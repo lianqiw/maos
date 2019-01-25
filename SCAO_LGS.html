@@ -108,8 +108,8 @@ $(document).ready(function(){initNavTree('SCAO_LGS.html','');});
 <div class="line"><span class="preprocessor"></span>include=<span class="stringliteral">&quot;scao_base.conf&quot;</span></div>
 <div class="line"></div>
 <div class="line">include=powfs_none.conf</div>
-<div class="line">include=powfs_lgs.conf</div>
-<div class="line">include=powfs_tt.conf</div>
+<div class="line">include=shwfs_lgs.conf</div>
+<div class="line">include=shwfs_ttf.conf</div>
 <div class="line"></div>
 <div class="line">powfs.nwfs=[1 1]</div>
 <div class="line">wfs.thetax=[0 0] #x coordinate in arcsecond unit.</div>
@@ -123,9 +123,9 @@ $(document).ready(function(){initNavTree('SCAO_LGS.html','');});
 <div class="line"><span class="preprocessor">#Tilt surfaces. see nfiraos.conf for description.</span></div>
 <div class="line"><span class="preprocessor"></span>tsurf       = []</div>
 <div class="line">surf        = [] # a list of file names</div>
-<div class="line">include     = <span class="stringliteral">&quot;atm_mk13n50p.conf&quot;</span></div>
+<div class="line">include     = <span class="stringliteral">&quot;atm_mk50p.conf&quot;</span></div>
+<div class="line">include     = <span class="stringliteral">&quot;atmr_single.conf&quot;</span></div>
 <div class="line">include     = <span class="stringliteral">&quot;dm_single.conf&quot;</span></div>
-<div class="line"></div>
 <div class="line">include     = <span class="stringliteral">&quot;fov_oa.conf&quot;</span></div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#Including configurations for reconstruction (tomo/fitting) and debugging.</span></div>
@@ -138,14 +138,6 @@ $(document).ready(function(){initNavTree('SCAO_LGS.html','');});
 <div class="line">tomo.maxit  = 5</div>
 <div class="line">fit.alg     = 0</div>
 <div class="line">sim.cachedm = 0</div>
-<div class="line"></div>
-<div class="line"><span class="preprocessor">#Reconstructor parameters</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#When there is cone effect, reconstruct multiple layers actually help in performance in scao mode.</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#__protect_start #to protect the following from overriden by atm_*.conf</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#atmr.ht     = [0]</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#atmr.wt     = [1]</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#atmr.os     = [2]</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#__protect_end</span></div>
 </div><!-- fragment --><p>and "wfs_single_lgs.conf" that defines parameters for a single high order NGS WFS. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

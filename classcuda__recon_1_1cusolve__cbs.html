@@ -116,36 +116,36 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1cusolve__cbs.html'
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:afc2eebd6a3d18804df127d537ec9bf55"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc2eebd6a3d18804df127d537ec9bf55"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cusolve_cbs</b> (<a class="el" href="structspchol.html">spchol</a> *_C=0, <a class="el" href="structdmat.html">dmat</a> *_Up=0, <a class="el" href="structdmat.html">dmat</a> *_Vp=0)</td></tr>
-<tr class="separator:afc2eebd6a3d18804df127d537ec9bf55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affb985e3ea36ed24b0cd19fce290f431"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="affb985e3ea36ed24b0cd19fce290f431"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cusolve_cbs</b> (<a class="el" href="structspchol.html">spchol</a> *_C, <a class="el" href="structdmat.html">dmat</a> *_Up, <a class="el" href="structdmat.html">dmat</a> *_Vp)</td></tr>
+<tr class="separator:affb985e3ea36ed24b0cd19fce290f431"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa44e711d869b957d67bb81d89c89b96a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa44e711d869b957d67bb81d89c89b96a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>chol_solve</b> (Real *out, const Real *in, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:aa44e711d869b957d67bb81d89c89b96a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c8f37085e671e4c536ac51ab847fdd6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c8f37085e671e4c536ac51ab847fdd6"></a>
-virtual Real&#160;</td><td class="memItemRight" valign="bottom"><b>solve</b> (curcell **xout, const curcell *xin, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a0c8f37085e671e4c536ac51ab847fdd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7be7ffb3c9aa46850ca20de712449373"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7be7ffb3c9aa46850ca20de712449373"></a>
+virtual Real&#160;</td><td class="memItemRight" valign="bottom"><b>solve</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="separator:a7be7ffb3c9aa46850ca20de712449373"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a300b68217ca959b468b9e100042cdf28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a300b68217ca959b468b9e100042cdf28"></a>
-<a class="el" href="classcusp.html">cusp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>Cl</b></td></tr>
-<tr class="separator:a300b68217ca959b468b9e100042cdf28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef1feab425f5105bc4a12f600eee6a1d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef1feab425f5105bc4a12f600eee6a1d"></a>
-int *&#160;</td><td class="memItemRight" valign="bottom"><b>Cp</b></td></tr>
-<tr class="separator:aef1feab425f5105bc4a12f600eee6a1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0290ce77ce174bb18755048ba6506512"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0290ce77ce174bb18755048ba6506512"></a>
-curmat *&#160;</td><td class="memItemRight" valign="bottom"><b>Up</b></td></tr>
-<tr class="separator:a0290ce77ce174bb18755048ba6506512"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d6d215dbe2f6c579e76050e8a6c88e4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d6d215dbe2f6c579e76050e8a6c88e4"></a>
-curmat *&#160;</td><td class="memItemRight" valign="bottom"><b>Vp</b></td></tr>
-<tr class="separator:a7d6d215dbe2f6c579e76050e8a6c88e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77cd2759a4d34fa6c7af9c351aee6008"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77cd2759a4d34fa6c7af9c351aee6008"></a>
-curmat *&#160;</td><td class="memItemRight" valign="bottom"><b>y</b></td></tr>
-<tr class="separator:a77cd2759a4d34fa6c7af9c351aee6008"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17fc18f65f5d29ba237f27b826a51cd5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a17fc18f65f5d29ba237f27b826a51cd5"></a>
-curmat *&#160;</td><td class="memItemRight" valign="bottom"><b>Vr</b></td></tr>
-<tr class="separator:a17fc18f65f5d29ba237f27b826a51cd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abcf18e4d8636b8b2a8e6e21c4c4c55eb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcf18e4d8636b8b2a8e6e21c4c4c55eb"></a>
+<a class="el" href="classcusp.html">cusp</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Cl</b></td></tr>
+<tr class="separator:abcf18e4d8636b8b2a8e6e21c4c4c55eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad017466fd163c059099c09ab3bc076f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad017466fd163c059099c09ab3bc076f9"></a>
+<a class="el" href="classcumat.html">cumat</a>&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Cp</b></td></tr>
+<tr class="separator:ad017466fd163c059099c09ab3bc076f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ea9690732be1d04bdaba63e5661d4ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ea9690732be1d04bdaba63e5661d4ff"></a>
+curmat&#160;</td><td class="memItemRight" valign="bottom"><b>Up</b></td></tr>
+<tr class="separator:a2ea9690732be1d04bdaba63e5661d4ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8403118673f7a65badc9a833032f97d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8403118673f7a65badc9a833032f97d7"></a>
+curmat&#160;</td><td class="memItemRight" valign="bottom"><b>Vp</b></td></tr>
+<tr class="separator:a8403118673f7a65badc9a833032f97d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbca08b8f2dd1a984a1b9e16ef53c308"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbca08b8f2dd1a984a1b9e16ef53c308"></a>
+curmat&#160;</td><td class="memItemRight" valign="bottom"><b>y</b></td></tr>
+<tr class="separator:afbca08b8f2dd1a984a1b9e16ef53c308"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac20b426793b67fdb724503dba9502a9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac20b426793b67fdb724503dba9502a9c"></a>
+curmat&#160;</td><td class="memItemRight" valign="bottom"><b>Vr</b></td></tr>
+<tr class="separator:ac20b426793b67fdb724503dba9502a9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/solve.h</li>

@@ -5,7 +5,10 @@ var maos_2setup__parms_8c =
     [ "READ_DBL", "maos_2setup__parms_8c.html#af718a871315bd372063bbbeee477b396", null ],
     [ "READ_STR", "maos_2setup__parms_8c.html#a50c89029f94fb2b378c6499bdbdb61f3", null ],
     [ "READ_DMAT", "maos_2setup__parms_8c.html#ac023a8e8d214d92926295f9a051c9461", null ],
+    [ "READ_DCELL", "maos_2setup__parms_8c.html#afe036de633ef5e6d27c6e495d1494ae9", null ],
+    [ "READ_LMAT", "maos_2setup__parms_8c.html#a192f65c64a1794826e320363a1b0ab7f", null ],
     [ "READ_POWFS", "maos_2setup__parms_8c.html#a0588bde7efe6ccb7af8053fca795d916", null ],
+    [ "READ_POWFS_MAT", "maos_2setup__parms_8c.html#ad9205c90aa606d60349a46d6bab0ae3b", null ],
     [ "READ_POWFS_RELAX", "maos_2setup__parms_8c.html#a10d7e0d103da3ef7dc749842e7cfb19c", null ],
     [ "READ_WFS", "maos_2setup__parms_8c.html#a40f3ff53c4da32bd18c3d93cfa123af1", null ],
     [ "READ_WFS_RELAX", "maos_2setup__parms_8c.html#af2ea3c2f11a41116a0e22d4761553407", null ],
@@ -16,6 +19,7 @@ var maos_2setup__parms_8c =
     [ "free_powfs_cfg", "maos_2setup__parms_8c.html#ab4954ec0786c9b9dceb9ae6ddb60d68c", null ],
     [ "free_strarr", "maos_2setup__parms_8c.html#abb6e36b04cc59e87a10f7ef9378cb5a0", null ],
     [ "free_parms", "maos_2setup__parms_8c.html#afad950a4f059f347cede7c2f97c7e0bd", null ],
-    [ "setup_parms", "maos_2setup__parms_8c.html#a4415a47bdac032359c831c0625a6e7e4", null ],
+    [ "dbl2pair", "maos_2setup__parms_8c.html#aa0a06931647e22ea5d19c69c31b1c5be", null ],
+    [ "setup_parms", "maos_2setup__parms_8c.html#a17e9b53acf321cc472b06a5813e17c44", null ],
     [ "setup_parms_gpu", "maos_2setup__parms_8c.html#a9a36b5678c2ca8539187637c1e016a2c", null ]
 ];

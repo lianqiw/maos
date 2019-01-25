@@ -21,5 +21,6 @@ var structFIT__CFG__T =
     [ "pos", "structFIT__CFG__T.html#a9b1c621d1c049db9f41fe663324402db", null ],
     [ "indoa", "structFIT__CFG__T.html#a420883fa6da814706e7d175011299b7f", null ],
     [ "cachedm", "structFIT__CFG__T.html#ab298910fcc58b2dc96e5fc1304a59646", null ],
-    [ "cachex", "structFIT__CFG__T.html#a2ccc56386db62f4aa2244239f1053f09", null ]
+    [ "cachex", "structFIT__CFG__T.html#a2ccc56386db62f4aa2244239f1053f09", null ],
+    [ "cgwarm", "structFIT__CFG__T.html#a28c48bdc7447eaa8b0416c0def491f85", null ]
 ];

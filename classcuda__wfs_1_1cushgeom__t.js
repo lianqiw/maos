@@ -4,7 +4,7 @@ var classcuda__wfs_1_1cushgeom__t =
     [ "initsim", "classcuda__wfs_1_1cushgeom__t.html#ab8a5c6fc5deb61d3986d7315d37cb3b6", null ],
     [ "addnoise", "classcuda__wfs_1_1cushgeom__t.html#a7c9c34860fea70298376400a8ff9bbc8", null ],
     [ "output", "classcuda__wfs_1_1cushgeom__t.html#aaeb532431fd57ef41450775f90d05287", null ],
-    [ "calcg", "classcuda__wfs_1_1cushgeom__t.html#a5fd682e39ef0741a8f648c5996808cd9", null ],
+    [ "calcg", "classcuda__wfs_1_1cushgeom__t.html#a0bb9112fb1ebad4887ae040cfde1c8fb", null ],
     [ "acc", "classcuda__wfs_1_1cushgeom__t.html#ac63dfde10bdb088f12b988c3731c3b2c", null ],
     [ "gradacc", "classcuda__wfs_1_1cushgeom__t.html#aff4ce38ce51264cc8b36dec6bddec29c", null ],
     [ "gradcalc", "classcuda__wfs_1_1cushgeom__t.html#a94fe36019512dcab64068c7f0d7b03df", null ],

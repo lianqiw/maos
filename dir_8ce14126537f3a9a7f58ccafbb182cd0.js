@@ -18,7 +18,6 @@ var dir_8ce14126537f3a9a7f58ccafbb182cd0 =
     [ "setup_parms.c", "maos_2setup__parms_8c.html", "maos_2setup__parms_8c" ],
     [ "setup_powfs.c", "maos_2setup__powfs_8c.html", "maos_2setup__powfs_8c" ],
     [ "setup_recon.c", "setup__recon_8c.html", "setup__recon_8c" ],
-    [ "setup_recon_dm.c", "setup__recon__dm_8c.html", "setup__recon__dm_8c" ],
     [ "setup_surf.c", "setup__surf_8c.html", "setup__surf_8c" ],
     [ "sim.c", "sim_8c.html", "sim_8c" ],
     [ "sim_utils.c", "sim__utils_8c.html", "sim__utils_8c" ],

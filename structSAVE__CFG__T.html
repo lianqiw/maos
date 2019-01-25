@@ -129,6 +129,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:a76bd0e8cf3bef025b0b490f09d0f2f60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54b9df0f0ca9410a85f069a08e1d1cd9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#a54b9df0f0ca9410a85f069a08e1d1cd9">ncpa</a></td></tr>
 <tr class="separator:a54b9df0f0ca9410a85f069a08e1d1cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3700d7c065a5b60e066301ff3849d81"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#ac3700d7c065a5b60e066301ff3849d81">fdpcg</a></td></tr>
+<tr class="separator:ac3700d7c065a5b60e066301ff3849d81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e19a6b97476eaefd13dc838468042d4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#a7e19a6b97476eaefd13dc838468042d4">atm</a></td></tr>
 <tr class="separator:a7e19a6b97476eaefd13dc838468042d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34a4c23843708f2e41eae5d31718112a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#a34a4c23843708f2e41eae5d31718112a">run</a></td></tr>
@@ -173,6 +175,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:aa8189c841ed48f7e406d72fa68eea0bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9e91d2d09d6f372de86a55c3ada00b2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#ad9e91d2d09d6f372de86a55c3ada00b2">gcov</a></td></tr>
 <tr class="separator:ad9e91d2d09d6f372de86a55c3ada00b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61acd1d7e6eed2e364cf90ad5560bfa6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#a61acd1d7e6eed2e364cf90ad5560bfa6">ecov</a></td></tr>
+<tr class="separator:a61acd1d7e6eed2e364cf90ad5560bfa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69c8ed5647eafb2be3546090f6f07b47"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#a69c8ed5647eafb2be3546090f6f07b47">mvmi</a></td></tr>
 <tr class="separator:a69c8ed5647eafb2be3546090f6f07b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6e56400a52ecb7e2eb4d9e305f38626"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#af6e56400a52ecb7e2eb4d9e305f38626">mvmf</a></td></tr>
@@ -257,7 +261,20 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Save NCPA surface OPD on aper and powfs </p>
+<p>save NCPA surface OPD on aper and powfs </p>
+
+</div>
+</div>
+<a class="anchor" id="ac3700d7c065a5b60e066301ff3849d81"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int SAVE_CFG_T::fdpcg</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>save FDPCG matrices </p>
 
 </div>
 </div>
@@ -544,6 +561,19 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>size of 2*ngcov, specifying wfs for each pair </p>
+
+</div>
+</div>
+<a class="anchor" id="a61acd1d7e6eed2e364cf90ad5560bfa6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int SAVE_CFG_T::ecov</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>save covariance of DM error vector </p>
 
 </div>
 </div>

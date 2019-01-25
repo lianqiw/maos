@@ -114,6 +114,7 @@ $(document).ready(function(){initNavTree('pywfs_8c.html','');});
 <div class="contents">
 <div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
 <code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;pywfs.h&quot;</code><br/>
 <code>#include &quot;../cuda/gpu.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -121,9 +122,12 @@ Macros</h2></td></tr>
 <tr class="memitem:a6bc85f078c4f395c33b2a52117dc3f26"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6bc85f078c4f395c33b2a52117dc3f26"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>PYWFS_GUARD</b>&#160;&#160;&#160;1.5</td></tr>
 <tr class="separator:a6bc85f078c4f395c33b2a52117dc3f26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4dd8091197026b4423cd48d4e020520d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dd8091197026b4423cd48d4e020520d"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>PYWFS_POKE</b>&#160;&#160;&#160;1e-6</td></tr>
-<tr class="separator:a4dd8091197026b4423cd48d4e020520d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c66e95b05c30433d4ad917e8532a4c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c66e95b05c30433d4ad917e8532a4c5"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PWFS_DEBUG</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:a8c66e95b05c30433d4ad917e8532a4c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61844643b5907dad7fecbcaf0bb385d0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61844643b5907dad7fecbcaf0bb385d0"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PYWFS_TT_DUAL</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:a61844643b5907dad7fecbcaf0bb385d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -135,11 +139,8 @@ Functions</h2></td></tr>
 <tr class="separator:a6705f903478cb213c1f4fc386f2bc624"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ff8fc94b4c21eaa25d8c8ca2a8918bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#a0ff8fc94b4c21eaa25d8c8ca2a8918bc">pywfs_tt</a> (const <a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs)</td></tr>
 <tr class="separator:a0ff8fc94b4c21eaa25d8c8ca2a8918bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afae2c1e1c59cb308f2f25509fdbb6105"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#afae2c1e1c59cb308f2f25509fdbb6105">pywfs_mkg</a> (const <a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs, const <a class="el" href="structloc__t.html">loc_t</a> *ploc, int cubic, double iac)</td></tr>
-<tr class="separator:afae2c1e1c59cb308f2f25509fdbb6105"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a112a9b4fc83ace436f7aaf00994c60c3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a112a9b4fc83ace436f7aaf00994c60c3"></a>
-<a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_mkg_ga</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structloc__t.html">loc_t</a> *aloc, int iwfs, int idm)</td></tr>
-<tr class="separator:a112a9b4fc83ace436f7aaf00994c60c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35b28bb745dcf68de70b888068caf67b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#a35b28bb745dcf68de70b888068caf67b">pywfs_mkg</a> (<a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs, const <a class="el" href="structloc__t.html">loc_t</a> *locin, const char *distortion, const <a class="el" href="structdmat.html">dmat</a> *mod, const <a class="el" href="structdmat.html">dmat</a> *opdadd, double displacex, double displacey, double scale)</td></tr>
+<tr class="separator:a35b28bb745dcf68de70b888068caf67b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1826aede48a77226e4bb6af5803c6cd2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1826aede48a77226e4bb6af5803c6cd2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs)</td></tr>
 <tr class="separator:a1826aede48a77226e4bb6af5803c6cd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -182,7 +183,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Complex wavefront created by pyramid </p>
+<p>Setup pyramid WFS based on configuration. </p>
 
 </div>
 </div>
@@ -265,37 +266,61 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return T/T mode </p>
+<p>Return measurement of T/T mode, normalized for 1 unit of input. </p>
 
 </div>
 </div>
-<a class="anchor" id="afae2c1e1c59cb308f2f25509fdbb6105"></a>
+<a class="anchor" id="a35b28bb745dcf68de70b888068caf67b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structdsp.html">dsp</a>* pywfs_mkg </td>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* pywfs_mkg </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPYWFS__T.html">PYWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="structPYWFS__T.html">PYWFS_T</a> *&#160;</td>
           <td class="paramname"><em>pywfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
-          <td class="paramname"><em>ploc</em>, </td>
+          <td class="paramname"><em>locin</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>cubic</em>, </td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>distortion</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>mod</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>opdadd</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>iac</em>&#160;</td>
+          <td class="paramname"><em>displacex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>displacey</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>scale</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -304,7 +329,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-<p>ploc is on pupil. </p>
+<p>locin is on pupil. </p>
 
 </div>
 </div>

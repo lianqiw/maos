@@ -1,9 +1,9 @@
 var classculoc__t =
 [
-    [ "culoc_t", "classculoc__t.html#a369e7d6c12adbf58ee516821744f93ab", null ],
-    [ "~culoc_t", "classculoc__t.html#a697fc0b39989451c0012529353eadcea", null ],
-    [ "p", "classculoc__t.html#a2b0ab07a471314ea686d242adfc4cfed", null ],
-    [ "dx", "classculoc__t.html#af0c9a18b42875c2f40cfe80583dc4ab4", null ],
-    [ "dy", "classculoc__t.html#a83c6aec2f12801f5c55bc79bfeeb32ee", null ],
-    [ "nloc", "classculoc__t.html#af17ea8212d061628123e804c040446e0", null ]
+    [ "culoc_t", "classculoc__t.html#af8626018357e3a0f612dde93f00d1b93", null ],
+    [ "operator()", "classculoc__t.html#a6b9ad70775002846a8df618e70727a0c", null ],
+    [ "operator()", "classculoc__t.html#ac4e9bb2c52953f82ad8d201ee09d5753", null ],
+    [ "Nloc", "classculoc__t.html#a9cd876b4bdcb90bbb0a867c7b52b0488", null ],
+    [ "Dx", "classculoc__t.html#a0a7dbfebd243e3deafd96d2076696d6b", null ],
+    [ "Dy", "classculoc__t.html#a905fefbfe1cc6ee3ec85d8681a5bdfe0", null ]
 ];

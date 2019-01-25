@@ -118,17 +118,17 @@ $(document).ready(function(){initNavTree('sim_8c.html','');});
 <code>#include &quot;recon.h&quot;</code><br/>
 <code>#include &quot;recon_utils.h&quot;</code><br/>
 <code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;setup_recon.h&quot;</code><br/>
 <code>#include &quot;sim.h&quot;</code><br/>
 <code>#include &quot;sim_utils.h&quot;</code><br/>
 <code>#include &quot;fdpcg.h&quot;</code><br/>
+<code>#include &quot;save.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5332613c93902884c54be80cf6027a98"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5332613c93902884c54be80cf6027a98"></a>
-<a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>maos_iseed</b> (int iseed)</td></tr>
+<tr class="memitem:a5332613c93902884c54be80cf6027a98"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim_8c.html#a5332613c93902884c54be80cf6027a98">maos_iseed</a> (int iseed)</td></tr>
 <tr class="separator:a5332613c93902884c54be80cf6027a98"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afda0654e4cb8f4e37feb53986e044e19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afda0654e4cb8f4e37feb53986e044e19"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>maos_isim</b> (int isim)</td></tr>
+<tr class="memitem:afda0654e4cb8f4e37feb53986e044e19"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim_8c.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim</a> (int isim)</td></tr>
 <tr class="separator:afda0654e4cb8f4e37feb53986e044e19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5935e0612a22d888703e8eee46a930bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim_8c.html#a5935e0612a22d888703e8eee46a930bf">maos_sim</a> ()</td></tr>
 <tr class="separator:a5935e0612a22d888703e8eee46a930bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -136,6 +136,41 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maos_isim</b> (int is
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Call various functions to do the simulation and evaluate performance. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a5332613c93902884c54be80cf6027a98"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structSIM__T.html">SIM_T</a>* maos_iseed </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>iseed</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Initialize the simulation runtime data struct. </p>
+
+</div>
+</div>
+<a class="anchor" id="afda0654e4cb8f4e37feb53986e044e19"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void maos_isim </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>isim</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Simulation for each time step.</p>
+<p>Callable from matlab. </p>
+
+</div>
+</div>
 <a class="anchor" id="a5935e0612a22d888703e8eee46a930bf"></a>
 <div class="memitem">
 <div class="memproto">
@@ -148,7 +183,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maos_isim</b> (int is
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Closed loop simulation main loop. It calls <a class="el" href="sim__utils_8c.html#a27c195134fbcb70dbf90b5ff2ee82a84">init_simu()</a> to initialize the simulation struct. Then calls <a class="el" href="sim__utils_8c.html#afce4363970d1fde0eca6130b82b2d28e">genatm()</a> to generate atmospheric turbulence screens. Then for every time step, it calls <a class="el" href="perfevl_8c.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a> to evaluate performance, <a class="el" href="wfsgrad_8c.html#a99e7e23b2226afc767fc176f352f6e11">wfsgrad()</a> to do wfs measurement, <a class="el" href="recon_8c.html#a7a1d62d90b85cb3eeaa156e2a6d9784f">reconstruct()</a> to do tomography and DM fit, filter() to do DM command filtering. In MOAO mode, it call calls <a class="el" href="moao_8c.html#af62a4685464fea7bdd37d04c821c3caf">moao_recon()</a> for MOAO DM fitting. </p>
+<p>Closed loop simulation main loop.</p>
+<p>It calls <a class="el" href="sim__utils_8c.html#a27c195134fbcb70dbf90b5ff2ee82a84">init_simu()</a> to initialize the simulation struct, and then calls <a class="el" href="sim_8c.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> for each simulation time step. Arranged this way so that <a class="el" href="sim_8c.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> can be called from matlab. </p>
 
 </div>
 </div>

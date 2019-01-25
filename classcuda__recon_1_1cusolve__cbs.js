@@ -1,13 +1,12 @@
 var classcuda__recon_1_1cusolve__cbs =
 [
-    [ "cusolve_cbs", "classcuda__recon_1_1cusolve__cbs.html#afc2eebd6a3d18804df127d537ec9bf55", null ],
-    [ "~cusolve_cbs", "classcuda__recon_1_1cusolve__cbs.html#a65c679dbd7690ab79e392b7c9122e51c", null ],
+    [ "cusolve_cbs", "classcuda__recon_1_1cusolve__cbs.html#affb985e3ea36ed24b0cd19fce290f431", null ],
     [ "chol_solve", "classcuda__recon_1_1cusolve__cbs.html#aa44e711d869b957d67bb81d89c89b96a", null ],
-    [ "solve", "classcuda__recon_1_1cusolve__cbs.html#a0c8f37085e671e4c536ac51ab847fdd6", null ],
-    [ "Cl", "classcuda__recon_1_1cusolve__cbs.html#a300b68217ca959b468b9e100042cdf28", null ],
-    [ "Cp", "classcuda__recon_1_1cusolve__cbs.html#aef1feab425f5105bc4a12f600eee6a1d", null ],
-    [ "Up", "classcuda__recon_1_1cusolve__cbs.html#a0290ce77ce174bb18755048ba6506512", null ],
-    [ "Vp", "classcuda__recon_1_1cusolve__cbs.html#a7d6d215dbe2f6c579e76050e8a6c88e4", null ],
-    [ "y", "classcuda__recon_1_1cusolve__cbs.html#a77cd2759a4d34fa6c7af9c351aee6008", null ],
-    [ "Vr", "classcuda__recon_1_1cusolve__cbs.html#a17fc18f65f5d29ba237f27b826a51cd5", null ]
+    [ "solve", "classcuda__recon_1_1cusolve__cbs.html#a7be7ffb3c9aa46850ca20de712449373", null ],
+    [ "Cl", "classcuda__recon_1_1cusolve__cbs.html#abcf18e4d8636b8b2a8e6e21c4c4c55eb", null ],
+    [ "Cp", "classcuda__recon_1_1cusolve__cbs.html#ad017466fd163c059099c09ab3bc076f9", null ],
+    [ "Up", "classcuda__recon_1_1cusolve__cbs.html#a2ea9690732be1d04bdaba63e5661d4ff", null ],
+    [ "Vp", "classcuda__recon_1_1cusolve__cbs.html#a8403118673f7a65badc9a833032f97d7", null ],
+    [ "y", "classcuda__recon_1_1cusolve__cbs.html#afbca08b8f2dd1a984a1b9e16ef53c308", null ],
+    [ "Vr", "classcuda__recon_1_1cusolve__cbs.html#ac20b426793b67fdb724503dba9502a9c", null ]
 ];

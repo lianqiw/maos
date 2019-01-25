@@ -120,13 +120,13 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a264b27bc558c597da94aadf75c3be3d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a264b27bc558c597da94aadf75c3be3d1"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>dither_t</b> (int nsa, int pixpsax, int pixpsay)</td></tr>
 <tr class="separator:a264b27bc558c597da94aadf75c3be3d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a76c4379babad193c308b64da394cc082"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdither__t.html#a76c4379babad193c308b64da394cc082">acc</a> (<a class="el" href="structDITHER__T.html">DITHER_T</a> *dither, curcell *ints, Real cs, Real ss, int nstat, cudaStream_t stream)</td></tr>
-<tr class="separator:a76c4379babad193c308b64da394cc082"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab05bb21a209c49d8b5c9c2e26b0efade"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdither__t.html#ab05bb21a209c49d8b5c9c2e26b0efade">acc</a> (<a class="el" href="structDITHER__T.html">DITHER_T</a> *dither, curcell &amp;ints, Real cs, Real ss, int nstat, cudaStream_t stream)</td></tr>
+<tr class="separator:ab05bb21a209c49d8b5c9c2e26b0efade"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>For matched filter update </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a76c4379babad193c308b64da394cc082"></a>
+<a class="anchor" id="ab05bb21a209c49d8b5c9c2e26b0efade"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -139,7 +139,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">curcell *&#160;</td>
+          <td class="paramtype">curcell &amp;&#160;</td>
           <td class="paramname"><em>ints</em>, </td>
         </tr>
         <tr>
@@ -158,7 +158,7 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>ndrift</em>, </td>
+          <td class="paramname"><em>npll</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

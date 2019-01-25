@@ -9,6 +9,7 @@ var searchData=
   ['loc_5fadd_5fptt',['loc_add_ptt',['../loc_8h.html#a43b690f19e294542434f1c9ff5f1c501',1,'loc.c']]],
   ['loc_5fcalc_5fmod',['loc_calc_mod',['../loc_8h.html#adf80440f82c491521a1b6316d0793652',1,'loc.c']]],
   ['loc_5fcalc_5fptt',['loc_calc_ptt',['../loc_8h.html#ac69d715119dab849084d00b76fd88d1a',1,'loc.c']]],
+  ['loc_5fcoord2ind',['loc_coord2ind',['../recon__utils_8c.html#a069780ed16a2fa71439c5dbc9a95126b',1,'recon_utils.c']]],
   ['loc_5fcreate_5fembed',['loc_create_embed',['../loc_8h.html#a693cf06f5fe586acdbb835a69628bd04',1,'loc.c']]],
   ['loc_5fcreate_5fmap',['loc_create_map',['../loc_8h.html#ae3b2280ea7b47be6321e96d02a1f2f9e',1,'loc.c']]],
   ['loc_5fcreate_5fmap_5fnpad',['loc_create_map_npad',['../loc_8h.html#a15b161f5f2373e7b0144dd4b188df4df',1,'loc.c']]],
@@ -34,11 +35,13 @@ var searchData=
   ['locfft_5fpsf',['locfft_psf',['../locfft_8c.html#a10dfbf49464dd0cdc5026defc66cc2e7',1,'locfft.c']]],
   ['locfree_5fdo',['locfree_do',['../loc_8h.html#aa53d0ffe413fe5002244699bfb7d641b',1,'loc.c']]],
   ['lock_5ffile',['lock_file',['../daemonize_8h.html#ad10839cacf3acb84d43eae3ff6d04ade',1,'daemonize.c']]],
-  ['lockadd',['lockadd',['../thread_8h.html#a9930843fcf00924f1a4076af69232a5b',1,'thread.c']]],
+  ['locmean',['locmean',['../loc_8h.html#acfdfdfe5d7dde3e8a26d39d807c60a08',1,'loc.c']]],
   ['locnew',['locnew',['../loc_8h.html#a1ffc0fceed3940f64a99ce1e0f4a5903',1,'loc.c']]],
   ['locreaddata',['locreaddata',['../locbin_8h.html#a22b5b42fb69c0946972bc87f2f95b1e6',1,'locbin.c']]],
+  ['locref',['locref',['../loc_8h.html#ab929d93ab02c2d3931fb10fdd78ec4ad',1,'loc.c']]],
   ['locresize',['locresize',['../loc_8h.html#a4d17a0ee145421054bd35a35b55fb05d',1,'loc.c']]],
   ['locrot',['locrot',['../loc_8h.html#ab69c225c64ec68bf802f11586f5e6d79',1,'loc.c']]],
   ['locshift',['locshift',['../loc_8h.html#a73d1239e6a32b16cfb9c37a0336aa4f3',1,'loc.c']]],
+  ['locstretch',['locstretch',['../loc_8h.html#a71e90584a098f1d7cc420235e673cd20',1,'loc.c']]],
   ['loctransform',['loctransform',['../loc_8h.html#a43403e4e1e651451d9dc34c251c2aa54',1,'loc.c']]]
 ];

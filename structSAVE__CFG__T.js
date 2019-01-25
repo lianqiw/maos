@@ -6,6 +6,7 @@ var structSAVE__CFG__T =
     [ "recon", "structSAVE__CFG__T.html#a487426d82238f2159c7d6e9ec0b58ad3", null ],
     [ "mvst", "structSAVE__CFG__T.html#a76bd0e8cf3bef025b0b490f09d0f2f60", null ],
     [ "ncpa", "structSAVE__CFG__T.html#a54b9df0f0ca9410a85f069a08e1d1cd9", null ],
+    [ "fdpcg", "structSAVE__CFG__T.html#ac3700d7c065a5b60e066301ff3849d81", null ],
     [ "atm", "structSAVE__CFG__T.html#a7e19a6b97476eaefd13dc838468042d4", null ],
     [ "run", "structSAVE__CFG__T.html#a34a4c23843708f2e41eae5d31718112a", null ],
     [ "opdr", "structSAVE__CFG__T.html#aa4595ac42f4762887f4e9cf9b4b926fb", null ],
@@ -28,6 +29,7 @@ var structSAVE__CFG__T =
     [ "gcovp", "structSAVE__CFG__T.html#aaf92f5f254d19422eda3da9f5e18cd0a", null ],
     [ "ngcov", "structSAVE__CFG__T.html#aa8189c841ed48f7e406d72fa68eea0bf", null ],
     [ "gcov", "structSAVE__CFG__T.html#ad9e91d2d09d6f372de86a55c3ada00b2", null ],
+    [ "ecov", "structSAVE__CFG__T.html#a61acd1d7e6eed2e364cf90ad5560bfa6", null ],
     [ "mvmi", "structSAVE__CFG__T.html#a69c8ed5647eafb2be3546090f6f07b47", null ],
     [ "mvmf", "structSAVE__CFG__T.html#af6e56400a52ecb7e2eb4d9e305f38626", null ],
     [ "mvm", "structSAVE__CFG__T.html#ab077efe8de4a13679ffc72a8f9b2af5d", null ]

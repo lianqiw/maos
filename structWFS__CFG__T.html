@@ -119,10 +119,16 @@ $(document).ready(function(){initNavTree('structWFS__CFG__T.html','');});
 Data Fields</h2></td></tr>
 <tr class="memitem:a48eefa6089eb0ba38989ed225ee2941c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#a48eefa6089eb0ba38989ed225ee2941c">wvlwts</a></td></tr>
 <tr class="separator:a48eefa6089eb0ba38989ed225ee2941c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62872e351b623ca42f7f349c739dc1b4"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#a62872e351b623ca42f7f349c739dc1b4">sabad</a></td></tr>
+<tr class="separator:a62872e351b623ca42f7f349c739dc1b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebd74c669d9a3f057f4d4b4a43eda163"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#aebd74c669d9a3f057f4d4b4a43eda163">thetax</a></td></tr>
 <tr class="separator:aebd74c669d9a3f057f4d4b4a43eda163"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3344f596561dfaf1d9d197112e2cefbd"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#a3344f596561dfaf1d9d197112e2cefbd">thetay</a></td></tr>
 <tr class="separator:a3344f596561dfaf1d9d197112e2cefbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2910d87b6b47c1fe6205314317bdfa99"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#a2910d87b6b47c1fe6205314317bdfa99">misregx_tel</a></td></tr>
+<tr class="separator:a2910d87b6b47c1fe6205314317bdfa99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad82d689bc044af9c7cc8674c17273ae1"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#ad82d689bc044af9c7cc8674c17273ae1">misregy_tel</a></td></tr>
+<tr class="separator:ad82d689bc044af9c7cc8674c17273ae1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac67dd456e4d3d31400fc9830daf9735"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#aac67dd456e4d3d31400fc9830daf9735">siglev</a></td></tr>
 <tr class="separator:aac67dd456e4d3d31400fc9830daf9735"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83582e7e6916eee3a62304b0dae680f8"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#a83582e7e6916eee3a62304b0dae680f8">siglevsim</a></td></tr>
@@ -134,8 +140,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>hs</b></td></tr>
 <tr class="separator:ab9facff80f5b518bbe038f7877e5a46a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6eeef5eba99a8dea64c1692bb60f5ff"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#ac6eeef5eba99a8dea64c1692bb60f5ff">powfs</a></td></tr>
 <tr class="separator:ac6eeef5eba99a8dea64c1692bb60f5ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe67b086fd5bbba19af1e6d047da7ec5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#abe67b086fd5bbba19af1e6d047da7ec5">sock</a></td></tr>
-<tr class="separator:abe67b086fd5bbba19af1e6d047da7ec5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>contains input parmaeters for each wfs </p>
@@ -151,6 +155,19 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>hs</b></td></tr>
 </div><div class="memdoc">
 <pre class="fragment">  Weights of signal value for each wavelength. if not
 </pre><p> specified in config, will use powfs.wvlwts </p>
+
+</div>
+</div>
+<a class="anchor" id="a62872e351b623ca42f7f349c739dc1b4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* WFS_CFG_T::sabad</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>coordinate of bad subaperture due to bad detector or lenslet array. </p>
 
 </div>
 </div>
@@ -177,6 +194,32 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>hs</b></td></tr>
       </table>
 </div><div class="memdoc">
 <p>y direction </p>
+
+</div>
+</div>
+<a class="anchor" id="a2910d87b6b47c1fe6205314317bdfa99"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double WFS_CFG_T::misregx_tel</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs. </p>
+
+</div>
+</div>
+<a class="anchor" id="ad82d689bc044af9c7cc8674c17273ae1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double WFS_CFG_T::misregy_tel</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs. </p>
 
 </div>
 </div>
@@ -230,19 +273,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>hs</b></td></tr>
       </table>
 </div><div class="memdoc">
 <p>powfs type </p>
-
-</div>
-</div>
-<a class="anchor" id="abe67b086fd5bbba19af1e6d047da7ec5"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int WFS_CFG_T::sock</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>-1: handle locally. otherwise, indicate the socket that handles it. </p>
 
 </div>
 </div>

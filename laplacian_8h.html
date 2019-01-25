@@ -115,8 +115,8 @@ $(document).ready(function(){initNavTree('laplacian_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a6ef3b0a4cde1896b52fc7855a31b0b06"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="laplacian_8h.html#a6ef3b0a4cde1896b52fc7855a31b0b06">apply_laplacian_map</a> (int nx, int ny, double dx, double r0, double weight, double *opd, double *opdout)</td></tr>
-<tr class="separator:a6ef3b0a4cde1896b52fc7855a31b0b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaeeac18fb36bae4577c19a1235cef451"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="laplacian_8h.html#aaeeac18fb36bae4577c19a1235cef451">apply_laplacian_map</a> (<a class="el" href="structdmat.html">dmat</a> *opdout, const <a class="el" href="structdmat.html">dmat</a> *opd, double dx, double r0, double weight)</td></tr>
+<tr class="separator:aaeeac18fb36bae4577c19a1235cef451"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8394f2cfd9866ff96d44b320697c39c6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="laplacian_8h.html#a8394f2cfd9866ff96d44b320697c39c6">mklaplacian_map</a> (int nx, int ny, double dx, double r0, double weight)</td></tr>
 <tr class="separator:a8394f2cfd9866ff96d44b320697c39c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a230a7e9f8f290452f9f15757f9c23418"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="laplacian_8h.html#a230a7e9f8f290452f9f15757f9c23418">mklaplacian_loc</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double r0, double weight)</td></tr>
@@ -127,21 +127,21 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Compute laplacian operator for turbulence covariance approximation. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a6ef3b0a4cde1896b52fc7855a31b0b06"></a>
+<a class="anchor" id="aaeeac18fb36bae4577c19a1235cef451"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void apply_laplacian_map </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>opdout</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>ny</em>, </td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>opd</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -159,19 +159,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>weight</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>opd</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>opdout</em>&#160;</td>
+          <td class="paramname"><em>weight</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

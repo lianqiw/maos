@@ -7,9 +7,7 @@ var structLOAD__CFG__T =
     [ "ploc", "structLOAD__CFG__T.html#a28b02d2097e9869b59af91324f5b9031", null ],
     [ "floc", "structLOAD__CFG__T.html#a551d85483d0cc1ad17918192d045b675", null ],
     [ "cxx", "structLOAD__CFG__T.html#af3196a976edabab31ad4687c655de145", null ],
-    [ "HXF", "structLOAD__CFG__T.html#abb5a37ef8486ef3d28d0d342fe9f8289", null ],
     [ "HXW", "structLOAD__CFG__T.html#ae705f7dc47b680b513157356846f6b4e", null ],
-    [ "HA", "structLOAD__CFG__T.html#a3eb9ae4eeeaed334aa9e04f74763f0d3", null ],
     [ "GP", "structLOAD__CFG__T.html#a76383facf232ed5b68bd0ed11288dbc3", null ],
     [ "GA", "structLOAD__CFG__T.html#a1ab194d4e5e60b6345074df9a8d6e630", null ],
     [ "mvm", "structLOAD__CFG__T.html#a2a2447883c9bd857513d0daf1c80b35d", null ],
@@ -21,5 +19,5 @@ var structLOAD__CFG__T =
     [ "tomo", "structLOAD__CFG__T.html#a6300bd2144c25191aa100662d299234f", null ],
     [ "fit", "structLOAD__CFG__T.html#adf26dbe4454ff3de00641dbf5022b601", null ],
     [ "W", "structLOAD__CFG__T.html#a059a70c92c1cc12fcf7b63d7cbb01a68", null ],
-    [ "ncpa", "structLOAD__CFG__T.html#a2ca0bc80952f5f9b6679917ba6a5b784", null ]
+    [ "ncpa", "structLOAD__CFG__T.html#aa373213cdf51ce277a2bce636eecb390", null ]
 ];

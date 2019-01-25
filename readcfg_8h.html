@@ -122,8 +122,8 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a53c73968400d1223024541da96b25a53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a53c73968400d1223024541da96b25a53">open_config</a> (char *fn, const char *prefix, long protect)</td></tr>
-<tr class="separator:a53c73968400d1223024541da96b25a53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81abf84c9f61c49dd58731d7f2637c00"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a81abf84c9f61c49dd58731d7f2637c00">open_config</a> (const char *fn, const char *prefix, const int priority)</td></tr>
+<tr class="separator:a81abf84c9f61c49dd58731d7f2637c00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7985dcf84dcc547bc18df8a29b616d76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76">close_config</a> (const char *format,...)</td></tr>
 <tr class="separator:a7985dcf84dcc547bc18df8a29b616d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73c95aaed91c735a3fdc93701f6d964f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f">readcfg_peek</a> (const char *format,...)</td></tr>
@@ -164,6 +164,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
 <tr class="separator:a840d9d01fee9bd3ab8587eddbc8ccfca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2c70689f05aead41deedb6abc5fc96f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#ae2c70689f05aead41deedb6abc5fc96f">readcfg_lmat_nmax</a> (int n, const char *format,...)</td></tr>
 <tr class="separator:ae2c70689f05aead41deedb6abc5fc96f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fd72ddb2a821baf224122de60711b6d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a5fd72ddb2a821baf224122de60711b6d">readcfg_dcell</a> (const char *format,...)</td></tr>
+<tr class="separator:a5fd72ddb2a821baf224122de60711b6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add90c1a773600f3302d94a289b314189"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#add90c1a773600f3302d94a289b314189">readcfg_dblarr_n</a> (double **ret, int len, const char *format,...)</td></tr>
 <tr class="separator:add90c1a773600f3302d94a289b314189"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b93ac243fed9ecdeb3d10d660d752ca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a4b93ac243fed9ecdeb3d10d660d752ca">readcfg_intarr_n</a> (int **ret, int len, const char *format,...)</td></tr>
@@ -176,15 +178,15 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines to read .conf type config files. Each entry is composed of a key and a value. The entries are maintained in a hash table. Each entry can be retrieved from the key. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a53c73968400d1223024541da96b25a53"></a>
+<a class="anchor" id="a81abf84c9f61c49dd58731d7f2637c00"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void open_config </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>config_file</em>, </td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>config_in</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -195,8 +197,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>protect</em>&#160;</td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>priority</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -205,12 +207,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Start the read config process by opening .conf files and fill the entries in a hash table. A key can be protected. If a key is not protected, newer entries with the same key will override a previous entry. </p>
+<p>Start the read config process by opening .conf files and fill the entries in a hash table. A key has a priority or 0 or higher. A new key with same or higher priority can override previous entry. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">config_file</td><td>The .conf file to read </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">config_in</td><td>The .conf file to read </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">prefix</td><td>if not NULL, prefix the key with this. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">protect</td><td>whether we protect the value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>Priorities of keys. </td></tr>
   </table>
   </dd>
 </dl>
@@ -733,6 +735,33 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
       </table>
 </div><div class="memdoc">
 <p>Read as an lmat. A max of n numbers </p>
+
+</div>
+</div>
+<a class="anchor" id="a5fd72ddb2a821baf224122de60711b6d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* readcfg_dcell </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read dcell </p>
 
 </div>
 </div>

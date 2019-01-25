@@ -2,11 +2,11 @@ var classcuda__recon_1_1curecon__t =
 [
     [ "curecon_t", "classcuda__recon_1_1curecon__t.html#a1a59217909036c599c575eff4bebbc89", null ],
     [ "~curecon_t", "classcuda__recon_1_1curecon__t.html#a60c7b3ffc6f0a9b6847e18b71fcd4e28", null ],
-    [ "delete_config", "classcuda__recon_1_1curecon__t.html#a4e0c7c118f77ae569b54a2a753209624", null ],
-    [ "reset", "classcuda__recon_1_1curecon__t.html#a96acc470f68122c94a67ba197d371460", null ],
+    [ "reset_config", "classcuda__recon_1_1curecon__t.html#afa40be20ada2ec3c5b812b8ba97b880e", null ],
+    [ "reset_runtime", "classcuda__recon_1_1curecon__t.html#a876281f965e5beb65812e2cf84e2b3bd", null ],
     [ "update", "classcuda__recon_1_1curecon__t.html#aa56dcdb2268761984ec4abd03f1f46f9", null ],
     [ "update_cn2", "classcuda__recon_1_1curecon__t.html#a54f2dfb612ceae6ce68204b42ef1c196", null ],
-    [ "tomo", "classcuda__recon_1_1curecon__t.html#ae27af0959e28ff69e1d77ebd946e73a1", null ],
+    [ "tomo", "classcuda__recon_1_1curecon__t.html#ae78d3a4609101ea554dbb8103f9cbc22", null ],
     [ "fit", "classcuda__recon_1_1curecon__t.html#af46ad89edd0812ad075cd6c299e07d35", null ],
     [ "moao_recon", "classcuda__recon_1_1curecon__t.html#a69eed376ba3451f014203ffc239618e5", null ],
     [ "moao_filter", "classcuda__recon_1_1curecon__t.html#a33f63300bd284a47e6b2145f16513f02", null ],
@@ -25,7 +25,7 @@ var classcuda__recon_1_1curecon__t =
     [ "moao", "classcuda__recon_1_1curecon__t.html#a6d667eb383635feaef7442ca5f0a6965", null ],
     [ "moao_gwfs", "classcuda__recon_1_1curecon__t.html#aa5c2411dba577e2545861410032104dd", null ],
     [ "moao_gevl", "classcuda__recon_1_1curecon__t.html#a6eeff68c11e96758091bfb9781d54042", null ],
-    [ "dm_moao", "classcuda__recon_1_1curecon__t.html#ae3a6a32b80cf46fdb6e599202aebdc4f", null ],
-    [ "dm_wfs", "classcuda__recon_1_1curecon__t.html#addab2822e8d3f8bef24af27aa52140e1", null ],
-    [ "dm_evl", "classcuda__recon_1_1curecon__t.html#a5bf9d4470776800bcd910597ca901179", null ]
+    [ "dm_moao", "classcuda__recon_1_1curecon__t.html#a9866e6c8ad4c243c74905041f48e17dd", null ],
+    [ "dm_wfs", "classcuda__recon_1_1curecon__t.html#a1d14ddc407bc2ca4515b3ea26f7da6c7", null ],
+    [ "dm_evl", "classcuda__recon_1_1curecon__t.html#add56273a383405586a564600ea8a127c", null ]
 ];

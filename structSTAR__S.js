@@ -14,5 +14,5 @@ var structSTAR__S =
     [ "ztiltout", "structSTAR__S.html#a783187058941a0bffb43ab215cff9d26", null ],
     [ "goff", "structSTAR__S.html#a3e70a3a277cc953ccb7d2fd1a628ddbe", null ],
     [ "nstep", "structSTAR__S.html#a72e351fbfd4331b32dcb920d9412e738", null ],
-    [ "idtrat", "structSTAR__S.html#af51f186daebc3a2763d18da215f514d9", null ]
+    [ "minidtrat", "structSTAR__S.html#a1f0910018f0c95da0b8c42b25af4219d", null ]
 ];

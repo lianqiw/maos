@@ -147,8 +147,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:a443a8af21d2eae10582c95a6194cad5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d29960f17c0fb98056922eb67c85eed"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#a1d29960f17c0fb98056922eb67c85eed">mdtrat</a></td></tr>
 <tr class="separator:a1d29960f17c0fb98056922eb67c85eed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33ee3b0fa5a43daa6450e73d3a4a649b"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#a33ee3b0fa5a43daa6450e73d3a4a649b">mresol</a></td></tr>
-<tr class="separator:a33ee3b0fa5a43daa6450e73d3a4a649b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a769a350315ed4c8c26d763da4a210e6c"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#a769a350315ed4c8c26d763da4a210e6c">mresest</a></td></tr>
+<tr class="separator:a769a350315ed4c8c26d763da4a210e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad39903372e6358e7bc1e776091edb0ac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmt__state.html">rand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#ad39903372e6358e7bc1e776091edb0ac">rand</a></td></tr>
 <tr class="separator:ad39903372e6358e7bc1e776091edb0ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb2783f1a45956809ecc403d76cba879"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#abb2783f1a45956809ecc403d76cba879">idtratmin</a></td></tr>
@@ -166,6 +166,10 @@ Data Fields</h2></td></tr>
 <tr class="separator:a25cfa4ecf8d3fae564ed9335bf16a122"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68e069a919adb9dfc2fd5bb9474fe069"><td class="memItemLeft" align="right" valign="top">long *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#a68e069a919adb9dfc2fd5bb9474fe069">ngs</a></td></tr>
 <tr class="separator:a68e069a919adb9dfc2fd5bb9474fe069"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae12414110959097a7cb96d687abb4ee7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#ae12414110959097a7cb96d687abb4ee7">phyRes</a></td></tr>
+<tr class="separator:ae12414110959097a7cb96d687abb4ee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34fcc314ee08a52a10548b07b09662f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structASTER__S.html#a34fcc314ee08a52a10548b07b09662f9">phyMRes</a></td></tr>
+<tr class="separator:a34fcc314ee08a52a10548b07b09662f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>asterism dependent data. </p>
@@ -365,16 +369,16 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a33ee3b0fa5a43daa6450e73d3a4a649b"></a>
+<a class="anchor" id="a769a350315ed4c8c26d763da4a210e6c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double ASTER_S::mresol</td>
+          <td class="memname">double ASTER_S::mresest</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>miminum rms on OL restimation. </p>
+<p>miminum rms on servo restimation. </p>
 
 </div>
 </div>
@@ -427,6 +431,32 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>number of gradients for each wfs </p>
+
+</div>
+</div>
+<a class="anchor" id="ae12414110959097a7cb96d687abb4ee7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* ASTER_S::phyRes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Wavefront variance result from physical optics simulations. </p>
+
+</div>
+</div>
+<a class="anchor" id="a34fcc314ee08a52a10548b07b09662f9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* ASTER_S::phyMRes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Residual modes from physical optics simulation </p>
 
 </div>
 </div>

@@ -8,7 +8,7 @@ var structPROP__WRAP__T =
     [ "offps", "structPROP__WRAP__T.html#a511eef22e2f58552404ae04c6dc177aa", null ],
     [ "offpsx", "structPROP__WRAP__T.html#a880157b63e652e4a79652934808a350a", null ],
     [ "offpsy", "structPROP__WRAP__T.html#af1de8ab31a0e9745a53b66c453a05ffa", null ],
-    [ "cc", "structPROP__WRAP__T.html#ab9718e29a371577dbf62209b387e4aeb", null ],
+    [ "cc", "structPROP__WRAP__T.html#a83d6b3f38a34b125cd771ae1f6918b53", null ],
     [ "nxdir", "structPROP__WRAP__T.html#a10e9d8e642a1661b87407292a0f1d134", null ],
     [ "nydir", "structPROP__WRAP__T.html#ab7505e28f7260361ec71cb397a47912d", null ],
     [ "nxps", "structPROP__WRAP__T.html#a86c532a425e3a6cdd528d2c7a0c35e63", null ],

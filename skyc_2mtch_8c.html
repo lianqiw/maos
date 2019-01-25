@@ -118,8 +118,8 @@ $(document).ready(function(){initNavTree('skyc_2mtch_8c.html','');});
 Functions</h2></td></tr>
 <tr class="memitem:adcb355a34a0a77b39a48b048d4e54d90"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skyc_2mtch_8c.html#adcb355a34a0a77b39a48b048d4e54d90">psf2i0gxgy</a> (<a class="el" href="structdmat.html">dmat</a> *i0, <a class="el" href="structdmat.html">dmat</a> *gx, <a class="el" href="structdmat.html">dmat</a> *gy, <a class="el" href="structdmat.html">dmat</a> *psf, <a class="el" href="structDTF__S.html">DTF_S</a> *dtf)</td></tr>
 <tr class="separator:adcb355a34a0a77b39a48b048d4e54d90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d309a7be913ac949237d6ffdfa59bfd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skyc_2mtch_8c.html#a9d309a7be913ac949237d6ffdfa59bfd">mtch</a> (<a class="el" href="structdcell.html">dcell</a> **mtche, <a class="el" href="structdmat.html">dmat</a> **sanea, <a class="el" href="structdcell.html">dcell</a> *i0, <a class="el" href="structdcell.html">dcell</a> *gx, <a class="el" href="structdcell.html">dcell</a> *gy, double pixtheta, double rne, double bkgrnd, int cr)</td></tr>
-<tr class="separator:a9d309a7be913ac949237d6ffdfa59bfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ef2217ba8f5d29e11725652f60b1ec0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skyc_2mtch_8c.html#a6ef2217ba8f5d29e11725652f60b1ec0">genmtch</a> (<a class="el" href="structdcell.html">dcell</a> **mtche, <a class="el" href="structdmat.html">dmat</a> **sanea, <a class="el" href="structdcell.html">dcell</a> *i0, <a class="el" href="structdcell.html">dcell</a> *gx, <a class="el" href="structdcell.html">dcell</a> *gy, double pixtheta, double rne, double bkgrnd, int cr)</td></tr>
+<tr class="separator:a6ef2217ba8f5d29e11725652f60b1ec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routings regarding matched filter computation. </p>
@@ -166,16 +166,16 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Compute pixel intensity i0, and gradient of pixel intensity gx, gy from the PSF. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>merge this file with <a class="el" href="maos_2mtch_8c.html">maos/mtch.c</a> and put in lib folder. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>merge this file with <a class="el" href="maos_2mtch_8c.html">maos/mtch.c</a> and put in lib folder. </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a9d309a7be913ac949237d6ffdfa59bfd"></a>
+<a class="anchor" id="a6ef2217ba8f5d29e11725652f60b1ec0"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void mtch </td>
+          <td class="memname">void genmtch </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> **&#160;</td>
           <td class="paramname"><em>mtche</em>, </td>
@@ -235,7 +235,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute matched filter. </p>
+<p>shift without wraping i0 into i0x1 (+1) and i0x2 (-1) shift without wraping i0 into i0y1 (+1) and i0y2 (-1) Compute matched filter. </p>
 
 </div>
 </div>

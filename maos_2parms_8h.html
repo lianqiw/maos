@@ -181,32 +181,32 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a43a230cd655d6c6e0582849152f2e989"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2parms_8h.html#a43a230cd655d6c6e0582849152f2e989">setup_parms</a> (char *<a class="el" href="skyc_8c.html#ac0f2228420376f4db7e1274f2b41667c">main</a>, char *extra, int override)</td></tr>
-<tr class="separator:a43a230cd655d6c6e0582849152f2e989"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a441e9246520886122d956f9e9f0bc1be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2parms_8h.html#a441e9246520886122d956f9e9f0bc1be">setup_parms</a> (const char *<a class="el" href="skyc_8c.html#ac0f2228420376f4db7e1274f2b41667c">main</a>, const char *extra, int override)</td></tr>
+<tr class="separator:a441e9246520886122d956f9e9f0bc1be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a36b5678c2ca8539187637c1e016a2c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2parms_8h.html#a9a36b5678c2ca8539187637c1e016a2c">setup_parms_gpu</a> (<a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int *gpus, int ngpu)</td></tr>
 <tr class="separator:a9a36b5678c2ca8539187637c1e016a2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afad950a4f059f347cede7c2f97c7e0bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2parms_8h.html#afad950a4f059f347cede7c2f97c7e0bd">free_parms</a> (<a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 <tr class="separator:afad950a4f059f347cede7c2f97c7e0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17f83b9d00296996ebdaff0335ef4340"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2parms_8h.html#a17f83b9d00296996ebdaff0335ef4340">plotdir</a> (char *fig, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double totfov, char *format,...)</td></tr>
-<tr class="separator:a17f83b9d00296996ebdaff0335ef4340"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f1118562492baba6abdfc30a7f49c5c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2parms_8h.html#a7f1118562492baba6abdfc30a7f49c5c">plotdir</a> (const char *fig, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double totfov, const char *format,...)</td></tr>
+<tr class="separator:a7f1118562492baba6abdfc30a7f49c5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Store the input parameters. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a43a230cd655d6c6e0582849152f2e989"></a>
+<a class="anchor" id="a441e9246520886122d956f9e9f0bc1be"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structPARMS__T.html">PARMS_T</a>* setup_parms </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>mainconf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>extraconf</em>, </td>
         </tr>
         <tr>
@@ -276,14 +276,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a17f83b9d00296996ebdaff0335ef4340"></a>
+<a class="anchor" id="a7f1118562492baba6abdfc30a7f49c5c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void plotdir </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>fig</em>, </td>
         </tr>
         <tr>
@@ -301,7 +301,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>format</em>, </td>
         </tr>
         <tr>

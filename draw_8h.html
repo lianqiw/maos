@@ -106,7 +106,6 @@ $(document).ready(function(){initNavTree('draw_8h.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">draw.h File Reference</div>  </div>
@@ -114,37 +113,6 @@ $(document).ready(function(){initNavTree('draw_8h.html','');});
 <div class="contents">
 <div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
 </div><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:adf764cbdea00d65edcd07bb9953ad2b7"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <br/>
-&#160;&#160;<b>DRAW_START</b> =0, 
-<b>DRAW_DATA</b>, 
-<b>DRAW_SHM</b>, 
-<b>DRAW_POINTS</b>, 
-<br/>
-&#160;&#160;<b>DRAW_STYLE</b>, 
-<b>DRAW_CIRCLE</b>, 
-<b>DRAW_LIMIT</b>, 
-<b>DRAW_FIG</b>, 
-<br/>
-&#160;&#160;<b>DRAW_NAME</b>, 
-<b>DRAW_TITLE</b>, 
-<b>DRAW_XLABEL</b>, 
-<b>DRAW_YLABEL</b>, 
-<br/>
-&#160;&#160;<b>DRAW_ZLIM</b>, 
-<b>DRAW_LEGEND</b>, 
-<b>DRAW_XYLOG</b>, 
-<b>DRAW_FIGFN</b>, 
-<br/>
-&#160;&#160;<b>DRAW_PAUSE</b>, 
-<b>DRAW_RESUME</b>, 
-<b>DRAW_FINAL</b>, 
-<b>DRAW_END</b> =100
-<br/>
- }</td></tr>
-<tr class="separator:adf764cbdea00d65edcd07bb9953ad2b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a5e2f206b380b5b9a10b87b7d3d80ccc8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a5e2f206b380b5b9a10b87b7d3d80ccc8">draw_helper</a> (void)</td></tr>
@@ -156,16 +124,16 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
 <tr class="separator:ab01d0d9c0f4f57ef56695fc9a7aa3efe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc80c25521f9db8258abbaf67cba49b0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#adc80c25521f9db8258abbaf67cba49b0">draw_current</a> (const char *fig, const char *fn)</td></tr>
 <tr class="separator:adc80c25521f9db8258abbaf67cba49b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af58f06e03e87e6c2e2edf1c4b783cf50"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc</a> (const char *fig, long nx, long ny, const double *limit, const double *zlimit, const void *p, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
-<tr class="separator:af58f06e03e87e6c2e2edf1c4b783cf50"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47b1c20c8ea9bace6c7cd37af040001f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc</a> (const char *fig, long nx, long ny, const double *limit, const double *zlimit, const double *p, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
+<tr class="separator:a47b1c20c8ea9bace6c7cd37af040001f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f154cba0bfde6869ff37181ee98be5c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a2f154cba0bfde6869ff37181ee98be5c">imagesc_cmp_ri</a> (const char *fig, long nx, long ny, const double *limit, const double *zlim, const dcomplex *p, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="separator:a2f154cba0bfde6869ff37181ee98be5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56baf0066ac544fe5fe23fe971f1fe97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a56baf0066ac544fe5fe23fe971f1fe97">imagesc_cmp_ap</a> (const char *fig, long nx, long ny, const double *limit, const double *zlim, const dcomplex *p, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="separator:a56baf0066ac544fe5fe23fe971f1fe97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4997fbd3c4b2448f3cfa24da23a927f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a4997fbd3c4b2448f3cfa24da23a927f0">imagesc_cmp_abs</a> (const char *fig, long nx, long ny, const double *limit, const double *zlim, const dcomplex *p, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="separator:a4997fbd3c4b2448f3cfa24da23a927f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0a944bcc1048dc6410c574bb51e0a0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#ae0a944bcc1048dc6410c574bb51e0a0d">plot_points</a> (const char *fig, long ngroup, <a class="el" href="structloc__t.html">loc_t</a> **loc, <a class="el" href="structdcell.html">dcell</a> *dc, const int32_t *style, const double *limit, const char *xylog, int ncir, double(*pcir)[4], char **legend, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
-<tr class="separator:ae0a944bcc1048dc6410c574bb51e0a0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa649645167e1da48660dff252b3bba7c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#aa649645167e1da48660dff252b3bba7c">plot_points</a> (const char *fig, long ngroup, <a class="el" href="structloc__t.html">loc_t</a> **loc, const <a class="el" href="structdcell.html">dcell</a> *dc, const int32_t *style, const double *limit, const char *xylog, const <a class="el" href="structdmat.html">dmat</a> *cir, const char *const *const legend, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
+<tr class="separator:aa649645167e1da48660dff252b3bba7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fbb1adfd9348bf8b06b41d39d326e4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a7fbb1adfd9348bf8b06b41d39d326e4d">ddraw</a> (const char *fig, const <a class="el" href="structdmat.html">dmat</a> *A, double *xylim, double *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="separator:a7fbb1adfd9348bf8b06b41d39d326e4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a254463a86d044c956d127563b08464b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a254463a86d044c956d127563b08464b9">cdraw</a> (const char *fig, const <a class="el" href="structcmat.html">cmat</a> *A, double *xylim, double *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
@@ -248,7 +216,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
 
 </div>
 </div>
-<a class="anchor" id="af58f06e03e87e6c2e2edf1c4b783cf50"></a>
+<a class="anchor" id="a47b1c20c8ea9bace6c7cd37af040001f"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -280,12 +248,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>zlim</em>, </td>
+          <td class="paramname"><em>zlimit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const void *&#160;</td>
+          <td class="paramtype">const double *&#160;</td>
           <td class="paramname"><em>p</em>, </td>
         </tr>
         <tr>
@@ -325,14 +293,13 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Draw an image. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fig</td><td>Category of the figure </td></tr>
     <tr><td class="paramname">nx</td><td>the image is of size nx*ny </td></tr>
     <tr><td class="paramname">ny</td><td>the image is of size nx*ny </td></tr>
     <tr><td class="paramname">limit</td><td>x min, xmax, ymin and ymax </td></tr>
-    <tr><td class="paramname">zlim</td><td>min,max, the data </td></tr>
+    <tr><td class="paramname">zlimit</td><td>min,max, the data </td></tr>
     <tr><td class="paramname">p</td><td>The image </td></tr>
     <tr><td class="paramname">title</td><td>title of the plot </td></tr>
     <tr><td class="paramname">xlabel</td><td>x axis label </td></tr>
@@ -421,7 +388,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Draw the OPD of real and imaginary of complex p defined on nx*ny grid. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Draw the OPD of real and imaginary of complex p defined on nx*ny grid. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -502,7 +469,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Draw the OPD of abs and phase of complex p defined on nx*ny grid. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Draw the OPD of abs and phase of complex p defined on nx*ny grid. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -583,11 +550,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Draw the OPD of abs of complex p defined on nx*ny grid. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Draw the OPD of abs of complex p defined on nx*ny grid. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
-<a class="anchor" id="ae0a944bcc1048dc6410c574bb51e0a0d"></a>
+<a class="anchor" id="aa649645167e1da48660dff252b3bba7c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -612,7 +579,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&#160;</td>
           <td class="paramname"><em>dc</em>, </td>
         </tr>
         <tr>
@@ -636,19 +603,13 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>ncir</em>, </td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>cir</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double(*)&#160;</td>
-          <td class="paramname"><em>pcir</em>[4], </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char **&#160;</td>
+          <td class="paramtype">const char *const *const&#160;</td>
           <td class="paramname"><em>legend</em>, </td>
         </tr>
         <tr>
@@ -698,8 +659,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
     <tr><td class="paramname">style</td><td>Style of each point </td></tr>
     <tr><td class="paramname">limit</td><td>x min, xmax, ymin and ymax </td></tr>
     <tr><td class="paramname">xylog</td><td>Whether use logscale for x, y </td></tr>
-    <tr><td class="paramname">ncir</td><td>Number of circles </td></tr>
-    <tr><td class="paramname">pcir</td><td>Data for the circles: x, y origin, radius, and color </td></tr>
+    <tr><td class="paramname">cir</td><td>Data for the circles: x, y origin, radius, and color </td></tr>
     <tr><td class="paramname">legend</td><td>ngroup number of char* </td></tr>
     <tr><td class="paramname">title</td><td>title of the plot </td></tr>
     <tr><td class="paramname">xlabel</td><td>x axis label </td></tr>
@@ -776,7 +736,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Mapping the floating point numbers onto screen with scaling similar to matlab imagesc. . see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Mapping the floating point numbers onto screen with scaling similar to matlab imagesc. . see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -845,7 +805,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Mapping the absolute and phase of complex array. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Mapping the absolute and phase of complex array. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -914,7 +874,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Mapping the absolution value of complex array. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Mapping the absolution value of complex array. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -983,7 +943,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Mapping the real/imaginary part of complex array. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Mapping the real/imaginary part of complex array. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -1046,7 +1006,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>like ddraw, acting on map object. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>like ddraw, acting on map object. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -1109,7 +1069,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot the loc on the screen. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Plot the loc on the screen. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -1178,7 +1138,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot the opd using coordinate loc. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Plot the opd using coordinate loc. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>
@@ -1253,7 +1213,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_add</b> (int fd)<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot opd*amp with coordinate loc. see <a class="el" href="draw_8h.html#af58f06e03e87e6c2e2edf1c4b783cf50">imagesc()</a> </p>
+<p>Plot opd*amp with coordinate loc. see <a class="el" href="draw_8h.html#a47b1c20c8ea9bace6c7cd37af040001f">imagesc()</a> </p>
 
 </div>
 </div>

@@ -137,9 +137,18 @@ Macros</h2></td></tr>
 <tr class="memitem:ac023a8e8d214d92926295f9a051c9461"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac023a8e8d214d92926295f9a051c9461"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_DMAT</b>(A)&#160;&#160;&#160;parms-&gt;A= <a class="el" href="readcfg_8h.html#a9a45f9445048b5f0da0573a563aeeed5">readcfg_dmat</a>(#A) /*read a key with dmat. */</td></tr>
 <tr class="separator:ac023a8e8d214d92926295f9a051c9461"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe036de633ef5e6d27c6e495d1494ae9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe036de633ef5e6d27c6e495d1494ae9"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_DCELL</b>(A)&#160;&#160;&#160;parms-&gt;A= <a class="el" href="readcfg_8h.html#a5fd72ddb2a821baf224122de60711b6d">readcfg_dcell</a>(#A) /*read a key with dmat. */</td></tr>
+<tr class="separator:afe036de633ef5e6d27c6e495d1494ae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a192f65c64a1794826e320363a1b0ab7f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a192f65c64a1794826e320363a1b0ab7f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_LMAT</b>(A)&#160;&#160;&#160;parms-&gt;A= <a class="el" href="readcfg_8h.html#aea613f94d787dff48909dd7499e3268a">readcfg_lmat</a>(#A) /*read a key with lmat. */</td></tr>
+<tr class="separator:a192f65c64a1794826e320363a1b0ab7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0588bde7efe6ccb7af8053fca795d916"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0588bde7efe6ccb7af8053fca795d916"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_POWFS</b>(A, B)</td></tr>
 <tr class="separator:a0588bde7efe6ccb7af8053fca795d916"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9205c90aa606d60349a46d6bab0ae3b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9205c90aa606d60349a46d6bab0ae3b"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_POWFS_MAT</b>(A, B)</td></tr>
+<tr class="separator:ad9205c90aa606d60349a46d6bab0ae3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10d7e0d103da3ef7dc749842e7cfb19c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a10d7e0d103da3ef7dc749842e7cfb19c"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_POWFS_RELAX</b>(A, B)</td></tr>
 <tr class="separator:a10d7e0d103da3ef7dc749842e7cfb19c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -172,8 +181,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_strarr</b> (char
 <tr class="separator:abb6e36b04cc59e87a10f7ef9378cb5a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afad950a4f059f347cede7c2f97c7e0bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#afad950a4f059f347cede7c2f97c7e0bd">free_parms</a> (<a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 <tr class="separator:afad950a4f059f347cede7c2f97c7e0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4415a47bdac032359c831c0625a6e7e4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#a4415a47bdac032359c831c0625a6e7e4">setup_parms</a> (char *mainconf, char *extraconf, int override)</td></tr>
-<tr class="separator:a4415a47bdac032359c831c0625a6e7e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0a06931647e22ea5d19c69c31b1c5be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#aa0a06931647e22ea5d19c69c31b1c5be">dbl2pair</a> (double val)</td></tr>
+<tr class="separator:aa0a06931647e22ea5d19c69c31b1c5be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17e9b53acf321cc472b06a5813e17c44"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#a17e9b53acf321cc472b06a5813e17c44">setup_parms</a> (const char *mainconf, const char *extraconf, int override)</td></tr>
+<tr class="separator:a17e9b53acf321cc472b06a5813e17c44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a36b5678c2ca8539187637c1e016a2c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#a9a36b5678c2ca8539187637c1e016a2c">setup_parms_gpu</a> (<a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int *gpus, int ngpu)</td></tr>
 <tr class="separator:a9a36b5678c2ca8539187637c1e016a2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -197,20 +208,37 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_strarr</b> (char
 
 </div>
 </div>
-<a class="anchor" id="a4415a47bdac032359c831c0625a6e7e4"></a>
+<a class="anchor" id="aa0a06931647e22ea5d19c69c31b1c5be"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* dbl2pair </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>val</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Convert double to value pair of [-val, val]. </p>
+
+</div>
+</div>
+<a class="anchor" id="a17e9b53acf321cc472b06a5813e17c44"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structPARMS__T.html">PARMS_T</a>* setup_parms </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>mainconf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>extraconf</em>, </td>
         </tr>
         <tr>

@@ -118,16 +118,22 @@ $(document).ready(function(){initNavTree('servo_8h.html','');});
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSERVO__T.html">SERVO_T</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSHO__T.html">SHO_T</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a4898bb77a0169299d0a7c4904df1c49d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a4898bb77a0169299d0a7c4904df1c49d">servo_optim</a> (const <a class="el" href="structdmat.html">dmat</a> *psdin, double dt, long dtrat, double pmargin, const <a class="el" href="structdmat.html">dmat</a> *sigma2n, int servo_type)</td></tr>
 <tr class="separator:a4898bb77a0169299d0a7c4904df1c49d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52dfa35cb053bfcb4b66fd9a7a4551b6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a52dfa35cb053bfcb4b66fd9a7a4551b6">servo_rej2ol</a> (const <a class="el" href="structdmat.html">dmat</a> *psdcl, double dt, long dtrat, double gain, double sigma2n)</td></tr>
+<tr class="separator:a52dfa35cb053bfcb4b66fd9a7a4551b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24d1e3001eb02ce0a180f6a7db127259"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24d1e3001eb02ce0a180f6a7db127259"></a>
 <a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>servo_Hol</b> (const <a class="el" href="structdmat.html">dmat</a> *nu, double dt, double dtrat, const <a class="el" href="structdmat.html">dmat</a> *gain)</td></tr>
 <tr class="separator:a24d1e3001eb02ce0a180f6a7db127259"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fb15b59144848e3d5e1a72dbb5807c3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a7fb15b59144848e3d5e1a72dbb5807c3">servo_residual</a> (double *noise_amp, const <a class="el" href="structdmat.html">dmat</a> *psdin, double dt, long dtrat, const <a class="el" href="structdmat.html">dmat</a> *gain, int servo_type)</td></tr>
 <tr class="separator:a7fb15b59144848e3d5e1a72dbb5807c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6eeb7a612c94ca02fe5e8739dc42a7d9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a6eeb7a612c94ca02fe5e8739dc42a7d9">servo_update</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st, const <a class="el" href="structdmat.html">dmat</a> *ep)</td></tr>
+<tr class="separator:a6eeb7a612c94ca02fe5e8739dc42a7d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8913fbd450e6f7895e5c5f705963760d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a8913fbd450e6f7895e5c5f705963760d">servo_new</a> (<a class="el" href="structdcell.html">dcell</a> *merr, const <a class="el" href="structdmat.html">dmat</a> *ap, int al, double dt, const <a class="el" href="structdmat.html">dmat</a> *ep)</td></tr>
 <tr class="separator:a8913fbd450e6f7895e5c5f705963760d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0837f1096ffa6a5da0574de1f7565815"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a0837f1096ffa6a5da0574de1f7565815">servo_filter</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st, const <a class="el" href="structdcell.html">dcell</a> *merr)</td></tr>
@@ -142,6 +148,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
 <tr class="memitem:a4b59f1b3048e30f25b608c3405d3b013"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b59f1b3048e30f25b608c3405d3b013"></a>
 <a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>servo_typeII_Hol</b> (const <a class="el" href="structdmat.html">dmat</a> *gain, double fs, double lgsdt)</td></tr>
 <tr class="separator:a4b59f1b3048e30f25b608c3405d3b013"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7b49e28757ffec9841e544c886fd9ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSHO__T.html">SHO_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#ae7b49e28757ffec9841e544c886fd9ed">sho_new</a> (double f0, double zeta)</td></tr>
+<tr class="separator:ae7b49e28757ffec9841e544c886fd9ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7dbb5f6d4e548e03045744cf28406a56"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a7dbb5f6d4e548e03045744cf28406a56">sho_step</a> (<a class="el" href="structSHO__T.html">SHO_T</a> *sho, double xi, double dt)</td></tr>
+<tr class="separator:a7dbb5f6d4e548e03045744cf28406a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadb5d10418e6b79732b46b5af2cda408"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#aadb5d10418e6b79732b46b5af2cda408">sho_reset</a> (<a class="el" href="structSHO__T.html">SHO_T</a> *sho)</td></tr>
+<tr class="separator:aadb5d10418e6b79732b46b5af2cda408"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a860d4a8ac50d3981611bddc18ee5affd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a860d4a8ac50d3981611bddc18ee5affd">sho_filter</a> (const <a class="el" href="structdmat.html">dmat</a> *xi, double dt, double f0, double zeta)</td></tr>
+<tr class="separator:a860d4a8ac50d3981611bddc18ee5affd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines for servo optimization, filtering, etc. </p>
@@ -199,7 +213,52 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
 <p>2011-01-17: The optimization process is quite slow, but the result is only dependent on the sigma2n and fs. psdin does not change during the simulation. Built a lookup table in skyc using various sigma2n and interpolate to get ress, resn, and gain.</p>
 <p>2012-03-28: Cleaned up this routine. groupped similar calculations together. Change g2=a from g=sqrt(a)</p>
 <p>2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);</p>
-<p>sigma2n is a dmat array of all wanted sigma2n. Returns a cellarray of a dmat of [g0, a, T, res_sig, res_n] </p>
+<p>sigma2n is a dmat array of all wanted sigma2n. Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n] </p>
+
+</div>
+</div>
+<a class="anchor" id="a52dfa35cb053bfcb4b66fd9a7a4551b6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* servo_rej2ol </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>psdcl</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>dtrat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>gain</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>sigma2n</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Convert Closed loop residual PSD back to OL psd using rejection transfer function: PSD_OL=(PSD_CL-sigma2n/F_nyquist)/Hrej; </p>
 
 </div>
 </div>
@@ -253,6 +312,33 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
 <p>Compute the residual error after servo rejection of a type II servo given the gain.</p>
 <p>Written: 2010-06-11</p>
 <p>Tested OK: 2010-06-11 </p>
+
+</div>
+</div>
+<a class="anchor" id="a6eeb7a612c94ca02fe5e8739dc42a7d9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void servo_update </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td>
+          <td class="paramname"><em>st</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>ep</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Update servo parameters </p>
 
 </div>
 </div>
@@ -387,6 +473,138 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
       </table>
 </div><div class="memdoc">
 <p>Free <a class="el" href="structSERVO__T.html">SERVO_T</a> struct </p>
+
+</div>
+</div>
+<a class="anchor" id="ae7b49e28757ffec9841e544c886fd9ed"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structSHO__T.html">SHO_T</a>* sho_new </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>f0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>zeta</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Second harmonic oscillator. Initialization. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">f0</td><td>Resonance frequency </td></tr>
+    <tr><td class="paramname">zeta</td><td>Damping </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a7dbb5f6d4e548e03045744cf28406a56"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double sho_step </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSHO__T.html">SHO_T</a> *&#160;</td>
+          <td class="paramname"><em>sho</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>xi</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dt</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Second harmonic oscillator. Step. </p>
+
+</div>
+</div>
+<a class="anchor" id="aadb5d10418e6b79732b46b5af2cda408"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sho_reset </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSHO__T.html">SHO_T</a> *&#160;</td>
+          <td class="paramname"><em>sho</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Second harmonic oscillator. Reset. </p>
+
+</div>
+</div>
+<a class="anchor" id="a860d4a8ac50d3981611bddc18ee5affd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* sho_filter </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>f0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>zeta</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Second harmonic oscillator. Filter a time series for testing. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>Input time series </td></tr>
+    <tr><td class="paramname">dt</td><td>Input time series sampling </td></tr>
+    <tr><td class="paramname">f0</td><td>Resonance frequency </td></tr>
+    <tr><td class="paramname">zeta</td><td>Damping </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

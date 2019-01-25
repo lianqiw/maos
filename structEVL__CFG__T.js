@@ -24,6 +24,5 @@ var structEVL__CFG__T =
     [ "nevl", "structEVL__CFG__T.html#a9f76679213a98ac7e3eb0fe92d645799", null ],
     [ "tomo", "structEVL__CFG__T.html#a9204ffd6eaf3c92a575b306c4a401903", null ],
     [ "indoa", "structEVL__CFG__T.html#a1a4adc47bdaa62f95418783e1506ac67", null ],
-    [ "moao", "structEVL__CFG__T.html#a529a8acf247028c9e66cbe87c6edd84e", null ],
-    [ "sock", "structEVL__CFG__T.html#a62d758f7d6c657d167b2428c2461bc20", null ]
+    [ "moao", "structEVL__CFG__T.html#a529a8acf247028c9e66cbe87c6edd84e", null ]
 ];

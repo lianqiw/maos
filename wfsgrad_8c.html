@@ -119,7 +119,9 @@ $(document).ready(function(){initNavTree('wfsgrad_8c.html','');});
 <code>#include &quot;mtch.h&quot;</code><br/>
 <code>#include &quot;save.h&quot;</code><br/>
 <code>#include &quot;setup_recon.h&quot;</code><br/>
+<code>#include &quot;recon_utils.h&quot;</code><br/>
 <code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;pywfs.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -129,24 +131,68 @@ Macros</h2></td></tr>
 <tr class="memitem:a52bfe1186605f34e3d77031297d538c3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52bfe1186605f34e3d77031297d538c3"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>TIM</b>(A)</td></tr>
 <tr class="separator:a52bfe1186605f34e3d77031297d538c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af58979b506de7664036cab8fc0c43aa4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af58979b506de7664036cab8fc0c43aa4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIA_G_UPDATE</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:af58979b506de7664036cab8fc0c43aa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ac4c0c11d64fde6cae58f388ae1c9fde7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#ac4c0c11d64fde6cae58f388ae1c9fde7">wfs_ideal_atm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdmat.html">dmat</a> *opd, int iwfs, double alpha)</td></tr>
+<tr class="separator:ac4c0c11d64fde6cae58f388ae1c9fde7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d7d20b6b274be139712a0c74329803d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#a7d7d20b6b274be139712a0c74329803d">wfsgrad_iwfs</a> (<a class="el" href="structthread__t.html">thread_t</a> *info)</td></tr>
 <tr class="separator:a7d7d20b6b274be139712a0c74329803d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55019535bfb6d523008d096ab2efee68"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55019535bfb6d523008d096ab2efee68"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>wfsgrad_fsm</b> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, int iwfs)</td></tr>
 <tr class="separator:a55019535bfb6d523008d096ab2efee68"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a077de92fb8ce172c1fd3e16ee8c8b5eb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#a077de92fb8ce172c1fd3e16ee8c8b5eb">wfsgrad_mffocus</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a077de92fb8ce172c1fd3e16ee8c8b5eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a96035f15795975f539aaac8050d89b88"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#a96035f15795975f539aaac8050d89b88">wfsgrad_post</a> (<a class="el" href="structthread__t.html">thread_t</a> *info)</td></tr>
 <tr class="separator:a96035f15795975f539aaac8050d89b88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa30e4f373fd9ab964752417c2bcb49f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#aa30e4f373fd9ab964752417c2bcb49f2">wfsgrad_twfs_recon</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
+<tr class="separator:aa30e4f373fd9ab964752417c2bcb49f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99e7e23b2226afc767fc176f352f6e11"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#a99e7e23b2226afc767fc176f352f6e11">wfsgrad</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
 <tr class="separator:a99e7e23b2226afc767fc176f352f6e11"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>contains functions that computes WFS gradients in geometric or physical optics mode. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ac4c0c11d64fde6cae58f388ae1c9fde7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void wfs_ideal_atm </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramname"><em>simu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>opd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>iwfs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>alpha</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Propagate atm onto WFS subaperture grid, and then to fine lenslet grid. </p>
+
+</div>
+</div>
 <a class="anchor" id="a7d7d20b6b274be139712a0c74329803d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -164,27 +210,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfsgrad_fsm</b> (<a c
 
 </div>
 </div>
-<a class="anchor" id="a077de92fb8ce172c1fd3e16ee8c8b5eb"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void wfsgrad_mffocus </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
-          <td class="paramname"><em>simu</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Accomplish Two tasks:</p>
-<p>1) High pass filter lgs focus to remove sodium range variation effact. 2) Average LGS focus measurement to drive the trombone.</p>
-<p>We trust the focus measurement of the LGS WFS at high temporal frequency where NGS cannot provide due to low frame rate. After the HPF on lgs gradients, our system is NO LONGER affected by sodium layer variation.</p>
-<p>if sim.mffocus==1: The HPF is applied to each LGS WFS indepently. This largely removes the effect of differential focus. powfs.dfrs is no longer needed. (preferred).</p>
-<p>if sim.mffocus==2: We apply a LPF on the average focus from six LGS WFS, and then remove this value from all LGS WFS. The differential focus is still present and powfs.dfrs need to be set to 1 to handle it in tomography. This is the original focus tracking method. </p>
-
-</div>
-</div>
 <a class="anchor" id="a96035f15795975f539aaac8050d89b88"></a>
 <div class="memitem">
 <div class="memproto">
@@ -199,6 +224,23 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfsgrad_fsm</b> (<a c
       </table>
 </div><div class="memdoc">
 <p>Every operation here should be in the Simulator not the Controller </p>
+
+</div>
+</div>
+<a class="anchor" id="aa30e4f373fd9ab964752417c2bcb49f2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void wfsgrad_twfs_recon </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramname"><em>simu</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>TWFS has output. Accumulate result to simu-&gt;gradoff. It is put in <a class="el" href="wfsgrad_8c.html">wfsgrad.c</a> instead of <a class="el" href="recon_8c.html">recon.c</a> to avoid race condition because it updates simu-&gt;gradoff. </p>
 
 </div>
 </div>

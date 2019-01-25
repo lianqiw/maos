@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['factorial',['factorial',['../mathmisc_8h.html#ab0fd7caaf2798397c30803cf508ba1ae',1,'mathmisc.c']]],
+  ['factorial',['factorial',['../mathmisc_8h.html#aaaa4c88a31aa854fbedaa09ab5c48278',1,'mathmisc.c']]],
   ['fdpcg_5ffree',['fdpcg_free',['../fdpcg_8c.html#a39d6c9be2ba21e2556b11d2e56d215fe',1,'fdpcg.c']]],
   ['fdpcg_5fprecond',['fdpcg_precond',['../fdpcg_8c.html#a2fe70a98a8797a50a58639f9c032a996',1,'fdpcg.c']]],
   ['fdpcg_5fprepare',['fdpcg_prepare',['../fdpcg_8c.html#a8b3477417f7ceb8183f072392ec551ca',1,'fdpcg.c']]],
@@ -12,7 +12,7 @@ var searchData=
   ['fitr',['FitR',['../recon__utils_8c.html#a168e09881164d7f61ac8e0620ec7135b',1,'recon_utils.c']]],
   ['fltsum',['fltsum',['../mathmisc_8h.html#aa38fdc78d9dc1e1ae591d7aca2502f4a',1,'mathmisc.c']]],
   ['fractal_5fscreen',['fractal_screen',['../turbulence_8h.html#aeb514bab0df876eeb65154d87b58e47d',1,'turbulence.c']]],
-  ['free_5faper',['free_aper',['../setup__aper_8c.html#a25a8d32ea27c2d8e32b1237f0fd8ba6a',1,'setup_aper.c']]],
+  ['free_5faper',['free_aper',['../setup__aper_8c.html#aea65e60525339d2921549850d52e8464',1,'setup_aper.c']]],
   ['free_5faster',['free_aster',['../setup__aster_8c.html#ab4edbba502e193755bec6e1ea6687ad0',1,'setup_aster.c']]],
   ['free_5fparms',['free_parms',['../maos_2parms_8h.html#afad950a4f059f347cede7c2f97c7e0bd',1,'free_parms(PARMS_T *parms):&#160;setup_parms.c'],['../maos_2setup__parms_8c.html#afad950a4f059f347cede7c2f97c7e0bd',1,'free_parms(PARMS_T *parms):&#160;setup_parms.c'],['../skyc_2parms_8h.html#abf81ad02a9b69659c78a46ac0512669a',1,'free_parms(PARMS_S *parms):&#160;setup_parms.c']]],
   ['free_5fpistat',['free_pistat',['../setup__star_8c.html#af261402679395e8775009c60f13b05ab',1,'setup_star.c']]],

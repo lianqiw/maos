@@ -5,6 +5,7 @@ var searchData=
   ['sccell',['sccell',['../structsccell.html',1,'']]],
   ['scell',['scell',['../structscell.html',1,'']]],
   ['servo_5ft',['SERVO_T',['../structSERVO__T.html',1,'']]],
+  ['sho_5ft',['SHO_T',['../structSHO__T.html',1,'']]],
   ['sim_5fcfg_5ft',['SIM_CFG_T',['../structSIM__CFG__T.html',1,'']]],
   ['sim_5fs',['SIM_S',['../structSIM__S.html',1,'']]],
   ['sim_5fsave_5ft',['SIM_SAVE_T',['../structSIM__SAVE__T.html',1,'']]],

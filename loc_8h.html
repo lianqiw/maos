@@ -150,9 +150,9 @@ Functions</h2></td></tr>
 <tr class="separator:a15b161f5f2373e7b0144dd4b188df4df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3b2280ea7b47be6321e96d02a1f2f9e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ae3b2280ea7b47be6321e96d02a1f2f9e">loc_create_map</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
 <tr class="separator:ae3b2280ea7b47be6321e96d02a1f2f9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e133b23134b9c1b92e6d0997720393f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9e133b23134b9c1b92e6d0997720393f"></a>
-long&#160;</td><td class="memItemRight" valign="bottom"><b>loc_map_get</b> (<a class="el" href="structmap__t.html">map_t</a> *map, long ix, long iy)</td></tr>
-<tr class="separator:a9e133b23134b9c1b92e6d0997720393f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac428cbcf587739f1b4623e9ce3898d42"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac428cbcf587739f1b4623e9ce3898d42"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>lochash</b> (const <a class="el" href="structloc__t.html">loc_t</a> *loc, uint32_t key)</td></tr>
+<tr class="separator:ac428cbcf587739f1b4623e9ce3898d42"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bc84d7a62c6205641954d22e5797d00"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bc84d7a62c6205641954d22e5797d00"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_embed</b> (<a class="el" href="structmap__t.html">map_t</a> *dest, const <a class="el" href="structloc__t.html">loc_t</a> *loc, const double *in)</td></tr>
 <tr class="separator:a8bc84d7a62c6205641954d22e5797d00"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,8 +162,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_embed_add</b> (<a
 <tr class="memitem:a907129388439c75da938eb78d551566f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a907129388439c75da938eb78d551566f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_extract</b> (<a class="el" href="structdmat.html">dmat</a> *dest, const <a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structmap__t.html">map_t</a> *in)</td></tr>
 <tr class="separator:a907129388439c75da938eb78d551566f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acece66522afd9f8b8bf2e0d0b57d39d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#acece66522afd9f8b8bf2e0d0b57d39d3">map2loc</a> (<a class="el" href="structmap__t.html">map_t</a> *amp)</td></tr>
-<tr class="separator:acece66522afd9f8b8bf2e0d0b57d39d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1bc33539e866bb79a6724b148ae0189"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#af1bc33539e866bb79a6724b148ae0189">map2loc</a> (<a class="el" href="structmap__t.html">map_t</a> *amp, double thres)</td></tr>
+<tr class="separator:af1bc33539e866bb79a6724b148ae0189"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbc2aac077ef9ac37c7f50d8c743c4a1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#abbc2aac077ef9ac37c7f50d8c743c4a1">rmapfree_do</a> (<a class="el" href="structrmap__t.html">rmap_t</a> *map)</td></tr>
 <tr class="separator:abbc2aac077ef9ac37c7f50d8c743c4a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af36a619fec3cc46210fa10f8b8a79d2b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#af36a619fec3cc46210fa10f8b8a79d2b">mapfree_do</a> (<a class="el" href="structmap__t.html">map_t</a> *map)</td></tr>
@@ -184,6 +184,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_extract</b> (<a c
 <tr class="separator:a061a12b16222483d272d19cf53030f1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ffc0fceed3940f64a99ce1e0f4a5903"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a1ffc0fceed3940f64a99ce1e0f4a5903">locnew</a> (long nloc, double dx, double dy)</td></tr>
 <tr class="separator:a1ffc0fceed3940f64a99ce1e0f4a5903"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab929d93ab02c2d3931fb10fdd78ec4ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab929d93ab02c2d3931fb10fdd78ec4ad">locref</a> (const <a class="el" href="structloc__t.html">loc_t</a> *in)</td></tr>
+<tr class="separator:ab929d93ab02c2d3931fb10fdd78ec4ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28ff7f3346e3697d1f9c699b27b6d862"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpts__t.html">pts_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a28ff7f3346e3697d1f9c699b27b6d862">ptsnew</a> (long nsa, double dsax, double dsay, long nx, double dx, double dy)</td></tr>
 <tr class="separator:a28ff7f3346e3697d1f9c699b27b6d862"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac69d715119dab849084d00b76fd88d1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ac69d715119dab849084d00b76fd88d1a">loc_calc_ptt</a> (double *out, double *coeffout, const <a class="el" href="structloc__t.html">loc_t</a> *loc, const double ipcc, const <a class="el" href="structdmat.html">dmat</a> *imcc, const double *amp, const double *opd)</td></tr>
@@ -212,8 +214,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_extract</b> (<a c
 <tr class="separator:a1e88b64b40915848e62d802f98a3183f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67ecca0c93a5633b2039574d754fd9ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a67ecca0c93a5633b2039574d754fd9ca">mksqlocrot</a> (long nx, long ny, double dx, double dy, double ox, double oy, double theta)</td></tr>
 <tr class="separator:a67ecca0c93a5633b2039574d754fd9ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab546034c046ad5d125e7f56c42a309aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab546034c046ad5d125e7f56c42a309aa">mkcirloc</a> (double D, double dx)</td></tr>
-<tr class="separator:ab546034c046ad5d125e7f56c42a309aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68319042f336d77a199b71dffd235397"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a68319042f336d77a199b71dffd235397">mkannloc</a> (double D, double Din, double dx, double thres)</td></tr>
+<tr class="separator:a68319042f336d77a199b71dffd235397"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9edbafa21c09482df62b0fc8e67bdd9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#af9edbafa21c09482df62b0fc8e67bdd9">loc_create_stat_do</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
 <tr class="separator:af9edbafa21c09482df62b0fc8e67bdd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d8fd7f128a52013ed66af307793e0e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a5d8fd7f128a52013ed66af307793e0e9">loc_free_stat</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
@@ -240,8 +242,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_extract</b> (<a c
 <tr class="separator:a4d528e34a7d8b4e5e3d034480db6a2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab69c225c64ec68bf802f11586f5e6d79"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab69c225c64ec68bf802f11586f5e6d79">locrot</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, const double theta)</td></tr>
 <tr class="separator:ab69c225c64ec68bf802f11586f5e6d79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71e90584a098f1d7cc420235e673cd20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a71e90584a098f1d7cc420235e673cd20">locstretch</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, const double theta, const double frac)</td></tr>
+<tr class="separator:a71e90584a098f1d7cc420235e673cd20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cde9c71833ed0c72f04e868f343b508"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a2cde9c71833ed0c72f04e868f343b508">locdup</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
 <tr class="separator:a2cde9c71833ed0c72f04e868f343b508"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfdfdfe5d7dde3e8a26d39d807c60a08"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#acfdfdfe5d7dde3e8a26d39d807c60a08">locmean</a> (double *xm, double *ym, const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
+<tr class="separator:acfdfdfe5d7dde3e8a26d39d807c60a08"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43403e4e1e651451d9dc34c251c2aa54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a43403e4e1e651451d9dc34c251c2aa54">loctransform</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, const char *ps)</td></tr>
 <tr class="separator:a43403e4e1e651451d9dc34c251c2aa54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73d1239e6a32b16cfb9c37a0336aa4f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a73d1239e6a32b16cfb9c37a0336aa4f3">locshift</a> (const <a class="el" href="structloc__t.html">loc_t</a> *loc, double sx, double sy)</td></tr>
@@ -370,7 +376,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 
 </div>
 </div>
-<a class="anchor" id="acece66522afd9f8b8bf2e0d0b57d39d3"></a>
+<a class="anchor" id="af1bc33539e866bb79a6724b148ae0189"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -378,8 +384,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
           <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* map2loc </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td>
-          <td class="paramname"><em>map</em></td><td>)</td>
+          <td class="paramname"><em>map</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thres</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -590,6 +606,23 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
       </table>
 </div><div class="memdoc">
 <p>Create a loc with nloc elements. </p>
+
+</div>
+</div>
+<a class="anchor" id="ab929d93ab02c2d3931fb10fdd78ec4ad"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* locref </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>in</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reference an existing loc </p>
 
 </div>
 </div>
@@ -1138,12 +1171,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 
 </div>
 </div>
-<a class="anchor" id="ab546034c046ad5d125e7f56c42a309aa"></a>
+<a class="anchor" id="a68319042f336d77a199b71dffd235397"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* mkcirloc </td>
+          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* mkannloc </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>D</em>, </td>
@@ -1152,7 +1185,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>dx</em>&#160;</td>
+          <td class="paramname"><em>Din</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thres</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1161,7 +1206,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a loc array within diameter D, with spacing dx. </p>
+<p>Create a loc array within diameter D, and inner diameter Din, with spacing dx. </p>
 
 </div>
 </div>
@@ -1567,7 +1612,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add val amount of focus to opd. The unit is in radian like. Piston is not removed. </p>
+<p>Add val amount of focus to opd. The unit is in radian like. Piston is removed. </p>
 
 </div>
 </div>
@@ -1638,7 +1683,40 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Rotate the coordinates by theta CCW. </p>
+<p>Rotate the coordinates by theta (radian) CCW. </p>
+
+</div>
+</div>
+<a class="anchor" id="a71e90584a098f1d7cc420235e673cd20"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void locstretch </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>loc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double&#160;</td>
+          <td class="paramname"><em>theta</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double&#160;</td>
+          <td class="paramname"><em>frac</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Stretch the coordinate by frac along theta (radian) CCW. </p>
 
 </div>
 </div>
@@ -1659,6 +1737,39 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 
 </div>
 </div>
+<a class="anchor" id="acfdfdfe5d7dde3e8a26d39d807c60a08"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void locmean </td>
+          <td>(</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>xm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>ym</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>loc</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Compute average of locx, locy </p>
+
+</div>
+</div>
 <a class="anchor" id="a43403e4e1e651451d9dc34c251c2aa54"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1673,7 +1784,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>_polyn</em>&#160;</td>
+          <td class="paramname"><em>polycoeff</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1682,7 +1793,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Transform coordinate. loc contains x,y; locm contains xm, ym. polyn contains the formula xm{ip}=sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic))) ym{ip}=sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic))) </p>
+<p>Transform coordinate. loc (input) contains x,y; locm (return) contains xm, ym. polyn contains the formula xm{ip}=sum}_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic))) ym{ip}=sum}_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic))) was using string input. New scheme uses bin files to preserve precision. </p>
 
 </div>
 </div>
@@ -2010,7 +2121,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
     <tr><td class="paramdir">[out]</td><td class="paramname">mapout</td><td>map </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">nxout</td><td>nx </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">nyout</td><td>ny </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dirs</td><td>All Directions to cover </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dirs</td><td>All Directions to cover (thetax, thetay, hs) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Diameter (meter) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ht</td><td>Height (meter) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling along x (meter) </td></tr>

@@ -161,6 +161,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:ab298910fcc58b2dc96e5fc1304a59646"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ccc56386db62f4aa2244239f1053f09"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFIT__CFG__T.html#a2ccc56386db62f4aa2244239f1053f09">cachex</a></td></tr>
 <tr class="separator:a2ccc56386db62f4aa2244239f1053f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28c48bdc7447eaa8b0416c0def491f85"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFIT__CFG__T.html#a28c48bdc7447eaa8b0416c0def491f85">cgwarm</a></td></tr>
+<tr class="separator:a28c48bdc7447eaa8b0416c0def491f85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>contains input parameters for deformable mirror fitting. </p>
@@ -278,7 +280,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>interpolate actuator results to non-active actuators after DM fitting. turn on when inter-actuator-stroke study. </p>
+<p>interpolate actuator results to non-active actuators. </p>
 
 </div>
 </div>
@@ -449,6 +451,19 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Cache X (xloc) in intermediate plane </p>
+
+</div>
+</div>
+<a class="anchor" id="a28c48bdc7447eaa8b0416c0def491f85"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int FIT_CFG_T::cgwarm</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Warm restart in CG. inherits recon.warm_restart </p>
 
 </div>
 </div>

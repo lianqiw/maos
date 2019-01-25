@@ -117,10 +117,64 @@ Functions</h2></td></tr>
 <tr class="memitem:a261951da5f6beb00732691fc60585756"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a261951da5f6beb00732691fc60585756"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>proj_rect_grid</b> (<a class="el" href="structrmap__t.html">rmap_t</a> *mapin, double thetax, double thetay, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double ratiox, const double ratioy, const double *ampout, double *phiout, double sc, double hs, double ht, double betax, double betay)</td></tr>
 <tr class="separator:a261951da5f6beb00732691fc60585756"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a964ca0a99c808c39a48fd430345657"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="proj_8h.html#a6a964ca0a99c808c39a48fd430345657">m3proj</a> (<a class="el" href="structrmap__t.html">rmap_t</a> *tsurf, <a class="el" href="structdmat.html">dmat</a> *opd, <a class="el" href="structloc__t.html">loc_t</a> *locin, double thetax, double thetay, double hs)</td></tr>
+<tr class="separator:a6a964ca0a99c808c39a48fd430345657"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Project from a tilt surface to flat surface (M3). </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a6a964ca0a99c808c39a48fd430345657"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void m3proj </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structrmap__t.html">rmap_t</a> *&#160;</td>
+          <td class="paramname"><em>tsurf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>opd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>locout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thetax</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thetay</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>hs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Wraps proj_rect_grid for M3. </p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

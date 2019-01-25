@@ -1,7 +1,7 @@
 var readcfg_8h =
 [
     [ "format2key", "readcfg_8h.html#a0258dd21e9b70280d7b8fd9de5614c76", null ],
-    [ "open_config", "readcfg_8h.html#a53c73968400d1223024541da96b25a53", null ],
+    [ "open_config", "readcfg_8h.html#a81abf84c9f61c49dd58731d7f2637c00", null ],
     [ "close_config", "readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76", null ],
     [ "readcfg_peek", "readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f", null ],
     [ "readcfg_peek_n", "readcfg_8h.html#a2e922a9c36a239462733acec6cd00827", null ],
@@ -21,6 +21,7 @@ var readcfg_8h =
     [ "readcfg_lmat", "readcfg_8h.html#aea613f94d787dff48909dd7499e3268a", null ],
     [ "readcfg_lmat_n", "readcfg_8h.html#a840d9d01fee9bd3ab8587eddbc8ccfca", null ],
     [ "readcfg_lmat_nmax", "readcfg_8h.html#ae2c70689f05aead41deedb6abc5fc96f", null ],
+    [ "readcfg_dcell", "readcfg_8h.html#a5fd72ddb2a821baf224122de60711b6d", null ],
     [ "readcfg_dblarr_n", "readcfg_8h.html#add90c1a773600f3302d94a289b314189", null ],
     [ "readcfg_intarr_n", "readcfg_8h.html#a4b93ac243fed9ecdeb3d10d660d752ca", null ],
     [ "readcfg_dblarr_nmax", "readcfg_8h.html#ab05d7b9c4140e2391243e7223d9c151f", null ],

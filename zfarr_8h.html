@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>Multi-threaded Adaptive Optics Simulator: math/cellarr.h File Reference</title>
+<title>Multi-threaded Adaptive Optics Simulator: math/zfarr.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -87,7 +87,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('cellarr_8h.html','');});
+$(document).ready(function(){initNavTree('zfarr_8h.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -106,63 +106,33 @@ $(document).ready(function(){initNavTree('cellarr_8h.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Data Structures</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">cellarr.h File Reference</div>  </div>
+<div class="title">zfarr.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="type_8h.html">type.h</a>&quot;</code><br/>
 </div><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcellarr.html">cellarr</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a42c2be57d6cae76e6dce51b974ee6dd8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcellarr.html">cellarr</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#a42c2be57d6cae76e6dce51b974ee6dd8">cellarr_init</a> (long nx, long ny, const char *format,...)</td></tr>
-<tr class="separator:a42c2be57d6cae76e6dce51b974ee6dd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a007161604e1c45af16d130465e21e88b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#a007161604e1c45af16d130465e21e88b">cellarr_push</a> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const void *A)</td></tr>
-<tr class="separator:a007161604e1c45af16d130465e21e88b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a605ba4e2c0a6c447806d165b184c8435"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a605ba4e2c0a6c447806d165b184c8435"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_dcell</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structdcell.html">dcell</a> *A)</td></tr>
-<tr class="separator:a605ba4e2c0a6c447806d165b184c8435"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7806bc9ba8fdb6b64675f7cffb5254ca"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7806bc9ba8fdb6b64675f7cffb5254ca"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_scell</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structscell.html">scell</a> *A)</td></tr>
-<tr class="separator:a7806bc9ba8fdb6b64675f7cffb5254ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2a2c524cc895bfe2f869c184a93668b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2a2c524cc895bfe2f869c184a93668b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_ccell</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structccell.html">ccell</a> *A)</td></tr>
-<tr class="separator:ad2a2c524cc895bfe2f869c184a93668b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b07a463e723de4a358ba1cb0e45b73e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0b07a463e723de4a358ba1cb0e45b73e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zcell</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structzcell.html">zcell</a> *A)</td></tr>
-<tr class="separator:a0b07a463e723de4a358ba1cb0e45b73e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad17bccf5d84e9e0181f318daa7d66d69"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad17bccf5d84e9e0181f318daa7d66d69"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_dmat</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structdmat.html">dmat</a> *A)</td></tr>
-<tr class="separator:ad17bccf5d84e9e0181f318daa7d66d69"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5c8050e19e8c842f98d548de910fd6a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af5c8050e19e8c842f98d548de910fd6a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_smat</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structsmat.html">smat</a> *A)</td></tr>
-<tr class="separator:af5c8050e19e8c842f98d548de910fd6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09d6186a35238713135322573986d125"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09d6186a35238713135322573986d125"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_cmat</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structcmat.html">cmat</a> *A)</td></tr>
-<tr class="separator:a09d6186a35238713135322573986d125"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae43fb6d7bfd64529779ec1933ac52b24"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae43fb6d7bfd64529779ec1933ac52b24"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structzmat.html">zmat</a> *A)</td></tr>
-<tr class="separator:ae43fb6d7bfd64529779ec1933ac52b24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1befd9e7d6ab8731df1fcc80e6c35b57"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#a1befd9e7d6ab8731df1fcc80e6c35b57">cellarr_close</a> (<a class="el" href="structcellarr.html">cellarr</a> *ca)</td></tr>
-<tr class="separator:a1befd9e7d6ab8731df1fcc80e6c35b57"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af15a30fa62ff9b797eeea8ca072c06a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#af15a30fa62ff9b797eeea8ca072c06a3">cellarr_close_n</a> (<a class="el" href="structcellarr.html">cellarr</a> **ca, int nc)</td></tr>
-<tr class="separator:af15a30fa62ff9b797eeea8ca072c06a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a245a46d3c1e49146ce516c883cca6c0e"><td class="memItemLeft" align="right" valign="top">zfarr *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#a245a46d3c1e49146ce516c883cca6c0e">zfarr_init</a> (long nx, long ny, const char *format,...)</td></tr>
+<tr class="separator:a245a46d3c1e49146ce516c883cca6c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace3d2c38d319c69b6ee988dfe1d6bdd2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#ace3d2c38d319c69b6ee988dfe1d6bdd2">zfarr_push</a> (zfarr *ca, int i, const void *A)</td></tr>
+<tr class="separator:ace3d2c38d319c69b6ee988dfe1d6bdd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a749eb5424ce0ab50cc3ad55b1560ddf3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#a749eb5424ce0ab50cc3ad55b1560ddf3">zfarr_close</a> (zfarr *ca)</td></tr>
+<tr class="separator:a749eb5424ce0ab50cc3ad55b1560ddf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4da312d93e7d98d003098db6976392fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#a4da312d93e7d98d003098db6976392fc">zfarr_close_n</a> (zfarr **ca, int nc)</td></tr>
+<tr class="separator:a4da312d93e7d98d003098db6976392fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>cellarr is an object used to write arrays of dcell or ccell into file. Mainly used to output PSF into files. </p>
+<div class="textblock"><p>zfarr is an object used to write arrays of dcell or ccell into file. Mainly used to output PSF into files. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a42c2be57d6cae76e6dce51b974ee6dd8"></a>
+<a class="anchor" id="a245a46d3c1e49146ce516c883cca6c0e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structcellarr.html">cellarr</a>* cellarr_init </td>
+          <td class="memname">zfarr* zfarr_init </td>
           <td>(</td>
           <td class="paramtype">long&#160;</td>
           <td class="paramname"><em>nx</em>, </td>
@@ -192,18 +162,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell </p>
+<p>Initializing an zfarray object that contains arrays of dmat, cmat, dcell or ccell </p>
 
 </div>
 </div>
-<a class="anchor" id="a007161604e1c45af16d130465e21e88b"></a>
+<a class="anchor" id="ace3d2c38d319c69b6ee988dfe1d6bdd2"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void cellarr_push </td>
+          <td class="memname">void zfarr_push </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structcellarr.html">cellarr</a> *&#160;</td>
+          <td class="paramtype">zfarr *&#160;</td>
           <td class="paramname"><em>ca</em>, </td>
         </tr>
         <tr>
@@ -225,35 +195,35 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Append a A of type type into the cellarr ca, at location i. </p>
+<p>Append a A of type type into the zfarr ca, at location i. </p>
 
 </div>
 </div>
-<a class="anchor" id="a1befd9e7d6ab8731df1fcc80e6c35b57"></a>
+<a class="anchor" id="a749eb5424ce0ab50cc3ad55b1560ddf3"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void cellarr_close </td>
+          <td class="memname">void zfarr_close </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structcellarr.html">cellarr</a> *&#160;</td>
+          <td class="paramtype">zfarr *&#160;</td>
           <td class="paramname"><em>ca</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Close the cellarr. </p>
+<p>Close the zfarr. </p>
 
 </div>
 </div>
-<a class="anchor" id="af15a30fa62ff9b797eeea8ca072c06a3"></a>
+<a class="anchor" id="a4da312d93e7d98d003098db6976392fc"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void cellarr_close_n </td>
+          <td class="memname">void zfarr_close_n </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structcellarr.html">cellarr</a> **&#160;</td>
+          <td class="paramtype">zfarr **&#160;</td>
           <td class="paramname"><em>ca</em>, </td>
         </tr>
         <tr>
@@ -269,7 +239,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Close an array of cellarr </p>
+<p>Close an array of zfarr </p>
 
 </div>
 </div>

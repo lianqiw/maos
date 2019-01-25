@@ -1,10 +1,8 @@
 var structdsp =
 [
-    [ "id", "structdsp.html#a436e1b13ec4958c89860518f5bb36be8", null ],
+    [ "id", "structdsp.html#a9bfeeda8884f6ebd57ee2c4f725af1f5", null ],
     [ "x", "structdsp.html#ac6af7908ae14bd4661556aec0756016f", null ],
-    [ "m", "structdsp.html#a41a5578612c657ab47e06b921e6b1948", null ],
     [ "nx", "structdsp.html#af73e8354dff1e695a825ffb084ac64d9", null ],
-    [ "n", "structdsp.html#af5ae33e67862e20cfc580ac361ca3e30", null ],
     [ "ny", "structdsp.html#a5ac3666a5e38bde4f0002b18af9318ba", null ],
     [ "header", "structdsp.html#a48dfc52c6a63a963208606e4d3980f0b", null ],
     [ "nzmax", "structdsp.html#a870a449e24356b8a08ec11a4916be6a0", null ],

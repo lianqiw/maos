@@ -193,9 +193,15 @@ Macros</h2></td></tr>
 <tr class="memitem:a421883434ffb6254589a0ae09f9bc6df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a421883434ffb6254589a0ae09f9bc6df"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>M_LOC64</b>&#160;&#160;&#160;0x036402/*loc_t with double data*/</td></tr>
 <tr class="separator:a421883434ffb6254589a0ae09f9bc6df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa98cc7bc4e23a74a77305f0d86c4a352"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa98cc7bc4e23a74a77305f0d86c4a352"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>iscell</b>(magic)&#160;&#160;&#160;(((magic)&amp;0x6410)==0x6410 || ((magic)&amp;0x6420) == 0x6420)</td></tr>
-<tr class="separator:aa98cc7bc4e23a74a77305f0d86c4a352"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d7a62842f24cb108f65eccaffd1792e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d7a62842f24cb108f65eccaffd1792e"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>M_INT</b>&#160;&#160;&#160;M_INT32</td></tr>
+<tr class="separator:a7d7a62842f24cb108f65eccaffd1792e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4ed8c773baf80e6ca472bb27587922e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae4ed8c773baf80e6ca472bb27587922e"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>M_STR</b>&#160;&#160;&#160;M_INT8</td></tr>
+<tr class="separator:ae4ed8c773baf80e6ca472bb27587922e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc46f80934732beab06ff0684ca9727e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abc46f80934732beab06ff0684ca9727e"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>M_SPINT</b>&#160;&#160;&#160;M_INT32</td></tr>
+<tr class="separator:abc46f80934732beab06ff0684ca9727e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a143f4fa19469a58a25aa68e849f53fcf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a143f4fa19469a58a25aa68e849f53fcf"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>M_DSP</b>&#160;&#160;&#160;M_DSP32</td></tr>
 <tr class="separator:a143f4fa19469a58a25aa68e849f53fcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -260,7 +266,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 <tr class="separator:a3d718e30cd4faabe0c6b902e3ede141c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fb14ee86ee80eac407abb5fe9b5e289"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289">zfrewind</a> (file_t *fp)</td></tr>
 <tr class="separator:a0fb14ee86ee80eac407abb5fe9b5e289"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a43fd0b9636dd5ca782e8c718eeb8b7f1">zfopen</a> (const char *fn, const char *mod)</td></tr>
+<tr class="memitem:a2cfcc67ae6d2bd846287f97ae03f181b"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a2cfcc67ae6d2bd846287f97ae03f181b">zfopen_try</a> (const char *fn, const char *mod)</td></tr>
+<tr class="separator:a2cfcc67ae6d2bd846287f97ae03f181b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43fd0b9636dd5ca782e8c718eeb8b7f1"></a>
+file_t *&#160;</td><td class="memItemRight" valign="bottom"><b>zfopen</b> (const char *fn, const char *mod)</td></tr>
 <tr class="separator:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b81bfaf82d10ec42e8d296544a0b3dc"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a4b81bfaf82d10ec42e8d296544a0b3dc">zfname</a> (file_t *fp)</td></tr>
 <tr class="separator:a4b81bfaf82d10ec42e8d296544a0b3dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -272,19 +281,15 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 <tr class="separator:a956297097c436bc2e8eaf8789fa522ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a67c349fe1033d91feb34b436dbb7e6b3">zfwrite</a> (const void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr class="separator:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a092420d038c729b4dc5e9829b515fd94"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a092420d038c729b4dc5e9829b515fd94">zfread2</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
+<tr class="memitem:a092420d038c729b4dc5e9829b515fd94"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a092420d038c729b4dc5e9829b515fd94"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>zfread2</b> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr class="separator:a092420d038c729b4dc5e9829b515fd94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f90c7b343cad172afd005feb5112c30"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a6f90c7b343cad172afd005feb5112c30">zfread</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr class="separator:a6f90c7b343cad172afd005feb5112c30"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf3e8d275430f33c2cd8262fac88cac8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#adf3e8d275430f33c2cd8262fac88cac8">search_header</a> (const char *header, const char *key)</td></tr>
-<tr class="separator:adf3e8d275430f33c2cd8262fac88cac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af916b0aa443255291534c8a9222dd585"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#af916b0aa443255291534c8a9222dd585">search_header_num</a> (const char *header, const char *key)</td></tr>
-<tr class="separator:af916b0aa443255291534c8a9222dd585"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abefda2be23c35c49761c61084c86b936"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#abefda2be23c35c49761c61084c86b936">search_header_num_valid</a> (const char *header, const char *key)</td></tr>
-<tr class="separator:abefda2be23c35c49761c61084c86b936"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a343d68b2551eff30cf94bb976cafb0ff"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a343d68b2551eff30cf94bb976cafb0ff">bytes_header</a> (const char *header)</td></tr>
 <tr class="separator:a343d68b2551eff30cf94bb976cafb0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a1825ca342f947862c152e0408e923189">write_timestamp</a> (file_t *fp)</td></tr>
+<tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1825ca342f947862c152e0408e923189"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (file_t *fp)</td></tr>
 <tr class="separator:a1825ca342f947862c152e0408e923189"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeafd15c22e61f56f291b709b43ddb04e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e">write_header</a> (const <a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
 <tr class="separator:aeafd15c22e61f56f291b709b43ddb04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -292,28 +297,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 <tr class="separator:a972a1cdff7d5f045daa2ffe7fb43ecc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ed0da59c78ad3c8ada5c0ce67fa1c94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a5ed0da59c78ad3c8ada5c0ce67fa1c94">read_header</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
 <tr class="separator:a5ed0da59c78ad3c8ada5c0ce67fa1c94"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a585950cd0440830725f150106f4c41f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a585950cd0440830725f150106f4c41f3">check_cell</a> (<a class="el" href="structheader__t.html">header_t</a> *header, long *nx, long *ny)</td></tr>
-<tr class="separator:a585950cd0440830725f150106f4c41f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9471eeb77e74e8c66ec913534df2d72d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a9471eeb77e74e8c66ec913534df2d72d">writearr</a> (const void *fpn, const int isfile, const size_t size, const uint32_t magic, const char *header, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
 <tr class="separator:a9471eeb77e74e8c66ec913534df2d72d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07e8fcd0256fd8377d0bb0d86bfd3c53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a07e8fcd0256fd8377d0bb0d86bfd3c53">writedbl</a> (const double *p, long nx, long ny, const char *format,...)</td></tr>
 <tr class="separator:a07e8fcd0256fd8377d0bb0d86bfd3c53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad50c5f6b6016874997a5be6105482229"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ad50c5f6b6016874997a5be6105482229">writeflt</a> (const float *p, long nx, long ny, const char *format,...)</td></tr>
 <tr class="separator:ad50c5f6b6016874997a5be6105482229"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b79cbb8bdc6e520ce66162fd80a01b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a3b79cbb8bdc6e520ce66162fd80a01b3">writecmp</a> (const dcomplex *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="separator:a3b79cbb8bdc6e520ce66162fd80a01b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2945e4b7fdf9ea504ef1c13a092f8b9b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a2945e4b7fdf9ea504ef1c13a092f8b9b">writefcmp</a> (const fcomplex *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="separator:a2945e4b7fdf9ea504ef1c13a092f8b9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f306628b3df9abba320293f2108b4aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a6f306628b3df9abba320293f2108b4aa">writeint</a> (const int *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="separator:a6f306628b3df9abba320293f2108b4aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee94d09fd8d7b41ed85dcf5bd6e493a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aee94d09fd8d7b41ed85dcf5bd6e493a2">writelong</a> (const long *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="separator:aee94d09fd8d7b41ed85dcf5bd6e493a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a85fcc0ed2953b5e9d0812f92de86e5a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a85fcc0ed2953b5e9d0812f92de86e5a3">writespint</a> (const spint *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="separator:a85fcc0ed2953b5e9d0812f92de86e5a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4fdbbb160f78db3e75593887b597d51"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aa4fdbbb160f78db3e75593887b597d51">readspintdata</a> (file_t *fp, uint32_t magic, spint *out, long len)</td></tr>
-<tr class="separator:aa4fdbbb160f78db3e75593887b597d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17976d85cba2939873589c6a8bc3e08b"><td class="memItemLeft" align="right" valign="top">spint *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a17976d85cba2939873589c6a8bc3e08b">readspint</a> (file_t *fp, long *nx, long *ny)</td></tr>
-<tr class="separator:a17976d85cba2939873589c6a8bc3e08b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7052d4dbd36ff6e9108e022df369b0a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a7052d4dbd36ff6e9108e022df369b0a2">mmap_unref</a> (struct mmap_t *in)</td></tr>
 <tr class="separator:a7052d4dbd36ff6e9108e022df369b0a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a28a7321caa0513c0395c929ca49eae"><td class="memItemLeft" align="right" valign="top">struct mmap_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a3a28a7321caa0513c0395c929ca49eae">mmap_new</a> (int fd, void *p, long n)</td></tr>
@@ -470,12 +459,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 
 </div>
 </div>
-<a class="anchor" id="a43fd0b9636dd5ca782e8c718eeb8b7f1"></a>
+<a class="anchor" id="a2cfcc67ae6d2bd846287f97ae03f181b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">file_t* zfopen </td>
+          <td class="memname">file_t* zfopen_try </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>fn</em>, </td>
@@ -605,45 +594,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 
 </div>
 </div>
-<a class="anchor" id="a092420d038c729b4dc5e9829b515fd94"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int zfread2 </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>ptr</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const size_t&#160;</td>
-          <td class="paramname"><em>size</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const size_t&#160;</td>
-          <td class="paramname"><em>nmemb</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">file_t *&#160;</td>
-          <td class="paramname"><em>fp</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Handles byteswapping in fits file format then call zfread_do to do the actual writing. </p>
-
-</div>
-</div>
 <a class="anchor" id="a6f90c7b343cad172afd005feb5112c30"></a>
 <div class="memitem">
 <div class="memproto">
@@ -679,88 +629,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wraps zfread2 and do error checking. </p>
-
-</div>
-</div>
-<a class="anchor" id="adf3e8d275430f33c2cd8262fac88cac8"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* search_header </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>key</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Search and return the value correspond to key. NULL if not found. Do not free the returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace), and succeeded by = sign. </p>
-
-</div>
-</div>
-<a class="anchor" id="af916b0aa443255291534c8a9222dd585"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">double search_header_num </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>key</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Read a number from the header with key </p>
-
-</div>
-</div>
-<a class="anchor" id="abefda2be23c35c49761c61084c86b936"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">double search_header_num_valid </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>key</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Read a number from the header and verify. </p>
+<p>Wraps zfread_try and do error checking. </p>
 
 </div>
 </div>
@@ -778,23 +647,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
       </table>
 </div><div class="memdoc">
 <p>Get the length of mem to storge the header and its dimension, rounded to multiple of 8. </p>
-
-</div>
-</div>
-<a class="anchor" id="a1825ca342f947862c152e0408e923189"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void write_timestamp </td>
-          <td>(</td>
-          <td class="paramtype">file_t *&#160;</td>
-          <td class="paramname"><em>fp</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Write the time stamp as header into current location in the file. </p>
 
 </div>
 </div>
@@ -879,39 +731,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 
 </div>
 </div>
-<a class="anchor" id="a585950cd0440830725f150106f4c41f3"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structheader__t.html">header_t</a>* check_cell </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long *&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long *&#160;</td>
-          <td class="paramname"><em>ny</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension. </p>
-
-</div>
-</div>
 <a class="anchor" id="a9471eeb77e74e8c66ec913534df2d72d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -971,7 +790,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Write an 1-d or 2-d array into the file. First write a magic number that represents the data type. Then write two numbers representing the dimension. Finally write the data itself. </p>
+<p>Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension.</p>
+<p>Write the time stamp as header into current location in the file. Write an 1-d or 2-d array into the file. First write a magic number that represents the data type. Then write two numbers representing the dimension. Finally write the data itself. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">fpn</td><td>The file pointer </td></tr>
@@ -1075,303 +895,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
       </table>
 </div><div class="memdoc">
 <p>Write a double array of size nx*ny to file. </p>
-
-</div>
-</div>
-<a class="anchor" id="a3b79cbb8bdc6e520ce66162fd80a01b3"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void writecmp </td>
-          <td>(</td>
-          <td class="paramtype">const dcomplex *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>ny</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Write a double complex array of size nx*ny to file. </p>
-
-</div>
-</div>
-<a class="anchor" id="a2945e4b7fdf9ea504ef1c13a092f8b9b"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void writefcmp </td>
-          <td>(</td>
-          <td class="paramtype">const fcomplex *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>ny</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Write a float complex array of size nx*ny to file. </p>
-
-</div>
-</div>
-<a class="anchor" id="a6f306628b3df9abba320293f2108b4aa"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void writeint </td>
-          <td>(</td>
-          <td class="paramtype">const int *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>ny</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Write a int array of size nx*ny to file. </p>
-
-</div>
-</div>
-<a class="anchor" id="aee94d09fd8d7b41ed85dcf5bd6e493a2"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void writelong </td>
-          <td>(</td>
-          <td class="paramtype">const long *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>ny</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Write a long array of size nx*ny to file. </p>
-
-</div>
-</div>
-<a class="anchor" id="a85fcc0ed2953b5e9d0812f92de86e5a3"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void writespint </td>
-          <td>(</td>
-          <td class="paramtype">const spint *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>ny</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Write spint array of size nx*ny to file. </p>
-
-</div>
-</div>
-<a class="anchor" id="aa4fdbbb160f78db3e75593887b597d51"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void readspintdata </td>
-          <td>(</td>
-          <td class="paramtype">file_t *&#160;</td>
-          <td class="paramname"><em>fp</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>magic</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">spint *&#160;</td>
-          <td class="paramname"><em>out</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>len</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>read spint array of size len from file and do optional data conversion. </p>
-
-</div>
-</div>
-<a class="anchor" id="a17976d85cba2939873589c6a8bc3e08b"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">spint* readspint </td>
-          <td>(</td>
-          <td class="paramtype">file_t *&#160;</td>
-          <td class="paramname"><em>fp</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long *&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long *&#160;</td>
-          <td class="paramname"><em>ny</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Read spint array of size nx*ny from file and do optional data conversion. </p>
 
 </div>
 </div>

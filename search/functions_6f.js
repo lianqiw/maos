@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['open_5fconfig',['open_config',['../readcfg_8h.html#a53c73968400d1223024541da96b25a53',1,'readcfg.c']]]
+  ['open_5fconfig',['open_config',['../readcfg_8h.html#a81abf84c9f61c49dd58731d7f2637c00',1,'readcfg.c']]]
 ];

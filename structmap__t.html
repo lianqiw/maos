@@ -117,8 +117,8 @@ $(document).ready(function(){initNavTree('structmap__t.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a98082b14731732998970d5dbcd139c11"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html#a98082b14731732998970d5dbcd139c11">id</a></td></tr>
-<tr class="separator:a98082b14731732998970d5dbcd139c11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2e8d305ae03b790c9038ea8fbb4fcb0"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html#ad2e8d305ae03b790c9038ea8fbb4fcb0">id</a></td></tr>
+<tr class="separator:ad2e8d305ae03b790c9038ea8fbb4fcb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54f42e602fa810d8415bc270de820854"><td class="memItemLeft" align="right" valign="top">double *__restrict&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html#a54f42e602fa810d8415bc270de820854">p</a></td></tr>
 <tr class="separator:a54f42e602fa810d8415bc270de820854"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c61ae5f9b2c0d4997ad21bd5702360f"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html#a7c61ae5f9b2c0d4997ad21bd5702360f">nx</a></td></tr>
@@ -149,25 +149,22 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>vx</b></td></tr>
 <tr class="separator:a6cb4e9ced138317f070ce67d35d6bdbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5039896aeaffaa0e8f3ba50921e9ed10"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html#a5039896aeaffaa0e8f3ba50921e9ed10">vy</a></td></tr>
 <tr class="separator:a5039896aeaffaa0e8f3ba50921e9ed10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3cc4b8d4ca8d3457681a7799525b410"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html#ad3cc4b8d4ca8d3457681a7799525b410">cubic</a></td></tr>
-<tr class="separator:ad3cc4b8d4ca8d3457681a7799525b410"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d662b57235272ca02d322471178cd18"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d662b57235272ca02d322471178cd18"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>iac</b></td></tr>
+<tr class="memitem:a9d662b57235272ca02d322471178cd18"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html#a9d662b57235272ca02d322471178cd18">iac</a></td></tr>
 <tr class="separator:a9d662b57235272ca02d322471178cd18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>OPD or Amplitude map defined on square/rectangular grids. with equal spacing on x/y. Can be casted to dmat </p>
 </div><h2 class="groupheader">Field Documentation</h2>
-<a class="anchor" id="a98082b14731732998970d5dbcd139c11"></a>
+<a class="anchor" id="ad2e8d305ae03b790c9038ea8fbb4fcb0"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">long map_t::id</td>
+          <td class="memname">uint32_t map_t::id</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>to identify the array type </p>
+<p>to identify the array type. Must be the first element </p>
 
 </div>
 </div>
@@ -327,16 +324,16 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>iac</b></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ad3cc4b8d4ca8d3457681a7799525b410"></a>
+<a class="anchor" id="a9d662b57235272ca02d322471178cd18"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int map_t::cubic</td>
+          <td class="memname">double map_t::iac</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wind velocity. Useful for atmospheric grid </p>
+<p>Wind velocity. Useful for atmospheric grid Inter-actuator coupling. &gt;0: use cubic influence function </p>
 
 </div>
 </div>

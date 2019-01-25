@@ -115,12 +115,6 @@ $(document).ready(function(){initNavTree('readstr_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a8701968ceb20a387aa8bfc7d411f6e07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8701968ceb20a387aa8bfc7d411f6e07"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>is_space</b> (char c)</td></tr>
-<tr class="separator:a8701968ceb20a387aa8bfc7d411f6e07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43b69792d1b2328be0405689c1cbbf9a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43b69792d1b2328be0405689c1cbbf9a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>is_end</b> (char c)</td></tr>
-<tr class="separator:a43b69792d1b2328be0405689c1cbbf9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4e8a5fd8356383ad30696d4140fa47f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#ac4e8a5fd8356383ad30696d4140fa47f">readstr_strarr</a> (char ***res, int len, const char *sdata)</td></tr>
 <tr class="separator:ac4e8a5fd8356383ad30696d4140fa47f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f23448c252708e467790d7edf1d0fd0"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a0f23448c252708e467790d7edf1d0fd0">readstr_num</a> (const char *data, char **endptr0)</td></tr>
@@ -134,6 +128,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
 <tr class="separator:aa8708b4c5638fbcc7cd84373027f4869"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d29469601ed39c1cc611626f89d27d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a9d29469601ed39c1cc611626f89d27d4">readstr_intarr_relax</a> (int **ret, int len, const char *data)</td></tr>
 <tr class="separator:a9d29469601ed39c1cc611626f89d27d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf3e8d275430f33c2cd8262fac88cac8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#adf3e8d275430f33c2cd8262fac88cac8">search_header</a> (const char *header, const char *key)</td></tr>
+<tr class="separator:adf3e8d275430f33c2cd8262fac88cac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af916b0aa443255291534c8a9222dd585"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#af916b0aa443255291534c8a9222dd585">search_header_num</a> (const char *header, const char *key)</td></tr>
+<tr class="separator:af916b0aa443255291534c8a9222dd585"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abefda2be23c35c49761c61084c86b936"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#abefda2be23c35c49761c61084c86b936">search_header_num_valid</a> (const char *header, const char *key)</td></tr>
+<tr class="separator:abefda2be23c35c49761c61084c86b936"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Group all routines that are used to parse values from string that contain key=value pairs. </p>
@@ -167,7 +167,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Group all routines that are used to parse values from string that contain key=value pairs. Obtain a string array value from the key. </p>
+<p>Group all routines that are used to parse values from string that contain key=value pairs. Obtain a string array value from the key. String entries must be separated by space, coma [,] or semi-column [;]. Enclosing with quote is optional, but necessary to protect spaces. Examples: []: one empty string [,]: two empty strings [a b]: two strings: "a" and "b"; [a,b]: same as [a b] ['a b']: one string "a b". </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>Result </td></tr>
@@ -355,6 +355,87 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a class="anchor" id="adf3e8d275430f33c2cd8262fac88cac8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* search_header </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Search and return the value correspond to key. NULL if not found. Do not free the returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace), and succeeded by = sign. </p>
+
+</div>
+</div>
+<a class="anchor" id="af916b0aa443255291534c8a9222dd585"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double search_header_num </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read a number from the header with key </p>
+
+</div>
+</div>
+<a class="anchor" id="abefda2be23c35c49761c61084c86b936"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double search_header_num_valid </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read a number from the header and verify. </p>
 
 </div>
 </div>

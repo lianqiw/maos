@@ -1,6 +1,6 @@
 var classcuda__wfs_1_1cuwfs__info =
 [
-    [ "cuwfs_info", "classcuda__wfs_1_1cuwfs__info.html#a6a2140b97cd8218c3ecb804c80d00af2", null ],
+    [ "cuwfs_dbg", "classcuda__wfs_1_1cuwfs__info.html#a97bad14d6a8037abab0feed1a46c6a4e", null ],
     [ "loc", "classcuda__wfs_1_1cuwfs__info.html#a5391895c2a9d535ec78f30ef27ab4757", null ],
     [ "amp", "classcuda__wfs_1_1cuwfs__info.html#a53387c264d4a16f7ca4e5c32fc92fe8d", null ],
     [ "embed", "classcuda__wfs_1_1cuwfs__info.html#a2a06ed2fedb19e3feb6e3ceaac1bac5a", null ],

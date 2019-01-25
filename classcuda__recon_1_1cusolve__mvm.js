@@ -1,6 +1,5 @@
 var classcuda__recon_1_1cusolve__mvm =
 [
-    [ "cusolve_mvm", "classcuda__recon_1_1cusolve__mvm.html#ab9514b880a2a86cf9797b9f46927b4d5", null ],
-    [ "~cusolve_mvm", "classcuda__recon_1_1cusolve__mvm.html#a6428b12db3817244a8ffb3b0d3803886", null ],
-    [ "solve", "classcuda__recon_1_1cusolve__mvm.html#afde14e4ef7b9792b7532cffe5f11da03", null ]
+    [ "cusolve_mvm", "classcuda__recon_1_1cusolve__mvm.html#a677e41f4a8a515a0e93a6cdf833e4f82", null ],
+    [ "solve", "classcuda__recon_1_1cusolve__mvm.html#a1f9f8d75258f9a3909780860b2baa698", null ]
 ];

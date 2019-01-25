@@ -116,42 +116,75 @@ $(document).ready(function(){initNavTree('classcumat.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0e1eb8434413fe86f89217dd6a5a95a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0e1eb8434413fe86f89217dd6a5a95a6"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cumat</b> (long nxi, long nyi, T *pi=NULL, int own=1)</td></tr>
-<tr class="separator:a0e1eb8434413fe86f89217dd6a5a95a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9cb712f98584b465bb4f89ea07b2c714"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9cb712f98584b465bb4f89ea07b2c714"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zero</b> (cudaStream_t stream=(cudaStream_t)-1)</td></tr>
-<tr class="separator:a9cb712f98584b465bb4f89ea07b2c714"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d72f510a5bb4a502a54e81a34ac6aa6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d72f510a5bb4a502a54e81a34ac6aa6"></a>
-<a class="el" href="classcumat.html">cumat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ref</b> (int vector=0)</td></tr>
-<tr class="separator:a7d72f510a5bb4a502a54e81a34ac6aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90a0f99352b6bf54579036b8b8accc68"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90a0f99352b6bf54579036b8b8accc68"></a>
-<a class="el" href="classcumat.html">cumat</a>&lt; T &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>trans</b> (<a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a90a0f99352b6bf54579036b8b8accc68"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a681c185109e2a4196d4f87bcf4458ba4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a681c185109e2a4196d4f87bcf4458ba4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>operator T *</b> ()</td></tr>
 <tr class="separator:a681c185109e2a4196d4f87bcf4458ba4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e70271d2b86fdf388c13ce25d07b6ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e70271d2b86fdf388c13ce25d07b6ff"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>operator const T *</b> () const </td></tr>
+<tr class="separator:a2e70271d2b86fdf388c13ce25d07b6ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa6b29925dadbcf1d13c7c274e013f91"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afa6b29925dadbcf1d13c7c274e013f91"></a>
+T *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> ()</td></tr>
+<tr class="separator:afa6b29925dadbcf1d13c7c274e013f91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe0609dbd1d01408d7d78ee42fc418d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe0609dbd1d01408d7d78ee42fc418d6"></a>
+const T *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> () const </td></tr>
+<tr class="separator:abe0609dbd1d01408d7d78ee42fc418d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f2799e3ca9d4e18bf0a1c79a1ffe589"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2f2799e3ca9d4e18bf0a1c79a1ffe589"></a>
+T *&#160;</td><td class="memItemRight" valign="bottom"><b>Col</b> (int icol)</td></tr>
+<tr class="separator:a2f2799e3ca9d4e18bf0a1c79a1ffe589"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fd0eeaf4167893b7a3f9a7cf0fd97ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0fd0eeaf4167893b7a3f9a7cf0fd97ae"></a>
+const T *&#160;</td><td class="memItemRight" valign="bottom"><b>Col</b> (int icol) const </td></tr>
+<tr class="separator:a0fd0eeaf4167893b7a3f9a7cf0fd97ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae18d7484f46f87c618918a6508dc530f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae18d7484f46f87c618918a6508dc530f"></a>
+long&#160;</td><td class="memItemRight" valign="bottom"><b>Nx</b> () const </td></tr>
+<tr class="separator:ae18d7484f46f87c618918a6508dc530f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e9ae853300f336c9825b79b6e18d4cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7e9ae853300f336c9825b79b6e18d4cb"></a>
+long&#160;</td><td class="memItemRight" valign="bottom"><b>Ny</b> () const </td></tr>
+<tr class="separator:a7e9ae853300f336c9825b79b6e18d4cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac48d49c94d43c5b2e891ad8c39f95a60"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac48d49c94d43c5b2e891ad8c39f95a60"></a>
+long&#160;</td><td class="memItemRight" valign="bottom"><b>N</b> () const </td></tr>
+<tr class="separator:ac48d49c94d43c5b2e891ad8c39f95a60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d2c6c2b0c4dce015f96a123a46b2bc0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d2c6c2b0c4dce015f96a123a46b2bc0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const </td></tr>
+<tr class="separator:a7d2c6c2b0c4dce015f96a123a46b2bc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5419da3609f479aa85f5b6b7d7fa9a00"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5419da3609f479aa85f5b6b7d7fa9a00"></a>
 T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (int ix, int iy)</td></tr>
 <tr class="separator:a5419da3609f479aa85f5b6b7d7fa9a00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aacdb39b90073734e8fbbb3c454a8262a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aacdb39b90073734e8fbbb3c454a8262a"></a>
-T *&#160;</td><td class="memItemRight" valign="bottom"><b>col</b> (int icol)</td></tr>
-<tr class="separator:aacdb39b90073734e8fbbb3c454a8262a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a418f9d0cf9c1c1c69fac81e51c2479c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a418f9d0cf9c1c1c69fac81e51c2479c5"></a>
+const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (int ix, int iy) const </td></tr>
+<tr class="separator:a418f9d0cf9c1c1c69fac81e51c2479c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c1698da96c63b45ef654ca299ed824f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6c1698da96c63b45ef654ca299ed824f"></a>
+T *&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (int off)</td></tr>
+<tr class="separator:a6c1698da96c63b45ef654ca299ed824f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25fdbfab674f9f5859b0826b7e5e70ca"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a25fdbfab674f9f5859b0826b7e5e70ca"></a>
+const T *&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (int off) const </td></tr>
+<tr class="separator:a25fdbfab674f9f5859b0826b7e5e70ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a062e999aefd85e60b5779ca2beb2296e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a062e999aefd85e60b5779ca2beb2296e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cumat</b> (long nxi=0, long nyi=0, T *pi=NULL, int own=1)</td></tr>
+<tr class="separator:a062e999aefd85e60b5779ca2beb2296e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2876158c6004a3faa7c856a8b03b2b55"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2876158c6004a3faa7c856a8b03b2b55"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
+<tr class="separator:a2876158c6004a3faa7c856a8b03b2b55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0eec2f98150e606a442ecfea5a6d7169"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0eec2f98150e606a442ecfea5a6d7169"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cumat</b> (const <a class="el" href="classcumat.html">cumat</a> &amp;in)</td></tr>
+<tr class="separator:a0eec2f98150e606a442ecfea5a6d7169"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab147bcb917127fd0090704b5ffcf9257"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab147bcb917127fd0090704b5ffcf9257"></a>
+<a class="el" href="classcumat.html">cumat</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcumat.html">cumat</a> &amp;in)</td></tr>
+<tr class="separator:ab147bcb917127fd0090704b5ffcf9257"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e4c33f561558247783405adfe216efd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e4c33f561558247783405adfe216efd"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classcumat.html">cumat</a> &amp;in)</td></tr>
+<tr class="separator:a1e4c33f561558247783405adfe216efd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9cb712f98584b465bb4f89ea07b2c714"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9cb712f98584b465bb4f89ea07b2c714"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zero</b> (cudaStream_t stream=(cudaStream_t)-1)</td></tr>
+<tr class="separator:a9cb712f98584b465bb4f89ea07b2c714"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f2029aa8dbf556d7f88fb36793ef203"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f2029aa8dbf556d7f88fb36793ef203"></a>
+<a class="el" href="classcumat.html">cumat</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> ()</td></tr>
+<tr class="separator:a5f2029aa8dbf556d7f88fb36793ef203"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85cc682b5fa9a4598bdac2734e097af5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85cc682b5fa9a4598bdac2734e097af5"></a>
+<a class="el" href="classcumat.html">cumat</a>&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>trans</b> (<a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="separator:a85cc682b5fa9a4598bdac2734e097af5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:ac7392d26b28be499c837ca65ad6390c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7392d26b28be499c837ca65ad6390c2"></a>
-T *&#160;</td><td class="memItemRight" valign="bottom"><b>p</b></td></tr>
-<tr class="separator:ac7392d26b28be499c837ca65ad6390c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a963af98c8b7dab987eb11123986d8cf6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a963af98c8b7dab987eb11123986d8cf6"></a>
-long&#160;</td><td class="memItemRight" valign="bottom"><b>nx</b></td></tr>
-<tr class="separator:a963af98c8b7dab987eb11123986d8cf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39cacc41a4cd7068e5873fcdbdecc079"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a39cacc41a4cd7068e5873fcdbdecc079"></a>
-long&#160;</td><td class="memItemRight" valign="bottom"><b>ny</b></td></tr>
-<tr class="separator:a39cacc41a4cd7068e5873fcdbdecc079"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd26a23561a6a11179136ca0c73f9765"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd26a23561a6a11179136ca0c73f9765"></a>
-int *&#160;</td><td class="memItemRight" valign="bottom"><b>nref</b></td></tr>
-<tr class="separator:abd26a23561a6a11179136ca0c73f9765"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29da5ef9095ea63c39665d09e251cf95"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29da5ef9095ea63c39665d09e251cf95"></a>
 char *&#160;</td><td class="memItemRight" valign="bottom"><b>header</b></td></tr>
 <tr class="separator:a29da5ef9095ea63c39665d09e251cf95"><td class="memSeparator" colspan="2">&#160;</td></tr>

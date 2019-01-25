@@ -118,8 +118,8 @@ $(document).ready(function(){initNavTree('scheduler__client_8h.html','');});
 Functions</h2></td></tr>
 <tr class="memitem:ab6a4b8cf1bc6f3fd8582630575ebc755"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#ab6a4b8cf1bc6f3fd8582630575ebc755">scheduler_listen</a> (void(*fun)(int))</td></tr>
 <tr class="separator:ab6a4b8cf1bc6f3fd8582630575ebc755"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa973afc826afd1b7e797c3d0a4115a1b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#aa973afc826afd1b7e797c3d0a4115a1b">scheduler_start</a> (char *path, int nthread, int waiting)</td></tr>
-<tr class="separator:aa973afc826afd1b7e797c3d0a4115a1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e0b6096b3f3d1f5e3b741887a38b395"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a3e0b6096b3f3d1f5e3b741887a38b395">scheduler_start</a> (char *path, int nthread, int ngpu, int waiting)</td></tr>
+<tr class="separator:a3e0b6096b3f3d1f5e3b741887a38b395"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a421e27a8cfef2c8bb7439f0f4ab949c2">scheduler_wait</a> (void)</td></tr>
 <tr class="separator:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5986891c7e4175bef6a299caa29b3c8d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a5986891c7e4175bef6a299caa29b3c8d">scheduler_finish</a> (int status)</td></tr>
@@ -138,10 +138,10 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
 <tr class="separator:a928e4a2456fb419b4361122459bf63fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a7861b01cc62c04cfeacec8b8ed27aab2">print_backtrace_symbol</a> (void *const *buffer, int size)</td></tr>
 <tr class="separator:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2792cc8d89def3977725e8a4a108eeda"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a2792cc8d89def3977725e8a4a108eeda">scheduler_send_socket</a> (int sfd)</td></tr>
-<tr class="separator:a2792cc8d89def3977725e8a4a108eeda"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ac41fc0c0ba612865c05ff21b9d093e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a3ac41fc0c0ba612865c05ff21b9d093e">scheduler_recv_socket</a> (int *sfd)</td></tr>
-<tr class="separator:a3ac41fc0c0ba612865c05ff21b9d093e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb27c3904db5220767660e274b4bc0ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#adb27c3904db5220767660e274b4bc0ba">scheduler_send_socket</a> (int sfd, int id)</td></tr>
+<tr class="separator:adb27c3904db5220767660e274b4bc0ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ed452224a349c9e53a0260ae054315e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a4ed452224a349c9e53a0260ae054315e">scheduler_recv_socket</a> (int *sfd, int id)</td></tr>
+<tr class="separator:a4ed452224a349c9e53a0260ae054315e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines that will be used to talk to the scheduler. </p>
@@ -163,7 +163,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
 
 </div>
 </div>
-<a class="anchor" id="aa973afc826afd1b7e797c3d0a4115a1b"></a>
+<a class="anchor" id="a3e0b6096b3f3d1f5e3b741887a38b395"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -178,6 +178,12 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
           <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>nthread</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ngpu</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -276,7 +282,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Ask scheduler in another machine to launch exe. </p>
+<p>Ask scheduler (maybe in another machine) to launch executable. </p>
 
 </div>
 </div>
@@ -340,7 +346,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
 
 </div>
 </div>
-<a class="anchor" id="a2792cc8d89def3977725e8a4a108eeda"></a>
+<a class="anchor" id="adb27c3904db5220767660e274b4bc0ba"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -348,8 +354,18 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
           <td class="memname">int scheduler_send_socket </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>sfd</em></td><td>)</td>
+          <td class="paramname"><em>sfd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -357,7 +373,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
 
 </div>
 </div>
-<a class="anchor" id="a3ac41fc0c0ba612865c05ff21b9d093e"></a>
+<a class="anchor" id="a4ed452224a349c9e53a0260ae054315e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -365,8 +381,18 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
           <td class="memname">int scheduler_recv_socket </td>
           <td>(</td>
           <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>sfd</em></td><td>)</td>
+          <td class="paramname"><em>sfd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">

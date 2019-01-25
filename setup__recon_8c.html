@@ -119,9 +119,18 @@ $(document).ready(function(){initNavTree('setup__recon_8c.html','');});
 <code>#include &quot;recon_utils.h&quot;</code><br/>
 <code>#include &quot;moao.h&quot;</code><br/>
 <code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;pywfs.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ae988b19359343246c5c05ffe6000caa0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#ae988b19359343246c5c05ffe6000caa0">check_nea</a> (<a class="el" href="structdmat.html">dmat</a> *nea, int nsa)</td></tr>
+<tr class="separator:ae988b19359343246c5c05ffe6000caa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad707e69a8fa5604c71e5a2d0fadcfbb5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#ad707e69a8fa5604c71e5a2d0fadcfbb5">nea_chol</a> (<a class="el" href="structdmat.html">dmat</a> **pout, const <a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
+<tr class="separator:ad707e69a8fa5604c71e5a2d0fadcfbb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a182387c2aadfaac90464c33a249699ce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a182387c2aadfaac90464c33a249699ce">nea_mm</a> (<a class="el" href="structdmat.html">dmat</a> **pout, const <a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
+<tr class="separator:a182387c2aadfaac90464c33a249699ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac585c2fa925a41f60b9bb757a9ef640b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#ac585c2fa925a41f60b9bb757a9ef640b">nea_inv</a> (<a class="el" href="structdmat.html">dmat</a> **pout, const <a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
+<tr class="separator:ac585c2fa925a41f60b9bb757a9ef640b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ade74dd6feba7dba0a4b6f38fe134a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a2ade74dd6feba7dba0a4b6f38fe134a8">setup_recon_tomo_prep</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 <tr class="separator:a2ade74dd6feba7dba0a4b6f38fe134a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a764bf903a38cfc81220e42699e911884"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a764bf903a38cfc81220e42699e911884">setup_recon_tomo_matrix</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
@@ -130,13 +139,16 @@ Functions</h2></td></tr>
 <tr class="separator:aa860829623f5076a779fa20d62f5b6d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73a310c15901ee437d44af53a66b22a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a73a310c15901ee437d44af53a66b22a6">setup_recon_mvst</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 <tr class="separator:a73a310c15901ee437d44af53a66b22a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b87050521ffc455c9cb8edd09f5c6c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a7b87050521ffc455c9cb8edd09f5c6c7">setup_recon_tomo</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="separator:a7b87050521ffc455c9cb8edd09f5c6c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a743bfb4b4bcf6543a2564d19be192882"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a743bfb4b4bcf6543a2564d19be192882"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_recon_dmttr</b> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="separator:a743bfb4b4bcf6543a2564d19be192882"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ff118b091512df4b19987614c6326ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a1ff118b091512df4b19987614c6326ae">setup_recon</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="separator:a1ff118b091512df4b19987614c6326ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1935e44e08dd325b5a999854fba87f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#ac1935e44e08dd325b5a999854fba87f7">setup_recon_tomo</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
+<tr class="separator:ac1935e44e08dd325b5a999854fba87f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d13900f0063afbade21324718aa1eaa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a2d13900f0063afbade21324718aa1eaa">setup_recon</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
+<tr class="separator:a2d13900f0063afbade21324718aa1eaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76a216af9a5d20249980e3af4ed66be4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a76a216af9a5d20249980e3af4ed66be4">setup_recon_update</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
+<tr class="separator:a76a216af9a5d20249980e3af4ed66be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a00e032093657c25759a55fdc1ee7c4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a4a00e032093657c25759a55fdc1ee7c4">setup_recon_psd</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
+<tr class="separator:a4a00e032093657c25759a55fdc1ee7c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac77b103ae7e42781d477ff2e8d65c76c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#ac77b103ae7e42781d477ff2e8d65c76c">setup_recon_post</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
+<tr class="separator:ac77b103ae7e42781d477ff2e8d65c76c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa06f785843d809cffebe5ef4764a7618"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#aa06f785843d809cffebe5ef4764a7618">free_recon_unused</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
 <tr class="separator:aa06f785843d809cffebe5ef4764a7618"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a810c17bd7027feae0decafb93f48efcf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#a810c17bd7027feae0decafb93f48efcf">free_recon</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
@@ -145,8 +157,117 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_recon_dmttr</b>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines that setup the wavefront reconstructor and DM fitting. Use parms-&gt;wfsr instead of parms-&gt;wfs for wfs information, which hands GLAO mode correctly.x</p>
 <p>TOMOSCALE is used for RLM, RRM, in MVST for M, and in CUDA due to limited dynamic range of single precision floating point numbers.</p>
-<p>2014-04-01: Scale saneai, cxx, zzt by TOMOSCALE. </p>
+<p>2014-04-01: Scale saneai, cxx, zzt by TOMOSCALE.</p>
+<p>All routines in this file depends on saneai and may be called repeatedly during simulation. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ae988b19359343246c5c05ffe6000caa0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void check_nea </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>nea</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nsa</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Check the dimension of NEA and fix if possible </p>
+
+</div>
+</div>
+<a class="anchor" id="ad707e69a8fa5604c71e5a2d0fadcfbb5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void nea_chol </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> **&#160;</td>
+          <td class="paramname"><em>pout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>in</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Apply cholesky in a 2x2 symmetric matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector. Input and output may be the same. </p>
+
+</div>
+</div>
+<a class="anchor" id="a182387c2aadfaac90464c33a249699ce"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void nea_mm </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> **&#160;</td>
+          <td class="paramname"><em>pout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>in</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Apply LL' to lower diagonal matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector. Input and output may be the same. </p>
+
+</div>
+</div>
+<a class="anchor" id="ac585c2fa925a41f60b9bb757a9ef640b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void nea_inv </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> **&#160;</td>
+          <td class="paramname"><em>pout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>in</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Apply matrix inversion in a 2x2 symmetrisa matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector. Input and output may be the same. </p>
+
+</div>
+</div>
 <a class="anchor" id="a2ade74dd6feba7dba0a4b6f38fe134a8"></a>
 <div class="memitem">
 <div class="memproto">
@@ -288,7 +409,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_recon_dmttr</b>
  
 </div>
 </div>
-<a class="anchor" id="a7b87050521ffc455c9cb8edd09f5c6c7"></a>
+<a class="anchor" id="ac1935e44e08dd325b5a999854fba87f7"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -308,13 +429,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_recon_dmttr</b>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
-          <td class="paramname"><em>powfs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
-          <td class="paramname"><em>aper</em>&#160;</td>
+          <td class="paramname"><em>powfs</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -325,13 +440,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_recon_dmttr</b>
 </div><div class="memdoc">
 <p>Sets up the tomogrpahy turbulence reconstruction structs including wavefront reconstructor and DM fitting operator</p>
 <p>Calls <a class="el" href="setup__recon_8c.html#a764bf903a38cfc81220e42699e911884">setup_recon_tomo_matrix()</a> and setup_recon_fit_matrix() to setup the tomography and DM fitting matrix.</p>
-<p>AHST is handled in <a class="el" href="ahst_8c.html#a55e7a08356d9cc6424c4b549e4a364f2">setup_ngsmod()</a>.</p>
+<p>AHST is handled in setup_ngsmod().</p>
 <p>MVST is handled in <a class="el" href="setup__recon_8c.html#a73a310c15901ee437d44af53a66b22a6">setup_recon_mvst()</a>.</p>
 <p>MOAO is handled in <a class="el" href="moao_8c.html#ac70e508023f8816854d7d4eaf0452aa6">setup_recon_moao()</a>. </p>
 
 </div>
 </div>
-<a class="anchor" id="a1ff118b091512df4b19987614c6326ae"></a>
+<a class="anchor" id="a2d13900f0063afbade21324718aa1eaa"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -351,7 +466,94 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_recon_dmttr</b>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
-          <td class="paramname"><em>powfs</em>, </td>
+          <td class="paramname"><em>powfs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Setup either the minimum variance reconstructor by calling setup_recon_mvr() or least square reconstructor by calling setup_recon_lsr() </p>
+
+</div>
+</div>
+<a class="anchor" id="a76a216af9a5d20249980e3af4ed66be4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_recon_update </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramname"><em>powfs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Update reconstructor </p>
+
+</div>
+</div>
+<a class="anchor" id="a4a00e032093657c25759a55fdc1ee7c4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_recon_psd </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>PSD computation for gian update </p>
+
+</div>
+</div>
+<a class="anchor" id="ac77b103ae7e42781d477ff2e8d65c76c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_recon_post </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -366,7 +568,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_recon_dmttr</b>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Setup either the minimum variance reconstructor by calling setup_recon_mvr() or least square reconstructor by calling setup_recon_lsr() </p>
+<p>A few further operations that needs MVM. </p>
 
 </div>
 </div>

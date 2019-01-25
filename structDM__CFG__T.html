@@ -147,10 +147,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:a1984c03323eaf33b0b643be4aaec05db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21257246abe111970daa1487486bc6dc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDM__CFG__T.html#a21257246abe111970daa1487486bc6dc">hist</a></td></tr>
 <tr class="separator:a21257246abe111970daa1487486bc6dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf71d816fd769fe830d2e03f82c28b12"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDM__CFG__T.html#acf71d816fd769fe830d2e03f82c28b12">cubic</a></td></tr>
-<tr class="separator:acf71d816fd769fe830d2e03f82c28b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09c1e5f048b46fb48660629a6bddbb43"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDM__CFG__T.html#a09c1e5f048b46fb48660629a6bddbb43">order</a></td></tr>
-<tr class="separator:a09c1e5f048b46fb48660629a6bddbb43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad51c7bdc88ea34b8b9b7577186f689de"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDM__CFG__T.html#ad51c7bdc88ea34b8b9b7577186f689de">order</a></td></tr>
+<tr class="separator:ad51c7bdc88ea34b8b9b7577186f689de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3eca0a0f00d7e45fb842d4a8dace867"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDM__CFG__T.html#ab3eca0a0f00d7e45fb842d4a8dace867">isground</a></td></tr>
 <tr class="separator:ab3eca0a0f00d7e45fb842d4a8dace867"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab74e80a86f033c5ec79c0e563c484791"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDM__CFG__T.html#ab74e80a86f033c5ec79c0e563c484791">actfloat</a></td></tr>
@@ -320,7 +318,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Inter-Actuator Coupling coefficient. </p>
+<p>If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient. </p>
 
 </div>
 </div>
@@ -363,29 +361,16 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="acf71d816fd769fe830d2e03f82c28b12"></a>
+<a class="anchor" id="ad51c7bdc88ea34b8b9b7577186f689de"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int DM_CFG_T::cubic</td>
+          <td class="memname">int DM_CFG_T::order</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>use cubic spline. better than linear. need to specify iac </p>
-
-</div>
-</div>
-<a class="anchor" id="a09c1e5f048b46fb48660629a6bddbb43"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">double DM_CFG_T::order</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Order of the DM within telescope clear subaperture </p>
+<p>Nominal order of the DM within telescope clear subaperture </p>
 
 </div>
 </div>

@@ -1,9 +1,8 @@
 var structMOAO__CFG__T =
 [
     [ "dx", "structMOAO__CFG__T.html#ae8b54a015cead1cfb2c10ec323a1c527", null ],
-    [ "order", "structMOAO__CFG__T.html#aa7b46059ddd06468dcf6d5af0a9e1f3d", null ],
+    [ "order", "structMOAO__CFG__T.html#ad48b40cc8fa331e50d718f6ac50a2de3", null ],
     [ "used", "structMOAO__CFG__T.html#a739411b38175c0a432ad6d73df2c45a3", null ],
-    [ "cubic", "structMOAO__CFG__T.html#a6ccaefa7d6eb62c0bd011e9c79f7cfef", null ],
     [ "actslave", "structMOAO__CFG__T.html#aba8ac60ba9a8b4791e088820716f8cdf", null ],
     [ "lrt_ptt", "structMOAO__CFG__T.html#a7a4a0f72cab64d5066a6a1e4fe10a51e", null ],
     [ "iac", "structMOAO__CFG__T.html#af52f25ca1fec25148e7163d40d059691", null ],

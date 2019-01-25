@@ -119,18 +119,21 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae937fd89f3317b68b95d8c7c000812a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae937fd89f3317b68b95d8c7c000812a6"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>cucg_t</b> (int _maxit=0, int _warm_restart=0)</td></tr>
 <tr class="separator:ae937fd89f3317b68b95d8c7c000812a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a5b36f810c23cb62e010d4a686d858c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a5b36f810c23cb62e010d4a686d858c"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>L</b> (curcell **xout, Real beta, const curcell *xin, Real alpha, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)=0</td></tr>
-<tr class="separator:a3a5b36f810c23cb62e010d4a686d858c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8aedc17739f4a1882436fd32a409cb11"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8aedc17739f4a1882436fd32a409cb11"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (curcell **xout, Real beta, const curcell *xin, Real alpha, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a8aedc17739f4a1882436fd32a409cb11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ceef07a4a1fd7ce8b3f931547cb0a99"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ceef07a4a1fd7ce8b3f931547cb0a99"></a>
-virtual Real&#160;</td><td class="memItemRight" valign="bottom"><b>solve</b> (curcell **xout, const curcell *xin, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a4ceef07a4a1fd7ce8b3f931547cb0a99"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a319782970090e6949b3e08049f5ce5e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a319782970090e6949b3e08049f5ce5e2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>P</b> (curcell **xout, const curcell *xin, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a319782970090e6949b3e08049f5ce5e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee4315487905810deb88ef79d2ba51aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee4315487905810deb88ef79d2ba51aa"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Init</b> (int _maxit, int _warm_restart)</td></tr>
+<tr class="separator:aee4315487905810deb88ef79d2ba51aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a366386e8eb5de8972cbff702a8ae0fd0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a366386e8eb5de8972cbff702a8ae0fd0"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>L</b> (curcell &amp;xout, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)=0</td></tr>
+<tr class="separator:a366386e8eb5de8972cbff702a8ae0fd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7b93e8dc0822464aaa046acc3c26d6e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7b93e8dc0822464aaa046acc3c26d6e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (curcell &amp;xout, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="separator:ab7b93e8dc0822464aaa046acc3c26d6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa243050a9f27b6637154673a1fe36c72"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa243050a9f27b6637154673a1fe36c72"></a>
+virtual Real&#160;</td><td class="memItemRight" valign="bottom"><b>solve</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="separator:aa243050a9f27b6637154673a1fe36c72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99dc98467727cecabecf161fe5a7d231"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a99dc98467727cecabecf161fe5a7d231"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Pre</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="separator:a99dc98467727cecabecf161fe5a7d231"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>

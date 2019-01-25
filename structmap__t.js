@@ -1,6 +1,6 @@
 var structmap__t =
 [
-    [ "id", "structmap__t.html#a98082b14731732998970d5dbcd139c11", null ],
+    [ "id", "structmap__t.html#ad2e8d305ae03b790c9038ea8fbb4fcb0", null ],
     [ "p", "structmap__t.html#a54f42e602fa810d8415bc270de820854", null ],
     [ "nx", "structmap__t.html#a7c61ae5f9b2c0d4997ad21bd5702360f", null ],
     [ "ny", "structmap__t.html#a1ca4de9a0f6584e5d7e7227b678e3e4a", null ],
@@ -15,6 +15,5 @@ var structmap__t =
     [ "h", "structmap__t.html#af44964e7d847f0486ff68fe875d6f679", null ],
     [ "vx", "structmap__t.html#a6cb4e9ced138317f070ce67d35d6bdbb", null ],
     [ "vy", "structmap__t.html#a5039896aeaffaa0e8f3ba50921e9ed10", null ],
-    [ "cubic", "structmap__t.html#ad3cc4b8d4ca8d3457681a7799525b410", null ],
     [ "iac", "structmap__t.html#a9d662b57235272ca02d322471178cd18", null ]
 ];

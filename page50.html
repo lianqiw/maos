@@ -131,11 +131,11 @@ Guidelines</h1>
 Code Structure</h1>
 <ul>
 <li><a class="el" href="skyc_8c.html#ac0f2228420376f4db7e1274f2b41667c">main()</a> is the entrance into the program. It calls<ul>
-<li><a class="el" href="maos_2parms_8h.html#a43a230cd655d6c6e0582849152f2e989">setup_parms()</a>: to setup the parameters of types <a class="el" href="structPARMS__T.html">PARMS_T</a> and check for errors.</li>
-<li><a class="el" href="maos_8c.html#a03b12a216d3e6a33a008f5e35da726e3">maos()</a>: calls the following to do simulation.<ul>
+<li><a class="el" href="maos_2parms_8h.html#a441e9246520886122d956f9e9f0bc1be">setup_parms()</a>: to setup the parameters of types <a class="el" href="structPARMS__T.html">PARMS_T</a> and check for errors.</li>
+<li>maos(): calls the following to do simulation.<ul>
 <li><a class="el" href="setup__aper_8c.html#abf63108c7633e5a353e73cd913fc9c26">setup_aper()</a>: to setup the aperture (of type <a class="el" href="structAPER__T.html">APER_T</a>)</li>
 <li><a class="el" href="skyc_2setup__powfs_8c.html#a9fd5284932263fee238a4f1bcf8f78d1">setup_powfs()</a>: to setup the wfs type information (of type <a class="el" href="structPOWFS__T.html">POWFS_T</a>)</li>
-<li><a class="el" href="setup__recon_8c.html#a1ff118b091512df4b19987614c6326ae">setup_recon()</a>: to setup the wavefront reconstructor and dm fit structs (of type <a class="el" href="structRECON__T.html">RECON_T</a>)</li>
+<li><a class="el" href="setup__recon_8c.html#a2d13900f0063afbade21324718aa1eaa">setup_recon()</a>: to setup the wavefront reconstructor and dm fit structs (of type <a class="el" href="structRECON__T.html">RECON_T</a>)</li>
 <li>sim(): to start the simulation. It then calls<ul>
 <li><a class="el" href="sim__utils_8c.html#af566f334aaf19cf9ad3ed5a847c2aee9">save_skyc()</a>: (optional) to save information for sky coverage postproc</li>
 <li>FOR EACH SEED<ul>
@@ -146,7 +146,7 @@ Code Structure</h1>
 <li>genscreen(): (in open loop) to generate atmosphere turbulence</li>
 <li><a class="el" href="perfevl_8c.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a>: (in closed loop) to evaluate the performance ins cience field</li>
 <li><a class="el" href="wfsgrad_8c.html#a99e7e23b2226afc767fc176f352f6e11">wfsgrad()</a>: to compute WFS gradients</li>
-<li><a class="el" href="recon_8c.html#a17defa53668245c14cd494b9fab761f1">tomofit()</a>: to do tomography and DM fit</li>
+<li><a class="el" href="recon_8c.html#a930531540b7291036352d7b18436ce47">tomofit()</a>: to do tomography and DM fit</li>
 <li>filter(): to do temporal filtering of DM commands.</li>
 <li><a class="el" href="moao_8c.html#af62a4685464fea7bdd37d04c821c3caf">moao_recon()</a>: (optional) to compute MOAO DM commands.</li>
 <li><a class="el" href="perfevl_8c.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a>: (in open loop) to performance evaluation</li>

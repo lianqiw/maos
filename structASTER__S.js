@@ -15,12 +15,14 @@ var structASTER__S =
     [ "res_ws", "structASTER__S.html#aea75c7e597dcfffa4cfc191a9b13de32", null ],
     [ "res_ngs", "structASTER__S.html#a443a8af21d2eae10582c95a6194cad5d", null ],
     [ "mdtrat", "structASTER__S.html#a1d29960f17c0fb98056922eb67c85eed", null ],
-    [ "mresol", "structASTER__S.html#a33ee3b0fa5a43daa6450e73d3a4a649b", null ],
+    [ "mresest", "structASTER__S.html#a769a350315ed4c8c26d763da4a210e6c", null ],
     [ "rand", "structASTER__S.html#ad39903372e6358e7bc1e776091edb0ac", null ],
     [ "idtratmin", "structASTER__S.html#abb2783f1a45956809ecc403d76cba879", null ],
     [ "idtratmax", "structASTER__S.html#aa4ddeb8183cae8709729391c4f028a91", null ],
     [ "kalman", "structASTER__S.html#aeec8f28f1dd997429417b627b5e9dc45", null ],
     [ "idtrats", "structASTER__S.html#a3bc2962002ae36d487021d6792055862", null ],
     [ "dtrats", "structASTER__S.html#a25cfa4ecf8d3fae564ed9335bf16a122", null ],
-    [ "ngs", "structASTER__S.html#a68e069a919adb9dfc2fd5bb9474fe069", null ]
+    [ "ngs", "structASTER__S.html#a68e069a919adb9dfc2fd5bb9474fe069", null ],
+    [ "phyRes", "structASTER__S.html#ae12414110959097a7cb96d687abb4ee7", null ],
+    [ "phyMRes", "structASTER__S.html#a34fcc314ee08a52a10548b07b09662f9", null ]
 ];

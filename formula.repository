@@ -65,6 +65,5 @@
 \form#64:\begin{eqnarray*} a&=&-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&=& f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&=&-0.5 f(-1) + 0.5 f(1) \\ d&=& f(0) \\ \end{eqnarray*}
 \form#65:\[f^\prime(0)=(f(1)-f(-1))/2\]
 \form#66:\[f^\prime(0)=(f(1)-f(0))\]
-\form#67:$C0+=A*B*alpha$
-\form#68:$C_n^k$
-\form#69:\[ \sigma^2=\int \textrm{PSD}_{ngs,ws}H_{rej}\textrm{d}\nu + \int_0^{\nu_{nyquist}} \textrm{PSF}\textrm{d}\nu \]
+\form#67:$C_n^k$
+\form#68:\[ \sigma^2=\int \textrm{PSD}_{ngs,ws}H_{rej}\textrm{d}\nu + \int_0^{\nu_{nyquist}} \textrm{PSF}\textrm{d}\nu \]

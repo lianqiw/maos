@@ -122,8 +122,6 @@ Data Structures</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html">INTSTAT_T</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPYWFS__T.html">PYWFS_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html">POWFS_T</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html">NGSMOD_T</a></td></tr>
@@ -135,6 +133,8 @@ Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINVPSD__T.html">INVPSD_T</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFRACTAL__T.html">FRACTAL_T</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFIT__T.html">FIT_T</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRECON__T.html">RECON_T</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,7 +152,7 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a47895b22092692ba9ca782f61cc1d4b8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a47895b22092692ba9ca782f61cc1d4b8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>CHECK_SAVE</b>(start, end, now, every)&#160;&#160;&#160;((now)+1&gt;(start) &amp;&amp; (((every)&gt;1 &amp;&amp; ((now)+1-(start))%(every)==0) || (now)+1==(end)))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CHECK_SAVE</b>(start, end, now, every)&#160;&#160;&#160;((now)&gt;=(start) &amp;&amp; (((every)&gt;1 &amp;&amp; ((now)+1-(start))%(every)==0) || (now)+1==(end)))</td></tr>
 <tr class="separator:a47895b22092692ba9ca782f61cc1d4b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

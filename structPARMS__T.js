@@ -43,7 +43,10 @@ var structPARMS__T =
     [ "dirs", "structPARMS__T.html#a80536cfd8cbf8991bafec37082f5f964", null ],
     [ "dither", "structPARMS__T.html#a4013388795a00797b88a3f32d101f496", null ],
     [ "ilgspowfs", "structPARMS__T.html#aaa5c8ba49b49d4afb12b253141ee5056", null ],
+    [ "nlgspowfs", "structPARMS__T.html#add0f96aa8c6339f37cafa19427817c24", null ],
     [ "itpowfs", "structPARMS__T.html#a9a12436ad46c36071a29cc4ab48d59a3", null ],
+    [ "idmground", "structPARMS__T.html#a85954ed8f0966d8b614226a183046cd7", null ],
     [ "step_lo", "structPARMS__T.html#ad8b89d1fe5a384e0d17aa44e6d7f5044", null ],
-    [ "step_hi", "structPARMS__T.html#a3486cdd72a5702e24b463195039c7e98", null ]
+    [ "step_hi", "structPARMS__T.html#a3486cdd72a5702e24b463195039c7e98", null ],
+    [ "hipowfs_hs", "structPARMS__T.html#a3fc6ebd7adfd1f443d90a01431695e71", null ]
 ];

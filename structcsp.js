@@ -1,10 +1,8 @@
 var structcsp =
 [
-    [ "id", "structcsp.html#a18eb4557a2c7d77f4f566652ea459cf7", null ],
+    [ "id", "structcsp.html#a3fa7ef2e16e0b700bc06d837cec9cc2a", null ],
     [ "x", "structcsp.html#a67b69c2bba80f474c3d693c7e916bbbc", null ],
-    [ "m", "structcsp.html#a2fc683f3c656de7244ea28ba8bba3204", null ],
     [ "nx", "structcsp.html#aad7f9afab1677e489fff66625036fda4", null ],
-    [ "n", "structcsp.html#a3c3ba5850365cc78c4b4f227ea70eaa9", null ],
     [ "ny", "structcsp.html#ac7102cbe89e0f455deb13406499f348e", null ],
     [ "header", "structcsp.html#a0de482dbb747dd977608dea928a96d9c", null ],
     [ "nzmax", "structcsp.html#a1ac262485faf97bba7f808626854a480", null ],

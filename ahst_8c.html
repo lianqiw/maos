@@ -113,21 +113,20 @@ $(document).ready(function(){initNavTree('ahst_8c.html','');});
 <div class="contents">
 <div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
 <code>#include &quot;ahst.h&quot;</code><br/>
+<code>#include &quot;pywfs.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a192c4884609228272643174ef145d71e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a192c4884609228272643174ef145d71e">ngsmod_hm_accphi</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="separator:a192c4884609228272643174ef145d71e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a361c2bca340edabb5a394c01aafc54e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a361c2bca340edabb5a394c01aafc54e9">ngsmod_hm_ana</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="separator:a361c2bca340edabb5a394c01aafc54e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55e7a08356d9cc6424c4b549e4a364f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a55e7a08356d9cc6424c4b549e4a364f2">setup_ngsmod</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="separator:a55e7a08356d9cc6424c4b549e4a364f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abad45266bd29e9426cdbb40322c78c38"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#abad45266bd29e9426cdbb40322c78c38">calc_ngsmod_dot</a> (double *pttr_out, double *pttrcoeff_out, double *ngsmod_out, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, const double *opd, int ievl)</td></tr>
-<tr class="separator:abad45266bd29e9426cdbb40322c78c38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d2a474cd4a6fcebb9e1ff8f26855353"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a3d2a474cd4a6fcebb9e1ff8f26855353">ngsmod2dm</a> (<a class="el" href="structdcell.html">dcell</a> **dmc, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structdcell.html">dcell</a> *M, double gain)</td></tr>
-<tr class="separator:a3d2a474cd4a6fcebb9e1ff8f26855353"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0182debdd2a686ac5e1b02a9588dfe0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a0182debdd2a686ac5e1b02a9588dfe0e">ngsmod2science</a> (<a class="el" href="structdmat.html">dmat</a> *iopd, <a class="el" href="structloc__t.html">loc_t</a> *loc, const <a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *ngsmod, double thetax, double thetay, const double *mod, double alpha)</td></tr>
-<tr class="separator:a0182debdd2a686ac5e1b02a9588dfe0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabb9e658d5f0d2a663c27425206f849b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#aabb9e658d5f0d2a663c27425206f849b">setup_ngsmod_prep</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
+<tr class="separator:aabb9e658d5f0d2a663c27425206f849b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8967f5146174c863ff0d957d92fa327"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#ac8967f5146174c863ff0d957d92fa327">setup_ngsmod_recon</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
+<tr class="separator:ac8967f5146174c863ff0d957d92fa327"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f191362ff1cd926ce50c0cfeb6340da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a9f191362ff1cd926ce50c0cfeb6340da">calc_ngsmod_dot</a> (double *pttr_out, double *pttrcoeff_out, double *ngsmod_out, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *ngsmod, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, const double *opd, int ievl)</td></tr>
+<tr class="separator:a9f191362ff1cd926ce50c0cfeb6340da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ab3d8f4a56c524b4d7b8b8a5356d460"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a2ab3d8f4a56c524b4d7b8b8a5356d460">calc_ngsmod_post</a> (double *pttr_out, double *pttrcoeff_out, double *ngsmod_out, double tot, const double *coeff, const <a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *ngsmod, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, double thetax, double thetay)</td></tr>
+<tr class="separator:a2ab3d8f4a56c524b4d7b8b8a5356d460"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ab00f00818882cc75b2e9e964229834"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a6ab00f00818882cc75b2e9e964229834">ngsmod2science</a> (<a class="el" href="structdmat.html">dmat</a> *iopd, const <a class="el" href="structloc__t.html">loc_t</a> *loc, const <a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *ngsmod, double thetax, double thetay, const double *mod, double alpha)</td></tr>
+<tr class="separator:a6ab00f00818882cc75b2e9e964229834"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac11262023c447185fc5f178daae87abc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac11262023c447185fc5f178daae87abc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *ngsmod)</td></tr>
 <tr class="separator:ac11262023c447185fc5f178daae87abc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,80 +134,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
 <tr class="separator:a36f0c7d4ea59dd8f46e209691e5e6d8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Contains functions to setup NGS modes and reconstructor using AHST for one or two DMs. Use parms-&gt;wfsr instead of parms-&gt;wfs for wfs information, which hands GLAO mode correctly. </p>
+<div class="textblock"><p>Contains functions to setup NGS modes and reconstructor using AHST for one or more DMs. Use parms-&gt;wfsr instead of parms-&gt;wfs for wfs information, which hands GLAO mode correctly.</p>
+<p>Notice that update of this file may require GPU code update accordingly</p>
+<p>2017-09-11: When there is misregistration/distortion between the DM and science pupil, the assumed NGS mode on DM remain intact, but the influence on Science OPD needs to use ray tracing. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a192c4884609228272643174ef145d71e"></a>
+<a class="anchor" id="aabb9e658d5f0d2a663c27425206f849b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* ngsmod_hm_accphi </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
-          <td class="paramname"><em>parms</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
-          <td class="paramname"><em>recon</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
-          <td class="paramname"><em>aper</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compute NGS modes Ha*M in the science directon using ray tracing. Not used </p>
-
-</div>
-</div>
-<a class="anchor" id="a361c2bca340edabb5a394c01aafc54e9"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* ngsmod_hm_ana </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
-          <td class="paramname"><em>parms</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
-          <td class="paramname"><em>recon</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
-          <td class="paramname"><em>aper</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compute NGS modes Ha*M in the science directon using analytic formula. Not used </p>
-
-</div>
-</div>
-<a class="anchor" id="a55e7a08356d9cc6424c4b549e4a364f2"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void setup_ngsmod </td>
+          <td class="memname">void setup_ngsmod_prep </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
@@ -228,7 +163,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>&#160;</td>
         </tr>
         <tr>
@@ -238,11 +173,38 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>setup NGS modes and reconstructor using AHST for one or two DMs. </p>
+<p>AHST parameters that are related to the geometry only, and will not be updated when estimated WFS measurement noise changes. </p>
 
 </div>
 </div>
-<a class="anchor" id="abad45266bd29e9426cdbb40322c78c38"></a>
+<a class="anchor" id="ac8967f5146174c863ff0d957d92fa327"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_ngsmod_recon </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>setup NGS modes reconstructor in ahst mode. </p>
+
+</div>
+</div>
+<a class="anchor" id="a9f191362ff1cd926ce50c0cfeb6340da"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -273,8 +235,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
-          <td class="paramname"><em>recon</em>, </td>
+          <td class="paramtype">const <a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *&#160;</td>
+          <td class="paramname"><em>ngsmod</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -305,33 +267,63 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
 
 </div>
 </div>
-<a class="anchor" id="a3d2a474cd4a6fcebb9e1ff8f26855353"></a>
+<a class="anchor" id="a2ab3d8f4a56c524b4d7b8b8a5356d460"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void ngsmod2dm </td>
+          <td class="memname">void calc_ngsmod_post </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> **&#160;</td>
-          <td class="paramname"><em>dmc</em>, </td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>pttr_out</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
-          <td class="paramname"><em>recon</em>, </td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>pttrcoeff_out</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&#160;</td>
-          <td class="paramname"><em>M</em>, </td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>ngsmod_out</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>gain</em>&#160;</td>
+          <td class="paramname"><em>tot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double *&#160;</td>
+          <td class="paramname"><em>coeff</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *&#160;</td>
+          <td class="paramname"><em>ngsmod</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramname"><em>aper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thetax</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thetay</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -340,12 +332,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert NGS modes to DM actuator commands using analytical expression. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>switch to use mode vectors </dd></dl>
+<p>Separate post processing part so that GPU code can call it. </p>
 
 </div>
 </div>
-<a class="anchor" id="a0182debdd2a686ac5e1b02a9588dfe0e"></a>
+<a class="anchor" id="a6ab00f00818882cc75b2e9e964229834"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -358,7 +349,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
           <td class="paramname"><em>loc</em>, </td>
         </tr>
         <tr>
@@ -398,7 +389,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert NGS mode vector to aperture grid for science directions. </p>
+<p>Convert NGS mode vector to aperture grid for science directions.</p>
+<p>2017-09-11: Deprecated. This routine does not take into account DM 2 science misregistration. </p>
 
 </div>
 </div>
@@ -425,8 +417,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>remove NGS modes from LGS DM commands if ahst_wt==1 Rngs*GA*dmerr is zero if ahst_wt==2 Doesn't perturb NGS modes in science direction. if ahst_wt==3 Identity weighting.</p>
-<p>if nmod==6: make sure the global focus mode is not removed from LGS result. </p>
+<p>remove NGS modes from LGS DM commands if nmod==6: make sure the global focus mode is not removed from LGS result. </p>
 
 </div>
 </div>

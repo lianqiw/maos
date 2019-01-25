@@ -113,7 +113,7 @@ $(document).ready(function(){initNavTree('type_8h.html','');});
 <div class="title">type.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;../sys/sys.h&quot;</code><br/>
+<div class="textblock"><code>#include &quot;numtype.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
@@ -205,30 +205,54 @@ Macros</h2></td></tr>
 <tr class="memitem:a03f463a93452d4a47b80ee67e0ac1cea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03f463a93452d4a47b80ee67e0ac1cea"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>ARR</b>(T)</td></tr>
 <tr class="separator:a03f463a93452d4a47b80ee67e0ac1cea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63e02520a95cc4e77c28f4e57e26e11e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63e02520a95cc4e77c28f4e57e26e11e"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>MAT</b>(T)</td></tr>
-<tr class="separator:a63e02520a95cc4e77c28f4e57e26e11e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70cc5773ce5ac5ff39ef31bb6237b1ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70cc5773ce5ac5ff39ef31bb6237b1ef"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>CELL</b>(T)</td></tr>
-<tr class="separator:a70cc5773ce5ac5ff39ef31bb6237b1ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20a2f43764e3d7c4d4bad9c8cfea5ba5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a20a2f43764e3d7c4d4bad9c8cfea5ba5"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>SPMAT</b>(T)</td></tr>
-<tr class="separator:a20a2f43764e3d7c4d4bad9c8cfea5ba5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7540e420f4266a07773f84a10e784ee7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7540e420f4266a07773f84a10e784ee7"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>IND0</b>(A)&#160;&#160;&#160;error(&quot;Invalid use. Use IND(A,i) or IND(A,ix,iy)\n&quot;);</td></tr>
-<tr class="separator:a7540e420f4266a07773f84a10e784ee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e7f5ab7904ef59b8c9255b155f4a070"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e7f5ab7904ef59b8c9255b155f4a070"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>IND1</b>(A, i)&#160;&#160;&#160;A-&gt;p[i]</td></tr>
-<tr class="separator:a4e7f5ab7904ef59b8c9255b155f4a070"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac162f28e69c7a8a8da5f6482957d1908"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac162f28e69c7a8a8da5f6482957d1908"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>IND2</b>(A, ix, iy)&#160;&#160;&#160;A-&gt;p[ix+A-&gt;nx*iy]</td></tr>
-<tr class="separator:ac162f28e69c7a8a8da5f6482957d1908"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af2c1d1f814337c2b9584b3d84420690a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af2c1d1f814337c2b9584b3d84420690a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>IND_GET</b>(_0, _1, _2, _3, NAME,...)&#160;&#160;&#160;NAME</td></tr>
-<tr class="separator:af2c1d1f814337c2b9584b3d84420690a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a104f7f5429ad6b881b0d6ee3e1da78f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a104f7f5429ad6b881b0d6ee3e1da78f6"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>IND</b>(...)&#160;&#160;&#160;IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)</td></tr>
-<tr class="separator:a104f7f5429ad6b881b0d6ee3e1da78f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e62a38d7281e7d3eb937e1bd9bd9b38"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e62a38d7281e7d3eb937e1bd9bd9b38"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MATARR</b>(T)</td></tr>
+<tr class="separator:a2e62a38d7281e7d3eb937e1bd9bd9b38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a4be8256eeebf567f08bb468e36051a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a4be8256eeebf567f08bb468e36051a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CELLARR</b>(T)</td></tr>
+<tr class="separator:a5a4be8256eeebf567f08bb468e36051a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30838a1f88af6f28e6b2fbea9fa31dc0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a30838a1f88af6f28e6b2fbea9fa31dc0"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SPMATARR</b>(T)</td></tr>
+<tr class="separator:a30838a1f88af6f28e6b2fbea9fa31dc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bf89c4d3278bf55adbf96d2fb727680"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5bf89c4d3278bf55adbf96d2fb727680"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>P1</b>(A, i)&#160;&#160;&#160;((A)-&gt;p[(i)])</td></tr>
+<tr class="separator:a5bf89c4d3278bf55adbf96d2fb727680"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c187952e0a16e6704c4549be18118aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c187952e0a16e6704c4549be18118aa"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>P2</b>(A, ix, iy)&#160;&#160;&#160;((A)-&gt;p[(ix)+(A)-&gt;nx*(iy)])</td></tr>
+<tr class="separator:a1c187952e0a16e6704c4549be18118aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38ba78c2263699976c461d62c8c0cd27"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38ba78c2263699976c461d62c8c0cd27"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>P0</b>(A)&#160;&#160;&#160;((A)-&gt;p)</td></tr>
+<tr class="separator:a38ba78c2263699976c461d62c8c0cd27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0437e103d06910032381b554e4c6e922"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0437e103d06910032381b554e4c6e922"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PP0</b>(A)&#160;&#160;&#160;((A)-&gt;p)</td></tr>
+<tr class="separator:a0437e103d06910032381b554e4c6e922"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03e0bd76aace3fd9312bdadb5cdf1750"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03e0bd76aace3fd9312bdadb5cdf1750"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PP1</b>(A, i)&#160;&#160;&#160;((A)-&gt;p+(i))</td></tr>
+<tr class="separator:a03e0bd76aace3fd9312bdadb5cdf1750"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad996ab471c869f4cc23111f321dac9a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad996ab471c869f4cc23111f321dac9a8"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PP2</b>(A, ix, iy)&#160;&#160;&#160;((A)-&gt;p+(ix)+(A)-&gt;nx*(iy))</td></tr>
+<tr class="separator:ad996ab471c869f4cc23111f321dac9a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fedfbcc95311f7df837bd5ed1503c44"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6fedfbcc95311f7df837bd5ed1503c44"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>P_GET</b>(_0, _1, _2, _3, NAME,...)&#160;&#160;&#160;NAME</td></tr>
+<tr class="separator:a6fedfbcc95311f7df837bd5ed1503c44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afba9f40fe63e258302b2c472f9e9f386"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afba9f40fe63e258302b2c472f9e9f386"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>P</b>(...)&#160;&#160;&#160;P_GET(_0,__VA_ARGS__,P2,P1,P0)(__VA_ARGS__)</td></tr>
+<tr class="separator:afba9f40fe63e258302b2c472f9e9f386"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbbefb93188c2cbca0551d44f95db166"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbbefb93188c2cbca0551d44f95db166"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PP</b>(...)&#160;&#160;&#160;P_GET(_0,__VA_ARGS__,PP2,PP1,PP0)(__VA_ARGS__)</td></tr>
+<tr class="separator:adbbefb93188c2cbca0551d44f95db166"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedbdd989a69ced62e7db462fc0a02972"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aedbdd989a69ced62e7db462fc0a02972"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PCOL</b>(A, iy)&#160;&#160;&#160;((A)-&gt;p+(iy)*(A)-&gt;nx)</td></tr>
+<tr class="separator:aedbdd989a69ced62e7db462fc0a02972"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc6c8a37faad9f0f715e9ecf731a1e66"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abc6c8a37faad9f0f715e9ecf731a1e66"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PR</b>(A, ix, iy)&#160;&#160;&#160;P2(A, wrap(ix, A-&gt;nx), wrap(iy, A-&gt;ny))</td></tr>
+<tr class="separator:abc6c8a37faad9f0f715e9ecf731a1e66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee2ecfa776775f07c7962b4f605ed48a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee2ecfa776775f07c7962b4f605ed48a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PPR</b>(A, ix, iy)&#160;&#160;&#160;PP2(A, wrap(ix, A-&gt;nx), wrap(iy, A-&gt;ny))</td></tr>
+<tr class="separator:aee2ecfa776775f07c7962b4f605ed48a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16d2ae3e5519371c1d566bc9f8aa717c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16d2ae3e5519371c1d566bc9f8aa717c"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PCOLR</b>(A, iy)&#160;&#160;&#160;((A)-&gt;p+wrap(iy, A-&gt;ny)*(A)-&gt;nx)</td></tr>
+<tr class="separator:a16d2ae3e5519371c1d566bc9f8aa717c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>

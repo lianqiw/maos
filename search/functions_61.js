@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['acc',['acc',['../classdither__t.html#a76c4379babad193c308b64da394cc082',1,'dither_t']]],
-  ['act_5fcoord2ind',['act_coord2ind',['../recon__utils_8c.html#a347342c8605c1f0acf2ddbe61af37b1e',1,'recon_utils.c']]],
+  ['acc',['acc',['../classdither__t.html#ab05bb21a209c49d8b5c9c2e26b0efade',1,'dither_t']]],
   ['act_5fextrap',['act_extrap',['../slaving_8h.html#a1173c1aa86a338405f4fa85ccd00f465',1,'slaving.c']]],
   ['act_5fextrap_5fdo',['act_extrap_do',['../slaving_8h.html#a746f4f30fe77615563102f09543fd191',1,'slaving.c']]],
   ['act_5ffloat',['act_float',['../slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7',1,'slaving.c']]],
@@ -9,14 +8,14 @@ var searchData=
   ['act_5fstuck',['act_stuck',['../slaving_8h.html#a4dd509feae130cc64f3cc381bea87f54',1,'slaving.c']]],
   ['act_5fstuck_5fcmd',['act_stuck_cmd',['../slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3',1,'slaving.c']]],
   ['act_5fzero',['act_zero',['../slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf',1,'slaving.c']]],
-  ['add_5fpsd',['add_psd',['../psd_8h.html#adbc96f094195135e8ac5fcd26b7cb120',1,'psd.c']]],
+  ['add_5fpsd',['add_psd',['../psd_8h.html#a6e04d886c502aa4c372dbe71fd934509',1,'psd.c']]],
   ['adddbl',['adddbl',['../mathmisc_8h.html#ac03ebf16a4d4a5b1cf715f594067067d',1,'mathmisc.c']]],
   ['addlow2dm',['addlow2dm',['../filter_8c.html#ac45a59f9db709790e8f359e498cb588e',1,'filter.c']]],
   ['addpath',['addpath',['../path_8h.html#a8539b4e587a7ea71221206e43f29ead5',1,'path.c']]],
   ['apply_5ffractal',['apply_fractal',['../recon__utils_8c.html#a68ea00a9c6e3e064ff6b613e9718cf54',1,'recon_utils.c']]],
   ['apply_5finvpsd',['apply_invpsd',['../recon__utils_8c.html#a666275101e117d56e1cf2908b18e0278',1,'recon_utils.c']]],
-  ['apply_5fl2',['apply_L2',['../recon__utils_8c.html#a736ddf612e3ea272d3543f05852cdd6a',1,'recon_utils.c']]],
-  ['apply_5flaplacian_5fmap',['apply_laplacian_map',['../laplacian_8h.html#a6ef3b0a4cde1896b52fc7855a31b0b06',1,'laplacian.c']]],
+  ['apply_5fl2',['apply_L2',['../recon__utils_8c.html#a6fd4b33825780c0a4cc8aabfe8c50bca',1,'recon_utils.c']]],
+  ['apply_5flaplacian_5fmap',['apply_laplacian_map',['../laplacian_8h.html#aaeeac18fb36bae4577c19a1235cef451',1,'laplacian.c']]],
   ['applyw',['applyW',['../recon__utils_8c.html#aac31a93d205900027f62a385a321de0b',1,'recon_utils.c']]],
   ['atm2xloc',['atm2xloc',['../sim__utils_8c.html#a130fb2cf597c4752d9397777e9bcf1e2',1,'sim_utils.c']]]
 ];

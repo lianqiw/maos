@@ -121,8 +121,12 @@ Data Fields</h2></td></tr>
 <tr class="separator:ac56be22038fff61ad88a7350b97c34cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35e16848dad0992028e3fcf394c26e37"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#a35e16848dad0992028e3fcf394c26e37">svdthres</a></td></tr>
 <tr class="separator:a35e16848dad0992028e3fcf394c26e37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33b6e909dac4e50a02e1d14993f128b0"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#a33b6e909dac4e50a02e1d14993f128b0">actthres</a></td></tr>
+<tr class="separator:a33b6e909dac4e50a02e1d14993f128b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae629e7b241f24cf8ce63f89041fbc31f"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#ae629e7b241f24cf8ce63f89041fbc31f">fnreg</a></td></tr>
 <tr class="separator:ae629e7b241f24cf8ce63f89041fbc31f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae80c2f5dae7992d88a06ed9a2b84925"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#aae80c2f5dae7992d88a06ed9a2b84925">actinterp</a></td></tr>
+<tr class="separator:aae80c2f5dae7992d88a06ed9a2b84925"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32d808276474ee2a0c8c79aa231d1aeb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#a32d808276474ee2a0c8c79aa231d1aeb">actslave</a></td></tr>
 <tr class="separator:a32d808276474ee2a0c8c79aa231d1aeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0e18ff2e89ca55058dcdb3653fc1132"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#aa0e18ff2e89ca55058dcdb3653fc1132">bgs</a></td></tr>
@@ -161,6 +165,19 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a33b6e909dac4e50a02e1d14993f128b0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double LSR_CFG_T::actthres</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>When actuator coupling coefficient drops below this, start slaving. </p>
+
+</div>
+</div>
 <a class="anchor" id="ae629e7b241f24cf8ce63f89041fbc31f"></a>
 <div class="memitem">
 <div class="memproto">
@@ -171,6 +188,19 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>File containing a regularization term to add to LL.M </p>
+
+</div>
+</div>
+<a class="anchor" id="aae80c2f5dae7992d88a06ed9a2b84925"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int LSR_CFG_T::actinterp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>interpolate actuator results to non-active actuators . </p>
 
 </div>
 </div>

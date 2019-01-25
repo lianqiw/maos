@@ -108,6 +108,7 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1map__ray.html','')
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">cuda_recon::map_ray Class Reference</div>  </div>
@@ -116,12 +117,27 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1map__ray.html','')
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a8a6becbe67ea3692cc30d38868bd1606"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a6becbe67ea3692cc30d38868bd1606"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Init_l2d</b> (const <a class="el" href="classcugrid__t.html">cugrid_t</a> &amp;out, const <a class="el" href="structcuda__recon_1_1dir__t.html">dir_t</a> *dir, int _ndir, const <a class="el" href="classArray.html">cugridcell</a> &amp;in, Real dt=0)</td></tr>
+<tr class="separator:a8a6becbe67ea3692cc30d38868bd1606"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8eda419d071cdc0490294e503af952a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8eda419d071cdc0490294e503af952a3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Init_l2l</b> (const <a class="el" href="classArray.html">cugridcell</a> &amp;out, const <a class="el" href="classArray.html">cugridcell</a> &amp;in)</td></tr>
+<tr class="separator:a8eda419d071cdc0490294e503af952a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1cce927aa544c6e294ce527e2b94fa0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1cce927aa544c6e294ce527e2b94fa0f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>forward</b> (Real **out, Real **in, Real alpha, Real *wt, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:a1cce927aa544c6e294ce527e2b94fa0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a657ef70a49261c6b5de3fc071981d5d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a657ef70a49261c6b5de3fc071981d5d3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>backward</b> (Real **out, Real **in, Real alpha, Real *wt, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:a657ef70a49261c6b5de3fc071981d5d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8988b64c1ad2e6d35af15cdd17d9107"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae8988b64c1ad2e6d35af15cdd17d9107"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const </td></tr>
+<tr class="separator:ae8988b64c1ad2e6d35af15cdd17d9107"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
+<tr class="memitem:a787fd35dc6757f42b18e439e87cdddb6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a787fd35dc6757f42b18e439e87cdddb6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>deinit</b> ()</td></tr>
+<tr class="separator:a787fd35dc6757f42b18e439e87cdddb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -135,8 +151,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>nlayer</b></td></tr>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>ndir</b></td></tr>
 <tr class="separator:a51c8b4c459657d1f73c3c47c4e98cd58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/recon_base.h</li>
+<li>cuda/recon_base.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

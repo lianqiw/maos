@@ -108,7 +108,7 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1cumoao__t.html',''
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Data Fields</a>  </div>
+<a href="#friends">Friends</a>  </div>
   <div class="headertitle">
 <div class="title">cuda_recon::cumoao_t Class Reference</div>  </div>
 </div><!--header-->
@@ -116,21 +116,24 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1cumoao__t.html',''
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0ca91a351bf1575b1a7551b900c4ce7f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ca91a351bf1575b1a7551b900c4ce7f"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>L</b> (curcell **xout, Real beta, const curcell *xin, Real alpha, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a0ca91a351bf1575b1a7551b900c4ce7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f2e99f0c0d5320937e617fdf13438f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f2e99f0c0d5320937e617fdf13438f9"></a>
-Real&#160;</td><td class="memItemRight" valign="bottom"><b>moao_solve</b> (curcell **xout, const curcell *xin, const curcell *ain, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a3f2e99f0c0d5320937e617fdf13438f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a687c609148d80cf3664e95a47a1e943d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a687c609148d80cf3664e95a47a1e943d"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>L</b> (curcell &amp;xout, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="separator:a687c609148d80cf3664e95a47a1e943d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02a302de631c3dd35024340ce0c4f18e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02a302de631c3dd35024340ce0c4f18e"></a>
+Real&#160;</td><td class="memItemRight" valign="bottom"><b>moao_solve</b> (<a class="el" href="classArray.html">curccell</a> &amp;xout, const curcell &amp;xin, const curcell &amp;ain, <a class="el" href="structstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="separator:a02a302de631c3dd35024340ce0c4f18e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebee8c486c0ae030b862b0cc0ea16530"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aebee8c486c0ae030b862b0cc0ea16530"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>cumoao_t</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structMOAO__T.html">MOAO_T</a> *moao, <a class="el" href="structcuda__recon_1_1dir__t.html">dir_t</a> *dir, int _ndir, <a class="el" href="classcuda__recon_1_1curecon__geom.html">curecon_geom</a> *_grid)</td></tr>
 <tr class="separator:aebee8c486c0ae030b862b0cc0ea16530"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac124e0f33be041b369eedefd52ca43c1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac124e0f33be041b369eedefd52ca43c1"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> ()</td></tr>
+<tr class="separator:ac124e0f33be041b369eedefd52ca43c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Data Fields</h2></td></tr>
-<tr class="memitem:a609defad99b9b0c8b211835316dace41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a609defad99b9b0c8b211835316dace41"></a>
-friend&#160;</td><td class="memItemRight" valign="bottom"><b>curecon_t</b></td></tr>
-<tr class="separator:a609defad99b9b0c8b211835316dace41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:aae94cb4733258f3e7c204b43db0bc1bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae94cb4733258f3e7c204b43db0bc1bd"></a>
+class&#160;</td><td class="memItemRight" valign="bottom"><b>curecon_t</b></td></tr>
+<tr class="separator:aae94cb4733258f3e7c204b43db0bc1bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/moao.h</li>

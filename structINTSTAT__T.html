@@ -135,22 +135,14 @@ Data Fields</h2></td></tr>
 <tr class="separator:a0cee55e1121df68253f8e51abcae8899"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac3579bfed8599c928d05aac5cd109d82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#ac3579bfed8599c928d05aac5cd109d82">i0sum</a></td></tr>
 <tr class="separator:ac3579bfed8599c928d05aac5cd109d82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbd95e08fb4f41d270fe6c6406021137"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#acbd95e08fb4f41d270fe6c6406021137">i0sumsum</a></td></tr>
+<tr class="separator:acbd95e08fb4f41d270fe6c6406021137"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0165680cc8d86944018418a1e361df81"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a0165680cc8d86944018418a1e361df81">mtche</a></td></tr>
 <tr class="separator:a0165680cc8d86944018418a1e361df81"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02032157ea0454eaee56b5f9d9ebed16"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a02032157ea0454eaee56b5f9d9ebed16">saneaxy</a></td></tr>
-<tr class="separator:a02032157ea0454eaee56b5f9d9ebed16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4642e0a8b89262386e731f37b2cb2ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#aa4642e0a8b89262386e731f37b2cb2ba">saneaxyl</a></td></tr>
-<tr class="separator:aa4642e0a8b89262386e731f37b2cb2ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a98a206f564e70b7e42ffea0f441f86b3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a98a206f564e70b7e42ffea0f441f86b3">saneaixy</a></td></tr>
-<tr class="separator:a98a206f564e70b7e42ffea0f441f86b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe3059adef4f433c4943ab824d4ec265"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#abe3059adef4f433c4943ab824d4ec265">cogcoeff</a></td></tr>
-<tr class="separator:abe3059adef4f433c4943ab824d4ec265"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac36294be21c9b94bd24d5eeea089f996"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#ac36294be21c9b94bd24d5eeea089f996">notf</a></td></tr>
 <tr class="separator:ac36294be21c9b94bd24d5eeea089f996"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4c4e98be2b8a57d4feb99abb892574b0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a4c4e98be2b8a57d4feb99abb892574b0">nsepsf</a></td></tr>
 <tr class="separator:a4c4e98be2b8a57d4feb99abb892574b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11181613351aea05685a331418975476"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a11181613351aea05685a331418975476">nmtche</a></td></tr>
-<tr class="separator:a11181613351aea05685a331418975476"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>contains the intensity statistics assiciated with a certain powfs for physical optics wfs. </p>
@@ -204,7 +196,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Point source otf. potf.*etf=fotf </p>
+<p>Point source otf. potf.*etf=fotf. Used for wfslinearity. </p>
 
 </div>
 </div>
@@ -269,7 +261,20 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>sum of i0 </p>
+<p>sum of i0 for each subaperture </p>
+
+</div>
+</div>
+<a class="anchor" id="acbd95e08fb4f41d270fe6c6406021137"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* INTSTAT_T::i0sumsum</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>sum of i0sum for all subapertures </p>
 
 </div>
 </div>
@@ -283,58 +288,6 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>mtched filter operator along x/y, even if radpix=1 </p>
-
-</div>
-</div>
-<a class="anchor" id="a02032157ea0454eaee56b5f9d9ebed16"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* INTSTAT_T::saneaxy</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>computed sanea along xy. (rad^2) </p>
-
-</div>
-</div>
-<a class="anchor" id="aa4642e0a8b89262386e731f37b2cb2ba"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* INTSTAT_T::saneaxyl</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>decomposition of saneaxy: L*L'=saneaxy. </p>
-
-</div>
-</div>
-<a class="anchor" id="a98a206f564e70b7e42ffea0f441f86b3"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* INTSTAT_T::saneaixy</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>computed sanea inverse along xy (rad^-2) </p>
-
-</div>
-</div>
-<a class="anchor" id="abe3059adef4f433c4943ab824d4ec265"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* INTSTAT_T::cogcoeff</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>per subaperture CoG offset/threshold </p>
 
 </div>
 </div>
@@ -361,19 +314,6 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>number of sepsf; usually 1. </p>
-
-</div>
-</div>
-<a class="anchor" id="a11181613351aea05685a331418975476"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int INTSTAT_T::nmtche</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>number of matched filters. 1 or nwfs of this powfs. </p>
 
 </div>
 </div>

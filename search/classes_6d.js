@@ -1,8 +1,6 @@
 var searchData=
 [
   ['maos_5fs',['MAOS_S',['../structMAOS__S.html',1,'']]],
-  ['map_5fl2d',['map_l2d',['../classcuda__recon_1_1map__l2d.html',1,'cuda_recon']]],
-  ['map_5fl2l',['map_l2l',['../classcuda__recon_1_1map__l2l.html',1,'cuda_recon']]],
   ['map_5fray',['map_ray',['../classcuda__recon_1_1map__ray.html',1,'cuda_recon']]],
   ['map_5ft',['map_t',['../structmap__t.html',1,'']]],
   ['mapccell',['mapccell',['../structmapccell.html',1,'']]],

@@ -38,8 +38,8 @@ var structSKYC__S =
     [ "pixoffx", "structSKYC__S.html#a9a4ec93335e3b2cbcef66ab5b8ec3d41", null ],
     [ "pixoffy", "structSKYC__S.html#ae62df63875c954c1cc6c96d09b02639c", null ],
     [ "keepout", "structSKYC__S.html#a83dc6452a96fb9d0118ef2ad7cf65bec", null ],
-    [ "intgain", "structSKYC__S.html#a8065c22f64927d17df0c12aae2049348", null ],
     [ "rne", "structSKYC__S.html#a47b89d15cad250b2dd00fe0f8b396b76", null ],
+    [ "excess", "structSKYC__S.html#a6a66d36a042ab2fd93ae99b2cc925921", null ],
     [ "rnefs", "structSKYC__S.html#a161d366939577ff01f1cf2af52e395b1", null ],
     [ "telthruput", "structSKYC__S.html#a5e842ee69c86c2887cb8e8fa988a8378", null ],
     [ "qe", "structSKYC__S.html#a3f20e9fbf9051c9d0af3fc2347e8b310", null ],
@@ -50,7 +50,7 @@ var structSKYC__S =
     [ "evlstart", "structSKYC__S.html#af72d423486b717dded4938b1ce606f59", null ],
     [ "phystart", "structSKYC__S.html#a086660c278ebd8e2662c2ed3ed8333de", null ],
     [ "mtchcr", "structSKYC__S.html#a2401fa5c7ec987c9438a638354d99637", null ],
-    [ "mtch", "structSKYC__S.html#ad2ec19c5c10f7ab831b321dd471abb6c", null ],
+    [ "phytype", "structSKYC__S.html#a09daf61c3818f325c403bfa7935efca1", null ],
     [ "neaaniso", "structSKYC__S.html#a21886d36ccdc117d44908e8073088368", null ],
     [ "neanonlin", "structSKYC__S.html#aaa6ca937d1c85a46e27d1df716c3857a", null ],
     [ "ndtrat", "structSKYC__S.html#ad422271efd7930ec5718c2cda266aac6", null ],
@@ -78,5 +78,6 @@ var structSKYC__S =
     [ "sdetmax", "structSKYC__S.html#a5e5e1bbe42ae7b0ee8eaabf749805791", null ],
     [ "multirate", "structSKYC__S.html#a4f08521428e8a9d44557645e95e5d09b", null ],
     [ "snrmin", "structSKYC__S.html#abe5167d5666711b221bd2c47268b138e", null ],
-    [ "usephygrad", "structSKYC__S.html#ae0472d9610b0e249cbdbfa21b416d9f1", null ]
+    [ "usephygrad", "structSKYC__S.html#ae0472d9610b0e249cbdbfa21b416d9f1", null ],
+    [ "estimate", "structSKYC__S.html#a5a915102c9b16daa4a667079e98f0f6b", null ]
 ];

@@ -9,7 +9,6 @@ var searchData=
   ['setup_5fpowfs_2ec',['setup_powfs.c',['../skyc_2setup__powfs_8c.html',1,'']]],
   ['setup_5fpowfs_2ec',['setup_powfs.c',['../maos_2setup__powfs_8c.html',1,'']]],
   ['setup_5frecon_2ec',['setup_recon.c',['../setup__recon_8c.html',1,'']]],
-  ['setup_5frecon_5fdm_2ec',['setup_recon_dm.c',['../setup__recon__dm_8c.html',1,'']]],
   ['setup_5fstar_2ec',['setup_star.c',['../setup__star_8c.html',1,'']]],
   ['setup_5fsurf_2ec',['setup_surf.c',['../setup__surf_8c.html',1,'']]],
   ['sim_2ec',['sim.c',['../sim_8c.html',1,'']]],

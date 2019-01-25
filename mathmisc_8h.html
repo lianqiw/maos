@@ -114,7 +114,6 @@ $(document).ready(function(){initNavTree('mathmisc_8h.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;../sys/sys.h&quot;</code><br/>
-<code>#include &quot;<a class="el" href="blas_8h.html">blas.h</a>&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -133,10 +132,12 @@ typedef double(*&#160;</td><td class="memItemRight" valign="bottom"><b>golden_se
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ab0fd7caaf2798397c30803cf508ba1ae"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ab0fd7caaf2798397c30803cf508ba1ae">factorial</a> (long n1, long n2)</td></tr>
-<tr class="separator:ab0fd7caaf2798397c30803cf508ba1ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaaa4c88a31aa854fbedaa09ab5c48278"><td class="memItemLeft" align="right" valign="top">long double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#aaaa4c88a31aa854fbedaa09ab5c48278">factorial</a> (long n1, long n2)</td></tr>
+<tr class="separator:aaaa4c88a31aa854fbedaa09ab5c48278"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d93ab065d26256340ccb78b4cc1e0fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a5d93ab065d26256340ccb78b4cc1e0fd">normalize_sum</a> (double *p, long nloc, double norm)</td></tr>
 <tr class="separator:a5d93ab065d26256340ccb78b4cc1e0fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c8bdd908bfa88c0575fa72e76054ed5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a2c8bdd908bfa88c0575fa72e76054ed5">normalize_sumabs</a> (double *p, long nloc, double norm)</td></tr>
+<tr class="separator:a2c8bdd908bfa88c0575fa72e76054ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ed0395a68a0c06d7bab414a7ba61ca2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4ed0395a68a0c06d7bab414a7ba61ca2">normalize_max</a> (double *p, long nloc, double max)</td></tr>
 <tr class="separator:a4ed0395a68a0c06d7bab414a7ba61ca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4226ed564a7d77401332c3a55a526d3f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4226ed564a7d77401332c3a55a526d3f">dotdbl</a> (const double *__restrict p1, const double *__restrict p2, const double *__restrict p3, long n)</td></tr>
@@ -182,16 +183,20 @@ unsigned long&#160;</td><td class="memItemRight" valign="bottom"><b>mylog2</b> (
 <tr class="memitem:a1ce6ad13180bb05668fcea47b866d4cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1ce6ad13180bb05668fcea47b866d4cb"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search</b> (golden_section_fun f, void *param, double x1, double x4, double tau)</td></tr>
 <tr class="separator:a1ce6ad13180bb05668fcea47b866d4cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4fdbbb160f78db3e75593887b597d51"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#aa4fdbbb160f78db3e75593887b597d51">readspintdata</a> (file_t *fp, uint32_t magic, spint *out, long len)</td></tr>
+<tr class="separator:aa4fdbbb160f78db3e75593887b597d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17976d85cba2939873589c6a8bc3e08b"><td class="memItemLeft" align="right" valign="top">spint *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a17976d85cba2939873589c6a8bc3e08b">readspint</a> (file_t *fp, long *nx, long *ny)</td></tr>
+<tr class="separator:a17976d85cba2939873589c6a8bc3e08b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A few math routines </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ab0fd7caaf2798397c30803cf508ba1ae"></a>
+<a class="anchor" id="aaaa4c88a31aa854fbedaa09ab5c48278"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double factorial </td>
+          <td class="memname">long double factorial </td>
           <td>(</td>
           <td class="paramtype">long&#160;</td>
           <td class="paramname"><em>n1</em>, </td>
@@ -243,6 +248,39 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
       </table>
 </div><div class="memdoc">
 <p>normalize vector to sum to norm; </p>
+
+</div>
+</div>
+<a class="anchor" id="a2c8bdd908bfa88c0575fa72e76054ed5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void normalize_sumabs </td>
+          <td>(</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>nloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>norm</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>normalize vector to sum of abs to norm; </p>
 
 </div>
 </div>
@@ -823,6 +861,78 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
       </table>
 </div><div class="memdoc">
 <p>Find the next number suitable for FFT. Use radix of 2, 3, 5, 7 </p>
+
+</div>
+</div>
+<a class="anchor" id="aa4fdbbb160f78db3e75593887b597d51"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void readspintdata </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>magic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">spint *&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>read spint array of size len from file and do optional data conversion. </p>
+
+</div>
+</div>
+<a class="anchor" id="a17976d85cba2939873589c6a8bc3e08b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">spint* readspint </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long *&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long *&#160;</td>
+          <td class="paramname"><em>ny</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read spint array of size nx*ny from file and do optional data conversion. </p>
 
 </div>
 </div>

@@ -140,11 +140,14 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a17defa53668245c14cd494b9fab761f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#a17defa53668245c14cd494b9fab761f1">tomofit</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a17defa53668245c14cd494b9fab761f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a930531540b7291036352d7b18436ce47"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#a930531540b7291036352d7b18436ce47">tomofit</a> (<a class="el" href="structdcell.html">dcell</a> **dmout, <a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *gradin)</td></tr>
+<tr class="separator:a930531540b7291036352d7b18436ce47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2257619590d10abb8a961010d430d1b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2257619590d10abb8a961010d430d1b7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>recon_split</b> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
 <tr class="separator:a2257619590d10abb8a961010d430d1b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5afd045eaa1d61dd8a3b63677a603989"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5afd045eaa1d61dd8a3b63677a603989"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>recon_servo_update</b> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
+<tr class="separator:a5afd045eaa1d61dd8a3b63677a603989"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a1d62d90b85cb3eeaa156e2a6d9784f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#a7a1d62d90b85cb3eeaa156e2a6d9784f">reconstruct</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
 <tr class="separator:a7a1d62d90b85cb3eeaa156e2a6d9784f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -152,16 +155,32 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>recon_split</b> (<a c
 <div class="textblock"><p>Wavefront reconstruction and DM fitting routines.</p>
 <p>Since these are related to reconstruction, we don't have access to dmreal, which is the <em>actual</em> location of DM actuators, and only available in simulation. dmint should be used for dm actuator commands. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a17defa53668245c14cd494b9fab761f1"></a>
+<a class="anchor" id="a930531540b7291036352d7b18436ce47"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void tomofit </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
-          <td class="paramname"><em>simu</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> **&#160;</td>
+          <td class="paramname"><em>dmout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramname"><em>simu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> *&#160;</td>
+          <td class="paramname"><em>gradin</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -182,7 +201,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>recon_split</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wavefront reconstruction. call <a class="el" href="recon_8c.html#a17defa53668245c14cd494b9fab761f1">tomofit()</a> to do tomo()/fit() or lsr() to do least square reconstruction. </p>
+<p>Wavefront reconstruction. call <a class="el" href="recon_8c.html#a930531540b7291036352d7b18436ce47">tomofit()</a> to do tomo()/fit() or lsr() to do least square reconstruction. </p>
 
 </div>
 </div>

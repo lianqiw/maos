@@ -145,13 +145,13 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#Atmospheric profile</span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">#atm=&quot;atm_srd.conf&quot; #TMT SRD Profile</span></div>
-<div class="line"><span class="preprocessor"></span>include     = <span class="stringliteral">&quot;atm_mk13n50p.conf&quot;</span> #Mauna Kea 13N 50%.</div>
+<div class="line"><span class="preprocessor"></span>include     = <span class="stringliteral">&quot;atm_mk50p.conf&quot;</span> #Mauna Kea 13N 50%.</div>
 <div class="line"></div>
 <div class="line">#Wavefront sensor information.</div>
 <div class="line">include     = <span class="stringliteral">&quot;wfs_lgs_ttf_tt.conf&quot;</span></div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#Evaluation and fitting FoV information.</span></div>
-<div class="line"><span class="preprocessor"></span>include     = <span class="stringliteral">&quot;fov_iris.conf&quot;</span></div>
+<div class="line"><span class="preprocessor"></span>include     = <span class="stringliteral">&quot;fov_sq34.conf&quot;</span></div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#Including configurations for reconstruction (tomo/fitting)</span></div>
 <div class="line"><span class="preprocessor"></span>include     = <span class="stringliteral">&quot;recon.conf&quot;</span></div>
@@ -161,9 +161,9 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 </div><!-- fragment --><p>It includes the following files to define all the parameters. <code>"sim.conf"</code> to define some general parameters: </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#FILE sim.conf</span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">#Contains common parameters to all setups. </span></div>
-<div class="line"><span class="preprocessor"></span></div>
-<div class="line"><span class="preprocessor">#Telescope Aperture Configuration.</span></div>
-<div class="line"><span class="preprocessor"></span>aper.d     = [30 3.6] #may contain one <span class="keywordflow">for</span> [d] or two numbers <span class="keywordflow">for</span> [d din]. d is</div>
+<div class="line"><span class="preprocessor"></span>__reset__             #replace all previous entries.</div>
+<div class="line">#Telescope Aperture Configuration.</div>
+<div class="line">aper.d     = [30 3.6] #may contain one <span class="keywordflow">for</span> [d] or two numbers <span class="keywordflow">for</span> [d din]. d is</div>
 <div class="line"><span class="preprocessor">              #outer diameter. din is optimal inner hole diameter.</span></div>
 <div class="line"><span class="preprocessor"></span>aper.fnamp    = <span class="stringliteral">&quot;TMT_23cm6.bin&quot;</span> #The amplitude map contains a <a class="code" href="structcell.html">cell</a> array</div>
 <div class="line"><span class="preprocessor">                  # of 2 elements.  The first element is 5x1 vector,</span></div>
@@ -186,37 +186,40 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">#Servo coefficients. There is two cycle delay.</div>
 <div class="line">#A is command. e is error signal. at time step n, the command is updated by</div>
 <div class="line"><span class="preprocessor">#A(n)=A(n-1)*apdm(0)+A(n-2)*apdm(1)+...+e(n-2)*ep</span></div>
-<div class="line"><span class="preprocessor"></span>sim.apdm      = [1 0] #<span class="keyword">this</span> is the <span class="keywordflow">default</span>. [0.5 0.5] is used in laos </div>
-<div class="line">sim.epdm      = 0.5   #error gain of high order loop. -1 to scan from 0.1 to 0.9</div>
-<div class="line">sim.aldm      = 0     #Additional latency (sim.dt) of the high order loop. </div>
+<div class="line"><span class="preprocessor"></span>sim.aphi      = [0.999 0] #<span class="keyword">this</span> is the <span class="keywordflow">default</span>. [0.5 0.5] is used in laos </div>
+<div class="line">sim.ephi      = 0.5   #error gain of high order loop. -1 to scan from 0.1 to 0.9</div>
+<div class="line">sim.alhi      = 0     #Additional latency (sim.dt) of the high order loop. </div>
 <div class="line">                  <span class="preprocessor">#End to end latency is (powfs[hi].dtrat+1+aldm)*sim.dt</span></div>
-<div class="line"><span class="preprocessor"></span>sim.aplo      = [1 0] #<span class="keyword">this</span> is the <span class="keywordflow">default</span>. [0.5 0.5] is used in laos.</div>
+<div class="line"><span class="preprocessor"></span>sim.aplo      = [0.999 0] #<span class="keyword">this</span> is the <span class="keywordflow">default</span>. [0.5 0.5] is used in laos.</div>
 <div class="line">sim.eplo      = [0.5] #error gain of ngs mode in split tomography</div>
 <div class="line">sim.allo      = 0     #Additional latency (sim.dt) of the lo order loop. </div>
 <div class="line">                  <span class="preprocessor">#End to end latency is (powfs[lo].dtrat+1+allo)*sim.dt</span></div>
 <div class="line"><span class="preprocessor"></span>sim.fuseint   = 1     #use fused integrator. <span class="keywordflow">for</span> high and low order loop.</div>
 <div class="line">sim.fcttm     = 20    #Cross over frequency of T/T split between DM and TTM*/         </div>
 <div class="line"><span class="preprocessor">#Focus tracking gains.</span></div>
-<div class="line"><span class="preprocessor"></span>sim.fcfocus   = -1    #cross-over frequency of the focus LPF. lpfocus=2*pi*fc/fs where fs is AO sampling frequency. -1 means 1/10 of NGS frame rate.</div>
-<div class="line">sim.mffocus   = 0     #method <span class="keywordflow">for</span> focus tracking. </div>
+<div class="line"><span class="preprocessor"></span>sim.fcfocus   = 10    #cross-over frequency of the focus LPF. lpfocus=2*pi*fc/fs where fs is AO sampling frequency. -1 means 1/10 of NGS frame rate.</div>
+<div class="line">sim.mffocus   = -1     #method <span class="keywordflow">for</span> focus tracking. </div>
 <div class="line"><span class="preprocessor">                  #0: disable focus update. </span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">              #1: Focus tracking using closed loop gradients, for each LGS independently. (preferred)</span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">              #2: Focus tracking using closed loop graidnets, for common LGS focus only.</span></div>
-<div class="line"><span class="preprocessor"></span></div>
-<div class="line"><span class="preprocessor">#Uplink laser pointing servo #TODO: This belongs to LGS. Migrate to powfs</span></div>
-<div class="line"><span class="preprocessor"></span>sim.apfsm     = [1 0] #[0.5 0.5] is used in laos.</div>
+<div class="line"><span class="preprocessor"></span><span class="preprocessor">              #-1: auto. 1 for LGS.</span></div>
+<div class="line"><span class="preprocessor"></span><span class="preprocessor">#Focus offloading to telescope</span></div>
+<div class="line"><span class="preprocessor"></span>sim.focus2tel = 0     #Offload focus to telescope</div>
+<div class="line">sim.epfocus2tel=0.01  #Integrator gain <span class="keywordflow">for</span> telescope focus control</div>
+<div class="line"><span class="preprocessor">#Uplink laser pointing servo #TODO: This belongs to LGS. TODO: Migrate to powfs</span></div>
+<div class="line"><span class="preprocessor"></span>sim.apfsm     = [0.999 0] #[0.5 0.5] is used in laos.</div>
 <div class="line">sim.epfsm     = [0.5] #uplink integrator gain. </div>
 <div class="line">sim.alfsm     = 0     #Additional latency (sim.dt) of the uplink loop. </div>
 <div class="line">                  <span class="preprocessor">#End to end latency is (powfs.dtrat+1+alfsm)*sim.dt</span></div>
-<div class="line"><span class="preprocessor"></span>sim.fsmideal  = 0     #ideal correction on uplink (debugging)</div>
-<div class="line"></div>
-<div class="line"><span class="preprocessor">#Trombone zoom corrector for LGS #TODO: This belongs to LGS. Migrate to powfs</span></div>
-<div class="line"><span class="preprocessor"></span>sim.zoomdtrat = 266   #dtrat of the trombone controller (averager)</div>
-<div class="line">sim.zoomshare = 1     <span class="preprocessor">#All WFS in same powfs share the same zoom corrector</span></div>
-<div class="line"><span class="preprocessor"></span>sim.zoomgain  = 0.5   #gain of zoom corrector</div>
-<div class="line"></div>
-<div class="line"><span class="preprocessor">#Other</span></div>
-<div class="line"><span class="preprocessor"></span>sim.skysim    = 0     #enable presimulation <span class="keywordflow">for</span> sky coverage.</div>
+<div class="line"><span class="preprocessor"></span>sim.commonfsm = 0     #Make FSM <span class="keywordflow">for each</span> powfs common (single FSM in LLT <span class="keywordflow">for</span> LGS WFS).</div>
+<div class="line">sim.idealfsm  = 0     #ideal correction on uplink (debugging)</div>
+<div class="line">sim.zetafsm   = 1     <span class="preprocessor">#Damping of FSM modeled as second harmonic oscillater (SHO).</span></div>
+<div class="line"><span class="preprocessor"></span>sim.f0fsm     = 0     #Resonance frequency of FSM (SHO). 0: infinite.</div>
+<div class="line">#Twfs</div>
+<div class="line">sim.aptwfs    = 1     #Leak should be small <span class="keywordflow">if</span> eptwfs is small.</div>
+<div class="line">sim.eptwfs    = 1     #Twfs reference vector servo gain.</div>
+<div class="line">#Other</div>
+<div class="line">sim.skysim    = 0     #enable presimulation <span class="keywordflow">for</span> sky coverage.</div>
 <div class="line">sim.wspsd     =       #Telescope wind shake PSD input. Nx2. First column is freq</div>
 <div class="line"><span class="preprocessor">              #in Hz, Second column is PSD in rad^2/Hz.</span></div>
 <div class="line"><span class="preprocessor"></span>sim.wsseq     = 1     #windshake sequency. different wsseq gives different realizations</div>
@@ -246,124 +249,126 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">sim.mvmngpu   = 0     #&gt;0: limit maximum number of gpus to use.      </div>
 <div class="line"><span class="preprocessor">#For special purpose</span></div>
 <div class="line"><span class="preprocessor"></span>sim.noatm     = 0     #Disable atmosphere generation (to evaluate telescope errors).</div>
-<div class="line">sim.evlol     = 0     #evaluate open loop performance only. don<span class="stringliteral">&#39;t do wfs/tomo/recon.</span></div>
-<div class="line"><span class="stringliteral">sim.psfr      = 0     #Save PSF reconstruction telemetry.</span></div>
-<div class="line"><span class="stringliteral">sim.ecnn      = 0     #Estimate WF covariance due to WFS noise cov Cnn.</span></div>
-<div class="line"><span class="stringliteral">sim.wfsalias  = 0     #Study the wfs aliasing effect by project turbulence onto</span></div>
-<div class="line"><span class="stringliteral">                  #the orthogonal of the DM vector space.</span></div>
-<div class="line"><span class="stringliteral">sim.idealfit  = 0     #evaluation ideal fit error only. no wfs, no recon. (was fitonly)</span></div>
-<div class="line"><span class="stringliteral">sim.idealtomo = 0     #ideal tomography without wfs (directly propagate from turbulence).</span></div>
-<div class="line"><span class="stringliteral">sim.idealwfs  = 0     #Implements ideal WFS by only using turbulence in DM range. conflicts sim.wfsalias</span></div>
-<div class="line"><span class="stringliteral">sim.idealevl  = 0     #Evaluate the performance only in DM range.</span></div>
-<div class="line"><span class="stringliteral">sim.ahstfocus = 0     #&gt;0: the first plate scale mode creates no focus error on science</span></div>
-<div class="line"><span class="stringliteral">                  #=1: do not null the focus offset of the first plate scale mode on LGS WFS (preferred)</span></div>
-<div class="line"><span class="stringliteral">              #=2: null the focus effect of the first plate mode on LGS WFS gradients</span></div>
-<div class="line"><span class="stringliteral"></span></div>
-<div class="line"><span class="stringliteral">#Common atmospheric parameters</span></div>
-<div class="line"><span class="stringliteral">atm.fractal   = 0     #Use fractal method to generate atmosphere screen. 0: fft method.</span></div>
-<div class="line"><span class="stringliteral">atm.size      = [64 64]#size of atmosphere in meter. 0: automatic.</span></div>
-<div class="line"><span class="stringliteral">atm.dx        = 1/64  #sampling of the atmosphere, match evl.dx</span></div>
-<div class="line"><span class="stringliteral">atm.wdrand    = 1     #&gt;0: as additional seed to randomize wind direction </span></div>
-<div class="line"><span class="stringliteral">atm.frozenflow=0      #using frozen flow screen (at OL. CL is always frozenflow)</span></div>
-<div class="line"><span class="stringliteral">atm.ninit     = 17    #Initial size of the screen in fractal method. &gt;=2</span></div>
-<div class="line"><span class="stringliteral">atm.share     = 1     #We share atmosphere by default.</span></div>
-<div class="line"><span class="stringliteral">atm.r0evolve  = 0     #0: disable. 1: Scale turbulence screen spatially by r0logpsds, 2) Scale Raytracing using r0logpsdt, 3) both.</span></div>
-<div class="line"><span class="stringliteral">atm.r0logpsdt = [-1.43 3.353e-4 0 0.3107] #[alpha beta]:temporal PSD of log(r0) /Hz: beta*f^alpha. Or a file of nx2</span></div>
-<div class="line"><span class="stringliteral">atm.r0logpsds = [-2.43 5.195e-5 0 1/30] #[alpha beta]:spatial PSD of log(r0) /Hz: beta*f^alpha. Or a file of nx2</span></div>
-<div class="line"><span class="stringliteral">atmr.dx       = 0     #Sampling if tomography grid. 0 for automatic</span></div>
-<div class="line"><span class="stringliteral">atmr.r0z      = -1  #atm r0 at zenith. -1: matches atm.r0z</span></div>
-<div class="line"><span class="stringliteral">atmr.L0       = -1  #atm outer scale.  -1: matches atm.l0</span></div>
-<div class="line"><span class="stringliteral">#CN2 Estimation</span></div>
-<div class="line"><span class="stringliteral">cn2.pair      = []    #pairs of wfs to estimate cn2. empty to disable cn2 estimation.</span></div>
-<div class="line"><span class="stringliteral">cn2.step      = 100   #do cn2 estimation every this time step</span></div>
-<div class="line"><span class="stringliteral">cn2.reset     = 1     #reset the accumulated cn2 after every cn2.reset set of results</span></div>
-<div class="line"><span class="stringliteral">cn2.hmax      = 18000 #maximum height to esimate at zenith</span></div>
-<div class="line"><span class="stringliteral">cn2.saat      = 0.95  #subaperture area threashold to use in cn2 estimation</span></div>
-<div class="line"><span class="stringliteral">cn2.keepht    = 1     #1: Interpolate slodar results onto atmr.ht. 2: do slodar directly on these layers.</span></div>
-<div class="line"><span class="stringliteral">cn2.tomo      = 0     #1: update tomography parameters </span></div>
-<div class="line"><span class="stringliteral">cn2.verbose   = 1     #output estimated r0, cn2 during simulation</span></div>
-<div class="line"><span class="stringliteral">cn2.nhtomo    = 6     #number of layers to feed into reconstructor. only effective if keepht==0</span></div>
-<div class="line"><span class="stringliteral">cn2.psol      = 1     #1: use pseudo open loop gradients. 0: to probe residual turbulence</span></div>
-<div class="line"><span class="stringliteral">cn2.moveht    = 0     #move the ht used for reconstructor to near strongest layers. only</span></div>
-<div class="line"><span class="stringliteral">                      #effective if keepht=0.</span></div>
-<div class="line"><span class="stringliteral"></span></div>
-<div class="line"><span class="stringliteral">#set MOAO DMs parameters.</span></div>
-<div class="line"><span class="stringliteral">moao.dx       = [0.5]</span></div>
-<div class="line"><span class="stringliteral">moao.order    = [0]   #specify moao.dx instead.</span></div>
-<div class="line"><span class="stringliteral">moao.cubic    = [1]</span></div>
-<div class="line"><span class="stringliteral">moao.iac      = [0.3]</span></div>
-<div class="line"><span class="stringliteral">moao.gdm      = [0.5]</span></div>
-<div class="line"><span class="stringliteral">moao.stroke   = [inf]</span></div>
-<div class="line"><span class="stringliteral">moao.actslave = [0]</span></div>
-<div class="line"><span class="stringliteral">moao.lrt_ptt  = [0]</span></div>
-<div class="line"><span class="stringliteral">moao.guard    = [1]</span></div>
-<div class="line"><span class="stringliteral">moao.actstuck = [&quot;&quot;]</span></div>
-<div class="line"><span class="stringliteral">moao.actfloat = [&quot;&quot;]</span></div>
-<div class="line"><span class="stringliteral">moao.ar       = [1]</span></div>
-<div class="line"><span class="stringliteral">#some common fov parameters</span></div>
-<div class="line"><span class="stringliteral">evl.dx      = 1/64  #sampling of the aperture in simulation</span></div>
-<div class="line"><span class="stringliteral">evl.psf     = [1] #output psf for this direction if psf is computed. 1 or nevl elements.</span></div>
-<div class="line"><span class="stringliteral">evl.psfr    = [1] #output psf reconstruction telemetry for this direction.</span></div>
-<div class="line"><span class="stringliteral">evl.hs      = [inf] #the height of the science object. normally infinity. </span></div>
-<div class="line"><span class="stringliteral">evl.rmax    = 1   #max radial order in performance evaluation. </span></div>
-<div class="line"><span class="stringliteral">           #1: includes piston/tip/tilt. 2: p/t/t/focus/astigmatism</span></div>
-<div class="line"><span class="stringliteral">evl.tomo    = 0 #evaluate CL error for tomography</span></div>
-<div class="line"><span class="stringliteral">evl.moao    = -1 #index into MOAO config in recon.conf</span></div>
-<div class="line"><span class="stringliteral">evl.psfhist = 0 #output history of the psf (a lot of storage). </span></div>
-<div class="line"><span class="stringliteral">evl.psfmean = 0 #output time averaged psf. for this number of psf&#39;</span>s along the</div>
-<div class="line"><span class="preprocessor">        #way. 1: only save in the end. n: save cumulative average every</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">        #n steps (do not reset)</span></div>
-<div class="line"><span class="preprocessor"></span>evl.psfol   = 1 #compute OL psf in additional to CL PSF. 0: disable 1: on axis</div>
-<div class="line"><span class="preprocessor">            #direction only, 2: all directions and average them.</span></div>
-<div class="line"><span class="preprocessor"></span>evl.psfngsr = 0 #<span class="keyword">remove</span> NGS modes from PSF in split tomography mode. </div>
-<div class="line"><span class="preprocessor">            # 1: both normal psf and psf with ngsmod removal are saved.</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">        # 2: only psf with ngs mode removed is computed.</span></div>
-<div class="line"><span class="preprocessor"></span>evl.cov  = 0 #save covariance of opd <span class="keywordflow">for</span> directions where evl.psf==1.</div>
+<div class="line">sim.evlol     = 0     #evaluate open loop performance only. Skip wfs/tomo/recon.</div>
+<div class="line">sim.psfr      = 0     #Save PSF reconstruction telemetry.</div>
+<div class="line">sim.ecnn      = 0     #Estimate WF covariance due to WFS noise cov Cnn.</div>
+<div class="line">sim.wfsalias  = 0     #Study the wfs aliasing effect by project turbulence onto</div>
+<div class="line"><span class="preprocessor">                  #the orthogonal of the DM vector space.</span></div>
+<div class="line"><span class="preprocessor"></span>sim.idealfit  = 0     #evaluation ideal fit error only. no wfs, no recon. (was fitonly)</div>
+<div class="line">sim.idealtomo = 0     #ideal tomography without wfs (directly propagate from turbulence).</div>
+<div class="line">sim.idealwfs  = 0     #Implements ideal WFS by only <span class="keyword">using</span> turbulence in DM range. conflicts sim.wfsalias</div>
+<div class="line">sim.idealevl  = 0     #Evaluate the performance only in DM range.</div>
 <div class="line"></div>
-<div class="line">evl.wvl     = [1.25e-6 1.65e-6 2.2e-6]#wavelength to evaluat PSF or strehl</div>
-<div class="line">evl.pttr = [0] #<span class="keyword">remove</span> p/t/t in wavefront OPD before computing PSF or covariance</div>
-<div class="line">evl.psfisim = 20  #time step to start psfmean/psfhist</div>
-<div class="line">evl.psfgridsize = [] #FFT grid size <span class="keywordflow">for</span> psf computation <span class="keywordflow">for each</span></div>
-<div class="line"><span class="preprocessor">             #wavelength. 0,1,or nwvl number of elements. 0:</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">             #automatic. This determines the sampling of the computed</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">             #PSF. length matches evl.wvl</span></div>
-<div class="line"><span class="preprocessor"></span>evl.psfsize = []    #size of the psf to output. The large PSF is cut to <span class="keyword">this</span></div>
-<div class="line"><span class="preprocessor">            #size. Set to 1 to compute strehl only. 1 or nwvl number of</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">            #elements(for each wvl)</span></div>
+<div class="line"></div>
+<div class="line">#Common atmospheric parameters</div>
+<div class="line">atm.method    = 0     #0: Von Karman. 1: Fractal method. 2: Biharmonic. </div>
+<div class="line">atm.size      = [64 64]#size of atmosphere in meter. 0: automatic.</div>
+<div class="line">atm.dx        = 1/64  #sampling of the atmosphere, match evl.dx</div>
+<div class="line">atm.wdrand    = 1     #&gt;0: as additional seed to randomize wind direction </div>
+<div class="line">atm.frozenflow= 1      #<span class="keyword">using</span> frozen flow screen (at OL. CL is always frozenflow)</div>
+<div class="line">atm.ninit     = 17    #Initial size of the screen in fractal method. &gt;=2</div>
+<div class="line">atm.share     = 1     #We share atmosphere by <span class="keywordflow">default</span>.</div>
+<div class="line">atm.r0evolve  = 0     #0: disable. 1: Scale turbulence screen spatially by r0logpsds, 2) Scale Raytracing <span class="keyword">using</span> r0logpsdt, 3) both.</div>
+<div class="line">atm.r0logpsdt = [-1.43 3.353e-4 0 0.3107] #[alpha beta fmin fmax]:temporal PSD of log(r0) /Hz: beta*f^alpha. Or a file of nx2</div>
+<div class="line">atm.r0logpsds = [-2.43 5.195e-5 0 1/30] #[alpha beta fmin fmax]:spatial PSD of log(r0) /Hz: beta*f^alpha. Or a file of nx2</div>
+<div class="line"><span class="preprocessor">#Reconstructor parameters</span></div>
+<div class="line"><span class="preprocessor"></span>atmr.dx       = 0   #Fundemental reconstructio grid sampling. 0: matching</div>
+<div class="line"><span class="preprocessor">            #minimum of actuator spacing and subaperture size.</span></div>
+<div class="line"><span class="preprocessor"></span>atmr.r0z      = -1  #atm r0 at zenith. -1: matches atm.r0z</div>
+<div class="line">atmr.L0       = -1  #atm outer scale.  -1: matches atm.l0</div>
+<div class="line">atmr.os       = [2]   #reconstruction screen oversampling over atmr.dx</div>
+<div class="line">atmr.ht       = [] #reconstructed screen height. Empty meaning follow atm.ht (MCAO)</div>
+<div class="line">atmr.wt       = [] #reconstructed screen weight. Empty meaning follow atm.wt (MCAO)</div>
+<div class="line"></div>
+<div class="line"><span class="preprocessor">#CN2 Estimation</span></div>
+<div class="line"><span class="preprocessor"></span>cn2.pair      = []    #pairs of wfs to estimate cn2. empty to disable cn2 estimation.</div>
+<div class="line">cn2.step      = 100   #<span class="keywordflow">do</span> cn2 estimation every <span class="keyword">this</span> time step</div>
+<div class="line">cn2.reset     = 1     #reset the accumulated cn2 after every cn2.reset set of results</div>
+<div class="line">cn2.hmax      = 18000 #maximum height to esimate at zenith</div>
+<div class="line">cn2.saat      = 0.95  #subaperture area threashold to use in cn2 estimation</div>
+<div class="line">cn2.keepht    = 1     #1: Interpolate slodar results onto atmr.ht. 2: <span class="keywordflow">do</span> slodar directly on these layers.</div>
+<div class="line">cn2.tomo      = 0     #1: update tomography parameters </div>
+<div class="line">cn2.verbose   = 1     #output estimated r0, cn2 during simulation</div>
+<div class="line">cn2.nhtomo    = 6     #number of layers to feed into reconstructor. only effective <span class="keywordflow">if</span> keepht==0</div>
+<div class="line">cn2.psol      = 1     #1: use pseudo open loop gradients. 0: to probe residual turbulence</div>
+<div class="line">cn2.moveht    = 0     #move the ht used <span class="keywordflow">for</span> reconstructor to near strongest layers. only</div>
+<div class="line"><span class="preprocessor">                      #effective if keepht=0.</span></div>
 <div class="line"><span class="preprocessor"></span></div>
-<div class="line"><span class="preprocessor">#some common DM parameters that are usually the same for each DM. Can take either 1 or ndm values.</span></div>
-<div class="line"><span class="preprocessor"></span>dm.dx     = [0.5]  #spacing of DM actuators. preferred way to set system order as 2014-04-03.</div>
-<div class="line">dm.order  = [0]    #order of the DM. derived from dm.dx when is not specified.</div>
-<div class="line">dm.ar     = [1]    #DM aspect ratio. dy/dx spacing</div>
-<div class="line">dm.guard  = [1]    #extra DM actuator rings in actuator grid. minimum of 2 <span class="keywordflow">for</span> cubic influence <span class="keyword">function</span>. changed to 1 on Aug 9, 2013</div>
-<div class="line">dm.stroke = [inf]  #surface stroke in meter. opd is [-stroke stroke]</div>
-<div class="line">dm.iastroke=[inf]  #surface inter-actuator stroke in meter. </div>
-<div class="line">dm.iastrokefn=[]</div>
-<div class="line">dm.cubic  = [1]    #1: cubic influence <span class="keyword">function</span>, with dm.iac as inter-actuator-coupling.</div>
-<div class="line">dm.iac    = [0.3]  #inter-actuator-coupling coefficient.  </div>
-<div class="line">dm.hist   = [0]    #output histogram of DM actuator commands.</div>
-<div class="line">dm.histbin= [1e-7] #The bin size <span class="keywordflow">for</span> DM histogram computation.</div>
-<div class="line">dm.histn  = [201]  #Total number of bins. odd number, centered around zero.</div>
-<div class="line">dm.vmisreg= [0]    #vertical misregistration. not implemented yet.</div>
-<div class="line">dm.hyst   = [<span class="stringliteral">&quot;&quot;</span>]   #File containing a matrix that describes the hysterisis. The matrix should have 3 rows, and multiple columns. Each column</div>
-<div class="line"><span class="preprocessor">           #describe the parameters for a mode, and the rows are: 1) weight 2) alpha, 3) beta. See &quot;Hysteresis Modeling and</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">           #Simulation&quot; by Luc Gilles. Optionally the file may contain a header that defines stroke=a where a is surface p/v stroke</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">           #Concequently, alpha is scaled by a. The header may also contain alpha_power=b that describes how alpha varies when command</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">           #goes from [-a a]: alpha(v)=alpha*((a-v)/(2*a))^b where v is command.</span></div>
-<div class="line"><span class="preprocessor"></span>dm.actfloat = [<span class="stringliteral">&quot;&quot;</span>] #file containing floating actuators. nx2 coordinate</div>
-<div class="line">dm.actstuck = [<span class="stringliteral">&quot;&quot;</span>] #file containing stuck actuators. nx2 coordinate. or nx3 with third column the stuck position (in opd).</div>
-<div class="line">#All misregistrations/distortions are specified here</div>
-<div class="line">misreg.tel2wfs=[] #From telescope pupil (atmosphere) to WFS</div>
-<div class="line">misreg.dm2wfs=[] <span class="preprocessor">#From DM to WFS</span></div>
-<div class="line"><span class="preprocessor"></span>misreg.dm2sci=[] #From DM to science.</div>
-<div class="line">misreg.pupil=[0 0]  #2 numbers only. Misregistration of pupil wrt to AO and instrument.</div>
+<div class="line"><span class="preprocessor">#set MOAO DMs parameters.</span></div>
+<div class="line"><span class="preprocessor"></span>moao.dx       = [0.5] #spacing of actuator</div>
+<div class="line">moao.iac      = [0.3]</div>
+<div class="line">moao.gdm      = [0.5]</div>
+<div class="line">moao.stroke   = [inf]</div>
+<div class="line">moao.actslave = [0]</div>
+<div class="line">moao.lrt_ptt  = [0]</div>
+<div class="line">moao.guard    = [1]</div>
+<div class="line">moao.actstuck = [<span class="stringliteral">&quot;&quot;</span>]</div>
+<div class="line">moao.actfloat = [<span class="stringliteral">&quot;&quot;</span>]</div>
+<div class="line">moao.ar       = [1]</div>
+<div class="line"><span class="preprocessor">#some common fov parameters</span></div>
+<div class="line"><span class="preprocessor"></span>evl.dx      = -1  #sampling of the aperture in simulation. -1: follow atm.dx</div>
+<div class="line">evl.psf     = [1] #output psf <span class="keywordflow">for</span> <span class="keyword">this</span> direction <span class="keywordflow">if</span> psf is computed. 1 or nevl elements.</div>
+<div class="line">evl.psfr    = [1] #output psf reconstruction telemetry <span class="keywordflow">for</span> <span class="keyword">this</span> direction.</div>
+<div class="line">evl.hs      = [inf] #the height of the science <span class="keywordtype">object</span>. normally infinity. </div>
+<div class="line">evl.rmax    = 1   #max radial order in performance evaluation. </div>
+<div class="line"><span class="preprocessor">           #1: includes piston/tip/tilt. 2: p/t/t/focus/astigmatism</span></div>
+<div class="line"><span class="preprocessor"></span>evl.tomo    = 0 #evaluate CL error <span class="keywordflow">for</span> tomography</div>
+<div class="line">evl.moao    = -1 #index into MOAO config in recon.conf</div>
+<div class="line">evl.psfhist = 0 #output history of the complex psf (a lot of storage). </div>
+<div class="line">evl.psfmean = 0 #output time averaged psf. <span class="keywordflow">for</span> <span class="keyword">this</span> number of psf<span class="stringliteral">&#39;s along the</span></div>
+<div class="line"><span class="stringliteral">        #way. 1: only save in the end. n: save  average every n steps (no reset after saving)</span></div>
+<div class="line"><span class="stringliteral">evl.psfol   = 1 #compute OL psf in additional to CL PSF. 0: disable 1: on axis</span></div>
+<div class="line"><span class="stringliteral">            #direction only, 2: all directions and average them.</span></div>
+<div class="line"><span class="stringliteral">evl.psfngsr = 0 #remove NGS modes from PSF in split tomography mode. </span></div>
+<div class="line"><span class="stringliteral">            # 1: both normal psf and psf with ngsmod removal are saved.</span></div>
+<div class="line"><span class="stringliteral">        # 2: only psf with ngs mode removed is computed.</span></div>
+<div class="line"><span class="stringliteral">evl.cov     = 0 #save covariance of opd for directions for steps like evl.psfmean (no reset after saving)</span></div>
+<div class="line"><span class="stringliteral"></span></div>
+<div class="line"><span class="stringliteral">evl.wvl     = [1.25e-6 1.65e-6 2.2e-6]#wavelength to evaluat PSF or strehl</span></div>
+<div class="line"><span class="stringliteral">evl.pttr    = [0] #remove p/t/t in wavefront OPD before computing PSF or covariance</span></div>
+<div class="line"><span class="stringliteral">evl.psfisim = 20  #time step to start psfmean/psfhist</span></div>
+<div class="line"><span class="stringliteral">evl.psfgridsize = [] #FFT grid size for psf computation for each</span></div>
+<div class="line"><span class="stringliteral">             #wavelength. 0,1,or nwvl number of elements. 0:</span></div>
+<div class="line"><span class="stringliteral">             #automatic. This determines the sampling of the computed</span></div>
+<div class="line"><span class="stringliteral">             #PSF. length matches evl.wvl</span></div>
+<div class="line"><span class="stringliteral">evl.psfsize = []    #size of the psf to output. The large PSF is cut to this</span></div>
+<div class="line"><span class="stringliteral">            #size. Set to 1 to compute strehl only. 1 or nwvl number of</span></div>
+<div class="line"><span class="stringliteral">            #elements(for each wvl)</span></div>
+<div class="line"><span class="stringliteral"></span></div>
+<div class="line"><span class="stringliteral">#some common DM parameters that are usually the same for each DM. Can take either 1 or ndm values.</span></div>
+<div class="line"><span class="stringliteral">dm.dx     = [0.5]  #spacing of DM actuators. preferred way to set system order as 2014-04-03. Only way since 2016.</span></div>
+<div class="line"><span class="stringliteral">dm.ar     = [1]    #DM aspect ratio. dy/dx spacing</span></div>
+<div class="line"><span class="stringliteral">dm.guard  = [1]    #extra DM actuator rings in actuator grid. minimum of 2 for cubic influence function. changed to 1 on Aug 9, 2013</span></div>
+<div class="line"><span class="stringliteral">dm.stroke = [inf]  #surface stroke in meter. opd is [-stroke stroke]</span></div>
+<div class="line"><span class="stringliteral">dm.iastroke=[inf]  #surface inter-actuator stroke in meter. </span></div>
+<div class="line"><span class="stringliteral">dm.iastrokefn=[]</span></div>
+<div class="line"><span class="stringliteral">dm.iac    = [0.3]  #inter-actuator-coupling coefficient for cubic influence function. 0: disable</span></div>
+<div class="line"><span class="stringliteral">dm.hist   = [0]    #output histogram of DM actuator commands.</span></div>
+<div class="line"><span class="stringliteral">dm.histbin= [1e-7] #The bin size for DM histogram computation.</span></div>
+<div class="line"><span class="stringliteral">dm.histn  = [201]  #Total number of bins. odd number, centered around zero.</span></div>
+<div class="line"><span class="stringliteral">dm.vmisreg= [0]    #vertical misregistration. not implemented yet.</span></div>
+<div class="line"><span class="stringliteral">dm.hyst   = [&quot;&quot;]   #File containing a matrix that describes the hysterisis. The matrix should have 3 rows, and multiple columns. Each column</span></div>
+<div class="line"><span class="stringliteral">           #describe the parameters for a mode, and the rows are: 1) weight 2) alpha, 3) beta. See &quot;Hysteresis Modeling and</span></div>
+<div class="line"><span class="stringliteral">           #Simulation&quot; by Luc Gilles. Optionally the file may contain a header that defines stroke=a where a is surface p/v stroke</span></div>
+<div class="line"><span class="stringliteral">           #Consequently, alpha is scaled by a. The header may also contain alpha_power=b that describes how alpha varies when command</span></div>
+<div class="line"><span class="stringliteral">           #goes from [-a a]: alpha(v)=alpha*((a-v)/(2*a))^b where v is command.</span></div>
+<div class="line"><span class="stringliteral">dm.actfloat = [&quot;&quot;] #file containing floating actuators. nx2 coordinate</span></div>
+<div class="line"><span class="stringliteral">dm.actstuck = [&quot;&quot;] #file containing stuck actuators. nx2 coordinate. or nx3 with third column the stuck position (in opd).</span></div>
+<div class="line"><span class="stringliteral">#All misregistrations/distortions are specified here</span></div>
+<div class="line"><span class="stringliteral">misreg.tel2wfs=[] #From telescope pupil (atmosphere) to WFS</span></div>
+<div class="line"><span class="stringliteral">misreg.dm2wfs=[] #From DM to WFS</span></div>
+<div class="line"><span class="stringliteral">misreg.dm2sci=[] #From DM to science.</span></div>
+<div class="line"><span class="stringliteral">misreg.pupil=[0 0]  #2 numbers only. Misregistration of pupil wrt to AO and instrument.</span></div>
 </div><!-- fragment --><p><code>"dm_dual.conf"</code> to define the dual deformable mirrors </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#File dm_dual.conf</span></div>
 <div class="line"><span class="preprocessor"></span></div>
-<div class="line"><span class="preprocessor">#Deformable Mirror Information.</span></div>
-<div class="line"><span class="preprocessor"></span>dm.ht     = [0 11200] #height conjugation in meter.</div>
-<div class="line">dm.offset = [0 1/2]   #0: actuator is on subaperture edge. 1/2: actuator is on</div>
-<div class="line"><span class="preprocessor">              #subaperture center.</span></div>
+<div class="line"><span class="preprocessor">#Use TMT NFIRAOS setup.</span></div>
+<div class="line"><span class="preprocessor"></span><span class="preprocessor">#Updated on 4/1/2016: upper DM changed from 11.2 to 11.8 km.</span></div>
+<div class="line"><span class="preprocessor"></span></div>
+<div class="line"><span class="preprocessor">#Deformable Mirror Information. See dm_none.conf for definition.</span></div>
+<div class="line"><span class="preprocessor"></span></div>
+<div class="line">dm.ht     = [0 11800] ##height conjugation in meter</div>
+<div class="line">dm.offset = [0 1/2]   #Upper DM is sheared against ground DM to reduce fitting error.</div>
 </div><!-- fragment --><p><code>"atm_mk13n50p.conf"</code> to define the turbulence profiles using the Mauna Kea 13N median seeing </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#File atm_mk13n50p.conf</span></div>
 <div class="line"><span class="preprocessor"></span></div>
@@ -385,32 +390,27 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line"><span class="preprocessor">       #wind speed to height atm.ht. updated on 2010-02-19. from tony on 2009-11</span></div>
 <div class="line"><span class="preprocessor"></span>atm.wddeg = [0]  </div>
 <div class="line"><span class="preprocessor">       #wind direction in degree. If wdrand=1, this will be irrelevant.</span></div>
-<div class="line"><span class="preprocessor"></span></div>
-<div class="line"><span class="preprocessor">#Reconstructor parameters</span></div>
-<div class="line"><span class="preprocessor"></span>atmr.ht  = [0 1000 2000 4000 8000 16000]#reconstructed screen height.</div>
-<div class="line">atmr.wt  = [0.5248    0.1136    0.0416    0.1167    0.0926    0.1107]</div>
-<div class="line"><span class="preprocessor">     #reconstructed screen weight. see atm.wt</span></div>
-<div class="line"><span class="preprocessor"></span>atmr.os  = [2 2 2 2 1 1] #over sampling factor of XLOC over the sampling defined by</div>
-<div class="line"><span class="preprocessor">             #actuator spacing.</span></div>
 </div><!-- fragment --><p><code>"wfs_lgs_ttf_tt.conf"</code> to define the wavefront sensors. </p>
 <div class="fragment"></div><!-- fragment --> <div class="fragment"><div class="line"><span class="preprocessor">#FILE wfs_lgs_ttf_tt.conf</span></div>
 <div class="line"><span class="preprocessor"></span>include=powfs_none.conf</div>
-<div class="line">include=powfs_lgs.conf</div>
-<div class="line">include=powfs_ttf.conf</div>
-<div class="line">include=powfs_tt.conf</div>
+<div class="line">include=shwfs_lgs.conf</div>
+<div class="line">include=shwfs_ttf.conf</div>
+<div class="line">include=shwfs_tt.conf</div>
 </div><!-- fragment --> <div class="fragment"><div class="line"><span class="preprocessor">#File llt_CL.conf for center launch</span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">#Specifying laser launch telescope and sodium layer parameters.</span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">#Notice that when the options are overriden else, the key must be specified like</span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">#powfs0_llt.d=0.4</span></div>
 <div class="line"><span class="preprocessor"></span></div>
 <div class="line">llt.d=0.4      #laser launch telescope diameter in meter.</div>
-<div class="line">llt.widthp=0.6 #Gaussian beam width. 60 percent of d</div>
+<div class="line">llt.widthp=0.6 #Gaussian beam width as a fraction of LLT diameter.</div>
 <div class="line">llt.ttrat=5.155#ratio of LLT uplink jitter to downlink jitter = 1/(2*D_M2/M1). Need to determine the direction.</div>
+<div class="line">llt.ttpsd=<span class="stringliteral">&quot;&quot;</span>   #PSD of uplink beam jitter</div>
 <div class="line">llt.fnamp=<span class="stringliteral">&quot;&quot;</span>   #Pupil amplitude map. Overrides widthp</div>
 <div class="line">llt.fnsurf=<span class="stringliteral">&quot;&quot;</span>  #Pupil surface error of each LLT. <a class="code" href="structcell.html">cell</a> array of 2-d <a class="code" href="structmap__t.html">map_t</a> arrays.</div>
+<div class="line">llt.ttfr=0     #Remove piston/tip/tilt/focus from ncpa (fnsurf)</div>
 <div class="line">llt.<a class="code" href="structmap__t.html#ac7a7ed6823814624bbe926ba3dadd79a">ox</a>=[0]     #LLT x coordinate. single number or match # of wfs belongs to</div>
-<div class="line">          #<span class="keyword">this</span> powfs.</div>
-<div class="line">llt.oy=[0]     #LLT y coordinate.</div>
+<div class="line"><span class="preprocessor">          #this powfs.</span></div>
+<div class="line"><span class="preprocessor"></span>llt.oy=[0]     #LLT y coordinate.</div>
 <div class="line">llt.misreg=[0 0]#misregistration during ray tracing (<span class="keywordflow">for</span> testing purpose)</div>
 <div class="line">llt.fnrange=<span class="stringliteral">&quot;&quot;</span> #additional change of sodium height <span class="keywordflow">for</span> LGS. in meter. </div>
 <div class="line"><span class="preprocessor">          #matrix of size nsim*1 or nsim*nLGS.</span></div>
@@ -421,7 +421,7 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">               #factor of signal level, normally 1.</span></div>
 <div class="line"><span class="preprocessor"></span>llt.colprep= 0 #which column of the profiles to use in matched filter.</div>
 <div class="line">llt.colsim = 0 #which column of the profiles to start to use in simulation.</div>
-<div class="line">llt.colsimdtrat=0 #every coldsimtrat to increment to next column during</div>
+<div class="line">llt.coldtrat=0 #every coldsimtrat to increment to next column during</div>
 <div class="line"><span class="preprocessor">           #simulation and update etf. 0 means not updating.</span></div>
 <div class="line"><span class="preprocessor"></span></div>
 <div class="line"><span class="preprocessor">#For side launch, uncomment and put the following in your override .conf file</span></div>
@@ -431,22 +431,7 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">#llt.oy=[14.1284    9.8890   -4.2394  -14.1284   -9.8890    4.2394]</span></div>
 <div class="line"><span class="preprocessor"></span><span class="preprocessor">#powfs.ncomp=[128 0 0]#128 is faster than 124 by many times.</span></div>
 </div><!-- fragment --><p><code>"fov_iris.conf"</code> to define the science fov for performance evaluation with IRIS. </p>
-<div class="fragment"><div class="line"><span class="preprocessor">#FILE evl_iris.conf Contains performance evaluation direction defined for TMT</span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#NFIRAOS IRIS Instrument which has 17x17 square FoV.</span></div>
-<div class="line"><span class="preprocessor"></span></div>
-<div class="line"><span class="preprocessor">#performance evaluation directions.</span></div>
-<div class="line"><span class="preprocessor"></span>evl.thetax  = [0 8.5 0 -8.5 0 8.5 -8.5 -8.5 8.5]#x coordinate in arcsec</div>
-<div class="line">evl.thetay  = [0 0 8.5 0 -8.5 8.5 8.5 -8.5 -8.5]#y coordinate in arcsec</div>
-<div class="line">evl.wt      = [4/9 1/9 1/9 1/9 1/9 1/36 1/36 1/36 1/36] #weighting to compute</div>
-<div class="line"><span class="preprocessor">                        #field average wavefront error.</span></div>
-<div class="line"><span class="preprocessor"></span></div>
-<div class="line"></div>
-<div class="line"><span class="preprocessor">#DM Fitting directions </span></div>
-<div class="line"><span class="preprocessor"></span><span class="preprocessor">#Circular, 30 as to better sharpen the NGS to get good sky coverage.</span></div>
-<div class="line"><span class="preprocessor"></span>fit.thetax=[0  15  10.6066    0  -10.6066  -15 -10.6066   -0   10.6066]</div>
-<div class="line">fit.thetay=[0  0   10.6066   15   10.6066    0 -10.6066  -15  -10.6066]</div>
-<div class="line">fit.wt =   [1/2 1/12 1/24 1/12 1/24 1/12 1/24 1/12 1/24]</div>
-</div><!-- fragment --><p><code>"recon.conf"</code> to define the parameters about turbulence reconstruction and DM fitting </p>
+<div class="fragment"></div><!-- fragment --><p><code>"recon.conf"</code> to define the parameters about turbulence reconstruction and DM fitting </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#FILE recon.conf</span></div>
 <div class="line"><span class="preprocessor"></span></div>
 <div class="line"><span class="preprocessor">#The parameters for generation reconstruction</span></div>
@@ -454,9 +439,17 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">recon.glao      = 0 #1: average gradient from wfs of same type (GLAO).</div>
 <div class="line">recon.split     = 1 #0: integrated reconstruction. 1: ad hoc Split. 2: mvst (only <span class="keywordflow">if</span> recon.alg==0)</div>
 <div class="line">recon.mvm       = 0 <span class="preprocessor">#1: Assemble control matrix directly. 1: use warm restart in cg from neighboring actuators. 2: disable warm restart.</span></div>
-<div class="line"><span class="preprocessor"></span>recon.modal     = 0 #0: zonal, 1:zernike modes, 2: KL modes</div>
-<div class="line">recon.modr      = 30 #Maxium Radial mode in modal controller</div>
-<div class="line">recon.psol      = 1 #Use pseudo open loop gradients in MVR. keep at 1.</div>
+<div class="line"><span class="preprocessor"></span>recon.modal     = 0 #-2: emulate zonal, -1: zernike modes, 0: zonal, 1: KL modes</div>
+<div class="line">recon.nmod      = 0 #Maxium number of modes in modal controller. 0: all available modes.</div>
+<div class="line">recon.psol      = -1#1: Use pseudo open loop gradients. -1 : <span class="keyword">auto</span>, on <span class="keywordflow">for</span> MVR off <span class="keywordflow">for</span> lsr</div>
+<div class="line">recon.poke      = 1e-7#How much WFE (meter) to apply to OPD for computing experimental interaction matrix. In noise free case, smaller one works fine.</div>
+<div class="line">recon.psd       = 0 <span class="preprocessor">#1: compute PSDs of DM error signal averaged over aperture and field points.</span></div>
+<div class="line"><span class="preprocessor"></span>recon.psddtrat  = 1024 #how many time step to sample <span class="keywordflow">for</span> PSD computation.</div>
+<div class="line">recon.psddtrat_lo=256 #For low order PSD computation. 0:disable</div>
+<div class="line">recon.psddtrat_twfs=0 #For TWFS PSD computation. 0:disable</div>
+<div class="line">recon.psdservo_gain=0.5 #Gain used to update servo parameter</div>
+<div class="line">recon.psdnseg   = 1 #how many overlapping partitions of the time history to compute PSD.</div>
+<div class="line">recon.fnsphpsd  = <span class="stringliteral">&quot;&quot;</span>#PSD of spherical aberration due to profile evolution.</div>
 <div class="line">#The parameters <span class="keywordflow">for</span> minimum variance tomography reconstruction, which is</div>
 <div class="line"><span class="preprocessor">#composed of a turbulence tomography step and a DM fitting step.</span></div>
 <div class="line"><span class="preprocessor"></span></div>
@@ -467,30 +460,32 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line"><span class="stringliteral">tomo.predict    = 0 #prediction through modified ray tracing direction in tomo (testing)</span></div>
 <div class="line"><span class="stringliteral">tomo.tikcr      = 1e-9#tikhonov regularization. Necessary if tomo.alg=0</span></div>
 <div class="line"><span class="stringliteral">tomo.svdthres   = 1e-9 #threshold of SVD inversion. 1e-9 for GLAO. 2e-4 for BGS?</span></div>
-<div class="line"><span class="stringliteral">tomo.piston_cr  = 0 #single point piston constraint in tomography. degrads</span></div>
-<div class="line"><span class="stringliteral">            #fdpcg. does not help cg or cbs</span></div>
+<div class="line"><span class="stringliteral">tomo.piston_cr  = 0 #single point piston constraint in tomography. degrads fdpcg. does not help cg or cbs.</span></div>
 <div class="line"><span class="stringliteral"></span></div>
 <div class="line"><span class="stringliteral">tomo.alg        = 1 #Tomography algorithm. 0: cholesky backsubstitution (CBS) on full #matrix</span></div>
 <div class="line"><span class="stringliteral">            #1: Conjugate Gradient (CG). 2: SVD Inversion.</span></div>
 <div class="line"><span class="stringliteral">tomo.bgs        = 0 #block Gauss Seidel method</span></div>
-<div class="line"><span class="stringliteral">tomo.precond    = 0 #Tomography CG preconditioning. 0: no precondition. 1: Fourier Domain PCG</span></div>
-<div class="line"><span class="stringliteral">tomo.maxit      = 0 #max iterations in CG. 0 is default: 30 for CG, 3 for FDPCG (tomo.precond=1) x10 in non warm restart mode</span></div>
+<div class="line"><span class="stringliteral">tomo.precond    = 1 #Tomography CG preconditioning. 0: no precondition. 1: Fourier Domain PCG</span></div>
+<div class="line"><span class="stringliteral">tomo.maxit      = 0 #max iterations in CG. 0 is default: 40 for CG, 4 for FDPCG (tomo.precond=1) x10 in non warm restart mode (3 as of 2016-06-20)</span></div>
 <div class="line"><span class="stringliteral">tomo.minwt      = 0.01 #minimum layer weight allowed. if less than this will force to this.</span></div>
 <div class="line"><span class="stringliteral">tomo.square     = 0 #1: using square grid in tomography (xloc)</span></div>
 <div class="line"><span class="stringliteral">tomo.cgthres    = 1 #Repeat cg if residual is not reached (only used in MVM assemble in gpu)</span></div>
-<div class="line"><span class="stringliteral">#The following split_* options are only used in ad hoc split tomography</span></div>
+<div class="line"><span class="stringliteral">#The following ahst_* options are only used in ad hoc split tomography</span></div>
 <div class="line"><span class="stringliteral">tomo.ahst_wt    = 1 #weighting method to remove ngs modes from lgs DM commands.</span></div>
 <div class="line"><span class="stringliteral">                    #1: use NGS gradient reconstruction weighting, 2:use</span></div>
 <div class="line"><span class="stringliteral">                    #aperture evaluation weighting, 3: identity weighting.</span></div>
 <div class="line"><span class="stringliteral">tomo.ahst_idealngs = 0 #apply ideal NGS mode correction. for skycoverage pre-simulation</span></div>
+<div class="line"><span class="stringliteral">tomo.ahst_focus = 1   #Only useful in LGS AO mode, in split tomography, when focus tracking (sim.mffocus)is turned on.</span></div>
+<div class="line"><span class="stringliteral">                  #0: the first plate scale mode creates focus error on science, but no focus error in LGS.</span></div>
+<div class="line"><span class="stringliteral">                  #1: the first plate scale mode results in no focus in science, but focus error in LGS. sim.mffocus takes care of it.</span></div>
+<div class="line"><span class="stringliteral">              #2: Like 1, but feed this mode to LGS focus measurement. (Deprecated).</span></div>
 <div class="line"><span class="stringliteral">tomo.cone     = 1 #1: using cone coordinate for tomography grid. keep at 1.</span></div>
-<div class="line"><span class="stringliteral">tomo.cxx      = 0 #method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal</span></div>
-<div class="line"><span class="stringliteral">tomo.cxxscale = 1 #scale the Cxx^-1 term.</span></div>
+<div class="line"><span class="stringliteral">tomo.cxxalg   = 0 #method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal</span></div>
+<div class="line"><span class="stringliteral">tomo.cxxscale = 1 #scale the Cxx^-1 term (debugging).</span></div>
 <div class="line"><span class="stringliteral">tomo.guard    = 1 #rings of padding in generating reconstruction grid, not too small, not too large.</span></div>
 <div class="line"><span class="stringliteral">tomo.pos      = 2 #over sampling ratio of ploc grid over actuator grid</span></div>
 <div class="line"><span class="stringliteral">tomo.nxbase   = 0 #Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.</span></div>
 <div class="line"><span class="stringliteral"></span></div>
-<div class="line"><span class="stringliteral">tomo.cubic    = 0 #cubic influence function in tomography (testing)</span></div>
 <div class="line"><span class="stringliteral">tomo.iac      = 0 #inter-actuator-coupling in cubic influence function (testing)</span></div>
 <div class="line"><span class="stringliteral">tomo.ninit    = 5 #Initial size of the screen in fractal method. &gt;=2</span></div>
 <div class="line"><span class="stringliteral">tomo.splitlrt = 0 #1: use LGS low rank terms in split tomography. to 0 on 2013/1/15</span></div>
@@ -498,17 +493,16 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line"><span class="stringliteral">#DM Fitting</span></div>
 <div class="line"><span class="stringliteral">fit.tikcr     = 1e-7 #tikhonov regularization. 1.e-9 is not enough.</span></div>
 <div class="line"><span class="stringliteral">fit.svdthres  = 2e-4 #threshold of SVD inversion</span></div>
-<div class="line"><span class="stringliteral">fit.actslave  = 0 #actuators that are weakly coupled are slaved to active ones during DM fitting</span></div>
-<div class="line"><span class="stringliteral">fit.actthres  = 0.05 #When actuator coupling coefficient drops below this, start slaving.</span></div>
-<div class="line"><span class="stringliteral">fit.actinterp = 1 #Interpolate weakly coupled actuators from activeo nes.</span></div>
+<div class="line"><span class="stringliteral">fit.actslave  = 1 #actuators that are weakly coupled are slaved to active ones during DM fitting</span></div>
+<div class="line"><span class="stringliteral">fit.actthres  = 0.1 #When actuator coupling coefficient drops below this, start slaving. 0.05 is not very stable.</span></div>
+<div class="line"><span class="stringliteral">fit.actinterp = 1 #Interpolate weakly coupled actuators from active ones.</span></div>
 <div class="line"><span class="stringliteral">fit.lrt_piston= 1 #piston constraint</span></div>
-<div class="line"><span class="stringliteral">fit.lrt_tt    = 1 #Tip/tilt constraint (2 dm system only). 0: no. 2: differential</span></div>
-<div class="line"><span class="stringliteral">          #tilt on two DMs. 1: upper DM tt constraint.</span></div>
+<div class="line"><span class="stringliteral">fit.lrt_tt    = 1 #Limiting tip/tilt on upper DMs.</span></div>
 <div class="line"><span class="stringliteral">fit.assemble  = 1 #1: assemble fit matrix. fast for fit.</span></div>
-<div class="line"><span class="stringliteral">fit.alg       = 1 #Fitting algorithm. see tomo.alg</span></div>
-<div class="line"><span class="stringliteral">fit.bgs       = 0 #block Gauss Seidel method</span></div>
+<div class="line"><span class="stringliteral">fit.alg       = 1 #Fitting algorithm. see tomo.alg. CBS works the best, but slow in GPU.</span></div>
+<div class="line"><span class="stringliteral">fit.bgs       = 0 #block Gauss Seidel method.</span></div>
 <div class="line"><span class="stringliteral">fit.precond   = 0 #CG preconditioning. see tomo.precond</span></div>
-<div class="line"><span class="stringliteral">fit.maxit     = 0 #max iterations in CG. 0 is default: 4. x10 in non warm restart mode</span></div>
+<div class="line"><span class="stringliteral">fit.maxit     = 0 #max iterations in CG. 0 is default: 10. x10 in non warm restart mode</span></div>
 <div class="line"><span class="stringliteral">fit.square    = 0 #use square grid on DM grid and ploc</span></div>
 <div class="line"><span class="stringliteral">fit.hs        = [inf] #the height of the science object to optimize DM fitting with. normally infinity</span></div>
 <div class="line"><span class="stringliteral">fit.pos       = -1 #over sampling ratio of floc grid over actuator grid. -1: inherits tomo.pos by default.</span></div>
@@ -517,6 +511,8 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line"><span class="stringliteral">#Parameters for least square reconstructor follows tomography parameter.</span></div>
 <div class="line"><span class="stringliteral">lsr.tikcr     = 1e-2</span></div>
 <div class="line"><span class="stringliteral">lsr.svdthres  = 1e-5</span></div>
+<div class="line"><span class="stringliteral">lsr.actthres  = 0.1 #When actuator coupling coefficient drops below this, start slaving.</span></div>
+<div class="line"><span class="stringliteral">lsr.actinterp = -1 #extrapolate weakly coupled actuators from active ones. -1: auto, on for zonal, off for modal control</span></div>
 <div class="line"><span class="stringliteral">lsr.fnreg     = #File name for regularization. has to be sparse cell array of ndm*ndm. </span></div>
 <div class="line"><span class="stringliteral">lsr.actslave  = 1</span></div>
 <div class="line"><span class="stringliteral">lsr.bgs       = 0</span></div>
@@ -531,7 +527,7 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="fragment"><div class="line"><span class="preprocessor">#FILE dbg.conf</span></div>
 <div class="line"><span class="preprocessor"></span></div>
 <div class="line"><span class="preprocessor">###The following are parameters used for debugging</span></div>
-<div class="line"><span class="preprocessor"></span>dbg.atm   = 0   #test special atmosphere. 1: tip/tilt. 2: diff focus. -1: use power of -4 instead of -11/3.</div>
+<div class="line"><span class="preprocessor"></span>dbg.atm = []  #Test atmosphere. A number <span class="keywordflow">for each</span> layer &lt;0: fourier mode with spatial frequency 1/dbg.atm m^-1. &gt;0: zernike mode.</div>
 <div class="line"></div>
 <div class="line">dbg.wamethod=0  #0: Use mod on dm. 1: use mod on science when tomo.ahst_wt=2</div>
 <div class="line">dbg.mvstlimit=0 #limit MVST modes to the number <span class="keywordflow">if</span> none zero</div>
@@ -539,29 +535,43 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">dbg.tomo_maxit=[]#<span class="keywordflow">if</span> not empty, will study these maxits in open loop</div>
 <div class="line">dbg.tomo_hxw=0  #1: force use hxw</div>
 <div class="line">dbg.ecovxx=0    #output ecovxx used to generate ecov.</div>
-<div class="line">dbg.useopdr=0   #use opdr. (deprecated)</div>
-<div class="line">dbg.usegwr=0    #GA/GX method. 0: GP, 1: GS0</div>
+<div class="line">dbg.useopdr=0   #use opdr in PSF reconstruction. (deprecated)</div>
 <div class="line">dbg.cmpgpu=0    #1: make cpu code follow GPU implementation.</div>
-<div class="line">dbg.pupmask=0   #pupil mask (<span class="keywordflow">for</span> ngs wfs, within LGS volume)</div>
-<div class="line">dbg.wfslinearity=-1#Study the linearity/noise <span class="keyword">property</span> of pixel processing algorithms of <span class="keyword">this</span> wfs.</div>
+<div class="line">dbg.wfslinearity=-1#Study the linearity/noise property of pixel processing algorithms of <span class="keyword">this</span> wfs.</div>
 <div class="line">dbg.nocgwarm=0    #disable warm restart in cg.</div>
-<div class="line">dbg.deltafocus=0 #use delta focus between science and NGS estimated from opdr.</div>
-<div class="line">dbg.dmfullfov=0 #let DM cover full FoV (sim.fov)</div>
-<div class="line">dbg.tomo=0   <span class="preprocessor">#debug tomography in gpu</span></div>
-<div class="line"><span class="preprocessor"></span>dbg.fit=0    #debug fitting in gpu</div>
-<div class="line">dbg.na_smooth = 1 #2014-05-07 <a class="code" href="mkdtf_8h.html#a2238fcc6606691210bae8c9a0f971453">smooth</a> sodium profile. newly introduced. replaced llt.smooth</div>
+<div class="line">dbg.dmfullfov=0  #let DM cover full FoV (sim.fov)</div>
+<div class="line">dbg.tomo=0   #debug tomography in gpu</div>
+<div class="line">dbg.fit=0    #debug fitting in gpu</div>
+<div class="line">dbg.na_smooth = 1 #2014-05-07 <a class="code" href="mkdtf_8h.html#a1019bd04997fd407aede4d92c4c1cc2a">smooth</a> sodium profile. newly introduced. replaced llt.smooth</div>
 <div class="line">dbg.na_interp = 1 #2014-05-07 1: interpolate sodium profile (old way). 0: direct sum (slow, but accurate)</div>
-<div class="line">dbg.ncpa_preload=0 #preload integrator with DM sys flat</div>
-<div class="line">dbg.ncpa_uncorr=1 #1: include uncorrelatable error in science path.</div>
-<div class="line">dbg.i0drift=1 #1: Control drift of i0</div>
-<div class="line">dbg.pywfs_atm=0#use atmosphere when generating pywfs gain.</div>
-<div class="line">#For plotting</div>
-<div class="line">plot.setup=0 #plot aperture,powfs,recon grids, etc.</div>
+<div class="line">dbg.ncpa_preload=0 #1: preload integrator with DM sys flat, 0: add DM sys flat after the integrator.</div>
+<div class="line">dbg.ncpa_rmsci=0   #1: <span class="keywordflow">do</span> not include uncorrelatable error in science path.</div>
+<div class="line">dbg.gradoff_scale=1 #scale the gradient reference vector</div>
+<div class="line">dbg.pwfs_psx=[0 0 0 0] #pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.</div>
+<div class="line">dbg.pwfs_psy=[0 0 0 0] #pyramid WFS pupil shift along y (in pixel).</div>
+<div class="line">dbg.pwfs_flate=0 #pyramid flat edge width in mas.</div>
+<div class="line">dbg.pwfs_flatv=0 #pyramid flat vertex width in mas.</div>
+<div class="line">dbg.pwfs_pupelong=0 #pyramid pupil radial elongation induced number of pixel offset at farthest radius on detector. 1 means pupil is larger by 2*sqrt(2) pixels along radial direction than the azimuthal direction.</div>
+<div class="line">dbg.pwfs_side=4  <span class="preprocessor">#Four sided pyramid WFS. 2 for roof. 3 for 3-sided.</span></div>
+<div class="line"><span class="preprocessor"></span>dbg.dmoff=     #DM offset <span class="keywordflow">for</span> simulating turbulence on the DM. dimension: ndm*nstep</div>
+<div class="line">dbg.gradoff=   #Introduced additional gradient offset. dimension: nwfs*nstep</div>
+<div class="line">dbg.gp_noamp=0 #1: Use annular amplitude amp instead of theoretical one.</div>
+<div class="line">dbg.twfsflag=1 #use TWFS to control 0: all modes, 1: only radial.</div>
+<div class="line">dbg.draw_opdmax=0 #Limit OPD to [-1 1]*opdmax in drawing</div>
+<div class="line">dbg.draw_gmax=0 #Limit gradient to [-1 1]*gmax in drawing</div>
+<div class="line">dbg.wfs_iac=0. #Cubic spline coupling factor <span class="keywordflow">for</span> turbulence fitting onto wfs grid. 0 disables cubic spline.</div>
+<div class="line">dbg.fullatm=0 #1: Always copy full atm to GPU.</div>
+<div class="line">dbg.lo_blend=0 #Low order multi-rate control blending scheme. 0: no blend, 1: slower loop generates offset <span class="keywordflow">for</span> faster loop, 2: HPF/LPF</div>
+<div class="line">dbg.eploscale = 1 #scale of eplo <span class="keywordflow">for</span> </div>
+<div class="line"></div>
+<div class="line"><span class="preprocessor">#For plotting</span></div>
+<div class="line"><span class="preprocessor"></span>plot.setup=0 #plot aperture,powfs,recon grids, etc.</div>
 <div class="line">plot.atm=0   #plot atmosphere</div>
 <div class="line">plot.run=0   #plot wfs opd, gradients, DM opd, science opd, etc.</div>
 <div class="line">plot.opdx=0  #plot turbulence projeced to xloc.</div>
-<div class="line">plot.all=0   #enables plot.setup, plot.atm, and plot.run</div>
-<div class="line"></div>
+<div class="line">plot.psf=0   #plot PSF in linear (1) or log (2) mode</div>
+<div class="line">plot.all=0   <span class="preprocessor">#enables plot.setup, plot.atm, and plot.run</span></div>
+<div class="line"><span class="preprocessor"></span></div>
 <div class="line"><span class="preprocessor">#The saved files can be loaded with mex routine &quot;read&quot; in MATLAB.</span></div>
 <div class="line"><span class="preprocessor"></span>save.extra=1 #Save extra results, namely clep, olep, cleNGSmp, etc</div>
 <div class="line">save.all=0   #saves everything below except gcov. mainly <span class="keywordflow">for</span> debugging</div>
@@ -570,8 +580,9 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">save.recon=0 #save reconstructor. big matrices.</div>
 <div class="line">save.mvst=0  #save mvst intermediate matrices in preparation to load later.</div>
 <div class="line">save.ncpa=0  #save NCPA surface in setup_surf.c</div>
-<div class="line"><span class="preprocessor">#Run time saving:</span></div>
-<div class="line"><span class="preprocessor"></span>save.atm =0  #save atmosphere</div>
+<div class="line">save.fdpcg=0 #save FDPCG matrices.</div>
+<div class="line">#Run time saving:</div>
+<div class="line">save.atm =0  #save atmosphere</div>
 <div class="line">save.run =0  #save run time information, also enables save.dmreal,gradcl,gradpsol</div>
 <div class="line"></div>
 <div class="line"></div>
@@ -592,6 +603,7 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">save.gcov=[]  #output covariance of psol gradient. set to [1 3 2 5] to output</div>
 <div class="line">          #covariance between wfs 1 and 3, 2 and 5 drawdaemon is used to <span class="keywordflow">do</span></div>
 <div class="line">          #the plotting.</div>
+<div class="line">save.ecov=0   #save covariance of DM error vector</div>
 <div class="line">save.mvmi=0   #save tomography output of mvm control matrix assembly <span class="keywordflow">for</span> warm restart.</div>
 <div class="line">save.mvmf=0   #save <a class="code" href="recon__utils_8c.html#a168e09881164d7f61ac8e0620ec7135b">FitR</a> output of mvm control matrix assemble</div>
 <div class="line">save.mvm=0    #save MVM control matrix</div>
@@ -603,9 +615,9 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">load.ploc=#<span class="stringliteral">&quot;ploc&quot;</span> #load aperture reconstruction grid.</div>
 <div class="line">load.floc=#<span class="stringliteral">&quot;floc&quot;</span> #load aperture fitting grid.</div>
 <div class="line">load.cxx=#<span class="stringliteral">&quot;cxx^-1&quot;</span> #load laplacian or bihormonic <span class="keyword">operator</span>.</div>
-<div class="line">load.HXF=#<span class="stringliteral">&quot;HXF&quot;</span> #load propagation matrix from xloc to ploc along fit directions</div>
+<div class="line">#load.HXF=#<span class="stringliteral">&quot;HXF&quot;</span> #load propagation matrix from xloc to ploc along fit directions</div>
 <div class="line">load.HXW=#<span class="stringliteral">&quot;HXW&quot;</span> #load propagation matrix from xloc to ploc along wfs directions</div>
-<div class="line">load.HA=#<span class="stringliteral">&quot;HA&quot;</span> #load propagation matrix from aloc to ploc</div>
+<div class="line">#load.HA=#<span class="stringliteral">&quot;HA&quot;</span> #load propagation matrix from aloc to ploc</div>
 <div class="line">load.GP=#<span class="stringliteral">&quot;GP&quot;</span> #load gradient <span class="keyword">operator</span> from ploc to wfs (<span class="keywordflow">for</span> tomography)</div>
 <div class="line">load.GA=#<span class="stringliteral">&quot;GA&quot;</span> #load gradient <span class="keyword">operator</span> from aloc to wfs (to compute pseudo</div>
 <div class="line">    #openloop gradients)</div>
@@ -618,7 +630,7 @@ $(document).ready(function(){initNavTree('nfiraos.html','');});
 <div class="line">load.mvm=   #load recon.MVM as a <a class="code" href="structcell.html">cell</a> array that converts gradients to actuator commands.</div>
 <div class="line">load.mvmi=  #load tomography output of mvm control matrix assembly <span class="keywordflow">for</span> warm restart.</div>
 <div class="line">load.mvmf=  #load <a class="code" href="recon__utils_8c.html#a168e09881164d7f61ac8e0620ec7135b">FitR</a> output of mvm control matrix assembly.</div>
-<div class="line">load.ncpa=0 #load NCPA surface saved during save.ncpa</div>
+<div class="line">load.ncpa=  #folder name: load NCPA surface saved during save.ncpa</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- doc-content -->
 

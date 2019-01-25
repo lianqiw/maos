@@ -107,8 +107,7 @@ $(document).ready(function(){initNavTree('classcusp.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Data Fields</a>  </div>
+<a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
 <div class="title">cusp Class Reference</div>  </div>
 </div><!--header-->
@@ -116,48 +115,54 @@ $(document).ready(function(){initNavTree('classcusp.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a26b72799e675e74a15f5f08c94776bcd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a26b72799e675e74a15f5f08c94776bcd"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cusp</b> (const <a class="el" href="structdsp.html">dsp</a> *in=0, int tocsr=1)</td></tr>
-<tr class="separator:a26b72799e675e74a15f5f08c94776bcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6aa22d55232fbd869944bca4dde4d7ed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6aa22d55232fbd869944bca4dde4d7ed"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>toCSR</b> ()</td></tr>
-<tr class="separator:a6aa22d55232fbd869944bca4dde4d7ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32dea88b79848e7a01f6455651a05636"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32dea88b79848e7a01f6455651a05636"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>toCSC</b> ()</td></tr>
-<tr class="separator:a32dea88b79848e7a01f6455651a05636"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76e2b237767e16281518304c01202a57"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a76e2b237767e16281518304c01202a57"></a>
+enum TYPE_SP&#160;</td><td class="memItemRight" valign="bottom"><b>Type</b> () const </td></tr>
+<tr class="separator:a76e2b237767e16281518304c01202a57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ed17916f9890ae2ecef9ed66a1dd5c3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ed17916f9890ae2ecef9ed66a1dd5c3"></a>
+long&#160;</td><td class="memItemRight" valign="bottom"><b>Nx</b> () const </td></tr>
+<tr class="separator:a2ed17916f9890ae2ecef9ed66a1dd5c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa30dfc598eba88a0c6561ce97888957c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa30dfc598eba88a0c6561ce97888957c"></a>
+long&#160;</td><td class="memItemRight" valign="bottom"><b>Ny</b> () const </td></tr>
+<tr class="separator:aa30dfc598eba88a0c6561ce97888957c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75c1ceab61125de2e76dd59f45d2a03f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a75c1ceab61125de2e76dd59f45d2a03f"></a>
+long&#160;</td><td class="memItemRight" valign="bottom"><b>Nzmax</b> () const </td></tr>
+<tr class="separator:a75c1ceab61125de2e76dd59f45d2a03f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af229edbfd09ced7827c6a39e68543b79"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af229edbfd09ced7827c6a39e68543b79"></a>
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>Pp</b> ()</td></tr>
+<tr class="separator:af229edbfd09ced7827c6a39e68543b79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64cb94e13bdcf19bdfda78e7d93cea9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a64cb94e13bdcf19bdfda78e7d93cea9c"></a>
+const int *&#160;</td><td class="memItemRight" valign="bottom"><b>Pp</b> () const </td></tr>
+<tr class="separator:a64cb94e13bdcf19bdfda78e7d93cea9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60c00ab66c5a970269d4bda4cc3f51be"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60c00ab66c5a970269d4bda4cc3f51be"></a>
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>Pi</b> ()</td></tr>
+<tr class="separator:a60c00ab66c5a970269d4bda4cc3f51be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaafef9f71e803212dfb651c5e01732b8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaafef9f71e803212dfb651c5e01732b8"></a>
+const int *&#160;</td><td class="memItemRight" valign="bottom"><b>Pi</b> () const </td></tr>
+<tr class="separator:aaafef9f71e803212dfb651c5e01732b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d8a7fd4f65f6c6a44ba74419188f2bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d8a7fd4f65f6c6a44ba74419188f2bf"></a>
+Real *&#160;</td><td class="memItemRight" valign="bottom"><b>Px</b> ()</td></tr>
+<tr class="separator:a4d8a7fd4f65f6c6a44ba74419188f2bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3a7b94864b9b6a11dbf262a5b4bb776"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3a7b94864b9b6a11dbf262a5b4bb776"></a>
+const Real *&#160;</td><td class="memItemRight" valign="bottom"><b>Px</b> () const </td></tr>
+<tr class="separator:ac3a7b94864b9b6a11dbf262a5b4bb776"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c6f380e71fcd34910fa825a2ae437b2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4c6f380e71fcd34910fa825a2ae437b2"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cusp</b> (const <a class="el" href="structdsp.html">dsp</a> *in, int tocsr)</td></tr>
+<tr class="separator:a4c6f380e71fcd34910fa825a2ae437b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c3317731a12c1e4c25e03d04017cc2f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c3317731a12c1e4c25e03d04017cc2f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cusp</b> (const <a class="el" href="classcusp.html">cusp</a> &amp;in)</td></tr>
+<tr class="separator:a8c3317731a12c1e4c25e03d04017cc2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa25c18587b4988fe1cc6832137516ea3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa25c18587b4988fe1cc6832137516ea3"></a>
+<a class="el" href="classcusp.html">cusp</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcusp.html">cusp</a> &amp;in)</td></tr>
+<tr class="separator:aa25c18587b4988fe1cc6832137516ea3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2abee66a55e6d8dd4a2ceac82066a56"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae2abee66a55e6d8dd4a2ceac82066a56"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
+<tr class="separator:ae2abee66a55e6d8dd4a2ceac82066a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab57cdaf40fbfbe3420ee9152ed7f9686"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab57cdaf40fbfbe3420ee9152ed7f9686"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>trans</b> ()</td></tr>
 <tr class="separator:ab57cdaf40fbfbe3420ee9152ed7f9686"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c6634ce6ae1001a4f54e9429f7ba3a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c6634ce6ae1001a4f54e9429f7ba3a6"></a>
-<a class="el" href="classcusp.html">cusp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ref</b> (void)</td></tr>
-<tr class="separator:a7c6634ce6ae1001a4f54e9429f7ba3a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Data Fields</h2></td></tr>
-<tr class="memitem:abdbace947beecdc19f6391b2935a5d88"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abdbace947beecdc19f6391b2935a5d88"></a>
-int *&#160;</td><td class="memItemRight" valign="bottom"><b>p</b></td></tr>
-<tr class="separator:abdbace947beecdc19f6391b2935a5d88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4efbc44c51efad6878c73483e3f9aa8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4efbc44c51efad6878c73483e3f9aa8"></a>
-int *&#160;</td><td class="memItemRight" valign="bottom"><b>i</b></td></tr>
-<tr class="separator:af4efbc44c51efad6878c73483e3f9aa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acebda92bb5916c4af858a682ef0c700e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acebda92bb5916c4af858a682ef0c700e"></a>
-Real *&#160;</td><td class="memItemRight" valign="bottom"><b>x</b></td></tr>
-<tr class="separator:acebda92bb5916c4af858a682ef0c700e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9dcfde4c32df9d9ef64eb19d6e34a09"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9dcfde4c32df9d9ef64eb19d6e34a09"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>nx</b></td></tr>
-<tr class="separator:ac9dcfde4c32df9d9ef64eb19d6e34a09"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa96c285b3f0466ea2693b0c96619a538"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa96c285b3f0466ea2693b0c96619a538"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>ny</b></td></tr>
-<tr class="separator:aa96c285b3f0466ea2693b0c96619a538"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd79e7d76d9b0f087fff185a9ff97032"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd79e7d76d9b0f087fff185a9ff97032"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>nzmax</b></td></tr>
-<tr class="separator:abd79e7d76d9b0f087fff185a9ff97032"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b87db75adb0c3ec448a70868878933c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0b87db75adb0c3ec448a70868878933c"></a>
-int *&#160;</td><td class="memItemRight" valign="bottom"><b>nref</b></td></tr>
-<tr class="separator:a0b87db75adb0c3ec448a70868878933c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6b46fb0e7394a5a8ddeaa0ffe14828c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac6b46fb0e7394a5a8ddeaa0ffe14828c"></a>
-enum TYPE_SP&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
-<tr class="separator:ac6b46fb0e7394a5a8ddeaa0ffe14828c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9463ffbb612018ef0de3138361bf3533"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9463ffbb612018ef0de3138361bf3533"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const </td></tr>
+<tr class="separator:a9463ffbb612018ef0de3138361bf3533"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/types.h</li>

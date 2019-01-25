@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['qdv',['qdv',['../structDITHER__T.html#acb28f12887521651d931cb9630c6c756',1,'DITHER_T']]],
-  ['qdve',['qdve',['../structDITHER__T.html#aeeae46d248a05d7a0ae4abd40586eb41',1,'DITHER_T']]],
-  ['qe',['qe',['../structSKYC__S.html#a3f20e9fbf9051c9d0af3fc2347e8b310',1,'SKYC_S']]],
-  ['queue_5fthread',['QUEUE_THREAD',['../thread_8h.html#a321500c6118ea20905a0952e001be992',1,'thread.h']]]
+  ['qe',['qe',['../classcuwfs__t.html#ace61382985c60f440ba19aecb8b6a46e',1,'cuwfs_t::qe()'],['../structPOWFS__CFG__T.html#af6fcee8cf8e7d9b4c4608fe07da77b96',1,'POWFS_CFG_T::qe()'],['../structSKYC__S.html#a3f20e9fbf9051c9d0af3fc2347e8b310',1,'SKYC_S::qe()']]],
+  ['qn',['Qn',['../structkalman__t.html#a1ba2448c65147251924966938caacb24',1,'kalman_t']]],
+  ['queue',['QUEUE',['../thread_8h.html#aafc57d44738df70f43ac87ed969eed47',1,'thread.h']]]
 ];

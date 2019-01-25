@@ -119,12 +119,10 @@ $(document).ready(function(){initNavTree('structMOAO__CFG__T.html','');});
 Data Fields</h2></td></tr>
 <tr class="memitem:ae8b54a015cead1cfb2c10ec323a1c527"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMOAO__CFG__T.html#ae8b54a015cead1cfb2c10ec323a1c527">dx</a></td></tr>
 <tr class="separator:ae8b54a015cead1cfb2c10ec323a1c527"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7b46059ddd06468dcf6d5af0a9e1f3d"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMOAO__CFG__T.html#aa7b46059ddd06468dcf6d5af0a9e1f3d">order</a></td></tr>
-<tr class="separator:aa7b46059ddd06468dcf6d5af0a9e1f3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad48b40cc8fa331e50d718f6ac50a2de3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMOAO__CFG__T.html#ad48b40cc8fa331e50d718f6ac50a2de3">order</a></td></tr>
+<tr class="separator:ad48b40cc8fa331e50d718f6ac50a2de3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a739411b38175c0a432ad6d73df2c45a3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMOAO__CFG__T.html#a739411b38175c0a432ad6d73df2c45a3">used</a></td></tr>
 <tr class="separator:a739411b38175c0a432ad6d73df2c45a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ccaefa7d6eb62c0bd011e9c79f7cfef"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMOAO__CFG__T.html#a6ccaefa7d6eb62c0bd011e9c79f7cfef">cubic</a></td></tr>
-<tr class="separator:a6ccaefa7d6eb62c0bd011e9c79f7cfef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba8ac60ba9a8b4791e088820716f8cdf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMOAO__CFG__T.html#aba8ac60ba9a8b4791e088820716f8cdf">actslave</a></td></tr>
 <tr class="separator:aba8ac60ba9a8b4791e088820716f8cdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a4a0f72cab64d5066a6a1e4fe10a51e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMOAO__CFG__T.html#a7a4a0f72cab64d5066a6a1e4fe10a51e">lrt_ptt</a></td></tr>
@@ -161,16 +159,16 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>guard</b></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aa7b46059ddd06468dcf6d5af0a9e1f3d"></a>
+<a class="anchor" id="ad48b40cc8fa331e50d718f6ac50a2de3"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double MOAO_CFG_T::order</td>
+          <td class="memname">int MOAO_CFG_T::order</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Order of this MOAO </p>
+<p>Nominal order of this MOAO </p>
 
 </div>
 </div>
@@ -184,19 +182,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>guard</b></td></tr>
       </table>
 </div><div class="memdoc">
 <p>This moao is used </p>
-
-</div>
-</div>
-<a class="anchor" id="a6ccaefa7d6eb62c0bd011e9c79f7cfef"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int MOAO_CFG_T::cubic</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Whether use cubic influence function </p>
 
 </div>
 </div>
@@ -235,7 +220,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>guard</b></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Inter-actuator-coupling for cubic influence function </p>
+<p>If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient. </p>
 
 </div>
 </div>

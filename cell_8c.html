@@ -115,27 +115,37 @@ $(document).ready(function(){initNavTree('cell_8c.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5156cf89ffa98d3221eb596c9ceeada1"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#a5156cf89ffa98d3221eb596c9ceeada1">cellnew</a> (long nx, long ny)</td></tr>
-<tr class="separator:a5156cf89ffa98d3221eb596c9ceeada1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5ecd7ec0a002a20b2f5af006c9ae47a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a> (long nx, long ny)</td></tr>
+<tr class="separator:af5ecd7ec0a002a20b2f5af006c9ae47a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ca6559e8fe0488b3c1bcbbfcfa66cc1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#a9ca6559e8fe0488b3c1bcbbfcfa66cc1">cellnew2</a> (const void *A_)</td></tr>
+<tr class="separator:a9ca6559e8fe0488b3c1bcbbfcfa66cc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb65b5605889cf804e3a132332a4857d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#abb65b5605889cf804e3a132332a4857d">cellinit</a> (<a class="el" href="structcell.html">cell</a> **A, long nx, long ny)</td></tr>
+<tr class="separator:abb65b5605889cf804e3a132332a4857d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1398d9e0cd56674c160b61ac69dc738"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#ad1398d9e0cd56674c160b61ac69dc738">cellinit2</a> (<a class="el" href="structcell.html">cell</a> **A, const <a class="el" href="structcell.html">cell</a> *B)</td></tr>
+<tr class="separator:ad1398d9e0cd56674c160b61ac69dc738"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4a3aa0583f19ce22ca010b9272172f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae4a3aa0583f19ce22ca010b9272172f9"></a>
+<a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>cell_cast</b> (const void *A)</td></tr>
+<tr class="separator:ae4a3aa0583f19ce22ca010b9272172f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15b0507e701ac0f04e4c3cd49ecf76c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#a15b0507e701ac0f04e4c3cd49ecf76c3">celldim</a> (const void *A_, long *nx, long *ny, long **nxs, long **nys)</td></tr>
+<tr class="separator:a15b0507e701ac0f04e4c3cd49ecf76c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a682107a5841cf5a77468485121f94bea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#a682107a5841cf5a77468485121f94bea">cellresize</a> (void *in, long nx, long ny)</td></tr>
 <tr class="separator:a682107a5841cf5a77468485121f94bea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d070f2765b08f13dd749c84eba83b14"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#a8d070f2765b08f13dd749c84eba83b14">cellfree_do</a> (void *A)</td></tr>
 <tr class="separator:a8d070f2765b08f13dd749c84eba83b14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1ca790ebc24300b80bfb4116b1981a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab1ca790ebc24300b80bfb4116b1981a8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>writedata_by_id</b> (file_t *fp, const void *A_, long id)</td></tr>
-<tr class="separator:ab1ca790ebc24300b80bfb4116b1981a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa10528104ce6b09633b88ecedb353e8a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa10528104ce6b09633b88ecedb353e8a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (const void *A, long id, const char *format,...)</td></tr>
-<tr class="separator:aa10528104ce6b09633b88ecedb353e8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a071f916bb8cb3f9b76155467a8a81827"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a071f916bb8cb3f9b76155467a8a81827"></a>
-void *&#160;</td><td class="memItemRight" valign="bottom"><b>readdata_by_id</b> (file_t *fp, long id, int level, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
-<tr class="separator:a071f916bb8cb3f9b76155467a8a81827"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae82979df9cc59fdfc2e42cc335f3d594"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae82979df9cc59fdfc2e42cc335f3d594"></a>
-void *&#160;</td><td class="memItemRight" valign="bottom"><b>read_by_id</b> (long id, int level, const char *format,...)</td></tr>
-<tr class="separator:ae82979df9cc59fdfc2e42cc335f3d594"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c136f18db89dd98b8bf7a27ac9567c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4c136f18db89dd98b8bf7a27ac9567c9"></a>
-void *&#160;</td><td class="memItemRight" valign="bottom"><b>readbin</b> (const char *format,...)</td></tr>
-<tr class="separator:a4c136f18db89dd98b8bf7a27ac9567c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4a1cb297701348ec28a4f4caff913ce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab4a1cb297701348ec28a4f4caff913ce"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>writedata_by_id</b> (file_t *fp, const void *A_, uint32_t id)</td></tr>
+<tr class="separator:ab4a1cb297701348ec28a4f4caff913ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad714619a78a95fcacf495930b5636948"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad714619a78a95fcacf495930b5636948"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (const void *A, uint32_t id, const char *format,...)</td></tr>
+<tr class="separator:ad714619a78a95fcacf495930b5636948"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a223dc5824d7dd17786ca2ecf5b385fd2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a223dc5824d7dd17786ca2ecf5b385fd2"></a>
+<a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>readdata_by_id</b> (file_t *fp, uint32_t id, int level, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="separator:a223dc5824d7dd17786ca2ecf5b385fd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40abd6f20840af65f7f3ca17c8159a22"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40abd6f20840af65f7f3ca17c8159a22"></a>
+<a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>read_by_id</b> (uint32_t id, int level, const char *format,...)</td></tr>
+<tr class="separator:a40abd6f20840af65f7f3ca17c8159a22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefcc505a75a4fb24415fe88172ac0d9d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8c.html#aefcc505a75a4fb24415fe88172ac0d9d">readbin</a> (const char *format,...)</td></tr>
+<tr class="separator:aefcc505a75a4fb24415fe88172ac0d9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a990247f2c1fa8e4c407676773bacd9fd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a990247f2c1fa8e4c407676773bacd9fd"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>writebin</b> (const void *A, const char *format,...)</td></tr>
 <tr class="separator:a990247f2c1fa8e4c407676773bacd9fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,12 +154,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>writebindata</b> (fil
 <tr class="separator:a06b7fe0d3a1afa1b8371f3c960436559"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a5156cf89ffa98d3221eb596c9ceeada1"></a>
+<a class="anchor" id="af5ecd7ec0a002a20b2f5af006c9ae47a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void* cellnew </td>
+          <td class="memname"><a class="el" href="structcell.html">cell</a>* cellnew </td>
           <td>(</td>
           <td class="paramtype">long&#160;</td>
           <td class="paramname"><em>nx</em>, </td>
@@ -168,6 +178,128 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>writebindata</b> (fil
       </table>
 </div><div class="memdoc">
 <p>Create a generic cell array. </p>
+
+</div>
+</div>
+<a class="anchor" id="a9ca6559e8fe0488b3c1bcbbfcfa66cc1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcell.html">cell</a>* cellnew2 </td>
+          <td>(</td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>A_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Allocate a new array of the same type </p>
+
+</div>
+</div>
+<a class="anchor" id="abb65b5605889cf804e3a132332a4857d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cellinit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structcell.html">cell</a> **&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>ny</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>check the size of cell array if exist. Otherwise create it </p>
+
+</div>
+</div>
+<a class="anchor" id="ad1398d9e0cd56674c160b61ac69dc738"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cellinit2 </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structcell.html">cell</a> **&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structcell.html">cell</a> *&#160;</td>
+          <td class="paramname"><em>B</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>check the size of cell array if exist. Otherwise create it. m is created for dcell </p>
+
+</div>
+</div>
+<a class="anchor" id="a15b0507e701ac0f04e4c3cd49ecf76c3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void celldim </td>
+          <td>(</td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>A_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long *&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long *&#160;</td>
+          <td class="paramname"><em>ny</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long **&#160;</td>
+          <td class="paramname"><em>nxs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long **&#160;</td>
+          <td class="paramname"><em>nys</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Obtain the dimensions. </p>
 
 </div>
 </div>
@@ -218,6 +350,33 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>writebindata</b> (fil
       </table>
 </div><div class="memdoc">
 <p>free a mat or cell object. </p>
+
+</div>
+</div>
+<a class="anchor" id="aefcc505a75a4fb24415fe88172ac0d9d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcell.html">cell</a>* readbin </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Return cell* so the consumer does not use it without check and cast </p>
 
 </div>
 </div>

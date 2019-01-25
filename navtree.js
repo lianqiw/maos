@@ -78,20 +78,21 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1cufit__grid.html#afcc6ffa450800333628340cf6a1deaa8",
-"classcuwfs__t.html#a0b07a1be98793b5fcc63441434e67bd6",
-"gpu__mvm_8c.html#a0ddf1224851353fc92bfbff6f499fa97",
-"muv_8h.html#aff77c75d843be90cfe5c8a0aa552d9e0",
-"scheduler__client_8h.html#ab6a4b8cf1bc6f3fd8582630575ebc755",
-"structCN2EST__CFG__T.html#a8b956d35e59a79f45b42ec6c016e48b7",
-"structGPU__DATA__T.html#a43a14690fdf74e1a8af397e8ecd23b0f",
-"structNGSMOD__T.html#a775fc58dfb417d170c077c3ee44f204c",
-"structPROP__WRAP__T.html",
-"structSIM__CFG__T.html#a95888f046943700e71c979bc09a5247d",
-"structSKYC__S.html#a261c455bd2cf89b1a6ae516c62d9e525",
-"structcspcell.html#a53908c34870ae6094f472897f2be9a7e",
-"structlocccell.html#addd660a58ec6e54bb76662525bb75e51",
-"structzcell.html"
+"classcuda__recon_1_1cufit__grid.html#a37dac9717dcac4b2fa1ddb095a88d57b",
+"classcumat.html#a9cb712f98584b465bb4f89ea07b2c714",
+"globals_defs.html",
+"mkdtf_8h.html",
+"recon_8c.html#a930531540b7291036352d7b18436ce47",
+"structATMR__CFG__T.html#a26e119edbff7cfa6dfbd397181fde2ac",
+"structFIT__T.html#af6f52e21cbb8daddea7f7c7f1524eb8c",
+"structMOAO__T.html#ab08d093eb6456569504194e84d6ad18b",
+"structPOWFS__CFG__T.html#af6fcee8cf8e7d9b4c4608fe07da77b96",
+"structRECON__T.html#afb58b5c25acca52013546f1f07999ce6",
+"structSIM__T.html#a5b9f8bee43f720df579626894b5bcdf8",
+"structWFS__CFG__T.html#a48eefa6089eb0ba38989ed225ee2941c",
+"structdcell.html#a5dd7df3add46c2475b4786efa5a60ed3",
+"structrmap__t.html#a0ed5ff611a9ea9886c0659f20a37c9f1",
+"type_8h.html#a03f463a93452d4a47b80ee67e0ac1cea"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
