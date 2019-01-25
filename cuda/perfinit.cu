@@ -22,11 +22,11 @@
 #include "cudata.h"
 #include "perf.h"
 
-cuarray<int> cuperf_t::nembed;
-cuarray<int> cuperf_t::psfsize;
-cuarray<Real> cuperf_t::wvls;
-cuarray<stream_t> cuperf_t::stream;
-cuarray<cufftHandle> cuperf_t::plan;
+Array<int> cuperf_t::nembed;
+Array<int> cuperf_t::psfsize;
+Array<Real> cuperf_t::wvls;
+Array<stream_t> cuperf_t::stream;
+Array<cufftHandle> cuperf_t::plan;
 int cuperf_t::nevl;
 curcell cuperf_t::surf;
 curcell cuperf_t::opd;
@@ -76,9 +76,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     const int nwvl=parms->evl.nwvl;
     /*The following lives in CPU. */
     if(parms->evl.psfmean || parms->evl.psfhist){
-	cuperf_t::nembed =cuarray<int>(nwvl, 1);
-	cuperf_t::psfsize=cuarray<int>(nwvl, 1);
-	cuperf_t::wvls   =cuarray<Real>(nwvl, 1);
+	cuperf_t::nembed =Array<int>(nwvl, 1);
+	cuperf_t::psfsize=Array<int>(nwvl, 1);
+	cuperf_t::wvls   =Array<Real>(nwvl, 1);
     
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cuperf_t::nembed[iwvl]=(int)aper->embed->nembed->p[iwvl];
@@ -102,9 +102,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     for(int ievl=0; ievl<nevl; ievl++){
 	gpu_set(cudata_t::evlgpu[ievl]);
 	if(!cudata->perf.locs_dm){
-	    cudata->perf.locs_dm=cuarray<cuarray<culoc_t> >(nevl, 1);
+	    cudata->perf.locs_dm=Array<Array<culoc_t> >(nevl, 1);
 	}
-	cudata->perf.locs_dm[ievl]=cuarray<culoc_t>(parms->ndm,1);
+	cudata->perf.locs_dm[ievl]=Array<culoc_t>(parms->ndm,1);
 	for(int idm=0; idm<parms->ndm; idm++){
 	    loc_t *loc_dm;
 	    if(aper->locs_dm && aper->locs_dm->p[ievl+idm*nevl]){
@@ -115,9 +115,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	    cudata->perf.locs_dm[ievl][idm]=culoc_t(loc_dm);
 	}
     }
-    cuperf_t::stream=cuarray<stream_t>(nevl, 1);
+    cuperf_t::stream=Array<stream_t>(nevl, 1);
     if(parms->evl.psfmean || parms->evl.psfhist){
-	cuperf_t::plan  = cuarray<cufftHandle>(nwvl*nevl,1);
+	cuperf_t::plan  = Array<cufftHandle>(nwvl*nevl,1);
     }
     for(int ievl=0; ievl<nevl; ievl++){
 	gpu_set(cudata_t::evlgpu[ievl]);

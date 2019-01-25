@@ -80,18 +80,18 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture lower left corner. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    IND(pxsel,ix,iy)=1./(double)(nx*ny);/*cancel FFT scaling.*/
+	    P(pxsel,ix,iy)=1./(double)(nx*ny);/*cancel FFT scaling.*/
 	}
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
-    double xselc=creal(IND(pxsel,nx/2,ny/2))*threas;/*Fourier center */
+    double xselc=creal(P(pxsel,nx/2,ny/2))*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
 	for(long iy=0; iy<ny; iy++){
-	    if(cabs(IND(pxsel,ix,iy))<xselc){
-		IND(pxsel,ix,iy)=0;
+	    if(cabs(P(pxsel,ix,iy))<xselc){
+		P(pxsel,ix,iy)=0;
 	    }
 	}
     }

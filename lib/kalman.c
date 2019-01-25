@@ -81,7 +81,7 @@ void sde_psd(dmat **psd, const dmat *f, const double *coeff, int ncoeff, int nmo
 		denom+=coeff[order-1+im*ncoeff];
 		double val=pow(coeff[order+im*ncoeff],2)/cabs2(denom);
 		if(ppsd->ny==nmod){//seperate
-		    IND(ppsd, is, im)+=val;
+		    P(ppsd, is, im)+=val;
 		}else{
 		    ppsd->p[is]+=val;
 		}

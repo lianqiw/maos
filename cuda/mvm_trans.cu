@@ -66,7 +66,7 @@ static void mvm_trans_igpu(thread_t *info){
     curcell eyec;/* Only use eyec for CG.*/
     Real eye2c[2]={0,1.};
     curmat eye2(2,1);
-    cudaMemcpy(eye2.P(), eye2c, sizeof(Real)*2, cudaMemcpyHostToDevice);
+    cudaMemcpy(eye2(), eye2c, sizeof(Real)*2, cudaMemcpyHostToDevice);
     //const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
     /*fit*/
@@ -107,10 +107,10 @@ static void mvm_trans_igpu(thread_t *info){
 	}
 	if(eyec){
 	    if(iact){
-		cudaMemcpyAsync(eyec.M().P()+iact-1, eye2.P(), 2*sizeof(Real),
+		cudaMemcpyAsync(eyec.M()()+iact-1, eye2(), 2*sizeof(Real),
 				cudaMemcpyDeviceToDevice, stream);
 	    }else{
-		cudaMemcpyAsync(eyec.M().P()+iact, eye2.P()+1, sizeof(Real), 
+		cudaMemcpyAsync(eyec.M()()+iact, eye2()+1, sizeof(Real), 
 				cudaMemcpyDeviceToDevice, stream);
 	    }
 #if MVM_DEBUG == 1
@@ -119,7 +119,7 @@ static void mvm_trans_igpu(thread_t *info){
 	}
 	if(!recon->actcpl || recon->actcpl->p[curdm]->p[curact]>EPS){
 	    if(mvmf){
-		opdx.replace(mvmf.P()+(iact-info->start)*mvmf.Nx(), stream);
+		opdx.replace(mvmf()+(iact-info->start)*mvmf.Nx(), stream);
 	    }
 	    if(!load_mvmf){
 		if(eyec){ /*Fitting operator*/
@@ -129,7 +129,7 @@ static void mvm_trans_igpu(thread_t *info){
 		    cuwrite(dmfit, "mvm_dmfit_%d", iact);
 #endif
 		}else{
-		    cudaMemcpyAsync(dmfit.M().P(), FLI+iact*ntotact, sizeof(Real)*ntotact, 
+		    cudaMemcpyAsync(dmfit.M()(), FLI+iact*ntotact, sizeof(Real)*ntotact, 
 				    cudaMemcpyHostToDevice, stream);
 		}
     		tk_fitL+=toc3; tic;
@@ -141,7 +141,7 @@ static void mvm_trans_igpu(thread_t *info){
 	    }
 	    tk_fitR+=toc3; tic;
 	    if(mvmi){
-		opdr.replace(mvmi.P()+(iact-info->start)*mvmi.Nx(),  stream);
+		opdr.replace(mvmi()+(iact-info->start)*mvmi.Nx(),  stream);
 	    }else{
 		cuzero(opdr.M(), stream);
 	    }
@@ -151,7 +151,7 @@ static void mvm_trans_igpu(thread_t *info){
 #endif
 	    tk_TomoL+=toc3; tic;
 	    /*Right hand side. output directly to mvmt*/
-	    grad.replace(mvmt.P()+(iact-info->start)*ntotgrad, stream);
+	    grad.replace(mvmt()+(iact-info->start)*ntotgrad, stream);
 	    curecon->RR->Rt(grad, 0, opdr, 1, stream);
 #if MVM_DEBUG == 1
 	    cuwrite(grad, "mvm_grad_%d", iact);
@@ -163,8 +163,8 @@ static void mvm_trans_igpu(thread_t *info){
 	}
     }//for iact
     int nn=ntotgrad*(info->end-info->start)*sizeof(Real);
-    Real *mvmtc=data->mvmt.P()+info->start*ntotgrad;
-    cudaMemcpyAsync(mvmtc, mvmt.P(), nn, cudaMemcpyDeviceToDevice, stream);
+    Real *mvmtc=data->mvmt()+info->start*ntotgrad;
+    cudaMemcpyAsync(mvmtc, mvmt(), nn, cudaMemcpyDeviceToDevice, stream);
     stream.sync();
     tk_cp+=toc3;tic;
     info("GPU %d: Prep %.2f FitL %.2f FitR %.2f TomoL %.1f TomoR %.1f cp %.2f\n", 
@@ -291,7 +291,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		gpu_set(i);
 		mvmig[i]=curmat(ntotxloc, info[i].end-info[i].start);
 		if(parms->load.mvmi){
-		    cudaMemcpy(mvmig[i].P(), mvmi->p+info[i].start*ntotxloc, 
+		    cudaMemcpy(mvmig[i](), mvmi->p+info[i].start*ntotxloc, 
 			       sizeof(Real)*ntotxloc*(info[i].end-info[i].start), cudaMemcpyHostToDevice);
 		}
 	    }
@@ -307,7 +307,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		gpu_set(i);
 		mvmfg[i]=curmat(ntotxloc, info[i].end-info[i].start);
 		if(parms->load.mvmf){
-		    cudaMemcpy(mvmfg[i].P(), mvmf->p+info[i].start*ntotxloc, 
+		    cudaMemcpy(mvmfg[i](), mvmf->p+info[i].start*ntotxloc, 
 			       sizeof(Real)*ntotxloc*(info[i].end-info[i].start), cudaMemcpyHostToDevice);
 		}
 	    }
@@ -336,7 +336,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	if(parms->save.mvmi){
 	    for(int i=0; i<NGPU; i++){
 		gpu_set(i);
-		cudaMemcpy(mvmi->p+info[i].start*ntotxloc, mvmig[i].P(),  
+		cudaMemcpy(mvmi->p+info[i].start*ntotxloc, mvmig[i](),  
 			   sizeof(Real)*ntotxloc*(info[i].end-info[i].start), cudaMemcpyDeviceToHost);
 	    }
 	    writebin(mvmi, "MVM_Tomo.bin");
@@ -344,7 +344,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	if(parms->save.mvmf){
 	    for(int i=0; i<NGPU; i++){
 		gpu_set(i);
-		cudaMemcpy(mvmf->p+info[i].start*ntotxloc, mvmfg[i].P(),  
+		cudaMemcpy(mvmf->p+info[i].start*ntotxloc, mvmfg[i](),  
 			   sizeof(Real)*ntotxloc*(info[i].end-info[i].start), cudaMemcpyDeviceToHost);
 	    }
 	    writebin(mvmf, "MVM_FitL.bin");

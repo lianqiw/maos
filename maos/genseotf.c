@@ -190,7 +190,7 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	double dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
 	double thres=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
-	    genotf(PIND(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
+	    genotf(PP(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
 		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 		   notf, notf, 1, 1);
 	}
@@ -266,14 +266,14 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    free(psf->header); psf->header=strdup(header);	    
 	    for(int illt=0; illt<intstat->lotf->ny; illt++){
 
-		ccp(&psfhat, IND(lotf,iwvl,illt));
+		ccp(&psfhat, P(lotf,iwvl,illt));
 		cfftshift(psfhat);
 		cfft2i(psfhat, 1);
 		cfftshift(psfhat);
 		creal2d(&psf, 0, psfhat, 1);
 		info("illt %d, iwvl %d has FWHM of %g\"\n",
 		      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
-		zfarr_dmat(lltpsfsave, illt*nwvl+iwvl, psf);
+		zfarr_push(lltpsfsave, illt*nwvl+iwvl, psf);
 	    }
 	}
 	zfarr_close(lltpsfsave);
@@ -319,8 +319,8 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    cmat *sepsf=cnew(ncompx, ncompy);
 	    for(int isa=0; isa<nsa; isa++){
 		double norm=area[isa]/((double)(ncompx*ncompy));
-		if(IND(otf,isa,iwvl)){
-		    ccp(&sepsf,IND(otf,isa,iwvl));/*peak in center */
+		if(P(otf,isa,iwvl)){
+		    ccp(&sepsf,P(otf,isa,iwvl));/*peak in center */
 		}else{
 		    czero(sepsf);
 		}
@@ -341,7 +341,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		cfftshift(sepsf); /*peak now in corner. */
 		cfft2(sepsf,1);   /*turn to psf. FFT 1th */
 		cfftshift(sepsf); /*psf with peak in center */
-		creal2d(PIND(psepsf,isa,iwvl),0,sepsf,norm);/*copy to output. */
+		creal2d(PP(psepsf,isa,iwvl),0,sepsf,norm);/*copy to output. */
 	    }
 	    cfree(sepsf);
 	}
@@ -445,9 +445,9 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
   
     for(int ii0=0; ii0<ni0; ii0++){
 	for(int isa=0; isa<nsa; isa++){
-	    IND(i0,isa,ii0)=dnew(pixpsax,pixpsay);
-	    IND(gx,isa,ii0)=dnew(pixpsax,pixpsay);
-	    IND(gy,isa,ii0)=dnew(pixpsax,pixpsay);
+	    P(i0,isa,ii0)=dnew(pixpsax,pixpsay);
+	    P(gx,isa,ii0)=dnew(pixpsax,pixpsay);
+	    P(gy,isa,ii0)=dnew(pixpsax,pixpsay);
 	}
     }
   
@@ -548,14 +548,14 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		/*loaded psepsf. sum to 1 for full sa. peak in center */
 		if(parms->powfs[ipowfs].mtchstc){
 		    /*Forst psf to be centered. */
-		    double pmax=dmax(IND(psepsf,isa,iwvl));
-		    dcog(pgrad,IND(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax, 0);
+		    double pmax=dmax(P(psepsf,isa,iwvl));
+		    dcog(pgrad,P(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax, 0);
 		}
-		if(dsum(IND(psepsf,isa,iwvl))>1.1){
+		if(dsum(P(psepsf,isa,iwvl))>1.1){
 		    error("Short exposure PSF has wrong scaling. It should total to <=1\n");
 		}
 		/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
-		cembedd(seotfk, IND(psepsf,isa,iwvl), angle);//if radrot: rotate from x/y to r/a coordinate
+		cembedd(seotfk, P(psepsf,isa,iwvl), angle);//if radrot: rotate from x/y to r/a coordinate
 		cfftshift(seotfk);/*PSF, peak in corner; */
 		cfft2(seotfk,-1);/*turn to OTF, peak in corner, max is 1 */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
@@ -567,7 +567,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    ccp(&intstat->potf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
 		}
 		if(nllt){/*elongation. */
-		    (*pccwm)(seotfk,IND(petf,isa,ietf));
+		    (*pccwm)(seotfk,P(petf,isa,ietf));
 		}
 		ccp(&seotfj,seotfk);/*backup */
 		if(intstat->fotf){
@@ -575,7 +575,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		}
 		cfft2(seotfk,1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
 		/*no need fftshift becaose nominal is pre-treated */
-		dspmulcreal(IND(i0,isa,ii0)->p,si,seotfk->p, wvlsig);
+		dspmulcreal(P(i0,isa,ii0)->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);
 		
 		double ct=cos(angleg);
@@ -583,19 +583,19 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		
 		for(int iy=0; iy<ncompy; iy++){
 		    for(int ix=0; ix<ncompx; ix++){
-			IND(seotfk,ix,iy)*=ct*Ux[ix]+st*Uy[iy];
-			IND(seotfj,ix,iy)*=-st*Ux[ix]+ct*Uy[iy];
+			P(seotfk,ix,iy)*=ct*Ux[ix]+st*Uy[iy];
+			P(seotfj,ix,iy)*=-st*Ux[ix]+ct*Uy[iy];
 		    }
 		}
 		cfft2(seotfk,1);
-		dspmulcreal(IND(gx,isa,ii0)->p,si,seotfk->p, wvlsig);
+		dspmulcreal(P(gx,isa,ii0)->p,si,seotfk->p, wvlsig);
 		cfft2(seotfj,1);
-		dspmulcreal(IND(gy,isa,ii0)->p,si,seotfj->p, wvlsig);
+		dspmulcreal(P(gy,isa,ii0)->p,si,seotfj->p, wvlsig);
 		if(i0scale){
-		    double scale=area[isa]/dsum(IND(i0,isa,ii0));
-		    dscale(IND(i0,isa,ii0),scale);
-		    dscale(IND(gx,isa,ii0),scale);
-		    dscale(IND(gy,isa,ii0),scale);
+		    double scale=area[isa]/dsum(P(i0,isa,ii0));
+		    dscale(P(i0,isa,ii0),scale);
+		    dscale(P(gx,isa,ii0),scale);
+		    dscale(P(gy,isa,ii0),scale);
 		}
 	    }/*for isa */
 	    cellfree(se_save);

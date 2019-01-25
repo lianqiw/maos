@@ -100,8 +100,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 		map_t *map=recon->aloc->p[idm]->map;
 		for(long iy=0; iy<map->ny; iy++){
 		    for(long ix=0; ix<map->nx; ix++){
-			if(IND(map,ix,iy)>0){//Some may be negative due to extend.
-			    p[(long)IND(map,ix,iy)-1]=(double)2*((iy+ix)&1)-1;
+			if(P(map,ix,iy)>0){//Some may be negative due to extend.
+			    p[(long)P(map,ix,iy)-1]=(double)2*((iy+ix)&1)-1;
 			}
 		    }
 		}
@@ -137,8 +137,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    continue;
 	}
 	for(int idm=0; idm<ndm; idm++){
-	    dspfull(PIND(pULo,idm,iwfs), (dsp*)IND(recon->LR.M, idm, iwfs),'n',-1);
-	    dspfull(PIND(pVLo,idm,iwfs), (dsp*)IND(GAM, iwfs, idm),'t',1);
+	    dspfull(PP(pULo,idm,iwfs), (dsp*)P(recon->LR.M, idm, iwfs),'n',-1);
+	    dspfull(PP(pVLo,idm,iwfs), (dsp*)P(GAM, iwfs, idm),'t',1);
 	}
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);

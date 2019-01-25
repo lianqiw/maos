@@ -49,10 +49,10 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, const curecon_geom *_grid)
 	    count++;
 	}
     }
-    fft=cuarray<cufftHandle>(count,1);
-    ffti=cuarray<cufftHandle>(count,1);
+    fft=Array<cufftHandle>(count,1);
+    ffti=Array<cufftHandle>(count,1);
     fftnc=count;
-    fftips=cuarray<int>(count+1,1);
+    fftips=Array<int>(count+1,1);
     for(int ic=0; ic<count; ic++){
 	fftips[ic]=start[ic];
     }
@@ -97,7 +97,7 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, const curecon_geom *_grid)
 	}
     }
     fddata=cumat<GPU_FDPCG_T>(nps, 1);
-    cudaMemcpy(fddata.P(), FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
+    cudaMemcpy(fddata(), FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
     delete [] FDDATA;
 }
 /*
@@ -165,7 +165,7 @@ fdpcg_scale(GPU_FDPCG_T *fddata, T **xall){
 
 */
 #define DBG_FD 0
-void cufdpcg_t::P(curcell &xout, const curcell &xin, stream_t &stream){
+void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
 #if TIMING
     EVENT_INIT(4)
 #define RECORD(i) EVENT_TIC(i)
@@ -188,19 +188,19 @@ void cufdpcg_t::P(curcell &xout, const curcell &xin, stream_t &stream){
     for(int ic=0; ic<fftnc; ic++){
 	int ips=fftips[ic];
 	DO(cufftSetStream(fft[ic], stream));
-	CUFFTR2C(fft[ic], xin[ips].P(), xhat1[ips].P());
+	CUFFTR2C(fft[ic], xin[ips](), xhat1[ips]());
     }
     RECORD(1);
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr), dim3(256,1),0,stream>>>
-	    (fddata.P(), xhat1.pm);
+	    (fddata(), xhat1.pm);
     }
 #if DBG_FD
 	cuccellwrite(xhat1, "fdg_fft");
 #endif
 
     fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(Comp)*bs*2*nby, stream>>>
-	(xhat2.M().P(), xhat1.M().P(), Mb.M().P(), perm, nb);
+	(xhat2.M()(), xhat1.M()(), Mb.M()(), perm, nb);
     RECORD(2);
 #if DBG_FD
     cuccellwrite(xhat2, "fdg_mul");
@@ -208,11 +208,11 @@ void cufdpcg_t::P(curcell &xout, const curcell &xin, stream_t &stream){
     for(int ic=0; ic<fftnc; ic++){
 	int ips=fftips[ic];
 	DO(cufftSetStream(ffti[ic], stream));
-	CUFFTC2R(ffti[ic], xhat2[ips].P(), xout[ips].P());
+	CUFFTC2R(ffti[ic], xhat2[ips](), xout[ips]());
     }
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr),dim3(256,1),0,stream>>>
-	    (fddata.P(), xout.pm);
+	    (fddata(), xout.pm);
     }
 #if DBG_FD
     cuwrite(xout, "fdg_xout");

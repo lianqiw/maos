@@ -255,7 +255,7 @@ static void Tomo_prop_do(thread_t *info){
 			       displace[0],displace[1], scale, 0, 0, 0);
 	    }else{
 		dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
-		dspmm(&xx, IND(HXW,iwfs,ips), data->xin->p[ips], "nn", 1);
+		dspmm(&xx, P(HXW,iwfs,ips), data->xin->p[ips], "nn", 1);
 	    }
 	}
 	/*Apply the gradient operation */
@@ -285,7 +285,7 @@ static void Tomo_nea_gpt_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmm(&gg2, IND(NEAI,iwfs,iwfs), data->gg->p[iwfs], "nn", 1);
+	dspmm(&gg2, P(NEAI,iwfs,iwfs), data->gg->p[iwfs], "nn", 1);
 	dfree(data->gg->p[iwfs]); /*We reuse gg. */
 	dspmm(&data->gg->p[iwfs], recon->GP->p[iwfs], gg2, "tn", data->alpha);
 	dfree(gg2);
@@ -299,7 +299,7 @@ static void Tomo_nea_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmm(&gg2, IND(NEAI,iwfs,iwfs), data->gg->p[iwfs], "nn", 1);
+	dspmm(&gg2, P(NEAI,iwfs,iwfs), data->gg->p[iwfs], "nn", 1);
 	dcp(&data->gg->p[iwfs], gg2);
 	dfree(gg2);
     }
@@ -355,7 +355,7 @@ static void Tomo_iprop_do(thread_t *info){
 	}else{
 	    dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		dspmm(&data->xout->p[ips], IND(HXW,iwfs,ips), data->gg->p[iwfs], "tn", 1);
+		dspmm(&data->xout->p[ips], P(HXW,iwfs,ips), data->gg->p[iwfs], "tn", 1);
 	    }
 	}
 	if(data->xin){/*data->xin is empty when called from TomoR */
@@ -661,7 +661,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		}
 		dmm(&simu->ecov->p[ievl], 1, xx, xx, "nt", 1);
 		if(parms->dbg.ecovxx){
-		    zfarr_dmat(simu->save->ecovxx[ievl], simu->isim, xx);
+		    zfarr_push(simu->save->ecovxx[ievl], simu->isim, xx);
 		}
 	    }/*if psfr[ievl] */
 	}/*ievl */
@@ -729,11 +729,11 @@ lmat* loc_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
     dmat*  ps=dead/*PDMAT*/;
     lmat *out=lnew(aloc->nloc, 1);
     for(long jact=0; jact<dead->nx; jact++){
-	long mapx=(long)round((IND(ps,jact,0)-ox)*dx1);
-	long mapy=(long)round((IND(ps,jact,1)-oy)*dx1);
+	long mapx=(long)round((P(ps,jact,0)-ox)*dx1);
+	long mapy=(long)round((P(ps,jact,1)-oy)*dx1);
 	long iact=loc_map_get(map, mapx, mapy)-1;
 	if(iact>=0){
-	    out->p[iact]=(dead->ny==3?IND(ps,jact,2)*1e9:1);//integer in nm.
+	    out->p[iact]=(dead->ny==3?P(ps,jact,2)*1e9:1);//integer in nm.
 	}
     }
     dfree(dead);
@@ -760,8 +760,8 @@ cn2est_t *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     dmat *wfstheta=dnew(parms->nwfs, 2);
     dmat*  ptheta=wfstheta/*PDMAT*/;
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	IND(ptheta,iwfs,0)=parms->wfs[iwfs].thetax;
-	IND(ptheta,iwfs,1)=parms->wfs[iwfs].thetay;
+	P(ptheta,iwfs,0)=parms->wfs[iwfs].thetax;
+	P(ptheta,iwfs,1)=parms->wfs[iwfs].thetay;
     }
     dmat *ht=0;
     if(parms->cn2.keepht){

@@ -78,13 +78,13 @@ void cellinit2(cell **A, const cell *B){
     }else{
 	uint32_t magic=0;
 	for(int ib=0; ib<B->nx*B->ny; ib++){
-	    if(IND(B,ib)){
+	    if(P(B,ib)){
 		if(!magic){
-		    magic=IND(B,ib)->id;
+		    magic=P(B,ib)->id;
 		}else{
-		    if(magic!=IND(B, ib)->id){
+		    if(magic!=P(B, ib)->id){
 			error("Mixed type is not supported: %u vs %u\n",
-			      magic, IND(B, ib)->id);
+			      magic, P(B, ib)->id);
 		    }
 		}
 	    }
@@ -116,18 +116,18 @@ void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys){
     *ny=0;
     for(long ix=0; ix<A->nx; ix++){
 	for(long iy=0; iy<A->ny; iy++){
-	    if(!isempty(IND(A,ix,iy))){
-		*nx+=IND(A,ix,iy)->nx;
-		(*nxs)[ix]=IND(A,ix,iy)->nx;
+	    if(!isempty(P(A,ix,iy))){
+		*nx+=P(A,ix,iy)->nx;
+		(*nxs)[ix]=P(A,ix,iy)->nx;
 		break;
 	    }
 	}
     }
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
-	    if(!isempty(IND(A,ix,iy))){
-		*ny+=IND(A,ix,iy)->ny;
-		(*nys)[iy]=IND(A,ix,iy)->ny;
+	    if(!isempty(P(A,ix,iy))){
+		*ny+=P(A,ix,iy)->ny;
+		(*nys)[iy]=P(A,ix,iy)->ny;
 		break;
 	    }
 	}

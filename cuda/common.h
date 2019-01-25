@@ -43,9 +43,8 @@ typedef dmat rmat;
 #define CUSP(A) cusparseD##A
 #define CUBL(A) cublasD##A
 #define X(A) d##A
-#define C(A) c##A
+#define XC(A) c##A
 #define Z(A) A
-#define zfarr_mat zfarr_dmat
 #define FFT_T_C2C CUFFT_Z2Z
 #define FFT_T_C2R CUFFT_Z2D
 #define FFT_T_R2C CUFFT_D2Z
@@ -61,9 +60,8 @@ typedef smat rmat;
 #define CUSP(A) cusparseS##A
 #define CUBL(A) cublasS##A
 #define X(A) s##A
-#define C(A) z##A
+#define XC(A) z##A
 #define Z(A) A##f
-#define zfarr_mat zfarr_smat
 #define FFT_T_C2C CUFFT_C2C
 #define FFT_T_C2R CUFFT_C2R
 #define FFT_T_R2C CUFFT_R2C

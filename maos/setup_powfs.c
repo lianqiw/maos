@@ -132,8 +132,8 @@ sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea){
 	saa=dnew(nsa,1);
 	for(long iwfs=0; iwfs<powfs[ipowfs].saa_tel->nx; iwfs++){
 	    for(long isa=0; isa<nsa; isa++){
-		if(IND(saa,isa)<powfs[ipowfs].saa_tel->p[iwfs]->p[isa]){
-		    IND(saa,isa)=powfs[ipowfs].saa_tel->p[iwfs]->p[isa];
+		if(P(saa,isa)<powfs[ipowfs].saa_tel->p[iwfs]->p[isa]){
+		    P(saa,isa)=powfs[ipowfs].saa_tel->p[iwfs]->p[isa];
 		}
 	    }
 	}
@@ -354,11 +354,11 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	double tot=0;
 	for(int iy=nedge-1; iy<nx-nedge+1; iy++){
 	    for(int ix=nedge-1; ix<nx-nedge+1; ix++){
-		IND(pampi,ix,iy)=1;
+		P(pampi,ix,iy)=1;
 		if(ix==nedge-1 || ix==nx-nedge || iy==nedge-1 || iy==nx-nedge){
-		    IND(pampi,ix,iy)=alpha;
+		    P(pampi,ix,iy)=alpha;
 		}
-		tot+=IND(pampi,ix,iy);
+		tot+=P(pampi,ix,iy);
 	    }
 	}
 	if(parms->save.setup){
@@ -624,7 +624,7 @@ void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
 		double *saa=powfs[ipowfs].realsaa->p[jwfs]->p;
 		dmat *nea_each=nea->p[jwfs]=dnew(nsa, 3);
 		for(int isa=0; isa<nsa; isa++){
-		    IND(nea_each,isa,0)=IND(nea_each,isa,1)=nea_rad/sqrt(saa[isa]);
+		    P(nea_each,isa,0)=P(nea_each,isa,1)=nea_rad/sqrt(saa[isa]);
 		}
 	    }
 	}
@@ -904,8 +904,8 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			    dy=sqrt(dx*dx+dy*dy);
 			    dx=0;
 			}
-			IND(pixoffx, isa, jwfs)=dx/pixtheta;
-			IND(pixoffy, isa, jwfs)=dy/pixtheta;
+			P(pixoffx, isa, jwfs)=dx/pixtheta;
+			P(pixoffy, isa, jwfs)=dy/pixtheta;
 		    }
 		}
 	
@@ -916,15 +916,15 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			double gx=parms->powfs[ipowfs].pixoffy;
 			double gy=0;
 			if(parms->powfs[ipowfs].radpix){
-			    double angle=INDR(INDR(powfs[ipowfs].srot, jwfs, 1), isa, 1);
+			    double angle=PR(PR(powfs[ipowfs].srot, jwfs, 1), isa, 1);
 			    double ct=cos(angle);
 			    double st=sin(angle);
 			    double gx2=gx*ct+gy*st;//XY->RA: CW
 			    gy=-gx*st+gy*ct;
 			    gx=gx2;
 			}
-			IND(pixoffx, isa, jwfs)=gx;
-			IND(pixoffy, isa, jwfs)=gy;
+			P(pixoffx, isa, jwfs)=gx;
+			P(pixoffy, isa, jwfs)=gy;
 		    }
 		}
 	    }else{
@@ -1358,13 +1358,13 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		dmat *bkgrnd2i=bkgrnd2?bkgrnd2[isa]:NULL;
 		dmat *bkgrnd2ic=bkgrnd2c?bkgrnd2c[isa]:NULL;
 	
-		IND(cogcoeff,0,isa)=parms->powfs[ipowfs].cogthres;
-		IND(cogcoeff,1,isa)=parms->powfs[ipowfs].cogoff;
+		P(cogcoeff,0,isa)=parms->powfs[ipowfs].cogthres;
+		P(cogcoeff,1,isa)=parms->powfs[ipowfs].cogoff;
 		  
 		if(do_nea){
 		    dmat *nea=dnew(2,2);
 		    dmat *ints=intstat->i0->p[isa+jwfs*nsa];/*equivalent noise*/
-		    cog_nea(nea->p, ints, IND(cogcoeff,0,isa), IND(cogcoeff,1,isa), ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
+		    cog_nea(nea->p, ints, P(cogcoeff,0,isa), P(cogcoeff,1,isa), ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
 		    nea->p[0]=nea->p[0]*pixthetax*pixthetax+neaspeckle2;
 		    nea->p[3]=nea->p[3]*pixthetay*pixthetay+neaspeckle2;
 		    nea->p[1]=nea->p[1]*pixthetax*pixthetay;
@@ -1375,9 +1375,9 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 			drotvecnn(&nea2, nea, srot[isa]);
 			dfree(nea); nea=nea2; nea2=0;
 		    }
-		    IND(psanea,isa,0)=nea->p[0];
-		    IND(psanea,isa,1)=nea->p[3];
-		    IND(psanea,isa,2)=nea->p[1];
+		    P(psanea,isa,0)=nea->p[0];
+		    P(psanea,isa,1)=nea->p[3];
+		    P(psanea,isa,2)=nea->p[1];
 		    dfree(nea);
 		}
 	    }
@@ -1515,7 +1515,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs){
 				  realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
 		    }else{//Gtilt
 			if(parms->powfs[ipowfs].ncpa_method==1){//GS0*opd
-			    dspmm(&powfs[ipowfs].gradncpa->p[jwfs],INDR(powfs[ipowfs].GS0, jwfs, 0),
+			    dspmm(&powfs[ipowfs].gradncpa->p[jwfs],PR(powfs[ipowfs].GS0, jwfs, 0),
 				  powfs[ipowfs].opdbias->p[jwfs],"nn",1);
 			}else if(parms->powfs[ipowfs].ncpa_method==2){//CoG(i0)
 			    if(!powfs[ipowfs].gradncpa){
@@ -1544,18 +1544,18 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs){
 		double pixthetax=parms->powfs[ipowfs].pixtheta;
 		double pixthetay=parms->powfs[ipowfs].radpixtheta;
 		for(int isa=0; isa<nsa; isa++){
-		    double gx=pixthetax*INDR(powfs[ipowfs].pixoffx, isa, jwfs);
-		    double gy=pixthetay*INDR(powfs[ipowfs].pixoffy, isa, jwfs);
+		    double gx=pixthetax*PR(powfs[ipowfs].pixoffx, isa, jwfs);
+		    double gy=pixthetay*PR(powfs[ipowfs].pixoffy, isa, jwfs);
 		    if(parms->powfs[ipowfs].radpix){
-			double angle=INDR(INDR(powfs[ipowfs].srot, jwfs, 1), isa, 1);
+			double angle=PR(PR(powfs[ipowfs].srot, jwfs, 1), isa, 1);
 			double ct=cos(angle);
 			double st=sin(angle);
 			double gx2=gx*ct-gy*st;//RA->XY; CCW
 			gy=gx*st+gy*ct;
 			gx=gx2;
 		    }
-		    IND(powfs[ipowfs].gradncpa->p[jwfs], isa)+=gx;
-		    IND(powfs[ipowfs].gradncpa->p[jwfs], isa+nsa)+=gy;
+		    P(powfs[ipowfs].gradncpa->p[jwfs], isa)+=gx;
+		    P(powfs[ipowfs].gradncpa->p[jwfs], isa+nsa)+=gy;
 		}
 	    }
 	}

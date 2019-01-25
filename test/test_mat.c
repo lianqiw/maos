@@ -213,7 +213,7 @@ static void test_spline_2d(void){
     dmat* pz=z;
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
-	    IND(pz,ix,iy)=sin(ix*M_PI/14.2)*sin(iy*M_PI/12.3);
+	    P(pz,ix,iy)=sin(ix*M_PI/14.2)*sin(iy*M_PI/12.3);
 	}
     }
     long nxnew=nx*11;
@@ -224,8 +224,8 @@ static void test_spline_2d(void){
     dmat* pynew=ynew;
     for(int iy=0; iy<nynew; iy++){
 	for(int ix=0; ix<nxnew; ix++){
-	    IND(pxnew,ix,iy)=ix*0.2+6;
-	    IND(pynew,ix,iy)=iy*0.12+6;
+	    P(pxnew,ix,iy)=ix*0.2+6;
+	    P(pynew,ix,iy)=iy*0.12+6;
 	}
     }
     dcell *coeff=dbspline_prep(x,y,z);

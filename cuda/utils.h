@@ -146,7 +146,7 @@ cp2gpu(cumat<M>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	if(dest.N()!=nx*ny){
 	    error("cumat is %ldx%ld, input is %dx%d\n", dest.Nx(), dest.Ny(), nx, ny);
 	}
-	cp2gpu(dest.P(), src, nx, ny, stream);
+	cp2gpu(dest(), src, nx, ny, stream);
     }else{
 	M *tmp=0;
 	int own=cp2gpu(&tmp, src, nx, ny, stream);
@@ -223,10 +223,10 @@ void cp2cpu(scell **out, const curcell &in, cudaStream_t stream);
 void cp2cpu(dcell **out, const curcell &in, cudaStream_t stream);
 void cp2cpu(zcell **out, const cuccell &in, cudaStream_t stream);
 void cp2cpu(ccell **out, const cuccell &in, cudaStream_t stream);
-void zfarr_cur(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream);
-void zfarr_cuc(struct zfarr *ca, int i, const cucmat &A, cudaStream_t stream);
-void zfarr_curcell(struct zfarr *ca, int i, const curcell &A, cudaStream_t stream);
-void zfarr_cuccell(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream);
+void zfarr_push(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream);
+void zfarr_push(struct zfarr *ca, int i, const cucmat &A, cudaStream_t stream);
+void zfarr_push(struct zfarr *ca, int i, const curcell &A, cudaStream_t stream);
+void zfarr_push(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream);
 void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t stream, 
 		    const double *amp, double *zlim,
 		    const char *title, const char *xlabel, const char *ylabel,

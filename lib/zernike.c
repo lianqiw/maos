@@ -227,15 +227,15 @@ dmat *zernike_cov_kolmogorov(int nr){
 		    *(tgamma(14./3.)*tgamma((ir+jr-5./3.)*0.5))
 		    /(tgamma((ir-jr+17./3.)*0.5)*tgamma((jr-ir+17./3.)*0.5)*tgamma((ir+jr+23./3.)*0.5));
 		if(im==0){
-		    IND(pres,ict0,jct0)=IND(pres,jct0,ict0)=tmp;
+		    P(pres,ict0,jct0)=P(pres,jct0,ict0)=tmp;
 		}else{
-		    IND(pres,jctc,ictc)=IND(pres,ictc,jctc)=tmp;
-		    IND(pres,jcts,icts)=IND(pres,icts,jcts)=tmp;
+		    P(pres,jctc,ictc)=P(pres,ictc,jctc)=tmp;
+		    P(pres,jcts,icts)=P(pres,icts,jcts)=tmp;
 		}
 	    }
 	}
     }
-    //IND(pres,0,0)=0; //piston covariance
+    //P(pres,0,0)=0; //piston covariance
     lfree(zind);
     return res;
 }
@@ -256,7 +256,7 @@ dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
     for(long ic=0; ic<nmod; ic++){
 	spect->p[ic]=cnew(nembed, nembed);
 	for(long ix=0; ix<loc->nloc; ix++){
-	    spect->p[ic]->p[embed->p[ix]]=IND(modz, ix, ic);
+	    spect->p[ic]->p[embed->p[ix]]=P(modz, ix, ic);
 	}
 	cfftshift(spect->p[ic]);
 	cfft2(spect->p[ic], -1);
@@ -271,7 +271,7 @@ dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
 	    for(long ip=0; ip<nembed*nembed; ip++){
 		tmp+=creal(spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip]))*turbspec->p[ip];
 	    }
-	    IND(DD, ic, id)=IND(DD,id,ic)=tmp;//*scale;
+	    P(DD, ic, id)=P(DD,id,ic)=tmp;//*scale;
 	}
     }
     dmat *CCi=dpinv(CC, 0);

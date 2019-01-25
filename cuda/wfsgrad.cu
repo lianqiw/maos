@@ -44,7 +44,8 @@ extern const char *dirskysim;
 /*
   Notice that both blocks and threads are partitioning isa
 */
-__global__ static void add_geom_noise_do(Real *restrict g, const Real *restrict nea, 
+static __global__ void
+add_geom_noise_do(Real *restrict g, const Real *restrict nea, 
 					 int nsa, curandState *restrict rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
     curandState lstat=rstat[id];
@@ -115,9 +116,9 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 /**
    Apply matched filter. \todo this implementation relies on shared variable. It
    is probably causing competition.  */
-__global__ static void mtche_do(Real *restrict grad, Real (*mtches)[2],
-				const Real *restrict ints, int sigmatch, const Real *restrict i0sum, Real scale,
-				int pixpsa, int nsa){
+__global__ static void
+mtche_do(Real *restrict grad, Real (*mtches)[2], const Real *restrict ints,
+	 int sigmatch, const Real *restrict i0sum, Real scale, int pixpsa, int nsa){
     extern __shared__ Real g0[];
     Real *g[3];
     for(int i=0; i<3; i++){
@@ -152,9 +153,10 @@ __global__ static void mtche_do(Real *restrict grad, Real (*mtches)[2],
     }
 }
 
-static void mtche(Real *restrict grad, Real (*mtches)[2],
-		  const Real *restrict ints, int sigmatch, const Real *restrict i0sum, Real scale,
-		  int pixpsa, int nsa, int msa, cudaStream_t stream){
+static void
+mtche(Real *restrict grad, Real (*mtches)[2],
+      const Real *restrict ints, int sigmatch, const Real *restrict i0sum, Real scale,
+      int pixpsa, int nsa, int msa, cudaStream_t stream){
     for(int isa=0; isa<nsa; isa+=msa){
 	int ksa=MIN(msa, nsa-isa);
 	mtche_do<<<ksa, 16, 16*3*sizeof(Real), stream>>>
@@ -164,8 +166,9 @@ static void mtche(Real *restrict grad, Real (*mtches)[2],
 /**
    Apply tCoG. /todo: replace atomicAdd by reduction.
 */
-__global__ static void tcog_do(Real *grad, const Real *restrict ints, Real siglev, Real *saa,
-			       int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real (*cogcoeff)[2], Real *srot){
+__global__ static void
+tcog_do(Real *grad, const Real *restrict ints, Real siglev, Real *saa,
+	int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real (*cogcoeff)[2], Real *srot){
     __shared__ Real sum[3];
     if(threadIdx.x<3 && threadIdx.y==0) sum[threadIdx.x]=0.f;
     __syncthreads();//is this necessary?
@@ -257,12 +260,13 @@ __global__ static void addnoise_do(Real *restrict ints0, int nsa, int pixpsa, Re
     }
     rstat[id]=lstat;
 }
-void gpu_fieldstop(curmat &opd, curmat &amp, int *embed, int nembed, 
-		   curmat &fieldstop, Real wvl, cufftHandle fftplan, cudaStream_t stream){
+static void
+cu_fieldstop(curmat &opd, curmat &amp, int *embed, int nembed, 
+	  curmat &fieldstop, Real wvl, cufftHandle fftplan, cudaStream_t stream){
     cucmat wvf(nembed, nembed);
     embed_wvf_do<<<DIM(opd.Nx(), 256), 0, stream>>> (wvf, opd, amp, embed, opd.Nx(), wvl);
     CUFFT(fftplan, wvf, CUFFT_FORWARD);
-    cwm_do<<<DIM(wvf.N(), 256),0,stream>>> (wvf.P(), fieldstop.P(), wvf.N());
+    cwm_do<<<DIM(wvf.N(), 256),0,stream>>> (wvf(), fieldstop(), wvf.N());
     CUFFT(fftplan, wvf, CUFFT_INVERSE);
     unwrap_phase_do<<<DIM2(wvf.Nx(), wvf.Ny(), 16),0,stream>>> (wvf, opd, embed, opd.Nx(), wvl);
 }
@@ -313,8 +317,8 @@ void gpu_wfsgrad_queue(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	//info("thread %ld gpu %d iwfs %d start\n", thread_id(), cudata->igpu, iwfs);
 	gpu_set(cudata_t::wfsgpu[iwfs]);
-	cuarray<cupowfs_t> &cupowfs=cudata->powfs;
-	cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
+	Array<cupowfs_t> &cupowfs=cudata->powfs;
+	Array<cuwfs_t> &cuwfs=cudata_t::wfs;
 	TIC;tic;
 	const PARMS_T *parms=simu->parms;
 	const POWFS_T *powfs=simu->powfs;
@@ -342,7 +346,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	const int do_geom=!do_phy || save_gradgeom || do_pistatout;
 	const Real thetax=parms->wfs[iwfs].thetax;
 	const Real thetay=parms->wfs[iwfs].thetay;
-	Real2 *loc=cupowfs[ipowfs].loc;
+	Real2 *loc=cupowfs[ipowfs].loc();
 	/*Out to host for now. \todo : keep grad in device when do reconstruction on device. */
 	stream_t &stream=cuwfs[iwfs].stream;
 	curmat phiout=cuwfs[iwfs].phiout;
@@ -381,7 +385,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
 	}
 	if(save_opd){
-	    zfarr_cur(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
+	    zfarr_push(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
 	}
 	if(CL){
 	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
@@ -402,7 +406,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 
 	if(parms->tomo.ahst_idealngs==1 && parms->powfs[ipowfs].lo){
 	    const double *cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
-	    gpu_ngsmod2science(phiout, cupowfs[ipowfs].loc.P(), recon->ngsmod, cleNGSm, 
+	    gpu_ngsmod2science(phiout, cupowfs[ipowfs].loc(), recon->ngsmod, cleNGSm, 
 			       parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
 			       -1, stream);
 	}
@@ -421,11 +425,11 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    if(parms->powfs[ipowfs].nwvl>1){
 		error("Implement broadband case\n");
 	    }
-	    gpu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed[0], cupowfs[ipowfs].nembed[0], 
-			  cupowfs[ipowfs].fieldstop[0], parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
+	    cu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed[0], cupowfs[ipowfs].nembed[0], 
+			 cupowfs[ipowfs].fieldstop[0], parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
 	}
 	if(save_opd){
-	    zfarr_cur(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
+	    zfarr_push(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
 	}
 	if(parms->plot.run){
 	    const double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
@@ -453,16 +457,16 @@ void gpu_wfsgrad_queue(thread_t *info){
 			    cupowfs[ipowfs].pts.Nloc(), 
 			    cupowfs[ipowfs].pts.Dxsa(), 
 			    cupowfs[ipowfs].pts.Nxsa(), cuwfs[iwfs].imcc,
-			    cupowfs[ipowfs].pts, cuwfs[iwfs].amp, ratio, stream);
+			    cupowfs[ipowfs].pts(), cuwfs[iwfs].amp, ratio, stream);
 		}else{
 		    cuspmul(gradref, cuwfs[iwfs].GS0, phiout, 1, 'n', ratio, stream);
 		}
-		if(gradacc.P()!=gradref.P()){
+		if(gradacc()!=gradref()){
 		    curadd(gradacc, 1, gradref, 1.f/(Real)dtrat, stream);
 		}
 	    }   
 	    if(parms->powfs[ipowfs].psfout){
-		zfarr_cur(simu->save->ztiltout[iwfs], simu->isim, gradcalc, stream);
+		zfarr_push(simu->save->ztiltout[iwfs], simu->isim, gradcalc, stream);
 	    }
 	    if(do_phy || parms->powfs[ipowfs].psfout || parms->powfs[ipowfs].dither || do_pistatout){/*physical optics */
 		CUDA_CHECK_ERROR;
@@ -479,7 +483,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		const int totpix=(powfs[ipowfs].pywfs)?powfs[ipowfs].pywfs->nside:(ints[0].N());//PyWFs and SHWFS
 		if(save_ints){
 		    CUDA_CHECK_ERROR;
-		    zfarr_curcell(simu->save->intsnf[iwfs], simu->isim, ints, stream);
+		    zfarr_push(simu->save->intsnf[iwfs], simu->isim, ints, stream);
 		    CUDA_CHECK_ERROR;
 		}
 		ctoc("mtche");
@@ -488,11 +492,11 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 		    addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
 			(ints[0], nsa, totpix, bkgrnd, bkgrnd*parms->powfs[ipowfs].bkgrndc,
-			 cuwfs[iwfs].bkgrnd2.P(), cuwfs[iwfs].bkgrnd2c.P(), 
+			 cuwfs[iwfs].bkgrnd2(), cuwfs[iwfs].bkgrnd2c(), 
 			 cuwfs[iwfs].qe, rne, cuwfs[iwfs].custat);
 		    ctoc("noise");
 		    if(save_ints){
-			zfarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
+			zfarr_push(simu->save->intsny[iwfs], simu->isim, ints, stream);
 		    }
 		}
 		if(parms->powfs[ipowfs].i0save){
@@ -521,8 +525,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 		case 1:
 		    {
 			Real sigratio=parms->powfs[ipowfs].sigmatch==2?(cuwfs[iwfs].i0sumsum/cursum(ints.M(),stream)):0;
-			mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche.P()), ints.M(), 
-			      parms->powfs[ipowfs].sigmatch, cuwfs[iwfs].i0sum.P(), sigratio,
+			mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche()), ints.M(), 
+			      parms->powfs[ipowfs].sigmatch, cuwfs[iwfs].i0sum(), sigratio,
 			      totpix, nsa, cuwfs[iwfs].msa, stream);
 		    }
 		    break;
@@ -536,25 +540,25 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    switch(parms->powfs[ipowfs].sigmatch){
 		    case 0://No signal level match. Use sum(i0) as denominator. Linear.
 			//scale1=parms->powfs[ipowfs].siglev*parms->powfs[ipowfs].dtrat;
-			//scale2=cupowfs[ipowfs].saa.P();
+			//scale2=cupowfs[ipowfs].saa();
 			//The following is preferred.
 			scale1=1.f;
-			scale2=cuwfs[iwfs].i0sum.P();
+			scale2=cuwfs[iwfs].i0sum();
 			break;
 		    case 1://Use instantaneous intensity of each sa
 			break;
 		    case 2://Use averaged instantaneous intensity.
 			scale1=cursum(ints.M(),stream)/powfs[ipowfs].saasum;
-			scale2=cupowfs[ipowfs].saa.P();
+			scale2=cupowfs[ipowfs].saa();
 			break;
 		    default:
 			error("Invalid sigmatch\n");
 		    }
-		    Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot.P():NULL;
+		    Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot():NULL;
 		    tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
 			(gradcalc, ints[0], scale1, scale2,
 			 pixpsax, pixpsay, pixthetax, pixthetay, nsa, 
-			 (Real(*)[2])cuwfs[iwfs].cogcoeff.P(), srot);
+			 (Real(*)[2])cuwfs[iwfs].cogcoeff(), srot);
 		}
 		    break;
 		default://Use CPU version.
@@ -583,7 +587,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
     gpu_set(cudata_t::wfsgpu[iwfs]);
-    cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
+    Array<cuwfs_t> &cuwfs=cudata_t::wfs;
     stream_t &stream=cuwfs[iwfs].stream;
     const int isim=simu->isim;
     const int ipowfs=parms->wfs[iwfs].powfs;
@@ -601,7 +605,7 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 		cp2cpu(&gradcl, gradcalc, stream);
 	    }
 	    if(save_gradgeom){//also do geom grad during phy grad sims
-		zfarr_cur(simu->save->gradgeom[iwfs], simu->isim, gradacc, stream);
+		zfarr_push(simu->save->gradgeom[iwfs], simu->isim, gradacc, stream);
 	    }
 	    if(parms->plot.run && cuwfs[iwfs].ints.Nx()<=4){
 		cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints, stream);
@@ -609,7 +613,7 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 	}else{
 	    cp2cpu(&gradcl, gradacc, stream);
 	    if(save_gradgeom){
-		zfarr_cur(simu->save->gradgeom[iwfs], simu->isim, curmat(), stream);
+		zfarr_push(simu->save->gradgeom[iwfs], simu->isim, curmat(), stream);
 	    }
 	}
     }
@@ -619,7 +623,7 @@ void gpu_save_pistat(SIM_T *simu){
     const int isim=simu->isim;
     for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
 	gpu_set(cudata_t::wfsgpu[iwfs]);
-	cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
+	Array<cuwfs_t> &cuwfs=cudata_t::wfs;
 	const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	stream_t &stream=cuwfs[iwfs].stream;
 	if(parms->powfs[ipowfs].pistatout){

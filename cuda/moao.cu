@@ -41,8 +41,8 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
     opdfit=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
     opdfit2=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
 
-    hxp=cuarray<map_ray>(ndir, 1);
-    hap=cuarray<map_ray>(ndir, 1);
+    hxp=Array<map_ray>(ndir, 1);
+    hap=Array<map_ray>(ndir, 1);
     for(int idir=0; idir<ndir; idir++){
 	hxp[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->xmap);
 	hap[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->amap);
@@ -60,7 +60,7 @@ Real cumoao_t::moao_solve(curccell &xout, const curcell &xin, const curcell &ain
 	//dbg("hap[%d]\n", idir);
 	hap[idir].forward(opdfit.pm, ain.pm, -1.f, NULL, stream);//minus common DM.
 	//cuwrite(opdfit, "opdfit1_%d", idir);
-	grid->W01.apply(opdfit2.M().P(), opdfit.M().P(), opdfit.Nx(), stream);
+	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
 	//cuwrite(opdfit2, "opdfit2_%d", idir);
 	cuzero(rhs.M(), stream);
 	ha.backward(opdfit2.pm, rhs.pm, 1, NULL, stream);
@@ -86,14 +86,14 @@ void cumoao_t::L(curcell &xout, Real beta, const curcell &xin, Real alpha, strea
     }
     cuzero(opdfit.M(), stream);
     ha.forward(opdfit.pm, xin.pm, 1, NULL, stream);
-    grid->W01.apply(opdfit2.M().P(), opdfit.M().P(), opdfit.Nx(), stream);
+    grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
     ha.backward(opdfit2.pm, xout.pm, alpha, NULL, stream);
     if(NW){
-	curmv(dotNW.P(), 0, NW, xin.M().P(), 't', 1, stream);
-	curmv(xout.M().P(), 1, NW, dotNW.P(), 'n', alpha, stream);
+	curmv(dotNW(), 0, NW, xin.M()(), 't', 1, stream);
+	curmv(xout.M()(), 1, NW, dotNW(), 'n', alpha, stream);
     }
     if(actslave){
-	cuspmul(xout.M().P(), actslave, xin.M().P(), 1,'n', alpha, stream);
+	cuspmul(xout.M()(), actslave, xin.M()(), 1,'n', alpha, stream);
     }
 }
 }//namespace
@@ -111,7 +111,7 @@ static void gpu_dm2gpu_embed(curmat &dmgpu, dmat *dmcpu, loc_t *loc, int nx, int
 	    pout[i]=pin[iphi];
 	}
     }
-    DO(cudaMemcpy(dmgpu.P(), pout, nx*ny*sizeof(Real), cudaMemcpyHostToDevice));
+    DO(cudaMemcpy(dmgpu(), pout, nx*ny*sizeof(Real), cudaMemcpyHostToDevice));
     free(pout);
 }
 
@@ -133,7 +133,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 	    MOAO_T *moao=recon->moao+imoao;
 	    gpu_set(cudata_t::wfsgpu[iwfs]);
 	    if(!cudata->dm_wfs){
-		cudata->dm_wfs=cuarray<cumapcell>(nwfs, 1);
+		cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
 	    }
 	    if(!cudata->dm_wfs[iwfs]){
 		cudata->dm_wfs[iwfs]=cumapcell(1,1);
@@ -153,7 +153,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 	for(int ievl=0; ievl<nevl; ievl++){
 	    gpu_set(cudata_t::evlgpu[ievl]);
 	    if(!cudata->dm_evl){
-		cudata->dm_evl=cuarray<cumapcell>(nevl, 1);
+		cudata->dm_evl=Array<cumapcell>(nevl, 1);
 	    }
 	    if(!cudata->dm_evl[ievl]){
 		cudata->dm_evl[ievl]=cumapcell(1,1);

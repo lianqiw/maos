@@ -103,10 +103,10 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 	}
 	sc2=sc*cosangle(vi,vm3);
 	/*sc2=sc*0.707; */
-	phiout[iloc]+=sc2*(IND(mapin,nplocx,nplocy)*(1.-dplocx)*(1.-dplocy)
-			  +IND(mapin,nplocx1,nplocy)*(dplocx)*(1.-dplocy)
-			  +IND(mapin,nplocx,nplocy1)*(1.-dplocx)*(dplocy)
-			  +IND(mapin,nplocx1,nplocy1)*(dplocx)*(dplocy));
+	phiout[iloc]+=sc2*(P(mapin,nplocx,nplocy)*(1.-dplocx)*(1.-dplocy)
+			  +P(mapin,nplocx1,nplocy)*(dplocx)*(1.-dplocy)
+			  +P(mapin,nplocx,nplocy1)*(1.-dplocx)*(dplocy)
+			  +P(mapin,nplocx1,nplocy1)*(dplocx)*(dplocy));
     }
 }
 

@@ -30,7 +30,7 @@ psfout. No user modifiable entries.  */
 typedef struct zfarr zfarr;
 zfarr* zfarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
 void zfarr_push(zfarr *ca, int i, const void *A);
-void zfarr_dcell(zfarr *ca, int i, const dcell *A);
+/*void zfarr_dcell(zfarr *ca, int i, const dcell *A);
 void zfarr_scell(zfarr *ca, int i, const scell *A);
 void zfarr_ccell(zfarr *ca, int i, const ccell *A);
 void zfarr_zcell(zfarr *ca, int i, const zcell *A);
@@ -38,6 +38,7 @@ void zfarr_dmat(zfarr *ca, int i, const dmat *A);
 void zfarr_smat(zfarr *ca, int i, const smat *A);
 void zfarr_cmat(zfarr *ca, int i, const cmat *A);
 void zfarr_zmat(zfarr *ca, int i, const zmat *A);
+*/
 void zfarr_close(zfarr *ca);
 void zfarr_close_n(zfarr **ca, int nc);
 #endif

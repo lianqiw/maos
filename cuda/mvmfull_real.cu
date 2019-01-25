@@ -56,7 +56,7 @@ typedef struct{
     cumat<int>saind;
     stream_t stream_p;//pixels and other transportation across PCI-E.
     stream_t stream_g;//grads
-    cuarray<stream_t> stream_a;//act
+    Array<stream_t> stream_a;//act
     stream_t stream_b;//background process
     int ism;//index of stream for mvm
     int count;
@@ -266,7 +266,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	cp2gpu(data[igpu]->cumvm1, mvm);
 	data[igpu]->pix=cumat<short>(totpix, 1);
 	data[igpu]->pixbias=cumat<short>(totpix, 1);
-	cp2gpu(data[igpu]->pixbias.P(), (short*)pixbias->p, totpix*sizeof(short), cudaMemcpyHostToDevice);
+	cp2gpu(data[igpu]->pixbias(), (short*)pixbias->p, totpix*sizeof(short), cudaMemcpyHostToDevice);
 	data[igpu]->mtch=curcell(nbuf, 1, totpix*2,1);
 	cp2gpu(data[igpu]->mtch[0], mtch);
 	data[igpu]->grad=curmat(ng, 1);
@@ -274,7 +274,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	data[igpu]->actelse=curcell(ngpu-1, 1, nact, 1);
 	data[igpu]->im0=curcell(nbuf,1, totpix, 3);//two buffers
 	data[igpu]->FSMdelta=0.2;
-	data[igpu]->stream_a=cuarray<stream_t>(nsm, 1);
+	data[igpu]->stream_a=Array<stream_t>(nsm, 1);
 	data[igpu]->event_w=new event_t[nsm];
 	data[igpu]->gpu=gpus[igpu];
 	data[igpu]->event_g=new cudaEvent_t[sect_gpu];
@@ -287,7 +287,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	dmres->p[igpu]=X(new)(nact, 1);
 	X(pagelock)(dmres->p[igpu], NULL);
 	data[igpu]->saind=cumat<int>(nsa+1,1);
-	cp2gpu(data[igpu]->saind.P(), saind, nsa+1, 1, 0);
+	cp2gpu(data[igpu]->saind(), saind, nsa+1, 1, 0);
     }
     X(mat) *timing=X(new)(nstep, 1);
     X(mat) *timing_tot=X(new)(nstep, 1);
@@ -370,7 +370,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		timing_sock->p[istep]+=myclockd()-tmp0;
 	    }
 	 
-	    DO(cudaMemcpyAsync(datai->pix.P()+saind[isa], pcur, sizeof(short)*npixleft,
+	    DO(cudaMemcpyAsync(datai->pix()+saind[isa], pcur, sizeof(short)*npixleft,
 			       cudaMemcpyHostToDevice, datai->stream_p));
 	    //Recored the event when the memcpy is finished
 	    DO(cudaEventRecord(datai->event_p[datai->count], datai->stream_p));
@@ -380,7 +380,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    mtch_do<<<mtch_ngrid, dim3(mtch_dimx, mtch_dimy), 
 		mtch_dimx*mtch_dimy*sizeof(Real)*2, datai->stream_g>>>
 		(datai->mtch[ibuf_mtch], datai->pix, datai->pixbias, 
-		 datai->grad.P()+isa*2, datai->saind.P()+isa, nsaleft);
+		 datai->grad()+isa*2, datai->saind()+isa, nsaleft);
 	    //Record the event when matched filter is done
 	    DO(cudaEventRecord(datai->event_g[datai->count], datai->stream_g));
 	    //Another stream does the matrix vector multiplication. Wait for the event before executing.
@@ -399,7 +399,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nsaleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
 #else
 	    multimv_do<<<nblock, naeach, sizeof(Real)*naeach, datai->stream_a[datai->ism]>>>
-		(datai->cumvm.P()+nact*isa*2, datai->act, datai->grad.P()+isa*2, 
+		(datai->cumvm()+nact*isa*2, datai->act, datai->grad()+isa*2, 
 		 nact, nsaleft*2);
 #endif
 	    DO(cudaEventRecord(datai->event_w[datai->ism], datai->stream_a[datai->ism]));
@@ -433,8 +433,8 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    cudaStreamWaitEvent(datai->stream_b, datai->event_pall, 0);
 #endif
 	    dither_acc_do<<<DIM(npixleft, 256), 0, datai->stream_b>>>
-		(datai->pix.P()+saind[isa], datai->im0[ibuf].P()+saind[isa], 
-		 datai->im0[ibuf].P()+totpix+saind[isa],datai->im0[ibuf].P()+totpix*2+saind[isa],
+		(datai->pix()+saind[isa], datai->im0[ibuf]()+saind[isa], 
+		 datai->im0[ibuf]()+totpix+saind[isa],datai->im0[ibuf]()+totpix*2+saind[isa],
 		 cd, sd, npixleft);
 	}
 	//Download statistics to CPU for matched filter building.
@@ -457,7 +457,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 			npixleft=saind[isa+sastep]-saind[isa];
 		    }
 		    DO(cudaMemcpyAsync(im0->p+saind[isa]+icol*totpix, 
-				       data[igpu]->im0[ibuf_stat].P()+saind[isa]+icol*totpix,
+				       data[igpu]->im0[ibuf_stat]()+saind[isa]+icol*totpix,
 				       sizeof(Real)*npixleft,
 				       cudaMemcpyDeviceToHost, stream));
 		    copied_mtch[iset]=1;
@@ -481,7 +481,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		if(datai->ic==0){
 		    info("step %d: gpu %d uploading mvm\n", istep, igpu);
 		}
-		DO(cudaMemcpyAsync(datai->cumvm_next.P()+datai->ic*mvm->nx, 
+		DO(cudaMemcpyAsync(datai->cumvm_next()+datai->ic*mvm->nx, 
 				   mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nsaleft, 
 				   cudaMemcpyHostToDevice, datai->stream_p));
 		

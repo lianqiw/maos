@@ -23,7 +23,7 @@
 #include "wfs.h"
 extern int NGPU;
 extern int MAXGPU;
-extern cuarray<int> GPUS;
+extern Array<int> GPUS;
 typedef Real ATYPE;
 typedef Real GTYPE;
 namespace cuda_recon{
@@ -37,8 +37,8 @@ class cuwfs_t;
 typedef struct cudata_t{ 
     int igpu;
     static int recongpu;
-    static cuarray<int> evlgpu;
-    static cuarray<int> wfsgpu;
+    static Array<int> evlgpu;
+    static Array<int> wfsgpu;
     std::map<uint64_t, void*> memhash;/*For reuse constant GPU memory*/
     std::map<void *, int> memcount; /*Store count of reused memory*/
     void *memcache;/*For reuse temp array for type conversion.*/
@@ -55,13 +55,13 @@ typedef struct cudata_t{
     cuperf_t perf;
     stream_t perf_stream;/**<Default stream for perfevl. One per GPU. This allows sharing resource per GPU.*/
     /*for wfsgrad */
-    cuarray<cupowfs_t>powfs;
-    static cuarray<cuwfs_t>wfs;//must be static so we can address all elements.
+    Array<cupowfs_t>powfs;
+    static Array<cuwfs_t>wfs;//must be static so we can address all elements.
     /*for recon */
     cuda_recon::curecon_t *recon;
     /*for moao*/
-    cuarray<cumapcell> dm_wfs;
-    cuarray<cumapcell> dm_evl;
+    Array<cumapcell> dm_wfs;
+    Array<cumapcell> dm_evl;
     /*for mvm*/
     curmat mvm_m;/*the control matrix*/
     ATYPE *mvm_a; /*contains act result from mvm_m*mvm_g*/
@@ -94,7 +94,7 @@ long gpu_get_mem(void);
    switch to the next GPU and update the pointer.
 */
 static inline void gpu_set(int igpu){
-    extern cuarray<int> GPUS;
+    extern Array<int> GPUS;
     if(igpu>=NGPU){
 	error("Invalid igpu=%d", igpu);
     }

@@ -1993,29 +1993,29 @@ static void setup_parms_postproc_dirs(PARMS_T *parms){
     int count=0;
 
     for(int i=0; i<parms->nwfs; i++){
-	IND(pdir,0,count)=parms->wfs[i].thetax;
-	IND(pdir,1,count)=parms->wfs[i].thetay;
-	IND(pdir,2,count)=parms->wfs[i].hs;
+	P(pdir,0,count)=parms->wfs[i].thetax;
+	P(pdir,1,count)=parms->wfs[i].thetay;
+	P(pdir,2,count)=parms->wfs[i].hs;
 	count++;
     }
     
     for(int i=0; i<parms->evl.nevl; i++){
-	IND(pdir,0,count)=parms->evl.thetax->p[i];
-	IND(pdir,1,count)=parms->evl.thetay->p[i];
-	IND(pdir,2,count)=parms->evl.hs->p[i];
+	P(pdir,0,count)=parms->evl.thetax->p[i];
+	P(pdir,1,count)=parms->evl.thetay->p[i];
+	P(pdir,2,count)=parms->evl.hs->p[i];
 	count++;
     }
     for(int i=0; i<parms->fit.nfit; i++){
-	IND(pdir,0,count)=parms->fit.thetax->p[i];
-	IND(pdir,1,count)=parms->fit.thetay->p[i];
-	IND(pdir,2,count)=parms->fit.hs->p[i];
+	P(pdir,0,count)=parms->fit.thetax->p[i];
+	P(pdir,1,count)=parms->fit.thetay->p[i];
+	P(pdir,2,count)=parms->fit.hs->p[i];
 	count++;
     }
     if(parms->sim.ncpa_calib){
 	for(int i=0; i<parms->sim.ncpa_ndir; i++){
-	    IND(pdir,0,count)=parms->sim.ncpa_thetax->p[i];
-	    IND(pdir,1,count)=parms->sim.ncpa_thetay->p[i];
-	    IND(pdir,2,count)=parms->sim.ncpa_hs->p[i];
+	    P(pdir,0,count)=parms->sim.ncpa_thetax->p[i];
+	    P(pdir,1,count)=parms->sim.ncpa_thetay->p[i];
+	    P(pdir,2,count)=parms->sim.ncpa_hs->p[i];
 	    count++;
 	}
     }
@@ -2027,8 +2027,8 @@ static void setup_parms_postproc_dirs(PARMS_T *parms){
     dresize(parms->dirs, 3, count);
     double rmax2=0;
     for(int ic=0; ic<count; ic++){
-	double x=IND(parms->dirs, 0, ic);
-	double y=IND(parms->dirs, 1, ic);
+	double x=P(parms->dirs, 0, ic);
+	double y=P(parms->dirs, 1, ic);
 	double r2=x*x+y*y;
 	if(r2>rmax2) rmax2=r2;
     }
@@ -2586,20 +2586,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
     if(parms->evl.psfisim<parms->sim.start){
 	parms->evl.psfisim=parms->sim.start;
     }
-    if(parms->evl.psfisim>=parms->sim.end){
-	if(parms->evl.psfmean){
-	    warning("psfisim>=sim.end, disable psfmean\n");
-	    parms->evl.psfmean=0;
-	}
-	if(parms->evl.psfhist){
-	    warning("psfisim>=sim.end, disable psfhist\n");
-	}
-    }
-    if(parms->sim.closeloop==0 || parms->evl.tomo){
-	/*disable parallelizing the big loop. */
-	extern int PARALLEL;
-	PARALLEL=0;
-    }
+   
     if(parms->evl.psfmean || parms->evl.psfhist){
 	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psf->p);
 	if(fnd==0){

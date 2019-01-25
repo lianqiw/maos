@@ -76,12 +76,12 @@ void nea_chol(dmat **pout, const dmat *in){
     dmat *out=*pout;
     for(int isa=0; isa<in->nx; isa++){
 	//Use temporary variable to handle the case that out and in is the same.
-	double a=sqrt(IND(in,isa,0));
-	double b=isxy?(IND(in,isa,2)/a):0;
-	double c=sqrt(IND(in,isa,1)-b*b);
-	IND(out,isa,0)=a;
-	IND(out,isa,1)=c;
-	IND(out,isa,2)=b;
+	double a=sqrt(P(in,isa,0));
+	double b=isxy?(P(in,isa,2)/a):0;
+	double c=sqrt(P(in,isa,1)-b*b);
+	P(out,isa,0)=a;
+	P(out,isa,1)=c;
+	P(out,isa,2)=b;
     }
 }
 /**
@@ -102,12 +102,12 @@ void nea_mm(dmat **pout, const dmat *in){
     }
     for(int isa=0; isa<in->nx; isa++){
 	//Use temporary variable to handle the case that out and in is the same.
-	double a=IND(in,isa,0);
-	double b=isxy?(IND(in,isa,2)):0;
-	double c=IND(in,isa,1);
-	IND(out,isa,0)=a*a;
-	IND(out,isa,1)=c*c+b*b;
-	if(isxy) IND(out,isa,2)=a*b;
+	double a=P(in,isa,0);
+	double b=isxy?(P(in,isa,2)):0;
+	double c=P(in,isa,1);
+	P(out,isa,0)=a*a;
+	P(out,isa,1)=c*c+b*b;
+	if(isxy) P(out,isa,2)=a*b;
     }
 }
 /**
@@ -125,13 +125,13 @@ void nea_inv(dmat **pout, const dmat *in){
     int isxy=in->ny==3?1:0;
     dmat *out=*pout;
     for(int isa=0; isa<in->nx; isa++){
-	double xy=isxy?IND(in,isa,2):0;
-	double invdet=1./(IND(in,isa,0)*IND(in,isa,1)-xy*xy);
+	double xy=isxy?P(in,isa,2):0;
+	double invdet=1./(P(in,isa,0)*P(in,isa,1)-xy*xy);
 	//Use temporary variable to handle the case that out and in is the same.
-	double a=invdet*IND(in,isa,1);
-	IND(out,isa,1)=invdet*IND(in,isa,0);
-	IND(out,isa,0)=a;
-	IND(out,isa,2)=invdet*xy;
+	double a=invdet*P(in,isa,1);
+	P(out,isa,1)=invdet*P(in,isa,0);
+	P(out,isa,0)=a;
+	P(out,isa,2)=invdet*xy;
     }
 }
 
@@ -181,7 +181,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		//convert from mill-arcsec to radian.
 		double nearad=pow(neamas/206265000.,2)/(parms->powfs[ipowfs].dtrat);
 		for(int isa=0; isa<nsa; isa++){
-		    IND(saneac->p[0],isa,0)=IND(saneac->p[0],isa,1)=nearad/(IND(powfs[ipowfs].saa,isa));
+		    P(saneac->p[0],isa,0)=P(saneac->p[0],isa,1)=nearad/(P(powfs[ipowfs].saa,isa));
 		}
 	    }
 	}
@@ -202,7 +202,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		samask=loc_coord2ind(powfs[ipowfs].saloc, parms->wfs[iwfs].sabad);
 	    }
 	    if(!do_ref  || iwfs==iwfs0 || parms->wfs[iwfs].sabad || parms->wfs[iwfs0].sabad){
-		dmat *sanea0=INDR(saneac, jwfs, 0);
+		dmat *sanea0=PR(saneac, jwfs, 0);
 		int isxy=sanea0->ny==3?1:0;
 
 		dcell *sanea2=dcellnew(nsa, 1);
@@ -219,9 +219,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			dset(sanea2l->p[isa], INFINITY);
 			dset(sanea2i->p[isa], 0);
 		    }else{
-			nea->p[0]=IND(sanea0, isa, 0);
-			nea->p[1]=nea->p[2]=isxy?IND(sanea0, isa, 2):0;
-			nea->p[3]=IND(sanea0, isa, 1);
+			nea->p[0]=P(sanea0, isa, 0);
+			nea->p[1]=nea->p[2]=isxy?P(sanea0, isa, 2):0;
+			nea->p[3]=P(sanea0, isa, 1);
 		    
 			sanea2l->p[isa]=dchol(nea);
 			sanea2i->p[isa]=dinvspd(nea);
@@ -553,7 +553,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    /*single point piston constraint. no need tikholnov.*/
 	    info("Adding ZZT to RLM\n");
 	    for(int ips=0; ips<npsr; ips++){
-		dspadd(PIND(RLM,ips,ips), 1, recon->ZZT->p[ips+ips*npsr], 1);
+		dspadd(PP(RLM,ips,ips), 1, recon->ZZT->p[ips+ips*npsr], 1);
 	    }
 	    dspcellfree(recon->ZZT);
 	}
@@ -574,7 +574,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		if(!tmp){
 		    error("L2 is empty!!\n");
 		}
-		dspadd(PIND(RLM,ips,ips), 1, tmp, 1);
+		dspadd(PP(RLM,ips,ips), 1, tmp, 1);
 		dspfree(tmp);
 	    }
 	    break;
@@ -602,8 +602,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    if(parms->powfs[ipowfs].lo){
 		for(int ips=0; ips<npsr; ips++){
-		    dspfull(PIND(pULo,ips,iwfs), IND(RRM,ips,iwfs),'n',-1);
-		    dspfull(PIND(pVLo,ips,iwfs), IND(GX,iwfs,ips),'t',1);
+		    dspfull(PP(pULo,ips,iwfs), P(RRM,ips,iwfs),'n',-1);
+		    dspfull(PP(pVLo,ips,iwfs), P(GX,iwfs,ips),'t',1);
 		}
 	    }
 	}
@@ -737,7 +737,7 @@ static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *loc
 	for(int iwfsr=0; iwfsr<parms->nwfsr; iwfsr++){
 	    int ipowfs=parms->wfsr[iwfsr].powfs;
 	    if(!parms->powfs[ipowfs].skip){
-		IND(sanealhi, iwfsr, iwfsr)=dspref(IND(recon->saneal, iwfsr, iwfsr));
+		P(sanealhi, iwfsr, iwfsr)=dspref(P(recon->saneal, iwfsr, iwfsr));
 	    }
 	}
 	//dsp *tmp=dspcell2sp(sanealhi);  dspcellfree(sanealhi);
@@ -824,7 +824,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
 		error("L2 is empty!!\n");
 	    }
 	    dsp *LLdiff=dspadd2(LL,1,LLold,-1);/*adjustment to RLM */
-	    dspadd(PIND(RLM,ips,ips), 1, LLdiff, 1);
+	    dspadd(PP(RLM,ips,ips), 1, LLdiff, 1);
 	    dspfree(LLdiff);
 	    dspfree(LL);
 	    dspfree(LLold);
@@ -894,9 +894,9 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 		if(iwfs==iwfs0 || !parms->recon.glao){
-		    IND(recon->RFlgsg, iwfs, iwfs)=dpinv(recon->GFall->p[iwfs], IND(recon->saneai, iwfs, iwfs));
+		    P(recon->RFlgsg, iwfs, iwfs)=dpinv(recon->GFall->p[iwfs], P(recon->saneai, iwfs, iwfs));
 		}else{
-		    IND(recon->RFlgsg, iwfs, iwfs)=dref(IND(recon->RFlgsg, iwfs0, iwfs0));
+		    P(recon->RFlgsg, iwfs, iwfs)=dref(P(recon->RFlgsg, iwfs0, iwfs0));
 		}
 	    }
 	}
@@ -1119,7 +1119,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dmat*  ptmp=tmp/*PDMAT*/;
 	double rss=0;
 	for(int i=0; i<tmp->nx; i++){
-	    rss+=IND(ptmp,i,i);
+	    rss+=P(ptmp,i,i);
 	}
 	dfree(tmp);
 	dcellfree(RCRtQwQ);
@@ -1416,7 +1416,7 @@ void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
 	    double dispx=parms->evl.thetax->p[ievl]*ht;
 	    double dispy=parms->evl.thetay->p[ievl]*ht;
 	    double scale=1-ht/parms->evl.hs->p[ievl];
-	    IND(recon->Herr, ievl, idm)=mkh(recon->aloc->p[idm], eloc, dispx, dispy, scale);
+	    P(recon->Herr, ievl, idm)=mkh(recon->aloc->p[idm], eloc, dispx, dispy, scale);
 	}
     }
     if(parms->recon.psd==2){//don't use signanhi by default
@@ -1425,7 +1425,7 @@ void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    double sigma2i=0;
 	    for(int iloc=0; iloc<eloc->nloc; iloc++){
-		sigma2i+=IND(ecnn->p[ievl], iloc, iloc);
+		sigma2i+=P(ecnn->p[ievl], iloc, iloc);
 	    }
 	    sigma2e+=parms->evl.wt->p[ievl]*(sigma2i/eloc->nloc);
 	}

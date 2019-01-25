@@ -170,7 +170,7 @@ X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
 */
 X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
     assert_mat(in);
-    return X(new_ref)(in->nx, ncol, in->p+icol*in->nx);
+    return X(new_ref)(in->nx, ncol, PCOL(in, icol));
 }
 
 /**
@@ -191,7 +191,7 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
     }
     X(mat)*out=X(new)(nx, ny);
     for(int iy=0; iy<ny; iy++){
-	memcpy(PCOL(out, iy), PIND(in, sx, iy+sy), sizeof(T)*nx); 
+	memcpy(PCOL(out, iy), PP(in, sx, iy+sy), sizeof(T)*nx); 
     }
     return out;
 }
@@ -306,7 +306,7 @@ X(mat) *X(trans)(const X(mat) *A){
     }else{
 	for(int ix=0; ix<A->nx; ix++){
 	    for(int iy=0; iy<A->ny; iy++){
-		IND(B,iy,ix)=IND(A,ix,iy);
+		P(B,iy,ix)=P(A,ix,iy);
 	    }
 	}
     }
@@ -341,7 +341,7 @@ void X(show)(const X(mat) *A, const char *format, ...){
 	printf("Cols %d to %d\n", iset, ncol-1);
 	for(j=0; j<A->nx; j++){
 	    for(i=iset*colmax; i<ncol; i++){
-		PRINT(IND(A,j,i));
+		PRINT(P(A,j,i));
 	    }
 	    printf("\n");
 	}
@@ -481,15 +481,15 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
 	int dy=ny-sy;
 	int dx=nx-sx;
 	for(int iy=0; iy<sy; iy++){
-	    memcpy(B->p+iy*nx, A->p+(dy+iy)*nx+dx, sx*sizeof(T));/*3 */
-	    memcpy(B->p+iy*nx+sx, A->p+(dy+iy)*nx, dx*sizeof(T));/*4 */
+	    memcpy(PP(B, 0, iy), PP(A, dx, iy+dy), sx*sizeof(T));/*3 */
+	    memcpy(PP(B, sx,iy), PP(A, 0,  iy+dy), dx*sizeof(T));/*4 */
 	}
 	for(int iy=sy; iy<ny; iy++){
-	    memcpy(B->p+iy*nx, A->p+(iy-sy)*nx+dx, sx*sizeof(T));/*1 */
-	    memcpy(B->p+iy*nx+sx, A->p+(iy-sy)*nx, dx*sizeof(T));/*2 */
+	    memcpy(PP(B, 0, iy), PP(A, dx, iy-sy), sx*sizeof(T));/*1 */
+	    memcpy(PP(B, sx,iy), PP(A, 0,  iy-sy), dx*sizeof(T));/*2 */
 	}
     }else{
-	memcpy(B->p, A->p, sizeof(T)*nx*ny);
+	X(cp)(B0, A);
     }
 }
 /**
@@ -600,7 +600,7 @@ X(cell) *X(celltrans)(const X(cell) *A){
     X(cell) *B=X(cellnew)(A->ny, A->nx);
     for(int ix=0; ix<A->nx; ix++){
 	for(int iy=0; iy<A->ny; iy++){
-	    IND(B,iy,ix)=X(trans)(IND(A,ix,iy));
+	    P(B,iy,ix)=X(trans)(P(A,ix,iy));
 	}
     }
     return B;
@@ -623,9 +623,8 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 	    for(long icol=0; icol<nys[iy]; icol++){
 		long kr=0;
 		for(long ix=0; ix<A->nx; ix++){
-		    if(!isempty(IND(A,ix,iy))){
-			memcpy(out->p[iy]->p+icol*nx+kr,
-			       IND(A,ix,iy)->p+icol*nxs[ix],
+		    if(!isempty(P(A,ix,iy))){
+			memcpy(PP(out->p[iy], kr, icol), PCOL(P(A,ix,iy),icol),
 			       nxs[ix]*sizeof(T));
 		    }			
 		    kr+=nxs[ix];
@@ -639,10 +638,8 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 	    out->p[ix]=X(new)(nxs[ix],ny);
 	    long kr=0;
 	    for(long iy=0; iy<A->ny; iy++){
-		if(!isempty(IND(A,ix,iy))){
-		    memcpy(out->p[ix]->p+kr*nxs[ix],
-			   IND(A,ix,iy)->p,
-			   nxs[ix]*nys[iy]*sizeof(T));
+		if(!isempty(P(A,ix,iy))){
+		    memcpy(PCOL(out->p[ix], kr), P(A,ix,iy)->p, nxs[ix]*nys[iy]*sizeof(T));
 		}
 		kr+=nys[iy];
 	    }
@@ -668,7 +665,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	for(int ix=0; ix<A->nx; ix++){
 	    keep[ix]=0;
 	    for(int iy=0; iy<A->ny; iy++){
-		if(!isempty(IND(A,ix,iy))){
+		if(!isempty(P(A,ix,iy))){
 		    keep[ix]=1;
 		    break;
 		}
@@ -688,7 +685,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 		    if(keep[ix]){
 			if(count!=ix){
 			    for(int iy=0; iy<A->ny; iy++){
-				IND(B,count,iy)=IND(A,ix,iy);
+				P(B,count,iy)=P(A,ix,iy);
 			    }
 			}
 			count++;
@@ -706,14 +703,14 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	for(int iy=0; iy<A->ny; iy++){
 	    int keep=0;
 	    for(int ix=0; ix<A->nx; ix++){
-		if(!isempty(IND(A,ix,iy))){
+		if(!isempty(P(A,ix,iy))){
 		    keep=1;
 		    break;
 		}
 	    }
 	    if(keep){
 		for(int ix=0; ix<A->nx; ix++){
-		    IND(A,ix,count)=IND(A,ix,iy);
+		    P(A,ix,count)=P(A,ix,iy);
 		}
 		count++;
 	    }else{
@@ -779,7 +776,7 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
 	X(cell)* Bp=(*B);
 	for(long iy=0; iy<ref->ny; iy++){
 	    for(long ix=0; ix<ref->nx; ix++){
-		IND(Bp,ix,iy)=X(new)(nxs[ix],nys[iy]);
+		P(Bp,ix,iy)=X(new)(nxs[ix],nys[iy]);
 	    }
 	}
     }
@@ -790,9 +787,7 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
 	    long kr=0;
 	    for(long ix=0; ix<ref->nx; ix++){
 		if(nxs[ix]>0){
-		    memcpy(IND(Bp,ix,iy)->p+icol*IND(Bp,ix,iy)->nx,
-			   A->p+((icol+jcol)*nx+kr),
-			   nxs[ix]*sizeof(T));
+		    memcpy(PCOL(P(Bp,ix,iy), icol), PP(A, kr, icol+jcol), nxs[ix]*sizeof(T));
 		    kr+=nxs[ix];
 		}
 	    }
@@ -821,7 +816,7 @@ X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
     }
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
-	    IND(out,ix,iy)=X(ref)(IND(in,ix+sx,iy+sy));
+	    P(out,ix,iy)=X(ref)(P(in,ix+sx,iy+sy));
 	}
     }
     return out;

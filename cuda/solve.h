@@ -36,9 +36,9 @@ public:
 
 class cucgpre_t{/*Interface for preconditioner*/
 public:
-    virtual void P(curcell &xout, const curcell &xin, stream_t &stream)=0;
+    virtual void Pre(curcell &xout, const curcell &xin, stream_t &stream)=0;
     void operator()(curcell &xout, const curcell &xin, stream_t &stream){
-	P(xout, xin, stream);
+	Pre(xout, xin, stream);
     }
     virtual ~cucgpre_t(){}
 };
@@ -60,7 +60,7 @@ public:
 	L(xout, beta, xin, alpha, stream);
     }
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream);
-    void P(curcell &xout, const curcell &xin, stream_t &stream){
+    void Pre(curcell &xout, const curcell &xin, stream_t &stream){
 	if(precond){
 	    (*precond)(xout, xin, stream);
 	}
@@ -128,7 +128,7 @@ public:
     }
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream){
 	if(!xout) xout=xin.New();
-	curmv(xout.M().P(), 0., M, xin.M().P(), 'n', 1., stream);
+	curmv(xout.M()(), 0., M, xin.M()(), 'n', 1., stream);
 	return 0;
     }
 };

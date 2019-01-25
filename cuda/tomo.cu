@@ -81,7 +81,7 @@ void prep_GP(cumat<short2> &GPp, Real *GPscale, cusp &GPf,
 	}
 	dspfree(GPt);
 	GPp=cumat<short2>(np, nsa);
-	cudaMemcpy(GPp.P(), partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
+	cudaMemcpy(GPp(), partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
 	*GPscale=1./pxscale;
 	free(partxy);
     }else{/*use sparse */
@@ -104,7 +104,7 @@ prep_saptr(loc_t *saloc, map_t *pmap){
 	saptr[isa][1]=(int)roundf((salocy[isa]-oy)*dy1);
     }
     cumat<int> saptr_gpu=cumat<int>(2, nsa);
-    DO(cudaMemcpy(saptr_gpu.P(), saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
+    DO(cudaMemcpy(saptr_gpu(), saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
     delete [] saptr;
     return saptr_gpu;
 }
@@ -133,7 +133,7 @@ static curmat convert_neai(dsp *nea){
 	}
     }
     curmat neai_gpu=curmat(3, nsa);
-    DO(cudaMemcpy(neai_gpu.P(), neai, 3*nsa*sizeof(Real), cudaMemcpyHostToDevice));
+    DO(cudaMemcpy(neai_gpu(), neai, 3*nsa*sizeof(Real), cudaMemcpyHostToDevice));
     free(neai);
     return neai_gpu;
 }
@@ -168,7 +168,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	}
     }
     lap=cumat<LAP_T>(recon->npsr, 1);
-    cudaMemcpy(lap.P(), lapc, sizeof(LAP_T)*recon->npsr, cudaMemcpyHostToDevice);
+    cudaMemcpy(lap(), lapc, sizeof(LAP_T)*recon->npsr, cudaMemcpyHostToDevice);
 }
 
 cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
@@ -260,18 +260,18 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];//wfs index in this group
 	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
 	    GPDATA[iwfs].pos=parms->tomo.pos;
-	    GPDATA[iwfs].saptr=(int(*)[2])saptr[iwfs].P();
-	    GPDATA[iwfs].GPp=(short2*)GPp[iwfs].P();
+	    GPDATA[iwfs].saptr=(int(*)[2])saptr[iwfs]();
+	    GPDATA[iwfs].GPp=(short2*)GPp[iwfs]();
 	    GPDATA[iwfs].GPscale=GPscale[iwfs];
 	    if(parms->powfs[ipowfs].trs){
-		GPDATA[iwfs].PTT=PTT(iwfs,iwfs).P();
+		GPDATA[iwfs].PTT=PTT(iwfs,iwfs)();
 	    }
 	    if(parms->powfs[ipowfs].dfrs){
-		GPDATA[iwfs].PDF=PDF[ipowfs].P();
-		GPDATA[iwfs].PDFTT=PDFTT[ipowfs].P();
+		GPDATA[iwfs].PDF=PDF[ipowfs]();
+		GPDATA[iwfs].PDFTT=PDFTT[ipowfs]();
 	    }
 
-	    GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs].P();
+	    GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs]();
 	    GPDATA[iwfs].nsa=powfs[ipowfs].pts->nsa;
 	    GPDATA[iwfs].nxp=recon->pmap->nx;
 	    GPDATA[iwfs].dxp=recon->pmap->dx;
@@ -280,7 +280,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].oyp=recon->pmap->oy;
 	}
 	gpdata=cumat<GPU_GP_T>(nwfs,1);
-	DO(cudaMemcpy(gpdata.P(), GPDATA, sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
+	DO(cudaMemcpy(gpdata(), GPDATA, sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
 	delete [] GPDATA;
     }
 
@@ -577,12 +577,12 @@ void cutomo_grid::do_gp(curcell &_grad, const curcell &_opdwfs, int ptt2, stream
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    if(GPp[iwfs] || !GP[iwfs]) continue;
 	    cuzero(_grad[iwfs], stream);
-	    cuspmul(_grad[iwfs].P(), GP[iwfs], _opdwfs[iwfs].P(), 1, 'n', 1, stream);
+	    cuspmul(_grad[iwfs](), GP[iwfs], _opdwfs[iwfs](), 1, 'n', 1, stream);
 	}
     }
     cuzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata.P(), _grad.pm, ttf.P(), ttf.P()+nwfs*2, _opdwfs?_opdwfs.pm:NULL, ptt2);
+	(gpdata(), _grad.pm, ttf(), ttf()+nwfs*2, _opdwfs?_opdwfs.pm:NULL, ptt2);
 }
 void cutomo_grid::do_gpt(curcell &_opdwfs, curcell &_grad, int ptt2, stream_t &stream){
     if(_opdwfs){
@@ -590,13 +590,13 @@ void cutomo_grid::do_gpt(curcell &_opdwfs, curcell &_grad, int ptt2, stream_t &s
     }
     //Does  GP'*NEA*(1-TTDF) if _opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata.P(), _opdwfs?_opdwfs.pm:0, ttf.P(), ttf.P()+nwfs*2, _grad.pm, ptt2);
+	(gpdata(), _opdwfs?_opdwfs.pm:0, ttf(), ttf()+nwfs*2, _grad.pm, ptt2);
     
     if(_opdwfs){//Does GP' for GP with sparse
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    if(GPp[iwfs] || !GP[iwfs]) continue;
 	    cuzero(_opdwfs[iwfs], stream);
-	    cuspmul(_opdwfs[iwfs].P(), GP[iwfs], _grad[iwfs].P(), 1, 't', 1, stream);
+	    cuspmul(_opdwfs[iwfs](), GP[iwfs], _grad[iwfs](), 1, 't', 1, stream);
 	}
     }
 }
@@ -664,7 +664,7 @@ void cutomo_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, st
     RECORD(4);
     /*This could be in parallel to hx->forward, do_gp, do_gpt*/
     gpu_laplacian_do<<<dim3(3,3,grid->npsr),dim3(16,16), 0, stream>>>
-	(lap.P(), xout.pm, xin.pm, nwfs, alpha);
+	(lap(), xout.pm, xin.pm, nwfs, alpha);
     RECORD(5);
 #if TIMING==2
     EVENT_TOC;

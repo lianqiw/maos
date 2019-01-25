@@ -167,10 +167,10 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
 	    atm->p[j]=randn(&rstat);
 	}
 	fractal_do((dmat*)atm, dx, r0,L0,ninit);
-	vec->p[0]=IND(pp,ofx+0,ofy+0);
-	vec->p[1]=IND(pp,ofx+1,ofy+0);
-	vec->p[2]=IND(pp,ofx+0,ofy+1);
-	vec->p[3]=IND(pp,ofx+1,ofy+1);
+	vec->p[0]=P(pp,ofx+0,ofy+0);
+	vec->p[1]=P(pp,ofx+1,ofy+0);
+	vec->p[2]=P(pp,ofx+0,ofy+1);
+	vec->p[3]=P(pp,ofx+1,ofy+1);
 	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
@@ -205,7 +205,7 @@ static void test_stfun(){
 	    }
 	    fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	    stfun_push(data, (dmat*)atm);
-	    zfarr_dmat(save, i, (dmat*)atm);
+	    zfarr_push(save, i, (dmat*)atm);
 	    if(i%100==0)
 		dbg("%ld of %ld\n", i, nframe);
 	}
@@ -272,7 +272,7 @@ static void test_psd(){
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
-		    IND(hat,ix+xskip,iy+yskip)=IND(atm,ix,iy);
+		    P(hat,ix+xskip,iy+yskip)=P(atm,ix,iy);
 		}
 	    }
 	    cfftshift(hat);
@@ -309,7 +309,7 @@ static void test_psd(){
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
-		    IND(phat,ix+xskip,iy+yskip)=IND(patmr,ix,iy);
+		    P(phat,ix+xskip,iy+yskip)=P(patmr,ix,iy);
 		}
 	    }
 	    cfftshift(hat);
@@ -318,7 +318,7 @@ static void test_psd(){
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
-		    IND(phat,ix+xskip,iy+yskip)=IND(patmi,ix,iy);
+		    P(phat,ix+xskip,iy+yskip)=P(patmi,ix,iy);
 		}
 	    }
 	    cfftshift(hat);

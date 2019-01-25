@@ -65,7 +65,7 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
     mod[2]=locy;
     for(int im=0; im<3;im++){
 	for(int jm=im;jm<3;jm++){
-	    IND(mcc,im,jm)=IND(mcc,jm,im)=dotdbl(mod[im], mod[jm], amp, nloc);
+	    P(mcc,im,jm)=P(mcc,jm,im)=dotdbl(mod[im], mod[jm], amp, nloc);
 	}
     }
     dinvspd_inplace(mcc);
@@ -92,28 +92,28 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
     /*Remove tip/tilt from left side*/
     dmat*  pMtmp=Mtmp;
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=IND(pMtmp,0,iloc);
-	double tmp2=IND(pMtmp,1,iloc);
-	double tmp3=IND(pMtmp,2,iloc);
+	double tmp1=P(pMtmp,0,iloc);
+	double tmp2=P(pMtmp,1,iloc);
+	double tmp3=P(pMtmp,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
-	    IND(BP,jloc,iloc)=IND(B,jloc,iloc)+
-		(IND(pMCC,0,jloc)*tmp1
-		 +IND(pMCC,1,jloc)*tmp2
-		 +IND(pMCC,2,jloc)*tmp3);
+	    P(BP,jloc,iloc)=P(B,jloc,iloc)+
+		(P(pMCC,0,jloc)*tmp1
+		 +P(pMCC,1,jloc)*tmp2
+		 +P(pMCC,2,jloc)*tmp3);
 	}
     }
     /* Mtmp = MW' * BP' */
     dmm(&Mtmp, 0, MW, B2, "tt", 1);
     /*Remove tip/tilt from right side*/
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=IND(pMCC,0,iloc);
-	double tmp2=IND(pMCC,1,iloc);
-	double tmp3=IND(pMCC,2,iloc);
+	double tmp1=P(pMCC,0,iloc);
+	double tmp2=P(pMCC,1,iloc);
+	double tmp3=P(pMCC,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
-	    IND(BP,jloc,iloc)+=
-		tmp1*IND(pMtmp,0,jloc)
-		+tmp2*IND(pMtmp,1,jloc)
-		+tmp3*IND(pMtmp,2,jloc);
+	    P(BP,jloc,iloc)+=
+		tmp1*P(pMtmp,0,jloc)
+		+tmp2*P(pMtmp,1,jloc)
+		+tmp3*P(pMtmp,2,jloc);
 	}
     }
     dfree(mcc);
@@ -152,9 +152,9 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     double *restrict BPD=mymalloc(nloc,double);
     for(long iloc=0; iloc<nloc; iloc++){
 	for(long jloc=0; jloc<nloc; jloc++){
-	    IND(BP,jloc,iloc)=exp(k2*IND(BP,jloc,iloc));
+	    P(BP,jloc,iloc)=exp(k2*P(BP,jloc,iloc));
 	}
-	BPD[iloc]=pow(IND(BP,iloc,iloc), -0.5);
+	BPD[iloc]=pow(P(BP,iloc,iloc), -0.5);
     }
     double otfnorm=0;
     if(amp){
@@ -175,7 +175,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
-		double tmp1=BPD[iloc1]*IND(BP, iloc2, iloc1);
+		double tmp1=BPD[iloc1]*P(BP, iloc2, iloc1);
 		double tmp2=BPD[iloc2];
 		if(amp){
 		    tmp1*=amp[iloc1];
@@ -188,7 +188,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		    tmp+=tmp1*tmp2;
 		}
 	    }
-	    IND(OTF,im,jm)=tmp*otfnorm;
+	    P(OTF,im,jm)=tmp*otfnorm;
 	}
     }
     free(BPD);
@@ -302,7 +302,7 @@ static dmat* genotfB(loc_t *loc, double r0, double L0){
     for(long i=0; i<nloc; i++){
 	for(long j=i; j<nloc; j++){
 	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
-	    IND(B,i,j)=IND(B,j,i)=coeff*pow(rdiff2,5./6.);
+	    P(B,i,j)=P(B,j,i)=coeff*pow(rdiff2,5./6.);
 	}
     }
     return B;
@@ -419,15 +419,15 @@ dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int
 		long iy=map_y[iloc]+jm2;
 		long iloc2=(long)loc_map_get(map, ix, iy);
 		if(iloc2>0 && (!amp || amp->p[iloc2]>=ampthres)){
-		    acc+=IND(cov,iloc2-1,iloc);
+		    acc+=P(cov,iloc2-1,iloc);
 		    count++;
 		}
 	    }
 	    if(count>0){
 		if(norm){/*compute the covariance*/
-		    IND(cov2d,im,jm)=acc/count;
+		    P(cov2d,im,jm)=acc/count;
 		}else{/*compute approximate PSD.*/
-		    IND(cov2d,im,jm)=acc;
+		    P(cov2d,im,jm)=acc;
 		}
 	    }
 	}
@@ -446,8 +446,8 @@ static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, double scale, lon
     pcol *i0x2p=(pcol*)i0x2;
     for(int iy=0; iy<i0->ny-sy; iy++){
 	for(int ix=0; ix<i0->nx-sx; ix++){
-	    i0x1p[iy+sy][ix+sx]=IND(i0,ix,iy)*scale;
-	    i0x2p[iy][ix]=IND(i0,ix+sx,iy+sy)*scale;
+	    i0x1p[iy+sy][ix+sx]=P(i0,ix,iy)*scale;
+	    i0x2p[iy][ix]=P(i0,ix+sx,iy+sy)*scale;
 	}
     }
 }
@@ -465,7 +465,7 @@ dmat *derive_by_fft(const dmat *i0, double theta){
     long nx2=i0->nx/2;
     for(long iy=0; iy<i0->ny; iy++){
 	for(long ix=0; ix<i0->nx; ix++){
-	    IND(otf, ix, iy)*=-_Complex_I*((ix<nx2?ix:(ix-i0->nx))*sx+(iy<ny2?iy:(iy-i0->ny))*sy);
+	    P(otf, ix, iy)*=-_Complex_I*((ix<nx2?ix:(ix-i0->nx))*sx+(iy<ny2?iy:(iy-i0->ny))*sy);
 	}
     }
     cfft2(otf, 1);
@@ -515,20 +515,20 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     dmat *i0g=dnew(i0n,nmod);
     dmat *wt=dnew(i0n,1);
     /*Derivative is along r/a or x/y*/
-    IND(i0m,0,0)=1;
-    IND(i0m,1,1)=1;
+    P(i0m,0,0)=1;
+    P(i0m,1,1)=1;
     double theta=radgx?0:pixrot;
     if(mtchcrx){/*constrained x(radial) */
-	IND(i0m,0,mtchcrx)=cos(theta);
-	IND(i0m,1,mtchcrx)=sin(theta);
-	IND(i0m,0,mtchcrx+1)=-IND(i0m,0,mtchcrx);
-	IND(i0m,1,mtchcrx+1)=-IND(i0m,1,mtchcrx);
+	P(i0m,0,mtchcrx)=cos(theta);
+	P(i0m,1,mtchcrx)=sin(theta);
+	P(i0m,0,mtchcrx+1)=-P(i0m,0,mtchcrx);
+	P(i0m,1,mtchcrx+1)=-P(i0m,1,mtchcrx);
     }
     if(mtchcry){/*constrained y(azimuthal). */
-	IND(i0m,0,mtchcry)=-sin(theta);
-	IND(i0m,1,mtchcry)= cos(theta);
-	IND(i0m,0,mtchcry+1)=-IND(i0m,0,mtchcry);
-	IND(i0m,1,mtchcry+1)=-IND(i0m,1,mtchcry);
+	P(i0m,0,mtchcry)=-sin(theta);
+	P(i0m,1,mtchcry)= cos(theta);
+	P(i0m,0,mtchcry+1)=-P(i0m,0,mtchcry);
+	P(i0m,1,mtchcry+1)=-P(i0m,1,mtchcry);
     }
     dmat *gx2=0, *gy2=0;
     if(!gx){

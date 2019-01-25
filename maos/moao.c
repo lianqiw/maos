@@ -102,9 +102,9 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    const double *locy=recon->moao[imoao].aloc->p[0]->locy;
 	    for(long iloc=0; iloc<nloc; iloc++){
 		/*We don't want piston/tip/tilt on the mems. */
-		IND(pNW,iloc,0)=scl;/*piston; */
-		IND(pNW,iloc,1)=scl2*locx[iloc];/*tip */
-		IND(pNW,iloc,2)=scl2*locy[iloc];/*tilt */
+		P(pNW,iloc,0)=scl;/*piston; */
+		P(pNW,iloc,1)=scl2*locx[iloc];/*tip */
+		P(pNW,iloc,2)=scl2*locy[iloc];/*tilt */
 	    }
 	}
 	recon->moao[imoao].W0=dspref(recon->W0);
@@ -271,7 +271,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 	    }
 	    if(parms->save.dm){
-		zfarr_dmat(simu->save->dm_wfs[iwfs], simu->isim, dmmoao->p[0]);
+		zfarr_push(simu->save->dm_wfs[iwfs], simu->isim, dmmoao->p[0]);
 	    }
 	    dcellfree(rhsout);
 	    dmmoao->p[0]=NULL;
@@ -317,7 +317,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){
-		zfarr_dmat(simu->save->dm_evl[ievl], simu->isim, dmmoao->p[0]);
+		zfarr_push(simu->save->dm_evl[ievl], simu->isim, dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
 	    dmmoao->p[0]=NULL;

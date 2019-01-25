@@ -360,9 +360,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		    double rne_floor=2.4;
 		    double rne_dark=0.0037*coadd;
 		    //0.85 is a factor expected for newer detectors
-		    IND(rnefs,idtrat,ipowfs)=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
+		    P(rnefs,idtrat,ipowfs)=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
 		    info("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
-			  parms->skyc.fss[idtrat], IND(rnefs,idtrat,ipowfs));
+			  parms->skyc.fss[idtrat], P(rnefs,idtrat,ipowfs));
 		}
 	    }
 	}else if(fabs(parms->skyc.rne+2)<EPS){//older model.
@@ -374,8 +374,8 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		    int N=parms->skyc.pixpsa[ipowfs];
 		    double raw_frame_time=((0.00604*N+0.01033)*N+0.00528)*1e-3;
 		    double K=1./(raw_frame_time*fs);
-		    IND(rnefs,idtrat,ipowfs)=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
-		    info("%5.1f ",IND(rnefs,idtrat,ipowfs));
+		    P(rnefs,idtrat,ipowfs)=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
+		    info("%5.1f ",P(rnefs,idtrat,ipowfs));
 		}
 		info("\n");
 	    }

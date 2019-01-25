@@ -51,6 +51,10 @@ void maos_setup(const PARMS_T *parms){
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
     read_env();
+    if(parms->sim.closeloop==0 || parms->evl.tomo){
+	/*need to disable parallelizing the big loop. */
+	PARALLEL=0;
+    }
     if(parms->sim.skysim){
 	dirskysim="skysim";
 	mymkdir("%s",dirskysim);
@@ -147,6 +151,25 @@ void maos_setup(const PARMS_T *parms){
     */
     free_powfs_unused(parms, powfs);
     //free_recon_unused(parms, recon);
+    if(parms->evl.psfmean || parms->evl.psfhist){
+	/*compute diffraction limited PSF. Save to output directory.*/
+	dmat *iopdevl=dnew(aper->locs->nloc,1);
+	ccell *psf2s=0;
+	locfft_psf(&psf2s, aper->embed, iopdevl, parms->evl.psfsize, 0);
+	const int nwvl=parms->evl.nwvl;
+	dcell *evlpsfdl=dcellnew(nwvl,1);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
+	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl, parms->evl.psfisim-1);
+	}
+	ccellfree(psf2s);
+	writebin(evlpsfdl, "evlpsfdl.fits");
+	dcellfree(evlpsfdl);
+	dfree(iopdevl);
+    }
+    if(parms->sim.skysim){
+	save_skyc(powfs,recon,parms);
+    }
     toc2("Presimulation");
 }
 

@@ -97,7 +97,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		pixrot=srot[isa]; 
 	    }
 	    if(mtchadp){
-		long fwhm=dfwhm(IND(i0s,isa,ii0));
+		long fwhm=dfwhm(P(i0s,isa,ii0));
 		if(fwhm>4){
 		    crdisable=0;
 		}else{
@@ -113,31 +113,31 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    if(powfs[ipowfs].bkgrndc){
 		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
 	    }
-	    IND(mtche,isa,ii0)=mtch(&nea2, IND(i0s,isa,ii0),
-				    gxs?IND(gxs,isa,ii0):0, gys?IND(gys,isa,ii0):0, 
+	    P(mtche,isa,ii0)=mtch(&nea2, P(i0s,isa,ii0),
+				    gxs?P(gxs,isa,ii0):0, gys?P(gys,isa,ii0):0, 
 				    parms->powfs[ipowfs].qe,
 				    bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
 				    pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
 	    
-	    IND(i0sum,isa,ii0)=dsum(IND(i0s,isa,ii0));
-	    i0sumsum+=IND(i0sum,isa,ii0);
+	    P(i0sum,isa,ii0)=dsum(P(i0s,isa,ii0));
+	    i0sumsum+=P(i0sum,isa,ii0);
 
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
-	    if(IND(i0sum,isa,ii0)<i0thres || nea2->p[0]>nea2thres || nea2->p[3]>nea2thres){
+	    if(P(i0sum,isa,ii0)<i0thres || nea2->p[0]>nea2thres || nea2->p[3]>nea2thres){
 		//Signal level too low or error to high.
 		nea2->p[0]=nea2->p[3]=nea2thres;
 		nea2->p[1]=nea2->p[2]=0;
-		dset(IND(mtche,isa,ii0), 0);
+		dset(P(mtche,isa,ii0), 0);
 	    }
 	    if(parms->powfs[ipowfs].mtchcpl==0 
 	       && (!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx)){
 		/*remove coupling between r/a (x/y) measurements. */
 		nea2->p[1]=nea2->p[2]=0;
 	    }
-	    IND(psanea,isa,0)=nea2->p[0];
-	    IND(psanea,isa,1)=nea2->p[3];
-	    IND(psanea,isa,2)=nea2->p[1];
+	    P(psanea,isa,0)=nea2->p[0];
+	    P(psanea,isa,1)=nea2->p[3];
+	    P(psanea,isa,2)=nea2->p[1];
 	}/*isa  */
 	dfree(nea2);
 
@@ -167,8 +167,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    if(isa>0){
 			info("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n", 
 			      isa, powfs[ipowfs].srsa->p[illt]->p[isa], 
-			      sqrt(IND(psanea,isa,0))*206265000,
-			      sqrt(IND(psanea,isa,1))*206265000);
+			      sqrt(P(psanea,isa,0))*206265000,
+			      sqrt(P(psanea,isa,1))*206265000);
 		    }
 		}
 	    }
@@ -186,8 +186,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    info("sa%4d:%6.1fm",isa, locx);
 		    for(int ii0=0; ii0<ni0; ii0++){
 			info(" (%4.1f,%4.1f)", 
-			      sqrt(IND(sanea->p[ii0],isa,0))*206265000,
-			      sqrt(IND(sanea->p[ii0],isa,1))*206265000);
+			      sqrt(P(sanea->p[ii0],isa,0))*206265000,
+			      sqrt(P(sanea->p[ii0],isa,1))*206265000);
 		    }//for ii0
 		    info(" mas\n");
 		}

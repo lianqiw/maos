@@ -275,7 +275,7 @@ static dmat *calc_recon_error(const dmat *pgm,   /**<[in] the reconstructor*/
     dmat *res=dnew(mcc->nx+1,1);
     /*It is right for both ix, iy to stop at ib.*/
     for(int ib=0; ib<mcc->ny; ib++){
-	res->p[ib]=IND(var, ib, ib);
+	res->p[ib]=P(var, ib, ib);
 	res->p[mcc->ny]+=res->p[ib];//trace
 	if(res->p[ib]<0){
 	    res->p[ib]=fabs(res->p[ib]);
@@ -403,9 +403,9 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	for(int imod=simu->psds->nx; imod<nmod; imod++){
 	    memcpy(PCOL(pgain,imod), PCOL(pgain,0), sizeof(double)*ng);
 	}
-	IND(pres_ngs,idtrat,0)=res_ngs+res_ngsn;/*error due to signal and noise */
-	IND(pres_ngs,idtrat,1)=res_ngs;/*error due to signal */
-	IND(pres_ngs,idtrat,2)=res_ngsn;/*error due to noise propagation. */
+	P(pres_ngs,idtrat,0)=res_ngs+res_ngsn;/*error due to signal and noise */
+	P(pres_ngs,idtrat,1)=res_ngs;/*error due to signal */
+	P(pres_ngs,idtrat,2)=res_ngsn;/*error due to noise propagation. */
 
 	dmat *g_tt=dnew_ref(ng,1,PCOL(pgain,0));
 	double gain_n;
@@ -553,7 +553,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    dfree(res);
 #endif
 	    //toc("estimate");
-	    IND(pres_ngs,idtrat,0)=rms;
+	    P(pres_ngs,idtrat,0)=rms;
 	    if(parms->skyc.dbg){
 		kalman_write(aster->kalman[idtrat],"%s/aster%d_kalman_%d",dirsetup,aster->iaster,dtrat);
 	    }
@@ -597,15 +597,15 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	for(int idtrat=0; idtrat<(parms->skyc.multirate?1:ndtrat); idtrat++){
 	    /*should not add res_ws here since res_ngs already includes that.*/
 	    double wfv=aster[iaster].res_ngs->p[idtrat];
-	    IND(res,idtrat,iaster)=wfv;
+	    P(res,idtrat,iaster)=wfv;
 	    if(wfv<asterMinRes){
 		asterMinRes=wfv;
 		aster[iaster].mdtrat=idtrat;
 		aster[iaster].mresest=wfv;
 	    }
 	}
-	IND(imin,0,iaster)=asterMinRes;
-	IND(imin,1,iaster)=iaster;
+	P(imin,0,iaster)=asterMinRes;
+	P(imin,1,iaster)=iaster;
 	if(asterMinRes<fieldMinRes){
 	    master=iaster;
 	    fieldMinRes=asterMinRes;
@@ -618,14 +618,14 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 		    double thres2=MIN(asterMinRes+wvfMargin, maxerror);//threshold at high freq end
 		    /*Find upper and fieldMinRes good dtrats. */
 		    for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
-			if(IND(res,idtrat,iaster)<thres){
+			if(P(res,idtrat,iaster)<thres){
 			    aster[iaster].idtratmax=idtrat+1;
 			}else{
 			    break;
 			}
 		    }
 		    for(int idtrat=aster[iaster].mdtrat; idtrat>=0; idtrat--){
-			if(IND(res,idtrat,iaster)<thres2){
+			if(P(res,idtrat,iaster)<thres2){
 			    aster[iaster].idtratmin=idtrat;
 			}else{
 			    break;
@@ -650,9 +650,9 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 		  iaster, (int)parms->skyc.dtrats->p[aster[iaster].idtratmin],
 		  (int)parms->skyc.dtrats->p[aster[iaster].mdtrat],
 		  (int)parms->skyc.dtrats->p[aster[iaster].idtratmax-1], 
-		  sqrt(IND(res,aster[iaster].idtratmin,iaster))*1e9,
-		  sqrt(IND(res,aster[iaster].mdtrat,iaster))*1e9,
-		  sqrt(IND(res,aster[iaster].idtratmax-1,iaster))*1e9);
+		  sqrt(P(res,aster[iaster].idtratmin,iaster))*1e9,
+		  sqrt(P(res,aster[iaster].mdtrat,iaster))*1e9,
+		  sqrt(P(res,aster[iaster].idtratmax-1,iaster))*1e9);
 	}
     }
     if(parms->skyc.dbgsky>-1){
@@ -675,8 +675,8 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	}
 	qsort(imin->p, naster, 2*sizeof(double),(int(*)(const void*,const void*))sortfun);
 	for(int jaster=0; jaster<taster; jaster++){
-	    if(IND(imin,0,jaster)>thres) continue;
-	    int iaster=(int)IND(imin,1,jaster);
+	    if(P(imin,0,jaster)>thres) continue;
+	    int iaster=(int)P(imin,1,jaster);
 	    if(aster[iaster].mdtrat==-1) continue; 
 	    count++;
 	    aster[iaster].use=1;/*mark as valid. */

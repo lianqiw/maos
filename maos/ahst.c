@@ -56,9 +56,9 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
     dmat *aMCC=aper->mcc;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	dmat *MCC=mcc->p[ievl]=dnew(nmod,nmod);
-	IND(MCC,0,0)=IND(aMCC,1,1);
-	IND(MCC,1,1)=IND(aMCC,2,2);
-	IND(MCC,0,1)=IND(MCC,1,0)=IND(aMCC,2,1);
+	P(MCC,0,0)=P(aMCC,1,1);
+	P(MCC,1,1)=P(aMCC,2,2);
+	P(MCC,0,1)=P(MCC,1,0)=P(aMCC,2,1);
     }
     
     if(ngsmod->nmod>2){
@@ -114,7 +114,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 		for(int imod=jmod; imod<nmod; imod++){
 		    if(imod<2 && jmod<2) continue;
 		    double tmp=dotdbl(mod[imod],mod[jmod],amp,nloc);
-		    IND(MCC,imod,jmod)=IND(MCC,jmod,imod)=tmp;
+		    P(MCC,imod,jmod)=P(MCC,jmod,imod)=tmp;
 		}
 	    }
 	}//for(ievl)
@@ -206,8 +206,8 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     WHm->p[0]=dnew(nloc,nmod);
     dmat *mod=WHm->p[0];
     for(int iloc=0; iloc<nloc; iloc++){
-	IND(mod,iloc,0)=x[iloc]*amp[iloc];
-	IND(mod,iloc,1)=y[iloc]*amp[iloc];
+	P(mod,iloc,0)=x[iloc]*amp[iloc];
+	P(mod,iloc,1)=y[iloc]*amp[iloc];
     }
     const double MCC_fcp=ngsmod->aper_fcp;
     /*dc component of the focus mod. subtract during evaluation. */
@@ -225,26 +225,26 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		double yy=y[iloc]*y[iloc];
 		if(ngsmod->indps){
 		    if(ngsmod->ahstfocus){//no focus mode at ps
-			IND(mod,iloc,ngsmod->indps)=amp[iloc]
+			P(mod,iloc,ngsmod->indps)=amp[iloc]
 			    *(-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
 		    }else{
-			IND(mod,iloc,ngsmod->indps)=amp[iloc]
+			P(mod,iloc,ngsmod->indps)=amp[iloc]
 			    *(scale1*(xx+yy-MCC_fcp)
 			      -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
 		    }
-		    IND(mod,iloc,ngsmod->indps+1)=amp[iloc]
+		    P(mod,iloc,ngsmod->indps+1)=amp[iloc]
 			*(scale1*(xx-yy)
 			  -2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]));
-		    IND(mod,iloc,ngsmod->indps+2)=amp[iloc]
+		    P(mod,iloc,ngsmod->indps+2)=amp[iloc]
 			*(scale1*(xy)
 			  -ht*scale*(thetay*x[iloc]+thetax*y[iloc]));
 		}
 		if(ngsmod->indastig){
-		    IND(mod,iloc,ngsmod->indastig)=amp[iloc]*(xx-yy);
-		    IND(mod,iloc,ngsmod->indastig+1)=amp[iloc]*(xy);
+		    P(mod,iloc,ngsmod->indastig)=amp[iloc]*(xx-yy);
+		    P(mod,iloc,ngsmod->indastig+1)=amp[iloc]*(xy);
 		}
 		if(ngsmod->indfocus){ /*remove piston in focus */
-		    IND(mod,iloc,ngsmod->indfocus)=amp[iloc]*(xx+yy-MCC_fcp);
+		    P(mod,iloc,ngsmod->indfocus)=amp[iloc]*(xx+yy-MCC_fcp);
 		}
 	    }
 	}
@@ -305,7 +305,7 @@ static dcell *ngsmod_dm(const PARMS_T *parms, RECON_T *recon){
 	for(int idm=0; idm<ndm; idm++){
 	    double piston=dsum(dmt->p[idm])/aloc[idm]->nloc;
 	    for(long iact=0; iact<aloc[idm]->nloc; iact++){
-		IND(mod->p[idm], iact, imod)=IND(dmt->p[idm], iact)-piston;
+		P(mod->p[idm], iact, imod)=P(dmt->p[idm], iact)-piston;
 	    }
 	}
     }
@@ -388,15 +388,15 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     dmat *MCC=ngsmod->MCC;
     ngsmod->IMCC_TT=dnew(2,2);
-    ngsmod->IMCC_TT->p[0]=IND(MCC,0,0);
-    ngsmod->IMCC_TT->p[1]=IND(MCC,1,0);
-    ngsmod->IMCC_TT->p[2]=IND(MCC,0,1);
-    ngsmod->IMCC_TT->p[3]=IND(MCC,1,1);
+    ngsmod->IMCC_TT->p[0]=P(MCC,0,0);
+    ngsmod->IMCC_TT->p[1]=P(MCC,1,0);
+    ngsmod->IMCC_TT->p[2]=P(MCC,0,1);
+    ngsmod->IMCC_TT->p[3]=P(MCC,1,1);
     dinvspd_inplace(ngsmod->IMCC_TT);
     if(ngsmod->indfocus){
 	ngsmod->IMCC_F=dnew(ngsmod->nmod, ngsmod->nmod);
 	const int indfocus=ngsmod->indfocus;
-	IND(ngsmod->IMCC_F, indfocus, indfocus)=1./IND(ngsmod->MCC, indfocus, indfocus);
+	P(ngsmod->IMCC_F, indfocus, indfocus)=1./P(ngsmod->MCC, indfocus, indfocus);
     }
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_dm(parms,recon);
@@ -426,7 +426,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(parms->powfs[ipowfs].type==0){//shwfs
-			dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
+			dspmm(PP(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
 		    }else{//pwfs.
 			double  ht = parms->dm[idm].ht-parms->powfs[ipowfs].hc;
 			double  scale=1. - ht/parms->wfs[iwfs].hs;
@@ -435,8 +435,8 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 			dispy=parms->wfsr[iwfs].thetay*ht;
 			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 
 					    parms->misreg.dm2wfs[iwfs+idm*parms->nwfs],
-					    IND(ngsmod->Modes, idm), 0, dispx, dispy, scale);
-			dadd(PIND(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
+					    P(ngsmod->Modes, idm), 0, dispx, dispy, scale);
+			dadd(PP(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
 		    }
 		}
 	    }
@@ -522,11 +522,11 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, l
     dcell *GM2=dcellnew(GM->nx, GM->ny);
     int nmod=0, ntt=0, nttf=0;
     for(int iwfs=0; iwfs<GM->nx; iwfs++){
-	if((!mask || IND(mask, iwfs)) && IND(GM, iwfs) && IND(saneai, iwfs, iwfs)->x[0]>0){
+	if((!mask || P(mask, iwfs)) && P(GM, iwfs) && P(saneai, iwfs, iwfs)->x[0]>0){
 	    info(" %d", iwfs);
-	    IND(GM2, iwfs)=ddup(IND(GM, iwfs));
-	    nmod=IND(GM2, iwfs)->ny;
-	    int ng=IND(GM2, iwfs)->nx;
+	    P(GM2, iwfs)=ddup(P(GM, iwfs));
+	    nmod=P(GM2, iwfs)->ny;
+	    int ng=P(GM2, iwfs)->nx;
 	    if(ng>=8){//TTF OIWFS
 		nttf++;
 	    }else if(ng==2){
@@ -569,11 +569,11 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, l
     }
 			
     for(int iwfs=0; iwfs<GM->nx; iwfs++){
-	if(IND(GM2, iwfs)){
+	if(P(GM2, iwfs)){
 	    for(int imod=0; imod<nmod; imod++){
-		if(!IND(modvalid, imod)){
-		    int ng=IND(GM2, iwfs)->nx;
-		    memset(PCOL(IND(GM2, iwfs), imod), 0, ng*sizeof(double));
+		if(!P(modvalid, imod)){
+		    int ng=P(GM2, iwfs)->nx;
+		    memset(PCOL(P(GM2, iwfs), imod), 0, ng*sizeof(double));
 		}
 	    }
 	}
@@ -605,8 +605,8 @@ void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon){
 	    lmat *mask=lnew(nwfsr, 1);
 	    for(int iwfsr=0; iwfsr<nwfsr; iwfsr++){
 		int ipowfs=parms->wfsr[iwfsr].powfs;
-		if(parms->powfs[ipowfs].dtrat == parms->sim.dtrat_lo2 && IND(ngsmod->GM, iwfsr)){
-		    IND(mask, iwfsr)=1;
+		if(parms->powfs[ipowfs].dtrat == parms->sim.dtrat_lo2 && P(ngsmod->GM, iwfsr)){
+		    P(mask, iwfsr)=1;
 		}
 	    }
 	    ngsmod->Rngs->p[1]=inv_gm(ngsmod->GM, recon->saneai, mask, &ngsmod->modvalid);

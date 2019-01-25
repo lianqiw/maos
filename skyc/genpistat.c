@@ -126,7 +126,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		    double wvl=parms->maos.wvl[iwvl];
 		    for(long isa=0; isa<nsa; isa++){
 			//first compute PSF from WVF and compute CoG
-			ccp(&wvfc, IND(wvfout,isa,iwvl));
+			ccp(&wvfc, P(wvfout,isa,iwvl));
 			cembedc(wvf,wvfc,0,C_FULL);
 			cfft2(wvf,-1);
 			cabs22d(&psf, 0, wvf, 1);//peak in corner.
@@ -137,12 +137,12 @@ static void calc_pistat(GENPISTAT_S *data){
 			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax, 0);
 			grad[0]*=dtheta[iwvl];//convert to Radian
 			grad[1]*=dtheta[iwvl];
-			IND(pphygrad,isa,istep)+=grad[0]*nwvli;//record the value
-			IND(pphygrad,isa+nsa,istep)+=grad[1]*nwvli;
+			P(pphygrad,isa,istep)+=grad[0]*nwvli;//record the value
+			P(pphygrad,isa+nsa,istep)+=grad[1]*nwvli;
 
 			if(istep>=avgstart){
-			    IND(pgmean,0,isa)+=grad[0];//record the average
-			    IND(pgmean,1,isa)+=grad[1];
+			    P(pgmean,0,isa)+=grad[0];//record the average
+			    P(pgmean,1,isa)+=grad[1];
 			    //Then remove the CoG from the WVF and accumulate PSF.
 			    mapply->p[0]=-grad[0];
 			    mapply->p[1]=-grad[1];
@@ -163,7 +163,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
 			    cembedc(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
-			    cabs22d(PIND(ppistat,isa,iwvl), 1, wvf, 1);
+			    cabs22d(PP(ppistat,isa,iwvl), 1, wvf, 1);
 			}
 		    }
 		    
@@ -192,7 +192,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		    psf=pistat->p[i];//peak in corner
 		    ccpd(&otf, psf);
 		    cfft2(otf,-1);//turn to otf. peak in corner
-		    ctilt(otf,IND(pgmean,0,isa)/dtheta[iwvl],IND(pgmean,1,isa)/dtheta[iwvl],0);
+		    ctilt(otf,P(pgmean,0,isa)/dtheta[iwvl],P(pgmean,1,isa)/dtheta[iwvl],0);
 		    cfft2i(otf,1);//turn to psf, peak in corner
 		    creal2d(&psf,0,otf,1);
 		}
@@ -414,8 +414,8 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			/*Assume each WVL has same weighting*/
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 			    writebin(avgpi, "avgpi");
-			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], IND(pavgpi,isa,iwvl), powfs[ipowfs].dtf+iwvl);
-			    ccpd(&otf1->p[isa+iwvl*nsa], IND(pavgpi,isa,iwvl));
+			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], P(pavgpi,isa,iwvl), powfs[ipowfs].dtf+iwvl);
+			    ccpd(&otf1->p[isa+iwvl*nsa], P(pavgpi,isa,iwvl));
 			    cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
 			}
 		    }

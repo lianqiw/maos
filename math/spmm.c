@@ -142,8 +142,8 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
 
 #define no_conj(A) (A)
 #define do_conj(A) conj(A)
-#define no_trans(A,i,j) IND(A,i,j)
-#define do_trans(A,i,j) IND(A,j,i)
+#define no_trans(A,i,j) P(A,i,j)
+#define do_trans(A,i,j) P(A,j,i)
 #define LOOP_NORMA(py, yny,  conjA, px, conjx)				\
 	for(long icol=0; icol<A->ny; icol++){				\
 	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
@@ -421,14 +421,14 @@ void X(celladdI)(void *A_, T alpha){
     cell *A=cell_cast(A_);
     assert(A->nx==A->ny);
     for(int ii=0; ii<A->ny; ii++){
-	if(!IND(A, ii, ii)){
+	if(!P(A, ii, ii)){
 	    continue;
-	}else if(ismat(IND(A, ii, ii))){
-	    X(addI)(X(mat_cast)(IND(A,ii,ii)), alpha);
-	}else if(issp(IND(A, ii, ii))){
-	    X(spaddI)(X(sp_cast)(IND(A,ii,ii)),alpha);
+	}else if(ismat(P(A, ii, ii))){
+	    X(addI)(X(mat_cast)(P(A,ii,ii)), alpha);
+	}else if(issp(P(A, ii, ii))){
+	    X(spaddI)(X(sp_cast)(P(A,ii,ii)),alpha);
 	}else{
-	    error("Invalid id=%u", IND(A,ii,ii)->id);
+	    error("Invalid id=%u", P(A,ii,ii)->id);
 	}
     }
 }
@@ -523,13 +523,13 @@ X(mat)* X(cell2m)(const void *A_){
 	for(long icol=0; icol<nys[iy]; icol++){
 	    long kr=0;
 	    for(long ix=0; ix<A->nx; ix++){
-		if(!isempty(IND(A,ix,iy))){
+		if(!isempty(P(A,ix,iy))){
 		    T *pout=out->p+((icol+jcol)*nx+kr);
-		    if(ismat(IND(A,ix,iy))){
-			memcpy(pout, ((X(mat*))IND(A,ix,iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));
-		    }else if(issp(IND(A, ix, iy))){
+		    if(ismat(P(A,ix,iy))){
+			memcpy(pout, ((X(mat*))P(A,ix,iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));
+		    }else if(issp(P(A, ix, iy))){
 			//convert sparse col to full
-			X(sp*)Asp=(X(sp*))IND(A,ix,iy);
+			X(sp*)Asp=(X(sp*))P(A,ix,iy);
 			for(long j=Asp->p[icol]; j<Asp->p[icol+1]; j++){
 			    pout[Asp->i[j]]=Asp->x[j];
 			}			

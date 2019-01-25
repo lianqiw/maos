@@ -101,18 +101,18 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     if(!*xout){
 	*xout=dcellnew(A->M->nx, xin->ny);
     }
-    if(IND(A->M, xb, yb)->id==M_DBL){
-	dmm(&(*xout)->p[xb], 1, dmat_cast(IND(A->M, xb, yb)), xin->p[yb], "nn", alpha);
+    if(P(A->M, xb, yb)->id==M_DBL){
+	dmm(&(*xout)->p[xb], 1, dmat_cast(P(A->M, xb, yb)), xin->p[yb], "nn", alpha);
     }else{
-	dspmm(&(*xout)->p[xb], dsp_cast(IND(A->M, xb, yb)), xin->p[yb], "nn", alpha);
+	dspmm(&(*xout)->p[xb], dsp_cast(P(A->M, xb, yb)), xin->p[yb], "nn", alpha);
     }
     if(A->V && A->U){
 	dcell*  AV=A->V;
 	dcell*  AU=A->U;
 	for(int jb=0; jb<A->U->ny; jb++){
 	    dmat *tmp=NULL;
-	    dmm(&tmp, 0, IND(AV,yb,jb), xin->p[yb], "tn", -1);
-	    dmm(&(*xout)->p[xb], 1, IND(AU,xb,jb), tmp, "nn", alpha);
+	    dmm(&tmp, 0, P(AV,yb,jb), xin->p[yb], "tn", -1);
+	    dmm(&(*xout)->p[xb], 1, P(AU,xb,jb), tmp, "nn", alpha);
 	    dfree(tmp);
 	}
     }

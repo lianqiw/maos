@@ -35,7 +35,7 @@ typedef struct cupowfs_t{
     cupts_t pts;   /**<location of lower left OPD point in each sa*/
     culoc_t loc;  /**<location of OPD points. for reconstruction purpose only.*/
     culoc_t saloc;
-    cuarray<culoc_t> msaloc;/**<Mishaped saloc, for pywfs.*/
+    Array<culoc_t> msaloc;/**<Mishaped saloc, for pywfs.*/
     int **embed;       /**<embed for field stop computation*/
     int *nembed;       /**<embed for field stop computation*/
     curcell fieldstop;/**<*mask for field stop computation*/
@@ -64,16 +64,16 @@ public:
 class cuwfs_t{//one for each WFS.
 public:
     stream_t stream;
-    cuarray<stream_t> streams;
+    Array<stream_t> streams;
     cupowfs_t *powfs;
-    cuarray<culoc_t> loc_dm;  /**<Grid for ray tracing from DM to WFS*/
+    Array<culoc_t> loc_dm;  /**<Grid for ray tracing from DM to WFS*/
     culoc_t loc_tel;  /**<Grid for ray tracing from Telescope to WFS*/
     cusp GS0;         /**<For gtilt. is GS0t in col major */
     curmat imcc;     /**<size is 9*nsa*/
     curmat neasim;     /**<The noise equivalent angles for each subaperture.*/
     curmat  amp;        /**<Amplitude map*/
     cufftHandle plan1, plan2, plan3,plan_fs;   /**<FFTW plan if any*/
-    cuarray<cudtf_t> dtf;       /**<array for each wvl.*/
+    Array<cudtf_t> dtf;       /**<array for each wvl.*/
     curmat qe;        /**<See powfs.qe*/
     curmat srot;      /**<angle to rotate PSF/OTF*/
     curmat mtche;     /**<matched filter gradient operator.*/
@@ -119,7 +119,7 @@ public:
     curmat isum;//stores sum of psf for all subapertures at each frame in GPU.
 
     cufftHandle plan_py;
-    cuarray<cufftHandle> plan_pys;
+    Array<cufftHandle> plan_pys;
     cuccell pyotfs;
     curcell pypsfs;
     cuwfs_t():powfs(0),dtf(0),msa(0),custatb(0),custatt(0),lltg(0),i0sumsum(0){

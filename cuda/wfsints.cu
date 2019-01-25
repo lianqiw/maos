@@ -362,8 +362,8 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp *restrict otf, int nx, int
 */
 void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     TIC;tic;
-    cuarray<cupowfs_t>&cupowfs=cudata->powfs;
-    cuarray<cuwfs_t>&cuwfs=cudata->wfs;
+    Array<cupowfs_t>&cupowfs=cudata->powfs;
+    Array<cuwfs_t>&cuwfs=cudata->wfs;
     stream_t &stream=cuwfs[iwfs].stream;
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
@@ -382,15 +382,15 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
     const Real pixthetax=parms->powfs[ipowfs].radpixtheta;
     const Real pixthetay=parms->powfs[ipowfs].pixtheta;
     const Real siglev=parms->wfs[iwfs].siglevsim;
-    const Real *srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot.P():NULL;
+    const Real *srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot():NULL;
     const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot 
 			 && parms->powfs[ipowfs].radpix);
-    const Real *srot2=multi_dtf?cuwfs[iwfs].srot.P():NULL;
+    const Real *srot2=multi_dtf?cuwfs[iwfs].srot():NULL;
     const Real *pixoffx=0, *pixoffy=0;
     if(cupowfs[ipowfs].pixoffx){
 	int icol=cupowfs[ipowfs].pixoffx>1?wfsind:0;
-	pixoffx=cupowfs[ipowfs].pixoffx.P()+cupowfs[ipowfs].pixoffx.Nx()*icol;
-	pixoffy=cupowfs[ipowfs].pixoffy.P()+cupowfs[ipowfs].pixoffy.Nx()*icol;
+	pixoffx=cupowfs[ipowfs].pixoffx()+cupowfs[ipowfs].pixoffx.Nx()*icol;
+	pixoffy=cupowfs[ipowfs].pixoffy()+cupowfs[ipowfs].pixoffy.Nx()*icol;
     }
     const int nwvl=parms->powfs[ipowfs].nwvl;
     curcell &ints=cuwfs[iwfs].ints;
@@ -437,7 +437,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 		cuztilt(lltg, lltopd, 1, 
 			cupowfs[ipowfs].llt.pts.Dxsa(), 
 			cupowfs[ipowfs].llt.pts.Nxsa(), cuwfs[iwfs].lltimcc,
-			cupowfs[ipowfs].llt.pts, cuwfs[iwfs].lltamp, 1.f, stream);
+			cupowfs[ipowfs].llt.pts(), cuwfs[iwfs].lltamp, 1.f, stream);
 		CUDA_SYNC_STREAM;
 		simu->fsmreal->p[iwfs]->p[0]=-lltg[0];
 		simu->fsmreal->p[iwfs]->p[1]=-lltg[1];
@@ -470,7 +470,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 	    lotfc=lwvf;
 	}
 	if(parms->save.wfsopd->p[iwfs]){
-	    zfarr_cur(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
+	    zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
 	}
     }/*if has llt */
 
@@ -493,7 +493,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
     }
 
     if(pistatout){
-	psfstat=cuwfs[iwfs].psfstat.P();
+	psfstat=cuwfs[iwfs].psfstat();
     }
     /* Now begin physical optics  */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -528,7 +528,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 		cudaMemsetAsync(psf, 0, sizeof(Comp)*ksa*notf*notf, stream);
 	    }
 	    sa_embed_wvf_do<<<ksa, dim3(16,16),0,stream>>>
-		(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp.P()+isa*nx*nx, wvl, nx, nwvf);
+		(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp()+isa*nx*nx, wvl, nx, nwvf);
 	    ctoc("embed");
 	    /* turn to complex psf, peak in corner */
 	    CUFFT(cuwfs[iwfs].plan1, wvf, CUFFT_FORWARD);
@@ -559,7 +559,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 				    MEMCPY_D2D, stream);
 		    if(parms->powfs[ipowfs].pistatout){
 			sa_add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
-			    (psfstat, notf,notf, gradref.P()+isa, gradref.P()+nsa+isa, -1.f/dtheta);
+			    (psfstat, notf,notf, gradref()+isa, gradref()+nsa+isa, -1.f/dtheta);
 		    }
 		    CUFFT(cuwfs[iwfs].plan2, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/
 		    if(parms->sim.skysim){/*want peak in corner*/
@@ -655,6 +655,6 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 	}/*for isa block loop */
     }/*for iwvl */
     if(parms->powfs[ipowfs].psfout){
-	zfarr_cuccell(simu->save->wfspsfout[iwfs], isim, wvfout, stream);
+	zfarr_push(simu->save->wfspsfout[iwfs], isim, wvfout, stream);
     }
 }

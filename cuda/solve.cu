@@ -50,10 +50,10 @@ void cumuv_t::Forward(curcell &out, Real beta, const curcell &in, Real alpha, st
     }else{
 	curscale(out.M(), beta, stream);
     }
-    cuspmul(out.M().P(), M, in.M().P(), 1, 'n', alpha, stream);
+    cuspmul(out.M()(), M, in.M()(), 1, 'n', alpha, stream);
     if(U && V){
-	curmv(Vx.P(), 0, V, in.M().P(), 't', 1, stream);
-	curmv(out.M().P(), 1, U, Vx.P(), 'n', -alpha, stream);
+	curmv(Vx(), 0, V, in.M()(), 't', 1, stream);
+	curmv(out.M()(), 1, U, Vx(), 'n', -alpha, stream);
     }
 }
 void cumuv_t::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
@@ -65,10 +65,10 @@ void cumuv_t::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stre
     }
     
     curscale(out.M(), beta, stream);
-    cuspmul(out.M().P(), M, in.M().P(), 1, 't', alpha, stream);
+    cuspmul(out.M()(), M, in.M()(), 1, 't', alpha, stream);
     if(U && V){
-	curmv(Vx.P(), 0, U, in.M().P(), 't', 1, stream);
-	curmv(out.M().P(), 1, V, Vx.P(), 'n', -alpha, stream);
+	curmv(Vx(), 0, U, in.M()(), 't', 1, stream);
+	curmv(out.M()(), 1, V, Vx(), 'n', -alpha, stream);
     }
 }
 void cumuv_t::Init(const MUV_T *in){
@@ -114,7 +114,7 @@ cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp){
 Real cusolve_cbs::solve(curcell &xout, const curcell &xin, stream_t &stream){
     if(!xout) xout=xin.New();
     if(Cl.Type()==SP_CSC){
-	chol_solve(xout.M().P(), xin.M().P(), stream);
+	chol_solve(xout.M()(), xin.M()(), stream);
     }else{
 	error("To implemente\n");
     }
@@ -122,8 +122,8 @@ Real cusolve_cbs::solve(curcell &xout, const curcell &xin, stream_t &stream){
 	if(!Vr){
 	    Vr=curmat(Vp.Ny(), 1);
 	}
-	curmv(Vr.P(), 0, Vp, xin.M().P(), 't', -1, stream);
-	curmv(xout.M().P(), 1, Up, Vr.P(), 'n', 1, stream);
+	curmv(Vr(), 0, Vp, xin.M()(), 't', -1, stream);
+	curmv(xout.M()(), 1, Up, Vr(), 'n', 1, stream);
     }
     return 0;
 }
@@ -170,11 +170,11 @@ void cusolve_cbs::chol_solve(Real *out, const Real *in, stream_t &stream){
     if(!y){
 	y=curmat(Cl.Nx(), 1);
     }
-    perm_f_do<<<DIM(n, 256),0,stream>>>(y.P(), in, Cp.P(), n);
+    perm_f_do<<<DIM(n, 256),0,stream>>>(y(), in, Cp(), n);
     //only 1 block for synchronization. //todo: improve the implementation.
     const int NTH=256;
-    cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(Real),stream>>>(y.P(), Cl.Px(), Cl.Pp(), Cl.Pi(), n); 
-    perm_i_do<<<DIM(n, 256),0,stream>>>(out, y.P(), Cp.P(), n);
+    cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(Real),stream>>>(y(), Cl.Px(), Cl.Pp(), Cl.Pi(), n); 
+    perm_i_do<<<DIM(n, 256),0,stream>>>(out, y(), Cp(), n);
     cudaStreamSynchronize(stream);
 }
 }

@@ -43,12 +43,12 @@ void curcellinn_add(Real *restrict res, const curcell &A, const curcell &B, cuda
     //cudaMemsetAsync(res, 0,sizeof(Real), stream);
     if(A.M() && B.M()){
 	const int n=A.M().N();
-	inn_wrap(res, A.M().P(), B.M().P(), n, stream);
+	inn_wrap(res, A.M()(), B.M()(), n, stream);
     }else{
 	for(int i=0; i<A.N(); i++){
 	    const curmat &a=A[i];
 	    const curmat &b=B[i];
-	    inn_wrap(res,a.P(),b.P(),a.N(),stream);
+	    inn_wrap(res,a(),b(),a.N(),stream);
 	}
     }
 }
@@ -147,7 +147,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 	    (*Amul)(r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */ 
 	    RECORD(3);
 	    if(Mmul){/*z0=M*r0*/
-		if(z0.P()==r0.P()) z0=0;
+		if(z0()==r0()) z0=0;
 		(*Mmul)(z0,r0,stream);
 	    }else{
 		z0=r0;

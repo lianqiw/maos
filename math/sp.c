@@ -420,7 +420,7 @@ T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x){
 	    /*PSX(cell)* Ap=A; */
 	    for(int iy=0; iy<A->ny; iy++){
 		for(int ix=0; ix<A->nx; ix++){
-		    res+=X(spwdinn)(y->p[ix], IND(A,ix,iy), x->p[iy]);
+		    res+=X(spwdinn)(y->p[ix], P(A,ix,iy), x->p[iy]);
 		}
 	    }
 	}else{
@@ -453,7 +453,7 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
 		    irow=A->i[ix];
 		    if(irow>=nx)
 			error("invalid row:%ld, %ld",irow,nx);
-		    IND(out,irow,icol)+=alpha*A->x[ix];
+		    P(out,irow,icol)+=alpha*A->x[ix];
 		}
 	    }
 	}else{
@@ -473,7 +473,7 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
 		    irow=A->i[ix];
 		    if(irow>=nx)
 			error("invalid row:%ld, %ld",irow,nx);
-		    IND(out,icol,irow)+=alpha*A->x[ix];
+		    P(out,icol,irow)+=alpha*A->x[ix];
 		}
 	    }
 	}else{
@@ -493,7 +493,7 @@ X(sp) *X(2sp)(X(mat)*A, R thres){
     for(long icol=0; icol<A->ny; icol++){
 	out->p[icol]=count;
 	for(long irow=0; irow<A->nx; irow++){
-	    T val=IND(A, irow, icol);
+	    T val=P(A, irow, icol);
 	    if(fabs(val)>thres){
 		out->i[count]=irow;
 		out->x[count]=val;
@@ -624,9 +624,9 @@ void X(spcellfull)(X(cell)**out0, const X(spcell)*A, const char trans, const T a
     for(int iy=0; iy<A->ny; iy++){
 	for(int ix=0; ix<A->nx; ix++){
 	    if(trans=='n'){
-		X(spfull)(PIND((*out0), ix, iy), IND(A, ix, iy), trans, alpha);
+		X(spfull)(PP((*out0), ix, iy), P(A, ix, iy), trans, alpha);
 	    }else{
-		X(spfull)(PIND((*out0), iy, ix), IND(A, ix, iy), trans, alpha);
+		X(spfull)(PP((*out0), iy, ix), P(A, ix, iy), trans, alpha);
 	    }
 	}
     }
@@ -708,18 +708,18 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
     long nny[A->ny];
     for(long ix=0; ix<A->nx; ix++){
 	for(long iy=0; iy<A->ny; iy++){
-	    if(IND(A,ix,iy)) {
-		nnx[ix]=IND(A,ix,iy)->nx;
-		nx+=IND(A,ix,iy)->nx;
+	    if(P(A,ix,iy)) {
+		nnx[ix]=P(A,ix,iy)->nx;
+		nx+=P(A,ix,iy)->nx;
 		break;
 	    }
 	}
     }
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
-	    if(IND(A,ix,iy)) {
-		nny[iy]=IND(A,ix,iy)->ny;
-		ny+=IND(A,ix,iy)->ny;
+	    if(P(A,ix,iy)) {
+		nny[iy]=P(A,ix,iy)->ny;
+		ny+=P(A,ix,iy)->ny;
 		break;
 	    }
 	}
@@ -737,11 +737,11 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
 	    out->p[jcol+icol]=count;
 	    long kr=0;
 	    for(long ix=0; ix<A->nx; ix++){
-		if(IND(A,ix,iy)){
-		    for(long ir=IND(A,ix,iy)->p[icol]; 
-			ir<IND(A,ix,iy)->p[icol+1]; ir++){
-			out->x[count]=IND(A,ix,iy)->x[ir];
-			out->i[count]=IND(A,ix,iy)->i[ir]+kr;
+		if(P(A,ix,iy)){
+		    for(long ir=P(A,ix,iy)->p[icol]; 
+			ir<P(A,ix,iy)->p[icol+1]; ir++){
+			out->x[count]=P(A,ix,iy)->x[ir];
+			out->i[count]=P(A,ix,iy)->i[ir]+kr;
 			count++;
 		    }
 		}
@@ -936,8 +936,8 @@ X(sp) *X(spconvolvop)(X(mat) *A){
     X(mat)* PA=A;
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
-	    if(fabs(IND(PA,ix,iy))>0){
-		vals[count]=IND(PA,ix,iy);
+	    if(fabs(P(PA,ix,iy))>0){
+		vals[count]=P(PA,ix,iy);
 		sepx[count]=ix;
 		sepy[count]=iy;
 		count++;
@@ -1062,7 +1062,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
 		    dbg("solving block %ld\n",ib);
 		    error("The array is not block diagonal matrix or not calculated properly.\n");
 		}
-		IND(pbk,ind,icol-is)=A->x[irow];
+		P(pbk,ind,icol-is)=A->x[irow];
 	    }
 	}
 	X(inv_inplace)(bk);
@@ -1070,7 +1070,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
 	    B->p[icol]=icol*bs;
 	    for(long irow=0; irow<bs; irow++){
 		B->i[B->p[icol]+irow]=irow+is;
-		B->x[B->p[icol]+irow]=IND(pbk,irow,icol-is);
+		B->x[B->p[icol]+irow]=P(pbk,irow,icol-is);
 	    }
 	}
     }
@@ -1102,7 +1102,7 @@ X(cell) *X(spblockextract)(const X(sp) *A, long bs){
 		    dbg("solving block %ld\n",ib);
 		    error("The array is not block diagonal matrix or not calculated property\n");
 		}
-		IND(pbk,ind,icol-is)=A->x[irow];
+		P(pbk,ind,icol-is)=A->x[irow];
 	    }
 	}
     }

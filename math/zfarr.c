@@ -67,7 +67,7 @@ void zfarr_push(zfarr *ca, int i, const void *p){
     writedata_by_id(ca->fp, p, id); 
     ca->cur++;
 }
-
+/*
 #define zfarr_cell(type)					\
     void zfarr_##type##cell(zfarr *ca, int i, const type##cell *A){ \
 	zfarr_push(ca, i, A);}					\
@@ -83,7 +83,7 @@ zfarr_cell(z);
 zfarr_mat(d);
 zfarr_mat(s);
 zfarr_mat(c);
-zfarr_mat(z);
+zfarr_mat(z);*/
 
 /**
    Close the zfarr.

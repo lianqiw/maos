@@ -108,7 +108,7 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    for(int isa=0; isa<ndtf; isa++){
 		if(multi_dtf){
-		    theta=INDR(srot, iwfs, 1)->p[isa];
+		    theta=PR(srot, iwfs, 1)->p[isa];
 		    ct=cos(theta);
 		    st=sin(theta);
 		}
@@ -120,9 +120,9 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 			double ir=ct*jx+st*jy;
 			double ia=-st*jx+ct*jy;
 			//Pixel function
-			IND(pn,ix,iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
+			P(pn,ix,iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
 			if(do_blur){//Charge diffusion.
-			    IND(pn,ix,iy)*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
+			    P(pn,ix,iy)*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
 			}
 		    }
 		}
@@ -134,11 +134,11 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 		cfft2(nominal,1);
 		//cancel FFT scaling effect.
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
-		ccp(PIND(nominals,isa,iwfs), nominal);
+		ccp(PP(nominals,isa,iwfs), nominal);
 		//Coordinate of pixels
 		if(pixoffx){
-		    double dx=INDR(pixoffx, isa, iwfs)*pixthetax;
-		    double dy=INDR(pixoffy, isa, iwfs)*pixthetay;
+		    double dx=PR(pixoffx, isa, iwfs)*pixthetax;
+		    double dy=PR(pixoffy, isa, iwfs)*pixthetay;
 		    /*if(radpix){//Rotate from x/y to r/a coordinate.
 			double dx2=dx*ct+dy*st;
 			dy=-dx*st+dy*ct;
@@ -148,7 +148,7 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 		    pyo2=pyo-dy;
 		}
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo2,pyo2,theta);
-		IND(sis,isa,iwfs)=mkh(loc_psf,loc_ccd,0,0,1);
+		P(sis,isa,iwfs)=mkh(loc_psf,loc_ccd,0,0,1);
 		locfree(loc_ccd);
 	    }/*isa */
 	}/*iwfs */
@@ -264,8 +264,8 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		    double rsa=srsa->p[illt]->p[isa];
 		    double rsa_za=rsa*cos(za);
 		    if(use1d){ /*1d ETF along radius. */
-			IND(petf,isa,illt)=cnew(ncompx,1);
-			dcomplex *etf1d=IND(petf,isa,illt)->p;
+			P(petf,isa,illt)=cnew(ncompx,1);
+			dcomplex *etf1d=P(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
 			for(int icompx=0; icompx<ncompx; icompx++){
 			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
@@ -278,8 +278,8 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			const double theta=psrot[illt][isa];
 			const double ct=cos(theta);
 			const double st=sin(theta);
-			IND(petf,isa,illt)=cnew(ncompx,ncompy);
-			cmat *etf2d=IND(petf,isa,illt);
+			P(petf,isa,illt)=cnew(ncompx,ncompy);
+			cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
 			for(int icompy=0; icompy<ncompy; icompy++){
 			    const double ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
@@ -288,7 +288,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				const double kr=(ct*kx+st*ky);/*along radial*/
 				for(int ih=0; ih<nhp; ih++){
 				    const double tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
-				    IND(etf2d,icompx,icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
+				    P(etf2d,icompx,icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
 				}
 			    }
 			}
@@ -364,11 +364,11 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			cfft2(etf, -1);
 			if(use1d){
 			    if(npad==1 && nover==1){
-				ccp(PIND(petf,isa,illt),etf);
+				ccp(PP(petf,isa,illt),etf);
 			    }else{
 				cfftshift(etf);
-				IND(petf,isa,illt)=cnew(ncompx,1);
-				dcomplex *etf1d=IND(petf,isa,illt)->p;
+				P(petf,isa,illt)=cnew(ncompx,1);
+				dcomplex *etf1d=P(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
 				for(int icompx=0; icompx<ncompx; icompx++){
 				    double ir=dusc*(icompx-ncompx2)+netf2;
@@ -379,7 +379,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 					    +etf->p[iir+1]*ir;
 				    }/*else{etf1d[icompx]=0;}*/
 				}
-				cfftshift(IND(petf,isa,illt));
+				cfftshift(P(petf,isa,illt));
 			    }
 			}else{
 			    /*Rotate the ETF. */
@@ -388,8 +388,8 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			    double theta=psrot[illt][isa];
 			    double ct=cos(theta);
 			    double st=sin(theta);
-			    IND(petf,isa,illt)=cnew(ncompx,ncompy);
-			    cmat *etf2d=IND(petf,isa,illt);
+			    P(petf,isa,illt)=cnew(ncompx,ncompy);
+			    cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
 			    for(int icompy=0; icompy<ncompy; icompy++){
 				double iy=(icompy-ncompy2);
@@ -400,21 +400,21 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				    ir=ir-iir;
 				    if(iir>=0 && iir<netf-1){
 					/*bilinear interpolation. */
-					IND(etf2d,icompx,icompy)=etf->p[iir]*(1.-ir)
+					P(etf2d,icompx,icompy)=etf->p[iir]*(1.-ir)
 					    +etf->p[iir+1]*ir;
-				    }/*else{IND(etf2d,icompx,icompy)=0;}*/
+				    }/*else{P(etf2d,icompx,icompy)=0;}*/
 				}
 			    }
-			    cfftshift(IND(petf,isa,illt));/*peak in corner; */
+			    cfftshift(P(petf,isa,illt));/*peak in corner; */
 			}
 		    }else{
 			warning_once("Wrong focus!\n");
 			if(use1d){
-			    IND(petf,isa,illt)=cnew(ncompx,1);
+			    P(petf,isa,illt)=cnew(ncompx,1);
 			}else{
-			    IND(petf,isa,illt)=cnew(ncompx,ncompy);
+			    P(petf,isa,illt)=cnew(ncompx,ncompy);
 			}
-			cset(IND(petf,isa,illt),1);
+			cset(P(petf,isa,illt),1);
 		    }
 		}//for isa
 	    }//for illt.
@@ -433,7 +433,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    }
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
-		    ccwm(IND(petf,isa,illt), IND(pnominal,isa*mnominal,illt*mllt));
+		    ccwm(P(petf,isa,illt), P(pnominal,isa*mnominal,illt*mllt));
 		}
 	    }
 	    dtfs[iwvl].fused=1;

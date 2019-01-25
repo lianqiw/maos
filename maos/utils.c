@@ -52,43 +52,43 @@ void plotloc(const char *fig, const PARMS_T *parms,
     int count=0;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	double hs=parms->evl.hs->p[ievl];
-	IND(cir,0,count)=ht*parms->evl.thetax->p[ievl];
-	IND(cir,1,count)=ht*parms->evl.thetay->p[ievl];
-	IND(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
-	IND(cir,3,count)=0xFF0000;/*rgb color */
+	P(cir,0,count)=ht*parms->evl.thetax->p[ievl];
+	P(cir,1,count)=ht*parms->evl.thetay->p[ievl];
+	P(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
+	P(cir,3,count)=0xFF0000;/*rgb color */
 	count++;
     }
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	double hs=parms->fit.hs->p[ifit];
-	IND(cir,0,count)=ht*parms->fit.thetax->p[ifit];
-	IND(cir,1,count)=ht*parms->fit.thetay->p[ifit];
-	IND(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
-	IND(cir,3,count)=0xFF22DD;/*rgb color */
+	P(cir,0,count)=ht*parms->fit.thetax->p[ifit];
+	P(cir,1,count)=ht*parms->fit.thetay->p[ifit];
+	P(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
+	P(cir,3,count)=0xFF22DD;/*rgb color */
 	count++;
     }
     for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
 	double hs=parms->sim.ncpa_hs->p[idir];
-	IND(cir,0,count)=ht*parms->sim.ncpa_thetax->p[idir];
-	IND(cir,1,count)=ht*parms->sim.ncpa_thetay->p[idir];
-	IND(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
-	IND(cir,3,count)=0x22FF00;/*rgb color */
+	P(cir,0,count)=ht*parms->sim.ncpa_thetax->p[idir];
+	P(cir,1,count)=ht*parms->sim.ncpa_thetay->p[idir];
+	P(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
+	P(cir,3,count)=0x22FF00;/*rgb color */
 	count++;
     }
 
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	double hs=parms->wfs[iwfs].hs;
 	int ipowfs=parms->wfs[iwfs].powfs;
-	IND(cir,0,count)=parms->wfs[iwfs].thetax*ht;
-	IND(cir,1,count)=parms->wfs[iwfs].thetay*ht;
-	IND(cir,2,count)=parms->aper.d*0.5*(1.-ht/hs);
+	P(cir,0,count)=parms->wfs[iwfs].thetax*ht;
+	P(cir,1,count)=parms->wfs[iwfs].thetay*ht;
+	P(cir,2,count)=parms->aper.d*0.5*(1.-ht/hs);
 	if(isfinite(hs)){//LGS
-	    IND(cir,3,count)=0xFF8800;
+	    P(cir,3,count)=0xFF8800;
 	}else if(!parms->powfs[ipowfs].lo){//Hi NGS
-	    IND(cir,3,count)=0xFFFF00;
+	    P(cir,3,count)=0xFFFF00;
 	}else if(parms->powfs[ipowfs].order>1){//TTF
-	    IND(cir,3,count)=0x0000FF;//TTF
+	    P(cir,3,count)=0x0000FF;//TTF
 	}else{
-	    IND(cir,3,count)=0x0000FF;//TT
+	    P(cir,3,count)=0x0000FF;//TT
 	}
 	count++;
     }
@@ -102,10 +102,10 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
     format2fn;
     int ncir=1;
     dmat *cir=dnew(4, ncir);
-    IND(cir,0,0)=0;
-    IND(cir,1,0)=0;
-    IND(cir,2,0)=totfov/2;
-    IND(cir,3,0)=0x000000;/*rgb color */
+    P(cir,0,0)=0;
+    P(cir,1,0)=0;
+    P(cir,2,0)=totfov/2;
+    P(cir,3,0)=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
     ngroup+=1;
     const char *legend[ngroup];
@@ -572,7 +572,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 		    int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
 		    dspcell*  psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
-		    dsp *sis=IND(psi,idtfsa,idtf);
+		    dsp *sis=P(psi,idtfsa,idtf);
 		    double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		    if(petf){
@@ -614,18 +614,18 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    error("Invalid");
 		}
 		if(type==1 || !srot){
-		    IND(pgnfxy,isep,isa)=g[0]/pixthetax;
-		    IND(pgnfxy,isep,isa+nsa)=g[1]/pixthetay;
+		    P(pgnfxy,isep,isa)=g[0]/pixthetax;
+		    P(pgnfxy,isep,isa+nsa)=g[1]/pixthetay;
 		    
 		    if(srot){/*obtain gradients in r/a coord*/
-			IND(pgnfra,isep,isa)=(g[0]*cx+g[1]*sx)/pixthetax;
-			IND(pgnfra,isep,isa+nsa)=(-g[0]*sx+g[1]*cx)/pixthetay;
+			P(pgnfra,isep,isa)=(g[0]*cx+g[1]*sx)/pixthetax;
+			P(pgnfra,isep,isa+nsa)=(-g[0]*sx+g[1]*cx)/pixthetay;
 		    }
 		}else{
-		    IND(pgnfra,isep,isa)=g[0]/pixthetax;
-		    IND(pgnfra,isep,isa+nsa)=g[1]/pixthetay;
-		    IND(pgnfxy,isep,isa)=(g[0]*cx-g[1]*sx)/pixthetax;
-		    IND(pgnfxy,isep,isa+nsa)=(g[0]*sx+g[1]*cx)/pixthetay;
+		    P(pgnfra,isep,isa)=g[0]/pixthetax;
+		    P(pgnfra,isep,isa+nsa)=g[1]/pixthetay;
+		    P(pgnfxy,isep,isa)=(g[0]*cx-g[1]*sx)/pixthetax;
+		    P(pgnfxy,isep,isa+nsa)=(g[0]*sx+g[1]*cx)/pixthetay;
 		}
 	    }
 	}/*for isa*/
@@ -768,7 +768,7 @@ static double mapfun(double *x, mapdata_t *info){
 	dspcell*  psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
 	int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 	int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
-	dsp *sis=IND(psi,idtfsa,idtf);
+	dsp *sis=P(psi,idtfsa,idtf);
 	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
@@ -849,7 +849,7 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
     double focus=0;
     if(parms->powfs[ipowfs].llt){
 	if(powfs[ipowfs].focus){
-	    focus+=INDR(powfs[ipowfs].focus, isim, wfsind);
+	    focus+=PR(powfs[ipowfs].focus, isim, wfsind);
 	}
 	if(simu->zoomreal && parms->powfs[ipowfs].llt){
 	    if(simu->zoompos && simu->zoompos->p[iwfs]){
@@ -891,9 +891,9 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
   //Find Peak location (jx, jy)
   for(int iy=1; iy<corr->ny-1; iy++){
   for(int ix=1; ix<corr->nx-1; ix++){
-  if(IND(corr,ix,iy)>valmax){
+  if(P(corr,ix,iy)>valmax){
   jy=iy; jx=ix;
-  valmax=IND(corr,ix,iy);
+  valmax=P(corr,ix,iy);
   }
   }
   }
@@ -902,8 +902,8 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
   for(long iy=0; iy<3; iy++){
   vy[iy]=0; vx[iy]=0;
   for(long ix=0; ix<3; ix++){
-  vy[iy]+=IND(corr, ix+jx-1, iy+jy-1);
-  vx[iy]+=IND(corr, iy+jx-1, ix+jy-1);
+  vy[iy]+=P(corr, ix+jx-1, iy+jy-1);
+  vx[iy]+=P(corr, iy+jx-1, ix+jy-1);
   }
   }
   //Parabolic fit.
@@ -924,15 +924,15 @@ double parabolic_peak_1d(dmat *corr){
     double valmax=0;
     int jx=0;
     for(int ix=1; ix<corr->nx-1; ix++){
-	if(IND(corr,ix)>valmax){
+	if(P(corr,ix)>valmax){
 	    jx=ix;
-	    valmax=IND(corr,ix);
+	    valmax=P(corr,ix);
 	}
     }
     //Parabolic fit.
     double px[2];
-    px[0]=(IND(corr, jx+1)+IND(corr, jx-1))*0.5-IND(corr, jx);
-    px[1]=(IND(corr, jx+1)-IND(corr, jx-1))*0.5;
+    px[0]=(P(corr, jx+1)+P(corr, jx-1))*0.5-P(corr, jx);
+    px[1]=(P(corr, jx+1)-P(corr, jx-1))*0.5;
     return px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
 }
 /**
@@ -949,8 +949,8 @@ void parabolic_peak_sum(double *grad, dmat *corr, int nbox){
     const long offy=(ny-nbox)/2;
     for(int iy=0; iy<nbox; iy++){
 	for(int ix=0; ix<nbox; ix++){
-	    IND(corrx, ix)+=IND(corr, ix+offx, iy+offy);
-	    IND(corry, iy)+=IND(corr, ix+offx, iy+offy);
+	    P(corrx, ix)+=P(corr, ix+offx, iy+offy);
+	    P(corry, iy)+=P(corr, ix+offx, iy+offy);
 	}
     }
     grad[0]=parabolic_peak_1d(corrx);
@@ -974,11 +974,11 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     double *i0sum=NULL;
     double i0sumg=0;
     if(phytype==1){
-	mtche=PINDR(powfs[ipowfs].intstat->mtche, 0, wfsind);
+	mtche=PPR(powfs[ipowfs].intstat->mtche, 0, wfsind);
     }
     if(powfs[ipowfs].intstat->i0sum){
-	i0sum=PINDR(powfs[ipowfs].intstat->i0sum, 0, wfsind);
-	i0sumg=INDR(powfs[ipowfs].intstat->i0sumsum, wfsind, 0);
+	i0sum=PPR(powfs[ipowfs].intstat->i0sum, 0, wfsind);
+	i0sumg=PR(powfs[ipowfs].intstat->i0sumsum, wfsind, 0);
     }
     /*if(phytype==1){
 	if(powfs[ipowfs].intstat->mtche->ny==1){
@@ -991,7 +991,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[wfsind];
 	    }
 	    }*/
-    const double *srot=(parms->powfs[ipowfs].radpix)?INDR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
+    const double *srot=(parms->powfs[ipowfs].radpix)?PR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
     /*output directly to simu->gradcl. replace */

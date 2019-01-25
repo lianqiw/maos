@@ -209,7 +209,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		if(parms->powfs[ipowfs].moao==imoao){
 		    gpu_set(cudata_t::wfsgpu[iwfs]);
 		    if(!cudata->dm_wfs){
-			cudata->dm_wfs=cuarray<cumapcell>(nwfs, 1);
+			cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
 		    }
 		    cudata->dm_wfs[iwfs]=cumapcell(1,1);
 		    cudata->dm_wfs[iwfs][0]=(recon->moao[imoao].amap->p[0]); 
@@ -219,7 +219,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		    gpu_set(cudata_t::evlgpu[ievl]);
 		    if(!cudata->dm_evl){
-			cudata->dm_evl=cuarray<cumapcell>(parms->evl.nevl, 1);
+			cudata->dm_evl=Array<cumapcell>(parms->evl.nevl, 1);
 		    }
 		    cudata->dm_evl[ievl]=cumapcell(1,1);
 		    cudata->dm_evl[ievl][0]=(recon->moao[imoao].amap->p[0]); 
@@ -303,7 +303,7 @@ Real curecon_t::moao_recon(dcell *_dmfit, dcell *_opdr){
 
 void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
     warning_once("MOAO temporal filter implemented with LPF\n");
-    const int *wfsgpu=cudata_t::wfsgpu;
+    const int *wfsgpu=cudata_t::wfsgpu();
     if(dm_wfs){
 	int nwfs=dm_wfs.Nx();
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -400,9 +400,9 @@ void curecon_t::tomo_test(SIM_T *simu){
 	if(parms->tomo.precond==1){
 	    RL2=dynamic_cast<cucg_t*>(RL);
 	    curcell lp;
-	    RL2->P(lp, rhsg, stream);
+	    RL2->Pre(lp, rhsg, stream);
 	    cuwrite(lp, "GPU_TomoP");
-	    RL2->P(lp, rhsg, stream);
+	    RL2->Pre(lp, rhsg, stream);
 	    cuwrite(lp, "GPU_TomoP2");
 	}
     }

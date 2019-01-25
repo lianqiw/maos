@@ -173,7 +173,7 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
 	}
 	double tk3=myclockd();
 	if(fc){/*save to file. */
-	    zfarr_dmat(fc, ilayer, this_screen);
+	    zfarr_push(fc, ilayer, this_screen);
 	}else{
 	    dcp((dmat**)&data->screen->p[ilayer], this_screen);
 	}
@@ -200,7 +200,7 @@ static void fractal_screen_do(zfarr *fc, GENATM_T *data){
 	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 	    fractal_do(screen, data->dx, r0i, data->L0[ilayer], data->ninit);
 	    remove_piston(screen->p, nx*ny);
-	    zfarr_dmat(fc, ilayer, screen);
+	    zfarr_push(fc, ilayer, screen);
 	}
 	dfree(screen);
     }else{

@@ -134,11 +134,11 @@ dmat *psd_vibid(const dmat *psdin){
 	    }
 	    if(y->p[i+1]>ylpf+dylpf*5 && f[i]>1){//beginning of peak
 		inpeak=1;
-		if(count>0 && f[i] < f[(int)IND(res,3,count-1)] + 0.1){
+		if(count>0 && f[i] < f[(int)P(res,3,count-1)] + 0.1){
 		    //combine with last peak if within 1 Hz.
 		    count--;
 		}else{
-		    IND(res,2,count)=i;
+		    P(res,2,count)=i;
 		    sumxy=f[i]*psd[i];//for CoG
 		    sumy=psd[i];//for CoG
 		    sum=0;//integration
@@ -152,9 +152,9 @@ dmat *psd_vibid(const dmat *psdin){
 	    if(y->p[i]<ylpf+dylpf && y->p[i+1]<ylpf+dylpf){//end of peak
 		inpeak=0;
 		if(sum*0.5>thres){
-		    IND(res,0,count)=sumxy/sumy;
-		    IND(res,1,count)=sum*0.5;
-		    IND(res,3,count)=i;
+		    P(res,0,count)=sumxy/sumy;
+		    P(res,1,count)=sum*0.5;
+		    P(res,3,count)=i;
 		    count++;
 		    if(count==nmaxp){
 			nmaxp*=2;
@@ -363,9 +363,9 @@ void psd_sum(dmat *psd, double scale){
     for(int ix=0; ix<psd->nx; ix++){
 	double tmp=0;
 	for(int iy=1; iy<psd->ny; iy++){
-	    tmp+=IND(psd, ix, iy);
+	    tmp+=P(psd, ix, iy);
 	}
-	IND(psd, ix, 1)=tmp*scale;
+	P(psd, ix, 1)=tmp*scale;
     }
     dresize(psd, psd->nx, 2);
 }

@@ -167,20 +167,20 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		dmat* map=(dmat*)simu->recon->amap->p[idm]/*PDMAT*/;
 		for(int iy=0; iy<simu->recon->any->p[idm]-1; iy++){
 		    for(int ix=0; ix<nx; ix++){
-			int iact1=IND(map,ix,iy);
-			int iact2=IND(map,ix,iy+1);
+			int iact1=P(map,ix,iy);
+			int iact2=P(map,ix,iy+1);
 			if(iact1>0 && iact2>0){
-			    count+=limit_diff(PIND(dmr,ix,iy), PIND(dmr,ix,iy+1), iastroke, 
+			    count+=limit_diff(PP(dmr,ix,iy), PP(dmr,ix,iy+1), iastroke, 
 					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
 		    } 
 		}
 		for(int iy=0; iy<simu->recon->any->p[idm]; iy++){
 		    for(int ix=0; ix<nx-1; ix++){
-			int iact1=IND(map,ix,iy);
-			int iact2=IND(map,ix+1,iy);
+			int iact1=P(map,ix,iy);
+			int iact2=P(map,ix+1,iy);
 			if(iact1>0 && iact2>0){
-			    count+=limit_diff(PIND(dmr,ix,iy), PIND(dmr,ix+1,iy), iastroke, 
+			    count+=limit_diff(PP(dmr,ix,iy), PP(dmr,ix+1,iy), iastroke, 
 					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
 		    }
@@ -330,7 +330,7 @@ static void filter_cl(SIM_T *simu){
 	info_once("Add injected DM offset vector\n");
 	int icol=(isim+1)%parms->dbg.dmoff->ny;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    dadd(&simu->dmcmd->p[idm], 1, IND(parms->dbg.dmoff, idm, icol), -1);
+	    dadd(&simu->dmcmd->p[idm], 1, P(parms->dbg.dmoff, idm, icol), -1);
 	}
     }
     if(parms->sim.dmclip || parms->sim.dmclipia || recon->actstuck){
@@ -450,7 +450,7 @@ static void filter_ol(SIM_T *simu){
 	info_once("Add injected DM offset vector\n");
 	int icol=(simu->isim+1)%parms->dbg.dmoff->ny;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    dadd(&simu->dmcmd->p[idm], 1, IND(parms->dbg.dmoff, idm, icol), -1);
+	    dadd(&simu->dmcmd->p[idm], 1, P(parms->dbg.dmoff, idm, icol), -1);
 	}
     }
     //Extrapolate to edge actuators

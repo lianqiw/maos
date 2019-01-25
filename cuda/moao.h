@@ -30,8 +30,8 @@ private:
     curcell opdfit;
     curcell opdfit2;
     map_ray ha;
-    cuarray<map_ray>hxp;
-    cuarray<map_ray>hap;
+    Array<map_ray>hxp;
+    Array<map_ray>hap;
     int ndir;
     curcell rhs;
 public:

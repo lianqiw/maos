@@ -79,11 +79,11 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
     if(parms->evl.psfmean){
 	dcell*  pevlpsfmean=evlpsfmean/*PDELL*/;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cabs22d(PIND(pevlpsfmean,iwvl,ievl), 1, psf2s->p[iwvl], 1);
+	    cabs22d(PP(pevlpsfmean,iwvl,ievl), 1, psf2s->p[iwvl], 1);
 	}
     }
     if(parms->evl.psfhist){
-	zfarr_ccell(evlpsfhist[ievl], -1, psf2s);
+	zfarr_push(evlpsfhist[ievl], -1, psf2s);
     }
     if(parms->plot.run){
 	dmat *psftemp=NULL;
@@ -195,7 +195,7 @@ void perfevl_ievl(thread_t *info){
 
 	TIM(1);
 	if(save_evlopd){
-	    zfarr_dmat(simu->save->evlopdol[ievl], simu->isim, iopdevl);
+	    zfarr_push(simu->save->evlopdol[ievl], simu->isim, iopdevl);
 	}
 	if(parms->plot.run){
 	    drawopdamp("Evlol", aper->locs,iopdevl->p , aper->amp1->p, parms->dbg.draw_opdmax->p,
@@ -214,7 +214,7 @@ void perfevl_ievl(thread_t *info){
 		loc_remove_ptt(opdevlcopy->p,PCOL(polmp,isim), aper->locs);
 	    }else if(parms->evl.cov){
 		dcp(&opdevlcopy,iopdevl);
-		dadds(opdevlcopy, -IND(polmp,0,isim));
+		dadds(opdevlcopy, -P(polmp,0,isim));
 	    }else{
 		opdevlcopy=dref(iopdevl);
 	    }
@@ -304,7 +304,7 @@ void perfevl_ievl(thread_t *info){
 		       "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
 	}
 	if(save_evlopd){
-	    zfarr_dmat(simu->save->evlopdcl[ievl], isim, iopdevl);
+	    zfarr_push(simu->save->evlopdcl[ievl], isim, iopdevl);
 	}
 
 	/*Evaluate closed loop performance. */
@@ -322,7 +322,7 @@ void perfevl_ievl(thread_t *info){
 		    warning_once("Removing piston/tip/tilt from OPD.\n");
 		    loc_remove_ptt(iopdevl->p, PCOL(pclmp,isim), aper->locs);
 		}else if(parms->evl.cov){/*remove piston */
-		    dadds(iopdevl, -IND(pclmp,0,isim));
+		    dadds(iopdevl, -P(pclmp,0,isim));
 		}
 		if(parms->evl.cov && parms->evl.psfr->p[ievl]){
 		    dmm(&simu->evlopdcov->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
@@ -419,13 +419,13 @@ static void perfevl_mean(SIM_T *simu){
 	    }
 	}
 	
-	IND(simu->clem, 0, isim)=lgs; /*lgs mode */
+	P(simu->clem, 0, isim)=lgs; /*lgs mode */
 	if(simu->parms->tomo.ahst_idealngs!=1){
-	    IND(simu->clem, 1, isim)=tt;    /*tt mode */
-	    IND(simu->clem, 2, isim)=ngs;   /*ngs mod */
+	    P(simu->clem, 1, isim)=tt;    /*tt mode */
+	    P(simu->clem, 2, isim)=ngs;   /*ngs mod */
 	    if(recon->ngsmod->indfocus){
 		double focus=dwdot(pcleNGSdot, recon->ngsmod->IMCC_F, pcleNGSdot);
-		IND(simu->clem, 3, isim)=focus;
+		P(simu->clem, 3, isim)=focus;
 	    }
 	}
 	simu->status->clerrlo=sqrt(ngs)*1e9;
@@ -530,9 +530,9 @@ static void perfevl_save(SIM_T *simu){
 		if(!simu->save->evlpsfmean[ievl]
 		    ||!simu->evlpsfmean->p[ievl]) continue;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    free(IND(pcl,iwvl,ievl)->header);
-		    IND(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
-		    zfarr_dmat(simu->save->evlpsfmean[ievl], isim*parms->evl.nwvl+iwvl, IND(pcl,iwvl,ievl));
+		    free(P(pcl,iwvl,ievl)->header);
+		    P(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
+		    zfarr_push(simu->save->evlpsfmean[ievl], isim*parms->evl.nwvl+iwvl, P(pcl,iwvl,ievl));
 		}
 	    }
 	    dcellscale(simu->evlpsfmean, 1./scale);
@@ -544,9 +544,9 @@ static void perfevl_save(SIM_T *simu){
 		if(!simu->save->evlpsfmean_ngsr[ievl]
 		    ||!simu->evlpsfmean_ngsr->p[ievl]) continue;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    free(IND(pcl,iwvl,ievl)->header);
-		    IND(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
-		    zfarr_dmat(simu->save->evlpsfmean_ngsr[ievl], isim*parms->evl.nwvl+iwvl, IND(pcl,iwvl,ievl));
+		    free(P(pcl,iwvl,ievl)->header);
+		    P(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
+		    zfarr_push(simu->save->evlpsfmean_ngsr[ievl], isim*parms->evl.nwvl+iwvl, P(pcl,iwvl,ievl));
 		}
 	    }
 	    dcellscale(simu->evlpsfmean_ngsr, 1./scale);
@@ -559,7 +559,7 @@ static void perfevl_save(SIM_T *simu){
 		if(!simu->evlpsfolmean->p[iwvl]) continue;
 		free(pcl[iwvl]->header);
 		pcl[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl, isim);
-		zfarr_dmat(simu->save->evlpsfolmean, isim*parms->evl.nwvl+iwvl, pcl[iwvl]);
+		zfarr_push(simu->save->evlpsfolmean, isim*parms->evl.nwvl+iwvl, pcl[iwvl]);
 	    }
 	    dcellscale(simu->evlpsfolmean, 1./scaleol);
 	}
@@ -574,13 +574,13 @@ static void perfevl_save(SIM_T *simu){
 	dcellscale(simu->evlopdmean_ngsr, scale);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov->p[ievl]) continue;
-	    zfarr_dmat(simu->save->evlopdcov[ievl], isim, simu->evlopdcov->p[ievl]);
-	    zfarr_dmat(simu->save->evlopdmean[ievl], isim, simu->evlopdmean->p[ievl]);
+	    zfarr_push(simu->save->evlopdcov[ievl], isim, simu->evlopdcov->p[ievl]);
+	    zfarr_push(simu->save->evlopdmean[ievl], isim, simu->evlopdmean->p[ievl]);
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov_ngsr->p[ievl]) continue;
-	    zfarr_dmat(simu->save->evlopdcov_ngsr[ievl], isim, simu->evlopdcov_ngsr->p[ievl]);
-	    zfarr_dmat(simu->save->evlopdmean_ngsr[ievl], isim, simu->evlopdmean_ngsr->p[ievl]);
+	    zfarr_push(simu->save->evlopdcov_ngsr[ievl], isim, simu->evlopdcov_ngsr->p[ievl]);
+	    zfarr_push(simu->save->evlopdmean_ngsr[ievl], isim, simu->evlopdmean_ngsr->p[ievl]);
 	}
 	dcellscale(simu->evlopdcov, 1./scale);
 	dcellscale(simu->evlopdmean, 1./scale);
@@ -590,8 +590,8 @@ static void perfevl_save(SIM_T *simu){
 	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 	    dscale(simu->evlopdcovol, scaleol);
 	    dscale(simu->evlopdmeanol, scaleol);
-	    zfarr_dmat(simu->save->evlopdcovol, isim, simu->evlopdcovol);
-	    zfarr_dmat(simu->save->evlopdmeanol, isim, simu->evlopdmeanol);
+	    zfarr_push(simu->save->evlopdcovol, isim, simu->evlopdcovol);
+	    zfarr_push(simu->save->evlopdmeanol, isim, simu->evlopdmeanol);
 	    dscale(simu->evlopdcovol, 1./scaleol);
 	    dscale(simu->evlopdmeanol, 1./scaleol);
 	}

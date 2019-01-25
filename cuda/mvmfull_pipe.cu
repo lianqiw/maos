@@ -37,7 +37,7 @@ typedef struct{
     curmat pix;//pixels. Each sa has 15x6=90 pixels.
     curmat grad;
     curmat act;
-    cuarray<stream_t> stream;
+    Array<stream_t> stream;
     stream_t stream_mvm;//mvm
     int ism;//index of stream for mvm
     int count;
@@ -132,7 +132,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	cp2gpu(data[igpu].mtch, mtch);
 	data[igpu].grad=curmat(ng, 1);
 	data[igpu].act=curmat(mvm1->nx, 1);
-	data[igpu].stream=cuarray<stream_t>(nsm, 1);
+	data[igpu].stream=Array<stream_t>(nsm, 1);
 	data[igpu].gpu=gpus[igpu];
 
 	data[igpu].event_g=new event_t[sect_gpu];
@@ -178,13 +178,13 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	    int ism=datai->ism=(datai->ism+1)%nsm;
 	    int nleft=(nsa-isa)<sastep?(nsa-isa):sastep;
 
-	    DO(cudaMemcpyAsync(datai->pix.P()+isa*pixpsa, pix->p+isa*pixpsa, sizeof(Real)*nleft*pixpsa,
+	    DO(cudaMemcpyAsync(datai->pix()+isa*pixpsa, pix->p+isa*pixpsa, sizeof(Real)*nleft*pixpsa,
 			       cudaMemcpyHostToDevice, datai->stream[ism]));
 	    //Start matched filter in the same stream
 	    mtch_do<<<mtch_ngrid, dim3(mtch_dimx, mtch_dimy), 
 		mtch_dimx*mtch_dimy*sizeof(Real), datai->stream[ism]>>>
-		(datai->mtch.P()+isa*2*pixpsa, datai->pix.P()+isa*pixpsa, 
-		 datai->grad.P()+isa*2, pixpsa, nleft);
+		(datai->mtch()+isa*2*pixpsa, datai->pix()+isa*pixpsa, 
+		 datai->grad()+isa*2, pixpsa, nleft);
 #if 0
 	    Real one=1; Real zero=0; 
 	    Real *pbeta;
@@ -202,7 +202,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 		const int nstream=10;
 		const int nblock=(nact*nstream+naeach-1)/naeach;
 		multimv_do<<<nblock, naeach, sizeof(Real)*naeach, datai->stream[ism]>>>
-		    (datai->cumvm.P()+nact*isa*2, datai->act, datai->grad.P()+isa*2, 
+		    (datai->cumvm()+nact*isa*2, datai->act, datai->grad()+isa*2, 
 		     nact, nleft*2);
 	    }
 #endif

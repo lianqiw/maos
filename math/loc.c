@@ -254,7 +254,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	int ix=(int)round((locx[iloc]-xmin)*dx_in1);
 	int iy=(int)round((locy[iloc]-ymin)*dy_in1);
-	IND(pmap,ix,iy)=iloc+1;/*start from 1. */
+	P(pmap,ix,iy)=iloc+1;/*start from 1. */
     }
     if(LOC_MAP_EXTEND && loc->nloc<map_nx*map_ny){
 	/*
@@ -275,8 +275,8 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 	lmat *level=lnew(map_nx, map_ny);
 	for(int iy=0; iy<map_ny; iy++){
 	    for(int ix=0; ix<map_nx; ix++){
-		if(IND(pmap,ix,iy)){
-		    IND(level,ix,iy)=0;//level of existence.
+		if(P(pmap,ix,iy)){
+		    P(level,ix,iy)=0;//level of existence.
 		}
 	    }
 	}
@@ -287,7 +287,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 		num_found=0;
 		for(int iy=0; iy<map_ny; iy++){
 		    for(int ix=0; ix<map_nx; ix++){
-			if(!IND(pmap,ix,iy)){
+			if(!P(pmap,ix,iy)){
 			    int count=0;//count how many neighbors of lowest level
 			    /*choose the minimum level of interpolation*/
 			    int min_level=INT_MAX, min_jx=0, min_jy=0, min_sep=INT_MAX;
@@ -296,17 +296,17 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 				for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
 				    int sep=(abs(iy-jy)+abs(ix-jx));
 				    int iphi;
-				    if((sep==1 || sep==2) && (iphi=fabs(IND(pmap,jx,jy)))){//edge
+				    if((sep==1 || sep==2) && (iphi=fabs(P(pmap,jx,jy)))){//edge
 					iphi--;
 					double rad=locx[iphi]*locx[iphi]+locy[iphi]*locy[iphi];//dist^2 to center
-					if(IND(level,jx,jy)<min_level){
-					    min_level=IND(level,jx,jy);
+					if(P(level,jx,jy)<min_level){
+					    min_level=P(level,jx,jy);
 					    min_rad=rad;
 					    min_sep=sep;
 					    min_jy=jy;
 					    min_jx=jx;
 					    count=1;//reset to one
-					}else if(IND(level,jx,jy)==min_level){
+					}else if(P(level,jx,jy)==min_level){
 					    count++;
 					    if(sep<min_sep){
 						min_sep=sep;
@@ -323,8 +323,8 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 			    }
 			    if((min_level==cur_level && count==3) || min_level<cur_level){
 				//if level satisfy or even if three neighbor with higher level.
-				IND(pmap,ix,iy)=-fabs(IND(pmap,min_jx,min_jy));
-				IND(level,ix,iy)=min_level+1;
+				P(pmap,ix,iy)=-fabs(P(pmap,min_jx,min_jy));
+				P(level,ix,iy)=min_level+1;
 				num_found++;
 			    }
 			}
@@ -413,7 +413,7 @@ loc_t* map2loc(map_t *map, double thres){
     long count=0;
     for(iy=0; iy<ny; iy++){
 	for(ix=0; ix<nx; ix++){
-	    if(IND(map,ix,iy)>thres){
+	    if(P(map,ix,iy)>thres){
 		loc->locx[count]=ix*dx+ox;
 		loc->locy[count]=iy*dy+oy;
 		count++;
@@ -472,8 +472,8 @@ loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
     for(iy=0; iy<ny; iy++){
 	y=iy*dy+oy;
 	for(ix=0; ix<nx; ix++){
-	    IND(locx,ix,iy)=ix*dx+ox;
-	    IND(locy,ix,iy)=y;
+	    P(locx,ix,iy)=ix*dx+ox;
+	    P(locy,ix,iy)=y;
 	}
     }
     dfree(locx);
@@ -496,8 +496,8 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, 
 	y=iy*dy+oy;
 	for(ix=0; ix<nx; ix++){
 	    x=ix*dx+ox;
-	    IND(locx,ix,iy)=ct*x-st*y;
-	    IND(locy,ix,iy)=st*x+ct*y;
+	    P(locx,ix,iy)=ct*x-st*y;
+	    P(locy,ix,iy)=st*x+ct*y;
 	}
     }
     dfree(locx);
@@ -563,7 +563,7 @@ dmat *loc_mcc_ptt(const loc_t *loc, const double *amp){
     for(int jmod=0; jmod<nmod; jmod++){
 	for(int imod=jmod; imod<nmod; imod++){
 	    double tmp=dotdbl(mod[imod],mod[jmod],amp,loc->nloc);
-	    IND(mcc,imod,jmod)=IND(mcc,jmod,imod)=tmp;
+	    P(mcc,imod,jmod)=P(mcc,jmod,imod)=tmp;
 	}
     }
     return mcc;
@@ -599,12 +599,12 @@ dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
 		a22+=a*y*y;
 	    }
 	}
-	IND(ATA,0,0)=a00;
-	IND(ATA,1,1)=a11;
-	IND(ATA,2,2)=a22;
-	IND(ATA,0,1)=IND(ATA,1,0)=a01;
-	IND(ATA,0,2)=IND(ATA,2,0)=a02;
-	IND(ATA,1,2)=IND(ATA,2,1)=a12;
+	P(ATA,0,0)=a00;
+	P(ATA,1,1)=a11;
+	P(ATA,2,2)=a22;
+	P(ATA,0,1)=P(ATA,1,0)=a01;
+	P(ATA,0,2)=P(ATA,2,0)=a02;
+	P(ATA,1,2)=P(ATA,2,1)=a12;
     }
     return mcc;
 }
@@ -675,7 +675,7 @@ void loc_calc_mod(double *rmsout, double *coeffout,const dmat *mod,
 	double junk=opd[iloc]*amp[iloc];
 	tot+=opd[iloc]*junk;
 	for(long imod=0; imod<nmod; imod++){
-	    val[imod]+=IND(mod,iloc,imod)*junk;
+	    val[imod]+=P(mod,iloc,imod)*junk;
 	}
     }
     for(long imod=0; imod<nmod; imod++){
@@ -1196,24 +1196,24 @@ static dmat *parse_poly(const char *_ps){
     int icx=0;
     char *endptr;
     while(ps[0] && ps[0]!=';'){
-	IND(cx,0,icx)=strtod(ps, &endptr);//coefficient
+	P(cx,0,icx)=strtod(ps, &endptr);//coefficient
 	if(ps==endptr){
 	    if(ps[0]=='-'){
 		ps++;
-		IND(cx,0,icx)=-1;
+		P(cx,0,icx)=-1;
 	    }else if(ps[0]=='+'){
 		ps++;
-		IND(cx,0,icx)=1;
+		P(cx,0,icx)=1;
 	    }
 	    if(ps[0]=='x' || ps[0]=='y'){
-		if(IND(cx,0,icx)==0) IND(cx,0,icx)=1;
+		if(P(cx,0,icx)==0) P(cx,0,icx)=1;
 	    }else{
 		error("Unable to parse (%s). ps=(%s)\n", _ps, ps);
 	    }
 	}else{
 	    ps=endptr;
 	}
-	IND(cx,1,icx)=IND(cx,2,icx)=0;
+	P(cx,1,icx)=P(cx,2,icx)=0;
 	while(ps[0]==' ') ps++;
 	if(ps[0]=='*') ps++;
 	while(ps[0]==' ') ps++;
@@ -1227,16 +1227,16 @@ static dmat *parse_poly(const char *_ps){
 		ps++;
 		if(ps[0]=='^'){
 		    ps++;
-		    IND(cx,iy,icx)+=strtol(ps, &endptr, 10);
+		    P(cx,iy,icx)+=strtol(ps, &endptr, 10);
 		    if(ps==endptr){
 			error("Unable to parse %s\n", _ps);
 		    }
 		    ps=endptr;
 		}else{
-		    IND(cx,iy,icx)++;
+		    P(cx,iy,icx)++;
 		}
 	    }else{
-		IND(cx,0,icx)*=strtod(ps, &endptr);
+		P(cx,0,icx)*=strtod(ps, &endptr);
 		if(ps==endptr){
 		    error("Unable to parse %s\n", _ps);
 		}
@@ -1284,10 +1284,10 @@ loc_t *loctransform(loc_t *loc, const char *polycoeff){
 	    cx=dnew(3, coeff->nx);
 	    cy=dnew(3, coeff->nx);
 	    for(int ic=0; ic<cx->ny; ic++){
-		IND(cx, 0, ic)=IND(coeff, ic, 2);//coeff for x
-		IND(cy, 0, ic)=IND(coeff, ic, 3);//coeff for y
-		IND(cx, 1, ic)=IND(cy, 1, ic)=IND(coeff, ic, 0);//power for x
-		IND(cx, 2, ic)=IND(cy, 2, ic)=IND(coeff, ic, 1);//power for y
+		P(cx, 0, ic)=P(coeff, ic, 2);//coeff for x
+		P(cy, 0, ic)=P(coeff, ic, 3);//coeff for y
+		P(cx, 1, ic)=P(cy, 1, ic)=P(coeff, ic, 0);//power for x
+		P(cx, 2, ic)=P(cy, 2, ic)=P(coeff, ic, 1);//power for y
 	    }
 	    dfree(coeff);
 	}else{
@@ -1309,18 +1309,18 @@ loc_t *loctransform(loc_t *loc, const char *polycoeff){
     int np=0;
     int nonint=0;
     for(int ic=0; ic<cx->ny; ic++){
-	int ocx=(int)round(IND(cx,1,ic));
-	int ocy=(int)round(IND(cx,2,ic));
-	if((IND(cx,1,ic)-ocx)>EPS || (IND(cx,2,ic)-ocy)>EPS){//not integer
+	int ocx=(int)round(P(cx,1,ic));
+	int ocy=(int)round(P(cx,2,ic));
+	if((P(cx,1,ic)-ocx)>EPS || (P(cx,2,ic)-ocy)>EPS){//not integer
 	    nonint=1;
 	}
 	if(ocx>np) np=ocx;
 	if(ocy>np) np=ocy;
     }
     for(int ic=0; ic<cy->ny; ic++){
-	int ocx=(int)round(IND(cy,1,ic));
-	int ocy=(int)round(IND(cy,2,ic));
-	if((IND(cy,1,ic)-ocx)>EPS || (IND(cy,2,ic)-ocy)>EPS){//not integer
+	int ocx=(int)round(P(cy,1,ic));
+	int ocy=(int)round(P(cy,2,ic));
+	if((P(cy,1,ic)-ocx)>EPS || (P(cy,2,ic)-ocy)>EPS){//not integer
 	    nonint=1;
 	}
 	if(ocx>np) np=ocx;
@@ -1330,11 +1330,11 @@ loc_t *loctransform(loc_t *loc, const char *polycoeff){
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	if(nonint){
 	    for(long ic=0; ic<cx->ny; ic++){
-		xm[iloc]+=IND(cx,0,ic)*pow(x[iloc],IND(cx,1,ic))*pow(y[iloc],IND(cx,2,ic));
+		xm[iloc]+=P(cx,0,ic)*pow(x[iloc],P(cx,1,ic))*pow(y[iloc],P(cx,2,ic));
 	    }
 		
 	    for(long ic=0; ic<cy->ny; ic++){
-		ym[iloc]+=IND(cy,0,ic)*pow(x[iloc],IND(cy,1,ic))*pow(y[iloc],IND(cy,2,ic));
+		ym[iloc]+=P(cy,0,ic)*pow(x[iloc],P(cy,1,ic))*pow(y[iloc],P(cy,2,ic));
 	    }
 	}else{/*faster method for integer powers (>10x speed up). */
 	    double xp[np], yp[np];
@@ -1345,11 +1345,11 @@ loc_t *loctransform(loc_t *loc, const char *polycoeff){
 	    }
 
 	    for(long ic=0; ic<cx->ny; ic++){
-		xm[iloc]+=IND(cx,0,ic)*xp[(int)IND(cx,1,ic)]*yp[(int)IND(cx,2,ic)];
+		xm[iloc]+=P(cx,0,ic)*xp[(int)P(cx,1,ic)]*yp[(int)P(cx,2,ic)];
 	    }
 
 	    for(long ic=0; ic<cy->ny; ic++){
-		ym[iloc]+=IND(cy,0,ic)*xp[(int)IND(cy,1,ic)]*yp[(int)IND(cy,2,ic)];
+		ym[iloc]+=P(cy,0,ic)*xp[(int)P(cy,1,ic)]*yp[(int)P(cy,2,ic)];
 	    }
 	}
     }
@@ -1454,7 +1454,7 @@ void map_d_din(map_t *map, double *d, double *din){
     for(long iy=0; iy<map->ny; iy++){
 	double y=iy*map->dy+map->oy;
 	for(long ix=0; ix<map->nx; ix++){
-	    if(IND(map,ix,iy)>EPS){
+	    if(P(map,ix,iy)>EPS){
 		double x=ix*map->dx+map->ox;
 		double r2=x*x+y*y;
 		if(r2>r2max) r2max=r2;
@@ -1496,11 +1496,11 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	error("dirs should have no less than 3 rows and positive number of cols.\n");
     }
     for(int idir=0; idir<dirs->ny; idir++){
-	double RR=(1.-ht/IND(dirs,2,idir))*R+guard;
-	double sx1=(IND(dirs,0,idir)*ht)-RR;
-	double sx2=(IND(dirs,0,idir)*ht)+RR;
-	double sy1=(IND(dirs,1,idir)*ht)-RR;
-	double sy2=(IND(dirs,1,idir)*ht)+RR;
+	double RR=(1.-ht/P(dirs,2,idir))*R+guard;
+	double sx1=(P(dirs,0,idir)*ht)-RR;
+	double sx2=(P(dirs,0,idir)*ht)+RR;
+	double sy1=(P(dirs,1,idir)*ht)-RR;
+	double sy2=(P(dirs,1,idir)*ht)+RR;
 	//Need to work when ht<0;
 	if(sx1<minx) minx=sx1; if(sx1>maxx) maxx=sx1;
 	if(sx2<minx) minx=sx2; if(sx2>maxx) maxx=sx2;
@@ -1566,9 +1566,9 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	    dset(dmap,1);
 	}else{/*Want non square grid*/
 	    for(int idir=0; idir<dirs->ny; idir++){
-		double sx=-ox+(IND(dirs,0,idir)*ht);
-		double sy=-oy+(IND(dirs,1,idir)*ht);
-		double RR=R*(1.-ht/IND(dirs,2,idir))+guard;
+		double sx=-ox+(P(dirs,0,idir)*ht);
+		double sy=-oy+(P(dirs,1,idir)*ht);
+		double RR=R*(1.-ht/P(dirs,2,idir))+guard;
 		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
 	    }
 	    for(int i=0; i<nx*ny; i++){
@@ -1610,7 +1610,7 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	    long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1); \
 	    long pos1=locstat->cols[icol].pos;				\
 	    long pos2=locstat->cols[icol+1].pos;			\
-	    T *restrict dest=PIND(p,xoff+xoff0,yoff+yoff0);		\
+	    T *restrict dest=PP(p,xoff+xoff0,yoff+yoff0);		\
 	    if(!reverse){						\
 		if(oin){						\
 		    const R *restrict oin2=oin+pos1;			\

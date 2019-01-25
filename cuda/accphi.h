@@ -22,7 +22,7 @@ void gpu_map2loc(const cumap_t &map, const culoc_t &loc, Real *phiout,
 		 Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream);
 void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax,Real thetay,
 		 Real mispx, Real mispy, Real dt, int isim, Real atmalpha, cudaStream_t stream);
-void gpu_dm2loc(Real *phiout, const cuarray<culoc_t> &locarr, const cumapcell &cudm, int ndm,
+void gpu_dm2loc(Real *phiout, const Array<culoc_t> &locarr, const cumapcell &cudm, int ndm,
 		Real hs, Real hc, Real thetax, Real thetay,
 		Real mispx, Real mispy, Real dmalpha, cudaStream_t stream);
 void gpu_dm2loc(Real *phiout, const culoc_t &locout, const cumapcell &cudm, int ndm,

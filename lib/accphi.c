@@ -319,28 +319,28 @@ void prop(thread_t *data){
     long iphi; double tmp=0; double wt=0; double wtsum=0;	\
     wt=(1.-dplocx)*(1.-dplocy);					\
     if(wt>EPS){/*this test fixed to top/right boundary defect*/	\
-	if((iphi=fabs(IND(map,nplocx,nplocy)))){		\
+	if((iphi=fabs(P(map,nplocx,nplocy)))){		\
 	    tmp+=(phiin0[iphi]*wt);				\
 	    wtsum+=wt;						\
 	}							\
     }								\
     wt=(dplocx)*(1.-dplocy);					\
     if(wt>EPS){							\
-	if((iphi=fabs(IND(map,nplocx1,nplocy)))){		\
+	if((iphi=fabs(P(map,nplocx1,nplocy)))){		\
 	    tmp+=(phiin0[iphi]*wt);				\
 	    wtsum+=wt;						\
 	}							\
     }								\
     wt=(1.-dplocx)*(dplocy);					\
     if(wt>EPS){							\
-	if((iphi=fabs(IND(map,nplocx,nplocy1)))){		\
+	if((iphi=fabs(P(map,nplocx,nplocy1)))){		\
 	    tmp+=(phiin0[iphi]*wt);				\
 	    wtsum+=wt;						\
 	}							\
     }								\
     wt=(dplocx)*(dplocy);					\
     if(wt>EPS){							\
-	if((iphi=fabs(IND(map,nplocx1,nplocy1)))){		\
+	if((iphi=fabs(P(map,nplocx1,nplocy1)))){		\
 	    tmp+=(phiin0[iphi]*wt);				\
 	    wtsum+=wt;						\
 	}							\
@@ -375,7 +375,7 @@ void prop(thread_t *data){
 	for(int kx=-1; kx<3; kx++){				\
 	    double wt=fx[kx+1]*fy[ky+1];			\
 	    if(wt>EPS){						\
-		double tmp=IND(mapin,kx+nplocx,ky+nplocy);	\
+		double tmp=P(mapin,kx+nplocx,ky+nplocy);	\
 		sum+=wt*tmp;sumwt+=wt;				\
 	    }							\
 	}							\
@@ -393,7 +393,7 @@ void prop(thread_t *data){
 	    long iphi;						\
 	    double wt=fx[jx+1]*fy[jy+1];			\
 	    if(wt>EPS){						\
-		if((iphi=fabs(IND(map,jx+nplocx,jy+nplocy)))){	\
+		if((iphi=fabs(P(map,jx+nplocx,jy+nplocy)))){	\
 		    sum+=wt*phiin0[iphi];			\
 		    sumwt+=wt;					\
 		}						\
@@ -469,10 +469,10 @@ void prop_grid(ARGIN_GRID,
 
 	nplocx1=(nplocx==nxmax?0:nplocx+1);
 	nplocy1=(nplocy==nymax?0:nplocy+1);
-	const double m00=IND(mapin,nplocx,nplocy);
-	const double m10=IND(mapin,nplocx1,nplocy);
-	const double m01=IND(mapin,nplocx,nplocy1);
-	const double m11=IND(mapin,nplocx1,nplocy1);
+	const double m00=P(mapin,nplocx,nplocy);
+	const double m10=P(mapin,nplocx1,nplocy);
+	const double m01=P(mapin,nplocx,nplocy1);
+	const double m11=P(mapin,nplocx1,nplocy1);
 	phiout[iloc]+=alpha*(+(m00+(m10-m00)*dplocx)*(1.-dplocy)
 			     +(m01+(m11-m01)*dplocx)*dplocy);
     }
@@ -921,10 +921,10 @@ void prop_nongrid_bin(const loc_t *locin,
 	
 	    /*only proceed if all four points exist, otherwise we run the risk
 	     * of accumulating edge results beyond the map to within the map. */
-	    iphi1=IND(map,nplocx,nplocy);
-	    iphi2=IND(map,nplocx1,nplocy);
-	    iphi3=IND(map,nplocx,nplocy1);
-	    iphi4=IND(map,nplocx1,nplocy1);
+	    iphi1=P(map,nplocx,nplocy);
+	    iphi2=P(map,nplocx1,nplocy);
+	    iphi3=P(map,nplocx,nplocy1);
+	    iphi4=P(map,nplocx1,nplocy1);
 	    if(iphi1>0 && iphi2>0 && iphi3>0 && iphi4>0){
 		phiout0[iphi1]+=alpha2*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
 		phiout0[iphi2]+=alpha2*(phiin[iloc]*(dplocx)*(1.-dplocy));

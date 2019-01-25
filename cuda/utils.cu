@@ -317,7 +317,7 @@ static void add2cpu(T * restrict *dest, R alpha, const S *src, R beta, long n,
 	}else{								\
 	    assert((*out)->nx*(*out)->ny==in.N());			\
 	}								\
-	add2cpu(&(*out)->p, alpha, in.P(), beta, in.N(), stream, mutex); \
+	add2cpu(&(*out)->p, alpha, in(), beta, in.N(), stream, mutex); \
     }
 
 add2cpu_mat(s, float, Real)
@@ -352,7 +352,7 @@ add2cpu_cell(z, float, cuccell)
 	    return;							\
 	}								\
 	if(!*out) *out=dnew(in.Nx(), in.Ny());				\
-	DO(cudaMemcpyAsync((*out)->p, in.P(), in.N()*sizeof(double),	\
+	DO(cudaMemcpyAsync((*out)->p, in(), in.N()*sizeof(double),	\
 			   cudaMemcpyDeviceToHost, stream));		\
 	CUDA_SYNC_STREAM;						\
 	if(in.header) (*out)->header=strdup(in.header);	\
@@ -393,7 +393,7 @@ cp2cpu_cell(d, Real)
 cp2cpu_cell(c, Comp)
 cp2cpu_cell(z, Comp)
 
-void zfarr_cur(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream){
+void zfarr_push(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream){
     X(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
@@ -401,15 +401,15 @@ void zfarr_cur(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream){
     X(free)(tmp);
 }
 
-void zfarr_cuc(struct zfarr *ca, int i, const cucmat &A, cudaStream_t stream){
-    C(mat) *tmp=NULL;
+void zfarr_push(struct zfarr *ca, int i, const cucmat &A, cudaStream_t stream){
+    XC(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
     zfarr_push(ca, i, tmp);
-    C(free)(tmp);
+    XC(free)(tmp);
 }
 
-void zfarr_curcell(struct zfarr *ca, int i, const curcell &A, cudaStream_t stream){
+void zfarr_push(struct zfarr *ca, int i, const curcell &A, cudaStream_t stream){
     X(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
@@ -417,12 +417,12 @@ void zfarr_curcell(struct zfarr *ca, int i, const curcell &A, cudaStream_t strea
     X(cellfree)(tmp);
 }
 
-void zfarr_cuccell(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream){
-    C(cell) *tmp=NULL;
+void zfarr_push(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream){
+    XC(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
     zfarr_push(ca, i, tmp);
-    C(cellfree)(tmp);
+    XC(cellfree)(tmp);
 }
 
 void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t stream, 

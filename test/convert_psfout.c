@@ -25,7 +25,7 @@ int main(){
 	    if(isim%100==0)
 		dbg("iwfs=%d, isim=%d\n",iwfs,isim);
 	    psf=ccellread("psfout/psfout_wfs%d_isim%d.bin",iwfs,isim);
-	    zfarr_ccell(ca, isim, psf);
+	    zfarr_push(ca, isim, psf);
 	    ccellfree(psf);
 	}
 	zfarr_close(ca);

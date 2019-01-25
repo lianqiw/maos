@@ -56,11 +56,11 @@ void apply_laplacian_map(dmat *opdout, const dmat *opd, double dx, double r0, do
 	error("opdout is not allocated\n");
     for(long iy=0; iy<ny; iy++){
 	for(long ix=0; ix<nx; ix++){
-	    IND(opdout,ix,iy)=cf*(-IND(opd,ix,iy)
-			       +0.25*(IND(opd,ix,iy==0?ny-1:iy-1)
-				      +IND(opd,ix==0?nx-1:ix-1,iy)
-				      +IND(opd,ix==nx-1?0:ix+1,iy)
-				      +IND(opd,ix,iy==ny-1?0:iy+1)));
+	    P(opdout,ix,iy)=cf*(-P(opd,ix,iy)
+			       +0.25*(P(opd,ix,iy==0?ny-1:iy-1)
+				      +P(opd,ix==0?nx-1:ix-1,iy)
+				      +P(opd,ix==nx-1?0:ix+1,iy)
+				      +P(opd,ix,iy==ny-1?0:iy+1)));
 	    
 	}
     }

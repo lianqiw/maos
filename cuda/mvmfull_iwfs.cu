@@ -57,7 +57,7 @@ typedef struct{
     curmat act;
     stream_t stream_p;//pixels
     stream_t stream_g;//grads
-    cuarray<stream_t> stream_a;//act
+    Array<stream_t> stream_a;//act
     stream_t stream_mvm;//mvm
     int ism;//index of stream for mvm
     int count;
@@ -255,7 +255,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	data[igpu]->grad=curmat(ng, 1);
 	data[igpu]->act=curmat(mvm1->nx, 1);
 	data[igpu]->event_w=new event_t[nsm];
-	data[igpu]->stream_a=cuarray<stream_t>(nsm);
+	data[igpu]->stream_a=Array<stream_t>(nsm);
 	data[igpu]->gpu=gpus[igpu];
 #if TIMING
 	cudaEventCreateWithFlags(&data[igpu]->event0, event_flag);
@@ -369,7 +369,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 		}
 		timing_sock->p[istep]+=myclockd()-tmp0;
 	    }
-	    DO(cudaMemcpyAsync(datai->pix.P()+isa*pixpsa, pcur, 2*nleft*pixpsa,
+	    DO(cudaMemcpyAsync(datai->pix()+isa*pixpsa, pcur, 2*nleft*pixpsa,
 			       cudaMemcpyHostToDevice, datai->stream_p));
 	    //Recored the event when the memcpy is finished
 	    DO(cudaEventRecord(datai->event_p[datai->count], datai->stream_p));
@@ -380,8 +380,8 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 #endif
 	    mtch_do<<<mtch_ngrid, dim3(mtch_dimx, mtch_dimy), 
 		mtch_dimx*mtch_dimy*sizeof(Real), datai->stream_g>>>
-		(datai->mtch.P()+isa*2*pixpsa, datai->pix.P()+isa*pixpsa, 
-		 datai->grad.P()+isa*2, pixpsa, nleft);
+		(datai->mtch()+isa*2*pixpsa, datai->pix()+isa*pixpsa, 
+		 datai->grad()+isa*2, pixpsa, nleft);
 	    //Record the event when matched filter is done
 	    DO(cudaEventRecord(datai->event_g[datai->count], datai->stream_g));
 
@@ -397,7 +397,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
 #else
 	    multimv_do<<<nblock, naeach, sizeof(Real)*naeach, datai->stream_a[datai->ism]>>>
-		(datai->cumvm.P()+nact*isa*2, datai->act.P(), datai->grad.P()+isa*2, 
+		(datai->cumvm()+nact*isa*2, datai->act(), datai->grad()+isa*2, 
 		 nact, nleft*2);
 #endif
 	    DO(cudaEventRecord(datai->event_w[datai->ism], datai->stream_a[datai->ism]));
@@ -427,7 +427,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 #if TIMING
 		DO(cudaEventRecord(datai->event0_mvm, datai->stream_mvm[0]));	
 #endif
-		DO(cudaMemcpyAsync(datai->cumvm_next.P()+datai->ic*mvm->nx, 
+		DO(cudaMemcpyAsync(datai->cumvm_next()+datai->ic*mvm->nx, 
 				   mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nleft, 
 				   cudaMemcpyHostToDevice, datai->stream_mvm));
 #if TIMING
@@ -454,7 +454,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 #if TIMING
 	    DO(cudaEventRecord(datai->event0_a, datai->stream_a[0]));
 #endif
-	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act.P(), nact*sizeof(Real), cudaMemcpyDeviceToHost, datai->stream_a[0]);
+	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act(), nact*sizeof(Real), cudaMemcpyDeviceToHost, datai->stream_a[0]);
 #if TIMING
 	    DO(cudaEventRecord(datai->event_a, datai->stream_a[0]));//record event when all act are copied so mvm can start.
 #endif
@@ -495,7 +495,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	for(int igpu=0; igpu<ngpu; igpu++){
 	    GPU_DATA_T *datai=data[igpu];
 	    cudaSetDevice(datai->gpu);
-	    cudaMemsetAsync(datai->act.P(), 0, nact*sizeof(Real), datai->stream_a[datai->ism]);
+	    cudaMemsetAsync(datai->act(), 0, nact*sizeof(Real), datai->stream_a[datai->ism]);
 	    datai->stream_a[datai->ism].sync();
 	    datai->stream_mvm.sync();
 	}

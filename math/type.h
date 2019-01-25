@@ -235,30 +235,32 @@ static inline void assert_2d(long ix, long iy, long nx, long ny){
 	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }
 }
-#define IND1(A,i) ((A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)])
-#define IND2(A,ix,iy) ((A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)])
-//#define PIND1(A,i) ((A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i)))
-//#define PIND2(A,ix,iy) ((A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)))
+#define P1(A,i) ((A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)])
+#define P2(A,ix,iy) ((A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)])
+//#define PP1(A,i) ((A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i)))
+//#define PP2(A,ix,iy) ((A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)))
 #else
-#define IND1(A,i) ((A)->p[(i)])
-#define IND2(A,ix,iy) ((A)->p[(ix)+(A)->nx*(iy)])
+#define P1(A,i) ((A)->p[(i)])
+#define P2(A,ix,iy) ((A)->p[(ix)+(A)->nx*(iy)])
 #endif
-#define PIND1(A,i) ((A)->p+(i))
-#define PIND2(A,ix,iy) ((A)->p+(ix)+(A)->nx*(iy))
+#define P0(A) ((A)->p)
+#define PP0(A) ((A)->p)
+#define PP1(A,i) ((A)->p+(i))
+#define PP2(A,ix,iy) ((A)->p+(ix)+(A)->nx*(iy))
 //#endif
-#define IND0(A) _Pragma("#error Invalid use. Use IND(A,i) or IND(A,ix,iy)\n")
-#define PIND0(A) _Pragma("#error Invalid use. Use PIND(A,i) or PIND(A,ix,iy)\n")
-#define IND_GET(_0,_1,_2,_3,NAME,...) NAME
-#define IND(...) IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)
-#define PIND(...) IND_GET(_0,__VA_ARGS__,PIND2,PIND1,PIND0,PIND0)(__VA_ARGS__)
+//#define P0(A) _Pragma("#error Invalid use. Use P(A,i) or P(A,ix,iy)\n")
+//#define PP0(A) _Pragma("#error Invalid use. Use PP(A,i) or PP(A,ix,iy)\n")
+#define P_GET(_0,_1,_2,_3,NAME,...) NAME
+#define P(...) P_GET(_0,__VA_ARGS__,P2,P1,P0)(__VA_ARGS__)
+#define PP(...) P_GET(_0,__VA_ARGS__,PP2,PP1,PP0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+(iy)*(A)->nx)
 
 //Define indexing using wrapping. See wrap()
-//#define IND1R(A,i) _Pragma("#error Invalid use. Use INDR(A,i,j)")
-#define INDR(A,ix,iy) IND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
-//#define INDR(...) IND_GET(_0,__VA_ARGS__,IND2R,IND1R,IND1R,IND1R)(__VA_ARGS__)
-//#define PIND1R(A,i) _Pragma("#error Invalid use. Use PINDR(A,i,j)")
-#define PINDR(A,ix,iy) PIND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
-//#define PINDR(...) IND_GET(_0,__VA_ARGS__,PIND2R,PIND1R,PIND1R,PIND1R)(__VA_ARGS__)
+//#define P1R(A,i) _Pragma("#error Invalid use. Use PR(A,i,j)")
+#define PR(A,ix,iy) P2(A, wrap(ix, A->nx), wrap(iy, A->ny))
+//#define PR(...) P_GET(_0,__VA_ARGS__,P2R,P1R,P1R,P1R)(__VA_ARGS__)
+//#define PP1R(A,i) _Pragma("#error Invalid use. Use PPR(A,i,j)")
+#define PPR(A,ix,iy) PP2(A, wrap(ix, A->nx), wrap(iy, A->ny))
+//#define PPR(...) P_GET(_0,__VA_ARGS__,PP2R,PP1R,PP1R,PP1R)(__VA_ARGS__)
 #define PCOLR(A,iy) ((A)->p+wrap(iy, A->ny)*(A)->nx)
 #endif

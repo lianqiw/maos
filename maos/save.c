@@ -78,7 +78,7 @@ void save_gradol(SIM_T *simu){
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)", "y %d",  iwfs);
 	}
 	if(simu->save->gradol[iwfs] && (simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){
-	    zfarr_dmat(simu->save->gradol[iwfs], simu->reconisim, simu->gradlastol->p[iwfs]);
+	    zfarr_push(simu->save->gradol[iwfs], simu->reconisim, simu->gradlastol->p[iwfs]);
 	}
     }
     if(parms->save.ngcov>0){
@@ -157,7 +157,7 @@ void save_recon(SIM_T *simu){
     if(parms->recon.alg==0 && !parms->sim.idealfit && !parms->recon.glao){
 	/*minimum variance tomo/fit reconstructor */
 	if(parms->save.opdr){
-	    zfarr_dcell(simu->save->opdr, simu->reconisim, simu->opdr);
+	    zfarr_push(simu->save->opdr, simu->reconisim, simu->opdr);
 	}
 	if(parms->save.opdx || parms->plot.opdx){
 	    dcell *opdx=simu->opdx;
@@ -165,7 +165,7 @@ void save_recon(SIM_T *simu){
 		atm2xloc(&opdx, simu);
 	    }
 	    if(parms->save.opdx){
-		zfarr_dcell(simu->save->opdx, simu->isim, opdx);
+		zfarr_push(simu->save->opdx, simu->isim, opdx);
 	    }
 	    if(parms->plot.opdx){ /*draw opdx */
 		for(int i=0; i<opdx->nx; i++){
@@ -182,18 +182,18 @@ void save_recon(SIM_T *simu){
     }
     if(parms->save.dm && (!parms->sim.closeloop || simu->isim>0)){
 	if(simu->dmfit){
-	    zfarr_dcell(simu->save->dmfit, simu->reconisim, simu->dmfit);
+	    zfarr_push(simu->save->dmfit, simu->reconisim, simu->dmfit);
 	}
 	if(simu->dmerr){
-	    zfarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
+	    zfarr_push(simu->save->dmerr, simu->reconisim, simu->dmerr);
 	}
 	if(simu->dmint->mint->p[0]){
-	    zfarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
+	    zfarr_push(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
 	}
 	if(simu->Merr_lo){
-	    zfarr_dmat(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo->p[0]);
+	    zfarr_push(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo->p[0]);
 	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
-		zfarr_dmat(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]->p[0]);
+		zfarr_push(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]->p[0]);
 	    }
 	}
     }
@@ -253,8 +253,8 @@ void save_dmreal(SIM_T *simu){
 	}
     }
     if(parms->save.dm){
-	zfarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
-	zfarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
+	zfarr_push(simu->save->dmreal, simu->isim, simu->dmreal);
+	zfarr_push(simu->save->dmcmd, simu->isim, simu->dmcmd);
 	if(simu->ttmreal){
 	    simu->save->ttmreal->p[simu->isim*2]=simu->ttmreal->p[0];
 	    simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];

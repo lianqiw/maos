@@ -197,9 +197,9 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 
 		cuzero(otf, stream);
 		cwm_do<<<DIM2(nx2, ny2,16),0,stream>>>
-		    (otf.P()+ix0+iy0*ncomp, 
-		     cupowfs->pyramid[iwvl].P()+ix0+iy0*ncomp, 
-		     wvf.P()+ix0+offx2+(iy0+offy2)*nembed,
+		    (otf()+ix0+iy0*ncomp, 
+		     cupowfs->pyramid[iwvl]()+ix0+iy0*ncomp, 
+		     wvf()+ix0+offx2+(iy0+offy2)*nembed,
 		     ncomp, nembed, nx2, ny2);
 		//cuwrite(otf, "gpu_wvf1_%d", ipos);
 		CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
@@ -214,7 +214,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);
 	//cuwrite(otf, "gpu_wvf5");
 	cwm_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
-	    (otf.P(), cupowfs->pynominal.P(), ncomp*ncomp);
+	    (otf(), cupowfs->pynominal(), ncomp*ncomp);
 	CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
 	//cuwrite(otf, "gpu_wvf6");
 	//Use ray tracing for si
@@ -230,15 +230,15 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 		saloc=cupowfs->saloc;
 	    }
 	    if(pywfs->pupilshift){
-		shx=IND(pywfs->pupilshift, ind, 0)*saloc.Dx();
-		shy=IND(pywfs->pupilshift, ind, 1)*saloc.Dy();
+		shx=P(pywfs->pupilshift, ind, 0)*saloc.Dx();
+		shy=P(pywfs->pupilshift, ind, 1)*saloc.Dy();
 	    }
-	    Real* pout=ints.P()+ind*nsa;
-	    Real offx=IND(pywfs->sioff, ind, 0);
-	    Real offy=IND(pywfs->sioff, ind, 1);
+	    Real* pout=ints()+ind*nsa;
+	    Real offx=P(pywfs->sioff, ind, 0);
+	    Real offy=P(pywfs->sioff, ind, 1);
 	    prop_linear<<<DIM(nsa, 256), 0, stream>>>
 		(pout, otf, otf.Nx(), otf.Ny(), 
-		 saloc, saloc.Nloc(),
+		 saloc(), saloc.Nloc(),
 		 1./dx2, 1./dx2, 
 		 (offx*ncomp2)-(-ncomp2+0.5)+shx,
 		 (offy*ncomp2)-(-ncomp2+0.5)+shy, scale);

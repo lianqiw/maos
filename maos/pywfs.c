@@ -60,8 +60,8 @@ static void pywfs_mksi(PYWFS_T *pywfs, loc_t *loc_fft, loc_t *saloc0, double dx2
 	}
 	double shx=0, shy=0;
 	if(pywfs->pupilshift){
-	    shx=IND(pywfs->pupilshift, ind, 0)*dsa;
-	    shy=IND(pywfs->pupilshift, ind, 1)*dsa;
+	    shx=P(pywfs->pupilshift, ind, 0)*dsa;
+	    shy=P(pywfs->pupilshift, ind, 1)*dsa;
 	}
 	double offx=0, offy=0;
 	switch(pyside){
@@ -87,8 +87,8 @@ static void pywfs_mksi(PYWFS_T *pywfs, loc_t *loc_fft, loc_t *saloc0, double dx2
 	default:
 	    error("Invalid dbg.pwfs_side=%d\n", pyside);
 	}
-	IND(pywfs->sioff, ind, 0)=offx;
-	IND(pywfs->sioff, ind, 1)=offy;
+	P(pywfs->sioff, ind, 0)=offx;
+	P(pywfs->sioff, ind, 1)=offy;
 	pywfs->si->p[ind]=mkh(loc_fft, saloc,
 		       (offx*ncomp2)*dx2+shx, 
 		       (offy*ncomp2)*dx2+shy,
@@ -208,8 +208,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 			error("Invalid pwfs_side=%d\n", pyside);
 		    }
 		}
-		IND(pp,ix,iy)=cexp(opd*coeff);
-		IND(pyramid, ix, iy)=opd;//saving only.
+		P(pp,ix,iy)=cexp(opd*coeff);
+		P(pyramid, ix, iy)=opd;//saving only.
 	    }
 	}
     }
@@ -232,9 +232,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	int jy=iy-ncomp2;
 	for(int ix=0; ix<ncomp; ix++){
 	    int jx=ix-ncomp2; 
-	    IND(pn,ix,iy)=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
+	    P(pn,ix,iy)=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
 	    if(pixblur){
-		IND(pn,ix,iy)*=exp(e0b*(jx*jx+jy*jy));
+		P(pn,ix,iy)*=exp(e0b*(jx*jx+jy*jy));
 	    }
 	}
     }
@@ -258,10 +258,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	pywfs->pupilshift=dnew(4,2);
 	for(int i=0; i<4; i++){
 	    double tmp;
-	    tmp=IND(parms->dbg.pwfs_psx, i);
-	    IND(pywfs->pupilshift, i, 0)=tmp-redefine?round(tmp):0;
-	    tmp=IND(parms->dbg.pwfs_psy, i);
-	    IND(pywfs->pupilshift, i, 1)=tmp-redefine?round(tmp):0;
+	    tmp=P(parms->dbg.pwfs_psx, i);
+	    P(pywfs->pupilshift, i, 0)=tmp-redefine?round(tmp):0;
+	    tmp=P(parms->dbg.pwfs_psy, i);
+	    P(pywfs->pupilshift, i, 1)=tmp-redefine?round(tmp):0;
 
 	}
 	if(parms->save.setup){
@@ -310,7 +310,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	pywfs->saa=dnew(nints, 1);
 	for(int i=0; i<ints->nx; i++){
 	    for(int j=0; j<ints->ny; j++){
-		pywfs->saa->p[i]+=IND(ints, i, j);
+		pywfs->saa->p[i]+=P(ints, i, j);
 	    }
 	}
 	cellfree(ints);
@@ -391,7 +391,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	for(int isa=0; isa<nsa; isa++){
 	    double ogi=pywfs->gain*parms->powfs[ipowfs].gradscale;
 	    double sig=pywfs->saa->p[isa]*parms->powfs[ipowfs].siglev;//siglev of subaperture
-	    IND(sanea,isa,0)=IND(sanea,isa,1)=pow(ogi/sig,2)*(sig+4*rne*rne);
+	    P(sanea,isa,0)=P(sanea,isa,1)=pow(ogi/sig,2)*(sig+4*rne*rne);
 	}
     }
     if(parms->save.setup){
@@ -455,7 +455,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		addnoise(ints2, &rstat, 0, 0, 0, 0, 0, in, 1);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints2);
 		dmm(&tmp, 0, reg, grad, "nn", 1);
-		IND(res, j, in)=tmp->p[0];
+		P(res, j, in)=tmp->p[0];
 		info("%d of %d, %d of %d: %g\n", j, nj, in, nn, tmp->p[0]);
 	    }
 	}
@@ -659,7 +659,7 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
 	case 1:
 	    info_once("PWFS: Individual siglev correction.\n");
 	    for(int i=0; i<pyside; i++){
-		isum+=IND(ints, isa, i);
+		isum+=P(ints, isa, i);
 	    }
 	    break;
 	case 2:
@@ -670,14 +670,14 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
 	double alpha2=gain/isum;
 	switch(pyside){
 	case 3:
-	    pgx[isa]=(IND(ints,isa,1)-IND(ints,isa,2))*alpha2*triscalex;
-	    pgy[isa]=(IND(ints,isa,0)-0.5*(IND(ints,isa,1)+IND(ints,isa,2)))*alpha2;
+	    pgx[isa]=(P(ints,isa,1)-P(ints,isa,2))*alpha2*triscalex;
+	    pgy[isa]=(P(ints,isa,0)-0.5*(P(ints,isa,1)+P(ints,isa,2)))*alpha2;
 	    break;
 	case 4:
-	    pgx[isa]=(IND(ints,isa,0)-IND(ints,isa,1)
-		      +IND(ints,isa,2)-IND(ints,isa,3))*alpha2;
-	    pgy[isa]=(IND(ints,isa,0)+IND(ints,isa,1)
-		      -IND(ints,isa,2)-IND(ints,isa,3))*alpha2;
+	    pgx[isa]=(P(ints,isa,0)-P(ints,isa,1)
+		      +P(ints,isa,2)-P(ints,isa,3))*alpha2;
+	    pgy[isa]=(P(ints,isa,0)+P(ints,isa,1)
+		      -P(ints,isa,2)-P(ints,isa,3))*alpha2;
 	    break;
 	}
     }
@@ -883,9 +883,9 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const char *distortion, cons
 	    memcpy(PCOL(mod1, 1), PCOL(mod, 1000), sizeof(double)*mod->nx);
 	    memcpy(PCOL(mod1, 2), PCOL(mod, 3200), sizeof(double)*mod->nx);
 	}else{
-	    IND(mod1, 30, 0)=1;//sqrt(locin->nloc);
-	    IND(mod1, 800, 1)=1;//sqrt(locin->nloc);
-	    IND(mod1, 3000, 2)=1;//sqrt(locin->nloc);
+	    P(mod1, 30, 0)=1;//sqrt(locin->nloc);
+	    P(mod1, 800, 1)=1;//sqrt(locin->nloc);
+	    P(mod1, 3000, 2)=1;//sqrt(locin->nloc);
 	}
 	writebin(mod1, "mod1");
 	dcell *gg1=dcellnew(13,1);

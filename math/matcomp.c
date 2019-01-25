@@ -212,7 +212,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	T *restrict out2=PIND(A, skipx, skipy);
+	T *restrict out2=PP(A, skipx, skipy);
 	for(int iy=iystart; iy<iyend; iy++){
 	    T * outi=out2+iy*noutx;
 	    const T * ini=in+iy*ninx;
@@ -272,11 +272,11 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    for(int ix=sx; ix<mx; ix++){				\
 		ix2=ifloor(x2); x3=x2-ix2;x31=1.-x3;			\
 		iy2=ifloor(y2); y3=y2-iy2;				\
-		IND(A,ix,iy) =						\
-		    AFTER((CMD(IND(B,ix2,iy2))*(x31)			\
-			   +CMD(IND(B,ix2+1,iy2))*x3)*(1.-y3)		\
-			  +(CMD(IND(B,ix2,iy2+1))*(x31)			\
-			    +CMD(IND(B,ix2+1,iy2+1))*x3)*y3);		\
+		P(A,ix,iy) =						\
+		    AFTER((CMD(P(B,ix2,iy2))*(x31)			\
+			   +CMD(P(B,ix2+1,iy2))*x3)*(1.-y3)		\
+			  +(CMD(P(B,ix2,iy2+1))*(x31)			\
+			    +CMD(P(B,ix2+1,iy2+1))*x3)*y3);		\
 		x2+=ctheta;						\
 		y2+=negstheta;						\
 	    }								\
@@ -328,7 +328,7 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	T *out2=PIND(A, skipx, skipy);
+	T *out2=PP(A, skipx, skipy);
 	for(long iy=iystart; iy<iyend; iy++){
 	    T *outi=out2+iy*noutx;
 	    const R *ini=PCOL(B, iy);
@@ -357,11 +357,11 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 		    iy2=ifloor(y2); 
 		    x2=x2-ix2; 
 		    y2=y2-iy2; 
-		    IND(A,ix,iy) =
-			+IND(B,ix2,iy2)*((1.-x2)*(1.-y2))
-			+IND(B,ix2+1,iy2)*(x2*(1.-y2))
-			+IND(B,ix2,iy2+1)*((1-x2)*y2)
-			+IND(B,ix2+1,iy2+1)*(x2*y2); 
+		    P(A,ix,iy) =
+			+P(B,ix2,iy2)*((1.-x2)*(1.-y2))
+			+P(B,ix2+1,iy2)*(x2*(1.-y2))
+			+P(B,ix2,iy2+1)*((1-x2)*y2)
+			+P(B,ix2+1,iy2+1)*(x2*y2); 
 		} 
 	    } 
 	} 
@@ -404,11 +404,11 @@ void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B,
 		iy2=ifloor(y2);						\
 		x2=x2-ix2;						\
 		y2=y2-iy2;						\
-		IND(A,ix,iy) =AFTER(+CMD(IND(B,ix2,iy2))*((1.-x2)*(1.-y2)) \
-				    +CMD(IND(B,ix2+1,iy2))*(x2*(1.-y2))	\
-				    +CMD(IND(B,ix2,iy2+1))*((1-x2)*y2)	\
-				    +CMD(IND(B,ix2+1,iy2+1))*(x2*y2));	\
-	    }else IND(A,ix,iy)=0;					\
+		P(A,ix,iy) =AFTER(+CMD(P(B,ix2,iy2))*((1.-x2)*(1.-y2)) \
+				    +CMD(P(B,ix2+1,iy2))*(x2*(1.-y2))	\
+				    +CMD(P(B,ix2,iy2+1))*((1-x2)*y2)	\
+				    +CMD(P(B,ix2+1,iy2+1))*(x2*y2));	\
+	    }else P(A,ix,iy)=0;					\
 	}								\
     }
     /*it is not good to embed flag in the inner most loop. */
@@ -641,13 +641,13 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     if(otf->p==otfin->p){
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		IND(otf,ix,iy)*=ux[ix]*uy[iy];
+		P(otf,ix,iy)*=ux[ix]*uy[iy];
 	    }
 	}
     }else{
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		IND(otf,ix,iy)=IND(otfin,ix,iy)*ux[ix]*uy[iy];
+		P(otf,ix,iy)=P(otfin,ix,iy)*ux[ix]*uy[iy];
 	    }
 	}
     }

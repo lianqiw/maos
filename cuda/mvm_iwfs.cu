@@ -169,7 +169,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 	    cudaSetDevice(gpus[igpu]); 
 	    GPU_DATA_T *datai=data[igpu];
 	    //One stream handling the memcpy
-	    DO(cudaMemcpyAsync(datai->grad.P()+ig, grad->p+ig, sizeof(Real)*nleft, 
+	    DO(cudaMemcpyAsync(datai->grad()+ig, grad->p+ig, sizeof(Real)*nleft, 
 			       cudaMemcpyHostToDevice, datai->stream_g));
 	    //Recored the event when the memcpy is finished
 	    DO(cudaEventRecord(datai->event_g[datai->count_g], datai->stream_g));
@@ -182,7 +182,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 		pbeta=&one;
 	    }
 	    //Another stream does the matrix vector multiplication. Wait for the event before executing.
-	    DO(CUBL(gemv)(datai->stream_a, CUBLAS_OP_N, nact, nleft, &one, datai->cumvm.P()+nact*ig, nact, datai->grad.P()+ig, 1, pbeta, datai->act, 1));
+	    DO(CUBL(gemv)(datai->stream_a, CUBLAS_OP_N, nact, nleft, &one, datai->cumvm()+nact*ig, nact, datai->grad()+ig, 1, pbeta, datai->act, 1));
 	    DO(cudaEventRecord(datai->event_a[1], datai->stream_a));
 	    datai->count_g++;
 	}
@@ -204,7 +204,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 		}
 		//wait for gradient transport to finish before copying mvm.
 		DO(cudaStreamWaitEvent(datai->stream_mvm, datai->event_gall, 0));
-		DO(cudaMemcpyAsync(datai->cumvm_next.P()+datai->ic*mvm->nx, mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nleft, 
+		DO(cudaMemcpyAsync(datai->cumvm_next()+datai->ic*mvm->nx, mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nleft, 
 				   cudaMemcpyHostToDevice, datai->stream_mvm));
 		DO(cudaEventRecord(datai->event_mvm, datai->stream_mvm));
 		datai->ic+=nleft;

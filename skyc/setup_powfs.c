@@ -63,7 +63,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		    int jx=ix-ncomp2;
 		    double ir=ct*jx+st*jy;
 		    double ia=-st*jx+ct*jy;
-		    IND(pn,ix,iy)=sinc(ir*dupth)*sinc(ia*dupth)
+		    P(pn,ix,iy)=sinc(ir*dupth)*sinc(ia*dupth)
 			*pow(e0,ir*ir*du2)*pow(e0,ia*ia*du2)
 			*pdtheta;
 		}

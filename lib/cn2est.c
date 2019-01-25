@@ -86,10 +86,10 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     for(int iy=0; iy<nx; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    /*Only use a subaperture if we are able to make curvature. */
-	    if(IND(mask,ix,iy) && IND(mask,ix+1,iy) && IND(mask,ix-1,iy) &&
-	       IND(mask,ix,iy+1) && IND(mask,ix,iy-1)){
-		IND(cn2est->mask,ix,iy)=1;
-		IND(pover,ix,iy)=1;
+	    if(P(mask,ix,iy) && P(mask,ix+1,iy) && P(mask,ix-1,iy) &&
+	       P(mask,ix,iy+1) && P(mask,ix,iy-1)){
+		P(cn2est->mask,ix,iy)=1;
+		P(pover,ix,iy)=1;
 		if(ix>ixmax) ixmax=ix;
 		if(ix<ixmin) ixmin=ix;
 		if(iy>iymax) iymax=iy;
@@ -179,8 +179,8 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	pair->wfs0=wfs0;
 	pair->wfs1=wfs1;
 	/*The separation between the stars */
-	const double dthetax=IND(wfstheta,wfs0,0)-IND(wfstheta,wfs1,0);
-	const double dthetay=IND(wfstheta,wfs0,1)-IND(wfstheta,wfs1,1);
+	const double dthetax=P(wfstheta,wfs0,0)-P(wfstheta,wfs1,0);
+	const double dthetay=P(wfstheta,wfs0,1)-P(wfstheta,wfs1,1);
 	/*the angular distance between WFS */
 	double dtheta=sqrt(dthetax*dthetax+dthetay*dthetay);
 	/*The direction of the WFS pair baseline vector */
@@ -305,7 +305,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 		    const double psd=psd_coef*pow((fx*fx+fy*fy)*zetan2+L02,-11./6.);
 		    /*gx diff is along x, gy diff is along y to form real curvature */
 		    const double cur=pow(2*fx*(cos(2*M_PI*dsa*fx)-1)+2*fy*(cos(2*M_PI*dsa*fy)-1),2);
-		    IND(pmc,ix,iy)=pow(sincfy*sincfx,2)*psd*cur;
+		    P(pmc,ix,iy)=pow(sincfy*sincfx,2)*psd*cur;
 		}/*ix */
 	    }/*iy */
 	    /*doing fft */
@@ -332,15 +332,15 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 		    /*Do interpolation using nearest neighbor */
 		    int ixx=(int)round(xx);
 		    int iyy=(int)round(yy);
-		    double imc=creal(IND(pmc,ixx,iyy));
+		    double imc=creal(P(pmc,ixx,iyy));
 #else
 		    /*Do interpolation using bilinear spline interp. */
 		    int ixx=(int)floor(xx); xx=xx-ixx;
 		    int iyy=(int)floor(yy); yy=yy-iyy;
-		    double imc=creal((IND(pmc,ixx,iyy)*(1-xx)+IND(pmc,ixx+1,iyy)*(xx))*(1-yy)
-				     +(IND(pmc,ixx,iyy+1)*(1-xx)+IND(pmc,ixx+1,iyy+1)*(xx))*yy);
+		    double imc=creal((P(pmc,ixx,iyy)*(1-xx)+P(pmc,ixx+1,iyy)*(xx))*(1-yy)
+				     +(P(pmc,ixx,iyy+1)*(1-xx)+P(pmc,ixx+1,iyy+1)*(xx))*yy);
 #endif
-		    IND(Pnk, isep, iht-pair->iht0)=imc;
+		    P(Pnk, isep, iht-pair->iht0)=imc;
 		}
 	    }
 	}
@@ -393,11 +393,11 @@ static void cn2est_embed(cn2est_t *cn2est, dcell *gradol, int icol){
 	const int nx=cn2est->curi->p[iwfs]->nx;
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		if(IND(cn2est->mask,ix,iy)){
-		    IND(cur,ix,iy)=IND(gx,ix+1,iy)+IND(gx,ix-1,iy)-2*IND(gx,ix,iy)/*gx along x */
-			+IND(gy,ix,iy+1)+IND(gy,ix,iy-1)-2*IND(gy,ix,iy);/*gy along y */
+		if(P(cn2est->mask,ix,iy)){
+		    P(cur,ix,iy)=P(gx,ix+1,iy)+P(gx,ix-1,iy)-2*P(gx,ix,iy)/*gx along x */
+			+P(gy,ix,iy+1)+P(gy,ix,iy-1)-2*P(gy,ix,iy);/*gy along y */
 		}else{
-		    IND(cur,ix,iy)=0;//must set to zero.
+		    P(cur,ix,iy)=0;//must set to zero.
 		}
 	    }
 	}
@@ -465,7 +465,7 @@ void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;
 	int off=cn2est->nembed/2;
 	for(long isep=pair->iht0; isep<pair->iht1; isep++){
-	    cc[isep-pair->iht0]=IND(covr, off+isep, off)*IND(cn2est->overlapi,off+isep,off);
+	    cc[isep-pair->iht0]=P(covr, off+isep, off)*P(cn2est->overlapi,off+isep,off);
 	}
 #else
 	for(long isep=0; isep<covi->nx*covi->ny; isep++){

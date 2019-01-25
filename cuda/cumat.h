@@ -37,7 +37,7 @@ template <typename T>
     }
     if(A && A.Nx()>0 && A.Ny()>0){
 	T *tmp=(T*)malloc(A.Nx()*A.Ny()*sizeof(T));
-	cudaMemcpy(tmp, A.P(), A.Nx()*A.Ny()*sizeof(T), cudaMemcpyDeviceToHost);
+	cudaMemcpy(tmp, A(), A.Nx()*A.Ny()*sizeof(T), cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
 	writearr(fp, 0, sizeof(T), magic, NULL, tmp, A.Nx(), A.Ny());
 	free(tmp);

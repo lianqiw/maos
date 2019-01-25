@@ -59,10 +59,10 @@ Real curcellmaxabs(const curcell &a, cudaStream_t stream);
    Add tip/tilt to OPD
 */
 static inline void curaddptt(curmat &opd, Real (*loc)[2], Real pis, Real tx, Real ty, cudaStream_t stream){
-    add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd.P(), loc, opd.N(), pis, tx, ty);
+    add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd(), loc, opd.N(), pis, tx, ty);
 }
 static inline void curaddptt(curmat &opd, Real (*loc)[2], Real *ptt, Real pis, Real tx, Real ty,  cudaStream_t stream){
-    add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd.P(), loc, opd.N(), ptt, pis, tx, ty);
+    add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd(), loc, opd.N(), ptt, pis, tx, ty);
 }
 
 #endif

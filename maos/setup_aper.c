@@ -110,7 +110,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 		if(parms->misreg.dm2sci[ievl+idm*nevl])
 #pragma omp task shared(isset)
 		{
-		    IND(aper->locs_dm, ievl, idm)
+		    P(aper->locs_dm, ievl, idm)
 			=loctransform(aper->locs, parms->misreg.dm2sci[ievl+idm*nevl]);
 		    isset=1;
 		}

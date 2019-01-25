@@ -187,7 +187,7 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	}/*for iact */
 	pp[nact]=count;
 	dspsetnzmax(slavet, count);
-	IND(actslave,idm,idm)=dspmulsp(slavet, slavet,"nt");
+	P(actslave,idm,idm)=dspmulsp(slavet, slavet,"nt");
 	if(NW && NW->p[idm] && 0){
 	    /*Now we need to make sure NW is in the NULL
 	      space of the slaving regularization, especially
@@ -210,7 +210,7 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 		for(int iy=0; iy<NW->p[idm]->ny; iy++){
 		    for(int iact=0; iact<nact; iact++){
 			if((stuck && stuck[iact])||(floated && floated[iact])){
-			    IND(pNW,iact,iy)=0;
+			    P(pNW,iact,iy)=0;
 			}
 		    }
 		}
@@ -305,7 +305,7 @@ void act_zero(loccell *aloc, const dcell *HB, const lcell *dead){
 	    for(int iact=0; iact<nact; iact++){
 		if(dead->p[idm]->p[iact]){
 		    for(int iy=0; iy<hb->ny; iy++){
-			IND(phb,iact,iy)=0;
+			P(phb,iact,iy)=0;
 		    }
 		}
 	    }
@@ -358,7 +358,7 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 		    int kact=loc_map_get(map, mapx+ix, mapy+iy)-1;
 		    if(kact>-1){
 			if(!isfloat[kact]){
-			    IND(indfloat,nindfloat[kact], kact)=iact;
+			    P(indfloat,nindfloat[kact], kact)=iact;
 			    nindfloat[kact]++;
 			    neighbor[iact]++;
 			    nzmax+=4;/*assume 1 point couples to 4 points max. */
@@ -372,28 +372,28 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 	    dspcell*  pdHA=dHA;
 	    /*Create dHA to assign weights of floating actuators to neighbors. */
 	    for(int ifit=0; ifit<(*HA)->nx; ifit++){
-		spint *pp=IND(pHA,ifit,idm)->p;
-		spint *pi=IND(pHA,ifit,idm)->i;
-		double *px=IND(pHA,ifit,idm)->x;
+		spint *pp=P(pHA,ifit,idm)->p;
+		spint *pi=P(pHA,ifit,idm)->i;
+		double *px=P(pHA,ifit,idm)->x;
 
-		IND(pdHA,ifit,idm)=dspnew(IND(pHA,ifit,idm)->nx, IND(pHA,ifit,idm)->ny, nzmax);
-		spint *pp2=IND(pdHA,ifit,idm)->p;
-		spint *pi2=IND(pdHA,ifit,idm)->i;
-		double *px2=IND(pdHA,ifit,idm)->x;
+		P(pdHA,ifit,idm)=dspnew(P(pHA,ifit,idm)->nx, P(pHA,ifit,idm)->ny, nzmax);
+		spint *pp2=P(pdHA,ifit,idm)->p;
+		spint *pi2=P(pdHA,ifit,idm)->i;
+		double *px2=P(pdHA,ifit,idm)->x;
 		long count=0;
 		for(long iact=0; iact<nact; iact++){
 		    pp2[iact]=count;
 		    if(nindfloat[iact]){
 			for(long in=0; in<nindfloat[iact]; in++){
-			    long jact=IND(indfloat,in,iact);/*the floating act. */
+			    long jact=P(indfloat,in,iact);/*the floating act. */
 			    double scale=1./neighbor[jact];
 			    for(long ie=pp[jact]; ie<pp[jact+1]; ie++){
 				if(count>=nzmax){
 				    nzmax*=2;
-				    dspsetnzmax(IND(pdHA,ifit,idm), nzmax);
-				    pp2=IND(pdHA,ifit,idm)->p;
-				    pi2=IND(pdHA,ifit,idm)->i;
-				    px2=IND(pdHA,ifit,idm)->x;
+				    dspsetnzmax(P(pdHA,ifit,idm), nzmax);
+				    pp2=P(pdHA,ifit,idm)->p;
+				    pi2=P(pdHA,ifit,idm)->i;
+				    px2=P(pdHA,ifit,idm)->x;
 				}	
 				pi2[count]=pi[ie];
 				px2[count]=px[ie]*scale;
@@ -403,7 +403,7 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 		    }
 		}
 		pp2[nact]=count;
-		dspsetnzmax(IND(pdHA,ifit,idm), count);
+		dspsetnzmax(P(pdHA,ifit,idm), count);
 		/*Remove weights of floating actuatorsf from HA. */
 		for(int jact=0; jact<actfloat->p[idm]->nx; jact++){
 		    int iact=actfloat->p[idm]->p[jact];
@@ -416,13 +416,13 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 	    for(long iact=0; iact<nact; iact++){
 		if(nindfloat[iact]){
 		    for(long in=0; in<nindfloat[iact]; in++){
-			long jact=IND(indfloat,in,iact);/*the floating act. */
+			long jact=P(indfloat,in,iact);/*the floating act. */
 			double scale=1./neighbor[jact];
 			for(int ifit=0; ifit<HB->nx; ifit++){
-			    dmat *hbi=IND(HB,ifit,idm);
+			    dmat *hbi=P(HB,ifit,idm);
 			    dmat*  phbi=hbi;
 			    for(long ix=0; ix<hbi->nx; ix++){
-				IND(phbi,ix,iact)+=IND(phbi,ix,jact)*scale;
+				P(phbi,ix,iact)+=P(phbi,ix,jact)*scale;
 			    }
 			}
 		    }
@@ -431,7 +431,7 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 	    for(int jact=0; jact<actfloat->p[idm]->nx; jact++){
 		int iact=actfloat->p[idm]->p[jact];
 		for(int ifit=0; ifit<HB->nx; ifit++){
-		    dmat *hbi=IND(HB,ifit,idm);
+		    dmat *hbi=P(HB,ifit,idm);
 		    memset(PCOL(hbi, iact), 0, hbi->nx*sizeof(double));
 		}
 	    }
@@ -458,13 +458,13 @@ void act_stuck_cmd(loccell *aloc, /**<[in] Actuator grid array*/
 	if(!stuck->p[idm]) continue;
 	const int nact=aloc->p[idm]->nloc;
 	for(int iy=0; iy<adm->ny; iy++){
-	    dmat *pai=IND(adm,idm,iy);
+	    dmat *pai=P(adm,idm,iy);
 	    dmat*  px=pai;
 	    assert(pai->nx==aloc->p[idm]->nloc);
 	    for(int icol=0; icol<pai->ny; icol++){
 		for(int iact=0; iact<nact; iact++){
 		    if(stuck->p[idm]->p[iact]){
-			IND(px,iact,icol)=0;
+			P(px,iact,icol)=0;
 		    }
 		}
 	    }

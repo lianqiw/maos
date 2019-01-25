@@ -153,7 +153,7 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 		AtW=X(new)(A->ny,A->nx);
 		for(long iy=0; iy<A->ny; iy++){
 		    for(long ix=0;ix<A->nx; ix++){
-			IND(AtW,iy,ix)=IND(A,ix,iy)*IND(wt,ix);
+			P(AtW,iy,ix)=P(A,ix,iy)*P(wt,ix);
 		    }
 		}
 	    }else{
@@ -294,7 +294,7 @@ X(mat)* X(chol)(const X(mat) *A){
 	X(mat)*  Bp=B;
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<iy; ix++){
-		IND(Bp,ix,iy)=0;
+		P(Bp,ix,iy)=0;
 	    }
 	}
     }

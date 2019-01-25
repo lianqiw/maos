@@ -125,13 +125,13 @@ void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stre
     }
     //Apply W1: Piston removal
     inn_multi_do<<<dim3(32, ndir), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(Real), stream>>>
-	(pis.P(), xin, W1.P(), W1.Nx());
+	(pis(), xin, W1(), W1.Nx());
     assign_multi_do<<<dim3(32, ndir), dim3(256), 0, stream>>>
-	(xout, W1.P(), pis.P(), -1, W1.Nx());
+	(xout, W1(), pis(), -1, W1.Nx());
     //Apply W0: bilinar-weighting
     if(W0f){
 	apply_W0_do<<<dim3(16, ndir), dim3(256,1), 0, stream>>> 		
-	    (xout, xin, W0f.P(), W0v, nxx, W1.Nx(), W0f.Nx());
+	    (xout, xin, W0f(), W0v, nxx, W1.Nx(), W0f.Nx());
     }
     if(W0p){
 	cuspmul(xout, W0p, xin, ndir, 'n', 1.f, stream);

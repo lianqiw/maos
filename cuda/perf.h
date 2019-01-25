@@ -23,11 +23,11 @@
  */
 struct cuperf_t{
     static int nevl;
-    static cuarray<int> nembed;
-    static cuarray<int> psfsize;
-    static cuarray<Real> wvls;
-    static cuarray<stream_t>   stream;
-    static cuarray<cufftHandle>    plan;
+    static Array<int> nembed;
+    static Array<int> psfsize;
+    static Array<Real> wvls;
+    static Array<stream_t>   stream;
+    static Array<cufftHandle>    plan;
     static curcell surf;
     static curcell opd;
     static curcell psfcl;
@@ -40,7 +40,7 @@ struct cuperf_t{
     static Real **ccb_ol, **ccb_cl;
     static pthread_mutex_t perfmutex;
     culoc_t locs;
-    cuarray<cuarray<culoc_t> > locs_dm;
+    Array<Array<culoc_t> > locs_dm;
     curmat imcc;
     curmat amp;
     int    **embed;

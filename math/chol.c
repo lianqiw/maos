@@ -426,7 +426,7 @@ static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
 	double *tmp=mymalloc(in->nx,double);
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		tmp[icx]=IND(in,perm[icx],icy);
+		tmp[icx]=P(in,perm[icx],icy);
 	    }
 	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
 	}
@@ -434,7 +434,7 @@ static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
     }else{
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		IND(pout,icx,icy)=IND(in,perm[icx],icy);
+		P(pout,icx,icy)=P(in,perm[icx],icy);
 	    }
 	}
     }
@@ -453,7 +453,7 @@ static inline void chol_perm_b(dmat **out, spint *perm, const dmat *in){
 	double *tmp=mymalloc(in->nx,double);
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		tmp[perm[icx]]=IND(in,icx,icy);
+		tmp[perm[icx]]=P(in,icx,icy);
 	    }
 	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
 	}
@@ -461,7 +461,7 @@ static inline void chol_perm_b(dmat **out, spint *perm, const dmat *in){
     }else{
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		IND(pout,perm[icx],icy)=IND(in,icx,icy);
+		P(pout,perm[icx],icy)=P(in,icx,icy);
 	    }
 	}
     }
@@ -485,10 +485,10 @@ static void chol_solve_lower_each(thread_t *info){
     for(long icol=0; icol<A->ny; icol++){
 	double AxI=1./Ax[Ap[icol]];
 	for(long iy=info->start; iy<info->end; iy++){
-	    IND(y2,icol,iy)*=AxI;
-	    double val=-IND(y2,icol,iy);
+	    P(y2,icol,iy)*=AxI;
+	    double val=-P(y2,icol,iy);
 	    for(long irow=Ap[icol]+1; irow<Ap[icol+1]; irow++){
-		IND(y2,Ai[irow],iy)+=val*Ax[irow];/*update in place. */
+		P(y2,Ai[irow],iy)+=val*Ax[irow];/*update in place. */
 	    }
 	}
     }
@@ -500,9 +500,9 @@ static void chol_solve_lower_each(thread_t *info){
 	    double sum=0;
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-1; irow>Ap[icol]; irow--){
-		sum+=Ax[irow]*IND(y2,Ai[irow],iy);
+		sum+=Ax[irow]*P(y2,Ai[irow],iy);
 	    }
-	    IND(y2,icol,iy)=(IND(y2,icol,iy)-sum)*AxI;
+	    P(y2,icol,iy)=(P(y2,icol,iy)-sum)*AxI;
 	}
     }
 }
@@ -524,10 +524,10 @@ static void chol_solve_upper_each(thread_t *info){
 	for(long iy=info->start; iy<info->end; iy++){
 	    double sum=0;
 	    for(long irow=Ap[icol]; irow<Ap[icol+1]-1; irow++){
-		sum+=Ax[irow]*IND(y2,Ai[irow],iy);
+		sum+=Ax[irow]*P(y2,Ai[irow],iy);
 	    }
 	    /*assert(Ai[Ap[icol+1]-1]==icol);//confirm upper right triangular */
-	    IND(y2,icol,iy)=(IND(y2,icol,iy)-sum)*AxI;
+	    P(y2,icol,iy)=(P(y2,icol,iy)-sum)*AxI;
 	}
     }
 	
@@ -535,11 +535,11 @@ static void chol_solve_upper_each(thread_t *info){
     for(long icol=A->nx-1; icol>-1; icol--){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
-	    IND(y2,icol,iy)*=AxI;
-	    double val=-IND(y2,icol,iy);
+	    P(y2,icol,iy)*=AxI;
+	    double val=-P(y2,icol,iy);
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-2; irow>Ap[icol]-1; irow--){
-		IND(y2,Ai[irow],iy)+=val*Ax[irow];
+		P(y2,Ai[irow],iy)+=val*Ax[irow];
 	    }
 	}
     }

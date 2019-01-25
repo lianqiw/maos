@@ -380,11 +380,11 @@ dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double
 	//dcomplex Hwfs=st.Hwfs->p[i];
 	//dcomplex Hn=Hcl/Hwfs;
 	//double normHn=Hn*conj(Hn);
-	IND(psdol, i, 0)=nu->p[i];//frequency.
+	P(psdol, i, 0)=nu->p[i];//frequency.
 	for(int icol=0; icol<psd->ny; icol++){
-	    IND(psdol, i, icol+1)=IND(psd, i, icol)/(normHrej)-psdn;
-	    if(IND(psdol, i, icol+1)<0){
-		IND(psdol, i, icol+1)=0;
+	    P(psdol, i, icol+1)=P(psd, i, icol)/(normHrej)-psdn;
+	    if(P(psdol, i, icol+1)<0){
+		P(psdol, i, icol+1)=0;
 	    }
 	}
     }
@@ -458,9 +458,9 @@ servo_typeII_filter(SERVO_T *st, const dcell *merrc){
 	 */
 	for(int imod=0; imod<nmod; imod++){
 	    int indm=imod * indmul;
-	    gg=IND(gain,0,indm);
-	    e1a=IND(gain,1,indm);
-	    e1=IND(gain,2,indm);
+	    gg=P(gain,0,indm);
+	    e1a=P(gain,1,indm);
+	    e1=P(gain,2,indm);
 	    mlead->p[imod] = e1a*mlead->p[imod]+gg*(1-e1a)/(1-e1)*(merr->p[imod]-e1*merrlast->p[imod]);
 	}
     }
@@ -752,7 +752,7 @@ dmat *sho_filter( const dmat *x,/**<Input time series*/
     for(long iy=0; iy<xi->ny; iy++){
 	sho_reset(sho);
 	for(long ix=0; ix<xi->nx; ix++){
-	    IND(yo, ix, iy)=sho_step(sho, IND(xi, ix, iy), dt);
+	    P(yo, ix, iy)=sho_step(sho, P(xi, ix, iy), dt);
 	}
     }
     dfree(xi);

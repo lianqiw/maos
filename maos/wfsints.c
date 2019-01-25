@@ -209,7 +209,7 @@ void wfsints(thread_t *thread_data){
 		/*peak in corner. become WVF in center.*/
 		cfft2(fftpsfout,1);
 		/*output center of the complex pupil function.*/
-		cembedc(IND(psfout,isa,iwvl), fftpsfout, 0, C_FULL);
+		cembedc(P(psfout,isa,iwvl), fftpsfout, 0, C_FULL);
 	    }
 	    /* form PSF with peak in corner*/
 	    cabs2toreal(psf);
@@ -229,7 +229,7 @@ void wfsints(thread_t *thread_data){
 			cshift2center(psftmp,0.5,0.5);
 		    }
 		                       /*accumulate the real part of psf*/
-		    creal2d(PIND(pistatout,isa,iwvl),1,psftmp,norm_pistat);
+		    creal2d(PP(pistatout,isa,iwvl),1,psftmp,norm_pistat);
 		}
 		if(lltopd){            /*add uplink otf */
 		    ccwm(psf,lotfc);   /*normalization done in gen of lotfc. */
@@ -253,7 +253,7 @@ void wfsints(thread_t *thread_data){
 		    cfft2(otf,-1);/*turn to OTF. peak in corner */
 		}
 		if(hasllt){/*has llt, multiply with DTF and ETF.*/
-		    (*pccwm3)(otf,nominal,IND(petf1,isa,illt), etf1wt, petf2?IND(petf2,isa,illt):0, etf2wt);
+		    (*pccwm3)(otf,nominal,P(petf1,isa,illt), etf1wt, petf2?P(petf2,isa,illt):0, etf2wt);
 		}else{/*no uplink, multiply with DTF only.*/
 		    ccwm(otf,nominal);
 		}

@@ -91,8 +91,8 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
 	xpp[isa]=xcount;
 	ypp[isa]=ycount;
 	for(int ic=0; ic<count; ic++){
-	    double xx=IND(mcc,0,1)+IND(mcc,1,1)*slocx[ic]+IND(mcc,2,1)*slocy[ic];
-	    double yy=IND(mcc,0,2)+IND(mcc,1,2)*slocx[ic]+IND(mcc,2,2)*slocy[ic];
+	    double xx=P(mcc,0,1)+P(mcc,1,1)*slocx[ic]+P(mcc,2,1)*slocy[ic];
+	    double yy=P(mcc,0,2)+P(mcc,1,2)*slocx[ic]+P(mcc,2,2)*slocy[ic];
 	    if(amp){
 		xx*=amploc[ic];
 		yy*=amploc[ic];

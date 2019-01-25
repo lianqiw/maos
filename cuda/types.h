@@ -36,24 +36,23 @@ private:
     int *nref;
 public:
     char *header;
- 
-    T *P(){
-	return (T*)p;
-    }
-    const T *P() const{
-	return (const T*)p;
-    }
     operator T*(){
-	return P();
+	return p;
     }
     operator const T*()const{
-	return P();
+	return p;
+    }
+    T* operator()(){
+	return p;
+    }
+    const T* operator()() const{
+	return p;
     }
     T *Col(int icol){
-	return P()+nx*icol;
+	return p+nx*icol;
     }
     const T *Col(int icol)const{
-	return P()+nx*icol;
+	return p+nx*icol;
     }
     long Nx()const{
 	return nx;
@@ -68,16 +67,16 @@ public:
 	return (nx && ny);
     }
     T&operator ()(int ix, int iy){
-	return P()[ix+nx*iy];
+	return p[ix+nx*iy];
     }
     const T&operator ()(int ix, int iy)const{
-	return P()[ix+nx*iy];
+	return p[ix+nx*iy];
     }
     T *operator+(int off){
-	return P()+off;
+	return p+off;
     }
     const T*operator+(int off)const{
-	return P()+off;
+	return p+off;
     }
     //Constructors 
     cumat(long nxi=0, long nyi=0, T *pi=NULL, int own=1)
@@ -123,7 +122,7 @@ public:
 	return *this;
     }
     bool operator==(const cumat&in){
-	return P()==in.P();
+	return p==in.p;
     }
     void zero(cudaStream_t stream=(cudaStream_t)-1){
 	if(p){
@@ -155,18 +154,20 @@ public:
     T **pm; /*contains the data pointer in each cell in gpu.*/
     T **pm_cpu;/*contains the data pointer in each cell in cpu.*/
 
-    cumat<T> *P(){
-	return p;
-    }
-    const cumat<T> *P() const{
-	return p;
-    }
+   
     cumat<T> &M(){
 	return m;
     }
     const cumat<T>&M() const{
 	return m;
     }
+    cumat<T>* operator()(){
+	return p;
+    }
+    const cumat<T>* operator()() const{
+	return p;
+    }
+    
     cumat<T>& operator()(int i){
 	return p[i];
     }
@@ -201,7 +202,7 @@ public:
 	return p+off;
     }
     bool operator==(const cucell&in){
-	return P()==in.P();
+	return p==in.p;
     }
     void p2pm(cudaStream_t stream=(cudaStream_t)-1){
 	if(!nref || nref[0]>1){
@@ -212,7 +213,7 @@ public:
 	    pm_cpu=(T**)malloc4async(nx*ny*sizeof(T*));
 	}
 	for(long i=0; i<nx*ny; i++){
-	    pm_cpu[i]=p[i].P();
+	    pm_cpu[i]=p[i]();
 	}
 	if(!pm){
 	    DO(cudaMalloc(&pm, sizeof(T*)*nx*ny));
@@ -245,7 +246,7 @@ public:
 	if(mx && my){
 	    m=cumat<T>(mx*my*nxi*nyi,1,pin,pin?0:1);
 	    for(int i=0; i<nxi*nyi; i++){
-		p[i]=cumat<T>(mx, my, m.P()+i*(mx*my), 0);
+		p[i]=cumat<T>(mx, my, m()+i*(mx*my), 0);
 	    }
 	    p2pm();
 	}
@@ -261,7 +262,7 @@ public:
 	tot=0;
 	for(long i=0; i<_nx*_ny; i++){
 	    if(mx[i]){
-		p[i]=cumat<T>(mx[i],(my?my[i]:1),m.P()+tot, 0);
+		p[i]=cumat<T>(mx[i],(my?my[i]:1),m()+tot, 0);
 		tot+=mx[i]*(my?my[i]:1);
 	    }
 	}
@@ -437,23 +438,23 @@ class cusp{
     }
 };
 template <typename T>
-class cuarray{
+class Array{
     T *p;
     int nx;
     int ny;
     int *nref;
  public:
-    cuarray(int _nx=0, int _ny=1):p(0),nx(_nx),ny(_nx?_ny:0),nref(0){
+    Array(int _nx=0, int _ny=1):p(0),nx(_nx),ny(_nx?_ny:0),nref(0){
 	if(nx && ny){
 	    p=new T[nx*ny];
 	    nref=new int;
 	    nref[0]=1;
 	}
     }
-    cuarray(const cuarray&in):p(in.p),nx(in.nx),ny(in.ny),nref(in.nref){
+    Array(const Array&in):p(in.p),nx(in.nx),ny(in.ny),nref(in.nref){
 	if(nref) nref[0]++;
     }
-    cuarray &operator=(const cuarray&in){
+    Array &operator=(const Array&in){
 	if(&p!=&in.p){
 	    p=in.p;
 	    nx=in.nx;
@@ -465,7 +466,7 @@ class cuarray{
 	}
 	return *this;
     }
-    ~cuarray(){
+    ~Array(){
 	if(nref && !atomicadd(nref, -1)){
 	    delete []p;
 	    delete nref;
@@ -474,10 +475,10 @@ class cuarray{
     operator bool()const {
 	return nx && ny;
     }
-    T *P(){
+    T * operator()(){
 	return p;
     }
-    const T *P() const{
+    const T *operator()() const{
 	return p;
     }
     T& operator()(int i){
@@ -513,16 +514,10 @@ class cuarray{
     const T*operator+(int off)const{
 	return p+off;
     }
-    operator T*(){
-	return P();
-    }
-    operator const T*()const{
-	return P();
-    }
 };
-typedef cuarray<cusp> cuspcell;
-typedef cuarray<curcell> curccell;
-typedef cuarray<curccell> curcccell;
+typedef Array<cusp> cuspcell;
+typedef Array<curcell> curccell;
+typedef Array<curccell> curcccell;
 void cp2gpu(curmat &dest, const loc_t *src);
 class culoc_t{
 private:
@@ -530,17 +525,11 @@ private:
     Real dx;
     Real dy;
 public:
-    operator Real2*(){
-	return P();
+    Real2* operator()(){
+	return (Real2*)(p());
     }
-    operator const Real2*()const{
-	return P();
-    }
-    Real2* P(){
-	return (Real2*)(p.P());
-    }
-    const Real2* P()const{
-	return (const Real2*)(p.P());
+    const Real2*operator()()const{
+	return (Real2*)(p());
     }
     long Nloc()const{
 	return p.Ny();
@@ -590,27 +579,7 @@ public:
     Real iac;
     curmat cubic_cc; /*coefficients for cubic influence function. */
     //use default copy assignment operator and copy constructor
-    /*
-    cugrid_t(const cugrid_t &in):nx(in.nx), ny(in.ny), ox(in.ox), oy(in.oy), dx(in.dx), dy(in.dy),
-				 ht(in.ht), vx(in.vx), vy(in.vy),
-				 iac(in.iac),cubic_cc(gpu_dmcubic_cc(in.iac)){
-    }
-    cugrid_t &operator=(const cugrid_t &in){
-	if(&nx!=&in.nx){
-	    nx=in.nx;
-	    ny=in.ny;
-	    ox=in.ox;
-	    oy=in.oy;
-	    dx=in.dx;
-	    dy=in.dy;
-	    ht=in.ht;
-	    vx=in.vx;
-	    vy=in.vy;
-	    iac=in.iac;
-	    cubic_cc=in.cubic_cc;
-	}
-	return *this;
-	}*/
+
     cugrid_t &operator=(const map_t *in){
 	if(in){
 	    nx=in->nx;
@@ -641,14 +610,6 @@ public:
     operator bool(){
 	return nx&&ny;
     }
-    /*cugrid_t(long nxi=0, long nyi=0,Real oxi=0, Real oyi=0, Real dxi=0, Real dyi=0, Real hti=0, Real vxi=0, Real vyi=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi),cubic_cc(_cubic_cc){
-    }
-    cugrid_t scale(Real sc)const{
-	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
-    }
-    cugrid_t operator *(Real sc)const{
-	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
-	}*/
 };
 class cumap_t:public cugrid_t{
 public:
@@ -669,27 +630,22 @@ public:
 	}
 	return *this;
     }
-    /*cumap_t(map_t *map=0):cugrid_t(map){
-	if(nx>0 && ny>0) {
-	    p=curmat(nx,ny);
-	}
-	}*/
     operator const curmat&()const{
 	return p;
     }
     operator curmat&(){
 	return p;
     }
-    Real *P(){
-	return p.P();
+    Real *operator()(){
+	return p();
     }
-    const Real *P()const{
-	return p.P();
+    const Real *operator()()const{
+	return p();
     }
 };
 
-typedef cuarray<cumap_t> cumapcell;
-typedef cuarray<cugrid_t> cugridcell;
+typedef Array<cumap_t> cumapcell;
+typedef Array<cugrid_t> cugridcell;
 template <typename T>
 void initzero(cumat<T> &A, long nx, long ny){
     /*zero array if exist, otherwise allocate and zero*/

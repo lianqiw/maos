@@ -29,10 +29,10 @@ class cufdpcg_t:public cucgpre_t,nonCopyable{
     const curecon_geom *grid;
     cumat<int> perm;   /**<permutation vector for fdpcg*/
     cuccell Mb;  /**<The main fdpcg block matrix*/
-    cuarray<cufftHandle> fft;
-    cuarray<cufftHandle> ffti;
+    Array<cufftHandle> fft;
+    Array<cufftHandle> ffti;
     int      fftnc;/*total number of ffts*/
-    cuarray<int> fftips;/*starting ips for each fft.*/
+    Array<int> fftips;/*starting ips for each fft.*/
     cuccell xhat1, xhat2;
     int nb, bs, nby, nbz; 
     int scale;
@@ -42,7 +42,7 @@ public:
     }
     cufdpcg_t(FDPCG_T *fdpcg=0, const curecon_geom *_grid=0);
     void update(FDPCG_T *fdpcg);
-    void P(curcell &xout, const curcell &xin, stream_t &stream);
+    void Pre(curcell &xout, const curcell &xin, stream_t &stream);
 };
 }//namespace
 #endif

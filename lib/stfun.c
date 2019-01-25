@@ -73,9 +73,9 @@ void stfun_push(stfun_t *A, dmat *opd){
     cset(A->hat2, 0);
     for(long iy=0; iy<ny; iy++){
 	for(long ix=0; ix<nx; ix++){
-	    double o=IND(popd,ix,iy)*IND(pamp,ix,iy);
-	    IND(p1,ix+nx2,iy+ny2)=o;
-	    IND(p2,ix+nx2,iy+ny2)=o*o;
+	    double o=P(popd,ix,iy)*P(pamp,ix,iy);
+	    P(p1,ix+nx2,iy+ny2)=o;
+	    P(p2,ix+nx2,iy+ny2)=o*o;
 	}
     }
     cfft2(A->hat1, -1);
@@ -101,7 +101,7 @@ dmat *stfun_finalize(stfun_t *A){
     cmat*  p2=A->hat0;
     for(long iy=1; iy<ny; iy++){/*skip first row/column where hat0 is 0. */
 	for(long ix=1; ix<nx; ix++){
-	    IND(pst,ix,iy)=creal(IND(p1,ix,iy)/IND(p2,ix,iy));
+	    P(pst,ix,iy)=creal(P(p1,ix,iy)/P(p2,ix,iy));
 	}
     }
     cfree(A->hat0);
@@ -125,7 +125,7 @@ dmat* stfun_kolmogorov(loc_t *loc, double r0){
     for(int i=0; i<nloc; i++){
 	for(int j=i; j<nloc; j++){
 	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
-	    IND(B,i,j)=IND(B,j,i)=coeff*pow(rdiff2,5./6.);
+	    P(B,i,j)=P(B,j,i)=coeff*pow(rdiff2,5./6.);
 	}
     }
     return st;

@@ -44,6 +44,9 @@ extern int draw_single;
 static double tk_0;
 static double tk_1;
 static double tk_atm=0;
+/**
+   Initialize the simulation runtime data struct.
+ */
 SIM_T *maos_iseed(int iseed){
     if(iseed==0) tk_0=myclockd();
     tk_1=myclockd();
@@ -87,7 +90,11 @@ SIM_T *maos_iseed(int iseed){
 #endif
     return simu;
 }
+/**
+   Simulation for each time step. 
 
+   Callable from matlab.
+*/
 void maos_isim(int isim){
     const PARMS_T *parms=global->parms;
     RECON_T *recon=global->recon;
@@ -129,7 +136,7 @@ void maos_isim(int isim){
 	    muv_solve(&simu->dmproj, &recon->fit->FL, &recon->fit->FR, NULL);
 	    recon->fit->FR.M=FRM;/*set FR.M back*/
 	    if(parms->save.dm){
-		zfarr_dcell(simu->save->dmproj, simu->isim, simu->dmproj);
+		zfarr_push(simu->save->dmproj, simu->isim, simu->dmproj);
 	    }
 	    if(!parms->fit.square){
 		/* Embed DM commands to a square array for fast ray tracing */
@@ -257,40 +264,18 @@ void maos_isim(int isim){
 }
 
 /**
-   Closed loop simulation main loop. It calls init_simu() to initialize the
-   simulation struct. Then calls genatm() to generate atmospheric turbulence
-   screens. Then for every time step, it calls perfevl() to evaluate
-   performance, wfsgrad() to do wfs measurement, reconstruct() to do tomography
-   and DM fit, filter() to do DM command filtering. In MOAO mode, it call calls
-   moao_recon() for MOAO DM fitting.  \callgraph */
+   Closed loop simulation main loop. 
+
+   It calls init_simu() to initialize the simulation struct, and then calls
+   maos_isim() for each simulation time step. Arranged this way so that
+   maos_isim() can be called from matlab.
+*/
 void maos_sim(){
     const PARMS_T *parms=global->parms;
-    POWFS_T *powfs=global->powfs;
-    RECON_T *recon=global->recon;
-    APER_T *aper=global->aper;
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
-    if(parms->sim.skysim){
-	save_skyc(powfs,recon,parms);
-    }
-    if(parms->evl.psfmean || parms->evl.psfhist){
-	/*compute diffraction limited PSF. Save to output directory.*/
-	dmat *iopdevl=dnew(aper->locs->nloc,1);
-	ccell *psf2s=0;
-	locfft_psf(&psf2s, aper->embed, iopdevl, parms->evl.psfsize, 0);
-	const int nwvl=parms->evl.nwvl;
-	dcell *evlpsfdl=dcellnew(nwvl,1);
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
-	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl, parms->evl.psfisim-1);
-	}
-	ccellfree(psf2s);
-	writebin(evlpsfdl, "evlpsfdl.fits");
-	dcellfree(evlpsfdl);
-	dfree(iopdevl);
-    }
+   
     info("PARALLEL=%d\n", PARALLEL);
-    if(simstart>=simend) return;
     double restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	SIM_T *simu=0;

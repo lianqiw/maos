@@ -124,11 +124,11 @@ static void do_unwrap(cmat *phi, cmat *wvf, dmat *unwrap, dmat *diff, dmat *phir
     dmat* pdiff=diff;
     /*TIC;tic; */
     for(int ix=1; ix<npsf; ix++){
-	IND(pdiff,ix,0)=carg(IND(pwvf,ix,0)*conj(IND(pwvf,ix-1,0)));
-	IND(pdiff,npsf,ix)=carg(IND(pwvf,0,ix)*conj(IND(pwvf,0,ix-1)));
+	P(pdiff,ix,0)=carg(P(pwvf,ix,0)*conj(P(pwvf,ix-1,0)));
+	P(pdiff,npsf,ix)=carg(P(pwvf,0,ix)*conj(P(pwvf,0,ix-1)));
 	for(int iy=1; iy<npsf; iy++){
-	    IND(pdiff,ix,iy)=carg(IND(pwvf,ix,iy)*conj(IND(pwvf,ix-1,iy)));
-	    IND(pdiff,ix+npsf,iy)=carg(IND(pwvf,ix,iy)*conj(IND(pwvf,ix,iy-1)));
+	    P(pdiff,ix,iy)=carg(P(pwvf,ix,iy)*conj(P(pwvf,ix-1,iy)));
+	    P(pdiff,ix+npsf,iy)=carg(P(pwvf,ix,iy)*conj(P(pwvf,ix,iy-1)));
 	}
     }
     /*toc("assemble");tic; */
@@ -151,11 +151,11 @@ static void convert_wvf(GENPISTAT_S *data){
     return;
     while((LOCKADD(icase,data->icase, 1))<data->ncase){
     TIC;tic;
-    double thetax=data->ngsgrid*data->IND(cases,0,icase);
-    double thetay=data->ngsgrid*data->IND(cases,1,icase);
-    long ipowfs=data->IND(cases,2,icase);
+    double thetax=data->ngsgrid*data->P(cases,0,icase);
+    double thetay=data->ngsgrid*data->P(cases,1,icase);
+    long ipowfs=data->P(cases,2,icase);
     long ncomp=parms->maos.ncomp[ipowfs];
-    long seed=data->IND(cases,3,icase);
+    long seed=data->P(cases,3,icase);
     long msa=parms->maos.msa[ipowfs];/*in 1-d */
     char fnwvf[PATH_MAX],fnphase[PATH_MAX];
     mymkdir("%s/phase",dirstart);
@@ -196,7 +196,7 @@ static void convert_wvf(GENPISTAT_S *data){
 		do_unwrap(phi->p[ic], wvfi->p[ic], data->unwrap->p[ipowfs], diff, phirecon);
 	    }
 	}
-	zfarr_ccell(phase,phi);
+	zfarr_push(phase,phi);
 	ccellfree(wvfi);
     }
     ccellfree(phi);

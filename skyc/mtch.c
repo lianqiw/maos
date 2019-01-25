@@ -45,8 +45,8 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     //Now derivative 
     for(int iy=0; iy<otf->ny; iy++){
 	for(int ix=0; ix<otf->nx; ix++){
-	    IND(potf,ix,iy)*=dtf->U->p[ix];
-	    IND(potfsave,ix,iy)*=dtf->U->p[iy];
+	    P(potf,ix,iy)*=dtf->U->p[ix];
+	    P(potfsave,ix,iy)*=dtf->U->p[iy];
 	}
     }
     cfft2(otf, 1);//was 1, changed to -1 on 1/29/2013
@@ -66,8 +66,8 @@ static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
     double (*i0x2p)[nx]=(double(*)[nx])i0x2;
     for(int iy=0; iy<i0->ny; iy++){
 	for(int ix=0; ix<i0->nx-1; ix++){
-	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
-	    i0x2p[iy][ix]=IND(i0,ix+1,iy)*scale;
+	    i0x1p[iy][ix+1]=P(i0,ix,iy)*scale;
+	    i0x2p[iy][ix]=P(i0,ix+1,iy)*scale;
 	}
     }
     }*/
@@ -81,8 +81,8 @@ static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
     double (*i0y2p)[nx]=(double(*)[nx])i0y2;
     for(int iy=0; iy<i0->ny-1; iy++){
 	for(int ix=0; ix<i0->nx; ix++){
-	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
-	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
+	    i0y1p[iy+1][ix]=P(i0,ix,iy)*scale;
+	    i0y2p[iy][ix]=P(i0,ix,iy+1)*scale;
 	}
     }
     }*/
@@ -101,7 +101,7 @@ void genmtch(dcell **mtche, dmat **sanea,
     }
     for(long isa=0; isa<nsa; isa++){    
 	dmat *nea2=0;
-	IND(*mtche, isa)=mtch(&nea2, IND(i0, isa), IND(gx, isa), IND(gy, isa), 0, 0, 0,
+	P(*mtche, isa)=mtch(&nea2, P(i0, isa), P(gx, isa), P(gy, isa), 0, 0, 0,
 			      bkgrnd, bkgrnd, rne, pixtheta, pixtheta, 0, 0, cr);
 	/*Drop coupling in x/y gradients. */
 	(*sanea)->p[isa]=sqrt(nea2->p[0]);

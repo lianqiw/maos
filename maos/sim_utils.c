@@ -108,7 +108,7 @@ static mapcell *genatm_do(SIM_T *simu){
 		const double alpha=2*strength*atm->wt->p[ips];
 		for(int iy=0; iy<ny; iy++){
 		    for(int ix=0; ix<nx; ix++){
-			IND(screens->p[ips], ix, iy)=alpha*sind->p[ix]*sind->p[iy];
+			P(screens->p[ips], ix, iy)=alpha*sind->p[ix]*sind->p[iy];
 		    }
 		}
 		dfree(sind);
@@ -292,7 +292,7 @@ void setup_recon_HXW_predict(SIM_T *simu){
 	    const double hs = parms->wfs[iwfs].hs;
 	    const double hc=parms->powfs[ipowfs].hc;
 	    for(int ips=0; ips<npsr; ips++){
-		dspfree(IND(HXWtomo,iwfs,ips));
+		dspfree(P(HXWtomo,iwfs,ips));
 		double  ht = recon->ht->p[ips]-hc;
 		double  scale=1. - ht/hs;
 		double  displace[2];
@@ -303,7 +303,7 @@ void setup_recon_HXW_predict(SIM_T *simu){
 		    displace[0]+=simu->atm->p[ips0]->vx*delay;
 		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
-		IND(HXWtomo,iwfs,ips)=mkh(recon->xloc->p[ips], ploc, 
+		P(HXWtomo,iwfs,ips)=mkh(recon->xloc->p[ips], ploc, 
 				       displace[0],displace[1],scale);
 	    }
 	}
@@ -758,7 +758,7 @@ static void init_simu_wfs(SIM_T *simu){
 	if(powfs[ipowfs].gradncpa && !(parms->powfs[ipowfs].phytype_sim==1 && parms->powfs[ipowfs].ncpa_method==2)){
 	    //CMF has gradncpa with in matched filter
 	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-	    dadd(&simu->gradoff->p[iwfs], 1, INDR(powfs[ipowfs].gradncpa, wfsind,1), 1);
+	    dadd(&simu->gradoff->p[iwfs], 1, PR(powfs[ipowfs].gradncpa, wfsind,1), 1);
 	}
 
     }
@@ -1657,17 +1657,17 @@ void print_progress(const SIM_T *simu){
     }else{    
 	info("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
 	     GREEN, isim,
-	     mysqrt(IND(simu->ole, 0, isim))*1e9,
-	     mysqrt(IND(simu->ole, 1, isim))*1e9,
-	     mysqrt(IND(simu->ole, 2, isim))*1e9,
-	     mysqrt(IND(simu->cle, 0, isim))*1e9,
-	     mysqrt(IND(simu->cle, 1, isim))*1e9,
-	     mysqrt(IND(simu->cle, 2, isim))*1e9);
+	     mysqrt(P(simu->ole, 0, isim))*1e9,
+	     mysqrt(P(simu->ole, 1, isim))*1e9,
+	     mysqrt(P(simu->ole, 2, isim))*1e9,
+	     mysqrt(P(simu->cle, 0, isim))*1e9,
+	     mysqrt(P(simu->cle, 1, isim))*1e9,
+	     mysqrt(P(simu->cle, 2, isim))*1e9);
 	if(parms->recon.split){
 	    info(" Split %6.1f %6.1f %6.1f nm",
-		 mysqrt(IND(simu->clem, 0, isim))*1e9,
-		 mysqrt(IND(simu->clem, 1, isim))*1e9,
-		 mysqrt(IND(simu->clem, 2, isim))*1e9);
+		 mysqrt(P(simu->clem, 0, isim))*1e9,
+		 mysqrt(P(simu->clem, 1, isim))*1e9,
+		 mysqrt(P(simu->clem, 2, isim))*1e9);
 	}
 	info("%s\n", BLACK);
     
@@ -1699,17 +1699,17 @@ void print_progress(const SIM_T *simu){
 	dcell *res=dcellnew_same(nline,1,simu->isim+1,1);
 	if(parms->recon.split){
 	    for(int i=0; i<=simu->isim; i++){
-		IND(res->p[0], i)=IND(tmp, 0, i);//LGS
-		IND(res->p[1], i)=IND(tmp, 1, i);//TT
-		IND(res->p[2], i)=IND(tmp, 2, i)-IND(tmp, 1, i);//PS
+		P(res->p[0], i)=P(tmp, 0, i);//LGS
+		P(res->p[1], i)=P(tmp, 1, i);//TT
+		P(res->p[2], i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
 		if(nline==4){
-		    IND(res->p[3], i)=IND(tmp, 3, i);//Focus
+		    P(res->p[3], i)=P(tmp, 3, i);//Focus
 		}
 	    }
 	}else{
 	    for(int i=0; i<tmp->ny; i++){
-		IND(res->p[0], i)=IND(tmp, 2, i);//PTTR
-		IND(res->p[1], i)=IND(tmp, 0, i)-IND(tmp,2,i);//TT
+		P(res->p[0], i)=P(tmp, 2, i);//PTTR
+		P(res->p[1], i)=P(tmp, 0, i)-P(tmp,2,i);//TT
 	    }
 	}
 	dcellcwpow(res, 0.5); dcellscale(res, 1e9);

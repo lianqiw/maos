@@ -369,7 +369,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	    double displace[2];
 	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
 	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
-	    IND(HA,ievl,idm)=mkh(recon->aloc->p[idm], recon->floc, 
+	    P(HA,ievl,idm)=mkh(recon->aloc->p[idm], recon->floc, 
 			      displace[0], displace[1], scale);
 	}
     }
@@ -435,15 +435,15 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 #if MEASURED_LENSLET
 		    double xx=(iy-nx2)*(iy-nx2)*Rx2;
 		    double yy=(ix-nx2)*(ix-nx2)*Rx2;
-		    IND(popdi,ix,iy)=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
+		    P(popdi,ix,iy)=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
 #else
-		    IND(popdi,ix,iy)=rr*rr;
+		    P(popdi,ix,iy)=rr*rr;
 #endif
-		    double amp=IND(pampw,ix,iy);
+		    double amp=P(pampw,ix,iy);
 		    R2+=rr*amp;
 		    R4+=rr*rr*amp;
-		    Rf+=IND(popdi,ix,iy)*amp;
-		    Rf2+=IND(popdi,ix,iy)*rr*rr*amp;
+		    Rf+=P(popdi,ix,iy)*amp;
+		    Rf2+=P(popdi,ix,iy)*rr*rr*amp;
 		}
 	    }		
 	    double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
@@ -452,8 +452,8 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
 		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		    IND(popdi,ix,iy)-=a*rr+b;
-		    var+=IND(popdi,ix,iy)*IND(popdi,ix,iy)*IND(pampw,ix,iy);
+		    P(popdi,ix,iy)-=a*rr+b;
+		    var+=P(popdi,ix,iy)*P(popdi,ix,iy)*P(pampw,ix,iy);
 		}
 	    }
 	    dfree(ampw);

@@ -424,9 +424,9 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	for(int ips=0; ips<npsr; ips++){
 	    int nloc=recon->xloc->p[ips]->nloc;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(!IND(HXW,iwfs,ips) 
-		   || IND(HXW,iwfs,ips)->nx!=nploc 
-		   || IND(HXW,iwfs,ips)->ny!=nloc){
+		if(!P(HXW,iwfs,ips) 
+		   || P(HXW,iwfs,ips)->nx!=nploc 
+		   || P(HXW,iwfs,ips)->ny!=nloc){
 		    error("Wrong saved HXW\n");
 		}
 	    }
@@ -453,7 +453,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		const double  scale=1. - ht/hs;
 		const double dispx=parms->wfsr[iwfs].thetax*ht;
 		const double dispy=parms->wfsr[iwfs].thetay*ht;
-		IND(HXW,iwfs,ips)=mkh(recon->xloc->p[ips], loc, 
+		P(HXW,iwfs,ips)=mkh(recon->xloc->p[ips], loc, 
 				   dispx,dispy,scale);
 	    }
 	}
@@ -469,7 +469,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
 	    for(int ips=0; ips<npsr; ips++){
-		IND(HXWtomo,iwfs,ips)=dspref(IND(HXW,iwfs,ips));
+		P(HXWtomo,iwfs,ips)=dspref(P(HXW,iwfs,ips));
 	    }
 	} 
     }
@@ -573,8 +573,8 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    continue;
 		}
 		int nsa=powfs[ipowfs].saloc->nloc;
-		if(IND(recon->GA,iwfs,idm)->nx!=nsa*2 || (!parms->recon.modal && IND(recon->GA,iwfs,idm)->ny!=nloc)
-		   || (parms->recon.modal && IND(recon->GA,iwfs,idm)->ny!=recon->amod->p[idm]->ny)){
+		if(P(recon->GA,iwfs,idm)->nx!=nsa*2 || (!parms->recon.modal && P(recon->GA,iwfs,idm)->ny!=nloc)
+		   || (parms->recon.modal && P(recon->GA,iwfs,idm)->ny!=recon->amod->p[idm]->ny)){
 		    error("Wrong saved GA\n");
 		}
 	    }
@@ -646,13 +646,13 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			    info("\nPyWFS from aloc to saloc directly\n");
 			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
 						0, opdadd, dispx, dispy, scale);
-			    IND(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
+			    P(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
 			    dfree(tmp);
 			}else{
 			    info("\nPyWFS from amod to saloc directly\n");
 			   
 			    //We compute the GM for full set of modes so that it is cached only once.
-			    IND(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
+			    P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
 								recon->amod->p[idm], opdadd, dispx, dispy, scale);
 			}
 		    }
@@ -664,13 +664,13 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			freeloc=1;
 		    }
 		    dsp *H=mkh(recon->aloc->p[idm], loc, dispx,dispy,scale);
-		    IND(recon->GA, iwfs, idm)=dspmulsp(recon->GP->p[iwfs], H,"nn");
+		    P(recon->GA, iwfs, idm)=dspmulsp(recon->GP->p[iwfs], H,"nn");
 		    dspfree(H);
 		    if(freeloc){
 			locfree(loc);
 		    }
 		    if(parms->recon.modal){
-			dspmm(PIND(recon->GM, iwfs, idm), IND(recon->GA, iwfs, idm), recon->amod->p[idm], "nn",1);
+			dspmm(PP(recon->GM, iwfs, idm), P(recon->GA, iwfs, idm), recon->amod->p[idm], "nn",1);
 		    }
 		}
 	    }/*idm */
@@ -685,8 +685,8 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		dresize(recon->amod->p[idm], 0, parms->recon.nmod);
 		recon->anmod->p[idm]=recon->amod->p[idm]->ny;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-		    if(!IND(recon->GM, iwfs, idm)) continue;
-		    dresize(IND(recon->GM, iwfs, idm), 0,  parms->recon.nmod);
+		    if(!P(recon->GM, iwfs, idm)) continue;
+		    dresize(P(recon->GM, iwfs, idm), 0,  parms->recon.nmod);
 		}
 	    }
 	}
@@ -741,12 +741,12 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].lo
 	       || (parms->recon.split && parms->nlopowfs==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
-		IND(recon->GAlo, iwfs, idm)=dspref(IND(recon->GA, iwfs, idm));
+		P(recon->GAlo, iwfs, idm)=dspref(P(recon->GA, iwfs, idm));
 	    }
 	    if(!parms->powfs[ipowfs].skip){
-		IND(recon->GAhi, iwfs, idm)=dspref(IND(recon->GA, iwfs, idm));
+		P(recon->GAhi, iwfs, idm)=dspref(P(recon->GA, iwfs, idm));
 		if(parms->recon.modal){
-		    IND(recon->GMhi, iwfs, idm)=dref(IND(recon->GM, iwfs, idm));
+		    P(recon->GMhi, iwfs, idm)=dref(P(recon->GM, iwfs, idm));
 		}
 	    }
 	}
@@ -766,7 +766,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	/*gradient from xloc. Also useful for lo WFS in MVST mode. */
 	for(int ips=0; ips<npsr; ips++){
-	    IND(GX,iwfs,ips)=dspmulsp(recon->GP->p[iwfs], IND(HXW,iwfs,ips),"nn");
+	    P(GX,iwfs,ips)=dspmulsp(recon->GP->p[iwfs], P(HXW,iwfs,ips),"nn");
 	}/*ips */
     }
     toc2(" ");
@@ -781,12 +781,12 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	for(int ips=0; ips<npsr; ips++){
 	    if(!parms->powfs[ipowfs].skip){/*for tomography */
-		IND(GXtomo,iwfs,ips)=dspref(IND(GX,iwfs,ips));
+		P(GXtomo,iwfs,ips)=dspref(P(GX,iwfs,ips));
 	    }
 	    if(parms->powfs[ipowfs].lo 
 	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){
 		/*for low order wfs or extracted t/t for high order ngs wfs.*/
-		IND(GXlo,iwfs,ips)=dspref(IND(GX,iwfs,ips));
+		P(GXlo,iwfs,ips)=dspref(P(GX,iwfs,ips));
 	    }
 	}
     }/*iwfs */
@@ -985,7 +985,7 @@ void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *
 	recon->dither_m->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d, 0, 0, dither_mode);
 	dscale(recon->dither_m->p[idm], dither_amp);
 	recon->dither_ra=dcellnew(parms->ndm, parms->ndm);
-	IND(recon->dither_ra, idm, idm)=dpinv(recon->dither_m->p[idm], 0);
+	P(recon->dither_ra, idm, idm)=dpinv(recon->dither_m->p[idm], 0);
 	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
@@ -1003,7 +1003,7 @@ void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *
 		dmat *grad=0;
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-		IND(recon->dither_rg, iwfs, iwfs)=dpinv(grad, IND(recon->saneai, iwfs, iwfs));
+		P(recon->dither_rg, iwfs, iwfs)=dpinv(grad, P(recon->saneai, iwfs, iwfs));
 		if(0){//test linearity
 		    dscale(opd, 1./4.);
 		    dmat *tmp=0;
@@ -1013,7 +1013,7 @@ void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *
 			dzero(ints);
 			pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-			dmm(&tmp, 0, IND(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
+			dmm(&tmp, 0, P(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
 			res->p[i]=tmp->p[0];
 		    }
 		    writebin(res, "linearity");

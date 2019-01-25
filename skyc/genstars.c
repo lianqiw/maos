@@ -92,7 +92,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    for(long istar=0; istar<nstar; istar++){
 		long ind=round(ntot*randu(rstat));/*randomly draw a star index in the catlog */
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    IND(pres,2+iwvl,istar)=IND(pcatalog,ind,iwvl);
+		    P(pres,2+iwvl,istar)=P(pcatalog,ind,iwvl);
 		}
 	    }
 	}
@@ -117,9 +117,9 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    for(long istar=0; istar<nstar; istar++){
 		long ind=round((ntot-1)*randu(rstat));
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    IND(pres,2+iwvl,istar)=IND(pcatalog,ind,iwvl);
+		    P(pres,2+iwvl,istar)=P(pcatalog,ind,iwvl);
 		}
-		if(IND(pres,2+Jind,istar)<=19){
+		if(P(pres,2+Jind,istar)<=19){
 		    J19c++;
 		}
 	    }
@@ -142,8 +142,8 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    /*randomly draw the star location. */
 	    double r=sqrt(fov22*randu(rstat));
 	    double th=2*M_PI*randu(rstat);
-	    IND(pres,0,istar)=r*cos(th);
-	    IND(pres,1,istar)=r*sin(th);
+	    P(pres,0,istar)=r*cos(th);
+	    P(pres,1,istar)=r*sin(th);
 	}
     }
     dfree(catalog);

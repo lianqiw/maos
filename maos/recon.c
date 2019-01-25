@@ -114,7 +114,7 @@ static void calc_gradol(SIM_T *simu){
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){
-			dspmm(&simu->gradlastol->p[iwfs], IND(GA,iwfs,idm), 
+			dspmm(&simu->gradlastol->p[iwfs], P(GA,iwfs,idm), 
 			      simu->wfspsol->p[ipowfs]->p[idm], "nn", 1);
 		    }
 		}
@@ -188,7 +188,7 @@ void recon_split(SIM_T *simu){
 			}
 		    }else if(ngsmod->lp2<0){//Use slower as Truth WFS mode by mode
 			for(int imod=0; imod<ngsmod->nmod; imod++){
-			    if(IND(ngsmod->modvalid, imod)){//Modes that has multi-rates
+			    if(P(ngsmod->modvalid, imod)){//Modes that has multi-rates
 				if(iRngs==0){//Accumulate Truth mode offset
 				    simu->Merr_lo2->p[0]->p[imod]+=tmp->p[0]->p[imod]*(0.5/parms->dbg.eploscale);
 				}else{//Apply truth mode offset.
@@ -251,7 +251,7 @@ void recon_servo_update(SIM_T *simu){
 	//Accumulate data history.
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    for(int idm=0; idm<parms->ndm; idm++){
-		dspmulvec(PCOL(IND(simu->dmerrts, ievl), iframe), IND(recon->Herr, ievl, idm),
+		dspmulvec(PCOL(P(simu->dmerrts, ievl), iframe), P(recon->Herr, ievl, idm),
 			  simu->dmerr->p[idm]->p, 'n', 1);
 	    }
 	}
@@ -260,7 +260,7 @@ void recon_servo_update(SIM_T *simu){
 	    dmat *psd=0;
 	    double dthi=parms->sim.dt*parms->sim.dtrat_hi;
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		dmat *tmp=dtrans(IND(simu->dmerrts, ievl));
+		dmat *tmp=dtrans(P(simu->dmerrts, ievl));
 		dmat *psdi=psd1dt(tmp, parms->recon.psdnseg, dthi);
 		dfree(tmp);
 		dadd(&psd, 1, psdi, parms->evl.wt->p[ievl]);

@@ -86,12 +86,12 @@ static void mvm_direct_igpu(thread_t *info){
     dmat *residualfit=data->residualfit;
     {
 	Real eye2c[2]={0,1.};
-	cudaMemcpy(eye2.P(), eye2c, sizeof(Real)*2, cudaMemcpyHostToDevice);
+	cudaMemcpy(eye2(), eye2c, sizeof(Real)*2, cudaMemcpyHostToDevice);
     }
     cuda_recon::curecon_t *curecon=cudata->recon;
     stream_t stream;
     if(parms->load.mvmf){
-	cudaMemcpyAsync(mvm.P(), data->mvmc->p+info->start*ntotact, 
+	cudaMemcpyAsync(mvm(), data->mvmc->p+info->start*ntotact, 
 			ntotact*(info->end-info->start)*sizeof(Real), 
 			cudaMemcpyHostToDevice, stream);
     }
@@ -100,7 +100,7 @@ static void mvm_direct_igpu(thread_t *info){
 	dbg("Creating mvmi of size %ldx %ld\n", ntotxloc, info->end-info->start);
 	mvmi=curmat(ntotxloc, info->end-info->start);
 	if(parms->load.mvmi){
-	    cudaMemcpyAsync(mvmi.P(), data->mvmi->p+info->start*ntotxloc,
+	    cudaMemcpyAsync(mvmi(), data->mvmi->p+info->start*ntotxloc,
 			    ntotxloc*(info->end-info->start)*sizeof(Real),
 			    cudaMemcpyHostToDevice, stream);
 	}
@@ -120,18 +120,18 @@ static void mvm_direct_igpu(thread_t *info){
 	    }
 	}
 	if(ig){
-	    cudaMemcpyAsync(grad.M().P()+ig-1, eye2.P(), 2*sizeof(Real), cudaMemcpyDeviceToDevice, stream);
+	    cudaMemcpyAsync(grad.M()()+ig-1, eye2(), 2*sizeof(Real), cudaMemcpyDeviceToDevice, stream);
 	}else{
-	    cudaMemcpyAsync(grad.M().P()+ig, eye2.P()+1, sizeof(Real), cudaMemcpyDeviceToDevice, stream);
+	    cudaMemcpyAsync(grad.M()()+ig, eye2()+1, sizeof(Real), cudaMemcpyDeviceToDevice, stream);
 	}
 	RECORD(1);
 	if(mvmi){
-	    opdr.replace(mvmi.P()+(ig-info->start)*ntotxloc, stream);
+	    opdr.replace(mvmi()+(ig-info->start)*ntotxloc, stream);
 	}
 	curecon->RR->R(tomo_rhs, 0, grad, 1, stream);
 	residual->p[ig]=curecon->RL->solve(opdr, tomo_rhs, stream);
 	RECORD(2);
-	fitr.replace(mvm.P()+(ig-info->start)*ntotact, stream);
+	fitr.replace(mvm()+(ig-info->start)*ntotact, stream);
 	curecon->FR->R(fit_rhs, 0, opdr, 1, stream);
 	residualfit->p[ig]=curecon->FL->solve(fitr, fit_rhs, stream);
 	RECORD(3);
@@ -145,11 +145,11 @@ static void mvm_direct_igpu(thread_t *info){
 #endif	
     }
     DO(cudaMemcpyAsync(data->mvmc->p+info->start*ntotact, 
-		       mvm.P(), ntotact*(info->end-info->start)*sizeof(Real), 
+		       mvm(), ntotact*(info->end-info->start)*sizeof(Real), 
 		       cudaMemcpyDeviceToHost, stream));
     if(parms->save.mvmi){
 	DO(cudaMemcpyAsync(data->mvmi->p+info->start*ntotxloc,
-			   mvmi.P(), ntotxloc*(info->end-info->start)*sizeof(Real),
+			   mvmi(), ntotxloc*(info->end-info->start)*sizeof(Real),
 			   cudaMemcpyDeviceToHost, stream));
     }
     stream.sync();

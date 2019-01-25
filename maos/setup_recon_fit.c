@@ -37,7 +37,7 @@ setup_fit_HXF(const FIT_T *fit){
 	    double displace[2];
 	    displace[0]=fit->thetax->p[ifit]*ht;
 	    displace[1]=fit->thetay->p[ifit]*ht;
-	    IND(HXF,ifit,ips)=mkh(fit->xloc->p[ips], fit->floc, displace[0], displace[1], scale);
+	    P(HXF,ifit,ips)=mkh(fit->xloc->p[ips], fit->floc, displace[0], displace[1], scale);
 	}
     }
     toc2(" ");
@@ -64,7 +64,7 @@ setup_fit_HA(FIT_T *fit){
 	    if(fit->misreg && fit->misreg[ifit+idm*nfit]){
 		loc=loctransform(loc, fit->misreg[ifit+idm*nfit]);
 	    }
-	    IND(HA,ifit,idm)=mkh(fit->aloc->p[idm], loc, 
+	    P(HA,ifit,idm)=mkh(fit->aloc->p[idm], loc, 
 				 displace[0], displace[1], scale);
 	    if(loc!=fit->floc){
 		locfree(loc);
@@ -212,9 +212,9 @@ setup_fit_matrix(FIT_T *fit){
 	    for(int ips=0; ips<npsr; ips++){
 		for(int ifit=0; ifit<nfit; ifit++){
 		    if(fabs(fit->wt->p[ifit])<1.e-12) continue;
-		    dsp *tmp=dspmulsp(fit->W0, IND(HXF,ifit,ips),"nn");
+		    dsp *tmp=dspmulsp(fit->W0, P(HXF,ifit,ips),"nn");
 		    for(int idm=0; idm<ndm; idm++){
-			dspmulsp2(PIND(FRM,idm,ips),IND(HAT,idm,ifit), tmp, "nn",
+			dspmulsp2(PP(FRM,idm,ips),P(HAT,idm,ifit), tmp, "nn",
 				  fit->wt->p[ifit]);
 		    }
 		    dspfree(tmp);
@@ -230,7 +230,7 @@ setup_fit_matrix(FIT_T *fit){
 		    /*notice the sqrt. */
 		    if(fabs(fit->wt->p[ifit])<1.e-12) continue;
 		    dspmulvec(FRV[ips]->p+ifit*nloc, 
-			      IND(HXF,ifit,ips), fit->W1->p, 't',
+			      P(HXF,ifit,ips), fit->W1->p, 't',
 			      sqrt(fit->wt->p[ifit]));
 		}
 	    }
@@ -251,7 +251,7 @@ setup_fit_matrix(FIT_T *fit){
 		/*notice the sqrt. */
 		if(fabs(fit->wt->p[ifit])<1.e-12) continue;
 		dspmulvec(FRU[idm]->p+ifit*nloc, 
-			  IND(HA,ifit,idm), fit->W1->p,'t',
+			  P(HA,ifit,idm), fit->W1->p,'t',
 			  sqrt(fit->wt->p[ifit]));
 	    }
 	}
@@ -264,9 +264,9 @@ setup_fit_matrix(FIT_T *fit){
 	for(int idm=0; idm<ndm; idm++){
 	    for(int ifit=0; ifit<nfit; ifit++){
 		if(fabs(fit->wt->p[ifit])<1.e-12) continue;
-		dsp *tmp=dspmulsp(fit->W0, IND(HA,ifit,idm),"nn");
+		dsp *tmp=dspmulsp(fit->W0, P(HA,ifit,idm),"nn");
 		for(int jdm=0; jdm<ndm; jdm++){
-		    dspmulsp2(PIND(FLM,jdm,idm),IND(HAT,jdm,ifit), tmp,"nn",
+		    dspmulsp2(PP(FLM,jdm,idm),P(HAT,jdm,ifit), tmp,"nn",
 			      fit->wt->p[ifit]);
 		}
 		dspfree(tmp);
