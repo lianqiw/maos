@@ -241,12 +241,10 @@ file_t* zfopen_try(const char *fn, const char *mod){
     }
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
     if(mod[0]=='w'){
-	if(check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
+	if(check_suffix(fn, ".fits")){
 	    fp->isgzip=0;
-	}else if (check_suffix(fn, ".gz")){
-	    fp->isgzip=1;
 	}else{
-	    fp->isgzip=0;
+	    fp->isgzip=1;
 	}
     }else{ 
 	uint16_t magic;

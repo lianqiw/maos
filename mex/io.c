@@ -175,7 +175,7 @@ file_t* zfopen(const char *fn, const char *mod){
 	return NULL;
     }
     if(mod[0]=='w'){
-	if(check_suffix(fn2, ".bin") || check_suffix(fn2, ".fits")){
+	if(check_suffix(fn2, ".fits")){
 	    fp->isgzip=0;
 	}else{
 	    fp->isgzip=1;
