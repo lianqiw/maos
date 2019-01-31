@@ -240,11 +240,12 @@ static inline void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){
     }							
 }
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
-typedef struct stream_t{
+class stream_t{
     int ref;//1: we don't own these.
     cudaStream_t stream;
     cublasHandle_t handle;
     cusparseHandle_t sphandle;
+public:
     stream_t():ref(0){
 	init();
     }
@@ -272,16 +273,22 @@ typedef struct stream_t{
 	//assert(this);
 	DO(cudaStreamSynchronize(stream));
     }
-    operator cudaStream_t&(){
+    operator cudaStream_t(){
 	//assert(this);
 	return stream;
     }
-    operator cublasHandle_t&(){
-	//assert(this);
+    /*
+      cuda 10.0 complains multiple conversion function to void *
+      operator cublasHandle_t(){
 	return handle;
     }
-    operator cusparseHandle_t&(){
-	//assert(this);
+    operator cusparseHandle_t(){
+	return sphandle;
+    }*/
+    cublasHandle_t blas(){
+	return handle;
+    }
+    cusparseHandle_t sparse(){
 	return sphandle;
     }
     stream_t & operator=(const stream_t &in){
@@ -295,7 +302,7 @@ typedef struct stream_t{
 private:
     stream_t(const stream_t &);
 
-}stream_t;
+};
 typedef struct event_t{
     cudaEvent_t event;
     event_t(unsigned int flag=cudaEventDefault){

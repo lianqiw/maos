@@ -202,7 +202,7 @@ void cp2gpu(curcell &dest, const dcell *src);
 void cp2gpu(cuccell &dest, const ccell *src);
 
 void cuspmul (Real *y, const cusp &A, const Real *x, int ncol, char trans,
-	      Real alpha, cusparseHandle_t handle);
+	      Real alpha, stream_t &stream);
 
 void gpu_write(const Real *p, int nx, int ny, const char *format, ...);
 void gpu_write(const Comp *p, int nx, int ny, const char *format, ...);

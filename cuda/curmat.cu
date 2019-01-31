@@ -94,7 +94,7 @@ void curscale(curmat &in, Real alpha, cudaStream_t stream){
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
-void curmm(curmat &C, Real alpha, const curmat &A, const curmat &B, const char trans[2], Real beta, cublasHandle_t handle){
+void curmm(curmat &C, Real alpha, const curmat &A, const curmat &B, const char trans[2], Real beta, stream_t &stream){
     int m,n,k,k2;
     cublasOperation_t transa, transb;
     if(trans[0]=='t'){
@@ -121,17 +121,17 @@ void curmm(curmat &C, Real alpha, const curmat &A, const curmat &B, const char t
 	assert(C.Nx()==m && C.Ny()==n);
     }
     if(k!=k2) error("Matrix mismatch\n");
-    DO(CUBL(gemm)(handle, transa, transb, m,n,k,
+    DO(CUBL(gemm)(stream.blas(), transa, transb, m,n,k,
 		  &beta, A(), A.Nx(), B(), B.Nx(), &alpha, C(), C.Nx()));
 }
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
-void curmv(Real *c, Real alpha, const curmat &A, const Real *b, char trans, Real beta, cublasHandle_t handle){
-    CUBL(gemv)(handle, (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A.Nx(), A.Ny(), &beta, A(), A.Nx(), b, 1, &alpha, c, 1);
+void curmv(Real *c, Real alpha, const curmat &A, const Real *b, char trans, Real beta, stream_t &stream){
+    CUBL(gemv)(stream.blas(), (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A.Nx(), A.Ny(), &beta, A(), A.Nx(), b, 1, &alpha, c, 1);
 }
 void curcellmm(curcell &C, Real alpha, const curcell &A, const curcell &B, 
-	       const char trans[2], const double beta, cublasHandle_t handle){
+	       const char trans[2], const double beta, stream_t &stream){
     if(!A || !B) return;
     int ax, az;
     int nx,ny,nz;
@@ -158,8 +158,6 @@ void curcellmm(curcell &C, Real alpha, const curcell &A, const curcell &B,
 	C=curcell(nx,ny);
     }else{
 	assert(C.Nx()==nx && C.Ny()==ny);
-	cudaStream_t stream;
-	cublasGetStream(handle, &stream);
 	if(alpha==0){
 	    cuzero(C, stream);
 	}else if(Z(fabs)(alpha-(Real)1)>EPS){
@@ -171,7 +169,7 @@ void curcellmm(curcell &C, Real alpha, const curcell &A, const curcell &B,
 	    for(int iz=0; iz<nz; iz++){
 		if(A[ix*ax+iz*az]&&B[iz*bz+iy*by]){
 		    curmm(C[ix+iy*nx],1.,A[ix*ax+iz*az], 
-			  B[iz*bz+iy*by],trans,beta,handle);
+			  B[iz*bz+iy*by],trans,beta,stream);
 		}
 	    }
 	}

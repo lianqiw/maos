@@ -30,11 +30,11 @@ void curadd(curmat &out,Real alpha,const curmat &in,Real beta,cudaStream_t strea
 void curaddcabs2(curmat &out, Real alpha, const cucmat &in, Real beta, cudaStream_t stream);
 void curscale(curmat &in, Real alpha, cudaStream_t stream);
 void curmv(Real *c, Real alpha, const curmat &A, const Real *b, 
-	   char trans, Real beta, cublasHandle_t handle);
+	   char trans, Real beta, stream_t &stream);
 void curmm(curmat &C, Real alpha, const curmat &A, const curmat &B, 
-	   const char trans[2], Real beta, cublasHandle_t handle);
+	   const char trans[2], Real beta, stream_t &stream);
 void curcellmm(curcell &C0, Real alpha, const curcell &A, const curcell &B, 
-	       const char trans[2], const double beta, cublasHandle_t handle);
+	       const char trans[2], const double beta, stream_t &stream);
 void curcelladd(curcell &A, Real beta, const curcell &B, Real alpha, cudaStream_t stream);
 __global__ void add_do(Real *vec, Real *palpha, Real beta, int n);
 __global__ void add_do(Real *restrict a, const Real * b, const Real *restrict b_sc1, Real b_sc2, int n);

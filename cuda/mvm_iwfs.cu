@@ -72,7 +72,7 @@ void mvm_only(int *gpus, int ngpu, int nstep){
     Real one=1; 
     for(int istep=0; istep<nstep; istep++){
 	DO(cudaEventRecord(event_mvm[istep], stream_mvm));
-	DO(CUBL(gemv)(stream_mvm, CUBLAS_OP_N, nact, ng, &one,
+	DO(CUBL(gemv)(stream_mvm.blas(), CUBLAS_OP_N, nact, ng, &one,
 		      cumvm1, nact, cugrad1, 1, &one, cuact, 1));
     }
     DO(cudaEventRecord(event_mvm[nstep], stream_mvm));
@@ -182,7 +182,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 		pbeta=&one;
 	    }
 	    //Another stream does the matrix vector multiplication. Wait for the event before executing.
-	    DO(CUBL(gemv)(datai->stream_a, CUBLAS_OP_N, nact, nleft, &one, datai->cumvm()+nact*ig, nact, datai->grad()+ig, 1, pbeta, datai->act, 1));
+	    DO(CUBL(gemv)(datai->stream_a.blas(), CUBLAS_OP_N, nact, nleft, &one, datai->cumvm()+nact*ig, nact, datai->grad()+ig, 1, pbeta, datai->act, 1));
 	    DO(cudaEventRecord(datai->event_a[1], datai->stream_a));
 	    datai->count_g++;
 	}

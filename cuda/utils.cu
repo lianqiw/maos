@@ -123,7 +123,7 @@ static const char *scsrmv_err[]={
   y=A*x where A is sparse. x, y are vectors. Slow for GS0.
 */
 
-void cuspmul(Real *y, const cusp &A, const Real *x, int ncolvec, char trans, Real alpha, cusparseHandle_t handle){
+void cuspmul(Real *y, const cusp &A, const Real *x, int ncolvec, char trans, Real alpha, stream_t &stream){
     cusparseOperation_t opr;
     int istrans=(trans=='t' || trans==1);
     if(A.Type()==SP_CSC){
@@ -146,12 +146,12 @@ void cuspmul(Real *y, const cusp &A, const Real *x, int ncolvec, char trans, Rea
     int status;
     Real one=1.f;
     if(ncolvec==1){
-	status=CUSP(csrmv)(handle, opr,
+	status=CUSP(csrmv)(stream.sparse(), opr,
 			   nrow, ncol, A.Nzmax(), &alpha, spdesc,
 			   A.Px(), A.Pp(), A.Pi(), x, &one, y);
     }else{
 	int nlead=istrans?nrow:ncol;
-	status=CUSP(csrmm)(handle, opr,
+	status=CUSP(csrmm)(stream.sparse(), opr,
 			   nrow, ncolvec, ncol, A.Nzmax(), &alpha, spdesc,
 			   A.Px(), A.Pp(), A.Pi(), x, nlead, &one, y, nlead);
     }
