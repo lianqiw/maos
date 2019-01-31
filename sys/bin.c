@@ -118,6 +118,9 @@ static char* procfn(const char *fn, const char *mod){
 	free(fn2);
 	fn2=fnr;
     }else if (mod[0]=='w' || mod[0]=='a'){
+	if (check_suffix(fn2, ".gz")){
+	    fn2[strlen(fn2)-3]='\0';
+	}
 	if(disable_save && mystrcmp(fn2, CACHE)){
 	    //When saving is disabled, allow writing to cache folder.
 	    warning("Saving is disabled for %s.\n", fn2);
@@ -241,10 +244,10 @@ file_t* zfopen_try(const char *fn, const char *mod){
     }
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
     if(mod[0]=='w'){
-	if(check_suffix(fn, ".fits")){
-	    fp->isgzip=0;
-	}else{
+	if(check_suffix(fn, ".gz")){
 	    fp->isgzip=1;
+	}else{
+	    fp->isgzip=0;
 	}
     }else{ 
 	uint16_t magic;
@@ -392,17 +395,22 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
    fread. Follows the interface of fread.
 */
 int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+    int ans;
     if(fp->isgzip){
-	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
+	ans=gzread((voidp)fp->p, ptr, size*nmemb)>0;
+	if(ans>0) ans=0; else gzerror((voidp)fp->p, &ans);
     }else{
-	return fread(ptr, size, nmemb, (FILE*)fp->p)==nmemb?0:-1;
+	ans=fread(ptr, size, nmemb, (FILE*)fp->p);
+	if((size_t)ans==nmemb) ans=0; 
     }
+    return ans;
 }
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
 */
 int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
+    int ans=0;
     if(fp->isfits && size>1){/*need to do byte swapping.*/
 	const long bs=2880;
 	char junk[bs];
@@ -410,7 +418,8 @@ int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	long nb=(length+bs-1)/bs;
 	char *out=(char*)ptr;
 	for(int ib=0; ib<nb; ib++){
-	    if(zfread_do(junk, sizeof(char), bs, fp)) return -1;
+	    ans=zfread_do(junk, sizeof(char), bs, fp);
+	    if(ans) break;
 	    int nd=length<bs?length:bs;
 	    switch(size){
 	    case 2:
@@ -446,18 +455,18 @@ int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	    out+=bs;
 	    length-=bs;
 	}
-	return 0;
     }else{
-	return zfread_do(ptr, size, nmemb, fp);
+	ans=zfread_do(ptr, size, nmemb, fp);
     }
+    return ans;
 }
 /**
    Wraps zfread_try and do error checking.
 */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-    if(zfread_try(ptr, size, nmemb, fp)){
-	perror("zfread");
-	error("Error happened while reading %s\n", fp->fn);
+    int ans=zfread_try(ptr, size, nmemb, fp);
+    if(ans){
+	error("Error (%d) happened while reading %s\n", ans, fp->fn);
     }
 }
 /**

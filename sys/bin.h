@@ -103,6 +103,7 @@ int   gzread(voidp gzfile, voidp buf, unsigned len);
 int   gzseek(voidp file, long offset, int whence);
 int   gzrewind(voidp file);
 int   gzflush(voidp gzfile, int flush);
+const char*gzerror(voidp gzfile, int *error);
 #ifdef __cplusplus
 }
 #endif

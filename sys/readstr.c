@@ -156,7 +156,8 @@ double readstr_num(const char *data, /**<[in] Input string*/
 	data=endptr;
 	double tmp=strtod(data, &endptr);
 	if(data==endptr){
-	    error("{%s}: Failed to parse for a number\n", data);
+	    //no number is followed by / or *
+	    break;
 	}
 	if(power==1){
 	    res*=tmp;
@@ -486,13 +487,11 @@ void readstr_intarr_relax(int **ret, /**<[out] Result*/
 const char *search_header(const char *header, const char *key){
     if(!header) return NULL;
     const char *ans=NULL;
-    //const char *ans_bak=NULL;
     const char *val=header;
     while(val[0]!='\0' && (val=strstr(val, key))){
 	if(val>header){
 	    char prev=*(val-1);
 	    if(!isspace((int)prev) && prev!=';' && prev !=','){
-		//ans_bak=val;
 		val=val+strlen(key);
 		continue;/*Invalid */
 	    }
@@ -501,12 +500,10 @@ const char *search_header(const char *header, const char *key){
 	while(val[0]==' ') val++;
 	if(val[0] == '='){
 	    val++;
-	}else{
-	    continue;//invalid key
+	    while(val[0]==' ') val++;
+	    ans=val;
+	    break;
 	}
-	while(val[0]==' ') val++;
-	ans=val;
-	break;
     }
     //if(!ans) ans=ans_bak;
     return ans;

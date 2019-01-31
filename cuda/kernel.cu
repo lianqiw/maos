@@ -20,7 +20,6 @@
 /**
    A few kernels.
 */
-/*somehow I must test both CUDA_ARCH existance and version.*/
 
 __global__ void set_do(Real *a, Real alpha, int n){
     const int step=blockDim.x * gridDim.x;

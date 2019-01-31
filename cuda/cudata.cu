@@ -142,6 +142,9 @@ static int task_cmp(const task_t *a, const task_t *b){
    and NVML, causing the selection of GPUs to fail. Do not use NVML 
 */
 int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
+    //Set the CACHE size big enough if use didn't set it.
+    setenv("CUDA_CACHE_MAXSIZE", "1000000000", 0);
+
     int ans;//total number of GPUs.
     if((ans=cudaGetDeviceCount(&MAXGPU)) || MAXGPU==0){//no GPUs available.
 	info("No GPUs available. ans=%d (%s)\n", ans, cudaGetErrorString((cudaError_t)ans));

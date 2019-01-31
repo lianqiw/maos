@@ -324,14 +324,14 @@ int main(int argc, char *argv[]){
 		dmat *ires=dtrans(res0); dfree(res0);
 		dmat *tmp;
 		if(!ysky){
-		    int nsky=res->nx;
+		    int nsky=ires->nx;
 		    ysky=dnew(nsky,1);
 		    for(int i=0; i<nsky; i++){
 			ysky->p[i]=pow((double)i/(double)(nsky-1)*1e-9,2);
 		    }
 		}
 		
-		if(res->nx!=ysky->nx){
+		if(ires->nx!=ysky->nx){
 		    warning("Mismatch: %ld vs %ld\n", ires->nx, ysky->nx);
 		    dfree(ires);
 		    continue;

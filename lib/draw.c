@@ -348,6 +348,7 @@ void draw_final(int reuse){
 */
 int draw_current(const char *fig, const char *fn){
     if(disable_draw) return 0;
+    if(!draw_single) return 1;
     int current=0;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
@@ -544,7 +545,9 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	     const char *format, /**<subcategory of the plot.*/
 	     ...){
     format2fn;
-    if(disable_draw || !draw_current(fig, fn)) return;
+    if(disable_draw || !draw_current(fig, fn)){
+	return;
+    }
     if (draw_single){
 	//Skip this drawing if line is busy.
 	if((TRYLOCK(lock))){//lock failed
