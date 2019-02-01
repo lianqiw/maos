@@ -22,6 +22,7 @@ struct zfarr{
     file_t *fp;     /**<pointer to file*/
     long cur;       /**<Current element*/
     long tot;       /**<Total number of elements*/
+    uint32_t id;
 };
 
 /**
@@ -44,10 +45,6 @@ zfarr* zfarr_init(long nx, long ny,const char*format,...){
    Append a A of type type into the zfarr ca, at location i.
 */
 void zfarr_push(zfarr *ca, int i, const void *p){
-    if(!p){
-	warning_once("p is empty\n");
-	return;//nothing to be done
-    }
     if(!ca){
 	warning_once("zfarr is NULL\n");
 	return;
@@ -58,13 +55,14 @@ void zfarr_push(zfarr *ca, int i, const void *p){
     }
     if(i>=ca->tot){
 	warning_once("zfarr %s overflow. Size is %ld, current position is %ld\n", zfname(ca->fp), ca->tot, ca->cur);
+	return;
     }
-    uint32_t id=((cell*)p)->id;
+    if(p) ca->id=((cell*)p)->id;
     while(ca->cur<i && !zfisfits(ca->fp)) {
-	writedata_by_id(ca->fp, 0, id); 
+	writedata_by_id(ca->fp, 0, ca->id); 
 	ca->cur++;
     }
-    writedata_by_id(ca->fp, p, id); 
+    writedata_by_id(ca->fp, p, ca->id);
     ca->cur++;
 }
 /*
@@ -94,6 +92,8 @@ void zfarr_close(zfarr *ca){
 	warning("zfarr %s is initialized with %ld elements, "
 		"but %ld elements are written\n",
 		zfname(ca->fp),ca->tot,ca->cur);
+    }else if(ca->cur < ca->tot){
+	zfarr_push(ca, ca->tot-1, NULL);
     }
     zfclose(ca->fp);
     free(ca);

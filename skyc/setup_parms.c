@@ -69,6 +69,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.imperrnm);
     READ_DBL(skyc.imperrnmb);
     READ_INT(skyc.mtchcr);
+    READ_INT(skyc.mtchfft);
     READ_INT(skyc.phytype);
     readcfg_dblarr_nmax(&parms->skyc.qe, parms->maos.nwvl,"skyc.qe");
     readcfg_dblarr_nmax(&parms->skyc.telthruput, parms->maos.nwvl, "skyc.telthruput");
@@ -83,8 +84,11 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.neaaniso);
     READ_INT(skyc.neanonlin);
     char *temp;
-    temp=readcfg_str("skyc.psd_ws"); 
-    parms->skyc.psd_ws=dread("%s",temp); free(temp);
+    temp=readcfg_str("skyc.psd_ws");
+    if(temp){
+	parms->skyc.psd_ws=dread("%s",temp);
+    }
+    free(temp);
 
     READ_DBL(skyc.zb.ZJ);
     READ_DBL(skyc.zb.ZH);
@@ -106,7 +110,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.sdetmax);
 
     READ_INT(skyc.multirate);
-    READ_MAT(skyc.snrmin);
+    READ_DBL(skyc.snrmin);
     READ_INT(skyc.usephygrad);
 
     READ_INT(skyc.estimate);
@@ -228,7 +232,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.servo<0){
 	parms->skyc.addws=1;
     }
-    if(parms->skyc.servo<0 && parms->skyc.multirate){
+    if(parms->skyc.multirate){
 	dfree(parms->skyc.dtrats);
 	parms->skyc.dtrats=parms->skyc.dtrats_mr;
 	parms->skyc.dtrats_mr=0;
@@ -239,8 +243,8 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.addws==-1){
 	parms->skyc.addws=1;
     }
-    if(parms->skyc.snrmin->nx > 1 && parms->skyc.snrmin->nx != parms->skyc.ndtrat){
-	error("snrmin size does not match dtrats\n");
+    if(!parms->skyc.psd_ws){
+	parms->skyc.addws=0;
     }
     switch(parms->skyc.servo){
     case -1://LQG

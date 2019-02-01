@@ -130,6 +130,7 @@ typedef struct SKYC_S{
     int evlstart;    /**<time step to start evaluate performance*/
     int phystart;    /**<time step to start physical optics*/
     int mtchcr;      /**<constraint in matched filter*/
+    int mtchfft;     /**<Use FFT for derivative*/
     int phytype;     /**<Type of pixel processing. 1: mtch, 2: cog, 3: correlation*/
     int neaaniso;     /**<use additional measurement error caused by
 			 anisoplanatism in regularization.*/
@@ -160,7 +161,7 @@ typedef struct SKYC_S{
 			of otf, and second column of value.*/
     double sdetmax;  /**<tmax for SDE fitting*/
     int multirate;   /**<Each OIWFS can run at different dtrat*/
-    dmat* snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
+    double snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
     int usephygrad;  /**<1: Use physical optics grad instead of ztilt*/
     int estimate;    /**<1: Estiamte performance only, without time domain simulation*/
 }SKYC_S;

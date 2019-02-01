@@ -22,7 +22,7 @@
 #error "Don't include this file directly"
 #endif
 
-#define AOS_MAT_DEF(X,T)						\
+#define AOS_MAT_DEF(X,T,R)						\
     X(mat) *X(new_ref)(long nx, long ny, T *p) CHECK_UNUSED_RESULT;	\
     X(mat) *X(new_data)(long nx, long ny, T *p) CHECK_UNUSED_RESULT;	\
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;		\
@@ -37,12 +37,22 @@
     X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny) CHECK_UNUSED_RESULT; \
     X(mat) *X(cat)(const X(mat) *in1, const X(mat) *in2, int dim) CHECK_UNUSED_RESULT; \
     X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;		\
+    void X(zero)(X(mat)*A);						\
+    void X(zerocol)(X(mat)*A, int icol);				\
+    uint32_t X(hash)(const X(mat)*A, uint32_t key);			\
     void X(cp)(X(mat) **out0, const X(mat) *in);			\
     X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;		\
     void X(set)(X(mat) *A, const T val);				\
     void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);	\
     T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+    void X(sort)(X(mat) *A, int ascend);				\
+    void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\
+    R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+    R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+    R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+    R X(sumabs)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
+    R X(sumsq)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     void X(fftshift)(X(mat) *A);					\
     void X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
     X(cell) *X(cell_cast)(const void *A) CHECK_UNUSED_RESULT;		\

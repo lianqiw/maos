@@ -511,8 +511,10 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     }
 }
 /**
-   Invert GM while handling rank deficiency. Ignore those WFS whoes mask is 0. It assumes the modes are ordered as below:
-   T/T x, T/T y, PS1, PS2, PS3, Focus
+   Invert GM while handling rank deficiency. 
+
+   It ignores those WFS whoes mask is 0, and assumes the modes are ordered as
+   below: T/T x, T/T y, PS1, PS2, PS3, Focus.
 */
 static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, lmat **pmodvalid){
     if(GM->ny!=1){
@@ -541,6 +543,8 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, l
     if(pmodvalid){
 	if(!*pmodvalid){
 	    *pmodvalid=lnew(nmod,1);
+	}else{
+	    lset(*pmodvalid, 0);
 	}
 	modvalid=*pmodvalid;
     }else{
@@ -550,7 +554,7 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, l
 	lset(modvalid, 1);
     }
     if(nttf>0){
-	if(ntt==0 && nmod==6){
+	if(nttf==1 && ntt==0 && nmod==6){
 	    modvalid->p[2]=0;//disable magnofication mode
 	}//else: all mode is valid
     }else{//nttf==0;
@@ -561,13 +565,17 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, l
 	    if(ntt<3){//1 or 2 TT OIWFS can not control all 3 PS modes
 		modvalid->p[2]=0;
 	    }
-	    if(ntt==1){//1 TT OIWFS can not control any PS mode.
+	    if(ntt<2){//1 TT OIWFS can not control any PS mode.
 		modvalid->p[3]=0;
 		modvalid->p[4]=0;
 	    }
+	    if(ntt==0){
+		modvalid->p[0]=0;
+		modvalid->p[1]=0;
+	    }
 	}
     }
-			
+    
     for(int iwfs=0; iwfs<GM->nx; iwfs++){
 	if(P(GM2, iwfs)){
 	    for(int imod=0; imod<nmod; imod++){
@@ -736,7 +744,7 @@ static void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double 
     if(!M || !M->p[0]) return;
     const NGSMOD_T *ngsmod=recon->ngsmod;
     //const int nmod=ngsmod->nmod;
-    assert(M->nx==1 && M->ny==1 && M->p[0]->nx==nmod);
+    assert(M->nx==1 && M->ny==1 && M->p[0]->nx==ngsmod->nmod);
     double scale=ngsmod->scale;
     /*The MCC_fcp depends weakly on the aperture sampling. */
     double MCC_fcp=ngsmod->aper_fcp;

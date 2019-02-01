@@ -41,8 +41,8 @@
 #define isempty(A) (!(A) || !(A)->nx || !(A)->ny)
 //#ifdef USE_SINGLE
 //Single
-AOS_MAT_DEF(AOS_SMAT,float)
-AOS_MAT_DEF(AOS_ZMAT,fcomplex)
+AOS_MAT_DEF(AOS_SMAT,float,float)
+AOS_MAT_DEF(AOS_ZMAT,fcomplex,float)
 
 AOS_MATMATH_DEF(AOS_SMAT,AOS_SMAT,float,float)
 AOS_MATMATH_DEF(AOS_ZMAT,AOS_SMAT,fcomplex,float)
@@ -63,8 +63,8 @@ AOS_FFT_DEF(AOS_SMAT)
 AOS_FFT_DEF(AOS_ZMAT)
 //#else
 //Double
-AOS_MAT_DEF(AOS_DMAT,double)
-AOS_MAT_DEF(AOS_CMAT,dcomplex)
+AOS_MAT_DEF(AOS_DMAT,double,double)
+AOS_MAT_DEF(AOS_CMAT,dcomplex,double)
 
 AOS_MATMATH_DEF(AOS_DMAT,AOS_DMAT,double,double)
 AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,dcomplex,double)
@@ -84,7 +84,7 @@ AOS_FFT_DEF(AOS_DMAT)
 AOS_FFT_DEF(AOS_CMAT)
 
 //#endif
-AOS_MAT_DEF(AOS_LMAT, long)
+AOS_MAT_DEF(AOS_LMAT, long,long)
 AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define abs2(A)      ((A)*(A))
@@ -92,34 +92,22 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define cabs2(A)     (abs2(creal(A))+abs2(cimag(A)))
 
 #define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
-#define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
 #define dcellfree(A) ({cellfree_do(A);A=NULL;})
 #define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
-#define dzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
-#define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
 
 #define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
-#define scp2(A,B)    memcpy(A->p,B->p,sizeof(float)*A->nx*A->ny)
 #define scellfree(A) ({cellfree_do(A);A=NULL;})
 #define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
-#define szero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(float))
-#define shash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(float), key)
 
 #define cfree(A)     ({cfree_do(A,0);A=NULL;})
 #define ccellfree(A) ({cellfree_do(A);A=NULL;})
 #define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
-#define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
-#define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
 
 #define zfree(A)     ({zfree_do(A,0);A=NULL;})
 #define zcellfree(A) ({cellfree_do(A);A=NULL;})
-#define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
-#define zhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(fcomplex), key)
 
 #define lfree(A)     ({lfree_do(A,0);A=NULL;})
 #define lcellfree(A) ({cellfree_do(A);A=NULL;})
-#define lzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(long))
-#define lhash(A,key) hashlittle((A)->p, (A)->nx*(A)->ny*sizeof(long), key)
 
 #define cellfree(A) ({cellfree_do(A); A=0;})
 

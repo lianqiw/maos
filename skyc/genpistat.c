@@ -121,12 +121,12 @@ static void calc_pistat(GENPISTAT_S *data){
 		LOCK(data->mutex_read);
 		ccell *wvfi=ccellreaddata(fp_wvf, 0);
 		UNLOCK(data->mutex_read);
-		ccell* wvfout=wvfi;
+		if(!wvfi || wvfi->nx==0 || wvfi->ny==0) continue;
 		for(long iwvl=0; iwvl<nwvl; iwvl++){
 		    double wvl=parms->maos.wvl[iwvl];
 		    for(long isa=0; isa<nsa; isa++){
 			//first compute PSF from WVF and compute CoG
-			ccp(&wvfc, P(wvfout,isa,iwvl));
+			ccp(&wvfc, P(wvfi,isa,iwvl));
 			cembedc(wvf,wvfc,0,C_FULL);
 			cfft2(wvf,-1);
 			cabs22d(&psf, 0, wvf, 1);//peak in corner.
@@ -414,7 +414,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			/*Assume each WVL has same weighting*/
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 			    writebin(avgpi, "avgpi");
-			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], P(pavgpi,isa,iwvl), powfs[ipowfs].dtf+iwvl);
+			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], P(pavgpi,isa,iwvl), powfs[ipowfs].dtf+iwvl, 1);
 			    ccpd(&otf1->p[isa+iwvl*nsa], P(pavgpi,isa,iwvl));
 			    cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
 			}

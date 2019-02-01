@@ -29,7 +29,7 @@ typedef struct{
     dcell *M;  /**<M is innovation gain.*/
     dmat *P;   /**<Error covariance matrix*/
     double dthi;/**<Sampling period of control loop*/
-    dmat *dtrat;/**<WFS sampling period over dthi*/
+    lmat *dtrat;/**<WFS sampling period over dthi*/
     dcell *Gwfs;/**<WFS measurement from modes. Can be identity.*/
     dcell *Rwfs;/**<WFS measurement noise covariance due to photon and RoN.*/
     dcell *Rn;  /**<Total WFS measurement error due to signal evolution and Rwfs. */
@@ -39,7 +39,7 @@ typedef struct{
 }kalman_t;
 dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *C, const dcell *Rn);
-kalman_t* sde_kalman(const dmat *coeff, const double dthi, const dmat* dtrat, 
+kalman_t* sde_kalman(const dmat *coeff, const double dthi, const lmat* dtrat, 
 		     const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);
 void kalman_free(kalman_t *kalman);
 dmat *kalman_test(kalman_t *kalman, dmat *input);

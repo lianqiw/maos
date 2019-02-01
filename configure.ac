@@ -865,11 +865,17 @@ if test "$with_cuda" != "no" ;then
 	NVCC+=" -ccbin ${CCBIN%% *}"
     fi
     if test "$cudaver" -lt 40 ;then
-	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
+	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 and compute_20])
     fi
-    
-    CUDAOPT+=" --gpu-architecture=compute_20" #requires at least compute_20
-
+    #virtual GPUs are used here to allow JIT compilation during runtime
+    #set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
+    if test "$cudaver" -lt 80 ;then
+	CUDAOPT+=" -arch=compute_20" #<cuda-8.0 supports compute_20
+    else
+	CUDAOPT+=" -arch=compute_30" #compute_30 is the minimum version
+    fi
+    #To specify multiple architectures, use
+    #CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
     if test "$debug" = "yes" ;then
         CUDAOPT+=" -O0"
     else

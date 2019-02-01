@@ -23,12 +23,6 @@
 #endif
 #define AOS_MATMATH_DEF(X,XR,T,R)					\
     int X(isnan)(const X(mat)*A);					\
-    void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\
-    R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
-    R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
-    R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
-    R X(sumabs)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
-    R X(sumsq)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(norm)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(std)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     void X(randu)(X(mat) *A, const T mean, rand_t *rstat);		\
@@ -106,7 +100,6 @@
     void X(cwlog)(X(mat) *A);						\
     void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta); \
     long X(fwhm)(X(mat) *A);						\
-    void X(sort)(X(mat) *A, int ascend);				\
     X(mat) *X(enc)(X(mat) *A, X(mat) *dvec, int type, int nthread);	\
     typedef T (*X(minsearch_fun))(const T *x, void *info);		\
     int X(minsearch)(T *x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void *info); \

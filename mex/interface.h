@@ -378,7 +378,7 @@ static kalman_t *mx2kalman(const mxArray*A){
     kalman->M=mx2dcell(mxGetField(A,0,"M"));
     kalman->P=mx2d(mxGetField(A,0,"P"));
     kalman->dthi=(double)mxGetScalar(mxGetField(A,0,"dthi"));
-    kalman->dtrat=mx2d(mxGetField(A,0,"dtrat"));
+    kalman->dtrat=mx2l(mxGetField(A,0,"dtrat"));
     kalman->Gwfs=mx2dcell(mxGetField(A,0,"Gwfs"));
     kalman->Rwfs=mx2dcell(mxGetField(A,0,"Rwfs"));
     return kalman;

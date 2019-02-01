@@ -26,72 +26,42 @@
    Compute pixel intensity i0, and gradient of pixel intensity gx, gy from the
    PSF.
    \todo merge this file with maos/mtch.c and put in lib folder.
- */
-void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
+*/
+void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf, int deriv){
     cmat *otf=cnew(psf->nx, psf->ny);
-    cmat *otfsave=cnew(psf->nx, psf->ny);
-    //cfft2plan(otf, 1);
-    //cfft2plan(otf, -1);
-    //cfft2plan(otfsave,1);
+    cmat *otfsave=0;
     ccpd(&otf, psf);//loaded psf has peak in corner 
-    cfft2i(otf, -1);//turn to OTF, peak in corner. was 1, turn to -1 on 1/30/2013 
-    ccwm(otf, dtf->nominal);
-    ccp(&otfsave, otf);
-    cfft2(otf, 1);//turn back. 
-    dspmulcreal(i0->p, dtf->si, otf->p, 1);
-    ccp(&otf, otfsave);
-    cmat*  potf=otf;
-    cmat*  potfsave=otfsave;
-    //Now derivative 
-    for(int iy=0; iy<otf->ny; iy++){
-	for(int ix=0; ix<otf->nx; ix++){
-	    P(potf,ix,iy)*=dtf->U->p[ix];
-	    P(potfsave,ix,iy)*=dtf->U->p[iy];
-	}
+    cfft2i(otf, -1);//turn to OTF, peak in corner.
+    ccwm(otf, dtf->nominal);//apply pixel transfer function
+    if(deriv){
+	ccp(&otfsave, otf);//save for later
     }
-    cfft2(otf, 1);//was 1, changed to -1 on 1/29/2013
-    cfft2(otfsave, 1);//was 1, changed to -1 on 1/29/2013
-    dspmulcreal(gx->p,dtf->si,otf->p,1);
-    dspmulcreal(gy->p,dtf->si,otfsave->p,1);
-    cfree(otf); cfree(otfsave);
+    cfft2(otf, 1);//convert otf back to psf space
+    dspmulcreal(i0->p, dtf->si, otf->p, 1);//sample psf to detectors.
+    if(deriv){
+	ccp(&otf, otfsave); //copy back otf
+	//apply derivative.
+	for(int iy=0; iy<otf->ny; iy++){
+	    for(int ix=0; ix<otf->nx; ix++){
+		P(otf,ix,iy)*=dtf->U->p[ix];
+		P(otfsave,ix,iy)*=dtf->U->p[iy];
+	    }
+	}
+	cfft2(otf, 1);
+	cfft2(otfsave, 1);
+	dspmulcreal(gx->p,dtf->si,otf->p,1);
+	dspmulcreal(gy->p,dtf->si,otfsave->p,1);
+	cfree(otfsave);
+    }
+    cfree(otf); 
 }
 
 /**
-   shift without wraping i0 into i0x1 (+1) and i0x2 (-1)
-*/
-/*
-static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
-    int nx=i0->nx;
-    double (*i0x1p)[nx]=(double(*)[nx])i0x1;
-    double (*i0x2p)[nx]=(double(*)[nx])i0x2;
-    for(int iy=0; iy<i0->ny; iy++){
-	for(int ix=0; ix<i0->nx-1; ix++){
-	    i0x1p[iy][ix+1]=P(i0,ix,iy)*scale;
-	    i0x2p[iy][ix]=P(i0,ix+1,iy)*scale;
-	}
-    }
-    }*/
-/**
-  shift without wraping i0 into i0y1 (+1) and i0y2 (-1)
-*/
-/*
-static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
-    int nx=i0->nx;
-    double (*i0y1p)[nx]=(double(*)[nx])i0y1;
-    double (*i0y2p)[nx]=(double(*)[nx])i0y2;
-    for(int iy=0; iy<i0->ny-1; iy++){
-	for(int ix=0; ix<i0->nx; ix++){
-	    i0y1p[iy+1][ix]=P(i0,ix,iy)*scale;
-	    i0y2p[iy][ix]=P(i0,ix,iy+1)*scale;
-	}
-    }
-    }*/
-/**
    Compute matched filter.
- */
+*/
 void genmtch(dcell **mtche, dmat **sanea,
-	  dcell *i0, dcell *gx, dcell *gy, double pixtheta, 
-	  double rne, double bkgrnd, int cr){
+	     dcell *i0, dcell *gx, dcell *gy, double pixtheta, 
+	     double rne, double bkgrnd, int cr){
     const long nsa=i0->nx;
     if(!*mtche){
 	*mtche=dcellnew(nsa,1);
@@ -102,7 +72,7 @@ void genmtch(dcell **mtche, dmat **sanea,
     for(long isa=0; isa<nsa; isa++){    
 	dmat *nea2=0;
 	P(*mtche, isa)=mtch(&nea2, P(i0, isa), P(gx, isa), P(gy, isa), 0, 0, 0,
-			      bkgrnd, bkgrnd, rne, pixtheta, pixtheta, 0, 0, cr);
+			    bkgrnd, bkgrnd, rne, pixtheta, pixtheta, 0, 0, cr);
 	/*Drop coupling in x/y gradients. */
 	(*sanea)->p[isa]=sqrt(nea2->p[0]);
 	(*sanea)->p[isa+nsa]=sqrt(nea2->p[3]);

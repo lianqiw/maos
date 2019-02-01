@@ -133,10 +133,10 @@ static void skysim_isky(SIM_S *simu){
 		seed_rand(&aster[iaster].rand, parms->skyc.seed+iaster+40);
 		/*Compute signal level. */
 		setup_aster_copystar(&aster[iaster], star, parms);
-		/*setup gradient operator. */
-		setup_aster_g(&aster[iaster], star, parms);
+		/*setup mode to gradient operator. */
+		setup_aster_gm(&aster[iaster], star, parms);
 		/*Compute the reconstructor, nea, sigman and optimize controller. */
-		setup_aster_controller(simu, &aster[iaster], star, parms);
+		setup_aster_controller(simu, &aster[iaster], parms);
 	    }
 	}
 #if _OPENMP >= 200805
@@ -172,7 +172,7 @@ static void skysim_isky(SIM_S *simu){
 			goto skip1;
 		    }
 		}else{
-		    if(!asteri->use){
+		    if(asteri->use!=1){
 			goto skip1;
 		    }
 		}
@@ -291,7 +291,7 @@ static void skysim_isky(SIM_S *simu){
 	}
 	if(seldtrat!=-1){
 	    simu->fss->p[isky]=parms->skyc.fss[seldtrat];
-	    if(parms->skyc.servo>0){
+	    if(parms->skyc.servo>0 && !parms->skyc.multirate){
 		dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
 	    }
 	}
@@ -433,13 +433,14 @@ static void skysim_calc_psd(SIM_S *simu){
     }
 
     info("PSD integrates to %.2f nm. varol=%.2f nm\n", sqrt(var_all)*1e9, sqrt(simu->varol)*1e9);
-    
-    double var_ws=psd_inte2(parms->skyc.psd_ws);
-    info("Windshake PSD integrates to %g nm\n", sqrt(var_ws)*1e9);
-    simu->varol+=var_ws;//testing
- 
-    //add windshake PSD to ngs/tt
-    add_psd2(&simu->psds->p[0], parms->skyc.psd_ws,1);
+    if(parms->skyc.psd_ws){
+	double var_ws=psd_inte2(parms->skyc.psd_ws);
+	info("Windshake PSD integrates to %g nm\n", sqrt(var_ws)*1e9);
+	simu->varol+=var_ws;//testing
+	
+	//add windshake PSD to ngs/tt
+	add_psd2(&simu->psds->p[0], parms->skyc.psd_ws,1);
+    }
     if(parms->skyc.dbg || 1){
 	writebin(simu->psds, "psds_m2.bin");
     }

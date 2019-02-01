@@ -212,7 +212,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(strname && (!strcmp(strname, "M1") || !strcmp(strname, "M2"))){
 	    if(fabs(parms->aper.rotdeg)>1.e-10){
 		dmat *B=ddup((dmat*)surf);
-		dzero(surf);
+		dzero((dmat*)surf);
 		dembed((dmat*)surf, B, parms->aper.rotdeg/180.*M_PI);
 		dfree(B);
 	    }

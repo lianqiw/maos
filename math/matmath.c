@@ -49,76 +49,6 @@ int X(isnan)(const X(mat)*A){
     return 0;
 }
 /**
-   Compute max, min and sum. Has to handle NAN nicely. Complex values are
-   converted into magnitude during comparison. */
-void X(maxmin)(const T *restrict p, long N, R *max, R *min){
-    R a,b;
-    long i;
-    a=-INFINITY;
-    b=INFINITY;
-    for(i=0; i<N; i++){
-#ifdef USE_COMPLEX
-	R tmp=fabs(p[i]);
-#else
-	R tmp=p[i];
-#endif
-	if(!isnan(tmp)){
-	    if(tmp>a) a=tmp;
-	    if(tmp<b) b=tmp;
-	}
-    }
-    if(max)*max=a; 
-    if(min)*min=b; 
-}
-
-/**
-   find the maximum value of a X(mat) object
-*/
-R X(max)(const X(mat) *A){
-    R max,min;
-    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
-    return max;
-}
-
-/**
-   find the minimum value of a X(mat) object
-*/
-R X(min)(const X(mat) *A){
-    R max,min;
-    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
-    return min;
-}
-/**
-   find the maximum of abs of a X(mat) object
-*/
-R X(maxabs)(const X(mat) *A){
-    R max,min;
-    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
-    max=fabs(max);
-    min=fabs(min);
-    return max>min?max:min;
-}
-/**
-   compute the sum of abs(A)
-*/
-R X(sumabs)(const X(mat)*A){
-    R out=0;
-    for(long i=0; i<A->nx*A->ny; i++){
-	out+=fabs(A->p[i]);
-    }
-    return out;
-}
-/**
-   compute the sum of A.*A
-*/
-R X(sumsq)(const X(mat)*A){
-    R out=0;
-    for(long i=0; i<A->nx*A->ny; i++){
-	out+=creal(A->p[i]*conj(A->p[i]));
-    }
-    return out;
-}
-/**
    compute the norm(2) of A
 */
 R X(norm)(const X(mat)*A){
@@ -130,7 +60,7 @@ R X(norm)(const X(mat)*A){
 R X(std)(const X(mat)*A){
     long N=A->nx*A->ny;
     T sum=X(sum)(A);
-    R var=(X(sumsq)(A)-creal(sum*conj(sum))/N)/(N-1);
+    R var=(X(sumsq)(A)-ABS2(sum)/N)/(N-1);
     return sqrt(var);
 }
 /**
@@ -1466,24 +1396,6 @@ long X(fwhm)(X(mat) *A){
     return fwhm;
 }
 #ifndef USE_COMPLEX
-static int sort_ascend(const T*A, const T*B){
-    if ((*A)>(*B)) return 1; 
-    else return -1;
-}
-static int sort_descend(const T*A, const T*B){
-    if ((*A)>(*B)) return -1; 
-    else return 1;
-}
-/*
-  Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
-*/
-void X(sort)(X(mat) *A, int ascend){
-    for(int i=0; i<A->ny; i++){
-	qsort(PCOL(A, i), A->nx, sizeof(R), 
-	      (int(*)(const void*,const void*))(ascend?sort_ascend:sort_descend));
-    }
-}
-
 typedef struct{
     X(mat) *enc; /**<Output*/
     X(mat) *dvec;/**<Radius wanted*/

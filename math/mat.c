@@ -267,7 +267,32 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
     }
     return out;
 }
-
+/**
+   Set elements to zero.
+*/
+void X(zero)(X(mat)*A){
+    if(A){
+	memset(A->p, 0, sizeof(T)*A->nx*A->ny);
+    }
+}
+/**
+   Set column elements to zero.
+*/
+void X(zerocol)(X(mat)*A, int icol){
+    if(A){
+	assert(icol>=0 && icol<A->ny);
+	memset(PCOL(A, icol), 0, sizeof(T)*A->nx);
+    }
+}
+/**
+   Compute the hashlittle
+ */
+uint32_t X(hash)(const X(mat)*A, uint32_t key){
+    if(A){
+	key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
+    }
+    return key;
+}
 /**
    copy the values from one X(mat) to another.
 */
@@ -382,6 +407,102 @@ T X(trace)(const X(mat)*A){
     return trace;
 }
 
+#ifndef USE_COMPLEX
+static int sort_ascend(const T*A, const T*B){
+    if ((*A)>(*B)) return 1; 
+    else return -1;
+}
+static int sort_descend(const T*A, const T*B){
+    if ((*A)>(*B)) return -1; 
+    else return 1;
+}
+/*
+  Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
+*/
+void X(sort)(X(mat) *A, int ascend){
+    for(int i=0; i<A->ny; i++){
+	qsort(PCOL(A, i), A->nx, sizeof(R), 
+	      (int(*)(const void*,const void*))(ascend?sort_ascend:sort_descend));
+    }
+}
+#endif
+
+
+/**
+   Compute max, min and sum. Has to handle NAN nicely. Complex values are
+   converted into magnitude during comparison. */
+void X(maxmin)(const T *restrict p, long N, R *max, R *min){
+    R a,b;
+    long i;
+#ifdef USE_LONG
+    a=-INT_MAX;
+    b=INT_MAX;
+#else
+    a=-INFINITY;
+    b=INFINITY;
+#endif
+    for(i=0; i<N; i++){
+#ifdef USE_COMPLEX
+	R tmp=fabs(p[i]);
+#else
+	R tmp=p[i];
+#endif
+	if(!isnan(tmp)){
+	    if(tmp>a) a=tmp;
+	    if(tmp<b) b=tmp;
+	}
+    }
+    if(max)*max=a; 
+    if(min)*min=b; 
+}
+
+/**
+   find the maximum value of a X(mat) object
+*/
+R X(max)(const X(mat) *A){
+    R max,min;
+    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
+    return max;
+}
+
+/**
+   find the minimum value of a X(mat) object
+*/
+R X(min)(const X(mat) *A){
+    R max,min;
+    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
+    return min;
+}
+/**
+   find the maximum of abs of a X(mat) object
+*/
+R X(maxabs)(const X(mat) *A){
+    R max,min;
+    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
+    max=fabs(max);
+    min=fabs(min);
+    return max>min?max:min;
+}
+/**
+   compute the sum of abs(A)
+*/
+R X(sumabs)(const X(mat)*A){
+    R out=0;
+    for(long i=0; i<A->nx*A->ny; i++){
+	out+=fabs(A->p[i]);
+    }
+    return out;
+}
+/**
+   compute the sum of A.*A
+*/
+R X(sumsq)(const X(mat)*A){
+    R out=0;
+    for(long i=0; i<A->nx*A->ny; i++){
+	out+=ABS2(A->p[i]);
+    }
+    return out;
+}
 
 /**
    shift frequency components by n/2

@@ -115,7 +115,7 @@ typedef struct ASTER_S{
     /*The following are for each dtrat */
     dcell *pgm;        /**<mode reconstructor */
     dcell *gain;       /**<type II gain vector*/
-    dcell **neam;        /**<measurement error covariance matrix (full matrix with values in diagonal)*/
+    dccell *neam;        /**<measurement error covariance matrix (full matrix with values in diagonal)*/
     dcell *sigman;     /**<NGS, TT noise propagated from WFS measurement noise.*/
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
@@ -125,8 +125,8 @@ typedef struct ASTER_S{
     int idtratmin;     /**<minimum index of dtrat allowed*/
     int idtratmax;     /**<maximum index of dtrat allowed*/
     kalman_t**kalman;
-    dmat *idtrats;
-    dmat *dtrats;
+    lmat *idtrats;
+    lmat *dtrats;
     long *ngs;         /**<number of gradients for each wfs*/
     dcell *phyRes;      /**<Wavefront variance result from physical optics simulations.*/
     dcell *phyMRes;     /**<Residual modes from physical optics simulation*/

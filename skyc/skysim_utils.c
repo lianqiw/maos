@@ -126,7 +126,8 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
     dmat *mreal=NULL;/*modal correction at this step. */
     dmat *merr=dnew(nmod,1);/*modal error */
-    dcell *merrm=dcellnew(1,1);dcell *pmerrm=NULL;
+    dcell *merrm=dcellnew(1,1); merrm->p[0]=dnew(nmod, 1);
+    dcell *pmerrm=NULL;
     const int nstep=aster->nstep?aster->nstep:parms->maos.nstep;
     dmat *mres=dnew(nmod,nstep);
     dmat* rnefs=parms->skyc.rnefs;
@@ -136,22 +137,26 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     if(parms->skyc.dbg){
 	gradsave=dnew(aster->tsa*2,nstep);
     }
-   
-    
+       
     SERVO_T *st2t=0;
     kalman_t *kalman=0;
     dcell *mpsol=0;
-    dmat *pgm=0;
-    dmat *dtrats=0;
     int multirate=parms->skyc.multirate;
-    if(multirate){
-	kalman=aster->kalman[0];
-	dtrats=aster->dtrats;
+    dmat *moffset=multirate?dnew(nmod,1):0;
+    lmat *dtrats=aster->dtrats;//only in multirate case. dtrat of each wfs in the asterism
+    if(parms->skyc.servo>0){
+	if(multirate){//only supports integrator
+	    dmat *gtmp=dnew(1,1); gtmp->p[0]=1;
+	    st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, gtmp);
+	    dfree(gtmp);
+	}else{
+	    //dmat *gtmp=dnew(1,1); gtmp->p[0]=0.5;
+	    st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc,aster->gain->p[idtratc]);
+	    //dfree(gtmp);
+	}
     }else{
-	if(parms->skyc.servo>0){
-	    const double dtngs=parms->maos.dt*dtratc;
-	    st2t=servo_new(merrm, NULL, 0, dtngs, aster->gain->p[idtratc]);
-	    pgm=aster->pgm->p[idtratc];
+	if(multirate){
+	    kalman=aster->kalman[0];
 	}else{
 	    kalman=aster->kalman[idtratc];
 	}
@@ -196,6 +201,11 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }
 	}
     }
+    zfarr *zfmerr=0;
+    if(parms->skyc.dbg){
+	int dtrati=(multirate?dtrats->p[0]:dtratc);
+	zfmerr=zfarr_init(nstep, 1, "%s/skysim_merr_aster%d_dtrat%d", dirsetup, aster->iaster, dtrati);
+    }
     for(int irep=0; irep<parms->skyc.navg; irep++){
 	if(kalman){
 	    kalman_init(kalman);
@@ -209,6 +219,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		dcellzero(ints[iwfs]);
 	    }
 	}
+	int plotted=0;
 	for(int istep=0; istep<nstep; istep++){
 	    memcpy(merr->p, PCOL(mideal,istep), nmod*sizeof(double));
 	    dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
@@ -262,12 +273,12 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		}
 	
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		    int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
+		    int dtrati=(multirate?dtrats->p[iwfs]:dtratc);
 		    if((istep+1) % dtrati==0){
 			dadd(&gradout->p[iwfs], 0, zgradc->p[iwfs], 1./dtrati);
 			dzero(zgradc->p[iwfs]);
 			if(noisy){
-			    int idtrati=(multirate?(int)aster->idtrats->p[iwfs]:idtratc);
+			    int idtrati=(multirate?aster->idtrats->p[iwfs]:idtratc);
 			    dmat *nea=aster->wfs[iwfs].pistat->sanea->p[idtrati];
 			    for(int i=0; i<nea->nx; i++){
 				gradout->p[iwfs]->p[i]+=nea->p[i]*randn(&aster->rand);
@@ -345,13 +356,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    igrad[0]=0;
 			    igrad[1]=0;
 			    double pixtheta=parms->skyc.pixtheta[ipowfs];
-			    //if(parms->skyc.phytype==1){
-			    //	dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
-			    // }
-			    //if(parms->skyc.phytype!=1 || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
-			    //if(parms->skyc.phytype==1){
-			    //	    warning_once("mtch is out of range\n");
-			    //	}
+		
 			    switch(parms->skyc.phytype){
 			    case 1:
 				dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
@@ -370,7 +375,6 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    default:
 				error("Invalid phytype\n");
 			    }
-				// }
 			    gradout->p[iwfs]->p[isa]=igrad[0];
 			    gradout->p[iwfs]->p[isa+nsa]=igrad[1];
 			}/*isa */
@@ -387,11 +391,11 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }else{//LQG control
 		kalman_output(kalman, &mreal, 0, 1);
 	    }
-	    if(kalman){//LQG control
+	    if(parms->skyc.servo<0){//LQG control
 		int indk=0;
 		//Form PSOL grads and obtain index to LQG M
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		    int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
+		    int dtrati=(multirate?dtrats->p[iwfs]:dtratc);
 		    if((istep+1) % dtrati==0){
 			indk|=1<<iwfs;
 			dmm(&gradout->p[iwfs], 1, aster->g->p[iwfs], mpsol->p[iwfs], "nn", 1./dtrati);
@@ -401,9 +405,42 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		if(indk){
 		    kalman_update(kalman, gradout->m, indk-1);
 		}
-	    }else if(st2t){
+	    }else{
 		if(pmerrm){
-		    dmm(&merrm->p[0], 0, pgm, gradout->m, "nn", 1);	
+		    if(!multirate){//single rate
+			dmm(&merrm->p[0], 0, aster->pgm->p[idtratc], gradout->m, "nn", 1);
+		    }else{
+			int indk=0;
+			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+			    int dtrati=(multirate?dtrats->p[iwfs]:dtratc);
+			    if((istep+1) % dtrati==0){
+				indk|=1<<iwfs;
+			    }
+			}
+			dzero(merrm->p[0]);
+			if(indk==aster->pgm->nx){//slower loop
+			    dmm(&moffset, 1, aster->pgm->p[indk-1], gradout->m, "nn", 0.5);
+			    for(int imod=0; imod<nmod; imod++){
+				if((aster->pgm->p[0] && imod==2)
+				   || (aster->pgm->p[1] && imod>1)
+				   || (!aster->pgm->p[0] && !aster->pgm->p[1]))
+				{//direct output some modes
+				    if(!plotted){
+					//info("directly output %d\n", imod);
+				    }
+				    merrm->p[0]->p[imod]=moffset->p[imod];
+				    moffset->p[imod]=0;
+				}
+			    }
+			    plotted=1;
+			}else{
+			    dmm(&merrm->p[0], 1, aster->pgm->p[indk-1], gradout->m, "nn", 0.5);//aster->gain->p[indk-1]->p[0]);
+			    dadd(&merrm->p[0], 1, moffset, 1);
+			}
+			if(zfmerr){
+			    zfarr_push(zfmerr, istep, merrm->p[0]);
+			}
+		    }
 		}
 		servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
 	    }
@@ -413,11 +450,13 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	}/*istep; */
     }
     if(parms->skyc.dbg){
-	int dtrati=(multirate?(int)dtrats->p[0]:dtratc);
+	int dtrati=(multirate?dtrats->p[0]:dtratc);
 	writebin(gradsave,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
-	writebin(mres,"%s/skysim_sim_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
+	writebin(mres,"%s/skysim_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
     }
-  
+    if(zfmerr){
+	zfarr_close(zfmerr);
+    }
     dfree(mreal);
     dcellfree(mpsol);
     dfree(merr);
@@ -467,7 +506,7 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	writebin(aster[selaster].wfs[iwfs].pistat->sanea, 
 		   "%s/neafull_wfs%d",path,iwfs+6);
     }
-    if(parms->skyc.servo>0){
+    if(parms->skyc.servo>0 && !parms->skyc.multirate){
 	writebin(aster[selaster].gain->p[seldtrat], "%s/gain",path);
     }
     writebin(simu->mres->p[isky], "%s/mres",path);
@@ -481,7 +520,7 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
     fprintf(fp,"sim.dt=%g\n", parms->maos.dt);
     fprintf(fp,"sim.zadeg=%g\n", parms->maos.zadeg);
     fprintf(fp,"sim.mffocus=%d\n", parms->maos.mffocus);
-    fprintf(fp,"sim.ahstfocus=%d\n", parms->maos.ahstfocus);
+    fprintf(fp,"tomo.ahst_focus=%d\n", parms->maos.ahstfocus);
     fprintf(fp,"tomo.ahst_wt=3\n");
     if(parms->skyc.servo>0){
 	fprintf(fp,"sim.eplo='gain.bin'\n");

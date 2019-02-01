@@ -259,7 +259,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		    Pi[i]=tmp[i].y;
 		}
 	    }else if(id==mxSINGLE_CLASS){
-		dcomplex *tmp=tmp0;
+		fcomplex *tmp=tmp0;
 		float *Pr=Pr0;
 		float *Pi=Pi0;
 		for(long i=0; i<ntot; i++){

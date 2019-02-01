@@ -316,7 +316,9 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	    }
 	}
 	/*Do real MVM control matrix assemble in multiply CPU/GPU*/
+	tic;
 	CALL_THREAD(info, 1);
+	toc2("MVM Assembly in GPU");
 	/*Copy MVM control matrix results back*/
 	{
 	    gpu_set(cudata_t::recongpu);

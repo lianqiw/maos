@@ -106,41 +106,6 @@ static void __global__ mtch_do(const Real *mtch, const Real *pix, Real *grad, in
 	}
     }
 }
-/*
-__global__ static void 
-multimv_do(const Real *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ Real acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    int nset=(blockDim.x*gridDim.x+nact-1)/nact;
-    if(blockDim.x*gridDim.x<nset*nact){
-	//drop partial set
-	nset--;
-    }
-    const int iset=iact/nact;
-    if(iset>=nset) return;
-    iact=iact-nact*iset;
-    acc[threadIdx.x]=0;
-    const int igi=(iset*ng)/nset;
-    const int ngi=((iset+1)*ng)/nset;
-    for(int ig=igi; ig<ngi; ig++){
-	register Real mvmi=mvm[nact*ig+iact];
-	acc[threadIdx.x]+=mvmi*(Real)(g[ig]);
-    }
-    atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
-    }*/
-
-/*__global__ static void mvm_g_mul_do(const Real *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ Real acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    if(iact<nact){
-	acc[threadIdx.x]=0;
-	for(int ig=0; ig<ng; ig++){
-	    register Real mvmi=mvm[nact*ig+iact];
-	    acc[threadIdx.x]+=mvmi*(Real)(g[ig]);
-	}
-	a[iact]+=(ATYPE)acc[threadIdx.x];
-    }
-    }*/
 
 /**
    A standalone routine that testes applying MVM for a single WFS and update mvm.

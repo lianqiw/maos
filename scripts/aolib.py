@@ -24,6 +24,10 @@ def handle_type(argtype):
         mx2c='mx2d'
         c2mx='any2mx'
         free_c='dfree'
+    elif argtype=='lmat*':
+        mx2c='mx2l'
+        c2mx='any2mx'
+        free_c='lfree'
     elif argtype=='dsp*':
         mx2c='mx2dsp'
         c2mx='dsp2mx'

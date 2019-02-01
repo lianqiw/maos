@@ -48,8 +48,11 @@
 #undef PCELL
 #undef PSPCELL
 #undef M_SPT
+
+//Long Integers
 #ifdef USE_LONG
 #define T long
+#define R long
 #define X(A) l##A
 #undef fabs
 #define fabs(A) abs(A)

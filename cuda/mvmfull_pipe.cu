@@ -22,9 +22,10 @@
 /**
    \file mvmfull_pipe.cu
 
-Copied from mvmfull_iwfs.cu to test another scheme for parallelizing. More
-streams are used now with each stream doing tasks in series. This helps to increase the occupancy on Kepler GPUs with more lower speed cores.
-
+   Copied from mvmfull_iwfs.cu to test another scheme for parallelizing. More
+   streams are used now with each stream doing tasks in series. This helps to
+   increase the occupancy on Kepler GPUs with more lower speed cores.
+   
 */
 
 #define TIMING 0

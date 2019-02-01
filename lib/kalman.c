@@ -452,7 +452,7 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
 */
 kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 		     const double dthi, /**<Loop frequency*/
-		     const dmat *dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
+		     const lmat *dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
 		     const dcell *Gwfs,  /**<WFS measurement from modes. Can be identity*/
 		     const dcell *Rwfs,  /**<WFS measurement noise covariance*/
 		     const dmat *Proj   /**<Project modes in statespace to DM/correction space*/){
@@ -496,13 +496,13 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	error("dtrat_wfs should have size %ldx1\n", dtrat_wfs->nx);
     }
     int ndtrat=0;
-    dmat *dtrats=dnew(nwfs, 1);//unique dtrats
+    lmat *dtrats=lnew(nwfs, 1);//unique dtrats
     int dtrat_prod=1;
     ndtrat=0;
     for(int iwfs=0; iwfs<dtrat_wfs->nx; iwfs++){
 	int found=0;
 	for(int jdtrat=0; jdtrat<ndtrat; jdtrat++){
-	    if((int)dtrats->p[jdtrat]==(int)dtrat_wfs->p[iwfs]){
+	    if(dtrats->p[jdtrat]==dtrat_wfs->p[iwfs]){
 		found=1; break;
 	    }
 	}
@@ -511,8 +511,8 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    dtrat_prod*=dtrat_wfs->p[iwfs];
 	}
     }
-    dresize(dtrats, ndtrat, 1);
-    dsort(dtrats, 1);
+    lresize(dtrats, ndtrat, 1);
+    lsort(dtrats, 1);
     const int dtrat_min=dtrats->p[0];
     dmat*  Sigma_varep=0;/*state noise in discrete space*/
     dcell* Sigma_zeta =dcellnew(ndtrat,1);/*state measurement noise*/
@@ -522,7 +522,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	/*Evaluate noise covariance matrix of discrete state, and measurement of the
 	 * state. This block takes most of the preparation step*/
-	int dtrat=(int)dtrats->p[idtrat];
+	int dtrat=dtrats->p[idtrat];
 	double dT=dthi*dtrat;
 	int nsec=dtrat*10;
 	double dT2=dT/nsec;
@@ -583,7 +583,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     res->AdM=AdM;
     res->FdM=FdM;
     res->dthi=dthi;
-    res->dtrat=ddup(dtrat_wfs);
+    res->dtrat=ldup(dtrat_wfs);
     res->Gwfs=dcelldup(Gwfs);//Used for simulation. Do not mess with it.
     res->Rwfs=dcelldup(Rwfs);
     res->Rn=dcellnew(nkalman, 1);
@@ -594,7 +594,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     for(int istep=0; istep<dtrat_prod; istep++){
 	int indk=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int dtrat=(int)dtrat_wfs->p[iwfs];
+	    int dtrat=dtrat_wfs->p[iwfs];
 	    if((istep+1) % dtrat == 0){
 		indk|=1<<iwfs;/*this is how we compute the index into kalman*/
 	    }
@@ -611,13 +611,13 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 		}else{
 		    Gwfsi=dref(Gwfs->p[iwfs]);
 		}
-		int dtrat=(int)dtrat_wfs->p[iwfs];
+		int dtrat=dtrat_wfs->p[iwfs];
 		Cd->p[iwfs]=dnew(Gwfsi->nx, Ac->ny);
 		if((istep+1) % dtrat == 0){
 		    //WFS active. Locate the index into Xi, Radd.
 		    int jdtrat;
 		    for(jdtrat=0; jdtrat<ndtrat; jdtrat++){
-			if((int)dtrats->p[jdtrat]==dtrat){
+			if(dtrats->p[jdtrat]==dtrat){
 			    break;
 			}
 		    }
@@ -657,7 +657,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	dmm(&res->P, 0, tmp1, Pd, "nt", 1);
 	dfree(tmp1);
     }
-    dfree(dtrats);
+    lfree(dtrats);
     dcellfree(Xi);
     dfree(Ac);
     dfree(Sigma_ep);
@@ -678,7 +678,7 @@ void kalman_free(kalman_t *kalman){
     dfree(kalman->Qn);
     dcellfree(kalman->M);
     dfree(kalman->P);
-    dfree(kalman->dtrat);
+    lfree(kalman->dtrat);
     dcellfree(kalman->Gwfs);
     dcellfree(kalman->Rwfs);
     dcellfree(kalman->Rn);
