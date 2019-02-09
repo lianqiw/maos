@@ -55,7 +55,7 @@
 #define R long
 #define X(A) l##A
 #undef fabs
-#define fabs(A) abs(A)
+#define fabs(A) labs(A)
 #define M_T M_LONG
 #define PRINT(A) info(" %ld",A);
 #else //if USE_LONG
