@@ -136,11 +136,11 @@ spchol* chol_factorize(dsp *A_in){
 	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */
 	//warning("Converted to our format.");
 	cholmod_factor *L=out->L;
-	out->Cp=L->Perm; L->Perm=NULL;
+	out->Cp=(spint*)L->Perm; L->Perm=NULL;
 	dsp *C=out->Cl=dspnew(L->n, L->n, 0);
-	C->p=L->p;L->p=NULL;
-	C->i=L->i;L->i=NULL;
-	C->x=L->x;L->x=NULL;
+	C->p=(spint*)L->p;L->p=NULL;
+	C->i=(spint*)L->i;L->i=NULL;
+	C->x=(double*)L->x;L->x=NULL;
 	C->nzmax=L->nzmax;
 	MOD(free_factor)(&out->L, out->c);
 	MOD(finish)(out->c);

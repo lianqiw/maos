@@ -78,6 +78,7 @@ using std::isinf;
 using std::complex;
 typedef complex<double> dcomplex;
 typedef complex<float> fcomplex;
+#define I dcomplex(0,1)
 #define COMPLEX(A,B) dcomplex(A,B)
 #define DCOMPLEX(A,B) dcomplex(A,B)
 #define FCOMPLEX(A,B) fcomplex(A,B)
@@ -156,7 +157,9 @@ typedef __complex__ float fcomplex;
 #ifndef _Complex_I
 #define _Complex_I (__extension__ 1.0iF)
 #endif
+#ifndef I
 #define I _Complex_I
+#endif
 double cabs(dcomplex __z);
 //double cimag(dcomplex __z);
 //double creal(dcomplex __z);

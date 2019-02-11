@@ -26,6 +26,7 @@
 #include <cusparse_v2.h>
 #include <cufft.h>
 #include <cuComplex.h>
+#include <cuda_profiler_api.h>
 typedef double2 dcomplex;
 typedef float2 fcomplex;
 #include "gpu.h"
@@ -71,10 +72,6 @@ typedef smat rmat;
 #define M_REAL M_FLT
 #define M_COMP M_ZMP
 #endif
-extern "C"{
-    void cudaProfilerStart(void);
-    void cudaProfilerStop(void);
-}
 #undef EPS
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 typedef Real Real2[2];

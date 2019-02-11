@@ -15,17 +15,20 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#include "utils.h"
-#include "curmat.h"
-#include "cucmat.h"
-extern "C"{
-#include "../maos/mvm_client.h"
 #include <sys/file.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
 #include <errno.h>
+#include "utils.h"
+#include "curmat.h"
+#include "cucmat.h"
+#if !USE_CPP
+extern "C"{
+#endif
+#include "../maos/mvm_client.h"
+#if !USE_CPP
 }
+#endif
 #include "cudata.h"
 
 /**

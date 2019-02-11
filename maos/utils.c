@@ -136,7 +136,7 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
 	locs->p[count]->locy[ifit]=parms->sim.ncpa_thetay->p[ifit]*206265;
     }
     count++;
-    char* const legwfs[]={
+    const char* const legwfs[]={
 	"LGS WFS",
 	"NGS WFS",
 	"PWFS",

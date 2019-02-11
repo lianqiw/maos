@@ -360,7 +360,7 @@ void free_fit(FIT_T *fit, int nfit){
     free(fit);
 }
 void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
-    FIT_T *fit=calloc(1, sizeof(FIT_T));
+    FIT_T *fit=mycalloc(1, FIT_T);
     recon->fit=fit;
     fit->thetax=parms->fit.thetax;
     fit->thetay=parms->fit.thetay;
@@ -439,7 +439,7 @@ void setup_powfs_fit(POWFS_T *powfs, const RECON_T *recon, const PARMS_T *parms)
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].lo) continue;
 	int nwfs=parms->powfs[ipowfs].nwfs;
-	FIT_T *fitall=powfs[ipowfs].fit=calloc(nwfs, sizeof(FIT_T));
+	FIT_T *fitall=powfs[ipowfs].fit=mycalloc(nwfs, FIT_T);
 	loc_t *wfsloc=mkannloc(parms->aper.d+parms->powfs[ipowfs].dsa*2, 0, parms->powfs[ipowfs].dsa, 0);
 	wfsloc->ht=parms->powfs[ipowfs].hc;
 	wfsloc->iac=parms->dbg.wfs_iac;//cubic spline better fits the turbulence.

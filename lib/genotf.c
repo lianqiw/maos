@@ -465,7 +465,7 @@ dmat *derive_by_fft(const dmat *i0, double theta){
     long nx2=i0->nx/2;
     for(long iy=0; iy<i0->ny; iy++){
 	for(long ix=0; ix<i0->nx; ix++){
-	    P(otf, ix, iy)*=-_Complex_I*((ix<nx2?ix:(ix-i0->nx))*sx+(iy<ny2?iy:(iy-i0->ny))*sy);
+	    P(otf, ix, iy)*=-I*((ix<nx2?ix:(ix-i0->nx))*sx+(iy<ny2?iy:(iy-i0->ny))*sy);
 	}
     }
     cfft2(otf, 1);

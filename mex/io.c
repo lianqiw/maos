@@ -610,7 +610,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 		error("Unable to determine naxis\n");
 	    }
 	    if(*ndim>0){
-		*dims=calloc(sizeof(mwSize), MAX(2,*ndim));
+		*dims=(mwSize*)calloc(sizeof(mwSize), MAX(2,*ndim));
 		for(uint64_t idim=0; idim<*ndim; idim++){
 		    do{
 			//skip illegal lines.
@@ -759,7 +759,7 @@ int read_header2(header_t *header, file_t *fp){
 	}else{
 	    ans=0;
 	    header->ndim=2;
-	    if(!header->dims) header->dims=calloc(2, sizeof(mwSize));
+	    if(!header->dims) header->dims=(mwSize*)calloc(2, sizeof(mwSize));
 	    zfread(header->dims, sizeof(mwSize), 2, fp);
 	}
     }
@@ -782,7 +782,7 @@ void read_header(header_t *header, file_t *fp){
  */
 int search_header_int(const char *str, const char *name){
     if(!str || !name) return 0;
-    char *tmp=strstr(str, name);
+    const char *tmp=strstr(str, name);
     if(tmp){
 	return strtol(tmp+strlen(name), NULL, 10);
     }else{
@@ -793,7 +793,7 @@ int search_header_int(const char *str, const char *name){
    Parse an integer from header str
 */
 double search_header_dbl(const char *str, const char *name){
-    char *tmp=strstr(str, name);
+    const char *tmp=strstr(str, name);
     if(tmp){
 	return strtod(tmp+strlen(name), NULL);
     }else{

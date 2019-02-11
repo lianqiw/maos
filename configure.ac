@@ -61,14 +61,27 @@ BUILD_DIR=$(pwd)
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 
+USE_CPP=0
 #find the real flavor of CC
-if $CC -v 2>&1 |grep clang ;then
+CCv=`$CC -v 2>&1`
+#if $CC -v 2>&1 |grep clang ;then
+if grep clang++ <<< $CCv ;then
     CN=CLANG
-elif $CC -v 2>&1 |grep icc ;then
+    USE_CPP=1
+elif grep clang <<< $CCv ;then
+    CN=CLANG
+elif grep icpc <<< $CCv ;then
     CN=ICC
+    USE_CPP=1
+elif grep icc <<< $CCv ;then
+    CN=ICC
+elif grep g++ <<< $CCv ;then
+    CN=GCC
+    USE_CPP=1
 else
     CN=GCC
 fi
+AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], ["Whether MAOS is using C++ compiler"])
 #canonicalize the host_cpu name
 case "$host_cpu" in
     *86)

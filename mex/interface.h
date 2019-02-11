@@ -229,7 +229,7 @@ csp *mx2csp(const mxArray *A){
 loc_t *mx2loc(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
     loc_t *loc=(loc_t*)calloc(1, sizeof(loc_t));
-    loc->nref=malloc(sizeof(int)); loc->nref[0]=1;
+    loc->nref=(int*)malloc(sizeof(int)); loc->nref[0]=1;
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
     loc->locy=loc->locx+loc->nloc;

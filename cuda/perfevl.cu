@@ -21,12 +21,12 @@
 #include "kernel.h"
 #include "cudata.h"
 #include "perf.h"
-#ifdef __cplusplus
+#if !USE_CPP
 extern "C"{
 #endif
 #include "../maos/utils.h"
 #include "../maos/ahst.h"
-#ifdef __cplusplus
+#if !USE_CPP
 }
 #endif
 #undef TIMING

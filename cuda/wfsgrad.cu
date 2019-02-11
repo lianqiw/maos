@@ -21,12 +21,16 @@
 #include "wfs.h"
 #include "cudata.h"
 #include "cucmat.h"
+#if !USE_CPP
 extern "C"
 {
+#endif
 #include "../maos/sim.h"
 #include "../maos/utils.h"
 #include "../maos/pywfs.h"
+#if !USE_CPP
 }
+#endif
 #undef TIMING
 #define TIMING 0
 #if !TIMING

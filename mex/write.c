@@ -161,7 +161,7 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 		if(fp->isfits){
 		    //write Jc header
 		    header2.magic=(sizeof(mwIndex)==4?M_INT32:M_INT64);
-		    header2.str="Jc";
+		    header2.str=(char*)"Jc";
 		    header2.dims[0]=ny+1;
 		    header2.dims[1]=1;
 		    write_header(&header2, fp);
@@ -170,7 +170,7 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 		if(fp->isfits){
 		    //write Ir header
 		    header2.magic=(sizeof(mwIndex)==4?M_INT32:M_INT64);
-		    header2.str="Ir";
+		    header2.str=(char*)"Ir";
 		    header2.dims[0]=nz;
 		    header2.dims[1]=1;
 		    write_header(&header2, fp);
@@ -179,7 +179,7 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 		if(fp->isfits){
 		    //Write P header
 		    header2.magic=(mxIsComplex(arr)?M_CMP:M_DBL);
-		    header2.str="P";
+		    header2.str=(char*)"P";
 		    header2.dims[0]=nz;
 		    header2.dims[1]=1;
 		    write_header(&header2, fp);
@@ -197,17 +197,17 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 	    void *Pi0=mxGetPi(arr);
 	    void *tmp0=malloc(ntot*byte);
 	    if(mxIsDouble(arr)){
-		dcomplex *tmp=tmp0;
-		double *Pr=Pr0;
-		double *Pi=Pi0;
+		dcomplex *tmp=(dcomplex*)tmp0;
+		double *Pr=(double*)Pr0;
+		double *Pi=(double*)Pi0;
 		for(int i=0; i<ntot; i++){
 		    tmp[i].x=Pr[i];
 		    tmp[i].y=Pi[i];
 		}
 	    }else{
-		fcomplex *tmp=tmp0;
-		float *Pr=Pr0;
-		float *Pi=Pi0;
+		fcomplex *tmp=(fcomplex*)tmp0;
+		float *Pr=(float*)Pr0;
+		float *Pi=(float*)Pi0;
 		for(int i=0; i<ntot; i++){
 		    tmp[i].x=Pr[i];
 		    tmp[i].y=Pi[i];

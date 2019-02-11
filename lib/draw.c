@@ -466,7 +466,7 @@ void plot_points(const char *fig,    /**<Category of the figure*/
    Draw an image.
 */
 //Data structure for imagesc
-struct imagesc_t{
+typedef struct imagesc_t{
     char *fig; /**<Category of the figure*/
     long nx;   /**<the image is of size nx*ny*/
     long ny;   /**<the image is of size nx*ny*/
@@ -477,8 +477,8 @@ struct imagesc_t{
     char *xlabel; /**<x axis label*/
     char *ylabel; /**<y axis label*/
     char *fn;
-};
-static void imagesc_do(struct imagesc_t *data){
+}imagesc_t;
+static void imagesc_do(imagesc_t *data){
     LOCK(lock);
     if(!open_drawdaemon()){
 	char *fig=data->fig;
@@ -558,7 +558,7 @@ void imagesc(const char *fig, /**<Category of the figure*/
     }
     //We copy all the data and put the imagesc job into a task
     //The task will free the data after it finishes.
-    struct imagesc_t *data=calloc(1, sizeof(struct imagesc_t));
+    imagesc_t *data=mycalloc(1, imagesc_t);
     data->nx=nx;
     data->ny=ny;
 #define datastrdup(x) data->x=(x)?strdup(x):0

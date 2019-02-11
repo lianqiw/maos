@@ -79,7 +79,7 @@ static void __global__ mtch_do(const Real *mtch, const Real *pix, Real *grad, in
 
 /**
    A standalone routine that testes applying MVM for a single WFS and update mvm.*/
-void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *fnmtch, 
+void mvmfull_pipe(const char *fnmvm1, const char *fnmvm2, const char *fnpix1, const char *fnpix2, const char *fnmtch, 
 	      int *gpus, int ngpu, int nstep){
     {
 	DO(cudaFuncSetCacheConfig(mvm_do, cudaFuncCachePreferShared));

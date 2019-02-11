@@ -301,8 +301,8 @@ mapcell *fractal_screen(GENATM_T *data){
 map_t *genatm_simple(double r0, double L0, double dx, long nx){
     rand_t rstat;
     seed_rand(&rstat, 1);
-    double wt[1]; wt[0]=1;
-    GENATM_T cfg={&rstat, wt, r0, &L0, dx, nx, nx, 1, 0, 0, 0, 0, 0, 0};
+    double wt=1.;
+    GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, nx, nx, 1, 0, 0, 0, 0};
     mapcell *screens=vonkarman_screen(&cfg);
     map_t *out=mapref(screens->p[0]);
     cellfree(screens);

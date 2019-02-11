@@ -24,11 +24,11 @@
 #include "recon.h"
 #include "cudata.h"
 #include "perf.h"
-#ifdef __cplusplus
+#if !USE_CPP
 extern "C"{
 #endif
-    #include "../maos/fdpcg.h"
-#ifdef __cplusplus
+#include "../maos/fdpcg.h"
+#if !USE_CPP
 }
 #endif
 #undef TIMING

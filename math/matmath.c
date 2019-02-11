@@ -594,7 +594,7 @@ void X(corr)(X(mat) **pout, const X(mat) *A, const X(mat) *B){
 	for(long offx=-offx2; offx<=offx2; offx++){
 	    long sx1, nnx;
 	    SHIFT_PEX(sx1, nnx, A->nx, offx);
-	    R tmp=0;
+	    T tmp=0;
 	    for(long iy1=sy1; iy1<nny; iy1++){
 		for(long ix1=sx1; ix1<nnx; ix1++){
 		    tmp+=P(A, ix1, iy1)*P(B, ix1-offx, iy1-offy);

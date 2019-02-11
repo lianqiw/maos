@@ -21,12 +21,12 @@
 #include "wfs.h"
 #include "cudata.h"
 #include "cucmat.h"
-#ifdef __cplusplus
+#if !USE_CPP
 extern "C"{
 #endif
 #include "../maos/pywfs.h"
 #include "../maos/sim.h"
-#ifdef __cplusplus
+#if !USE_CPP
 }
 #endif
 #define triscalex 0.866025403784439 //sqrt(3.)/2;

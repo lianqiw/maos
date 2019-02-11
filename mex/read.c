@@ -73,7 +73,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     if(fp->eof) return NULL;
     mxArray *out=NULL;
     mwSize byte=0;
-    mxClassID id=0;
+    mxClassID id=(mxClassID)0;
 
     switch(magic){
     case M_SP64:  byte=8; id=mxDOUBLE_CLASS;break;
@@ -251,17 +251,17 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    void *Pr0=mxGetPr(out);
 	    void *Pi0=mxGetPi(out);
 	    if(id==mxDOUBLE_CLASS){
-		dcomplex *tmp=tmp0;
-		double *Pr=Pr0;
-		double *Pi=Pi0;
+		dcomplex *tmp=(dcomplex*)tmp0;
+		double *Pr=(double*)Pr0;
+		double *Pi=(double*)Pi0;
 		for(long i=0; i<ntot; i++){
 		    Pr[i]=tmp[i].x;
 		    Pi[i]=tmp[i].y;
 		}
 	    }else if(id==mxSINGLE_CLASS){
-		fcomplex *tmp=tmp0;
-		float *Pr=Pr0;
-		float *Pi=Pi0;
+		fcomplex *tmp=(fcomplex*)tmp0;
+		float *Pr=(float*)Pr0;
+		float *Pi=(float*)Pi0;
 		for(long i=0; i<ntot; i++){
 		    Pr[i]=tmp[i].x;
 		    Pi[i]=tmp[i].y;

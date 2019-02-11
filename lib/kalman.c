@@ -792,12 +792,12 @@ void kalman_write(kalman_t *kalman, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     if(kalman){
-	header_t header={MCC_ANY, 12, 1, "type=struct"};
+	header_t header={MCC_ANY, 12, 1, (char*)"type=struct"};
 	write_header(&header, fp);
 	char *tmp;
 #define WRITE_KEY(fp, str, key)			\
 	tmp=str->key->header;			\
-	str->key->header=#key;			\
+	str->key->header=(char*)#key;		\
 	writebindata(fp, str->key);		\
 	str->key->header=tmp;
 
