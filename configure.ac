@@ -136,7 +136,7 @@ fi
 #Common configure options.
 AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
-AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code profiling.]),[use_oprof="$enableval"],[use_oprf="no"])
+AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]),[use_gcov="$enableval"],[use_gcov="no"])
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
 AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
@@ -152,6 +152,11 @@ if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
     with_matlab=yes
+fi
+
+if test x$use_gcov = "xyes" ;then
+    OPTSprof+="  -fprofile-arcs -ftest-coverage --coverage"
+    debug="yes"
 fi
 
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
@@ -172,7 +177,7 @@ COMMON_ALL=""
 OPTIM_ALL="-O3 "
 DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
 
-DEBUG_GCC="-ggdb"
+DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 
 #inline definition:
 
@@ -392,10 +397,6 @@ if test "x$use_static" = "xyes" ;then
 else
     AM_CONDITIONAL(USE_STATIC, false)
     AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
-fi
-
-if test x$use_oprof = "xyes" ;then
-    OPTSprof+=" -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 fi
 
 #call convention of fortran libraries
