@@ -112,11 +112,11 @@ static double coeff_isbad(const double *coeff, int ncoeff){
 
 static double sde_diff(const double *coeff, void *pdata){
     sde_fit_t *data=(sde_fit_t*)pdata;
-    double check;
+    double tmp;
     double diff;
     data->count++;
-    if((check=coeff_isbad(coeff, data->ncoeff*data->nmod))){
-	diff=(check)*10+10;
+    if((tmp=coeff_isbad(coeff, data->ncoeff*data->nmod))){
+	diff=(tmp)*10+10;
     }else{
 	sde_psd(&data->psdcov_sde, data->freq, coeff, data->ncoeff, data->nmod);
 	if(!data->ncov){//PSD fitting

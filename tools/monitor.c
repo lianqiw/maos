@@ -122,8 +122,8 @@ static const gchar *rc_string_treeview =
 	/*" GtkTreeView::grid-line-pattern=\"\111\111\"\n" */
 	" GtkTreeView::grid-line-width   = 1             \n"
 	" GtkTreeView::allow-rules       = 1             \n"
-	" GtkTreeView::odd-row-color     = \"#EFEFEF\"   \n"
-	" GtkTreeView::even-row-color    = \"#FFFFFF\"   \n"
+	/*" GtkTreeView::odd-row-color     = \"#EFEFEF\"   \n"
+	  " tkTreeView::even-row-color    = \"#FFFFFF\"   \n"*/
 	" GtkTreeView::horizontal-separator = 0          \n"
 	" GtkTreeView::vertical-separator = 0            \n"
 	"}\n                                             \n" 
@@ -133,8 +133,8 @@ static const gchar *rc_string_treeview =
 static const gchar *rc_string_entry =
     {
 	"style \"entry\" {               \n"
-	"base[NORMAL] = \"white\"        \n"
-	"bg[SELECTED] = \"#0099FF\"         \n"
+	/*"base[NORMAL] = \"white\"        \n"
+	  "bg[SELECTED] = \"#0099FF\"         \n"*/
 	"xthickness   = 0                \n"
 	"ythickness   = 0                \n"
 	"GtkEntry::inner-border    = {1,1,1,1}     \n"

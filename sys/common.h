@@ -132,7 +132,7 @@ extern int detached;
 #define assert(A)
 #endif
 #endif
-
+#define check(A) if(!(A)) error("check failed: %s\n", #A)
 /*
    Functions that return realtime:
    time(): resolution is in integer second. not enough resolution.

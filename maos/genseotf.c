@@ -262,10 +262,9 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    const double dx=powfs[ipowfs].llt->pts->dx;
 	    const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	    const double dpsf=wvl/(nlpsf*dx)*206265.;
-	    snprintf(header, 64,"dtheta=%g #arcsecond\n", dpsf); 
+	    snprintf(header, 64,"dtheta=%g; #arcsecond\n", dpsf); 
 	    free(psf->header); psf->header=strdup(header);	    
 	    for(int illt=0; illt<intstat->lotf->ny; illt++){
-
 		ccp(&psfhat, P(lotf,iwvl,illt));
 		cfftshift(psfhat);
 		cfft2i(psfhat, 1);

@@ -214,9 +214,9 @@ static void genotf_wrap(thread_t *info){
     const long pttr=data->pttr;
     const dmat *B=data->B;
     const T_VALID *pval=data->pval;
-    assert(!area || area->nx*area->ny==nsa);
-    assert(!amp || amp->nx*amp->ny==nxsa*nsa);
-    assert(!opdbias || opdbias->nx*opdbias->ny==nxsa*nsa);
+    check(!area || area->nx*area->ny==nsa);
+    check(!amp || amp->nx*amp->ny==nxsa*nsa);
+    check(!opdbias || opdbias->nx*opdbias->ny==nxsa*nsa);
     for(int isa=info->start; isa<info->end; isa++){
 	if(!detached && nsa>10 && info->ithread==0){
   	    info2("%6ld of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa*(nsa/info->end), nsa);

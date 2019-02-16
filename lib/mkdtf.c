@@ -99,7 +99,6 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	ccell*  nominals=dtfs[iwvl].nominal;
 	dspcell*  sis=dtfs[iwvl].si;
 	cmat *nominal=cnew(ncompx,ncompy);
-	cmat* pn=nominal;
 	//Coordinate of PSF points
 	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta,dtheta,-ncompx2*dtheta, -ncompy2*dtheta);
 	double theta=0;
@@ -120,9 +119,9 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 			double ir=ct*jx+st*jy;
 			double ia=-st*jx+ct*jy;
 			//Pixel function
-			P(pn,ix,iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
+			P(nominal,ix,iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
 			if(do_blur){//Charge diffusion.
-			    P(pn,ix,iy)*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
+			    P(nominal,ix,iy)*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
 			}
 		    }
 		}
@@ -139,11 +138,6 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 		if(pixoffx){
 		    double dx=PR(pixoffx, isa, iwfs)*pixthetax;
 		    double dy=PR(pixoffy, isa, iwfs)*pixthetay;
-		    /*if(radpix){//Rotate from x/y to r/a coordinate.
-			double dx2=dx*ct+dy*st;
-			dy=-dx*st+dy*ct;
-			dx=dx2;
-		    }*/
 		    pxo2=pxo-dx;
 		    pyo2=pyo-dy;
 		}
