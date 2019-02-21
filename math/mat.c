@@ -447,7 +447,10 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
 #else
 	R tmp=p[i];
 #endif
-	if(!isnan(tmp)){
+#ifndef USE_LONG	
+	if(!isnan(tmp))
+#endif
+	{
 	    if(tmp>a) a=tmp;
 	    if(tmp<b) b=tmp;
 	}
