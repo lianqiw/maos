@@ -334,7 +334,9 @@ int scheduler_display(int ihost, int pid){
     }else if(cmd[0]){
 	warning("The scheduler failed to talk to maos\n");
     }else{
-	if(spawn_drawdaemon(sock)){
+	char arg1[20];
+	snprintf(arg1, 20, "%d", sock);
+	if(spawn_process("drawdaemon", arg1, NULL)<0){
 	    warning("spwn drawdaemon failed\n");
 	}else{
 	    ans=0;

@@ -33,6 +33,6 @@ void daemonize(void);
 void redirect(void);
 pid_t launch_exe(const char *exepath, const char *cmd);
 char* find_exe(const char *name);
-int spawn_drawdaemon(int sock);
+int spawn_process(const char *exename, const char *arg, const char *path);
 extern int detached;
 #endif

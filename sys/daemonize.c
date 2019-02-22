@@ -375,6 +375,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
     }else{
 	cmd2=strdup(cmd);
     }
+    //Break cmd into path (cwd), exename (stexe), and arguments (args).
     const char *cmd2end=cmd2+strlen(cmd2);
     for(int iexe=0; iexe<nexe; iexe++){
 	const char *exe=exes[iexe];
@@ -403,53 +404,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 	    goto end;
 	}
 	args+=strlen(exename)+1;
-	int pipfd[2];
-	if(pipe(pipfd)){
-	    warning("unable to create pipe\n");
-	    goto end;
-	}
-	pid_t pid=fork();
-	if(pid<0){
-	    goto end;//unable to fork
-	}else if(pid>0){//parant
-	    close(pipfd[1]);
-	    waitpid(pid, NULL, 0);/*wait child*/
-	    if(read(pipfd[0], &ans, sizeof(pid_t))!=sizeof(pid_t)){
-		ans=-1;
-	    }
-	    close(pipfd[0]);
-	}else{//child
-	    close(pipfd[0]);
-	    detached=1;
-	    pid_t pid2=fork();
-	    if(pid2<0){//error forking
-		if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
-		    warning("Report pid(%d) failed\n", (int)pid2);
-		}
-		_exit(EXIT_FAILURE);//unable to fork
-	    }else if(pid2>0){//parent
-		usleep(1000000);
-		waitpid(pid2, NULL, WNOHANG);
-		//Must waitpid before running kill because otherwise child maybe zoombie.
-		if(kill(pid2, 0)){//exec failed.
-		    warning("child pid %d not found. exec failed?\n", pid2);
-		}
-		if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
-		    warning("Report pid(%d) failed\n", (int)pid2);
-		}
-		_exit(EXIT_SUCCESS);
-	    }else{//child
-		close(pipfd[1]);
-		if(setsid()==-1) warning("Error setsid\n");
-		if(chdir(cwd)) error("Error chdir to %s\n", cwd);
-		//Do not use putenv as it does not copy the string
-		setenv("MAOS_DIRECT_LAUNCH", "1", 1);
-		if(execlp(exepath, exepath, args, NULL)){
-		    error("Unable to exec: %s\n", strerror(errno));
-		}
-		_exit(EXIT_FAILURE);
-	    }
-	}
+	ans=spawn_process(exepath, args, cwd);
     }else{
 	warning("Unabel to interpret %s\n", cmd);
     }
@@ -474,16 +429,14 @@ char *find_exe(const char *name){
     return fn;
 }
 /**
-   fork and launch drawdaemon
+   fork twice and launch exename, with arguments args. Returns PID of the grandchild process.
 */
-int spawn_drawdaemon(int sock){
-    pid_t pid;
+int spawn_process(const char *exename, const char *args, const char *path){
+    /*pid_t pid;
     if((pid=fork())<0){
 	warning("forked failed\n");
-	close(sock);
 	return -1;
     }else if(pid>0){
-	close(sock);
 	waitpid(pid, NULL, 0);
 	return 0;
     }else{
@@ -493,17 +446,61 @@ int spawn_drawdaemon(int sock){
 	if(pid<0){
 	    exit(1);
 	}else if(pid>0){
-	    close(sock);
-	    exit(0);
+	    _exit(0);
 	}
-	char arg1[20];
-	snprintf(arg1, 20, "%d", sock);
-	char *fn=find_exe("drawdaemon");
+	if(path && chdir(path)){
+	    warning("Error chdir to %s\n", path);
+	}
+	char *fn=find_exe(exename);
 	if(fn){
-	    execl(fn, "drawdaemon", arg1,  NULL);
+	    execl(fn, exename, arg1,  NULL);
 	}else{
-	    execlp("drawdaemon", "drawdaemon", arg1, NULL);
+	    execlp(exename, exenmae, arg1, NULL);
 	}
 	exit(0);//in case child comes here. quit.
+	}*/
+    
+
+    int pipfd[2];
+    if(pipe(pipfd)){
+	warning("unable to create pipe\n");
+	return -1;
     }
+    pid_t pid=fork();
+    pid_t ans=0;
+    if(pid<0){//fork failed.
+	return -1;
+    }else if(pid>0){//parant
+	close(pipfd[1]);
+	if(read(pipfd[0], &ans, sizeof(pid_t))!=sizeof(pid_t)){
+	    ans=-1;
+	}
+	waitpid(pid, NULL, 0);/*wait child*/
+	close(pipfd[0]);
+    }else{//child
+	close(pipfd[0]);
+	detached=1;
+	setenv("MAOS_DIRECT_LAUNCH", "1", 1);
+	pid_t pid2=fork();//fork twice to avoid zoombie process.
+	if(pid2){//parent, or fail.
+	    if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
+		warning("Report pid(%d) failed\n", (int)pid2);
+	    }
+	    waitpid(pid2, NULL, WNOHANG);
+	    _exit(EXIT_SUCCESS);
+	}else{//child
+	    close(pipfd[1]);
+	    if(setsid()==-1) warning("Error setsid\n");
+	    if(path && chdir(path)) warning("Error chdir to %s\n", path);
+	    //Do not use putenv as it does not copy the string
+	    char *fn=find_exe(exename);
+	    if(fn){
+		execl(fn, exename, args, NULL);
+	    }else{
+		execlp(exename, exename, args, NULL);
+	    }
+	    _exit(EXIT_FAILURE);
+	}
+    }
+    return ans;
 }

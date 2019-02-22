@@ -660,7 +660,7 @@ static int respond(int sock){
 	break;
     case CMD_UNUSED0://9: not used
 	break;
-    case CMD_SOCK://10:Called by draw() to cache a fd. Vaoid over UNIX socket only.
+    case CMD_SOCK://10:Called by draw() to cache a fd. Valid over UNIX socket only.
 	{
 	    typedef struct SOCKID_M{
 		int id;
@@ -676,7 +676,7 @@ static int respond(int sock){
 		    warning("receive socket from %d failed\n", sock);
 		    sock_save=-1;
 		}else{
-		    dbg("received socket %d\n", sock_save);
+		    info("received socket %d from %d\n", sock_save, sock);
 		    for(SOCKID_T *p=head; p; p=p->next){
 			if(p->id==pid){
 			    close(p->sock);
@@ -727,7 +727,7 @@ static int respond(int sock){
 		    if(stwritefd(sock, sock_save)){
 			warning("send socket %d to %d failed\n", sock_save, sock);
 		    }else{//socket is transferred to draw. we close it.
-			warning("sent socket %d\n",sock_save);
+			info("send socket %d to %d success\n",sock_save, sock);
 		    }
 		    close(sock_save);
 		}

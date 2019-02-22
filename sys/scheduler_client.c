@@ -372,7 +372,7 @@ int scheduler_recv_socket(int *sfd, int id){
 	    warning("Talk to scheduler failed\n");
 	}else if(!ans2 && !streadfd(ssock, sfd)){
 	    ans=0;
-	    //dbg("received %d from scheduler\n", *sfd);
+	    info("received %d from scheduler\n", *sfd);
 	}else{
 	    //dbg("scheduler had no valid fd\n");
 	}

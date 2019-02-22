@@ -206,7 +206,9 @@ static int launch_drawdaemon(){
     /*one end of sv2 will be passed back to draw_helper, the other end of sv2
       will be passed to drawdaemon.*/
     if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
-	if(spawn_drawdaemon(sv2[1])){
+	char arg1[20];
+	snprintf(arg1, 20, "%d", sv2[1]);
+	if(spawn_process("drawdaemon", arg1, NULL)<0){
 	    warning("spawn drawdaemon failed\n");
 	    close(sv2[0]);
 	    sv2[0]=-1;
