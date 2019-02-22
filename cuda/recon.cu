@@ -207,7 +207,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].moao==imoao){
-		    gpu_set(cudata_t::wfsgpu[iwfs]);
+		    gpu_set(cuglobal->wfsgpu[iwfs]);
 		    if(!cudata->dm_wfs){
 			cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
 		    }
@@ -217,7 +217,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    }
 	    if(parms->evl.moao==imoao){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		    gpu_set(cudata_t::evlgpu[ievl]);
+		    gpu_set(cuglobal->evlgpu[ievl]);
 		    if(!cudata->dm_evl){
 			cudata->dm_evl=Array<cumapcell>(parms->evl.nevl, 1);
 		    }
@@ -225,7 +225,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		    cudata->dm_evl[ievl][0]=(recon->moao[imoao].amap->p[0]); 
 		}
 	    }
-	    gpu_set(cudata_t::recongpu);
+	    gpu_set(cuglobal->recongpu);
 	}
     }
 }
@@ -303,7 +303,7 @@ Real curecon_t::moao_recon(dcell *_dmfit, dcell *_opdr){
 
 void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
     warning_once("MOAO temporal filter implemented with LPF\n");
-    const int *wfsgpu=cudata_t::wfsgpu();
+    const int *wfsgpu=cuglobal->wfsgpu();
     if(dm_wfs){
 	int nwfs=dm_wfs.Nx();
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -311,7 +311,7 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
 	    curmat temp;
 	    if(wfsgpu) gpu_set(wfsgpu[iwfs]);
 	    stream_t stream;
-	    if(wfsgpu && wfsgpu[iwfs] != cudata_t::recongpu){
+	    if(wfsgpu && wfsgpu[iwfs] != cuglobal->recongpu){
 		curcp(temp, dm_wfs[iwfs], stream);
 	    }else{
 		temp=dm_wfs[iwfs];
@@ -327,17 +327,17 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
     if(dm_evl){
 	const int nevl=dm_evl.Nx();
 	for(int ievl=0; ievl<nevl; ievl++){
-	    if(cudata_t::evlgpu) gpu_set(cudata_t::evlgpu[ievl]);
+	    if(cuglobal->evlgpu) gpu_set(cuglobal->evlgpu[ievl]);
 	    stream_t stream;
 	    curmat temp;
-	    if(cudata_t::evlgpu && cudata_t::evlgpu[ievl]!=cudata_t::recongpu){
+	    if(cuglobal->evlgpu && cuglobal->evlgpu[ievl]!=cuglobal->recongpu){
 		curcp(temp, dm_evl[ievl], stream);
 	    }else{
 		temp=dm_evl[ievl];
 	    }
 	    Real g=moao_gevl->p[ievl];
 	    curadd(cudata->dm_evl[ievl][0], 1-g, temp, g, stream);
-	    if(!cudata_t::evlgpu || (_dm_evl && _dm_evl->p[ievl])){
+	    if(!cuglobal->evlgpu || (_dm_evl && _dm_evl->p[ievl])){
 		cp2cpu(&_dm_evl->p[ievl], cudata->dm_evl[ievl][0], stream);
 	    }
 	}
@@ -351,7 +351,7 @@ void curecon_t::mvm(dcell **_dmerr, dcell *_gradin){
 }
 
 void curecon_t::tomo_test(SIM_T *simu){
-    gpu_set(cudata_t::recongpu);
+    gpu_set(cuglobal->recongpu);
     const PARMS_T *parms=simu->parms;
     stream_t stream;
     RECON_T *recon=simu->recon;
@@ -415,7 +415,7 @@ void curecon_t::tomo_test(SIM_T *simu){
     exit(0);
 }
 void curecon_t::fit_test(SIM_T *simu){	//Debugging. 
-    gpu_set(cudata_t::recongpu);
+    gpu_set(cuglobal->recongpu);
     stream_t stream;
     const RECON_T *recon=simu->recon;
     dcell *rhsc=NULL;
@@ -478,7 +478,7 @@ typedef cuda_recon::curecon_t curecon_t;
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
-	   || igpu==cudata_t::recongpu){
+	   || igpu==cuglobal->recongpu){
 	    gpu_set(igpu);
 	    if(cudata->recon){
 		delete cudata->recon;
@@ -506,7 +506,7 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     }
 
     if(!parms->sim.mvmport){
-	gpu_set(cudata_t::recongpu);
+	gpu_set(cuglobal->recongpu);
 	//recreate curecon_t that uses MVM.
 	cudata->recon=new curecon_t(parms, powfs, recon);
     }
@@ -516,7 +516,7 @@ void gpu_update_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     if(!parms->gpu.tomo) return;
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
-	   || igpu==cudata_t::recongpu){
+	   || igpu==cuglobal->recongpu){
 	    gpu_set(igpu);
 	    
 	    curecon_t *curecon=cudata->recon;
@@ -528,7 +528,7 @@ void gpu_update_recon_cn2(const PARMS_T *parms, RECON_T *recon){
     if(!parms->gpu.tomo) return;
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
-	   || igpu==cudata_t::recongpu){
+	   || igpu==cuglobal->recongpu){
 	    gpu_set(igpu);
 	    
 	    curecon_t *curecon=cudata->recon;
@@ -545,7 +545,7 @@ void gpu_recon_reset(const PARMS_T *parms){//reset warm restart.
 	}
 	if(cudata->dm_wfs){
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		gpu_set(cudata_t::wfsgpu[iwfs]);
+		gpu_set(cuglobal->wfsgpu[iwfs]);
 		if(cudata->dm_wfs[iwfs]){
 		    cuzero(cudata->dm_wfs[iwfs][0].p);
 		}
@@ -553,7 +553,7 @@ void gpu_recon_reset(const PARMS_T *parms){//reset warm restart.
 	}
 	if(cudata->dm_evl){
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		gpu_set(cudata_t::evlgpu[ievl]);
+		gpu_set(cuglobal->evlgpu[ievl]);
 		if(cudata->dm_evl[ievl]){
 		    cuzero(cudata->dm_evl[ievl][0].p);
 		}
@@ -563,7 +563,7 @@ void gpu_recon_reset(const PARMS_T *parms){//reset warm restart.
     }
 }
 void gpu_tomo(SIM_T *simu, dcell *gradin){
-    gpu_set(cudata_t::recongpu);
+    gpu_set(cuglobal->recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->grid->isim=simu->isim;
     curecon->grid->reconisim=simu->reconisim;
@@ -583,7 +583,7 @@ void gpu_tomo(SIM_T *simu, dcell *gradin){
 }
 
 void gpu_fit(dcell **dmout, SIM_T *simu){
-    gpu_set(cudata_t::recongpu);
+    gpu_set(cuglobal->recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->grid->isim=simu->isim;
     curecon->grid->reconisim=simu->reconisim;
@@ -597,20 +597,20 @@ void gpu_fit(dcell **dmout, SIM_T *simu){
     //Don't free opdr. Needed for warm restart in tomo.
 }
 void gpu_recon_mvm(dcell **dmout, dcell *gradin){
-    gpu_set(cudata_t::recongpu);
+    gpu_set(cuglobal->recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->mvm(dmout, gradin);
 }
 
 void gpu_moao_recon(SIM_T *simu){
-    gpu_set(cudata_t::recongpu);
+    gpu_set(cuglobal->recongpu);
     const PARMS_T *parms=simu->parms;
     curecon_t *curecon=cudata->recon;
     curecon->moao_recon(parms->gpu.fit?NULL:simu->dmfit, (parms->gpu.tomo || parms->gpu.fit)?NULL:simu->opdr);
 }
 
 void gpu_moao_filter(SIM_T *simu){
-    gpu_set(cudata_t::recongpu);
+    gpu_set(cuglobal->recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->moao_filter(simu->dm_wfs, simu->dm_evl);
 }

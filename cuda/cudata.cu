@@ -23,7 +23,7 @@ int MAXGPU=0;
 int NULL_STREAM=0;
 Array<int> GPUS;
 cudata_t **cudata_all=NULL;/*for all GPU. */
-
+cuglobal_t *cuglobal=NULL; /*global data*/
 #ifdef __APPLE__
 pthread_key_t cudata_key;
 #else
@@ -42,11 +42,7 @@ static __attribute((constructor)) void init(){
 	}
     }
 }
-int cudata_t::recongpu=0;
-Array<int>cudata_t::evlgpu;
-Array<int>cudata_t::wfsgpu;
-Array<cuwfs_t>cudata_t::wfs;
-dmat *cudata_t::atmscale=0;
+
 /**
    Get GPU info.
 */
@@ -267,6 +263,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	free(gpu_info);
     }
     if(NGPU) {
+	cuglobal=new cuglobal_t;
 	cudata_all=new cudata_t*[NGPU];
 	register_deinit(NULL, cudata_all);
 	info("Using GPU");
@@ -290,8 +287,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	     * usage. We first gather together all the tasks and assign a timing
 	     * in ms to each. Sort all the tasks in descend order and then
 	     * iteratively assign each task to the minimally used GPU*/
-	    cudata_t::evlgpu=Array<int>(parms->evl.nevl, 1);
-	    cudata_t::wfsgpu=Array<int>(parms->nwfs, 1);
+	    cuglobal->evlgpu=Array<int>(parms->evl.nevl, 1);
+	    cuglobal->wfsgpu=Array<int>(parms->nwfs, 1);
 	    int ntask=0;
 	    if(parms->gpu.tomo || parms->gpu.fit|| parms->gpu.lsr) ntask++;
 	    if(parms->gpu.evl) ntask+=parms->evl.nevl;
@@ -307,7 +304,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    int count=0;
 	    if(parms->gpu.tomo || parms->gpu.fit || parms->gpu.lsr){
 		tasks[count].timing=20;//ms
-		tasks[count].dest=&cudata_t::recongpu;
+		tasks[count].dest=&cuglobal->recongpu;
 		snprintf(tasks[count].name, 64, "RECON");
 		count++;
 	    }
@@ -318,7 +315,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}else{
 		    tasks[count].timing=10;//ms
 		}
-		tasks[count].dest=cudata_t::evlgpu+ievl;
+		tasks[count].dest=cuglobal->evlgpu+ievl;
 		snprintf(tasks[count].name, 64, "EVL %d", ievl);
 		count++;
 	    }
@@ -332,7 +329,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}else{
 		    tasks[count].timing=10;
 		}
-		tasks[count].dest=cudata_t::wfsgpu+iwfs;
+		tasks[count].dest=cuglobal->wfsgpu+iwfs;
 		snprintf(tasks[count].name, 64, "WFS %d", iwfs);
 		count++;
 	    }
@@ -380,9 +377,9 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
    Clean up device.
 */
 void gpu_cleanup(void){
-    cudata_t::wfs=Array<cuwfs_t>(0,0);
     for(int ig=0; ig<NGPU; ig++){
 	gpu_set(ig);
 	delete cudata;
     }
+    delete cuglobal;
 }

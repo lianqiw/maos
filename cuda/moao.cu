@@ -131,7 +131,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 	    int imoao=parms->powfs[ipowfs].moao;
 	    if(imoao<0) continue;
 	    MOAO_T *moao=recon->moao+imoao;
-	    gpu_set(cudata_t::wfsgpu[iwfs]);
+	    gpu_set(cuglobal->wfsgpu[iwfs]);
 	    if(!cudata->dm_wfs){
 		cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
 	    }
@@ -151,7 +151,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 	int imoao=parms->evl.moao;
 	MOAO_T *moao=recon->moao+imoao;
 	for(int ievl=0; ievl<nevl; ievl++){
-	    gpu_set(cudata_t::evlgpu[ievl]);
+	    gpu_set(cuglobal->evlgpu[ievl]);
 	    if(!cudata->dm_evl){
 		cudata->dm_evl=Array<cumapcell>(nevl, 1);
 	    }

@@ -458,19 +458,13 @@ void drawpsf_gpu(const char *fig, curmat &psf, cudaStream_t stream, int plotpsf,
 int mycudaFree(void *pp){
     int tofree=1;
     if(cudata){
-	LOCK(cudata->memmutex);
-	if(cudata->memcount.count(pp)){
-	    if(cudata->memcount[pp]>1){
-		cudata->memcount[pp]--;
-		//warning("Do not free referenced pointer %p\n", pp);
+	if(cuglobal->memcount.count(pp)){
+	    lock_t tmp(cuglobal->memmutex);
+	    cuglobal->memcount[pp]--;
+	    if(cuglobal->memcount[pp]){
 		tofree=0;
-	    }else if(cudata->memcount[pp]==1){
-		cudata->memcount.erase(pp);
-	    }else{
-		warning("Illegal: memcount[%p]=%d\n", pp, cudata->memcount[pp]);
 	    }
 	}
-	UNLOCK(cudata->memmutex);
     }
     if(tofree){
 	return cudaFree(pp);

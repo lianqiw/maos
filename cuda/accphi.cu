@@ -142,8 +142,8 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
     const int nps=parms->atm.nps;
     static int iseed0=-1;
     if(iseed0!=iseed){
-	dfree(cudata_t::atmscale);
-	if(atmscale) cudata_t::atmscale=ddup(atmscale);
+	dfree(cuglobal->atmscale);
+	if(atmscale) cuglobal->atmscale=ddup(atmscale);
     }
     /*The minimum size to cover the meta-pupil*/
     const long nxn=parms->atm.nxnmax;
@@ -509,8 +509,8 @@ void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax
 		  Real mispx, Real mispy, Real dt, int isim, Real atmalpha, cudaStream_t stream){
     cumapcell &cuatm=cudata->atm;
     if(Z(fabs)(atmalpha)<EPS) return;
-    if(cudata_t::atmscale){
-	atmalpha*=cudata_t::atmscale->p[isim];
+    if(cuglobal->atmscale){
+	atmalpha*=cuglobal->atmscale->p[isim];
     }
     for(int ips=0; ips<cudata->nps; ips++){
 	const Real dx=cuatm[ips].dx;

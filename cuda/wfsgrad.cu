@@ -320,9 +320,9 @@ void gpu_wfsgrad_queue(thread_t *info){
     SIM_T *simu=(SIM_T*)info->data;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	//info("thread %ld gpu %d iwfs %d start\n", thread_id(), cudata->igpu, iwfs);
-	gpu_set(cudata_t::wfsgpu[iwfs]);
+	gpu_set(cuglobal->wfsgpu[iwfs]);
 	Array<cupowfs_t> &cupowfs=cudata->powfs;
-	Array<cuwfs_t> &cuwfs=cudata_t::wfs;
+	Array<cuwfs_t> &cuwfs=cuglobal->wfs;
 	TIC;tic;
 	const PARMS_T *parms=simu->parms;
 	const POWFS_T *powfs=simu->powfs;
@@ -590,8 +590,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 
 void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
-    gpu_set(cudata_t::wfsgpu[iwfs]);
-    Array<cuwfs_t> &cuwfs=cudata_t::wfs;
+    gpu_set(cuglobal->wfsgpu[iwfs]);
+    Array<cuwfs_t> &cuwfs=cuglobal->wfs;
     stream_t &stream=cuwfs[iwfs].stream;
     const int isim=simu->isim;
     const int ipowfs=parms->wfs[iwfs].powfs;
@@ -626,8 +626,8 @@ void gpu_save_pistat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
-	gpu_set(cudata_t::wfsgpu[iwfs]);
-	Array<cuwfs_t> &cuwfs=cudata_t::wfs;
+	gpu_set(cuglobal->wfsgpu[iwfs]);
+	Array<cuwfs_t> &cuwfs=cuglobal->wfs;
 	const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	stream_t &stream=cuwfs[iwfs].stream;
 	if(parms->powfs[ipowfs].pistatout){

@@ -19,37 +19,55 @@
 #define AOS_CUDA_PERF_H
 #include "types.h"
 /**
-   cell array of nevl*1 is allocated using static data member to avoid duplicate.
+   Data per GPU
  */
-struct cuperf_t{
-    static int nevl;
-    static Array<int> nembed;
-    static Array<int> psfsize;
-    static Array<Real> wvls;
-    static Array<stream_t>   stream;
-    static Array<cufftHandle>    plan;
-    static curcell surf;
-    static curcell opd;
-    static curcell psfcl;
-    static curcell psfcl_ngsr;
-    static curcell opdcov;
-    static curcell opdcov_ngsr;
-    static curcell opdmean;
-    static curcell opdmean_ngsr;
-    static curcell cc_ol, cc_cl, coeff;
-    static Real **ccb_ol, **ccb_cl;
-    static pthread_mutex_t perfmutex;
+class cuperf_t{
+public:
     culoc_t locs;
     Array<Array<culoc_t> > locs_dm;
     curmat imcc;
     curmat amp;
-    int    **embed;
+    Array<cumat<int> > embed;
 
     curcell psfol;
     curmat  opdcovol;
     curmat  opdmeanol;
-    cuperf_t():embed(0){
+    cuperf_t(){
     }
-    ~cuperf_t();
+    ~cuperf_t(){};
+};
+/**
+   Global data independent of GPU.
+*/
+class cuperf_g{
+public:
+    int nevl;
+    Array<int> nembed;
+    Array<int> psfsize;
+    Array<Real> wvls;
+    Array<stream_t>   stream;
+    Array<cufftHandle>    plan;
+    curcell surf;
+    curcell opd;
+    curcell psfcl;
+    curcell psfcl_ngsr;
+    curcell opdcov;
+    curcell opdcov_ngsr;
+    curcell opdmean;
+    curcell opdmean_ngsr;
+    curcell cc_ol, cc_cl, coeff;
+    Real **ccb_ol, **ccb_cl;
+    cuperf_g():ccb_ol(0),ccb_cl(0){
+    }
+    ~cuperf_g(){
+	if(ccb_cl){
+	    for(int ievl=0; ievl<nevl; ievl++){
+		free4async(ccb_cl[ievl]);
+		free4async(ccb_ol[ievl]);
+	    }
+	    free(ccb_cl); ccb_cl=0;
+	    free(ccb_ol); ccb_ol=0;
+	}
+    }
 };
 #endif

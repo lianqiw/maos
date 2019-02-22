@@ -363,7 +363,7 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp *restrict otf, int nx, int
 void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     TIC;tic;
     Array<cupowfs_t>&cupowfs=cudata->powfs;
-    Array<cuwfs_t>&cuwfs=cudata->wfs;
+    Array<cuwfs_t>&cuwfs=cuglobal->wfs;
     stream_t &stream=cuwfs[iwfs].stream;
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;

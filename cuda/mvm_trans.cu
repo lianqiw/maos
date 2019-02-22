@@ -276,7 +276,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		dfree(FLId);
 	    }
 	}
-	gpu_set(cudata_t::recongpu);
+	gpu_set(cuglobal->recongpu);
     	curmat mvmt=curmat(ntotgrad, ntotact);
 	MVM_IGPU_T data={parms, recon, mvmig, mvmfg, mvmt, FLI, residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
@@ -321,7 +321,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	toc2("MVM Assembly in GPU");
 	/*Copy MVM control matrix results back*/
 	{
-	    gpu_set(cudata_t::recongpu);
+	    gpu_set(cuglobal->recongpu);
 	    tic;
 	    stream_t stream;
 	    curmat mvmtt=mvmt.trans(stream);

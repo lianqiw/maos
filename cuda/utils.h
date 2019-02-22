@@ -74,15 +74,15 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	    from=(M*)malloc(memsize);
 	    free_from=1;
 	}else{
-	    LOCK(cudata->memmutex);
-	    if(cudata->nmemcache<memsize){
-		cudata->nmemcache=memsize;
+	    LOCK(cuglobal->memmutex);
+	    if(cuglobal->nmemcache<memsize){
+		cuglobal->nmemcache=memsize;
 		/*dbg("GPU%d: Enlarge mem cache to %ld: %p->", 
-		  current_gpu(), memsize, cudata->memcache);*/
-		cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
-		//dbg("%p\n", cudata->memcache);
+		  current_gpu(), memsize, cuglobal->memcache);*/
+		cuglobal->memcache=realloc(cuglobal->memcache, cuglobal->nmemcache);
+		//dbg("%p\n", cuglobal->memcache);
 	    }
-	    from=(M*)cudata->memcache;
+	    from=(M*)cuglobal->memcache;
 	}
 	type_convert(from, src, nx*ny);
     }else{
@@ -99,7 +99,7 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	}
 	free(from);
     }else if(sizeof(M)!=sizeof(N)){
-	UNLOCK(cudata->memmutex);
+	UNLOCK(cuglobal->memmutex);
     }
 }
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
@@ -109,20 +109,20 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     uint64_t key=0;
     int own=0;//whether the returned process owns the pointer (yes if created).
     if(cuda_dedup && !*dest){
-	key=hashlittle(src, nx*ny*sizeof(N), 0);
-	key=(key<<32) | (nx*ny);
-	lock_t tmp(cudata->memmutex);
-	if(cudata->memhash.count(key)){
-	    *dest=(M*)cudata->memhash[key];
-	    cudata->memcount[*dest]++;
+	key=hashlittle(src, nx*ny*sizeof(N), nx*ny);
+	key=hashlittle(&cudata, sizeof(void*), key);//put GPU index as part of fingerprint.
+	lock_t tmp(cuglobal->memmutex);
+	if(cuglobal->memhash.count(key)){
+	    *dest=(M*)cuglobal->memhash[key];
+	    cuglobal->memcount[*dest]++;
 	    return 0;
 	}
     }else if(!cuda_dedup && *dest && cudata){
 	//Avoid overriding previously referenced memory
-	lock_t tmp(cudata->memmutex);
-	if(cudata->memcount.count(*dest) && cudata->memcount[*dest]>1){
+	lock_t tmp(cuglobal->memmutex);
+	if(cuglobal->memcount.count(*dest) && cuglobal->memcount[*dest]>1){
 	    //dbg("Deferencing data: %p\n", *dest);
-	    cudata->memcount[*dest]--;
+	    cuglobal->memcount[*dest]--;
 	    *dest=0;
 	}
     }
@@ -130,9 +130,9 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	own=1;
 	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
 	if(cuda_dedup){
-	    lock_t tmp(cudata->memmutex);
-	    cudata->memhash[key]=*dest;
-	    cudata->memcount[*dest]=1;
+	    lock_t tmp(cuglobal->memmutex);
+	    cuglobal->memhash[key]=*dest;
+	    cuglobal->memcount[*dest]=1;
 	}
     }
     cp2gpu(*dest, src, nx, ny, stream);

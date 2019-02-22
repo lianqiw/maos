@@ -30,24 +30,37 @@ namespace cuda_recon{
 class curecon_t;
 class curecon_geom;
 }
-struct cuperf_t;
-class cupowfs_t;
-class cuwfs_t;
-
-typedef struct cudata_t{ 
-    int igpu;
-    static int recongpu;
-    static Array<int> evlgpu;
-    static Array<int> wfsgpu;
-    std::map<uint64_t, void*> memhash;/*For reuse constant GPU memory*/
+//Global data independent of GPU
+class cuglobal_t{
+public:
+    int recongpu;
+    Array<int> evlgpu;
+    Array<int> wfsgpu;
+    dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
+    cuperf_g perf;
+    Array<cuwfs_t>wfs;
+    
+    std::map<uint64_t, void*> memhash;/*For reuse constant GPU memory. Put in cuglobal so that gpu_cleanup() works with cell in cuglobal*/
     std::map<void *, int> memcount; /*Store count of reused memory*/
+
     void *memcache;/*For reuse temp array for type conversion.*/
     long nmemcache;
     pthread_mutex_t memmutex;
+
+    cuglobal_t():recongpu(0),atmscale(0),nmemcache(0),memcache(NULL){
+	pthread_mutex_init(&memmutex, 0);
+	free(memcache); memcache=0;
+    }
+};
+//Per GPU data
+class cudata_t{
+public:
+    int igpu;
+
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
     cumapcell atm;   /**<atmosphere: array of cumap_t */
-    static dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
+
     cumapcell dmreal;/**<DM: array of cumap_t */
     cumapcell dmproj;/**<DM: array of cumap_t */
     int nps; /**<number of phase screens*/
@@ -55,8 +68,8 @@ typedef struct cudata_t{
     cuperf_t perf;
     stream_t perf_stream;/**<Default stream for perfevl. One per GPU. This allows sharing resource per GPU.*/
     /*for wfsgrad */
-    Array<cupowfs_t>powfs;
-    static Array<cuwfs_t>wfs;//must be static so we can address all elements.
+    Array<cupowfs_t>powfs;//This is created for each GPU.
+
     /*for recon */
     cuda_recon::curecon_t *recon;
     /*for moao*/
@@ -68,15 +81,13 @@ typedef struct cudata_t{
     ATYPE **mvm_a2;/*contains act copied from other gpus for sum*/
     GTYPE *mvm_g;/*the gradients copied from gpu*/
     stream_t mvm_stream;
-    cudata_t():nmemcache(0),memcache(NULL),reserve(0),nps(0),powfs(0),recon(0)
+    cudata_t():reserve(0),nps(0),powfs(0),recon(0)
 	      ,mvm_a(0),mvm_a2(0),mvm_g(0){
-	pthread_mutex_init(&memmutex, 0);
     }
     ~cudata_t(){
-	free(memcache); memcache=0;
     }
-}cudata_t;
-class cudata_t;
+};
+
 #ifdef __APPLE__
 extern pthread_key_t cudata_key;
 static inline cudata_t* _cudata(){
@@ -87,7 +98,7 @@ static inline cudata_t* _cudata(){
 extern __thread cudata_t *cudata;
 #endif
 extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
-
+extern cuglobal_t *cuglobal;
 void gpu_print_mem(const char *msg);
 long gpu_get_mem(void);
 /**
