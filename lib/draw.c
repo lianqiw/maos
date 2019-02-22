@@ -24,7 +24,7 @@
 #include "../math/mathdef.h"
 #include "draw.h"
 int DRAW_ID=0;
-int DRAW_DIRECT=0;
+int DRAW_DIRECT=1;
 int disable_draw=0; /*if 1, draw will be disabled  */
 PNEW(lock);
 #define MAXDRAW 1024
@@ -37,11 +37,7 @@ int draw_single=0;//1: Only draw active frame. 0: draw all frames.
 
    2013-02-20 
 
-   A new scheme:
- 
-   The draw() routines pass sock to drawdaemon if need to launch it. 
-   
-   There are two scenarios where drawdaemon is used to display graphics.
+   There are three ways to enable drawing with drawdaemon.
 
    1) monitor (remote machine) opens a socket to connect to scheduler to request
    showing progress of a maos run. The scheduler passes the socket to maos. The
@@ -49,14 +45,13 @@ int draw_single=0;//1: Only draw active frame. 0: draw all frames.
    the end maos has direct connect to drawdaemon using sockets. draw() will
    write to the sockets the information to display.
 
-   2) maos wants to launch drawdaemon. draw() will now talk to draw_helper()
-   (running in a separate lightweight process) with pid through a socket pair
-   (AF_UNIX type). The draw_helper() will then create another socket_pair, pass
-   one end of it to draw(), and the other end to drawdaemon() by fork()+exec().
+   2) If DRAW_DIRECT=0, open_drawdaemon() will talk to draw_helper() (a
+   fork()'ed process) with pid through a socket pair (AF_UNIX type). The
+   draw_helper() will then create another socket_pair, pass one end of it to
+   draw(), and the other end to drawdaemon() by fork()+exec().
 
+   3 If DRAW_DIRECT=1, open_drawdaemon() will launch drawdaemon directly.
 
-   todo: 
-   1) code drawopdmap to call routines to copy data from gpu to cpu when needed to avoid unnecessary copy.
 */
 /* List of list*/
 typedef struct list_t{
@@ -236,12 +231,18 @@ static int launch_drawdaemon(){
    even if environment is passed.
 */
 void draw_helper(void){
+    if(DRAW_DIRECT){
+	warning("draw_direct=1, skip draw_helper\n");
+	return;
+    }
     int sv[2];
     if(socketpair(AF_UNIX, SOCK_STREAM, 0, sv)){
 	perror("socketpair");
 	warning("socketpair failed, disable drawing.\n"); 
 	disable_draw=1;
 	sock_helper=-1;
+    }else{
+	warning("draw_helper started\n");
     }
     pid_t pid=fork();
     if(pid<0){
@@ -289,8 +290,9 @@ static int open_drawdaemon(){
 	}
 	if(sock==-1){
 	    if(DRAW_DIRECT){//directly fork and launch
+		TIC;tic;
 		sock=launch_drawdaemon();
-		dbg("directly launch: sock=%d\n", sock);
+		toc2("Directly launch drawdaemon");
 	    }else if(sock_helper!=-2){//use help to launch
 		if(sock_helper==-1){
 		    draw_helper();
