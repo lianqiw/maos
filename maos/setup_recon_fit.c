@@ -29,9 +29,10 @@ setup_fit_HXF(const FIT_T *fit){
     const int nfit=fit->thetax->nx;
     const int npsr=fit->xloc->nx;
     dspcell *HXF=dspcellnew(nfit, npsr);
+#pragma omp parallel for collapse(2)
     for(int ifit=0; ifit<nfit; ifit++){
-	double hsi=fit->hs->p[ifit];
 	for(int ips=0; ips<npsr; ips++){
+	    const double hsi=fit->hs->p[ifit];
 	    const double ht = fit->xloc->p[ips]->ht-fit->floc->ht;
 	    const double scale=1.-ht/hsi;
 	    double displace[2];
@@ -52,9 +53,10 @@ setup_fit_HA(FIT_T *fit){
     const int ndm=fit->aloc->nx;
     dspcell *HA=dspcellnew(nfit, ndm);
     info("Generating HA ");TIC;tic;
+#pragma omp parallel for collapse(2)
     for(int ifit=0; ifit<nfit; ifit++){
-	double hs=fit->hs->p[ifit];
 	for(int idm=0; idm<ndm; idm++){
+	    const double hs=fit->hs->p[ifit];
 	    const double ht=fit->aloc->p[idm]->ht-fit->floc->ht;
 	    const double scale=1.-ht/hs;
 	    double displace[2];

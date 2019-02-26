@@ -510,39 +510,46 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 	    if(parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs]){
 		share_gp=0;
 	    }
-	   
 	}
 	info("Generating GP with ");TIC;tic;
+#pragma omp parallel for
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    const int ipowfs=parms->wfsr[iwfs].powfs;
 	    const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
 	    if(parms->powfs[ipowfs].type==1){
 		info(" PWFS (skip)");
-		continue;
-	    }
-	    dmat *gamp=0;
-	    loc_t *gloc=make_gloc(&gamp, parms, aper, iwfs);
-	    if(!share_gp || iwfs==iwfs0){
-		dsp *gp=0;
-		if(parms->powfs[ipowfs].gtype_recon==0){//Average tilt
-		    info(" Gploc");
-		    gp=mkg(ploc,gloc, gamp, powfs[ipowfs].saloc,1,0,0,1);
-		}else if(parms->powfs[ipowfs].gtype_recon==1){//Zernike fit
-		    info(" Zploc");
-		    dsp* ZS0=mkz(gloc, gamp->p, (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
-		    dsp *H=mkh(ploc,gloc, 0,0,1);
-		    gp=dspmulsp(ZS0,H,"nn");
-		    dspfree(H);
-		    dspfree(ZS0);
-		}else{
-		    error("Invalid gtype_recon\n");
-		}
-		recon->GP->p[iwfs]=gp;
 	    }else{
-		recon->GP->p[iwfs]=dspref(recon->GP->p[iwfs0]);
+		dmat *gamp=0;
+		loc_t *gloc=make_gloc(&gamp, parms, aper, iwfs);
+		if(!share_gp || iwfs==iwfs0){
+		    dsp *gp=0;
+		    if(parms->powfs[ipowfs].gtype_recon==0){//Average tilt
+			info(" Gploc");
+			gp=mkg(ploc,gloc, gamp, powfs[ipowfs].saloc,1,0,0,1);
+		    }else if(parms->powfs[ipowfs].gtype_recon==1){//Zernike fit
+			info(" Zploc");
+			dsp* ZS0=mkz(gloc, gamp->p, (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
+			dsp *H=mkh(ploc,gloc, 0,0,1);
+			gp=dspmulsp(ZS0,H,"nn");
+			dspfree(H);
+			dspfree(ZS0);
+		    }else{
+			error("Invalid gtype_recon\n");
+		    }
+		    recon->GP->p[iwfs]=gp;
+		}
+		locfree(gloc);
+		dfree(gamp);
 	    }
-	    locfree(gloc);
-	    dfree(gamp);
+	}
+	if(share_gp){
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		const int ipowfs=parms->wfsr[iwfs].powfs;
+		const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
+		if(iwfs!=iwfs0){
+		    recon->GP->p[iwfs]=dspref(recon->GP->p[iwfs0]);
+		}
+	    }
 	}
 	toc2(" ");
 	if(parms->save.setup){

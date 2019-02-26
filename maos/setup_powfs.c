@@ -1591,12 +1591,11 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
 void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
     TIC;tic;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(parms->powfs[ipowfs].type!=0) continue;
-	if(parms->powfs[ipowfs].usephy
-	   ||parms->powfs[ipowfs].psfout
-	   ||parms->powfs[ipowfs].pistatout
-	   ||parms->powfs[ipowfs].neaphy){
+	if(parms->powfs[ipowfs].nwfs && parms->powfs[ipowfs].type==0 
+	   &&(parms->powfs[ipowfs].usephy
+	      ||parms->powfs[ipowfs].psfout
+	      ||parms->powfs[ipowfs].pistatout
+	      ||parms->powfs[ipowfs].neaphy)){
 	    info("\n%sSetting up powfs %d PO WFS%s\n\n", GREEN, ipowfs, BLACK);
 	    /*We have physical optics. setup necessary struct */
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);

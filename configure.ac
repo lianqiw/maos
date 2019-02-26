@@ -483,16 +483,14 @@ function set_lapack(){
 		LAPACK+=" -lmkl_intel"
 	    fi
 	    LAPACK+=" -lmkl_core"
-	    if test -n "$OPENMP_CFLAGS" ;then
-		if test "$CN" = "ICC" ;then
-		    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
-		elif test "$CN" = "GCC" ;then
-		    LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
-		else
-		    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
-		fi
+	    if false; then
+		LAPACK+=" -lmkl_sequential -lpthread"
 	    else
-		LAPACK+=" -lmkl_intel_thread -liomp5"
+		if test "$CN" = "GCC" ;then
+		    LAPACK+=" -lmkl_gnu_thread -lgomp"
+		else #ICC or others
+		    LAPACK+=" -lmkl_intel_thread -liomp5"
+		fi
 	    fi
 	 
 	    if test "$use_static" = "yes" ;then
