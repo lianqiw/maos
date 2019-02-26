@@ -59,15 +59,15 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     curcell PTT;  /**< Global tip/tilt */
     curcell PDF;  /**< Differential focus removal */
     curcell PDFTT;/**<Coupling between DF and TT*/
-    cucell<int> saptr;
-    cucell<short2> GPp;
+    cucell<int,Gpu> saptr;
+    cucell<short2,Gpu> GPp;
     Real *GPscale;
     cuspcell GP;
     int ptt;       /**< piston/tip/tilt removal in L()*/
     int nwfs;
     map_ray hx;
-    cumat<GPU_GP_T>gpdata;
-    cumat<LAP_T> lap;
+    Array<GPU_GP_T,Gpu>gpdata;
+    Array<LAP_T,Gpu> lap;
     //void init(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
     void do_gp(curcell &grad, const curcell &opdwfs, int ptt, stream_t &stream);
     void do_gpt(curcell &opdwfs, curcell &grad, int ptt, stream_t &stream);

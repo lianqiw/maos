@@ -26,9 +26,62 @@ private:
 protected:
     nonCopyable(){}
 };
+//Standard CPU memory
+class Cpu{
+public:
+    static void *calloc(size_t size){
+	return ::calloc(size, 1);
+    }
+    static void free(void *p){
+	::free(p);
+    }
+    static void zero(void *p, size_t size, cudaStream_t stream){
+	(void) stream;
+	if(p) memset(p, 0, size);
+    }
+};
+//Pinned (page locked) CPU memory
+class Pinned{
+public:
+    static void *calloc(size_t size){
+	void *p=0;
+	cudaMallocHost(&p, size);
+	memset(p, 0, size);
+	return p;
+    }
+    static void free(void *p){
+	cudaFreeHost(p);
+    }
+    static void zero(void *p, size_t size, cudaStream_t stream){
+	(void) stream;
+	if(p) memset(p, 0, size);
+    }
+};
 
-template <typename T>
-class cumat{
+//Gpu memory
+class Gpu{
+public:
+    static void *calloc(size_t size){
+	void *p=0;
+	DO(cudaMalloc(&p, size));
+	DO(cudaMemset(p, 0, size));
+	return p;
+    }
+    static void free(void *p){
+	DO(cudaFree(p));
+    }
+    static void zero(void *p, size_t size, cudaStream_t stream){
+	if(p){
+	    if(stream==(cudaStream_t)-1){
+		DO(cudaMemset(p, 0, size));
+	    }else{
+		DO(cudaMemsetAsync(p, 0, size, stream));
+	    }
+	}
+    }
+};
+template <typename T, class Dev=Cpu >
+class Array{
 private:
     T *p;
     long nx;
@@ -54,6 +107,7 @@ public:
     const T *Col(int icol)const{
 	return p+nx*icol;
     }
+ 
     long Nx()const{
 	return nx;
     }
@@ -65,6 +119,13 @@ public:
     }
     operator bool()const{
 	return (nx && ny);
+    }
+    
+    T& operator()(int i){
+	return p[i];
+    }
+    const T& operator()(int i)const{
+	return p[i];
     }
     T&operator ()(int ix, int iy){
 	return p[ix+nx*iy];
@@ -78,14 +139,20 @@ public:
     const T*operator+(int off)const{
 	return p+off;
     }
+    void init(long nxi, long nyi){
+	deinit();
+	nx=nxi;
+	ny=nyi;
+	p=(T*)Dev::calloc(nx*ny*sizeof(T));
+	nref=new int;
+	nref[0]=1;
+    }
     //Constructors 
-    cumat(long nxi=0, long nyi=0, T *pi=NULL, int own=1)
+    Array(long nxi=0, long nyi=1, T *pi=NULL, int own=1)
 	:nx(nxi),ny(nyi),p(pi),nref(NULL),header(NULL){
 	if(nxi >0 && nyi >0){
 	    if(!p){
-		DO(cudaMalloc(&p, nx*ny*sizeof(T)));
-		DO(cudaMemset(p, 0, nx*ny*sizeof(T)));
-		//info("%p allocated with size %ld\n", p, nx*ny*sizeof(T));
+		p=(T*)Dev::calloc(nx*ny*sizeof(T));
 		own=1;
 	    }
 	    if(own){
@@ -94,24 +161,26 @@ public:
 	    }
 	}
     }
-    void reset(){
+    void zero(cudaStream_t stream=(cudaStream_t)-1){
+	Dev::zero(p, nx*ny*sizeof(T), stream);
+    }
+    void deinit(){
 	if(nref && !atomicadd(nref, -1)){
-	    //warning("%p free with size %ld\n", p, nx*ny*sizeof(T));
-	    DO(cudaFree(p));
+	    Dev::free(p);
 	    delete nref;
 	    if(header) free(header);
 	}
 	p=NULL;
     }
-    ~cumat(){
-	reset();
+    ~Array(){
+	deinit();
     }
-    cumat(const cumat &in):p(in.p),nx(in.nx),ny(in.ny),nref(in.nref),header(in.header){
+    Array(const Array &in):p(in.p),nx(in.nx),ny(in.ny),nref(in.nref),header(in.header){
 	if(nref) nref[0]++;
     }
-    cumat &operator=(const cumat &in){
+    Array &operator=(const Array &in){
 	if(&p!=&in.p){//prevent self assignment
-	    reset();
+	    deinit();
 	    p=in.p;
 	    nx=in.nx;
 	    ny=in.ny;
@@ -121,69 +190,60 @@ public:
 	}
 	return *this;
     }
-    bool operator==(const cumat&in){
+    bool operator==(const Array&in){
 	return p==in.p;
     }
-    void zero(cudaStream_t stream=(cudaStream_t)-1){
-	if(p){
-	    if(stream==(cudaStream_t)-1){
-		DO(cudaMemset(p, 0, nx*ny*sizeof(T)));
-	    }else{
-		DO(cudaMemsetAsync(p, 0, nx*ny*sizeof(T), stream));
-	    }
-	}
-    }
-    cumat Vector(){
-	cumat tmp=*this;
+    Array Vector(){
+	Array tmp=*this;
 	tmp.nx=tmp.nx*tmp.ny;
 	tmp.ny=1;
 	return tmp;
     }
-    cumat<T>trans(stream_t &stream);
+    Array trans(stream_t &stream);
 };
-
-template <typename T>
+template <typename T, class Dev>
 class cucell{
 private:
-    cumat<T> *p;
+    typedef Array<T,Dev> Tmat;
+    Tmat *p;
     long nx;
     long ny;
-    cumat<T> m; /*contains the continuous data*/
+    Tmat m; /*contains the continuous data*/
     int *nref;
 public:
-    T **pm; /*contains the data pointer in each cell in gpu.*/
-    T **pm_cpu;/*contains the data pointer in each cell in cpu.*/
-
-   
-    cumat<T> &M(){
+    //T **pm; /*contains the data pointer in each cell in gpu.*/
+    //T **pm_cpu;/*contains the data pointer in each cell in cpu.*/
+    Array<T*,Pinned>pm_cpu;
+    Array<T*,Gpu>pm;
+    Tmat &M(){
 	return m;
     }
-    const cumat<T>&M() const{
+    const Tmat&M() const{
 	return m;
     }
-    cumat<T>* operator()(){
+    Tmat* operator()(){
 	return p;
     }
-    const cumat<T>* operator()() const{
+    const Tmat* operator()() const{
 	return p;
     }
     
-    cumat<T>& operator()(int i){
+    Tmat& operator()(int i){
 	return p[i];
     }
-    const cumat<T>& operator()(int i)const{
+    const Tmat& operator()(int i)const{
 	return p[i];
     }
-    cumat<T>& operator[](int i){
+    Tmat& operator[](int i){
 	return p[i];
     }
-    const cumat<T>& operator[](int i)const{
+    const Tmat& operator[](int i)const{
 	return p[i];
     }
-    cumat<T>& operator()(int ix, int iy){
+    Tmat& operator()(int ix, int iy){
 	return p[ix+iy*nx];
     }
-    const cumat<T>& operator()(int ix, int iy)const{
+    const Tmat& operator()(int ix, int iy)const{
 	return p[ix+iy*nx];
     }
     long Nx()const{
@@ -195,10 +255,10 @@ public:
     long N()const{
 	return nx*ny;
     }
-    cumat<T> *operator+(int off){
+    Tmat *operator+(int off){
 	return p+off;
     }
-    const cumat<T>*operator+(int off)const{
+    const Tmat*operator+(int off)const{
 	return p+off;
     }
     bool operator==(const cucell&in){
@@ -210,33 +270,34 @@ public:
 	}
 	if(!p) error("p must not be null\n");
 	if(!pm_cpu){
-	    pm_cpu=(T**)malloc4async(nx*ny*sizeof(T*));
+	    //pm_cpu=(T**)malloc4async(nx*ny*sizeof(T*));
+	    pm_cpu.init(nx, ny);
 	}
 	for(long i=0; i<nx*ny; i++){
 	    pm_cpu[i]=p[i]();
 	}
 	if(!pm){
-	    DO(cudaMalloc(&pm, sizeof(T*)*nx*ny));
+	    pm.init(nx,ny);
 	}
 	if(stream==(cudaStream_t)-1){
-	    cudaMemcpy(pm, pm_cpu, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
+	    cudaMemcpy(pm(), pm_cpu(), sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
 	}else{
-	    cudaMemcpyAsync(pm, pm_cpu, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice, stream);
+	    cudaMemcpyAsync(pm(), pm_cpu(), sizeof(T*)*nx*ny,cudaMemcpyHostToDevice, stream);
 	}
     }
     void init(long nxi, long nyi){
 	nx=nxi;
 	ny=nyi;
 	if(nx&&ny) {
-	    p=new cumat<T>[nx*ny];
+	    p=new Tmat[nx*ny];
 	    nref=new int;
 	    nref[0]=1;
 	}else{
 	    p=0;
 	    nref=0;
 	}
-	pm=NULL;
-	pm_cpu=NULL;
+	//pm=NULL;
+	//pm_cpu=NULL;
     }
     cucell(long nxi=0, long nyi=1){
 	init(nxi, nyi);
@@ -244,9 +305,9 @@ public:
     cucell(long nxi, long nyi, long mx, long my, T *pin=NULL){
 	init(nxi, nyi);
 	if(mx && my){
-	    m=cumat<T>(mx*my*nxi*nyi,1,pin,pin?0:1);
+	    m=Tmat(mx*my*nxi*nyi,1,pin,pin?0:1);
 	    for(int i=0; i<nxi*nyi; i++){
-		p[i]=cumat<T>(mx, my, m()+i*(mx*my), 0);
+		p[i]=Tmat(mx, my, m()+i*(mx*my), 0);
 	    }
 	    p2pm();
 	}
@@ -258,22 +319,22 @@ public:
 	for(long i=0; i<_nx*_ny; i++){
 	    tot+=mx[i]*(my?my[i]:1);
 	}
-	m=cumat<T>(tot,1,pin,pin?0:1);
+	m=Tmat(tot,1,pin,pin?0:1);
 	tot=0;
 	for(long i=0; i<_nx*_ny; i++){
 	    if(mx[i]){
-		p[i]=cumat<T>(mx[i],(my?my[i]:1),m()+tot, 0);
+		p[i]=Tmat(mx[i],(my?my[i]:1),m()+tot, 0);
 		tot+=mx[i]*(my?my[i]:1);
 	    }
 	}
 	p2pm();
     }
-    cucell(const cucell<T>&in):p(in.p),nx(in.nx),ny(in.ny),m(in.m),nref(in.nref),pm(in.pm),pm_cpu(in.pm_cpu){
+    cucell(const cucell&in):p(in.p),nx(in.nx),ny(in.ny),m(in.m),nref(in.nref),pm(in.pm),pm_cpu(in.pm_cpu){
 	if(nref){
 	    nref[0]++;
 	}
     }
-    cucell& operator=(const cucell<T>&in){
+    cucell& operator=(const cucell&in){
 	if(&p!=&in.p){
 	    reset();
 	    p=in.p;
@@ -293,8 +354,10 @@ public:
     void reset(){
 	if(nref && !atomicadd(nref, -1)){
 	    delete [] p;
-	    free4async(pm_cpu);
-	    cudaFree(pm);
+	    pm_cpu.deinit();
+	    pm.deinit();
+	    //free4async(pm_cpu);
+	    //cudaFree(pm);
 	    delete nref;
 	}
 	p=0;
@@ -321,11 +384,11 @@ public:
 	/*replace the data with a new set. free original data if free_original
 	  is set. we don't own the pnew.*/
 	if(m){
-	    m=cumat<T>(m.Nx(), m.Ny(), pnew, 0);//replace m
+	    m=Tmat(m.Nx(), m.Ny(), pnew, 0);//replace m
 	}
 
 	for(long i=0; i<nx*ny; i++){
-	    p[i]=cumat<T>(p[i].Nx(), p[i].Ny(), pnew, 0);//don't own the data pnew
+	    p[i]=Tmat(p[i].Nx(), p[i].Ny(), pnew, 0);//don't own the data pnew
 	    pnew+=p[i].N();
 	}
 	p2pm(stream);
@@ -344,10 +407,11 @@ public:
 	}
     }
 };
-typedef class cumat<Real>   curmat;
-typedef class cumat<Comp>   cucmat;
-typedef class cucell<Real>  curcell;
-typedef class cucell<Comp>  cuccell;
+typedef class Array<int, Gpu>   cuimat;
+typedef class Array<Real, Gpu>   curmat;
+typedef class Array<Comp, Gpu>   cucmat;
+typedef class cucell<Real, Gpu>  curcell;
+typedef class cucell<Comp, Gpu>  cuccell;
 enum TYPE_SP{
     SP_CSC,//compressed sparse column major. 
     SP_CSR,//compressed sparse row major. 
@@ -437,6 +501,7 @@ class cusp{
 	  return nx && ny;
     }
 };
+/*
 template <typename T>
 class Array{
     T *p;
@@ -514,7 +579,8 @@ class Array{
     const T*operator+(int off)const{
 	return p+off;
     }
-};
+    };*/
+//template <typename T> using Array=Array<T,Cpu>;
 typedef Array<cusp> cuspcell;
 typedef Array<curcell> curccell;
 typedef Array<curccell> curcccell;
@@ -646,13 +712,13 @@ public:
 
 typedef Array<cumap_t> cumapcell;
 typedef Array<cugrid_t> cugridcell;
-template <typename T>
-void initzero(cumat<T> &A, long nx, long ny){
+template <typename T, class Dev>
+void initzero(Array<T, Dev> &A, long nx, long ny){
     /*zero array if exist, otherwise allocate and zero*/
     if(A){
 	A.zero();
     }else{
-	A=cumat<T>(nx,ny);
+	A=Array<T, Dev>(nx,ny);
     }
 }
 

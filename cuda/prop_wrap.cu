@@ -33,7 +33,7 @@
   Do not separate the function branches because each layer/wfs combination may use different branches.
 */
 __global__ void 
-gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, Real alpha1, Real *alpha2, char trans){
+gpu_map2map_do(PROP_WRAP_T *data, Real *const*pdirs, Real *const*ppss, int ndir, int nps, Real alpha1, const Real *alpha2, char trans){
     /*Using shared memory to reduce register spill */
     __shared__ gpu_map2map_shared_t shared;
     int &stepx=shared.stepx;

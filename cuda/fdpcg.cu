@@ -96,7 +96,7 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, const curecon_geom *_grid)
 	    FDDATA[ips].scale=1.f;
 	}
     }
-    fddata=cumat<GPU_FDPCG_T>(nps, 1);
+    fddata=Array<GPU_FDPCG_T,Gpu>(nps, 1);
     cudaMemcpy(fddata(), FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
     delete [] FDDATA;
 }
@@ -143,7 +143,7 @@ __device__ static inline void do_scale(Comp &a, Real b){
     a.y*=b;
 }
 template<typename T> __global__ static void 
-fdpcg_scale(GPU_FDPCG_T *fddata, T **xall){
+fdpcg_scale(GPU_FDPCG_T *fddata, T *const*xall){
     int ips=blockIdx.z;
     int nx=fddata[ips].nx*fddata[ips].ny;
     const int step=blockDim.x * gridDim.x; 
@@ -193,7 +193,7 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
     RECORD(1);
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr), dim3(256,1),0,stream>>>
-	    (fddata(), xhat1.pm);
+	    (fddata(), xhat1.pm());
     }
 #if DBG_FD
 	cuccellwrite(xhat1, "fdg_fft");
@@ -212,7 +212,7 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
     }
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr),dim3(256,1),0,stream>>>
-	    (fddata(), xout.pm);
+	    (fddata(), xout.pm());
     }
 #if DBG_FD
     cuwrite(xout, "fdg_xout");

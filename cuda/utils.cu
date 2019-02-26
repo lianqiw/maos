@@ -306,7 +306,7 @@ static void add2cpu(T * restrict *dest, R alpha, const S *src, R beta, long n,
     free(tmp);
 }
 #define add2cpu_mat(D, T, C)						\
-    void add2cpu(D##mat **out, T alpha, const cumat<C> &in, T beta,	\
+    void add2cpu(D##mat **out, T alpha, const Array<C, Gpu> &in, T beta, \
 		 cudaStream_t stream, pthread_mutex_t *mutex){		\
 	if(!in){							\
 	    if(*out) D##scale(*out, alpha);				\
@@ -346,7 +346,7 @@ add2cpu_cell(s, float, curcell)
 add2cpu_cell(c, double,cuccell)
 add2cpu_cell(z, float, cuccell)
 #define cp2cpu_same(dmat,dzero,dnew,double)				\
-    void cp2cpu(dmat **out, const cumat<double> &in, cudaStream_t stream){ \
+    void cp2cpu(dmat **out, const Array<double, Gpu> &in, cudaStream_t stream){ \
 	if(!in) {							\
 	    if(*out) dzero(*out);					\
 	    return;							\
@@ -378,7 +378,7 @@ void cp2cpu(zmat **out, const cucmat &in, cudaStream_t stream){
 }
 #endif
 #define cp2cpu_cell(S, T)						\
-    void cp2cpu(S##cell **out, const cucell<T> &in, cudaStream_t stream){ \
+    void cp2cpu(S##cell **out, const cucell<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in){							\
 	    if(*out) S##cellzero(*out);					\
 	    return;							\
@@ -456,15 +456,13 @@ void drawpsf_gpu(const char *fig, curmat &psf, cudaStream_t stream, int plotpsf,
 */
 #undef cudaFree
 int mycudaFree(void *pp){
+    if(!pp) return 0;
     int tofree=1;
-    if(cudata){
-	if(cuglobal->memcount.count(pp)){
-	    lock_t tmp(cuglobal->memmutex);
-	    cuglobal->memcount[pp]--;
-	    if(cuglobal->memcount[pp]){
-		tofree=0;
-	    }
-	}
+    lock_t tmp(cuglobal->memmutex);
+    std::map<void*, int>::iterator it=cuglobal->memcount.find(pp);
+    if(it!=cuglobal->memcount.end()){
+	it->second--;
+	tofree=!(it->second);
     }
     if(tofree){
 	return cudaFree(pp);

@@ -66,8 +66,8 @@ typedef struct{
     Real fx[9];//9 to avoid bank conflict
     Real fy[9];
 }gpu_map2map_shared_t;
-__global__ void gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, 
-			       int ndir, int nps, Real alpha1, Real *alpha2, char trans);
+__global__ void gpu_map2map_do(PROP_WRAP_T *data, Real *const*pdirs, Real *const*ppss, 
+			       int ndir, int nps, Real alpha1, const Real *alpha2, char trans);
 
 void gpu_map2map_prep(PROP_WRAP_T*res, const cugrid_t &g_dir, const cugrid_t &gi,
 		      Real dispx, Real dispy, const curmat &cc);

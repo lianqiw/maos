@@ -37,8 +37,9 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 	spint *pp2=W0new->p;
 	spint *pi2=W0new->i;
 	double *px2=W0new->x;
-	int *full;
-	DO(cudaMallocHost(&full, R_W0->ny*sizeof(int)));
+	//int *full;
+	Array<int> full(R_W0->ny, 1);
+	//DO(cudaMallocHost(&full, R_W0->ny*sizeof(int)));
 	//#define W0_BW 1
 	double W1max=dmax(R_W1);
 	double thres=W1max*(1.f-1e-6);
@@ -62,9 +63,9 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 	//W0new is the transpose of W0p.
 	dsp *W0new2=dsptrans(W0new); dspfree(W0new);
 	W0p=cusp(W0new2, 1);
-	cp2gpu(W0f, full, count2, 1);
+	cp2gpu(W0f, full(), count2, 1);
 	dspfree(W0new2);
-	cudaFreeHost(full);
+	//cudaFreeHost(full);
     }else{
 	W0p=cusp(R_W0, 1);	
     }

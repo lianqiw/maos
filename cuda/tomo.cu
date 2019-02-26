@@ -27,7 +27,7 @@ namespace cuda_recon{
   We convert GP from sparse matrix to coefficients of pos==1 or 2. By doing so, we can also convert the type to integer to save memory transfer. Short2 is used without performance penalty.
   For partially illiminated subapertures, this conversion brings in approximation as we limite the influence of gradient from each subaperture to (pos*2-1)x(pos*2-1) points. The system performance is largely not affected.
 */
-void prep_GP(cumat<short2> &GPp, Real *GPscale, cusp &GPf,
+void prep_GP(Array<short2,Gpu> &GPp, Real *GPscale, cusp &GPf,
 	     const dsp *GP, const loc_t *saloc, const loc_t *ploc){
     if(!GP){ 
 	error("GP is required\n");
@@ -80,7 +80,7 @@ void prep_GP(cumat<short2> &GPp, Real *GPscale, cusp &GPf,
 	    }
 	}
 	dspfree(GPt);
-	GPp=cumat<short2>(np, nsa);
+	GPp=Array<short2,Gpu>(np, nsa);
 	cudaMemcpy(GPp(), partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
 	*GPscale=1./pxscale;
 	free(partxy);
@@ -88,7 +88,7 @@ void prep_GP(cumat<short2> &GPp, Real *GPscale, cusp &GPf,
 	GPf=cusp(GP, 1);
     }
 }
-static cumat<int> 
+static cuimat 
 prep_saptr(loc_t *saloc, map_t *pmap){
     /*saloc mapped onto pmap*/
     int nsa=saloc->nloc;
@@ -103,7 +103,7 @@ prep_saptr(loc_t *saloc, map_t *pmap){
 	saptr[isa][0]=(int)roundf((salocx[isa]-ox)*dx1);
 	saptr[isa][1]=(int)roundf((salocy[isa]-oy)*dy1);
     }
-    cumat<int> saptr_gpu=cumat<int>(2, nsa);
+    cuimat saptr_gpu(2, nsa);
     DO(cudaMemcpy(saptr_gpu(), saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
     delete [] saptr;
     return saptr_gpu;
@@ -167,7 +167,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	    lapc[ips].zzi=-1;
 	}
     }
-    lap=cumat<LAP_T>(recon->npsr, 1);
+    lap=Array<LAP_T,Gpu>(recon->npsr, 1);
     cudaMemcpy(lap(), lapc, sizeof(LAP_T)*recon->npsr, cudaMemcpyHostToDevice);
 }
 
@@ -206,10 +206,10 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	dcellfree(pdftt);
     }
     {
-	GPp=cucell<short2>(nwfs, 1);
+	GPp=cucell<short2,Gpu>(nwfs, 1);
 	GP=cuspcell(nwfs, 1);
 	GPscale=new Real[nwfs];
-	saptr=cucell<int>(nwfs, 1);
+	saptr=cucell<int,Gpu>(nwfs, 1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs=parms->wfsr[iwfs].powfs;
 	    const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
@@ -279,7 +279,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].oxp=recon->pmap->ox;
 	    GPDATA[iwfs].oyp=recon->pmap->oy;
 	}
-	gpdata=cumat<GPU_GP_T>(nwfs,1);
+	gpdata=Array<GPU_GP_T,Gpu>(nwfs,1);
 	DO(cudaMemcpy(gpdata(), GPDATA, sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
 	delete [] GPDATA;
     }
@@ -314,12 +314,10 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 /*
   If merge the operation in to gpu_prop_grid_do, need to do atomic
   operation because previous retracing starts at offo, not 0.  */
-__global__ void gpu_laplacian_do(LAP_T *datai, Real **outall, Real **inall, int nwfs, Real alpha){
-    Real *restrict in, *restrict out;
-    
+__global__ void gpu_laplacian_do(LAP_T *datai, Real *const *outall, const Real *const *inall, int nwfs, Real alpha){
     const int ips=blockIdx.z;
-    in=inall[ips];
-    out=outall[ips];
+    const Real* in=inall[ips];
+    Real *out=outall[ips];
     datai+=ips;
     
     const int nx=datai->nxps;
@@ -359,7 +357,7 @@ __global__ void gpu_laplacian_do(LAP_T *datai, Real **outall, Real **inall, int 
    Handles TTDF*GP
 */
 #define DIM_GP 128
-__global__ static void gpu_gp_do(GPU_GP_T *data, Real **gout, Real *ttout, Real *dfout, Real **wfsopd, int ptt){
+__global__ static void gpu_gp_do(GPU_GP_T *data, Real *const *gout, Real *ttout, Real *dfout, Real *const*wfsopd, int ptt){
     __shared__ Real gx[DIM_GP];
     __shared__ Real gy[DIM_GP];
     __shared__ Real gdf[DIM_GP];
@@ -482,7 +480,7 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, Real **gout, Real *ttout, Real 
    Handles GP'*nea*(1-TTDF)
    Be carefulll about the ptt flag. It is always 1 for Right hand side, but may be zero for Left hand side.
 */
-__global__ static void gpu_gpt_do(GPU_GP_T *data, Real **wfsopd, Real *ttin, Real *dfin, Real **gin, int ptt){
+__global__ static void gpu_gpt_do(GPU_GP_T *data, Real *const*wfsopd, const Real *ttin, const Real *dfin, Real *const *gin, int ptt){
     const int iwfs=blockIdx.z;
     const int nwfs=gridDim.z;
     GPU_GP_T *datai=data+iwfs;
@@ -582,7 +580,7 @@ void cutomo_grid::do_gp(curcell &_grad, const curcell &_opdwfs, int ptt2, stream
     }
     cuzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata(), _grad.pm, ttf(), ttf()+nwfs*2, _opdwfs?_opdwfs.pm:NULL, ptt2);
+	(gpdata(), _grad.pm(), ttf(), ttf()+nwfs*2, _opdwfs?_opdwfs.pm():NULL, ptt2);
 }
 void cutomo_grid::do_gpt(curcell &_opdwfs, curcell &_grad, int ptt2, stream_t &stream){
     if(_opdwfs){
@@ -590,7 +588,7 @@ void cutomo_grid::do_gpt(curcell &_opdwfs, curcell &_grad, int ptt2, stream_t &s
     }
     //Does  GP'*NEA*(1-TTDF) if _opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata(), _opdwfs?_opdwfs.pm:0, ttf(), ttf()+nwfs*2, _grad.pm, ptt2);
+	(gpdata(), _opdwfs?_opdwfs.pm():0, ttf(), ttf()+nwfs*2, _grad.pm(), ptt2);
     
     if(_opdwfs){//Does GP' for GP with sparse
 	for(int iwfs=0; iwfs<nwfs; iwfs++){

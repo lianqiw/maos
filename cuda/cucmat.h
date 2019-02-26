@@ -21,8 +21,8 @@
 #include "utils.h"
 #include "types.h"
 
-#define cucnew  new cumat<Comp> 
-#define cuccellnew  new cucell<Comp>
+#define cucnew  new cucmat
+#define cuccellnew  new cuccell
 #define cucwrite cuwrite
 #define cuccellwrite cuwrite
 void cucscale(cucmat &in, Real Alpha, cudaStream_t stream);

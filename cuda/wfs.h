@@ -98,7 +98,7 @@ public:
     curmat gradacc;    /**<For accumulating grads*/
     curmat gradcalc;   /**<For outputing grads*/
     curmat lltopd;
-    Real  *lltg; //pinned memory.
+    Array<Real,Pinned> lltg; //pinned memory.
     cucmat lltwvf;
     cucmat lltotfc;
     cucmat wvf;
@@ -122,7 +122,7 @@ public:
     Array<cufftHandle> plan_pys;
     cuccell pyotfs;
     curcell pypsfs;
-    cuwfs_t():powfs(0),dtf(0),msa(0),custatb(0),custatt(0),lltg(0),i0sumsum(0){
+    cuwfs_t():powfs(0),dtf(0),msa(0),custatb(0),custatt(0),i0sumsum(0){
     }
 };
 

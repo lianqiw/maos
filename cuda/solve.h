@@ -109,7 +109,7 @@ public:
 class cusolve_cbs:public cusolve_l,nonCopyable{
 protected:
     cusp Cl;      //Lower diagonal sparse matrix L. M=LL';
-    cumat<int> Cp;//Permutation matrix.
+    cuimat Cp;//Permutation matrix.
     curmat Up;   //Low rank
     curmat Vp;   //Low rank
     curmat y;    //Temporary data.

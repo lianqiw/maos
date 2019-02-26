@@ -27,7 +27,7 @@ typedef struct GPU_FDPCG_T{
 class curecon_geom;
 class cufdpcg_t:public cucgpre_t,nonCopyable{
     const curecon_geom *grid;
-    cumat<int> perm;   /**<permutation vector for fdpcg*/
+    cuimat perm;   /**<permutation vector for fdpcg*/
     cuccell Mb;  /**<The main fdpcg block matrix*/
     Array<cufftHandle> fft;
     Array<cufftHandle> ffti;
@@ -36,7 +36,7 @@ class cufdpcg_t:public cucgpre_t,nonCopyable{
     cuccell xhat1, xhat2;
     int nb, bs, nby, nbz; 
     int scale;
-    cumat<GPU_FDPCG_T> fddata;
+    Array<GPU_FDPCG_T,Gpu> fddata;
 public:
     virtual ~cufdpcg_t(){
     }

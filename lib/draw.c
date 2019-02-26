@@ -225,12 +225,8 @@ static int launch_drawdaemon(){
 
 /**
    A helper routine that forks in the early stage to launch drawdaemon.  We
-   don't use the main routine to launch drawdaemon because it takes very long to
-   fork a process that consumes Gig's of memory.
-
-   We don't use drawdaemon to launch it because drawdaemon may not have the
-   right DISPLAY related environment and also hard to work during ssh session
-   even if environment is passed.
+   don't use the main routine to launch drawdaemon because it may take very long
+   to fork a process that consumes Gig's of memory.
 */
 void draw_helper(void){
     if(DRAW_DIRECT){

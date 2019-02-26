@@ -50,7 +50,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	cp2gpu(cudata->perf.amp, aper->amp);
 	cp2gpu(cudata->perf.imcc, aper->imcc);
 	if(parms->evl.psfmean || parms->evl.psfhist){
-	    cudata->perf.embed    = Array<cumat<int> >(nwvl, 1);//(int**) calloc(nwvl, sizeof(int*));
+	    cudata->perf.embed    = Array<cuimat>(nwvl, 1);//(int**) calloc(nwvl, sizeof(int*));
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		cp2gpu(cudata->perf.embed[iwvl], aper->embed->embed->p[iwvl]->p, aper->locs->nloc, 1);
 	    }
@@ -94,12 +94,14 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     cuglobal->perf.cc_cl=curcell(nevl, 1);
     cuglobal->perf.cc_ol=curcell(nevl, 1);
     cuglobal->perf.coeff=curcell(nevl, 1);
-    cuglobal->perf.ccb_ol=(Real**)malloc(sizeof(Real*)*nevl);
-    cuglobal->perf.ccb_cl=(Real**)malloc(sizeof(Real*)*nevl);
+    cuglobal->perf.ccb_ol.init(nevl,1);
+    cuglobal->perf.ccb_cl.init(nevl,1);
+    //cuglobal->perf.ccb_ol=(Real**)malloc(sizeof(Real*)*nevl);
+    //cuglobal->perf.ccb_cl=(Real**)malloc(sizeof(Real*)*nevl);
     for(int ievl=0; ievl<nevl; ievl++){
 	gpu_set(cuglobal->evlgpu[ievl]);
-	cuglobal->perf.ccb_ol[ievl]=(Real*)malloc4async(sizeof(Real)*7);
-	cuglobal->perf.ccb_cl[ievl]=(Real*)malloc4async(sizeof(Real)*7);
+	cuglobal->perf.ccb_ol[ievl].init(7,1);//=(Real*)malloc4async(sizeof(Real)*7);
+	cuglobal->perf.ccb_cl[ievl].init(7,1);//=(Real*)malloc4async(sizeof(Real)*7);
 	cuglobal->perf.cc_cl[ievl]=curmat(7,1);
 	cuglobal->perf.cc_ol[ievl]=curmat(7,1);
 	cuglobal->perf.coeff[ievl]=curmat(7,1);

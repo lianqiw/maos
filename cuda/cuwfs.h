@@ -31,7 +31,7 @@ class cuwfs_info{
 public:
     culoc_t *loc;   /**<location of OPD points*/
     curmat *amp;    /**<Amplitude map defined on loc*/  
-    cumat<int> *embed;
+    Array<int> *embed;
     int embednx, embedny;
     int iwfs;
     int igpu;

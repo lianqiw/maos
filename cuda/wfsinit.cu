@@ -439,7 +439,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 		cuwfs[iwfs].lltopd=curmat(nlx, nlx);
 		if(parms->powfs[ipowfs].pistatout || parms->sim.idealfsm){
-		    DO(cudaMallocHost(&cuwfs[iwfs].lltg, 2*sizeof(Real)));
+		    cuwfs[iwfs].lltg.init(2,1);
 		}
 		cuwfs[iwfs].lltwvf=cucmat(nlwvf, nlwvf);
 		if(nlwvf!=notf){

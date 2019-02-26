@@ -27,7 +27,7 @@ public:
     Array<Array<culoc_t> > locs_dm;
     curmat imcc;
     curmat amp;
-    Array<cumat<int> > embed;
+    Array<cuimat> embed;
 
     curcell psfol;
     curmat  opdcovol;
@@ -56,7 +56,9 @@ public:
     curcell opdmean;
     curcell opdmean_ngsr;
     curcell cc_ol, cc_cl, coeff;
-    Real **ccb_ol, **ccb_cl;
+    Array<Array<Real,Pinned> >ccb_ol;
+    Array<Array<Real,Pinned> >ccb_cl;
+    /*Real **ccb_ol, **ccb_cl;
     cuperf_g():ccb_ol(0),ccb_cl(0){
     }
     ~cuperf_g(){
@@ -68,6 +70,6 @@ public:
 	    free(ccb_cl); ccb_cl=0;
 	    free(ccb_ol); ccb_ol=0;
 	}
-    }
+	}*/
 };
 #endif

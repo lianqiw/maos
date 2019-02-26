@@ -27,12 +27,11 @@ typedef struct CGTMP_T{
     curcell p0;
     curcell Ap;
     curmat store;
-    Real *diff;
+    Array<Real,Pinned> diff;
     int count_fail, count;
     CGTMP_T():diff(0),count_fail(0),count(0){
     }
     ~CGTMP_T(){
-	if(diff) cudaFreeHost(diff); 
     }
 }CGTMP_T;
 //typedef void (*G_CGFUN)(curcell**, Real, const curcell*, Real, stream_t &stream);

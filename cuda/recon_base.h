@@ -36,7 +36,7 @@ public:
 class W01_T{
     curmat W1;    /**< The aperture weighting, piston removal*/
     cusp   W0p;   /**< W0 for partial points*/
-    cumat<int>W0f;/**< index for fully illuminated points.*/
+    cuimat W0f;/**< index for fully illuminated points.*/
     Real   W0v;   /**< maximum Value of W0*/
     int     nxx;  /**< First dimension of grid*/
     mutable curmat pis;   /**< Temporary data*/
@@ -94,14 +94,14 @@ public:
     void Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, const cugridcell &in, Real dt=0);
     void Init_l2l(const cugridcell &out, const cugridcell &in);
     //from in to out
-    void forward(Real **out, Real **in,  Real alpha, Real *wt, stream_t &stream){
+    void forward(Real *const*out, const Real *const *in,  Real alpha, Real *wt, stream_t &stream){
 	gpu_map2map_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(PROP_WRAP_TX,4),0,stream>>>
-	    (hdata, out, in, ndir, nlayer, alpha, wt, 'n');
+	    (hdata, out, (Real*const*)in, ndir, nlayer, alpha, wt, 'n');
     }
     //from out to in
-    void backward(Real **out, Real **in, Real alpha, Real *wt, stream_t &stream){
+    void backward(const Real *const *out, Real *const*in, Real alpha, Real *wt, stream_t &stream){
 	gpu_map2map_do<<<dim3(4,4,nlayer),dim3(PROP_WRAP_TX,4),0,stream>>>
-	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
+	    (hdata, (Real*const*)out, in, ndir, nlayer, alpha, wt, 't');
     }
     virtual ~map_ray(){
 	deinit();

@@ -97,10 +97,6 @@ static inline int CUDAFREE(void *p){
 int current_gpu();
 #define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){print_backtrace(); error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define DORELAX(A...) ({int _ans=(int)(A); static int counter=0; if(_ans!=0&& _ans!=cudaErrorNotReady){counter++; if(counter>5) error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));else warning("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
-#define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); memset(P,0,N);})
-#define cudaCallocBlock(P,N)     ({DO(cudaMalloc(&(P),N));     DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
-#define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
-#define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
 static inline __host__ __device__ float2 operator*(const float2 &a, const float2 &b){
     return cuCmulf(a,b);
@@ -144,14 +140,7 @@ static inline __host__ __device__ double2&operator*=(double2 &a, const double b)
     a.y*=b;
     return a;
 }
-static inline void* malloc4async(size_t N){
-    void *tmp;
-    cudaMallocHost(&tmp, N);
-    return tmp;
-}
-static inline void free4async(void *P){
-    cudaFreeHost(P);
-}
+
 extern int NULL_STREAM;
 #if DEBUG
 #define CUDA_CHECK_ERROR DO(cudaGetLastError())
@@ -238,16 +227,16 @@ static inline void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){
 }
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 class stream_t{
-    int ref;//1: we don't own these.
+    int own;//1: we don't own these.
     cudaStream_t stream;
     cublasHandle_t handle;
     cusparseHandle_t sphandle;
 public:
-    stream_t():ref(0){
+    stream_t():own(1){
 	init();
     }
     void init(){
-	ref=0;
+	own=1;
 	STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
 	HANDLE_NEW(handle, stream);
 	SPHANDLE_NEW(sphandle, stream);
@@ -256,7 +245,7 @@ public:
 	deinit();
     }
     void deinit(){
-	if(!ref){
+	if(own){
 	    SPHANDLE_DONE(sphandle);
 	    HANDLE_DONE(handle);
 	    STREAM_DONE(stream);
@@ -290,7 +279,7 @@ public:
     }
     stream_t & operator=(const stream_t &in){
 	deinit();
-	ref=1;
+	own=0;
 	stream=in.stream;
 	handle=in.handle;
 	sphandle=in.sphandle;

@@ -212,8 +212,8 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	    residualfit=X(new)(ntotact, 1);
 	}
 	dmat *FLId=NULL; /* MI is inv(FL) for direct methods*/
-	Real *FLI=NULL;
-
+	//Real *FLI=NULL;
+	Array<Real,Pinned>FLI;
 	/* Loading or saving intermediate TomoL result. */
 	X(mat) *mvmi=NULL; 
 	if(parms->load.mvmi){
@@ -269,8 +269,9 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		error("Invalid fit.alg=%d\n", parms->fit.alg);
 	    }
 	    if(FLId){
-		FLI=(Real*)malloc4async(sizeof(Real)*ntotact*ntotact);
-		for(long i=0; i<ntotact*ntotact; i++){
+		FLI.init(ntotact*ntotact,1);
+		//FLI=(Real*)malloc4async(sizeof(Real)*ntotact*ntotact);
+		for(int i=0; i<ntotact*ntotact; i++){
 		    FLI[i]=(Real)FLId->p[i];
 		}
 		dfree(FLId);
@@ -278,7 +279,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	}
 	gpu_set(cuglobal->recongpu);
     	curmat mvmt=curmat(ntotgrad, ntotact);
-	MVM_IGPU_T data={parms, recon, mvmig, mvmfg, mvmt, FLI, residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
+	MVM_IGPU_T data={parms, recon, mvmig, mvmfg, mvmt, FLI(), residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
 	thread_t info[nthread];
 	thread_prep(info, 0, ntotact, nthread, mvm_trans_igpu, &data);
@@ -357,7 +358,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	X(free)(residual);
 	X(free)(residualfit);
 	free(curp);
-	if(FLI) free4async(FLI);
+	//if(FLI) free4async(FLI);
     }//if assemble in gpu
 }
 

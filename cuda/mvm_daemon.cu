@@ -72,9 +72,9 @@ typedef struct mvm_g_mul_t{
     int icol;
     int ngpu;
     int k;
-    GTYPE *g;/*full g*/
-    ATYPE **ac;/*a for each gpu.*/
-    ATYPE *a;/*final a*/
+    Array<GTYPE,Pinned>g;/*full g*/
+    Array<Array<ATYPE,Pinned> > ac;/*a for each gpu.*/
+    Array<ATYPE,Pinned> a;/*final a*/
     X(mat) *mvm;
     int *icols;
     int *kcols;
@@ -190,12 +190,12 @@ static void mvm_thread(void* ithread0){
     }
 }
 static void mvm_data_free(void){
-    cudaFreeHost(mvm_data->g);
+    /*cudaFreeHost(mvm_data->g);
     cudaFreeHost(mvm_data->a);
     for(int i=0; i<mvm_data->ngpu; i++){
 	cudaFreeHost(mvm_data->ac[i]);
-    }
-    free(mvm_data->ac);
+	}
+	free(mvm_data->ac);*/
     free(mvm_data->icols);
     free(mvm_data->kcols);
     free(mvm_data);
@@ -230,13 +230,20 @@ static int respond(int sock){
 	    warning("Using %d GPUs\n", ngpu);
 	}
 	mvm_data->ngpu=NGPU;
-	mvm_data->ac=new ATYPE*[NGPU];
-	cudaMallocHost(&mvm_data->g, sizeof(GTYPE)*ngtot);
+	//mvm_data->ac=new ATYPE*[NGPU];
+	/*cudaMallocHost(&mvm_data->g, sizeof(GTYPE)*ngtot);
 	cudaMallocHost(&mvm_data->a, sizeof(ATYPE)*nact);
 	memset(mvm_data->a, 0, nact*sizeof(ATYPE));
 	for(int ig=0; ig<NGPU; ig++){
 	    cudaMallocHost(&mvm_data->ac[ig], sizeof(ATYPE)*nact);
+	    }*/
+	mvm_data->g.init(ngtot,1);
+	mvm_data->a.init(nact,1);
+	mvm_data->ac.init(NGPU,1);
+	for(int ig=0; ig<NGPU; ig++){
+	    mvm_data->ac[ig].init(nact,1);
 	}
+		
 	mvm_data->icols=(int*)calloc(NGPU, sizeof(int));
 	mvm_data->kcols=(int*)calloc(NGPU, sizeof(int));
 

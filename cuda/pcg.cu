@@ -117,10 +117,11 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
     Real *ak  =store; store+=maxiter;
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
     if(!cg_data.diff){ //Only this enables async transfer
-	DO(cudaMallocHost(&cg_data.diff, sizeof(Real)*(maxiter+1)));
+	cg_data.diff.init(maxiter+1,1);
+	//DO(cudaMallocHost(&cg_data.diff, sizeof(Real)*(maxiter+1)));
     }
-    Real *&diff=cg_data.diff;
-    memset(diff, 0, sizeof(Real)*(maxiter+1));
+    cg_data.diff.zero();
+    Real *diff=cg_data.diff;
 #if PRINT_RES == 2
     info("GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
@@ -136,7 +137,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 	if(k==maxiter){
 	    k=0;//reset 
 	    kover++;
-	    memset(diff, 0, sizeof(Real)*(maxiter+1));
+	    cg_data.diff.zero();
 	    DO(cudaMemsetAsync(rr0+1, 0, (ntot-1)*sizeof(Real),stream));
 	}
 	if(k%500==0){/*initial or re-start every 500 steps*/

@@ -115,13 +115,13 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	if(cuglobal->memhash.count(key)){
 	    *dest=(M*)cuglobal->memhash[key];
 	    cuglobal->memcount[*dest]++;
-	    return 0;
+	    own=1;//mycudaFree takes care of double fre.
 	}
-    }else if(!cuda_dedup && *dest && cudata){
+    }else if(!cuda_dedup && *dest){
 	//Avoid overriding previously referenced memory
 	lock_t tmp(cuglobal->memmutex);
 	if(cuglobal->memcount.count(*dest) && cuglobal->memcount[*dest]>1){
-	    //dbg("Deferencing data: %p\n", *dest);
+	    warning("Deferencing data: %p\n", *dest);
 	    cuglobal->memcount[*dest]--;
 	    *dest=0;
 	}
@@ -140,17 +140,17 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 }
 
 template<typename M, typename N> static inline void
-cp2gpu(cumat<M>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
+cp2gpu(Array<M,Gpu>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(!src || !nx || !ny) return;
     if(dest){
 	if(dest.N()!=nx*ny){
-	    error("cumat is %ldx%ld, input is %dx%d\n", dest.Nx(), dest.Ny(), nx, ny);
+	    error("Array is %ldx%ld, input is %dx%d\n", dest.Nx(), dest.Ny(), nx, ny);
 	}
 	cp2gpu(dest(), src, nx, ny, stream);
     }else{
 	M *tmp=0;
 	int own=cp2gpu(&tmp, src, nx, ny, stream);
-	dest=cumat<M>(nx, ny, tmp, own);
+	dest=Array<M, Gpu>(nx, ny, tmp, own);
     }
 }
 static inline void cp2gpu(Real**dest, const dmat*src, cudaStream_t stream=0){

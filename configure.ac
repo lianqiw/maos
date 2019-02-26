@@ -879,7 +879,9 @@ if test "$with_cuda" != "no" ;then
 	NVCC+=" -ccbin ${CCBIN%% *}"
     fi
     if test "$cudaver" -lt 40 ;then
-	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 and compute_20])
+	#CUDA 4.0 supports compute_20
+	#CUDA 7.0 supports C++11.
+	AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
     fi
     #virtual GPUs are used here to allow JIT compilation during runtime
     #set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
@@ -900,6 +902,7 @@ if test "$with_cuda" != "no" ;then
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
     fi
+    #CUDAOPT+=" -std=c++11"
     CUDAOPT+=" -Wno-deprecated-gpu-targets"
     CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS -Wno-unused-parameter"
     CCBINOPT="${CCBINOPT/-fpermissive/}"

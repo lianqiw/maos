@@ -33,19 +33,19 @@ class curecon_geom;
 //Global data independent of GPU
 class cuglobal_t{
 public:
+    //Field ordering is important in destructor calling.
+    std::map<uint64_t, void*> memhash;/*For reuse constant GPU memory.*/
+    std::map<void *, int> memcount; /*Store count of reused memory*/
+    void *memcache;/*For reuse temp array for type conversion.*/
+    long nmemcache;
+    pthread_mutex_t memmutex;
+
     int recongpu;
     Array<int> evlgpu;
     Array<int> wfsgpu;
     dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
     cuperf_g perf;
     Array<cuwfs_t>wfs;
-    
-    std::map<uint64_t, void*> memhash;/*For reuse constant GPU memory. Put in cuglobal so that gpu_cleanup() works with cell in cuglobal*/
-    std::map<void *, int> memcount; /*Store count of reused memory*/
-
-    void *memcache;/*For reuse temp array for type conversion.*/
-    long nmemcache;
-    pthread_mutex_t memmutex;
 
     cuglobal_t():recongpu(0),atmscale(0),nmemcache(0),memcache(NULL){
 	pthread_mutex_init(&memmutex, 0);

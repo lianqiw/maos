@@ -44,8 +44,8 @@ typedef struct{
     curmat cumvm1;
     curmat cumvm2;
     curcell mtch;
-    cumat<short> pix;//pixels. Each sa has 15x6=90 pixels.
-    cumat<short> pixbias;
+    Array<short,Gpu> pix;//pixels. Each sa has 15x6=90 pixels.
+    Array<short,Gpu> pixbias;
     curmat grad;
     curmat gdm;/*add to grad*/
     curmat act;
@@ -53,7 +53,7 @@ typedef struct{
     Real FSMdelta; /*FSM actual angle difference from command.*/
     curcell im0;
     int mtch_isa;
-    cumat<int>saind;
+    cuimat saind;
     stream_t stream_p;//pixels and other transportation across PCI-E.
     stream_t stream_g;//grads
     Array<stream_t> stream_a;//act
@@ -264,8 +264,8 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	data[igpu]->cumvm=data[igpu]->cumvm1;
 	data[igpu]->cumvm_next=data[igpu]->cumvm2;
 	cp2gpu(data[igpu]->cumvm1, mvm);
-	data[igpu]->pix=cumat<short>(totpix, 1);
-	data[igpu]->pixbias=cumat<short>(totpix, 1);
+	data[igpu]->pix=Array<short,Gpu>(totpix, 1);
+	data[igpu]->pixbias=Array<short,Gpu>(totpix, 1);
 	cp2gpu(data[igpu]->pixbias(), (short*)pixbias->p, totpix*sizeof(short), cudaMemcpyHostToDevice);
 	data[igpu]->mtch=curcell(nbuf, 1, totpix*2,1);
 	cp2gpu(data[igpu]->mtch[0], mtch);
@@ -286,7 +286,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	cudaEventCreateWithFlags(&data[igpu]->event_pall,event_flag);
 	dmres->p[igpu]=X(new)(nact, 1);
 	X(pagelock)(dmres->p[igpu], NULL);
-	data[igpu]->saind=cumat<int>(nsa+1,1);
+	data[igpu]->saind=cuimat(nsa+1,1);
 	cp2gpu(data[igpu]->saind(), saind, nsa+1, 1, 0);
     }
     X(mat) *timing=X(new)(nstep, 1);
