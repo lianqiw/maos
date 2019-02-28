@@ -251,7 +251,8 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
     init_hx(parms, recon);
     
     {
-	GPU_GP_T *GPDATA=new GPU_GP_T[nwfs];
+	Array<GPU_GP_T,Cpu> GPDATA(nwfs,1);
+	//GPU_GP_T *GPDATA=new GPU_GP_T[nwfs];
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs = parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip) continue;
@@ -280,8 +281,8 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].oyp=recon->pmap->oy;
 	}
 	gpdata=Array<GPU_GP_T,Gpu>(nwfs,1);
-	DO(cudaMemcpy(gpdata(), GPDATA, sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
-	delete [] GPDATA;
+	DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
+	//delete [] GPDATA;
     }
 
     if(parms->tomo.precond==1){

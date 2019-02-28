@@ -39,7 +39,8 @@ typedef struct GPU_GP_T{
     Real dxp, dyp;/*pmap dx*/
     Real oxp, oyp;/*pmap origin*/
     const Real(*neai)[3];
-    GPU_GP_T():ipowfs(0),nwfs(0),jwfs(0),saptr(0),PTT(0),PDF(0),PDFTT(0),dsa(0),nsa(0),GPp(0),GPscale(0),pos(0),nxp(0),dxp(0),dyp(0),oxp(0),oyp(0){}
+    //Must have empty constructor since the array may be in GPU memory.
+    GPU_GP_T(){};//:ipowfs(0),nwfs(0),jwfs(0),saptr(0),PTT(0),PDF(0),PDFTT(0),dsa(0),nsa(0),GPp(0),GPscale(0),pos(0),nxp(0),dxp(0),dyp(0),oxp(0),oyp(0){}
 }GPU_GP_T;
 struct LAP_T{
     int nxps,nyps;

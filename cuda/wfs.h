@@ -122,7 +122,7 @@ public:
     Array<cufftHandle> plan_pys;
     cuccell pyotfs;
     curcell pypsfs;
-    cuwfs_t():powfs(0),dtf(0),msa(0),custatb(0),custatt(0),i0sumsum(0){
+    cuwfs_t():powfs(0),msa(0),custatb(0),custatt(0),i0sumsum(0){
     }
 };
 
