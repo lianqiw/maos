@@ -19,7 +19,7 @@
 #define AOS_CUDA_TYPES_H
 #include "common.h"
 #include "kernel.h"
-//#include <typeinfo>
+#include <typeinfo>
 class nonCopyable{
 private:
     nonCopyable& operator=(nonCopyable&);
@@ -65,20 +65,27 @@ public:
 	cudaFreeHost(p);
     }
 };
-
+extern int cuda_dedup;
 //Gpu memory
 template<typename T>
 class Gpu{
     T val;
 public:
     void *operator new[](size_t size){
-	//info("Cuda::new for %s, %ld\n",  typeid(T).name(), size);
 	void *p=0;
 	DO(cudaMalloc(&p, size));
 	DO(cudaMemset(p, 0, size));
+	/*if(!cuda_dedup){
+	    info("Cuda::new for %s, %p, %ld\n",  typeid(T).name(), p, size);
+	    print_backtrace();
+	    }*/
 	return p;
     }
     void operator delete[](void*p){
+	/*if(!cuda_dedup) {
+	    info("Cuda::delete for %s, %p\n",  typeid(T).name(), p);
+	    print_backtrace();
+	    }*/
 	DO(cudaFree(p));
     }
     static void zero(T *p, size_t size, cudaStream_t stream){
@@ -162,18 +169,13 @@ public:
     const T&operator ()(int ix, int iy)const{
 	return p[ix+nx*iy];
     }
-    T *operator+(int off){
-	return p+off;
-    }
-    const T*operator+(int off)const{
-	return p+off;
-    }
-    virtual void init(long nxi, long nyi){
+  
+    void init(long nxi, long nyi){
 	deinit();
 	nx=nxi;
 	ny=nyi;
-	if(nx && ny){
-	    p=(T*)new Dev<T>[nx*ny];//(T*)Dev::calloc(nx*ny*sizeof(T));
+	if(nxi && nyi){
+	    p=(T*)new Dev<T>[nxi*nyi];//(T*)Dev::calloc(nx*ny*sizeof(T));
 	    nref=new int;
 	    nref[0]=1;
 	}
@@ -183,7 +185,7 @@ public:
 	:nx(nxi),ny(nyi),p(pi),nref(NULL),header(NULL){
 	if(nxi >0 && nyi >0){
 	    if(!p){
-		p=(T*)new Dev<T>[nx*ny]; //p=(T*)Dev::calloc(nx*ny*sizeof(T));
+		p=(T*)new Dev<T>[nxi*nyi]; //p=(T*)Dev::calloc(nx*ny*sizeof(T));
 		own=1;
 	    }
 	    if(own){
@@ -307,16 +309,11 @@ public:
 	    error("cannot act on referenced array\n");
 	}
 	if(!p) error("p must not be null\n");
-	if(!pm_cpu){
-	    //pm_cpu=(T**)malloc4async(nx*ny*sizeof(T*));
-	    pm_cpu.init(nx, ny);
-	}
+	pm_cpu.init(nx, ny);
 	for(long i=0; i<nx*ny; i++){
 	    pm_cpu[i]=p[i]();
 	}
-	if(!pm){
-	    pm.init(nx,ny);
-	}
+	pm.init(nx,ny);
 	if(stream==(cudaStream_t)-1){
 	    cudaMemcpy(pm(), pm_cpu(), sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
 	}else{
@@ -334,8 +331,6 @@ public:
 	    p=0;
 	    nref=0;
 	}
-	//pm=NULL;
-	//pm_cpu=NULL;
     }
     cucell(long nxi=0, long nyi=1){
 	init(nxi, nyi);
@@ -351,15 +346,15 @@ public:
 	}
     }
     template <typename L>
-    cucell(const long _nx, const long _ny, L *mx, L *my, T *pin=NULL){
-	init(_nx,_ny);
+    cucell(const long nxi, const long nyi, L *mx, L *my, T *pin=NULL){
+	init(nxi,nyi);
 	long tot=0;
-	for(long i=0; i<_nx*_ny; i++){
+	for(long i=0; i<nxi*nyi; i++){
 	    tot+=mx[i]*(my?my[i]:1);
 	}
 	m=Tmat(tot,1,pin,pin?0:1);
 	tot=0;
-	for(long i=0; i<_nx*_ny; i++){
+	for(long i=0; i<nxi*nyi; i++){
 	    if(mx[i]){
 		p[i]=Tmat(mx[i],(my?my[i]:1),m()+tot, 0);
 		tot+=mx[i]*(my?my[i]:1);

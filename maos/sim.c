@@ -102,6 +102,7 @@ void maos_isim(int isim){
     int iseed=global->iseed;
     int simstart=parms->sim.start;
     int simend=parms->sim.end;
+    extern int NO_RECON, NO_WFS, NO_EVL;
     if(isim==simstart+1){//skip slow first step.
 	tk_atm=myclockd();
     }
@@ -151,7 +152,6 @@ void maos_isim(int isim){
 #endif
 	}
 	save_dmreal(simu);
-	extern int NO_RECON, NO_WFS, NO_EVL;
 	if(PARALLEL){
 	    /*
 	      We do the big loop in parallel to make better use the

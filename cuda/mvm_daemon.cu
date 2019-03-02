@@ -59,11 +59,6 @@ enum{
     CMD_DMADD,
 };
 
-/**
- * 2012-06-22: Serious bug found:
- * Initially was using curnew. But later replaced by new while should be using cudaMalloc
- * This caused misterious bugs, such as no answer or even kernel panic.
- */
 pthread_t thread_init;
 int thread_init_joined=0;
 typedef struct mvm_g_mul_t{
@@ -122,32 +117,23 @@ static void mvm_thread(void* ithread0){
 	    }
 	    X(mat) *mvm=mvm_data->mvm;
 	    cp2gpu(cudata->mvm_m, mvm, cudata->mvm_stream);
-	    if(cudata->mvm_a){
-		cudaFree(cudata->mvm_a); cudata->mvm_a=NULL;
-		cudaFree(cudata->mvm_g); cudata->mvm_g=NULL;
-	    }
-	    cudaMalloc(&cudata->mvm_a, mvm->nx*sizeof(ATYPE));
-	    cudaMalloc(&cudata->mvm_g, mvm->ny*sizeof(GTYPE));
-	    cudaMemsetAsync(cudata->mvm_a, 0, mvm->nx*sizeof(ATYPE), cudata->mvm_stream);
+	    cudata->mvm_a.init(mvm->nx,1);
+	    cudata->mvm_g.init(mvm->ny,1);
+	  
+	    cudaMemsetAsync(cudata->mvm_a(), 0, mvm->nx*sizeof(ATYPE), cudata->mvm_stream);
 	    cudaStreamSynchronize(cudata->mvm_stream);
-	    if(cudata->mvm_a2){
-		free(cudata->mvm_a2);
-	    }
-	    cudata->mvm_a2=(ATYPE**)calloc(NGPU, sizeof(ATYPE*));
 	    cmds[ithread]=0;
 	}
 	    break;
 	case CMD_GMUL:{
 	    int icol=mvm_data->icols[ithread];
 	    int k=mvm_data->kcols[ithread];
-	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
+	    cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, cudata->mvm_stream);
 	    
 	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, cudata->mvm_stream>>>
-		(cudata->mvm_m+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
-	    /*Real one=1;
-	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
-	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
+		(cudata->mvm_m.Col(icol), cudata->mvm_a(), cudata->mvm_g()+icol, nact, k);
+	 
 	    cmds[ithread]=0;
 	}
 	    break;
@@ -156,13 +142,11 @@ static void mvm_thread(void* ithread0){
 	    int icol=mvm_data->icol+ki*ithread;
 	    int ki2=mvm_data->k+mvm_data->icol-icol;
 	    int k=MIN(ki, ki2);
-	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
+	    cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, cudata->mvm_stream);
 	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, cudata->mvm_stream>>>
-		(cudata->mvm_m+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
-	    /*Real one=1;
-	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
-	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
+		(cudata->mvm_m.Col(icol), cudata->mvm_a(), cudata->mvm_g()+icol, nact, k);
+
 	    cmds[ithread]=0;
 	}
 	    break;
@@ -170,7 +154,7 @@ static void mvm_thread(void* ithread0){
 	    cudaMemcpyAsync(mvm_data->ac[ithread], cudata->mvm_a, nact*sizeof(ATYPE),
 			    cudaMemcpyDeviceToHost, cudata->mvm_stream);
 	    cudaStreamSynchronize(cudata->mvm_stream);
-	    cudaMemsetAsync(cudata->mvm_a, 0, nact*sizeof(ATYPE), cudata->mvm_stream);
+	    cudata->mvm_a.zero(cudata->mvm_stream);
 	    cmds[ithread]=0;
 	}
 	    break;
@@ -190,12 +174,6 @@ static void mvm_thread(void* ithread0){
     }
 }
 static void mvm_data_free(void){
-    /*cudaFreeHost(mvm_data->g);
-    cudaFreeHost(mvm_data->a);
-    for(int i=0; i<mvm_data->ngpu; i++){
-	cudaFreeHost(mvm_data->ac[i]);
-	}
-	free(mvm_data->ac);*/
     free(mvm_data->icols);
     free(mvm_data->kcols);
     free(mvm_data);
@@ -230,13 +208,6 @@ static int respond(int sock){
 	    warning("Using %d GPUs\n", ngpu);
 	}
 	mvm_data->ngpu=NGPU;
-	//mvm_data->ac=new ATYPE*[NGPU];
-	/*cudaMallocHost(&mvm_data->g, sizeof(GTYPE)*ngtot);
-	cudaMallocHost(&mvm_data->a, sizeof(ATYPE)*nact);
-	memset(mvm_data->a, 0, nact*sizeof(ATYPE));
-	for(int ig=0; ig<NGPU; ig++){
-	    cudaMallocHost(&mvm_data->ac[ig], sizeof(ATYPE)*nact);
-	    }*/
 	mvm_data->g.init(ngtot,1);
 	mvm_data->a.init(nact,1);
 	mvm_data->ac.init(NGPU,1);
@@ -275,7 +246,7 @@ static int respond(int sock){
 	tim_gfirst=myclockd();
 	for(int icol=cmd[1]; icol<ngtot; icol+=ngeach){
 	    int k=MIN(ngeach, ngtot-icol);
-	    stread(sock_mvm, mvm_data->g+icol, k*sizeof(GTYPE));
+	    stread(sock_mvm, mvm_data->g()+icol, k*sizeof(GTYPE));
 	    tim_gsend+=toc3;tic;
 	    if(cmd[2]<1800){//Use next available GPU to handle this task.
 		int igpu=gpu_next();

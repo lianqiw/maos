@@ -58,12 +58,12 @@ public:
     int igpu;
 
     /**<for accphi */
-    void *reserve;   /**<Reserve some memory in GPU*/
+    curmat reserve;   /**<Reserve some memory in GPU*/
     cumapcell atm;   /**<atmosphere: array of cumap_t */
 
     cumapcell dmreal;/**<DM: array of cumap_t */
     cumapcell dmproj;/**<DM: array of cumap_t */
-    int nps; /**<number of phase screens*/
+    //int nps; /**<number of phase screens*/
     /*for perfevl */
     cuperf_t perf;
     stream_t perf_stream;/**<Default stream for perfevl. One per GPU. This allows sharing resource per GPU.*/
@@ -77,12 +77,10 @@ public:
     Array<cumapcell> dm_evl;
     /*for mvm*/
     curmat mvm_m;/*the control matrix*/
-    ATYPE *mvm_a; /*contains act result from mvm_m*mvm_g*/
-    ATYPE **mvm_a2;/*contains act copied from other gpus for sum*/
-    GTYPE *mvm_g;/*the gradients copied from gpu*/
+    Array<ATYPE, Gpu>mvm_a; /*contains act result from mvm_m*mvm_g*/
+    Array<GTYPE, Gpu>mvm_g;/*the gradients copied from gpu*/
     stream_t mvm_stream;
-    cudata_t():reserve(0),nps(0),powfs(0),recon(0)
-	      ,mvm_a(0),mvm_a2(0),mvm_g(0){
+    cudata_t():recon(0){
     }
     ~cudata_t(){
     }
@@ -116,8 +114,7 @@ static inline void gpu_set(int igpu){
     cudata=cudata_all[igpu];
 #endif
     if(cudata->reserve){
-	cudaFree(cudata->reserve);
-	cudata->reserve=NULL;
+	cudata->reserve.deinit();
     }
 }
 /**

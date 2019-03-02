@@ -71,5 +71,4 @@ __global__ void gpu_map2map_do(PROP_WRAP_T *data, Real *const*pdirs, Real *const
 
 void gpu_map2map_prep(PROP_WRAP_T*res, const cugrid_t &g_dir, const cugrid_t &gi,
 		      Real dispx, Real dispy, const curmat &cc);
-void gpu_map2map(cumap_t &out, const cumap_t &in, Real dispx, Real dispy, Real alpha, const curmat &cc, char trans);
 #endif

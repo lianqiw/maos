@@ -464,9 +464,20 @@ int mycudaFree(void *pp){
 	it->second--;
 	tofree=!(it->second);
     }
+    /*if(!cuda_dedup){
+	info("cudaFree %p.\n",pp);
+	}*/
     if(tofree){
 	return cudaFree(pp);
     }else{
 	return 0;
     }
+}
+#undef cudaMalloc
+int mycudaMalloc(void **p, size_t size){
+    int ans=cudaMalloc(p, size);
+    /*if(!cuda_dedup){
+	info("cudaMalloc %p for %ld bytes.\n", *p, size);
+	}*/
+    return ans;
 }

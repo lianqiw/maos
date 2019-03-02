@@ -17,7 +17,7 @@
 */
 #include "cudata.h"
 int nstream=0;
-#define MEM_RESERVE 200000000
+#define MEM_RESERVE 50000000 
 int NGPU=0;
 int MAXGPU=0;
 int NULL_STREAM=0;
@@ -279,7 +279,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    }
 	    info(" %d", cudata->igpu);
 	    //Reserve memory in GPU so the next maos will not pick this GPU.
-	    DO(cudaMalloc(&cudata->reserve, MEM_RESERVE));
+	    cudata->reserve.init(MEM_RESERVE,1);
 	}
 	info("\n");
 	if(parms){
@@ -315,7 +315,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}else{
 		    tasks[count].timing=10;//ms
 		}
-		tasks[count].dest=cuglobal->evlgpu+ievl;
+		tasks[count].dest=cuglobal->evlgpu()+ievl;
 		snprintf(tasks[count].name, 64, "EVL %d", ievl);
 		count++;
 	    }
@@ -329,7 +329,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}else{
 		    tasks[count].timing=10;
 		}
-		tasks[count].dest=cuglobal->wfsgpu+iwfs;
+		tasks[count].dest=cuglobal->wfsgpu()+iwfs;
 		snprintf(tasks[count].name, 64, "WFS %d", iwfs);
 		count++;
 	    }

@@ -76,22 +76,17 @@ typedef smat rmat;
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 typedef Real Real2[2];
 int mycudaFree(void *p);//Unreference deduplicated memory
+int mycudaMalloc(void **p, size_t size);
 /*static int tot_mem=0; */
 #undef cudaMalloc
 #undef cudaFree
-static inline int CUDAMALLOC(void **p, size_t size){
-    return cudaMalloc(p,size);
-}
-static inline int CUDAFREE(void *p){
-    return mycudaFree(p);
-}
 #define DEBUG_MEM 0
 #if DEBUG_MEM
-#define cudaMalloc(p,size) ({dbg("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((void**)(void*)p,size);})
-#define cudaFree(p)        ({dbg("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((void*)p);})
+#define cudaMalloc(p,size) ({dbg("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);mycudaMalloc((void**)(void*)p,size);})
+#define cudaFree(p)        ({dbg("%ld cudaFree   for %s\n", pthread_self(),#p);mycudaFree((void*)p);})
 #else
-#define cudaMalloc(p,size) CUDAMALLOC((void**)(void*)p,size)
-#define cudaFree(p) CUDAFREE((void*)p)
+#define cudaMalloc(p,size) mycudaMalloc((void**)(void*)p,size)
+#define cudaFree(p) mycudaFree((void*)p)
 #endif
 
 int current_gpu();

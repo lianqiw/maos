@@ -452,21 +452,3 @@ void gpu_map2map_prep(PROP_WRAP_T*res, const cugrid_t &g_dir, const cugrid_t &g_
     res->cc=cc?cc():NULL;
 }
 
-void gpu_map2map(cumap_t &out, const cumap_t &in, Real dispx, Real dispy, Real alpha, const curmat &cc, char trans){
-    PROP_WRAP_T wrap;
-    PROP_WRAP_T *wrap_gpu;
-    cudaMalloc(&wrap_gpu, sizeof(PROP_WRAP_T));
-    gpu_map2map_prep(&wrap, out, in, dispx, dispy, cc);
-    wrap.togpu(wrap_gpu);
-    Real **p;
-    cudaMalloc(&p, sizeof(Real*)*2);
-    const Real *tmp[2]={out(), in()};
-    cudaMemcpy(p, tmp, sizeof(Real*)*2, cudaMemcpyHostToDevice);
-    gpu_map2map_do<<<dim3(4,4,1),dim3(PROP_WRAP_TX,4),0,0>>>
-	(wrap_gpu, p, p+1, 1, 1, alpha, 0, trans);
-    cudaMemcpy(&wrap, wrap_gpu, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
-    if(wrap.reverse){
-	cudaFree(wrap.reverse);
-    }
-    cudaFree(wrap_gpu);
-}

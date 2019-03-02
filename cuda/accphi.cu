@@ -124,7 +124,6 @@ static void gpu_atm2gpu_full(const mapcell *atm){
     {
 	gpu_set(im);
 	gpu_print_mem("atm in full");
-	cudata->nps=atm->nx;
 	cp2gpu(cudata->atm, atm);
 	gpu_print_mem("atm out");
     }
@@ -233,7 +232,6 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	for(int im=0; im<NGPU; im++){/*Loop over all GPUs. */
 	    gpu_set(im);
 	    cudata->atm=cumapcell(nps, 1);
-	    cudata->nps=nps;
 	    for(int ips=0; ips<nps; ips++){
 		cudata->atm[ips].p=curmat(nx0, ny0);
 		cudata->atm[ips].nx=nx0;
@@ -512,7 +510,7 @@ void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax
     if(cuglobal->atmscale){
 	atmalpha*=cuglobal->atmscale->p[isim];
     }
-    for(int ips=0; ips<cudata->nps; ips++){
+    for(int ips=0; ips<cudata->atm.N(); ips++){
 	const Real dx=cuatm[ips].dx;
 	const Real dy=cuatm[ips].dy;
 	const Real ht=cuatm[ips].ht-hc;

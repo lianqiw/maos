@@ -1628,7 +1628,6 @@ void free_simu(SIM_T *simu){
     free(simu->save);
     free(simu);
 }
-
 /**
    Print out wavefront error information and timing at each time step.
 */
@@ -1677,7 +1676,8 @@ void print_progress(const SIM_T *simu){
 	      status->eval*tkmean, status->other*tkmean,
 	      status->tot*tkmean, status->mean*tkmean,
 	      lapsh,lapsm,resth,restm);
-	if(!isfinite(simu->cle->p[isim*nmod])){
+	extern int NO_EVL;
+	if(!NO_EVL && !isfinite(simu->cle->p[isim*nmod])){
 	    error("Step %d: NaN/inf found: cle is %g\n", isim, simu->cle->p[isim*nmod]);
 	}
     }

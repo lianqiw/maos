@@ -67,6 +67,24 @@ void test_sum(){
     dbg("sum2_wrap %.2f GB/s\n", N*sizeof(Real)/tim2);
     dbg("Result: %g %g %g %g\n", res[0], res[1]-res[0], res[2]-res[1], res[3]-res[2]);
 }
+void gpu_map2map(cumap_t &out, const cumap_t &in, Real dispx, Real dispy, Real alpha, const curmat &cc, char trans){
+    PROP_WRAP_T wrap;
+    Array<PROP_WRAP_T, Gpu> wrap_gpu(1);
+    //cudaMalloc(&wrap_gpu, sizeof(PROP_WRAP_T));
+    gpu_map2map_prep(&wrap, out, in, dispx, dispy, cc);
+    wrap.togpu(wrap_gpu());
+    Real **p;
+    cudaMalloc(&p, sizeof(Real*)*2);
+    const Real *tmp[2]={out(), in()};
+    cudaMemcpy(p, tmp, sizeof(Real*)*2, cudaMemcpyHostToDevice);
+    gpu_map2map_do<<<dim3(4,4,1),dim3(PROP_WRAP_TX,4),0,0>>>
+	(wrap_gpu, p, p+1, 1, 1, alpha, 0, trans);
+    cudaMemcpy(&wrap, wrap_gpu(), sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
+    if(wrap.reverse){
+	cudaFree(wrap.reverse);
+    }
+}
+
 /*Test ray tracing*/
 void test_prop(){
     cudaSetDevice(0);

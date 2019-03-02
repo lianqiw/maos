@@ -118,7 +118,6 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
     if(!cg_data.diff){ //Only this enables async transfer
 	cg_data.diff.init(maxiter+1,1);
-	//DO(cudaMallocHost(&cg_data.diff, sizeof(Real)*(maxiter+1)));
     }
     cg_data.diff.zero();
     Real *diff=cg_data.diff;

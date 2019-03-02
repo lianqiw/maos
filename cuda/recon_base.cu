@@ -39,7 +39,6 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 	double *px2=W0new->x;
 	//int *full;
 	Array<int> full(R_W0->ny, 1);
-	//DO(cudaMallocHost(&full, R_W0->ny*sizeof(int)));
 	//#define W0_BW 1
 	double W1max=dmax(R_W1);
 	double thres=W1max*(1.f-1e-6);
