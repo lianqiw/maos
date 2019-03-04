@@ -102,10 +102,10 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	gpu_set(cuglobal->evlgpu[ievl]);
 	cuglobal->perf.ccb_ol[ievl].init(7,1);//=(Real*)malloc4async(sizeof(Real)*7);
 	cuglobal->perf.ccb_cl[ievl].init(7,1);//=(Real*)malloc4async(sizeof(Real)*7);
-	cuglobal->perf.cc_cl[ievl]=curmat(7,1);
-	cuglobal->perf.cc_ol[ievl]=curmat(7,1);
-	cuglobal->perf.coeff[ievl]=curmat(7,1);
-	cuglobal->perf.opd[ievl]=curmat(aper->locs->nloc, 1);
+	cuglobal->perf.cc_cl[ievl].init(7,1);
+	cuglobal->perf.cc_ol[ievl].init(7,1);
+	cuglobal->perf.coeff[ievl].init(7,1);
+	cuglobal->perf.opd[ievl].init(aper->locs->nloc, 1);
     }
     if(!parms->sim.evlol){
 	if(parms->evl.cov && parms->gpu.psf){

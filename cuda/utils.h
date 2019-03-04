@@ -128,7 +128,8 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
     if(!*dest){
 	own=1;
-	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
+	*dest=(M*)new Gpu<M>[nx*ny];
+	//DO(cudaMalloc(dest, nx*ny*sizeof(M)));
 	if(cuda_dedup){
 	    lock_t tmp(cuglobal->memmutex);
 	    cuglobal->memhash[key]=*dest;
@@ -148,7 +149,7 @@ cp2gpu(Array<M,Gpu>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	}
 	cp2gpu(dest(), src, nx, ny, stream);
     }else{
-	M *tmp=0;
+	M*tmp=0;
 	int own=cp2gpu(&tmp, src, nx, ny, stream);
 	dest=Array<M, Gpu>(nx, ny, tmp, own);
     }
@@ -175,24 +176,6 @@ static inline void cp2gpu(cucmat &dest, const zmat*src, cudaStream_t stream=0){
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
 
-/* A few special cases to avoid N match to cell*/
-template<typename M>
-void cp2gpu(M**dest, const dmat*src){
-    if(!src) return;
-    cp2gpu(dest, src->p, src->nx, src->ny);
-}
-
-template<typename M>
-void cp2gpu(M**dest, const cmat*src){
-    if(!src) return;
-    cp2gpu(dest, src->p, src->nx, src->ny);
-}
-
-template<typename M>
-void cp2gpu(M**dest, const zmat*src){
-    if(!src) return;
-    cp2gpu(dest, src->p, src->nx, src->ny);
-}
 void cp2gpu(cumapcell &dest, const mapcell *source);
 void cp2gpu(cusp &dest, const dsp *src, int tocsr);
 void cp2gpu(cusp &dest, const dspcell *src, int tocsr);

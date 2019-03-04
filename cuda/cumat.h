@@ -35,15 +35,20 @@ static inline void cuwritedata(const Array<T, Gpu> &A, file_t *fp){
     }else{
 	error("Invalid type\n");
     }
+    char *header=0;
+    if(A.header.length()){
+	header=strdup(A.header.c_str());
+    }
     if(A && A.Nx()>0 && A.Ny()>0){
 	T *tmp=(T*)malloc(A.Nx()*A.Ny()*sizeof(T));
 	cudaMemcpy(tmp, A(), A.Nx()*A.Ny()*sizeof(T), cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
-	writearr(fp, 0, sizeof(T), magic, NULL, tmp, A.Nx(), A.Ny());
+	writearr(fp, 0, sizeof(T), magic, header, tmp, A.Nx(), A.Ny());
 	free(tmp);
     }else{
-	writearr(fp, 0, sizeof(T), magic, NULL, NULL, 0, 0);
+	writearr(fp, 0, sizeof(T), magic, header, NULL, 0, 0);
     }
+    free(header);
 }
 template <typename T>
 static inline void cuwrite(const Array<T, Gpu> &A, const char *format, ...)CHECK_ARG(2){
@@ -54,7 +59,7 @@ static inline void cuwrite(const Array<T, Gpu> &A, const char *format, ...)CHECK
 }
 
 template <typename T>
-static inline void cuwrite(const cucell<T, Gpu> &A, const char *format, ...)CHECK_ARG(2){
+static inline void cuwrite(const Cell<T, Gpu> &A, const char *format, ...)CHECK_ARG(2){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     header_t header={MCC_ANY, A?(uint64_t)A.Nx():0, A?(uint64_t)A.Ny():0, NULL};
@@ -68,7 +73,7 @@ static inline void cuwrite(const cucell<T, Gpu> &A, const char *format, ...)CHEC
 }
 
 template <typename T>
-static inline void cucellcp(cucell<T, Gpu> &out, const cucell<T, Gpu>&in, cudaStream_t stream){
+static inline void cucellcp(Cell<T, Gpu> &out, const Cell<T, Gpu>&in, cudaStream_t stream){
     if(!out){
 	out=in.New();
     }

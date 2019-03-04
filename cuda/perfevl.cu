@@ -565,7 +565,6 @@ void gpu_perfevl_save(SIM_T *simu){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curmat &pp=cuglobal->perf.psfcl[iwvl+nwvl*ievl];
 		    curscale(pp, scale, stream);
-		    free(pp.header);
 		    pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
 		    zfarr_push(simu->save->evlpsfmean[ievl], isim*nwvl+iwvl, pp, stream);
 		    curscale(pp, 1./scale, stream);
@@ -580,7 +579,6 @@ void gpu_perfevl_save(SIM_T *simu){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curmat &pp=cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl];
 		    curscale(pp, scale, stream);
-		    free(pp.header);
 		    pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
 		    zfarr_push(simu->save->evlpsfmean_ngsr[ievl], isim*nwvl+iwvl, pp, stream);
 		    curscale(pp, 1./scale, stream);

@@ -232,7 +232,8 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	}else if (id!=MCC_ANY){
 	    uint32_t id2=A->id;
 	    if((id & id2)!=id && (id & id2) != id2){
-		error("id=%u, id2=%u, mismatch\n", id, id2);
+		warning("id=%u, id2=%u, mismatch\n", id, id2);
+		id=id2;
 	    }
 	}
     }else if(!id){
@@ -248,7 +249,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	}
 	id=0;/*determine id first for empty cell*/
 	if(nx && ny){
-	    for(long ix=0; ix<(long)(nx*ny); ix++){
+	    for(uint64_t ix=0; ix<(nx*ny); ix++){
 		if(A->p[ix]){
 		    id=A->p[ix]->id;
 		    if(!id){
@@ -263,7 +264,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
 	write_header(&header, fp);
 	if(id){
-	    for(long ix=0; ix<(long)(A->nx*A->ny); ix++){
+	    for(long ix=0; ix<(A->nx*A->ny); ix++){
 		writedata_by_id(fp, A->p[ix], 0);
 	    }
 	}

@@ -62,26 +62,11 @@ void zfarr_push(zfarr *ca, int i, const void *p){
 	writedata_by_id(ca->fp, 0, ca->id); 
 	ca->cur++;
     }
-    writedata_by_id(ca->fp, p, ca->id);
-    ca->cur++;
+    if(p || !zfisfits(ca->fp)){
+	writedata_by_id(ca->fp, p, ca->id);
+	ca->cur++;
+    }
 }
-/*
-#define zfarr_cell(type)					\
-    void zfarr_##type##cell(zfarr *ca, int i, const type##cell *A){ \
-	zfarr_push(ca, i, A);}					\
-
-#define zfarr_mat(type)					\
-    void zfarr_##type##mat(zfarr *ca, int i, const type##mat *A){	\
-	zfarr_push(ca, i, A);}
-
-zfarr_cell(d);
-zfarr_cell(s);
-zfarr_cell(c);
-zfarr_cell(z);
-zfarr_mat(d);
-zfarr_mat(s);
-zfarr_mat(c);
-zfarr_mat(z);*/
 
 /**
    Close the zfarr.

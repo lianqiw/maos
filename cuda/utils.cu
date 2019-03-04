@@ -294,8 +294,8 @@ static void add2cpu(T * restrict *dest, R alpha, const S *src, R beta, long n,
 		    cudaStream_t stream, pthread_mutex_t *mutex){
     S *tmp=0;
     tmp=(S*)malloc(n*sizeof(S));
-    DO(cudaMemcpyAsync(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost, stream));
     CUDA_SYNC_STREAM;
+    DO(cudaMemcpy(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost));
     if(!*dest){
 	*dest=(T*)malloc(sizeof(T)*n);
     }
@@ -352,10 +352,12 @@ add2cpu_cell(z, float, cuccell)
 	    return;							\
 	}								\
 	if(!*out) *out=dnew(in.Nx(), in.Ny());				\
-	DO(cudaMemcpyAsync((*out)->p, in(), in.N()*sizeof(double),	\
-			   cudaMemcpyDeviceToHost, stream));		\
+	dmat *pout=*out;						\
 	CUDA_SYNC_STREAM;						\
-	if(in.header) (*out)->header=strdup(in.header);	\
+	DO(cudaMemcpy(pout->p, in(), in.N()*sizeof(double),		\
+		      cudaMemcpyDeviceToHost));				\
+	if(pout->header) free(pout->header);				\
+	if(in.header.length()) pout->header=strdup(in.header.c_str());	\
     }
 
 cp2cpu_same(dmat,dzero,dnew,double)
@@ -378,7 +380,7 @@ void cp2cpu(zmat **out, const cucmat &in, cudaStream_t stream){
 }
 #endif
 #define cp2cpu_cell(S, T)						\
-    void cp2cpu(S##cell **out, const cucell<T, Gpu> &in, cudaStream_t stream){ \
+    void cp2cpu(S##cell **out, const Cell<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in){							\
 	    if(*out) S##cellzero(*out);					\
 	    return;							\

@@ -17,9 +17,11 @@
 */
 #ifndef AOS_CUDA_TYPES_H
 #define AOS_CUDA_TYPES_H
+#include <typeinfo>
+#include <string>
+using std::string;
 #include "common.h"
 #include "kernel.h"
-#include <typeinfo>
 class nonCopyable{
 private:
     nonCopyable& operator=(nonCopyable&);
@@ -27,6 +29,10 @@ private:
 protected:
     nonCopyable(){}
 };
+/**
+   Cpu, Pinned, and GPU template classes are created to allow different memory
+   allocation.
+*/
 //Standard CPU memory. 
 template<typename T>
 class Cpu{
@@ -34,33 +40,27 @@ class Cpu{
 public:
     static void zero(T *p, size_t size, cudaStream_t stream){
 	(void) stream;
-	//info("Cpu::zero %s with %ld\n", typeid(T).name(), sizeof(T));
 	if(p) memset(p, 0, size*sizeof(T));
     }
-    //Operator new is called before constructor is called.
     void *operator new[](size_t size){
-	//info("Cpu::new for %s\n", typeid(T).name());
 	return ::calloc(size, 1);
     }
-    //Must use same pair. new/delete, alloc/free.
     void operator delete[](void*p){
 	::free(p);
     }
+  
 };
 
 //Pinned (page locked) CPU memory
 template<typename T>
 class Pinned:public Cpu<T>{
-    T val;
 public:
     void *operator new[](size_t size){
 	void *p=0;
 	cudaMallocHost(&p, size);
 	memset(p, 0, size);
-	//info("Pinned::new for %s\n", typeid(T).name());
 	return p;
     }
-    //static void free(void *p){
     void operator delete[](void*p){
 	cudaFreeHost(p);
     }
@@ -75,21 +75,12 @@ public:
 	void *p=0;
 	DO(cudaMalloc(&p, size));
 	DO(cudaMemset(p, 0, size));
-	/*if(!cuda_dedup){
-	    info("Cuda::new for %s, %p, %ld\n",  typeid(T).name(), p, size);
-	    print_backtrace();
-	    }*/
 	return p;
     }
     void operator delete[](void*p){
-	/*if(!cuda_dedup) {
-	    info("Cuda::delete for %s, %p\n",  typeid(T).name(), p);
-	    print_backtrace();
-	    }*/
 	DO(cudaFree(p));
     }
     static void zero(T *p, size_t size, cudaStream_t stream){
-//	info("Cuda::zero %s with %ld\n", typeid(T).name(), size);
 	if(p){
 	    if(stream==(cudaStream_t)-1){
 		DO(cudaMemset(p, 0, size));
@@ -99,44 +90,155 @@ public:
 	}
     }
 };
+
 template <typename T, template<typename> class Dev=Cpu >
 class Array;
+/**
+   Functions to Set memory to zero. Array of fundamental types are treated
+   differently from array of Arrays.
+ */
 template <typename T, template<typename> class Dev >
 void zero(Dev<T>*p, long n, cudaStream_t stream){
     Dev<T>::zero((T*)p, n, stream);
-}
-//partially specialyze
-template <typename T, template<typename> class Dev >
-void zero(Dev<Array<T> >*p, long n, cudaStream_t stream){
-    for(long i=0; i<n; i++){
-	zero(p[i], p[i].N(), stream);
+    if(sizeof(T)>8){
+	warning("call dev zero for %s. This will lead to code error.\n", typeid(T).name());
     }
 }
+
+//partially specialize for array of array
+template <typename T, template<typename> class Dev >
+void zero(Cpu<Array<T, Dev> >*p_, long n, cudaStream_t stream){
+    Array<T, Dev>*p=(Array<T, Dev>*)p_;
+    for(long i=0; i<n; i++){
+	zero((Dev<T>*)p[i](), p[i].N(), stream);
+    }
+}
+/**
+   RefP is a reference counting for pointers. 
+*/
+template <typename T, template<typename> class Dev>
+class RefP{
+private:
+    Dev<T> *p0; //The allocated memory address. p>=p0;
+    int *nref;  //The reference counter. Delete p0 only if nref is valid and has value of 1.
+protected:
+    T *p;  //The memory address being used.
+private:
+    void _init(long n){
+	if(n>0){
+	    p0=new Dev<T>[n];
+	    nref=new int;
+	    nref[0]=1;
+	}
+	p=(T*)p0;
+    }
+    void _deinit(){
+	if(nref && !atomicadd(nref, -1)){
+	    delete[] p0;
+	    delete nref;
+	}
+    }
+public:
+    //Constructors and related
+    RefP():p(0),p0(0),nref(0){
+    }
+    RefP(long n, T *pin=0, int own=1):p0((Dev<T>*)pin),nref(0){
+	if(n>0){
+	    if(!p0){
+		p0=new Dev<T>[n];
+		own=1;
+	    }
+	    if(own){
+		nref=new int;
+		nref[0]=1;
+	    }
+	}
+	p=(T*)p0;
+    }
+    //Create a new pointer with offset for p.
+    RefP(const RefP& pin, long offset=0):p0(pin.p0),p(pin.p+offset),nref(pin.nref){
+	if(nref) atomicadd(nref, 1);
+    }
+    
+    RefP &operator=(const RefP &in){
+	if(this!=&in){
+	    p=in.p;
+	    p0=in.p0;
+	    nref=in.nref;
+	    if(nref) atomicadd(nref, 1);
+	}
+	return *this;
+    }
+    void init(long n=0){
+	_deinit();
+	if(n>0){
+	    p0=new Dev<T>[n];
+	    nref=new int;
+	    nref[0]=1;
+	}else{
+	    p0=0;
+	    nref=0;
+	}
+	p=(T*)p0;	
+    }
+    //Destructors and related
+    ~RefP(){
+	_deinit();
+    }
+    
+    //Access operators
+    //() operator
+    T* operator()(){
+	return (T*)p;
+    }
+    const T* operator()() const{
+	return (T*)p;
+    }
+    //conversion operator
+    operator T*(){
+	return (T*)p;
+    }
+    operator const T*()const{
+	return (T*)p;
+    }
+    T& operator()(int i){
+	return p[i];
+    }
+    const T& operator()(int i)const{
+	return p[i];
+    }
+    bool operator==(const RefP&in){
+	return p==in.p;
+    }
+    T*operator+(int i){
+	return p+i;
+    }
+    const T* operator+(int i)const {
+	return p+i;
+    }
+};
 /**
    Generic array of basic types and classes.
    Need to call new on p to handle cases when T is a class.
 */
 template <typename T, template<typename> class Dev>
-class Array{
-private:
-    T *p;
+class Array:public RefP<T, Dev>{
+    typedef RefP<T, Dev> Parent;
+protected:
     long nx;
     long ny;
-    int *nref;
 public:
-    char *header;
-    operator T*(){
-	return p;
+    string header;
+    using Parent::operator();
+    using Parent::p;
+    
+    T&operator ()(int ix, int iy){
+	return p[ix+nx*iy];
     }
-    operator const T*()const{
-	return p;
+    const T&operator ()(int ix, int iy)const{
+	return p[ix+nx*iy];
     }
-    T* operator()(){
-	return p;
-    }
-    const T* operator()() const{
-	return p;
-    }
+    
     T *Col(int icol){
 	return p+nx*icol;
     }
@@ -156,79 +258,36 @@ public:
     operator bool()const{
 	return (nx && ny);
     }
-    
-    T& operator()(int i){
-	return p[i];
-    }
-    const T& operator()(int i)const{
-	return p[i];
-    }
-    T&operator ()(int ix, int iy){
-	return p[ix+nx*iy];
-    }
-    const T&operator ()(int ix, int iy)const{
-	return p[ix+nx*iy];
-    }
-  
-    void init(long nxi, long nyi){
-	deinit();
+ 
+    void init(long nxi=0, long nyi=1){
 	nx=nxi;
 	ny=nyi;
-	if(nxi && nyi){
-	    p=(T*)new Dev<T>[nxi*nyi];//(T*)Dev::calloc(nx*ny*sizeof(T));
-	    nref=new int;
-	    nref[0]=1;
-	}
+	Parent::init(nxi*nyi);
     }
     //Constructors 
     Array(long nxi=0, long nyi=1, T *pi=NULL, int own=1)
-	:nx(nxi),ny(nyi),p(pi),nref(NULL),header(NULL){
-	if(nxi >0 && nyi >0){
-	    if(!p){
-		p=(T*)new Dev<T>[nxi*nyi]; //p=(T*)Dev::calloc(nx*ny*sizeof(T));
-		own=1;
-	    }
-	    if(own){
-		nref=new int;
-		nref[0]=1;
-	    }
-	}
+	:Parent(nxi*nyi, pi, own),nx(nxi),ny(nyi){
     }
+    //Use default destructor
+
     //Need to handle both basic types and classes. Use template function.
     //Cannot partially specialize single member function.
     void zero(cudaStream_t stream=(cudaStream_t)-1){
 	::zero((Dev<T>*)p, nx*ny, stream);
     }
-    void deinit(){
-	if(nref && !atomicadd(nref, -1)){
-	    delete[] (Dev<T>*)p;
-	    delete nref;
-	    if(header) free(header);
-	}
-	p=NULL;
-	nref=0;
-    }
-    ~Array(){
-	deinit();
-    }
-    Array(const Array &in):p(in.p),nx(in.nx),ny(in.ny),nref(in.nref),header(in.header){
-	if(nref) nref[0]++;
+    
+    Array(const Array &in):Parent(in),nx(in.nx),ny(in.ny),header(in.header){
     }
     Array &operator=(const Array &in){
 	if(this!=&in){
-	    deinit();
-	    p=in.p;
+	    Parent::operator=(in);
 	    nx=in.nx;
 	    ny=in.ny;
-	    nref=in.nref;
 	    header=in.header;
-	    if(nref) nref[0]++;
 	}
 	return *this;
     }
-    bool operator==(const Array&in){
-	return p==in.p;
-    }
+ 
     Array Vector(){
 	Array tmp=*this;
 	tmp.nx=tmp.nx*tmp.ny;
@@ -237,169 +296,85 @@ public:
     }
     Array trans(stream_t &stream);
 };
-/*template <typename T, class Dev>
-  class cucell :public Array<T, Cpu>{
 
-  };*/
+/**
+   Cell is a special Array that can stores multiple Arrays of data in continuous
+   region.
+*/
+
 template <typename T, template<typename> class Dev=Cpu >
-class cucell{
+class Cell:public Array<Array<T,Dev>,Cpu>{
 private:
-    typedef Array<T,Dev > Tmat;
-    Tmat *p;
-    long nx;
-    long ny;
-    Tmat m; /*contains the continuous data*/
-    int *nref;
+    typedef Array<T,Dev> TMat;
+    typedef Array<Array<T,Dev>,Cpu> Parent;
+    TMat m; /*contains the continuous data*/
 public:
-    //T **pm; /*contains the data pointer in each cell in gpu.*/
-    //T **pm_cpu;/*contains the data pointer in each cell in cpu.*/
-    Array<T*,Pinned>pm_cpu;
-    Array<T*,Gpu>pm;
-    Tmat &M(){
+    Array<T*,Pinned>pm_cpu;/*contains the data pointer in each cell in gpu.*/
+    Array<T*,Gpu>pm;/*contains the data pointer in each cell in cpu.*/
+    using Parent::operator();
+    using Parent::p;
+    using Parent::nx;
+    using Parent::ny;
+    TMat &M(){
 	return m;
     }
-    const Tmat&M() const{
+    const TMat&M() const{
 	return m;
     }
-    Tmat* operator()(){
-	return p;
-    }
-    const Tmat* operator()() const{
-	return p;
-    }
-    
-    Tmat& operator()(int i){
-	return p[i];
-    }
-    const Tmat& operator()(int i)const{
-	return p[i];
-    }
-    Tmat& operator[](int i){
-	return p[i];
-    }
-    const Tmat& operator[](int i)const{
-	return p[i];
-    }
-    Tmat& operator()(int ix, int iy){
-	return p[ix+iy*nx];
-    }
-    const Tmat& operator()(int ix, int iy)const{
-	return p[ix+iy*nx];
-    }
-    long Nx()const{
-	return nx;
-    }
-    long Ny()const{
-	return ny;
-    }
-    long N()const{
-	return nx*ny;
-    }
-    Tmat *operator+(int off){
-	return p+off;
-    }
-    const Tmat*operator+(int off)const{
-	return p+off;
-    }
-    bool operator==(const cucell&in){
-	return p==in.p;
-    }
+  
     void p2pm(cudaStream_t stream=(cudaStream_t)-1){
-	if(!nref || nref[0]>1){
-	    error("cannot act on referenced array\n");
-	}
-	if(!p) error("p must not be null\n");
-	pm_cpu.init(nx, ny);
-	for(long i=0; i<nx*ny; i++){
-	    pm_cpu[i]=p[i]();
-	}
-	pm.init(nx,ny);
-	if(stream==(cudaStream_t)-1){
-	    cudaMemcpy(pm(), pm_cpu(), sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
-	}else{
-	    cudaMemcpyAsync(pm(), pm_cpu(), sizeof(T*)*nx*ny,cudaMemcpyHostToDevice, stream);
+	if(nx && ny){
+	    pm_cpu.init(nx,ny);
+	    pm.init(nx,ny);
+	    for(long i=0; i<nx*ny; i++){
+		pm_cpu[i]=p[i]();
+	    }
+	    if(stream==(cudaStream_t)-1){
+		cudaMemcpy(pm(), pm_cpu(), sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
+	    }else{
+		cudaMemcpyAsync(pm(), pm_cpu(), sizeof(T*)*nx*ny,cudaMemcpyHostToDevice, stream);
+	    }
 	}
     }
-    void init(long nxi, long nyi){
-	nx=nxi;
-	ny=nyi;
-	if(nx&&ny) {
-	    p=new Tmat[nx*ny];
-	    nref=new int;
-	    nref[0]=1;
-	}else{
-	    p=0;
-	    nref=0;
-	}
+  
+    Cell(long nxi=0, long nyi=1):Parent(nxi,nyi){
+	p2pm();
     }
-    cucell(long nxi=0, long nyi=1){
-	init(nxi, nyi);
-    }
-    cucell(long nxi, long nyi, long mx, long my, T *pin=NULL){
-	init(nxi, nyi);
+    Cell(long nxi, long nyi, long mx, long my, T *pin=NULL):Parent(nxi,nyi){
 	if(mx && my){
-	    m=Tmat(mx*my*nxi*nyi,1,pin,pin?0:1);
+	    m=TMat(mx*my*nxi*nyi,1,pin, 0);
 	    for(int i=0; i<nxi*nyi; i++){
-		p[i]=Tmat(mx, my, m()+i*(mx*my), 0);
+		p[i]=TMat(mx, my, m()+i*(mx*my), 0);
 	    }
 	    p2pm();
 	}
     }
     template <typename L>
-    cucell(const long nxi, const long nyi, L *mx, L *my, T *pin=NULL){
-	init(nxi,nyi);
+    Cell(const long nxi, const long nyi, L *mx, L *my, T *pin=NULL):Parent(nxi,nyi){
 	long tot=0;
 	for(long i=0; i<nxi*nyi; i++){
 	    tot+=mx[i]*(my?my[i]:1);
 	}
-	m=Tmat(tot,1,pin,pin?0:1);
+	m=TMat(tot,1,pin,0);
 	tot=0;
 	for(long i=0; i<nxi*nyi; i++){
 	    if(mx[i]){
-		p[i]=Tmat(mx[i],(my?my[i]:1),m()+tot, 0);
-		tot+=mx[i]*(my?my[i]:1);
+		p[i]=TMat(mx[i],(my?my[i]:1),m()+tot, 0);
+		tot+=p[i].N();
 	    }
 	}
 	p2pm();
     }
-    cucell(const cucell&in):p(in.p),nx(in.nx),ny(in.ny),m(in.m),nref(in.nref),pm(in.pm),pm_cpu(in.pm_cpu){
-	if(nref){
-	    nref[0]++;
-	}
-    }
-    cucell& operator=(const cucell&in){
-	if(this!=&in){
-	    deinit();
-	    p=in.p;
-	    nx=in.nx;
-	    ny=in.ny;
-	    m=in.m;
-	    nref=in.nref;
-	    if(nref) nref[0]++;
-	    pm=in.pm;
-	    pm_cpu=in.pm_cpu;
-	}
-	return *this;
-    }
-    ~cucell(){
-	deinit();
-    }
-    void deinit(){
-	if(nref && !atomicadd(nref, -1)){
-	    delete [] p;
-	    delete nref;
-	}
-	pm_cpu.deinit();
-	pm.deinit();
-	p=0;
-	nref=0;
-	nx=0;
-	ny=0;
+    //Use default copy constructor and copy assignment operator
+    void init(long nxi=0, long nyi=1){
+	Parent::init(nxi*nyi);
+	pm_cpu.init();
+	pm.init();
     }
     //Create a similar cell from this cell.
-    cucell New()const{
+    Cell New()const{
 	if(!m){
-	    return cucell(nx, ny);
+	    return Cell(nx, ny);
 	}else{
 	    long mx[nx*ny];
 	    long my[nx*ny];
@@ -407,42 +382,28 @@ public:
 		mx[i]=p[i].Nx();
 		my[i]=p[i].Ny();
 	    }
-	    return cucell(nx, ny, mx, my);
+	    return Cell(nx, ny, mx, my);
 	}
     }
  
     void replace(T *pnew, cudaStream_t stream){
-	/*replace the data with a new set. free original data if free_original
-	  is set. we don't own the pnew.*/
+	/*replace the data with a new set. we don't own the pnew.*/
 	if(m){
-	    m=Tmat(m.Nx(), m.Ny(), pnew, 0);//replace m
+	    m=TMat(m.Nx(), m.Ny(), pnew, 0);//replace m
 	}
 
 	for(long i=0; i<nx*ny; i++){
-	    p[i]=Tmat(p[i].Nx(), p[i].Ny(), pnew, 0);//don't own the data pnew
+	    p[i]=TMat(p[i].Nx(), p[i].Ny(), pnew, 0);//don't own the data pnew
 	    pnew+=p[i].N();
 	}
 	p2pm(stream);
-    }
- 
-    operator bool()const{
-	return (nx && ny);
-    }
-    void zero(cudaStream_t stream=(cudaStream_t)-1){
-	if(m){
-	    m.zero(stream);
-	}else{
-	    for(long i=0; i<nx*ny; i++){
-		p[i].zero(stream);
-	    }
-	}
     }
 };
 typedef class Array<int, Gpu>   cuimat;
 typedef class Array<Real, Gpu>   curmat;
 typedef class Array<Comp, Gpu>   cucmat;
-typedef class cucell<Real, Gpu>  curcell;
-typedef class cucell<Comp, Gpu>  cuccell;
+typedef class Cell<Real, Gpu>  curcell;
+typedef class Cell<Comp, Gpu>  cuccell;
 enum TYPE_SP{
     SP_CSC,//compressed sparse column major. 
     SP_CSR,//compressed sparse row major. 
@@ -494,7 +455,7 @@ public:
 	if(nref) nref[0]++;
     }
     cusp &operator=(const cusp&in){
-	if(&p!=&in.p){
+	if(this!=&in){
 	    reset();
 	    p=in.p;
 	    i=in.i;

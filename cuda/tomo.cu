@@ -206,10 +206,10 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	dcellfree(pdftt);
     }
     {
-	GPp=cucell<short2,Gpu>(nwfs, 1);
+	GPp=Cell<short2,Gpu>(nwfs, 1);
 	GP=cuspcell(nwfs, 1);
 	GPscale=new Real[nwfs];
-	saptr=cucell<int,Gpu>(nwfs, 1);
+	saptr=Cell<int,Gpu>(nwfs, 1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs=parms->wfsr[iwfs].powfs;
 	    const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
