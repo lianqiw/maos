@@ -10,6 +10,8 @@ build:
   # install the necessary build tools when needed
   before_script: 
     - apt update && apt -y install make autoconf 
+    - apt -y install gfortran
+    - update-alternatives --install /usr/bin/gfortran gfortran /usr/local/bin/gfortran 999
     - apt -y install libblas-dev liblapack-dev
   script: 
     - ./autogen.sh 
