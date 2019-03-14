@@ -10,6 +10,7 @@ build:
   # install the necessary build tools when needed
   before_script: 
     - apt update && apt -y install make autoconf 
+    - apt -y install libblas-dev liblapack-dev
   script: 
     - ./autogen.sh 
     - mkdir build 
@@ -18,8 +19,9 @@ build:
     - make
   artifacts:
     paths:
-      - bin
+      - build/bin
       - config
+      - build/config.log
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:
