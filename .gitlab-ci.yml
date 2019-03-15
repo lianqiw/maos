@@ -11,13 +11,12 @@ build:
   before_script: 
     - apt update && apt -y install make autoconf 
     - apt -y install gfortran || update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-6 1
-    - apt -y install libfftw3-dev
-    - apt -y install libblas-dev liblapack-dev
+    - apt -y install libfftw3-dev libblas-dev liblapack-dev libcholmod3 libwebsockets-dev
   script: 
     - ./autogen.sh 
     - mkdir -p build 
     - cd build 
-    - ../configure
+    - ../configure --disable-scheduler --disable-websocket
     - make
     - cd bin
     - ../../scripts/maos_check.sh 5 > maos_check.txt
@@ -28,7 +27,7 @@ build:
   cache:
     paths:
       - build
-      - /root/.aos
+      - ~/.aos
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:
