@@ -19,7 +19,7 @@ build:
     - su lianqiw -c "../configure --disable-scheduler --disable-websockets && make"
     - cd bin
     - su lianqiw -c "./maos -h && ./maos aper.d=5 "
-    - su lianqiw -c "../../scripts/maos_check.sh 5 > maos_check.txt"
+    #- su lianqiw -c "../../scripts/maos_check.sh 5 > maos_check.txt"
   artifacts:
     paths:
       - build/config.log
