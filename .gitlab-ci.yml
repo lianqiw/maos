@@ -13,8 +13,7 @@ build:
     #- apt -y install gfortran || update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-6 1
     #- apt -y install libfftw3-dev libblas-dev liblapack-dev #libcholmod3 libwebsockets-dev
   script: 
-    - umask 000
-    - useradd -m lianqiw
+    #- useradd -m lianqiw
     - su lianqiw -c "whoami && ./autogen.sh && mkdir -p build "
     - cd build
     - su lianqiw -c "../configure --disable-scheduler --disable-websockets && make"
