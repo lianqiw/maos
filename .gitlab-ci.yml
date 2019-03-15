@@ -13,12 +13,15 @@ build:
     - apt -y install gfortran || update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-6 1
     - apt -y install libfftw3-dev libblas-dev liblapack-dev #libcholmod3 libwebsockets-dev
   script: 
+    - umask 000
     - useradd maos
-    - chown -R maos:maos .
+    - mkdir ~/.aos
+    - chown -R maos:maos . ~/.aos
     - su maos -c "whoami && ./autogen.sh && mkdir -p build "
     - cd build
-    - su maos -c "../configure --disable-scheduler --disable-websockets "
-    - su maos -c "make &&  cd bin && ./maos -h && ./maos aper.d=5 "
+    - su maos -c "../configure --disable-scheduler --disable-websockets && make"
+    - cd bin
+    - su maos -c "./maos -h && ./maos aper.d=5 "
     - su maos -c "../../scripts/maos_check.sh 5 > maos_check.txt"
   artifacts:
     paths:
