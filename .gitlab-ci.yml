@@ -26,11 +26,12 @@ build:
   artifacts:
     paths:
       - build/config.log
+      - builds/maos/maos/build/external//compile.log
       - build/bin/maos_check*
-  cache:
-    paths:
-      - build
-      - ~/.aos
+  #cache:
+  #  paths:
+  #    - build
+  #    - ~/.aos
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:
