@@ -466,6 +466,7 @@ compile(){
 	echo "Compiled $name successfully."
     else
 	echo "Failed to compile $name. Please see $fnlog for details"
+	cat $fnlog
     fi
 }
 function set_lapack(){
