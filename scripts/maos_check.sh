@@ -50,6 +50,7 @@ function run_maos(){
     else
 	RMS[ii]='error'
 	a=0
+	ans=1
     fi
 
     b=${REF[$ii]%.*}
@@ -126,3 +127,4 @@ run_maos dm_single.conf fov_oa.conf recon.split=1
 
 echo ${RMS[*]}
 
+exit ans

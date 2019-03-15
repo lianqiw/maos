@@ -471,7 +471,7 @@ compile(){
 function set_lapack(){
     type=$1
     case $type in
-	mkl)
+	mkl*)
 	    if test "$type" = "mkl-download" -a "$mkl_avail" = "yes";then
 		download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
 	    fi
