@@ -15,16 +15,11 @@ build:
   script: 
     - useradd maos
     - chown -R maos:maos .
-    - su maos
-    - ./autogen.sh 
-    - mkdir -p build 
-    - cd build 
-    - ../configure --disable-scheduler --disable-websockets #--enable-mkl
-    - make
-    - cd bin
-    - ./maos -h
-    - ./maos aper.d=5
-    - ../../scripts/maos_check.sh 5 > maos_check.txt
+    - su maos -c " 
+    whoami && ./autogen.sh && mkdir -p build &&  cd build &&
+    ../configure --disable-scheduler --disable-websockets &&\
+    make &&  cd bin && ./maos -h && ./maos aper.d=5 &&\
+    ../../scripts/maos_check.sh 5 > maos_check.txt"
   artifacts:
     paths:
       - build/config.log
