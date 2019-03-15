@@ -16,7 +16,7 @@ build:
     - useradd maos
     - chown -R maos:maos .
     - su maos -c " \
-    whoami && ./autogen.sh && mkdir -p build &&  cd build &&
+    whoami && ./autogen.sh && mkdir -p build &&  cd build &&\
     ../configure --disable-scheduler --disable-websockets &&\
     make &&  cd bin && ./maos -h && ./maos aper.d=5 &&\
     ../../scripts/maos_check.sh 5 > maos_check.txt"
