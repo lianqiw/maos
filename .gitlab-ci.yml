@@ -1,0 +1,48 @@
+# This file is a template, and might need editing before it works on your project.
+# use the official gcc image, based on debian
+# can use verions as well, like gcc:5.2
+# see https://hub.docker.com/_/gcc/
+image: gcc
+
+build:
+  stage: build
+  # instead of calling g++ directly you can also use some build toolkit like make
+  # install the necessary build tools when needed
+  before_script: 
+    - apt update && apt -y install make autoconf 
+    #- apt -y install gfortran || update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-6 1
+    #- apt -y install libfftw3-dev libblas-dev liblapack-dev libcholmod3 libwebsockets-dev
+  script: 
+    - ./autogen.sh 
+    - mkdir -p build 
+    - cd build 
+    - ../configure --disable-scheduler --disable-websockets --enable-mkl
+    - make
+    - cd bin
+    - ./maos -h
+    - ./maos aper.d=5
+    - ../../scripts/maos_check.sh 5 > maos_check.txt
+  artifacts:
+    paths:
+      - build/config.log
+      - build/bin/maos_check*
+  cache:
+    paths:
+      - build
+      - ~/.aos
+  # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
+  # cache:
+  #   paths:
+  #     - "*.o"
+
+# run tests using the binary built before
+#test:
+#  stage: test
+#  script:
+#    - cd build/bin
+#    - ../../scripts/maos_check.sh 5 > maos_check.txt
+#  artifacts:
+#    paths:
+#      - build/bin/maos_check*
+#      
+    
