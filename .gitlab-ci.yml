@@ -10,13 +10,16 @@ build:
   # install the necessary build tools when needed
   before_script: 
     - apt update && apt -y install make autoconf 
-    #- apt -y install gfortran || update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-6 1
-    #- apt -y install libfftw3-dev libblas-dev liblapack-dev libcholmod3 libwebsockets-dev
+    - apt -y install gfortran || update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-6 1
+    - apt -y install libfftw3-dev libblas-dev liblapack-dev #libcholmod3 libwebsockets-dev
   script: 
+    - useradd maos
+    - chown -R maos:maos .
+    - su maos
     - ./autogen.sh 
     - mkdir -p build 
     - cd build 
-    - ../configure --disable-scheduler --disable-websockets --enable-mkl
+    - ../configure --disable-scheduler --disable-websockets #--enable-mkl
     - make
     - cd bin
     - ./maos -h
