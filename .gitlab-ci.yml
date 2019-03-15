@@ -19,7 +19,7 @@ build:
     - cd build 
     - ../configure
     - make
-    - cd build/bin
+    - cd bin
     - ../../scripts/maos_check.sh 5 > maos_check.txt
   artifacts:
     paths:
