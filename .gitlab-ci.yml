@@ -14,7 +14,7 @@ build:
     - apt -y install libfftw3-dev libblas-dev liblapack-dev #libcholmod3 libwebsockets-dev
   script: 
     - umask 000
-    - useradd maos
+    - useradd -m maos
     - mkdir ~/.aos
     - chown -R maos:maos . ~/.aos
     - su maos -c "whoami && ./autogen.sh && mkdir -p build "
@@ -26,7 +26,7 @@ build:
   artifacts:
     paths:
       - build/config.log
-      - builds/maos/maos/build/external//compile.log
+      - build/external/compile.log
       - build/bin/maos_check*
   #cache:
   #  paths:
