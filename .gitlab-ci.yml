@@ -16,7 +16,7 @@ build:
     - ./autogen.sh 
     - mkdir -p build 
     - cd build 
-    - ../configure --disable-scheduler --disable-websockets
+    - ../configure --disable-scheduler --disable-websockets --enable-mkl
     - make
     - cd bin
     - ./maos -h
