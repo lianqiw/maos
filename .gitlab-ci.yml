@@ -15,7 +15,7 @@ build:
     - apt -y install libblas-dev liblapack-dev
   script: 
     - ./autogen.sh 
-    - mkdir build 
+    - mkdir -p build 
     - cd build 
     - ../configure
     - make
