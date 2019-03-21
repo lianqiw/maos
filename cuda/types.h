@@ -268,6 +268,9 @@ public:
     Array(long nxi=0, long nyi=1, T *pi=NULL, int own=1)
 	:Parent(nxi*nyi, pi, own),nx(nxi),ny(nyi){
     }
+    //Create a reference with offset.
+    Array(long nxi,long nyi,const Parent& pi,long offset=0):Parent(pi,offset),nx(nxi),ny(nyi){
+    }
     //Use default destructor
 
     //Need to handle both basic types and classes. Use template function.
@@ -344,7 +347,7 @@ public:
 	if(mx && my){
 	    m=TMat(mx*my*nxi*nyi,1,pin, 0);
 	    for(int i=0; i<nxi*nyi; i++){
-		p[i]=TMat(mx, my, m()+i*(mx*my), 0);
+		p[i]=TMat(mx, my, m, i*(mx*my));
 	    }
 	    p2pm();
 	}
@@ -359,7 +362,7 @@ public:
 	tot=0;
 	for(long i=0; i<nxi*nyi; i++){
 	    if(mx[i]){
-		p[i]=TMat(mx[i],(my?my[i]:1),m()+tot, 0);
+		p[i]=TMat(mx[i],(my?my[i]:1),m, tot);
 		tot+=p[i].N();
 	    }
 	}
