@@ -852,7 +852,7 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad, int *tomo_up
 	cn2est_est(cn2est, parms->cn2.verbose, reset);/*do the CN2 estimation */
 	if(global->simu->cn2est){
 	    global->simu->cn2est->p[0]->p[icn2]=cn2est->r0m;
-	    memcpy(global->simu->cn2est->p[1]->p+icn2*cn2est->htrecon->nx,cn2est->wtrecon->p[0]->p, 
+	    memcpy(PCOL(global->simu->cn2est->p[1], icn2),cn2est->wtrecon->p[0]->p, 
 		   cn2est->htrecon->nx*sizeof(double));
 	}
 	if(parms->cn2.tomo){

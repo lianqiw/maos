@@ -1059,8 +1059,8 @@ static void init_simu_wfs(SIM_T *simu){
     if(recon->cn2est){
 	simu->cn2est=dcellnew(2,1);
 	int ncn2=(parms->sim.end-1)/parms->cn2.step;
-	long nnx[2]={ncn2, ncn2};
-	long nny[2]={1, recon->cn2est->htrecon->nx};
+	long nnx[2]={ncn2, recon->cn2est->htrecon->nx};
+	long nny[2]={1, ncn2};
 	simu->cn2est=dcellnew_mmap(2, 1, nnx, nny, NULL, NULL, "Rescn2_%d.bin", seed);
     }
     if(parms->itpowfs!=-1){
