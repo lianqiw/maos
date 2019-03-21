@@ -163,7 +163,7 @@ fi
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-    OPTScommon+=" -Wshadow -Wall -Wextra -Werror -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla -Wno-cast-function-type" 
+    OPTScommon+=" -Wshadow -Wall -Wextra -Werror -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
 fi
 LDEXE=
 OPTS=
@@ -222,6 +222,9 @@ case "$CN" in
 	    fi
 	    if test "$major" -ge 7 ;then #GCC 7 introduces more checking.
 		COMMON_GCC+=" -Wno-format-truncation -Wno-misleading-indentation -Wimplicit-fallthrough=2"
+	    fi
+	    if test "$major" -ge 8 ;then
+		COMMON_GCC+=" -Wno-cast-function-type"
 	    fi
 	    #GCC4.3 changed meaning of inline to C99
 	    #if test $major -eq 4 -a $minor -lt 5;then
