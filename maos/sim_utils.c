@@ -682,7 +682,7 @@ static void init_simu_evl(SIM_T *simu){
 	    data->scale=1-ht/parms->evl.hs->p[ievl];
 	    data->alpha=-1;
 	    data->wrap=0;
-	    if(simu->cachedm){
+	    if(parms->sim.cachedm){
 		data->mapin=simu->cachedm->p[idm];
 	    }else{
 		if(simu->dmrealsq){
@@ -954,7 +954,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    data->scale=1.-ht/hs;
 	    data->alpha=-1;/*remove dm contribution. */
 	    data->wrap=0;
-	    if(simu->cachedm){
+	    if(parms->sim.cachedm){
 		data->mapin=simu->cachedm->p[idm];
 	    }else{
 		if(simu->dmrealsq){
@@ -1147,6 +1147,9 @@ static void init_simu_dm(SIM_T *simu){
 		}
 	    }
 	}
+    }
+    if(parms->sim.cachedm){
+	prep_cachedm(simu);
     }
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
@@ -1356,9 +1359,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	init_simu_dm(simu);
 	init_simu_moao(simu);
 	init_simu_wfs(simu);
-	if(parms->sim.cachedm){
-	    prep_cachedm(simu);
-	}
 	if(parms->recon.alg==0){
 	    int nstep=parms->sim.end;
 	    if(parms->save.opdr){

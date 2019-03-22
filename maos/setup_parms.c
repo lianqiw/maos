@@ -1487,7 +1487,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(parms->wfs[iwfs].hs<=EPS){
 		parms->wfs[iwfs].hs=parms->powfs[ipowfs].hs;
 	    }else{
-		parms->sim.cachedm=0;
 		wfs_hs+=parms->wfs[iwfs].hs;
 	    }
 	}

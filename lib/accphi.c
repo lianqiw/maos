@@ -356,20 +356,21 @@ void prop(thread_t *data){
     register double dplocx, dplocy, dplocx0, dplocy0;	\
     int nplocx, nplocy;
 
-#define MAKE_CUBIC_COEFF			\
-    double fx[4],fy[4];				\
+#define MAKE_CUBIC_COEFF_X			\
+    double fx[4];				\
     fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);	\
     fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);	\
     fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);	\
-    fx[3]=dplocx*dplocx*(c3+c4*dplocx);		\
-						\
+    fx[3]=dplocx*dplocx*(c3+c4*dplocx);		
+
+#define MAKE_CUBIC_COEFF_Y			\
+    double fy[4];				\
     fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);	\
     fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);	\
     fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);	\
     fy[3]=dplocy*dplocy*(c3+c4*dplocy);			
 
 #define CUBIC_ADD_GRID						\
-    MAKE_CUBIC_COEFF						\
     register double sum=0, sumwt=0;				\
     for(int ky=-1; ky<3; ky++){					\
 	for(int kx=-1; kx<3; kx++){				\
@@ -386,7 +387,6 @@ void prop(thread_t *data){
     }
 
 #define CUBIC_ADD_NONGRID					\
-    MAKE_CUBIC_COEFF						\
     register double sum=0,sumwt=0;				\
     for(int jy=-1; jy<3; jy++){					\
 	for(int jx=-1; jx<3; jx++){				\
@@ -625,8 +625,9 @@ void prop_grid_cubic(ARGIN_GRID,
 	    SPLIT(dplocx,dplocx,nplocx);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
+	    MAKE_CUBIC_COEFF_Y;
 	    dplocx0=1.-dplocx;
-
+	    MAKE_CUBIC_COEFF_X;
 	    CUBIC_ADD_GRID;
 	}else{
 	    missing++;
@@ -665,12 +666,14 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	    if(dplocy>=nymin && dplocy<=nymax){
 		SPLIT(dplocy,dplocy,nplocy);
 		dplocy0=1.-dplocy;
+		MAKE_CUBIC_COEFF_Y;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    if(dplocx>=nxmin && dplocx<=nxmax){
 			SPLIT(dplocx,dplocx,nplocx);
 			dplocx0=1.-dplocx;
+			MAKE_CUBIC_COEFF_X;
 			CUBIC_ADD_GRID;
 		    }else{
 			missing++;
@@ -701,12 +704,14 @@ void prop_grid_map_cubic(ARGIN_GRID,
 	if(dplocy>=nymin && dplocy<=nymax){
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
+	    MAKE_CUBIC_COEFF_Y;
 	    for(int ix=0; ix<nxout; ix++){
 		int iloc=ix+iy*nxout;//output index
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		if(dplocx>=nxmin && dplocx<=nxmax){
 		    SPLIT(dplocx,dplocx,nplocx);
 		    dplocx0=1.-dplocx;
+		    MAKE_CUBIC_COEFF_X;
 		    CUBIC_ADD_GRID;
 		}else{
 		    missing++;
@@ -736,6 +741,7 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 	if(dplocy>=nymin && dplocy<=nymax){
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
+	    MAKE_CUBIC_COEFF_Y;
 	    const int nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
 	    for(int ix=0; ix<nxout; ix++){
 		int iloc=ostat->cols[icol].pos+ix;//output index.
@@ -743,6 +749,7 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 		if(dplocx>=nxmin && dplocx<=nxmax){
 		    SPLIT(dplocx,dplocx,nplocx);
 		    dplocx0=1.-dplocx;
+		    MAKE_CUBIC_COEFF_X;
 		    CUBIC_ADD_GRID;
 		}else{
 		    missing++;
@@ -776,7 +783,9 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 	    SPLIT(dplocx,dplocx,nplocx);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
+	    MAKE_CUBIC_COEFF_Y;
 	    dplocx0=1.-dplocx;
+	    MAKE_CUBIC_COEFF_X;
 	    CUBIC_ADD_NONGRID;
 	}else{
 	    missing++;
@@ -807,12 +816,14 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	    if(dplocy>=nymin && dplocy<=nymax){
 		SPLIT(dplocy,dplocy,nplocy);
 		dplocy0=1.-dplocy;
+		MAKE_CUBIC_COEFF_Y;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    if(dplocx>=nxmin && dplocx<=nxmax){
 			SPLIT(dplocx,dplocx,nplocx);
 		        dplocx0=1.-dplocx;
+			MAKE_CUBIC_COEFF_X;
 		        CUBIC_ADD_NONGRID;
 		    }else{
 			missing++;
@@ -843,12 +854,14 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 	if(dplocy>=nymin && dplocy<=nymax){
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
+	    MAKE_CUBIC_COEFF_Y;
 	    for(int ix=0; ix<nxout; ix++){
 		int iloc=ix+iy*nxout;
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		if(dplocx>=nxmin && dplocx<=nxmax){
 		    SPLIT(dplocx,dplocx,nplocx);
 		    dplocx0=1.-dplocx;
+		    MAKE_CUBIC_COEFF_X;
 		    CUBIC_ADD_NONGRID;
 		}else{
 		    missing++;
