@@ -27,7 +27,7 @@ build:
       - build/bin/maos_check*
   cache:
     paths:
-      - ~/.aos
+      - ~lianqiw/.aos
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:
