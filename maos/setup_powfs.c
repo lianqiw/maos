@@ -1072,8 +1072,8 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    if(powfs[ipowfs].etfsim==powfs[ipowfs].etfprep){
 		powfs[ipowfs].etfsim=0;
 	    }
-	    etf_free(powfs[ipowfs].etfsim, nwvl);
-	    if(istep!=0 && powfs[ipowfs].etfsim2){//reuse etfsim2 as etfsim
+	    etf_free(powfs[ipowfs].etfsim, nwvl); powfs[ipowfs].etfsim=0;
+	    if(istep==powfs[ipowfs].etfsim2->icol){//reuse etfsim2 as etfsim
 		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 		powfs[ipowfs].etfsim2=0;
 	    }else{
@@ -1081,14 +1081,14 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    }
 	}else if(mode==2){/*second pair for interpolation*/
 	    static pthread_t etfthread=0;
-	    if(powfs[ipowfs].etfsim2){
-		error("etsim2 should be null\n");
-		etf_free(powfs[ipowfs].etfsim2, nwvl);
-	    }
 	    if(etfthread){//preparation already running in a thread
 		pthread_join(etfthread, (void**)(void*)&powfs[ipowfs].etfsim2);
 		etfthread=0;
-	    }else{
+	    }
+	    if(powfs[ipowfs].etfsim2 && powfs[ipowfs].etfsim2->icol!=istep){
+		etf_free(powfs[ipowfs].etfsim2, nwvl); powfs[ipowfs].etfsim2=0;
+	    }
+	    if(!powfs[ipowfs].etfsim2){
 		powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
 	    }
 	    //asynchronously preparing for next update.

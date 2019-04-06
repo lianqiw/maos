@@ -663,7 +663,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
    which NGS cannot provide due to low frame rate. After the HPF on lgs
    gradients, our system is NO LONGER affected by sodium layer variation.
 
-   if sim.mffocus==1: The HPF is applied to each LGS WFS indepently. This largely
+   if sim.mffocus==1: The HPF is applied to each LGS WFS independently. This largely
    removes the effect of differential focus. powfs.dfrs is no longer needed. (preferred).
 
    if sim.mffocus==2: We apply a LPF on the average focus from six LGS WFS, and

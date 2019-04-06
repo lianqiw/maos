@@ -27,6 +27,7 @@
 #include <cufft.h>
 #include <cuComplex.h>
 #include <cuda_profiler_api.h>
+
 typedef double2 dcomplex;
 typedef float2 fcomplex;
 #include "gpu.h"

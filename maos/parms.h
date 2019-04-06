@@ -629,6 +629,7 @@ typedef struct DBG_CFG_T{
     int fullatm;      /**<Always copy full atm to GPU.*/
     int lo_blend;     /**<Low order multi-rate control blending scheme.*/
     double eploscale; /**<Scale of eplo*/
+    int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

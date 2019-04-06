@@ -878,7 +878,7 @@ setup_recon_TT(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].trs 
-	   || (parms->recon.split && !parms->powfs[ipowfs].lo)
+	   || (parms->recon.split && !parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].skip)
 	   || parms->powfs[ipowfs].dither==1){
 	    int nsa=powfs[ipowfs].saloc->nloc;
 	    dmat *TT=0;

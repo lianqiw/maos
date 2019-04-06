@@ -250,7 +250,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    petf=etfs[iwvl].p2;
 	    use1d=0;
 	}
-
+	etfs[iwvl].icol=icol;
 	if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
 	    TIC;tic;
 	    for(int illt=0; illt<nllt; illt++){

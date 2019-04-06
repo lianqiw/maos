@@ -49,6 +49,7 @@ typedef struct DTF_T{
 typedef struct ETF_T{
     ccell *p1;           /**<Store the ETF along radial direction when radrot==1*/
     ccell *p2;           /**<Store the 2D ETF when radrot==0*/
+    int icol;            /**<Store the column index*/
 }ETF_T;
 
 DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/

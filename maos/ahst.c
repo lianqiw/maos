@@ -357,7 +357,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    ngsmod->indastig=ngsmod->nmod;
 	    ngsmod->nmod+=2;
 	}
-	if(parms->sim.mffocus || ngsmod->indastig){//Focus for LTAO or focus tracking
+	{//Always enable focus when LGS WFS is present
 	    ngsmod->indfocus=ngsmod->nmod;
 	    ngsmod->nmod+=1;
 	}
@@ -906,7 +906,7 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	mngs[ngsmod->indastig]=simu->ngsmodlpf->p[1];
 	mngs[ngsmod->indastig+1]=simu->ngsmodlpf->p[2];
     }
-    if(ngsmod->indfocus && parms->sim.mffocus && 0){
+    if(ngsmod->indfocus && parms->sim.mffocus && parms->dbg.ahst_keepfocus){
 	/*preserve LGS focus. 
 	  2019-01-15: Let all focus mode be removed
 	  * actually improves performance.*/

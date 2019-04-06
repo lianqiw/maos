@@ -251,9 +251,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		dcellfree(sanea2);
 		dcellfree(sanea2l);
 		dcellfree(sanea2i);
-		if(!parms->powfs[ipowfs].skip){
-		    dspscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
-		}
+		dspscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
 	    }else if(do_ref){
 		sanea->p[iwfs+iwfs*nwfs] =dspref( sanea->p[iwfs0+iwfs0*nwfs]);
 		saneal->p[iwfs+iwfs*nwfs]=dspref(saneal->p[iwfs0+iwfs0*nwfs]);
