@@ -124,7 +124,8 @@ int main(int argc, const char *argv[]){
     int ngpu;
 #if USE_CUDA
     ngpu=arg->ngpu;
-    if(!ngpu) ngpu=0xFFFFFF;
+    if(!ngpu) ngpu=0xFFFFFF; 
+    else if(ngpu<0) ngpu=0;
 #else
     ngpu=0;
 #endif

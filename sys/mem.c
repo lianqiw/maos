@@ -24,12 +24,14 @@
 #endif
 #include <sys/stat.h>
 
+#include <dlfcn.h>
 int exit_fail=0;
 #define IN_MEM_C 1
 #include "mem.h"
 #include "thread.h"
 #include "scheduler_client.h"
 #include "process.h"
+#include "misc.h"
 /*
   Record allocated memory and their size.  Warn if some memory is not freed.
   Notice that the pointer return by tsearch and the pointer passwd to the
@@ -45,8 +47,6 @@ int exit_fail=0;
   matlab, the memory allocations are replaced by matlab equivalents to have
   matlab manage the memory during referencing..
   */
-#include <dlfcn.h>
-#include "misc.h"
 
 void *(*calloc_default)(size_t, size_t);
 void *(*malloc_default)(size_t);

@@ -1707,7 +1707,7 @@ void print_progress(const SIM_T *simu){
 		}
 	    }
 	}else{
-	    for(int i=0; i<tmp->ny; i++){
+	    for(int i=0; i<simu->isim; i++){
 		P(res->p[0], i)=P(tmp, 2, i);//PTTR
 		P(res->p[1], i)=P(tmp, 0, i)-P(tmp,2,i);//TT
 	    }

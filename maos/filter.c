@@ -286,14 +286,7 @@ static void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmtmp,simu,simu->Mint_lo->mint->p[0], 1);
     }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	//Record dmpsol for this time step for each powfs before updating it (z^-1).
-	//Do not reference the data, even for dtrat==1
-	if(!parms->powfs[ipowfs].psol || !parms->powfs[ipowfs].dtrat) continue;
-	double alpha=(isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
-	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
-    }
-    dcellcp(&simu->dmpsol, simu->dmtmp);
+  
     if(parms->recon.modal){
 	dcellzero(simu->dmcmd);
 	dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmtmp, "nn", 1);
@@ -333,15 +326,24 @@ static void filter_cl(SIM_T *simu){
 	    dadd(&simu->dmcmd->p[idm], 1, P(parms->dbg.dmoff, idm, icol), -1);
 	}
     }
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	//Record dmpsol for this time step for each powfs before updating it (z^-1).
+	//Do not reference the data, even for dtrat==1
+	if(!parms->powfs[ipowfs].psol || !parms->powfs[ipowfs].dtrat) continue;
+	double alpha=(isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
+	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
+    }
+    dcellcp(&simu->dmpsol, simu->dmcmd);
     if(parms->sim.dmclip || parms->sim.dmclipia || recon->actstuck){
 	dcell *tmp=dcelldup(simu->dmcmd);
 	if(recon->actstuck){//zero stuck actuators
 	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
 	}
 	clipdm(simu, simu->dmcmd);
-	dcelladd(&tmp, 1, simu->dmcmd, -1); //find what is clipped
-	dcelladd(&simu->dmint->mint->p[0], 1, tmp, -1);//remove from integrator (anti wind up)
-	dcelladd(&simu->dmpsol, 1, tmp, -1);//also feed to PSOL (is this really necessary?)
+	if(parms->sim.dmclip || parms->sim.dmclipia){
+	    dcelladd(&tmp, 1, simu->dmcmd, -1); //find what is clipped
+	    dcelladd(&simu->dmint->mint->p[0], 1, tmp, -1);//remove from integrator (anti wind up)
+	}
 	dcellfree(tmp);
     }
     /*This is after the integrator output and clipping*/

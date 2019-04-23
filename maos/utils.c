@@ -203,10 +203,12 @@ void rename_file(int sig){
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	remove("run_done.log");
-	mysymlink(fn, "run_done.log");
+	rename(fn, "run_done.log");
+	mysymlink("run_done.log", fn);
 	snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
 	remove("maos_done.conf");
-	mysymlink(fn, "maos_done.conf");
+	rename(fn, "maos_done.conf");
+	mysymlink("maos_done.conf", fn);
     }
     if(global && global->parms && global->parms->fdlock && sig!=0){
 	char fn[80];

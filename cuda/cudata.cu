@@ -146,6 +146,10 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	info("No GPUs available. ans=%d (%s)\n", ans, cudaGetErrorString((cudaError_t)ans));
 	return 0;
     }
+    if(ngpu<0){
+	info("CUDA is disabled by user.\n");
+	return 0;
+    }
     if(gpus && ngpu>0){
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){

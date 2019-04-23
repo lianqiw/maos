@@ -124,7 +124,7 @@ setup_fit_lrt(FIT_T *fit){
     }
     if(nnw==0) return;
     dcell* actcpl=dcelldup(fit->actcpl);
-    //include stuck actuator
+    //avoid stuck actuators for piston constraint.
     act_stuck(fit->aloc, actcpl, fit->actstuck);
     for(int idm=0; idm<ndm; idm++){
 	int nloc=fit->aloc->p[idm]->nloc;
