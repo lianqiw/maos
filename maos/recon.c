@@ -419,9 +419,6 @@ void reconstruct(SIM_T *simu){
 		remove_dm_ngsmod(simu, simu->dmerr);
 	    }
 	}
-	if(recon->actstuck && !parms->recon.modal){//zero stuck actuators
-	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
-	}
 	if(parms->plot.run){
 	    if(parms->recon.alg==0){
 		for(int i=0; simu->opdr && i<simu->opdr->nx; i++){

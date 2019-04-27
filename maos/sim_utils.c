@@ -324,7 +324,7 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 	return;
     }
     /*in close loop mode, opdr is from last time step. */
-    int isim=parms->sim.closeloop?simu->isim-1:simu->isim;
+    int isim=simu->reconisim;
     if(!*opdx){
 	*opdx=dcellnew(recon->npsr,1);
     }

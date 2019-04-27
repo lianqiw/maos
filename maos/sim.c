@@ -102,6 +102,7 @@ void maos_isim(int isim){
     int iseed=global->iseed;
     int simstart=parms->sim.start;
     int simend=parms->sim.end;
+    long group=0;
     extern int NO_RECON, NO_WFS, NO_EVL;
     if(isim==simstart+1){//skip slow first step.
 	tk_atm=myclockd();
@@ -112,7 +113,7 @@ void maos_isim(int isim){
     double ck_0=myclockd();
     simu->isim=isim;
     simu->status->isim=isim;
-    if(parms->sim.idealfit || parms->sim.idealtomo || !parms->sim.closeloop){
+    if(!parms->sim.closeloop){
 	simu->reconisim=simu->isim;
     }else{//work on gradients from last time step for parallelization.
 	simu->reconisim=simu->isim-1;
@@ -151,7 +152,6 @@ void maos_isim(int isim){
 	    }
 #endif
 	}
-	save_dmreal(simu);
 	if(PARALLEL){
 	    /*
 	      We do the big loop in parallel to make better use the
@@ -159,7 +159,6 @@ void maos_isim(int isim){
 	      last time step so that there is no confliction in data access.
 	    */
 	    /*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
-	    long group=0;
 	    if(parms->gpu.evl && !NO_EVL){
 		//Queue tasks on GPU, no stream sync is done
 		QUEUE_THREAD(&group, simu->perfevl_pre, 0);

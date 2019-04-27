@@ -733,7 +733,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}
     }
-    if(recon->actstuck){
+    if(recon->actstuck && parms->recon.alg==1){
 	/*This is need for LSR reconstructor to skip stuck actuators.  GA is
 	  also used to form PSOL gradients, but that one doesn't need this
 	  modification because actuator extropolation was already applied.*/

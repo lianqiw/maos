@@ -1117,7 +1117,7 @@ static void readcfg_save(PARMS_T *parms){
 	/*The following are run time information that are not enabled by
 	  save.run because they take a lot of space*/
 	parms->save.opdr=parms->save.all;
-	parms->save.opdx=parms->save.all;
+	//parms->save.opdx=parms->save.all;
 	parms->save.evlopd=parms->save.all;
 	parms->save.run=parms->save.all;/*see following */
 	parms->save.ncpa=parms->save.all;
