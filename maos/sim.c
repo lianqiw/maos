@@ -153,6 +153,7 @@ void maos_isim(int isim){
 #endif
 	}
 	if(PARALLEL){
+	    simu->tk_0=myclockd();
 	    /*
 	      We do the big loop in parallel to make better use the
 	      CPUs. Notice that the reconstructor is working on grad from

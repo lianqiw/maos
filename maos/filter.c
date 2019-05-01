@@ -105,107 +105,130 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
       clip integrator. This both limits the output and
       feeds back the clip since we are acting on the integrator directly.
     */
-    if(parms->sim.dmclip){
-	for(int idm=0; idm<parms->ndm; idm++){
-	    const int nact=dmcmd->p[idm]->nx;
-	    if(parms->dm[idm].stroke->nx==1){
-		if(parms->dm[idm].stroke->ny!=1){
-		    error("dm.stroke is in wrong format\n");
-		}
-		int nclip=dclip(dmcmd->p[idm], 
-				-parms->dm[idm].stroke->p[0],
-				parms->dm[idm].stroke->p[0]);
-		if(nclip>0){
-		    info("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
-		}
-	    }else if(parms->dm[idm].stroke->nx==nact){
-		if(parms->dm[idm].stroke->ny!=2){
-		    error("dm.stroke is in wrong format\n");
-		}
+    if(!parms->sim.dmclip) return;
+    for(int idm=0; idm<parms->ndm; idm++){
+	const int nact=dmcmd->p[idm]->nx;
+	if(parms->dm[idm].stroke->nx==1){
+	    if(parms->dm[idm].stroke->ny!=1){
+		error("dm.stroke is in wrong format\n");
+	    }
+	    static int nclip0=0;
+	    if(simu->isim<10) nclip0=0;
+	    int nclip=dclip(dmcmd->p[idm], 
+			    -parms->dm[idm].stroke->p[0],
+			    parms->dm[idm].stroke->p[0]);
+	    if(nclip>nclip0){
+		nclip0=nclip;
+		info("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
+	    }
+	}else if(parms->dm[idm].stroke->nx==nact){
+	    if(parms->dm[idm].stroke->ny!=2){
+		error("dm.stroke is in wrong format\n");
+	    }
 		
-		double *pcmd=dmcmd->p[idm]->p;
-		double *plow=parms->dm[idm].stroke->p;
-		double *phigh=parms->dm[idm].stroke->p+nact;
-		for(int iact=0; iact<nact; iact++){
-		    if(pcmd[iact]<plow[iact]){
-			pcmd[iact]=plow[iact];
-		    }else if(pcmd[iact]>phigh[iact]){
-			pcmd[iact]=phigh[iact];
-		    }
-		}		    
-	    }else{
-		error("Invalid format\n");
+	    double *pcmd=dmcmd->p[idm]->p;
+	    double *plow=parms->dm[idm].stroke->p;
+	    double *phigh=parms->dm[idm].stroke->p+nact;
+	    for(int iact=0; iact<nact; iact++){
+		if(pcmd[iact]<plow[iact]){
+		    pcmd[iact]=plow[iact];
+		}else if(pcmd[iact]>phigh[iact]){
+		    pcmd[iact]=phigh[iact];
+		}
+	    }		    
+	}else{
+	    error("Invalid format\n");
+	}
+    }
+}
+static inline void clipdm_dead(const SIM_T *simu, dcell *dmcmd){
+    if(!dmcmd) return;
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    if(!recon->actstuck) return;
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(!recon->actstuck->p[idm]) continue;
+	const int nact=recon->aloc->p[idm]->nloc;
+	for(int iact=0; iact<nact; iact++){
+	    double val=recon->actstuck->p[idm]->p[iact]*1e-9;
+	    if(val){
+		dmcmd->p[idm]->p[iact]=val;
 	    }
 	}
     }
-    if(parms->sim.dmclipia){
-	/*Clip interactuator stroke*/
-	for(int idm=0; idm<parms->ndm; idm++){
-	    /* Embed DM commands to a square array (borrow dmrealsq) */
-	    double iastroke, iastroked;
-	    int nx=simu->recon->anx->p[idm];
-	    dmat *dmr;
-	    dmat *dm;
-	    if(parms->dm[idm].iastrokescale){ //convert dm to voltage
-		dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmcmd->p[idm], NAN);
-		iastroke=parms->dm[idm].iastroke;//voltage.
-	    }else{
-		dm=dmcmd->p[idm];
-		iastroke=parms->dm[idm].iastroke*2;//surface to opd
-	    }
-	    iastroked=iastroke*1.414;//for diagonal separation.
-	    if(!parms->fit.square){
-		loc_embed(simu->dmrealsq->p[idm], simu->recon->aloc->p[idm], dm->p);
-		dmr=(dmat*)simu->dmrealsq->p[idm];
-	    }else{
-		dmr=dm;
-	    }
-	    lcell *actstuck=simu->recon->actstuck;
-	    //offset point by 1 because map is 1 based index.
-	    long *stuck=actstuck&&actstuck->p[idm]?(actstuck->p[idm]->p-1):0;
-	    int count=0,trials=0;
-	    do{
-		count=0;
-		dmat* map=(dmat*)simu->recon->amap->p[idm]/*PDMAT*/;
-		for(int iy=0; iy<simu->recon->any->p[idm]-1; iy++){
-		    for(int ix=0; ix<nx-1; ix++){
-			int iact1=P(map,ix,iy);
-			if(iact1>0){
-			    int iact2=P(map,ix,iy+1);
-			    double *dmri=PP(dmr,ix,iy);
-			    if(iact2>0){
-				count+=limit_diff(dmri, PP(dmr,ix,iy+1), iastroke, 
-						  stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
-			    }
-			    iact2=P(map, ix+1, iy);
-			    if(iact2>0){
-				count+=limit_diff(dmri, PP(dmr,ix+1,iy), iastroke, 
-						  stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
-			    }
-			    iact2=P(map, ix+1, iy+1);
-			    if(iact2>0){
-				count+=limit_diff(dmri, PP(dmr,ix+1,iy+1), iastroked, 
-						  stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
-			    }
+}
+
+static inline void clipdm_ia(const SIM_T *simu, dcell *dmcmd){
+    if(!dmcmd) return;
+    const PARMS_T *parms=simu->parms;
+    if(!parms->sim.dmclipia) return;
+    RECON_T *recon=simu->recon;
+    /*Clip interactuator stroke*/
+    for(int idm=0; idm<parms->ndm; idm++){
+	/* Embed DM commands to a square array (borrow dmrealsq) */
+	double iastroke, iastroked;
+	int nx=recon->anx->p[idm];
+	dmat *dmr;
+	dmat *dm;
+	if(parms->dm[idm].iastrokescale){ //convert dm to voltage
+	    dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmcmd->p[idm], NAN);
+	    iastroke=parms->dm[idm].iastroke;//voltage.
+	}else{
+	    dm=dmcmd->p[idm];
+	    iastroke=parms->dm[idm].iastroke*2;//surface to opd
+	}
+	iastroked=iastroke*1.414;//for diagonal separation.
+	if(!parms->fit.square){
+	    loc_embed(simu->dmrealsq->p[idm], recon->aloc->p[idm], dm->p);
+	    dmr=(dmat*)simu->dmrealsq->p[idm];
+	}else{
+	    dmr=dm;
+	}
+	lcell *actstuck=recon->actstuck;
+	//offset point by 1 because map is 1 based index.
+	long *stuck=actstuck&&actstuck->p[idm]?(actstuck->p[idm]->p-1):0;
+	int count=0,trials=0;
+	do{
+	    count=0;
+	    dmat* map=(dmat*)recon->amap->p[idm]/*PDMAT*/;
+	    for(int iy=0; iy<recon->any->p[idm]-1; iy++){
+		for(int ix=0; ix<nx-1; ix++){
+		    int iact1=P(map,ix,iy);
+		    if(iact1>0){
+			int iact2=P(map,ix,iy+1);
+			double *dmri=PP(dmr,ix,iy);
+			if(iact2>0){
+			    count+=limit_diff(dmri, PP(dmr,ix,iy+1), iastroke, 
+					      stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
 			}
-		    } 
-		}
-		trials++;
-		if(trials==1 && count>0) {
-		    info("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
-		}
-	    }while(count>0 && trials<100);
-	    if(trials>1){
-		info("trials=%d: %s\n", trials, count?"failed.":"success.");
+			iact2=P(map, ix+1, iy);
+			if(iact2>0){
+			    count+=limit_diff(dmri, PP(dmr,ix+1,iy), iastroke, 
+					      stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
+			}
+			iact2=P(map, ix+1, iy+1);
+			if(iact2>0){
+			    count+=limit_diff(dmri, PP(dmr,ix+1,iy+1), iastroked, 
+					      stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
+			}
+		    }
+		} 
 	    }
-	    if(!parms->fit.square){//copy data back
-		loc_extract(simu->dmreal->p[idm], simu->recon->aloc->p[idm], simu->dmrealsq->p[idm]);
+	    trials++;
+	    if(trials==1 && count>0) {
+		info("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
 	    }
-	    if(parms->dm[idm].iastrokescale){//convert back to opd
-		dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm, NAN);
-		dcp(&dmcmd->p[idm], dm2);
-		dfree(dm); dfree(dm2);
-	    }
+	}while(count>0 && trials<100);
+	if(trials>1){
+	    info("trials=%d: %s\n", trials, count?"failed.":"success.");
+	}
+	if(!parms->fit.square){//copy data back
+	    loc_extract(simu->dmreal->p[idm], recon->aloc->p[idm], simu->dmrealsq->p[idm]);
+	}
+	if(parms->dm[idm].iastrokescale){//convert back to opd
+	    dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm, NAN);
+	    dcp(&dmcmd->p[idm], dm2);
+	    dfree(dm); dfree(dm2);
 	}
     }
 }
@@ -331,8 +354,9 @@ static void filter_cl(SIM_T *simu){
 	info_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }
+    //dmpsol should not contain DM offset vector, which may not be recovered by reconstruction.
     dcellcp(&simu->dmpsol, simu->dmcmd);    
-    if(recon->actstuck && !parms->recon.modal){
+    if(recon->actstuck && !parms->recon.modal && parms->dbg.recon_stuck){
 	//zero stuck actuators so that gradpsol still contains gradients caused
 	//by stuck actuators, so that MVR can smooth it out.
 	act_stuck_cmd(recon->aloc, simu->dmpsol, recon->actstuck);
@@ -344,14 +368,18 @@ static void filter_cl(SIM_T *simu){
 	    dadd(&simu->dmcmd->p[idm], 1, P(parms->dbg.dmoff, idm, icol), 1);
 	}
     }
-    if(parms->sim.dmclip || parms->sim.dmclipia){
-	dcell *tmp=dcelldup(simu->dmcmd);
-	clipdm(simu, simu->dmcmd);
-	if((parms->sim.dmclip || parms->sim.dmclipia)){
-	    dcelladd(&tmp, 1, simu->dmcmd, -1); //find what is clipped
-	    dcelladd(&simu->dmint->mint->p[0], 1, tmp, -1);//remove from integrator (anti wind up)
+    //Need to clip
+    if(parms->sim.dmclip || parms->sim.dmclipia || recon->actstuck){
+	int feedback=(parms->sim.dmclip || parms->sim.dmclipia) || (recon->actstuck && parms->dbg.recon_stuck);
+	if(parms->sim.dmclip) clipdm(simu, simu->dmcmd);
+	if(parms->sim.dmclipia) clipdm_ia(simu, simu->dmcmd);
+	if(recon->actstuck && parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
+	if(feedback){
+	    dcelladd(&simu->dmtmp, 1, simu->dmcmd, -1); //find what is clipped
+	    dcelladd(&simu->dmint->mint->p[0], 1, simu->dmtmp, -1);//remove from integrator (anti wind up)
+	    dcelladd(&simu->dmpsol, 1, simu->dmtmp, -1);//remove from dmpsol.
 	}
-	dcellfree(tmp);
+	if(recon->actstuck && !parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
     }
     /*This is after the integrator output and clipping*/
     if(simu->dmhist){

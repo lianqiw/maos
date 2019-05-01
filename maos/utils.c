@@ -337,7 +337,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	    if(arg->gpus[ig]<0){
 		if(ig+1==arg->ngpu){//-g-1 appear last
 		    arg->gpus[0]=-1;
-		    arg->ngpu=1;
+		    arg->ngpu=-1;
 		}else{
 		    //-g-1 is not last. It invalides previous -g's
 		    arg->ngpu=arg->ngpu-(1+ig);

@@ -630,6 +630,7 @@ typedef struct DBG_CFG_T{
     int lo_blend;     /**<Low order multi-rate control blending scheme.*/
     double eploscale; /**<Scale of eplo*/
     int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
+    int recon_stuck; /**<Whether to handle stuck actuator in reconstruction.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

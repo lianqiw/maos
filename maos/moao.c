@@ -83,7 +83,9 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	if(parms->moao[imoao].actstuck){
 	    recon->moao[imoao].actstuck=lcellnew(1,1);
 	    recon->moao[imoao].actstuck->p[0]=loc_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actstuck);
-	    act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
+	    if(parms->dbg.recon_stuck){
+		act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
+	    }
 	}
 	if(parms->moao[imoao].actfloat){
 	    recon->moao[imoao].actfloat=lcellnew(1,1);
@@ -114,7 +116,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    recon->moao[imoao].actslave=slaving(recon->moao[imoao].aloc, 
 						recon->moao[imoao].actcpl,
 						recon->moao[imoao].NW,
-						recon->moao[imoao].actstuck,
+						parms->dbg.recon_stuck?recon->moao[imoao].actstuck:0,
 						recon->moao[imoao].actfloat,
 						0.1, 
 						1./recon->floc->nloc);

@@ -400,7 +400,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     }
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_dm(parms,recon);
-    if(recon->actstuck && !parms->recon.modal){
+    if(recon->actstuck && !parms->recon.modal && parms->dbg.recon_stuck){
 	warning("Apply stuck actuators to ngs modes\n");
 	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
     }

@@ -616,6 +616,8 @@ typedef struct SIM_T{
     /*MOAO*/
     dcell *dm_wfs;   /**<moao DM command computed for wfs*/
     dcell *dm_evl;   /**<moao DM command computed for science field*/
+    //Timing
+    double tk_0;       /**<Start time of each isim*/
     double tk_eval;    /**<time spent in perfevl in this step*/
     double tk_recon;   /**<time spent in reconstruct in this step*/
     double tk_cache;   /**<time spent in cachedm in this step*/

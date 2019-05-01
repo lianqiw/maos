@@ -77,8 +77,10 @@ setup_fit_HA(FIT_T *fit){
     fit->actcpl=genactcpl(HA, fit->W1);
     //cpl accounts for floating actuators, but not stuck actuators.
     act_stuck(fit->aloc, fit->actcpl, fit->actfloat);
-    //Do not modify HA by floating actuators, otherwise, HA*actinterp will not work.
-    act_stuck(fit->aloc, HA, fit->actstuck);
+    if(global->parms->dbg.recon_stuck){
+	//Do not modify HA by floating actuators, otherwise, HA*actinterp will not work.
+	act_stuck(fit->aloc, HA, fit->actstuck);
+    }
   
     if(fit->flag.actinterp){
 	fit->actinterp=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres);
@@ -124,8 +126,10 @@ setup_fit_lrt(FIT_T *fit){
     }
     if(nnw==0) return;
     dcell* actcpl=dcelldup(fit->actcpl);
-    //avoid stuck actuators for piston constraint.
-    act_stuck(fit->aloc, actcpl, fit->actstuck);
+    if(global->parms->dbg.recon_stuck){
+	//avoid stuck actuators for piston constraint.
+	act_stuck(fit->aloc, actcpl, fit->actstuck);
+    }
     for(int idm=0; idm<ndm; idm++){
 	int nloc=fit->aloc->p[idm]->nloc;
 	fit->NW->p[idm]=dnew(nloc, nnw);
@@ -174,7 +178,7 @@ setup_fit_lrt(FIT_T *fit){
 	*/
 	TIC;tic;
 	fit->actslave=slaving(fit->aloc, fit->actcpl,
-			      fit->NW, fit->actstuck,
+			      fit->NW, global->parms->dbg.recon_stuck?fit->actstuck:0,
 			      fit->actfloat, fit->flag.actthres, 1./fit->floc->nloc);
 	toc2("slaving");
     }

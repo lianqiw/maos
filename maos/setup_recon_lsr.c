@@ -115,7 +115,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	if(parms->lsr.actslave){
 	    /*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
 	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
-				      recon->actstuck, recon->actfloat, parms->lsr.actthres, maxeig);
+				      parms->dbg.recon_stuck?recon->actstuck:0, 
+				      recon->actfloat, parms->lsr.actthres, maxeig);
 	    if(parms->save.setup){
 		if(NW){
 		    writebin(NW, "lsrNW2");

@@ -1164,11 +1164,11 @@ void wfsgrad_twfs_recon(SIM_T *simu){
    It also includes operations on Gradients before tomography.
 */
 void wfsgrad(SIM_T *simu){
-    double tk_start=myclockd();
+    extern int PARALLEL;
+    double tk_start=PARALLEL?simu->tk_0:myclockd();
     const PARMS_T *parms=simu->parms;
     if(parms->sim.idealfit || parms->sim.evlol || parms->sim.idealtomo) return;
     // call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
-    extern int PARALLEL;
     if(!PARALLEL || parms->tomo.ahst_idealngs==1 || !parms->gpu.wfs){
 	CALL_THREAD(simu->wfsgrad_pre, 0);
     }//else: already called by sim.c

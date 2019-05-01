@@ -1067,6 +1067,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.lo_blend);
     READ_DBL(dbg.eploscale);
     READ_INT(dbg.ahst_keepfocus);
+    READ_INT(dbg.recon_stuck);
 }
 /**
    Read in GPU options
@@ -2450,10 +2451,15 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
     if(parms->sim.mffocus==-1){
 	parms->sim.mffocus=(parms->nlgspowfs)?1:0;
-    }else if(parms->sim.mffocus>0 && (!parms->recon.split || !parms->nlgspowfs || parms->sim.idealfit)){
-	//no need focus tracking in the following cases: 1)integrated control mode, 2)no LGS, 3) idealfit
-	warning("parms->sim.mffocus is reset to 0\n");
-	parms->sim.mffocus=0;
+    }
+    if(parms->sim.mffocus>0){
+	if(!parms->recon.split || !parms->nlgspowfs || parms->sim.idealfit){
+	    if(!parms->recon.split){
+		warning("Focus blending is not implemented yet for integrated tomography\n");
+	    }
+	    warning("parms->sim.mffocus is reset to 0\n");
+	    parms->sim.mffocus=0;
+	}
     }
     
     if(parms->sim.mffocus<0 || parms->sim.mffocus>2){

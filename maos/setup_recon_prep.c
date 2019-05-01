@@ -386,38 +386,13 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	   effects.
 
 	   3) For dmreal the stuck actuators are set to their stuck value in
-	   dmclip().	   
+	   clipdm(). The clipped value is fed into the integrator.
 	   
 	 */
 	recon->actstuck=lcellnew(parms->ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actstuck) continue;
 	    recon->actstuck->p[idm]=loc_coord2ind(recon->aloc->p[idm], parms->dm[idm].actstuck);
-	    double stroke=INFINITY;
-	    const int nact=recon->aloc->p[idm]->nloc;
-	    if(parms->dm[idm].stroke){
-		if(parms->dm[idm].stroke->nx==1){
-		    stroke=parms->dm[idm].stroke->p[0];
-		    dfree(parms->dm[idm].stroke);
-		}else if(parms->dm[idm].stroke->nx!=nact){
-		    error("dm.stroke is in wrong format\n");
-		}
-	    }
-	    if(!parms->dm[idm].stroke){
-		parms->dm[idm].stroke=dnew(nact, 2);
-		for(int iact=0; iact<nact; iact++){
-		    parms->dm[idm].stroke->p[iact]=-stroke;
-		    parms->dm[idm].stroke->p[iact+nact]=stroke;
-		}
-		((PARMS_T*)parms)->sim.dmclip=1;
-	    }
-	    for(int iact=0; iact<nact; iact++){
-		double val=recon->actstuck->p[idm]->p[iact];
-		if(val){
-		    parms->dm[idm].stroke->p[iact]=val*1e-9;
-		    parms->dm[idm].stroke->p[iact+nact]=val*1e-9;
-		}
-	    }
 	}
     }
     if(anyfloat){
@@ -733,7 +708,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}
     }
-    if(recon->actstuck && parms->recon.alg==1){
+    if(recon->actstuck && parms->recon.alg==1 && parms->dbg.recon_stuck){
 	/*This is need for LSR reconstructor to skip stuck actuators.  GA is
 	  also used to form PSOL gradients, but that one doesn't need this
 	  modification because actuator extropolation was already applied.*/
@@ -895,7 +870,9 @@ void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
     for(int idm=0; idm<parms->ndm; idm++){
 	recon->DMTT->p[idm]=loc2mat(recon->aloc->p[idm], 0);
     }
-    act_zero(recon->aloc, recon->DMTT, recon->actstuck);
+    if(parms->dbg.recon_stuck){
+	act_zero(recon->aloc, recon->DMTT, recon->actstuck);
+    }
     for(int idm=0; idm<parms->ndm; idm++){
 	recon->DMPTT->p[idm]=dpinv(recon->DMTT->p[idm], 0);
     }
