@@ -385,14 +385,6 @@ void reconstruct(SIM_T *simu){
 	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 	}
 	if(parms->recon.psol){
-	    if(parms->plot.run && simu->dmfit){
-		for(int i=0; i<simu->dmfit->nx; i++){
-		    if(simu->dmfit->p[i]){
-			drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p, parms->dbg.draw_opdmax->p,
-				"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
-		    }
-		}
-	    }
 	    //form error signal in PSOL mode
 	    if(0){
 		warning_once("temporarily disable recon->actinterp\n");
@@ -419,25 +411,7 @@ void reconstruct(SIM_T *simu){
 		remove_dm_ngsmod(simu, simu->dmerr);
 	    }
 	}
-	if(parms->plot.run){
-	    if(parms->recon.alg==0){
-		for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
-		    if(simu->opdr->p[i]){
-			drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, parms->dbg.draw_opdmax->p,
-				"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
-		    }
-		}
-	    }
-	    if(!parms->recon.modal){
-		for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
-		    if(simu->dmerr->p[idm]){
-			drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p, parms->dbg.draw_opdmax->p,
-				"DM Error Signal (Hi)","x (m)","y (m)",
-				"Err Hi %d",idm);
-		    }
-		}
-	    }
-	}
+
     }
     
     if(parms->recon.split){//low order reconstruction
@@ -460,5 +434,6 @@ void reconstruct(SIM_T *simu){
 #endif
 	    moao_recon(simu);
     }
+    save_recon(simu);
     simu->tk_recon=myclockd()-tk_start;
 }

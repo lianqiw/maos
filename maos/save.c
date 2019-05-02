@@ -97,13 +97,6 @@ void save_recon(SIM_T *simu){
     const RECON_T *recon=simu->recon;
     if(simu->reconisim<0) return;
     if(parms->plot.run){
-	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
-	    if(simu->dmint->mint->p[0]->p[idm]){
-		drawopd("DM",recon->aloc->p[idm], simu->dmint->mint->p[0]->p[idm]->p,NULL,
-			"DM Integrator (Hi)","x (m)","y (m)",
-			"Int Hi %d",idm);
-	    }
-	}
 	if(simu->dm_wfs){
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
@@ -120,40 +113,50 @@ void save_recon(SIM_T *simu){
 			"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
 	    }
 	}
-    }
-    if(parms->plot.run && simu->Merr_lo){
-	dcell *dmlo=NULL;
-	switch(simu->parms->recon.split){
-	case 1:
-	    dcellmm(&dmlo, recon->ngsmod->Modes, simu->Merr_lo, "nn", 1);
-	    break;
-	case 2:
-	    dcellmm(&dmlo, recon->MVModes, simu->Merr_lo, "nn", 1);
-	    break;
+	for(int i=0; simu->dmfit && i<parms->ndm; i++){
+	    if(simu->dmfit->p[i]){
+		drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p, parms->dbg.draw_opdmax->p,
+			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
+	    }
 	}
-	for(int idm=0; dmlo && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,parms->dbg.draw_opdmax->p,
-		    "DM Error Signal (Lo)","x (m)","y (m)",
-		    "Err Lo %d",idm);
+
+	if(!parms->recon.modal){
+	    for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
+		if(simu->dmerr->p[idm]){
+		    drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p, parms->dbg.draw_opdmax->p,
+			    "DM Error Signal (Hi)","x (m)","y (m)",
+			    "Err Hi %d",idm);
+		}
+	    }
 	}
-	dcellfree(dmlo);
-    }
-    if(parms->plot.run && simu->Mint_lo && simu->Mint_lo->mint->p[0]){
-	dcell *dmlo=NULL;
-	switch(simu->parms->recon.split){
-	case 1:
-	    dcellmm(&dmlo, recon->ngsmod->Modes, simu->Mint_lo->mint->p[0], "nn", 1);
-	    break;
-	case 2:
-	    dcellmm(&dmlo, recon->MVModes, simu->Mint_lo->mint->p[0], "nn", 1);
-	    break;
+
+	if(parms->recon.alg==0 && simu->opdr){
+	    for(int i=0; i<simu->opdr->nx; i++){
+		if(simu->opdr->p[i]){
+		    drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, parms->dbg.draw_opdmax->p,
+			    "Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
+		}
+	    }
+	}	
+
+	if(simu->Merr_lo){
+	    /*dcell *dmlo=NULL;
+	    switch(simu->parms->recon.split){
+	    case 1:
+		dcellmm(&dmlo, recon->ngsmod->Modes, simu->Merr_lo, "nn", 1);
+		break;
+	    case 2:
+		dcellmm(&dmlo, recon->MVModes, simu->Merr_lo, "nn", 1);
+		break;
+	    }
+	    for(int idm=0; dmlo && idm<parms->ndm; idm++){
+		drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,parms->dbg.draw_opdmax->p,
+			"DM Error Signal (Lo)","x (m)","y (m)",
+			"Err Lo %d",idm);
+	    }
+	    dcellfree(dmlo);*/
+	    plot_points("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 	}
-	for(int idm=0; dmlo && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,parms->dbg.draw_opdmax->p,
-		    "DM Integrator (Lo)","x (m)","y (m)",
-		    "Int Lo %d",idm);
-	}
-	dcellfree(dmlo);
     }
     if(parms->recon.alg==0 && !parms->sim.idealfit && !parms->recon.glao){
 	/*minimum variance tomo/fit reconstructor */
@@ -188,12 +191,9 @@ void save_recon(SIM_T *simu){
 	if(simu->dmerr){
 	    zfarr_push(simu->save->dmerr, simu->reconisim, simu->dmerr);
 	}
-	if(simu->dmint->mint->p[0]){
-	    zfarr_push(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
-	}
 	if(simu->Merr_lo){
 	    zfarr_push(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo->p[0]);
-	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
+	    if(!parms->sim.fuseint){
 		zfarr_push(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]->p[0]);
 	    }
 	}
@@ -233,30 +233,62 @@ void save_recon(SIM_T *simu){
 	dcellscale(simu->ecov, 1./scale); //2016-06-07: Do not reset. 
     }
 }
-
-void save_dmreal(SIM_T *simu){
+void save_dmproj(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    if(parms->plot.run){
-    	for(int idm=0; idm<parms->ndm; idm++){
-	    if(simu->dmproj && simu->dmproj->p[idm]){
+    if(parms->save.dm){
+	zfarr_push(simu->save->dmproj, simu->isim, simu->dmproj);
+    }
+    if(parms->plot.run && simu->dmproj){ 
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(simu->dmproj->p[idm]){
 		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,parms->dbg.draw_opdmax->p,
 			"ATM to DM Projection (Hi)","x (m)","y (m)",
 			"Proj Hi %d",idm);
 	    }
 	}
-	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(simu->dmreal && simu->dmreal->p[idm]){
-		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,parms->dbg.draw_opdmax->p,
-			"DM Actuator Stroke","x (m)", "y (m)", "Real %d",idm);
+    }
+}
+void save_dmreal(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    if(parms->plot.run){
+	if(parms->sim.closeloop){
+	    for(int idm=0; idm<parms->ndm; idm++){
+		if(simu->dmint->mint->p[0]->p[idm]){
+		    drawopd("DM",recon->aloc->p[idm], simu->dmint->mint->p[0]->p[idm]->p,NULL,
+			    "DM Integrator (Hi)","x (m)","y (m)",
+			    "Int Hi %d",idm);
+		}
 	    }
-	}
-	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(simu->dmpsol && simu->dmpsol->p[idm]){
-		drawopd("DM", simu->recon->aloc->p[idm], simu->dmpsol->p[idm]->p,parms->dbg.draw_opdmax->p,
-			"DM PSOL","x (m)", "y (m)", "PSOL %d",idm);
+	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
+		dcell *dmlo=NULL;
+		switch(simu->parms->recon.split){
+		case 1:
+		    dcellmm(&dmlo, recon->ngsmod->Modes, simu->Mint_lo->mint->p[0], "nn", 1);
+		    break;
+		case 2:
+		    dcellmm(&dmlo, recon->MVModes, simu->Mint_lo->mint->p[0], "nn", 1);
+		    break;
+		}
+		for(int idm=0; dmlo && idm<parms->ndm; idm++){
+		    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,parms->dbg.draw_opdmax->p,
+			    "DM Integrator (Lo)","x (m)","y (m)",
+				"Int Lo %d",idm);
+		}
+		dcellfree(dmlo);
+	    }
+	    for(int idm=0; idm<parms->ndm; idm++){
+		if(simu->dmreal && simu->dmreal->p[idm]){
+		    drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,parms->dbg.draw_opdmax->p,
+			    "DM Actuator Stroke","x (m)", "y (m)", "Real %d",idm);
+		}
+	    }
+	    for(int idm=0; idm<parms->ndm; idm++){
+		if(simu->dmpsol && simu->dmpsol->p[idm]){
+		    drawopd("DM", simu->recon->aloc->p[idm], simu->dmpsol->p[idm]->p,parms->dbg.draw_opdmax->p,
+			    "DM PSOL","x (m)", "y (m)", "PSOL %d",idm);
+		}
 	    }
 	}
     }
@@ -268,6 +300,12 @@ void save_dmreal(SIM_T *simu){
 	    if(simu->ttmreal){
 		simu->save->ttmreal->p[isim*2]=simu->ttmreal->p[0];
 		simu->save->ttmreal->p[isim*2+1]=simu->ttmreal->p[1];
+	    }
+	    if(parms->sim.closeloop){
+		zfarr_push(simu->save->dmint, isim, simu->dmint->mint->p[0]);
+		if(!parms->sim.fuseint){
+		    zfarr_push(simu->save->Mint_lo, isim, simu->Mint_lo->mint->p[0]->p[0]);
+		}
 	    }
 	}
     }

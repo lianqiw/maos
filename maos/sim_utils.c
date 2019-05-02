@@ -1208,7 +1208,6 @@ static void init_simu_dm(SIM_T *simu){
     int nrstep=nstep-(parms->sim.closeloop?1:0);
     if(parms->save.dm){
 	save->dmerr=zfarr_init(nrstep, 1,"dmerr_%d.bin", seed);
-	save->dmint=zfarr_init(nrstep, 1,"dmint_%d.bin", seed);
 	save->dmfit=zfarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	if(parms->recon.split){
 	    save->Merr_lo=zfarr_init(nstep, 1, "Merr_lo_%d.bin", seed);
@@ -1219,6 +1218,7 @@ static void init_simu_dm(SIM_T *simu){
 	if(parms->sim.lpttm>EPS){
 	    save->ttmreal= dnew_mmap(2, nstep, NULL, "ttmreal_%d.bin", seed);
 	}
+	save->dmint=zfarr_init(nstep, 1,"dmint_%d.bin", seed);
 	save->dmreal = zfarr_init(nstep, 1, "dmreal_%d.bin", seed);
 	save->dmcmd  = zfarr_init(nstep, 1, "dmcmd_%d.bin", seed);
 	if(parms->sim.dmproj){

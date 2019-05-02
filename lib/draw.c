@@ -421,6 +421,8 @@ void plot_points(const char *fig,    /**<Category of the figure*/
 		    STWRITE(p, sizeof(double)*dc->p[ig]->nx*dc->p[ig]->ny);
 		}
 	    }
+	}else{
+	    error("Invalid Usage\n");
 	}
 	if(style){
 	    STWRITEINT(DRAW_STYLE);

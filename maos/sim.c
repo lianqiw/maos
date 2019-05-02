@@ -137,9 +137,7 @@ void maos_isim(int isim){
 	    cell *FRM=recon->fit->FR.M; recon->fit->FR.M=NULL; 
 	    muv_solve(&simu->dmproj, &recon->fit->FL, &recon->fit->FR, NULL);
 	    recon->fit->FR.M=FRM;/*set FR.M back*/
-	    if(parms->save.dm){
-		zfarr_push(simu->save->dmproj, simu->isim, simu->dmproj);
-	    }
+	    save_dmproj(simu);
 	    if(!parms->fit.square){
 		/* Embed DM commands to a square array for fast ray tracing */
 		for(int idm=0; idm<parms->ndm; idm++){

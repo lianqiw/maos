@@ -333,7 +333,8 @@ static void filter_cl(SIM_T *simu){
     }else{
 	dcellcp(&simu->dmcmd, simu->dmtmp);
     }
-    
+    //dmpsol should not contain DM offset vector, which may not be recovered by reconstruction.
+    dcellcp(&simu->dmpsol, simu->dmcmd);    
     //The DM commands are always on zonal modes from this moment
 
     if(simu->ttmreal){
@@ -354,8 +355,7 @@ static void filter_cl(SIM_T *simu){
 	info_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }
-    //dmpsol should not contain DM offset vector, which may not be recovered by reconstruction.
-    dcellcp(&simu->dmpsol, simu->dmcmd);    
+ 
     if(recon->actstuck && !parms->recon.modal && parms->dbg.recon_stuck){
 	//zero stuck actuators so that gradpsol still contains gradients caused
 	//by stuck actuators, so that MVR can smooth it out.
@@ -550,7 +550,6 @@ void update_dm(SIM_T *simu){
  */
 void filter_dm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    save_recon(simu);
     if(parms->sim.evlol) return;
     if(parms->sim.closeloop){
 	filter_cl(simu);
