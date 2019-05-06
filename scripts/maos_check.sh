@@ -34,8 +34,9 @@ case $D in
 	#12/13/2018: with sim.mffocus=1 as default
 	#REF=(112.68 112.93 134.55 141.49 134.51 error 118.06 375.25 370.70 109.01 109.02 146.39 147.32 343.20 368.34 155.83 143.43)
 	#2/11/2019
-	REF=(112.68 112.93 134.58 141.23 133.94 146.73 117.34 375.55 370.68 108.96 109.09 146.35 147.25 343.93 367.85 156.07 138.63)
-
+	#REF=(112.68 112.93 134.58 141.23 133.94 146.73 117.34 375.55 370.68 108.96 109.09 146.35 147.25 343.93 367.85 156.07 138.63)
+	#5/6/2019
+	REF=(112.69 112.98 134.55 141.07 134.05 140.53 117.68 374.64 370.47 109.00 109.25 146.04 146.90 343.89 367.74 154.98 136.58)
 esac
 fnlog=maos_check_${D}.log
 echo > $fnlog
@@ -82,7 +83,7 @@ echo -n "LGS MCAO (FDPCG):"
 run_maos tomo.precond=1
 
 echo -n "LGS MCAO (CBS):  "
-run_maos tomo.alg=0 fit.alg=0
+run_maos tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
 
 if [ $D -le 10 ];then
 echo -n "LGS MCAO (SVD):  "
@@ -127,4 +128,4 @@ run_maos dm_single.conf fov_oa.conf recon.split=1
 
 echo ${RMS[*]}
 
-exit ans
+exit $ans

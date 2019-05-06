@@ -51,10 +51,12 @@ void zfarr_push(zfarr *ca, int i, const void *p){
     }
     if(i>=0 && ca->cur>i) {
 	warning("Invalid. cur=%ld, i=%d, skip.\n", ca->cur, i);
+	print_backtrace();
 	return;
     }
     if(i>=ca->tot){
 	warning_once("zfarr %s overflow. Size is %ld, current position is %ld\n", zfname(ca->fp), ca->tot, ca->cur);
+	print_backtrace();
 	return;
     }
     if(p) ca->id=((cell*)p)->id;

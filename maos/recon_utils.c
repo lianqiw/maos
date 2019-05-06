@@ -491,7 +491,7 @@ void FitR(dcell **xout, const void *A,
     if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
 	const PARMS_T *parms=global->parms;
 	SIM_T *simu=global->simu;
-	int isim=fit->notrecon?simu->isim:simu->reconisim;
+	int isim=fit->notrecon?simu->wfsisim:simu->reconisim;
 	const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=fit->hs->p[ifit];
@@ -661,7 +661,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		}
 		dmm(&simu->ecov->p[ievl], 1, xx, xx, "nt", 1);
 		if(parms->dbg.ecovxx){
-		    zfarr_push(simu->save->ecovxx[ievl], simu->isim, xx);
+		    zfarr_push(simu->save->ecovxx[ievl], simu->reconisim, xx);
 		}
 	    }/*if psfr[ievl] */
 	}/*ievl */
@@ -686,6 +686,16 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 void shift_grad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol || parms->sim.idealfit || parms->sim.idealtomo) return;
+    if(PARALLEL==2){
+	if(simu->wfsisim>0){
+	    while(simu->wfsgrad_count<1){//not being consumed yet
+		//dbg("waiting: wfsgrad_count is %d, need %d\n", simu->wfsgrad_count, 1);
+		pthread_cond_wait(&simu->wfsgrad_condw, &simu->wfsgrad_mutex);
+		pthread_mutex_unlock(&simu->wfsgrad_mutex);
+	    }
+	    //dbg("ready: wfsgrad_count is ready: %d\n", simu->wfsgrad_count);
+	}
+    }
     if(parms->recon.glao){
 	/* Average the gradients in GLAO mode. */
 	if(simu->gradlastcl){
@@ -707,6 +717,13 @@ void shift_grad(SIM_T *simu){
 	}
     }else{
 	dcellcp(&simu->gradlastcl, simu->gradcl); 
+    }
+    if(PARALLEL==2){
+	//Signal recon wfsgrad is ready/
+	simu->wfsgrad_isim=simu->wfsisim;
+	simu->wfsgrad_count=0;//reset the counter
+	pthread_cond_broadcast(&simu->wfsgrad_condr);
+	//dbg("wfsgrad_isim is set to %d\n", simu->wfsgrad_isim);
     }
 }
 

@@ -267,11 +267,15 @@ unset optname1 optname2 optname3 optname4
 
 if test -z "$OPENMP_CFLAGS" ;then
     OPTScc+=" -pthread" #enables pthreads feature and links in the library
-    AC_DEFINE(HAS_OPENMP,[0],["Openmp is disabled"])
+    with_openmp="no"
+    has_openmp=0
 else
     OPTScc+=" $OPENMP_CFLAGS"
-    AC_DEFINE(HAS_OPENMP,[1],["Openmp is enabled"])
+    with_openmp="yes"
+    has_openmp=1
 fi
+AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
+
 OPTSextra=""
 
 #Used for embedding conf folder in maos exe
@@ -649,9 +653,10 @@ if test "$use_websockets" = "yes" ;then
 	AC_MSG_NOTICE(["libwebsocket library or header is not available"])
     fi
 fi
-AM_CONDITIONAL(DRAW,false) #for drawdaemon
-AM_CONDITIONAL(MON, false)  #for parital monitor without notify
-AM_CONDITIONAL(MONN,false) #for full monitor with notify
+comp_draw="no" #for drawdaemon
+comp_mon="no" #for parital monitor without notify
+comp_monn="no" #for full monitor with notify
+
 if test "$with_gtk" != "no" ;then
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
@@ -700,10 +705,7 @@ if test "$with_gtk" != "no" ;then
 	AC_CHECK_HEADERS([libnotify/notify.h], [], [comp_monn="no"])
 	CFLAGS=$CFLAGS_SAVE
     fi
-    AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
-    AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
-
-    AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
+ 
     if test "$comp_mon" = "yes" ;then
 	if ! echo "$MON_LIBS" | grep -q gthread ;then
 	    #OLD GLIB has GTHREAD separated
@@ -725,6 +727,10 @@ if test "$with_gtk" != "no" ;then
     AC_SUBST(GTK_CFLAGS)
     AC_SUBST(GTK_LIBS)
 fi
+
+AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
+AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
+AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
 
 AC_CHECK_HEADERS([unistd.h])
 OPTS+=" $OPTScommon $OPTScc $OPTSprof $OPTSextra"
@@ -1012,16 +1018,18 @@ fi
 echo
 echo Compiling options:
 echo
-if test "$with_gtk" != "no" ;then
-    echo "Drawdaemon:      $comp_draw"
-    echo "Monitor:         $comp_mon (libnotify: $comp_monn)"
-    echo "GTK version:     ${gtk_ver}"
-fi
-if true ;then
-    echo "Websocket:       $has_lws"
-    echo "CUDA:            $cudaver"
-    echo "MATLAB MEX:      $with_matlab"
-fi
+echo 
+
+echo "OpenMP:          $with_openmp"
+
+echo "Drawdaemon:      $comp_draw"
+echo "Monitor:         $comp_mon (libnotify: $comp_monn)"
+echo "GTK version:     ${gtk_ver}"
+
+echo "Websocket:       $has_lws"
+echo "CUDA:            $cudaver"
+echo "MATLAB MEX:      $with_matlab"
+
 echo
 
 echo "*************************************************************************"

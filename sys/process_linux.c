@@ -302,8 +302,8 @@ int get_ncpu(void){
     FILE *fp=fopen("/proc/cpuinfo","r");
 #define nmax 4096
     char line[1024];
-    int phyid[nmax];/*record the list of physical cpu ids */
-    int coreid[nmax];/*record the list of core ids */
+    int phyid[nmax]={0};/*record the list of physical cpu ids */
+    int coreid[nmax]={0};/*record the list of core ids */
     int iphy=0, icore=0;
     const char *s_phy="physical id"; /*records number of CPUs */
     const char *s_core="core id";    /*should record number of cores per cpu */

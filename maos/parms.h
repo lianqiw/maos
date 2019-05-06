@@ -826,5 +826,4 @@ typedef enum T_TYPE{
     T_ATM,
 }T_TYPE;
 void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...);
-
 #endif

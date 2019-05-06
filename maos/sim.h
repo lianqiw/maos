@@ -32,4 +32,5 @@ void wfsgrad_iwfs(thread_t *info);
 void wfsgrad_post(thread_t *info);
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain);
+void filter_fsm(SIM_T *simu);
 #endif

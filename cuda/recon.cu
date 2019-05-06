@@ -565,7 +565,6 @@ void gpu_recon_reset(const PARMS_T *parms){//reset warm restart.
 void gpu_tomo(SIM_T *simu, dcell *gradin){
     gpu_set(cuglobal->recongpu);
     curecon_t *curecon=cudata->recon;
-    curecon->grid->isim=simu->isim;
     curecon->grid->reconisim=simu->reconisim;
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
@@ -585,7 +584,6 @@ void gpu_tomo(SIM_T *simu, dcell *gradin){
 void gpu_fit(dcell **dmout, SIM_T *simu){
     gpu_set(cuglobal->recongpu);
     curecon_t *curecon=cudata->recon;
-    curecon->grid->isim=simu->isim;
     curecon->grid->reconisim=simu->reconisim;
     const PARMS_T *parms=simu->parms;
     if(parms->dbg.fit){

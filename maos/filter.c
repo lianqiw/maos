@@ -113,13 +113,13 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		error("dm.stroke is in wrong format\n");
 	    }
 	    static int nclip0=0;
-	    if(simu->isim<10) nclip0=0;
+	    if(simu->reconisim<10) nclip0=0;
 	    int nclip=dclip(dmcmd->p[idm], 
 			    -parms->dm[idm].stroke->p[0],
 			    parms->dm[idm].stroke->p[0]);
 	    if(nclip>nclip0){
 		nclip0=nclip;
-		info("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
+		info("step %d DM %d: %d actuators clipped\n", simu->reconisim, idm, nclip);
 	    }
 	}else if(parms->dm[idm].stroke->nx==nact){
 	    if(parms->dm[idm].stroke->ny!=2){
@@ -216,7 +216,7 @@ static inline void clipdm_ia(const SIM_T *simu, dcell *dmcmd){
 	    }
 	    trials++;
 	    if(trials==1 && count>0) {
-		info("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
+		info("Step %d, DM %d: %d actuators over ia limit. ", simu->reconisim, idm, count);
 	    }
 	}while(count>0 && trials<100);
 	if(trials>1){
@@ -261,7 +261,8 @@ static void filter_cl(SIM_T *simu){
     assert(parms->sim.closeloop);
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
-    const int isim=simu->isim;
+    const int isim=simu->reconisim;
+    //dbg("reconisim=%d\n", isim);
     {/*Auto adjusting ephi for testing different ephi*/
     	static int ephi_is_auto=0;
 	if(simcfg->ephi->p[0]<0){
@@ -391,10 +392,7 @@ static void filter_cl(SIM_T *simu){
 	}
     }
  
-    /*hysteresis. */
-    if(simu->hyst){
-	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
-    }else//dmreal and dmcmd is the same.
+ 
     
     if(recon->moao && !parms->gpu.moao){
 	warning_once("moao filter implemented with LPF\n");
@@ -417,6 +415,35 @@ static void filter_cl(SIM_T *simu){
 	    }
 	}
     }
+    if(PARALLEL==2){
+	//Wait until all clients has consumed the last dmreal
+	if(simu->dmreal_isim!=-1){
+	    int count=parms->evl.nevl;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(simu->reconisim+1>=parms->powfs[ipowfs].step){
+		    count+=parms->powfs[ipowfs].nwfs;
+		}
+	    }
+	    while(simu->dmreal_count < count){
+		//dbg("waiting: dmreal_count is %d need %d\n", simu->dmreal_count, parms->evl.nevl + parms->nwfs);
+		pthread_cond_wait(&simu->dmreal_condw, &simu->dmreal_mutex);
+		pthread_mutex_unlock(&simu->dmreal_mutex);
+	    }
+	    if(simu->dmreal_count > parms->evl.nevl + parms->nwfs){
+		warning("error: dmreal_count is %d need %d\n", simu->dmreal_count, parms->evl.nevl + parms->nwfs);
+	    }
+	}
+	//dbg("ready: dmreal_count is %d\n", simu->dmreal_count);
+    }
+    /*hysteresis. */
+    if(simu->hyst){
+	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
+    }else{
+	dcellcp(&simu->dmreal, simu->dmcmd);
+    }
+}
+void filter_fsm(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
     if(simu->fsmint){
 	/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
 	if(parms->sim.f0fsm>0){//Apply SHO filter
@@ -458,12 +485,13 @@ static void filter_cl(SIM_T *simu){
 		//Use isim+1 because the command is for next time step.
 		//minus adjust for delay
 		double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-		double angle=((isim+1-adjust)/parms->powfs[ipowfs].dtrat)*anglei;
+		double angle=((simu->wfsisim+1-adjust)/parms->powfs[ipowfs].dtrat)*anglei;
 		simu->fsmreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
 		simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }
 	}
     }
+    simu->fsmerr=0;
 }
 /**
    filter DM commands in open loop mode by simply copy the output
@@ -485,7 +513,7 @@ static void filter_ol(SIM_T *simu){
     }
     if(parms->dbg.dmoff){
 	info_once("Add injected DM offset vector\n");
-	int icol=(simu->isim+1)%parms->dbg.dmoff->ny;
+	int icol=(simu->reconisim+1)%parms->dbg.dmoff->ny;
 	for(int idm=0; idm<parms->ndm; idm++){
 	    dadd(&simu->dmcmd->p[idm], 1, P(parms->dbg.dmoff, idm, icol), -1);
 	}
@@ -503,6 +531,8 @@ static void filter_ol(SIM_T *simu){
     /*hysterisis. */
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
+    }else{
+	dcellcp(&simu->dmreal, simu->dmcmd);
     }
     /*moao DM is already taken care of automatically.*/
 }
@@ -515,7 +545,7 @@ void turb_dm(SIM_T *simu){
     for(int idm=0; idm<parms->ndm; idm++){
 	if(!simu->dmadd->p[idm]) continue;
 	double *restrict p2=simu->dmreal->p[idm]->p;
-	const int icol=(simu->isim+1)%simu->dmadd->p[idm]->ny;
+	const int icol=(simu->reconisim+1)%simu->dmadd->p[idm]->ny;
 	const double *p=simu->dmadd->p[idm]->p+simu->dmadd->p[idm]->nx*icol;
 	if(simu->dmadd->p[idm]->nx==simu->dmreal->p[idm]->nx){//match
 	    for(long i=0; i<simu->dmadd->p[idm]->nx; i++){
@@ -572,5 +602,11 @@ void filter_dm(SIM_T *simu){
     //mark no output to handle mutiple dtrat case.
     simu->dmerr=0;
     simu->Merr_lo=0;
-    simu->fsmerr=0;
+    if(PARALLEL==2){
+	//Signal perfevl and wfsgrad that dmreal is ready
+	simu->dmreal_isim=simu->reconisim+2;
+	simu->dmreal_count=0;//reset the counter
+	pthread_cond_broadcast(&simu->dmreal_condr);
+	//dbg("dmreal_isim is set to %d\n", simu->dmreal_isim);
+    }
 }

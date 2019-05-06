@@ -25,7 +25,7 @@
 
 void save_pistat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    const int isim=simu->isim;
+    const int isim=simu->wfsisim;
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].pistatout){
@@ -184,7 +184,7 @@ void save_recon(SIM_T *simu){
 	    }
 	}
     }
-    if(parms->save.dm && (!parms->sim.closeloop || simu->isim>0)){
+    if(parms->save.dm && (!parms->sim.closeloop || simu->reconisim>=0)){
 	if(simu->dmfit){
 	    zfarr_push(simu->save->dmfit, simu->reconisim, simu->dmfit);
 	}
@@ -237,7 +237,7 @@ void save_dmproj(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     if(parms->save.dm){
-	zfarr_push(simu->save->dmproj, simu->isim, simu->dmproj);
+	zfarr_push(simu->save->dmproj, simu->wfsisim, simu->dmproj);
     }
     if(parms->plot.run && simu->dmproj){ 
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -293,7 +293,7 @@ void save_dmreal(SIM_T *simu){
 	}
     }
     if(parms->save.dm){
-	int isim=(parms->sim.closeloop?1:0)+simu->isim;
+	int isim=(parms->sim.closeloop?2:0)+simu->reconisim;
 	if(isim>=0 && isim<parms->sim.end){
 	    zfarr_push(simu->save->dmreal, isim, simu->dmreal);
 	    zfarr_push(simu->save->dmcmd, isim, simu->dmcmd);

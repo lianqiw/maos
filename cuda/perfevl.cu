@@ -266,7 +266,7 @@ void gpu_perfevl_queue(thread_t *info){
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
     const RECON_T *recon=simu->recon;
-    const int isim=simu->isim;
+    const int isim=simu->perfisim;
     const int imoao=parms->evl.moao;
     const int nloc=aper->locs->nloc;
     const int nwvl=parms->evl.nwvl;
@@ -359,6 +359,7 @@ void gpu_perfevl_queue(thread_t *info){
 	if(parms->evl.tomo){
 	    TO_IMPLEMENT;
 	}else{
+	    wait_dmreal(simu, simu->perfisim);
 	    gpu_dm2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmreal, parms->ndm, 
 		       parms->evl.hs->p[ievl], 0, thetax, thetay,
 		       0,0,-1, stream);
@@ -437,7 +438,7 @@ void gpu_perfevl_sync(thread_t *info){
     TIC;tic;
     SIM_T *simu=(SIM_T*)info->data;
     const PARMS_T *parms=simu->parms;
-    const int isim=simu->isim;
+    const int isim=simu->perfisim;
     const APER_T *aper=simu->aper;
     const RECON_T *recon=simu->recon;
     const int nmod=parms->evl.nmod;
@@ -508,7 +509,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 		/*Compute complex. */
 		cuccell psfs(nwvl, 1);
 		psfcomp(psfs, iopdevl, nwvl, ievl, nloc, stream);
-		zfarr_push(simu->save->evlpsfhist_ngsr[ievl], simu->isim, psfs, stream);
+		zfarr_push(simu->save->evlpsfhist_ngsr[ievl], simu->perfisim, psfs, stream);
 		if(parms->evl.psfmean){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			curaddcabs2(cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl], 1, 
@@ -531,11 +532,11 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 void gpu_perfevl_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(!parms->evl.nevl) return;
-    const int isim=simu->isim;
+    const int isim=simu->perfisim;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 	info("Step %d: Output PSF\n", isim);
 	const int nwvl=parms->evl.nwvl;
-	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
+	int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
 	if(cudata->perf.psfol){
 	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
@@ -588,7 +589,7 @@ void gpu_perfevl_save(SIM_T *simu){
     }
     if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
 	info("Step %d: Output opdcov\n", isim);
-	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
+	int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!parms->evl.psf->p[ievl]) continue;

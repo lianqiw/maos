@@ -139,7 +139,7 @@ void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stre
 }
 
 curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
-    :npsr(0),ndm(0),delay(0),isim(0),reconisim(0),
+    :npsr(0),ndm(0),delay(0),reconisim(0),
      xnx(0),xny(0),anx(0),any(0), anloc(0),ngrad(0), dt(0),
      W01(recon->W0, recon->W1, recon->fmap->nx){
     ndm=parms->ndm;

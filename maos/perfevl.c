@@ -128,7 +128,7 @@ void perfevl_ievl(thread_t *info){
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
     const RECON_T *recon=simu->recon;
-    const int isim=simu->isim;
+    const int isim=simu->perfisim;
     const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
     const int nmod=parms->evl.nmod;
     const int nps=parms->atm.nps;
@@ -195,7 +195,7 @@ void perfevl_ievl(thread_t *info){
 
 	TIM(1);
 	if(save_evlopd){
-	    zfarr_push(simu->save->evlopdol[ievl], simu->isim, iopdevl);
+	    zfarr_push(simu->save->evlopdol[ievl], simu->perfisim, iopdevl);
 	}
 	if(parms->plot.run){
 	    drawopdamp("Evlol", aper->locs,iopdevl->p , aper->amp1->p, parms->dbg.draw_opdmax->p,
@@ -274,6 +274,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}else{
 	    /* Apply dm correction. tip/tilt command is contained in DM commands */
+	    wait_dmreal(simu, simu->perfisim);
 	    if(simu->dmreal){
 		int ndm=parms->ndm;
 		for(int idm=0; idm<ndm; idm++){
@@ -349,7 +350,7 @@ void perfevl_ievl(thread_t *info){
 static void perfevl_mean(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    const int isim=simu->isim;
+    const int isim=simu->perfisim;
     const int nevlmod=parms->evl.nmod;
     const int nevl=parms->evl.nevl;
     /*Field average the OL error */
@@ -518,10 +519,10 @@ static void perfevl_mean(SIM_T *simu){
 */
 static void perfevl_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    const int isim=simu->isim;
+    const int isim=simu->perfisim;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 	info("Step %d: Output PSF (cumulative average).\n", isim);
-	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
+	int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
 	if(!parms->sim.evlol){
 	    dcellscale(simu->evlpsfmean, scale);
@@ -566,7 +567,7 @@ static void perfevl_save(SIM_T *simu){
     }
     if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
 	info("Step %d: Output opdcov (non-cumulative average)\n", isim);
-	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
+	int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
 	dcellscale(simu->evlopdcov, scale);
 	dcellscale(simu->evlopdmean, scale);
@@ -601,8 +602,7 @@ static void perfevl_save(SIM_T *simu){
    Evaluate performance by calling perfevl_ievl in parallel and then calls
    perfevl_mean to field average.  */
 void perfevl(SIM_T *simu){
-    extern int PARALLEL;
-    double tk_start=PARALLEL?simu->tk_0:myclockd();
+    double tk_start=PARALLEL==1?simu->tk_0:myclockd();
     const PARMS_T *parms=simu->parms;
     if(!(parms->gpu.evl) && parms->evl.nevl>1){ //Cache the ground layer. 
 	int ips=simu->perfevl_iground;
@@ -614,7 +614,7 @@ void perfevl(SIM_T *simu){
 	    }
 	    const int ievl=0;//doesn't matter for ground layer. 
 	    int ind=ievl+parms->evl.nevl*ips;
-	    const int isim=simu->isim;
+	    const int isim=simu->perfisim;
 	    const double dt=parms->sim.dt;
 	    const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	    simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
@@ -624,7 +624,7 @@ void perfevl(SIM_T *simu){
 	    CALL_THREAD(simu->evl_prop_atm[ind], 0);
 	}
     }
-    if(!PARALLEL || !parms->gpu.evl){
+    if(PARALLEL!=1 || !parms->gpu.evl){
 	CALL_THREAD(simu->perfevl_pre, 0);
     }
     if(simu->perfevl_post){//only in GPU mode

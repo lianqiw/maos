@@ -847,7 +847,7 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-    const int isim=simu->isim;
+    const int isim=simu->wfsisim;
     double focus=0;
     if(parms->powfs[ipowfs].llt){
 	if(powfs[ipowfs].focus){
@@ -1124,4 +1124,22 @@ dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs){
 	}
     }
     return nea;
+}
+
+void wait_dmreal(SIM_T *simu, int isim){
+    if(PARALLEL==2){
+	//if(simu->dmreal_isim!=-1){
+	while(simu->dmreal_isim!=isim){
+	    //if(simu->dmreal_isim+1!=isim){
+	    //	error("dmreal_isim=%d, isim=%d\n", simu->dmreal_isim, isim);
+	    //}
+	    //dbg("waiting: dmreal_isim is %d need %d...\n", simu->dmreal_isim, isim);
+	    pthread_cond_wait(&simu->dmreal_condr, &simu->dmreal_mutex);
+	}
+	//dbg("ready: dmreal_isim is %d need %d\n", simu->dmreal_isim, isim);
+	atomicadd(&simu->dmreal_count,1);
+	//}
+	pthread_mutex_unlock(&simu->dmreal_mutex);
+	pthread_cond_signal(&simu->dmreal_condw);
+    }
 }

@@ -38,7 +38,6 @@
 #if HAVE_NUMA_H
 #include <numa.h>
 #endif
-extern int PARALLEL;
 extern int KEEP_MEM;
 extern int draw_single;
 static double tk_0;
@@ -111,12 +110,13 @@ void maos_isim(int isim){
 	draw_single=0;
     }
     double ck_0=myclockd();
-    simu->isim=isim;
+    simu->wfsisim=isim;
+    simu->perfisim=isim;
     simu->status->isim=isim;
     if(!parms->sim.closeloop){
-	simu->reconisim=simu->isim;
+	simu->reconisim=isim;
     }else{//work on gradients from last time step for parallelization.
-	simu->reconisim=simu->isim-1;
+	simu->reconisim=isim-1;
     }
     sim_update_etf(simu);
     if(!parms->atm.frozenflow){
@@ -150,14 +150,16 @@ void maos_isim(int isim){
 	    }
 #endif
 	}
-	if(PARALLEL){
+	if(PARALLEL==1){
 	    simu->tk_0=myclockd();
 	    /*
 	      We do the big loop in parallel to make better use the
 	      CPUs. Notice that the reconstructor is working on grad from
 	      last time step so that there is no confliction in data access.
+
+	      Launch perfevl_pre and wfsgrad_pre to allow gpu code to execute in advance. 
 	    */
-	    /*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
+
 	    if(parms->gpu.evl && !NO_EVL){
 		//Queue tasks on GPU, no stream sync is done
 		QUEUE_THREAD(&group, simu->perfevl_pre, 0);
@@ -179,8 +181,7 @@ void maos_isim(int isim){
 	    }
 	    if(!NO_WFS){
 		if(parms->tomo.ahst_idealngs==1 || (parms->gpu.wfs && !parms->gpu.evl)){
-		    //in ahst_idealngs==1 mode, wait for perfevl to finish.
-		    //otherwise, wait for GPU tasks to be queued before calling sync
+		    /*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 		    WAIT(group);
 		}
 		QUEUE(&group, (thread_fun)wfsgrad, simu, 1, 0);
@@ -238,27 +239,8 @@ void maos_isim(int isim){
     }
     simu->status->laps=(long)(ck_end-tk_0);
     simu->status->tot  =ck_end-ck_0;
-    simu->status->wfs  =simu->tk_wfs;
-    simu->status->recon=simu->tk_recon;
-    simu->status->other=simu->tk_cache;
-    simu->status->eval =simu->tk_eval;
-    simu->status->scale=1;
-    if(simu->timing){
-	simu->timing->p[isim*simu->timing->nx]=get_job_mem();
-	simu->timing->p[isim*simu->timing->nx+1]=simu->status->tot;
-	simu->timing->p[isim*simu->timing->nx+2]=simu->status->wfs;
-	simu->timing->p[isim*simu->timing->nx+3]=simu->status->recon;
-	simu->timing->p[isim*simu->timing->nx+4]=simu->status->eval;
-    }
-    double this_time=myclockd();
-    if(this_time>simu->last_report_time+1 || isim+1==simend || parms->sim.pause==1){
-	/*we don't print out or report too frequently. */
-	simu->last_report_time=this_time;
-#if defined(__linux__) || defined(__APPLE__)
-	scheduler_report(simu->status);
-#endif
-	print_progress(simu);
-    }
+   
+    print_progress(simu);
 }
 
 /**
@@ -283,12 +265,37 @@ void maos_sim(){
 #ifdef HAVE_NUMA_H
 	numa_set_localalloc();
 #endif
-	for(int isim=simstart; isim<simend; isim++){
-	    maos_isim(isim);
-	    if(parms->sim.pause>0 && isim%parms->sim.pause==0){
-		mypause();
+	if(PARALLEL==2){
+#pragma omp parallel
+#pragma omp sections
+	    {
+#pragma omp section
+		for(int isim=simstart; isim<simend; isim++){
+		    simu->perfisim=isim;
+		    perfevl(simu);
+		    print_progress(simu);
+		}
+#pragma omp section
+		for(int isim=simstart; isim<simend; isim++){
+		    simu->wfsisim=isim;
+		    wfsgrad(simu);
+		    shift_grad(simu);
+		}
+#pragma omp section
+		for(int isim=simstart; isim<simend; isim++){
+		    simu->reconisim=isim-1;
+		    reconstruct(simu);
+		    filter_dm(simu);
+		}
 	    }
-	}/*isim */
+	}else{
+	    for(int isim=simstart; isim<simend; isim++){
+		maos_isim(isim);
+		if(parms->sim.pause>0 && isim%parms->sim.pause==0){
+		    mypause();
+		}
+	    }/*isim */
+	}
 	{
 	    /*Compute average performance*/
 	    int isim0;

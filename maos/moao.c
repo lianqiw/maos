@@ -273,7 +273,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 	    }
 	    if(parms->save.dm){
-		zfarr_push(simu->save->dm_wfs[iwfs], simu->isim, dmmoao->p[0]);
+		zfarr_push(simu->save->dm_wfs[iwfs], simu->wfsisim, dmmoao->p[0]);
 	    }
 	    dcellfree(rhsout);
 	    dmmoao->p[0]=NULL;
@@ -294,8 +294,8 @@ void moao_recon(SIM_T *simu){
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		parms->recon.warm_restart, parms->fit.maxit);
 	    if(0){
-		writebin(rhsout->p[0], "evl_rhs_%d_%d", ievl, simu->isim);
-		writebin(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->isim);
+		writebin(rhsout->p[0], "evl_rhs_%d_%d", ievl, simu->perfisim);
+		writebin(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->perfisim);
 	    }
 	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
 	      double ptt[3]={0,0,0};
@@ -319,7 +319,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){
-		zfarr_push(simu->save->dm_evl[ievl], simu->isim, dmmoao->p[0]);
+		zfarr_push(simu->save->dm_evl[ievl], simu->perfisim, dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
 	    dmmoao->p[0]=NULL;

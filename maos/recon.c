@@ -328,6 +328,17 @@ void reconstruct(SIM_T *simu){
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
     if(isim<0) return;
+    if(PARALLEL==2){
+	while(simu->wfsgrad_isim<simu->reconisim){
+	    //dbg("waiting wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
+	    //if(simu->wfsgrad_isim+1==simu->reconisim){
+	    //}
+	    pthread_cond_wait(&simu->wfsgrad_condr, &simu->wfsgrad_mutex);
+	}
+	//dbg("ready: wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
+	simu->wfsgrad_count++;
+	pthread_mutex_unlock(&simu->wfsgrad_mutex);
+    }
     const int hi_output=(!parms->sim.closeloop || (isim+1-parms->step_hi)%parms->sim.dtrat_hi==0);
     if(simu->gradlastcl){
 	if(parms->sim.closeloop){

@@ -350,7 +350,7 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
    Evolving the Sodium layer by updating the elongation transfer function.
 */
 void sim_update_etf(SIM_T *simu){
-    int isim=simu->isim;
+    int isim=simu->wfsisim;
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1112,11 +1112,8 @@ static void init_simu_dm(SIM_T *simu){
     }
     for(int idm=0; idm<parms->ndm; idm++){
 	simu->dmcmd->p[idm]=dnew(recon->anloc->p[idm],1);
-	if(simu->hyst){
-	    simu->dmreal->p[idm]=dnew(recon->anloc->p[idm],1);
-	}else{
-	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
-	}
+	//Do not reference for the new synchronization scheme.
+	simu->dmreal->p[idm]=dnew(recon->anloc->p[idm],1);
 	if(simu->dmrealsq){
 	    simu->dmrealsq->p[idm]=mapnew2(recon->amap->p[idm]);
 	    dset((dmat*)simu->dmrealsq->p[idm], invalid_val);
@@ -1297,9 +1294,21 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     const int nwfs=parms->nwfs;
     SIM_T *simu=mycalloc(1,SIM_T);
     global->simu=simu;
+
+    pthread_cond_init(&simu->dmreal_condr,0);
+    pthread_cond_init(&simu->dmreal_condw,0);
+    pthread_mutex_init(&simu->dmreal_mutex,0);
+    simu->dmreal_isim=-1;
+
+    pthread_cond_init(&simu->wfsgrad_condr,0);
+    pthread_cond_init(&simu->wfsgrad_condw,0);
+    pthread_mutex_init(&simu->wfsgrad_mutex,0);
+    simu->wfsgrad_isim=-1;
+
     SIM_SAVE_T *save=simu->save=mycalloc(1,SIM_SAVE_T);
-    simu->isim=-1;
-    simu->reconisim=-1;
+    simu->wfsisim=-1;
+    simu->perfisim=-1;
+    simu->reconisim=-2;
     simu->parms=parms;
     simu->powfs=powfs;
     simu->recon=recon;
@@ -1339,7 +1348,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->gpu.evl){
 	thread_prep(simu->perfevl_pre, 0, nevl, nevl, gpu_perfevl_queue, simu);
 	simu->perfevl_post=mycalloc(nevl,thread_t);
-	thread_prep(simu->perfevl_post, 0, nevl, 1, gpu_perfevl_sync, simu);
+	thread_prep(simu->perfevl_post, 0, nevl, nevl, gpu_perfevl_sync, simu);
     }else
 #endif
     {
@@ -1353,7 +1362,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     {
 	thread_prep(simu->wfsgrad_pre, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
     }
-    thread_prep(simu->wfsgrad_post, 0, nwfs, 1, wfsgrad_post, simu);
+    thread_prep(simu->wfsgrad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
     
     if(!parms->sim.evlol){
 	init_simu_dm(simu);
@@ -1631,91 +1640,115 @@ void free_simu(SIM_T *simu){
 /**
    Print out wavefront error information and timing at each time step.
 */
-void print_progress(const SIM_T *simu){
+void print_progress(SIM_T *simu){
+    const int isim=simu->perfisim;
     const PARMS_T *parms=simu->parms;
-    const STATUS_T *status=simu->status;
-    const double tkmean=status->scale;
-    const long rest=status->rest;
-    const long laps=status->laps;
-    const long resth=rest/3600;
-    const long restm=(rest-resth*3600)/60;
-    const long lapsh=laps/3600;
-    const long lapsm=(laps-lapsh*3600)/60;
-    const int isim=simu->isim;
-    const int nmod=parms->evl.nmod;
-    
-    if(parms->sim.evlol){
-	info("%sStep %5d: OL: %6.1f %6.1f %6.1f nm%s\n", GREEN,
-	      isim,
-	      mysqrt(simu->ole->p[isim*nmod])*1e9,
-	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
-	     mysqrt(simu->ole->p[2+isim*nmod])*1e9, BLACK);
-	
-	info("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
-	     status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
-    }else{    
-	info("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
-	     GREEN, isim,
-	     mysqrt(P(simu->ole, 0, isim))*1e9,
-	     mysqrt(P(simu->ole, 1, isim))*1e9,
-	     mysqrt(P(simu->ole, 2, isim))*1e9,
-	     mysqrt(P(simu->cle, 0, isim))*1e9,
-	     mysqrt(P(simu->cle, 1, isim))*1e9,
-	     mysqrt(P(simu->cle, 2, isim))*1e9);
-	if(parms->recon.split){
-	    info(" Split %6.1f %6.1f %6.1f nm",
-		 mysqrt(P(simu->clem, 0, isim))*1e9,
-		 mysqrt(P(simu->clem, 1, isim))*1e9,
-		 mysqrt(P(simu->clem, 2, isim))*1e9);
-	}
-	info("%s\n", BLACK);
-    
-	info("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
-	      " Used %ld:%02ld, Left %ld:%02ld\n",
-	      status->wfs*tkmean, status->recon*tkmean, 
-	      status->eval*tkmean, status->other*tkmean,
-	      status->tot*tkmean, status->mean*tkmean,
-	      lapsh,lapsm,resth,restm);
-	extern int NO_EVL;
-	if(!NO_EVL && !isfinite(simu->cle->p[isim*nmod])){
-	    error("Step %d: NaN/inf found: cle is %g\n", isim, simu->cle->p[isim*nmod]);
-	}
+    simu->status->wfs  =simu->tk_wfs;
+    simu->status->recon=simu->tk_recon;
+    simu->status->other=simu->tk_cache;
+    simu->status->eval =simu->tk_eval;
+    simu->status->scale=1;
+    if(simu->timing){
+	simu->timing->p[isim*simu->timing->nx]=get_job_mem();
+	simu->timing->p[isim*simu->timing->nx+1]=simu->status->tot;
+	simu->timing->p[isim*simu->timing->nx+2]=simu->status->wfs;
+	simu->timing->p[isim*simu->timing->nx+3]=simu->status->recon;
+	simu->timing->p[isim*simu->timing->nx+4]=simu->status->eval;
     }
+
+    double this_time=myclockd();
+    if(this_time>simu->last_report_time+1 || isim+1==parms->sim.end || parms->sim.pause==1){
+	/*we don't print out or report too frequently. */
+	simu->last_report_time=this_time;
+#if defined(__linux__) || defined(__APPLE__)
+	scheduler_report(simu->status);
+#endif
+	
+
+
+	const STATUS_T *status=simu->status;
+	const double tkmean=status->scale;
+	const long rest=status->rest;
+	const long laps=status->laps;
+	const long resth=rest/3600;
+	const long restm=(rest-resth*3600)/60;
+	const long lapsh=laps/3600;
+	const long lapsm=(laps-lapsh*3600)/60;
+	const int nmod=parms->evl.nmod;
     
-    if(parms->plot.run){
-	dmat *tmp=parms->recon.split?simu->clem:simu->cle;
-	const char *legs[4]={0,0,0,0};
-	int nline=2;
-	legs[0]="High Order";
-	legs[1]="Tip/Tilt";
-	if(parms->recon.split){
-	    nline++;
-	    legs[2]="Plate Scale";
-	    if(tmp->nx==4){
-		nline++;
-		legs[3]="Focus";
+	if(parms->sim.evlol){
+	    info("%sStep %5d: OL: %6.1f %6.1f %6.1f nm%s\n", GREEN,
+		 isim,
+		 mysqrt(simu->ole->p[isim*nmod])*1e9,
+		 mysqrt(simu->ole->p[1+isim*nmod])*1e9,
+		 mysqrt(simu->ole->p[2+isim*nmod])*1e9, BLACK);
+	
+	    info("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
+		 status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
+	}else{    
+	    info("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
+		 GREEN, isim,
+		 mysqrt(P(simu->ole, 0, isim))*1e9,
+		 mysqrt(P(simu->ole, 1, isim))*1e9,
+		 mysqrt(P(simu->ole, 2, isim))*1e9,
+		 mysqrt(P(simu->cle, 0, isim))*1e9,
+		 mysqrt(P(simu->cle, 1, isim))*1e9,
+		 mysqrt(P(simu->cle, 2, isim))*1e9);
+	    if(parms->recon.split){
+		info(" Split %6.1f %6.1f %6.1f nm",
+		     mysqrt(P(simu->clem, 0, isim))*1e9,
+		     mysqrt(P(simu->clem, 1, isim))*1e9,
+		     mysqrt(P(simu->clem, 2, isim))*1e9);
+	    }
+	    info("%s\n", BLACK);
+    
+	    info("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
+		 " Used %ld:%02ld, Left %ld:%02ld\n",
+		 status->wfs*tkmean, status->recon*tkmean, 
+		 status->eval*tkmean, status->other*tkmean,
+		 status->tot*tkmean, status->mean*tkmean,
+		 lapsh,lapsm,resth,restm);
+	    extern int NO_EVL;
+	    if(!NO_EVL && !isfinite(simu->cle->p[isim*nmod])){
+		error("Step %d: NaN/inf found: cle is %g\n", isim, simu->cle->p[isim*nmod]);
 	    }
 	}
-	dcell *res=dcellnew_same(nline,1,simu->isim+1,1);
-	if(parms->recon.split){
-	    for(int i=0; i<=simu->isim; i++){
-		P(res->p[0], i)=P(tmp, 0, i);//LGS
-		P(res->p[1], i)=P(tmp, 1, i);//TT
-		P(res->p[2], i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
-		if(nline==4){
-		    P(res->p[3], i)=P(tmp, 3, i);//Focus
+    
+	if(parms->plot.run){
+	    dmat *tmp=parms->recon.split?simu->clem:simu->cle;
+	    const char *legs[4]={0,0,0,0};
+	    int nline=2;
+	    legs[0]="High Order";
+	    legs[1]="Tip/Tilt";
+	    if(parms->recon.split){
+		nline++;
+		legs[2]="Plate Scale";
+		if(tmp->nx==4){
+		    nline++;
+		    legs[3]="Focus";
 		}
 	    }
-	}else{
-	    for(int i=0; i<simu->isim; i++){
-		P(res->p[0], i)=P(tmp, 2, i);//PTTR
-		P(res->p[1], i)=P(tmp, 0, i)-P(tmp,2,i);//TT
+	    dcell *res=dcellnew_same(nline,1,simu->perfisim+1,1);
+	    if(parms->recon.split){
+		for(int i=0; i<=simu->perfisim; i++){
+		    P(res->p[0], i)=P(tmp, 0, i);//LGS
+		    P(res->p[1], i)=P(tmp, 1, i);//TT
+		    P(res->p[2], i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
+		    if(nline==4){
+			P(res->p[3], i)=P(tmp, 3, i);//Focus
+		    }
+		}
+	    }else{
+		for(int i=0; i<simu->perfisim; i++){
+		    P(res->p[0], i)=P(tmp, 2, i);//PTTR
+		    P(res->p[1], i)=P(tmp, 0, i)-P(tmp,2,i);//TT
+		}
 	    }
+	    dcellcwpow(res, 0.5); dcellscale(res, 1e9);
+	    plot_points("Res", res->nx, NULL, res, NULL, NULL, "nn", NULL, legs,
+			"Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
+	    dcellfree(res);
 	}
-	dcellcwpow(res, 0.5); dcellscale(res, 1e9);
-	plot_points("Res", res->nx, NULL, res, NULL, NULL, "nn", NULL, legs,
-		    "Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
-	dcellfree(res);
     }
 }
 /**

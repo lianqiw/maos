@@ -55,7 +55,7 @@ public:
 class curecon_geom:public nonCopyable{
 public:
     int npsr, ndm;
-    int delay, isim, reconisim;
+    int delay, reconisim;
     cugridcell xmap;/*Grid of xmap*/
     cugridcell xcmap;
     cugridcell amap;

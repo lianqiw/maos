@@ -29,5 +29,6 @@ extern int exit_fail;
 extern const char *dirskysim;
 #define EXIT raise(SIGTERM)
 extern GLOBAL_T *global;
+extern int PARALLEL;
 #endif
 

@@ -655,7 +655,8 @@ typedef struct SIM_T{
     int perfevl_iground;/**<index of the layer at ground*/
     int seed;          /**<current running seed.*/
     int iseed;         /**<index of current running seed.*/
-    int isim;          /**<record current simulations step.*/
+    int wfsisim;       /**<record current simulations step for wfs.*/
+    int perfisim;      /**<record current simulations step for pefevl.*/
     int reconisim;     /**<The time step for the gradlast data struct. =isim for OL, =isim-1 for CL*/
     /*maintain pointer of other structs for use in thread functions.*/
     const PARMS_T *parms; /**<pointer to parms*/
@@ -664,6 +665,20 @@ typedef struct SIM_T{
     POWFS_T *powfs;    /**<pointer to powfs*/
     double last_report_time;/**<The time we lasted reported status to the scheduler.*/
     int tomo_update;   /**<Triggering setup_recon_tomo_upate*/
+
+    //For synchronization. perfevl and wfsgrad waist for dmreal to be updated.
+    //reconstruct waist for gradients to be available.
+    int dmreal_isim;//which isim this dmreal is valid for
+    int dmreal_count;//how many time this dmreal has been consumed (parms->evl.nevl + parms->nwfs)
+    pthread_cond_t dmreal_condr;
+    pthread_cond_t dmreal_condw;
+    pthread_mutex_t dmreal_mutex;
+    int wfsgrad_isim;//which isim this wfsgrad is from
+    int wfsgrad_count;//how many times this wfsgrad has been consumed.
+    pthread_cond_t wfsgrad_condr;
+    pthread_cond_t wfsgrad_condw;
+    pthread_mutex_t wfsgrad_mutex;
+    
 }SIM_T;
 #define CHECK_SAVE(start,end,now,every) ((now)>=(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
 
@@ -676,4 +691,5 @@ typedef struct GLOBAL_T{
     int iseed;
     int setupdone;
 }GLOBAL_T;
+void wait_dmreal(SIM_T*simu, int isim);
 #endif

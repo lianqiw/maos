@@ -36,7 +36,7 @@ int NO_RECON=0;
 /** end*/
 static void read_env(){
     READ_ENV_DBL(TOMOSCALE,0,INFINITY);
-    READ_ENV_INT(PARALLEL,0,1);
+    READ_ENV_INT(PARALLEL,0,2);
     READ_ENV_INT(NO_WFS,0,1);
     READ_ENV_INT(NO_EVL,0,1);
     READ_ENV_INT(NO_RECON,0,1);
@@ -51,10 +51,13 @@ void maos_setup(const PARMS_T *parms){
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
     read_env();
-    if(parms->sim.closeloop==0 || parms->evl.tomo){
-	/*need to disable parallelizing the big loop. */
-	PARALLEL=0;
+    if(PARALLEL && (parms->sim.closeloop==0 || parms->evl.tomo)){
+	PARALLEL=0;	/*need to disable parallelizing the big loop. */
     }
+    if(PARALLEL==2 && (parms->sim.dmproj || !parms->atm.frozenflow || !HAS_OPENMP)){
+	PARALLEL=1;
+    }
+
     if(parms->sim.skysim){
 	dirskysim="skysim";
 	mymkdir("%s",dirskysim);
