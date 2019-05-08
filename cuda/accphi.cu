@@ -198,8 +198,8 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		}else
 		*/
 		{
-		    nx0=MIN(nx0,MIN(nxa, nxn*2));
-		    ny0=MIN(nx0,MIN(nxa, nxn*2));
+		    nx0=MIN(parms->atm.nx,MIN(nxa, nxn*2));
+		    ny0=MIN(parms->atm.ny,MIN(nxa, nxn*2));
 		}
 	    }
 	    info("We will host %dx%d in GPU, taking %zd MiB\n", 
