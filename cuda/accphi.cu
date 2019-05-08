@@ -192,12 +192,14 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		/*we are able to host this amount. */
 		long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
 		info("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
-		if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
+		/*if(nxa*nxa>parms->atm.nx*parms->atm.ny){//we can host all atmosphere. 
 		    nx0=parms->atm.nx;
 		    ny0=parms->atm.ny;
-		}else{
-		    nx0=MIN(nxa, nxn*2);
-		    ny0=MIN(nxa, nxn*2);
+		}else
+		*/
+		{
+		    nx0=MIN(nx0,MIN(nxa, nxn*2));
+		    ny0=MIN(nx0,MIN(nxa, nxn*2));
 		}
 	    }
 	    info("We will host %dx%d in GPU, taking %zd MiB\n", 
