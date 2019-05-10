@@ -123,33 +123,26 @@ private:
     int *nref;  //The reference counter. Delete p0 only if nref is valid and has value of 1.
 protected:
     T *p;  //The memory address being used.
-private:
-    void _init(long n){
-	if(n>0){
-	    p0=new Dev<T>[n];
-	    nref=new int;
-	    nref[0]=1;
-	}
-	p=(T*)p0;
-    }
-    void _deinit(){
+  
+public:
+    void deinit(){
 	if(nref && !atomicadd(nref, -1)){
 	    delete[] p0;
-	    delete nref;
+	    myfree(nref);
 	}
     }
-public:
+
     //Constructors and related
     RefP():p(0),p0(0),nref(0){
     }
-    RefP(long n, T *pin=0, int own=1):p0((Dev<T>*)pin),nref(0){
+    explicit RefP(long n, T *pin=0, int own=1):p0((Dev<T>*)pin),nref(0){
 	if(n>0){
 	    if(!p0){
 		p0=new Dev<T>[n];
 		own=1;
 	    }
 	    if(own){
-		nref=new int;
+		nref=mymalloc(1, int);
 		nref[0]=1;
 	    }
 	}
@@ -170,10 +163,10 @@ public:
 	return *this;
     }
     void init(long n=0){
-	_deinit();
+	deinit();
 	if(n>0){
 	    p0=new Dev<T>[n];
-	    nref=new int;
+	    nref=mymalloc(1, int);
 	    nref[0]=1;
 	}else{
 	    p0=0;
@@ -182,8 +175,8 @@ public:
 	p=(T*)p0;	
     }
     //Destructors and related
-    ~RefP(){
-	_deinit();
+    virtual ~RefP(){
+	deinit();
     }
     
     //Access operators
@@ -291,7 +284,7 @@ public:
 	return *this;
     }
  
-    Array Vector(){
+    Array Vector()const{
 	Array tmp=*this;
 	tmp.nx=tmp.nx*tmp.ny;
 	tmp.ny=1;
@@ -367,6 +360,18 @@ public:
 	    }
 	}
 	p2pm();
+    }
+
+    Cell(const Cell&in):Parent(in),m(in.m),pm_cpu(in.pm_cpu),pm(in.pm){}
+
+    Cell& operator=(const Cell &in){
+	if(this!=&in){
+	    Parent::operator=(in);
+	    m=in.m;
+	    pm_cpu=in.pm_cpu;
+	    pm=in.pm;
+	}
+	return *this;
     }
     //Use default copy constructor and copy assignment operator
     void init(long nxi=0, long nyi=1){
@@ -480,7 +485,7 @@ public:
 	    cudaFree(p);
 	    cudaFree(i);
 	    cudaFree(x);
-	    delete nref;
+	    myfree(nref);
 	}
 	p=0; i=0; x=0; nref=0;
     }

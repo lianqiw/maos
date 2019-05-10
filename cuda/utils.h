@@ -20,7 +20,7 @@
 #include <typeinfo>
 #include "common.h"
 #include "types.h"
-#include "cudata.h"
+#include "cudata.h" 
 class lock_t{
     pthread_mutex_t &mutex;
     int enable;

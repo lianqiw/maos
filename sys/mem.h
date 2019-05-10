@@ -31,9 +31,10 @@ extern "C"{
 }
 #endif
 #define myalloca(nelem, type) (type*)alloca(nelem*sizeof(type))
-#define mycalloc(nelem, type) (type*)calloc(nelem,sizeof(type))
-#define mymalloc(nelem, type) (type*)malloc(nelem*sizeof(type))
-#define myrealloc(p, nelem, type) (type*)realloc(p,nelem*sizeof(type))
+#define mycalloc(nelem, type) (type*)calloc_maos(nelem,sizeof(type))
+#define mymalloc(nelem, type) (type*)malloc_maos(nelem*sizeof(type))
+#define myrealloc(p, nelem, type) (type*)realloc_maos(p,nelem*sizeof(type))
+#define myfree(p) free_maos(p)
 #if defined(__linux__) || !defined(__cplusplus)
 #ifndef IN_MEM_C
 #define free free_maos

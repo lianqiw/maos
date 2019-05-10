@@ -87,7 +87,7 @@ cusp::cusp(const dsp *src_csc, /*Source dsp in CSC*/
     cp2gpu(&p, src->p, src->ny+1, 1);
     cp2gpu(&i, src->i, src->nzmax, 1);
     cp2gpu(&x, src->x, src->nzmax, 1);
-    nref=new int;
+    nref=mymalloc(1, int);
     nref[0]=1;
     if(src_trans){
 	dspfree(src_trans);

@@ -17,11 +17,13 @@
 */
 #ifndef AOS_CUDA_PCG_H
 #define AOS_CUDA_PCG_H
+#include "curmat.h"
 namespace cuda_recon{
 /**
    hold data struct for temporary data used for CG to avoid alloc/free at every call to CG.
 */
-typedef struct CGTMP_T{
+class CGTMP_T{
+public:
     curcell r0;
     curcell z0;
     curcell p0;
@@ -29,11 +31,12 @@ typedef struct CGTMP_T{
     curmat store;
     Array<Real,Pinned> diff;
     int count_fail, count;
-    CGTMP_T():diff(0),count_fail(0),count(0){
+
+    CGTMP_T():count_fail(0),count(0){
     }
     ~CGTMP_T(){
     }
-}CGTMP_T;
+};
 //typedef void (*G_CGFUN)(curcell**, Real, const curcell*, Real, stream_t &stream);
 //typedef void (*G_PREFUN)(curcell**, const curcell*, stream_t &stream);
 class cucg_t;

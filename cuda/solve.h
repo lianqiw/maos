@@ -17,7 +17,6 @@
 */
 #ifndef AOS_CUDA_SOLVE_H
 #define AOS_CUDA_SOLVE_H
-#include "utils.h"
 #include "curmat.h"
 #include "pcg.h"
 namespace cuda_recon{
@@ -50,8 +49,8 @@ protected:
     cucgpre_t *precond;
 public:
     cucg_t(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(0){}
-    void Init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart;}
-    virtual ~cucg_t(){
+    void Init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart; precond=0;}
+    ~cucg_t(){
 	delete precond;
     }
     /*Left hand side forward operaton*/
@@ -123,14 +122,12 @@ public:
 class cusolve_mvm:public cusolve_l,nonCopyable{
     curmat M;
 public:
-    cusolve_mvm(dmat *_M){
-	cp2gpu(M, _M);
-    }
+    cusolve_mvm(dmat *_M);
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream){
 	if(!xout) xout=xin.New();
 	curmv(xout.M()(), 0., M, xin.M()(), 'n', 1., stream);
 	return 0;
     }
 };
-}//namespace
+};//namespace
 #endif

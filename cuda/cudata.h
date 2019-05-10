@@ -21,15 +21,16 @@
 #include "types.h"
 #include "perf.h"
 #include "wfs.h"
+#include "recon.h"
 extern int NGPU;
 extern int MAXGPU;
 extern Array<int> GPUS;
 typedef Real ATYPE;
 typedef Real GTYPE;
-namespace cuda_recon{
+/*namespace cuda_recon{
 class curecon_t;
 class curecon_geom;
-}
+}*/
 //Global data independent of GPU
 class cuglobal_t{
 public:
@@ -49,7 +50,10 @@ public:
 
     cuglobal_t():recongpu(0),atmscale(0),nmemcache(0),memcache(NULL){
 	pthread_mutex_init(&memmutex, 0);
+    }
+    ~cuglobal_t(){
 	free(memcache); memcache=0;
+	dfree(atmscale);
     }
 };
 //Per GPU data
@@ -83,6 +87,7 @@ public:
     cudata_t():recon(0){
     }
     ~cudata_t(){
+	delete recon;
     }
 };
 

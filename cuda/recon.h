@@ -63,6 +63,7 @@ public:
     void reset_config();
     ~curecon_t(){
 	reset_config();
+	delete grid;
     }
     void reset_runtime();
     void update(const PARMS_T *parms, POWFS_T*powfs, RECON_T *recon);

@@ -73,15 +73,22 @@ typedef struct{
     void *func[DT];
     int nfunc;
     size_t size;
+    size_t nbyte;
 }T_MEMKEY;
 typedef struct{
     void *p;
     void **func;
     int nfunc;
     size_t size;
+    size_t nbyte;
 }T_STATKEY;
 typedef int(*compar)(const void*, const void*);
 static int stat_cmp(const T_STATKEY *pa, const T_STATKEY *pb){
+    if(pa->nfunc<pb->nfunc){
+	return -1;
+    }else if(pa->nfunc>pb->nfunc){
+	return 1;
+    }
     int nfunc=MIN(pa->nfunc, pb->nfunc);
     for(int i=0; i<nfunc; i++){
 	if(pa->func[i]<pb->func[i]){
@@ -90,13 +97,7 @@ static int stat_cmp(const T_STATKEY *pa, const T_STATKEY *pb){
 	    return 1;
 	}
     }
-    if(pa->nfunc<pb->nfunc){
-	return -1;
-    }else if(pa->nfunc>pb->nfunc){
-	return 1;
-    }else{
-	return 0;
-    }
+    return 0;
 }
 static void stat_usage(const void *key, VISIT which, int level){
     const T_MEMKEY* key2=*((const T_MEMKEY**)key);
@@ -115,6 +116,7 @@ static void stat_usage(const void *key, VISIT which, int level){
 	    memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
 	    keynew->nfunc=key3.nfunc;
 	    keynew->size=key2->size;
+	    keynew->nbyte=key2->nbyte;
 	    if(!tsearch(keynew, &MSTATROOT, (compar)stat_cmp)){
 		error("Error inserting to tree\n");
 	    }
@@ -128,7 +130,7 @@ static void print_usage(const void *key, VISIT which, int level){
     const T_STATKEY *key2=*((const T_STATKEY**)key);
     (void) level;
     if(which==leaf || which==postorder){
-	info("size %4zu B@%p", (key2->size), key2->p);
+	info("size %4zu(%2zu) B@%p", key2->size, key2->nbyte, key2->p);
 	print_backtrace_symbol(key2->func, key2->nfunc);
     }
 }
@@ -148,7 +150,7 @@ static int key_cmp(const void *a, const void *b){
     else if(p1>p2) return 1;
     else return 0;
 }
-static void memkey_add(void *p,size_t size){
+static void memkey_add(void *p, size_t nbyte, size_t size){
     if(!p){
 	if(size){
 	    error("memory allocation for %zu failed\n", size);
@@ -158,6 +160,7 @@ static void memkey_add(void *p,size_t size){
  
     T_MEMKEY *key=(T_MEMKEY*)calloc_default(1,sizeof(T_MEMKEY));
     key->p=p;
+    key->nbyte=nbyte;
     key->size=size;
 #ifndef __CYGWIN__
     key->nfunc=backtrace(key->func,DT);
@@ -170,7 +173,7 @@ static void memkey_add(void *p,size_t size){
 	warning("Error inserting to tree\n");
     }
     memcnt++;
-    memalloc+=size;
+    memalloc+=size*nbyte;
     UNLOCK(mutex_mem);    
     if(MEM_VERBOSE==1){
 	dbg("%p malloced with %zu bytes\n",p, size);
@@ -190,10 +193,10 @@ static int memkey_del(void*p){
     found=tfind(&key, &MROOT, key_cmp);
     if(found){
 	T_MEMKEY* key1=*(T_MEMKEY**)found;/*the address of allocated T_MEMKEY. */
-	memfree+=key1->size;
+	memfree+=key1->size*key1->nbyte;
 	memcnt--;
 	if(MEM_VERBOSE==1){
-	    info("Free: %p freed with %zu bytes\n",p, key1->size);
+	    info("Free: %p freed with %zu (%2zu) bytes\n",p, key1->size, key1->nbyte);
 	}else if(MEM_VERBOSE==2 && key1->size>1024){
 	    info("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
 	}
@@ -212,19 +215,19 @@ static int memkey_del(void*p){
 
 }
 static void *calloc_dbg(size_t nmemb, size_t size){
-    void *p=calloc_default(nmemb,size);
-    memkey_add(p,size*nmemb);
+    void *p=calloc_default(nmemb, size);
+    memkey_add(p,size,nmemb);
     return p;
 }
 static void *malloc_dbg(size_t size){
     void *p=malloc_default(size);
-    memkey_add(p,size);
+    memkey_add(p,1,size);
     return p;
 }
 static void *realloc_dbg(void*p0, size_t size){
     if(p0) memkey_del(p0);
     void *p=realloc_default(p0,size);
-    memkey_add(p,size);
+    memkey_add(p,1,size);
     return p;
 }
 static void free_dbg(void *p){
@@ -254,8 +257,8 @@ unamespace std{
     void* malloc_maos(size_t size){
 	return mem_debug?malloc_custom(size):malloc_default(size);
     }
-    void *calloc_maos(size_t size, size_t nmemb){
-	return mem_debug?calloc_custom(size, nmemb):calloc_default(size,nmemb);
+    void *calloc_maos(size_t nmemb, size_t size){
+	return mem_debug?calloc_custom(nmemb, size):calloc_default(nmemb, size);
     }
     void* realloc_maos(void *p, size_t size){
 	return mem_debug?realloc_custom(p, size):realloc_default(p,size);
@@ -270,8 +273,8 @@ void print_mem(){
     if(MROOT){
 	warning("%ld (%.3f MB) allocated memory not freed!!!\n",
 		memcnt, (memalloc-memfree)/1024./1024.);
-	twalk(MROOT,stat_usage);
-	twalk(MSTATROOT, print_usage);
+	twalk(MROOT,stat_usage);//walk over the recording tree and combine records with the same backtrace
+	twalk(MSTATROOT, print_usage);//print results.
     }else{
 	info("All allocated memory are freed.\n");
 	if(memcnt>0){
@@ -281,7 +284,7 @@ void print_mem(){
     info("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
     info("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 }
-static __attribute__((constructor)) void init(){
+static __attribute__((constructor(101))) void init(){
 #define RTLD_MINE RTLD_DEFAULT
     calloc_default=(void*(*)(size_t, size_t))dlsym(RTLD_MINE, "calloc");
     malloc_default=(void*(*)(size_t))dlsym(RTLD_MINE, "malloc");
@@ -306,7 +309,7 @@ static __attribute__((constructor)) void init(){
 /**
    Register routines to be called with mem.c is unloading (deinit).
  */
-static __attribute__((destructor)) void deinit(){
+static __attribute__((destructor(101))) void deinit(){
     void freepath();
     void thread_pool_destroy();
     //remove files that are 365 days old.

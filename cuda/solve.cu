@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "solve.h"
+#include "utils.h"
 namespace cuda_recon{
 Real cucg_t::solve(curcell &xout, const curcell &xin, stream_t &stream){
     Real ans;
@@ -176,5 +177,8 @@ void cusolve_cbs::chol_solve(Real *out, const Real *in, stream_t &stream){
     cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(Real),stream>>>(y(), Cl.Px(), Cl.Pp(), Cl.Pi(), n); 
     perm_i_do<<<DIM(n, 256),0,stream>>>(out, y(), Cp(), n);
     cudaStreamSynchronize(stream);
+}
+cusolve_mvm::cusolve_mvm(dmat *_M){
+    cp2gpu(M, _M);
 }
 }

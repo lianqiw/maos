@@ -29,9 +29,9 @@ libaogpu_la_LDFLAGS=$(LDOPTS)
 #	$(NVCC) $(CUDAOPT) -dlink .libs/libaogpu.a -o dlink.o
 #endif
 LDADD=libaogpu.la $(LIBCUDA) $(LDEXE_FULL)
-bin_PROGRAMS=../test/test_cuda ../bin/gpu_mvm
-___test_test_cuda_SOURCES=test.cu 
-___bin_gpu_mvm_SOURCES=gpu_mvm.c
+#bin_PROGRAMS=../test/test_cuda ../bin/gpu_mvm
+#___test_test_cuda_SOURCES=test.cu 
+#___bin_gpu_mvm_SOURCES=gpu_mvm.c
 
 #The following does the depency generation/tracking and verbosity right.
 .cu.o:

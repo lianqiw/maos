@@ -60,7 +60,7 @@ namespace cuda_recon{
 	}else{
 	    dmfit=curcell(parms->ndm, 1, recon->anloc->p, (long*)NULL);
 	}
-	dmfit_vec=curcell(parms->ndm, 1);
+	dmfit_vec.init(parms->ndm, 1);
 	for(int idm=0; idm<parms->ndm; idm++){
 	    dmfit_vec[idm]=dmfit[idm].Vector();
 	}
@@ -73,7 +73,7 @@ namespace cuda_recon{
 	}else{
 	    opdr=curcell(recon->npsr, 1, recon->xnloc->p, (long*)NULL);
 	}
-	opdr_vec=curcell(recon->npsr, 1);
+	opdr_vec.init(recon->npsr, 1);
 	for(int ips=0; ips<recon->npsr; ips++){
 	    opdr_vec[ips]=opdr[ips].Vector();
 	}
@@ -88,7 +88,7 @@ void curecon_t::reset_config(){
     if(FL && FL!=dynamic_cast<cusolve_l*>(FR)) delete FL; FL=0;
     delete FR; FR=0;
     if(RL && RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
-    delete RR; RR=0;//problematic.
+    delete RR; RR=0;
     delete MVM; MVM=0;
     if(moao){
 	for(int im=0; im<nmoao; im++){

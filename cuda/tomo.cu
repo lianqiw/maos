@@ -174,7 +174,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 			 const POWFS_T *powfs, const curecon_geom *_grid)
     :cucg_t(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
-     grid(_grid), GPscale(0),ptt(0),nwfs(0){
+     grid(_grid),ptt(0),nwfs(0){
     nwfs=parms->nwfsr;
 
     if(recon->PTT && !PTT){//for t/t proj in 1)uplink t/t 2) recon
@@ -208,7 +208,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
     {
 	GPp=Cell<short2,Gpu>(nwfs, 1);
 	GP=cuspcell(nwfs, 1);
-	GPscale=new Real[nwfs];
+	GPscale.init(nwfs,1);
 	saptr=Cell<int,Gpu>(nwfs, 1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs=parms->wfsr[iwfs].powfs;

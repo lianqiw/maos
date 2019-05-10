@@ -62,7 +62,7 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     curcell PDFTT;/**<Coupling between DF and TT*/
     Cell<int,Gpu> saptr;
     Cell<short2,Gpu> GPp;
-    Real *GPscale;
+    Array<Real> GPscale;
     cuspcell GP;
     int ptt;       /**< piston/tip/tilt removal in L()*/
     int nwfs;
@@ -86,7 +86,6 @@ public:
     virtual void Rt(curcell &out, Real beta, 
 		    curcell &xin, Real alpha, stream_t &stream);
     ~cutomo_grid(){
-	delete[] GPscale;
     }
 };
 
