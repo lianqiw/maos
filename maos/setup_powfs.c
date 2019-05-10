@@ -1408,8 +1408,22 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	INTSTAT_T *intstat=powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
 	if(parms->powfs[ipowfs].i0load){
 	    info("Loading i0, gx, gy\n");
-	    intstat->i0=dcellread("%s/powfs%d_i0",parms->powfs[ipowfs].i0load, ipowfs);
-	    if(parms->powfs[ipowfs].phytype_recon==1||parms->powfs[ipowfs].phytype_sim==1){
+	    if(zfexist("%s/powfs%d_i0",parms->powfs[ipowfs].i0load, ipowfs)){
+		intstat->i0=dcellread("%s/powfs%d_i0",parms->powfs[ipowfs].i0load, ipowfs);
+	    }else{
+		//convert runtime saved ints.
+		intstat->i0=dcellnew(nsa, parms->powfs[ipowfs].nwfs);
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		    dcell *i0=dcellread("%s/ints_1_wfs%d", parms->powfs[ipowfs].i0load, iwfs);
+		    for(int isa=0; isa<nsa; isa++){
+			P(intstat->i0, isa, jwfs)=dref(P(i0, isa));
+		    }
+		    dcellfree(i0);
+		}
+	    }
+	    if((parms->powfs[ipowfs].phytype_recon==1||parms->powfs[ipowfs].phytype_sim==1)
+		&& !parms->powfs[ipowfs].mtchfft){
 		intstat->gx=dcellread("%s/powfs%d_gx",parms->powfs[ipowfs].i0load, ipowfs);
 		intstat->gy=dcellread("%s/powfs%d_gy",parms->powfs[ipowfs].i0load, ipowfs);
 	    }
