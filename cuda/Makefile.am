@@ -41,6 +41,7 @@ LDADD=libaogpu.la $(LIBCUDA) $(LDEXE_FULL)
 
 .cu.lo:
 	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDAOPT) --compiler-options "$(CCBINOPT) " -c $< -o $@ 
+	@mkdir -p $(DEPDIR)
 	@$(NVCC) $(CUDAOPT) -M $< -MT $@ > $(DEPDIR)/$*.Po
 
 -include $(SRCS:%.cu=$(DEPDIR)/%.Po)
