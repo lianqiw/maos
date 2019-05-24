@@ -83,7 +83,7 @@ public:
     static void zero(T *p, size_t size, cudaStream_t stream){
 	if(p){
 	    if(stream==(cudaStream_t)-1){
-		DO(cudaMemset(p, 0, size));
+		DO(cudaMemset(p, 0, size*sizeof(T)));
 	    }else{
 		DO(cudaMemsetAsync(p, 0, size*sizeof(T), stream));
 	    }
