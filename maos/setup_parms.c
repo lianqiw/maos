@@ -297,7 +297,8 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(str,neareconfile);
     READ_POWFS_RELAX(str,neasimfile);
     READ_POWFS_RELAX(dbl,neasim);
-    READ_POWFS_RELAX(dbl,neaspeckle);
+    READ_POWFS_RELAX(dbl,neaextra);
+    READ_POWFS_RELAX(dbl,neamin);
     READ_POWFS_RELAX(dbl,bkgrnd);
     READ_POWFS_RELAX(dbl,bkgrndc);
     READ_POWFS_RELAX(str,bkgrndfn);
@@ -397,6 +398,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
 	    powfsi->llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
 	    powfsi->llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
+	    powfsi->llt->focus=readcfg_dbl("%sllt.focus",prefix);
 	    powfsi->llt->ttfr=readcfg_int("%sllt.ttfr",prefix);
 	    powfsi->llt->colprep=readcfg_int("%sllt.colprep",prefix); 
 	    powfsi->llt->colsim=readcfg_int("%sllt.colsim",prefix);
@@ -1620,6 +1622,14 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 	    }else if(parms->powfs[ipowfs].type==1){
 		parms->powfs[ipowfs].sigmatch=2;
+	    }
+	}
+	if(parms->powfs[ipowfs].usephy){
+	    if(parms->powfs[ipowfs].neaextra){
+		warning("powfs%d: Adding extra NEA of %.2f mas\n", ipowfs, parms->powfs[ipowfs].neaextra);
+	    }
+	    if(parms->powfs[ipowfs].neamin){
+		warning("powfs%d: Limit minimum NEA to %.2f mas\n", ipowfs, parms->powfs[ipowfs].neamin);
 	    }
 	}
 	if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].bkgrndfn){

@@ -193,7 +193,10 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}
 
 	const double area_thres=(nsa>4)?0.9*parms->powfs[ipowfs].safill2d:0;
-
+	const double neaextra2=copysign(pow(parms->powfs[ipowfs].neaextra/206265000.,2),
+					parms->powfs[ipowfs].neaextra);
+	const double neamin2=pow(parms->powfs[ipowfs].neamin/206265000.,2);
+  
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
 	    int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
@@ -222,7 +225,12 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			nea->p[0]=P(sanea0, isa, 0);
 			nea->p[1]=nea->p[2]=isxy?P(sanea0, isa, 2):0;
 			nea->p[3]=P(sanea0, isa, 1);
-		    
+			{//When signal level is too high, nea is too small, the MVR can be problematic
+			    nea->p[0]+=neaextra2;
+			    nea->p[3]+=neaextra2;
+			    if(nea->p[0]<neamin2) nea->p[0]=neamin2;
+			    if(nea->p[3]<neamin2) nea->p[3]=neamin2;
+			}
 			sanea2l->p[isa]=dchol(nea);
 			sanea2i->p[isa]=dinvspd(nea);
 		    }

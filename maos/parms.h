@@ -93,6 +93,7 @@ typedef struct APER_CFG_T{
 typedef struct LLT_CFG_T{
     double d;      /**<LLT clear aperture diameter*/
     double widthp; /**<Gaussian beam width percentage of d*/
+    double focus;  /**<RMS focus error in nm of LLT.*/
     char *ttpsd;   /**<PSD of uplink beam jitter*/
     char *fnrange; /**<File contains range to sodium layer*/
     char *fnprof;  /**<File contains sodium profile*/
@@ -102,7 +103,7 @@ typedef struct LLT_CFG_T{
     dmat *oy;    /**<see ox.*/
     dmat *misreg;
     lmat *i;        /**<Index into llt for this iwfs.*/
-    int ttfr;      /**<Remove piston/tip/tilt/focus from ncpa*/
+    int ttfr;      /**<Remove piston/tip/tilt and focus (if = 2) from ncpa*/
     int n;         /**<number of launch telescopes in this powfs*/
     int colprep;   /**<starting column to use in fn for ETF in preparation of
 		      matched filter*/
@@ -132,9 +133,8 @@ typedef struct POWFS_CFG_T{
     double neasim;  /**<NEA used in simulation. -1 to use nearecon*/
     char*  neasimfile;/**<read NEA used in simulation from file. Defined at
 			 sim.dt sampling rate, in radian. neasim must be -1*/
-    double neaspeckle;/**<NEA caused by speckle noise. Added to matched filter
-			 estimation of NEA due to photon and detector noise in
-			 physical optics mode for reconstructor*/
+    double neaextra;/**<Extra NEA to add in quadrature to the NEA determined by matched filter or CoG*/
+    double neamin;  /**<Minimum NEA to limit the NEA determined by matched filter or CoG*/
     double bkgrnd;  /**<background in electron per pixel per LGS frame*/
     double bkgrndc;/**<How much of the background in bkgrnd can be calibrated
 		      out. depends on variability.*/

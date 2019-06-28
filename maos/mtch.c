@@ -65,15 +65,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     int irot_multiplier=nllt>1?1:0;
     const int mtchadp=parms->powfs[ipowfs].mtchadp;
-    double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
-    if(neaspeckle>pixthetax){
-	error("parms->powfs[%d].neaspeckle=%g is bigger than pixel size\n",
-	      ipowfs, neaspeckle);
-    }
-    if(neaspeckle>0){
-	warning("powfs%d: Adding speckle noise of %.2f mas\n", ipowfs, neaspeckle*206265000);
-    }
-    double neaspeckle2=pow(neaspeckle,2);
+  
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
 	const double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
@@ -122,8 +114,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    P(i0sum,isa,ii0)=dsum(P(i0s,isa,ii0));
 	    i0sumsum+=P(i0sum,isa,ii0);
 
-	    nea2->p[0]+=neaspeckle2;
-	    nea2->p[3]+=neaspeckle2;
 	    if(P(i0sum,isa,ii0)<i0thres || nea2->p[0]>nea2thres || nea2->p[3]>nea2thres){
 		//Signal level too low or error to high.
 		nea2->p[0]=nea2->p[3]=nea2thres;

@@ -1117,7 +1117,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
     double wvl0=parms->powfs[ipowfs].wvl->p[0];
     LLT_T *llt=powfs[ipowfs].llt=mycalloc(1,LLT_T);
-    LLT_CFG_T *lltcfg=parms->powfs[ipowfs].llt;
+    const LLT_CFG_T *lltcfg=parms->powfs[ipowfs].llt;
 
     double lltd=lltcfg->d;
 
@@ -1160,8 +1160,8 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     /*normalized so that max(otf)=1; */
     sumamp2=1./(sqrt(sumamp2));
     dscale(llt->amp, sumamp2);
-    if(parms->powfs[ipowfs].llt->fnsurf){
-	mapcell *ncpa=mapcellread("%s",parms->powfs[ipowfs].llt->fnsurf);
+    if(lltcfg->fnsurf){
+	mapcell *ncpa=mapcellread("%s",lltcfg->fnsurf);
 	int nlotf=ncpa->nx*ncpa->ny;
 	assert(nlotf==1 || nlotf==parms->powfs[ipowfs].nwfs);
 	llt->ncpa=dcellnew(nlotf, 1);
@@ -1189,9 +1189,35 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     llt->loc=mksqloc(nx,nx,dx,dx, lpts->origx[0], lpts->origy[0]);
     llt->mcc =pts_mcc_ptt(llt->pts, llt->amp->p);
     llt->imcc =dcellinvspd_each(llt->mcc);
+    if(lltcfg->focus){
+	if(!llt->ncpa){
+	    llt->ncpa=dcellnew(1, 1);
+	    llt->ncpa->p[0]=dnew(nx,nx);
+	}
+	double nm2rad=1e-9*2*sqrt(3)*pow(lltcfg->d,-2);
+	dmat *focus=dnew(nx, nx);
+	loc_add_focus(focus->p, llt->loc, lltcfg->focus*nm2rad);
+	double var=0, piston=0;
+	long count=0;
+	for(long i=0; i<llt->loc->nloc; i++){
+	    if(llt->amp->p[i]>0){
+		count++;
+		var+=focus->p[i]*focus->p[i];
+		piston+=focus->p[i];
+	    }
+	}
+	var/=count;
+	piston/=count;
+	dadds(focus, -piston);
+	var=sqrt(var-piston*piston);
+	for(int ic=0; ic<llt->ncpa->nx; ic++){
+	    dadd(&llt->ncpa->p[ic], 1, focus, lltcfg->focus*1e-9/var);
+	}
+	info("Adding focus %g nm to LLT ncpa\n", lltcfg->focus);
+    }
     /*Remove tip/tilt/focus from ncpa */
     if(llt->ncpa && parms->powfs[ipowfs].llt->ttfr){
-	int nmod=4;//pick first four modes
+	int nmod=parms->powfs[ipowfs].llt->ttfr==2?4:3;
 	dmat *pttfa=zernike(llt->loc, parms->powfs[ipowfs].llt->d, 0, 2, 0);
 	dmat *pttf=drefcols(pttfa, 0, nmod);
 	dmat *proj=dpinv(pttf, llt->amp);
@@ -1299,7 +1325,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     int do_nea=0;
     rand_t rstat;
-    double neaspeckle2=0;
     if(!intstat || !intstat->i0){
 	if(!parms->powfs[ipowfs].phyusenea){
 	    error("powfs[%d].i0 is not available, please enable phyusenea.\n", ipowfs);
@@ -1310,15 +1335,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	do_nea=1;
 	powfs[ipowfs].sanea=dcellnew(intstat->i0->ny, 1);
 	seed_rand(&rstat, 1);
-	double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
-	if(neaspeckle>pixthetax){
-	    error("parms->powfs[%d].neaspeckle=%g is bigger than pixel size\n",
-		  ipowfs, neaspeckle);
-	}
-	if(neaspeckle>0){
-	    warning("powfs%d: Adding speckle noise of %.2f mas\n", ipowfs, neaspeckle*206265000);
-	}
-	neaspeckle2=pow(neaspeckle,2);
     }
     powfs[ipowfs].cogcoeff=dcellnew(nwfs,1);
     
@@ -1365,8 +1381,8 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dmat *nea=dnew(2,2);
 		    dmat *ints=intstat->i0->p[isa+jwfs*nsa];/*equivalent noise*/
 		    cog_nea(nea->p, ints, P(cogcoeff,0,isa), P(cogcoeff,1,isa), ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
-		    nea->p[0]=nea->p[0]*pixthetax*pixthetax+neaspeckle2;
-		    nea->p[3]=nea->p[3]*pixthetay*pixthetay+neaspeckle2;
+		    nea->p[0]=nea->p[0]*pixthetax*pixthetax;
+		    nea->p[3]=nea->p[3]*pixthetay*pixthetay;
 		    nea->p[1]=nea->p[1]*pixthetax*pixthetay;
 		    nea->p[2]=nea->p[1];
 		    

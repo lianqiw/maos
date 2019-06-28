@@ -22,3 +22,4 @@ sim.wfsideal  ==> sim.idealwfs
 sim.evlideal  ==> sim.idealevl
 dbg.clemp_all ==> (removed)
 dbg.parallel  ==> sim.parallel
+powfs.neaspeckle ==> powfs.neaextra
