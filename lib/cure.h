@@ -15,38 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef AOS_LIB_AOS_H
-#define AOS_LIB_AOS_H
-
 #include "../math/mathdef.h"
-#include "readcfg.h"
-#include "draw.h"
-#include "accphi.h"
-#include "mkz.h"
-#include "mkg.h"
-#include "mkh.h"
-#include "mkw.h"
-#include "turbulence.h"
-#include "proj.h"
-#include "laplacian.h"
-#include "pcg.h"
-#include "muv.h"
-#include "genotf.h"
-#include "fractal.h"
-#include "stfun.h"
-#include "servo.h"
-#include "hyst.h"
-#include "slaving.h"
-#include "mkdtf.h"
-#include "psd.h"
-#include "kalman.h"
-#include "cn2est.h"
-#include "locfft.h"
-#include "zernike.h"
-#include "misc.h"
-#include "cure.h"
-#define SEC2RAD 4.848136811095360e-06 //arcsec in unit of radian
-#define RAD2SEC 206264.8062470964 //radian in unit of arcsec
-#define RAD2MAS 2.062648062470964e+08 //radian to milli-arcsecond
-#endif
+void cure1d(dmat **phix, const dmat*gx, const dmat *gy, double dx);
+void cure(dmat **phix, const dmat*gx, const dmat *gy, double dx);

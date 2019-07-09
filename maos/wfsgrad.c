@@ -797,15 +797,9 @@ void wfsgrad_post(thread_t *info){
 	}
 	if(dtrat_output){
 	    if(parms->plot.run>1 && (simu->gradoff->p[iwfs]|| parms->dbg.gradoff)){
-		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p,
-			parms->dbg.draw_gmax->p,
-			"WFS Closeloop Gradients (x)","x (m)", "y (m)",
-			"raw x %d",  iwfs);
-		drawopd("Gcly", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p+
-			simu->powfs[ipowfs].saloc->nloc,
-			parms->dbg.draw_gmax->p,
-			"WFS Closeloop Gradients (y)","x (m)", "y (m)",
-			"raw y %d",  iwfs);
+		drawgrad("Gcl", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs],
+			 parms->dbg.draw_gmax->p, parms->plot.grad2opd,
+			 "WFS Raw Closeloop Gradients","x (m)", "y (m)", "Gcl raw %d",  iwfs);
 	    }
 	    //scaling on gradout
 	    if(simu->gradscale->p[iwfs]){
@@ -841,15 +835,9 @@ void wfsgrad_post(thread_t *info){
 		zfarr_push(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){
-		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p,
-			parms->dbg.draw_gmax->p,
-			"WFS Closeloop Gradients (x)","x (m)", "y (m)",
-			"x %d",  iwfs);
-		drawopd("Gcly", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p+
-			simu->powfs[ipowfs].saloc->nloc,
-			parms->dbg.draw_gmax->p,
-			"WFS Closeloop Gradients (y)","x (m)", "y (m)",
-			"y %d",  iwfs);
+		drawgrad("Gcl", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs],
+			 parms->dbg.draw_gmax->p, parms->plot.grad2opd,
+			 "WFS Closeloop Gradients","x (m)", "y (m)", "Gcl %d",  iwfs);
 		if(do_phy){
 		    if(simu->ints->p[iwfs]->nx==1){
 			ddraw("Ints", simu->ints->p[iwfs]->p[0], NULL,NULL, "WFS Subaperture Images",
@@ -1116,13 +1104,9 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 		dmm(&simu->gradoff->p[iwfs], 1, simu->recon->GRall->p[iwfs], Rmod->p[0], "nn", -simu->eptwfs); 
 		
 		if(parms->plot.run){
-		    const int nsa=simu->powfs[ipowfs].saloc->nloc;
-		    drawopd("Goffx",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p,
-			    parms->dbg.draw_gmax->p,
-			    "WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
-		    drawopd("Goffy",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p+nsa,
-			    parms->dbg.draw_gmax->p,
-			    "WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
+		    drawgrad("Goff",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs],
+			     parms->dbg.draw_gmax->p, parms->plot.grad2opd, 
+			     "WFS Offset","x (m)", "y (m)", "Goff %d",  iwfs);
 		}
 	    }
 	    if(parms->save.dither){

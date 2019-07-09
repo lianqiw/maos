@@ -1006,6 +1006,7 @@ static void readcfg_plot(PARMS_T *parms){
     READ_INT(plot.opdx);
     READ_INT(plot.psf);
     READ_INT(plot.all);
+    READ_INT(plot.grad2opd);
     if(parms->plot.all){
 	parms->plot.setup=parms->plot.all;
 	parms->plot.run=parms->plot.all;

@@ -585,6 +585,7 @@ typedef struct PLOT_CFG_T{
     int run;         /**<Plot information during simulation*/
     int opdx;        /**<Plot turbulence projected onto xloc.*/
     int psf;         /**<Plot PSF in linear (1) or log (2) mode*/
+    int grad2opd;    /**<Plot gradients as reconstructed opd*/
     int all;         /**<Enables setup, atm, run*/
 }PLOT_CFG_T;
 /**

@@ -23,3 +23,7 @@ sim.evlideal  ==> sim.idealevl
 dbg.clemp_all ==> (removed)
 dbg.parallel  ==> sim.parallel
 powfs.neaspeckle ==> powfs.neaextra
+dbg.ncpa_nouncorr ==> dbg.ncpa_rmsci
+sim.apdm      ==> sim.aphi
+sim.epdm      ==> sim.ephi
+

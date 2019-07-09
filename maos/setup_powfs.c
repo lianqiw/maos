@@ -621,7 +621,7 @@ void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
 		    nea_rad=parms->powfs[ipowfs].neasim;//in mas
 		}
 		nea_rad=nea_rad/206265000./sqrt(parms->powfs[ipowfs].dtrat);//in rad
-		double *saa=powfs[ipowfs].realsaa->p[jwfs]->p;
+		double *saa=powfs[ipowfs].realsaa?powfs[ipowfs].realsaa->p[jwfs]->p:powfs[ipowfs].saa->p;
 		dmat *nea_each=nea->p[jwfs]=dnew(nsa, 3);
 		for(int isa=0; isa<nsa; isa++){
 		    P(nea_each,isa,0)=P(nea_each,isa,1)=nea_rad/sqrt(saa[isa]);

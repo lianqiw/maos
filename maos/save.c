@@ -69,13 +69,11 @@ void save_gradol(SIM_T *simu){
     const POWFS_T *powfs=simu->powfs;
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(!parms->powfs[ipowfs].psol || !simu->gradlastol->p[iwfs]) continue;
 	if(parms->plot.run){
-	    drawopd("Gpolx",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p, parms->dbg.draw_opdmax->p,
-		    "WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)", "x %d",  iwfs);
-	    drawopd("Gpoly",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p+nsa, parms->dbg.draw_opdmax->p,
-		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)", "y %d",  iwfs);
+	    drawgrad("Gpol",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs], 
+		     parms->dbg.draw_opdmax->p, parms->plot.grad2opd,
+		     "WFS Pseudo Openloop Gradients ","x (m)", "y (m)", "Gpol %d",  iwfs);
 	}
 	if(simu->save->gradol[iwfs] && (simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){
 	    zfarr_push(simu->save->gradol[iwfs], simu->reconisim, simu->gradlastol->p[iwfs]);

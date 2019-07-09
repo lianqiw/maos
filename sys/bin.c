@@ -291,18 +291,19 @@ file_t *zfopen(const char *fn, const char *mod){
    Return the underlining filename
 */
 const char *zfname(file_t *fp){
-    return fp->fn;
+    return fp?fp->fn:NULL;
 }
 /**
    Return 1 when it is a fits file.
 */
 int zfisfits(file_t *fp){
-    return fp->isfits?1:0;
+    return (fp && fp->isfits)?1:0;
 }
 /**
    Close the file.
 */
 void zfclose(file_t *fp){
+    if(!fp) return;
     LOCK(lock);
     if(fp->isgzip){
 	gzclose((voidp)fp->p);

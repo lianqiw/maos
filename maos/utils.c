@@ -440,12 +440,10 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 	}
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    if(powfs[ipowfs].gradncpa){
-		drawopd("Goffx",powfs[ipowfs].saloc, powfs[ipowfs].gradncpa->p[jwfs]->p,NULL,
-			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
-		drawopd("Goffy",powfs[ipowfs].saloc, powfs[ipowfs].gradncpa->p[jwfs]->p+nsa, NULL,
-			"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
+		drawgrad("Goff",powfs[ipowfs].saloc, powfs[ipowfs].gradncpa->p[jwfs],
+			 NULL, parms->plot.grad2opd,
+			 "WFS Offset","x (m)", "y (m)", "Goff %d",  iwfs);
 	    }
 	}
     }
