@@ -169,17 +169,18 @@ setup_fit_lrt(FIT_T *fit){
 	inw+=2*(ndm-1);
     }
     if(fit->flag.actslave){
-	/*
-	  2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found
-	  that slaving is causing mis-measurement of a few edge
-	  actuators. First try to remove W1. Or lower the weight. Revert
-	  back.
-	  1./floc->nloc is on the same order of norm of Ha'*W*Ha. 
-	*/
 	TIC;tic;
 	fit->actslave=slaving(fit->aloc, fit->actcpl,
-			      fit->NW, global->parms->dbg.recon_stuck?fit->actstuck:0,
-			      fit->actfloat, fit->flag.actthres, 1./fit->floc->nloc);
+			      global->parms->dbg.recon_stuck?fit->actstuck:0,
+			      fit->actfloat, fit->flag.actthres, 1./fit->floc->nloc, 1);
+
+	if(fit->flag.actslave>1){
+	    dspcell *actslave2=slaving(fit->aloc, fit->actcpl,
+				       global->parms->dbg.recon_stuck?fit->actstuck:0,
+				       fit->actfloat, fit->flag.actthres, 1./fit->floc->nloc, 2);
+	    dcelladd(&fit->actslave, 1, actslave2, 1);
+	    cellfree(actslave2);
+	}
 	toc2("slaving");
     }
     cellfree(actcpl);

@@ -21,6 +21,30 @@
 #include "ahst.h"
 
 /**
+   \page simulation
+   \section Actuator Slaving
+
+   Due to pupil obscuration, there may be actuators that are not sensed
+   by the WFS and therefore cannot be accurately reconstructed. The
+   actuator coupling coefficient, computed using HA or GA, is used to
+   determine how accurately an actuator is sensed/controlled. 
+
+   - Scenario 1, enabled by lsr.actslave>0, and lsr.actthres 
+
+   When an actuator is outside of the pupil, its coupling coefficient is
+   usually very small. When it is below lsr.acthres, its value is slaved
+   to its neighboring actuators.
+	   
+   - Scenario 2, enabled by lsr.actslave>1, and lsr.actthres2: 
+
+   When an actautor is hidden by secondary mirror support struts, it may
+   still have relatively strong coupling, but regions separated by the
+   structs may have different piston values, so called island
+   effect. The mitigation method is to limit the value gap around such
+   actautors whoes coupling is below lsr.actthres2.
+*/
+
+/**
    Setup the least square reconstruct by directly inverting GA matrix. 
    The reconstructor is simply the pseudo inverse of GA matrix:
    \f[\hat{x}=(G_a^TC_g^{-1}G_a)^{-1}G_a^TC_g^{-1}\f]
@@ -112,16 +136,26 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 		writebin(NW, "lsrNW");
 	    }
 	}
+
 	if(parms->lsr.actslave){
 	    /*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
-	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
+	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, 
 				      parms->dbg.recon_stuck?recon->actstuck:0, 
-				      recon->actfloat, parms->lsr.actthres, maxeig);
+				      recon->actfloat, parms->lsr.actthres, maxeig, 1);
 	    if(parms->save.setup){
-		if(NW){
-		    writebin(NW, "lsrNW2");
-		}
-		writebin(actslave,"actslave");
+		writebin(actslave,"lsr_actslave");
+	    }
+	    dcelladd(&recon->LL.M, 1, actslave, 1);
+	    cellfree(actslave);
+	}
+	if(parms->lsr.actslave>1){
+	    /*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
+	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, 
+				      parms->dbg.recon_stuck?recon->actstuck:0, 
+				      recon->actfloat, parms->lsr.actthres2, maxeig, 
+				      parms->lsr.actslave);
+	    if(parms->save.setup){
+		writebin(actslave,"lsr_actslave2");
 	    }
 	    dcelladd(&recon->LL.M, 1, actslave, 1);
 	    cellfree(actslave);

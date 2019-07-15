@@ -377,9 +377,9 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    RENAME(evl.opdcov, evl.cov);
 	    RENAME(evl.psfpttr, evl.pttr);*/
 	    /*Added 2017-11-27*/
-	    /*RENAME(sim.apdm, sim.aphi);
+	    RENAME(sim.apdm, sim.aphi);
 	    RENAME(sim.epdm, sim.ephi);
-	    RENAME(sim.aldm, sim.alhi);*/
+	    RENAME(sim.aldm, sim.alhi);
 	    //RENAME(tomo.cxx,tomo.cxxalg);
 	    //RENAME(sim.ahstfocus, tomo.ahst_focus);
 #endif

@@ -709,6 +709,9 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
     for(long ix=0; ix<A->nx; ix++){
 	for(long iy=0; iy<A->ny; iy++){
 	    if(P(A,ix,iy)) {
+		if(!issp(P(A,ix,iy))){
+		    error("Not every cell is sparse\n");
+		}
 		nnx[ix]=P(A,ix,iy)->nx;
 		nx+=P(A,ix,iy)->nx;
 		break;
@@ -725,7 +728,7 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
 	}
     }
     for(long i=0; i<A->nx*A->ny; i++){
-	if(A->p[i]){
+	if(A->p[i] && A->p[i]->nzmax>0){
 	    nzmax+=A->p[i]->p[A->p[i]->ny];
 	}
     }

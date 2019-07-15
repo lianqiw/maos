@@ -32,6 +32,7 @@ PNEW(lock);
 static int sock_helper=-1;
 int listening=0;
 int draw_single=0;//1: Only draw active frame. 0: draw all frames.
+int draw_changed=0; //1: switched pages
 long group=0;
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
@@ -103,6 +104,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 		streadstr(sock_draw, &fig);
 		streadstr(sock_draw, &fn);
 		if(figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
+		    draw_changed=1;
 		    //info("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 		}
 		free(figfn[0]);
@@ -276,6 +278,13 @@ static int open_drawdaemon(){
 	return -1;
     }
     if(!sock_ndraw){
+	{
+	    static int count=0;
+	    count++;
+	    if(count>5){
+		return -1;
+	    }
+	}
 	if(DRAW_ID<=0){
 	    DRAW_ID=getsid(0);
 	    if(DRAW_ID<0){
@@ -293,7 +302,7 @@ static int open_drawdaemon(){
 		TIC;tic;
 		sock=launch_drawdaemon();
 		toc2("Directly launch drawdaemon");
-	    }else if(sock_helper!=-2){//use help to launch
+	    }else if(sock_helper!=-2){//use helper to launch
 		if(sock_helper==-1){
 		    draw_helper();
 		}
@@ -363,27 +372,29 @@ int draw_current(const char *fig, const char *fn){
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
-void plot_points(const char *fig,    /**<Category of the figure*/
-		 long ngroup,        /**<Number of groups to plot*/
-		 loc_t **loc,        /**<Plot arrays of loc as grid*/
-		 const dcell *dc,    /**<If loc isempty, use cell to plot curves*/
-		 const int32_t *style,/**<Style of each point*/
-		 const double *limit,/**<x min, xmax, ymin and ymax*/
-		 const char *xylog,  /**<Whether use logscale for x, y*/
-		 const dmat *cir,    /**<Data for the circles: x, y origin, radius, and color*/
-		 const char *const*const legend, /**<ngroup number of char**/
-		 const char *title,  /**<title of the plot*/
-		 const char *xlabel, /**<x axis label*/
-		 const char *ylabel, /**<y axis label*/
-		 const char *format, /**<subcategory of the plot.*/
-		 ...){
-    if(disable_draw) return;
+int plot_points(const char *fig,    /**<Category of the figure*/
+		long ngroup,        /**<Number of groups to plot*/
+		loc_t **loc,        /**<Plot arrays of loc as grid*/
+		const dcell *dc,    /**<If loc isempty, use cell to plot curves*/
+		const int32_t *style,/**<Style of each point*/
+		const double *limit,/**<x min, xmax, ymin and ymax*/
+		const char *xylog,  /**<Whether use logscale for x, y*/
+		const dmat *cir,    /**<Data for the circles: x, y origin, radius, and color*/
+		const char *const*const legend, /**<ngroup number of char**/
+		const char *title,  /**<title of the plot*/
+		const char *xlabel, /**<x axis label*/
+		const char *ylabel, /**<y axis label*/
+		const char *format, /**<subcategory of the plot.*/
+		...){
+    if(disable_draw) return 0;
     format2fn;
     LOCK(lock);
+    int ans=0;
     if(open_drawdaemon()){/*failed to open. */
 	warning("Failed to open drawdaemon\n");
 	goto end;
     }
+
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	int sock_draw=sock_draws[ifd].fd;
@@ -461,9 +472,11 @@ void plot_points(const char *fig,    /**<Category of the figure*/
 	STWRITECMDSTR(DRAW_XLABEL,xlabel);
 	STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	STWRITEINT(DRAW_END);
+	ans=1;
     }
   end:
     UNLOCK(lock); 
+    return ans;
 }
 
 /**
@@ -482,7 +495,8 @@ typedef struct imagesc_t{
     char *ylabel; /**<y axis label*/
     char *fn;
 }imagesc_t;
-static void imagesc_do(imagesc_t *data){
+static int imagesc_do(imagesc_t *data){
+    int ans;
     LOCK(lock);
     if(!open_drawdaemon()){
 	char *fig=data->fig;
@@ -522,6 +536,7 @@ static void imagesc_do(imagesc_t *data){
 	    STWRITECMDSTR(DRAW_XLABEL,xlabel);
 	    STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	    STWRITEINT(DRAW_END);
+	    ans=1;
 	}
     }else{
 	warning("Failed to open drawdaemon()\n");
@@ -536,8 +551,9 @@ static void imagesc_do(imagesc_t *data){
     free(data->ylabel);
     free(data->fn);
     free(data);
+    return ans;
 }
-void imagesc(const char *fig, /**<Category of the figure*/
+int imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
 	     long ny,   /**<the image is of size nx*ny*/
 	     const double *limit, /**<x min, xmax, ymin and ymax*/
@@ -550,12 +566,12 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	     ...){
     format2fn;
     if(disable_draw || !draw_current(fig, fn)){
-	return;
+	return 0;
     }
     if (draw_single){
 	//Skip this drawing if line is busy.
 	if((TRYLOCK(lock))){//lock failed
-	    return;
+	    return 1;
 	}else{
 	    UNLOCK(lock);
 	}
@@ -584,16 +600,17 @@ void imagesc(const char *fig, /**<Category of the figure*/
 #undef datastrdup
 #undef datamemdup
     QUEUE(&group, (thread_fun)imagesc_do, (void*)data, 1, 0);
+    return 1;
 }
 
 /**
    Draw the OPD of real and imaginary of complex p defined on nx*ny grid. see imagesc()
 */
-void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const double *zlim,
+int imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     format2fn;
-    if(disable_draw || !draw_current(fig, fn)) return;
+    if(disable_draw || !draw_current(fig, fn)) return 0;
 
     double *pr,*pi;
     pr=mymalloc(nx*ny,double);
@@ -606,15 +623,16 @@ void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, cons
     free(pr);
     imagesc(fig, nx, ny, limit, zlim,pi, title, xlabel, ylabel, "%s imag",fn);
     free(pi);
+    return 1;
 }
 /**
    Draw the OPD of abs and phase of complex p defined on nx*ny grid. see imagesc()
 */
-void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const double *zlim,
+int imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     format2fn;
-    if(disable_draw || !draw_current(fig, fn)) return;
+    if(disable_draw || !draw_current(fig, fn)) return 0;
     double *pr,*pi;
     int isreal=1;
     pr=mymalloc(nx*ny,double);
@@ -634,15 +652,16 @@ void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const
 		"%s phi",fn);
     }
     free(pi);
+    return 1;
 }
 /**
    Draw the OPD of abs of complex p defined on nx*ny grid. see imagesc()
 */
-void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const double *zlim,
+int imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		     const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...){
     format2fn;
-    if(disable_draw|| !draw_current(fig, fn)) return;
+    if(disable_draw|| !draw_current(fig, fn)) return 0;
     double *pr;
     pr=mymalloc(nx*ny,double);
     for(int i=0; i<nx*ny; i++){
@@ -651,6 +670,7 @@ void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,cons
     imagesc(fig, nx, ny, limit, zlim, pr, title, xlabel, ylabel,
 	    "%s abs",fn);
     free(pr);
+    return 1;
 }
 #include "../math/mathdef.h"
 #include "../math/mathdef.h"
@@ -670,66 +690,69 @@ void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,cons
    imagesc.  . see imagesc()
 */
 
-void ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
+int ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
-    imagesc(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
+    return imagesc(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
 }
 
 /**
    Mapping the absolution value of complex array. see imagesc()
 */
-void cdrawabs(const char *fig, const cmat *A, double *xylim, double *zlim,
+int cdrawabs(const char *fig, const cmat *A, double *xylim, double *zlim,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char *format,...){
   
     format2fn;
-    imagesc_cmp_abs(fig,A->nx,A->ny,xylim,zlim,A->p,title,xlabel,ylabel,"%s abs",fn);
+    return imagesc_cmp_abs(fig,A->nx,A->ny,xylim,zlim,A->p,title,xlabel,ylabel,"%s abs",fn);
 }
 
 /**
    Mapping the real/imaginary part of complex array. see imagesc()
 */
-void cdrawri(const char *fig, const cmat *A, double *xylim, double *zlim,
+int cdrawri(const char *fig, const cmat *A, double *xylim, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     
     format2fn;
-    imagesc_cmp_ri(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
+    return imagesc_cmp_ri(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
 }
 
 /**
    Mapping the absolute and phase of complex array. see imagesc()
 */
-void cdraw(const char *fig, const cmat *A, double *xylim, double *zlim,
+int cdraw(const char *fig, const cmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
-    imagesc_cmp_ap(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
+    return imagesc_cmp_ap(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
 }
 
 /**
    like ddraw, acting on map object. see imagesc()
 */
-void drawmap(const char *fig, const map_t *map,  double *zlim,
+int drawmap(const char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     format2fn;
+    if(disable_draw|| !draw_current(fig, fn)) return 0;
     double limit[4];
     limit[0]=map->ox-map->dx/2;
     limit[1]=map->ox+(map->nx-0.5)*map->dx;
     limit[2]=map->oy-map->dx/2;
     limit[3]=map->oy+(map->ny-0.5)*map->dx;
     imagesc(fig, map->nx, map->ny, limit, zlim, map->p,  title, xlabel, ylabel,"%s",fn);
+    return 1;
 }
 /**
    Plot the loc on the screen. see imagesc()
 */
-void drawloc(const char *fig, loc_t *loc, double *zlim,
+int drawloc(const char *fig, loc_t *loc, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
     format2fn;
+    if(disable_draw|| !draw_current(fig, fn)) return 0;
     loc_create_map(loc);
     int npad=loc->npad;
     int nxm=loc->map->nx;
@@ -748,16 +771,18 @@ void drawloc(const char *fig, loc_t *loc, double *zlim,
     limit[3]=limit[2]+loc->dx*ny;
     imagesc(fig, nx, ny,limit,zlim,opd0,  title, xlabel, ylabel,"%s",fn);
     free(opd0);
+    return 1;
 }
 
 /**
    Plot the opd using coordinate loc. see imagesc()
 */
-void drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
+int drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
 
     format2fn;
+    if(disable_draw|| !draw_current(fig, fn)) return 0;
     loc_create_map(loc);
     //This is different from loc_embed. It removes the padding.
     int npad=loc->npad;
@@ -782,14 +807,16 @@ void drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
     limit[3]=loc->map->oy+fabs(loc->dy)*(ny+npad-1/2);
     imagesc(fig,nx,ny, limit,zlim,opd0->p,  title, xlabel, ylabel,"%s",fn);
     dfree(opd0);
+    return 1;
 }
 /**
    Plot gradients using CuReD
 */
-void drawgrad(const char *fig, loc_t *loc, const dmat *grad, double *zlim, int grad2opd,
+int drawgrad(const char *fig, loc_t *loc, const dmat *grad, double *zlim, int grad2opd,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char* format,...){
     format2fn;
+    if(disable_draw|| !draw_current(fig, fn)) return 0;
     if(grad2opd && grad->nx>8){
 	//This is different from loc_embed. It removes the padding.
 	loc_create_map(loc);
@@ -828,14 +855,16 @@ void drawgrad(const char *fig, loc_t *loc, const dmat *grad, double *zlim, int g
 	drawopd(fig, loc, grad->p, zlim, title, xlabel, ylabel, "%s x", fn);
 	drawopd(fig, loc, grad->p+grad->nx/2, zlim, title, xlabel, ylabel, "%s y", fn);
     }
+    return 1;
 }
 /**
    Plot opd*amp with coordinate loc. see imagesc()
 */
-void drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
+int drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...){
     format2fn;
+    if(disable_draw|| !draw_current(fig, fn)) return 0;
     (void)fig;
     loc_create_map(loc);
 
@@ -864,4 +893,5 @@ void drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *am
     limit[3]=limit[2]+loc->dx*ny;
     imagesc(fig, nx,ny,limit,zlim, opd0,  title, xlabel, ylabel,"%s",fn);
     free(opd0);
+    return 1;
 }

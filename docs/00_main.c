@@ -32,9 +32,7 @@
 
     - \ref page25
 
-    - \ref page30 
-
-    - \ref page31
+    - \ref simulation 
 
     - \ref page40 
     

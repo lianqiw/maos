@@ -115,11 +115,9 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    recon->moao[imoao].actcpl=genactcpl(recon->moao[imoao].HA, recon->moao[imoao].W1);
 	    recon->moao[imoao].actslave=slaving(recon->moao[imoao].aloc, 
 						recon->moao[imoao].actcpl,
-						recon->moao[imoao].NW,
 						parms->dbg.recon_stuck?recon->moao[imoao].actstuck:0,
 						recon->moao[imoao].actfloat,
-						0.1, 
-						1./recon->floc->nloc);
+						0.1, 1./recon->floc->nloc, 1);
 	}
 	if(parms->save.setup){
 	    writebin(recon->moao[imoao].aloc,"moao%d_aloc",imoao);

@@ -838,7 +838,7 @@ void wfsgrad_post(thread_t *info){
 		drawgrad("Gcl", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs],
 			 parms->dbg.draw_gmax->p, parms->plot.grad2opd,
 			 "WFS Closeloop Gradients","x (m)", "y (m)", "Gcl %d",  iwfs);
-		if(do_phy){
+		if(do_phy && parms->powfs[ipowfs].lo){
 		    if(simu->ints->p[iwfs]->nx==1){
 			ddraw("Ints", simu->ints->p[iwfs]->p[0], NULL,NULL, "WFS Subaperture Images",
 			      "x", "y", "wfs %d", iwfs);

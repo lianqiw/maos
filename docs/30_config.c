@@ -16,7 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page30 Simulation Parameters
+   \page simulation Configuring Simulation
+
+   \section Introduction
    
     All user modifiable options are configured through these config files with
     suffix \c .conf. The supplied default setup files are stored in sub-folder
@@ -92,6 +94,13 @@
     `fov_iris.conf` to specify the science FoV as simpson weighting on 3x3
     points in the square FoV.
 
+    \ref nfiraos Shows the example configuration file for NFIRAOS.
+    
+    \ref SCAO_NGS shows the example configuration file of a single conjugate NGS system.
+
+    \ref SCAO_LGS shows the example configuration file of a single conjugate LGS system.
+
+
     \subsection sect-surface Specifying Surface OPDs
 
     We can optionally setup one or more surfaces that can cover science fields
@@ -134,9 +143,4 @@
     fsurf the distance between the center of the M3 surface and the focus.
     \endverbatim
 
-    \ref nfiraos Shows the example configuration file for NFIRAOS.
-    
-    \ref SCAO_NGS shows the example configuration file of a single conjugate NGS system.
-
-    \ref SCAO_LGS shows the example configuration file of a single conjugate LGS system.
 */

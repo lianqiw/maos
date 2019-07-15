@@ -16,11 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page31 Misregistration
+   \page simulation Configuring Simulation
+   \section  Misregistration
+   
 
    It is tricky to implement the misregistration of the deformable mirror and the WFS.
    
-   \section sect-mis-dm Misregistration of the deformable mirror.  
+   \subsection sect-mis-dm Misregistration of the deformable mirror.  
    
    Denote the grid of actuators as saloc, and with misregistration, it becomes
    salocm. 
@@ -32,7 +34,7 @@
    because this is what happens in the system, no matter whether we know the
    misregistration or not.
 
-   \section sect-mis-wfs Misregistration of the WFS.
+   \subsection sect-mis-wfs Misregistration of the WFS.
    
    Denote the grid of the WFS entry pupil as loc, and with misregistration, it
    becomes locm. Project the telescope amplitude map onto loc, we get amp, which

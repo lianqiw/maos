@@ -54,26 +54,27 @@ dcell *genactcpl(const dspcell *HA, const dmat *W1){
     return actcplc;
 }
 /**
-   Compute slaving actuator regularization. actcplc indicates 
-   active actuators. If NW is non NULL, orthogonalize it with the slaving
-   regularization.  When the actuators are in the NULL space of HA, we want to
-   contraint their values to be close to the ones that are active. We put an
-   additional term in the fitting matrix to force this. Be careful with it when
-   using tip/tilt constraint and cholesky back solve.  */
-dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
-		 const dcell *actcplc,/**<[in]Actuator coupling coefficiency*/
-		 dcell *NW,     /**<[in]The low rank terms that need to be orthogonal to the output (optional)*/
+   Compute slaving actuator regularization term.
+
+
+   Inactive actuators (coupling coefficiency below the threshold) are slaved to neighbors that are active. 
+
+   The result is S=H'*H; Let b=H*a, we have
+   if mode==1: b(isa)=alpha*(a(isa)-sum(a(jsa).*weight(jsa))), where isa is inactive and jsa are neighoring active actuators.
+   if mode==2: b(igroup)=alpha*sum(a(jsa)), where jsa are fully active actuators belonging to igroup
+   if mode==3: b(isa)=alpha*sum(a(jsa)-a(ksa)), where isa is inactive, and jsa and ksa are neighrboring and opposite active actuator
+
+*/
+dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
+		 const dcell *actcplc, /**<[in]Actuator coupling coefficiency*/
 		 const lcell *actstuck,/**<[in]mask for stuck actuators that will not be slaved, but have value constrained.*/
 		 const lcell *actfloat,/**<[in]mask for float actuators that will be slaved, but not have value constrained.*/
-		 const double thres,  /**<[in]The threshold that an actuator is deemed slave*/
-		 const double sclsq   /**<[in]The square of scaling of the overall strength*/
+		 const double thres,   /**<[in]The threshold that an actuator is deemed slave*/
+		 const double sclsq,   /**<[in] Expected norm of the slaving matrix.*/
+		 const int mode        /**<[in] Mode of operation. (1 or 2)*/
     ){
     if(!actcplc && !actfloat) {
 	error("Both actcplc and actfloat are not supplied\n");
-    }
-    double scl=sqrt(sclsq);
-    if(scl<EPS){
-	error("scl=%g is too small\n", scl);
     }
     int ndm=aloc->nx;
     dspcell *actslavec=(dspcell*)cellnew(ndm, ndm);/*block diagonal. */
@@ -102,128 +103,250 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	}
 
 	nslavetot+=nslave;
-	info("dm %d: there are %d slave actuators\n", idm, nslave);
-	if(nslave==0) {
-	    continue;
-	}
+	info("dm %d, mode %d: there are %d slave actuators\n", idm, mode, nslave);
+
 	loc_create_map(aloc->p[idm]);
 	map_t *map=aloc->p[idm]->map;
 	const double ox=map->ox;
 	const double oy=map->oy;
 	const double dx1=1./aloc->p[idm]->dx;
 	const double dy1=1./aloc->p[idm]->dy;
-	//dsp *slavet=dspnew(nact,nslave,nslave*5);
-	dsp *slavet=dspnew(nact,nact,nslave*5);
-	spint *pp=slavet->p;
-	spint *pi=slavet->i;
-	double *px=slavet->x;
+
 	const double *locx=aloc->p[idm]->locx;
 	const double *locy=aloc->p[idm]->locy;
+	dsp *slavet=0;
 	long count=0;
-	for(int iact=0; iact<nact; iact++){
-	    pp[iact]=count;
-	    if(isstuck && isstuck[iact]){/*limit the strength of stuck actuators. */
-		pi[count]=iact;
-		px[count]=scl;
-		count++;
-	    }else if(actcpl[iact]<thres){/*slave actuators */
-		long mapx=(long)round((locx[iact]-ox)*dx1);
-		long mapy=(long)round((locy[iact]-oy)*dy1);
-		int near_active=0;//neighbor is more coupled
-		int near_exist=0;//neighbor exist
-		double thres2=MAX(0.1, actcpl[iact]);//was 0.1
-		for(int iy=-1; iy<2; iy++){
-		    for(int ix=-1; ix<2; ix++){
-			if(abs(ix+iy)!=1){
-			    continue;/*skip self and corner */
-			}
-			int kact1=loc_map_get(map, mapx+ix, mapy+iy);
-			if(kact1>0 && (!isstuck || !isstuck[kact1-1])){
-			    near_exist++;
-			    if(actcpl0[kact1]>thres2){//better than this one.
-				near_active++;
-			    }
-			}
-		
-		    }
-		}
-		if(!near_exist){
-		    warning("This is an isolated actuator\n");
-		}else{
-		    /*
-		      neighbors are defined as the four pixels to the left, right,
-		      top and bottom.  If some of the neighbors are active, use the
-		      average of them for my value, otherwise, use the average of
-		      all neighbors.
-		    */
-		    double value=0;
-		    if(!near_active) value=-scl*0.1/near_exist;
-		    double valsum=0;
-		    /*part 1*/
+	if(mode==2){//also handles nslave==0 case
+	    lmat *group=lnew(nact, 1);
+	    lmat *groupc=lnew(nact,1);
+	    long ngroup=1;//number of isolated islands
+	    long ngsub=0;//over counted number of ngroup.
+	    for(int iact=0; iact<nact; iact++){
+		if(isstuck && isstuck[iact]) continue;
+		if(actcpl[iact]>thres){/*active actuators */
+		    long mapx=(long)round((locx[iact]-ox)*dx1);
+		    long mapy=(long)round((locy[iact]-oy)*dy1);
+		    long found=0;
+		    //Check if any of its neighbor has group assigned
 		    for(int iy=-1; iy<2; iy++){
 			for(int ix=-1; ix<2; ix++){
-			    if(abs(ix+iy)!=1){
-				continue;//skip self and corner
-			    }
 			    int kact1=loc_map_get(map, mapx+ix, mapy+iy);
-			    if(kact1>0 && (!isstuck || !isstuck[kact1-1])){
-				if(!near_active){
-				    valsum+=(px[count]=value);
-				    pi[count]=kact1-1;
-				    count++;
-				}else if(actcpl0[kact1]>actcpl[iact]){
-				    valsum+=(px[count]=-scl*MAX(0.1,actcpl0[kact1]));
-				    pi[count]=kact1-1;
-				    count++;
+			    if(actcpl0[kact1]>thres){
+				if(P(group, kact1-1)){
+				    if(found){
+					if(found!=P(group, kact1-1)){
+					    int toreplace=P(group, kact1-1);
+					    for(int jact=0; jact<nact; jact++){
+						if(P(group, jact)==toreplace){
+						    P(group, jact)=found;
+						}
+					    }
+					    ngsub++;
+					    P(groupc, toreplace)=0;
+					}
+				    }else{
+					found=P(group, kact1-1);
+				    }
 				}
 			    }
 			}
 		    }
-		
-		    /*part 2, matches negative sum of part 1*/
-		    pi[count]=iact;
-		    px[count]=-valsum;
-		    count++;
-		}
-	    }/*if */
-	}/*for iact */
-	pp[nact]=count;
-	dspsetnzmax(slavet, count);
-	P(actslave,idm,idm)=dspmulsp(slavet, slavet,"nt");
-	if(NW && NW->p[idm] && 0){
-	    /*Now we need to make sure NW is in the NULL
-	      space of the slaving regularization, especially
-	      the tip/tilt constraints. NW=NW-slavet*inv(slavet)*NW 
-
-	      2014-08-26: This step has no performance difference and is slow
-	      for large DMs. Disable.
-	    */
-	    dmat *H=NULL;
-	    dspfull(&H, slavet, 'n',1);
-	    dmat *Hinv=dpinv(H,NULL);
-	    dmat *mod=NULL;
-	    dmm(&mod, 0, Hinv, NW->p[idm], "nn", 1);
-	    dmm(&NW->p[idm], 1, H, mod,"nn", -1);
-	    dfree(H);
-	    dfree(Hinv);
-	    dfree(mod);
-	    if(isstuck || isfloat){
-		dmat*  pNW=NW->p[idm];
-		for(int iy=0; iy<NW->p[idm]->ny; iy++){
-		    for(int iact=0; iact<nact; iact++){
-			if((isstuck && isstuck[iact])||(isfloat && isfloat[iact])){
-			    P(pNW,iact,iy)=0;
-			}
+		    //Assign a value if no neighbor is assigned
+		    if(!found){
+			found=ngroup;
+			P(groupc, found)=1;
+			ngroup++;
 		    }
+		    //Assign all neighboring ones and itself
+		    for(int iy=-1; iy<2; iy++){
+			for(int ix=-1; ix<2; ix++){
+			    int kact1=loc_map_get(map, mapx+ix, mapy+iy);
+			    if(actcpl0[kact1]>thres){
+				P(group, kact1-1)=found;
+			    }
+			}
+		     }
 		}
 	    }
+	    lmat* groupu=lnew(ngroup-ngsub-1, 1);//list of uniq group value
+	    int ic=0;
+	    for(int ig=1; ig<ngroup; ig++){
+		if(P(groupc, ig)){
+		    P(groupu,ic)=ig;
+		    ic++;
+		}
+	    }
+	    lfree(groupc);
+	    ngroup=ic;
+	    if(ngroup<2){
+		warning("Only one discontinuous region found\n");
+	    }
+	
+	    slavet=dspnew(nact, ngroup,nact);
+	    spint *pp=slavet->p;
+	    spint *pi=slavet->i;
+	    double *px=slavet->x;
+	    for(int igroup=0; igroup<ngroup; igroup++){
+		pp[igroup]=count;
+		int count2=count;
+		for(int iact=0; iact<nact; iact++){
+		    if(P(group, iact)==P(groupu, igroup)){
+			pi[count]=iact;
+			count++;
+		    }
+		}
+		double scale=1./(count-count2);
+		for(; count2<count; count2++){
+		    px[count2]=scale;
+		}
+	    }
+	    pp[slavet->ny]=count;
+	   
+	    lfree(groupu);
+	    lfree(group);
+	}else if(nslave>0){
+	    slavet=dspnew(nact,nact,nslave*9);
+	    spint *pp=slavet->p;
+	    spint *pi=slavet->i;
+	    double *px=slavet->x;
+
+	    for(int iact=0; iact<nact; iact++){
+		pp[iact]=count;
+		if(isstuck && isstuck[iact]){/*limit the strength of stuck actuators. */
+		    pi[count]=iact;
+		    px[count]=1;
+		    count++;
+		}else if(actcpl[iact]<thres){/*slave actuators */
+		    long mapx=(long)round((locx[iact]-ox)*dx1);
+		    long mapy=(long)round((locy[iact]-oy)*dy1);
+		    int near_activer=0;//neighbor is more coupled
+		    int near_exist=0;//neighbor exist
+		    int near_inactive=0;//inactive neighbor
+		    double thres2=MAX(0.1, actcpl[iact]);//was 0.1
+		    for(int iy=-1; iy<2; iy++){
+			for(int ix=-1; ix<2; ix++){
+			    if(ix==0 && iy==0) continue;//skip self
+			    int kact1=loc_map_get(map, mapx+ix, mapy+iy);
+			    if(kact1>0 && (!isstuck || !isstuck[kact1-1])){
+				if(abs(ix+iy)==1){
+				    near_exist++;
+				    if(actcpl0[kact1]>thres2){//better than this one.
+					near_activer++;
+				    }
+				}
+				if(actcpl0[kact1]<thres){
+				    near_inactive++;
+				}
+			    }
+		
+			}
+		    }
+		    if(!near_exist){
+			warning("This is an isolated actuator\n");
+		    }else if(mode==1){//Determining inactive actuators using neighbors.
+			/*
+			  neighbors are defined as the four pixels to the left, right,
+			  top and bottom.  If some of the neighbors are active, use the
+			  average of them for my value, otherwise, use the average of
+			  all neighbors.
+			*/
+			/*part 1*/
+			double valsum=0;
+			for(int iy=-1; iy<2; iy++){
+			    for(int ix=-1; ix<2; ix++){
+				if(abs(ix+iy)!=1){
+				    continue;//skip self and corner
+				}
+				int kact1=loc_map_get(map, mapx+ix, mapy+iy);
+				if(kact1>0 && (!isstuck || !isstuck[kact1-1])){
+				    if(!near_activer){//simply average neighoring ones
+					valsum+=(px[count]=-0.1/near_exist);
+					pi[count]=kact1-1;
+					count++;
+				    }else if(actcpl0[kact1]>actcpl[iact]){//weighted average neighrboring ones.
+					valsum+=(px[count]=-MAX(0.1,actcpl0[kact1]));
+					pi[count]=kact1-1;
+					count++;
+				    }
+				}
+			    }
+			}
+		
+			/*part 2, matches negative sum of part 1*/
+			pi[count]=iact;
+			px[count]=-valsum;
+			count++;
+		    }else if(mode==3 && near_inactive>1 && near_inactive<7){
+		       
+			/*Limit difference of neighbors actuators of inactive
+			 * actuators. To minimize island effect*/ 
+			
+			//This one works in dual DM case.
+			for(int iy=-1; iy<2; iy++){
+			    for(int ix=-1; ix<=MIN(iy,0); ix++){
+				//if(abs(ix+iy)!=1) continue;//skip self and corner
+				if(ix==0 && iy==0) continue; //skip self
+				int kact1=loc_map_get(map, mapx+ix, mapy+iy);
+				int kact2=loc_map_get(map, mapx-ix, mapy-iy);
+				if(kact1>0 && (!isstuck || !isstuck[kact1-1])
+				   && kact2>0 && (!isstuck || !isstuck[kact2-1])
+				   && actcpl0[kact1] > thres && actcpl0[kact2] > thres ){
+				    px[count]=1;
+				    pi[count]=kact1-1;
+				    count++;
+				    px[count]=-1;
+				    pi[count]=kact2-1;
+				    count++;
+				}
+			    }
+			}
+		    }else if(mode==4 && near_inactive>1 && near_inactive<7){
+			//this one does no work
+			int last_ic=-1;
+			int sign=aloc->p[idm]->locy[iact]>0?1:-1;
+
+			for(int ic=0; ic<4; ic++){
+			    int ix, iy;
+			    switch(ic){
+			    case 0:
+				ix=-1; iy=-1; break;
+			    case 1:
+				ix=-1; iy=0; break;
+			    case 2:
+				ix=-1; iy=1; break;
+			    case 3:
+				ix=0; iy=1; break;
+			    default:
+				continue;
+			    }
+			    int kact1=loc_map_get(map, mapx+ix, mapy+iy);
+			    int kact2=loc_map_get(map, mapx-ix, mapy-iy);
+			    //if actuators at opposite edge/corners are active
+			    if(kact1>0 && (!isstuck || !isstuck[kact1-1]) && 
+			       kact2>0 && (!isstuck || !isstuck[kact2-1]) &&
+			       actcpl0[kact1] > thres && actcpl0[kact2] > thres){
+				if(ic>last_ic+1) sign=-sign; 
+				last_ic=ic;
+				px[count]=sign;
+				pi[count]=kact1-1;
+				count++;
+				px[count]=-sign;
+				pi[count]=kact2-1;
+				count++;
+			    }
+			}
+		    }
+		}/*if */
+	    }/*for iact */
+	    pp[nact]=count;
 	}
+	dspsetnzmax(slavet, count);
+	//writebin(slavet, "slave_%d_%d", mode, idm);
+	P(actslave,idm,idm)=dspmulsp(slavet, slavet,"nt");
+	dspscale(P(actslave,idm,idm), sclsq);
 	dspfree(slavet);
     }/*idm */
-    if(nslavetot==0){
-	dspcellfree(actslavec);
-	actslavec=NULL;
-    }
+
     return actslavec;
 }
 /**

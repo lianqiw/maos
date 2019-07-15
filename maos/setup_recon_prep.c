@@ -736,10 +736,10 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	if(parms->save.setup){
 	    if(recon->actinterp){
-		writebin(recon->actinterp, "actinterp");
+		writebin(recon->actinterp, "lsr_actinterp");
 	    }
 	    if(recon->actcpl){
-		writebin(recon->actcpl, "actcpl");
+		writebin(recon->actcpl, "lsr_actcpl");
 	    }
 	}
     }

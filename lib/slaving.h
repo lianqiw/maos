@@ -23,7 +23,7 @@
    Routines to compute interpolation matrices for stuck and floating actuators.
 */
 dcell *genactcpl(const dspcell *HA, const dmat *W1);
-dspcell *slaving(loccell *aloc, const dcell *actcpl, dcell *NW, const lcell *actstuck, const lcell *actfloat, const double thres, const double scl);
+dspcell *slaving(loccell *aloc, const dcell *actcpl, const lcell *actstuck, const lcell *actfloat, double thres, double scale, int mode);
 void act_stuck(loccell *aloc, void *HA, const lcell *stuck);
 void act_zero(loccell *aloc, const dcell *HB, const lcell *dead);
 void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actfloat);

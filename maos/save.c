@@ -111,7 +111,7 @@ void save_recon(SIM_T *simu){
 			"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
 	    }
 	}
-	for(int i=0; simu->dmfit && i<parms->ndm; i++){
+	for(int i=0; parms->recon.alg==0 && simu->dmfit && i<parms->ndm; i++){
 	    if(simu->dmfit->p[i]){
 		drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p, parms->dbg.draw_opdmax->p,
 			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
@@ -278,10 +278,23 @@ void save_dmreal(SIM_T *simu){
 	    }
 	    for(int idm=0; idm<parms->ndm; idm++){
 		if(simu->dmreal && simu->dmreal->p[idm]){
-		    drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,parms->dbg.draw_opdmax->p,
+		    drawopd("DM", recon->aloc->p[idm], simu->dmreal->p[idm]->p,parms->dbg.draw_opdmax->p,
 			    "DM Actuator Stroke","x (m)", "y (m)", "Real %d",idm);
 		}
 	    }
+	    if(simu->dmreal){
+		dmat *opd=dnew(simu->aper->locs->nloc, 1);
+		for(int idm=0; idm<parms->ndm; idm++){
+		    int ind=parms->evl.nevl*idm;
+		    simu->evl_propdata_dm[ind].phiout=opd->p;
+		    CALL_THREAD(simu->evl_prop_dm[ind], 0);
+		}
+		dscale(opd, -1);
+		drawopd("Evldm", simu->aper->locs, opd->p,parms->dbg.draw_opdmax->p,
+			"DM OPD","x (m)", "y (m)", "dir %d", 0);	
+		dfree(opd);
+	    }
+
 	    for(int idm=0; idm<parms->ndm; idm++){
 		if(simu->dmpsol && simu->dmpsol->p[idm]){
 		    drawopd("DM", simu->recon->aloc->p[idm], simu->dmpsol->p[idm]->p,parms->dbg.draw_opdmax->p,

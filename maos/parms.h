@@ -395,8 +395,9 @@ typedef struct FIT_CFG_T{
     dmat *hs;      /**<height of target in each direction*/
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
-    double actthres; /**<When actuator coupling coefficient drops below this, start slaving.*/
-    int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
+    double actthres; /**<Threshold for slaving value of weakly coupled actuators*/
+    double actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
+    int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
     int actinterp;   /**<interpolate actuator results to non-active actuators.*/
     int nfit;        /**<Number of DM fit directions */
     int lrt_piston;  /**<Piston constraint low rank term in fit coefficient matrix*/
@@ -423,10 +424,11 @@ typedef struct FIT_CFG_T{
 typedef struct LSR_CFG_T{
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
-    double actthres; /**<When actuator coupling coefficient drops below this, start slaving.*/
+    double actthres; /**<Threshold for slaving value of weakly coupled actuators*/
+    double actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
     char  *fnreg;    /**<File containing a regularization term to add to LL.M*/
     int actinterp;   /**<interpolate actuator results to non-active actuators .*/
-    int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
+    int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
     int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int alg;         /**<algorithm to solve the linear equation.
 			0: Cholesky direct solve for the large matrix.  (CBS)

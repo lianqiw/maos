@@ -225,6 +225,7 @@ void cellfree_do(void *A){
 }
 
 void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
+    if(!fp) return;
     const cell *A=(const cell*)A_;
     if(A){
 	if(!id){
