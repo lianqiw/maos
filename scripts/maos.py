@@ -40,13 +40,14 @@ def parse_structs(srcdir, files):
             struct=ln.find('struct', end)
             if struct==-1:
                 break
-            struct=struct+len('struct ')
+            struct=struct+len('struct')
             start=ln.find('{', struct)
             if start==-1:
                 break;
-            name=ln[struct:start];
+            name=ln[struct+1:start];
             end0=ln.find('{', start+1)
             end=ln.find('}', start+1)
+
             if end0!=-1 and end0<end:
                 print(struct, start, end0, end)
                 print (ln[struct:end])

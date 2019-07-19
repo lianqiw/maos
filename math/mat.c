@@ -90,7 +90,8 @@ void X(init)(X(mat)**A, long nx, long ny){
 X(mat) *X(mat_cast)(const void *A){
     if(!A) return 0;
     assert(ismat(A));
-    return (X(mat)*)A;
+    X(mat)*B=(X(mat)*)A;
+    if(!B->nx || !B->ny) return 0; else return B;
 }
 /**
    free a X(mat) object. if keepdata!=0, will not free A->p.

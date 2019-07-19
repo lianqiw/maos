@@ -44,7 +44,6 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
     sp->nx=nx;
     sp->ny=ny;
     sp->nzmax=nzmax;
-    sp->nz=-1;
     sp->nref=mycalloc(1,int);
     sp->nref[0]=1;
     return sp;
@@ -171,7 +170,8 @@ X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
 X(sp)* X(sp_cast)(const void *A){
     if(!A) return 0;
     assert(issp(A));
-    return (X(sp)*)A;
+    X(sp)*B=(X(sp)*)A;
+    if(!B->nx || !B->ny) return 0; else return B;
 }
 /**
    resize a X(sp) matrix

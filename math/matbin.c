@@ -46,12 +46,11 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
     uint64_t nx, ny;
     nx=header->nx;
     ny=header->ny;
-    if(!nx || !ny) {
+    /*if(!nx || !ny) {
 	free(header->str);
 	return NULL;
-    }
-    X(mat) *out;
-    out=X(new)((long)nx,(long)ny);
+	}*/
+    X(mat) *out=X(new)((long)nx,(long)ny);
     out->header=header->str; header->str=NULL;
     if(nx>0 && ny>0){
 	if(header->magic==M_T){

@@ -16,8 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*
-  This file is parsed by aolib.py. The content here does not necessarily adhere to C standard.
+  This file is parsed by lib2mex.py. The content here does not necessarily adhere to C standard.
  */
+void cellfree=cellfree_do(cell *arr);
 dmat *zernike_Rnm(const dmat *locr, int ir, int im);
 dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr);
 dmat *zernike_cov_kolmogorov(int nr);
@@ -71,3 +72,5 @@ dmat *add_psd(const dmat *psd1, const dmat *psd2, double scale2);
 dmat *derive_by_fft(const dmat *i0, double theta);
 void cure(dmat **phi, const dmat*gx, const dmat *gy, double dx);
 void cure1d(dmat **phi, const dmat*gx, const dmat *gy, double dx);
+cell* loc_embed=loc_embed2(loc_t *loc, dmat *arr);
+

@@ -198,7 +198,6 @@ dsp *mx2dsp(const mxArray *A){
     if(A && mxGetM(A) && mxGetN(A)){
 	out=(dsp*)calloc(1, sizeof(dsp));
 	out->id=M_DSP64;
-	out->nz=-1;
 	out->nx=mxGetM(A);
 	out->ny=mxGetN(A);
 	out->p=(spint*)mxGetJc(A);
@@ -215,7 +214,6 @@ csp *mx2csp(const mxArray *A){
     if(A && mxGetM(A) && mxGetN(A)){
 	out=(csp*)calloc(1, sizeof(csp));
 	out->id=M_CSP64;
-	out->nz=-1;
 	out->nx=mxGetM(A);
 	out->ny=mxGetN(A);
 	out->p=(spint*)mxGetJc(A);

@@ -380,6 +380,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    RENAME(sim.apdm, sim.aphi);
 	    RENAME(sim.epdm, sim.ephi);
 	    RENAME(sim.aldm, sim.alhi);
+	    RENAME(powfs.neaspeckle, powfs.neaextra);
 	    //RENAME(tomo.cxx,tomo.cxxalg);
 	    //RENAME(sim.ahstfocus, tomo.ahst_focus);
 #endif

@@ -37,6 +37,6 @@ maos_LDADD+=-lcholmod $(LIBMEX)
 BUILT_SOURCES=maos2mex.h aolib.c aolibmex.c
 maos2mex.h:../maos/parms.h ../maos/types.h ../lib/aos.h ../scripts/maos2mex.py
 	$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR) $(SRC_DIR)/mex/maos2mex.h
-aolib.c:../maos/parms.h ../maos/types.h ../scripts/aolib.py aolib.h
-	$(SRC_DIR)/scripts/aolib.py $(SRC_DIR) $(SRC_DIR)/mex/aolib.c
+aolib.c:../maos/parms.h ../maos/types.h ../scripts/lib2mex.py aolib.h
+	$(SRC_DIR)/scripts/lib2mex.py $(SRC_DIR) $(SRC_DIR)/mex/aolib.c
 aolib_SOURCES=aolibmex.c aolib.c

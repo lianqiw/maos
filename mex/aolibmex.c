@@ -81,3 +81,30 @@ ccell *mkdtfmex(dspcell **si, const dmat *wvls, double dxsa, double embfac, long
     free(dtf);
     return nominal;
 }
+///Embed arr according to loc into a 2d array
+cell *loc_embed2(loc_t *loc, dmat *arr){
+    if(!loc->map){
+	loc_create_map(loc);
+    }
+    if(arr->nx==1 && arr->ny!=1){
+	arr->nx=arr->ny;
+	arr->ny=1;
+    }
+    int nx=arr->nx/loc->nloc;
+    int ny=arr->ny;
+    if(nx*loc->nloc!=arr->nx){
+	error("arr has wrong dimension: %ldx%ld. loc length is %ld \n", arr->nx, arr->ny, loc->nloc);
+    }
+    dcell *dest=dcellnew(nx, ny);
+    for(int ix=0; ix<nx*ny; ix++){
+	P(dest, ix)=dnew(loc->map->nx, loc->map->ny);
+	loc_embed((map_t*)P(dest, ix), loc, arr->p+ix*loc->nloc);
+    }
+    if(nx==1 && ny==1){
+	dmat *dest0=dref(P(dest,0));
+	cellfree(dest);
+	return (cell*)dest0;
+    }else{
+	return (cell*)dest;
+    }
+}

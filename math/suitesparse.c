@@ -16,9 +16,34 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*Taken from suitesparse package from UFL. The operations performs ok with
- * non-ascending ordering in each column and may produce results such way. Sort
- * the columns in ascending order before exporting to matlab.*/
+/*
+  Adapted from CSparse
+
+  CSparse: a Concise Sparse Matrix package.
+  Copyright (c) 2006-2017, Timothy A. Davis.
+  http://www.suitesparse.com
+
+  --------------------------------------------------------------------------------
+
+  CSparse is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  CSparse is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this Module; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA  
+
+*/
+
+/*
+  Sort the columns in ascending order before exporting to matlab.
+*/
 
 
 #include <limits.h>
@@ -35,8 +60,6 @@ typedef spint SS_INT;
 #define SS_UNFLIP(i) (((i) < 0) ? SS_FLIP(i) : (i))
 #define SS_MARKED(w,j) (w [j] < 0)
 #define SS_MARK(w,j) { w [j] = SS_FLIP (w [j]) ; }
-#define SS_CSC(A) (A && (A->nz == -1))
-#define SS_TRIPLET(A) (A && (A->nz >= 0))
 
 /**
  free a sparse matrix */
@@ -83,7 +106,7 @@ static cs *ss_spalloc (SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT t
     A->nx = m ;                              /* define dimensions and nzmax */
     A->ny = n ;
     A->nzmax = nzmax = SS_MAX (nzmax, 1) ;
-    A->nz = triplet ? 0 : -1 ;              /* allocate triplet or comp.col */
+
     A->p = (SS_INT*)ss_malloc (triplet ? nzmax : n+1, sizeof (SS_INT)) ;
     A->i = (SS_INT*)ss_malloc (nzmax, sizeof (SS_INT)) ;
     A->x = values ? (SS_ENTRY*)ss_malloc (nzmax, sizeof (SS_ENTRY)) : NULL ;
@@ -103,9 +126,8 @@ static SS_INT ss_sprealloc (cs *A, SS_INT nzmax)
 {
     SS_INT ok, oki, okj = 1, okx = 1 ;
     if (!A) return (0) ;
-    if (nzmax <= 0) nzmax = (SS_CSC (A)) ? (A->p [A->ny]) : A->nz ;
+    if (nzmax <= 0) nzmax =  (A->p [A->ny]) ;
     A->i = (SS_INT*)ss_realloc (A->i, nzmax, sizeof (SS_INT), &oki) ;
-    if (SS_TRIPLET (A)) A->p = (SS_INT*)ss_realloc (A->p, nzmax, sizeof (SS_INT), &okj) ;
     if (A->x) A->x = (SS_ENTRY*)ss_realloc (A->x, nzmax, sizeof (SS_ENTRY), &okx) ;
     ok = (oki && okj && okx) ;
     if (ok) A->nzmax = nzmax ;
@@ -128,7 +150,7 @@ static SS_INT ss_scatter (const cs *A, SS_INT j, SS_ENTRY beta, SS_INT *w, SS_EN
 {
     SS_INT i, p, *Ap, *Ai, *Ci ;
     SS_ENTRY *Ax ;
-    if (!SS_CSC (A) || !w || !SS_CSC (C)) return (-1) ;     /* check inputs */
+    if (! (A) || !w || ! (C)) return (-1) ;     /* check inputs */
     Ap = A->p ; Ai = A->i ; Ax = A->x ; Ci = C->i ;
     for (p = Ap [j] ; p < Ap [j+1] ; p++)
     {
@@ -151,8 +173,8 @@ cs* X(ss_multiply) (const cs *A, const cs *B)
     SS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values, *Bi ;
     SS_ENTRY *x, *Bx, *Cx ;
     cs *C ;
-    if (!SS_CSC (A) || !SS_CSC (B)) {
-	error("A or B is not in CSC format\n");
+    if (!(A) || !(B)) {
+	error("A or B is not available\n");
 	return (NULL) ;      /* check inputs */
     }
     if (A->ny != B->nx) {
@@ -197,8 +219,8 @@ cs* X(ss_add) (const cs *A, const cs *B, SS_ENTRY alpha, SS_ENTRY beta)
     SS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values ;
     SS_ENTRY *x, *Bx, *Cx ;
     cs *C ;
-    if (!SS_CSC (A) || !SS_CSC (B)){
-	error("A or B is not in CSC format\n");
+    if (!(A) || !(B)){
+	error("A or B is not available\n");
 	return (NULL) ;         /* check inputs */
     }
     if (A->nx != B->nx || A->ny != B->ny) {
@@ -238,7 +260,7 @@ static SS_INT ss_fkeep (cs *A, SS_INT (*fkeep) (SS_INT, SS_INT, SS_ENTRY, void *
 {
     SS_INT j, p, nz = 0, n, *Ap, *Ai ;
     SS_ENTRY *Ax ;
-    if (!SS_CSC (A) || !fkeep) return (-1) ;    /* check inputs */
+    if (!(A) || !fkeep) return (-1) ;    /* check inputs */
     n = A->ny ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     for (j = 0 ; j < n ; j++)
     {
@@ -311,7 +333,7 @@ cs* X(ss_transpose) (const cs *A, SS_INT values)
     SS_INT p, q, j, *Cp, *Ci, n, m, *Ap, *Ai, *w ;
     SS_ENTRY *Cx, *Ax ;
     cs *C ;
-    if (!SS_CSC (A)) return (NULL) ;    /* check inputs */
+    if (!(A)) return (NULL) ;    /* check inputs */
     m = A->nx ; n = A->ny ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     C = ss_spalloc (n, m, Ap [n], values && Ax, 0) ;       /* allocate result */
     w = (SS_INT*)ss_calloc (m, sizeof (SS_INT)) ;                      /* get workspace */
