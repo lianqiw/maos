@@ -584,7 +584,7 @@ typedef struct SIM_T{
     dcell *telfocusreal;/**<Telescope focus integrated*/
     /*PSD computation*/
     dcell *dmerrts;    /**<Herr*dmerr time history*/
-    dmat *Merrts;      /**<Time history of low order WFE.*/
+    dmat *Merrts;      /**<Time history of low order mode.*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

@@ -893,7 +893,8 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn",1);
     double *mngs=simu->Mngs->p[0]->p;
     if(ngsmod->indastig){//LTAO
-	//Temporary: remove LPF'ed focus/astigmatism from LGS DM command.
+	//LTAO is unable to tell where focus/astigmatism occures. NGS WFS needs to control this.
+	//Testing: remove LPF'ed focus/astigmatism from LGS DM command. 
 	if(!simu->ngsmodlpf){
 	    simu->ngsmodlpf=dnew(3,1);
 	}
@@ -923,4 +924,5 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	}
     }
     dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);
+  
  }

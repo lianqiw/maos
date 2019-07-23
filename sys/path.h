@@ -24,6 +24,7 @@
    This file contains function managing the searching path for files, behaves
    like PATH in POSIX systems.
 */
+void addpath2(const char*path, int priority);
 void addpath(const char*path);
 void rmpath(const char *path);
 void printpath(void);

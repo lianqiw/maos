@@ -308,6 +308,7 @@ static void filter_cl(SIM_T *simu){
     }
     //always run servo_filter even if dmerr is NULL.
     int hiout=servo_filter(simu->dmint, dmerr);
+
     if(parms->recon.split){ 
 	/*Low order in split tomography only. fused integrator*/
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
@@ -391,9 +392,7 @@ static void filter_cl(SIM_T *simu){
 	    }
 	}
     }
- 
- 
-    
+     
     if(recon->moao && !parms->gpu.moao){
 	warning_once("moao filter implemented with LPF\n");
 	if(simu->dm_wfs){

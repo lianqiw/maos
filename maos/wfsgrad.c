@@ -704,6 +704,8 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 	if(simu->wfsisim<parms->powfs[ipowfs].step) continue;
 	if(parms->sim.closeloop && (simu->wfsisim+1)%parms->sim.dtrat_hi!=0) continue;
 	if(!parms->powfs[ipowfs].llt) continue;
+	//const int do_phy=(parms->powfs[ipowfs].usephy && simu->wfsisim>=parms->powfs[ipowfs].phystep);
+	//if(!do_phy) continue;
 	const int do_phy=(parms->powfs[ipowfs].usephy && simu->wfsisim>=parms->powfs[ipowfs].phystep);
 	if(!do_phy) continue;
 	double lgsfocusm=0;
@@ -748,6 +750,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 		}
 		simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+infocus*lpfocus;
 		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
+		//info("lgs focus: %d %g\n", iwfs, infocus);
 	    }
 	    if(zoom_from_grad){//Trombone averager
 		if(parms->powfs[ipowfs].zoomshare){//all lgs share the same trombone.
@@ -796,26 +799,11 @@ void wfsgrad_post(thread_t *info){
 	    P(simu->fsmcmds->p[iwfs], 1, isim)=simu->fsmreal->p[iwfs]->p[1];
 	}
 	if(dtrat_output){
-	    if(parms->plot.run>1 && (simu->gradoff->p[iwfs]|| parms->dbg.gradoff)){
-		drawgrad("Gcl", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs],
-			 parms->dbg.draw_gmax->p, parms->plot.grad2opd,
-			 "WFS Raw Closeloop Gradients","x (m)", "y (m)", "Gcl raw %d",  iwfs);
-	    }
 	    //scaling on gradout
 	    if(simu->gradscale->p[iwfs]){
 		dcwm(*gradout, simu->gradscale->p[iwfs]);
 	    }else{
 		dscale(*gradout, parms->powfs[ipowfs].gradscale);
-	    }
-	    //Gradient offset due to mainly NCPA calibration. Must be after gain adjustment.
-	    if(simu->gradoff->p[iwfs]){
-		dadd(gradout, 1, simu->gradoff->p[iwfs], -parms->dbg.gradoff_scale);
-	    }
-	    //Injected gradient offset for testing.
-	    if(parms->dbg.gradoff){
-		info_once("Add injected gradient offset vector\n");
-		int icol=(isim+1)%parms->dbg.gradoff->ny;
-		dadd(gradout, 1, P(parms->dbg.gradoff, iwfs, icol), -1);
 	    }
 	    if(do_phy){
 		if(simu->fsmerr_store->p[iwfs]){
@@ -827,9 +815,9 @@ void wfsgrad_post(thread_t *info){
 		if(!parms->powfs[ipowfs].trs && parms->powfs[ipowfs].skip!=2 && simu->fsmerr){
 		    dzero(simu->fsmerr->p[iwfs]);//do not close fsm loop
 		}
-		if(parms->powfs[ipowfs].llt){
-		    dmm(PP(simu->LGSfocus, iwfs), 0, P(simu->recon->RFlgsg, iwfs, iwfs), P(simu->gradcl, iwfs), "nn", 1);
-		}
+	    }
+	    if(parms->powfs[ipowfs].llt){
+		dmm(PP(simu->LGSfocus, iwfs), 0, P(simu->recon->RFlgsg, iwfs, iwfs), P(simu->gradcl, iwfs), "nn", 1);
 	    }
 	    if(parms->save.grad->p[iwfs]){
 		zfarr_push(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
@@ -1158,13 +1146,13 @@ void wfsgrad(SIM_T *simu){
     }///else: already called by sim.c
     CALL_THREAD(simu->wfsgrad_post, 0);
     wfsgrad_dither_post(simu);//must be before wfsgrad_lgsfocus because wfsgrad_lgsfocus runs zoom integrator.
+    if(parms->nlgspowfs){//high pass filter lgs focus to remove sodium range variation effect
+	wfsgrad_lgsfocus(simu);
+    }
     if(parms->itpowfs!=-1){
 	wfsgrad_twfs_recon(simu);
     }
-    if(parms->nlgspowfs){ 
-	//high pass filter lgs focus to remove sodium range variation effect
-	wfsgrad_lgsfocus(simu);
-    }
+
     //todo: split filter_fsm to per WFS.
     filter_fsm(simu);
     if(1+simu->wfsisim==parms->sim.end){

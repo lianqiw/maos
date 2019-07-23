@@ -1722,7 +1722,11 @@ void print_progress(SIM_T *simu){
 	    legs[1]="Tip/Tilt";
 	    if(parms->recon.split){
 		nline++;
-		legs[2]="Plate Scale";
+		if(simu->recon->ngsmod->indps){
+		    legs[2]="Plate Scale";
+		}else if(simu->recon->ngsmod->indastig){
+		    legs[2]="Astig";
+		}
 		if(tmp->nx==4){
 		    nline++;
 		    legs[3]="Focus";

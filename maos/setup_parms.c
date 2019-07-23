@@ -1781,7 +1781,6 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 		    double siglev=parms->wfs[iwfs].siglev;
 		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
 		    info("iwfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
-		    warning("Need to update to account for the transmittance\n");
 		}
 	    }
 	}

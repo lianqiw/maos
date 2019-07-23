@@ -191,9 +191,6 @@ void save_recon(SIM_T *simu){
 	}
 	if(simu->Merr_lo){
 	    zfarr_push(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo->p[0]);
-	    if(!parms->sim.fuseint){
-		zfarr_push(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]->p[0]);
-	    }
 	}
     }
     const int seed=simu->seed;

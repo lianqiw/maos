@@ -58,7 +58,7 @@ SIM_T *maos_iseed(int iseed){
 		parms->sim.seeds->p[iseed]);
 	return 0;
     }
-    if(parms->sim.pause!=1){
+    if(!parms->sim.pause){
 	draw_single=1;//Only draw active frame.
     }else{
 	draw_single=0;

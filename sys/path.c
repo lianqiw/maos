@@ -35,27 +35,42 @@
 */
 typedef struct PATH_T{
     char *path;
+    int priority;
     struct PATH_T *next;
 }PATH_T;
 static PATH_T *PATH=NULL;/*privately maintained path to locate config files. */
 PNEW(mutex_path);
 /**
-   Add a directory to path.
+   Add a directory to path. Higher priority is searched first.
 */
-void addpath(const char*path){
+void addpath2(const char*path, int priority){
     char *abspath=myabspath(path);
     if(!path || !abspath){
 	warning("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath,mygetcwd());
 	return;
     }
     PATH_T *node=mycalloc(1,PATH_T);
+    info("adding path %s\n", abspath);
     node->path=abspath;
+    node->priority=priority;
     LOCK(mutex_path);
-    node->next=PATH;
-    PATH=node;
+    PATH_T *ia1=0, *ia2=0;
+    for(ia1=PATH; ia1; ia2=ia1,ia1=ia1->next){
+	if(ia1->priority<=priority){
+	    break;
+	}
+    }
+    node->next=ia1;
+    if(ia2){
+	ia2->next=node;
+    }else{
+	PATH=node;
+    }
     UNLOCK(mutex_path);
 }
-
+void addpath(const char *path){
+    addpath2(path, 0);
+}
 /**
    Remove a directory from path.
  */
@@ -118,8 +133,13 @@ char *search_file(const char *fn){
 		strcat(fntmp,"/");
 	    strcat(fntmp,fn);
 	    if(exist(fntmp)){
-		fnout=strdup(fntmp);
-		break;
+		if(!fnout){
+		    fnout=strdup(fntmp);
+		}else if(strcmp(fnout, fntmp)){
+		    info("at %s\n", fnout);
+		    info("at %s\n", fntmp);
+		    error("Found multiple %s. Please rename.\n", fn);
+		}
 	    }
 	}
     }
