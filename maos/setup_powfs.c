@@ -593,7 +593,9 @@ void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	const long nsa=powfs[ipowfs].saloc->nloc;
 	dcell *nea=0;
-	if(parms->powfs[ipowfs].neaphy){
+	//if(parms->powfs[ipowfs].neaphy || parms->powfs[ipowfs].phystep>-1){
+	if(powfs[ipowfs].sanea){
+	    info("Use sanea to derive neasim\n");
 	    nea=dcelldup(powfs[ipowfs].sanea);
 	    for(int ii=0; ii<nea->nx; ii++){
 		nea_chol(&nea->p[ii], nea->p[ii]);

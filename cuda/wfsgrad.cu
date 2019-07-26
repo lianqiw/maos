@@ -313,6 +313,67 @@ void dither_t::acc(DITHER_T *dither, curcell &ints, Real cs, Real ss, int npll, 
     }
 }
 /**
+   Calculate SHWFS gradients
+*/
+static void shwfs_grad(curmat&gradcalc, const curcell&ints, Array<cuwfs_t>&cuwfs, Array<cupowfs_t>&cupowfs, 
+		       const PARMS_T *parms, const POWFS_T *powfs, SIM_T *simu, int iwfs, int ipowfs, stream_t& stream){
+    const int nsa=powfs[ipowfs].saloc->nloc;
+    CUDA_CHECK_ERROR;
+    cuzero(gradcalc, stream);
+    const int totpix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
+    switch(parms->powfs[ipowfs].phytype_sim){
+    case 0:
+	break; //no-op
+    case 1://Matched filter
+	{
+	    Real sigratio=parms->powfs[ipowfs].sigmatch==2?(cuwfs[iwfs].i0sumsum/cursum(ints.M(),stream)):0;
+	    mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche()), ints.M(), 
+		  parms->powfs[ipowfs].sigmatch, cuwfs[iwfs].i0sum(), sigratio,
+		  totpix, nsa, cuwfs[iwfs].msa, stream);
+	}
+	break;
+    case 2:{//CoG
+	Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
+	Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
+	int pixpsax=powfs[ipowfs].pixpsax;
+	int pixpsay=powfs[ipowfs].pixpsay;
+	Real scale1=0;
+	Real *scale2=0;
+	switch(parms->powfs[ipowfs].sigmatch){
+	case 0://No signal level match. Use sum(i0) as denominator. Linear.
+	    //scale1=parms->powfs[ipowfs].siglev*parms->powfs[ipowfs].dtrat;
+	    //scale2=cupowfs[ipowfs].saa();
+	    //The following is preferred.
+	    scale1=1.f;
+	    scale2=cuwfs[iwfs].i0sum();
+	    break;
+	case 1://Use instantaneous intensity of each sa
+	    break;
+	case 2://Use averaged instantaneous intensity.
+	    scale1=cursum(ints.M(),stream)/powfs[ipowfs].saasum;
+	    scale2=cupowfs[ipowfs].saa();
+	    break;
+	default:
+	    error("Invalid sigmatch\n");
+	}
+	Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot():NULL;
+	tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
+	    (gradcalc, ints[0], scale1, scale2,
+	     pixpsax, pixpsay, pixthetax, pixthetay, nsa, 
+	     (Real(*)[2])cuwfs[iwfs].cogcoeff(), srot);
+    }
+	break;
+    default://Use CPU version.
+	cp2cpu(&simu->ints->p[iwfs], ints, stream);
+	CUDA_SYNC_STREAM;
+	calc_phygrads(&simu->gradcl->p[iwfs],simu->ints->p[iwfs]->p,
+		      parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
+    }
+    ctoc("grad");
+    CUDA_CHECK_ERROR;
+	    
+}
+/**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
    data back to CPU.
 */
@@ -487,12 +548,23 @@ void gpu_wfsgrad_queue(thread_t *info){
 		curcell &ints=cuwfs[iwfs].ints;
 		const int totpix=(powfs[ipowfs].pywfs)?powfs[ipowfs].pywfs->nside:(ints[0].N());//PyWFs and SHWFS
 		if(save_ints){
-		    CUDA_CHECK_ERROR;
 		    zfarr_push(simu->save->intsnf[iwfs], simu->wfsisim, ints, stream);
-		    CUDA_CHECK_ERROR;
 		}
 		ctoc("mtche");
 		if(noisy){
+		    if(parms->save.gradnf->p[iwfs]){
+			if(parms->powfs[ipowfs].type==1){//PWFS
+			    pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa, 
+				       cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs,stream);
+			}else{
+			    shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
+			}
+			if(parms->powfs[ipowfs].phytype_sim<3){
+			    zfarr_push(simu->save->gradnf[iwfs], isim, gradcalc, stream);
+			}else{//CPU version
+			    zfarr_push(simu->save->gradnf[iwfs], isim, simu->gradcl->p[iwfs]);
+			}
+		    }
 		    rne=parms->powfs[ipowfs].rne;
 		    bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 		    addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
@@ -515,70 +587,24 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
 		}
 	    }
-	    if(parms->powfs[ipowfs].type==1){
-		pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa, 
-			   cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs,stream);
-		//cuwrite(gradcalc, "gradcalc"); exit(0);
-	    }else if(do_phy){
-		CUDA_CHECK_ERROR;
-		cuzero(gradcalc, stream);
-		curcell &ints=cuwfs[iwfs].ints;
-		const int totpix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
-		switch(parms->powfs[ipowfs].phytype_sim){
-		case 0:
-		    break; //no-op
-		case 1:
-		    {
-			Real sigratio=parms->powfs[ipowfs].sigmatch==2?(cuwfs[iwfs].i0sumsum/cursum(ints.M(),stream)):0;
-			mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche()), ints.M(), 
-			      parms->powfs[ipowfs].sigmatch, cuwfs[iwfs].i0sum(), sigratio,
-			      totpix, nsa, cuwfs[iwfs].msa, stream);
-		    }
-		    break;
-		case 2:{
-		    Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
-		    Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
-		    int pixpsax=powfs[ipowfs].pixpsax;
-		    int pixpsay=powfs[ipowfs].pixpsay;
-		    Real scale1=0;
-		    Real *scale2=0;
-		    switch(parms->powfs[ipowfs].sigmatch){
-		    case 0://No signal level match. Use sum(i0) as denominator. Linear.
-			//scale1=parms->powfs[ipowfs].siglev*parms->powfs[ipowfs].dtrat;
-			//scale2=cupowfs[ipowfs].saa();
-			//The following is preferred.
-			scale1=1.f;
-			scale2=cuwfs[iwfs].i0sum();
-			break;
-		    case 1://Use instantaneous intensity of each sa
-			break;
-		    case 2://Use averaged instantaneous intensity.
-			scale1=cursum(ints.M(),stream)/powfs[ipowfs].saasum;
-			scale2=cupowfs[ipowfs].saa();
-			break;
-		    default:
-			error("Invalid sigmatch\n");
-		    }
-		    Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot():NULL;
-		    tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
-			(gradcalc, ints[0], scale1, scale2,
-			 pixpsax, pixpsay, pixthetax, pixthetay, nsa, 
-			 (Real(*)[2])cuwfs[iwfs].cogcoeff(), srot);
+	    if(do_phy){
+		if(parms->powfs[ipowfs].type==1){
+		    pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa, 
+			       cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs,stream);
+		    //cuwrite(gradcalc, "gradcalc"); exit(0);
+		}else{
+		    shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
 		}
-		    break;
-		default://Use CPU version.
-		    cp2cpu(&simu->ints->p[iwfs], ints, stream);
-		    CUDA_SYNC_STREAM;
-		    calc_phygrads(&simu->gradcl->p[iwfs],simu->ints->p[iwfs]->p,
-				  parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
-		}
-		ctoc("grad");
-		CUDA_CHECK_ERROR;
 	    }else{
-		if(noisy && !parms->powfs[ipowfs].usephy){
-		    add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-			(gradacc, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
-		    ctoc("noise");
+		if(noisy){
+		    if(parms->save.gradnf->p[iwfs]){
+			zfarr_push(simu->save->gradnf[iwfs], isim, gradacc, stream);	
+		    }
+		    if(!parms->powfs[ipowfs].usephy){//do not add noise for presimulation to physical optics
+			add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
+			    (gradacc, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
+			ctoc("noise");
+		    }
 		}
 	    }
 
@@ -617,9 +643,6 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 	    }
 	}else{
 	    cp2cpu(&gradcl, gradacc, stream);
-	    if(save_gradgeom){
-		zfarr_push(simu->save->gradgeom[iwfs], simu->wfsisim, curmat(), stream);
-	    }
 	}
     }
 }

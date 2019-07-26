@@ -899,10 +899,29 @@ static void init_simu_wfs(SIM_T *simu){
 		}
 	    }
 	}
+	if(parms->save.gradnf){
+	    save->gradnf=mycalloc(nwfs,zfarr*);
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		if(parms->save.gradnf->p[iwfs]){
+		    int ipowfs=parms->wfs[iwfs].powfs;
+		    if(parms->powfs[ipowfs].noisy){
+			save->gradnf[iwfs]=zfarr_init(nstep,1, "wfs%d_gradnf_%d.bin", iwfs, seed);
+		    }else{//for noise free wfs, link gradcl to gradnf
+			char fn1[PATH_MAX];
+			char fn2[PATH_MAX];
+			snprintf(fn1, PATH_MAX, "wfs%d_gradcl_%d.bin", iwfs, seed);
+			snprintf(fn2, PATH_MAX, "wfs%d_gradnf_%d.bin", iwfs, seed);
+			(void)remove(fn2);
+			mysymlink(fn1, fn2);
+		    }
+		}
+	    }
+	}
 	if(parms->save.gradgeom){
 	    save->gradgeom=mycalloc(nwfs,zfarr*);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(parms->save.gradgeom->p[iwfs]){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->save.gradgeom->p[iwfs] && parms->powfs[ipowfs].phystep>-1){
 		    save->gradgeom[iwfs]=zfarr_init(nstep,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 		}
 	    }
@@ -1617,6 +1636,7 @@ void free_simu(SIM_T *simu){
     zfarr_close_n(save->wfsopdol, nwfs);
     zfarr_close_n(save->wfslltopd, nwfs);
     zfarr_close_n(save->gradcl, nwfs);
+    zfarr_close_n(save->gradnf, nwfs);
     zfarr_close_n(save->gradgeom, nwfs);
     zfarr_close_n(save->gradol, nwfs);
     zfarr_close_n(save->intsny, nwfs);

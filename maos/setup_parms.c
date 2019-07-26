@@ -165,6 +165,7 @@ void free_parms(PARMS_T *parms){
     lfree(parms->save.ints);
     lfree(parms->save.wfsopd);
     lfree(parms->save.grad);
+    lfree(parms->save.gradnf);
     lfree(parms->save.gradgeom);
     free(parms->load.mvm);
     free(parms->load.mvmi);
@@ -1107,6 +1108,7 @@ static void readcfg_save(PARMS_T *parms){
     parms->save.ints=readcfg_lmat_nmax(parms->nwfs, "save.ints");
     parms->save.wfsopd=readcfg_lmat_nmax(parms->nwfs, "save.wfsopd");
     parms->save.grad=readcfg_lmat_nmax(parms->nwfs, "save.grad");
+    parms->save.gradnf=readcfg_lmat_nmax(parms->nwfs, "save.gradnf");
     parms->save.gradgeom=readcfg_lmat_nmax(parms->nwfs, "save.gradgeom");
     if(disable_save){
 	parms->save.extra=0;
@@ -1140,6 +1142,7 @@ static void readcfg_save(PARMS_T *parms){
 		parms->save.ints->p[iwfs]=1;
 		parms->save.wfsopd->p[iwfs]=1;
 		parms->save.grad->p[iwfs]=1;
+		parms->save.gradnf->p[iwfs]=1;
 		parms->save.gradgeom->p[iwfs]=1;
 	    }
 	}
@@ -1506,7 +1509,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->powfs[ipowfs].hs=wfs_hs;
 		warning("powfs[%d].hs is set to %g\n", ipowfs, parms->powfs[ipowfs].hs);
 	    }else{
-		error("either wfs.wfs or powfs.hs has to be specified\n");
+		error("either wfs.hs or powfs.hs has to be specified\n");
 	    }
 	}else if(wfs_hs>0 && fabs(wfs_hs-parms->powfs[ipowfs].hs)>10000){
 	    warning("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);

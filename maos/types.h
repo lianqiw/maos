@@ -427,6 +427,7 @@ typedef struct SIM_SAVE_T{
     zfarr **wfslltopd;
     /*gradients */
     zfarr **gradcl;
+    zfarr **gradnf;
     zfarr **gradgeom;
     zfarr **gradol;
     zfarr **intsny;

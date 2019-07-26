@@ -349,6 +349,15 @@ void wfsgrad_iwfs(thread_t *info){
 		zfarr_push(simu->save->intsnf[iwfs], isim, ints);
 	    }
 	    if(noisy){/*add noise */
+		if(parms->save.gradnf->p[iwfs]){//save noise free gradients
+		    if(parms->powfs[ipowfs].type==0){
+			calc_phygrads(gradout, ints->p, parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
+		    }else{
+			pywfs_grad(gradout, powfs[ipowfs].pywfs, ints->p[0]);
+		    }
+		    zfarr_push(simu->save->gradnf[iwfs], isim, *gradout);
+		}
+
 		const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
 		dmat **bkgrnd2=NULL;
 		dmat **bkgrnd2c=NULL;
@@ -392,7 +401,6 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
 	if(do_phy){
-
 	    if(parms->powfs[ipowfs].type==0){
 		calc_phygrads(gradout, ints->p, parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 	    }else{
@@ -404,6 +412,10 @@ void wfsgrad_iwfs(thread_t *info){
 	    if(dtrat!=1){
 		dscale(*gradout,1./dtrat);/*average */
 	    }
+	    if(parms->save.gradnf->p[iwfs]){
+		zfarr_push(simu->save->gradnf[iwfs], isim, *gradout);
+	    }
+
 	    if(noisy && !parms->powfs[ipowfs].usephy){
 		const dmat *nea=PR(powfs[ipowfs].neasim,wfsind,0);//neasim is the LL' decomposition
 		const double *neax=nea->p;
@@ -422,7 +434,7 @@ void wfsgrad_iwfs(thread_t *info){
 		}
 	    }
 	}
-	if(save_gradgeom){
+	if(save_gradgeom && do_phy){
 	    dmat *gradtmp=NULL;
 	    dadd(&gradtmp, 1, *gradacc, 1./dtrat);
 	    zfarr_push(simu->save->gradgeom[iwfs], isim, gradtmp);/*noise free. */

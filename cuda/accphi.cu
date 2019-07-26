@@ -66,9 +66,9 @@ typedef struct{
 }atm_prep_t;
 static void atm_prep(atm_prep_t *data){
     PNEW(lock);
-    const int ips=data->ips;
+    //const int ips=data->ips;
     LOCK(lock);/*make sure we only read one layer at a time. */
-    TIC;tic;
+    //TIC;tic;
     const int nx0=data->nx0;
     const int ny0=data->ny0;
     const map_t *atm=data->atm;
@@ -108,7 +108,7 @@ static void atm_prep(atm_prep_t *data){
 	    pout[iy][ix]=(Real)P(atm, ix+offx-nxi, iy+offy-nyi);
 	}
     }
-    toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
+    //toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
     UNLOCK(lock);
 }
 /**
@@ -309,7 +309,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
     for(int ips=0; ips<nps; ips++) {
 	if(isim==prep_data[ips].isim_next){
 	    /*need to copy atm to gpu. and update next_isim */
-	    TIC;tic;
+	    //TIC;tic;
 	    pthread_join(prep_data[ips].threads, NULL);
 	    for(int im=0; im<NGPU; im++)
 	    {
@@ -343,7 +343,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		prep_data[ips].isim_next=INT_MAX;
 	    }
 	 
-	    toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, prep_data[ips].isim_next); 
+	    //toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, prep_data[ips].isim_next); 
 	}//if isim
     }//for ips
 #if _OPENMP >= 200805 
