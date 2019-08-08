@@ -719,6 +719,7 @@ typedef struct SAVE_CFG_T{
     lmat *ints;        /**<save WFS subaperture image*/
     lmat *grad;        /**<save WFS gradients*/
     lmat *gradnf;      /**<save WFS noise free gradients*/
+    lmat *gradpsol;    /**<save WFS PSOL gradients*/
     lmat *gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
     /*The following are derived from above. */
     int wfsopdhi;    /**<save high order WFS OPD(derived)*/

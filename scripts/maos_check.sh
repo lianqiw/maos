@@ -5,12 +5,11 @@
 if [ -n "$1" ];then
     D=$1
     shift
-    args="$@"
+    args="aper.d=$D $@"
 else
     D=30
-    args=
 fi
-args+=" aper.d=$D"
+
 case $D in
     2)
 	#4/4/2017

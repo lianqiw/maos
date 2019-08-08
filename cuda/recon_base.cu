@@ -209,7 +209,7 @@ void map_ray::Init_l2l(const cugridcell &out, const cugridcell &in){//input. lay
     DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer));
     for(int ilayer=0; ilayer<nlayer; ilayer++){
 	if(Z(fabs)(out[ilayer].ht-in[ilayer].ht)>EPS){
-	    error("Layer height miX(mat)ch\n");
+	    error("Layer height mis-match.\n");
 	}
 	gpu_map2map_prep(hdata_cpu+ilayer, out[ilayer], in[ilayer],
 			   0, 0, in[ilayer].cubic_cc);

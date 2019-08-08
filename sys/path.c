@@ -50,7 +50,6 @@ void addpath2(const char*path, int priority){
 	return;
     }
     PATH_T *node=mycalloc(1,PATH_T);
-    info("adding path %s\n", abspath);
     node->path=abspath;
     node->priority=priority;
     LOCK(mutex_path);

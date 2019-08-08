@@ -84,7 +84,7 @@ void maos_version(void){
    <p><code>maos base.conf save.setup=1 'powfs.phystep=[0 100 100]'</code><p>
 
    Any duplicate parameters will override the pervious specified value. The
-   configure file nfiraos.conf will be loaded as the master .conf unless a -c
+   configure file default.conf will be loaded as the master .conf unless a -c
    switch is used with another .conf file. For scao simulations, call maos with
    -c switch and the right base .conf file.
    
@@ -94,7 +94,7 @@ void maos_version(void){
 
    <p><code>maos -c scao_lgs.conf override.conf</code><p>
 
-   for scao LGS simulations.  With -c switch, nfiraos.conf will not be read,
+   for scao LGS simulations.  With -c switch, default.conf will not be read,
    instead scao_ngs.conf or scao_lgs.conf are read as the master config file.
    Do not specify any parameter that are not understood by the code, otherwise
    maos will complain and exit to prevent accidental mistakes.

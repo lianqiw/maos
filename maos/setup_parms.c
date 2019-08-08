@@ -166,6 +166,7 @@ void free_parms(PARMS_T *parms){
     lfree(parms->save.wfsopd);
     lfree(parms->save.grad);
     lfree(parms->save.gradnf);
+    lfree(parms->save.gradpsol);
     lfree(parms->save.gradgeom);
     free(parms->load.mvm);
     free(parms->load.mvmi);
@@ -491,7 +492,7 @@ static void readcfg_wfs(PARMS_T *parms){
     parms->npowfs=ipowfs;
     if(parms->npowfs==0){
 	warning("No wfs is found\n");
-	if(!parms->sim.idealfit && !parms->sim.evlol){
+	if(!parms->sim.idealfit && !parms->sim.idealtomo && !parms->sim.evlol){
 	    error("Cannot proceed\n");
 	}
     }else if(parms->nwfs!=wfscount){
@@ -1109,6 +1110,7 @@ static void readcfg_save(PARMS_T *parms){
     parms->save.wfsopd=readcfg_lmat_nmax(parms->nwfs, "save.wfsopd");
     parms->save.grad=readcfg_lmat_nmax(parms->nwfs, "save.grad");
     parms->save.gradnf=readcfg_lmat_nmax(parms->nwfs, "save.gradnf");
+    parms->save.gradpsol=readcfg_lmat_nmax(parms->nwfs, "save.gradpsol");
     parms->save.gradgeom=readcfg_lmat_nmax(parms->nwfs, "save.gradgeom");
     if(disable_save){
 	parms->save.extra=0;
@@ -1143,6 +1145,7 @@ static void readcfg_save(PARMS_T *parms){
 		parms->save.wfsopd->p[iwfs]=1;
 		parms->save.grad->p[iwfs]=1;
 		parms->save.gradnf->p[iwfs]=1;
+		parms->save.gradpsol->p[iwfs]=1;
 		parms->save.gradgeom->p[iwfs]=1;
 	    }
 	}
@@ -1338,7 +1341,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
    -# necessary adjustments if outputing WFS PSF.
 */
 static void setup_parms_postproc_wfs(PARMS_T *parms){
-    if(parms->sim.evlol){
+    if(parms->sim.evlol || parms->sim.idealfit || parms->sim.idealtomo){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    free_powfs_cfg(&parms->powfs[ipowfs]);
 	}
