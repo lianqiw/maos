@@ -214,7 +214,7 @@ void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t
 		    const double *amp, double *zlim,
 		    const char *title, const char *xlabel, const char *ylabel,
 		    const char* format,...) CHECK_ARG(10);
-void drawpsf_gpu(const char *fig, curmat &psf, cudaStream_t stream, int plotpsf,
+void drawpsf_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int plotpsf,
 		  const char *title, const char *xlabel, const char *ylabel,
-		  const char* format,...) CHECK_ARG(8);
+		  const char* format,...) CHECK_ARG(9);
 #endif

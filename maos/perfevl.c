@@ -68,7 +68,31 @@ static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha
 		  0, 0);
     }
 }
-static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
+static void plot_psf(ccell *psf2s, const char *psfname, int closeloop, int ievl, const PARMS_T *parms){
+    dmat *psftemp=NULL;
+    for(int iwvl=0; iwvl<psf2s->nx; iwvl++){
+	if(psftemp && psftemp->nx!=psf2s->p[iwvl]->nx){
+	    dfree(psftemp);
+	}
+	cabs22d(&psftemp, 0, psf2s->p[iwvl], 1);
+	if(parms->plot.psf==2){
+	    dcwlog10(psftemp);
+	}
+	const char *title, *tab;
+	if(closeloop){
+	    title="Science Closed Loop PSF";
+	    tab="CL";
+	}else{
+	    title="Science Open Loop PSF";
+	    tab="OL";
+	}
+	ddraw(psfname, psftemp, NULL, NULL, title,
+	      "x", "y", "%s%2d %.2f", tab, ievl, parms->evl.wvl->p[iwvl]*1e6);
+    }
+    dfree(psftemp);
+}
+
+static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper, const char *psfname,
 			  dcell *evlpsfmean, zfarr** evlpsfhist,
 			  dmat *iopdevl, int ievl){
     /* the OPD after this time will be tilt removed. Don't use for performance
@@ -86,16 +110,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 	zfarr_push(evlpsfhist[ievl], -1, psf2s);
     }
     if(parms->plot.run){
-	dmat *psftemp=NULL;
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-	    if(parms->plot.psf==2){
-		dcwlog10(psftemp);
-	    }
-	    ddraw("PSFcl", psftemp, NULL, NULL, "Science Closed Loop PSF", 
-		  "x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
-	    dfree(psftemp);
-	}
+	plot_psf(psf2s, psfname, 1, ievl, parms);
     }
     ccellfree(psf2s);
 }
@@ -230,16 +245,7 @@ void perfevl_ievl(thread_t *info){
 		    cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
 		}
 		if(parms->plot.run){
-		    dmat *psftemp=NULL;
-		    for(int iwvl=0; iwvl<nwvl; iwvl++){
-			cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-			if(parms->plot.psf==2){
-			    dcwlog10(psftemp);
-			}
-			ddraw("PSFol", psftemp, NULL, NULL, "Science Openloop PSF", 
-			      "x", "y", "OL%2d %.2f", ievl,  parms->evl.wvl->p[iwvl]*1e6);
-			dfree(psftemp);
-		    }
+		    plot_psf(psf2s, "PSFol", 0, ievl, parms);
 		}
 		ccellfree(psf2s);
 	    }
@@ -330,7 +336,7 @@ void perfevl_ievl(thread_t *info){
 		    dadd(&simu->evlopdmean->p[ievl], 1, iopdevl, 1);
 		}/*opdcov */
 		if(parms->evl.psfmean || parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
-		    perfevl_psfcl(parms, aper, simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
+		    perfevl_psfcl(parms, aper, "PSFcl", simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
 		}/*do_psf */
 	    }
 	}
@@ -379,13 +385,14 @@ static void perfevl_mean(SIM_T *simu){
     if(parms->recon.split){
 	/* convert cleNGSm into mode and put NGS mode WVE into clem. */
 	int nngsmod=recon->ngsmod->nmod;
-	    
+	//Record NGS mode correction time history
 	if(simu->corrNGSm && simu->Mint_lo->mint->p[0] && isim<parms->sim.end-1){
 	    double *pcorrNGSm=simu->corrNGSm->p+(isim+1)*nngsmod;
 	    for(int imod=0; imod<nngsmod; imod++){
 		pcorrNGSm[imod]=simu->Mint_lo->mint->p[0]->p[0]->p[imod];
 	    }
 	}
+	//Compute dot product of NGS mode with OPD
 	double pcleNGSdot[nngsmod];
 	memset(pcleNGSdot, 0, sizeof(double)*nngsmod);
 	double poleNGSdot[nngsmod];
@@ -400,17 +407,26 @@ static void perfevl_mean(SIM_T *simu){
 		poleNGSdot[imod]+=poleNGSdotp[imod]*wt;
 	    }
 	}
+	//Determine NGS modes from dot product
 	double tt=dwdot2(pcleNGSdot, recon->ngsmod->IMCC_TT, pcleNGSdot);
 	double ngs=dwdot(pcleNGSdot, recon->ngsmod->IMCC,    pcleNGSdot);
 	double tot=simu->cle->p[isim*nevlmod];
+	double focus=0;
+	if(recon->ngsmod->indfocus){
+	    focus=dwdot(pcleNGSdot, recon->ngsmod->IMCC_F, pcleNGSdot);
+	}
 	double lgs=tot-ngs;
-	/*turn dot product to modes */
+	//Turn dot product to modes 
 	double *pcleNGSm=simu->cleNGSm->p+isim*nngsmod;
 	dmulvec(pcleNGSm,recon->ngsmod->IMCC,pcleNGSdot,1);
 	double *poleNGSm=simu->oleNGSm->p+isim*nngsmod;
 	dmulvec(poleNGSm,recon->ngsmod->IMCC,poleNGSdot,1);
-	
-	if(simu->parms->tomo.ahst_idealngs==2){
+	if(simu->parms->tomo.ahst_idealngs==1){
+	    //Magically remove NGS modes 
+	    tt=0;
+	    ngs=0;
+	    focus=0;
+	}else if(simu->parms->tomo.ahst_idealngs==2){
 	    //Simulate close loop correction using ideal NGS mod.
 	    simu->Merr_lo=simu->Merr_lo_store;
 	    memcpy(simu->Merr_lo->p[0]->p, pcleNGSm, nngsmod*sizeof(double));
@@ -419,20 +435,16 @@ static void perfevl_mean(SIM_T *simu){
 		pcleNGSm[imod]+=simu->Mint_lo->mint->p[0]->p[0]->p[imod];
 	    }
 	}
-	
+	//Record NGS mode RMS error time history
 	P(simu->clem, 0, isim)=lgs; /*lgs mode */
-	if(simu->parms->tomo.ahst_idealngs!=1){
-	    P(simu->clem, 1, isim)=tt;    /*tt mode */
-	    P(simu->clem, 2, isim)=ngs;   /*ngs mod */
-	    if(recon->ngsmod->indfocus){
-		double focus=dwdot(pcleNGSdot, recon->ngsmod->IMCC_F, pcleNGSdot);
-		P(simu->clem, 3, isim)=focus;
-	    }
+	P(simu->clem, 1, isim)=tt;    /*tt mode */
+	P(simu->clem, 2, isim)=ngs;   /*ngs mod */
+	if(recon->ngsmod->indfocus){
+	    P(simu->clem, 3, isim)=focus;
 	}
 	simu->status->clerrlo=sqrt(ngs)*1e9;
 	simu->status->clerrhi=sqrt(lgs)*1e9;
-	/*compute error spliting to tip/tilt and high order for any
-	  direction.*/
+	/*compute error spliting to tip/tilt and high order for each direction.*/
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    /*New calculation. Notice that the calculations are for
 	      (phi-Hm*m)'*W*(phi-Hm*m) where m is cleNGSm, phi is opdevl
@@ -483,7 +495,7 @@ static void perfevl_mean(SIM_T *simu){
 			dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
 		    }
 		    if(do_psf){
-			perfevl_psfcl(parms, aper, simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
+			perfevl_psfcl(parms, aper, "PSFngsr", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
 		    }
 		    dfree(simu->evlopd->p[ievl]);
 		}

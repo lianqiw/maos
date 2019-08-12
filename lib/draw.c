@@ -72,9 +72,7 @@ typedef struct{
 sockinfo_t sock_draws[MAXDRAW];
 
 #define CATCH(A) if(A){\
-	dbg("stwrite to %d failed with %s\n", \
-	     sock_draw, strerror(errno));				\
-	warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);	\
+	warning("stwrite to %d failed with %s\n", sock_draw, strerror(errno)); \
 	if(sock_helper<0&&!DRAW_DIRECT){				\
 	    disable_draw=1;						\
 	    warning("disable draw\n");					\

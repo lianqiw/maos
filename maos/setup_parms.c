@@ -2638,6 +2638,12 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 		warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
 	    }
 	}
+	if(parms->tomo.ahst_idealngs==1){
+	    //Output NGS mode removed PSF as there is no CL control of NGS mode
+	    if(!parms->evl.psfngsr->p[ievl]){
+		parms->evl.psfngsr->p[ievl]=2;
+	    }
+	}
     }
     if(parms->dbg.dmoff){
 	if(parms->dbg.dmoff->nx!=parms->ndm){
@@ -3052,6 +3058,10 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    warning("Atm is not frozen flow. Disabled gpu.evl and gpu.wfs.\n");
 	    parms->gpu.evl=0;
 	    parms->gpu.wfs=0;
+	}
+	if(parms->plot.run){
+	    //Do not accumulate PSF in GPU in order to plot individual PSF frame.
+	    parms->gpu.psf=0;
 	}
     }
     /*use a max of one gpu if there is only 1 wfs.*/

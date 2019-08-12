@@ -439,13 +439,14 @@ void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t
 	dfree(tmp);
     }
 }
-void drawpsf_gpu(const char *fig, curmat &psf, cudaStream_t stream, int plotpsf,
+void drawpsf_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int plotpsf,
 		  const char *title, const char *xlabel, const char *ylabel,
 		  const char* format,...){
     format2fn;
     if(draw_current(fig, fn)){
 	dmat *psftemp=NULL;
 	cp2cpu(&psftemp, psf, stream);
+	if(count!=1) dscale(psftemp, 1./count);
 	if(plotpsf==2){
 	    dcwlog10(psftemp);
 	}
