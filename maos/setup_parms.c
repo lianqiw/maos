@@ -2160,6 +2160,9 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 		warning("dm %d: stroke %g um is probably wrong\n",
 			i, strokemicron);
 	    }
+	    if(parms->sim.fcttm==0){
+		warning("Please set sim.fcttm to cross over frequency for offloading to tip/tilt mirror\n");
+	    }
 	}
 	if(isfinite(parms->dm[i].iastroke) && !parms->dm[i].iastrokefn){
 	    double strokemicron=parms->dm[i].iastroke*1e6;
@@ -2424,15 +2427,18 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->tomo.alg==1 && parms->tomo.maxit==0){
 	    int factor;
 	    if(parms->recon.mvm){
-		factor=parms->load.mvmi?1:25;
+		factor=parms->load.mvmi?1:25;//assembly mvm needs more steps
 	    }else{
 		factor=parms->recon.warm_restart?1:10;
 	    }
 	    if(!parms->tomo.precond){
-		factor*=10;
+		factor*=10;//non-precond CG needs more steps
+	    }
+	    if(!parms->recon.split){
+		factor*=3;//integrated tomo needs more steps
 	    }
 	    parms->tomo.maxit=4*factor;
-	    if(parms->recon.mvm==1 && parms->tomo.splitlrt){
+	    if(parms->recon.mvm==1 && parms->recon.split && parms->tomo.splitlrt){
 		warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
 		parms->tomo.splitlrt=0;
 	    }

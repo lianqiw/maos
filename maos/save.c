@@ -273,13 +273,25 @@ void save_dmreal(SIM_T *simu){
 		}
 		dcellfree(dmlo);
 	    }
-	    for(int idm=0; idm<parms->ndm; idm++){
-		if(simu->dmreal && simu->dmreal->p[idm]){
-		    drawopd("DM", recon->aloc->p[idm], simu->dmreal->p[idm]->p,parms->dbg.draw_opdmax->p,
-			    "DM Actuator Stroke","x (m)", "y (m)", "Real %d",idm);
-		}
-	    }
 	    if(simu->dmreal){
+		for(int idm=0; idm<parms->ndm; idm++){
+		    if(simu->dmreal->p[idm]){
+			drawopd("DM", recon->aloc->p[idm], simu->dmreal->p[idm]->p,parms->dbg.draw_opdmax->p,
+				"DM Actuator Stroke","x (m)", "y (m)", "Real %d",idm);
+		    }
+		}
+		if(simu->ttmreal){
+		    int idm=0;
+		    double ptt[3]={0,0,0};
+		    ptt[1]=simu->ttmreal->p[0];
+		    ptt[2]=simu->ttmreal->p[1];
+		    dzero(simu->dmtmp->p[idm]);
+		    loc_add_ptt(simu->dmtmp->p[idm]->p, ptt, recon->aloc->p[idm]);
+		    drawopd("DM", recon->aloc->p[idm], simu->dmtmp->p[idm]->p,parms->dbg.draw_opdmax->p,
+			    "DM Actuator Stroke","x (m)", "y (m)", "Real TTM");
+		}
+
+
 		dmat *opd=dnew(simu->aper->locs->nloc, 1);
 		for(int idm=0; idm<parms->ndm; idm++){
 		    int ind=parms->evl.nevl*idm;
@@ -287,8 +299,15 @@ void save_dmreal(SIM_T *simu){
 		    CALL_THREAD(simu->evl_prop_dm[ind], 0);
 		}
 		dscale(opd, -1);
+		if(simu->ttmreal){
+		    double ptt[]={0,0,0};
+		    ptt[1]=simu->ttmreal->p[0];
+		    ptt[2]=simu->ttmreal->p[1];
+		    loc_add_ptt(opd->p, ptt, simu->aper->locs);
+		}
+		
 		drawopd("Evldm", simu->aper->locs, opd->p,parms->dbg.draw_opdmax->p,
-			"DM OPD","x (m)", "y (m)", "dir %d", 0);	
+			"DM OPD","x (m)", "y (m)", "OA");	
 		dfree(opd);
 	    }
 

@@ -268,7 +268,7 @@ void apply_limit(drawdata_t *drawdata){
 	style=stylein & 0x7;					\
 	connectpts=(stylein&0x8)>>3;				\
 	color=(stylein&0xFFFFFF00)>>8;				\
-	size=round(((stylein&0xF0)>>4) * sqrt(zoomx));		\
+	sym_size=round(((stylein&0xF0)>>4));			\
 	if(style>5) style=0;					\
 	if(style==0) connectpts=1;				\
     }
@@ -683,7 +683,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    style=0;
 	    connectpts=1;
 	}
-	double size=round(3*sqrt(zoomx));
+	double sym_size=3;//round(3*sqrt(zoomx));
 	if(drawdata->nstyle==1){
 	    PARSE_STYLE(drawdata->style[0]);
 	}
@@ -698,7 +698,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		color=default_color(ipts);
 	    }
 	    /*save the styles for legend */
-	    drawdata->style_pts[ipts]=style | connectpts<<3 |color << 8 |(int)(size/sqrt(zoomx))<<4;
+	    drawdata->style_pts[ipts]=style | connectpts<<3 |color << 8 |(int)(sym_size)<<4;
 	    set_color(cr, color);
 
 	    const double *pts=drawdata->pts[ipts];
@@ -795,7 +795,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 			y=ptsy[ips];
 		    }
 		    iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
-		    draw_point(cr, ix, iy, style, size);
+		    draw_point(cr, ix, iy, style, sym_size);
 		    cairo_stroke(cr);/*stroke each point because color may change. */
 		}/*ipts */
 	    }/*if */
@@ -1051,7 +1051,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     if(drawdata->legend && drawdata->npts && drawdata->legendbox){
 	int style, color, connectpts;
-	double size=0;//???
+	double sym_size=0;
 	cairo_save(cr);
 	cairo_identity_matrix(cr);
 	/*draw legend */
@@ -1071,8 +1071,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    if(connectpts){
 		leglen=MAX(leglen, linelen);
 	    }else{
-		leglen=MAX(leglen, size*2);
-		tall=MAX(tall, size*2);
+		leglen=MAX(leglen, sym_size*2);
+		tall=MAX(tall, sym_size*2);
 	    }
 	}
 	const double legmarin=3;/*margin inside of box */
@@ -1097,7 +1097,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    set_color(cr, color);
 	    double ix=leglen*0.5;
 	    double iy=tall*0.5;
-	    draw_point(cr, ix, iy, style, size);
+	    draw_point(cr, ix, iy, style, sym_size);
 	    cairo_stroke(cr);
 	    if(connectpts){
 		cairo_move_to(cr, 0, tall*0.5);

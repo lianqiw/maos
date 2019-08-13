@@ -35,7 +35,9 @@ case $D in
 	#2/11/2019
 	#REF=(112.68 112.93 134.58 141.23 133.94 146.73 117.34 375.55 370.68 108.96 109.09 146.35 147.25 343.93 367.85 156.07 138.63)
 	#5/6/2019
-	REF=(112.69 112.98 134.55 141.07 134.05 140.53 117.68 374.64 370.47 109.00 109.25 146.04 146.90 343.89 367.74 154.98 136.58)
+	#REF=(112.69 112.98 134.55 141.07 134.05 140.53 117.68 374.64 370.47 109.00 109.25 146.04 146.90 343.89 367.74 154.98 136.58)
+	#8/13/2019
+	REF=(112.92 113.22 134.20 140.38 136.00 139.92 119.87 368.31 373.93 109.68 111.99 128.41 143.92 346.34 367.57 113.80 141.73)
 esac
 fnlog=maos_check_${D}.log
 echo > $fnlog
@@ -86,7 +88,7 @@ run_maos tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
 
 if [ $D -le 10 ];then
 echo -n "LGS MCAO (SVD):  "
-run_maos tomo.alg=2 fit.alg=2
+run_maos tomo.alg=2 fit.alg=2 gpu.tomo=0
 
 echo -n "LGS MCAO (MVM):  "
 run_maos atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
@@ -123,7 +125,7 @@ echo -n "LGS LTAO (inte): "
 run_maos dm_single.conf fov_oa.conf recon.split=0
 
 echo -n "LGS LTAO (split):"
-run_maos dm_single.conf fov_oa.conf recon.split=1
+run_maos dm_single.conf fov_oa.conf recon.split=1 
 
 echo ${RMS[*]}
 
