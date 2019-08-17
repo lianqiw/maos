@@ -44,12 +44,14 @@ typedef struct DTF_T{
     int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
     int radrot;          /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     int fused;           /**<Whether the DTF has been fused to ETF*/
+    int nwvl;            /**<Number of DTF_T*/
 }DTF_T;
 
 typedef struct ETF_T{
     ccell *p1;           /**<Store the ETF along radial direction when radrot==1*/
     ccell *p2;           /**<Store the 2D ETF when radrot==0*/
     int icol;            /**<Store the column index*/
+    int nwvl;            /**<Number of DTF_T*/
 }ETF_T;
 
 DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
@@ -78,9 +80,9 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     );
-void dtf_free_do(DTF_T *dtfs, int nwvl);
-void etf_free_do(ETF_T *etfs, int nwvl);
-#define dtf_free(dtfs, nwvl) ({dtf_free_do(dtfs, nwvl); dtfs=0;})
-#define etf_free(etfs, nwvl) ({etf_free_do(etfs, nwvl); etfs=0;})
+void dtf_free_do(DTF_T *dtfs);
+void etf_free_do(ETF_T *etfs);
+#define dtf_free(dtfs) ({dtf_free_do(dtfs); dtfs=0;})
+#define etf_free(etfs) ({etf_free_do(etfs); etfs=0;})
 dmat* smooth(const dmat *profile, double dxnew);
 #endif

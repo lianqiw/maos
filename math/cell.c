@@ -220,7 +220,8 @@ void cellfree_do(void *A){
     case M_ZSP:
 	zspfree_do((zsp*)A);break;
     default:
-	error("Unknown id=%u\n", id);
+	print_backtrace();
+	error("Unknown id=%x, A=%p\n", id, A);
     }
 }
 
@@ -301,6 +302,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 void write_by_id(const void *A, uint32_t id, const char* format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
+    if(!fp) return;
     writedata_by_id(fp, A, id);
     zfclose(fp);
 }
@@ -388,6 +390,7 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 cell* read_by_id(uint32_t id, int level, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
+    if(!fp) return 0;
     cell *out=readdata_by_id(fp, id, level, 0);
     zfclose(fp);
     return out;

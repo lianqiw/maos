@@ -359,6 +359,36 @@ void loc_embed(map_t *dest, const loc_t *loc, const double *in){
     }
 }
 /*
+  A convenient wrapper for loc_embed to be called by matlab or python
+*/
+cell *loc_embed2(loc_t *loc, dmat *arr){
+    if(!loc->map){
+	loc_create_map(loc);
+    }
+    if(arr->nx==1 && arr->ny!=1){
+	arr->nx=arr->ny;
+	arr->ny=1;
+    }
+    int nx=arr->nx/loc->nloc;
+    int ny=arr->ny;
+    if(nx*loc->nloc!=arr->nx){
+	error("arr has wrong dimension: %ldx%ld. loc length is %ld \n", arr->nx, arr->ny, loc->nloc);
+    }
+    dcell *dest=dcellnew(nx, ny);
+    for(int ix=0; ix<nx*ny; ix++){
+	P(dest, ix)=dnew(loc->map->nx, loc->map->ny);
+	loc_embed((map_t*)P(dest, ix), loc, arr->p+ix*loc->nloc);
+    }
+    if(nx==1 && ny==1){
+	dmat *dest0=dref(P(dest,0));
+	cellfree(dest);
+	return (cell*)dest0;
+    }else{
+	return (cell*)dest;
+    }
+}
+
+/*
   Embed in into dest according to map defined in loc->map. Arbitraty map cannot
   be used here for mapping.
 */
@@ -518,6 +548,14 @@ loc_t *mkannloc(double D, double Din, double dx, double thres){
     loc_t *loc=map2loc(xy, thres);
     mapfree(xy);
     return loc;
+}
+/**
+   A convenient wrapp for dcircle.
+ */
+dmat *mkcirmap(long nx, long ny, double cx, double cy, double r){
+    dmat *map=dnew(nx, ny);
+    dcircle(map, cx, cy, 1,1, r, 1);
+    return map;
 }
 /**
    Estimate the diameter of loc

@@ -369,7 +369,14 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     free(pval[0].loc);
     free(pval);
 }
-
+/**
+   A convenient wrapper for genotf() to be called from matlab or python.
+*/
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr){
+    ccell *out=ccellnew(nsa, 1);
+    genotf(out->p, loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr);
+    return (cell*)out;
+}
 /**
    Average spatially the 4-d covariance function to create a 2-d covariance
    function. For OPD f defined on points x (2-d coordinate), the 4-d covariance
@@ -593,4 +600,10 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     dfree(gx2);
     dfree(gy2);
     return mtche;
+}
+/**
+   A simplified wrapper for mtch
+*/
+dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr){
+    return mtch(nea, i0, gx, gy, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
 }

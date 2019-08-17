@@ -3,7 +3,7 @@ AM_LDFLAGS=$(LDMEX)
 #LDFLAGS goes before LDADD. Must put maos libraries before matlab libraries.
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
 LDADD=../lib/libaos.la $(LIBMEX) 
-EXTRA_DIST=io.c io.h interface.h Makefile.mex compile.sh aolib.h aolibmex.h
+EXTRA_DIST=io.c io.h interface.h Makefile.mex compile.sh aolib.h 
 EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c
@@ -34,9 +34,10 @@ endif
 maos_LDADD+=-lcholmod $(LIBMEX) 
 
 
-BUILT_SOURCES=maos2mex.h aolib.c aolibmex.c
+BUILT_SOURCES=maos2mex.h aolib.c
 maos2mex.h:../maos/parms.h ../maos/types.h ../lib/aos.h ../scripts/maos2mex.py
 	$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR) $(SRC_DIR)/mex/maos2mex.h
 aolib.c:../maos/parms.h ../maos/types.h ../scripts/lib2mex.py aolib.h
 	$(SRC_DIR)/scripts/lib2mex.py $(SRC_DIR) $(SRC_DIR)/mex/aolib.c
-aolib_SOURCES=aolibmex.c aolib.c
+aolib_SOURCES=aolib.c
+

@@ -69,10 +69,13 @@ typedef struct cn2est_t{
     double L0;        /**<outer scale*/
 } cn2est_t;
 
-cn2est_t *cn2est_new(const dmat *wfspair, const dmat *wfstheta, const loc_t *saloc,
+cn2est_t* cn2est_new(const dmat *wfspair, const dmat *wfstheta, const loc_t *saloc,
 		     const dmat *saa, const double saat, 
 		     const dmat* hs, const dmat *htrecon, int keepht, double l0);
 void cn2est_est(cn2est_t *cn2est, int verbose, int reset);
 void cn2est_free(cn2est_t *cn2est);
 void cn2est_push(cn2est_t *cn2est, dcell *gradol);
+cn2est_t* cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
+		    const dmat *saa, const double saat, 
+		    const dmat* hs, const dmat *htrecon, int keepht, double l0, dcell *grad);
 #endif

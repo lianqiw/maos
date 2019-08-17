@@ -38,6 +38,7 @@ static inline long loc_map_get(map_t *map, long ix, long iy){
 }
 uint32_t lochash(const loc_t *loc, uint32_t key);
 void loc_embed(map_t *dest, const loc_t *loc, const double *in);
+cell *loc_embed2(loc_t *loc, dmat *arr);
 void loc_embed_add(map_t *dest, const loc_t *loc, const double *in);
 void loc_extract(dmat *dest, const loc_t *loc, map_t *in);
 loc_t * map2loc(map_t *amp, double thres);
@@ -79,6 +80,7 @@ loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy);
 loc_t *mksqlocrot(long nx, long ny, double dx, double dy,
 		  double ox, double oy, double theta);
 loc_t *mkannloc(double D, double Din, double dx, double thres);
+dmat *mkcirmap(long nx, long ny, double cx, double cy, double r);
 void loc_create_stat_do(loc_t *loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t *loc);

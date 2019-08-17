@@ -25,7 +25,6 @@ typedef int16_t char16_t;
 #endif
 #include <mex.h>
 #include "../lib/aos.h"
-#include "aolibmex.h"
 
 #define REFERENCE 0
 /*
@@ -257,8 +256,12 @@ dmat *mx2d(const mxArray *A){
 	mexErrMsgTxt("A is sparse");
     }
     dmat *out=0;
-    if(A && mxGetM(A) && mxGetN(A)){
-	out=dnew_ref(mxGetM(A), mxGetN(A), mxGetPr(A));
+    if(A && mxGetNumberOfElements(A)){
+	double *p=mxGetPr(A);
+	//The user may supply 0 for empty matrix
+	if(mxGetNumberOfElements(A)>1 || p[0]){
+	    out=dnew_ref(mxGetM(A), mxGetN(A), mxGetPr(A));
+	}
     }
     return out;
 }
@@ -426,6 +429,21 @@ static mxArray *cn2est2mx(cn2est_t *cn2est){
     return A;
 
 }
+static mxArray *dtf2mx(DTF_T *dtf){
+    const int nfield=2;
+    const char *fieldnames[]={"nominal","si"};
+    mxArray *A=mxCreateStructMatrix(dtf->nwvl,1,nfield,fieldnames);
+    for(int iwvl=0; iwvl<dtf->nwvl; iwvl++){
+	int pos=0;
+	mxSetFieldByNumber(A, iwvl, pos++, any2mx(dtf[iwvl].nominal));
+	mxSetFieldByNumber(A, iwvl, pos++, any2mx(dtf[iwvl].si));
+	if(pos!=nfield){
+	    error("Invalid number of elements\n");
+	}
+    }
+    return A;
+}
+
 char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=(char*)malloc(nlen);

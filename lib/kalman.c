@@ -89,6 +89,14 @@ void sde_psd(dmat **psd, const dmat *f, const double *coeff, int ncoeff, int nmo
 	}
     }
 }
+/**
+   A convenient wrapper for sde_psd()
+*/
+dmat *sde_psd2(const dmat *ff, const dmat *coeff){
+    dmat *psd=0;
+    sde_psd(&psd, ff, coeff->p, coeff->nx, coeff->ny);
+    return psd;
+}
 static double coeff_isbad(const double *coeff, int ncoeff){
     for(int icoeff=0; icoeff<ncoeff; icoeff++){
 	if(coeff[icoeff]<=0){

@@ -134,3 +134,16 @@ void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locout, double thetax, double theta
     double by=thetay*(d_img_focus+ftel)/d_img_exit;
     proj_rect_grid(tsurf,alx,aly,locout,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
 }
+/**
+   A convenient wrapper for m3proj() to be called from matlab or python
+ */
+dmat *m3proj2(dmat *mapin_0, char *header, loc_t *locout, double thetax, double thetay, double hs){
+    free(mapin_0->header);
+    mapin_0->header=header;
+    rmap_t *mapin=d2rmap(mapin_0);
+    dmat *opd=dnew(locout->nloc, 1);
+    m3proj(mapin, opd, locout, thetax, thetay, hs);
+    cellfree(mapin);
+    cellfree(mapin_0);
+    return opd;
+}

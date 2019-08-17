@@ -1,7 +1,16 @@
 #!/Usr/bin/env python
 
-#Use ctypes to convert python data for C functions
-#Use contents to retrieve contents of a pointer
+#Use ctypes to interface with C libraries
+#POINTER is the class type of pointer
+#c_int is a ctypes type
+#a=c_int(42) #creates a ctypes int object
+#p=pointer(a) creates pointers to object a
+#p.contents retreates the contents of pointer p
+#addressof(p) retreates the address of p
+#use pd=cast(p, POINTER(c_double)) to convert pointer p to c_double pointer 
+#use pd=cast(address, POINTER(c_double)) to convert address in c_double pointer
+#cast(addressof(a), POINTER(c_double)).contents #reinterpreted int a as double
+
 #Use byref() or pointer() to obtain pointer to an object
 #Set restype to return correct value
 #Set argtypes for type checking for input into C code
@@ -15,7 +24,7 @@ import numpy as np
 import scipy.sparse as sp
 from warnings import warn
 
-lib=cdll.LoadLibrary("/home/lianqiw/work/aos/comp/optim/mex/aolib.mexa64")
+lib=cdll.LoadLibrary("/home/lianqiw/work/aos/comp/optim/bin/aolib.so")
 
 id2ctype={
     #obtain type information from MAOS id.
@@ -24,7 +33,7 @@ id2ctype={
     25601: (c_double,0,1), #M_SP64
     25602: (c_double,0,0), #'M_DBL'
     25603: (c_long,  0,0), #'M_INT64'
-    25604: (c_double,1,1), #'M_CMP'
+    25604: (c_double,1,0), #'M_CMP'
     25605: (c_int,   0,0), #'M_INT32',),
     25606: (c_float, 1,1), #'M_CSP32',),
     25607: (c_float, 0,1), #'M_SP32',),
@@ -37,9 +46,9 @@ id2ctype={
 }
 #convert C array pointer to numpy array. Freeing C memory
 def pt2py(pointer):
-    if pointer is not None:
+    if bool(pointer):
         out=pointer.contents.as_array()
-        lib.cellfree_do(pointer)
+        pointer.contents.free()
         return out
     else:
         return None
@@ -47,9 +56,8 @@ def pt2py(pointer):
 def as_array(arr, id, shape):
     ''' convert C array arr to numpy based in id'''
     (tt, iscomplex, issparse)=id2ctype.get(id)
-    if tt is None:
-        print('as_array: Unknown data, id='+ str(id))
-        return np.empty(())
+    if tt is None or not bool(arr) or shape[0]==0:
+        return np.empty((0,))
     else:
         parr=cast(arr, POINTER(tt))
         if iscomplex:
@@ -62,10 +70,26 @@ def as_array(arr, id, shape):
 
 #convert numpy array to any C array adaptively
 def py2cell(arr):
+    if type(arr) is list:
+        arr=np.asarray(arr)
     if sp.isspmatrix_csc(arr):
         return csc(arr)
     else:
         return cell(arr)
+
+#convert numpy array to any C array adaptively
+def py2cellref(arr):
+    if type(arr) is list:
+        arr=np.asarray(arr)
+    elif type(arr) is not np.ndarray:
+        print('py2cellref does not take ', type(arr))
+        return None
+    if arr.size==0:
+        return None #turn empty ndarray to Null pointer. do not use 0
+    elif sp.isspmatrix_csc(arr):
+        return byref(csc(arr))
+    else:
+        return byref(cell(arr))
 
 class cell(Structure):
     _fields_ = [ #fields compatible with C type
@@ -85,6 +109,9 @@ class cell(Structure):
             np.int64: 25603,
             np.object_:25633,
         }
+        if type(arr) is list:
+            arr=np.asarray(arr)
+
         if arr is not None:
             self.id=dtype2id.get(arr.dtype.type)
             if self.id is None:
@@ -101,8 +128,9 @@ class cell(Structure):
                     self.ny=1
                 else:
                     self.ny=0
-
-            if arr.dtype.kind is not 'O':
+            if self.nx==0:
+                self.p=0
+            elif arr.dtype.kind is not 'O':
                 self.p=arr.ctypes.data_as(c_void_p)
             else:
                 self.qarr=np.zeros(self.shape(1), dtype=object)
@@ -140,8 +168,9 @@ class cell(Structure):
             (tt, iscomplex, kind)=id2ctype.get(self.id)
         except:
             kind=-1
+
         if kind==0: #dense matrix
-            return as_array(self.p, self.id, self.shape(1))
+            return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
             return cast(addressof(self), POINTER(csc)).contents.as_array()
         elif kind==2: #loc
@@ -157,13 +186,14 @@ class cell(Structure):
                         res[iy, ix]=pp.contents.as_array() #recursive
                     else:
                         res[iy, ix]=np.empty(())
-            #if self.ny==1:
-            #    res=res[0,]
+            if self.ny==1:
+                res=res[0,]
             return res
         else:
             print('as_array: Unknown data, id='+ str(self.id))
             return np.empty((),dtype=object)
-
+    def free(self):
+        lib.cellfree_do(byref(self))
 
 class loc(Structure):
     _fields_ = [
@@ -216,7 +246,8 @@ class loc(Structure):
                 arr[0,]=as_array(self.locx, 25602, shape=(self.nloc,))
                 arr[1,]=as_array(self.locy, 25602, shape=(self.nloc,))
                 return arr
-
+    def free(self):
+        lib.cellfree_do(byref(self))
 class csc(Structure):#CSC sparse matrix
     _fields_=[
         ('id', c_uint32),
@@ -258,14 +289,15 @@ class csc(Structure):#CSC sparse matrix
         self.header=None
         self.nref=None
     def as_array(self): #convert form C to numpy. Memory is copied
-        if(self.x):
+        if self.nzmax>0:
             self.xp=as_array(self.x, self.id, (self.nzmax,))
             self.ip=as_array(self.i, 25603, (self.nzmax,))
             self.pp=as_array(self.p, 25603, (self.ny+1,))
             return sp.csc_matrix((self.xp, self.ip, self.pp), shape=(self.nx, self.ny))
         else:
-            return sp.csc_matrix((0,0))
-
+            return sp.csc_matrix((self.nx,self.ny))
+    def free(self):
+        lib.cellfree_do(byref(self))
 def convert_fields(fields):
     val2type={
         '*':c_void_p,
@@ -281,9 +313,22 @@ def convert_fields(fields):
             val=val2type[val]
         newfields.append((key,val))
     return newfields
+
 #Create a ctypes class with field listed 
 def make_class(name, fields):
     newfields=convert_fields(fields)
-    class name(Structure):
+    class newclass(Structure):
         pass
-    name._fields_=newfields
+        def as_array(self):#convert struct into dictionary
+            out=dict()
+            for ff in self._fields_:
+                #convert C pointers to POINTER then to array
+                if ff[1] is c_void_p:
+                    exec('out[\''+ff[0]+'\']=cast(self.'+ff[0]+',POINTER(cell)).contents.as_array()')
+                else:
+                    exec('out[\''+ff[0]+'\']=self.'+ff[0])
+            return out
+        def free(self):
+            print('to implement: free');
+    newclass._fields_=newfields
+    return newclass

@@ -36,8 +36,9 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
 	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     ){
-    int nwvl=wvls->nx;
+    int nwvl=wvls->nx*wvls->ny;
     DTF_T *dtfs=mycalloc(nwvl,DTF_T);
+    dtfs->nwvl=nwvl;
     const double blurx=pixblur*pixthetax;
     const double blury=pixblur*pixthetay;
     const double e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
@@ -181,6 +182,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     ){
     ETF_T *etfs=mycalloc(nwvl,ETF_T);
+    etfs->nwvl=nwvl;
     /*setup elongation along radial direction. don't care azimuthal. */
     if(!srot) error("srot is required");
     const int nllt=MAX(srot->nx, sodium->nx);
@@ -436,9 +438,9 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     return etfs;
 }
 
-void dtf_free_do(DTF_T *dtfs, int nwvl){
+void dtf_free_do(DTF_T *dtfs){
     if(!dtfs) return;
-    for(int iwvl=0;iwvl<nwvl;iwvl++){
+    for(int iwvl=0;iwvl<dtfs->nwvl;iwvl++){
 	ccellfree(dtfs[iwvl].nominal);
 	dspcellfree(dtfs[iwvl].si);
 	cfree(dtfs[iwvl].Ux);
@@ -447,9 +449,9 @@ void dtf_free_do(DTF_T *dtfs, int nwvl){
     free(dtfs);
 }
 
-void etf_free_do(ETF_T *etfs, int nwvl){
+void etf_free_do(ETF_T *etfs){
     if(!etfs) return;
-    for(int iwvl=0;iwvl<nwvl;iwvl++){
+    for(int iwvl=0;iwvl<etfs->nwvl;iwvl++){
 	ccellfree(etfs[iwvl].p1);
 	ccellfree(etfs[iwvl].p2);
     }

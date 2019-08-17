@@ -15,7 +15,7 @@ if len(sys.argv)>2:
     fnout=sys.argv[2];
 else:
     srcdir=srcdir=str(Path.home())+'/work/programming/aos'
-    fnout='../scripts/libaos.py'
+    fnout=srcdir+'/scripts/libaos.py'
 
 simu_all=list();
 
@@ -68,14 +68,19 @@ def handle_type(argtype, argname):
     if pytype is None: #represent as a struct
         py2c='py2struct('+argname+')'
     elif pytype=='cell':#arbitrary array
-        py2c='py2cell('+argname+')'
+        if isref:
+            py2c='py2cellref('+argname+')'
+        else:
+            py2c='py2cell('+argname+')'
     else:
         py2c=pytype+'('+argname+')'
-    if isref:
-        if pytype=='cell' or pytype=='loc':
+    if isref: #pointer input
+        if pytype=='cell' :
+            pass
+        elif pytype=='loc':
             py2c='byref('+py2c+')'
         elif pytype=='c_char':
-            py2c='c_char_p('+argname+')'
+            py2c='c_char_p('+argname+'.encode(\'ascii\'))'
         else:
             py2c=argname+'.ctypes.data_as(c_void_p)'
 

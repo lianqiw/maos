@@ -603,3 +603,22 @@ void cn2est_free(cn2est_t *cn2est){
 
     free(cn2est);
 }
+cn2est_t *cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
+		     const dmat *saa, const double saat, 
+		     const dmat* hs, const dmat *htrecon, int keepht, double l0, dcell *grad){
+    if(maxabs(wfstheta->p, wfstheta->nx*wfstheta->ny)>1){
+	dmat *tmp=wfstheta;
+	wfstheta=ddup(tmp);
+	dfree(tmp);
+	//Don't scale the matlab one.
+	dscale(wfstheta, 1./206265);
+    }
+    if(grad->nx==1 && grad->ny>1){
+	grad->nx=grad->ny;
+	grad->ny=1;
+    }
+    struct cn2est_t *cn2est=cn2est_new(wfspair, wfstheta, saloc, saa, saat, hs, htrecon, keepht, l0);
+    cn2est_push(cn2est, grad);
+    cn2est_est(cn2est, 1, 0);
+    return cn2est;
+}

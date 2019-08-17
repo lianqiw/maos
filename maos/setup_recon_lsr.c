@@ -149,11 +149,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    cellfree(actslave);
 	}
 	if(parms->lsr.actslave>1){
-	    /*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
+	    /*per island regularization to mitigate the island effect*/
 	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, 
 				      parms->dbg.recon_stuck?recon->actstuck:0, 
-				      recon->actfloat, parms->lsr.actthres2, maxeig, 
-				      parms->lsr.actslave);
+				      recon->actfloat, parms->lsr.actthres2, maxeig, parms->lsr.actslave);
 	    if(parms->save.setup){
 		writebin(actslave,"lsr_actslave2");
 	    }

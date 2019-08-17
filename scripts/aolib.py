@@ -32,8 +32,8 @@ def isequal(a, b):
     else:
         return a==b
 
-if __name__ == '__main__':
 
+def test_read():
     import matplotlib.pyplot as plt
     import os
     path=b'/home/lianqiw/work/aos/comp/optim/bin/test/setup/'
@@ -61,4 +61,12 @@ if __name__ == '__main__':
         else:
             raise(Exception(file, 'not equal'))
     
-    
+def test_mkdtf():
+    out=mkdtf([0.5e-6], 1./64., 2., 64, 64, 8,8,10e-6,10e-6,[],[],0,[],0,0)
+    return out
+
+if __name__ == '__main__':
+    a=readbin('non.bin');
+    b=test_mkdtf()
+    print(a)
+    print(b)

@@ -1054,7 +1054,6 @@ ETF_T* mketf_wrap(mketf_t *data){
 */
 void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode, int istep){
     if(!parms->powfs[ipowfs].llt) return;
-    const int nwvl=parms->powfs[ipowfs].nwvl;
     mketf_t etfdata={powfs[ipowfs].dtf, 
 		     parms->powfs[ipowfs].hs,
 		     powfs[ipowfs].sodium,
@@ -1066,7 +1065,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		     !parms->dbg.na_interp, 0};
     if(mode==0){/*preparation. */
 	if(powfs[ipowfs].etfprep && powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
-	    etf_free(powfs[ipowfs].etfprep, nwvl);
+	    etf_free(powfs[ipowfs].etfprep);
 	}
 	powfs[ipowfs].etfprep=mketf_wrap(&etfdata);
     }else{/*simulation*/
@@ -1074,7 +1073,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    if(powfs[ipowfs].etfsim==powfs[ipowfs].etfprep){
 		powfs[ipowfs].etfsim=0;
 	    }
-	    etf_free(powfs[ipowfs].etfsim, nwvl); powfs[ipowfs].etfsim=0;
+	    etf_free(powfs[ipowfs].etfsim); powfs[ipowfs].etfsim=0;
 	    if(istep==powfs[ipowfs].etfsim2->icol){//reuse etfsim2 as etfsim
 		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 		powfs[ipowfs].etfsim2=0;
@@ -1088,7 +1087,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		etfthread=0;
 	    }
 	    if(powfs[ipowfs].etfsim2 && powfs[ipowfs].etfsim2->icol!=istep){
-		etf_free(powfs[ipowfs].etfsim2, nwvl); powfs[ipowfs].etfsim2=0;
+		etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
 	    }
 	    if(!powfs[ipowfs].etfsim2){
 		powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
@@ -1672,7 +1671,7 @@ void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
 }
 void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     free_powfs_geom(powfs,ipowfs);
-    dtf_free(powfs[ipowfs].dtf, parms->powfs[ipowfs].nwvl);
+    dtf_free(powfs[ipowfs].dtf);
     dspcellfree(powfs[ipowfs].GS0);
     dcellfree(powfs[ipowfs].neasim);
     dcellfree(powfs[ipowfs].sanea);
@@ -1709,10 +1708,10 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     dcellfree(powfs[ipowfs].sodium);
     if(powfs[ipowfs].etfprep!=powfs[ipowfs].etfsim){
-	etf_free(powfs[ipowfs].etfprep, parms->powfs[ipowfs].nwvl);
+	etf_free(powfs[ipowfs].etfprep);
     }
-    etf_free(powfs[ipowfs].etfsim, parms->powfs[ipowfs].nwvl);
-    etf_free(powfs[ipowfs].etfsim2, parms->powfs[ipowfs].nwvl);
+    etf_free(powfs[ipowfs].etfsim);
+    etf_free(powfs[ipowfs].etfsim2);
     dcellfree(powfs[ipowfs].opdadd);
     dcellfree(powfs[ipowfs].opdbias);
     dcellfree(powfs[ipowfs].gradncpa);

@@ -39,6 +39,9 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	    );
+
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr);
+
 dmat* mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int norm);
 dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   const dmat *i0, /**<Averaged subaperture image*/
@@ -55,5 +58,7 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   double pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
 	   int radgx,        /**<1: gx/gy is along r/a coord.*/
 	   int cr );
+dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
 dmat *derive_by_fft(const dmat *i0, double theta);
+
 #endif

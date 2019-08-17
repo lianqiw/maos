@@ -98,29 +98,34 @@ static char* procfn(const char *fn, const char *mod){
 	strcpy(fn2,fn);
     }
     /*If there is no recognized suffix, add .bin in the end. */
-    if(!check_suffix(fn2,".bin")  && !check_suffix(fn2, ".bin.gz")
-       && !check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
-	strncat(fn2, ".bin", 4);
-    }
     if(mod[0]=='r'){
 	char *fnr=NULL;
-	if(!(fnr=search_file(fn2))){/*If does not exist. */
-	    if(!check_suffix(fn2, ".gz")){
-		/*does not end with .gz, add gz*/
-		strncat(fn2, ".gz", 3);
-	    }else if (check_suffix(fn, ".gz")){
-		/*ended with gz, remove .gz*/
-		fn2[strlen(fn2)-3]='\0';
+       	if(!(fnr=search_file(fn2))){/*If does not exist. */
+	    if(!check_suffix(fn2,".bin")  && !check_suffix(fn2, ".bin.gz")
+	       && !check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
+		//Try adding suffix.
+		const char* suf[]={".bin",".fits",".bin.gz",".fits.gz"};
+		for(unsigned int is=0; is<4; is++){
+		    strcat(fn2, suf[is]);
+		    if(!(fnr=search_file(fn2))){
+			fn2[strlen(fn2)-strlen(suf[is])]='\0';
+		    }else{
+			break;
+		    }
+		}
 	    }
-	    fnr=search_file(fn2);
 	}
 	//It is ok to have NUL fnr.
 	free(fn2);
 	fn2=fnr;
     }else if (mod[0]=='w' || mod[0]=='a'){
-	if (check_suffix(fn2, ".gz")){
-	    fn2[strlen(fn2)-3]='\0';
+	if(!check_suffix(fn2,".bin")  && !check_suffix(fn2, ".bin.gz")
+	   && !check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
+	    strncat(fn2, ".bin", 4);
 	}
+	/*if (check_suffix(fn2, ".gz")){
+	    fn2[strlen(fn2)-3]='\0';
+	    }*/
 	if(disable_save && mystrcmp(fn2, CACHE)){
 	    //When saving is disabled, allow writing to cache folder.
 	    warning("Saving is disabled for %s.\n", fn2);
@@ -129,11 +134,11 @@ static char* procfn(const char *fn, const char *mod){
 	}
 	if(fn2 && islink(fn2)){/*remove old file to avoid write over a symbolic link. */
 	    if(remove(fn2)){
-		error("Failed to remove %s\n", fn2);
+		warning("Failed to remove %s\n", fn2);
 	    }
 	}
     }else{
-	error("Invalid mode\n");
+	warning("Invalid mode\n");
     }
     return fn2;
 }
@@ -172,10 +177,12 @@ static file_t* zfdopen(int sock, const char *mod){
     if(fp->isgzip){
 	if(!(fp->p=gzdopen(fp->fd,mod))){
 	    error("Error gzdopen for %d\n",sock);
+	    free(fp); fp=0;
 	}
     }else{
 	if(!(fp->p=fdopen(fp->fd,mod))){
 	    error("Error fdopen for %d\n",sock);
+	    free(fp); fp=0;
 	}
     }
     return fp;
@@ -189,17 +196,26 @@ static file_t* zfdopen(int sock, const char *mod){
    will not be gzipped. If the file has no suffix, the file will be gzipped and
    .bin is appened to file name.
 */
-file_t* zfopen_try(const char *fn, const char *mod){
+file_t* zfopen_try(const char *fni, const char *mod){
     LOCK(lock);
     file_t* fp=mycalloc(1,file_t);
-    const char* fn2=fp->fn=procfn(fn,mod);
+    const char* fn2=fp->fn=procfn(fni,mod);
     if(!fn2){
 	if(mod[0]=='r'){
 	    printpath();
-	    error("%s does not exist for read\n", fn);
+	    error("%s does not exist for read\n", fni);
 	}
-	free(fp); fp=0;
-	goto end;
+	goto fail;
+    }
+    if(mod[0]=='w'||mod[0]=='a'){
+	if(check_suffix(fn2, ".gz")){
+	    fp->isgzip=1;
+	    if(mod[0]=='w'){
+		fp->fn[strlen(fn2)-3]='\0';
+	    }
+	}else{
+	    fp->isgzip=0;
+	}
     }
     /*Now open the file to get a fd number that we can use to lock on the
       file.*/
@@ -237,47 +253,44 @@ file_t* zfopen_try(const char *fn, const char *mod){
     }
     if(fp->fd==-1){
 	error("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));
-	free(fp->fn);
-	free(fp);
-	fp=0;
-	goto end;
+	goto fail;
     }
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
-    if(mod[0]=='w'){
-	if(check_suffix(fn, ".gz")){
-	    fp->isgzip=1;
-	}else{
-	    fp->isgzip=0;
-	}
-    }else{ 
+    if(mod[0]=='r'){
 	uint16_t magic;
 	if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
-	    error("Unable to read %s.\n", fp->fn);
-	}
-	if(magic==0x8b1f){
-	    fp->isgzip=1;
+	    error("Unable to read %s.\n", fn2);
 	}else{
-	    fp->isgzip=0;
+	    if(magic==0x8b1f){
+		fp->isgzip=1;
+	    }else{
+		fp->isgzip=0;
+	    }
 	}
 	lseek(fp->fd, 0, SEEK_SET);
     }
     if(fp->isgzip){
 	if(!(fp->p=gzdopen(fp->fd,mod))){
 	    error("Error gzdopen for %s\n",fn2);
+	    goto fail;
 	}
     }else{
 	if(!(fp->p=fdopen(fp->fd,mod))){
 	    error("Error fdopen for %s\n",fn2);
+	    goto fail;
 	}
     }
-    if(check_suffix(fn, ".fits") || check_suffix(fn, ".fits.gz")){
+    if(check_suffix(fn2, ".fits") || check_suffix(fn2, ".fits.gz")){
 	fp->isfits=1;
     }
     /*if(mod[0]=='w' && !fp->isfits){
 	write_timestamp(fp);
 	}*/
-  end:
     UNLOCK(lock);
+    return fp;
+  fail:
+    UNLOCK(lock);
+    free(fp->fn); free(fp); fp=0;
     return fp;
 }
 file_t *zfopen(const char *fn, const char *mod){

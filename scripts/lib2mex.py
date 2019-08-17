@@ -11,12 +11,12 @@ if len(sys.argv)>2:
     fnout=sys.argv[2];
 else:
     srcdir=str(Path.home())+'/work/programming/aos'
-    fnout='../mex/aolib.c'
+    fnout=srcdir+'/mex/aolib.c'
 
 simu_all=list();
 
 headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
-          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h']
+          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h']
 structs=maos.parse_structs(srcdir, headlist)
 
 funcs=maos.parse_func(srcdir, structs, ['mex/aolib.h'])
@@ -92,6 +92,10 @@ def handle_type(argtype):
         mx2c='unknown'
         c2mx='cn2est2mx'
         free_c='cn2est_free'
+    elif argtype=='DTF_T*':
+        mx2c='unknown'
+        c2mx='dtf2mx'
+        free_c='dtf_free'
     else:
         mx2c='unknown'
         c2mx='unknown'

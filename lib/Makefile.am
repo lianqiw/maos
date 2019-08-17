@@ -17,3 +17,8 @@ lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
 libaos_la_LIBADD=../math/libaomath.la
 
+bin_PROGRAMS=../bin/aolib.so
+___bin_aolib_so_SOURCES=aolib.c
+___bin_aolib_so_LDADD=libaos.la $(LDFFT) $(LDCHOL) $(LAPACK) -lm -ldl -lz
+___bin_aolib_so_LDFLAGS=$(LDOPTS) -static -Xcompiler -shared -Wl,--whole-archive,.libs/libaos.a,../math/.libs/libaomath.a,../sys/.libs/libaosys.a,--no-whole-archive
+
