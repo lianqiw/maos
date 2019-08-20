@@ -476,29 +476,36 @@ static void perfevl_mean(SIM_T *simu){
 	    }else{
 #endif
 		const APER_T *aper=simu->aper;
-		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		    if(!parms->evl.psf->p[ievl] || !parms->evl.psfngsr->p[ievl]) continue;
-		    dmat *iopdevl=simu->evlopd->p[ievl];
-		    if(!iopdevl) continue;
-		    ngsmod2science(iopdevl, aper->locs, recon->ngsmod, 
-				   parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
-				   pcleNGSm, -1);
-		    if(parms->evl.pttr->p[ievl]){
-			/*we cannot use clmp because the removed ngsmod
-			  has tip/tilt component*/
-			double ptt[3];
-			loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
-			loc_remove_ptt(iopdevl->p, ptt, aper->locs);
+		for(int ievl=0; ievl<parms->evl.nevl; ievl++)
+		    if(parms->evl.psf->p[ievl] && parms->evl.psfngsr->p[ievl])
+#pragma omp task
+		    {
+
+			dmat *iopdevl=simu->evlopd->p[ievl];
+			ngsmod2science(iopdevl, aper->locs, recon->ngsmod, 
+				       parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
+				       pcleNGSm, -1);
+			if(parms->plot.run){
+			    drawopdamp("Evlcl", aper->locs, iopdevl->p, aper->amp1->p, parms->dbg.draw_opdmax->p,
+				       "Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d",ievl);
+			}
+			if(parms->evl.pttr->p[ievl]){
+			    /*we cannot use clmp because the removed ngsmod
+			      has tip/tilt component*/
+			    double ptt[3];
+			    loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
+			    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
+			}
+			if(parms->evl.cov && parms->evl.psfr->p[ievl]){
+			    dmm(&simu->evlopdcov_ngsr->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
+			    dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
+			}
+			if(do_psf){
+			    perfevl_psfcl(parms, aper, "PSFngsr", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
+			}
+			dfree(simu->evlopd->p[ievl]);
 		    }
-		    if(parms->evl.cov && parms->evl.psfr->p[ievl]){
-			dmm(&simu->evlopdcov_ngsr->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
-			dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
-		    }
-		    if(do_psf){
-			perfevl_psfcl(parms, aper, "PSFngsr", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
-		    }
-		    dfree(simu->evlopd->p[ievl]);
-		}
+#pragma omp taskwait
 #if USE_CUDA
 	    }
 #endif

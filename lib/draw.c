@@ -48,12 +48,12 @@ long group=0;
    the end maos has direct connect to drawdaemon using sockets. draw() will
    write to the sockets the information to display.
 
-   2) If DRAW_DIRECT=0, open_drawdaemon() will talk to draw_helper() (a
+   2) If DRAW_DIRECT=0, get_drawdaemon() will talk to draw_helper() (a
    fork()'ed process) with pid through a socket pair (AF_UNIX type). The
    draw_helper() will then create another socket_pair, pass one end of it to
    draw(), and the other end to drawdaemon() by fork()+exec().
 
-   3 If DRAW_DIRECT=1, open_drawdaemon() will launch drawdaemon directly.
+   3 If DRAW_DIRECT=1, get_drawdaemon() will launch drawdaemon directly.
 
 */
 /* List of list*/
@@ -270,55 +270,66 @@ void draw_helper(void){
 /**
    Open a connection to drawdaemon. sock_draw may be set externally, in which case helper=-1.
 */
-static int open_drawdaemon(){
+static int get_drawdaemon(){
     signal(SIGPIPE, SIG_IGN);
     if(disable_draw){
 	return -1;
     }
-    if(!sock_ndraw){
-	{
-	    static int count=0;
-	    count++;
-	    if(count>5){
-		return -1;
-	    }
-	}
-	if(DRAW_ID<=0){
-	    DRAW_ID=getsid(0);
-	    if(DRAW_ID<0){
-		DRAW_ID=1;
-	    }
-	}
-	int sock=-1;
-	if(scheduler_recv_socket(&sock, DRAW_ID)){
-	    sock=-1;
-	}else{
-	    //dbg("received sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
-	}
-	if(sock==-1){
-	    if(DRAW_DIRECT){//directly fork and launch
-		TIC;tic;
-		sock=launch_drawdaemon();
-		toc2("Directly launch drawdaemon");
-	    }else if(sock_helper!=-2){//use helper to launch
-		if(sock_helper==-1){
-		    draw_helper();
-		}
-		if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
-		    sock=-1;
-		    disable_draw=1;
-		    close(sock_helper);
-		    sock_helper=-1;
-		    warning("Unable to talk to the helper to launch drawdaemon\n");
-		}
-		dbg("launch using sock helper: sock=%d\n", sock);
-	    }
-	}
-	if(sock!=-1){
-	    draw_add(sock);
+    if(sock_ndraw){//drawdaemon already connected
+	return 0;
+    }
+    
+    {//only try 5 times.
+	static int count=0;
+	count++;
+	if(count>5){
+	    disable_draw=1;
+	    return -1;
 	}
     }
-    return (sock_ndraw>0)?0:1;
+    if(DRAW_ID<=0){
+	DRAW_ID=getsid(0);
+	if(DRAW_ID<0){
+	    DRAW_ID=1;
+	}
+    }
+    int sock=-1;
+    //First try reusing existing idle drawdaemon
+    if(scheduler_recv_socket(&sock, DRAW_ID)){
+	sock=-1;
+    }
+    if(sock==-1){
+	if(DRAW_DIRECT){//directly fork and launch
+	    TIC;tic;
+	    sock=launch_drawdaemon();
+	    toc2("Directly launch drawdaemon");
+	}else if(sock_helper!=-2){//use helper to launch
+	    if(sock_helper==-1){
+		draw_helper();
+	    }
+	    if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
+		sock=-1;
+		disable_draw=1;
+		close(sock_helper);
+		sock_helper=-1;
+		warning("Unable to talk to the helper to launch drawdaemon\n");
+	    }
+	    dbg("launch using sock helper: sock=%d\n", sock);
+	}else{
+	    warning("disable drawdaemon\n");
+	    disable_draw=1;
+	    return -1;
+	}
+    }
+    if(sock!=-1){
+	draw_add(sock);
+    }
+    if(sock_ndraw>0){
+	return 0;
+    }else{
+	warning("Failed to open drawdaemon\n");
+	return 1;
+    }
 }
 
 /* 
@@ -388,8 +399,7 @@ int plot_points(const char *fig,    /**<Category of the figure*/
     format2fn;
     LOCK(lock);
     int ans=0;
-    if(open_drawdaemon()){/*failed to open. */
-	warning("Failed to open drawdaemon\n");
+    if(get_drawdaemon()){/*failed to open. */
 	goto end;
     }
 
@@ -496,7 +506,7 @@ typedef struct imagesc_t{
 static int imagesc_do(imagesc_t *data){
     int ans;
     LOCK(lock);
-    if(!open_drawdaemon()){
+    if(!get_drawdaemon()){
 	char *fig=data->fig;
 	long nx=data->nx;
 	long ny=data->ny;
