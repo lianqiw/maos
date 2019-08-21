@@ -20,5 +20,11 @@ libaos_la_LIBADD=../math/libaomath.la
 bin_PROGRAMS=../bin/aolib.so
 ___bin_aolib_so_SOURCES=aolib.c
 ___bin_aolib_so_LDADD=libaos.la $(LDFFT) $(LDCHOL) $(LAPACK) -lm -ldl -lz
-___bin_aolib_so_LDFLAGS=$(LDOPTS) -static -Xcompiler -shared -Wl,--whole-archive,.libs/libaos.a,../math/.libs/libaomath.a,../sys/.libs/libaosys.a,--no-whole-archive
-
+___bin_aolib_so_LDFLAGS=$(LDOPTS) -static -Xcompiler -shared
+if GCC
+___bin_aolib_so_LDFLAGS+=-Wl,--whole-archive,.libs/libaos.a,../math/.libs/libaomath.a,../sys/.libs/libaosys.a,--no-whole-archive
+else
+if CLANG
+___bin_aolib_so_LDFLAGS+=-Wl,-force_load,.libs/libaos.a,../math/.libs/libaomath.a,../sys/.libs/libaosys.a
+endif
+endif

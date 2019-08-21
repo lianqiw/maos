@@ -65,6 +65,7 @@ USE_CPP=0
 #find the real flavor of CC
 CCv=`$CC -v 2>&1`
 #if $CC -v 2>&1 |grep clang ;then
+
 if grep clang++ <<< $CCv ;then
     CN=CLANG
     USE_CPP=1
@@ -78,8 +79,11 @@ elif grep icc <<< $CCv ;then
 elif grep g++ <<< $CCv ;then
     CN=GCC
     USE_CPP=1
+elif grep gcc <<< $CCv ;then
+    CN=GCC
 else
     CN=GCC
+    AC_MSG_ERROR([Compiler $CC is unknown])
 fi
 AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], ["Whether MAOS is using C++ compiler"])
 #canonicalize the host_cpu name
@@ -187,6 +191,9 @@ DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-funct
 #in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline 
 #GCC mode can be forced on using __attribute__((gnu_inline))
 #always_inline causes inline to be done in debug mode.
+AM_CONDITIONAL(GCC, [test x$CN = xGCC])
+AM_CONDITIONAL(ICC, [test x$CN = xICC])
+AM_CONDITIONAL(CLANG, [test x$CN = xCLANG])
 case "$CN" in
     ICC)
 	CC_VERSION=$($CC -dumpversion)
@@ -996,6 +1003,7 @@ echo BIGENDIAN=$BIGENDIAN
 echo use_static=$use_static
 
 echo CC=$CC
+echo CN=$CN
 echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
