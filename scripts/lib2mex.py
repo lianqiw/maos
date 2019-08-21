@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Convert functions defined in aolib.h to aolib.c with conversion
 

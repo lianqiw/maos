@@ -504,7 +504,7 @@ typedef struct imagesc_t{
     char *fn;
 }imagesc_t;
 static int imagesc_do(imagesc_t *data){
-    int ans;
+    int ans=0;
     LOCK(lock);
     if(!get_drawdaemon()){
 	char *fig=data->fig;
