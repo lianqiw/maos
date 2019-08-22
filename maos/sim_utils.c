@@ -1727,7 +1727,7 @@ void print_progress(SIM_T *simu){
 	    }
 	}
     
-	if(parms->plot.run){
+	if(parms->plot.run && draw_current("Res", "Close loop")){
 	    dmat *tmp=parms->recon.split?simu->clem:simu->cle;
 	    const char *legs[4]={0,0,0,0};
 	    int nline=2;

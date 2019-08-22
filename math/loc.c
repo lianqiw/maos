@@ -176,7 +176,7 @@ lmat *loc_create_embed(long *nembed, const loc_t *loc, double oversize, int fftp
 	if(*nembed<(long)(nxy*0.6)){
 	    error("Supplied nembed %ld is too small, recommend %ld\n",*nembed, nxy);
 	}else if(*nembed<nxy){
-	    warning("Supplied nembed %ld maybe too small, recommend %ld\n",*nembed, nxy);
+	    warning("Supplied nembed %ld is too small, recommend %ld\n",*nembed, nxy);
 	}
 	nxy=*nembed;
     }

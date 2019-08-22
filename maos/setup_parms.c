@@ -3031,7 +3031,12 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	if(parms->sim.idealtomo){
 	    parms->gpu.tomo=0;
 	}
-	if(parms->evl.tomo){
+	if(parms->evl.tomo && parms->gpu.evl){
+	    warning("evl.tomo is not implemented in gpu. disable gpu.evl\n");
+	    parms->gpu.evl=0;
+	}
+	if(parms->evl.rmax>1 && parms->gpu.evl){
+	    warning("evl.rmax>1 is not implemented in gpu. disable gpu.evl\n");
 	    parms->gpu.evl=0;
 	}
 	if(parms->recon.alg==0){/*MV*/

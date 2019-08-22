@@ -137,8 +137,9 @@ void save_recon(SIM_T *simu){
 	    }
 	}	
 
-	if(simu->Merr_lo){
-	    /*dcell *dmlo=NULL;
+	if(simu->Merr_lo && draw_current("DM", "Err lo")){
+	    dcell *dmlo=simu->dmtmp;
+	    dcellzero(dmlo);
 	    switch(simu->parms->recon.split){
 	    case 1:
 		dcellmm(&dmlo, recon->ngsmod->Modes, simu->Merr_lo, "nn", 1);
@@ -152,8 +153,7 @@ void save_recon(SIM_T *simu){
 			"DM Error Signal (Lo)","x (m)","y (m)",
 			"Err Lo %d",idm);
 	    }
-	    dcellfree(dmlo);*/
-	    plot_points("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
+	    //plot_points("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 	}
     }
     if(parms->recon.alg==0 && !parms->sim.idealfit && !parms->recon.glao){
@@ -256,8 +256,9 @@ void save_dmreal(SIM_T *simu){
 			    "Int Hi %d",idm);
 		}
 	    }
-	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
-		dcell *dmlo=NULL;
+	    /*if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
+		dcell *dmlo=simu->dmtmp;
+		dcellzero(dmlo);
 		switch(simu->parms->recon.split){
 		case 1:
 		    dcellmm(&dmlo, recon->ngsmod->Modes, simu->Mint_lo->mint->p[0], "nn", 1);
@@ -271,8 +272,7 @@ void save_dmreal(SIM_T *simu){
 			    "DM Integrator (Lo)","x (m)","y (m)",
 				"Int Lo %d",idm);
 		}
-		dcellfree(dmlo);
-	    }
+	    }*/
 	    if(simu->dmreal){
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(simu->dmreal->p[idm]){
@@ -280,7 +280,7 @@ void save_dmreal(SIM_T *simu){
 				"DM Actuator Stroke","x (m)", "y (m)", "Real %d",idm);
 		    }
 		}
-		if(simu->ttmreal){
+		if(simu->ttmreal && draw_current("DM", "Real TTM")){
 		    int idm=0;
 		    double ptt[3]={0,0,0};
 		    ptt[1]=simu->ttmreal->p[0];
@@ -291,24 +291,25 @@ void save_dmreal(SIM_T *simu){
 			    "DM Actuator Stroke","x (m)", "y (m)", "Real TTM");
 		}
 
-
-		dmat *opd=dnew(simu->aper->locs->nloc, 1);
-		for(int idm=0; idm<parms->ndm; idm++){
-		    int ind=parms->evl.nevl*idm;
-		    simu->evl_propdata_dm[ind].phiout=opd->p;
-		    CALL_THREAD(simu->evl_prop_dm[ind], 0);
-		}
-		dscale(opd, -1);
-		if(simu->ttmreal){
-		    double ptt[]={0,0,0};
-		    ptt[1]=simu->ttmreal->p[0];
-		    ptt[2]=simu->ttmreal->p[1];
-		    loc_add_ptt(opd->p, ptt, simu->aper->locs);
-		}
+		if(draw_current("Evldm", "OA")){
+		    dmat *opd=dnew(simu->aper->locs->nloc, 1);
+		    for(int idm=0; idm<parms->ndm; idm++){
+			int ind=parms->evl.nevl*idm;
+			simu->evl_propdata_dm[ind].phiout=opd->p;
+			CALL_THREAD(simu->evl_prop_dm[ind], 0);
+		    }
+		    dscale(opd, -1);
+		    if(simu->ttmreal){
+			double ptt[]={0,0,0};
+			ptt[1]=simu->ttmreal->p[0];
+			ptt[2]=simu->ttmreal->p[1];
+			loc_add_ptt(opd->p, ptt, simu->aper->locs);
+		    }
 		
-		drawopd("Evldm", simu->aper->locs, opd->p,parms->dbg.draw_opdmax->p,
-			"DM OPD","x (m)", "y (m)", "OA");	
-		dfree(opd);
+		    drawopd("Evldm", simu->aper->locs, opd->p,parms->dbg.draw_opdmax->p,
+			    "DM OPD","x (m)", "y (m)", "OA");	
+		    dfree(opd);
+		}
 	    }
 
 	    for(int idm=0; idm<parms->ndm; idm++){

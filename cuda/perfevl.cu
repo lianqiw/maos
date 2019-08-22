@@ -83,6 +83,33 @@ static void calc_ptt(Real *cc,
     calc_ptt_do<<<DIM(nloc, TT_NBX), 0, stream>>>			
 	(cc, loc, nloc, phi, amp);
 }
+/*
+  Let M be the modal matrix of pistion/tip/tilt. Calculate M'*diag(amp)*phi
+  where amp is the amptliude weighting.  */
+static int calc_ptt_post(double *rmsout, double *coeffout, 
+			 const double ipcc, const dmat *imcc,
+			 const Real *ccb){
+    double coeff[3];
+    double tot=ccb[0];
+    coeff[0]=ccb[1]; coeff[1]=ccb[2]; coeff[2]=ccb[3]; 
+    if(coeffout){
+	dmulvec3(coeffout, imcc, coeff);
+    }
+    int ans=0;
+    if(rmsout){
+	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
+	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
+	rmsout[0]=tot-pis;/*PR */
+	rmsout[1]=ptt-pis;/*TT */
+	rmsout[2]=tot-ptt;/*PTTR*/
+	if(tot+1e-18<pis || tot+1e-18<ptt){//sanity check. allow round off error
+	    warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
+	    ans=1;
+	}
+    }
+    return ans;
+}
+
 __global__ static void calc_ngsmod_do( Real *cc,
 				       const Real (*restrict loc)[2], 
 				       const int nloc,
@@ -123,37 +150,10 @@ static void calc_ngsmod(Real *cc,
 			const int nloc,
 			const Real *restrict phi,
 			const Real *restrict amp,
-			stream_t&stream
-){
+			stream_t&stream){
     cudaMemsetAsync(cc, 0, 7*sizeof(Real), stream);			
     calc_ngsmod_do<<<DIM(nloc,TT_NBX),0,stream>>>
 	(cc, loc, nloc, phi, amp);
-}
-/*
-  Let M be the modal matrix of pistion/tip/tilt. Calculate M'*diag(amp)*phi
-  where amp is the amptliude weighting.  */
-static int calc_ptt_post(double *rmsout, double *coeffout, 
-		     const double ipcc, const dmat *imcc,
-		     Real *ccb){
-    double coeff[3];
-    double tot=ccb[0];
-    coeff[0]=ccb[1]; coeff[1]=ccb[2]; coeff[2]=ccb[3]; 
-    if(coeffout){
-	dmulvec3(coeffout, imcc, coeff);
-    }
-    int ans=0;
-    if(rmsout){
-	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
-	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
-	rmsout[0]=tot-pis;/*PR */
-	rmsout[1]=ptt-pis;/*TT */
-	rmsout[2]=tot-ptt;/*PTTR*/
-	if(tot+1e-18<pis || tot+1e-18<ptt){//sanity check. allow round off error
-	    warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
-	    ans=1;
-	}
-    }
-    return ans;
 }
 
 

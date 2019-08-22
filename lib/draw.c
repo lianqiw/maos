@@ -63,6 +63,7 @@ typedef struct list_t{
     struct list_t *child;//child list
 }list_t;
 int sock_ndraw=0;//number of displays
+int sock_ndraw2=0;//number of valid displays
 typedef struct{
     int fd;
     int pause;
@@ -73,10 +74,6 @@ sockinfo_t sock_draws[MAXDRAW];
 
 #define CATCH(A) if(A){\
 	warning("stwrite to %d failed with %s\n", sock_draw, strerror(errno)); \
-	if(sock_helper<0&&!DRAW_DIRECT){				\
-	    disable_draw=1;						\
-	    warning("disable draw\n");					\
-	}								\
 	draw_remove(sock_draw,0);					\
 	continue;							\
     }
@@ -94,7 +91,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
     char **figfn=sock_data->figfn;
     //info("draw is listening to drawdaemon at %d\n", sock_draw);
     int cmd;
-    while(!streadint(sock_draw, &cmd)){
+    while(sock_data->fd!=-1 && !streadint(sock_draw, &cmd)){
 	switch(cmd){
 	case DRAW_FIGFN:
 	    {
@@ -160,11 +157,12 @@ static void list_destroy(list_t **head){
 /*Add fd to list of drawing socks*/
 int draw_add(int fd){
     if(fd==-1) return -1;
-    if(sock_helper==-1){//externally added
-	sock_helper=-2;
-    }
     for(int ifd=0; ifd<sock_ndraw; ifd++){
-	if(sock_draws[ifd].fd==fd){//already found
+	if(sock_draws[ifd].fd<0){//fill a empty slot
+	    sock_draws[ifd].fd=fd;
+	    sock_ndraw2++;
+	    thread_new((thread_fun)listen_drawdaemon, &sock_draws[ifd]);
+	    disable_draw=0;
 	    return 0;
 	}
     }
@@ -173,13 +171,15 @@ int draw_add(int fd){
 	sock_draws[sock_ndraw].fd=fd;
 	thread_new((thread_fun)listen_drawdaemon, &sock_draws[sock_ndraw]);
 	sock_ndraw++;
+	sock_ndraw2++;
+	disable_draw=0;
 	return 0;
     }else{
 	return -1;
     }
 }
 static void draw_remove(int fd, int reuse){
-    if(sock_ndraw<=0 || fd<0) return;
+    if(fd<0) return;
     if(reuse){
 	scheduler_send_socket(fd, DRAW_ID);
     }
@@ -192,15 +192,16 @@ static void draw_remove(int fd, int reuse){
 	    list_destroy(&sock_draws[ifd].list);
 	    free(sock_draws[ifd].figfn[0]);sock_draws[ifd].figfn[0]=0;
 	    free(sock_draws[ifd].figfn[1]);sock_draws[ifd].figfn[1]=0;
-	}else if(found){//shift left
-	    memcpy(&sock_draws[ifd-1], &sock_draws[ifd], sizeof(sockinfo_t));
 	}
     }
   
     if(found){
-	sock_ndraw--;
+	sock_ndraw2--;
     }else{
 	warning("draw_remove: fd=%d is not found\n", fd);
+    }
+    if(sock_ndraw2<=0){
+	disable_draw=1;//do not try to restart drawdaemon
     }
 }
 static int launch_drawdaemon(){
@@ -232,7 +233,11 @@ static int launch_drawdaemon(){
 */
 void draw_helper(void){
     if(DRAW_DIRECT){
-	warning("draw_direct=1, skip draw_helper\n");
+	warning("DRAW_DIRECT=1, skip draw_helper\n");
+	return;
+    }
+    if(sock_helper>-1){
+	warning("draw_helper is already running.\n");
 	return;
     }
     int sv[2];
@@ -240,7 +245,6 @@ void draw_helper(void){
 	perror("socketpair");
 	warning("socketpair failed, disable drawing.\n"); 
 	disable_draw=1;
-	sock_helper=-1;
     }else{
 	warning("draw_helper started\n");
     }
@@ -249,7 +253,6 @@ void draw_helper(void){
 	close(sv[0]); 
 	close(sv[1]);
 	warning("Fork failed. Return.\n");
-	sock_helper=-1;
     }
     if(pid){/*Parent */
 	sock_helper=sv[0];
@@ -272,21 +275,13 @@ void draw_helper(void){
 */
 static int get_drawdaemon(){
     signal(SIGPIPE, SIG_IGN);
+    if(sock_ndraw2){//drawdaemon already connected
+	return 0;
+    }
     if(disable_draw){
 	return -1;
     }
-    if(sock_ndraw){//drawdaemon already connected
-	return 0;
-    }
     
-    {//only try 5 times.
-	static int count=0;
-	count++;
-	if(count>5){
-	    disable_draw=1;
-	    return -1;
-	}
-    }
     if(DRAW_ID<=0){
 	DRAW_ID=getsid(0);
 	if(DRAW_ID<0){
@@ -299,14 +294,11 @@ static int get_drawdaemon(){
 	sock=-1;
     }
     if(sock==-1){
-	if(DRAW_DIRECT){//directly fork and launch
+	if(DRAW_DIRECT || sock_helper<=-1){//directly fork and launch
 	    TIC;tic;
 	    sock=launch_drawdaemon();
 	    toc2("Directly launch drawdaemon");
-	}else if(sock_helper!=-2){//use helper to launch
-	    if(sock_helper==-1){
-		draw_helper();
-	    }
+	}else{//use helper to launch
 	    if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
 		sock=-1;
 		disable_draw=1;
@@ -315,16 +307,12 @@ static int get_drawdaemon(){
 		warning("Unable to talk to the helper to launch drawdaemon\n");
 	    }
 	    dbg("launch using sock helper: sock=%d\n", sock);
-	}else{
-	    warning("disable drawdaemon\n");
-	    disable_draw=1;
-	    return -1;
 	}
     }
     if(sock!=-1){
 	draw_add(sock);
     }
-    if(sock_ndraw>0){
+    if(sock_ndraw2>0){
 	return 0;
     }else{
 	warning("Failed to open drawdaemon\n");
@@ -357,6 +345,7 @@ void draw_final(int reuse){
     LOCK(lock);
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	int sock_draw=sock_draws[ifd].fd;
+	if(sock_draw==-1) continue;
 	STWRITEINT(DRAW_FINAL);
 	draw_remove(sock_draw, reuse);
     }
@@ -371,6 +360,8 @@ int draw_current(const char *fig, const char *fn){
     if(!draw_single) return 1;
     int current=0;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
+	int sock_draw=sock_draws[ifd].fd;
+	if(sock_draw==-1) continue;
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	if(check_figfn(ifd, fig, fn, 0)){
 	    current=1;
@@ -399,90 +390,88 @@ int plot_points(const char *fig,    /**<Category of the figure*/
     format2fn;
     LOCK(lock);
     int ans=0;
-    if(get_drawdaemon()){/*failed to open. */
-	goto end;
-    }
-
-    for(int ifd=0; ifd<sock_ndraw; ifd++){
-	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-	int sock_draw=sock_draws[ifd].fd;
-	if(!check_figfn(ifd, fig, fn, 1)) continue;
-	STWRITEINT(DRAW_START);
-	if(loc){/*there are points to plot. */
-	    for(int ig=0; ig<ngroup; ig++){
-		STWRITEINT(DRAW_POINTS);
-		STWRITEINT(loc[ig]->nloc);
-		STWRITEINT(2);
-		STWRITEINT(1);
-		STWRITE(loc[ig]->locx, sizeof(double)*loc[ig]->nloc);
-		STWRITE(loc[ig]->locy, sizeof(double)*loc[ig]->nloc);
-	    }
-	    if(dc){
-		warning("both loc and dc are specified\n");
-	    }
-	}else if(dc){
-	    if(ngroup!=dc->nx*dc->ny){
-		warning("ngroup and dimension of dc mismatch\n");
-		ngroup=dc->nx*dc->ny;
-	    }
-	    for(int ig=0; ig<ngroup; ig++){
-		int nx=0, ny=0;
-		double *p=NULL;
-		if(dc->p[ig]){
-		    nx=dc->p[ig]->nx;
-		    ny=dc->p[ig]->ny;
-		    p=dc->p[ig]->p;
+    if(!get_drawdaemon()){
+	for(int ifd=0; ifd<sock_ndraw; ifd++){
+	    /*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+	    int sock_draw=sock_draws[ifd].fd;
+	    if(sock_draw==-1) continue;
+	    if(!check_figfn(ifd, fig, fn, 1)) continue;
+	    STWRITEINT(DRAW_START);
+	    if(loc){/*there are points to plot. */
+		for(int ig=0; ig<ngroup; ig++){
+		    STWRITEINT(DRAW_POINTS);
+		    STWRITEINT(loc[ig]->nloc);
+		    STWRITEINT(2);
+		    STWRITEINT(1);
+		    STWRITE(loc[ig]->locx, sizeof(double)*loc[ig]->nloc);
+		    STWRITE(loc[ig]->locy, sizeof(double)*loc[ig]->nloc);
 		}
-		STWRITEINT(DRAW_POINTS);
-		STWRITEINT(nx);
-		STWRITEINT(ny);
-		STWRITEINT(0);
-		if(p){
-		    STWRITE(p, sizeof(double)*dc->p[ig]->nx*dc->p[ig]->ny);
+		if(dc){
+		    warning("both loc and dc are specified\n");
+		}
+	    }else if(dc){
+		if(ngroup!=dc->nx*dc->ny){
+		    warning("ngroup and dimension of dc mismatch\n");
+		    ngroup=dc->nx*dc->ny;
+		}
+		for(int ig=0; ig<ngroup; ig++){
+		    int nx=0, ny=0;
+		    double *p=NULL;
+		    if(dc->p[ig]){
+			nx=dc->p[ig]->nx;
+			ny=dc->p[ig]->ny;
+			p=dc->p[ig]->p;
+		    }
+		    STWRITEINT(DRAW_POINTS);
+		    STWRITEINT(nx);
+		    STWRITEINT(ny);
+		    STWRITEINT(0);
+		    if(p){
+			STWRITE(p, sizeof(double)*dc->p[ig]->nx*dc->p[ig]->ny);
+		    }
+		}
+	    }else{
+		error("Invalid Usage\n");
+	    }
+	    if(style){
+		STWRITEINT(DRAW_STYLE);
+		STWRITEINT(ngroup);
+		STWRITE(style,sizeof(uint32_t)*ngroup);
+	    }
+	    if(cir){
+		if(cir->nx!=4){
+		    error("Cir should have 4 rows\n");
+		}
+		STWRITEINT(DRAW_CIRCLE);
+		STWRITEINT(cir->ny);
+		STWRITE(cir->p, sizeof(double)*cir->nx*cir->ny);
+	    }
+	    if(limit){/*xmin,xmax,ymin,ymax */
+		STWRITEINT(DRAW_LIMIT);
+		STWRITE(limit, sizeof(double)*4);
+	    }
+	    if(xylog){
+		STWRITEINT(DRAW_XYLOG);
+		STWRITE(xylog, sizeof(const char)*2);
+	    }
+	    if(format){
+		STWRITEINT(DRAW_NAME);
+		STWRITESTR(fn);
+	    }
+	    if(legend){
+		STWRITEINT(DRAW_LEGEND);
+		for(int ig=0; ig<ngroup; ig++){
+		    STWRITESTR(legend[ig]);
 		}
 	    }
-	}else{
-	    error("Invalid Usage\n");
+	    STWRITECMDSTR(DRAW_FIG,fig);
+	    STWRITECMDSTR(DRAW_TITLE,title);
+	    STWRITECMDSTR(DRAW_XLABEL,xlabel);
+	    STWRITECMDSTR(DRAW_YLABEL,ylabel);
+	    STWRITEINT(DRAW_END);
+	    ans=1;
 	}
-	if(style){
-	    STWRITEINT(DRAW_STYLE);
-	    STWRITEINT(ngroup);
-	    STWRITE(style,sizeof(uint32_t)*ngroup);
-	}
-	if(cir){
-	    if(cir->nx!=4){
-		error("Cir should have 4 rows\n");
-	    }
-	    STWRITEINT(DRAW_CIRCLE);
-	    STWRITEINT(cir->ny);
-	    STWRITE(cir->p, sizeof(double)*cir->nx*cir->ny);
-	}
-	if(limit){/*xmin,xmax,ymin,ymax */
-	    STWRITEINT(DRAW_LIMIT);
-	    STWRITE(limit, sizeof(double)*4);
-	}
-	if(xylog){
-	    STWRITEINT(DRAW_XYLOG);
-	    STWRITE(xylog, sizeof(const char)*2);
-	}
-	if(format){
-	    STWRITEINT(DRAW_NAME);
-	    STWRITESTR(fn);
-	}
-	if(legend){
-	    STWRITEINT(DRAW_LEGEND);
-	    for(int ig=0; ig<ngroup; ig++){
-		STWRITESTR(legend[ig]);
-	    }
-	}
-	STWRITECMDSTR(DRAW_FIG,fig);
-	STWRITECMDSTR(DRAW_TITLE,title);
-	STWRITECMDSTR(DRAW_XLABEL,xlabel);
-	STWRITECMDSTR(DRAW_YLABEL,ylabel);
-	STWRITEINT(DRAW_END);
-	ans=1;
     }
-  end:
     UNLOCK(lock); 
     return ans;
 }
@@ -520,6 +509,7 @@ static int imagesc_do(imagesc_t *data){
 	for(int ifd=0; ifd<sock_ndraw; ifd++){
 	    /*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	    int sock_draw=sock_draws[ifd].fd;
+	    if(sock_draw==-1) continue;
 	    if(!check_figfn(ifd, fig, fn, 1)) continue;
 	    int32_t header[2];
 	    header[0]=nx;
@@ -546,8 +536,6 @@ static int imagesc_do(imagesc_t *data){
 	    STWRITEINT(DRAW_END);
 	    ans=1;
 	}
-    }else{
-	warning("Failed to open drawdaemon()\n");
     }
     UNLOCK(lock);
     free(data->fig);
@@ -573,7 +561,7 @@ int imagesc(const char *fig, /**<Category of the figure*/
 	     const char *format, /**<subcategory of the plot.*/
 	     ...){
     format2fn;
-    if(disable_draw || !draw_current(fig, fn)){
+    if(!draw_current(fig, fn)){
 	return 0;
     }
     if (draw_single){
@@ -618,7 +606,7 @@ int imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     format2fn;
-    if(disable_draw || !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
 
     double *pr,*pi;
     pr=mymalloc(nx*ny,double);
@@ -640,7 +628,7 @@ int imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const 
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     format2fn;
-    if(disable_draw || !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
     double *pr,*pi;
     int isreal=1;
     pr=mymalloc(nx*ny,double);
@@ -669,7 +657,7 @@ int imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const
 		     const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...){
     format2fn;
-    if(disable_draw|| !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
     double *pr;
     pr=mymalloc(nx*ny,double);
     for(int i=0; i<nx*ny; i++){
@@ -744,7 +732,7 @@ int drawmap(const char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     format2fn;
-    if(disable_draw|| !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
     double limit[4];
     limit[0]=map->ox-map->dx/2;
     limit[1]=map->ox+(map->nx-0.5)*map->dx;
@@ -760,7 +748,7 @@ int drawloc(const char *fig, loc_t *loc, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
     format2fn;
-    if(disable_draw|| !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
     loc_create_map(loc);
     int npad=loc->npad;
     int nxm=loc->map->nx;
@@ -790,7 +778,7 @@ int drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 	     const char* format,...){
 
     format2fn;
-    if(disable_draw|| !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
     loc_create_map(loc);
     //This is different from loc_embed. It removes the padding.
     int npad=loc->npad;
@@ -824,7 +812,7 @@ int drawgrad(const char *fig, loc_t *loc, const dmat *grad, double *zlim, int gr
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char* format,...){
     format2fn;
-    if(disable_draw|| !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
     if(grad2opd && grad->nx>8){
 	//This is different from loc_embed. It removes the padding.
 	loc_create_map(loc);
@@ -872,7 +860,7 @@ int drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...){
     format2fn;
-    if(disable_draw|| !draw_current(fig, fn)) return 0;
+    if(!draw_current(fig, fn)) return 0;
     (void)fig;
     loc_create_map(loc);
 

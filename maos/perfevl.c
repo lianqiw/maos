@@ -68,17 +68,10 @@ static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha
 		  0, 0);
     }
 }
-static void plot_psf(ccell *psf2s, const char *psfname, int closeloop, int ievl, const PARMS_T *parms){
+static void plot_psf(ccell *psf2s, const char *psfname, int closeloop, int ievl, dmat *wvl, int uselog){
     dmat *psftemp=NULL;
+    const char *title, *tab;
     for(int iwvl=0; iwvl<psf2s->nx; iwvl++){
-	if(psftemp && psftemp->nx!=psf2s->p[iwvl]->nx){
-	    dfree(psftemp);
-	}
-	cabs22d(&psftemp, 0, psf2s->p[iwvl], 1);
-	if(parms->plot.psf==2){
-	    dcwlog10(psftemp);
-	}
-	const char *title, *tab;
 	if(closeloop){
 	    title="Science Closed Loop PSF";
 	    tab="CL";
@@ -86,8 +79,21 @@ static void plot_psf(ccell *psf2s, const char *psfname, int closeloop, int ievl,
 	    title="Science Open Loop PSF";
 	    tab="OL";
 	}
-	ddraw(psfname, psftemp, NULL, NULL, title,
-	      "x", "y", "%s%2d %.2f", tab, ievl, parms->evl.wvl->p[iwvl]*1e6);
+	char tabname[64];
+	snprintf(tabname, sizeof(tabname), "%s%2d %.2f", tab, ievl, wvl->p[iwvl]*1e6);
+	if(draw_current(psfname, tabname)){
+	    if(psftemp && psftemp->nx!=psf2s->p[iwvl]->nx){
+		dfree(psftemp);
+	    }
+	    cabs22d(&psftemp, 0, psf2s->p[iwvl], 1);
+	    if(uselog==2){
+		dcwlog10(psftemp);
+	    }
+
+
+	    ddraw(psfname, psftemp, NULL, NULL, title,
+		  "x", "y", tabname);
+	}
     }
     dfree(psftemp);
 }
@@ -110,7 +116,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper, const char *
 	zfarr_push(evlpsfhist[ievl], -1, psf2s);
     }
     if(parms->plot.run){
-	plot_psf(psf2s, psfname, 1, ievl, parms);
+	plot_psf(psf2s, psfname, 1, ievl, parms->evl.wvl, parms->plot.psf==2);
     }
     ccellfree(psf2s);
 }
@@ -245,7 +251,7 @@ void perfevl_ievl(thread_t *info){
 		    cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
 		}
 		if(parms->plot.run){
-		    plot_psf(psf2s, "PSFol", 0, ievl, parms);
+		    plot_psf(psf2s, "PSFol", 0, ievl, parms->evl.wvl, parms->plot.psf==2);
 		}
 		ccellfree(psf2s);
 	    }
