@@ -280,7 +280,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    if(p0){
 		len=p0-config_line;
 	    }else{
-		len=MAXLN; 
+		len=MAXLN-1; 
 	    }
 	    if(len+1>MAXLN){
 		error("Input line is too long. Please make MAXLN larger to accomodate.\n");
