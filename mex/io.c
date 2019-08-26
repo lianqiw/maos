@@ -565,7 +565,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mw
 	    }
 	    if(length>70) length=70;
 	    FLUSH_OUT;
-	    strncpy(header[hc], "COMMENT   ", 10);
+	    strncpy(header[hc], "COMMENT   ", 11);
 	    strncpy(header[hc]+10, str, length);
 	    if(nl){
 		header[hc][10+length-1]=';';

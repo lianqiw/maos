@@ -284,7 +284,7 @@ void print_mem(){
     info("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
     info("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 }
-static __attribute__((constructor(101))) void init(){
+static __attribute__((constructor)) void init(){
 #define RTLD_MINE RTLD_DEFAULT
     calloc_default=(void*(*)(size_t, size_t))dlsym(RTLD_MINE, "calloc");
     malloc_default=(void*(*)(size_t))dlsym(RTLD_MINE, "malloc");
@@ -309,7 +309,7 @@ static __attribute__((constructor(101))) void init(){
 /**
    Register routines to be called with mem.c is unloading (deinit).
  */
-static __attribute__((destructor(101))) void deinit(){
+static __attribute__((destructor)) void deinit(){
     void freepath();
     void thread_pool_destroy();
     //remove files that are 365 days old.

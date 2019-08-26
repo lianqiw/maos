@@ -42,7 +42,7 @@
 char *mybasename(const char *fn){
     if(!fn || strlen(fn)==0) return NULL;
     char fn2[PATH_MAX];
-    strncpy(fn2,fn, PATH_MAX);
+    strncpy(fn2,fn, PATH_MAX-1);
     /*If this is a folder, remove the last / */
     if(fn2[strlen(fn2)-1]=='/')
 	fn2[strlen(fn2)-1]='\0';
@@ -60,7 +60,7 @@ char *mybasename(const char *fn){
 char *mydirname(const char *fn){
     if(!fn || strlen(fn)==0) return NULL;
     char fn2[PATH_MAX];
-    strncpy(fn2,fn, PATH_MAX);
+    strncpy(fn2,fn, PATH_MAX-1);
     /*If this is a folder, remove the last / */
     if(fn2[strlen(fn2)-1]=='/')
 	fn2[strlen(fn2)-1]='\0';

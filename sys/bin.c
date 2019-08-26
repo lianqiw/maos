@@ -703,7 +703,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 		header[hc][9]=' ';
 		strncpy(header[hc]+10, eq+1, length);
 	    }else{
-		strncpy(header[hc], "COMMENT   ", 10);
+		strncpy(header[hc], "COMMENT   ", 11);
 		strncpy(header[hc]+10, str, length);
 	    }
 	    if(nl){//Replace \n by ;

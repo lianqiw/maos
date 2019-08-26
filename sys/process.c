@@ -103,7 +103,7 @@ void init_process(void){
 	    if(exepath[0]=='/' && tmp){
 		*tmp=0;
 	    }else{
-		strncpy(exepath, mygetcwd(), PATH_MAX); 
+		strncpy(exepath, mygetcwd(), PATH_MAX-1); 
 	    }
 	    strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]=0;
 	}else{
