@@ -100,6 +100,10 @@ void nea_mm(dmat **pout, const dmat *in){
     if(out->ny<in->ny){
 	error("nea_mm: wrong format. Need 3 columns in the output.\n");
     }
+    if(P(in,0,0)<1e-11){
+	warning("nea[0,0]=%g may be already in rad^2 unit. Will not square again.\n", P(in,0,0));
+	return;
+    }
     for(int isa=0; isa<in->nx; isa++){
 	//Use temporary variable to handle the case that out and in is the same.
 	double a=P(in,isa,0);

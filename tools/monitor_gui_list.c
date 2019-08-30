@@ -125,11 +125,11 @@ static void list_update_progress(PROC_T *p){
     char tmp[64];
   
     if(toth>99){
-	snprintf(tmp,64, "%d/%d %5.2fs %ldh/%ldh",p->status.isim+1,p->status.simend, step, resth,toth);
+	snprintf(tmp,64, "%d/%d %.3fs %ldh/%ldh",p->status.isim+1,p->status.simend, step, resth,toth);
     }else if(toth>0){
-	snprintf(tmp,64, "%d/%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.isim+1,p->status.simend, step, resth,restm,toth,totm);
+	snprintf(tmp,64, "%d/%d %.3fs %ldh%02ld/%ldh%02ld",p->status.isim+1,p->status.simend, step, resth,restm,toth,totm);
     }else{
-	snprintf(tmp,64, "%d/%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.isim+1,p->status.simend, step, restm,rests,totm,tots);	
+	snprintf(tmp,64, "%d/%d %.3fs %2ld:%02ld/%ld:%02ld",p->status.isim+1,p->status.simend, step, restm,rests,totm,tots);	
     }
     gtk_list_store_set(list, &iter, 
 		       COL_STEP,tmp, 

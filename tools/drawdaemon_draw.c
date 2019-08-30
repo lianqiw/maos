@@ -117,7 +117,7 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     /*first get the order of magnitude. */
     double rmax=MAX(fabs(xmin),fabs(xmax));
     double order1=floor(log10(rmax));
-    if(isnan(order1) || order1<-1000 || fabs(order1)<=2){
+    if(isnan(order1) || order1<-1000 || fabs(order1)<=1){
 	order1=0;
     }
     const double scale1=pow(10, -order1);
@@ -130,7 +130,7 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	spacing=1;
     }else{
 	spacing=diff*0.1;
-	double scale=pow(10., floor(log10(spacing)));
+	double scale=pow(10., round(log10(spacing)));
 	int ratio=(int)round(spacing/scale);
 	const double ratio2[11]={1, 1, 1, 5, 5, 5, 5, 5, 10, 10, 10};
 	if(ratio<0 || ratio>10){

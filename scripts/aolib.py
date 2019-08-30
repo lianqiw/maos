@@ -4,6 +4,47 @@ try:
 except:
     import lib2py #it generates libaos
     from libaos import *
+import glob
+
+import numpy as np
+np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
+
+
+import matplotlib as mpl
+from cycler import cycler
+mpl.rcParams['axes.prop_cycle'] = cycler(color='bgrcmyk')
+mpl.rcParams['axes.grid']=True
+#mpl.rcParams['grid.color'] = 'k'
+#mpl.rcParams['grid.linestyle'] = '--'
+#mpl.rcParams['grid.linewidth'] = 0.5
+
+mpl.rcParams['lines.linewidth'] = 1.0
+mpl.rcParams['lines.dashed_pattern'] = [6, 4]
+mpl.rcParams['lines.dashdot_pattern'] = [6, 3, 1, 3] #dash off dot off
+mpl.rcParams['lines.dotted_pattern'] = [1, 3]
+mpl.rcParams['lines.scale_dashes'] = False
+
+mpl.rcParams['axes.xmargin']=0
+mpl.rcParams['axes.ymargin']=0
+mpl.rcParams['axes.autolimit_mode']='round_numbers'
+
+mpl.rcParams['font.size']=10
+mpl.rcParams['savefig.dpi']=120
+mpl.rcParams['image.cmap']='jet'
+
+mpl.rcParams['figure.autolayout']=True
+#mpl.rcParams['figure.subplot.left']=0.1
+#mpl.rcParams['figure.subplot.right']=0.9
+
+#For ploting
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, figure, subplot, xlabel, ylabel, title, xlim, ylim, close, savefig
+from scipy.special import erf
+from numpy import sqrt, exp, log, floor, ceil
+from numpy.random import rand, randn
+
+plt.ion() #enable interactive mode.
+
 
 def iscell(arr):
     if type(arr)==np.ndarray and arr.dtype.name=='object':
@@ -65,8 +106,52 @@ def test_mkdtf():
     out=mkdtf([0.5e-6], 1./64., 2., 64, 64, 8,8,10e-6,10e-6,[],[],0,[],0,0)
     return out
 
-if __name__ == '__main__':
-    a=readbin('non.bin');
-    b=test_mkdtf()
-    print(a)
-    print(b)
+def maos_res(fds, seeds=[1], iframe1=0.2, iframe2=1):
+    fds2=glob.glob(fds)
+    resall=None
+    for fd in fds2:
+        fns=glob.glob(fd+"/Res_*.bin")
+        nseed=0
+        mres=0
+        split=-1
+        for fn in fns:
+            res=readbin(fn)
+            if res[3].size>0: #split tomography
+                res=res[3]
+                split=1
+            else: #integrated
+                res=res[2]
+                split=0
+            
+            if iframe1<1:
+                n1=round(iframe1*res.shape[0])
+            else:
+                n1=iframe1
+            if iframe2<=1:
+                n2=round(iframe2*res.shape[0])
+            else:
+                n2=iframe2
+            res=res[n1:n2,:]
+            if max(res[-1,:])==0:
+                print(fn, 'Incomplete result')
+                continue #unfinished result
+            res=res.mean(0)*1e18
+            mres+=res
+            nseed+=1
+        if nseed>0:
+            mres=mres*(1/nseed)
+            if resall is None:
+                resall=mres
+            else:
+                resall=np.vstack((resall, mres))
+    if len(fds2)>1:
+        return (resall,fds2)
+    else:
+        return resall
+def mysqrt(x):
+    if type(x) is np.ndarray:
+        return np.sign(x)*np.sqrt(np.abs(x))
+    elif x<0:
+        return -np.sqrt(-x)
+    else:
+        return np.sqrt(x)

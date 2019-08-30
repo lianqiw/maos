@@ -50,10 +50,11 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	*res=mycalloc(maxcount,char*);
     }
     if(!sdata) return count;
-    const char *sdataend=sdata+strlen(sdata)-1;
+    const char *sdataend=sdata+strlen(sdata);
     const char *sdata2=sdata;
     if(sdata[0]=='['){
 	sdata2++;
+	sdataend--;
 	if(sdataend[0]!=']'){
 	    error("{%s}: Does not end in ].\n", sdata);
 	}

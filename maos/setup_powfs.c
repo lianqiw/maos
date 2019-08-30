@@ -606,7 +606,9 @@ void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
 	    if(!file && parms->powfs[ipowfs].neasim==-1){
 		file=parms->powfs[ipowfs].neareconfile;
 	    }
-	    nea=dcellread_prefix(file, parms, ipowfs);
+	    if(file){
+		nea=dcellread_prefix(file, parms, ipowfs);
+	    }
 	}
 	if(nea){
 	    for(int ii=0; ii<nea->nx*nea->ny; ii++){
@@ -824,6 +826,19 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     }
 }
 /**
+   \page simulation
+   \section WFS gradient pixel offset
+   
+   Use powfs.pixoffx and powfs.pixoffy to set WFs gradient pix offset
+   
+   - If abs(pixoffx) is less than 1. All subapertures have uniform pixel offset along x/r: pixoffx and along y/a: pixoffy (pixel).
+   
+   - If pixoffx==1 : There is a rotational offset with maximum value of pixoffy (pixel) at the edge.
+
+   - If pixoffx==2: There is a global offset along x and y of pixoffy (pixel).
+*/
+
+/**
    Setting up Detector transfer function used to translate PSFs from FFTs to
    detector pixel images. Integration over pixel size and leaking between pixels
    are considered.
@@ -878,7 +893,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     dmat *pixoffy=0;
     if(parms->powfs[ipowfs].pixoffx||parms->powfs[ipowfs].pixoffy){
 	const int nsa=powfs[ipowfs].pts->nsa;
-	if(fabs(parms->powfs[ipowfs].pixoffx)<1 && fabs(parms->powfs[ipowfs].pixoffy)<1){
+	if(fabs(parms->powfs[ipowfs].pixoffx)<1){
 	    info("powfs%d: uniform pixel offset\n", ipowfs);
 	    //both pixoff within 1 denotes constant offset in unit of pixel.
 	    pixoffx=dnew(nsa,1); dset(pixoffx, parms->powfs[ipowfs].pixoffx);

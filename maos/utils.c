@@ -1103,21 +1103,24 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 */
 dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs){
     dcell *nea=0;
+    int iwfs0=parms->powfs[ipowfs].wfs->p[0];
     if(!file){
-	nea=0;
-    }else if(zfexist(file)){
-	//info("using %s\n", file);
-	nea=dcellread(file);
+	return nea;
     }else if(zfexist("%s_powfs%d.bin", file, ipowfs)){
 	//info("using %s_powfs%d.bin\n", file, ipowfs);
 	nea=dcellread("%s_powfs%d.bin", file, ipowfs);
-    }else{
+    }else if(zfexist("%s_wfs%d.bin", file, iwfs0)){
 	nea=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<nea->nx; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	    //info("using %s_wfs%d.bin\n", file, iwfs);
 	    nea->p[jwfs]=dread("%s_wfs%d.bin", file, iwfs);
 	}
+    }else if(zfexist(file)){
+	//info("using %s\n", file);
+	nea=dcellread(file);
+    }else{
+	error("%s_powfs%d.bin or %s_wfs%d.bin not found\n", file, ipowfs, file, iwfs0);
     }
     return nea;
 }

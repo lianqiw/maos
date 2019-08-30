@@ -170,6 +170,8 @@ class cell(Structure):
             kind=-1
 
         if kind==0: #dense matrix
+            if self.header:
+                print(self.header)
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
             return cast(addressof(self), POINTER(csc)).contents.as_array()

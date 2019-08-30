@@ -1309,10 +1309,10 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
-    if(parms->sim.ncpa_calib && !(parms->nsurf || parms->ntsurf || parms->load.ncpa)){
+    /*if(parms->sim.ncpa_calib && !(parms->nsurf || parms->ntsurf || parms->load.ncpa)){
 	info("No surface found. sim.ncpa_calib is reset to 0.\n");
 	parms->sim.ncpa_calib=0;
-    }
+	}*/
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
 	info("Using evaluation directions as ncpa calibration directions if needed.\n");
 	int ndir=parms->sim.ncpa_ndir=parms->evl.nevl;

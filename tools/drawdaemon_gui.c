@@ -970,8 +970,8 @@ static void tool_save(GtkToolButton *button){
 
     if(strcmp(suffix,".eps")==0){
 #if CAIRO_HAS_PS_SURFACE == 1
-	width=72*8;
-	height=(drawdata)->height*72*8/(drawdata)->width;/*same aspect ratio as widget */
+	width=96*8;
+	height=(drawdata)->height*96*8/(drawdata)->width;/*same aspect ratio as widget */
 	surface=cairo_ps_surface_create(filename, width,height);
 	cairo_ps_surface_set_eps (surface, TRUE);
 #else
@@ -980,8 +980,8 @@ static void tool_save(GtkToolButton *button){
 #endif
     }else if(strcmp(suffix,".pdf")==0){
 #if CAIRO_HAS_PDF_SURFACE == 1
-	width=72*8;
-	height=(drawdata)->height*72*8/(drawdata)->width;/*same aspect ratio as widget */
+	width=96*8;
+	height=(drawdata)->height*96*8/(drawdata)->width;/*same aspect ratio as widget */
 	surface=cairo_pdf_surface_create(filename, width,height);
 #else
 	error_msg("pdf surface is unavailable");
@@ -989,8 +989,8 @@ static void tool_save(GtkToolButton *button){
 #endif
     }else if(strcmp(suffix,".svg")==0){
 #if CAIRO_HAS_SVG_SURFACE == 1
-	width=72*8;
-	height=(drawdata)->height*72*8/(drawdata)->width;/*same aspect ratio as widget */
+	width=96*8;
+	height=(drawdata)->height*96*8/(drawdata)->width;/*same aspect ratio as widget */
 	surface=cairo_svg_surface_create(filename, width,height);
 #else
 	error_msg("svg surface is unavailable");

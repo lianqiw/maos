@@ -397,12 +397,13 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 
 	    /*
 	      The OPD is 
-	      Phi=f(r)-ar^2-b;
+	      Phi=f(r)-a*r^2-b;
 	      which r^2=x^2+y^2.
-	      f(r) was r^4 for spherical aberration. 
-	      It is changed to new form on 2013-05-16 based on measurements.
+	      f(r) is r^4 for spherical aberration, or custom formula based on measurement (2013-05-16)
 
-	      We first minimize \Int phi^2, then use phi.
+	      To simulate focusing the lenslet, we optimize a and b to minimum
+	      \Int phi^2. For circular lenslet, the end result will be the same as Z11.
+
 	      let 
 	      R2=\Int r^2
 	      R4=\Int r^4
@@ -410,7 +411,9 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	      Rf2=\Int f(r)*r^2. 
 
 	      We have
-	      b=(R4Rf-R2R6)/(R4-R2R2);
+	      #b=(R4Rf-R2R6)/(R4-R2R2);
+	      b=(R2*Rf2-R4*Rf)/(R2*R2-R4*N)
+	      a=(R4-b*N)/R2;
 	  
 	    */
 	    const int nx=powfs[ipowfs].pts->nx;
@@ -426,8 +429,8 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    double fill1d=sqrt(parms->powfs[ipowfs].safill2d);
 	    //normalize x,y from -1 to 1 in clear aperture
 	    double Rx2=pow(fill1d*nx/2, -2);
-	    dmat *opdi=dnew(nx, nx); dmat*  popdi=opdi/*PDMAT*/;
-	    double R2=0, R4=0, Rf2=0, Rf=0;
+	    dmat *opdi=dnew(nx, nx); 
+	    double R2=0, R4=0, RfR2=0, Rf=0, RN=0;
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
 #define MEASURED_LENSLET 0
@@ -435,25 +438,28 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 #if MEASURED_LENSLET
 		    double xx=(iy-nx2)*(iy-nx2)*Rx2;
 		    double yy=(ix-nx2)*(ix-nx2)*Rx2;
-		    P(popdi,ix,iy)=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
+		    P(opdi,ix,iy)=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
 #else
-		    P(popdi,ix,iy)=rr*rr;
+		    P(opdi,ix,iy)=rr*rr;
 #endif
 		    double amp=P(pampw,ix,iy);
 		    R2+=rr*amp;
 		    R4+=rr*rr*amp;
-		    Rf+=P(popdi,ix,iy)*amp;
-		    Rf2+=P(popdi,ix,iy)*rr*rr*amp;
+		    Rf+=P(opdi,ix,iy)*amp;
+		    RfR2+=P(opdi,ix,iy)*rr*amp;
+		    RN+=amp;
 		}
 	    }		
-	    double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
-	    double a=(R4-b)/R2;
+	    //double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
+	    //double a=(R4-b)/R2;
+	    double b=(R2*RfR2-R4*Rf)/(R2*R2-R4*RN);//fixed in 8/27/2019
+	    double a=(Rf-b*RN)/R2;
 	    double var=0;
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
 		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		    P(popdi,ix,iy)-=a*rr+b;
-		    var+=P(popdi,ix,iy)*P(popdi,ix,iy)*P(pampw,ix,iy);
+		    P(opdi,ix,iy)-=a*rr+b;
+		    var+=P(opdi,ix,iy)*P(opdi,ix,iy)*P(pampw,ix,iy);
 		}
 	    }
 	    dfree(ampw);
@@ -656,7 +662,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	writebin(aper->opdadd, "surfevl.bin");
 	writebin(aper->opdfloc, "surffloc.bin");
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    writebin(powfs[ipowfs].opdadd, "surfpowfs_%d.bin",  ipowfs);
+	    writebin(powfs[ipowfs].opdadd, "powfs%d_surf.bin",  ipowfs);
 	}
     }
     if(parms->sim.ncpa_calib && parms->dbg.ncpa_rmsci && recon->dm_ncpa && aper->opdadd){
