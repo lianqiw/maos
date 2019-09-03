@@ -146,8 +146,8 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	dir[iwfs].hs=parms->wfsr[iwfs].hs;
 	dir[iwfs].thetax=parms->wfsr[iwfs].thetax;
 	dir[iwfs].thetay=parms->wfsr[iwfs].thetay;
-	dir[iwfs].misregx=parms->wfsr[iwfs].misregx_tel;
-	dir[iwfs].misregy=parms->wfsr[iwfs].misregy_tel;
+	dir[iwfs].misregx=parms->wfsr[iwfs].misreg_x;
+	dir[iwfs].misregy=parms->wfsr[iwfs].misreg_y;
 	if(parms->tomo.predict){
 	    dir[iwfs].delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 	}

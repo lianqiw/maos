@@ -5,7 +5,7 @@ except:
     import lib2py #it generates libaos
     from libaos import *
 import glob
-
+import os
 import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 
@@ -40,7 +40,7 @@ mpl.rcParams['figure.autolayout']=True
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, figure, subplot, xlabel, ylabel, title, xlim, ylim, close, savefig
 from scipy.special import erf
-from numpy import sqrt, exp, log, floor, ceil
+from numpy import sqrt, exp, log, floor, ceil, nan
 from numpy.random import rand, randn
 
 plt.ion() #enable interactive mode.
@@ -106,16 +106,28 @@ def test_mkdtf():
     out=mkdtf([0.5e-6], 1./64., 2., 64, 64, 8,8,10e-6,10e-6,[],[],0,[],0,0)
     return out
 
-def maos_res(fds, seeds=[1], iframe1=0.2, iframe2=1):
+def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
     fds2=glob.glob(fds)
     resall=None
     for fd in fds2:
-        fns=glob.glob(fd+"/Res_*.bin")
+        if seeds is None:
+            fns=glob.glob(fd+"/Res_*.bin")
+        else:
+            fns=list()
+            if type(seeds)!=list:
+                seeds=[seeds]
+            for seed in seeds:
+                fns.append(fd+'/Res_{}.bin'.format(seed))
         nseed=0
         mres=0
         split=-1
         for fn in fns:
+            if not os.path.exists(fn):
+                print(fn, 'does not exist')
+                continue
             res=readbin(fn)
+            if res is None:
+                continue
             if res[3].size>0: #split tomography
                 res=res[3]
                 split=1
@@ -144,6 +156,8 @@ def maos_res(fds, seeds=[1], iframe1=0.2, iframe2=1):
                 resall=mres
             else:
                 resall=np.vstack((resall, mres))
+    if resall is None:
+        resall=np.array([nan,nan,nan])
     if len(fds2)>1:
         return (resall,fds2)
     else:

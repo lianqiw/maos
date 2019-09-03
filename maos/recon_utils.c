@@ -240,8 +240,8 @@ static void Tomo_prop_do(thread_t *info){
 		/*Do the ray tracing instead of using HXW. */
 		double ht=recon->ht->p[ips]-hc;
 		double displace[2];
-		displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misregx_tel;
-		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misregy_tel;
+		displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
+		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misreg_y;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
 		    displace[0]+=simu->atm->p[ips0]->vx*delay;
@@ -339,8 +339,8 @@ static void Tomo_iprop_do(thread_t *info){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		const double hc=parms->powfs[ipowfs].hc;
 		double displace[2];
-		displace[0]=parms->wfsr[iwfs].thetax*(ht-hc)+parms->wfsr[iwfs].misregx_tel;
-		displace[1]=parms->wfsr[iwfs].thetay*(ht-hc)+parms->wfsr[iwfs].misregy_tel;
+		displace[0]=parms->wfsr[iwfs].thetax*(ht-hc)+parms->wfsr[iwfs].misreg_x;
+		displace[1]=parms->wfsr[iwfs].thetay*(ht-hc)+parms->wfsr[iwfs].misreg_y;
 		if(parms->tomo.predict){
 		    const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		    int ips0=parms->atmr.indps->p[ips];

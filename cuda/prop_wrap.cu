@@ -31,6 +31,9 @@
   alpha2: additional scaling defined on dimension dir.
 
   Do not separate the function branches because each layer/wfs combination may use different branches.
+
+  The output grid aligns with the input grid along x/y. There cannot be rotation or higher order distortion effects.
+
 */
 __global__ void 
 gpu_map2map_do(PROP_WRAP_T *data, Real *const*pdirs, Real *const*ppss, int ndir, int nps, Real alpha1, const Real *alpha2, char trans){

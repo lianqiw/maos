@@ -73,17 +73,19 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 		loc_t *ploc2=recon->ploc_tel->p[iwfs];
 		double xm, ym;
 		locmean(&xm, &ym, ploc2);
-		parms->wfsr[iwfs].misregx_tel=xm-ploc_xm;
-		parms->wfsr[iwfs].misregy_tel=ym-ploc_ym;
+		parms->wfsr[iwfs].misreg_x=xm-ploc_xm;
+		parms->wfsr[iwfs].misreg_y=ym-ploc_ym;
 		warning("ploc for wfs%d shifted by (%g, %g)\n", iwfs, 
-			parms->wfsr[iwfs].misregx_tel, parms->wfsr[iwfs].misregy_tel);
+			parms->wfsr[iwfs].misreg_x, parms->wfsr[iwfs].misreg_y);
 	    }
 	}
     }
 }
+/**
+   Create loc/amp that can be used to build GP. It has points on edge of subapertures. The amplitude depends on the distortion.
+*/
 static loc_t* 
 make_gloc(dmat **gamp, const PARMS_T *parms, const APER_T *aper, int iwfsr){
-    //Create loc/amp that can be used to build GP. It has points on edge of subapertures
     const int ipowfs=parms->wfsr[iwfsr].powfs;
     double dx=parms->powfs[ipowfs].dx;
     loc_t *gloc=mkannloc(parms->aper.d+1, 0, dx, 0);

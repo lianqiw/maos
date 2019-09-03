@@ -257,8 +257,9 @@ typedef struct WFS_CFG_T{
     char *sabad;    /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     double thetax;  /**<x direction*/
     double thetay;  /**<y direction*/
-    double misregx_tel; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
-    double misregy_tel; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    double misreg_x; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    double misreg_y; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    double misreg_r; /**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs.*/
     double siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
