@@ -19,7 +19,7 @@
 #define AOS_CUDA_RECON_H
 
 #include "solve.h"
-#include "recon_base.h"
+#include "recon_geom.h"
 #include "moao.h"
 namespace cuda_recon{
 class curecon_t:public nonCopyable{

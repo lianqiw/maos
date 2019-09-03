@@ -423,11 +423,11 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 	const int illt=parms->powfs[ipowfs].llt->i->p[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
 	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
-	gpu_atm2loc(lltopd, cupowfs[ipowfs].llt.loc,
-		    hs, hc, thetaxl, thetayl, 
-		    parms->powfs[ipowfs].llt->misreg->p[0], 
-		    parms->powfs[ipowfs].llt->misreg->p[1], 
-		    parms->sim.dt, isim, 1, stream);
+	atm2loc(lltopd, cupowfs[ipowfs].llt.loc,
+		hs, hc, thetaxl, thetayl, 
+		parms->powfs[ipowfs].llt->misreg->p[0], 
+		parms->powfs[ipowfs].llt->misreg->p[1], 
+		parms->sim.dt, isim, 1, stream);
 	Real ttx=0,tty=0;
 	if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||pistatout||parms->sim.idealfsm){
 	    if(pistatout||parms->sim.idealfsm){

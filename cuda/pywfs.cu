@@ -220,7 +220,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	//Use ray tracing for si
 	const Real dx2=dx*nembed/ncomp;
 	const int nsa=cupowfs->saloc.Nloc();
-	const Real scale=(Real)nsa*siglev/(Real)(ncomp*ncomp);
+	const Real alpha=(Real)nsa*siglev/(Real)(ncomp*ncomp);
 	for(int ind=0; ind<pywfs->nside; ind++){
 	    Real shx=0, shy=0;
 	    culoc_t saloc;
@@ -236,12 +236,12 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	    Real* pout=ints()+ind*nsa;
 	    Real offx=P(pywfs->sioff, ind, 0);
 	    Real offy=P(pywfs->sioff, ind, 1);
-	    prop_linear<<<DIM(nsa, 256), 0, stream>>>
+	    map2loc_linear<<<DIM(nsa, 256), 0, stream>>>
 		(pout, otf, otf.Nx(), otf.Ny(), 
 		 saloc(), saloc.Nloc(),
 		 1./dx2, 1./dx2, 
 		 (offx*ncomp2)-(-ncomp2+0.5)+shx,
-		 (offy*ncomp2)-(-ncomp2+0.5)+shy, scale);
+		 (offy*ncomp2)-(-ncomp2+0.5)+shy, alpha);
 	}
 	//cuwrite(ints, "gpu_ints"); exit(0);
     }
@@ -300,7 +300,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const loc_t* locff
 	cp2gpu(cumapin, mapinsq);
 	//cuzero(phiout, stream);
 	curcp(phiout, phiout0, stream);
-	gpu_dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, pywfs->hc, displacex, displacey, 0, 0, 1, stream);
+	dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, pywfs->hc, displacex, displacey, 0, 0, 1, stream);
 	//cuwrite(cumapin[0].p, "gpu_cumapin_%d", imod);
 	//cuwrite(phiout, "gpu_phiout_%d", imod);
 	cuzero(ints, stream);

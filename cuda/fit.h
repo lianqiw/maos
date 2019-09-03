@@ -18,11 +18,10 @@
 #ifndef AOS_CUDA_FIT_H
 #define AOS_CUDA_FIT_H
 #include "solve.h"
-#include "recon_base.h"
-#include "prop_wrap.h"
+#include "recon_geom.h"
 /*cufit_grid implements both RHS and LHS. LHS is through cucg*/
 namespace cuda_recon{
-class cufit_grid:public cusolve_r,public cucg_t{/*grid based*/
+class cufit_grid:public cusolve_r,public cusolve_cg{/*grid based*/
 protected:
     /*the following data are input or intermediate data for the operation*/
     const curecon_geom *grid;
@@ -39,7 +38,7 @@ protected:
     culoc_t floc;
     dir_t *dir;
     cusp actslave;
-    map_ray hxp, hxp0, hxp1, ha, ha0, ha1;
+    map2map hxp, hxp0, hxp1, ha, ha0, ha1;
     /*PROP_WRAP_T *hxpdata,*hxp0data,*hxp1data;
     PROP_WRAP_T *hapdata;//for moao
     PROP_WRAP_T *hadata,*ha0data,*ha1data;*/

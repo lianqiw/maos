@@ -45,6 +45,7 @@ public:
     Array<int> evlgpu;
     Array<int> wfsgpu;
     dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
+    int atm_full; /**<Indicate whether atm is loaded in full to GPU*/
     cuperf_g perf;
     Array<cuwfs_t>wfs;
 

@@ -84,7 +84,7 @@ int pcg_save=0;
 
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
 */
-Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
+Real gpu_pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 	      const curcell &b, CGTMP_T &cg_data, int warm, int maxiter,
 	      stream_t &stream, double cgthres){
 #if TIMING 

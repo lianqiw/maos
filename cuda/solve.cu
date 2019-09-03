@@ -18,7 +18,7 @@
 #include "solve.h"
 #include "utils.h"
 namespace cuda_recon{
-Real cucg_t::solve(curcell &xout, const curcell &xin, stream_t &stream){
+Real cusolve_cg::solve(curcell &xout, const curcell &xin, stream_t &stream){
     Real ans;
     cgtmp.count++;
     if((ans=gpu_pcg(xout, this, precond, xin, cgtmp,
@@ -44,7 +44,7 @@ Real cucg_t::solve(curcell &xout, const curcell &xin, stream_t &stream){
     return ans;
 }
 
-void cumuv_t::Forward(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
+void cusolve_muv::Forward(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
     if(!M) error("M Can not be empty\n");
     if(!out){
 	out=curcell(nx, 1, nxs, (int*)NULL);
@@ -57,7 +57,7 @@ void cumuv_t::Forward(curcell &out, Real beta, const curcell &in, Real alpha, st
 	curmv(out.M()(), 1, U, Vx(), 'n', -alpha, stream);
     }
 }
-void cumuv_t::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
+void cusolve_muv::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
     if(!M) error("M Can not be empty\n");
     if(!out){
 	out=curcell(ny, 1, nys, (int*)NULL);
@@ -72,7 +72,7 @@ void cumuv_t::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stre
 	curmv(out.M()(), 1, V, Vx(), 'n', -alpha, stream);
     }
 }
-void cumuv_t::Init(const MUV_T *in){
+void cusolve_muv::init(const MUV_T *in){
     if(!in || !in->M) return;
     dspcell *inM=dspcell_cast(in->M);
     dsp *Mc=dspcell2sp(inM);
@@ -96,9 +96,9 @@ void cumuv_t::Init(const MUV_T *in){
 }
 
 cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L)
-    :cucg_t(_maxit, _warm_restart){
-    CR.Init(_R);
-    CL.Init(_L);
+    :cusolve_cg(_maxit, _warm_restart){
+    CR.init(_R);
+    CL.init(_L);
 }
 cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp){
     if(!_C){

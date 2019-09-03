@@ -19,9 +19,9 @@
 #define AOS_CUDA_MOAO_H
 #include "types.h"
 #include "solve.h"
-#include "recon_base.h"
+#include "recon_geom.h"
 namespace cuda_recon{
-class cumoao_t:private cucg_t{
+class cumoao_t:private cusolve_cg{
 private:
     curecon_geom *grid;
     curmat NW, dotNW;
@@ -29,9 +29,9 @@ private:
     cusp actslave;
     curcell opdfit;
     curcell opdfit2;
-    map_ray ha;
-    Array<map_ray>hxp;
-    Array<map_ray>hap;
+    map2map ha;
+    Array<map2map>hxp;
+    Array<map2map>hap;
     int ndir;
     curcell rhs;
 public:

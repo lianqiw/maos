@@ -18,20 +18,10 @@
 #ifndef AOS_CUDA_RECON_GEOM_H
 #define AOS_CUDA_RECON_GEOM_H
 #include "types.h"
-#include "prop_wrap.h"
+#include "prop_map.h"
 
 namespace cuda_recon{
-struct dir_t{
-    Real thetax; /**<Direction of guide star*/
-    Real thetay; /**<Direction of guide star*/
-    Real hs;     /**<Height of guide star*/
-    Real misregx;/**<Misregistration*/
-    Real misregy;/**<Misregistration*/
-    Real delay;  /**<The delay used for tomo.predict*/
-    int skip;    /**<Skip this direction*/
-public:
-    dir_t():thetax(0),thetay(0),hs(INFINITY),misregx(0),misregy(0),delay(0),skip(0){}
-};
+
 /*Data for aperture bi-linear weighting, used in fitting*/
 class W01_T{
     curmat W1;    /**< The aperture weighting, piston removal*/
@@ -68,48 +58,6 @@ public:
     Real dt; 
     curecon_geom(const PARMS_T *parms, const RECON_T *recon);
     ~curecon_geom(){ }
-};
-class map_ray:public nonCopyable{
-protected:
-    PROP_WRAP_T *hdata;
-    int nlayer, ndir;
-    void deinit(){
-	if(hdata){
-	    int np=(ndir==0?1:ndir)*nlayer;
-	    PROP_WRAP_T *pcpu=new PROP_WRAP_T[np];
-	    cudaMemcpy(pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
-	    for(int i=0; i<np; i++){
-		if(pcpu[i].reverse){
-		    cudaFree(pcpu[i].reverse);
-		}
-	    }
-	    delete [] pcpu;
-	    cudaFree(hdata);
-	    hdata=0;
-	    nlayer=0;
-	    ndir=0;
-	}
-    }
-public:
-    map_ray():hdata(0),nlayer(0),ndir(0){};
-    void Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, const cugridcell &in, Real dt=0);
-    void Init_l2l(const cugridcell &out, const cugridcell &in);
-    //from in to out
-    void forward(Real *const*out, const Real *const *in,  Real alpha, Real *wt, stream_t &stream){
-	gpu_map2map_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(PROP_WRAP_TX,4),0,stream>>>
-	    (hdata, out, (Real*const*)in, ndir, nlayer, alpha, wt, 'n');
-    }
-    //from out to in
-    void backward(const Real *const *out, Real *const*in, Real alpha, Real *wt, stream_t &stream){
-	gpu_map2map_do<<<dim3(4,4,nlayer),dim3(PROP_WRAP_TX,4),0,stream>>>
-	    (hdata, (Real*const*)out, in, ndir, nlayer, alpha, wt, 't');
-    }
-    virtual ~map_ray(){
-	deinit();
-    }
-    operator bool()const{
-	return nlayer||ndir;
-    }
 };
 
 }//namespace

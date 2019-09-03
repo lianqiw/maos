@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "utils.h"
-#include "recon_base.h"
+#include "recon_geom.h"
 #include "curmat.h"
 #include "accphi.h"
 namespace cuda_recon{
@@ -171,51 +171,6 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     ngrad=recon->ngrad->p;
     dt=parms->sim.dt;
     delay=2;//2 frame delay
-}
-
-void map_ray::Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, //output.
-		       const cugridcell &in,//input.
-		       Real delay){//directions and star height.
-    if(hdata) {
-	deinit();
-    }
-    nlayer=in.N();
-    ndir=_ndir;
-    PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer*ndir];
-    DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer*ndir));
-    for(int ilayer=0; ilayer<nlayer; ilayer++){
-	const Real ht=in[ilayer].ht;
-	for(int idir=0; idir<ndir; idir++){
-	    if(!dir[idir].skip){
-		const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dir[idir].delay+dir[idir].misregx;
-		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dir[idir].delay+dir[idir].misregy;
-		const Real hs=dir[idir].hs;
-		const Real scale=1.f-ht/hs;
-		cugrid_t outscale=out.Scale(scale);
-		gpu_map2map_prep(hdata_cpu+idir+ilayer*ndir, outscale, in[ilayer],
-				 dispx, dispy, in[ilayer].cubic_cc);
-	    }
-	    hdata_cpu[idir+ilayer*ndir].togpu(hdata+idir+ilayer*ndir);
-	}
-    }
-    delete [] hdata_cpu;
-}
-
-void map_ray::Init_l2l(const cugridcell &out, const cugridcell &in){//input. layers.
-    if(nlayer) error("Already initialized\n");
-    nlayer=in.N();
-    ndir=0;//this is laye to layer.
-    PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer];
-    DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer));
-    for(int ilayer=0; ilayer<nlayer; ilayer++){
-	if(Z(fabs)(out[ilayer].ht-in[ilayer].ht)>EPS){
-	    error("Layer height mis-match.\n");
-	}
-	gpu_map2map_prep(hdata_cpu+ilayer, out[ilayer], in[ilayer],
-			   0, 0, in[ilayer].cubic_cc);
-	hdata_cpu[ilayer].togpu(hdata+ilayer);
-    }
-    delete [] hdata_cpu;
 }
 
 }//namespace

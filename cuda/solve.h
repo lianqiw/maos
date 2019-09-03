@@ -33,24 +33,24 @@ public:
     virtual ~cusolve_l(){}
 };
 
-class cucgpre_t{/*Interface for preconditioner*/
+class cusolve_cgpre{/*Interface for preconditioner*/
 public:
     virtual void Pre(curcell &xout, const curcell &xin, stream_t &stream)=0;
     void operator()(curcell &xout, const curcell &xin, stream_t &stream){
 	Pre(xout, xin, stream);
     }
-    virtual ~cucgpre_t(){}
+    virtual ~cusolve_cgpre(){}
 };
 
-class cucg_t:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorithm*/
+class cusolve_cg:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorithm*/
     int maxit, warm_restart;
     CGTMP_T cgtmp;
 protected:
-    cucgpre_t *precond;
+    cusolve_cgpre *precond;
 public:
-    cucg_t(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(0){}
-    void Init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart; precond=0;}
-    ~cucg_t(){
+    cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(0){}
+    void init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart; precond=0;}
+    ~cusolve_cg(){
 	delete precond;
     }
     /*Left hand side forward operaton*/
@@ -66,16 +66,16 @@ public:
     }
 };
 
-class cumuv_t:public nonCopyable{
+class cusolve_muv:public nonCopyable{
     cusp M;
     curmat U;
     curmat V;
     curmat Vx;
     int nx, ny, *nxs, *nys;
  public:
-    cumuv_t():nx(0),ny(0),nxs(0),nys(0){};
-    void Init(const MUV_T *in);
-    ~cumuv_t(){
+    cusolve_muv():nx(0),ny(0),nxs(0),nys(0){};
+    void init(const MUV_T *in);
+    ~cusolve_muv(){
 	delete[] nxs;
 	delete[] nys;
     }
@@ -86,9 +86,9 @@ class cumuv_t:public nonCopyable{
     void Trans(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream);
 };
 
-class cusolve_sparse:public cusolve_r,public cucg_t{
+class cusolve_sparse:public cusolve_r,public cusolve_cg{
 protected:
-    cumuv_t CR, CL;
+    cusolve_muv CR, CL;
 public:
     cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L);
     virtual void R(curcell &out, Real beta, 

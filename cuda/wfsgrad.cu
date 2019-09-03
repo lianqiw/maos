@@ -429,7 +429,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(simu->atm && ((!parms->sim.idealwfs && !parms->powfs[ipowfs].lo)
 			 || (!parms->sim.wfsalias && parms->powfs[ipowfs].lo))){
-	    gpu_atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
+	    atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 	}
 	if(!parms->powfs[ipowfs].lo && (parms->sim.idealwfs || parms->sim.wfsalias)){
 	    Real alpha=parms->sim.idealwfs?1:-1;
@@ -440,8 +440,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 		cp2gpu(phiout, opd);
 		dfree(opd);
 	    }else{
-		gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
-			   hs, hc, thetax, thetay, 0, 0, alpha, stream);
+		dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
+		       hs, hc, thetax, thetay, 0, 0, alpha, stream);
 	    }
 	}
 	if(simu->telws){
@@ -454,8 +454,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(CL){
 	    wait_dmreal(simu, simu->wfsisim);
-	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
-		       hs, hc, thetax, thetay, 0, 0, -1, stream);
+	    dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
+		   hs, hc, thetax, thetay, 0, 0, -1, stream);
 	    Real ttx=0, tty=0;
 	    if(simu->ttmreal){
 		ttx+=simu->ttmreal->p[0];
@@ -472,13 +472,13 @@ void gpu_wfsgrad_queue(thread_t *info){
 
 	if(parms->tomo.ahst_idealngs==1 && parms->powfs[ipowfs].lo){
 	    const double *cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
-	    gpu_ngsmod2science(phiout, cupowfs[ipowfs].loc(), recon->ngsmod, cleNGSm, 
-			       parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
-			       -1, stream);
+	    ngsmod2loc(phiout, cupowfs[ipowfs].loc(), recon->ngsmod, cleNGSm, 
+		       parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
+		       -1, stream);
 	}
 	if(imoao>-1){
-	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
-		       INFINITY, hc, 0, 0, 0, 0, -1, stream);
+	    dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
+		   INFINITY, hc, 0, 0, 0, 0, -1, stream);
 	}
   
 	Real focus=(Real)wfsfocusadj(simu, iwfs);

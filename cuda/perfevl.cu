@@ -304,11 +304,11 @@ void gpu_perfevl_queue(thread_t *info){
 	    curset(iopdevl, 0, stream);
 	}
 	if(parms->sim.idealevl){
-	    gpu_dm2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmproj, parms->ndm,
-		       parms->evl.hs->p[ievl], 0, thetax, thetay, 0,0,1, stream);
+	    dm2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmproj, parms->ndm,
+		   parms->evl.hs->p[ievl], 0, thetax, thetay, 0,0,1, stream);
 	}else if(simu->atm && !parms->sim.wfsalias){
-	    gpu_atm2loc(iopdevl(), cudata->perf.locs, parms->evl.hs->p[ievl], 0, thetax, thetay, 
-			0,0,parms->sim.dt,isim, 1, stream);
+	    atm2loc(iopdevl(), cudata->perf.locs, parms->evl.hs->p[ievl], 0, thetax, thetay, 
+		    0,0,parms->sim.dt,isim, 1, stream);
 	}
 	if(simu->telws){//Wind shake 
 	    Real tt=simu->telws->p[isim];
@@ -381,15 +381,15 @@ void gpu_perfevl_queue(thread_t *info){
 	    TO_IMPLEMENT;
 	}else{
 	    wait_dmreal(simu, simu->perfisim);
-	    gpu_dm2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmreal, parms->ndm, 
-		       parms->evl.hs->p[ievl], 0, thetax, thetay,
-		       0,0,-1, stream);
+	    dm2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmreal, parms->ndm, 
+		   parms->evl.hs->p[ievl], 0, thetax, thetay,
+		   0,0,-1, stream);
 	    if(simu->ttmreal){
 		curaddptt(iopdevl, cudata->perf.locs(), 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
 	    }
 	    if(imoao!=-1){
-		gpu_dm2loc(iopdevl(), cudata->perf.locs, cudata->dm_evl[ievl], 1,
-			   INFINITY, 0, 0, 0, 0, 0, -1, stream);
+		dm2loc(iopdevl(), cudata->perf.locs, cudata->dm_evl[ievl], 1,
+		       INFINITY, 0, 0, 0, 0, 0, -1, stream);
 	    }
 	}
 	if(save_evlopd){
@@ -504,9 +504,9 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    gpu_set(cuglobal->evlgpu[ievl]);
 	    curmat &iopdevl=cuglobal->perf.opd[ievl];
 	    stream_t &stream=cuglobal->perf.stream[ievl];
-	    gpu_ngsmod2science(iopdevl, cudata->perf.locs(), simu->recon->ngsmod, cleNGSm, 
-			       parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
-			       -1, stream);
+	    ngsmod2loc(iopdevl, cudata->perf.locs(), simu->recon->ngsmod, cleNGSm, 
+		       parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
+		       -1, stream);
 	    if(parms->plot.run){
 		drawopdamp_gpu("Evlcl", aper->locs,iopdevl, stream , aper->amp1->p, NULL,
 			       "Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d", ievl);

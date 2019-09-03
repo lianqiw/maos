@@ -551,7 +551,6 @@ public:
 	nxsa=in->nx;
     }
 };
-curmat gpu_dmcubic_cc(Real iac);
 /**
    Specifies the grid.
 */
@@ -562,10 +561,25 @@ public:
     Real dx, dy;
     Real ht;
     Real vx, vy;
-    Real iac;
     curmat cubic_cc; /*coefficients for cubic influence function. */
     //use default copy assignment operator and copy constructor
 
+    curmat iac2cc(Real iac){
+	if(iac){
+	    Real cc[5];
+	    Real cubicn=1.f/(1.f+2.f*iac);
+	    cc[0]=1.f*cubicn;
+	    cc[1]=(4.f*iac-2.5f)*cubicn; 
+	    cc[2]=(1.5f-3.f*iac)*cubicn;		       
+	    cc[3]=(2.f*iac-0.5f)*cubicn;			
+	    cc[4]=(0.5f-iac)*cubicn; 
+	    curmat res(5,1);
+	    cudaMemcpy(res, cc, 5*sizeof(Real), cudaMemcpyHostToDevice);
+	    return res;
+	}else{
+	    return curmat();
+	}
+    }
     cugrid_t &operator=(const map_t *in){
 	if(in){
 	    nx=in->nx;
@@ -577,14 +591,11 @@ public:
 	    ht=in->h;
 	    vx=in->vx;
 	    vy=in->vy;
-	    if(fabs(iac-in->iac)>fabs(iac+in->iac)*1e-5){
-		iac=in->iac;
-		cubic_cc=gpu_dmcubic_cc(in->iac);
-	    }
+	    cubic_cc=iac2cc(in->iac);
 	}
 	return *this;
     }
-    cugrid_t():nx(0),ny(0),ox(0),oy(0),dx(0),dy(0),ht(0),vx(0),vy(0),iac(0){}
+    cugrid_t():nx(0),ny(0),ox(0),oy(0),dx(0),dy(0),ht(0),vx(0),vy(0){}
     cugrid_t Scale(Real sc)const{
 	cugrid_t tmp(*this);
 	tmp.ox*=sc;

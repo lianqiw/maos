@@ -392,13 +392,13 @@ void curecon_t::tomo_test(SIM_T *simu){
     RR->Rt(rtg, 0, rhsg, 1, stream);
     cuwrite(rtg, "GPU_TomoRt");
     if(parms->tomo.alg==1){
-	cucg_t *RL2=dynamic_cast<cucg_t*>(RL);
+	cusolve_cg *RL2=dynamic_cast<cusolve_cg*>(RL);
 	RL2->L(lg, 0, rhsg, 1,stream);
 	cuwrite(lg, "GPU_TomoL"); 
 	RL2->L(lg, 1, rhsg, -1,stream);
 	cuwrite(lg, "GPU_TomoL2");
 	if(parms->tomo.precond==1){
-	    RL2=dynamic_cast<cucg_t*>(RL);
+	    RL2=dynamic_cast<cusolve_cg*>(RL);
 	    curcell lp;
 	    RL2->Pre(lp, rhsg, stream);
 	    cuwrite(lp, "GPU_TomoP");
@@ -447,7 +447,7 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
     curcell lg;
     FR->R(rhsg, 0.f, opdr, 1.f, stream);
     cuwrite(rhsg, "GPU_FitR");
-    cucg_t *FL2=dynamic_cast<cucg_t*>(FL);
+    cusolve_cg *FL2=dynamic_cast<cusolve_cg*>(FL);
     if(FL2){
 	FL2->L(lg, 0, rhsg, 1, stream);
 	cuwrite(lg, "GPU_FitL");

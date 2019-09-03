@@ -25,7 +25,7 @@
 
 namespace cuda_recon{
 cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid)
-    :cucg_t(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),ndir(_ndir){
+    :cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),ndir(_ndir){
     amap=cugridcell(1,1);
     amap[0]=(moao->amap->p[0]);
     if(moao->NW){
@@ -37,15 +37,15 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
     }
 
     dir_t dir0;
-    ha.Init_l2d(grid->fmap, &dir0, 1, amap);
+    ha.init_l2d(grid->fmap, &dir0, 1, amap);
     opdfit=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
     opdfit2=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
 
-    hxp=Array<map_ray>(ndir, 1);
-    hap=Array<map_ray>(ndir, 1);
+    hxp=Array<map2map>(ndir, 1);
+    hap=Array<map2map>(ndir, 1);
     for(int idir=0; idir<ndir; idir++){
-	hxp[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->xmap);
-	hap[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->amap);
+	hxp[idir].init_l2d(grid->fmap, dir+idir, 1, grid->xmap);
+	hap[idir].init_l2d(grid->fmap, dir+idir, 1, grid->amap);
     }
     rhs=curcell(1,1,amap[0].nx,amap[0].ny);
 }

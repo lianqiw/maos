@@ -152,7 +152,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	    dir[iwfs].delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 	}
     }
-    hx.Init_l2d(grid->pmap, dir, nwfs, grid->xmap);
+    hx.init_l2d(grid->pmap, dir, nwfs, grid->xmap);
     delete[] dir;
     LAP_T lapc[recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 
@@ -173,7 +173,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 
 cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 			 const POWFS_T *powfs, const curecon_geom *_grid)
-    :cucg_t(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
+    :cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
      grid(_grid),ptt(0),nwfs(0){
     nwfs=parms->nwfsr;
 

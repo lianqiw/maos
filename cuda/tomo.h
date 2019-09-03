@@ -18,8 +18,7 @@
 #ifndef AOS_CUDA_TOMO_H
 #define AOS_CUDA_TOMO_H
 #include "solve.h"
-#include "recon_base.h"
-#include "prop_wrap.h"
+#include "recon_geom.h"
 #include "fdpcg.h"
 namespace cuda_recon{
 typedef struct GPU_GP_T{
@@ -48,7 +47,7 @@ struct LAP_T{
     int zzi;
     Real zzv;
 };
-class cutomo_grid:public cusolve_r, public cucg_t{
+class cutomo_grid:public cusolve_r, public cusolve_cg{
     const curecon_geom *grid;
     /*Temporary data*/
     curcell opdwfs;
@@ -66,7 +65,7 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     cuspcell GP;
     int ptt;       /**< piston/tip/tilt removal in L()*/
     int nwfs;
-    map_ray hx;
+    map2map hx;
     Array<GPU_GP_T,Gpu>gpdata;
     Array<LAP_T,Gpu> lap;
     //void init(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);

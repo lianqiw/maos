@@ -45,7 +45,7 @@
 #endif
 namespace cuda_recon{
 cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon_geom *_grid)
-    :cucg_t(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
+    :cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
      nfit(0),dir(0){
     if(!parms || !recon) return;
     /*Initialize*/
@@ -103,16 +103,16 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon
     /*Data for ray tracing*/
     //dm -> floc
     if(parms->fit.cachex){
-	hxp0.Init_l2l(grid->xcmap, grid->xmap);
-	hxp1.Init_l2d(grid->fmap, dir, nfit, grid->xcmap);
+	hxp0.init_l2l(grid->xcmap, grid->xmap);
+	hxp1.init_l2d(grid->fmap, dir, nfit, grid->xcmap);
     }else{
-	hxp.Init_l2d(grid->fmap, dir, nfit,grid->xmap);
+	hxp.init_l2d(grid->fmap, dir, nfit,grid->xmap);
     }
     if(parms->fit.cachedm){
-	ha0.Init_l2l(acmap, grid->amap);
-	ha1.Init_l2d(grid->fmap, dir, nfit, acmap);
+	ha0.init_l2l(acmap, grid->amap);
+	ha1.init_l2d(grid->fmap, dir, nfit, acmap);
     }else{
-	ha.Init_l2d(grid->fmap, dir, nfit, grid->amap);
+	ha.init_l2d(grid->fmap, dir, nfit, grid->amap);
     }
 }
 
@@ -126,9 +126,9 @@ void cufit_grid::do_hxp(const curcell &xin, stream_t &stream){
     cuzero(opdfit.M(), stream);
     if(idealfit){//ideal fiting.
 	for(int ifit=0; ifit<nfit; ifit++){
-	    gpu_atm2loc(opdfit[ifit](), floc, INFINITY, 0,
-			dir[ifit].thetax, dir[ifit].thetay,
-			0, 0, grid->dt, grid->reconisim, 1, stream);
+	    atm2loc(opdfit[ifit](), floc, INFINITY, 0,
+		    dir[ifit].thetax, dir[ifit].thetay,
+		    0, 0, grid->dt, grid->reconisim, 1, stream);
 	}
     }else{
 	if(xcache){//caching
