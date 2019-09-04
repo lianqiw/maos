@@ -841,14 +841,6 @@ void register_signal_handler(int (*func)(int)){
     sigaction(SIGQUIT,&act, 0);
     signal_handler=func;
 }
-/**
-   Pause, waiting for user input
-*/
-void mypause(){
-    info("Press Any Key to Continue:"); 
-    while(getchar()!=0x0a); 
-    info("continuing...\n"); 
-}
 #undef strdup
 char* (*strdup0)(const char *)=strdup;
 

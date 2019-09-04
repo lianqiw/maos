@@ -57,7 +57,7 @@ public:
     virtual void L(curcell &out, Real beta, 
 		   const curcell &xin, Real alpha, stream_t &stream);
     virtual void Rt(curcell &out, Real beta, 
-		    curcell &xin, Real alpha, stream_t &stream);
+		    const curcell &xin, Real alpha, stream_t &stream);
 };
 
 }//namespace

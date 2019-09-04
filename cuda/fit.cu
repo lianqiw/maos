@@ -200,7 +200,7 @@ void cufit_grid::R(curcell &xout, Real beta,  curcell &xin, Real alpha, stream_t
     do_hat(xout, alpha, stream);//opdfit2->xout. 390 us
     //cuwrite(xout, "GPU_FitR_x3");
 }
-void cufit_grid::Rt(curcell &xout, Real beta,  curcell &xin, Real alpha, stream_t &stream){
+void cufit_grid::Rt(curcell &xout, Real beta,  const curcell &xin, Real alpha, stream_t &stream){
     if(!xout){
 	xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
     }else{

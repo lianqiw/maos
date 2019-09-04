@@ -75,9 +75,20 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 		locmean(&xm, &ym, ploc2);
 		parms->wfsr[iwfs].misreg_x=xm-ploc_xm;
 		parms->wfsr[iwfs].misreg_y=ym-ploc_ym;
-		warning("ploc for wfs%d shifted by (%g, %g)\n", iwfs, 
-			parms->wfsr[iwfs].misreg_x, parms->wfsr[iwfs].misreg_y);
+		parms->wfsr[iwfs].misreg_r=loc_angle(recon->ploc, ploc2);
+		warning("ploc for wfs%d shifted by (%g, %g), and rotated by %g.\n", iwfs, 
+			parms->wfsr[iwfs].misreg_x, parms->wfsr[iwfs].misreg_y, 
+			parms->wfsr[iwfs].misreg_r);
 	    }
+	}
+        if(parms->save.setup){
+	    writebin(recon->ploc_tel, "ploc_tel");
+	}
+    }
+    if(0){
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    parms->wfsr[iwfs].misreg_r=0.5/15;
+	    warning("ploc for wfs%d is rotated by %g.\n", iwfs, parms->wfsr[iwfs].misreg_r);
 	}
     }
 }

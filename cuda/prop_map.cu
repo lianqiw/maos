@@ -494,3 +494,67 @@ void map2map::init_l2l(const cugridcell &out, const cugridcell &in){//input. lay
     }
     delete [] hdata_cpu;
 }
+/**
+   Rotate each OPD array by theta CCW around point (cx, cy)
+ */
+__global__ static void 
+map_rot_do(Real *const*outs, const Real *const *ins, Real cx, Real cy, long nx, long ny, const Real*wfsrot, int dir){
+    const Real *in=ins[blockIdx.z];
+    Real *out=outs[blockIdx.z];
+    if(!in || !out) return;
+    long nx1=nx-1;
+    long ny1=ny-1;
+    Real cs=wfsrot[blockIdx.z*2];
+    Real ss=wfsrot[blockIdx.z*2+1]*dir;
+	
+    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
+	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
+	    //Rotated index in the opposite direction
+	    Real ixnew= (ix-cx)*cs+(iy-cy)*ss+cx;
+	    Real iynew=-(ix-cx)*ss+(iy-cy)*cs+cy;
+	    int ix2=(int)floor(ixnew);
+	    int iy2=(int)floor(iynew);
+	    if(ix2>=0 && iy2>=0 && ix2<nx1 && iy2<ny1){
+		ixnew-=ix2;
+		iynew-=iy2;
+		out[ix+iy*nx]+=
+		    +(in[ix2+    iy2*nx]*(1-ixnew)+in[(1+ix2)+    iy2*nx]*ixnew)*(1-iynew)
+		    +(in[ix2+(1+iy2)*nx]*(1-ixnew)+in[(1+ix2)+(1+iy2)*nx]*ixnew)*(  iynew);
+	    }
+	}
+    }
+}
+
+void map_rot(curcell &out, const curcell &in, const curmat &wfsrot, int dir, stream_t &stream){
+    long nx=0;
+    long ny=0;
+    long nb=in.N();
+    for(long ib=0; ib<nb; ib++){
+	if(in[ib].N()){
+	    if(!nx){
+		nx=in[ib].Nx();
+		ny=in[ib].Ny();
+	    }else if(nx!=in[ib].Nx() || ny!=in[ib].Ny()){
+		error("Different cell has different dimensions (%ldx%ld) vs (%ldx%ld)\n", 
+		      nx, ny, in[ib].Nx(), in[ib].Ny());
+	    }
+	}
+    }
+    Real cx=nx/2-1;
+    Real cy=ny/2-1;
+    if(out.M()){
+	out.M().zero(stream);
+    }else{
+	out.zero(stream);
+    }
+    map_rot_do<<<DIM3(nx, ny, 16, nb), 0, stream>>>
+    (out.pm, in.pm, cx, cy, nx, ny, wfsrot, dir);
+
+    /*static int count=-1; count++;
+    if(count<10){
+	cuwrite(in, "in_%d_%d", count, dir);
+	cuwrite(out, "out_%d_%d", count, dir);
+	}*/
+}
+
+

@@ -83,5 +83,4 @@ void parse_argopt(char *cmds, ARGOPT_T *options);
 void maos_version(void);
 void set_realtime(int icpu, int niceness);
 void register_signal_handler(int(*)(int));
-void mypause(void);
 #endif

@@ -142,7 +142,8 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 		    pxo2=pxo-dx;
 		    pyo2=pyo-dy;
 		}
-		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo2,pyo2,theta);
+		loc_t *loc_ccd=mksqloc(pixpsax,pixpsay, pixthetax,pixthetay,pxo2,pyo2);
+		locrot(loc_ccd, theta);
 		P(sis,isa,iwfs)=mkh(loc_psf,loc_ccd,0,0,1);
 		locfree(loc_ccd);
 	    }/*isa */

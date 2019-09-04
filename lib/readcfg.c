@@ -341,7 +341,8 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    error("Line '%s' is invalid\n",line);
 	}else if(!strcmp(var,"path") || !strcmp(var, "PATH")){
 	    char *val2=strextract(value);
-	    addpath(val2);
+	    addpath2(val2, 99);
+	    info("addpath %s\n", val2);
 	    free(val2);
 	}else if(!strcmp(var,"include")){
 	    /*dbg("Opening embeded config file %s\n",value); */

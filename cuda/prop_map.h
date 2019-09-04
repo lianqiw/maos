@@ -127,6 +127,5 @@ public:
     }
 };
 
-
-
+void map_rot(curcell &out, const curcell &in, const curmat &wfsrot, int dir, stream_t &stream);
 #endif

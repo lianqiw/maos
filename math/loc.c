@@ -510,30 +510,6 @@ loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
     dfree(locy);
     return loc;
 }
-/**
-   like mksqloc, but roated theta CCW. Useful in creating the
-   pixel coordinates in a polar coordinate CCD.
-*/
-loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, double theta){
-    loc_t *loc=locnew(nx*ny, dx, dy);
-    long ix,iy;
-    dmat *locx=dnew_ref(nx, ny, loc->locx);
-    dmat *locy=dnew_ref(nx, ny, loc->locy);
-    double y,x;
-    double ct=cos(theta);
-    double st=sin(theta);
-    for(iy=0; iy<ny; iy++){
-	y=iy*dy+oy;
-	for(ix=0; ix<nx; ix++){
-	    x=ix*dx+ox;
-	    P(locx,ix,iy)=ct*x-st*y;
-	    P(locy,ix,iy)=st*x+ct*y;
-	}
-    }
-    dfree(locx);
-    dfree(locy);
-    return loc;
-}
 
 /**
    Create a loc array within diameter D, and inner diameter Din, with spacing dx.
@@ -1192,6 +1168,31 @@ void locrot(loc_t *loc, const double theta){
 	y[i]=x[i]*stheta+y[i]*ctheta;
 	x[i]=tmp;
     }
+}
+/**
+   Determine the angle of rotation from loc1 to loc2. CCW is positive.
+ */
+double loc_angle(const loc_t *loc1, const loc_t *loc2){
+    double mx1, mx2, my1, my2;
+    locmean(&mx1, &my1, loc1);
+    locmean(&mx2, &my2, loc2);
+    double sina=0; 
+    long count=0;
+    const double thres=(loc1->dx+loc1->dy)*0.5;
+    for(long i=0; i<loc1->nloc; i++){
+	double x1=loc1->locx[i]-mx1;
+	double y1=loc1->locy[i]-my1;
+	double x2=loc2->locx[i]-mx2;
+	double y2=loc2->locy[i]-my2;
+	double lcross=x1*y2-x2*y1;
+	double lamp=sqrt((x1*x1+y1*y1)*(x2*x2+y2*y2));
+	if(lamp>thres){
+	    sina+=lcross/lamp;
+	    count++;
+	}
+    }
+    sina/=count;
+    return asin(sina);
 }
 /**
    Stretch the coordinate by frac along theta (radian) CCW.

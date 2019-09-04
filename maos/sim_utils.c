@@ -1670,7 +1670,7 @@ void print_progress(SIM_T *simu){
     }
 
     double this_time=myclockd();
-    if(this_time>simu->last_report_time+1 || isim+1==parms->sim.end || parms->sim.pause==1){
+    if(this_time>simu->last_report_time+1 || isim+1==parms->sim.end){
 	/*we don't print out or report too frequently. */
 	simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)

@@ -293,7 +293,16 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	int nxp=recon->pmap->nx;
 	int nyp=recon->pmap->ny;
 	int nxpw[nwfs], nypw[nwfs], ngw[nwfs];
+
+	smat *wfsrot2=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    if(parms->wfsr[iwfs].misreg_r){
+		if(!wfsrot2){
+		    wfsrot2=snew(2, nwfs);
+		}
+		P(wfsrot2, 0, iwfs)=cos(parms->wfsr[iwfs].misreg_r);
+		P(wfsrot2, 1, iwfs)=sin(parms->wfsr[iwfs].misreg_r);
+	    }
 	    const int ipowfs = parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip){
 		nxpw[iwfs]=0;
@@ -305,8 +314,13 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		ngw[iwfs]=powfs[ipowfs].pts->nsa*2;
 	    }
 	}
-
+	if(wfsrot2){
+	    opdwfs2=curcell(nwfs, 1, nxpw, nypw);
+	    cp2gpu(wfsrot, wfsrot2);
+	    sfree(wfsrot2);
+	}
 	opdwfs=curcell(nwfs, 1, nxpw, nypw);
+	
 	grad=curcell(nwfs, 1, ngw, (int*)NULL);
 	ttf=curmat(3*nwfs, 1);
     }
@@ -599,6 +613,30 @@ void cutomo_grid::do_gpt(curcell &_opdwfs, curcell &_grad, int ptt2, stream_t &s
 	}
     }
 }
+/**
+   apply HX from xin to opdwfs.
+*/
+void cutomo_grid::HX(const curcell &xin, Real alpha, stream_t &stream){
+    if(wfsrot){
+	opdwfs2.M().zero(stream);
+	hx.forward(opdwfs2.pm, xin.pm, alpha, NULL, stream);
+	map_rot(opdwfs, opdwfs2, wfsrot, -1, stream);
+    }else{
+	opdwfs.M().zero(stream);
+	hx.forward(opdwfs.pm, xin.pm, alpha, NULL, stream);
+    }
+}
+/**
+   Apply HX' from opdwfs to xout
+*/
+void cutomo_grid::HXT(curcell &xout, Real alpha, stream_t &stream){
+    if(wfsrot){
+	map_rot(opdwfs2, opdwfs, wfsrot, 1, stream);
+	hx.backward(opdwfs2.pm, xout.pm, alpha, NULL, stream);
+    }else{
+	hx.backward(opdwfs.pm, xout.pm, alpha, NULL, stream);
+    }
+}
 /*
   Tomography right hand side matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
   xout is zeroed out before accumulation.
@@ -611,17 +649,16 @@ void cutomo_grid::R(curcell &xout, Real beta,  curcell &_grad, Real alpha, strea
     }
     do_gp(_grad, curcell(), 1, stream);
     do_gpt(opdwfs, _grad, 1, stream);
-    hx.backward(opdwfs.pm, xout.pm, alpha, NULL, stream);
+    HXT(xout, alpha, stream);
 }
 
-void cutomo_grid::Rt(curcell &gout, Real beta,  curcell &xin, Real alpha, stream_t &stream){
+void cutomo_grid::Rt(curcell &gout, Real beta, const curcell &xin, Real alpha, stream_t &stream){
     if(!gout){
 	gout=curcell(nwfs, 1, grid->ngrad, (long*)NULL);
     }else{
 	curcellscale(gout, beta, stream);
     }
-    opdwfs.M().zero(stream);
-    hx.forward(opdwfs.pm, xin.pm, alpha, NULL, stream);
+    HX(xin, alpha, stream);
     do_gp(gout, opdwfs, 1, stream);
     curcell dummy;
     do_gpt(dummy, gout, 1, stream);
@@ -648,9 +685,8 @@ void cutomo_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, st
 #define RECORD(i)
 #endif
     RECORD(0);
-    cuzero(opdwfs.M(), stream);
     //xin to opdwfs
-    hx.forward(opdwfs.pm, xin.pm, 1, NULL, stream);
+    HX(xin, 1, stream);
     RECORD(1);
     //opdwfs to grad to ttf
     do_gp(grad, opdwfs, ptt, stream);
@@ -659,7 +695,7 @@ void cutomo_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, st
     do_gpt(opdwfs, grad, ptt, stream);
     RECORD(3);
     //opdwfs to xout
-    hx.backward(opdwfs.pm, xout.pm, alpha, NULL, stream);
+    HXT(xout, alpha, stream);
     RECORD(4);
     /*This could be in parallel to hx->forward, do_gp, do_gpt*/
     gpu_laplacian_do<<<dim3(3,3,grid->npsr),dim3(16,16), 0, stream>>>

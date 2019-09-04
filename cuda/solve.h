@@ -23,7 +23,7 @@ namespace cuda_recon{
 class cusolve_r{/*Interface for RHS*/
 public:
     virtual void R(curcell &xout, Real beta, curcell &xin, Real alpha, stream_t &stream)=0;
-    virtual void Rt(curcell &xout, Real beta, curcell &xin, Real alpha, stream_t &stream)=0;
+    virtual void Rt(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream)=0;
     virtual ~cusolve_r(){}
 };
 
@@ -100,7 +100,7 @@ public:
 	CL.Forward(out, beta, xin, alpha, stream);
     }
     virtual void Rt(curcell &out, Real beta, 
-		    curcell &xin, Real alpha, stream_t &stream){
+		    const curcell &xin, Real alpha, stream_t &stream){
 	CR.Trans(out, beta, xin, alpha, stream);
     }
 };

@@ -77,8 +77,6 @@ loc_t *mk1dloc(double x0, double dx, long nx);
 loc_t *mksqloc_auto(long nx, long ny, double dx, double dy);
 loc_t *mksqloc_map(map_t*map);
 loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy);
-loc_t *mksqlocrot(long nx, long ny, double dx, double dy,
-		  double ox, double oy, double theta);
 loc_t *mkannloc(double D, double Din, double dx, double thres);
 dmat *mkcirmap(long nx, long ny, double cx, double cy, double r);
 void loc_create_stat_do(loc_t *loc);
@@ -97,6 +95,7 @@ void loc_add_focus(double *opd, loc_t *loc, double val);
 dmat *loc2mat(loc_t *loc,int piston);
 loc_t *pts2loc(pts_t *pts);
 void locrot(loc_t *loc, const double theta);
+double loc_angle(const loc_t *loc1, const loc_t *loc2);
 void locstretch(loc_t *loc, const double theta, const double frac);
 loc_t *locdup(loc_t *loc);
 void locmean(double *xm, double *ym, const loc_t *loc);

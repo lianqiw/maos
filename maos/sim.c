@@ -292,7 +292,14 @@ void maos_sim(){
 	    for(int isim=simstart; isim<simend; isim++){
 		maos_isim(isim);
 		if(parms->sim.pause>0 && isim%parms->sim.pause==0){
-		    mypause();
+		    info("Press enter to step, c to resume:\n"); 
+		    int key;
+		    while((key=getchar())!=0x0a){
+			if(key=='c'){
+			    ((PARMS_T*)parms)->sim.pause=0;
+			}
+		    }
+		    info("continuing...\n"); 
 		}
 	    }/*isim */
 	}

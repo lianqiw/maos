@@ -155,9 +155,9 @@ extern int NULL_STREAM;
 
 #define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
 #define REDUCE(nsa) MIN((nsa+DIM_REDUCE-1)/DIM_REDUCE,NG1D), DIM_REDUCE
-#define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D)),dim3(MIN(nx,nb),MIN(ny,nb))
-#define DIM3(nx,ny,nb,nbz) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D),nbz),dim3(MIN(nx,nb),MIN(ny,nb))
-
+//Launch kernel configured to handled nz nx*ny array indexing, 
+#define DIM3(nx,ny,nb,nz) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D),nz),dim3(MIN(nx,nb),MIN(ny,nb))
+#define DIM2(nx,ny,nb) DIM3(nx,ny,nb,1)
 #define MEMCPY_D2D cudaMemcpyDefault
 #define MEMCPY_D2H cudaMemcpyDeviceToHost
 #define MEMCPY_H2D cudaMemcpyHostToDevice

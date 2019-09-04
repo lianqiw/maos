@@ -49,8 +49,10 @@ struct LAP_T{
 };
 class cutomo_grid:public cusolve_r, public cusolve_cg{
     const curecon_geom *grid;
+    curmat wfsrot;
     /*Temporary data*/
     curcell opdwfs;
+    curcell opdwfs2;
     curcell grad;  
     curmat ttf;
 
@@ -78,12 +80,14 @@ public:
     void update_fdpcg(FDPCG_T *fdpcg){
 	dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);
     }
+    void HX(const curcell &xin, Real alpha, stream_t &stream);
+    void HXT(curcell &xout, Real alpha, stream_t &stream);
     virtual void R(curcell &out, Real beta, 
 		   curcell &xin, Real alpha, stream_t &stream);
     virtual void L(curcell &out, Real beta, 
 		   const curcell &xin, Real alpha, stream_t &stream);
     virtual void Rt(curcell &out, Real beta, 
-		    curcell &xin, Real alpha, stream_t &stream);
+		    const curcell &xin, Real alpha, stream_t &stream);
     ~cutomo_grid(){
     }
 };
