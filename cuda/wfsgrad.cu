@@ -398,7 +398,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const Real hs=parms->wfs[iwfs].hs;
-	const Real hc=parms->powfs[ipowfs].hc;
+	const Real hc=parms->wfs[iwfs].hc;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	const int save_gradgeom=parms->save.gradgeom->p[iwfs];
 	const int save_opd =parms->save.wfsopd->p[iwfs];

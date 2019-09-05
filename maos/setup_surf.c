@@ -148,10 +148,10 @@ static void prop_surf_wfs(thread_t *info){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const double hs=parms->wfs[iwfs].hs;
-	const double hc=parms->powfs[ipowfs].hc;
+	const double hc=parms->wfs[iwfs].hc;
 	const double scale=1.-(hl-hc)/hs;
-	const double displacex=parms->wfs[iwfs].thetax*(hl-hc);
-	const double displacey=parms->wfs[iwfs].thetay*(hl-hc);
+	const double displacex=parms->wfs[iwfs].thetax*hl;
+	const double displacey=parms->wfs[iwfs].thetay*hl;
 
 	loc_t *locwfs;
 	if(powfs[ipowfs].loc_tel){
@@ -613,7 +613,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		    const double hs=parms->wfs[iwfs].hs;
-		    const double hc=parms->powfs[ipowfs].hc;
+		    const double hc=parms->wfs[iwfs].hc;
 		    double thetax=parms->wfs[iwfs].thetax;
 		    double thetay=parms->wfs[iwfs].thetay;
 		    if(!powfs[ipowfs].opdbias){
@@ -624,8 +624,8 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		    }
 		    for(int idm=0; idm<parms->ndm; idm++){
 			if(!recon->dm_ncpa->p[idm] || recon->dm_ncpa->p[idm]->nx==0) continue;
-			double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
-			double scale=1.-ht/hs;
+			double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+			double scale=1.-(ht-hc)/hs;
 			double dispx=ht*thetax;
 			double dispy=ht*thetay;
 			prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p, 

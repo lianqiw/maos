@@ -466,14 +466,14 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		continue;
 	    }
 	    const double  hs = parms->wfs[iwfs].hs;
-	    const double  hc = parms->powfs[ipowfs].hc;
+	    const double  hc = parms->wfs[iwfs].hc;
 	    loc_t *loc=recon->ploc;
 	    if(recon->ploc_tel && recon->ploc_tel->p[iwfs]){
 		loc=recon->ploc_tel->p[iwfs];
 	    }
 	    for(int ips=0; ips<npsr; ips++){
-		const double  ht = recon->ht->p[ips]-hc;
-		const double  scale=1. - ht/hs;
+		const double  ht = recon->ht->p[ips];
+		const double  scale=1. - (ht-hc)/hs;
 		const double dispx=parms->wfsr[iwfs].thetax*ht;
 		const double dispy=parms->wfsr[iwfs].thetay*ht;
 		P(HXW,iwfs,ips)=mkh(recon->xloc->p[ips], loc, 
@@ -655,11 +655,11 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].skip==2){//no need for TWFS
 		continue;
 	    }
-	    const double  hs = parms->wfs[iwfs].hs;
-	    const double hc=parms->powfs[ipowfs].hc;
+	    const double hs=parms->wfs[iwfs].hs;
+	    const double hc=parms->wfs[iwfs].hc;
 	    for(int idm=0; idm<ndm; idm++){
-		const double  ht = parms->dm[idm].ht-hc;
-		const double  scale=1. - ht/hs;
+		const double  ht = parms->dm[idm].ht;
+		const double  scale=1. - (ht-hc)/hs;
 		double  dispx=0, dispy=0;
 		if(!parms->recon.glao){
 		    dispx=parms->wfsr[iwfs].thetax*ht;
@@ -1028,11 +1028,11 @@ void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *
 	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    const double hc=parms->powfs[ipowfs].hc;
+	    const double hc=parms->wfsr[iwfs].hc;
 	    if(parms->powfs[ipowfs].dither>1){
 		dmat *opd=dnew(powfs[ipowfs].loc->nloc, 1);
-		double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
-		double scale=1.-ht/parms->powfs[ipowfs].hs;
+		double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+		double scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
 		double dispx=ht*parms->wfsr[iwfs].thetax;
 		double dispy=ht*parms->wfsr[iwfs].thetay;
 		prop_nongrid(recon->aloc->p[idm], recon->dither_m->p[idm]->p, 

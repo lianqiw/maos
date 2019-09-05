@@ -48,7 +48,7 @@ void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];
     const double hs=parms->wfs[iwfs].hs;
-    const double hc=parms->powfs[ipowfs].hc;
+    const double hc=parms->wfs[iwfs].hc;
     if(parms->sim.wfsalias==2 || parms->sim.idealwfs==2){
 	loc_t *aloc=powfs[ipowfs].fit[jwfs].aloc->p[0];
 	dcell *wfsopd=dcellnew(1,1); wfsopd->p[0]=dnew(aloc->nloc, 1);
@@ -60,10 +60,11 @@ void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	for(int idm=0; idm<parms->ndm; idm++){
 	    loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm->p[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
-	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	    double dispx=ht*parms->wfs[iwfs].thetax;
 	    double dispy=ht*parms->wfs[iwfs].thetay;
-	    double scale=1.-ht/hs;
+	    //wfs is registered to pupil. wfs.hc only effects the cone effect.
+	    double scale=1.-(ht-hc)/hs;
 	    if(scale<0) continue;
 	    prop_grid(simu->dmprojsq->p[idm], loc, opd->p, 
 		      alpha, dispx, dispy, scale, 0, 0, 0);

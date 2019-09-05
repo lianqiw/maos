@@ -252,14 +252,15 @@ typedef struct POWFS_CFG_T{
    contains input parmaeters for each wfs
 */
 typedef struct WFS_CFG_T{
-    dmat *wvlwts; /**<Weights of signal value for each wavelength. if not
+    dmat *wvlwts;   /**<Weights of signal value for each wavelength. if not
 		       specified in config, will use powfs.wvlwts*/
     char *sabad;    /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     double thetax;  /**<x direction*/
     double thetay;  /**<y direction*/
-    double misreg_x; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
-    double misreg_y; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
-    double misreg_r; /**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs.*/
+    double misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    double misreg_y;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    double misreg_r;/**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs.*/
+    double hc;      /**<conjugation height of WFS pupil*/
     double siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
@@ -305,15 +306,15 @@ typedef struct DM_CFG_T{
 /**
    contarins input parameters all evaluation directions.  */
 typedef struct EVL_CFG_T{
-    dmat *thetax; /**<x Coordinate of evaluation directions*/
-    dmat *thetay; /**<y Coordinate of evaluation directions*/
-    dmat *wt;     /**<weight of each direction*/
-    dmat *wvl;    /**<wavelength for PSF and strehl computation*/
-    dmat *hs;     /**<height of each science object*/
-    double dx;     /**<sampling of aperture for evaluation*/
+    dmat *thetax;   /**<x Coordinate of evaluation directions*/
+    dmat *thetay;   /**<y Coordinate of evaluation directions*/
+    dmat *wt;       /**<weight of each direction*/
+    dmat *wvl;      /**<wavelength for PSF and strehl computation*/
+    dmat *hs;       /**<height of each science object*/
+    double dx;      /**<sampling of aperture for evaluation*/
     int nwvl;       /**<Number of wavelength*/
-    lmat *psf;       /**<1: participate in psf evaluation.*/
-    lmat *psfr;      /**<1: participate in psf reconstruction telemetry*/
+    lmat *psf;      /**<1: participate in psf evaluation.*/
+    lmat *psfr;     /**<1: participate in psf reconstruction telemetry*/
     int npsf;       /**<how many directions we compute psf for*/
     int rmax;       /**<max radial mode for performance evaluation. 
 		       - 0: piston only
@@ -327,12 +328,12 @@ typedef struct EVL_CFG_T{
     int psfmean;    /**<output time averaged psf*/
     int cov;        /**<save covairance of science OPD ,every this time step,
 		       for directions where evl.psf is 1*/
-    lmat *pttr;      /**<remove p/t/t from psf. 1 number for each evl.*/
-    lmat *psfngsr;   /**<remove ngs modes from psf.*/
+    lmat *pttr;     /**<remove p/t/t from psf. 1 number for each evl.*/
+    lmat *psfngsr;  /**<remove ngs modes from psf.*/
 
 
     int psfisim;    /**<time step to start psfmean.*/
-    lmat *psfsize;    /**<save this number of pixels of the center of the psf. 1
+    lmat *psfsize;  /**<save this number of pixels of the center of the psf. 1
 			number for each wvl.*/
     lmat *psfgridsize;/**<grid size for FFT to generate PSF. Becareful about FFT
 			speed and enough padding. Determines the sampling of the
@@ -442,17 +443,17 @@ typedef struct LSR_CFG_T{
    contains input parameters for wavefront reconstruction.
 */
 typedef struct RECON_CFG_T{
-    int alg;        /**<algorithm for reconstruction. 0: MVR. 1: LSR. moved from sim.recon*/
-    int glao;       /**<whether we are in GLAO mode where all WFS in each powfs are averaged*/
-    int split;      /**<split reconstruction/tomography type.
+    int alg;         /**<algorithm for reconstruction. 0: MVR. 1: LSR. moved from sim.recon*/
+    int glao;        /**<whether we are in GLAO mode where all WFS in each powfs are averaged*/
+    int split;       /**<split reconstruction/tomography type.
 		       - 0: integrated tomography
 		       - 1: adhoc split tomography
 		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
     int modal;       /**-2: emulate zonal, -1: zernike, 0: zonal, 1: KL modes*/
     int nmod;        /**<Maximum number of modes to control in modal controller*/
-    int warm_restart; /**<Warm restart in CG*/
+    int warm_restart;/**<Warm restart in CG*/
     int psol;        /**<Use pseudo open loop gradients for wavefront reconstruction*/
-    int mvm;        /**<Use the various algorithms recon.alg to assemble a control
+    int mvm;         /**<Use the various algorithms recon.alg to assemble a control
 		       matrix to multiply to gradients to get DM commands. If
 		       the algorithm needs PSOL gradient, we will have an
 		       auxillary matrix to multiply to the DM actuators and
@@ -482,7 +483,7 @@ typedef struct SIM_CFG_T{
     int dtrat_lo;    /**<highest dtrat of the lower order loop.*/
     int dtrat_lo2;   /**<lowest dtrat of the lower order loop.*/
     int dtrat_lof;   /**<lowest dtrat of the lower order focus loop.*/
-    int dtrat_skip;   /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
+    int dtrat_skip;  /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
     int pause;       /**<Pause at the end of every time step*/
@@ -513,8 +514,8 @@ typedef struct SIM_CFG_T{
     double fcttm;    /**<cross over frequency of tip/tilt split*/
     double lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
     double fcfocus;  /**<cross-over frequency of the focus LPF.*/
-    double lpfocushi;  /**<derived: lpfocus=2*pi*fc*sim.dthi*/
-    double lpfocuslo;  /**<derived: lpfocus=2*pi*fc*sim.dtlo*/
+    double lpfocushi;/**<derived: lpfocus=2*pi*fc*sim.dthi*/
+    double lpfocuslo;/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
     double fov;      /**<The diameter of total fov in arcsec*/
     int focus2tel;   /**<Offload focus to telescope*/
     double epfocus2tel;/*Gain for telescope focus control*/
@@ -555,15 +556,15 @@ typedef struct SIM_CFG_T{
     dmat *ncpa_thetay; /**<Coordinate for NCPA calibration (arcsec)*/
     dmat *ncpa_wt;     /**<Weight for each point.*/
     dmat *ncpa_hs;     /**<Height of star.*/
-    int ncpa_ndir;       /**<Number of points for NCPA calibration*/
-    char *dmadd;      /**<Containing dm vector to simulate turbulence (added to integrator output). 
+    int ncpa_ndir;   /**<Number of points for NCPA calibration*/
+    char *dmadd;     /**<Containing dm vector to simulate turbulence (added to integrator output). 
 			 It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
 */
 typedef struct CN2EST_CFG_T{
-    dmat *pair;       /**<If non empty, paris of WFS to use for cn2
+    dmat *pair;      /**<If non empty, paris of WFS to use for cn2
 			 estimation. Empty: disable cn2 estimation*/
     int step;        /**<do cn2 estimation every this time step*/
     int reset;       /**<reset the accumulated cn2 after every cn2step.*/
@@ -616,7 +617,7 @@ typedef struct DBG_CFG_T{
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
-    dmat *atm;         /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
+    dmat *atm;       /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     double gradoff_scale;/**<Scale the reference vector*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
@@ -624,15 +625,15 @@ typedef struct DBG_CFG_T{
     double pwfs_flatv;/**<pyramid flat vertex angular width*/
     double pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
     int pwfs_side; /**<Make pyramid WFS a single roof only.*/
-    dcell *dmoff;     /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
-    dcell *gradoff;   /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
-    int twfsflag;      /**<use TWFS to control 0: all modes, 1: radial only*/
+    dcell *dmoff;    /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
+    dcell *gradoff;  /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
+    int twfsflag;    /**<use TWFS to control 0: all modes, 1: radial only*/
     dmat* draw_opdmax;/**<Set zlim for OPD drawing*/
-    dmat* draw_gmax;  /**<Set zlim for gradient drawing*/
-    int wfs_iac;      /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
-    int fullatm;      /**<Always copy full atm to GPU.*/
-    int lo_blend;     /**<Low order multi-rate control blending scheme.*/
-    double eploscale; /**<Scale of eplo*/
+    dmat* draw_gmax; /**<Set zlim for gradient drawing*/
+    int wfs_iac;     /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
+    int fullatm;     /**<Always copy full atm to GPU.*/
+    int lo_blend;    /**<Low order multi-rate control blending scheme.*/
+    double eploscale;/**<Scale of eplo*/
     int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
     int recon_stuck; /**<Whether to handle stuck actuator in reconstruction.*/
 }DBG_CFG_T;
@@ -716,12 +717,12 @@ typedef struct SAVE_CFG_T{
       Scalar input: 1: both, 2: high order only, 3: lo only
       Vector input: Equal to the number of WFS.
     */
-    lmat *wfsopd;      /**<save WFS OPD:*/
-    lmat *ints;        /**<save WFS subaperture image*/
-    lmat *grad;        /**<save WFS gradients*/
-    lmat *gradnf;      /**<save WFS noise free gradients*/
-    lmat *gradpsol;    /**<save WFS PSOL gradients*/
-    lmat *gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
+    lmat *wfsopd;    /**<save WFS OPD:*/
+    lmat *ints;      /**<save WFS subaperture image*/
+    lmat *grad;      /**<save WFS gradients*/
+    lmat *gradnf;    /**<save WFS noise free gradients*/
+    lmat *gradpsol;  /**<save WFS PSOL gradients*/
+    lmat *gradgeom;  /**<save WFS geometric gradient during physical optics simu*/
     /*The following are derived from above. */
     int wfsopdhi;    /**<save high order WFS OPD(derived)*/
     int wfsopdlo;    /**<save low order WFS OPD(derived)*/
@@ -785,11 +786,11 @@ typedef struct PARMS_T{
     int nsurf;       /**<Number of OPD surfaces*/
     char **tsurf;    /**<Tilted surfaces, surface, not OPD*/
     int ntsurf;      /**<Number of tilted surfaces*/
-    lmat *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
+    lmat *fdlock;    /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int nlopowfs;    /**<Number of low order wfs types*/
-    lmat *lopowfs;    /**<List of low order powfs*/
+    lmat *lopowfs;   /**<List of low order powfs*/
     int nhipowfs;    /**<Number of high order wfs types*/
-    lmat *hipowfs;    /**<List of high order powfs*/
+    lmat *hipowfs;   /**<List of high order powfs*/
     int ntrpowfs;    /**<Number of tip/tilt removed wfs types*/
     int ntipowfs;    /**<Number of tip/tilt include wfs types*/
     int nphypowfs;   /**<Number of powfs with local/uplink tip/tilt loop*/
@@ -797,9 +798,9 @@ typedef struct PARMS_T{
     int nhiwfs;      /**<Number of high order wfs*/
     dmat *dirs;      /**<Collect for beam directions*/
     int dither;      /**<Some WFS is doing dithering*/
-    int ilgspowfs;     /**<Index of LGS WFS*/
+    int ilgspowfs;   /**<Index of LGS WFS*/
     int nlgspowfs;   /**<Number of LGS WFS*/
-    int itpowfs;       /**<Index of twfs*/
+    int itpowfs;     /**<Index of twfs*/
     int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/
     int step_hi;     /**<Enabling step for high order wfs*/

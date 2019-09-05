@@ -127,7 +127,7 @@ static void
 sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea){
     dmat *saa=NULL;//create a temporary sa area array
     if(powfs[ipowfs].saa_tel){
-	warning_once("Todo: Improve to allow different sa for same wfs type. Use maximum size.\n");
+	//We expact subaperture to union of all wfs
 	long nsa=powfs[ipowfs].saa_tel->p[0]->nx;
 	saa=dnew(nsa,1);
 	for(long iwfs=0; iwfs<powfs[ipowfs].saa_tel->nx; iwfs++){

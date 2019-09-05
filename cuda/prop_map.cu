@@ -464,8 +464,7 @@ void map2map::init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, //outpu
 	    if(!dir[idir].skip){
 		const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dir[idir].delay+dir[idir].misregx;
 		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dir[idir].delay+dir[idir].misregy;
-		const Real hs=dir[idir].hs;
-		const Real scale=1.f-ht/hs;
+		const Real scale=1.f-(ht-dir[idir].hc)/(dir[idir].hs-dir[idir].hc);
 		cugrid_t outscale=out.Scale(scale);
 		map2map_prep(hdata_cpu+idir+ilayer*ndir, outscale, in[ilayer],
 			     dispx, dispy, in[ilayer].cubic_cc);

@@ -234,11 +234,11 @@ static void Tomo_prop_do(thread_t *info){
 	const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 	dmat *xx=dnew(recon->ploc->nloc, 1);
 	const double hs=parms->wfs[iwfs].hs;
-	const double hc=parms->powfs[ipowfs].hc;
+	const double hc=parms->wfs[iwfs].hc;
 	for(int ips=0; ips<nps; ips++){
 	    if(parms->tomo.square && !parms->dbg.tomo_hxw){
 		/*Do the ray tracing instead of using HXW. */
-		double ht=recon->ht->p[ips]-hc;
+		double ht=recon->ht->p[ips];
 		double displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
 		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misreg_y;
@@ -247,7 +247,7 @@ static void Tomo_prop_do(thread_t *info){
 		    displace[0]+=simu->atm->p[ips0]->vx*delay;
 		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
-		double scale=1. - ht/hs;
+		double scale=1. - (ht-hc)/hs;
 		if(scale<0) continue;
 		memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 		xmap.p=data->xin->p[ips]->p;
@@ -336,18 +336,18 @@ static void Tomo_iprop_do(thread_t *info){
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(!data->gg->p[iwfs]) continue;
 		const double hs=parms->wfs[iwfs].hs;
+		const double hc=parms->wfs[iwfs].hc;
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		const double hc=parms->powfs[ipowfs].hc;
 		double displace[2];
-		displace[0]=parms->wfsr[iwfs].thetax*(ht-hc)+parms->wfsr[iwfs].misreg_x;
-		displace[1]=parms->wfsr[iwfs].thetay*(ht-hc)+parms->wfsr[iwfs].misreg_y;
+		displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
+		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misreg_y;
 		if(parms->tomo.predict){
 		    const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		    int ips0=parms->atmr.indps->p[ips];
 		    displace[0]+=simu->atm->p[ips0]->vx*delay;
 		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
-		double scale=1. - ht/hs;
+		double scale=1. - (ht-hc)/hs;
 		if(scale<0) continue;
 		prop_grid_stat_transpose(&xmap, recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
 					 displace[0],displace[1], scale, 0, 0, 0);

@@ -456,9 +456,9 @@ static void readcfg_wfs(PARMS_T *parms){
 	parms->wfs[i].thetay/=206265.;
     }
     READ_WFS_RELAX(dbl,hs);
+    //READ_WFS_RELAX(dbl,hc); //do not enable before implementation is fixed.
     READ_WFS_RELAX(dbl,fitwt);
     READ_WFS_RELAX(str,sabad);
-
     /*link wfs with powfs*/
     int wfscount=0;
     int ipowfs=0;
@@ -1498,24 +1498,35 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 
 	double wfs_hs=0;
+	double wfs_hc=0;
 	for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
-	    if(parms->wfs[iwfs].hs<=EPS){
+	    if(parms->wfs[iwfs].hs<=0){
 		parms->wfs[iwfs].hs=parms->powfs[ipowfs].hs;
-	    }else{
-		wfs_hs+=parms->wfs[iwfs].hs;
 	    }
+	    if(!parms->wfs[iwfs].hc){
+		parms->wfs[iwfs].hc=parms->powfs[ipowfs].hc;
+	    }
+	    wfs_hs+=parms->wfs[iwfs].hs;
+	    wfs_hc+=parms->wfs[iwfs].hc;
 	}
 	wfs_hs/=parms->powfs[ipowfs].nwfs;
+	wfs_hc/=parms->powfs[ipowfs].nwfs;
 	if(parms->powfs[ipowfs].hs==0){
-	    if(wfs_hs>EPS){
+	    if(wfs_hs){
 		parms->powfs[ipowfs].hs=wfs_hs;
-		warning("powfs[%d].hs is set to %g\n", ipowfs, parms->powfs[ipowfs].hs);
+		warning("powfs[%d].hs is set to average of wfs[].hs: %g\n", ipowfs, parms->powfs[ipowfs].hs);
 	    }else{
 		error("either wfs.hs or powfs.hs has to be specified\n");
 	    }
-	}else if(wfs_hs>0 && fabs(wfs_hs-parms->powfs[ipowfs].hs)>10000){
+	}else if(wfs_hs && fabs(wfs_hs-parms->powfs[ipowfs].hs)>100){
 	    warning("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
+	}
+	if(parms->powfs[ipowfs].hc==0 && wfs_hc){
+	    parms->powfs[ipowfs].hs=wfs_hc;
+	    warning("powfs[%d].hc is set to average of wfs[].hc: %g\n", ipowfs, parms->powfs[ipowfs].hc);
+	}else if(wfs_hc>0 && fabs(wfs_hc-parms->powfs[ipowfs].hc)>100){
+	    warning("powfs[%d].hc is %g, but wfs average hc is %g\n", ipowfs, parms->powfs[ipowfs].hc, wfs_hc);
 	}
     }//for ipowfs
     
@@ -2283,6 +2294,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->wfsr[ipowfs].thetax=0;
 	    parms->wfsr[ipowfs].thetay=0;
 	    parms->wfsr[ipowfs].hs=parms->powfs[ipowfs].hs;
+	    parms->wfsr[ipowfs].hc=parms->powfs[ipowfs].hc;
 	    parms->wfsr[ipowfs].powfs=ipowfs;
 	    parms->powfs[ipowfs].nwfsr=1;
 	    parms->powfs[ipowfs].wfsr=lnew(1,1);

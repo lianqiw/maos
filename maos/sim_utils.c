@@ -289,12 +289,12 @@ void setup_recon_HXW_predict(SIM_T *simu){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
 	    const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
-	    const double hs = parms->wfs[iwfs].hs;
-	    const double hc=parms->powfs[ipowfs].hc;
+	    const double hs=parms->wfs[iwfs].hs;
+	    const double hc=parms->wfs[iwfs].hc;
 	    for(int ips=0; ips<npsr; ips++){
 		dspfree(P(HXWtomo,iwfs,ips));
-		double  ht = recon->ht->p[ips]-hc;
-		double  scale=1. - ht/hs;
+		double  ht = recon->ht->p[ips];
+		double  scale=1. - (ht-hc)/hs;
 		double  displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
@@ -929,13 +929,13 @@ static void init_simu_wfs(SIM_T *simu){
 	const int nwfsp=parms->powfs[ipowfs].nwfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const double hs=parms->wfs[iwfs].hs;
-	const double hc=parms->powfs[ipowfs].hc;
+	const double hc=parms->wfs[iwfs].hc;
 	for(int ips=0; ips<parms->atm.nps; ips++){
-	    const double ht=parms->atm.ht->p[ips]-hc;
+	    const double ht=parms->atm.ht->p[ips];
 	    PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
 	    data->displacex0=ht*parms->wfs[iwfs].thetax;
 	    data->displacey0=ht*parms->wfs[iwfs].thetay;
-	    data->scale=1.-ht/hs;
+	    data->scale=1.-(ht-hc)/hs;
 	    data->alpha=1;
 	    data->wrap=1;
 	    data->mapin=(map_t*)1;/*need to update this in genatm. */
@@ -956,12 +956,12 @@ static void init_simu_wfs(SIM_T *simu){
 	    thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips],0,tot,nthread,prop,data);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
-	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	    PROPDATA_T *data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
 	    int tot;
 	    data->displacex0=ht*parms->wfs[iwfs].thetax;
 	    data->displacey0=ht*parms->wfs[iwfs].thetay;
-	    data->scale=1.-ht/hs;
+	    data->scale=1.-(ht-hc)/hs;
 	    data->alpha=-1;/*remove dm contribution. */
 	    data->wrap=0;
 	    if(parms->sim.cachedm){
