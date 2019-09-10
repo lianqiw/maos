@@ -18,3 +18,5 @@
 #include "../math/mathdef.h"
 void cure1d(dmat **phix, const dmat*gx, const dmat *gy, double dx);
 void cure(dmat **phix, const dmat*gx, const dmat *gy, double dx);
+void cure_loc(dmat **phix, const dmat*grad, const loc_t *gloc);
+void cure_loc2(dmat **phix, const dmat*grad, const loc_t *saloc);

@@ -580,6 +580,97 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 	}
     }
 }
+typedef struct loc_fit_t{
+    const loc_t *aloc;
+    const loc_t *saloc;
+    const dmat *opd;
+    const dmat *opd2;
+    dmat *opd3;
+    double dispx;
+    double dispy;
+    double scale;
+    dmat *coeff;
+    double diff;
+    int count;
+}loc_fit_t;
+/*
+  Apply transformation based on current estimate, and compute the difference between measured and estimated GA.
+*/
+double loc_fit_res(const double *distort, void *info){
+    loc_fit_t *data=info;
+    if(distort!=PCOL(data->coeff,2)){
+	memcpy(PCOL(data->coeff,2),distort,sizeof(double)*data->coeff->nx*2);
+    }
+
+    loc_t *loc2=loctransform(data->saloc, (char*)data->coeff);
+    //dsp *H2=mkh(data->aloc, loc2, data->dispx, data->dispy, data->scale);
+    //dsp *GA2=dspmulsp(data->GP, H2,"nn");
+    //dsp *HA2=mkh(data->aloc, loc2, data->dispx, data->dispy, data->scale);
+    //dmat *HA3=0;
+    //dspfull(&HA3, HA2, 'n', 1);
+    //dadd(&HA3, 1, data->HA, -1);
+    dzero(data->opd3);
+    prop_nongrid(data->aloc, data->opd->p, loc2, data->opd3->p, 1, data->dispx, data->dispy, data->scale, 0, 0);
+    double sum=0;
+    for(int ix=0; ix<loc2->nloc; ix++){
+	sum+=fabs((data->opd3->p[ix]-data->opd2->p[ix])*data->opd2->p[ix]);
+    }
+    data->diff=sqrt(sum/loc2->nloc)*1e6;
+    //dspfree(HA2);
+    //dfree(HA3);
+    locfree(loc2);
+
+    data->count++;
+    /*if(data->count%100==0){
+	info("Step %d, diff=%g\n", data->count, data->diff);
+	}*/
+    return data->diff;
+}
+/**
+   Determine transformation of ploc that gives GA.
+   2nd order polynomial is used.
+*/
+dmat *loc_fit(const loc_t *aloc, const loc_t *saloc, const dmat *opd, const dmat *opd2,
+	      double dispx, double dispy, double scale){
+#define TOL 0.01
+    double order1[]={0,0,1,
+		     0,1,0,
+		     TOL,TOL,1,
+		     TOL,1,TOL};
+
+    double order2[]={0,1,2,0,1,0,
+		     0,0,0,1,1,2,
+		     TOL,1,  TOL,TOL,TOL,TOL,
+		     TOL,TOL,TOL,1,TOL,TOL};
+    int nmod=3;
+    double *order;
+    if(nmod==3){
+	order=order1;
+    }else if(nmod==6){
+	order=order2;
+    }else{
+	order=0;
+	error("Invalid\n");
+    }
+    dmat *coeff=dnew(nmod,4);    
+    memcpy(coeff->p, order, sizeof(double)*nmod*4);
+    int nmax=20000;
+    dmat *opd3=dnew(opd2->nx,1);
+    loc_fit_t info={aloc, saloc, opd, opd2, opd3, dispx, dispy, scale, coeff, 0, 0};
+    double diff0=loc_fit_res(PCOL(coeff,2),&info);
+    double ftol=diff0*1e-5;
+    //writebin(opd3, "opd30");
+    int ncall=dminsearch(PCOL(coeff,2), coeff->nx*2, ftol, nmax, loc_fit_res, &info);
+    double diff1=loc_fit_res(PCOL(coeff,2),&info);
+    info("loc_fit finished after %d iterations.Difference reduced from %g to %g\n", ncall, diff0, diff1);
+    //writebin(opd3, "opd31");
+    {
+	static int count=-1; count++;
+	writebin(opd3, "opd3_%d", count);
+    }
+    dfree(opd3);
+    return coeff;
+}
 /**
    Setup gradient operator form aloc for wfs by using GP.
 */
@@ -657,14 +748,14 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    const double hs=parms->wfs[iwfs].hs;
 	    const double hc=parms->wfs[iwfs].hc;
+	    const loc_t *saloc=powfs[ipowfs].saloc;
 	    for(int idm=0; idm<ndm; idm++){
 		const double  ht = parms->dm[idm].ht;
 		const double  scale=1. - (ht-hc)/hs;
-		double  dispx=0, dispy=0;
-		if(!parms->recon.glao){
-		    dispx=parms->wfsr[iwfs].thetax*ht;
-		    dispy=parms->wfsr[iwfs].thetay*ht;
-		}
+		const loc_t *aloc=recon->aloc->p[idm];
+		const double dispx=parms->wfsr[iwfs].thetax*ht;
+		const double dispy=parms->wfsr[iwfs].thetay*ht;
+		
 		if(parms->powfs[ipowfs].type==1){//PWFS
 		    if(!parms->powfs[ipowfs].lo){
 			dmat *opdadd=0;
@@ -674,7 +765,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			}
 			if(!parms->recon.modal){
 			    info("\nPyWFS from aloc to saloc directly\n");
-			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
+			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
 						0, opdadd, dispx, dispy, scale);
 			    P(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
 			    dfree(tmp);
@@ -682,21 +773,166 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			    info("\nPyWFS from amod to saloc directly\n");
 			   
 			    //We compute the GM for full set of modes so that it is cached only once.
-			    P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
+			    P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
 								recon->amod->p[idm], opdadd, dispx, dispy, scale);
 			}
 		    }
 		}else{//SHWFS
-		    int freeloc=0;
-		    loc_t *loc=ploc;
-		    if(parms->recon.misreg_dm2wfs && parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]){
-			loc=loctransform(loc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]);
-			freeloc=1;
+		    char *input=parms->misreg.dm2wfs?parms->misreg.dm2wfs[iwfs+idm*nwfs]:0;
+		    char *calib=parms->recon.misreg_dm2wfs?parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]:0;
+		    loc_t *loc=ploc;		    
+
+		    if(input && saloc->nloc>4){//there is distortion input			
+			if(calib){//there is magical calibration input
+			    loc=loctransform(loc, calib);
+			}else{//determine distortion by fitting
+			    warning("dm2wfs: determine distortion by fitting (%d, %d)\n", idm, iwfs); 
+
+			    //dmat *opd=zernike(aloc, parms->aper.d, 0, 0, -55);
+			    //dmat *opd=fft_mode(aloc, parms->aper.d, 8);
+			    dmat *opd=dnew(aloc->nloc,1);
+			    //double oo=-parms->aper.d;
+			    double RR1=pow(parms->aper.d*scale/2/aloc->dx-3,2);
+			    double RR2=pow(parms->aper.din*scale/2/aloc->dx+3,2);
+			    for(int iloc=0; iloc<aloc->nloc; iloc++){
+				double locx=(aloc->locx[iloc]-dispx)/aloc->dx;
+				double locy=(aloc->locy[iloc]-dispy)/aloc->dy;
+				
+				double locx0=round(locx/10)*10;
+				double locy0=round(locy/10)*10;
+				double R0=locx0*locx0+locy0*locy0;
+				if(R0<RR1 && R0>RR2){
+				    double R1=pow(locx-locx0,2)+pow(locy-locy0,2);
+				    if(R1<9){
+					P(opd, iloc)=1e-6*exp(-R1/(4*scale));
+				    }
+				}
+			    }
+			    if(iwfs==0){
+				writebin(opd, "opd_%d", idm);
+			    }
+			    dmat *opd2=0;
+			    dmat *opd0=dnew(saloc->nloc,1);
+			    prop_nongrid(aloc, opd->p, saloc, opd0->p, 1, dispx, dispy, scale, 0, 0);
+			    writebin(opd0, "opd0_%d_%d", idm, iwfs);
+			    {
+				loc_t *saloc2=loctransform(saloc, input);
+				dzero(opd0);
+				prop_nongrid(aloc, opd->p, saloc2, opd0->p, 1, dispx, dispy, scale, 0, 0);
+				writebin(opd0, "opd1_%d_%d", idm, iwfs);
+			    }
+			    dfree(opd0);
+			    dmat *opd4=dnew(saloc->nloc,1);
+			    loc_t *loc2=loctransform(ploc, input);
+
+			    if(1){
+				//loc_t *loc2=locdup(ploc);
+				dsp *H2=mkh(aloc, loc2, dispx,dispy,scale);
+				dsp *GA2=dspmulsp(recon->GP->p[iwfs], H2,"nn"); //measured GA.
+				dspfree(H2);
+
+				dmat *gg=0;
+				dspmm(&gg, GA2, opd, "nn", 1);
+				writebin(gg, "gg");
+			    
+				cure_loc2(&opd4, gg, saloc);
+				writebin(opd4, "opd6_%d_%d", idm, iwfs);
+			   
+
+				dmat *R3=0;
+				if(0){
+				    //Reconstruct gradients to saloc.
+				    dsp *H3=mkh(saloc, ploc, 0, 0, 1);
+				    dsp *G3=dspmulsp(recon->GP->p[iwfs], H3, "nn");//saloc to grad
+				    dspfree(H3);
+				    dmat *G3F=0;
+				    dspfull(&G3F, G3, 'n', 1);
+				    R3=dpinv2(G3F, 0, 1e-3);//grad to saloc
+				    writebin(G3F, "G3");
+				    dspfree(G3);
+				    dfree(G3F);
+				    //Remove misbehaving rows
+				    if(0){
+					dmat* R3s=dnew(R3->nx,1);;
+					double R3m=0;
+					for(long ix=0; ix<R3->nx; ix++){
+					    double sum=0;
+					    for(long iy=0; iy<R3->ny; iy++){
+						sum+=abs(P(R3,ix,iy));
+					    }
+					    if(R3m<sum){
+						R3m=sum;
+					    }
+					    P(R3s,ix)=sum;
+					}
+					R3m*=0.5;
+					for(long ix=0; ix<R3->nx; ix++){
+					    if(P(R3s,ix)>R3m){//drop
+						for(long iy=0; iy<R3->ny; iy++){
+						    P(R3,ix,iy)=0;
+						}
+					    }
+					}
+				
+					dfree(R3s);
+				    }
+			    
+			
+			 
+				    if(R3){
+					writebin(R3, "R3");
+					dmat *H4=0;
+					dmulsp(&H4, R3, GA2, "nn", 1);//From aloc to saloc ray tracing.
+					writebin(H4, "H4");
+					dmm(&opd2,0, H4, opd, "nn", 1);
+					writebin(opd2, "opd2");
+					dfree(opd2);
+					dfree(H4);
+				    }
+				}
+				dfree(gg);
+				dspfree(GA2);
+			    }else if(0){
+				dmat *opd1=dnew(loc2->nloc,1);
+				prop_nongrid(aloc, opd->p, loc2, opd1->p, 1, dispx, dispy, scale, 0, 0);
+				dmat *gg=0;
+				dspmm(&gg, recon->GP->p[iwfs], opd1, "nn", 1);
+				cure_loc2(&opd4, gg, saloc);
+				writebin(opd4, "opd4_%d_%d", idm, iwfs);
+				writebin(gg, "gg1_%d_%d", idm, iwfs);
+				dfree(opd1);
+				dfree(gg);
+			    }else{
+				
+				loc_t *saloc2=loctransform(saloc, input);
+				dzero(opd4);
+				prop_nongrid(aloc, opd->p, saloc2, opd4->p, 1, dispx, dispy, scale, 0, 0);
+				writebin(opd4, "opd5_%d_%d", idm, iwfs);
+				
+			    }
+			    
+			    //dsp *H4sp=d2sp(H4);
+			    dmat *calib2=loc_fit(aloc, saloc, opd, opd4, dispx,dispy,scale);
+
+			    writebin(calib2, "dm2wfs_calib_%d_%d", idm, iwfs);
+			    {
+				loc_t *saloc2=loctransform(saloc, (char*)calib2);
+				dzero(opd4);
+				prop_nongrid(aloc, opd->p, saloc2, opd4->p, 1, dispx, dispy, scale, 0, 0);
+				writebin(opd4, "opd2_%d_%d", idm, iwfs);
+			    }
+			    loc=loctransform(ploc, (char*)calib2);
+			    locfree(loc2);
+			    dfree(opd);
+			    dfree(opd4);
+			    dfree(calib2);
+			}
 		    }
-		    dsp *H=mkh(recon->aloc->p[idm], loc, dispx,dispy,scale);
+		    writebin(loc, "dm2wfs_loc_%d_%d", idm, iwfs);
+		    dsp *H=mkh(aloc, loc, dispx,dispy,scale);
 		    P(recon->GA, iwfs, idm)=dspmulsp(recon->GP->p[iwfs], H,"nn");
 		    dspfree(H);
-		    if(freeloc){
+		    if(loc!=ploc){
 			locfree(loc);
 		    }
 		    if(parms->recon.modal){
@@ -704,7 +940,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    }
 		}
 	    }/*idm */
-	}
+	}//iwfs
     	toc2(" ");
     }
     if(parms->recon.modal && parms->recon.nmod>0){

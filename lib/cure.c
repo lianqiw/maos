@@ -23,19 +23,7 @@
    Implementation is based on M.Rosensteiner, J. Opt. Soc. Am. A28, 2132-2138 (2011)
    
 */
-void cure(dmat **phi, const dmat *gx, const dmat *gy, double dx){
-    dmat *gxt=dtrans(gx);
-    dmat *gyt=dtrans(gy);
-    dmat *phi2t=0;
-    cure1d(phi, gx, gy, dx);
-    cure1d(&phi2t, gyt, gxt, dx);    
-    dmat *phi2=dtrans(phi2t);
-    dadd(phi, 0.5, phi2, 0.5);
-    dfree(phi2);
-    dfree(phi2t);
-    dfree(gxt);
-    dfree(gyt);
-}
+
 void cure1d(dmat **pphix,   /**<Output: opd*/
 	    const dmat *gx,/**<x gradients, dimension is nx*ny. Invalid subapertures set to NaN*/
 	    const dmat *gy,/**<y gradients, dimension is ny*ny.*/
@@ -212,4 +200,73 @@ void cure1d(dmat **pphix,   /**<Output: opd*/
     dfree(lx);
     dfree(ty);
     lfree(flag);
+}
+/**
+   Implements 2d cure by calling cure1d twice.
+*/
+void cure(dmat **phi, const dmat *gx, const dmat *gy, double dx){
+    dmat *gxt=dtrans(gx);
+    dmat *gyt=dtrans(gy);
+    dmat *phi2t=0;
+    cure1d(phi, gx, gy, dx);
+    cure1d(&phi2t, gyt, gxt, dx);    
+    dmat *phi2=dtrans(phi2t);
+    dadd(phi, 0.5, phi2, 0.5);
+    dfree(phi2);
+    dfree(phi2t);
+    dfree(gxt);
+    dfree(gyt);
+}
+/**
+   An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid.
+*/
+void cure_loc(dmat **phix, const dmat*grad, const loc_t *saloc){
+    loc_create_map(saloc);
+    int nxm=saloc->map->nx;
+    int npad=saloc->npad;
+    int nx=saloc->map->nx-npad*2;
+    int ny=saloc->map->ny-npad*2;
+    dmat *gx=dnew(nx,ny);
+    dmat *gy=dnew(nx,ny);
+    long nsa=grad->nx/2;
+    for(int iy=0; iy<ny; iy++){
+	for(int ix=0; ix<nx; ix++){
+	    long ii=saloc->map->p[(ix+npad)+(iy+npad)*nxm];
+	    if(ii>0){
+		gx->p[ix+iy*nx]=P(grad, ii-1, 0);
+		gy->p[ix+iy*nx]=P(grad, ii-1+nsa, 0);
+	    }else{
+		gx->p[ix+iy*nx]=NAN;
+		gy->p[ix+iy*nx]=NAN;
+	    }
+	}
+    }
+    cure(phix, gx, gy, saloc->dx);
+    dfree(gx);
+    dfree(gy);
+}
+/**
+   An alternative interface. grad is nsa*2 defined on saloc, instead of on
+   square grid. Return phix also on saloc grid.
+*/
+void cure_loc2(dmat **phix, const dmat*grad, const loc_t *saloc){
+    dmat *phi2d=0;
+    cure_loc(&phi2d, grad, saloc);
+    if(!*phix){
+	*phix=dnew(saloc->nloc,1);
+    }else if((*phix)->nx!=saloc->nloc){
+	error("Mismatch: %ld vs %ld\n", (*phix)->nx, saloc->nloc);
+    }
+    dmat *phi=*phix;
+    int npad=saloc->npad;
+    int nxm=saloc->map->nx;
+    for(int iy=0; iy<phi2d->ny-1; iy++){
+	for(int ix=0; ix<phi2d->nx-1; ix++){
+	    long ii=saloc->map->p[(ix+npad)+(iy+npad)*nxm];
+	    if(ii>0){ 
+		P(phi, ii-1)=P(phi2d, ix, iy);
+	    }
+	}
+    }
+    dfree(phi2d);
 }

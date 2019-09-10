@@ -26,8 +26,8 @@
  */
 
 lmat *loc_create_embed(long *nembed, const loc_t *loc, double oversize, int fftpad);
-void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny);
-void loc_create_map(loc_t *loc);
+void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny);
+void loc_create_map(const loc_t *loc);
 /*Obtain an entry in the map, with boundary checking enforced*/
 static inline long loc_map_get(map_t *map, long ix, long iy){
     if(ix>=0 && ix<map->nx && iy>=0 && iy<map->ny){
@@ -99,7 +99,7 @@ double loc_angle(const loc_t *loc1, const loc_t *loc2);
 void locstretch(loc_t *loc, const double theta, const double frac);
 loc_t *locdup(loc_t *loc);
 void locmean(double *xm, double *ym, const loc_t *loc);
-loc_t *loctransform(loc_t *loc, const char *ps);
+loc_t *loctransform(const loc_t *loc, const char *ps);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double dy, double *p);

@@ -24,4 +24,5 @@ dmat *zernike_cov_kolmogorov(int nr);
 dmat *cov_vonkarman(const loc_t *loc, const dmat *modz, double L0);
 dmat *cov_diagnolize(const dmat *mz, const dmat *cov);
 dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0);
+dmat *fft_mode(const loc_t *loc, double D, double px, double py);
 #endif

@@ -1293,7 +1293,7 @@ static void cog_nea(double *nea, dmat *ints, double cogthres, double cogoff, int
     double gnf[2]={0,0};
     double gny[2]={0,0};
     dcog(gnf, ints, 0, 0, cogthres, cogoff, 0);
-    seed_rand(rstat, 1);/*reset the seed each time to make dminsearch work.*/
+    seed_rand(rstat, 1);/*reset the seed each time.*/
     nea[0]=0; nea[1]=0; nea[2]=0; nea[3]=0;
     for(int i=0; i<ntry; i++){
 	dcp(&ints2, ints);

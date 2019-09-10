@@ -808,48 +808,28 @@ int drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 /**
    Plot gradients using CuReD
 */
-int drawgrad(const char *fig, loc_t *loc, const dmat *grad, double *zlim, int grad2opd,
+int drawgrad(const char *fig, loc_t *saloc, const dmat *grad, double *zlim, int grad2opd,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char* format,...){
     format2fn;
     if(!draw_current(fig, fn)) return 0;
     if(grad2opd && grad->nx>8){
 	//This is different from loc_embed. It removes the padding.
-	loc_create_map(loc);
-	int npad=loc->npad;
-	int nxm=loc->map->nx;
-	int nx=loc->map->nx-npad*2;
-	int ny=loc->map->ny-npad*2;
-	dmat *gx=dnew(nx,ny);
-	dmat *gy=dnew(nx,ny);
-	long nsa=grad->nx/2;
-	for(int iy=0; iy<ny; iy++){
-	    for(int ix=0; ix<nx; ix++){
-		long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
-		if(ii>0){
-		    gx->p[ix+iy*nx]=P(grad, ii-1, 0);
-		    gy->p[ix+iy*nx]=P(grad, ii-1+nsa, 0);
-		}else{
-		    gx->p[ix+iy*nx]=NAN;
-		    gy->p[ix+iy*nx]=NAN;
-		}
-	    }
-	}
 	dmat *phi=0;
-	cure(&phi, gx, gy, loc->dx);
+	cure_loc(&phi, grad, saloc);
 	double limit[4];
-	limit[0]=loc->map->ox+fabs(loc->dx)*(npad-1/2);
-	limit[1]=loc->map->ox+fabs(loc->dx)*(nx+npad-1/2);
-	limit[2]=loc->map->oy+fabs(loc->dy)*(npad-1/2+1);
-	limit[3]=loc->map->oy+fabs(loc->dy)*(ny+npad-1/2+1);
+	int npad=saloc->npad;
+    	limit[0]=saloc->map->ox+fabs(saloc->dx)*(npad-1/2);
+	limit[1]=saloc->map->ox+fabs(saloc->dx)*(phi->nx+npad-1/2);
+	limit[2]=saloc->map->oy+fabs(saloc->dy)*(npad-1/2+1);
+	limit[3]=saloc->map->oy+fabs(saloc->dy)*(phi->ny+npad-1/2+1);
 	//writebin(phi, "phi");
 	imagesc(fig,phi->nx,phi->ny, limit, zlim, phi->p,  title, xlabel, ylabel,"%s",fn);
 	dfree(phi);
-	dfree(gx);
-	dfree(gy);
+
     }else{
-	drawopd(fig, loc, grad->p, zlim, title, xlabel, ylabel, "%s x", fn);
-	drawopd(fig, loc, grad->p+grad->nx/2, zlim, title, xlabel, ylabel, "%s y", fn);
+	drawopd(fig, saloc, grad->p, zlim, title, xlabel, ylabel, "%s x", fn);
+	drawopd(fig, saloc, grad->p+grad->nx/2, zlim, title, xlabel, ylabel, "%s y", fn);
     }
     return 1;
 }

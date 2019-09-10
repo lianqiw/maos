@@ -507,6 +507,17 @@ R X(sumsq)(const X(mat)*A){
     }
     return out;
 }
+/**
+   compute the sum of A.*A
+*/
+R X(sumdiffsq)(const X(mat)*A, const X(mat)*B){
+    R out=0;
+    assert(A->nx==B->nx && A->ny==B->ny);
+    for(long i=0; i<A->nx*A->ny; i++){
+	out+=ABS2(A->p[i]-B->p[i]);
+    }
+    return out;
+}
 
 /**
    shift frequency components by n/2

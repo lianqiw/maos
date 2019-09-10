@@ -427,11 +427,7 @@ X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt){
    sqrt(||A-B||/||A||) using norm2. for debugging purpose.
 */
 T X(diff)(const X(mat) *A, const X(mat) *B){
-    X(mat) *C=NULL;
-    X(cp)(&C,A);
-    X(add)(&C,1,B,-1);
-    T d=sqrt(X(norm)(C)*2/(X(norm)(C)+X(norm)(B)));
-    X(free)(C);
+    T d=sqrt(X(sumdiffsq)(A,B)*2/(X(norm)(A)+X(norm)(B)));
     return isnan(creal(d))?0:d;
 }
 /**

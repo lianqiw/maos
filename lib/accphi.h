@@ -64,7 +64,7 @@ void prop(thread_t *data);/*A unified wrapper */
     const map_t *mapin /**<[in] OPD defind on a square grid*/
 #define ARGIN_GRID2 mapin
 #define ARGIN_NONGRID							\
-    loc_t *locin,     /**<[in] Coordinate of iregular source grid*/	\
+    const loc_t *locin,     /**<[in] Coordinate of iregular source grid*/	\
     const double *phiin/**<[in] Input OPD defined in locin*/
 #define ARGIN_NONGRID2 locin, phiin
 #define ARGOUT_LOC							\

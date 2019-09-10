@@ -193,8 +193,8 @@ lmat *loc_create_embed(long *nembed, const loc_t *loc, double oversize, int fftp
 /**
    Create a map for loc with padding of 1. 
 */
-void loc_create_map(loc_t *loc){
-    loc_create_map_npad(loc,0,0,0);
+void loc_create_map(const loc_t *loc){
+    loc_create_map_npad((loc_t*)loc,0,0,0);
 }
 PNEW(maplock);
 DEF_ENV_FLAG(LOC_MAP_EXTEND, 1);
@@ -205,7 +205,7 @@ DEF_ENV_FLAG(LOC_MAP_EXTEND, 1);
    region in the map is replaced with closest valid point. This extends the
    coverage of the grid automatically.
 */
-void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
+void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
     LOCK(maplock);
     if(loc->map){
 	if(loc->npad<npad){
@@ -219,7 +219,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 	UNLOCK(maplock);
 	return;
     }
-    loc->npad = npad;/*just record the information. */
+    ((loc_t*)loc)->npad = npad;/*just record the information. */
     double xmin,xmax,ymin,ymax;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
@@ -244,7 +244,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 	map_nx=nx;
 	map_ny=ny;
     }
-    loc->map = mapnew(map_nx, map_ny, loc->dx, loc->dy, 0);
+    ((loc_t*)loc)->map=mapnew(map_nx, map_ny, loc->dx, loc->dy, 0);
     loc->map->iac=loc->iac;
     loc->map->ox=xmin;
     loc->map->oy=ymin;
@@ -1308,7 +1308,7 @@ static dmat *parse_poly(const char *_ps){
    ym{ip}=\{sum}_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
    was using string input. New scheme uses bin files to preserve precision.
 */
-loc_t *loctransform(loc_t *loc, const char *polycoeff){
+loc_t *loctransform(const loc_t *loc, const char *polycoeff){
     const double *restrict x=loc->locx;
     const double *restrict y=loc->locy;
     /*Test whether the transform is pure shift. */
@@ -1317,8 +1317,21 @@ loc_t *loctransform(loc_t *loc, const char *polycoeff){
     double *restrict ym=locm->locy;
     //Parse from string to 3xn array
     dmat *cx=0, *cy=0;
+    int input_type;
     if(check_suffix(polycoeff, ".bin")){
-	dmat *coeff=dread(polycoeff);
+	input_type=1;
+    }else if(*((const uint32_t*)polycoeff)==M_DBL){
+	input_type=2;
+    }else{
+	input_type=0;
+    }
+    if(input_type>0){
+	dmat *coeff=0;
+	if(input_type==1){
+	    coeff=dread(polycoeff);
+	}else if(input_type==2){
+	    coeff=(dmat*)polycoeff;
+	}
 	if(coeff->ny==4){
 	    cx=dnew(3, coeff->nx);
 	    cy=dnew(3, coeff->nx);
@@ -1328,7 +1341,9 @@ loc_t *loctransform(loc_t *loc, const char *polycoeff){
 		P(cx, 1, ic)=P(cy, 1, ic)=P(coeff, ic, 0);//power for x
 		P(cx, 2, ic)=P(cy, 2, ic)=P(coeff, ic, 1);//power for y
 	    }
-	    dfree(coeff);
+	    if(input_type==1){
+		dfree(coeff);
+	    }
 	}else{
 	    error("coeff is in wrong format\n");
 	}

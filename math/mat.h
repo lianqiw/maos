@@ -53,6 +53,7 @@
     R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(sumabs)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(sumsq)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
+    R X(sumdiffsq)(const X(mat)*A, const X(mat)*B) CHECK_UNUSED_RESULT;	\
     void X(fftshift)(X(mat) *A);					\
     void X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
     X(cell) *X(cell_cast)(const void *A) CHECK_UNUSED_RESULT;		\

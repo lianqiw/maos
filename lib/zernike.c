@@ -391,3 +391,15 @@ dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0){
     }
     return kl;
 }
+/**
+   Generate FFT mode with period.
+ */
+dmat *fft_mode(const loc_t *loc, double D, double px, double py){
+    dmat *opd=dnew(loc->nloc,1);
+    double tx=2*M_PI*px/D;
+    double ty=2*M_PI*py/D;
+    for(long iloc=0; iloc<loc->nloc; iloc++){
+	P(opd,iloc)=cos(loc->locx[iloc]*tx)*cos(loc->locy[iloc]*ty);
+    }
+    return opd;
+}

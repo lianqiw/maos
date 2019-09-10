@@ -139,8 +139,10 @@ X(mat)* X(inv)(const X(mat) *A){
 /**
    compute the pseudo inverse of matrix A with weigthing of full matrix W or
    sparse matrix weighting Wsp.  For full matrix, wt can be either W or diag (W)
-   for diagonal weighting.  B=inv(A'*W*A)*A'*W; */
-X(mat) *X(pinv)(const X(mat) *A, const void *W){
+   for diagonal weighting.  B=inv(A'*W*A)*A'*W;
+   thres is the threshold to truncate eigenvalues.
+*/
+X(mat) *X(pinv2)(const X(mat) *A, const void *W, R thres){
     if(!A) return NULL;
     X(mat) *AtW=NULL;
     /*Compute AtW=A'*W */
@@ -181,13 +183,20 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 	writebin(AtW,"AtW_isnan");
 	writebin(W,"W_isnan");
     }
-    X(svd_pow)(cc,-1,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
+    X(svd_pow)(cc,-1,thres);/*invert the matrix using SVD. safe with small eigen values. */
     X(mat) *out=NULL;
     /*Compute (A'*W*A)*A'*W */
     X(mm) (&out, 0, cc, AtW, "nn", 1);
     X(free)(AtW);
     X(free)(cc);
     return out;
+}
+
+/**
+   A convenient wrapper.
+ */
+X(mat) *X(pinv)(const X(mat) *A, const void *W){
+    return X(pinv2)(A, W, 1e-14);
 }
 /**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.

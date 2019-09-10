@@ -44,7 +44,7 @@
    that it sums to 1.
 
  */
-dsp* mkh(loc_t *locin, loc_t *locout, 
+dsp* mkh(const loc_t *locin, const loc_t *locout, 
 	 double displacex, double displacey, double scale){
     dsp *Hb=mkhb(locin, locout,displacex, displacey, scale);
     dsp *H=dsptrans(Hb);
@@ -54,7 +54,7 @@ dsp* mkh(loc_t *locin, loc_t *locout,
 /**
    Create transpose of mkh() result.
 */
-dsp* mkhb(loc_t *locin, loc_t *locout,
+dsp* mkhb(const loc_t *locin, const loc_t *locout,
 	  double displacex, double displacey, double scale){
     if(locin->iac){
 	return mkhb_cubic(locin, locout, displacex, displacey, scale, locin->iac);
@@ -139,7 +139,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout,
     dspdroptol(hback,EPS);
     return hback;
 }
-dsp *mkh_cubic(loc_t *locin, loc_t *locout, 
+dsp *mkh_cubic(const loc_t *locin, const loc_t *locout, 
 	       double displacex, double displacey, double scale, double cubic_iac){
     dsp *Hb=mkhb_cubic(locin, locout,displacex, displacey, scale, cubic_iac);
     dsp *H=dsptrans(Hb);
@@ -149,7 +149,7 @@ dsp *mkh_cubic(loc_t *locin, loc_t *locout,
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt.  */
-dsp *mkhb_cubic(loc_t *locin, loc_t *locout, 
+dsp *mkhb_cubic(const loc_t *locin, const loc_t *locout, 
 		double displacex, double displacey, double scale, double cubic_iac){
     dsp *hback;
     double dplocx, dplocy;
@@ -260,7 +260,7 @@ dsp *mkhb_cubic(loc_t *locin, loc_t *locout,
    xout should be 1-d arrays of coordinates. We require the coordinates to order
    incrementally monotonically, but do not require them to be evenly spaced.
  */
-dsp *mkhbin1d(dmat *xin, dmat *xout){
+dsp *mkhbin1d(const dmat *xin, const dmat *xout){
     if(xin->ny!=1 || xout->ny!=1){
 	error("We require both xin and xout to be only one column\n");
     }
