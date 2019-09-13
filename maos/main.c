@@ -183,6 +183,7 @@ int main(int argc, const char *argv[]){
     }
     
     maos_reset();
+    free_parms(parms);
     info("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),HOST);
     free(scmd);
     free(arg->gpus);

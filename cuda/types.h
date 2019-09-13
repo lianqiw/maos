@@ -130,6 +130,8 @@ public:
 	    delete[] p0;
 	    myfree(nref);
 	}
+	nref=0;
+	p0=0;
     }
 
     //Constructors and related
@@ -168,9 +170,6 @@ public:
 	    p0=new Dev<T>[n];
 	    nref=mymalloc(1, int);
 	    nref[0]=1;
-	}else{
-	    p0=0;
-	    nref=0;
 	}
 	p=(T*)p0;	
     }
@@ -261,6 +260,7 @@ public:
     Array(long nxi=0, long nyi=1, T *pi=NULL, int own=1)
 	:Parent(nxi*nyi, pi, own),nx(nxi),ny(nyi){
     }
+
     //Create a reference with offset.
     Array(long nxi,long nyi,const Parent& pi,long offset=0):Parent(pi,offset),nx(nxi),ny(nyi){
     }

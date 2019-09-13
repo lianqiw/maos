@@ -1301,65 +1301,12 @@ static dmat *parse_poly(const char *_ps){
     return cx;
     
 }
-/**
-   Transform coordinate. loc (input) contains x,y; locm (return) contains xm, ym.
-   polyn contains the formula
-   xm{ip}=\{sum}_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic)))
-   ym{ip}=\{sum}_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
-   was using string input. New scheme uses bin files to preserve precision.
-*/
-loc_t *loctransform(const loc_t *loc, const char *polycoeff){
-    const double *restrict x=loc->locx;
-    const double *restrict y=loc->locy;
-    /*Test whether the transform is pure shift. */
+static loc_t *loctransform_do(const loc_t *loc, const dmat *cx, const dmat *cy){
     loc_t *locm=locnew(loc->nloc, loc->dx, loc->dy);
     double *restrict xm=locm->locx;
     double *restrict ym=locm->locy;
-    //Parse from string to 3xn array
-    dmat *cx=0, *cy=0;
-    int input_type;
-    if(check_suffix(polycoeff, ".bin")){
-	input_type=1;
-    }else if(*((const uint32_t*)polycoeff)==M_DBL){
-	input_type=2;
-    }else{
-	input_type=0;
-    }
-    if(input_type>0){
-	dmat *coeff=0;
-	if(input_type==1){
-	    coeff=dread(polycoeff);
-	}else if(input_type==2){
-	    coeff=(dmat*)polycoeff;
-	}
-	if(coeff->ny==4){
-	    cx=dnew(3, coeff->nx);
-	    cy=dnew(3, coeff->nx);
-	    for(int ic=0; ic<cx->ny; ic++){
-		P(cx, 0, ic)=P(coeff, ic, 2);//coeff for x
-		P(cy, 0, ic)=P(coeff, ic, 3);//coeff for y
-		P(cx, 1, ic)=P(cy, 1, ic)=P(coeff, ic, 0);//power for x
-		P(cx, 2, ic)=P(cy, 2, ic)=P(coeff, ic, 1);//power for y
-	    }
-	    if(input_type==1){
-		dfree(coeff);
-	    }
-	}else{
-	    error("coeff is in wrong format\n");
-	}
-    }else{
-	char *polyn=strdup(polycoeff);
-	char *px=polyn;
-	char *py=strchr(polyn, ';');
-	if(py==polyn || !py) error("Wrong format '%s'\n", polyn);
-	py[0]='\0';
-	py++;
-	//info("polyn=(%s)\npx=(%s)\npy=(%s)\n", _polyn, px, py);
-	//Now parse the strings.
-	cx=parse_poly(px);
-	cy=parse_poly(py);
-	free(polyn); polyn=0;
-    }
+    const double *restrict x=loc->locx;
+    const double *restrict y=loc->locy;
     int np=0;
     int nonint=0;
     for(int ic=0; ic<cx->ny; ic++){
@@ -1407,10 +1354,77 @@ loc_t *loctransform(const loc_t *loc, const char *polycoeff){
 	    }
 	}
     }
+    return locm;
+}
+loc_t *loctransform2(const loc_t *loc, const dmat *coeff){
+    dmat *cx=dnew(3, coeff->nx);
+    dmat *cy=dnew(3, coeff->nx);
+    for(int ic=0; ic<cx->ny; ic++){
+	P(cx, 0, ic)=P(coeff, ic, 2);//coeff for x
+	P(cy, 0, ic)=P(coeff, ic, 3);//coeff for y
+	P(cx, 1, ic)=P(cy, 1, ic)=P(coeff, ic, 0);//power for x
+	P(cx, 2, ic)=P(cy, 2, ic)=P(coeff, ic, 1);//power for y
+    }
+    loc_t* locm=loctransform_do(loc, cx, cy);
     dfree(cx);
     dfree(cy);
     return locm;
 }
+/**
+   Transform coordinate. loc (input) contains x,y; locm (return) contains xm, ym.
+   polyn contains the formula
+   xm{ip}=\{sum}_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic)))
+   ym{ip}=\{sum}_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
+   was using string input. New scheme uses bin files to preserve precision.
+*/
+loc_t *loctransform(const loc_t *loc, const char *polycoeff){
+    /*Test whether the transform is pure shift. */
+    //Parse from string to 3xn array
+    int input_type;
+    if(check_suffix(polycoeff, ".bin")){
+	input_type=1;
+    }else if(*((const uint32_t*)polycoeff)==M_DBL){
+	input_type=2;
+    }else{
+	input_type=0;
+    }
+    loc_t *locm=0;
+    if(input_type>0){
+	dmat *coeff=0;
+	if(input_type==1){
+	    coeff=dread(polycoeff);
+	}else if(input_type==2){
+	    coeff=(dmat*)polycoeff;
+	}
+	if(coeff->ny==4){
+	    locm=loctransform2(loc, coeff);
+
+	}else{
+	    error("coeff is in wrong format\n");
+	}
+	if(input_type==1){
+	    dfree(coeff);
+	}
+    }else{
+	char *polyn=strdup(polycoeff);
+	char *px=polyn;
+	char *py=strchr(polyn, ';');
+	if(py==polyn || !py) error("Wrong format '%s'\n", polyn);
+	py[0]='\0';
+	py++;
+	//info("polyn=(%s)\npx=(%s)\npy=(%s)\n", _polyn, px, py);
+	//Now parse the strings.
+	dmat *cx=parse_poly(px);
+	dmat *cy=parse_poly(py);
+	free(polyn); polyn=0;
+    
+	locm=loctransform_do(loc, cx, cy);
+	dfree(cx);
+	dfree(cy);
+    }
+    return locm;
+}
+
 /**
    Shift a loc coordinate
 */

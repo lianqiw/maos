@@ -231,7 +231,6 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    ngpu=MAXGPU;
 	}
 	GPUS=Array<int>(ngpu, 1);//stores CUDA index
-	register_deinit(NULL, GPUS());
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*MAXGPU, sizeof(long));
 	int gpu_valid_count;
@@ -269,7 +268,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
     if(NGPU) {
 	cuglobal=new cuglobal_t;
 	cudata_all=new cudata_t*[NGPU];
-	register_deinit(NULL, cudata_all);
+
 	info("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    cudaSetDevice(GPUS[i]);
@@ -381,9 +380,14 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
    Clean up device.
 */
 void gpu_cleanup(void){
-    for(int ig=0; ig<NGPU; ig++){
-	gpu_set(ig);
-	delete cudata;
+    if(NGPU){
+	for(int ig=0; ig<NGPU; ig++){
+	    gpu_set(ig);
+	    delete cudata;
+	}
+	delete cudata_all;
+	delete cuglobal;
+	GPUS.deinit();
+	NGPU=0;
     }
-    delete cuglobal;
 }

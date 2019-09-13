@@ -222,7 +222,7 @@ case "$CN" in
 	    if test "$major" -lt 4 ;then
 		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
-	    OPTIM_GCC+=" -ftree-vectorize " #introduced in GCC 4
+	    OPTIM_GCC+=" -ftree-vectorize -ffast-math -fno-finite-math-only" #introduced in GCC 4
 	    if test "$major" -gt 4 -o "$minor" -ge 2 ;then
 		#echo "Enabling -mtune=native"
 		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2

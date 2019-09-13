@@ -19,9 +19,12 @@
 #include "moao.h"
 /**
    \file maos.c
-   Contains main() and the entry into simulation maos()
+
+   Contains main() and the entry into simulation maos(). The main() is separated
+   into main.c so that maos.c can be a part of libaos.la which is callable by
+   MATLAB.
 */
-GLOBAL_T *global=NULL;//record for convenient access.
+GLOBAL_T *global=NULL;//record for convenient access. It enables calling maos from matlab
 int use_cuda=0;
 const char *dirskysim=NULL;
 
@@ -181,11 +184,9 @@ void maos_reset(){
       keep track of all the memory allocation.*/
     if(!global) return;
     PARMS_T *parms=(PARMS_T*)global->parms;
-    free_simu(global->simu);
     free_recon(parms,global->recon); 
     free_powfs(parms,global->powfs); 
     free_aper(global->aper);
-    free_parms(parms);
 #if USE_CUDA
     if(use_cuda){
 	gpu_cleanup();

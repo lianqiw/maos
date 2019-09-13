@@ -21,8 +21,8 @@ namespace cuda_recon{
 Real cusolve_cg::solve(curcell &xout, const curcell &xin, stream_t &stream){
     Real ans;
     cgtmp.count++;
-    if((ans=gpu_pcg(xout, this, precond, xin, cgtmp,
-		    warm_restart, maxit, stream))>1){
+    if((ans=pcg(xout, this, precond, xin, cgtmp,
+		warm_restart, maxit, stream))>1){
 	cgtmp.count_fail++;
 	warning("CG %5d(%5d) does not converge. residual=%g. maxit=%d. Result saved.\n", 
 		 cgtmp.count, cgtmp.count_fail, ans, maxit);

@@ -169,6 +169,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 void free_aper(APER_T *aper){
     /*aper->ampground is freed on setup_recon*/
     locfree(aper->locs);
+    cellfree(aper->locs_dm);
     dfree(aper->amp);
     dfree(aper->amp1);
     dfree(aper->imcc);

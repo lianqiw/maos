@@ -30,7 +30,7 @@ PNEW2(drawdata_mutex);
 void dmaxmin(const double *p, long n, double *pmax, double *pmin){
     double max=-INFINITY, min=INFINITY;
     for(long i=0; i<n; i++){
-	if(p[i]==p[i]){//not NAN
+	if(!isnan(p[i])){//not NAN
 	    if(p[i]>max){
 		max=p[i];
 	    }

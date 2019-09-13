@@ -49,7 +49,7 @@ protected:
     cusolve_cgpre *precond;
 public:
     cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(0){}
-    void init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart; precond=0;}
+    //void init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart; precond=0;}
     ~cusolve_cg(){
 	delete precond;
     }

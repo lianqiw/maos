@@ -101,8 +101,8 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		dbg("icols=%d, nyout=%ld\n", icols, nyout);
 	    }
 	    OMPTASK_FOR(icol, icols, nyout){
-		CONST_IN double *phicol, *phicol2;
-		CONST_OUT double *phiout2=phiout+icol*nxout;//starting address of output
+		CONST_IN double *restrict phicol, *restrict phicol2;
+		CONST_OUT double *restrict phiout2=phiout+icol*nxout;//starting address of output
 		long nplocy=nplocy0+icol;
 		while(nplocy>=nyin){
 		    nplocy-=nyin;
@@ -265,6 +265,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		int irow=irows;
 		if(dplocx_arr){//use cached results
 		    //First handle points fall within [0, wrapx)
+#pragma omp simd
 		    for(; irow<rowdiv; irow++){
 			dplocx0=dplocx_arr[irow];
 			nplocx0=nplocx_arr[irow];

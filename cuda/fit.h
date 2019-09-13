@@ -49,7 +49,6 @@ protected:
 public:
     cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, const curecon_geom *_grid=0);
     virtual ~cufit_grid(){
-	info("cufit_grid::destructor\n");
 	delete dir;
     }
     virtual void R(curcell &out, Real beta, 

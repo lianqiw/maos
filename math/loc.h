@@ -100,6 +100,7 @@ void locstretch(loc_t *loc, const double theta, const double frac);
 loc_t *locdup(loc_t *loc);
 void locmean(double *xm, double *ym, const loc_t *loc);
 loc_t *loctransform(const loc_t *loc, const char *ps);
+loc_t *loctransform2(const loc_t *loc, const dmat *coeff);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double dy, double *p);
