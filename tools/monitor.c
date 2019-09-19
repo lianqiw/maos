@@ -351,8 +351,9 @@ void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p){
 	kill_job(p);
     }
 }
-static void kill_all_jobs(GtkAction *btn){
+static void kill_all_jobs(GtkButton *btn, gpointer data){
     (void)btn;
+    (void)data;
     int this_host=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
 
     GtkWidget *dia=gtk_message_dialog_new
@@ -448,22 +449,26 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	}
     return TRUE;
 }
-static int test_skipped(int status, double frac){
-    return status==S_FINISH && frac<1;
+static int test_jobs(int status, double frac, int flag){
+    switch(flag){
+    case 1://skipped
+	return status==S_FINISH && frac<1;
+	;;
+    case 2://finished
+	return status==S_FINISH;
+	;;
+    case 3://crashed
+	return status==S_CRASH || status==S_KILLED || status==S_TOKILL;
+	;;
+    case 4://all that is not running or pending
+	return status == S_FINISH || status==S_CRASH || status==S_KILLED || status==S_TOKILL;
+	;;
+    default:
+	return 0;
+	;;
+    }
 }
-static int test_finished(int status, double frac){
-    (void)frac;
-    return status==S_FINISH;
-}
-static int test_crashed(int status, double frac){
-    (void)frac;
-    return status==S_CRASH || status==S_KILLED || status==S_TOKILL;
-}
-static int test_all(int status, double frac){
-    (void)frac;
-    return status == S_FINISH || status==S_CRASH || status==S_KILLED || status==S_TOKILL;
-}
-static void clear_jobs(GtkAction *btn, int (*testfun)(int, double)){
+static void clear_jobs(GtkButton *btn, gpointer flag){
     (void)btn;
     //int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
     for(int ihost=0; ihost<nhost; ihost++){
@@ -473,7 +478,7 @@ static void clear_jobs(GtkAction *btn, int (*testfun)(int, double)){
 	int cmd[2];
 	cmd[0]=CMD_REMOVE;
 	for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
-	    if(testfun(iproc->status.info, iproc->frac)){
+	    if(test_jobs(iproc->status.info, iproc->frac, GPOINTER_TO_INT(flag))){
 		cmd[1]=iproc->pid;
 		if(stwriteintarr(sock,cmd,2)){
 		    warning("write to socket %d failed\n",sock);
@@ -483,20 +488,10 @@ static void clear_jobs(GtkAction *btn, int (*testfun)(int, double)){
 	}
     }
 }
-static void clear_jobs_finished(GtkAction *btn){
-    clear_jobs(btn, test_finished);
-}
-static void clear_jobs_crashed(GtkAction *btn){
-    clear_jobs(btn, test_crashed);
-}
-static void clear_jobs_skipped(GtkAction *btn){
-    clear_jobs(btn, test_skipped);
-}
-static void clear_jobs_all(GtkAction *btn){
-    clear_jobs(btn, test_all);
-}
-static void save_all_jobs(GtkAction *btn){
+
+static void save_all_jobs(GtkAction *btn, gpointer data){
     (void)btn;
+    (void)data;
     char *fnall=NULL;
     char *tm=strtime();
     for(int ihost=0; ihost<nhost; ihost++){
@@ -600,7 +595,13 @@ static void add_host_event(GtkButton *button, gpointer data){
 	}
     }
 }
-
+static GtkToolItem *new_toolbar_item(const char *iconname, const char *cmdname, void(*func)(GtkButton*, gpointer data), int data){
+    GtkToolItem* item;
+    GtkWidget *image=gtk_image_new_from_icon_name(iconname, GTK_ICON_SIZE_SMALL_TOOLBAR);
+    item=gtk_tool_button_new(image, cmdname);
+    g_signal_connect(item, "clicked", G_CALLBACK(func),GINT_TO_POINTER(data));
+    return item;
+}
 int main(int argc, char *argv[])
 {
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
@@ -680,75 +681,49 @@ int main(int argc, char *argv[])
     provider_red=gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider_red, prog_red, strlen(prog_red), NULL);
     /*Properties not belonging to GtkWidget need to begin with -WidgetClassName*/
-    const gchar *all_style="*{"
-	"padding:0px;\n"
-	"border-radius:0px;\n"
-	"border-width:1px;\n"
-	"font:Sans 10;\n"
-	"-GtkToolbar-button-releaf:0px\n"
-	"}"
-	".notebook{"
-	"-GtkNotebook-tab-overlap: 2px;"
-	"-GtkNotebook-tab-curvature: 2px;"
-	"-GtkWidget-focus-line-width: 0px;"
-	"background-color:@theme_bg_color;"
-	"}"
-	".notebook tab{"
-	"-adwaita-focus-border-radius: 5px;"
-	"border-width: 0px;"
-	"padding: 1px 1px 1px;"
-	"background-color:@theme_bg_color;"
-	"}"
-	".notebook tab:active{"
- 	"border-width: 1px;"
-	"padding: 0px 0px 0px;"
-        "background-color:#FFFFFF;"
-	"}"
-	".entry.progressbar{"
-	"-GtkEntry-has-frame:1;\n"
-	"-GtkEntry-progress-border:0px,0px,0px,0px;\n"
-	"-GtkEntry-inner-border:0px,0px,0px,0px;\n"
-	"background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));\n"
-	"border-width:1px;\n"
-        "border-style:none; \n"
-	"border-color:#000000;\n"
-	"}"
-	"GtkProgressBar {\n"
-	"-GtkProgressBar-min-horizontal-bar-height:6px;\n"
-	"-GtkProgressBar-min-horizontal-bar-width:6px;\n"
-	"-GtkProgressBar-min-vertical-bar-height:6px;\n"
-	"-GtkProgressBar-min-vertical-bar-width:6px;\n"
-	"-GtkProgressBar-xspacing:0px;\n"
-	"-GtkProgressBar-yspacing:0px;\n"
-	"padding:1;\n" //this is the gap betwen trough and bar.
-	"}"
-	"GtkProgressBar.progressbar{"
-	"background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));\n" //this is the bar
-	"}"
-	"GtkProgressBar.progressbar,.progressbar{"
-	"border-width:0px;"
-	"padding:0px;"
-	"border-radius:0px;" //make the bar square
-	"-adwaita-progressbar-pattern: none;"
-	"}"
-	".progressbar.vertical{"
-	"-adwaita-progressbar-pattern: none;"
-	"border-radius:0px;"
-	"padding:0px;"
-	"}"
-	".trough, .trough row, .trough row:hover{"
-	"border-width: 1px;\n"
-	"-GtkProgressBar-xspacing: 0px;"
-	"-GtkProgressBar-yspacing: 0px;"
-	"border-radius:0px;\n" //make the trough square
-	//"background-image:-gtk-gradient(linear, left bottom, left top, from (#0000FF), to (#FF0000);\n"
-	"}";
+    const gchar *all_style=
+		      "progress, trough {\n"
+		      "min-height:4px;\n"
+		      "min-width: 4px;\n"
+		      "padding: 1px;\n"
+		      "}\n"
+		      "*{\n"
+		      "padding:0px;\n"
+		      "border-radius:0px;\n"
+		      "border-width:1px;\n"
+		      "font:11px Sans;\n"
+		      "-GtkToolbar-button-releaf:0px;\n"
+		      "}\n"
+		      ".notebook{\n"
+		      "background-color:@theme_bg_color;\n"
+		      "}\n"
+		      ".notebook tab{\n"
+		      "-adwaita-focus-border-radius: 5px;\n"
+		      "border-width: 0px;\n"
+		      "padding: 1px 1px 1px;\n"
+		      "background-color:@theme_bg_color;\n"
+		      "}\n"
+		      ".notebook tab:active{\n"
+		      "border-width: 1px;\n"
+		      "padding: 0px 0px 0px;\n"
+		      "background-color:#FFFFFF;\n"
+		      "}\n"
+		      ".entry.progressbar{\n"
+		      "-GtkEntry-has-frame:1;\n"
+		      "-GtkEntry-progress-border:0px,0px,0px,0px;\n"
+		      "-GtkEntry-inner-border:0px,0px,0px,0px;\n"
+		      "background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));\n"
+		      "border-width:1px;\n"
+		      "border-style:none; \n"
+		      "border-color:#000000;\n"
+		      "}\n"
+;
+
     GtkCssProvider *provider_default=gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);
     GtkStyleContext *all_context=gtk_widget_get_style_context(window);
     GdkScreen *screen=gtk_style_context_get_screen(all_context);
-    gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default),
-					      GTK_STYLE_PROVIDER_PRIORITY_USER);
+    gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default), GTK_STYLE_PROVIDER_PRIORITY_USER);
     
 #endif
 
@@ -756,7 +731,8 @@ int main(int argc, char *argv[])
     GtkWidget *vbox=gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
     {
-	/*first create actions*/
+/*#if GTK_MAJOR_VERSION<3
+
 	topgroup=gtk_action_group_new("topgroup");
 	GtkAction *action_connect_all=gtk_action_new("act-connect-all", "Connect all", "Connect to all hosts", GTK_STOCK_CONNECT);
 	g_signal_connect(action_connect_all, "activate", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
@@ -786,8 +762,9 @@ int main(int argc, char *argv[])
 	g_signal_connect(action_save_jobs, "activate", G_CALLBACK(save_all_jobs),NULL);
 	gtk_action_group_add_action(topgroup, action_save_jobs);
 
-	/*set toolbar*/
+
 	toptoolbar=gtk_toolbar_new();
+	
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);	
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_finish)), -1);
@@ -797,6 +774,20 @@ int main(int argc, char *argv[])
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_kill_all)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_save_jobs)), -1);
+#else */
+	toptoolbar=gtk_toolbar_new();
+	//GtkToolItem* item;
+	//item=gtk_tool_button_new(gtk_image_new_from_icon_name("network-wired", GTK_ICON_SIZE_SMALL_TOOLBAR), "Connect");
+	//g_signal_connect(item, "clicked", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("emblem-synchronizing", "Connect", add_host_event,  -1), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select-symbolic", "Clear finished jobs", clear_jobs, 1),-1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", "Clear skipped jobs", clear_jobs, 2),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("dialog-error", "Clear crashed jobs", clear_jobs, 3),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear", "Clear all jobs", clear_jobs, 4),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("process-stop", "Kill all jobs", kill_all_jobs, -1),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy", "Save jobs to file", clear_jobs, -1),  -1);
+
 	gtk_widget_show_all(toptoolbar);
 	gtk_box_pack_start(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar), GTK_ICON_SIZE_MENU);
@@ -845,8 +836,13 @@ int main(int argc, char *argv[])
     	titles[ihost]=gtk_label_new(tit);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
 	GtkWidget *hbox0=gtk_hbox_new(FALSE,0);
+#if GTK_MAJOR_VERSION>=3
+	prog_cpu[ihost]=monitor_new_progress(1,4);
+	prog_mem[ihost]=monitor_new_progress(1,4);
+#else
 	prog_cpu[ihost]=monitor_new_progress(1,16);
 	prog_mem[ihost]=monitor_new_progress(1,16);
+#endif
 	gtk_box_pack_start(GTK_BOX(hbox0),prog_cpu[ihost], FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(hbox0),prog_mem[ihost], FALSE, FALSE, 1);
 	modify_bg(prog_cpu[ihost], 1);
