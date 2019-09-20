@@ -10,6 +10,7 @@ import sys
 import maos
 from pathlib import Path
 import json
+import keyword
 if len(sys.argv)>2:
     srcdir=sys.argv[1];
     fnout=sys.argv[2];
@@ -19,12 +20,13 @@ else:
 
 simu_all=list();
 
-headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
-          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h',
+headlist=['lib/accphi.h','lib/cn2est.h','lib/kalman.h', 'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h',
           'lib/mkdtf.h', 'math/chol.h','sys/scheduler.h']
 structs=maos.parse_structs(srcdir, headlist)
 
-funcs=maos.parse_func(srcdir, structs, ['mex/aolib.h'])
+funcs=maos.parse_func(srcdir, structs, ['lib/aolib.h'])
+
+ #['mex/aolib.h', 'lib/accphi.h','lib/cn2est.h','lib/kalman.h', 'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h', 'math/chol.h'])
 
 fpout=open(fnout,'w')
 print("#!/usr/bin/env python", file=fpout)
@@ -37,36 +39,54 @@ aotype2py={
     'lmat':'cell',
     'cmat':'cell',
     'smat':'cell',
+    'zmat':'cell',
     'cell':'cell',
+    'map_t':'cell',
     'loc_t':'loc',
+    'pts_t':'loc',
     'dsp':'csc',
     'csp':'csc',
     'ssp':'csc',
     'zsp':'csc',
     'char':'c_char',
     'double':'c_double',
+    'float':'c_float',
+    'size_t':'c_size_t',
     'long':'c_long',
     'int':'c_int',
+    'uint32_t':'c_uint',
+    'uint64_t':'c_ulonglong',
     'void':'',
 }
 #process variable type
 def handle_type(argtype, argname):
-    isout=0;
-    isref=0;
-  
-    if argtype[-2:]=='**': #output
+    if (len(argtype)>3 and argtype[-3:]=='***') or argname.count('[')>0: #known
+        return ('Unknown','Unknown','Unknown')
+    elif argtype[-2:]=='**': #output
         isout=1;
         isref=1
         argtype=argtype[:-2]
     elif argtype[-1:]=='*': #pointer
+        isout=0
         isref=1;
         argtype=argtype[:-1]
+    else:
+        isout=0
+        isref=0
 
     if argtype[-4:]=='cell':
         argtype='cell'
+
     pytype=aotype2py.get(argtype, None)
+
     if pytype is None: #represent as a struct
-        py2c='py2struct('+argname+')'
+        if structs.get(argtype,None) :
+            pytype='make_class(\''+argtype+'\''+','+json.dumps(structs.get(argtype,None))+')'
+        else:
+            #print(argtype, argname)
+            pytype='Unknown'
+            argname='Unknown'
+        py2c='py2cellref('+argname+')'
     elif pytype=='cell':#arbitrary array
         if isref:
             py2c='py2cellref('+argname+')'
@@ -74,15 +94,14 @@ def handle_type(argtype, argname):
             py2c='py2cell('+argname+')'
     else:
         py2c=pytype+'('+argname+')'
-    if isref: #pointer input
-        if pytype=='cell' :
-            pass
-        elif pytype=='loc':
-            py2c='byref('+py2c+')'
-        elif pytype=='c_char':
-            py2c='c_char_p('+argname+'.encode(\'ascii\'))'
-        else:
-            py2c=argname+'.ctypes.data_as(c_void_p)'
+        if isref: #pointer input
+            if pytype=='loc':
+                py2c='byref('+py2c+')'
+            elif pytype=='c_char':
+                py2c='c_char_p('+argname+'.encode(\'ascii\'))'
+            else:
+                py2c=argname+'.ctypes.data_as(c_void_p)'
+
 
     if isout:
         prep1=argname+'=POINTER('+pytype+')'
@@ -104,13 +123,18 @@ def handle_output(funtype, funname):
         funtype='cell'
     fun_arg=aotype2py.get(funtype, None)
     if fun_arg is None:#represent as a struct
-        fun_arg='make_class(\''+funtype+'\''+','+json.dumps(structs.get(funtype,None))+')'
+        if structs.get(funtype,None):
+            fun_arg='make_class(\''+funtype+'\''+','+json.dumps(structs.get(funtype,None))+')'
+        else:
+            print(funtype, funname)
+            fun_arg='Unknown'
     if ispointer:
         fun_val='pt2py(out)'
         fun_arg='POINTER('+fun_arg+')'
     else:
         fun_val='out'
-
+    if len(fun_arg)==0:
+        fun_arg='None'
     return ('lib.'+funname+'.restype='+fun_arg, fun_val)
 
 funcalls=list()
@@ -118,7 +142,8 @@ for funname in funcs: #loop over functions
     funtype=funcs[funname][0]  #function return type
     funargs=funcs[funname][1]  #Function arguments
     funname2=funcs[funname][2] #C function name
-    nargs=len(funargs)
+    if len(funargs)==0 :
+        continue
     fundef=''
     fundef_free=''
     pointer_output=''
@@ -129,8 +154,8 @@ for funname in funcs: #loop over functions
     argin=''
     argout=''
     prepout=''
-    fun_arg, fun_val=handle_output(funtype, funname2)
     if funtype!='void': #with C outupt
+        fun_arg, fun_val=handle_output(funtype, funname2)
         argout+=fun_val+','
         funname1='out='
     else:
@@ -139,15 +164,18 @@ for funname in funcs: #loop over functions
     for arg in funargs: #loop over the arguments
         argtype=arg[0]
         argname=arg[1]
-        if argname == 'loc':
-            argname = 'loc_'
-        if argname == 'input':
-            argname = 'input_'
+
+        if argname in ['loc','input','in','out','str','string','len','format','type','min','max']:
+            argname += '_'
+     
         py2c, prep1, prep2=handle_type(argtype, argname)
         argin+=py2c+','
+        #TODO: some argument maybe both input and output argument.
         if prep1: #output argument
             prepout+='    '+prep1+'\n'
             argout+=prep2+','
+            if len(funargs)==1:
+                pyargin+=argname+','
         else: #input argument
             pyargin+=argname+','
 

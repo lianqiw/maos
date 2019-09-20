@@ -29,3 +29,8 @@ if DARWIN
 ___bin_aolib_so_LDFLAGS+=-Wl,-force_load,.libs/libaos.a,../math/.libs/libaomath.a,../sys/.libs/libaosys.a
 endif
 endif
+
+BUILT_SOURCES=aolib.h
+aolib.h:$(nobase_include_HEADERS)
+	gcc -E $(SRC_DIR)/lib/aos.h > $(SRC_DIR)/lib/aolib.h
+

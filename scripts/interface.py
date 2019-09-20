@@ -16,6 +16,9 @@
 #Set argtypes for type checking for input into C code
 #be careful regarding memory management.
 
+
+#TODO: investigate whether CFFI is a better solution.
+
 import sys
 from pdb import set_trace as keyboard
 from ctypes import *

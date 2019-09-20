@@ -2581,7 +2581,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	    snprintf(fn, 80, "Res_%ld.done",parms->sim.seeds->p[iseed]);
 	    if(exist(fn) && !override){
 		parms->fdlock->p[iseed]=-1;
-		warning("Skip seed %ld because %s exist.\n", parms->sim.seeds->p[iseed], fn);
+		warning("Skip seed %ld because %s exists.\n", parms->sim.seeds->p[iseed], fn);
 	    }else{
 		remove(fn);
 	    	snprintf(fn, 80, "Res_%ld.lock",parms->sim.seeds->p[iseed]);

@@ -9,7 +9,7 @@ def parse_file(srcdir, files):
         fpi.close();
     
         while True: #remove all comments start with # or //
-            start=ln.find('#')
+            start=ln.find('#include')
             if start==-1:
                 start=ln.find('//')
             end=ln.find('\n', start)
@@ -23,8 +23,11 @@ def parse_file(srcdir, files):
             if start==-1 or end==-1:
                 break
             ln=ln[0:start]+ln[end+2:]
-            ln=ln.replace('\n','')
 
+        ln=ln.replace('\n',' ')
+        ln=ln.replace(';','; ')
+        ln=re.sub(r'format,[ ]*...','format',ln)
+        ln=re.sub(r'[)][ ]*[(]',')(',ln) #replace space between ) and (
         ln=ln.replace('*','* ') #add space after *
         ln=re.sub(r'[ ]*[*]','*', ln) #remove space before *
         ln=re.sub(r'[ ]+',' ', ln) #remove double space
@@ -49,9 +52,9 @@ def parse_structs(srcdir, files):
             end=ln.find('}', start+1)
 
             if end0!=-1 and end0<end:
-                print(struct, start, end0, end)
-                print (ln[struct:end])
-                print ("embeded {} are not supported")
+                #print(struct, start, end0, end)
+                #print (ln[struct:end])
+                #print ("embeded {} are not supported")
                 break
             fields=ln[start+1:end].split(';')
             if len(name)==0:
@@ -69,6 +72,8 @@ def parse_func(srcdir, structs, files):
     funcs=dict()
     lines=parse_file(srcdir, files)
     for ln in lines:
+        if ln[0:6]=='extern':
+            pass
         ln=ln.replace('const','')
         end=0
         while True:
@@ -78,27 +83,41 @@ def parse_func(srcdir, structs, files):
                 break;
             closep=ln.find(')', openp+1);
             openp2=ln.find('(', openp+1);
-            if openp2!=-1 and openp2<closep:
-                print(ln[openp:closep])
-                print ("embeded () are not supported")
-                break
+            if openp2!=-1 and openp2<closep: #nested (). Skip
+                closep2=ln.find(')', closep+1)
+                end=closep2+1
+                continue
+            elif openp2==closep+1:
+                closep2=ln.find(')', openp2+2)
+                end=closep2+1
+                continue
+
             args=ln[openp+1:closep].split(',')
             defs=ln[end:openp].lstrip().rstrip().split(' ')
-            if len(defs)==2:
-                funtype=defs[0]
-                funname=defs[1]
+
+            if len(defs)>=2:
+                funtype=defs[-2]
+                funname=defs[-1]
                 name2=funname.split('=')
                 funname=name2[0] #Mex name
                 funname2=name2[len(name2)-1] #C name
             else:
-                print(defs)
+                funname=''
+                #print('Skipped:', defs)
+            if funname=='readbin':
+                print(args)
             funarg=list()
             for arg in args:
                 argpair=arg.lstrip().rstrip().split(' ')
-                if len(argpair)==2:
+                if len(argpair)==1 and argpair[0]=='...':
+                    pass #skip this parameter
+                elif len(argpair)==2 :
                     funarg.append(argpair)
                 else:
-                    print(argpair)
+                    funname=''
+                    #print('Skipped:',argpair)
+            if funname=='readbin':
+                print(args)
             if len(funname)>0:
                 funcs[funname]=[funtype, funarg, funname2]
             end=closep+1;

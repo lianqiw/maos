@@ -36,3 +36,4 @@ mex/aolib.c*
 .nfs*
 version.h
 scripts/libaos.py
+lib/aolib.h

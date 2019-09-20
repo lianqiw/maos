@@ -89,7 +89,7 @@ void prop(thread_t *data);/*A unified wrapper */
     const double scale     /**<[in] scaling of the beam diameter (cone)*/
 #define ARG_PROP2 alpha, displacex, displacey, scale
 
-    void prop_grid     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, int wrap, long start, long end);
+void prop_grid     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, int wrap, long start, long end);
 void prop_grid_map (ARGIN_GRID, ARGOUT_MAP, ARG_PROP, int wrap, long start, long end);
 void prop_grid_pts (ARGIN_GRID, ARGOUT_PTS, ARG_PROP, int wrap, long sastart, long saend);
 void prop_grid_stat(ARGIN_GRID, ARGOUT_STAT, ARG_PROP, int wrap, long start, long end);
