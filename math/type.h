@@ -39,30 +39,29 @@ typedef enum CEMBED{
   may use the same pointer, but with different nx or ny
   partition. */
 
-#define ARR(T)						\
+#define ARR(T)								\
     uint32_t id;   /**< to identify the array type. Must be the first element*/	\
-    T *restrict p; /**<The data pointer*/		\
-    long nx;       /**< number of rows */		\
-    long ny;       /**< number of columns */		\
-    char *header;  /**<The header*/			\
-    struct mmap_t *mmap;/**< not NULL if mmaped.*/	\
-    int *nref; /**< reference count */			\
+    T *restrict p; /**<The data pointer*/				\
+    long nx;       /**< number of rows */				\
+    long ny;       /**< number of columns */				\
+    char *header;  /**<The header*/					\
     struct fft_t *fft					
 
-#define MATARR(T) struct{ \
-	ARR(T);		  \
-    }
+#define MATARR(T)				\
+    ARR(T);					\
+    struct mem_t *mem /**< Memory management*/	\
+    
 
-#define CELLARR(T) struct{	      \
-	ARR(T);			      \
-	T m;/*store continuous data*/ \
+#define CELLARR(T)struct{			\
+	ARR(T);					\
+	T m; /*store continuous data*/		\
     }
 
 #define SPMATARR(T) struct{						\
-	uint32_t id;/**<to identify the array type*/			\
+	uint32_t id;         /**<to identify the array type*/		\
 	T *restrict x;       /**< numerical values, size nzmax */	\
-	long nx;             /**< number of rows */		\
-	long ny;             /**< number of columns */		\
+	long nx;             /**< number of rows */			\
+	long ny;             /**< number of columns */			\
 	char *header;        /**<header*/				\
 	long nzmax ;         /**< maximum number of entries */		\
         spint *restrict p ;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
@@ -70,11 +69,11 @@ typedef enum CEMBED{
 	int *nref;           /**< reference counting like dmat */	\
     }
 
-typedef MATARR(double) dmat;/*a double matrix object contains 2-d array of double numbers*/
-typedef MATARR(float) smat;
-typedef MATARR(dcomplex) cmat;
-typedef MATARR(fcomplex) zmat;
-typedef MATARR(long) lmat;
+typedef struct{MATARR(double);} dmat;/*a double matrix object contains 2-d array of double numbers*/
+typedef struct{MATARR(float);} smat;
+typedef struct{MATARR(dcomplex);} cmat;
+typedef struct{MATARR(fcomplex);} zmat;
+typedef struct{MATARR(long);} lmat;
 
 typedef SPMATARR(double) dsp;
 typedef SPMATARR(float) ssp;
@@ -89,7 +88,7 @@ typedef SPMATARR(fcomplex) zsp;
 */
 typedef struct map_t{
     /*The OPD, takes the same form of dmat so can be casted. */
-    ARR(double);
+    MATARR(double);
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x*/
@@ -104,7 +103,7 @@ typedef struct map_t{
    Map with different x/y sampling. Can be cased to dmat
 */
 typedef struct rmap_t{
-    ARR(double);
+    MATARR(double);
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x (first dimension)*/

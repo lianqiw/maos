@@ -248,8 +248,9 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    double dxr=parms->atmr.dx/parms->fit.pos;
 	    const double guard=parms->tomo.guard*dxr;
 	    create_metapupil(&recon->xcmap->p[ips], 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,0,0,0,parms->fit.square);
-	    free(recon->xcmap->p[ips]->p);recon->xcmap->p[ips]->p=NULL;
-	    free(recon->xcmap->p[ips]->nref);recon->xcmap->p[ips]->nref=NULL;
+	    mem_unref(recon->xcmap->p[ips]->mem); 
+	    recon->xcmap->p[ips]->mem=0;
+	    recon->xcmap->p[ips]->p=NULL;
 	}
     }
     recon->xmap=mapcellnew(npsr, 1);
@@ -331,7 +332,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 		double D=(parms->sim.fov*fabs(ht)+parms->aper.d+guard*2);
 		long nx=D/dx+1;
 		long ny=D/dy+1;
-		map=mapnew(nx, ny, dx, dy, 0);
+		map=mapnew(nx, ny, dx, dy);
 		map->h=ht;
 		map->ox+=offset*dx;
 		mapcircle_symbolic(map, D*0.5);

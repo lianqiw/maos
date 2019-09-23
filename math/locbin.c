@@ -162,7 +162,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
 	dmat *in=dreaddata(fp, header);
 	map=d2map(in);
 	dfree(in);
-    }else if(iscell(&header->magic)){/*old format. */
+	/*}else if(iscell(&header->magic)){
 	dcell *in=dcellreaddata(fp, header);
 	if(fabs(in->p[0]->p[0]-in->p[0]->p[1])>1.e-14){
 	    error("Map should be square\n");
@@ -173,7 +173,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
 	map->oy=in->p[0]->p[3];
 	map->h=in->p[0]->p[4];
 	dfree_keepdata(in->p[1]);
-	dcellfree(in);
+	dcellfree(in);*/
     }else{
 	error("Invalid format. magic=%u\n", header->magic);
     }

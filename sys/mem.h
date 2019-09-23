@@ -27,6 +27,7 @@ extern "C"{
     void *malloc_maos(size_t);
     void *realloc_maos(void *, size_t);
     void  free_maos(void *);
+
 #ifdef __cplusplus
 }
 #endif

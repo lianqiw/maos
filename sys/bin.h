@@ -109,7 +109,6 @@ const char*gzerror(voidp gzfile, int *error);
 #endif
 #endif
 typedef struct file_t file_t;
-typedef struct mmap_t mmap_t;
 typedef struct {
     uint32_t magic;//this must be the first element because we cast header_t to uint32_t.
     uint64_t nx;
@@ -151,10 +150,13 @@ void writearr(const void *fpn, const int isfile, const size_t size, const uint32
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void mmap_unref(struct mmap_t *in);
-struct mmap_t *mmap_new(int fd, void *p, long n);
-mmap_t*mmap_ref(mmap_t *in);
+typedef struct mem_t mem_t;
+struct mem_t *mem_new(int fd, void *p, long n);
+void mem_unref(struct mem_t *in);
+mem_t*mem_ref(mem_t *in);
+void mem_replace(mem_t *in, void *p);
+int mem_isref(const mem_t *in);
 int mmap_open(char *fn, int rw);
-void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header);
-void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, char **header0);
+void mmap_header_rw(char **p0, const char **header0, uint32_t magic, long nx, long ny, const char *header);
+void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0);
 #endif

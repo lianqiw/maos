@@ -1347,6 +1347,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	free(parms->powfs); parms->powfs=NULL;
 	parms->npowfs=0;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    dfree(parms->wfs[iwfs].wvlwts);
+	    free(parms->wfs[iwfs].sabad);
+	}
 	free(parms->wfs); parms->wfs=NULL;
 	parms->nwfs=0;
     }

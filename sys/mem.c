@@ -48,6 +48,7 @@ int exit_fail=0;
   matlab manage the memory during referencing..
   */
 
+
 void *(*calloc_default)(size_t, size_t);
 void *(*malloc_default)(size_t);
 void *(*realloc_default)(void *, size_t);
@@ -208,8 +209,8 @@ static int memkey_del(void*p){
 	return 0;
     }else{
 	UNLOCK(mutex_mem);
-	error("Free: %p not found\n", p);
-	print_backtrace();
+	//info("Free: %p not found. Allocated from outside.\n", p);
+	//print_backtrace();
 	return 1;
     }
 
@@ -232,9 +233,8 @@ static void *realloc_dbg(void*p0, size_t size){
 }
 static void free_dbg(void *p){
     if(!p) return;
-    if(!memkey_del(p)){
-	free_default(p);
-    }
+    memkey_del(p);
+    free_default(p);
 }
 
 /**

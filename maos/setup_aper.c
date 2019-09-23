@@ -51,10 +51,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	}
 	if(fabs(parms->aper.rotdeg)>1.e-12){
 	    warning("Pupil is rotated by %g deg\n",parms->aper.rotdeg);
-	    const long nx=aper->ampground->nx;
-	    const long ny=aper->ampground->ny;
-	    dmat *B=dnew_data(nx, ny, aper->ampground->p);
-	    aper->ampground->p=mycalloc(nx*ny,double);
+	    dmat *B=ddup((dmat*)aper->ampground);
 	    dembed((dmat*)aper->ampground,B,parms->aper.rotdeg/180.*M_PI);
 	    dfree(B);
 	}
@@ -84,8 +81,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	map_t *mask=mapread("%s",parms->aper.pupmask);
 	if(fabs(parms->aper.rotdeg)>1.e-12){
 	    warning("Pupil mask is rotated by %g deg\n",parms->aper.rotdeg);
-	    dmat *B=dnew_data(mask->nx, mask->ny, mask->p);
-	    mask->p=mycalloc(mask->nx*mask->ny,double);
+	    dmat *B=ddup((dmat*)mask);
 	    dembed((dmat*)mask, B, parms->aper.rotdeg/180.*M_PI);
 	    dfree(B);
 	}

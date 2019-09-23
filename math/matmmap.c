@@ -47,17 +47,17 @@ X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ..
     }
     char *map0=map;//save value of map
     /*memset(map, 0, msize); */
-    char *header0;
+    const char *header0;
     mmap_header_rw(&map, &header0, M_T, nx, ny, header);
-    X(mat) *out=X(new_data)(nx, ny, (T*)map);
-    out->header=header0;
-    out->mmap=mmap_new(fd, map0, msize);
+    mem_t *mem=mem_new(fd, map0, msize);
+    X(mat) *out=X(new_do)(nx, ny, (T*)map, mem);
+    mem_unref(mem);
+    if(header) out->header=strdup(header);
     return out;
 }
 /**
    Create a new X(cell) matrix cell object, mmapped from file. The file is
-   truncated if already exists. We only add headers to individual dmat/cmat in
-   the file, not in the cell.
+   truncated if already exists. 
 */
 X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, 
 			 const char *header1, const char *header2[],
@@ -71,7 +71,9 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
     long metasize=3*8;
     long msize=metasize+bytes_header(header1);
     for(long ix=0; ix<nx*ny; ix++){
-	msize+=metasize+nnx[ix]*nny[ix]*sizeof(T)+bytes_header(header2?header2[ix]:NULL);
+	long mx=(long)nnx>0?nnx[ix]:(-(long)nnx);
+	long my=nny?((long)nny>0?nny[ix]:(-(long)nny)):1;
+	msize+=metasize+mx*my*sizeof(T)+bytes_header(header2?header2[ix]:NULL);
     }
     if(ftruncate(fd, msize)){
 	error("Error truncating file %s to size %lu\n", fn, msize);
@@ -83,20 +85,19 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
     }
     char *map0=map;
     /*memset(map, 0, msize); */
-    char *header0;
+    const char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header1);
     X(cell) *out=X(cellnew)(nx,ny);
-    out->mmap=mmap_new(fd, map0, msize);
-    out->header=header0;
+    if(header0) out->header=strdup(header0);
+    mem_t *mem=mem_new(fd, map0, msize);
     for(long ix=0; ix<nx*ny; ix++){
-	mmap_header_rw(&map, &header0, M_T, nnx[ix], nny[ix], header2?header2[ix]:NULL);
-	out->p[ix]=X(new_data)(nnx[ix], nny[ix], (T*)map);
-	memset(map, 0, nnx[ix]*nny[ix]*sizeof(T));//temporary
-	map+=nnx[ix]*nny[ix]*sizeof(T);
-	if(out->p[ix]) {
-	    out->p[ix]->mmap=mmap_ref(out->mmap);/*reference */
-	    out->p[ix]->header=header0;
-	}
+	long mx=(long)nnx>0?nnx[ix]:(-(long)nnx);
+	long my=nny?((long)nny>0?nny[ix]:(-(long)nny)):1;
+	mmap_header_rw(&map, &header0, M_T, mx, my, header2?header2[ix]:NULL);
+	out->p[ix]=X(new_do)(mx, my, (T*)map, mem);
+	memset(map, 0, mx*my*sizeof(T));//temporary
+	map+=nnx[ix]*my*sizeof(T);
+	if(header0) out->p[ix]->header=strdup(header0);
     }
     
     return out;
@@ -107,53 +108,22 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
    already exists.  */
 X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *header,
 			     const char *format, ...){
-    if(!nx || !ny) return NULL;
-    if(disable_save){
-	return X(cellnew_same)(nx, ny, mx, my);
-    }
     format2fn;
-    int fd=mmap_open(fn, 1);
-    long metasize=3*8;
-    long msize=metasize;
-    msize=metasize+bytes_header(header)+nx*ny*(metasize+mx*my*sizeof(T));
-    if(ftruncate(fd, msize)){
-	error("Error truncating file %s to size %lu\n", fn, msize);
-    }
-    char *map=(char*)mmap(NULL, msize,(PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
-    if(map==MAP_FAILED){
-	perror("mmap");
-	error("mmap failed\n");
-    }
-    char *map0=map;
-    /*memset(map, 0, msize);*/
-    X(cell) *out=X(cellnew)(nx,ny);
-    char *header0;
-    mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header);
-    out->mmap=mmap_new(fd, map0, msize);
-    out->header=header0;
-    for(long ix=0; ix<nx*ny; ix++){
-	mmap_header_rw(&map, &header0, M_T, mx, my, NULL);
-	out->p[ix]=X(new_data)(mx, my, (T*)map);
-	map+=mx*my*sizeof(T);
-	if(out->p[ix]){
-	    out->p[ix]->mmap=mmap_ref(out->mmap);;
-	    out->p[ix]->header=header0;
-	}
-    }
-    return out;
+    return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, NULL, "%s", fn);
 }
-static X(mat*) X(readdata_mmap)(char **map){
+
+static X(mat*) X(readdata_mmap)(char **map, mem_t *mem){
     long nx, ny;
     uint32_t magic;
-    char *header;
+    const char *header;
     mmap_header_ro(map, &magic, &nx, &ny, &header);
     if(magic!=M_T){
 	error("File has magic %d, we want %d\n", (int)magic, M_T);
     }
-    X(mat)* out=X(new_data)(nx, ny, (T*)(*map));
+    X(mat)* out=X(new_do)(nx, ny, (T*)(*map), mem);
     *map+=nx*ny*sizeof(T);
     if(out){
-	out->header=header;
+	out->header=strdup(header);
     }
     return out;
 }
@@ -171,10 +141,7 @@ X(mat*) X(read_mmap)(const char *format, ...){
 	error("mmap failed\n");
     }
     char *map0=map;
-    X(mat) *out=X(readdata_mmap)(&map);
-    if(out){
-	out->mmap=mmap_new(fd, map0,msize);
-    }
+    X(mat) *out=X(readdata_mmap)(&map, mem_new(fd, map0,msize));
     return out;
 }
 
@@ -194,17 +161,16 @@ X(cell*) X(cellread_mmap)(const char *format, ...){
     char *map0=map;
     long nx, ny;
     uint32_t magic;
-    char *header;
+    const char *header;
     mmap_header_ro(&map, &magic, &nx, &ny, &header);
     if(!iscell(&magic)){
 	error("We want a cell array, File has %x\n", (int)magic);
     }
     X(cell) *out=X(cellnew)(nx, ny);
-    out->mmap=mmap_new(fd, map0, msize);
-    out->header=header;
+    mem_t *mem=mem_new(fd, map0, msize);
+    if(header) out->header=strdup(header);
     for(long ix=0; ix<nx*ny; ix++){
-	out->p[ix]=X(readdata_mmap)(&map);
-	out->p[ix]->mmap=mmap_ref(out->mmap);
+	out->p[ix]=X(readdata_mmap)(&map, mem);
     }
     return out;
 }

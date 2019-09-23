@@ -70,10 +70,10 @@ struct file_t{
   memory, which causes the whole page to be unmapped. Instead, reference count
   the mmaped file and unmap the segment when the nref dropes to 1.
 */
-struct mmap_t{
+struct mem_t{
     void *p;  /**<points to the beginning of mmaped memory for this type of data.*/
     long n;   /**<length of mmaped memory.*/
-    long nref;/**<Number of reference.*/
+    int nref;/**<Number of reference.*/
     int fd;   /**<file descriptor. close it if not -1.*/
 };
 /**
@@ -942,38 +942,64 @@ void writeflt(const float *p, long nx, long ny, const char*format,...){
 }
 
 /**
-   Unreference the mmaped memory. When the reference drops to zero, unmap it.
+   Unreference the mmaped memory. When the reference drops to zero free or unmap it.
 */
-void mmap_unref(struct mmap_t *in){
-    if(in->nref>1){
-	in->nref--;
-    }else{
-	munmap(in->p, in->n);
-	if(in->fd!=-1){
-	    close(in->fd);
+void mem_unref(struct mem_t *in){
+    if(in){
+	int nref=atomicadd(&(in->nref), -1);
+	if(!nref){
+	    if(in->fd==-2){//temporary hack.
+		free(in->p);
+	    }else{
+		munmap(in->p, in->n);
+		if(in->fd!=-1){
+		    close(in->fd);
+		}
+	    }
+	    free(in);
 	}
-	free(in);
     }
 }
 /**
-   Create a mmap_t object.
+   Create a mem_t object. Notice that nref is set to 0.
 */
-struct mmap_t *mmap_new(int fd, void *p, long n){
-    struct mmap_t *out=mycalloc(1,struct mmap_t);
+struct mem_t *mem_new(int fd, void *p, long n){
+    struct mem_t *out=mycalloc(1,struct mem_t);
     out->p=p;
     out->n=n;
-    out->nref=1;
+    out->nref=0;
     out->fd=fd;
     return out;
 }
 /**
-   Add a reference to a mmap_t.
+   Add a reference to a mem_t.
 */
-mmap_t*mmap_ref(mmap_t *in){
-    in->nref++;
+mem_t*mem_ref(mem_t *in){
+    if(in){
+	atomicadd(&in->nref, 1);
+    }else{
+	warning("Trying to referencing non-referenced memory.\n");
+    }
     return in;
 }
-
+/**
+   Check whether it is a referenced data.
+*/
+int mem_isref(const mem_t *in){
+    return (in && (in->nref>1 || in->fd!=-2))?1:0;
+}
+/**
+   Replace internal vector. If p is null, checking only. Use with care.
+*/
+void mem_replace(mem_t *in, void *p){
+    if(!in || in->nref>1 || in->fd!=-2){
+	error("Replacing referenced or mmaped memory\n");
+    }else{
+	if(p!=(void*)-1){
+	    in->p=p;
+	}
+    }
+}
 /**
    Open a file for write with mmmap. We don't provide a access control here for
    generic usage of the function. Lock on a special dummy file for access
@@ -1010,7 +1036,7 @@ int mmap_open(char *fn, int rw){
 /**
    Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p.
 */
-void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header){
+void mmap_header_rw(char **p0, const char **header0, uint32_t magic, long nx, long ny, const char *header){
     char *p=*p0;
     /*Always have a header to align the data. */
     if(header){
@@ -1034,7 +1060,7 @@ void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny,
 /**
    Initialize the dimension from the header in the mmaped file.
 */
-void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, char **header0){
+void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0){
     char *p=*p0;
     char *header=NULL;
     while(((uint32_t*)p)[0]==M_HEADER){

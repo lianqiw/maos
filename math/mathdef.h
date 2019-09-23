@@ -91,22 +91,22 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define cabs2f(A)    (abs2(crealf(A))+abs2(cimagf(A)))
 #define cabs2(A)     (abs2(creal(A))+abs2(cimag(A)))
 
-#define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
+#define dfree(A)     ({dfree_do(A);A=NULL;})
 #define dcellfree(A) ({cellfree_do(A);A=NULL;})
 #define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
 
-#define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
+#define sfree(A)     ({sfree_do(A);A=NULL;})
 #define scellfree(A) ({cellfree_do(A);A=NULL;})
 #define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
 
-#define cfree(A)     ({cfree_do(A,0);A=NULL;})
+#define cfree(A)     ({cfree_do(A);A=NULL;})
 #define ccellfree(A) ({cellfree_do(A);A=NULL;})
 #define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
 
-#define zfree(A)     ({zfree_do(A,0);A=NULL;})
+#define zfree(A)     ({zfree_do(A);A=NULL;})
 #define zcellfree(A) ({cellfree_do(A);A=NULL;})
 
-#define lfree(A)     ({lfree_do(A,0);A=NULL;})
+#define lfree(A)     ({lfree_do(A);A=NULL;})
 #define lcellfree(A) ({cellfree_do(A);A=NULL;})
 
 #define cellfree(A) ({cellfree_do(A); A=0;})

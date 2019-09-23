@@ -1060,8 +1060,8 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y
     int free_xy=0;
     X(mat)*ynew=NULL;
     if(!yin){
-	yin=X(new_ref)(xin->nx, 1, xin->p+xin->nx);
-	xin=X(new_ref)(xin->nx, 1, xin->p);
+	xin=X(refcols)(xin, 0, 1);
+	yin=X(refcols)(xin, 1, 1);
 	free_xy=1;
     }
     if(X(islinear)(xin)){

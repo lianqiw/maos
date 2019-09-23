@@ -50,7 +50,7 @@ ii=0
 function run_maos(){
     ./maos sim.end=1000 $args "$*" >> $fnlog
     if [ $? == 0 ];then
-	RMS[ii]=$(tail -n5 $fnlog |grep 'Mean:' |cut -d ':' -f 2)
+	RMS[ii]=$(grep 'Mean:' $fnlog |tail -n1 |cut -d ':' -f 2)
 	a=${RMS[$ii]%.*}
     else
 	RMS[ii]='error'
@@ -60,7 +60,7 @@ function run_maos(){
 
     b=${REF[$ii]%.*}
     echo -n "${RMS[$ii]} nm, Ref: ${REF[$ii]} nm, "
-    if [ $a -ne 0 -a "$b" != "error" ];then
+    if [ "$a" != "0" -a "$b" != "error" ];then
 	echo $(((a-b)*100/b))%
     else
 	echo

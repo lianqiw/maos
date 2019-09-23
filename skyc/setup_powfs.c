@@ -83,8 +83,8 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		if(psf1->ny!=2){
 		    error("skyc.fnpsf1 has wrong dimension\n");
 		}
-		dmat *psf1x=dnew_ref(psf1->nx, 1, psf1->p);
-		dmat *psf1y=dnew_ref(psf1->nx, 1, psf1->p+psf1->nx);
+		dmat *psf1x=drefcols(psf1, 0, 1);
+		dmat *psf1y=drefcols(psf1, 1, 1);
 		dmat *psf2x=dnew(ncomp*ncomp, 1);
 		for(int iy=0; iy<ncomp; iy++){
 		    int jy=iy-ncomp2;

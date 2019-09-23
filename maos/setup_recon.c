@@ -1146,7 +1146,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 		dmat *psd_ws=dread("%s", parms->sim.wspsd);
 		dmat *psd_ws_m=ddup(psd_ws); 
 		dfree(psd_ws);
-		dmat *psd_ws_y=dnew_ref(psd_ws_m->nx,1,psd_ws_m->p+psd_ws_m->nx);
+		dmat *psd_ws_y=drefcols(psd_ws_m, 1, 1);
 		dscale(psd_ws_y, 4./parms->aper.d); dfree(psd_ws_y);
 		add_psd2(&psd_ngs, psd_ws_m, 1); dfree(psd_ws_m);
 	    }

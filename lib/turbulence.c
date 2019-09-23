@@ -265,7 +265,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
 	long ny = data->ny;
 	double dx = data->dx;
 	for(int ilayer=0; ilayer<nlayer; ilayer++){
-	    screen->p[ilayer]=mapnew(nx, ny, dx, dx, NULL);
+	    screen->p[ilayer]=mapnew(nx, ny, dx, dx);
 	}
 	data->screen=screen;
 	atmfun(0, data);

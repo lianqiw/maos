@@ -189,26 +189,22 @@ void cellfree_do(void *A){
 	    memset(dc->p, 0, sizeof(void*)*dc->nx*dc->ny);
 	    free(dc->p);dc->p=0;
 	}
-	if(dc->mmap){
-	    mmap_unref(dc->mmap);
-	}else{
-	    free(dc->header);
-	}
+	free(dc->header);
 	if(dc->m) cellfree_do(dc->m);
 	if(dc->fft) dfft_free_plan(dc->fft);
 	memset(dc, 0, sizeof(cell));
 	free(dc);
     }break;
     case M_DBL:
-	dfree_do((dmat*)A,0);break;
+	dfree_do((dmat*)A);break;
     case M_CMP:
-	cfree_do((cmat*)A,0);break;
+	cfree_do((cmat*)A);break;
     case M_FLT:
-	sfree_do((smat*)A,0);break;
+	sfree_do((smat*)A);break;
     case M_ZMP:
-	zfree_do((zmat*)A,0);break;
+	zfree_do((zmat*)A);break;
     case M_LONG:
-	lfree_do((lmat*)A,0);break;
+	lfree_do((lmat*)A);break;
     case M_LOC64:
 	locfree_do((loc_t*)A);break;
     case M_DSP:

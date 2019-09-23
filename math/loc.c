@@ -88,7 +88,7 @@ void locarrfree_do(loc_t **loc, int nloc){
    Free map_t data
 */
 void mapfree_do(map_t *map){
-    dfree_do((dmat*)map, 0);
+    dfree_do((dmat*)map);
 }
 
 /**
@@ -106,7 +106,7 @@ void maparrfree_do(map_t **map, int nmap){
    Free rmap_t data
 */
 void rmapfree_do(rmap_t *map){
-    dfree_do((dmat*)map, 0);
+    dfree_do((dmat*)map);
 }
 /**
    Create a loc with nloc elements.
@@ -244,7 +244,7 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
 	map_nx=nx;
 	map_ny=ny;
     }
-    ((loc_t*)loc)->map=mapnew(map_nx, map_ny, loc->dx, loc->dy, 0);
+    ((loc_t*)loc)->map=mapnew(map_nx, map_ny, loc->dx, loc->dy);
     loc->map->iac=loc->iac;
     loc->map->ox=xmin;
     loc->map->oy=ymin;
@@ -354,7 +354,7 @@ void loc_embed(map_t *dest, const loc_t *loc, const double *in){
 	if(iphi){
 	    dest->p[i]=pin[iphi];
 	}else{
-	    dest->p[i]=invalid_val;
+	    dest->p[i]=NAN;
 	}
     }
 }
@@ -493,21 +493,14 @@ loc_t *mksqloc_auto(long nx, long ny, double dx, double dy){
    Create a loc array contains coorindates in a square map of size nx*ny, with
    sampling dx, and at origin ox,oy */
 loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
-    
     loc_t *loc=locnew(nx*ny, dx, dy);
-    long ix,iy;
-    dmat *locx=dnew_ref(nx, ny, loc->locx);
-    dmat *locy=dnew_ref(nx, ny, loc->locy);
-    double y;
-    for(iy=0; iy<ny; iy++){
-	y=iy*dy+oy;
-	for(ix=0; ix<nx; ix++){
-	    P(locx,ix,iy)=ix*dx+ox;
-	    P(locy,ix,iy)=y;
+    for(long iy=0; iy<ny; iy++){
+	double y=iy*dy+oy;
+	for(long ix=0; ix<nx; ix++){
+	    loc->locx[ix+iy*nx]=ix*dx+ox;
+	    loc->locy[ix+iy*nx]=y;
 	}
     }
-    dfree(locx);
-    dfree(locy);
     return loc;
 }
 
@@ -516,7 +509,7 @@ loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
  */
 loc_t *mkannloc(double D, double Din, double dx, double thres){
     long nx=D/dx+1;
-    map_t *xy=mapnew(nx, nx, dx, dx, 0);
+    map_t *xy=mapnew(nx, nx, dx, dx);
     mapcircle(xy, D/2, 1);
     if(Din>0 && Din<D){
 	mapcircle(xy, Din/2, -1);
@@ -1461,8 +1454,8 @@ void locresize(loc_t *loc, long nloc){
 /**
    create a new map_t object.
 */
-map_t *mapnew(long nx, long ny, double dx, double dy, double *p){
-    map_t *map=(map_t*)realloc(dnew_data(nx, ny, p),sizeof(map_t));
+map_t *mapnew(long nx, long ny, double dx, double dy){
+    map_t *map=(map_t*)realloc(dnew(nx, ny),sizeof(map_t));
     map->h=0;
     map->dx=dx;
     map->dy=dy;
@@ -1477,7 +1470,7 @@ map_t *mapnew(long nx, long ny, double dx, double dy, double *p){
    ceate a new map_t object from existing one. P is left empty.
 */
 map_t *mapnew2(map_t* A){
-    map_t *map=(map_t*)realloc(dnew_data(A->nx, A->ny, NULL),sizeof(map_t));
+    map_t *map=(map_t*)realloc(dnew(A->nx, A->ny),sizeof(map_t));
     map->h=A->h;
     map->dx=A->dx;
     map->dy=A->dy;
@@ -1492,14 +1485,7 @@ map_t *mapref(map_t*in){
     if(!in) return NULL;
     map_t *out=mycalloc(1,map_t);
     memcpy(out,in,sizeof(map_t));
-    if(!in->nref){
-	extern quitfun_t quitfun;
-	if(quitfun==&default_quitfun){
-	    warning_once("Referencing non-referenced data. This may cause error.\n");
-	}
-    }else{
-	atomicadd(in->nref, 1);
-    }
+    mem_ref(in->mem);
     return out;
 }
 /**
@@ -1625,7 +1611,7 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
     if(nyout)
 	*nyout=ny;
     if(mapout){
-	*mapout=mapnew(nx, ny, dx, dy, 0);
+	*mapout=mapnew(nx, ny, dx, dy);
 	(*mapout)->ox=ox;
 	(*mapout)->oy=oy;
 	(*mapout)->h=ht;

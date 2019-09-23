@@ -28,32 +28,52 @@
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
    true, p is treated as external resource and is not reference counted.
 */
-X(mat) *X(new_do)(long nx, long ny, T *p, int foreign){
+static X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
     X(mat) *out=mycalloc(1,X(mat));
     out->id=M_T;
     out->nx=nx;
     out->ny=ny;
-    if(foreign){/*the data does not belong to us. */
-	if(!p){
-	    error("When foreign is 1, p must not be NULL.\n");
-	}
-	out->p=p;
-    }else{
-	if(!p && nx && ny){
+
+    if(!p){//no pointer is supplied
+	if(nx && ny){
 	    p=mycalloc((nx*ny),T);
+	    mem=mem_new(-2, p, 0);
 	}
-	out->p=p;
-	out->nref=mycalloc(1,int);
-	out->nref[0]=1;
+    }else{//pointer is supplied.
+	if(mem==(mem_t*)-1){//Borrow pointer without reference.
+	    warning("Deprecated usage\n");
+	    mem=0;
+	}else if(!mem){//Create reference
+	    mem=mem_new(-2, p, 0);
+	}
     }
+    out->p=p;
+    if(mem) out->mem=mem_ref(mem);
     return out;
 }
+
+/**
+   creat a X(mat) reference an existing X(mat). Use the reference carefully.
+*/
+X(mat) *X(ref)(const X(mat) *in){
+    if(!in) return NULL;
+    assert_mat(in);
+    X(mat) *out=mycalloc(1,X(mat));
+    out->id=M_T;
+    out->nx=in->nx;
+    out->ny=in->ny;
+    out->p=in->p;
+    out->mem=mem_ref(in->mem);
+    if(in->header) out->header=strdup(in->header);
+    return out;
+}
+
 /**
    Creat a X(mat) object to reference an already existing vector.  Free the
    X(mat) object won't free the existing vector.
 */
 X(mat) *X(new_ref)(long nx, long ny, T *p){
-    return X(new_do)(nx,ny,p,1);
+    return X(new_do)(nx,ny,p,(mem_t*)-1);
 }
 
 /**
@@ -96,62 +116,17 @@ X(mat) *X(mat_cast)(const void *A){
 /**
    free a X(mat) object. if keepdata!=0, will not free A->p.
 */
-void X(free_do)(X(mat) *A, int keepdata){
+void X(free_do)(X(mat) *A){
     if(!A) return;
     assert_mat(A);
-    int free_extra=0;
-    if(A->nref){
-	int nref=atomicadd(A->nref, -1);
-	if(!nref){
-	    if(!keepdata){
-		if(A->mmap){/*data is mmap'ed. */
-		    mmap_unref(A->mmap);
-		}else{
-		    free_extra=1;
-		    free(A->p);
-		}
-	    }
-	    free(A->nref);
-	}else if(nref<0){
-	    error("The ref is less than 0. something wrong!!!:%d\n",A->nref[0]);
-	}
-    }else{
-	free_extra=1;
-    }
-    if(free_extra){
+    mem_unref(A->mem);//takes care of freeing memory.
 #ifndef USE_LONG
-	X(fft_free_plan)(A->fft);
+    X(fft_free_plan)(A->fft);
 #endif
-	free(A->header);
-    }
+    free(A->header);
     free(A);
 }
 
-/**
-   Free the X(mat), but keep the data.
-*/
-void X(free_keepdata)(X(mat) *A){
-    X(free_do)(A,1);
-}
-
-/**
-   creat a X(mat) reference an existing X(mat). Use the reference carefully.
-*/
-X(mat) *X(ref)(const X(mat) *in){
-    if(!in) return NULL;
-    assert_mat(in);
-    X(mat) *out=mycalloc(1,X(mat));
-    memcpy(out,in,sizeof(X(mat)));
-    if(!in->nref){
-	extern quitfun_t quitfun;
-	if(quitfun==&default_quitfun){
-	    warning_once("Referencing non-referenced data. This may cause error.\n");
-	}
-    }else{
-	atomicadd(in->nref, 1);
-    }
-    return out;
-}
 /**
    create an new X(mat) reference another with different shape.
 */
@@ -171,7 +146,7 @@ X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
 */
 X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
     assert_mat(in);
-    return X(new_ref)(in->nx, ncol, PCOL(in, icol));
+    return X(new_do)(in->nx, ncol, PCOL(in, icol), in->mem);
 }
 
 /**
@@ -202,28 +177,35 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
 */
 void X(resize)(X(mat) *A, long nx, long ny){
     assert_mat(A);
-    if(!A->nref || A->nref[0]>1){
-	error("Resizing a referenced vector\n");
-    }
     if(!nx) nx=A->nx;
     if(!ny) ny=A->ny;
-    if(A->nx==nx || A->ny==1){
-	A->p=myrealloc(A->p,nx*ny,T);
-	if(nx*ny>A->nx*A->ny){
-	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
-	}
-    }else{/*copy memory to preserve data*/
-	T *p=mycalloc(nx*ny,T);
-	long minx=A->nx<nx?A->nx:nx;
-	long miny=A->ny<ny?A->ny:ny;
-	for(long iy=0; iy<miny; iy++){
-	    memcpy(p+iy*nx, PCOL(A, iy), sizeof(T)*minx);
-	}
-	free(A->p);
-	A->p=p;
+    if(mem_isref(A->mem)){
+	error("Trying to resize referenced array\n");
     }
-    A->nx=nx;
-    A->ny=ny;
+    if(A->nx!=nx || A->ny!=ny){
+	if(A->nx==nx || A->ny==1){
+	    A->p=myrealloc(A->p,nx*ny,T);
+	    if(nx*ny>A->nx*A->ny){
+		memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
+	    }
+	}else{/*copy memory to preserve data*/
+	    T *p=mycalloc(nx*ny,T);
+	    long minx=A->nx<nx?A->nx:nx;
+	    long miny=A->ny<ny?A->ny:ny;
+	    for(long iy=0; iy<miny; iy++){
+		memcpy(p+iy*nx, PCOL(A, iy), sizeof(T)*minx);
+	    }
+	    free(A->p);
+	    A->p=p;
+	}
+	if(A->mem){
+	    mem_replace(A->mem, A->p);
+	}else{
+	    A->mem=mem_ref(mem_new(-2, A->p, 0));
+	}
+	A->nx=nx;
+	A->ny=ny;
+    }
 }
 
 /**
@@ -302,6 +284,10 @@ void X(cp)(X(mat) **out0, const X(mat) *in){
 	assert_mat(in);
 	X(init)(out0, in->nx, in->ny);
 	X(mat) *out=*out0;
+	if(in->header){
+	    free(out->header);
+	    out->header=strdup(in->header);
+	}
 	if(out->p!=in->p){
 	    memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
 	}
@@ -382,11 +368,6 @@ T X(sum)(const X(mat) *A){
     if(A){
 	assert_mat(A);
 	T *restrict p=A->p;
-	/**
-	   Loops like this will only be vectorized with -ffast-math because
-	   different orders of accumulation give different results for floating
-	   point numbers.
-	*/
 	for(int i=0; i<A->nx*A->ny; i++){
 	    if(isfinite(creal(p[i]))){
 		v+=p[i];
@@ -656,7 +637,7 @@ X(cell) *X(cellnew2)(const X(cell) *A){
     tot=0;
     for(int i=0; i<A->nx*A->ny; i++){
 	if(!isempty(A->p[i])){
-	    out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
+	    out->p[i]=X(new_do)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot, out->m->mem);
 	    tot+=A->p[i]->nx*A->p[i]->ny;
 	}else{
 	    out->p[i]=X(new)(0,0);//place holder to avoid been overriden.
@@ -664,21 +645,26 @@ X(cell) *X(cellnew2)(const X(cell) *A){
     }
     return out;
 }
+
 /**
    Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
 */
 X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     long tot=0;
     for(long i=0; i<nx*ny; i++){
-	tot+=nnx[i]*(nny?nny[i]:1);
+	long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
+	long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
+	tot+=mx*my;
     }
     if(!tot) return NULL;
     X(cell) *out=X(cellnew)(nx,ny);
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){
-	out->p[i]=X(new_ref)(nnx[i], (nny?nny[i]:1), out->m->p+tot);
-	tot+=nnx[i]*(nny?nny[i]:1);
+	long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
+	long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
+	out->p[i]=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
+	tot+=mx*my;
     }
     return out;
 }
@@ -686,16 +672,7 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
    Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
 */
 X(cell) *X(cellnew_same)(long nx, long ny, long mx, long my){
-    long tot=nx*ny*mx*my;    
-    if(!tot) return NULL;
-    X(cell) *out=X(cellnew)(nx,ny);
-    out->m=X(new)(tot,1);
-    tot=0;
-    for(long i=0; i<nx*ny; i++){
-	out->p[i]=X(new_ref)(mx, my, out->m->p+tot);
-	tot+=mx*my;
-    }
-    return out;
+    return X(cellnew3)(nx, ny, (long*)-mx, (long*)-my);
 }
 /**
    creat a X(cell) reference an existing X(cell) by referencing the
@@ -706,14 +683,11 @@ X(cell) *X(cellref)(const X(cell) *in){
     X(cell) *out=X(cellnew)(in->nx, in->ny);
     if(in->m){
 	out->m=X(ref)(in->m);
-	for(int i=0; i<in->nx*in->ny; i++){
-	    out->p[i]=X(new_ref)(in->p[i]->nx, in->p[i]->ny, in->p[i]->p);
-	}
-    }else{
-	for(int i=0; i<in->nx*in->ny; i++){
-	    out->p[i]=X(ref)(in->p[i]);
-	}
     }
+    for(int i=0; i<in->nx*in->ny; i++){
+	out->p[i]=X(ref)(in->p[i]);
+    }
+    if(in->header) out->header=strdup(in->header);
     return out;
 }
 
@@ -885,7 +859,7 @@ X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim){
     X(cell) *B=X(cellnew)(ndim,1);
     B->m=X(ref)(A);
     for(long ix=0; ix<ndim; ix++){
-	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);
+	B->p[ix]=X(new_do)(dims[ix],1,A->p+kr, A->mem);
 	kr+=dims[ix];
     }
     return B;

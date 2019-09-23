@@ -59,8 +59,7 @@ static inline int wrap(long index, long n){
 #endif
 #define SPLIT(A,B,C) {C=ifloor(A); B=(A)-(C);}
 
-#define add_valid(dest, A, B) if(~isnan(B)) dest+=(A)*(B)
-#define invalid_val NAN
+#define add_valid(dest, A, B) if(!isnan(B)) dest+=(A)*(B)
 
 /**
    Include headers and finish definition for various complex number operations.

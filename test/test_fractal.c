@@ -27,11 +27,11 @@ static void test_accuracy(){
     long nx=N;
     long ny=N;
     seed_rand(&rstat, seed);
-    map_t *atm=mapnew(nx, ny, dx, dx,NULL);
+    map_t *atm=mapnew(nx, ny, dx, dx);
     for(long i=0; i<nx*ny; i++){
 	atm->p[i]=randn(&rstat);
     }
-    map_t *atm2=mapnew(nx, ny, dx, dx,NULL);
+    map_t *atm2=mapnew(nx, ny, dx, dx);
     for(long i=0; i<nx*ny; i++){
 	atm2->p[i]=randn(&rstat);
     }
@@ -77,7 +77,7 @@ static void test_cov(){/*not good */
     long ny=N;
     long nframe=1;
     seed_rand(&rstat, seed);
-    map_t *atm=mapnew(nx, ny, dx,dx, NULL);
+    map_t *atm=mapnew(nx, ny, dx,dx);
     cmat *atmhat=cnew((N+1)*3,(N+1)*3);
     dmat *atmhattot=dnew((N+1)*3,(N+1)*3);
     //cfft2plan(atmhat,-1);
@@ -131,7 +131,7 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
     long ny=N;
     long nframe=1000000;
     seed_rand(&rstat, seed);
-    map_t *atm=mapnew(nx, ny, dx, dx,NULL);
+    map_t *atm=mapnew(nx, ny, dx, dx);
     dmat *vec=dref_reshape((dmat*)atm, N*N, 1);
     dmat *cov=NULL;
     for(long i=0; i<nframe; i++){
@@ -157,7 +157,7 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
     long ny=N;
     long nframe=1000000;
     seed_rand(&rstat, seed);
-    map_t *atm=mapnew(nx, ny, dx,dx, NULL);
+    map_t *atm=mapnew(nx, ny, dx,dx);
     dmat *vec=dnew(4,1);
     dmat *cov=NULL;
     dmat* pp=(dmat*)atm;
@@ -196,7 +196,7 @@ static void test_stfun(){
     }
     /*    return; */
     {
-	map_t *atm=mapnew(nx+1, ny+1, dx, dx,NULL);
+	map_t *atm=mapnew(nx+1, ny+1, dx, dx);
 	stfun_t *data=stfun_init(nx, ny, NULL);
 	zfarr *save=zfarr_init(nframe, 1, "fractal_atm.bin");
 	for(long i=0; i<nframe; i++){
@@ -258,7 +258,7 @@ static void test_psd(){
     long nframe=512;
     seed_rand(&rstat, seed);
     if(1){
-	map_t *atm=mapnew(nx+1, ny+1, dx,dx, NULL);
+	map_t *atm=mapnew(nx+1, ny+1, dx,dx);
 	cmat *hat=cnew(nx*ratio, ny*ratio);
 	//cfft2plan(hat, -1);
 	dmat *hattot=dnew(nx*ratio, ny*ratio);
@@ -345,7 +345,7 @@ static void test_cxx(){
     seed_rand(&rstat, seed);
     {
 	dmat *cxx=dnew(N*N,N*N);
-	map_t *atm=mapnew(nx+1, ny+1, dx, dx,NULL);
+	map_t *atm=mapnew(nx+1, ny+1, dx, dx);
 	for(long i=0; i<nframe; i++){
 	    dbg("%ld of %ld\n", i, nframe);
 	    for(long j=0; j<(nx+1)*(ny+1); j++){

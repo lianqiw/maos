@@ -104,7 +104,7 @@ cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp){
     if(!_C){
 	error("C cannot be empty\n");
     }
-    chol_convert(_C, 0);
+    chol_convert(_C, 1);
     Cl=cusp(_C->Cl, 0);
     cp2gpu(Cp, _C->Cp, _C->Cl->nx, 1);
     if(_Up){

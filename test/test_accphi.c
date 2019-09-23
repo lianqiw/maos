@@ -67,7 +67,7 @@ static void test_accuracy(int argc, char **argv){
 
     double dx=1/64.; 
     double dsa=0.5;
-    map_t *screen=mapnew(D2/dx, D2/dx, dx, dx, 0);
+    map_t *screen=mapnew(D2/dx, D2/dx, dx, dx);
     dset((dmat*)screen, 1);
     dmat *tmp=dnew(screen->nx, 1);
     for(long ix=0; ix<screen->nx; ix++){

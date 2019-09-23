@@ -531,7 +531,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	P(pres_ngs,icase,1)=res_ngs;/*error due to signal */
 	P(pres_ngs,icase,2)=res_ngsn;/*error due to noise propagation. */
 	if(minres>P(pres_ngs,icase,0)) minres=P(pres_ngs,icase,0);
-	dmat *g_tt=dnew_ref(ng,1,PCOL(pgain,0));
+	dmat *g_tt=drefcols(pgain, 0, 1);
 	double gain_n;
 	if(parms->skyc.psd_ws){
 	    aster->res_ws->p[icase]=servo_residual(&gain_n, parms->skyc.psd_ws, 

@@ -80,12 +80,12 @@ mxArray *csp2mx(const csp*A){
 mxArray *d2mx(const dmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out=0;
-    if(REFERENCE && !A->mmap && A->nref){
+    if(REFERENCE){
 	out=mxCreateDoubleMatrix(0,0,mxREAL);
 	mxSetPr(out, A->p);
 	mxSetM(out, A->nx);
 	mxSetN(out, A->ny);
-	if(A->nref) A->nref[0]++;
+	mem_ref(A->mem);
     }else{
 	out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
 	memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));

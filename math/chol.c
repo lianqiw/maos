@@ -89,7 +89,7 @@ spchol* chol_factorize(dsp *A_in){
     spchol *out=mycalloc(1,spchol);
     out->c=mycalloc(1,cholmod_common);
     MOD(start)(out->c);
-    cholmod_sparse *A=dsp2chol(A_in);
+    cholmod_sparse *A=dsp2chol(A_in);//borrows content.
     out->c->status=CHOLMOD_OK;
 #if CHOL_SIMPLE
     out->c->final_super=0;/*we want a simplicity result. */
@@ -133,20 +133,9 @@ spchol* chol_factorize(dsp *A_in){
     }
 #if CHOL_SIMPLE
     if(!out->c->final_asis){
-	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */
-	//warning("Converted to our format.");
-	cholmod_factor *L=out->L;
-	out->Cp=(spint*)L->Perm; L->Perm=NULL;
-	dsp *C=out->Cl=dspnew(L->n, L->n, 0);
-	C->p=(spint*)L->p;L->p=NULL;
-	C->i=(spint*)L->i;L->i=NULL;
-	C->x=(double*)L->x;L->x=NULL;
-	C->nzmax=L->nzmax;
-	MOD(free_factor)(&out->L, out->c);
-	MOD(finish)(out->c);
-	free(out->c);
-	out->c=NULL;
-	out->L=NULL;
+	/*Our solver is much slower than the cholmod simplicity solver, or the
+	 * supernodal solver. Keep original data to use cholmod solver*/
+	chol_convert(out, 1);
     }
 #endif
     free(A);/*just free our reference.*/
@@ -167,15 +156,19 @@ void chol_convert(spchol *A, int keep){
     error("chol_convert only work with CHOL_SIMPLE=1\n");
 #endif
     cholmod_factor *L=A->L;
-    A->Cp=mymalloc(A->L->n,spint);
-    memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
+    if(keep){
+	A->Cp=A->L->Perm;
+    }else{
+	A->Cp=mymalloc(A->L->n,spint);
+	memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
+    }
     if(keep){
 	L=MOD(copy_factor)(A->L, A->c);
     }else{
 	L=A->L;
     }
     cholmod_sparse *B=MOD(factor_to_sparse)(L, A->c);
-    A->Cl=chol2sp(B);
+    A->Cl=chol2sp(B);//moves content of B.
     free(B);
     MOD(free_factor)(&L, A->c);
     if(!keep){
@@ -353,7 +346,7 @@ static void chol_solve_each(thread_t *info){
    Solve A*x=y where the cholesky factor of A is stored in A.
 */
 void chol_solve(dmat **x, spchol *A, dmat *y){
-    if(!A->L){
+    if(!A->L){//Use our own simple implementation. Much slower than cholmod one.
 	if(A->Cl){
 	    chol_solve_lower(x, A, y);
 	}else if(A->Cu){
@@ -361,7 +354,7 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 	}else{
 	    error("There is no cholesky factor\n");
 	}
-    }else{
+    }else{//Use cholmod implementation. Much faster the above.
 	assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
 	if(y->ny==1){
 	    cholmod_dense *y2=d2chol(y, 0, y->ny);/*share pointer. */
@@ -684,8 +677,9 @@ void chol_free_do(spchol *A){
 	    MOD(free_factor)(&A->L, A->c);
 	    MOD(finish)(A->c);
 	    free(A->c);
+	}else{
+	    free(A->Cp);
 	}
-	if(A->Cp) free(A->Cp);
 	if(A->Cl) dspfree(A->Cl);
 	if(A->Cu) dspfree(A->Cu);
 	free(A);

@@ -52,8 +52,7 @@ void loc_free_map(loc_t *loc);
 
 void locfree_do(loc_t *loc);
 #define locfree(A) ({locfree_do(A);A=NULL;})
-void ptsfree_do(pts_t *pts);
-#define ptsfree(A) ({ptsfree_do(A);A=NULL;})
+#define ptsfree(A) ({locfree_do((loc_t*)A);A=NULL;})
 void locarrfree_do(loc_t **loc, int nloc);
 #define locarrfree(A,B) ({locarrfree_do(A,B);A=NULL;})
 double loc_diam(const loc_t *loc);
@@ -103,7 +102,7 @@ loc_t *loctransform(const loc_t *loc, const char *ps);
 loc_t *loctransform2(const loc_t *loc, const dmat *coeff);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
-map_t *mapnew(long nx, long ny, double dx, double dy, double *p);
+map_t *mapnew(long nx, long ny, double dx, double dy);
 map_t *mapnew2(map_t *A);
 map_t *mapref(map_t *A);
 void mapcircle(map_t *map, double r, double val);
