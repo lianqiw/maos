@@ -31,6 +31,20 @@ typedef Real GTYPE;
 class curecon_t;
 class curecon_geom;
 }*/
+typedef struct{
+    int ips;
+    int nx0;
+    int ny0;
+    int offx;
+    int offy;
+    int isim;
+    int isim_next;
+    map_t *atm;
+    Real ox;
+    Real oy;
+    Real *next_atm;
+    pthread_t threads;
+}atm_prep_t;
 //Global data independent of GPU
 class cuglobal_t{
 public:
@@ -48,7 +62,7 @@ public:
     int atm_full; /**<Indicate whether atm is loaded in full to GPU*/
     cuperf_g perf;
     Array<cuwfs_t>wfs;
-
+    Array<atm_prep_t>atm_prep_data;
     cuglobal_t():recongpu(0),atmscale(0),nmemcache(0),memcache(NULL){
 	pthread_mutex_init(&memmutex, 0);
     }

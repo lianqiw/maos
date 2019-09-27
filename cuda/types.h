@@ -96,7 +96,7 @@ class Array;
 /**
    Functions to Set memory to zero. Array of fundamental types are treated
    differently from array of Arrays.
- */
+*/
 template <typename T, template<typename> class Dev >
 void zero(Dev<T>*p, long n, cudaStream_t stream){
     Dev<T>::zero((T*)p, n, stream);
@@ -118,27 +118,15 @@ void zero(Cpu<Array<T, Dev> >*p_, long n, cudaStream_t stream){
 */
 template <typename T, template<typename> class Dev>
 class RefP{
+protected:
+    T *p;  //The memory address being used.
 private:
     Dev<T> *p0; //The allocated memory address. p>=p0;
     int *nref;  //The reference counter. Delete p0 only if nref is valid and has value of 1.
-protected:
-    T *p;  //The memory address being used.
-  
-public:
-    void deinit(){
-	if(nref && !atomicadd(nref, -1)){
-	    delete[] p0;
-	    myfree(nref);
-	}
-	nref=0;
-	p0=0;
-    }
-
-    //Constructors and related
-    RefP():p(0),p0(0),nref(0){
-    }
-    explicit RefP(long n, T *pin=0, int own=1):p0((Dev<T>*)pin),nref(0){
+    void init_(long n=0, T*pin=0, int own=1){
+	//Initialize from uninitialized state.
 	if(n>0){
+	    p0=(Dev<T>*)pin;
 	    if(!p0){
 		p0=new Dev<T>[n];
 		own=1;
@@ -147,16 +135,34 @@ public:
 		nref=mymalloc(1, int);
 		nref[0]=1;
 	    }
+	    p=(T*)p0;
 	}
-	p=(T*)p0;
+    }
+public:
+    void deinit(){
+	if(nref && !atomicadd(nref, -1)){
+	    delete[] p0;
+	    myfree(nref);
+	}
+	nref=0;
+	p0=0;
+	p=0;
+    }
+
+    //Constructors and related
+    RefP():p(0),p0(0),nref(0){
+    }
+    explicit RefP(long n, T *pin=0, int own=1):p(0),p0(0),nref(0){
+	init_(n, pin, own);
     }
     //Create a new pointer with offset for p.
-    RefP(const RefP& pin, long offset=0):p0(pin.p0),p(pin.p+offset),nref(pin.nref){
+    RefP(const RefP& pin, long offset=0):p(pin.p+offset),p0(pin.p0),nref(pin.nref){
 	if(nref) atomicadd(nref, 1);
     }
     
     RefP &operator=(const RefP &in){
 	if(this!=&in){
+	    deinit();//20190927: destroy old data (fix)
 	    p=in.p;
 	    p0=in.p0;
 	    nref=in.nref;
@@ -166,12 +172,7 @@ public:
     }
     void init(long n=0){
 	deinit();
-	if(n>0){
-	    p0=new Dev<T>[n];
-	    nref=mymalloc(1, int);
-	    nref[0]=1;
-	}
-	p=(T*)p0;	
+	init_(n);
     }
     //Destructors and related
     virtual ~RefP(){
@@ -346,7 +347,7 @@ public:
 	}
     }
     template <typename L>
-    Cell(const long nxi, const long nyi, L *mx, L *my, T *pin=NULL):Parent(nxi,nyi){
+    Cell(long nxi, long nyi, L *mx, L *my, T *pin=NULL):Parent(nxi,nyi){
 	long tot=0;
 	for(long i=0; i<nxi*nyi; i++){
 	    tot+=mx[i]*(my?my[i]:1);
@@ -355,7 +356,7 @@ public:
 	tot=0;
 	for(long i=0; i<nxi*nyi; i++){
 	    if(mx[i]){
-		p[i]=TMat(mx[i],(my?my[i]:1),m, tot);
+		p[i]=TMat(mx[i],(my?my[i]:1), m, tot);
 		tot+=p[i].N();
 	    }
 	}

@@ -385,7 +385,7 @@ void gpu_cleanup(void){
 	    gpu_set(ig);
 	    delete cudata;
 	}
-	delete cudata_all;
+	delete[] cudata_all;
 	delete cuglobal;
 	GPUS.deinit();
 	NGPU=0;

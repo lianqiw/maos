@@ -28,20 +28,7 @@
 */
 
 
-typedef struct{
-    int ips;
-    int nx0;
-    int ny0;
-    int offx;
-    int offy;
-    int isim;
-    int isim_next;
-    map_t *atm;
-    Real ox;
-    Real oy;
-    Real *next_atm;
-    pthread_t threads;
-}atm_prep_t;
+
 static void atm_prep(atm_prep_t *data){
     PNEW(lock);
     LOCK(lock);/*make sure we only read one layer at a time. */
@@ -189,14 +176,13 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
     cuglobal->atm_full=0;
     const double dt=parms->sim.dt;
     const double dx=parms->atm.dx;
-    static atm_prep_t *prep_data=NULL;
- 
+
     if(iseed0==-1){//Initializing data
 	/*The atm in GPU is smaller than in CPU. */
-	prep_data=(atm_prep_t*)calloc(nps, sizeof(atm_prep_t));
+	cuglobal->atm_prep_data.init(nps);
 	for(int ips=0; ips<nps; ips++){
-	    prep_data[ips].nx0=nx0;
-	    prep_data[ips].ny0=ny0;
+	    cuglobal->atm_prep_data[ips].nx0=nx0;
+	    cuglobal->atm_prep_data[ips].ny0=ny0;
 	}
 	for(int im=0; im<NGPU; im++){/*Loop over all GPUs. */
 	    gpu_set(im);
@@ -208,6 +194,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	    }
 	}/*for im */
     }/*if need_init; */
+    Array<atm_prep_t>& prep_data=cuglobal->atm_prep_data;
     if(iseed0!=iseed){/*A new seed or initialization update vx, vy, ht, etc. */
 	iseed0=iseed;
     	for(int im=0; im<NGPU; im++){

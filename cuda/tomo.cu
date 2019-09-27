@@ -88,8 +88,8 @@ void prep_GP(Array<short2,Gpu> &GPp, Real *GPscale, cusp &GPf,
 	GPf=cusp(GP, 1);
     }
 }
-static cuimat 
-prep_saptr(loc_t *saloc, map_t *pmap){
+static void
+prep_saptr(cuimat&saptr_gpu, loc_t *saloc, map_t *pmap){
     /*saloc mapped onto pmap*/
     int nsa=saloc->nloc;
     int (*saptr)[2]=new int[nsa][2];
@@ -103,10 +103,9 @@ prep_saptr(loc_t *saloc, map_t *pmap){
 	saptr[isa][0]=(int)roundf((salocx[isa]-ox)*dx1);
 	saptr[isa][1]=(int)roundf((salocy[isa]-oy)*dy1);
     }
-    cuimat saptr_gpu(2, nsa);
-    DO(cudaMemcpy(saptr_gpu(), saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
+    saptr_gpu.init(2, nsa);
+    DO(cudaMemcpy(saptr_gpu, saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
     delete [] saptr;
-    return saptr_gpu;
 }
 static curmat convert_neai(dsp *nea){
     spint *pp=nea->p;
@@ -224,7 +223,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		saptr[iwfs]=saptr[iwfs0];
 	    }
 	    if(iwfs==iwfs0){
-		saptr[iwfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
+		prep_saptr(saptr[iwfs], powfs[ipowfs].saloc, recon->pmap);
 	    }else{
 		saptr[iwfs]=saptr[iwfs0];
 	    }

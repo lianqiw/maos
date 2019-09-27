@@ -262,11 +262,11 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 
 		rowdiv=rowdiv0;
 		dplocx=dplocx00;
-		int irow=irows;
+
 		if(dplocx_arr){//use cached results
 		    //First handle points fall within [0, wrapx)
 #pragma omp simd
-		    for(; irow<rowdiv; irow++){
+		    for(int irow=irows; irow<rowdiv; irow++){
 			dplocx0=dplocx_arr[irow];
 			nplocx0=nplocx_arr[irow];
 			GRID_ADD(irow, (nplocx2_arr[irow]));
@@ -274,13 +274,15 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		    //Then handle points fall within [wrapx, wrapx+xover)
 		    //xover is EPS if wrap==0, 1 if wrap==1.
 		    if(wrap){
-			for(; irow < nxout ; irow++){//right on edge
+#pragma omp simd
+			for(int irow=rowdiv; irow < nxout ; irow++){//right on edge
 			    dplocx0=dplocx_arr[irow];
 			    nplocx0=nplocx_arr[irow];
 			    GRID_ADD(irow, (nplocx2_arr[irow]));
 			}
 		    }
 		}else{
+		    int irow=irows;
 		    do{
 			//First handle points fall within [0, wrapx)
 			for(; irow<rowdiv; irow++, dplocx+=dxout){
