@@ -28,27 +28,24 @@
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
    true, p is treated as external resource and is not reference counted.
 */
-static X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
+X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
+    if(!p){//no pointer is supplied
+
+	if(nx && ny){
+	    p=mycalloc((nx*ny),T);
+	    if(mem){
+		warning("mem can only be NULL when p is NULL.\n");
+	    }
+	    mem=mem_new(p);
+	}
+    }
+
     X(mat) *out=mycalloc(1,X(mat));
     out->id=M_T;
     out->nx=nx;
     out->ny=ny;
-
-    if(!p){//no pointer is supplied
-	if(nx && ny){
-	    p=mycalloc((nx*ny),T);
-	    mem=mem_new(-2, p, 0);
-	}
-    }else{//pointer is supplied.
-	if(mem==(mem_t*)-1){//Borrow pointer without reference.
-	    warning("Deprecated usage\n");
-	    mem=0;
-	}else if(!mem){//Create reference
-	    mem=mem_new(-2, p, 0);
-	}
-    }
     out->p=p;
-    if(mem) out->mem=mem_ref(mem);
+    out->mem=mem_ref(mem);
     return out;
 }
 
@@ -58,30 +55,9 @@ static X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
 X(mat) *X(ref)(const X(mat) *in){
     if(!in) return NULL;
     assert_mat(in);
-    X(mat) *out=mycalloc(1,X(mat));
-    out->id=M_T;
-    out->nx=in->nx;
-    out->ny=in->ny;
-    out->p=in->p;
-    out->mem=mem_ref(in->mem);
+    X(mat)* out=X(new_do)(in->nx, in->ny, in->p, in->mem);
     if(in->header) out->header=strdup(in->header);
     return out;
-}
-
-/**
-   Creat a X(mat) object to reference an already existing vector.  Free the
-   X(mat) object won't free the existing vector.
-*/
-X(mat) *X(new_ref)(long nx, long ny, T *p){
-    return X(new_do)(nx,ny,p,(mem_t*)-1);
-}
-
-/**
-   Creat a X(mat) object with already allocated memory chunk. the memory is
-   freed when the X(mat) is freed.
-*/
-X(mat) *X(new_data)(long nx, long ny, T *p){
-    return X(new_do)(nx,ny,p,0);
 }
 
 /**
@@ -201,7 +177,7 @@ void X(resize)(X(mat) *A, long nx, long ny){
 	if(A->mem){
 	    mem_replace(A->mem, A->p);
 	}else{
-	    A->mem=mem_ref(mem_new(-2, A->p, 0));
+	    A->mem=mem_ref(mem_new(A->p));
 	}
 	A->nx=nx;
 	A->ny=ny;

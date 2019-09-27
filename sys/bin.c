@@ -73,8 +73,8 @@ struct file_t{
 struct mem_t{
     void *p;  /**<points to the beginning of mmaped memory for this type of data.*/
     long n;   /**<length of mmaped memory.*/
+    int kind; /**<Kind of memory. 0: heap, 1: mmap*/
     int nref;/**<Number of reference.*/
-    int fd;   /**<file descriptor. close it if not -1.*/
 };
 /**
    Disables file saving when set to 1.
@@ -945,30 +945,28 @@ void writeflt(const float *p, long nx, long ny, const char*format,...){
    Unreference the mmaped memory. When the reference drops to zero free or unmap it.
 */
 void mem_unref(struct mem_t *in){
-    if(in){
-	int nref=atomicadd(&(in->nref), -1);
-	if(!nref){
-	    if(in->fd==-2){//temporary hack.
-		free(in->p);
-	    }else{
-		munmap(in->p, in->n);
-		if(in->fd!=-1){
-		    close(in->fd);
-		}
-	    }
-	    free(in);
+    if(in && !atomicadd(&(in->nref), -1)){
+	switch(in->kind){
+	case 0:
+	    free(in->p);
+	    break;
+	case 1:
+	    munmap(in->p, in->n);
+	    break;
+	default:
+	    warning("invalid in->kind=%d\n", in->kind);
 	}
+	free(in);
     }
 }
 /**
-   Create a mem_t object. Notice that nref is set to 0.
+   Create a mem_t object. 
+
+   Notice that nref is set to 0. Default is set to reference heap memory.
 */
-struct mem_t *mem_new(int fd, void *p, long n){
+struct mem_t *mem_new(void *p){
     struct mem_t *out=mycalloc(1,struct mem_t);
     out->p=p;
-    out->n=n;
-    out->nref=0;
-    out->fd=fd;
     return out;
 }
 /**
@@ -977,8 +975,6 @@ struct mem_t *mem_new(int fd, void *p, long n){
 mem_t*mem_ref(mem_t *in){
     if(in){
 	atomicadd(&in->nref, 1);
-    }else{
-	warning("Trying to referencing non-referenced memory.\n");
     }
     return in;
 }
@@ -986,69 +982,88 @@ mem_t*mem_ref(mem_t *in){
    Check whether it is a referenced data.
 */
 int mem_isref(const mem_t *in){
-    return (in && (in->nref>1 || in->fd!=-2))?1:0;
+    return (in && (in->nref>1 || in->kind))?1:0;
 }
 /**
    Replace internal vector. If p is null, checking only. Use with care.
 */
 void mem_replace(mem_t *in, void *p){
-    if(!in || in->nref>1 || in->fd!=-2){
+    if(!in || in->nref>1 || in->kind){
 	error("Replacing referenced or mmaped memory\n");
     }else{
-	if(p!=(void*)-1){
-	    in->p=p;
-	}
+	in->p=p;
     }
+}
+/**
+   Return internal pointer
+*/
+void *mem_p(const mem_t *in){
+    return in->p;
 }
 /**
    Open a file for write with mmmap. We don't provide a access control here for
    generic usage of the function. Lock on a special dummy file for access
    control.
 */
-int mmap_open(char *fn, int rw){
+mem_t* mmap_open(char *fn, size_t msize, int rw){
     if(rw && disable_save && mystrcmp(fn, CACHE)){
 	warning("Saving is disabled for %s\n", fn);
     }
     char *fn2=procfn(fn,rw?"w":"r");
-    if(!fn2) return -1;
-    if(fn2 && strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
-	error("new_mmap does not support gzip\n");
+    if(!fn2) return NULL;
+    if(!check_suffix(fn2, ".bin")){
+	error("mmap only support .bin file\n");
     }
     int fd;
     if(rw){
 	fd=open(fn2, O_RDWR|O_CREAT, 0600);
-	if(fd!=-1 && ftruncate(fd, 0)){/*truncate the file. */
-	    error("Unable to ftruncate file to 0 size\n");
+	if(fd!=-1 && ftruncate(fd, msize)){/*truncate the file. */
+	    error("Unable to ftruncate file %s to %zu size\n", fn2, msize);
 	}
     }else{
 	fd=open(fn2, O_RDONLY);
     }
     /*in read only mode, allow -1 to indicate failed. In write mode, fail.*/
-    if(fd==-1 && rw){
+    if(fd==-1){
 	perror("open");
-	error("Unable to create file %s\n", fn2);
+	if(rw){
+	    error("Unable to create file %s\n", fn2);
+	}
+	return NULL;
     }
  
+    if(!rw && !msize){
+	msize=flen(fn2);
+    }
     free(fn2);
-    return fd;
+
+    void *p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ, MAP_SHARED, fd, 0);
+    close(fd);//it is ok to close fd after mmap.
+    if(p==MAP_FAILED){
+	perror("mmap");
+	error("mmap failed\n");
+	return NULL;
+    }else{
+	mem_t *mem=mem_new(p);
+	mem->kind=1;
+	mem->n=msize;
+	return mem;
+    }
 }
 
 /**
    Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p.
 */
-void mmap_header_rw(char **p0, const char **header0, uint32_t magic, long nx, long ny, const char *header){
+void mmap_write_header(char **p0, uint32_t magic, long nx, long ny, const char *header){
     char *p=*p0;
     /*Always have a header to align the data. */
     if(header){
 	uint64_t nlen=bytes_header(header)-24;
 	((uint32_t*)p)[0]=(uint32_t)M_HEADER; p+=4;
 	((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
-	*header0=p;
 	memcpy(p, header, strlen(header)+1); p+=nlen;
 	((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
 	((uint32_t*)p)[0]=(uint32_t)M_HEADER;p+=4;
-    }else{
-	*header0=NULL;
     }
     ((uint32_t*)p)[0]=(uint32_t)M_SKIP; p+=4;
     ((uint32_t*)p)[0]=(uint32_t)magic; p+=4;
@@ -1060,7 +1075,7 @@ void mmap_header_rw(char **p0, const char **header0, uint32_t magic, long nx, lo
 /**
    Initialize the dimension from the header in the mmaped file.
 */
-void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0){
+void mmap_read_header(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0){
     char *p=*p0;
     char *header=NULL;
     while(((uint32_t*)p)[0]==M_HEADER){

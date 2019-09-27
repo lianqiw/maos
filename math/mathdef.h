@@ -30,7 +30,8 @@
 #include "chol.h"
 #include "zfarr.h"
 #include "mathmisc.h"
-#include "locbin.h"
+#include "loc.h"
+#include "map.h"
 #include "random.h"
 
 #define AOS_LMAT(A) l##A
@@ -113,11 +114,14 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP64, 0, A)
+
 #define mapcellread(A...) (mapcell*)read_by_id(M_MAP64, 1, A)
 #define mapcellnew (mapcell*)cellnew
 #define mapccellnew (mapccell*)cellnew
-    
-#define rmapcellnew (rmapcell*)cellnew
+
+#define rmapread(A...)    (rmap_t*)read_by_id(M_RECTMAP64, 0, A)    
+#define rmapwrite(out, A...)   write_by_id((void*)out, M_RECTMAP64, A)
+#define rmapcellnew  (rmapcell*)cellnew
 #define rmapccellnew (rmapccell*)cellnew
     
 #define locwrite(out, A...) write_by_id((void*)out, M_LOC64, A)

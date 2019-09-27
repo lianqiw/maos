@@ -151,12 +151,13 @@ void writearr(const void *fpn, const int isfile, const size_t size, const uint32
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 typedef struct mem_t mem_t;
-struct mem_t *mem_new(int fd, void *p, long n);
+struct mem_t *mem_new(void *p);
 void mem_unref(struct mem_t *in);
 mem_t*mem_ref(mem_t *in);
 void mem_replace(mem_t *in, void *p);
 int mem_isref(const mem_t *in);
-int mmap_open(char *fn, int rw);
-void mmap_header_rw(char **p0, const char **header0, uint32_t magic, long nx, long ny, const char *header);
-void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0);
+void* mem_p(const mem_t *in);
+mem_t* mmap_open(char *fn, size_t msize, int rw);
+void mmap_write_header(char **p0, uint32_t magic, long nx, long ny, const char *header);
+void mmap_read_header(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0);
 #endif

@@ -42,12 +42,7 @@ cell *loc_embed2(loc_t *loc, dmat *arr);
 void loc_embed_add(map_t *dest, const loc_t *loc, const double *in);
 void loc_extract(dmat *dest, const loc_t *loc, map_t *in);
 loc_t * map2loc(map_t *amp, double thres);
-void rmapfree_do(rmap_t *map);
-#define rmapfree(A) ({rmapfree_do(A);A=NULL;})
-void mapfree_do(map_t *map);
-#define mapfree(A) ({mapfree_do(A);A=NULL;})
-void maparrfree_do(map_t **map, int nmap);
-#define maparrfree(A,B) ({maparrfree_do(A,B);A=NULL;})
+
 void loc_free_map(loc_t *loc);
 
 void locfree_do(loc_t *loc);
@@ -74,10 +69,10 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 loc_t *mk1dloc_vec(double *x, long nx);
 loc_t *mk1dloc(double x0, double dx, long nx);
 loc_t *mksqloc_auto(long nx, long ny, double dx, double dy);
-loc_t *mksqloc_map(map_t*map);
+loc_t *mksqloc_map(const map_t*map);
 loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy);
 loc_t *mkannloc(double D, double Din, double dx, double thres);
-dmat *mkcirmap(long nx, long ny, double cx, double cy, double r);
+
 void loc_create_stat_do(loc_t *loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t *loc);
@@ -102,16 +97,12 @@ loc_t *loctransform(const loc_t *loc, const char *ps);
 loc_t *loctransform2(const loc_t *loc, const dmat *coeff);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
-map_t *mapnew(long nx, long ny, double dx, double dy);
-map_t *mapnew2(map_t *A);
-map_t *mapref(map_t *A);
-void mapcircle(map_t *map, double r, double val);
-void mapcircle_symbolic(map_t *map, double r);
-void map_d_din(map_t *map, double *d, double *din);
-void create_metapupil(map_t **map, long* nx, long* ny, dmat *dirs, double D, double ht, double dx, double dy, 
-		      double offset,double guard, long ninx, long niny, int pad,int square);
+
 void locresize(loc_t *loc, long nloc);
 #define ptsresize(pts, nsa) locresize((loc_t*)pts, nsa)
 void dembed_locstat(dmat **out, double alpha, loc_t *loc, double *oin, double beta, int reverse);
 void cembed_locstat(cmat **out, double alpha, loc_t *loc, double *oin, double beta, int reverse);
+void loc_dxdy(loc_t *loc);
+loc_t *locreaddata(file_t *fp, header_t* header);
+void locwritedata(file_t *fp, const loc_t *loc);
 #endif

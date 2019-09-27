@@ -281,7 +281,11 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
     case M_LOC64:
 	locwritedata(fp, (loc_t*)A);break;
     case M_MAP64:
-	mapwritedata(fp, (map_t*)A);break;
+	map_header((map_t*)A);
+	dwritedata(fp, (dmat*)A);break;
+    case M_RECTMAP64:
+	rmap_header((rmap_t*)A);
+	dwritedata(fp, (dmat*)A);break;
     case M_DSP:
 	dspwritedata(fp, (dsp*)A);break;
     case M_SSP:
@@ -314,7 +318,7 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
     }
     if(zfisfits(fp) || level==0){
 	switch(level){
-	case 0:/*read a mat*/
+	case 0:/*read array*/
 	    if(!id) id=header->magic;
 	    switch(id){
 	    case M_DBL: 
@@ -325,7 +329,18 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 		out=creaddata(fp, header);break;
 	    case M_LONG: out=lreaddata(fp, header);break;
 	    case M_LOC64: out=locreaddata(fp, header); break;
-	    case M_MAP64: out=mapreaddata(fp, header); break;
+	    case M_MAP64: {
+		dmat *tmp=dreaddata(fp, header); 
+		out=d2map(tmp);
+		dfree(tmp);
+	    }
+		break;
+	    case M_RECTMAP64: {
+		dmat *tmp=dreaddata(fp, header); 
+		out=d2rmap(tmp);
+		dfree(tmp);
+	    }
+		break;
 	    case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
 		out=dspreaddata(fp, header);break;
 	    case M_SSP32: case M_SSP64:
@@ -363,7 +378,7 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	    cell *dcout=cellnew(1,1);
 	    dcout->p[0]=readdata_by_id(fp, id, level-1, header);
 	    out=dcout;
-	}else{
+	}else{//cell array
 	    long nx=header->nx;
 	    long ny=header->ny;
 	    cell *dcout=cellnew(nx, ny);

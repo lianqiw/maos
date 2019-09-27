@@ -230,7 +230,8 @@ loc_t *mx2loc(const mxArray *A){
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
     loc->locy=loc->locx+loc->nloc;
-    const double tol=1e-7;
+    loc_dxdy(loc);
+    /*const double tol=1e-7;
     double dxd=INFINITY, dyd=INFINITY;
     for(long i=0; i<loc->nloc-1; i++){
 	double dxi=fabs(loc->locx[i+1]-loc->locx[i]);
@@ -243,7 +244,7 @@ loc_t *mx2loc(const mxArray *A){
 	}
     }
     loc->dx=dxd;
-    loc->dy=dyd;
+    loc->dy=dyd;*/
     return loc;
 }
 
@@ -260,7 +261,7 @@ dmat *mx2d(const mxArray *A){
 	double *p=mxGetPr(A);
 	//The user may supply 0 for empty matrix
 	if(mxGetNumberOfElements(A)>1 || p[0]){
-	    out=dnew_ref(mxGetM(A), mxGetN(A), mxGetPr(A));
+	    out=dnew_do(mxGetM(A), mxGetN(A), mxGetPr(A), 0);
 	}
     }
     return out;
@@ -275,7 +276,7 @@ cmat *mx2c(const mxArray *A){
     }
     cmat *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
-	out=cnew_ref(mxGetM(A), mxGetN(A), mxGetData(A));
+	out=cnew_do(mxGetM(A), mxGetN(A), mxGetData(A), 0);
     }
     return out;
 #else

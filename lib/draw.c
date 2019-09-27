@@ -151,6 +151,7 @@ static void list_destroy(list_t **head){
 	if(p->child){
 	    list_destroy(&p->child);
 	}
+	free(p->key);
 	free(p);
     }
 }

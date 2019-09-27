@@ -358,15 +358,16 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 	assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
 	if(y->ny==1){
 	    cholmod_dense *y2=d2chol(y, 0, y->ny);/*share pointer. */
-	    cholmod_dense *x2=NULL;
-	    x2=MOD(solve)(CHOLMOD_A,A->L,y2,A->c);
+	    cholmod_dense *x2=MOD(solve)(CHOLMOD_A,A->L,y2,A->c);
 	    if(!x2) error("chol_solve failed\n");
 	    if(x2->z) error("why is this?\n");
 	    if(x2->nzmax!=x2->nrow*x2->ncol || x2->d!=x2->nrow){
 		error("Fix here\n");
 	    }
 	    if(!*x){
-		*x=dnew_data(x2->nrow,x2->ncol, (double*)x2->x);/*takes over the owner of x2->x. */
+		/*takes over the owner of x2->x. */
+		*x=dnew_do(x2->nrow,x2->ncol, (double*)x2->x, mem_new(x2->x));
+		x2->x=0;
 	    }else{
 		if((*x)->nx!=(long)x2->nrow || (*x)->ny!=(long)x2->ncol){
 		    error("Matrix mismatch\n");

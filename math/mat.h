@@ -23,9 +23,8 @@
 #endif
 
 #define AOS_MAT_DEF(X,T,R)						\
-    X(mat) *X(new_ref)(long nx, long ny, T *p) CHECK_UNUSED_RESULT;	\
-    X(mat) *X(new_data)(long nx, long ny, T *p) CHECK_UNUSED_RESULT;	\
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;		\
+    X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
     X(mat) *X(mat_cast)(const void *A) CHECK_UNUSED_RESULT;		\
     void X(init)(X(mat)**A, long nx, long ny) ;				\
     void X(free_do)(X(mat) *A);						\

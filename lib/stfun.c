@@ -41,17 +41,10 @@ stfun_t *stfun_init(long nx, long ny, double *amp){
     A->hat2=cnew(nx*2, ny*2);
     A->hattot=cnew(nx*2, ny*2);
 
-    //cfft2plan(A->hat0, -1);
-    //cfft2plan(A->hat0, 1);
-    //cfft2plan(A->hat1, -1);
-    //cfft2plan(A->hat2, -1);
-    //cfft2plan(A->hattot, 1);
-
-    dmat *damp;
+    dmat *damp=dnew(nx, ny);;
     if(amp){
-	damp=dnew_ref(nx,ny,amp);
+	memcpy(damp->p, amp, nx*ny*sizeof(double));
     }else{
-	damp=dnew(nx, ny);
 	dset(damp, 1);
     }
     cembedd(A->hat0,damp,0);

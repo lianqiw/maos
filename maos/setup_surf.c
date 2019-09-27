@@ -256,26 +256,34 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		wfscover[iwfs]=1;
 	    }
 	}else{
-	    int ncover=readstr_intarr(&wfscover, 0, strwfs);
+	    int *wfscover2=0;
+	    int ncover=readstr_intarr(&wfscover2, 0, strwfs);
+	    for(int i=0; i<MIN(ncover, nwfs); i++){
+		wfscover[i]=wfscover2[i];
+	    }
 	    if(ncover!=nwfs){
-		if(ncover==0) error("wfscover has zero length\n");
-		wfscover=myrealloc(wfscover,nwfs,int);
 		int val;
-		//warning("SURFWFS has length of %d, expect %d. Will replicate ", ncover, nwfs);
-		if(parms->sim.skysim){
-		    val=wfscover[ncover-1];
-		    info("last wfs: %d\n", val);
+		if(ncover==0){
+		    warning("wfscover has zero length. Assume all 0.\n");
+		    val=0;
 		}else{
-		    val=wfscover[0];
-		    for(int i=1; i<ncover; i++){
-			if(val>wfscover[i]) val=wfscover[i];
+		    //warning("SURFWFS has length of %d, expect %d. Will replicate ", ncover, nwfs);
+		    if(parms->sim.skysim){
+			val=wfscover2[ncover-1];
+			info("last wfs: %d\n", val);
+		    }else{
+			val=wfscover2[0];
+			for(int i=1; i<ncover; i++){
+			    if(val>wfscover2[i]) val=wfscover2[i];
+			}
+			info("lowest value: %d\n", val);
 		    }
-		    info("lowest value: %d\n", val);
 		}
 		for(int i=ncover; i<nwfs; i++){
 		    wfscover[i]=val;
 		}
 	    }
+	    free(wfscover2);
 	    ncover=0;
 	    for(int i=0; i<nwfs; i++){
 		ncover+=wfscover[i]?1:0;
@@ -295,7 +303,6 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}else{
 	    opdxcover=(int)readstr_num(stropdx, NULL);
 	}
-	sdata.wfscover=wfscover;
 	sdata.evlcover=evlcover;
 	sdata.surf=surf;
 	sdata.opdxcover=opdxcover;
@@ -682,4 +689,5 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	writebin(aper->opdadd, "surfevl_correctable.bin");
     }
     dcellfree(aper->opdfloc);
+    dcellfree(recon->dm_ncpa);
 }

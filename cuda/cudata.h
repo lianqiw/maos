@@ -53,7 +53,7 @@ public:
 	pthread_mutex_init(&memmutex, 0);
     }
     ~cuglobal_t(){
-	free(memcache); memcache=0;
+	free(memcache); memcache=0; nmemcache=0;
 	dfree(atmscale);
     }
 };

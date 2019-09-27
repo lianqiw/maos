@@ -580,14 +580,14 @@ int readcfg_intarr(int **ret, const char *format,...){
  */
 lmat *readcfg_lmat_do(int n, char *key){
     long *val=0;
-    long **ret=&val;
+    //long **ret=&val;
     int nx, ny;
-    readstr_numarr((void**)ret, n, &nx, &ny, M_LONG, getrecord(key, 1)->data);
+    readstr_numarr((void**)&val, n, &nx, &ny, M_LONG, getrecord(key, 1)->data);
     lmat *res=0;
     if(!nx || !ny){
 	free(val); val=0;
     }
-    res=lnew_data(nx,ny, val);
+    res=lnew_do(nx,ny, val, mem_new(val));
     return res;
 }
 /**
@@ -655,7 +655,7 @@ static dmat *readstr_dmat_do(int n, const char *str){
 	if(!nx || !ny) {
 	    free(val); val=0;
 	}
-	res=dnew_data(nx, ny, val);
+	res=dnew_do(nx, ny, val, mem_new(val));
     }
     free(fn);
     return res;

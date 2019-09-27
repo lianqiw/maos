@@ -305,7 +305,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		isim2=(long)floor(-(prep_data[ips].oy+(ny0-(nxni/2+1))*dx)/(atm[ips]->vy*dt));
 	    }
 	    prep_data[ips].isim_next=isim1<isim2?isim1:isim2;
-	    if(prep_data[ips].isim_next>parms->sim.end){/*no need to do */
+	    if(prep_data[ips].isim_next>=parms->sim.end){/*no need to do */
 		prep_data[ips].isim_next=INT_MAX;
 	    }
 	 

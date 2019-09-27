@@ -22,6 +22,8 @@
 #include "../sys/sys.h"
 #include "mathdef.h"
 #include "loc.h"
+#include "map.h"
+
 struct loc_private{
 };
 /**
@@ -84,42 +86,22 @@ void locarrfree_do(loc_t **loc, int nloc){
     }
     free(loc);
 }
-/**
-   Free map_t data
-*/
-void mapfree_do(map_t *map){
-    dfree_do((dmat*)map);
-}
 
-/**
-   Free map_t array
- */
-void maparrfree_do(map_t **map, int nmap){
-    if(!map) return;
-    for(int imap=0; imap<nmap; imap++){
-	mapfree(map[imap]);
-    }
-    free(map);
-}
-
-/**
-   Free rmap_t data
-*/
-void rmapfree_do(rmap_t *map){
-    dfree_do((dmat*)map);
-}
 /**
    Create a loc with nloc elements.
 */
 loc_t *locnew(long nloc,double dx, double dy){
     loc_t *loc=mycalloc(1,loc_t);
     loc->id=M_LOC64;
-    loc->locx=mycalloc(nloc,double);
-    loc->locy=mycalloc(nloc,double);
+    if(nloc>0){
+	loc->locx=mycalloc(nloc,double);
+	loc->locy=mycalloc(nloc,double);
+	loc->nref=mycalloc(1, int); loc->nref[0]=1;
+    }
     loc->nloc=nloc;
-    loc->dx=dx;
-    loc->dy=dy;
-    loc->nref=mycalloc(1, int); loc->nref[0]=1;
+    if(!isnan(dx)) loc->dx=dx;
+    if(!isnan(dy)) loc->dy=dy;
+
     return loc;
 }
 /**
@@ -480,7 +462,7 @@ loc_t *mk1dloc(double x0, double dx, long nx){
    Create a loc array that covers the map_t. Notice that it is different from
    map2loc which only covers valid (value>0) regions.
 */
-loc_t *mksqloc_map(map_t*map){
+loc_t *mksqloc_map(const map_t*map){
     return mksqloc(map->nx, map->ny, map->dx, map->dy, map->ox, map->oy);
 }
 /**
@@ -1451,186 +1433,7 @@ void locresize(loc_t *loc, long nloc){
     loc->locy=myrealloc(loc->locy,nloc,double);
     loc->nloc=nloc;
 }
-/**
-   create a new map_t object.
-*/
-map_t *mapnew(long nx, long ny, double dx, double dy){
-    map_t *map=(map_t*)realloc(dnew(nx, ny),sizeof(map_t));
-    map->h=0;
-    map->dx=dx;
-    map->dy=dy;
-    map->ox=-map->nx/2*map->dx;
-    map->oy=-map->ny/2*map->dy;
-    map->vx=0;
-    map->vy=0;
-    map->iac=0;
-    return map;
-}
-/**
-   ceate a new map_t object from existing one. P is left empty.
-*/
-map_t *mapnew2(map_t* A){
-    map_t *map=(map_t*)realloc(dnew(A->nx, A->ny),sizeof(map_t));
-    map->h=A->h;
-    map->dx=A->dx;
-    map->dy=A->dy;
-    map->ox=A->ox;
-    map->oy=A->oy;
-    map->vx=A->vx;
-    map->vy=A->vy;
-    map->iac=A->iac;
-    return map;
-}
-map_t *mapref(map_t*in){
-    if(!in) return NULL;
-    map_t *out=mycalloc(1,map_t);
-    memcpy(out,in,sizeof(map_t));
-    mem_ref(in->mem);
-    return out;
-}
-/**
-   Create a circular aperture on map_t.
-*/
-void mapcircle(map_t *map, double r, double val){
-    dcircle((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r, val);
-}
-/**
-   Create a circular aperture on map_t.
-*/
-void mapcircle_symbolic(map_t *map, double r){
-    dcircle_symbolic((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r);
-}
-/**
-   Find the inner and outer diameter of an amplitude map contained in map_t.
-*/
-void map_d_din(map_t *map, double *d, double *din){
-    double r2min=INFINITY, r2max=0;
-    for(long iy=0; iy<map->ny; iy++){
-	double y=iy*map->dy+map->oy;
-	for(long ix=0; ix<map->nx; ix++){
-	    if(P(map,ix,iy)>EPS){
-		double x=ix*map->dx+map->ox;
-		double r2=x*x+y*y;
-		if(r2>r2max) r2max=r2;
-		if(r2<r2min) r2min=r2;
-	    }
-	}
-    }
-    *d=sqrt(r2max)*2;
-    *din=sqrt(r2min)*2;
-}
-/**
-   create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx, dy,
-   height of ht, that can cover all the directions specified in dirs
 
-   offset: distance in pixel from the point closest to the origin to origin (right side).  
-   0: there is a point on the origin.  
-   1/2: the closest point to origin is 1/2 pixel.  
-   
-   pad!=0: round nx, ny to power of 2.  */
-
-void create_metapupil(map_t**mapout,/**<[out] map*/
-		      long* nxout,  /**<[out] nx*/
-		      long* nyout,  /**<[out] ny*/
-		      dmat *dirs,   /**<[in] All Directions to cover (thetax, thetay, hs)*/
-		      double D,     /**<[in] Diameter (meter)*/
-		      double ht,    /**<[in] Height (meter)*/
-		      double dx,    /**<[in] Sampling along x (meter)*/
-		      double dy,    /**<[in] Sampling along y (meter)*/
-		      double offset,/**<[in] Fractional offset of point closet from origin. between [0, 1)*/
-		      double guard, /**<[in] Width of guard area, in meter*/
-		      long ninx,    /**<[in] Suggested size along x*/
-		      long niny,    /**<[in] Suggested size along y*/
-		      int pad,      /**<[in] Increase nx, ny to power of 2*/
-		      int square    /**<[in] Full square/rectangular grid*/
-    ){
-    const double R=D/2;
-    double minx=INFINITY,miny=INFINITY,maxx=-INFINITY,maxy=-INFINITY;
-    if(dirs->nx<3 || dirs->ny<=0){ 
-	error("dirs should have no less than 3 rows and positive number of cols.\n");
-    }
-    for(int idir=0; idir<dirs->ny; idir++){
-	double RR=(1.-ht/P(dirs,2,idir))*R+guard;
-	double sx1=(P(dirs,0,idir)*ht)-RR;
-	double sx2=(P(dirs,0,idir)*ht)+RR;
-	double sy1=(P(dirs,1,idir)*ht)-RR;
-	double sy2=(P(dirs,1,idir)*ht)+RR;
-	//Need to work when ht<0;
-	if(sx1<minx) minx=sx1; if(sx1>maxx) maxx=sx1;
-	if(sx2<minx) minx=sx2; if(sx2>maxx) maxx=sx2;
-	if(sy1<miny) miny=sy1; if(sy1>maxy) maxy=sy1;
-	if(sy2<miny) miny=sy2; if(sy2>maxy) maxy=sy2;
-    }
-    if(square){//if square, also make symmetric.
-	maxx=MAX(fabs(minx), fabs(maxx));
-	minx=-maxx;
-	maxy=MAX(fabs(miny), fabs(maxy));
-	miny=-maxy;
-    }
-    /*ajust central point offset*/
-    {
-	offset=offset-floor(offset);//between 0 and 1
-	double mind=minx/dx;
-	double adjust=mind-floor(mind)-offset;
-	if(adjust<0){
-	    adjust++;
-	}
-	minx-=adjust*dx;
-	mind=miny/dy;
-	adjust=mind-floor(mind)-offset;
-	if(adjust<0){
-	    adjust++;
-	}
-	miny-=adjust*dy;
-    }
-    double ox=minx;
-    double oy=miny;
-    long nx=ceil((maxx-ox)/dx)+1;
-    long ny=ceil((maxy-oy)/dy)+1;
-
-    /*Make it square */
-    if(square){
-	ny=nx=(nx<ny)?ny:nx;
-    }
-    if(pad){/*pad to power of 2 */
-	ninx=1<<iceil(log2((double)nx));
-	niny=1<<iceil(log2((double)ny));
-    }
-    if(ninx>1){
-	if(ninx<nx) warning("ninx=%ld is too small. need %ld\n",ninx, nx);
-	ox=ox-(ninx-nx)/2*dx;
-	nx=ninx;
-    }
-    if(niny>1){
-	if(niny<ny)  warning("niny=%ld is too small. need %ld\n",niny, ny);
-	oy=oy-(niny-ny)/2*dy;
-	ny=niny;
-    }
-    if(nxout)
-	*nxout=nx;
-    if(nyout)
-	*nyout=ny;
-    if(mapout){
-	*mapout=mapnew(nx, ny, dx, dy);
-	(*mapout)->ox=ox;
-	(*mapout)->oy=oy;
-	(*mapout)->h=ht;
-	dmat *dmap=(dmat*)(*mapout);
-	if(square){/**Only want square grid*/
-	    dset(dmap,1);
-	}else{/*Want non square grid*/
-	    for(int idir=0; idir<dirs->ny; idir++){
-		double sx=-ox+(P(dirs,0,idir)*ht);
-		double sy=-oy+(P(dirs,1,idir)*ht);
-		double RR=R*(1.-ht/P(dirs,2,idir))+guard;
-		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
-	    }
-	    for(int i=0; i<nx*ny; i++){
-		dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
-	    }
-	}
-    }
-}
 /**
    Embeding an OPD defined on loc to another array. 
    Do the embeding using locstat to have best speed.
@@ -1709,3 +1512,80 @@ LOC_EMBED_DEF(AOS_DMAT, double, double, OPX)
 #define OPX(A) creal(A)
 LOC_EMBED_DEF(AOS_CMAT, dcomplex, double, OPX)
 #undef OPX
+
+/**
+   Determine dx and dy from data.
+*/
+void loc_dxdy(loc_t *out){
+    const double tol=1e-7;
+
+    double dxd=INFINITY, dyd=INFINITY;
+    for(long i=0; i<out->nloc-1; i++){
+	double dxi=fabs(out->locx[i+1]-out->locx[i]);
+	double dyi=fabs(out->locy[i+1]-out->locy[i]);
+	if(dxi>tol && dxi+tol<dxd){
+	    dxd=dxi;
+	}
+	if(dyi>tol && dyi+tol<dyd){
+	    dyd=dyi;
+	}
+    }
+    if(out->dx==0 || isnan(out->dx)){
+	out->dx=dxd;//use value derived from data
+    }else if(fabs(out->dx-dxd)>tol && isfinite(dxd)){
+	warning("Specified dx=%.15g doesn't agree with data: %.15g, replace.\n", out->dx, dxd);
+	out->dx=dxd;
+    }
+
+    if(out->dy==0 || isnan(out->dy)){
+	out->dy=dyd;
+    }else if(fabs(out->dy-dyd)>tol && isfinite(dyd)){
+	warning("Specified dy=%.15g doesn't agree with data: %.15g, replace.\n", out->dy, dyd);
+	out->dy=dyd;
+    }
+}
+/**
+   Verify the magic, dimension and read in the loc_t by calling locreaddata2().
+ */
+loc_t *locreaddata(file_t *fp, header_t *header){
+    header_t header2;
+    if(!header){
+	header=&header2;
+	read_header(header, fp);
+    }
+    if((header->magic&M_DBL)!=M_DBL){
+	error("magic=%u. Expect %x\n", header->magic, M_DBL);
+    }
+    double dx=fabs(search_header_num(header->str,"dx"));
+    double dy=fabs(search_header_num(header->str,"dy"));
+    
+    free(header->str);header->str=0;
+    long nx=header->nx;
+    long ny=header->ny;
+    loc_t *out;
+    if(nx==0 || ny==0){
+	out=NULL;
+    }else{
+	out=locnew(nx, dx, dy);
+	zfread(out->locx, sizeof(double), nx, fp);
+	zfread(out->locy, sizeof(double), nx, fp);
+	
+	loc_dxdy(out);
+    }
+    return out;
+}
+
+void locwritedata(file_t *fp, const loc_t *loc){
+    char str[120];
+    snprintf(str,120,"dx=%.15g;\ndy=%.15g;iac=%.15g\n",loc->dx,loc->dy,loc->iac);
+    header_t header={M_LOC64, 0, 0, str};
+    if(loc){
+	header.nx=loc->nloc;
+	header.ny=2;
+    }
+    write_header(&header,fp);
+    if(loc){
+	zfwrite(loc->locx, sizeof(double),loc->nloc,fp);
+	zfwrite(loc->locy, sizeof(double),loc->nloc,fp);
+    }
+}
