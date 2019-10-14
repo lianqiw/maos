@@ -45,7 +45,7 @@ public:
     Array<int> nembed;
     Array<int> psfsize;
     Array<Real> wvls;
-    Array<stream_t>   stream;
+    //Array<stream_t>   stream;
     Array<cufftHandle>    plan;
     curcell surf;
     curcell opd;

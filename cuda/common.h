@@ -223,16 +223,14 @@ static inline void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){
 }
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 class stream_t{
-    int own;//1: we don't own these.
     cudaStream_t stream;
     cublasHandle_t handle;
     cusparseHandle_t sphandle;
 public:
-    stream_t():own(1){
+    stream_t(){
 	init();
     }
     void init(){
-	own=1;
 	STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
 	HANDLE_NEW(handle, stream);
 	SPHANDLE_NEW(sphandle, stream);
@@ -241,11 +239,9 @@ public:
 	deinit();
     }
     void deinit(){
-	if(own){
-	    SPHANDLE_DONE(sphandle);
-	    HANDLE_DONE(handle);
-	    STREAM_DONE(stream);
-	}
+	SPHANDLE_DONE(sphandle);
+	HANDLE_DONE(handle);
+	STREAM_DONE(stream);
     }
     void reset(){//to place on correct gpu.
 	deinit();
@@ -273,15 +269,15 @@ public:
     cusparseHandle_t sparse(){
 	return sphandle;
     }
-    stream_t & operator=(const stream_t &in){
+private://do not allow copy.
+    stream_t & operator=(const stream_t &in);
+/*
 	deinit();
-	own=0;
 	stream=in.stream;
 	handle=in.handle;
 	sphandle=in.sphandle;
 	return *this;
-    }
-private:
+*/
     stream_t(const stream_t &);
 
 };

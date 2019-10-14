@@ -20,7 +20,8 @@
 #include "sim_utils.h"
 #include "maos.h"
 #include "version.h"
-static void maos_daemon(int sock){
+
+static void maos_listener(int sock){
     thread_block_signal();
     int cmd[2];
     while(!streadintarr(sock, cmd, 2)){
@@ -35,11 +36,13 @@ static void maos_daemon(int sock){
 		    warning("got fd=%d\n", fd);
 		}
 		draw_add(fd);
-		PARMS_T *parms=(PARMS_T*)global->parms;//cast away constness
-		parms->plot.setup=1;
-		parms->plot.run=1;
-		if(global->setupdone){//setup is already finished. request plot setup.
-		    plot_setup(global->parms, global->powfs, global->aper, global->recon);
+		if(global){
+		    PARMS_T *parms=(PARMS_T*)global->parms;//cast away constness
+		    parms->plot.setup=1;
+		    parms->plot.run=1;
+		    if(global->setupdone){//setup is already finished. request plot setup.
+			plot_setup(global->parms, global->powfs, global->aper, global->recon);
+		    }
 		}
 	    }break;
 	default:
@@ -165,13 +168,13 @@ int main(int argc, const char *argv[]){
 		wait_cpu(NTHREAD);
 	    }
 	}
-	thread_new((thread_fun)scheduler_listen, (void*)maos_daemon);
+	thread_new((thread_fun)scheduler_listen, (void*)maos_listener);
 	setup_parms_gpu(parms, arg->gpus, arg->ngpu);
     
  
-    /* do not use prallel single in maos(). It causes blas to run single threaded
-     * during preparation. Selective enable parallel for certain setup functions
-     * that doesn't use blas*/
+	/* do not use prallel single in maos(). It causes blas to run single threaded
+	 * during preparation. Selective enable parallel for certain setup functions
+	 * that doesn't use blas*/
 
 	info("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),HOST);
 	maos_setup(parms);

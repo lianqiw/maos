@@ -72,7 +72,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	    cudata->perf.locs_dm[ievl][idm]=culoc_t(loc_dm);
 	}
     }
-    cuglobal->perf.stream=Array<stream_t>(nevl, 1);
+    //cuglobal->perf.stream=Array<stream_t>(nevl, 1);
     if(parms->evl.psfmean || parms->evl.psfhist){
 	cuglobal->perf.plan  = Array<cufftHandle>(nwvl*nevl,1);
     }
@@ -80,12 +80,12 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	gpu_set(cuglobal->evlgpu[ievl]);
 	//STREAM_NEW(cuglobal->perf.stream[ievl]);
 	//Use stream created per GPU in order to share resource within GPU between different evl dir.
-	cuglobal->perf.stream[ievl]=cudata->perf_stream;
+	//cuglobal->perf.stream[ievl]=cudata->perf_stream;
 	if(parms->evl.psfmean || parms->evl.psfhist){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		DO(cufftPlan2d(&cuglobal->perf.plan[iwvl+nwvl*ievl],cuglobal->perf.nembed[iwvl],
 			       cuglobal->perf.nembed[iwvl],FFT_T_C2C));
-		DO(cufftSetStream(cuglobal->perf.plan[iwvl+nwvl*ievl], cuglobal->perf.stream[ievl]));
+		DO(cufftSetStream(cuglobal->perf.plan[iwvl+nwvl*ievl], cudata->perf_stream));
 	    }/*for iwvl */
 	}
     }

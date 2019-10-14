@@ -295,7 +295,7 @@ void gpu_perfevl_queue(thread_t *info){
 	const double thetax=parms->evl.thetax->p[ievl];
 	const double thetay=parms->evl.thetay->p[ievl];
  
-	stream_t &stream=cuglobal->perf.stream[ievl];
+	stream_t &stream=cudata->perf_stream;
 	curmat &iopdevl=cuglobal->perf.opd[ievl];
 	// iopdevl must be in device memory. 6 times slower if in host memory.
 	if(cuglobal->perf.surf && cuglobal->perf.surf[ievl]){
@@ -466,7 +466,7 @@ void gpu_perfevl_sync(thread_t *info){
     const int nmod=parms->evl.nmod;
     for(int ievl=info->start; ievl<info->end; ievl++){
 	gpu_set(cuglobal->evlgpu[ievl]);
-	cudaStream_t stream=cuglobal->perf.stream[ievl];
+	cudaStream_t stream=cudata->perf_stream;
 	const double thetax=parms->evl.thetax->p[ievl];
 	const double thetay=parms->evl.thetay->p[ievl];
 	/*Setup pointers for easy usage */
@@ -503,7 +503,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    //warning_once("Compare with CPU code to verify accuracy. Need to verify focus mode\n");
 	    gpu_set(cuglobal->evlgpu[ievl]);
 	    curmat &iopdevl=cuglobal->perf.opd[ievl];
-	    stream_t &stream=cuglobal->perf.stream[ievl];
+	    stream_t &stream=cudata->perf_stream;
 	    ngsmod2loc(iopdevl, cudata->perf.locs(), simu->recon->ngsmod, cleNGSm, 
 		       parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
 		       -1, stream);
@@ -599,7 +599,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!parms->evl.psf->p[ievl] || parms->evl.psfngsr->p[ievl]==2) continue;
 		gpu_set(cuglobal->evlgpu[ievl]);
-		cudaStream_t stream=cuglobal->perf.stream[ievl];
+		cudaStream_t stream=cudata->perf_stream;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curmat &pp=cuglobal->perf.psfcl[iwvl+nwvl*ievl];
 		    curscale(pp, scale, stream);
@@ -613,7 +613,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!parms->evl.psf->p[ievl] || !parms->evl.psfngsr->p[ievl]) continue;
 		gpu_set(cuglobal->evlgpu[ievl]);
-		cudaStream_t stream=cuglobal->perf.stream[ievl];
+		cudaStream_t stream=cudata->perf_stream;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curmat &pp=cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl];
 		    curscale(pp, scale, stream);
@@ -631,7 +631,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!parms->evl.psf->p[ievl]) continue;
 	    gpu_set(cuglobal->evlgpu[ievl]);
-	    cudaStream_t stream=cuglobal->perf.stream[ievl];
+	    cudaStream_t stream=cudata->perf_stream;
 	    if(parms->evl.psfngsr->p[ievl]!=2){
 		{
 		    curmat &pp=cuglobal->perf.opdcov[ievl];

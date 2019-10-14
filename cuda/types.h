@@ -465,7 +465,7 @@ public:
     }
     cusp &operator=(const cusp&in){
 	if(this!=&in){
-	    reset();
+	    deinit();
 	    p=in.p;
 	    i=in.i;
 	    x=in.x;
@@ -479,9 +479,9 @@ public:
 	return *this;
     }
     ~cusp(){
-	reset();
+	deinit();
     }
-    void reset(){
+    void deinit(){
 	if(nref && !atomicadd(nref, -1)){
 	    cudaFree(p);
 	    cudaFree(i);
@@ -492,12 +492,7 @@ public:
     }
  
     void trans();/*covnert to CSR mode by transpose*/
-    /*cusp* ref(void){
-      if(nref) atomicadd(nref, 1);
-      cusp* res=(cusp*)malloc(sizeof(cusp));
-      memcpy(res, this, sizeof(*this));
-      return res;
-      }*/
+ 
     operator bool()const{
 	return nx && ny;
     }
@@ -547,9 +542,10 @@ public:
 	return nxsa;
     }
     cupts_t(pts_t *in=0):culoc_t((loc_t*)in),dxsa(0),nxsa(0){
-	if(!in) return;
-	dxsa=in->dx;
-	nxsa=in->nx;
+	if(in){
+	    dxsa=in->dx;
+	    nxsa=in->nx;
+	}
     }
 };
 /**
@@ -557,7 +553,7 @@ public:
 */
 class cugrid_t{
 public:
-    long  nx, ny;
+    long nx, ny;
     Real ox, oy;
     Real dx, dy;
     Real ht;
