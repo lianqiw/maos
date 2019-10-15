@@ -64,7 +64,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	GAlsr=GAM;
     }
     int free_GAlsr=0;
-    if(GAlsr->p[0]->id!=M_DBL){
+    if(GAlsr->p[0]->id!=M_DBL){//Convert low sparsity matrices to full
 	dsp *tmp=dsp_cast(GAlsr->p[0]);
 	if(tmp->nzmax>tmp->nx*tmp->ny*0.2){//not very sparse
 	    dcell *tmp2=0;
@@ -80,10 +80,18 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	dcellmm(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
 	recon->LR.V=dcelltrans(recon->PTTF);
     }
+   
     info("Building recon->LL\n");
     recon->LL.M=dcellmm2(recon->LR.M, GAlsr, "nn");
     if(free_GAlsr){
 	cellfree(GAlsr);
+    }
+    if(recon->LR.U){
+	recon->LL.U=dcelldup(recon->LR.U);
+	dcell *GPTTDF=NULL;
+	dcellmm(&GPTTDF, GAM, recon->LR.V, "tn", 1);
+	recon->LL.V=dcelldup(GPTTDF);
+	dcellfree(GPTTDF);
     }
     double maxeig=pow(recon->neamhi * recon->aloc->p[0]->dx, -2);
     if(parms->recon.modal){
@@ -102,6 +110,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
     dcell *NW=NULL;
     if(!parms->recon.modal){
 	if(parms->lsr.alg!=2){
+	    info("Create piston and check board modes that are in NULL space of GA.\n");
 	    /* Not SVD, need low rank terms for piston/waffle mode constraint. */
 	    NW=dcellnew(ndm,1);
 	    int nmod=2;/*two modes. */
@@ -135,6 +144,11 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    if(parms->save.setup){
 		writebin(NW, "lsrNW");
 	    }
+
+	    dcellcat2(&recon->LL.U, NW, 2);
+	    dcellscale(NW, -1);
+	    dcellcat2(&recon->LL.V, NW, 2);
+	    dcellfree(NW);
 	}
 
 	if(parms->lsr.actslave){
@@ -160,39 +174,27 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    cellfree(actslave);
 	}
     }
-    /*Low rank terms for low order wfs. Only in Integrated tomography. */
-    dcell *ULo=dcellnew(ndm,nwfs);
-    dcell *VLo=dcellnew(ndm,nwfs);
-    dcell*  pULo=ULo/*PDELL*/;
-    dcell*  pVLo=VLo/*PDELL*/;
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	int ipowfs=parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
-	    continue;
+    if(parms->recon.split==0 && parms->nlowfs){
+	/*Low rank terms for low order wfs. Only in Integrated tomography with low order WFS. */
+	dcell *ULo=dcellnew(ndm,nwfs);
+	dcell *VLo=dcellnew(ndm,nwfs);
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
+		continue;
+	    }
+	    for(int idm=0; idm<ndm; idm++){
+		dspfull(PP(ULo,idm,iwfs), (dsp*)P(recon->LR.M, idm, iwfs),'n',-1);
+		dspfull(PP(VLo,idm,iwfs), (dsp*)P(GAM, iwfs, idm),'t',1);
+	    }
 	}
-	for(int idm=0; idm<ndm; idm++){
-	    dspfull(PP(pULo,idm,iwfs), (dsp*)P(recon->LR.M, idm, iwfs),'n',-1);
-	    dspfull(PP(pVLo,idm,iwfs), (dsp*)P(GAM, iwfs, idm),'t',1);
-	}
-    }
-    recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
-    dcell *GPTTDF=NULL;
-    dcellmm(&GPTTDF, GAM, recon->LR.V, "tn", 1);
-    recon->LL.V=dcellcat(GPTTDF, VLo, 2);
-    dcellfree(GPTTDF);
-    dcellfree(ULo);
-    dcellfree(VLo);
-    if(!parms->recon.modal && NW){
-	info("Create piston and check board modes that are in NULL space of GA.\n");
-	/*add to low rank terms. */
-	dcell *tmp=recon->LL.U;
-	recon->LL.U=dcellcat(tmp, NW, 2);
-	dcellfree(tmp);
-	dcellscale(NW, -1);
-	tmp=recon->LL.V;
-	recon->LL.V=dcellcat(tmp, NW, 2);
-	dcellfree(tmp);
-	dcellfree(NW);
+
+
+	dcellcat2(&recon->LL.U, ULo, 2);
+	dcellcat2(&recon->LL.V, VLo, 2);
+
+	dcellfree(ULo);
+	dcellfree(VLo);
     }
     if(parms->lsr.fnreg){
 	warning("Loading LSR regularization from file %s.\n", parms->lsr.fnreg);

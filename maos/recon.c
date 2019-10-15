@@ -418,9 +418,7 @@ void reconstruct(SIM_T *simu){
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
 	if(parms->recon.split){
-	    if(parms->recon.alg==0){//mvr
-		remove_dm_ngsmod(simu, simu->dmerr);
-	    }
+	    remove_dm_ngsmod(simu, simu->dmerr);
 	}
 
     }

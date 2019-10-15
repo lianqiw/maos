@@ -1736,15 +1736,16 @@ void print_progress(SIM_T *simu){
 	    legs[0]="High Order";
 	    legs[1]="Tip/Tilt";
 	    if(parms->recon.split){
-		nline++;
 		if(simu->recon->ngsmod->indps){
-		    legs[2]="Plate Scale";
+		    legs[nline]="Plate Scale";
+		    nline++;
 		}else if(simu->recon->ngsmod->indastig){
-		    legs[2]="Astig";
+		    legs[nline]="Astig";
+		    nline++;
 		}
 		if(tmp->nx==4){
+		    legs[nline]="Focus";
 		    nline++;
-		    legs[3]="Focus";
 		}
 	    }
 	    dcell *res=dcellnew_same(nline,1,simu->perfisim+1,1);
@@ -1752,8 +1753,10 @@ void print_progress(SIM_T *simu){
 		for(int i=0; i<=simu->perfisim; i++){
 		    P(res->p[0], i)=P(tmp, 0, i);//LGS
 		    P(res->p[1], i)=P(tmp, 1, i);//TT
-		    P(res->p[2], i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
-		    if(nline==4){
+		    if(nline>2){
+			P(res->p[2], i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
+		    }
+		    if(nline>3){
 			P(res->p[3], i)=P(tmp, 3, i);//Focus
 		    }
 		}

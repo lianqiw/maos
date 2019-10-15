@@ -66,6 +66,7 @@
     void X(cellcp)(void* out0, const void*in);				\
     X(cell) *X(cellreduce)(const X(cell) *A, int dim) CHECK_UNUSED_RESULT; \
     X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim) CHECK_UNUSED_RESULT; \
+    void X(cellcat2)(X(cell) **A, const X(cell) *B, int dim);		\
     X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim) CHECK_UNUSED_RESULT; \
     X(mat) *X(cell2m)(const void *A) CHECK_UNUSED_RESULT;		\
     X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim) CHECK_UNUSED_RESULT; \

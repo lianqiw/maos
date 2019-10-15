@@ -804,7 +804,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     if(sig != SIGABRT && siginfo && siginfo->si_addr){
 	info("Memory location: %p\n", siginfo->si_addr);
     }
-    if(sig==SIGBUS || sig==SIGILL || sig==SIGSEGV || sig==SIGABRT){
+    //It is not save to call backtrace in SIGSEGV.
+    if(sig==SIGBUS || sig==SIGILL || sig==SIGABRT){
 	print_backtrace();
     }
     if(signal_handler){

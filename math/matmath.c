@@ -1609,6 +1609,15 @@ X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
 }
 
 /**
+   concatenate two cell matrices along dimenstion 'dim'.
+*/
+void X(cellcat2)(X(cell)**A, const X(cell)*B, int dim){
+    if(!B) return;
+    X(cell) *Anew=X(cellcat)(*A, B, dim);
+    X(cellfree)(*A);
+    *A=Anew;
+}
+/**
    concatenate coresponding elements of each X(cell). They must
    have the same shape.
 */

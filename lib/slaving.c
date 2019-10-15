@@ -178,9 +178,9 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 	    }
 	    lfree(groupc);
 	    ngroup=ic;
-	    if(ngroup<2){
+	    /*if(ngroup<2){
 		warning("Only one discontinuous region found\n");
-	    }
+		}*/
 	
 	    slavet=dspnew(nact, ngroup,nact);
 	    spint *pp=slavet->p;

@@ -224,7 +224,10 @@ public:
     string header;
     using Parent::operator();
     using Parent::p;
-    
+    ~Array(){
+	nx=0;
+	ny=0;
+    }
     T&operator ()(int ix, int iy){
 	return p[ix+nx*iy];
     }

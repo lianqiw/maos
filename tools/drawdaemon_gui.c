@@ -170,8 +170,7 @@ static void update_pixmap(drawdata_t *drawdata){
     gint width=drawdata->width;
     gint height=drawdata->height;
     if(drawdata->pixmap){
-	if(width != drawdata->pwidth || height != drawdata->pheight
-	   || drawdata->limit_changed){
+	if(width != drawdata->pwidth || height != drawdata->pheight){
 #if GTK_MAJOR_VERSION>=3 
 	    cairo_surface_destroy(drawdata->pixmap);
 #else
@@ -829,6 +828,8 @@ gboolean addpage(gpointer indata){
 	    drawdata_old->limit_changed=1;
 	}
 	free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
+	drawdata_old->nx=drawdata->nx;
+	drawdata_old->ny=drawdata->ny;
 	drawdata_old->zlim=drawdata->zlim;
 	drawdata_old->format=drawdata->format;
 	drawdata_old->gray=drawdata->gray;
