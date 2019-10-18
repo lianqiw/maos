@@ -21,7 +21,7 @@
 #include "mathdef.h"
 #include "type.h"
 /**
-   \file loc.h
+   \file map.h
    This file defines functions relates to map_t, etc.
 */
 

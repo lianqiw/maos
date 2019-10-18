@@ -299,9 +299,6 @@ void map_header(map_t *map){
 	map->header=strdup(header);
     }
 }
-//    writebindata(fp, (dmat*) map);
-//}
-
 
 //void rmapwritedata(file_t *fp, rmap_t *map){
 void rmap_header(rmap_t *map){
@@ -312,49 +309,3 @@ void rmap_header(rmap_t *map){
 	map->header=strdup(header);
     }
 }
-//    writebindata(fp, (dmat*) map);
-//}
-
-/**
- * Read map_t from file
- */
-/*map_t *mapreaddata(file_t *fp, header_t *header){
-    header_t header2={0,0,0,0};
-    if(!header){
-	header=&header2;
-	read_header(header, fp);
-    }
-    map_t *map=NULL;
-    if(header->magic==M_DBL){
-	dmat *in=dreaddata(fp, header);
-	map=d2map(in);
-	dfree(in);
-    }else{
-	error("Invalid format. magic=%u\n", header->magic);
-    }
-    free(header->str);header->str=0;
-    return map;
-    }*/
-
-/**
- * Read map_t from file
- */
-/*
-rmap_t *rmapreaddata(file_t *fp, header_t *header){
-    header_t header2={0,0,0,0};
-    if(!header){
-	header=&header2;
-	read_header(header, fp);
-    }
-    rmap_t *map=NULL;
-    if(header->magic==M_DBL){
-	dmat *in=dreaddata(fp, header);
-	map=d2rmap(in);
-	dfree(in);
-    }else{
-	error("Invalid format. magic=%u\n", header->magic);
-    }
-    free(header->str);header->str=0;
-    return map;
-}
-*/

@@ -1097,6 +1097,7 @@ void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *
    This can be used to do NCPA calibration.
  */
 RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs){
+    info("\n%sSetting up reconstructor geometry.%s\n\n", GREEN, BLACK);
     RECON_T * recon = mycalloc(1,RECON_T); 
     if(parms->recon.warm_restart){
 	info("Wavefront reconstruction uses warm restart.\n");
@@ -1203,6 +1204,7 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
    That may depend on GPU data.
  */
 void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs){
+    info("\n%sSetting up reconstructor%s\n\n", GREEN, BLACK);
     setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
     setup_recon_GF(recon, parms);//GF depends on GA.
     if(parms->itpowfs!=-1){

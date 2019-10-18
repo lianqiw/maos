@@ -30,7 +30,7 @@ ___bin_aolib_so_LDFLAGS+=-Wl,-force_load,.libs/libaos.a,../math/.libs/libaomath.
 endif
 endif
 
-BUILT_SOURCES=aolib.h
-aolib.h:$(nobase_include_HEADERS)
-	gcc -E $(SRC_DIR)/lib/aos.h > $(SRC_DIR)/lib/aolib.h
+#BUILT_SOURCES=aolib.h
+#aolib.h:$(nobase_include_HEADERS)
+#	gcc -E $(SRC_DIR)/lib/aos.h > $(SRC_DIR)/lib/aolib.h
 

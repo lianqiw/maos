@@ -24,9 +24,9 @@ headlist=['lib/accphi.h','lib/cn2est.h','lib/kalman.h', 'lib/locfft.h','lib/muv.
           'lib/mkdtf.h', 'math/chol.h','sys/scheduler.h']
 structs=maos.parse_structs(srcdir, headlist)
 
-funcs=maos.parse_func(srcdir, structs, ['lib/aolib.h'])
+#funcs=maos.parse_func(srcdir, structs, ['lib/aolib.h'])
 
- #['mex/aolib.h', 'lib/accphi.h','lib/cn2est.h','lib/kalman.h', 'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h', 'math/chol.h'])
+funcs=maos.parse_func(srcdir, structs, ['mex/aolib.h', 'lib/accphi.h','lib/cn2est.h','lib/kalman.h', 'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h', 'math/chol.h'])
 
 fpout=open(fnout,'w')
 print("#!/usr/bin/env python", file=fpout)

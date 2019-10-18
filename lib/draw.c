@@ -234,11 +234,11 @@ static int launch_drawdaemon(){
 */
 void draw_helper(void){
     if(DRAW_DIRECT){
-	warning("DRAW_DIRECT=1, skip draw_helper\n");
+	info("DRAW_DIRECT=1, skip draw_helper\n");
 	return;
     }
     if(sock_helper>-1){
-	warning("draw_helper is already running.\n");
+	info("draw_helper is already running.\n");
 	return;
     }
     int sv[2];
@@ -247,7 +247,7 @@ void draw_helper(void){
 	warning("socketpair failed, disable drawing.\n"); 
 	disable_draw=1;
     }else{
-	warning("draw_helper started\n");
+	info("draw_helper started\n");
     }
     pid_t pid=fork();
     if(pid<0){
@@ -408,7 +408,7 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 		    STWRITE(loc[ig]->locy, sizeof(double)*loc[ig]->nloc);
 		}
 		if(dc){
-		    warning("both loc and dc are specified\n");
+		    warning("both loc and dc are specified, ignore dc.\n");
 		}
 	    }else if(dc){
 		if(ngroup!=dc->nx*dc->ny){

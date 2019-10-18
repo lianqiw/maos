@@ -206,7 +206,4 @@ typedef mt_state  rand_t;
 #define lrandu    mts_ldrand/*rand double with 64 bit precision within [0,1) */
 double randn(rand_t *rstat);/*normal distribution with 1*/
 long   randp(rand_t *rstat, double xm);
-rand_t *new_rand(int seed);
-void writerand(rand_t *rstat,const char *format,...) CHECK_ARG(2);
-void readrand(rand_t *rstat, const char *format,...) CHECK_ARG(2);
 #endif

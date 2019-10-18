@@ -745,15 +745,29 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
     pp[nact]=count;
     out=dsptrans(outit);
     dspfree(outit);
-    //estimate number of weakly coupled rings.
-    int nring=(int)ceil(sqrt(nact/M_PI)-sqrt(dsum(actcplc)/M_PI));
-    /*The above interpolation only propagate the value one step. Multiple the
-      interpolator a few times to propagate longer.*/
-    for(int i=0; i<nring; i++){
+
+    TIC;tic;
+    //New method. Test convergence
+    dmat *x=dnew(out->nx, 1); dset(x, 1);
+    dmat *y1=dnew(out->nx, 1);
+    dmat *y2=dnew(out->nx, 1);
+    dcellmm(&y1, out, x, "tn", 1);
+    double diff;
+    do{
 	dsp *tmp=dspmulsp(out,out,"nn");
 	dspfree(out);
 	out=tmp;
-    }
+	dzero(y2);
+	dcellmm(&y2, out, x, "tn", 1);
+	diff=ddiff(y1, y2);
+	dcp(&y1, y2);
+    }while(diff>EPS);
+    dfree(x);
+    dfree(y1);
+    dfree(y2);
+    dspdroptol(out, 1e-3);
+    toc2("indempotent");
+
     return out;
 }
 dspcell* act_extrap(loccell *aloc,     /**<[in] Actuator grid array*/

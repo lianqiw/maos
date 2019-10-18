@@ -19,36 +19,6 @@
 /**
    Routine to generate random numbers.
 */
-/**
-   Create a new random stream, seeded with seed.
-*/
-rand_t *new_rand(int seed){
-    rand_t *out=mycalloc(1,rand_t);
-    seed_rand(out, seed);
-    return out;
-}
-/**
-   Save random stream to file.
- */
-void writerand(rand_t *rstat, const char *format, ...){
-    format2fn;
-    FILE *fp=fopen(fn,"w");
-    if(fwrite(rstat, 1, sizeof(rand_t), fp)!=1) 
-	error("Error writing\n");
-    fclose(fp);
-}
-/**
-   Seed a random stream*/
-void readrand(rand_t *rstat, const char *format,...){
-    format2fn;
-    if(rstat){
-	FILE *fp=fopen(fn,"r");
-	if(fread(rstat, 1, sizeof(rand_t), fp)!=1)
-	    error("Error reading\n");
-	fclose(fp);
-    }
-}
-
 
 /* 
    extracted from mtwist.h/c
