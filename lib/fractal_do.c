@@ -35,7 +35,7 @@
 #endif
 
 
-void FRACTAL(dmat *p0, double dx, double r0, double L0, long ninit){
+void FRACTAL(dmat *p0, real dx, real r0, real L0, long ninit){
     const long nx=p0->nx;
     const long ny=p0->ny;
     assert(nx==ny);
@@ -56,7 +56,7 @@ void FRACTAL(dmat *p0, double dx, double r0, double L0, long ninit){
     const long nx1=nx-1;
     const long ny1=ny-1;
     const long norder=mylog2(step0);
-    const double c0=P(pcov,0,0);
+    const real c0=P(pcov,0,0);
 #if FORWARD == 1
     {
 	dmat *pi=dnew(ninit,ninit);
@@ -98,7 +98,7 @@ void FRACTAL(dmat *p0, double dx, double r0, double L0, long ninit){
 #define TRI(p0,p1,p2,p3)    p0=(p0-((p1+p2)*tri1+p3*tri3))/tri0;
 #endif
 #else /*TRANPOSE == 0 */
-    double tmp;
+    real tmp;
 #if INVERSE==0
 #define QUA(p0,p1,p2,p3,p4) tmp=qua1*p0; p1+=tmp; p2+=tmp; p3+=tmp; p4+=tmp; p0=qua0*p0;
 #define DIA(p0,p1,p2,p3,p4) tmp=dia1*p0; p1+=tmp; p2+=tmp; p3+=tmp; p4+=tmp; p0=dia0*p0;
@@ -117,21 +117,21 @@ void FRACTAL(dmat *p0, double dx, double r0, double L0, long ninit){
     for(LOOP){
 #undef LOOP
 	long step=1<<order;/*step of the parent grid. */
-	double c1=P(pcov,0,order);
-	double c2=P(pcov,1,order);
-	double c3=P(pcov,0,order+1);
-	double c4=P(pcov,1,order+1);
+	real c1=P(pcov,0,order);
+	real c2=P(pcov,1,order);
+	real c3=P(pcov,0,order+1);
+	real c4=P(pcov,1,order+1);
 	/*for case 1: square case */
-	double qua1=c2/(c0+2*c3+c4);
-	double qua0=sqrt(c0-4.*c2*qua1);
+	real qua1=c2/(c0+2*c3+c4);
+	real qua0=sqrt(c0-4.*c2*qua1);
 	/*for case 3: Diamond configuration */
-	double dia1=c1/(c0+2*c2+c3);
-	double dia0=sqrt(c0-4.*c1*dia1);
+	real dia1=c1/(c0+2*c2+c3);
+	real dia0=sqrt(c0-4.*c1*dia1);
 	/*for case 2: triangular case */
-	double trii=1./(c0*(c0+c3)-2*c2*c2);
-	double tri1=c1*(c0-c2)*trii;
-	double tri3=c1*(c0-2*c2+c3)*trii;
-	double tri0=sqrt(c0-c1*c1*(3*c0-4*c2+c3)*trii);
+	real trii=1./(c0*(c0+c3)-2*c2*c2);
+	real tri1=c1*(c0-c2)*trii;
+	real tri3=c1*(c0-2*c2+c3)*trii;
+	real tri0=sqrt(c0-c1*c1*(3*c0-4*c2+c3)*trii);
 	long ny2=ny1-step;
 	long nx2=nx1-step;
 	long step2=step>>1;

@@ -43,7 +43,7 @@ extern "C"{
    and MVM, in a piplined way.
 */
 
-double tic_save;
+real tic_save;
 pthread_t *threads=NULL;
 int *cmds=NULL;
 int NGPU_MAX=0;
@@ -178,13 +178,13 @@ static void mvm_data_free(void){
     free(mvm_data->kcols);
     free(mvm_data);
 }
-double tim_cmd=0, tim_gsend=0, tim_gcp=0, tim_dmcp=0, tim_queue=0, tim_dmsum=0, tim_dmsend=0;
+real tim_cmd=0, tim_gsend=0, tim_gcp=0, tim_dmcp=0, tim_queue=0, tim_dmsum=0, tim_dmsend=0;
 static int respond(int sock){
     TIC;tic;
     sock_mvm=sock;
     int cmd[N_CMD]={0};
     READ_CMD(cmd);
-    static double tim_gfirst=0;
+    static real tim_gfirst=0;
     switch(cmd[0]){
     case GPU_MVM_M:{/*maos sends M matrix*/
 	int ngpu=cmd[1];

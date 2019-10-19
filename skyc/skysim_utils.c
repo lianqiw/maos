@@ -26,8 +26,8 @@
 
 /**
    Compute Open loop NGS mode wavefront error from mode vectors.  */
-double calc_rms(const dmat *mod, const dmat *mcc, int istep0){
-    double rms=0;
+real calc_rms(const dmat *mod, const dmat *mcc, int istep0){
+    real rms=0;
     for(long istep=istep0; istep<mod->ny; istep++){
 	rms+=dwdot(PCOL(mod,istep), mcc, PCOL(mod,istep));
     }
@@ -39,37 +39,37 @@ double calc_rms(const dmat *mod, const dmat *mcc, int istep0){
    Notice the the coordinate for each subaperture is different for TTF.
 */
 void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
-		double wvl,           /**<[in] the wavelength*/
+		real wvl,           /**<[in] the wavelength*/
 		const dmat *modm,     /**<[in] the NGS mode vector*/
 		const POWFS_S *powfs,       /**<[in] the powfs configuration*/
 		int isa,              /**<[in] index of subaperture*/
-		double thetax,        /**<[in] direction of WFS*/
-		double thetay,        /**<[in] direction of WFS*/
+		real thetax,        /**<[in] direction of WFS*/
+		real thetay,        /**<[in] direction of WFS*/
 		const PARMS_S *parms  /**<[in] the parms*/
     ){
-    const double *mod=modm->p;
-    const dcomplex ik=COMPLEX(0, 2*M_PI/wvl);
-    double dx=powfs->dxwvf;
-    double ox=powfs->saloc->locx[isa]+dx*0.5;
-    double oy=powfs->saloc->locy[isa]+dx*0.5;
+    const real *mod=modm->p;
+    const comp ik=COMPLEX(0, 2*M_PI/wvl);
+    real dx=powfs->dxwvf;
+    real ox=powfs->saloc->locx[isa]+dx*0.5;
+    real oy=powfs->saloc->locy[isa]+dx*0.5;
     int nx=powfs->nxwvf;
     assert(wvf->nx==wvf->ny);
-    dcomplex *p=wvf->p+(wvf->nx-nx)/2*(1+wvf->nx);
+    comp *p=wvf->p+(wvf->nx-nx)/2*(1+wvf->nx);
     if(modm->nx==2){
 	for(int iy=0; iy<nx; iy++){
-	    double ym=(oy+iy*dx)*mod[1];
+	    real ym=(oy+iy*dx)*mod[1];
 	    for(int ix=0; ix<nx; ix++){
-		double x=ox+ix*dx;
-		double tmp=x*mod[0]+ym;
+		real x=ox+ix*dx;
+		real tmp=x*mod[0]+ym;
 		p[ix+wvf->nx*iy]*=cexp(ik*tmp);
 	    }
 	}
     }else{
-	const double hc=parms->maos.hc;
-	const double hs=parms->maos.hs;
-	const double scale=pow(1.-hc/hs, -2);
-	const double scale1=1.-scale;
-	double focus;
+	const real hc=parms->maos.hc;
+	const real hs=parms->maos.hs;
+	const real scale=pow(1.-hc/hs, -2);
+	const real scale1=1.-scale;
+	real focus;
 	if(modm->nx>5){
 	    focus=mod[5];
 	    if(!parms->maos.ahstfocus){
@@ -79,13 +79,13 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 	    focus=mod[2]*scale1;
 	}
 	for(int iy=0; iy<nx; iy++){
-	    double y=oy+iy*dx;
+	    real y=oy+iy*dx;
 	    for(int ix=0; ix<nx; ix++){
-		double x=ox+ix*dx;
-		double xy=x*y;
-		double x2=x*x;
-		double y2=y*y;
-		double tmp= 
+		real x=ox+ix*dx;
+		real xy=x*y;
+		real x2=x*x;
+		real y2=y*y;
+		real tmp= 
 		    +x*mod[0]
 		    +y*mod[1]
 		    +focus*(x2+y2)
@@ -107,7 +107,7 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
    - 1: poisson and read out noise. 
    - 2: only poisson noise.   
 */
-dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, double ngsol, 
+dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, real ngsol, 
 		 ASTER_S *aster, const POWFS_S *powfs, 
 		 const PARMS_S *parms, int idtratc, int noisy, int phystart){
     int dtratc=0;
@@ -221,9 +221,9 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	}
 	int plotted=0;
 	for(int istep=0; istep<nstep; istep++){
-	    memcpy(merr->p, PCOL(mideal,istep), nmod*sizeof(double));
+	    memcpy(merr->p, PCOL(mideal,istep), nmod*sizeof(real));
 	    dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
-	    memcpy(PCOL(mres,istep),merr->p,sizeof(double)*nmod);
+	    memcpy(PCOL(mres,istep),merr->p,sizeof(real)*nmod);
 	    if(mpsol){//collect averaged modes for PSOL.
 		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		    dadd(&mpsol->p[iwfs], 1, mreal, 1);
@@ -231,7 +231,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }
 	    pmerrm=0;
 	    if(istep>=parms->skyc.evlstart){/*performance evaluation*/
-		double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
+		real res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
 		if(res_ngs>ngsol*100){
 		    dfree(res); res=NULL;
 		    break;
@@ -239,9 +239,9 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		{
 		    res->p[0]+=res_ngs;
 		    res->p[1]+=dwdot2(merr->p,parms->maos.mcc_tt,merr->p);
-		    double dot_oa=dwdot(merr->p, parms->maos.mcc_oa, merr->p);
-		    double dot_res_ideal=dwdot(merr->p, parms->maos.mcc_oa, PCOL(mideal,istep));
-		    double dot_res_oa=0;
+		    real dot_oa=dwdot(merr->p, parms->maos.mcc_oa, merr->p);
+		    real dot_res_ideal=dwdot(merr->p, parms->maos.mcc_oa, PCOL(mideal,istep));
+		    real dot_res_oa=0;
 		    for(int imod=0; imod<nmod; imod++){
 			dot_res_oa+=merr->p[imod]*P(mideal_oa,imod,istep);
 		    }
@@ -249,10 +249,10 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    res->p[4]+=dot_oa;
 		}
 		{
-		    double dot_oa_tt=dwdot2(merr->p, parms->maos.mcc_oa_tt, merr->p);
+		    real dot_oa_tt=dwdot2(merr->p, parms->maos.mcc_oa_tt, merr->p);
 		    /*Notice that mcc_oa_tt2 is 2x5 marix. */
-		    double dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, PCOL(mideal,istep));
-		    double dot_res_oa_tt=0;
+		    real dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, PCOL(mideal,istep));
+		    real dot_res_oa_tt=0;
 		    for(int imod=0; imod<2; imod++){
 			dot_res_oa_tt+=merr->p[imod]*P(mideal_oa,imod,istep);
 		    }
@@ -290,13 +290,13 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }else{
 		/*Accumulate PSF intensities*/
 		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		    const double thetax=aster->wfs[iwfs].thetax;
-		    const double thetay=aster->wfs[iwfs].thetay;
+		    const real thetax=aster->wfs[iwfs].thetax;
+		    const real thetay=aster->wfs[iwfs].thetay;
 		    const int ipowfs=aster->wfs[iwfs].ipowfs;
 		    const long nsa=parms->maos.nsa[ipowfs];
 		    ccell* wvfout=aster->wfs[iwfs].wvfout[istep];
 		    for(long iwvl=0; iwvl<nwvl; iwvl++){
-			double wvl=parms->maos.wvl[iwvl];
+			real wvl=parms->maos.wvl[iwvl];
 			for(long isa=0; isa<nsa; isa++){
 			    ccp(&wvfc->p[iwfs], P(wvfout,isa,iwvl));
 			    /*Apply NGS mode error to PSF. */
@@ -311,7 +311,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		}/*iwfs */
 	
 		/*Form detector image from accumulated PSFs*/
-		double igrad[2];
+		real igrad[2];
 		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		    int dtrati=dtratc, idtrat=idtratc;
 		    if(multirate){//multirate
@@ -324,7 +324,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			const long nsa=parms->maos.nsa[ipowfs];
 			for(long isa=0; isa<nsa; isa++){
 			    for(long iwvl=0; iwvl<nwvl; iwvl++){
-				double siglev=aster->wfs[iwfs].siglev->p[iwvl];
+				real siglev=aster->wfs[iwfs].siglev->p[iwvl];
 				ccpd(&otf->p[iwfs],psf[iwfs]->p[isa+nsa*iwvl]);
 				cfft2i(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
 				ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
@@ -342,7 +342,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 				break;
 			    case 1:/*both poisson and read out noise. */
 				{
-				    double bkgrnd=aster->wfs[iwfs].bkgrnd*dtrati;
+				    real bkgrnd=aster->wfs[iwfs].bkgrnd*dtrati;
 				    addnoise(ints[iwfs]->p[isa], &aster->rand, bkgrnd, bkgrnd, 0,0,0,P(rnefs,idtrat,ipowfs), parms->skyc.excess);
 				}
 				break;
@@ -355,7 +355,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		
 			    igrad[0]=0;
 			    igrad[1]=0;
-			    double pixtheta=parms->skyc.pixtheta[ipowfs];
+			    real pixtheta=parms->skyc.pixtheta[ipowfs];
 		
 			    switch(parms->skyc.phytype){
 			    case 1:
@@ -445,7 +445,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
 	    }
 	    if(parms->skyc.dbg){
-		memcpy(PCOL(gradsave, istep), gradout->m->p, sizeof(double)*gradsave->nx);
+		memcpy(PCOL(gradsave, istep), gradout->m->p, sizeof(real)*gradsave->nx);
 	    }
 	}/*istep; */
     }
@@ -487,7 +487,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 
 /**
    Save NGS WFS and other information for later use in MAOS simulations.*/
-void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, int selaster, int seldtrat, int isky){
+void skysim_save(const SIM_S *simu, const ASTER_S *aster, const real *ipres, int selaster, int seldtrat, int isky){
     const PARMS_S* parms=simu->parms;
     const int nwvl=parms->maos.nwvl;
     char path[PATH_MAX];
@@ -574,8 +574,8 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	error("Fill this out please\n");
     }
     dmat* rnefs=parms->skyc.rnefs;
-    double rne=P(rnefs,seldtrat,0);
-    double bkgrnd=aster[selaster].wfs[0].bkgrnd;
+    real rne=P(rnefs,seldtrat,0);
+    real bkgrnd=aster[selaster].wfs[0].bkgrnd;
 
     if(parms->maos.npowfs==1){
 	fprintf(fp, "powfs.nwfs=[6 1]\n");

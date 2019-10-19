@@ -29,11 +29,11 @@
  */
 void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    const double pixthetax=parms->powfs[ipowfs].radpixtheta;
-    const double pixthetay=parms->powfs[ipowfs].pixtheta;
-    const double rne=parms->powfs[ipowfs].rne;
-    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
-    const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
+    const real pixthetax=parms->powfs[ipowfs].radpixtheta;
+    const real pixthetay=parms->powfs[ipowfs].pixtheta;
+    const real rne=parms->powfs[ipowfs].rne;
+    const real bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
+    const real bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
     int ni0=intstat->i0->ny;
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
@@ -68,23 +68,23 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
   
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
-	const double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
-	double i0thres=MAX(0.1*siglev, rne*10);
-	double nea2thres=pixthetax*pixthetay*100;
-	double *srot=NULL;
+	const real siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
+	real i0thres=MAX(0.1*siglev, rne*10);
+	real nea2thres=pixthetax*pixthetay*100;
+	real *srot=NULL;
 	if(powfs[ipowfs].srot){
 	    int irot=ii0*irot_multiplier;
 	    srot=powfs[ipowfs].srot->p[irot]->p;
 	}
 	sanea->p[ii0]=dnew(nsa,3);
 	dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
-	double i0sumsum=0;
+	real i0sumsum=0;
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 	int ncrdisable=0;
 	const int radgx=parms->powfs[ipowfs].radgx;
 	dmat *nea2=0;
 	for(int isa=0; isa<nsa; isa++){
-	    double pixrot=0;//pixel rotation
+	    real pixrot=0;//pixel rotation
 	    if(srot && parms->powfs[ipowfs].radpix){
 		pixrot=srot[isa]; 
 	    }
@@ -163,13 +163,13 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		}
 	    }
 	}else{
-	    double dsa=powfs[ipowfs].saloc->dx;
-	    double llimit=-dsa/2;
-	    double ulimit=dsa/2;
+	    real dsa=powfs[ipowfs].saloc->dx;
+	    real llimit=-dsa/2;
+	    real ulimit=dsa/2;
 	    info("index: position noise equivalent angle\n");
 	    for(int isa=0; isa<nsa; isa++){
-		double locx=powfs[ipowfs].saloc->locx[isa];
-		double locy=powfs[ipowfs].saloc->locy[isa];
+		real locx=powfs[ipowfs].saloc->locx[isa];
+		real locy=powfs[ipowfs].saloc->locy[isa];
 		if((parms->powfs[ipowfs].llt && (nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)))
 		   ||(!parms->powfs[ipowfs].llt && locx>=0 && locx<dsa*0.6 && locy>=0 && locy<dsa*0.6)
 		    || nsa<=4){
@@ -190,7 +190,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     if(parms->powfs[ipowfs].phytype_recon==1 && parms->recon.glao && ni0>0){
 	info("Averaging saneaxy of different WFS for GLAO mode\n");
 	dmat *sanea2=0;
-	double scale=1./ni0;
+	real scale=1./ni0;
 	for(int ii0=0; ii0<ni0; ii0++){
 	    dadd(&sanea2, 1, sanea->p[ii0], scale);
 	}

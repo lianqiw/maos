@@ -49,7 +49,7 @@ void prep_cachedm(SIM_T *simu){
     if(!simu->cachedm){
 	simu->cachedm=mapcellnew(parms->ndm, 1);
 	for(int idm=0; idm<parms->ndm; idm++){
-	    double dx=parms->dm[idm].dx/(parms->sim.cachedm>3?parms->sim.cachedm:4);
+	    real dx=parms->dm[idm].dx/(parms->sim.cachedm>3?parms->sim.cachedm:4);
 	    info(" dm[%d]@1/%gm", idm, 1./dx);
 	    create_metapupil(&simu->cachedm->p[idm], 0, 0, parms->dirs, parms->aper.d,
 			     parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
@@ -88,8 +88,8 @@ void prep_cachedm(SIM_T *simu){
    segments in each combination to maximum efficiency.
 */
 void calc_cachedm(SIM_T *simu){
-    double tk_start=myclockd();
     if(simu->parms->sim.cachedm){
+	real tk_start=myclockd();
 	long group=0;
 	/*zero out the data. */
 	for(int idm=0; idm<simu->parms->ndm; idm++){
@@ -98,6 +98,6 @@ void calc_cachedm(SIM_T *simu){
 	    QUEUE_THREAD(&group,(simu->cachedm_prop[idm]), 1);
 	}
 	WAIT(group);
+	simu->tk_cache=myclockd()-tk_start;
     }
-    simu->tk_cache=myclockd()-tk_start;
 }

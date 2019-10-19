@@ -207,7 +207,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	    /*Each GPU cannot handle all the mvmi if just divide to NGPU
 	      runs. Do multiple pass to avoid memroy overflow. Assemes each GPU
 	      has more than 2G free space.*/
-	    int npass=iceil((double)ntotxloc*(double)ntotgrad*sizeof(Real)/NGPU/2000000000);
+	    int npass=iceil((real)ntotxloc*(real)ntotgrad*sizeof(Real)/NGPU/2000000000);
 	    dbg("mul=%ld\n", ntotxloc*ntotgrad*sizeof(Real));
 	    dbg("NGPU=%d\n", NGPU);
 	    dbg("npass=%d\n", npass);
@@ -243,7 +243,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	{
 	    dmat *dmvmc=dnew(ntotact, ntotgrad);
 	    for(long i=0; i<ntotact*ntotgrad; i++){
-		dmvmc->p[i]=(double)mvmc->p[i];
+		dmvmc->p[i]=(real)mvmc->p[i];
 	    }
 	    recon->MVM=dmvmc;
 	    X(free)(mvmc);

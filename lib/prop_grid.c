@@ -48,10 +48,10 @@
    phiout with size of nxout*nyout, normalized spacing of dxout, dyout, origin offset of oxout, oyout.
  */
 static int 
-FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
-	       CONST_OUT double *phiout, long nxout, long nyout, 
-	       double dxout, double dyout, double oxout, double oyout,
-	       const double alpha, int wrap){
+FUN_NAME_BLOCK(CONST_IN real *phiin, long nxin, long nyin,
+	       CONST_OUT real *phiout, long nxout, long nyout, 
+	       real dxout, real dyout, real oxout, real oyout,
+	       const real alpha, int wrap){
     
     const long wrapx  = nxin - 1;
     const long wrapy  = nyin - 1;
@@ -60,11 +60,11 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	if(fabs(dxout-1.)<EPS && fabs(dyout-1.)<EPS){
 	    //loc_out and loc_in has the same sampling.
 	    int irows=0;
-	    double dplocx=oxout;
-	    double dplocy=oyout;
+	    real dplocx=oxout;
+	    real dplocy=oyout;
 	    int nplocx, nplocy0;
 	    if(wrap){
-		dplocx-=floor(dplocx/(double)nxin)*nxin;
+		dplocx-=floor(dplocx/(real)nxin)*nxin;
 	    }else if(dplocx<0){
 		irows=iceil(-dplocx);
 		missing+=irows*nyout;
@@ -78,7 +78,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 
 	    int icols=0;
 	    if(wrap){
-		dplocy-=floor(dplocy/(double)nyin)*nyin;
+		dplocy-=floor(dplocy/(real)nyin)*nyin;
 	    }else{
 		//limit column range to within [0, wrapy]
 		if(dplocy<0){
@@ -92,17 +92,17 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		}
 	    }
 	    SPLIT(dplocy,dplocy,nplocy0);
-	    const double bl=dplocx*dplocy;
-	    const double br=(1.-dplocx)*dplocy;
-	    const double tl=dplocx*(1-dplocy);
-	    const double tr=(1.-dplocx)*(1-dplocy);
+	    const real bl=dplocx*dplocy;
+	    const real br=(1.-dplocx)*dplocy;
+	    const real tl=dplocx*(1-dplocy);
+	    const real tr=(1.-dplocx)*(1-dplocy);
 	    phiin+=nplocx;
 	    if(nyout==640){
 		dbg("icols=%d, nyout=%ld\n", icols, nyout);
 	    }
 	    OMPTASK_FOR(icol, icols, nyout){
-		CONST_IN double *restrict phicol, *restrict phicol2;
-		CONST_OUT double *restrict phiout2=phiout+icol*nxout;//starting address of output
+		CONST_IN real *restrict phicol, *restrict phicol2;
+		CONST_OUT real *restrict phiout2=phiout+icol*nxout;//starting address of output
 		long nplocy=nplocy0+icol;
 		while(nplocy>=nyin){
 		    nplocy-=nyin;
@@ -119,7 +119,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		     +tr*phicol[irow]);
 #else
 #define GRID_ADD(irow,offset)			\
-		double tmp=alpha*phiout2[irow];	\
+		real tmp=alpha*phiout2[irow];	\
 		phicol2[irow+offset]+=tmp*bl;	\
 		phicol2[irow]+=tmp*br;		\
 		phicol[irow+offset]+=tmp*tl;	\
@@ -149,12 +149,12 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	}else{
 	    //grid size of loc_in and loc_out doesn't agree
 	    assert(dyout>0);
-	    const double dxout1=1./dxout;
-	    const double dyout1=1./dyout;
+	    const real dxout1=1./dxout;
+	    const real dyout1=1./dyout;
 	    /*Figure out the array offset. icols is start of y. irows is start of x. */
 	    long icols=0;
 	    if(wrap){//wrap starting point to within the active region
-		oyout-=floor(oyout/(double)nyin)*nyin;
+		oyout-=floor(oyout/(real)nyin)*nyin;
 	    }else{
 		//limit column range to within [0, wrapy]
 		if(oyout<0){
@@ -170,7 +170,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	    }
 	    int irows=0;
 	    if(wrap){
-		oxout-=floor(oxout/(double)nxin)*nxin;
+		oxout-=floor(oxout/(real)nxin)*nxin;
 	    }else if(oxout<0){
 		irows=iceil(-oxout*dxout1);
 	    }  
@@ -186,22 +186,22 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	    }else if(rowdiv0>nxout){
 		rowdiv0=nxout;
 	    }
-	    const double dplocx00 = oxout+irows*dxout;
+	    const real dplocx00 = oxout+irows*dxout;
 	    //allow points falls between [wrapx, wrapx+xover)
-	    const double xover=wrap?1:EPS;
-	    double *dplocx_arr=0;
+	    const real xover=wrap?1:EPS;
+	    real *dplocx_arr=0;
 	    int *nplocx_arr=0;
 	    int *nplocx2_arr=0;
 	    if(nyout>10 && nxout<2000){//cache SPLIT() results
 		//alloca is not good in mac due to stack limitation.
-		dplocx_arr=mymalloc(nxout,double);
+		dplocx_arr=mymalloc(nxout,real);
 		nplocx_arr=mymalloc(nxout,int);
 		nplocx2_arr=mymalloc(nxout,int);
 
-		double rowdiv=rowdiv0;
-		double dplocx=dplocx00;
+		real rowdiv=rowdiv0;
+		real dplocx=dplocx00;
 		int irow=irows;
-		double dplocx0;
+		real dplocx0;
 		int nplocx0;
 		do{
 		    //First handle points fall within [0, wrapx)
@@ -226,11 +226,11 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		}while(wrap && irow<nxout);
 	    }
 	    for(long icol=icols; icol<nyout; icol++){
-		CONST_OUT double *phiout2=phiout+icol*nxout;
-		double dplocy=myfma(icol, dyout, oyout);
+		CONST_OUT real *phiout2=phiout+icol*nxout;
+		real dplocy=myfma(icol, dyout, oyout);
 
-		CONST_IN double *phicol, *phicol2;
-		double dplocx,dplocx0,dplocy0;
+		CONST_IN real *phicol, *phicol2;
+		real dplocx,dplocx0,dplocy0;
 		int nplocx0,nplocy;
 		int rowdiv;
 		while(dplocy>=nyin){
@@ -242,7 +242,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		phicol  = phiin+nplocy*nxin;
                 //The points on [wrapy nyout) is handled correctly
 		phicol2 = phiin+(nplocy==wrapy?0:(nplocy+1))*nxin;
-		const double dplocy1=1.-dplocy0;
+		const real dplocy1=1.-dplocy0;
 
 #if TRANSPOSE == 0
 #define GRID_ADD(irow,offset)						\
@@ -253,7 +253,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 			       +dplocx0*phicol2[nplocx0+offset]));
 #else
 #define GRID_ADD(irow,offset)					\
-		double tmp=phiout2[irow]*alpha;			\
+		real tmp=phiout2[irow]*alpha;			\
 		phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);	\
 		phicol[nplocx0+offset]+=tmp*dplocy1*dplocx0;	\
 		phicol2[nplocx0]+=tmp*dplocy0*(1-dplocx0);	\
@@ -313,13 +313,13 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	//warning_once("Using unoptmized prop_grid_map\n");
 	/*non optimized case. slower, but hopefully accurate*/
 	OMPTASK_FOR(icol, 0, nyout){
-	    double dplocy1;
-	    double dplocx,dplocx0;
+	    real dplocy1;
+	    real dplocx,dplocx0;
 	    int nplocx,nplocy,nplocy1, nplocx1;
-	    CONST_OUT double *phiout2=phiout+icol*nxout;
-	    double dplocy=oyout+icol*dyout;
+	    CONST_OUT real *phiout2=phiout+icol*nxout;
+	    real dplocy=oyout+icol*dyout;
 	    if(wrap){
-		dplocy=dplocy-floor(dplocy/(double)nyin)*nyin;
+		dplocy=dplocy-floor(dplocy/(real)nyin)*nyin;
 	    }
 	    if(dplocy>=0 && dplocy <=wrapy){
 		SPLIT(dplocy,dplocy,nplocy);
@@ -330,7 +330,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		for(int irow=0; irow<nxout; irow++){
 		    dplocx=dplocx0+irow*dxout;
 		    if(wrap){
-			dplocx=dplocx-floor(dplocx/(double)nxin)*nxin;
+			dplocx=dplocx-floor(dplocx/(real)nxin)*nxin;
 		    }
 		    if(dplocx>=0 && dplocx<=wrapx){
 			SPLIT(dplocx,dplocx,nplocx);
@@ -342,7 +342,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 			     + (1-dplocx) * (dplocy * phiin[nplocx + (nplocy1)*nxin]
 					     +dplocy1 * phiin[nplocx + nplocy*nxin]));
 #else
-			double tmp=alpha*phiout2[irow];
+			real tmp=alpha*phiout2[irow];
 			phiin[(nplocx1) + (nplocy1)*nxin]+=tmp*dplocx*dplocy;
 			phiin[(nplocx1) + nplocy*nxin]+=tmp*dplocx*dplocy1;
 			phiin[nplocx + (nplocy1)*nxin]+=tmp*(1-dplocx)*dplocy;
@@ -393,8 +393,8 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
 #endif
     }
 	
-    CONST_OUT double *phiout=mapout->p;
-    CONST_IN double *phiin  = mapin->p;
+    CONST_OUT real *phiout=mapout->p;
+    CONST_IN real *phiin  = mapin->p;
     /*With OpenMP compiler complained uninitialized value for the following
       because they are treated as firstprivate*/
     if(colend==0) colend = mapout->ny;
@@ -403,14 +403,14 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
     /*
       convert to unitless variables
     */
-    const double dx_in1 = 1./mapin->dx;
-    const double dy_in1 = 1./mapin->dy;
-    const double dxout  = mapout->dx*dx_in1*scale;
-    const double dyout  = mapout->dy*dy_in1*scale;
+    const real dx_in1 = 1./mapin->dx;
+    const real dy_in1 = 1./mapin->dy;
+    const real dxout  = mapout->dx*dx_in1*scale;
+    const real dyout  = mapout->dy*dy_in1*scale;
     displacex = (displacex-mapin->ox)*dx_in1;
     displacey = (displacey-mapin->oy)*dy_in1;
-    const double oxout=mapout->ox*dx_in1*scale+displacex;
-    const double oyout=mapout->oy*dy_in1*scale+displacey;
+    const real oxout=mapout->ox*dx_in1*scale+displacex;
+    const real oyout=mapout->oy*dy_in1*scale+displacey;
     const long nxout=mapout->nx;
     int missing=FUN_NAME_BLOCK(phiin, nxin, nyin, 
 			       phiout+colstart*nxout, nxout, colend-colstart,
@@ -421,7 +421,7 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
 
 void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		  const pts_t *pts,/**<[in] coordinate of destination grid*/
-		  CONST_OUT double *phiout, /**<[in,out] OPD defined on locout*/
+		  CONST_OUT real *phiout, /**<[in,out] OPD defined on locout*/
 		  ARG_PROP,
 		  int wrap,           /**<[in] wrap input OPD or not*/
 		  long sastart,       /**<[in] The starting subaperture to trace ray*/
@@ -441,10 +441,10 @@ void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     /*
       convert to unitless variables
     */
-    const double dx_in1 = 1./mapin->dx;
-    const double dy_in1 = 1./mapin->dy;
-    const double dxout  = pts->dx*dx_in1*scale;
-    const double dyout  = pts->dy*dy_in1*scale;
+    const real dx_in1 = 1./mapin->dx;
+    const real dy_in1 = 1./mapin->dy;
+    const real dxout  = pts->dx*dx_in1*scale;
+    const real dyout  = pts->dy*dy_in1*scale;
     displacex = (displacex-mapin->ox)*dx_in1;
     displacey = (displacey-mapin->oy)*dy_in1;
     long nxout=pts->nx;
@@ -453,8 +453,8 @@ void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     int missing=0;
     OMPTASK_FOR(isa, sastart, saend,shared(missing)){
 	//for(long isa=sastart; isa<saend; isa++){
-	const double oxout=pts->origx[isa]*dx_in1*scale+displacex;
-	const double oyout=pts->origy[isa]*dy_in1*scale+displacey;
+	const real oxout=pts->origx[isa]*dx_in1*scale+displacex;
+	const real oyout=pts->origy[isa]*dy_in1*scale+displacey;
 	missing+=FUN_NAME_BLOCK(mapin->p, nxin, nyin, 
 				phiout+isa*nxout*nyout, nxout, nyout,
 				dxout, dyout, oxout, oyout, 
@@ -466,7 +466,7 @@ void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 
 void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    const locstat_t *ostat, /**<[in] information about each clumn of a output loc grid*/
-		    CONST_OUT double *phiout,    /**<[in,out] OPD defined on ostat*/
+		    CONST_OUT real *phiout,    /**<[in,out] OPD defined on ostat*/
 		    ARG_PROP,
 		    int wrap,           /**<[in] wrap input OPD or not*/
 		    long colstart,      /**<[in] First column to do ray tracing*/
@@ -485,10 +485,10 @@ void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*
     /*
       convert to unitless variables
     */
-    const double dx_in1 = 1./mapin->dx;
-    const double dy_in1 = 1./mapin->dy;
-    const double dxout  = ostat->dx*dx_in1*scale;
-    const double dyout  = ostat->dy*dy_in1*scale;
+    const real dx_in1 = 1./mapin->dx;
+    const real dy_in1 = 1./mapin->dy;
+    const real dxout  = ostat->dx*dx_in1*scale;
+    const real dyout  = ostat->dy*dy_in1*scale;
     displacex = (displacex-mapin->ox)*dx_in1;
     displacey = (displacey-mapin->oy)*dy_in1;
     const long nyout=1;
@@ -497,8 +497,8 @@ void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*
     OMPTASK_FOR(icol, colstart, colend,shared(missing)){
 	const long offset=ostat->cols[icol].pos;
 	const long nxout=ostat->cols[icol+1].pos-offset;
-	const double oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;
-	const double oyout=ostat->cols[icol].ystart*dy_in1*scale+displacey;
+	const real oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;
+	const real oyout=ostat->cols[icol].ystart*dy_in1*scale+displacey;
 	missing+=FUN_NAME_BLOCK(mapin->p, nxin, nyin, 
 				phiout+offset, nxout, nyout,
 				dxout, dyout, oxout, oyout, 

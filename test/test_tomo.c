@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 void TomoR(dcell **xout, const void *A, 
-	   const dcell *xin, const double alpha){
+	   const dcell *xin, const real alpha){
     
     const RECON_T *recon=(const RECON_T *)A;
     dcell *x2=NULL;
@@ -29,7 +29,7 @@ void TomoR(dcell **xout, const void *A,
     dcellfree(x3);
 }
 void TomoL(dcell **xout, const void *A, 
-	   const dcell *xin, const double alpha){
+	   const dcell *xin, const real alpha){
 
     const RECON_T *recon=(const RECON_T *)A;
     dcell *gg=NULL;
@@ -55,7 +55,7 @@ void TomoL(dcell **xout, const void *A,
 }
 
 void MUV(dcell **xout, const void *A, 
-	 const dcell *xin, const double alpha){
+	 const dcell *xin, const real alpha){
     /**
        Apply the sparse plug low rand compuation to xin
        without scaling of alpha:

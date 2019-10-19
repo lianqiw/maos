@@ -214,6 +214,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     case M_DBL:
 	size=sizeof(double);
 	break;
+    case M_FLT:
+	size=sizeof(float);
+	break;
     default:
 	error("Invalid type");
     }
@@ -360,6 +363,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	case M_DBL:
 	    ((double*)(*ret))[count]=res;
 	    break;
+	case M_FLT:
+	    ((float*)(*ret))[count]=(float)res;
+	    break;
 	default:
 	    error("Invalid type");
 	}
@@ -393,40 +399,34 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     if(trans && count>0){
 	dbg("Transposing %zux%zu array\n", ncol, nrow);
 	void *newer=calloc(count, size);
+#define DO_TRANS(T)						\
+	{							\
+	    T *from=(T*)(*ret);					\
+	    T *to=(T*)newer;					\
+	    for(size_t icol=0; icol<ncol; icol++){		\
+		for(size_t irow=0; irow<ncol; irow++){		\
+		    to[icol+ncol*irow]=from[irow+nrow*icol];	\
+		}						\
+	    }							\
+	}
+
 	switch(type){
-	case M_INT:{
-	    int *from=(int*)(*ret);
-	    int *to=(int*)newer;
-	    for(size_t icol=0; icol<ncol; icol++){
-		for(size_t irow=0; irow<ncol; irow++){
-		    to[icol+ncol*irow]=from[irow+nrow*icol];
-		}
-	    }
-	}
+	case M_INT:
+	    DO_TRANS(int);
 	    break;
-	case M_LONG:{
-	    long *from=(long*)(*ret);
-	    long *to=(long*)newer;
-	    for(size_t icol=0; icol<ncol; icol++){
-		for(size_t irow=0; irow<ncol; irow++){
-		    to[icol+ncol*irow]=from[irow+nrow*icol];
-		}
-	    }
-	}
+	case M_LONG:
+	    DO_TRANS(long);
 	    break;
-	case M_DBL:{
-	    double *from=(double*)(*ret);
-	    double *to=(double*)newer;
-	    for(size_t icol=0; icol<ncol; icol++){
-		for(size_t irow=0; irow<ncol; irow++){
-		    to[icol+ncol*irow]=from[irow+nrow*icol];
-		}
-	    }
-	}
+	case M_DBL:
+	    DO_TRANS(double);
+	    break;
+	case M_FLT:
+	    DO_TRANS(float);
 	    break;
 	default:
 	    error("Invalid type");
 	}
+#undef DO_TRANS
 	int tmp=ncol; ncol=nrow; nrow=tmp;
 	free(*ret);
 	*ret=newer;

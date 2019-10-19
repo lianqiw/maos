@@ -28,9 +28,9 @@ struct HYST_T{
     dmat *dxlast;     /**<Change of x*/
     dmat *x0;         /**<Initial x (before dx changes sign)*/
     dmat *y0;         /**<Initial y*/
-    double stroke;    /**<Surface stroke of DM. coeff->alpha is scaled by this*/
-    double power;     /**<Slope of changing alpha*/
-    double xscale;    /**<Scaling of x to fix overal slope error.*/
+    real stroke;    /**<Surface stroke of DM. coeff->alpha is scaled by this*/
+    real power;     /**<Slope of changing alpha*/
+    real xscale;    /**<Scaling of x to fix overal slope error.*/
 };
 
 /**
@@ -50,7 +50,7 @@ HYST_T *hyst_new(dmat *coeff, int naloc){
     hyst->y0=dnew(nhmod,naloc);
     hyst->xscale=1;
     if(coeff->header){
-	double stroke=search_header_num(coeff->header, "stroke");
+	real stroke=search_header_num(coeff->header, "stroke");
 	if(isfinite(stroke)){
 	    warning("stroke=%g\n", stroke);
 	    for(int i=0; i<coeff->ny; i++){
@@ -58,7 +58,7 @@ HYST_T *hyst_new(dmat *coeff, int naloc){
 	    }
 	    hyst->stroke=stroke;
 	}
-	double alpha_power=search_header_num(coeff->header, "alpha_power");
+	real alpha_power=search_header_num(coeff->header, "alpha_power");
 	if(isfinite(alpha_power)){
 	    warning("alpha_power=%g\n", alpha_power);
 	    hyst->power=alpha_power;
@@ -95,19 +95,19 @@ void hyst_free(HYST_T *hyst){
    Apply hysteresis to DM vector.
 */
 void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
-    double *restrict x=dmcmd->p;
-    double *restrict xout=dmreal->p;
-    double *restrict xlast=hyst->xlast->p;
-    double *restrict dxlast=hyst->dxlast->p;
-    double *restrict x0=hyst->x0->p;
+    real *restrict x=dmcmd->p;
+    real *restrict xout=dmreal->p;
+    real *restrict xlast=hyst->xlast->p;
+    real *restrict dxlast=hyst->dxlast->p;
+    real *restrict x0=hyst->x0->p;
     dmat*  ylast=hyst->ylast;
     dmat*  py0=hyst->y0;
     dmat*  coeff=hyst->coeff;
     int nmod=hyst->coeff->ny;
     int naloc=dmcmd->nx;
     for(int ia=0; ia<naloc; ia++){
-	double xia=x[ia]*hyst->xscale;
-	double dx=xia-xlast[ia];
+	real xia=x[ia]*hyst->xscale;
+	real dx=xia-xlast[ia];
 	if(fabs(dx)>1e-14){/*There is change in command */
 	    if(dx*dxlast[ia]<0){
 		/*Changes in moving direction, change the initial condition */
@@ -116,20 +116,20 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
 		    P(py0,imod,ia)=P(ylast,imod,ia);
 		}
 	    }
-	    double alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
+	    real alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
 	    if(hyst->power){
 		alphasc*=pow((hyst->stroke-x[ia])/(hyst->stroke*2.), hyst->power);
 	    }
 	    for(int imod=0; imod<nmod; imod++){
-		const double alpha=alphasc*P(coeff,1,imod);
-		const double alphabeta=alpha*P(coeff,2,imod);
+		const real alpha=alphasc*P(coeff,1,imod);
+		const real alphabeta=alpha*P(coeff,2,imod);
 		P(ylast,imod,ia)=xia-alphabeta+(P(py0,imod,ia)-x0[ia]+alphabeta)*exp(-(xia-x0[ia])/alpha);
 	    }
 	    xlast[ia]=xia;
 	    dxlast[ia]=dx;
 	}/*else: no change in voltage, no change in output. */
 	/*update output. */
-	double y=0;
+	real y=0;
 	for(int imod=0; imod<nmod; imod++){
 	    y+=P(ylast,imod,ia)*P(coeff,0,imod);
 	}
@@ -151,32 +151,32 @@ void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
 void hyst_calib(HYST_T *hyst, int ih){
     int N=1000;
     dmat *cmd=dnew(N,1);
-    dmat *real=dnew(N,1);
+    dmat *output=dnew(N,1);
     dmat *cmd0=dnew(1,1);
-    dmat *real0=dnew(1,1);
-    double stroke=hyst->stroke;
+    dmat *output0=dnew(1,1);
+    real stroke=hyst->stroke;
     if(!hyst->stroke){
 	stroke=10e-6;
     }
     for(int i=0; i<N; i++){
 	cmd0->p[0]=cmd->p[i]=sin(i*M_PI*0.01)*stroke;
-	hyst_dmat(hyst, real0, cmd0);
-	real->p[i]=real0->p[0];
+	hyst_dmat(hyst, output0, cmd0);
+	output->p[i]=output0->p[0];
     }
     hyst_reset(hyst);
-    hyst->xscale*=(dmax(cmd)-dmin(cmd))/(dmax(real)-dmin(real));
+    hyst->xscale*=(dmax(cmd)-dmin(cmd))/(dmax(output)-dmin(output));
     warning("x would be multiplied by %g\n", hyst->xscale);
-    writebin(real, "hyst%d_real", ih);
+    writebin(output, "hyst%d_output", ih);
     writebin(cmd,  "hyst%d_cmd", ih);
     for(int i=0; i<N; i++){
 	cmd0->p[0]=cmd->p[i];
-	hyst_dmat(hyst, real0, cmd0);
-	real->p[i]=real0->p[0];
+	hyst_dmat(hyst, output0, cmd0);
+	output->p[i]=output0->p[0];
     }
     hyst_reset(hyst);
-    writebin(real, "hyst%d_realcalib", ih);
+    writebin(output, "hyst%d_output_calib", ih);
     dfree(cmd);
-    dfree(real);
+    dfree(output);
     dfree(cmd0);
-    dfree(real0);
+    dfree(output0);
 }

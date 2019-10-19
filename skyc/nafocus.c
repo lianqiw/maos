@@ -22,28 +22,28 @@
 */
 #include "skyc.h"
 #include "nafocus.h"
-static inline double nafocus_NaPSD(double nu, double alpha, double beta2){
+static inline real nafocus_NaPSD(real nu, real alpha, real beta2){
     return beta2*pow(nu,alpha);/*we don't divide 2pi */
 }
 
 /**
    Compute Zoom optics focus corrector open loop transfer function
 */
-static inline dcomplex nafocus_Hol(double nu,  /**<[in] frequency.*/
-				   double fs,  /**<[in] sampling frequency*/
-				   double tau, /**<[in] time delay*/
-				   double zeta,/**<[in] dampling of zoom corrector*/
-				   double fzc  /**<[in] frequency of zoom corrector*/
+static inline comp nafocus_Hol(real nu,  /**<[in] frequency.*/
+				   real fs,  /**<[in] sampling frequency*/
+				   real tau, /**<[in] time delay*/
+				   real zeta,/**<[in] dampling of zoom corrector*/
+				   real fzc  /**<[in] frequency of zoom corrector*/
 				   ){
-    const dcomplex s=COMPLEX(0, 2*M_PI*nu);
-    const dcomplex fsovers=fs/s;
-    const dcomplex Hint=fsovers;
-    const dcomplex Hwfs=(1.-cexp(-1./fsovers))*fsovers;
-    const dcomplex Hlag=cexp(-s*tau);
-    const dcomplex Hdac=1;
-    const double omega=fzc*2*M_PI;
-    const dcomplex Hzoom=omega*omega/(s*s+2*zeta*omega*s+omega*omega);
-    const dcomplex Hol=Hwfs*Hlag*Hint*Hdac*Hzoom;
+    const comp s=COMPLEX(0, 2*M_PI*nu);
+    const comp fsovers=fs/s;
+    const comp Hint=fsovers;
+    const comp Hwfs=(1.-cexp(-1./fsovers))*fsovers;
+    const comp Hlag=cexp(-s*tau);
+    const comp Hdac=1;
+    const real omega=fzc*2*M_PI;
+    const comp Hzoom=omega*omega/(s*s+2*zeta*omega*s+omega*omega);
+    const comp Hol=Hwfs*Hlag*Hint*Hdac*Hzoom;
     return Hol;
 }
 
@@ -57,21 +57,21 @@ static inline dcomplex nafocus_Hol(double nu,  /**<[in] frequency.*/
    Written: 2010-06-15
    Tested ok against RC's skycoverage code: 2010-06-15.
 */
-double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
-			double tau,  /**<[in] zoom corrector time delay*/
-			double zcf,  /**<[in] zoom corrector frequency (Hz)*/
-			double zeta, /**<[in] zoom corrector sampling*/
-			double D,    /**<[in] telescope diameter */
-			double hs,   /**<[in] guide star altitude*/
-			double alpha,/**<[in] parameter of sodium layer height PSD.*/
-			double beta  /**<[in] parameter of sodium layer height PSD.*/
+real nafocus_residual(real fs,   /**<[in] sampling frequency of NGS*/
+			real tau,  /**<[in] zoom corrector time delay*/
+			real zcf,  /**<[in] zoom corrector frequency (Hz)*/
+			real zeta, /**<[in] zoom corrector sampling*/
+			real D,    /**<[in] telescope diameter */
+			real hs,   /**<[in] guide star altitude*/
+			real alpha,/**<[in] parameter of sodium layer height PSD.*/
+			real beta  /**<[in] parameter of sodium layer height PSD.*/
 			){
     int inu=1;
-    double nu;
-    double margin=M_PI/4;
-    double aw=-(M_PI-margin);
-    dcomplex Hol;
-    double angle;
+    real nu;
+    real margin=M_PI/4;
+    real aw=-(M_PI-margin);
+    comp Hol;
+    real angle;
     /*First we find out where NFIRAOS LGS zoom optics Hol have 45 degrees phase margin.*/
     while(1){
 	nu=inu;
@@ -83,17 +83,17 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
 	    break;
 	}
     }
-    double nu1=nu-1;
-    double nu2=nu;
+    real nu1=nu-1;
+    real nu2=nu;
     /*Then determine the true nu that lies in between nu1 and nu2. */
-    dcomplex Hol1=nafocus_Hol(nu1, fs, tau, zeta, zcf);/*>aw */
-    dcomplex Hol2=nafocus_Hol(nu2, fs, tau, zeta, zcf);/*<aw */
-    double a1=atan2(cimag(Hol1), creal(Hol1));/*bigger than aw */
-    double a2=atan2(cimag(Hol2), creal(Hol2));
+    comp Hol1=nafocus_Hol(nu1, fs, tau, zeta, zcf);/*>aw */
+    comp Hol2=nafocus_Hol(nu2, fs, tau, zeta, zcf);/*<aw */
+    real a1=atan2(cimag(Hol1), creal(Hol1));/*bigger than aw */
+    real a2=atan2(cimag(Hol2), creal(Hol2));
     while(fabs(nu1-nu2)>1.e-5){
 	nu=(nu1+nu2)/2;
 	Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
-	double am=atan2(cimag(Hol), creal(Hol));
+	real am=atan2(cimag(Hol), creal(Hol));
 	if(am>aw){
 	    nu1=nu;
 	}else{
@@ -105,26 +105,26 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     angle=atan2(cimag(Hol), creal(Hol));
     /*The gain is adjusted so that the cross over frequency (total gain of Hol
       is 1) aligns with the location where we have 45 degrees phase margin*/
-    double gain=1./cabs(Hol);
+    real gain=1./cabs(Hol);
     /*We integrate over f, not f*2pi */
     dmat *nus=dlogspace(-3,5,2000);/*agrees good with skycoverage matlab code. */
-    double rms=0;
+    real rms=0;
     for(long i=0; i<nus->nx; i++){
 	nu=nus->p[i];
 	Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
-	const dcomplex Hrej=1./(1.+gain*Hol);
-	const double NaPSD=nafocus_NaPSD(nu, alpha, beta);
+	const comp Hrej=1./(1.+gain*Hol);
+	const real NaPSD=nafocus_NaPSD(nu, alpha, beta);
 	rms+=NaPSD*pow(cabs(Hrej),2)*nu;/*we integratr f(nu)nu d(log(nu)) */
     }
     rms*=(log(nus->p[nus->nx-1])-log(nus->p[0]))/(nus->nx-1);
-    double focus=sqrt(rms)*1./(16*sqrt(3))*pow((D/hs),2);/*convert to focus error in meter. */
+    real focus=sqrt(rms)*1./(16*sqrt(3))*pow((D/hs),2);/*convert to focus error in meter. */
     dfree(nus);
     return focus;
 }
-dmat *nafocus_time(double alpha,/**<[in] parameter of sodium layer height PSD.*/
-		   double beta, /**<[in] parameter of sodium layer height PSD.*/
-		   double dt, long nstep, rand_t *rstat){
-    double df=1./(nstep*dt);
+dmat *nafocus_time(real alpha,/**<[in] parameter of sodium layer height PSD.*/
+		   real beta, /**<[in] parameter of sodium layer height PSD.*/
+		   real dt, long nstep, rand_t *rstat){
+    real df=1./(nstep*dt);
     cmat *psd=cnew(nstep, 1);
     //cfft2plan(psd, -1);
     for(int i=1; i<nstep; i++){

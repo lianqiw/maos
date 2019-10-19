@@ -40,18 +40,18 @@ enum{
 static char *create_fnatm(GENATM_T *data){
     uint32_t key;
     key=hashlittle(data->rstat, sizeof(rand_t), 0);/*contains seed */
-    key=hashlittle(data->wt, sizeof(double)*data->nlayer, key);
-    key=hashlittle(&data->r0, sizeof(double), key);
-    key=hashlittle(data->L0, sizeof(double)*data->nlayer, key);
-    key=hashlittle(&data->dx, sizeof(double), key);
-    key=hashlittle(&data->fmin, sizeof(double), key);
-    key=hashlittle(&data->fmax, sizeof(double), key);
+    key=hashlittle(data->wt, sizeof(real)*data->nlayer, key);
+    key=hashlittle(&data->r0, sizeof(real), key);
+    key=hashlittle(data->L0, sizeof(real)*data->nlayer, key);
+    key=hashlittle(&data->dx, sizeof(real), key);
+    key=hashlittle(&data->fmin, sizeof(real), key);
+    key=hashlittle(&data->fmax, sizeof(real), key);
     key=hashlittle(&data->nx, sizeof(long), key);
     key=hashlittle(&data->ny, sizeof(long), key);
     key=hashlittle(&data->nlayer, sizeof(long), key);
     key=hashlittle(&data->ninit, sizeof(long), key);
     if(data->r0logpsds){
-	key=hashlittle(data->r0logpsds->p, sizeof(double)*data->r0logpsds->nx, key);
+	key=hashlittle(data->r0logpsds->p, sizeof(real)*data->r0logpsds->nx, key);
     }
     char diratm[PATH_MAX];
     snprintf(diratm,PATH_MAX,"%s/atm", CACHE);
@@ -61,7 +61,7 @@ static char *create_fnatm(GENATM_T *data){
     snprintf(fnatm,PATH_MAX,"%s/%s_%ld_%ldx%ld_%g_%ud.bin",
 	     diratm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
     long avail=available_space(diratm);
-    long need=data->nx*data->ny*data->nlayer*sizeof(double)+500000000;
+    long need=data->nx*data->ny*data->nlayer*sizeof(real)+500000000;
     if(avail>need){
 	return strdup(fnatm);
     }else{
@@ -74,7 +74,7 @@ static char *create_fnatm(GENATM_T *data){
  * NULL. Handles large screens well without using the full storage.
  */
 static void spect_screen_do(zfarr *fc, GENATM_T *data){
-    double slope=0;
+    real slope=0;
     switch(data->method){
     case T_VONKARMAN:
 	slope=-11./3.;
@@ -87,19 +87,19 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
     }
    
     rand_t *rstat = data->rstat;
-    double* wt    = data->wt;
+    real* wt    = data->wt;
     int nlayer    = data->nlayer;
     dcell *dc     = dcellnew(2,1);
     long nx = data->nx;
     long ny = data->ny;
-    double dx=data->dx;
+    real dx=data->dx;
     dc->p[0] = dnew(nx, ny);
     dc->p[1] = dnew(nx, ny);
-    double *restrict p1=dc->p[0]->p;
-    double *restrict p2=dc->p[1]->p;
+    real *restrict p1=dc->p[0]->p;
+    real *restrict p2=dc->p[1]->p;
     char header[1024];
-    double ox=-nx/2*dx;
-    double oy=-ny/2*dx;
+    real ox=-nx/2*dx;
+    real oy=-ny/2*dx;
     snprintf(header, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
 	     ox, oy, dx, 0., 0., 0.);
     dc->p[0]->header=strdup(header);
@@ -109,9 +109,9 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
     dcell *dc2=0;
     rand_t rstat2;//don't consume rstat
     if(data->r0logpsds){//Scale r0 across the screen.
-	double slope2=data->r0logpsds->p[0];
-	double strength=data->r0logpsds->p[1]*(5./3.);//strength of log(wt)
-	double minfreq=0, maxfreq=0;
+	real slope2=data->r0logpsds->p[0];
+	real strength=data->r0logpsds->p[1]*(5./3.);//strength of log(wt)
+	real minfreq=0, maxfreq=0;
 	if(data->r0logpsds->nx>2){//low frequency end is converted to outscale
 	    minfreq=data->r0logpsds->p[2];
 	}
@@ -130,12 +130,12 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
     dmat *prev_scale=0;
     dmat *this_scale=0;
     dmat *spect=0;
-    double L0=0;
+    real L0=0;
     for(int ilayer=0; ilayer<nlayer; ilayer++){
-	double tk1=myclockd();
-	double tk2=tk1;
+	real tk1=myclockd();
+	real tk2=tk1;
 	if(!prev_screen){
-	    double strength=0.0229*pow(data->r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);;
+	    real strength=0.0229*pow(data->r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);;
 	    if(!spect || fabs(data->L0[ilayer]-L0)>EPS){
 		L0=data->L0[ilayer];
 		spatial_psd(&spect, data->nx,data->ny,data->dx,strength,L0,data->fmin,data->fmax,slope, 0.5);
@@ -171,13 +171,13 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
 	    }
 	    dcwm(this_screen, this_scale);
 	}
-	double tk3=myclockd();
+	real tk3=myclockd();
 	if(fc){/*save to file. */
 	    zfarr_push(fc, ilayer, this_screen);
 	}else{
 	    dcp((dmat**)&data->screen->p[ilayer], this_screen);
 	}
-	double tk4=myclockd();
+	real tk4=myclockd();
 	info("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n", 
 	     ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy",tk4-tk3);
     }
@@ -197,9 +197,10 @@ static void fractal_screen_do(zfarr *fc, GENATM_T *data){
 	dmat *screen = dnew(data->nx, data->ny);
 	for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 	    drandn(screen, 1, data->rstat);
-	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
+	    real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 	    fractal_do(screen, data->dx, r0i, data->L0[ilayer], data->ninit);
-	    remove_piston(screen->p, nx*ny);
+	    //remove_piston(screen->p, nx*ny);
+	    dadds(screen, -dsum(screen)/(nx*ny));
 	    zfarr_push(fc, ilayer, screen);
 	}
 	dfree(screen);
@@ -209,9 +210,10 @@ static void fractal_screen_do(zfarr *fc, GENATM_T *data){
 	    drandn((dmat*)screen[ilayer], 1, data->rstat);
 	}
 	OMPTASK_FOR(ilayer, 0, data->nlayer){
-	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
+	    real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 	    fractal_do((dmat*)screen[ilayer], screen[0]->dx, r0i, data->L0[ilayer], data->ninit);
-	    remove_piston(screen[ilayer]->p, nx*ny);
+	    //remove_piston(screen[ilayer]->p, nx*ny);
+	    dadds((dmat*)screen[ilayer], -dsum((dmat*)screen[ilayer])/(nx*ny));
 	}
 	OMPTASK_END;
     }
@@ -263,7 +265,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
   	screen=(mapcell*)cellnew(nlayer, 1);
 	long nx = data->nx;
 	long ny = data->ny;
-	double dx = data->dx;
+	real dx = data->dx;
 	for(int ilayer=0; ilayer<nlayer; ilayer++){
 	    screen->p[ilayer]=mapnew(nx, ny, dx, dx);
 	}
@@ -298,10 +300,10 @@ mapcell *fractal_screen(GENATM_T *data){
     return create_screen(data, fractal_screen_do);
 }
 
-map_t *genatm_simple(double r0, double L0, double dx, long nx){
+map_t *genatm_simple(real r0, real L0, real dx, long nx){
     rand_t rstat;
     seed_rand(&rstat, 1);
-    double wt=1.;
+    real wt=1.;
     GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, nx, nx, 1, 0, 0, 0, 0};
     mapcell *screens=vonkarman_screen(&cfg);
     map_t *out=mapref(screens->p[0]);
@@ -311,8 +313,8 @@ map_t *genatm_simple(double r0, double L0, double dx, long nx){
 /**
    Generate atmosphere and map onto loc.
 */
-dmat *genatm_loc(loc_t *loc, double r0, double dsa){
-    double D=loc_diam(loc);
+dmat *genatm_loc(loc_t *loc, real r0, real dsa){
+    real D=loc_diam(loc);
     dmat *opd=dnew(loc->nloc, 1);
     map_t *atm=genatm_simple(r0, dsa, loc->dx, ceil(D/loc->dx)*2);
     prop_grid(atm, loc, opd->p, 1, 0,0,1,1,0,0);
@@ -326,25 +328,25 @@ dmat *genatm_loc(loc_t *loc, double r0, double dsa){
  * function between two points separated by rmax.
  */
 
-dmat* turbcov(dmat *r, double rmax, double r0, double L0){
-    double tg1=tgamma(11./6) * pow(24./5 * tgamma(6./5.), 5./6.)
+dmat* turbcov(dmat *r, real rmax, real r0, real L0){
+    real tg1=tgamma(11./6) * pow(24./5 * tgamma(6./5.), 5./6.)
 	* pow(2 * M_PI/0.5e-6, -2) / pow(M_PI, 8./3.);
-    double vkcoeff  = tg1 / pow(2, 5./6.);    
-    double vkcoeff0 = tg1 * tgamma(5./6.) / 2 ;/*for variance */
+    real vkcoeff  = tg1 / pow(2, 5./6.);    
+    real vkcoeff0 = tg1 * tgamma(5./6.) / 2 ;/*for variance */
     dmat *cov=dnew(r->nx, r->ny);
     long n=r->nx*r->ny;
     if(!isfinite(L0)){/*kolmogorov. */
-	const double power=5./3.;
-	double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
-	double sigma2=0.5*coeff*pow(rmax, power);
+	const real power=5./3.;
+	real coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
+	real sigma2=0.5*coeff*pow(rmax, power);
 	for(long i=0; i<n; i++){
 	    cov->p[i]=sigma2-0.5*coeff*pow(r->p[i], power);
 	}
     }else{/*von karman. */
-	const double f0=1./L0;
-	const double r0f0p=pow(r0*f0, -5./3.);
-	double ri, rk, rip, rkp;
-	double r2pif0;	
+	const real f0=1./L0;
+	const real r0f0p=pow(r0*f0, -5./3.);
+	real ri, rk, rip, rkp;
+	real r2pif0;	
 	for(long i=0; i<n; i++){
 	    if(fabs(r->p[i])<EPS){
 		cov->p[i]=vkcoeff0*r0f0p;
@@ -365,25 +367,25 @@ dmat* turbcov(dmat *r, double rmax, double r0, double L0){
 void spatial_psd(dmat **pout,  /**<Output*/
 		 long nx,      /**<The size*/
 		 long ny,      /**<The size*/
-		 double dx,    /**<The sampling of spatial coordinate.*/
-		 double strength, /**<Strength coefficient*/
-		 double outerscale, /**<Outerscale */
-		 double minfreq,  /**<Low end frequency cut off*/
-		 double maxfreq,  /**<High end frequency cut off*/
-		 double slope, /**<should be -11/3 for von karman or kolmogorov
+		 real dx,    /**<The sampling of spatial coordinate.*/
+		 real strength, /**<Strength coefficient*/
+		 real outerscale, /**<Outerscale */
+		 real minfreq,  /**<Low end frequency cut off*/
+		 real maxfreq,  /**<High end frequency cut off*/
+		 real slope, /**<should be -11/3 for von karman or kolmogorov
 				  screens, or -4 for biharmonic screen (just
 				  testing only).*/
-		 double power  /**< optionally do a power of psd.*/
+		 real power  /**< optionally do a power of psd.*/
     ){
     if(slope==0) slope=-11./3.;//Kolmogorov
     slope*=power/2.;
     if(maxfreq==0) maxfreq=INFINITY;
-    const double dfx=1./(nx*dx);
-    const double dfy=1./(ny*dx);
-    const double zerofreq2=outerscale==0?0:pow(outerscale, -2);
-    const double minfreq2=minfreq*minfreq;
-    const double maxfreq2=(maxfreq==0?INFINITY:(maxfreq*maxfreq));
-    const double scrnstr=pow(strength*(dfx*dfy),power);
+    const real dfx=1./(nx*dx);
+    const real dfy=1./(ny*dx);
+    const real zerofreq2=outerscale==0?0:pow(outerscale, -2);
+    const real minfreq2=minfreq*minfreq;
+    const real maxfreq2=(maxfreq==0?INFINITY:(maxfreq*maxfreq));
+    const real scrnstr=pow(strength*(dfx*dfy),power);
     const int nx2=nx/2;
     const int ny2=ny/2;
     if(*pout && ((*pout)->nx!=nx || (*pout)->ny!=ny)){
@@ -395,9 +397,9 @@ void spatial_psd(dmat **pout,  /**<Output*/
     dmat *psd=*pout;
 #pragma omp parallel for
     for(int iy=0;iy<ny;iy++){
-	double r2y=pow((iy<ny2?iy:iy-ny)*dfy,2);/* to avoid fft shifting. */
+	real r2y=pow((iy<ny2?iy:iy-ny)*dfy,2);/* to avoid fft shifting. */
 	for(int ix=0;ix<nx;ix++){
-	    double r2=pow((ix<nx2?ix:ix-nx)*dfx,2)+r2y;
+	    real r2=pow((ix<nx2?ix:ix-nx)*dfx,2)+r2y;
 	    if(r2<=maxfreq2 && r2>=minfreq2){
 		psd->p[ix+iy*nx] = pow(r2+zerofreq2,slope)*scrnstr;
 	    }
@@ -405,8 +407,8 @@ void spatial_psd(dmat **pout,  /**<Output*/
     }
     if(minfreq==0) psd->p[0]=0;  //remove infinite piston mode if minfreq is zero (L0 is inf).
 }
-dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power){
-    double strength=0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
+dmat* turbpsd(long nx, long ny, real dx, real r0, real L0, real slope, real power){
+    real strength=0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
     dmat *out=0;
     spatial_psd(&out, nx, ny, dx, strength, L0, 0, INFINITY, slope, power);
     return out;
@@ -414,8 +416,8 @@ dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, d
 /**
    Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and
    weights.  */
-double calc_aniso(double r0, int nps, double *ht, double *wt){
-    double wh=0;
+real calc_aniso(real r0, int nps, real *ht, real *wt){
+    real wh=0;
     for(int ips=0; ips<nps; ips++){
 	if(wt[ips]>0.01){//only account for positive and significant layers, slodar may give negative results.
 	    wh+=pow(fabs(ht[ips]),5./3.)*wt[ips];
@@ -426,8 +428,8 @@ double calc_aniso(double r0, int nps, double *ht, double *wt){
 /**
    Estimate Green wood frequency
 */
-double calc_greenwood(double r0, int nps, double *ws, double *wt){
-    double wv=0;
+real calc_greenwood(real r0, int nps, real *ws, real *wt){
+    real wv=0;
     for(int ips=0; ips<nps; ips++){
 	wv+=pow(fabs(ws[ips]), 5./3.)*wt[ips];
     }
@@ -437,12 +439,12 @@ double calc_greenwood(double r0, int nps, double *ws, double *wt){
    Estimate generalized aniso angle theta2 from Fried parameter r0, and layer
    height and weights, and deformable mirror conjugation heights hc1 hc2 of the
    ground and altitude DMs. */
-double calc_aniso2(double r0, int nps, double *ht, double *wt, double hc1, double hc2){
-    double wh=0;
-    double hh=pow(hc2-hc1,5./3.);
+real calc_aniso2(real r0, int nps, real *ht, real *wt, real hc1, real hc2){
+    real wh=0;
+    real hh=pow(hc2-hc1,5./3.);
     for(int ips=0; ips<nps; ips++){
-	double t1=0.5*pow(fabs(ht[ips]-hc1),5./3.)+0.5*pow(fabs(ht[ips]-hc2),5./3.);
-	double t2=-0.25*hh-0.25/hh*pow(pow(fabs(ht[ips]-hc1),5./3.)-pow(fabs(ht[ips]-hc2),5./3.),2);
+	real t1=0.5*pow(fabs(ht[ips]-hc1),5./3.)+0.5*pow(fabs(ht[ips]-hc2),5./3.);
+	real t2=-0.25*hh-0.25/hh*pow(pow(fabs(ht[ips]-hc1),5./3.)-pow(fabs(ht[ips]-hc2),5./3.),2);
 	wh+=wt[ips]*(t1+t2);
     }
     return 0.3144*r0*pow(wh,-3./5.);

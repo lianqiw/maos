@@ -28,13 +28,13 @@ void benchmark()
     toc("");
     dcell *x=dcellread("rhs.bin");
     tic;
-    double res=dspcellwddot(x,A,x);//this takes 0.15s in debugging 0.04 in optim 
+    real res=dspcellwddot(x,A,x);//this takes 0.15s in debugging 0.04 in optim 
     toc("");
     printf("%g\n",res);
     tic;
     dcell *y=NULL;
     dspcellmulmat(&y, A,x,1);
-    double res2=dcellinn(x,y);//this takes 0.15s in debugging 0.04 in optim 
+    real res2=dcellinn(x,y);//this takes 0.15s in debugging 0.04 in optim 
     toc("");
     printf("%g\n",res2);
     //dcell *saneai=dcellread("saneai.bin"); 
@@ -43,7 +43,7 @@ void benchmark()
     dspcellmulmat(&z, G0,x,1);toc("");
     dcell *z2=NULL;
     dspcellmulmat(&z2, G0T,z,1);toc("");
-    double res3=dcellinn(x,z2);
+    real res3=dcellinn(x,z2);
     //this three steps takes 0.02 s, 0.01 s in optim 
     toc("");
     printf("%g\n",res3);

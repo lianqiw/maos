@@ -26,20 +26,20 @@
   dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper);
 */
 void ngsmod2science(dmat *iopd, const loc_t *loc, const NGSMOD_T *ngsmod, 
-		    double thetax, double thetay,
-		    const double *mod, double alpha);
+		    real thetax, real thetay,
+		    const real *mod, real alpha);
 void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon, 
 		       const APER_T *aper, const POWFS_T* powfs);
 
 void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon);
 
-void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
-		     double *ngsmod_out,
+void calc_ngsmod_dot(real *pttr_out, real *pttrcoeff_out,
+		     real *ngsmod_out,
 		     const PARMS_T *parms, const NGSMOD_T *ngsmod, const APER_T *aper, 
-		     const double *opd, int ievl);
-void calc_ngsmod_post(double *pttr_out, double *pttrcoeff_out, double *ngsmod_out,
-		      double tot, const double *coeff,  const NGSMOD_T *ngsmod, 
-		      const APER_T *aper,double thetax, double thetay);
+		     const real *opd, int ievl);
+void calc_ngsmod_post(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out,
+		      real tot, const real *coeff,  const NGSMOD_T *ngsmod, 
+		      const APER_T *aper,real thetax, real thetay);
 void ngsmod_free(NGSMOD_T *ngsmod);
 void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr);
 #endif

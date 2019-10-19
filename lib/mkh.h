@@ -24,9 +24,9 @@
    \file mkh.h
    Contains functions that create ray tracing operator
 */
-dsp *mkhb_cubic(const loc_t *locin, const loc_t *locout, double displacex, double displacey, double scale, double iac);
-dsp *mkh_cubic(const loc_t *locin, const loc_t *locout, double displacex, double displacey, double scale, double iac);
-dsp * mkhb(const loc_t *locin, const loc_t *locout, double displacex, double displacey,double scale);
-dsp * mkh(const loc_t *locin, const loc_t *locout, double displacex, double displacey,double scale);
+dsp *mkhb_cubic(const loc_t *locin, const loc_t *locout, real displacex, real displacey, real scale, real iac);
+dsp *mkh_cubic(const loc_t *locin, const loc_t *locout, real displacex, real displacey, real scale, real iac);
+dsp * mkhb(const loc_t *locin, const loc_t *locout, real displacex, real displacey,real scale);
+dsp * mkh(const loc_t *locin, const loc_t *locout, real displacex, real displacey,real scale);
 dsp *mkhbin1d(const dmat *xin, const dmat *xout);		   
 #endif

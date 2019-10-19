@@ -38,10 +38,10 @@ typedef struct APER_T{
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
-    double ipcc;         /**<piston term in imcc.*/
-    double sumamp2;      /**<sum of amplitude squared*/
+    real ipcc;         /**<piston term in imcc.*/
+    real sumamp2;      /**<sum of amplitude squared*/
     locfft_t *embed;     /**<For computing FFT*/
-    double fcp;          /**<piston correction in focus term.*/
+    real fcp;          /**<piston correction in focus term.*/
     dcell *opdadd;       /**<OPD surface for each evaluation direction.*/
     dcell *opdfloc;      /**<OPD surface for each evalution direction defined on floc*/
 }APER_T;
@@ -85,14 +85,14 @@ typedef struct POWFS_T{
     loc_t *saloc;       /**<lower left corner of the subaperture*/
     pts_t *pts;         /**<records lower left-most point of each sa in a regular grid.*/
     dmat *saa;          /**<Subaperture normalized area*/
-    double saasum;      /**<sum of saa*/
+    real saasum;      /**<sum of saa*/
     loc_t *loc;         /**<concatenated points for all subapertures.*/
     dmat *amp;          /**<amplitude map defined on loc, max at 1.*/
     loccell *loc_dm;    /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
     loccell *loc_tel;   /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
     dcell *amp_tel;     /**<real amplitude map on misregistered grid, loc_tel. used for gradient computing*/
     dcell *saa_tel;        /**<mis-registered saa, if any*/
-    double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
+    real areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
     dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
     dcell *gradncpa;    /**<Offset to grads due to ncpa. Copied to simu->gradoff*/
@@ -147,11 +147,11 @@ typedef struct POWFS_T{
    NGS mode and reconstructors in ad hoc split tomography. Only useful with 1 or 2 DMs.
  */
 typedef struct NGSMOD_T{
-    double hs;      /**<height of LGS*/
-    double ht;      /**<height of upper DM.*/
-    double scale;   /**<(1-ht/hs)^-2*/
-    double aper_fcp;/**<piston term in focus in plocs.*/
-    double lp2;     /**<LPF coefficient for Rngs->p[1]*/
+    real hs;      /**<height of LGS*/
+    real ht;      /**<height of upper DM.*/
+    real scale;   /**<(1-ht/hs)^-2*/
+    real aper_fcp;/**<piston term in focus in plocs.*/
+    real lp2;     /**<LPF coefficient for Rngs->p[1]*/
     dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
@@ -225,10 +225,10 @@ typedef struct INVPSD_T{
 typedef struct FRACTAL_T{
     dcell *xopd;      /**<A square array to embed x on xloc into for fractal */
     loccell *xloc;      /**<points to recon->xloc*/
-    const double *wt;  /**<weight of each layer*/
-    double  r0;        /**<The Fried parameter*/
-    double  L0;        /**<The outer scale*/
-    double  scale;     /**<An additional scaling factor*/
+    const real *wt;  /**<weight of each layer*/
+    real  r0;        /**<The Fried parameter*/
+    real  L0;        /**<The outer scale*/
+    real  scale;     /**<An additional scaling factor*/
     long   ninit;      /**<The initial size to do with covariance matrix. 2 is minimum*/
 }FRACTAL_T;
 /**
@@ -267,8 +267,8 @@ typedef struct FIT_T{
 /**
    contains data related to wavefront reconstruction and DM fitting. */
 typedef struct RECON_T{
-    double r0;         /**<r0 used in reconstruction. may get updated in cn2 estimation*/
-    double L0;         /**<L0 used in reconstruction. may get updated in cn2 estimation*/
+    real r0;         /**<r0 used in reconstruction. may get updated in cn2 estimation*/
+    real L0;         /**<L0 used in reconstruction. may get updated in cn2 estimation*/
     dmat *ht;          /**<height of the layers to do tomography.*/
     dmat *wt;          /**<weight of the layers to to tomography. may get updated in cn2 estimation*/
     dmat *os;          /**<over sampling of the layers.*/
@@ -344,9 +344,9 @@ typedef struct RECON_T{
     dspcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
     dcell *ecnn;       /**<covairance of Hx*(E*Cnn*E^t)*Hx^t: noise propagation to science.*/
     dmat *neam;        /**<subaperture averaged nea for each wfs*/
-    double neamhi;     /**<average of neam for high order wfs.*/
-    double sigmanlo;   /**<Wavefront error (m^2) due to noise for lo order.*/
-    double sigmanhi;   /**<Wavefront error (m^2) due to noise for high order. Needs to multiply with simu->gradscale^2.*/
+    real neamhi;     /**<average of neam for high order wfs.*/
+    real sigmanlo;   /**<Wavefront error (m^2) due to noise for lo order.*/
+    real sigmanhi;   /**<Wavefront error (m^2) due to noise for high order. Needs to multiply with simu->gradscale^2.*/
     
     MUV_T RR;          /**<tomography right hand side matrix, solve RL*x=RR*y*/
     MUV_T RL;          /**<tomography left hand side matrix*/
@@ -366,7 +366,7 @@ typedef struct RECON_T{
     
     dcell *GRall;      /**<Radial order zernike to gradient*/
     dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
-    double eptwfs;     /**<Twfs reference vector servo gain.*/
+    real eptwfs;     /**<Twfs reference vector servo gain.*/
     //For common path dithering
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/
@@ -454,12 +454,12 @@ typedef struct WFSINTS_T{
 */
 typedef struct DITHER_T{
     //For PLL
-    double delta; /**<PLL estimation of servo lag (only) at every time step*/
-    double deltam;/**<Average of delta*/
-    double deltao;/**<Offset of delta from outer loop*/
-    double delay; /**<Diference of delay from 2 frame due to beam propagation*/
-    double a2m;   /**<actual dither amplitude*/
-    double a2me;   /**<actual dither amplitude*/
+    real delta; /**<PLL estimation of servo lag (only) at every time step*/
+    real deltam;/**<Average of delta*/
+    real deltao;/**<Offset of delta from outer loop*/
+    real delay; /**<Diference of delay from 2 frame due to beam propagation*/
+    real a2m;   /**<actual dither amplitude*/
+    real a2me;   /**<actual dither amplitude*/
     //For matched filter
     dcell *imb;   /**<accumulated im*/
     dcell *imx;   /**<accumulated cos()*im */
@@ -514,7 +514,7 @@ typedef struct SIM_T{
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
     dcell *cn2est;     /**<Cn2 Estimation Result*/
     dcell *gradoff;    /**<Offset to grads to subtract from measurement. */
-    double eptwfs;     /**<Twfs reference vector servo gain.*/
+    real eptwfs;     /**<Twfs reference vector servo gain.*/
     /*CoG gain adjustment*/
     dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/
     dcell *llt_tt;   /**<LLT uplink jitter*/
@@ -574,7 +574,7 @@ typedef struct SIM_T{
     /*focus tracking loop*/
     dcell *LGSfocus;  /**<Temporary array*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
-    double ngsfocuslpf;/**<low pass filtered NGS focus*/
+    real ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomint;    /**<Trombone integrator*/
     dmat *zoomavg;    /**<Trombone averager from gradients*/
@@ -618,11 +618,11 @@ typedef struct SIM_T{
     dcell *dm_wfs;   /**<moao DM command computed for wfs*/
     dcell *dm_evl;   /**<moao DM command computed for science field*/
     //Timing
-    double tk_0;       /**<Start time of each isim*/
-    double tk_eval;    /**<time spent in perfevl in this step*/
-    double tk_recon;   /**<time spent in reconstruct in this step*/
-    double tk_cache;   /**<time spent in cachedm in this step*/
-    double tk_wfs;     /**<time spent in wfsgrad in this step*/
+    real tk_0;       /**<Start time of each isim*/
+    real tk_eval;    /**<time spent in perfevl in this step*/
+    real tk_recon;   /**<time spent in reconstruct in this step*/
+    real tk_cache;   /**<time spent in cachedm in this step*/
+    real tk_wfs;     /**<time spent in wfsgrad in this step*/
 
     /*A few data wraps for multi-threading*/
     PROPDATA_T *cachedm_propdata; /**<wrapped data for ray tracing from aloc to cachedm*/
@@ -664,7 +664,7 @@ typedef struct SIM_T{
     const APER_T *aper;/**<pointer to aper*/
     RECON_T *recon;    /**<pointer to recon*/
     POWFS_T *powfs;    /**<pointer to powfs*/
-    double last_report_time;/**<The time we lasted reported status to the scheduler.*/
+    real last_report_time;/**<The time we lasted reported status to the scheduler.*/
     int tomo_update;   /**<Triggering setup_recon_tomo_upate*/
 
     //For synchronization. perfevl and wfsgrad waist for dmreal to be updated.

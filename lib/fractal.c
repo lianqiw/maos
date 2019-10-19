@@ -28,9 +28,9 @@
 */
 
 typedef struct vkcov_t{
-    double r0;
-    double L0;
-    double dx;
+    real r0;
+    real L0;
+    real dx;
     long n;
     long ninit;
     dmat *cov;
@@ -41,7 +41,7 @@ typedef struct vkcov_t{
 }vkcov_t;
 vkcov_t *head=NULL;
 PNEW(mutex_cov);
-static vkcov_t *vkcov_get(double r0, double L0, double dx, long n, long ninit){
+static vkcov_t *vkcov_get(real r0, real L0, real dx, long n, long ninit){
     for(vkcov_t *p=head; p; p=p->next){
 	if(fabs(p->r0-r0)<EPS && (fabs(p->L0-L0)<EPS || (!isfinite(p->L0) && !isfinite(L0)))
 	   && fabs(p->dx-dx)<EPS && p->n == n && p->ninit==ninit){
@@ -71,7 +71,7 @@ static __attribute__((constructor)) void init(){
    size nx and sampling dx, with Fried parameter of r0, and outerscale of L0.  
    ninit is the initial side size of the atm array to start with.
 */
-static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
+static vkcov_t* vkcov_calc(real r0, real L0, real dx, long n, long ninit){
     if(L0>9000) L0=INFINITY;/*L0 bigger than 9000 is treated as infinity. */
     vkcov_t *node=vkcov_get(r0, L0, dx, n, ninit);
     if(node) return node;
@@ -81,14 +81,14 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
     node->dx=dx;
     node->n=n;
     node->ninit=ninit;
-    long nroot=(long)round(log2((double)n-1));
+    long nroot=(long)round(log2((real)n-1));
     node->next=head;
     if(r0>=L0){
 	error("Illegal parameter: r0=%g, L0=%g\n", r0, L0);
     }
     head=node;
     dmat *r=dnew(2, nroot+2);
-    double sqrt2=sqrt(2);
+    real sqrt2=sqrt(2);
     P(r,0,0)=0;
     P(r,1,0)=0;
     for(long i=0; i<=nroot; i++){
@@ -96,21 +96,21 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
 	P(r,0,i+1)=j*dx;
 	P(r,1,i+1)=j*dx*sqrt2;
     }
-    double D=(n-1)*dx;
+    real D=(n-1)*dx;
     node->cov=turbcov(r, D*sqrt(2), r0, L0);
     dfree(r);
     dmat *rc0=dnew(ninit*ninit, ninit*ninit);
     dmat*  rc=rc0;
-    double dx2=dx*(n-1)/(ninit-1);
+    real dx2=dx*(n-1)/(ninit-1);
     for(long j=0; j<ninit; j++){
-	double y=dx2*j;
+	real y=dx2*j;
 	for(long i=0; i<ninit; i++){
-	    double x=dx2*i;
+	    real x=dx2*i;
 	    long k=i+j*ninit;
 	    for(long j2=0; j2<ninit; j2++){
-		double y2=dx2*j2;
+		real y2=dx2*j2;
 		for(long i2=0; i2<ninit; i2++){
-		    double x2=dx2*i2;
+		    real x2=dx2*i2;
 		    long k2=i2+j2*ninit;
 		    P(rc,k2,k)=sqrt((x-x2)*(x-x2)+(y-y2)*(y-y2));
 		}

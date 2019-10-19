@@ -25,7 +25,7 @@
    ; input x is first guess if not NULL and warm==1; A is symmetric
    positive definite (SPD) matrix plus low rand terms.  x0 contains the initial
    guess. Amul is the operator that applies A to x.  */
-double pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
+real pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
 	   CGFUN Amul,    /**<[in] The function that applies y=y+A*x*alpha: (*Amul)(&y,A,x,alpha)*/
 	   const void *A, /**<[in] Contain info about the The left hand side matrix A*/
 	   PREFUN Mmul,   /**<[in] The precond func that applies y=M^-1*x;*/
@@ -42,12 +42,12 @@ double pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart
 	dcellzero(*px);
     }
     x0=*px;
-    double r0z1=0,r0z2;
+    real r0z1=0,r0z2;
     dcell *p0=NULL;
     dcell *Ap=NULL;
-    double ak,bk;
-    double r0z0=dcellinn(b,b);/*|b| */
-    double res[maxiter+1];
+    real ak,bk;
+    real r0z0=dcellinn(b,b);/*|b| */
+    real res[maxiter+1];
 #if PRINT_RES == 2
     info("CPU %sCG %d:", M?"P":"",maxiter);
 #endif

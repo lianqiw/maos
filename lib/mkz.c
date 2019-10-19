@@ -23,8 +23,8 @@
    Returns the transpose of a ztilt gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc.
  */
-dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc, 
-	   int saorc, double scale, double dispx, double dispy)
+dsp * mkzt(loc_t* xloc, real *amp, loc_t *saloc, 
+	   int saorc, real scale, real dispx, real dispy)
 {
     /*compute ztilt influence function from xloc to saloc
       saorc: SALOC is subaperture origin or center. 
@@ -32,40 +32,40 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
       0: center.
     */
     long nsa=saloc->nloc;
-    double dsa=saloc->dx;
-    double dx1=1./xloc->dx;
-    double dx2=scale*dx1;
-    double dy1=1./xloc->dy;
-    double dy2=scale*dy1;
+    real dsa=saloc->dx;
+    real dx1=1./xloc->dx;
+    real dx2=scale*dx1;
+    real dy1=1./xloc->dy;
+    real dy2=scale*dy1;
     loc_create_map(xloc);
     map_t *map=xloc->map;
     dispx=(dispx-map->ox+saorc*dsa*0.5*scale)*dx1;
     dispy=(dispy-map->oy+saorc*dsa*0.5*scale)*dy1;
-    double dsa2=dsa*0.5*dx2;
+    real dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
     long *ind=mycalloc(nmax,long);
     loc_t *sloc=locnew(nmax, xloc->dx, xloc->dy);
-    double *amploc=NULL;
-    if(amp) amploc=mycalloc(nmax,double);
+    real *amploc=NULL;
+    if(amp) amploc=mycalloc(nmax,real);
 
     dsp*zax=dspnew(xloc->nloc,nsa,xloc->nloc);
     dsp*zay=dspnew(xloc->nloc,nsa,xloc->nloc);
     long xcount=0,ycount=0;
     spint *xpp=zax->p;
     spint *xpi=zax->i;
-    double *xpx=zax->x;
+    real *xpx=zax->x;
     
     spint *ypp=zay->p;
     spint *ypi=zay->i;
-    double *ypx=zay->x;
-    const double *locx=xloc->locx;
-    const double *locy=xloc->locy;
-    double *slocx=sloc->locx;
-    double *slocy=sloc->locy;
+    real *ypx=zay->x;
+    const real *locx=xloc->locx;
+    const real *locy=xloc->locy;
+    real *slocx=sloc->locx;
+    real *slocy=sloc->locy;
     for(int isa=0; isa<nsa; isa++){
 	/*center of subaperture when mapped onto XLOC*/
-	double scx=saloc->locx[isa]*dx2+dispx;
-	double scy=saloc->locy[isa]*dy2+dispy;
+	real scx=saloc->locx[isa]*dx2+dispx;
+	real scy=saloc->locy[isa]*dy2+dispy;
 	int count=0;
 	/*find points that belongs to this subaperture. */
 	for(int iy=iceil(scy-dsa2); iy<ifloor(scy+dsa2);iy++){
@@ -91,8 +91,8 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
 	xpp[isa]=xcount;
 	ypp[isa]=ycount;
 	for(int ic=0; ic<count; ic++){
-	    double xx=P(mcc,0,1)+P(mcc,1,1)*slocx[ic]+P(mcc,2,1)*slocy[ic];
-	    double yy=P(mcc,0,2)+P(mcc,1,2)*slocx[ic]+P(mcc,2,2)*slocy[ic];
+	    real xx=P(mcc,0,1)+P(mcc,1,1)*slocx[ic]+P(mcc,2,1)*slocy[ic];
+	    real yy=P(mcc,0,2)+P(mcc,1,2)*slocx[ic]+P(mcc,2,2)*slocy[ic];
 	    if(amp){
 		xx*=amploc[ic];
 		yy*=amploc[ic];
@@ -123,8 +123,8 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
    Returns a ztilt gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc.
  */
-dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc, 
-	 int saorc, double scale, double dispx, double dispy)
+dsp *mkz(loc_t* xloc, real *amp,loc_t *saloc, 
+	 int saorc, real scale, real dispx, real dispy)
 {
     dsp *zt=mkzt(xloc,amp,saloc,saorc,scale,dispx, dispy);
     dsp *z=dsptrans(zt);

@@ -120,19 +120,19 @@ static static void test_sq2(){
     toc("*conj");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	const dcomplex tmp=C->p[i];
+	const comp tmp=C->p[i];
 	D->p[i]=creal(tmp*conj(tmp));/*0.26 */
     }
     toc("*conj2");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	const dcomplex tmp=C->p[i];
+	const comp tmp=C->p[i];
 	D->p[i]=creal(tmp)*creal(tmp)+cimag(tmp)*cimag(tmp);/*0.23 */
     }
     toc("real*real+imag*imag");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	const dcomplex tmp=C->p[i];
+	const comp tmp=C->p[i];
 	D->p[i]=pow(creal(tmp),2)+pow(cimag(tmp),2);/*0.23 */
     }
     toc("pow real+pow imag");
@@ -236,12 +236,12 @@ static void bench_ccwm(void){
 int test_ints(){
     int nopd=32;
     int npsf=64;
-    double *opd=mycalloc(nopd*nopd,double);
-    double *amp=mycalloc(nopd*nopd,double);
-    dcomplex *psf=mycalloc(npsf*npsf,dcomplex);
-    dcomplex *psf2=mycalloc(npsf*npsf,dcomplex);
-    double wvkr=2*M_PI/0.5e-6;
-    dcomplex wvk=COMPLEX(0, wvkr);
+    real *opd=mycalloc(nopd*nopd,real);
+    real *amp=mycalloc(nopd*nopd,real);
+    comp *psf=mycalloc(npsf*npsf,comp);
+    comp *psf2=mycalloc(npsf*npsf,comp);
+    real wvkr=2*M_PI/0.5e-6;
+    comp wvk=COMPLEX(0, wvkr);
     for(int i=0; i<nopd*nopd; i++){
 	amp[i]=1;
 	opd[i]=1;
@@ -258,7 +258,7 @@ int test_ints(){
     /*tic; */
     for(int j=0; j<10000; j++){
 	for(int i=0; i<nopd*nopd; i++){
-	    double junk=wvkr*opd[i];
+	    real junk=wvkr*opd[i];
 	    psf[i]=amp[i]*COMPLEX(cos(junk), sin(junk));
 	}
     }
@@ -266,7 +266,7 @@ int test_ints(){
     /*tic; */
     for(int j=0; j<10000; j++){
 	for(int i=0; i<nopd*nopd; i++){
-	    double junk=cos(wvkr*opd[i]);
+	    real junk=cos(wvkr*opd[i]);
 	    psf[i]=amp[i]*COMPLEX(junk, sqrt(1-junk*junk));
 	}
     }
@@ -312,7 +312,7 @@ int main(){
     cmat_correctness();/*passed */
     test_sq2();/*passed */
     test_cwm();/*passed */
-    dcomplex a=COMPLEX(2342,3);
+    comp a=COMPLEX(2342,3);
     dbg("a*conj(a)=%g\n",creal(a*conj(a)));
     dbg("abs2(a)=%g\n", cabs2(a));
     test_ctilt();

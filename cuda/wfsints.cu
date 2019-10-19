@@ -360,7 +360,7 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp *restrict otf, int nx, int
 
    stream is no longer an input parameter, as the FFT plan depends on it.
 */
-void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
+void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     TIC;tic;
     Array<cupowfs_t>&cupowfs=cudata->powfs;
     Array<cuwfs_t>&cuwfs=cuglobal->wfs;
@@ -421,8 +421,8 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 	    cuzero(lltopd, stream);
 	}
 	const int illt=parms->powfs[ipowfs].llt->i->p[wfsind];
-	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
-	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
+	const real thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
+	const real thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
 	atm2loc(lltopd, cupowfs[ipowfs].llt.loc,
 		hs, hc, thetaxl, thetayl, 
 		parms->powfs[ipowfs].llt->misreg->p[0], 
@@ -456,9 +456,9 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 	}
 	if(ttx!=0 && tty!=0){
 	    /* add tip/tilt to opd  */
-	    const double dx=powfs[ipowfs].llt->pts->dx;
-	    const double ox=powfs[ipowfs].llt->pts->origx[0];
-	    const double oy=powfs[ipowfs].llt->pts->origy[0];
+	    const real dx=powfs[ipowfs].llt->pts->dx;
+	    const real ox=powfs[ipowfs].llt->pts->origx[0];
+	    const real oy=powfs[ipowfs].llt->pts->origy[0];
 	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd, nlx, nlx, ox, oy, dx, ttx, tty);
 	}
 	ctoc("llt opd");
@@ -607,7 +607,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 		if(cuwfs[iwfs].dtf[iwvl].etf2){
 		    ctoc("before ccwm");
 		    const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
-		    Real wt2=(Real)(isim%dtrat)/(double)dtrat;
+		    Real wt2=(Real)(isim%dtrat)/(real)dtrat;
 		    Real wt1=1.-wt2;
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>

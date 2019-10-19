@@ -33,7 +33,7 @@ void save_pistat(SIM_T *simu){
 	    const int nstep=(isim+1-parms->powfs[ipowfs].pistatstart);
 	    if(nstep>0){
 		dcell *pp=simu->pistatout->p[iwfs];
-		dcellscale(pp,1./(double)nstep);
+		dcellscale(pp,1./(real)nstep);
 		if(parms->sim.skysim){/*need peak in corner */
 		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
 			dfftshift(pp->p[ic]);
@@ -57,7 +57,7 @@ void save_pistat(SIM_T *simu){
 	    const int nstep=(isim+1-parms->powfs[ipowfs].phystep)/dtrat;
 	    if(nstep>0){
 		dcell *pp=simu->intsout->p[iwfs];
-		dcellscale(pp, 1.f/(double)nstep);
+		dcellscale(pp, 1.f/(real)nstep);
 		writebin(pp, "ints_%d_wfs%d.bin", simu->seed,iwfs);
 		dcellscale(pp, nstep);
 	    }
@@ -195,7 +195,7 @@ void save_recon(SIM_T *simu){
     }
     const int seed=simu->seed;
     if(parms->save.ngcov>0 && CHECK_SAVE(parms->sim.start, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->save.gcovp)){
-	double scale=1./(double)(simu->reconisim-parms->sim.start+1);
+	real scale=1./(real)(simu->reconisim-parms->sim.start+1);
 	dcellscale(simu->gcov, scale);
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
 	    writebin(simu->gcov->p[igcov], "gcov_%d_wfs%ld_%ld_%d.bin", seed,
@@ -207,7 +207,7 @@ void save_recon(SIM_T *simu){
     if(parms->save.ecov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->save.ecov)){
 	info("Output PSF Recon Telemetry\n");
 	long nstep=simu->reconisim+1-parms->evl.psfisim;
-	double scale=1./nstep;
+	real scale=1./nstep;
 	dcellscale(simu->ecov, scale);
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
 	    writebin(simu->ecov, "ecov_%d_%d", seed, simu->reconisim);
@@ -282,7 +282,7 @@ void save_dmreal(SIM_T *simu){
 		}
 		if(simu->ttmreal && draw_current("DM", "Real TTM")){
 		    int idm=0;
-		    double ptt[3]={0,0,0};
+		    real ptt[3]={0,0,0};
 		    ptt[1]=simu->ttmreal->p[0];
 		    ptt[2]=simu->ttmreal->p[1];
 		    dzero(simu->dmtmp->p[idm]);
@@ -300,7 +300,7 @@ void save_dmreal(SIM_T *simu){
 		    }
 		    dscale(opd, -1);
 		    if(simu->ttmreal){
-			double ptt[]={0,0,0};
+			real ptt[]={0,0,0};
 			ptt[1]=simu->ttmreal->p[0];
 			ptt[2]=simu->ttmreal->p[1];
 			loc_add_ptt(opd->p, ptt, simu->aper->locs);

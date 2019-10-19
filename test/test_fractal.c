@@ -16,13 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../lib/aos.h"
-double L0=INFINITY;
+real L0=INFINITY;
 long ninit=2;
 static void test_accuracy(){
     rand_t rstat;
     int seed=4;
-    double r0=0.2;
-    double dx=1./64.;
+    real r0=0.2;
+    real dx=1./64.;
     long N=1+64;
     long nx=N;
     long ny=N;
@@ -57,21 +57,21 @@ static void test_accuracy(){
     dmat *Atu=dread("atm2_frac_trans.bin");
     dmat *Av=dread("atm_frac.bin");
     dmat *v=dread("atm_rand.bin");
-    double dot1=dotdbl(u->p, Av->p, NULL, nx*ny);
-    double dot2=dotdbl(v->p, Atu->p, NULL, nx*ny);
+    real dot1=dvecdot(u->p, Av->p, NULL, nx*ny);
+    real dot2=dvecdot(v->p, Atu->p, NULL, nx*ny);
     dbg("dot1=%g, dot2=%g, diff=%g\n", dot1, dot2, dot1-dot2);
 
     dmat *u2=dread("atm2_frac_inv_trans.bin");
     dmat *v2=dread("atm_frac_inv.bin");
-    double d1=ddiff(u, u2);
-    double d2=ddiff(v, v2);
+    real d1=ddiff(u, u2);
+    real d2=ddiff(v, v2);
     dbg("d1=%g, d2=%g\n", d1, d2);
 }
 static void test_cov(){/*not good */
     rand_t rstat;
     int seed=4;
-    double r0=0.2;
-    double dx=1./64;
+    real r0=0.2;
+    real dx=1./64;
     long N=1+1024;
     long nx=N;
     long ny=N;
@@ -124,8 +124,8 @@ static void test_cov(){/*not good */
 static void test_corner(){/*Compute the covariance of 4 corner points*/
     rand_t rstat;
     int seed=4;
-    double r0=0.2;
-    double dx=32;
+    real r0=0.2;
+    real dx=32;
     long N=1+1;
     long nx=N;
     long ny=N;
@@ -148,8 +148,8 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
 static void test_part(){/**Compute the covariance of 4 points with various separation.*/
     rand_t rstat;
     int seed=4;
-    double r0=0.2;
-    double dx=1./64.;
+    real r0=0.2;
+    real dx=1./64.;
     long N=1+2;
     long ofx=0;
     long ofy=0;
@@ -180,8 +180,8 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
 static void test_stfun(){
     rand_t rstat;
     int seed=4;
-    double r0=0.2;
-    double dx=1./16;
+    real r0=0.2;
+    real dx=1./16;
     long N=32;
     long nx=N;
     long ny=N;
@@ -247,8 +247,8 @@ static void test_stfun(){
 static void test_psd(){
     rand_t rstat;
     int seed=4;
-    double r0=0.2;
-    double dx=1./64;
+    real r0=0.2;
+    real dx=1./64;
     long N=1024;
     long nx=N;
     long ny=N;
@@ -336,8 +336,8 @@ static void test_psd(){
 static void test_cxx(){
     rand_t rstat;
     int seed=4;
-    double r0=0.2;
-    double dx=1./4;
+    real r0=0.2;
+    real dx=1./4;
     long N=16;
     long nx=N;
     long ny=N;

@@ -62,11 +62,11 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
     recon->moao=mycalloc(nmoao,MOAO_T);
     for(int imoao=0; imoao<nmoao; imoao++){
 	if(!parms->moao[imoao].used) continue;
-	double dxr=parms->moao[imoao].dx;
-	double dyr=dxr*parms->moao[imoao].ar;
+	real dxr=parms->moao[imoao].dx;
+	real dyr=dxr*parms->moao[imoao].ar;
 	map_t *map=0;
-	double offset=((int)round(parms->moao[imoao].order)%2)*0.5;
-	double guard=parms->moao[imoao].guard*MAX(dxr, dyr);
+	real offset=((int)round(parms->moao[imoao].order)%2)*0.5;
+	real guard=parms->moao[imoao].guard*MAX(dxr, dyr);
 	create_metapupil(&map,0,0,parms->dirs,parms->aper.d,0,dxr,dyr,offset,guard,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=loccellnew(1,1); 
 	recon->moao[imoao].aloc->p[0]=map2loc(map, 0);
@@ -98,10 +98,10 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    long nloc=recon->moao[imoao].aloc->p[0]->nloc;
 	    recon->moao[imoao].NW->p[0]=dnew(nloc,3);
 	    dmat*  pNW=recon->moao[imoao].NW->p[0]/*PDMAT*/;
-	    double scl=1./nloc;
-	    double scl2=scl*2./parms->aper.d;
-	    const double *locx=recon->moao[imoao].aloc->p[0]->locx;
-	    const double *locy=recon->moao[imoao].aloc->p[0]->locy;
+	    real scl=1./nloc;
+	    real scl2=scl*2./parms->aper.d;
+	    const real *locx=recon->moao[imoao].aloc->p[0]->locx;
+	    const real *locy=recon->moao[imoao].aloc->p[0]->locy;
 	    for(long iloc=0; iloc<nloc; iloc++){
 		/*We don't want piston/tip/tilt on the mems. */
 		P(pNW,iloc,0)=scl;/*piston; */
@@ -140,15 +140,15 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 
 static void 
 moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao, 
-	  double thetax, double thetay, double hs, 
-	  const dcell *opdr, const dcell *dmcommon, dcell **rhsout, const double alpha){
+	  real thetax, real thetay, real hs, 
+	  const dcell *opdr, const dcell *dmcommon, dcell **rhsout, const real alpha){
   
     dcell *xp=dcellnew(1,1);
     xp->p[0]=dnew(recon->floc->nloc,1);
     
     for(int ipsr=0; ipsr<recon->npsr; ipsr++){
-	const double ht = parms->atmr.ht->p[ipsr];
-	double scale=1.-ht/hs;
+	const real ht = parms->atmr.ht->p[ipsr];
+	real scale=1.-ht/hs;
 	if(parms->tomo.square){
 	    map_t map;
 	    memcpy(&map, recon->xmap->p[ipsr], sizeof(map_t));
@@ -165,8 +165,8 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
     //static int count=-1; count++;
     //writebin(xp->p[0], "opdfit0_%d", count);
     for(int idm=0; idm<parms->ndm; idm++){
-	const double ht = parms->dm[idm].ht;
-	double scale=1.-ht/hs;
+	const real ht = parms->dm[idm].ht;
+	real scale=1.-ht/hs;
 	prop_nongrid(recon->aloc->p[idm], dmcommon->p[idm]->p,
 		     recon->floc, xp->p[0]->p, -1, 
 		     thetax*ht, thetay*ht, scale, 
@@ -176,7 +176,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
     if(rhsout){
 	*rhsout=dcelldup(xp);
     }
-    double wt=1;
+    real wt=1;
     applyW(xp, recon->moao[imoao].W0, recon->moao[imoao].W1, &wt);
     dcellmm(xout, recon->moao[imoao].HA, xp, "tn", alpha);
     dcellfree(xp);
@@ -190,10 +190,10 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 
 static void 
 moao_FitL(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha){
+	  const dcell *xin, const real alpha){
     const MOAO_T *moao=(const MOAO_T *)A;
     dcell *xp=NULL;
-    double wt=1;
+    real wt=1;
     dcellmm(&xp, moao->HA, xin, "nn", 1.);
     applyW(xp, moao->W0, moao->W1, &wt);
     dcellmm(xout, moao->HA, xp, "tn", alpha);
@@ -241,7 +241,7 @@ void moao_recon(SIM_T *simu){
 	    int imoao=parms->powfs[ipowfs].moao;
 	    dcell *rhsout=NULL;
 	    if(imoao<0) continue;
-	    double hs=parms->wfs[iwfs].hs;
+	    real hs=parms->wfs[iwfs].hs;
 	    dmmoao->p[0]=(simu->dm_wfs->p[iwfs+iy*nwfs]);
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms,  imoao, 
@@ -250,7 +250,7 @@ void moao_recon(SIM_T *simu){
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs, 
 		parms->recon.warm_restart, parms->fit.maxit);
 	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
-	      double ptt[3]={0,0,0};
+	      real ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
 	      dmat *aimcc=recon->moao[imoao].aimcc;
 	      loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
@@ -296,7 +296,7 @@ void moao_recon(SIM_T *simu){
 		writebin(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->perfisim);
 	    }
 	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
-	      double ptt[3]={0,0,0};
+	      real ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
 	      dmat *aimcc=recon->moao[imoao].aimcc;
 	      loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);

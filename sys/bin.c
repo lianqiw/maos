@@ -331,7 +331,7 @@ void zfclose(file_t *fp){
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
   fwrite. Follows the interface of fwrite.
 */
-void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, const file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
 	    perror("gzwrite");
@@ -347,7 +347,7 @@ void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *
 /**
    Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
 */
-void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+void zfwrite(const void* ptr, const size_t size, const size_t nmemb, const file_t *fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     if(fp->isfits && BIGENDIAN==0){
 	int length=size*nmemb;
@@ -408,7 +408,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
    Read from the file. If in gzip mode, calls gzread, otherwise, calls
    fread. Follows the interface of fread.
 */
-int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+int zfread_do(void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
     int ans;
     if(fp->isgzip){
 	ans=gzread((voidp)fp->p, ptr, size*nmemb)>0;
@@ -422,7 +422,7 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
 */
-int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+int zfread_try(void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     int ans=0;
     if(fp->isfits && size>1){/*need to do byte swapping.*/
@@ -477,7 +477,7 @@ int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 /**
    Wraps zfread_try and do error checking.
 */
-void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+void zfread(void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
     int ans=zfread_try(ptr, size, nmemb, fp);
     if(ans){
 	error("Error (%d) happened while reading %s\n", ans, fp->fn);
@@ -926,20 +926,7 @@ void writearr(const void *fpn,     /**<[in] The file pointer*/
     if(nx*ny>0) zfwrite(p, size, nx*ny, fp);
     if(isfn) zfclose(fp);
 }
-/**
-   Write a double array of size nx*ny to file.
-*/
-void writedbl(const double *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(double), M_DBL, NULL, p, nx, ny);
-}
-/**
-   Write a double array of size nx*ny to file.
-*/
-void writeflt(const float *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(float), M_FLT, NULL, p, nx, ny);
-}
+
 
 /**
    Unreference the mmaped memory. When the reference drops to zero free or unmap it.
@@ -1017,7 +1004,8 @@ mem_t* mmap_open(char *fn, size_t msize, int rw){
     int fd;
     if(rw){
 	fd=open(fn2, O_RDWR|O_CREAT, 0600);
-	if(fd!=-1 && ftruncate(fd, msize)){/*truncate the file. */
+	/*First truncate the file to 0 to delete old data. */
+	if(fd==-1 || ftruncate(fd, 0)==-1 || ftruncate(fd, msize)==-1){
 	    error("Unable to ftruncate file %s to %zu size\n", fn2, msize);
 	}
     }else{

@@ -28,20 +28,20 @@
    are to be supplied by the end user.  */
 
 typedef struct MAOS_S{
-    double r0z;    /**<Fried parameter, used to read in PSD information.*/
-    double dt;     /**<simulation period time. 1/800*/
-    double zadeg;  /**<Zenith angle in degree*/
-    double za;     /**<Derived: zenith angle*/
-    double hc;     /**<Height conjugation of upper DM*/
-    double hs;     /**<Height of LGS*/
-    double D;      /**<Diameter of telescope*/
-    double *wvl;   /**<Wavelength vector*/
+    real r0z;    /**<Fried parameter, used to read in PSD information.*/
+    real dt;     /**<simulation period time. 1/800*/
+    real zadeg;  /**<Zenith angle in degree*/
+    real za;     /**<Derived: zenith angle*/
+    real hc;     /**<Height conjugation of upper DM*/
+    real hs;     /**<Height of LGS*/
+    real D;      /**<Diameter of telescope*/
+    real *wvl;   /**<Wavelength vector*/
     int nwvl;      /**<Number of wavelength*/
     int npowfs;    /**<Number of types of wfs.*/
     int nmod;      /**<Number of modes controlled by LOW NGS WFS;*/
     int *seeds;    /**<List of seed for maos PSF outputs.*/
     int nseed;     /**<Number of seeds*/
-    double *wddeg; /**<wind direction list for each layer. just to propagate to
+    real *wddeg; /**<wind direction list for each layer. just to propagate to
 		      maos for integrated simulation.*/
     int nwddeg;    /**<number of wddeg*/
 
@@ -50,7 +50,7 @@ typedef struct MAOS_S{
     int *msa;      /**<order of correction in 1-d*/
     int *ncomp;    /**<size of saved psf/wvf*/
     int *embfac;   /**<embeding factor of saved psf. determines the PSF sampling.*/
-    double *dxsa;  /**<subaperture size*/
+    real *dxsa;  /**<subaperture size*/
     char **fnwfsloc; /**<file name for WFS grid*/
     char **fnwfsamp; /**<file name for WFS amptitude defined on grid*/
     char **fnsaloc;  /**<file name for subaperture location coordinate*/
@@ -62,7 +62,7 @@ typedef struct MAOS_S{
     dmat *mcc_tt;    /**<NGS tip/tilt modal cross coupling matrix*/
     dmat *mcc_oa_tt; /**<NGS tip/tilt modal cross coupling matrix for on axis only, 2x2*/
     dmat *mcc_oa_tt2;/**<modal cross coupling matrix between NGS and tip/tilt for on axis only, 2x5*/
-    double ngsgrid;  /**<spacing of NGS grid in as*/
+    real ngsgrid;  /**<spacing of NGS grid in as*/
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
     int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
     int mffocus;     /**<1: maos already does sodium tracking*/
@@ -99,31 +99,31 @@ typedef struct SKYC_S{
     int ttfbrightest;/**<make ttf the brightest always.*/
     int bspstrehl;   /**<Do bicubic spline interpolation on strehl*/
     int npowfs;      /**<number of powfs, has to match MAOS_S.npowfs*/
-    double lat;      /**<Galactic latitude*/
-    double lon;      /**<Galactic longitude.*/
-    double catscl;   /**<Scale the catlog star count*/
-    double patfov;   /**<Patrol FoV in arcsec (diameter)*/
-    double minrad;   /**<minimum radius of the stars (keep out of center science region)*/
-    double imperrnm; /**<Implementation error in nm in the center.*/
-    double imperrnmb;/**<Implementation error slopt in nm:
+    real lat;      /**<Galactic latitude*/
+    real lon;      /**<Galactic longitude.*/
+    real catscl;   /**<Scale the catlog star count*/
+    real patfov;   /**<Patrol FoV in arcsec (diameter)*/
+    real minrad;   /**<minimum radius of the stars (keep out of center science region)*/
+    real imperrnm; /**<Implementation error in nm in the center.*/
+    real imperrnmb;/**<Implementation error slopt in nm:
 			imperrnm(theta)=sqrt(imperrnm^2+imperrnmb^2*theta^2). The
 			location in fov, theta, is normalized by patfov/2*/
     /** The following are vectors for each powfs; */
     int *nwfsmax;    /**<maximum # of wfs for each powfs*/
     int  nwfstot;    /**<Sum of nwfsmax*/
-    double *pixtheta;/**<size of WFS ccd pixel.*/
-    double *pixblur; /**<blurring of pixels.*/
+    real *pixtheta;/**<size of WFS ccd pixel.*/
+    real *pixblur; /**<blurring of pixels.*/
     int *pixpsa;     /**<number of detector pixels in each direction per sa*/
     int *pixguard;   /**<guard window size in each direction.*/
-    double *pixoffx; /**<pixel offset along x in units of pixel*/
-    double *pixoffy; /**<pixel offset along y in units of pixel*/
-    double keepout;  /**<NGS probe keep out range in arcsec.*/
-    double rne;      /**<detector read out noise in electron. -1 to use the formula.*/
-    double excess;   /**<detector excess photon noise factor*/
+    real *pixoffx; /**<pixel offset along x in units of pixel*/
+    real *pixoffy; /**<pixel offset along y in units of pixel*/
+    real keepout;  /**<NGS probe keep out range in arcsec.*/
+    real rne;      /**<detector read out noise in electron. -1 to use the formula.*/
+    real excess;   /**<detector excess photon noise factor*/
     dmat *rnefs;     /**<derived, actual read out noise, may be frame rate dependent.*/
-    double *telthruput;/**<Telescope throughput at each wvl*/
-    double *qe;      /**<quantum efficiency at each wvl.*/
-    double wvlmean;  /**<Mean wavelength*/
+    real *telthruput;/**<Telescope throughput at each wvl*/
+    real *qe;      /**<quantum efficiency at each wvl.*/
+    real wvlmean;  /**<Mean wavelength*/
     dmat *wvlwt;     /**<Weight for each wavelength*/
     int ngsalign;    /**<align NGS to the grid.*/
     int limitnstep;  /**<Limit the number of steps in each simulation*/
@@ -138,7 +138,7 @@ typedef struct SKYC_S{
     int ndtrat;      /**<number of dtrat*/
     dmat *dtrats;     /**<ratio between NGS and LGS WFS sampling period*/
     dmat *dtrats_mr; /**<For multirate*/
-    double *fss;     /**<sampling frequency at each dtrat*/
+    real *fss;     /**<sampling frequency at each dtrat*/
     int servo;       /**<servo type of NGS LOOP. 2: type II*/
     int ngain;       /**<Number of parameters for gain*/
     int gsplit;      /**<use separate gains for tip/tilt and plate scale modes*/
@@ -147,21 +147,21 @@ typedef struct SKYC_S{
     dmat *psd_ps;    /**<PSD of plate scale modes*/
     dmat *psd_ws;    /**<PSD of windshake*/
     dmat *psd_focus; /**<PSD of residual focus due to sodium layer variation, propagated by LGS WFS*/
-    double zc_f;     /**<focus zoom corrector frequency*/
-    double zc_zeta;  /**<focus zoom corrector dampling */
-    double na_alpha; /**<sodium PSD parameter. PSD is beta*f^alpha*/
-    double na_beta;  /**<sodium PSD parameter. PSD is beta*f^alpha*/
+    real zc_f;     /**<focus zoom corrector frequency*/
+    real zc_zeta;  /**<focus zoom corrector dampling */
+    real na_alpha; /**<sodium PSD parameter. PSD is beta*f^alpha*/
+    real na_beta;  /**<sodium PSD parameter. PSD is beta*f^alpha*/
     char *fnrange;   /**<Change of sodium height for LGS. in meter. Replaes na_alpha, na_beta*/
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/
-    double pmargin;  /**<phase margin of type II*/
+    real pmargin;  /**<phase margin of type II*/
     int psdcalc;     /**<Calculate PSD from time series*/
     char **fnpsf1;   /**<file name for additional otf to be interpolated and
 			multiplied to dtfq. 2 columns. first column is coordinate
 			of otf, and second column of value.*/
-    double sdetmax;  /**<tmax for SDE fitting*/
+    real sdetmax;  /**<tmax for SDE fitting*/
     int multirate;   /**<Each OIWFS can run at different dtrat*/
-    double snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
+    real snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
     int usephygrad;  /**<1: Use physical optics grad instead of ztilt*/
     int estimate;    /**<1: Estiamte performance only, without time domain simulation*/
 }SKYC_S;

@@ -201,7 +201,7 @@ void round_limit(double *xmin, double *xmax, int logscale){
    Updates drawdata->zoomx,y and offx,y
 */
 void apply_limit(drawdata_t *drawdata){
-    if(drawdata->zoomx==1 && drawdata->zoomy==1 && drawdata->offx==0 && drawdata->offy==0){
+    if(drawdata->limit_changed==-1 && drawdata->zoomx==1 && drawdata->zoomy==1 && drawdata->offx==0 && drawdata->offy==0){
 	return;
     }
     /*limit0 matches limit in unzoomed state */

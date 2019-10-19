@@ -51,7 +51,7 @@
 #define FLOOR(A) (fabs(A-round(A))<TOL?(int)round(A):(int)floor(A))
 #define DBLNZ(A) (fabs(A)>TOL)
 
-static const double TOL=5.e-16;
+static const real TOL=5.e-16;
 #define OFF 1 /*0: Only use points inside subaperture. introduced on 2011-08-28. 1: original approach. */
 
 /*
@@ -99,7 +99,7 @@ static const double TOL=5.e-16;
 
 typedef struct{
     long i;
-    double x;
+    real x;
 }record_t;
 #define ADDWT(A,B,C,D)				\
     iphi=loc_map_get(xloc->map, (A),(C));	\
@@ -113,9 +113,9 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	   loc_t *ploc,     /**<the grid on the aperture plan*/
 	   dmat  *pamp,     /**<the amplitude on ploc*/
 	   loc_t *saloc,    /**<Lower left origin of the subapertures*/
-	   double scale,    /**<cone effect*/
-	   double dispx,   /**<displacement due to beam angle (2 vector). similar as accphi routines*/
-	   double dispy,    /**<displacement due to beam angle (2 vector). similar as accphi routines*/
+	   real scale,    /**<cone effect*/
+	   real dispx,   /**<displacement due to beam angle (2 vector). similar as accphi routines*/
+	   real dispy,    /**<displacement due to beam angle (2 vector). similar as accphi routines*/
 	   int do_partial   /**<1: use points that are outside of by close to a subaperture. 0: do not use.*/
 	   )
 {
@@ -131,18 +131,18 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
       1: origin (lower left corner), 
       0: center.
     */
-    double *ampcopy;
-    double dsa2;
-    double scx, scy;
-    double weight[2];
-    double dx1,dx2;
-    double dp1,dp2,poffset[2];
+    real *ampcopy;
+    real dsa2;
+    real scx, scy;
+    real weight[2];
+    real dx1,dx2;
+    real dp1,dp2,poffset[2];
     int nsa,isa;
     int limx, limy;
     int same;
-    double dx=xloc->dx;
-    double dp=ploc->dx;
-    double dsa=saloc->dx;
+    real dx=xloc->dx;
+    real dp=ploc->dx;
+    real dsa=saloc->dx;
 
     nsa=saloc->nloc;
     dx1=1./dx;
@@ -191,25 +191,25 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     /*Spacing of half subaperture on pupil plane.*/
     dsa2=dsa/2.*dp2;
     /*To store the weights.*/
-    double amp_thres=dsa2*dsa2*4*0.01;/*1% area is the lower threshold to use subaperture*/
+    real amp_thres=dsa2*dsa2*4*0.01;/*1% area is the lower threshold to use subaperture*/
     poffset[0]+=dsa2;/*offset to SALOC to make it subaperture center.*/
     poffset[1]+=dsa2;
-    double amp2[3][3];
-    double wtfull[4]={0.5/3, 1./3, 0.5, 0.5};
-    double *wtalpha, *wtbeta;
-    double signx, signy;
-    double ampsum;
-    double limx1, limx2, limy1, limy2;
-    double alpha1, alpha2, beta1, beta2;
-    double dplocx,plocx,dplocy,plocy;
-    double wt0,wtsum;
+    real amp2[3][3];
+    real wtfull[4]={0.5/3, 1./3, 0.5, 0.5};
+    real *wtalpha, *wtbeta;
+    real signx, signy;
+    real ampsum;
+    real limx1, limx2, limy1, limy2;
+    real alpha1, alpha2, beta1, beta2;
+    real dplocx,plocx,dplocy,plocy;
+    real wt0,wtsum;
     int nplocx,nplocy;
     int ipix,ipix2,itmp,jtmp;
     int indx[2],indy[2];
     int valid=1;
     int iw;
     int iphi;
-    double *amp=pamp?pamp->p:0;
+    real *amp=pamp?pamp->p:0;
     if(!same && amp){
 	/*
 	  Copy and modify amplitude map to fix boundry
@@ -217,8 +217,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	  generally applies to the case that XLOC is smaller
 	  than PLOC.
 	*/
-	ampcopy=mymalloc(ploc->nloc,double);
-	memcpy(ampcopy,amp,sizeof(double)*ploc->nloc);
+	ampcopy=mymalloc(ploc->nloc,real);
+	memcpy(ampcopy,amp,sizeof(real)*ploc->nloc);
 	for(ipix=0; ipix<ploc->nloc; ipix++){
 	    plocx=ploc->locx[ipix]*dx2+dispx;
 	    plocy=ploc->locy[ipix]*dx2+dispy;
@@ -237,11 +237,11 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	ampcopy=amp;
     }
     if(do_partial){
-	wtalpha=(double*)alloca(sizeof(double)*4);
-	wtbeta =(double*)alloca(sizeof(double)*4);
+	wtalpha=(real*)alloca(sizeof(real)*4);
+	wtbeta =(real*)alloca(sizeof(real)*4);
     }else{
-	wtalpha=(double*)wtfull;
-	wtbeta =(double*)wtfull;
+	wtalpha=(real*)wtfull;
+	wtbeta =(real*)wtfull;
     }
     /*if no amplitude weighting, set all to one.*/
     if(!amp){
@@ -255,7 +255,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     long nzmax[2];
     spint *restrict pp[2];
     spint *restrict pi[2];
-    double  *restrict px[2];
+    real  *restrict px[2];
     long count[2];
     for(iw=0; iw<2; iw++){
 	nzmax[iw]=nsa*(dsa/dx)*16;/*four row in each side. */
@@ -468,7 +468,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
    Returns the transpose of mkgt()
  */
 dsp *mkg(loc_t* xloc, loc_t *ploc, dmat *amp, loc_t *saloc, 
-	 double scale, double dispx, double dispy, int do_partial){
+	 real scale, real dispx, real dispy, int do_partial){
     dsp *GS0T=mkgt(xloc, ploc, amp, saloc, scale, dispx, dispy, do_partial);
     dsp *GS0=dsptrans(GS0T);
     dspfree(GS0T);

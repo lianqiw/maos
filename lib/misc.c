@@ -27,22 +27,22 @@
    out. pcalib2 part of bkgrnd2 is calibrated out.  */
 void addnoise(dmat *A,              /**<[in/out]The pixel intensity array*/
 	      rand_t* rstat,        /**<[in]The random stream*/
-	      const double bkgrnd,  /**<[in]Real background in PDEs per pixel per frame*/
-	      const double bkgrndc, /**<[in]Removed background in PDEs per pixel per frame*/
+	      const real bkgrnd,  /**<[in]Real background in PDEs per pixel per frame*/
+	      const real bkgrndc, /**<[in]Removed background in PDEs per pixel per frame*/
 	      const dmat *bkgrnd2,  /**<[in]Real background in PDEs of each pixel per frame.*/
 	      const dmat *bkgrnd2c, /**<[in]Removed background in PDEs of each pixel per frame.*/
 	      const dmat *qe,       /**<[in]Pixel dependent Quantum Efficiency*/
-	      const double rne,     /**<[in]Read out noise per pixel per read*/
-	      double excess   /**<[in]Excess noise factor*/
+	      const real rne,     /**<[in]Read out noise per pixel per read*/
+	      real excess   /**<[in]Excess noise factor*/
     ){
     long np=A->nx*A->ny;
     assert(!bkgrnd2 || bkgrnd2->nx*bkgrnd2->ny==np);
     assert(!bkgrnd2c || bkgrnd2c->nx*bkgrnd2c->ny==np);
     if(excess<1) excess=1;
     for(int ix=0; ix<np; ix++){
-	double tot=A->p[ix]+bkgrnd+(bkgrnd2?bkgrnd2->p[ix]:0);
-	double corr=bkgrndc+(bkgrnd2c?bkgrnd2c->p[ix]:0);
-	double scale=1;
+	real tot=A->p[ix]+bkgrnd+(bkgrnd2?bkgrnd2->p[ix]:0);
+	real corr=bkgrndc+(bkgrnd2c?bkgrnd2c->p[ix]:0);
+	real scale=1;
 	if(qe){//the second qe factor is flat-field correction.
 	    tot*=qe->p[ix];
 	    scale=1./qe->p[ix];
@@ -68,7 +68,7 @@ int cog_multi(
 	int cx=P(loc, iloc, 0);
 	int cy=P(loc, iloc, 1);
 	int cx2=cx, cy2=cy;
-	double  cmax=-INFINITY, cmin=INFINITY;
+	real  cmax=-INFINITY, cmin=INFINITY;
 	for(int jy=cy-wsize2; jy<=cy+wsize2; jy++){
 	    for(int jx=cx-wsize2; jx<=cx+wsize2; jx++){
 		if(P(im, jx, jy)>cmax){
@@ -87,11 +87,11 @@ int cog_multi(
 	    P(pcg,iloc,1)=NAN;
 	    continue;
 	}
-	double thres=cmax*0.2+cmin*0.8;
-	double sum=0, sumx=0, sumy=0;
+	real thres=cmax*0.2+cmin*0.8;
+	real sum=0, sumx=0, sumy=0;
 	for(int jy=cy2-wsize2; jy<=cy2+wsize2; jy++){
 	    for(int jx=cx2-wsize2; jx<=cx2+wsize2; jx++){
-		double val=P(im, jx, jy);
+		real val=P(im, jx, jy);
 		if(val>thres){
 		    sum+=val;
 		    sumx+=val*jx;
@@ -137,8 +137,8 @@ dmat *poly2fit(const dmat *in,  /**<[in] input grid*/
     }
     dmat *M=dnew(in->nx, nmod);
     for(long ip=0; ip<in->nx; ip++){
-	const double x=P(in, ip, 0);
-	const double y=P(in, ip, 1);
+	const real x=P(in, ip, 0);
+	const real y=P(in, ip, 1);
 	for(ic=0; ic<nmod; ic++){
 	    const int xo=P(coeff, ic, 0);
 	    const int yo=P(coeff, ic, 1);
@@ -160,9 +160,9 @@ dmat *poly2fit(const dmat *in,  /**<[in] input grid*/
 dmat *loc_calib(const dsp *GA,     /**<[in] Measured interaction matrix*/
 		const loc_t *aloc, /**<[in] Actuator grid*/
 		const loc_t *saloc,/**<[in] Subaperture grid*/
-		double dispx,      /**<[in] Beam displacement along x*/
-		double dispy,      /**<[in] Beam displacement along y*/
-		double scale,      /**<[in] Beam cone effect*/
+		real dispx,      /**<[in] Beam displacement along x*/
+		real dispy,      /**<[in] Beam displacement along y*/
+		real scale,      /**<[in] Beam cone effect*/
 		int maxorder       /**<[in] Maximum power of x/y. Negative to limit total power*/
     ){
     static int count=-1; count++;
@@ -171,23 +171,23 @@ dmat *loc_calib(const dsp *GA,     /**<[in] Measured interaction matrix*/
     }
 
     const int period0=10;//period of poking on saloc
-    const double stroke=1e-6; //stroke of poke
+    const real stroke=1e-6; //stroke of poke
 
-    const double sigma=period0/6.*saloc->dx;//width of poke (on saloc)
-    const double denom=2*pow(sigma*scale,2);
+    const real sigma=period0/6.*saloc->dx;//width of poke (on saloc)
+    const real denom=2*pow(sigma*scale,2);
     const int period=round(period0*scale);
-    const double periodx=aloc->dx*period;
-    const double periody=aloc->dy*period;
+    const real periodx=aloc->dx*period;
+    const real periody=aloc->dy*period;
 
     //Determine actuators offset from origin.
-    const double xoff=fmod(aloc->locx[0], aloc->dx);
-    const double yoff=fmod(aloc->locy[0], aloc->dy);
+    const real xoff=fmod(aloc->locx[0], aloc->dx);
+    const real yoff=fmod(aloc->locy[0], aloc->dy);
 
-    const double diam=loc_diam(saloc); //size of aperture
+    const real diam=loc_diam(saloc); //size of aperture
 
-    const double thres=pow((diam-MAX(periodx,periody))*0.5,2);
-    const double thres2=pow(aloc->dx*0.0001,2);
-    double saminx=INT_MAX, saminy=INT_MAX; //origin of saloc
+    const real thres=pow((diam-MAX(periodx,periody))*0.5,2);
+    const real thres2=pow(aloc->dx*0.0001,2);
+    real saminx=INT_MAX, saminy=INT_MAX; //origin of saloc
     for(int iloc=0; iloc<saloc->nloc; iloc++){
 	if(saminx>saloc->locx[iloc]){
 	    saminx=saloc->locx[iloc];
@@ -203,16 +203,16 @@ dmat *loc_calib(const dsp *GA,     /**<[in] Measured interaction matrix*/
     //From saloc to aloc: scaloc*scale+displace
     for(int iloc=0; iloc<aloc->nloc; iloc++){
 	//Location of closest poke. Make sure it is on actuator.
-	double locx0=round((aloc->locx[iloc]-xoff)/periodx)*periodx+xoff;
-	double locy0=round((aloc->locy[iloc]-yoff)/periody)*periody+yoff;
+	real locx0=round((aloc->locx[iloc]-xoff)/periodx)*periodx+xoff;
+	real locy0=round((aloc->locy[iloc]-yoff)/periody)*periody+yoff;
 	//Gaussian peak
-	double R1=pow(aloc->locx[iloc]-locx0,2)+pow(aloc->locy[iloc]-locy0,2);
+	real R1=pow(aloc->locx[iloc]-locx0,2)+pow(aloc->locy[iloc]-locy0,2);
 	P(opd, iloc)=stroke*exp(-R1/denom);
 
 	if(R1<thres2){//This is the actuator being poked, compute poke index on saloc+cure
-	    double sax=(locx0-dispx)/scale;
-	    double say=(locy0-dispy)/scale;
-	    double RR=sax*sax+say*say;
+	    real sax=(locx0-dispx)/scale;
+	    real say=(locy0-dispy)/scale;
+	    real RR=sax*sax+say*say;
 	    if(RR<thres){//Only use if fully inside aperture
 		P(gloc, ng, 0)=(sax-saminx)/saloc->dx;
 		P(gloc, ng, 1)=(say-saminy)/saloc->dy;
@@ -240,7 +240,7 @@ dmat *loc_calib(const dsp *GA,     /**<[in] Measured interaction matrix*/
     dfree(opd2);
     //convert to metrix coordinate. Remove invalid apertures
 
-    double imax;//max of sub-image intensity
+    real imax;//max of sub-image intensity
     dmaxmin(PCOL(cg,2), cg->nx, &imax, 0);
     imax*=0.4;//threshold to keep
     int jloc=0;

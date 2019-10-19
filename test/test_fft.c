@@ -35,7 +35,7 @@ int main(){
     }
     char fn[64];
     FILE *fp=fopen("fft.txt","w");
-    double tk;
+    real tk;
     for(i=2; i<nlen; i++){
 	sprintf(fn,"%d",i);
 	for(int j=0; j<10;j++){

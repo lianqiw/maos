@@ -285,11 +285,11 @@ static dmat *calc_recon_error(const dmat *pgm,   /**<[in] the reconstructor*/
 /**
    Interpolate simu->gain based on noise.
 */
-static void interp_gain(double *out, const dcell *gain, const dmat *gainx,
-			double sigma2){
+static void interp_gain(real *out, const dcell *gain, const dmat *gainx,
+			real sigma2){
     const long nx=gainx->nx;
-    const double xsep=(log(gainx->p[nx-1])-log(gainx->p[0]))/(nx-1);
-    const double xx=(log(sigma2)-log(gainx->p[0]))/xsep;
+    const real xsep=(log(gainx->p[nx-1])-log(gainx->p[0]))/(nx-1);
+    const real xx=(log(sigma2)-log(gainx->p[0]))/xsep;
     int ig;
     if(xx<0){/*too small. */
 	ig=0;
@@ -299,7 +299,7 @@ static void interp_gain(double *out, const dcell *gain, const dmat *gainx,
 	ig=ifloor(xx);
 	/*2013-12-06: use one of the set, not interpolate*/
     }
-    memcpy(out, gain->p[ig]->p, sizeof(double)*gain->p[ig]->nx);
+    memcpy(out, gain->p[ig]->p, sizeof(real)*gain->p[ig]->nx);
 }
 dmat *setup_aster_mask_gm(const dcell *gm_in, const lmat *mask){
     if(!gm_in || gm_in->nx==0) return NULL;
@@ -453,7 +453,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
     aster->res_ngs=dnew(ncase,3);
     dmat*  pres_ngs=aster->res_ngs;
     dmat *gm=multirate?0:setup_aster_mask_gm(aster->g, 0);
-    double minres=INFINITY;
+    real minres=INFINITY;
     for(int icase=0; icase<ncase; icase++){
 	//Assemble the measurement error covariance matrix
 	if(multirate && !case_valid->p[icase]) continue;
@@ -500,39 +500,39 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	  1: Different mode use different gain (2017-0-24) was only tt/ps separate.
 	  note that simu->psds->p[0] contains windshake PSD.
 	*/
-	double res_ngs=0;/*residual error due to signal after servo rejection. */
-	double res_ngsn=0;/*residual error due to noise. */
+	real res_ngs=0;/*residual error due to signal after servo rejection. */
+	real res_ngsn=0;/*residual error due to noise. */
 	const int servotype=parms->skyc.servo;
 	const int ng=parms->skyc.ngain;//number of gain parameters
 	dmat*  pgain=aster->gain->p[icase]=dnew(ng,nmod);
 	int idtrat=multirate?max_idtrat:icase;
 	for(int ipsd=0; ipsd<simu->psds->nx; ipsd++){
-	    double sigma=aster->sigman->p[icase]->p[parms->skyc.gsplit?ipsd:nmod];
-	    double pg[ng+2];
+	    real sigma=aster->sigman->p[icase]->p[parms->skyc.gsplit?ipsd:nmod];
+	    real pg[ng+2];
 	    if(parms->skyc.interpg){
 		interp_gain(pg, simu->gain_pre->p[idtrat]->p[ipsd], simu->gain_x, sigma);
 	    }else{
 		dmat *sigma2=dnew(1,1); 
 		sigma2->p[0]=sigma;
 		dcell *tmp=servo_optim(simu->psds->p[ipsd], parms->maos.dt, parms->skyc.dtrats->p[idtrat], parms->skyc.pmargin, sigma2, servotype);
-		memcpy(pg, tmp->p[0]->p, (ng+2)*sizeof(double)); 
+		memcpy(pg, tmp->p[0]->p, (ng+2)*sizeof(real)); 
 		dcellfree(tmp);
 		dfree(sigma2);
 	    }
 	    res_ngs  += pg[ng];
 	    res_ngsn += pg[ng+1];
-	    memcpy(PCOL(pgain,ipsd), pg, sizeof(double)*ng);
+	    memcpy(PCOL(pgain,ipsd), pg, sizeof(real)*ng);
 	}
 	
 	for(int imod=simu->psds->nx; imod<nmod; imod++){
-	    memcpy(PCOL(pgain,imod), PCOL(pgain,0), sizeof(double)*ng);
+	    memcpy(PCOL(pgain,imod), PCOL(pgain,0), sizeof(real)*ng);
 	}
 	P(pres_ngs,icase,0)=res_ngs+res_ngsn;/*error due to signal and noise */
 	P(pres_ngs,icase,1)=res_ngs;/*error due to signal */
 	P(pres_ngs,icase,2)=res_ngsn;/*error due to noise propagation. */
 	if(minres>P(pres_ngs,icase,0)) minres=P(pres_ngs,icase,0);
 	dmat *g_tt=drefcols(pgain, 0, 1);
-	double gain_n;
+	real gain_n;
 	if(parms->skyc.psd_ws){
 	    aster->res_ws->p[icase]=servo_residual(&gain_n, parms->skyc.psd_ws, 
 						   parms->maos.dt, parms->skyc.dtrats->p[idtrat], g_tt, servotype);
@@ -612,7 +612,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms
 	    }
 	}
 	aster->kalman=mycalloc(1,kalman_t*);
-	double resmin=INFINITY;
+	real resmin=INFINITY;
 	kalman_t *kalman_min=0;
 	int idtrat_min=0;
 	//Try progressively lower sampling frequencies until performance starts to degrades
@@ -624,11 +624,11 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms
 #if USE_SIM   //more accurate
 	    dmat *res=skysim_sim(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->varol,
 				 aster, 0, parms, -1, 1, -1);
-	    double res0=res?res->p[0]:simu->varol;
+	    real res0=res?res->p[0]:simu->varol;
 	    dfree(res);
 #else
 	    rests=kalman_test(aster->kalman[0], simu->mideal);
-	    double res0=calc_rms(rests, parms->maos.mcc, parms->skyc.evlstart);
+	    real res0=calc_rms(rests, parms->maos.mcc, parms->skyc.evlstart);
 #endif
 	    if(parms->skyc.dbg){
 		writebin(rests, "isky%d_iaster%d_dtrat%d_rest", simu->isky, aster->iaster, idtrat_limit);
@@ -682,11 +682,11 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms
 	    //toc("kalman");
 #if USE_SIM 
 	    dmat *res=skysim_sim(0, simu->mideal, simu->mideal_oa, simu->varol, aster, 0, parms, idtrat, 1, -1);
-	    double rms=res?res->p[0]:simu->varol;
+	    real rms=res?res->p[0]:simu->varol;
 	    dfree(res);
 #else
 	    dmat *res=kalman_test(aster->kalman[idtrat], simu->mideal);
-	    double rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
+	    real rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
 	    dfree(res);
 #endif
 	    //toc("estimate");
@@ -708,21 +708,21 @@ void setup_aster_controller(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 /**
    for sort incrementally.
  */
-static int sortdbl(const double *a, const double *b){
+static int sortdbl(const real *a, const real *b){
     return a[0]<b[0]?-1:1;
 }
 /**
    Select a few asterisms that have decent performance (less than maxerror) */
-int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, 
-		       double maxerror, const PARMS_S *parms){
+int setup_aster_select(real *result, ASTER_S *aster, int naster, STAR_S *star, 
+		       real maxerror, const PARMS_S *parms){
  
     int ndtrat=parms->skyc.multirate?1:parms->skyc.ndtrat;
     dmat *res=dnew(ndtrat, naster);
     dmat *imin=dnew(2,naster);//record best performance of each asterism.
     dset(imin, INFINITY);
     int master=-1;
-    double fieldMinRes=INFINITY;//minimum of this field.
-    const double wvfMargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
+    real fieldMinRes=INFINITY;//minimum of this field.
+    const real wvfMargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
 	
     for(int iaster=0; iaster<naster; iaster++){
 	aster[iaster].mdtrat=-1;//idtrat at asterMinRes
@@ -732,10 +732,10 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	if(aster[iaster].use==-1){
 	    continue;
 	}
-	double asterMinRes=maxerror;//minimum of this asterism.
+	real asterMinRes=maxerror;//minimum of this asterism.
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	    /*should not add res_ws here since res_ngs already includes that.*/
-	    double wfv=P(aster[iaster].res_ngs, idtrat, 0);
+	    real wfv=P(aster[iaster].res_ngs, idtrat, 0);
 	    P(res,idtrat,iaster)=wfv;
 	    if(wfv<asterMinRes){
 		asterMinRes=wfv;
@@ -753,8 +753,8 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	    if(aster[iaster].mdtrat!=-1){
 		if(parms->skyc.maxdtrat>1){
 		    /*This is variance. allow a threshold */
-		    double thres=MIN(asterMinRes+wvfMargin, maxerror);//threshold at low freq end
-		    double thres2=MIN(asterMinRes+wvfMargin, maxerror);//threshold at high freq end
+		    real thres=MIN(asterMinRes+wvfMargin, maxerror);//threshold at low freq end
+		    real thres2=MIN(asterMinRes+wvfMargin, maxerror);//threshold at high freq end
 		    /*Find upper and fieldMinRes good dtrats. */
 		    for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
 			if(P(res,idtrat,iaster)<thres){
@@ -820,12 +820,12 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
     //Mark asterisms and stars to be evaluated further.
     int count=0;
     if(fieldMinRes<maxerror){
-	double thres=MIN(fieldMinRes+wvfMargin, maxerror);
+	real thres=MIN(fieldMinRes+wvfMargin, maxerror);
 	int taster=naster;
 	if(parms->skyc.maxaster>0 && naster>parms->skyc.maxaster){
 	    taster=parms->skyc.maxaster;
 	}
-	qsort(imin->p, naster, 2*sizeof(double),(int(*)(const void*,const void*))sortdbl);
+	qsort(imin->p, naster, 2*sizeof(real),(int(*)(const void*,const void*))sortdbl);
 	for(int jaster=0; jaster<taster; jaster++){
 	    if(P(imin,0,jaster)>thres) continue;
 	    int iaster=(int)P(imin,1,jaster);

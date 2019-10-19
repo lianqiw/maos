@@ -23,24 +23,24 @@
 
 /**
    compute the factor for the laplacian*/
-double laplacian_coef(double r0, double weight, double dx){
-    double cf;
+real laplacian_coef(real r0, real weight, real dx){
+    real cf;
     cf=(2.*M_PI/0.5e-6)*sqrt(pow(r0/dx,5./3.)/3.44/weight)
 	*pow(2.-pow(2,-1./3.)-pow(2,-1./6.),-1./2.);
     /*Fixme: need to study why is this.*/
     return cf;
 }
-static double laplacian_coef4(double r0, double weight, double dx){
+static real laplacian_coef4(real r0, real weight, real dx){
     /*compute the factor for the laplacian*/
-    double cf;
+    real cf;
     cf=(2.*M_PI/0.5e-6)*sqrt(pow(r0/dx,5./3.)/3.44/weight)
 	*pow(2.-pow(2,-4./3.)-pow(2,-1./6.),-1./2.);
     /*Fixme: need to study why is this.*/
     return cf;
 }
-static double laplacian_coef3(double r0, double weight, double dx){
+static real laplacian_coef3(real r0, real weight, real dx){
     /*compute the factor for the laplacian*/
-    double cf;
+    real cf;
     cf=(2.*M_PI/0.5e-6)*sqrt(pow(r0/dx,5./3.)/3.44/weight)
 	*pow(2.-pow(2,-1./6.),-1./2.);
     /*Fixme: need to study why is this.*/
@@ -48,10 +48,10 @@ static double laplacian_coef3(double r0, double weight, double dx){
 }
 /**
    Apply L2 directly to map with periodic condition.*/
-void apply_laplacian_map(dmat *opdout, const dmat *opd, double dx, double r0, double weight){
+void apply_laplacian_map(dmat *opdout, const dmat *opd, real dx, real r0, real weight){
     const long nx=opd->nx;
     const long ny=opd->ny;
-    double cf=laplacian_coef(r0, weight, dx);
+    real cf=laplacian_coef(r0, weight, dx);
     if(!opdout)
 	error("opdout is not allocated\n");
     for(long iy=0; iy<ny; iy++){
@@ -67,14 +67,14 @@ void apply_laplacian_map(dmat *opdout, const dmat *opd, double dx, double r0, do
 }
 /**
    build laplacian on square map using periodic conditions*/
-dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
+dsp* mklaplacian_map(int nx, int ny, real dx, real r0, real weight){
     dsp *L2=dspnew(nx*ny,nx*ny,nx*ny*5);
     int iy,ix;
     spint *pp=L2->p;
     spint *pi=L2->i;
-    double *px=L2->x;
-    double *px0=px;
-    double cf=laplacian_coef(r0, weight, dx);
+    real *px=L2->x;
+    real *px0=px;
+    real cf=laplacian_coef(r0, weight, dx);
     for(iy=0; iy<ny; iy++){
 	for(ix=0; ix<nx; ix++){
 	    *(pp++)=px-px0;
@@ -98,7 +98,7 @@ dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
 /**
    Generate laplacian on loc_t
  */
-dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
+dsp* mklaplacian_loc(loc_t *loc, real r0, real weight){
     /*
       The laplacian here is l=delta^2(u)/4;
       There is a scaling factor of 4.
@@ -121,11 +121,11 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     int ix,iy;
     spint *pp=L2->p;
     spint *pi=L2->i;
-    double  *px=L2->x;
-    double  *px0=L2->x;
-    double cf=laplacian_coef(r0, weight, loc->dx);
+    real  *px=L2->x;
+    real  *px0=L2->x;
+    real cf=laplacian_coef(r0, weight, loc->dx);
 #if USE_PARTIAL == 1
-    double cfs[5];
+    real cfs[5];
     cfs[0]=cfs[1]=0;
     cfs[2]=laplacian_coef3(r0, weight, loc->dx);
     cfs[3]=laplacian_coef4(r0, weight, loc->dx);
@@ -142,8 +142,8 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 		long iphiU=loc_map_get(map, ix, iy+1);
 		
 #if USE_PARTIAL == 1
-		double *px1=px;
-		double *p1, *p2;
+		real *px1=px;
+		real *p1, *p2;
 		if(iphiD>0){
 		    *(pi++)=iphiD-1;
 		    *(px++)=0.25;
@@ -184,8 +184,8 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 		    else
 			warning("Point is isolated");
 		}
-		double cfi=cfs[px-px1-1];
-		for(double *px2=px1; px2<px; px2++){
+		real cfi=cfs[px-px1-1];
+		for(real *px2=px1; px2<px; px2++){
 		    *px2*=cfi;
 		}
 #else

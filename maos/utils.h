@@ -26,29 +26,29 @@ extern char _binary____config_tar_gz_end;
 #endif
 
 void plotloc(const char *fig, const PARMS_T *parms, 
-	     loc_t *loc, double ht, const char *format,...);
+	     loc_t *loc, real ht, const char *format,...);
 void rename_file(int sig);
 int maos_signal_handler(int sig);
 ARG_T* parse_args(int argc, const char *argv[]);
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, int isim);
-void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat* fieldstop, double wvl);
+void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat* fieldstop, real wvl);
 void display_server(int sock);
 void plot_setup(const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper, const RECON_T *recon);
-dmat *mkamp(loc_t *loc, map_t *ampground, double misregx, double misregy, double D, double Din);
-void maxapriori(double *g, const dmat *ints, const PARMS_T *parms, 
+dmat *mkamp(loc_t *loc, map_t *ampground, real misregx, real misregy, real D, real Din);
+void maxapriori(real *g, const dmat *ints, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
-		double bkgrnd, double rne);
+		real bkgrnd, real rne);
 void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs);
 void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const int iwfs);
-double wfsfocusadj(SIM_T *simu, int iwfs);
-void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam);
+real wfsfocusadj(SIM_T *simu, int iwfs);
+void dither_position(real *cs, real *ss, const PARMS_T *parms, int ipowfs, int isim, real deltam);
 void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype);
 dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs);
 
 /**
    Create first order low pass filter coeffcient from cross over frequency and sampling rate.
 */
-static inline double fc2lp(double fc, double dt){
+static inline real fc2lp(real fc, real dt){
     if(fc*dt>=1){
 	return 1;
     }else{

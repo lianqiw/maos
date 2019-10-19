@@ -44,23 +44,17 @@
 #define M_INT8   0x640A  /*int 8  array */
 #define M_INT16  0x640B  /*int 16 array */
 
+//From 0x6410 to 0x6424 are cell arrays that are not longer used except 0x6421
+#define MCC_ANY  0x6421  /*cell of any thing */
+
 #define M_SSP64  0x6430  /*single precision float + int64 */
 #define M_SSP32  0x6431  /*single precision float + int32 */
 #define M_ZSP64  0x6432  /*single precision complex + int64 */
 #define M_ZSP32  0x6433  /*single precision complex + int32 */
 
-/*The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type for storage */
-#define MCC_ANY  0x6421  /*cell of any thing */
 #define M_HEADER 0x6500  /*header. */
 #define M_SKIP   0x6600  /*the padding of magic number. */
 
-#define M_MAP64     0x016402/*map_t, compatible with M_DBL*/
-#define M_RECTMAP64 0x026402/*map_t, compatible with M_DBL*/
-#define M_LOC64     0x036402/*loc_t with double data*/
-static inline int iscell(const void *id){
-    const uint32_t magic=*((const uint32_t*)id);
-    return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
-}
 #if LONG_MAX==2147483647L //long is 32 bit
 #define M_LONG M_INT32
 #elif LONG_MAX==9223372036854775807L
@@ -72,13 +66,15 @@ static inline int iscell(const void *id){
 #define M_STR M_INT8
 
 #ifdef DLONG
-#define M_SPINT M_INT64
+typedef long spint;
+#define M_SPINT M_LONG
 #define M_DSP M_DSP64
 #define M_CSP M_CSP64
 #define M_SSP M_SSP64
 #define M_ZSP M_ZSP64
 #else
-#define M_SPINT M_INT32
+typedef int spint;
+#define M_SPINT M_INT
 #define M_DSP M_DSP32
 #define M_CSP M_CSP32
 #define M_SSP M_SSP32
@@ -137,9 +133,8 @@ const char *zfname(file_t *fp);
 int zfisfits(file_t *fp);
 void zfclose(file_t *fp);
 void zflush(file_t *fp);
-void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
-int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
-void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
+void zfwrite(const void* ptr, const size_t size, const size_t nmemb, const file_t *fp);
+void zfread(void* ptr, const size_t size, const size_t nmemb, const file_t* fp);
 uint64_t bytes_header(const char *header);
 void write_timestamp(file_t *fp);
 void write_header(const header_t *header, file_t *fp);
@@ -148,8 +143,6 @@ void read_header(header_t *header, file_t *fp);
 /**Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension.*/
 void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
-void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 typedef struct mem_t mem_t;
 struct mem_t *mem_new(void *p);
 void mem_unref(struct mem_t *in);

@@ -20,24 +20,24 @@
 #define AOS_RECON_UTILS_H
 #include "common.h"
 
-void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, double alpha);
-void apply_invpsd(dcell **xout, const void *extra, const dcell *xin, double alpha, int xb, int yb);
-void apply_fractal(dcell **xout, const void *extra, const dcell *xin, double alpha, int xb, int yb);
+void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, real alpha);
+void apply_invpsd(dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb);
+void apply_fractal(dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb);
 void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF);
-void applyW(dcell *xin, const dsp *W0, const dmat *W1, const double *wt);
+void applyW(dcell *xin, const dsp *W0, const dmat *W1, const real *wt);
 dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, 
 		const dmat *W1, const dmat *wt);
 void TomoR(dcell **xout, const void *A, 
-	   const dcell *xin, const double alpha);
+	   const dcell *xin, const real alpha);
 void TomoRt(dcell **gout, const void *A, 
-	    const dcell *xin, const double alpha);
+	    const dcell *xin, const real alpha);
 void TomoL(dcell **xout, const void *A, 
-	   const dcell *xin, const double alpha);
+	   const dcell *xin, const real alpha);
 
 void FitL(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha);
+	  const dcell *xin, const real alpha);
 void FitR(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha);
+	  const dcell *xin, const real alpha);
 
 dsp *nea2sp(dmat **nea, long nsa);
 void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
@@ -45,7 +45,7 @@ void shift_grad(SIM_T *simu);
 lmat* loc_coord2ind(loc_t *aloc, const char *fndead);
 cn2est_t* cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs);
 void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad, int *tomo_update);
-double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
+real twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
 void nea_chol(dmat **pout, const dmat *in);
 void nea_inv(dmat **pout, const dmat *in);
 void nea_mm(dmat **pout, const dmat *in);

@@ -19,7 +19,7 @@
 #ifndef __AOS_PARMS_H__
 #define __AOS_PARMS_H__
 #define MAX_AMPS 5
-extern double TOMOSCALE;
+extern real TOMOSCALE;
 /*********************************************/
 /*             Structs for parms             */
 /*********************************************/
@@ -31,10 +31,10 @@ extern double TOMOSCALE;
    contains input parameters for the atmospheric turbulence.
 */
 typedef struct ATM_CFG_T{
-    double r0z;   /**<r0 at zenith*/
-    double r0;    /**<derived from r0z for zenith angle za*/
-    double dx;    /**<sampling of turbulence screens*/
-    double hmax;  /**<maximum in ht*/
+    real r0z;   /**<r0 at zenith*/
+    real r0;    /**<derived from r0z for zenith angle za*/
+    real dx;    /**<sampling of turbulence screens*/
+    real hmax;  /**<maximum in ht*/
     dmat *L0;     /**<outer scale. One number or one per layer*/
     dmat *r0logpsds; /**<[alpha beta]: temporal PSD of log(r0) is beta*f^alpha. f is in hz.*/
     dmat *r0logpsdt; /**<[alpha beta]: spatial  PSD of log(r0) is beta*f^alpha. f is in m.*/
@@ -63,14 +63,14 @@ typedef struct ATM_CFG_T{
 /**
    contains input parameters for the atmospheric reconstruction.  */
 typedef struct ATMR_CFG_T{
-    double r0z;   /**<r0 at zenith*/
-    double r0;    /**<derived from r0z for zenith angle za*/
-    double L0;    /**<outer scale*/
-    double hs;    /**<height of the high order guide star. derived*/
-    double hmax;  /**<maximum of ht*/
+    real r0z;   /**<r0 at zenith*/
+    real r0;    /**<derived from r0z for zenith angle za*/
+    real L0;    /**<outer scale*/
+    real hs;    /**<height of the high order guide star. derived*/
+    real hmax;  /**<maximum of ht*/
     dmat *ht;   /**<height of each layer*/
     dmat *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
-    double dx;    /**<baseline sampling (when os=1). matches to high order wfs.*/
+    real dx;    /**<baseline sampling (when os=1). matches to high order wfs.*/
     lmat *indps;   /**<Mapping atmr.ps to atm.ps*/
     lmat *os;      /**<over sampling factor of xloc over actuator spacing */
     int nps;      /**<number of phase screens*/
@@ -79,9 +79,9 @@ typedef struct ATMR_CFG_T{
    contains input parameters about the aperture, like the diameter,
    amplitude map, etc */
 typedef struct APER_CFG_T{
-    double d;     /**<Telescope aperture diameter*/
-    double din;   /**<Telescope inner blocking diameter*/
-    double rotdeg;/**<pupil rotation in degree*/
+    real d;     /**<Telescope aperture diameter*/
+    real din;   /**<Telescope inner blocking diameter*/
+    real rotdeg;/**<pupil rotation in degree*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
     int fnampuser;/**<User provided amplitude map (not default)*/
@@ -91,9 +91,9 @@ typedef struct APER_CFG_T{
    contains input parameters for laser launch telescope
 */
 typedef struct LLT_CFG_T{
-    double d;      /**<LLT clear aperture diameter*/
-    double widthp; /**<Gaussian beam width percentage of d*/
-    double focus;  /**<RMS focus error in nm of LLT.*/
+    real d;      /**<LLT clear aperture diameter*/
+    real widthp; /**<Gaussian beam width percentage of d*/
+    real focus;  /**<RMS focus error in nm of LLT.*/
     char *ttpsd;   /**<PSD of uplink beam jitter*/
     char *fnrange; /**<File contains range to sodium layer*/
     char *fnprof;  /**<File contains sodium profile*/
@@ -110,7 +110,7 @@ typedef struct LLT_CFG_T{
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
     int coldtrat;/**<change to next sodium profile during simulation every
 		       coldtrat time step*/
-    double ttrat;  /**<Ratio of uplink jitter to downlink jitter due to M2 windshake.*/
+    real ttrat;  /**<Ratio of uplink jitter to downlink jitter due to M2 windshake.*/
 } LLT_CFG_T;
 /**
    contains input parameters for each type of wfs (powfs).
@@ -122,21 +122,21 @@ typedef struct POWFS_CFG_T{
     char *piinfile;/**<input averaged pixel intensities for matched filter. NULL
 		      to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
-    double hs;     /**<height of guide star*/
-    double hc;     /**<conjugation height of WFS pupil*/
-    double saat;   /**<subaperture area (normalized) threshold to drop subaperture.*/
-    double safill2d;/**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
-    double saspherical;/**<Subaperture spherical aberration in nm RMS at best focus.*/
-    double safocuspv;   /**<Subaperture focus error in nm p/v*/
+    real hs;     /**<height of guide star*/
+    real hc;     /**<conjugation height of WFS pupil*/
+    real saat;   /**<subaperture area (normalized) threshold to drop subaperture.*/
+    real safill2d;/**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
+    real saspherical;/**<Subaperture spherical aberration in nm RMS at best focus.*/
+    real safocuspv;   /**<Subaperture focus error in nm p/v*/
     char  *neareconfile;/**<File contains noise equivalent angle in radian^2. Contains cell array of nwfsx1.*/
-    double nearecon;/**<NEA used in reconstruction*/
-    double neasim;  /**<NEA used in simulation. -1 to use nearecon*/
+    real nearecon;/**<NEA used in reconstruction*/
+    real neasim;  /**<NEA used in simulation. -1 to use nearecon*/
     char*  neasimfile;/**<read NEA used in simulation from file. Defined at
 			 sim.dt sampling rate, in radian. neasim must be -1*/
-    double neaextra;/**<Extra NEA to add in quadrature to the NEA determined by matched filter or CoG*/
-    double neamin;  /**<Minimum NEA to limit the NEA determined by matched filter or CoG*/
-    double bkgrnd;  /**<background in electron per pixel per LGS frame*/
-    double bkgrndc;/**<How much of the background in bkgrnd can be calibrated
+    real neaextra;/**<Extra NEA to add in quadrature to the NEA determined by matched filter or CoG*/
+    real neamin;  /**<Minimum NEA to limit the NEA determined by matched filter or CoG*/
+    real bkgrnd;  /**<background in electron per pixel per LGS frame*/
+    real bkgrndc;/**<How much of the background in bkgrnd can be calibrated
 		      out. depends on variability.*/
     char *bkgrndfn; /**<file contains sky background/rayleigh scatter input for
 		       each subaperture in each wfs. */
@@ -144,19 +144,19 @@ typedef struct POWFS_CFG_T{
 		       calibrated out. depends on variability.*/
     dmat *qe;       /**<File containing matrix of pixpsax*pixpsay specifying QE
 		     * of each pixel. To simulate PCCD non uniform response*/
-    double rne;     /**<read out noise in electron per pixel per frame*/
-    double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
-    double dsa;     /**<Size of subaperture in 1 dimension*/
-    double dx;      /**<sampling of opd points in each subaperture. usually
+    real rne;     /**<read out noise in electron per pixel per frame*/
+    real pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
+    real dsa;     /**<Size of subaperture in 1 dimension*/
+    real dx;      /**<sampling of opd points in each subaperture. usually
 		       matches atmosphere sampling for LGS. may be coraser for NGS.*/
-    double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
+    real pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
 		       ccd. Converted to radian from user input*/
-    double radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
-    double fieldstop;/**<size of field stop in arcsec.*/
-    double pixoffx; /**<offset of image center from center of detector*/
-    double pixoffy; /**<see pixoffx*/
-    double sigscale;/**<scale the signal level for simulation.*/
-    double siglev;  /**<signal level. will be override by wfs.siglev is specified.*/
+    real radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
+    real fieldstop;/**<size of field stop in arcsec.*/
+    real pixoffx; /**<offset of image center from center of detector*/
+    real pixoffy; /**<see pixoffx*/
+    real sigscale;/**<scale the signal level for simulation.*/
+    real siglev;  /**<signal level. will be override by wfs.siglev is specified.*/
     struct LLT_CFG_T *llt;/**<configuration for LLT*/
     char* fnllt;    /**<filename of LLT configuration. empty means no llt.*/
     int type;       /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
@@ -198,8 +198,8 @@ typedef struct POWFS_CFG_T{
 		    */
     int usephy;     /**<whether physical optics is used at all during
 		       simulation.(derived parameter)*/
-    double r0;      /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
-    double L0;      /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
+    real r0;      /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
+    real L0;      /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     int mtchcr;     /**<use constrained matched filter (0: disable, 1: both axis. 2: radial/x only, 3: az/y only)*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
     int mtchstc;    /**<shift peak in the time averaged short exposure PSF to center using fft.*/
@@ -208,8 +208,8 @@ typedef struct POWFS_CFG_T{
 		       in the image brighter than half maximum is more than this
 		       value, use constraint. introduced on 2011-02-21.*/
     int mtchfft;    /**<Compute gx, gy using i0 with FFT derivative instead of PSF.*/
-    double cogthres;/**<CoG threshold, relative to max(im)*/
-    double cogoff;  /**<CoG offset to remove, relative to max(im). */
+    real cogthres;/**<CoG threshold, relative to max(im)*/
+    real cogoff;  /**<CoG offset to remove, relative to max(im). */
     int needGS0;    /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */
     int ncpa_method;/**<Method to correct ncpa.
@@ -227,11 +227,11 @@ typedef struct POWFS_CFG_T{
     int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
     int i0save;     /**<Save time averaged subaperture images.*/
     char *i0load;   /**<load i0,gx,gy from this folder.*/
-    double gradscale;/**<Scale CL gradients. For testing*/
-    double dither_amp; /**<Dither amplitude in arcsec for tip/tilt mode*/
-    double dither_gpll;/**<Gain of phase locked loop*/
-    double dither_gog; /**<Gain for updating optical gain for cog*/
-    double dither_gdrift;/**<Gain for drift control*/
+    real gradscale;/**<Scale CL gradients. For testing*/
+    real dither_amp; /**<Dither amplitude in arcsec for tip/tilt mode*/
+    real dither_gpll;/**<Gain of phase locked loop*/
+    real dither_gog; /**<Gain for updating optical gain for cog*/
+    real dither_gdrift;/**<Gain for drift control*/
     int dither_npoint;/**<Number of points in each dither peroid (4)*/
     int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
     int dither_pllrat; /**<Number of WFS frames for updating PLL.*/
@@ -241,10 +241,10 @@ typedef struct POWFS_CFG_T{
     //options for zoom corrector
     int zoomdtrat;   /**<dtrat of the trombone averager*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
-    double zoomgain; /**<gain of the trombone controller*/
+    real zoomgain; /**<gain of the trombone controller*/
     int zoomset;     /**<Set zoom position from the beginning*/
     /*Options for Pywfs*/
-    double modulate;  /**<Pyramid modulation diamter in arcsec*/
+    real modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/
     int    modulring; /**<Number of rings within the maximum radius to modulate*/
 }POWFS_CFG_T;
@@ -255,41 +255,41 @@ typedef struct WFS_CFG_T{
     dmat *wvlwts;   /**<Weights of signal value for each wavelength. if not
 		       specified in config, will use powfs.wvlwts*/
     char *sabad;    /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
-    double thetax;  /**<x direction*/
-    double thetay;  /**<y direction*/
-    double misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
-    double misreg_y;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
-    double misreg_r;/**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs.*/
-    double hc;      /**<conjugation height of WFS pupil*/
-    double siglev;  /**<Total signal value for all wavelength. if not specified
+    real thetax;  /**<x direction*/
+    real thetay;  /**<y direction*/
+    real misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    real misreg_y;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    real misreg_r;/**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs.*/
+    real hc;      /**<conjugation height of WFS pupil*/
+    real siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
-    double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
-    double hs;      /**height of star. Derived from powfs.hs or from input*/
-    double fitwt;   /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
+    real siglevsim;/**<Signal value used for simulation. (derived parameter)*/
+    real hs;      /**height of star. Derived from powfs.hs or from input*/
+    real fitwt;   /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
     int powfs;      /**<powfs type*/
 }WFS_CFG_T;
 /**
    contains input parameters for each deformable mirror.
 */
 typedef struct DM_CFG_T{
-    double guard;   /**<extra DM actuator rings outside of aper.d*/
+    real guard;   /**<extra DM actuator rings outside of aper.d*/
     dmat *stroke;  /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke. array: per actuator$*/
-    double iastroke;/**<Inter actuator stroke (surface)*/
+    real iastroke;/**<Inter actuator stroke (surface)*/
     char *iastrokefn;   /**< describes polynomials that convert
 			  * opd to voltage (first cell), and voltage to opd
 			  * (second cell). The two operations has to be strict
 			  * inverse of each other*/
     dcell *iastrokescale;/**<Input from iastrokefn*/
-    double vmisreg; /**<vertical misregistration*/
-    double ht;      /**<height conjugation range*/
-    double dx;      /**<actuator separation along x (derived from order)*/
-    double ar;      /**<[in] aspect ratio: dy/dx*/
-    double dy;      /**<actuator separation along y (derived from dx and ar*/
-    double offset;  /**<Center-most actuator offset from origin
+    real vmisreg; /**<vertical misregistration*/
+    real ht;      /**<height conjugation range*/
+    real dx;      /**<actuator separation along x (derived from order)*/
+    real ar;      /**<[in] aspect ratio: dy/dx*/
+    real dy;      /**<actuator separation along y (derived from dx and ar*/
+    real offset;  /**<Center-most actuator offset from origin
 		       - =0 means there is a act on center. 
 		       - 1/2 means no one in the center.*/
-    double iac;     /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
-    double histbin; /**<The bin width for histogram.*/
+    real iac;     /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
+    real histbin; /**<The bin width for histogram.*/
     int histn;      /**<Number of bins in histogram.*/
     int hist;       /**<Compute histogram of commands of each actuator*/
     int order;      /**<Nominal order of the DM within telescope clear subaperture*/
@@ -311,7 +311,7 @@ typedef struct EVL_CFG_T{
     dmat *wt;       /**<weight of each direction*/
     dmat *wvl;      /**<wavelength for PSF and strehl computation*/
     dmat *hs;       /**<height of each science object*/
-    double dx;      /**<sampling of aperture for evaluation*/
+    real dx;      /**<sampling of aperture for evaluation*/
     int nwvl;       /**<Number of wavelength*/
     lmat *psf;      /**<1: participate in psf evaluation.*/
     lmat *psfr;     /**<1: participate in psf reconstruction telemetry*/
@@ -349,12 +349,12 @@ typedef struct EVL_CFG_T{
    contains input parameters for wavefront tomography.
 */
 typedef struct TOMO_CFG_T{
-    double tikcr;    /**<tikhonov regularization.*/
-    double minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
-    double iac;      /**<!=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
-    double cxxscale; /**<scale the Cxx^-1 term.*/
-    double svdthres; /**<Threshold in SVD inversion*/
-    double cgthres;  /**<Repeat cg if residual is not reached*/
+    real tikcr;    /**<tikhonov regularization.*/
+    real minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
+    real iac;      /**<!=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
+    real cxxscale; /**<scale the Cxx^-1 term.*/
+    real svdthres; /**<Threshold in SVD inversion*/
+    real cgthres;  /**<Repeat cg if residual is not reached*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int cxxalg;      /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
@@ -395,10 +395,10 @@ typedef struct FIT_CFG_T{
     dmat *thetay;  /**<y Coordinate of DM fitting directions. */
     dmat *wt;      /**<weight of each direction*/
     dmat *hs;      /**<height of target in each direction*/
-    double tikcr;    /**<tikhonov regularization*/
-    double svdthres; /**<Threshold in SVD inversion*/
-    double actthres; /**<Threshold for slaving value of weakly coupled actuators*/
-    double actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
+    real tikcr;    /**<tikhonov regularization*/
+    real svdthres; /**<Threshold in SVD inversion*/
+    real actthres; /**<Threshold for slaving value of weakly coupled actuators*/
+    real actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
     int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
     int actinterp;   /**<interpolate actuator results to non-active actuators.*/
     int nfit;        /**<Number of DM fit directions */
@@ -424,10 +424,10 @@ typedef struct FIT_CFG_T{
    contains input parameters for the least square reconstructor.
 */
 typedef struct LSR_CFG_T{
-    double tikcr;    /**<tikhonov regularization*/
-    double svdthres; /**<Threshold in SVD inversion*/
-    double actthres; /**<Threshold for slaving value of weakly coupled actuators*/
-    double actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
+    real tikcr;    /**<tikhonov regularization*/
+    real svdthres; /**<Threshold in SVD inversion*/
+    real actthres; /**<Threshold for slaving value of weakly coupled actuators*/
+    real actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
     char  *fnreg;    /**<File containing a regularization term to add to LL.M*/
     int actinterp;   /**<interpolate actuator results to non-active actuators .*/
     int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
@@ -462,7 +462,7 @@ typedef struct RECON_CFG_T{
     char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
 
-    double poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
+    real poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
     int psd;        /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
     int psddtrat;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
@@ -475,10 +475,10 @@ typedef struct RECON_CFG_T{
    contains input parameters for simulation, like loop gain, seeds, etc.
 */
 typedef struct SIM_CFG_T{
-    double dt;       /**<sampling period. 1/800*/
-    double dtlo;     /**<low order wfs sampling period*/
-    double dthi;     /**<high order wfs sampling period*/
-    double za;       /**<zenith angle in radian*/
+    real dt;       /**<sampling period. 1/800*/
+    real dtlo;     /**<low order wfs sampling period*/
+    real dthi;     /**<high order wfs sampling period*/
+    real za;       /**<zenith angle in radian*/
     int dtrat_hi;    /**<ratio of sampling period over clock of high order wfs*/
     int dtrat_lo;    /**<highest dtrat of the lower order loop.*/
     int dtrat_lo2;   /**<lowest dtrat of the lower order loop.*/
@@ -507,18 +507,18 @@ typedef struct SIM_CFG_T{
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
     int commonfsm;   /**<Make FSM common for each powfs (LLT)*/
-    double zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
-    double f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
-    double aptwfs;   /**<Twfs reference vector servo coefficient.*/
-    double eptwfs;   /**<Twfs reference vector servo gain.*/
-    double fcttm;    /**<cross over frequency of tip/tilt split*/
-    double lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
-    double fcfocus;  /**<cross-over frequency of the focus LPF.*/
-    double lpfocushi;/**<derived: lpfocus=2*pi*fc*sim.dthi*/
-    double lpfocuslo;/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
-    double fov;      /**<The diameter of total fov in arcsec*/
+    real zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
+    real f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
+    real aptwfs;   /**<Twfs reference vector servo coefficient.*/
+    real eptwfs;   /**<Twfs reference vector servo gain.*/
+    real fcttm;    /**<cross over frequency of tip/tilt split*/
+    real lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
+    real fcfocus;  /**<cross-over frequency of the focus LPF.*/
+    real lpfocushi;/**<derived: lpfocus=2*pi*fc*sim.dthi*/
+    real lpfocuslo;/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
+    real fov;      /**<The diameter of total fov in arcsec*/
     int focus2tel;   /**<Offload focus to telescope*/
-    double epfocus2tel;/*Gain for telescope focus control*/
+    real epfocus2tel;/*Gain for telescope focus control*/
     int mffocus;     /**<method for focus blending between LGS and LO NGS
 			- 0: no focus blending.
 			- 1: Focus blending using CL gradients, for each LGS independently.
@@ -577,8 +577,8 @@ typedef struct CN2EST_CFG_T{
     int moveht;      /**<1: move the ht used for reconstructor to near strongest
 			layers. only effective if keepht=0.*/
     int psol;        /**<Use pseudo open loop gradients. 0 to probe residual*/
-    double hmax;     /**<maximum height to estimat*/
-    double saat;     /**<subaperture area threashold to use in cn2 estimation*/
+    real hmax;     /**<maximum height to estimat*/
+    real saat;     /**<subaperture area threashold to use in cn2 estimation*/
 }CN2EST_CFG_T;
 /**
    contains input parameters for plotting during simulation. For debug purpose
@@ -618,12 +618,12 @@ typedef struct DBG_CFG_T{
     int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
     dmat *atm;       /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
-    double gradoff_scale;/**<Scale the reference vector*/
+    real gradoff_scale;/**<Scale the reference vector*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
-    double pwfs_flate;/**<pyramid flat edge angular width */
-    double pwfs_flatv;/**<pyramid flat vertex angular width*/
-    double pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
+    real pwfs_flate;/**<pyramid flat edge angular width */
+    real pwfs_flatv;/**<pyramid flat vertex angular width*/
+    real pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
     int pwfs_side; /**<Make pyramid WFS a single roof only.*/
     dcell *dmoff;    /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;  /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
@@ -633,7 +633,7 @@ typedef struct DBG_CFG_T{
     int wfs_iac;     /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
     int fullatm;     /**<Always copy full atm to GPU.*/
     int lo_blend;    /**<Low order multi-rate control blending scheme.*/
-    double eploscale;/**<Scale of eplo*/
+    real eploscale;/**<Scale of eplo*/
     int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
     int recon_stuck; /**<Whether to handle stuck actuator in reconstruction.*/
 }DBG_CFG_T;
@@ -653,16 +653,16 @@ typedef struct GPU_CFG_T{
    contains input parameters for each MOAO type.
 */
 typedef struct MOAO_CFG_T{
-    double dx;       /**<Spacing of MOAO DM act*/
+    real dx;       /**<Spacing of MOAO DM act*/
     int order;       /**<Nominal order of this MOAO*/
     int used;        /**<This moao is used*/
     int actslave;    /**<Do we do actuator slaving*/
     int lrt_ptt;     /**<Piston/tip/tilt constraint*/
-    double iac;      /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
-    double stroke;   /**<Stroke of the MOAO DM*/
-    double gdm;      /**<The gain of type I controller. a[n]=a[n-1]+e*g where g=o[n]-a[n-1]*/
-    double ar;       /**<Aspect ratio dy/dx*/
-    double guard;
+    real iac;      /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
+    real stroke;   /**<Stroke of the MOAO DM*/
+    real gdm;      /**<The gain of type I controller. a[n]=a[n-1]+e*g where g=o[n]-a[n-1]*/
+    real ar;       /**<Aspect ratio dy/dx*/
+    real guard;
     char *actfloat;  /**<file containing floating actuators. nx2 coordinate*/
     char *actstuck;  /**<file containing stuck actuators. nx2 coordinate.*/
 }MOAO_CFG_T;
@@ -804,7 +804,7 @@ typedef struct PARMS_T{
     int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/
     int step_hi;     /**<Enabling step for high order wfs*/
-    double hipowfs_hs;  /**<high order wfs minimum height*/
+    real hipowfs_hs;  /**<high order wfs minimum height*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.
@@ -832,5 +832,5 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...);
+void plotdir(const char *fig, const PARMS_T *parms, real totfov, const char *format,...);
 #endif

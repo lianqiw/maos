@@ -23,8 +23,8 @@
    \file mkz.h
    Contains function that creates ztilt gradient operator
 */
-dsp * mkzt(loc_t* xloc, double *amp,loc_t *saloc, 
-	   int saorc, double scale, double dispx, double dispy);
-dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc, 
-	 int saorc, double scale, double dispx, double dispy);
+dsp * mkzt(loc_t* xloc, real *amp,loc_t *saloc, 
+	   int saorc, real scale, real dispx, real dispy);
+dsp *mkz(loc_t* xloc, real *amp,loc_t *saloc, 
+	 int saorc, real scale, real dispx, real dispy);
 #endif

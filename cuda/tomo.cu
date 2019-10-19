@@ -35,29 +35,29 @@ void prep_GP(Array<short2,Gpu> &GPp, Real *GPscale, cusp &GPf,
 	error("GP has wrong dimension: %ldx%ld. (%ldx%ld is expected).\n",
 	      GP->nx, GP->ny, saloc->nloc*2, ploc->nloc);
     }
-    double pos=saloc->dx/ploc->dx;
+    real pos=saloc->dx/ploc->dx;
     if((fabs(pos-1)<1e-12 || fabs(pos-2)<1e-12)){//This case is accelerated.
 	dsp *GPt=dsptrans(GP);
 	const spint *pp=GPt->p;
 	const spint *pi=GPt->i;
-	const double *px=GPt->x;
+	const real *px=GPt->x;
 	//convert the max Real to max 2 byte integer
-	const double pxscale=floor(32767./maxabs(px, GPt->nzmax));
+	const real pxscale=floor(32767./dvecmaxabs(px, GPt->nzmax));
 	const int zmax=(int)round(pos);
 	const int np1=zmax+1;
 	const int np=np1*np1;
 	int nsa=saloc->nloc;
 	short2 *partxy=(short2*)calloc(sizeof(short2),np*nsa);//need to zero memory
-	double dx1=1./ploc->dx;
-	double dy1=1./ploc->dy;
+	real dx1=1./ploc->dx;
+	real dy1=1./ploc->dy;
 	for(int ic=0; ic<GPt->ny; ic++){
 	    int isa=(ic<nsa)?ic:(ic-nsa);
 	    for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
 		int ix=pi[ir];
-		double lx=ploc->locx[ix];
-		double ly=ploc->locy[ix];
-		double sx=saloc->locx[isa];
-		double sy=saloc->locy[isa];
+		real lx=ploc->locx[ix];
+		real ly=ploc->locy[ix];
+		real sx=saloc->locx[isa];
+		real sy=saloc->locy[isa];
 		int zx=(int)round((lx-sx)*dx1);
 		int zy=(int)round((ly-sy)*dy1);
 		/**
@@ -97,8 +97,8 @@ prep_saptr(cuimat&saptr_gpu, loc_t *saloc, map_t *pmap){
     const Real dy1=1./pmap->dy;
     const Real ox=pmap->ox;
     const Real oy=pmap->oy;
-    const double *salocx=saloc->locx;
-    const double *salocy=saloc->locy;
+    const real *salocx=saloc->locx;
+    const real *salocy=saloc->locy;
     for(int isa=0; isa<nsa; isa++){
 	saptr[isa][0]=(int)roundf((salocx[isa]-ox)*dx1);
 	saptr[isa][1]=(int)roundf((salocy[isa]-oy)*dy1);
@@ -110,7 +110,7 @@ prep_saptr(cuimat&saptr_gpu, loc_t *saloc, map_t *pmap){
 static curmat convert_neai(dsp *nea){
     spint *pp=nea->p;
     spint *pi=nea->i;
-    double *px=nea->x;
+    real *px=nea->x;
     int nsa=nea->ny/2;
     Real (*neai)[3]=(Real(*)[3])calloc(3*nsa, sizeof(Real));
     for(int ic=0; ic<nea->ny; ic++){

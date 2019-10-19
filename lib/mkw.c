@@ -38,47 +38,47 @@
 
    This function does not work well. 
 */
-void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
+void mkw_amp(loc_t *loc,real *amp,dsp **W0,dmat **W1){
 
     long nloc=loc->nloc;
-    double constamp=0;
+    real constamp=0;
     if(amp){
-	double sumamp=dotdbl(amp,NULL,NULL,nloc);
+	real sumamp=dvecdot(amp,NULL,NULL,nloc);
 	if(fabs(sumamp-1)>1.e-6){
 	    error("amp must be normalized to sum to 1\n");
 	}
     }else{
-	constamp=1./(double)nloc;
+	constamp=1./(real)nloc;
     }
     *W0=dspnew(nloc,nloc,9*nloc);
     loc_create_map(loc);
     map_t *map=loc->map;
-    const double ox=map->ox;
-    const double oy=map->oy;
-    double idx=1./loc->dx;
+    const real ox=map->ox;
+    const real oy=map->oy;
+    real idx=1./loc->dx;
     spint *W0p=(*W0)->p;
     spint *W0i=(*W0)->i;
-    double *W0x=(*W0)->x;
+    real *W0x=(*W0)->x;
     long count=0;
-    double *amp0=NULL;
+    real *amp0=NULL;
     if(amp){
 	amp0=amp-1;/*offset by -1 */
     }
     *W1=dnew(nloc,1);
-    double *W1p=(*W1)->p;
+    real *W1p=(*W1)->p;
     for(int iloc=0; iloc<nloc ;iloc++){
 	int ix=(int)round((loc->locx[iloc]-ox)*idx);
 	int iy=(int)round((loc->locy[iloc]-oy)*idx);
-	double camp=0;
+	real camp=0;
 	if(amp) camp=amp[iloc];
-	double wt2=0;
+	real wt2=0;
 	W0p[iloc]=count;
 	for(int jy=iy-1; jy<iy+2; jy++){
 	    for(int jx=ix-1;jx<ix+2; jx++){
 		int aloc1=loc_map_get(map, jx, jy);
 		if(aloc1<=0) continue; else aloc1--;
-		double bamp=0; if(amp) bamp=amp[aloc1]; 
-		double wt=0;
+		real bamp=0; if(amp) bamp=amp[aloc1]; 
+		real wt=0;
 		if(abs(ix-jx)==1 && abs(iy-jy)==1){
 		    /*corner to corner */
 		    int bloc0=loc_map_get(map, ix, jy);
@@ -149,13 +149,13 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
     }/*iloc */
     W0p[nloc]=count;
     dspsetnzmax(*W0,count);
-    double sumW1=dsum(*W1);
+    real sumW1=dsum(*W1);
     if(fabs(sumW1-1)>1.e-12){
-	double sc=1./sumW1;
+	real sc=1./sumW1;
 	warning("Sum W1 is not equal to 1. "
 		"Probably loc grid is too small. "
 		"Rescaling W0, W1\n");
-	double *p=(*W1)->p;
+	real *p=(*W1)->p;
 	for(int i=0; i<(*W1)->nx; i++){
 	    p[i]*=sc;
 	}
@@ -169,11 +169,11 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
    calculate the integral of a box with two points on corner to corner.  inside
    a circle at (icx,icy) with circle icr.  */
 
-static double calcwtcorner(int ix, int iy, 
+static real calcwtcorner(int ix, int iy, 
 		    int jx, int jy,
-		    double icx, double icy, double icr){
+		    real icx, real icy, real icr){
     if(ix==jx || iy==jy) error("Invalid\n");
-    double icr2=icr*icr;
+    real icr2=icr*icr;
     if(pow(ix-icx,2)+pow(iy-icy,2)<icr2
        &&pow(ix-icx,2)+pow(jy-icy,2)<icr2
        &&pow(jx-icx,2)+pow(iy-icy,2)<icr2
@@ -188,15 +188,15 @@ static double calcwtcorner(int ix, int iy,
 	/*The box is fully outside. */
 	return 0;
     }
-    double dres=1./(double)nres;
-    double ddx=(double)(jx-ix)/(double)nres;
-    double ddy=(double)(jy-iy)/(double)nres;
-    double wt=0.;
+    real dres=1./(real)nres;
+    real ddx=(real)(jx-ix)/(real)nres;
+    real ddy=(real)(jy-iy)/(real)nres;
+    real wt=0.;
     
     for(int iiy=0; iiy<nres; iiy++){
-	double dy=((double)iiy+0.5)*ddy;/*dy may be negative */
+	real dy=((real)iiy+0.5)*ddy;/*dy may be negative */
 	for(int iix=0; iix<nres; iix++){
-	    double dx=((double)iix+0.5)*ddx;
+	    real dx=((real)iix+0.5)*ddx;
 	    if(pow(ix+dx-icx,2)+pow(iy+dy-icy,2)<icr2){
 		/*inside circle. */
 		wt+=(1.-fabs(dx))*(1.-fabs(dy))*fabs(dx*dy);
@@ -208,12 +208,12 @@ static double calcwtcorner(int ix, int iy,
 /**
    calculate the integral of a box with two points on left/right inside a circle
    at (icx,icy) with circle icr.  */
-static double calcwtlr(int ix, int iy, 
+static real calcwtlr(int ix, int iy, 
 		int jx, int jy,
-		double icx, double icy, double icr){
+		real icx, real icy, real icr){
 
     if(iy!=jy || ix==jx) error("Invalid\n");
-    double icr2=icr*icr;
+    real icr2=icr*icr;
     if(pow(ix-icx,2)+pow(iy+1-icy,2)<icr2
        &&pow(ix-icx,2)+pow(iy-1-icy,2)<icr2
        &&pow(jx-icx,2)+pow(iy+1-icy,2)<icr2
@@ -228,16 +228,16 @@ static double calcwtlr(int ix, int iy,
 	/*The box is fully outside. */
 	return 0;
     }
-    double dres=1./(double)nres;
-    double ddx=(double)(jx-ix)/(double)nres;
-    /*double ddy=(double)(jy-iy)/(double)nres; */
-    double ddy=1./(double)nres;
-    double wt=0.;
+    real dres=1./(real)nres;
+    real ddx=(real)(jx-ix)/(real)nres;
+    /*real ddy=(real)(jy-iy)/(real)nres; */
+    real ddy=1./(real)nres;
+    real wt=0.;
     
     for(int iiy=0; iiy<nres; iiy++){
-	double dy=((double)iiy+0.5)*ddy;
+	real dy=((real)iiy+0.5)*ddy;
 	for(int iix=0; iix<nres; iix++){
-	    double dx=((double)iix+0.5)*ddx;
+	    real dx=((real)iix+0.5)*ddx;
 	    /*upper */
 	    if(pow(ix+dx-icx,2)+pow(iy+dy-icy,2)<icr2){
 		/*inside circle. */
@@ -256,11 +256,11 @@ static double calcwtlr(int ix, int iy,
    calculate the integral of a box with two points on bottom/top.  inside a
    circle at (icx,icy) with circle icr.
 */
-static double calcwtud(int ix, int iy, 
+static real calcwtud(int ix, int iy, 
 		int jx, int jy,
-		double icx, double icy, double icr){
+		real icx, real icy, real icr){
     if(ix!=jx) error("Invalid\n");
-    double icr2=icr*icr;
+    real icr2=icr*icr;
     if(pow(ix-1-icx,2)+pow(iy-icy,2)<icr2
        &&pow(ix-1-icx,2)+pow(jy-icy,2)<icr2
        &&pow(ix+1-icx,2)+pow(iy-icy,2)<icr2
@@ -276,16 +276,16 @@ static double calcwtud(int ix, int iy,
 	return 0;
     }
     
-    double dres=1./(double)nres;
-    /*double ddx=(double)(jx-ix)/(double)nres; */
-    double ddy=(double)(jy-iy)/(double)nres;
-    double ddx=1./(double)nres;
-    double wt=0.;
+    real dres=1./(real)nres;
+    /*real ddx=(real)(jx-ix)/(real)nres; */
+    real ddy=(real)(jy-iy)/(real)nres;
+    real ddx=1./(real)nres;
+    real wt=0.;
     
     for(int iiy=0; iiy<nres; iiy++){
-	double dy=((double)iiy+0.5)*ddy;
+	real dy=((real)iiy+0.5)*ddy;
 	for(int iix=0; iix<nres; iix++){
-	    double dx=((double)iix+0.5)*ddx;
+	    real dx=((real)iix+0.5)*ddx;
 	    /*upper */
 	    if(pow(ix+dx-icx,2)+pow(iy+dy-icy,2)<icr2){
 		/*inside circle. */
@@ -303,11 +303,11 @@ static double calcwtud(int ix, int iy,
 /**
   calculate the integral of a box with the same point.  inside a circle at
   (icx,icy) with circle icr.  */
-static double calcwtcenter(int ix, int iy, int jx, int jy,
-			   double icx, double icy, double icr){
+static real calcwtcenter(int ix, int iy, int jx, int jy,
+			   real icx, real icy, real icr){
   
     if(ix!=jx || iy!=jy) error("Invalid\n");
-    double icr2=icr*icr;
+    real icr2=icr*icr;
     if(pow(ix+1-icx,2)+pow(iy+1-icy,2)<icr2
        &&pow(ix+1-icx,2)+pow(iy-1-icy,2)<icr2
        &&pow(ix-1-icx,2)+pow(iy+1-icy,2)<icr2
@@ -322,14 +322,14 @@ static double calcwtcenter(int ix, int iy, int jx, int jy,
 	/*The box is fully outside. */
 	return 0;
     }
-    double dres=1./(double)nres;
-    double ddy=1./(double)nres;
-    double ddx=ddy;
-    double wt=0.;
+    real dres=1./(real)nres;
+    real ddy=1./(real)nres;
+    real ddx=ddy;
+    real wt=0.;
     for(int iiy=0; iiy<nres; iiy++){
-	double dy=((double)iiy+0.5)*ddy;
+	real dy=((real)iiy+0.5)*ddy;
 	for(int iix=0; iix<nres; iix++){
-	    double dx=((double)iix+0.5)*ddx;
+	    real dx=((real)iix+0.5)*ddx;
 	    /*lower left */
 	    if(pow(ix-dx-icx,2)+pow(iy-dy-icy,2)<icr2){
 		/*inside circle. */
@@ -361,37 +361,37 @@ static double calcwtcenter(int ix, int iy, int jx, int jy,
    error for a continuous OPD that are interpolated bi-linearly using the OPD on
    the grid.*/
 void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
-		  double cx, /**<[in] center of circle, x*/
-		  double cy, /**<[in] center of circle, y*/
-		  double cr, /**<[in] circle radius*/
+		  real cx, /**<[in] center of circle, x*/
+		  real cy, /**<[in] center of circle, y*/
+		  real cr, /**<[in] circle radius*/
 		  dsp **W0,  /**<[out] sparse W0*/
 		  dmat **W1  /**<[out] dense  W1*/){
     long nloc=loc->nloc;
     *W0=dspnew(nloc,nloc,9*nloc);
     loc_create_map(loc);
     map_t *map=loc->map;
-    const double ox=map->ox;
-    const double oy=map->oy;
+    const real ox=map->ox;
+    const real oy=map->oy;
     spint *W0p=(*W0)->p;
     spint *W0i=(*W0)->i;
-    double *W0x=(*W0)->x;
+    real *W0x=(*W0)->x;
     long count=0;
     *W1=dnew(nloc,1);
-    double *W1p=(*W1)->p;
-    double idx=1./loc->dx;
+    real *W1p=(*W1)->p;
+    real idx=1./loc->dx;
     /*center of circle in the map. */
-    double icx=(cx-ox)*idx;
-    double icy=(cy-oy)*idx;
+    real icx=(cx-ox)*idx;
+    real icy=(cy-oy)*idx;
     /*radius of circle in unit of the map. */
-    double icr=cr*idx;
-    double sc=1./(M_PI*pow(icr,2));
+    real icr=cr*idx;
+    real sc=1./(M_PI*pow(icr,2));
     for(int iloc=0; iloc<nloc ;iloc++){
-	double xx=loc->locx[iloc];
-	double yy=loc->locy[iloc];
+	real xx=loc->locx[iloc];
+	real yy=loc->locy[iloc];
 	int ix=(int)round((xx-ox)*idx);
 	int iy=(int)round((yy-oy)*idx);
-	double wt2=0;
-	double wt=0;
+	real wt2=0;
+	real wt=0;
 	W0p[iloc]=count;
 	for(int jy=iy-1; jy<iy+2; jy++){
 	    for(int jx=ix-1;jx<ix+2; jx++){
@@ -426,10 +426,10 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
     }/*iloc */
     W0p[nloc]=count;
     dspsetnzmax(*W0,count);
-    double sumW1=dsum(*W1);
+    real sumW1=dsum(*W1);
     if(fabs(sumW1-1)>1.e-12){
 	sc=1./sumW1;
-	double *p=(*W1)->p;
+	real *p=(*W1)->p;
 	for(int i=0; i<(*W1)->nx; i++){
 	    p[i]*=sc;
 	}
@@ -445,10 +445,10 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
    radius inner radius cri, and outer radius cro. see mkw().
  */
 void mkw_annular(loc_t *loc, /**<[in] grid coordinate */
-		 double cx,  /**<[in] center of circle, x*/
-		 double cy,  /**<[in] center of circle, y*/
-		 double cri, /**<[in] inner circular hole radius*/
-		 double cro, /**<[in] outer circle radius*/
+		 real cx,  /**<[in] center of circle, x*/
+		 real cy,  /**<[in] center of circle, y*/
+		 real cri, /**<[in] inner circular hole radius*/
+		 real cro, /**<[in] outer circle radius*/
 		 dsp **W0,   /**<[out] sparse W0*/
 		 dmat **W1   /**<[out] dense  W1*/
 		 ){
@@ -463,13 +463,13 @@ void mkw_annular(loc_t *loc, /**<[in] grid coordinate */
 	mkw_circular(loc, cx, cy, cro, &W0o, &W1o);/*outer */
 
 	/*Calculate the factor applied in mkw_circular */
-	double idx=1./loc->dx;
-	double sco=1/(M_PI*pow(cro*idx, 2));
-	double sci=1/(M_PI*pow(cri*idx, 2));
+	real idx=1./loc->dx;
+	real sco=1/(M_PI*pow(cro*idx, 2));
+	real sci=1/(M_PI*pow(cri*idx, 2));
 
 	*W1 = W1o;
 	dadd(W1, 1./sco, W1i, -1/sci);/*cancel the factor applied in mkw_circular */
-	double sc=1./dsum(*W1);
+	real sc=1./dsum(*W1);
 	dscale(*W1, sc);
 	/*cancel the factor applied in mkw_circular and apply the new factor */
 	*W0 = dspadd2(W0o, sc/sco, W0i, -sc/sci);

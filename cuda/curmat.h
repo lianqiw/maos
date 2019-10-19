@@ -19,7 +19,7 @@
 #define AOS_CUDA_CURMAT_H
 #include "types.h"
 #include "kernel.h"
-#include "cumat.h"
+#include "cubin.h"
 #define curcellcp    cucellcp<Real>
 
 void curset(curmat &A, Real alpha, cudaStream_t stream);
@@ -34,7 +34,7 @@ void curmv(Real *c, Real alpha, const curmat &A, const Real *b,
 void curmm(curmat &C, Real alpha, const curmat &A, const curmat &B, 
 	   const char trans[2], Real beta, stream_t &stream);
 void curcellmm(curcell &C0, Real alpha, const curcell &A, const curcell &B, 
-	       const char trans[2], const double beta, stream_t &stream);
+	       const char trans[2], const Real beta, stream_t &stream);
 void curcelladd(curcell &A, Real beta, const curcell &B, Real alpha, cudaStream_t stream);
 __global__ void add_do(Real *vec, Real *palpha, Real beta, int n);
 __global__ void add_do(Real *restrict a, const Real * b, const Real *restrict b_sc1, Real b_sc2, int n);
@@ -64,5 +64,6 @@ static inline void curaddptt(curmat &opd, Real (*loc)[2], Real pis, Real tx, Rea
 static inline void curaddptt(curmat &opd, Real (*loc)[2], Real *ptt, Real pis, Real tx, Real ty,  cudaStream_t stream){
     add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd(), loc, opd.N(), ptt, pis, tx, ty);
 }
+void cucscale(cucmat &in, Real Alpha, cudaStream_t stream);
 
 #endif

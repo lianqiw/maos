@@ -43,6 +43,6 @@ class cusolve_cg;
 class cusolve_cgpre;
 Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 	 const curcell &b, CGTMP_T &cg_data, int warm, int maxiter, 
-	 stream_t &stream, double cgthres=-1);
+	 stream_t &stream, Real cgthres=-1);
 }//namespace
 #endif

@@ -45,10 +45,10 @@ int    readcfg_strarr(char ***res, const char *format,...) CHECK_ARG(2);
 void   readcfg_strarr_n(char ***ret, int len, const char *format,...) CHECK_ARG(3);
 void   readcfg_strarr_nmax(char ***ret, int len, const char *format,...) CHECK_ARG(3);
 int    readcfg_int (const char*format,...) CHECK_ARG(1);
-double readcfg_dbl (const char*format,...) CHECK_ARG(1);
+real readcfg_dbl (const char*format,...) CHECK_ARG(1);
 
 int    readcfg_intarr(int **ret,   const char *format,...) CHECK_ARG(2);
-int    readcfg_dblarr(double **ret,const char *format,...) CHECK_ARG(2);
+int    readcfg_dblarr(real **ret,const char *format,...) CHECK_ARG(2);
 dmat*  readstr_dmat(const char *str);
 dmat*  readcfg_dmat(const char *format,...) CHECK_ARG(1);
 dmat*  readcfg_dmat_n(int n, const char *format,...) CHECK_ARG(2);
@@ -57,9 +57,9 @@ lmat*  readcfg_lmat(const char *format,...) CHECK_ARG(1);
 lmat*  readcfg_lmat_n(int n, const char *format,...) CHECK_ARG(2);
 lmat*  readcfg_lmat_nmax(int n, const char *format,...) CHECK_ARG(2);
 dcell*  readcfg_dcell(const char *format,...) CHECK_ARG(1);
-void   readcfg_dblarr_n(double **ret, int len, const char *format,...) CHECK_ARG(3);
+void   readcfg_dblarr_n(real **ret, int len, const char *format,...) CHECK_ARG(3);
 void   readcfg_intarr_n(   int **ret, int len, const char *format,...) CHECK_ARG(3);
 
-void   readcfg_dblarr_nmax(double **ret, int len, const char *format,...) CHECK_ARG(3);
+void   readcfg_dblarr_nmax(real **ret, int len, const char *format,...) CHECK_ARG(3);
 void   readcfg_intarr_nmax(   int **ret, int len, const char *format,...) CHECK_ARG(3);
 #endif

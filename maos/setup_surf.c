@@ -102,15 +102,15 @@ static void prop_surf_evl(thread_t *info){
     const PARMS_T *parms=data->parms;
     const APER_T *aper=data->aper;
     const map_t *surf=data->surf;
-    const double hl=surf->h;
+    const real hl=surf->h;
     const int *evlcover=data->evlcover;
     for(int ievl=info->start; ievl<info->end; ievl++){
 	if(!evlcover[ievl]){
 	    continue;
 	}
-	const double displacex=parms->evl.thetax->p[ievl]*hl;
-	const double displacey=parms->evl.thetay->p[ievl]*hl;
-	const double scale=1-hl/parms->evl.hs->p[ievl];
+	const real displacex=parms->evl.thetax->p[ievl]*hl;
+	const real displacey=parms->evl.thetay->p[ievl]*hl;
+	const real scale=1-hl/parms->evl.hs->p[ievl];
 	prop_grid_stat(surf, aper->locs->stat, aper->opdadd->p[ievl]->p, 
 		       1, displacex, displacey, scale, 0, 0, 0);
     }
@@ -122,13 +122,13 @@ static void prop_surf_ncpa(thread_t *info){
     const APER_T *aper=data->aper;
     const RECON_T *recon=data->recon;
     const map_t *surf=data->surf;
-    const double hl=surf->h;
+    const real hl=surf->h;
     const int *ncpacover=data->ncpacover;
     for(int idir=info->start; idir<info->end; idir++){
 	if(!ncpacover[idir]) continue;
-	const double displacex=parms->sim.ncpa_thetax->p[idir]*hl;
-	const double displacey=parms->sim.ncpa_thetay->p[idir]*hl;
-	const double scale=1.-hl/parms->sim.ncpa_hs->p[idir];
+	const real displacex=parms->sim.ncpa_thetax->p[idir]*hl;
+	const real displacey=parms->sim.ncpa_thetay->p[idir]*hl;
+	const real scale=1.-hl/parms->sim.ncpa_hs->p[idir];
 	prop_grid(surf, recon->floc, aper->opdfloc->p[idir]->p, 
 		  1, displacex, displacey, scale, 0, 0, 0);	
     }
@@ -139,7 +139,7 @@ static void prop_surf_wfs(thread_t *info){
     const PARMS_T *parms=data->parms;
     const POWFS_T *powfs=data->powfs;
     const map_t *surf=data->surf;
-    const double hl=surf->h;
+    const real hl=surf->h;
     const int *wfscover=data->wfscover;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	if(!wfscover[iwfs]){
@@ -147,11 +147,11 @@ static void prop_surf_wfs(thread_t *info){
 	}
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-	const double hs=parms->wfs[iwfs].hs;
-	const double hc=parms->wfs[iwfs].hc;
-	const double scale=1.-(hl-hc)/hs;
-	const double displacex=parms->wfs[iwfs].thetax*hl;
-	const double displacey=parms->wfs[iwfs].thetay*hl;
+	const real hs=parms->wfs[iwfs].hs;
+	const real hc=parms->wfs[iwfs].hc;
+	const real scale=1.-(hl-hc)/hs;
+	const real displacex=parms->wfs[iwfs].thetax*hl;
+	const real displacey=parms->wfs[iwfs].thetay*hl;
 
 	loc_t *locwfs;
 	if(powfs[ipowfs].loc_tel){
@@ -344,7 +344,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
     dcellfree(xp);
 }
 void FitL_NCPA(dcell **xout, const void *A, 
-	       const dcell *xin, const double alpha){
+	       const dcell *xin, const real alpha){
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=global->parms;
     dcell *xp=NULL;
@@ -366,14 +366,14 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     dspcell* HA=recon->HA_ncpa/*PDSPCELL*/;
     info("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
-	double hs=parms->sim.ncpa_hs->p[ievl];
+	real hs=parms->sim.ncpa_hs->p[ievl];
 	for(int idm=0; idm<ndm; idm++){
 	    if(parms->sim.ncpa_calib==2 && idm>0){
 		continue;
 	    }
-	    const double ht=parms->dm[idm].ht;
-	    const double scale=1.-ht/hs;
-	    double displace[2];
+	    const real ht=parms->dm[idm].ht;
+	    const real scale=1.-ht/hs;
+	    real displace[2];
 	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
 	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
 	    P(HA,ievl,idm)=mkh(recon->aloc->p[idm], recon->floc, 
@@ -400,7 +400,7 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 		error("powfs%d: saspherical=%g should be in nm.\n", 
 		      ipowfs, parms->powfs[ipowfs].saspherical);
 	    }
-	    double err=parms->powfs[ipowfs].saspherical*1e-9;
+	    real err=parms->powfs[ipowfs].saspherical*1e-9;
 
 	    /*
 	      The OPD is 
@@ -429,27 +429,27 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    for(int ix=0; ix<nx*nx; ix++){
 		ampw->p[ix]=1;
 	    }
-	    normalize_sumabs(ampw->p, ampw->nx*ampw->ny, 1);
+	    dnormalize_sumabs(ampw->p, ampw->nx*ampw->ny, 1);
 	    dmat*  pampw=ampw/*PDMAT*/;
 	    
-	    double nx2=(nx-1)*0.5;
-	    double fill1d=sqrt(parms->powfs[ipowfs].safill2d);
+	    real nx2=(nx-1)*0.5;
+	    real fill1d=sqrt(parms->powfs[ipowfs].safill2d);
 	    //normalize x,y from -1 to 1 in clear aperture
-	    double Rx2=pow(fill1d*nx/2, -2);
+	    real Rx2=pow(fill1d*nx/2, -2);
 	    dmat *opdi=dnew(nx, nx); 
-	    double R2=0, R4=0, RfR2=0, Rf=0, RN=0;
+	    real R2=0, R4=0, RfR2=0, Rf=0, RN=0;
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
 #define MEASURED_LENSLET 0
-		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+		    real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
 #if MEASURED_LENSLET
-		    double xx=(iy-nx2)*(iy-nx2)*Rx2;
-		    double yy=(ix-nx2)*(ix-nx2)*Rx2;
+		    real xx=(iy-nx2)*(iy-nx2)*Rx2;
+		    real yy=(ix-nx2)*(ix-nx2)*Rx2;
 		    P(opdi,ix,iy)=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
 #else
 		    P(opdi,ix,iy)=rr*rr;
 #endif
-		    double amp=P(pampw,ix,iy);
+		    real amp=P(pampw,ix,iy);
 		    R2+=rr*amp;
 		    R4+=rr*rr*amp;
 		    Rf+=P(opdi,ix,iy)*amp;
@@ -457,14 +457,14 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 		    RN+=amp;
 		}
 	    }		
-	    //double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
-	    //double a=(R4-b)/R2;
-	    double b=(R2*RfR2-R4*Rf)/(R2*R2-R4*RN);//fixed in 8/27/2019
-	    double a=(Rf-b*RN)/R2;
-	    double var=0;
+	    //real b=(R2*Rf2-R4*R4)/(R2*R2-R4);
+	    //real a=(R4-b)/R2;
+	    real b=(R2*RfR2-R4*Rf)/(R2*R2-R4*RN);//fixed in 8/27/2019
+	    real a=(Rf-b*RN)/R2;
+	    real var=0;
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
-		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+		    real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
 		    P(opdi,ix,iy)-=a*rr+b;
 		    var+=P(opdi,ix,iy)*P(opdi,ix,iy)*P(pampw,ix,iy);
 		}
@@ -495,7 +495,7 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 	    if(fabs(parms->powfs[ipowfs].safocuspv)<1){
 		error("powfs%d: safocuspv should be in nm.\n", ipowfs);
 	    }
-	    double pv=parms->powfs[ipowfs].safocuspv*1e-9;
+	    real pv=parms->powfs[ipowfs].safocuspv*1e-9;
 	    dbg("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
 	    if(!powfs[ipowfs].opdadd){
 		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
@@ -506,14 +506,14 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 		if(!powfs[ipowfs].opdadd->p[jwfs]){
 		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].amp->nx, 1);
 		}
-		double nx2=(nx-1)*0.5;
-		double Rx2=pow(nx2, -2);//do not use fill2d here as defocus is caused by misregistration.
-		double rmax2=2*nx2*nx2*Rx2;
-		double scale=pv/rmax2;
+		real nx2=(nx-1)*0.5;
+		real Rx2=pow(nx2, -2);//do not use fill2d here as defocus is caused by misregistration.
+		real rmax2=2*nx2*nx2*Rx2;
+		real scale=pv/rmax2;
 		for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
 		    for(int iy=0; iy<nx; iy++){
 			for(int ix=0; ix<nx; ix++){
-			    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+			    real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
 			    powfs[ipowfs].opdadd->p[jwfs]->p[isa*nxsa+ix+iy*nx]+=rr*scale;
 			}
 		    }
@@ -619,10 +619,10 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    if(any_evl){//apply NCPA DM command.
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		    const double hs=parms->wfs[iwfs].hs;
-		    const double hc=parms->wfs[iwfs].hc;
-		    double thetax=parms->wfs[iwfs].thetax;
-		    double thetay=parms->wfs[iwfs].thetay;
+		    const real hs=parms->wfs[iwfs].hs;
+		    const real hc=parms->wfs[iwfs].hc;
+		    real thetax=parms->wfs[iwfs].thetax;
+		    real thetay=parms->wfs[iwfs].thetay;
 		    if(!powfs[ipowfs].opdbias){
 			powfs[ipowfs].opdbias=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 		    }
@@ -631,10 +631,10 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		    }
 		    for(int idm=0; idm<parms->ndm; idm++){
 			if(!recon->dm_ncpa->p[idm] || recon->dm_ncpa->p[idm]->nx==0) continue;
-			double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-			double scale=1.-(ht-hc)/hs;
-			double dispx=ht*thetax;
-			double dispy=ht*thetay;
+			real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+			real scale=1.-(ht-hc)/hs;
+			real dispx=ht*thetax;
+			real dispy=ht*thetay;
 			prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p, 
 				     powfs[ipowfs].loc, powfs[ipowfs].opdbias->p[jwfs]->p, 
 				     -1, dispx, dispy, scale, 0, 0);
@@ -648,7 +648,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		dinvspd_inplace(mcc);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    if(powfs[ipowfs].opdbias->p[jwfs]){
-			double ptt[3]={0,0,0};
+			real ptt[3]={0,0,0};
 			loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./mcc->p[0], mcc, 
 				     powfs[ipowfs].amp->p, powfs[ipowfs].opdbias->p[jwfs]->p);
 			loc_remove_ptt(powfs[ipowfs].opdbias->p[jwfs]->p, ptt, powfs[ipowfs].loc);
@@ -677,10 +677,10 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	dcellzero(aper->opdadd);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    for(int idm=0; idm<parms->ndm; idm++){
-		const double hl=parms->dm[idm].ht;
-		const double dispx=parms->evl.thetax->p[ievl]*hl;
-		const double dispy=parms->evl.thetay->p[ievl]*hl;
-		const double scale=1-hl/parms->evl.hs->p[ievl];
+		const real hl=parms->dm[idm].ht;
+		const real dispx=parms->evl.thetax->p[ievl]*hl;
+		const real dispy=parms->evl.thetay->p[ievl]*hl;
+		const real scale=1-hl/parms->evl.hs->p[ievl];
 		prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p,
 			     aper->locs, aper->opdadd->p[ievl]->p,
 			     1, dispx, dispy, scale, 0, 0);   

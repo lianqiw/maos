@@ -23,7 +23,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 static int sock_mvm=-1;
-/*Read into double array until we get all*/
+/*Read into real array until we get all*/
 #define READ_ARR(p,n,type)				\
     {							\
 	int nleft;					\
@@ -111,7 +111,7 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
 	neach=(neach0+=10);
     }
     if(neach>ngtot) neach=ngtot;
-    TIC;double tk0=tic;
+    TIC;real tk0=tic;
     int cmd[N_CMD]={GPU_MVM_G, 0, 0, 1};
     cmd[1]=0;//NGPU
     cmd[2]=neach;//Number of grads each time.
@@ -123,21 +123,21 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
 #else //write all the data once
     WRITE_ARR(gall, ngtot, GTYPE);
 #endif
-    double tim_gsend=toc3;
+    real tim_gsend=toc3;
     //Read computed DM command
     READ_ARR(dmall, natot, ATYPE);
-    double tim_aread=toc3;
+    real tim_aread=toc3;
     //Copy DM command to the right place.
     for(int idm=0; idm<dm->nx; idm++){
 	if(dm->p[idm]){
 	    int nact=dm->p[idm]->nx;
-	    double *restrict pdm=dm->p[idm]->p;
+	    real *restrict pdm=dm->p[idm]->p;
 	    for(int i=0; i<nact; i++){
-		pdm[i]=(double)(*(pdmall++)*ASCALE1);
+		pdm[i]=(real)(*(pdmall++)*ASCALE1);
 	    }
 	}
     }
-    double tim_acp=toc3; tic;
+    real tim_acp=toc3; tic;
     info("k=%d, gsend %3.0f, dmread %4.0f, dmcopy %2.0f, total %4.0f\n", neach,
 	  tim_gsend*1e6, tim_aread*1e6, tim_acp*1e6, (myclockd()-tk0)*1e6);
     free(dmall);

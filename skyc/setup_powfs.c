@@ -33,36 +33,36 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	const int ncomp2=ncomp>>1;
 	const int embfac=parms->maos.embfac[ipowfs];
 	const int pixpsa=parms->skyc.pixpsa[ipowfs];
-	const double pixtheta=parms->skyc.pixtheta[ipowfs];
-	const double blur=parms->skyc.pixblur[ipowfs]*pixtheta;
-	const double e0=exp(-2*M_PI*M_PI*blur*blur);
-	const double dxsa=parms->maos.dxsa[ipowfs];
-	const double pixoffx=parms->skyc.pixoffx[ipowfs];
-	const double pixoffy=parms->skyc.pixoffy[ipowfs];
-	const double pxo=-(pixpsa/2-0.5+pixoffx)*pixtheta;
-	const double pyo=-(pixpsa/2-0.5+pixoffy)*pixtheta;
+	const real pixtheta=parms->skyc.pixtheta[ipowfs];
+	const real blur=parms->skyc.pixblur[ipowfs]*pixtheta;
+	const real e0=exp(-2*M_PI*M_PI*blur*blur);
+	const real dxsa=parms->maos.dxsa[ipowfs];
+	const real pixoffx=parms->skyc.pixoffx[ipowfs];
+	const real pixoffy=parms->skyc.pixoffy[ipowfs];
+	const real pxo=-(pixpsa/2-0.5+pixoffx)*pixtheta;
+	const real pyo=-(pixpsa/2-0.5+pixoffy)*pixtheta;
 	loc_t *loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pixtheta, pxo, pyo);
 	powfs[ipowfs].dtf=mycalloc(parms->maos.nwvl,DTF_S);
 	for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-	    const double wvl=parms->maos.wvl[iwvl];
-	    const double dtheta=wvl/(dxsa*embfac);
-	    const double pdtheta=pixtheta*pixtheta/(dtheta*dtheta);
-	    const double du=1./(dtheta*ncomp);
-	    const double du2=du*du;
-	    const double dupth=du*pixtheta;
+	    const real wvl=parms->maos.wvl[iwvl];
+	    const real dtheta=wvl/(dxsa*embfac);
+	    const real pdtheta=pixtheta*pixtheta/(dtheta*dtheta);
+	    const real du=1./(dtheta*ncomp);
+	    const real du2=du*du;
+	    const real dupth=du*pixtheta;
 	    cmat *nominal=cnew(ncomp,ncomp);
 	    //cfft2plan(nominal,-1);
 	    //cfft2plan(nominal,1);
 	    cmat* pn=nominal;
-	    const double theta=0;
-	    const double ct=cos(theta);
-	    const double st=sin(theta);
+	    const real theta=0;
+	    const real ct=cos(theta);
+	    const real st=sin(theta);
 	    for(int iy=0; iy<ncomp; iy++){
 		int jy=iy-ncomp2;
 		for(int ix=0; ix<ncomp; ix++){
 		    int jx=ix-ncomp2;
-		    double ir=ct*jx+st*jy;
-		    double ia=-st*jx+ct*jy;
+		    real ir=ct*jx+st*jy;
+		    real ia=-st*jx+ct*jy;
 		    P(pn,ix,iy)=sinc(ir*dupth)*sinc(ia*dupth)
 			*pow(e0,ir*ir*du2)*pow(e0,ia*ia*du2)
 			*pdtheta;
@@ -96,7 +96,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		dbg("powfs %d, iwvl=%d, dtheta=%g\n", ipowfs, iwvl, dtheta*206265000);
 		writebin(psf2x, "powfs%d_psf2x_%d", ipowfs,iwvl);
 		dmat *psf2=dinterp1(psf1x, psf1y, psf2x, 0);
-		normalize_sumabs(psf2->p, psf2->nx*psf2->ny, 1);
+		dnormalize_sumabs(psf2->p, psf2->nx*psf2->ny, 1);
 		psf2->nx=ncomp; psf2->ny=ncomp;
 		writebin(psf2, "powfs%d_psf2_%d", ipowfs,iwvl);
 		cmat *otf2=cnew(ncomp, ncomp);
@@ -122,7 +122,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    cfft2(nominal,-1);
 	    cfftshift(nominal);//peak in center
 	    cfft2i(nominal,1);
-	    warning_once("double check nominal for off centered skyc.fnpsf1\n");
+	    warning_once("real check nominal for off centered skyc.fnpsf1\n");
 	    /*This nominal will multiply to OTF with peak in corner. But after
 	      inverse fft, peak will be in center*/
 	    ccp(&powfs[ipowfs].dtf[iwvl].nominal, nominal);
@@ -138,7 +138,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 			"%s/powfs%d_dtf%d_si",dirsetup,ipowfs,iwvl);
 	    }
 	    powfs[ipowfs].dtf[iwvl].U=cnew(ncomp,1);
-	    dcomplex *U=powfs[ipowfs].dtf[iwvl].U->p;
+	    comp *U=powfs[ipowfs].dtf[iwvl].U->p;
 
 	    for(int ix=0; ix<ncomp; ix++){
 		int jx=ix<ncomp2?ix:(ix-ncomp);
@@ -166,13 +166,13 @@ static void read_powfs_locamp(POWFS_S *powfs, const PARMS_S *parms){
 	if(loc->nloc!=nsa*ptspsa){
 	    error("loc %ld does not divide to %ld sa\n",loc->nloc, nsa);
 	}
-	powfs[ipowfs].locxamp=mycalloc(nsa,double);
-	powfs[ipowfs].locyamp=mycalloc(nsa,double);
+	powfs[ipowfs].locxamp=mycalloc(nsa,real);
+	powfs[ipowfs].locyamp=mycalloc(nsa,real);
 	for(long isa=0; isa<nsa; isa++){
-	    const double* iamp=amp->p+isa*ptspsa;
-	    const double* locx=loc->locx+isa*ptspsa;
-	    const double* locy=loc->locy+isa*ptspsa;
-	    double ampsum=0, locxamp=0, locyamp=0;
+	    const real* iamp=amp->p+isa*ptspsa;
+	    const real* locx=loc->locx+isa*ptspsa;
+	    const real* locy=loc->locy+isa*ptspsa;
+	    real ampsum=0, locxamp=0, locyamp=0;
 	    for(long iloc=0; iloc<ptspsa; iloc++){
 		ampsum+=iamp[iloc];
 		locxamp+=iamp[iloc]*locx[iloc];

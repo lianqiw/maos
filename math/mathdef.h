@@ -40,7 +40,7 @@
 #define AOS_SMAT(A) s##A
 #define AOS_ZMAT(A) z##A
 #define isempty(A) (!(A) || !(A)->nx || !(A)->ny)
-//#ifdef USE_SINGLE
+
 //Single
 AOS_MAT_DEF(AOS_SMAT,float,float)
 AOS_MAT_DEF(AOS_ZMAT,fcomplex,float)
@@ -62,24 +62,24 @@ AOS_SPBIN_DEF(AOS_ZMAT,fcomplex)
 
 AOS_FFT_DEF(AOS_SMAT)
 AOS_FFT_DEF(AOS_ZMAT)
-//#else
-//Double
-AOS_MAT_DEF(AOS_DMAT,double,double)
-AOS_MAT_DEF(AOS_CMAT,dcomplex,double)
 
-AOS_MATMATH_DEF(AOS_DMAT,AOS_DMAT,double,double)
-AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,dcomplex,double)
+//Real, which can be double or float
+AOS_MAT_DEF(AOS_DMAT,real,real)
+AOS_MAT_DEF(AOS_CMAT,comp,real)
 
-AOS_CMATMATH_DEF(AOS_CMAT,AOS_DMAT,dcomplex,double)
+AOS_MATMATH_DEF(AOS_DMAT,AOS_DMAT,real,real)
+AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,comp,real)
 
-AOS_MATBIN_DEF(AOS_DMAT,double)
-AOS_MATBIN_DEF(AOS_CMAT,dcomplex)
+AOS_CMATMATH_DEF(AOS_CMAT,AOS_DMAT,comp,real)
 
-AOS_SP_DEF(AOS_DMAT,double,double,dcomplex)
-AOS_SP_DEF(AOS_CMAT,dcomplex,double,dcomplex)
+AOS_MATBIN_DEF(AOS_DMAT,real)
+AOS_MATBIN_DEF(AOS_CMAT,comp)
 
-AOS_SPBIN_DEF(AOS_DMAT,double)
-AOS_SPBIN_DEF(AOS_CMAT,dcomplex)
+AOS_SP_DEF(AOS_DMAT,real,real,comp)
+AOS_SP_DEF(AOS_CMAT,comp,real,comp)
+
+AOS_SPBIN_DEF(AOS_DMAT,real)
+AOS_SPBIN_DEF(AOS_CMAT,comp)
 
 AOS_FFT_DEF(AOS_DMAT)
 AOS_FFT_DEF(AOS_CMAT)
@@ -112,31 +112,31 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define cellfree(A) ({cellfree_do(A); A=0;})
 
-#define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
-#define mapread(A...)    (map_t*)read_by_id(M_MAP64, 0, A)
+#define mapwrite(out, A...) write_by_id((void*)out, M_MAP, A)
+#define mapread(A...)    (map_t*)read_by_id(M_MAP, 0, A)
 
-#define mapcellread(A...) (mapcell*)read_by_id(M_MAP64, 1, A)
+#define mapcellread(A...) (mapcell*)read_by_id(M_MAP, 1, A)
 #define mapcellnew (mapcell*)cellnew
 #define mapccellnew (mapccell*)cellnew
 
-#define rmapread(A...)    (rmap_t*)read_by_id(M_RECTMAP64, 0, A)    
-#define rmapwrite(out, A...)   write_by_id((void*)out, M_RECTMAP64, A)
+#define rmapread(A...)    (rmap_t*)read_by_id(M_RECTMAP, 0, A)    
+#define rmapwrite(out, A...)   write_by_id((void*)out, M_RECTMAP, A)
 #define rmapcellnew  (rmapcell*)cellnew
 #define rmapccellnew (rmapccell*)cellnew
     
-#define locwrite(out, A...) write_by_id((void*)out, M_LOC64, A)
-#define locread(A...)    (loc_t*)read_by_id(M_LOC64, 0, A)
-#define loccellread(A...) (loccell*)read_by_id(M_LOC64, 1, A)
+#define locwrite(out, A...) write_by_id((void*)out, M_LOC, A)
+#define locread(A...)    (loc_t*)read_by_id(M_LOC, 0, A)
+#define loccellread(A...) (loccell*)read_by_id(M_LOC, 1, A)
 #define loccellnew (loccell*)cellnew
 #define locccellnew (locccell*)cellnew
 /** Read needs type checking, so don't use readbin*/
-#define dread(A...)    dmat_cast(read_by_id(M_DBL, 0, A))
+#define dread(A...)    dmat_cast(read_by_id(M_REAL, 0, A))
 #define dcellnew (dcell*)cellnew
 #define dccellnew (dccell*)cellnew
-#define dcellreaddata(fp, header) dcell_cast(readdata_by_id(fp, M_DBL, 1, header))
-#define dcellread(A...) (dcell*)read_by_id(M_DBL, 1, A)
-#define dccellread(A...) (dccell*)read_by_id(M_DBL, 2, A)
-#define dcccellread(A...) (dcccell*)read_by_id(M_DBL, 3, A)
+#define dcellreaddata(fp, header) dcell_cast(readdata_by_id(fp, M_REAL, 1, header))
+#define dcellread(A...) (dcell*)read_by_id(M_REAL, 1, A)
+#define dccellread(A...) (dccell*)read_by_id(M_REAL, 2, A)
+#define dcccellread(A...) (dcccell*)read_by_id(M_REAL, 3, A)
 
 #define sread(A...)    smat_cast(read_by_id(M_FLT, 0, A))
 #define scellnew (scell*)cellnew
@@ -146,13 +146,13 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
 #define scccellread(A...) (scccell*)read_by_id(M_FLT, 3, A)
 
-#define cread(A...)    cmat_cast(read_by_id(M_CMP, 0, A))
+#define cread(A...)    cmat_cast(read_by_id(M_COMP, 0, A))
 #define ccellnew (ccell*)cellnew
 #define cccellnew (cccell*)cellnew
-#define ccellreaddata(fp, header) ccell_cast(readdata_by_id(fp, M_CMP, 1, header))
-#define ccellread(A...) (ccell*)read_by_id(M_CMP, 1, A)
-#define cccellread(A...) (cccell*)read_by_id(M_CMP, 2, A)
-#define ccccellread(A...) (ccccell*)read_by_id(M_CMP, 3, A)
+#define ccellreaddata(fp, header) ccell_cast(readdata_by_id(fp, M_COMP, 1, header))
+#define ccellread(A...) (ccell*)read_by_id(M_COMP, 1, A)
+#define cccellread(A...) (cccell*)read_by_id(M_COMP, 2, A)
+#define ccccellread(A...) (ccccell*)read_by_id(M_COMP, 3, A)
 
 #define zread(A...)    zmat_cast(read_by_id(M_ZMP, 0, A))
 #define zcellnew (zcell*)cellnew

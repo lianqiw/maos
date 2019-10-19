@@ -40,7 +40,7 @@
    Apply Laplacian2 to xin and accumulates to xout.
 */
 void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, 
-	      double alpha){
+	      real alpha){
     dcell *xx=NULL;
     dcellmm(&xx, L2, xin, "nn", 1.);
     dcellmm(xout, L2, xx, "tn", alpha);
@@ -52,7 +52,7 @@ void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin,
    if xb==-1, do all blocks. 
    \todo: this is not thread safe.
 */
-void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
+void apply_invpsd(dcell **xout, const void *A, const dcell *xin, real alpha, int xb, int yb){
     if(xb!=yb) return;
     const INVPSD_T *extra=(const INVPSD_T*)A;
     dcell *invpsd=extra->invpsd;
@@ -97,7 +97,7 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
    if xb==-1, do all blocks. 
    \todo: this is not thread safe.
 */
-void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
+void apply_fractal(dcell **xout, const void *A, const dcell *xin, real alpha, int xb, int yb){
     if(xb!=yb) return;
     const FRACTAL_T *extra=(const FRACTAL_T*)A;
     int ips1, ips2;
@@ -111,7 +111,7 @@ void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, 
     for(int ips=ips1; ips<ips2; ips++){
 	/*for(int ips=0; ips<xin->nx*xin->ny; ips++){ */
 	dzero(extra->xopd->p[ips]);
-	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);
+	real r0i=extra->r0*pow(extra->wt[ips], -3./5.);
 	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc->p[ips], xin->p[ips]->p, 
 		       alpha*extra->scale, 0);
 	fractal_inv(extra->xopd->p[ips],
@@ -152,7 +152,7 @@ void TTFRt(dcell* x, const dcell *TTF, const dcell *PTTF){
 /**
    Apply weighting W0/W1 to a vector. W0*x-W1*(W1'*x)
 */
-static void applyWeach(dmat *xin, const dsp *W0, const dmat *W1, const double wt){
+static void applyWeach(dmat *xin, const dsp *W0, const dmat *W1, const real wt){
     if(!W0 || !W1) {
 	warning("W0 or W1 is NULL\n");
 	return;
@@ -169,7 +169,7 @@ static void applyWeach(dmat *xin, const dsp *W0, const dmat *W1, const double wt
    apply weighting W0/W1 with weighting wt for each block.
    W0*xin-W1*(W1'*xin);
 */
-void applyW(dcell *xin, const dsp *W0, const dmat *W1, const double *wt){
+void applyW(dcell *xin, const dsp *W0, const dmat *W1, const real *wt){
     const int nevl=xin->nx;
     for(int iy=0; iy<xin->ny; iy++){
 	for(int ievl=0; ievl<nevl; ievl++){
@@ -208,7 +208,7 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 
 typedef struct Tomo_T{
     const RECON_T *recon;
-    const double alpha;
+    const real alpha;
     const dcell *xin;/*input */
     dcell *gg;/*intermediate gradient */
     dcell *xout;/*output */
@@ -231,15 +231,15 @@ static void Tomo_prop_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
-	const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
+	const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 	dmat *xx=dnew(recon->ploc->nloc, 1);
-	const double hs=parms->wfs[iwfs].hs;
-	const double hc=parms->wfs[iwfs].hc;
+	const real hs=parms->wfs[iwfs].hs;
+	const real hc=parms->wfs[iwfs].hc;
 	for(int ips=0; ips<nps; ips++){
 	    if(parms->tomo.square && !parms->dbg.tomo_hxw){
 		/*Do the ray tracing instead of using HXW. */
-		double ht=recon->ht->p[ips];
-		double displace[2];
+		real ht=recon->ht->p[ips];
+		real displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
 		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misreg_y;
 		if(parms->tomo.predict){
@@ -247,7 +247,7 @@ static void Tomo_prop_do(thread_t *info){
 		    displace[0]+=simu->atm->p[ips0]->vx*delay;
 		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
-		double scale=1. - (ht-hc)/hs;
+		real scale=1. - (ht-hc)/hs;
 		if(scale<0) continue;
 		memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 		xmap.p=data->xin->p[ips]->p;
@@ -332,22 +332,22 @@ static void Tomo_iprop_do(thread_t *info){
 	    }
 	    memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 	    xmap.p=data->xout->p[ips]->p;
-	    double ht=recon->ht->p[ips];
+	    real ht=recon->ht->p[ips];
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(!data->gg->p[iwfs]) continue;
-		const double hs=parms->wfs[iwfs].hs;
-		const double hc=parms->wfs[iwfs].hc;
+		const real hs=parms->wfs[iwfs].hs;
+		const real hc=parms->wfs[iwfs].hc;
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		double displace[2];
+		real displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
 		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misreg_y;
 		if(parms->tomo.predict){
-		    const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
+		    const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		    int ips0=parms->atmr.indps->p[ips];
 		    displace[0]+=simu->atm->p[ips0]->vx*delay;
 		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
-		double scale=1. - (ht-hc)/hs;
+		real scale=1. - (ht-hc)/hs;
 		if(scale<0) continue;
 		prop_grid_stat_transpose(&xmap, recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
 					 displace[0],displace[1], scale, 0, 0, 0);
@@ -397,7 +397,7 @@ void Tomo_iprop(Tomo_T *data, int nthread){
 */
 
 void TomoR(dcell **xout, const void *A, 
-	   const dcell *gin, const double alpha){
+	   const dcell *gin, const real alpha){
     TIC_tm;tic_tm;
     const RECON_T *recon=(const RECON_T *)A;
     dcell *gg=NULL;
@@ -417,7 +417,7 @@ void TomoR(dcell **xout, const void *A,
    Transpose operation of TomoRt. From xout -> gin
  */
 void TomoRt(dcell **gout, const void *A, 
-	    const dcell *xin, const double alpha){
+	    const dcell *xin, const real alpha){
     const RECON_T *recon=(const RECON_T *)A;
     if(!*gout){
 	*gout=dcellnew(recon->saneai->nx, 1);
@@ -447,7 +447,7 @@ void TomoRt(dcell **gout, const void *A,
 
 #define test_TomoL 0
 void TomoL(dcell **xout, const void *A, 
-	   const dcell *xin, const double alpha){
+	   const dcell *xin, const real alpha){
     TIC_tm;tic_tm;
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=global->parms;
@@ -483,7 +483,7 @@ void TomoL(dcell **xout, const void *A,
    Slow. don't use. Assembled matrix is faster because of multiple directions.
 */
 void FitR(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha){
+	  const dcell *xin, const real alpha){
     const FIT_T *fit=(const FIT_T *)A;
     const int nfit=fit->thetax->nx;
     dcell *xp=dcellnew(nfit,1);
@@ -492,14 +492,14 @@ void FitR(dcell **xout, const void *A,
 	const PARMS_T *parms=global->parms;
 	SIM_T *simu=global->simu;
 	int isim=fit->notrecon?simu->wfsisim:simu->reconisim;
-	const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
+	const real atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=fit->hs->p[ifit];
+	    real hs=fit->hs->p[ifit];
 	    xp->p[ifit]=dnew(fit->floc->nloc,1);
 	    for(int ips=0; ips<parms->atm.nps; ips++){
-		const double ht = parms->atm.ht->p[ips]-fit->floc->ht;
-		double scale=1-ht/hs;
-		double displace[2];
+		const real ht = parms->atm.ht->p[ips]-fit->floc->ht;
+		real scale=1-ht/hs;
+		real displace[2];
 		if(scale<0) continue;
 		displace[0]=fit->thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*parms->sim.dt;
 		displace[1]=fit->thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*parms->sim.dt;
@@ -512,12 +512,12 @@ void FitR(dcell **xout, const void *A,
     }else{/*Do the ray tracing from xloc to ploc */
 	const int npsr=fit->xloc->nx;
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=fit->hs->p[ifit];
+	    real hs=fit->hs->p[ifit];
 	    xp->p[ifit]=dnew(fit->floc->nloc,1);
 	    for(int ips=0; ips<npsr; ips++){
-		const double ht = fit->xloc->p[ips]->ht-fit->floc->ht;
-		double scale=1-ht/hs;
-		double displace[2];
+		const real ht = fit->xloc->p[ips]->ht-fit->floc->ht;
+		real scale=1-ht/hs;
+		real displace[2];
 		if(scale<0) continue;
 		displace[0]=fit->thetax->p[ifit]*ht;
 		displace[1]=fit->thetay->p[ifit]*ht;
@@ -538,7 +538,7 @@ void FitR(dcell **xout, const void *A,
    matrix. Slow. don't use. Assembled matrix is faster because of multiple
    directions.  */
 void FitL(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha){
+	  const dcell *xin, const real alpha){
     const FIT_T *fit=(const FIT_T *)A;
     dcell *xp=NULL;
     dcellmm(&xp, fit->HA, xin, "nn", 1.);
@@ -561,7 +561,7 @@ dsp *nea2sp(dmat **nea, long nsa){
     dsp *sanea=dspnew(nsa*2, nsa*2, 4*nsa);
     spint *pp=sanea->p;
     spint *pi=sanea->i;
-    double *px=sanea->x;
+    real *px=sanea->x;
     long count=0;
     for(long isa=0; isa<nsa; isa++){
 	/*Cxx */
@@ -624,7 +624,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 	loc_t *locs=simu->aper->locs;
 	dmat *xx = dnew(locs->nloc, 1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    double hs = parms->evl.hs->p[ievl];
+	    real hs = parms->evl.hs->p[ievl];
 	    if(parms->evl.psfr->p[ievl]){
 		dzero(xx);
 		if(opdr){
@@ -632,10 +632,10 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		    const int npsr=recon->npsr;
 		    /*First compute residual opd: Hx*x-Ha*a*/
 		    for(int ips=0; ips<npsr; ips++){
-			const double ht = recon->ht->p[ips];
-			double scale=1-ht/hs;
-			double dispx=parms->evl.thetax->p[ievl]*ht;
-			double dispy=parms->evl.thetay->p[ievl]*ht;
+			const real ht = recon->ht->p[ips];
+			real scale=1-ht/hs;
+			real dispx=parms->evl.thetax->p[ievl]*ht;
+			real dispy=parms->evl.thetay->p[ievl]*ht;
 			if(scale<0) continue;
 			if(parms->tomo.square){/*square xloc */
 			    memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
@@ -650,10 +650,10 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		}
 		if(dmadd){
 		    for(int idm=0; idm<parms->ndm; idm++){
-			const double ht = parms->dm[idm].ht;
-			double scale=1.-ht/hs;
-			double dispx=parms->evl.thetax->p[ievl]*ht;
-			double dispy=parms->evl.thetay->p[ievl]*ht;
+			const real ht = parms->dm[idm].ht;
+			real scale=1.-ht/hs;
+			real dispx=parms->evl.thetax->p[ievl]*ht;
+			real dispy=parms->evl.thetay->p[ievl]*ht;
 			if(scale<0) continue;
 			prop_nongrid(recon->aloc->p[idm], dmadd->p[idm]->p, locs,
 				     xx->p, 1, dispx, dispy, scale, 0, 0);
@@ -709,7 +709,7 @@ void shift_grad(SIM_T *simu){
 	    simu->gradlastcl=dcellnew3(parms->nwfsr, 1, nnx, NULL);
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    const double scale=1./parms->powfs[ipowfs].nwfs;
+	    const real scale=1./parms->powfs[ipowfs].nwfs;
 	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
 		dadd(&simu->gradlastcl->p[ipowfs], 1., simu->gradcl->p[iwfs], scale);
@@ -761,9 +761,9 @@ lmat* loc_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
     }
     loc_create_map(aloc);
     map_t *map=aloc->map;
-    double ox=aloc->map->ox;
-    double oy=aloc->map->oy;
-    double dx1=1./aloc->dx;
+    real ox=aloc->map->ox;
+    real oy=aloc->map->oy;
+    real dx1=1./aloc->dx;
     dmat*  ps=dead/*PDMAT*/;
     lmat *out=lnew(aloc->nloc, 1);
     for(long jact=0; jact<dead->nx; jact++){
@@ -810,7 +810,7 @@ cn2est_t *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     }else{
 	int nht=parms->cn2.nhtomo;
 	ht=dnew(nht,1);
-	double dht=parms->cn2.hmax/(double)(nht-1);
+	real dht=parms->cn2.hmax/(real)(nht-1);
 	if(dht<=0) error("Invalid hmax or nhtomo\n");
 	for(int iht=0; iht<nht; iht++){
 	    ht->p[iht]=dht*iht;
@@ -891,7 +891,7 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad, int *tomo_up
 	if(global->simu->cn2est){
 	    global->simu->cn2est->p[0]->p[icn2]=cn2est->r0m;
 	    memcpy(PCOL(global->simu->cn2est->p[1], icn2),cn2est->wtrecon->p[0]->p, 
-		   cn2est->htrecon->nx*sizeof(double));
+		   cn2est->htrecon->nx*sizeof(real));
 	}
 	if(parms->cn2.tomo){
 	    if(parms->cn2.moveht){

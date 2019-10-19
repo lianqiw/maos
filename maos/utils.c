@@ -42,7 +42,7 @@
    Plot the loc, together with all beams
 */
 void plotloc(const char *fig, const PARMS_T *parms, 
-	     loc_t *loc, double ht, const char *format,...){
+	     loc_t *loc, real ht, const char *format,...){
     format2fn;
     int ncir=parms->evl.nevl + parms->fit.nfit + parms->nwfs;
     if(parms->sim.ncpa_calib){
@@ -51,7 +51,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
     dmat *cir=dnew(4, ncir);
     int count=0;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	double hs=parms->evl.hs->p[ievl];
+	real hs=parms->evl.hs->p[ievl];
 	P(cir,0,count)=ht*parms->evl.thetax->p[ievl];
 	P(cir,1,count)=ht*parms->evl.thetay->p[ievl];
 	P(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
@@ -59,7 +59,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
 	count++;
     }
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	double hs=parms->fit.hs->p[ifit];
+	real hs=parms->fit.hs->p[ifit];
 	P(cir,0,count)=ht*parms->fit.thetax->p[ifit];
 	P(cir,1,count)=ht*parms->fit.thetay->p[ifit];
 	P(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
@@ -67,7 +67,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
 	count++;
     }
     for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
-	double hs=parms->sim.ncpa_hs->p[idir];
+	real hs=parms->sim.ncpa_hs->p[idir];
 	P(cir,0,count)=ht*parms->sim.ncpa_thetax->p[idir];
 	P(cir,1,count)=ht*parms->sim.ncpa_thetay->p[idir];
 	P(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
@@ -76,7 +76,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
     }
 
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	double hs=parms->wfs[iwfs].hs;
+	real hs=parms->wfs[iwfs].hs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	P(cir,0,count)=parms->wfs[iwfs].thetax*ht;
 	P(cir,1,count)=parms->wfs[iwfs].thetay*ht;
@@ -98,7 +98,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
 }
 /**
    ploted all the different beam directions as points. */
-void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...){
+void plotdir(const char *fig, const PARMS_T *parms, real totfov, const char *format,...){
     format2fn;
     int ncir=1;
     dmat *cir=dnew(4, ncir);
@@ -184,7 +184,7 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
     if(count!=ngroup){
 	error("count=%d, ngroup=%d. they should equal.\n", count, ngroup);
     }
-    double limit[4];
+    real limit[4];
     limit[0]=limit[2]=-totfov/2;
     limit[1]=limit[3]=totfov/2;
     plot_points(fig, ngroup, locs->p, NULL, style,limit,NULL, cir, legend,
@@ -362,8 +362,8 @@ ARG_T * parse_args(int argc, const char *argv[]){
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, int isim){
     char header[320];
     int nembed=aper->embed->nembed->p[iwvl];
-    double wvl=parms->evl.wvl->p[iwvl];
-    double sumamp2=aper->sumamp2;
+    real wvl=parms->evl.wvl->p[iwvl];
+    real sumamp2=aper->sumamp2;
     snprintf(header, 320, 
 	     /*"Science PSF at (%.15g, %.15g) arcsec\n"
 	     "Turbulence: r0=%g, l0=%g\n"
@@ -389,13 +389,13 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, i
 	     sumamp2*nembed*nembed, parms->sim.dt*(isim-parms->evl.psfisim+1));
     return strdup(header);
 }
-void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *fieldstop, double wvl){
+void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *fieldstop, real wvl){
     cmat *wvf=cnew(nembed, nembed);
     //cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
-    double kk=2*M_PI/wvl;
-    double kki=1./kk;
-    double wvlh=wvl*0.5;
-    dcomplex i2pi=COMPLEX(0, kk);
+    real kk=2*M_PI/wvl;
+    real kki=1./kk;
+    real wvlh=wvl*0.5;
+    comp i2pi=COMPLEX(0, kk);
     for(int iloc=0; iloc<opd->nx; iloc++){
 	wvf->p[embed->p[iloc]]=amp->p[iloc]*cexp(i2pi*opd->p[iloc]);
     }
@@ -403,8 +403,8 @@ void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *field
     ccwmd(wvf, fieldstop, 1);
     cfft2(wvf, 1);
     for(int iloc=0; iloc<opd->nx; iloc++){
-	double val=carg(wvf->p[embed->p[iloc]])*kki;
-	double diff=fmod(val-opd->p[iloc]+wvlh, wvl);
+	real val=carg(wvf->p[embed->p[iloc]])*kki;
+	real diff=fmod(val-opd->p[iloc]+wvlh, wvl);
 	if(diff<0) diff+=wvl;
 	opd->p[iloc]+=diff-wvlh;
     }
@@ -417,11 +417,11 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
     plotloc("Aperture",parms,recon->ploc,0, "ploc");
     plotloc("Aperture",parms,recon->floc,0, "floc");
     for(int idm=0; idm<parms->ndm; idm++){
-	double ht=parms->dm[idm].ht;
+	real ht=parms->dm[idm].ht;
 	plotloc("Aperture", parms, recon->aloc->p[idm], ht, "aloc%d", idm);
     }
     for(int ips=0; ips<recon->npsr; ips++){
-	const double ht=recon->ht->p[ips];
+	const real ht=recon->ht->p[ips];
 	plotloc("Aperture",parms,recon->xloc->p[ips],ht, "xloc%d",ips);
     }
     drawopd("Aperture",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
@@ -451,7 +451,7 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 /**
    Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). 
 */
-dmat *mkamp(loc_t *loc, map_t *ampground, double misregx, double misregy, double D, double Din){
+dmat *mkamp(loc_t *loc, map_t *ampground, real misregx, real misregy, real D, real Din){
     dmat *amp=dnew(loc->nloc, 1);
     if(ampground){
 	prop_grid(ampground, loc, amp->p, 1, misregx, misregy,1,0,0,0);
@@ -473,8 +473,8 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	otf->p[iwvl]=cnew(potf->p[0]->nx, potf->p[0]->ny);
     }
-    double pixthetax=parms->powfs[ipowfs].radpixtheta;
-    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    real pixthetax=parms->powfs[ipowfs].radpixtheta;
+    real pixthetay=parms->powfs[ipowfs].pixtheta;
     dmat **mtche=NULL;
     if(parms->powfs[ipowfs].phytype_sim==1){
 	if(powfs[ipowfs].intstat->mtche->ny==1){
@@ -484,7 +484,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 	}
     }
     int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
-    double *srot=NULL;
+    real *srot=NULL;
     cmat ***petf=NULL;
     void (*pccwm)(cmat*,const cmat*)=NULL;
     if(nllt){
@@ -508,11 +508,11 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     }
 
     const int nsep=41;
-    const double dg=0.1;
-    double gx=0, gy=0, dgx=0, dgy=0;
+    const real dg=0.1;
+    real gx=0, gy=0, dgx=0, dgy=0;
     dmat *ints=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
-    double theta=0, cx=1, sx=0;
-    double isep0=-(nsep-1)*0.5;
+    real theta=0, cx=1, sx=0;
+    real isep0=-(nsep-1)*0.5;
     dmat *xg=dlinspace(isep0*dg, dg, nsep);
     writebin(xg, "wfslinearity_wfs%d_sep", iwfs);
     dfree(xg);
@@ -565,14 +565,14 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		gy=dgy*(isep+isep0);
 		dzero(ints);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
+		    real wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 			*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		    int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 		    int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
 		    dspcell*  psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
 		    dsp *sis=P(psi,idtfsa,idtf);
-		    double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+		    real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+		    real dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		    if(petf){
 			ccp(&potf2, potf->p[isa+nsa*iwvl]);
 			(*pccwm)(potf2,petf[iwvl][isa]);
@@ -584,7 +584,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    dspmulcreal(ints->p, sis, otf->p[iwvl]->p, wvlsig);
 		}
 		//ddraw("ints", ints, NULL, NULL, "ints", "x", "y", "ints"); PAUSE;
-		double g[3]={0,0,0};
+		real g[3]={0,0,0};
 		//notice that all the following gives gradients in x/y coord only.
 		switch(type){
 		case 0://no-op
@@ -670,11 +670,11 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
     int dtrat=parms->powfs[ipowfs].llt->coldtrat;
     dmat *rmodmf=dnew(RR->nx, ncol/dtrat);
     dmat *rmodcg=dnew(RR->nx, ncol/dtrat);
-    double scale=1;
-    double pixthetax=parms->powfs[ipowfs].radpixtheta;
-    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    real scale=1;
+    real pixthetax=parms->powfs[ipowfs].radpixtheta;
+    real pixthetay=parms->powfs[ipowfs].pixtheta;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-    double *srot=(parms->powfs[ipowfs].radpix)?
+    real *srot=(parms->powfs[ipowfs].radpix)?
 	powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
     for(int icol=0; icol<1000; icol+=dtrat){
 	setup_powfs_etf(powfs, parms, ipowfs, 0, icol);
@@ -682,7 +682,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
 	dcell *i0_new=powfs[ipowfs].intstat->i0;
 	//writebin(i0_new, "i0_%d", icol);
 	for(int isa=0; isa<nsa; isa++){
-	    double geach[3]={0,0,1};
+	    real geach[3]={0,0,1};
 	    dmulvec(geach, mtche->p[isa], i0_new->p[isa]->p, 1);
 	    if(parms->powfs[ipowfs].sigmatch){
 		scale=i0sum->p[isa]/dsum(i0_new->p[isa]);
@@ -696,10 +696,10 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
 		geach[0]*=pixthetax;
 		geach[1]*=pixthetay;
 		if(srot){
-		    double theta=srot[isa];
-		    double cx=cos(theta);
-		    double sx=sin(theta);
-		    double tmp=geach[0]*cx-geach[1]*sx;
+		    real theta=srot[isa];
+		    real cx=cos(theta);
+		    real sx=sin(theta);
+		    real tmp=geach[0]*cx-geach[1]*sx;
 		    geach[1]=geach[0]*sx+geach[1]*cx;
 		    geach[0]=tmp;
 		}
@@ -729,8 +729,8 @@ typedef struct {
     const dmat *ints;
     ccell *fotf;
     ccell *otf;//temporary.
-    double bkgrnd;
-    double rne;
+    real bkgrnd;
+    real rne;
     int noisy;
     int iwfs;
     int isa;
@@ -738,7 +738,7 @@ typedef struct {
 /**
    The function to evaluate the result at x.
 */
-static double mapfun(double *x, mapdata_t *info){
+static real mapfun(real *x, mapdata_t *info){
     const dmat *ints=info->ints;
     ccell *fotf=info->fotf;
     ccell *otf=info->otf;
@@ -761,22 +761,22 @@ static double mapfun(double *x, mapdata_t *info){
     }
     dmat *ints2=dnew(ints->nx, ints->ny);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
+	real wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 	    *parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 	dspcell*  psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
 	int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 	int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
 	dsp *sis=P(psi,idtfsa,idtf);
-	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+	real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+	real dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
 	cfft2(info->otf->p[iwvl], 1);
 	dspmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig*x[2]);
     }
  
-    double sigma=0;
+    real sigma=0;
     if(info->noisy){
-	double noise=info->rne*info->rne+info->bkgrnd;
+	real noise=info->rne*info->rne+info->bkgrnd;
 	for(int i=0; i<ints->nx*ints->ny; i++){
 	    sigma+=pow(ints->p[i]-ints2->p[i],2)/(ints2->p[i]+noise);
 	}
@@ -792,13 +792,13 @@ static double mapfun(double *x, mapdata_t *info){
 /**
    Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun if parms->powfs.radrot=0;
 */
-void maxapriori(double *g, const dmat *ints, const PARMS_T *parms, 
+void maxapriori(real *g, const dmat *ints, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
-		double bkgrnd, double rne){
+		real bkgrnd, real rne){
     int ipowfs=parms->wfs[iwfs].powfs;
     int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-    double pixthetax=parms->powfs[ipowfs].radpixtheta;
-    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    real pixthetax=parms->powfs[ipowfs].radpixtheta;
+    real pixthetay=parms->powfs[ipowfs].pixtheta;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
@@ -807,15 +807,15 @@ void maxapriori(double *g, const dmat *ints, const PARMS_T *parms,
     ccellfree(data.otf);
     /* convert to native format along x/y or r/a to check for overflow*/
     if(parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].radrot){
-	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
-	double cx=cos(theta);
-	double sx=sin(theta);
-	double tmp=g[0]*cx+g[1]*sx;
+	real theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
+	real cx=cos(theta);
+	real sx=sin(theta);
+	real tmp=g[0]*cx+g[1]*sx;
 	g[1]=-g[0]*sx+g[1]*cx;
 	g[0]=tmp;
     }
-    double gx=g[0]/pixthetax*2./ints->nx;
-    double gy=g[1]/pixthetay*2./ints->ny;
+    real gx=g[0]/pixthetax*2./ints->nx;
+    real gy=g[1]/pixthetay*2./ints->ny;
     if(fabs(gx)>0.55||fabs(gy)>0.55){
 	warning("sa %4d iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
 	gx=gx-floor(gx+0.5);
@@ -826,10 +826,10 @@ void maxapriori(double *g, const dmat *ints, const PARMS_T *parms,
     }
     //info("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
     if(parms->powfs[ipowfs].radpix){
-	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
-	double cx=cos(theta);
-	double sx=sin(theta);
-	double tmp=g[0]*cx-g[1]*sx;
+	real theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
+	real cx=cos(theta);
+	real sx=sin(theta);
+	real tmp=g[0]*cx-g[1]*sx;
 	g[1]=g[0]*sx+g[1]*cx;
 	g[0]=tmp;
     }
@@ -838,13 +838,13 @@ void maxapriori(double *g, const dmat *ints, const PARMS_T *parms,
 /**
    Compute the focus adjustment need to apply to OPD of wfs. Used in both CPU and GPU code.
 */
-double wfsfocusadj(SIM_T *simu, int iwfs){
+real wfsfocusadj(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int isim=simu->wfsisim;
-    double focus=0;
+    real focus=0;
     if(parms->powfs[ipowfs].llt){
 	if(powfs[ipowfs].focus){
 	    focus+=PR(powfs[ipowfs].focus, isim, wfsind);
@@ -864,17 +864,17 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
 /**
    Expected averaged position of dithering signal during WFS integration. Called when (isim+1)%dtrat=0
 */
-void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam){
+void dither_position(real *cs, real *ss, const PARMS_T *parms, int ipowfs, int isim, real deltam){
     //adjust for delay due to propagation, and computation delay. no effect when al+1=dtrat, which makes 2 wfs frame delay.
     const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
     //adjust to get delay at beginning of integration
     const int adjust2=parms->powfs[ipowfs].dtrat-1;
-    const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-    const double angle=((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
-    const double angle2=((isim-adjust)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
-    const double delay=(double)adjust/parms->powfs[ipowfs].dtrat;
-    const double beta=1+delay+floor(-delay);
-    const double scale=1./(beta*beta+(1-beta)*(1-beta));
+    const real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
+    const real angle=((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
+    const real angle2=((isim-adjust)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
+    const real delay=(real)adjust/parms->powfs[ipowfs].dtrat;
+    const real beta=1+delay+floor(-delay);
+    const real scale=1./(beta*beta+(1-beta)*(1-beta));
     //use average of two places during accumulation and scale
     *cs=(beta*cos(angle)+(1-beta)*cos(angle2))*scale;
     *ss=(beta*sin(angle)+(1-beta)*sin(angle2))*scale;
@@ -883,8 +883,8 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
    Find peak, then using parabolic fit on 3x3 window around it.
 */
 /*
-  void parabolic_peak_fit(double *grad, dmat *corr){
-  double valmax=0;
+  void parabolic_peak_fit(real *grad, dmat *corr){
+  real valmax=0;
   int jy=0, jx=0;
   //Find Peak location (jx, jy)
   for(int iy=1; iy<corr->ny-1; iy++){
@@ -896,7 +896,7 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
   }
   }
   //Calculate 1d sum of 3 row/columns.
-  double vx[3], vy[3];
+  real vx[3], vy[3];
   for(long iy=0; iy<3; iy++){
   vy[iy]=0; vx[iy]=0;
   for(long ix=0; ix<3; ix++){
@@ -905,7 +905,7 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
   }
   }
   //Parabolic fit.
-  double px[2], py[2];
+  real px[2], py[2];
   px[0]=(vx[0]+vx[2])*0.5-vx[1];
   py[0]=(vy[0]+vy[2])*0.5-vy[1];
   px[1]=(vx[2]-vx[0])*0.5;
@@ -918,8 +918,8 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
 /**
    Fit 3 points around the peak of a 1-d profile.
 */
-double parabolic_peak_1d(dmat *corr){
-    double valmax=0;
+real parabolic_peak_1d(dmat *corr){
+    real valmax=0;
     int jx=0;
     for(int ix=1; ix<corr->nx-1; ix++){
 	if(P(corr,ix)>valmax){
@@ -928,7 +928,7 @@ double parabolic_peak_1d(dmat *corr){
 	}
     }
     //Parabolic fit.
-    double px[2];
+    real px[2];
     px[0]=(P(corr, jx+1)+P(corr, jx-1))*0.5-P(corr, jx);
     px[1]=(P(corr, jx+1)-P(corr, jx-1))*0.5;
     return px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
@@ -936,7 +936,7 @@ double parabolic_peak_1d(dmat *corr){
 /**
    First sum along 1 dimension, then fit 3 points around the peak. More robust than the old method.
 */
-void parabolic_peak_sum(double *grad, dmat *corr, int nbox){
+void parabolic_peak_sum(real *grad, dmat *corr, int nbox){
     const long nx=corr->nx;
     const long ny=corr->ny;
     if(nbox<=0 || nbox>nx) nbox=nx;
@@ -965,12 +965,12 @@ void parabolic_peak_sum(double *grad, dmat *corr, int nbox){
 void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, const int iwfs, const int phytype){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int nsa=powfs[ipowfs].saloc->nloc;
-    const double rne=parms->powfs[ipowfs].rne;
-    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
+    const real rne=parms->powfs[ipowfs].rne;
+    const real bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     dmat **mtche=NULL;
-    double *i0sum=NULL;
-    double i0sumg=0;
+    real *i0sum=NULL;
+    real i0sumg=0;
     if(phytype==1){
 	mtche=PPR(powfs[ipowfs].intstat->mtche, 0, wfsind);
     }
@@ -989,36 +989,36 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[wfsind];
 	    }
 	    }*/
-    const double *srot=(parms->powfs[ipowfs].radpix)?PR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
-    double pixthetax=parms->powfs[ipowfs].radpixtheta;
-    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    const real *srot=(parms->powfs[ipowfs].radpix)?PR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
+    real pixthetax=parms->powfs[ipowfs].radpixtheta;
+    real pixthetay=parms->powfs[ipowfs].pixtheta;
     /*output directly to simu->gradcl. replace */
     if(!*pgrad){
 	*pgrad=dnew(nsa*2, 1);
     }
-    double *pgradx=(*pgrad)->p;
-    double *pgrady=pgradx+nsa;
-    double i1sum=0;
+    real *pgradx=(*pgrad)->p;
+    real *pgrady=pgradx+nsa;
+    real i1sum=0;
     dmat *corr=0;
     if(parms->powfs[ipowfs].sigmatch==2){
 	for(int isa=0; isa<nsa; isa++){
 	    i1sum+=dsum(ints[isa]);//Disable the following to match GPU code.
-	    /*const double thres=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2];
-	      const double offset=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1];
+	    /*const real thres=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2];
+	      const real offset=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1];
 	      for(int ip=0; ip<ints[isa]->nx*ints[isa]->ny; ip++){
-	      double sig=ints[isa]->p[ip]-offset;
+	      real sig=ints[isa]->p[ip]-offset;
 	      if(sig>thres){
 	      i1sum+=sig;
 	      }
 	      }*/
 	}
     }
-    double sigtot=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+    real sigtot=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
     for(int isa=0; isa<nsa; isa++){
-	double geach[3]={0,0,1};
+	real geach[3]={0,0,1};
 	switch(phytype){
 	case 1:{//matched filter
-	    double scale=1.;
+	    real scale=1.;
 	    switch(parms->powfs[ipowfs].sigmatch){
 	    case 0://no normalization
 		break;
@@ -1033,7 +1033,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	}
 	    break;
 	case 2:{//CoG
-	    double sumi=0;
+	    real sumi=0;
 	    switch(parms->powfs[ipowfs].sigmatch){
 	    case 0://normalization use model intensity (linear model)
 		if(i0sum){
@@ -1086,10 +1086,10 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    error("Invalid");
 	}
 	if(phytype>1 && srot){
-	    double theta=srot[isa];
-	    double cx=cos(theta);
-	    double sx=sin(theta);
-	    double tmp=geach[0]*cx-geach[1]*sx;
+	    real theta=srot[isa];
+	    real cx=cos(theta);
+	    real sx=sin(theta);
+	    real tmp=geach[0]*cx-geach[1]*sx;
 	    geach[1]=geach[0]*sx+geach[1]*cx;
 	    geach[0]=tmp;
 	}

@@ -174,8 +174,8 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	return;
     }
     cuglobal->atm_full=0;
-    const double dt=parms->sim.dt;
-    const double dx=parms->atm.dx;
+    const real dt=parms->sim.dt;
+    const real dx=parms->atm.dx;
 
     if(iseed0==-1){//Initializing data
 	/*The atm in GPU is smaller than in CPU. */

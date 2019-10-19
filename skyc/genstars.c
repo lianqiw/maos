@@ -31,11 +31,11 @@
 /**
    The sort function for stars. Sort stars according total flux.
  */
-static double Z_J=3.7666e9;
-static double Z_H=2.7206e9;
-static int sortfun(const double *p1, const double *p2){
-    double tot1=Z_J*pow(10,-0.4*p1[2])+Z_H*pow(10,-0.4*p1[3]);/*tot flux */
-    double tot2=Z_J*pow(10,-0.4*p2[2])+Z_H*pow(10,-0.4*p2[3]);
+static real Z_J=3.7666e9;
+static real Z_H=2.7206e9;
+static int sortfun(const real *p1, const real *p2){
+    real tot1=Z_J*pow(10,-0.4*p1[2])+Z_H*pow(10,-0.4*p1[3]);/*tot flux */
+    real tot2=Z_J*pow(10,-0.4*p2[2])+Z_H*pow(10,-0.4*p2[3]);
     return tot1<tot2?1:-1;
 }
 /**
@@ -44,16 +44,16 @@ static int sortfun(const double *p1, const double *p2){
    \return a cell array of nskyx1, each cell contains (2+nwvl) x nstar array of
 location, and magnitudes.  */
 dcell *genstars(long nsky,         /**<number of star fields wanted*/
-		double lat,        /**<galactic latitude.*/
-		double lon,        /**<galactic longitude*/
-		double catscl,     /**<Scale the catlog star count.*/
-		double fov,        /**<diameter of the patrol field of view in arcsec.*/
+		real lat,        /**<galactic latitude.*/
+		real lon,        /**<galactic longitude*/
+		real catscl,     /**<Scale the catlog star count.*/
+		real fov,        /**<diameter of the patrol field of view in arcsec.*/
 		int nwvl,          /**<number of wavelength*/
-		double *wvls,      /**<wavelength vector*/
+		real *wvls,      /**<wavelength vector*/
 		rand_t *rstat /**<random stream*/
 ){
     char fn[80];
-    double cat_fov=0;/*catalogue fov */
+    real cat_fov=0;/*catalogue fov */
     int Jind=-1;
     if(nwvl==2 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10){
 	snprintf(fn,80,"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
@@ -76,12 +76,12 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
     long nsky0=0;
     dcell *res=dcellnew(nsky,1);
     dmat*  pcatalog=catalog;
-    double fov22=pow(fov/2/206265,2);
+    real fov22=pow(fov/2/206265,2);
 
 
-    double navg0=M_PI*pow(fov/2./3600.,2)/cat_fov * ntot;
+    real navg0=M_PI*pow(fov/2./3600.,2)/cat_fov * ntot;
     if(catscl>0){//regular sky coverage sim
-	double navg=navg0*catscl;
+	real navg=navg0*catscl;
 	info("Average number of stars: %g, after scaled by %g\n", navg, catscl);
 	/*generate nstart && magnitude according to distribution.*/
 	for(long isky=0; isky<nsky; isky++){
@@ -140,8 +140,8 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	dmat* pres=res->p[isky];
 	for(long istar=0; istar<nstar; istar++){
 	    /*randomly draw the star location. */
-	    double r=sqrt(fov22*randu(rstat));
-	    double th=2*M_PI*randu(rstat);
+	    real r=sqrt(fov22*randu(rstat));
+	    real th=2*M_PI*randu(rstat);
 	    P(pres,0,istar)=r*cos(th);
 	    P(pres,1,istar)=r*sin(th);
 	}
@@ -155,7 +155,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 void sortstars(dcell *stars){
     for(long isky=0; isky<stars->nx*stars->ny; isky++){
 	if(!stars->p[isky]) continue;
-	qsort(stars->p[isky]->p, stars->p[isky]->ny,stars->p[isky]->nx*sizeof(double),
+	qsort(stars->p[isky]->p, stars->p[isky]->ny,stars->p[isky]->nx*sizeof(real),
 	      (int(*)(const void*, const void *))sortfun);
     }
 }

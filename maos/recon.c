@@ -173,8 +173,8 @@ void recon_split(SIM_T *simu){
 		    }
 		    if(iRngs==1 && ngsmod->lp2>=0){ //Do LHF on measurements
 			if(ngsmod->lp2>0){//HPF
-			    double *valpf=simu->Merr_lo2->p[0]->p;
-			    double *val=tmp->p[0]->p;
+			    real *valpf=simu->Merr_lo2->p[0]->p;
+			    real *val=tmp->p[0]->p;
 			    for(int imod=0; imod<ngsmod->nmod; imod++){
 				if(imod==ngsmod->indfocus){//there is no need to blend focus.
 				    continue;
@@ -194,7 +194,7 @@ void recon_split(SIM_T *simu){
 				}else{//Apply truth mode offset.
 				    simu->Merr_lo->p[0]->p[imod]+=simu->Merr_lo2->p[0]->p[imod];
 				}
-			    }else if(iRngs==0){//direct output. Avoid double integrator as above.
+			    }else if(iRngs==0){//direct output. Avoid real integrator as above.
 				simu->Merr_lo->p[0]->p[imod]=tmp->p[0]->p[imod];
 			    }
 			}
@@ -203,8 +203,8 @@ void recon_split(SIM_T *simu){
 		dcellfree(tmp);
 		
 		if(parms->sim.mffocus && ngsmod->indfocus && parms->sim.lpfocushi<1){ //Do LPF on focus.
-		    const double lpfocus=parms->sim.lpfocuslo;
-		    double ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->indfocus];
+		    const real lpfocus=parms->sim.lpfocuslo;
+		    real ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->indfocus];
 		    if(ngsfocus){//there is output
 			simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
 			simu->Merr_lo->p[0]->p[ngsmod->indfocus]=simu->ngsfocuslpf;
@@ -226,8 +226,8 @@ void recon_split(SIM_T *simu){
 		dcell *tmp=NULL;
 		dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
 		dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
-		const double lpfocus=parms->sim.lpfocuslo;
-		double ngsfocus=tmp->p[0]->p[0]; 
+		const real lpfocus=parms->sim.lpfocuslo;
+		real ngsfocus=tmp->p[0]->p[0]; 
 		simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
 		error("Please Implement: add ngsfocus to Merr_lo");
 		dcellfree(tmp);	
@@ -258,7 +258,7 @@ void recon_servo_update(SIM_T *simu){
 
 	if(iframe+1==dtrat){//ready for output.
 	    dmat *psd=0;
-	    double dthi=parms->sim.dt*parms->sim.dtrat_hi;
+	    real dthi=parms->sim.dt*parms->sim.dtrat_hi;
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		dmat *tmp=dtrans(P(simu->dmerrts, ievl));
 		dmat *psdi=psd1dt(tmp, parms->recon.psdnseg, dthi);
@@ -275,7 +275,7 @@ void recon_servo_update(SIM_T *simu){
 	    if(simu->dmint->ep->nx==1 && simu->dmint->ep->ny==1){
 		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, simu->dmint->ep->p[0], 0);
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, 0, 1);
-		double g=0.5;
+		real g=0.5;
 		simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
 		info("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
 		writebin(psdol, "psdol_%d", simu->reconisim);		    
@@ -296,7 +296,7 @@ void recon_servo_update(SIM_T *simu){
 	    //writebin(simu->Merrts, "Merrts_%d", simu->reconisim);
 	    dmat *ts=dtrans(simu->Merrts);
 	    dzero(simu->Merrts);
-	    double dt=parms->sim.dt*parms->sim.dtrat_lo;
+	    real dt=parms->sim.dt*parms->sim.dtrat_lo;
 	    for(int icol=0; icol<ts->ny; icol++){
 		dmat *tsi=dsub(ts, icol, 1, 0, 0);
 		dmat *psd=psd1dt(tsi, parms->recon.psdnseg, dt);
@@ -304,7 +304,7 @@ void recon_servo_update(SIM_T *simu){
 		if(simu->Mint_lo->ep->nx==1){//integrator
 		    dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, simu->Mint_lo->ep->p[0], 0);
 		    dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
-		    const double g=parms->recon.psdservo_gain;
+		    const real g=parms->recon.psdservo_gain;
 		    simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
 		    info("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
 		    dfree(psdol);
@@ -322,7 +322,7 @@ void recon_servo_update(SIM_T *simu){
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
-    double tk_start=myclockd();
+    real tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol) return;
     RECON_T *recon=simu->recon;

@@ -46,7 +46,7 @@ cell *cellnew2(const void *A_){
 	return 0;
     }else if(iscell(A)){
 	return cellnew(A->nx, A->ny);
-    }else if(A->id==M_DBL){
+    }else if(A->id==M_REAL){
 	return (cell*)dnew(A->nx, A->ny);
     }else{
 	error("Invalid type: id=%u\n", A->id);
@@ -89,9 +89,9 @@ void cellinit2(cell **A, const cell *B){
 		}
 	    }
 	}
-	if(magic==M_DBL){
+	if(magic==M_REAL){
 	    *A=(cell*)dcellnew2((const dcell*)B);
-	}else if(magic==M_CMP){
+	}else if(magic==M_COMP){
 	    *A=(cell*)ccellnew2((const ccell*)B);
 	}else{
 	    *A=(cell*)cellnew(B->nx, B->ny);
@@ -205,7 +205,7 @@ void cellfree_do(void *A){
 	zfree_do((zmat*)A);break;
     case M_LONG:
 	lfree_do((lmat*)A);break;
-    case M_LOC64:
+    case M_LOC:
 	locfree_do((loc_t*)A);break;
     case M_DSP:
 	dspfree_do((dsp*)A);break;
@@ -230,7 +230,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	}else if (id!=MCC_ANY){
 	    uint32_t id2=A->id;
 	    if((id & id2)!=id && (id & id2) != id2){
-		warning("id=%u, id2=%u, mismatch\n", id, id2);
+		warning("write as %x, data is %x, mismatch\n", id, id2);
 		id=id2;
 	    }
 	}
@@ -278,12 +278,12 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	zwritedata(fp, (zmat*)A);break;
     case M_LONG:
 	lwritedata(fp, (lmat*)A);break;
-    case M_LOC64:
+    case M_LOC:
 	locwritedata(fp, (loc_t*)A);break;
-    case M_MAP64:
+    case M_MAP:
 	map_header((map_t*)A);
 	dwritedata(fp, (dmat*)A);break;
-    case M_RECTMAP64:
+    case M_RECTMAP:
 	rmap_header((rmap_t*)A);
 	dwritedata(fp, (dmat*)A);break;
     case M_DSP:
@@ -322,24 +322,30 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	    if(!id) id=header->magic;
 	    switch(id){
 	    case M_DBL: 
-	    case M_FLT:
 		out=dreaddata(fp, header);break;
+	    case M_FLT:
+		out=sreaddata(fp, header);break;
 	    case M_CMP: 
-	    case M_ZMP:
 		out=creaddata(fp, header);break;
-	    case M_LONG: out=lreaddata(fp, header);break;
-	    case M_LOC64: out=locreaddata(fp, header); break;
-	    case M_MAP64: {
-		dmat *tmp=dreaddata(fp, header); 
-		out=d2map(tmp);
-		dfree(tmp);
-	    }
+	    case M_ZMP:
+		out=zreaddata(fp, header);break;
+	    case M_LONG: 
+		out=lreaddata(fp, header);break;
+	    case M_LOC64: case M_LOC32:
+		out=locreaddata(fp, header); break;
+	    case M_MAP64: case M_MAP32:
+		{
+		    dmat *tmp=dreaddata(fp, header); 
+		    out=d2map(tmp);
+		    dfree(tmp);
+		}
 		break;
-	    case M_RECTMAP64: {
-		dmat *tmp=dreaddata(fp, header); 
-		out=d2rmap(tmp);
-		dfree(tmp);
-	    }
+	    case M_RECTMAP64: case M_RECTMAP32:
+		{
+		    dmat *tmp=dreaddata(fp, header); 
+		    out=d2rmap(tmp);
+		    dfree(tmp);
+		}
 		break;
 	    case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
 		out=dspreaddata(fp, header);break;

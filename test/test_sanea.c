@@ -30,10 +30,10 @@ static void test_ints(){
     int nsim=500;
     int nsa=2582;
     dmat *nea=dnew(nsim,nsa*2);
-    double(*pnea)[nsim]=(void*)nea->p;
-    double rne=3;
-    double bkgrnd=0;
-    double siglev=1000;
+    real(*pnea)[nsim]=(void*)nea->p;
+    real rne=3;
+    real bkgrnd=0;
+    real siglev=1000;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	for(int isim=0; isim<nsim; isim++){
 	    dbg("iwfs %d isim=%d\n",iwfs,isim);
@@ -41,7 +41,7 @@ static void test_ints(){
 	    dcell *ints=dcellread("ints_%d_wfs%d.bin",isim,iwfs);
 	    /*dcell *i0=dcellread("powfs0_i0.bin"); */
 	    dmat *im=NULL, *imy=NULL;
-	    double gnf[2], gny[2];
+	    real gnf[2], gny[2];
 
 	    for(int isa=0; isa<nsa; isa++){
 		dcp(&im,ints->p[isa]);
@@ -67,15 +67,15 @@ static void test_i0(){
     int nsim=500;
     int nsa=2582;
     dmat *nea=dnew(nsim,nsa*2);
-    double(*pnea)[nsim]=(void*)nea->p;
-    double rne=3;
-    double bkgrnd=0;
-    double siglev=1000;
+    real(*pnea)[nsim]=(void*)nea->p;
+    real rne=3;
+    real bkgrnd=0;
+    real siglev=1000;
     dcell *i0=dcellread("powfs0_i0.bin");
     for(int isim=0; isim<nsim; isim++){
 	dbg("isim=%d\n",isim);
 	dmat *im=NULL, *imy=NULL;
-	double gnf[2], gny[2];
+	real gnf[2], gny[2];
 	for(int isa=0; isa<nsa; isa++){
 	    dcp(&im,i0->p[isa]);
 	    dscale(im,siglev);

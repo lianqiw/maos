@@ -51,7 +51,7 @@ static void test_dcp(){
     toc("dcp");
     tic;
     for(int i=0; i<100; i++){
-	memcpy(A->p,B->p,A->nx*A->ny*sizeof(double));
+	memcpy(A->p,B->p,A->nx*A->ny*sizeof(real));
     }
     toc("cpy");
     tic;
@@ -72,12 +72,12 @@ static void test_dref(){
 }
 static void test_dcircle(){
     dmat *A=dnew(100,100);
-    double r=45;
+    real r=45;
     dcircle(A,50,50,1,1,r,1);
     writebin(A,"dcircle_linear");
     dzero(A);
     writebin(A,"dcircle");
-    double r2=sqrt(dsum(A)/M_PI);
+    real r2=sqrt(dsum(A)/M_PI);
     dbg("r=%g, r2=%g\n",r,r2);
 }
 static void test_d2cell(){
@@ -344,7 +344,7 @@ void test_sho(){
     dmat *x=dread("input");
     dmat *y=dnew(x->nx, x->ny);
     SHO_T *sho=sho_new(200, 0.9);
-    double dt=1./64000.;
+    real dt=1./64000.;
     for(int i=1; i<x->nx*x->ny; i++){
 	y->p[i]=sho_step(sho, x->p[i-1], dt);
     }
@@ -352,7 +352,7 @@ void test_sho(){
     writebin(y, "output");
     dmat *x2=dread("input2");
     dmat *y2=dnew(x2->nx, x2->ny);
-    double dt2=1./800.;
+    real dt2=1./800.;
     for(int i=1; i<x2->nx*x2->ny; i++){
 	y2->p[i]=sho_step(sho, x2->p[i-1], dt2);
     }

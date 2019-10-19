@@ -20,7 +20,7 @@
 /**
    Compute the PSD from a sequence.
 */
-//#define W_J(i,N2) (1-pow((double)(i-N2)/(double)N2, 2))
+//#define W_J(i,N2) (1-pow((real)(i-N2)/(real)N2, 2))
 #define W_J(i,N2) 1
 dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 	    long nseg      /**<[in] Number of overlapping segments*/
@@ -41,9 +41,9 @@ dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
     cmat *hat=cnew(lseg, 1);
     //cfft2plan(hat, -1);
     for(long icol=0; icol<ncol; icol++){
-	double *ppsd=psd->p+icol*(lseg2+1);
+	real *ppsd=psd->p+icol*(lseg2+1);
 	for(int iseg=0; iseg<nseg; iseg++){
-	    double* p=v->p+icol*nx+iseg*lseg2;
+	    real* p=v->p+icol*nx+iseg*lseg2;
 	    for(int ix=0; ix<lseg; ix++){
 		hat->p[ix]=p[ix]*W_J(ix, lseg2);
 	    }
@@ -55,7 +55,7 @@ dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 	    ppsd[lseg2]+=cabs2(hat->p[lseg2]);
 	}
     }
-    double sumwt=0;
+    real sumwt=0;
     for(int ix=0; ix<lseg; ix++){
 	sumwt+=pow(W_J(ix, lseg2), 2);
     }
@@ -67,16 +67,16 @@ dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 /**
   Wrap of psd1d to put the frequency along the first column.
 */
-dmat *psd1dt(const dmat *v, long nseg, double dt){
+dmat *psd1dt(const dmat *v, long nseg, real dt){
     dmat *psd=psd1d(v, nseg);
     dmat *psd2=dnew(psd->nx, psd->ny+1);
     int N=(psd->nx-1)*2;
-    double df=1./(N*dt);
+    real df=1./(N*dt);
     for(int i=0; i<psd->nx; i++){
 	psd2->p[i]=df*i;
     }
     dscale(psd, 1./df);//divide so the value is point, not integrated in a bin.
-    memcpy(psd2->p+psd2->nx, psd->p, psd->nx*psd->ny*sizeof(double));
+    memcpy(psd2->p+psd2->nx, psd->p, psd->nx*psd->ny*sizeof(real));
     dfree(psd);
     return psd2;
 }
@@ -86,8 +86,8 @@ dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog){
     dmat *f1=drefcols(psdin, 0, 1);
     dmat *psd1=dsub(psdin, 0, 0, 1, 1);//copy
     dmat *f2=dref(fnew);
-    double t1=dtrapz(f1, psd1);
-    double ydefault=1e-40;
+    real t1=dtrapz(f1, psd1);
+    real ydefault=1e-40;
     if(uselog){
 	dcwlog(psd1);
 	ydefault=log(ydefault);
@@ -96,7 +96,7 @@ dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog){
     if(uselog){
 	dcwexp(psd2,1);
     }
-    double t2=dtrapz(f2, psd2);
+    real t2=dtrapz(f2, psd2);
     if(fabs(t1-t2)>fabs(0.5*(t1+t2)*2)){
 	warning("psd interpolation failed. int_orig=%g, int_interp=%g\n", t1, t2);
     }
@@ -108,26 +108,26 @@ dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog){
    Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise.
  */
 dmat *psd_vibid(const dmat *psdin){
-    double *f=psdin->p;
-    double *psd=psdin->p+psdin->nx;
+    real *f=psdin->p;
+    real *psd=psdin->p+psdin->nx;
     dmat *y=dsub(psdin, 0, 0, 1, 1);
-    const double gain=0.1;
-    const double gain2=0.05;
+    const real gain=0.1;
+    const real gain2=0.05;
     int inpeak=0;
-    double ylpf0=y->p[1];
-    double dylpf0=fabs(y->p[1]-y->p[0]);
-    double ylpf=0, dylpf=0;
+    real ylpf0=y->p[1];
+    real dylpf0=fabs(y->p[1]-y->p[0]);
+    real ylpf=0, dylpf=0;
     int nmaxp=100;
     dmat *res=dnew(4, nmaxp);
-    double thres=25e-18;/*threshold: 5 nm*/
-    double sumxy=0, sumy=0, sum=0;
+    real thres=25e-18;/*threshold: 5 nm*/
+    real sumxy=0, sumy=0, sum=0;
     int count=0;
     for(long i=1; i<psdin->nx-1; i++){
 	if(!inpeak){
 	    //second order LPF
 	    ylpf0=(1.-gain)*ylpf0+y->p[i]*gain; 
 	    ylpf=(1.-gain)*ylpf+ylpf0*gain;
-	    double diff=y->p[i]-y->p[i-1];
+	    real diff=y->p[i]-y->p[i-1];
 	    if(diff>0){
 		dylpf0=(1.-gain2)*dylpf0+diff*gain2; 
 		dylpf=(1.-gain2)*dylpf+dylpf0*gain2;
@@ -170,16 +170,16 @@ dmat *psd_vibid(const dmat *psdin){
 }
 
 /**Convert temporal PSD to spatial*/
-dmat *psdt2s(const dmat *psdt, double vmean){
+dmat *psdt2s(const dmat *psdt, real vmean){
     if(psdt->nx!=1 || psdt->ny>4){
 	error("psdt needs to be 1 row and less than 4 cols\n");
     }
-    double alpha=psdt->p[0];//power
-    double beta=psdt->p[1];//strength
-    double alpha2=alpha-1;
+    real alpha=psdt->p[0];//power
+    real beta=psdt->p[1];//strength
+    real alpha2=alpha-1;
     //n is -alpha2
-    double bfun=tgamma(0.5)*tgamma((-alpha2-1)*0.5)/tgamma(-alpha2*0.5);
-    double beta2=beta/bfun*pow(vmean, 2+alpha2);
+    real bfun=tgamma(0.5)*tgamma((-alpha2-1)*0.5)/tgamma(-alpha2*0.5);
+    real beta2=beta/bfun*pow(vmean, 2+alpha2);
     dmat *psds=dnew(psdt->nx, psdt->ny);
     psds->p[0]=alpha2;
     psds->p[1]=beta2;
@@ -193,16 +193,16 @@ dmat *psdt2s(const dmat *psdt, double vmean){
 }
 
 /**Convert special PSD to temporal*/
-dmat *psds2t(const dmat *psds, double vmean){
+dmat *psds2t(const dmat *psds, real vmean){
     if(psds->nx!=1 || psds->ny>4){
 	error("psds needs to be 1 row and less than 4 cols\n");
     }
-    double alpha=psds->p[0];//power
-    double beta=psds->p[1];//strength
-    double alpha2=alpha+1;
+    real alpha=psds->p[0];//power
+    real beta=psds->p[1];//strength
+    real alpha2=alpha+1;
     //n is -alpha
-    double bfun=tgamma(0.5)*tgamma((-alpha-1)*0.5)/tgamma(-alpha*0.5);
-    double beta2=beta*bfun*pow(vmean, -2-alpha);
+    real bfun=tgamma(0.5)*tgamma((-alpha-1)*0.5)/tgamma(-alpha*0.5);
+    real beta2=beta*bfun*pow(vmean, -2-alpha);
     dmat *psdt=dnew(psds->nx, psds->ny);
     psdt->p[0]=alpha2;
     psdt->p[1]=beta2;
@@ -219,10 +219,10 @@ dmat *psds2t(const dmat *psds, double vmean){
 /**
    Integrated a PSF that defines on linear or logrithmically spaced grid nu.
 */
-double psd_inte(const double *nu, const double *psd, long n){
-    double dnu=(nu[n-1]-nu[0])/(n-1);
-    double dlognu=(log(nu[n-1])-log(nu[0]))/(n-1);
-    double res_sig=0;
+real psd_inte(const real *nu, const real *psd, long n){
+    real dnu=(nu[n-1]-nu[0])/(n-1);
+    real dlognu=(log(nu[n-1])-log(nu[0]))/(n-1);
+    real res_sig=0;
     if(fabs(nu[1]-nu[0]-dnu)<dnu*1.e-4){
 	for(long i=0; i<n; i++){
 	    res_sig+=psd[i];
@@ -239,30 +239,30 @@ double psd_inte(const double *nu, const double *psd, long n){
 /**
    wraps psd_inte
 */
-double psd_inte2(const dmat *psdin){
+real psd_inte2(const dmat *psdin){
     if(psdin->ny!=2){
 	error("psdin  should have two columns\n");
     }
-    double *nu=psdin->p;
+    real *nu=psdin->p;
     long n=psdin->nx;
-    double *psd=nu+n;
+    real *psd=nu+n;
     return psd_inte(nu, psd, n);
 }
 
 /**
    Convert PSD into time series.*/
-dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
+dmat* psd2time(const dmat *psdin, rand_t *rstat, real dt, int nstepin){
     if(!psdin){
 	error("psdin cannot be null\n");
     }
     long nstep=nextpow2(nstepin);
-    double df=1./(dt*nstep);
+    real df=1./(dt*nstep);
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
     if(psdin->ny==1){//[alpha, beta, fmin, fmax] discribes power law with cut on/off freq.
 	psd=dnew(nstep, 1);
-	double alpha=psdin->p[0];
-	double beta=psdin->p[1];
+	real alpha=psdin->p[0];
+	real beta=psdin->p[1];
 	long i0=1, imax=nstep;
 	if(psdin->nx>2){
 	    i0=(long)round(psdin->p[2]/df);
@@ -306,7 +306,7 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
 */
 
 static int check_psd_match(const dmat *psd1, const dmat *psd2){
-    double ans=1;
+    real ans=1;
     if(psd1->nx!=psd2->nx){
 	ans=0;
     }else{
@@ -322,7 +322,7 @@ static int check_psd_match(const dmat *psd1, const dmat *psd2){
 /**
    Add two PSDs. The first column of each dmat is the frequency nu, and the
    second column is PSD*/
-dmat *add_psd(const dmat *psd1, const dmat *psd2, double scale2){
+dmat *add_psd(const dmat *psd1, const dmat *psd2, real scale2){
     dmat *out=ddup(psd1);
     add_psd2(&out, psd2, scale2);
     return out;
@@ -332,15 +332,15 @@ dmat *add_psd(const dmat *psd1, const dmat *psd2, double scale2){
   Add a PSD scaled by scale to another. The first column of each dmat is the
    frequency nu, and the second column is PSD.
 */
-void add_psd2(dmat **pout, const dmat *in, double scale){
+void add_psd2(dmat **pout, const dmat *in, real scale){
     if(!*pout){
 	*pout=ddup(in);
     }else{
 	dmat *out=*pout;
-	double *p1=PCOL(out,1);
+	real *p1=PCOL(out,1);
 	dmat *p2new=0;
 	const long nx=out->nx;
-	const double *p2=0;
+	const real *p2=0;
 	if(check_psd_match(out, in)){
 	    p2=PCOL(in, 1);
 	}else{
@@ -359,9 +359,9 @@ void add_psd2(dmat **pout, const dmat *in, double scale){
 /**
    Sum all the columns of PSDs (excluding first column), scaled by scale
 */
-void psd_sum(dmat *psd, double scale){
+void psd_sum(dmat *psd, real scale){
     for(int ix=0; ix<psd->nx; ix++){
-	double tmp=0;
+	real tmp=0;
 	for(int iy=1; iy<psd->ny; iy++){
 	    tmp+=P(psd, ix, iy);
 	}

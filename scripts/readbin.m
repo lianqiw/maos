@@ -158,17 +158,23 @@ function res=fread_fits(varargin)
     end
 function [res header err]=readbin_do(fid, isfits)
     M_CSP64=25600;
-    M_SP64=25601;
+    M_DSP64=25601;
     M_DBL=25602;
     M_INT64=25603;
     M_CMP=25604;
     M_INT32=25605;
     M_CSP32=25606;
-    M_SP32=25607;
+    M_DSP32=25607;
     M_FLT=25608;
     M_ZMP=25609;
     M_INT8=25610;
     M_INT16=25611;
+    
+    M_SSP64=25648;
+    M_SSP32=25649;
+    M_ZSP64=25650;
+    M_ZSP32=25651;
+    
     MC_CSP=25616;
     MC_SP=25617;
     MC_DBL=25618;
@@ -195,6 +201,7 @@ function [res header err]=readbin_do(fid, isfits)
         res=[];
         return;
     else
+        magic=bitand(magic, 65535);
         err=0;
     end
     if nx==0 || ny==0
@@ -224,7 +231,7 @@ function [res header err]=readbin_do(fid, isfits)
       else
           clear header2;
       end
-     case {M_SP64, M_CSP64}
+     case {M_DSP64, M_CSP64}
       nz=zfread(fid,1,'uint64=>uint64');
       Jc=zfread(fid,ny+1,'uint64=>uint64');
       Ir=zfread(fid,nz,'uint64=>uint64');
@@ -234,7 +241,7 @@ function [res header err]=readbin_do(fid, isfits)
           P=zfread(fid,nz,'double=>double');
       end
       convert_sparse=1;
-     case {M_SP32, M_CSP32}
+     case {M_DSP32, M_CSP32}
       nz=zfread(fid,1,'uint64=>uint64');
       Jc=zfread(fid,ny+1,'uint32=>uint32');
       Ir=zfread(fid,nz,'uint32=>uint32');
@@ -242,6 +249,26 @@ function [res header err]=readbin_do(fid, isfits)
           P=zfread(fid,[2 nz],'double=>double');
       else
           P=zfread(fid,nz,'double=>double');
+      end
+      convert_sparse=1;
+     case {M_SSP64, M_ZSP64}
+      nz=zfread(fid,1,'uint64=>uint64');
+      Jc=zfread(fid,ny+1,'uint64=>uint64');
+      Ir=zfread(fid,nz,'uint64=>uint64');
+      if magic==M_CSP64
+          P=zfread(fid,[2 nz],'float=>float');
+      else
+          P=zfread(fid,nz,'float=>float');
+      end
+      convert_sparse=1;
+     case {M_SSP32, M_ZSP32}
+      nz=zfread(fid,1,'uint64=>uint64');
+      Jc=zfread(fid,ny+1,'uint32=>uint32');
+      Ir=zfread(fid,nz,'uint32=>uint32');
+      if magic==M_CSP32
+          P=zfread(fid,[2 nz],'float=>float');
+      else
+          P=zfread(fid,nz,'float=>float');
       end
       convert_sparse=1;
      case M_DBL
@@ -270,6 +297,7 @@ function [res header err]=readbin_do(fid, isfits)
             Ic(Jc(iy)+1:Jc(iy+1))=iy;
         end
         Ir=Ir+1;%start from 1 now.
+        P=double(P);
         if size(P,1)==2
             Pr=P(1,:)';
             Pi=P(2,:)';

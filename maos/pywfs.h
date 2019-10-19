@@ -23,10 +23,10 @@
    Parameters used by Pyramid WFS
  */
 typedef struct PYWFS_T{
-    double hs;         /**<Height of guide star*/
-    double hc;         /**<Conjugation height of WFS pupil*/
-    double poke;       /**<How much to poke for mkg*/
-    double modulate;   /**<Amount of modulation in radian*/
+    real hs;         /**<Height of guide star*/
+    real hc;         /**<Conjugation height of WFS pupil*/
+    real poke;       /**<How much to poke for mkg*/
+    real modulate;   /**<Amount of modulation in radian*/
     int modulpos;      /**<Number of positions per modulation cycle*/
     int modulring;     /**<Number of rings within the maximum radius to modulate*/
     int iwfs0;         /**<First iwfs for this powfs*/
@@ -39,14 +39,14 @@ typedef struct PYWFS_T{
     cmat *nominal;     /**<For sampling results onto detector*/
     dspcell *si;       /**<For sampling results onto detector*/
     dmat *sioff;       /**<Offset for si*/
-    double gain;       /**<Optical gain of PYWFS*/
+    real gain;       /**<Optical gain of PYWFS*/
     dmat *saa;         /**<Subaperture area. Average is one*/
     dmat *gradoff;     /**<Gradient of a flat wavefront*/
     dmat *GTT;          /**<Response of TT mode.*/
     dmat *pupilshift;  /**<Pupil shift. 4x2.*/
     loccell *msaloc;   /**<Mishaped saloc of each sub-pupil due to optical effects*/
     int sigmatch;      /**<Scale gradients by matching intensity (1: locally, 2: globally).*/
-    double siglev;     /**<Nominal siglev per subaperture*/
+    real siglev;     /**<Nominal siglev per subaperture*/
     dmat *opdadd;      /**<Aberrations along the WFS path (on locfft grid)*/
 }PYWFS_T;
 
@@ -55,7 +55,7 @@ void pywfs_free(PYWFS_T *pywfs);
 void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints);
 void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd);
 dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* ploc, const char *distortion, 
-		const dmat *mod, const dmat *opdadd, double displacex,  double displacey, double scale);
+		const dmat *mod, const dmat *opdadd, real displacex,  real displacey, real scale);
 dmat *pywfs_tt(const PYWFS_T *pywfs);
 
 #endif

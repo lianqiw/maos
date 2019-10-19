@@ -27,16 +27,16 @@
 
 #define rmapfree(A) ({dfree_do((dmat*)A);A=NULL;})
 #define mapfree(A) ({dfree_do((dmat*)A);A=NULL;})
-map_t *mapnew(long nx, long ny, double dx, double dy);
+map_t *mapnew(long nx, long ny, real dx, real dy);
 map_t *mapnew2(map_t *A);
 map_t *mapref(map_t *A);
-void mapcircle(map_t *map, double r, double val);
-void mapcircle_symbolic(map_t *map, double r);
-void map_d_din(map_t *map, double *d, double *din);
-void create_metapupil(map_t **map, long* nx, long* ny, dmat *dirs, double D, 
-		      double ht, double dx, double dy, double offset,double guard, 
+void mapcircle(map_t *map, real r, real val);
+void mapcircle_symbolic(map_t *map, real r);
+void map_d_din(map_t *map, real *d, real *din);
+void create_metapupil(map_t **map, long* nx, long* ny, dmat *dirs, real D, 
+		      real ht, real dx, real dy, real offset,real guard, 
 		      long ninx, long niny, int pad,int square);
-dmat *mkcirmap(long nx, long ny, double cx, double cy, double r);
+dmat *mkcirmap(long nx, long ny, real cx, real cy, real r);
 
 map_t* d2map(const dmat *in);
 mapcell *dcell2map(const dcell *in);

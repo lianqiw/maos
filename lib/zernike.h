@@ -19,10 +19,10 @@
 #define AOS_LIB_ZERNIKE_H
 #include "../math/mathdef.h"
 dmat *zernike_Rnm(const dmat *locr, int ir, int im);
-dmat* zernike(const loc_t *loc, double D, int rstart, int rend, int flag);
+dmat* zernike(const loc_t *loc, real D, int rstart, int rend, int flag);
 dmat *zernike_cov_kolmogorov(int nr);
-dmat *cov_vonkarman(const loc_t *loc, const dmat *modz, double L0);
+dmat *cov_vonkarman(const loc_t *loc, const dmat *modz, real L0);
 dmat *cov_diagnolize(const dmat *mz, const dmat *cov);
-dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0);
-dmat *fft_mode(const loc_t *loc, double D, double px, double py);
+dmat *KL_vonkarman(const loc_t *loc, int nmod, real L0);
+dmat *fft_mode(const loc_t *loc, real D, real px, real py);
 #endif

@@ -32,18 +32,18 @@
 
 #include "accphi.h"
 #include "proj.h"
-/*const double pi=3.1415926535897932384626433832795; */
-static inline double cosangle(double a[3], double b[3]){
+/*const real pi=3.1415926535897932384626433832795; */
+static inline real cosangle(real a[3], real b[3]){
     return (a[0]*b[0]+a[1]*b[1]+a[2]*b[2])
 	/sqrt((a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
 	      *(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]));
 }
 
-void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
-		    const loc_t *locout,const double ratiox, const double ratioy,
-		    const double *ampout, double* phiout, 
-		    double sc, double hs, double ht,
-		    double betax, double betay){
+void proj_rect_grid(rmap_t *mapin, real thetax, real thetay,
+		    const loc_t *locout,const real ratiox, const real ratioy,
+		    const real *ampout, real* phiout, 
+		    real sc, real hs, real ht,
+		    real betax, real betay){
     /*
       input parameters:
       mapin: M3 surface map, NOT OPD. 
@@ -58,16 +58,16 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
     const int wrapy1 = mapin->ny;
     const int wrapx = wrapx1-1;
     const int wrapy = wrapy1-1;
-    double offx=hs*betax;
-    double offy=hs*betay;
+    real offx=hs*betax;
+    real offy=hs*betay;
     if(ratiox<0) offx=-offx;
     if(ratioy<0) offy=-offy;
-    const double dx_in1 = 1./mapin->dx;
-    const double dy_in1 = 1./mapin->dy;
-    double a0x=(-offx/sin(thetax)-mapin->ox)*dx_in1;
-    double a0y=(-offy/sin(thetay)-mapin->oy)*dy_in1;
-    double ddx=(hs-ht)*dx_in1;
-    double ddy=(hs-ht)*dy_in1;
+    const real dx_in1 = 1./mapin->dx;
+    const real dy_in1 = 1./mapin->dy;
+    real a0x=(-offx/sin(thetax)-mapin->ox)*dx_in1;
+    real a0y=(-offy/sin(thetay)-mapin->oy)*dy_in1;
+    real ddx=(hs-ht)*dx_in1;
+    real ddy=(hs-ht)*dy_in1;
   
     int nplocx,nplocy,nplocx1,nplocy1;
     if(fabs(thetax-M_PI*0.5)>M_PI*.45 || fabs(thetay-M_PI*0.5)>M_PI*0.45){
@@ -75,22 +75,22 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 	return;
     }
     
-    double vm3[3];
+    real vm3[3];
     vm3[0]=-sin(M_PI/2-thetax);
     vm3[1]=-sin(M_PI/2-thetay);
     vm3[2]=-sqrt(1.-vm3[0]*vm3[0]-vm3[1]*vm3[1]);
-    double vi[3];
+    real vi[3];
     vi[2]=-hs;
-    double sc2;
+    real sc2;
     for(int iloc=0; iloc<locout->nloc; iloc++){
 	if(ampout && fabs(ampout[iloc])<1.e-10)
 	    continue;/*skip points that has zero amplitude */
-	double alx=atan2(locout->locx[iloc]*ratiox+offx,hs);
-	double aly=atan2(locout->locy[iloc]*ratioy+offy,hs);
-	double btx=thetax-alx;
-	double bty=thetay-aly;
-	double dplocx=ddx*sin(alx)/sin(btx)+a0x;
-	double dplocy=ddy*sin(aly)/sin(bty)+a0y;
+	real alx=atan2(locout->locx[iloc]*ratiox+offx,hs);
+	real aly=atan2(locout->locy[iloc]*ratioy+offy,hs);
+	real btx=thetax-alx;
+	real bty=thetay-aly;
+	real dplocx=ddx*sin(alx)/sin(btx)+a0x;
+	real dplocy=ddy*sin(aly)/sin(bty)+a0y;
 	vi[0]=locout->locx[iloc]*ratiox+offx;
 	vi[1]=locout->locy[iloc]*ratioy+offy;
 	SPLIT(dplocx,dplocx,nplocx);
@@ -113,31 +113,31 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 /**
    Wraps proj_rect_grid for M3.
 */
-void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locout, double thetax, double thetay, double hs){
-    const double alx=tsurf->txdeg/180*M_PI;
-    const double aly=tsurf->tydeg/180*M_PI;
-    const double ftel=tsurf->ftel;
-    const double fexit=tsurf->fexit;
-    const double fsurf=tsurf->fsurf;
-    const double mag=fexit/ftel;
-    const double scalex=-mag;
-    const double scaley=mag;
-    const double scaleopd=-2;
-    const double het=fexit-fsurf;/*distance between exit pupil and M3. */
+void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locout, real thetax, real thetay, real hs){
+    const real alx=tsurf->txdeg/180*M_PI;
+    const real aly=tsurf->tydeg/180*M_PI;
+    const real ftel=tsurf->ftel;
+    const real fexit=tsurf->fexit;
+    const real fsurf=tsurf->fsurf;
+    const real mag=fexit/ftel;
+    const real scalex=-mag;
+    const real scaley=mag;
+    const real scaleopd=-2;
+    const real het=fexit-fsurf;/*distance between exit pupil and M3. */
 
-    double d_img_focus=1./(1./ftel-1./hs)-ftel;
+    real d_img_focus=1./(1./ftel-1./hs)-ftel;
     /*info("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
-    double d_img_exit=fexit+d_img_focus;
+    real d_img_exit=fexit+d_img_focus;
 		
     /*2010-04-02: do not put - sign */
-    double bx=thetax*(d_img_focus+ftel)/d_img_exit;
-    double by=thetay*(d_img_focus+ftel)/d_img_exit;
+    real bx=thetax*(d_img_focus+ftel)/d_img_exit;
+    real by=thetay*(d_img_focus+ftel)/d_img_exit;
     proj_rect_grid(tsurf,alx,aly,locout,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
 }
 /**
    A convenient wrapper for m3proj() to be called from matlab or python
  */
-dmat *m3proj2(dmat *mapin_0, char *header, loc_t *locout, double thetax, double thetay, double hs){
+dmat *m3proj2(dmat *mapin_0, char *header, loc_t *locout, real thetax, real thetay, real hs){
     free(mapin_0->header);
     mapin_0->header=header;
     rmap_t *mapin=d2rmap(mapin_0);

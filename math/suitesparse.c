@@ -50,9 +50,8 @@
 #include "../sys/sys.h"
 #include "type.h"
 /*Obtain from SuiteSparse ss_multiply. Gather together */
-typedef spint SS_INT;
 #define SS_MAX(a,b) (((a) > (b)) ? (a) : (b))
-
+#define SS_INT spint
 #define SS_ENTRY T
 #define cs X(sp)
 
@@ -303,25 +302,25 @@ static SS_INT ss_tol (SS_INT i, SS_INT j, SS_ENTRY aij, void *tol)
 {
     (void) i;
     (void) j;
-    return (fabs (aij) > *((double *) tol)) ;
+    return (fabs (aij) > *((real *) tol)) ;
 }
 /**
    drop values below threashold of tol.
 */ 
-SS_INT X(ss_droptol) (cs *A, double tol)
+SS_INT X(ss_droptol) (cs *A, real tol)
 {
     return (ss_fkeep (A, &ss_tol, &tol)) ;    /* keep all large entries */
 }
-static double ss_cumsum (SS_INT *p, SS_INT *c, SS_INT n)
+static real ss_cumsum (SS_INT *p, SS_INT *c, SS_INT n)
 {
     SS_INT i, nz = 0 ;
-    double nz2 = 0 ;
+    real nz2 = 0 ;
     if (!p || !c) return (-1) ;     /* check inputs */
     for (i = 0 ; i < n ; i++)
     {
         p [i] = nz ;
         nz += c [i] ;
-        nz2 += c [i] ;              /* also in double to avoid SS_INT overflow */
+        nz2 += c [i] ;              /* also in real to avoid SS_INT overflow */
         c [i] = p [i] ;             /* also copy p[0..n-1] back into c[0..n-1]*/
     }
     p [n] = nz ;

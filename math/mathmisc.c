@@ -34,217 +34,6 @@ long double factorial(long n1, long n2){
     }
     return fact;
 }
-/**
-   normalize vector to sum to norm;*/
-void normalize_sum(double *p, long nloc, double norm){
-    if(!nloc) return;
-    double ss=norm/dotdbl(p,NULL,NULL,nloc);
-    for(int i=0; i<nloc; i++){
-	p[i]*=ss;
-    }
-}
-/**
-   normalize vector to sum of abs to norm;*/
-void normalize_sumabs(double *p, long nloc, double norm){
-    if(!nloc) return;
-    double ss=0;
-    for (long i=0; i<nloc; i++){
-	ss+=fabs(p[i]);
-    }
-    ss=norm/ss;
-    for(int i=0; i<nloc; i++){
-	p[i]*=ss;
-    }
-}
-/**
-   normalize vector to max to max;*/
-void normalize_max(double *p, long nloc, double max){
-    if(!nloc) return;
-    double ss=max/maxabs(p,nloc);
-    for(int i=0; i<nloc; i++){
-	p[i]*=ss;
-    }
-}
-/**
-   compute sum(p1.*p2.*p3)*/
-
-double dotdbl(const double *restrict p1, const double *restrict p2, 
-	   const double *restrict p3, long n){
-    double ans=0;
-    if(p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
-    }else if(!p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
-    }else if(p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
-    }else if(!p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p3[i];
-    }else if(p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
-    }else if(!p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p2[i];
-    }else if(p1 && !p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i];
-    }else if(!p1 && !p2 && !p3){
-	ans=(double)n;/*assume all ones. */
-    }
-    return  ans;
-}
-
-/**
-   compute sum(p1.*p2.*p3)*/
-
-float dotflt(const float *restrict p1, const float *restrict p2, 
-	   const float *restrict p3, long n){
-    float ans=0;
-    if(p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
-    }else if(!p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
-    }else if(p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
-    }else if(!p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p3[i];
-    }else if(p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
-    }else if(!p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p2[i];
-    }else if(p1 && !p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i];
-    }else if(!p1 && !p2 && !p3){
-	ans=(float)n;/*assume all ones. */
-    }
-    return  ans;
-}
-/**
-   compute sum(p1.*p2.*p3) for complex p1, p2 and double p3*/
-dcomplex dotcmp(const dcomplex *restrict p1, const dcomplex *restrict p2, 
-		const double *restrict p3, long n){
-    dcomplex ans=0;
-    if(p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
-    }else if(!p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
-    }else if(p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
-    }else if(!p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p3[i];
-    }else if(p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
-    }else if(!p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p2[i];
-    }else if(p1 && !p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i];
-    }else if(!p1 && !p2 && !p3){
-	ans=(double)n;/*assume all ones. */
-    }
-    return  ans;
-}
-
-/**
-   compute sum(p1.*p2.*p3) for complex p1, p2 and float p3*/
-fcomplex dotzmp(const fcomplex *restrict p1, const fcomplex *restrict p2, 
-		const float *restrict p3, long n){
-    fcomplex ans=0;
-    if(p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
-    }else if(!p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
-    }else if(p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
-    }else if(!p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p3[i];
-    }else if(p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
-    }else if(!p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p2[i];
-    }else if(p1 && !p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i];
-    }else if(!p1 && !p2 && !p3){
-	ans=(float)n;/*assume all ones. */
-    }
-    return  ans;
-}
-/**
-   compute the maximum of double vector */
-double maxdbl(const double *p, long n){
-    if(!p) return 0;
-    double a=p[0];
-    for(long i=1; i<n; i++){
-	if(p[i]>a) a=p[i];
-    }
-    return a;
-}
-/**
-   compute the maximum of the abs of double vector*/
-double maxabs(const double *p, long n){
-    if(!p) return 0;
-    double a=fabs(p[0]);
-    for(long i=1; i<n; i++){
-	if(fabs(p[i])>a) a=fabs(p[i]);
-    }
-    return a;
-}
-/**
-   compute the maximum of the abs of float vector*/
-float maxabsf(const float *p, long n){
-    if(!p) return 0;
-    float a=fabs(p[0]);
-    for(long i=1; i<n; i++){
-	if(fabsf(p[i])>a) a=fabsf(p[i]);
-    }
-    return a;
-}
-/**
-   Compute the sum of double vector*/
-double dblsum(const double *p, long nx){
-    double sum=0;
-    for(long ix=0; ix<nx; ix++){
-	sum+=p[ix];
-    }
-    return sum;
-}
-
-/**
-   Compute the sum of double vector*/
-float fltsum(const float *p, long nx){
-    float sum=0;
-    for(long ix=0; ix<nx; ix++){
-	sum+=p[ix];
-    }
-    return sum;
-}
-
-/**
-   add two double vectors: out=out*alpha+in*beta+theta
-*/
-void adddbl(double *restrict out, double alpha, 
-	    const double *in, int N, double beta, double theta){
-
-    if (fabs(alpha)<EPS){
-	memset(out,0,sizeof(double)*N);
-	if(in){
-	    for(int i=0; i<N; i++){
-		out[i]=in[i]*beta+theta;
-	    }
-	}else{
-	    for(int i=0; i<N; i++){
-		out[i]=theta;
-	    }
-	}
-    }else{
-	if(in){
-	    for(int i=0; i<N; i++){
-		out[i]=out[i]*alpha+in[i]*beta+theta;
-	    }
-	}else{
-	    for(int i=0; i<N; i++){
-		out[i]=out[i]*alpha+theta;
-	    }
-	}
-    }
-}
-
 
 /**
    Reverse an permution vector.
@@ -257,32 +46,7 @@ long *invperm(long *p, long np){
     }
     return pi;
 }
-/**
-   Permute the vector so that
-   out(:)=in(p);
-*/
-void cvecperm(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx){
-    for(long i=0; i<nx; i++){
-	if(perm[i]>0){
-	    out[i]=in[perm[i]];
-	}else{
-	    out[i]=conj(in[-perm[i]]);
-	}
-    }
-}
-/**
-   Reverse permute the vector so that
-   out(p)=in(:);
-*/
-void cvecpermi(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx){
-    for(long i=0; i<nx; i++){
-	if(perm[i]>0){
-	    out[perm[i]]=in[i];
-	}else{
-	    out[-perm[i]]=conj(in[i]);
-	}
-    }
-}
+
 /**
  Compute max, min and sum of a long vector*/
 void maxminlong(const long *restrict p, long N,
@@ -298,19 +62,7 @@ void maxminlong(const long *restrict p, long N,
     if(max)*max=a; 
     if(min)*min=b; 
 }
-/**
-   Remove piston from p of length n
-*/
-void remove_piston(double *p, long n){
-    double piston=0;
-    for(long i=0; i<n; i++){
-	piston+=p[i];
-    }
-    piston/=-n;
-    for(long i=0; i<n; i++){
-	p[i]+=piston;
-    }
-}
+
 /**
    Find the next number that is power of 2.
 */
@@ -472,4 +224,37 @@ spint *readspint(file_t *fp, long* nx, long* ny){
 	*ny=0;
     }
     return out;
+}
+/**
+   Read a vector from file and perform conversion if type mismatches.
+*/
+void readvec(void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, const file_t *fp){
+    if(nmemb==0) return;
+
+#define DO_CONVERT(T1, T2)					\
+    T2 *p2=mymalloc(nmemb,T2);					\
+    zfread(p2, sizeof(T2), nmemb, fp);				\
+    for(size_t i=0; i<nmemb; i++){				\
+	((T1*)p)[i]=p2[i];					\
+    }								\
+    free(p2);
+
+    if(magic_p==magic_file){
+	zfread(p, size, nmemb, fp);
+    }else if(magic_p==M_DBL && magic_file==M_FLT){
+	DO_CONVERT(double, float);
+    }else if(magic_p==M_FLT && magic_file==M_DBL){
+	DO_CONVERT(float, double);
+    }else if(magic_p==M_CMP && magic_file==M_ZMP){
+	DO_CONVERT(dcomplex,fcomplex);
+    }else if(magic_p==M_ZMP && magic_file==M_CMP){
+	DO_CONVERT(fcomplex,dcomplex);
+    }else if(magic_p==M_INT32 && magic_file==M_INT64){
+	DO_CONVERT(int,int64_t);
+    }else if(magic_p==M_INT64 && magic_file==M_INT32){
+	DO_CONVERT(int64_t,int);
+    }else{
+	error("Please implement conversion from %x to %x\n", magic_file, magic_p);
+    }
+#undef DO_CONVERT
 }

@@ -19,7 +19,7 @@
 #ifndef SKYC_GETSTARS_H
 #define SKYC_GETSTARS_H
 #include "skyc.h"
-dcell *genstars(long nsky, double lat, double lon, double catscl, double fov, int nwvl, double *wvls,
+dcell *genstars(long nsky, real lat, real lon, real catscl, real fov, int nwvl, real *wvls,
 		rand_t *rstat);
 
 void sortstars(dcell *stars);

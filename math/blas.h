@@ -69,22 +69,25 @@ extern "C"{
     void X(gesdd)(const char *jobz, ptrdiff_t* m, ptrdiff_t* n, T* a, ptrdiff_t* lda, \
 		  R* s, T* u, ptrdiff_t* ldu, T* vt, ptrdiff_t* ldvt,	\
 		  T* work, ptrdiff_t* lwork, R*rwork, ptrdiff_t* iwork, ptrdiff_t* info); 
-
+#ifdef USE_DOUBLE
 #define BLAS_D(A) d##A##_
-#define BLAS_S(A) s##A##_
 #define BLAS_C(A) z##A##_
+    BLAS_DEF(BLAS_D,real)
+    BLAS_DEF(BLAS_C,comp)
+    BLAS_DEF_REAL(BLAS_D,real)
+    BLAS_DEF_COMP(BLAS_C,comp,real)
+#endif
+
+#define BLAS_S(A) s##A##_
 #define BLAS_Z(A) c##A##_
 
-BLAS_DEF(BLAS_D,double)
-BLAS_DEF(BLAS_S,float)
-BLAS_DEF(BLAS_C,dcomplex)
-BLAS_DEF(BLAS_Z,fcomplex)
 
-BLAS_DEF_REAL(BLAS_D,double)
-BLAS_DEF_REAL(BLAS_S,float)
-BLAS_DEF_COMP(BLAS_C,dcomplex,double)
-BLAS_DEF_COMP(BLAS_Z,fcomplex,float)
-
+    BLAS_DEF(BLAS_S,float)
+    BLAS_DEF(BLAS_Z,fcomplex)
+    
+    BLAS_DEF_REAL(BLAS_S,float)
+    BLAS_DEF_COMP(BLAS_Z,fcomplex,float)
+    
 #ifdef __cplusplus
 }
 #endif

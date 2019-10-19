@@ -19,11 +19,6 @@
 #ifndef AOS_MATH_NUMTYPE_H
 #define AOS_MATH_NUMTYPE_H
 #include "../sys/sys.h"
-#if defined(DLONG)
-typedef long spint; /*Only optionally activated in AMD64. */
-#else
-typedef int spint;  /*This is always 32 bit. */
-#endif
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -196,4 +191,28 @@ static inline fcomplex cpowf(fcomplex x, fcomplex z){
 }
 #endif //defined(__FreeBSD__) || defined(__NetBSD__)
 #endif //#if defined(__cplusplus) 
+
+#ifdef USE_DOUBLE
+typedef double real;
+typedef dcomplex comp;
+#define M_REAL M_DBL
+#define M_COMP M_CMP
+#else
+typedef float real;
+typedef fcomplex comp;
+#define M_REAL M_FLT
+#define M_COMP M_ZMP
+#endif
+#define M_MAP     0x010000 | M_REAL /*map_t, compatible with M_REAL*/
+#define M_RECTMAP 0x020000 | M_REAL /*map_t, compatible with M_REAL*/
+#define M_LOC     0x030000 | M_REAL /*loc_t, with real data*/
+
+#define M_MAP32     0x010000 | M_FLT /*map_t, compatible with M_FLT*/
+#define M_RECTMAP32 0x020000 | M_FLT /*map_t, compatible with M_FLT*/
+#define M_LOC32     0x030000 | M_FLT /*loc_t with float data*/
+
+#define M_MAP64     0x010000 | M_DBL /*map_t, compatible with M_DBL*/
+#define M_RECTMAP64 0x020000 | M_DBL /*map_t, compatible with M_DBL*/
+#define M_LOC64     0x030000 | M_DBL /*loc_t with double data*/
+
 #endif //ifndef AOS_MATH_NUMTYPE_H

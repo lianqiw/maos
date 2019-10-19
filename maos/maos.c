@@ -30,7 +30,7 @@ const char *dirskysim=NULL;
 
 /** begin variable overridable by environment variable MAOS_ .  These are for
  debugging maos itself. Not pertinent to a particular simulation*/
-double TOMOSCALE=1e-12;
+real TOMOSCALE=1e-12;
 int PARALLEL=1; //DO wfs, evl, and recon in parallel
 int KEEP_MEM=0; //keep allocated memory during steps.
 int NO_WFS=0;

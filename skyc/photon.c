@@ -25,20 +25,20 @@
 /*
   Zero magnitude and sky background relocated to parameter file skyc.conf
 */
-//const double Z_J=1.97e7*(20*9.56);
+//const real Z_J=1.97e7*(20*9.56);
 /*
   The following were obtain by R Clare on Table IV in Bessel 1988. But the print was garbelled. Fixed.
-  const double Z_H=9.6e6*(20*16.5);
-  const double Z_K=4.5e6*(20*14.41);
+  const real Z_H=9.6e6*(20*16.5);
+  const real Z_K=4.5e6*(20*14.41);
 */
 /*
-const double Z_H=9.6e6*(20*14.17);
-const double Z_K=4.5e6*(20*16.74);
+const real Z_H=9.6e6*(20*14.17);
+const real Z_K=4.5e6*(20*16.74);
 
 %these are for LA Silla from ESO slide
-const double MB_J=(16.7+15.8)/2;
-const double MB_H=(15.0+13.8)/2;
-const double MB_K=(13.0+12.7)/2;//kshort
+const real MB_J=(16.7+15.8)/2;
+const real MB_H=(15.0+13.8)/2;
+const real MB_K=(13.0+12.7)/2;//kshort
 */
 /**
    \file skyc/photon.c
@@ -49,47 +49,47 @@ const double MB_K=(13.0+12.7)/2;//kshort
    period, etc.
  */
 void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitude flux*/
-		 double *Np,      /**<[out] number of total signal at each wvl.*/
-		 double *Nptot,   /**<[out] total signal (sum of Np).*/
-		 double *Nbtot,   /**<[out] number of background photon per pixel*/
-		 double *QCSNR,   /**<[out] signal to noise ratio for a Quadcell*/
-		 double *QCNEA,   /**<[out] noise equivalent angle for a Quadcell with Nyquist sampling*/
+		 real *Np,      /**<[out] number of total signal at each wvl.*/
+		 real *Nptot,   /**<[out] total signal (sum of Np).*/
+		 real *Nbtot,   /**<[out] number of background photon per pixel*/
+		 real *QCSNR,   /**<[out] signal to noise ratio for a Quadcell*/
+		 real *QCNEA,   /**<[out] noise equivalent angle for a Quadcell with Nyquist sampling*/
 		 int nwvl,        /**<[in] number of wavelength.*/ 
-		 double* wvls,    /**<[in] vector of wavelength*/
-		 double *mags,    /**<[in] vector of magnitudes*/
-		 double dxsa,     /**<[in] subaperture side length*/
+		 real* wvls,    /**<[in] vector of wavelength*/
+		 real *mags,    /**<[in] vector of magnitudes*/
+		 real dxsa,     /**<[in] subaperture side length*/
 		 int iscircle,    /**<[in] where the subaperture is circle/part of a circle. true for TT/TTFA sensors.*/
-		 double pixtheta, /**<[in] pixel extense in radian*/
-		 double dt,       /**<[in] sampling period in seconds*/
-		 double za,       /**<[in] zenith angle*/
-		 double *strehl,  /**<[in] Strehl of the image. set to 1 for full flux.*/
-		 double imperrnm, /**<[in] Implementation error in nm*/
-		 double *thruput, /**<[in] end to end optical throughput*/
-		 double *qe,      /**<[in] detector quantum efficiency.*/
-		 double rne       /**<[in] detector read out noise.*/
+		 real pixtheta, /**<[in] pixel extense in radian*/
+		 real dt,       /**<[in] sampling period in seconds*/
+		 real za,       /**<[in] zenith angle*/
+		 real *strehl,  /**<[in] Strehl of the image. set to 1 for full flux.*/
+		 real imperrnm, /**<[in] Implementation error in nm*/
+		 real *thruput, /**<[in] end to end optical throughput*/
+		 real *qe,      /**<[in] detector quantum efficiency.*/
+		 real rne       /**<[in] detector read out noise.*/
 		 ){
     /*
        Written 2010-06-09;
        Tested PASS 2010-06-09;
      */
-    double pixas=pixtheta*206265;/*in arcsec. */
-    double Npsum=0;
-    double Nbsum=0;
-    double saa;
+    real pixas=pixtheta*206265;/*in arcsec. */
+    real Npsum=0;
+    real Nbsum=0;
+    real saa;
     if(iscircle){
 	saa=M_PI*pow(dxsa*0.5,2);
     }else{
 	saa=pow(dxsa,2);
     }
     if(!Np){
-	Np=myalloca(nwvl, double);
+	Np=myalloca(nwvl, real);
     }
-    double Npwvl=0;
+    real Npwvl=0;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvl=wvls[iwvl];
-	double Z=0, ZB=0;
-	double imperr_rad2=pow(imperrnm*1e-9*(2*M_PI/wvl),2);
-	double imperr_strehl=exp(-imperr_rad2);
+	real wvl=wvls[iwvl];
+	real Z=0, ZB=0;
+	real imperr_rad2=pow(imperrnm*1e-9*(2*M_PI/wvl),2);
+	real imperr_strehl=exp(-imperr_rad2);
 	if(fabs(wvl-1.25e-6)<1.e-7){ /*J band */
 	    Z=zb->ZJ; ZB=pow(10,-zb->BJ/2.5)*Z;
 	}else if(fabs(wvl-1.65e-6)<1.e-7){/*H band */
@@ -99,8 +99,8 @@ void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitu
 	}else{
 	    error("Invalid");
 	}
-	double absorp=(1./cos(za)-1)*(-log(0.98));/*atmosphere absorption. */
-	double strehl_iwvl=1;
+	real absorp=(1./cos(za)-1)*(-log(0.98));/*atmosphere absorption. */
+	real strehl_iwvl=1;
 	if(strehl){
 	    strehl_iwvl=strehl[iwvl];
 	}
@@ -111,10 +111,10 @@ void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitu
 	Npwvl+=Np[iwvl]/wvl;
     }
     //warning_once("How does background scale with zenith angle? Surface brightness is independent of distance\n");
-    double wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
-    double deltheta=wvlm/dxsa;
-    double thetaB=3.*M_PI*deltheta/16.;
-    double snr=Npsum/sqrt(Npsum+4*Nbsum+4.*pow(rne,2));
+    real wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
+    real deltheta=wvlm/dxsa;
+    real thetaB=3.*M_PI*deltheta/16.;
+    real snr=Npsum/sqrt(Npsum+4*Nbsum+4.*pow(rne,2));
     if(Nptot) *Nptot=Npsum;
     if(Nbtot) *Nbtot=Nbsum;
     if(QCSNR) *QCSNR=snr;

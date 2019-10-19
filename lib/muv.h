@@ -29,7 +29,7 @@
 /**
    Avoid function casting. It will hide data safety check and hide bugs.
 */
-typedef void (*EXFUN) (dcell **xout, const void *A, const dcell *xin, const double alpha, int xb, int yb);
+typedef void (*EXFUN) (dcell **xout, const void *A, const dcell *xin, const real alpha, int xb, int yb);
 /**
    Decompose an operator into a sparse operator and optional low rank
    terms. M-U*V'; M is usually symmetrical.
@@ -66,18 +66,18 @@ typedef struct MUV_T{
     int maxit;     /**<How many iterations*/
 }MUV_T;
 
-void muv(dcell **xout, const void *A, const dcell *xin, const double alpha);
-void muv_trans(dcell **xout, const void *A, const dcell *xin, const double alpha);
-void muv_ib(dcell **xout, const void *A, const dcell *xin, const double alpha);
+void muv(dcell **xout, const void *A, const dcell *xin, const real alpha);
+void muv_trans(dcell **xout, const void *A, const dcell *xin, const real alpha);
+void muv_ib(dcell **xout, const void *A, const dcell *xin, const real alpha);
 void muv_direct_solve(dcell **xout, const MUV_T *A, dcell *xin);
 void muv_direct_solve_mat(dmat **xout, const MUV_T *A, dmat *xin);
-void muv_direct_prep(MUV_T *muv, double svd);
+void muv_direct_prep(MUV_T *muv, real svd);
 void muv_direct_free(MUV_T *muv);
 void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib);
 void muv_bgs_solve(dcell **px, const MUV_T *A, const dcell *b);
-double muv_solve(dcell **px, const MUV_T *L, const MUV_T *R, dcell *b);
+real muv_solve(dcell **px, const MUV_T *L, const MUV_T *R, dcell *b);
 void* muv_direct_spsolve(const MUV_T *A, const dsp *xin);
-void muv_direct_diag_prep(MUV_T *muv, double svd);
+void muv_direct_diag_prep(MUV_T *muv, real svd);
 void muv_direct_diag_free(MUV_T *muv);
 void muv_free(MUV_T *A);
 #endif

@@ -378,7 +378,7 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 		loc_t **loc,        /**<Plot arrays of loc as grid*/
 		const dcell *dc,    /**<If loc isempty, use cell to plot curves*/
 		const int32_t *style,/**<Style of each point*/
-		const double *limit,/**<x min, xmax, ymin and ymax*/
+		const real *limit,/**<x min, xmax, ymin and ymax*/
 		const char *xylog,  /**<Whether use logscale for x, y*/
 		const dmat *cir,    /**<Data for the circles: x, y origin, radius, and color*/
 		const char *const*const legend, /**<ngroup number of char**/
@@ -397,15 +397,15 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 	    int sock_draw=sock_draws[ifd].fd;
 	    if(sock_draw==-1) continue;
 	    if(!check_figfn(ifd, fig, fn, 1)) continue;
+	    STWRITEINT(DRAW_FLOAT); STWRITEINT(sizeof(real));
 	    STWRITEINT(DRAW_START);
 	    if(loc){/*there are points to plot. */
 		for(int ig=0; ig<ngroup; ig++){
-		    STWRITEINT(DRAW_POINTS);
-		    STWRITEINT(loc[ig]->nloc);
+		    STWRITEINT(DRAW_POINTS); STWRITEINT(loc[ig]->nloc);
 		    STWRITEINT(2);
 		    STWRITEINT(1);
-		    STWRITE(loc[ig]->locx, sizeof(double)*loc[ig]->nloc);
-		    STWRITE(loc[ig]->locy, sizeof(double)*loc[ig]->nloc);
+		    STWRITE(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
+		    STWRITE(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
 		}
 		if(dc){
 		    warning("both loc and dc are specified, ignore dc.\n");
@@ -417,7 +417,7 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 		}
 		for(int ig=0; ig<ngroup; ig++){
 		    int nx=0, ny=0;
-		    double *p=NULL;
+		    real *p=NULL;
 		    if(dc->p[ig]){
 			nx=dc->p[ig]->nx;
 			ny=dc->p[ig]->ny;
@@ -428,7 +428,7 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 		    STWRITEINT(ny);
 		    STWRITEINT(0);
 		    if(p){
-			STWRITE(p, sizeof(double)*dc->p[ig]->nx*dc->p[ig]->ny);
+			STWRITE(p, sizeof(real)*dc->p[ig]->nx*dc->p[ig]->ny);
 		    }
 		}
 	    }else{
@@ -445,11 +445,11 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 		}
 		STWRITEINT(DRAW_CIRCLE);
 		STWRITEINT(cir->ny);
-		STWRITE(cir->p, sizeof(double)*cir->nx*cir->ny);
+		STWRITE(cir->p, sizeof(real)*cir->nx*cir->ny);
 	    }
 	    if(limit){/*xmin,xmax,ymin,ymax */
 		STWRITEINT(DRAW_LIMIT);
-		STWRITE(limit, sizeof(double)*4);
+		STWRITE(limit, sizeof(real)*4);
 	    }
 	    if(xylog){
 		STWRITEINT(DRAW_XYLOG);
@@ -485,9 +485,9 @@ typedef struct imagesc_t{
     char *fig; /**<Category of the figure*/
     long nx;   /**<the image is of size nx*ny*/
     long ny;   /**<the image is of size nx*ny*/
-    double *limit; /**<x min; xmax; ymin and ymax*/
-    double *zlim;/**< min;max; the data*/
-    double *p; /**<The image*/
+    real *limit; /**<x min; xmax; ymin and ymax*/
+    real *zlim;/**< min;max; the data*/
+    real *p; /**<The image*/
     char *title;  /**<title of the plot*/
     char *xlabel; /**<x axis label*/
     char *ylabel; /**<y axis label*/
@@ -500,9 +500,9 @@ static int imagesc_do(imagesc_t *data){
 	char *fig=data->fig;
 	long nx=data->nx;
 	long ny=data->ny;
-	double *limit=data->limit;
-	double *zlim=data->zlim;
-	double *p=data->p;
+	real *limit=data->limit;
+	real *zlim=data->zlim;
+	real *p=data->p;
 	char *title=data->title;
 	char *xlabel=data->xlabel;
 	char *ylabel=data->ylabel;
@@ -515,17 +515,18 @@ static int imagesc_do(imagesc_t *data){
 	    int32_t header[2];
 	    header[0]=nx;
 	    header[1]=ny;
+	    STWRITEINT(DRAW_FLOAT); STWRITEINT(sizeof(real));
 	    STWRITEINT(DRAW_START);
 	    STWRITEINT(DRAW_DATA);
 	    STWRITE(header, sizeof(int32_t)*2);
-	    STWRITE(p, sizeof(double)*nx*ny);
+	    STWRITE(p, sizeof(real)*nx*ny);
 	    if(zlim){
 		STWRITEINT(DRAW_ZLIM);
-		STWRITE(zlim,sizeof(double)*2);
+		STWRITE(zlim,sizeof(real)*2);
 	    }
 	    if(limit){/*xmin,xmax,ymin,ymax */
 		STWRITEINT(DRAW_LIMIT);
-		STWRITE(limit, sizeof(double)*4);
+		STWRITE(limit, sizeof(real)*4);
 	    }
 	    if(fn){
 		STWRITECMDSTR(DRAW_NAME,fn);
@@ -553,9 +554,9 @@ static int imagesc_do(imagesc_t *data){
 int imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
 	     long ny,   /**<the image is of size nx*ny*/
-	     const double *limit, /**<x min, xmax, ymin and ymax*/
-	     const double *zlim,/**< min,max, the data*/
-	     const double *p, /**<The image*/
+	     const real *limit, /**<x min, xmax, ymin and ymax*/
+	     const real *zlim,/**< min,max, the data*/
+	     const real *p, /**<The image*/
 	     const char *title,  /**<title of the plot*/
 	     const char *xlabel, /**<x axis label*/
 	     const char *ylabel, /**<y axis label*/
@@ -587,9 +588,9 @@ int imagesc(const char *fig, /**<Category of the figure*/
 	data->x=0;				\
     }
     datastrdup(fig);
-    datamemdup(limit, 4, double);
-    datamemdup(zlim, 2, double);
-    datamemdup(p, nx*ny, double);
+    datamemdup(limit, 4, real);
+    datamemdup(zlim, 2, real);
+    datamemdup(p, nx*ny, real);
     datastrdup(title);
     datastrdup(xlabel);
     datastrdup(ylabel);
@@ -603,15 +604,15 @@ int imagesc(const char *fig, /**<Category of the figure*/
 /**
    Draw the OPD of real and imaginary of complex p defined on nx*ny grid. see imagesc()
 */
-int imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const double *zlim,
-		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
+int imagesc_cmp_ri(const char *fig, long nx, long ny, const real *limit, const real *zlim,
+		    const comp *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     format2fn;
     if(!draw_current(fig, fn)) return 0;
 
-    double *pr,*pi;
-    pr=mymalloc(nx*ny,double);
-    pi=mymalloc(nx*ny,double);
+    real *pr,*pi;
+    pr=mymalloc(nx*ny,real);
+    pi=mymalloc(nx*ny,real);
     for(int i=0; i<nx*ny; i++){
 	pr[i]=creal(p[i]);
 	pi[i]=cimag(p[i]);
@@ -625,15 +626,15 @@ int imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const
 /**
    Draw the OPD of abs and phase of complex p defined on nx*ny grid. see imagesc()
 */
-int imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const double *zlim,
-		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
+int imagesc_cmp_ap(const char *fig, long nx, long ny, const real *limit,const real *zlim,
+		    const comp *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     format2fn;
     if(!draw_current(fig, fn)) return 0;
-    double *pr,*pi;
+    real *pr,*pi;
     int isreal=1;
-    pr=mymalloc(nx*ny,double);
-    pi=mycalloc(nx*ny,double);
+    pr=mymalloc(nx*ny,real);
+    pi=mycalloc(nx*ny,real);
     for(int i=0; i<nx*ny; i++){
 	pr[i]=cabs(p[i]);
 	if(pr[i]>1.e-10){
@@ -654,13 +655,13 @@ int imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const 
 /**
    Draw the OPD of abs of complex p defined on nx*ny grid. see imagesc()
 */
-int imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const double *zlim,
-		     const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
+int imagesc_cmp_abs(const char *fig, long nx, long ny, const real *limit,const real *zlim,
+		     const comp *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...){
     format2fn;
     if(!draw_current(fig, fn)) return 0;
-    double *pr;
-    pr=mymalloc(nx*ny,double);
+    real *pr;
+    pr=mymalloc(nx*ny,real);
     for(int i=0; i<nx*ny; i++){
 	pr[i]=cabs(p[i]);
     }
@@ -687,7 +688,7 @@ int imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const
    imagesc.  . see imagesc()
 */
 
-int ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
+int ddraw(const char *fig, const dmat *A, real *xylim, real *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
@@ -697,7 +698,7 @@ int ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
 /**
    Mapping the absolution value of complex array. see imagesc()
 */
-int cdrawabs(const char *fig, const cmat *A, double *xylim, double *zlim,
+int cdrawabs(const char *fig, const cmat *A, real *xylim, real *zlim,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char *format,...){
   
@@ -708,7 +709,7 @@ int cdrawabs(const char *fig, const cmat *A, double *xylim, double *zlim,
 /**
    Mapping the real/imaginary part of complex array. see imagesc()
 */
-int cdrawri(const char *fig, const cmat *A, double *xylim, double *zlim,
+int cdrawri(const char *fig, const cmat *A, real *xylim, real *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     
@@ -719,7 +720,7 @@ int cdrawri(const char *fig, const cmat *A, double *xylim, double *zlim,
 /**
    Mapping the absolute and phase of complex array. see imagesc()
 */
-int cdraw(const char *fig, const cmat *A, double *xylim, double *zlim,
+int cdraw(const char *fig, const cmat *A, real *xylim, real *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
@@ -729,12 +730,12 @@ int cdraw(const char *fig, const cmat *A, double *xylim, double *zlim,
 /**
    like ddraw, acting on map object. see imagesc()
 */
-int drawmap(const char *fig, const map_t *map,  double *zlim,
+int drawmap(const char *fig, const map_t *map,  real *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     format2fn;
     if(!draw_current(fig, fn)) return 0;
-    double limit[4];
+    real limit[4];
     limit[0]=map->ox-map->dx/2;
     limit[1]=map->ox+(map->nx-0.5)*map->dx;
     limit[2]=map->oy-map->dx/2;
@@ -745,7 +746,7 @@ int drawmap(const char *fig, const map_t *map,  double *zlim,
 /**
    Plot the loc on the screen. see imagesc()
 */
-int drawloc(const char *fig, loc_t *loc, double *zlim,
+int drawloc(const char *fig, loc_t *loc, real *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
     format2fn;
@@ -755,13 +756,13 @@ int drawloc(const char *fig, loc_t *loc, double *zlim,
     int nxm=loc->map->nx;
     int nx=loc->map->nx-npad*2;
     int ny=loc->map->ny-npad*2;
-    double *opd0=mycalloc(nx*ny,double);
+    real *opd0=mycalloc(nx*ny,real);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    opd0[ix+iy*nx]=(loc->map->p[(ix+npad)+(iy+npad)*nxm]>0);
 	}
     }
-    double limit[4];
+    real limit[4];
     limit[0]=loc->map->ox+loc->dx*(npad-1/2);
     limit[1]=limit[0]+loc->dx*nx;
     limit[2]=loc->map->oy+loc->dx*(npad-1/2);
@@ -774,7 +775,7 @@ int drawloc(const char *fig, loc_t *loc, double *zlim,
 /**
    Plot the opd using coordinate loc. see imagesc()
 */
-int drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
+int drawopd(const char *fig, loc_t *loc, const real *opd,  real *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
 
@@ -797,7 +798,7 @@ int drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 	    }
 	}
     }
-    double limit[4];
+    real limit[4];
     limit[0]=loc->map->ox+fabs(loc->dx)*(npad-1/2);
     limit[1]=loc->map->ox+fabs(loc->dx)*(nx+npad-1/2);
     limit[2]=loc->map->oy+fabs(loc->dy)*(npad-1/2);
@@ -809,7 +810,7 @@ int drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 /**
    Plot gradients using CuReD
 */
-int drawgrad(const char *fig, loc_t *saloc, const dmat *grad, double *zlim, int grad2opd,
+int drawgrad(const char *fig, loc_t *saloc, const dmat *grad, real *zlim, int grad2opd,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char* format,...){
     format2fn;
@@ -818,7 +819,7 @@ int drawgrad(const char *fig, loc_t *saloc, const dmat *grad, double *zlim, int 
 	//This is different from loc_embed. It removes the padding.
 	dmat *phi=0;
 	cure_loc(&phi, grad, saloc);
-	double limit[4];
+	real limit[4];
 	int npad=saloc->npad;
     	limit[0]=saloc->map->ox+fabs(saloc->dx)*(npad-1/2);
 	limit[1]=saloc->map->ox+fabs(saloc->dx)*(phi->nx+npad-1/2);
@@ -837,7 +838,7 @@ int drawgrad(const char *fig, loc_t *saloc, const dmat *grad, double *zlim, int 
 /**
    Plot opd*amp with coordinate loc. see imagesc()
 */
-int drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
+int drawopdamp(const char *fig, loc_t *loc, const real *opd, const real *amp, real *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...){
     format2fn;
@@ -849,10 +850,10 @@ int drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp
     int nxm=loc->map->nx;
     int nx=loc->map->nx-npad*2;
     int ny=loc->map->ny-npad*2;
-    double ampthres;
+    real ampthres;
     dmaxmin(amp, loc->nloc, &ampthres, 0);
     ampthres*=0.5;
-    double *opd0=mycalloc(nx*ny,double);
+    real *opd0=mycalloc(nx*ny,real);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm]-1;
@@ -863,7 +864,7 @@ int drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp
 	    }
 	}
     }
-    double limit[4];
+    real limit[4];
     limit[0]=loc->map->ox+loc->dx*(npad-1);
     limit[1]=limit[0]+loc->dx*nx;
     limit[2]=loc->map->oy+loc->dx*(npad-1);

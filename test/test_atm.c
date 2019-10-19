@@ -25,10 +25,10 @@ int main(){
     seed_rand(&bstat,1);
     seed_rand(&rstat,lrand(&bstat));
     int nlayer=2;
-    double wt[7]={0.2887, 0.17795, 0.06602, 0.07833, 0.1405, 0.1216, 0.1269};
-    double r0=0.1987; 
-    double L0[7]={30,30,30,30,30,30,30};
-    double dx=1./64.;
+    real wt[7]={0.2887, 0.17795, 0.06602, 0.07833, 0.1405, 0.1216, 0.1269};
+    real r0=0.1987; 
+    real L0[7]={30,30,30,30,30,30,30};
+    real dx=1./64.;
     int m=4096*2;
     NTHREAD=6;
     THREAD_POOL_INIT(NTHREAD);

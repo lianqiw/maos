@@ -19,7 +19,7 @@
 #define AOS_LIB_KALMAN_H
 
 #include "../math/mathdef.h"
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, int vibid);
+dmat* sde_fit(const dmat *psdin, const dmat *coeff0, real tmax_fit, int vibid);
 typedef struct{
     dmat *Ad;  /**<discrete state propagation at dT*/
     dcell *Cd; /**<From discrete state to WFS measurement*/
@@ -28,7 +28,7 @@ typedef struct{
     dmat *Qn;  /**<Covariance of the process noise term e_k*/
     dcell *M;  /**<M is innovation gain.*/
     dmat *P;   /**<Error covariance matrix*/
-    double dthi;/**<Sampling period of control loop*/
+    real dthi;/**<Sampling period of control loop*/
     lmat *dtrat;/**<WFS sampling period over dthi*/
     dcell *Gwfs;/**<WFS measurement from modes. Can be identity.*/
     dcell *Rwfs;/**<WFS measurement noise covariance due to photon and RoN.*/
@@ -39,14 +39,14 @@ typedef struct{
 }kalman_t;
 dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *C, const dcell *Rn);
-kalman_t* sde_kalman(const dmat *coeff, const double dthi, const lmat* dtrat, 
+kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat, 
 		     const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);
 void kalman_free(kalman_t *kalman);
 dmat *kalman_test(kalman_t *kalman, dmat *input);
 void kalman_init(kalman_t *kalman);
 void kalman_update(kalman_t *kalman, dmat *meas, int ik);
-void kalman_output(kalman_t *kalman, dmat **out, double alpha, double beta);
+void kalman_output(kalman_t *kalman, dmat **out, real alpha, real beta);
 void kalman_write(kalman_t *kalman, const char *format, ...) CHECK_ARG(2);
-void sde_psd(dmat **psd, const dmat *f, const double *coeff, int ncoeff, int nmod);
+void sde_psd(dmat **psd, const dmat *f, const real *coeff, int ncoeff, int nmod);
 dmat *sde_psd2(const dmat *ff, const dmat *coeff);
 #endif

@@ -30,9 +30,9 @@ void dm2loc(Real *phiout, const culoc_t &locout, const cumapcell &cudm, int ndm,
 		Real mispx, Real mispy, Real dmalpha, cudaStream_t stream);
 
 void ngsmod2loc(curmat &opd, Real (*restrict loc)[2],
-		const NGSMOD_T *ngsmod, const double *mod, 
-		double thetax, double thetay, 
-		double alpha, cudaStream_t stream);
+		const NGSMOD_T *ngsmod, const real *mod, 
+		real thetax, real thetay, 
+		real alpha, cudaStream_t stream);
 #define KARG_COMMON const Real (*restrict loc)[2], const int nloc, const Real dxi, const Real dyi, const Real dispx, const Real dispy, const Real alpha
 __global__ void map2loc_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON);
 __global__ void map2loc_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON);

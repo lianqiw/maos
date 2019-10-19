@@ -26,7 +26,10 @@
 static int no_longer_listen=0;
 int ndrawdata=0;
 int count=0;
+int byte_float=8;
+
 PNEW2(drawdata_mutex);
+//This file does not link to math folder
 void dmaxmin(const double *p, long n, double *pmax, double *pmin){
     double max=-INFINITY, min=INFINITY;
     for(long i=0; i<n; i++){
@@ -90,6 +93,12 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 #define STREADINT(p) if(streadint(sock, &p)) goto end;
 #define STREAD(p,len) if(stread(sock,p,len)) goto end;
 #define STREADSTR(p) if(streadstr(sock, &p)) goto end;
+#define STREADDBL(p,len) if(stread(sock, p, len*byte_float)) goto end;	\
+    if(byte_float==4){							\
+	for(int i=len-1; i>=0; i--){					\
+	    ((double*)p)[i]=(double)(((float*)p)[i]);			\
+	}								\
+    }
 void listen_draw(){
     dbg("listen_draw is listening at %d\n", sock);
     //TIC;tic;
@@ -137,7 +146,7 @@ void listen_draw(){
 		int ny=drawdata->ny;
 		drawdata->p0=mymalloc(nx*ny,double);
 		if(nx*ny>0){
-		    STREAD(drawdata->p0, nx*ny*sizeof(double));
+		    STREADDBL(drawdata->p0, nx*ny);
 		}
 	    }
 	    break;
@@ -157,7 +166,7 @@ void listen_draw(){
 		drawdata->ptsdim[ipts][0]=nptsx;
 		drawdata->ptsdim[ipts][1]=nptsy;
 		if(nptsx*nptsy>0){
-		    STREAD(drawdata->pts[ipts], sizeof(double)*nptsx*nptsy);
+		    STREADDBL(drawdata->pts[ipts], nptsx*nptsy);
 		    if(nptsx>50){
 			if(!drawdata->icumu){
 			    drawdata->icumu=nptsx/10;
@@ -175,11 +184,11 @@ void listen_draw(){
 	case DRAW_CIRCLE:
 	    STREADINT(drawdata->ncir);
 	    drawdata->cir=(double(*)[4])calloc(4*drawdata->ncir, sizeof(double));
-	    STREAD(drawdata->cir,sizeof(double)*4*drawdata->ncir);
+	    STREADDBL(drawdata->cir,4*drawdata->ncir);
 	    break;
 	case DRAW_LIMIT:
 	    drawdata->limit_data=mycalloc(4,double);
-	    STREAD(drawdata->limit_data, 4*sizeof(double));
+	    STREADDBL(drawdata->limit_data, 4);
 	    drawdata->limit_manual=1;
 	    break;
 	case DRAW_FIG:
@@ -199,7 +208,7 @@ void listen_draw(){
 	    break;
 	case DRAW_ZLIM:
 	    drawdata->zlim=mycalloc(2,double);
-	    STREAD(drawdata->zlim, sizeof(double)*2);
+	    STREADDBL(drawdata->zlim, 2);
 	    break;
 	case DRAW_LEGEND:
 	    drawdata->legend=mycalloc(drawdata->npts,char*);
@@ -213,6 +222,14 @@ void listen_draw(){
 	case DRAW_FINAL:
 	    //dbg("client is done\n");
 	    sock_block=1;
+	    break;
+	case DRAW_FLOAT:
+	    STREADINT(byte_float);
+	    if(byte_float>8){
+		error("invalid byte_float=%d\n", byte_float);
+	    }else{
+		info("byte_float=%d\n", byte_float);
+	    }
 	    break;
 	case DRAW_END:
 	    {

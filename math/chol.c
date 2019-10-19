@@ -25,13 +25,43 @@
 #include "chol.h"
 #if defined(DLONG)
 #define MOD(A) cholmod_l_##A
-#define ITYPE CHOLMOD_LONG
+#define CHOL_ITYPE CHOLMOD_LONG
 #else
 #define MOD(A) cholmod_##A
-#define ITYPE CHOLMOD_INT
+#define CHOL_ITYPE CHOLMOD_INT
 #endif
+
+/**
+   2019-10-25: As of this writing, the cholmod library does not support single precision.
+*/
+#define AS_DOUBLE 1 //must always be true
+#if defined(USE_DOUBLE) || AS_DOUBLE
+#define CHOL_DATA CHOLMOD_DOUBLE
+typedef double chol_real;
+#else
+#define CHOL_DATA CHOLMOD_SINGLE
+typedef float chol_real;
+#endif
+
 #define CHOL_SIMPLE 1 //essential for chol_convert to work.
 
+#define DO_CONVERT(p1, p2, t1, t2, size)	\
+    if(sizeof(t1)!=sizeof(t2)){			\
+	p1=mymalloc(size, t1);			\
+	for(long i=0; i<(long)size; i++){	\
+	    ((t1*)p1)[i]=((t2*)p2)[i];		\
+	}					\
+    }else{					\
+	p1=p2;					\
+    }
+#define DO_COPY(p1, p2, t1, t2, size)		\
+    if(sizeof(t1)!=sizeof(t2)){			\
+	for(long i=0; i<(long)size; i++){	\
+	    ((t1*)p1)[i]=((t2*)p2)[i];		\
+	}					\
+    }else{					\
+	memcpy(p1, p2, sizeof(t1)*size);	\
+    }
 /**
    Convert our dsp spase type to cholmod_sparse type. Data is shared. 
 */
@@ -39,29 +69,32 @@ static cholmod_sparse *dsp2chol(const dsp *A){
     cholmod_sparse *B=mycalloc(1,cholmod_sparse);
     B->nrow=A->nx;
     B->ncol=A->ny;
-    B->nzmax=A->nzmax;
+    B->nzmax=A->p[A->ny];
     B->p=A->p;/*do not duplicate. */
     B->i=A->i;
-    B->x=A->x;
-    B->stype=1;/*assume data is symmetric. upper triangular part is used. */
-    B->itype=ITYPE;
+    DO_CONVERT(B->x, A->x, chol_real, real, B->nzmax);
+    B->dtype=CHOL_DATA;
+    B->itype=CHOL_ITYPE;
     B->xtype=CHOLMOD_REAL;
-    B->dtype=CHOLMOD_DOUBLE;
-    B->sorted=0;
+    B->stype=1;/*assume data is symmetric. upper triangular part is used. */
+    B->sorted=1;
     B->packed=1;
     B->nz=NULL;
+    info("dsp2chol: dtype=%d\n", B->dtype);
     return B;
 }
+
 /**
    Convert cholmod_sparse to dsp. Data is shared
 */
 static dsp *chol2sp(const cholmod_sparse *B){
+    info("chol2sp: dtype=%d\n", B->dtype);
     dsp *A;
     A=dspnew(B->nrow, B->ncol, 0);
     A->p=(spint*)B->p;
+    A->nzmax=A->p[A->ny];
     A->i=(spint*)B->i;
-    A->x=(double*)B->x;
-    A->nzmax=B->nzmax;
+    DO_CONVERT(A->x, B->x, real, chol_real, A->nzmax);
     return A;
 }
 /**
@@ -74,27 +107,28 @@ static cholmod_dense* d2chol(const dmat *A, int start, int end){
     B->ncol=end-start;
     B->nzmax=B->nrow*B->ncol;
     B->d=A->nx;
-    B->x=A->p+start*A->nx;
     B->z=NULL;
     B->xtype=CHOLMOD_REAL;
-    B->dtype=CHOLMOD_DOUBLE;
+    DO_CONVERT(B->x, PCOL(A, start), chol_real, real, B->nzmax);
+    B->dtype=CHOL_DATA;
     return B;
 }
 
 /**
    Factorize a sparse array into LL' with reordering.
 */
-spchol* chol_factorize(dsp *A_in){
+spchol* chol_factorize(const dsp *A_in){
     if(!A_in) return NULL;
     spchol *out=mycalloc(1,spchol);
     out->c=mycalloc(1,cholmod_common);
-    MOD(start)(out->c);
-    cholmod_sparse *A=dsp2chol(A_in);//borrows content.
+    MOD(start)(out->c);//This sets dtype to CHOLMOD_DOUBLE
     out->c->status=CHOLMOD_OK;
+    out->c->itype=CHOL_ITYPE;
 #if CHOL_SIMPLE
     out->c->final_super=0;/*we want a simplicity result. */
     out->c->final_ll=1;   /*Leave in LL instead of LDL format. */
-    out->c->final_asis=0; /*do the conversion as shown above. */
+    out->c->final_asis=0; /*0: do the conversion. */
+    out->c->final_pack=1; /*In CSC format*/
 #endif    
     /*Try AMD ordering only: SLOW */
     /*
@@ -104,7 +138,11 @@ spchol* chol_factorize(dsp *A_in){
       out->c.supernodal=CHOLMOD_SIMPLICIAL; force simplicial only. 
     */
     int success=0;
+    cholmod_sparse *A=dsp2chol(A_in);//borrows content.
     out->L=MOD(analyze)(A,out->c);
+    if(out->c->dtype!=A->dtype){
+	error("dtype mismatch: %d and %d\n", out->c->dtype, A->dtype);
+    }
     if(out->L){
 	success=MOD(factorize)(A,out->L, out->c);
     }
@@ -131,13 +169,17 @@ spchol* chol_factorize(dsp *A_in){
 	warning("Common->status=%d\n", out->c->status);
 	error("Analyze failed\n");
     }
-#if CHOL_SIMPLE
+#if CHOL_SIMPLE 
     if(!out->c->final_asis){
 	/*Our solver is much slower than the cholmod simplicity solver, or the
 	 * supernodal solver. Keep original data to use cholmod solver*/
-	chol_convert(out, 1);
+	//chol_convert(out, 0);
+	//out->Cu=dsptrans(out->Cl); dspfree(out->Cl);
     }
 #endif
+    if(A->x!=A_in->x){
+	free(A->x);
+    }
     free(A);/*just free our reference.*/
     return out;
 }
@@ -169,6 +211,9 @@ void chol_convert(spchol *A, int keep){
     }
     cholmod_sparse *B=MOD(factor_to_sparse)(L, A->c);
     A->Cl=chol2sp(B);//moves content of B.
+    if(A->Cl->x!=B->x){
+	free(B->x);
+    }
     free(B);
     MOD(free_factor)(&L, A->c);
     if(!keep){
@@ -177,6 +222,22 @@ void chol_convert(spchol *A, int keep){
 	A->c=NULL;
 	A->L=NULL;
     }
+}
+/**
+   Alternative interface
+*/
+dsp *chol_factorize2(spint **Cp, const dsp *A_in){
+    spchol *C=chol_factorize(A_in);
+    if(!C->Cl){
+	chol_convert(C, 1);
+    }
+    if(Cp){
+	*Cp=C->Cp;
+	C->Cp=0;
+    }
+    dsp *out=C->Cl; C->Cl=0;
+    chol_free_do(C);
+    return out;
 }
 /**
    Save cholesky factor and permutation vector to file.*/
@@ -228,7 +289,12 @@ void chol_save(spchol *A, const char *format,...){
 	    writearr(fp, 0, sizeof(spint), M_SPINT, "px", L->px, L->nsuper+1, 1);
 	    writearr(fp, 0, sizeof(spint), M_SPINT, "s", L->s, L->ssize, 1);
 	}
-	writearr(fp, 0, sizeof(double),M_DBL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
+	info("L->dtype=%d, double is %d, single is %d\n", L->dtype, CHOLMOD_DOUBLE, CHOLMOD_SINGLE);
+	if(L->dtype==CHOLMOD_DOUBLE){
+	    writearr(fp, 0, sizeof(double),M_DBL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
+	}else{
+	    writearr(fp, 0, sizeof(float),M_FLT, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
+	}
     }
     zfclose(fp);
 }
@@ -291,11 +357,11 @@ spchol *chol_read(const char *format, ...){
 #define READSPINT(A,N) L->A=readspint(fp, &nx, &ny);			\
 	if((long)(N)!=nx*ny) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny);
 #define READDBL(A,N) read_header(&header2,fp);				\
-	if(header2.magic!=M_DBL) error("Invalid magic: wanted %u, got %u\n", M_DBL, header2.magic); \
+	if(header2.magic!=M_REAL) error("Invalid magic: wanted %u, got %u\n", M_REAL, header2.magic); \
 	nx=header2.nx; ny=header2.ny;					\
 	if(nx*ny!=(long)(N)) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny); \
-	L->A=mymalloc(nx*ny,double);				\
-	zfread(L->A, sizeof(double), nx*ny, fp);
+	L->A=mymalloc(nx*ny,real);					\
+	zfread(L->A, sizeof(real), nx*ny, fp);
 	
 	READSPINT(Perm, L->n);
 	READSPINT(ColCount, L->n);
@@ -328,64 +394,31 @@ typedef struct{
     spchol *A;
     const dmat *y;
 }CHOLSOLVE_T;
-/*
-  Solve section of the columns in multi-threaded way.
-*/
-static void chol_solve_each(thread_t *info){
-    CHOLSOLVE_T *data=(CHOLSOLVE_T*)info->data;
-    dmat *x=data->x;
-    spchol *A=data->A;
-    cholmod_dense *y2=d2chol(data->y, info->start, info->end);
-    cholmod_dense *x2=MOD(solve)(CHOLMOD_A, A->L, y2, A->c);
-    memcpy(x->p+info->start*x->nx, x2->x, x->nx*(info->end-info->start)*sizeof(double));
-    free(y2);
-    free(x2->x);
-    free(x2);
-}
-/**
-   Solve A*x=y where the cholesky factor of A is stored in A.
-*/
-void chol_solve(dmat **x, spchol *A, dmat *y){
-    if(!A->L){//Use our own simple implementation. Much slower than cholmod one.
-	if(A->Cl){
-	    chol_solve_lower(x, A, y);
-	}else if(A->Cu){
-	    chol_solve_upper(x, A, y);
-	}else{
-	    error("There is no cholesky factor\n");
+static void chol_solve_cholmod(dmat **x, const spchol *A, const dmat *y, long start, long end){
+    cholmod_dense *y2=d2chol(y, start, end);
+    cholmod_dense *x2=MOD(solve)(CHOLMOD_A,A->L,y2,A->c);
+    if(y2->x!=PCOL(y,start)){
+	free(y2->x);
+    }
+    if(!x2 || x2->z || x2->nzmax!=x2->nrow*x2->ncol || x2->d!=x2->nrow || start+x2->ncol!=(size_t)end){
+	error("chol_solve failed or returns unexpected answer.\n");
+    }
+   
+    if(!*x && start==0 && sizeof(real)==sizeof(chol_real)){
+	*x=dnew_do(x2->nrow, x2->ncol, x2->x, mem_new(x2->x));
+    }else{
+	if(!(*x)){
+	    *x=dnew(x2->nrow, end);
+	}else if((*x)->nx!=(long)x2->nrow || (*x)->ny<(long)end){
+	    error("Matrix mismatch\n");
 	}
-    }else{//Use cholmod implementation. Much faster the above.
-	assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
-	if(y->ny==1){
-	    cholmod_dense *y2=d2chol(y, 0, y->ny);/*share pointer. */
-	    cholmod_dense *x2=MOD(solve)(CHOLMOD_A,A->L,y2,A->c);
-	    if(!x2) error("chol_solve failed\n");
-	    if(x2->z) error("why is this?\n");
-	    if(x2->nzmax!=x2->nrow*x2->ncol || x2->d!=x2->nrow){
-		error("Fix here\n");
-	    }
-	    if(!*x){
-		/*takes over the owner of x2->x. */
-		*x=dnew_do(x2->nrow,x2->ncol, (double*)x2->x, mem_new(x2->x));
-		x2->x=0;
-	    }else{
-		if((*x)->nx!=(long)x2->nrow || (*x)->ny!=(long)x2->ncol){
-		    error("Matrix mismatch\n");
-		}
-		memcpy((*x)->p,x2->x,sizeof(double)*((*x)->nx)*((*x)->ny));
-		free(x2->x);
-	    }
-	    free(y2);/*don't do dfree */
-	    free(x2);/*don't do dfree */
-	}else{
-	    if(!*x) *x=dnew(y->nx, y->ny);
-	    CHOLSOLVE_T data={*x,A,y};
-	    thread_t info[NTHREAD];
-	    thread_prep(info, 0, y->ny, NTHREAD, chol_solve_each, &data);
-	    CALL_THREAD(info, 1);
-	}
-    } 
+	DO_COPY(PCOL(*x, start), x2->x, real, chol_real, (x2->nrow*x2->ncol));
+	free(x2->x);
+    }
+    free(y2);/*keep data */
+    free(x2);/*keep data */
 }
+
 /**
    Solve A*x=y where Y is sparse. Not good idea to use dsp ** as chol_solve
    because the result may have different nzmax.
@@ -394,93 +427,54 @@ dsp *chol_spsolve(spchol *A, const dsp *y){
     assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
     cholmod_sparse *y2=dsp2chol(y);
     cholmod_sparse *x2=MOD(spsolve)(CHOLMOD_A,A->L,y2,A->c);
-    if(!x2) error("chol_solve failed\n");
-    if(x2->z) error("why is this?\n");
-    dsp *x=dspnew(x2->nrow, x2->ncol, 0);
-    x->p=(spint*)x2->p;
-    x->i=(spint*)x2->i;
-    x->x=(double*)x2->x;
-    x->nzmax=x2->nzmax;
+    if(!x2 || x2->z) error("chol_solve failed or returns unexpected answer.\n");
+    dsp *x=chol2sp(x2);
+    if(y2->x!=y->x) free(y2->x);
+    if(x->x!=x2->x) free(x2->x);
     free(y2);/*don't do spfree */
     free(x2);/*don't do spfree */
     return x;
 }
+/**
+   forward permutation. In place permutation does not work.
+*/
+static inline void chol_perm(dmat **out, spint *perm, const dmat *in, 
+			     long start_out, long start_in, long ncol, int direction){
+    if(!*out){
+	*out=dnew(in->nx, ncol+start_out);
+    }else if(*out==in){
+	error("Cannot do in place permutation");
+    }else{
+	assert((*out)->nx == in->nx && (*out)->ny >=ncol+start_out);
+    }
+    for(long icy=0; icy<ncol; icy++){
+	real *pout=PCOL(*out, icy+start_out);
+	real *pin=PCOL(in, icy+start_in);
+	if(direction==1){//forward
+	    for(long icx=0; icx<in->nx; icx++){
+		pout[icx]=pin[perm[icx]];
+	    }
+	}else{
+	    for(long icx=0; icx<in->nx; icx++){
+		pout[perm[icx]]=pin[icx];
+	    }
+	}
+    }
+}
 
-/**
-   forward permutation.
-*/
-static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
-    if(!*out){
-	*out=dnew(in->nx, in->ny);
-    }else{
-	assert((*out)->nx == in->nx && (*out)->ny == in->ny);
-    }
-    dmat* pout=*out;
-    if(pout==in){/*Do each column in place. */
-	double *tmp=mymalloc(in->nx,double);
-	for(int icy=0; icy<in->ny; icy++){
-	    for(int icx=0; icx<in->nx; icx++){
-		tmp[icx]=P(in,perm[icx],icy);
-	    }
-	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
-	}
-	free(tmp);
-    }else{
-	for(int icy=0; icy<in->ny; icy++){
-	    for(int icx=0; icx<in->nx; icx++){
-		P(pout,icx,icy)=P(in,perm[icx],icy);
-	    }
-	}
-    }
-}
-/**
-   backward permutation.
-*/
-static inline void chol_perm_b(dmat **out, spint *perm, const dmat *in){
-    if(!*out){
-	*out=dnew(in->nx, in->ny);
-    }else{
-	assert((*out)->nx == in->nx && (*out)->ny == in->ny);
-    }
-    dmat* pout=*out;
-    if(pout==in){/*Do each column in place. */
-	double *tmp=mymalloc(in->nx,double);
-	for(int icy=0; icy<in->ny; icy++){
-	    for(int icx=0; icx<in->nx; icx++){
-		tmp[perm[icx]]=P(in,icx,icy);
-	    }
-	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
-	}
-	free(tmp);
-    }else{
-	for(int icy=0; icy<in->ny; icy++){
-	    for(int icx=0; icx<in->nx; icx++){
-		P(pout,perm[icx],icy)=P(in,icx,icy);
-	    }
-	}
-    }
-}
-typedef struct{
-    spchol *C;
-    dmat *y2;
-}CHOL_LOWER_T;
 /*
   The performance of this is poorer than chol_solve_each. done in place
 */
-static void chol_solve_lower_each(thread_t *info){
-    CHOL_LOWER_T *data=(CHOL_LOWER_T*)info->data;
-    dsp *A=data->C->Cl;
-    double *Ax=A->x;
+static void chol_solve_lower(const dsp *A, dmat *y2, long start, long end){
+    real *Ax=A->x;
     spint *Ap=A->p;
     spint *Ai=A->i;
-    dmat *y2=data->y2;
-    //info("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
     /*Solve L\y */
     for(long icol=0; icol<A->ny; icol++){
-	double AxI=1./Ax[Ap[icol]];
-	for(long iy=info->start; iy<info->end; iy++){
+	real AxI=1./Ax[Ap[icol]];
+	for(long iy=start; iy<end; iy++){
 	    P(y2,icol,iy)*=AxI;
-	    double val=-P(y2,icol,iy);
+	    real val=-P(y2,icol,iy);
 	    for(long irow=Ap[icol]+1; irow<Ap[icol+1]; irow++){
 		P(y2,Ai[irow],iy)+=val*Ax[irow];/*update in place. */
 	    }
@@ -489,9 +483,9 @@ static void chol_solve_lower_each(thread_t *info){
 
     /*Solve L'\y; */
     for(long icol=A->ny-1; icol>-1; icol--){
-	double AxI=1./Ax[Ap[icol]];
-	for(long iy=info->start; iy<info->end; iy++){
-	    double sum=0;
+	real AxI=1./Ax[Ap[icol]];
+	for(long iy=start; iy<end; iy++){
+	    real sum=0;
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-1; irow>Ap[icol]; irow--){
 		sum+=Ax[irow]*P(y2,Ai[irow],iy);
@@ -503,20 +497,15 @@ static void chol_solve_lower_each(thread_t *info){
 /*
   The performance of this is poorer than chol_solve_each. done in place
 */
-static void chol_solve_upper_each(thread_t *info){
-    CHOL_LOWER_T *data=(CHOL_LOWER_T*)info->data;
-    dsp *A=data->C->Cu;
-    double *Ax=A->x;
+static void chol_solve_upper(const dsp *A, dmat *y2, long start, long end){
+    real *Ax=A->x;
     spint *Ap=A->p;
     spint *Ai=A->i;
-    dmat *y2=data->y2;
-    //info("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
-    /*Solve L\y */
     /*Solve R'\y */
     for(long icol=0; icol<A->nx; icol++){
-	double AxI=1./Ax[Ap[icol+1]-1];
-	for(long iy=info->start; iy<info->end; iy++){
-	    double sum=0;
+	real AxI=1./Ax[Ap[icol+1]-1];
+	for(long iy=start; iy<end; iy++){
+	    real sum=0;
 	    for(long irow=Ap[icol]; irow<Ap[icol+1]-1; irow++){
 		sum+=Ax[irow]*P(y2,Ai[irow],iy);
 	    }
@@ -527,149 +516,57 @@ static void chol_solve_upper_each(thread_t *info){
 	
     /*Solve R\y */
     for(long icol=A->nx-1; icol>-1; icol--){
-	double AxI=1./Ax[Ap[icol+1]-1];
-	for(long iy=info->start; iy<info->end; iy++){
+	real AxI=1./Ax[Ap[icol+1]-1];
+	for(long iy=start; iy<end; iy++){
 	    P(y2,icol,iy)*=AxI;
-	    double val=-P(y2,icol,iy);
+	    real val=-P(y2,icol,iy);
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-2; irow>Ap[icol]-1; irow--){
 		P(y2,Ai[irow],iy)+=val*Ax[irow];
 	    }
 	}
     }
+  
+}
+static void chol_solve_each(dmat **x, spchol *A, const dmat *y, long start, long end){
+    if(end==0) end=y->ny;
+    if(A->L){
+	chol_solve_cholmod(x, A, y, start, end);
+    }else{
+	dmat *y2=0;
+	chol_perm(&y2, A->Cp, y, 0, start, end-start, 1);
+	if(A->Cl){
+	    chol_solve_lower(A->Cl, y2, 0, end-start);
+	}else if(A->Cu){
+	    chol_solve_upper(A->Cu, y2, 0, end-start);
+	}else{
+	    error("There is no valid Cholesky factor\n");
+	}	  
+	chol_perm(x, A->Cp, y2, start, 0, end-start, -1);
+	dfree(y2);
+    }
 }
 /*
-  2010-08-09: The following two routines are a bit slower than the cholmod
-  solver because the later uses supernodal paritition.  */
-/**
-   Solve A*x=Y where the A=LL' and L is stored in A.
-   
-   Solve the cholesky backsubstitution when it's expressed in sparse matrix and
-   a permutation vector. Notice only the lower left side of the sparse matrix is
-   stored.
-   
-   The original matrix B=A*A';
-   solve B*x=y or A*(A'*x)=y 
-   first solve A\\y
-   then solve A'\\(A\\y)
-
-   This is slower than chol_solve in cholmod. I observed high cpu usage burst
-   during chol_solve, which is probably due to call of blas which is
-   multi-threaded. I don't call blas here.  */
-void chol_solve_lower(dmat **x, spchol *C, dmat *y){
-    if(!C->Cl){
-	info("Converting spchol\n");
-	chol_convert(C, 1);
-    }
-    dsp *A=C->Cl;
-    spint *perm=C->Cp;
-    assert(A && A->nx==A->ny && A->nx==y->nx);
-    if(!*x){
-	*x=dnew(y->nx,y->ny);
-    }else{
-	assert((*x)->nx==y->nx && (*x)->ny==y->ny);
-    }
-    dmat *y2=NULL;
-    if(*x==y) y2=y;/*do inplace. */
-    chol_perm_f(&y2, perm, y);
-    double *Ax=A->x;
-    spint *Ap=A->p;
-    spint *Ai=A->i;
-    if(y2->ny==1){
-	/*Solve L\y */
-	double *py=y2->p;
-	
-	for(long icol=0; icol<A->ny; icol++){
-	    /*assert(Ai[Ap[icol]]==icol);//lower triangular matrix. */
-	    py[icol]/=Ax[Ap[icol]];
-	    double val=-py[icol];
-	    for(long irow=Ap[icol]+1; irow<Ap[icol+1]; irow++){
-		py[Ai[irow]]+=val*Ax[irow];/*update in place. */
-	    }
-	}
-
-	/*Solve L'\y; */
-	for(long icol=A->ny-1; icol>-1; icol--){
-	    double sum=0;
-	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order.*/
-	    for(long irow=Ap[icol+1]-1; irow>Ap[icol]; irow--){
-		sum+=Ax[irow]*py[Ai[irow]];
-	    }
-	    py[icol]=(py[icol]-sum)/Ax[Ap[icol]];
-	}
-    }else{/*When there are multiple columns. */
-	CHOL_LOWER_T data={C,y2};
-	thread_t info[NTHREAD];
-	thread_prep(info, 0, y2->ny, NTHREAD, chol_solve_lower_each, &data);
-	CALL_THREAD(info, 1);
-    }
-    chol_perm_b(x, perm, y2);
-    if(*x!=y2) dfree(y2);
-}
-/**
-   Solve A*x=Y where the A=U'U and U is stored in A.
-
-   Solve the cholesky backsubstitution when it's expressed in sparse matrix and
-   a permutation vector. Notice only the lower left side of the sparse matrix is
-   stored.
-   
-   The original matrix B=A'*A;
+  Solve section of the columns in multi-threaded way.
 */
-void chol_solve_upper(dmat **x, spchol *C, dmat *y){
-    if(!C->Cu){
-	if(!C->Cl){
-	    info("Converting spchol\n");
-	    chol_convert(C, 1);
-	}
-	info("Transposing C->Cl");
-	C->Cu=dsptrans(C->Cl);
-    }
-    dsp *A=C->Cu;
-    spint *perm=C->Cp;
-    assert(A && A->nx==A->ny && A->nx==y->nx);
-    if(!*x){
-	*x=dnew(y->nx,y->ny);
-    }else{
-	assert((*x)->nx==y->nx && (*x)->ny==y->ny);
-    }
-    dmat *y2=NULL;
-    if(*x==y) y2=y;/*do inplace. */
-    chol_perm_f(&y2, perm, y);
-    double *Ax=A->x;
-    spint *Ap=A->p;
-    spint *Ai=A->i;
-    if(y2->ny==1){
-	/*Solve R'\y */
-	double *py=y2->p;
-
-	for(long icol=0; icol<A->nx; icol++){
-	    double sum=0;
-	    for(long irow=Ap[icol]; irow<Ap[icol+1]-1; irow++){
-		sum+=Ax[irow]*py[Ai[irow]];
-	    }
-	    py[icol]=(py[icol]-sum)/Ax[Ap[icol+1]-1];
-	}
-
-	/*Solve R\y */
-	for(long icol=A->nx-1; icol>-1; icol--){
-	    py[icol]/=Ax[Ap[icol+1]-1];
-	    double val=-py[icol];
-	    /*We do in reverse order to increase memory reuse. 1.5xFaster than
-	      forward order.*/
-	    for(long irow=Ap[icol+1]-2; irow>Ap[icol]-1; irow--){
-		py[Ai[irow]]+=val*Ax[irow];
-	    }
-	}
-    }else{
-	CHOL_LOWER_T data={C,y2};
-	thread_t info[y2->ny];
-	thread_prep(info, 0, y2->ny, y2->ny, chol_solve_upper_each, &data);
-	CALL_THREAD(info, 1);
-    }
-    chol_perm_b(x, perm, y2);
-    if(*x!=y2) dfree(y2);
+static void chol_solve_thread(thread_t *info){
+    CHOLSOLVE_T *data=(CHOLSOLVE_T*)info->data;
+    chol_solve_each(&data->x, data->A, data->y, info->start, info->end);
 }
-
+/**
+   Solve A*x=y where the cholesky factor of A is stored in A.
+*/
+void chol_solve(dmat **x, spchol *A, dmat *y){
+    if(y->ny==1){
+	chol_solve_each(x, A, y, 0, 0);
+    }else{//Multi-threaded call
+	if(!*x) *x=dnew(y->nx, y->ny);
+	CHOLSOLVE_T data={*x,A,y};
+	thread_t info[NTHREAD];
+	thread_prep(info, 0, y->ny, NTHREAD, chol_solve_thread, &data);
+	CALL_THREAD(info, 1);
+    } 
+}
 /**
    Free cholesky factor.*/
 void chol_free_do(spchol *A){

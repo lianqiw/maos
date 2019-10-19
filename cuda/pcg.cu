@@ -86,7 +86,7 @@ int pcg_save=0;
 */
 Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 	 const curcell &b, CGTMP_T &cg_data, int warm, int maxiter,
-	 stream_t &stream, double cgthres){
+	 stream_t &stream, Real cgthres){
 #if TIMING 
 #define NEVENT 16
 #define RECORD(i) DO(cudaEventRecord(event[i], stream))

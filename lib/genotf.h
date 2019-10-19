@@ -28,21 +28,21 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    const dmat *amp,     /**<The amplitude map of all the (sub)apertures*/
 	    const dmat *opdbias, /**<The static OPD bias. */
 	    const dmat *area,    /**<normalized area of the (sub)apertures*/
-	    double thres,  /**<The threshold to consider a (sub)aperture as full*/
-	    double wvl,    /**<The wavelength. only needef if opdbias is not null*/
-	    double dtheta, /**<Sampling of PSF.*/
+	    real thres,  /**<The threshold to consider a (sub)aperture as full*/
+	    real wvl,    /**<The wavelength. only needef if opdbias is not null*/
+	    real dtheta, /**<Sampling of PSF.*/
 	    const dmat *cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
-	    double r0,     /**<Fried parameter*/
-	    double l0,     /**<Outer scale*/
+	    real r0,     /**<Fried parameter*/
+	    real l0,     /**<Outer scale*/
 	    long ncompx,   /**<Size of OTF*/
 	    long ncompy,   /**<Size of OTF*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	    );
 
-cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr);
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long ncompx, long ncompy, long nsa, long pttr);
 
-dmat* mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int norm);
+dmat* mk2dcov(loc_t *loc, const dmat *amp, real ampthres, const dmat *cov, int norm);
 dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   const dmat *i0, /**<Averaged subaperture image*/
 	   const dmat *gx, /**<derivative of i0 along x*/
@@ -50,15 +50,15 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   const dmat *qe, /**<non uniform quantum efficiency (optional)*/
 	   const dmat *dbkgrnd2, /**<background*/
 	   const dmat *dbkgrnd2c, /**<background calibration*/
-	   double bkgrnd,  /**<global background*/
-	   double bkgrndc, /**<global background calibration*/
-	   double rne,     /**<Detector read noise*/
-	   double pixthetax, /**<Size of pixel along x*/
-	   double pixthetay, /**<Size of pixel along y*/
-	   double pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
+	   real bkgrnd,  /**<global background*/
+	   real bkgrndc, /**<global background calibration*/
+	   real rne,     /**<Detector read noise*/
+	   real pixthetax, /**<Size of pixel along x*/
+	   real pixthetay, /**<Size of pixel along y*/
+	   real pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
 	   int radgx,        /**<1: gx/gy is along r/a coord.*/
 	   int cr );
 dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
-dmat *derive_by_fft(const dmat *i0, double theta);
+dmat *derive_by_fft(const dmat *i0, real theta);
 
 #endif

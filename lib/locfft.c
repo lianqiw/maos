@@ -19,7 +19,7 @@
 #include "locfft.h"
 #define TIMING 0
 #if TIMING == 1
-#define TIM(A) double tk##A=myclockd()
+#define TIM(A) real tk##A=myclockd()
 #else
 #define TIM(A)
 #endif
@@ -35,8 +35,8 @@ locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
 		      const dmat *amp,        /**<[in] The amplitude*/
 		      const dmat *wvl,        /**<[in] The wavelength*/
 		      const lmat *fftsize,    /**<[in] The suggested size for FFT*/
-		      const double oversize,  /**<[in] Factor of oversize. 2 fot FFT*/
-		      double fieldstop        /**<[in] Size of field stop (radian) if used*/
+		      const real oversize,  /**<[in] Factor of oversize. 2 fot FFT*/
+		      real fieldstop        /**<[in] Size of field stop (radian) if used*/
     ){
     const int nwvl=wvl->nx*wvl->ny;
     locfft_t *locfft=mycalloc(1, locfft_t);
@@ -62,8 +62,8 @@ locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    int nembed=locfft->nembed->p[iwvl];
 	    locfft->fieldmask->p[iwvl]=dnew(nembed, nembed);
-	    double dtheta=wvl->p[iwvl]/(loc->dx*nembed);//sampling of psf
-	    double radius=fieldstop/(dtheta*2);
+	    real dtheta=wvl->p[iwvl]/(loc->dx*nembed);//sampling of psf
+	    real radius=fieldstop/(dtheta*2);
 	    dcircle(locfft->fieldmask->p[iwvl], nembed/2+1, nembed/2+1, 1, 1, radius, 1);
 	    dfftshift(locfft->fieldmask->p[iwvl]);
 	}
@@ -90,9 +90,9 @@ void locfft_free(locfft_t *locfft){
    
    where A is the amplitude map.
 */
-static dcomplex strehlcomp(const dmat *iopdevl, const dmat *amp, const double wvl){
-    dcomplex i2pi=COMPLEX(0, 2*M_PI/wvl);
-    dcomplex strehl=0;
+static comp strehlcomp(const dmat *iopdevl, const dmat *amp, const real wvl){
+    comp i2pi=COMPLEX(0, 2*M_PI/wvl);
+    comp strehl=0;
     for(int iloc=0; iloc<iopdevl->nx; iloc++){
 	strehl+=amp->p[iloc]*cexp(i2pi*iopdevl->p[iloc]);
     }
@@ -132,7 +132,7 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 	    TIM(0);
 	    long nembed=locfft->nembed->p[iwvl];
 	    long *embed=locfft->embed->p[iwvl]->p;
-	    const double *amp=locfft->amp->p;
+	    const real *amp=locfft->amp->p;
 	    const int ref=!psfsize || psfsize->p[iwvl]==nembed;
 	    cmat *psf2=0;
 	    if(ref){//Full PSF is returned
@@ -152,7 +152,7 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 	    }
 #endif
 
-	    dcomplex i2pi=COMPLEX(0, 2*M_PI/locfft->wvl->p[iwvl]);
+	    comp i2pi=COMPLEX(0, 2*M_PI/locfft->wvl->p[iwvl]);
 	    for(int iloc=0; iloc<opd->nx; iloc++){
 		psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*opd->p[iloc]);
 	    }
@@ -178,7 +178,7 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 		 tk1-tk0, tk2-tk1, 8L*(use1d?psfsize->p[iwvl]:nembed)*nembed*log2(nembed)/(tk2-tk1)*1e-9, tk3-tk2);
 #endif		
 	}
-	double psfnorm;
+	real psfnorm;
 	if(sum2one){/**PSF sum to 1*/
 	    psfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
 	}else{/**PSF max is strehl*/
@@ -207,9 +207,9 @@ void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
 	cmat *wvf=cnew(nembed, nembed);
 	wvfs->p[iwvl]=wvf;
 	//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
-	double wvl=locfft->wvl->p[iwvl];
-	dcomplex i2pi=COMPLEX(0,2*M_PI/wvl);
-	const double *amp=locfft->amp->p;
+	real wvl=locfft->wvl->p[iwvl];
+	comp i2pi=COMPLEX(0,2*M_PI/wvl);
+	const real *amp=locfft->amp->p;
 	for(int iloc=0; iloc<opd->nx; iloc++){
 	    wvf->p[embed->p[iloc]]=amp[iloc]*cexp(i2pi*opd->p[iloc]);
 	}
@@ -224,16 +224,16 @@ void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
     }
     dmat *opdold=ddup(opd); dzero(opd);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvl=locfft->wvl->p[iwvl];
-	double wvlh=wvl*0.5;
-	double kki=wvl/(2*M_PI);
+	real wvl=locfft->wvl->p[iwvl];
+	real wvlh=wvl*0.5;
+	real kki=wvl/(2*M_PI);
 	cmat *wvf=wvfs->p[iwvl];
 	lmat *embed=locfft->embed->p[iwvl];
 	for(int iloc=0; iloc<opd->nx; iloc++){
-	    double val=carg(wvf->p[embed->p[iloc]])*kki;
+	    real val=carg(wvf->p[embed->p[iloc]])*kki;
 	    if(fabs(val-opdold->p[iloc])>wvlh){//need phase unwrapping
 		warning_once("phase unwrapping is needed\n");
-		double diff=fmod(val-opdold->p[iloc]+wvlh, wvl);
+		real diff=fmod(val-opdold->p[iloc]+wvlh, wvl);
 		if(diff<0) diff+=wvl;
 		val=(diff-wvlh)+opdold->p[iloc];
 	    }

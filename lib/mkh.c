@@ -45,7 +45,7 @@
 
  */
 dsp* mkh(const loc_t *locin, const loc_t *locout, 
-	 double displacex, double displacey, double scale){
+	 real displacex, real displacey, real scale){
     dsp *Hb=mkhb(locin, locout,displacex, displacey, scale);
     dsp *H=dsptrans(Hb);
     dspfree(Hb);
@@ -55,7 +55,7 @@ dsp* mkh(const loc_t *locin, const loc_t *locout,
    Create transpose of mkh() result.
 */
 dsp* mkhb(const loc_t *locin, const loc_t *locout,
-	  double displacex, double displacey, double scale){
+	  real displacex, real displacey, real scale){
     if(locin->iac){
 	return mkhb_cubic(locin, locout, displacex, displacey, scale, locin->iac);
     }
@@ -64,14 +64,14 @@ dsp* mkhb(const loc_t *locin, const loc_t *locout,
     int nplocx, nplocy;
     long iloc;
     /*int missing=0; */
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    const double dy_in1 = 1./locin->dy;
-    const double dy_in2 = scale*dy_in1;
+    const real dx_in1 = 1./locin->dx;
+    const real dx_in2 = scale*dx_in1;
+    const real dy_in1 = 1./locin->dy;
+    const real dy_in2 = scale*dy_in1;
     displacex = (displacex-locin->map->ox)*dx_in1;
     displacey = (displacey-locin->map->oy)*dy_in1;
-    const double *px=locout->locx;
-    const double *py=locout->locy;
+    const real *px=locout->locx;
+    const real *py=locout->locy;
     /*-1 because we count from 1 in the map. */
     map_t *map=locin->map;
     //const int nxmin=locin->npad;
@@ -83,10 +83,10 @@ dsp* mkhb(const loc_t *locin, const loc_t *locout,
     hback = dspnew(locin->nloc, locout->nloc, nzmax);
     spint *bp=hback->p;
     spint *bi=hback->i;
-    double *bx=hback->x;
+    real *bx=hback->x;
     long count=0;
-    double fx[2], fy[2];
-    /*double *phiin0=phiin-1; */
+    real fx[2], fy[2];
+    /*real *phiin0=phiin-1; */
     for(iloc=0; iloc<locout->nloc; iloc++){
 	bp[iloc]=count;/*column index */
 	if(count+5>nzmax){
@@ -103,10 +103,10 @@ dsp* mkhb(const loc_t *locin, const loc_t *locout,
 	/*Limit the point to within active region*/
 	fx[0]=1.-fx[1];
 	fy[0]=1.-fy[1];
-	double wtsum=0;
+	real wtsum=0;
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
-		double weight=fx[ix]*fy[iy];
+		real weight=fx[ix]*fy[iy];
 		long iphi;
 		/*The test on weight fixes the right/top boundary defect*/
 		if(weight>EPS && (iphi=labs(loc_map_get(map, nplocx+ix, nplocy+iy)))){
@@ -140,7 +140,7 @@ dsp* mkhb(const loc_t *locin, const loc_t *locout,
     return hback;
 }
 dsp *mkh_cubic(const loc_t *locin, const loc_t *locout, 
-	       double displacex, double displacey, double scale, double cubic_iac){
+	       real displacex, real displacey, real scale, real cubic_iac){
     dsp *Hb=mkhb_cubic(locin, locout,displacex, displacey, scale, cubic_iac);
     dsp *H=dsptrans(Hb);
     dspfree(Hb);
@@ -150,39 +150,39 @@ dsp *mkh_cubic(const loc_t *locin, const loc_t *locout,
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt.  */
 dsp *mkhb_cubic(const loc_t *locin, const loc_t *locout, 
-		double displacex, double displacey, double scale, double cubic_iac){
+		real displacex, real displacey, real scale, real cubic_iac){
     dsp *hback;
-    double dplocx, dplocy;
+    real dplocx, dplocy;
     int nplocx, nplocy;
     long iloc;
     int missing=0;
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    const double dy_in1 = 1./locin->dy;
-    const double dy_in2 = scale*dy_in1;
+    const real dx_in1 = 1./locin->dx;
+    const real dx_in2 = scale*dx_in1;
+    const real dy_in1 = 1./locin->dy;
+    const real dy_in2 = scale*dy_in1;
     loc_create_map_npad(locin, 0,0,0);
     map_t *map=locin->map;
     displacex = (displacex-map->ox)*dx_in1;
     displacey = (displacey-map->oy)*dy_in1;
-    const double *px=locout->locx;
-    const double *py=locout->locy;
+    const real *px=locout->locx;
+    const real *py=locout->locy;
     /*-1 because we count from 1 in the map. */
     /*cubic */
-    double fx[4],fy[4];
-    //double cubic_iac=locin->iac;
-    const double cubicn=1./(1.+2.*cubic_iac);
-    const double c0=1*cubicn;
-    const double c1=(4*cubic_iac-2.5)*cubicn;
-    const double c2=(1.5-3*cubic_iac)*cubicn;
-    const double c3=(2*cubic_iac-0.5)*cubicn;
-    const double c4=(0.5-cubic_iac)*cubicn;
-    double dplocx0, dplocy0;
+    real fx[4],fy[4];
+    //real cubic_iac=locin->iac;
+    const real cubicn=1./(1.+2.*cubic_iac);
+    const real c0=1*cubicn;
+    const real c1=(4*cubic_iac-2.5)*cubicn;
+    const real c2=(1.5-3*cubic_iac)*cubicn;
+    const real c3=(2*cubic_iac-0.5)*cubicn;
+    const real c4=(0.5-cubic_iac)*cubicn;
+    real dplocx0, dplocy0;
     long nzmax=locout->nloc*16;
     hback = dspnew(locin->nloc, locout->nloc, nzmax);
   
     spint *bp=hback->p;
     spint *bi=hback->i;
-    double *bx=hback->x;
+    real *bx=hback->x;
     long count=0;
     const int nxmin=locin->npad;/*allow guarding points*/
     const int nymin=locin->npad;
@@ -216,10 +216,10 @@ dsp *mkhb_cubic(const loc_t *locin, const loc_t *locout,
 	fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);
 	fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);
 	fy[3]=dplocy*dplocy*(c3+c4*dplocy); 
-	double wtsum=0;
+	real wtsum=0;
 	for(int iy=-1; iy<+3; iy++){
 	    for(int ix=-1; ix<+3; ix++){
-		double weight=fx[ix+1]*fy[iy+1];
+		real weight=fx[ix+1]*fy[iy+1];
 		long iphi;
 		/*The test on weight fixes the right/top boundary defect*/
 		if(weight>EPS && (iphi=labs(loc_map_get(map, nplocx+ix, nplocy+iy)))>0){
@@ -269,7 +269,7 @@ dsp *mkhbin1d(const dmat *xin, const dmat *xout){
     int count=0;
     for(int iin=0; iin<xin->nx; iin++){
 	hbin->p[iin]=count;
-	double ixin=xin->p[iin];
+	real ixin=xin->p[iin];
 	while(iout+1<xout->nx && xout->p[iout+1]<ixin){
 	    iout++;//find location in xout to the left of ixin
 	}
@@ -282,7 +282,7 @@ dsp *mkhbin1d(const dmat *xin, const dmat *xout){
 	    //if(iout+1==xout->nx){
 	    //error("This shouldn't happen\n");
 	    //}
-	    double wt=(ixin-xout->p[iout])/(xout->p[iout+1]-xout->p[iout]);
+	    real wt=(ixin-xout->p[iout])/(xout->p[iout+1]-xout->p[iout]);
 	    hbin->i[count]=iout;
 	    hbin->x[count]=1.-wt;
 	    count++;

@@ -35,8 +35,13 @@ convert the function beschb.
 #error "Do not use for complex numbers"
 #endif
 #undef MYEPS
+#ifdef USE_DOUBLE
 #define MYEPS 1.0e-16
 #define FPMIN 1.0e-30
+#else
+#define MYEPS 1.0e-7
+#define FPMIN 1.0e-15
+#endif
 #define MAXIT 10000
 #define XMIN 2.0
 

@@ -21,17 +21,17 @@
 #include "mkh.h"
 
 DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
-	     double dxsa,/**<Subaperture size*/
-	     double embfac,/**<Embedding factor (2)*/
+	     real dxsa,/**<Subaperture size*/
+	     real embfac,/**<Embedding factor (2)*/
 	     long ncompx,/**<FFT size along x*/
 	     long ncompy,/**<FFT size along y*/
 	     long pixpsax,/**<Number of pixels along x(r)*/
 	     long pixpsay,/**<Number of pixels along y(a)*/
-	     double pixthetax,/**<Pixel size along x (r)*/
-	     double pixthetay,/**<Pixel size along y (a)*/
+	     real pixthetax,/**<Pixel size along x (r)*/
+	     real pixthetay,/**<Pixel size along y (a)*/
 	     const dmat* pixoffx,  /**<offset of image center from center of pixel array, along x or radial*/
 	     const dmat* pixoffy,  /**<offset of image center from center of pixel array, along y or azimuthal*/
-	     double pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
+	     real pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
 	     const dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
 	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
@@ -39,17 +39,17 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
     int nwvl=wvls->nx*wvls->ny;
     DTF_T *dtfs=mycalloc(nwvl,DTF_T);
     dtfs->nwvl=nwvl;
-    const double blurx=pixblur*pixthetax;
-    const double blury=pixblur*pixthetay;
-    const double e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
-    const double e0y=-2*M_PI*M_PI*blury*blury;
+    const real blurx=pixblur*pixthetax;
+    const real blury=pixblur*pixthetay;
+    const real e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
+    const real e0y=-2*M_PI*M_PI*blury*blury;
     const int do_blur=fabs(blurx)>EPS && fabs(blury)>EPS;
     const long ncompx2=ncompx>>1;
     const long ncompy2=ncompy>>1;
-    const double pxo=-(pixpsax*0.5-0.5)*pixthetax;
-    const double pyo=-(pixpsay*0.5-0.5)*pixthetay;
-    double pxo2=pxo;
-    double pyo2=pyo;
+    const real pxo=-(pixpsax*0.5-0.5)*pixthetax;
+    const real pyo=-(pixpsay*0.5-0.5)*pixthetay;
+    real pxo2=pxo;
+    real pyo2=pyo;
     if(pixoffx || pixoffy){
 	int nwfs=1; int nsa=1;
 	if(srot){
@@ -69,15 +69,15 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 
     /*both nominal and si depends on wavelength.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	const double wvl=wvls->p[iwvl];
-	const double dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
-	const double dux=1./(dtheta*ncompx);
-	const double duy=1./(dtheta*ncompy);
-	const double dux2=dux*dux;
-	const double duy2=duy*duy;
-	const double pdtheta=pixthetax*pixthetay/(dtheta*dtheta);//scaling factor due to binning into detectors
-	const double duxp=dux*pixthetax;
-	const double duyp=duy*pixthetay;
+	const real wvl=wvls->p[iwvl];
+	const real dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
+	const real dux=1./(dtheta*ncompx);
+	const real duy=1./(dtheta*ncompy);
+	const real dux2=dux*dux;
+	const real duy2=duy*duy;
+	const real pdtheta=pixthetax*pixthetay/(dtheta*dtheta);//scaling factor due to binning into detectors
+	const real duxp=dux*pixthetax;
+	const real duyp=duy*pixthetay;
 	/*For LGS WFS (srot!=NULL), there is elongation effect. For radial pixel
 	  CCD without using rotating psf/otf method, we need to create
 	  nominal/si for each subaperture. The PSF/OTF and hence DTF are on x/y
@@ -102,9 +102,9 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	cmat *nominal=cnew(ncompx,ncompy);
 	//Coordinate of PSF points
 	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta,dtheta,-ncompx2*dtheta, -ncompy2*dtheta);
-	double theta=0;
-	double ct=cos(theta);
-	double st=sin(theta);
+	real theta=0;
+	real ct=cos(theta);
+	real st=sin(theta);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    for(int isa=0; isa<ndtf; isa++){
 		if(multi_dtf){
@@ -117,8 +117,8 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 		    int jy=iy-ncompy2;
 		    for(int ix=0; ix<ncompx; ix++){
 			int jx=ix-ncompx2;
-			double ir=ct*jx+st*jy;
-			double ia=-st*jx+ct*jy;
+			real ir=ct*jx+st*jy;
+			real ia=-st*jx+ct*jy;
 			//Pixel function
 			P(nominal,ix,iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
 			if(do_blur){//Charge diffusion.
@@ -133,12 +133,12 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 		cfftshift(nominal);
 		cfft2(nominal,1);
 		//cancel FFT scaling effect.
-		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
+		cscale(nominal,1./(real)(nominal->nx*nominal->ny));
 		ccp(PP(nominals,isa,iwfs), nominal);
 		//Coordinate of pixels
 		if(pixoffx){
-		    double dx=PR(pixoffx, isa, iwfs)*pixthetax;
-		    double dy=PR(pixoffy, isa, iwfs)*pixthetay;
+		    real dx=PR(pixoffx, isa, iwfs)*pixthetax;
+		    real dy=PR(pixoffy, isa, iwfs)*pixthetay;
 		    pxo2=pxo-dx;
 		    pyo2=pyo-dy;
 		}
@@ -155,8 +155,8 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	  we don't have to do fftshift later.*/
 	dtfs[iwvl].Ux=cnew(ncompx,1);
 	dtfs[iwvl].Uy=cnew(ncompy,1);
-	dcomplex *Ux=dtfs[iwvl].Ux->p;
-	dcomplex *Uy=dtfs[iwvl].Uy->p;
+	comp *Ux=dtfs[iwvl].Ux->p;
+	comp *Uy=dtfs[iwvl].Uy->p;
 
 	/*The following is used in genseotf to compute shifted i0.*/
 	for(int ix=0; ix<ncompx; ix++){
@@ -173,13 +173,13 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 }
 
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
-	     double hs,    /**<Guide star focus range*/
+	     real hs,    /**<Guide star focus range*/
 	     const dcell *sodium,/**<The sodium profile. In each cell First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
 	     int nwvl,     /**<Number of wavelength*/
 	     const dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     const dcell *srsa,  /**<Subaperture to LLT distance*/
-	     double za,    /**<Zenith angle*/
+	     real za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     ){
     ETF_T *etfs=mycalloc(nwvl,ETF_T);
@@ -194,36 +194,38 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     info("Na using column %d.\n",icol);
     const int nhp=sodium0->nx; 
     //adjusting sodium height for the zenith angle;
-    double hpmin=0, dhp1=0;
+    real hpmin=0, dhp1=0;
     if(!no_interp){/**Requires linear spacing*/
 	hpmin=sodium0->p[0]/cos(za);
 	dhp1=cos(za)/(sodium0->p[1]-sodium0->p[0]);
 	/*assume linear spacing. check the assumption valid */
-	if(fabs(sodium0->p[nhp-1]-sodium0->p[0]-(nhp-1)*(sodium0->p[1]-sodium0->p[0]))>1.e-7){
-	    error("llt profile is not evenly spaced\n");
+	real diff;
+	if((diff=fabs((sodium0->p[nhp-1]-sodium0->p[0])/((nhp-1)*(sodium0->p[1]-sodium0->p[0]))-1.))>1.e-5){
+	    writebin(sodium0, "sodium0");
+	    error("sodium profile is not evenly spaced: %g\n", diff);
 	}
     }//else: Any spacing is ok.
-    const double* px=sodium0->p;
+    const real* px=sodium0->p;
     /*the sum of pp determines the scaling of the pixel intensity. */
-    double *psrot[nllt];
-    double *pna[nllt];
-    double i0scale[nllt];
+    real *psrot[nllt];
+    real *pna[nllt];
+    real i0scale[nllt];
     for(int illt=0; illt<nllt; illt++){
 	psrot[illt]=srot->p[srot->nx>1?illt:0]->p;
 	pna[illt]=sodium->p[sodium->nx>1?illt:0]->p+nhp*(1+icol);
-	i0scale[illt]=dblsum(pna[illt], nhp);
+	i0scale[illt]=dsumvec(pna[illt], nhp);
 	if(fabs(i0scale[illt]-1)>0.01){
 	    warning("Siglev is scaled by %g by sodium profile\n", i0scale[illt]);
 	}
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	const double dtheta=dtfs[iwvl].dtheta;
+	const real dtheta=dtfs[iwvl].dtheta;
 	const long ncompx=dtfs[iwvl].ncompx;
 	const long ncompy=dtfs[iwvl].ncompy;
 	const long ncompx2=ncompx>>1;
 	const long ncompy2=ncompy>>1;
-	const double dux=1./(dtheta*ncompx);
-	const double duy=1./(dtheta*ncompy);
+	const real dux=1./(dtheta*ncompx);
+	const real duy=1./(dtheta*ncompy);
 	ccell *petf=0;
 	int use1d;
 	if(dtfs[iwvl].radrot){
@@ -258,33 +260,33 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    TIC;tic;
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
-		    double rsa=srsa->p[illt]->p[isa];
-		    double rsa_za=rsa*cos(za);
+		    real rsa=srsa->p[illt]->p[isa];
+		    real rsa_za=rsa*cos(za);
 		    if(use1d){ /*1d ETF along radius. */
 			P(petf,isa,illt)=cnew(ncompx,1);
-			dcomplex *etf1d=P(petf,isa,illt)->p;
+			comp *etf1d=P(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
 			for(int icompx=0; icompx<ncompx; icompx++){
-			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
+			    const real kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
 			    for(int ih=0; ih<nhp; ih++){
-				const double tmp=(-2*M_PI*(kr*(rsa_za/sodium0->p[ih]-rsa/hs)));
+				const real tmp=(-2*M_PI*(kr*(rsa_za/sodium0->p[ih]-rsa/hs)));
 				etf1d[icompx]+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
 			    }
 			}
 		    }else{
-			const double theta=psrot[illt][isa];
-			const double ct=cos(theta);
-			const double st=sin(theta);
+			const real theta=psrot[illt][isa];
+			const real ct=cos(theta);
+			const real st=sin(theta);
 			P(petf,isa,illt)=cnew(ncompx,ncompy);
 			cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
 			for(int icompy=0; icompy<ncompy; icompy++){
-			    const double ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
+			    const real ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
 			    for(int icompx=0; icompx<ncompx; icompx++){
-				const double kx=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
-				const double kr=(ct*kx+st*ky);/*along radial*/
+				const real kx=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
+				const real kr=(ct*kx+st*ky);/*along radial*/
 				for(int ih=0; ih<nhp; ih++){
-				    const double tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
+				    const real tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
 				    P(etf2d,icompx,icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
 				}
 			    }
@@ -306,10 +308,10 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    const int npad=2;/*zero padding to reduce aliasing */
 	    const int nover=2;/*enough size for rotation*/
 	    const int netf=ncompx*nover*npad;
-	    const double dtetf=dtheta/nover;
-	    const double dusc=(netf*dtetf)/(dtheta*ncompx);
+	    const real dtetf=dtheta/nover;
+	    const real dusc=(netf*dtetf)/(dtheta*ncompx);
 	    cmat *etf=cnew(netf,1);
-	    double *thetas=mycalloc(netf,double);
+	    real *thetas=mycalloc(netf,real);
 	    const int netf2=netf>>1;
 	    /*Only interpolating the center part. the rest is padding. */
 	    const int etf0=netf2-(int)round(ncompx2*(dtheta/dtetf));
@@ -323,23 +325,23 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
 		    /*1d ETF along radius. */
-		    double rsa=srsa->p[illt]->p[isa];
-		    double etf2sum=0;
+		    real rsa=srsa->p[illt]->p[isa];
+		    real etf2sum=0;
 		    czero(etf);
 		    for(int icomp=etf0; icomp<etf1; icomp++){
 			/*peak in center */
-			const double itheta=thetas[icomp];
+			const real itheta=thetas[icomp];
 			/*non linear mapping. changed from - to + on 2014-05-07.*/
-			const double ih=hs*rsa/(rsa+itheta*hs);
+			const real ih=hs*rsa/(rsa+itheta*hs);
 			/*interpolating to get Na profile strenght. */
 			/*this is bilinear interpolation. not good. need to do averaging */
-			const double iih=(ih-hpmin)*dhp1;
+			const real iih=(ih-hpmin)*dhp1;
 			const int iihf=ifloor(iih);
-			const double iihw=iih-iihf;
+			const real iihw=iih-iihf;
 			if(iihf<0 || iihf>nhp-2){
 			    etf->p[icomp]=0.;
 			}else{
-			    double tmp=pna[illt][iihf]*(1.-iihw)+pna[illt][iihf+1]*iihw;
+			    real tmp=pna[illt][iihf]*(1.-iihw)+pna[illt][iihf+1]*iihw;
 			    /*neglected rsa1 due to renormalization. */
 			    etf->p[icomp]=tmp;
 			    etf2sum+=tmp;
@@ -365,10 +367,10 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			    }else{
 				cfftshift(etf);
 				P(petf,isa,illt)=cnew(ncompx,1);
-				dcomplex *etf1d=P(petf,isa,illt)->p;
+				comp *etf1d=P(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
 				for(int icompx=0; icompx<ncompx; icompx++){
-				    double ir=dusc*(icompx-ncompx2)+netf2;
+				    real ir=dusc*(icompx-ncompx2)+netf2;
 				    int iir=ifloor(ir);
 				    ir=ir-iir;
 				    if(iir>=0 && iir<netf-1){
@@ -382,17 +384,17 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			    /*Rotate the ETF. */
 			    /*need to put peak in center. */
 			    cfftshift(etf);
-			    double theta=psrot[illt][isa];
-			    double ct=cos(theta);
-			    double st=sin(theta);
+			    real theta=psrot[illt][isa];
+			    real ct=cos(theta);
+			    real st=sin(theta);
 			    P(petf,isa,illt)=cnew(ncompx,ncompy);
 			    cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
 			    for(int icompy=0; icompy<ncompy; icompy++){
-				double iy=(icompy-ncompy2);
+				real iy=(icompy-ncompy2);
 				for(int icompx=0; icompx<ncompx; icompx++){
-				    double ix=(icompx-ncompx2);
-				    double ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
+				    real ix=(icompx-ncompx2);
+				    real ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
 				    int iir=ifloor(ir);
 				    ir=ir-iir;
 				    if(iir>=0 && iir<netf-1){
@@ -463,10 +465,10 @@ void etf_free_do(ETF_T *etfs){
    is function of coordinate. This routine smoothes the profile on new
    coordinate with spacing of dxnew.
  */
-dmat* smooth(const dmat *prof, double dxnew){
+dmat* smooth(const dmat *prof, real dxnew){
     const long nxin=prof->nx;
-    const double x0in=prof->p[0];
-    const double dxin=(prof->p[nxin-1]-x0in)/(nxin-1);
+    const real x0in=prof->p[0];
+    const real dxin=(prof->p[nxin-1]-x0in)/(nxin-1);
     dmat *out;
     if(dxnew > dxin * 2){
 	const long nxnew=ceil((prof->p[nxin-1]-x0in)/dxnew);
@@ -474,17 +476,17 @@ dmat* smooth(const dmat *prof, double dxnew){
 	loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
 	dsp *ht=mkhb(loc_out, loc_in, 0, 0, 1);
 	out=dnew(nxnew, prof->ny);
-	memcpy(out->p, loc_out->locx, sizeof(double)*nxnew);
+	memcpy(out->p, loc_out->locx, sizeof(real)*nxnew);
 #pragma omp parallel for default(shared)
 	for(long icol=1; icol<prof->ny; icol++){
 	    /*input profile */
-	    const double *pin=PCOL(prof,icol);
+	    const real *pin=PCOL(prof,icol);
 	    /*output profile */
-	    double *pout=PCOL(out, icol);
+	    real *pout=PCOL(out, icol);
 	    /*preserve sum of input profile */
-	    double Nasum=dblsum(pin, nxin);
+	    real Nasum=dsumvec(pin, nxin);
 	    dspmulvec(pout, ht, pin, 'n', 1);
-	    normalize_sumabs(pout, nxnew, Nasum);
+	    dnormalize_sumabs(pout, nxnew, Nasum);
 	}
 	dspfree(ht);
 	locfree(loc_in);

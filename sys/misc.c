@@ -217,14 +217,17 @@ char *strtime(void){
    Get current time in milli-second resolution.
 */
 double myclockd(void){
+    static time_t t0=0;//to avoid precision error when cast to float
 #if defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
-    struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC, &t);
-    return (double)t.tv_sec+(double)t.tv_nsec*1e-9;
+    struct timespec tk;
+    clock_gettime(CLOCK_MONOTONIC, &tk);
+    if(!t0) t0=tk.tv_sec;
+    return (double)(tk.tv_sec-t0)+(double)tk.tv_nsec*1e-9;
 #else
     struct timeval tk;
     gettimeofday(&tk,NULL);
-    return (double)tk.tv_sec+(double)tk.tv_usec*1e-6;
+    if(!t0) t0=tk.tv_sec;
+    return (double)(tk.tv_sec-t0)+(double)tk.tv_usec*1e-6;
 #endif
 }
 /**
@@ -783,7 +786,7 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
-    info("default_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
+    info("\ndefault_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
     int cancel_action=0;
     struct sigaction act={{0}};
     act.sa_flags=0;
@@ -809,12 +812,9 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	print_backtrace();
     }
     if(signal_handler){
-	info("Signal %d caught. Call signal handler.\n", sig);
 	if(signal_handler(sig)){
 	    cancel_action=1; 
 	}
-    }else{
-	info("Signal %d caught without active handler.\n", sig);
     }
     sync();
     if(!cancel_action){//Propagate signal to default handler.

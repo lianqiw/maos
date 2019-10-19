@@ -46,36 +46,10 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
     uint64_t nx, ny;
     nx=header->nx;
     ny=header->ny;
-    /*if(!nx || !ny) {
-	free(header->str);
-	return NULL;
-	}*/
+ 
     X(mat) *out=X(new)((long)nx,(long)ny);
     out->header=header->str; header->str=NULL;
-    if(nx>0 && ny>0){
-	if(header->magic==M_T){
-	    zfread(out->p,sizeof(T),nx*ny,fp);
-	}else if(M_T==M_DBL && header->magic==M_FLT){
-	    float *p=mymalloc(nx*ny,float);
-	    zfread(p, sizeof(float), nx*ny, fp);
-	    for(uint64_t i=0; i<nx*ny; i++){
-		out->p[i]=(T)p[i];
-	    }
-	    free(p);
-#ifdef USE_COMPLEX
-	}else if(M_T==M_CMP && header->magic==M_ZMP){
-	    fcomplex *p=mymalloc(nx*ny,fcomplex);
-	    zfread(p, sizeof(fcomplex), nx*ny, fp);
-	    for(uint64_t i=0; i<nx*ny; i++){
-		out->p[i]=(T)p[i];
-	    }
-	    free(p);
-#endif
-	}else{
-	    error("%s is not a X(mat) file. magic=%x. We want %x\n", 
-		  zfname(fp), header->magic, M_T);
-	}
-    }
+    readvec(out->p, M_T, header->magic, sizeof(T), nx*ny, fp); 
     return out;
 }
 #include "matmmap.c"

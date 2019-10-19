@@ -177,7 +177,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	//cuwrite(wvf, "gpu_wvf0");
 	const Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
 	for(int ir=0; ir<pos_nr; ir++){
-	    double pos_ri=pos_r*(ir+1)/pos_nr;
+	    real pos_ri=pos_r*(ir+1)/pos_nr;
 	    //Scale number of points by ring size to have even surface brightness
 	    int pos_ni=pos_n*(ir+1)/pos_nr;
 	    const Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr);
@@ -246,7 +246,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	//cuwrite(ints, "gpu_ints"); exit(0);
     }
 }
-dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const loc_t* locfft, const dmat *mod, double displacex, double displacey){
+dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const loc_t* locfft, const dmat *mod, real displacex, real displacey){
     gpu_set(cuglobal->wfsgpu[pywfs->iwfs0]);
     cuwfs_t &cuwfs=cuglobal->wfs[pywfs->iwfs0];
     cupowfs_t *cupowfs=cuwfs.powfs;
@@ -283,8 +283,8 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const loc_t* locff
 	Real poke=pywfs->poke;
 	if(mod){
 	    dmat *tmp=drefcols(mod, imod, 1);
-	    //double radial=ceil((sqrt(8.*(imod+1)+1)-3)*0.5)+1;
-	    double tmax,tmin;
+	    //real radial=ceil((sqrt(8.*(imod+1)+1)-3)*0.5)+1;
+	    real tmax,tmin;
 	    dmaxmin(tmp->p, tmp->nx, &tmax, &tmin);
 	    poke/=(tmax-tmin);//sqrt(radial);
 	    dadd(&opdin->p[0], 0, tmp, poke);

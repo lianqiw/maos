@@ -76,9 +76,9 @@ void nea_chol(dmat **pout, const dmat *in){
     dmat *out=*pout;
     for(int isa=0; isa<in->nx; isa++){
 	//Use temporary variable to handle the case that out and in is the same.
-	double a=sqrt(P(in,isa,0));
-	double b=isxy?(P(in,isa,2)/a):0;
-	double c=sqrt(P(in,isa,1)-b*b);
+	real a=sqrt(P(in,isa,0));
+	real b=isxy?(P(in,isa,2)/a):0;
+	real c=sqrt(P(in,isa,1)-b*b);
 	P(out,isa,0)=a;
 	P(out,isa,1)=c;
 	P(out,isa,2)=b;
@@ -106,9 +106,9 @@ void nea_mm(dmat **pout, const dmat *in){
     }
     for(int isa=0; isa<in->nx; isa++){
 	//Use temporary variable to handle the case that out and in is the same.
-	double a=P(in,isa,0);
-	double b=isxy?(P(in,isa,2)):0;
-	double c=P(in,isa,1);
+	real a=P(in,isa,0);
+	real b=isxy?(P(in,isa,2)):0;
+	real c=P(in,isa,1);
 	P(out,isa,0)=a*a;
 	P(out,isa,1)=c*c+b*b;
 	if(isxy) P(out,isa,2)=a*b;
@@ -129,10 +129,10 @@ void nea_inv(dmat **pout, const dmat *in){
     int isxy=in->ny==3?1:0;
     dmat *out=*pout;
     for(int isa=0; isa<in->nx; isa++){
-	double xy=isxy?P(in,isa,2):0;
-	double invdet=1./(P(in,isa,0)*P(in,isa,1)-xy*xy);
+	real xy=isxy?P(in,isa,2):0;
+	real invdet=1./(P(in,isa,0)*P(in,isa,1)-xy*xy);
 	//Use temporary variable to handle the case that out and in is the same.
-	double a=invdet*P(in,isa,1);
+	real a=invdet*P(in,isa,1);
 	P(out,isa,1)=invdet*P(in,isa,0);
 	P(out,isa,0)=a;
 	P(out,isa,2)=invdet*xy;
@@ -156,13 +156,13 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     dspcell *saneai=recon->saneai=dspcellnew(nwfs,nwfs);//The inverse of sanea
     dfree(recon->neam);
     recon->neam=dnew(parms->nwfsr, 1);
-    double neam_hi=0; 
+    real neam_hi=0; 
     int count_hi=0;
     info("Recon NEA:\n");
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==3) continue;
 	const int nsa=powfs[ipowfs].saloc->nloc;
-	const double pixtheta=parms->powfs[ipowfs].pixtheta;
+	const real pixtheta=parms->powfs[ipowfs].pixtheta;
 	dcell *saneac=0;//in unit of rad^2.
 	
 	if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && !parms->powfs[ipowfs].phyusenea){
@@ -178,12 +178,12 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }else{
 		saneac=dcellnew(1,1);
 		saneac->p[0]=dnew(nsa,3);
-		double neamas=parms->powfs[ipowfs].nearecon;
+		real neamas=parms->powfs[ipowfs].nearecon;
 		if(neamas < 0.001 || neamas > 2000){
 		    warning("powfs[%d].nearecon=%g mas may have unit incorrect.\n", ipowfs, neamas);
 		}
 		//convert from mill-arcsec to radian.
-		double nearad=pow(neamas/206265000.,2)/(parms->powfs[ipowfs].dtrat);
+		real nearad=pow(neamas/206265000.,2)/(parms->powfs[ipowfs].dtrat);
 		for(int isa=0; isa<nsa; isa++){
 		    P(saneac->p[0],isa,0)=P(saneac->p[0],isa,1)=nearad/(P(powfs[ipowfs].saa,isa));
 		}
@@ -196,10 +196,10 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    error("Please average nearecon for GLAO mode.\n");
 	}
 
-	const double area_thres=(nsa>4)?0.9*parms->powfs[ipowfs].safill2d:0;
-	const double neaextra2=copysign(pow(parms->powfs[ipowfs].neaextra/206265000.,2),
+	const real area_thres=(nsa>4)?0.9*parms->powfs[ipowfs].safill2d:0;
+	const real neaextra2=copysign(pow(parms->powfs[ipowfs].neaextra/206265000.,2),
 					parms->powfs[ipowfs].neaextra);
-	const double neamin2=pow(parms->powfs[ipowfs].neamin/206265000.,2);
+	const real neamin2=pow(parms->powfs[ipowfs].neamin/206265000.,2);
   
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
@@ -215,7 +215,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		dcell *sanea2=dcellnew(nsa, 1);
 		dcell *sanea2l=dcellnew(nsa, 1);
 		dcell *sanea2i=dcellnew(nsa, 1);
-		double nea2_sum=0;
+		real nea2_sum=0;
 		int nea2_count=0;
 
 		for(int isa=0; isa<nsa; isa++){
@@ -243,7 +243,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			nea2_count++;
 		    }
 		}
-		double nea_mean=sqrt(nea2_sum/nea2_count*0.5);
+		real nea_mean=sqrt(nea2_sum/nea2_count*0.5);
 		recon->neam->p[iwfs]=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
 		if(nea_mean>pixtheta*0.33
 		   && parms->powfs[ipowfs].usephy
@@ -371,7 +371,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
       regularization unstability issues.*/
     dclip(recon->wt, 0.01, 1);
     /*normalize the weights to sum to 1. */
-    normalize_sumabs(recon->wt->p, recon->npsr, 1);
+    dnormalize_sumabs(recon->wt->p, recon->npsr, 1);
     const int npsr=recon->npsr;
     recon->cxxalg=parms->tomo.cxxalg;
     /*test_cxx(recon, parms); */
@@ -413,10 +413,10 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    for(int ips=0; ips<npsr; ips++){
 		long nx=recon->xmap->p[ips]->nx;
 		long ny=recon->xmap->p[ips]->ny;
-		double r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
+		real r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
 		invpsd->p[ips]=turbpsd(nx, ny, recon->xloc->p[ips]->dx, r0i,
 				       recon->L0, 0, -1);
-		dscale(invpsd->p[ips], pow((double)(nx*ny),-2));
+		dscale(invpsd->p[ips], pow((real)(nx*ny),-2));
 	    }
 	}
 	if(parms->save.setup){
@@ -454,10 +454,10 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	dspcellfree(recon->ZZT);
 	recon->ZZT=dspcellnew(npsr,npsr);
 	for(int ips=0; ips<npsr; ips++){
-	    double r0=recon->r0;
-	    double dx=recon->xloc->p[ips]->dx;
-	    double wt=recon->wt->p[ips];
-	    double val=pow(laplacian_coef(r0,wt,dx),2)*1e-6;
+	    real r0=recon->r0;
+	    real dx=recon->xloc->p[ips]->dx;
+	    real wt=recon->wt->p[ips];
+	    real val=pow(laplacian_coef(r0,wt,dx),2)*1e-6;
 	    /*dbg("Scaling of ZZT is %g\n",val); */
 	    /*piston mode eq 47 in Brent 2002 paper */
 	    int icenter=loccenter(recon->xloc->p[ips]);
@@ -570,8 +570,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	/*Apply tikholnov regularization.*/
 	if(fabs(parms->tomo.tikcr)>1.e-15){
 	    /*Estimated from the Formula */
-	    double maxeig=pow(recon->neamhi * recon->xloc->p[0]->dx, -2);
-	    double tikcr=parms->tomo.tikcr;
+	    real maxeig=pow(recon->neamhi * recon->xloc->p[0]->dx, -2);
+	    real tikcr=parms->tomo.tikcr;
 	    info("Adding tikhonov constraint of %g to RLM\n",tikcr);
 	    info("The maximum eigen value is estimated to be around %g\n", maxeig);
 	    dcelladdI(recon->RL.M, tikcr*maxeig);
@@ -637,9 +637,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	if(recon->RL.U){
 	    /* balance UV. may not be necessary. Just to compare well against
 	       laos. */
-	    double r0=recon->r0;
-	    double dx=recon->xloc->p[0]->dx;
-	    double val=laplacian_coef(r0,1,dx);/*needs to be a constant */
+	    real r0=recon->r0;
+	    real dx=recon->xloc->p[0]->dx;
+	    real val=laplacian_coef(r0,1,dx);/*needs to be a constant */
 	    dcellscale(recon->RL.U, 1./val);
 	    dcellscale(recon->RL.V, val);
 	}
@@ -694,7 +694,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 
     if(parms->save.recon){
        	if(recon->RL.C){
-	    chol_convert(recon->RL.C, 1);
+	    //chol_convert(recon->RL.C, 1);
 	    chol_save(recon->RL.C,"RLC.bin");
 	}
 	if(recon->RL.MI){
@@ -729,7 +729,7 @@ static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *loc
        because 1) the number of points in xloc is larger than in Cnn, so
        after the tomography right hand side vector is applied, the number of
        rows is larger than number of columns, this causes the right hand
-       side solver to be much slower. 2) Simply double the computation.
+       side solver to be much slower. 2) Simply real the computation.
 
        For HX opeation, build the sparse matrix and do multiply is way
        slower than doing ray tracing directly. 
@@ -786,13 +786,13 @@ static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *loc
 	tic;
 	/*Build HX for science directions that need ecov.*/
 	dmat *x1=dnew(locs->nloc, t1->ny);
-	double hs=parms->evl.hs->p[ievl];
+	real hs=parms->evl.hs->p[ievl];
 	int offset=0;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    const double ht=parms->dm[idm].ht;
-	    const double scale=1.-ht/hs;
-	    const double dispx=parms->evl.thetax->p[ievl]*ht;
-	    const double dispy=parms->evl.thetay->p[ievl]*ht;
+	    const real ht=parms->dm[idm].ht;
+	    const real scale=1.-ht/hs;
+	    const real dispx=parms->evl.thetax->p[ievl]*ht;
+	    const real dispy=parms->evl.thetay->p[ievl]*ht;
 	    for(int icol=0; icol<t1->ny; icol++){
 		prop_nongrid(recon->aloc->p[idm], PCOL(t1, icol)+offset,
 			     locs, PCOL(x1, icol), 1, dispx, dispy, scale, 0, 0);
@@ -1127,7 +1127,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcellmm(&RCRtQwQ, RCRt, QwQc, "nn", 1);
 	dmat *tmp=dcell2m(RCRtQwQ);
 	dmat*  ptmp=tmp/*PDMAT*/;
-	double rss=0;
+	real rss=0;
 	for(int i=0; i<tmp->nx; i++){
 	    rss+=P(ptmp,i,i);
 	}
@@ -1158,7 +1158,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    dfree(rss2);
 	    dbg("dtrat=%d\n", dtrat);
 	    dbg("g,a,T was %g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
-	    memcpy(parms->sim.eplo->p, res->p[0]->p, 3*sizeof(double));
+	    memcpy(parms->sim.eplo->p, res->p[0]->p, 3*sizeof(real));
 	    dbg("g,a,T=%g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
 	    dbg("res=%g, resn=%g nm\n", sqrt(res->p[0]->p[3])*1e9, sqrt(res->p[0]->p[4])*1e9);
 	    dcellfree(res); 
@@ -1413,27 +1413,27 @@ void setup_recon_update(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
     if(!parms->recon.psd) return;
     recon->Herr=dspcellnew(parms->evl.nevl, parms->ndm);
-    double d1=parms->aper.d-parms->dm[0].dx;
-    double d2=parms->aper.din+parms->dm[0].dx;
-    double dx=(d1-d2)*0.1;
+    real d1=parms->aper.d-parms->dm[0].dx;
+    real d2=parms->aper.din+parms->dm[0].dx;
+    real dx=(d1-d2)*0.1;
     if(dx<parms->dm[0].dx){
 	dx=parms->dm[0].dx;
     }
     loc_t *eloc=mkannloc(d1, d2, dx, 0.8);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	for(int idm=0; idm<parms->ndm; idm++){
-	    double ht=parms->dm[idm].ht;
-	    double dispx=parms->evl.thetax->p[ievl]*ht;
-	    double dispy=parms->evl.thetay->p[ievl]*ht;
-	    double scale=1-ht/parms->evl.hs->p[ievl];
+	    real ht=parms->dm[idm].ht;
+	    real dispx=parms->evl.thetax->p[ievl]*ht;
+	    real dispy=parms->evl.thetay->p[ievl]*ht;
+	    real scale=1-ht/parms->evl.hs->p[ievl];
 	    P(recon->Herr, ievl, idm)=mkh(recon->aloc->p[idm], eloc, dispx, dispy, scale);
 	}
     }
     if(parms->recon.psd==2){//don't use signanhi by default
 	dcell *ecnn=setup_recon_ecnn(recon, parms, eloc, 0);
-	double sigma2e=0;
+	real sigma2e=0;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    double sigma2i=0;
+	    real sigma2i=0;
 	    for(int iloc=0; iloc<eloc->nloc; iloc++){
 		sigma2i+=P(ecnn->p[ievl], iloc, iloc);
 	    }

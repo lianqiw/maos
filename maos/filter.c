@@ -35,7 +35,7 @@
    Add low order NGS modes to DM actuator commands for AHST and MVST
  */
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
-	       const dcell *low_val, double gain){
+	       const dcell *low_val, real gain){
     switch(simu->parms->recon.split){
     case 0:
 	break;/*nothing to do. */
@@ -49,16 +49,16 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	error("Not implemented\n");
     }
 }
-static inline int limit_diff(double *x1, double *x2, double thres, long stuck1, long stuck2){
-    double diff=*x2-*x1;
+static inline int limit_diff(real *x1, real *x2, real thres, long stuck1, long stuck2){
+    real diff=*x2-*x1;
     if(fabs(diff)>thres){
-	double ratio=signbit(diff)?-.49999:.49999;
+	real ratio=signbit(diff)?-.49999:.49999;
 	if(stuck1){
 	    *x2=*x1+thres*ratio*2;
 	}else if(stuck2){
 	    *x1=*x2-thres*ratio*2;
 	}else{
-	    double mean=0.5*(*x1+*x2);
+	    real mean=0.5*(*x1+*x2);
 	    *x1=mean-thres*ratio;
 	    *x2=mean+thres*ratio;
 	}
@@ -69,11 +69,11 @@ static inline int limit_diff(double *x1, double *x2, double thres, long stuck1, 
 /**
    Send LPF TT to TTM. Use DMTT, DMPTT to take into account possible stuck actuators.
 */
-static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
+static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, real lp){
 #if 1
     int ndm=dmcmd->nx;
-    double totaltt[2]={0,0};
-    double tt1[2];
+    real totaltt[2]={0,0};
+    real tt1[2];
     for(int idm=0; idm<ndm; idm++){
 	tt1[0]=tt1[1]=0;
 	dmulvec(tt1, recon->DMPTT->p[idm], dmcmd->p[idm]->p,1);
@@ -90,7 +90,7 @@ static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp
     dmulvec(dmcmd->p[0]->p, recon->DMTT->p[0], totaltt, 1);
 #else
     //Only touch ground DM
-    double tt1[2]={0,0};
+    real tt1[2]={0,0};
     dmulvec(tt1, recon->DMPTT->p[0], dmcmd->p[0]->p,1);
     ttm->p[0]=ttm->p[0]*(1-lp)+lp*tt1[0];
     ttm->p[1]=ttm->p[1]*(1-lp)+lp*tt1[1];
@@ -126,9 +126,9 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		error("dm.stroke is in wrong format\n");
 	    }
 		
-	    double *pcmd=dmcmd->p[idm]->p;
-	    double *plow=parms->dm[idm].stroke->p;
-	    double *phigh=parms->dm[idm].stroke->p+nact;
+	    real *pcmd=dmcmd->p[idm]->p;
+	    real *plow=parms->dm[idm].stroke->p;
+	    real *phigh=parms->dm[idm].stroke->p+nact;
 	    for(int iact=0; iact<nact; iact++){
 		if(pcmd[iact]<plow[iact]){
 		    pcmd[iact]=plow[iact];
@@ -150,7 +150,7 @@ static inline void clipdm_dead(const SIM_T *simu, dcell *dmcmd){
 	if(!recon->actstuck->p[idm]) continue;
 	const int nact=recon->aloc->p[idm]->nloc;
 	for(int iact=0; iact<nact; iact++){
-	    double val=recon->actstuck->p[idm]->p[iact]*1e-9;
+	    real val=recon->actstuck->p[idm]->p[iact]*1e-9;
 	    if(val){
 		dmcmd->p[idm]->p[iact]=val;
 	    }
@@ -166,7 +166,7 @@ static inline void clipdm_ia(const SIM_T *simu, dcell *dmcmd){
     /*Clip interactuator stroke*/
     for(int idm=0; idm<parms->ndm; idm++){
 	/* Embed DM commands to a square array (borrow dmrealsq) */
-	double iastroke, iastroked;
+	real iastroke, iastroked;
 	int nx=recon->anx->p[idm];
 	dmat *dmr;
 	dmat *dm;
@@ -196,7 +196,7 @@ static inline void clipdm_ia(const SIM_T *simu, dcell *dmcmd){
 		    int iact1=P(map,ix,iy);
 		    if(iact1>0){
 			int iact2=P(map,ix,iy+1);
-			double *dmri=PP(dmr,ix,iy);
+			real *dmri=PP(dmr,ix,iy);
 			if(iact2>0){
 			    count+=limit_diff(dmri, PP(dmr,ix,iy+1), iastroke, 
 					      stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
@@ -273,7 +273,7 @@ static void filter_cl(SIM_T *simu){
 	    if((isim*10)<parms->sim.end){//initial steps
 		simcfg->ephi->p[0]=0.5;
 	    }else if((isim*10)%parms->sim.end==0){
-		simcfg->ephi->p[0]=(double)isim/(double)parms->sim.end;
+		simcfg->ephi->p[0]=(real)isim/(real)parms->sim.end;
 		dbg("ephi is set to %.1f at step %d\n", simcfg->ephi->p[0], isim);
 	    }
 	}
@@ -283,7 +283,7 @@ static void filter_cl(SIM_T *simu){
 	//Record dmpsol for this time step for each powfs before updating it (z^-1).
 	//Do not reference the data, even for dtrat==1
 	if(!parms->powfs[ipowfs].psol || !parms->powfs[ipowfs].dtrat) continue;
-	double alpha=(isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
+	real alpha=(isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
 	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
     }
     /*Do the servo filtering. First simulate a drop frame*/
@@ -294,7 +294,7 @@ static void filter_cl(SIM_T *simu){
 		drop=1;
 	    }
 	}else if(parms->sim.dtrat_skip<0){//use random draws
-	    double tmp=randu(simu->misc_rand);
+	    real tmp=randu(simu->misc_rand);
 	    if(tmp*(-parms->sim.dtrat_skip)<1.){
 		drop=1;
 	    }
@@ -349,7 +349,7 @@ static void filter_cl(SIM_T *simu){
     if(recon->dither_m){
 	//Change phase in calc_dither_amp if phase of dithering is changed
 	//this is for step isim+1
-	double anglei=((isim+1)/recon->dither_dtrat)*(2*M_PI/recon->dither_npoint);
+	real anglei=((isim+1)/recon->dither_dtrat)*(2*M_PI/recon->dither_npoint);
 	dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
     }
 
@@ -401,14 +401,14 @@ static void filter_cl(SIM_T *simu){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		int imoao=parms->powfs[ipowfs].moao;
 		if(imoao<0) continue;
-		double g=parms->moao[imoao].gdm;
+		real g=parms->moao[imoao].gdm;
 		dadd(&simu->dm_wfs->p[iwfs], 1-g, simu->dm_wfs->p[iwfs+nwfs], g);
 	    }
 	}
 	if(simu->dm_evl){
 	    const int nevl=parms->evl.nevl;
 	    int imoao=parms->evl.moao;
-	    double g=parms->moao[imoao].gdm;
+	    real g=parms->moao[imoao].gdm;
 	    for(int ievl=0; ievl<nevl; ievl++){
 		dadd(&simu->dm_evl->p[ievl], 1-g, simu->dm_evl->p[ievl+nevl], g);
 	    }
@@ -448,7 +448,7 @@ void filter_fsm(SIM_T *simu){
 	if(parms->sim.f0fsm>0){//Apply SHO filter
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		if(simu->fsmreal->p[iwfs]){
-		    double *pin=simu->fsmint->mint->p[0]->p[iwfs]->p;
+		    real *pin=simu->fsmint->mint->p[0]->p[iwfs]->p;
 		    simu->fsmreal->p[iwfs]->p[0]=sho_step(simu->fsmsho[iwfs], pin[0], parms->sim.dt);
 		    simu->fsmreal->p[iwfs]->p[1]=sho_step(simu->fsmsho[iwfs+parms->nwfs], pin[1], parms->sim.dt);
 		}
@@ -461,7 +461,7 @@ void filter_fsm(SIM_T *simu){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].llt){
 		    dmat *fsmerr=0;
-		    double scale=1./parms->powfs[ipowfs].nwfs;
+		    real scale=1./parms->powfs[ipowfs].nwfs;
 		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 			dadd(&fsmerr, 1, simu->fsmerr->p[iwfs], scale);
@@ -483,8 +483,8 @@ void filter_fsm(SIM_T *simu){
 		const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
 		//Use isim+1 because the command is for next time step.
 		//minus adjust for delay
-		double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-		double angle=((simu->wfsisim+1-adjust)/parms->powfs[ipowfs].dtrat)*anglei;
+		real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
+		real angle=((simu->wfsisim+1-adjust)/parms->powfs[ipowfs].dtrat)*anglei;
 		simu->fsmreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
 		simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }
@@ -543,9 +543,9 @@ void turb_dm(SIM_T *simu){
     if(!simu->dmadd) return;
     for(int idm=0; idm<parms->ndm; idm++){
 	if(!simu->dmadd->p[idm]) continue;
-	double *restrict p2=simu->dmreal->p[idm]->p;
+	real *restrict p2=simu->dmreal->p[idm]->p;
 	const int icol=(simu->reconisim+1)%simu->dmadd->p[idm]->ny;
-	const double *p=simu->dmadd->p[idm]->p+simu->dmadd->p[idm]->nx*icol;
+	const real *p=simu->dmadd->p[idm]->p+simu->dmadd->p[idm]->nx*icol;
 	if(simu->dmadd->p[idm]->nx==simu->dmreal->p[idm]->nx){//match
 	    for(long i=0; i<simu->dmadd->p[idm]->nx; i++){
 		p2[i]+=p[i];

@@ -141,6 +141,7 @@ fi
 AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
 AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]),[use_gcov="$enableval"],[use_gcov="no"])
+AC_ARG_ENABLE(double, AS_HELP_STRING([--disable-double],[Disable double precision]), [use_double="$enableval"],[use_double="default"])
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
 AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
@@ -156,6 +157,30 @@ if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
     with_matlab=yes
+fi
+if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
+    with_cuda=no
+else
+    with_cuda=yes
+fi
+if test "$use_double" = "default" ;then
+    if test "$with_cuda" != "no" ;then
+	use_double=no
+    else
+	use_double=yes
+    fi
+fi
+AM_CONDITIONAL(USE_DOUBLE, [test "$use_double" = "yes" ])
+if test "$use_double" = "yes" ;then
+    AC_DEFINE_UNQUOTED(USE_DOUBLE, [1], ["Use double precision floating point numbers"])
+else
+    if test "$cuda_double" = "yes" ;then
+	AC_MSG_ERROR(["cuda_double is only possible without --disable-double"])
+    fi
+    if test "$with_matlab" != "no" ;then
+	AC_MSG_WARN(["MATLAB linking is only possible without --disable-double. Disabled."])
+	with_matlab=no
+    fi
 fi
 
 if test x$use_gcov = "xyes" ;then
@@ -623,6 +648,9 @@ else
 	LDFFT="-lfftw3 -lfftw3f"
     else
 	LDFFT="-lfftw3"
+	if test "$use_double" = "no" ;then
+	    AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])
+	fi
     fi
     fftw_threads=0 #To avoid crush in matlab, we use optional dynamic loading from sys/fft.c instead.
 fi
@@ -824,9 +852,6 @@ else
     AM_CONDITIONAL(USE_MEX, false)
 fi
 
-if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
-    with_cuda="no"
-fi
 if test "$with_cuda" != "no" ;then
     if test -n "$with_cuda" ;then
 	user_enable_cuda=yes

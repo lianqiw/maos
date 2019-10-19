@@ -32,7 +32,7 @@ static dmat* gen_unwrap(long nx, long ny){
     long count=0;
     spint *pp=Ht->p;
     spint *pi=Ht->i;
-    double *px=Ht->x;
+    real *px=Ht->x;
     long col=0;
     for(long iy=0; iy<ny; iy++){
 	long offx=iy*nx;
@@ -151,8 +151,8 @@ static void convert_wvf(GENPISTAT_S *data){
     return;
     while((LOCKADD(icase,data->icase, 1))<data->ncase){
     TIC;tic;
-    double thetax=data->ngsgrid*data->P(cases,0,icase);
-    double thetay=data->ngsgrid*data->P(cases,1,icase);
+    real thetax=data->ngsgrid*data->P(cases,0,icase);
+    real thetay=data->ngsgrid*data->P(cases,1,icase);
     long ipowfs=data->P(cases,2,icase);
     long ncomp=parms->maos.ncomp[ipowfs];
     long seed=data->P(cases,3,icase);
@@ -217,9 +217,9 @@ static void convert_wvf(GENPISTAT_S *data){
 	{
 	rand_t rstat;
 	seed_rand(&rstat,1);
-	double wt=1;
+	real wt=1;
 	const int npsf=16;
-	double pi2l=M_PI/2.2e-6;
+	real pi2l=M_PI/2.2e-6;
 	MAP_S **screen=vonkarman_screen(&rstat, 16, 16, 1/2., .2, 30, &wt, 1, 1);
 	cmat *wvf=cnew(16,16);
 	dmat *opd=dnew(16,16);

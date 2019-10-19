@@ -131,7 +131,7 @@ void curmv(Real *c, Real alpha, const curmat &A, const Real *b, char trans, Real
     CUBL(gemv)(stream.blas(), (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A.Nx(), A.Ny(), &beta, A(), A.Nx(), b, 1, &alpha, c, 1);
 }
 void curcellmm(curcell &C, Real alpha, const curcell &A, const curcell &B, 
-	       const char trans[2], const double beta, stream_t &stream){
+	       const char trans[2], const Real beta, stream_t &stream){
     if(!A || !B) return;
     int ax, az;
     int nx,ny,nz;
@@ -390,5 +390,17 @@ void curcellscale(curcell &A, Real alpha, cudaStream_t stream){
 	for(int i=0; i<A.Nx()*A.Ny(); i++){
 	    curscale(A[i], alpha, stream);
 	}
+    }
+}
+
+
+
+void cucscale(cucmat &in, Real alpha, cudaStream_t stream){
+    if(!in) return;
+    if(alpha==0){
+	cuzero(in, stream);
+    }else if(Z(fabs)(alpha-1.f)>EPS){
+	int n=in.Nx()*in.Ny();
+	scale_do<<<DIM(n,256), 0, stream>>>(in(), n, alpha); 
     }
 }

@@ -335,7 +335,43 @@ void X(show)(const X(mat) *A, const char *format, ...){
 	}
     }
 }
-
+/**
+   Permute the vector so that
+   out(:)=in(p);
+*/
+void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm){
+    if(!in || !out) return;
+    assert(in->nx*in->ny == out->nx*out->ny);
+    for(long i=0; i<in->nx*in->ny; i++){
+	if(perm[i]>0){
+	    P(out,i)=P(in, perm[i]);
+	}else{
+	    P(out,i)=conj(P(in,-perm[i]));
+	}
+    }
+}
+/**
+   Reverse permute the vector so that
+   out(p)=in(:);
+*/
+void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm){
+    if(!in || !out) return;
+    assert(in->nx*in->ny == out->nx*out->ny);
+    for(long i=0; i<in->nx*in->ny; i++){
+	if(perm[i]>0){
+	    P(out, perm[i])=P(in, i);
+	}else{
+	    P(out, -perm[i])=conj(P(in, i));
+	}
+    }
+}
+T X(sumvec)(const T *restrict p, long nx){
+    T sum=0;
+    for(long ix=0; ix<nx; ix++){
+	sum+=p[ix];
+    }
+    return sum;
+}
 /**
    create sum of all the elements in A.
 */
@@ -343,12 +379,13 @@ T X(sum)(const X(mat) *A){
     T v=0;
     if(A){
 	assert_mat(A);
-	T *restrict p=A->p;
+	v=X(sumvec)(A->p, A->nx*A->ny);
+	/*T *restrict p=A->p;
 	for(int i=0; i<A->nx*A->ny; i++){
 	    if(isfinite(creal(p[i]))){
 		v+=p[i];
 	    }
-	}
+	    }*/
     }
     return v;
 }
@@ -416,7 +453,61 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     if(max)*max=a; 
     if(min)*min=b; 
 }
+/**
+   compute sum(p1.*p2.*p3)*/
 
+T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n){
+    T ans=0;
+    if(p1 && p2 && p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
+    }else if(!p1 && p2 && p3){
+	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
+    }else if(p1 && !p2 && p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
+    }else if(!p1 && !p2 && p3){
+	for(long i=0; i<n; i++) ans+=p3[i];
+    }else if(p1 && p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
+    }else if(!p1 && p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p2[i];
+    }else if(p1 && !p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p1[i];
+    }else if(!p1 && !p2 && !p3){
+	ans=(T)n;/*assume all ones. */
+    }
+    return  ans;
+}
+/**
+   normalize vector to sum to norm;*/
+void X(normalize_sum)(T *restrict p, long nloc, T norm){
+    if(!nloc) return;
+    T ss=norm/X(vecdot)(p,NULL,NULL,nloc);
+    for(int i=0; i<nloc; i++){
+	p[i]*=ss;
+    }
+}
+/**
+   normalize vector to sum of abs to norm;*/
+void X(normalize_sumabs)(T *restrict p, long nloc, T norm){
+    if(!nloc) return;
+    T ss=0;
+    for (long i=0; i<nloc; i++){
+	ss+=fabs(p[i]);
+    }
+    ss=norm/ss;
+    for(int i=0; i<nloc; i++){
+	p[i]*=ss;
+    }
+}
+/**
+   normalize vector to max to max;*/
+void X(normalize_max)(T *restrict p, long nloc, T max){
+    if(!nloc) return;
+    T ss=max/X(vecmaxabs)(p, nloc);
+    for(int i=0; i<nloc; i++){
+	p[i]*=ss;
+    }
+}
 /**
    find the maximum value of a X(mat) object
 */
@@ -434,15 +525,18 @@ R X(min)(const X(mat) *A){
     X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     return min;
 }
+R X(vecmaxabs)(const T*restrict p, long n){
+    R max,min;
+    X(maxmin)(p, n, &max, &min);
+    max=fabs(max);
+    min=fabs(min);
+    return max>min?max:min;
+}
 /**
    find the maximum of abs of a X(mat) object
 */
 R X(maxabs)(const X(mat) *A){
-    R max,min;
-    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
-    max=fabs(max);
-    min=fabs(min);
-    return max>min?max:min;
+    return X(vecmaxabs)(A->p, A->nx*A->ny);
 }
 /**
    compute the sum of abs(A)
@@ -475,6 +569,7 @@ R X(sumdiffsq)(const X(mat)*A, const X(mat)*B){
     }
     return out;
 }
+
 
 /**
    shift frequency components by n/2

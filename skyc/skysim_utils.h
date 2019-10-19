@@ -17,12 +17,12 @@
 */
 #ifndef SKYC_SIM_H
 #define SKYC_SIM_H
-double calc_rms(const dmat *mideal, const dmat *mcc, int istep0);
-void ngsmod2wvf(cmat *wvf, double wvl, const dmat *modm,
-		const POWFS_S *powfs, int isa, double thetax, double thetay, 
+real calc_rms(const dmat *mideal, const dmat *mcc, int istep0);
+void ngsmod2wvf(cmat *wvf, real wvl, const dmat *modm,
+		const POWFS_S *powfs, int isa, real thetax, real thetay, 
 		const PARMS_S *parms);
-dmat* skysim_sim(dmat **mres, const dmat *mideal, const dmat *mideal_oa, double ngsol,
+dmat* skysim_sim(dmat **mres, const dmat *mideal, const dmat *mideal_oa, real ngsol,
 		 ASTER_S *aster, const POWFS_S *powfs, const PARMS_S *parms, 
 		 int idtrat, int noisy, int phystart);
-void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, int selaster, int seldtrat, int isky);
+void skysim_save(const SIM_S *simu, const ASTER_S *aster, const real *ipres, int selaster, int seldtrat, int isky);
 #endif

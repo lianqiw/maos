@@ -32,16 +32,16 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 	  GPU. W0 of fully illuminated points are stored in W0p.*/
 	spint *pp=R_W0->p;
 	spint *pi=R_W0->i;
-	double *px=R_W0->x;
+	real *px=R_W0->x;
 	dsp *W0new=dspnew(R_W0->nx, R_W0->ny, R_W0->nzmax);
 	spint *pp2=W0new->p;
 	spint *pi2=W0new->i;
-	double *px2=W0new->x;
+	real *px2=W0new->x;
 	//int *full;
 	Array<int> full(R_W0->ny, 1);
 	//#define W0_BW 1
-	double W1max=dmax(R_W1);
-	double thres=W1max*(1.f-1e-6);
+	real W1max=dmax(R_W1);
+	real thres=W1max*(1.f-1e-6);
 	W0v=(Real)(W1max*4./9.);//max of W0 is 4/9 of max of W1. 
 	int count=0;
 	int count2=0;
@@ -53,7 +53,7 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 	    }else{
 		int nv=pp[ic+1]-pp[ic];
 		memcpy(pi2+count, pi+pp[ic], sizeof(spint)*nv);
-		memcpy(px2+count, px+pp[ic], sizeof(double)*nv);
+		memcpy(px2+count, px+pp[ic], sizeof(real)*nv);
 		count+=nv;
 	    }
 	}

@@ -25,12 +25,12 @@
 #include "../math/mathdef.h"
 typedef struct GENATM_T{
     rand_t *rstat;   /**<The random stream*/
-    double *wt;      /**<The layer weights*/
-    double r0;       /**<The Fried Parameter*/
-    double *L0;       /**<The outer scale*/
-    double dx;       /**<The sampling*/
-    double fmin;     /**<Minimum spatial frequency*/
-    double fmax;     /**<Maximum spatial frequency*/
+    real *wt;      /**<The layer weights*/
+    real r0;       /**<The Fried Parameter*/
+    real *L0;       /**<The outer scale*/
+    real dx;       /**<The sampling*/
+    real fmin;     /**<Minimum spatial frequency*/
+    real fmax;     /**<Maximum spatial frequency*/
     long nx;         /**<Number of pixels along x*/
     long ny;         /**<Number of pixels along y*/
     long nlayer;     /**<The number of layers*/
@@ -41,18 +41,18 @@ typedef struct GENATM_T{
     mapcell *screen;  /**<The destination screen pointer*/
     long method;     /**<The method*/
 }GENATM_T;
-map_t *genatm_simple(double r0, double L0, double dx, long nx);
-dmat *genatm_loc(loc_t *loc, double r0, double L0);
+map_t *genatm_simple(real r0, real L0, real dx, long nx);
+dmat *genatm_loc(loc_t *loc, real r0, real L0);
 mapcell* genatm_from_spect(GENATM_T *data);
 mapcell* vonkarman_screen(GENATM_T *data);
 mapcell* biharmonic_screen(GENATM_T *data);
 mapcell *fractal_screen(GENATM_T *data);
-dmat* turbcov(dmat *r, double rmax, double r0, double L0);
-void spatial_psd(dmat **out, long nx, long ny, double dx, double strength, double L0,
-		 double fmin, double fmax, double slope, double power);
-dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power);
+dmat* turbcov(dmat *r, real rmax, real r0, real L0);
+void spatial_psd(dmat **out, long nx, long ny, real dx, real strength, real L0,
+		 real fmin, real fmax, real slope, real power);
+dmat* turbpsd(long nx, long ny, real dx, real r0, real L0, real slope, real power);
 
-double calc_aniso(double r0, int nht, double *ht, double *wt);
-double calc_greenwood(double r0, int nps, double *ws, double *wt);
-double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2);
+real calc_aniso(real r0, int nht, real *ht, real *wt);
+real calc_greenwood(real r0, int nps, real *ws, real *wt);
+real calc_aniso2(real r0, int nht, real *ht, real *wt, real hc1, real hc2);
 #endif

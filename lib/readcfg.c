@@ -18,7 +18,7 @@
 
 /*
   read the config file, parse the tokens and store into a binary tree. 
-  then user can query tokens using read_int, read_double, or read_array
+  then user can query tokens using read_int, read_real, or read_array
 */
 
 #include <search.h>
@@ -513,7 +513,7 @@ int readcfg_peek_n(const char *format, ...){
 	free(ret);
     }else{/*this is numerical array */
 	void *ret;
-	count=readstr_numarr(&ret, 0, NULL,NULL,M_DBL, sdata);
+	count=readstr_numarr(&ret, 0, NULL,NULL,M_REAL, sdata);
 	free(ret);
     }
     return count;
@@ -630,11 +630,11 @@ lmat *readcfg_lmat_nmax(int n, const char *format,...){
     return out;
 }
 /**
-   Read double array
+   Read real array
 */
-int readcfg_dblarr(double **ret, const char *format,...){
+int readcfg_dblarr(real **ret, const char *format,...){
     format2key;
-    return readstr_numarr((void**)ret, 0,NULL,NULL,M_DBL, getrecord(key, 1)->data);
+    return readstr_numarr((void**)ret, 0,NULL,NULL,M_REAL, getrecord(key, 1)->data);
 }
 /**
    Read as a dmat. It can be a file name or an array.
@@ -649,9 +649,9 @@ static dmat *readstr_dmat_do(int n, const char *str){
 	res=dread("%s", fn);
     }else{
 	int nx, ny;
-	double *val=NULL;
-        double **pval=&val;
-	readstr_numarr((void**)pval, n, &nx, &ny,M_DBL, fn);
+	real *val=NULL;
+        real **pval=&val;
+	readstr_numarr((void**)pval, n, &nx, &ny,M_REAL, fn);
 	if(!nx || !ny) {
 	    free(val); val=0;
 	}
@@ -753,21 +753,21 @@ void readcfg_intarr_nmax(int **ret, int len, const char *format,...){
     }
 }
 /**
-   Read double array of len elements
+   Read real array of len elements
 */
-void readcfg_dblarr_n(double **ret, int len, const char *format,...){
+void readcfg_dblarr_n(real **ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_numarr((void**)ret, len,NULL,NULL, M_DBL, getrecord(key, 1)->data))){
-	error("%s: Need %d, got %d double\n", key, len, len2);
+    if(len!=(len2=readstr_numarr((void**)ret, len,NULL,NULL, M_REAL, getrecord(key, 1)->data))){
+	error("%s: Need %d, got %d real\n", key, len, len2);
     }
 }
 /**
-   Read double array of len elements
+   Read real array of len elements
 */
-void readcfg_dblarr_nmax(double **ret, int len, const char *format,...){
+void readcfg_dblarr_nmax(real **ret, int len, const char *format,...){
     format2key;
-    int len2=readstr_numarr((void**)ret, len, NULL,NULL,M_DBL, getrecord(key, 1)->data);
+    int len2=readstr_numarr((void**)ret, len, NULL,NULL,M_REAL, getrecord(key, 1)->data);
     if(len2==1){
 	for(int i=1; i<len; i++){
 	    (*ret)[i]=(*ret)[0];
@@ -783,7 +783,7 @@ int readcfg_int( const char *format,...){
     format2key;
     char *val=getrecord(key, 1)->data;
     char *endstr;
-    double ans=readstr_num(val, &endstr);
+    real ans=readstr_num(val, &endstr);
     if(fabs(ans-(int)ans)>EPS){
 	warning("Floating point number supplied while integer is needed: %s=%s\n", key, val);
     }
@@ -793,13 +793,13 @@ int readcfg_int( const char *format,...){
     return (int)ans;
 }
 /**
-   Read double
+   Read real
 */
-double readcfg_dbl(const char *format,...){
+real readcfg_dbl(const char *format,...){
     format2key;
     char *val=getrecord(key, 1)->data;
     char *endstr;
-    double ans=readstr_num(val, &endstr);
+    real ans=readstr_num(val, &endstr);
     if(endstr[0]!='\0'){
 	error("Garbage found in %s=%s.\n", key, val);
     }

@@ -65,11 +65,22 @@ X(sp) *X(spreaddata)(file_t *fp, header_t *header){
     X(sp) *out=NULL;
     if(m!=0 && n!=0){
 	uint32_t magic2=0;
+	uint32_t magic1=0;
 	switch(header->magic){
-	case M_SPT64:
+	case M_DSP64:
+	    magic1=M_DBL;
 	    magic2=M_INT64;
 	    break;
-	case M_SPT32:
+	case M_SSP64:
+	    magic1=M_FLT;
+	    magic2=M_INT64;
+	    break;
+	case M_DSP32:
+	    magic1=M_DBL;
+	    magic2=M_INT32;
+	    break;
+	case M_SSP32:
+	    magic1=M_FLT;
 	    magic2=M_INT32;
 	    break;
 	default:
@@ -79,9 +90,11 @@ X(sp) *X(spreaddata)(file_t *fp, header_t *header){
 	if(nzmax!=0){
 	    out=X(spnew)(m,n,nzmax);
 	    out->header=header->str; header->str=NULL;
-	    readspintdata(fp, magic2, out->p, n+1);
-	    readspintdata(fp, magic2, out->i, nzmax);
-	    zfread(out->x, sizeof(T), nzmax, fp);
+	    //readspintdata(fp, magic2, out->p, n+1);
+	    //readspintdata(fp, magic2, out->i, nzmax);
+	    readvec(out->p, M_SPINT, magic2, sizeof(spint), n+1, fp);
+	    readvec(out->i, M_SPINT, magic2, sizeof(spint), nzmax, fp);
+	    readvec(out->x, M_T, magic1, sizeof(T), nzmax, fp);
 	}
     }
     free(header->str);

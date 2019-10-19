@@ -122,6 +122,7 @@ enum{
     DRAW_PAUSE,
     DRAW_RESUME,
     DRAW_FINAL,/*this client is done.*/
+    DRAW_FLOAT,/*number of bytes for float*/
     DRAW_END=100
 };
 #define scheduler_version 0x29

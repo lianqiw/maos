@@ -69,18 +69,27 @@ typedef enum CEMBED{
 	int *nref;           /**< reference counting like dmat */	\
     }
 
-typedef struct{MATARR(double);} dmat;/*a double matrix object contains 2-d array of double numbers*/
 typedef struct{MATARR(float);} smat;
-typedef struct{MATARR(dcomplex);} cmat;
 typedef struct{MATARR(fcomplex);} zmat;
+#ifdef USE_DOUBLE
+typedef struct{MATARR(real);} dmat;/*a real matrix object contains 2-d array of real numbers*/
+typedef struct{MATARR(comp);} cmat;
+#else
+typedef smat dmat;
+typedef zmat cmat;
+#endif
 typedef struct{MATARR(long);} lmat;
+typedef struct{MATARR(int);} imat;
 
-typedef SPMATARR(double) dsp;
 typedef SPMATARR(float) ssp;
-typedef SPMATARR(dcomplex) csp;
 typedef SPMATARR(fcomplex) zsp;
-
-
+#ifdef USE_DOUBLE
+typedef SPMATARR(real) dsp;
+typedef SPMATARR(comp) csp;
+#else
+typedef ssp dsp;
+typedef zsp csp;
+#endif
 
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
@@ -88,39 +97,39 @@ typedef SPMATARR(fcomplex) zsp;
 */
 typedef struct map_t{
     /*The OPD, takes the same form of dmat so can be casted. */
-    MATARR(double);
-    double ox;      /**<Origin in x*/
-    double oy;      /**<Origin in y*/
-    double dx;      /**<Sampling along x*/
-    double dy;      /**<Sampling along y*/
-    double h;       /**<Heigh conjugation of this surface*/
-    double vx;      /**Wind velocity. Useful for atmospheric grid*/
-    double vy;      /**Wind velocity. Useful for atmospheric grid*/
-    double iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/
+    MATARR(real);
+    real ox;      /**<Origin in x*/
+    real oy;      /**<Origin in y*/
+    real dx;      /**<Sampling along x*/
+    real dy;      /**<Sampling along y*/
+    real h;       /**<Heigh conjugation of this surface*/
+    real vx;      /**Wind velocity. Useful for atmospheric grid*/
+    real vy;      /**Wind velocity. Useful for atmospheric grid*/
+    real iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/
 } map_t;
 
 /**
    Map with different x/y sampling. Can be cased to dmat
 */
 typedef struct rmap_t{
-    MATARR(double);
-    double ox;      /**<Origin in x*/
-    double oy;      /**<Origin in y*/
-    double dx;      /**<Sampling along x (first dimension)*/
-    double dy;      /**<Sampling along y (second dimension)*/
-    double txdeg;   /**<the x tilt angle in degree wrt beam (90 is prep), */
-    double tydeg;   /**<the y tilt angle in degree wrt beam (90 is prep), */
-    double ftel;    /**<Effective focal length of the telescope*/
-    double fexit;   /**<The distance between the exit pupil and the focus*/
-    double fsurf;   /**<The distance between the tilted surface (M3) and the focus*/
+    MATARR(real);
+    real ox;      /**<Origin in x*/
+    real oy;      /**<Origin in y*/
+    real dx;      /**<Sampling along x (first dimension)*/
+    real dy;      /**<Sampling along y (second dimension)*/
+    real txdeg;   /**<the x tilt angle in degree wrt beam (90 is prep), */
+    real tydeg;   /**<the y tilt angle in degree wrt beam (90 is prep), */
+    real ftel;    /**<Effective focal length of the telescope*/
+    real fexit;   /**<The distance between the exit pupil and the focus*/
+    real fsurf;   /**<The distance between the tilted surface (M3) and the focus*/
 }rmap_t;
 
 /**
    Store starting x,y for each col
 */
 typedef struct locstatcol_t{
-    double xstart; /**<starting x of this column*/
-    double ystart; /**<starting y of this column*/
+    real xstart; /**<starting x of this column*/
+    real ystart; /**<starting y of this column*/
     long   pos;    /**<starting index of this column*/
 }locstatcol_t;
 
@@ -130,10 +139,10 @@ typedef struct locstatcol_t{
 */
 typedef struct locstat_t{
     locstatcol_t *cols; /**<Information about each column*/
-    double dx;          /**<Sampling of the grid along x*/
-    double dy;          /**<Sampling of the grid along y*/
-    double xmin;        /**<Minimum x*/
-    double ymin;        /**<Minimum y*/
+    real dx;          /**<Sampling of the grid along x*/
+    real dy;          /**<Sampling of the grid along y*/
+    real xmin;        /**<Minimum x*/
+    real ymin;        /**<Minimum y*/
     long   ncol;        /**<Number of consecutive columns found*/
     long   nx,ny;       /**<Size for embedding*/
 }locstat_t;
@@ -143,13 +152,13 @@ typedef struct locstat_t{
 */
 typedef struct loc_t{
     uint32_t id;
-    double *locx;  /**< x coordinates of each point*/
-    double *locy;  /**< y coordinates of each point*/
+    real *locx;  /**< x coordinates of each point*/
+    real *locy;  /**< y coordinates of each point*/
     long   nloc;   /**< number of points*/
-    double dx;     /**< Sampling along x*/
-    double dy;     /**< Sampling along y*/
-    double ht;     /**< Conjugation height of the loc grid.*/
-    double iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
+    real dx;     /**< Sampling along x*/
+    real dy;     /**< Sampling along y*/
+    real ht;     /**< Conjugation height of the loc grid.*/
+    real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
     locstat_t *stat;/**<points to column statistics*/
     map_t *map;    /**< point to the map used for identifying neihboring points.*/
     int npad;      /*padding when create map*/
@@ -162,24 +171,24 @@ typedef struct loc_t{
 */
 typedef struct pts_t{
     uint32_t id;
-    double *origx; /**<The x origin of each subaperture*/
-    double *origy; /**<The y origin of each subaperture*/
+    real *origx; /**<The x origin of each subaperture*/
+    real *origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
     union{
-	double dsa;    /**<side length of subaperture*/
-	double dsax;   /**<side length of subaperture*/
+	real dsa;    /**<side length of subaperture*/
+	real dsax;   /**<side length of subaperture*/
     };
-    double dsay;   /**<side length of subaperture*/
-    double dummy1; /**<Place holder*/
-    double dummy2;  /**<Place holder*/
+    real dsay;   /**<side length of subaperture*/
+    real dummy1; /**<Place holder*/
+    real dummy2;  /**<Place holder*/
     locstat_t *stat;/**<padding so that we can be casted to loc_t*/
     map_t *map;    /**<treat pts_t as loc_t and compute the MAP*/
     int npad;      /*padding when create map*/
     int *nref;     /**<Reference counting*/
     int nx;        /**<number of cols per subaperture*/
     int ny;        /**<number of rows per subaperture*/
-    double dx;     /**<sampling of points in each subaperture*/
-    double dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
+    real dx;     /**<sampling of points in each subaperture*/
+    real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;
 
 typedef CELLARR(cmat*) ccell;
@@ -220,7 +229,11 @@ typedef struct cell{
 #undef ARR
 #undef CELLARR
 #undef MATARR
-
+static inline int iscell(const void *id){
+    const uint32_t magic=*((const uint32_t*)id);
+    return magic==MCC_ANY;
+    //return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
+}
 /*A method to simulate operator overloading for indexing arrys*/
 #if DEBUG
 static inline void assert_1d(long i, long nx, long ny){

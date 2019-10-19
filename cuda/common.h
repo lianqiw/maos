@@ -53,8 +53,8 @@ typedef dmat rmat;
 #define FFT_C2C cufftExecZ2Z
 #define FFT_C2R cufftExecZ2D
 #define FFT_R2C cufftExecD2Z
-#define M_REAL M_DBL
-#define M_COMP M_CMP
+#define MCU_REAL M_DBL
+#define MCU_COMP M_CMP
 #else
 typedef float2 Comp;
 typedef float Real;
@@ -70,8 +70,8 @@ typedef smat rmat;
 #define FFT_C2C cufftExecC2C
 #define FFT_C2R cufftExecC2R
 #define FFT_R2C cufftExecR2C
-#define M_REAL M_FLT
-#define M_COMP M_ZMP
+#define MCU_REAL M_FLT
+#define MCU_COMP M_ZMP
 #endif
 #undef EPS
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.

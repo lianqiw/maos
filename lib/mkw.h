@@ -24,9 +24,9 @@
    \file mkw.h
    Contains functions that computes the bilinear weighting function W0, W1
 */
-void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1);
-void mkw_circular(loc_t *loc,double cx, double cy,
-		   double r,dsp **W0,dmat **W1);
-void mkw_annular(loc_t *loc, double cx, double cy, double cri, double cro, 
+void mkw_amp(loc_t *loc,real *amp,dsp **W0,dmat **W1);
+void mkw_circular(loc_t *loc,real cx, real cy,
+		   real r,dsp **W0,dmat **W1);
+void mkw_annular(loc_t *loc, real cx, real cy, real cri, real cro, 
 		 dsp **W0, dmat **W1);
 #endif

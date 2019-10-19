@@ -34,7 +34,7 @@ typedef struct GENPISTAT_S{
     pthread_mutex_t mutex_read;/*don't let them read in the same time. */
     const PARMS_S *parms;
     POWFS_S *powfs;
-    double ngsgrid;
+    real ngsgrid;
     dcell *unwrap;/*matrix that does unwraping. */
 }GENPISTAT_S;
 
@@ -58,8 +58,8 @@ static void calc_pistat(GENPISTAT_S *data){
 	if(icase==0){
 	    writebin(dtrats, "%s/neaspec/neaspec_dtrats", dirstart);
 	}
-	double thetax=data->ngsgrid*data->cases[icase][0];
-	double thetay=data->ngsgrid*data->cases[icase][1];
+	real thetax=data->ngsgrid*data->cases[icase][0];
+	real thetay=data->ngsgrid*data->cases[icase][1];
 	long ipowfs=data->cases[icase][2];
 	long ncomp=parms->maos.ncomp[ipowfs];
 	long seed=data->cases[icase][3];
@@ -107,12 +107,12 @@ static void calc_pistat(GENPISTAT_S *data){
 	    //cfft2plan(otf,1);
 	    //cfft2plan(otf,-1);
 	    dmat *psf=NULL;
-	    double nwvli=1./(nwvl);
-	    double dtheta[nwvl];
+	    real nwvli=1./(nwvl);
+	    real dtheta[nwvl];
 	    const int embfac=parms->maos.embfac[ipowfs];
-	    const double dxsa=parms->maos.dxsa[ipowfs];
+	    const real dxsa=parms->maos.dxsa[ipowfs];
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		const double wvl=parms->maos.wvl[iwvl];
+		const real wvl=parms->maos.wvl[iwvl];
 		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
 	    dmat *gmean=dnew(2,nsa);
@@ -123,7 +123,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		UNLOCK(data->mutex_read);
 		if(!wvfi || wvfi->nx==0 || wvfi->ny==0) continue;
 		for(long iwvl=0; iwvl<nwvl; iwvl++){
-		    double wvl=parms->maos.wvl[iwvl];
+		    real wvl=parms->maos.wvl[iwvl];
 		    for(long isa=0; isa<nsa; isa++){
 			//first compute PSF from WVF and compute CoG
 			ccp(&wvfc, P(wvfi,isa,iwvl));
@@ -132,8 +132,8 @@ static void calc_pistat(GENPISTAT_S *data){
 			cabs22d(&psf, 0, wvf, 1);//peak in corner.
 			dfftshift(psf);//peak in center
 			    
-			double grad[2]={0,0};
-			double pmax=dmax(psf);
+			real grad[2]={0,0};
+			real pmax=dmax(psf);
 			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax, 0);
 			grad[0]*=dtheta[iwvl];//convert to Radian
 			grad[1]*=dtheta[iwvl];
@@ -218,8 +218,8 @@ static void calc_pistat(GENPISTAT_S *data){
 }
 
 void genpistat(const PARMS_S *parms, POWFS_S *powfs){
-    double patfov=parms->skyc.patfov;
-    double ngsgrid=parms->maos.ngsgrid;
+    real patfov=parms->skyc.patfov;
+    real ngsgrid=parms->maos.ngsgrid;
     long ng=ceil(patfov/2/ngsgrid);
     info("Genpistat..");
     GENPISTAT_S *data=mycalloc(1,GENPISTAT_S);
@@ -233,8 +233,8 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 	int seed=parms->maos.seeds[iseed];/*loop over seed */
 	for(long gy=-ng; gy<=ng; gy++){
 	    for(long gx=-ng; gx<=ng; gx++){
-		/*double thetax=gx*ngsgrid; */
-		/*double thetay=gy*ngsgrid; */
+		/*real thetax=gx*ngsgrid; */
+		/*real thetay=gy*ngsgrid; */
 		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){/*for ipowfs */
 		    data->cases[count][0]=gx;
 		    data->cases[count][1]=gy;
@@ -265,14 +265,14 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 */
 void prep_bspstrehl(SIM_S *simu){
     const PARMS_S *parms = simu->parms;
-    double patfov  = parms->skyc.patfov;
-    double ngsgrid = parms->maos.ngsgrid;
+    real patfov  = parms->skyc.patfov;
+    real ngsgrid = parms->maos.ngsgrid;
     long ng  = ceil(patfov/2/ngsgrid);
     long ng2 = ng*2+1;
     long seed = simu->seed_maos;
     dmat *gg=dnew(ng*2+1,1);
     for(long gx=-ng; gx<=ng; gx++){
-	gg->p[gx+ng]=(double)gx;
+	gg->p[gx+ng]=(real)gx;
     }
     simu->bspstrehlxy=dref(gg);
 
@@ -296,9 +296,9 @@ void prep_bspstrehl(SIM_S *simu){
 	    strehlgrid->p[ic]=dnew(ng2,ng2);
 	}
 	for(long gy=-ng; gy<=ng; gy++){
-	    double thetay = gy * ngsgrid;
+	    real thetay = gy * ngsgrid;
 	    for(long gx=-ng; gx<=ng; gx++){
-		double thetax = gx * ngsgrid;
+		real thetax = gx * ngsgrid;
 		char fnpistat[PATH_MAX];
 		snprintf(fnpistat,PATH_MAX,
 			 "%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
@@ -334,8 +334,8 @@ void prep_bspstrehl(SIM_S *simu){
 dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
     const int npowfs=parms->maos.npowfs;
     const int nwvl=parms->maos.nwvl;
-    double patfov=parms->skyc.patfov;
-    const double ngsgrid=parms->maos.ngsgrid;
+    real patfov=parms->skyc.patfov;
+    const real ngsgrid=parms->maos.ngsgrid;
     dmat *siglevs=dlogspace(1, 2, 20);//dlinspace(10, 5, 20);
     int nstep=1000;
     rand_t rstat;
@@ -352,7 +352,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 	    const long msa=parms->maos.msa[ipowfs];
 	    const long nsa=parms->maos.nsa[ipowfs];
 	    const long pixpsa=parms->skyc.pixpsa[ipowfs];
-	    const double pixtheta=parms->skyc.pixtheta[ipowfs];
+	    const real pixtheta=parms->skyc.pixtheta[ipowfs];
 	    long pixpsas[nsa];
 	    for(int isa=0; isa<nsa; isa++){
 		pixpsas[isa]=pixpsa;
@@ -377,11 +377,11 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		    //cfft2plan(otf2->p[isa+iwvl*nsa], 1);
 		}
 	    }
-	    double dtheta[nwvl];
+	    real dtheta[nwvl];
 	    const int embfac=parms->maos.embfac[ipowfs];
-	    const double dxsa=parms->maos.dxsa[ipowfs];
+	    const real dxsa=parms->maos.dxsa[ipowfs];
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		const double wvl=parms->maos.wvl[iwvl];
+		const real wvl=parms->maos.wvl[iwvl];
 		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
 	    dcell *nonxy=dcellnew(ng,1);
@@ -421,7 +421,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		    }
 		    /*Build matched filter for different siglevs and test linearity*/
 		    for(int isig=0; isig<siglevs->nx; isig++){
-			double sig=siglevs->p[isig];
+			real sig=siglevs->p[isig];
 			dcelladd(&i0s, 0, i0, sig);
 			dcelladd(&gxs, 0, gx, sig);
 			dcelladd(&gys, 0, gy, sig);
@@ -432,7 +432,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			  writebin(gxs, "gxs_%.0f", sig);
 			  writebin(gys, "gys_%.0f", sig);*/
 #define SCAN 0
-			double sxe=0,sye=0,neam=0;
+			real sxe=0,sye=0,neam=0;
 			for(int isa=0; isa<nsa; isa++){
 			    neam+=sanea->p[isa*2]+sanea->p[isa*2+1];
 #if SCAN
@@ -441,13 +441,13 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			    for(int istep=0; istep<nstep; istep++){
 				dzero(is->p[isa]);
 #if SCAN
-				double sx=pixtheta*istep/nstep;
-				double sy=0;
+				real sx=pixtheta*istep/nstep;
+				real sy=0;
 #else
-				double sx=randn(&rstat)*sanea->p[isa*2];
-				double sy=randn(&rstat)*sanea->p[isa*2+1];
+				real sx=randn(&rstat)*sanea->p[isa*2];
+				real sy=randn(&rstat)*sanea->p[isa*2+1];
 #endif
-				double sout[2]={0,0};
+				real sout[2]={0,0};
 				for(long iwvl=0; iwvl<nwvl; iwvl++){
 				    ccp(&otf2->p[isa+iwvl*nsa], otf1->p[isa+iwvl*nsa]);
 				    ctilt(otf2->p[isa+iwvl*nsa], sx/dtheta[iwvl], sy/dtheta[iwvl],0);

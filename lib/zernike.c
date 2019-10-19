@@ -28,15 +28,15 @@ dmat *zernike_Rnm(const dmat *locr, int ir, int im){
     const long nloc=locr->nx*locr->ny;
     dmat *Rnm=dnew(locr->nx, locr->ny);
     const int ns=(ir-im)/2+1;
-    double coeff[ns];
+    real coeff[ns];
     int power[ns];
     for(int s=0; s<ns; s++){
 	coeff[s]=factorial((ir+im)/2-s+1, ir-s)/factorial(1,s)/factorial(1,(ir-im)/2-s)*pow(-1,s);
 	power[s]=ir-2*s;
     }
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp=0;
-	double r=locr->p[iloc];
+	real tmp=0;
+	real r=locr->p[iloc];
 	for(int s=0; s<ns; s++){
 	    tmp+=coeff[s]*pow(r,power[s]);
 	}
@@ -55,7 +55,7 @@ dmat *zernike_Rnm(const dmat *locr, int ir, int im){
    if flag is  0, all modes between rmin and rmax.
    if flag is <0, only generate mode -flag. rmin and rmax is irrelevant
 */
-dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
+dmat* zernike(const loc_t *loc, real D, int rmin, int rmax, int flag){
     if(flag<0){
 	rmin=ceil((sqrt(8.*(-flag)+1)-3)*0.5);
 	rmax=rmin;
@@ -73,7 +73,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     }else{//a specific mode
 	nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
     }
-    double D2=loc_diam(loc);
+    real D2=loc_diam(loc);
     if(D<=0){
 	D=D2;
     }else if(fabs(D-D2)>D*0.5){
@@ -83,10 +83,10 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     dmat *restrict opd=dnew(nloc,nmod);
     dmat *restrict locr=dnew(nloc,1);
     dmat *restrict locs=dnew(nloc,1);
-    const double *restrict locx=loc->locx;
-    const double *restrict locy=loc->locy;
-    const double R1=2./D;
-    long nover=0; double rover=1;
+    const real *restrict locx=loc->locx;
+    const real *restrict locy=loc->locy;
+    const real R1=2./D;
+    long nover=0; real rover=1;
     for(long iloc=0; iloc<nloc; iloc++){
 	locr->p[iloc]=sqrt(pow(locx[iloc],2)+pow(locy[iloc],2))*R1;
 	if(locr->p[iloc]>1){
@@ -114,17 +114,17 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
 	    if(flag>0 && im!=0) continue;//we want radial only
 	    dmat *Rnm=zernike_Rnm(locr, ir, im);
 	    if(im==0){/*Radial*/
-		double coeff=sqrt(ir+1.);
-		double *restrict pmod=opd->p+nloc*cmod;
+		real coeff=sqrt(ir+1.);
+		real *restrict pmod=opd->p+nloc*cmod;
 #pragma omp parallel for
 		for(long iloc=0; iloc<nloc; iloc++){
 		    pmod[iloc]=Rnm->p[iloc]*coeff;
 		}
 		cmod++;
 	    }else if(flag<=0){
-		double coeff=sqrt(2*(ir+1.));
-		double *restrict pmodc;
-		double *restrict pmods;
+		real coeff=sqrt(2*(ir+1.));
+		real *restrict pmodc;
+		real *restrict pmods;
 		if((cmod+1) % 2 == 1){
 		    pmods=opd->p+nloc*cmod;
 		    pmodc=opd->p+nloc*(cmod+1);
@@ -172,7 +172,7 @@ static lmat *zernike_index(int nr){
 	    out->p[im+ir*(nr+1)]=count;
 	    if(im==0){//single, pure radial mode
 		count++;
-	    }else{//double mode as a pair
+	    }else{//real mode as a pair
 		count+=2;
 	    }
 	}
@@ -223,7 +223,7 @@ dmat *zernike_cov_kolmogorov(int nr){
 		if(jct0==-1){//doesn't have the same azimuthal mode
 		    continue;
 		}
-		double tmp=7.2e-3*sqrt((ir+1.)*(jr+1.))*pow(-1, (ir+jr-2*im)*0.5)*pow(M_PI, 8./3.)
+		real tmp=7.2e-3*sqrt((ir+1.)*(jr+1.))*pow(-1, (ir+jr-2*im)*0.5)*pow(M_PI, 8./3.)
 		    *(tgamma(14./3.)*tgamma((ir+jr-5./3.)*0.5))
 		    /(tgamma((ir-jr+17./3.)*0.5)*tgamma((jr-ir+17./3.)*0.5)*tgamma((ir+jr+23./3.)*0.5));
 		if(im==0){
@@ -245,7 +245,7 @@ dmat *zernike_cov_kolmogorov(int nr){
 */
 dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
 		    const dmat *modz, /**<Zernike modes*/
-		    double L0 /**<Outer scale*/){
+		    real L0 /**<Outer scale*/){
     dmat *CC=0;
     dmm(&CC, 1, modz, modz, "tn", 1);//the covariance of the modes
     long nembed=0;
@@ -267,7 +267,7 @@ dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
 #pragma omp parallel for
     for(long ic=0; ic<nmod; ic++){
 	for(long id=0; id<=ic; id++){
-	    double tmp=0;
+	    real tmp=0;
 	    for(long ip=0; ip<nembed*nembed; ip++){
 		tmp+=creal(spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip]))*turbspec->p[ip];
 	    }
@@ -298,8 +298,8 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
     dmm(&kl, 0, mod, U, "nn", 1);
     {
 	//Drop modes with infinitesimal strength
-	double ssmax=S->p[0];
-	double thres=ssmax*1e-10;
+	real ssmax=S->p[0];
+	real thres=ssmax*1e-10;
 	long count=0;
 	for(long i=S->nx-1; i>0; i--){
 	    if(S->p[i]<thres){
@@ -328,7 +328,7 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
    The original method is to compute covariance of zernike modes in von Karman
    spectrum and diagnolize the covariance matrix. But this methods suffers for
    higher order systems because high order zernike modes are hard to generate on
-   account of limited resolution of double precision floating point numbers. To
+   account of limited resolution of real precision floating point numbers. To
    make matters worse, to generate m KL modes, around 2*m Zernike modes are
    needed because each KL mode is a linear combination of all Zernike modes with
    same azimuthal (m) but higher radial (r) order. A work around of the
@@ -342,9 +342,9 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
    In theory, the KL modes computes should be independent on the starting mode,
    as long as the modes span the whole vector space for the coordinate.
  */
-dmat *KL_vonkarman_do(const loc_t *loc, double L0){
+dmat *KL_vonkarman_do(const loc_t *loc, real L0){
     dmat *modz=dnew(loc->nloc, loc->nloc);
-    double val=sqrt(loc->nloc); //this ensures rms wfe is 1, or orthonormal.
+    real val=sqrt(loc->nloc); //this ensures rms wfe is 1, or orthonormal.
     daddI(modz, val);
     dadds(modz, -val/loc->nloc);//this ensure every column sum to 0 (no piston)
     dmat *cov=cov_vonkarman(loc, modz, L0);
@@ -353,7 +353,7 @@ dmat *KL_vonkarman_do(const loc_t *loc, double L0){
     dfree(cov);
     return kl;
 }
-dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0){
+dmat *KL_vonkarman(const loc_t *loc, int nmod, real L0){
     if(!loc) return 0;
     uint32_t key=lochash(loc, 0);
     mymkdir("%s/.aos/cache", HOME);
@@ -394,10 +394,10 @@ dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0){
 /**
    Generate FFT mode with period.
  */
-dmat *fft_mode(const loc_t *loc, double D, double px, double py){
+dmat *fft_mode(const loc_t *loc, real D, real px, real py){
     dmat *opd=dnew(loc->nloc,1);
-    double tx=2*M_PI*px/D;
-    double ty=2*M_PI*py/D;
+    real tx=2*M_PI*px/D;
+    real ty=2*M_PI*py/D;
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	P(opd,iloc)=cos(loc->locx[iloc]*tx)*cos(loc->locy[iloc]*ty);
     }

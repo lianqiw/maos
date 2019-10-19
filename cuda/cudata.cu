@@ -180,7 +180,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	if(mem_minimum==0){//gpu is disabled
 	    return 0;
 	}else{
-	    info("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(double)(1024*1024*1024));
+	    info("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
 	}
     }
     char fnlock[PATH_MAX];

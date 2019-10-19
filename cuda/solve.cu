@@ -34,11 +34,7 @@ Real cusolve_cg::solve(curcell &xout, const curcell &xin, stream_t &stream){
 	    cuwrite(cgtmp.p0, "cucg_solve_p0_%d", cgtmp.count_fail);
 	    cuwrite(cgtmp.Ap, "cucg_solve_Ap_%d", cgtmp.count_fail);
 	    cuwrite(cgtmp.store, "cucg_solve_store_%d", cgtmp.count_fail);
-#if CUDA_DOUBLE
-	    writedbl(cgtmp.diff, maxit+1,1, "cucg_solve_diff_%d", cgtmp.count_fail);
-#else
-	    writeflt(cgtmp.diff, maxit+1,1, "cucg_solve_diff_%d", cgtmp.count_fail);
-#endif
+	    cuwrite(cgtmp.diff, "cucg_solve_diff_%d", cgtmp.count_fail);
 	}
     }
     return ans;
@@ -105,8 +101,12 @@ cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp){
 	error("C cannot be empty\n");
     }
     chol_convert(_C, 1);
-    Cl=cusp(_C->Cl, 0);
-    cp2gpu(Cp, _C->Cp, _C->Cl->nx, 1);
+    if(_C->Cl){
+	Cl=cusp(_C->Cl, 0, 0);
+    }else{
+	Cl=cusp(_C->Cu, 0, 1);
+    }
+    cp2gpu(Cp, _C->Cp, Cl.Nx(), 1);
     if(_Up){
 	cp2gpu(Up, _Up);
 	cp2gpu(Vp, _Vp);

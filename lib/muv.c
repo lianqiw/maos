@@ -34,7 +34,7 @@
 /**
    Apply the sparse plus low rank compuation to xin with scaling of alpha:
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
-void muv(dcell **xout, const void *A_, const dcell *xin, const double alpha){
+void muv(dcell **xout, const void *A_, const dcell *xin, const real alpha){
     const MUV_T *A = (const MUV_T*)A_;//A_ is declared void for cg to use without casting.
     if(A->M && xin){
 	dcellmm(xout, A->M, xin, "nn", alpha);
@@ -55,7 +55,7 @@ void muv(dcell **xout, const void *A_, const dcell *xin, const double alpha){
    Apply the transpose of operation muv(); Apply the sparse plug low rand
    compuation to xin with scaling of alpha: \f$xout=(A.M-A.V*A.U')*xin*alpha\f$;
    U,V are low rank.  */
-void muv_trans(dcell **xout, const void *A_, const dcell *xin, const double alpha){
+void muv_trans(dcell **xout, const void *A_, const dcell *xin, const real alpha){
     const MUV_T *A = (const MUV_T*)A_;
     if(A->M){
 	if(!xin) return;
@@ -87,7 +87,7 @@ typedef struct{
 /**
    Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb):
    \f$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha\f$; U,V are low rank. */
-void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
+void muv_ib(dcell **xout, const void *B, const dcell *xin, const real alpha){
     const MUV_IB_T *C=(const MUV_IB_T*)B;
     int xb=C->xb;
     int yb=C->yb;
@@ -101,7 +101,7 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     if(!*xout){
 	*xout=dcellnew(A->M->nx, xin->ny);
     }
-    if(P(A->M, xb, yb)->id==M_DBL){
+    if(P(A->M, xb, yb)->id==M_REAL){
 	dmm(&(*xout)->p[xb], 1, dmat_cast(P(A->M, xb, yb)), xin->p[yb], "nn", alpha);
     }else{
 	dspmm(&(*xout)->p[xb], dsp_cast(P(A->M, xb, yb)), xin->p[yb], "nn", alpha);
@@ -165,7 +165,7 @@ static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, d
   Vp=M^{-1}*[V*(I-Up'*V)^{-1}]
 
 */
-void muv_direct_prep(MUV_T *A, double svd){ 
+void muv_direct_prep(MUV_T *A, real svd){ 
     int use_svd=fabs(svd)>0;
     if(!A->M) error("M has to be none NULL\n");
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
@@ -212,7 +212,7 @@ void muv_direct_prep(MUV_T *A, double svd){
   Vp=M\[V*(I-Up'*V)^{-1}]
   For each diagonal block.
 */
-void muv_direct_diag_prep(MUV_T *A, double svd){ 
+void muv_direct_diag_prep(MUV_T *A, real svd){ 
     int use_svd=fabs(svd)>0;
     if(!A->M) error("M has to be none NULL\n");
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
@@ -230,7 +230,7 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
     }
     for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
 	if(use_svd){
-	    if(A->M->p[ib+ib*nb]->id==M_DBL){
+	    if(A->M->p[ib+ib*nb]->id==M_REAL){
 		dcp(&A->MIB->p[ib], dmat_cast(A->M->p[ib+ib*nb]));
 	    }else{
 		dspfull(&A->MIB->p[ib], dsp_cast(A->M->p[ib+ib*nb]), 'n',1);
@@ -414,13 +414,13 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
 /**
    solve x=A^-1*B*b using algorithms depend on algorithm, wrapper.
 */
-double muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
+real muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
 	       const MUV_T *L,/**<[in] Contain info about the left hand side matrix A*/
 	       const MUV_T *R,/**<[in] Contain info about the right hand side matrix B*/
-	       dcell *b       /**<[in] The right hand side vector to solve. mull is special case*/ 
+	       dcell *b       /**<[in] The right hand side vector to solve. null is special case*/ 
 	       ){
     dcell *rhs=NULL;
-    double res=0;
+    real res=0;
     if(R){
 	muv(&rhs, R, b, 1);
     }else{

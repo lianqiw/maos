@@ -48,7 +48,9 @@ public:
     void operator delete[](void*p){
 	::free(p);
     }
-  
+    T* cpuPointer(T* p, size_t size){
+	return p;
+    }
 };
 
 //Pinned (page locked) CPU memory
@@ -88,6 +90,14 @@ public:
 		DO(cudaMemsetAsync(p, 0, size*sizeof(T), stream));
 	    }
 	}
+    }
+    T* cpuPointer(T* p, size_t size){
+	T* p2=mymalloc(size, T);
+	DO(cudaMemcpy(p2, p, size*sizeof(T), cudaMemcpyDeviceToHost));
+	return p2;
+    }
+    void cpuPointerFree(T *p){
+	free(p);
     }
 };
 
@@ -159,7 +169,11 @@ public:
     RefP(const RefP& pin, long offset=0):p(pin.p+offset),p0(pin.p0),nref(pin.nref){
 	if(nref) atomicadd(nref, 1);
     }
-    
+    /*
+      template<template <typename> class Dev2>
+      RefP &operator=(const RefP<T, Dev2> &in);
+    */
+
     RefP &operator=(const RefP &in){
 	if(this!=&in){
 	    deinit();//20190927: destroy old data (fix)
@@ -170,6 +184,7 @@ public:
 	}
 	return *this;
     }
+
     void init(long n=0){
 	deinit();
 	init_(n);
@@ -210,6 +225,7 @@ public:
 	return p+i;
     }
 };
+
 /**
    Generic array of basic types and classes.
    Need to call new on p to handle cases when T is a class.
@@ -462,7 +478,7 @@ public:
 	return x;
     }
     cusp():p(0),i(0),x(0),nx(0),ny(0),nzmax(0),nref(0),type(SP_CSC){}
-    cusp(const dsp *in, int tocsr);
+    cusp(const dsp *in, int tocsr=0, int transp=0);
     cusp(const cusp&in):p(in.p),i(in.i),x(in.x),nx(in.nx),ny(in.ny),nzmax(in.nzmax),nref(in.nref),type(in.type){
 	if(nref) nref[0]++;
     }

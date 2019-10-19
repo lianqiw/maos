@@ -62,24 +62,21 @@ void cp2gpu(cumapcell &dest, const mapcell *source){
 }
 
 /*
-  Convert a host dsp array to GPU sprase array.
+  Convert a host dsp array to GPU sprase array.g
 */
-cusp::cusp(const dsp *src_csc, /*Source dsp in CSC*/
-	   int tocsr           /*0: Keep in CSC
-				 1: Convert to CSR
-			       */
+cusp::cusp(const dsp *src_csc, /**<Source dsp in CSC*/
+	   int tocsr,        /**<0: Keep in CSC. 1: Convert to CSR */
+	   int transp        /**<1: transpost*/
     )
-    :p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC),nref(0){
+    :p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(tocsr?SP_CSR:SP_CSC),nref(0){
     if(!src_csc) return;
     dsp *src_trans=0;
     const dsp *src=0;
-    if(tocsr){
-	type=SP_CSR;
+    if(tocsr!=transp){
 	src_trans=dsptrans(src_csc);
 	src=src_trans;
     }else{
 	src=src_csc;
-	type=SP_CSC;
     }
     nx=src_csc->nx;
     ny=src_csc->ny;
@@ -241,7 +238,7 @@ void gpu_write(const Real *p, int nx, int ny, const char *format, ...){
     format2fn;
     Real *tmp=(Real*)malloc(nx*ny*sizeof(Real));
     cudaMemcpy(tmp, p, nx*ny*sizeof(Real), cudaMemcpyDeviceToHost);
-    writearr(fn, 1, sizeof(Real), M_REAL, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(Real), MCU_REAL, NULL, p, nx, ny);
     free(tmp);
 }
 
@@ -252,7 +249,7 @@ void gpu_write(const Comp *p, int nx, int ny, const char *format, ...){
     format2fn;
     Comp *tmp=(Comp*)malloc(nx*ny*sizeof(Comp));
     cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), cudaMemcpyDeviceToHost);
-    writearr(fn, 1, sizeof(Comp), M_COMP, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(Comp), MCU_COMP, NULL, p, nx, ny);
     free(tmp);
 }
 /*
@@ -320,11 +317,12 @@ static void add2cpu(T * restrict *dest, R alpha, const S *src, R beta, long n,
 	add2cpu(&(*out)->p, alpha, in(), beta, in.N(), stream, mutex); \
     }
 
-add2cpu_mat(s, float, Real)
-add2cpu_mat(d, double,Real)
-add2cpu_mat(z, float, Comp)
-add2cpu_mat(c, double,Comp)
-	
+add2cpu_mat(s, float,Real)
+add2cpu_mat(z, float,Comp)
+#ifdef USE_DOUBLE
+add2cpu_mat(d, real, Real)
+add2cpu_mat(c, real, Comp)
+#endif
 #define add2cpu_cell(D, T, C)				    \
     void add2cpu(D##cell **out, T alpha, const C &in, T beta,	\
 		 cudaStream_t stream, pthread_mutex_t *mutex){		\
@@ -341,12 +339,12 @@ add2cpu_mat(c, double,Comp)
 	    add2cpu((*out)->p+i, alpha, in[i], beta, stream, mutex);	\
 	}								\
     }
-add2cpu_cell(d, double,curcell)
-add2cpu_cell(s, float, curcell)
-add2cpu_cell(c, double,cuccell)
-add2cpu_cell(z, float, cuccell)
-#define cp2cpu_same(dmat,dzero,dnew,double)				\
-    void cp2cpu(dmat **out, const Array<double, Gpu> &in, cudaStream_t stream){ \
+add2cpu_cell(d, real, curcell)
+add2cpu_cell(s, float,curcell)
+add2cpu_cell(c, real, cuccell)
+add2cpu_cell(z, float,cuccell)
+#define cp2cpu_same(dmat,dzero,dnew,T)				\
+    void cp2cpu(dmat **out, const Array<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in) {							\
 	    if(*out) dzero(*out);					\
 	    return;							\
@@ -354,23 +352,26 @@ add2cpu_cell(z, float, cuccell)
 	if(!*out) *out=dnew(in.Nx(), in.Ny());				\
 	dmat *pout=*out;						\
 	CUDA_SYNC_STREAM;						\
-	DO(cudaMemcpy(pout->p, in(), in.N()*sizeof(double),		\
+	DO(cudaMemcpy(pout->p, in(), in.N()*sizeof(T),			\
 		      cudaMemcpyDeviceToHost));				\
 	if(pout->header) free(pout->header);				\
 	if(in.header.length()) pout->header=strdup(in.header.c_str());	\
     }
-
+#ifdef USE_DOUBLE
 cp2cpu_same(dmat,dzero,dnew,double)
 cp2cpu_same(cmat,czero,cnew,double2)
+#endif
 cp2cpu_same(smat,szero,snew,float)
 cp2cpu_same(zmat,zzero,znew,float2)
 #if ! CUDA_DOUBLE 
+#ifdef USE_DOUBLE
 void cp2cpu(dmat **out, const curmat &in, cudaStream_t stream){
     add2cpu(out, 0, in, 1, stream, 0);
 }
 void cp2cpu(cmat **out, const cucmat &in, cudaStream_t stream){
     add2cpu(out, 0, in, 1, stream, 0);
 }
+#endif
 #else
 void cp2cpu(smat **out, const curmat &in, cudaStream_t stream){
     add2cpu(out, 0, in, 1, stream, 0);
@@ -428,7 +429,7 @@ void zfarr_push(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream){
 }
 
 void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t stream, 
-		    const double *amp, double *zlim,
+		    const real *amp, real *zlim,
 		    const char *title, const char *xlabel, const char *ylabel,
 		    const char* format,...){
     format2fn;

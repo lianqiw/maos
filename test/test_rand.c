@@ -37,51 +37,49 @@ static void test_number(){
     dbg("First number is %g\n",randn(&b));
 }
 static void test_speed(){
-    double *p;
     int N,i;
     clock_t ck;
     int seed=2;
     N=1000000;
-    p=mymalloc(N,double);
-    memset(p, 0, sizeof(double)*N);
+    dmat *p=dnew(N,1);
     seed_rand(&rstat, seed);
     srand(seed);
     ck=clock();
     seed_rand(&rstat, seed);
     ck=clock();
     for(i=0; i<N; i++){
-	p[i]=randu(&rstat);
+	p->p[i]=randu(&rstat);
     }
-    printf("randu elapsed %f seconds\n", (double)(clock()-ck)/CLOCKS_PER_SEC);
-    writedbl(p, N, 1,"randu.bin");
+    printf("randu elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
+    writebin(p,"randu.bin");
     srand(1);
     ck=clock();
     for(i=0; i<N; i++){
-	p[i]=rand();
+	p->p[i]=rand();
     }
-    printf("Rand elapsed %f seconds\n", (double)(clock()-ck)/CLOCKS_PER_SEC);
+    printf("Rand elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
     /*ck=clock();
     for(i=0; i<N; i++){
 	p[i]=slow_randn(&rstat);
     }
-    printf("Slow Randn elapsed %f seconds\n", (double)(clock()-ck)/CLOCKS_PER_SEC);
-    writedbl("slow_randn.bin", p, N, 1);
+    printf("Slow Randn elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
+    writebin("slow_randn.bin", p, N, 1);
     */
     ck=clock();
     for(i=0; i<N; i++){
-	p[i]=randn(&rstat)*10;
+	p->p[i]=randn(&rstat)*10;
     }
-    printf("Fast Randn elapsed %f seconds\n", (double)(clock()-ck)/CLOCKS_PER_SEC);
-    writedbl(p, N, 1, "randn.bin");
+    printf("Fast Randn elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
+    writebin(p, "randn.bin");
 
     seed_rand(&rstat2,seed);
     ck=clock();
     for(i=0; i<N; i++){
-	p[i]=(double)randp(&rstat2,30);
+	p->p[i]=(real)randp(&rstat2,30);
     }
-    printf("Randp elapsed %f seconds\n", (double)(clock()-ck)/CLOCKS_PER_SEC);
-    writedbl(p, N, 1,"randp.bin");
-    free(p);
+    printf("Randp elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
+    writebin(p,"randp.bin");
+    dfree(p);
 }
 int main(){
     test_number();

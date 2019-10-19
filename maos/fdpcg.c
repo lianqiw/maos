@@ -68,25 +68,25 @@
    infinite subapertures. The sum of xsel in FD has to be 1.
 */
 static csp* 
-fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
+fdpcg_saselect(long nx, long ny, real dx,loc_t *saloc, real *saa){
     const long threas=1;
     cmat *xsel=cnew(nx,ny);
     //cfft2plan(xsel,-1);
     cmat* pxsel=xsel/*PCMAT*/;
-    double dx1=1./dx;
+    real dx1=1./dx;
     long offx=nx/2;
     long offy=ny/2;
     for(long isa=0; isa<saloc->nloc; isa++){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture lower left corner. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    P(pxsel,ix,iy)=1./(double)(nx*ny);/*cancel FFT scaling.*/
+	    P(pxsel,ix,iy)=1./(real)(nx*ny);/*cancel FFT scaling.*/
 	}
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
-    double xselc=creal(P(pxsel,nx/2,ny/2))*threas;/*Fourier center */
+    real xselc=creal(P(pxsel,nx/2,ny/2))*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
 	for(long iy=0; iy<ny; iy++){
@@ -96,7 +96,7 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	}
     }
     /*scale xsel to have the same sum, to preserve its value in spatial domain. (2012-04-06)*/
-    //cscale(xsel, 1./(double)csum(xsel)); //degrades performance.
+    //cscale(xsel, 1./(real)csum(xsel)); //degrades performance.
     csp *sel=cspconvolvop(xsel);
     cfree(xsel);
     return sel;
@@ -196,37 +196,37 @@ fdpcg_perm(const long *nx, const long *ny, const long *os, int bs, int nps, int 
    Compute gradient operator in Fourier domain. Subapertures are denoted with lower left corner, so no shift is required.
 */
 static void 
-fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
+fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, real dx, real dsa){
     long os=(long)round(dsa/dx);
     if(fabs(dsa-dx*os)>1.e-10){
 	error("dsa must be multiple of dx. dsa=%g, dx=%g, diff=%g\n", dsa, dx, fabs(dsa-dx*os));
     }
  
-    double *wt=myalloca(os+1, double);
-    double *st=myalloca(os+1, double);
+    real *wt=myalloca(os+1, real);
+    real *st=myalloca(os+1, real);
     /*Trapzoidal weights for averaging. */
-    wt[os]=wt[0]=0.5/(double)os/dsa;
+    wt[os]=wt[0]=0.5/(real)os/dsa;
     for(long ios=1; ios<os; ios++){
-	wt[ios]=1./(double)os/dsa;
+	wt[ios]=1./(real)os/dsa;
     }
     for(long ios=0; ios<os+1; ios++){
 	st[ios]=ios*dx;
     }
     long ny2=ny/2;
     long nx2=nx/2;
-    dcomplex cf=COMPLEX(0, 2*M_PI);
-    double dfy=1/(ny*dx);
-    double dfx=1/(nx*dx);
+    comp cf=COMPLEX(0, 2*M_PI);
+    real dfy=1/(ny*dx);
+    real dfx=1/(nx*dx);
     *gx=cnew(nx*ny,1);
     *gy=cnew(nx*ny,1);
-    dcomplex *pgx=(*gx)->p;
-    dcomplex *pgy=(*gy)->p;
+    comp *pgx=(*gx)->p;
+    comp *pgy=(*gy)->p;
     for(long iy=0; iy<ny; iy++){
-	double fy=(double)(iy-ny2)*dfy;
+	real fy=(real)(iy-ny2)*dfy;
 	for(long ix=0; ix<nx; ix++){
-	    double fx=(double)(ix-nx2)*dfx;
-	    dcomplex tx=0;
-	    dcomplex ty=0;
+	    real fx=(real)(ix-nx2)*dfx;
+	    comp tx=0;
+	    comp ty=0;
 	    for(int ios=0; ios<os+1; ios++){
 		tx+=wt[ios]*(cexp(cf*(fx*dsa+fy*st[ios]))-cexp(cf*(fy*st[ios])));
 		ty+=wt[ios]*(cexp(cf*(fy*dsa+fx*st[ios]))-cexp(cf*(fx*st[ios])));
@@ -250,13 +250,13 @@ fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
    nxp*nxp, sampling dx, with displacement of dispx, dispy.
 */
 static csp *
-fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
+fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, real dx, real *dispx, real *dispy){
     long nx2[nps],nx3[nps];
     long ny2[nps],ny3[nps];
     long noff[nps];
     long nxtot=0;
-    double dkx=1./(nxp*dx);
-    double dky=1./(nyp*dx);
+    real dkx=1./(nxp*dx);
+    real dky=1./(nyp*dx);
     for(long ips=0; ips<nps; ips++){
 	nx2[ips]=nx[ips]/2;
 	nx3[ips]=nx2[ips]+nx[ips];
@@ -271,23 +271,23 @@ fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, double dx, double *
     csp *propt=cspnew(nxtot,nxp*nyp,nxp*nyp*nps);
     spint *pp=propt->p;
     spint *pi=propt->i;
-    dcomplex *px=propt->x;
+    comp *px=propt->x;
     long count=0;
-    double cfr=2*M_PI;
-    dcomplex cf=COMPLEX(0, cfr);
+    real cfr=2*M_PI;
+    comp cf=COMPLEX(0, cfr);
     for(long iy=0; iy<nyp; iy++){
-	double fyg=(iy-nyp2)*dky;
+	real fyg=(iy-nyp2)*dky;
 	for(long ix=0; ix<nxp; ix++){
-	    double fxg=(ix-nxp2)*dkx;/*spatial frequency in pupil. */
+	    real fxg=(ix-nxp2)*dkx;/*spatial frequency in pupil. */
 	    long icol=ix+iy*nxp;
 	    pp[icol]=count;
 	    for(long ips=0; ips<nps; ips++){
 		long jx=((ix-nxp2)+nx3[ips])%nx[ips];/*map to layer ips. */
 		long jy=((iy-nyp2)+ny3[ips])%ny[ips];/*map to layer ips. */
-		double fx=(jx-nx2[ips])*dkx;/*spatial frequency in plane ips. */
-		double fy=(jy-ny2[ips])*dky;
+		real fx=(jx-nx2[ips])*dkx;/*spatial frequency in plane ips. */
+		real fy=(jy-ny2[ips])*dky;
 		pi[count]=jx+jy*nx[ips]+noff[ips];
-		dcomplex shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
+		comp shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
 		switch(nxp/nx[ips]){
 		case 0:
 		case 1:
@@ -302,8 +302,8 @@ fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, double dx, double *
 			  for this scaling effect.
 			*/
 			/*
-			  dcomplex shiftx=cexp(cf*(fxg*dx));
-			  dcomplex shifty=cexp(cf*(fyg*dx));
+			  comp shiftx=cexp(cf*(fxg*dx));
+			  comp shifty=cexp(cf*(fyg*dx));
 			  px[count]=conj(shift*(1+0.5*shiftx+0.5*conj(shiftx))
 			  *(1+0.5*shifty+0.5*conj(shifty)));
 			  //the following is equivalent. 
@@ -351,8 +351,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     long* ny=recon->xny->p;
     const long nxp=nx[0]/os[0]*parms->tomo.pos;
     const long nyp=ny[0]/os[0]*parms->tomo.pos;
-    const double dxp=recon->ploc->dx;
-    const double *ht=parms->atmr.ht->p;
+    const real dxp=recon->ploc->dx;
+    const real *ht=parms->atmr.ht->p;
     long nxtot=0;
     int os0=os[0];
     int needscale=0;
@@ -371,7 +371,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cmat *gx, *gy;
     fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx);/*tested ok. */
     /*Concatenate invpsd; */
-    dcomplex *invpsd=mycalloc(nxtot,dcomplex);
+    comp *invpsd=mycalloc(nxtot,comp);
     long offset=0;
     switch(parms->tomo.cxxalg){
     case 0:/*forward matrix uses biharmonic approx. We use here also. */
@@ -396,8 +396,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    cfft2(psd,-1);
 	    cfftshift(psd);
 	    /*look for a way to obtain this automatically. */
-	    const double eps=2.220446049250313e-16;
-	    double max;
+	    const real eps=2.220446049250313e-16;
+	    real max;
 	    cmaxmin(psd->p, psd->nx*psd->ny, &max, 0);
 	    max=max*sqrt(eps);
 	    for(long i=0; i<nx[ips]*ny[ips]; i++){
@@ -414,7 +414,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    dmat *tmp=ddup(recon->invpsd->invpsd->p[ips]);
 	    dfftshift(tmp);
 	    /*cancel the scaling applied in invpsd routine. */
-	    dscale(tmp,(double)(nx[ips]*ny[ips]));
+	    dscale(tmp,(real)(nx[ips]*ny[ips]));
 	    for(long i=0; i<nx[ips]*ny[ips]; i++){
 		invpsd[offset+i]=tmp->p[i];
 	    }
@@ -455,15 +455,15 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cfree(gx);
     cfree(gy);
     cspfree(sel);
-    const double delay=parms->sim.dt*(parms->powfs[hipowfs].dtrat+1+parms->sim.alhi);
+    const real delay=parms->sim.dt*(parms->powfs[hipowfs].dtrat+1+parms->sim.alhi);
 
     /* Mhat = Mhat + propx' * Mmid * propx */
 #pragma omp parallel for
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
-	double dispx[nps];
-	double dispy[nps];
+	real dispx[nps];
+	real dispy[nps];
 	int iwfs=parms->powfs[hipowfs].wfsr->p[jwfs];
-	double neai=recon->neam->p[iwfs];
+	real neai=recon->neam->p[iwfs];
 	//info("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
 	for(long ips=0; ips<nps; ips++){
 	    /*
@@ -500,9 +500,9 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 
     if(!needscale){  /*scale Mhat to avoid scaling FFT. */
 	cmat *sc=cnew(nxtot, 1);
-	dcomplex *psc=sc->p;
+	comp *psc=sc->p;
 	for(int ips=0; ips<nps; ips++){
-	    double scale=(double)(nx[ips]*ny[ips]);
+	    real scale=(real)(nx[ips]*ny[ips]);
 	    for(long ix=0; ix<nx[ips]*ny[ips]; ix++){
 		*(psc++)=scale;
 	    }
@@ -557,7 +557,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->save.fdpcg){
 	writebin(fdpcg->Mbinv,"fdpcg_Mhatb");
     }
-    double svd_thres=1e-7;
+    real svd_thres=1e-7;
     info("FDPCG SVD Threshold is %g...", svd_thres);
 #pragma omp parallel for
     for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
@@ -668,7 +668,7 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     }
     const long nps=recon->npsr;
     FDPCG_T *fdpcg=recon->fdpcg;
-    long nxtot=fdpcg->nxtot;
+    //long nxtot=fdpcg->nxtot;
     ccell *xhati=ccellnew3(nps, 1, recon->xnx->p, recon->xny->p);
     ccell *xhat2i=ccellnew3(nps, 1, recon->xnx->p, recon->xny->p);
     cmat *xhat=cref(xhati->m);
@@ -707,10 +707,10 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
 #else/*permute vectors and apply block diagonal matrix */
     /*permute xhat and put into xhat2 */
-    cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm->p,nxtot);
+    cvecperm(xhat2,xhat,recon->fdpcg->perm->p);
     czero(xhat);
     CALL_THREAD(info_mulblock, 1);
-    cvecpermi(xhat2->p,xhat->p,fdpcg->perm->p,nxtot);
+    cvecpermi(xhat2,xhat,fdpcg->perm->p);
 #if DBG_FD
     writebin(xhat2i, "fdc_mul");
 #endif

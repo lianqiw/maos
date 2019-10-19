@@ -818,14 +818,14 @@ gboolean addpage(gpointer indata){
 	    }
 	    for(int i=0; i<4; i++){
 		if(fabs(drawdata_old->limit_data[i]-drawdata->limit_data[i])>0.1){
-		    drawdata_old->limit_changed=1;
+		    drawdata_old->limit_changed=-1;
 		}
 	    }
 	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
 	}else{
 	    free(drawdata_old->limit_data);
 	    drawdata_old->limit_data=NULL;
-	    drawdata_old->limit_changed=1;
+	    drawdata_old->limit_changed=-1;
 	}
 	free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 	drawdata_old->nx=drawdata->nx;
@@ -836,7 +836,7 @@ gboolean addpage(gpointer indata){
 	drawdata_old->drawn=0;/*need redraw. */
 	/*we preserve the limit instead of off, zoom in case we are drawing curves */
 	if(drawdata_old->npts){
-	    drawdata_old->limit_changed=1;
+	    drawdata_old->limit_changed=-1;
 	}
 	{
 	    free(drawdata);

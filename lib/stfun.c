@@ -33,7 +33,7 @@ struct stfun_t{
 /**
    Initialize the stfun data.
 */
-stfun_t *stfun_init(long nx, long ny, double *amp){
+stfun_t *stfun_init(long nx, long ny, real *amp){
     stfun_t *A=mycalloc(1,struct stfun_t);
     A->count=0;
     A->hat0=cnew(nx*2, ny*2);
@@ -43,7 +43,7 @@ stfun_t *stfun_init(long nx, long ny, double *amp){
 
     dmat *damp=dnew(nx, ny);;
     if(amp){
-	memcpy(damp->p, amp, nx*ny*sizeof(double));
+	memcpy(damp->p, amp, nx*ny*sizeof(real));
     }else{
 	dset(damp, 1);
     }
@@ -66,7 +66,7 @@ void stfun_push(stfun_t *A, dmat *opd){
     cset(A->hat2, 0);
     for(long iy=0; iy<ny; iy++){
 	for(long ix=0; ix<nx; ix++){
-	    double o=P(popd,ix,iy)*P(pamp,ix,iy);
+	    real o=P(popd,ix,iy)*P(pamp,ix,iy);
 	    P(p1,ix+nx2,iy+ny2)=o;
 	    P(p2,ix+nx2,iy+ny2)=o*o;
 	}
@@ -108,16 +108,16 @@ dmat *stfun_finalize(stfun_t *A){
 /**
    Generate the structure function of the phase of kolmogorov spectrum 
 */
-dmat* stfun_kolmogorov(loc_t *loc, double r0){
+dmat* stfun_kolmogorov(loc_t *loc, real r0){
     long nloc=loc->nloc;
-    double *locx=loc->locx;
-    double *locy=loc->locy;
+    real *locx=loc->locx;
+    real *locy=loc->locy;
     dmat *st=dnew(nloc,nloc);
     dmat* B=st;
-    double coeff=6.88*pow(r0,-5./3.)*pow(0.5e-6/(2.*M_PI),2);
+    real coeff=6.88*pow(r0,-5./3.)*pow(0.5e-6/(2.*M_PI),2);
     for(int i=0; i<nloc; i++){
 	for(int j=i; j<nloc; j++){
-	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
+	    real rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
 	    P(B,i,j)=P(B,j,i)=coeff*pow(rdiff2,5./6.);
 	}
     }

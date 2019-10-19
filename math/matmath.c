@@ -36,7 +36,6 @@ void X(scale)(X(mat) *A, R w){
     }
 }
 
-
 /**
  * Check for NaN in elements
  */
@@ -95,7 +94,9 @@ T X(inn)(const X(mat)*A, const X(mat) *B){
 	out+=A->p[i]*B->p[i];
     }
     if(isnan(creal(out))){
-	error("NaN found\n");
+	writebin(A, "inn_A");
+	writebin(B, "inn_B");
+	warning("NaN found\n");
     }
     return out;
 }
@@ -111,7 +112,11 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b){
 	}
     }
     if(isnan(creal(res))){
-	warning_once("NaN found.\n");
+	writebin(w, "wdot_w");
+	writearr("wdot_a", 1, sizeof(real), M_T, NULL, a, w->nx, w->ny);
+	writearr("wdot_b", 1, sizeof(real), M_T, NULL, b, w->nx, w->ny);
+	warning("NaN found.\n");
+	raise(1);
     }
     return res;
 }
@@ -674,7 +679,7 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx, R offsety,
    Shift the image in A to center on physical
    center+[offsetx,offsety] using cog and fft.
 */
-#ifndef USE_SINGLE
+//#ifndef USE_SINGLE
 void X(shift2center)(X(mat) *A, R offsetx, R offsety){
     R grad[2];
     R Amax=X(max)(A);
@@ -706,7 +711,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
 	XC(free)(B);
     }
 }
-#endif
+//#endif
 
 
 /**
@@ -719,11 +724,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
     const long nx=Mod->nx;
     R wtsum=(R)nx;
     if(amp){
-#ifdef USE_SINGLE
-	wtsum=fltsum(amp, nx);
-#else
-	wtsum=dblsum(amp, nx);
-#endif
+	wtsum=XR(sumvec)(amp, nx);
     }
     int nonvalid[nmod];
     memset(nonvalid, 0, sizeof(int)*nmod);
@@ -736,7 +737,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 	    /*compute dot product. */
 	    for(int jmod=0; jmod<imod; jmod++){
 		if(nonvalid[jmod]) continue;
-		cross=-DOT(PCOL(Mod,imod),PCOL(Mod,jmod),amp,nx)/wtsum;
+		cross=-X(vecdot)(PCOL(Mod,imod),PCOL(Mod,jmod),amp,nx)/wtsum;
 #pragma omp parallel for
 		for(long ix=0; ix<nx; ix++){
 		    P(Mod,ix,imod)+=cross*P(Mod,ix,jmod);
@@ -744,7 +745,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 	    }
 	}
 	/*normalize*/
-	R norm=sqrt(creal(DOT(PCOL(Mod,imod),PCOL(Mod,imod),amp,nx)/wtsum));
+	R norm=sqrt(creal(X(vecdot)(PCOL(Mod,imod),PCOL(Mod,imod),amp,nx)/wtsum));
 	if(fabs(norm)>1.e-15){
 	    norm=1./norm;
 	    for(long ix=0; ix<nx; ix++){

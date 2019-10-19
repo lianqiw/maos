@@ -361,7 +361,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    //One stream handling the memcpy
 	    short *pcur=(short*)(pix->p)+saind[isa];
 	    if(sock!=-1){
-		double tmp0=myclockd();
+		real tmp0=myclockd();
 		if(stread(sock, pcur, sizeof(short)*npixleft)){
 		    warning("failed: %s\n", strerror(errno));
 		    close(sock); sock=-1;
@@ -420,7 +420,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    }else{
 		npixleft=saind[isa+sastep]-saind[isa];
 	    }
-	    double theta=M_PI*0.5*istep+datai->FSMdelta;
+	    real theta=M_PI*0.5*istep+datai->FSMdelta;
 	    Real cd=cos(theta);
 	    Real sd=cos(theta);
 	    //Do not start before pixels are transported
@@ -583,7 +583,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    datai->stream_p.sync();
 	}
 	if(sock!=-1){
-	    double tmp0=myclockd();
+	    real tmp0=myclockd();
 	    if(stwrite(sock, dmres->p[0]->p, sizeof(Real)*nact)){
 		warning("error write dmres: %s\n", strerror(errno));
 		close(sock); sock=-1;

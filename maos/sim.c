@@ -40,9 +40,9 @@
 #endif
 extern int KEEP_MEM;
 extern int draw_single;
-static double tk_0;
-static double tk_1;
-static double tk_atm=0;
+static real tk_0;
+static real tk_1;
+static real tk_atm=0;
 /**
    Initialize the simulation runtime data struct.
  */
@@ -109,7 +109,7 @@ void maos_isim(int isim){
     if(isim+2+parms->sim.dtrat_hi>=simend){
 	draw_single=0;
     }
-    double ck_0=myclockd();
+    real ck_0=myclockd();
     simu->wfsisim=isim;
     simu->perfisim=isim;
     simu->status->isim=isim;
@@ -226,7 +226,7 @@ void maos_isim(int isim){
 	    simu->tomo_update=0;
 	}
     }
-    double ck_end=myclockd();
+    real ck_end=myclockd();
     long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
     long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
     if(isim==simstart){//first step, rough estimate.
@@ -235,7 +235,7 @@ void maos_isim(int isim){
     }else{
 	simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_1)*(iseed+1))/steps_done*steps_rest
 				  +(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
-	simu->status->mean=(ck_end-tk_atm)/(double)(isim-simstart);
+	simu->status->mean=(ck_end-tk_atm)/(real)(isim-simstart);
     }
     simu->status->laps=(long)(ck_end-tk_0);
     simu->status->tot  =ck_end-ck_0;
@@ -256,7 +256,7 @@ void maos_sim(){
     int simstart=parms->sim.start;
    
     info("PARALLEL=%d\n", PARALLEL);
-    double restot=0; long rescount=0;
+    real restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	SIM_T *simu=0;
 	while(!(simu=maos_iseed(iseed))){
@@ -315,7 +315,7 @@ void maos_sim(){
 	    }else{
 		isim0=0;
 	    }
-	    double sum=0;
+	    real sum=0;
 	    for(int i=isim0; i<parms->sim.end; i++){
 		sum+=simu->cle->p[i*parms->evl.nmod];
 	    }

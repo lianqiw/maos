@@ -64,7 +64,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	GAlsr=GAM;
     }
     int free_GAlsr=0;
-    if(GAlsr->p[0]->id!=M_DBL){//Convert low sparsity matrices to full
+    if(GAlsr->p[0]->id!=M_REAL){//Convert low sparsity matrices to full
 	dsp *tmp=dsp_cast(GAlsr->p[0]);
 	if(tmp->nzmax>tmp->nx*tmp->ny*0.2){//not very sparse
 	    dcell *tmp2=0;
@@ -93,9 +93,9 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	recon->LL.V=dcelldup(GPTTDF);
 	dcellfree(GPTTDF);
     }
-    double maxeig=pow(recon->neamhi * recon->aloc->p[0]->dx, -2);
+    real maxeig=pow(recon->neamhi * recon->aloc->p[0]->dx, -2);
     if(parms->recon.modal){
-	double strength=1;
+	real strength=1;
 	for(int idm=0; idm<ndm; idm++){
 	    strength*=dnorm(recon->amod->p[idm]);
 	}
@@ -117,10 +117,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    for(int idm=0; idm<ndm; idm++){
 		const long nloc=recon->aloc->p[idm]->nloc;
 		NW->p[idm]=dnew(nloc, ndm*nmod);
-		double *p=PCOL(NW->p[idm], idm*nmod);
+		real *p=PCOL(NW->p[idm], idm*nmod);
 		
 		//First mode: piston mode.
-		const double *cpl=recon->actcpl->p[idm]->p;
+		const real *cpl=recon->actcpl->p[idm]->p;
 		for(long iloc=0; iloc<nloc; iloc++){
 		    if(cpl[iloc]>0.1){
 			p[iloc]=1;
@@ -134,7 +134,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 		for(long iy=0; iy<map->ny; iy++){
 		    for(long ix=0; ix<map->nx; ix++){
 			if(P(map,ix,iy)>0){//Some may be negative due to extend.
-			    p[(long)P(map,ix,iy)-1]=(double)2*((iy+ix)&1)-1;
+			    p[(long)P(map,ix,iy)-1]=(real)2*((iy+ix)&1)-1;
 			}
 		    }
 		}

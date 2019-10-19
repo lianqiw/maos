@@ -50,7 +50,7 @@ void test_sum(){
     sum_do<<<DIM_REDUCE, BS, DIM_REDUCE*sizeof(Real), stream>>>(res_gpu, Ap, N);
     cudaMemcpyAsync(res+1, res_gpu, sizeof(Real), cudaMemcpyDeviceToHost);
     CUDA_SYNC_STREAM;
-    double tim=toc3*1024*1024*1024;
+    real tim=toc3*1024*1024*1024;
     toc("sum_wrap");tic;
     sum2_wrap(res_gpu, Ap, N, stream);
     cudaMemcpyAsync(res+2, res_gpu, sizeof(Real), cudaMemcpyDeviceToHost);
@@ -60,7 +60,7 @@ void test_sum(){
     //sum2_wrap(res_gpu, Ap, N, stream);
     cudaMemcpyAsync(res+3, res_gpu, sizeof(Real), cudaMemcpyDeviceToHost);
     CUDA_SYNC_STREAM;
-    double tim2=toc3*1024*1024*1024;
+    real tim2=toc3*1024*1024*1024;
     toc("sum2_wrap");
 
     dbg("sum_wrap  %.2f GB/s\n", N*sizeof(Real)/tim);

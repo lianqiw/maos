@@ -45,7 +45,7 @@ typedef struct MVM_IGPU_T{
 #define MVM_DEBUG 0
 static void mvm_trans_igpu(thread_t *info){
     TIC;tic;
-    double tk_prep=0, tk_fitL=0, tk_fitR=0, tk_TomoL=0, tk_TomoR=0, tk_cp=0;
+    real tk_prep=0, tk_fitL=0, tk_fitR=0, tk_TomoL=0, tk_TomoR=0, tk_cp=0;
     MVM_IGPU_T *data=(MVM_IGPU_T*)info->data;
     const PARMS_T *parms=data->parms;
     RECON_T *recon=data->recon;

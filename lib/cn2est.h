@@ -56,7 +56,7 @@ typedef struct cn2est_t{
     dcell *iPnk;     /**<Cn2 Estimation matrix.*/
     dcell *wt;       /**<Estimated weighting of the layers*/
     dcell *ht;       /**<Estimated Height of the layers*/
-    double hmax;     /**<maximum cn2 estimation when keepht!=2*/
+    real hmax;     /**<maximum cn2 estimation when keepht!=2*/
     dmat *r0;        /**<Estimated r0*/
     /*the following are used to feed into reconstructor. */
     dmat *htrecon;   /**<layer heights for tomography*/
@@ -65,17 +65,17 @@ typedef struct cn2est_t{
     dmat *dmht;      /**<For theta_2 printing*/
     dcell *wtrecon;   /**<layer weights for tomography*/
     dspcell *wtconvert; /**<to convert wt from wt to wtrecon.*/
-    double r0m;       /**<averaged r0 from all the pairs.>*/
-    double L0;        /**<outer scale*/
+    real r0m;       /**<averaged r0 from all the pairs.>*/
+    real L0;        /**<outer scale*/
 } cn2est_t;
 
 cn2est_t* cn2est_new(const dmat *wfspair, const dmat *wfstheta, const loc_t *saloc,
-		     const dmat *saa, const double saat, 
-		     const dmat* hs, const dmat *htrecon, int keepht, double l0);
+		     const dmat *saa, const real saat, 
+		     const dmat* hs, const dmat *htrecon, int keepht, real l0);
 void cn2est_est(cn2est_t *cn2est, int verbose, int reset);
 void cn2est_free(cn2est_t *cn2est);
 void cn2est_push(cn2est_t *cn2est, dcell *gradol);
 cn2est_t* cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
-		    const dmat *saa, const double saat, 
-		    const dmat* hs, const dmat *htrecon, int keepht, double l0, dcell *grad);
+		    const dmat *saa, const real saat, 
+		    const dmat* hs, const dmat *htrecon, int keepht, real l0, dcell *grad);
 #endif

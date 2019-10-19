@@ -27,7 +27,7 @@
 void cure1d(dmat **pphix,   /**<Output: opd*/
 	    const dmat *gx,/**<x gradients, dimension is nx*ny. Invalid subapertures set to NaN*/
 	    const dmat *gy,/**<y gradients, dimension is ny*ny.*/
-	    double dx      /**<Size of subaperture*/
+	    real dx      /**<Size of subaperture*/
     ){
     const long nx=gx->nx;
     const long ny=gy->ny;
@@ -64,7 +64,7 @@ void cure1d(dmat **pphix,   /**<Output: opd*/
 	for(iseg=0; iseg<nseg; iseg++){
 	    long ix0=P(flag, iseg*2+1, iy);
 	    long ix1=P(flag, iseg*2+2, iy)+1;
-	    double lxs=0;
+	    real lxs=0;
 	    //remove mean of each x-chain
 	    for(long ix=ix0; ix<ix1; ix++){
 		lxs+=P(lx, ix, iy);
@@ -82,7 +82,7 @@ void cure1d(dmat **pphix,   /**<Output: opd*/
     //Connecting chains
     dmat *ty=dnew(maxseg, ny);
     long nseglast=P(flag, 0, 0);
-    double piston=0; long pcount=0;
+    real piston=0; long pcount=0;
     //Include #elemenets in first chain in pcount
     for(long iy=0; iy<1; iy++){
 	for(long iseg=0; iseg<nseglast; iseg++){
@@ -95,21 +95,21 @@ void cure1d(dmat **pphix,   /**<Output: opd*/
 	for(long iseg=0; iseg<nseg; iseg++){
 	    const long ig0=P(flag, iseg*2+1, iy);
 	    const long ig1=P(flag, iseg*2+2, iy);
-	    double gym=0;
+	    real gym=0;
 	    long gyc=0;
 	    //compute mean gy along common boundary
 	    for(long ig=ig0; ig<ig1; ig++){
-		double gyi=P(gy, ig, iy)+P(gy, ig, iy-1);
+		real gyi=P(gy, ig, iy)+P(gy, ig, iy-1);
 		if(!isnan(gyi)){//both valid
 		    gym+=gyi;
 		    gyc++;
 		}
 	    }
-	    double lxm=0;
+	    real lxm=0;
 	    long lxc=0;
 	    //compute x-chain mean difference along common boundary
 	    for(long ix=ig0; ix<=ig1; ix++){
-		double lxd=P(lx, ix, iy)-P(lx, ix, iy-1);
+		real lxd=P(lx, ix, iy)-P(lx, ix, iy-1);
 		if(!isnan(lxd)){
 		    lxm+=lxd;
 		    lxc++;
@@ -119,7 +119,7 @@ void cure1d(dmat **pphix,   /**<Output: opd*/
 	    if(!lxc || !gyc || isnan(gym) || isnan(lxm)){
 		continue;
 	    }
-	    double tylast=0;
+	    real tylast=0;
 	    //Handle mismatch in #segment
 	    if(nseglast!=nseg){//combine
 		if(nseglast==1){//break up
@@ -172,7 +172,7 @@ void cure1d(dmat **pphix,   /**<Output: opd*/
     //Interpolate inner points first
     for(long iy=0; iy<=ny; iy++){
 	for(long ix=0; ix<=nx; ix++){
-	    double val=0; 
+	    real val=0; 
 	    long count=0;
 	    if(ix>0 && iy>0 && !isnan(P(gy, ix-1, iy-1))){//BL
 		val+=P(lx, ix, iy-1)+P(gy, ix-1, iy-1)*dx*0.5;
@@ -204,7 +204,7 @@ void cure1d(dmat **pphix,   /**<Output: opd*/
 /**
    Implements 2d cure by calling cure1d twice.
 */
-void cure(dmat **phi, const dmat *gx, const dmat *gy, double dx){
+void cure(dmat **phi, const dmat *gx, const dmat *gy, real dx){
     dmat *gxt=dtrans(gx);
     dmat *gyt=dtrans(gy);
     dmat *phi2t=0;

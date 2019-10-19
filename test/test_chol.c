@@ -48,6 +48,7 @@ int main(int argc, char* argv[]){
     tic;info("chol ...");
     spchol *R1=chol_factorize(RLMc);
     toc("done");
+    chol_save(R1, "%s_chol.bin", argv[1]);
     rand_t rstat;
     seed_rand(&rstat,1);
     dmat *y=dnew(RLMc->nx, 1);
@@ -58,18 +59,20 @@ int main(int argc, char* argv[]){
     toc("cholmod");tic;
     chol_solve(&x, R1, y);
     toc("cholmod");tic;
-    chol_solve_upper(&x3, R1, y);
-    toc("upper");tic;
-    chol_solve_upper(&x3, R1, y);
-    toc("upper");tic;
-    chol_solve_lower(&x2, R1,y);
+    chol_convert(R1, 0);//convert to Cl
+    
+    chol_solve(&x2, R1, y);
     toc("lower");tic;
-    chol_solve_lower(&x2, R1,y);
+    chol_solve(&x2, R1, y);
     toc("lower");tic;
-    chol_solve(&x, R1, y);
-    toc("cholmod");tic;
-    chol_solve(&x, R1, y);
-    toc("cholmod");tic;
+
+    R1->Cu=dsptrans(R1->Cl);
+    dspfree(R1->Cl);
+    chol_solve(&x3, R1, y);
+    toc("upper");tic;
+    chol_solve(&x3, R1, y);
+    toc("upper");tic;
+    
     writebin(y,"y");
     writebin(x,"x");
     writebin(x2,"x2");

@@ -23,7 +23,7 @@
 /**
    create a new map_t object.
 */
-map_t *mapnew(long nx, long ny, double dx, double dy){
+map_t *mapnew(long nx, long ny, real dx, real dy){
     map_t *map=(map_t*)realloc(dnew(nx, ny),sizeof(map_t));
     map->h=0;
     map->dx=dx;
@@ -61,13 +61,13 @@ map_t *mapref(map_t*in){
 /**
    Create a circular aperture on map_t.
 */
-void mapcircle(map_t *map, double r, double val){
+void mapcircle(map_t *map, real r, real val){
     dcircle((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r, val);
 }
 /**
    Create a circular aperture on map_t.
 */
-void mapcircle_symbolic(map_t *map, double r){
+void mapcircle_symbolic(map_t *map, real r){
     dcircle_symbolic((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r);
 }
 
@@ -75,14 +75,14 @@ void mapcircle_symbolic(map_t *map, double r){
 /**
    Find the inner and outer diameter of an amplitude map contained in map_t.
 */
-void map_d_din(map_t *map, double *d, double *din){
-    double r2min=INFINITY, r2max=0;
+void map_d_din(map_t *map, real *d, real *din){
+    real r2min=INFINITY, r2max=0;
     for(long iy=0; iy<map->ny; iy++){
-	double y=iy*map->dy+map->oy;
+	real y=iy*map->dy+map->oy;
 	for(long ix=0; ix<map->nx; ix++){
 	    if(P(map,ix,iy)>EPS){
-		double x=ix*map->dx+map->ox;
-		double r2=x*x+y*y;
+		real x=ix*map->dx+map->ox;
+		real r2=x*x+y*y;
 		if(r2>r2max) r2max=r2;
 		if(r2<r2min) r2min=r2;
 	    }
@@ -106,28 +106,28 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 		      long* nxout,  /**<[out] nx*/
 		      long* nyout,  /**<[out] ny*/
 		      dmat *dirs,   /**<[in] All Directions to cover (thetax, thetay, hs)*/
-		      double D,     /**<[in] Diameter (meter)*/
-		      double ht,    /**<[in] Height (meter)*/
-		      double dx,    /**<[in] Sampling along x (meter)*/
-		      double dy,    /**<[in] Sampling along y (meter)*/
-		      double offset,/**<[in] Fractional offset of point closet from origin. between [0, 1)*/
-		      double guard, /**<[in] Width of guard area, in meter*/
+		      real D,     /**<[in] Diameter (meter)*/
+		      real ht,    /**<[in] Height (meter)*/
+		      real dx,    /**<[in] Sampling along x (meter)*/
+		      real dy,    /**<[in] Sampling along y (meter)*/
+		      real offset,/**<[in] Fractional offset of point closet from origin. between [0, 1)*/
+		      real guard, /**<[in] Width of guard area, in meter*/
 		      long ninx,    /**<[in] Suggested size along x*/
 		      long niny,    /**<[in] Suggested size along y*/
 		      int pad,      /**<[in] Increase nx, ny to power of 2*/
 		      int square    /**<[in] Full square/rectangular grid*/
     ){
-    const double R=D/2;
-    double minx=INFINITY,miny=INFINITY,maxx=-INFINITY,maxy=-INFINITY;
+    const real R=D/2;
+    real minx=INFINITY,miny=INFINITY,maxx=-INFINITY,maxy=-INFINITY;
     if(dirs->nx<3 || dirs->ny<=0){ 
 	error("dirs should have no less than 3 rows and positive number of cols.\n");
     }
     for(int idir=0; idir<dirs->ny; idir++){
-	double RR=(1.-ht/P(dirs,2,idir))*R+guard;
-	double sx1=(P(dirs,0,idir)*ht)-RR;
-	double sx2=(P(dirs,0,idir)*ht)+RR;
-	double sy1=(P(dirs,1,idir)*ht)-RR;
-	double sy2=(P(dirs,1,idir)*ht)+RR;
+	real RR=(1.-ht/P(dirs,2,idir))*R+guard;
+	real sx1=(P(dirs,0,idir)*ht)-RR;
+	real sx2=(P(dirs,0,idir)*ht)+RR;
+	real sy1=(P(dirs,1,idir)*ht)-RR;
+	real sy2=(P(dirs,1,idir)*ht)+RR;
 	//Need to work when ht<0;
 	if(sx1<minx) minx=sx1; if(sx1>maxx) maxx=sx1;
 	if(sx2<minx) minx=sx2; if(sx2>maxx) maxx=sx2;
@@ -143,8 +143,8 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
     /*ajust central point offset*/
     {
 	offset=offset-floor(offset);//between 0 and 1
-	double mind=minx/dx;
-	double adjust=mind-floor(mind)-offset;
+	real mind=minx/dx;
+	real adjust=mind-floor(mind)-offset;
 	if(adjust<0){
 	    adjust++;
 	}
@@ -156,8 +156,8 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	}
 	miny-=adjust*dy;
     }
-    double ox=minx;
-    double oy=miny;
+    real ox=minx;
+    real oy=miny;
     long nx=ceil((maxx-ox)/dx)+1;
     long ny=ceil((maxy-oy)/dy)+1;
 
@@ -166,8 +166,8 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	ny=nx=(nx<ny)?ny:nx;
     }
     if(pad){/*pad to power of 2 */
-	ninx=1<<iceil(log2((double)nx));
-	niny=1<<iceil(log2((double)ny));
+	ninx=1<<iceil(log2((real)nx));
+	niny=1<<iceil(log2((real)ny));
     }
     if(ninx>1){
 	if(ninx<nx) warning("ninx=%ld is too small. need %ld\n",ninx, nx);
@@ -193,9 +193,9 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	    dset(dmap,1);
 	}else{/*Want non square grid*/
 	    for(int idir=0; idir<dirs->ny; idir++){
-		double sx=-ox+(P(dirs,0,idir)*ht);
-		double sy=-oy+(P(dirs,1,idir)*ht);
-		double RR=R*(1.-ht/P(dirs,2,idir))+guard;
+		real sx=-ox+(P(dirs,0,idir)*ht);
+		real sy=-oy+(P(dirs,1,idir)*ht);
+		real RR=R*(1.-ht/P(dirs,2,idir))+guard;
 		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
 	    }
 	    for(int i=0; i<nx*ny; i++){

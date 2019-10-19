@@ -35,13 +35,13 @@
 TIC;
 
 static void test_accuracy(int argc, char **argv){
-    double displacex=0.01;
-    double displacey=0.05;
-    double scale=0.7;/*.414065; */
+    real displacex=0.01;
+    real displacey=0.05;
+    real scale=0.7;/*.414065; */
     int wrap=1;  
 
-    double D=30;
-    double D2=32;
+    real D=30;
+    real D2=32;
     int save=0;
     if(argc>1){
 	scale=strtod(argv[1], 0);
@@ -65,13 +65,13 @@ static void test_accuracy(int argc, char **argv){
 	save=strtol(argv[7], 0, 10);
     }
 
-    double dx=1/64.; 
-    double dsa=0.5;
+    real dx=1/64.; 
+    real dsa=0.5;
     map_t *screen=mapnew(D2/dx, D2/dx, dx, dx);
     dset((dmat*)screen, 1);
     dmat *tmp=dnew(screen->nx, 1);
     for(long ix=0; ix<screen->nx; ix++){
-	tmp->p[ix]=sin((double)ix/screen->nx*2*M_PI);
+	tmp->p[ix]=sin((real)ix/screen->nx*2*M_PI);
     }
     for(long iy=0; iy<screen->ny; iy++){
 	for(long ix=0; ix<screen->nx; ix++){
@@ -103,25 +103,25 @@ static void test_accuracy(int argc, char **argv){
     loc_embed(screen2, locin, screen->p);
 
 
-    double *phi_h, *phi_cub, *phi_cub2, *phi_cubh;
+    real *phi_h, *phi_cub, *phi_cub2, *phi_cubh;
 
-    double cubic=0.3;
+    real cubic=0.3;
     int ii;
 	    
     info("displacex=%g, displacey=%g, scale=%g, wrap=%d\n",
 	 displacex, displacey,scale,wrap);
 	
-    double diff1, diff2,diff3,diff14,diff15;
+    real diff1, diff2,diff3,diff14,diff15;
     diff1=0;
     diff2=0;
     diff3=0;
     diff14=0;
     diff15=0;
 	
-    double *phi_pts=mycalloc(loc->nloc,double);
-    double *phi_loc=mycalloc(loc->nloc,double);
-    double *phi_stat=mycalloc(loc->nloc,double);
-    double *phi_loc2loc=mycalloc(loc->nloc,double);
+    real *phi_pts=mycalloc(loc->nloc,real);
+    real *phi_loc=mycalloc(loc->nloc,real);
+    real *phi_stat=mycalloc(loc->nloc,real);
+    real *phi_loc2loc=mycalloc(loc->nloc,real);
 
     map_t *map1=mapnew2(loc->map);
     
@@ -155,7 +155,7 @@ static void test_accuracy(int argc, char **argv){
     toc2("nongrid\t");
     
 	
-    phi_h=mycalloc(loc->nloc,double);
+    phi_h=mycalloc(loc->nloc,real);
  
     tic;
     dsp *hfor=mkh(locin, loc, displacex, displacey, scale);
@@ -166,11 +166,11 @@ static void test_accuracy(int argc, char **argv){
     toc2("mul h\t");
 
 
-    phi_cub=mycalloc(loc->nloc,double);
-    phi_cub2=mycalloc(loc->nloc,double);
-    double *phi_cub3=mycalloc(loc->nloc,double);
-    double *phi_cub4=mycalloc(loc->nloc,double);
-    phi_cubh=mycalloc(loc->nloc,double);
+    phi_cub=mycalloc(loc->nloc,real);
+    phi_cub2=mycalloc(loc->nloc,real);
+    real *phi_cub3=mycalloc(loc->nloc,real);
+    real *phi_cub4=mycalloc(loc->nloc,real);
+    phi_cubh=mycalloc(loc->nloc,real);
 
     prop_nongrid_cubic(locin,screen->p,loc,phi_cub,-2, displacex, displacey, scale, cubic,0,0);
     tic;
@@ -196,7 +196,7 @@ static void test_accuracy(int argc, char **argv){
     tic;
     dspmulvec(phi_cubh, hforcubic,screen->p,'n',1);
     toc2("cubic mul h\t\t");
-    double diffc12=0,diff45=0,diff46=0,diff47=0;
+    real diffc12=0,diff45=0,diff46=0,diff47=0;
     for(ii=0; ii<loc->nloc; ii++){
 	diff1+=fabs(phi_loc[ii]-phi_pts[ii]);
 	diff2+=fabs(phi_stat[ii]-phi_loc[ii]);
@@ -228,6 +228,7 @@ static void test_accuracy(int argc, char **argv){
 	mapwrite(locin->map, "accphi_locin_map");
 	mapwrite(loc->map, "accphi_loc_map");
 	mapwrite(map1, "accphi_map2map.bin");
+	/*
 	writedbl(phi_pts,loc->nloc,1,"accphi_pts1.bin");
 	writedbl(phi_loc,loc->nloc,1,"accphi_loc0.bin");
 	writedbl(phi_stat,loc->nloc,1,"accphi_stat.bin");
@@ -242,9 +243,10 @@ static void test_accuracy(int argc, char **argv){
 
 	writedbl(phi_pts,loc->nloc,1,"accphi_pts.bin");
 	writedbl(phi_cub,loc->nloc,1,"accphi_cub.bin");
-
+	*/
 	writebin(hfor, "accphi_hfor");
 	writebin(hforcubic, "accphi_cub_hfor");
+	
     }
     dspfree(hfor);
     dspfree(hforcubic);

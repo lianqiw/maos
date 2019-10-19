@@ -44,7 +44,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		       powfs[ipowfs].pts->dy);
     /*The embeding factor for embedding the aperture */
     const int embfac=parms->powfs[ipowfs].embfac;
-    const double dxsa=powfs[ipowfs].pts->dsa;
+    const real dxsa=powfs[ipowfs].pts->dsa;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     int nsa=powfs[ipowfs].saloc->nloc;
  
@@ -54,7 +54,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	//check whether opdbias is different between wfs[0] and following.
 	int different=0;
 	for(int iwfs=1; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-	    double diff=ddiff(powfs[ipowfs].opdbias->p[0], powfs[ipowfs].opdbias->p[iwfs]);
+	    real diff=ddiff(powfs[ipowfs].opdbias->p[0], powfs[ipowfs].opdbias->p[iwfs]);
 	    if(diff>1e-4){
 		dbg("powfs[%d].opdbias[%d] is different from powfs[%d].opdbias[0] by %g.\n", 
 		     ipowfs, iwfs, ipowfs, diff);
@@ -79,11 +79,11 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	powfs[ipowfs].intstat->otf->p[iotf]=ccellnew(nsa,nwvl);
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-	double dtheta=wvl/(dxsa*embfac);
+	real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+	real dtheta=wvl/(dxsa*embfac);
 	for(int iotf=0; iotf<notf; iotf++){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
-	    double thres=opdbias?1:(1-1e-10);
+	    real thres=opdbias?1:(1-1e-10);
 	    info("There is %s bias\n", opdbias?"NCPA":"no");
 	    OMPTASK_SINGLE
 		genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
@@ -186,9 +186,9 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	warning("LGS has multi-color!\n");
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-	double dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
-	double thres=1;
+	real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+	real dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
+	real thres=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    genotf(PP(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
 		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
@@ -259,9 +259,9 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	zfarr *lltpsfsave=NULL;
 	lltpsfsave=zfarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    const double dx=powfs[ipowfs].llt->pts->dx;
-	    const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-	    const double dpsf=wvl/(nlpsf*dx)*206265.;
+	    const real dx=powfs[ipowfs].llt->pts->dx;
+	    const real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+	    const real dpsf=wvl/(nlpsf*dx)*206265.;
 	    snprintf(header, 64,"dtheta=%g; #arcsecond\n", dpsf); 
 	    free(psf->header); psf->header=strdup(header);	    
 	    for(int illt=0; illt<intstat->lotf->ny; illt++){
@@ -271,7 +271,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 		cfftshift(psfhat);
 		creal2d(&psf, 0, psfhat, 1);
 		info("illt %d, iwvl %d has FWHM of %g\"\n",
-		      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
+		      illt, iwvl, sqrt(4.*(real)dfwhm(psf)/M_PI)*dpsf);
 		zfarr_push(lltpsfsave, illt*nwvl+iwvl, psf);
 	    }
 	}
@@ -313,11 +313,11 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	ccell* otf=powfs[ipowfs].intstat->otf->p[iotf]/*PCELL*/;
 	powfs[ipowfs].intstat->sepsf->p[isepsf]=dcellnew(nsa,nwvl);
 	dcell*  psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf]/*PDELL*/;
-	const double *area=powfs[ipowfs].realsaa->p[isepsf]->p;
+	const real *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cmat *sepsf=cnew(ncompx, ncompy);
 	    for(int isa=0; isa<nsa; isa++){
-		double norm=area[isa]/((double)(ncompx*ncompy));
+		real norm=area[isa]/((real)(ncompx*ncompy));
 		if(P(otf,isa,iwvl)){
 		    ccp(&sepsf,P(otf,isa,iwvl));/*peak in center */
 		}else{
@@ -368,12 +368,12 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     int ni0=nllt<=1?nsepsf:nllt;
     if(ni0==1 && parms->powfs[ipowfs].nwfs>1){/*check wvlwts. */
 	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-	const double siglev0=parms->wfs[iwfs0].siglev;
-	const double *wvlwts0=parms->wfs[iwfs0].wvlwts->p;
+	const real siglev0=parms->wfs[iwfs0].siglev;
+	const real *wvlwts0=parms->wfs[iwfs0].wvlwts->p;
 	for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs;jwfs++){
 	    const int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    const double siglev=parms->wfs[iwfs].siglev;
-	    const double *wvlwts=parms->wfs[iwfs].wvlwts->p;
+	    const real siglev=parms->wfs[iwfs].siglev;
+	    const real *wvlwts=parms->wfs[iwfs].wvlwts->p;
 	    if(fabs(siglev-siglev0)>EPS){
 		ni0=parms->powfs[ipowfs].nwfs;
 		warning("Different wfs for powfs %d has different siglev\n",ipowfs);
@@ -461,10 +461,10 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    =powfs[ipowfs].dtf[iwvl].si->ny>1?1:0;
 	const int idtfisa_multiplier
 	    =powfs[ipowfs].dtf[iwvl].si->nx>1?1:0;
-	const dcomplex *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
-	const dcomplex *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
+	const comp *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
+	const comp *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 	
-	const double norm=1./(double)(ncompx*ncompy);
+	const real norm=1./(real)(ncompx*ncompy);
 	const ccell *petf=NULL;
 	void (*pccwm)(cmat*,const cmat*)=NULL;
 	int radrot=0;
@@ -490,18 +490,18 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
 
 	for(int ii0=0; ii0<ni0; ii0++){
-	    double *area=powfs[ipowfs].realsaa->p[ii0]->p;
+	    real *area=powfs[ipowfs].realsaa->p[ii0]->p;
 	    int isepsf=ii0*isepsf_multiplier;
 	    int idtf=ii0*idtf_multiplier;
 	    int irot=ii0*irot_multiplier;
 	    int ietf=ii0*ietf_multiplier;
 	    int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
-	    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
+	    real wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 	    dcell*  psepsf=intstat->sepsf->p[isepsf]/*PDELL*/;
 	    cmat **nominals=powfs[ipowfs].dtf[iwvl].fused?0:(powfs[ipowfs].dtf[iwvl].nominal->p+powfs[ipowfs].dtf[iwvl].nominal->nx*idtf);
 	    dsp **sis=powfs[ipowfs].dtf[iwvl].si->p+powfs[ipowfs].dtf[iwvl].si->nx*idtf;
-	    double *angles=nllt?(powfs[ipowfs].srot->p[irot]->p):0;
+	    real *angles=nllt?(powfs[ipowfs].srot->p[irot]->p):0;
 	    ccell *se_save=ccellnew(3, NTHREAD);
 #ifdef _OPENMP
 	    if(omp_in_parallel()){
@@ -512,8 +512,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 #pragma omp for 
 	    for(int isa=0; isa<nsa; isa++){
 		int ith=0;
-		double angle=0;/*angle to rotate otf/psf */
-		double angleg=0;/*angle to derivative of i0 to r/a from x/y */
+		real angle=0;/*angle to rotate otf/psf */
+		real angleg=0;/*angle to derivative of i0 to r/a from x/y */
 
 #ifdef _OPENMP
 		ith = omp_get_thread_num();
@@ -543,11 +543,11 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 			}
 		    }
 		}
-		double pgrad[2];
+		real pgrad[2];
 		/*loaded psepsf. sum to 1 for full sa. peak in center */
 		if(parms->powfs[ipowfs].mtchstc){
 		    /*Forst psf to be centered. */
-		    double pmax=dmax(P(psepsf,isa,iwvl));
+		    real pmax=dmax(P(psepsf,isa,iwvl));
 		    dcog(pgrad,P(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax, 0);
 		}
 		if(dsum(P(psepsf,isa,iwvl))>1.1){
@@ -577,8 +577,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		dspmulcreal(P(i0,isa,ii0)->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);
 		
-		double ct=cos(angleg);
-		double st=sin(angleg);
+		real ct=cos(angleg);
+		real st=sin(angleg);
 		
 		for(int iy=0; iy<ncompy; iy++){
 		    for(int ix=0; ix<ncompx; ix++){
@@ -591,7 +591,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		cfft2(seotfj,1);
 		dspmulcreal(P(gy,isa,ii0)->p,si,seotfj->p, wvlsig);
 		if(i0scale){
-		    double scale=area[isa]/dsum(P(i0,isa,ii0));
+		    real scale=area[isa]/dsum(P(i0,isa,ii0));
 		    dscale(P(i0,isa,ii0),scale);
 		    dscale(P(gx,isa,ii0),scale);
 		    dscale(P(gy,isa,ii0),scale);

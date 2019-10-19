@@ -22,15 +22,15 @@
    Compute the PSD from a sequence.
 */
 dmat *psd1d(const dmat *v, long nseg );
-dmat *psd1dt(const dmat *v, long nseg, double dt);
+dmat *psd1dt(const dmat *v, long nseg, real dt);
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
 dmat *psd_vibid(const dmat *psdin);
-dmat *psdt2s(const dmat *psdt, double vmean);
-dmat *psds2t(const dmat *psdt, double vmean);
-double psd_inte(const double *nu, const double *psd, long n);
-double psd_inte2(const dmat *psdin);
-dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstep);
-dmat* add_psd(const dmat *psd1, const dmat *psd2, double scale2);
-void add_psd2(dmat **out, const dmat *in, double scale);
-void psd_sum(dmat *psd, double scale);
+dmat *psdt2s(const dmat *psdt, real vmean);
+dmat *psds2t(const dmat *psdt, real vmean);
+real psd_inte(const real *nu, const real *psd, long n);
+real psd_inte2(const dmat *psdin);
+dmat* psd2time(const dmat *psdin, rand_t *rstat, real dt, int nstep);
+dmat* add_psd(const dmat *psd1, const dmat *psd2, real scale2);
+void add_psd2(dmat **out, const dmat *in, real scale);
+void psd_sum(dmat *psd, real scale);
 #endif

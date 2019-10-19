@@ -35,7 +35,7 @@
    subaperture spacing) grid that defines the circular aperture for tomography.*/
 static void
 setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
-    double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
+    real dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
     if(parms->load.ploc){/*optionally load ploc from the file. see dbg.conf */
 	warning("Loading ploc from %s\n",parms->load.ploc);
 	recon->ploc=locread("%s", parms->load.ploc);
@@ -48,7 +48,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	  Create a circular PLOC with telescope diameter by calling
 	  create_metapupil with height of 0. We don't add any guard points. PLOC
 	  does not need to follow XLOC in FDPCG.*/
-	double guard=parms->tomo.guard*dxr;
+	real guard=parms->tomo.guard*dxr;
 	map_t *pmap=0;
 	create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
 	info("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
@@ -62,7 +62,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     recon->pmap=recon->ploc->map;
     loc_create_stat(recon->ploc);
     if(parms->recon.misreg_tel2wfs){
-	double ploc_xm=0, ploc_ym=0;
+	real ploc_xm=0, ploc_ym=0;
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    if(parms->recon.misreg_tel2wfs[iwfs]){
 		if(!recon->ploc_tel){
@@ -71,7 +71,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 		}
 		recon->ploc_tel->p[iwfs]=loctransform(recon->ploc, parms->recon.misreg_tel2wfs[iwfs]);
 		loc_t *ploc2=recon->ploc_tel->p[iwfs];
-		double xm, ym;
+		real xm, ym;
 		locmean(&xm, &ym, ploc2);
 		parms->wfsr[iwfs].misreg_x=xm-ploc_xm;
 		parms->wfsr[iwfs].misreg_y=ym-ploc_ym;
@@ -98,11 +98,11 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 static loc_t* 
 make_gloc(dmat **gamp, const PARMS_T *parms, const APER_T *aper, int iwfsr){
     const int ipowfs=parms->wfsr[iwfsr].powfs;
-    double dx=parms->powfs[ipowfs].dx;
+    real dx=parms->powfs[ipowfs].dx;
     loc_t *gloc=mkannloc(parms->aper.d+1, 0, dx, 0);
     if(gamp){
-	double dout=parms->aper.d;
-	double din=parms->aper.din;
+	real dout=parms->aper.d;
+	real din=parms->aper.din;
 	map_t *ampground=parms->dbg.gp_noamp>0?0:aper->ampground;
 	if(parms->dbg.gp_noamp==2){
 	    dout+=1;
@@ -123,7 +123,7 @@ make_gloc(dmat **gamp, const PARMS_T *parms, const APER_T *aper, int iwfsr){
 */
 static void
 setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
-    double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
+    real dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
@@ -132,7 +132,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 		    recon->floc->dx, dxr);
 	}
     }else{
-	double guard=parms->tomo.guard*dxr;
+	real guard=parms->tomo.guard*dxr;
 	map_t *fmap=0;
 	create_metapupil(&fmap,0,0,parms->dirs,parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
 	info("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
@@ -157,7 +157,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	  sparse. W1 is a vector. These matrices are used for weighting in DM
 	  fitting.
 	*/
-	double rin=0;
+	real rin=0;
 	if(parms->dbg.annular_W && parms->aper.din>0){
 	    warning("Define the W0/W1 on annular aperture instead of circular.\n");
 	    rin=parms->aper.din/2;
@@ -190,7 +190,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	if(nxloc!=npsr) 
 	    error("Invalid saved file. npsr=%d, nxloc=%d\n",npsr,nxloc);
 	for(int ips=0; ips<npsr; ips++){
-	    double dxr=recon->dx->p[ips];
+	    real dxr=recon->dx->p[ips];
 	    if(fabs(recon->xloc->p[ips]->dx-dxr)>0.01*dxr){
 		warning("xloc[%d]: sampling is %g, expected %g\n", ips, recon->xloc->p[ips]->dx, dxr);
 	    }
@@ -207,7 +207,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    long nxmax=0, nymax=0;
 	    for(int ips=0; ips<npsr; ips++){
 		long nxi, nyi;
-		double dxr=recon->dx->p[ips];
+		real dxr=recon->dx->p[ips];
 		create_metapupil(0, &nxi, &nyi, parms->dirs, parms->aper.d, recon->ht->p[ips], dxr, dxr, 0,
 				 dxr*parms->tomo.guard, 0, 0, 0, 1);
 		nxi/=recon->os->p[ips];
@@ -228,9 +228,9 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	for(int ips=0; ips<npsr; ips++){
-	    const double ht=recon->ht->p[ips];
-	    double dxr=(parms->sim.idealfit)?parms->atm.dx:recon->dx->p[ips];
-	    const double guard=parms->tomo.guard*dxr;
+	    const real ht=recon->ht->p[ips];
+	    real dxr=(parms->sim.idealfit)?parms->atm.dx:recon->dx->p[ips];
+	    const real guard=parms->tomo.guard*dxr;
 	    long nin=nin0*recon->os->p[ips];
 	    map_t *map=0;
 	    create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
@@ -244,9 +244,9 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     if(parms->gpu.fit==2 && parms->fit.cachex){//to cache x on grid matching floc.
 	recon->xcmap=mapcellnew(npsr, 1);
 	for(int ips=0; ips<npsr; ips++){
-	    const double ht=recon->ht->p[ips];
-	    double dxr=parms->atmr.dx/parms->fit.pos;
-	    const double guard=parms->tomo.guard*dxr;
+	    const real ht=recon->ht->p[ips];
+	    real dxr=parms->atmr.dx/parms->fit.pos;
+	    const real guard=parms->tomo.guard*dxr;
 	    create_metapupil(&recon->xcmap->p[ips], 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,0,0,0,parms->fit.square);
 	    mem_unref(recon->xcmap->p[ips]->mem); 
 	    recon->xcmap->p[ips]->mem=0;
@@ -311,7 +311,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 		error("DM[%d]: loaded aloc has dx=%g while dm.dx=%g\n", idm, 
 		      recon->aloc->p[idm]->dx, parms->dm[idm].dx);
 	    }
-	    double max,min;
+	    real max,min;
 	    dmaxmin(recon->aloc->p[idm]->locx,recon->aloc->p[idm]->nloc, &max, &min);
 	    if(max-min<parms->aper.d){
 		warning("DM[%d]: loaded aloc is too small: diameter is %g while aper.d is %g\n", 
@@ -322,14 +322,14 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aloc=loccellnew(ndm, 1);
 	/*int nxmax=0, nymax=0; */
 	for(int idm=0; idm<ndm; idm++){
-	    double ht=parms->dm[idm].ht;
-	    double dx=parms->dm[idm].dx;
-	    double dy=parms->dm[idm].dy;
-	    double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
-	    double guard=parms->dm[idm].guard*MAX(dx,dy);
+	    real ht=parms->dm[idm].ht;
+	    real dx=parms->dm[idm].dx;
+	    real dy=parms->dm[idm].dy;
+	    real offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
+	    real guard=parms->dm[idm].guard*MAX(dx,dy);
 	    map_t *map;
 	    if(parms->dbg.dmfullfov && !parms->fit.square){//DM covers full fov
-		double D=(parms->sim.fov*fabs(ht)+parms->aper.d+guard*2);
+		real D=(parms->sim.fov*fabs(ht)+parms->aper.d+guard*2);
 		long nx=D/dx+1;
 		long ny=D/dy+1;
 		map=mapnew(nx, ny, dx, dy);
@@ -346,21 +346,18 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     }
     recon->amap=mapcellnew(parms->ndm, 1);
     for(int idm=0; idm<parms->ndm; idm++){
-	double ht=parms->dm[idm].ht;
-	double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
-	double dx=parms->dm[idm].dx;
+	real ht=parms->dm[idm].ht;
+	real offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
+	real dx=parms->dm[idm].dx;
 	recon->aloc->p[idm]->iac=parms->dm[idm].iac;
 	loc_create_map_npad(recon->aloc->p[idm], parms->fit.square?0:1, 0, 0);
 	recon->amap->p[idm]=recon->aloc->p[idm]->map;
 	recon->amap->p[idm]->h=ht;
 	if(parms->fit.cachedm){
-	    const double dx2=parms->atmr.dx/parms->fit.pos;
-	    const double dy2=dx2;
+	    const real dx2=parms->atmr.dx/parms->fit.pos;
+	    const real dy2=dx2;
 	    create_metapupil(&recon->acmap->p[idm],0,0, parms->dirs, parms->aper.d,
 			     ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
-	    info("amap origin is %g, %g. acmap is %g, %g\n", 
-		 recon->aloc->p[idm]->map->ox, recon->aloc->p[idm]->map->oy,
-		 recon->acmap->p[idm]->ox, recon->acmap->p[idm]->oy);
 	}
     }
 
@@ -466,17 +463,17 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		//don't need HXW for low order wfs that does not participate in tomography. 
 		continue;
 	    }
-	    const double  hs = parms->wfs[iwfs].hs;
-	    const double  hc = parms->wfs[iwfs].hc;
+	    const real  hs = parms->wfs[iwfs].hs;
+	    const real  hc = parms->wfs[iwfs].hc;
 	    loc_t *loc=recon->ploc;
 	    if(recon->ploc_tel && recon->ploc_tel->p[iwfs]){
 		loc=recon->ploc_tel->p[iwfs];
 	    }
 	    for(int ips=0; ips<npsr; ips++){
-		const double  ht = recon->ht->p[ips];
-		const double  scale=1. - (ht-hc)/hs;
-		const double dispx=parms->wfsr[iwfs].thetax*ht;
-		const double dispy=parms->wfsr[iwfs].thetay*ht;
+		const real  ht = recon->ht->p[ips];
+		const real  scale=1. - (ht-hc)/hs;
+		const real dispx=parms->wfsr[iwfs].thetax*ht;
+		const real dispy=parms->wfsr[iwfs].thetay*ht;
 		P(HXW,iwfs,ips)=mkh(recon->xloc->p[ips], loc, 
 				   dispx,dispy,scale);
 	    }
@@ -628,7 +625,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			warning("recon.mod should be 0 or %ld when recon.modal=2 \n",nloc);
 		    }
 		    recon->amod->p[idm]=dnew(nloc, nloc);
-		    double val=sqrt(nloc);
+		    real val=sqrt(nloc);
 		    daddI(recon->amod->p[idm], val);
 		    dadds(recon->amod->p[idm], -val/nloc);
 		}
@@ -657,15 +654,15 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].skip==2){//no need for TWFS
 		continue;
 	    }
-	    const double hs=parms->wfs[iwfs].hs;
-	    const double hc=parms->wfs[iwfs].hc;
+	    const real hs=parms->wfs[iwfs].hs;
+	    const real hc=parms->wfs[iwfs].hc;
 	    const loc_t *saloc=powfs[ipowfs].saloc;
 	    for(int idm=0; idm<ndm; idm++){
-		const double  ht = parms->dm[idm].ht;
-		const double  scale=1. - (ht-hc)/hs;
+		const real  ht = parms->dm[idm].ht;
+		const real  scale=1. - (ht-hc)/hs;
 		const loc_t *aloc=recon->aloc->p[idm];
-		const double dispx=parms->wfsr[iwfs].thetax*ht;
-		const double dispy=parms->wfsr[iwfs].thetay*ht;
+		const real dispx=parms->wfsr[iwfs].thetax*ht;
+		const real dispy=parms->wfsr[iwfs].thetay*ht;
 		
 		if(parms->powfs[ipowfs].type==1){//PWFS
 		    if(!parms->powfs[ipowfs].lo){
@@ -933,8 +930,8 @@ setup_recon_TT(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    dmat *TT=0;
 	    if(parms->powfs[ipowfs].type==0){//SHWFS
 		TT=dnew(nsa*2,2);
-		double *TTx=TT->p;
-		double *TTy=TT->p+nsa*2;
+		real *TTx=TT->p;
+		real *TTy=TT->p+nsa*2;
 		for(int isa=0; isa<nsa; isa++){
 		    TTx[isa]=1;
 		    TTy[isa]=0;
@@ -984,8 +981,8 @@ setup_recon_DF(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    int nsa=powfs[ipowfs].saloc->nloc;
 	    dmat* DF=dnew(nsa*2,1);
 	    /*saloc is lower left corner of subaperture. don't have to be the center. */
-	    memcpy(DF->p, powfs[ipowfs].saloc->locx, sizeof(double)*nsa);
-	    memcpy(DF->p+nsa, powfs[ipowfs].saloc->locy, sizeof(double)*nsa);
+	    memcpy(DF->p, powfs[ipowfs].saloc->locx, sizeof(real)*nsa);
+	    memcpy(DF->p+nsa, powfs[ipowfs].saloc->locy, sizeof(real)*nsa);
 	    /**
 	       postive focus on first wfs. negative focus on diagnonal wfs.
 	    */
@@ -1010,7 +1007,7 @@ setup_recon_DF(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
     int any=0;
     int dither_mode=0;
-    double dither_amp=0;
+    real dither_amp=0;
     int dither_npoint=0;
     int dither_dtrat=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1045,13 +1042,13 @@ void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *
 	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    const double hc=parms->wfsr[iwfs].hc;
+	    const real hc=parms->wfsr[iwfs].hc;
 	    if(parms->powfs[ipowfs].dither>1){
 		dmat *opd=dnew(powfs[ipowfs].loc->nloc, 1);
-		double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-		double scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
-		double dispx=ht*parms->wfsr[iwfs].thetax;
-		double dispy=ht*parms->wfsr[iwfs].thetay;
+		real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+		real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
+		real dispx=ht*parms->wfsr[iwfs].thetax;
+		real dispy=ht*parms->wfsr[iwfs].thetay;
 		prop_nongrid(recon->aloc->p[idm], recon->dither_m->p[idm]->p, 
 			     powfs[ipowfs].loc, opd->p, 
 			     -1, dispx, dispy, scale, 0, 0);
@@ -1185,7 +1182,7 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	/*sampling of xloc */
 	recon->dx=dnew(recon->ht->nx, 1);
 	for(int iht=0; iht<recon->ht->nx; iht++){
-	    double scale = 1.0 - recon->ht->p[iht]/parms->atmr.hs;
+	    real scale = 1.0 - recon->ht->p[iht]/parms->atmr.hs;
 	    recon->dx->p[iht]=(parms->atmr.dx/recon->os->p[iht])*scale;	
 	}
 	/*number of reconstruction layers */

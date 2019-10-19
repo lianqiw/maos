@@ -327,7 +327,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    if(sock!=-1){
 		//pcur=pix->p;//temporary. always use the same buffer
 		//manually use 2 byte.
-		double tmp0=myclockd();
+		real tmp0=myclockd();
 		if(stread(sock, pcur, 2*nleft*pixpsa2)){
 		    warning("failed: %s\n", strerror(errno));
 		    close(sock); sock=-1;
@@ -435,7 +435,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    }
 	}
 	if(sock!=-1){
-	    double tmp0=myclockd();
+	    real tmp0=myclockd();
 	    if(stwrite(sock, dmres->p[0]->p, sizeof(Real)*nact)){
 		warning("error write dmres: %s\n", strerror(errno));
 		close(sock); sock=-1;

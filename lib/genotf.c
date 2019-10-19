@@ -31,8 +31,8 @@ typedef struct GENOTF_T{
     const dmat *amp;    /**<The amplitude map of all the (sub)apertures*/
     const dmat *opdbias;/**<The static OPD bias. */
     const dmat *area;   /**<area of a (sub)aperture*/
-    double thres;/**<threshold to consider an (sub)aperture as full*/
-    double wvl;  /**<The wavelength. only needef if opdbias is not null*/
+    real thres;/**<threshold to consider an (sub)aperture as full*/
+    real wvl;  /**<The wavelength. only needef if opdbias is not null*/
     long ncompx; /**<Size of OTF*/
     long ncompy; /**<Size of OTF*/
     long nsa;    /**<Number of (sub)apertures*/
@@ -47,17 +47,17 @@ typedef struct GENOTF_T{
 */
 static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
 		    loc_t *loc,       /**<The aperture grid*/
-		    const double *amp /**<The amplitude map*/
+		    const real *amp /**<The amplitude map*/
 		   ){
     if(!amp) error("amplitude map has to be not empty to remove pistion/tip/tilt\n");
-    double *locx=loc->locx;
-    double *locy=loc->locy;
+    real *locx=loc->locx;
+    real *locy=loc->locy;
     int nloc=loc->nloc;
 
     dmat *B2=dnew(nloc, nloc);
     dmat*  BP=B2;
   
-    double *mod[3];
+    real *mod[3];
     dmat *mcc=dnew(3,3);/*modal cross coupling matrix. */
  
     mod[0]=NULL;
@@ -65,7 +65,7 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
     mod[2]=locy;
     for(int im=0; im<3;im++){
 	for(int jm=im;jm<3;jm++){
-	    P(mcc,im,jm)=P(mcc,jm,im)=dotdbl(mod[im], mod[jm], amp, nloc);
+	    P(mcc,im,jm)=P(mcc,jm,im)=dvecdot(mod[im], mod[jm], amp, nloc);
 	}
     }
     dinvspd_inplace(mcc);
@@ -77,8 +77,8 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
     for(long iloc=0; iloc<nloc; iloc++){
 	M->p[iloc]=1;
     }
-    memcpy(M->p+nloc, locx, nloc*sizeof(double));
-    memcpy(M->p+nloc*2, locy, nloc*sizeof(double));
+    memcpy(M->p+nloc, locx, nloc*sizeof(real));
+    memcpy(M->p+nloc*2, locy, nloc*sizeof(real));
     for(long iloc=0; iloc<nloc; iloc++){
 	MW->p[iloc]=amp[iloc];
 	MW->p[iloc+nloc]=amp[iloc]*locx[iloc];
@@ -92,9 +92,9 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
     /*Remove tip/tilt from left side*/
     dmat*  pMtmp=Mtmp;
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=P(pMtmp,0,iloc);
-	double tmp2=P(pMtmp,1,iloc);
-	double tmp3=P(pMtmp,2,iloc);
+	real tmp1=P(pMtmp,0,iloc);
+	real tmp2=P(pMtmp,1,iloc);
+	real tmp3=P(pMtmp,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
 	    P(BP,jloc,iloc)=P(B,jloc,iloc)+
 		(P(pMCC,0,jloc)*tmp1
@@ -106,9 +106,9 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
     dmm(&Mtmp, 0, MW, B2, "tt", 1);
     /*Remove tip/tilt from right side*/
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=P(pMCC,0,iloc);
-	double tmp2=P(pMCC,1,iloc);
-	double tmp3=P(pMCC,2,iloc);
+	real tmp1=P(pMCC,0,iloc);
+	real tmp2=P(pMCC,1,iloc);
+	real tmp3=P(pMCC,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
 	    P(BP,jloc,iloc)+=
 		tmp1*P(pMtmp,0,jloc)
@@ -128,9 +128,9 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
    in opdbias is NOT removed.
 */
 static void genotf_do(cmat **otf, long pttr, long notfx, long notfy, 
-		      loc_t *loc, const double *amp, const double *opdbias, double wvl,
+		      loc_t *loc, const real *amp, const real *opdbias, real wvl,
 		      const dmat* B,  const T_VALID *pval){
-    double ampsum=dblsum(amp, loc->nloc);
+    real ampsum=dsumvec(amp, loc->nloc);
     if(ampsum<=loc->nloc*0.01){
 	warning("genotf_do: amplitude sum to less than 1%%. Skip\n");
 	return;
@@ -148,15 +148,15 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     }
     cmat* OTF=*otf;
     /*Do the exponential.*/
-    double k2=pow(2*M_PI/wvl,2);
-    double *restrict BPD=mymalloc(nloc,double);
+    real k2=pow(2*M_PI/wvl,2);
+    real *restrict BPD=mymalloc(nloc,real);
     for(long iloc=0; iloc<nloc; iloc++){
 	for(long jloc=0; jloc<nloc; jloc++){
 	    P(BP,jloc,iloc)=exp(k2*P(BP,jloc,iloc));
 	}
 	BPD[iloc]=pow(P(BP,iloc,iloc), -0.5);
     }
-    double otfnorm=0;
+    real otfnorm=0;
     if(amp){
 	for(long iloc=0; iloc<nloc; iloc++){
 	    otfnorm+=amp[iloc]*amp[iloc];
@@ -167,22 +167,22 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     otfnorm=1./otfnorm;
     struct T_VALID (*qval)[notfx]=(struct T_VALID (*)[notfx])pval;
 
-    dcomplex wvk=COMPLEX(0, 2.*M_PI/wvl);
+    comp wvk=COMPLEX(0, 2.*M_PI/wvl);
     for(long jm=0; jm<notfy; jm++){
 	for(long im=0; im<notfx; im++){
 	    long (*jloc)[2]=qval[jm][im].loc;
-	    dcomplex tmp=0.;
+	    comp tmp=0.;
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
-		double tmp1=BPD[iloc1]*P(BP, iloc2, iloc1);
-		double tmp2=BPD[iloc2];
+		real tmp1=BPD[iloc1]*P(BP, iloc2, iloc1);
+		real tmp2=BPD[iloc2];
 		if(amp){
 		    tmp1*=amp[iloc1];
 		    tmp2*=amp[iloc2];
 		}
 		if(opdbias){
-		    dcomplex tmp3=cexp(wvk*(opdbias[iloc1]-opdbias[iloc2]));
+		    comp tmp3=cexp(wvk*(opdbias[iloc1]-opdbias[iloc2]));
 		    tmp+=tmp1*tmp2*tmp3;
 		}else{
 		    tmp+=tmp1*tmp2;
@@ -203,11 +203,11 @@ static void genotf_wrap(thread_t *info){
     cmat**otf=(cmat**)data->otf;
     loc_t *loc=data->loc;
     const long nxsa=loc->nloc;
-    const double wvl=data->wvl;
+    const real wvl=data->wvl;
     const long ncompx=data->ncompx;
     const long ncompy=data->ncompy;
     const dmat *area=data->area;
-    const double thres=data->thres;
+    const real thres=data->thres;
     const cmat *otffull=data->otffull;
     const dmat *amp=data->amp;
     const dmat *opdbias=data->opdbias;
@@ -221,7 +221,7 @@ static void genotf_wrap(thread_t *info){
 	if(!detached && nsa>10 && info->ithread==0){
   	    info2("%6ld of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa*(nsa/info->end), nsa);
 	}
-	const double *opdbiasi=NULL;
+	const real *opdbiasi=NULL;
 	if(opdbias){
 	    opdbiasi=opdbias->p+isa*nxsa;
 	}else{
@@ -241,10 +241,10 @@ static void genotf_wrap(thread_t *info){
    2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
    first subaperture to build pval, but this one is not fully illuminated. 
  */
-static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double ysep){
+static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, real xsep, real ysep){
     long nloc=loc->nloc;
-    double *locx=loc->locx;
-    double *locy=loc->locy;
+    real *locx=loc->locx;
+    real *locy=loc->locy;
     const long pvaltot=notfx*notfy*nloc*2;
     typedef long long2[2];
     long2 *pval0=mymalloc(pvaltot,long2);
@@ -258,8 +258,8 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
     map_t *map=loc->map;
     long notfx2=notfx/2;
     long notfy2=notfy/2;
-    double dx1=1./loc->dx;
-    double dy1=1./loc->dy;
+    real dx1=1./loc->dx;
+    real dy1=1./loc->dy;
     for(long jm=0; jm<notfy; jm++){
 	long jm2=(jm-notfy2);/*peak in the center */
 	/*long jm2=jm<notfy2?jm:jm-notfy;//peak in the corner */
@@ -292,16 +292,16 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
    Generate the turbulence covariance matrix B with B(i,j)=-0.5*D(x_i, x_j). We
    are neglecting the DC part since the OTF only depends on the structure
    function.  */
-static dmat* genotfB(loc_t *loc, double r0, double L0){
+static dmat* genotfB(loc_t *loc, real r0, real L0){
     (void)L0;
     long nloc=loc->nloc;
-    double *locx=loc->locx;
-    double *locy=loc->locy;
+    real *locx=loc->locx;
+    real *locy=loc->locy;
     dmat *B=dnew(nloc, nloc);
-    const double coeff=6.88*pow(2*M_PI/0.5e-6,-2)*pow(r0,-5./3.)*(-0.5);
+    const real coeff=6.88*pow(2*M_PI/0.5e-6,-2)*pow(r0,-5./3.)*(-0.5);
     for(long i=0; i<nloc; i++){
 	for(long j=i; j<nloc; j++){
-	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
+	    real rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
 	    P(B,i,j)=P(B,j,i)=coeff*pow(rdiff2,5./6.);
 	}
     }
@@ -319,12 +319,12 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    const dmat *amp,    /**<The amplitude map of all the (sub)apertures*/
 	    const dmat *opdbias,/**<The static OPD bias (complex part of amp). */
 	    const dmat *area,   /**<normalized area of the (sub)apertures*/
-	    double thres,  /**<The threshold to consider a (sub)aperture as full*/
-	    double wvl,    /**<The wavelength. only needef if opdbias is not null*/
-	    double dtheta, /**<Sampling of PSF.*/
+	    real thres,  /**<The threshold to consider a (sub)aperture as full*/
+	    real wvl,    /**<The wavelength. only needef if opdbias is not null*/
+	    real dtheta, /**<Sampling of PSF.*/
 	    const dmat *cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
-	    double r0,     /**<Fried parameter*/
-	    double l0,     /**<Outer scale*/
+	    real r0,     /**<Fried parameter*/
+	    real l0,     /**<Outer scale*/
 	    long ncompx,   /**<Size of OTF*/
 	    long ncompy,   /**<Size of OTF*/
 	    long nsa,      /**<Number of (sub)apertures*/
@@ -338,8 +338,8 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	error("nsa, ncompx, ncompy has to be at least 1\n");
     }
     /*creating pairs of points that both exist with given separation*/
-    double duxwvl=wvl/(dtheta*ncompx);
-    double duywvl=wvl/(dtheta*ncompy);
+    real duxwvl=wvl/(dtheta*ncompx);
+    real duywvl=wvl/(dtheta*ncompy);
     T_VALID *pval=gen_pval(ncompx, ncompy, loc, duxwvl, duywvl);/*returns T_VALID array. */
     /* Generate the B matrix. */
     dmat *B=cov?(dmat*)cov:genotfB(loc, r0, l0);
@@ -347,7 +347,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     const long nloc=loc->nloc;
     long isafull=-1;
     if(!opdbias && nsa>1){
-	double maxarea=0;
+	real maxarea=0;
 	for(long isa=0; isa<nsa; isa++){
 	    if(area->p[isa]>maxarea){
 		maxarea=area->p[isa];
@@ -372,7 +372,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 /**
    A convenient wrapper for genotf() to be called from matlab or python.
 */
-cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr){
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long ncompx, long ncompy, long nsa, long pttr){
     ccell *out=ccellnew(nsa, 1);
     genotf(out->p, loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr);
     return (cell*)out;
@@ -386,18 +386,18 @@ cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area
    overlapping pairs of points for each r and then compute the averaging. When
    the amplitude is less than the threshold, the point does not count.*/
 
-dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int norm){
+dmat *mk2dcov(loc_t *loc, const dmat *amp, real ampthres, const dmat *cov, int norm){
     if(loc->nloc!=cov->nx || loc->nloc!=cov->ny){
 	error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, cov->nx, cov->ny);
     }
-    double xmin,xmax,ymin,ymax;
+    real xmin,xmax,ymin,ymax;
     long nloc=loc->nloc;
-    double *locx=loc->locx;
-    double *locy=loc->locy;
+    real *locx=loc->locx;
+    real *locy=loc->locy;
     dmaxmin(locx, nloc, &xmax, &xmin);
     dmaxmin(locy, nloc, &ymax, &ymin);  
-    double dx1=1./loc->dx;
-    double dy1=1./loc->dy;
+    real dx1=1./loc->dx;
+    real dy1=1./loc->dy;
     long ncovx=(long) round((xmax-xmin)*dx1)*2;
     long ncovy=(long) round((ymax-ymin)*dy1)*2;
     dmat *cov2d=dnew(ncovx, ncovy);
@@ -419,7 +419,7 @@ dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int
 	    long im2=(im-ncovx2);//peak in the center 
 	    /*long im2=im<ncovx2?im:im-ncovx; //peak in the corner */
 	    long count=0;
-	    double acc=0;
+	    real acc=0;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
 		if(amp && amp->p[iloc]<ampthres) continue;
 		long ix=map_x[iloc]+im2;
@@ -446,9 +446,9 @@ dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int
 /**
    shift i0 along x or ywithout wraping into i0s1 (+sx/sy) and i0s2 (-sx/sy)
 */
-static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, double scale, long sx, long sy){
+static void mki0sh(real *i0x1, real *i0x2, const dmat *i0, real scale, long sx, long sy){
     int nx=i0->nx;
-    typedef double pcol[nx];
+    typedef real pcol[nx];
     pcol *i0x1p=(pcol*)i0x1;
     pcol *i0x2p=(pcol*)i0x2;
     for(int iy=0; iy<i0->ny-sy; iy++){
@@ -462,12 +462,12 @@ static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, double scale, lon
 /**
    Compute the derivative using FFT method along direction specified by theta (radian).
  */
-dmat *derive_by_fft(const dmat *i0, double theta){
+dmat *derive_by_fft(const dmat *i0, real theta){
     cmat *otf=0;
     ccpd(&otf, i0);
     cfft2(otf, -1);
-    double sx=cos(theta)*2.*M_PI/i0->nx;
-    double sy=sin(theta)*2.*M_PI/i0->ny;
+    real sx=cos(theta)*2.*M_PI/i0->nx;
+    real sy=sin(theta)*2.*M_PI/i0->ny;
     long ny2=i0->ny/2;
     long nx2=i0->nx/2;
     for(long iy=0; iy<i0->ny; iy++){
@@ -481,6 +481,38 @@ dmat *derive_by_fft(const dmat *i0, double theta){
     cfree(otf);
     return gx;
 }
+
+/**
+   add two vectors: out=out*alpha+in*beta+theta
+*/
+void addvec(real *restrict out, real alpha, 
+	    const real *restrict in, int N, real beta, real theta){
+
+    if (fabs(alpha)<EPS){
+	memset(out,0,sizeof(real)*N);
+	if(in){
+	    for(int i=0; i<N; i++){
+		out[i]=in[i]*beta+theta;
+	    }
+	}else{
+	    for(int i=0; i<N; i++){
+		out[i]=theta;
+	    }
+	}
+    }else{
+	if(in){
+	    for(int i=0; i<N; i++){
+		out[i]=out[i]*alpha+in[i]*beta+theta;
+	    }
+	}else{
+	    for(int i=0; i<N; i++){
+		out[i]=out[i]*alpha+theta;
+	    }
+	}
+    }
+}
+
+
 /**
    Generating matched filter from averaged short exposure images.
 */
@@ -491,20 +523,20 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   const dmat *qe, /**<non uniform quantum efficiency (optional)*/
 	   const dmat *dbkgrnd2, /**<background*/
 	   const dmat *dbkgrnd2c, /**<background calibration*/
-	   double bkgrnd,  /**<global background*/
-	   double bkgrndc, /**<global background calibration*/
-	   double rne,     /**<Detector read noise*/
-	   double pixthetax, /**<Size of pixel along x*/
-	   double pixthetay, /**<Size of pixel along y*/
-	   double pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
+	   real bkgrnd,  /**<global background*/
+	   real bkgrndc, /**<global background calibration*/
+	   real rne,     /**<Detector read noise*/
+	   real pixthetax, /**<Size of pixel along x*/
+	   real pixthetay, /**<Size of pixel along y*/
+	   real pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
 	   int radgx,        /**<1: gx/gy is along r/a coord.*/
 	   int cr    /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
     ){
-    const double *bkgrnd2=dbkgrnd2?dbkgrnd2->p:0;
-    const double *bkgrnd2c=dbkgrnd2c?dbkgrnd2c->p:0;
-    const double bkgrnd_res=bkgrnd-bkgrndc;
-    const double kpx=1./pixthetax;
-    const double kpy=1./pixthetay;
+    const real *bkgrnd2=dbkgrnd2?dbkgrnd2->p:0;
+    const real *bkgrnd2c=dbkgrnd2c?dbkgrnd2c->p:0;
+    const real bkgrnd_res=bkgrnd-bkgrndc;
+    const real kpx=1./pixthetax;
+    const real kpy=1./pixthetay;
     int nmod=3;
     int mtchcrx=0;
     int mtchcry=0;
@@ -524,7 +556,7 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     /*Derivative is along r/a or x/y*/
     P(i0m,0,0)=1;
     P(i0m,1,1)=1;
-    double theta=radgx?0:pixrot;
+    real theta=radgx?0:pixrot;
     if(mtchcrx){/*constrained x(radial) */
 	P(i0m,0,mtchcrx)=cos(theta);
 	P(i0m,1,mtchcrx)=sin(theta);
@@ -543,28 +575,28 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	gx=gx2=derive_by_fft(i0, theta); dscale(gx2, kpx);
 	gy=gy2=derive_by_fft(i0, theta+M_PI/2); dscale(gy2, kpy);
     }
-    adddbl(PCOL(i0g,0), 1, gx->p, i0n, 1, 0);
-    adddbl(PCOL(i0g,1), 1, gy->p, i0n, 1, 0);
-    adddbl(PCOL(i0g,2), 1, i0->p, i0n, kpx, bkgrnd_res);
-    adddbl(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
-    adddbl(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
+    addvec(PCOL(i0g,0), 1, gx->p, i0n, 1, 0);
+    addvec(PCOL(i0g,1), 1, gy->p, i0n, 1, 0);
+    addvec(PCOL(i0g,2), 1, i0->p, i0n, kpx, bkgrnd_res);
+    addvec(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
+    addvec(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
     if(mtchcrx){
 	mki0sh(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),i0,kpx,1,0);
-	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
-	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
-	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
-	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
+	addvec(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	addvec(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
+	addvec(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
+	addvec(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
     }
     if(mtchcry){
 	mki0sh(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),i0,kpy,0,1);
-	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
-	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
-	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);
-	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2c ,i0n, -1, 0);
+	addvec(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	addvec(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
+	addvec(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	addvec(PCOL(i0g,mtchcry+1),1, bkgrnd2c ,i0n, -1, 0);
     }
 
     /*adding rayleigh backscatter poisson noise. */
-    double rne2=rne*rne; 
+    real rne2=rne*rne; 
     for(int i=0; i<i0n; i++){/*noise weighting. */
 	if(i0->p[i]<0){//ignore negative pixels.
 	    wt->p[i]=1./rne2;

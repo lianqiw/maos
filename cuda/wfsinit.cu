@@ -33,7 +33,7 @@ static cmat *concat_ccell_as_vector(ccell *input){
     int nsa=input->nx;
     cmat *output=cnew(npix, nsa);
     for(long isa=0; isa<nsa; isa++){
-	memcpy(output->p+isa*npix, input->p[isa]->p, sizeof(dcomplex)*npix);
+	memcpy(output->p+isa*npix, input->p[isa]->p, sizeof(comp)*npix);
     }
     return output;
 }
@@ -48,7 +48,7 @@ static dmat *concat_dcell_as_vector(dcell *input){
     int nsa=input->nx;
     dmat *output=dnew(npix, nsa);
     for(long isa=0; isa<nsa; isa++){
-	memcpy(output->p+isa*npix, input->p[isa]->p, sizeof(double)*npix);
+	memcpy(output->p+isa*npix, input->p[isa]->p, sizeof(real)*npix);
     }
     return output;
 }

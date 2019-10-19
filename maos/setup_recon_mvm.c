@@ -72,7 +72,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		dmat *to=MVM->p[idm+curwfs*ndm];
 		if(to){
 		    int nact=to->nx;
-		    memcpy(to->p+curg*nact,res->p[idm]->p, nact*sizeof(double));
+		    memcpy(to->p+curg*nact,res->p[idm]->p, nact*sizeof(real));
 		}
 	    }
 	    curg++;
@@ -86,7 +86,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	dfree(eye);
     }else{
 	dcell *LR=NULL;
-	if(recon->LR.M->p[0]->id==M_DBL){
+	if(recon->LR.M->p[0]->id==M_REAL){
 	    LR=(dcell*)recon->LR.M;
 	}else{
 	    dcelladd(&LR, 1, (dspcell*)recon->LR.M, 1);
@@ -162,7 +162,7 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 	    dmat *to=MVMt->p[iwfs+curdm*nwfs];
 	    if(to){
 		int ng=to->nx;
-		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(double));
+		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(real));
 	    }
 	}
 	//toc2(" %ld", iact);

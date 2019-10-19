@@ -104,7 +104,7 @@ static void skysim_isky(SIM_S *simu){
     dmat*  pres_oa=simu->res_oa;
     dmat*  pres_geom=simu->res_geom;
     while(LOCKADD(isky, simu->isky, 1)<simu->isky_end){
-	double tk_1=myclockd();
+	real tk_1=myclockd();
 	/*Setup star parameters. */
 	STAR_S *star=setup_star(&nstar, simu,stars->p[isky],seed_maos);
 	if(!star || nstar==0){
@@ -145,11 +145,11 @@ static void skysim_isky(SIM_S *simu){
 	/*Select asters that have good performance. */
 	int nsel=setup_aster_select(PCOL(pres_geom,isky),aster, naster, star, 
 				    parms->skyc.phytype==1?0.5*simu->varol:INFINITY,parms); 
-	double tk_2=myclockd();
-	double tk_3=tk_2;
+	real tk_2=myclockd();
+	real tk_3=tk_2;
 	int selaster=0;
 	int seldtrat=0;
-	double skymini=simu->varol;
+	real skymini=simu->varol;
 	if(!parms->skyc.estimate){
 	    /*Read in physical optics data (wvf) */
 	    setup_star_read_ztilt(star,nstar,parms,seed_maos);
@@ -164,7 +164,7 @@ static void skysim_isky(SIM_S *simu){
 #endif
 	    {
 		ASTER_S *asteri=&aster[iaster];
-		double asterMinPhy=0;//best performance of this asterism.
+		real asterMinPhy=0;//best performance of this asterism.
 		int asterMinRat=0;//dtrat at best performance.
 		asteri->nstep=nstep;
 		if(parms->skyc.dbgaster>-1){
@@ -214,7 +214,7 @@ static void skysim_isky(SIM_S *simu){
 #endif
 		for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++) {
 		    /*focus and windshake residual; */
-		    double resadd=0;
+		    real resadd=0;
 		    if(!parms->skyc.addws){
 			resadd+=asteri->res_ws->p[idtrat];
 		    }
@@ -226,7 +226,7 @@ static void skysim_isky(SIM_S *simu){
 				  sqrt(ires->p[0]+resadd)*1e9);
 			}
 			/*Add windshake contribution. */
-			double thisVar=ires->p[0] + resadd;	
+			real thisVar=ires->p[0] + resadd;	
 			if(thisVar < asterMinPhy){
 			    asterMinPhy=thisVar;
 			    asterMinRat=idtrat;
@@ -300,7 +300,7 @@ static void skysim_isky(SIM_S *simu){
 	}
 	free_aster(aster, naster, parms);
 	free_star(star, nstar, parms);
-	double tk_4=myclockd();
+	real tk_4=myclockd();
 	LOCK(simu->mutex_status);
 	simu->status->isim=isky;
 	simu->status->tot=tk_4-tk_1;/*per step */
@@ -346,7 +346,7 @@ static void skysim_read_mideal(SIM_S *simu){
     simu->mideal_oa=dref(midealp->p[parms->maos.evlindoa]);
     dcellfree(midealp);
     if(0){
-	double scale=0;
+	real scale=0;
 	dscale(simu->mideal, scale);
 	dscale(simu->mideal_oa, scale);
     }
@@ -377,7 +377,7 @@ static void skysim_update_mideal(SIM_S *simu){
    ones. Combine them with windshake.  */
 static void skysim_calc_psd(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
-    double var_all=0;
+    real var_all=0;
     if(parms->skyc.psdcalc){
 	dmat*  MCC=parms->maos.mcc;
 	dmat *x=dtrans(simu->mideal);
@@ -414,16 +414,16 @@ static void skysim_calc_psd(SIM_S *simu){
 	simu->psd_tt=ddup(parms->skyc.psd_tt);
 	simu->psd_focus=ddup(parms->skyc.psd_focus);
 	//renormalize PSD
-	double rms_ngs=psd_inte2(simu->psd_ngs);
+	real rms_ngs=psd_inte2(simu->psd_ngs);
 	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
 	    info("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
-	    double rms_ratio=simu->varol/rms_ngs;
+	    real rms_ratio=simu->varol/rms_ngs;
 	    info("Scaling PSD by %g\n", rms_ratio);
 	    long nx=simu->psd_ngs->nx;
 	    //scale PSF in place. //
-	    double *p_ngs=simu->psd_ngs->p+nx;
-	    double *p_tt=simu->psd_tt->p+nx;
-	    double *p_ps=simu->psd_ps->p+nx;
+	    real *p_ngs=simu->psd_ngs->p+nx;
+	    real *p_tt=simu->psd_tt->p+nx;
+	    real *p_ps=simu->psd_ps->p+nx;
 	    for(long i=0; i<nx; i++){
 		p_ngs[i]*=rms_ratio;
 		p_tt[i]*=rms_ratio;
@@ -434,7 +434,7 @@ static void skysim_calc_psd(SIM_S *simu){
 
     info("PSD integrates to %.2f nm. varol=%.2f nm\n", sqrt(var_all)*1e9, sqrt(simu->varol)*1e9);
     if(parms->skyc.psd_ws){
-	double var_ws=psd_inte2(parms->skyc.psd_ws);
+	real var_ws=psd_inte2(parms->skyc.psd_ws);
 	info("Windshake PSD integrates to %g nm\n", sqrt(var_ws)*1e9);
 	simu->varol+=var_ws;//testing
 	
@@ -502,7 +502,7 @@ static void skysim_prep_sde(SIM_S *simu){
 	if(coeff->ny>1){
 	    error("Please handle this case\n");
 	}
-	memcpy(PCOL(pcoeff, im), coeff->p, coeff->nx*sizeof(double));
+	memcpy(PCOL(pcoeff, im), coeff->p, coeff->nx*sizeof(real));
 	dfree(coeff);
     }
     

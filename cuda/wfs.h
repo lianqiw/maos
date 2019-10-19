@@ -126,7 +126,7 @@ public:
     }
 };
 
-void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim);
+void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim);
 
 void cuztilt(Real *restrict g, Real *restrict opd, 
 	     const int nsa, const Real dx, const int nx, Real *imcc,
@@ -135,5 +135,5 @@ __global__ void cpcenter_do(Comp *restrict out, int noutx, int nouty,
 			    const Comp *restrict in, int ninx, int niny);
 void pywfs_grad(curmat &grad, const curmat &ints, const curmat &saa, curmat &isum, const curmat &goff, const PYWFS_T *pywfs, cudaStream_t stream);
 void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev);
-dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
+//dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
 #endif

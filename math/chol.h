@@ -31,7 +31,8 @@ typedef struct spchol{
     spint *Cp;/*The Permutation vector.*/
 }spchol;
 /* assume large file support.  If problems occur, compile with -DNLARGEFILE */
-spchol* chol_factorize(dsp *A_in);
+spchol* chol_factorize(const dsp *A_in);
+dsp* chol_factorize2(spint**Cp, const dsp* A_in);
 void chol_solve(dmat **x, spchol *A, dmat *y);
 dsp *chol_spsolve(spchol *A, const dsp *y);
 void chol_free_do(spchol *A);
@@ -39,6 +40,4 @@ void chol_free_do(spchol *A);
 void chol_save(spchol *A, const char *format,...) CHECK_ARG(2);
 spchol *chol_read(const char *format, ...) CHECK_ARG(1);
 void chol_convert(spchol *A, int keep);
-void chol_solve_lower(dmat **x, spchol *C, dmat *y);
-void chol_solve_upper(dmat **x, spchol *C, dmat *y);
 #endif

@@ -22,11 +22,11 @@
    \file proj.h
    Project from a tilt surface to flat surface (M3).
  */
-void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
-		    const loc_t *locout,const double ratiox, const double ratioy,
-		    const double *ampout, double* phiout, 
-		    double sc, double hs, double ht,
-		    double betax, double betay);
-void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs);
-dmat *m3proj2(dmat *mapin_0, char *header, loc_t *locout, double thetax, double thetay, double hs);
+void proj_rect_grid(rmap_t *mapin, real thetax, real thetay,
+		    const loc_t *locout,const real ratiox, const real ratioy,
+		    const real *ampout, real* phiout, 
+		    real sc, real hs, real ht,
+		    real betax, real betay);
+void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locin, real thetax, real thetay, real hs);
+dmat *m3proj2(dmat *mapin_0, char *header, loc_t *locout, real thetax, real thetay, real hs);
 #endif

@@ -22,14 +22,14 @@ typedef struct{
     dmat *wvl;  /*reference to the wavelength*/
     lmat *nembed;/**<size of embedding array (square)*/
     lcell *embed; /**<embedding index*/
-    double ampsum;/**<sum(amp)*/
-    double ampnorm;/**<sum(amp.*amp)*/
+    real ampsum;/**<sum(amp)*/
+    real ampnorm;/**<sum(amp.*amp)*/
     dcell *fieldmask;/**<Masking the PSF in fourier domain*/
-    double fieldstop;
+    real fieldstop;
 }locfft_t;
 
 locfft_t *locfft_init(loc_t *loc, const dmat *amp, const dmat *wvl, 
-		      const lmat *fftsize, double oversize , double fieldstop); 
+		      const lmat *fftsize, real oversize , real fieldstop); 
 void locfft_free(locfft_t *locfft);
 void locfft_psf(ccell **psfs, const locfft_t *locfft, const dmat *opd, const lmat *psfsize, int sum2one);
 void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts);

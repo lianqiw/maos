@@ -77,8 +77,11 @@ using std::strerror;
 #define restrict __restrict
 #endif
 
-#ifndef EPS
+#undef EPS
+#ifdef USE_DOUBLE
 #define EPS 1.e-15
+#else
+#define EPS 1.e-6
 #endif
 
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)

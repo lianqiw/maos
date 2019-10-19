@@ -25,6 +25,7 @@
 #endif
 #ifndef AOS_MATH_DEFS_H
 #define AOS_MATH_DEFS_H
+
 #undef COMPLEX
 #undef IMAG
 #undef REAL
@@ -43,17 +44,34 @@
 #undef RANDU
 #undef RANDN
 #undef PRINT
-#undef DOT
 #undef PMAT
 #undef PCELL
 #undef PSPCELL
 #undef M_SPT
 
+#ifdef USE_LONG
+#define X(A) l##A
+#else
+
+#ifndef USE_SINGLE
+  #ifndef USE_COMPLEX 
+   #define X(A) d##A
+  #else
+   #define X(A) c##A
+  #endif
+#else 
+ #ifndef USE_COMPLEX 
+  #define X(A) s##A
+ #else
+  #define X(A) z##A
+ #endif
+#endif
+#endif
 //Long Integers
 #ifdef USE_LONG
 #define T long
 #define R long
-#define X(A) l##A
+
 #undef fabs
 #define fabs(A) labs(A)
 #define M_T M_LONG
@@ -61,16 +79,17 @@
 #else //if USE_LONG
 
 #define MAT_TYPE
+
 /*Double precision*/
-#ifndef USE_SINGLE
+#if !defined(USE_SINGLE) && defined(USE_DOUBLE)
 #define XR(A) d##A
 #define XC(A) c##A
 #define R double
 #define RI dcomplex
 #define FFTW(A) fftw_##A
-#ifndef USE_COMPLEX
-/*Double */
-#define X(A) d##A
+
+/*Double Real*/
+#ifndef USE_COMPLEX 
 #define Y(A) D##A
 #define Z(A) d##A##_
 #define T double
@@ -80,9 +99,9 @@
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
 #define PRINT(A) info(" %10.3e",A);
-#define DOT dotdbl
-#else/*Double Complex */
-#define X(A) c##A
+
+/*Double Complex */
+#else
 #define Y(A) C##A
 #define Z(A) z##A##_ /*blas/lapack convention */
 #define T dcomplex
@@ -95,10 +114,10 @@
 #define RANDU(A) COMPLEX(randu(A),randu(A))
 #define RANDN(A) COMPLEX(randn(A),randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
-#define DOT dotcmp
 #define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
 #else 
+#define USE_SINGLE
 /*Single Precision*/
 #define XR(A) s##A
 #define XC(A) z##A
@@ -107,7 +126,6 @@
 #define FFTW(A) fftwf_##A
 /*Float */
 #ifndef USE_COMPLEX
-#define X(A) s##A
 #define Y(A) S##A
 #define Z(A) s##A##_
 #define T float
@@ -117,10 +135,8 @@
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
 #define PRINT(A) info("%10.3e",A);
-#define DOT dotflt
 #else
 /*Single Complex */
-#define X(A) z##A
 #define Y(A) Z##A
 #define Z(A) c##A##_ /*blas/lapack convention */
 #define T fcomplex
@@ -133,10 +149,9 @@
 #define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
-#define DOT dotzmp
 #define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #endif/*#define USE_COMPLEX */
-#endif/*#define USE_SINGLE */
+#endif
 /*
 #ifndef USE_COMPLEX
 #undef conj

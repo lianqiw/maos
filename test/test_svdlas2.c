@@ -74,10 +74,10 @@ static
 long    *pointr = NULL, /* pointer to column start array      */
    	*rowind = NULL; /* pointer to row indices array       */
 static 
-double  *value = NULL;  /* pointer to nonzero values array    */
+real  *value = NULL;  /* pointer to nonzero values array    */
 
 static 
-double  rnm,            /* norm of the next residual vector   */
+real  rnm,            /* norm of the next residual vector   */
 	anorm,
 	tol,
 	eps,            /* positive machine epsilon           */
@@ -87,7 +87,7 @@ double  rnm,            /* norm of the next residual vector   */
 	eps34;
 
 static 
-double  *xv1 = NULL,    /* temp arrays needed for computing   */
+real  *xv1 = NULL,    /* temp arrays needed for computing   */
 	*xv2 = NULL,    /* singular vectors                   */
 	*ztemp = NULL,
 
@@ -109,61 +109,61 @@ const char	*error[10] = {  /* error messages used by function    *
 	  " ***** 6*N+4*LANMAX+1 CANNOT EXCEED NW *****",
 	    NULL};
 static long check_parameters(long maxprs, long lanmax, long n, 
-		      double endl, double endr, long vectors, 
+		      real endl, real endr, long vectors, 
 			     long nnzero) ;
-static long landr(long n, long lanmax, long maxprs, long nnzero, double endl, 
-	   double endr, long vectors, double kappa, double *ritz, 
-		  double *bnd, double *r);
+static long landr(long n, long lanmax, long maxprs, long nnzero, real endl, 
+	   real endr, long vectors, real kappa, real *ritz, 
+		  real *bnd, real *r);
 
-static void ritvec(long n, double kappa, double *ritz, double *bnd, double *alf,
-		   double *bet, double *w1, double *w2);
+static void ritvec(long n, real kappa, real *ritz, real *bnd, real *alf,
+		   real *bet, real *w1, real *w2);
 
-static void lanso(long n, long lanmax, long maxprs, double endl,
-		  double endr, double *ritz, double *bnd, double *wptr[]);
+static void lanso(long n, long lanmax, long maxprs, real endl,
+		  real endr, real *ritz, real *bnd, real *wptr[]);
 
-static void lanczos_step(long n, long first, long last, double *wptr[],
-		  double *alf, double *eta, double *oldeta,
-			 double *bet, long *ll, long *enough);
-static void ortbnd(double *alf, double *eta, double *oldeta, double *bet);
+static void lanczos_step(long n, long first, long last, real *wptr[],
+		  real *alf, real *eta, real *oldeta,
+			 real *bet, long *ll, long *enough);
+static void ortbnd(real *alf, real *eta, real *oldeta, real *bet);
 
-static void purge(long n, long ll, double *r, double *q, double *ra,  
-		  double *qa, double *wrk, double *eta, double *oldeta);
+static void purge(long n, long ll, real *r, real *q, real *ra,  
+		  real *qa, real *wrk, real *eta, real *oldeta);
 
-static void stpone(long n, double *wrkptr[]);
+static void stpone(long n, real *wrkptr[]);
 
-static double startv(long n, double *wptr[]);
-static double pythag(double a, double b);
-static void error_bound(long *enough, double endl, double endr, 
-		     double *ritz, double *bnd);
+static real startv(long n, real *wptr[]);
+static real pythag(real a, real b);
+static void error_bound(long *enough, real endl, real endr, 
+		     real *ritz, real *bnd);
 
-static void imtqlb(long n, double d[], double e[], double bnd[]);
-static void imtql2(long nm, long n, double d[], double e[], double z[]);
+static void imtqlb(long n, real d[], real e[], real bnd[]);
+static void imtql2(long nm, long n, real d[], real e[], real z[]);
 static void machar(long *ibeta, long *it, long *irnd, long *machep, long *negep);
-static void store(long n, long isw, long j, double *s);
-static double fsign(double a,double b);
-static double ddmax(double a, double b);
-static double ddmin(double a, double b);
+static void store(long n, long isw, long j, real *s);
+static real fsign(real a,real b);
+static real ddmax(real a, real b);
+static real ddmin(real a, real b);
 static long imin(long a, long b);
 static long imax(long a,long b);
-static void daxpy (long n,double da,double *dx,long incx,double *dy,long incy);
-static double ddot(long n,double *dx,long incx,double *dy,long incy);
-static void datx(long n,double da,double *dx,long incx,double *dy,long incy);
-static void dsort2(long igap,long n,double *array1,double *array2);
-static void dswap(long n,double *dx,long incx,double *dy,long incy);
-static long idamax(long n,double *dx,long incx);
-static void dscal(long n,double da,double *dx,long incx);
-static void dcopy(long n,double *dx,long incx,double *dy,long incy);
+static void daxpy (long n,real da,real *dx,long incx,real *dy,long incy);
+static real ddot(long n,real *dx,long incx,real *dy,long incy);
+static void datx(long n,real da,real *dx,long incx,real *dy,long incy);
+static void dsort2(long igap,long n,real *array1,real *array2);
+static void dswap(long n,real *dx,long incx,real *dy,long incy);
+static long idamax(long n,real *dx,long incx);
+static void dscal(long n,real da,real *dx,long incx);
+static void dcopy(long n,real *dx,long incx,real *dy,long incy);
 static const dsp* A2=NULL;
 /**************************************************************
  * multiplication of matrix B by vector x, where B = A'A,     *
  * and A is nrow by ncol (nrow >> ncol). Hence, B is of order *
  * n = ncol (y stores product vector).		              *
  **************************************************************/
-static void opb(long n, double *x, double *y){
+static void opb(long n, real *x, real *y){
     (void)n;
     dmat *tmp=dnew(A2->nx, 1);
     dspmulvec(tmp->p, A2, x, 'n',1);
-    memset(y, 0, sizeof(double)*A2->ny);
+    memset(y, 0, sizeof(real)*A2->ny);
     dspmulvec(y, A2, tmp->p, 't',1);
     dfree(tmp);
     mxvcount +=2;
@@ -179,10 +179,10 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     long lanmax=ncol;    /*upper limit of desired number of Lanczos steps */
     long maxprs=ncol; /*upper limit of desired number of eigenpairs */
     long nnzero=A->nzmax;
-    double endl=-1e-30;
-    double endr=1e-30;
+    real endl=-1e-30;
+    real endr=1e-30;
     long vectors=1;    /*1: indicates both eigenvalues and eigen vectors are wanted. */
-    double kappa=1e-6; /*relative accuracy of ritz values acceptable as
+    real kappa=1e-6; /*relative accuracy of ritz values acceptable as
 			 eigenvalues of B (singular values of A)*/
    /*******************************************************************
      * allocate memory                                                 *
@@ -193,14 +193,14 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
      * ztemp  - work array for user function opb	       (nrow)  *
      * a      - storage area for Lanczos vectors     (n * (lanmax+2))  *
      *******************************************************************/
-    long size1 = sizeof(double) * (6 * n + nrow + nnzero + (n * lanmax));
+    long size1 = sizeof(real) * (6 * n + nrow + nnzero + (n * lanmax));
 
-    if (!(value  = (double *) malloc(size1))){
+    if (!(value  = (real *) malloc(size1))){
 	perror("MALLOC FAILED in MAIN()");
 	exit(errno);
     }
-    double* tptr1 = value;
-    double *r,*ritz,*bnd,*d;
+    real* tptr1 = value;
+    real *r,*ritz,*bnd,*d;
     rowind = pointr + ncol + 1;
     tptr1 += nnzero;
     r      = tptr1;
@@ -234,7 +234,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     }
 
     if(vectors){/*we do want eigen vectors */
-	size1 = sizeof(double) * nrow;
+	size1 = sizeof(real) * nrow;
 	
 	long id = 0;
 
@@ -242,18 +242,18 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 
 	    /* multiply by matrix B first */
 	    opb(n, &xv1[id], xv2);
-	    double tmp0 = ddot(n, &xv1[id], 1, xv2, 1);
+	    real tmp0 = ddot(n, &xv1[id], 1, xv2, 1);
 	    daxpy(n, -tmp0, &xv1[id], 1, xv2, 1);
 	    tmp0 = sqrt(tmp0);
-	    double xnorm = sqrt(ddot(n, xv2, 1, xv2, 1));
+	    real xnorm = sqrt(ddot(n, xv2, 1, xv2, 1));
 	    long ida = id + ncol;
 
 	    /* multiply by matrix A to get (scaled) left s-vector */
 	    /*opa(&xv1[id], &xv1[ida]); */
 	    mxvcount+=1;
-	    memset(&xv1[ida], 0, sizeof(double)*nrow);
+	    memset(&xv1[ida], 0, sizeof(real)*nrow);
 	    dspmulvec(&xv1[ida], A, &xv1[id],'n', 1);
-	    double tmp1 = 1.0 / tmp0;
+	    real tmp1 = 1.0 / tmp0;
 	    dscal(nrow, tmp1, &xv1[ida], 1);
 	    xnorm *= tmp1;
 	    bnd[i] = xnorm;
@@ -358,7 +358,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 ***********************************************************************/
 
 static long check_parameters(long maxprs, long lanmax, long n, 
-		      double endl, double endr, long vectors, 
+		      real endl, real endr, long vectors, 
 		      long nnzero) 
 {
     long error_inbex, ncells;
@@ -390,7 +390,7 @@ static long check_parameters(long maxprs, long lanmax, long n,
  *				landr()				       *
  *        Lanczos algorithm with selective orthogonalization           *
  *                    Using Simon's Recurrence                         *
- *                       (double precision)                            *
+ *                       (real precision)                            *
  *                                                                     *
  ***********************************************************************/
 /***********************************************************************
@@ -456,13 +456,13 @@ static long check_parameters(long maxprs, long lanmax, long n,
 
 ***********************************************************************/
 
-static long landr(long n, long lanmax, long maxprs, long nnzero, double endl, 
-	   double endr, long vectors, double kappa, double *ritz, 
-	   double *bnd, double *r)
+static long landr(long n, long lanmax, long maxprs, long nnzero, real endl, 
+	   real endr, long vectors, real kappa, real *ritz, 
+	   real *bnd, real *r)
 
 {
     long i, size, ibeta, it, irnd, machep, negep;
-    double *wptr[10], *tptr, *tptr2;
+    real *wptr[10], *tptr, *tptr2;
 
     /* data validation */
     if (check_parameters(maxprs, lanmax, n, endl, endr, vectors, nnzero))
@@ -471,7 +471,7 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
     /* Compute machine precision */ 
     machar(&ibeta, &it, &irnd, &machep, &negep);
 
-    eps1 = eps * sqrt( (double) n );
+    eps1 = eps * sqrt( (real) n );
     reps = sqrt(eps);
     eps34 = reps * sqrt(reps);
 
@@ -490,7 +490,7 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
 
     size = 5 * n + (lanmax * 4 + 1);
     tptr = NULL;
-    if (!(tptr = (double*)malloc(size * sizeof(double)))){
+    if (!(tptr = (real*)malloc(size * sizeof(real)))){
 	perror("FIRST MALLOC FAILED in LANDR()");
 	raise(errno);
     }
@@ -509,8 +509,8 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
     /* compute eigenvectors */
     if (vectors) {
 	dbg("j=%ld\n",j);
-	xv1 = mymalloc((nrow+ncol)*(j+1) ,double);
-	xv2 = mymalloc(ncol ,double);
+	xv1 = mymalloc((nrow+ncol)*(j+1) ,real);
+	xv2 = mymalloc(ncol ,real);
 
 	kappa = ddmax(fabs(kappa), eps34);
 	ritvec(n, kappa, ritz, bnd, wptr[6], wptr[9], wptr[4], wptr[5]);
@@ -575,18 +575,18 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
 
 ***********************************************************************/
 
-static void ritvec(long n, double kappa, double *ritz, double *bnd, double *alf,
-	    double *bet, double *w1, double *w2)
+static void ritvec(long n, real kappa, real *ritz, real *bnd, real *alf,
+	    real *bet, real *w1, real *w2)
 
 {
     long js, jsq, i, k, id, id2, tmp;
-    double *s;
+    real *s;
 
     js = j + 1;
     jsq = js * js;
-    //size = sizeof(double) * n;
+    //size = sizeof(real) * n;
 
-    if(!(s = (double *) malloc (jsq * sizeof(double)))) {
+    if(!(s = (real *) malloc (jsq * sizeof(real)))) {
 	perror("MALLOC FAILED in RITVEC()");
 	raise(errno);
     }
@@ -694,14 +694,14 @@ static void ritvec(long n, double kappa, double *ritz, double *bnd, double *alf,
 
 ***********************************************************************/
 
-static void lanso(long n, long lanmax, long maxprs, double endl,
-	   double endr, double *ritz, double *bnd, double *wptr[])
+static void lanso(long n, long lanmax, long maxprs, real endl,
+	   real endr, real *ritz, real *bnd, real *wptr[])
 
 {
-    double *alf, *eta, *oldeta, *bet, *wrk;
+    real *alf, *eta, *oldeta, *bet, *wrk;
     long ll, first, last, ENOUGH, id1, id2, id3, i, l;
 
-    //double *r = wptr[0];
+    //real *r = wptr[0];
     alf = wptr[6];
     eta = wptr[7];
     oldeta = wptr[8];
@@ -813,12 +813,12 @@ static void lanso(long n, long lanmax, long maxprs, double endl,
 
 ***********************************************************************/
 
-static void lanczos_step(long n, long first, long last, double *wptr[],
-		  double *alf, double *eta, double *oldeta,
-		  double *bet, long *ll, long *enough)
+static void lanczos_step(long n, long first, long last, real *wptr[],
+		  real *alf, real *eta, real *oldeta,
+		  real *bet, long *ll, long *enough)
 
 {
-    double t, *mid;
+    real t, *mid;
     long i;
 
     for (j=first; j<last; j++) {
@@ -930,7 +930,7 @@ static void lanczos_step(long n, long first, long last, double *wptr[],
 
 ***********************************************************************/
 
-static void ortbnd(double *alf, double *eta, double *oldeta, double *bet)
+static void ortbnd(real *alf, real *eta, real *oldeta, real *bet)
 
 {
     long i;
@@ -995,11 +995,11 @@ static void ortbnd(double *alf, double *eta, double *oldeta, double *bet)
 
 ***********************************************************************/
 
-static void purge(long n, long ll, double *r, double *q, double *ra,  
-	   double *qa, double *wrk, double *eta, double *oldeta)
+static void purge(long n, long ll, real *r, real *q, real *ra,  
+	   real *qa, real *wrk, real *eta, real *oldeta)
 
 {
-    double t, tq, tr, reps1;
+    real t, tq, tr, reps1;
     long k, iteration, flag, i;
 
     if (j < ll+2) return; 
@@ -1082,10 +1082,10 @@ static void purge(long n, long ll, double *r, double *q, double *ra,
 
 ***********************************************************************/
 
-static void stpone(long n, double *wrkptr[])
+static void stpone(long n, real *wrkptr[])
 
 {
-    double t, *alf;
+    real t, *alf;
     alf = wrkptr[6];
 
     /* get initial vector; default is random */
@@ -1148,10 +1148,10 @@ static void stpone(long n, double *wrkptr[])
 
 ***********************************************************************/
 
-static double startv(long n, double *wptr[])
+static real startv(long n, real *wptr[])
 
 {
-    double rnm2, *r, t;
+    real rnm2, *r, t;
     /*long irand; */
     rand_t rstat;
     long id, i;
@@ -1216,10 +1216,10 @@ static double startv(long n, double *wptr[])
 
 **************************************************************/ 
 
-static double pythag(double a1, double b)
+static real pythag(real a1, real b)
 
 {
-    double p, r, s, t, u, temp;
+    real p, r, s, t, u, temp;
 
     p = ddmax(fabs(a1), fabs(b));
     if (p != 0.0) {
@@ -1272,11 +1272,11 @@ static double pythag(double a1, double b)
 
 ***********************************************************************/
 
-static void error_bound(long *enough, double endl, double endr, 
-		 double *ritz, double *bnd)
+static void error_bound(long *enough, real endl, real endr, 
+		 real *ritz, real *bnd)
 {
     long mid, i;
-    double gapl, gap;
+    real gapl, gap;
 
     /* massage error bounds for very close ritz values */
     mid = idamax(j + 1, bnd, 1);
@@ -1358,7 +1358,7 @@ static void error_bound(long *enough, double endl, double endr,
 
 ***********************************************************************/
 
-static void imtqlb(long n, double d[], double e[], double bnd[])
+static void imtqlb(long n, real d[], real e[], real bnd[])
 
 {
     long last, l, m, i, iteration;
@@ -1366,7 +1366,7 @@ static void imtqlb(long n, double d[], double e[], double bnd[])
     /* various flags */
     long exchange, convergence, underflow;	
 
-    double b, test, g, r, s, c, p, f;
+    real b, test, g, r, s, c, p, f;
 
     if (n == 1) return;
     ierr = 0;
@@ -1515,11 +1515,11 @@ static void imtqlb(long n, double d[], double e[], double bnd[])
 ***********************************************************************/
 
 
-static void imtql2(long nm, long n, double d[], double e[], double z[])
+static void imtql2(long nm, long n, real d[], real e[], real z[])
 
 {
     long inbex, nnm, j2, last, l, m, i, k, iteration, convergence, underflow;
-    double b, test, g, r, s, c, p, f;
+    real b, test, g, r, s, c, p, f;
     if (n == 1) return;
     ierr = 0;
     last = n - 1;
@@ -1678,10 +1678,10 @@ static void machar(long *ibeta, long *it, long *irnd, long *machep, long *negep)
 
 {
 
-    double beta, betain, betah, a2, b, ZERO, ONE, TWO, temp, tempa, temp1;
+    real beta, betain, betah, a2, b, ZERO, ONE, TWO, temp, tempa, temp1;
     long i, itemp;
 
-    ONE = (double) 1;
+    ONE = (real) 1;
     TWO = ONE + ONE;
     ZERO = ONE - ONE;
 
@@ -1701,7 +1701,7 @@ static void machar(long *ibeta, long *it, long *irnd, long *machep, long *negep)
 	itemp = (long)(temp - a2);
     }
     *ibeta = itemp;
-    beta = (double) *ibeta;
+    beta = (real) *ibeta;
 
     *it = 0;
     b = ONE;
@@ -1782,7 +1782,7 @@ static void machar(long *ibeta, long *it, long *irnd, long *machep, long *negep)
 
 ***********************************************************************/
 
-static void store(long n, long isw, long j2, double *s)
+static void store(long n, long isw, long j2, real *s)
 
 {
     switch(isw) {
@@ -1805,7 +1805,7 @@ static void store(long n, long isw, long j2, double *s)
     }
     return;
 }
-static double fsign(double a2,double b)
+static real fsign(real a2,real b)
 /************************************************************** 
  * returns |a| if b is positive; else fsign returns -|a|      *
  **************************************************************/ 
@@ -1816,9 +1816,9 @@ static double fsign(double a2,double b)
     return a2;
 }
 
-static double ddmax(double a2, double b)
+static real ddmax(real a2, real b)
 /************************************************************** 
- * returns the larger of two double precision numbers         *
+ * returns the larger of two real precision numbers         *
  **************************************************************/ 
 {
 
@@ -1826,9 +1826,9 @@ static double ddmax(double a2, double b)
     else return(b);
 }
 
-static double ddmin(double a2, double b)
+static real ddmin(real a2, real b)
 /************************************************************** 
- * returns the smaller of two double precision numbers        *
+ * returns the smaller of two real precision numbers        *
  **************************************************************/ 
 {
 
@@ -1864,7 +1864,7 @@ static long imax(long a2,long b)
  * Based on Fortran-77 routine from Linpack by J. Dongarra    *
  **************************************************************/ 
 
-static void daxpy (long n,double da,double *dx,long incx,double *dy,long incy)
+static void daxpy (long n,real da,real *dx,long incx,real *dy,long incy)
 
 {
     long i;
@@ -1891,11 +1891,11 @@ static void daxpy (long n,double da,double *dx,long incx,double *dy,long incy)
  * Based on Fortran-77 routine from Linpack by J. Dongarra    *
  **************************************************************/ 
 
-static double ddot(long n,double *dx,long incx,double *dy,long incy)
+static real ddot(long n,real *dx,long incx,real *dy,long incy)
 
 {
     long i;
-    double dot_product;
+    real dot_product;
 
     if (n <= 0 || incx == 0 || incy == 0) return(0.0);
     dot_product = 0.0;
@@ -1917,7 +1917,7 @@ static double ddot(long n,double *dx,long incx,double *dy,long incy)
  * Based on Fortran-77 routine from Linpack by J. Dongarra    *
  **************************************************************/ 
 
-static void datx(long n,double da,double *dx,long incx,double *dy,long incy)
+static void datx(long n,real da,real *dx,long incx,real *dy,long incy)
 
 {
     long i;
@@ -1941,10 +1941,10 @@ static void datx(long n,double da,double *dx,long incx,double *dy,long incy)
  * Function sorts array1 and array2 into increasing order for array1 *
  *********************************************************************/
 
-static void dsort2(long igap,long n,double *array1,double *array2)
+static void dsort2(long igap,long n,real *array1,real *array2)
 
 {
-    double temp;
+    real temp;
     long i, j2, inbex;
 
     if (!igap) return;
@@ -1971,11 +1971,11 @@ static void dsort2(long igap,long n,double *array1,double *array2)
  * Based on Fortran-77 routine from Linpack by J. Dongarra    *
  **************************************************************/ 
 
-static void dswap(long n,double *dx,long incx,double *dy,long incy)
+static void dswap(long n,real *dx,long incx,real *dy,long incy)
 
 {
     long i;
-    double dtemp;
+    real dtemp;
 
     if (n <= 0 || incx == 0 || incy == 0) return;
     if (incx == 1 && incy == 1) {
@@ -2003,11 +2003,11 @@ static void dswap(long n,double *dx,long incx,double *dy,long incy)
  * based on FORTRAN 77 routine from Linpack by J. Dongarra       *
  *****************************************************************/ 
 
-static long idamax(long n,double *dx,long incx)
+static long idamax(long n,real *dx,long incx)
 
 {
     long ix,i,iMax;
-    double dtemp, dMax;
+    real dtemp, dMax;
 
     if (n < 1) return(-1);
     if (n == 1) return(0);
@@ -2034,7 +2034,7 @@ static long idamax(long n,double *dx,long incx)
  * Based on Fortran-77 routine from Linpack by J. Dongarra    *
  **************************************************************/ 
 
-static void dscal(long n,double da,double *dx,long incx)
+static void dscal(long n,real da,real *dx,long incx)
 
 {
     long i;
@@ -2052,7 +2052,7 @@ static void dscal(long n,double da,double *dx,long incx)
  * Based on Fortran-77 routine from Linpack by J. Dongarra    *
  **************************************************************/ 
 
-static void dcopy(long n,double *dx,long incx,double *dy,long incy)
+static void dcopy(long n,real *dx,long incx,real *dy,long incy)
 
 {
     long i;

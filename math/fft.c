@@ -22,8 +22,6 @@
 #include "mathdef.h"
 #include "defs.h"
 #if !defined(USE_SINGLE) || HAS_FFTWF==1
-extern int has_threads;
-extern void (*p_fftw_plan_with_nthreads)(int n);
 static int FFTW_VERBOSE=0;
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
@@ -63,10 +61,7 @@ void X(fft_free_plan)(fft_t *fft){
 /**
    load FFT wisdom from file.
 */
-#if defined(USE_COMPLEX) && !defined (USE_SINGLE)
-int has_threads=-1;
-void (*p_fftw_plan_with_nthreads)(int n)=NULL;
-//Put the following within USE_COMPLEX to avoid run multiple copies of it.
+
 static char fnwisdom[64];
 static void load_wisdom(){
     FILE *fpwisdom;
@@ -78,6 +73,8 @@ static void load_wisdom(){
 /**
    save FFT wisdom to file.
 */
+#if defined(USE_COMPLEX) && !defined (USE_SINGLE)
+//Put the following within USE_COMPLEX to avoid run multiple copies of it.
 static void save_wisdom(){
     FILE *fpwisdom;
     if((fpwisdom=fopen(fnwisdom,"w"))){
@@ -97,8 +94,10 @@ static __attribute__((destructor))void deinit(){
 static __attribute__((constructor))void init(){
     READ_ENV_INT(FFTW_VERBOSE, 0, 1);
 }
+#endif
+//#if defined(USE_COMPLEX) 
 #include <dlfcn.h>
-static void init_threads(){
+static void (*init_threads())(int){
     void *libfftw_threads=NULL;
     const char *fn=0;
     //quitfun is not null when run in matlab.
@@ -117,7 +116,7 @@ static void init_threads(){
 #endif
 #endif //if OPENMP
 #endif //if FFTW_THREADS
-    
+    void (*p_fftw_plan_with_nthreads)(int)=NULL;
     if(!fn || (libfftw_threads=dlopen(fn, RTLD_LAZY))){
 	if(!fn){
 	    info("FFTW thread library is built in\n");
@@ -125,7 +124,7 @@ static void init_threads(){
 	    info("Open FFTW thread library %s: success\n", fn);
 	}
 	int (*p_fftw_init_threads)(void)=NULL;
-	has_threads=1;
+
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
 #if BUILTIN_FFTW_THREADS
@@ -150,7 +149,6 @@ static void init_threads(){
 	if(!quitfun){
 	    info("Open FFTW thread library %s: failed\n", fn);
 	}
-	has_threads=0;
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial",HOME);
 #else
@@ -158,25 +156,23 @@ static void init_threads(){
 #endif
     }
     load_wisdom();
+    return p_fftw_plan_with_nthreads;
 }
-#else //if USE_COMPLEX
-static void init_threads(){}//avoid multiple init.
-#endif
+//#endif
 static void fft_execute(FFTW(plan) plan){
-/*
-  #if _OPENMP>200805
-  if(has_threads && !omp_in_parallel()){//testing purpose.
-  OMPTASK_SINGLE{
-  FFTW(execute)(plan);
-  }
-  }else
-  #endif
-*/
     FFTW(execute)(plan);
 }
 static void fft_threads(long nx, long ny){
+    static int has_threads=-1;
+    static void (*p_fftw_plan_with_nthreads)(int n)=NULL;
+
     if(has_threads==-1){
-	init_threads();
+	if((p_fftw_plan_with_nthreads=init_threads())){
+	    has_threads=1;
+	}else{
+	    has_threads=0;
+	}
+	
 	if(FFTW_VERBOSE){
 	    info("FFTW: has_threads=%d\n", has_threads);
 	}

@@ -17,7 +17,7 @@
 */
 #ifndef AOS_CUDA_CUCMAT_H
 #define AOS_CUDA_CUCMAT_H
-
+/*
 #include "utils.h"
 #include "types.h"
 
@@ -25,5 +25,5 @@
 #define cuccellnew  new cuccell
 #define cucwrite cuwrite
 #define cuccellwrite cuwrite
-void cucscale(cucmat &in, Real Alpha, cudaStream_t stream);
+*/
 #endif

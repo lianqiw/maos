@@ -60,8 +60,8 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf, int deriv){
    Compute matched filter.
 */
 void genmtch(dcell **mtche, dmat **sanea,
-	     dcell *i0, dcell *gx, dcell *gy, double pixtheta, 
-	     double rne, double bkgrnd, int cr){
+	     dcell *i0, dcell *gx, dcell *gy, real pixtheta, 
+	     real rne, real bkgrnd, int cr){
     const long nsa=i0->nx;
     if(!*mtche){
 	*mtche=dcellnew(nsa,1);

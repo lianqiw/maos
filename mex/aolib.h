@@ -79,3 +79,4 @@ dmat *loc_calib(const dsp *GA, const loc_t *aloc, const loc_t *saloc,
 		double dispx, double dispy, double scale, int maxorder);
 dmat *poly2fit(const dmat *in, const dmat *out, int maxorder);
 loc_t *loctransform2(const loc_t *loc, const dmat *coeff);
+dsp *chol_factorize2(long **Cp, const dsp *A_in);

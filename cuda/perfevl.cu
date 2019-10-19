@@ -86,19 +86,19 @@ static void calc_ptt(Real *cc,
 /*
   Let M be the modal matrix of pistion/tip/tilt. Calculate M'*diag(amp)*phi
   where amp is the amptliude weighting.  */
-static int calc_ptt_post(double *rmsout, double *coeffout, 
-			 const double ipcc, const dmat *imcc,
+static int calc_ptt_post(real *rmsout, real *coeffout, 
+			 const real ipcc, const dmat *imcc,
 			 const Real *ccb){
-    double coeff[3];
-    double tot=ccb[0];
+    real coeff[3];
+    real tot=ccb[0];
     coeff[0]=ccb[1]; coeff[1]=ccb[2]; coeff[2]=ccb[3]; 
     if(coeffout){
 	dmulvec3(coeffout, imcc, coeff);
     }
     int ans=0;
     if(rmsout){
-	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
-	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
+	real pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
+	real ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
 	rmsout[0]=tot-pis;/*PR */
 	rmsout[1]=ptt-pis;/*TT */
 	rmsout[2]=tot-ptt;/*PTTR*/
@@ -262,8 +262,8 @@ static void psfcomp_r(curmat *psf, const curmat &iopdevl, int nwvl, int ievl, in
     }									\
     int ans=0;								\
     if(parms->recon.split){						\
-	double *pcleNGSmp=PCOL(cleNGSmp->p[ievl], isim);		\
-	double coeff[6];						\
+	real *pcleNGSmp=PCOL(cleNGSmp->p[ievl], isim);		\
+	real coeff[6];						\
 	coeff[0]=ccb[1]; coeff[1]=ccb[2];				\
 	coeff[2]=ccb[3]; coeff[3]=ccb[4];				\
 	coeff[4]=ccb[5]; coeff[5]=ccb[6];				\
@@ -292,8 +292,8 @@ void gpu_perfevl_queue(thread_t *info){
 	const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov) 
 	    && isim>=parms->evl.psfisim && parms->evl.psf->p[ievl]!=0;
 	const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
-	const double thetax=parms->evl.thetax->p[ievl];
-	const double thetay=parms->evl.thetay->p[ievl];
+	const real thetax=parms->evl.thetax->p[ievl];
+	const real thetay=parms->evl.thetay->p[ievl];
  
 	stream_t &stream=cudata->perf_stream;
 	curmat &iopdevl=cuglobal->perf.opd[ievl];
@@ -467,13 +467,13 @@ void gpu_perfevl_sync(thread_t *info){
     for(int ievl=info->start; ievl<info->end; ievl++){
 	gpu_set(cuglobal->evlgpu[ievl]);
 	cudaStream_t stream=cudata->perf_stream;
-	const double thetax=parms->evl.thetax->p[ievl];
-	const double thetay=parms->evl.thetay->p[ievl];
+	const real thetax=parms->evl.thetax->p[ievl];
+	const real thetay=parms->evl.thetay->p[ievl];
 	/*Setup pointers for easy usage */
-	double *polmp=PCOL(simu->olmp->p[ievl], isim);
-	double *pclmp=PCOL(simu->clmp->p[ievl], isim);
-	double *polep=PCOL(simu->olep->p[ievl], isim);
-	double *pclep=PCOL(simu->clep->p[ievl], isim);
+	real *polmp=PCOL(simu->olmp->p[ievl], isim);
+	real *pclmp=PCOL(simu->clmp->p[ievl], isim);
+	real *polep=PCOL(simu->olep->p[ievl], isim);
+	real *pclep=PCOL(simu->clep->p[ievl], isim);
 	CUDA_SYNC_STREAM;
 	PERFEVL_WFE_CPU(ans1, polep, polmp, simu->oleNGSmp, cuglobal->perf.ccb_ol[ievl]);
 	PERFEVL_WFE_CPU(ans2, pclep, pclmp, simu->cleNGSmp, cuglobal->perf.ccb_cl[ievl]);
@@ -490,7 +490,7 @@ void gpu_perfevl_sync(thread_t *info){
 /**
    Compute the PSF or OPDCOV for NGS mode removed opd.
 */
-void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
+void gpu_perfevl_ngsr(SIM_T *simu, real *cleNGSm){
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
     const int nloc=aper->locs->nloc;
@@ -516,7 +516,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 		cudaMemcpyAsync(cuglobal->perf.ccb_cl[ievl], cuglobal->perf.cc_cl[ievl](), 
 				4*sizeof(Real), cudaMemcpyDeviceToHost, stream); 
 		CUDA_SYNC_STREAM;
-		double ptt[3]={0,0,0};
+		real ptt[3]={0,0,0};
 		calc_ptt_post(NULL, ptt,  aper->ipcc, aper->imcc, cuglobal->perf.ccb_cl[ievl]);
 		curaddptt(iopdevl, cudata->perf.locs(), -ptt[0], -ptt[1], -ptt[2], stream);
 	    }
@@ -574,9 +574,9 @@ void gpu_perfevl_save(SIM_T *simu){
 	info("Step %d: Output PSF\n", isim);
 	const int nwvl=parms->evl.nwvl;
 	int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
-	const double scale=1./(double)nacc;
+	const real scale=1./(real)nacc;
 	if(cudata->perf.psfol){
-	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
+	    const real scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 	    /*copy the PSF accumulated in all the GPUs to CPU.*/
 	    X(cell) *temp=X(cellnew)(nwvl, 1);
 	    X(cell) *temp2=X(cellnew)(nwvl, 1);
@@ -627,7 +627,7 @@ void gpu_perfevl_save(SIM_T *simu){
     if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
 	info("Step %d: Output opdcov\n", isim);
 	int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
-	const double scale=1./(double)nacc;
+	const real scale=1./(real)nacc;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!parms->evl.psf->p[ievl]) continue;
 	    gpu_set(cuglobal->evlgpu[ievl]);
@@ -662,7 +662,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	    }
 	}
 	if(parms->evl.psfol){
-	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
+	    const real scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 	    {
 		X(mat) *temp=NULL;
 		X(mat) *temp2=NULL;

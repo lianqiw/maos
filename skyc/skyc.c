@@ -29,7 +29,7 @@ void skyc_version(void){
     info("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
 #if USE_CUDA
 #if CUDA_DOUBLE
-    info(" +CUDA(double)");
+    info(" +CUDA(real)");
 #else
     info(" +CUDA(single)");
 #endif

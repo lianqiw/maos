@@ -27,10 +27,10 @@ void filter_dm(SIM_T *simu);
 void update_dm(SIM_T *simu);
 void wfsgrad(SIM_T *simu);
 void wfsints(thread_t *thread_data);
-void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha);
+void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, real alpha);
 void wfsgrad_iwfs(thread_t *info);
 void wfsgrad_post(thread_t *info);
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
-	       const dcell *low_val, double gain);
+	       const dcell *low_val, real gain);
 void filter_fsm(SIM_T *simu);
 #endif

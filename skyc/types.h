@@ -38,10 +38,10 @@ typedef struct POWFS_S{
     DTF_S  *dtf;       /**<array of dtf for each wvl*/
     loc_t  *loc;       /**<explicit pts in a regular grid. */
     dmat   *amp;       /**<amplitude map defined on loc*/
-    double *locxamp;   /**<dot(loc->locx,amp);*/
-    double *locyamp;   /**<dot(loc->locy,amp);*/
+    real *locxamp;   /**<dot(loc->locx,amp);*/
+    real *locyamp;   /**<dot(loc->locy,amp);*/
     loc_t  *saloc;     /**<subaperture location*/
-    double dxwvf;      /**<sampling for the wvf.*/
+    real dxwvf;      /**<sampling for the wvf.*/
     int    nxwvf;      /**<number of points each subaps*/
 }POWFS_S;
 /**
@@ -66,12 +66,12 @@ typedef struct PISTAT_S{
 typedef struct WFS_S{
     int ipowfs;        /**<type of powfs for each wfs.*/
     int istar;         /**<index to star;*/
-    double thetax;     /**<location of wfs*/
-    double thetay;     /**<location of wfs*/
+    real thetax;     /**<location of wfs*/
+    real thetay;     /**<location of wfs*/
     dmat *mags;        /**<magnitude in each band*/
     dmat *siglev;    /**<signal level at maos.dt sampling for each wvl*/
-    double siglevtot;  /**<sum of siglev*/
-    double bkgrnd;     /**<background level per pixel at maos.dt*/
+    real siglevtot;  /**<sum of siglev*/
+    real bkgrnd;     /**<background level per pixel at maos.dt*/
     ccell **wvfout;    /**<complex wavefront output from maos run*/
     dmat *ztiltout;   /**<ztilt out from maos run*/
     dmat *goff;        /**<gradient offset for ncpa calibration*/
@@ -83,9 +83,9 @@ typedef struct WFS_S{
    Data for each available star.
 */
 typedef struct STAR_S{
-    double thetax;     /**<star location*/
-    double thetay;     /**<star location*/
-    double scbcs;      /**<scale factor to match strehl for bi-cubic spline*/
+    real thetax;     /**<star location*/
+    real thetay;     /**<star location*/
+    real scbcs;      /**<scale factor to match strehl for bi-cubic spline*/
     dmat  *mags;       /**<star magnitude at each wavelength*/
     /*The following is for each ipowfs */
     dcell  *siglev;    /**<signal level of size npowfs, nwvl*/
@@ -120,7 +120,7 @@ typedef struct ASTER_S{
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
     int mdtrat;        /**<dtrat of minimum rms in OL estimation.*/
-    double mresest;    /**<miminum rms on servo restimation.*/
+    real mresest;    /**<miminum rms on servo restimation.*/
     rand_t rand;       /**<random stream*/
     int idtratmin;     /**<minimum index of dtrat allowed*/
     int idtratmax;     /**<maximum index of dtrat allowed*/
@@ -139,7 +139,7 @@ typedef struct SIM_S{
     dcell *stars;      /**<randomly generated star fields.*/
     dmat *mideal;      /**<ideal NGS modes*/
     dmat *mideal_oa;   /**<ideal NGS modes on axis (dot product only)*/
-    double varol;      /**<open loop error*/
+    real varol;      /**<open loop error*/
     STATUS_T *status;  /**<to report status to the scheduler*/
     STAR_S *star;      /**<STAR_S*/
     int iseed;         /**<Current seed index*/
@@ -167,7 +167,7 @@ typedef struct SIM_S{
     int isky;          /**<current star field being evaluated*/
     int isky_start;    /**<first star field to evaluate*/
     int isky_end;      /**<last star field to evalaute (exclusive)*/
-    double tk_0;       /**<initial star time*/
+    real tk_0;       /**<initial star time*/
     pthread_mutex_t mutex_status;/**<mutex for status reporting*/
     dmat *sdecoeff;    /**<sde coefficient*/
     dcell *psdi;        /**<PSD of each mode computed from time series*/

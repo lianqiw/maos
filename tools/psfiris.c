@@ -250,7 +250,8 @@ int main(int argc, char *argv[]){
     loc_t *ploc=mksqloc_auto((int)ceil(D/dx1), (int)ceil(D/dx1), dx1, dx1);
     dmat  *pamp=dnew(ploc->nloc, 1);
     locannular(pamp->p, ploc, 0, 0, 15, 1.8, 1);
-    dmat *pwt=ddup(pamp); normalize_sumabs(pwt->p, pwt->nx, 1);
+    dmat *pwt=ddup(pamp); 
+    dnormalize_sumabs(pwt->p, pwt->nx, 1);
     dmat *mode_ploc=dnew(ploc->nloc, nmod);
     for(int imod=0; imod<nmod; imod++){
 	for(int ialoc=0; ialoc<naloc; ialoc++){
@@ -258,7 +259,7 @@ int main(int argc, char *argv[]){
 			 ploc,  mode_ploc->p+ploc->nloc*imod, 
 			 1, thetax[idir]/206265., thetay[idir]/206265., 1, 0, 0);
 	}
-	double inp=dotdbl(mode_ploc->p+ploc->nloc*imod, mode_ploc->p+ploc->nloc*imod, pwt->p, ploc->nloc);
+	double inp=dvecdot(mode_ploc->p+ploc->nloc*imod, mode_ploc->p+ploc->nloc*imod, pwt->p, ploc->nloc);
 	dmat *dtmp=drefcols(mode_ploc, imod, 1);
 	dscale(dtmp, sqrt(1./inp));
 	dfree(dtmp);

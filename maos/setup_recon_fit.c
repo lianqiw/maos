@@ -32,10 +32,10 @@ setup_fit_HXF(const FIT_T *fit){
 #pragma omp parallel for collapse(2)
     for(int ifit=0; ifit<nfit; ifit++){
 	for(int ips=0; ips<npsr; ips++){
-	    const double hsi=fit->hs->p[ifit];
-	    const double ht = fit->xloc->p[ips]->ht-fit->floc->ht;
-	    const double scale=1.-ht/hsi;
-	    double displace[2];
+	    const real hsi=fit->hs->p[ifit];
+	    const real ht = fit->xloc->p[ips]->ht-fit->floc->ht;
+	    const real scale=1.-ht/hsi;
+	    real displace[2];
 	    displace[0]=fit->thetax->p[ifit]*ht;
 	    displace[1]=fit->thetay->p[ifit]*ht;
 	    P(HXF,ifit,ips)=mkh(fit->xloc->p[ips], fit->floc, displace[0], displace[1], scale);
@@ -56,10 +56,10 @@ setup_fit_HA(FIT_T *fit){
 #pragma omp parallel for collapse(2)
     for(int ifit=0; ifit<nfit; ifit++){
 	for(int idm=0; idm<ndm; idm++){
-	    const double hs=fit->hs->p[ifit];
-	    const double ht=fit->aloc->p[idm]->ht-fit->floc->ht;
-	    const double scale=1.-ht/hs;
-	    double displace[2];
+	    const real hs=fit->hs->p[ifit];
+	    const real ht=fit->aloc->p[idm]->ht-fit->floc->ht;
+	    const real scale=1.-ht/hs;
+	    real displace[2];
 	    displace[0]=fit->thetax->p[ifit]*ht;
 	    displace[1]=fit->thetay->p[ifit]*ht;
 	    loc_t *loc=fit->floc;
@@ -112,8 +112,8 @@ static void
 setup_fit_lrt(FIT_T *fit){
     const int ndm=fit->aloc->nx;
     fit->NW=dcellnew(ndm,1);
-    //double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
-    double fitscl=1./fit->floc->nloc;
+    //real fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
+    real fitscl=1./fit->floc->nloc;
     if(fabs(fitscl)<1.e-15){
 	error("fit->fitscl is too small\n");
     }
@@ -139,8 +139,8 @@ setup_fit_lrt(FIT_T *fit){
 	info("Adding piston cr to fit matrix\n");
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=fit->aloc->p[idm]->nloc;
-	    double *p=fit->NW->p[idm]->p+(inw+idm)*nloc;
-	    const double *cpl=actcpl->p[idm]->p;
+	    real *p=fit->NW->p[idm]->p+(inw+idm)*nloc;
+	    const real *cpl=actcpl->p[idm]->p;
 	    for(int iloc=0; iloc<nloc; iloc++){
 		if(cpl[iloc]>0.1){ //don't count floating or stuck actuators
 		    p[iloc]=fitscl;
@@ -150,15 +150,15 @@ setup_fit_lrt(FIT_T *fit){
 	inw+=ndm;
     }
     if(fit->flag.lrt_tt){
-	double factor=0;
+	real factor=0;
 	info("Adding TT cr on upper DMs to fit matrix.\n");
 	factor=fitscl*2./loc_diam(fit->aloc->p[0]);
 	for(int idm=1; idm<ndm; idm++){
 	    int nloc=fit->aloc->p[idm]->nloc;
-	    double *p=fit->NW->p[idm]->p+(inw+(idm-1)*2)*nloc;
-	    double *p2x=p;
-	    double *p2y=p+nloc;
-	    const double *cpl=actcpl->p[idm]->p;
+	    real *p=fit->NW->p[idm]->p+(inw+(idm-1)*2)*nloc;
+	    real *p2x=p;
+	    real *p2y=p+nloc;
+	    const real *cpl=actcpl->p[idm]->p;
 	    for(int iloc=0; iloc<nloc; iloc++){
 		if(cpl[iloc]>0.1){
 		    p2x[iloc]=fit->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
@@ -281,14 +281,14 @@ setup_fit_matrix(FIT_T *fit){
 	}
 
 	if(fabs(fit->flag.tikcr)>1.e-15){
-	    double tikcr=fit->flag.tikcr;
+	    real tikcr=fit->flag.tikcr;
 	    /*Estimated from the formula.  1/nloc is due to W0, the other
 	      scaling is due to ray tracing between different sampling freq.*/
 	    int nact=0;
 	    for(int idm=0; idm<ndm; idm++){
 		nact+=fit->aloc->p[idm]->nloc;
 	    }
-	    double maxeig=4./nact;
+	    real maxeig=4./nact;
 	    info("Adding tikhonov constraint of %g to FLM\n", tikcr);
 	    info("The maximum eigen value is estimated to be around %e\n", maxeig);
 	    dcelladdI(fit->FL.M,tikcr*maxeig);
@@ -316,6 +316,11 @@ setup_fit_matrix(FIT_T *fit){
 	    muv_direct_diag_prep(&(fit->FL),(fit->flag.alg==2)*fit->flag.svdthres);
 	}else{
 	    muv_direct_prep(&(fit->FL),(fit->flag.alg==2)*fit->flag.svdthres);
+	    if(0){
+		writebin(fit->FL.M, "FLM");
+		writebin(fit->FL.U, "FLU");
+		writebin(fit->FL.V, "FLV");
+	    }
 	    cellfree(fit->FL.M);
 	    dcellfree(fit->FL.U);
 	    dcellfree(fit->FL.V);
@@ -417,9 +422,12 @@ void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
 	writebin(fit->FR.M,"FRM");
 	writebin(fit->FR.V,"FRV");
 	writebin(fit->FR.U,"FRU");
-	  
+
+	writebin(fit->FL.M, "FLM");
+	writebin(fit->FL.U, "FLU");
+	writebin(fit->FL.V, "FLV");
        	if(fit->FL.C){
-	    chol_convert(fit->FL.C, 1);
+	    //chol_convert(fit->FL.C, 1);
 	    chol_save(fit->FL.C,"FLC.bin");
 	}
 	if(fit->FL.MI)
@@ -436,7 +444,11 @@ void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
 	if(fit->FL.MIB){
 	    writebin(fit->FL.MIB,"FLMIB");
 	}
-   
+    }
+    if(fit->flag.alg!=1){
+	cellfree(fit->FL.M);
+	dcellfree(fit->FL.U);
+	dcellfree(fit->FL.V);
     }
 }
 /**
@@ -469,6 +481,11 @@ void setup_powfs_fit(POWFS_T *powfs, const RECON_T *recon, const PARMS_T *parms)
 		fit->thetax=dnew(1,1);fit->thetax->p[0]=parms->wfs[iwfs].thetax;
 		fit->thetay=dnew(1,1);fit->thetay->p[0]=parms->wfs[iwfs].thetay;
 		setup_fit(fit, 1);
+		if(fit->flag.alg!=1){
+		    cellfree(fit->FL.M);
+		    dcellfree(fit->FL.U);
+		    dcellfree(fit->FL.V);
+		}
 	    }else{
 		memcpy(fitall+jwfs, fitall, sizeof(FIT_T));
 		fit->FR.Mdata=fit;

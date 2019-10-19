@@ -49,7 +49,7 @@ void wfsints(thread_t *thread_data){
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int hasllt=(parms->powfs[ipowfs].llt!=NULL);
     const int illt=hasllt?parms->powfs[ipowfs].llt->i->p[wfsind]:0;
-    const double *srot=(hasllt && parms->powfs[ipowfs].radrot)?powfs[ipowfs].srot->p[illt]->p:NULL;
+    const real *srot=(hasllt && parms->powfs[ipowfs].radrot)?powfs[ipowfs].srot->p[illt]->p:NULL;
     const int nsa=powfs[ipowfs].saloc->nloc;
     const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
     const int ncompy=powfs[ipowfs].ncompy;
@@ -69,11 +69,11 @@ void wfsints(thread_t *thread_data){
     cmat *lotfc=NULL;
     cmat *lwvf=NULL;
     /*this coefficient normalize the complex psf so its abs2 sum to 1.*/
-    double norm_psf=sqrt(powfs[ipowfs].areascale)/(double)(powfs[ipowfs].pts->nx*nwvf);
+    real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(powfs[ipowfs].pts->nx*nwvf);
     /*normalized pistat. notf is due to a pair of FFT on psf. */
-    double norm_pistat=norm_psf*norm_psf/((double)notf*notf);
+    real norm_pistat=norm_psf*norm_psf/((real)notf*notf);
     /*this ncompx*ncompy is due to cfft2 after cwm and detector transfer function. */
-    double norm_ints=parms->wfs[iwfs].siglevsim*norm_psf*norm_psf/((double)ncompx*ncompy);
+    real norm_ints=parms->wfs[iwfs].siglevsim*norm_psf*norm_psf/((real)ncompx*ncompy);
     /*wvf first contains the complex wavefront, embed to get nyquist sampling.*/
     wvf=cnew(nwvf,nwvf);
     /* psf contains the psf/otf necessary to cover the focal plane. square */
@@ -86,7 +86,7 @@ void wfsints(thread_t *thread_data){
     if(notf!=ncompx || notf!=ncompy || srot){
 	otf=cnew(ncompx,ncompy);
 	if(isotf){/*there is an additional pair of FFT*/
-	    norm_ints/=(double)(notf*notf);
+	    norm_ints/=(real)(notf*notf);
 	}
     }else{
 	otf=psf;
@@ -109,7 +109,7 @@ void wfsints(thread_t *thread_data){
     if(psfout){
 	fftpsfout=cnew(psf->nx, psf->ny);
     }
-    double *gx=NULL; double *gy=NULL;
+    real *gx=NULL; real *gy=NULL;
     /* need to output pixel itnensity averages */
     if(pistatout){
 	assert(pistatout->nx==nsa && pistatout->ny==nwvl);
@@ -120,10 +120,10 @@ void wfsints(thread_t *thread_data){
 	    gy=gx+nsa;
 	}
     }
-    double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
+    real *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-	const double dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;
+	const real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+	const real dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;
 	/* uplink llt opd*/
 	if(lltopd){
 	    const int nlx=powfs[ipowfs].llt->pts->nx;
@@ -141,7 +141,7 @@ void wfsints(thread_t *thread_data){
 		ccpcorner(lotfc, lwvf, C_FULL);
 	    }
 	    /*lotfc has peak nlwvf*nlwvf in corner. */
-	    cscale(lotfc,1./(double)((long)nlwvf*nlwvf));/*max of 1 */
+	    cscale(lotfc,1./(real)((long)nlwvf*nlwvf));/*max of 1 */
 	}
 	int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
 	/* nominal and si are used to sampled PSF onto detector pixels */
@@ -156,9 +156,9 @@ void wfsints(thread_t *thread_data){
 	}
 	/* elongation due to uplink projection */
 	ccell *petf1=NULL, *petf2=NULL;
-	double etf1wt=1;
-	double etf2wt=0;
-	void (*pccwm3)(cmat*,const cmat*,const cmat*,double,const cmat*, double)=NULL;
+	real etf1wt=1;
+	real etf2wt=0;
+	void (*pccwm3)(cmat*,const cmat*,const cmat*,real,const cmat*, real)=NULL;
 	if(hasllt){
 	    if(powfs[ipowfs].etfsim[iwvl].p1){
 		petf1=powfs[ipowfs].etfsim[iwvl].p1;
@@ -174,7 +174,7 @@ void wfsints(thread_t *thread_data){
 		    petf2=powfs[ipowfs].etfsim2[iwvl].p2;
 		}
 		const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
-		etf2wt=(double)(data->isim%dtrat)/(double)dtrat;
+		etf2wt=(real)(data->isim%dtrat)/(real)dtrat;
 		etf1wt=1.-etf2wt;
 	    }
 	}
@@ -205,7 +205,7 @@ void wfsints(thread_t *thread_data){
 	    if(psfout){
 		ccp(&fftpsfout, psf);
 		/*notf * notf to cancel out the effect of fft pair (one here, one later in skyc)*/
-		cscale(fftpsfout, norm_psf/((double)notf*notf));
+		cscale(fftpsfout, norm_psf/((real)notf*notf));
 		/*peak in corner. become WVF in center.*/
 		cfft2(fftpsfout,1);
 		/*output center of the complex pupil function.*/

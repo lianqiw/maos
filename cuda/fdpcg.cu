@@ -196,14 +196,14 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
 	    (fddata(), xhat1.pm());
     }
 #if DBG_FD
-	cuccellwrite(xhat1, "fdg_fft");
+    cuwrite(xhat1, "fdg_fft");
 #endif
 
     fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(Comp)*bs*2*nby, stream>>>
 	(xhat2.M()(), xhat1.M()(), Mb.M()(), perm, nb);
     RECORD(2);
 #if DBG_FD
-    cuccellwrite(xhat2, "fdg_mul");
+    cuwrite(xhat2, "fdg_mul");
 #endif
     for(int ic=0; ic<fftnc; ic++){
 	int ips=fftips[ic];

@@ -19,7 +19,7 @@
 /*
 static void test_w1(){
     loc_t *loc=mksqloc2(200,200,1./64.);
-    double *amp=mycalloc(loc->nloc,double);
+    real *amp=mycalloc(loc->nloc,real);
     loccircle(amp,loc,0,0, 1,1);
     drawopd("test_loc",loc,amp,"loc");
     normalize(amp,loc->nloc,1);
@@ -34,10 +34,10 @@ static void test_w1(){
 }
 static void test_wploc(){
     loc_t *loc=locread("ploc.bin");
-    double *amp=NULL; long nx,ny;
+    real *amp=NULL; long nx,ny;
     readdbl(&amp,&nx,&ny,"pamp.bin");
-    double ampmax=maxdbl(amp,nx);
-    double ampmax1=1./ampmax;
+    real ampmax=maxdbl(amp,nx);
+    real ampmax1=1./ampmax;
     for(int i=0; i<nx; i++){
 	amp[i]=round(amp[i]*ampmax1)*ampmax;
     }
@@ -63,49 +63,49 @@ static void test_wcir(){
 }
 static void test_int_reg(){
     int n=100;
-    double dx=1./n;
-    double cy=0;
-    double cx=0;
-    double cr=0.3;
-    double cr2=cr*cr;
+    real dx=1./n;
+    real cy=0;
+    real cx=0;
+    real cr=0.3;
+    real cr2=cr*cr;
     int area=0;
     for(int i=0; i<n; i++){
-	double y=dx*(i+0.5);
-	double r2y=pow(y-cy,2);
+	real y=dx*(i+0.5);
+	real r2y=pow(y-cy,2);
 	for(int j=0; j<n; j++){
-	    double x=dx*(j+0.5);
+	    real x=dx*(j+0.5);
 	    if(pow(x-cx,2)+r2y < cr2){
 		area++;
 	    }
 	}
     }
-    double ar=(double)area/(double)(n*n);
+    real ar=(real)area/(real)(n*n);
     dbg("Area=%g, Err=%g\n",ar,ar-M_PI*cr2/4);
 }
 static void test_int_rand(){
     int n=10000;
-    double cy=0;
-    double cx=0;
-    double cr=0.3;
-    double cr2=cr*cr;
+    real cy=0;
+    real cx=0;
+    real cr=0.3;
+    real cr2=cr*cr;
     int area=0;
     rand_t stat;
     seed_rand(&stat,1);
     for(int i=0; i<n; i++){
-	double x=drand48();
-	double y=drand48();
+	real x=drand48();
+	real y=drand48();
 	if(pow(x-cx,2)+pow(y-cy,2) <= cr2){
 	    area++;
 	}
     } 
-    double ar=(double)area/(double)(n);
+    real ar=(real)area/(real)(n);
     dbg("Area=%g, Err=%g\n",ar,ar-M_PI*cr2/4);
 }
 */
 /*
 static void test_sqlocrot(void){
     int nn=64;
-    double dx=1./64.;
+    real dx=1./64.;
     loc_t *loc=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,0);
     locwrite(loc,"loc_0deg.bin");
     loc_t *loc2=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,M_PI/10);

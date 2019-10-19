@@ -22,7 +22,6 @@
 #include "mathmisc.h"
 #include "type.h"
 #include "mathdef.h"
-#include "suitesparse.h"
 #include "defs.h"
 #include "suitesparse.c"
 #define assert_sp(A) assert(!A || A->id==M_SPT)
@@ -1042,7 +1041,7 @@ X(sp) *X(spperm)(X(sp) *A, int reverse, long *pcol, long *prow){
    Invert a SPD X(sp) matrix that is block diagonal with
    block sizes of bs.
 */
-#ifndef USE_SINGLE
+//#ifndef USE_SINGLE
 X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
     if(!A) return 0;
     assert_sp(A);
@@ -1081,7 +1080,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
     X(free)(bk);
     return B;
 }
-#endif
+//#endif
 /**
    Extrat the diagonal blocks of size bs into cell arrays.
 */

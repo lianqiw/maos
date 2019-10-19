@@ -90,12 +90,12 @@ void locarrfree_do(loc_t **loc, int nloc){
 /**
    Create a loc with nloc elements.
 */
-loc_t *locnew(long nloc,double dx, double dy){
+loc_t *locnew(long nloc,real dx, real dy){
     loc_t *loc=mycalloc(1,loc_t);
-    loc->id=M_LOC64;
+    loc->id=M_LOC;
     if(nloc>0){
-	loc->locx=mycalloc(nloc,double);
-	loc->locy=mycalloc(nloc,double);
+	loc->locx=mycalloc(nloc,real);
+	loc->locy=mycalloc(nloc,real);
 	loc->nref=mycalloc(1, int); loc->nref[0]=1;
     }
     loc->nloc=nloc;
@@ -118,11 +118,11 @@ loc_t *locref(const loc_t *in){
 /**
    Create a pts with nsa, dsa, nx, dx
 */
-pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy){
+pts_t *ptsnew(long nsa, real dsax, real dsay, long nx, real dx, real dy){
     pts_t *pts=mycalloc(1,pts_t);
-    pts->id=M_LOC64;
-    pts->origx=mycalloc(nsa,double);
-    pts->origy=mycalloc(nsa,double);
+    pts->id=M_LOC;
+    pts->origx=mycalloc(nsa,real);
+    pts->origy=mycalloc(nsa,real);
     pts->dsa=dsax;
     pts->dsay=dsay;
     pts->nref=mycalloc(1, int); pts->nref[0]=1;
@@ -133,19 +133,19 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
     return pts;
 }
 uint32_t lochash(const loc_t *loc, uint32_t key){
-    key=hashlittle(loc->locx, loc->nloc*sizeof(double), key);
-    key=hashlittle(loc->locy, loc->nloc*sizeof(double), key);
+    key=hashlittle(loc->locx, loc->nloc*sizeof(real), key);
+    key=hashlittle(loc->locy, loc->nloc*sizeof(real), key);
     return key;
 }
 /**
    Create an vector to embed OPD into square array for FFT purpose. oversize is
 2 for fft.  */
-lmat *loc_create_embed(long *nembed, const loc_t *loc, double oversize, int fftpad){
-    double xmin,xmax,ymin,ymax;
+lmat *loc_create_embed(long *nembed, const loc_t *loc, real oversize, int fftpad){
+    real xmin,xmax,ymin,ymax;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
-    const double dx_in1=1./loc->dx;
-    const double dy_in1=1./loc->dy;
+    const real dx_in1=1./loc->dx;
+    const real dy_in1=1./loc->dy;
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
     long ny=(long)round((ymax-ymin)*dy_in1)+1;
     long nxy=(long)ceil((nx>ny?nx:ny)*oversize);/*minimum size */
@@ -202,7 +202,7 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
 	return;
     }
     ((loc_t*)loc)->npad = npad;/*just record the information. */
-    double xmin,xmax,ymin,ymax;
+    real xmin,xmax,ymin,ymax;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
     /*padding the map. normally don't need. */
@@ -212,8 +212,8 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
 	xmax+=npad*fabs(loc->dx);
 	ymax+=npad*fabs(loc->dy);
     }
-    const double dx_in1=1./fabs(loc->dx);
-    const double dy_in1=1./fabs(loc->dy);
+    const real dx_in1=1./fabs(loc->dx);
+    const real dy_in1=1./fabs(loc->dy);
     long map_nx=(long) round((xmax-xmin)*dx_in1)+1;
     long map_ny=(long) round((ymax-ymin)*dy_in1)+1;
     if(nx && ny){
@@ -231,8 +231,8 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
     loc->map->ox=xmin;
     loc->map->oy=ymin;
     dmat*  pmap=(dmat*)loc->map;
-    const double *locx=loc->locx;
-    const double *locy=loc->locy;
+    const real *locx=loc->locx;
+    const real *locy=loc->locy;
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	int ix=(int)round((locx[iloc]-xmin)*dx_in1);
 	int iy=(int)round((locy[iloc]-ymin)*dy_in1);
@@ -273,14 +273,14 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
 			    int count=0;//count how many neighbors of lowest level
 			    /*choose the minimum level of interpolation*/
 			    int min_level=INT_MAX, min_jx=0, min_jy=0, min_sep=INT_MAX;
-			    double min_rad=INFINITY;
+			    real min_rad=INFINITY;
 			    for(int jy=MAX(0, iy-1); jy<MIN(map_ny, iy+2); jy++){
 				for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
 				    int sep=(abs(iy-jy)+abs(ix-jx));
 				    int iphi;
 				    if((sep==1 || sep==2) && (iphi=fabs(P(pmap,jx,jy)))){//edge
 					iphi--;
-					double rad=locx[iphi]*locx[iphi]+locy[iphi]*locy[iphi];//dist^2 to center
+					real rad=locx[iphi]*locx[iphi]+locy[iphi]*locy[iphi];//dist^2 to center
 					if(P(level,jx,jy)<min_level){
 					    min_level=P(level,jx,jy);
 					    min_rad=rad;
@@ -322,7 +322,7 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
   Embed in into dest according to map defined in loc->map. Arbitraty map cannot
   be used here for mapping.
 */
-void loc_embed(map_t *dest, const loc_t *loc, const double *in){
+void loc_embed(map_t *dest, const loc_t *loc, const real *in){
     map_t *map=loc->map;
     if(!map){
 	error("map is null\n");
@@ -330,7 +330,7 @@ void loc_embed(map_t *dest, const loc_t *loc, const double *in){
     if(dest->nx!=map->nx || dest->ny!=map->ny){
 	error("dest and map doesn't agree\n");
     }
-    const double *pin=in-1;//iphi count from 1
+    const real *pin=in-1;//iphi count from 1
     for(long i=0; i<map->nx*map->ny; i++){
 	long iphi=fabs(map->p[i]);
 	if(iphi){
@@ -374,7 +374,7 @@ cell *loc_embed2(loc_t *loc, dmat *arr){
   Embed in into dest according to map defined in loc->map. Arbitraty map cannot
   be used here for mapping.
 */
-void loc_embed_add(map_t *dest, const loc_t *loc, const double *in){
+void loc_embed_add(map_t *dest, const loc_t *loc, const real *in){
     map_t *map=loc->map;
     if(!map){
 	error("map is null\n");
@@ -382,7 +382,7 @@ void loc_embed_add(map_t *dest, const loc_t *loc, const double *in){
     if(dest->nx!=map->nx || dest->ny!=map->ny){
 	error("dest and map doesn't agree\n");
     }
-    const double *pin=in-1;//iphi count from 1
+    const real *pin=in-1;//iphi count from 1
     for(long i=0; i<map->nx*map->ny; i++){
 	long iphi=fabs(map->p[i]);
 	if(iphi){
@@ -403,7 +403,7 @@ void loc_extract(dmat *dest, const loc_t *loc, map_t *in){
 	error("in and map doesn't agree: in is %ldx%ld, map is %ldx%ld\n",
 	      in->nx, in->ny, map->nx, map->ny);
     }
-    double *restrict pdest=dest->p-1;//iphi count from 1
+    real *restrict pdest=dest->p-1;//iphi count from 1
     for(long i=0; i<map->nx*map->ny; i++){
 	long iphi=map->p[i];
 	if(iphi>0){
@@ -413,11 +413,11 @@ void loc_extract(dmat *dest, const loc_t *loc, map_t *in){
 }
 /**
    Convert a map to a loc that collects all positive entries. */
-loc_t* map2loc(map_t *map, double thres){
-    const double dx=map->dx;
-    const double dy=map->dy;
-    const double ox=map->ox;
-    const double oy=map->oy;
+loc_t* map2loc(map_t *map, real thres){
+    const real dx=map->dx;
+    const real dy=map->dy;
+    const real ox=map->ox;
+    const real oy=map->oy;
     const long nx=map->nx;
     const long ny=map->ny;
     long ix,iy;
@@ -432,8 +432,8 @@ loc_t* map2loc(map_t *map, double thres){
 	    }
 	}
     }
-    loc->locx=myrealloc(loc->locx,count,double);
-    loc->locy=myrealloc(loc->locy,count,double);
+    loc->locx=myrealloc(loc->locx,count,real);
+    loc->locy=myrealloc(loc->locy,count,real);
     loc->nloc=count;
     loc->iac=map->iac;
     loc->ht=map->h;
@@ -442,16 +442,16 @@ loc_t* map2loc(map_t *map, double thres){
 /**
    Create 1 dimensional loc with given vector.
 */
-loc_t *mk1dloc_vec(double *x, long nx){
-    double dx=fabs((x[nx-1]-x[0])/(nx-1));
+loc_t *mk1dloc_vec(real *x, long nx){
+    real dx=fabs((x[nx-1]-x[0])/(nx-1));
     loc_t *loc=locnew(nx, dx, dx);
-    memcpy(loc->locx, x, sizeof(double)*nx);
+    memcpy(loc->locx, x, sizeof(real)*nx);
     return loc;
 }
 /**
    Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers.
 */
-loc_t *mk1dloc(double x0, double dx, long nx){
+loc_t *mk1dloc(real x0, real dx, long nx){
     loc_t *loc=locnew(nx, dx, dx);
     for(long ix=0; ix<nx; ix++){
 	loc->locx[ix]=x0+dx*ix;
@@ -468,16 +468,16 @@ loc_t *mksqloc_map(const map_t*map){
 /**
    Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)
 */
-loc_t *mksqloc_auto(long nx, long ny, double dx, double dy){
+loc_t *mksqloc_auto(long nx, long ny, real dx, real dy){
     return mksqloc(nx,ny,dx,dy,-nx/2*dx,-ny/2*dy);
 }
 /**
    Create a loc array contains coorindates in a square map of size nx*ny, with
    sampling dx, and at origin ox,oy */
-loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
+loc_t *mksqloc(long nx, long ny, real dx, real dy, real ox, real oy){
     loc_t *loc=locnew(nx*ny, dx, dy);
     for(long iy=0; iy<ny; iy++){
-	double y=iy*dy+oy;
+	real y=iy*dy+oy;
 	for(long ix=0; ix<nx; ix++){
 	    loc->locx[ix+iy*nx]=ix*dx+ox;
 	    loc->locy[ix+iy*nx]=y;
@@ -489,7 +489,7 @@ loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
 /**
    Create a loc array within diameter D, and inner diameter Din, with spacing dx.
  */
-loc_t *mkannloc(double D, double Din, double dx, double thres){
+loc_t *mkannloc(real D, real Din, real dx, real thres){
     long nx=D/dx+1;
     map_t *xy=mapnew(nx, nx, dx, dx);
     mapcircle(xy, D/2, 1);
@@ -503,7 +503,7 @@ loc_t *mkannloc(double D, double Din, double dx, double thres){
 /**
    A convenient wrapp for dcircle.
  */
-dmat *mkcirmap(long nx, long ny, double cx, double cy, double r){
+dmat *mkcirmap(long nx, long ny, real cx, real cy, real r){
     dmat *map=dnew(nx, ny);
     dcircle(map, cx, cy, 1,1, r, 1);
     return map;
@@ -511,10 +511,10 @@ dmat *mkcirmap(long nx, long ny, double cx, double cy, double r){
 /**
    Estimate the diameter of loc
 */
-double loc_diam(const loc_t *loc){
-    double R2max=0;
+real loc_diam(const loc_t *loc){
+    real R2max=0;
     for(long i=0; i<loc->nloc; i++){
-	double R2=loc->locx[i]*loc->locx[i]+loc->locy[i]*loc->locy[i];
+	real R2=loc->locx[i]*loc->locx[i]+loc->locy[i]*loc->locy[i];
 	if(R2max<R2){
 	    R2max=R2;
 	}
@@ -527,7 +527,7 @@ double loc_diam(const loc_t *loc){
 */
 int loccenter(const loc_t *loc){
     int ipix,jpix=0;
-    double r2,r2min=INFINITY;
+    real r2,r2min=INFINITY;
     
     for(ipix=0; ipix<loc->nloc; ipix++){
 	r2=pow(loc->locx[ipix],2)+pow(loc->locy[ipix],2);
@@ -542,16 +542,16 @@ int loccenter(const loc_t *loc){
 /**
    assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their
    inverse covariance matrix.  mcc=M'*(amp.*M) */
-dmat *loc_mcc_ptt(const loc_t *loc, const double *amp){
+dmat *loc_mcc_ptt(const loc_t *loc, const real *amp){
     const int nmod=3;
-    double *mod[nmod];
+    real *mod[nmod];
     dmat *mcc=dnew(nmod,nmod);
     mod[0]=NULL;
     mod[1]=loc->locx;
     mod[2]=loc->locy;
     for(int jmod=0; jmod<nmod; jmod++){
 	for(int imod=jmod; imod<nmod; imod++){
-	    double tmp=dotdbl(mod[imod],mod[jmod],amp,loc->nloc);
+	    real tmp=dvecdot(mod[imod],mod[jmod],amp,loc->nloc);
 	    P(mcc,imod,jmod)=P(mcc,jmod,imod)=tmp;
 	}
     }
@@ -561,25 +561,25 @@ dmat *loc_mcc_ptt(const loc_t *loc, const double *amp){
    same as loc_mcc_ptt, except using pts instead of loc.
    this is used to build imcc for TT/F powfs ztilt imcc
 */
-dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
+dcell *pts_mcc_ptt(const pts_t *pts, const real *amp){
     const int nmod=3;
     const int nsa=pts->nsa;
     dcell *mcc=dcellnew(nsa,1);
     for(int isa=0; isa<nsa; isa++){
-	const double origy=pts->origy[isa];
-	const double origx=pts->origx[isa];
-	const double dx=pts->dx;
-	const double dy=pts->dy;
-	const double *ampi=amp+pts->nx*pts->nx*isa;
+	const real origy=pts->origy[isa];
+	const real origx=pts->origx[isa];
+	const real dx=pts->dx;
+	const real dy=pts->dy;
+	const real *ampi=amp+pts->nx*pts->nx*isa;
 	mcc->p[isa]=dnew(nmod,nmod);
 	dmat *ATA=mcc->p[isa];
-	double a00=0,a01=0,a02=0,a11=0,a12=0,a22=0;
+	real a00=0,a01=0,a02=0,a11=0,a12=0,a22=0;
 	for(int iy=0; iy<pts->nx; iy++){
-	    double y=iy*dy+origy;
-	    const double *ampx=ampi+iy*pts->nx;
+	    real y=iy*dy+origy;
+	    const real *ampx=ampi+iy*pts->nx;
 	    for(int ix=0; ix<pts->nx; ix++){
-		double x=ix*dx+origx;
-		double a=ampx[ix];
+		real x=ix*dx+origx;
+		real a=ampx[ix];
 		a00+=a;
 		a01+=a*x;
 		a02+=a*y;
@@ -602,19 +602,19 @@ dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
    evaluate piston/tip-tilt/ removed wavefront error.
    output coeffout in unit of radian like units.
 */
-void loc_calc_ptt(double *rmsout, double *coeffout,
-		  const loc_t *loc, const double ipcc, 
-		  const dmat *imcc, const double *amp, const double *opd){
+void loc_calc_ptt(real *rmsout, real *coeffout,
+		  const loc_t *loc, const real ipcc, 
+		  const dmat *imcc, const real *amp, const real *opd){
     assert(imcc->nx==imcc->ny && imcc->nx==3);
     const long nloc=loc->nloc;
-    const double *restrict locx=loc->locx;
-    const double *restrict locy=loc->locy;
+    const real *restrict locx=loc->locx;
+    const real *restrict locy=loc->locy;
 
-    double tot=0;
-    double coeff[3]={0,0,0};
+    real tot=0;
+    real coeff[3]={0,0,0};
     if(amp){
 	for(long iloc=0; iloc<nloc; iloc++){
-	    const double junk=opd[iloc]*amp[iloc];
+	    const real junk=opd[iloc]*amp[iloc];
 	    coeff[0]+=junk;
 	    coeff[1]+=junk*locx[iloc];
 	    coeff[2]+=junk*locy[iloc];
@@ -622,7 +622,7 @@ void loc_calc_ptt(double *rmsout, double *coeffout,
 	}
     }else{
 	for(long iloc=0; iloc<nloc; iloc++){
-	    const double junk=opd[iloc];
+	    const real junk=opd[iloc];
 	    coeff[0]+=junk;
 	    coeff[1]+=junk*locx[iloc];
 	    coeff[2]+=junk*locy[iloc];
@@ -633,8 +633,8 @@ void loc_calc_ptt(double *rmsout, double *coeffout,
 	dmulvec3(coeffout, imcc, coeff);
     }
     if(rmsout){
-	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
-	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
+	real pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
+	real ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
 	rmsout[0]=tot-pis;/*PR */
 	rmsout[1]=ptt-pis;/*TT */
 	rmsout[2]=tot-ptt;/*PTTR */
@@ -652,16 +652,16 @@ void loc_calc_ptt(double *rmsout, double *coeffout,
 
    coeffout is in unit of zernike!
 */
-void loc_calc_mod(double *rmsout, double *coeffout,const dmat *mod,
-		  const double *amp, double *opd){
+void loc_calc_mod(real *rmsout, real *coeffout,const dmat *mod,
+		  const real *amp, real *opd){
   
     const int nmod=mod->ny;
     const int nloc=mod->nx;
-    double tot=0;
-    double val[nmod];
-    memset(val, 0, sizeof(double)*nmod);
+    real tot=0;
+    real val[nmod];
+    memset(val, 0, sizeof(real)*nmod);
     for(long iloc=0; iloc<nloc; iloc++){
-	double junk=opd[iloc]*amp[iloc];
+	real junk=opd[iloc]*amp[iloc];
 	tot+=opd[iloc]*junk;
 	for(long imod=0; imod<nmod; imod++){
 	    val[imod]+=P(mod,iloc,imod)*junk;
@@ -681,8 +681,8 @@ void loc_calc_mod(double *rmsout, double *coeffout,const dmat *mod,
 /**
    Remove Piston/Tip/Tilt (in radian) from OPD
 */
-void loc_remove_ptt(double *opd, const double *ptt, const loc_t *loc){
-    double ptt1[3];
+void loc_remove_ptt(real *opd, const real *ptt, const loc_t *loc){
+    real ptt1[3];
     ptt1[0]=-ptt[0];
     ptt1[1]=-ptt[1];
     ptt1[2]=-ptt[2];
@@ -692,10 +692,10 @@ void loc_remove_ptt(double *opd, const double *ptt, const loc_t *loc){
 /**
    Add Piston/Tip/Tilt from OPD
 */
-void loc_add_ptt(double *opd, const double *ptt, const loc_t *loc){
+void loc_add_ptt(real *opd, const real *ptt, const loc_t *loc){
     const long nloc=loc->nloc;
-    const double *restrict locx=loc->locx;
-    const double *restrict locy=loc->locy;
+    const real *restrict locx=loc->locx;
+    const real *restrict locy=loc->locy;
     for(long iloc=0; iloc<nloc; iloc++){
 	opd[iloc]+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
     }
@@ -704,28 +704,28 @@ void loc_add_ptt(double *opd, const double *ptt, const loc_t *loc){
    Compute zernike best fit for all subapertures. add result to out.  returns
    radians not zernike modes of tip/tilt. Used in wfsgrad */
 void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
-	       const double *amp, const double *opd){
+	       const real *amp, const real *opd){
     const int nsa=pts->nsa;
     assert(imcc->nx==nsa && imcc->ny==1);
     if(!*out) *out=dnew(nsa*2,1);
-    double *res=(*out)->p;
+    real *res=(*out)->p;
     for(int isa=0; isa<nsa; isa++){
-	const double origy=pts->origy[isa];
-	const double origx=pts->origx[isa];
-	const double dx=pts->dx;
-	const double dy=pts->dy;
-	const double *ampi=amp+pts->nx*pts->nx*isa;
-	const double *opdi=opd+pts->nx*pts->nx*isa;
+	const real origy=pts->origy[isa];
+	const real origx=pts->origx[isa];
+	const real dx=pts->dx;
+	const real dy=pts->dy;
+	const real *ampi=amp+pts->nx*pts->nx*isa;
+	const real *opdi=opd+pts->nx*pts->nx*isa;
 	assert(imcc->p[isa]->nx==3 && imcc->p[isa]->ny==3);
-        double coeff[3]={0,0,0};
-	double a0=0,a1=0,a2=0;
+        real coeff[3]={0,0,0};
+	real a0=0,a1=0,a2=0;
 	for(int iy=0; iy<pts->nx; iy++){
-	    double y=iy*dy+origy;
-	    const double *ampx=ampi+iy*pts->nx;
-	    const double *opdx=opdi+iy*pts->nx;
+	    real y=iy*dy+origy;
+	    const real *ampx=ampi+iy*pts->nx;
+	    const real *opdx=opdi+iy*pts->nx;
 	    for(int ix=0; ix<pts->nx; ix++){
-		double x=ix*dx+origx;
-		double tmp=ampx[ix]*opdx[ix];
+		real x=ix*dx+origx;
+		real tmp=ampx[ix]*opdx[ix];
 		a0+=tmp;
 		a1+=tmp*x;
 		a2+=tmp*y;
@@ -734,7 +734,7 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 	coeff[0]=a0;
 	coeff[1]=a1;
 	coeff[2]=a2;
-	double outp[3];
+	real outp[3];
 	dmulvec3(outp, imcc->p[isa], coeff);
 	/*
 	  2010-07-19: Was =, modified to += to conform to the convention.
@@ -749,11 +749,11 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 void loc_create_stat_do(loc_t *loc){
     locstat_t *locstat=mycalloc(1,locstat_t);
     loc->stat=locstat;
-    const double *locx=loc->locx;
-    const double *locy=loc->locy;
+    const real *locx=loc->locx;
+    const real *locy=loc->locy;
     int nloc=loc->nloc;
-    double dx=locstat->dx=loc->dx;
-    double dy=locstat->dy=loc->dy;
+    real dx=locstat->dx=loc->dx;
+    real dy=locstat->dy=loc->dy;
     int ncolmax=(int)round((locy[nloc-1]-locy[0])/dy)+2;
     locstat->cols=mymalloc(ncolmax,locstatcol_t);
     int colcount=0;
@@ -764,9 +764,9 @@ void loc_create_stat_do(loc_t *loc){
     locstat->cols[colcount].ystart=locy[iloc];
     locstat->ymin=locstat->cols[colcount].ystart;
     locstat->xmin=locstat->cols[colcount].xstart;
-    double xmax=locstat->cols[colcount].xstart;
-    const double dythres=fabs(dy)*0.1;
-    const double dxthres=fabs(dx)*0.1;
+    real xmax=locstat->cols[colcount].xstart;
+    const real dythres=fabs(dy)*0.1;
+    const real dxthres=fabs(dx)*0.1;
     colcount++;
     for(iloc=1; iloc<loc->nloc; iloc++){
 	if(fabs(locy[iloc]-locy[iloc-1])>dythres /*a new column starts */
@@ -801,41 +801,41 @@ void loc_create_stat_do(loc_t *loc){
 /**
    Create a gray pixel circular map in phi using coordinates defined in loc, center
    defined using cx, cy, radius of r, and value of val */
-void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
+void loccircle(real *phi,loc_t *loc,real cx,real cy,real r,real val){
     /*cx,cy,r are in unit of true unit, as in loc */
-    double dx=loc->dx;
-    double dy=loc->dy;
+    real dx=loc->dx;
+    real dy=loc->dy;
     int nres=10;
-    double cres=(nres-1.)/2.;
-    double res=1./nres;
-    double dxres=res*dx;
-    double dyres=res*dy;
-    double res2=res*res;
-    double r2=r*r;
-    double r2l=(r-dx*1.5)*(r-dy*1.5);
-    double r2u=(r+dx*1.5)*(r+dy*1.5);
-    double *locx=loc->locx;
-    double *locy=loc->locy;
-    double iix,iiy;
+    real cres=(nres-1.)/2.;
+    real res=1./nres;
+    real dxres=res*dx;
+    real dyres=res*dy;
+    real res2=res*res;
+    real r2=r*r;
+    real r2l=(r-dx*1.5)*(r-dy*1.5);
+    real r2u=(r+dx*1.5)*(r+dy*1.5);
+    real *locx=loc->locx;
+    real *locy=loc->locy;
+    real iix,iiy;
     for(int iloc=0; iloc<loc->nloc; iloc++){
-	double x=locx[iloc];
-	double y=locy[iloc];
-	double r2r=pow(x-cx,2)+pow(y-cy,2);
+	real x=locx[iloc];
+	real y=locy[iloc];
+	real r2r=pow(x-cx,2)+pow(y-cy,2);
 	if(r2r<r2l) 
 	    phi[iloc]+=val;
 	else if(r2r<r2u){
 	    long tot=0;
 	    for(int jres=0; jres<nres; jres++){
 		iiy=y+(jres-cres)*dyres;
-		double rr2y=(iiy-cy)*(iiy-cy);
+		real rr2y=(iiy-cy)*(iiy-cy);
 		for(int ires=0; ires<nres; ires++){
 		    iix=x+(ires-cres)*dxres;
-		    double rr2r=(iix-cx)*(iix-cx)+rr2y;
+		    real rr2r=(iix-cx)*(iix-cx)+rr2y;
 		    if(rr2r<=r2)
 			tot++;
 		}
 	    }
-	    phi[iloc]+=(double)tot*res2*val;
+	    phi[iloc]+=(real)tot*res2*val;
 	}
     }
 }
@@ -843,7 +843,7 @@ void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
    Create a gray pixel annular map in phi using coordinates defined in loc,
    center defined using cx, cy, radius of r, and value of val
 */
-void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,double val){
+void locannular(real *phi,loc_t *loc,real cx,real cy,real r,real rin,real val){
     loccircle(phi,loc,cx,cy,r,val);
     if(rin>EPS){
 	loccircle(phi,loc,cx,cy,rin,-val);
@@ -852,13 +852,13 @@ void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,d
 /**
    Create a hard annular mask in phi.
 */
-void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin){
+void locannularmask(real *phi,loc_t *loc,real cx,real cy,real r,real rin){
     /*apply the hard pupil mask of aper.d, using loc. not locm */
     /* 2011-07-13: changed from r^2 to (r+0.5*dx)^2*/
-    double rr2max=pow(r+0.25*(loc->dx+loc->dy),2);
-    double rr2min=MIN(rin*rin, pow(rin-0.25*(loc->dx+loc->dy),2));
+    real rr2max=pow(r+0.25*(loc->dx+loc->dy),2);
+    real rr2min=MIN(rin*rin, pow(rin-0.25*(loc->dx+loc->dy),2));
     for(long iloc=0; iloc<loc->nloc; iloc++){
-	double r2=pow(loc->locx[iloc]-cx,2)+pow(loc->locy[iloc]-cy,2);
+	real r2=pow(loc->locx[iloc]-cx,2)+pow(loc->locy[iloc]-cy,2);
 	if(r2<rr2min || r2>rr2max){
 	    phi[iloc]=0;
 	}
@@ -867,41 +867,41 @@ void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double r
 /**
    Create a gray pixel elliptical map in phi using coordinates defined in loc,
    center defined using cx, cy, radii of rx, ry, and value of val */
-void locellipse(double *phi,loc_t *loc,double cx,double cy,
-		double rx,double ry,double val){
+void locellipse(real *phi,loc_t *loc,real cx,real cy,
+		real rx,real ry,real val){
     /*cx,cy,r are in unit of true unit, as in loc */
-    double dx=loc->dx;
-    double dy=loc->dy;
+    real dx=loc->dx;
+    real dy=loc->dy;
     int nres=10;
-    double cres=(nres-1.)/2.;
-    double res=1./nres;
-    double dxres=res*dx;
-    double dyres=res*dy;
-    double res2=res*res;
-    double rx1=1./rx;
-    double ry1=1./ry;
-    double rx12=rx1*rx1;
-    double ry12=ry1*ry1;
-    double r2=2.;
-    double r2l=(rx-dx)*(rx-dx)*rx12+(ry-dy)*(ry-dy)*ry12;
-    double r2u=(rx+dx)*(rx+dx)*rx12+(ry+dy)*(ry+dy)*ry12;
-    double *locx=loc->locx;
-    double *locy=loc->locy;
-    double iix,iiy;
+    real cres=(nres-1.)/2.;
+    real res=1./nres;
+    real dxres=res*dx;
+    real dyres=res*dy;
+    real res2=res*res;
+    real rx1=1./rx;
+    real ry1=1./ry;
+    real rx12=rx1*rx1;
+    real ry12=ry1*ry1;
+    real r2=2.;
+    real r2l=(rx-dx)*(rx-dx)*rx12+(ry-dy)*(ry-dy)*ry12;
+    real r2u=(rx+dx)*(rx+dx)*rx12+(ry+dy)*(ry+dy)*ry12;
+    real *locx=loc->locx;
+    real *locy=loc->locy;
+    real iix,iiy;
     for(int iloc=0; iloc<loc->nloc; iloc++){
-	double x=locx[iloc];
-	double y=locy[iloc];
-	double r2r=pow(x-cx,2)*rx12+pow(y-cy,2)*ry12;
+	real x=locx[iloc];
+	real y=locy[iloc];
+	real r2r=pow(x-cx,2)*rx12+pow(y-cy,2)*ry12;
 	if(r2r<r2l) 
 	    phi[iloc]+=val;
 	else if(r2r<r2u){
 	    long tot=0;
 	    for(int jres=0; jres<nres; jres++){
 		iiy=y+(jres-cres)*dyres;
-		double rr2y=(iiy-cy)*(iiy-cy)*ry12;
+		real rr2y=(iiy-cy)*(iiy-cy)*ry12;
 		for(int ires=0; ires<nres; ires++){
 		    iix=x+(ires-cres)*dxres;
-		    double rr2r=(iix-cx)*(iix-cx)*rx12+rr2y;
+		    real rr2r=(iix-cx)*(iix-cx)*rx12+rr2y;
 		    if(rr2r<r2)
 			tot++;
 		}
@@ -915,7 +915,7 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
    time. Keep each row continuous if cont==1. Return in skipout the index of
    skipped points if skipout is not NULL.  */
 
-void loc_reduce(loc_t *loc, dmat *amp, double thres, int cont, int **skipout){
+void loc_reduce(loc_t *loc, dmat *amp, real thres, int cont, int **skipout){
     if(thres<=0) thres=EPS;
     int redo_stat=loc->stat?1:0;
     int nloc=loc->nloc; 
@@ -1063,13 +1063,13 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
    Add val amount of focus to opd. The unit is in radian like.
    Piston is removed.
 */
-void loc_add_focus(double *opd, loc_t *loc, double val){
+void loc_add_focus(real *opd, loc_t *loc, real val){
     if(fabs(val)<1.e-15) return;
-    const double *restrict locx=loc->locx;
-    const double *restrict locy=loc->locy;
-    double piston=0;
+    const real *restrict locx=loc->locx;
+    const real *restrict locy=loc->locy;
+    real piston=0;
     for(long iloc=0; iloc<loc->nloc; iloc++){
-	double tmp=(locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc])*val;
+	real tmp=(locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc])*val;
 	opd[iloc]+=tmp;
 	piston+=tmp;
     }
@@ -1083,7 +1083,7 @@ void loc_add_focus(double *opd, loc_t *loc, double val){
 */
 dmat *loc2mat(loc_t *loc,int piston){
     dmat *out=NULL;
-    double *ptt=NULL;
+    real *ptt=NULL;
     if(piston){
 	out=dnew(loc->nloc,3);
 	for(long i=0; i<loc->nloc; i++){
@@ -1094,8 +1094,8 @@ dmat *loc2mat(loc_t *loc,int piston){
 	out=dnew(loc->nloc,2);
 	ptt=out->p;
     }
-    memcpy(ptt,loc->locx,sizeof(double)*loc->nloc);
-    memcpy(ptt+loc->nloc,loc->locy,sizeof(double)*loc->nloc);
+    memcpy(ptt,loc->locx,sizeof(real)*loc->nloc);
+    memcpy(ptt+loc->nloc,loc->locy,sizeof(real)*loc->nloc);
     return out;
 }
 
@@ -1107,21 +1107,21 @@ loc_t *pts2loc(pts_t *pts){
     long nsa  = pts->nsa;
     long nx   = pts->nx;
     long nxsa = nx*nx;
-    double dx = pts->dx;
-    double dy = pts->dy;
+    real dx = pts->dx;
+    real dy = pts->dy;
     if(dy==0){
 	dy=dx;
     }
     loc_t *loc = locnew(nsa*nxsa, dx, dy);
     for(int isa=0; isa<nsa; isa++){
-	const double origx = pts->origx[isa];
-	const double origy = pts->origy[isa];
-	double *locx = loc->locx+isa*nxsa;
-	double *locy = loc->locy+isa*nxsa;
+	const real origx = pts->origx[isa];
+	const real origy = pts->origy[isa];
+	real *locx = loc->locx+isa*nxsa;
+	real *locy = loc->locy+isa*nxsa;
 	for(int jj=0; jj<nx; jj++){
-	    const double yy=origy+(double)jj*dy;
+	    const real yy=origy+(real)jj*dy;
 	    for(int ii=0; ii<nx; ii++){
-		locx[jj*nx+ii]=origx+(double)ii*dx;
+		locx[jj*nx+ii]=origx+(real)ii*dx;
 		locy[jj*nx+ii]=yy;
 	    }
 	}
@@ -1132,14 +1132,14 @@ loc_t *pts2loc(pts_t *pts){
 /**
    Rotate the coordinates by theta (radian) CCW.
 */
-void locrot(loc_t *loc, const double theta){
-    const double ctheta=cos(theta);
-    const double stheta=sin(theta);
+void locrot(loc_t *loc, const real theta){
+    const real ctheta=cos(theta);
+    const real stheta=sin(theta);
 
-    double *x=loc->locx;
-    double *y=loc->locy;
+    real *x=loc->locx;
+    real *y=loc->locy;
     for(int i=0; i<loc->nloc; i++){
-	double tmp=x[i]*ctheta-y[i]*stheta;
+	real tmp=x[i]*ctheta-y[i]*stheta;
 	y[i]=x[i]*stheta+y[i]*ctheta;
 	x[i]=tmp;
     }
@@ -1147,20 +1147,20 @@ void locrot(loc_t *loc, const double theta){
 /**
    Determine the angle of rotation from loc1 to loc2. CCW is positive.
  */
-double loc_angle(const loc_t *loc1, const loc_t *loc2){
-    double mx1, mx2, my1, my2;
+real loc_angle(const loc_t *loc1, const loc_t *loc2){
+    real mx1, mx2, my1, my2;
     locmean(&mx1, &my1, loc1);
     locmean(&mx2, &my2, loc2);
-    double sina=0; 
+    real sina=0; 
     long count=0;
-    const double thres=(loc1->dx+loc1->dy)*0.5;
+    const real thres=(loc1->dx+loc1->dy)*0.5;
     for(long i=0; i<loc1->nloc; i++){
-	double x1=loc1->locx[i]-mx1;
-	double y1=loc1->locy[i]-my1;
-	double x2=loc2->locx[i]-mx2;
-	double y2=loc2->locy[i]-my2;
-	double lcross=x1*y2-x2*y1;
-	double lamp=sqrt((x1*x1+y1*y1)*(x2*x2+y2*y2));
+	real x1=loc1->locx[i]-mx1;
+	real y1=loc1->locy[i]-my1;
+	real x2=loc2->locx[i]-mx2;
+	real y2=loc2->locy[i]-my2;
+	real lcross=x1*y2-x2*y1;
+	real lamp=sqrt((x1*x1+y1*y1)*(x2*x2+y2*y2));
 	if(lamp>thres){
 	    sina+=lcross/lamp;
 	    count++;
@@ -1172,7 +1172,7 @@ double loc_angle(const loc_t *loc1, const loc_t *loc2){
 /**
    Stretch the coordinate by frac along theta (radian) CCW.
 */
-void locstretch(loc_t *loc, const double theta, const double frac){
+void locstretch(loc_t *loc, const real theta, const real frac){
     locrot(loc, -theta);
     for(int i=0; i<loc->nloc; i++){
 	loc->locx[i]*=frac;
@@ -1184,16 +1184,16 @@ void locstretch(loc_t *loc, const double theta, const double frac){
    duplicate a loc_t object; */
 loc_t *locdup(loc_t *loc){
     loc_t *res=locnew(loc->nloc, loc->dx, loc->dy);
-    memcpy(res->locx,loc->locx,sizeof(double)*loc->nloc);
-    memcpy(res->locy,loc->locy,sizeof(double)*loc->nloc);
+    memcpy(res->locx,loc->locx,sizeof(real)*loc->nloc);
+    memcpy(res->locy,loc->locy,sizeof(real)*loc->nloc);
     res->iac=loc->iac;
     res->ht=loc->ht;
     return res;
 }
 /**
    Compute average of locx, locy*/
-void locmean(double *xm, double *ym, const loc_t *loc){
-    double x=0, y=0;
+void locmean(real *xm, real *ym, const loc_t *loc){
+    real x=0, y=0;
     for(long i=0; i<loc->nloc; i++){
 	x+=loc->locx[i];
 	y+=loc->locy[i];
@@ -1278,10 +1278,10 @@ static dmat *parse_poly(const char *_ps){
 }
 static loc_t *loctransform_do(const loc_t *loc, const dmat *cx, const dmat *cy){
     loc_t *locm=locnew(loc->nloc, loc->dx, loc->dy);
-    double *restrict xm=locm->locx;
-    double *restrict ym=locm->locy;
-    const double *restrict x=loc->locx;
-    const double *restrict y=loc->locy;
+    real *restrict xm=locm->locx;
+    real *restrict ym=locm->locy;
+    const real *restrict x=loc->locx;
+    const real *restrict y=loc->locy;
     int np=0;
     int nonint=0;
     for(int ic=0; ic<cx->ny; ic++){
@@ -1313,7 +1313,7 @@ static loc_t *loctransform_do(const loc_t *loc, const dmat *cx, const dmat *cy){
 		ym[iloc]+=P(cy,0,ic)*pow(x[iloc],P(cy,1,ic))*pow(y[iloc],P(cy,2,ic));
 	    }
 	}else{/*faster method for integer powers (>10x speed up). */
-	    double xp[np], yp[np];
+	    real xp[np], yp[np];
 	    xp[0]=1; yp[0]=1;
 	    for(long ip=1; ip<np; ip++){
 		xp[ip]=xp[ip-1]*x[iloc];
@@ -1358,7 +1358,7 @@ loc_t *loctransform(const loc_t *loc, const char *polycoeff){
     int input_type;
     if(check_suffix(polycoeff, ".bin")){
 	input_type=1;
-    }else if(*((const uint32_t*)polycoeff)==M_DBL){
+    }else if(*((const uint32_t*)polycoeff)==M_REAL){
 	input_type=2;
     }else{
 	input_type=0;
@@ -1403,7 +1403,7 @@ loc_t *loctransform(const loc_t *loc, const char *polycoeff){
 /**
    Shift a loc coordinate
 */
-loc_t *locshift(const loc_t *loc, double sx, double sy){
+loc_t *locshift(const loc_t *loc, real sx, real sy){
     loc_t *loc2=locnew(loc->nloc, loc->dx, loc->dy);
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	loc2->locx[iloc]=loc->locx[iloc]+sx;
@@ -1416,7 +1416,7 @@ loc_t *locshift(const loc_t *loc, double sx, double sy){
    (embed)
 */
 void loc_nxny(long *nx, long *ny, const loc_t *loc){
-    double xmax, xmin, ymax, ymin;
+    real xmax, xmin, ymax, ymin;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
     *nx=(long)round((xmax-xmin)/loc->dx)+1;
@@ -1429,8 +1429,8 @@ void locresize(loc_t *loc, long nloc){
     if(!loc) return;
     loc_free_map(loc);
     loc_free_stat(loc);
-    loc->locx=myrealloc(loc->locx,nloc,double);
-    loc->locy=myrealloc(loc->locy,nloc,double);
+    loc->locx=myrealloc(loc->locx,nloc,real);
+    loc->locy=myrealloc(loc->locy,nloc,real);
     loc->nloc=nloc;
 }
 
@@ -1441,9 +1441,9 @@ void locresize(loc_t *loc, long nloc){
    reverse = 1 : from out to oin: in=in*beta+out*alpha
 */
 #define LOC_EMBED_DEF(X, T, R, OPX)					\
-    void X(embed_locstat)(X(mat) **restrict out, double alpha,		\
+    void X(embed_locstat)(X(mat) **restrict out, real alpha,		\
 			  loc_t *restrict loc,				\
-			  R *restrict oin, double beta, int reverse){	\
+			  R *restrict oin, real beta, int reverse){	\
 	locstat_t *restrict locstat=loc->stat;				\
 	if(!*out){							\
 	    if(reverse == 0){						\
@@ -1458,7 +1458,7 @@ void locresize(loc_t *loc, long nloc){
 	    }								\
 	}								\
 	X(mat*) p=*out;							\
-	double dx1=1./locstat->dx;					\
+	real dx1=1./locstat->dx;					\
 	long xoff0=((*out)->nx - locstat->nx +1)/2;			\
 	long yoff0=((*out)->ny - locstat->ny +1)/2;			\
 									\
@@ -1507,22 +1507,22 @@ void locresize(loc_t *loc, long nloc){
 }
 
 #define OPX(A) (A)
-LOC_EMBED_DEF(AOS_DMAT, double, double, OPX)
+LOC_EMBED_DEF(AOS_DMAT, real, real, OPX)
 #undef OPX
 #define OPX(A) creal(A)
-LOC_EMBED_DEF(AOS_CMAT, dcomplex, double, OPX)
+LOC_EMBED_DEF(AOS_CMAT, comp, real, OPX)
 #undef OPX
 
 /**
    Determine dx and dy from data.
 */
 void loc_dxdy(loc_t *out){
-    const double tol=1e-7;
+    const real tol=1e-7;
 
-    double dxd=INFINITY, dyd=INFINITY;
+    real dxd=INFINITY, dyd=INFINITY;
     for(long i=0; i<out->nloc-1; i++){
-	double dxi=fabs(out->locx[i+1]-out->locx[i]);
-	double dyi=fabs(out->locy[i+1]-out->locy[i]);
+	real dxi=fabs(out->locx[i+1]-out->locx[i]);
+	real dyi=fabs(out->locy[i+1]-out->locy[i]);
 	if(dxi>tol && dxi+tol<dxd){
 	    dxd=dxi;
 	}
@@ -1553,11 +1553,11 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	header=&header2;
 	read_header(header, fp);
     }
-    if((header->magic&M_DBL)!=M_DBL){
-	error("magic=%u. Expect %x\n", header->magic, M_DBL);
+    if((header->magic&M_REAL)!=M_REAL){
+	error("magic=%u. Expect %x\n", header->magic, M_REAL);
     }
-    double dx=fabs(search_header_num(header->str,"dx"));
-    double dy=fabs(search_header_num(header->str,"dy"));
+    real dx=fabs(search_header_num(header->str,"dx"));
+    real dy=fabs(search_header_num(header->str,"dy"));
     
     free(header->str);header->str=0;
     long nx=header->nx;
@@ -1567,8 +1567,8 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	out=NULL;
     }else{
 	out=locnew(nx, dx, dy);
-	zfread(out->locx, sizeof(double), nx, fp);
-	zfread(out->locy, sizeof(double), nx, fp);
+	zfread(out->locx, sizeof(real), nx, fp);
+	zfread(out->locy, sizeof(real), nx, fp);
 	
 	loc_dxdy(out);
     }
@@ -1578,14 +1578,14 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 void locwritedata(file_t *fp, const loc_t *loc){
     char str[120];
     snprintf(str,120,"dx=%.15g;\ndy=%.15g;iac=%.15g\n",loc->dx,loc->dy,loc->iac);
-    header_t header={M_LOC64, 0, 0, str};
+    header_t header={M_LOC, 0, 0, str};
     if(loc){
 	header.nx=loc->nloc;
 	header.ny=2;
     }
     write_header(&header,fp);
     if(loc){
-	zfwrite(loc->locx, sizeof(double),loc->nloc,fp);
-	zfwrite(loc->locy, sizeof(double),loc->nloc,fp);
+	zfwrite(loc->locx, sizeof(real),loc->nloc,fp);
+	zfwrite(loc->locy, sizeof(real),loc->nloc,fp);
     }
 }

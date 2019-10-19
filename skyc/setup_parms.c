@@ -25,9 +25,9 @@
 #undef realloc
 
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
-#define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with double value */
+#define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with real value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
-#define READ_MAT(A) parms->A = readcfg_dmat(#A) /*read a key with double array. */
+#define READ_MAT(A) parms->A = readcfg_dmat(#A) /*read a key with real array. */
 
 static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.dbg);
@@ -206,17 +206,17 @@ PARMS_S *setup_parms(const ARG_S *arg){
     setup_parms_maos(parms);
     setup_parms_skyc(parms);
     {
-	double sum=0;
-	double wtsum=0; 
+	real sum=0;
+	real wtsum=0; 
 	parms->skyc.wvlwt=dnew(parms->maos.nwvl, 1);
 	for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-	    double wt=parms->skyc.qe[iwvl]*parms->skyc.telthruput[iwvl];
+	    real wt=parms->skyc.qe[iwvl]*parms->skyc.telthruput[iwvl];
 	    parms->skyc.wvlwt->p[iwvl]=wt;
 	    sum+=parms->maos.wvl[iwvl]*wt;
 	    wtsum+=wt;
 	}
 	parms->skyc.wvlmean=sum/wtsum;
-	normalize_sumabs(parms->skyc.wvlwt->p, parms->maos.nwvl, 1);
+	dnormalize_sumabs(parms->skyc.wvlwt->p, parms->maos.nwvl, 1);
     }
     if(parms->skyc.maxdtrat<=0){
 	parms->skyc.maxdtrat=parms->skyc.ndtrat;
@@ -327,7 +327,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    error("skyc.dtrats must be specified in descending order\n");
 	}
     }
-    parms->skyc.fss=mycalloc(parms->skyc.ndtrat,double);
+    parms->skyc.fss=mycalloc(parms->skyc.ndtrat,real);
     for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 	int dtrat=parms->skyc.dtrats->p[idtrat];
 	parms->skyc.fss[idtrat]=1./(parms->maos.dt*dtrat);
@@ -339,19 +339,19 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	dmat* rnefs=parms->skyc.rnefs;
 	info("Using frame rate dependent read out noise:\n");
 	if(fabs(parms->skyc.rne+1)<EPS){
-	    const double pixeltime=6.04;//time to read a pixel in us
-	    const double linetime=2;//time to read a line in us
-	    const double frametime=3;//time to read a frame in us
+	    const real pixeltime=6.04;//time to read a pixel in us
+	    const real linetime=2;//time to read a line in us
+	    const real frametime=3;//time to read a frame in us
 	  
 	    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		int N=parms->skyc.pixpsa[ipowfs];
 		int Nb=parms->skyc.pixguard[ipowfs];
 		int nsa=parms->maos.nsa[ipowfs];
-		double t1=nsa*(pixeltime*N*N+linetime*N+frametime);
-		double t2=(pixeltime*Nb*Nb+linetime*Nb+frametime);
+		real t1=nsa*(pixeltime*N*N+linetime*N+frametime);
+		real t2=(pixeltime*Nb*Nb+linetime*Nb+frametime);
 		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		    int dtrat=parms->skyc.dtrats->p[idtrat];
-		    double dt=parms->maos.dt*dtrat*1e6;
+		    real dt=parms->maos.dt*dtrat*1e6;
 		    int coadd=floor((dt-t2*nsa)/t1);//number of coadds possible.
 		    if(coadd<=32 && dtrat<=10){//at high frame rate, read out only 1 subaperture's guard window each time.
 			coadd=floor((dt-t2)/t1);
@@ -360,9 +360,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
 			coadd=177;//more coadds increases dark noise.
 		    }
 		    if(coadd<1) coadd=1;
-		    double rne_white=10.9*pow(coadd, -0.47);
-		    double rne_floor=2.4;
-		    double rne_dark=0.0037*coadd;
+		    real rne_white=10.9*pow(coadd, -0.47);
+		    real rne_floor=2.4;
+		    real rne_dark=0.0037*coadd;
 		    //0.85 is a factor expected for newer detectors
 		    P(rnefs,idtrat,ipowfs)=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
 		    info("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
@@ -372,12 +372,12 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	}else if(fabs(parms->skyc.rne+2)<EPS){//older model.
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		int dtrat=parms->skyc.dtrats->p[idtrat];
-		double fs=1./(parms->maos.dt*dtrat);
+		real fs=1./(parms->maos.dt*dtrat);
 		info("%5.1f Hz: ", fs);
 		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		    int N=parms->skyc.pixpsa[ipowfs];
-		    double raw_frame_time=((0.00604*N+0.01033)*N+0.00528)*1e-3;
-		    double K=1./(raw_frame_time*fs);
+		    real raw_frame_time=((0.00604*N+0.01033)*N+0.00528)*1e-3;
+		    real K=1./(raw_frame_time*fs);
 		    P(rnefs,idtrat,ipowfs)=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
 		    info("%5.1f ",P(rnefs,idtrat,ipowfs));
 		}
@@ -394,7 +394,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->maos.nmod<6){//Do not model focus in time series.
 	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 	    int dtrat=parms->skyc.dtrats->p[idtrat];
-	    double fs=1./(parms->maos.dt*dtrat);
+	    real fs=1./(parms->maos.dt*dtrat);
 	    
 	    parms->skyc.resfocus->p[idtrat]=
 		pow(nafocus_residual(fs, parms->maos.dt, parms->skyc.zc_f,

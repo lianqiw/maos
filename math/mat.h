@@ -42,11 +42,19 @@
     X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;		\
     void X(set)(X(mat) *A, const T val);				\
     void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);	\
+    void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm);	\
+    void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm);	\
+    T X(sumvec)(const T*restrict p, long np) CHECK_UNUSED_RESULT;	\
     T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     void X(sort)(X(mat) *A, int ascend);				\
     void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\
+    T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n);	\
+    void X(normalize_sum)(T *restrict p, long nloc, T norm);		\
+    void X(normalize_sumabs)(T *restrict p, long nloc, T norm);		\
+    void X(normalize_max)(T *restrict p, long nloc, T max);		\
     R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+    R X(vecmaxabs)(const T *restrict p, long n) CHECK_UNUSED_RESULT;	\
     R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(sumabs)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
