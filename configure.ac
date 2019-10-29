@@ -165,7 +165,7 @@ else
 fi
 if test "$use_double" = "default" ;then
     if test "$with_cuda" != "no" ;then
-	use_double=no
+	use_double=yes #no
     else
 	use_double=yes
     fi
@@ -1054,13 +1054,13 @@ echo
 echo 
 
 echo "OpenMP:          $with_openmp"
-
+echo "Double:          $use_double"
 echo "Drawdaemon:      $comp_draw"
 echo "Monitor:         $comp_mon (libnotify: $comp_monn)"
 echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       $has_lws"
-echo "CUDA:            $cudaver"
+echo "CUDA:            $cudaver (double: $cuda_double)"
 echo "MATLAB MEX:      $with_matlab"
 
 echo

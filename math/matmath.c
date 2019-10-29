@@ -89,7 +89,7 @@ void X(randn)(X(mat) *A, const T sigma, rand_t *rstat){
 T X(inn)(const X(mat)*A, const X(mat) *B){
     if(!A || !B) return 0;
     assert(A->nx==B->nx && A->ny==B->ny);
-    T out=0;
+    TD out=0;
     for(int i=0; i<A->nx*A->ny; i++){
 	out+=A->p[i]*B->p[i];
     }
@@ -105,7 +105,7 @@ T X(inn)(const X(mat)*A, const X(mat) *B){
    compute weighted dot product a'*(w*b)
 */
 T X(wdot)(const T *a, const X(mat) *w, const T *b){
-    T res=0;
+    TD res=0;
     for(int j=0; j<w->ny; j++){
 	for(int i=0; i<w->nx; i++){
 	    res+=P(w,i,j)*a[i]*b[j];

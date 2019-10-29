@@ -90,8 +90,6 @@ X(sp) *X(spreaddata)(file_t *fp, header_t *header){
 	if(nzmax!=0){
 	    out=X(spnew)(m,n,nzmax);
 	    out->header=header->str; header->str=NULL;
-	    //readspintdata(fp, magic2, out->p, n+1);
-	    //readspintdata(fp, magic2, out->i, nzmax);
 	    readvec(out->p, M_SPINT, magic2, sizeof(spint), n+1, fp);
 	    readvec(out->i, M_SPINT, magic2, sizeof(spint), nzmax, fp);
 	    readvec(out->x, M_T, magic1, sizeof(T), nzmax, fp);

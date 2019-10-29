@@ -1567,8 +1567,8 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	out=NULL;
     }else{
 	out=locnew(nx, dx, dy);
-	zfread(out->locx, sizeof(real), nx, fp);
-	zfread(out->locy, sizeof(real), nx, fp);
+	readvec(out->locx, M_REAL, header->magic, sizeof(real), nx, fp);
+	readvec(out->locy, M_REAL, header->magic, sizeof(real), nx, fp);
 	
 	loc_dxdy(out);
     }

@@ -366,11 +366,11 @@ void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm){
     }
 }
 T X(sumvec)(const T *restrict p, long nx){
-    T sum=0;
+    TD sum=0;
     for(long ix=0; ix<nx; ix++){
 	sum+=p[ix];
     }
-    return sum;
+    return (T)sum;
 }
 /**
    create sum of all the elements in A.
@@ -380,12 +380,6 @@ T X(sum)(const X(mat) *A){
     if(A){
 	assert_mat(A);
 	v=X(sumvec)(A->p, A->nx*A->ny);
-	/*T *restrict p=A->p;
-	for(int i=0; i<A->nx*A->ny; i++){
-	    if(isfinite(creal(p[i]))){
-		v+=p[i];
-	    }
-	    }*/
     }
     return v;
 }
@@ -393,13 +387,13 @@ T X(sum)(const X(mat) *A){
    compute the trace (sum of diagonal elements)
 */
 T X(trace)(const X(mat)*A){
-    T trace=0;
+    TD trace=0;
     assert_mat(A);
     long n=MIN(A->nx, A->ny);
     for(long i=0; i<n; i++){
 	trace+=A->p[i*(1+A->nx)];
     }
-    return trace;
+    return (T)trace;
 }
 
 #ifndef USE_COMPLEX
@@ -457,7 +451,7 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
    compute sum(p1.*p2.*p3)*/
 
 T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n){
-    T ans=0;
+    TD ans=0;
     if(p1 && p2 && p3){
 	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
     }else if(!p1 && p2 && p3){
@@ -475,7 +469,7 @@ T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, lo
     }else if(!p1 && !p2 && !p3){
 	ans=(T)n;/*assume all ones. */
     }
-    return  ans;
+    return  (T)ans;
 }
 /**
    normalize vector to sum to norm;*/
@@ -490,7 +484,7 @@ void X(normalize_sum)(T *restrict p, long nloc, T norm){
    normalize vector to sum of abs to norm;*/
 void X(normalize_sumabs)(T *restrict p, long nloc, T norm){
     if(!nloc) return;
-    T ss=0;
+    TD ss=0;
     for (long i=0; i<nloc; i++){
 	ss+=fabs(p[i]);
     }
@@ -562,12 +556,12 @@ R X(sumsq)(const X(mat)*A){
    compute the sum of A.*A
 */
 R X(sumdiffsq)(const X(mat)*A, const X(mat)*B){
-    R out=0;
+    RD out=0;
     assert(A->nx==B->nx && A->ny==B->ny);
     for(long i=0; i<A->nx*A->ny; i++){
 	out+=ABS2(A->p[i]-B->p[i]);
     }
-    return out;
+    return (R)out;
 }
 
 

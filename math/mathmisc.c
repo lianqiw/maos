@@ -156,56 +156,6 @@ double golden_section_search(golden_section_fun f, void *param,
     return f2<f3?x2:x3;
 }
 
-
-/**
-   read spint array of size len from file and do optional data conversion. 
-*/
-void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
-    int size=0;
-    switch(magic & 0xFFFF){
-    case M_INT64:
-	size=8;
-	break;
-    case M_INT32:
-	size=4;
-	break;
-    case M_DBL:/*saved by matlab. */
-	size=-8;
-	break;
-    default:
-	error("This is not a valid sparse spint file. magic=%x\n", magic);
-    }
-    if(sizeof(spint)==size){/*Matched int. */
-	zfread(out, sizeof(spint), len, fp);
-    }else{
-	size=abs(size);
-	void *p=malloc(size*len);
-	zfread(p, size, len, fp);
-	switch(magic & 0xFFFF){
-	case M_INT64:{
-	    uint64_t *p2=(uint64_t*)p;
-	    for(long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	case M_INT32:{
-	    uint32_t *p2=(uint32_t*)p;
-	    for(long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	case M_DBL:{
-	    double *p2=(double*)p;
-	    for(long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	}
-    }
-}
 /**
    Read spint array of size nx*ny from file and do optional data conversion.
 */
@@ -231,30 +181,65 @@ spint *readspint(file_t *fp, long* nx, long* ny){
 void readvec(void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, const file_t *fp){
     if(nmemb==0) return;
 
-#define DO_CONVERT(T1, T2)					\
-    T2 *p2=mymalloc(nmemb,T2);					\
-    zfread(p2, sizeof(T2), nmemb, fp);				\
-    for(size_t i=0; i<nmemb; i++){				\
-	((T1*)p)[i]=p2[i];					\
-    }								\
-    free(p2);
-
+#define TEST_CONVERT(M1, T1, M2, T2)				\
+    else if((magic_p&0xFFFF)==M1 && (magic_file&0xFFFF)==M2){	\
+	T2 *p2=mymalloc(nmemb,T2);				\
+	zfread(p2, sizeof(T2), nmemb, fp);			\
+	for(size_t i=0; i<nmemb; i++){				\
+	    ((T1*)p)[i]=p2[i];					\
+	}							\
+	free(p2);						\
+    }
+    
     if(magic_p==magic_file){
 	zfread(p, size, nmemb, fp);
-    }else if(magic_p==M_DBL && magic_file==M_FLT){
-	DO_CONVERT(double, float);
-    }else if(magic_p==M_FLT && magic_file==M_DBL){
-	DO_CONVERT(float, double);
-    }else if(magic_p==M_CMP && magic_file==M_ZMP){
-	DO_CONVERT(dcomplex,fcomplex);
-    }else if(magic_p==M_ZMP && magic_file==M_CMP){
-	DO_CONVERT(fcomplex,dcomplex);
-    }else if(magic_p==M_INT32 && magic_file==M_INT64){
-	DO_CONVERT(int,int64_t);
-    }else if(magic_p==M_INT64 && magic_file==M_INT32){
-	DO_CONVERT(int64_t,int);
-    }else{
+    }
+    TEST_CONVERT(M_DBL,double,M_FLT,float)
+	TEST_CONVERT(M_DBL,double,M_CMP,dcomplex)
+	TEST_CONVERT(M_DBL,double,M_ZMP,fcomplex)
+	TEST_CONVERT(M_DBL,double,M_INT32,int)
+	TEST_CONVERT(M_DBL,double,M_INT64,int64_t)
+	TEST_CONVERT(M_DBL,double,M_SPINT,spint)
+	TEST_CONVERT(M_FLT,float,M_DBL,double)
+	TEST_CONVERT(M_FLT,float,M_CMP,dcomplex)
+	TEST_CONVERT(M_FLT,float,M_ZMP,fcomplex)
+	TEST_CONVERT(M_FLT,float,M_INT32,int)
+	TEST_CONVERT(M_FLT,float,M_INT64,int64_t)
+	TEST_CONVERT(M_FLT,float,M_SPINT,spint)
+	TEST_CONVERT(M_CMP,dcomplex,M_DBL,double)
+	TEST_CONVERT(M_CMP,dcomplex,M_FLT,float)
+	TEST_CONVERT(M_CMP,dcomplex,M_ZMP,fcomplex)
+	TEST_CONVERT(M_CMP,dcomplex,M_INT32,int)
+	TEST_CONVERT(M_CMP,dcomplex,M_INT64,int64_t)
+	TEST_CONVERT(M_CMP,dcomplex,M_SPINT,spint)
+	TEST_CONVERT(M_ZMP,fcomplex,M_DBL,double)
+	TEST_CONVERT(M_ZMP,fcomplex,M_FLT,float)
+	TEST_CONVERT(M_ZMP,fcomplex,M_CMP,dcomplex)
+	TEST_CONVERT(M_ZMP,fcomplex,M_INT32,int)
+	TEST_CONVERT(M_ZMP,fcomplex,M_INT64,int64_t)
+	TEST_CONVERT(M_ZMP,fcomplex,M_SPINT,spint)
+	TEST_CONVERT(M_INT32,int,M_DBL,double)
+	TEST_CONVERT(M_INT32,int,M_FLT,float)
+	TEST_CONVERT(M_INT32,int,M_CMP,dcomplex)
+	TEST_CONVERT(M_INT32,int,M_ZMP,fcomplex)
+	TEST_CONVERT(M_INT32,int,M_INT64,int64_t)
+	TEST_CONVERT(M_INT32,int,M_SPINT,spint)
+	TEST_CONVERT(M_INT64,int64_t,M_DBL,double)
+	TEST_CONVERT(M_INT64,int64_t,M_FLT,float)
+	TEST_CONVERT(M_INT64,int64_t,M_CMP,dcomplex)
+	TEST_CONVERT(M_INT64,int64_t,M_ZMP,fcomplex)
+	TEST_CONVERT(M_INT64,int64_t,M_INT32,int)
+	TEST_CONVERT(M_INT64,int64_t,M_SPINT,spint)
+	TEST_CONVERT(M_SPINT,spint,M_DBL,double)
+	TEST_CONVERT(M_SPINT,spint,M_FLT,float)
+	TEST_CONVERT(M_SPINT,spint,M_CMP,dcomplex)
+	TEST_CONVERT(M_SPINT,spint,M_ZMP,fcomplex)
+	TEST_CONVERT(M_SPINT,spint,M_INT32,int)
+	TEST_CONVERT(M_SPINT,spint,M_INT64,int64_t)
+    else{
 	error("Please implement conversion from %x to %x\n", magic_file, magic_p);
     }
-#undef DO_CONVERT
+}
+void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
+    readvec(out, M_SPINT, magic, sizeof(spint), len, fp);
 }

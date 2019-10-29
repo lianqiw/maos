@@ -80,7 +80,6 @@ void parse_argopt(char *cmds, ARGOPT_T *options);
 //sem_lock is removed in favor of lock_file which can recover when a process exits.
 //int sig_block(int block);
 //int sem_lock(const char *key, int lock);
-void maos_version(void);
 void set_realtime(int icpu, int niceness);
 void register_signal_handler(int(*)(int));
 #endif

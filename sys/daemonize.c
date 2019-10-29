@@ -17,7 +17,6 @@
 */
 
 #include <netdb.h>
-#include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
 #include <arpa/inet.h>
@@ -25,8 +24,8 @@
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/stat.h>
-#include <netinet/in.h>
 #include <sys/wait.h>
+#include <netinet/in.h>
 #include <pthread.h>
 #include <ctype.h>
 #include "common.h"
@@ -61,6 +60,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
     count++;
     fd=open(fnlock,O_RDWR|O_CREAT,0644);
     if(fd>=0){
+	fcntl(fd, F_SETFD, FD_CLOEXEC);
 	int op=LOCK_EX;
 	if(!block) op |= LOCK_NB;
 	if(flock(fd, op)){/*lock faild. */
@@ -270,6 +270,7 @@ static void redirect2fd(int fd){
 	warning("Error redirecting stdout\n");
     }
     setbuf(stdout, NULL);//disable buffering to see immediate output.
+    fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);
     //2018-10-29: We no longer redirecting stderr to file to keep it clean.
     /*if(dup2(fd, 2)<0){
       warning("Error redirecting stderr\n");
@@ -285,6 +286,7 @@ static void redirect2fn(const char *fn){
 	warning("Error redirecting stdout/stderr\n");
     }
     setbuf(stdout, NULL);
+    fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);
     //2018-10-29: We no longer redirecting stderr to file to keep it clean.
     //Redirect stderr to stdout 
     //dup2(fileno(stdout), fileno(stderr));

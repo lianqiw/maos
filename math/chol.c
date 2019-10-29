@@ -80,7 +80,6 @@ static cholmod_sparse *dsp2chol(const dsp *A){
     B->sorted=1;
     B->packed=1;
     B->nz=NULL;
-    info("dsp2chol: dtype=%d\n", B->dtype);
     return B;
 }
 
@@ -88,7 +87,6 @@ static cholmod_sparse *dsp2chol(const dsp *A){
    Convert cholmod_sparse to dsp. Data is shared
 */
 static dsp *chol2sp(const cholmod_sparse *B){
-    info("chol2sp: dtype=%d\n", B->dtype);
     dsp *A;
     A=dspnew(B->nrow, B->ncol, 0);
     A->p=(spint*)B->p;
@@ -167,7 +165,7 @@ spchol* chol_factorize(const dsp *A_in){
 	    info("Unknown error\n");
 	}
 	warning("Common->status=%d\n", out->c->status);
-	error("Analyze failed\n");
+	error("Cholmod factorize failed\n");
     }
 #if CHOL_SIMPLE 
     if(!out->c->final_asis){
@@ -289,7 +287,6 @@ void chol_save(spchol *A, const char *format,...){
 	    writearr(fp, 0, sizeof(spint), M_SPINT, "px", L->px, L->nsuper+1, 1);
 	    writearr(fp, 0, sizeof(spint), M_SPINT, "s", L->s, L->ssize, 1);
 	}
-	info("L->dtype=%d, double is %d, single is %d\n", L->dtype, CHOLMOD_DOUBLE, CHOLMOD_SINGLE);
 	if(L->dtype==CHOLMOD_DOUBLE){
 	    writearr(fp, 0, sizeof(double),M_DBL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
 	}else{
@@ -357,12 +354,10 @@ spchol *chol_read(const char *format, ...){
 #define READSPINT(A,N) L->A=readspint(fp, &nx, &ny);			\
 	if((long)(N)!=nx*ny) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny);
 #define READDBL(A,N) read_header(&header2,fp);				\
-	if(header2.magic!=M_REAL) error("Invalid magic: wanted %u, got %u\n", M_REAL, header2.magic); \
 	nx=header2.nx; ny=header2.ny;					\
 	if(nx*ny!=(long)(N)) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny); \
 	L->A=mymalloc(nx*ny,real);					\
-	zfread(L->A, sizeof(real), nx*ny, fp);
-	
+	readvec(L->A, M_REAL, header2.magic, sizeof(real), nx*ny, fp);	
 	READSPINT(Perm, L->n);
 	READSPINT(ColCount, L->n);
 	if(L->is_super==0){/*Simplicity */

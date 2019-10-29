@@ -255,6 +255,7 @@ file_t* zfopen_try(const char *fni, const char *mod){
 	error("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));
 	goto fail;
     }
+    fcntl(fp->fd, F_SETFD, FD_CLOEXEC);
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
     if(mod[0]=='r'){
 	uint16_t magic;
@@ -1005,8 +1006,8 @@ mem_t* mmap_open(char *fn, size_t msize, int rw){
     if(rw){
 	fd=open(fn2, O_RDWR|O_CREAT, 0600);
 	/*First truncate the file to 0 to delete old data. */
-	if(fd==-1 || ftruncate(fd, 0)==-1 || ftruncate(fd, msize)==-1){
-	    error("Unable to ftruncate file %s to %zu size\n", fn2, msize);
+	if(fd==-1 || ftruncate(fd, msize)==-1){
+	    error("Unable to open or ftruncate file %s to %zu size\n", fn2, msize);
 	}
     }else{
 	fd=open(fn2, O_RDONLY);

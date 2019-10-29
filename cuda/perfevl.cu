@@ -192,6 +192,9 @@ static void psfcomp(cuccell psfs, const curmat &iopdevl, int nwvl, int ievl, int
     cucmat wvf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &psf=psfs[iwvl];
+	if(!psf){
+	    psf=cucmat(cuglobal->perf.psfsize[iwvl], cuglobal->perf.psfsize[iwvl]);
+	}
 	if(cuglobal->perf.psfsize[iwvl]==1){
 	    strehlcomp_do<<<REDUCE(nloc), DIM_REDUCE*sizeof(Comp),stream>>>
 		(psf(), iopdevl(), cudata->perf.amp, nloc, 2.*M_PI/cuglobal->perf.wvls[iwvl]);

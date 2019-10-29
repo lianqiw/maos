@@ -40,6 +40,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ..
     char *map=(char*)mem_p(mem);//save value of map
     mmap_write_header(&map, M_T, nx, ny, header);
     X(mat) *out=X(new_do)(nx, ny, (T*)map, mem);
+    memset(map, 0, nx*ny*sizeof(T));//Is this necessary?
     if(header) out->header=strdup(header);
     return out;
 }
@@ -74,7 +75,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
 	const char *header2i=header2?header2[ix]:NULL;
 	mmap_write_header(&map, M_T, mx, my, header2i);
 	out->p[ix]=X(new_do)(mx, my, (T*)map, mem);
-	memset(map, 0, mx*my*sizeof(T));//temporary
+	memset(map, 0, mx*my*sizeof(T));//Is this necessary?
 	map+=nnx[ix]*my*sizeof(T);
 	if(header2i) out->p[ix]->header=strdup(header2i);
     }

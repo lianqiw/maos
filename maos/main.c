@@ -54,9 +54,14 @@ static void maos_listener(int sock){
 void maos_version(void){
     info("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
     info("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
+#if USE_DOUBLE
+    info(" double");
+#else
+    info(" single");
+#endif
 #if USE_CUDA
 #if CUDA_DOUBLE
-    info(" +CUDA(real)");
+    info(" +CUDA(double)");
 #else
     info(" +CUDA(single)");
 #endif
