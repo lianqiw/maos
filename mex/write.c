@@ -142,9 +142,9 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 		    }
 		}else{
 		    if(sizeof(mwIndex)==4){
-			header2.magic=M_SP32;
+			header2.magic=M_DSP32;
 		    }else{
-			header2.magic=M_SP64;
+			header2.magic=M_DSP64;
 		    }
 		}
 		write_header(&header2, fp);

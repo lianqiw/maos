@@ -219,7 +219,7 @@ void maos_isim(int isim){
 		setup_recon_update(simu->recon, simu->parms, simu->powfs);
 #if USE_CUDA
 		if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
-		    gpu_update_recon(parms, simu->powfs, simu->recon);
+		    gpu_update_recon(parms, simu->recon);
 		}
 #endif
 	    }

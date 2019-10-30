@@ -24,9 +24,10 @@ Real cusolve_cg::solve(curcell &xout, const curcell &xin, stream_t &stream){
     if((ans=pcg(xout, this, precond, xin, cgtmp,
 		warm_restart, maxit, stream))>1){
 	cgtmp.count_fail++;
-	warning("CG %5d(%5d) does not converge. residual=%g. maxit=%d. Result saved.\n", 
-		 cgtmp.count, cgtmp.count_fail, ans, maxit);
-	if(!disable_save){
+	warning("CG %5d(%5d) does not converge: residual=%.5f, maxit=%d.",
+		cgtmp.count, cgtmp.count_fail, ans, maxit);
+	if(!disable_save && cgtmp.count_fail<10){
+	    info("Result saved.\n");
 	    cuwrite(xin,  "cucg_solve_xin_%d", cgtmp.count_fail);
 	    cuwrite(xout, "cucg_solve_xout_%d", cgtmp.count_fail);
 	    cuwrite(cgtmp.r0, "cucg_solve_r0_%d", cgtmp.count_fail);
@@ -35,6 +36,8 @@ Real cusolve_cg::solve(curcell &xout, const curcell &xin, stream_t &stream){
 	    cuwrite(cgtmp.Ap, "cucg_solve_Ap_%d", cgtmp.count_fail);
 	    cuwrite(cgtmp.store, "cucg_solve_store_%d", cgtmp.count_fail);
 	    cuwrite(cgtmp.diff, "cucg_solve_diff_%d", cgtmp.count_fail);
+	}else{
+	    info("\n");
 	}
     }
     return ans;

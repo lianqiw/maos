@@ -144,8 +144,8 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
      W01(recon->W0, recon->W1, recon->fmap->nx){
     ndm=parms->ndm;
     npsr=parms->sim.idealfit?parms->atm.nps:recon->npsr;
-    pmap=(recon->pmap);
-    fmap=(recon->fmap);
+    pmap=recon->pmap;
+    fmap=recon->fmap;
     /*Setup various grid*/
     amap=cugridcell(ndm,1);
     for(int idm=0; idm<ndm; idm++){

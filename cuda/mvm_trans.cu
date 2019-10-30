@@ -33,7 +33,7 @@ typedef struct MVM_IGPU_T{
     RECON_T *recon;
     curcell &mvmig; /*intermediate TomoL result*/
     curcell &mvmfg; /*intermediate FitR result*/
-    curmat &mvmt;     /*result: tranpose of MVM calculated by this GPU.*/
+    curmat &mvmt;   /*control matrix transposed.*/
     Real *FLI;
     X(mat) *residual;
     X(mat) *residualfit;
@@ -176,23 +176,28 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
     if(parms->recon.alg!=0){
 	error("Please adapt to LSR\n");
     } 
-    if(!parms->load.mvm){
-	info("Assembling MVR MVM (transpose) in GPU\n");
-	int ntotact=0;
-	int ntotgrad=0;
-	int ntotxloc=0;
-	const int ndm=parms->ndm;
-	for(int idm=0; idm<ndm; idm++){
-	    ntotact+=recon->anloc->p[idm];
-	} 
-	for(int ips=0; ips<recon->npsr; ips++){
-	    ntotxloc+=recon->xloc->p[ips]->nloc;
-	}
-	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    ntotgrad+=recon->ngrad->p[iwfs];
-	}
-	
+    if(parms->load.mvm){
+	return;
+    }
+    gpu_set(cuglobal->recongpu);
 
+    info("Assembling MVR MVM (transpose) in GPU\n");
+    int ntotact=0;
+    int ntotgrad=0;
+    int ntotxloc=0;
+    const int ndm=parms->ndm;
+    for(int idm=0; idm<ndm; idm++){
+	ntotact+=recon->anloc->p[idm];
+    } 
+    for(int ips=0; ips<recon->npsr; ips++){
+	ntotxloc+=recon->xloc->p[ips]->nloc;
+    }
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	ntotgrad+=recon->ngrad->p[iwfs];
+    }
+    //Store control matrix in cuglobal.
+    curmat mvmt=curmat(ntotgrad, ntotact);
+    {
 	long (*curp)[2]=(long(*)[2])malloc(ntotact*2*sizeof(long));
 	int nact=0;
 	for(int idm=0; idm<ndm; idm++){
@@ -211,7 +216,6 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	if(parms->fit.alg==1){
 	    residualfit=X(new)(ntotact, 1);
 	}
-	dmat *FLId=NULL; /* MI is inv(FL) for direct methods*/
 	//Real *FLI=NULL;
 	Array<Real,Pinned>FLI;
 	/* Loading or saving intermediate TomoL result. */
@@ -222,7 +226,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		error("loaded mvmi has dimension (%ld, %ld) but we expect (%d, %d)",
 		      mvmi->nx, mvmi->ny, ntotxloc, ntotact);
 	    }
-       	}else if(parms->save.mvmi){
+	}else if(parms->save.mvmi){
 	    mvmi=X(new)(ntotxloc, ntotact);
 	}
 	curcell mvmig;
@@ -249,6 +253,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	    mvmfg=curcell(NGPU, 1);
 	}
 	if(!parms->load.mvmf){
+	    dmat *FLId=NULL; /* MI is inv(FL) for direct methods*/
 	    /*Prepare FitR, FitL is don't load fitting results using mvmf*/
 	    switch(parms->fit.alg){
 	    case 0:{//Use CPU to handle CBS.
@@ -270,15 +275,12 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	    }
 	    if(FLId){
 		FLI.init(ntotact*ntotact,1);
-		//FLI=(Real*)malloc4async(sizeof(Real)*ntotact*ntotact);
 		for(int i=0; i<ntotact*ntotact; i++){
 		    FLI[i]=(Real)FLId->p[i];
 		}
 		dfree(FLId);
 	    }
 	}
-	gpu_set(cuglobal->recongpu);
-    	curmat mvmt=curmat(ntotgrad, ntotact);
 	MVM_IGPU_T data={parms, recon, mvmig, mvmfg, mvmt, FLI(), residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
 	thread_t info[nthread];
@@ -320,18 +322,8 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	tic;
 	CALL_THREAD(info, 1);
 	toc2("MVM Assembly in GPU");
-	/*Copy MVM control matrix results back*/
-	{
-	    gpu_set(cuglobal->recongpu);
-	    tic;
-	    stream_t stream;
-	    curmat mvmtt=mvmt.trans(stream);
-	    stream.sync();
-	    toc2("MVM Reshape in GPU");tic;
-	    cp2cpu(&recon->MVM, mvmtt, stream);
-	    stream.sync();
-	    toc2("MVM copy to CPU");
-	}
+
+
 	if(parms->save.setup){
 	    writebin(residual, "MVM_RL_residual");
 	    writebin(residualfit, "MVM_FL_residual");
@@ -358,7 +350,28 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	X(free)(residual);
 	X(free)(residualfit);
 	free(curp);
-	//if(FLI) free4async(FLI);
-    }//if assemble in gpu
+    }
+    {
+	for(int i=0; i<NGPU; i++){
+	    gpu_set(i);
+	    if(cudata->recon){
+		delete cudata->recon;
+		cudata->recon=NULL;
+	    }
+	}
+    }
+    //Clear memory used to do the assembly to avoid out of memory error below.
+    {
+	gpu_set(cuglobal->recongpu);
+	tic;
+	gpu_print_mem("before trans");
+	stream_t stream;
+	cuglobal->mvm=mvmt.trans(stream);
+	stream.sync();
+	toc2("MVM Reshape in GPU");tic;
+	cp2cpu(&recon->MVM, cuglobal->mvm, stream);
+	stream.sync();
+	toc2("MVM copy to CPU");
+    }
 }
 

@@ -56,7 +56,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	}
     }else if(fp->isfits){
 	if(search_header_int(header2.str,"Sparse=")){
-	    magic=M_SP64;
+	    magic=M_DSP64;
 	}
 	if(howmany!=0){
 	    /*first read of fits file. determine if we need it*/
@@ -74,19 +74,25 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     mxArray *out=NULL;
     mwSize byte=0;
     mxClassID id=(mxClassID)0;
-
+    mxComplexity mxFLAG=mxREAL;
+    int ibyte=8;
+    int issp=0;
     switch(magic){
-    case M_SP64:  byte=8; id=mxDOUBLE_CLASS;break;
+    case M_DSP64:  byte=8; id=mxDOUBLE_CLASS; issp=1; break;
+    case M_DSP32:  byte=8; id=mxDOUBLE_CLASS; issp=1;ibyte=4; break;
     case M_DBL:   byte=8; id=mxDOUBLE_CLASS;break;
 
-    case M_CSP64: byte=16;id=mxDOUBLE_CLASS;break;
-    case M_CMP:   byte=16;id=mxDOUBLE_CLASS;break;
+    case M_CSP64: byte=16;id=mxDOUBLE_CLASS;mxFLAG=mxCOMPLEX;issp=1;break;
+    case M_CSP32: byte=16;id=mxDOUBLE_CLASS;mxFLAG=mxCOMPLEX;issp=1; ibyte=4; break;
+    case M_CMP:   byte=16;id=mxDOUBLE_CLASS;mxFLAG=mxCOMPLEX;break;
 
-    case M_SP32:  byte=4; id=mxSINGLE_CLASS;break;
+    case M_SSP64:  byte=4; id=mxSINGLE_CLASS;issp=1;break;
+    case M_SSP32:  byte=4; id=mxSINGLE_CLASS;issp=1;ibyte=4; break;
     case M_FLT:   byte=4; id=mxSINGLE_CLASS;break;
 
-    case M_CSP32: byte=8; id=mxSINGLE_CLASS;break;
-    case M_ZMP:   byte=8; id=mxSINGLE_CLASS;break;
+    case M_ZSP64: byte=8; id=mxSINGLE_CLASS;mxFLAG=mxCOMPLEX;issp=1;break;
+    case M_ZSP32: byte=8; id=mxSINGLE_CLASS;mxFLAG=mxCOMPLEX;issp=1;ibyte=4; break;
+    case M_ZMP:   byte=8; id=mxSINGLE_CLASS;mxFLAG=mxCOMPLEX;break;
 	
     case M_INT64: byte=8; id=mxINT64_CLASS; break;
     case M_INT32: byte=4; id=mxINT32_CLASS; break;
@@ -94,25 +100,9 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     case M_INT8:  byte=1; id=mxINT8_CLASS; break;
     default: id=(mxClassID)0;
     }
-    mxComplexity mxFLAG;
-    if(magic==M_CSP32 || magic==M_CSP64 || magic==M_CMP || magic==M_ZMP){
-	mxFLAG=mxCOMPLEX;
-    }else{
-	mxFLAG=mxREAL;
-    }
-    int issp=0;
-    int ibyte=0;
-    if(magic==M_CSP32 || magic==M_CSP64 || magic==M_CSP32 || magic==M_SP64){
-	issp=1;
-	if(start==-1){
-	    warning("Skipping sparse matrix not implemented yet.\n");
-	    start=0;
-	}
-	if(magic==M_CSP32 || magic==M_CSP32 ){
-	    ibyte=4;
-	}else{
-	    ibyte=8;
-	}
+    if(issp && start==-1){
+	warning("Skipping sparse matrix not implemented yet.\n");
+	start=0;
     }
     if(magic>=0x6410 && magic<=0x6424){//any array
   	iscell=1;

@@ -63,6 +63,7 @@ public:
     cuperf_g perf;
     Array<cuwfs_t>wfs;
     Array<atm_prep_t>atm_prep_data;
+    curmat mvm;
     cuglobal_t():recongpu(0),atmscale(0),nmemcache(0),memcache(NULL){
 	pthread_mutex_init(&memmutex, 0);
     }

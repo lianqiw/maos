@@ -91,14 +91,6 @@ void maos_setup(const PARMS_T *parms){
 	/*calibrate gradient offset*/
 	setup_powfs_calib(parms, powfs);
     
-#if USE_CUDA
-	extern int cuda_dedup;
-	cuda_dedup=1;
-	if(!parms->sim.evlol && (parms->gpu.wfs)){// || parms->gpu.tomo)){
-	    gpu_wfsgrad_init(parms, powfs);
-	}
-	
-#endif
 	setup_recon_prep2(recon, parms, aper, powfs);
 	//Don't put this inside parallel, otherwise svd will run single threaded.
 	setup_recon(recon, parms, powfs);
@@ -129,17 +121,22 @@ void maos_setup(const PARMS_T *parms){
 	}
     }
 #if USE_CUDA
+    extern int cuda_dedup;
+    cuda_dedup=1;
+    //setup_recon first because MVM assembly and transpose uses a lot of memory.
+    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit || parms->gpu.lsr)){
+	gpu_setup_recon(parms, recon);
+	if(parms->recon.mvm){
+	    gpu_setup_recon_mvm(parms, recon);
+	}
+    }
     if(parms->gpu.evl){
 	gpu_perfevl_init(parms, aper);
     }
-    if(parms->gpu.wfs && powfs){
+    if(!parms->sim.evlol && parms->gpu.wfs && powfs){
+	gpu_wfsgrad_init(parms, powfs);
 	gpu_wfssurf2gpu(parms, powfs);
     }
-    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit || parms->gpu.lsr)){
-	gpu_setup_recon(parms, powfs, recon);
-    }
-    extern int cuda_dedup;
-    cuda_dedup=0;
 #endif
 
     if(!parms->sim.evlol && parms->recon.mvm){
@@ -176,6 +173,9 @@ void maos_setup(const PARMS_T *parms){
     if(parms->sim.skysim){
 	save_skyc(powfs,recon,parms);
     }
+#if USE_CUDA
+    cuda_dedup=0;
+#endif
     toc2("Presimulation");
 }
 

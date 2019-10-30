@@ -47,8 +47,8 @@ extern "C"{
   The caller must specify current GPU.
 */
 namespace cuda_recon{
-    curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
-	:grid(0),FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0),moao(0){
+curecon_t::curecon_t(const PARMS_T *parms, RECON_T *recon)
+    :grid(0),FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0),moao(0){
     if(!parms) return;
     if((parms->recon.alg==0 && parms->gpu.fit || parms->recon.mvm ||parms->gpu.moao)
        || (parms->recon.alg==1 && parms->gpu.lsr)
@@ -67,7 +67,7 @@ namespace cuda_recon{
     }
 
     if(parms->recon.alg==0 && (parms->gpu.tomo || parms->gpu.fit)
-       && !parms->sim.idealfit && !parms->load.mvm){
+       && !parms->sim.idealfit && !parms->load.mvm && !recon->MVM && !cuglobal->mvm){
 	if(parms->tomo.square){
 	    opdr=curcell(recon->npsr, 1, recon->xnx->p, recon->xny->p);
 	}else{
@@ -81,7 +81,7 @@ namespace cuda_recon{
     if(parms->recon.alg==0 && !(parms->recon.mvm && parms->load.mvm)){
 	grid=new curecon_geom(parms, recon);//does not change
     }
-    update(parms, powfs, recon);
+    update(parms, recon);
     gpu_print_mem("recon init");
 }
 void curecon_t::reset_config(){
@@ -98,61 +98,66 @@ void curecon_t::reset_config(){
 	moao=0; nmoao=0;
     }
 }
-void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
+void curecon_t::update(const PARMS_T *parms, RECON_T *recon){
     reset_config();
+    int skip_tomofit=0;
     if(parms->recon.mvm){
-	if(recon->MVM){//MVM already exists
+	skip_tomofit=1;
+	if(cuglobal->mvm){
+	    MVM=new cusolve_mvm(cuglobal->mvm);
+	}else if(recon->MVM){//MVM already exists
 	    MVM=new cusolve_mvm(recon->MVM);
-	    return;//done.
-	}else if(!parms->gpu.tomo || !parms->gpu.fit){
-	    return; //Use CPU to assemble MVM
+	}else if(parms->gpu.tomo){
+	    skip_tomofit=0;//use GPU to assemble MVM
 	}
     }
-    if(parms->gpu.fit){
-	switch(parms->gpu.fit){
-	case 1:
-	    FR=new cusolve_sparse(parms->fit.maxit, parms->recon.warm_restart,
-				  &recon->fit->FR, &recon->fit->FL);
-	    break;
-	case 2:
-	    FR=new cufit_grid(parms, recon, grid);
-	    break;
-	default:
-	    error("Invalid");
+    if(!skip_tomofit){
+	if(parms->gpu.fit){
+	    switch(parms->gpu.fit){
+	    case 1:
+		FR=new cusolve_sparse(parms->fit.maxit, parms->recon.warm_restart,
+				      &recon->fit->FR, &recon->fit->FL);
+		break;
+	    case 2:
+		FR=new cufit_grid(parms, recon, grid);
+		break;
+	    default:
+		error("Invalid");
+	    }
+	    switch(parms->fit.alg){
+	    case 0:
+		FL=new cusolve_cbs(recon->fit->FL.C, recon->fit->FL.Up, recon->fit->FL.Vp);
+		break;
+	    case 1:
+		FL=dynamic_cast<cusolve_l*>(FR);
+		break;
+	    case 2:
+		FL=new cusolve_mvm(recon->fit->FL.MI);
+		break;
+	    default:
+		error("Invalid");
+	    }
 	}
-	switch(parms->fit.alg){
-	case 0:
-	    FL=new cusolve_cbs(recon->fit->FL.C, recon->fit->FL.Up, recon->fit->FL.Vp);
-	    break;
-	case 1:
-	    FL=dynamic_cast<cusolve_l*>(FR);
-	    break;
-	case 2:
-	    FL=new cusolve_mvm(recon->fit->FL.MI);
-	    break;
-	default:
-	    error("Invalid");
+	if(parms->gpu.tomo){
+	    RR=new cutomo_grid(parms, recon, grid);
+	    switch(parms->tomo.alg){
+	    case 0:
+		RL=new cusolve_cbs(recon->RL.C, recon->RL.Up, recon->RL.Vp);
+		break;
+	    case 1:
+		RL=dynamic_cast<cusolve_l*>(RR);
+		break;
+	    case 2:
+		RL=new cusolve_mvm(recon->RL.MI);
+		break;
+	    default:
+		error("Invalid");
+	    }
 	}
-    }
-    if(parms->gpu.tomo){
-	RR=new cutomo_grid(parms, recon, powfs, grid);
-	switch(parms->tomo.alg){
-	case 0:
-	    RL=new cusolve_cbs(recon->RL.C, recon->RL.Up, recon->RL.Vp);
-	    break;
-	case 1:
-	    RL=dynamic_cast<cusolve_l*>(RR);
-	    break;
-	case 2:
-	    RL=new cusolve_mvm(recon->RL.MI);
-	    break;
-	default:
-	    error("Invalid");
-	}
-    }
  
-    if(parms->recon.split==2){
-	cp2gpu(GXL, recon->GXL);
+	if(parms->recon.split==2){
+	    cp2gpu(GXL, recon->GXL);
+	}
     }
     if(parms->nmoao){
 	nmoao=parms->nmoao;
@@ -475,7 +480,7 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
 }//namespace
 
 typedef cuda_recon::curecon_t curecon_t;
-void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
+void gpu_setup_recon(const PARMS_T *parms, RECON_T *recon){
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
 	   || igpu==cuglobal->recongpu){
@@ -483,11 +488,11 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    if(cudata->recon){
 		delete cudata->recon;
 	    }
-	    cudata->recon=new curecon_t(parms, powfs, recon);
+	    cudata->recon=new curecon_t(parms, recon);
 	}
     }
 }
-void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
+void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon){
     //The following routine assemble MVM and put in recon->MVM
     if(!recon->MVM){
 	if(parms->recon.mvm==1){
@@ -508,11 +513,11 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     if(!parms->sim.mvmport){
 	gpu_set(cuglobal->recongpu);
 	//recreate curecon_t that uses MVM.
-	cudata->recon=new curecon_t(parms, powfs, recon);
+	cudata->recon=new curecon_t(parms, recon);
     }
     gpu_print_mem("MVM");
 }
-void gpu_update_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
+void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
     if(!parms->gpu.tomo) return;
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
@@ -520,7 +525,7 @@ void gpu_update_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    gpu_set(igpu);
 	    
 	    curecon_t *curecon=cudata->recon;
-	    curecon->update(parms, powfs, recon);
+	    curecon->update(parms, recon);
 	}
     }
 }

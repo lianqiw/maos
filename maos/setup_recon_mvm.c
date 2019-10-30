@@ -230,22 +230,15 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     TIC;tic;
     if(!parms->recon.mvm) return;
-    if(!recon->MVM){
-	if(!(parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit)){
-	    if(parms->recon.alg==0){
-		setup_recon_mvr_mvm(recon, parms, powfs);
-	    }else{
-		setup_recon_lsr_mvm(recon, parms, powfs);   
-	    }
+    if(!recon->MVM){//GPU has not assembled the MVM.
+	if(parms->recon.alg==0){
+	    setup_recon_mvr_mvm(recon, parms, powfs);
+	}else{
+	    setup_recon_lsr_mvm(recon, parms, powfs);   
 	}
-#if USE_CUDA
-	if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){
-	    gpu_setup_recon_mvm(parms, recon, powfs);
-	}
-#endif
-	if(!parms->load.mvm && (parms->save.setup || parms->save.mvm || parms->save.recon)){
-	    writebin(recon->MVM, "MVM.bin");
-	}
+    }
+    if(!parms->load.mvm && (parms->save.setup || parms->save.mvm || parms->save.recon)){
+	writebin(recon->MVM, "MVM.bin");
     }
     if(parms->sim.mvmport){
 	mvm_client_init(parms->sim.mvmhost, parms->sim.mvmport, recon->MVM, parms->sim.mvmngpu);

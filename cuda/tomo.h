@@ -70,12 +70,11 @@ class cutomo_grid:public cusolve_r, public cusolve_cg{
     map2map hx;
     Array<GPU_GP_T,Gpu>gpdata;
     Array<LAP_T,Gpu> lap;
-    //void init(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
+
     void do_gp(curcell &grad, const curcell &opdwfs, int ptt, stream_t &stream);
     void do_gpt(curcell &opdwfs, curcell &grad, int ptt, stream_t &stream);
 public:
-    cutomo_grid(const PARMS_T *parms, const RECON_T *recon, 
-		const POWFS_T *powfs, const curecon_geom *_grid);
+    cutomo_grid(const PARMS_T *parms, const RECON_T *recon, const curecon_geom *_grid);
     void init_hx(const PARMS_T *parms, const RECON_T *recon);
     void update_fdpcg(FDPCG_T *fdpcg){
 	dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);
