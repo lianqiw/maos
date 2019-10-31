@@ -213,7 +213,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     if(!same && amp){
 	/*
 	  Copy and modify amplitude map to fix boundry
-	  issues when propage between two planes.  This
+	  issues when propagate between two planes.  This
 	  generally applies to the case that XLOC is smaller
 	  than PLOC.
 	*/

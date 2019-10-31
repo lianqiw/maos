@@ -188,7 +188,7 @@ int main(int argc, char *argv[]){
 	P_TT,
 	P_PS,
 	P_F,
-	P_ALL,
+	N_ALL,
     };
     const char *toptab[]={
 	"OL",
@@ -225,8 +225,8 @@ int main(int argc, char *argv[]){
     };
     
 	
-    dccell *res=dccellnew(P_ALL,1);
-    dccell *resm=dccellnew(P_ALL,1);
+    dccell *res=dccellnew(N_ALL,1);
+    dccell *resm=dccellnew(N_ALL,1);
     for(int i=0; i<res->nx; i++){
 	res->p[i]=dcellnew(npath,nseed);
 	resm->p[i]=dcellnew(npath,1);
