@@ -75,6 +75,47 @@ static int check_suffix(const char *fn, const char *suffix){
 	return 1;
     }
 }
+
+/**
+   Make dirs recursively. like mkdir -p in bash
+*/
+void mymkdir(char *fn){
+    if(!fn) return;
+    while(fn[strlen(fn)-1]=='/')
+	fn[strlen(fn)-1]='\0';
+    if(mkdir(fn, 0777)==-1 && errno!=EEXIST){
+	perror("mkdir");
+	char *tmp=strrchr(fn,'/');
+	if(!tmp){
+	    error("Unable to mkdir '%s'\n",fn);
+	}
+	tmp[0]='\0';
+	mymkdir(fn);
+
+	tmp[0]='/';
+	if(mkdir(fn,0777)==-1 && errno!=EEXIST){
+	    error("Unable to mkdir '%s'\n",fn);
+	}
+    }
+}
+/**
+   Obtain the dirname of a path. See mybasename().
+*/
+char *mydirname(const char *fn){
+    if(!fn || strlen(fn)==0) return NULL;
+    char fn2[PATH_MAX];
+    strncpy(fn2,fn, PATH_MAX-1);
+    /*If this is a folder, remove the last / */
+    if(fn2[strlen(fn2)-1]=='/')
+	fn2[strlen(fn2)-1]='\0';
+    char* sep=strrchr(fn2,'/');
+    if(!sep){
+	fn2[0]='.'; fn2[1]='\0';
+    }else{
+	sep[0]='\0';
+    }
+    return strdup(fn2);
+}
 /**
    Test whether fn is a symbolic link
 */
@@ -132,6 +173,12 @@ static char* procfn(const char *fn, const char *mod){
 		dbg("Failed to remove %s\n", fn2);
 		return NULL;
 	    }
+	}else{
+	    char *fd=mydirname(fn2);
+	    if(!exist(fd)){
+		mymkdir(fd);
+	    }
+	    free(fd);
 	}
     }else{
 	error("Invalid mode\n");
@@ -483,27 +530,13 @@ uint32_t read_bin_magic(file_t *fp, char **header){
 */
 static void
 write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mwSize *dims){
-    /*
-    uint64_t naxis[count];
-    va_list ap;
-    va_start (ap, count);       
-    int empty=0;
-    for (int i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*); 
-	if((*addr)==0) empty=1;
-	naxis[i]=*addr;
-	}
-    va_end(ap);
-
-    if(empty) count=0;
-    */
     int bitpix;
     switch(magic){
     case M_FLT:
 	bitpix=-32;
 	break;
     case M_DBL:
-    case M_SP64:
+    case M_DSP64:
 	bitpix=-64;
 	break;
     case M_INT64:

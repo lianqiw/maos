@@ -171,8 +171,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
     cudaMemcpy(lap(), lapc, sizeof(LAP_T)*recon->npsr, cudaMemcpyHostToDevice);
 }
 
-cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
-			 const POWFS_T *powfs, const curecon_geom *_grid)
+cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon, const curecon_geom *_grid)
     :cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
      grid(_grid),ptt(0),nwfs(0){
     nwfs=parms->nwfsr;
@@ -215,7 +214,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
 	    if(parms->powfs[ipowfs].skip) continue;
 	    if(iwfs==iwfs0 || recon->GP->p[iwfs]->p!=recon->GP->p[iwfs0]->p){
-		prep_GP(GPp[iwfs], &GPscale[iwfs], GP[iwfs], recon->GP->p[iwfs], powfs[ipowfs].saloc, recon->ploc);
+		prep_GP(GPp[iwfs], &GPscale[iwfs], GP[iwfs], recon->GP->p[iwfs], recon->saloc->p[ipowfs], recon->ploc);
 	    }else{
 		GPp[iwfs]=GPp[iwfs0];
 		GPscale[iwfs]=GPscale[iwfs0];
@@ -223,7 +222,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		saptr[iwfs]=saptr[iwfs0];
 	    }
 	    if(iwfs==iwfs0){
-		prep_saptr(saptr[iwfs], powfs[ipowfs].saloc, recon->pmap);
+		prep_saptr(saptr[iwfs], recon->saloc->p[ipowfs], recon->pmap);
 	    }else{
 		saptr[iwfs]=saptr[iwfs0];
 	    }
@@ -259,7 +258,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].ipowfs=ipowfs;
 	    GPDATA[iwfs].nwfs=parms->powfs[ipowfs].nwfsr;
 	    GPDATA[iwfs].jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];//wfs index in this group
-	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
+	    GPDATA[iwfs].dsa=recon->saloc->p[ipowfs]->dx;
 	    GPDATA[iwfs].pos=parms->tomo.pos;
 	    GPDATA[iwfs].saptr=(int(*)[2])saptr[iwfs]();
 	    GPDATA[iwfs].GPp=(short2*)GPp[iwfs]();
@@ -273,7 +272,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    }
 
 	    GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs]();
-	    GPDATA[iwfs].nsa=powfs[ipowfs].pts->nsa;
+	    GPDATA[iwfs].nsa=recon->saloc->p[ipowfs]->nloc;
 	    GPDATA[iwfs].nxp=recon->pmap->nx;
 	    GPDATA[iwfs].dxp=recon->pmap->dx;
 	    GPDATA[iwfs].dyp=recon->pmap->dy;
@@ -311,7 +310,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    }else{
 		nxpw[iwfs]=nxp;
 		nypw[iwfs]=nyp;
-		ngw[iwfs]=powfs[ipowfs].pts->nsa*2;
+		ngw[iwfs]=recon->saloc->p[ipowfs]->nloc*2;
 	    }
 	}
 	if(wfsrot2){

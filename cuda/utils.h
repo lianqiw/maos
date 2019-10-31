@@ -100,18 +100,26 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 }
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
 template<typename M, typename N>
-int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
-    if(!src) return -1;
+void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
+    if(!src) {
+	error("src=null\n");
+    }
     uint64_t key=0;
-    int own=0;//whether the returned process owns the pointer (yes if created).
+    int skip_copy=0;
     if(cuda_dedup && !*dest){
 	key=hashlittle(src, nx*ny*sizeof(N), nx*ny);
 	key=hashlittle(&cudata, sizeof(void*), key);//put GPU index as part of fingerprint.
 	lock_t tmp(cuglobal->memmutex);
 	if(cuglobal->memhash.count(key)){
 	    *dest=(M*)cuglobal->memhash[key];
-	    cuglobal->memcount[*dest]++;
-	    own=1;//mycudaFree takes care of double fre.
+	    if(cuglobal->memcount[*dest]){//valid memory
+		cuglobal->memcount[*dest]++;
+		skip_copy=1;//no need to copy again
+	    }else{
+		cuglobal->memhash.erase(key);
+		cuglobal->memcount.erase(*dest);
+		*dest=0;
+	    }
 	}
     }else if(!cuda_dedup && *dest){
 	//Avoid overriding previously referenced memory
@@ -123,7 +131,6 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	}
     }
     if(!*dest){
-	own=1;
 	*dest=(M*)new Gpu<M>[nx*ny];
 	//DO(cudaMalloc(dest, nx*ny*sizeof(M)));
 	if(cuda_dedup){
@@ -132,8 +139,9 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	    cuglobal->memcount[*dest]=1;
 	}
     }
-    cp2gpu(*dest, src, nx, ny, stream);
-    return own;
+    if(!skip_copy){
+	cp2gpu(*dest, src, nx, ny, stream);
+    }
 }
 
 template<typename M, typename N> static inline void
@@ -146,8 +154,8 @@ cp2gpu(Array<M,Gpu>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	cp2gpu(dest(), src, nx, ny, stream);
     }else{
 	M*tmp=0;
-	int own=cp2gpu(&tmp, src, nx, ny, stream);
-	dest=Array<M, Gpu>(nx, ny, tmp, own);
+	cp2gpu(&tmp, src, nx, ny, stream);
+	dest=Array<M, Gpu>(nx, ny, tmp, 1);
     }
 }
 static inline void cp2gpu(Real**dest, const dmat*src, cudaStream_t stream=0){

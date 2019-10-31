@@ -529,25 +529,37 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->nsurf || parms->ntsurf){
 	    error("Please disable surf and tsurf when load.ncpa is set\n");
 	}
-	aper->opdadd=dcellread("%s/surfevl.bin", parms->load.ncpa);
-	if(aper->opdadd->nx!=parms->evl.nevl || aper->opdadd->p[0]->nx!=aper->locs->nloc){
-	    error("surfevl is in wrong format\n");
-	}	
-	aper->opdfloc=dcellread("%s/surffloc.bin", parms->load.ncpa);
-	if(aper->opdfloc->nx!=parms->sim.ncpa_ndir || aper->opdfloc->p[0]->nx!=recon->floc->nloc){
-	    error("opdfloc is in wrong foramt\n");
+	if(zfexist("%s/surfevl.bin", parms->load.ncpa)){
+	    aper->opdadd=dcellread("%s/surfevl.bin", parms->load.ncpa);
+	    if(aper->opdadd->nx!=parms->evl.nevl || aper->opdadd->p[0]->nx!=aper->locs->nloc){
+		error("surfevl is in wrong format\n");
+	    }	
+	}else{
+	    warning("%s/surfevl.bin does not exist.\n", parms->load.ncpa);
 	}
-
+	if(zfexist("%s/surffloc.bin", parms->load.ncpa)){
+	    aper->opdfloc=dcellread("%s/surffloc.bin", parms->load.ncpa);
+	    if(aper->opdfloc->nx!=parms->sim.ncpa_ndir || aper->opdfloc->p[0]->nx!=recon->floc->nloc){
+		error("opdfloc is in wrong foramt\n");
+	    }
+	}else{
+	    warning("%s/surffloc.bin does not exist.\n", parms->load.ncpa);
+	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    powfs[ipowfs].opdadd=dcellread("%s/surfpowfs_%d.bin", parms->load.ncpa, ipowfs);
-	    if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
-		error("surfpowfs_%d is in wrong format\n", ipowfs);
-	    }else{
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    if(powfs[ipowfs].opdadd->p[jwfs]->nx!=powfs[ipowfs].saloc->nloc){
-			error("surfpowfs_%d is in wrong format\n", ipowfs);
+	    if(zfexist("%s/surfpowfs_%d.bin", parms->load.ncpa, ipowfs)){
+		powfs[ipowfs].opdadd=dcellread("%s/surfpowfs_%d.bin", parms->load.ncpa, ipowfs);
+		if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
+		    error("surfpowfs_%d is in wrong format, expect %d, got %ld\n", ipowfs,
+			  parms->powfs[ipowfs].nwfs, powfs[ipowfs].opdadd->nx);
+		}else{
+		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			if(powfs[ipowfs].opdadd->p[jwfs]->nx!=powfs[ipowfs].loc->nloc){
+			    error("surfpowfs_%d cell %d is in wrong format\n", ipowfs, jwfs);
+			}
 		    }
 		}
+	    }else{
+		warning("%s/surfpowfs_%d.bin does not exist.\n", parms->load.ncpa, ipowfs);
 	    }
 	}
     }else{
@@ -572,15 +584,16 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		    aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
 		}
 	    }
+	
+	    TIC;tic;
+	    if(parms->ntsurf>0){
+		setup_surf_tilt(parms, aper, powfs, recon);
+	    }
+	    if(parms->nsurf>0){
+		OMPTASK_SINGLE setup_surf_perp(parms, aper, powfs, recon);
+	    }
+	    toc2("surf prop");
 	}
-	TIC;tic;
-	if(parms->ntsurf>0){
-	    setup_surf_tilt(parms, aper, powfs, recon);
-	}
-	if(parms->nsurf>0){
-	    OMPTASK_SINGLE setup_surf_perp(parms, aper, powfs, recon);
-	}
-	toc2("surf prop");
 	/**
 	   note about idealfit: No need to pass surfaces to DM fitting
 	   routine. These are already contained in dm_ncpa which got to add to the

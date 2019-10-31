@@ -1105,7 +1105,9 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can be fed to the tomography */
 	recon->cn2est=cn2est_prepare(parms, powfs);
     }
+    recon->saloc=loccellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	P(recon->saloc, ipowfs)=locref(powfs[ipowfs].saloc);
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	/*we will remove tip/tilt from the high order NGS wfs in split tomo mode.*/
 	if(parms->powfs[ipowfs].trs || (parms->recon.split && !parms->powfs[ipowfs].lo)){

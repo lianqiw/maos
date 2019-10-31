@@ -273,7 +273,7 @@ typedef struct RECON_T{
     dmat *wt;          /**<weight of the layers to to tomography. may get updated in cn2 estimation*/
     dmat *os;          /**<over sampling of the layers.*/
     dmat *dx;          /**<sampling in meter of the layers*/
-
+    loccell *saloc;    /**<referenced from powfs.saloc*/
     loc_t *ploc;       /**<Grid on pupil for tomography*/
     map_t *pmap;       /**<square grid of ploc.*/
     loccell *ploc_tel;   /**<Distorted ploc when mapped onto telescope pupil for each WFS*/

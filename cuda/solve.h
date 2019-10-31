@@ -123,6 +123,9 @@ class cusolve_mvm:public cusolve_l,nonCopyable{
     curmat M;
 public:
     cusolve_mvm(dmat *_M);
+    cusolve_mvm(curmat &_M){
+	M=_M;
+    }
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream){
 	if(!xout) xout=xin.New();
 	curmv(xout.M()(), 0., M, xin.M()(), 'n', 1., stream);

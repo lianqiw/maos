@@ -67,29 +67,36 @@ typedef struct file_t{
     int eof;
 }file_t;
 #define M_CSP64 0x6400
-#define M_SP64  0x6401
+#define M_DSP64  0x6401
 #define M_DBL   0x6402
 #define M_INT64 0x6403
 #define M_CMP   0x6404 //double complex
 #define M_INT32 0x6405
 #define M_CSP32 0x6406
-#define M_SP32  0x6407
+#define M_DSP32  0x6407
 #define M_FLT   0x6408
 #define M_ZMP   0x6409 //float complex
 #define M_INT8  0x640A
 #define M_INT16 0x640B
 
+#define M_SSP64  0x6430  /*single precision float + int64 */
+#define M_SSP32  0x6431  /*single precision float + int32 */
+#define M_ZSP64  0x6432  /*single precision complex + int64 */
+#define M_ZSP32  0x6433  /*single precision complex + int32 */
+
+/*
 #define MC_CSP  0x6410
-#define MC_SP   0x6411
+#define MC_DSP  0x6411
 #define MC_DBL  0x6412
 #define MC_INT64 0x6413
 #define MC_CMP 0x6414
 #define MC_INT32 0x6415
-
+*/
 
 #define MCC_ANY  0x6421
-#define MCC_DBL 0x6422
+/*#define MCC_DBL 0x6422
 #define MCC_CMP 0x6424
+*/
 #define M_HEADER 0x6500
 #define M_SKIP   0x6600
 
