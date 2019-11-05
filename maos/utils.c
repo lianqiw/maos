@@ -289,36 +289,39 @@ ARG_T * parse_args(int argc, const char *argv[]){
     };
     char *cmds=strnadd(argc-1, argv+1, " ");
     parse_argopt(cmds, options);
-    if((host || arg->detach) && !arg->dirout){
-	error("detach mode requires specifying -o\n");
-    }
-    if(!host && !arg->detach){//forground running.
+  
+    if((!host || !strcmp(host, "localhost")) && !arg->detach){//forground running.
 	arg->force=1;
-    }else if(getenv("MAOS_DIRECT_LAUNCH")){
-	/*being lanuched by scheduler. We are already detached, so don't daemonize again.*/
-	arg->detach=0;
-	arg->force=0;
-	detached=1;
     }else{
-#ifndef MAOS_DISABLE_SCHEDULER
-	/*Detached version. Always launch through scheduler if available.*/
-	int locally=0;
-	if(!host){
-	    locally=1;
-	    host=strdup("localhost");
+	if(!arg->dirout){
+	    error("detach mode requires specifying -o\n");
 	}
-	if(scheduler_launch_exe(host, argc, argv)){
-	    if(!locally){
-		error("Unable to launch maos at server %s.\n", host);
-	    }else{
-		warning("Launch locally without scheduler.\n");
-	    }
+	if(getenv("MAOS_DIRECT_LAUNCH")){
+	    /*being lanuched by scheduler. We are already detached, so don't daemonize again.*/
+	    arg->detach=0;
+	    arg->force=0;
+	    detached=1;
 	}else{
-	    exit(EXIT_SUCCESS);
-	}
+#ifndef MAOS_DISABLE_SCHEDULER
+	    /*Detached version. Always launch through scheduler if available.*/
+	    int locally=0;
+	    if(!host){
+		locally=1;
+		host=strdup("localhost");
+	    }
+	    if(scheduler_launch_exe(host, argc, argv)){
+		if(!locally){
+		    error("Unable to launch maos at server %s.\n", host);
+		}else{
+		    warning("Launch locally without scheduler.\n");
+		}
+	    }else{
+		exit(EXIT_SUCCESS);
+	    }
 #else
-	arg->force=1;//launch directly when scheduler is disabled.
+	    arg->force=1;//launch directly when scheduler is disabled.
 #endif
+	}
     }
     free(host);
     if(nthread<MAXTHREAD && nthread>0){

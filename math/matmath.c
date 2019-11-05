@@ -724,7 +724,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
     const long nx=Mod->nx;
     R wtsum=(R)nx;
     if(amp){
-	wtsum=XR(sumvec)(amp, nx);
+	wtsum=XR(vecsum)(amp, nx);
     }
     int nonvalid[nmod];
     memset(nonvalid, 0, sizeof(int)*nmod);
@@ -796,19 +796,7 @@ void X(muldiag)(X(mat) *A, const X(mat) *s){
 	}
     }
 }
-/**
-   A=B*A*B, where diag(B)=s
-*/
-void X(muldiag2)(X(mat) *A, const X(mat) *s){
-    assert(A->ny==s->nx && s->ny==1);
-    X(mat)* pA=A;
-    const T *ps=s->p;
-    for(long iy=0; iy<A->ny; iy++){
-	for(long ix=0; ix<A->nx; ix++){
-	    P(pA,ix,iy)*=ps[iy]*ps[ix];
-	}
-    }
-}
+
 /**
    Raise all elements to power 'power'
 */

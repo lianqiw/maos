@@ -73,7 +73,10 @@ void maos_setup(const PARMS_T *parms){
 	    error("Unable to save to folder setup\n");
 	}
     }
- 
+#if USE_CUDA
+    extern int cuda_dedup;
+    cuda_dedup=1;
+#endif
     THREAD_POOL_INIT(NTHREAD);
     global->aper=aper=setup_aper(parms);
     info("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
@@ -90,7 +93,11 @@ void maos_setup(const PARMS_T *parms){
 	setup_powfs_neasim(parms, powfs);
 	/*calibrate gradient offset*/
 	setup_powfs_calib(parms, powfs);
-    
+#if USE_CUDA
+	if(!parms->sim.evlol && parms->gpu.wfs && powfs){
+	    gpu_wfsgrad_init(parms, powfs);//needed by pywfs_mkg
+	}
+#endif
 	setup_recon_prep2(recon, parms, aper, powfs);
 	//Don't put this inside parallel, otherwise svd will run single threaded.
 	setup_recon(recon, parms, powfs);
@@ -120,29 +127,36 @@ void maos_setup(const PARMS_T *parms){
 	    }
 	}
     }
+    if(!parms->sim.evlol && parms->recon.mvm){
 #if USE_CUDA
-    extern int cuda_dedup;
-    cuda_dedup=1;
-    //setup_recon first because MVM assembly and transpose uses a lot of memory.
-    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit || parms->gpu.lsr)){
-	gpu_setup_recon(parms, recon);
-	if(parms->recon.mvm){
-	    gpu_setup_recon_mvm(parms, recon);
+	if(!(parms->gpu.tomo && parms->recon.alg==0))
+#endif
+	{
+	    setup_recon_mvm(parms, recon, powfs);//use cpu to compute mvm
 	}
+#if USE_CUDA
+	gpu_setup_recon_mvm(parms, recon);
+	
+#endif
+	    
+    }
+#if USE_CUDA
+    //setup_recon first because MVM assembly and transpose uses a lot of memory.
+    if(parms->gpu.recon && !parms->recon.mvm){
+	gpu_setup_recon(parms, recon);
     }
     if(parms->gpu.evl){
 	gpu_perfevl_init(parms, aper);
     }
-    if(!parms->sim.evlol && parms->gpu.wfs && powfs){
-	gpu_wfsgrad_init(parms, powfs);
+    if(parms->gpu.wfs && powfs){
+	//gpu_wfsgrad_init(parms, powfs); //moved to above
 	gpu_wfssurf2gpu(parms, powfs);
     }
 #endif
 
-    if(!parms->sim.evlol && parms->recon.mvm){
-	setup_recon_mvm(parms, recon, powfs);
+    if(!parms->sim.evlol){
+	setup_recon_post(recon, parms, aper);
     }
-    setup_recon_post(recon, parms, aper);
     if(parms->plot.setup){
 	plot_setup(parms, powfs, aper, recon);
     }

@@ -204,7 +204,7 @@ static int bind_socket (char *ip, uint16_t port){
     }
     int count=0;
     while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
-	info_time("errno=%d. port=%d,sock=%d: ",errno,port,sock);
+	dbg_time("errno=%d. port=%d,sock=%d: ",errno,port,sock);
 	perror ("bind");
 	sleep(10);
 	count++;

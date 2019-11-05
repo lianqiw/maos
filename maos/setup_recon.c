@@ -1408,7 +1408,7 @@ void setup_recon_update(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 
 
 /**
-   PSD computation for gian update
+   PSD computation for gain update
  */
 void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
     if(!parms->recon.psd) return;

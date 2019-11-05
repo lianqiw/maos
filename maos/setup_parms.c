@@ -1665,12 +1665,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	} 
 	if(parms->sim.ncpa_calib && (parms->nsurf || parms->ntsurf || parms->load.ncpa)){
 	    if(parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
-		warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
+		//warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
 		parms->powfs[ipowfs].mtchstc=0;
 	    }
 	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].type==1)
 	       && parms->powfs[ipowfs].ncpa_method==2){
-		warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs, PWFS, or CoG mode\n", ipowfs);
+		info("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs, PWFS, or CoG mode\n", ipowfs);
 		parms->powfs[ipowfs].ncpa_method=1;
 	    }
 	    if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].skip){
@@ -2488,10 +2488,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
     if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
     if(parms->recon.alg==1){
-	if(parms->lsr.actslave>1){
-	    warning("lsr.actslave>1 disables lsr.tikcr\n");
+	/*if(parms->lsr.actslave>1 && parms->lsr.tikcr>0){
+	    info("lsr.actslave>1 disables lsr.tikcr\n");
 	    parms->lsr.tikcr=0;
-	}
+	    }*/
 	if(parms->lsr.alg==1 && parms->lsr.maxit==0){
 	    int factor;
 	    factor=parms->recon.warm_restart?1:10;
@@ -3081,6 +3081,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    parms->gpu.tomo=0;
 	    parms->gpu.fit=0;
 	}
+	parms->gpu.recon=(parms->gpu.tomo || parms->gpu.fit || parms->gpu.lsr);
 	if(!parms->atm.frozenflow){
 	    warning("Atm is not frozen flow. Disabled gpu.evl and gpu.wfs.\n");
 	    parms->gpu.evl=0;

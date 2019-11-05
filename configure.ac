@@ -579,7 +579,7 @@ function set_lapack(){
     echo trying LAPACK=$LAPACK
 }
 has_lapack=no
-base_lapack="pkg-config openblas-openmp openblas-threads openblas default default-link"
+base_lapack="pkg-config default openblas-openmp openblas-threads openblas default-link"
 case $use_mkl in
     yes) #prefer MKL
 	trys="mkl mkl-download $base_lapack"

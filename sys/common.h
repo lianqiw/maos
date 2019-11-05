@@ -95,7 +95,7 @@ extern int detached;
 #define GREEN (detached?"":"\033[0;32m")
 #ifndef error
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
-#define dbg(A...) ({char fline[4096]; int n__;			      \
+/*#define dbg(A...) ({char fline[4096]; int n__;		       \
 	    snprintf(fline,4096, "INFO(%s:%d): ", BASEFILE, __LINE__); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
 	    fprintf(stdout,"%s", fline); })
@@ -111,9 +111,6 @@ extern int detached;
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
 	    fprintf(stdout,"%s%s%s", RED, fline, BLACK); })
 
-#define info(A...) fprintf(stdout, A)
-#define info2(A...) fprintf(stderr, A) //stderr is not directed to file.
-
 #define info_time(A...) ({char fline[4096]; int n__;			      \
 	    snprintf(fline,4096, "INFO(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
@@ -123,6 +120,18 @@ extern int detached;
 	    snprintf(fline,4096, "WARN(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
 	    fprintf(stdout,"%s%s%s", RED, fline, BLACK); })
+
+
+*/
+#define dbg(format,...) printf("Info(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define error(format,...) ({char fline[4096]; snprintf(fline, 4096, "%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN(fline);})
+#define warning(format,...) printf("%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK)
+#define dbg_time(format,...) printf("Info(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
+#define warning_time(format,...) printf("%sWarning(%s:%d)[%s]: " format "%s", RED, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__, BLACK)
+
+#define info(A...) fprintf(stdout, A)
+#define info2(A...) fprintf(stderr, A) //stderr is not directed to file.
+
 
 #define warning_once(A...) ({static int done=0; if(!done){done=1; warning(A);}})
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})

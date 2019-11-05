@@ -227,8 +227,6 @@ void listen_draw(){
 	    STREADINT(byte_float);
 	    if(byte_float>8){
 		error("invalid byte_float=%d\n", byte_float);
-	    }else{
-		info("byte_float=%d\n", byte_float);
 	    }
 	    break;
 	case DRAW_END:

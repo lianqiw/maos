@@ -213,7 +213,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     for(int illt=0; illt<nllt; illt++){
 	psrot[illt]=srot->p[srot->nx>1?illt:0]->p;
 	pna[illt]=sodium->p[sodium->nx>1?illt:0]->p+nhp*(1+icol);
-	i0scale[illt]=dsumvec(pna[illt], nhp);
+	i0scale[illt]=dvecsum(pna[illt], nhp);
 	if(fabs(i0scale[illt]-1)>0.01){
 	    warning("Siglev is scaled by %g by sodium profile\n", i0scale[illt]);
 	}
@@ -484,7 +484,7 @@ dmat* smooth(const dmat *prof, real dxnew){
 	    /*output profile */
 	    real *pout=PCOL(out, icol);
 	    /*preserve sum of input profile */
-	    real Nasum=dsumvec(pin, nxin);
+	    real Nasum=dvecsum(pin, nxin);
 	    dspmulvec(pout, ht, pin, 'n', 1);
 	    dnormalize_sumabs(pout, nxnew, Nasum);
 	}

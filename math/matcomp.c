@@ -283,7 +283,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    x4+=stheta;							\
 	    y4+=ctheta;							\
 	} 
-	/*it is not good to embed flag in the inner most loop. */
+	/*it is not good to test embed flag in the inner most loop. */
 	switch(flag){
 	case C_FULL:
 	    DO_LOOP(,);
@@ -598,10 +598,10 @@ void X(abs22d)(XR(mat)**restrict A0, R alpha,
    apply exp(-2*pi*sx/nx)*exp(-2*pi*sy/ny) to otf to move the image
    sx, sy are shifts in terms of pixel.
    sx/nx is equivalent to sx*dtheta*du.
-   pinct=1: peak is in center
-   pinct=0: peak is in corner
+   peak_corner=1: peak is in center
+   peak_corner=0: peak is in corner
 */
-void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
+void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int peak_corner){
     int nx=otf->nx;
     int ny=otf->ny;
     R dux=1./(R)nx;
@@ -611,7 +611,7 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     T cx=EXPI(-2*M_PI*dux*sx);
     T cy=EXPI(-2*M_PI*duy*sy);
     //warning_once("Consider caching ux, uy\n");
-    if(pinct==1){/*peak in center */
+    if(peak_corner==1){/*peak in center */
 	ux[0]=EXPI(-2*M_PI*dux*sx*(-nx/2));
 	for(int i=1; i<nx; i++){
 	    ux[i]=ux[i-1]*cx;
@@ -655,6 +655,6 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
 /**
    Inplace tilt the otf to make the image shift. 
 */
-void X(tilt)(X(mat) *otf, R sx, R sy, int pinct){
-    X(tilt2)(otf, otf, sx, sy, pinct);
+void X(tilt)(X(mat) *otf, R sx, R sy, int peak_corner){
+    X(tilt2)(otf, otf, sx, sy, peak_corner);
 }

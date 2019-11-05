@@ -365,7 +365,7 @@ void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm){
 	}
     }
 }
-T X(sumvec)(const T *restrict p, long nx){
+T X(vecsum)(const T *restrict p, long nx){
     TD sum=0;
     for(long ix=0; ix<nx; ix++){
 	sum+=p[ix];
@@ -379,7 +379,7 @@ T X(sum)(const X(mat) *A){
     T v=0;
     if(A){
 	assert_mat(A);
-	v=X(sumvec)(A->p, A->nx*A->ny);
+	v=X(vecsum)(A->p, A->nx*A->ny);
     }
     return v;
 }

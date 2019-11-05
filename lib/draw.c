@@ -25,7 +25,7 @@
 #include "draw.h"
 #include "cure.h"
 int DRAW_ID=0;
-int DRAW_DIRECT=1;
+int DRAW_DIRECT=0;
 int disable_draw=0; /*if 1, draw will be disabled  */
 PNEW(lock);
 #define MAXDRAW 1024
@@ -133,13 +133,11 @@ static int list_search(list_t **head, list_t **node, const char *key, int add){
 	}
     }
     int ans=p?1:0;
-    if(add){
-	if(!p){
-	    p=mycalloc(1,list_t);
-	    p->key=strdup(key);
-	    p->next=*head;
-	    *head=p;
-	}
+    if(add && !p){
+	p=mycalloc(1,list_t);
+	p->key=strdup(key);
+	p->next=*head;
+	*head=p;
     }
     if(node) *node=p;
     return ans;
@@ -293,6 +291,11 @@ static int get_drawdaemon(){
     //First try reusing existing idle drawdaemon
     if(scheduler_recv_socket(&sock, DRAW_ID)){
 	sock=-1;
+    }else{//test whether drawdaemon is still running
+	if(stwriteint(sock, DRAW_FINAL)){
+	    close(sock);
+	    sock=-1;
+	}
     }
     if(sock==-1){
 	if(DRAW_DIRECT || sock_helper<=-1){//directly fork and launch
@@ -329,7 +332,8 @@ static int get_drawdaemon(){
    4) pause must not be set set.
 */
 static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
-    if(disable_draw) return 0;
+    if(disable_draw || sock_draws[ifd].pause) return 0;
+    if(!draw_single) return 1;
     list_t *child=0;
     list_search(&sock_draws[ifd].list, &child, fig, add);
     int found=0;
@@ -337,7 +341,7 @@ static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
 	found=list_search(&child->child, NULL, fn, add);
     }
     char **figfn=sock_draws[ifd].figfn;
-    return !sock_draws[ifd].pause && (!draw_single || !found || (!mystrcmp(figfn[0], fig) && !mystrcmp(figfn[1], fn)));
+    return (!found || (!mystrcmp(figfn[0], fig) && !mystrcmp(figfn[1], fn)));
 }
 /**
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
@@ -395,7 +399,10 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 	for(int ifd=0; ifd<sock_ndraw; ifd++){
 	    /*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	    int sock_draw=sock_draws[ifd].fd;
-	    if(sock_draw==-1) continue;
+	    if(sock_draw==-1) {
+		warning("sock_draw==-1; this should never happen\n");
+		continue;
+	    }
 	    if(!check_figfn(ifd, fig, fn, 1)) continue;
 	    STWRITEINT(DRAW_FLOAT); STWRITEINT(sizeof(real));
 	    STWRITEINT(DRAW_START);

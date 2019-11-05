@@ -206,6 +206,7 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 	    lfree(group);
 	}else if(nslave>0){
 	    slavet=dspnew(nact,nact,nslave*9);
+	    lmat *actct=lnew(nact,1);
 	    spint *pp=slavet->p;
 	    spint *pi=slavet->i;
 	    real *px=slavet->x;
@@ -290,13 +291,17 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 				int kact2=loc_map_get(map, mapx-ix, mapy-iy);
 				if(kact1>0 && (!isstuck || !isstuck[kact1-1])
 				   && kact2>0 && (!isstuck || !isstuck[kact2-1])
-				   && actcpl0[kact1] > thres && actcpl0[kact2] > thres ){
+				   && actcpl0[kact1] > thres && actcpl0[kact2] > thres 
+				   && !P(actct, kact1-1) && !P(actct, kact2-1)
+				    ){
 				    px[count]=1;
 				    pi[count]=kact1-1;
+				    P(actct, kact1-1)++;
 				    count++;
 				    px[count]=-1;
 				    pi[count]=kact2-1;
 				    count++;
+				    P(actct, kact2-1)++;
 				}
 			    }
 			}
@@ -341,7 +346,7 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 	    pp[nact]=count;
 	}
 	dspsetnzmax(slavet, count);
-	//writebin(slavet, "slave_%d_%d", mode, idm);
+	writebin(slavet, "slave_%d_%d", mode, idm);
 	P(actslave,idm,idm)=dspmulsp(slavet, slavet,"nt");
 	dspscale(P(actslave,idm,idm), sclsq);
 	dspfree(slavet);
@@ -667,6 +672,8 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
 		   const dmat *actcplc,/**<[in] Actuator coupling coefficiency*/
 		   const real thres  /**<[in] Threshold of coupling to turn on interpolation*/
     ){
+    TIC;tic;
+
     dsp *out=0;
     const real *cpl=actcplc->p;
     const real *cpl0 = cpl-1;
@@ -746,13 +753,13 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
     out=dsptrans(outit);
     dspfree(outit);
 
-    TIC;tic;
     //New method. Test convergence
     dmat *x=dnew(out->nx, 1); dset(x, 1);
     dmat *y1=dnew(out->nx, 1);
     dmat *y2=dnew(out->nx, 1);
     dcellmm(&y1, out, x, "tn", 1);
     real diff;
+    count=0;
     do{
 	dsp *tmp=dspmulsp(out,out,"nn");
 	dspfree(out);
@@ -761,12 +768,13 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
 	dcellmm(&y2, out, x, "tn", 1);
 	diff=ddiff(y1, y2);
 	dcp(&y1, y2);
+	count++;
     }while(diff>EPS);
     dfree(x);
     dfree(y1);
     dfree(y2);
     dspdroptol(out, 1e-3);
-    toc2("indempotent");
+    toc2("act_extrap: %ld iterations", count);
 
     return out;
 }

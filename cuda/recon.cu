@@ -481,35 +481,39 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
 
 typedef cuda_recon::curecon_t curecon_t;
 void gpu_setup_recon(const PARMS_T *parms, RECON_T *recon){
-    for(int igpu=0; igpu<NGPU; igpu++){
-	if((parms->recon.mvm && parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
-	   || igpu==cuglobal->recongpu){
+    gpu_set(cuglobal->recongpu);
+    if(cudata->recon){
+	delete cudata->recon;
+    }
+    cudata->recon=new curecon_t(parms, recon);
+}
+
+void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon){
+    //The following routine assemble MVM and put in recon->MVM
+    if(!recon->MVM){
+	for(int igpu=0; igpu<NGPU; igpu++){
 	    gpu_set(igpu);
 	    if(cudata->recon){
 		delete cudata->recon;
 	    }
 	    cudata->recon=new curecon_t(parms, recon);
 	}
-    }
-}
-void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon){
-    //The following routine assemble MVM and put in recon->MVM
-    if(!recon->MVM){
+
 	if(parms->recon.mvm==1){
 	    gpu_setup_recon_mvm_trans(parms, recon);
 	}else{
 	    gpu_setup_recon_mvm_direct(parms, recon);
 	}
-    }
-    //free existing data
-    for(int igpu=0; igpu<NGPU; igpu++){
-	gpu_set(igpu);
-	if(cudata->recon){
-	    delete cudata->recon;
-	    cudata->recon=NULL;
+    
+	//free existing data
+	for(int igpu=0; igpu<NGPU; igpu++){
+	    gpu_set(igpu);
+	    if(cudata->recon){
+		delete cudata->recon;
+		cudata->recon=NULL;
+	    }
 	}
     }
-
     if(!parms->sim.mvmport){
 	gpu_set(cuglobal->recongpu);
 	//recreate curecon_t that uses MVM.

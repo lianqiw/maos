@@ -102,7 +102,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	strength=pow(strength, 2./ndm);
 	maxeig*=strength;
     }
-    if(fabs(parms->lsr.tikcr)>EPS){
+    if(fabs(parms->lsr.tikcr)>EPS && parms->lsr.actslave<=1){
 	info("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 	info("The maximum eigen value is estimated to be around %g\n", maxeig);
 	dcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
@@ -166,7 +166,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    /*per island regularization to mitigate the island effect*/
 	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, 
 				      parms->dbg.recon_stuck?recon->actstuck:0, 
-				      recon->actfloat, parms->lsr.actthres2, maxeig, parms->lsr.actslave);
+				      recon->actfloat, parms->lsr.actthres2, parms->lsr.tikcr*maxeig, parms->lsr.actslave);
 	    if(parms->save.setup){
 		writebin(actslave,"lsr_actslave2");
 	    }

@@ -44,12 +44,12 @@
     void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);	\
     void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm);	\
     void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm);	\
-    T X(sumvec)(const T*restrict p, long np) CHECK_UNUSED_RESULT;	\
+    T X(vecsum)(const T*restrict p, long np) CHECK_UNUSED_RESULT;	\
     T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     void X(sort)(X(mat) *A, int ascend);				\
     void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\
-    T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n);	\
+    T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n); \
     void X(normalize_sum)(T *restrict p, long nloc, T norm);		\
     void X(normalize_sumabs)(T *restrict p, long nloc, T norm);		\
     void X(normalize_max)(T *restrict p, long nloc, T max);		\
@@ -64,8 +64,8 @@
     void X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
     X(cell) *X(cell_cast)(const void *A) CHECK_UNUSED_RESULT;		\
     X(cell) *X(cellnew2)(const X(cell) *A) CHECK_UNUSED_RESULT;		\
-    X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny) CHECK_UNUSED_RESULT;	\
-    X(cell) *X(cellnew_same)(long nx, long ny, long mx, long my) CHECK_UNUSED_RESULT;	\
+    X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny) CHECK_UNUSED_RESULT; \
+    X(cell) *X(cellnew_same)(long nx, long ny, long mx, long my) CHECK_UNUSED_RESULT; \
     void X(cellzero)(void *dc);						\
     void X(cellset)(X(cell)*dc, T alpha);				\
     X(cell) *X(celltrans)(const X(cell) *A) CHECK_UNUSED_RESULT;	\

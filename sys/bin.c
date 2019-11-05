@@ -121,7 +121,7 @@ static char* procfn(const char *fn, const char *mod){
     }else if (mod[0]=='w' || mod[0]=='a'){
 	if(!check_suffix(fn2,".bin")  && !check_suffix(fn2, ".bin.gz")
 	   && !check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
-	    strncat(fn2, ".bin", 4);
+	    strcat(fn2, ".bin");
 	}
 	/*if (check_suffix(fn2, ".gz")){
 	    fn2[strlen(fn2)-3]='\0';

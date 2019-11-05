@@ -130,7 +130,7 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
 static void genotf_do(cmat **otf, long pttr, long notfx, long notfy, 
 		      loc_t *loc, const real *amp, const real *opdbias, real wvl,
 		      const dmat* B,  const T_VALID *pval){
-    real ampsum=dsumvec(amp, loc->nloc);
+    real ampsum=dvecsum(amp, loc->nloc);
     if(ampsum<=loc->nloc*0.01){
 	warning("genotf_do: amplitude sum to less than 1%%. Skip\n");
 	return;

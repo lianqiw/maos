@@ -646,6 +646,7 @@ typedef struct GPU_CFG_T{
     int tomo;        /**<Use GPU for tomography*/
     int fit;         /**<Use GPU for DM fitting. Options: 1) assembled matrix 2) matrix free for RHS.*/
     int lsr;         /**<Use GPU for least square reconstruction*/
+    int recon;       /**<Use GPU for reconstructor any of(tomo, fit, lsr)*/
     int psf;         /**<Use GPU for accumulating PSF. */
     int moao;        /**<Use GPU for moao.*/
 }GPU_CFG_T;

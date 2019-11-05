@@ -124,7 +124,7 @@ static int proc_read_status(char *fnjob,  char *exename, char *cstat,long* nthre
 int get_usage_running(void){
   
     struct dirent *dp, *dpsub;
-    char fnjob[256],fnsub[256];
+    char fnjob[512],fnsub[512];
     char cstat;
     char exename[256];
     int nrunning=0;
@@ -166,7 +166,7 @@ int get_usage_running(void){
 		long nthread2;
 		while((dpsub=readdir(dirsub))){
 		    if(dpsub->d_name[0]<='9' && dpsub->d_name[0]>='0'){
-			snprintf(fnsub,64,"/proc/%s/task/%s/stat",dp->d_name,dpsub->d_name);
+			snprintf(fnsub,sizeof(fnsub),"/proc/%s/task/%s/stat",dp->d_name,dpsub->d_name);
 			if(proc_read_status(fnsub, exename, &stat2, &nthread2)){
 			    continue;
 			}

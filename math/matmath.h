@@ -32,7 +32,7 @@
     T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     T X(wdot2)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     T X(wdot3)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
-    void X(cwm)(X(mat) *B, const X(mat) *A);				\
+    void X(cwm)(X(mat) *A, const X(mat) *B);				\
     void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2);\
     void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W , const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \
     void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B);	\
@@ -72,7 +72,6 @@
     int X(clip)(X(mat) *A, R min, R max);				\
     void X(gramschmidt)(X(mat) *Mod, R *amp);				\
     void X(muldiag)(X(mat) *A, const X(mat) *s);			\
-    void X(muldiag2)(X(mat) *A, const X(mat) *s);			\
     void X(cwpow)(X(mat) *A, R power);					\
     void X(cwexp)(X(mat) *A, R alpha);					\
     void X(cwpow_thres)(X(mat) *A, R power, R thres);			\
@@ -146,15 +145,11 @@
     void X(real2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(imag2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(abs22d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
-    void X(cp)(X(mat)**restrict A0, const X(mat) *restrict B);		\
-    void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct);	\
-    void X(tilt)(X(mat) *otf, R sx, R sy, int pinct);			\
+    void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int peak_corner); \
+    void X(tilt)(X(mat) *otf, R sx, R sy, int peak_corner);		\
     void X(cogreal)(R *grad,const X(mat) *i0,R offsetx,			\
 		    R offsety,R thres, R bkgrnd);			\
     void X(cogabs)(R *grad,const X(mat) *i0,R offsetx,			\
 		   R offsety,R thres, R bkgrnd);			\
-    void X(inv_inplace)(X(mat)*A);					\
-    void X(invspd_inplace)(X(mat) *A);					\
-    void X(mulvec)(T *restrict y, const X(mat) * restrict A,		\
-		   const T *restrict x, const T alpha);			
+    ;
 #endif

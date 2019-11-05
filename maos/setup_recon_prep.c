@@ -500,7 +500,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
    Setup gradient operator from ploc to wavefront sensors.
 */
 static void
-setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper){
+setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     recon->GP=dspcellnew(nwfs, 1);
@@ -517,7 +517,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
-	    const long nsa=powfs[ipowfs].saloc->nloc;
+	    const long nsa=recon->saloc->p[ipowfs]->nloc;
 	    recon->GP->p[iwfs]=dspref(GPload->p[assign==1?iwfs:ipowfs]);
 	    if(recon->GP->p[iwfs]->nx!=nsa*2 || recon->GP->p[iwfs]->ny!=ploc->nloc){
 		error("Wrong saved GP[%d]: size is %ldx%ld, need %ldx%ld\n", iwfs,
@@ -546,10 +546,10 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 		    dsp *gp=0;
 		    if(parms->powfs[ipowfs].gtype_recon==0){//Average tilt
 			info(" Gploc");
-			gp=mkg(ploc,gloc, gamp, powfs[ipowfs].saloc,1,0,0,1);
+			gp=mkg(ploc,gloc, gamp, recon->saloc->p[ipowfs],1,0,0,1);
 		    }else if(parms->powfs[ipowfs].gtype_recon==1){//Zernike fit
 			info(" Zploc");
-			dsp* ZS0=mkz(gloc, gamp->p, (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
+			dsp* ZS0=mkz(gloc, gamp->p, recon->saloc->p[ipowfs], 1,1,0,0);
 			dsp *H=mkh(ploc,gloc, 0,0,1);
 			gp=dspmulsp(ZS0,H,"nn");
 			dspfree(H);
@@ -601,7 +601,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].lo){
 		    continue;
 		}
-		int nsa=powfs[ipowfs].saloc->nloc;
+		int nsa=recon->saloc->p[ipowfs]->nloc;
 		if(P(recon->GA,iwfs,idm)->nx!=nsa*2 || (!parms->recon.modal && P(recon->GA,iwfs,idm)->ny!=nloc)
 		   || (parms->recon.modal && P(recon->GA,iwfs,idm)->ny!=recon->amod->p[idm]->ny)){
 		    error("Wrong saved GA\n");
@@ -656,7 +656,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    const real hs=parms->wfs[iwfs].hs;
 	    const real hc=parms->wfs[iwfs].hc;
-	    const loc_t *saloc=powfs[ipowfs].saloc;
+	    const loc_t *saloc=recon->saloc->p[ipowfs];
 	    for(int idm=0; idm<ndm; idm++){
 		const real  ht = parms->dm[idm].ht;
 		const real  scale=1. - (ht-hc)/hs;
@@ -667,7 +667,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		if(parms->powfs[ipowfs].type==1){//PWFS
 		    if(!parms->powfs[ipowfs].lo){
 			dmat *opdadd=0;
-			if(!parms->recon.glao && powfs[ipowfs].opdadd){
+			if(!parms->recon.glao && powfs[ipowfs].opdadd && 0){
 			    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 			    opdadd=powfs[ipowfs].opdadd->p[wfsind];
 			}
@@ -926,7 +926,7 @@ setup_recon_TT(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	if(parms->powfs[ipowfs].trs 
 	   || (parms->recon.split && !parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].skip)
 	   || parms->powfs[ipowfs].dither==1){
-	    int nsa=powfs[ipowfs].saloc->nloc;
+	    int nsa=recon->saloc->p[ipowfs]->nloc;
 	    dmat *TT=0;
 	    if(parms->powfs[ipowfs].type==0){//SHWFS
 		TT=dnew(nsa*2,2);
@@ -966,7 +966,7 @@ setup_recon_TT(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 */
 
 static void
-setup_recon_DF(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+setup_recon_DF(RECON_T *recon, const PARMS_T *parms){
     if(!recon->has_dfr) return;
 
     int nwfs=parms->nwfsr;
@@ -978,11 +978,11 @@ setup_recon_DF(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].nwfs<2){
 		error("This powfs group has only 1 wfs. Could not remove diff focus\n");
 	    }
-	    int nsa=powfs[ipowfs].saloc->nloc;
+	    int nsa=recon->saloc->p[ipowfs]->nloc;
 	    dmat* DF=dnew(nsa*2,1);
 	    /*saloc is lower left corner of subaperture. don't have to be the center. */
-	    memcpy(DF->p, powfs[ipowfs].saloc->locx, sizeof(real)*nsa);
-	    memcpy(DF->p+nsa, powfs[ipowfs].saloc->locy, sizeof(real)*nsa);
+	    memcpy(DF->p, recon->saloc->p[ipowfs]->locx, sizeof(real)*nsa);
+	    memcpy(DF->p+nsa, recon->saloc->p[ipowfs]->locy, sizeof(real)*nsa);
 	    /**
 	       postive focus on first wfs. negative focus on diagnonal wfs.
 	    */
@@ -1108,6 +1108,8 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
     recon->saloc=loccellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	P(recon->saloc, ipowfs)=locref(powfs[ipowfs].saloc);
+    }
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	/*we will remove tip/tilt from the high order NGS wfs in split tomo mode.*/
 	if(parms->powfs[ipowfs].trs || (parms->recon.split && !parms->powfs[ipowfs].lo)){
@@ -1128,7 +1130,7 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){
-	    recon->ngrad->p[iwfs]=powfs[ipowfs].saloc->nloc*2;
+	    recon->ngrad->p[iwfs]=recon->saloc->p[ipowfs]->nloc*2;
 	}
     }
     /*to be used in tomography. */
@@ -1140,12 +1142,12 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
     /*Grid for DM fitting*/
     setup_recon_floc(recon,parms);
     /*Gradient operators*/
-    setup_recon_GP(recon, parms, powfs, aper);
+    setup_recon_GP(recon, parms, aper);
     //TT Removal
     setup_recon_TT(recon,parms,powfs);
     //DF removal. //Deprecated
     if(recon->has_dfr){
-	setup_recon_DF(recon,parms,powfs);
+	setup_recon_DF(recon,parms);
     }
     if(recon->DF){
 	recon->TTF=dcellcat(recon->TT,recon->DF,2);
