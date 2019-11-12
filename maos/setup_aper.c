@@ -157,7 +157,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 		  iwvl, nembed, aper->sumamp2*nembed*nembed);
 	}
     }
-    toc2("setup_aper");
+    toc("setup_aper");
     return aper;
 }
 /**

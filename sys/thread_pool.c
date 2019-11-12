@@ -77,7 +77,7 @@
  * struct of jobs for the linked first in first out (fifo) list.
  */
 typedef struct jobs_t{
-    thread_fun fun;     /**<The function*/
+    thread_wrapfun fun;     /**<The function*/
     void *arg;          /**<The argument*/
     long *count;        /**<address of the job group, which is also a counter.*/
     int urgent;         /**<whether this job is urgent (can not be interruped)*/
@@ -162,7 +162,8 @@ int thread_pool_do_job_once(void){
  *   is guarded by mutex. The mutex is only released upon 1) cond_wait, 2)
  *   do_job, 3) exit.
  */
-static void run_thread(){
+static void* run_thread(void*data){
+    (void)data;
     pthread_mutex_lock(&pool.mutex);
     pool.ncur++;
     while(!pool.quit){
@@ -198,6 +199,7 @@ static void run_thread(){
 	pthread_cond_signal(&pool.exited);
     }
     pthread_mutex_unlock(&pool.mutex);
+    return NULL;
 }
 
 /**
@@ -233,7 +235,7 @@ void thread_pool_init(int nthread){
     if(ncur<nthread){/*need to launch more threads. */
 	pthread_t thread;/*we don't need the thread information. */
 	for(int ith=0; ith<nthread-ncur; ith++){
-	    if(pthread_create(&thread, &pool.attr, (thread_fun)run_thread, NULL)){
+	    if(pthread_create(&thread, &pool.attr, run_thread, NULL)){
 		error("Can not create thread\n");
 	    }
 	}
@@ -248,7 +250,7 @@ void thread_pool_init(int nthread){
  *  will be incremented by 1 when queued and decreased by 1 if job is
  *  finished. Wait on it will clear when count is decreased to zero.
  */
-void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
+void thread_pool_queue(long *group, thread_wrapfun fun, void *arg, int urgent){
     /*Add the job to the head if urgent>0, otherwise to the tail. */
     jobs_t *job=0;
     LOCK_DO(pool.mutex_pool);
@@ -291,7 +293,7 @@ void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
 /**
  *   Queue njob jobs. If fun is NULL, arg is thread_t array otherwise, arg is argument to fun directly.
  */
-void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, int urgent){
+void thread_pool_queue_many(long *group, thread_wrapfun fun, void *arg, int njob, int urgent){
     /*
       First create a temporary list of all the jobs without acquiring lock.
     */
@@ -314,7 +316,7 @@ void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, in
 	    job->arg=arg;
 	}else{
 	    thread_t *arg2=(thread_t*)arg;
-	    job->fun=(thread_fun)(arg2[ijob].fun);
+	    job->fun=arg2[ijob].fun;
 	    job->arg=arg2+ijob;
 	    if(!job->fun || ((thread_t*)job->arg)->end==((thread_t*)job->arg)->start){
 		/*empty job. don't queue it. */

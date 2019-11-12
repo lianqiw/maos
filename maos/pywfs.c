@@ -758,7 +758,7 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     dfree(grady);
     dfree(opd);
     dfree(ints);
-    toc2("done");
+    toc("done");
     return out;
 }
 static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
@@ -867,13 +867,13 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const char *distortion, cons
     key=pywfs_hash(pywfs, key);
     if(mod) key=dhash(mod, key);
     if(opdadd) key=dhash(opdadd, key);
-    char fn[PATH_MAX];
+    char fn[PATH_MAX-10];
     char fnlock[PATH_MAX];
     mymkdir("%s/G/", CACHE);
-    snprintf(fn, PATH_MAX, "%s/G/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_v2.bin", CACHE, 
+    snprintf(fn, sizeof(fn), "%s/G/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_v2.bin", CACHE, 
 	     key, pywfs->locfft->nembed->p[0], locin->nloc, pywfs->modulate, pywfs->modulpos,
 	     locin->iac, displacex, displacey, scale, pywfs->poke);
-    snprintf(fnlock, PATH_MAX, "%s.lock", fn);
+    snprintf(fnlock, sizeof(fnlock), "%s.lock", fn);
     info("Using G in %s\n", fn);
     dmat *gg=0;
     if(0){//test amount of poke 

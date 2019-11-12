@@ -478,7 +478,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 				   dispx,dispy,scale);
 	    }
 	}
-	toc2(" ");
+	toc(" ");
     }
     if(parms->save.setup){
 	writebin(recon->HXW, "HXW");
@@ -572,7 +572,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 		}
 	    }
 	}
-	toc2(" ");
+	toc(" ");
 	if(parms->save.setup){
 	    writebin(recon->GP, "GP");
 	}
@@ -719,7 +719,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		}
 	    }/*idm */
 	}//iwfs
-    	toc2(" ");
+    	toc(" ");
     }
     if(parms->recon.modal && parms->recon.nmod>0){
 	for(int idm=0; idm<ndm; idm++){
@@ -815,7 +815,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 	    P(GX,iwfs,ips)=dspmulsp(recon->GP->p[iwfs], P(HXW,iwfs,ips),"nn");
 	}/*ips */
     }
-    toc2(" ");
+    toc(" ");
     recon->GXtomo=dspcellnew(recon->GX->nx, recon->GX->ny);
     dspcell* GXtomo=recon->GXtomo/*PDSPCELL*/;
 

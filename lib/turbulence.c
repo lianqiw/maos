@@ -56,9 +56,9 @@ static char *create_fnatm(GENATM_T *data){
     char diratm[PATH_MAX];
     snprintf(diratm,PATH_MAX,"%s/atm", CACHE);
     if(!exist(diratm)) mymkdir("%s", diratm);
-    char fnatm[PATH_MAX];
     const char *types[]={"vonkarman","fractal","biharmonic"};
-    snprintf(fnatm,PATH_MAX,"%s/%s_%ld_%ldx%ld_%g_%ud.bin",
+    char fnatm[PATH_MAX+100];
+    snprintf(fnatm,sizeof(fnatm),"%s/%s_%ld_%ldx%ld_%g_%ud.bin",
 	     diratm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
     long avail=available_space(diratm);
     long need=data->nx*data->ny*data->nlayer*sizeof(real)+500000000;

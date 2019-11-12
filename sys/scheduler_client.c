@@ -73,9 +73,9 @@ int scheduler_finish(int status){
 int scheduler_report(STATUS_T *status){
     (void)status; return -1;
 }
-int scheduler_listen(void(*fun)(int)){
+void* scheduler_listen(void(*fun)(int)){
     (void)fun;
-    return -1;
+    return (void*)-1;
 }
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     (void)host;
@@ -235,12 +235,12 @@ static void scheduler_report_path(char *path){
    Started by maos to listen to the sock which connects to the
    scheduler for commands
 */
-int scheduler_listen(void(*fun)(int)){
+void* scheduler_listen(void(*fun)(int)){
     if(psock!=-1 && fun){
 	fun(psock);
-	return 0;
+	return NULL;
     }else{
-	return -1;
+	return (void*)-1;
     }
 }
 
@@ -416,14 +416,14 @@ void print_backtrace_symbol(void *const *buffer, int size){
     //disable memory debugging as this code may be called from within malloc_dbg
 #if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     static int connect_failed=0;
-    char cmdstr[PATH_MAX]={0};
+    char cmdstr[PATH_MAX+40]={0};
     char add[24]={0};
-    char progname[PATH_MAX]={0};
-    if(get_job_progname(progname, PATH_MAX, 0)){
+    char progname[PATH_MAX+20]={0};
+    if(get_job_progname(progname, sizeof progname, 0)){
 	warning("Unable to get progname\n");
 	return;
     }
-    snprintf(cmdstr, PATH_MAX, "addr2line -f -e %s", progname);
+    snprintf(cmdstr, sizeof cmdstr, "addr2line -f -e %s", progname);
     for(int it=size-1; it>0; it--){
 	snprintf(add,24," %p",buffer[it]);
 	strncat(cmdstr, add, PATH_MAX-strlen(cmdstr)-1);

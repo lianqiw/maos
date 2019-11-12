@@ -200,7 +200,7 @@ void muv_direct_prep(MUV_T *A, real svd){
 	dfree(V);
 	dfree(U);
     }
-    toc2("done.");
+    toc("done.");
 }
 /**
   Cholesky factorization (svd=0) or svd (svd>0) on each diagonal element of the
@@ -262,7 +262,7 @@ void muv_direct_diag_prep(MUV_T *A, real svd){
 				    A->V->p[ib]);
 	}
     }
-    toc2("done.");
+    toc("done.");
 }
 /*
   A few routines to apply CBS or SVD solver.

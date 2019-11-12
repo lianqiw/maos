@@ -59,8 +59,8 @@ double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtra
 kalman_t* sde_kalman(const dmat *coeff, double dthi, const lmat* dtrat, const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);
 dmat *kalman_test(kalman_t *kalman, dmat *input);
 dspcell *slaving(loccell *aloc, const dcell *actcpl, const lcell *actstuck, const lcell *actfloat, double thres, double scale, int mode);
-dmat *mtch(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, const dmat *qe, const dmat *bkbrnd2, const dmat *bkgrnd2c, double bkgrnd, double bkgrndc, double rne, double pixthetax, double pixthetay, double pixrot, int radgx, int cr);
-dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
+void mtch(dmat **mtche, dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, const dmat *qe, const dmat *bkbrnd2, const dmat *bkgrnd2c, double bkgrnd, double bkgrndc, double rne, double pixthetax, double pixthetay, double pixrot, int radgx, int cr);
+void mtch2(dmat **mtche, dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
 dmat *sde_psd2(const dmat *ff, const dmat *coeff);
 cn2est_t *cn2est=cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
 			    const dmat *saa, const double saat, const dmat* hs,

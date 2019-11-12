@@ -625,7 +625,8 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 	int start=0;
 	if(page==0){
 	    /*First read mandatory fits headers.*/
-	    if(zfread2(line, 1, 80, fp)) return -1; start++;
+	    if(zfread2(line, 1, 80, fp)) return -1; 
+	    start++;
 	    line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
 		dbg("Garbage in fits file at %ld:\n", zftell(fp));

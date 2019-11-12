@@ -129,10 +129,14 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	real sy1=(P(dirs,1,idir)*ht)-RR;
 	real sy2=(P(dirs,1,idir)*ht)+RR;
 	//Need to work when ht<0;
-	if(sx1<minx) minx=sx1; if(sx1>maxx) maxx=sx1;
-	if(sx2<minx) minx=sx2; if(sx2>maxx) maxx=sx2;
-	if(sy1<miny) miny=sy1; if(sy1>maxy) maxy=sy1;
-	if(sy2<miny) miny=sy2; if(sy2>maxy) maxy=sy2;
+	if(sx1<minx) minx=sx1; 
+	if(sx1>maxx) maxx=sx1;
+	if(sx2<minx) minx=sx2; 
+	if(sx2>maxx) maxx=sx2;
+	if(sy1<miny) miny=sy1; 
+	if(sy1>maxy) maxy=sy1;
+	if(sy2<miny) miny=sy2; 
+	if(sy2>maxy) maxy=sy2;
     }
     if(square){//if square, also make symmetric.
 	maxx=MAX(fabs(minx), fabs(maxx));

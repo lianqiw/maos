@@ -401,15 +401,15 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 }
 
 void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
-    char fnsvd[PATH_MAX];
+    char fnsvd[PATH_MAX+50];
     int do_cache=0;
     if(A->nx>512){
 	//Cache the result
 	uint32_t key=0;
 	key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
 	char dirsvd[PATH_MAX];
-	snprintf(dirsvd, PATH_MAX, "%s/.aos/cache/svd", HOME);
-	snprintf(fnsvd, PATH_MAX, "%s/svd_%ld_%u.bin", dirsvd, A->nx, key);
+	snprintf(dirsvd, sizeof dirsvd, "%s/.aos/cache/svd", HOME);
+	snprintf(fnsvd, sizeof fnsvd, "%s/svd_%ld_%u.bin", dirsvd, A->nx, key);
 	if(!exist(dirsvd)){
 	    mymkdir("%s", dirsvd);
 	}else{
@@ -426,16 +426,16 @@ void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     }else{
 	cell *in=0;
 	while(!in){
-	    char fnlock[PATH_MAX];
-	    snprintf(fnlock, PATH_MAX, "%s.lock", fnsvd);
+	    char fnlock[PATH_MAX+70];
+	    snprintf(fnlock, sizeof fnlock, "%s.lock", fnsvd);
 	    if(exist(fnsvd)){
 		info("Reading %s\n", fnsvd);
 		in=readbin("%s", fnsvd);
 	    }else{
 		int fd=lock_file(fnlock, 0, 0);
 		if(fd>=0){//success
-		    char fntmp[PATH_MAX];
-		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnsvd);
+		    char fntmp[PATH_MAX+100];
+		    snprintf(fntmp, sizeof fntmp, "%s.partial.bin", fnsvd);
 		    X(svd)(U, Sdiag, VT, A);
 		    in=cellnew(3, 1);
 		    in->p[0]=(cell*)*U;

@@ -116,7 +116,7 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 	const real *locy=aloc->p[idm]->locy;
 	dsp *slavet=0;
 	long count=0;
-	if(mode==2){//also handles nslave==0 case
+	if(mode==2){//falls back to tikhonov when ngroup==0
 	    lmat *group=lnew(nact, 1);
 	    lmat *groupc=lnew(nact,1);
 	    long ngroup=1;//number of isolated islands
@@ -234,9 +234,10 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 				    if(actcpl0[kact1]>thres2){//better than this one.
 					near_activer++;
 				    }
-				}
-				if(actcpl0[kact1]<thres){
-				    near_inactive++;
+				
+				    if(actcpl0[kact1]<thres){
+					near_inactive++;
+				    }
 				}
 			    }
 		
@@ -298,52 +299,79 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 				    pi[count]=kact1-1;
 				    P(actct, kact1-1)++;
 				    count++;
+				    
 				    px[count]=-1;
 				    pi[count]=kact2-1;
-				    count++;
 				    P(actct, kact2-1)++;
+				    count++;
 				}
 			    }
 			}
-		    }else if(mode==4 && near_inactive>1 && near_inactive<7){
+		    }else if(mode==4){
 			//this one does no work
-			int last_ic=-1;
 			int sign=aloc->p[idm]->locy[iact]>0?1:-1;
-
-			for(int ic=0; ic<4; ic++){
-			    int ix, iy;
-			    switch(ic){
+			int count2=0;
+			int offx=0, offy=0;
+			for(int id=0; id<4; id++){
+			    switch(id){
 			    case 0:
-				ix=-1; iy=-1; break;
+				offx=0; offy=0; break;
 			    case 1:
-				ix=-1; iy=0; break;
+				offx=1; offy=0; break;
 			    case 2:
-				ix=-1; iy=1; break;
+				offx=0; offy=1; break;
 			    case 3:
-				ix=0; iy=1; break;
+				offx=1; offy=1; break;
 			    default:
 				continue;
 			    }
-			    int kact1=loc_map_get(map, mapx+ix, mapy+iy);
-			    int kact2=loc_map_get(map, mapx-ix, mapy-iy);
-			    //if actuators at opposite edge/corners are active
-			    if(kact1>0 && (!isstuck || !isstuck[kact1-1]) && 
-			       kact2>0 && (!isstuck || !isstuck[kact2-1]) &&
-			       actcpl0[kact1] > thres && actcpl0[kact2] > thres){
-				if(ic>last_ic+1) sign=-sign; 
-				last_ic=ic;
-				px[count]=sign;
-				pi[count]=kact1-1;
-				count++;
-				px[count]=-sign;
-				pi[count]=kact2-1;
-				count++;
+
+			    int last_ic=-1;
+			    for(int ic=0; ic<4; ic++){
+				int ix, iy;
+				switch(ic){
+				case 0:
+				    ix=-1; iy=-1; break;
+				case 1:
+				    ix=-1; iy=0; break;
+				case 2:
+				    ix=-1; iy=1; break;
+				case 3:
+				    ix=0; iy=1; break;
+				default:
+				    continue;
+				}
+				int kact1=loc_map_get(map, mapx+ix*(1+offx), mapy+iy*(1+offy));
+				int kact2=loc_map_get(map, mapx-ix, mapy-iy);
+				//if actuators at opposite edge/corners are active
+				if(kact1>0 && (!isstuck || !isstuck[kact1-1]) && 
+				   kact2>0 && (!isstuck || !isstuck[kact2-1]) &&
+				   actcpl0[kact1] > thres && actcpl0[kact2] > thres
+				   && !P(actct, kact1-1) && !P(actct, kact2-1)
+				    ){
+				    if(ic>last_ic+1) sign=-sign; 
+				    last_ic=ic;
+				    px[count]=sign;
+				    pi[count]=kact1-1;
+				    P(actct, kact1-1)++;
+				    count++;
+				    px[count]=-sign;
+				    pi[count]=kact2-1;
+				    P(actct, kact2-1)++;
+				    count++;
+				    count2++;
+				}
 			    }
+			    if(count2>0) break;
 			}
+			/*if(count2==1){//false positive
+			    count-=2;
+			    }*/
 		    }
 		}/*if */
 	    }/*for iact */
 	    pp[nact]=count;
+	    lfree(actct);
 	}
 	dspsetnzmax(slavet, count);
 	writebin(slavet, "slave_%d_%d", mode, idm);
@@ -774,7 +802,7 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
     dfree(y1);
     dfree(y2);
     dspdroptol(out, 1e-3);
-    toc2("act_extrap: %ld iterations", count);
+    toc("act_extrap: %ld iterations", count);
 
     return out;
 }

@@ -208,7 +208,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    dcellfree(neaspec);
 	    dcellfreearr(avgpsf, nwvl);
 	    dfree(phygrad);
-	    toc2("Processing %s:", fnwvf);
+	    toc("Processing %s:", fnwvf);
 	}/*if exist */
     }
 #if _OPENMP >= 200805
@@ -253,7 +253,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     data->ncase=count;
     data->icase=0;
     data->cases=myrealloc(data->cases,data->ncase,long4);
-    CALL((thread_fun)calc_pistat, (void*)data, parms->skyc.nthread,0);
+    CALL((thread_wrapfun)calc_pistat, (void*)data, parms->skyc.nthread,0);
     info("done\n");
   
     dcellfree(data->unwrap);

@@ -252,12 +252,13 @@ case "$CN" in
 		#echo "Enabling -mtune=native"
 		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
 	    fi
-	    if test "$major" -ge 7 ;then #GCC 7 introduces more checking.
-		COMMON_GCC+=" -Wno-format-truncation -Wno-misleading-indentation -Wimplicit-fallthrough=2"
-	    fi
-	    if test "$major" -ge 8 ;then
-		COMMON_GCC+=" -Wno-cast-function-type"
-	    fi
+	    #if test "$major" -ge 7 ;then #GCC 7 introduces more checking.
+		#COMMON_GCC+=" -Wno-misleading-indentation -Wimplicit-fallthrough=2"
+		#-Wno-format-truncation 
+	    #fi
+	    #if test "$major" -ge 8 ;then
+	    #COMMON_GCC+=" -Wno-cast-function-type"
+	    #fi
 	    #GCC4.3 changed meaning of inline to C99
 	    #if test $major -eq 4 -a $minor -lt 5;then
 	    #gnu_inline="yes"

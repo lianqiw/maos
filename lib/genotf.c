@@ -516,21 +516,22 @@ void addvec(real *restrict out, real alpha,
 /**
    Generating matched filter from averaged short exposure images.
 */
-dmat *mtch(dmat **neaout, /**<[out] sanea*/
-	   const dmat *i0, /**<Averaged subaperture image*/
-	   const dmat *gx, /**<derivative of i0 along x*/
-	   const dmat *gy, /**<derivative of i0 along y*/
-	   const dmat *qe, /**<non uniform quantum efficiency (optional)*/
-	   const dmat *dbkgrnd2, /**<background*/
-	   const dmat *dbkgrnd2c, /**<background calibration*/
-	   real bkgrnd,  /**<global background*/
-	   real bkgrndc, /**<global background calibration*/
-	   real rne,     /**<Detector read noise*/
-	   real pixthetax, /**<Size of pixel along x*/
-	   real pixthetay, /**<Size of pixel along y*/
-	   real pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
-	   int radgx,        /**<1: gx/gy is along r/a coord.*/
-	   int cr    /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
+void mtch(dmat **mtche,   /**<[out] the matched filter*/
+	  dmat **neaout,  /**<[out] the subaperture noise equivalent angle*/
+	  const dmat *i0, /**<[in] Averaged subaperture image*/
+	  const dmat *gx, /**<[in] derivative of i0 along x (r)*/
+	  const dmat *gy, /**<[in] derivative of i0 along y (a)*/
+	  const dmat *qe, /**<[in] non uniform quantum efficiency (optional)*/
+	  const dmat *dbkgrnd2,  /**<[in] background*/
+	  const dmat *dbkgrnd2c, /**<[in] background calibration*/
+	  real bkgrnd,    /**<[in] global background*/
+	  real bkgrndc,   /**<[in] global background calibration*/
+	  real rne,       /**<[in] Detector read noise*/
+	  real pixthetax, /**<[in] Size of pixel along x*/
+	  real pixthetay, /**<[in] Size of pixel along y*/
+	  real pixrot,    /**<[in] Rotation (CCW, radian) of pixel island 0 for cartesian*/
+	  int radgx,      /**<[in] 1: gx/gy is along r/a coord.*/
+	  int cr          /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
     ){
     const real *bkgrnd2=dbkgrnd2?dbkgrnd2->p:0;
     const real *bkgrnd2c=dbkgrnd2c?dbkgrnd2c->p:0;
@@ -608,22 +609,23 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     }	
 
     dmat *tmp=dpinv(i0g, wt);
-    dmat *mtche=0;
-    dmm(&mtche,0,i0m, tmp, "nn", 1);
+    dmat *mtche0=0;
+    if(!mtche) mtche=&mtche0;
+    dmm(mtche,0,i0m, tmp, "nn", 1);
     dfree(tmp);
     
     for(int i=0; i<i0n; i++){/*noise weighting. */
 	wt->p[i]=1./wt->p[i];
     }
-    dmat *nea2=dtmcc(mtche, wt);
+    dmat *nea2=dtmcc(*mtche, wt);
 
     if(radgx && pixrot){
 	//Rotate mtched filter to x/y
-	drotvect(mtche, pixrot);
+	drotvect(*mtche, pixrot);
 	//Rotate NEA to (x/y)
-	drotvecnn(neaout, nea2,pixrot);
+	if(neaout) drotvecnn(neaout, nea2,pixrot);
     }else{//Already in x/y
-	dcp(neaout, nea2);
+	if(neaout) dcp(neaout, nea2);
     }
     dfree(nea2);
     dfree(i0m);
@@ -631,11 +633,11 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     dfree(wt);
     dfree(gx2);
     dfree(gy2);
-    return mtche;
+    if(mtche0) dfree(mtche0);
 }
 /**
    A simplified wrapper for mtch
 */
-dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr){
-    return mtch(nea, i0, gx, gy, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
+void mtch2(dmat **mtche, dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr){
+    mtch(mtche, nea, i0, gx, gy, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
 }

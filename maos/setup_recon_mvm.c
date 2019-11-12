@@ -151,13 +151,13 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 	eye->p[iact]=0;
 	/*Apply F_R'*/
 	muv_trans(&FRT, &recon->fit->FR, FLI, 1);
-	//toc2("fit");
+	//toc("fit");
 	/*Apply R_L*/
 	dcellzero(RLT);//warm restart.
 	muv_solve(&RLT, &recon->RL, NULL, FRT);
 	/*Apply R_R'*/
 	muv_trans(&RRT, &recon->RR, RLT, 1);
-	//toc2("tomo");
+	//toc("tomo");
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    dmat *to=MVMt->p[iwfs+curdm*nwfs];
 	    if(to){
@@ -165,7 +165,7 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(real));
 	    }
 	}
-	//toc2(" %ld", iact);
+	//toc(" %ld", iact);
 	/*{
 	    writebin(FLI, "cpu_dmfit_%ld", iact);
 	    writebin(FRT, "cpu_opdx_%ld", iact);
@@ -243,5 +243,5 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     if(parms->sim.mvmport){
 	mvm_client_init(parms->sim.mvmhost, parms->sim.mvmport, recon->MVM, parms->sim.mvmngpu);
     }
-    toc2("setup_recon_mvm");
+    toc("setup_recon_mvm");
 }

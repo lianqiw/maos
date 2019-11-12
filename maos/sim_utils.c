@@ -60,7 +60,7 @@ static mapcell *genatm_do(SIM_T *simu){
 	info("Generating Atmospheric Screen...\n");
 	tic;
 	screens = parms->atm.fun(gs);
-	toc2("Atmosphere ");
+	toc("Atmosphere ");
     }else{
 	/*
 	  create screens on two layers that produce pure
@@ -507,15 +507,16 @@ static void init_simu_evl(SIM_T *simu){
 	header[0]='\0';
 	if(parms->evl.psfmean || parms->evl.psfhist ){
 	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		char headeri[80];
+		char headeri[00];
 		int nembed=aper->embed->nembed->p[iwvl];
-		snprintf(headeri, 80, "wvl=%g\nPSF sampling is %.15g radian\nPSF will sum to %.15g\n",
+		snprintf(headeri, sizeof(headeri), "wvl=%g\nPSF sampling is %.15g radian\nPSF will sum to %.15g\n",
 			 parms->evl.wvl->p[iwvl],
 			 parms->evl.wvl->p[iwvl]/(nembed*parms->evl.dx),
 			 aper->sumamp2*nembed*nembed); 
-		strncat(header, headeri, 800-strlen(header)-2);
+		strcat(header, headeri);
 	    }
 	}
+	header[sizeof(header)-1]='\0';
 	//The saved PSF and COVs are padded by empty cells.
 	long nframepsf=parms->sim.end;
 	long nframecov=parms->sim.end;

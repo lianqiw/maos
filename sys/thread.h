@@ -101,7 +101,7 @@ static inline void THREAD_POOL_INIT(int nthread){
     omp_set_num_threads(nthread);
     omp_set_nested(0);//make sure nested is not enabled
 }
-static inline void QUEUE(long *group, thread_fun fun, void *arg, int nthread, int urgent){
+static inline void QUEUE(long *group, thread_wrapfun fun, void *arg, int nthread, int urgent){
     (void) group;
     (void) urgent;
     for(int it=0; it<nthread; it++){
@@ -109,7 +109,7 @@ static inline void QUEUE(long *group, thread_fun fun, void *arg, int nthread, in
 	    fun(arg);
     }
 }
-static inline void CALL(thread_fun fun, void *arg, int nthread, int urgent){
+static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
     (void)urgent;
     OMP_TASKSYNC_START
 	QUEUE(NULL, fun, arg, nthread, urgent);
@@ -170,7 +170,7 @@ static inline void  QUEUE_THREAD(long *group, thread_t *A, int urgent){
 /**
    Queue jobs to a temp group, Then wait for it to complete.
 */
-static inline void CALL(thread_fun fun, void *arg, int nthread, int urgent){
+static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
     if(nthread>1){							
 	long group=0; 
 	QUEUE(&group, fun, arg, nthread, urgent); 

@@ -173,7 +173,7 @@ int main(int argc, const char *argv[]){
 		wait_cpu(NTHREAD);
 	    }
 	}
-	thread_new((thread_fun)scheduler_listen, (void*)maos_listener);
+	thread_new((thread_fun)scheduler_listen, maos_listener);
 	setup_parms_gpu(parms, arg->gpus, arg->ngpu);
     
  

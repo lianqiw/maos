@@ -124,7 +124,7 @@ static int proc_read_status(char *fnjob,  char *exename, char *cstat,long* nthre
 int get_usage_running(void){
   
     struct dirent *dp, *dpsub;
-    char fnjob[512],fnsub[512];
+    char fnjob[512],fnsub[1024];
     char cstat;
     char exename[256];
     int nrunning=0;

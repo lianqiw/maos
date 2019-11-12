@@ -490,8 +490,8 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, real
 void skysim_save(const SIM_S *simu, const ASTER_S *aster, const real *ipres, int selaster, int seldtrat, int isky){
     const PARMS_S* parms=simu->parms;
     const int nwvl=parms->maos.nwvl;
-    char path[PATH_MAX];
-    snprintf(path,PATH_MAX,"Res%d_%d_maos/sky%d",simu->seed_maos,parms->skyc.seed,isky);
+    char path[PATH_MAX-100];
+    snprintf(path,sizeof(path),"Res%d_%d_maos/sky%d",simu->seed_maos,parms->skyc.seed,isky);
     mymkdir("%s",path);
     for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	dcell *sepsf=dcelldup(aster[selaster].wfs[iwfs].pistat->psf);
@@ -512,7 +512,7 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const real *ipres, int
     writebin(simu->mres->p[isky], "%s/mres",path);
     writebin(simu->psds,"%s/psds",path);
     char fnconf[PATH_MAX];
-    snprintf(fnconf,PATH_MAX,"%s/base.conf",path);
+    snprintf(fnconf,sizeof(fnconf),"%s/base.conf",path);
     FILE *fp=fopen(fnconf,"w");
 
     fprintf(fp,"sim.seeds=[%d]\n",simu->seed_maos);
@@ -632,7 +632,7 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const real *ipres, int
     }
  
     fclose(fp);
-    snprintf(fnconf,PATH_MAX,"%s/skyres.txt",path);
+    snprintf(fnconf,sizeof(fnconf),"%s/skyres.txt",path);
     fp=fopen(fnconf,"w");
     fprintf(fp, "TotAll\tNGS\tTT\n");
     fprintf(fp, "%g\t%g\t%g\n",

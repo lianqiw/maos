@@ -85,7 +85,7 @@ sockinfo_t sock_draws[MAXDRAW];
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
 */
-static void listen_drawdaemon(sockinfo_t *sock_data){
+static void* listen_drawdaemon(sockinfo_t *sock_data){
     listening=1;
     int sock_draw=sock_data->fd;
     char **figfn=sock_data->figfn;
@@ -123,6 +123,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
     }
     //info("draw stop lisening to drawdaemon at %d\n", sock_draw);
     listening=0;
+    return NULL;
 }
 
 static int list_search(list_t **head, list_t **node, const char *key, int add){
@@ -301,7 +302,7 @@ static int get_drawdaemon(){
 	if(DRAW_DIRECT || sock_helper<=-1){//directly fork and launch
 	    TIC;tic;
 	    sock=launch_drawdaemon();
-	    toc2("Directly launch drawdaemon");
+	    toc("Directly launch drawdaemon");
 	}else{//use helper to launch
 	    if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
 		sock=-1;
@@ -500,8 +501,7 @@ typedef struct imagesc_t{
     char *ylabel; /**<y axis label*/
     char *fn;
 }imagesc_t;
-static int imagesc_do(imagesc_t *data){
-    int ans=0;
+static void imagesc_do(imagesc_t *data){
     LOCK(lock);
     if(!get_drawdaemon()){
 	char *fig=data->fig;
@@ -543,7 +543,6 @@ static int imagesc_do(imagesc_t *data){
 	    STWRITECMDSTR(DRAW_XLABEL,xlabel);
 	    STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	    STWRITEINT(DRAW_END);
-	    ans=1;
 	}
     }
     UNLOCK(lock);
@@ -556,7 +555,6 @@ static int imagesc_do(imagesc_t *data){
     free(data->ylabel);
     free(data->fn);
     free(data);
-    return ans;
 }
 int imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
@@ -604,7 +602,7 @@ int imagesc(const char *fig, /**<Category of the figure*/
     data->fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
-    QUEUE(&group, (thread_fun)imagesc_do, (void*)data, 1, 0);
+    QUEUE(&group, (thread_wrapfun)imagesc_do, (void*)data, 1, 0);
     return 1;
 }
 

@@ -363,20 +363,11 @@ ARG_T * parse_args(int argc, const char *argv[]){
 }
 
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, int isim){
-    char header[320];
+    char header[400];
     int nembed=aper->embed->nembed->p[iwvl];
     real wvl=parms->evl.wvl->p[iwvl];
     real sumamp2=aper->sumamp2;
-    snprintf(header, 320, 
-	     /*"Science PSF at (%.15g, %.15g) arcsec\n"
-	     "Turbulence: r0=%g, l0=%g\n"
-	     "Wavelength: %.15gm\n"
-	     "OPD Sampling: %.15gm\n"
-	     "FFT Grid: %dx%d\n"
-	     "PSF Sampling: %.15g arcsec\n"
-	     "PSF Sum to: %.15g\n"
-	     "Exposure: %gs\n", 
-	     */
+    snprintf(header, sizeof(header), 
 	     "theta=(%.15g, %.15g) / Field location (arcsec)\n"
 	     "r0=%g / Fried parameter (meter)\n"
 	     "L0=%g / Outer scale (meter)\n"

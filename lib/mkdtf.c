@@ -294,7 +294,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		    }
 		}//isa
 	    }//illt
-	    toc2("ETF");
+	    toc("ETF");
 	}else{
 	    /*
 	      The ETF is computed as DFT

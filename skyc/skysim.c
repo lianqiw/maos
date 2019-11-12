@@ -464,7 +464,7 @@ static void skysim_prep_gain(SIM_S *simu){
     }
     writebin(simu->gain_pre, "gain_pre.bin");
     writebin(simu->gain_x, "gain_x.bin");
-    toc2("servo_optim");
+    toc("servo_optim");
     simu->gain_x=dref(sigma2);
     dfree(sigma2);
 }
@@ -615,7 +615,7 @@ void skysim(const PARMS_S *parms){
 #endif
 	if(simu->isky_start < simu->isky_end){
 	    simu->isky=simu->isky_start;
-	    CALL((thread_fun)skysim_isky, simu, nthread,0);/*isky iteration. */
+	    CALL((thread_wrapfun)skysim_isky, simu, nthread,0);/*isky iteration. */
 	}
 	if(parms->skyc.dbgsky<0){
 	    char fn[80];

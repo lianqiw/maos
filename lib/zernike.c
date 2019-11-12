@@ -357,10 +357,10 @@ dmat *KL_vonkarman(const loc_t *loc, int nmod, real L0){
     if(!loc) return 0;
     uint32_t key=lochash(loc, 0);
     mymkdir("%s/.aos/cache", HOME);
-    char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX, "%s/.aos/cache/KL_vonkarman_%u_%g_%ld.bin", HOME, key, L0, loc->nloc);
-    char fnlock[PATH_MAX];
-    snprintf(fnlock, PATH_MAX, "%s.lock", fn);
+    char fn[PATH_MAX+100];
+    snprintf(fn, sizeof(fn), "%s/.aos/cache/KL_vonkarman_%u_%g_%ld.bin", HOME, key, L0, loc->nloc);
+    char fnlock[PATH_MAX+110];
+    snprintf(fnlock, sizeof(fnlock), "%s.lock", fn);
     dmat *kl=0;
   redo:
     if(loc->nloc<500){//fast. no need cache.

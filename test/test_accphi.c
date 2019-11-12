@@ -128,42 +128,42 @@ static void test_accuracy(int argc, char **argv){
     prop_grid(screen, loc, phi_loc, -2,displacex, displacey, scale, wrap, 0,0);
     tic;
     prop_grid(screen, loc, phi_loc,  1,displacex, displacey, scale, wrap, 0,0);
-    toc2("loc\t");
+    toc("loc\t");
 
     prop_grid_pts(screen, pts, phi_pts, -2, displacex, displacey, scale, wrap, 0,0);
     tic;
     prop_grid_pts(screen, pts, phi_pts,  1, displacex, displacey, scale, wrap, 0,0);
-    toc2("pts\t");
+    toc("pts\t");
 
 
     prop_grid_map(screen, map1, -2, displacex, displacey, scale, wrap, 0,0);
     tic;
     prop_grid_map(screen, map1, 1, displacex, displacey, scale, wrap, 0,0);
-    toc2("map\t");
+    toc("map\t");
 
  
     prop_grid_stat(screen, locstat, phi_stat, -2,displacex, displacey, scale, wrap, 0,0);
     tic;
     prop_grid_stat(screen, locstat, phi_stat , 1, displacex, displacey, scale, wrap, 0,0);
-    toc2("stat\t");tic;
+    toc("stat\t");tic;
 
   
 
     prop_nongrid(locin, screen->p,loc, phi_loc2loc, -2,displacex, displacey, scale,0,0);
-    toc2("nongrid\t"); tic;
+    toc("nongrid\t"); tic;
     prop_nongrid(locin, screen->p,loc, phi_loc2loc, 1,displacex, displacey, scale,0,0);
-    toc2("nongrid\t");
+    toc("nongrid\t");
     
 	
     phi_h=mycalloc(loc->nloc,real);
  
     tic;
     dsp *hfor=mkh(locin, loc, displacex, displacey, scale);
-    toc2("mkh\t\t");
+    toc("mkh\t\t");
     dspmulvec(phi_h,hfor, screen->p, 'n', -2);
     tic;
     dspmulvec(phi_h,hfor, screen->p, 'n', 1);
-    toc2("mul h\t");
+    toc("mul h\t");
 
 
     phi_cub=mycalloc(loc->nloc,real);
@@ -175,27 +175,27 @@ static void test_accuracy(int argc, char **argv){
     prop_nongrid_cubic(locin,screen->p,loc,phi_cub,-2, displacex, displacey, scale, cubic,0,0);
     tic;
     prop_nongrid_cubic(locin,screen->p,loc,phi_cub,1, displacex, displacey, scale, cubic,0,0);
-    toc2("nongrid, cubic\t");
+    toc("nongrid, cubic\t");
     prop_grid_cubic(screen, loc, phi_cub2, -2,displacex, displacey, scale,  cubic, 0,0);
     tic;
     prop_grid_cubic(screen, loc, phi_cub2, 1,displacex, displacey, scale,  cubic, 0,0);
-    toc2("grid,  cubic\t");
+    toc("grid,  cubic\t");
     prop_grid_cubic(screen2, loc,phi_cub3, -2,displacex, displacey, scale,  cubic, 0,0);
     tic;
     prop_grid_cubic(screen2, loc,phi_cub3, 1,displacex, displacey, scale,  cubic, 0,0);
-    toc2("grid2, cubic\t");
+    toc("grid2, cubic\t");
     prop_grid_stat_cubic(screen, locstat,phi_cub4, -2,displacex, displacey, scale,  cubic, 0,0);
     tic;
     prop_grid_stat_cubic(screen, locstat,phi_cub4, 1,displacex, displacey, scale,  cubic, 0,0);
-    toc2("grid  2stat, cubic\t");
+    toc("grid  2stat, cubic\t");
     dsp *hforcubic;
     tic;
     hforcubic=mkh_cubic(locin, loc, displacex, displacey, scale, cubic);
-    toc2("mkh cubic \t\t");
+    toc("mkh cubic \t\t");
     dspmulvec(phi_cubh, hforcubic,screen->p,'n',-2);
     tic;
     dspmulvec(phi_cubh, hforcubic,screen->p,'n',1);
-    toc2("cubic mul h\t\t");
+    toc("cubic mul h\t\t");
     real diffc12=0,diff45=0,diff46=0,diff47=0;
     for(ii=0; ii<loc->nloc; ii++){
 	diff1+=fabs(phi_loc[ii]-phi_pts[ii]);

@@ -387,7 +387,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	dspcellfree(recon->HA_ncpa);
 	recon->HA_ncpa=HA2;
     }
-    toc2(" ");
+    toc(" ");
     if(parms->save.setup){
 	writebin(recon->HA_ncpa,"HA_ncpa");
     }
@@ -592,7 +592,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    if(parms->nsurf>0){
 		OMPTASK_SINGLE setup_surf_perp(parms, aper, powfs, recon);
 	    }
-	    toc2("surf prop");
+	    toc("surf prop");
 	}
 	/**
 	   note about idealfit: No need to pass surfaces to DM fitting

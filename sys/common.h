@@ -124,7 +124,9 @@ extern int detached;
 
 */
 #define dbg(format,...) printf("Info(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
-#define error(format,...) ({char fline[4096]; snprintf(fline, 4096, "%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN(fline);})
+//#define error(format,...) ({char fline[5000]; snprintf(fline, sizeof fline, "%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); 
+//	    fline[sizeof(fline)-1]='\0';QUIT_FUN(fline);})
+#define error(format,...) ({printf("%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
 #define warning(format,...) printf("%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK)
 #define dbg_time(format,...) printf("Info(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
 #define warning_time(format,...) printf("%sWarning(%s:%d)[%s]: " format "%s", RED, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__, BLACK)
@@ -157,11 +159,7 @@ extern int detached;
 */
 #define TIC double tk
 #define tic tk=myclockd();
-#define toc(A...) ({char fline[4096];char sect[4096];			\
-	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__); snprintf(fline,4096, "%-20s",sect); \
-	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stdout,"%s takes %.6f seconds.\n", fline, myclockd()-tk);})
-#define toc2(A...) ({char fline[4096]; snprintf(fline, 4096, A); fprintf(stdout, "%s takes %.6f seconds.\n",fline, myclockd()-tk);})
+#define toc(format,...) printf(format "takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

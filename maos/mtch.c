@@ -44,7 +44,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcellfree(intstat->mtche);
     dfree(intstat->i0sum);
 
-    intstat->mtche=dcellnew(nsa,ni0);
+    intstat->mtche=dcellnew_same(nsa,ni0,2,pixthetax*pixthetay);
     dcellfree(powfs[ipowfs].sanea);
     dcell *sanea=powfs[ipowfs].sanea=dcellnew(ni0,1);
     intstat->i0sum=dnew(nsa,ni0);
@@ -105,11 +105,11 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    if(powfs[ipowfs].bkgrndc){
 		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
 	    }
-	    P(mtche,isa,ii0)=mtch(&nea2, P(i0s,isa,ii0),
-				    gxs?P(gxs,isa,ii0):0, gys?P(gys,isa,ii0):0, 
-				    parms->powfs[ipowfs].qe,
-				    bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
-				    pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
+	    mtch(PP(mtche,isa,ii0),&nea2, P(i0s,isa,ii0),
+		 gxs?P(gxs,isa,ii0):0, gys?P(gys,isa,ii0):0, 
+		 parms->powfs[ipowfs].qe,
+		 bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
+		 pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
 	    
 	    P(i0sum,isa,ii0)=dsum(P(i0s,isa,ii0));
 	    i0sumsum+=P(i0sum,isa,ii0);

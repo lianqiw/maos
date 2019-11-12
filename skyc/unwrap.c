@@ -202,7 +202,7 @@ static void convert_wvf(GENPISTAT_S *data){
     ccellfree(phi);
     dfree(diff);
     dfree(phirecon);
-    toc2("Processing %s:", fnphase);
+    toc("Processing %s:", fnphase);
     }
 }
   /*convert wvf of a+bi to log(a+bi) for interpolation. */

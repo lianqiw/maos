@@ -277,9 +277,9 @@ void listen_draw(){
 		drawdatawrap[0]=drawdata;
 		gdk_threads_add_idle(addpage, drawdatawrap);
 		/*if(drawdata->p0){
-		    toc2("fifo_read image %dx%d", drawdata->nx, drawdata->ny);
+		    toc("fifo_read image %dx%d", drawdata->nx, drawdata->ny);
 		}else{
-		    toc2("fifo_read points");
+		    toc("fifo_read points");
 		    }*/
 		drawdata=NULL;
 	    }

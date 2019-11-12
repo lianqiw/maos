@@ -100,7 +100,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     int npsfx=powfs[ipowfs].pts->nx *parms->powfs[ipowfs].embfac;
     int npsfy=npsfx;
-    char fnprefix[PATH_MAX]; fnprefix[0]='\0';
+    char fnprefix[200]; fnprefix[0]='\0';
     uint32_t key=0;
     strcat(fnprefix, "SEOTF");
     if(powfs[ipowfs].amp_tel){
@@ -120,16 +120,16 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(key!=0){
 	char tmp2[80];
 	snprintf(tmp2,80,"_%ud",key);
-	strncat(fnprefix, tmp2, PATH_MAX-strlen(fnprefix)-1);
+	strcat(fnprefix, tmp2);
     }
-    char fnotf[PATH_MAX];
-    char fnlock[PATH_MAX];
+    char fnotf[PATH_MAX+20];
+    char fnlock[PATH_MAX+40];
     snprintf(fnotf,PATH_MAX,"%s/SEOTF/",CACHE);
     if(!exist(fnotf)) {
 	mymkdir("%s",fnotf);
     }
     long nsa=powfs[ipowfs].saloc->nloc;
-    snprintf(fnotf,PATH_MAX,"%s/SEOTF/%s_D%g_%g_"
+    snprintf(fnotf,sizeof(fnotf),"%s/SEOTF/%s_D%g_%g_"
 	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
 	     "nwvl%d_%g_embfac%d_ncompx%d_%dx%d_v2",
 	     CACHE, fnprefix,
@@ -141,14 +141,14 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
 	     parms->powfs[ipowfs].embfac,
 	     powfs[ipowfs].ncompx, npsfx,npsfy);
-    snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
+    snprintf(fnlock, sizeof(fnlock), "%s.lock", fnotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     while(!intstat->otf){
 	if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
 	    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 	    if(fd>=0){/*succeed */
 		info("Generating WFS OTF for %s...", fnotf);
-		TIC;tic; genseotf_do(parms,powfs,ipowfs); toc2("done");
+		TIC;tic; genseotf_do(parms,powfs,ipowfs); toc("done");
 		writebin(intstat->otf, "%s", fnotf);
 	    }else{
 		warning("Waiting for previous lock to release ...");
@@ -213,11 +213,11 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     }
     snprintf(fnprefix,80,"SELOTF_%0x",key);
     char fnlotf[PATH_MAX];
-    snprintf(fnlotf,PATH_MAX,"%s/SELOTF/", CACHE);
+    snprintf(fnlotf,sizeof(fnlotf),"%s/SELOTF/", CACHE);
     if(!exist(fnlotf)){
 	mymkdir("%s",fnlotf);
     }
-    snprintf(fnlotf,PATH_MAX,"%s/SELOTF/%s_"
+    snprintf(fnlotf,sizeof(fnlotf),"%s/SELOTF/%s_"
 	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
 	     "nwvl%d_%g_embfac%d_v2", 
 	     CACHE, fnprefix,
@@ -228,8 +228,8 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	     parms->powfs[ipowfs].nwvl,
 	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
 	     parms->powfs[ipowfs].embfac);
-    char fnlock[PATH_MAX];
-    snprintf(fnlock, PATH_MAX, "%s.lock", fnlotf);
+    char fnlock[PATH_MAX+10];
+    snprintf(fnlock, sizeof(fnlock), "%s.lock", fnlotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     while(!intstat->lotf){
 	if(exist(fnlock) || !zfexist(fnlotf)){/*need to create data */

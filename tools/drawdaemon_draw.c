@@ -605,7 +605,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymin0=ymin-(ofy/drawdata->ny)*ydiff;
 	ymax0=ymin0+ydiff/zoomy;
 	cairo_restore(cr);
-	//toc2("cairo_draw image");
+	//toc("cairo_draw image");
     }
     if(drawdata->npts>0){
 	cairo_save(cr);
@@ -842,7 +842,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
 
 	cairo_restore(cr);
-	//toc2("cairo_draw pts");
+	//toc("cairo_draw pts");
     }
 
     if(drawdata->ncir>0){
@@ -1133,5 +1133,5 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     drawdata->zoomxlast=drawdata->zoomx;
     drawdata->zoomylast=drawdata->zoomy;
     drawdata->drawn=1;
-    //toc2("cairo_draw");
+    //toc("cairo_draw");
 }

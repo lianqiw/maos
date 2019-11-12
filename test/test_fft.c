@@ -78,7 +78,7 @@ static int test_fft_speed_small(){
 	for(int i=0; i<1000; i++){
 	    cfft2(ac->p[ii],-1);
 	}
-	toc2("fft");
+	toc("fft");
 	tim->p[ii]=toc3;
     }
     writebin(tim,"fft_timing");
@@ -118,7 +118,7 @@ static void test_fft_speed(){
 	for(int i=0; i<nrepeat; i++){
 	    cfft2(ac->p[ii],-1);
 	}
-	toc2("fft");
+	toc("fft");
 	tim->p[ii]=toc3/nrepeat;
     }
     writebin(tim,"fft_timing");
@@ -157,11 +157,11 @@ static void test_fft_special(){
 	for(int i=0; i<nrepeat; i++){
 	    cfft2(ac->p[ii],-1);
 	}
-	toc2("fft");
+	toc("fft");
 	for(int i=0; i<nrepeat; i++){
 	    cfft2partial(ac->p[ii],512,-1);
 	}
-	toc2("fft2partial");
+	toc("fft2partial");
 	tim->p[ii]=toc3/nrepeat;
     }
     writebin(tim,"fft_timing");
