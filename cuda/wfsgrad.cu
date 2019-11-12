@@ -41,7 +41,7 @@ extern "C"
 #define tic
 #define ctoc(A)
 #else
-#define ctoc(A) toc2(A)
+#define ctoc(A) toc(A)
 #endif
 
 extern const char *dirskysim;

@@ -22,49 +22,11 @@
 #include "wfs.h"
 #include "cudata.h"
 #include "../maos/pywfs.h"
-/**
-   Reshape each cell into column vector and concatenate each cell into a column
-*/
-static cmat *concat_ccell_as_vector(ccell *input){
-    if(input->ny!=1){
-	error("Invalid format\n");
-    }
-    int npix=input->p[0]->nx*input->p[0]->ny;
-    int nsa=input->nx;
-    cmat *output=cnew(npix, nsa);
-    for(long isa=0; isa<nsa; isa++){
-	memcpy(output->p+isa*npix, input->p[isa]->p, sizeof(comp)*npix);
-    }
-    return output;
-}
-/**
-   Reshape each cell into column vector and concatenate each cell into a column
-*/
-static dmat *concat_dcell_as_vector(dcell *input){
-    if(input->ny!=1){
-	error("Invalid format\n");
-    }
-    int npix=input->p[0]->nx*input->p[0]->ny;
-    int nsa=input->nx;
-    dmat *output=dnew(npix, nsa);
-    for(long isa=0; isa<nsa; isa++){
-	memcpy(output->p+isa*npix, input->p[isa]->p, sizeof(real)*npix);
-    }
-    return output;
-}
+
 static void etf2gpu(cucmat &cuetf, ETF_T *etf, int icol, int *etfis1d){
-    ccell *etfc=0;
-    if(etf->p1){
-	etfc=ccellsub(etf->p1, 0, 0, icol, 1);
-	*etfis1d=1;
-    }else{
-	etfc=ccellsub(etf->p2, 0, 0, icol, 1);
-	*etfis1d=0;
-    }
-    cmat *etfm=concat_ccell_as_vector(etfc);
+    cmat *etfm=ccell_col(etf->p1?etf->p1:etf->p2, icol);
     cp2gpu(cuetf, etfm);
     cfree(etfm);
-    ccellfree(etfc);
 }
 /**
    Initialize or update etf.
@@ -112,9 +74,7 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 	    if(multi_mf|| wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		if(parms->powfs[ipowfs].phytype_sim==1){//matched filter
 		    int icol=multi_mf?wfsind:0;
-		    dcell *mtchec=dcellsub(powfs[ipowfs].intstat->mtche, 0, 0, icol, 1);
-		    dmat *mtche=concat_dcell_as_vector(mtchec);
-		    dcellfree(mtchec);
+		    dmat *mtche=dcell_col(powfs[ipowfs].intstat->mtche, icol);
 		    if(iwfs!=iwfs0 && cuwfs[iwfs].mtche()==cuwfs[iwfs0].mtche()){
 			//Delete old values.
 			cuwfs[iwfs].mtche=0;
@@ -244,7 +204,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].saimcc->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		int icol=powfs[ipowfs].saimcc->nx>1?wfsind:0;
-		dmat *imcc=concat_dcell_as_vector(powfs[ipowfs].saimcc->p[icol]);
+		dmat *imcc=dcell_col(powfs[ipowfs].saimcc->p[icol], 0);
 		cp2gpu(cuwfs[iwfs].imcc, imcc);
 		dfree(imcc);
 	    }else{
@@ -357,11 +317,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			int notfused=!powfs[ipowfs].dtf[iwvl].fused;
 			if(notfused){
 			    int icol=powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0;
-			    ccell *nominalc=ccellsub(powfs[ipowfs].dtf[iwvl].nominal, 0, 0, icol, 1);
-			    //Convert nominal from cell of vector to matrix so
-			    //that cuda kernel can address multiple subapertures
-			    cmat *nominal=concat_ccell_as_vector(nominalc);
-			    ccellfree(nominalc);
+			    cmat *nominal=ccell_col(powfs[ipowfs].dtf[iwvl].nominal, icol);
 			    cp2gpu(cuwfs[iwfs].dtf[iwvl].nominal, nominal);
 			    cfree(nominal);
 			}
@@ -393,11 +349,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		if(powfs[ipowfs].bkgrnd){
 		    if(powfs[ipowfs].bkgrnd->ny==1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			int icol=(powfs[ipowfs].bkgrnd->ny==1?wfsind:0);
-			dcell *bkgrndi=dcellsub(powfs[ipowfs].bkgrnd, 0, 0, icol, 1);
-			dmat *bkgrnd=concat_dcell_as_vector(bkgrndi);
+			dmat *bkgrnd=dcell_col(powfs[ipowfs].bkgrnd, icol);
 			cp2gpu(cuwfs[iwfs].bkgrnd2, bkgrnd);
 			dfree(bkgrnd);
-			dcellfree(bkgrndi);		
 		    }else{
 			cuwfs[iwfs].bkgrnd2=cuwfs[iwfs0].bkgrnd2;
 		    }
@@ -405,11 +359,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		if(powfs[ipowfs].bkgrndc){
 		    if(powfs[ipowfs].bkgrndc->ny==1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			int icol=(powfs[ipowfs].bkgrndc->ny==1?wfsind:0);
-			dcell *bkgrndi=dcellsub(powfs[ipowfs].bkgrndc, 0, 0, icol, 1);
-			dmat *bkgrnd=concat_dcell_as_vector(bkgrndi);
+			dmat *bkgrnd=dcell_col(powfs[ipowfs].bkgrndc, icol);
 			cp2gpu(cuwfs[iwfs].bkgrnd2c, bkgrnd);
 			dfree(bkgrnd);
-			dcellfree(bkgrndi);		
+
 		    }else{
 			cuwfs[iwfs].bkgrnd2c=cuwfs[iwfs0].bkgrnd2c;
 		    }	

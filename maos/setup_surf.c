@@ -41,11 +41,11 @@
 
 static void 
 setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
-    dbg("Setting up tilt surface (M3)\n");
+    info("Setting up tilt surface (M3)\n");
     rmapcell *tsurf=rmapcellnew(parms->ntsurf, 1);
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	char *fn=parms->tsurf[itsurf];
-	dbg("Loading tilt surface from %s\n", fn);
+	info("Loading tilt surface from %s\n", fn);
 	tsurf->p[itsurf]=rmapread("%s",fn); 
     }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -496,7 +496,7 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 		error("powfs%d: safocuspv should be in nm.\n", ipowfs);
 	    }
 	    real pv=parms->powfs[ipowfs].safocuspv*1e-9;
-	    dbg("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
+	    info("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
 	    if(!powfs[ipowfs].opdadd){
 		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
@@ -624,7 +624,9 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
 	    //don't extrapolate dm_ncpa here.
 	    dcellfree(rhs);
-	    writebin(recon->dm_ncpa, "dm_ncpa");
+	    if(parms->save.setup){
+		writebin(recon->dm_ncpa, "dm_ncpa");
+	    }
 	    dspcellfree(recon->HA_ncpa);
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

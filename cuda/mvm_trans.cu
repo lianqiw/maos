@@ -299,7 +299,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		}
 	    }
 	    if(parms->load.mvmi){
-		toc2("copy mvmi to gpu");
+		toc("copy mvmi to gpu");
 	    }
 	}
 	/*Initialyze intermediate FitL/FitR result array in GPU. Send
@@ -315,13 +315,13 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		}
 	    }
 	    if(parms->load.mvmf){
-		toc2("copy mvmf to gpu");
+		toc("copy mvmf to gpu");
 	    }
 	}
 	/*Do real MVM control matrix assemble in multiply CPU/GPU*/
 	tic;
 	CALL_THREAD(info, 1);
-	toc2("MVM Assembly in GPU");
+	toc("MVM Assembly in GPU");
 
 
 	if(parms->save.setup){
@@ -368,10 +368,10 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	stream_t stream;
 	cuglobal->mvm=mvmt.trans(stream);
 	stream.sync();
-	toc2("MVM Reshape in GPU");tic;
+	toc("MVM Reshape in GPU");tic;
 	cp2cpu(&recon->MVM, cuglobal->mvm, stream);
 	stream.sync();
-	toc2("MVM copy to CPU");
+	toc("MVM copy to CPU");
     }
 }
 

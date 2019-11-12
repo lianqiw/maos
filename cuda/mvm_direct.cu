@@ -153,7 +153,7 @@ static void mvm_direct_igpu(thread_t *info){
 			   cudaMemcpyDeviceToHost, stream));
     }
     stream.sync();
-    toc2("Thread %ld mvm", info->ithread);
+    toc("Thread %ld mvm", info->ithread);
     if(gpu_avail){
 	LOCK(gpu_mutex);
 	gpu_avail[gpu_pos++]=igpu;
@@ -195,7 +195,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	if(parms->load.mvmi){
 	    tic; info("Loading mvmi ...");
 	    mvmi=X(read)("%s", parms->load.mvmi);
-	    toc2("done");
+	    toc("done");
 	}else if(parms->save.mvmi){
 	    mvmi=X(new)(ntotxloc, ntotgrad);
 	}
@@ -237,7 +237,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	if(parms->save.mvmi){
 	    tic; info("Saving mvmi ...");
 	    writebin(mvmi, "mvmi.bin");
-	    toc2("done");
+	    toc("done");
 	}
 	X(free)(mvmi);
 	{

@@ -204,8 +204,9 @@ COMMON_CLANG="-Wno-deprecated-declarations -Qunused-arguments "
 COMMON_ALL=""
 
 OPTIM_ALL="-O3 "
-DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
+OPTIM_GCC=" -ftree-vectorize -ffast-math -fno-finite-math-only " #minimum 4.
 
+DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 
 #inline definition:
@@ -247,25 +248,12 @@ case "$CN" in
 	    if test "$major" -lt 4 ;then
 		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
-	    OPTIM_GCC+=" -ftree-vectorize -ffast-math -fno-finite-math-only" #introduced in GCC 4
 	    if test "$major" -gt 4 -o "$minor" -ge 2 ;then
-		#echo "Enabling -mtune=native"
 		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
 	    fi
-	    #if test "$major" -ge 7 ;then #GCC 7 introduces more checking.
-		#COMMON_GCC+=" -Wno-misleading-indentation -Wimplicit-fallthrough=2"
-		#-Wno-format-truncation 
-	    #fi
-	    #if test "$major" -ge 8 ;then
-	    #COMMON_GCC+=" -Wno-cast-function-type"
-	    #fi
-	    #GCC4.3 changed meaning of inline to C99
-	    #if test $major -eq 4 -a $minor -lt 5;then
-	    #gnu_inline="yes"
-	    #fi
 	    #GCC introduced openmp task in 4.4
 	    if test $major -le 4 -a $minor -le 4 ;then
-		AC_MSG_ERROR([OpenMP is not supported by GCC $CC_VERSION])
+		AC_MSG_WARN([OpenMP is not supported by GCC $CC_VERSION])
 		unset OPENMP_CFLAGS
 	    fi
 	fi
@@ -314,8 +302,7 @@ OPTSextra=""
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
-#AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw_system="yes"],[has_fftw_system='no'])
-#unset ac_cv_lib_fftw3_fftw_execute
+
 #Check operating system.
 AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
@@ -353,6 +340,9 @@ case "$host_os" in
 	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
 	if test "$use_release" = "yes" ;then
 	    CFLAGS+=" -mmacosx-version-min=10.7"
+	fi
+	if test "$CN" = "CLANG" ;then
+	    CFLAGS+= "-stdlib=libc++"
 	fi
 	;;
     *bsd*)

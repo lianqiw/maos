@@ -236,42 +236,44 @@ static inline int iscell(const void *id){
 }
 /*A method to simulate operator overloading for indexing arrys*/
 #if DEBUG
-static inline void assert_1d(long i, long nx, long ny){
+static inline long index_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
 	error("%ld is out of range for (%ld,%ld) array\n", i, nx, ny);
+    }else{
+	return i;
     }
 }
-static inline void assert_2d(long ix, long iy, long nx, long ny){
+static inline void index_2d(long ix, long iy, long nx, long ny){
     if(ix<0 || ix>=nx || iy<0 || iy>=ny){
 	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
+    }else{
+	return ix+iy*nx;
     }
 }
-#define P1(A,i) ((A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)])
-#define P2(A,ix,iy) ((A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)])
-//#define PP1(A,i) ((A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i)))
-//#define PP2(A,ix,iy) ((A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)))
 #else
-#define P1(A,i) ((A)->p[(i)])
-#define P2(A,ix,iy) ((A)->p[(ix)+(A)->nx*(iy)])
+#define index_1d(i,    nx,ny) (i)
+#define index_2d(ix,iy,nx,ny) ((ix)+(iy)*(nx))
 #endif
-#define P0(A) ((A)->p)
-#define PP0(A) ((A)->p)
-#define PP1(A,i) ((A)->p+(i))
-#define PP2(A,ix,iy) ((A)->p+(ix)+(A)->nx*(iy))
-//#endif
-//#define P0(A) _Pragma("#error Invalid use. Use P(A,i) or P(A,ix,iy)\n")
-//#define PP0(A) _Pragma("#error Invalid use. Use PP(A,i) or PP(A,ix,iy)\n")
+    
+#define P0(A)  ((A)->p)
+
+#define P1(A,i)     (A)->p[index_1d((i),        (A)->nx, (A)->ny)]
+#define P2(A,ix,iy) (A)->p[index_2d((ix), (iy), (A)->nx, (A)->ny)]
+
+#define PP1(A,i)     ((A)->p+index_1d((i),        (A)->nx, (A)->ny))
+#define PP2(A,ix,iy) ((A)->p+index_2d((ix), (iy), (A)->nx, (A)->ny))
+
 #define P_GET(_0,_1,_2,_3,NAME,...) NAME
 #define P(...) P_GET(_0,__VA_ARGS__,P2,P1,P0)(__VA_ARGS__)
-#define PP(...) P_GET(_0,__VA_ARGS__,PP2,PP1,PP0)(__VA_ARGS__)
+#define PP(...) P_GET(_0,__VA_ARGS__,PP2,PP1,P0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+(iy)*(A)->nx)
 
 //Define indexing using wrapping. See wrap()
-//#define P1R(A,i) _Pragma("#error Invalid use. Use PR(A,i,j)")
-#define PR(A,ix,iy) P2(A, wrap(ix, A->nx), wrap(iy, A->ny))
-//#define PR(...) P_GET(_0,__VA_ARGS__,P2R,P1R,P1R,P1R)(__VA_ARGS__)
-//#define PP1R(A,i) _Pragma("#error Invalid use. Use PPR(A,i,j)")
-#define PPR(A,ix,iy) PP2(A, wrap(ix, A->nx), wrap(iy, A->ny))
-//#define PPR(...) P_GET(_0,__VA_ARGS__,PP2R,PP1R,PP1R,PP1R)(__VA_ARGS__)
+#define PR(A,ix,iy)   P2((A), wrap((ix), (A)->nx), wrap((iy), (A)->ny))
+#define PPR(A,ix,iy) PP2((A), wrap((ix), (A)->nx), wrap((iy), (A)->ny))
 #define PCOLR(A,iy) ((A)->p+wrap(iy, A->ny)*(A)->nx)
+
+//Return Number of elements
+#define PN(A) ((A)->nx*(A)->ny)
+
 #endif

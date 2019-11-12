@@ -95,7 +95,7 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	dtfs[iwvl].wvl=wvl;
 	dtfs[iwvl].ncompx=ncompx;
 	dtfs[iwvl].ncompy=ncompy;
-	dtfs[iwvl].nominal=ccellnew(ndtf,nwfs);
+	dtfs[iwvl].nominal=ccellnew_same(ndtf,nwfs,ncompx,ncompy);
 	dtfs[iwvl].si=dspcellnew(ndtf,nwfs);
 	ccell*  nominals=dtfs[iwvl].nominal;
 	dspcell*  sis=dtfs[iwvl].si;

@@ -106,7 +106,7 @@ static inline void QUEUE(long *group, thread_wrapfun fun, void *arg, int nthread
     (void) urgent;
     for(int it=0; it<nthread; it++){
 	OMP_TASK(urgent)
-	    fun(arg);
+	    fun((thread_t*)arg);
     }
 }
 static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
@@ -135,7 +135,7 @@ static inline void QUEUE_THREAD(long *group, thread_t *A, int urgent){
     for(int it=0; it<A[0].nthread; it++){		
 	if(A[it].fun){
 	    OMP_TASK(urgent)
-		A[it].fun(A+it); 
+		A[it].fun((A+it)); 
 	}
     }
 }
@@ -176,7 +176,7 @@ static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
 	QUEUE(&group, fun, arg, nthread, urgent); 
 	WAIT(group); 
     }else{								
-	fun(arg);							
+	fun((thread_t*)arg);							
     }
 }
 

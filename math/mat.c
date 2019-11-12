@@ -996,3 +996,20 @@ X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
     }
     return out;
 }
+
+/**
+   input is nsa*ncol cell. each cell has npix=nx*ny elements. Extract icol of cell as npix*nsa array.
+*/
+X(mat) *X(cell_col)(X(cell) *input, long icol){
+    long npix=PN(P(input,0,0));
+    long nsa=input->nx;
+    if(input->m){
+	return X(new_do)(npix, nsa, P(input->m)+(npix*nsa)*icol, NULL);
+    }else{
+	X(mat) *output=X(new)(npix, nsa);
+	for(long isa=0; isa<nsa; isa++){
+	    memcpy(PCOL(output, isa), P(P(input, isa, icol)), sizeof(T)*npix);
+	}
+	return output;
+    }
+}

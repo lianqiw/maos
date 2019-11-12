@@ -39,7 +39,7 @@ extern "C"{
 #define tic
 #define ctoc(A)
 #else
-#define ctoc(A) toc2(A)
+#define ctoc(A) toc(A)
 #endif
 /** 
     save aper_locs, aper_amp to GPU.

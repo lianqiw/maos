@@ -72,7 +72,7 @@ static void atm_prep(atm_prep_t *data){
 	    pout[iy][ix]=(Real)P(atm, ix+offx-nxi, iy+offy-nyi);
 	}
     }
-    //toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
+    //toc("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
     UNLOCK(lock);
 }
 /**
@@ -94,7 +94,7 @@ static void gpu_atm2gpu_full(const mapcell *atm){
 #if _OPENMP >= 200805 
 #pragma omp taskwait
 #endif
-    toc2("atm to gpu");
+    toc("atm to gpu");
 }
 /**
    Transfer atmosphere or update atmosphere in GPU.
@@ -296,7 +296,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		prep_data[ips].isim_next=INT_MAX;
 	    }
 	 
-	    //toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, prep_data[ips].isim_next); 
+	    //toc("Step %d: Layer %d transfered. next in step %d. ",isim, ips, prep_data[ips].isim_next); 
 	}//if isim
     }//for ips
 #if _OPENMP >= 200805 

@@ -44,7 +44,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcellfree(intstat->mtche);
     dfree(intstat->i0sum);
 
-    intstat->mtche=dcellnew_same(nsa,ni0,2,pixthetax*pixthetay);
     dcellfree(powfs[ipowfs].sanea);
     dcell *sanea=powfs[ipowfs].sanea=dcellnew(ni0,1);
     intstat->i0sum=dnew(nsa,ni0);
@@ -54,7 +53,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx/*PDELL*/;
     dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy/*PDELL*/;
     dmat *i0sum=intstat->i0sum;
-    dcell *mtche=intstat->mtche;
+    long npix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
+    dcell *mtche=intstat->mtche=dcellnew_same(nsa,ni0,2,npix);
   
     //dcell *saneaxy=powfs[ipowfs].saneaxy;
     int nllt;

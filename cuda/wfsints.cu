@@ -41,7 +41,7 @@
 #define tic
 #define ctoc(A)
 #else
-#define ctoc(A) CUDA_SYNC_STREAM; toc2(A)
+#define ctoc(A) CUDA_SYNC_STREAM; toc(A)
 #endif
 
 /**

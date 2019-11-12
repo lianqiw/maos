@@ -564,14 +564,13 @@ dmat *loc_mcc_ptt(const loc_t *loc, const real *amp){
 dcell *pts_mcc_ptt(const pts_t *pts, const real *amp){
     const int nmod=3;
     const int nsa=pts->nsa;
-    dcell *mcc=dcellnew(nsa,1);
+    dcell *mcc=dcellnew_same(nsa,1,nmod,nmod);
     for(int isa=0; isa<nsa; isa++){
 	const real origy=pts->origy[isa];
 	const real origx=pts->origx[isa];
 	const real dx=pts->dx;
 	const real dy=pts->dy;
 	const real *ampi=amp+pts->nx*pts->nx*isa;
-	mcc->p[isa]=dnew(nmod,nmod);
 	dmat *ATA=mcc->p[isa];
 	real a00=0,a01=0,a02=0,a11=0,a12=0,a22=0;
 	for(int iy=0; iy<pts->nx; iy++){

@@ -1664,18 +1664,26 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		    "background won't be effective.\n", ipowfs);
 	} 
 	if(parms->sim.ncpa_calib && (parms->nsurf || parms->ntsurf || parms->load.ncpa)){
-	    if(parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
-		//warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
-		parms->powfs[ipowfs].mtchstc=0;
+	    if(parms->powfs[ipowfs].ncpa_method==-1){//auto
+		if(parms->powfs[ipowfs].type==1 && parms->powfs[ipowfs].phytype_sim==1){//mtch
+		    parms->powfs[ipowfs].ncpa_method=2;//default to 2
+		}else{
+		    parms->powfs[ipowfs].ncpa_method=1;
+		}
 	    }
-	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].type==1)
-	       && parms->powfs[ipowfs].ncpa_method==2){
-		info("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs, PWFS, or CoG mode\n", ipowfs);
-		parms->powfs[ipowfs].ncpa_method=1;
-	    }
-	    if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].skip){
-		warning("powfs %d: ncpa_method changed from 2 to 1 in idealngs mode\n", ipowfs);
-		parms->powfs[ipowfs].ncpa_method=1;
+	    if(parms->powfs[ipowfs].ncpa_method==2){
+		if(!(parms->powfs[ipowfs].type==1 && parms->powfs[ipowfs].phytype_sim==1 
+		     && parms->powfs[ipowfs].usephy)){
+		    info("powfs %d: ncpa_method changed from 2 to 1 for non-matched filter mode.\n", ipowfs);
+		    parms->powfs[ipowfs].ncpa_method=1;
+		}else if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].skip){
+		    warning("powfs %d: ncpa_method changed from 2 to 1 in idealngs mode\n", ipowfs);
+		    parms->powfs[ipowfs].ncpa_method=1;
+		}else{
+		    if(parms->powfs[ipowfs].mtchstc){
+			parms->powfs[ipowfs].mtchstc=0;
+		    }
+		}	
 	    }
 	}
 	{
