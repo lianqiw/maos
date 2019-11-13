@@ -1,6 +1,7 @@
-AC_PREREQ(2.57)
 AC_INIT(maos, 2.3.0, lianqiw@gmail.com)
-AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
+AC_PREREQ(2.57)
+AC_CONFIG_AUX_DIR([m4])
+AM_INIT_AUTOMAKE([1.9.6 foreign -Wall -Werror no-define subdir-objects dist-bzip2])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
@@ -23,7 +24,7 @@ AC_CANONICAL_HOST
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
 AC_PROG_CC([$CC])
-AM_PROG_CC_C_O
+#AM_PROG_CC_C_O #deprecated. Included in AC_PROG_CC.
 #AC_PROG_CC_STDC #enable the current c standard, which is c99 circa 2014
 AC_PROG_CC_C99  #enable C99
 #AC_PROG_CXX([$CXX])
