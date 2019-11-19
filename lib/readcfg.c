@@ -461,7 +461,12 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 #undef MAXLN
 }
 /**
-   Get the record number of a key.
+   Get the record number of a key. 
+
+   Value of mark: 
+   1: mark the record as read.
+   0: do not mark or check record existance
+   -1:do not mark but error if record is not found.
  */
 static const STORE_T* getrecord(char *key, int mark){
     STORE_T store;
@@ -469,12 +474,20 @@ static const STORE_T* getrecord(char *key, int mark){
     strtrim(&key);
     store.key=key;
     if((found=tfind(&store, &MROOT, key_cmp))){
-	if(mark){
+	if(mark>0){
 	    if((*(STORE_T**)found)->used){
 		error("This record %s is already read\n",key);
 	    }
 	    (*(STORE_T**)found)->used++;
 	    nused++;
+	}
+	const char *data=(*(STORE_T**)found)->data;
+	if(!mystrcmp(data, "ref:")){
+	    //This key references another key's value
+	    char *key2=mystrdup(data+4);
+	    const STORE_T *refed=getrecord(key2, -1);
+	    free(key2);
+	    return refed;
 	}
     }else if(mark){
 	print_file("change.log");

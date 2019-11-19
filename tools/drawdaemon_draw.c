@@ -202,6 +202,7 @@ void round_limit(double *xmin, double *xmax, int logscale){
 */
 void apply_limit(drawdata_t *drawdata){
     if(drawdata->limit_changed==-1 && drawdata->zoomx==1 && drawdata->zoomy==1 && drawdata->offx==0 && drawdata->offy==0){
+	//when new data is plotted, do not try to preserve the displayed region.
 	return;
     }
     /*limit0 matches limit in unzoomed state */
@@ -239,7 +240,7 @@ void apply_limit(drawdata_t *drawdata){
 	/*the new zoom */
 	double ratiox=diffx0/diffx1; if(ratiox==0) ratiox=1;
 	double ratioy=diffy0/diffy1; if(ratioy==0) ratioy=1;
-	if(drawdata->square){/*make the ratio equal. */
+	if(drawdata->square && !drawdata->image){/*make the ratio equal. */
 	    if(fabs(ratiox-drawdata->zoomx)>1e-2 && fabs(ratioy-drawdata->zoomy)<1e-2){
 		/*only x changed */
 		ratioy=ratiox;
@@ -333,9 +334,12 @@ draw_point(cairo_t *cr, double ix, double iy, long style, double size){
 	warning("Invalid style\n");
     }
 }
-void update_limit(drawdata_t *drawdata){
+/**
+   Compute the limit from data for line plotting.
+ */
+static void update_limit(drawdata_t *drawdata){
     /*need to update max/minimum. */
-    drawdata->limit_changed=0;
+    drawdata->limit_changed=0;//do not try to update zoom from the updated limit.
     if(drawdata->cumulast!=drawdata->cumu){
 	drawdata->offx=0;
 	drawdata->offy=0;
@@ -354,9 +358,9 @@ void update_limit(drawdata_t *drawdata){
 	}
 	drawdata->limit=drawdata->limit_data;
     }
-    /*if(drawdata->dtime<1){
-	gain=drawdata->dtime;
-	}*/
+    if(drawdata->dtime<1){//continuous update, do not update the y range too quickly.
+	gain=0.1;
+    }
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
     for(int ipts=0; ipts<drawdata->npts; ipts++){
 	const double *ptsx=drawdata->pts[ipts], *ptsy=0;
@@ -527,7 +531,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
        || (drawdata->widthim_last !=0 
 	   && (drawdata->widthim_last!=drawdata->widthim 
 	       || drawdata->heightim_last!=drawdata->heightim))){
-	/*canvas is resized, need to adjust zoom/paning */
+	/*apply_limit: response to canvas resize or zoom/move called by the GUI*/
 	apply_limit(drawdata);
 	drawdata->limit_changed=0;
 	drawdata->drawn=0;

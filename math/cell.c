@@ -186,13 +186,11 @@ void cellfree_do(void *A){
 	    for(int ix=0; ix<dc->nx*dc->ny; ix++){
 		cellfree_do(dc->p[ix]);
 	    }
-	    memset(dc->p, 0, sizeof(void*)*dc->nx*dc->ny);
 	    free(dc->p);dc->p=0;
 	}
 	free(dc->header);
 	if(dc->m) cellfree_do(dc->m);
 	if(dc->fft) dfft_free_plan(dc->fft);
-	memset(dc, 0, sizeof(cell));
 	free(dc);
     }break;
     case M_DBL:
@@ -217,7 +215,7 @@ void cellfree_do(void *A){
 	zspfree_do((zsp*)A);break;
     default:
 	print_backtrace();
-	error("Unknown id=%x, A=%p\n", id, A);
+	warning("Unknown id=%x, A=%p\n", id, A);
     }
 }
 

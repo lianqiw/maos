@@ -459,7 +459,7 @@ static void skysim_prep_gain(SIM_S *simu){
 	simu->gain_pre->p[idtrat]=(dccell*)cellnew(simu->psds->nx, 1);
 	for(int ip=0; ip<simu->psds->nx; ip++){
 	    simu->gain_pre->p[idtrat]->p[ip]=servo_optim(simu->psds->p[ip], parms->maos.dt,
-							 dtrat, parms->skyc.pmargin, sigma2, servotype);
+							 dtrat, 0, parms->skyc.pmargin, sigma2, servotype);
 	}
     }
     writebin(simu->gain_pre, "gain_pre.bin");

@@ -146,8 +146,9 @@ static real gain_at_phase(real *fcross, /**<[out] Cross over frequency*/
 
 /**
    Make basic arrays for servo analysis.
+   al: additional latency
 */
-static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, real dt, long dtrat){
+static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, real dt, long dtrat, long al){
     if(psdin->ny!=2){
 	error("psdin should have two columns\n");
     }
@@ -176,7 +177,7 @@ static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, real dt, long d
 	    Hwfs=st->Hwfs->p[i]=(1-zInv)/(Ts*s);
 	    Hdac=Hwfs;
 	}
-	comp Hlag=cexp(-s*dt);/*lag due to readout/computation*/
+	comp Hlag=cexp(-s*dt*(1+al));/*lag due to readout/computation*/
 	comp Hmir=1;/*DM */
 	st->Hsys->p[i]=Hwfs*Hlag*Hdac*Hmir*Hint;
     }
@@ -319,14 +320,14 @@ static real servo_calc_do(SERVO_CALC_T *st, real g0){
    sigma2n is a dmat array of all wanted sigma2n.
    Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n]
 */
-dcell* servo_optim(const dmat *psdin,  real dt, long dtrat, real pmargin,
+dcell* servo_optim(const dmat *psdin,  real dt, long dtrat, long al, real pmargin,
 		   const dmat* sigma2n, int servo_type){
     /*The upper end must be nyquist freq so that noise transfer can be
       computed. But we need to capture the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
     */
     SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(SERVO_CALC_T));
-    servo_calc_init(&st, psdin, dt, dtrat);
+    servo_calc_init(&st, psdin, dt, dtrat, al);
     st.type=servo_type;
     st.pmargin=pmargin;
     int ng=1;
@@ -364,9 +365,9 @@ dcell* servo_optim(const dmat *psdin,  real dt, long dtrat, real pmargin,
    Convert Closed loop residual PSD back to OL psd using rejection transfer function:
    PSD_OL=(PSD_CL-sigma2n/F_nyquist)/Hrej;
  */
-dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, real gain, real sigma2n){
+dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, long al, real gain, real sigma2n){
     SERVO_CALC_T st; memset(&st, 0, sizeof(st));
-    servo_calc_init(&st, psdcl, dt, dtrat);
+    servo_calc_init(&st, psdcl, dt, dtrat, al);
     const dmat *nu=st.nu;
     const dmat *psd=st.psd;
     dmat *psdol=dnew(psd->nx, psd->ny+1);
@@ -398,9 +399,9 @@ dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, real gain, real sigma
    
    Tested OK: 2010-06-11
 */
-real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, const dmat *gain, int servo_type){
+real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, long al, const dmat *gain, int servo_type){
     SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(st));
-    servo_calc_init(&st, psdin, dt, dtrat);
+    servo_calc_init(&st, psdin, dt, dtrat, al);
     st.type=servo_type;
     switch(servo_type){
     case 1:

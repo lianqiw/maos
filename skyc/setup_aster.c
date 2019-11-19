@@ -514,7 +514,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	    }else{
 		dmat *sigma2=dnew(1,1); 
 		sigma2->p[0]=sigma;
-		dcell *tmp=servo_optim(simu->psds->p[ipsd], parms->maos.dt, parms->skyc.dtrats->p[idtrat], parms->skyc.pmargin, sigma2, servotype);
+		dcell *tmp=servo_optim(simu->psds->p[ipsd], parms->maos.dt, parms->skyc.dtrats->p[idtrat], 0, parms->skyc.pmargin, sigma2, servotype);
 		memcpy(pg, tmp->p[0]->p, (ng+2)*sizeof(real)); 
 		dcellfree(tmp);
 		dfree(sigma2);
@@ -535,7 +535,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	real gain_n;
 	if(parms->skyc.psd_ws){
 	    aster->res_ws->p[icase]=servo_residual(&gain_n, parms->skyc.psd_ws, 
-						   parms->maos.dt, parms->skyc.dtrats->p[idtrat], g_tt, servotype);
+						   parms->maos.dt, parms->skyc.dtrats->p[idtrat], 0, g_tt, servotype);
 	}
 	dfree(g_tt);
     }//for dtrat

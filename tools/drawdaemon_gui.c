@@ -427,11 +427,15 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	    drawdata->mxdown=x;
 	    drawdata->mydown=y;
 	}else if(event->state & GDK_BUTTON3_MASK){/*select and zoom. */
-	    if(drawdata->square){/*for a square */
-		if(fabs(dx)<fabs(dy)){
-		    dy*=fabs(dx/dy);
+	    if(drawdata->square && !drawdata->image){/*for a square */
+		double ratio=1;
+		if(drawdata->image){
+		    ratio=(double)drawdata->nx/(double)drawdata->ny;
+		}
+		if(fabs(dx)<fabs(dy)*ratio){
+		    dy*=fabs(dx/(dy*ratio));
 		}else{
-		    dx*=fabs(dy/dx);
+		    dx*=fabs(dy*ratio/dx);
 		}
 	    }
 	    if(drawdata->pixmap){/*force a refresh to remove previous rectangule */
@@ -574,11 +578,15 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
     }else if(fabs(dx)>2 && fabs(dy)>2){/*select and zoom. */
 	double xx = drawdata->mxdown;
 	double yy = drawdata->mydown;
-	if(drawdata->square){
-	    if(fabs(dx)<fabs(dy)){
-		dy*=fabs(dx/dy);
+	if(drawdata->square && !drawdata->image){
+	    double ratio=1;
+	    if(drawdata->image){
+		ratio=(double)drawdata->nx/(double)drawdata->ny;
+	    }
+	    if(fabs(dx)<fabs(dy)*ratio){
+		dy*=fabs(dx/(dy*ratio));
 	    }else{
-		dx*=fabs(dy/dx);
+		dx*=fabs(dy*ratio/dx);
 	    }
 	}
 	if(dx<0) xx+=dx;
@@ -589,6 +597,7 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
 	drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(dx);
 	drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
 	drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
+	drawdata->limit_changed=1;
 	apply_limit(drawdata);
 	update_pixmap(drawdata);
     }
@@ -816,17 +825,17 @@ gboolean addpage(gpointer indata){
 	    if(!drawdata_old->limit_data){
 		drawdata_old->limit_data=mycalloc(4,double);
 	    }
-	    for(int i=0; i<4; i++){
+	    for(int i=0; i<4; i++){//data has different size. Reset the zoom/off.
 		if(fabs(drawdata_old->limit_data[i]-drawdata->limit_data[i])>0.1){
-		    drawdata_old->limit_changed=-1;
+		    do_zoom(drawdata_old, 0, 0, 0);//resets zoom, offset.
 		}
 	    }
 	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
 	}else{
 	    free(drawdata_old->limit_data);
 	    drawdata_old->limit_data=NULL;
-	    drawdata_old->limit_changed=-1;
 	}
+	drawdata_old->limit_changed=-1;
 	free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 	drawdata_old->nx=drawdata->nx;
 	drawdata_old->ny=drawdata->ny;
@@ -835,9 +844,9 @@ gboolean addpage(gpointer indata){
 	drawdata_old->gray=drawdata->gray;
 	drawdata_old->drawn=0;/*need redraw. */
 	/*we preserve the limit instead of off, zoom in case we are drawing curves */
-	if(drawdata_old->npts){
-	    drawdata_old->limit_changed=-1;
-	}
+	//if(drawdata_old->npts){
+	//    drawdata_old->limit_changed=-1;
+	//	}
 	{
 	    free(drawdata);
 	    LOCK(drawdata_mutex);

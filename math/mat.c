@@ -1004,10 +1004,16 @@ X(mat) *X(cell_col)(X(cell) *input, long icol){
     long npix=PN(P(input,0,0));
     long nsa=input->nx;
     if(input->m){
+	if(PN(input->m)!=npix*PN(input)){
+	    error("dimension mismatch.\n");
+	}
 	return X(new_do)(npix, nsa, P(input->m)+(npix*nsa)*icol, NULL);
     }else{
 	X(mat) *output=X(new)(npix, nsa);
 	for(long isa=0; isa<nsa; isa++){
+	    if(PN(P(input, isa, icol))!=npix){
+		error("dimension mismatch.\n");
+	    }
 	    memcpy(PCOL(output, isa), P(P(input, isa, icol)), sizeof(T)*npix);
 	}
 	return output;

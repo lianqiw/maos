@@ -1154,7 +1154,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    dmat *rss2=dnew(1,1); rss2->p[0]=rss;
 	    int dtrat=parms->powfs[parms->lopowfs->p[0]].dtrat;
 	    dcell *res=servo_optim(psd_ngs, parms->sim.dt, 
-				   dtrat, M_PI/4, rss2, 2); 
+				   dtrat, parms->sim.allo, M_PI/4, rss2, 2); 
 	    dfree(rss2);
 	    dbg("dtrat=%d\n", dtrat);
 	    dbg("g,a,T was %g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);

@@ -26,4 +26,4 @@ powfs.neaspeckle ==> powfs.neaextra
 dbg.ncpa_nouncorr ==> dbg.ncpa_rmsci
 sim.apdm      ==> sim.aphi
 sim.epdm      ==> sim.ephi
-
+sim.psddtrat  ==> sim.psddtrat_hi

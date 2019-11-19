@@ -464,7 +464,7 @@ typedef struct RECON_CFG_T{
 
     real poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
     int psd;        /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
-    int psddtrat;   /**<how many time step to sample for PSD computation.*/
+    int psddtrat_hi;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
     int psddtrat_twfs; /**<how many time step to sample for TWFS PSD computation.*/
     int psdservo_gain; /**<Gain used to update servo parameter*/
@@ -476,14 +476,8 @@ typedef struct RECON_CFG_T{
 */
 typedef struct SIM_CFG_T{
     real dt;       /**<sampling period. 1/800*/
-    real dtlo;     /**<low order wfs sampling period*/
-    real dthi;     /**<high order wfs sampling period*/
     real za;       /**<zenith angle in radian*/
-    int dtrat_hi;    /**<ratio of sampling period over clock of high order wfs*/
-    int dtrat_lo;    /**<highest dtrat of the lower order loop.*/
-    int dtrat_lo2;   /**<lowest dtrat of the lower order loop.*/
-    int dtrat_lof;   /**<lowest dtrat of the lower order focus loop.*/
-    int dtrat_skip;  /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
+
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
     int pause;       /**<Pause at the end of every time step*/
@@ -512,10 +506,7 @@ typedef struct SIM_CFG_T{
     real aptwfs;   /**<Twfs reference vector servo coefficient.*/
     real eptwfs;   /**<Twfs reference vector servo gain.*/
     real fcttm;    /**<cross over frequency of tip/tilt split*/
-    real lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
     real fcfocus;  /**<cross-over frequency of the focus LPF.*/
-    real lpfocushi;/**<derived: lpfocus=2*pi*fc*sim.dthi*/
-    real lpfocuslo;/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
     real fov;      /**<The diameter of total fov in arcsec*/
     int focus2tel;   /**<Offload focus to telescope*/
     real epfocus2tel;/*Gain for telescope focus control*/
@@ -525,8 +516,6 @@ typedef struct SIM_CFG_T{
 			- 2: Focus blending using CL gradinets, for common LGS focus only.
 		     */
     int idealfsm;    /**<ideal compensation for uplink pointing*/
-    int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
-    int servotype_lo;/**<servo type for low order loop. 1: simple integrator. 2: type II*/
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
@@ -542,7 +531,21 @@ typedef struct SIM_CFG_T{
 			onto the NULL space of DM.*/
     int idealwfs;    /**<Generates ideal WFS by sensing turbulence with DM range.*/
     int idealevl;    /**<Evaluate performance within DM range.*/
+    
     /* A few derived parameters*/
+    real dtlo;     /**<low order wfs sampling period*/
+    real dthi;     /**<high order wfs sampling period*/
+    int dtrat_hi;    /**<ratio of sampling period over clock of high order wfs*/
+    int dtrat_lo;    /**<highest dtrat of the lower order loop.*/
+    int dtrat_lo2;   /**<lowest dtrat of the lower order loop.*/
+    int dtrat_lof;   /**<lowest dtrat of the lower order focus loop.*/
+    int dtrat_skip;  /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
+    int noisy_hi;    /**<whether high order WFS is noisy*/
+    int noisy_lo;    /**<whether low order WFS is noisy*/
+    real lpfocushi;/**<derived: lpfocus=2*pi*fc*sim.dthi*/
+    real lpfocuslo;/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
+    real lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
+
     int dmclip;      /**<derived: Need to clip actuator stroke*/
     int dmclipia;    /**<derived: Need to clip inter-actuator stroke*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */

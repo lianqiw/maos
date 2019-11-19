@@ -1209,7 +1209,7 @@ static void init_simu_dm(SIM_T *simu){
     }
     if(parms->recon.psd){
 	simu->dmerrts=dcellnew_same(parms->evl.nevl, 1, recon->Herr->p[0]->nx,
-				   parms->recon.psddtrat);
+				   parms->recon.psddtrat_hi);
 	if(parms->recon.split){
 	    simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat_lo);
 	}

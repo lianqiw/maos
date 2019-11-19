@@ -890,7 +890,7 @@ static void readcfg_recon(PARMS_T *parms){
     readcfg_strarr_nmax(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr, "recon.misreg_dm2wfs");  
     readcfg_strarr_nmax(&parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit, "recon.misreg_dm2sci");
     READ_INT(recon.psd);
-    READ_INT(recon.psddtrat);
+    READ_INT(recon.psddtrat_hi);
     READ_INT(recon.psddtrat_lo); 
     READ_INT(recon.psddtrat_twfs);
     READ_DBL(recon.psdservo_gain);
@@ -1742,6 +1742,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(parms->step_lo<0 || parms->step_lo>parms->powfs[ipowfs].step){
 		parms->step_lo=parms->powfs[ipowfs].step;
 	    }
+	    if(parms->powfs[ipowfs].noisy){
+		parms->sim.noisy_lo=1;
+	    }
 	}
 	if(!parms->powfs[ipowfs].lo){
 	    if(!parms->powfs[ipowfs].skip){//participate in high order recon
@@ -1754,6 +1757,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		    parms->step_hi=parms->powfs[ipowfs].step;
 		}else if(parms->step_hi!=parms->powfs[ipowfs].step){
 		    error("Different high order WFS has different enabling step\n");
+		}
+		if(parms->powfs[ipowfs].noisy){
+		    parms->sim.noisy_hi=1;
 		}
 	    }
 	}
@@ -2574,6 +2580,14 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	if(parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs] && !parms->dbg.tomo_hxw){
 	    warning_once("Without dbg.tomo_hxw, only pure shift between telescope and LGS WFS is calibrated.\n");
+	}
+    }
+    if(parms->recon.psd){
+	if(parms->recon.psddtrat_hi && !parms->sim.noisy_hi){
+	    parms->recon.psddtrat_hi=0;   
+	}
+	if(parms->recon.psddtrat_lo && !parms->sim.noisy_lo){
+	    parms->recon.psddtrat_lo=0;   
 	}
     }
 }

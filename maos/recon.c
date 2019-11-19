@@ -243,9 +243,9 @@ void recon_split(SIM_T *simu){
 void recon_servo_update(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    assert(parms->recon.psd);
-    if(simu->dmerr && parms->sim.dtrat_hi>0){//compute PSD on dmerr.
-	const int dtrat=parms->recon.psddtrat;
+    if(!parms->recon.psd) return;
+    if(simu->dmerr && parms->recon.psddtrat_hi>0){//compute PSD on dmerr.
+	const int dtrat=parms->recon.psddtrat_hi;
 	const int iacc=(simu->reconisim/parms->sim.dtrat_hi);//reconstruction steps
 	const int iframe=iacc % dtrat;
 	//Accumulate data history.
@@ -273,8 +273,8 @@ void recon_servo_update(SIM_T *simu){
 	    psd_sum(psd, 1./(psd->ny-1));
 	    //writebin(psd, "psdcl_%d", simu->reconisim);
 	    if(simu->dmint->ep->nx==1 && simu->dmint->ep->ny==1){
-		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, simu->dmint->ep->p[0], 0);
-		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, 0, 1);
+		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, simu->dmint->ep->p[0], 0);
+		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi,parms->sim.alhi,  M_PI*0.25, 0, 1);
 		real g=0.5;
 		simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
 		info("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
@@ -302,11 +302,11 @@ void recon_servo_update(SIM_T *simu){
 		dmat *psd=psd1dt(tsi, parms->recon.psdnseg, dt);
 
 		if(simu->Mint_lo->ep->nx==1){//integrator
-		    dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, simu->Mint_lo->ep->p[0], 0);
-		    dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
+		    dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, simu->Mint_lo->ep->p[0], 0);
+		    dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, M_PI*0.25, 0, 1);
 		    const real g=parms->recon.psdservo_gain;
 		    simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		    info("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
+		    if(icol==0) info("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
 		    dfree(psdol);
 		    dcellfree(coeff);
 		}else{

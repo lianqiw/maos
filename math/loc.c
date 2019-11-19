@@ -325,7 +325,8 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
 void loc_embed(map_t *dest, const loc_t *loc, const real *in){
     map_t *map=loc->map;
     if(!map){
-	error("map is null\n");
+	loc_create_map((loc_t*)loc);
+	map=loc->map;
     }
     if(dest->nx!=map->nx || dest->ny!=map->ny){
 	error("dest and map doesn't agree\n");
@@ -377,7 +378,8 @@ cell *loc_embed2(loc_t *loc, dmat *arr){
 void loc_embed_add(map_t *dest, const loc_t *loc, const real *in){
     map_t *map=loc->map;
     if(!map){
-	error("map is null\n");
+	loc_create_map((loc_t*)loc);
+	map=loc->map;
     }
     if(dest->nx!=map->nx || dest->ny!=map->ny){
 	error("dest and map doesn't agree\n");
@@ -387,6 +389,32 @@ void loc_embed_add(map_t *dest, const loc_t *loc, const real *in){
 	long iphi=fabs(map->p[i]);
 	if(iphi){
 	    dest->p[i]+=pin[iphi];
+	}
+    }
+}
+/*
+  Embed in into dest according to map defined in loc->map for cells. Arbitraty map cannot
+  be used here for mapping.
+*/
+void loc_embed_cell(dcell **pdest, const loc_t *loc, const dcell *in){
+    map_t *map=loc->map;
+    if(!map){
+	loc_create_map((loc_t*)loc);
+	map=loc->map;
+    }
+    if(!*pdest){
+	*pdest=dcellnew(map->nx, map->ny);
+    }
+    dcell *dest=*pdest;
+    if(dest->nx!=map->nx || dest->ny!=map->ny){
+	error("dest and map doesn't agree\n");
+    }
+    for(long i=0; i<map->nx*map->ny; i++){
+	long iphi=fabs(map->p[i]);
+	if(iphi){
+	    dest->p[i]=dref(P(in, iphi-1));
+	}else{
+	    dest->p[i]=0;
 	}
     }
 }

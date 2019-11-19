@@ -40,6 +40,7 @@ uint32_t lochash(const loc_t *loc, uint32_t key);
 void loc_embed(map_t *dest, const loc_t *loc, const real *in);
 cell *loc_embed2(loc_t *loc, dmat *arr);
 void loc_embed_add(map_t *dest, const loc_t *loc, const real *in);
+void loc_embed_cell(dcell **dest, const loc_t *loc, const dcell *in);
 void loc_extract(dmat *dest, const loc_t *loc, map_t *in);
 loc_t * map2loc(map_t *amp, real thres);
 

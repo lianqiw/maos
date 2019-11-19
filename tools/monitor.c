@@ -61,7 +61,7 @@ GdkPixbuf *icon_failed=NULL;
 GdkPixbuf *icon_running=NULL;
 GdkPixbuf *icon_waiting=NULL;
 
-static GtkStatusIcon *status_icon;
+static GtkStatusIcon *status_icon=0;
 GtkWidget *notebook=NULL;
 GtkWidget **pages;
 static GtkWidget *window=NULL;
@@ -232,21 +232,17 @@ void notify_user(PROC_T *p){
     if(p->status.info==p->oldinfo) return;
     static NotifyNotification *notify_urgent=NULL, *notify_normal=NULL, *notify_low=NULL;
     if (!notify_urgent){
-#if defined(NOTIFY_CHECK_VERSION) 
-#if NOTIFY_CHECK_VERSION(0,7,0) /*newer versions doesnot have _new_with_status_icon */
-	notify_low=notify_notification_new("Low", NULL, NULL);
-	notify_normal=notify_notification_new("Low", NULL, NULL);
-	notify_urgent=notify_notification_new("Low", NULL, NULL);
-#else
+#if !defined(NOTIFY_CHECK_VERSION) || !NOTIFY_CHECK_VERSION(0,7,0)
+	/*newer versions doesnot have _new_with_status_icon */
 	notify_low=notify_notification_new_with_status_icon ("Low",NULL,NULL,status_icon);
 	notify_normal=notify_notification_new_with_status_icon ("Normal",NULL,NULL,status_icon);
 	notify_urgent=notify_notification_new_with_status_icon ("Urgent",NULL,"error",status_icon);
 #endif
-#else
-	notify_low=notify_notification_new_with_status_icon ("Low",NULL,NULL,status_icon);
-	notify_normal=notify_notification_new_with_status_icon ("Normal",NULL,NULL,status_icon);
-	notify_urgent=notify_notification_new_with_status_icon ("Urgent",NULL,"error",status_icon);
-#endif
+	if(!notify_low){
+	    notify_low=notify_notification_new("Low", NULL, NULL);
+	    notify_normal=notify_notification_new("Normal", NULL, NULL);
+	    notify_urgent=notify_notification_new("Urgent", NULL, NULL);
+	}
 	notify_notification_set_icon_from_pixbuf(notify_low,icon_main);
 	notify_notification_set_timeout(notify_low,NOTIFY_EXPIRES_DEFAULT);
 	notify_notification_set_urgency(notify_low,NOTIFY_URGENCY_LOW);
@@ -386,7 +382,7 @@ static void status_icon_on_click(GtkStatusIcon *status_icon0,
     (void)status_icon0;
     (void)data;
     static int cx=0, cy=0;
-    static int x, y;
+    static int x=600, y=400;
     if(GTK_WIDGET_VISIBLE(window)){
 	gtk_window_get_size(GTK_WINDOW(window), &x, &y);
 	gtk_window_get_position(GTK_WINDOW(window), &cx, &cy);
@@ -406,8 +402,7 @@ static void trayIconPopup(GtkStatusIcon *status_icon0, guint button,
 }
 static void create_status_icon(){
     status_icon = gtk_status_icon_new_from_pixbuf(icon_main);
-    g_signal_connect(G_OBJECT(status_icon),"activate",
-		     G_CALLBACK(status_icon_on_click), NULL);
+    g_signal_connect(G_OBJECT(status_icon),"activate", G_CALLBACK(status_icon_on_click), NULL);
     GtkWidget *menu, *menuItemShow,*menuItemExit;
     menu=gtk_menu_new();
     menuItemShow=gtk_menu_item_new_with_label("Show/Hide");
@@ -429,7 +424,7 @@ static void create_status_icon(){
 
 
 static gboolean delete_window(void){
-    if(gtk_status_icon_is_embedded(status_icon)){
+    if(status_icon && gtk_status_icon_is_embedded(status_icon)){
 	gtk_widget_hide(window);
 	return TRUE;/*do not quit */
     }else{
@@ -809,7 +804,7 @@ int main(int argc, char *argv[])
 
     g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
     g_signal_connect(window, "destroy", G_CALLBACK (quitmonitor), NULL);
-    g_signal_connect(G_OBJECT (window), "window-state-event", G_CALLBACK (window_state_event), NULL);
+    //g_signal_connect(G_OBJECT (window), "window-state-event", G_CALLBACK (window_state_event), NULL);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(window), 1200, 600);
     gtk_widget_show_all(window);

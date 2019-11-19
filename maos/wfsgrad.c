@@ -839,7 +839,7 @@ void wfsgrad_post(thread_t *info){
 		drawgrad("Gcl", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs],
 			 parms->dbg.draw_gmax->p, parms->plot.grad2opd,
 			 "WFS Closeloop Gradients","x (m)", "y (m)", "Gcl %d",  iwfs);
-		if(do_phy && parms->powfs[ipowfs].lo){
+		if(do_phy){// && parms->powfs[ipowfs].lo){
 		    if(simu->ints->p[iwfs]->nx==1){
 			ddraw("Ints", simu->ints->p[iwfs]->p[0], NULL,NULL, "WFS Subaperture Images",
 			      "x", "y", "wfs %d", iwfs);
@@ -850,6 +850,16 @@ void wfsgrad_post(thread_t *info){
 			ddraw("Ints", ints2, NULL, NULL, "WFS Subaperture Images",
 			      "x", "y", "wfs %d", iwfs);
 			dfree(ints2);
+		    }else{
+			dcell *ints=0;
+			loc_embed_cell(&ints, simu->powfs[ipowfs].saloc, simu->ints->p[iwfs]);
+			dmat *ints2=dcell2m(ints); dcellfree(ints);
+			ddraw("Ints", ints2, NULL, NULL, "WFS Subaperture Images",
+			      "x", "y", "wfs %d", iwfs);
+			//writebin(ints, "ints_%d_%d", iwfs, simu->wfsisim);
+			//writebin(ints2, "ints2_%d_%d", iwfs, simu->wfsisim);
+			dfree(ints2);
+			
 		    }
 		}
 	    }
@@ -1131,10 +1141,10 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 		dfree(tts);
 		//Sum all the PSDs
 		psd_sum(psd, 1);
-		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->powfs[itpowfs].dtrat, simu->eptwfs, 0);
+		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->powfs[itpowfs].dtrat, 0, simu->eptwfs, 0);
 		writebin(psd, "psdcl_twfs_%d", ntacc);
 		writebin(psdol, "psdol_twfs_%d", ntacc);
-		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->powfs[itpowfs].dtrat, M_PI*0.25, 0, 1);
+		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->powfs[itpowfs].dtrat, 0, M_PI*0.25, 0, 1);
 		const real g=0.5;
 		simu->eptwfs=simu->eptwfs*(1-g)+coeff->p[0]->p[0]*g;
 		info("Step %5d New gain (twfs): %.3f\n", simu->wfsisim, simu->eptwfs);

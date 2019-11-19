@@ -169,3 +169,14 @@ def mysqrt(x):
         return -np.sqrt(-x)
     else:
         return np.sqrt(x)
+
+def rss(*args):
+    arr=np.array(args)
+    return mysqrt(np.sum(np.sign(arr)* arr**2))
+    
+def styles(ii):
+    lines=['-','--','-.',':'];
+    return lines[np.mod(ii,len(lines))]
+
+def reset_color():
+    plt.gca().set_prop_cycle(None)
