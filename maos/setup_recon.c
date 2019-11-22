@@ -55,10 +55,10 @@ void check_nea(dmat *nea, int nsa){
 	    nea->nx=nsa;
 	    nea->ny=3;
 	}else{
-	    error("nea has wrong format (%ldx%ld).\n", nea->nx, nea->ny);
+	    error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", nea->nx, nea->ny, nsa, 3);
 	}
     }else if(nea->nx!=nsa || nea->ny>3){
-	error("nea has wrong format (%ldx%ld).\n", nea->nx, nea->ny);
+	error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", nea->nx, nea->ny, nsa, 3);
     }
 }
 /**

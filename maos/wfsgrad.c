@@ -335,7 +335,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}else{//Pywfs
 	    pywfs_fft(&ints->p[0], powfs[ipowfs].pywfs, opd);
-	    dscale(ints->p[0], parms->wfs[iwfs].siglevsim);
+	    dscale(ints->p[0], parms->wfs[iwfs].sigsim);
 	}
     }
     TIM(3);

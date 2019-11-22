@@ -73,7 +73,7 @@ void wfsints(thread_t *thread_data){
     /*normalized pistat. notf is due to a pair of FFT on psf. */
     real norm_pistat=norm_psf*norm_psf/((real)notf*notf);
     /*this ncompx*ncompy is due to cfft2 after cwm and detector transfer function. */
-    real norm_ints=parms->wfs[iwfs].siglevsim*norm_psf*norm_psf/((real)ncompx*ncompy);
+    real norm_ints=parms->wfs[iwfs].sigsim*norm_psf*norm_psf/((real)ncompx*ncompy);
     /*wvf first contains the complex wavefront, embed to get nyquist sampling.*/
     wvf=cnew(nwvf,nwvf);
     /* psf contains the psf/otf necessary to cover the focal plane. square */

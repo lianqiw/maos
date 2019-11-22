@@ -305,7 +305,7 @@ static RUN_T* running_add(int pid,int sock){
 }
 
 static void running_remove(int pid, int status){
-    info("Removing %d from running\n", pid);
+    //info("Removing %d from running\n", pid);
     RUN_T *irun,*irun2=NULL;
     for(irun=running; irun; irun2=irun,irun=irun->next){
 	if(irun->pid==pid){
@@ -325,7 +325,7 @@ static void running_remove(int pid, int status){
 	    }else{
 		irun->status.info=status;
 	    }
-	    dbg("Job %d done with status %d\n", pid, irun->status.info);
+	    //dbg("Job %d done with status %d\n", pid, irun->status.info);
 	    //remove from the running list
 	    if(irun2){
 		irun2->next=irun->next;
@@ -438,7 +438,7 @@ static void process_queue(void){
 		/*don't close the socket. will close it in select loop. */
 		/*warning_time("process %d launched. write to sock %d cmd %d\n", */
 		/*irun->pid, irun->sock, S_START); */
-		info("process_queue: Start %d at %d\n", irun->pid, irun->sock);
+		//info("process_queue: Start %d at %d\n", irun->pid, irun->sock);
 		if(stwriteint(irun->sock,S_START)){
 		    perror("stwriteint");
 		    warning("failed to notify maos\n");
@@ -465,18 +465,18 @@ static void process_queue(void){
 	    if(thistime>lasttime+0.001){
 		lasttime=thistime;
 		irun=running_get_wait(S_QUEUED);
-		info("process_queue: process waiting list ... ");
+		//info("process_queue: process waiting list ... ");
 		if(!irun){
-		    info("all done\n");
+		    //info("all done\n");
 		    all_done=1;
 		}else{
-		    info("start new job\n");
+		    info("start new job: ");
 		    int pid;
 		    if((pid=launch_exe(irun->exe, irun->path0))<0){
 			warning("launch_exe %s failed\n", irun->path);
 			running_remove(irun->pid, S_CRASH);
 		    }else{
-			info("job launched as %d\n", pid);
+			info("as %d\n", pid);
 			//inplace update the information in monitor
 			irun->status.info=S_WAIT;
 			irun->status.timstart=myclocki();
@@ -509,7 +509,7 @@ static void new_job(const char *exename, const char *execmd){
     irun->exe=strdup(exename);
     irun->path0=strdup(execmd);
     irun->path=remove_endl(irun->path0);
-    info("new_job: (%s) (%s)\n", exename, execmd);
+    //info("new_job: (%s) (%s)\n", exename, execmd);
     monitor_send(irun, irun->path);
     monitor_send(irun, NULL);
     all_done=0;
@@ -526,7 +526,7 @@ static int respond(int sock){
        will complain Bad file descriptor
     */
     int ret=0, pid, cmd[2];
-    info("\rrespond %2d start ... ", sock);
+    //info("\rrespond %2d start ... ", sock);
     if((ret=streadintarr(sock, cmd, 2))){
 	info("read failed");
 	goto end;
@@ -564,12 +564,12 @@ static int respond(int sock){
 	    if(waiting & 0x1){
 		irun->status.info=S_WAIT;
 		all_done=0;
-		info("%5d queued.\n",pid);
+		//info("%5d queued.\n",pid);
 	    }else{/*no waiting, no need reply. */
 		nrun_add(pid, nthread, ngpu);
 		irun->status.info=S_START;
 		irun->status.timstart=myclocki();
-		info("%5d started\n",pid);
+		//info("%5d started\n",pid);
 	    }
 	    if(irun->path) monitor_send(irun,irun->path);
 	    monitor_send(irun,NULL);
@@ -609,7 +609,7 @@ static int respond(int sock){
 	    if(pid>=0x8){/*check monitor version. */
 		tmp->load=1;
 	    }
-	    info("Monitor is connected at sock %d.\n", sock);
+	    //info("Monitor is connected at sock %d.\n", sock);
 	}
 	break;
     case CMD_PATH://6: Called by MAOS to report the PATH.
@@ -626,7 +626,7 @@ static int respond(int sock){
 		break;
 	    }
 	    irun->path=remove_endl(irun->path0);
-	    info("Received path: %s\n",irun->path);
+	    //info("Received path: %s\n",irun->path);
 	    monitor_send(irun,irun->path);
 	}
 	break;
@@ -642,7 +642,7 @@ static int respond(int sock){
 		}else{
 		    running_remove(pid,S_KILLED);
 		}
-		info("%5d term signal sent\n", pid);
+		//info("%5d term signal sent\n", pid);
 	    }
 	}
 	break;
@@ -652,7 +652,7 @@ static int respond(int sock){
 	    if(streadstr(sock, &buf)
 	       ||call_addr2line(out,10000, buf)
 	       ||stwritestr(sock,out)){
-		info("CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
+		warning("CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
 		ret=-1; 
 	    }
 	    free(buf);
@@ -676,7 +676,7 @@ static int respond(int sock){
 		    warning("receive socket from %d failed\n", sock);
 		    sock_save=-1;
 		}else{
-		    info("received socket %d from %d\n", sock_save, sock);
+		    //info("received socket %d from %d\n", sock_save, sock);
 		    for(SOCKID_T *p=head; p; p=p->next){
 			if(p->id==pid){
 			    close(p->sock);
@@ -727,7 +727,7 @@ static int respond(int sock){
 		    if(stwritefd(sock, sock_save)){
 			warning("send socket %d to %d failed\n", sock_save, sock);
 		    }else{//socket is transferred to draw. we close it.
-			info("send socket %d to %d success\n",sock_save, sock);
+			//info("send socket %d to %d success\n",sock_save, sock);
 		    }
 		    close(sock_save);
 		}
@@ -1015,15 +1015,43 @@ static void monitor_send(RUN_T *irun,char*path){
 	}
     }
 }
+double get_usage_gpu(double* const gpu_mem){
+    static int enabled=1;
+    *gpu_mem=0;
+    if(enabled){
+	FILE *fp=popen("nvidia-smi --format=csv,nounits,noheader --query-gpu=memory.used,memory.total","r");
+	if(!fp){
+	    enabled=0;
+	}else{
+	    long used0=0, total0=0;
+	    long used, total;
+	    long nuse=0, ngpu=0;
+	    while(fscanf(fp, "%ld, %ld\n", &used, &total)==2){
+		used0+=used;
+		total0+=total;
+		if(used>500){
+		    nuse++;
+		}
+		ngpu++;
+	    }
+	    fclose(fp);
+	    *gpu_mem=(double)used0/total0;
+	    return (double)nuse/ngpu;
+	}
+    }
+    return 0;
+}
 /* Notify alreadyed connected monitors machine load. */
 static void monitor_send_load(void){
     MONITOR_T *ic, *ic2;
     double mem=get_usage_mem();
+    double gpu_mem;
+    double gpu=get_usage_gpu(&gpu_mem);
     int cmd[3];
     cmd[0]=MON_LOAD;
     cmd[1]=0;
-    int memi=(int)(mem*100);
-    int cpui=(int)(usage_cpu*100);
+    int memi=(int)((MAX(mem, gpu_mem))*100);
+    int cpui=(int)((MAX(usage_cpu, gpu))*100);
     cmd[2]=(memi & 0xFFFF) | (cpui << 16);
 
     for(ic=pmonitor; ic; ic=ic2){

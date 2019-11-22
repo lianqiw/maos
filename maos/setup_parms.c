@@ -247,12 +247,9 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,nwvl);
     dmat* wvllist=readcfg_dmat("powfs.wvl");
     dmat* wvlwts=readcfg_dmat("powfs.wvlwts");
-    dmat* siglev=readcfg_dmat("powfs.siglev");
+
     if(wvllist->nx != wvlwts->nx && wvlwts->nx != 0){
 	error("powfs.wvl is not empty and does not match powfs.wvlwts\n");
-    }
-    if(siglev->nx!=0 && siglev->nx!=parms->npowfs){
-	error("powfs.siglev is not empty and does not match npowfs");
     }
     int count=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -275,11 +272,6 @@ static void readcfg_powfs(PARMS_T *parms){
 	    memcpy(parms->powfs[ipowfs].wvlwts->p, wvlwts->p+count,sizeof(real)*nwvl);
 	    dnormalize_sumabs(parms->powfs[ipowfs].wvlwts->p, nwvl, 1);
 	}
-	if(siglev->nx){
-	    parms->powfs[ipowfs].siglev=siglev->p[ipowfs];
-	}else{
-	    parms->powfs[ipowfs].siglev=-1;
-	}
 	count+=nwvl;
     }
     if(count!=wvllist->nx){
@@ -287,7 +279,10 @@ static void readcfg_powfs(PARMS_T *parms){
     }
     dfree(wvllist);
     dfree(wvlwts);
-    dfree(siglev);
+
+    READ_POWFS_RELAX(dbl,siglev);
+    READ_POWFS_RELAX(dbl,sigrecon);
+
     READ_POWFS_RELAX(str,saloc);
     READ_POWFS_RELAX(str,piinfile);
     READ_POWFS_RELAX(str,sninfile);
@@ -1807,15 +1802,16 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	    parms->atm.ws->p[ips] *= cosz;/*Wind velocity reduced due to line of sight*/
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
-	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
-		parms->wfs[iwfs].hs *= secz;
-		
-		if(isfinite(parms->wfs[iwfs].hs)){
+	    if(isfinite(parms->powfs[ipowfs].hs)){//LGS
+		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
+		parms->powfs[ipowfs].siglev*=cosz;
+		parms->powfs[ipowfs].sigrecon*=cosz;
+		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
+		    parms->wfs[iwfs].hs *= secz;
 		    real siglev=parms->wfs[iwfs].siglev;
 		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
-		    info("iwfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+		    info("iwfs%d: siglev scaled from %g to %g by za.\n", iwfs,siglev,parms->wfs[iwfs].siglev);
 		}
 	    }
 	}
@@ -1836,9 +1832,11 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    real siglev=parms->wfs[iwfs].siglev;
 	    parms->wfs[iwfs].siglev=siglev*sigscale;
-	    info("wfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+	    info("wfs%d: siglev scaled from %g to %g by framerate.\n", iwfs,siglev,parms->wfs[iwfs].siglev);
 	} 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    parms->powfs[ipowfs].siglev*=sigscale;
+	    parms->powfs[ipowfs].sigrecon*=sigscale;
 	    real bkgrnd=parms->powfs[ipowfs].bkgrnd;
 	    if(bkgrnd>0){
 		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
@@ -1855,10 +1853,10 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 	    warning("powfs[%d].sigscale=%g\n",ipowfs,sigscale);
 	}
 	real siglev=parms->wfs[iwfs].siglev;
-	parms->wfs[iwfs].siglevsim=siglev*sigscale;
+	parms->wfs[iwfs].sigsim=siglev*sigscale;
 	if(fabs(sigscale-1)>1.e-12){
-	    warning("wfs%d: siglev in simulation scaled from %g to %g\n", 
-		    iwfs,siglev,parms->wfs[iwfs].siglevsim);
+	    warning("wfs%d: siglev in simulation scaled from %g to %g by powfs.sigscale.\n", 
+		    iwfs,siglev,parms->wfs[iwfs].sigsim);
 	}
     }
 }
@@ -2582,14 +2580,14 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    warning_once("Without dbg.tomo_hxw, only pure shift between telescope and LGS WFS is calibrated.\n");
 	}
     }
-    if(parms->recon.psd){
+    /*if(parms->recon.psd){
 	if(parms->recon.psddtrat_hi && !parms->sim.noisy_hi){
 	    parms->recon.psddtrat_hi=0;   
 	}
 	if(parms->recon.psddtrat_lo && !parms->sim.noisy_lo){
 	    parms->recon.psddtrat_lo=0;   
 	}
-    }
+	}*/
 }
 
 
@@ -2819,8 +2817,8 @@ static void print_parms(const PARMS_T *parms){
 	info("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
 	     i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
 	     parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3, parms->wfs[i].siglev);
-	if((parms->wfs[i].siglev-parms->wfs[i].siglevsim)>EPS){
-	    info(" (%g in simulation)", parms->wfs[i].siglevsim);
+	if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
+	    info(" (%g in simulation)", parms->wfs[i].sigsim);
 	}
 	const int ipowfs=parms->wfs[i].powfs;
 	info(" bkgrnd is %g", parms->powfs[ipowfs].bkgrnd);

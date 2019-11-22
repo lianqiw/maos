@@ -381,7 +381,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     const int pixpsay=powfs[ipowfs].pixpsay;
     const Real pixthetax=parms->powfs[ipowfs].radpixtheta;
     const Real pixthetay=parms->powfs[ipowfs].pixtheta;
-    const Real siglev=parms->wfs[iwfs].siglevsim;
+    const Real siglev=parms->wfs[iwfs].sigsim;
     const Real *srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot():NULL;
     const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot 
 			 && parms->powfs[ipowfs].radpix);

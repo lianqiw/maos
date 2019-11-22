@@ -504,7 +504,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(parms->powfs[ipowfs].type==1){
 	    CUDA_CHECK_ERROR;
-	    pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs],parms->wfs[iwfs].siglevsim);
+	    pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs],parms->wfs[iwfs].sigsim);
 	    CUDA_CHECK_ERROR;
 	}else{
 	    if(do_geom){

@@ -157,6 +157,7 @@ typedef struct POWFS_CFG_T{
     real pixoffy; /**<see pixoffx*/
     real sigscale;/**<scale the signal level for simulation.*/
     real siglev;  /**<signal level. will be override by wfs.siglev is specified.*/
+    real sigrecon;/**<signal level for NEA computation*/
     struct LLT_CFG_T *llt;/**<configuration for LLT*/
     char* fnllt;    /**<filename of LLT configuration. empty means no llt.*/
     int type;       /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
@@ -263,7 +264,7 @@ typedef struct WFS_CFG_T{
     real hc;      /**<conjugation height of WFS pupil*/
     real siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
-    real siglevsim;/**<Signal value used for simulation. (derived parameter)*/
+    real sigsim;/**<Signal value used for simulation. (derived parameter)*/
     real hs;      /**height of star. Derived from powfs.hs or from input*/
     real fitwt;   /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
     int powfs;      /**<powfs type*/

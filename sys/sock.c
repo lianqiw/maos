@@ -359,7 +359,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 		    if(ans<0){
 			FD_CLR(i, &active_fd_set);
 			if(ans==-1){
-			    warning("close port %d\n", i);
+			    //warning("close port %d\n", i);
 			    close(i);
 			}else{
 			    warning("ans=%d is not understood.\n", ans);

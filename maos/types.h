@@ -73,7 +73,6 @@ typedef struct INTSTAT_T{
     dmat *i0sum;        /**<sum of i0 for each subaperture*/
     dmat *i0sumsum;     /**<sum of i0sum for all subapertures*/
     dcell *mtche;       /**<mtched filter operator along x/y, even if radpix=1*/
-    int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
 }INTSTAT_T;
 
@@ -251,6 +250,7 @@ typedef struct FIT_T{
     char **misreg;
     FIT_CFG_T flag;
     int notrecon;      /**<Not for reconstruction*/
+    int isref;         /**<Do not free generated data if isref is set*/
     //Generated data
     dspcell *HXF;      /**<ray tracing propagator from xloc to floc for fitting directions.*/
     dspcell *HA;       /**<ray tracing from aloc to floc for fitting directions.*/

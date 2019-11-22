@@ -49,9 +49,9 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     intstat->i0sum=dnew(nsa,ni0);
     intstat->i0sumsum=dnew(ni0, 1);
 
-    dcell *i0s=intstat->i0;
-    dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx/*PDELL*/;
-    dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy/*PDELL*/;
+    const dcell *i0s=intstat->i0;
+    const dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx/*PDELL*/;
+    const dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy/*PDELL*/;
     dmat *i0sum=intstat->i0sum;
     long npix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
     dcell *mtche=intstat->mtche=dcellnew_same(nsa,ni0,2,npix);
@@ -65,7 +65,9 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     int irot_multiplier=nllt>1?1:0;
     const int mtchadp=parms->powfs[ipowfs].mtchadp;
-  
+    double sigratio=parms->powfs[ipowfs].sigrecon/parms->powfs[ipowfs].siglev;
+    double sigratior=1./sigratio;
+    info("sigratio_recon=%g\n", sigratio);
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
 	const real siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
@@ -100,17 +102,29 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    dmat* bkgrnd2=NULL;
 	    dmat* bkgrnd2c=NULL;
 	    if(powfs[ipowfs].bkgrnd){
-		bkgrnd2= powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]; 
+		bkgrnd2=powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]; 
 	    }
 	    if(powfs[ipowfs].bkgrndc){
-		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
+		bkgrnd2c=powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
 	    }
 	    mtch(PP(mtche,isa,ii0),&nea2, P(i0s,isa,ii0),
 		 gxs?P(gxs,isa,ii0):0, gys?P(gys,isa,ii0):0, 
 		 parms->powfs[ipowfs].qe,
 		 bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
 		 pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
-	    
+	    if(fabs(sigratio-1)>1e-5){
+		dscale(P(i0s,isa,ii0), sigratio);
+		if(gxs) dscale(P(gxs,isa,ii0), sigratio);
+		if(gys) dscale(P(gys,isa,ii0), sigratio);
+		mtch(NULL,&nea2, P(i0s,isa,ii0),
+		     gxs?P(gxs,isa,ii0):0, gys?P(gys,isa,ii0):0, 
+		     parms->powfs[ipowfs].qe,
+		     bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
+		     pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);	
+		dscale(P(i0s,isa,ii0), sigratior);
+		if(gxs) dscale(P(gxs,isa,ii0), sigratior);
+		if(gys) dscale(P(gys,isa,ii0), sigratior);
+	    }
 	    P(i0sum,isa,ii0)=dsum(P(i0s,isa,ii0));
 	    i0sumsum+=P(i0sum,isa,ii0);
 

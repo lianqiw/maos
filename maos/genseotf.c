@@ -73,7 +73,6 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(powfs[ipowfs].intstat->otf){
 	cellfree(powfs[ipowfs].intstat->otf);
     }
-    powfs[ipowfs].intstat->notf=notf;
     powfs[ipowfs].intstat->otf=cccellnew(notf, 1);
     for(int iotf=0; iotf<notf; iotf++){
 	powfs[ipowfs].intstat->otf->p[iotf]=ccellnew(nsa,nwvl);
@@ -158,8 +157,6 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}else{
 	    info("Reading WFS OTF from %s\n", fnotf);
 	    intstat->otf=cccellread("%s",fnotf);
-	    intstat->notf=intstat->otf->nx*intstat->otf->ny;
-	    if(!intstat->notf) error("Invalid otf\n");
 	}
     }
 }
@@ -296,7 +293,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(nllt>0){
 	nlotf=powfs[ipowfs].intstat->lotf->ny;
     }
-    int notf=powfs[ipowfs].intstat->notf;
+    int notf=powfs[ipowfs].intstat->otf->nx;
     powfs[ipowfs].intstat->nsepsf=notf>nlotf?notf:nlotf;
     assert(powfs[ipowfs].intstat->nsepsf==1 
 	   || powfs[ipowfs].intstat->nsepsf==parms->powfs[ipowfs].nwfs);

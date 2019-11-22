@@ -802,7 +802,7 @@ int main(int argc, char *argv[])
     gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook),GTK_POS_LEFT);
 
 
-    g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
+    //g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
     g_signal_connect(window, "destroy", G_CALLBACK (quitmonitor), NULL);
     //g_signal_connect(G_OBJECT (window), "window-state-event", G_CALLBACK (window_state_event), NULL);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);

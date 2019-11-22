@@ -1737,13 +1737,13 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 */
 void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
     free_powfs_unused(parms, powfs);
+    free_powfs_fit(powfs,parms);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].type==0){
 	    free_powfs_shwfs(parms, powfs, ipowfs);
 	}else if(parms->powfs[ipowfs].type==1){
 	    pywfs_free(powfs[ipowfs].pywfs);
 	}
-	free_fit(powfs[ipowfs].fit, parms->powfs[ipowfs].nwfs);
     }
     free(powfs);
 }

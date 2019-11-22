@@ -360,14 +360,16 @@ void setup_fit(FIT_T *fit, int idealfit){
 void free_fit(FIT_T *fit, int nfit){
     if(!fit) return;
     for(int ifit=0; ifit<nfit; ifit++){
-	cellfree(fit[ifit].HXF);
-	cellfree(fit[ifit].HA);
-	cellfree(fit[ifit].actcpl);
-	cellfree(fit[ifit].actinterp);
-	cellfree(fit[ifit].actslave);
-	cellfree(fit[ifit].NW);
-	muv_free(&fit[ifit].FR);
-	muv_free(&fit[ifit].FL);
+	if(!fit[ifit].isref){
+	    cellfree(fit[ifit].HXF);
+	    cellfree(fit[ifit].HA);
+	    cellfree(fit[ifit].actcpl);
+	    cellfree(fit[ifit].actinterp);
+	    cellfree(fit[ifit].actslave);
+	    cellfree(fit[ifit].NW);
+	    muv_free(&fit[ifit].FR);
+	    muv_free(&fit[ifit].FL);
+	}
     }
     free(fit);
 }
@@ -488,6 +490,7 @@ void setup_powfs_fit(POWFS_T *powfs, const RECON_T *recon, const PARMS_T *parms)
 		}
 	    }else{
 		memcpy(fitall+jwfs, fitall, sizeof(FIT_T));
+		fit->isref=1;
 		fit->FR.Mdata=fit;
 		fit->FL.Mdata=fit;
 		fit->thetax=dnew(1,1);fit->thetax->p[0]=parms->wfs[iwfs].thetax;
@@ -496,4 +499,25 @@ void setup_powfs_fit(POWFS_T *powfs, const RECON_T *recon, const PARMS_T *parms)
 	}
 	locfree(wfsloc);
     }
+}
+/**
+   Call this instead of free_fit directly to free powfs fit parameters.
+*/
+void free_powfs_fit(POWFS_T *powfs, const PARMS_T *parms){
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	FIT_T *fitall=powfs[ipowfs].fit;
+	if(!fitall) continue;
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    FIT_T *fit=fitall+jwfs;
+	    dfree(fit->thetax);
+	    dfree(fit->thetay);
+	    if(!fit->isref){
+		dfree(fit->wt);
+		dfree(fit->hs);
+		cellfree(fit->aloc);
+		cellfree(fit->floc);
+	    }
+	}
+	free_fit(powfs[ipowfs].fit, parms->powfs[ipowfs].nwfs);
+    }    
 }
