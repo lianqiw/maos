@@ -64,28 +64,28 @@ def readuint32(fp):
     return struct.unpack("<I", fp.read(4))[0]
 def readuint64(fp):
     return struct.unpack("<Q", fp.read(8))[0]
-def read(file, want_header=0):
+def readbin(file, want_header=0):
     isfits=0
-    if file[-5:]==b'.fits' or file[-8:] == b'.fits.gz':
+    if file[-5:]=='.fits' or file[-8:] == '.fits.gz':
         isfits=1
-    elif file[-4:]==b'.bin' or file[-7:] == b'.bin.gz':
+    elif file[-4:]=='.bin' or file[-7:] == '.bin.gz':
         pass
-    elif os.path.isfile(file+b'.bin'):
-        file=file+b'.bin'
-    elif os.path.isfile(file+b'.bin.gz'):
-        file=file+b'.bin.gz'
-    elif os.path.isfile(file+b'.fits'):
-        file=file+b'.fits'
+    elif os.path.isfile(file+'.bin'):
+        file=file+'.bin'
+    elif os.path.isfile(file+'.bin.gz'):
+        file=file+'.bin.gz'
+    elif os.path.isfile(file+'.fits'):
+        file=file+'.fits'
         isfits=1
-    elif os.path.isfile(file+b'.fits.gz'):
-        file=file+b'.fits.gz'
+    elif os.path.isfile(file+'.fits.gz'):
+        file=file+'.fits.gz'
         isfits=1
     else:
         raise ValueError('Unknown file name, assume .bin')
 
     try:
         fp=open(file, 'rb')
-        if file[-3:]!=b'.gz':
+        if file[-3:]!='.gz':
             magic=readuint16(fp)
             if magic==0x8b1f:
                 fp.close()
@@ -246,7 +246,7 @@ def readbin_header(fp):
 if __name__ == '__main__':
     if len(sys.argv)>1:
         for fn in sys.argv[1:]:
-            res=read(fn)
+            res=readbin(fn)
             print(fn, ' is ', res.shape)
     else:
-        raise ValueError("Usage: res=readbin.read(file name)")
+        raise ValueError("Usage: res=readbin.readbin(file name)")

@@ -180,9 +180,10 @@ spint *readspint(file_t *fp, long* nx, long* ny){
 */
 void readvec(void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, const file_t *fp){
     if(nmemb==0) return;
-
+    magic_p   &=0xFFFF;
+    magic_file&=0xFFFF;
 #define TEST_CONVERT(M1, T1, M2, T2)				\
-    else if((magic_p&0xFFFF)==M1 && (magic_file&0xFFFF)==M2){	\
+    else if(magic_p==M1 && magic_file==M2){			\
 	T2 *p2=mymalloc(nmemb,T2);				\
 	zfread(p2, sizeof(T2), nmemb, fp);			\
 	for(size_t i=0; i<nmemb; i++){				\

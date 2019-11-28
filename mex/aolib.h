@@ -26,8 +26,8 @@ dmat *cov_diagnolize(const dmat *mod, const dmat *cov);
 dmat *karhunen_loeve=KL_vonkarman(const loc_t *loc, int nmod, double L0);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
 
-cell* readbin(const char *fn);
-void  writebin(const cell* dc, const char* fn);
+cell* read=readbin(const char *fn);
+void  write=writebin(const cell* dc, const char* fn);
 
 dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, int vibid);
 double dtrapz(const dmat *x, const dmat *y);

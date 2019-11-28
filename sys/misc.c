@@ -459,7 +459,7 @@ void mymkdir(const char *format, ...){
     while(fn[strlen(fn)-1]=='/')
 	fn[strlen(fn)-1]='\0';
     if(mkdir(fn, 0777)==-1 && errno!=EEXIST){
-	perror("mkdir");
+	//perror("mkdir");
 	char *tmp=strrchr(fn,'/');
 	if(!tmp){
 	    error("Unable to mkdir '%s'\n",fn);

@@ -1,54 +1,111 @@
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as pyplot
-import math
-def draw_each(image, iscell):
-    shape=image.shape
-    if len(shape)==2 and min(shape)==1:
-        shape=(max(shape)) #vector
-    if len(shape)==2 and min(shape)>2:
-        pyplot.imshow(imi.astype(np.double), origin='lower', interpolation='nearest')
-        if iscell:
-            pyplot.axis('off')
-        else:
-            pyplot.colorbar()
-    elif len(shape)==2 and shape[0]=='2':
-        pyplot.plot(image[0], image[1], '+')
-        
-def draw(image, ifig=0):
-    fig=pyplot.figure(ifig, figsize=(8,6), dpi=120)
-    iscell=0
-    nrow=1
-    ncol=1
-    while image.dtype==np.dtype(object) and len(image.flat)==1:
-        image=image.flat[0]
-    if image.dtype==np.dtype(object): #cell array
-        iscell=1
-        shape=image.shape
-        if len(shape)==2:
-            nrow=shape(1)
-            ncol=shape(2)
-        else:
-            nrow=1
-            ncol=1
-            for i in shape:
-                ncol=ncol*i
-        if nrow == 1 or ncol == 1:
-            tot=nrow*ncol
-            if tot>10:
-                ncol=math.sqrt(tot)
-                if ncol>6:
-                    ncol=6
-                nrow=tot/ncol
-        if ncol>10:
-            ncol=10
-        if nrow>4:
-            nrow=4
-    for ip in xrange(0, nrow*ncol):
-        spl=fig.add_subplot(nrow, ncol, ip)
-        if iscell:
-            draw_each(image.flat[ip], iscell)
-        else:
-            draw_each(image, iscell)
+#!/usr/bin/env python3
+"""
+This module contains routines to embed opds defined on coordinates to 2-d array and plot.
+"""
+from aolib import *
+
+#import struct
+
+def coord2grid(x):
+    xmin=x.min()
+    xmax=x.max()
+    x2=x-xmin
+    if x2.max()>0:
+        dx=x2[x2>0].min()
+        dx2=1/dx
+        nx=int(round((xmax-xmin)*dx2+1.))
+        ix=(x2*dx2).round().astype(int)
+    else:
+        ix=np.zeros(x.shape)
+        nx=1
+        dx=1
+    xi=[xmin,xmax]
+    return (ix, nx, dx, xi)
+
+def isvec(arg):
+    return arg.ndim==1 or (arg.ndim==2 and (arg.shape(0)==1 or arg.shape(1)==1))
+
+def isloc(arg):
+    return arg.ndim==2 and arg.shape[0]==2
+
+def locembed(loc, opd):
+    #draw(loc, opd): embed opd onto loc
+    (ix, nx, dx, xi)=coord2grid(loc[0])
+    (iy, ny, dy, yi)=coord2grid(loc[1])
     
-    return fig
+    nloc=loc.shape[1]
+    nframe=opd.size/nloc
+    print('nframe=', nframe)
+    if nframe!=round(nframe):
+        raise('Mismatch')
+        
+    nframe=int(nframe)
+    opd=opd.reshape((nframe,nloc))
+    print('opd=',opd.shape)
+    ims=np.zeros(nframe, dtype=object)
+    for iframe in range(nframe):
+        im=np.zeros((nx*ny))
+        im[ix+iy*nx]=opd[iframe,:]
+        im.shape=(nx,ny)
+        ims[iframe]=im
+        print('im=',im.shape)
+    ext=np.r_[xi[0]-dx/2, xi[1]+dx/2,yi[0]-dy/2, yi[1]+dy/2]
+    if nframe>1:
+        return ims, ext
+    else:
+        return im, ext
+
+def draw(*args, **kargs):
+    if args[0].dtype==object: #array of array
+        nframe=args[0].size
+        if nframe>3:
+            nx=np.ceil(np.sqrt(nframe))
+        else:
+            nx=nframe
+        ny=int(np.ceil(nframe/nx))
+        print(nx,ny)
+        for iframe in range(nframe):
+            if nx*ny>1:
+                plt.subplot(ny, nx, iframe+1)
+            if len(args)==1:
+                draw(args[0][iframe], **kargs)
+            elif len(args)==2:
+                draw(args[0][iframe], args[1][iframe],  **kargs)
+            else:
+                print('Too many arguments')
+    elif isloc(args[0]): #first argument is loc
+        if len(args)==1:
+            #plot grid
+            plt.plot(args[0][0], args[0][1],'+')
+            plt.axis('scaled') #better than equal
+            plt.xlabel('x (m)')
+            plt.ylabel('y (m)')
+        elif len(args)==2:
+            #draw(loc, opd): embed opd onto loc
+            ims, ext2=locembed(args[0], args[1])
+            print('ext2=',ext2)
+            draw(ims, ext=ext2)
+        else:
+            print('Too many arguments')
+    else:
+        if 'ext' in kargs:
+            plt.imshow(args[0], extent=kargs['ext'], cmap='jet')
+        else:
+            plt.imshow(args[0], cmap='jet')
+            
+        plt.colorbar()
+
+        
+#Use as standalone script
+if __name__ == "__main__":
+    from readbin import read
+    args=list()
+    for fn in sys.argv[1:]:
+        args.append(read(fn))
+
+    plt.figure()
+    plt.clf()
+    draw(*args)
+    print('Close window to continue')
+    plt.draw()
+    plt.show()

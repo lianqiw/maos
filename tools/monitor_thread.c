@@ -301,9 +301,9 @@ void listen_host(){
 	double ntime=myclockd();
 	for(int ihost=0; ihost<nhost; ihost++){
 	    if(hsock[ihost]>-1){
-		if(htime[ihost]+10<ntime){
+		if(htime[ihost]+100<ntime){
 		    //10 seconds grace period
-		    info("10 seconds no respond. disconnect\n");
+		    info("100 seconds no respond. disconnect\n");
 		    host_removed(hsock[ihost]);
 		}
 	    }

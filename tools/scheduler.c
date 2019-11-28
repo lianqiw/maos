@@ -880,6 +880,7 @@ void scheduler_handle_ws(char *in, size_t len){
 static void scheduler_timeout(void){
     static double lasttime1=0;//every 1 second
     static double lasttime3=0;//every 3 seconds
+    static double lasttime10=0;//every 10 seconds
 
 #if HAS_LWS
     ws_service();
@@ -897,9 +898,11 @@ static void scheduler_timeout(void){
 	if(running){
 	    check_jobs();
 	}
+    }
+    if(thistime>=(lasttime10+10)){
 	usage_cpu=get_usage_cpu();
 	monitor_send_load();
-	lasttime3=thistime;
+	lasttime10=thistime;
     }
 }
 

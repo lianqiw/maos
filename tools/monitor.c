@@ -605,6 +605,16 @@ static GtkToolItem *new_toolbar_item(const char *iconname, GdkPixbuf *iconbuf, c
 }
 int main(int argc, char *argv[])
 {
+    {
+	char *fnlog=stradd(TEMP, "/monitor.log", NULL);
+	info("Check %s for log.\n", fnlog);
+	if(!freopen(fnlog, "w", stdout)){
+	    warning("Unable to redirect output to %s\n", fnlog);
+	}else{
+	    setbuf(stdout, NULL);
+	}
+	free(fnlog);
+    }
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
     if(!g_thread_supported()){
 	g_thread_init(NULL);
