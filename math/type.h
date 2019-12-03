@@ -239,16 +239,14 @@ static inline int iscell(const void *id){
 static inline long index_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
 	error("%ld is out of range for (%ld,%ld) array\n", i, nx, ny);
-    }else{
-	return i;
     }
+    return i;
 }
-static inline void index_2d(long ix, long iy, long nx, long ny){
+static inline long index_2d(long ix, long iy, long nx, long ny){
     if(ix<0 || ix>=nx || iy<0 || iy>=ny){
 	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
-    }else{
-	return ix+iy*nx;
     }
+    return ix+iy*nx;
 }
 #else
 #define index_1d(i,    nx,ny) (i)

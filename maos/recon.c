@@ -346,7 +346,7 @@ void reconstruct(SIM_T *simu){
 	    save_gradol(simu);//must be here since gradol is only calculated in this file. 
 	}
     	if(parms->cn2.pair){
-	    cn2est_isim(recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl, &simu->tomo_update);
+	    cn2est_isim(simu->cn2res, recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl, &simu->tomo_update);
 	}//if cn2est 
     }
     if(hi_output || parms->sim.idealfit || parms->sim.idealtomo){

@@ -40,21 +40,16 @@ typedef struct cn2est_t{
     long nembed;      /**<size of array to embed the LGS gradients into*/
     lmat *embed;      /**<pointers to embed*/
     lmat *mask;       /**<select subapertures that are both full and have neighbors to compute covariance*/
-    dcell *gxs;      /**<gradient x*/
-    dcell *gys;      /**<gradient y*/
-    ccell *curi;     /**<For FFT*/
-    ccell *covc;     /**<Accumulation of FFT of Covariance in 2d*/
-    dcell *cov2;     /**<Covariance in 2d*/
-    dcell *cov1;     /**<Cut of cov2 along wfs separation*/
+
     dmat *overlapi;  /**<1./Number of overlapping subapertures for each separation*/
     int nsa;         /**<Number of subapertures*/
     int nwfs;        /**<number of wfs*/
     int nwfspair;    /**<number of wfs pairs to use for cn2 estimation*/
     int ovs;         /**<Over sampling ratio in building the influence matrix*/
-    int count;       /**<number of time steps we have accumulated the covariance*/
+
     dcell *Pnk;      /**<Cn2 Estimation forward matrix*/
     dcell *iPnk;     /**<Cn2 Estimation matrix.*/
-    dcell *wt;       /**<Estimated weighting of the layers*/
+
     dcell *ht;       /**<Estimated Height of the layers*/
     real hmax;     /**<maximum cn2 estimation when keepht!=2*/
     dmat *r0;        /**<Estimated r0*/
@@ -67,15 +62,29 @@ typedef struct cn2est_t{
     dspcell *wtconvert; /**<to convert wt from wt to wtrecon.*/
     real r0m;       /**<averaged r0 from all the pairs.>*/
     real L0;        /**<outer scale*/
+    /*the following are temporary data*/
+    dcell *gxs;      /**<gradient x*/
+    dcell *gys;      /**<gradient y*/
+    ccell *curi;     /**<For FFT*/
+
+    dcell *cov2;     /**<Covariance in 2d*/
+    dcell *cov1;     /**<Cut of cov2 along wfs separation*/
+
+    dcell *wt;       /**<Estimated weighting of the layers*/
+
+    /*the following are runtime data for accumulation*/
+    ccell *covc;     /**<Accumulation of FFT of Covariance in 2d*/
+    int count;       /**<number of time steps we have accumulated the covariance*/
 } cn2est_t;
 
 cn2est_t* cn2est_new(const dmat *wfspair, const dmat *wfstheta, const loc_t *saloc,
 		     const dmat *saa, const real saat, 
 		     const dmat* hs, const dmat *htrecon, int keepht, real l0);
-void cn2est_est(cn2est_t *cn2est, int verbose, int reset);
+void cn2est_est(cn2est_t *cn2est, int verbose);
 void cn2est_free(cn2est_t *cn2est);
-void cn2est_push(cn2est_t *cn2est, dcell *gradol);
+void cn2est_push(cn2est_t *cn2est, const dcell *gradol);
 cn2est_t* cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
 		    const dmat *saa, const real saat, 
 		    const dmat* hs, const dmat *htrecon, int keepht, real l0, dcell *grad);
+void cn2est_reset(cn2est_t *cn2est);
 #endif

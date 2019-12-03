@@ -512,7 +512,7 @@ typedef struct SIM_T{
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
-    dcell *cn2est;     /**<Cn2 Estimation Result*/
+    dcell *cn2res;     /**<Cn2 Estimation Result*/
     dcell *gradoff;    /**<Offset to grads to subtract from measurement. */
     real eptwfs;     /**<Twfs reference vector servo gain.*/
     /*CoG gain adjustment*/

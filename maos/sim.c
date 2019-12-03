@@ -252,6 +252,7 @@ void maos_isim(int isim){
 */
 void maos_sim(){
     const PARMS_T *parms=global->parms;
+    RECON_T *recon=global->recon;
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
    
@@ -262,6 +263,10 @@ void maos_sim(){
 	while(!(simu=maos_iseed(iseed))){
 	    iseed++;
 	}
+	if(recon->cn2est){//temporary. Should put runtime data in simu.
+	    cn2est_reset(recon->cn2est);
+	}
+	    
 #ifdef HAVE_NUMA_H
 	numa_set_localalloc();
 #endif

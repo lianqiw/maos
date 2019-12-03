@@ -359,12 +359,12 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 /*stores estimated r0 during simulation */
     cn2est->r0=dnew(nwfspair,1);
     return cn2est;
-}/*cn2est_prepare */
+}/*cn2est_new */
 
 /**
-   Embed gradent vector to gradient map 
+   Compute covariance from gradients and embed into a 2d map cn2est->curi.
 */
-static void cn2est_embed(cn2est_t *cn2est, dcell *gradol, int icol){
+static void cn2est_embed(cn2est_t *cn2est, const dcell *gradol, int icol){
     long *embed=cn2est->embed->p;
     for(int iwfs=0; iwfs<gradol->nx; iwfs++){
 	if(!cn2est->wfscov[iwfs]) continue;
@@ -379,16 +379,16 @@ static void cn2est_embed(cn2est_t *cn2est, dcell *gradol, int icol){
 	if(grad->nx!=nsa*2){
 	    error("grad and saloc does not match\n");
 	}
-	real *pgrad=grad->p+grad->nx*icol;
+	dmat*  gx=cn2est->gxs->p[iwfs];
+	dmat*  gy=cn2est->gys->p[iwfs];
+	const real *pgrad=grad->p+grad->nx*icol;
 	/*Embed gradients in a 2-d array */
 	for(int isa=0; isa<nsa; isa++){
-	    cn2est->gxs->p[iwfs]->p[embed[isa]]=pgrad[isa];
-	    cn2est->gys->p[iwfs]->p[embed[isa]]=pgrad[isa+nsa];
+	    gx->p[embed[isa]]=pgrad[isa];
+	    gy->p[embed[isa]]=pgrad[isa+nsa];
 	}
 	/*Compute curvature of wavefront from gradients. */
 	cmat*  cur=cn2est->curi->p[iwfs];
-	dmat*  gx=cn2est->gxs->p[iwfs];
-	dmat*  gy=cn2est->gys->p[iwfs];
 	const int ny=cn2est->curi->p[iwfs]->ny;
 	const int nx=cn2est->curi->p[iwfs]->nx;
 	for(int iy=0; iy<ny; iy++){
@@ -423,7 +423,7 @@ static void cn2est_cov(cn2est_t *cn2est){
 	}
     }/*iwfspair */
 }
-void cn2est_push(cn2est_t *cn2est, dcell *gradol){
+void cn2est_push(cn2est_t *cn2est, const dcell *gradol){
     int ncol=0;
     if(gradol->nx<cn2est->nwfs){
 	error("Grad has less number of wfs than required %d\n", cn2est->nwfs);
@@ -446,7 +446,7 @@ DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
 /**
    Do the Cn2 Estimation.
 */
-void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
+void cn2est_est(cn2est_t *cn2est, int verbose){
     info("cn2est from %d measurements\n", cn2est->count);
     cmat *covi=cnew(cn2est->nembed, cn2est->nembed);
 #if COV_ROTATE
@@ -532,9 +532,9 @@ void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
 	}
 	dscale(wt, 1./wtsum);
 	if(verbose){
-	    info("r0=%.4fm theta0=%6f\" ",r0,calc_aniso(r0,wt->nx,ht->p,wt->p)*206265);
+	    info("Pair%d: r0=%.4fm theta0=%.2f\" ",iwfspair, r0,calc_aniso(r0,wt->nx,ht->p,wt->p)*206265);
 	    if(cn2est->dmht && cn2est->dmht->nx==2){
-		info("theta2=%6f\" ", calc_aniso2(r0,wt->nx,ht->p,wt->p,
+		info("theta2=%.2f\" ", calc_aniso2(r0,wt->nx,ht->p,wt->p,
 						   cn2est->dmht->p[0], cn2est->dmht->p[1])*206265);
 	    }
 	    info("wt=[");
@@ -547,14 +547,14 @@ void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
     cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
     dcellzero(cn2est->wtrecon);
     dcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
-/*only 1 cell. norm to sum to 1. */
+    /*only 1 cell. norm to sum to 1. */
     dnormalize_sumabs(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
     if(verbose){
-	info("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
+	info("Mean : r0=%.4fm theta0=%.2f\" ",cn2est->r0m, 
 	      calc_aniso(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
 			 cn2est->htrecon->p,cn2est->wtrecon->p[0]->p)*206265);
 	if(cn2est->dmht && cn2est->dmht->nx==2){
-	    info("theta2=%6f\" ", calc_aniso2(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
+	    info("theta2=%.2f\" ", calc_aniso2(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
 					       cn2est->htrecon->p,cn2est->wtrecon->p[0]->p,
 					       cn2est->dmht->p[0], cn2est->dmht->p[1])*206265);
 	}
@@ -564,9 +564,13 @@ void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
 	}
 	info("]\n");
     }
-/*divide by the number of accumulated frames. */
-    if(reset){
-	if(verbose) info("reset the covariance");
+}
+/**
+   Reset the accumulation
+ */
+void cn2est_reset(cn2est_t* cn2est){
+    if(cn2est->count){
+	info("cn2est: reset the accumulation\n");
 	cn2est->count=0;/*reset the counter; */
 	ccellzero(cn2est->covc);/*reset the numbers. */
     }
@@ -619,6 +623,6 @@ cn2est_t *cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
     }
     struct cn2est_t *cn2est=cn2est_new(wfspair, wfstheta, saloc, saa, saat, hs, htrecon, keepht, l0);
     cn2est_push(cn2est, grad);
-    cn2est_est(cn2est, 1, 0);
+    cn2est_est(cn2est, 1);
     return cn2est;
 }
