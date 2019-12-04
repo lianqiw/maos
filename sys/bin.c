@@ -1090,7 +1090,10 @@ mem_t* mmap_open(char *fn, size_t msize, int rw){
 	mem=mem_new(p);
 	mem->kind=1;
 	mem->n=msize;
-	if(IS_SHM(fn2)) mem->shm=fn2; fn2=NULL;
+	if(IS_SHM(fn2)) {
+	    mem->shm=fn2; 
+	    fn2=NULL;
+	}
     }
     free(fn2);
     return mem;
