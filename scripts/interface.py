@@ -18,7 +18,7 @@
 
 
 #TODO: investigate whether CFFI is a better solution.
-
+import os
 import sys
 from pdb import set_trace as keyboard
 from ctypes import *
@@ -26,8 +26,10 @@ import json
 import numpy as np
 import scipy.sparse as sp
 from warnings import warn
-
-lib=cdll.LoadLibrary("/home/lianqiw/work/aos/comp/optim/bin/aolib.so")
+try:
+    lib=cdll.LoadLibrary(os.environ['MAOS_AOLIB'])
+except:
+    print('Please set environment variable MAOS_AOLIB to aolib.so')
 
 id2ctype={
     #obtain type information from MAOS id.
