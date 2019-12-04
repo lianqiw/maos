@@ -224,11 +224,11 @@ void close_config(const char *format, ...){
 /**
    Start the read config process by opening .conf files and fill the entries in
    a hash table. A key has a priority or 0 or higher. A new key with same or
-   higher priority can override previous entry.
+   higher priority can override previous entry. priority is 0 for default configurations
  */
 void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		 const char* prefix,    /**<[in]if not NULL, prefix the key with this.*/
-		 const int priority     /**<[in]Priorities of keys.*/
+		 int priority     /**<[in]Priorities of keys.*/
 		 ){
     if(!config_in) return;
     FILE *fd=NULL;
@@ -318,6 +318,8 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		    info("Replacing all existing input\n");
 		    erase_config();
 		}
+	    }else if(!strcmp(ssline, "__default__")){
+		priority=0;//this file contains default setup.
 	    }else{
 		error("Input (%s) is not valid\n", ssline);
 	    }
@@ -382,8 +384,8 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    RENAME(sim.epdm, sim.ephi);
 	    RENAME(sim.aldm, sim.alhi);
 	    RENAME(powfs.neaspeckle, powfs.neaextra);
-	    //RENAME(tomo.cxx,tomo.cxxalg);
-	    //RENAME(sim.ahstfocus, tomo.ahst_focus);
+	    RENAME(tomo.cxx,tomo.cxxalg);
+	    RENAME(sim.ahstfocus, tomo.ahst_focus);
 #endif
 	    STORE_T *store=mycalloc(1,STORE_T);
 	    if(prefix){

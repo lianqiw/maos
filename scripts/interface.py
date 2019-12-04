@@ -26,10 +26,8 @@ import json
 import numpy as np
 import scipy.sparse as sp
 from warnings import warn
-try:
-    lib=cdll.LoadLibrary(os.environ['MAOS_AOLIB'])
-except:
-    print('Please set environment variable MAOS_AOLIB to aolib.so')
+
+lib=cdll.LoadLibrary(os.environ['MAOS_AOLIB'])
 
 id2ctype={
     #obtain type information from MAOS id.

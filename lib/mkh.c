@@ -273,15 +273,12 @@ dsp *mkhbin1d(const dmat *xin, const dmat *xout){
 	while(iout+1<xout->nx && xout->p[iout+1]<ixin){
 	    iout++;//find location in xout to the left of ixin
 	}
-	if(iout==0 || iout+1==xout->nx || xout->nx==1){//outside of the area.
-	    //if(xout->p[iout]>=ixin || (iout+1==xout->nx && xout->p[iout]<ixin)){/*outside of the area. */
+	//Changes made on Nov 9, 2018 was incorrect. Correct the test
+	if((iout==0 && xout->p[iout]>=ixin) || (iout+1==xout->nx)){//outside
 	    hbin->i[count]=iout;
 	    hbin->x[count]=1;
 	    count++;
 	}else{/*within the area */
-	    //if(iout+1==xout->nx){
-	    //error("This shouldn't happen\n");
-	    //}
 	    real wt=(ixin-xout->p[iout])/(xout->p[iout+1]-xout->p[iout]);
 	    hbin->i[count]=iout;
 	    hbin->x[count]=1.-wt;
