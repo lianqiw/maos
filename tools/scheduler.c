@@ -370,7 +370,7 @@ static void running_remove(int pid, int status){
 static RUN_T *running_get(int pid){
     RUN_T *irun;
     for(irun=running; irun; irun=irun->next){
-	if(irun->pid==pid){
+	if(irun->pid==pid || pid<=0){
 	    break;
 	}
     }
@@ -513,6 +513,21 @@ static void new_job(const char *exename, const char *execmd){
     monitor_send(irun, irun->path);
     monitor_send(irun, NULL);
     all_done=0;
+}
+/**
+   Pass socket and command to maos. 
+ */
+static int maos_command(int pid, int sock, int cmd){
+    RUN_T *irun=running_get(pid);
+    int cmd2[2]={cmd, 0};
+    if(!irun || (stwriteintarr(irun->sock, cmd2, 2) || stwritefd(irun->sock, sock))){
+	warning("Unable to pass socket to maos\n");
+	stwriteint(sock, -1);//respond failure message.
+    }else{
+	warning("Successfully passed socket to maos\n");
+	stwriteint(sock, 0);//respond succeed
+    }
+    return -1;//do not keep this connection.
 }
 /**
    respond to client requests. The fixed header is int[2] for opcode and
@@ -745,19 +760,10 @@ static int respond(int sock){
 	}
 	break;	  
     case CMD_DISPLAY://12: called by monitor to enable maos to draw.*/
-	{
-	    RUN_T *irun=running_get(pid);
-	    int cmd2[2]={MAOS_DRAW, 0};
-	    if(stwriteintarr(irun->sock, cmd2, 2) || stwritefd(irun->sock, sock)){
-		warning("Unable to pass socket %d to maos at %d\n", sock, irun->sock);
-		stwriteint(sock, -1);//respond failure message.
-	    }else{
-		stwriteint(sock, 0);
-	    }
-	    ret=-1;
-	}
+	ret=maos_command(pid, sock, MAOS_DRAW);
 	break;
-    case CMD_UNUSED1://13;not used
+    case CMD_MAOS://13: create a live link to maos.
+	ret=maos_command(pid, sock, MAOS_VAR);
 	break;
     case CMD_UNUSED2://14;not used
 	break;

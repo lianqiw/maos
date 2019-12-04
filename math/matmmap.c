@@ -25,15 +25,14 @@
 #include "mathdef.h"
 #include "defs.h"
 
-
 /**
    Create a new X(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode.*/
 X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ...){
     if(!nx || !ny) return NULL;
-    if(disable_save){
+    format2fn;
+    if(disable_save && !IS_SHM(fn)){
 	return X(new)(nx, ny);
     }
-    format2fn;
     size_t metasize=3*8+bytes_header(header);//size of meta data. 
     size_t msize=nx*ny*sizeof(T)+metasize;//total size of file/memory
     mem_t *mem=mmap_open(fn, msize, 1);
@@ -52,10 +51,10 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
 			 const char *header1, const char *header2[],
 			 const char *format, ...){
     if(!nx || !ny) return NULL;
-    if(disable_save){
+    format2fn;
+    if(disable_save && !IS_SHM(fn)){
 	return X(cellnew3)(nx, ny, nnx, nny);
     }
-    format2fn;
     long metasize=3*8;
     long msize=metasize+bytes_header(header1);
     for(long ix=0; ix<nx*ny; ix++){

@@ -411,18 +411,33 @@ cell* read_by_id(uint32_t id, int level, const char *format, ...){
     return out;
 }
 /**
-   Return cell* so the consumer does not use it without check and cast
+   A generic routine for reading data from file. User need to cast the result.
  */
 cell* readbin(const char *format, ...){
     format2fn;
     return read_by_id(0, -1, "%s", fn);
 }
-
+/**
+   A generic routine for write data to file.
+ */
 void writebin(const void *A, const char *format, ...){
     format2fn;
     write_by_id(A, 0, "%s", fn);
 }
-
-void writebindata(file_t *fp, const void *A){
+/**
+   A generic routine for reading data from socket. User need to cast the result.
+ */
+cell* readsock(int sock){
+    file_t *fp=zfdopen(sock,"rb");
+    cell *out=readdata_by_id(fp, 0, -1, 0);
+    zfclose(fp);
+    return out;
+}
+/**
+   A generic routine for write data to socket.
+ */
+void writesock(const void *A, int sock){
+    file_t *fp=zfdopen(sock,"wb");
     writedata_by_id(fp, A, 0);
+    zfclose(fp);
 }

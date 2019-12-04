@@ -19,7 +19,7 @@
 #include "mathdef.h"
 #include "defs.h"
 /**
-   basic routines
+   Routines for input/output to bin/fits file.
 */
 
 /**

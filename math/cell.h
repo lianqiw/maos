@@ -50,5 +50,6 @@ cell* read_by_id(uint32_t id, int level, const char *format, ...) CHECK_ARG(3);
 
 cell* readbin(const char *format, ...) CHECK_ARG(1);
 void writebin(const void *dc, const char *format, ...) CHECK_ARG(2);
-void writebindata(file_t *fp, const void *dc);
+cell* readsock(int sock);
+void writesock(const void *dc, int sock);
 #endif

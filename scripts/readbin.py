@@ -5,6 +5,7 @@ import scipy.sparse as sparse
 import os
 import gzip
 import struct
+import socket
 
 magic2dname={
     25600: 'M_CSP64',
@@ -64,9 +65,18 @@ def readuint32(fp):
     return struct.unpack("<I", fp.read(4))[0]
 def readuint64(fp):
     return struct.unpack("<Q", fp.read(8))[0]
+def readvec(fp, datatype, nxy):#enable read from socket and file
+    if fp.seekable():
+        return np.fromfile(fp, dtype=datatype, count=nxy, sep='')
+    else:#for socket reading, fromfile fails.
+        buf=fp.read(nxy*datatype.itemsize)
+        return np.frombuffer(buf, dtype=datatype, count=nxy)
 def readbin(file, want_header=0):
     isfits=0
-    if file[-5:]=='.fits' or file[-8:] == '.fits.gz':
+    if isinstance(file, socket.socket):
+        file=file.fileno()
+        isfits=0
+    elif file[-5:]=='.fits' or file[-8:] == '.fits.gz':
         isfits=1
     elif file[-4:]=='.bin' or file[-7:] == '.bin.gz':
         pass
@@ -83,15 +93,18 @@ def readbin(file, want_header=0):
     else:
         raise ValueError('Unknown file name, assume .bin')
 
-    try:
-        fp=open(file, 'rb')
-        if file[-3:]!='.gz':
-            magic=readuint16(fp)
-            if magic==0x8b1f:
-                fp.close()
-                fp=gzip.open(file,'rb')
-            else:
-                fp.seek(0, 0)
+
+    if isinstance(file, int):
+        closefd0=False
+    else:
+        closefd0=True
+    with open(file, 'rb', closefd=closefd0) as fp:
+        magic=readuint16(fp)
+        if magic==0x8b1f:
+            fp.close()
+            fp=gzip.open(file,'rb')
+        else:
+            fp.seek(0, 0)
     
         err=0
         count=0
@@ -108,8 +121,6 @@ def readbin(file, want_header=0):
                 header=header[0]
         else:
             [out, header, err]=readbin_do(fp, isfits)
-    finally:
-        fp.close()
     if want_header:
         return (out, header)
     else:
@@ -153,15 +164,16 @@ def readbin_do(fp, isfits):
             ijtype=np.int64
         else:
             ijtype=np.int32
-        Jc=np.fromfile(fp, dtype=ijtype, count=ny+1, sep='').astype(int)
-        Ir=np.fromfile(fp, dtype=ijtype, count=nz, sep='').astype(int)
-        P=np.fromfile(fp, dtype=datatype, count=nz, sep='')
+        Jc=readvec(fp, ijtype, ny+1).astype(int)
+        Ir=readvec(fp, ijtype, nz).astype(int)
+        P=readvec(fp, datatype, nz)
         out=sparse.csr_matrix((P, Ir, Jc), shape=(ny, nx))
     elif dname[0:2]=='M_' and nx>0 and ny>0:
         datatype=np.dtype(dname2type[dname])
         if isfits:
             datatype=datatype.newbyteorder('>')
-        out=np.fromfile(fp, dtype=datatype, count=nx*ny, sep='')
+
+        out=readvec(fp, datatype, nx*ny)
         out.shape=(ny, nx)
 
         if ny==1:

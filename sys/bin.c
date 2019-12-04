@@ -74,7 +74,8 @@ struct mem_t{
     void *p;  /**<points to the beginning of mmaped memory for this type of data.*/
     long n;   /**<length of mmaped memory.*/
     int kind; /**<Kind of memory. 0: heap, 1: mmap*/
-    int nref;/**<Number of reference.*/
+    int nref; /**<Number of reference.*/
+    char *shm;/**<unlink when delete if set*/
 };
 /**
    Disables file saving when set to 1.
@@ -168,25 +169,40 @@ void zftouch(const char *format, ...){
 }
 PNEW(lock);
 /*
-  Open a bin file from a fd that may be a socket.
+  convert a socket or fd into FILE.
 */
-static file_t* zfdopen(int sock, const char *mod){
+
+file_t* zfdopen(int fd, const char *mode){
     file_t* fp=mycalloc(1,file_t);
     fp->isgzip=0;
-    fp->fd=sock;
-    if(fp->isgzip){
-	if(!(fp->p=gzdopen(fp->fd,mod))){
-	    error("Error gzdopen for %d\n",sock);
-	    free(fp); fp=0;
-	}
-    }else{
-	if(!(fp->p=fdopen(fp->fd,mod))){
-	    error("Error fdopen for %d\n",sock);
-	    free(fp); fp=0;
-	}
-    }
+    fp->fd=fd;
+    (void)mode;
+    /*if(!(fp->p=fdopen(fp->fd, mode))){
+	error("Error fdopen for %d\n",fd);
+	free(fp); fp=0;
+	}*/
     return fp;
 }
+/**
+   Adaptively call open or shm_open depending on the name.
+*/
+inline int myopen(const char *name, int oflag, mode_t mode){
+    if(IS_SHM(name)){
+	/*if(!mystrcmp(name, "/shm")){
+	    name+=4;
+	}
+	if(name[0]=='/'){
+	    name++;
+	}
+	char name2[NAME_MAX];
+	snprintf(name2, NAME_MAX, "/maos_%d_%s", PID, name);
+	name=name2;*/
+	return shm_open(name, oflag, mode);
+    }else{
+	return open(name, oflag, mode);
+    }
+}
+//#define OPEN(name, flags...) (IS_SHM(name)?(info("shm_open: %s\n", name),shm_open(name, flags)):open(name, flags))
 
 /**
    Open a bin file for read/write access. 
@@ -221,7 +237,7 @@ file_t* zfopen_try(const char *fni, const char *mod){
       file.*/
     switch(mod[0]){
     case 'r':/*read only */
-	if((fp->fd=open(fn2, O_RDONLY))==-1){
+	if((fp->fd=myopen(fn2, O_RDONLY, 0666))==-1){
 	    perror("open for read");
 	}else{//file exist
 	    if(!mystrcmp(fn2, CACHE)){
@@ -236,7 +252,7 @@ file_t* zfopen_try(const char *fni, const char *mod){
 	break;
     case 'w':/*write */
     case 'a':
-	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0666))==-1){
+	if((fp->fd=myopen(fn2, O_RDWR | O_CREAT, 0666))==-1){
 	    perror("open for write");
 	}else{
 	    if(flock(fp->fd, LOCK_EX)){//2018-03-07: Removed LOCK_NB
@@ -294,10 +310,29 @@ file_t* zfopen_try(const char *fni, const char *mod){
     free(fp->fn); free(fp); fp=0;
     return fp;
 }
-file_t *zfopen(const char *fn, const char *mod){
-    file_t *fp=zfopen_try(fn, mod);
+/**
+   Open a bin file or socket for read/write access. 
+
+   Whether the file is gzipped or not is automatically determined when open for
+   reading. When open for writing, if the file name ends with .bin or .fits,
+   will not be gzipped. If the file has no suffix, the file will be gzipped and
+   .bin is appened to file name.
+*/
+file_t *zfopen(const char *fn, const char *mode){
+    file_t *fp;
+#if 0
+    char *endptr;
+    long int sock=strtol(fn, &endptr, 10);
+    if(endptr){//fn is not just number
+	fp=zfopen_try(fn, mode);
+    }else{
+	fp=zfdopen((int)sock, mode);
+    }
+#else
+    fp=zfopen_try(fn, mode);
+#endif
     if(!fp && !disable_save){
-	error("Open file %s for %s failed\n", fn, mod[0]=='r'?"read":"write");
+	error("Open file %s for %s failed\n", fn, mode[0]=='r'?"read":"write");
     }
     return fp;
 }
@@ -319,11 +354,14 @@ int zfisfits(file_t *fp){
 void zfclose(file_t *fp){
     if(!fp) return;
     LOCK(lock);
-    if(fp->isgzip){
-	gzclose((voidp)fp->p);
-    }else{
-	fclose((FILE*)fp->p);
+    if(fp->p){
+	if(fp->isgzip){
+	    gzclose((voidp)fp->p);
+	}else{
+	    fclose((FILE*)fp->p);
+	}
     }
+    //close(fp->fd);//keep fd open
     free(fp->fn);
     free(fp);
     UNLOCK(lock);
@@ -333,16 +371,17 @@ void zfclose(file_t *fp){
   fwrite. Follows the interface of fwrite.
 */
 void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, const file_t *fp){
-    if(fp->isgzip){
-	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
-	    perror("gzwrite");
-	    error("write to %s failed\n", fp->fn);
-	}
+    int ans=0;
+    if(fp->fd && !fp->p){//use raw io
+	ans=(write(fp->fd, ptr, size*nmemb)!=(long)(size*nmemb));
+    }else if(fp->isgzip){
+	ans=(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb));
     }else{
-	if(fwrite(ptr, size, nmemb, (FILE*)fp->p)!=nmemb){
-	    perror("fwrite");
-	    error("write to %s failed\n", fp->fn);
-	}
+	ans=(fwrite(ptr, size, nmemb, (FILE*)fp->p)!=nmemb);
+    }
+    if(ans){
+	perror("zfwrite_do");
+	error("write to %s failed\n", fp->fn);
     }
 }
 /**
@@ -410,15 +449,29 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, const file_
    fread. Follows the interface of fread.
 */
 int zfread_do(void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
-    int ans;
-    if(fp->isgzip){
-	ans=gzread((voidp)fp->p, ptr, size*nmemb)>0;
-	if(ans>0) ans=0; else gzerror((voidp)fp->p, &ans);
+    int err=0;
+    ssize_t tot=size*nmemb;
+    if(fp->fd && !fp->p){//raw io. read until all needed data is done.
+	while(!err){
+	    int count=read(fp->fd, ptr, tot);
+	    if(count>0){
+		if(count<tot){
+		    ptr+=count;
+		    tot-=count;
+		}else{
+		    break;
+		}
+	    }else{
+		err=1;
+	    }
+	}
+    }else if(fp->isgzip){
+	err=(gzread((voidp)fp->p, ptr, tot)!=tot);
+	if(err) gzerror((voidp)fp->p, &err);
     }else{
-	ans=fread(ptr, size, nmemb, (FILE*)fp->p);
-	if((size_t)ans==nmemb) ans=0; 
+	err=(fread(ptr, size, nmemb, (FILE*)fp->p)!=nmemb);
     }
-    return ans;
+    return err;
 }
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
@@ -944,6 +997,9 @@ void mem_unref(struct mem_t *in){
 	default:
 	    warning("invalid in->kind=%d\n", in->kind);
 	}
+	if(in->shm){
+	    shm_unlink(in->shm);
+	}
 	free(in);
     }
 }
@@ -994,7 +1050,7 @@ void *mem_p(const mem_t *in){
    control.
 */
 mem_t* mmap_open(char *fn, size_t msize, int rw){
-    if(rw && disable_save && mystrcmp(fn, CACHE)){
+    if(rw && disable_save && !IS_SHM(fn)  && mystrcmp(fn, CACHE)){
 	warning("Saving is disabled for %s\n", fn);
     }
     char *fn2=procfn(fn,rw?"w":"r");
@@ -1004,13 +1060,13 @@ mem_t* mmap_open(char *fn, size_t msize, int rw){
     }
     int fd;
     if(rw){
-	fd=open(fn2, O_RDWR|O_CREAT, 0600);
+	fd=myopen(fn2, O_RDWR|O_CREAT, 0600);
 	/*First truncate the file to 0 to delete old data. */
 	if(fd==-1 || ftruncate(fd, msize)==-1){
 	    error("Unable to open or ftruncate file %s to %zu size\n", fn2, msize);
 	}
     }else{
-	fd=open(fn2, O_RDONLY);
+	fd=myopen(fn2, O_RDONLY, 0600);
     }
     /*in read only mode, allow -1 to indicate failed. In write mode, fail.*/
     if(fd==-1){
@@ -1024,20 +1080,20 @@ mem_t* mmap_open(char *fn, size_t msize, int rw){
     if(!rw && !msize){
 	msize=flen(fn2);
     }
-    free(fn2);
-
     void *p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ, MAP_SHARED, fd, 0);
     close(fd);//it is ok to close fd after mmap.
+    mem_t *mem=0;
     if(p==MAP_FAILED){
 	perror("mmap");
 	error("mmap failed\n");
-	return NULL;
     }else{
-	mem_t *mem=mem_new(p);
+	mem=mem_new(p);
 	mem->kind=1;
 	mem->n=msize;
-	return mem;
+	if(IS_SHM(fn2)) mem->shm=fn2; fn2=NULL;
     }
+    free(fn2);
+    return mem;
 }
 
 /**

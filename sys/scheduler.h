@@ -62,7 +62,7 @@ enum{
     CMD_SOCK,  /**<10 We are pass a socket*/
     CMD_REMOVE,/**<11 Remove a job*/
     CMD_DISPLAY,/**<12 Remote display for telemetry*/
-    CMD_UNUSED1,/*13 */
+    CMD_MAOS, /*13 */
     CMD_UNUSED2,/*14 */
     CMD_RESTART,/*15*/
     CMD_UNUSED3,/*16*/
@@ -75,6 +75,7 @@ enum{
 enum{
     MAOS_SERVER=1,/*not used*/
     MAOS_DRAW=10, /*tell maos to start drawing with the received fd*/
+    MAOS_VAR=20,  /*tell maos to enable variable access*/
     MAOS_ASSIGN_WFS=100,
     MAOS_ASSIGN_EVL,/*101*/
     MAOS_ASSIGN_RECON,/*102*/

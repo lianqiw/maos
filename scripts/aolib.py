@@ -4,19 +4,29 @@ try:
 except:
     import lib2py #it generates libaos
     from libaos import *
+
+from readbin import readbin
+from draw import draw
+
+
 import glob
 import os
+import sys
 import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
+from scipy.special import erf
+from numpy import sqrt, exp, log, floor, ceil, nan
+from numpy.random import rand, randn
 
 #The magic stuff for IPython
-try:
-    from IPython import get_ipython
-    ipython = get_ipython()
-    ipython.magic("load_ext autoreload")
-    ipython.magic("autoreload 2")
-except:
-    pass
+if 'get_ipython' not in sys.modules:
+    try:
+        from IPython import get_ipython
+        ipython = get_ipython()
+        ipython.magic("load_ext autoreload")
+        ipython.magic("autoreload 2")
+    except:
+        pass
 
 import matplotlib as mpl
 from cycler import cycler
@@ -44,31 +54,20 @@ mpl.rcParams['figure.autolayout']=True
 #mpl.rcParams['figure.subplot.left']=0.1
 #mpl.rcParams['figure.subplot.right']=0.9
 
-if True:
-    mpl.use('module://mpldock.backend')
-    from mpldock import persist_layout
-    persist_layout('maos')
-
-#%gui qt5 #replacing plt.show()
-
-
 #For ploting
 import matplotlib.pyplot as plt
-#plt.ion() #enable interactive mode.
+plt.ion() #enable interactive mode.
 
-#plt.switch_backend('module://mpldock.backend')
-
+#To dock multiple figures. Does not work very well.
+def dock_figure():
+    #mpl.use('module://mpldock.backend')
+    from mpldock import persist_layout
+    persist_layout('maos')
+    plt.switch_backend('module://mpldock.backend')
+    ipython.magic('gui qt5') #replacing plt.show() that blocks
 
 
 from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, figure, subplot, xlabel, ylabel, title, xlim, ylim, close, savefig
-from scipy.special import erf
-from numpy import sqrt, exp, log, floor, ceil, nan
-from numpy.random import rand, randn
-
-
-
-from readbin import readbin
-from draw import draw
 
 def iscell(arr):
     if type(arr)==np.ndarray and arr.dtype.name=='object':

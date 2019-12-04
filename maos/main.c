@@ -21,6 +21,57 @@
 #include "maos.h"
 #include "version.h"
 
+//Return maos data pointer by name
+static void *find_var(const char *name){
+    if(!name) return NULL;
+    if(global){
+	if(global->simu){
+	    if(!mystrcmp(name, "dmreal")){
+		return global->simu->dmreal;
+	    }
+	}else{
+	    warning("global->simu is NULL\n");
+	}
+    }else{
+	warning("global is NULL\n");
+    }
+    return NULL;
+}
+//Listen to requests coming from other client.
+static void *maos_var(void* psock){
+    thread_block_signal();
+    int cmd[2];
+    int sock=(int)(long)psock;
+    while(!streadintarr(sock, cmd, 2)){
+	switch(cmd[0]){
+	case MAOS_VAR:
+	    {
+		if(cmd[1]==1 || cmd[1]==2){//get or put
+		    char *name=0;
+		    streadstr(sock, &name);
+		    cell *var=(cell*)find_var(name);
+		    info("maos_var: request[%d] %s %p\n", cmd[1], name, var);
+		    if(var){
+			if(cmd[1]==1){//client to get
+			    writesock(var, sock);
+			}else if(cmd[1]==2){//client to put
+			    cell *newdata=readsock(sock);
+			    dcellcp(&var, newdata);
+			}else{
+			    warning("maos_var: unknown operation %d\n", cmd[1]);
+			}
+		    }
+		}
+	    }
+	    break;
+	}//switch
+    }//while
+    info("maos_var: client closed\n");
+    close(sock);
+    return NULL;
+}
+
+//Listen to commands coming from scheduler
 static void maos_listener(int sock){
     thread_block_signal();
     int cmd[2];
@@ -45,6 +96,19 @@ static void maos_listener(int sock){
 		    }
 		}
 	    }break;
+	case MAOS_VAR:
+	    {
+		int fd;
+		if(streadfd(sock, &fd)){
+		    warning("unable to read fd from %d\n", sock);
+		    continue;
+		}else{
+		    warning("got fd=%d\n", fd);
+		}
+		thread_new(maos_var, (void*)(long)fd);
+		
+	    }break;
+
 	default:
 	    warning("unknown cmd %d\n", cmd[0]);
 	    break;

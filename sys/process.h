@@ -42,6 +42,7 @@ extern int NCPU;  /**<True number of cores*/
 extern int MAXTHREAD;/**<Number of hyper threads. may be larger than NCPU*/
 extern int NTHREAD;  /**<Number of threads for simulation*/
 extern int TCK;
+extern int PID;
 extern long NMEM;
 extern const char *HOME;/*the user home */
 extern const char *USER;/*the user name */

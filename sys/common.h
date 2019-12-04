@@ -159,7 +159,7 @@ extern int detached;
 */
 #define TIC double tk
 #define tic tk=myclockd();
-#define toc(format,...) printf(format "takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
+#define toc(format,...) printf(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

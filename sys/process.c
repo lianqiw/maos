@@ -40,6 +40,7 @@ int NCPU=0;
 int MAXTHREAD=0;/*MAXTHREAD=2*NCPU when hyperthreading is enabled. */
 int NTHREAD=0;//Default to MAXTHREAD
 int TCK=0;
+int PID=0;
 long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
 const char *USER=NULL;
@@ -135,6 +136,7 @@ void init_process(void){
 #else
     NMEM=0;/*do not know. */
 #endif
+    PID=(int)getpid();
 }
 
 /**

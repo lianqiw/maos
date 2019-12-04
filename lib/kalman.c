@@ -808,7 +808,7 @@ void kalman_write(kalman_t *kalman, const char *format, ...){
 #define WRITE_KEY(fp, str, key)			\
 	tmp=str->key->header;			\
 	str->key->header=(char*)#key;		\
-	writebindata(fp, str->key);		\
+	writedata_by_id(fp, str->key,0);	\
 	str->key->header=tmp;
 
 	WRITE_KEY(fp, kalman, Ad);

@@ -129,6 +129,7 @@ int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
 file_t *zfopen_try(const char *fn, const char *mod);
 file_t *zfopen(const char *fn, const char *mod);
+file_t *zfdopen(int fd, const char *mod);
 const char *zfname(file_t *fp);
 int zfisfits(file_t *fp);
 void zfclose(file_t *fp);
@@ -153,4 +154,5 @@ void* mem_p(const mem_t *in);
 mem_t* mmap_open(char *fn, size_t msize, int rw);
 void mmap_write_header(char **p0, uint32_t magic, long nx, long ny, const char *header);
 void mmap_read_header(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0);
+#define IS_SHM(name) ((name[0]=='/' && !strchr(name+1, '/')) || !mystrcmp(name, "/shm"))
 #endif

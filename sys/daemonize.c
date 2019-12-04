@@ -200,7 +200,7 @@ void single_instance_daemonize(const char *lockfolder_in,
 	close(fd);/*close and release lock */
 	exit(EXIT_SUCCESS);
     }
-  
+    PID=getpid();
     /*redirect stdin/stdout. */
     if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
     if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
@@ -341,7 +341,7 @@ void daemonize(void){ /* Fork off the parent process */
     }
     /* Create a new SID for the child process */
     if(setsid()==-1) error("Error setsid\n");
-    pid=getpid();
+    PID=getpid();
     umask(0077);
     detached=1;/*we are in detached mode, disable certain print outs.*/
     redirect();
