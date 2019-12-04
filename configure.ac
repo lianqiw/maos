@@ -1,4 +1,4 @@
-AC_INIT(maos, 2.3.0, lianqiw@gmail.com)
+AC_INIT(maos, 2.4.0, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
 AM_INIT_AUTOMAKE([1.9.6 foreign -Wall -Werror no-define subdir-objects dist-bzip2])
