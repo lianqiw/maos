@@ -372,16 +372,18 @@ void zfclose(file_t *fp){
 */
 void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, const file_t *fp){
     int ans=0;
+    long ret=0;
     if(fp->fd && !fp->p){//use raw io
-	ans=(write(fp->fd, ptr, size*nmemb)!=(long)(size*nmemb));
+	ans=((ret=write(fp->fd, ptr, size*nmemb))!=(long)(size*nmemb));
     }else if(fp->isgzip){
-	ans=(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb));
+	ans=((ret=gzwrite((voidp)fp->p, ptr, size*nmemb))!=(long)(size*nmemb));
     }else{
-	ans=(fwrite(ptr, size, nmemb, (FILE*)fp->p)!=nmemb);
+	ans=((ret=fwrite(ptr, size, nmemb, (FILE*)fp->p))!=(long)nmemb);
     }
     if(ans){
-	perror("zfwrite_do");
-	error("write to %s failed\n", fp->fn);
+	if(errno) perror("zfwrite_do");
+	info("zfwrite_do failed: ret=%ld, size=%lu, nmemb=%lu\n", ret, size, nmemb);
+	warning("write to %s failed\n", fp->fn);
     }
 }
 /**

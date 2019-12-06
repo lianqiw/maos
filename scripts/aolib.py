@@ -1,14 +1,4 @@
 #!/usr/bin/env python3
-try:
-    from libaos import *
-except:
-    import lib2py #it generates libaos
-    from libaos import *
-
-from readbin import readbin
-from draw import draw
-
-
 import glob
 import os
 import sys
@@ -57,6 +47,17 @@ mpl.rcParams['figure.autolayout']=True
 #For ploting
 import matplotlib.pyplot as plt
 plt.ion() #enable interactive mode.
+
+try:
+    from libaos import *
+except:
+    import lib2py #it generates libaos
+    from libaos import *
+
+from readbin import readbin
+
+from draw import draw
+
 
 #To dock multiple figures. Does not work very well.
 def dock_figure():
@@ -205,4 +206,18 @@ def reset_color():
     plt.gca().set_prop_cycle(None)
 
 
-
+import inspect, dis
+def nargout():
+    """Return how many values the caller is expecting"""
+    f = inspect.currentframe()
+    f = f.f_back.f_back
+    c = f.f_code
+    i = f.f_lasti
+    bytecode = c.co_code
+    instruction = bytecode[i+3]
+    if instruction == dis.opmap['UNPACK_SEQUENCE']:
+        howmany = bytecode[i+4]
+        return howmany
+    elif instruction == dis.opmap['POP_TOP']:
+        return 0
+    return 1

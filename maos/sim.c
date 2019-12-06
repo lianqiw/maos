@@ -58,14 +58,15 @@ SIM_T *maos_iseed(int iseed){
 		parms->sim.seeds->p[iseed]);
 	return 0;
     }
-    if(!parms->sim.pause){
+    SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
+    global->simu=simu;
+    if(!simu->pause){
 	draw_single=1;//Only draw active frame.
     }else{
 	draw_single=0;
     }
     global->iseed=iseed;
-    SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
-    global->simu=simu;
+
     if(parms->atm.frozenflow){
 	genatm(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 	if(parms->tomo.predict){
@@ -296,12 +297,12 @@ void maos_sim(){
 	}else{
 	    for(int isim=simstart; isim<simend; isim++){
 		maos_isim(isim);
-		if(parms->sim.pause>0 && isim%parms->sim.pause==0){
+		if(simu->pause>0 && isim%simu->pause==0){
 		    info("Press enter to step, c to resume:\n"); 
 		    int key;
 		    while((key=getchar())!=0x0a){
 			if(key=='c'){
-			    ((PARMS_T*)parms)->sim.pause=0;
+			    simu->pause=0;
 			}
 		    }
 		    info("continuing...\n"); 

@@ -424,13 +424,12 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	  
 	    */
 	    const int nx=powfs[ipowfs].pts->nx;
-	    //Can be upgraded to actual amplitude for fill factor.
+	    //Can be upgraded to actual amplitude for fill factor, but need to use a full subaperture.
 	    dmat* ampw=dnew(nx,nx);
 	    for(int ix=0; ix<nx*nx; ix++){
 		ampw->p[ix]=1;
 	    }
 	    dnormalize_sumabs(ampw->p, ampw->nx*ampw->ny, 1);
-	    dmat*  pampw=ampw/*PDMAT*/;
 	    
 	    real nx2=(nx-1)*0.5;
 	    real fill1d=sqrt(parms->powfs[ipowfs].safill2d);
@@ -449,7 +448,7 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 #else
 		    P(opdi,ix,iy)=rr*rr;
 #endif
-		    real amp=P(pampw,ix,iy);
+		    real amp=P(ampw,ix,iy);
 		    R2+=rr*amp;
 		    R4+=rr*rr*amp;
 		    Rf+=P(opdi,ix,iy)*amp;
@@ -466,7 +465,7 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 		for(int ix=0; ix<nx; ix++){
 		    real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
 		    P(opdi,ix,iy)-=a*rr+b;
-		    var+=P(opdi,ix,iy)*P(opdi,ix,iy)*P(pampw,ix,iy);
+		    var+=P(opdi,ix,iy)*P(opdi,ix,iy)*P(ampw,ix,iy);
 		}
 	    }
 	    dfree(ampw);

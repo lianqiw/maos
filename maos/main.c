@@ -21,13 +21,175 @@
 #include "maos.h"
 #include "version.h"
 
-//Return maos data pointer by name
+//Return maos data pointer by name. Currently the numbers are filled manually. The next step is to automatically generate them from maos/types.h
+
 static void *find_var(const char *name){
-    if(!name) return NULL;
+    struct VAR_MAP{
+	char *name;
+	void *var;
+    };
+#define VAR_GET(STRUCT,FIELD) {#STRUCT "." #FIELD, global->STRUCT->FIELD}
+#define VAR_GET_2(STRUCT,FIELD,NUM) {#STRUCT "[" #NUM "]." #FIELD, global->STRUCT[NUM].FIELD}
+    struct VAR_MAP simu_map[]={
+	VAR_GET(simu,atm),
+	VAR_GET(simu,wfsopd),
+	VAR_GET(simu,ints),
+	VAR_GET(simu,gradcl),
+	VAR_GET(simu,gradacc),
+	VAR_GET(simu,gradlastcl),
+	VAR_GET(simu,gradlastol),
+	VAR_GET(simu,cn2res),
+	VAR_GET(simu,gradoff),
+	VAR_GET(simu,gradscale),
+	VAR_GET(simu,opdr),
+	VAR_GET(simu,cgres),
+	VAR_GET(simu,clem),
+	VAR_GET(simu,clemp),
+	VAR_GET(simu,corrNGSm),
+	VAR_GET(simu,cleNGSm),
+	VAR_GET(simu,dmpsol),
+	VAR_GET(simu,dmcmd),
+	VAR_GET(simu,dmreal),
+	VAR_GET(simu,dmadd),
+	VAR_GET(simu,dmfit),
+	VAR_GET(simu,dmerr),
+	VAR_GET(simu,dmerr_store),
+	VAR_GET(simu,Merr_lo),
+	VAR_GET(simu,Merr_lo2),
+	VAR_GET(simu,Mngs),
+	VAR_GET(simu,fsmerr),
+	VAR_GET(simu,fsmreal),
+	VAR_GET(simu,LGSfocus),
+	VAR_GET(simu,zoomerr),
+	VAR_GET(simu,zoomint),
+	VAR_GET(simu,zoomreal),
+	VAR_GET(simu,evlopd),
+	{NULL, NULL}//mark the end
+    };
+    
+    struct VAR_MAP aper_map[]={
+	VAR_GET(aper,locs),
+	VAR_GET(aper,locs_dm),
+	VAR_GET(aper,amp),
+	VAR_GET(aper,amp1),
+	VAR_GET(aper,ampground),
+	VAR_GET(aper,mod),
+	VAR_GET(aper,mcc),
+	VAR_GET(aper,imcc),
+	VAR_GET(aper,opdadd),
+	VAR_GET(aper,opdfloc),
+	{NULL, NULL}
+    };
+
+    struct VAR_MAP recon_map[]={
+	VAR_GET(recon,ht),
+	VAR_GET(recon,wt),
+	VAR_GET(recon,os),
+	VAR_GET(recon,dx),
+	VAR_GET(recon,saloc),
+	VAR_GET(recon,ploc),
+	VAR_GET(recon,pmap),
+	VAR_GET(recon,ploc_tel),
+	VAR_GET(recon,xloc),
+	VAR_GET(recon,xmap),
+	VAR_GET(recon,xcmap),
+	VAR_GET(recon,xmcc),
+	VAR_GET(recon,fmap),
+	VAR_GET(recon,floc),
+	VAR_GET(recon,aloc),
+	VAR_GET(recon,amap),
+	VAR_GET(recon,acmap),
+	VAR_GET(recon,actfloat),
+	VAR_GET(recon,actstuck),
+	VAR_GET(recon,amod),
+	VAR_GET(recon,W0),
+	VAR_GET(recon,W1),
+	VAR_GET(recon,L2),
+	VAR_GET(recon,GP),
+	VAR_GET(recon,HXW),
+	VAR_GET(recon,HXWtomo),
+	VAR_GET(recon,GX),
+	VAR_GET(recon,GXtomo),
+	VAR_GET(recon,GXlo),
+	VAR_GET(recon,GXL),
+	VAR_GET(recon,GA),
+	VAR_GET(recon,GAlo),
+	VAR_GET(recon,GAhi),
+	VAR_GET(recon,GM),
+	VAR_GET(recon,GMhi),
+	VAR_GET(recon,HA_ncpa),
+	{NULL, NULL}
+    };
+    struct VAR_MAP powfs_map[]={
+	VAR_GET_2(powfs,saloc,0),
+	VAR_GET_2(powfs,pts,0),
+	VAR_GET_2(powfs,saa,0),
+	VAR_GET_2(powfs,loc,0),
+	VAR_GET_2(powfs,amp,0),
+	VAR_GET_2(powfs,srot,0),
+	VAR_GET_2(powfs,srsa,0),
+
+	VAR_GET_2(powfs,neasim,0),
+	VAR_GET_2(powfs,opdadd,0),
+	{NULL,NULL}
+    };
+    struct MAP_MAP{
+	char *name;
+	struct VAR_MAP *map;
+    };
+#define MAP_ALL(NAME) {#NAME "_", NAME ## _map}
+    struct MAP_MAP map_map[]={
+	MAP_ALL(simu),
+	MAP_ALL(aper),
+	MAP_ALL(recon),
+	MAP_ALL(powfs),
+	{NULL, NULL}
+    };
     if(global){
 	if(global->simu){
-	    if(!mystrcmp(name, "dmreal")){
-		return global->simu->dmreal;
+	    if(name){
+		for(int j=0; map_map[j].name;  j++){
+		    char *div=strchr(name, '.');
+		    if(!div) continue;
+		    char *div2=strchr(name,'[');
+		    if(div2 && div2<div){
+			div=div2;
+		    }
+		    if(!strncmp(map_map[j].name, name, div-name)){//first find the correct map
+			struct VAR_MAP *var_map=map_map[j].map;
+			for(int i=0; var_map[i].name ; i++){
+			    if(!strcmp(var_map[i].name, name)){//then find the correct variable
+				info("%s is found at %p\n", name, var_map[i].var);
+				return var_map[i].var;
+			    }
+			}
+			info("%s not found.\n", name);
+		    }
+		}
+	    }
+	    {
+		static cell* dummy=0;
+		if(!dummy){
+		    dummy=cellnew(0,0);
+		    const char *msg0="Available variables are:\n";
+		    long count=strlen(msg0);
+		    for(int j=0; map_map[j].name;  j++){
+			struct VAR_MAP *var_map=map_map[j].map;
+			for(int i=0; var_map[i].name ; i++){
+			    count+=strlen(var_map[i].name)+1;
+			}
+		    }
+		    dummy->header=mycalloc(count, char);
+		    strcat(dummy->header, msg0);
+		    for(int j=0; map_map[j].name;  j++){
+			struct VAR_MAP *var_map=map_map[j].map;
+			for(int i=0; var_map[i].name ; i++){
+			    strcat(dummy->header, var_map[i].name);
+			    strcat(dummy->header, "\n");
+			}
+		    }
+		}
+		return dummy;
 	    }
 	}else{
 	    warning("global->simu is NULL\n");
@@ -43,6 +205,7 @@ static void *maos_var(void* psock){
     int cmd[2];
     int sock=(int)(long)psock;
     while(!streadintarr(sock, cmd, 2)){
+	info("maos_var: cmd=%d, %d\n", cmd[0], cmd[1]);
 	switch(cmd[0]){
 	case MAOS_VAR:
 	    {
@@ -51,7 +214,7 @@ static void *maos_var(void* psock){
 		    streadstr(sock, &name);
 		    cell *var=(cell*)find_var(name);
 		    info("maos_var: request[%d] %s %p\n", cmd[1], name, var);
-		    if(var){
+		    {
 			if(cmd[1]==1){//client to get
 			    writesock(var, sock);
 			}else if(cmd[1]==2){//client to put
@@ -61,6 +224,14 @@ static void *maos_var(void* psock){
 			    warning("maos_var: unknown operation %d\n", cmd[1]);
 			}
 		    }
+		}
+	    }
+	    break;
+	case MAOS_PAUSE:
+	    {
+		if(global && global->simu){
+		    global->simu->pause=cmd[1];
+		    putchar('\a');
 		}
 	    }
 	    break;
@@ -84,7 +255,7 @@ static void maos_listener(int sock){
 		    warning("unable to read fd from %d\n", sock);
 		    continue;
 		}else{
-		    warning("got fd=%d\n", fd);
+		    info("got fd=%d\n", fd);
 		}
 		draw_add(fd);
 		if(global){
@@ -103,7 +274,7 @@ static void maos_listener(int sock){
 		    warning("unable to read fd from %d\n", sock);
 		    continue;
 		}else{
-		    warning("got fd=%d\n", fd);
+		    info("got fd=%d\n", fd);
 		}
 		thread_new(maos_var, (void*)(long)fd);
 		

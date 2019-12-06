@@ -1311,7 +1311,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     const int nwfs=parms->nwfs;
     SIM_T *simu=mycalloc(1,SIM_T);
     global->simu=simu;
-
+    simu->pause=parms->sim.pause;
     pthread_cond_init(&simu->dmreal_condr,0);
     pthread_cond_init(&simu->dmreal_condw,0);
     pthread_mutex_init(&simu->dmreal_mutex,0);

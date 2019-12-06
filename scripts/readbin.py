@@ -99,12 +99,13 @@ def readbin(file, want_header=0):
     else:
         closefd0=True
     with open(file, 'rb', closefd=closefd0) as fp:
-        magic=readuint16(fp)
-        if magic==0x8b1f:
-            fp.close()
-            fp=gzip.open(file,'rb')
-        else:
-            fp.seek(0, 0)
+        if closefd0: #is file
+            magic=readuint16(fp)
+            if magic==0x8b1f:
+                fp.close()
+                fp=gzip.open(file,'rb')
+            else:
+                fp.seek(0, 0)
     
         err=0
         count=0
@@ -121,19 +122,20 @@ def readbin(file, want_header=0):
                 header=header[0]
         else:
             [out, header, err]=readbin_do(fp, isfits)
-    if want_header:
+
+    if want_header: 
         return (out, header)
     else:
         return out
 
 def readbin_do(fp, isfits):
     err=0
-    out=[]
     header=''
     if isfits:
         [magic, nx, ny, header]=readfits_header(fp)
     else:
         [magic, nx, ny, header]=readbin_header(fp)
+
     if magic==0:
         dname='Unknown'
         err=1
@@ -141,9 +143,10 @@ def readbin_do(fp, isfits):
         dname=magic2dname[magic & 0xFFFF]
 
     if dname[0:2]=='MC': #cell array
-        header_cell=header;
+        if nx>0 and ny>0:
+            header_cell=header;
+            header=np.zeros((ny, nx), dtype=object)
         out=np.zeros((ny, nx), dtype=object)
-        header=np.zeros((ny, nx), dtype=object)
 
         for iy in range(0, ny):
             for ix in range(0, nx):
@@ -154,21 +157,23 @@ def readbin_do(fp, isfits):
                     break
             if err:
                 break
+    
         if ny==1:
             out=out[0,]
             header=header[0,]
     elif 'SP' in dname and nx>0 and ny>0: #sparse matrix
-        datatype=dname2type[dname]
-        nz=np.fromfile(fp, dtype=np.uint64, count=1, sep='')[0]
+        datatype=np.dtype(dname2type[dname])
+        nz=readvec(fp, np.dtype(np.int64), 1)[0];
+        #nz=np.fromfile(fp, dtype=np.uint64, count=1, sep='')[0]
         if '64' in dname:
-            ijtype=np.int64
+            ijtype=np.dtype(np.int64)
         else:
-            ijtype=np.int32
+            ijtype=np.dtype(np.int32)
         Jc=readvec(fp, ijtype, ny+1).astype(int)
         Ir=readvec(fp, ijtype, nz).astype(int)
         P=readvec(fp, datatype, nz)
         out=sparse.csr_matrix((P, Ir, Jc), shape=(ny, nx))
-    elif dname[0:2]=='M_' and nx>0 and ny>0:
+    elif dname[0:2]=='M_' and nx>0 and ny>0: #dense matrix
         datatype=np.dtype(dname2type[dname])
         if isfits:
             datatype=datatype.newbyteorder('>')
@@ -185,7 +190,7 @@ def readbin_do(fp, isfits):
             if byteleft:
                 junk=fp.read(2880-byteleft)
 
-    return(out, header, err)
+    return (out, header, err)
 
 
 def readfits_header(fp):

@@ -76,6 +76,7 @@ enum{
     MAOS_SERVER=1,/*not used*/
     MAOS_DRAW=10, /*tell maos to start drawing with the received fd*/
     MAOS_VAR=20,  /*tell maos to enable variable access*/
+    MAOS_PAUSE,   /*tell maos to pause or resume*/
     MAOS_ASSIGN_WFS=100,
     MAOS_ASSIGN_EVL,/*101*/
     MAOS_ASSIGN_RECON,/*102*/

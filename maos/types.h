@@ -666,7 +666,7 @@ typedef struct SIM_T{
     POWFS_T *powfs;    /**<pointer to powfs*/
     real last_report_time;/**<The time we lasted reported status to the scheduler.*/
     int tomo_update;   /**<Triggering setup_recon_tomo_upate*/
-
+    int pause;         /**<pause simulation every this many steps. Copies from sim.pause*/
     //For synchronization. perfevl and wfsgrad waist for dmreal to be updated.
     //reconstruct waist for gradients to be available.
     int dmreal_isim;//which isim this dmreal is valid for

@@ -2,8 +2,9 @@
 """
 This module contains routines to embed opds defined on coordinates to 2-d array and plot.
 """
-from aolib import *
-
+#from aolib import *
+import matplotlib.pyplot as plt
+import numpy as np
 #import struct
 
 def coord2grid(x):
@@ -35,20 +36,20 @@ def locembed(loc, opd):
     
     nloc=loc.shape[1]
     nframe=opd.size/nloc
-    print('nframe=', nframe)
+    #print('nframe=', nframe)
     if nframe!=round(nframe):
         raise('Mismatch')
         
     nframe=int(nframe)
     opd=opd.reshape((nframe,nloc))
-    print('opd=',opd.shape)
+    #print('opd=',opd.shape)
     ims=np.zeros(nframe, dtype=object)
     for iframe in range(nframe):
         im=np.zeros((nx*ny))
         im[ix+iy*nx]=opd[iframe,:]
         im.shape=(nx,ny)
         ims[iframe]=im
-        print('im=',im.shape)
+        #print('im=',im.shape)
     ext=np.r_[xi[0]-dx/2, xi[1]+dx/2,yi[0]-dy/2, yi[1]+dy/2]
     if nframe>1:
         return ims, ext
@@ -56,14 +57,18 @@ def locembed(loc, opd):
         return im, ext
 
 def draw(*args, **kargs):
-    if args[0].dtype==object: #array of array
-        nframe=args[0].size
+    if type(args[0])==list or args[0].dtype==object: #array of array
+        if type(args[0])==list:
+            nframe=len(args[0])
+        else:
+            nframe=args[0].size
         if nframe>3:
             nx=np.ceil(np.sqrt(nframe))
         else:
             nx=nframe
         ny=int(np.ceil(nframe/nx))
-        print(nx,ny)
+        #print(nx,ny)
+        plt.clf()
         for iframe in range(nframe):
             if nx*ny>1:
                 plt.subplot(ny, nx, iframe+1)
@@ -83,18 +88,30 @@ def draw(*args, **kargs):
         elif len(args)==2:
             #draw(loc, opd): embed opd onto loc
             ims, ext2=locembed(args[0], args[1])
-            print('ext2=',ext2)
+            #print('ext2=',ext2)
             draw(ims, ext=ext2)
         else:
             print('Too many arguments')
+    elif args[0].ndim>2:
+        nframe=args[0].shape[0]
+        if nframe>3:
+            nx=np.ceil(np.sqrt(nframe))
+        else:
+            nx=nframe
+        ny=int(np.ceil(nframe/nx))
+        #print(nx,ny)
+        plt.clf()
+        for iframe in range(nframe):
+            if nx*ny>1:
+                plt.subplot(ny, nx, iframe+1)
+            draw(args[0][iframe,])
     else:
+        plt.cla()
         if 'ext' in kargs:
             plt.imshow(args[0], extent=kargs['ext'], cmap='jet')
         else:
             plt.imshow(args[0], cmap='jet')
-            
-        plt.colorbar()
-
+        #plt.colorbar()
         
 #Use as standalone script
 if __name__ == "__main__":

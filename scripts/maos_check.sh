@@ -88,8 +88,8 @@ run_maos sim.idealtomo=1 -g-1
 echo -n "LGS MCAO (inte): "
 run_maos recon.split=0 tomo.precond=0
 
-echo -n "LGS MCAO (CG):   "
-run_maos tomo.precond=0
+echo -n "LGS MCAO (CG):   " #also test other
+run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1
 
 echo -n "LGS MCAO (FDPCG):"
 run_maos tomo.precond=1

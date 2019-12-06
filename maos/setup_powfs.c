@@ -348,17 +348,16 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    nedge++;
 	}
 	ampi=dnew(nx,nx);
-	dmat*  pampi=ampi/*PDMAT*/;
 	real alpha=(nx*nx*parms->powfs[ipowfs].safill2d-(nx-2*nedge)*(nx-2*nedge))
 	    /((nx-2*(nedge-1))*(nx-2*(nedge-1))-(nx-2*nedge)*(nx-2*nedge));
 	real tot=0;
 	for(int iy=nedge-1; iy<nx-nedge+1; iy++){
 	    for(int ix=nedge-1; ix<nx-nedge+1; ix++){
-		P(pampi,ix,iy)=1;
+		P(ampi,ix,iy)=1;
 		if(ix==nedge-1 || ix==nx-nedge || iy==nedge-1 || iy==nx-nedge){
-		    P(pampi,ix,iy)=alpha;
+		    P(ampi,ix,iy)=alpha;
 		}
-		tot+=P(pampi,ix,iy);
+		tot+=P(ampi,ix,iy);
 	    }
 	}
 	if(parms->save.setup){
