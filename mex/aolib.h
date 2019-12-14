@@ -29,6 +29,7 @@ dmat* turbcov(dmat *r, double rmax, double r0, double L0);
 cell* read=readbin(const char *fn);
 cell* readsock(int sock);
 void  write=writebin(const cell* dc, const char* fn);
+void  write2=writebin2(const cell* dc, const char *header, const char* fn);
 void  writesock(const cell* dc, int sock);
 dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, int vibid);
 double dtrapz(const dmat *x, const dmat *y);

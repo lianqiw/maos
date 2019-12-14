@@ -446,21 +446,20 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 }
 static int test_jobs(int status, double frac, int flag){
     switch(flag){
-    case 1://skipped
-	return status==S_FINISH && frac<1;
-	;;
-    case 2://finished
+    case 1://finished
 	return status==S_FINISH;
-	;;
+	break;
+    case 2://skipped
+	return status==S_FINISH && frac<1;
+	break;
     case 3://crashed
 	return status==S_CRASH || status==S_KILLED || status==S_TOKILL;
-	;;
+	break;
     case 4://all that is not running or pending
 	return status == S_FINISH || status==S_CRASH || status==S_KILLED || status==S_TOKILL;
-	;;
+	break;
     default:
 	return 0;
-	;;
     }
 }
 static void clear_jobs(GtkButton *btn, gpointer flag){
@@ -484,7 +483,7 @@ static void clear_jobs(GtkButton *btn, gpointer flag){
     }
 }
 
-static void save_all_jobs(GtkAction *btn, gpointer data){
+static void save_all_jobs(GtkButton *btn, gpointer data){
     (void)btn;
     (void)data;
     char *fnall=NULL;
@@ -797,7 +796,7 @@ int main(int argc, char *argv[])
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear", NULL, "Clear all jobs", clear_jobs, 4),  -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("process-stop",NULL, "Kill all jobs", kill_all_jobs, -1),  -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy",NULL, "Save jobs to file", clear_jobs, -1),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy",NULL, "Save jobs to file", save_all_jobs, -1),  -1);
 
 	gtk_widget_show_all(toptoolbar);
 	gtk_box_pack_start(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);

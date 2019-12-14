@@ -57,7 +57,11 @@ def locembed(loc, opd):
         return im, ext
 
 def draw(*args, **kargs):
+    if not 'keep' in kargs or kargs['keep']==0:
+        plt.clf()
+        
     if type(args[0])==list or args[0].dtype==object: #array of array
+        kargs['keep']=1 #do not clear
         if type(args[0])==list:
             nframe=len(args[0])
         else:
@@ -68,7 +72,6 @@ def draw(*args, **kargs):
             nx=nframe
         ny=int(np.ceil(nframe/nx))
         #print(nx,ny)
-        plt.clf()
         for iframe in range(nframe):
             if nx*ny>1:
                 plt.subplot(ny, nx, iframe+1)
@@ -93,6 +96,7 @@ def draw(*args, **kargs):
         else:
             print('Too many arguments')
     elif args[0].ndim>2:
+        kargs['keep']=1 #do not clear
         nframe=args[0].shape[0]
         if nframe>3:
             nx=np.ceil(np.sqrt(nframe))
@@ -100,18 +104,16 @@ def draw(*args, **kargs):
             nx=nframe
         ny=int(np.ceil(nframe/nx))
         #print(nx,ny)
-        plt.clf()
         for iframe in range(nframe):
             if nx*ny>1:
                 plt.subplot(ny, nx, iframe+1)
-            draw(args[0][iframe,])
+            draw(args[0][iframe,], **kargs)
     else:
-        plt.cla()
         if 'ext' in kargs:
-            plt.imshow(args[0], extent=kargs['ext'], cmap='jet')
+            plt.imshow(args[0], extent=kargs['ext'], origin='lower', cmap='jet')
         else:
-            plt.imshow(args[0], cmap='jet')
-        #plt.colorbar()
+            plt.imshow(args[0], origin='lower', cmap='jet')
+        plt.colorbar()
         
 #Use as standalone script
 if __name__ == "__main__":

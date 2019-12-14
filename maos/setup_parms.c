@@ -284,6 +284,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,sigrecon);
 
     READ_POWFS_RELAX(str,saloc);
+    READ_POWFS_RELAX(str,amp);
     READ_POWFS_RELAX(str,piinfile);
     READ_POWFS_RELAX(str,sninfile);
     READ_POWFS_RELAX(dbl,saat);

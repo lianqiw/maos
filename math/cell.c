@@ -425,6 +425,18 @@ void writebin(const void *A, const char *format, ...){
     write_by_id(A, 0, "%s", fn);
 }
 /**
+   A generic routine for write data to file with separate header
+ */
+void writebin2(void *A, const char *header, const char *format, ...){
+    format2fn;
+    cell *Ac=cell_cast(A);
+    if(Ac){
+	free(Ac->header);
+	Ac->header=strdup(header);
+    }
+    write_by_id(A, 0, "%s", fn);
+}
+/**
    A generic routine for reading data from socket. User need to cast the result.
  */
 cell* readsock(int sock){

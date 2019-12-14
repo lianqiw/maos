@@ -95,7 +95,7 @@ static MONITOR_T *monitor_add(int hostid);
 static void monitor_send(RUN_T *run,char*path);
 static void monitor_send_initial(MONITOR_T *ic);
 static void monitor_send_load(void);
-static long counter=0;//an negative index to retrieve this irun.
+static long counter=-1;//an negative index to retrieve this irun.
 static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
     static int ncpu=0;
     static int ngpu=0;
@@ -249,6 +249,7 @@ static void runned_restart(int pid){
 static RUN_T* running_add(int pid,int sock){
     RUN_T *irun;
     if((irun=running_get(pid))){
+	info("PID %d is already in running.\n", pid); /*create the node */
 	if(irun->sock!=sock) irun->sock=sock;
 	return irun;
     }else{
@@ -370,7 +371,7 @@ static void running_remove(int pid, int status){
 static RUN_T *running_get(int pid){
     RUN_T *irun;
     for(irun=running; irun; irun=irun->next){
-	if(irun->pid==pid || pid<=0){
+	if(irun->pid==pid || (irun->pid>0 && pid==0)){
 	    break;
 	}
     }
@@ -509,7 +510,7 @@ static void new_job(const char *exename, const char *execmd){
     irun->exe=strdup(exename);
     irun->path0=strdup(execmd);
     irun->path=remove_endl(irun->path0);
-    //info("new_job: (%s) (%s)\n", exename, execmd);
+    info("new_job: (%s) (%s)\n", exename, execmd);
     monitor_send(irun, irun->path);
     monitor_send(irun, NULL);
     all_done=0;
@@ -541,13 +542,13 @@ static int respond(int sock){
        will complain Bad file descriptor
     */
     int ret=0, pid, cmd[2];
-    //info("\rrespond %2d start ... ", sock);
+    info("\rrespond %2d start ... ", sock);
     if((ret=streadintarr(sock, cmd, 2))){
-	info("read failed");
+	info("read failed: %s", strerror(errno));
 	goto end;
     }
     pid=cmd[1];
-    //info("\rrespond %d got %d %d. ", sock, cmd[0], cmd[1]);
+    info("\rrespond %d got %d %d. ", sock, cmd[0], cmd[1]);
     switch(cmd[0]){
     case CMD_START://1: Called by maos when job starts.
 	{
@@ -641,7 +642,7 @@ static int respond(int sock){
 		break;
 	    }
 	    irun->path=remove_endl(irun->path0);
-	    //info("Received path: %s\n",irun->path);
+	    info("Received path: %s\n",irun->path);
 	    monitor_send(irun,irun->path);
 	}
 	break;

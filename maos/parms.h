@@ -119,6 +119,7 @@ typedef struct POWFS_CFG_T{
     dmat *wvl;   /**<list of wavelength*/
     dmat *wvlwts; /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
     char *saloc;   /**<saloc override file*/
+    char *amp;    /**<amplitude override file*/
     char *piinfile;/**<input averaged pixel intensities for matched filter. NULL
 		      to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/

@@ -189,7 +189,8 @@ def readbin_do(fp, isfits):
             byteleft=byteread%2880
             if byteleft:
                 junk=fp.read(2880-byteleft)
-
+    else:
+        out=np.array(())
     return (out, header, err)
 
 

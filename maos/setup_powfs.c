@@ -335,9 +335,17 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       the pupil amplitude map. Pupil distortion is accounted for.*/
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     /*The assumed amp. */
-    powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
-			    -parms->misreg.pupil->p[0],-parms->misreg.pupil->p[1], 
-			    parms->aper.d, parms->aper.din);
+    if(parms->powfs[ipowfs].amp){
+	powfs[ipowfs].amp=dread("%s", parms->powfs[ipowfs].amp);
+	if(powfs[ipowfs].amp->nx!=powfs[ipowfs].loc->nloc){
+	    error("%s is in wrong format. Need %ld, has %ld.\n", 
+		  parms->powfs[ipowfs].amp, powfs[ipowfs].loc->nloc, powfs[ipowfs].amp->nx);
+	}
+    }else{
+	powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
+				-parms->misreg.pupil->p[0],-parms->misreg.pupil->p[1], 
+				parms->aper.d, parms->aper.din);
+    }
     /*The threashold for normalized area (by areafulli) to keep subaperture. */
     real thresarea=parms->powfs[ipowfs].saat;
     dmat *ampi=NULL;
@@ -399,7 +407,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	dscale(powfs[ipowfs].saa, areafulli);
 	dcellscale(powfs[ipowfs].saa_tel, areafulli);
     }
-    if(!parms->powfs[ipowfs].saloc){
+    if(!parms->powfs[ipowfs].saloc && !parms->powfs[ipowfs].amp){
 	sa_reduce(powfs, ipowfs, thresarea);
     }
     info("There are %ld valid subaperture in saloc.\n", powfs[ipowfs].saloc->nloc);
