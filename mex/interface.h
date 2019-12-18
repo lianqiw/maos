@@ -321,6 +321,7 @@ static void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
     if(!A) return NULL;
     else if(!mxIsCell(A)){
 	if(fun){
+	    warning("Requesting cell but input is not.\n");
 	    return fun(A);
 	} else if(mxIsComplex(A)){
 #if MX_HAS_INTERLEAVED_COMPLEX

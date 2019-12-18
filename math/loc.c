@@ -1394,7 +1394,7 @@ loc_t *loctransform(const loc_t *loc, const char *polycoeff){
     if(input_type>0){
 	dmat *coeff=0;
 	if(input_type==1){
-	    coeff=dread(polycoeff);
+	    coeff=dread("%s", polycoeff);
 	}else if(input_type==2){
 	    coeff=(dmat*)polycoeff;
 	}

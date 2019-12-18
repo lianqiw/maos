@@ -383,7 +383,7 @@ int main(int argc, char *argv[]){
 	for(int ic=0; ic<res->nx; ic++){
 	    if(res->p[ic]){
 		plot_points(toptab[ic], nseed, NULL, res->p[ic], NULL, NULL, xylog, NULL, legs,
-			    title[ic], xlabel,ylabel, sidetab[ic]);
+			    title[ic], xlabel,ylabel, "%s",sidetab[ic]);
 	    }
 	}
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -401,7 +401,7 @@ int main(int argc, char *argv[]){
 	for(int ic=0; ic<res->nx; ic++){
 	    if(res->p[ic]){
 		plot_points(toptab[ic], npath, NULL, resm->p[ic], NULL, NULL, xylog, NULL, pathtag,
-			    title[ic], xlabel,ylabel, sidetab[ic]);
+			    title[ic], xlabel,ylabel, "%s",sidetab[ic]);
 	    }
 	}
 

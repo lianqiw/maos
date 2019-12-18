@@ -19,7 +19,13 @@
 #include "../math/mathdef.h"
 #include "mkdtf.h"
 #include "mkh.h"
-
+/**
+   mkdtf() computes the parameters used to sample PSFs onto detectors in the
+   Fourier domain. It incorporates size of the detector pixels, and charge
+   diffusion. For polar coordinate detectors, it also rotates the pixels and
+   pixel coordinates so that they are aranged along the radial and azimuthal
+   direction.
+ */
 DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     real dxsa,/**<Subaperture size*/
 	     real embfac,/**<Embedding factor (2)*/

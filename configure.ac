@@ -282,7 +282,7 @@ optname1=COMMON_ALL
 optname2=COMMON_${CN}
 optname3=${ccprefix}_ALL
 optname4=${ccprefix}_${CN}
-echo OPTScc="${optname1} ${optname2} ${optname3} ${optname4}"
+echo OPTScc from "${optname1} ${optname2} ${optname3} ${optname4}"
 OPTScc="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
 echo OPTScc=$OPTScc
 unset optname1 optname2 optname3 optname4

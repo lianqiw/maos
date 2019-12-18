@@ -91,8 +91,7 @@ static void plot_psf(ccell *psf2s, const char *psfname, int closeloop, int ievl,
 	    }
 
 
-	    ddraw(psfname, psftemp, NULL, NULL, title,
-		  "x", "y", tabname);
+	    ddraw(psfname, psftemp, NULL, NULL, title, "x", "y", "%s", tabname);
 	}
     }
     dfree(psftemp);

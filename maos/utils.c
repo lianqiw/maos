@@ -1112,7 +1112,7 @@ dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs){
 	}
     }else if(zfexist(file)){
 	//info("using %s\n", file);
-	nea=dcellread(file);
+	nea=dcellread("%s", file);
     }else{
 	error("%s_powfs%d.bin or %s_wfs%d.bin not found\n", file, ipowfs, file, iwfs0);
     }

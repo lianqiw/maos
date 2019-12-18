@@ -58,6 +58,14 @@ or cle=read('Res_1.bin.gz');
    contains header information about the sampling, origin and height of the OPD
    array. 
 
+   \section sect-python Reading Results in Python
+
+   There is readbin.py in scripts folder for reading bin or fits files in
+   python. Alternatively, it is also possible to call C routines in python,
+   including readbin and writebin as read and write. To do so, first set an
+   environment variable MAOS_AOLIB poing to the aolib.so file in the bin folder
+   in the compiling directory. Then import scripts/aoslib.py to your python. 
+
    \section sect-idl Reading Results in IDL
 
    There are two idl scripts in the sub-folder \c script. They are readbin.pro

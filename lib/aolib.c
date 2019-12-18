@@ -21,7 +21,7 @@
 #include "aos.h"
 //jmp_buf exception_return;
 static void py_quitfun(const char *msg){
-    info(msg);
+    info("%s", msg);
     //longjmp(exception_return, 1);
 }
 static void py_signal_handler(int sig){
