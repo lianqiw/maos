@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -67,6 +67,9 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     const int mtchadp=parms->powfs[ipowfs].mtchadp;
     real sigratio=parms->powfs[ipowfs].sigrecon/parms->powfs[ipowfs].siglev;
     real sigratior=1./sigratio;
+    if(sigratio<0){
+	error("sigratio cannot be negative\n");
+    }
     info("sigratio_recon=%g\n", sigratio);
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -237,7 +237,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
 	dcell *in=NULL;
 	while(!in){
 	    if(exist(fnatm)){
-		info("Usinging %s\n", fnatm);
+		info("Using %s\n", fnatm);
 		in=dcellread_mmap("%s",fnatm);
 	    }else{
 		/*non blocking exclusive lock. */

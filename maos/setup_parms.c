@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -1806,7 +1806,11 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	    if(isfinite(parms->powfs[ipowfs].hs)){//LGS
 		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
 		parms->powfs[ipowfs].siglev*=cosz;
-		parms->powfs[ipowfs].sigrecon*=cosz;
+		if(parms->powfs[ipowfs].sigrecon<0){
+		    parms->powfs[ipowfs].sigrecon=parms->powfs[ipowfs].siglev;
+		}else{
+		    parms->powfs[ipowfs].sigrecon*=cosz;
+		}
 		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
 		    parms->wfs[iwfs].hs *= secz;

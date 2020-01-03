@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -386,6 +386,12 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    RENAME(powfs.neaspeckle, powfs.neaextra);
 	    RENAME(tomo.cxx,tomo.cxxalg);
 	    RENAME(sim.ahstfocus, tomo.ahst_focus);
+	    RENAME(powfs.phytype, powfs.phytype_recon);
+	    RENAME(powfs.phytypesim, powfs.phytype_sim);
+	    RENAME(powfs.phytypesim2, powfs.phytype_sim2);
+	    RENAME(dbg.ncpa_nouncorr, dbg.ncpa_rmsci);
+	    RENAME(powfs0_llt.colsimdtrat, powfs0_llt.coldtrat);
+	    RENAME(recon.psddtrat, recon.psddtrat_hi);
 #endif
 	    STORE_T *store=mycalloc(1,STORE_T);
 	    if(prefix){

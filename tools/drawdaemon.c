@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -26,6 +26,7 @@ int cumu=0;
 #endif
 GdkPixbuf *icon_main=NULL;
 int main(int argc, char *argv[]){
+    info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
     if(!g_thread_supported()){
 	g_thread_init(NULL);
