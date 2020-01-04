@@ -270,7 +270,7 @@ static void redirect2fd(int fd){
 	warning("Error redirecting stdout\n");
     }
     setbuf(stdout, NULL);//disable buffering to see immediate output.
-    fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);
+    //fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);//interferes with drawdaemon
     //2018-10-29: We no longer redirecting stderr to file to keep it clean.
     /*if(dup2(fd, 2)<0){
       warning("Error redirecting stderr\n");
@@ -286,7 +286,7 @@ static void redirect2fn(const char *fn){
 	warning("Error redirecting stdout/stderr\n");
     }
     setbuf(stdout, NULL);
-    fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);
+    //fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);//interferes with drawdaemon
     //2018-10-29: We no longer redirecting stderr to file to keep it clean.
     //Redirect stderr to stdout 
     //dup2(fileno(stdout), fileno(stderr));

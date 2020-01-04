@@ -26,27 +26,6 @@ int cumu=0;
 #endif
 GdkPixbuf *icon_main=NULL;
 int main(int argc, char *argv[]){
-    info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
-#if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
-    if(!g_thread_supported()){
-	g_thread_init(NULL);
-	gdk_threads_init();
-    }
-#endif
-    gtk_init(&argc, &argv);
-#ifdef MAC_INTEGRATION
-    GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-#endif
-    icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
-    if(argc<2){
-	error("Must call drawdaemon with at least one argument\n");
-    }
-    sock=strtol(argv[1], NULL, 10);
-    if(sock<0){
-	error("sock=%d\n", sock);
-    }
-    //dbg("sock=%d\n", sock);
-    socket_block(sock, 0);
     {
 	char fnlog[PATH_MAX];
 	snprintf(fnlog, PATH_MAX,"%s/drawdaemon.log", TEMP);
@@ -61,6 +40,28 @@ int main(int argc, char *argv[]){
 	setbuf(stdout,NULL);
 	setbuf(stderr,NULL);
     }
+    info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
+#if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
+    if(!g_thread_supported()){
+	g_thread_init(NULL);
+	gdk_threads_init();
+    }
+#endif
+    gtk_init(&argc, &argv);
+#ifdef MAC_INTEGRATION
+    GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+#endif
+    icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
+    if(argc<2){
+	error("Must call drawdaemon with the socket fd.\n");
+    }
+    sock=strtol(argv[1], NULL, 10);
+    if(sock<0){
+	error("sock=%d\n", sock);
+    }
+    //dbg("sock=%d\n", sock);
+    socket_block(sock, 0);
+    
 #ifdef MAC_INTEGRATION
     gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
     gtkosx_application_ready(theApp);

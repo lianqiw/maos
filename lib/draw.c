@@ -401,7 +401,6 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 	    /*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	    int sock_draw=sock_draws[ifd].fd;
 	    if(sock_draw==-1) {
-		warning("sock_draw==-1; this should never happen\n");
 		continue;
 	    }
 	    if(!check_figfn(ifd, fig, fn, 1)) continue;
