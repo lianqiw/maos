@@ -649,7 +649,7 @@ void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
    Prepare the parameters for physical optics setup.
 
    \todo Make LGS number of pixels depend on subapertue elongation in radial
-   coordinate CCD mode. Make ncompx, ncompy dependent on number of pixels for radial ccd.
+   coordinate CCD mode. Make notfx, notfy dependent on number of pixels for radial ccd.
    
 
 */
@@ -657,7 +657,6 @@ static void
 setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     const real pixthetax=parms->powfs[ipowfs].radpixtheta;
     const real pixthetay=parms->powfs[ipowfs].pixtheta;
-    const int nwvl=parms->powfs[ipowfs].nwvl;
     const int pixpsay=parms->powfs[ipowfs].pixpsa;
     const int radpix=parms->powfs[ipowfs].radpix;
     const real dsa=powfs[ipowfs].pts->dsa;
@@ -738,60 +737,43 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     powfs[ipowfs].pixpsax=pixpsax;
     powfs[ipowfs].pixpsay=pixpsay;
 
-    /*to avoid aliasing, fft warping. usually 2. */
-    const real embfac=parms->powfs[ipowfs].embfac;
- 
-    /*size required to form detector image. */
-    int ncompx, ncompy;
-    if(parms->powfs[ipowfs].ncomp){
-	ncompx=ncompy=parms->powfs[ipowfs].ncomp;
-	info("ncomp is specified in input file to %dx%d\n", ncompx,ncompy);
-    }else{
-	/*
-	  compute required otf size to cover the detector FoV
-	  Need to revise this part: when ncomp is less than the
-	  size of the full psf, may need padding.  study aliasing
-	  extensively with full, cropped psf and detector
-	  transfer function.
-	*/
+    {
+	/*to avoid aliasing, fft warping. usually 2. */
+	const real embfac=parms->powfs[ipowfs].embfac;
+ 	real safov=MAX(pixpsax*pixthetax, pixpsay*pixthetay);
 	real wvlmin=parms->powfs[ipowfs].wvl->p[0];
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    if(wvlmin>parms->powfs[ipowfs].wvl->p[iwvl])
-		wvlmin=parms->powfs[ipowfs].wvl->p[iwvl];
-	}
 	real dtheta=wvlmin/(dsa*embfac);/*PSF sampling. */
-	ncompx=ncompy=powfs[ipowfs].pts->nx*embfac;
-	real safov=ncompx*dtheta;
-	if(safov < pixpsax*pixthetax || safov < pixpsay*pixthetay){
-	    info("PSF Size (%.1f\"x%.1f\") < SA FoV (%.1f\"x%.1f\")\n",
-		 safov*206265, safov*206265,
-		 pixpsax*pixthetax*206265, pixpsay*pixthetay*206265);
-	}
-	//ncompx=ceil(pixpsax*pixthetax/dtheta);
-	//ncompy=ceil(pixpsay*pixthetay/dtheta);
 
-	/*
-	  Found that: Must set ncompx==ncompy even for rotationg either psf or
-	  otf. reduce aliasing and scattering of image intensities.
-	*/
-	ncompx=ncompy=MAX(ncompx, ncompy);
-	/*A few manual optimizations. */
-	if(ncompx==ncompy){
-	    if(ncompx>8 && ncompx<16){
-		ncompx=ncompy=16;
-	    }else if(ncompx>16 && ncompx<32){
-		ncompx=ncompy=32;
-	    }else if(ncompx>64 && ncompx<67){
-		ncompx=ncompy=64;
-	    }else if(ncompx<128 && ncompx>120){
-		ncompx=ncompy=128;
-	    }
+	/*size required to form detector image. */
+	int notf;
+	const char *okind;
+	if(parms->powfs[ipowfs].notf){
+	    notf=(parms->powfs[ipowfs].notf+1)/2*2;
+	    okind="input";
+	}else{
+	    notf=MAX(powfs[ipowfs].pts->nx*embfac, ceil(safov/dtheta));
+	    /*
+	    if(notf>8 && notf<16){
+		notf=16;
+	    }else if(notf>16 && notf<32){
+		notf=32;
+	    }else if(notf>64 && notf<67){
+		notf=64;
+	    }else if(notf<128 && notf>120){
+		notf=128;
+		}*/
+	    notf=nextfftsize(notf);
+	    okind="calculated";
 	}
-	ncompx=ncompy=nextfftsize(ncompx);
-	info("Subaperture DTF is %dx%d\n", ncompx,ncompy);
-    }/*ncomp */
-    powfs[ipowfs].ncompx=ncompx;
-    powfs[ipowfs].ncompy=ncompy;
+	powfs[ipowfs].notfx=notf;
+	powfs[ipowfs].notfy=notf;
+	info("notf is %dx%d (%s)\n", powfs[ipowfs].notfx, powfs[ipowfs].notfy, okind);
+	if(safov > dtheta*notf){
+	    warning("Subaperture PSF size (%g\") is smaller than detector FoV (%g\").", 
+		    dtheta*notf, safov);
+	}
+    }/*notf */
+
 
     if(parms->powfs[ipowfs].bkgrndfn){
 	char *fn=parms->powfs[ipowfs].bkgrndfn;
@@ -967,8 +949,8 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     powfs[ipowfs].dtf=mkdtf(parms->powfs[ipowfs].wvl, 
 			    powfs[ipowfs].pts->dsa,
 			    parms->powfs[ipowfs].embfac,
-			    powfs[ipowfs].ncompx,
-			    powfs[ipowfs].ncompy,
+			    powfs[ipowfs].notfx,
+			    powfs[ipowfs].notfy,
 			    powfs[ipowfs].pixpsax,
 			    powfs[ipowfs].pixpsay,
 			    parms->powfs[ipowfs].radpixtheta,
@@ -1144,7 +1126,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 
     real lltd=lltcfg->d;
 
-    int notf=MAX(powfs[ipowfs].ncompx, powfs[ipowfs].ncompy);
+    int notf=MAX(powfs[ipowfs].notfx, powfs[ipowfs].notfy);
     /*The otf would be dx/lambda. Make it equal to embfac*pts->dsa/lambda/notf)*/
     real dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
     real lltdsa=MAX(lltd, powfs[ipowfs].pts->dsa);

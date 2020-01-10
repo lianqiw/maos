@@ -822,9 +822,9 @@ static void init_simu_wfs(SIM_T *simu){
     /* For sky coverage telemetry output */
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	long ncompx=powfs[ipowfs].ncompx;
-	long ncompy=powfs[ipowfs].ncompy;
-	long notf=MAX(ncompx, ncompy);
+	long notfx=powfs[ipowfs].notfx;
+	long notfy=powfs[ipowfs].notfy;
+	long notf=MAX(notfx, notfy);
 	if(parms->powfs[ipowfs].psfout){
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    /*The PSFs here are PSFs of each subaperture. */
@@ -1860,8 +1860,8 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"]\n");
     fprintf(fp,"maos.ncomp=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"%d ",powfs[powfs_ngs[ipowfs]].ncompx);
-	if(powfs[powfs_ngs[ipowfs]].ncompx!=powfs[powfs_ngs[ipowfs]].ncompy){
+	fprintf(fp,"%d ",powfs[powfs_ngs[ipowfs]].notfx);
+	if(powfs[powfs_ngs[ipowfs]].notfx!=powfs[powfs_ngs[ipowfs]].notfy){
 	    error("Invalid\n");
 	}
     }

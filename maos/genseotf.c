@@ -89,16 +89,14 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		       loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
 		       powfs[ipowfs].realsaa->p[iotf],
 		       thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
-		       powfs[ipowfs].ncompx, 
-		       powfs[ipowfs].ncompy, nsa, 1);
+		       powfs[ipowfs].notfx, 
+		       powfs[ipowfs].notfy, nsa, 1);
 	}
     }/*iwvl */
     locfree(loc);
 }
 
 void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
-    int npsfx=powfs[ipowfs].pts->nx *parms->powfs[ipowfs].embfac;
-    int npsfy=npsfx;
     char fnprefix[200]; fnprefix[0]='\0';
     uint32_t key=0;
     strcat(fnprefix, "SEOTF");
@@ -109,6 +107,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }else{
 	key=dhash(powfs[ipowfs].amp, key);
     }
+    key=dhash(parms->powfs[ipowfs].wvl, key);
     info("powfs %d: ncpa_method=%d, opdbias=%p\n",
 	 ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
     if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
@@ -129,17 +128,13 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     long nsa=powfs[ipowfs].saloc->nloc;
     snprintf(fnotf,sizeof(fnotf),"%s/SEOTF/%s_D%g_%g_"
-	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-	     "nwvl%d_%g_embfac%d_ncompx%d_%dx%d_v2",
+	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_notf%dx%d",
 	     CACHE, fnprefix,
 	     parms->aper.d,parms->aper.din, 
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].pts->dsa,nsa,
 	     1./powfs[ipowfs].pts->dx, 
-	     parms->powfs[ipowfs].nwvl,
-	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
-	     parms->powfs[ipowfs].embfac,
-	     powfs[ipowfs].ncompx, npsfx,npsfy);
+	     powfs[ipowfs].notfx, powfs[ipowfs].notfy);
     snprintf(fnlock, sizeof(fnlock), "%s.lock", fnotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     while(!intstat->otf){
@@ -190,6 +185,9 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    genotf(PP(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
 		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 		   notf, notf, 1, 1);
+	    if(!PP(lotf,iwvl,ilotf)){
+		error("lotf is empty\n");
+	    }
 	}
     }/*iwvl */
     locfree(loc);
@@ -208,6 +206,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    key=dhash(ncpa->p[ilotf], key);
 	}
     }
+    key=dhash(parms->powfs[ipowfs].wvl, key);
     snprintf(fnprefix,80,"SELOTF_%0x",key);
     char fnlotf[PATH_MAX];
     snprintf(fnlotf,sizeof(fnlotf),"%s/SELOTF/", CACHE);
@@ -215,16 +214,14 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	mymkdir("%s",fnlotf);
     }
     snprintf(fnlotf,sizeof(fnlotf),"%s/SELOTF/%s_"
-	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
-	     "nwvl%d_%g_embfac%d_v2", 
+	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_notf%dx%d",
 	     CACHE, fnprefix,
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].llt->pts->dsa,
 	     1./powfs[ipowfs].llt->pts->dx,
 	     parms->powfs[ipowfs].llt->widthp,
-	     parms->powfs[ipowfs].nwvl,
-	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
-	     parms->powfs[ipowfs].embfac);
+	     powfs[ipowfs].notfx, powfs[ipowfs].notfy);
+
     char fnlock[PATH_MAX+10];
     snprintf(fnlock, sizeof(fnlock), "%s.lock", fnlotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
@@ -301,8 +298,8 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	cellfree(powfs[ipowfs].intstat->sepsf);
     }
     powfs[ipowfs].intstat->sepsf=dccellnew(powfs[ipowfs].intstat->nsepsf, 1);
-    const int ncompx=powfs[ipowfs].ncompx;
-    const int ncompy=powfs[ipowfs].ncompy;
+    const int notfx=powfs[ipowfs].notfx;
+    const int notfy=powfs[ipowfs].notfy;
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
 	int iotf=notf>1?isepsf:0;
 	int ilotf=nlotf>1?isepsf:0;
@@ -312,9 +309,9 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcell*  psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf]/*PDELL*/;
 	const real *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cmat *sepsf=cnew(ncompx, ncompy);
+	    cmat *sepsf=cnew(notfx, notfy);
 	    for(int isa=0; isa<nsa; isa++){
-		real norm=area[isa]/((real)(ncompx*ncompy));
+		real norm=area[isa]/((real)(notfx*notfy));
 		if(P(otf,isa,iwvl)){
 		    ccp(&sepsf,P(otf,isa,iwvl));/*peak in center */
 		}else{
@@ -349,8 +346,8 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
    sodium layer, and the detector transfer function. */
 void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    const int ncompx=powfs[ipowfs].ncompx;
-    const int ncompy=powfs[ipowfs].ncompy;
+    const int notfx=powfs[ipowfs].notfx;
+    const int notfy=powfs[ipowfs].notfy;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     const int nsa=powfs[ipowfs].saloc->nloc;
     const int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
@@ -461,7 +458,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	const comp *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
 	const comp *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 	
-	const real norm=1./(real)(ncompx*ncompy);
+	const real norm=1./(real)(notfx*notfy);
 	const ccell *petf=NULL;
 	void (*pccwm)(cmat*,const cmat*)=NULL;
 	int radrot=0;
@@ -519,7 +516,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 #define seotfk se_save->p[3*ith+1]
 //#define sepsf se_save->p[3*ith+2]
 		if(!seotfk){
-		    seotfk=cnew(ncompx,ncompy);
+		    seotfk=cnew(notfx,notfy);
 		}
 		cmat *nominal=NULL;
 		dsp *si=NULL;
@@ -577,8 +574,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		real ct=cos(angleg);
 		real st=sin(angleg);
 		
-		for(int iy=0; iy<ncompy; iy++){
-		    for(int ix=0; ix<ncompx; ix++){
+		for(int iy=0; iy<notfy; iy++){
+		    for(int ix=0; ix<notfx; ix++){
 			P(seotfk,ix,iy)*=ct*Ux[ix]+st*Uy[iy];
 			P(seotfj,ix,iy)*=-st*Ux[ix]+ct*Uy[iy];
 		    }

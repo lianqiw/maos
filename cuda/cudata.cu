@@ -138,7 +138,7 @@ static int task_cmp(const task_t *a, const task_t *b){
    and NVML, causing the selection of GPUs to fail. Do not use NVML 
 */
 int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
-    //Set the CACHE size big enough if use didn't set it.
+    //Set the CUDA CACHE size big enough if user didn't set it.
     setenv("CUDA_CACHE_MAXSIZE", "1000000000", 0);
 
     int ans;//total number of GPUs.
@@ -163,18 +163,18 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    const int nps=parms->atm.nps;
 	    long nxn=parms->atm.nxnmax;
-	    mem_minimum+=sizeof(Real)*nps*nxn*nxn*2;
+	    mem_minimum+=sizeof(Real)*nps*nxn*nxn;
 	}
 	if(parms->gpu.evl){
 	    mem_minimum+=sizeof(Real)*parms->evl.nevl*(long)pow(parms->aper.d/parms->evl.dx, 2);
 	}
 	if(parms->gpu.wfs && !parms->sim.idealfit){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		mem_minimum+=sizeof(Real)*parms->powfs[ipowfs].nwfs*(long)pow(parms->aper.d/parms->powfs[ipowfs].dx, 2)*8;
+		mem_minimum+=sizeof(Real)*parms->powfs[ipowfs].nwfs*(long)pow(parms->aper.d/parms->powfs[ipowfs].dx, 2)*2;
 	    }
 	}
 	if((parms->gpu.tomo || parms->gpu.fit)&& !parms->sim.idealfit){
-	    mem_minimum+=sizeof(Real)*parms->atmr.nps*(long)pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*8;
+	    mem_minimum+=sizeof(Real)*parms->atmr.nps*(long)pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*2;
 	}
 	//mem_minimum*=2;
 	if(mem_minimum==0){//gpu is disabled
@@ -182,6 +182,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	}else{
 	    info("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
 	}
+    }else{
+	mem_minimum=1000000000;//1GB.
     }
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);

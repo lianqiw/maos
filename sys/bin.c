@@ -186,7 +186,7 @@ file_t* zfdopen(int fd, const char *mode){
 /**
    Adaptively call open or shm_open depending on the name.
 */
-inline int myopen(const char *name, int oflag, mode_t mode){
+static inline int myopen(const char *name, int oflag, mode_t mode){
     if(IS_SHM(name)){
 	/*if(!mystrcmp(name, "/shm")){
 	    name+=4;

@@ -46,7 +46,7 @@ void svdpow=dsvd_pow(dmat *A, double power, double thres);
 cell* cellmm=dcellmm2(const cell *A, const cell *B, const char*trans);
 dsp *mkg(loc_t* xloc, loc_t *ploc, dmat *amp, loc_t *saloc, double scale, double dispx, double dispy, int do_partial);
 dmat *sho_filter(const dmat *xi, double dt, double f0, double zeta);
-cell *genotf=genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr);
+cell *genotf=genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long notfx, long notfy, long nsa, long pttr);
 dmat *calcenc=denc(dmat *psf, dmat *dvec, int type, int nthread);
 dmat *m3proj=m3proj2(dmat *mapin_0, char *header, loc_t *locout, double thetax, double thetay, double hs);
 dspcell *act_extrap(loccell *aloc, const dcell *actcplc, double thres);
@@ -68,7 +68,7 @@ cn2est_t *cn2est=cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *sa
 			    const dmat *saa, const double saat, const dmat* hs,
 			    const dmat *htrecon, int keepht, double l0, dcell *grad);
 
-DTF_T *mkdtf(const dmat *wvls, double dxsa, double embfac, long ncompx, long ncompy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, const dmat* pixoffx, const dmat* pixoffy, double pixblur, const dcell *srot, int radpix, int radrot);
+DTF_T *mkdtf(const dmat *wvls, double dxsa, double embfac, long notfx, long notfy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, const dmat* pixoffx, const dmat* pixoffy, double pixblur, const dcell *srot, int radpix, int radrot);
 dmat *add_psd(const dmat *psd1, const dmat *psd2, double scale2);
 dmat *derive_by_fft(const dmat *i0, double theta);
 void cure(dmat **phi, const dmat*gx, const dmat *gy, double dx);

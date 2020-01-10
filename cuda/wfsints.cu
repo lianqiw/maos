@@ -372,9 +372,9 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     const Real hs=parms->wfs[iwfs].hs;
     const Real hc=parms->wfs[iwfs].hc;
     const int nsa=powfs[ipowfs].saloc->nloc;
-    const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
-    const int ncompy=powfs[ipowfs].ncompy;
-    const int notf=MAX(ncompx,ncompy);
+    const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
+    const int notfy=powfs[ipowfs].notfy;
+    const int notf=MAX(notfx,notfy);
     const int nx=powfs[ipowfs].pts->nx;
     const int nwvf=nx*parms->powfs[ipowfs].embfac;
     const int pixpsax=powfs[ipowfs].pixpsax;
@@ -405,7 +405,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     }
     Real norm_psf=sqrt(powfs[ipowfs].areascale)/((Real)powfs[ipowfs].pts->nx*nwvf);
     Real norm_pistat=norm_psf*norm_psf/((Real)notf*notf);
-    Real norm_ints=siglev*norm_psf*norm_psf/((Real)ncompx*ncompy);
+    Real norm_ints=siglev*norm_psf*norm_psf/((Real)notfx*notfy);
     /* Do msa subapertures in a batch to avoid using too much memory.*/
     Comp *psf, *wvf, *otf, *psfstat=NULL;
 
@@ -483,7 +483,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     }else{
 	psf=cuwfs[iwfs].psf;
     }
-    if(srot1 || ncompx!=notf || ncompy!=notf){
+    if(srot1 || notfx!=notf || notfy!=notf){
 	otf=cuwfs[iwfs].otf;
 	if(isotf){/*There is an additional pair of FFT.*/
 	    norm_ints/=((Real)notf*notf);
@@ -585,18 +585,18 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 			ctoc("fft to psf");
 		    }
 		    if(otf!=psf){
-			cudaMemsetAsync(otf, 0, sizeof(Comp)*ksa*ncompx*ncompy, stream);
+			cudaMemsetAsync(otf, 0, sizeof(Comp)*ksa*notfx*notfy, stream);
 		    }
 		    if(srot1){/*rotate and embed psf*/
 			sa_fftshift_do<<<ksa, dim3(16,16),0,stream>>>
 			    (psf, notf, notf);/*shift to center */
 			sa_embed_rot_do<<<ksa, dim3(16,16), 0, stream>>>
-			    (otf, ncompx, ncompy, psf, notf, notf, srot1?srot1+isa:NULL);
+			    (otf, notfx, notfy, psf, notf, notf, srot1?srot1+isa:NULL);
 			sa_fftshift_do<<<ksa, dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy);/*shift back to corner */
+			    (otf, notfx, notfy);/*shift back to corner */
 		    }else if(otf!=psf){/*copy the psf corner*/
 			sa_cpcorner_do<<<ksa, dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy, psf, notf, notf);
+			    (otf, notfx, notfy, psf, notf, notf);
 			ctoc("cpcorner");
 		    }
 		    /*Turn PSF to OTF. */
@@ -611,20 +611,20 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		    Real wt1=1.-wt2;
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
+			    (otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
 		    }else{
 			sa_ccwm2_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, ncompx,ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
+			    (otf, notfx,notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
 		    }
 		    ctoc("ccwm2");
 		}else if(cuwfs[iwfs].dtf[iwvl].etf){
 		    ctoc("before ccwm");
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
+			    (otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
 		    }else{
 			sa_ccwm_do<<<ksa,256,0,stream>>>
-			    (otf, ncompx*ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
+			    (otf, notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
 		    }
 		    ctoc("ccwm");
 		}
@@ -640,7 +640,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 			pnominal=cuwfs[iwfs].dtf[iwvl].nominal.Col(isa);
 		    }
 		    sa_ccwm_do<<<ksa, 256,0,stream>>>
-			(otf, ncompx*ncompy, pnominal, repeat);
+			(otf, notfx*notfy, pnominal, repeat);
 		    ctoc("nominal");
 		}
 		/*back to spatial domain. */
@@ -648,7 +648,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		ctoc("fft");
 		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
 		    (ints[isa], pixpsax, pixpsay, pixoffx?pixoffx+isa:NULL, pixoffy?pixoffy+isa:NULL,
-		     pixthetax, pixthetay, otf, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
+		     pixthetax, pixthetay, otf, dtheta, notfx, notfy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
 		ctoc("final");
 	    }/*if ints. */

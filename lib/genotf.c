@@ -33,8 +33,8 @@ typedef struct GENOTF_T{
     const dmat *area;   /**<area of a (sub)aperture*/
     real thres;/**<threshold to consider an (sub)aperture as full*/
     real wvl;  /**<The wavelength. only needef if opdbias is not null*/
-    long ncompx; /**<Size of OTF*/
-    long ncompy; /**<Size of OTF*/
+    long notfx; /**<Size of OTF*/
+    long notfy; /**<Size of OTF*/
     long nsa;    /**<Number of (sub)apertures*/
     long pttr;   /**<Remove piston/tip/tilt*/
     const dmat *B;
@@ -131,8 +131,8 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		      loc_t *loc, const real *amp, const real *opdbias, real wvl,
 		      const dmat* B,  const T_VALID *pval){
     real ampsum=dvecsum(amp, loc->nloc);
-    if(ampsum<=loc->nloc*0.01){
-	warning("genotf_do: amplitude sum to less than 1%%. Skip\n");
+    if(ampsum<=loc->nloc*0.001){
+	warning("genotf_do: amplitude sum to less than 0.1%%. Skip\n");
 	return;
     }
     long nloc=loc->nloc;
@@ -204,8 +204,8 @@ static void genotf_wrap(thread_t *info){
     loc_t *loc=data->loc;
     const long nxsa=loc->nloc;
     const real wvl=data->wvl;
-    const long ncompx=data->ncompx;
-    const long ncompy=data->ncompy;
+    const long notfx=data->notfx;
+    const long notfy=data->notfy;
     const dmat *area=data->area;
     const real thres=data->thres;
     const cmat *otffull=data->otffull;
@@ -230,7 +230,7 @@ static void genotf_wrap(thread_t *info){
 	if(otffull && (!area || area->p[isa]>thres)){
 	    ccp(&otf[isa],otffull);/*just copy the full array */
 	}else if(!area || area->p[isa]>0.01){ 
-	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
+	    genotf_do(&otf[isa],pttr,notfx,notfy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
     //if(!detached && nsa>10) info("Thread %ld done\n", info->ithread);
@@ -325,8 +325,8 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    const dmat *cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
 	    real r0,     /**<Fried parameter*/
 	    real l0,     /**<Outer scale*/
-	    long ncompx,   /**<Size of OTF*/
-	    long ncompy,   /**<Size of OTF*/
+	    long notfx,   /**<Size of OTF*/
+	    long notfy,   /**<Size of OTF*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	     ){
@@ -334,13 +334,13 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	error("loc and amp mismatch. loc->nloc=%ld, amp is %ldx%ld, nsa=%ld\n", loc->nloc, amp->nx, amp->ny, nsa);
     }else if(cov && (amp->nx!=cov->nx || cov->nx!=cov->ny)){
     	error("loc and cov mismatch\n");
-    }else if(nsa<1 || ncompx<1 || ncompy<1){
-	error("nsa, ncompx, ncompy has to be at least 1\n");
+    }else if(nsa<1 || notfx<1 || notfy<1){
+	error("nsa, notfx, notfy has to be at least 1\n");
     }
     /*creating pairs of points that both exist with given separation*/
-    real duxwvl=wvl/(dtheta*ncompx);
-    real duywvl=wvl/(dtheta*ncompy);
-    T_VALID *pval=gen_pval(ncompx, ncompy, loc, duxwvl, duywvl);/*returns T_VALID array. */
+    real duxwvl=wvl/(dtheta*notfx);
+    real duywvl=wvl/(dtheta*notfy);
+    T_VALID *pval=gen_pval(notfx, notfy, loc, duxwvl, duywvl);/*returns T_VALID array. */
     /* Generate the B matrix. */
     dmat *B=cov?(dmat*)cov:genotfB(loc, r0, l0);
     cmat *otffull=NULL;
@@ -355,11 +355,11 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    }
 	}
 	if(isafull>0){
-	    genotf_do(&otffull,pttr,ncompx,ncompy,loc,amp?amp->p+isafull*nloc:NULL,NULL,wvl,B,pval);
+	    genotf_do(&otffull,pttr,notfx,notfy,loc,amp?amp->p+isafull*nloc:NULL,NULL,wvl,B,pval);
 	}
     }
     
-    GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, ncompx, ncompy, nsa, pttr, B, pval, isafull, otffull};
+    GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, notfx, notfy, nsa, pttr, B, pval, isafull, otffull};
    
     thread_t info[NCPU];
     thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
@@ -372,9 +372,9 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 /**
    A convenient wrapper for genotf() to be called from matlab or python.
 */
-cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long ncompx, long ncompy, long nsa, long pttr){
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long notfx, long notfy, long nsa, long pttr){
     ccell *out=ccellnew(nsa, 1);
-    genotf(out->p, loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr);
+    genotf(out->p, loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, notfx, notfy, nsa, pttr);
     return (cell*)out;
 }
 /**

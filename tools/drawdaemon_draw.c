@@ -346,20 +346,18 @@ static void update_limit(drawdata_t *drawdata){
 	drawdata->zoomx=1;
 	drawdata->zoomy=1;
     }
-    double gain=1;
-    if(drawdata->cumu){
-	if(!drawdata->limit_cumu){
-	    drawdata->limit_cumu=mycalloc(4,double);
+    if(!drawdata->limit){
+	if(drawdata->cumu){
+	    if(!drawdata->limit_cumu){
+		drawdata->limit_cumu=mycalloc(4,double);
+	    }
+	    drawdata->limit=drawdata->limit_cumu;
+	}else{
+	    if(!drawdata->limit_data){
+		drawdata->limit_data=mycalloc(4,double);
+	    }
+	    drawdata->limit=drawdata->limit_data;
 	}
-	drawdata->limit=drawdata->limit_cumu;
-    }else{
-	if(!drawdata->limit_data){
-	    drawdata->limit_data=mycalloc(4,double);
-	}
-	drawdata->limit=drawdata->limit_data;
-    }
-    if(drawdata->dtime<1){//continuous update, do not update the y range too quickly.
-	gain=0.1;
     }
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
     for(int ipts=0; ipts<drawdata->npts; ipts++){
@@ -426,6 +424,10 @@ static void update_limit(drawdata_t *drawdata){
     //dbg("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
     drawdata->limit[0]=xmin0;
     drawdata->limit[1]=xmax0;
+    double gain=1;
+    if(drawdata->dtime<2){//continuous update, do not update the y range too quickly.
+	gain=0.1;
+    }
     drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
     drawdata->limit[3]=ymax0*gain+(1-gain)*drawdata->limit[3];
 }
@@ -466,7 +468,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }else{
 	drawdata->limit=drawdata->limit_data;
     }
-    if(!drawdata->limit){
+    if(!drawdata->image){
 	update_limit(drawdata);
     }
     if(drawdata->cumulast!=drawdata->cumu || drawdata->cumuquadlast != drawdata->cumuquad){

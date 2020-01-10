@@ -74,20 +74,21 @@ long nextpow2(long n){
     return n+1;
 }
 /**
-   Find the next number suitable for FFT. Use radix of 2, 3, 5, 7
+   Find the next number suitable for FFT. Use radix of 2, 3, 5, 7, 11
 */
 long nextfftsize(long n){
     if(n==0) n=1;
-    const int nradix=4;
-    const int radixs[]={2,3,5,7};
-    int selected[4];
+    n=(n+1)/2*2;//make it a even number first
+#define nradix 5
+    const int radixs[nradix]={2,3,5,7,11};
+    int selected[nradix];
     long n2;/*division*/
     long n3;/*accumulated value so far*/
     do{
 	n2=n;
 	n3=1;
 	memset(selected, 0, nradix*sizeof(int));
-	/*We only allow mix of two radices. More will slow down fft*/
+	
 	for(int irad=0; irad<nradix; ){
 	    int radix=radixs[irad];
 	    int ratio=n2/radix;
@@ -99,15 +100,17 @@ long nextfftsize(long n){
 		irad++;
 	    }
 	}
-	/*If there is remainder not divisble by 2, 3, 5, or 7. Increase n2 by 1 and test again.*/
-	int count=0;
-	for(int i=0; i<nradix; i++){
-	    count+=selected[i];
-	}
-	if(count>2){
-	    n2=n;
-	}
-	n++; 
+	/*
+	  //Limit to mix of two radices. More will slow down fft.
+	  int count=0;
+	  for(int i=0; i<nradix; i++){
+	  count+=selected[i];
+	  }
+	  if(count>2){
+	  n2=n;
+	  }*/
+	/*If there is remainder not divisble by the radix. Increase n2 by 2 and test again.*/
+	n+=2; 
     }while(n2>1 || (n3&1)==1);
     return n3;
 }

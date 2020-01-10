@@ -34,13 +34,13 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    const dmat *cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
 	    real r0,     /**<Fried parameter*/
 	    real l0,     /**<Outer scale*/
-	    long ncompx,   /**<Size of OTF*/
-	    long ncompy,   /**<Size of OTF*/
+	    long notfx,   /**<Size of OTF*/
+	    long notfy,   /**<Size of OTF*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	    );
 
-cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long ncompx, long ncompy, long nsa, long pttr);
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long notfx, long notfy, long nsa, long pttr);
 
 dmat* mk2dcov(loc_t *loc, const dmat *amp, real ampthres, const dmat *cov, int norm);
 void mtch(dmat **mtche,   /**<[out] the matched filter*/

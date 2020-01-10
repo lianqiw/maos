@@ -257,10 +257,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    /*CUFFTW is row major. */
 	    int nwvf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
 	    int nwvf2[2]={nwvf, nwvf};
-	    const int ncompx=powfs[ipowfs].ncompx;
-	    const int ncompy=powfs[ipowfs].ncompy;
-	    const int notf=MAX(ncompx, ncompy);
-	    int ncomp2[2]={ncompy, ncompx};
+	    const int notfx=powfs[ipowfs].notfx;
+	    const int notfy=powfs[ipowfs].notfy;
+	    const int notf=MAX(notfx, notfy);
+	    int notf1[2]={notfy, notfx};
 	    int notf2[2]={notf, notf};
 	    /*limit the number of subapertures in each batch to less than 1024
 	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
@@ -280,10 +280,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		}
 		cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
 	    }
-	    if(notf==ncompx && notf==ncompy){
+	    if(notf==notfx && notf==notfy){
 		cuwfs[iwfs].plan3=cuwfs[iwfs].plan2;
 	    }else{
-		if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, ncomp2, NULL, 1, 0, NULL, 1, 0, 
+		if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, notf1, NULL, 1, 0, NULL, 1, 0, 
 				 FFT_T_C2C, cuwfs[iwfs].msa)){
 		    error("CUFFT plan failed\n");
 		}
@@ -376,8 +376,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    if(nwvf!=notf){
 		cuwfs[iwfs].psf=cucmat(notf*notf,msa);
 	    }
-	    if(parms->powfs[ipowfs].radrot || ncompx!=notf || ncompy!=notf){
-		cuwfs[iwfs].otf=cucmat(ncompx*ncompy,msa);
+	    if(parms->powfs[ipowfs].radrot || notfx!=notf || notfy!=notf){
+		cuwfs[iwfs].otf=cucmat(notfx*notfy,msa);
 	    }
 	    if(parms->powfs[ipowfs].psfout){
 		const int wvf_n=notf/2+2;
@@ -432,8 +432,8 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 		error("pistatstc is not supported yet.\n");
 	    }
 	    if(!cuwfs[iwfs].pistatout){
-		const int notfx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
-		const int notfy=powfs[ipowfs].ncompy;
+		const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
+		const int notfy=powfs[ipowfs].notfy;
 		const int npsf=MAX(notfx,notfy);
 		cuwfs[iwfs].pistatout=curcell(nsa, parms->powfs[ipowfs].nwvl, npsf, npsf);
 	    }else{

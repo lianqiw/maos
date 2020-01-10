@@ -39,8 +39,8 @@ typedef struct DTF_T{
     cmat *Ux;            /**<Special frequency vector along x*/
     cmat *Uy;            /**<Special frequency vector along y*/
     real dxsa;         /**<Subaperture size*/
-    long ncompx;         /**<FFT size along x*/
-    long ncompy;         /**<FFT size along y*/
+    long notfx;         /**<FFT size along x*/
+    long notfy;         /**<FFT size along y*/
     int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
     int radrot;          /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     int fused;           /**<Whether the DTF has been fused to ETF*/
@@ -57,8 +57,8 @@ typedef struct ETF_T{
 DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     real dxsa,/**<Subaperture size*/
 	     real embfac,/**<Embedding factor (2)*/
-	     long ncompx,/**<FFT size along x*/
-	     long ncompy,/**<FFT size along y*/
+	     long notfx,/**<FFT size along x*/
+	     long notfy,/**<FFT size along y*/
 	     long pixpsax,/**<Number of pixels along x(r)*/
 	     long pixpsay,/**<Number of pixels along y(a)*/
 	     real pixthetax,/**<Pixel size along x (r)*/

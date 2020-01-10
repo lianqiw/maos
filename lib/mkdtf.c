@@ -29,8 +29,8 @@
 DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     real dxsa,/**<Subaperture size*/
 	     real embfac,/**<Embedding factor (2)*/
-	     long ncompx,/**<FFT size along x*/
-	     long ncompy,/**<FFT size along y*/
+	     long notfx,/**<FFT size along x*/
+	     long notfy,/**<FFT size along y*/
 	     long pixpsax,/**<Number of pixels along x(r)*/
 	     long pixpsay,/**<Number of pixels along y(a)*/
 	     real pixthetax,/**<Pixel size along x (r)*/
@@ -50,8 +50,8 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
     const real e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
     const real e0y=-2*M_PI*M_PI*blury*blury;
     const int do_blur=fabs(blurx)>EPS && fabs(blury)>EPS;
-    const long ncompx2=ncompx>>1;
-    const long ncompy2=ncompy>>1;
+    const long notfx2=notfx>>1;
+    const long notfy2=notfy>>1;
     const real pxo=-(pixpsax*0.5-0.5)*pixthetax;
     const real pyo=-(pixpsay*0.5-0.5)*pixthetay;
     real pxo2=pxo;
@@ -77,8 +77,8 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const real wvl=wvls->p[iwvl];
 	const real dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
-	const real dux=1./(dtheta*ncompx);
-	const real duy=1./(dtheta*ncompy);
+	const real dux=1./(dtheta*notfx);
+	const real duy=1./(dtheta*notfy);
 	const real dux2=dux*dux;
 	const real duy2=duy*duy;
 	const real pdtheta=pixthetax*pixthetay/(dtheta*dtheta);//scaling factor due to binning into detectors
@@ -99,15 +99,15 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	dtfs[iwvl].radpix=radpix;
 	dtfs[iwvl].radrot=radrot;
 	dtfs[iwvl].wvl=wvl;
-	dtfs[iwvl].ncompx=ncompx;
-	dtfs[iwvl].ncompy=ncompy;
-	dtfs[iwvl].nominal=ccellnew_same(ndtf,nwfs,ncompx,ncompy);
+	dtfs[iwvl].notfx=notfx;
+	dtfs[iwvl].notfy=notfy;
+	dtfs[iwvl].nominal=ccellnew_same(ndtf,nwfs,notfx,notfy);
 	dtfs[iwvl].si=dspcellnew(ndtf,nwfs);
 	ccell*  nominals=dtfs[iwvl].nominal;
 	dspcell*  sis=dtfs[iwvl].si;
-	cmat *nominal=cnew(ncompx,ncompy);
+	cmat *nominal=cnew(notfx,notfy);
 	//Coordinate of PSF points
-	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta,dtheta,-ncompx2*dtheta, -ncompy2*dtheta);
+	loc_t *loc_psf=mksqloc(notfx,notfy,dtheta,dtheta,-notfx2*dtheta, -notfy2*dtheta);
 	real theta=0;
 	real ct=cos(theta);
 	real st=sin(theta);
@@ -119,10 +119,10 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 		    st=sin(theta);
 		}
 		
-		for(int iy=0; iy<ncompy; iy++){
-		    int jy=iy-ncompy2;
-		    for(int ix=0; ix<ncompx; ix++){
-			int jx=ix-ncompx2;
+		for(int iy=0; iy<notfy; iy++){
+		    int jy=iy-notfy2;
+		    for(int ix=0; ix<notfx; ix++){
+			int jx=ix-notfx2;
 			real ir=ct*jx+st*jy;
 			real ia=-st*jx+ct*jy;
 			//Pixel function
@@ -159,18 +159,18 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 
 	/*Create an excessive high frequency in nominal so that
 	  we don't have to do fftshift later.*/
-	dtfs[iwvl].Ux=cnew(ncompx,1);
-	dtfs[iwvl].Uy=cnew(ncompy,1);
+	dtfs[iwvl].Ux=cnew(notfx,1);
+	dtfs[iwvl].Uy=cnew(notfy,1);
 	comp *Ux=dtfs[iwvl].Ux->p;
 	comp *Uy=dtfs[iwvl].Uy->p;
 
 	/*The following is used in genseotf to compute shifted i0.*/
-	for(int ix=0; ix<ncompx; ix++){
-	    int jx=ix<ncompx2?ix:(ix-ncompx);
+	for(int ix=0; ix<notfx; ix++){
+	    int jx=ix<notfx2?ix:(ix-notfx);
 	    Ux[ix]=COMPLEX(0, -2.*M_PI*jx*dux);
 	}
-	for(int iy=0; iy<ncompy; iy++){
-	    int jy=iy<ncompy2?iy:(iy-ncompy);
+	for(int iy=0; iy<notfy; iy++){
+	    int jy=iy<notfy2?iy:(iy-notfy);
 	    Uy[iy]=COMPLEX(0, -2.*M_PI*jy*duy);
 	}
 
@@ -226,12 +226,12 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const real dtheta=dtfs[iwvl].dtheta;
-	const long ncompx=dtfs[iwvl].ncompx;
-	const long ncompy=dtfs[iwvl].ncompy;
-	const long ncompx2=ncompx>>1;
-	const long ncompy2=ncompy>>1;
-	const real dux=1./(dtheta*ncompx);
-	const real duy=1./(dtheta*ncompy);
+	const long notfx=dtfs[iwvl].notfx;
+	const long notfy=dtfs[iwvl].notfy;
+	const long notfx2=notfx>>1;
+	const long notfy2=notfy>>1;
+	const real dux=1./(dtheta*notfx);
+	const real duy=1./(dtheta*notfy);
 	ccell *petf=0;
 	int use1d;
 	if(dtfs[iwvl].radrot){
@@ -269,11 +269,11 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		    real rsa=srsa->p[illt]->p[isa];
 		    real rsa_za=rsa*cos(za);
 		    if(use1d){ /*1d ETF along radius. */
-			P(petf,isa,illt)=cnew(ncompx,1);
+			P(petf,isa,illt)=cnew(notfx,1);
 			comp *etf1d=P(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
-			for(int icompx=0; icompx<ncompx; icompx++){
-			    const real kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
+			for(int icompx=0; icompx<notfx; icompx++){
+			    const real kr=dux*(icompx>=notfx2?(icompx-notfx):icompx);
 			    for(int ih=0; ih<nhp; ih++){
 				const real tmp=(-2*M_PI*(kr*(rsa_za/sodium0->p[ih]-rsa/hs)));
 				etf1d[icompx]+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
@@ -283,13 +283,13 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			const real theta=psrot[illt][isa];
 			const real ct=cos(theta);
 			const real st=sin(theta);
-			P(petf,isa,illt)=cnew(ncompx,ncompy);
+			P(petf,isa,illt)=cnew(notfx,notfy);
 			cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
-			for(int icompy=0; icompy<ncompy; icompy++){
-			    const real ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
-			    for(int icompx=0; icompx<ncompx; icompx++){
-				const real kx=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
+			for(int icompy=0; icompy<notfy; icompy++){
+			    const real ky=duy*(icompy>=notfy2?(icompy-notfy):icompy);
+			    for(int icompx=0; icompx<notfx; icompx++){
+				const real kx=dux*(icompx>=notfx2?(icompx-notfx):icompx);
 				const real kr=(ct*kx+st*ky);/*along radial*/
 				for(int ih=0; ih<nhp; ih++){
 				    const real tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
@@ -313,15 +313,15 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    */
 	    const int npad=2;/*zero padding to reduce aliasing */
 	    const int nover=2;/*enough size for rotation*/
-	    const int netf=ncompx*nover*npad;
+	    const int netf=notfx*nover*npad;
 	    const real dtetf=dtheta/nover;
-	    const real dusc=(netf*dtetf)/(dtheta*ncompx);
+	    const real dusc=(netf*dtetf)/(dtheta*notfx);
 	    cmat *etf=cnew(netf,1);
 	    real *thetas=mycalloc(netf,real);
 	    const int netf2=netf>>1;
 	    /*Only interpolating the center part. the rest is padding. */
-	    const int etf0=netf2-(int)round(ncompx2*(dtheta/dtetf));
-	    const int etf1=etf0+(int)round(ncompx*(dtheta/dtetf));
+	    const int etf0=netf2-(int)round(notfx2*(dtheta/dtetf));
+	    const int etf1=etf0+(int)round(notfx*(dtheta/dtetf));
 	    if(etf0<0) error("Invalid configuration\n");
 	    for(int it=etf0; it<etf1; it++){
 		thetas[it]=(it-netf2)*dtetf;
@@ -372,11 +372,11 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				ccp(PP(petf,isa,illt),etf);
 			    }else{
 				cfftshift(etf);
-				P(petf,isa,illt)=cnew(ncompx,1);
+				P(petf,isa,illt)=cnew(notfx,1);
 				comp *etf1d=P(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
-				for(int icompx=0; icompx<ncompx; icompx++){
-				    real ir=dusc*(icompx-ncompx2)+netf2;
+				for(int icompx=0; icompx<notfx; icompx++){
+				    real ir=dusc*(icompx-notfx2)+netf2;
 				    int iir=ifloor(ir);
 				    ir=ir-iir;
 				    if(iir>=0 && iir<netf-1){
@@ -393,13 +393,13 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			    real theta=psrot[illt][isa];
 			    real ct=cos(theta);
 			    real st=sin(theta);
-			    P(petf,isa,illt)=cnew(ncompx,ncompy);
+			    P(petf,isa,illt)=cnew(notfx,notfy);
 			    cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
-			    for(int icompy=0; icompy<ncompy; icompy++){
-				real iy=(icompy-ncompy2);
-				for(int icompx=0; icompx<ncompx; icompx++){
-				    real ix=(icompx-ncompx2);
+			    for(int icompy=0; icompy<notfy; icompy++){
+				real iy=(icompy-notfy2);
+				for(int icompx=0; icompx<notfx; icompx++){
+				    real ix=(icompx-notfx2);
 				    real ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
 				    int iir=ifloor(ir);
 				    ir=ir-iir;
@@ -415,9 +415,9 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		    }else{
 			warning_once("Wrong focus!\n");
 			if(use1d){
-			    P(petf,isa,illt)=cnew(ncompx,1);
+			    P(petf,isa,illt)=cnew(notfx,1);
 			}else{
-			    P(petf,isa,illt)=cnew(ncompx,ncompy);
+			    P(petf,isa,illt)=cnew(notfx,notfy);
 			}
 			cset(P(petf,isa,illt),1);
 		    }

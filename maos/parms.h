@@ -116,75 +116,75 @@ typedef struct LLT_CFG_T{
    contains input parameters for each type of wfs (powfs).
 */
 typedef struct POWFS_CFG_T{
-    dmat *wvl;   /**<list of wavelength*/
-    dmat *wvlwts; /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
+    dmat *wvl;     /**<list of wavelength in ascending order.*/
+    dmat *wvlwts;  /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
     char *saloc;   /**<saloc override file*/
-    char *amp;    /**<amplitude override file*/
+    char *amp;     /**<amplitude override file*/
     char *piinfile;/**<input averaged pixel intensities for matched filter. NULL
 		      to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
-    real hs;     /**<height of guide star*/
-    real hc;     /**<conjugation height of WFS pupil*/
-    real saat;   /**<subaperture area (normalized) threshold to drop subaperture.*/
-    real safill2d;/**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
+    real hs;       /**<height of guide star*/
+    real hc;       /**<conjugation height of WFS pupil*/
+    real saat;     /**<subaperture area (normalized) threshold to drop subaperture.*/
+    real safill2d; /**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
     real saspherical;/**<Subaperture spherical aberration in nm RMS at best focus.*/
     real safocuspv;   /**<Subaperture focus error in nm p/v*/
     char  *neareconfile;/**<File contains noise equivalent angle in radian^2. Contains cell array of nwfsx1.*/
-    real nearecon;/**<NEA used in reconstruction*/
-    real neasim;  /**<NEA used in simulation. -1 to use nearecon*/
+    real nearecon; /**<NEA used in reconstruction*/
+    real neasim;   /**<NEA used in simulation. -1 to use nearecon*/
     char*  neasimfile;/**<read NEA used in simulation from file. Defined at
 			 sim.dt sampling rate, in radian. neasim must be -1*/
-    real neaextra;/**<Extra NEA to add in quadrature to the NEA determined by matched filter or CoG*/
-    real neamin;  /**<Minimum NEA to limit the NEA determined by matched filter or CoG*/
-    real bkgrnd;  /**<background in electron per pixel per LGS frame*/
-    real bkgrndc;/**<How much of the background in bkgrnd can be calibrated
+    real neaextra; /**<Extra NEA to add in quadrature to the NEA determined by matched filter or CoG*/
+    real neamin;   /**<Minimum NEA to limit the NEA determined by matched filter or CoG*/
+    real bkgrnd;   /**<background in electron per pixel per LGS frame*/
+    real bkgrndc;  /**<How much of the background in bkgrnd can be calibrated
 		      out. depends on variability.*/
-    char *bkgrndfn; /**<file contains sky background/rayleigh scatter input for
+    char *bkgrndfn;/**<file contains sky background/rayleigh scatter input for
 		       each subaperture in each wfs. */
     char *bkgrndfnc;/**<How much of the background in bkgrndfn can be
 		       calibrated out. depends on variability.*/
-    dmat *qe;       /**<File containing matrix of pixpsax*pixpsay specifying QE
+    dmat *qe;      /**<File containing matrix of pixpsax*pixpsay specifying QE
 		     * of each pixel. To simulate PCCD non uniform response*/
-    real rne;     /**<read out noise in electron per pixel per frame*/
-    real pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
-    real dsa;     /**<Size of subaperture in 1 dimension*/
-    real dx;      /**<sampling of opd points in each subaperture. usually
+    real rne;      /**<read out noise in electron per pixel per frame*/
+    real pixblur;  /**<pixel bluring due to leakage. relative to pixel size.*/
+    real dsa;      /**<Size of subaperture in 1 dimension*/
+    real dx;       /**<sampling of opd points in each subaperture. usually
 		       matches atmosphere sampling for LGS. may be coraser for NGS.*/
-    real pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
+    real pixtheta; /**<size of pixel pitch along x/y or azimuthal if radial
 		       ccd. Converted to radian from user input*/
     real radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
     real fieldstop;/**<size of field stop in arcsec.*/
-    real pixoffx; /**<offset of image center from center of detector*/
-    real pixoffy; /**<see pixoffx*/
-    real sigscale;/**<scale the signal level for simulation.*/
-    real siglev;  /**<signal level. will be override by wfs.siglev is specified.*/
-    real sigrecon;/**<signal level for NEA computation*/
+    real pixoffx;  /**<offset of image center from center of detector*/
+    real pixoffy;  /**<see pixoffx*/
+    real sigscale; /**<scale the signal level for simulation.*/
+    real siglev;   /**<signal level. will be override by wfs.siglev is specified.*/
+    real sigrecon; /**<signal level for NEA computation*/
     struct LLT_CFG_T *llt;/**<configuration for LLT*/
-    char* fnllt;    /**<filename of LLT configuration. empty means no llt.*/
-    int type;       /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
-    int step;       /**<frame to start using WFS*/
-    int trs;        /**<tip/tilt removal flag. True for LGS, False for NGS*/
-    int dfrs;       /**<differential focus removal flag. True for LGS, False for NGS*/
-    int lo;         /**<whether this is a low order wfs. False for LGS, True for NGS*/
-    int skip;       /**<skip in high order tomography, for split tomo (derived parameter)*/
-    int psol;       /**<Compute pseudo open loop gradients (derived parameter)*/
-    lmat *wfs;       /**<array of wfs belongs to this powfs*/
-    lmat *wfsr;      /**<array of reconstruction wfs belongs to this powfs*/
-    lmat *wfsind;    /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
-    int nwfs;       /**<number of wfs belonging to this powfs*/
-    int nwfsr;      /**<number of wfs for reconstruction belonging to this powfs*/
-    int neaphy;     /**<use nea from physical optical precomputation in geometric simulations.*/
-    int phyusenea;  /**<force using supplied noise equivalent angle in physical
-		       optics simulations*/
-    int order;      /**<order of wavefront sensing along one dimension.*/
-    int pixpsa;     /**<number of detector pixels along x/y or azimuthal if radial CCD.*/
-    int radpix;     /**<number of detector pixels along radial direction if radial CCD*/
-    int radrot;     /**<For radial format CCD, rotate OTF into R/A coordinate plane to multiply 1-d ETF. uses less memory*/
-    int radgx;      /**<1: gx/gy is along R/A coordinate. Only valid radpix and radrot are valid.*/
-    int ncomp;      /**<number of PSF points before forming detector image. 0 for automatic*/
-    int embfac;     /**<Embed subaperture atm OPD before fft. set to 2.*/
-    int nwvl;       /**<Number of wavelength. 1 for LGS, 2 for NGS J+H sensing.*/
-    int gtype_sim;  /**<wfs type if not using physical optics in reconstruction. 
+    char* fnllt;   /**<filename of LLT configuration. empty means no llt.*/
+    int type;      /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
+    int step;      /**<frame to start using WFS*/
+    int trs;       /**<tip/tilt removal flag. True for LGS, False for NGS*/
+    int dfrs;      /**<differential focus removal flag. True for LGS, False for NGS*/
+    int lo;        /**<whether this is a low order wfs. False for LGS, True for NGS*/
+    int skip;      /**<skip in high order tomography, for split tomo (derived parameter)*/
+    int psol;      /**<Compute pseudo open loop gradients (derived parameter)*/
+    lmat *wfs;     /**<array of wfs belongs to this powfs*/
+    lmat *wfsr;    /**<array of reconstruction wfs belongs to this powfs*/
+    lmat *wfsind;  /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
+    int nwfs;      /**<number of wfs belonging to this powfs*/
+    int nwfsr;     /**<number of wfs for reconstruction belonging to this powfs*/
+    int neaphy;    /**<use nea from physical optical precomputation in geometric simulations.*/
+    int phyusenea; /**<force using supplied noise equivalent angle in physical
+		      optics simulations*/
+    int order;     /**<order of wavefront sensing along one dimension.*/
+    int pixpsa;    /**<number of detector pixels along x/y or azimuthal if radial CCD.*/
+    int radpix;    /**<number of detector pixels along radial direction if radial CCD*/
+    int radrot;    /**<For radial format CCD, rotate OTF into R/A coordinate plane to multiply 1-d ETF. uses less memory*/
+    int radgx;     /**<1: gx/gy is along R/A coordinate. Only valid radpix and radrot are valid.*/
+    int notf;      /**<PSF is extended to this size before FFT into OTF.  0 for automatic*/
+    int embfac;    /**<Embed subaperture atm OPD before fft. set to 2.*/
+    int nwvl;      /**<Number of wavelength. 1 for LGS, 2 for NGS J+H sensing.*/
+    int gtype_sim; /**<wfs type if not using physical optics in reconstruction. 
 		       - 0: geometric
 		       - 1: ztilt.*/
     int gtype_recon;/**<wfs type if not using physical optics in simulation. 

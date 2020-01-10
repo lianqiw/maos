@@ -46,6 +46,9 @@ static GtkWidget *curtopnb=NULL;
 static GtkWidget *contexmenu=NULL;
 static drawdata_t *drawdata_dialog=NULL;
 static GtkToolItem *toggle_cumu=NULL;
+#if GTK_MAJOR_VERSION<3
+static GtkRcStyle *btn_rcstyle=NULL;
+#endif
 PangoFontDescription *desc=NULL;
 int font_name_version=0;
 char *font_name=NULL;
@@ -369,14 +372,12 @@ static GtkWidget *subnb_label_new(drawdata_t **drawdatawrap){
     g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
     /* make button as small as possible */
 #if GTK_MAJOR_VERSION<3
-    GtkRcStyle *rcstyle;
     gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
-    rcstyle = gtk_rc_style_new();
-    rcstyle->xthickness = rcstyle->ythickness = 0;
-    gtk_widget_modify_style(close_btn, rcstyle);
-    gtk_widget_set_size_request(close_btn,14,14);
-    gtk_rc_style_unref(rcstyle);
+    gtk_widget_modify_style(close_btn, btn_rcstyle);
+    gtk_widget_set_size_request(close_btn,20,20);
+    gtk_container_set_border_width(GTK_CONTAINER(close_btn),0);
 #endif
+
     gtk_box_pack_end(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
 #else
     GtkWidget *ebox=gtk_event_box_new();
@@ -832,8 +833,8 @@ gboolean addpage(gpointer indata){
 	    }
 	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
 	}else{
-	    free(drawdata_old->limit_data);
-	    drawdata_old->limit_data=NULL;
+	    /*free(drawdata_old->limit_data);
+	      drawdata_old->limit_data=NULL;*/
 	}
 	drawdata_old->limit_changed=-1;
 	free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
@@ -1452,7 +1453,13 @@ GtkWidget *create_window(){
     gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default),
     GTK_STYLE_PROVIDER_PRIORITY_USER);
 #endif
-
+#if GTK_MAJOR_VERSION<3
+    if(!btn_rcstyle){
+        btn_rcstyle = gtk_rc_style_new();
+	//This option is used in many places to determine padding between text and border of widgets
+        btn_rcstyle->xthickness = btn_rcstyle->ythickness = 0;
+    }
+#endif
     GtkWidget *toolbar=gtk_toolbar_new();
     gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),GTK_ICON_SIZE_MENU);
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);

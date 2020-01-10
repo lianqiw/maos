@@ -311,7 +311,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,radrot);
     READ_POWFS_RELAX(int,radgx);
     READ_POWFS_RELAX(int,embfac);
-    READ_POWFS_RELAX(int,ncomp);
+    READ_POWFS_RELAX(int,notf);
     READ_POWFS_RELAX(int,psfout);
     READ_POWFS_RELAX(int,pistatout);
     READ_POWFS_RELAX(int,pistatstart);

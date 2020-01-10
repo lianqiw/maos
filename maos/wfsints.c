@@ -51,13 +51,13 @@ void wfsints(thread_t *thread_data){
     const int illt=hasllt?parms->powfs[ipowfs].llt->i->p[wfsind]:0;
     const real *srot=(hasllt && parms->powfs[ipowfs].radrot)?powfs[ipowfs].srot->p[illt]->p:NULL;
     const int nsa=powfs[ipowfs].saloc->nloc;
-    const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
-    const int ncompy=powfs[ipowfs].ncompy;
-    const int notf=MAX(ncompx,ncompy);
+    const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
+    const int notfy=powfs[ipowfs].notfy;
+    const int notf=MAX(notfx,notfy);
     const int nopd=powfs[ipowfs].pts->nx;
     const int nxsa=nopd*nopd;
     const int nwvf=nopd*parms->powfs[ipowfs].embfac;
-    const int use1d=(nwvf>2*ncompy?1:0)&&(!hasllt)&&(!lltopd);
+    const int use1d=(nwvf>2*notfy?1:0)&&(!hasllt)&&(!lltopd);
     const int nwvl=parms->powfs[ipowfs].nwvl;
     dcell *ints=data->ints;
     dcell *pistatout=data->pistatout; 
@@ -72,8 +72,8 @@ void wfsints(thread_t *thread_data){
     real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(powfs[ipowfs].pts->nx*nwvf);
     /*normalized pistat. notf is due to a pair of FFT on psf. */
     real norm_pistat=norm_psf*norm_psf/((real)notf*notf);
-    /*this ncompx*ncompy is due to cfft2 after cwm and detector transfer function. */
-    real norm_ints=parms->wfs[iwfs].sigsim*norm_psf*norm_psf/((real)ncompx*ncompy);
+    /*this notfx*notfy is due to cfft2 after cwm and detector transfer function. */
+    real norm_ints=parms->wfs[iwfs].sigsim*norm_psf*norm_psf/((real)notfx*notfy);
     /*wvf first contains the complex wavefront, embed to get nyquist sampling.*/
     wvf=cnew(nwvf,nwvf);
     /* psf contains the psf/otf necessary to cover the focal plane. square */
@@ -83,8 +83,8 @@ void wfsints(thread_t *thread_data){
 	psf=wvf;
     }
     /* otf contains the psf/otf used to generate detecter image. maybe rectangular*/
-    if(notf!=ncompx || notf!=ncompy || srot){
-	otf=cnew(ncompx,ncompy);
+    if(notf!=notfx || notf!=notfy || srot){
+	otf=cnew(notfx,notfy);
 	if(isotf){/*there is an additional pair of FFT*/
 	    norm_ints/=(real)(notf*notf);
 	}

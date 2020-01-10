@@ -127,8 +127,8 @@ typedef struct POWFS_T{
     //int namp;         /**<number of amplitude maps*/
     int pixpsax;        /**<number of detector pixels along x*/
     int pixpsay;        /**<number of detector pixels along y*/
-    int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/
-    int ncompy;         /**<Dimension of FFT for subaperture imaging along y*/
+    int notfx;          /**<PSF is extended to this side before computing OTF*/
+    int notfy;          /**<PSF is extended to this side before computing OTF*/
     int nsaimcc;         /**<number of saimcc*/
     /*The following are a few convenient pointers. */
     dcell*realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
