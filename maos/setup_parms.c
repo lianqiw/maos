@@ -1406,7 +1406,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		powfsi->mtchcr=0;//cannot do constraint.
 	    }
 	    /*Convert pixtheta to radian and do senity check*/
-	    if(powfsi->pixtheta<0){//minus means ratio to lambda/dsa
+	    if(powfsi->pixtheta<=0){//minus means ratio to lambda/dsa
 		powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
 	    }else if(powfsi->pixtheta<1e-4){
 		warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);

@@ -326,6 +326,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    for(int it=etf0; it<etf1; it++){
 		thetas[it]=(it-netf2)*dtetf;
 	    }
+	    //info("etf0=%d, etf1=%d, netf=%d\n", etf0, etf1, netf);
 	    //cfft2plan(etf, -1);
 
 	    for(int illt=0; illt<nllt; illt++){
@@ -360,11 +361,18 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			  it max to 1. The strength of original profile doesn't
 			  matter.
 		    
-			  Changed: We no longer normalize the etf, so we can model
+			  Changed: We normalize the etf by sum(profile), so we can model
 			  the variation of the intensity and meteor trails.
 		      
 			*/
 			cscale(etf,i0scale[illt]/etf2sum);
+
+			//check for truncation
+			double ratio_edge=0.5*creal(etf->p[etf0]+etf->p[etf1-1])/creal(etf->p[netf2]);
+			if(ratio_edge>0.1){
+			    writebin(etf, "etf_%d", isa);
+			    error("sa %d: sodium profile is cropped when computing etf. Increase powfs.pixpsa or powfs.notf.\n", isa);
+			}
 			cfftshift(etf);/*put peak in corner; */
 			cfft2(etf, -1);
 			if(use1d){
