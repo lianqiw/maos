@@ -167,7 +167,7 @@ void zftouch(const char *format, ...){
     }
     free(fn2);
 }
-PNEW(lock);
+//PNEW(lock);
 /*
   convert a socket or fd into FILE.
 */
@@ -213,7 +213,7 @@ static inline int myopen(const char *name, int oflag, mode_t mode){
    .bin is appened to file name.
 */
 file_t* zfopen_try(const char *fni, const char *mod){
-    LOCK(lock);
+    //LOCK(lock);//nothing to protect
     file_t* fp=mycalloc(1,file_t);
     const char* fn2=fp->fn=procfn(fni,mod);
     if(!fn2){
@@ -303,10 +303,10 @@ file_t* zfopen_try(const char *fni, const char *mod){
     /*if(mod[0]=='w' && !fp->isfits){
 	write_timestamp(fp);
 	}*/
-    UNLOCK(lock);
+    //UNLOCK(lock);
     return fp;
   fail:
-    UNLOCK(lock);
+    //UNLOCK(lock);
     free(fp->fn); free(fp); fp=0;
     return fp;
 }
@@ -353,7 +353,7 @@ int zfisfits(file_t *fp){
 */
 void zfclose(file_t *fp){
     if(!fp) return;
-    LOCK(lock);
+    //LOCK(lock);//causes race condition with zfopen_try
     if(fp->p){
 	if(fp->isgzip){
 	    gzclose((voidp)fp->p);
@@ -364,7 +364,7 @@ void zfclose(file_t *fp){
     //close(fp->fd);//keep fd open
     free(fp->fn);
     free(fp);
-    UNLOCK(lock);
+    //UNLOCK(lock);
 }
 /*
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls

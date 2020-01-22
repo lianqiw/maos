@@ -237,8 +237,7 @@ void wfsints(thread_t *thread_data){
 		/* we have otf here in psf*/
 	    }/* else: we have psf here in psf*/
 	    if(ints){
-		if(!isotf /* Need to turn PSF to OTF*/ 
-		   || otf!=psf /* Need to embed*/ ){
+		if(!isotf /* Need to turn PSF to OTF*/ || otf!=psf /* Need to embed*/ ){
 		    if(isotf){ /*turn back to PSF for embedding. peak in corner.*/
 			cfft2(psf,1);
 		    }

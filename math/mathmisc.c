@@ -79,8 +79,8 @@ long nextpow2(long n){
 long nextfftsize(long n){
     if(n==0) n=1;
     n=(n+1)/2*2;//make it a even number first
-#define nradix 5
-    const int radixs[nradix]={2,3,5,7,11};
+#define nradix 4
+    const int radixs[nradix]={2,3,5,7};
     int selected[nradix];
     long n2;/*division*/
     long n3;/*accumulated value so far*/

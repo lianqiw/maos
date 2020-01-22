@@ -79,10 +79,10 @@ static void psfiris_do(thread_t *info){
     cmat *otf0=NULL;
     cmat *otf2=NULL;
     double wvl=wvls[iwvl]*1e-6;
-    double dtheta=wvl/(notf1*dx1);/*nyquist sampling*/
+    //double dtheta=wvl/(notf1*dx1);/*nyquist sampling*/
     double dtheta2=wvl/(notf2*dx2);
-    genotf(&otf2, ploc, pamp, NULL, 0, 0, wvl, dtheta, cc_opd, 0, 0, notf1, notf1, 1, 0);
-    genotf(&otf0, ploc, pamp, NULL, 0, 0, wvl, dtheta, cc_zero, 0, 0, notf1, notf1, 1, 0);
+    genotf(&otf2, ploc, pamp, NULL, 0, 0, wvl,  cc_opd, 0, 0, notf1, notf1, 1, 0);
+    genotf(&otf0, ploc, pamp, NULL, 0, 0, wvl,  cc_zero, 0, 0, notf1, notf1, 1, 0);
     ccwdiv(otf2, otf0, 0);
     /*used to up-sample OTF.*/
     map_t *otf_coarse=mapnew(notf1, notf1, dx1/wvl,dx1/wvl);

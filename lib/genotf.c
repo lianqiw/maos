@@ -33,8 +33,8 @@ typedef struct GENOTF_T{
     const dmat *area;   /**<area of a (sub)aperture*/
     real thres;/**<threshold to consider an (sub)aperture as full*/
     real wvl;  /**<The wavelength. only needef if opdbias is not null*/
-    long notfx; /**<Size of OTF*/
-    long notfy; /**<Size of OTF*/
+    long npsfx;   /**<Size of PSF/OTF*/
+    long npsfy;   /**<Size of PSF/OTF*/
     long nsa;    /**<Number of (sub)apertures*/
     long pttr;   /**<Remove piston/tip/tilt*/
     const dmat *B;
@@ -127,7 +127,7 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
    Generate OTF from the B or tip/tilted removed B matrix. Notice that tip/tilt
    in opdbias is NOT removed.
 */
-static void genotf_do(cmat **otf, long pttr, long notfx, long notfy, 
+static void genotf_do(cmat **otf, long pttr, long npsfx, long npsfy,
 		      loc_t *loc, const real *amp, const real *opdbias, real wvl,
 		      const dmat* B,  const T_VALID *pval){
     real ampsum=dvecsum(amp, loc->nloc);
@@ -144,9 +144,8 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     }
     dmat*  BP=B2;
     if(!*otf){
-	*otf=cnew(notfx,notfy);
+	*otf=cnew(npsfx,npsfy);
     }
-    cmat* OTF=*otf;
     /*Do the exponential.*/
     real k2=pow(2*M_PI/wvl,2);
     real *restrict BPD=mymalloc(nloc,real);
@@ -165,11 +164,11 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	otfnorm=nloc;
     }
     otfnorm=1./otfnorm;
-    struct T_VALID (*qval)[notfx]=(struct T_VALID (*)[notfx])pval;
+    struct T_VALID (*qval)[npsfx]=(struct T_VALID (*)[npsfx])pval;
 
     comp wvk=COMPLEX(0, 2.*M_PI/wvl);
-    for(long jm=0; jm<notfy; jm++){
-	for(long im=0; im<notfx; im++){
+    for(long jm=0; jm<npsfy; jm++){
+	for(long im=0; im<npsfx; im++){
 	    long (*jloc)[2]=qval[jm][im].loc;
 	    comp tmp=0.;
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
@@ -188,7 +187,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		    tmp+=tmp1*tmp2;
 		}
 	    }
-	    P(OTF,im,jm)=tmp*otfnorm;
+	    P(*otf,im,jm)=tmp*otfnorm;
 	}
     }
     free(BPD);
@@ -204,8 +203,6 @@ static void genotf_wrap(thread_t *info){
     loc_t *loc=data->loc;
     const long nxsa=loc->nloc;
     const real wvl=data->wvl;
-    const long notfx=data->notfx;
-    const long notfy=data->notfy;
     const dmat *area=data->area;
     const real thres=data->thres;
     const cmat *otffull=data->otffull;
@@ -230,7 +227,7 @@ static void genotf_wrap(thread_t *info){
 	if(otffull && (!area || area->p[isa]>thres)){
 	    ccp(&otf[isa],otffull);/*just copy the full array */
 	}else if(!area || area->p[isa]>0.01){ 
-	    genotf_do(&otf[isa],pttr,notfx,notfy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
+	    genotf_do(&otf[isa],pttr,data->npsfx, data->npsfy, loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
     //if(!detached && nsa>10) info("Thread %ld done\n", info->ithread);
@@ -241,31 +238,31 @@ static void genotf_wrap(thread_t *info){
    2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
    first subaperture to build pval, but this one is not fully illuminated. 
  */
-static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, real xsep, real ysep){
+static T_VALID *gen_pval(long npsfx, long npsfy, loc_t *loc, real xsep, real ysep){
     long nloc=loc->nloc;
     real *locx=loc->locx;
     real *locy=loc->locy;
-    const long pvaltot=notfx*notfy*nloc*2;
+    const long pvaltot=npsfx*npsfy*nloc*2;
     typedef long long2[2];
     long2 *pval0=mymalloc(pvaltot,long2);
     if(!pval0){
 	error("malloc for %ld failed\n", pvaltot);
     }
-    T_VALID *pval=mymalloc(notfx*notfy,T_VALID);
-    T_VALID (*restrict qval)[notfx]=(T_VALID (*)[notfx])(pval);
+    T_VALID *pval=mymalloc(npsfx*npsfy,T_VALID);
+    T_VALID (*restrict qval)[npsfx]=(T_VALID (*)[npsfx])(pval);
     long count=0,count2;
     loc_create_map(loc);
     map_t *map=loc->map;
-    long notfx2=notfx/2;
-    long notfy2=notfy/2;
+    long npsfx2=npsfx/2;
+    long npsfy2=npsfy/2;
     real dx1=1./loc->dx;
     real dy1=1./loc->dy;
-    for(long jm=0; jm<notfy; jm++){
-	long jm2=(jm-notfy2);/*peak in the center */
-	/*long jm2=jm<notfy2?jm:jm-notfy;//peak in the corner */
-	for(long im=0; im<notfx; im++){
-	    long im2=(im-notfx2);
-	    /*long im2=im<notfx2?im:im-notfx; */
+    for(long jm=0; jm<npsfy; jm++){
+	long jm2=(jm-npsfy2);/*peak in the center */
+	/*long jm2=jm<npsfy2?jm:jm-npsfy;//peak in the corner */
+	for(long im=0; im<npsfx; im++){
+	    long im2=(im-npsfx2);
+	    /*long im2=im<npsfx2?im:im-npsfx; */
 	    count2=count;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
 		long iy=(long)round((locy[iloc]+jm2*ysep-map->oy)*dy1);
@@ -312,7 +309,10 @@ static dmat* genotfB(loc_t *loc, real r0, real L0){
    must share the same geometry, but may come with different amplitude map and/or
    OPD biasas. if pttr is 1, the OTF will have tip/tilt removed. make r0 to
    infinity to build diffraction limited OTF. make r0 to infinity and opdbias to
-   none null to build OTF for a static map.*/
+   none null to build OTF for a static map.
+
+   2020-01-21: Compute OTF using nyquist sampling and then upsample with FFT.
+*/
 
 void genotf(cmat **otf,    /**<The otf array for output*/
 	    loc_t *loc,    /**<the aperture grid (same for all apertures)*/
@@ -321,12 +321,11 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    const dmat *area,   /**<normalized area of the (sub)apertures*/
 	    real thres,  /**<The threshold to consider a (sub)aperture as full*/
 	    real wvl,    /**<The wavelength. only needef if opdbias is not null*/
-	    real dtheta, /**<Sampling of PSF.*/
 	    const dmat *cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
 	    real r0,     /**<Fried parameter*/
 	    real l0,     /**<Outer scale*/
-	    long notfx,   /**<Size of OTF*/
-	    long notfy,   /**<Size of OTF*/
+	    long npsfx,   /**<Size of PSF*/
+	    long npsfy,   /**<Size of PSF*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	     ){
@@ -334,13 +333,11 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	error("loc and amp mismatch. loc->nloc=%ld, amp is %ldx%ld, nsa=%ld\n", loc->nloc, amp->nx, amp->ny, nsa);
     }else if(cov && (amp->nx!=cov->nx || cov->nx!=cov->ny)){
     	error("loc and cov mismatch\n");
-    }else if(nsa<1 || notfx<1 || notfy<1){
+    }else if(nsa<1 || npsfx<1 || npsfy<1){
 	error("nsa, notfx, notfy has to be at least 1\n");
     }
     /*creating pairs of points that both exist with given separation*/
-    real duxwvl=wvl/(dtheta*notfx);
-    real duywvl=wvl/(dtheta*notfy);
-    T_VALID *pval=gen_pval(notfx, notfy, loc, duxwvl, duywvl);/*returns T_VALID array. */
+    T_VALID *pval=gen_pval(npsfx, npsfy, loc, loc->dx, loc->dx);/*returns T_VALID array. */
     /* Generate the B matrix. */
     dmat *B=cov?(dmat*)cov:genotfB(loc, r0, l0);
     cmat *otffull=NULL;
@@ -355,11 +352,11 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    }
 	}
 	if(isafull>0){
-	    genotf_do(&otffull,pttr,notfx,notfy,loc,amp?amp->p+isafull*nloc:NULL,NULL,wvl,B,pval);
+	    genotf_do(&otffull,pttr,npsfx, npsfy, loc,amp?amp->p+isafull*nloc:NULL,NULL,wvl,B,pval);
 	}
     }
     
-    GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, notfx, notfy, nsa, pttr, B, pval, isafull, otffull};
+    GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, B, pval, isafull, otffull};
    
     thread_t info[NCPU];
     thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
@@ -372,9 +369,9 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 /**
    A convenient wrapper for genotf() to be called from matlab or python.
 */
-cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long notfx, long notfy, long nsa, long pttr){
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, const dmat *cov, real r0, real l0, long npsfx, long npsfy, long nsa, long pttr){
     ccell *out=ccellnew(nsa, 1);
-    genotf(out->p, loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, notfx, notfy, nsa, pttr);
+    genotf(out->p, loc, amp, opdbias, area, thres, wvl, cov, r0, l0, npsfx, npsfy, nsa, pttr);
     return (cell*)out;
 }
 /**

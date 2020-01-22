@@ -127,6 +127,7 @@ pts_t *ptsnew(long nsa, real dsax, real dsay, long nx, real dx, real dy){
     pts->dsay=dsay;
     pts->nref=mycalloc(1, int); pts->nref[0]=1;
     pts->nx=nx;
+    pts->ny=nx;
     pts->dx=dx;
     pts->dy=dy;
     pts->nsa=nsa;

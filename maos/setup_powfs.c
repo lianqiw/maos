@@ -769,8 +769,8 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	powfs[ipowfs].notfy=notf;
 	info("notf is %dx%d (%s)\n", powfs[ipowfs].notfx, powfs[ipowfs].notfy, okind);
 	if(safov > dtheta*notf){
-	    warning("Subaperture PSF size (%g\") is smaller than detector FoV (%g\").", 
-		    dtheta*notf, safov);
+	    warning("Subaperture PSF size (%g\") is smaller than detector FoV (%g\").\n", 
+		    dtheta*notf*206265, safov*206265);
 	}
     }/*notf */
 
@@ -1125,10 +1125,16 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     const LLT_CFG_T *lltcfg=parms->powfs[ipowfs].llt;
 
     real lltd=lltcfg->d;
-
-    int notf=MAX(powfs[ipowfs].notfx, powfs[ipowfs].notfy);
-    /*The otf would be dx/lambda. Make it equal to embfac*pts->dsa/lambda/notf)*/
-    real dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
+    real dx;
+    if(1){//avoid extending LLT psf
+	int notf=MAX(powfs[ipowfs].notfx, powfs[ipowfs].notfy);
+	dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
+    }else{
+	dx=powfs[ipowfs].pts->dx;
+    }
+    if(lltd>powfs[ipowfs].pts->dsa){
+	error("Please check the implementation for this case.\n");
+    }
     real lltdsa=MAX(lltd, powfs[ipowfs].pts->dsa);
     int nx=round(lltdsa/dx); lltdsa=dx*nx;
     pts_t *lpts=llt->pts=ptsnew(1, lltdsa, lltdsa, nx, dx, dx);

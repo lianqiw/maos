@@ -264,7 +264,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    int notf2[2]={notf, notf};
 	    /*limit the number of subapertures in each batch to less than 1024
 	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
-	    cuwfs[iwfs].msa=nsa>1024?((int)ceil((Real)nsa/(Real)(nsa/800))):nsa;
+	    cuwfs[iwfs].msa=(nsa>1024)?((int)ceil((Real)nsa/(Real)(nsa/800))):nsa;
 	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, nwvf2, NULL, 1, 0, NULL, 1, 0, 
 			     FFT_T_C2C, cuwfs[iwfs].msa)){
 		error("CUFFT plan failed\n");

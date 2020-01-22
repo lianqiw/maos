@@ -28,19 +28,18 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    const dmat *amp,     /**<The amplitude map of all the (sub)apertures*/
 	    const dmat *opdbias, /**<The static OPD bias. */
 	    const dmat *area,    /**<normalized area of the (sub)apertures*/
-	    real thres,  /**<The threshold to consider a (sub)aperture as full*/
-	    real wvl,    /**<The wavelength. only needef if opdbias is not null*/
-	    real dtheta, /**<Sampling of PSF.*/
+	    real thres,    /**<The threshold to consider a (sub)aperture as full*/
+	    real wvl,      /**<The wavelength. only needef if opdbias is not null*/
 	    const dmat *cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
-	    real r0,     /**<Fried parameter*/
-	    real l0,     /**<Outer scale*/
-	    long notfx,   /**<Size of OTF*/
-	    long notfy,   /**<Size of OTF*/
+	    real r0,       /**<Fried parameter*/
+	    real l0,       /**<Outer scale*/
+	    long npsfx,    /**<Size of PSF/OTF*/
+	    long npsfy,    /**<Size of PSF/OTF*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	    );
 
-cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, real dtheta, const dmat *cov, real r0, real l0, long notfx, long notfy, long nsa, long pttr);
+cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, const dmat *cov, real r0, real l0, long npsfx, long npsfy, long nsa, long pttr);
 
 dmat* mk2dcov(loc_t *loc, const dmat *amp, real ampthres, const dmat *cov, int norm);
 void mtch(dmat **mtche,   /**<[out] the matched filter*/

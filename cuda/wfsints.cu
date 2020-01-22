@@ -40,8 +40,16 @@
 #define TIC
 #define tic
 #define ctoc(A)
+#define ctoc_init
+#define ctoc_final
 #else
-#define ctoc(A) CUDA_SYNC_STREAM; toc(A)
+#define ntoc 30
+static __thread cudaEvent_t events[ntoc]={0};
+static __thread const char *nametoc[ntoc]={0};
+static __thread int itoc;
+#define ctoc_init {if(!events[0]){for(int ii=0; ii<ntoc; ii++){cudaEventCreate(&events[ii]);cudaEventRecord(events[0], stream); }} itoc=1;}
+#define ctoc(A) {nametoc[itoc]=A;cudaEventRecord(events[itoc], stream); itoc++;}
+#define ctoc_final {CUDA_SYNC_STREAM; float ms; for(int ii=1; ii<itoc; ii++){cudaEventElapsedTime(&ms, events[ii-1], events[ii]); info("%s takes %g ms\n", nametoc[ii], ms);}}
 #endif
 
 /**
@@ -361,7 +369,7 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp *restrict otf, int nx, int
    stream is no longer an input parameter, as the FFT plan depends on it.
 */
 void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
-    TIC;tic;
+    //TIC;tic;
     Array<cupowfs_t>&cupowfs=cudata->powfs;
     Array<cuwfs_t>&cuwfs=cuglobal->wfs;
     stream_t &stream=cuwfs[iwfs].stream;
@@ -412,6 +420,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     Comp *lotfc=NULL;
     Comp *lwvf=NULL;
     curmat lltopd;
+
     if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	int nlx=powfs[ipowfs].llt->pts->nx;
 	lltopd=cuwfs[iwfs].lltopd;
@@ -461,7 +470,6 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 	    const real oy=powfs[ipowfs].llt->pts->origy[0];
 	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd, nlx, nlx, ox, oy, dx, ttx, tty);
 	}
-	ctoc("llt opd");
 	int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 	lwvf=cuwfs[iwfs].lltwvf;
 	if(nlwvf != notf){
@@ -497,6 +505,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     }
     /* Now begin physical optics  */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
+
 	Real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	Real dtheta=wvl/(nwvf*powfs[ipowfs].pts->dx);
 	if(lltopd){ /*First calculate LOTF */
@@ -518,9 +527,9 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		sa_cpcorner_do<<<1, dim3(16,16),0,stream>>>(lotfc, notf, notf, lwvf, nlwvf, nlwvf);
 	    }
 	}
-	ctoc("llt otf");
 
 	for(int isa=0; isa<nsa; isa+=msa){
+	    ctoc_init;
 	    int ksa=MIN(msa, nsa-isa);/*total number of subapertures left to do. */
 	    /*embed amp/opd to wvf */
 	    cudaMemsetAsync(wvf, 0, sizeof(Comp)*ksa*nwvf*nwvf, stream);
@@ -529,7 +538,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 	    }
 	    sa_embed_wvf_do<<<ksa, dim3(16,16),0,stream>>>
 		(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp()+isa*nx*nx, wvl, nx, nwvf);
-	    ctoc("embed");
+	    ctoc("embed");//0.7 ms
 	    /* turn to complex psf, peak in corner */
 	    CUFFT(cuwfs[iwfs].plan1, wvf, CUFFT_FORWARD);
 	    /* copy big psf to smaller psf covering detector focal plane. */
@@ -538,7 +547,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		    (psf, notf, notf, wvf, nwvf, nwvf);
 	    }
 	    //gpu_write(psf, notf, notf*ksa, "psf_out_1");
-	    ctoc("psf");
+	    ctoc("psf");//1.1ms
 	    if(wvfout){
 		cuzero(cuwfs[iwfs].psfout, stream);
 		CUFFT2(cuwfs[iwfs].plan2, psf, cuwfs[iwfs].psfout, CUFFT_INVERSE);
@@ -548,12 +557,12 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 	    }
 	    /* abs2 part to real, peak in corner */
 	    sa_abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, 1);
-	    ctoc("abs2real");
+	    ctoc("abs2real");//0.8ms
 	    //gpu_write(psf, notf, notf*ksa, "psf_out_2");
 	    if(isotf){
 		/* turn to otf. peak in corner */
 		CUFFT(cuwfs[iwfs].plan2, psf, CUFFT_FORWARD);
-		ctoc("fft to otf");
+		ctoc("fft to otf");//3.7 ms for notf=84. 2.6 ms for 70. 0.7ms for 64.
 		if(pistatout){
 		    cudaMemcpyAsync(psfstat, psf, sizeof(Comp)*notf*notf*ksa, 
 				    MEMCPY_D2D, stream);
@@ -572,17 +581,16 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		}
 		if(lltopd){/*multiply with uplink otf. */
 		    sa_ccwm_do<<<ksa,256,0,stream>>>(psf, notf*notf, lotfc, 1);
-		    ctoc("ccwm with lotfc");
+		    ctoc("ccwm with lotfc");//0.66 ms
 		}
 		/* is OTF now. */
 	    }
 	    //gpu_write(psf, notf, notf*ksa, "psf_out_3");
-	    ctoc("before ints");
 	    if(ints){
 		if(!isotf || otf!=psf){/*rotate PSF, or turn to OTF first time. */
 		    if(isotf){/*srot1 is true. turn otf back to psf for rotation. */
 			CUFFT(cuwfs[iwfs].plan2, psf, CUFFT_INVERSE);
-			ctoc("fft to psf");
+			ctoc("fft to psf"); 
 		    }
 		    if(otf!=psf){
 			cudaMemsetAsync(otf, 0, sizeof(Comp)*ksa*notfx*notfy, stream);
@@ -605,7 +613,6 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		}
 		/*now we have otf. multiply with etf, dtf. */
 		if(cuwfs[iwfs].dtf[iwvl].etf2){
-		    ctoc("before ccwm");
 		    const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 		    Real wt2=(Real)(isim%dtrat)/(real)dtrat;
 		    Real wt1=1.-wt2;
@@ -618,7 +625,6 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		    }
 		    ctoc("ccwm2");
 		}else if(cuwfs[iwfs].dtf[iwvl].etf){
-		    ctoc("before ccwm");
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
 			    (otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
@@ -626,7 +632,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 			sa_ccwm_do<<<ksa,256,0,stream>>>
 			    (otf, notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
 		    }
-		    ctoc("ccwm");
+		    ctoc("ccwm");//0.97 ms
 		}
 		/*multiply with nominal */
 		if(cuwfs[iwfs].dtf[iwvl].nominal){
@@ -645,12 +651,13 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		}
 		/*back to spatial domain. */
 		CUFFT(cuwfs[iwfs].plan3, otf, CUFFT_INVERSE);
-		ctoc("fft");
+		ctoc("fft");//3.7 ms
 		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
 		    (ints[isa], pixpsax, pixpsay, pixoffx?pixoffx+isa:NULL, pixoffy?pixoffy+isa:NULL,
 		     pixthetax, pixthetay, otf, dtheta, notfx, notfy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
-		ctoc("final");
+		ctoc("si");//0.1 ms
+		ctoc_final;
 	    }/*if ints. */
 	}/*for isa block loop */
     }/*for iwvl */

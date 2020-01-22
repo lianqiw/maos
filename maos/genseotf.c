@@ -44,7 +44,8 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		       powfs[ipowfs].pts->dy);
     /*The embeding factor for embedding the aperture */
     const int embfac=parms->powfs[ipowfs].embfac;
-    const real dxsa=powfs[ipowfs].pts->dsa;
+    const int npsfx=powfs[ipowfs].pts->nx*embfac;    
+    const int npsfy=powfs[ipowfs].pts->ny*embfac;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     int nsa=powfs[ipowfs].saloc->nloc;
  
@@ -79,18 +80,17 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-	real dtheta=wvl/(dxsa*embfac);
 	for(int iotf=0; iotf<notf; iotf++){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
 	    real thres=opdbias?1:(1-1e-10);
 	    info("There is %s bias\n", opdbias?"NCPA":"no");
+	    //OTFs are always generated with native sampling. It is upsampled at gensepsf if necessary.
 	    OMPTASK_SINGLE
 		genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
 		       loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
 		       powfs[ipowfs].realsaa->p[iotf],
-		       thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
-		       powfs[ipowfs].notfx, 
-		       powfs[ipowfs].notfy, nsa, 1);
+		       thres,wvl,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
+		       npsfx, npsfy, nsa, 1);
 	}
     }/*iwvl */
     locfree(loc);
@@ -128,13 +128,12 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     long nsa=powfs[ipowfs].saloc->nloc;
     snprintf(fnotf,sizeof(fnotf),"%s/SEOTF/%s_D%g_%g_"
-	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_notf%dx%d",
+	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_embfac%d_v2",
 	     CACHE, fnprefix,
 	     parms->aper.d,parms->aper.din, 
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].pts->dsa,nsa,
-	     1./powfs[ipowfs].pts->dx, 
-	     powfs[ipowfs].notfx, powfs[ipowfs].notfy);
+	     1./powfs[ipowfs].pts->dx, parms->powfs[ipowfs].embfac);
     snprintf(fnlock, sizeof(fnlock), "%s.lock", fnotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     while(!intstat->otf){
@@ -160,10 +159,12 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 */
 void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
-    loc_t *loc=pts2loc(powfs[ipowfs].llt->pts);
-    const int notf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
+    pts_t *lltpts=powfs[ipowfs].llt->pts;
+    loc_t *loc=pts2loc(lltpts);
     const int nwvl=parms->powfs[ipowfs].nwvl;
-
+    const int embfac=parms->powfs[ipowfs].embfac;
+    const int npsfx=lltpts->nx*embfac;
+    const int npsfy=lltpts->ny*embfac;
     int nlotf=1;
     dcell *ncpa=powfs[ipowfs].llt->ncpa;
     if(ncpa){
@@ -177,14 +178,15 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(nwvl!=1){
 	warning("LGS has multi-color!\n");
     }
+    //const int notfx=powfs[ipowfs].notfx;//keep LOTF and OTF same sampling
+    //const int notfy=powfs[ipowfs].notfy;//keep LOTF and OTF same sampling
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-	real dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
 	real thres=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    genotf(PP(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
-		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
-		   notf, notf, 1, 1);
+		   0, thres, wvl, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
+		   npsfx,npsfy, 1, 1);
 	    if(!PP(lotf,iwvl,ilotf)){
 		error("lotf is empty\n");
 	    }
@@ -214,13 +216,12 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	mymkdir("%s",fnlotf);
     }
     snprintf(fnlotf,sizeof(fnlotf),"%s/SELOTF/%s_"
-	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_notf%dx%d",
+	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_embfac%d_v2",
 	     CACHE, fnprefix,
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].llt->pts->dsa,
 	     1./powfs[ipowfs].llt->pts->dx,
-	     parms->powfs[ipowfs].llt->widthp,
-	     powfs[ipowfs].notfx, powfs[ipowfs].notfy);
+	     parms->powfs[ipowfs].llt->widthp,parms->powfs[ipowfs].embfac);
 
     char fnlock[PATH_MAX+10];
     snprintf(fnlock, sizeof(fnlock), "%s.lock", fnlotf);
@@ -247,8 +248,8 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	int nwvl=intstat->lotf->nx;
 	ccell*  lotf=intstat->lotf/*PCELL*/;
 	int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
-	cmat *psfhat=cnew(nlpsf, nlpsf);
-	dmat *psf=dnew(nlpsf, nlpsf);
+	cmat *psfhat=0;//cnew(nlpsf, nlpsf);
+	dmat *psf=0;//dnew(nlpsf, nlpsf);
 	char header[64];
 	zfarr *lltpsfsave=NULL;
 	lltpsfsave=zfarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
@@ -257,7 +258,6 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    const real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	    const real dpsf=wvl/(nlpsf*dx)*206265.;
 	    snprintf(header, 64,"dtheta=%g; #arcsecond\n", dpsf); 
-	    free(psf->header); psf->header=strdup(header);	    
 	    for(int illt=0; illt<intstat->lotf->ny; illt++){
 		ccp(&psfhat, P(lotf,iwvl,illt));
 		cfftshift(psfhat);
@@ -266,6 +266,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 		creal2d(&psf, 0, psfhat, 1);
 		info("illt %d, iwvl %d has FWHM of %g\"\n",
 		      illt, iwvl, sqrt(4.*(real)dfwhm(psf)/M_PI)*dpsf);
+		free(psf->header); psf->header=strdup(header);
 		zfarr_push(lltpsfsave, illt*nwvl+iwvl, psf);
 	    }
 	}
@@ -274,7 +275,23 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	dfree(psf);
     }
 }
-
+/**
+   Upsample the otf in to out while preserving the PSF.
+ */
+static void upsample_otf(cmat *out, const cmat *in){
+    if(in->nx==out->nx && in->ny==out->ny){
+	ccp(&out, in);
+    }else{
+	cmat *temp=0;
+	ccp(&temp, in);
+	cfft2(temp, -1);
+	cscale(temp, 1./(in->nx*in->ny));
+	czero(out);
+	ccpcorner(out, temp, C_FULL);
+	cfft2(out, 1);
+	cfree(temp);
+    }
+}
 /**
    Createing subaperture short exposure PSF from the tip/tilt removed turbulence
    OTF and uplink OTF. Not including detector or elongation characteristics.  */
@@ -291,7 +308,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	nlotf=powfs[ipowfs].intstat->lotf->ny;
     }
     int notf=powfs[ipowfs].intstat->otf->nx;
-    powfs[ipowfs].intstat->nsepsf=notf>nlotf?notf:nlotf;
+    powfs[ipowfs].intstat->nsepsf=MAX(notf, nlotf);//notf>nlotf?notf:nlotf;
     assert(powfs[ipowfs].intstat->nsepsf==1 
 	   || powfs[ipowfs].intstat->nsepsf==parms->powfs[ipowfs].nwfs);
     if(powfs[ipowfs].intstat->sepsf){
@@ -301,35 +318,34 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int notfx=powfs[ipowfs].notfx;
     const int notfy=powfs[ipowfs].notfy;
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
-	int iotf=notf>1?isepsf:0;
-	int ilotf=nlotf>1?isepsf:0;
-	cmat **lotf=nlotf>0?(powfs[ipowfs].intstat->lotf->p+ilotf*nwvl):NULL;
-	ccell* otf=powfs[ipowfs].intstat->otf->p[iotf]/*PCELL*/;
+	//int iotf=notf>1?isepsf:0;
+	//int ilotf=nlotf>1?isepsf:0;
+	//cmat **lotf=nlotf>0?(powfs[ipowfs].intstat->lotf->p+ilotf*nwvl):NULL;
+	ccell* otf=PR(powfs[ipowfs].intstat->otf, isepsf, 0);//->p[iotf];
 	powfs[ipowfs].intstat->sepsf->p[isepsf]=dcellnew(nsa,nwvl);
-	dcell*  psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf]/*PDELL*/;
+	dcell*  psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf];
 	const real *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cmat *sepsf=cnew(notfx, notfy);
+	    cmat *lotf=0;
+	    if(nllt>0){
+		cmat *lotf2=PR(powfs[ipowfs].intstat->lotf, iwvl, isepsf);
+		if(lotf2->nx!=notfx || lotf2->ny!=notfy){
+		    lotf=cnew(notfx, notfy);
+		    upsample_otf(lotf, lotf2);
+		}else{
+		    lotf=cref(lotf2);
+		}
+	    }
 	    for(int isa=0; isa<nsa; isa++){
 		real norm=area[isa]/((real)(notfx*notfy));
 		if(P(otf,isa,iwvl)){
-		    ccp(&sepsf,P(otf,isa,iwvl));/*peak in center */
+		    upsample_otf(sepsf, P(otf,isa,iwvl));/*peak in center */
 		}else{
 		    czero(sepsf);
 		}
-		if(nllt>0){/*has laser launch */
-		    if(sepsf->nx == lotf[iwvl]->nx){
-			ccwm(sepsf,lotf[iwvl]);
-		    }else{
-			if(sepsf->nx > lotf[iwvl]->nx){
-			    error("lotf(%ldx%ld) has smaller size than sepsf (%ldx%ld)\n", 
-				  sepsf->nx, sepsf->nx, lotf[iwvl]->nx, lotf[iwvl]->nx);
-			}
-			cmat *tmp=cnew(sepsf->nx, sepsf->ny);
-			cembedc(tmp, lotf[iwvl], 0,C_FULL);
-			ccwm(sepsf, tmp);
-			cfree(tmp);
-		    }
+		if(lotf){
+		    ccwm(sepsf, lotf);
 		}
 		cfftshift(sepsf); /*peak now in corner. */
 		cfft2(sepsf,1);   /*turn to psf. FFT 1th */
@@ -337,6 +353,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		creal2d(PP(psepsf,isa,iwvl),0,sepsf,norm);/*copy to output. */
 	    }
 	    cfree(sepsf);
+	    cfree(lotf);
 	}
     }
 }
