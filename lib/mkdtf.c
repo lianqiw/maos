@@ -27,20 +27,19 @@
    direction.
  */
 DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
-	     real dxsa,/**<Subaperture size*/
-	     real embfac,/**<Embedding factor (2)*/
-	     long notfx,/**<FFT size along x*/
-	     long notfy,/**<FFT size along y*/
-	     long pixpsax,/**<Number of pixels along x(r)*/
-	     long pixpsay,/**<Number of pixels along y(a)*/
-	     real pixthetax,/**<Pixel size along x (r)*/
-	     real pixthetay,/**<Pixel size along y (a)*/
+	     real dxsa,        /**<Subaperture size*/
+	     real embfac,      /**<Embedding factor (2)*/
+	     long notfx,       /**<FFT size along x*/
+	     long notfy,       /**<FFT size along y*/
+	     long pixpsax,     /**<Number of pixels along x(r)*/
+	     long pixpsay,     /**<Number of pixels along y(a)*/
+	     real pixthetax,   /**<Pixel size along x (r)*/
+	     real pixthetay,   /**<Pixel size along y (a)*/
 	     const dmat* pixoffx,  /**<offset of image center from center of pixel array, along x or radial*/
 	     const dmat* pixoffy,  /**<offset of image center from center of pixel array, along y or azimuthal*/
-	     real pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
-	     const dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
-	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
+	     real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
+	     const dcell *srot,/**<Rotation angle of each subaperture. NULL for NGS WFS*/
+	     int radpix        /**<1: Pixels are along radial/azimuthal direction*/
     ){
     int nwvl=wvls->nx*wvls->ny;
     DTF_T *dtfs=mycalloc(nwvl,DTF_T);
@@ -89,15 +88,14 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	  nominal/si for each subaperture. The PSF/OTF and hence DTF are on x/y
 	  coordinate, so pixels and pixel coordinates need to rotated to r/a
 	  direction. */
-	const int multi_dtf=(srot && radpix && !radrot);//DTF is along x/y coord, pixel is r/a coord.
+	const int multi_dtf=(srot && radpix);//DTF is along x/y coord, pixel is r/a coord.
 	const int ndtf=(multi_dtf || (pixoffx && pixoffx->nx>1))?srot->p[0]->nx:1;
-	const int multi_wfs=((srot && srot->nx>1 && radpix && !radrot) || (pixoffx && pixoffx->ny>1));
+	const int multi_wfs=((srot && srot->nx>1 && radpix) || (pixoffx && pixoffx->ny>1));
 	const int nwfs=multi_wfs?MAX(srot->nx, pixoffx->ny):1;
 
 	dtfs[iwvl].dtheta=dtheta;
 	dtfs[iwvl].dxsa=dxsa;
 	dtfs[iwvl].radpix=radpix;
-	dtfs[iwvl].radrot=radrot;
 	dtfs[iwvl].wvl=wvl;
 	dtfs[iwvl].notfx=notfx;
 	dtfs[iwvl].notfy=notfy;
@@ -179,15 +177,14 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 }
 
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
-	     real hs,    /**<Guide star focus range*/
+	     real hs,      /**<LGS WFS focus altitude*/
 	     const dcell *sodium,/**<The sodium profile. In each cell First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
-	     int nwvl,     /**<Number of wavelength*/
 	     const dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     const dcell *srsa,  /**<Subaperture to LLT distance*/
-	     real za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     ){
+    int nwvl=dtfs[0].nwvl;
     ETF_T *etfs=mycalloc(nwvl,ETF_T);
     etfs->nwvl=nwvl;
     /*setup elongation along radial direction. don't care azimuthal. */
@@ -195,30 +192,33 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     const int nllt=MAX(srot->nx, sodium->nx);
     const int nsa=srot->p[0]->nx;
     dmat *sodium0=sodium->p[0];
-    const int ncol=(sodium0->ny-1);
+    const int ncol=sodium0->ny-1;
+    const int nhp=sodium0->nx; 
+    const real* px=sodium0->p;
+
     icol=wrap(icol, ncol);
     info("Na using column %d.\n",icol);
-    const int nhp=sodium0->nx; 
+
     //adjusting sodium height for the zenith angle;
     real hpmin=0, dhp1=0;
+
     if(!no_interp){/**Requires linear spacing*/
-	hpmin=sodium0->p[0]/cos(za);
-	dhp1=cos(za)/(sodium0->p[1]-sodium0->p[0]);
+	hpmin=px[0];
+	dhp1=1./(px[1]-px[0]);
 	/*assume linear spacing. check the assumption valid */
 	real diff;
-	if((diff=fabs((sodium0->p[nhp-1]-sodium0->p[0])/((nhp-1)*(sodium0->p[1]-sodium0->p[0]))-1.))>1.e-5){
-	    writebin(sodium0, "sodium0");
+	if((diff=fabs((px[nhp-1]-px[0])/((nhp-1)*(px[1]-px[0]))-1.))>1.e-5){
 	    error("sodium profile is not evenly spaced: %g\n", diff);
 	}
     }//else: Any spacing is ok.
-    const real* px=sodium0->p;
+
     /*the sum of pp determines the scaling of the pixel intensity. */
     real *psrot[nllt];
     real *pna[nllt];
     real i0scale[nllt];
     for(int illt=0; illt<nllt; illt++){
 	psrot[illt]=srot->p[srot->nx>1?illt:0]->p;
-	pna[illt]=sodium->p[sodium->nx>1?illt:0]->p+nhp*(1+icol);
+	pna[illt]=PR(sodium, illt, 0)->p+nhp*(1+icol);
 	i0scale[illt]=dvecsum(pna[illt], nhp);
 	if(fabs(i0scale[illt]-1)>0.01){
 	    warning("Siglev is scaled by %g by sodium profile\n", i0scale[illt]);
@@ -233,71 +233,43 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	const real dux=1./(dtheta*notfx);
 	const real duy=1./(dtheta*notfy);
 	ccell *petf=0;
-	int use1d;
-	if(dtfs[iwvl].radrot){
-	    if(!dtfs[iwvl].radpix){
-		error("radrot can only be used with radpix\n");
-	    }
-	    /*
-	      PSF/OTF is defined in a/r coordinate. ETF is 1D only, along r.
-	      Good for off-axis launch, otherwise, ETF and DTF takes a lot of
-	      space for many LGS.
-	    */
-	    warning("Rotate PSF to do radial format detector (preferred)\n");
-	    etfs[iwvl].p1=ccellnew(nsa,nllt);
-	    petf=etfs[iwvl].p1;
-	    use1d=1;
+
+	/*
+	  PSF/OTF/ETF is defined in x/y coordinate. 
+	  2010-01-04: Fuse dtf nominal into etf for this case.
+	*/
+	if(dtfs[iwvl].radpix){
+	    info_once("2D ETF for Radial CCD\n");
 	}else{
-	    /*
-	      PSF/OTF/ETF is defined in x/y coordinate. 
-	      2010-01-04: Fuse dtf nominal into etf for this case.
-	    */
-	    if(dtfs[iwvl].radpix){
-		info_once("2D ETF for Radial CCD\n");
-	    }else{
-		info_once("Non-Radial CCD\n");
-	    }
-	    etfs[iwvl].p2=ccellnew(nsa,nllt);
-	    petf=etfs[iwvl].p2;
-	    use1d=0;
+	    info_once("Non-Radial CCD\n");
 	}
+	petf=etfs[iwvl].etf=ccellnew(nsa,nllt);
+	
 	etfs[iwvl].icol=icol;
 	if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
 	    TIC;tic;
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
 		    real rsa=srsa->p[illt]->p[isa];
-		    real rsa_za=rsa*cos(za);
-		    if(use1d){ /*1d ETF along radius. */
-			P(petf,isa,illt)=cnew(notfx,1);
-			comp *etf1d=P(petf,isa,illt)->p;
+		   
+		    const real theta=psrot[illt][isa];
+		    const real ct=cos(theta);
+		    const real st=sin(theta);
+		    P(petf,isa,illt)=cnew(notfx,notfy);
+		    cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
+		    for(int icompy=0; icompy<notfy; icompy++){
+			const real ky=duy*(icompy>=notfy2?(icompy-notfy):icompy);
 			for(int icompx=0; icompx<notfx; icompx++){
-			    const real kr=dux*(icompx>=notfx2?(icompx-notfx):icompx);
+			    const real kx=dux*(icompx>=notfx2?(icompx-notfx):icompx);
+			    const real kr=(ct*kx+st*ky);/*along radial*/
 			    for(int ih=0; ih<nhp; ih++){
-				const real tmp=(-2*M_PI*(kr*(rsa_za/sodium0->p[ih]-rsa/hs)));
-				etf1d[icompx]+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
-			    }
-			}
-		    }else{
-			const real theta=psrot[illt][isa];
-			const real ct=cos(theta);
-			const real st=sin(theta);
-			P(petf,isa,illt)=cnew(notfx,notfy);
-			cmat *etf2d=P(petf,isa,illt);
-#pragma omp parallel for default(shared)
-			for(int icompy=0; icompy<notfy; icompy++){
-			    const real ky=duy*(icompy>=notfy2?(icompy-notfy):icompy);
-			    for(int icompx=0; icompx<notfx; icompx++){
-				const real kx=dux*(icompx>=notfx2?(icompx-notfx):icompx);
-				const real kr=(ct*kx+st*ky);/*along radial*/
-				for(int ih=0; ih<nhp; ih++){
-				    const real tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
-				    P(etf2d,icompx,icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
-				}
+				const real tmp=(-2*M_PI*(kr*(rsa/px[ih]-rsa/hs)));
+				P(etf2d,icompx,icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
 			    }
 			}
 		    }
+		    
 		}//isa
 	    }//illt
 	    toc("ETF");
@@ -375,58 +347,34 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			}
 			cfftshift(etf);/*put peak in corner; */
 			cfft2(etf, -1);
-			if(use1d){
-			    if(npad==1 && nover==1){
-				ccp(PP(petf,isa,illt),etf);
-			    }else{
-				cfftshift(etf);
-				P(petf,isa,illt)=cnew(notfx,1);
-				comp *etf1d=P(petf,isa,illt)->p;
+		
+			/*Rotate the ETF. */
+			/*need to put peak in center. */
+			cfftshift(etf);
+			real theta=psrot[illt][isa];
+			real ct=cos(theta);
+			real st=sin(theta);
+			P(petf,isa,illt)=cnew(notfx,notfy);
+			cmat *etf2d=P(petf,isa,illt);
 #pragma omp parallel for default(shared)
-				for(int icompx=0; icompx<notfx; icompx++){
-				    real ir=dusc*(icompx-notfx2)+netf2;
-				    int iir=ifloor(ir);
-				    ir=ir-iir;
-				    if(iir>=0 && iir<netf-1){
-					etf1d[icompx]=etf->p[iir]*(1.-ir)
-					    +etf->p[iir+1]*ir;
-				    }/*else{etf1d[icompx]=0;}*/
-				}
-				cfftshift(P(petf,isa,illt));
+			for(int icompy=0; icompy<notfy; icompy++){
+			    real iy=(icompy-notfy2);
+			    for(int icompx=0; icompx<notfx; icompx++){
+				real ix=(icompx-notfx2);
+				real ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
+				int iir=ifloor(ir);
+				ir=ir-iir;
+				if(iir>=0 && iir<netf-1){
+				    /*bilinear interpolation. */
+				    P(etf2d,icompx,icompy)=etf->p[iir]*(1.-ir)
+					+etf->p[iir+1]*ir;
+				}/*else{P(etf2d,icompx,icompy)=0;}*/
 			    }
-			}else{
-			    /*Rotate the ETF. */
-			    /*need to put peak in center. */
-			    cfftshift(etf);
-			    real theta=psrot[illt][isa];
-			    real ct=cos(theta);
-			    real st=sin(theta);
-			    P(petf,isa,illt)=cnew(notfx,notfy);
-			    cmat *etf2d=P(petf,isa,illt);
-#pragma omp parallel for default(shared)
-			    for(int icompy=0; icompy<notfy; icompy++){
-				real iy=(icompy-notfy2);
-				for(int icompx=0; icompx<notfx; icompx++){
-				    real ix=(icompx-notfx2);
-				    real ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
-				    int iir=ifloor(ir);
-				    ir=ir-iir;
-				    if(iir>=0 && iir<netf-1){
-					/*bilinear interpolation. */
-					P(etf2d,icompx,icompy)=etf->p[iir]*(1.-ir)
-					    +etf->p[iir+1]*ir;
-				    }/*else{P(etf2d,icompx,icompy)=0;}*/
-				}
-			    }
-			    cfftshift(P(petf,isa,illt));/*peak in corner; */
 			}
+			cfftshift(P(petf,isa,illt));/*peak in corner; */
 		    }else{
 			warning_once("Wrong focus!\n");
-			if(use1d){
-			    P(petf,isa,illt)=cnew(notfx,1);
-			}else{
-			    P(petf,isa,illt)=cnew(notfx,notfy);
-			}
+			P(petf,isa,illt)=cnew(notfx,notfy);
 			cset(P(petf,isa,illt),1);
 		    }
 		}//for isa
@@ -434,23 +382,23 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    cfree(etf);
 	    free(thetas);
 	}//if na_interp
-	if(!use1d){//fuse nominal to etf to avoid multiply again.
-	    ccell*  pnominal=dtfs[iwvl].nominal;
-	    int mnominal=0;/*multiply with isa to get index into pnominal. */
-	    if(dtfs[iwvl].nominal->nx>1){
-		mnominal=1;//polar ccd
-	    }
-	    int mllt=0;
-	    if(dtfs[iwvl].nominal->ny>1){
-		mllt=1;
-	    }
-	    for(int illt=0; illt<nllt; illt++){
-		for(int isa=0; isa<nsa; isa++){
-		    ccwm(P(petf,isa,illt), P(pnominal,isa*mnominal,illt*mllt));
-		}
-	    }
-	    dtfs[iwvl].fused=1;
+	//fuse nominal to etf to avoid multiply again.
+	ccell*  pnominal=dtfs[iwvl].nominal;
+	int mnominal=0;/*multiply with isa to get index into pnominal. */
+	if(dtfs[iwvl].nominal->nx>1){
+	    mnominal=1;//polar ccd
 	}
+	int mllt=0;
+	if(dtfs[iwvl].nominal->ny>1){
+	    mllt=1;
+	}
+	for(int illt=0; illt<nllt; illt++){
+	    for(int isa=0; isa<nsa; isa++){
+		ccwm(P(petf,isa,illt), P(pnominal,isa*mnominal,illt*mllt));
+	    }
+	}
+	dtfs[iwvl].fused=1;
+	
     }//for iwvl
     return etfs;
 }
@@ -469,8 +417,7 @@ void dtf_free_do(DTF_T *dtfs){
 void etf_free_do(ETF_T *etfs){
     if(!etfs) return;
     for(int iwvl=0;iwvl<etfs->nwvl;iwvl++){
-	ccellfree(etfs[iwvl].p1);
-	ccellfree(etfs[iwvl].p2);
+	ccellfree(etfs[iwvl].etf);
     }
     free(etfs);
 }

@@ -1783,7 +1783,7 @@ void print_progress(SIM_T *simu){
 */
 void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     char fn[PATH_MAX];
-    real zadeg=parms->sim.za*180/M_PI;
+    real zadeg=parms->sim.zadeg;
     snprintf(fn,PATH_MAX,"%s/maos.conf",dirskysim);
     FILE *fp=fopen(fn,"w");
     fprintf(fp,"maos.r0z=%g\n",parms->atm.r0z);

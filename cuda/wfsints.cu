@@ -147,26 +147,6 @@ __global__ static void sa_abs2real_do(Comp *wvf, const int nx, Real alpha){
     }
 }
 /**
-   FFT Shift.
-*/
-__global__ static void sa_fftshift_do(Comp *wvf, const int nx, const int ny){
-    const int isa=blockIdx.x;
-    wvf+=nx*ny*isa;
-    int nx2=nx>>1;
-    int ny2=ny>>1;
-    for(int iy=threadIdx.y; iy<ny2; iy+=blockDim.y){
-	for(int ix=threadIdx.x; ix<nx2; ix+=blockDim.x){
-	    Comp tmp;
-	    tmp=wvf[ix+iy*nx];
-	    wvf[ix+iy*nx]=wvf[(ix+nx2)+(iy+ny2)*nx];
-	    wvf[(ix+nx2)+(iy+ny2)*nx]=tmp;
-	    tmp=wvf[ix+(iy+ny2)*nx];
-	    wvf[ix+(iy+ny2)*nx]=wvf[(ix+nx2)+iy*nx];
-	    wvf[(ix+nx2)+iy*nx]=tmp;
-	}
-    }
-}
-/**
    FFT Shift from complex to real.
 */
 __global__ static void sa_acc_real_fftshift_do(Real *restrict out, const Comp *restrict wvf, 
@@ -185,40 +165,6 @@ __global__ static void sa_acc_real_fftshift_do(Real *restrict out, const Comp *r
 	}
     }
 }
-/**
-   Rotate and embed.
- */
-__global__ static void sa_embed_rot_do(Comp *restrict out, const int noutx, const int nouty,
-				    const Comp *restrict in, const int ninx, const int niny, const Real* srot){
-    const int isa=blockIdx.x;
-    out+=isa*noutx*nouty;
-    in+=isa*ninx*niny;
-    Real theta=srot[isa];
-    Real sx, cx;
-    Z(sincos)(theta, &sx, &cx);
-    const int niny2=niny/2;
-    const int ninx2=ninx/2;
-    const int nouty2=nouty/2;
-    const int noutx2=noutx/2;
-
-    for(int iy=threadIdx.y; iy<nouty; iy+=blockDim.y){
-	int y0=iy-nouty2;
-	for(int ix=threadIdx.x; ix<noutx; ix+=blockDim.x){
-	    int x0=ix-noutx2;
-	    Real x=(cx*x0-sx*y0)+ninx2;
-	    Real y=(sx*x0+cx*y0)+niny2;
-	    int jx=floorf(x); x=x-jx;
-	    int jy=floorf(y); y=y-jy;
-	    if(jx>=0 && jx<ninx-1 && jy>=0 && jy<niny-1){
-		out[iy*noutx+ix].x=((Z(cuCreal)(in[jy*ninx+jx])*(1-x)
-				     +Z(cuCreal)(in[jy*ninx+jx+1])*x)*(1-y)
-				    +(Z(cuCreal)(in[(jy+1)*ninx+jx])*(1-x)
-				      +Z(cuCreal)(in[(jy+1)*ninx+jx+1])*x)*y);
-		out[iy*noutx+ix].y=0;
-	    }
-	}
-    }
-} 
 /**
    Multiple one array with another. OTFs contains repeated arrays each with notf
    numbers. if repeat is 1, dtfs is repeatd for each array.
@@ -390,10 +336,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     const Real pixthetax=parms->powfs[ipowfs].radpixtheta;
     const Real pixthetay=parms->powfs[ipowfs].pixtheta;
     const Real siglev=parms->wfs[iwfs].sigsim;
-    const Real *srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot():NULL;
-    const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot 
-			 && parms->powfs[ipowfs].radpix);
-    const Real *srot2=multi_dtf?cuwfs[iwfs].srot():NULL;
+    const Real *srot=(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].radpix)?cuwfs[iwfs].srot():NULL;
     const Real *pixoffx=0, *pixoffy=0;
     if(cupowfs[ipowfs].pixoffx){
 	int icol=cupowfs[ipowfs].pixoffx>1?wfsind:0;
@@ -491,7 +434,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     }else{
 	psf=cuwfs[iwfs].psf;
     }
-    if(srot1 || notfx!=notf || notfy!=notf){
+    if(notfx!=notf || notfy!=notf){
 	otf=cuwfs[iwfs].otf;
 	if(isotf){/*There is an additional pair of FFT.*/
 	    norm_ints/=((Real)notf*notf);
@@ -595,14 +538,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		    if(otf!=psf){
 			cudaMemsetAsync(otf, 0, sizeof(Comp)*ksa*notfx*notfy, stream);
 		    }
-		    if(srot1){/*rotate and embed psf*/
-			sa_fftshift_do<<<ksa, dim3(16,16),0,stream>>>
-			    (psf, notf, notf);/*shift to center */
-			sa_embed_rot_do<<<ksa, dim3(16,16), 0, stream>>>
-			    (otf, notfx, notfy, psf, notf, notf, srot1?srot1+isa:NULL);
-			sa_fftshift_do<<<ksa, dim3(16,16),0,stream>>>
-			    (otf, notfx, notfy);/*shift back to corner */
-		    }else if(otf!=psf){/*copy the psf corner*/
+		    if(otf!=psf){/*copy the psf corner*/
 			sa_cpcorner_do<<<ksa, dim3(16,16),0,stream>>>
 			    (otf, notfx, notfy, psf, notf, notf);
 			ctoc("cpcorner");
@@ -654,7 +590,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		ctoc("fft");//3.7 ms
 		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
 		    (ints[isa], pixpsax, pixpsay, pixoffx?pixoffx+isa:NULL, pixoffy?pixoffy+isa:NULL,
-		     pixthetax, pixthetay, otf, dtheta, notfx, notfy, srot2?srot2+isa:NULL, 
+		     pixthetax, pixthetay, otf, dtheta, notfx, notfy, srot?srot+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
 		ctoc("si");//0.1 ms
 		ctoc_final;

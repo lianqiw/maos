@@ -92,7 +92,7 @@ static void psfiris_do(thread_t *info){
 	double dxsa=30;//30 meter
 	double embfac=wvl/dtheta/dxsa;
 	dbg("embfac=%g\n", embfac);
-	DTF_T *dtf=mkdtf(wvlmat, dxsa, embfac, ncomp, ncomp, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL, 0, 0);
+	DTF_T *dtf=mkdtf(wvlmat, dxsa, embfac, ncomp, ncomp, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL, 0);
 	ccwm(otf, dtf->nominal->p[0]);
 	cfft2(otf,-1);
 	output->p[ipsf]=dnew(npix, npix);

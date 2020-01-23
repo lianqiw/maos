@@ -179,7 +179,6 @@ typedef struct POWFS_CFG_T{
     int order;     /**<order of wavefront sensing along one dimension.*/
     int pixpsa;    /**<number of detector pixels along x/y or azimuthal if radial CCD.*/
     int radpix;    /**<number of detector pixels along radial direction if radial CCD*/
-    int radrot;    /**<For radial format CCD, rotate OTF into R/A coordinate plane to multiply 1-d ETF. uses less memory*/
     int radgx;     /**<1: gx/gy is along R/A coordinate. Only valid radpix and radrot are valid.*/
     int notf;      /**<PSF is extended to this size before FFT into OTF.  0 for automatic*/
     int embfac;    /**<Embed subaperture atm OPD before fft. set to 2.*/
@@ -477,9 +476,10 @@ typedef struct RECON_CFG_T{
    contains input parameters for simulation, like loop gain, seeds, etc.
 */
 typedef struct SIM_CFG_T{
-    real dt;       /**<sampling period. 1/800*/
-    real za;       /**<zenith angle in radian*/
-
+    real dt;         /**<sampling period. 1/800*/
+    real za;         /**<zenith angle in radian*/
+    real zadeg;      /**<zenith angle in degree. For print out.*/
+    real htel;       /**<Height of telescope. Used to adjust sodium profile range*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
     int pause;       /**<Pause at the end of every time step*/

@@ -308,7 +308,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,pixoffy);
     READ_POWFS_RELAX(int,phyusenea);
     READ_POWFS_RELAX(int,radpix);
-    READ_POWFS_RELAX(int,radrot);
     READ_POWFS_RELAX(int,radgx);
     READ_POWFS_RELAX(int,embfac);
     READ_POWFS_RELAX(int,notf);
@@ -504,14 +503,14 @@ static void readcfg_wfs(PARMS_T *parms){
     if(siglev->nx!=0 && siglev->nx!=parms->nwfs){
 	error("wfs.siglev can be either empty or %d\n",parms->nwfs);
     }
-    for(i=0; i<parms->nwfs; i++){
-	ipowfs=parms->wfs[i].powfs;
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	ipowfs=parms->wfs[iwfs].powfs;
 	int nwvl=parms->powfs[ipowfs].nwvl;
-	parms->wfs[i].wvlwts=dnew(nwvl, 1);
+	parms->wfs[iwfs].wvlwts=dnew(nwvl, 1);
 	if(wvlwts->nx==0){
-	    memcpy(parms->wfs[i].wvlwts->p,parms->powfs[ipowfs].wvlwts->p,sizeof(real)*nwvl);
+	    memcpy(parms->wfs[iwfs].wvlwts->p,parms->powfs[ipowfs].wvlwts->p,sizeof(real)*nwvl);
 	}else{
-	    memcpy(parms->wfs[i].wvlwts->p,wvlwts->p+count,sizeof(real)*nwvl);
+	    memcpy(parms->wfs[iwfs].wvlwts->p,wvlwts->p+count,sizeof(real)*nwvl);
 	    count+=nwvl;
 	    if(parms->powfs[ipowfs].wvlwts && powfs_wvlwts_override){
 		error("when both powfs.wvlwts and wfs.wvlwts are overriden "
@@ -519,13 +518,19 @@ static void readcfg_wfs(PARMS_T *parms){
 	    }
 	}
 	if(siglev->nx==0){
-	    parms->wfs[i].siglev=parms->powfs[ipowfs].siglev;
+	    parms->wfs[iwfs].siglev=parms->powfs[ipowfs].siglev;
 	}else{
-	    parms->wfs[i].siglev=siglev->p[i];
+	    parms->wfs[iwfs].siglev=siglev->p[iwfs];
 	    if(parms->powfs[ipowfs].siglev>0 && powfs_siglev_override){
 		error("when both powfs.siglev and wfs.siglev are overriden "
 		      "must set powfs.siglev=[]\n");
 	    }
+	}
+	if(parms->wfs[iwfs].hs<=0){
+	    parms->wfs[iwfs].hs=parms->powfs[ipowfs].hs;
+	}
+	if(!parms->wfs[iwfs].hc){
+	    parms->wfs[iwfs].hc=parms->powfs[ipowfs].hc;
 	}
     }
     if(count!=wvlwts->nx){
@@ -944,7 +949,8 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
     READ_DBL(sim.fov);parms->sim.fov/=206265;
-    parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
+    READ_DBL(sim.zadeg); parms->sim.za=parms->sim.zadeg*M_PI/180;
+    READ_INT(sim.htel);
     READ_INT(sim.evlol);
     READ_INT(sim.noatm);
     READ_INT(sim.idealfit);
@@ -1189,6 +1195,71 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.ncpa);
 }
 /**
+   Scaling necessary values for non-zero zenith angle (za).
+   -# r0
+   -# turbulence height
+   -# WFS height
+   -# WFS siglev
+   -# reconstruction height.
+   
+   DM conjugation range is not changed!
+   2012-04-07: Relocated to beginning
+*/
+static void setup_parms_postproc_za(PARMS_T *parms){
+    real cosz=cos(parms->sim.za);
+    real secz=1./cosz;
+    if(parms->sim.htel){
+	info("Adjust LGS range by telescope altitude %gm.\n", parms->sim.htel);
+    }
+    if(fabs(parms->sim.za)>1.e-14){
+	info("Zenith angle is %g degree:\n", parms->sim.zadeg);
+	info("\tScaling turbulence height and LGS hs by sec(za).\n"
+	     "\tScaling r0 by cos(za)^(3/5).\n"
+	     "\tScaling wind speed and LGS signal level by cos(za).\n");
+	
+    }
+    /*
+      The input r0z is the r0 at zenith. Scale it if off zenith
+    */
+    parms->atm.r0=parms->atm.r0z*pow(cosz,3./5.);
+    parms->atmr.r0=parms->atmr.r0z*pow(cosz,3./5.);
+
+    //Adjust turbulence only by zenith angle.
+    for(int ips=0; ips<parms->atm.nps; ips++){
+	parms->atm.ht->p[ips] *= secz;/*scale atmospheric height */
+	parms->atm.ws->p[ips] *= cosz;/*Wind velocity reduced due to line of sight*/
+    }
+
+    for(int ips=0; ips<parms->atmr.nps; ips++){
+	parms->atmr.ht->p[ips] *= secz;/*scale reconstructed atmospheric height. */
+    }
+    parms->cn2.hmax*=secz;
+  
+    //Adjust LGS height by telescope altitude and sec(za)
+    //Adjust LGS signal level by cos(za)
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(isfinite(parms->powfs[ipowfs].hs)){//LGS
+	    parms->powfs[ipowfs].hs = (parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
+	    parms->powfs[ipowfs].siglev*=cosz;
+	    if(parms->powfs[ipowfs].sigrecon<0){
+		parms->powfs[ipowfs].sigrecon=parms->powfs[ipowfs].siglev;
+	    }else{
+		parms->powfs[ipowfs].sigrecon*=cosz;
+	    }
+	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
+		parms->wfs[iwfs].hs = (parms->wfs[iwfs].hs-parms->sim.htel)*secz;
+		real siglev=parms->wfs[iwfs].siglev;
+		parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
+	    }
+	}
+    }
+
+    dadds(parms->evl.hs, -parms->sim.htel); dscale(parms->evl.hs, secz);
+    dadds(parms->sim.ncpa_hs, -parms->sim.htel); dscale(parms->sim.ncpa_hs, secz);
+    dadds(parms->fit.hs, -parms->sim.htel); dscale(parms->fit.hs, secz);
+}
+/**
    Process simulation parameters to find incompatibility.
 */
 static void setup_parms_postproc_sim(PARMS_T *parms){
@@ -1372,10 +1443,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->cogoff*=-powfsi->rne;
 	}
 
-	if(powfsi->radrot && !powfsi->radpix){
-	    powfsi->radrot=0;
-	    warning("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
-	}
 	if(powfsi->radgx && !powfsi->radpix){
 	    powfsi->radgx=0;
 	}
@@ -1501,12 +1568,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	real wfs_hc=0;
 	for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
-	    if(parms->wfs[iwfs].hs<=0){
-		parms->wfs[iwfs].hs=parms->powfs[ipowfs].hs;
-	    }
-	    if(!parms->wfs[iwfs].hc){
-		parms->wfs[iwfs].hc=parms->powfs[ipowfs].hc;
-	    }
 	    wfs_hs+=parms->wfs[iwfs].hs;
 	    wfs_hc+=parms->wfs[iwfs].hc;
 	}
@@ -1775,58 +1836,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 
     parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
 }
-/**
-   Scaling necessary values for non-zero zenith angle (za).
-   -# r0
-   -# turbulence height
-   -# WFS height
-   -# WFS siglev
-   -# reconstruction height.
-   
-   DM conjugation range is not changed!
-   2012-04-07: Relocated to beginning
-*/
-static void setup_parms_postproc_za(PARMS_T *parms){
-    /*
-      The input r0z is the r0 at zenith. Scale it if off zenith
-    */
-    parms->atm.r0=parms->atm.r0z*pow(cos(parms->sim.za),3./5.);
-    parms->atmr.r0=parms->atmr.r0z*pow(cos(parms->sim.za),3./5.);
 
-    if(fabs(parms->sim.za)>1.e-14){
-	warning("Scaling turbulence height and LGS hs to zenith angle %gdeg\n",
-		parms->sim.za*180./M_PI);
-	real cosz=cos(parms->sim.za);
-	real secz=1./cosz;
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    parms->atm.ht->p[ips] *= secz;/*scale atmospheric height */
-	    parms->atm.ws->p[ips] *= cosz;/*Wind velocity reduced due to line of sight*/
-	}
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(isfinite(parms->powfs[ipowfs].hs)){//LGS
-		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
-		parms->powfs[ipowfs].siglev*=cosz;
-		if(parms->powfs[ipowfs].sigrecon<0){
-		    parms->powfs[ipowfs].sigrecon=parms->powfs[ipowfs].siglev;
-		}else{
-		    parms->powfs[ipowfs].sigrecon*=cosz;
-		}
-		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
-		    parms->wfs[iwfs].hs *= secz;
-		    real siglev=parms->wfs[iwfs].siglev;
-		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
-		    info("iwfs%d: siglev scaled from %g to %g by za.\n", iwfs,siglev,parms->wfs[iwfs].siglev);
-		}
-	    }
-	}
-	warning("Scaling reconstruction height to zenith angle %gdeg\n",parms->sim.za*180./M_PI);
-	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    parms->atmr.ht->p[ips] *= secz;/*scale reconstructed atmospheric height. */
-	}
-	parms->cn2.hmax*=secz;
-    }
-}
 /**
    The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
 */
@@ -2734,9 +2744,9 @@ static void print_parms(const PARMS_T *parms){
     real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, parms->atm.ws->p, parms->atm.wt->p);
     real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
     
-    info("%sTurbulence at zenith:%s\n"
+    info("%sTurbulence at zenith angle %g degree:%s\n"
 	 "Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
-	 "Anisoplanatic angle is %.2f\"",GREEN, BLACK,
+	 "Anisoplanatic angle is %.2f\"",GREEN, parms->sim.zadeg, BLACK,
 	 parms->atm.r0, parms->atm.L0->p[0], fgreen, theta0z*206265);
     if(parms->ndm==2){
 	real H1=parms->dm[0].ht;
@@ -2747,7 +2757,7 @@ static void print_parms(const PARMS_T *parms){
     info("\n");
     info("There are %d layers, sampled %dx%d at 1/%gm. ZA is %g deg. wind dir is%s randomized.\n",
 	 parms->atm.nps, parms->atm.nx, parms->atm.ny,  1./parms->atm.dx,  
-	 parms->sim.za*180/M_PI, (parms->atm.wdrand?"":" not"));
+	 parms->sim.zadeg, (parms->atm.wdrand?"":" not"));
     if(parms->atm.nps>1 && theta0z*206265>4){
 	warning("Atmosphere theta0 maybe wrong\n");
     }
@@ -2759,7 +2769,7 @@ static void print_parms(const PARMS_T *parms){
 	info("%sReconstruction%s: r0=%gm l0=%gm "
 	     "ZA is %g deg. %d layers.%s\n", GREEN, BLACK,
 	     parms->atmr.r0, parms->atmr.L0,  
-	     parms->sim.za*180/M_PI, 
+	     parms->sim.zadeg, 
 	     parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
   
 	for(int ips=0; ips<parms->atmr.nps; ips++){
@@ -2767,7 +2777,7 @@ static void print_parms(const PARMS_T *parms){
 		 ips,parms->atmr.ht->p[ips],parms->atmr.wt->p[ips]);
 	}
     }
-    info("%sThere are %d powfs%s\n", GREEN, parms->npowfs, BLACK);
+    info("%sThere are %d powfs (wfs group)%s\n", GREEN, parms->npowfs, BLACK);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	info("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
 	     ipowfs,parms->powfs[ipowfs].order, (parms->powfs[ipowfs].llt?"L":"N"),
@@ -3016,9 +3026,9 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
 	    error("Please specify -o to enable saving to disk\n");
 	}
     }
+    setup_parms_postproc_za(parms);
     setup_parms_postproc_sim(parms);
     setup_parms_postproc_wfs(parms);
-    setup_parms_postproc_za(parms);
     setup_parms_postproc_siglev(parms);
     setup_parms_postproc_dirs(parms);
     setup_parms_postproc_atm(parms);

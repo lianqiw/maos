@@ -959,11 +959,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			    powfs[ipowfs].pixoffy,
 			    parms->powfs[ipowfs].pixblur,
 			    powfs[ipowfs].srot,
-			    parms->powfs[ipowfs].radpix,
-			    parms->powfs[ipowfs].radrot);
-    if(parms->powfs[ipowfs].radrot){
-	info("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
-    }
+			    parms->powfs[ipowfs].radpix);
 
     int nwvl=parms->powfs[ipowfs].nwvl;
     powfs[ipowfs].dtheta=dnew(nwvl, 1);
@@ -1001,8 +997,11 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 }
 
 /**
-   Load and smooth out sodium profile. We preserve the sum of the sodium profile,
-   which represents a scaling factor of the signal level.  */
+   Load and smooth out sodium profile and adjust for telescope altitude and
+   zenith angle. We preserve the sum of the sodium profile, which represents a
+   scaling factor of the signal level.
+   
+*/
 static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     char *fnprof=parms->powfs[ipowfs].llt->fnprof;
     dcell *Nains=dcellread("%s",fnprof);
@@ -1011,10 +1010,12 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	error("The sodium profile input %s is in wrong fromat\n", fnprof);
     }
     powfs[ipowfs].sodium=dcellnew(nprof, 1);
+    double nhtel=-parms->sim.htel;
+    double secza=1./cos(parms->sim.za);
     for(int i=0; i<Nains->nx*Nains->ny; i++){
 	dmat *Nain=Nains->p[i];
 	if(Nain->ny<2 || Nain->nx!=Nains->p[0]->nx){
-	    error("The sodium profile input %s is in wrong fromat\n", fnprof);
+	    error("The sodium profile input %s is in wrong format\n", fnprof);
 	}
 	if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
 	    /*Make new sampling: */
@@ -1027,6 +1028,9 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    info("Not smoothing sodium profile\n");
 	    powfs[ipowfs].sodium->p[i]=dref(Nain);
 	}
+	for(int ih=0; ih<powfs[ipowfs].sodium->p[i]->nx; ih++){
+	    powfs[ipowfs].sodium->p[i]->p[ih]=(powfs[ipowfs].sodium->p[i]->p[ih]+nhtel)*secza;
+	}
     }
     dcellfree(Nains);
     if(parms->save.setup){
@@ -1038,16 +1042,14 @@ typedef struct{
     real hs;    /**<Guide star focus range*/
     dcell *sodium;/**<The sodium profile. First column is coordinate.*/
     int icol;     /**<Which sodium profile to use*/
-    int nwvl;     /**<Number of wavelength*/
     dcell *srot;  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
     dcell *srsa;  /**<Subaperture to LLT distance*/
-    real za;    /**<Zenith angle*/
     int no_interp;/**<Use direct sum instead of interpolation + FFT. Slower */
     int free;     /**<Free this array after using?*/
 }mketf_t;
 ETF_T* mketf_wrap(mketf_t *data){
-    ETF_T*result=mketf(data->dtfs, data->hs, data->sodium, data->icol, data->nwvl,
-		       data->srot, data->srsa, data->za, data->no_interp);
+    ETF_T*result=mketf(data->dtfs, data->hs, data->sodium, data->icol,
+		       data->srot, data->srsa, data->no_interp);
     if(data->free) free(data);
     return result;
 }
@@ -1062,10 +1064,8 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		     parms->powfs[ipowfs].hs,
 		     powfs[ipowfs].sodium,
 		     istep,
-		     parms->powfs[ipowfs].nwvl, 
 		     powfs[ipowfs].srot,
 		     powfs[ipowfs].srsa,
-		     parms->sim.za,
 		     !parms->dbg.na_interp, 0};
     if(mode==0){/*preparation. */
 	if(powfs[ipowfs].etfprep && powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
@@ -1257,24 +1257,16 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     }
     if(parms->save.setup>1){
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    if(powfs[ipowfs].etfprep[iwvl].p1){
-		writebin(powfs[ipowfs].etfprep[iwvl].p1, 
-			 "powfs%d_etfprep%d_1d",ipowfs,iwvl);
-	    }
-	    if(powfs[ipowfs].etfprep[iwvl].p2){
-		writebin(powfs[ipowfs].etfprep[iwvl].p2,
-			   "powfs%d_etfprep%d_2d",ipowfs,iwvl);
+	    if(powfs[ipowfs].etfprep[iwvl].etf){
+		writebin(powfs[ipowfs].etfprep[iwvl].etf, 
+			 "powfs%d_etfprep%d",ipowfs,iwvl);
 	    }
 	}
 	if(powfs[ipowfs].etfsim && powfs[ipowfs].etfsim != powfs[ipowfs].etfprep){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		if(powfs[ipowfs].etfsim[iwvl].p1){
-		    writebin(powfs[ipowfs].etfsim[iwvl].p1, 
-			       "powfs%d_etfsim%d_1d",ipowfs,iwvl);
-		}
-		if(powfs[ipowfs].etfsim[iwvl].p2){
-		    writebin(powfs[ipowfs].etfsim[iwvl].p2,
-			       "powfs%d_etfsim%d_2d",ipowfs,iwvl);
+		if(powfs[ipowfs].etfsim[iwvl].etf){
+		    writebin(powfs[ipowfs].etfsim[iwvl].etf, 
+			       "powfs%d_etfsim%d",ipowfs,iwvl);
 		}
 	    }
 	}

@@ -480,24 +480,11 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
     real *srot=NULL;
     cmat ***petf=NULL;
-    void (*pccwm)(cmat*,const cmat*)=NULL;
     if(nllt){
 	srot=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p;
 	petf=mycalloc(nwvl,cmat**);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    if(powfs[ipowfs].etfsim[iwvl].p1){
-		pccwm=ccwmcol;
-		if(powfs[ipowfs].etfsim[iwvl].p1->ny==1)
-		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p1->p;
-		else
-		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p1->p+wfsind*nsa;
-	    }else{
-		pccwm=ccwm;
-		if(powfs[ipowfs].etfsim[iwvl].p2->ny==1)
-		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p2->p;
-		else
-		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p2->p+wfsind*nsa;
-	    }
+	    petf[iwvl]=PPR(powfs[ipowfs].etfsim[iwvl].etf, 0, wfsind);
 	}
     }
 
@@ -569,7 +556,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    real dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		    if(petf){
 			ccp(&potf2, potf->p[isa+nsa*iwvl]);
-			(*pccwm)(potf2,petf[iwvl][isa]);
+			ccwm(potf2,petf[iwvl][isa]);
 		    }else{
 			potf2=potf->p[isa+nsa*iwvl];
 		    }
@@ -784,7 +771,7 @@ static real mapfun(real *x, mapdata_t *info){
     return sigma;
 }
 /**
-   Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun if parms->powfs.radrot=0;
+   Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun
 */
 void maxapriori(real *g, const dmat *ints, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
@@ -800,7 +787,7 @@ void maxapriori(real *g, const dmat *ints, const PARMS_T *parms,
     int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, 5000, (dminsearch_fun)mapfun, &data);
     ccellfree(data.otf);
     /* convert to native format along x/y or r/a to check for overflow*/
-    if(parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].radrot){
+    if(parms->powfs[ipowfs].radpix){
 	real theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
 	real cx=cos(theta);
 	real sx=sin(theta);

@@ -49,7 +49,6 @@ void wfsints(thread_t *thread_data){
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int hasllt=(parms->powfs[ipowfs].llt!=NULL);
     const int illt=hasllt?parms->powfs[ipowfs].llt->i->p[wfsind]:0;
-    const real *srot=(hasllt && parms->powfs[ipowfs].radrot)?powfs[ipowfs].srot->p[illt]->p:NULL;
     const int nsa=powfs[ipowfs].saloc->nloc;
     const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
     const int notfy=powfs[ipowfs].notfy;
@@ -83,7 +82,7 @@ void wfsints(thread_t *thread_data){
 	psf=wvf;
     }
     /* otf contains the psf/otf used to generate detecter image. maybe rectangular*/
-    if(notf!=notfx || notf!=notfy || srot){
+    if(notf!=notfx || notf!=notfy){
 	otf=cnew(notfx,notfy);
 	if(isotf){/*there is an additional pair of FFT*/
 	    norm_ints/=(real)(notf*notf);
@@ -148,7 +147,7 @@ void wfsints(thread_t *thread_data){
 	cmat *nominal=NULL;
 	dsp *si=NULL;
 	if(!multi_nominal){
-	    /*true only if 1) no elongation, 2) no radpix or 3) radpix && radrot is true*/
+	    /*true only if 1) no elongation, 2) no radpix */
 	    if(!powfs[ipowfs].dtf[iwvl].fused){
 		nominal=powfs[ipowfs].dtf[iwvl].nominal->p[0];
 	    }
@@ -158,21 +157,10 @@ void wfsints(thread_t *thread_data){
 	ccell *petf1=NULL, *petf2=NULL;
 	real etf1wt=1;
 	real etf2wt=0;
-	void (*pccwm3)(cmat*,const cmat*,const cmat*,real,const cmat*, real)=NULL;
 	if(hasllt){
-	    if(powfs[ipowfs].etfsim[iwvl].p1){
-		petf1=powfs[ipowfs].etfsim[iwvl].p1;
-		pccwm3=ccwm3col;
-	    }else{
-		petf1=powfs[ipowfs].etfsim[iwvl].p2;
-		pccwm3=ccwm3;
-	    }
+	    petf1=powfs[ipowfs].etfsim[iwvl].etf;
 	    if(parms->powfs[ipowfs].llt->coldtrat>0){
-		if(powfs[ipowfs].etfsim2[iwvl].p1){
-		    petf2=powfs[ipowfs].etfsim2[iwvl].p1;
-		}else{
-		    petf2=powfs[ipowfs].etfsim2[iwvl].p2;
-		}
+		petf2=powfs[ipowfs].etfsim2[iwvl].etf;
 		const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 		etf2wt=(real)(data->isim%dtrat)/(real)dtrat;
 		etf1wt=1.-etf2wt;
@@ -242,17 +230,13 @@ void wfsints(thread_t *thread_data){
 			cfft2(psf,1);
 		    }
 		    /* now we have PSF with peak in corner */
-		    if(srot){
-			cfftshift(psf);/*peak in center */
-			cembedc(otf,psf,-srot[isa],C_REAL);/*notice otf and psf may have different size */
-			cfftshift(otf);/*peak in corner */
-		    }else if(otf!=psf){/*copy the corner (peak)*/
+		    if(otf!=psf){/*copy the corner (peak)*/
 			ccpcorner(otf, psf, C_FULL);
 		    }
 		    cfft2(otf,-1);/*turn to OTF. peak in corner */
 		}
 		if(hasllt){/*has llt, multiply with DTF and ETF.*/
-		    (*pccwm3)(otf,nominal,P(petf1,isa,illt), etf1wt, petf2?P(petf2,isa,illt):0, etf2wt);
+		    ccwm3(otf,nominal,P(petf1,isa,illt), etf1wt, petf2?P(petf2,isa,illt):0, etf2wt);
 		}else{/*no uplink, multiply with DTF only.*/
 		    ccwm(otf,nominal);
 		}

@@ -477,27 +477,15 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	
 	const real norm=1./(real)(notfx*notfy);
 	const ccell *petf=NULL;
-	void (*pccwm)(cmat*,const cmat*)=NULL;
-	int radrot=0;
+
 	int ietf_multiplier=0;
 	if(nllt){
-	    if(powfs[ipowfs].etfprep[iwvl].p1){
-		petf=powfs[ipowfs].etfprep[iwvl].p1;
-		pccwm=ccwmcol;
-		radrot=1;
-		if(powfs[ipowfs].etfprep[iwvl].p1->ny==1)
-		    ietf_multiplier=0;
-		else
-		    ietf_multiplier=1;
-	    }else{
-		petf=powfs[ipowfs].etfprep[iwvl].p2;
-		pccwm=ccwm;
-		radrot=0;
-		if(powfs[ipowfs].etfprep[iwvl].p2->ny==1)
-		    ietf_multiplier=0;
-		else
-		    ietf_multiplier=1;
-	    }
+	    petf=powfs[ipowfs].etfprep[iwvl].etf;
+
+	    if(powfs[ipowfs].etfprep[iwvl].etf->ny==1)
+		ietf_multiplier=0;
+	    else
+		ietf_multiplier=1;
 	}
 
 	for(int ii0=0; ii0<ni0; ii0++){
@@ -523,7 +511,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 #pragma omp for 
 	    for(int isa=0; isa<nsa; isa++){
 		int ith=0;
-		real angle=0;/*angle to rotate otf/psf */
 		real angleg=0;/*angle to derivative of i0 to r/a from x/y */
 
 #ifdef _OPENMP
@@ -542,16 +529,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		if(nominals) nominal=nominals[isadtf];
 		si=sis[isadtf];
 		if(nllt && parms->powfs[ipowfs].radpix){
-		    /*For polar CCD. If radrot==1, then 1-d ETF is used, DTF is defined along r/a axis. */
-		    if(radrot){/*OTF is along R/A direction. angleg is 0. */
-			angle=-angles[isa];
-			if(!radgx){
-			    angleg=-angles[isa];
-			}
-		    }else{
-			if(radgx){
-			    angleg=angles[isa];
-			}
+		    if(radgx){
+			angleg=angles[isa];
 		    }
 		}
 		real pgrad[2];
@@ -565,7 +544,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    error("Short exposure PSF has wrong scaling. It should total to <=1\n");
 		}
 		/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
-		cembedd(seotfk, P(psepsf,isa,iwvl), angle);//if radrot: rotate from x/y to r/a coordinate
+		cembedd(seotfk, P(psepsf,isa,iwvl), 0);
 		cfftshift(seotfk);/*PSF, peak in corner; */
 		cfft2(seotfk,-1);/*turn to OTF, peak in corner, max is 1 */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
@@ -577,7 +556,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    ccp(&intstat->potf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
 		}
 		if(nllt){/*elongation. */
-		    (*pccwm)(seotfk,P(petf,isa,ietf));
+		    ccwm(seotfk,P(petf,isa,ietf));
 		}
 		ccp(&seotfj,seotfk);/*backup */
 		if(intstat->fotf){

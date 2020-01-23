@@ -42,14 +42,12 @@ typedef struct DTF_T{
     long notfx;         /**<FFT size along x*/
     long notfy;         /**<FFT size along y*/
     int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
-    int radrot;          /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     int fused;           /**<Whether the DTF has been fused to ETF*/
     int nwvl;            /**<Number of DTF_T*/
 }DTF_T;
 
 typedef struct ETF_T{
-    ccell *p1;           /**<Store the ETF along radial direction when radrot==1*/
-    ccell *p2;           /**<Store the 2D ETF when radrot==0*/
+    ccell *etf;          /**<Store the 2D ETF when*/
     int icol;            /**<Store the column index*/
     int nwvl;            /**<Number of DTF_T*/
 }ETF_T;
@@ -67,17 +65,14 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     const dmat* pixoffy,  /**<offset of image center from center of detector*/
 	     real pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
 	     const dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
-	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
+	     int radpix         /**<1: Pixels are along radial/azimuthal direction*/
     );
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
-	     real hs,    /**<Guide star focus range*/
+	     real hs,      /**<Guide star focus range*/
 	     const dcell *sodium, /**<The sodium profile. First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
-	     int nwvl,     /**<Number of wavelength*/
 	     const dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     const dcell *srsa,  /**<Subaperture to LLT distance*/
-	     real za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     );
 void dtf_free_do(DTF_T *dtfs);

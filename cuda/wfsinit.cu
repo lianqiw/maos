@@ -24,7 +24,7 @@
 #include "../maos/pywfs.h"
 
 static void etf2gpu(cucmat &cuetf, ETF_T *etf, int icol, int *etfis1d){
-    cmat *etfm=ccell_col(etf->p1?etf->p1:etf->p2, icol);
+    cmat *etfm=ccell_col(etf->etf, icol);
     cp2gpu(cuetf, etfm);
     cfree(etfm);
 }
@@ -376,7 +376,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    if(nwvf!=notf){
 		cuwfs[iwfs].psf=cucmat(notf*notf,msa);
 	    }
-	    if(parms->powfs[ipowfs].radrot || notfx!=notf || notfy!=notf){
+	    if(notfx!=notf || notfy!=notf){
 		cuwfs[iwfs].otf=cucmat(notfx*notfy,msa);
 	    }
 	    if(parms->powfs[ipowfs].psfout){
