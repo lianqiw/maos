@@ -741,59 +741,13 @@ int main(int argc, char *argv[])
     GtkWidget *vbox=gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
     {
-/*#if GTK_MAJOR_VERSION<3
-
-	topgroup=gtk_action_group_new("topgroup");
-	GtkAction *action_connect_all=gtk_action_new("act-connect-all", "Connect all", "Connect to all hosts", GTK_STOCK_CONNECT);
-	g_signal_connect(action_connect_all, "activate", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
-	gtk_action_group_add_action(topgroup, action_connect_all);
-
-	GtkAction *action_clear_finish=gtk_action_new("act-clear-finish", "Clear finished", "Clear finished jobs", GTK_STOCK_APPLY);
-	g_signal_connect(action_clear_finish, "activate", G_CALLBACK(clear_jobs_finished),NULL);
-	gtk_action_group_add_action(topgroup, action_clear_finish);
-
-	GtkAction *action_clear_skip=gtk_action_new("act-clear-skip", "Clear skipped", "Clear skipped jobs", GTK_STOCK_MEDIA_NEXT);
-	g_signal_connect(action_clear_skip, "activate", G_CALLBACK(clear_jobs_skipped),NULL);
-	gtk_action_group_add_action(topgroup, action_clear_skip);
-
-	GtkAction *action_clear_crash=gtk_action_new("act-clear-crash", "Clear crashed", "Clear crashed jobs", GTK_STOCK_DELETE);
-	g_signal_connect(action_clear_crash, "activate", G_CALLBACK(clear_jobs_crashed),NULL);
-	gtk_action_group_add_action(topgroup, action_clear_crash);
-
-	GtkAction *action_clear_all=gtk_action_new("act-clear-all", "Clear all", "Clear all jobs", GTK_STOCK_CLEAR);
-	g_signal_connect(action_clear_all, "activate", G_CALLBACK(clear_jobs_all),NULL);
-	gtk_action_group_add_action(topgroup, action_clear_all);
-
-	GtkAction *action_kill_all=gtk_action_new("act-kill-all", "Kill all jobs", "Kill all jobs", GTK_STOCK_CANCEL);
-	g_signal_connect(action_kill_all, "activate", G_CALLBACK(kill_all_jobs),NULL);
-	gtk_action_group_add_action(topgroup, action_kill_all);
-
-	GtkAction *action_save_jobs=gtk_action_new("act-save-running", "Save jobs to file", "Save jobs to file", GTK_STOCK_SAVE);
-	g_signal_connect(action_save_jobs, "activate", G_CALLBACK(save_all_jobs),NULL);
-	gtk_action_group_add_action(topgroup, action_save_jobs);
-
-
 	toptoolbar=gtk_toolbar_new();
-	
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);	
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("computer", NULL, "Connect", add_host_event,  -1), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_finish)), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_skip)), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_crash)), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_all)), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_kill_all)), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_save_jobs)), -1);
-#else */
-	toptoolbar=gtk_toolbar_new();
-	//GtkToolItem* item;
-	//item=gtk_tool_button_new(gtk_image_new_from_icon_name("network-wired", GTK_ICON_SIZE_SMALL_TOOLBAR), "Connect");
-	//g_signal_connect(item, "clicked", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("emblem-synchronizing", NULL, "Connect", add_host_event,  -1), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", NULL,"Clear skipped jobs", clear_jobs, 2),  -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select-symbolic",icon_finished, "Clear finished jobs", clear_jobs, 1),-1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select",icon_finished, "Clear finished jobs", clear_jobs, 1),-1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, 3),  -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear", NULL, "Clear all jobs", clear_jobs, 4),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear-all", NULL, "Clear all jobs", clear_jobs, 4),  -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("process-stop",NULL, "Kill all jobs", kill_all_jobs, -1),  -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy",NULL, "Save jobs to file", save_all_jobs, -1),  -1);
@@ -892,7 +846,7 @@ int main(int argc, char *argv[])
 	    (GTK_NOTEBOOK(notebook),tabs[ihost],eventbox);
 	update_title(GINT_TO_POINTER(ihost));
 	gtk_widget_show_all(tabs[ihost]);
-	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
+	//gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
     }
     extern int sock_main[2];
     if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){

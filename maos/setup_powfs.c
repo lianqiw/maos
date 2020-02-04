@@ -583,8 +583,9 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     }
     if(parms->powfs[ipowfs].gtype_recon==1 ||parms->powfs[ipowfs].gtype_sim==1){
 	/*setting up zernike best fit (ztilt) inv(M'*W*M). good for NGS. */
-	if(parms->powfs[ipowfs].order>4) 
-	    warning("Ztilt for high order wfs is not good");
+	if(parms->powfs[ipowfs].order>4){ 
+	    warning("Ztilt for high order powfs %d is not good\n", ipowfs);
+	}
 	powfs[ipowfs].nsaimcc=MAX(1,(powfs[ipowfs].loc_tel?parms->powfs[ipowfs].nwfs:1));
 	int nsaimcc=powfs[ipowfs].nsaimcc;
 	cellfree(powfs[ipowfs].saimcc);

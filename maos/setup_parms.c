@@ -1213,14 +1213,17 @@ static void setup_parms_postproc_za(PARMS_T *parms){
     }
     if(fabs(parms->sim.za)>1.e-14){
 	info("Zenith angle is %g degree:\n", parms->sim.zadeg);
-	info("\tScaling turbulence height and LGS hs by sec(za).\n"
-	     "\tScaling r0 by cos(za)^(3/5).\n"
-	     "\tScaling wind speed and LGS signal level by cos(za).\n");
+	info("    Scaling turbulence height and LGS hs by sec(za).\n"
+	     "    Scaling r0 by cos(za)^(3/5).\n"
+	     "    Scaling wind speed and LGS signal level by cos(za).\n");
 	
     }
     /*
       The input r0z is the r0 at zenith. Scale it if off zenith
     */
+    if(parms->atm.r0z>parms->aper.d){
+	error("atm.r0z=%g appears too big.\n", parms->atm.r0z);
+    }
     parms->atm.r0=parms->atm.r0z*pow(cosz,3./5.);
     parms->atmr.r0=parms->atmr.r0z*pow(cosz,3./5.);
 
@@ -1426,13 +1429,17 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
 	if(parms->powfs[ipowfs].dsa<=-1){//Order
 	    parms->powfs[ipowfs].dsa=parms->aper.d/(-parms->powfs[ipowfs].dsa);
-	}else if(parms->powfs[ipowfs].dsa<0){//In unit of d
+        }else if(parms->powfs[ipowfs].dsa<0){//In unit of d
 	    parms->powfs[ipowfs].dsa*=-parms->aper.d;
-	}else if(parms->powfs[ipowfs].dsa==0){//Follow ground DM.
-	    if(parms->ndm){
-		parms->powfs[ipowfs].dsa=parms->dm[0].dx;
-	    }else{
-		parms->powfs[ipowfs].dsa=0.5;
+	}else if(parms->powfs[ipowfs].dsa==0){
+	    if(parms->powfs[ipowfs].lo){
+		error("powfs[%d].dsa=%g is incorrect for LO powfs.\n", ipowfs, parms->powfs[ipowfs].dsa);
+	    }else{//Follow ground DM.
+		if(parms->ndm){
+		    parms->powfs[ipowfs].dsa=parms->dm[0].dx;
+		}else{
+		    parms->powfs[ipowfs].dsa=0.5;
+		}
 	    }
 	}
 	parms->powfs[ipowfs].order=ceil(parms->aper.d/parms->powfs[ipowfs].dsa);
@@ -2745,8 +2752,8 @@ static void print_parms(const PARMS_T *parms){
     real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
     
     info("%sTurbulence at zenith angle %g degree:%s\n"
-	 "Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
-	 "Anisoplanatic angle is %.2f\"",GREEN, parms->sim.zadeg, BLACK,
+	 "    Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
+	 "    Anisoplanatic angle is %.2f\"",GREEN, parms->sim.zadeg, BLACK,
 	 parms->atm.r0, parms->atm.L0->p[0], fgreen, theta0z*206265);
     if(parms->ndm==2){
 	real H1=parms->dm[0].ht;
@@ -2762,24 +2769,23 @@ static void print_parms(const PARMS_T *parms){
 	warning("Atmosphere theta0 maybe wrong\n");
     }
     for(int ips=0; ips<parms->atm.nps; ips++){
-	info("layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
+	info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
 	     ips,parms->atm.ht->p[ips],parms->atm.wt->p[ips],parms->atm.ws->p[ips]);
     }
     if(parms->recon.alg==0){
-	info("%sReconstruction%s: r0=%gm l0=%gm "
-	     "ZA is %g deg. %d layers.%s\n", GREEN, BLACK,
+	info("%sReconstruction%s: r0=%gm l0=%gm ZA is %g deg. %d layers.%s\n", GREEN, BLACK,
 	     parms->atmr.r0, parms->atmr.L0,  
 	     parms->sim.zadeg, 
 	     parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
   
 	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    info("layer %d: ht= %6.0f m, wt= %5.3f\n",
+	    info("    layer %d: ht= %6.0f m, wt= %5.3f\n",
 		 ips,parms->atmr.ht->p[ips],parms->atmr.wt->p[ips]);
 	}
     }
     info("%sThere are %d powfs (wfs group)%s\n", GREEN, parms->npowfs, BLACK);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	info("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
+	info("  powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
 	     ipowfs,parms->powfs[ipowfs].order, (parms->powfs[ipowfs].llt?"L":"N"),
 	     parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 	int lrt=(parms->recon.split && parms->tomo.splitlrt);
@@ -2829,7 +2835,7 @@ static void print_parms(const PARMS_T *parms){
     }
     info("%sThere are %d wfs%s\n", GREEN, parms->nwfs, BLACK);
     for(i=0; i<parms->nwfs; i++){
-	info("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
+	info("    wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
 	     i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
 	     parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3, parms->wfs[i].siglev);
 	if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
@@ -2844,7 +2850,7 @@ static void print_parms(const PARMS_T *parms){
     }
     info("%sThere are %d DMs%s\n",GREEN, parms->ndm, BLACK);
     for(i=0; i<parms->ndm; i++){
-	info("DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+	info("    DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
 	     i, parms->dm[i].order,
 	     parms->dm[i].ht/1000, parms->dm[i].dx,
 	     parms->dm[i].offset, 
@@ -2896,24 +2902,24 @@ static void print_parms(const PARMS_T *parms){
 	}
 	switch(parms->fit.alg){
 	case 0:
-	    info("Cholesky back solve (CBS)");
+	    info("Cholesky back solve (CBS)\n");
 	    break;
 	case 1:
-	    info("CG, with %s%s%s preconditioner, %s%d%s iterations ",
+	    info("CG, with %s%s%s preconditioner, %s%d%s iterations\n",
 		 GREEN, tomo_precond[parms->fit.precond], BLACK, GREEN, parms->fit.maxit, BLACK);
 	    break;
 	case 2:
-	    info("SVD");
+	    info("SVD\n");
 	    break;
 	case 3:
-	    info("Block Gauss Seidel (BGS)");
+	    info("Block Gauss Seidel (BGS)\n");
 	    break;
 	default:
-	    error("Invalid");
+	    error("Invalid\n");
 	}
 	info("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
 	for(i=0; i<parms->fit.nfit; i++){
-	    info("Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	    info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 		 i,parms->fit.wt->p[i],parms->fit.thetax->p[i]*206265, 
 		 parms->fit.thetay->p[i]*206265);
 	    if(fabs(parms->fit.thetax->p[i])>1 || fabs(parms->fit.thetay->p[i])>1){
@@ -2946,7 +2952,7 @@ static void print_parms(const PARMS_T *parms){
     info("%sThere are %d evaluation directions%s at sampling 1/%g m.\n", 
 	 GREEN, parms->evl.nevl, BLACK, 1./parms->evl.dx);
     for(i=0; i<parms->evl.nevl; i++){
-	info("Eval %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info("    Eval %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	     i,parms->evl.wt->p[i],parms->evl.thetax->p[i]*206265, 
 	     parms->evl.thetay->p[i]*206265);
 	if(fabs(parms->evl.thetax->p[i])>1 || fabs(parms->evl.thetay->p[i])>1){

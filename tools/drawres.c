@@ -71,7 +71,6 @@ int main(int argc, char *argv[]){
     DRAW_DIRECT=1;/*launch drawdaemon directly, without going through server. */
     char **path;
     int npath;
-
     if(arg->iarg<argc){
 	npath=argc-arg->iarg;
 	path=mycalloc(npath,char*);
@@ -83,6 +82,7 @@ int main(int argc, char *argv[]){
 	path=mycalloc(npath,char*);
 	path[0]=mygetcwd();
     }
+    int mpath=npath;
     long nseed=0;
     long *seed=NULL;
     long *seed2=NULL;
@@ -90,10 +90,6 @@ int main(int argc, char *argv[]){
     int jpath=0;
     int restype=-1;
     for(int ipath=0; ipath<npath; ipath++){
-	if(!isdir(path[ipath])){
-	    continue;
-	}
-	/*dbg("Try path %s\n", path[ipath]); */
 	DIR *dir=opendir(path[ipath]);
 	if(!dir){
 	    warning("Unable to read directory %s\n", path[0]);
@@ -102,7 +98,14 @@ int main(int argc, char *argv[]){
 	struct dirent *dp;
 	int nseedfound=0;
 	while((dp=readdir(dir))){
-	    if(!strncmp(dp->d_name, "Res", 3) && check_suffix(dp->d_name, ".bin")){
+	    if(dp->d_type==DT_DIR && dp->d_name[0]!='.'){
+		if(npath==mpath){
+		    mpath*=2;
+		    path=realloc(path, sizeof(char*)*mpath);
+		}
+		path[npath]=stradd(path[ipath],"/", dp->d_name, NULL);
+		npath++;
+	    }else if(!strncmp(dp->d_name, "Res", 3) && check_suffix(dp->d_name, ".bin")){
 		long seedi, seedi2;
 		int found=0;
 		if(sscanf(dp->d_name, "Res_%ld.bin",&(seedi))==1){

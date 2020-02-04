@@ -17,36 +17,38 @@ if 'get_ipython' not in sys.modules:
         ipython.magic("autoreload 2")
     except:
         pass
+try:
+    import matplotlib as mpl
+    from cycler import cycler
+    mpl.rcParams['axes.prop_cycle'] = cycler(color='bgrcmyk')
+    mpl.rcParams['axes.grid']=True
+    #mpl.rcParams['grid.color'] = 'k'
+    #mpl.rcParams['grid.linestyle'] = '--'
+    #mpl.rcParams['grid.linewidth'] = 0.5
 
-import matplotlib as mpl
-from cycler import cycler
-mpl.rcParams['axes.prop_cycle'] = cycler(color='bgrcmyk')
-mpl.rcParams['axes.grid']=True
-#mpl.rcParams['grid.color'] = 'k'
-#mpl.rcParams['grid.linestyle'] = '--'
-#mpl.rcParams['grid.linewidth'] = 0.5
+    mpl.rcParams['lines.linewidth'] = 1.0
+    mpl.rcParams['lines.dashed_pattern'] = [6, 4]
+    mpl.rcParams['lines.dashdot_pattern'] = [6, 3, 1, 3] #dash off dot off
+    mpl.rcParams['lines.dotted_pattern'] = [1, 3]
+    mpl.rcParams['lines.scale_dashes'] = False
 
-mpl.rcParams['lines.linewidth'] = 1.0
-mpl.rcParams['lines.dashed_pattern'] = [6, 4]
-mpl.rcParams['lines.dashdot_pattern'] = [6, 3, 1, 3] #dash off dot off
-mpl.rcParams['lines.dotted_pattern'] = [1, 3]
-mpl.rcParams['lines.scale_dashes'] = False
+    mpl.rcParams['axes.xmargin']=0
+    mpl.rcParams['axes.ymargin']=0
+    mpl.rcParams['axes.autolimit_mode']='round_numbers'
 
-mpl.rcParams['axes.xmargin']=0
-mpl.rcParams['axes.ymargin']=0
-mpl.rcParams['axes.autolimit_mode']='round_numbers'
+    mpl.rcParams['font.size']=10
+    mpl.rcParams['savefig.dpi']=120
+    mpl.rcParams['image.cmap']='jet'
 
-mpl.rcParams['font.size']=10
-mpl.rcParams['savefig.dpi']=120
-mpl.rcParams['image.cmap']='jet'
+    mpl.rcParams['figure.autolayout']=True
+    #mpl.rcParams['figure.subplot.left']=0.1
+    #mpl.rcParams['figure.subplot.right']=0.9
 
-mpl.rcParams['figure.autolayout']=True
-#mpl.rcParams['figure.subplot.left']=0.1
-#mpl.rcParams['figure.subplot.right']=0.9
-
-#For ploting
-import matplotlib.pyplot as plt
-plt.ion() #enable interactive mode.
+    #For ploting
+    import matplotlib.pyplot as plt
+    plt.ion() #enable interactive mode.
+except:
+    print('matplotlib is not available')
 
 try:
     from libaos import *
@@ -131,17 +133,22 @@ def test_mkdtf():
     return out
 
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
-    fds2=glob.glob(fds)
+    return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
+def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
+    return maos_res_do(fds, "Rescle", seeds, iframe1, iframe2)
+def maos_res_do(fds, name, seeds=None, iframe1=0.2, iframe2=1):
+    fds2=glob.glob(fds+"/",recursive=1)
+    fds=[]
     resall=None
     for fd in fds2:
         if seeds is None:
-            fns=glob.glob(fd+"/Res_*.bin")
+            fns=glob.glob(fd+"/"+name+"_*.bin")
         else:
             fns=list()
             if type(seeds)!=list:
                 seeds=[seeds]
             for seed in seeds:
-                fns.append(fd+'/Res_{}.bin'.format(seed))
+                fns.append(fd+'/{}_{}.bin'.format(name,seed))
         nseed=0
         mres=0
         split=-1
@@ -152,13 +159,19 @@ def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
             res=readbin(fn)
             if res is None:
                 continue
-            if res[3].size>0: #split tomography
-                res=res[3]
-                split=1
-            else: #integrated
-                res=res[2]
+            if len(res)>4: #per direction, take on axis
+                res=res[0]
                 split=0
-            
+            elif len(res)==4:
+                if res[3].size>0: #split tomography
+                    res=res[3]
+                    split=1
+                else: #integrated
+                    res=res[2]
+                    split=0
+            else:
+                print('Invalid result')
+                continue
             if iframe1<1:
                 n1=round(iframe1*res.shape[0])
             else:
@@ -175,6 +188,7 @@ def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
             mres+=res
             nseed+=1
         if nseed>0:
+            fds.append(fd)
             mres=mres*(1/nseed)
             if resall is None:
                 resall=mres
@@ -182,10 +196,11 @@ def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
                 resall=np.vstack((resall, mres))
     if resall is None:
         resall=np.array([nan,nan,nan])
-    if len(fds2)>1:
-        return (resall,fds2)
-    else:
-        return resall
+    if len(fds)>1:
+        print(*fds, sep="\n")
+    #    return (resall,fds2)
+    #else:
+    return resall
 def mysqrt(x):
     if type(x) is np.ndarray:
         return np.sign(x)*np.sqrt(np.abs(x))
@@ -199,6 +214,7 @@ def rss(*args):
     return mysqrt(np.sum(np.sign(arr)* arr**2))
     
 def styles(ii):
+    reset_color()
     lines=['-','--','-.',':'];
     return lines[np.mod(ii,len(lines))]
 
