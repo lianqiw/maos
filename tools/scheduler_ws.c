@@ -326,7 +326,7 @@ callback_maos_monitor(struct lws *wsi,
 		lwsl_err("ERROR %d writing to mirror socket\n", n);
 		return -1;
 	    }else if(n<(int)pss->head->len){
-		lwsl_err("mirror partial write %d vs %d\n", n, pss->head->len);
+		lwsl_err("mirror partial write %d vs %ld\n", n, (long)pss->head->len);
 	    }
 	    l_message *tmp=pss->head;
 	    pss->head=pss->head->next;
@@ -353,8 +353,8 @@ callback_maos_monitor(struct lws *wsi,
 		return -1;
 	    }
 	    if (n < (int)ringbuffer[pss->ringbuffer_tail].len)
-		lwsl_err("mirror partial write %d vs %d\n",
-			 n, ringbuffer[pss->ringbuffer_tail].len);
+		lwsl_err("mirror partial write %d vs %ld\n",
+			 n, (long)ringbuffer[pss->ringbuffer_tail].len);
 
 	    if (pss->ringbuffer_tail == (MAX_MESSAGE_QUEUE - 1))
 		pss->ringbuffer_tail = 0;
@@ -422,11 +422,11 @@ int ws_start(short port){
     struct lws_context_creation_info info;
     memset(&info, 0, sizeof info);
     info.port = port;
-    lwsl_notice("libwebsockets test server - "
+    lwsl_notice("libwebsockets based server "
 		"(C) Copyright 2010-2013 Andy Green <andy@warmcat.com> - "
 		"licensed under LGPL2.1\n");
     info.protocols = protocols;
-    info.extensions = lws_get_internal_extensions();
+    //info.extensions = lws_get_internal_extensions();
     /*this is critical. otherwise UTF-8 error in client.*/
     info.gid = -1;
     info.uid = -1;
