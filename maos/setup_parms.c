@@ -1244,11 +1244,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	if(isfinite(parms->powfs[ipowfs].hs)){//LGS
 	    parms->powfs[ipowfs].hs = (parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
 	    parms->powfs[ipowfs].siglev*=cosz;
-	    if(parms->powfs[ipowfs].sigrecon<0){
-		parms->powfs[ipowfs].sigrecon=parms->powfs[ipowfs].siglev;
-	    }else{
-		parms->powfs[ipowfs].sigrecon*=cosz;
-	    }
+
 	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
 		parms->wfs[iwfs].hs = (parms->wfs[iwfs].hs-parms->sim.htel)*secz;
@@ -1858,7 +1854,6 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 	} 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->powfs[ipowfs].siglev*=sigscale;
-	    parms->powfs[ipowfs].sigrecon*=sigscale;
 	    real bkgrnd=parms->powfs[ipowfs].bkgrnd;
 	    if(bkgrnd>0){
 		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;

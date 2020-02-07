@@ -65,12 +65,12 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     int irot_multiplier=nllt>1?1:0;
     const int mtchadp=parms->powfs[ipowfs].mtchadp;
-    real sigratio=parms->powfs[ipowfs].sigrecon/parms->powfs[ipowfs].siglev;
+    real sigratio=parms->powfs[ipowfs].sigrecon>0?(parms->powfs[ipowfs].sigrecon/parms->powfs[ipowfs].siglev):1;
     real sigratior=1./sigratio;
     if(sigratio<0){
 	error("sigratio cannot be negative\n");
     }
-    info("sigratio_recon=%g\n", sigratio);
+
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
 	const real siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
