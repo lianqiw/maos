@@ -41,6 +41,7 @@ try:
     mpl.rcParams['image.cmap']='jet'
 
     mpl.rcParams['figure.autolayout']=True
+    mpl.rcParams['figure.figsize']=[10,7]
     #mpl.rcParams['figure.subplot.left']=0.1
     #mpl.rcParams['figure.subplot.right']=0.9
 
@@ -70,7 +71,7 @@ def dock_figure():
     ipython.magic('gui qt5') #replacing plt.show() that blocks
 
 
-from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, figure, subplot, xlabel, ylabel, title, xlim, ylim, close, savefig
+from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim, close, savefig
 
 def iscell(arr):
     if type(arr)==np.ndarray and arr.dtype.name=='object':
@@ -135,24 +136,23 @@ def test_mkdtf():
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
-    return maos_res_do(fds, "Rescle", seeds, iframe1, iframe2)
-def maos_res_do(fds, name, seeds=None, iframe1=0.2, iframe2=1):
-    fds2=glob.glob(fds+"/",recursive=1)
+    return maos_res_do(fds, "Resclep", seeds, iframe1, iframe2)
+def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
+    fds2=glob.glob(fdin+"/",recursive=1)
     fds=[]
     resall=None
-    for fd in fds2:
+    for fd in fds2: #loop over directory
         if seeds is None:
             fns=glob.glob(fd+"/"+name+"_*.bin")
         else:
             fns=list()
-            if type(seeds)!=list:
-                seeds=[seeds]
             for seed in seeds:
                 fns.append(fd+'/{}_{}.bin'.format(name,seed))
+
         nseed=0
         mres=0
         split=-1
-        for fn in fns:
+        for fn in fns: #loop over seed
             if not os.path.exists(fn):
                 print(fn, 'does not exist')
                 continue
@@ -194,8 +194,11 @@ def maos_res_do(fds, name, seeds=None, iframe1=0.2, iframe2=1):
                 resall=mres
             else:
                 resall=np.vstack((resall, mres))
+        else:
+            print(fd, fns, nseed, ' has no valid results')
     if resall is None:
         resall=np.array([nan,nan,nan])
+        print(fdin, ' has no valid results')
     if len(fds)>1:
         print(*fds, sep="\n")
     #    return (resall,fds2)
@@ -237,3 +240,9 @@ def nargout():
     elif instruction == dis.opmap['POP_TOP']:
         return 0
     return 1
+
+def figure(*args, **kargs):
+    plt.figure(*args, **kargs)
+    plt.clf()
+
+    

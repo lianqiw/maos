@@ -264,7 +264,7 @@ void maos_sim(){
 	while(!(simu=maos_iseed(iseed))){
 	    iseed++;
 	}
-	if(recon->cn2est){//temporary. Should put runtime data in simu.
+	if(recon && recon->cn2est){//temporary. Should put runtime data in simu.
 	    cn2est_reset(recon->cn2est);
 	}
 	    
@@ -323,7 +323,11 @@ void maos_sim(){
 	    }
 	    real sum=0;
 	    for(int i=isim0; i<parms->sim.end; i++){
-		sum+=simu->cle->p[i*parms->evl.nmod];
+		if(parms->sim.evlol){
+		    sum+=simu->ole->p[i*parms->evl.nmod];
+		}else{
+		    sum+=simu->cle->p[i*parms->evl.nmod];
+		}
 	    }
 	    restot+=sum/(parms->sim.end-isim0);
 	    rescount++;
