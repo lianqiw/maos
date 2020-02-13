@@ -21,7 +21,10 @@
 #include "cudata.h"
 
 
-/*This is memory bound. So increasing # of points processed does not help. */
+/**
+   Ray tracing from map to loc with boundary check. Real input
+   This is memory bound. So increasing # of points processed does not help.
+*/
 __global__ void map2loc_linear(Real *restrict out, const Real *restrict in,
 			       const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
@@ -39,7 +42,9 @@ __global__ void map2loc_linear(Real *restrict out, const Real *restrict in,
     }
 }
 
-/*This is memory bound. So increasing # of points processed does not help. */
+/**
+   Ray tracing from map to loc with boundary check. Complex input
+*/
 __global__ void map2loc_linear(Real *restrict out, const Comp *restrict in,
 			       const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
@@ -56,7 +61,9 @@ __global__ void map2loc_linear(Real *restrict out, const Comp *restrict in,
 	}
     }
 }
-/*This is memory bound. So increasing # of points processed does not help. */
+/*
+  Ray tracing from map to loc without boundary check. Real input.
+*/
 __global__ void map2loc_linear_nocheck(Real *restrict out, const Real *restrict in, 
 				       const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
@@ -70,7 +77,9 @@ __global__ void map2loc_linear_nocheck(Real *restrict out, const Real *restrict 
 		       +(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y);
     }
 }
-/*This is memory bound. So increasing # of points processed does not help. */
+/*
+  Ray tracing from map to loc with wrapping. Real input.
+*/
 __global__ void map2loc_linear_wrap(Real *restrict out, const Real *restrict in,
 				    const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
@@ -165,8 +174,18 @@ void atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax, Re
 	    map2loc_linear_wrap<<<DIM(nloc,256), 0, stream>>>
 		(phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}else{/*we are gauranteed. */
-	    map2loc_linear_nocheck<<<DIM(nloc,256), 0, stream>>>
-		(phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);
+	    //check boundary
+	    if(loc.xmin/dx+dispx>=0 && loc.ymin/dx+dispy>=0
+	       && loc.xmax/dx+dispx+1<cuatm[ips].nx && loc.ymax/dx+dispy+1<cuatm[ips].ny){
+		map2loc_linear_nocheck<<<DIM(nloc,256), 0, stream>>>
+		    (phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);
+	    }else{
+		warning_once("Unexpected: need to check boundary. min=(%g, %g), max=(%g, %g), map: (%ld, %ld)\n",
+			     loc.xmin/dx+dispx, loc.ymin/dx+dispy,
+		     loc.xmax/dx+dispx+1, loc.ymax/dx+dispy+1, cuatm[ips].nx, cuatm[ips].ny);
+		map2loc_linear<<<DIM(nloc,256), 0, stream>>>
+		    (phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);
+	    }
 	}
 #undef COMM
     }

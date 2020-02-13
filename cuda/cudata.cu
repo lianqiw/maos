@@ -173,8 +173,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		mem_minimum+=sizeof(Real)*parms->powfs[ipowfs].nwfs*(long)pow(parms->aper.d/parms->powfs[ipowfs].dx, 2)*2;
 	    }
 	}
-	if((parms->gpu.tomo || parms->gpu.fit)&& !parms->sim.idealfit){
-	    mem_minimum+=sizeof(Real)*parms->atmr.nps*(long)pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*2;
+	if(parms->gpu.tomo || parms->gpu.fit){
+	   mem_minimum+=sizeof(Real)*parms->atmr.nps*(long)pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*2;
 	}
 	//mem_minimum*=2;
 	if(mem_minimum==0){//gpu is disabled
@@ -299,6 +299,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    if(parms->gpu.evl) ntask+=parms->evl.nevl;
 	    if(parms->gpu.wfs) ntask+=parms->nwfs;
 	    if(ntask==0){
+		warning("GPU is not needed\n");
 		delete [] cudata_all;
 		NGPU=0;
 		GPUS=Array<int>();

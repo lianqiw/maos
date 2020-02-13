@@ -190,7 +190,7 @@ public:
 	init_(n);
     }
     //Destructors and related
-    virtual ~RefP(){
+    ~RefP(){
 	deinit();
     }
     
@@ -231,13 +231,17 @@ public:
    Need to call new on p to handle cases when T is a class.
 */
 template <typename T, template<typename> class Dev>
-class Array:public RefP<T, Dev>{
+class Array:private RefP<T, Dev>{
     typedef RefP<T, Dev> Parent;
 protected:
     long nx;
     long ny;
 public:
     string header;
+    using Parent::deinit;
+    using Parent::operator+;
+    using Parent::operator T*;
+    using Parent::operator const T*;
     using Parent::operator();
     using Parent::p;
     ~Array(){
@@ -282,7 +286,10 @@ public:
     }
 
     //Create a reference with offset.
-    Array(long nxi,long nyi,const Parent& pi,long offset=0):Parent(pi,offset),nx(nxi),ny(nyi){
+    //Array(long nxi,long nyi,const Parent& pi,long offset=0):Parent(pi,offset),nx(nxi),ny(nyi){
+    //}
+    //Create a reference with offset.
+    Array(long nxi,long nyi,const Array& pi,long offset=0):Parent(pi,offset),nx(nxi),ny(nyi){
     }
     //Use default destructor
 
@@ -324,13 +331,14 @@ private:
     typedef Array<T,Dev> TMat;
     typedef Array<Array<T,Dev>,Cpu> Parent;
     TMat m; /*contains the continuous data*/
+protected:
+    using Parent::nx;
+    using Parent::ny;
 public:
     Array<T*,Pinned>pm_cpu;/*contains the data pointer in each cell in gpu.*/
     Array<T*,Gpu>pm;/*contains the data pointer in each cell in cpu.*/
     using Parent::operator();
     using Parent::p;
-    using Parent::nx;
-    using Parent::ny;
     TMat &M(){
 	return m;
     }
@@ -526,6 +534,7 @@ private:
     Real dx;
     Real dy;
 public:
+    real xmax,xmin,ymax,ymin;
     Real2* operator()(){
 	return (Real2*)(p());
     }
@@ -547,6 +556,8 @@ public:
 	    dx=in->dx;
 	    dy=in->dy;
 	    cp2gpu(p, in);
+	    dmaxmin(in->locx, in->nloc, &xmax, &xmin);
+	    dmaxmin(in->locy, in->nloc, &ymax, &ymin);
 	}
     }
 };

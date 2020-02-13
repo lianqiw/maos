@@ -449,6 +449,9 @@ loc_t* map2loc(map_t *map, real thres){
     const real oy=map->oy;
     const long nx=map->nx;
     const long ny=map->ny;
+    if(thres){
+	thres*=dmax((dmat*)map);
+    }
     long ix,iy;
     loc_t *loc=locnew(nx*ny, dx, dy);
     long count=0;
@@ -460,6 +463,9 @@ loc_t* map2loc(map_t *map, real thres){
 		count++;
 	    }
 	}
+    }
+    if(!count){
+	warning("map2loc: there are 0 points.\n");
     }
     loc->locx=myrealloc(loc->locx,count,real);
     loc->locy=myrealloc(loc->locy,count,real);

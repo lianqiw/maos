@@ -1309,15 +1309,15 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    warning("idealfit takes precedence over idealtomo\n");
 	}
 	if(parms->recon.alg!=0){
-	    warning("idealfit only works in recon.alg=0 mode. changed\n");
+	    //warning("idealfit only works in recon.alg=0 mode. changed\n");
 	    parms->recon.alg=0;
 	}
 	if(parms->recon.split){
-	    warning("idealfit only works in integrated tomo mode. changed\n");
+	    //warning("idealfit only works in integrated tomo mode. changed\n");
 	    parms->recon.split=0;
 	}
 	if(parms->recon.mvm){
-	    warning("idealfit cannot be used with recon.mvm. changed\n");
+	    //warning("idealfit cannot be used with recon.mvm. changed\n");
 	    parms->recon.mvm=0;
 	}
 	if(parms->sim.wfsalias){
@@ -1327,42 +1327,12 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    error("idealwfs and idealtomo/idealfit conflicts\n");
 	}
 	if(parms->sim.closeloop==1){
-	    warning("closeloop changed to 0.\n");
+	    //warning("closeloop changed to 0.\n");
 	    parms->sim.closeloop=0;
 	}
-	parms->npowfs=0;
-	parms->nwfs=0;
-	parms->nwfsr=0;
 	parms->gpu.tomo=0;
     }
-    if(parms->sim.evlol){
-	parms->recon.split=0;
-    }
-    if(parms->recon.glao && parms->ndm!=1){
-	error("GLAO only works with 1 dm\n");
-    }
-    if(parms->recon.alg==1 && parms->recon.split==2){
-	error("MVST does not work with least square reconstructor.\n");
-    }
-    if(parms->ndm>1 && parms->recon.modal){
-	warning("Modal control is not supported for multiple DMs\n");
-	parms->recon.modal=0;
-    }
-    if(parms->recon.alg==0 && parms->recon.modal){
-	warning("Modal control is not supported yet with MV reconstructor. Disabled.\n");
-	parms->recon.modal=0;
-    }
-    if(parms->lsr.actinterp==-1){
-	if(parms->recon.alg==1 && parms->recon.modal){
-	    //no need in modal lsr control
-	    parms->lsr.actinterp=0;
-	}else{
-	    parms->lsr.actinterp=1;
-	}
-    }
-    if(parms->recon.alg==1 && parms->lsr.alg==2){
-	parms->recon.mvm=1;
-    }
+ 
     if(parms->sim.wfsalias){
 	if(parms->sim.idealwfs){
 	    error("sim.wfsalias conflicts with sim.idealwfs. Do not enable both.\n");
@@ -1419,6 +1389,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	free(parms->wfs); parms->wfs=NULL;
 	parms->nwfs=0;
+    }
+    if(!parms->nwfs){
+	parms->recon.psd=0;
     }
     //Check powfs.dsa
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1769,8 +1742,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     parms->hipowfs->nx=parms->nhipowfs;
     parms->lopowfs->nx=parms->nlopowfs;
-    if(!parms->nhipowfs){
-	warning("There is no high order WFS!!!\n");
+    if(parms->npowfs && !parms->nhipowfs){
+	warning("There is no high order WFS.\n");
     }
     parms->sim.dtrat_hi=-1;
     parms->sim.dtrat_lo=-1;//maximmum of all lo wfs
@@ -2050,6 +2023,61 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	parms->sim.dt=0;
     }
+
+    if(parms->atmr.hs<EPS){
+	real hs=NAN;
+	/*find out the height to setup cone coordinate. */
+	if(parms->tomo.cone){
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		/*skip wfs that does not participate in tomography*/
+		if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
+		    continue;
+		}
+		/*isinf and isfinite both return 0 on inf in FreeBSD 9.0.*/
+		if(isnan(hs)){
+		    hs=parms->powfs[ipowfs].hs;
+		}else{
+		    if(isfinite(hs) || isfinite(parms->powfs[ipowfs].hs)){
+			if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
+			    warning("Two high order POWFS with different hs found: %g and %g\n", 
+				    hs, parms->powfs[ipowfs].hs);
+			    if(parms->powfs[ipowfs].hs>hs){
+				hs=parms->powfs[ipowfs].hs;
+			    }
+			}
+		    }
+		}
+	    }
+	}
+	if(isnan(hs)) hs=INFINITY;
+	parms->atmr.hs=hs;
+    }
+    if(parms->atmr.dx<EPS){
+	/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
+	real mindsa=INFINITY;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
+		continue;
+	    }
+	    if(parms->powfs[ipowfs].dsa<mindsa){
+		mindsa=parms->powfs[ipowfs].dsa;
+	    }
+	}
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(parms->dm[idm].dx<mindsa){
+		mindsa=parms->dm[idm].dx;
+	    }
+	}
+	for(int imoao=0; imoao<parms->nmoao; imoao++){
+	    if(parms->moao[imoao].dx<mindsa){
+		mindsa=parms->moao[imoao].dx;
+	    }
+	}
+	parms->atmr.dx=mindsa;
+    }
+
+
+    
 }
 static void setup_parms_postproc_dirs(PARMS_T *parms){
     //Collect all beam directions 
@@ -2117,9 +2145,9 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     long nxout[nps],nyout[nps];
     parms->atm.nxn=lnew(nps, 1);
     for(int ips=0; ips<nps; ips++){
+	double guard=MAX(parms->atm.dx*3, parms->tomo.guard*parms->atmr.dx);
 	create_metapupil(0,&nxout[ips],&nyout[ips],parms->dirs, parms->aper.d,parms->atm.ht->p[ips],
-			 parms->atm.dx,parms->atm.dx,0.5,
-			 parms->atm.dx*3,0,0,0,1);
+			 parms->atm.dx,parms->atm.dx,0.5, guard,0,0,0,1);
 	parms->atm.nxn->p[ips]=MAX(nxout[ips], nyout[ips]);
 	Nmax=MAX(Nmax, parms->atm.nxn->p[ips]);
     }
@@ -2254,6 +2282,36 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->moao=NULL;
 	}
     }
+    if(parms->sim.evlol){
+	parms->recon.split=0;
+    }
+    if(parms->recon.glao && parms->ndm!=1){
+	error("GLAO only works with 1 dm\n");
+    }
+    if(parms->recon.alg==0 && parms->recon.modal){
+	warning("Modal control is not supported yet with MV reconstructor. Disabled.\n");
+	parms->recon.modal=0;
+    }
+    if(parms->ndm>1 && parms->recon.modal){
+	warning("Modal control is not supported for multiple DMs\n");
+	parms->recon.modal=0;
+    }
+    if(parms->recon.alg==1){
+	if(parms->recon.split==2){
+	    error("MVST does not work with least square reconstructor.\n");
+	}
+	if(parms->lsr.alg==2){
+	    parms->recon.mvm=1;
+	}
+	if(parms->lsr.actinterp==-1){
+	    if(parms->recon.modal){
+		//no need in modal lsr control
+		parms->lsr.actinterp=0;
+	    }else{
+		parms->lsr.actinterp=1;
+	    }
+	}
+    }
     if((parms->recon.split) && parms->ndm==0){
 	warning("Disable split tomography since there is no common DM\n");
 	parms->recon.split=0;
@@ -2381,57 +2439,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 
     parms->recon.warm_restart = !parms->dbg.nocgwarm && parms->atm.frozenflow && !(parms->dbg.tomo_maxit && parms->dbg.tomo_maxit->nx>0);
     parms->fit.cgwarm=parms->recon.warm_restart && parms->fit.alg==1;
-    {
-	real hs=NAN;
-	/*find out the height to setup cone coordinate. */
-	if(parms->tomo.cone){
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		/*skip wfs that does not participate in tomography*/
-		if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
-		    continue;
-		}
-		/*isinf and isfinite both return 0 on inf in FreeBSD 9.0.*/
-		if(isnan(hs)){
-		    hs=parms->powfs[ipowfs].hs;
-		}else{
-		    if(isfinite(hs) || isfinite(parms->powfs[ipowfs].hs)){
-			if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
-			    warning("Two high order POWFS with different hs found: %g and %g\n", 
-				    hs, parms->powfs[ipowfs].hs);
-			    if(parms->powfs[ipowfs].hs>hs){
-				hs=parms->powfs[ipowfs].hs;
-			    }
-			}
-		    }
-		}
-	    }
-	}
-	if(isnan(hs)) hs=INFINITY;
-	parms->atmr.hs=hs;
-    }
-    if(parms->atmr.dx<EPS){
-	/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
-	real mindsa=INFINITY;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
-		continue;
-	    }
-	    if(parms->powfs[ipowfs].dsa<mindsa){
-		mindsa=parms->powfs[ipowfs].dsa;
-	    }
-	}
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(parms->dm[idm].dx<mindsa){
-		mindsa=parms->dm[idm].dx;
-	    }
-	}
-	for(int imoao=0; imoao<parms->nmoao; imoao++){
-	    if(parms->moao[imoao].dx<mindsa){
-		mindsa=parms->moao[imoao].dx;
-	    }
-	}
-	parms->atmr.dx=mindsa;
-    }
+  
 
 
     if(parms->recon.split==1 && !parms->sim.closeloop && parms->ndm>1){
@@ -2444,7 +2452,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(!parms->recon.split && !parms->sim.fuseint){
 	parms->sim.fuseint=1;/*integrated tomo. only 1 integrator. */
     }
-
     /*Tomography related*/
     if(parms->sim.closeloop && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done in open loop\n");
@@ -3077,10 +3084,12 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    parms->gpu.lsr=0;
 	}
 	if(parms->sim.idealfit){
+	    parms->gpu.wfs=0;
 	    parms->gpu.tomo=0;/*no need tomo.*/
 	    parms->fit.cachex=0;
 	}
 	if(parms->sim.idealtomo){
+	    parms->gpu.wfs=0;
 	    parms->gpu.tomo=0;
 	}
 	if(parms->evl.tomo && parms->gpu.evl){
@@ -3161,7 +3170,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    parms->fit.square=0;
 	}
 
-	if(parms->gpu.evl && parms->gpu.wfs){
+	if((parms->gpu.evl||!parms->evl.nevl) && (parms->gpu.wfs || !parms->nwfs)){
 	    parms->sim.cachedm=0; /*No need in CUDA. */
 	}
 	if(parms->gpu.tomo || parms->gpu.fit==2){

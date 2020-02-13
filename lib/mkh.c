@@ -151,6 +151,10 @@ dsp *mkh_cubic(const loc_t *locin, const loc_t *locout,
    influence function that can reproduce piston/tip/tilt.  */
 dsp *mkhb_cubic(const loc_t *locin, const loc_t *locout, 
 		real displacex, real displacey, real scale, real cubic_iac){
+    if(!locin || !locout || !locin->nloc || !locout->nloc){
+	warning("mkhb_cubic input is empty.\n");
+	return NULL;
+    }
     dsp *hback;
     real dplocx, dplocy;
     int nplocx, nplocy;
