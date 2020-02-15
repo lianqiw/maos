@@ -1886,7 +1886,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
       dresize(parms->atm.wddeg, jps, 1);
       }*/
     if(parms->sim.idealfit){/*If fit only, we using atm for atmr. */
-	warning("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
+	info("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 	int nps=parms->atm.nps;
 	dresize(parms->atmr.ht, nps, 1);
 	dresize(parms->atmr.wt, nps, 1);
@@ -1900,7 +1900,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     }else if((parms->recon.glao || parms->nhiwfs==1)
 	     && parms->recon.alg==0 && parms->atmr.ht->nx>1 && !parms->sim.idealtomo){
 	/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
-	warning("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
+	info("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 	dresize(parms->atmr.ht, 1, 1);
 	dresize(parms->atmr.wt, 1, 1);
 	lresize(parms->atmr.os, 1, 1);

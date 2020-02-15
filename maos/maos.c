@@ -135,8 +135,9 @@ void maos_setup(const PARMS_T *parms){
 	    setup_recon_mvm(parms, recon, powfs);//use cpu to compute mvm
 	}
 #if USE_CUDA
-	gpu_setup_recon_mvm(parms, recon);
-	
+	if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){
+	    gpu_setup_recon_mvm(parms, recon);
+	}
 #endif
 	    
     }
