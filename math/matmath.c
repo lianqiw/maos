@@ -443,13 +443,13 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
    'val'
 */
 void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
-    int nres=10;
-    const R res=(R)(1./nres);
-    const R res1=(R)(1./nres);
-    const R res2=(R)(res1*res1*4.);
+    if(r<0) return;
+    const int nres=10;
+    const R res=(R)(2./nres);
+    const R res2=(R)(res*res);
     R resm=(R)((nres-1)*0.5);
     R r2=r*r;
-    R r2l=(r-1.5)*(r-1.5);
+    R r2l=r>1.5?((r-1.5)*(r-1.5)):0;
     R r2u=(r+2.5)*(r+2.5);
     for(int iy=0; iy<A->ny; iy++){
 	R r2y=(iy*dy-cy)*(iy*dy-cy);
@@ -461,12 +461,12 @@ void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
 	    }else if(r2r<r2u){
 		T tot=0.;
 		for(int jy=0; jy<nres; jy++){
-		    R iiy=iy+(jy-resm)*2*res;
+		    R iiy=iy+(jy-resm)*res;
 		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
 		    R wty=1.-fabs(iy-iiy);
 #pragma omp simd
 		    for(int jx=0; jx<nres; jx++){
-			R iix=ix+(jx-resm)*2*res;
+			R iix=ix+(jx-resm)*res;
 			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
 			R wtx=1.-fabs(ix-iix);
 			if(rr2r<r2){

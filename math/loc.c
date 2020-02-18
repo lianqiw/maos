@@ -466,6 +466,8 @@ loc_t* map2loc(map_t *map, real thres){
     }
     if(!count){
 	warning("map2loc: there are 0 points.\n");
+	writebin(map, "map2loc");
+	print_backtrace();
     }
     loc->locx=myrealloc(loc->locx,count,real);
     loc->locy=myrealloc(loc->locy,count,real);

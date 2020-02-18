@@ -1155,7 +1155,7 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	recon->TTF=dcellref(recon->TT);
     }
     if(parms->recon.alg==0 && !parms->sim.idealfit){//tomography parameters
-	if(parms->cn2.tomo){
+	if(parms->cn2.tomo && recon->cn2est){
 	    /*Use cn2 estimation results for tomography. Use its ht to build
 	      reconstructor matrices.*/
 	    cn2est_t *cn2est=recon->cn2est;

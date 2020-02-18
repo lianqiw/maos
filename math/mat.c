@@ -29,8 +29,8 @@
    true, p is treated as external resource and is not reference counted.
 */
 X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
+    assert(nx>=0 && ny>=0);
     if(!p){//no pointer is supplied
-
 	if(nx && ny){
 	    p=mycalloc((nx*ny),T);
 	    if(mem){

@@ -278,7 +278,9 @@ void recon_servo_update(SIM_T *simu){
 		real g=0.5;
 		simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
 		info("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
-		writebin(psdol, "psdol_%d", simu->reconisim);		    
+		if(parms->save.run){
+		    writebin(psdol, "psdol_%d", simu->reconisim);
+		}
 		dcellfree(coeff);
 		dfree(psdol);
 	    }else{
@@ -345,7 +347,7 @@ void reconstruct(SIM_T *simu){
 	    calc_gradol(simu);
 	    save_gradol(simu);//must be here since gradol is only calculated in this file. 
 	}
-    	if(parms->cn2.pair){
+    	if(recon->cn2est){
 	    cn2est_isim(simu->cn2res, recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl, &simu->tomo_update);
 	}//if cn2est 
     }

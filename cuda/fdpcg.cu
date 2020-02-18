@@ -81,7 +81,8 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, const curecon_geom *_grid)
 	/*nby is blockDim.y: number of FD blocks in each threading block*/
 	/*nbz is gridDim.x: number of threading blocks to launch*/
 	nby=256/bs;//number of blocks in each grid
-	nbz=nb/nby;//number of grids to launch.
+	nbz=(nb+nby-1)/nby;//number of grids to launch.
+	assert(nby>0 && nbz>0);
     }
     /* notice: performance may be improved by using
        R2C FFTs instead of C2C. Need to update perm
@@ -98,6 +99,7 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, const curecon_geom *_grid)
     }
     fddata=Array<GPU_FDPCG_T,Gpu>(nps, 1);
     cudaMemcpy(fddata(), FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
+    CUDA_CHECK_ERROR;
     delete [] FDDATA;
 }
 /*
@@ -181,6 +183,7 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
     }else if(!(xout).M()){
 	error("xout is not continuous");
     }
+    CUDA_CHECK_ERROR;
 #if DBG_FD
     cuwrite(xin, "fdg_xin");
 #endif
@@ -190,17 +193,20 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
 	DO(cufftSetStream(fft[ic], stream));
 	CUFFTR2C(fft[ic], xin[ips](), xhat1[ips]());
     }
+    CUDA_CHECK_ERROR;
     RECORD(1);
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr), dim3(256,1),0,stream>>>
 	    (fddata(), xhat1.pm());
     }
+    CUDA_CHECK_ERROR;
 #if DBG_FD
     cuwrite(xhat1, "fdg_fft");
 #endif
 
     fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(Comp)*bs*2*nby, stream>>>
 	(xhat2.M()(), xhat1.M()(), Mb.M()(), perm, nb);
+    CUDA_CHECK_ERROR;
     RECORD(2);
 #if DBG_FD
     cuwrite(xhat2, "fdg_mul");
@@ -210,9 +216,11 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
 	DO(cufftSetStream(ffti[ic], stream));
 	CUFFTC2R(ffti[ic], xhat2[ips](), xout[ips]());
     }
+    CUDA_CHECK_ERROR;
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr),dim3(256,1),0,stream>>>
 	    (fddata(), xout.pm());
+	CUDA_CHECK_ERROR;
     }
 #if DBG_FD
     cuwrite(xout, "fdg_xout");

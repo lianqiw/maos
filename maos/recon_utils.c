@@ -821,47 +821,49 @@ cn2est_t *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	hs->p[iwfs]=parms->wfs[iwfs].hs;
     }
     cn2est_t *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
-			     hs, ht, parms->cn2.keepht, parms->atmr.L0);
-    cn2est->os=dnew(ht->nx, 1);
-    if(!parms->cn2.keepht){
-	/*preserve the number of over sampled layers. */
-	int osc=0;
-	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    if(parms->atmr.os->p[ips]>1){
-		osc++;
-		if(parms->atmr.os->p[ips]!=2){
-		    error("os is not 2. adept this code to it.\n");
-		}	
-	    }
-	}
-	for(int iht=0; iht<ht->nx; iht++){
-	    if(iht<osc){
-		cn2est->os->p[iht]=2;
-	    }else{
-		cn2est->os->p[iht]=1;
-	    }
-	}
-    }else{
-	for(int iht=0; iht<ht->nx; iht++){
-	    cn2est->os->p[iht]=parms->atmr.os->p[iht];
-	}
-    }
-    if(parms->cn2.verbose){
-	cn2est->dmht=dnew(parms->ndm, 1);
-	for(int idm=0; idm<parms->ndm; idm++){
-	    cn2est->dmht->p[idm]=parms->dm[idm].ht;
-	}
-    }
-    if(parms->save.setup){
-	writebin(cn2est->overlapi, "cn2_overlapi");
-	writebin(cn2est->iPnk,"cn2_iPnk");
-	writebin(cn2est->Pnk,"cn2_Pnk");
-	writebin(cn2est->ht,"cn2_ht");
-	writebin(cn2est->wtconvert,"cn2_wtconvert");
-    }
-    dfree(wfstheta);
-    dfree(ht);
+				hs, ht, parms->cn2.keepht, parms->atmr.L0);
     dfree(hs);
+    dfree(wfstheta);
+    if(cn2est){
+	cn2est->os=dnew(ht->nx, 1);
+	if(!parms->cn2.keepht){
+	    /*preserve the number of over sampled layers. */
+	    int osc=0;
+	    for(int ips=0; ips<parms->atmr.nps; ips++){
+		if(parms->atmr.os->p[ips]>1){
+		    osc++;
+		    if(parms->atmr.os->p[ips]!=2){
+			error("os is not 2. adept this code to it.\n");
+		    }	
+		}
+	    }
+	    for(int iht=0; iht<ht->nx; iht++){
+		if(iht<osc){
+		    cn2est->os->p[iht]=2;
+		}else{
+		    cn2est->os->p[iht]=1;
+		}
+	    }
+	}else{
+	    for(int iht=0; iht<ht->nx; iht++){
+		cn2est->os->p[iht]=parms->atmr.os->p[iht];
+	    }
+	}
+	if(parms->cn2.verbose){
+	    cn2est->dmht=dnew(parms->ndm, 1);
+	    for(int idm=0; idm<parms->ndm; idm++){
+		cn2est->dmht->p[idm]=parms->dm[idm].ht;
+	    }
+	}
+	if(parms->save.setup){
+	    writebin(cn2est->overlapi, "cn2_overlapi");
+	    writebin(cn2est->iPnk,"cn2_iPnk");
+	    writebin(cn2est->Pnk,"cn2_Pnk");
+	    writebin(cn2est->ht,"cn2_ht");
+	    writebin(cn2est->wtconvert,"cn2_wtconvert");
+	}
+    }
+    dfree(ht);
     return cn2est;
 }
 /**

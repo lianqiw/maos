@@ -81,7 +81,6 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     /* this mask for for subapertures that we can compute curvature.*/
     cn2est->mask=lnew(nx,nx);
     cmat *overlap=cnew(nx, nx);
-    cmat*  pover=overlap;
     int iymin=nx,iymax=0,ixmin=nx,ixmax=0;
     for(int iy=0; iy<nx; iy++){
 	for(int ix=0; ix<nx; ix++){
@@ -89,7 +88,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	    if(P(mask,ix,iy) && P(mask,ix+1,iy) && P(mask,ix-1,iy) &&
 	       P(mask,ix,iy+1) && P(mask,ix,iy-1)){
 		P(cn2est->mask,ix,iy)=1;
-		P(pover,ix,iy)=1;
+		P(overlap,ix,iy)=1;
 		if(ix>ixmax) ixmax=ix;
 		if(ix<ixmin) ixmin=ix;
 		if(iy>iymax) iymax=iy;
@@ -97,8 +96,15 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	    }
 	}
     }
-    int maxsep=MIN((iymax-iymin), (ixmax-ixmin));
     lfree(mask);
+    int maxsep=MIN((iymax-iymin), (ixmax-ixmin));
+    if(maxsep<0){
+	warning("slodar is not possible with not enough subapertures\n");
+	cn2est_free(cn2est);
+	free(overlap);
+	return 0;
+    }
+
     cfft2(overlap, -1);
     for(long i=0; i<nxnx; i++){
 	overlap->p[i]=overlap->p[i]*conj(overlap->p[i]);

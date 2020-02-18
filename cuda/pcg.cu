@@ -144,11 +144,13 @@ Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 	    /*computes r0=b-A*x0 */
 	    curcellcp(r0, b, stream);/*r0=b; */
 	    RECORD(2);
-	    (*Amul)(r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */ 
+	    (*Amul)(r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */
+	    CUDA_CHECK_ERROR;
 	    RECORD(3);
 	    if(Mmul){/*z0=M*r0*/
 		if(z0()==r0()) z0=0;
 		(*Mmul)(z0,r0,stream);
+		CUDA_CHECK_ERROR;
 	    }else{
 		z0=r0;
 	    }
