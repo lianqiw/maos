@@ -177,9 +177,9 @@ typedef struct POWFS_CFG_T{
     int phyusenea; /**<force using supplied noise equivalent angle in physical
 		      optics simulations*/
     int order;     /**<order of wavefront sensing along one dimension.*/
-    int pixpsa;    /**<number of detector pixels along x/y or azimuthal if radial CCD.*/
+    int pixpsa;    /**<number of detector pixels along x/y (or azimuthal if radial CCD).*/
     int radpix;    /**<number of detector pixels along radial direction if radial CCD*/
-    int radgx;     /**<1: gx/gy is along R/A coordinate. Only valid radpix and radrot are valid.*/
+    int radgx;     /**<1: gx/gy is along R/A coordinate. Only valid if radpix is set*/
     int notf;      /**<PSF is extended to this size before FFT into OTF.  0 for automatic*/
     int embfac;    /**<Embed subaperture atm OPD before fft. set to 2.*/
     int nwvl;      /**<Number of wavelength. 1 for LGS, 2 for NGS J+H sensing.*/

@@ -42,24 +42,5 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, const dmat *cov, real r0, real l0, long npsfx, long npsfy, long nsa, long pttr);
 
 dmat* mk2dcov(loc_t *loc, const dmat *amp, real ampthres, const dmat *cov, int norm);
-void mtch(dmat **mtche,   /**<[out] the matched filter*/
-	  dmat **neaout,  /**<[out] the subaperture noise equivalent angle*/
-	  const dmat *i0, /**<[in] Averaged subaperture image*/
-	  const dmat *gx, /**<[in] derivative of i0 along x (r)*/
-	  const dmat *gy, /**<[in] derivative of i0 along y (a)*/
-	  const dmat *qe, /**<[in] non uniform quantum efficiency (optional)*/
-	  const dmat *dbkgrnd2,  /**<[in] background*/
-	  const dmat *dbkgrnd2c, /**<[in] background calibration*/
-	  real bkgrnd,    /**<[in] global background*/
-	  real bkgrndc,   /**<[in] global background calibration*/
-	  real rne,       /**<[in] Detector read noise*/
-	  real pixthetax, /**<[in] Size of pixel along x*/
-	  real pixthetay, /**<[in] Size of pixel along y*/
-	  real pixrot,    /**<[in] Rotation (CCW, radian) of pixel island 0 for cartesian*/
-	  int radgx,      /**<[in] 1: gx/gy is along r/a coord.*/
-	  int cr          /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
-    );
-void mtch2(dmat **mtche, dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
-dmat *derive_by_fft(const dmat *i0, real theta);
 
 #endif

@@ -23,4 +23,5 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
 void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
 void genselotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
 void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
+void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs);
 #endif

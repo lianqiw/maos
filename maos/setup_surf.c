@@ -24,6 +24,8 @@
 #include "setup_surf.h"
 #include "recon_utils.h"
 #include "setup_powfs.h"
+#include "genseotf.h"
+
 /**
    Setup tilted surface (M3) by ray tracing from the tilted surface to WFS and
    Science grid.
@@ -521,8 +523,7 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 	}
     }
 }
-#include "mtch.h"
-#include "genseotf.h"
+
 void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     if(parms->load.ncpa){
 	if(parms->nsurf || parms->ntsurf){
