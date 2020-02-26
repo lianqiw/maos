@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define TIMING 0
+
 #include "utils.h"
 #include "accphi.h"
 #include <curand_kernel.h>
@@ -30,18 +32,6 @@ extern "C"
 #include "../maos/pywfs.h"
 #if !USE_CPP
 }
-#endif
-#undef TIMING
-#define TIMING 0
-#if !TIMING
-#undef TIC
-#undef tic
-#undef toc
-#define TIC
-#define tic
-#define ctoc(A)
-#else
-#define ctoc(A) toc(A)
 #endif
 
 extern const char *dirskysim;
@@ -341,9 +331,6 @@ static void shwfs_grad(curmat&gradcalc, const curcell&ints, Array<cuwfs_t>&cuwfs
 	Real *scale2=0;
 	switch(parms->powfs[ipowfs].sigmatch){
 	case 0://No signal level match. Use sum(i0) as denominator. Linear.
-	    //scale1=parms->powfs[ipowfs].siglev*parms->powfs[ipowfs].dtrat;
-	    //scale2=cupowfs[ipowfs].saa();
-	    //The following is preferred.
 	    scale1=1.f;
 	    scale2=cuwfs[iwfs].i0sum();
 	    break;
@@ -369,7 +356,6 @@ static void shwfs_grad(curmat&gradcalc, const curcell&ints, Array<cuwfs_t>&cuwfs
 	calc_phygrads(&simu->gradcl->p[iwfs],simu->ints->p[iwfs]->p,
 		      parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
     }
-    ctoc("grad");
     CUDA_CHECK_ERROR;
 	    
 }
@@ -384,7 +370,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 	gpu_set(cuglobal->wfsgpu[iwfs]);
 	Array<cupowfs_t> &cupowfs=cudata->powfs;
 	Array<cuwfs_t> &cuwfs=cuglobal->wfs;
-	TIC;tic;
 	const PARMS_T *parms=simu->parms;
 	const POWFS_T *powfs=simu->powfs;
 	const RECON_T *recon=simu->recon;
@@ -418,6 +403,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	curmat gradacc=cuwfs[iwfs].gradacc;
 	curmat gradcalc=cuwfs[iwfs].gradcalc;
 	curmat gradref=0;
+	ctoc_init(30);
 	if(isim%dtrat==0){
 	    cuzero(cuwfs[iwfs].ints, stream);
 	    cuzero(cuwfs[iwfs].gradacc, stream);
@@ -502,9 +488,11 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    drawopdamp_gpu("wfsopd",powfs[ipowfs].loc,phiout,stream,realamp,NULL,
 			   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
 	}
+	ctoc("opd");
 	if(parms->powfs[ipowfs].type==1){
 	    CUDA_CHECK_ERROR;
 	    pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs],parms->wfs[iwfs].sigsim);
+	    ctoc("pywfs");
 	    CUDA_CHECK_ERROR;
 	}else{
 	    if(do_geom){
@@ -538,9 +526,9 @@ void gpu_wfsgrad_queue(thread_t *info){
 		CUDA_CHECK_ERROR;
 		wfsints(simu, phiout, gradref, iwfs, isim);
 		CUDA_CHECK_ERROR;
+		ctoc("shwfs");
 	    }/*do phy */
 	}
-	ctoc("grad");
 	if(dtrat_output){
 	    Real rne=0, bkgrnd=0;
 	    if(do_phy || parms->powfs[ipowfs].dither){
@@ -550,7 +538,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 		if(save_ints){
 		    zfarr_push(simu->save->intsnf[iwfs], simu->wfsisim, ints, stream);
 		}
-		ctoc("mtche");
 		if(noisy){
 		    if(parms->save.gradnf->p[iwfs]){
 			if(parms->powfs[ipowfs].type==1){//PWFS
@@ -585,6 +572,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    dither_position(&cs, &ss, parms, ipowfs, isim, simu->dither[iwfs]->deltam);
 		    int npll=parms->powfs[ipowfs].dither_pllrat;
 		    cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
+		    ctoc("dither");
 		}
 	    }
 	    if(do_phy){
@@ -595,6 +583,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		}else{
 		    shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
 		}
+		ctoc("grad");
 	    }else{
 		if(noisy){
 		    if(parms->save.gradnf->p[iwfs]){
@@ -603,14 +592,14 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    if(!parms->powfs[ipowfs].usephy){//do not add noise for presimulation to physical optics
 			add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
 			    (gradacc, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
-			ctoc("noise");
+			ctoc("geom_noise");
 		    }
 		}
 	    }
 
 	}/*dtrat_output */
 	//info("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
-	ctoc("done");
+	ctoc_final("wfs %d", iwfs);
 	CUDA_CHECK_ERROR;
     }//for iwfs
 }

@@ -65,22 +65,15 @@
 */
 static void
 free_powfs_geom(POWFS_T *powfs, int ipowfs){
-    if(!powfs[ipowfs].pts){
-	return;
-    }
     ptsfree(powfs[ipowfs].pts);
     dfree(powfs[ipowfs].saa);
     locfree(powfs[ipowfs].saloc);
     locfree(powfs[ipowfs].loc);
     dfree(powfs[ipowfs].amp);
-    if(powfs[ipowfs].loc_tel){
-	cellfree(powfs[ipowfs].loc_tel);
-	dcellfree(powfs[ipowfs].amp_tel);
-	dcellfree(powfs[ipowfs].saa_tel);
-    }
-    if(powfs[ipowfs].loc_dm){
-	cellfree(powfs[ipowfs].loc_dm);
-    }
+    cellfree(powfs[ipowfs].loc_tel);
+    dcellfree(powfs[ipowfs].amp_tel);
+    dcellfree(powfs[ipowfs].saa_tel);
+    cellfree(powfs[ipowfs].loc_dm);
     dcellfree(powfs[ipowfs].realamp);
     dcellfree(powfs[ipowfs].realsaa);
     dfree(powfs[ipowfs].sumamp);
@@ -253,7 +246,7 @@ sa_reduce(POWFS_T *powfs, int ipowfs, real thresarea){
    
 */
 static void 
-setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms, 
+setup_shwfs_geom(POWFS_T *powfs, const PARMS_T *parms, 
 		 APER_T *aper, int ipowfs){
     free_powfs_geom(powfs,ipowfs);
     int nwfsp=parms->powfs[ipowfs].nwfs;
@@ -550,7 +543,7 @@ setup_powfs_misreg_dm(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ip
    ray tracing.  This is simulation, not RTC, so use real system distortion,
    misregistration, etc. */
 static void 
-setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
+setup_shwfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(parms->powfs[ipowfs].gtype_recon==0 ||parms->powfs[ipowfs].gtype_sim==0){
 	dspcellfree(powfs[ipowfs].GS0);
 	/*Setting up every gradient tilt (g-ztilt) */
@@ -1078,7 +1071,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		powfs[ipowfs].etfsim=0;
 	    }
 	    etf_free(powfs[ipowfs].etfsim); powfs[ipowfs].etfsim=0;
-	    if(istep==powfs[ipowfs].etfsim2->icol){//reuse etfsim2 as etfsim
+	    if(powfs[ipowfs].etfsim2 && istep==powfs[ipowfs].etfsim2->icol){//reuse etfsim2 as etfsim
 		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 		powfs[ipowfs].etfsim2=0;
 	    }else{
@@ -1086,31 +1079,39 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    }
 	}else if(mode==2){/*second pair for interpolation*/
 	    static pthread_t etfthread=0;
+	    ETF_T *etfasync=0;
+	    etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
 	    if(etfthread){//preparation already running in a thread
-		pthread_join(etfthread, (void**)(void*)&powfs[ipowfs].etfsim2);
+		pthread_join(etfthread, (void**)(void*)&etfasync);
+		if(etfasync->icol!=istep){
+		    info("Async prepared etfsim2 (%d) is not correct (%d)\n",
+			  etfasync->icol, istep);
+		}else{
+		    powfs[ipowfs].etfsim2=etfasync;
+		}
 		etfthread=0;
 	    }
-	    if(powfs[ipowfs].etfsim2 && powfs[ipowfs].etfsim2->icol!=istep){
-		etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
-	    }
-	    if(!powfs[ipowfs].etfsim2){
+	    if(!powfs[ipowfs].etfsim2){//no async available
 		powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
 	    }
-	    //asynchronously preparing for next update.
-	    //Copy data to heap so that they don't disappear during thread execution
-	    mketf_t *etfdata2=mycalloc(1,mketf_t);//freed by mketf_wrap.
-	    memcpy(etfdata2, &etfdata, sizeof(mketf_t));
-	    etfdata2->icol++;
-	    etfdata2->free=1;
-	    if(pthread_create(&etfthread, NULL, (void*(*)(void *))mketf_wrap, etfdata2)){
-		warning("Thread creation failed\n");
-		free(etfdata2);
-		etfthread=0;
+	    if(0){
+		//asynchronously preparing for next update.
+		//Copy data to heap so that they don't disappear during thread execution
+		mketf_t *etfdata2=mycalloc(1,mketf_t);//freed by mketf_wrap.
+		memcpy(etfdata2, &etfdata, sizeof(mketf_t));
+		etfdata2->icol++;
+		etfdata2->free=1;
+		if(pthread_create(&etfthread, NULL, (void*(*)(void *))mketf_wrap, etfdata2)){
+		    warning_once("Thread creation failed\n");
+		    free(etfdata2);
+		    etfthread=0;
+		}
 	    }
 	}else{
 	    error("Invalid mode=%d\n", mode);
 	}
     }
+    //info("setup_powfs_etf: %.2f MiB\n", get_job_mem()/1024.);
 }
 
 /**
@@ -1224,6 +1225,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	for(int ic=0; ic<llt->ncpa->nx; ic++){
 	    dadd(&llt->ncpa->p[ic], 1, focus, lltcfg->focus*1e-9/var);
 	}
+	cellfree(focus);
 	info("Adding focus %g nm to LLT ncpa\n", lltcfg->focus);
     }
     /*Remove tip/tilt/focus from ncpa */
@@ -1608,8 +1610,8 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].type==0){
 	    info("\n%sSetting up powfs %d geom%s\n\n", GREEN,ipowfs,BLACK);
-	    setup_powfs_geom(powfs,parms,aper,ipowfs);
-	    setup_powfs_grad(powfs,parms,ipowfs);
+	    setup_shwfs_geom(powfs,parms,aper,ipowfs);
+	    setup_shwfs_grad(powfs,parms,ipowfs);
 	}else if(parms->powfs[ipowfs].type==1){
 	    info("\n%sSetting up powfs %d in Pyramid mode%s\n\n", GREEN,ipowfs,BLACK);
 	    pywfs_setup(powfs, parms, aper, ipowfs);
@@ -1671,8 +1673,7 @@ void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
 	}
     }
 }
-void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
-    free_powfs_geom(powfs,ipowfs);
+void free_powfs_shwfs(POWFS_T *powfs, int ipowfs){
     dtf_free(powfs[ipowfs].dtf);
     dspcellfree(powfs[ipowfs].GS0);
     dcellfree(powfs[ipowfs].neasim);
@@ -1689,7 +1690,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	free(intstat);
 	powfs[ipowfs].intstat=NULL;
     }
-    if(parms->powfs[ipowfs].llt){
+    {
 	dcellfree(powfs[ipowfs].srot);
 	dcellfree(powfs[ipowfs].srsa);
 	dfree(powfs[ipowfs].srsamax);
@@ -1726,11 +1727,9 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
     free_powfs_unused(parms, powfs);
     free_powfs_fit(powfs,parms);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].type==0){
-	    free_powfs_shwfs(parms, powfs, ipowfs);
-	}else if(parms->powfs[ipowfs].type==1){
-	    pywfs_free(powfs[ipowfs].pywfs);
-	}
+	free_powfs_geom(powfs,ipowfs);
+	free_powfs_shwfs(powfs, ipowfs);
+	pywfs_free(powfs[ipowfs].pywfs);
     }
     free(powfs);
 }

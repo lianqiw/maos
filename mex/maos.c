@@ -80,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		fprintf(stderr, "Already setup. Please call 'reset' first\n");
 		goto end;
 	    }
-	    int override=0;
+	    int over_ride=0;
 	    char *conf=0;
 	    char *dirout=0;
 	    char *mainconf=0;
@@ -92,7 +92,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    if(!strcmp(cmd, "setup") && nrhs>1){
 		conf=mxArrayToString(prhs[1]);
 		ARGOPT_T options[]={
-		    {"override",'O',M_INT,0, 0, &override, NULL},
+		    {"override",'O',M_INT,0, 0, &over_ride, NULL},
 		    {"output", 'o',M_STR, 1, 0, &dirout, NULL},
 		    {"nthread",'n',M_INT, 1, 0, &nthread,NULL},
 		    {"gpu",    'g',M_INT, 2, 0, &gpus, &ngpu},
@@ -130,7 +130,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		warning("Disable saving when no -o is supplied.\n");
 		disable_save=1;
 	    }
-	    parms=setup_parms(mainconf, conf, override);
+	    parms=setup_parms(mainconf, conf, over_ride);
 	    info("setup_parms done\n");
 	    setup_parms_gpu((PARMS_T*)parms, gpus, ngpu);
 	    maos_setup(parms);//sets global

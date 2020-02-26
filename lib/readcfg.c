@@ -83,7 +83,7 @@ static void strtrim(char **str){
     while(!is_end(**str) && isspace((*str)[0])) (*str)++;
     iend=strlen(*str)-1;
     /*remove tailing spaces. */
-    while((isspace((*str)[iend]) || (*str)[iend]==';') && iend>=0){
+    while((isspace((*str)[iend]) || (*str)[iend]==';' || (*str)[iend]==',') && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
@@ -233,16 +233,9 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
     if(!config_in) return;
     FILE *fd=NULL;
     char *config_file=NULL;
-    int print_override=1;
     if(check_suffix(config_in, ".conf")){
-	if(exist(config_in)){//from current path
-	    config_file=strdup(config_in);
-	}else{//from config dir
-	    config_file=find_file(config_in);
-	    print_override=0;
-	}
+	config_file=find_file(config_in);
 	if(!config_file || !(fd=fopen(config_file,"r"))){
-	    perror("fopen");
 	    error("Cannot open file %s for reading.\n",config_file);
 	}
     }else{
@@ -318,6 +311,9 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		    info("Replacing all existing input\n");
 		    erase_config();
 		}
+		countnew=0;
+		countold=0;
+		countskip=0;
 	    }else if(!strcmp(ssline, "__default__")){
 		priority=0;//this file contains default setup.
 	    }else{
@@ -433,7 +429,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			strncat(oldstore->data, newdata+1, nnewdata-1);
 		    }
 		}else{
-		    if(print_override && 
+		    if(priority && 
 		       (((oldstore->data==NULL || store->data==NULL)
 			 &&(oldstore->data != store->data))||
 			((oldstore->data!=NULL && store->data!=NULL)
@@ -748,7 +744,7 @@ void readcfg_strarr_nmax(char ***ret, int len, const char *format,...){
 	    (*ret)[i]=(*ret)[0]?strdup((*ret)[0]):NULL;
 	}
     }else if(len2!=0 && len2!=len){
-	error("%s: Require %d elements, but got %d\n", key, len, len2);
+	error("%s=%s: Require %d elements, but got %d\n", key, getrecord(key, 0)->data, len, len2);
     }
 }
 /**
@@ -758,7 +754,7 @@ void readcfg_intarr_n(int **ret, int len, const char *format,...){
     format2key;
     int len2;
     if(len!=(len2=readstr_numarr((void**)ret, len, NULL,NULL,M_INT, getrecord(key, 1)->data))){
-	error("%s: Need %d, got %d integers\n", key, len, len2);
+	error("%s=%s: Need %d, got %d integers\n", key, getrecord(key, 0)->data, len, len2);
     }
 }
 /**
@@ -772,7 +768,7 @@ void readcfg_intarr_nmax(int **ret, int len, const char *format,...){
 	    (*ret)[i]=(*ret)[0];
 	}
     }else if(len2!=0 && len2!=len){
-	error("%s: Require %d numbers, but got %d\n", key, len, len2);
+	error("%s=%s: Require %d numbers, but got %d\n", key, getrecord(key, 0)->data, len, len2);
     }
 }
 /**
@@ -782,7 +778,7 @@ void readcfg_dblarr_n(real **ret, int len, const char *format,...){
     format2key;
     int len2;
     if(len!=(len2=readstr_numarr((void**)ret, len,NULL,NULL, M_REAL, getrecord(key, 1)->data))){
-	error("%s: Need %d, got %d real\n", key, len, len2);
+	error("%s=%s: Need %d, got %d real\n", key, getrecord(key, 0)->data, len, len2);
     }
 }
 /**
@@ -796,7 +792,7 @@ void readcfg_dblarr_nmax(real **ret, int len, const char *format,...){
 	    (*ret)[i]=(*ret)[0];
 	}
     }else if(len2!=0 && len2!=len){
-	error("%s: Require %d numbers, but got %d\n", key, len, len2);
+	error("%s=%s: Require %d numbers, but got %d\n", key, getrecord(key, 0)->data, len, len2);
     }
 }
 /**

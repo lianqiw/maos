@@ -487,7 +487,7 @@ void gpu_perfevl_sync(thread_t *info){
 	}
 	//info("thread %ld gpu %d ievl %d end\n", thread_id(), cudata->igpu, ievl);
     }//for ievl
-    ctoc("done");
+    ctoc("gpu_perfevl_sync");
 }
 
 /**

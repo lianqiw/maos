@@ -674,7 +674,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			if(!parms->recon.modal){
 			    info("\nPyWFS from aloc to saloc directly\n");
 			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
-						0, opdadd, dispx, dispy, scale);
+						0, opdadd, dispx, dispy);
 			    P(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
 			    dfree(tmp);
 			}else{
@@ -682,7 +682,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			   
 			    //We compute the GM for full set of modes so that it is cached only once.
 			    P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
-								recon->amod->p[idm], opdadd, dispx, dispy, scale);
+							      recon->amod->p[idm], opdadd, dispx, dispy);
 			}
 		    }
 		}else{//SHWFS
@@ -878,7 +878,7 @@ setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
 	const int ipowfs=parms->wfs[iwfs].powfs; 
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
 	    if(parms->powfs[ipowfs].type==1){//PWFS
-		recon->GRall->p[iwfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0, 1);
+		recon->GRall->p[iwfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0);
 	    }else{//SHWFS
 		dspmm(&recon->GRall->p[iwfs], recon->GP->p[parms->recon.glao?ipowfs:iwfs], opd, "nn", 1);
 	    }

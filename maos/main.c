@@ -379,7 +379,7 @@ int main(int argc, const char *argv[]){
 
     maos_version();
     /*setting up parameters before asking scheduler to check for any errors. */
-    PARMS_T *parms=setup_parms(arg->conf, arg->confcmd, arg->override);
+    PARMS_T *parms=setup_parms(arg->conf, arg->confcmd, arg->over);
     free(arg->conf); arg->conf=0;
     if(arg->confcmd){
 	remove(arg->confcmd); free(arg->confcmd); arg->confcmd=0;

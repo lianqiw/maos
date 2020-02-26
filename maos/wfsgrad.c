@@ -1129,7 +1129,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 	}
 	dcellfree(Rmod);
     
-	if(parms->recon.psd){
+	if(parms->recon.psd && parms->recon.psddtrat_twfs){
 	    const int ntacc=ntstep/parms->powfs[itpowfs].dtrat;
 	    const int dtrat=parms->recon.psddtrat_twfs;
 	    if(ntacc % dtrat==0){//output

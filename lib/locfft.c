@@ -47,7 +47,7 @@ locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
 	    locfft->nembed->p[iwvl]=fftsize?fftsize->p[iwvl]:0;
 	    locfft->embed->p[iwvl]=loc_create_embed(&locfft->nembed->p[iwvl], loc, oversize, 1);
 	}else{
-	    locfft->embed->p[iwvl]=locfft->embed->p[0];
+	    locfft->embed->p[iwvl]=lref(locfft->embed->p[0]);
 	    locfft->nembed->p[iwvl]=locfft->nembed->p[0];
 	}
     }
@@ -72,16 +72,17 @@ locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
 }
 
 void locfft_free(locfft_t *locfft){
-    if(!locfft || !locfft->embed) return;
-    for(int iwvl=locfft->embed->nx-1; iwvl>=0; iwvl--){
+    if(!locfft) return;
+    /*for(int iwvl=locfft->embed->nx-1; iwvl>=0; iwvl--){
 	if(locfft->embed->p[iwvl]==locfft->embed->p[0]){
 	    locfft->embed->p[iwvl]=0;
 	}
-    }
-    lcellfree(locfft->embed);
-    lfree(locfft->nembed);
-    dcellfree(locfft->fieldmask);
-    dfree(locfft->wvl);
+	}*/
+    cellfree(locfft->embed);
+    cellfree(locfft->nembed);
+    cellfree(locfft->fieldmask);
+    cellfree(locfft->wvl);
+    free(locfft);
 }
 /**
    Computes strehl from OPD without doing FFT. The strehl is simply 

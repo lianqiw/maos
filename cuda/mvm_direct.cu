@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define TIMING 0
+
 #include "utils.h"
 #include "wfs.h"
 #include "recon.h"
@@ -41,7 +43,7 @@ typedef struct{
     X(mat) *mvmc;
     X(mat) *mvmi;
 }MVM_IGPU_T;
-#define TIMING 0
+
 static void mvm_direct_igpu(thread_t *info){
     int igpu=info->ithread;
     if(gpu_avail){
@@ -57,17 +59,6 @@ static void mvm_direct_igpu(thread_t *info){
     if(igpu==-1) return;
     gpu_set(igpu);
     info("thread %ld is using GPU %d\n", info->ithread, igpu);
-#if TIMING
-#define RECORD(i) DO(cudaEventRecord(event[i], stream))
-#define NEVENT 4
-    cudaEvent_t event[NEVENT]={0};
-    Real times[NEVENT];
-    for(int i=0; i<NEVENT; i++){
-	DO(cudaEventCreate(&event[i]));
-    }
-#else
-#define RECORD(i)
-#endif
 
     MVM_IGPU_T *data=(MVM_IGPU_T*)info->data;
     const PARMS_T *parms=data->parms;
@@ -111,7 +102,7 @@ static void mvm_direct_igpu(thread_t *info){
     TIC;tic;
     curcell tomo_rhs, fit_rhs;
     for(int ig=info->start; ig<info->end; ig++){
-	RECORD(0);
+	ctoc_init(10);
 	if(info->ithread==0){
 	    if(!detached){
 		info2("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
@@ -124,25 +115,18 @@ static void mvm_direct_igpu(thread_t *info){
 	}else{
 	    cudaMemcpyAsync(grad.M()()+ig, eye2()+1, sizeof(Real), cudaMemcpyDeviceToDevice, stream);
 	}
-	RECORD(1);
+	ctoc("copy");
 	if(mvmi){
 	    opdr.replace(mvmi()+(ig-info->start)*ntotxloc, stream);
 	}
 	curecon->RR->R(tomo_rhs, 0, grad, 1, stream);
 	residual->p[ig]=curecon->RL->solve(opdr, tomo_rhs, stream);
-	RECORD(2);
+	ctoc("Tomo");
 	fitr.replace(mvm()+(ig-info->start)*ntotact, stream);
 	curecon->FR->R(fit_rhs, 0, opdr, 1, stream);
 	residualfit->p[ig]=curecon->FL->solve(fitr, fit_rhs, stream);
-	RECORD(3);
-#if TIMING
-	stream.sync();
-	for(int i=1; i<NEVENT; i++){
-	    DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
-	    times[i]*=1e3;//micro-second
-	}
-	info("copy=%3.0f, Tomo=%3.0f, Fit=%3.0f\n", times[1], times[2], times[3]);
-#endif	
+	ctoc("Fit");
+	ctoc_final("mvm_direct");
     }
     DO(cudaMemcpyAsync(data->mvmc->p+info->start*ntotact, 
 		       mvm(), ntotact*(info->end-info->start)*sizeof(Real), 

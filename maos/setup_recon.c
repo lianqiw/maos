@@ -1574,6 +1574,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dspcellfree(recon->ZZT);
     dspcellfree(recon->HXW);
     dspcellfree(recon->HXWtomo);
+    cellfree(recon->Herr);
     dspfree(recon->W0); 
     dfree(recon->W1); 
 
@@ -1611,6 +1612,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->neam); 
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
     cn2est_free(recon->cn2est);
+    cellfree(recon->saloc);
     cellfree(recon->DMTT);
     cellfree(recon->DMPTT);
     free(recon);

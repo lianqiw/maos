@@ -15,6 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#define TIMING 0
+
 #include "utils.h"
 #include "accphi.h"
 #include <curand_kernel.h>
@@ -31,26 +34,6 @@
   Total takes about 12 ms.
 */
 
-#undef TIMING
-#define TIMING 0
-#if !TIMING
-#undef TIC
-#undef tic
-#undef toc
-#define TIC
-#define tic
-#define ctoc(A)
-#define ctoc_init
-#define ctoc_final
-#else
-#define ntoc 30
-static __thread cudaEvent_t events[ntoc]={0};
-static __thread const char *nametoc[ntoc]={0};
-static __thread int itoc;
-#define ctoc_init {if(!events[0]){for(int ii=0; ii<ntoc; ii++){cudaEventCreate(&events[ii]);cudaEventRecord(events[0], stream); }} itoc=1;}
-#define ctoc(A) {nametoc[itoc]=A;cudaEventRecord(events[itoc], stream); itoc++;}
-#define ctoc_final {CUDA_SYNC_STREAM; float ms; for(int ii=1; ii<itoc; ii++){cudaEventElapsedTime(&ms, events[ii-1], events[ii]); info("%s takes %g ms\n", nametoc[ii], ms);}}
-#endif
 
 /**
    Embed amp*exp(2*pi*i*opd). input is nxin*nxin, output is nxout*nxout;
@@ -202,7 +185,7 @@ __global__ static void sa_ccwm2_do(Comp *otfs, const int notfx, const int notfy,
 /**
    Multiple an otf with another 1-d otf along each column
 */
-__global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notfy,
+/*__global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notfy,
 				     const Comp *etfs, int repeat){
     const int isa=blockIdx.x;
     Comp *restrict otf=otfs+notfy*notfx*isa;
@@ -213,11 +196,12 @@ __global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notf
 	    otf2[ix]*=etf[ix];
 	}
     }
-}
+    }*/
 
 /**
    Multiple an otf with another 1-d otf along each column
 */
+/*
 __global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notfy,
 				     const Comp *etfs1, Real wt1, const Comp *etfs2, Real wt2, int repeat){
     const int isa=blockIdx.x;
@@ -233,7 +217,7 @@ __global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notf
 	    otf2[ix]*=temp;
 	}
     }
-}
+    }*/
 /**
    Take the real part and accumulate to output
 */
@@ -472,7 +456,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 	}
 
 	for(int isa=0; isa<nsa; isa+=msa){
-	    ctoc_init;
+	    ctoc_init(30);
 	    int ksa=MIN(msa, nsa-isa);/*total number of subapertures left to do. */
 	    /*embed amp/opd to wvf */
 	    cudaMemsetAsync(wvf, 0, sizeof(Comp)*ksa*nwvf*nwvf, stream);
@@ -552,22 +536,12 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		    const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 		    Real wt2=(Real)(isim%dtrat)/(real)dtrat;
 		    Real wt1=1.-wt2;
-		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
-			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
-		    }else{
-			sa_ccwm2_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, notfx,notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
-		    }
+		    sa_ccwm2_do<<<ksa,dim3(16,16),0,stream>>>
+			(otf, notfx,notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
 		    ctoc("ccwm2");
 		}else if(cuwfs[iwfs].dtf[iwvl].etf){
-		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
-			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
-		    }else{
-			sa_ccwm_do<<<ksa,256,0,stream>>>
-			    (otf, notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
-		    }
+		    sa_ccwm_do<<<ksa,256,0,stream>>>
+			(otf, notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
 		    ctoc("ccwm");//0.97 ms
 		}
 		/*multiply with nominal */
@@ -593,7 +567,7 @@ void wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
 		     pixthetax, pixthetay, otf, dtheta, notfx, notfy, srot?srot+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
 		ctoc("si");//0.1 ms
-		ctoc_final;
+		ctoc_final("wfsints %d", iwfs);
 	    }/*if ints. */
 	}/*for isa block loop */
     }/*for iwvl */

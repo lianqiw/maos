@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define TIMING 0
+
 #include "utils.h"
 #include "accphi.h"
 #include "cucmat.h"
@@ -136,7 +138,7 @@ static curmat convert_neai(dsp *nea){
     free(neai);
     return neai_gpu;
 }
-#define TIMING 0
+
 void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
     dir_t* dir=new dir_t[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -677,36 +679,24 @@ void cutomo_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, st
     }else{
 	curscale(xout.M(), beta, stream);
     }
-#if TIMING==2
-    EVENT_INIT(6);
-#define RECORD(i) EVENT_TIC(i)
-#else
-#define RECORD(i)
-#endif
-    RECORD(0);
+    ctoc_init(10);
     //xin to opdwfs
     HX(xin, 1, stream);
-    RECORD(1);
+    ctoc("Hx");
     //opdwfs to grad to ttf
     do_gp(grad, opdwfs, ptt, stream);
-    RECORD(2);
+    ctoc("Gp");
     //grad and ttf to opdwfs
     do_gpt(opdwfs, grad, ptt, stream);
-    RECORD(3);
+    ctoc("Gpt");
     //opdwfs to xout
     HXT(xout, alpha, stream);
-    RECORD(4);
+    ctoc("HxT");
     /*This could be in parallel to hx->forward, do_gp, do_gpt*/
     gpu_laplacian_do<<<dim3(3,3,grid->npsr),dim3(16,16), 0, stream>>>
 	(lap(), xout.pm, xin.pm, nwfs, alpha);
-    RECORD(5);
-#if TIMING==2
-    EVENT_TOC;
-    info("TomoL: Hx %.0f, Gp %.0f, Gpt %.0f, Hxt %.0f, L2 %.0f\n", 
-	  times[1], times[2], times[3], times[4], times[5]);
-    EVENT_DEINIT;
-#endif
+    ctoc("L2");
+    ctoc_final("TomoL");
     //overhead of TomoL is 27 micro-seconds (timing without synchornization).
-
 }
 }//namespace

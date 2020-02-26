@@ -15,34 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define TIMING 0
 #include "utils.h"
 #include "accphi.h"
 #include "fit.h"
-#define TIMING 0
-#if TIMING <1
-#undef EVENT_INIT
-#undef EVENT_TIC
-#undef EVENT_TOC
-#undef EVENT_PRINT
-#define EVENT_INIT(A)
-#define EVENT_TIC(A)
-#define EVENT_TOC
-#define EVENT_PRINT(A...)
-#else
-#define EVENT_PRINT(A...) info(A);EVENT_DEINIT
-#endif
 
-#if TIMING <2
-#define EVENT2_INIT(A)
-#define EVENT2_TIC(A)
-#define EVENT2_TOC
-#define EVENT2_PRINT(A...)
-#else
-#define EVENT2_INIT EVENT_INIT
-#define EVENT2_TIC EVENT_TIC
-#define EVENT2_TOC EVENT_TOC
-#define EVENT2_PRINT(A...) info(A);EVENT_DEINIT
-#endif
 namespace cuda_recon{
 cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon_geom *_grid)
     :cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
@@ -212,30 +189,27 @@ void cufit_grid::Rt(curcell &xout, Real beta,  const curcell &xin, Real alpha, s
 }
 void cufit_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream){
     const int ndm=grid->ndm;
-    EVENT_INIT(6);
-    EVENT_TIC(0);
+    ctoc_init(10);
     if(!xout){
 	xout=curcell(ndm, 1, grid->anx, grid->any);
     }else{
 	curscale(xout.M(), beta, stream);
     }   
     do_ha(xin, stream);//112 us
-    EVENT_TIC(1);
+    ctoc("HA");
     grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
-    EVENT_TIC(2);
+    ctoc("W");
     do_hat(xout, alpha, stream);//390 us
-    EVENT_TIC(3);
+    ctoc("HAT");
     if(fitNW){
 	curmv(dotNW(), 0, fitNW, xin.M()(), 't', 1, stream);
 	curmv(xout.M()(), 1, fitNW, dotNW(), 'n', alpha, stream);
     }
-    EVENT_TIC(4);
+    ctoc("NW");
     if(actslave){
 	cuspmul(xout.M()(), actslave, xin.M()(), 1,'n', alpha, stream);
     }
-    EVENT_TIC(5);
-    EVENT_TOC;
-    EVENT_PRINT("FitL HA: %.3f W: %.3f HAT: %.3f NW: %.3f SL: %.3f tot: %.3f\n",
-		times[1],times[2],times[3],times[4],times[5],times[0]);
+    ctoc("SL");
+    ctoc_final("FitL");
 }
 }//namespace

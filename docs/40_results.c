@@ -127,9 +127,16 @@ results. i.e. res=read('Res_1');
    gradient, and the second half is for y (or azimuthal) gradient. They are in
    units of \f$rad^2\f$.
 
- - \c evlpsfcl_1: When evl.psfmean is 1, contains the time averaged science
-   closed loop psf. if is a cell array of \f$n_{wvl}\times n_{evl}\f$. Each cell
-   contains a center cut of the science PSF.
+ - \c evlpsfcl_1: When evl.psfmean is 1, contains the time averaged
+   science closed loop psf. if is a cell array of \f$n_{wvl}\times
+   n_{evl}\f$. Each cell contains a center cut of the science PSF. 
+
+   The PSF total FOV is evl.wvl/evl.dx but may be trimmed by setting
+   evl.psfsize to a smaller number (of pixels). The PSF sampling is
+   usually evl.wvl/(2*aper.d) but may be
+   evl.wvl/(evl.psfgridsize*evl.dx) if evl.psfgridsize is set. The
+   exact number of those can be checked in the fits header.
+
 
  - \c evlpsfdl_1: diffraction limited, PSF.
 

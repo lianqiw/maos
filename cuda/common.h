@@ -173,28 +173,43 @@ extern pthread_mutex_t cufft_mutex;
 #define UNLOCK_CUFFT
 #endif
 
-/*For timing asynchronous kernels*/
-#define EVENT_INIT(n)				\
-    const int NEVENT=n;				\
-    Real times[NEVENT];			\
-    cudaEvent_t event[NEVENT]={0};		\
-    for(int i=0; i<NEVENT; i++){		\
-	DO(cudaEventCreate(&event[i]));		\
+#if TIMING == 1
+#define ctoc(A)						\
+    if(itoc==ntoc) error("please enlarge ntoc");	\
+    cudaEventCreate(&events[itoc]);			\
+    nametoc[itoc]=A;					\
+    cudaEventRecord(events[itoc], stream);		\
+    itoc++;					
+
+#define ctoc_init(nin)				\
+    const int ntoc=nin;				\
+    cudaEvent_t events[ntoc]={0};		\
+    const char *nametoc[ntoc]={0};		\
+    int itoc=0;					\
+    ctoc("init");				\
+
+#define ctoc_final(A...)						\
+    CUDA_SYNC_STREAM;							\
+    float ms;								\
+    char msg[1024];							\
+    int ct=snprintf(msg, sizeof(msg), A);				\
+    ct+=snprintf(msg+ct, sizeof(msg)-ct, ":");				\
+    for(int ii=1; ii<itoc; ii++){					\
+	DO(cudaEventElapsedTime(&ms, events[ii-1], events[ii]));	\
+	ct+=snprintf(msg+ct,sizeof(msg)-ct," %s %.1f,",nametoc[ii],ms); \
+    }									\
+    DO(cudaEventElapsedTime(&ms, events[0], events[itoc-1]));		\
+    info("%s Tot %.1f ms\n", msg, ms);					\
+    for(int ii=0; ii<itoc; ii++){					\
+	DO(cudaEventDestroy(events[ii]));				\
+	events[ii]=0;							\
     }
-#define EVENT_TIC(i) DO(cudaEventRecord(event[i], stream))
-#define EVENT_TOC			       \
-    stream.sync();times[0]=0;		       \
-    for(int i=1; i<NEVENT; i++){	       \
-	DO(cudaEventElapsedTime		       \
-	   (&times[i], event[i-1], event[i])); \
-	times[i]*=1e3;			       \
-	times[0]+=times[i];		       \
-    }						
-    
-#define EVENT_DEINIT				\
-    for(int i=0; i<NEVENT; i++){		\
-	 DO(cudaEventDestroy(event[i]));	\
-    }
+
+#else
+#define ctoc(A)
+#define ctoc_init(A)
+#define ctoc_final(A...)
+#endif
 
 extern const char *cufft_str[];
 static inline void CUFFT2(cufftHandle plan, Comp *in, Comp *out, int dir){

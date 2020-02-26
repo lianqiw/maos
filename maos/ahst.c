@@ -429,13 +429,12 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 			dspmm(PP(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
 		    }else{//pwfs.
 			real  ht = parms->dm[idm].ht-parms->powfs[ipowfs].hc;
-			real  scale=1. - ht/parms->wfs[iwfs].hs;
 			real  dispx=0, dispy=0;
 			dispx=parms->wfsr[iwfs].thetax*ht;
 			dispy=parms->wfsr[iwfs].thetay*ht;
 			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 
 					    parms->misreg.dm2wfs[iwfs+idm*parms->nwfs],
-					    P(ngsmod->Modes, idm), 0, dispx, dispy, scale);
+					    P(ngsmod->Modes, idm), 0, dispx, dispy);
 			dadd(PP(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
 		    }
 		}

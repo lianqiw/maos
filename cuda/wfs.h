@@ -25,21 +25,20 @@ struct cudtf_t{
     cucmat nominal;/*array for each sa. */
     cucmat etf;
     cucmat etf2;
-    int etfis1d;
 };
 struct cullt_t{
     cupts_t pts;
     culoc_t loc;
 };
 typedef struct cupowfs_t{
-    cupts_t pts;   /**<location of lower left OPD point in each sa*/
-    culoc_t loc;  /**<location of OPD points. for reconstruction purpose only.*/
-    culoc_t saloc;
+    cupts_t pts;       /**<location of lower left OPD point in each sa*/
+    culoc_t loc;       /**<location of OPD points. for reconstruction purpose only.*/
+    culoc_t saloc;     /**<location of subaperture lower left corner*/
     Array<culoc_t> msaloc;/**<Mishaped saloc, for pywfs.*/
-    int **embed;       /**<embed for field stop computation*/
-    int *nembed;       /**<embed for field stop computation*/
-    curcell fieldstop;/**<*mask for field stop computation*/
-    cullt_t llt;
+    Cell<int,Gpu>embed;    /**<embed for field stop computation*/
+    Array<int> nembed; /**<grid dimension for embed*/
+    curcell fieldstop; /**<mask for field stop computation*/
+    cullt_t llt;       /**<Laser launch telescope*/
     /*For Pyramid*/
     struct PYWFS_T *pywfs;//points to powfs[ipowfs].pywfs
     cuccell pyramid;
@@ -48,7 +47,7 @@ typedef struct cupowfs_t{
     curmat pyoff; //pywfs->gradoff
     curmat pixoffx;
     curmat pixoffy;
-    cupowfs_t():embed(0),nembed(0),pywfs(0){};
+    cupowfs_t():pywfs(0){};
 }cupowfs_t;
 /**For matched filter update*/
 class dither_t{

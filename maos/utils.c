@@ -276,7 +276,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{"help",   'h',M_INT, 0, 1, (void*)print_usage, NULL},
 	{"detach", 'd',M_INT, 0, 0, &arg->detach, NULL},
 	{"force",  'f',M_INT, 0, 0, &arg->force, NULL},
-	{"override",'O',M_INT,0, 0, &arg->override, NULL},
+	{"override",'O',M_INT,0, 0, &arg->over, NULL},
 	{"output", 'o',M_STR, 1, 0, &arg->dirout, NULL},
 	{"nthread",'n',M_INT, 1, 0, &nthread,NULL},
 	{"gpu",    'g',M_INT, 2, 0, &arg->gpus, &arg->ngpu},
@@ -955,21 +955,11 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     if(phytype==1){
 	mtche=PPR(powfs[ipowfs].intstat->mtche, 0, wfsind);
     }
-    if(powfs[ipowfs].intstat->i0sum){
+    if(powfs[ipowfs].intstat && powfs[ipowfs].intstat->i0sum){
 	i0sum=PPR(powfs[ipowfs].intstat->i0sum, 0, wfsind);
 	i0sumg=PR(powfs[ipowfs].intstat->i0sumsum, wfsind, 0);
     }
-    /*if(phytype==1){
-	if(powfs[ipowfs].intstat->mtche->ny==1){
-	    mtche=powfs[ipowfs].intstat->mtche->p;
-	    i0sum=powfs[ipowfs].intstat->i0sum->p;
-	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[0];
-	}else{
-	    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
-	    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
-	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[wfsind];
-	    }
-	    }*/
+ 
     const real *srot=(parms->powfs[ipowfs].radpix)?PR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
     real pixthetax=parms->powfs[ipowfs].radpixtheta;
     real pixthetay=parms->powfs[ipowfs].pixtheta;
@@ -981,20 +971,28 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     real *pgrady=pgradx+nsa;
     real i1sum=0;
     dmat *corr=0;
+    /**
+       note on powfs.sigmatch:
+       0: Does not normalize measurement by intensity (linear)
+       1: normalize measurement per subaperture by intensity 
+       2: normalize measurement globally for all subapertures
+     */
     if(parms->powfs[ipowfs].sigmatch==2){
 	for(int isa=0; isa<nsa; isa++){
-	    i1sum+=dsum(ints[isa]);//Disable the following to match GPU code.
-	    /*const real thres=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2];
-	      const real offset=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1];
-	      for(int ip=0; ip<ints[isa]->nx*ints[isa]->ny; ip++){
-	      real sig=ints[isa]->p[ip]-offset;
-	      if(sig>thres){
-	      i1sum+=sig;
-	      }
-	      }*/
+	    i1sum+=dsum(ints[isa]);
 	}
     }
-    real sigtot=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+    //sigtot: expected total signal level for full subapertures
+    real sigtot=NAN;
+    switch(parms->powfs[ipowfs].sigmatch){
+    case 0:
+	sigtot=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+	break;
+    case 2:
+	sigtot=(i1sum/powfs[ipowfs].saasum);
+	break;
+    }
+
     for(int isa=0; isa<nsa; isa++){
 	real geach[3]={0,0,1};
 	switch(phytype){
@@ -1023,16 +1021,15 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 		    sumi=sigtot*powfs[ipowfs].saa->p[isa];
 		}
 		break;
-	    case 1://normalization use current intensity (non-linear)
+	    case 1://normalization use current intensity (usual method, non-linear)
 		break;
 	    case 2://normalized use scaled current intensity (non-linear)
-		sumi=powfs[ipowfs].saa->p[isa]*(i1sum/powfs[ipowfs].saasum);
-		warning_once("Please verify implementation is correct\n");
+		sumi=sigtot*powfs[ipowfs].saa->p[isa];
 		break;
 	    }
 	    dcog(geach,ints[isa],0.,0.,
-		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2],
-		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1], sumi);
+		 P(powfs[ipowfs].cogcoeff->p[wfsind],0,isa),
+		 P(powfs[ipowfs].cogcoeff->p[wfsind],1,isa), sumi);
 	    geach[0]*=pixthetax;
 	    geach[1]*=pixthetay;
 	  

@@ -175,14 +175,15 @@ void atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax, Re
 		(phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}else{/*we are gauranteed. */
 	    //check boundary
-	    if(loc.xmin/dx+dispx>=0 && loc.ymin/dx+dispy>=0
-	       && loc.xmax/dx+dispx+1<cuatm[ips].nx && loc.ymax/dx+dispy+1<cuatm[ips].ny){
+	    if(loc.xmin/dx*scale+dispx>=0 && loc.ymin/dy*scale+dispy>=0
+	       && loc.xmax/dx*scale+dispx+1<cuatm[ips].nx && loc.ymax/dy*scale+dispy+1<cuatm[ips].ny){
 		map2loc_linear_nocheck<<<DIM(nloc,256), 0, stream>>>
 		    (phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);
 	    }else{
-		warning_once("Unexpected: need to check boundary. min=(%g, %g), max=(%g, %g), map: (%ld, %ld)\n",
-			     loc.xmin/dx+dispx, loc.ymin/dx+dispy,
-		     loc.xmax/dx+dispx+1, loc.ymax/dx+dispy+1, cuatm[ips].nx, cuatm[ips].ny);
+		warning("Unexpected: need to check boundary. min=(%g, %g), max=(%g, %g), map: (%ld, %ld)\n",
+			loc.xmin/dx+dispx, loc.ymin/dx+dispy,
+			loc.xmax/dx+dispx+1, loc.ymax/dx+dispy+1, cuatm[ips].nx, cuatm[ips].ny);
+		print_backtrace();
 		map2loc_linear<<<DIM(nloc,256), 0, stream>>>
 		    (phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);
 	    }

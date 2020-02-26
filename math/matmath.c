@@ -662,7 +662,7 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx, R offsety,
 	    }
 	}
     }
-    if(sum < flux){//linerize CoG by overriding sum, but only if sum is too small.
+    if(flux){//linerize CoG by overriding sum
 	sum = flux;
     }
     if(sum > thres){

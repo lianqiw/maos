@@ -197,7 +197,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     const real* px=sodium0->p;
 
     icol=wrap(icol, ncol);
-    info("Na using column %d.\n",icol);
+    //info("Na using column %d.\n",icol);
 
     //adjusting sodium height for the zenith angle;
     real hpmin=0, dhp1=0;
@@ -247,7 +247,6 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	
 	etfs[iwvl].icol=icol;
 	if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
-	    TIC;tic;
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
 		    real rsa=srsa->p[illt]->p[isa];
@@ -272,7 +271,6 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		    
 		}//isa
 	    }//illt
-	    toc("ETF");
 	}else{
 	    /*
 	      The ETF is computed as DFT

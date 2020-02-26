@@ -22,7 +22,14 @@
  
 
    \section Fundementals
+   
+   \section Memory 
 
+   Set environment variable MAOS_MEM_DEBUG=1 before starting maos to
+   print out memory usage information. It will print all memory
+   locations that is not freed before exit. We try to free all memory
+   before exit to avoid leaking memory.
+   
    \section Auxiliary
    
    \subsection Sodium range variation
@@ -33,6 +40,7 @@
    sodium height in meters with dimension nx1 or nxnLGS where n can be less
    than, equal to or greater than the length of simulation and nLGS is the
    number of LGS in this powfs (6 for NFIRAOS).
-   
+
+
 
 */

@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define TIMING 0
+
 #include "utils.h"
 #include "accphi.h"
 #include <curand_kernel.h>
@@ -164,16 +166,21 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
     const int pos_nr=pywfs->modulring;
     cucmat &otf=cuwfs.pyotf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
+	ctoc_init(20);
 	cucmat &wvf=cuwfs.pywvf[iwvl];
 	const Real wvl=locfft->wvl->p[iwvl];
 	cuzero(wvf, stream);
 	embed_wvf_do<<<DIM(phiout.Nx(),256),0,stream>>>
 	    (wvf, phiout, cuwfs.amp, cupowfs->embed[iwvl], phiout.Nx(), wvl);
+	ctoc("embed");
 	CUFFT(cuwfs.plan_fs, wvf, CUFFT_FORWARD);
+	ctoc("fft");
 	fftshift_do<<<DIM2(wvf.Nx(), wvf.Ny(), 16),0,stream>>>
 	    (wvf, wvf.Nx(), wvf.Ny());
+	ctoc("shift");
 	const Real otfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
 	cucscale(wvf, otfnorm, stream);
+	ctoc("scale");
 	//cuwrite(wvf, "gpu_wvf0");
 	const Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
 	for(int ir=0; ir<pos_nr; ir++){
@@ -208,14 +215,19 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 		//cuwrite(cuwfs.pypsf, "gpu_wvf3_%d", ipos);
 	    }//iposr: points along a ring.
 	}//ir: ring of dithering
+	ctoc("modul");
 	embed_do<<<DIM(ncomp*ncomp, 256),0,stream>>>
 	    (otf, cuwfs.pypsf, ncomp*ncomp);
+	ctoc("embed");
 	//cuwrite(otf, "gpu_wvf4");
 	CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);
+	ctoc("fft");
 	//cuwrite(otf, "gpu_wvf5");
 	cwm_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
 	    (otf(), cupowfs->pynominal(), ncomp*ncomp);
+	ctoc("cwm");
 	CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
+	ctoc("ifft");
 	//cuwrite(otf, "gpu_wvf6");
 	//Use ray tracing for si
 	const Real dx2=dx*nembed/ncomp;
@@ -243,6 +255,8 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 		 (offx*ncomp2)-(-ncomp2+0.5)+shx,
 		 (offy*ncomp2)-(-ncomp2+0.5)+shy, alpha);
 	}
+	ctoc("sample");
+	ctoc_final("pywfs");
 	//cuwrite(ints, "gpu_ints"); exit(0);
     }
 }
@@ -279,6 +293,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const loc_t* locff
     //cuwrite(ints, "ints0_gpu");
     const int nmod=mod?mod->ny:locin->nloc;
     dmat *ggd=dnew(nsa*2, nmod);
+
     for(int imod=0; imod<nmod; imod++){
 	Real poke=pywfs->poke;
 	if(mod){

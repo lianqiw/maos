@@ -18,8 +18,6 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-
-
 #include <limits.h>
 #include "common.h"
 #include "process.h"

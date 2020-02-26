@@ -243,8 +243,8 @@ static void readcfg_powfs(PARMS_T *parms){
     int    *inttmp=NULL;
     real *dbltmp=NULL;
     char  **strtmp=NULL;
-    READ_POWFS(dbl,dsa);
-    READ_POWFS(int,nwvl);
+    READ_POWFS_RELAX(dbl,dsa);
+    READ_POWFS_RELAX(int,nwvl);
     dmat* wvllist=readcfg_dmat("powfs.wvl");
     dmat* wvlwts=readcfg_dmat("powfs.wvlwts");
 
@@ -351,18 +351,18 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int, zoomshare);
     READ_POWFS_RELAX(dbl, zoomgain);
     READ_POWFS_RELAX(int, zoomset);
-    READ_POWFS(dbl,hs);
+    READ_POWFS_RELAX(dbl,hs);
     READ_POWFS_RELAX(dbl,hc);
-    READ_POWFS(dbl,nearecon);
-    READ_POWFS(dbl,rne);
+    READ_POWFS_RELAX(dbl,nearecon);
+    READ_POWFS_RELAX(dbl,rne);
     READ_POWFS_MAT(d,qe);
     READ_POWFS_RELAX(dbl,dx);
-    READ_POWFS(dbl,pixtheta);
-    READ_POWFS(str,fnllt);
-    READ_POWFS(int,trs);
-    READ_POWFS(int,dfrs);
-    READ_POWFS(int,lo);
-    READ_POWFS(int,pixpsa);
+    READ_POWFS_RELAX(dbl,pixtheta);
+    READ_POWFS_RELAX(str,fnllt);
+    READ_POWFS_RELAX(int,trs);
+    READ_POWFS_RELAX(int,dfrs);
+    READ_POWFS_RELAX(int,lo);
+    READ_POWFS_RELAX(int,pixpsa);
     READ_POWFS_RELAX(int,mtchcr);
     READ_POWFS_RELAX(int,mtchstc);
     READ_POWFS_RELAX(int,phystep);
@@ -374,7 +374,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,modulate);
     READ_POWFS_RELAX(int,modulpos);
     READ_POWFS_RELAX(int,modulring);
-    READ_POWFS(int,nwfs);
+    READ_POWFS_RELAX(int,nwfs);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
 	if(!isfinite(powfsi->hs) && powfsi->fnllt){
@@ -1396,38 +1396,81 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     //Check powfs.dsa
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
-	if(parms->powfs[ipowfs].dsa<=-1){//Order
-	    parms->powfs[ipowfs].dsa=parms->aper.d/(-parms->powfs[ipowfs].dsa);
-        }else if(parms->powfs[ipowfs].dsa<0){//In unit of d
-	    parms->powfs[ipowfs].dsa*=-parms->aper.d;
-	}else if(parms->powfs[ipowfs].dsa==0){
-	    if(parms->powfs[ipowfs].lo){
-		error("powfs[%d].dsa=%g is incorrect for LO powfs.\n", ipowfs, parms->powfs[ipowfs].dsa);
+	if(powfsi->dsa<=-1){//Order
+	    powfsi->dsa=parms->aper.d/(-powfsi->dsa);
+        }else if(powfsi->dsa<0){//In unit of d
+	    powfsi->dsa*=-parms->aper.d;
+	}else if(powfsi->dsa==0){
+	    if(powfsi->lo){
+		error("powfs[%d].dsa=%g is incorrect for LO powfs.\n", ipowfs, powfsi->dsa);
 	    }else{//Follow ground DM.
 		if(parms->ndm){
-		    parms->powfs[ipowfs].dsa=parms->dm[0].dx;
+		    powfsi->dsa=parms->dm[0].dx;
 		}else{
-		    parms->powfs[ipowfs].dsa=0.5;
+		    powfsi->dsa=0.5;
 		}
 	    }
 	}
-	parms->powfs[ipowfs].order=ceil(parms->aper.d/parms->powfs[ipowfs].dsa);
-	if(powfsi->cogthres<0){
-	    powfsi->cogthres*=-powfsi->rne;
-	}
-	if(powfsi->cogoff<0){
-	    powfsi->cogoff*=-powfsi->rne;
-	}
+	powfsi->order=ceil(parms->aper.d/powfsi->dsa);
 
-	if(powfsi->radgx && !powfsi->radpix){
-	    powfsi->radgx=0;
+	{
+	    /*Adjust dx if the subaperture does not contain integer, even number of points.*/
+	    const real dsa=parms->powfs[ipowfs].dsa;
+	    int nx = 2*(int)round(0.5*dsa/parms->powfs[ipowfs].dx);
+	    if(nx<2) nx=2;
+	    real dx=dsa/nx;/*adjust dx. */
+	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
+		warning("powfs %d: Adjusting dx from %g to %g. \n",
+			ipowfs,parms->powfs[ipowfs].dx, dx);
+	    }
+	    parms->powfs[ipowfs].dx=dx;
 	}
-	if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
-	    powfsi->mtchcpl=1;
-	    warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
+	if(!parms->sim.closeloop && parms->powfs[ipowfs].dtrat!=1){
+	    warning("powfs %d: in open loop mode, only dtrat=1 is supported. Changed\n", ipowfs);
+	    parms->powfs[ipowfs].dtrat=1;
+	}
+	if(parms->sim.wfsalias){
+	    parms->powfs[ipowfs].noisy=0;
+	    parms->powfs[ipowfs].phystep=-1;
+	}
+	if(powfsi->type == 1 && powfsi->phystep!=0){
+	    warning("PWFS must run in physical optics mode, changed.\n");
+	    powfsi->phystep=0;
+	}
+	if(powfsi->dither && powfsi->phystep!=0){
+	    warning("Dither requrie physical optics mode from the beginning, changed.\n");
+	    powfsi->phystep=0;
+	}
+	if(powfsi->phystep>0){
+	    /*round phystep to be multiple of dtrat. */
+	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
+	}
+	/*Do we ever do physical optics.*/
+	if(powfsi->phystep>=0 && (powfsi->phystep<parms->sim.end||parms->sim.end==0)){
+	    powfsi->usephy=1;
+	    parms->nphypowfs++;
+	}else{
+	    powfsi->usephy=0;
+	}
+	if (powfsi->phystep>powfsi->step || parms->save.gradgeom){
+	    powfsi->needGS0=1;
+	}else{
+	    powfsi->needGS0=0;
+	}
+	
+	if(powfsi->usephy && powfsi->sigmatch==-1){
+	    if(powfsi->type==0){//SHWFS
+		if(powfsi->phytype_sim==2){//CoG
+		    powfsi->sigmatch=1;
+		}else{//Others
+		    powfsi->sigmatch=2;//global match
+		}
+	    }else if(powfsi->type==1){
+		powfsi->sigmatch=2;//global match
+	    }
 	}
 	real wvlmax=dmax(powfsi->wvl);
-	if(powfsi->type==0){//shwfs
+	if(powfsi->type==0 && powfsi->usephy){//shwfs, physical optics mode
 	    if(powfsi->phytype_sim==-1){
 		powfsi->phytype_sim=powfsi->phytype_recon;
 	    }
@@ -1456,12 +1499,35 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }else{//input is arcsecond.
 		powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
 	    }
-	}else if(powfsi->type==1){//pywfs only uses cog for the moment
-	    powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
-	    if(powfsi->phystep!=0){
-		warning("PWFS must run in physical optics mode, changed.\n");
-		powfsi->phystep=0;
+	    if(fabs(powfsi->radpixtheta)<EPS){
+		powfsi->radpixtheta=powfsi->pixtheta;
+	    }else{
+		if(powfsi->radpixtheta>1e-4){
+		    powfsi->radpixtheta/=206265.;
+		}else if(powfsi->radpixtheta<0){
+		    error("powfs %d radpixtheta<0\n", ipowfs);
+		}
 	    }
+	    if(powfsi->phytype_sim==2 || powfsi->phytype_sim2==2){//COG
+		if(powfsi->cogthres<0){
+		    powfsi->cogthres*=-powfsi->rne;
+		}
+		if(powfsi->cogoff<0){
+		    powfsi->cogoff*=-powfsi->rne;
+		}
+		if((powfsi->cogthres || powfsi->cogoff) && powfsi->sigmatch!=1){
+		    error("When cogthres or cogoff is set, only sigmatch==1 is supported\n");
+		}
+	    }
+	    if(powfsi->radgx && !powfsi->radpix){
+		powfsi->radgx=0;
+	    }
+	    if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
+		powfsi->mtchcpl=1;
+		warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
+	    }
+	}else if(powfsi->type==1){//pywfs only uses quad-cell algorithm
+	    powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
 	    powfsi->pixpsa=2;//always 2x2 pixels by definition.
 	    //Input of modulate is in unit of wvl/D. Convert to radian
 	    powfsi->modulate*=wvlmax/parms->aper.d;
@@ -1471,28 +1537,18 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		error("PWFS must have phyusenea=1;\n");
 	    }
 	}
-	if(parms->powfs[ipowfs].qe){
+	if(powfsi->qe){
 	    //Check rne input.
 	    long pixpsay=powfsi->pixpsa;
 	    long pixpsax=powfsi->radpix;
 	    if(!pixpsax) pixpsax=pixpsay;
 	    
-	    if(parms->powfs[ipowfs].qe->nx*parms->powfs[ipowfs].qe->ny
-	       !=pixpsax*pixpsay){
+	    if(powfsi->qe->nx*powfsi->qe->ny !=pixpsax*pixpsay){
 		error("Input qe [%ldx%ld] does not match subaperture pixel [%ldx%ld]\n.", 
-		      parms->powfs[ipowfs].qe->nx, parms->powfs[ipowfs].qe->ny, pixpsax, pixpsay);
+		      powfsi->qe->nx, powfsi->qe->ny, pixpsax, pixpsay);
 	    }
 	}
-	if(powfsi->dither && powfsi->phystep!=0){
-	    warning("Dither requrie physical optics mode from the beginning, changed.\n");
-	    powfsi->phystep=0;
-	}else if(powfsi->phystep>0){
-	    /*round phystep to be multiple of dtrat. */
-	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
-	}
-	/*if(powfsi->phystep>=0 && powfsi->phystep < powfsi->step){
-	  powfsi->phystep=powfsi->step;
-	  }*/
+
 	if(powfsi->fieldstop>0){
 	    if(powfsi->fieldstop>10 || powfsi->fieldstop<1e-4){
 		warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
@@ -1500,8 +1556,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->fieldstop/=206265.;
 	    if(powfsi->type == 1 && powfsi->fieldstop < powfsi->modulate*2+0.5/206265.){
 		warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
-			parms->powfs[ipowfs].fieldstop*206265, parms->powfs[ipowfs].modulate*206265*2);
-		parms->powfs[ipowfs].fieldstop=parms->powfs[ipowfs].modulate*2+0.5/206265.;
+			powfsi->fieldstop*206265, powfsi->modulate*206265*2);
+		powfsi->fieldstop=powfsi->modulate*2+0.5/206265.;
 	    }
 	}
 
@@ -1515,7 +1571,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    //Convert all rate in unit of WFS frame rate
 	    //pllrat was already in WFS frame rate.
 	    powfsi->dither_ograt*=powfsi->dither_pllrat;
-	    
 	    powfsi->dither_ogskip=powfsi->dither_ogskip*powfsi->dither_pllrat+powfsi->dither_pllskip;
 	    //Convert all in simulation rate (sim.dt).
 	    powfsi->dither_pllskip*=powfsi->dtrat;
@@ -1586,11 +1641,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->itpowfs=ipowfs;
 	    int lgspowfs=parms->ilgspowfs;
 	    if(lgspowfs!=-1){
-		warning("powfs %d is TWFS for powfs %d\n", ipowfs, lgspowfs);
+		info("powfs %d is TWFS for powfs %d\n", ipowfs, lgspowfs);
 		if(parms->powfs[ipowfs].dtrat<1){//automatic dtrat: matched filter update rate.
 		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_ograt;
 		    parms->powfs[ipowfs].dtrat=mtchdtrat;
-		    warning("powfs %d dtrat is set to %d\n", ipowfs, mtchdtrat);
+		    info("powfs %d dtrat is set to %d\n", ipowfs, mtchdtrat);
 		}
 		//Set TWFS integration start time to pll start time to synchronize with matched filter update.
 		if(parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
@@ -1652,38 +1707,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 	    }
 	}
-	if(fabs(parms->powfs[ipowfs].radpixtheta)<EPS){
-	    parms->powfs[ipowfs].radpixtheta=parms->powfs[ipowfs].pixtheta;
-	}else{
-	    if(parms->powfs[ipowfs].radpixtheta>1e-4){
-		parms->powfs[ipowfs].radpixtheta/=206265.;
-	    }else if(parms->powfs[ipowfs].radpixtheta<0){
-		error("powfs %d radpixtheta<0\n", ipowfs);
-	    }
-	}
-	if (parms->powfs[ipowfs].phystep>parms->powfs[ipowfs].step || parms->save.gradgeom){
-	    parms->powfs[ipowfs].needGS0=1;
-	}else{
-	    parms->powfs[ipowfs].needGS0=0;
-	}
-	/*Do we ever do physical optics.*/
-	if(parms->powfs[ipowfs].phystep>=0&&(parms->powfs[ipowfs].phystep<parms->sim.end||parms->sim.end==0)){
-	    parms->powfs[ipowfs].usephy=1;
-	    parms->nphypowfs++;
-	}else{
-	    parms->powfs[ipowfs].usephy=0;
-	}
-	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].sigmatch==-1){
-	    if(parms->powfs[ipowfs].type==0){
-		if(parms->powfs[ipowfs].phytype_sim==2){//CoG
-		    parms->powfs[ipowfs].sigmatch=1;
-		}else{//Others
-		    parms->powfs[ipowfs].sigmatch=0;
-		}
-	    }else if(parms->powfs[ipowfs].type==1){
-		parms->powfs[ipowfs].sigmatch=2;
-	    }
-	}
+
 	if(parms->powfs[ipowfs].usephy){
 	    if(parms->powfs[ipowfs].neaextra){
 		warning("powfs%d: Adding extra NEA of %.2f mas\n", ipowfs, parms->powfs[ipowfs].neaextra);
@@ -1719,26 +1743,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}	
 	    }
 	}
-	{
-	    /*Adjust dx if the subaperture does not contain integer, even number of points.*/
-	    const real dsa=parms->powfs[ipowfs].dsa;
-	    int nx = 2*(int)round(0.5*dsa/parms->powfs[ipowfs].dx);
-	    if(nx<2) nx=2;
-	    real dx=dsa/nx;/*adjust dx. */
-	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
-		warning("powfs %d: Adjusting dx from %g to %g. \n",
-			ipowfs,parms->powfs[ipowfs].dx, dx);
-	    }
-	    parms->powfs[ipowfs].dx=dx;
-	}
-	if(!parms->sim.closeloop && parms->powfs[ipowfs].dtrat!=1){
-	    warning("powfs %d: in open loop mode, only dtrat=1 is supported. Changed\n", ipowfs);
-	    parms->powfs[ipowfs].dtrat=1;
-	}
-	if(parms->sim.wfsalias){
-	    parms->powfs[ipowfs].noisy=0;
-	    parms->powfs[ipowfs].phystep=-1;
-	}
+	
+
     }
     parms->hipowfs->nx=parms->nhipowfs;
     parms->lopowfs->nx=parms->nlopowfs;
@@ -2618,7 +2624,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 /**
    postproc misc parameters.
 */
-static void setup_parms_postproc_misc(PARMS_T *parms, int override){
+static void setup_parms_postproc_misc(PARMS_T *parms, int over_ride){
     if(!disable_save && parms->sim.end>parms->sim.start){
 	/*Remove seeds that are already done. */
 	char fn[80];
@@ -2627,7 +2633,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	parms->fdlock=lnew(parms->sim.nseed, 1);
 	for(iseed=0; iseed<parms->sim.nseed; iseed++){
 	    snprintf(fn, 80, "Res_%ld.done",parms->sim.seeds->p[iseed]);
-	    if(exist(fn) && !override){
+	    if(exist(fn) && !over_ride){
 		parms->fdlock->p[iseed]=-1;
 		warning("Skip seed %ld because %s exists.\n", parms->sim.seeds->p[iseed], fn);
 	    }else{
@@ -2732,7 +2738,7 @@ static void print_parms(const PARMS_T *parms){
     const char *phytype[]={
 	"Skip",
 	"matched filter",
-	"thresholded center of gravity",
+	"CoG",
 	"Maximum a posteriori tracing (MAP)",
 	"correlation (peak first)",
 	"correlation (sum first)",
@@ -2815,8 +2821,8 @@ static void print_parms(const PARMS_T *parms){
 	info("    %s in reconstruction. ", 
 	     parms->powfs[ipowfs].gtype_recon==0?"Gtilt":"Ztilt");
 	if(parms->powfs[ipowfs].phystep>-1){
-	    info("Physical optics start at %d with %s'%s'%s",
-		 parms->powfs[ipowfs].phystep, 
+	    info("Physical optics start at %d with %s'%s'%s ",
+		 MAX(parms->powfs[ipowfs].phystep, parms->powfs[ipowfs].step), 
 		 parms->powfs[ipowfs].phytype_sim==1?GREEN:RED, phytype[parms->powfs[ipowfs].phytype_sim], BLACK);
 	}else{
 	    info("Geomtric optics uses %s ",
@@ -2972,7 +2978,7 @@ static void print_parms(const PARMS_T *parms){
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override){
+PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int over_ride){
     if(!mainconf){
 	mainconf="default.conf";
     }
@@ -3043,7 +3049,7 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
     setup_parms_postproc_atm_size(parms);
     setup_parms_postproc_dm(parms);
     setup_parms_postproc_recon(parms);
-    setup_parms_postproc_misc(parms, override);
+    setup_parms_postproc_misc(parms, over_ride);
     if(parms->sim.nseed>0){
 	print_parms(parms);    
 	if(!disable_save){

@@ -31,6 +31,7 @@ typedef struct PYWFS_T{
     int modulring;     /**<Number of rings within the maximum radius to modulate*/
     int iwfs0;         /**<First iwfs for this powfs*/
     int nside;         /**<Number of sides*/
+    int gpu;           /**<Whether GPU can be used*/
     dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/
     dmat  *amp;        /**<Pupil plane amplitude map*/
@@ -55,7 +56,7 @@ void pywfs_free(PYWFS_T *pywfs);
 void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints);
 void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd);
 dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* ploc, const char *distortion, 
-		const dmat *mod, const dmat *opdadd, real displacex,  real displacey, real scale);
+		const dmat *mod, const dmat *opdadd, real displacex,  real displacey);
 dmat *pywfs_tt(const PYWFS_T *pywfs);
 
 #endif

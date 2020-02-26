@@ -817,7 +817,7 @@ typedef struct PARMS_T{
 */
 typedef struct ARG_T{
     int detach;      /**<Detach from the command line and run in background*/
-    int override;    /**<Run simulation even if Res_${seed}.done exists*/
+    int over;        /**<Run simulation even if Res_${seed}.done exists*/
     int force;       /**<For start, bypassing scheduler*/
     int *gpus;       /**<Index of GPU to use. -1 to disable*/
     int ngpu;        /**<Number of entries in gpus*/

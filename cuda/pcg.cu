@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#define TIMING 0
 #include "utils.h"
 #include "curmat.h"
 #include "pcg.h"
@@ -71,7 +71,6 @@ static inline void pcg_residual(Real *r0r0, Real *rkzk, Real *rr0, curcell &r0,
     }
 }
 int pcg_save=0;
-#define TIMING 0
 #define PRINT_RES 0
 
 /**
@@ -87,20 +86,6 @@ int pcg_save=0;
 Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 	 const curcell &b, CGTMP_T &cg_data, int warm, int maxiter,
 	 stream_t &stream, Real cgthres){
-#if TIMING 
-#define NEVENT 16
-#define RECORD(i) DO(cudaEventRecord(event[i], stream))
-    static cudaEvent_t event[NEVENT]={0};
-    Real times[NEVENT];
-    if(!event[0]){
-	for(int i=0; i<NEVENT; i++){
-	    DO(cudaEventCreate(&event[i]));
-	}
-    }
-#else
-#define RECORD(n)
-#endif
-    RECORD(0);
     curcell &r0=cg_data.r0;
     curcell &z0=cg_data.z0;/*Is reference to r0 or preconditioned value. */
     curcell &p0=cg_data.p0;
@@ -133,6 +118,7 @@ Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
    
     int kover=0; //k overflows maxit
     for(int k=0; ; k++){
+	ctoc_init(20);
 	if(k==maxiter){
 	    k=0;//reset 
 	    kover++;
@@ -140,13 +126,13 @@ Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 	    DO(cudaMemsetAsync(rr0+1, 0, (ntot-1)*sizeof(Real),stream));
 	}
 	if(k%500==0){/*initial or re-start every 500 steps*/
-	    RECORD(1);
+	    ctoc("prep");
 	    /*computes r0=b-A*x0 */
 	    curcellcp(r0, b, stream);/*r0=b; */
-	    RECORD(2);
+	    ctoc("cp");
 	    (*Amul)(r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */
 	    CUDA_CHECK_ERROR;
-	    RECORD(3);
+	    ctoc("Amul");
 	    if(Mmul){/*z0=M*r0*/
 		if(z0()==r0()) z0=0;
 		(*Mmul)(z0,r0,stream);
@@ -154,77 +140,53 @@ Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 	    }else{
 		z0=r0;
 	    }
-	    RECORD(4);
+	    ctoc("Mmul");
 	    curcellcp(p0, z0, stream);
-	    RECORD(5);
+	    ctoc("cp");
 	    curcellinn_add(rkzk+0, r0, z0, stream);//9
-	    RECORD(6);
-#if TIMING 
-	    CUDA_SYNC_STREAM;
-	    for(int i=1; i<7; i++){
-		DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
-		times[i]*=1e3;
-	    }
-	    info("CG %d k=0 Prep %3.0f CP %3.0f Amul %3.0f Mmul %3.0f cp %3.0f inn %3.0f \n", 
-		  maxiter, times[1], times[2], times[3], times[4], times[5], times[6]);
-#endif
+	    ctoc("inn");
 	}
 	if (PRINT_RES){
 	    pcg_residual(&diff[k], rkzk+k, rr0, r0, Mmul?1:0, stream);
 	}
-	RECORD(7);
 #if PRINT_RES == 2
 	info("%.5f ", diff[k]);
 #endif
 	/*Ap=A*p0*/
-	(*Amul)(Ap, 0.f, p0, 1.f, stream); RECORD(8);
+	(*Amul)(Ap, 0.f, p0, 1.f, stream);
+	ctoc("Amul");
 	/*ak[k]=rkzk[k]/(p0'*Ap); */
-	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
+	curcellinn_add(ak+k, p0, Ap, stream);
+	ctoc("inn");
 	div_do<<<1,1,0,stream>>>(ak+k, rkzk+k);
 	/*x0=x0+ak[k]*p0 */
 	curcelladd(x0, p0, ak+k, 1.f, stream);
-	RECORD(10);
+	ctoc("add");
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
 	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres) ||kover>=3){
 	    curcelladd(r0, Ap, ak+k, -1, stream);
 	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
-	    RECORD(15);
-#if TIMING 
-	    CUDA_SYNC_STREAM;
-	    for(int i=7; i<11; i++){
-		DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
-		times[i]*=1e3;
-	    }
-	    info("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f\n",
-		  maxiter, k, times[8], times[9], times[10], times[11]);
-#endif
+	    ctoc("add");
+	    ctoc_final("CG final %d", k, maxiter);
 	    break;
 	}
 	/*r0=r0-ak[k]*Ap */
 	curcelladd(r0, Ap, ak+k, -1, stream);
-	RECORD(11);
+	ctoc("add");
 	/*preconditioner */
 	if(Mmul) {/*z0=M*r0*/
 	    (*Mmul)(z0,r0, stream);
 	}
-	RECORD(12);
+	ctoc("Mul");
 	/*rkzk[k+1]=r0'*z0 for next step*/
 	curcellinn_add(rkzk+k+1, r0, z0, stream);
-	RECORD(13);
+	ctoc("add");
 	/*bk=rkzk[k+1]/rkzk[k];*/
 	div_assign_do<<<1,1,0,stream>>>(bk, rkzk+k+1, rkzk+k);
 	/*p0=bk*p0+z0 */
 	curcelladd(p0, bk, z0, stream);
-	RECORD(14);
-#if TIMING 
-	CUDA_SYNC_STREAM;
-	for(int i=7; i<15; i++){
-	    DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
-	    times[i]*=1e3;
-	}
-	info("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f Mmul %3.0f inn %3.0f add %3.0f\n",
-	      maxiter, k, times[8], times[9], times[10], times[11], times[12], times[13], times[14]);
-#endif
+	ctoc("add");
+	ctoc_final("CG %d/%d", k, maxiter);
     }
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     CUDA_SYNC_STREAM;
@@ -235,11 +197,6 @@ Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
 #endif
     Real residual=-1;/*Only useful if PRINT_RES is set*/
     residual=diff[maxiter];
-#if TIMING 
-    DO(cudaEventElapsedTime(&times[15], event[0], event[15]));
-    times[15]*=1e3;
-    info("CG %d total %4.0f\n", maxiter, times[15]);
-#endif
     return residual;
 }
 }//namespace

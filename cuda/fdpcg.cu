@@ -15,12 +15,13 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define TIMING 0
 
 #include "utils.h"
 #include "tomo.h"
 #include "recon.h"
 #include "cucmat.h"
-#define TIMING 0
+
 namespace cuda_recon{
 void cufdpcg_t::update(FDPCG_T *fdpcg){
     //copy or update Mb. 
@@ -168,13 +169,7 @@ fdpcg_scale(GPU_FDPCG_T *fddata, T *const*xall){
 */
 #define DBG_FD 0
 void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
-#if TIMING
-    EVENT_INIT(4)
-#define RECORD(i) EVENT_TIC(i)
-#else
-#define RECORD(i)
-#endif
-    RECORD(0);
+    ctoc_init(30);
     if(!xin.M()){
 	error("xin is not continuous");
     }
@@ -194,7 +189,7 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
 	CUFFTR2C(fft[ic], xin[ips](), xhat1[ips]());
     }
     CUDA_CHECK_ERROR;
-    RECORD(1);
+    ctoc("FFT");
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr), dim3(256,1),0,stream>>>
 	    (fddata(), xhat1.pm());
@@ -207,7 +202,7 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
     fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(Comp)*bs*2*nby, stream>>>
 	(xhat2.M()(), xhat1.M()(), Mb.M()(), perm, nb);
     CUDA_CHECK_ERROR;
-    RECORD(2);
+    ctoc("MUL");
 #if DBG_FD
     cuwrite(xhat2, "fdg_mul");
 #endif
@@ -225,11 +220,7 @@ void cufdpcg_t::Pre(curcell &xout, const curcell &xin, stream_t &stream){
 #if DBG_FD
     cuwrite(xout, "fdg_xout");
 #endif
-    RECORD(3);
-#if TIMING
-    EVENT_TOC;
-    info("FDPCG: FFT %3.0f MUL %3.0f FFTI %3.0f Total %3.0f\n", 
-	  times[1], times[2], times[3], times[0]);
-#endif
+    ctoc("FFTI");
+    ctoc_final("FDPCG");
 }
 }//namespace

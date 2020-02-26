@@ -361,9 +361,10 @@ void sim_update_etf(SIM_T *simu){
 	   && parms->powfs[ipowfs].llt
 	   && parms->powfs[ipowfs].llt->coldtrat>0
 	   && isim %parms->powfs[ipowfs].llt->coldtrat == 0){
-	    info("Step %d: powfs %d: Updating ETF\n",isim, ipowfs);
 	    int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 	    int colsim=parms->powfs[ipowfs].llt->colsim;
+	    info("Step %d: powfs %d: Updating ETF using column %d\n",isim, ipowfs,
+		 colsim+isim/dtrat+1);
 	    setup_powfs_etf(powfs,parms,ipowfs,1, colsim+isim/dtrat);
 	    setup_powfs_etf(powfs,parms,ipowfs,2, colsim+isim/dtrat+1);
 #if USE_CUDA
@@ -1521,6 +1522,7 @@ void free_simu(SIM_T *simu){
     servo_free(simu->Mint_lo);
     dcellfree(simu->Mngs);
     dcellfree(simu->dmerrts);
+    cellfree(simu->Merrts);
     dcellfree(simu->gcov);
     dcellfree(simu->ecov);
     if(simu->dmfit!=simu->dmerr_store){
