@@ -41,8 +41,7 @@ void gpu_wfsgrad_update_etf(const PARMS_T *parms, const POWFS_T *powfs){
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].llt){
-	    if(cuwfs[iwfs].dtf.p!=cuwfs[iwfs0].dtf.p){
-		//if (parms->powfs[ipowfs].llt->n>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+	    if (parms->powfs[ipowfs].llt->n>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    int icol=parms->powfs[ipowfs].llt->n>1?wfsind:0;
 		    if(powfs[ipowfs].etfsim){
