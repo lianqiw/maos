@@ -322,7 +322,7 @@ static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...
     gtk_tree_view_column_set_alignment(col, 1);
     //resizeable makes the column very small if not expand.
     gtk_tree_view_column_set_resizable(col, (width)?TRUE:FALSE);
-    gtk_tree_view_column_set_expand(col,(width==-1)?TRUE:FALSE);
+    gtk_tree_view_column_set_expand(col,(width && width!=-2)?TRUE:FALSE);
 
     //column only hides text when 1) maxwidth is set, 2) ellipsize is set
     if(width>0){
@@ -635,8 +635,8 @@ GtkWidget *new_page(int ihost){
     //gtk_tree_view_set_headers_clickable(GTK_TREE_VIEW(view), TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID" , "text", COL_PID, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 100,"Path", "text", COL_START, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -1,"Args", "text", COL_ARGS, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50,"Path", "text", COL_START, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50,"Args", "text", COL_ARGS, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -2,"Out", "text",  COL_OUT, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low" , "text", COL_ERRLO,"foreground",COL_COLOR, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI,"foreground",COL_COLOR, NULL));

@@ -606,7 +606,7 @@ int main(int argc, char *argv[])
 {
     {
 	char *fnlog=stradd(TEMP, "/monitor.log", NULL);
-	info("Check %s for log.\n", fnlog);
+	//info("Check %s for log.\n", fnlog);
 	if(!freopen(fnlog, "w", stdout)){
 	    warning("Unable to redirect output to %s\n", fnlog);
 	}else{
@@ -762,14 +762,14 @@ int main(int argc, char *argv[])
     gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);       
 
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
-    gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook),GTK_POS_LEFT);
+    gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook),GTK_POS_TOP);
 
 
     //g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
     g_signal_connect(window, "destroy", G_CALLBACK (quitmonitor), NULL);
     //g_signal_connect(G_OBJECT (window), "window-state-event", G_CALLBACK (window_state_event), NULL);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 1200, 600);
+    gtk_window_set_default_size(GTK_WINDOW(window), 1200, 800);
     gtk_widget_show_all(window);
 
     tabs=mycalloc(nhost,GtkWidget*);
