@@ -301,10 +301,6 @@ static __attribute__((constructor)) void init(){
     }
     void init_process(void);
     init_process();
-#ifndef MAOS_DISABLE_SCHEDULER
-    void init_hosts(void);
-    init_hosts();
-#endif
 }
 /**
    Register routines to be called with mem.c is unloading (deinit).

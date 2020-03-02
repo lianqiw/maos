@@ -23,9 +23,6 @@
    Contains routines that will be used to talk to the scheduler.
 */
 #include <stdint.h>
-extern int nhost;
-extern char* hosts[];
-extern int hid;
 extern uint16_t PORT;
 /*called by maos */
 void* scheduler_listen(void(*fun)(int));

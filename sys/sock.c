@@ -387,10 +387,13 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 }
 
 /**
-  Connect to a host at port.
+  Connect to a host at port. If hostname already includes port after :, port is ignored.
   hostname may start with / to indicate a local UNIX port
 */
-int connect_port(const char *hostname, int port, int block, int nodelay){
+int connect_port(const char *hostname,/**<The hostname can be just name or name:port.*/
+		 int port,            /**<The port if hostname does not include it*/
+		 int block,           /**<Do we block until connection is established*/
+		 int nodelay){
     int sock=-1;
     if(hostname[0]=='/'){//connect locally so we can pass fd.
 	sock = socket(PF_UNIX, SOCK_STREAM, 0);
@@ -421,9 +424,21 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	    struct addrinfo hints={0};
 	    hints.ai_family=AF_INET;
 	    hints.ai_socktype=SOCK_STREAM;
-	    char portstr[20];
-	    snprintf(portstr, 20, "%d", port);
-	    if((res=getaddrinfo(hostname, portstr, &hints, &result))){
+	    char hoststr[512];
+	    char portstr[32];
+	    const char *col=strchr(hostname,':');
+	    if(col && strlen(col+1)>0){//port is part of hostname
+		size_t nn=col-hostname;
+		if(nn+1>sizeof(hoststr)) nn=sizeof(hoststr)-1;
+		strncpy(hoststr, hostname, nn); hoststr[nn]='\0';
+		nn=strlen(col+1);
+		if(nn+1>sizeof(portstr)) nn=sizeof(portstr)-1;
+		strncpy(portstr, col+1, nn); portstr[nn]='\0';
+	    }else{
+		snprintf(hoststr, sizeof(hoststr), "%s", hostname);
+		snprintf(portstr, sizeof(portstr), "%d", port);
+	    }
+	    if((res=getaddrinfo(hoststr, portstr, &hints, &result))){
 		warning("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
 		return -1;
 	    }

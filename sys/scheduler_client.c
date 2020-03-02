@@ -95,63 +95,24 @@ int scheduler_recv_socket(int *sfd, int id){
 }
 #else
 uint16_t PORT=0;
-#define MAX_HOST 1024
-char* hosts[MAX_HOST];
-int nhost=0;
-static int myhostid(const char *host){
-    int i;
-    for(i=0; i<nhost; i++){
-	if(!strncasecmp(hosts[i],host,strlen(hosts[i])))
-	    break;
-    }
-    if(i==nhost){
-	i=-1;
-    }
-    return i;
-}
-
 
 /*Initialize hosts and associate an id number */
-void init_hosts(){
+static __attribute__((constructor)) void init_port(){
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;
-    {
-	FILE *fp=fopen(fn,"r");
-	if(fp){
-	    if(fscanf(fp,"%hu", &PORT)!=1){
-		/*warning_time("Failed to read port from %s\n",fn); */
-	    }
-	    fclose(fp);
+    
+    FILE *fp=fopen(fn,"r");
+    if(fp){
+	if(fscanf(fp,"%hu", &PORT)!=1){
 	}
+	fclose(fp);
     }
     if(PORT==0){
-	/*user dependent PORT to avoid conflict */
+	//user dependent PORT to avoid conflict 
 	PORT= (uint16_t)((uint16_t)(hashlittle(USER,strlen(USER),0)&0x2FFF)|10000);
     }
-    nhost=0;
-    snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
-    memset(hosts, 0, MAX_HOST*sizeof(char*));
-    if(exist(fn)){
-	FILE *fp=fopen(fn,"r");
-	if(fp){
-	    char line[64];
-	    while(fscanf(fp,"%s\n",line)==1){
-		if(strlen(line)>0 && line[0]!='#'){
-		    hosts[nhost++]=strdup0(line);
-		    if(nhost>=MAX_HOST-1){
-			break;
-		    }
-		}
-	    }
-	    fclose(fp);
-	}else{
-	    error("failed to open file %s\n",fn);
-	}
-    }
-    if(myhostid(HOST)==-1){
-	hosts[nhost++]=strdup0("localhost");/*use local machine */
-    }
+ 
 }
 
 /**

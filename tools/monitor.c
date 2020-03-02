@@ -89,6 +89,11 @@ GtkCssProvider *provider_red;
 GtkCssProvider *provider_blue;
 #endif
 int *hsock;
+#define MAX_HOST 1024
+char* hosts[MAX_HOST];
+int nhost=0;
+
+
 #define dialog_msg(A...) {				\
 	GtkWidget *dialog0=gtk_message_dialog_new	\
 	    (GTK_WINDOW(window),		\
@@ -602,6 +607,44 @@ static GtkToolItem *new_toolbar_item(const char *iconname, GdkPixbuf *iconbuf, c
     g_signal_connect(item, "clicked", G_CALLBACK(func),GINT_TO_POINTER(data));
     return item;
 }
+
+static int myhostid(const char *host){
+    int i;
+    for(i=0; i<nhost; i++){
+	if(!strncasecmp(hosts[i],host,strlen(hosts[i])))
+	    break;
+    }
+    if(i==nhost){
+	i=-1;
+    }
+    return i;
+}
+void init_hosts(){
+    nhost=0;
+    char fn[PATH_MAX];
+    snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
+    memset(hosts, 0, MAX_HOST*sizeof(char*));
+    if(exist(fn)){
+	FILE *fp=fopen(fn,"r");
+	if(fp){
+	    char line[64];
+	    while(fscanf(fp,"%s\n",line)==1){
+		if(strlen(line)>0 && line[0]!='#'){
+		    hosts[nhost++]=strdup0(line);
+		    if(nhost>=MAX_HOST-1){
+			break;
+		    }
+		}
+	    }
+	    fclose(fp);
+	}else{
+	    error("failed to open file %s\n",fn);
+	}
+    }
+    if(myhostid(HOST)==-1){
+	hosts[nhost++]=strdup0("localhost");//use local machine 
+    }
+}
 int main(int argc, char *argv[])
 {
     {
@@ -629,6 +672,7 @@ int main(int argc, char *argv[])
 	notify_daemon=0;
     }
 #endif
+    init_hosts();
     if(argc>1){
 	for(int i=1; i<argc; i++){
 	    if(isdigit((int)argv[i][0])){
