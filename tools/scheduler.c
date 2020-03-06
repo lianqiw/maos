@@ -95,7 +95,7 @@ static MONITOR_T *monitor_add(int hostid);
 static void monitor_send(RUN_T *run,char*path);
 static void monitor_send_initial(MONITOR_T *ic);
 static void monitor_send_load(void);
-static long counter=-1;//an negative index to retrieve this irun.
+static long counter=-1;//an negative index for a pending run
 static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
     static int ncpu=0;
     static int ngpu=0;
@@ -470,6 +470,7 @@ static void process_queue(void){
 		if(!irun){
 		    //info("all done\n");
 		    all_done=1;
+		    counter=-1; //reset the counter
 		}else{
 		    info("start new job: ");
 		    int pid;

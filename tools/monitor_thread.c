@@ -37,22 +37,7 @@ static fd_set active_fd_set;
 
 extern double *usage_cpu, *usage_cpu2;
 extern double *usage_mem, *usage_mem2;
-
-PROC_T *proc_get(int id,int pid){
-    PROC_T *iproc;
-    if(id<0 || id>=nhost){
-	error("id=%d is invalid\n", id);
-    }
-    LOCK(mhost);
-    for(iproc=pproc[id]; iproc; iproc=iproc->next){
-	if(iproc->pid==pid){
-	    break;
-	}
-    }
-    UNLOCK(mhost);
-    return iproc;
-}
-
+/*
 static PROC_T *proc_add(int id,int pid){
     PROC_T *iproc;
     if((iproc=proc_get(id,pid))) return iproc;
@@ -68,6 +53,34 @@ static PROC_T *proc_add(int id,int pid){
     UNLOCK(mhost);
     return iproc;
 }
+*/
+PROC_T *proc_get(int id,int pid){
+    PROC_T *iproc;
+    if(id<0 || id>=nhost){
+	error("id=%d is invalid\n", id);
+    }
+    LOCK(mhost);
+    for(iproc=pproc[id]; iproc; iproc=iproc->next){
+	if(iproc->pid==pid){
+	    break;
+	}
+    }
+    if(!iproc){
+	info("%s: %d is not found\n", hosts[id], pid);
+	iproc=mycalloc(1,PROC_T);
+	iproc->iseed_old=-1;
+	iproc->pid=pid;
+	iproc->hid=id;
+
+	iproc->next=pproc[id];
+	pproc[id]=iproc;
+	nproc[id]++;
+	gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id));
+    }
+    UNLOCK(mhost);
+    return iproc;
+}
+
 
 static void proc_remove_all(int id){
     PROC_T *iproc,*jproc=NULL;
@@ -157,7 +170,7 @@ static void add_host(gpointer data){
     }
     UNLOCK(mhost);
     if(todo){
-	int sock=connect_port(hosts[ihost], PORT, 0, 0);
+	int sock=connect_port(hostsaddr[ihost], PORT, 0, 0);
 	if(sock>-1){
 	    int cmd[2];
 	    cmd[0]=CMD_MONITOR;
@@ -205,9 +218,9 @@ static int respond(int sock){
 		return -1;
 	    }
 	    PROC_T *p=proc_get(ihost,pid);
-	    if(!p){
+	    /*if(!p){
 		p=proc_add(ihost,pid);
-	    }
+		}*/
 	    if(stread(sock, &p->status, sizeof(STATUS_T))){
 		return -1;
 	    }
@@ -229,9 +242,9 @@ static int respond(int sock){
 		return -1;
 	    }
 	    PROC_T *p=proc_get(ihost,pid);
-	    if(!p){
+	    /*if(!p){
 		p=proc_add(ihost,pid);
-	    }
+		}*/
 	    if(streadstr(sock, &p->path)){
 		return -1;
 	    }
@@ -322,7 +335,7 @@ void listen_host(){
 int scheduler_display(int ihost, int pid){
     /*connect to scheduler with a new port. The schedule pass the other
       end of the port to drawdaemon so we can communicate with it.*/
-    int sock=connect_port(hosts[ihost], PORT, 0, 0);
+    int sock=connect_port(hostsaddr[ihost], PORT, 0, 0);
     int ans=1;
     int cmd[2]={CMD_DISPLAY, pid};
     if(stwriteintarr(sock, cmd, 2)){

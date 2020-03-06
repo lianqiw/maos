@@ -52,6 +52,7 @@ typedef struct PROC_T{
 }PROC_T;
 extern int nhost;
 extern char *hosts[];
+extern char *hostsaddr[];
 /*void proc_remove(int id,int pid, int flag); */
 gboolean refresh(PROC_T *p);
 void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p);

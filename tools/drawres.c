@@ -17,7 +17,7 @@
 */
 #include <dirent.h>
 #include <getopt.h>
-
+#include <errno.h>
 #include "../lib/aos.h"
 static void usage(){
     fprintf(stderr,"Usage:\n"
@@ -92,7 +92,9 @@ int main(int argc, char *argv[]){
     for(int ipath=0; ipath<npath; ipath++){
 	DIR *dir=opendir(path[ipath]);
 	if(!dir){
-	    warning("Unable to read directory %s\n", path[0]);
+	    if(errno!=ENOTDIR){
+		warning("Unable to read directory %s\n", path[ipath]);
+	    }
 	    continue;
 	}
 	struct dirent *dp;
@@ -408,7 +410,7 @@ int main(int argc, char *argv[]){
 	    }
 	}
 
-	for(int iseed=0; iseed<nseed && nseed>1; iseed++){
+	for(int iseed=0; iseed<nseed; iseed++){
 	    for(int ic=0; ic<res->nx; ic++){
 		if(res->p[ic]){
 		    dcell *tmp=dcellsub(res->p[ic], 0, 0, iseed, 1);

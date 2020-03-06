@@ -89,8 +89,9 @@ GtkCssProvider *provider_red;
 GtkCssProvider *provider_blue;
 #endif
 int *hsock;
-#define MAX_HOST 1024
+#define MAX_HOST 20
 char* hosts[MAX_HOST];
+char* hostsaddr[MAX_HOST];
 int nhost=0;
 
 
@@ -619,22 +620,33 @@ static int myhostid(const char *host){
     }
     return i;
 }
+void parse_host(char *line){
+    if(strlen(line)>0 && line[0]!='#'){
+	if(nhost<MAX_HOST){
+	    char *eq=strchr(line, '=');
+	    if(eq){
+		eq[0]='\0'; eq++;
+	    }else{
+		eq=line;
+	    }
+	    hosts[nhost]=strdup(line);
+	    hostsaddr[nhost]=strdup(eq);
+	    nhost++;
+	}
+    }
+}
 void init_hosts(){
     nhost=0;
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
     memset(hosts, 0, MAX_HOST*sizeof(char*));
+    memset(hostsaddr, 0, MAX_HOST*sizeof(char*));
     if(exist(fn)){
 	FILE *fp=fopen(fn,"r");
 	if(fp){
 	    char line[64];
 	    while(fscanf(fp,"%s\n",line)==1){
-		if(strlen(line)>0 && line[0]!='#'){
-		    hosts[nhost++]=strdup0(line);
-		    if(nhost>=MAX_HOST-1){
-			break;
-		    }
-		}
+		parse_host(line);
 	    }
 	    fclose(fp);
 	}else{
@@ -642,12 +654,12 @@ void init_hosts(){
 	}
     }
     if(myhostid(HOST)==-1){
-	hosts[nhost++]=strdup0("localhost");//use local machine 
+	parse_host("localhost");//use local machine 
     }
 }
 int main(int argc, char *argv[])
 {
-    {
+    if(0){
 	char *fnlog=stradd(TEMP, "/monitor.log", NULL);
 	//info("Check %s for log.\n", fnlog);
 	if(!freopen(fnlog, "w", stdout)){
@@ -678,11 +690,7 @@ int main(int argc, char *argv[])
 	    if(isdigit((int)argv[i][0])){
 		PORT=strtol(argv[i], NULL, 10);
 	    }else if(isalnum((int)argv[i][0])){
-		hosts[nhost]=strdup(argv[i]);
-		nhost++;
-		if(nhost>=1024){
-		    break;
-		}
+		parse_host(argv[i]);
 	    }
 	}
     }else if(nhost==1){
@@ -802,7 +810,7 @@ int main(int argc, char *argv[])
     }
 
     notebook=gtk_notebook_new();
-    gtk_widget_show(notebook);
+    //gtk_widget_show(notebook);
     gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);       
 
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
@@ -814,7 +822,6 @@ int main(int argc, char *argv[])
     //g_signal_connect(G_OBJECT (window), "window-state-event", G_CALLBACK (window_state_event), NULL);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(window), 1200, 800);
-    gtk_widget_show_all(window);
 
     tabs=mycalloc(nhost,GtkWidget*);
     pages=mycalloc(nhost,GtkWidget*);
@@ -839,9 +846,9 @@ int main(int argc, char *argv[])
     pango_attr_list_insert(pango_active, pango_attr_foreground_new(0x0000, 0x0000, 0x0000));
 
     for(int ihost=0; ihost<nhost; ihost++){
-	char tit[40];
-	snprintf(tit,40,"%s(0)",hosts[ihost]);
-    	titles[ihost]=gtk_label_new(tit);
+	//char tit[40];
+	//snprintf(tit,40,"%s(0)",hosts[ihost]);
+    	titles[ihost]=gtk_label_new(NULL);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
 	GtkWidget *hbox0=gtk_hbox_new(FALSE,0);
 #if GTK_MAJOR_VERSION>=3
@@ -901,5 +908,6 @@ int main(int argc, char *argv[])
     for(int ihost=0; ihost<nhost; ihost++){
 	add_host_wrap(ihost);
     }
+    gtk_widget_show_all(window);
     gtk_main();
 }
