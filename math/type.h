@@ -266,10 +266,10 @@ static inline long index_2d(long ix, long iy, long nx, long ny){
 #define PP(...) P_GET(_0,__VA_ARGS__,PP2,PP1,P0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+(iy)*(A)->nx)
 
-//Define indexing using wrapping. See wrap()
-#define PR(A,ix,iy)   P2((A), wrap((ix), (A)->nx), wrap((iy), (A)->ny))
-#define PPR(A,ix,iy) PP2((A), wrap((ix), (A)->nx), wrap((iy), (A)->ny))
-#define PCOLR(A,iy) ((A)->p+wrap(iy, A->ny)*(A)->nx)
+//Define indexing using wrapping. 
+#define PR(A,ix,iy)   P2((A), ((ix)%(A)->nx), ((iy)%(A)->ny))
+#define PPR(A,ix,iy) PP2((A), ((ix)%(A)->nx), ((iy)%(A)->ny))
+#define PCOLR(A,iy) ((A)->p+((iy)%(A)->ny)*(A)->nx)
 
 //Return Number of elements
 #define PN(A) ((A)->nx*(A)->ny)

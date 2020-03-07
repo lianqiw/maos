@@ -353,6 +353,7 @@ void sim_update_etf(SIM_T *simu){
     int isim=simu->wfsisim;
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
+    extern int update_etf;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	/* Update ETF if necessary. */
 	if((parms->powfs[ipowfs].usephy
@@ -360,13 +361,18 @@ void sim_update_etf(SIM_T *simu){
 	    ||parms->powfs[ipowfs].pistatout) 
 	   && parms->powfs[ipowfs].llt
 	   && parms->powfs[ipowfs].llt->coldtrat>0
-	   && isim %parms->powfs[ipowfs].llt->coldtrat == 0){
+	   && (update_etf||isim %parms->powfs[ipowfs].llt->coldtrat == 0)){
 	    int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 	    int colsim=parms->powfs[ipowfs].llt->colsim;
-	    info("Step %d: powfs %d: Updating ETF using column %d\n",isim, ipowfs,
-		 colsim+isim/dtrat+1);
-	    setup_powfs_etf(powfs,parms,ipowfs,1, colsim+isim/dtrat);
-	    setup_powfs_etf(powfs,parms,ipowfs,2, colsim+isim/dtrat+1);
+	    double deltah=0;
+	    if(simu->zoomreal){
+		deltah=-simu->zoomreal->p[parms->powfs[ipowfs].wfs->p[0]];
+		deltah/=0.5*pow(1./parms->powfs[ipowfs].hs,2);//focus to range.
+	    }
+	    info("Step %d: powfs %d: Updating ETF using column %d with dh=%g\n",isim, ipowfs,
+		 colsim+isim/dtrat+1, deltah);
+	    setup_powfs_etf(powfs,parms,deltah,ipowfs,1, colsim+isim/dtrat);
+	    setup_powfs_etf(powfs,parms,deltah,ipowfs,2, colsim+isim/dtrat+1);
 #if USE_CUDA
 	    if(parms->gpu.wfs){
 		gpu_wfsgrad_update_etf(parms, powfs);
@@ -374,6 +380,7 @@ void sim_update_etf(SIM_T *simu){
 #endif
 	}
     }
+    update_etf=0;
 }
 
 /**
@@ -1017,7 +1024,9 @@ static void init_simu_wfs(SIM_T *simu){
     }
     if(parms->nlgspowfs){
 	simu->LGSfocus=dcellnew(parms->nwfs,1);
+	simu->LGSfocus_drift=dcellnew(parms->nwfs,1);
 	simu->zoomerr=dnew(parms->nwfs,1);
+	simu->zoomerr2=dnew(parms->nwfs,1);
 	simu->zoomint=dnew(parms->nwfs,1);
 	simu->zoomavg=dnew(parms->nwfs, 1);
 	if(!disable_save){
@@ -1163,7 +1172,7 @@ static void init_simu_dm(SIM_T *simu){
 	    }
 	}
     }
-    if(parms->sim.cachedm){
+    if(parms->ndm && (parms->sim.cachedm || parms->plot.run)){
 	prep_cachedm(simu);
     }
 #if USE_CUDA
@@ -1498,7 +1507,7 @@ void free_simu(SIM_T *simu){
     free(simu->perfevl_pre);
     free(simu->perfevl_post);
     free(simu->status);
-    dfree(simu->opdevlground);
+    dfree(simu->evlopdground);
     dcellfree(simu->wfsopd);
     dcellfree(simu->gradcl);
     dcellfree(simu->gradacc);
@@ -1553,9 +1562,11 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->fsmerrs);
     dcellfree(simu->fsmcmds);
     dcellfree(simu->LGSfocus);
+    dcellfree(simu->LGSfocus_drift);
     dcellfree(simu->telfocusint);
     dcellfree(simu->telfocusreal);
     dfree(simu->zoomerr);
+    dfree(simu->zoomerr2);
     dfree(simu->zoomreal);
     dfree(simu->zoomavg);
     dfree(simu->zoomint);

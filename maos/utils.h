@@ -41,10 +41,10 @@ void maxapriori(real *g, const dmat *ints, const PARMS_T *parms,
 void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs);
 void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const int iwfs);
 real wfsfocusadj(SIM_T *simu, int iwfs);
-void dither_position(real *cs, real *ss, const PARMS_T *parms, int ipowfs, int isim, real deltam);
-void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype);
+void dither_position(real *cs, real *ss, int alfsm, int dtrat, int npoint, int isim, real deltam);   
+void shwfs_grad(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype);
 dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs);
-
+void draw_ints(const dcell *ints, const loc_t *saloc, int iwfs);
 /**
    Create first order low pass filter coeffcient from cross over frequency and sampling rate.
 */

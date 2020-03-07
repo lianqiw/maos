@@ -353,8 +353,8 @@ static void shwfs_grad(curmat&gradcalc, const curcell&ints, Array<cuwfs_t>&cuwfs
     default://Use CPU version.
 	cp2cpu(&simu->ints->p[iwfs], ints, stream);
 	CUDA_SYNC_STREAM;
-	calc_phygrads(&simu->gradcl->p[iwfs],simu->ints->p[iwfs]->p,
-		      parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
+	shwfs_grad(&simu->gradcl->p[iwfs],simu->ints->p[iwfs]->p,
+		   parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
     }
     CUDA_CHECK_ERROR;
 	    
@@ -569,7 +569,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_ogskip 
 		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytype_sim2==1){
 		    real cs, ss;
-		    dither_position(&cs, &ss, parms, ipowfs, isim, simu->dither[iwfs]->deltam);
+		    dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
+				    parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
 		    int npll=parms->powfs[ipowfs].dither_pllrat;
 		    cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
 		    ctoc("dither");

@@ -455,7 +455,7 @@ typedef struct WFSINTS_T{
 typedef struct DITHER_T{
     //For PLL
     real delta; /**<PLL estimation of servo lag (only) at every time step*/
-    real deltam;/**<Average of delta*/
+    real deltam;/**<Output of PLL*/
     real deltao;/**<Offset of delta from outer loop*/
     real delay; /**<Diference of delay from 2 frame due to beam propagation*/
     real a2m;   /**<actual dither amplitude*/
@@ -572,10 +572,12 @@ typedef struct SIM_T{
     dcell *fsmcmds;    /**<mmaped file to store fsmcmd history*/
 
     /*focus tracking loop*/
-    dcell *LGSfocus;  /**<Temporary array*/
+    dcell *LGSfocus;  /**<LGS focus error*/
+    dcell *LGSfocus_drift;  /**<LGS focus drift error*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     real ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
+    dmat *zoomerr2;   /**<Trombone error signal from drift im*/
     dmat *zoomint;    /**<Trombone integrator*/
     dmat *zoomavg;    /**<Trombone averager from gradients*/
     dmat *zoomreal;   /**<Trombone real position*/
@@ -588,11 +590,12 @@ typedef struct SIM_T{
     dmat *Merrts;      /**<Time history of low order mode.*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
-    dmat *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
+    dcell *evlopdmean;    /**<science field opd mean*/
+    dmat  *evlopdground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
     dcell *evlpsfmean;    /**<science field psf time average*/
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
     dcell *evlopdcov;     /**<science field opd covariance*/
-    dcell *evlopdmean;    /**<science field opd mean*/
+
     dmat *evlopdcovol;   /**<science field opd covariance (open loop)*/
     dmat *evlopdmeanol;  /**<science field opd mean (open loop)*/
     dcell *evlpsfmean_ngsr;    /**<science field psf time average with NGS mode removed.*/

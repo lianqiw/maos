@@ -22,6 +22,7 @@ void addnoise(dmat *A, rand_t* rstat,
 	      const real bkgrnd, const real bkgrndc, 
 	      const dmat *bkgrnd2, const dmat *bkgrnd2c,
 	      const dmat* qe, real rne, real excess);
+void addnoise_grad(dmat *grad, const dmat *neal, rand_t *srand);
 dmat *poly2fit(const dmat *in, const dmat *out, int maxorder);
 dmat *loc_calib(const dsp *GA, const loc_t *aloc, const loc_t *saloc,
 		real dispx, real dispy, real scale, int maxorder);

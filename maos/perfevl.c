@@ -182,14 +182,14 @@ void perfevl_ievl(thread_t *info){
 	if(parms->sim.idealevl){
 	    perfevl_ideal_atm(simu, iopdevl, ievl, 1);
 	}else if(simu->atm && !parms->sim.wfsalias){
-	    if(simu->opdevlground){
-		dcp(&iopdevl, simu->opdevlground);
+	    if(simu->evlopdground){
+		dcp(&iopdevl, simu->evlopdground);
 	    }else{
 		dzero(iopdevl);
 	    }
 	    /*fix me: the ray tracing of the same part must be performed in the same thread. */
 	    for(int ips=0; ips<nps; ips++){
-		if(ips!=simu->perfevl_iground || !simu->opdevlground){
+		if(ips!=simu->perfevl_iground || !simu->evlopdground){
 		    int ind=ievl+parms->evl.nevl*ips;
 		    simu->evl_propdata_atm[ind].phiout=iopdevl->p;
 		    simu->evl_propdata_atm[ind].displacex1=-simu->atm->p[ips]->vx*isim*dt;
@@ -631,17 +631,17 @@ void perfevl(SIM_T *simu){
     if(!(parms->gpu.evl) && parms->evl.nevl>1){ //Cache the ground layer. 
 	int ips=simu->perfevl_iground;
 	if(ips!=-1 && simu->atm && !parms->sim.idealevl){
-	    if(!simu->opdevlground){
-		simu->opdevlground=dnew(simu->aper->locs->nloc,1);
+	    if(!simu->evlopdground){
+		simu->evlopdground=dnew(simu->aper->locs->nloc,1);
 	    }else{
-		dzero(simu->opdevlground);
+		dzero(simu->evlopdground);
 	    }
 	    const int ievl=0;//doesn't matter for ground layer. 
 	    int ind=ievl+parms->evl.nevl*ips;
 	    const int isim=simu->perfisim;
 	    const real dt=parms->sim.dt;
 	    const real atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
-	    simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
+	    simu->evl_propdata_atm[ind].phiout=simu->evlopdground->p;
 	    simu->evl_propdata_atm[ind].displacex1=-simu->atm->p[ips]->vx*isim*dt;
 	    simu->evl_propdata_atm[ind].displacey1=-simu->atm->p[ips]->vy*isim*dt;
 	    simu->evl_propdata_atm[ind].alpha=atmscale;

@@ -1390,9 +1390,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	free(parms->wfs); parms->wfs=NULL;
 	parms->nwfs=0;
     }
-    if(!parms->nwfs){
-	parms->recon.psd=0;
-    }
     //Check powfs.dsa
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
@@ -1467,6 +1464,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 	    }else if(powfsi->type==1){
 		powfsi->sigmatch=2;//global match
+	    }else{
+		error("Please specify sigmatch\n");
 	    }
 	}
 	real wvlmax=dmax(powfsi->wvl);
@@ -1499,7 +1498,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }else{//input is arcsecond.
 		powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
 	    }
-	    if(fabs(powfsi->radpixtheta)<EPS){
+	    if(!powfsi->radpixtheta){
 		powfsi->radpixtheta=powfsi->pixtheta;
 	    }else{
 		if(powfsi->radpixtheta>1e-4){
@@ -1825,34 +1824,23 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 static void setup_parms_postproc_siglev(PARMS_T *parms){
     real sigscale=parms->sim.dt>0?(parms->sim.dt*800):1;
     if(fabs(sigscale-1.)>EPS){
-	info("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
+	info("sim.dt is 1/%g, need to scale siglev and bkgrnd by %g.\n",1/parms->sim.dt, sigscale);
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    real siglev=parms->wfs[iwfs].siglev;
-	    parms->wfs[iwfs].siglev=siglev*sigscale;
-	    info("wfs%d: siglev scaled from %g to %g by framerate.\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+	    parms->wfs[iwfs].siglev*=sigscale;
 	} 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->powfs[ipowfs].siglev*=sigscale;
-	    real bkgrnd=parms->powfs[ipowfs].bkgrnd;
-	    if(bkgrnd>0){
-		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
-		info("powfs%d: bkgrnd scaled from %g to %g\n", 
-		     ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
-	    }
+	    parms->powfs[ipowfs].bkgrnd*=sigscale;
 	}
     }
     
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	sigscale=parms->powfs[ipowfs].sigscale;
-	if(fabs(sigscale-1)>0.5){
-	    warning("powfs[%d].sigscale=%g\n",ipowfs,sigscale);
-	}
-	real siglev=parms->wfs[iwfs].siglev;
-	parms->wfs[iwfs].sigsim=siglev*sigscale;
+	parms->wfs[iwfs].sigsim=parms->wfs[iwfs].siglev*sigscale;
 	if(fabs(sigscale-1)>1.e-12){
-	    warning("wfs%d: siglev in simulation scaled from %g to %g by powfs.sigscale.\n", 
-		    iwfs,siglev,parms->wfs[iwfs].sigsim);
+	    warning("wfs%d: siglev is scaled by %g to %g for simulation (not pixel processing).\n", 
+		    iwfs,sigscale,parms->wfs[iwfs].sigsim);
 	}
     }
 }
@@ -2610,14 +2598,21 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    warning_once("Without dbg.tomo_hxw, only pure shift between telescope and LGS WFS is calibrated.\n");
 	}
     }
-    /*if(parms->recon.psd){
+    if(!parms->nwfs || parms->sim.noatm){
+	parms->recon.psd=0;
+    }
+
+    if(parms->recon.psd){
 	if(parms->recon.psddtrat_hi && !parms->sim.noisy_hi){
 	    parms->recon.psddtrat_hi=0;   
 	}
 	if(parms->recon.psddtrat_lo && !parms->sim.noisy_lo){
 	    parms->recon.psddtrat_lo=0;   
 	}
-	}*/
+	if(!parms->recon.psddtrat_hi && !parms->recon.psddtrat_lo){
+	    parms->recon.psd=0;
+	}
+    }
 }
 
 
@@ -2803,7 +2798,7 @@ static void print_parms(const PARMS_T *parms){
 		 lrt?"both":"right hand",  BLACK);
 	}
 	info("\n");
-	if(parms->powfs[ipowfs].type==0){
+	if(parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].usephy){
 	    info("    CCD image is %dx%d @ %gx%gmas, blur %g%% (sigma), %gHz, ", 
 		 (parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa), 
 		 parms->powfs[ipowfs].pixpsa, 

@@ -979,7 +979,7 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	error("fnrange has wrong format. Must be column vectors of 1 or %d columns\n",
 	      parms->powfs[ipowfs].nwfs);
     }
-    /*(D/h)^2/(16*sqrt(3)) convert it from range to WFE in m but here we want
+    /*(D/h)^2/(16*sqrt(3)) convert from range to WFE in m but here we want
       focus mode, so just do 1/(2*h^2).*/
     /*1./cos() is for zenith angle adjustment of the range.*/
     real range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2)*(1./cos(parms->sim.za));
@@ -1051,12 +1051,12 @@ ETF_T* mketf_wrap(mketf_t *data){
    - mode=0: for preparation.
    - mode=1: for simulation.
 */
-void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode, int istep){
+void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, double deltah, int ipowfs, int mode, int icol){
     if(!parms->powfs[ipowfs].llt) return;
     mketf_t etfdata={powfs[ipowfs].dtf, 
-		     parms->powfs[ipowfs].hs,
+		     parms->powfs[ipowfs].hs+deltah,
 		     powfs[ipowfs].sodium,
-		     istep,
+		     icol,
 		     powfs[ipowfs].srot,
 		     powfs[ipowfs].srsa,
 		     !parms->dbg.na_interp, 0};
@@ -1071,7 +1071,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		powfs[ipowfs].etfsim=0;
 	    }
 	    etf_free(powfs[ipowfs].etfsim); powfs[ipowfs].etfsim=0;
-	    if(powfs[ipowfs].etfsim2 && istep==powfs[ipowfs].etfsim2->icol){//reuse etfsim2 as etfsim
+	    if(powfs[ipowfs].etfsim2 && icol==powfs[ipowfs].etfsim2->icol && deltah==0){//reuse etfsim2 as etfsim
 		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 		powfs[ipowfs].etfsim2=0;
 	    }else{
@@ -1083,9 +1083,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
 	    if(etfthread){//preparation already running in a thread
 		pthread_join(etfthread, (void**)(void*)&etfasync);
-		if(etfasync->icol!=istep){
+		if(etfasync->icol!=icol){
 		    info("Async prepared etfsim2 (%d) is not correct (%d)\n",
-			  etfasync->icol, istep);
+			  etfasync->icol, icol);
 		}else{
 		    powfs[ipowfs].etfsim2=etfasync;
 		}
@@ -1094,7 +1094,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    if(!powfs[ipowfs].etfsim2){//no async available
 		powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
 	    }
-	    if(0){
+	    if(0){//Disable incase deltah is not zero.
 		//asynchronously preparing for next update.
 		//Copy data to heap so that they don't disappear during thread execution
 		mketf_t *etfdata2=mycalloc(1,mketf_t);//freed by mketf_wrap.
@@ -1557,7 +1557,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs){
 				powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
 			    }
 			    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-			    calc_phygrads(&powfs[ipowfs].gradncpa->p[jwfs],
+			    shwfs_grad(&powfs[ipowfs].gradncpa->p[jwfs],
 					  PCOLR(powfs[ipowfs].intstat->i0, jwfs),
 					  parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 			    
@@ -1638,12 +1638,12 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].llt){
 		/*prepare Laser launch telescope. */
 		setup_powfs_sodium(powfs,parms,ipowfs);/*read sodium profile and smooth it */
-		setup_powfs_etf(powfs,parms,ipowfs,0,parms->powfs[ipowfs].llt->colprep);/*etf for prep */
+		setup_powfs_etf(powfs,parms,0,ipowfs,0,parms->powfs[ipowfs].llt->colprep);/*etf for prep */
 		if(!parms->powfs[ipowfs].llt->coldtrat){/*const etf for sim */
 		    if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim){
 			powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
 		    }else{
-			setup_powfs_etf(powfs,parms,ipowfs,1,parms->powfs[ipowfs].llt->colsim);
+			setup_powfs_etf(powfs,parms,0,ipowfs,1,parms->powfs[ipowfs].llt->colsim);
 		    }
 		}
 		setup_powfs_llt(powfs,parms,ipowfs);

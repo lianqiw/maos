@@ -28,8 +28,8 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs);
 void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs);
 void free_powfs(const PARMS_T *parms, POWFS_T *powfs);
 void test_powfs(const PARMS_T *parms, POWFS_T *powfs);
-void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, 
-		     int ipowfs, int mode, int istep);
+void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, double deltah,
+		     int ipowfs, int mode, int icol);
 void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs);
 
 #endif

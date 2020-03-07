@@ -342,7 +342,7 @@ static void filter_cl(SIM_T *simu){
     if(simu->ttmreal){
 	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
-    if(parms->sim.focus2tel && hiout){
+    if(parms->sim.focus2tel && hiout){//offloading DM focus mode to telescope.
 	dcellcp(&simu->telfocusreal, simu->telfocusint);
 	dcellmm(&simu->telfocusint, recon->RFdm, simu->dmcmd, "nn", parms->sim.epfocus2tel);
     }

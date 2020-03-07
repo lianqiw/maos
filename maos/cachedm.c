@@ -40,7 +40,7 @@
 */
 void prep_cachedm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(!parms->ndm || !parms->sim.cachedm){
+    if(!parms->ndm || !(parms->sim.cachedm || parms->plot.run)){
 	warning("DM cache is not needed\n");
 	return;
     }else{
@@ -88,7 +88,7 @@ void prep_cachedm(SIM_T *simu){
    segments in each combination to maximum efficiency.
 */
 void calc_cachedm(SIM_T *simu){
-    if(simu->parms->sim.cachedm){
+    if(simu->cachedm){
 	real tk_start=myclockd();
 	long group=0;
 	/*zero out the data. */

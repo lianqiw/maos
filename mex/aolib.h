@@ -73,6 +73,7 @@ dmat *add_psd(const dmat *psd1, const dmat *psd2, double scale2);
 dmat *derive_by_fft(const dmat *i0, double theta);
 void cure(dmat **phi, const dmat*gx, const dmat *gy, double dx);
 void cure1d(dmat **phi, const dmat*gx, const dmat *gy, double dx);
+void cure_loc(dmat **phix, const dmat*grad, const loc_t *gloc);
 cell* loc_embed=loc_embed2(loc_t *loc, dmat *arr);
 double loc_angle(const loc_t *loc1, const loc_t *loc2);
 void locrot(loc_t *loc, const double theta);

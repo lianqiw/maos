@@ -176,6 +176,18 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
     return dtfs;
 }
 
+/**
+   Wrap the index for dataset with total of n frames for continuity. The actual data becomes
+   0, 1, 2, ..., n-2, n-1, n-2, ..., 0, 1
+*/
+static inline int wrap_seq(long index, long n){
+    long m=n*2-1;
+    index=index%m;
+    if(index<0) index+=m;
+    if(index>=n) index=m-1-index;
+    return index;
+}
+
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     real hs,      /**<LGS WFS focus altitude*/
 	     const dcell *sodium,/**<The sodium profile. In each cell First column is coordinate.*/
@@ -196,7 +208,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     const int nhp=sodium0->nx; 
     const real* px=sodium0->p;
 
-    icol=wrap(icol, ncol);
+    icol=wrap_seq(icol, ncol);
     //info("Na using column %d.\n",icol);
 
     //adjusting sodium height for the zenith angle;

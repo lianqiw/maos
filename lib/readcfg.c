@@ -75,7 +75,7 @@ static void strtrim(char **str){
     int iend;
     /*turn non-printable characters, coma, and semicolumn, to space */
     for(char *tmp=*str; !is_end(*tmp); tmp++){
-	if(!isgraph((int)*tmp) || isspace(*tmp)){
+	if(!isgraph((int)*tmp) || isspace(*tmp) || *tmp==','){
 	    *tmp=' ';
 	}
     }
@@ -83,19 +83,27 @@ static void strtrim(char **str){
     while(!is_end(**str) && isspace((*str)[0])) (*str)++;
     iend=strlen(*str)-1;
     /*remove tailing spaces. */
-    while((isspace((*str)[iend]) || (*str)[iend]==';' || (*str)[iend]==',') && iend>=0){
+    while((isspace((*str)[iend]) || (*str)[iend]==';') && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
-    /*remove duplicated spaces */
+    /*remove continuous spaces */
     char *tmp2=*str;
     int issp=0;
     for(char *tmp=*str; !is_end(*tmp); tmp++){
-	if(*tmp==' '){
-	    if(issp){/*there is already a space, skip. */
+	if(*tmp=='['){
+	    issp=2; //skip space after [
+	}else if(*tmp==' '){
+	    if(issp){//skip multiple space
 		continue;
 	    }else{
 		issp=1;
+	    }
+	}else if(*tmp==']'){
+	    if(issp==1){//remove space before ]
+		tmp2--;
+	    }else{
+		issp=2;//skip space after ]
 	    }
 	}else{
 	    issp=0;
@@ -409,11 +417,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    if(entryfind){ 
 		/*same key found */
 		STORE_T *oldstore=*(STORE_T**)entryfind;
-		if(oldstore->priority > priority){
-		    countskip++;
-		    info("Not overriding %-20s=%s by %s\n", store->key, oldstore->data, store->data);
-		    //Skip the entry.
-		}else if(append){
+		int diffval=(((oldstore->data==NULL || store->data==NULL)
+			      &&(oldstore->data != store->data))||
+			     ((oldstore->data!=NULL && store->data!=NULL)
+			      &&strcmp(oldstore->data, store->data)));
+		if(append){
 		    /*concatenate new value with old value for arrays. both have to start/end with [/]*/
 		    const char *olddata=oldstore->data;
 		    const char *newdata=store->data;
@@ -428,21 +436,20 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			oldstore->data[nolddata-1]=' ';
 			strncat(oldstore->data, newdata+1, nnewdata-1);
 		    }
-		}else{
-		    if(priority && 
-		       (((oldstore->data==NULL || store->data==NULL)
-			 &&(oldstore->data != store->data))||
-			((oldstore->data!=NULL && store->data!=NULL)
-			 &&strcmp(oldstore->data, store->data)))){
-			info("Overriding %-20s\t{%s}-->{%s}\n", 
-			      store->key, oldstore->data, store->data);
+		}else if(diffval){
+		    if(oldstore->priority > priority){
+			countskip++;
+			info("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
+			//Skip the entry.
+		    }else{
+			info("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
+			/*free old value */
+			free(oldstore->data);
+			/*move pointer of new value. */
+			oldstore->data=store->data; store->data=0;
+			oldstore->priority=priority;
+			oldstore->used=store->used;
 		    }
-		    /*free old value */
-		    free(oldstore->data);
-		    /*move pointer of new value. */
-		    oldstore->data=store->data; store->data=0;
-		    oldstore->priority=priority;
-		    oldstore->used=store->used;
 		}
 		countold++;
 		free(store->data);

@@ -291,7 +291,14 @@ void save_dmreal(SIM_T *simu){
 			    "DM Actuator Stroke","x (m)", "y (m)", "Real TTM");
 		}
 
+		if(simu->cachedm){//use cachedm
+		    for(int idm=0; idm<parms->ndm; idm++){
+			drawmap("DM", simu->cachedm->p[idm], NULL,
+				"DM OPD","x (m)", "y (m)", "RealOPD %d",idm);
+		    }
+		}
 		if(draw_current("Evldm", "OA")){
+
 		    dmat *opd=dnew(simu->aper->locs->nloc, 1);
 		    for(int idm=0; idm<parms->ndm; idm++){
 			int ind=parms->evl.nevl*idm;
@@ -311,6 +318,7 @@ void save_dmreal(SIM_T *simu){
 		    dfree(opd);
 		}
 	    }
+	    
 
 	    for(int idm=0; idm<parms->ndm; idm++){
 		if(simu->dmpsol && simu->dmpsol->p[idm]){

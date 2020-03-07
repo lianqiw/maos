@@ -198,7 +198,10 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             print(fd, fns, nseed, ' has no valid results')
     if resall is None:
         resall=np.array([nan,nan,nan])
-        print(fdin, ' has no valid results')
+        if not os.path.exists(fdin):
+            print(fdin, 'does not exist')
+        else:
+            print(fdin, ' has no valid results')
     if len(fds)>1:
         print(*fds, sep="\n")
     #    return (resall,fds2)
@@ -246,3 +249,5 @@ def figure(*args, **kargs):
     plt.clf()
 
     
+def width_at(x, y, height):
+    return len(np.argwhere(y>=max(y)*height))*(x[1]-x[0])

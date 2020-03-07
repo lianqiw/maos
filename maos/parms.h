@@ -229,7 +229,7 @@ typedef struct POWFS_CFG_T{
     int i0save;     /**<Save time averaged subaperture images.*/
     char *i0load;   /**<load i0,gx,gy from this folder.*/
     real gradscale;/**<Scale CL gradients. For testing*/
-    real dither_amp; /**<Dither amplitude in arcsec for tip/tilt mode*/
+    real dither_amp; /**<Dither amplitude.*/
     real dither_gpll;/**<Gain of phase locked loop*/
     real dither_gog; /**<Gain for updating optical gain for cog*/
     real dither_gdrift;/**<Gain for drift control*/

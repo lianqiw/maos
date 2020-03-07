@@ -94,6 +94,7 @@ dmat* zernike(const loc_t *loc, real D, int rmin, int rmax, int flag){
 	    if(locr->p[iloc]>rover){
 		rover=locr->p[iloc];
 	    }
+	    locr->p[iloc]=1;//2020-03-06: prevent r from above 1.
 	}
 	locs->p[iloc]=atan2(locy[iloc], locx[iloc]);
     }

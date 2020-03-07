@@ -51,6 +51,27 @@ void addnoise(dmat *A,              /**<[in/out]The pixel intensity array*/
     }
 }
 /**
+   Add noise to gradients according to neal, which is LL' decomposition of the sanea
+ */
+void addnoise_grad(dmat *grad, const dmat *neal, rand_t *srand){
+    const long nsa=neal->nx;
+    assert(nsa*2==grad->nx*grad->ny);
+    const real *neax=PCOL(neal, 0);
+    const real *neay=PCOL(neal, 1);
+    const real *neaxy=PCOL(neal, 2);
+    real *restrict ggx=grad->p;
+    real *restrict ggy=grad->p+nsa;
+    for(long isa=0; isa<nsa; isa++){
+	/*Preserve the random sequence. */
+	real n1=randn(srand);
+	real n2=randn(srand);
+	real errx=neax[isa]*n1;
+	real erry=neay[isa]*n2+neaxy[isa]*n1;/*cross term. */
+	ggx[isa]+=errx;
+	ggy[isa]+=erry;
+    }
+}
+/**
    Determine the CoG on multiple locations near the nominal position.
 */
 int cog_multi(

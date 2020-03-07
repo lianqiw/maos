@@ -658,7 +658,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
     real *srot=(parms->powfs[ipowfs].radpix)?
 	powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
     for(int icol=0; icol<1000; icol+=dtrat){
-	setup_powfs_etf(powfs, parms, ipowfs, 0, icol);
+	setup_powfs_etf(powfs, parms, 0, ipowfs, 0, icol);
 	gensei(parms, powfs, ipowfs);
 	dcell *i0_new=powfs[ipowfs].intstat->i0;
 	//writebin(i0_new, "i0_%d", icol);
@@ -827,15 +827,17 @@ real wfsfocusadj(SIM_T *simu, int iwfs){
     const int isim=simu->wfsisim;
     real focus=0;
     if(parms->powfs[ipowfs].llt){
-	if(powfs[ipowfs].focus){
+	if(powfs[ipowfs].focus){//input focus error due to range variation
 	    focus+=PR(powfs[ipowfs].focus, isim, wfsind);
 	}
-	if(simu->zoomreal && parms->powfs[ipowfs].llt){
-	    if(simu->zoompos && simu->zoompos->p[iwfs]){
-		simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
-	    }
-	    focus-=simu->zoomreal->p[iwfs];
-	}
+	/*
+	  The following has been migrated to sim_update_etf to change the hs directly.
+	  if(simu->zoomreal && parms->powfs[ipowfs].llt){
+	  if(simu->zoompos && simu->zoompos->p[iwfs]){//save
+	  simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
+	  }
+	  focus-=simu->zoomreal->p[iwfs];
+	  }*/
     }
     if(simu->telfocusreal){
 	focus-=simu->telfocusreal->p[0]->p[0];
@@ -844,16 +846,19 @@ real wfsfocusadj(SIM_T *simu, int iwfs){
 }
 /**
    Expected averaged position of dithering signal during WFS integration. Called when (isim+1)%dtrat=0
+   
+   
 */
-void dither_position(real *cs, real *ss, const PARMS_T *parms, int ipowfs, int isim, real deltam){
-    //adjust for delay due to propagation, and computation delay. no effect when al+1=dtrat, which makes 2 wfs frame delay.
-    const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
+
+void dither_position(real *cs, real *ss, int alfsm, int dtrat, int npoint, int isim, real deltam){
+    //adjust for delay due to propagation, and computation delay if delay is not 2 frame.
+    const int adjust=alfsm+1-dtrat;
     //adjust to get delay at beginning of integration
-    const int adjust2=parms->powfs[ipowfs].dtrat-1;
-    const real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-    const real angle=((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
-    const real angle2=((isim-adjust)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
-    const real delay=(real)adjust/parms->powfs[ipowfs].dtrat;
+    const int adjust2=dtrat-1;
+    const real anglei=(2*M_PI/npoint);
+    const real angle=((isim-adjust-adjust2)/dtrat)*anglei+deltam;
+    const real angle2=((isim-adjust)/dtrat)*anglei+deltam;
+    const real delay=(real)adjust/dtrat;
     const real beta=1+delay+floor(-delay);
     const real scale=1./(beta*beta+(1-beta)*(1-beta));
     //use average of two places during accumulation and scale
@@ -943,7 +948,7 @@ void parabolic_peak_sum(real *grad, dmat *corr, int nbox){
 /**
    Calculate gradients using current specified algorithm
 */
-void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, const int iwfs, const int phytype){
+void shwfs_grad(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, const int iwfs, const int phytype){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int nsa=powfs[ipowfs].saloc->nloc;
     const real rne=parms->powfs[ipowfs].rne;
@@ -1119,4 +1124,24 @@ void wait_dmreal(SIM_T *simu, int isim){
 	pthread_mutex_unlock(&simu->dmreal_mutex);
 	pthread_cond_signal(&simu->dmreal_condw);
     }
+}
+
+void draw_ints(const dcell *ints, const loc_t *saloc, int iwfs){
+    dmat *ints2=0;
+    if(ints->nx==1){//T
+	ints2=dref(ints->p[0]);
+    }else if(ints->nx==4){//TTF
+	dcell *ints3=dcellref(ints);
+	cellreshape(ints3, 2, 2);
+	ints2=dcell2m(ints3);
+	dcellfree(ints3);
+    }else{
+	dcell *ints3=0;
+	loc_embed_cell(&ints3, saloc, ints);
+	ints2=dcell2m(ints3);
+	dcellfree(ints3);
+    }
+    ddraw("Ints", ints2, NULL, NULL, "WFS Subaperture Images",
+	  "x", "y", "wfs %d", iwfs);
+    dfree(ints2);
 }
