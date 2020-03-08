@@ -25,7 +25,7 @@ math/tmp.c*
 #misc
 *.tar*
 *~
-
+.DS_Store
 scripts/*.app
 *.stackdump
 */.#*

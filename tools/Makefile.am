@@ -2,8 +2,8 @@ AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDOPTS) $(LDEXE)
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
-icon-finished.h icon-optics.h icon-waiting.h mouse_black.h mouse_hand.h mouse_white.h mygtk.h\
-button-err.png button-ok.png button-play.png button-wait.png icon-waiting.png monitor.png mouse_black.png mouse_hand.png mouse_white.png monitor.html
+icon-finished.h icon-waiting.h icon-skip.h icon-save.h icon-connect.h icon-clear.h mygtk.h\
+button-err.png button-ok.png button-play.png button-wait.png monitor.html
 noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h $(ICONS) 
 
 PROGS=

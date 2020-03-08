@@ -55,12 +55,22 @@ static int notify_daemon=1;
 #include "icon-running.h"
 #include "icon-failed.h"
 #include "icon-waiting.h"
+#include "icon-cancel.h"
+#include "icon-save.h"
+#include "icon-skip.h"
+#include "icon-clear.h"
+#include "icon-connect.h"
+
 GdkPixbuf *icon_main=NULL;
 GdkPixbuf *icon_finished=NULL;
 GdkPixbuf *icon_failed=NULL;
 GdkPixbuf *icon_running=NULL;
 GdkPixbuf *icon_waiting=NULL;
-
+GdkPixbuf *icon_cancel=NULL;
+GdkPixbuf *icon_save=NULL;
+GdkPixbuf *icon_skip=NULL;
+GdkPixbuf *icon_clear=NULL;
+GdkPixbuf *icon_connect=NULL;
 static GtkStatusIcon *status_icon=0;
 GtkWidget *notebook=NULL;
 GtkWidget **pages;
@@ -705,11 +715,16 @@ int main(int argc, char *argv[])
     gdk_color_parse("#FFFFFF",&color_odd);
 
 
-    icon_main=gdk_pixbuf_new_from_inline(-1,icon_monitor, FALSE, NULL);
+    icon_main=gdk_pixbuf_new_from_inline(-1,icon_inline_monitor, FALSE, NULL);
     icon_finished=gdk_pixbuf_new_from_inline(-1,icon_inline_finished,FALSE,NULL);
     icon_failed=gdk_pixbuf_new_from_inline(-1,icon_inline_failed,FALSE,NULL);
     icon_running=gdk_pixbuf_new_from_inline(-1,icon_inline_running,FALSE,NULL);
     icon_waiting=gdk_pixbuf_new_from_inline(-1,icon_inline_waiting,FALSE,NULL);
+    icon_cancel=gdk_pixbuf_new_from_inline(-1,icon_inline_cancel,FALSE,NULL);
+    icon_save=gdk_pixbuf_new_from_inline(-1,icon_inline_save,FALSE,NULL);
+    icon_skip=gdk_pixbuf_new_from_inline(-1,icon_inline_skip,FALSE,NULL);
+    icon_clear=gdk_pixbuf_new_from_inline(-1,icon_inline_clear,FALSE,NULL);
+    icon_connect=gdk_pixbuf_new_from_inline(-1,icon_inline_connect,FALSE,NULL);
     /*GtkWidget *image_finished=gtk_image_new_from_stock(GTK_STOCK_APPLY, GTK_ICON_SIZE_MENU);
     gtk_widget_show(image_finished);
     icon_finished=gtk_image_get_pixbuf(GTK_IMAGE(image_finished));
@@ -794,15 +809,15 @@ int main(int argc, char *argv[])
     gtk_container_add(GTK_CONTAINER(window), vbox);
     {
 	toptoolbar=gtk_toolbar_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("computer", NULL, "Connect", add_host_event,  -1), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("computer", icon_connect, "Connect", add_host_event,  -1), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", NULL,"Clear skipped jobs", clear_jobs, 2),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", icon_skip,"Clear skipped jobs", clear_jobs, 2),  -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select",icon_finished, "Clear finished jobs", clear_jobs, 1),-1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, 3),  -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear-all", NULL, "Clear all jobs", clear_jobs, 4),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, 4),  -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("process-stop",NULL, "Kill all jobs", kill_all_jobs, -1),  -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy",NULL, "Save jobs to file", save_all_jobs, -1),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("process-stop",icon_cancel, "Kill all jobs", kill_all_jobs, -1),  -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy",icon_save, "Save jobs to file", save_all_jobs, -1),  -1);
 
 	gtk_widget_show_all(toptoolbar);
 	gtk_box_pack_start(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);

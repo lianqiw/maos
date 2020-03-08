@@ -18,8 +18,6 @@
 #include <tgmath.h>
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
-#include "mouse_hand.h"
-#include "mouse_white.h"
 
 #ifndef GTK_WIDGET_HAS_FOCUS
 #define GTK_WIDGET_HAS_FOCUS gtk_widget_has_focus
@@ -1368,8 +1366,6 @@ static gboolean window_state(GtkWidget *window, GdkEvent *event){
 GtkWidget *create_window(){
     if(!cursors[1]){
 	GdkDisplay *display=gdk_display_get_default();
-	//pix_hand=gdk_pixbuf_new_from_inline(-1, mouse_hand, FALSE, NULL);
-	//pix_arrow=gdk_pixbuf_new_from_inline(-1, mouse_white, FALSE, NULL);
 	cursors[0]=gdk_cursor_new_from_name(display, "default");
 	cursors[1]=gdk_cursor_new_from_name(display, "crosshair");
 #if GTK_MAJOR_VERSION < 3
