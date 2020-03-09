@@ -24,6 +24,12 @@
 */
 #include <stdint.h>
 extern uint16_t PORT;
+extern int nhost;
+extern char **hosts;
+extern char **hostsaddr;
+void parse_host(char *line);
+void free_hosts();
+void init_hosts();
 /*called by maos */
 void* scheduler_listen(void(*fun)(int));
 int scheduler_start(char *path, int nthread, int ngpu, int waiting);

@@ -301,6 +301,7 @@ static __attribute__((constructor)) void init(){
     }
     void init_process(void);
     init_process();
+    init_hosts();
 }
 /**
    Register routines to be called with mem.c is unloading (deinit).
@@ -311,6 +312,7 @@ static __attribute__((destructor)) void deinit(){
     //remove files that are 365 days old.
     remove_file_older(CACHE, 1, 30*24*3600);//1 month
     freepath();
+    free_hosts();
     thread_pool_destroy();
     for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){
 	DEINIT=p1->next;

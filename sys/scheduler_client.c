@@ -95,9 +95,66 @@ int scheduler_recv_socket(int *sfd, int id){
 }
 #else
 uint16_t PORT=0;
+char** hosts=0;
+char** hostsaddr=0;
+int nhost=0;
+PNEW(mutex_hosts);
+/**
+   Parse and add host info to hosts[] and hostaddr[]. The format is hostname[=hostaddr:port]
+*/
+void parse_host(char *line){
+    static int memhost=0;
+    if(strlen(line)>0 && line[0]!='#'){
+	LOCK(mutex_hosts);
+	if(memhost<nhost+1){
+	    memhost+=10;
+	    hosts=realloc(hosts, memhost*sizeof(char*));
+	    hostsaddr=realloc(hostsaddr, memhost*sizeof(char*));
+	}
+
+	char *eq=strchr(line, '=');
+	if(eq){
+	    eq[0]='\0'; eq++;
+	}else{
+	    eq=line;
+	}
+	hosts[nhost]=strdup(line);
+	hostsaddr[nhost]=strdup(eq);
+	nhost++;
+	UNLOCK(mutex_hosts);
+    }
+}
+/**
+   free hosts[] and hostsaddr[]
+ */
+void free_hosts(){
+    LOCK(mutex_hosts);
+    for(int ihost=0; ihost<nhost; ihost++){
+	free(hosts[ihost]);
+	free(hostsaddr[ihost]);
+    }
+    free(hosts);
+    free(hostsaddr);
+    nhost=0;
+    UNLOCK(mutex_hosts);
+}
+/*
+
+static int myhostid(const char *host){
+    int i;
+    for(i=0; i<nhost; i++){
+	if(!strncasecmp(hosts[i],host,strlen(hosts[i])))
+	    break;
+    }
+    if(i==nhost){
+	i=-1;
+    }
+    return i;
+    }*/
 
 /*Initialize hosts and associate an id number */
-static __attribute__((constructor)) void init_port(){
+//static __attribute__((constructor))
+void init_hosts(){
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;
@@ -108,11 +165,22 @@ static __attribute__((constructor)) void init_port(){
 	}
 	fclose(fp);
     }
-    if(PORT==0){
-	//user dependent PORT to avoid conflict 
+    if(PORT<1000){ //user dependent PORT to avoid conflict 
 	PORT= (uint16_t)((uint16_t)(hashlittle(USER,strlen(USER),0)&0x2FFF)|10000);
     }
- 
+
+    snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
+    fp=fopen(fn,"r");
+    if(fp){
+	char line[64];
+	while(fscanf(fp,"%s ",line)==1){
+	    parse_host(line);
+	}
+	fclose(fp);
+    }
+    /*if(myhostid(HOST)==-1){
+	parse_host("localhost");//use local machine 
+	}*/
 }
 
 /**
