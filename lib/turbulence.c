@@ -337,10 +337,10 @@ dmat* turbcov(dmat *r, real rmax, real r0, real L0){
     long n=r->nx*r->ny;
     if(!isfinite(L0)){/*kolmogorov. */
 	const real power=5./3.;
-	real coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
-	real sigma2=0.5*coeff*pow(rmax, power);
+	real coeff=0.5*6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
+	real sigma2=coeff*pow(rmax, power);
 	for(long i=0; i<n; i++){
-	    cov->p[i]=sigma2-0.5*coeff*pow(r->p[i], power);
+	    cov->p[i]=sigma2-coeff*pow(r->p[i], power);
 	}
     }else{/*von karman. */
 	const real f0=1./L0;

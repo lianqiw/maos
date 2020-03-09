@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "genotf.h"
+#include "turbulence.h"
 /**
 private data struct to mark valid pairs of points.  */
 typedef struct T_VALID{
@@ -129,30 +130,33 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
 static void genotf_do(cmat **otf, long pttr, long npsfx, long npsfy,
 		      loc_t *loc, const real *amp, const real *opdbias, real wvl,
 		      const dmat* B,  const T_VALID *pval){
-    real ampsum=dvecsum(amp, loc->nloc);
-    if(ampsum<=loc->nloc*0.001){
-	warning("genotf_do: amplitude sum to less than 0.1%%. Skip\n");
-	return;
+    {
+	real ampsum=dvecsum(amp, loc->nloc);
+	real ampmax;
+	dmaxmin(amp, loc->nloc, &ampmax, 0);
+	if(ampsum<=ampmax*0.1*sqrt((real)loc->nloc)){
+	    warning("genotf_do: amplitude may be too sparse\n");
+	}
     }
     long nloc=loc->nloc;
-    dmat *B2;
+    dmat *BP;
     if(pttr){/*remove p/t/t from the B matrix */
-	B2=pttr_B(B,loc,amp);
+	BP=pttr_B(B,loc,amp);
     }else{
-	B2=ddup(B);/*duplicate since we need to modify it. */
+	BP=ddup(B);/*duplicate since we need to modify it. */
     }
-    dmat*  BP=B2;
+
     if(!*otf){
 	*otf=cnew(npsfx,npsfy);
     }
     /*Do the exponential.*/
     real k2=pow(2*M_PI/wvl,2);
-    real *restrict BPD=mymalloc(nloc,real);
+    dmat *BPD=dnew(nloc,1);
     for(long iloc=0; iloc<nloc; iloc++){
 	for(long jloc=0; jloc<nloc; jloc++){
 	    P(BP,jloc,iloc)=exp(k2*P(BP,jloc,iloc));
 	}
-	BPD[iloc]=pow(P(BP,iloc,iloc), -0.5);
+	P(BPD,iloc)=pow(P(BP,iloc,iloc), -0.5);
     }
     real otfnorm=0;
     if(amp){
@@ -163,34 +167,34 @@ static void genotf_do(cmat **otf, long pttr, long npsfx, long npsfy,
 	otfnorm=nloc;
     }
     otfnorm=1./otfnorm;
+    
     struct T_VALID (*qval)[npsfx]=(struct T_VALID (*)[npsfx])pval;
 
     comp wvk=COMPLEX(0, 2.*M_PI/wvl);
     for(long jm=0; jm<npsfy; jm++){
 	for(long im=0; im<npsfx; im++){
 	    long (*jloc)[2]=qval[jm][im].loc;
-	    comp tmp=0.;
+	    comp tmpc=0.;
+	    real tmpr=0.;
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
-		real tmp1=BPD[iloc1]*P(BP, iloc2, iloc1);
-		real tmp2=BPD[iloc2];
+		real tmp12=P(BPD,iloc1)*P(BPD,iloc2)*P(BP, iloc2, iloc1);
 		if(amp){
-		    tmp1*=amp[iloc1];
-		    tmp2*=amp[iloc2];
+		    tmp12*=amp[iloc1]*amp[iloc2];
 		}
 		if(opdbias){
 		    comp tmp3=cexp(wvk*(opdbias[iloc1]-opdbias[iloc2]));
-		    tmp+=tmp1*tmp2*tmp3;
+		    tmpc+=tmp12*tmp3;
 		}else{
-		    tmp+=tmp1*tmp2;
+		    tmpr+=tmp12;
 		}
 	    }
-	    P(*otf,im,jm)=tmp*otfnorm;
+	    P(*otf,im,jm)=(tmpc+tmpr)*otfnorm;
 	}
     }
-    free(BPD);
-    dfree(B2);
+    dfree(BPD);
+    dfree(BP);
 }
 /**
    A wrapper to execute pttr parallel in pthreads
@@ -237,10 +241,10 @@ static void genotf_wrap(thread_t *info){
    2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
    first subaperture to build pval, but this one is not fully illuminated. 
  */
-static T_VALID *gen_pval(long npsfx, long npsfy, loc_t *loc, real xsep, real ysep){
-    long nloc=loc->nloc;
-    real *locx=loc->locx;
-    real *locy=loc->locy;
+static T_VALID *gen_pval(long npsfx, long npsfy, loc_t *loc){
+    const long nloc=loc->nloc;
+    const real *locx=loc->locx;
+    const real *locy=loc->locy;
     const long pvaltot=npsfx*npsfy*nloc*2;
     typedef long long2[2];
     long2 *pval0=mymalloc(pvaltot,long2);
@@ -256,17 +260,18 @@ static T_VALID *gen_pval(long npsfx, long npsfy, loc_t *loc, real xsep, real yse
     long npsfy2=npsfy/2;
     real dx1=1./loc->dx;
     real dy1=1./loc->dy;
+    lmat *mloc=lnew(2, loc->nloc);
+    for(long iloc=0; iloc<loc->nloc; iloc++){
+	P(mloc,0,iloc)=(long)round((locx[iloc]-map->ox)*dx1);
+	P(mloc,1,iloc)=(long)round((locy[iloc]-map->oy)*dy1);
+    }
     for(long jm=0; jm<npsfy; jm++){
 	long jm2=(jm-npsfy2);/*peak in the center */
-	/*long jm2=jm<npsfy2?jm:jm-npsfy;//peak in the corner */
 	for(long im=0; im<npsfx; im++){
 	    long im2=(im-npsfx2);
-	    /*long im2=im<npsfx2?im:im-npsfx; */
 	    count2=count;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
-		long iy=(long)round((locy[iloc]+jm2*ysep-map->oy)*dy1);
-		long ix=(long)round((locx[iloc]+im2*xsep-map->ox)*dx1);
-		long iloc2=(long)loc_map_get(map, ix, iy);
+		long iloc2=(long)loc_map_get(map, P(mloc,0,iloc)+im2, P(mloc,1,iloc)+jm2);
 		if(iloc2>0){
 		    pval0[count][0]=iloc;
 		    pval0[count][1]=iloc2-1;
@@ -285,23 +290,19 @@ static T_VALID *gen_pval(long npsfx, long npsfy, loc_t *loc, real xsep, real yse
     return pval;
 }
 /**
-   Generate the turbulence covariance matrix B with B(i,j)=-0.5*D(x_i, x_j). We
-   are neglecting the DC part since the OTF only depends on the structure
-   function.  */
-static dmat* genotfB(loc_t *loc, real r0, real L0){
-    (void)L0;
+   Compute the separation vector of each point in loc.
+*/
+static dmat *loc_sep(const loc_t *loc){
     long nloc=loc->nloc;
     real *locx=loc->locx;
     real *locy=loc->locy;
-    dmat *B=dnew(nloc, nloc);
-    const real coeff=6.88*pow(2*M_PI/0.5e-6,-2)*pow(r0,-5./3.)*(-0.5);
+    dmat *sep=dnew(nloc, nloc);
     for(long i=0; i<nloc; i++){
 	for(long j=i; j<nloc; j++){
-	    real rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
-	    P(B,i,j)=P(B,j,i)=coeff*pow(rdiff2,5./6.);
+	    P(sep, i, j)=P(sep, j, i)=sqrt(pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2));
 	}
     }
-    return B;
+    return sep;
 }
 /**
    Generate OTFs for an aperture or multiple subapertures. ALl these apertures
@@ -336,12 +337,22 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	error("nsa, notfx, notfy has to be at least 1\n");
     }
     /*creating pairs of points that both exist with given separation*/
-    T_VALID *pval=gen_pval(npsfx, npsfy, loc, loc->dx, loc->dx);/*returns T_VALID array. */
+    T_VALID *pval=gen_pval(npsfx, npsfy, loc);/*returns T_VALID array. */
     /* Generate the B matrix. */
-    dmat *B=cov?(dmat*)cov:genotfB(loc, r0, l0);
+    dmat *B;
+    if(cov){
+	B=(dmat*)cov;
+    }else{
+	dmat *sep=loc_sep(loc);
+	B=turbcov(sep, 0, r0, l0);
+	dfree(sep);
+    }
     cmat *otffull=NULL;
     const long nloc=loc->nloc;
     long isafull=-1;
+    if(opdbias && dsumsq(opdbias)==0){
+	opdbias=0;
+    }
     if(!opdbias && nsa>1){
 	real maxarea=0;
 	for(long isa=0; isa<nsa; isa++){

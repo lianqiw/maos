@@ -3148,11 +3148,11 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
     if(use_cuda){
 	if(parms->recon.alg==0){/*MV*/
 	    if(parms->gpu.fit==1 && !parms->fit.assemble){
-		warning("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
+		info("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
 		parms->fit.assemble=1;
 	    }
 	    if(parms->gpu.fit==2 && !parms->fit.square){
-		warning("GPU fitting=2 requires fit.square=1. Changed\n");
+		info("GPU fitting=2 requires fit.square=1. Changed\n");
 		parms->fit.square=1;
 	    }
 	    if(parms->nmoao>0){

@@ -787,10 +787,11 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
     dcp(&simu->zoomreal, simu->zoomint);
     dadd(&simu->zoomint, 1, simu->zoomerr, 1);
     dadd(&simu->zoomint, 1, simu->zoomerr2, 1);
-    
-    for(int iwfs=0; simu->zoomreal && iwfs<parms->nwfs; iwfs++){
-	if(simu->zoompos->p[iwfs]){
-	    simu->zoompos->p[iwfs]->p[simu->wfsisim]=simu->zoomreal->p[iwfs];
+    if(simu->zoomreal && simu->zoompos){
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(simu->zoompos->p[iwfs]){
+		simu->zoompos->p[iwfs]->p[simu->wfsisim]=simu->zoomreal->p[iwfs];
+	    }
 	}
     }
     if(update_etf) sim_update_etf(simu);//force an update. Otherwise, zoomreal is absorbed with next ETF.

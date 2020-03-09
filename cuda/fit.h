@@ -49,7 +49,7 @@ protected:
 public:
     cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, const curecon_geom *_grid=0);
     virtual ~cufit_grid(){
-	delete dir;
+	delete [] dir;
     }
     virtual void R(curcell &out, Real beta, 
 		   curcell &xin, Real alpha, stream_t &stream);
