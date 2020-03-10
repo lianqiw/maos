@@ -181,7 +181,9 @@ int draw_add(int fd){
 static void draw_remove(int fd, int reuse){
     if(fd<0) return;
     if(reuse){
-	scheduler_send_socket(fd, DRAW_ID);
+	if(scheduler_send_socket(fd, DRAW_ID)){
+	    close(fd);
+	}
     }
     close(fd);
     int found=0;

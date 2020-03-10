@@ -24,7 +24,7 @@
    Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
 static dspcell *
 setup_fit_HXF(const FIT_T *fit){
-    info("Generating HXF");TIC;tic;
+    info2("Generating HXF");TIC;tic;
     if(!fit->xloc) return 0;
     const int nfit=fit->thetax->nx;
     const int npsr=fit->xloc->nx;
@@ -52,7 +52,7 @@ setup_fit_HA(FIT_T *fit){
     const int nfit=fit->thetax->nx;
     const int ndm=fit->aloc->nx;
     dspcell *HA=dspcellnew(nfit, ndm);
-    info("Generating HA ");TIC;tic;
+    info2("Generating HA ");TIC;tic;
 #pragma omp parallel for collapse(2)
     for(int ifit=0; ifit<nfit; ifit++){
 	for(int idm=0; idm<ndm; idm++){
@@ -94,7 +94,7 @@ setup_fit_HA(FIT_T *fit){
 	  HA*actinterp*a. We replace HA by HA*actinterp to take this into
 	  account during DM fitting.
 	*/
-	info("Replacing HA by HA*fit->interp\n");
+	info2("Replacing HA by HA*fit->interp\n");
 	
 	dspcell *HA2=0;
 	dcellmm(&HA2, HA, fit->actinterp, "nn", 1);
@@ -136,7 +136,7 @@ setup_fit_lrt(FIT_T *fit){
     }
     int inw=0;/*current column */
     if(fit->flag.lrt_piston){
-	info("Adding piston cr to fit matrix\n");
+	info2("Adding piston cr to fit matrix\n");
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=fit->aloc->p[idm]->nloc;
 	    real *p=fit->NW->p[idm]->p+(inw+idm)*nloc;
@@ -151,7 +151,7 @@ setup_fit_lrt(FIT_T *fit){
     }
     if(fit->flag.lrt_tt){
 	real factor=0;
-	info("Adding TT cr on upper DMs to fit matrix.\n");
+	info2("Adding TT cr on upper DMs to fit matrix.\n");
 	factor=fitscl*2./loc_diam(fit->aloc->p[0]);
 	for(int idm=1; idm<ndm; idm++){
 	    int nloc=fit->aloc->p[idm]->nloc;
@@ -206,12 +206,12 @@ setup_fit_matrix(FIT_T *fit){
     dspcell* HA=fit->HA;
     dspcell *HAT=dspcelltrans(HA);
     
-    info("Before assembling fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    print_mem("Before assembling fit matrix");
     /*Assemble Fit matrix. */
     if(!fit->FR.M && fit->flag.assemble){
 	if(fit->HXF){//not idealfit.
 	    const int npsr=fit->xloc->nx;
-	    info("Building fit->FR\n");
+	    info2("Building fit->FR\n");
 	    fit->FR.M=cellnew(ndm, npsr);
 	    dspcell* FRM=(dspcell*)fit->FR.M;
 	    dspcell* HXF=fit->HXF;
@@ -265,7 +265,7 @@ setup_fit_matrix(FIT_T *fit){
     }
 
     if(!fit->FL.M){
-	info("Building fit->FL\n");
+	info2("Building fit->FL\n");
 	fit->FL.M=cellnew(ndm, ndm);
 	dspcell *FLM=(dspcell*)fit->FL.M;
 	for(int idm=0; idm<ndm; idm++){
@@ -289,8 +289,8 @@ setup_fit_matrix(FIT_T *fit){
 		nact+=fit->aloc->p[idm]->nloc;
 	    }
 	    real maxeig=4./nact;
-	    info("Adding tikhonov constraint of %g to FLM\n", tikcr);
-	    info("The maximum eigen value is estimated to be around %e\n", maxeig);
+	    info2("Adding tikhonov constraint of %g to FLM\n", tikcr);
+	    info2("The maximum eigen value is estimated to be around %e\n", maxeig);
 	    dcelladdI(fit->FL.M,tikcr*maxeig);
 	}
 
@@ -305,7 +305,7 @@ setup_fit_matrix(FIT_T *fit){
 	    dcelladd(&fit->FL.M, 1, fit->actslave, 1);
 	}
 	/*dspcellsym(fit->FL.M); */
-	info("DM Fit number of Low rank terms: %ld in LHS\n", fit->FL.U->p[0]->ny);
+	info2("DM Fit number of Low rank terms: %ld in LHS\n", fit->FL.U->p[0]->ny);
     }
     dspcellfree(HAT);
     if(fit->flag.alg==0 || fit->flag.alg==2){
@@ -325,10 +325,10 @@ setup_fit_matrix(FIT_T *fit){
 	    dcellfree(fit->FL.U);
 	    dcellfree(fit->FL.V);
 	}
-	info("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+	print_mem("After cholesky/svd on matrix");
     }
   
-    info("After assemble fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    print_mem("After assemble fit matrix");
 }
 /**
    A generic DM fitting routine.

@@ -34,6 +34,7 @@
 #include "misc.h"
 #include "path.h"
 #include "bin.h"
+#include "scheduler_client.h"
 /**
    Obtain the basename of a file. The returnned string must be freed.  Behavior
    is the same as basename() except that this implementation is reentrant and

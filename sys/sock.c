@@ -80,6 +80,7 @@
 #include "sock.h"
 #include "thread.h"
 #include "sockio.h"
+#include "scheduler_client.h"
 /**
    When the keepalive flag is on, the socket will receive notice when the
    connection to remote socket is disrupted.

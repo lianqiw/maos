@@ -47,5 +47,4 @@ extern "C"{
 void register_deinit(void (*fun)(void), void *data);
 void malloc_dbg_enable();
 int malloc_dbg_disable(int print);
-void print_backtrace();
 #endif

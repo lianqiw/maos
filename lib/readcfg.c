@@ -221,7 +221,7 @@ void close_config(const char *format, ...){
     format2fn;
     const char *fnout=format?fn:NULL;
     if(MROOT){
-	info("Used %ld of %ld supplied keys\n",nused, nstore);
+	info2("Used %ld of %ld supplied keys\n",nused, nstore);
 	if(fnout && strlen(fnout)>0 && !disable_save) fpout=fopen(fnout, "w");
 	twalk(MROOT, print_key);
 	if(fpout) fclose(fpout);
@@ -316,7 +316,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		free(embeded);
 	    }else if(!strcmp(ssline, "__reset__")){
 		if(nstore>0){
-		    info("Replacing all existing input\n");
+		    info2("Replacing all existing input\n");
 		    erase_config();
 		}
 		countnew=0;
@@ -348,7 +348,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	}else if(!strcmp(var,"path") || !strcmp(var, "PATH")){
 	    char *val2=strextract(value);
 	    addpath2(val2, 99);
-	    info("addpath %s\n", val2);
+	    info2("addpath %s\n", val2);
 	    free(val2);
 	}else if(!strcmp(var,"include")){
 	    /*dbg("Opening embeded config file %s\n",value); */
@@ -439,10 +439,10 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		}else if(diffval){
 		    if(oldstore->priority > priority){
 			countskip++;
-			info("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
+			info2("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
 			//Skip the entry.
 		    }else{
-			info("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
+			info2("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
 			/*free old value */
 			free(oldstore->data);
 			/*move pointer of new value. */
@@ -466,7 +466,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	}
 	ssline[0]='\0';
     }
-    info("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew,fd?config_file:"command line");
+    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew,fd?config_file:"command line");
     if(fd){
 	fclose(fd);
     }

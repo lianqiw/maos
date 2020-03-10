@@ -250,11 +250,6 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	  PSF/OTF/ETF is defined in x/y coordinate. 
 	  2010-01-04: Fuse dtf nominal into etf for this case.
 	*/
-	if(dtfs[iwvl].radpix){
-	    info_once("2D ETF for Radial CCD\n");
-	}else{
-	    info_once("Non-Radial CCD\n");
-	}
 	petf=etfs[iwvl].etf=ccellnew(nsa,nllt);
 	
 	etfs[iwvl].icol=icol;

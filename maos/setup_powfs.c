@@ -268,11 +268,11 @@ setup_shwfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     const real dx=dsa/nx;/*adjust dx. */
     const real dxoffset=dx*0.5;//Always keep points inside subaperture for simulation.
     if(fabs(parms->powfs[ipowfs].dx-dx)>EPS)
-	info("Adjusting dx from %g to %g\n", parms->powfs[ipowfs].dx,dx);
+	info2("Adjusting dx from %g to %g\n", parms->powfs[ipowfs].dx,dx);
     if(fabs(dsa - nx * dx)>EPS){
 	warning("nx=%d,dsa=%f,dx=%f not agree\n", nx, dsa, dx);
     }
-    info("There are %d points in each subaperture of %gm.\n", nx, dsa);
+    info2("There are %d points in each subaperture of %gm.\n", nx, dsa);
     const int nxsa=nx*nx;/*Total Number of OPD points. */
     if(parms->powfs[ipowfs].saloc){
 	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
@@ -402,7 +402,7 @@ setup_shwfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(!parms->powfs[ipowfs].saloc && !parms->powfs[ipowfs].amp){
 	sa_reduce(powfs, ipowfs, thresarea);
     }
-    info("There are %ld valid subaperture in saloc.\n", powfs[ipowfs].saloc->nloc);
+    info("There are %ld valid subaperture.\n", powfs[ipowfs].saloc->nloc);
     setup_powfs_misreg_dm(powfs, parms, aper, ipowfs);
     powfs[ipowfs].realsaa=dcellnew(nwfsp, 1);
     for(int jwfs=0; jwfs<nwfsp; jwfs++){
@@ -595,7 +595,7 @@ void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
 	dcell *nea=0;
 	//if(parms->powfs[ipowfs].neaphy || parms->powfs[ipowfs].phystep>-1){
 	if(powfs[ipowfs].sanea){
-	    info("Use sanea to derive neasim\n");
+	    info2("Use sanea to derive neasim\n");
 	    nea=dcelldup(powfs[ipowfs].sanea);
 	    for(int ii=0; ii<nea->nx; ii++){
 		nea_chol(&nea->p[ii], nea->p[ii]);
@@ -760,7 +760,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	}
 	powfs[ipowfs].notfx=notf;
 	powfs[ipowfs].notfy=notf;
-	info("notf is %dx%d (%s)\n", powfs[ipowfs].notfx, powfs[ipowfs].notfy, okind);
+	info2("notf is %dx%d (%s)\n", powfs[ipowfs].notfx, powfs[ipowfs].notfy, okind);
 	if(safov > dtheta*notf){
 	    warning("Subaperture PSF size (%g\") is smaller than detector FoV (%g\").\n", 
 		    dtheta*notf*206265, safov*206265);
@@ -770,13 +770,13 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 
     if(parms->powfs[ipowfs].bkgrndfn){
 	char *fn=parms->powfs[ipowfs].bkgrndfn;
-	info("Loading sky background/rayleigh backscatter from %s\n",fn);
+	info2("Loading sky background/rayleigh backscatter from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrnd);
 	powfs[ipowfs].bkgrnd=dcellread("%s",fn);
     }
     if(parms->powfs[ipowfs].bkgrndfnc){
 	char *fn=parms->powfs[ipowfs].bkgrndfnc;
-	info("Loading sky background/rayleigh backscatter correction from %s\n",fn);
+	info2("Loading sky background/rayleigh backscatter correction from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrndc);
 	powfs[ipowfs].bkgrndc=dcellread("%s",fn);
     }
@@ -876,7 +876,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     if(parms->powfs[ipowfs].pixoffx||parms->powfs[ipowfs].pixoffy){
 	const int nsa=powfs[ipowfs].pts->nsa;
 	if(fabs(parms->powfs[ipowfs].pixoffx)<1){
-	    info("powfs%d: uniform pixel offset\n", ipowfs);
+	    info2("powfs%d: uniform pixel offset\n", ipowfs);
 	    //both pixoff within 1 denotes constant offset in unit of pixel.
 	    pixoffx=dnew(nsa,1); dset(pixoffx, parms->powfs[ipowfs].pixoffx);
 	    pixoffy=dnew(nsa,1); dset(pixoffy, parms->powfs[ipowfs].pixoffy);
@@ -885,7 +885,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    pixoffx=dnew(nsa, nwfs);
 	    pixoffy=dnew(nsa, nwfs);
 	    if(parms->powfs[ipowfs].pixoffx==1){
-		info("powfs%d: CCD rotation wrt lenslet @ %g pixel.\n", ipowfs, parms->powfs[ipowfs].pixoffy);
+		info2("powfs%d: CCD rotation wrt lenslet @ %g pixel.\n", ipowfs, parms->powfs[ipowfs].pixoffy);
 		//pixoffx==1 denotes clocking effect with pixoffy denotes maximum amount in unit of pixel CCW.
 		real pixtheta=0.5*(parms->powfs[ipowfs].pixtheta+parms->powfs[ipowfs].radpixtheta);
 		const real dsah=powfs[ipowfs].pts->dsa*0.5;
@@ -909,7 +909,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		}
 	
 	    }else if(parms->powfs[ipowfs].pixoffx==2){
-		info("powfs%d: CCD global shift wrt lenslet @ %g pixel.\n", ipowfs, parms->powfs[ipowfs].pixoffy);
+		info2("powfs%d: CCD global shift wrt lenslet @ %g pixel.\n", ipowfs, parms->powfs[ipowfs].pixoffy);
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
 		    for(int isa=0; isa<nsa; isa++){
 			real gx=parms->powfs[ipowfs].pixoffy;
@@ -1018,7 +1018,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    const real dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
 	    powfs[ipowfs].sodium->p[i]=smooth(Nain, dxnew);
 	}else{
-	    info("Not smoothing sodium profile\n");
+	    info2("Not smoothing sodium profile\n");
 	    powfs[ipowfs].sodium->p[i]=dref(Nain);
 	}
 	for(int ih=0; ih<powfs[ipowfs].sodium->p[i]->nx; ih++){
@@ -1084,8 +1084,8 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, double deltah, int ip
 	    if(etfthread){//preparation already running in a thread
 		pthread_join(etfthread, (void**)(void*)&etfasync);
 		if(etfasync->icol!=icol){
-		    info("Async prepared etfsim2 (%d) is not correct (%d)\n",
-			  etfasync->icol, icol);
+		    warning("Async prepared etfsim2 (%d) is not correct (%d)\n",
+			    etfasync->icol, icol);
 		}else{
 		    powfs[ipowfs].etfsim2=etfasync;
 		}
@@ -1111,7 +1111,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, double deltah, int ip
 	    error("Invalid mode=%d\n", mode);
 	}
     }
-    //info("setup_powfs_etf: %.2f MiB\n", get_job_mem()/1024.);
+    print_mem("After setup_powfs_etf");
 }
 
 /**
@@ -1226,7 +1226,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    dadd(&llt->ncpa->p[ic], 1, focus, lltcfg->focus*1e-9/var);
 	}
 	cellfree(focus);
-	info("Adding focus %g nm to LLT ncpa\n", lltcfg->focus);
+	info2("Adding focus %g nm to LLT ncpa\n", lltcfg->focus);
     }
     /*Remove tip/tilt/focus from ncpa */
     if(llt->ncpa && parms->powfs[ipowfs].llt->ttfr){
@@ -1428,7 +1428,7 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	){
 	INTSTAT_T *intstat=powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
 	if(parms->powfs[ipowfs].i0load){
-	    info("Loading i0, gx, gy\n");
+	    info2("Loading i0, gx, gy\n");
 	    if(zfexist("%s/powfs%d_i0",parms->powfs[ipowfs].i0load, ipowfs)){
 		intstat->i0=dcellread("%s/powfs%d_i0",parms->powfs[ipowfs].i0load, ipowfs);
 	    }else{
@@ -1465,7 +1465,7 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	}else{
 	    if(parms->powfs[ipowfs].piinfile){
 		/*load psf. 1 for each wavefront sensor. */
-		info("Using 1 sepsf for each wfs when loading sepsf\n");
+		info2("Using 1 sepsf for each wfs when loading sepsf\n");
 		intstat->nsepsf=parms->powfs[ipowfs].nwfs;
 		intstat->sepsf=dccellnew(parms->powfs[ipowfs].nwfs, 1);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){

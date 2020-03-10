@@ -22,7 +22,6 @@
 #include "mathdef.h"
 #include "defs.h"
 #if !defined(USE_SINGLE) || HAS_FFTWF==1
-static int FFTW_VERBOSE=0;
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
 */
@@ -46,12 +45,12 @@ void X(fft_free_plan)(fft_t *fft){
 	    FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[0]);
 	    FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[1]);
 	    FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[2]);
-	    /*dbg("Plan %p destroyed\n", fft->plan1d[idir+1]); */
+	    dbg3("Plan %p destroyed\n", fft->plan1d[idir+1]); 
 	    free(fft->plan1d[idir+1]);
 	}
 	if(fft->plan[idir+1]){
 	    FFTW(destroy_plan)(fft->plan[idir+1]);
-	    /*dbg("Plan %p destroyed\n", fft->plan[idir+1]); */
+	    dbg3("Plan %p destroyed\n", fft->plan[idir+1]); 
 
 	}
 	UNLOCK_FFT;
@@ -91,9 +90,6 @@ static __attribute__((destructor))void deinit(){
 /**
    executed before main()
 */
-static __attribute__((constructor))void init(){
-    READ_ENV_INT(FFTW_VERBOSE, 0, 1);
-}
 #endif
 //#if defined(USE_COMPLEX) 
 #include <dlfcn.h>
@@ -119,9 +115,9 @@ static void (*init_threads())(int){
     void (*p_fftw_plan_with_nthreads)(int)=NULL;
     if(!fn || (libfftw_threads=dlopen(fn, RTLD_LAZY))){
 	if(!fn){
-	    info("FFTW thread library is built in\n");
+	    dbg("FFTW thread library is built in\n");
 	}else{
-	    info("Open FFTW thread library %s: success\n", fn);
+	    dbg("Open FFTW thread library %s: success\n", fn);
 	}
 	int (*p_fftw_init_threads)(void)=NULL;
 
@@ -147,7 +143,7 @@ static void (*init_threads())(int){
 	p_fftw_init_threads();
     }else{
 	if(!quitfun){
-	    info("Open FFTW thread library %s: failed\n", fn);
+	    dbg("Open FFTW thread library %s: failed\n", fn);
 	}
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial",HOME);
@@ -173,15 +169,11 @@ static void fft_threads(long nx, long ny){
 	    has_threads=0;
 	}
 	
-	if(FFTW_VERBOSE){
-	    info("FFTW: has_threads=%d\n", has_threads);
-	}
+	dbg2("FFTW: has_threads=%d\n", has_threads);
     }
     if(has_threads==1){
 	int nth=(nx*ny>256*256)?NTHREAD:1;
-	if(FFTW_VERBOSE){
-	    info("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
-	}
+	dbg2("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
 	p_fftw_plan_with_nthreads(nth);
     }
 }
@@ -215,7 +207,7 @@ static void X(fft2plan)(X(mat) *A, int dir){
 	error("Plan is empty\n");
     }
     UNLOCK_FFT;  
-    /*dbg("Plan %p created\n", A->fft->plan[dir+1]); */
+    dbg3("Plan %p created\n", A->fft->plan[dir+1]); 
 }
 
 /**
@@ -253,7 +245,7 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     }
     UNLOCK_FFT; 
     plan1d->ncomp=ncomp;
-    /*dbg("Plan %p created\n", A->fft->plan1d[dir+1]); */
+    dbg3("Plan %p created\n", A->fft->plan1d[dir+1]); 
 }
 
 /**

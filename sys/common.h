@@ -93,52 +93,30 @@ extern int detached;
 #define BLACK (detached?"":"\033[00;00m")
 #define RED (detached?"":"\033[01;31m")
 #define GREEN (detached?"":"\033[0;32m")
-#ifndef error
+
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
-/*#define dbg(A...) ({char fline[4096]; int n__;		       \
-	    snprintf(fline,4096, "INFO(%s:%d): ", BASEFILE, __LINE__); \
-	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
-	    fprintf(stdout,"%s", fline); })
 
-#define error(A...) ({char fline[4096]; int n__;			\
-	    snprintf(fline,4096, "%sFATAL(%s:%d): ", RED, BASEFILE, __LINE__); \
-	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, BLACK); \
-	    QUIT_FUN(fline);})
+extern int LOG_LEVEL;
 
-#define warning(A...) ({char fline[4096]; int n__;			\
-	    snprintf(fline,4096, "WARN(%s:%d): ", BASEFILE, __LINE__); \
-	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    fprintf(stdout,"%s%s%s", RED, fline, BLACK); })
-
-#define info_time(A...) ({char fline[4096]; int n__;			      \
-	    snprintf(fline,4096, "INFO(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
-	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
-	    fprintf(stdout,"%s", fline); })
-
-#define warning_time(A...) ({char fline[4096]; int n__;			\
-	    snprintf(fline,4096, "WARN(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
-	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    fprintf(stdout,"%s%s%s", RED, fline, BLACK); })
-
-
-*/
-#define dbg(format,...) printf("Info(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
-//#define error(format,...) ({char fline[5000]; snprintf(fline, sizeof fline, "%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); 
-//	    fline[sizeof(fline)-1]='\0';QUIT_FUN(fline);})
 #define error(format,...) ({printf("%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
-#define warning(format,...) printf("%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK)
-#define dbg_time(format,...) printf("Info(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
-#define warning_time(format,...) printf("%sWarning(%s:%d)[%s]: " format "%s", RED, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__, BLACK)
+#define warning(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK)
+#define warning_time(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d)[%s]: " format "%s", RED, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__, BLACK)
+#define warning_once(A...)  if(LOG_LEVEL>-3){static int done=0; if(!done){done=1; warning(A);}}
 
-#define info(A...) fprintf(stdout, A)
-#define info2(A...) fprintf(stderr, A) //stderr is not directed to file.
+#define info(A...)  if(LOG_LEVEL>-2) printf(A)
+#define info2(A...)  if(LOG_LEVEL>-1) printf(A)
+#define info_stderr(A...) if(LOG_LEVEL>-2) fprintf(stderr, A) //stderr is not directed to file.
+#define info_once(A...) if(LOG_LEVEL>-2){static int done=0; if(!done){done=1; info(A);}}
+
+#define dbg(format,...) if(LOG_LEVEL>0) printf("Debug(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg2(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg3(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+
+#define dbg_time(format,...) if(LOG_LEVEL>0) printf("Debug(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
+#define dbg2_time(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
+#define dbg3_time(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
 
 
-#define warning_once(A...) ({static int done=0; if(!done){done=1; warning(A);}})
-#define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
-
-#endif
 #ifndef assert
 #if DEBUG
 #define assert(A) if(!(A)) error("assertion failed: %s\n", #A)
@@ -159,7 +137,7 @@ extern int detached;
 */
 #define TIC double tk
 #define tic tk=myclockd();
-#define toc(format,...) printf(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
+#define toc(format,...) info2(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\
@@ -197,21 +175,21 @@ extern int detached;
 #define CHECK_NULL_TERMINATED
 #endif
 
-#define READ_ENV_INT(A,min,max)				\
-    if(getenv("MAOS_"#A)){				\
-	A=strtol(getenv("MAOS_"#A),NULL,10);		\
-	info(#A"=%d\n", A);				\
-	if(A>max || A<min){				\
-	    error("MAOS_%s: invalid range\n", #A);	\
-	}						\
+#define READ_ENV_INT(A,min,max)						\
+    if(getenv("MAOS_"#A)){						\
+	A=strtol(getenv("MAOS_"#A),NULL,10);				\
+	dbg(#A"=%d\n", A);						\
+	if(A>max || A<min){						\
+	    error("MAOS_%s is not between [%s %s]\n", #A, #min, #max);	\
+	}								\
     }
-#define READ_ENV_DBL(A,min,max)				\
-    if(getenv("MAOS_"#A)){				\
-	A=strtod(getenv("MAOS_"#A),NULL);		\
-	info(#A"=%g\n", A);				\
-	if(A>max || A<min){				\
-	    error("MAOS_%s: invalid range\n", #A);	\
-	}						\
+#define READ_ENV_DBL(A,min,max)						\
+    if(getenv("MAOS_"#A)){						\
+	A=strtod(getenv("MAOS_"#A),NULL);				\
+	dbg(#A"=%g\n", A);						\
+	if(A>max || A<min){						\
+	    error("MAOS_%s is not between [%s %s]\n", #A, #min, #max);	\
+	}								\
     }
 #define DEF_ENV_FLAG(A,default_val)			\
     static int A=default_val;				\

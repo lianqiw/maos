@@ -97,7 +97,7 @@ long thread_id(void);
 #define OMP_TASK(urgent) DO_PRAGMA(omp task)
 #endif
 static inline void THREAD_POOL_INIT(int nthread){
-    info("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
+    info2("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
     omp_set_nested(0);//make sure nested is not enabled
 }
@@ -191,7 +191,7 @@ static inline void  CALL_THREAD(thread_t *A, int urgent){
     }
 }
 
-#define THREAD_POOL_INIT(A) ({thread_pool_init(A);info("Using thread pool with %d threads\n", A);})
+#define THREAD_POOL_INIT(A) ({thread_pool_init(A);info2("Using thread pool with %d threads\n", A);})
 #define THREAD_YIELD thread_pool_do_job_once()
 #endif
 
@@ -207,7 +207,7 @@ extern pthread_mutex_t mutex_fftw;
 #define LOCK_FFT LOCK(mutex_fftw)
 #define UNLOCK_FFT UNLOCK(mutex_fftw)
 
-void thread_prep(thread_t *info, long start, long end, long nthread, 
+void thread_prep(thread_t *thd, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data);
 
 #define LOCKADD(dest,src,step)				\

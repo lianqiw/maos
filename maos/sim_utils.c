@@ -57,7 +57,7 @@ static mapcell *genatm_do(SIM_T *simu){
 		gs->r0logpsds=atm->r0logpsds;
 	    }
 	}
-	info("Generating Atmospheric Screen...\n");
+	info2("Generating Atmospheric Screen...\n");
 	tic;
 	screens = parms->atm.fun(gs);
 	toc("Atmosphere ");
@@ -199,7 +199,7 @@ void genatm(SIM_T *simu){
 	warning("sim.noatm flag is on. will not generate atmoshere\n");
 	return;
     }
-    info("Wind dir:");/*initialize wind direction one time only for each seed in frozen flow mode. */
+    info2("Wind dir:");/*initialize wind direction one time only for each seed in frozen flow mode. */
     simu->winddir=dnew(atm->nps,1);
     int wdnz=0;
     for(int i=0; i<atm->nps; i++){
@@ -213,16 +213,16 @@ void genatm(SIM_T *simu){
 	    angle=atm->wddeg->p[i]*M_PI/180;
 	}
 	simu->winddir->p[i]=angle;
-	info(" %5.1f", angle*180/M_PI);
+	info2(" %5.1f", angle*180/M_PI);
     }
-    info(" deg\n");
+    info2(" deg\n");
     if(wdnz){
 	error("wdrand is specified, but wddeg are not all zero. \n"
 	      "possible confliction of intension!\n");
     }
     if(simu->parms->load.atm){
 	const char *fn=simu->parms->load.atm;
-	info("loading atm from %s\n",fn);
+	info2("loading atm from %s\n",fn);
 	simu->atm = mapcellread("%s",fn);
 	if(simu->atm->nx!=atm->nps) error("ATM Mismatch\n");
     }else{
@@ -247,7 +247,7 @@ void genatm(SIM_T *simu){
 	}
     }
   
-    info("After genatm:\t%.2f MiB\n",get_job_mem()/1024.);
+    print_mem("After genatm");
     if((parms->atm.r0evolve&2)==2){
 	dbg("Scaling OPD temporarily\n");
 	simu->atmscale=psd2time(parms->atm.r0logpsdt, simu->atm_rand, parms->sim.dt, parms->sim.end);
@@ -283,7 +283,7 @@ void setup_recon_HXW_predict(SIM_T *simu){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
-    info("Generating Predictive HXW\n");
+    info2("Generating Predictive HXW\n");
     dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
@@ -369,8 +369,8 @@ void sim_update_etf(SIM_T *simu){
 		deltah=-simu->zoomreal->p[parms->powfs[ipowfs].wfs->p[0]];
 		deltah/=0.5*pow(1./parms->powfs[ipowfs].hs,2);//focus to range.
 	    }
-	    info("Step %d: powfs %d: Updating ETF using column %d with dh=%g\n",isim, ipowfs,
-		 colsim+isim/dtrat+1, deltah);
+	    info2("Step %d: powfs %d: Updating ETF using column %d with dh=%g\n",isim, ipowfs,
+		  colsim+isim/dtrat+1, deltah);
 	    setup_powfs_etf(powfs,parms,deltah,ipowfs,1, colsim+isim/dtrat);
 	    setup_powfs_etf(powfs,parms,deltah,ipowfs,2, colsim+isim/dtrat+1);
 #if USE_CUDA
@@ -1361,7 +1361,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->sim.wspsd){
 	/* Telescope wind shake added to TT input. */
 	dmat *psdin=dread("%s", parms->sim.wspsd);
-	info("Loading windshake PSD from file %s\n", parms->sim.wspsd);
+	info2("Loading windshake PSD from file %s\n", parms->sim.wspsd);
 	simu->telws = psd2time(psdin, simu->telws_rand, parms->sim.dt, parms->sim.end);
 	dfree(psdin);
 	writebin(simu->telws, "telws_%d", seed);
@@ -1716,7 +1716,7 @@ void print_progress(SIM_T *simu){
 		 mysqrt(simu->ole->p[1+isim*nmod])*1e9,
 		 mysqrt(simu->ole->p[2+isim*nmod])*1e9, BLACK);
 	
-	    info("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
+	    info2("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
 		 status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
 	}else{    
 	    info("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
@@ -1735,7 +1735,7 @@ void print_progress(SIM_T *simu){
 	    }
 	    info("%s\n", BLACK);
     
-	    info("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
+	    info2("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
 		 " Used %ld:%02ld, Left %ld:%02ld\n",
 		 status->wfs*tkmean, status->recon*tkmean, 
 		 status->eval*tkmean, status->other*tkmean,

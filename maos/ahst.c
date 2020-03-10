@@ -362,7 +362,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    ngsmod->nmod+=1;
 	}
     }
-    info("ahst: nmod=%d, mffocus=%d, ahst_focus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus);
+    info2("ahst: nmod=%d, mffocus=%d, ahst_focus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus);
     ngsmod->hs=hs;
     if(ndm>1){
 	ngsmod->ht=parms->dm[ndm-1].ht;//last DM.
@@ -470,7 +470,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     }else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting to isolate active meta pupil. */
 	if(parms->dbg.wamethod==0){
-	    info("Wa using DM mode\n");
+	    info2("Wa using DM mode\n");
 
 	    tic;
 	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,1);
@@ -519,12 +519,12 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, l
     if(GM->ny!=1){
 	error("To be implemented\n");
     }
-    info("Rngs is using wfs ");
+    info2("Rngs is using wfs ");
     dcell *GM2=dcellnew(GM->nx, GM->ny);
     int nmod=0, ntt=0, nttf=0;
     for(int iwfs=0; iwfs<GM->nx; iwfs++){
 	if((!mask || P(mask, iwfs)) && P(GM, iwfs) && P(saneai, iwfs, iwfs)->x[0]>0){
-	    info(" %d", iwfs);
+	    info2(" %d", iwfs);
 	    P(GM2, iwfs)=ddup(P(GM, iwfs));
 	    nmod=P(GM2, iwfs)->ny;
 	    int ng=P(GM2, iwfs)->nx;
@@ -537,7 +537,7 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, l
 	    }
 	}
     }
-    info("\n");
+    info2("\n");
     lmat *modvalid=0;
     if(pmodvalid){
 	if(!*pmodvalid){

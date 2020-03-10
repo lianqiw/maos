@@ -219,7 +219,7 @@ static void genotf_wrap(thread_t *info){
     check(!opdbias || opdbias->nx*opdbias->ny==nxsa*nsa);
     for(int isa=info->start; isa<info->end; isa++){
 	if(!detached && nsa>10 && info->ithread==0){
-  	    info2("%6ld of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa*(nsa/info->end), nsa);
+  	    info_stderr("%6ld of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa*(nsa/info->end), nsa);
 	}
 	const real *opdbiasi=NULL;
 	if(opdbias){

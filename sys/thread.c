@@ -43,7 +43,7 @@ int thread_new(thread_fun fun, void* arg){
 /**
    Break out the job to be executed by multiple threads. 
 */
-void thread_prep(thread_t *info, long start, long end, long nthread, 
+void thread_prep(thread_t *thd, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data){
     if(nthread==0 || end<=start) return;
     long nt=(end-start+nthread-1)/nthread;
@@ -52,15 +52,15 @@ void thread_prep(thread_t *info, long start, long end, long nthread,
     }
     int skip=0;
     for(long ithread=0; ithread<nthread; ithread++){
-	info[ithread].ithread=ithread;
-	info[ithread].nthread=nthread;
-	info[ithread].data=data;
-	info[ithread].fun=fun;
+	thd[ithread].ithread=ithread;
+	thd[ithread].nthread=nthread;
+	thd[ithread].data=data;
+	thd[ithread].fun=fun;
 	if(skip){//skip the rest
-	    info[ithread].start=0;
-	    info[ithread].end=0;
+	    thd[ithread].start=0;
+	    thd[ithread].end=0;
 	}else{
-	    info[ithread].start=start;
+	    thd[ithread].start=start;
 	    start+=nt;
 	    if(start>=end){
 		start=end; 
@@ -68,11 +68,11 @@ void thread_prep(thread_t *info, long start, long end, long nthread,
 		data=0;
 		fun=0;
 	    }
-	    info[ithread].end=start;
+	    thd[ithread].end=start;
 	}
     }
     /*Make sure we terminate at the right place. */
-    if(info[nthread-1].end && info[nthread-1].end!=end){
+    if(thd[nthread-1].end && thd[nthread-1].end!=end){
 	error("Not correctly terminated\n");
     }
 }

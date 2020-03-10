@@ -243,7 +243,8 @@ static void *maos_var(void* psock){
 }
 
 //Listen to commands coming from scheduler
-static void maos_listener(int sock){
+static void* maos_listener(void *psock){
+    int sock=(int)(long)psock;
     thread_block_signal();
     int cmd[2];
     while(!streadintarr(sock, cmd, 2)){
@@ -285,33 +286,34 @@ static void maos_listener(int sock){
 	    break;
 	}
     }
+    return NULL;
 }
 void maos_version(void){
-    info("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
-    info("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
+    info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
+    info2("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
 #if USE_DOUBLE
-    info(" double");
+    info2(" double");
 #else
-    info(" single");
+    info2(" single");
 #endif
 #if USE_CUDA
 #if CUDA_DOUBLE
-    info(" +CUDA(double)");
+    info2(" +CUDA(double)");
 #else
-    info(" +CUDA(single)");
+    info2(" +CUDA(single)");
 #endif
 #else
-    info(" -CUDA");
+    info2(" -CUDA");
 #endif
 #ifdef __OPTIMIZE__
-    info(" +optimization.\n");
+    info2(" +optimization.\n");
 #else
-    info(" -optimization\n");
+    info2(" -optimization\n");
 #endif
-    info("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
+    info2("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
 #if HAS_LWS
     extern uint16_t PORT;
-    info("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
+    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
 #endif
 }
 
@@ -408,7 +410,9 @@ int main(int argc, const char *argv[]){
 		wait_cpu(NTHREAD);
 	    }
 	}
-	thread_new((thread_fun)scheduler_listen, maos_listener);
+	if(scheduler_listen(maos_listener)){
+	    info("Failed to start maos_listener\n");
+	}
 	setup_parms_gpu(parms, arg->gpus, arg->ngpu);
     
  

@@ -244,8 +244,8 @@ static void print_usage(void){
 	"maos is a simulation tool developed to adaptive optics systems\n\n"
 	"Examples:\n"
 	"maos   # Run the default configuration of NFIRAOS: nfiaros.conf as the baseline.\n"
-	"maos -c scao_ngs.conf -s 2 -n 2 -d -o scao_ngs override.conf chol.conf\n"
-	"       # Run a single conjugate natural guide star case, with seed 2, 2 threads\n"
+	"maos -c scao_ngs.conf sim.seeds=[1 10] -d -o scao_ngs override.conf \n"
+	"       # Run a single conjugate natural guide star case, with seed 1 and 10\n"
 	"       # detach from the terminal and output results to folder scao_ngs\n"
 	"       # and read in overriding parameters stored in override.conf and chol.conf\n"
 	"\n"
@@ -261,7 +261,20 @@ static void print_usage(void){
 	"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic\n"
 	"-G, --ngpu=N'     Use a total of N gpus.\n"
 	"-r, --run=host    Run the job in another host.\n"
+	"\n"
+	"The following environment variables are supported\n"
+	"MAOS_TOMO_SCALE=1e12 Rebalance tomography terms for single precision calculation\n"
+	"MAOS_PARALLEL=1      Set to 0 to disable parallel launch\n"
+	"MAOS_NO_WFS=0        Set to 1 to disable all WFS calls\n"
+	"MAOS_NO_EVL=0        Set to 1 to disable evaluation calls\n"
+	"MAOS_NO_RECON=0      Set to 1 to disable reconstruction calls\n"
+	"MAOS_KEEP_MEM=0      Set to 1 to keep temporary memory between steps\n"
+	"MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting\n"
+	"MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info\n"
+	"MAOS_LOG_LEVEL=0     Set logging level. -3: error only, -2: also warning, -1 also essential info, 0: also useful info, "
+	"                     1: also debugging info, 2: more debugging info, 3: extra more info.\n"
 	);
+
     exit(0);
 }
 
@@ -515,7 +528,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 	dzero(gnfra);
 	dzero(gnfxy);
 	for(int isa=0; isa<nsa; isa++){
-	    info2("isa=%4d\b\b\b\b\b\b\b\b", nsa);
+	    info_stderr("isa=%4d\b\b\b\b\b\b\b\b", nsa);
 	    if(srot){
 		theta=srot[isa];
 		cx=cos(theta);

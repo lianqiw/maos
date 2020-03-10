@@ -237,7 +237,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
 	dcell *in=NULL;
 	while(!in){
 	    if(exist(fnatm)){
-		info("Using %s\n", fnatm);
+		info2("Using %s\n", fnatm);
 		in=dcellread_mmap("%s",fnatm);
 	    }else{
 		/*non blocking exclusive lock. */

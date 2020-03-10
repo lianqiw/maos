@@ -61,6 +61,7 @@ void  (*free_custom)(void *);
 
 static int MEM_VERBOSE=0;
 static int MEM_DEBUG=0;
+int LOG_LEVEL=1;
 int mem_debug=0;
 PNEW(mutex_mem);
 static void *MROOT=NULL;
@@ -269,7 +270,7 @@ unamespace std{
 #ifdef __cpluspluc
 }
 #endif
-void print_mem(){
+static void print_mem_debug(){
     if(MROOT){
 	warning("%ld (%.3f MB) allocated memory not freed!!!\n",
 		memcnt, (memalloc-memfree)/1024./1024.);
@@ -292,6 +293,7 @@ static __attribute__((constructor)) void init(){
     free_default=(void(*)(void*))dlsym(RTLD_MINE, "free");
     READ_ENV_INT(MEM_DEBUG, 0, 1);
     READ_ENV_INT(MEM_VERBOSE, 0, 2);
+    READ_ENV_INT(LOG_LEVEL,-5, 5);
     mem_debug=MEM_DEBUG;
     if(mem_debug){
 	malloc_custom=malloc_dbg;
@@ -323,7 +325,7 @@ static __attribute__((destructor)) void deinit(){
     if(mem_debug){
 	if(!exit_fail){
 	    if(!mem_debug) return;
-	    print_mem();
+	    print_mem_debug();
 	}else{
 	    dbg("exit_fail=%d\n", exit_fail);
 	}

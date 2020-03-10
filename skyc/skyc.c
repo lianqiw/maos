@@ -25,26 +25,26 @@
 char *dirstart;
 
 void skyc_version(void){
-    info("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
-    info("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
+    info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
+    info2("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
 #if USE_CUDA
 #if CUDA_DOUBLE
-    info(" +CUDA(real)");
+    info2(" +CUDA(real)");
 #else
-    info(" +CUDA(single)");
+    info2(" +CUDA(single)");
 #endif
 #else
-    info(" -CUDA");
+    info2(" -CUDA");
 #endif
 #ifdef __OPTIMIZE__
-    info(" +optimization.\n");
+    info2(" +optimization.\n");
 #else
-    info(" -optimization\n");
+    info2(" -optimization\n");
 #endif
-    info("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
+    info2("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
 #if HAS_LWS
     extern uint16_t PORT;
-    info("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
+    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
 #endif
 }
 /**
@@ -105,7 +105,7 @@ int main(int argc, const char *argv[]){
     free(dirstart);
     rename_file(0);
     scheduler_finish(0);
-    info("End:\t%.2f MiB\n",get_job_mem()/1024.);
+    print_mem("End");
     info("Simulation finished at %s in %s.\n",myasctime(),HOST);
     return 0;
 }

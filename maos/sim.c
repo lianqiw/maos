@@ -257,7 +257,7 @@ void maos_sim(){
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
    
-    info("PARALLEL=%d\n", PARALLEL);
+    dbg("PARALLEL=%d\n", PARALLEL);
     real restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	SIM_T *simu=0;

@@ -70,7 +70,7 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info("GPU (%d) mem used %ld MB (%s)\n",current_gpu(),(long)(tot-fr)/1024/1024, msg);
+    info2("GPU (%d) mem used %ld MB (%s)\n",current_gpu(),(long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -89,7 +89,7 @@ static long gpu_get_free_mem_ratio(int igpu, long minimum){
     if((ans=cudaMemGetInfo(&fr, &tot))){
 	warning("cudaMemGetInfo failed with error %d\n", ans);
     }
-    info("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", 
+    info2("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", 
 	  igpu, fr*9.3e-10, tot*9.3e-10);
     if((long)fr>minimum){
 	return (long)(fr*100./tot);
@@ -143,17 +143,17 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 
     int ans;//total number of GPUs.
     if((ans=cudaGetDeviceCount(&MAXGPU)) || MAXGPU==0){//no GPUs available.
-	info("No GPUs available. ans=%d (%s)\n", ans, cudaGetErrorString((cudaError_t)ans));
+	info2("No GPUs available. ans=%d (%s)\n", ans, cudaGetErrorString((cudaError_t)ans));
 	return 0;
     }
     if(ngpu<0){
-	info("CUDA is disabled by user.\n");
+	info2("CUDA is disabled by user.\n");
 	return 0;
     }
     if(gpus && ngpu>0){
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
-		info("CUDA is disabled by user.\n");
+		info2("CUDA is disabled by user.\n");
 		return 0;
 	    }
 	}
@@ -180,7 +180,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	if(mem_minimum==0){//gpu is disabled
 	    return 0;
 	}else{
-	    info("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
+	    info2("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
 	}
     }else{
 	mem_minimum=1000000000;//1GB.
@@ -214,7 +214,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	GPUS=Array<int>(ngpu, 1);
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
-		info("CUDA is disabled by user.\n");
+		info2("CUDA is disabled by user.\n");
 		GPUS=Array<int>();
 		NGPU=0;
 		goto end;
@@ -271,7 +271,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	cuglobal=new cuglobal_t;
 	cudata_all=new cudata_t*[NGPU];
 
-	info("Using GPU");
+	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    cudaSetDevice(GPUS[i]);
 	    cudata_all[i]=new cudata_t;//make sure allocation on the right gpu.
@@ -282,11 +282,11 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		    break;
 		}
 	    }
-	    info(" %d", cudata->igpu);
+	    info2(" %d", cudata->igpu);
 	    //Reserve memory in GPU so the next maos will not pick this GPU.
 	    cudata->reserve.init(MEM_RESERVE,1);
 	}
-	info("\n");
+	info2("\n");
 	if(parms){
 	    /*Assign task to gpu evenly based on empirical data to maximum GPU
 	     * usage. We first gather together all the tasks and assign a timing

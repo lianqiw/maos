@@ -158,7 +158,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     recon->neam=dnew(parms->nwfsr, 1);
     real neam_hi=0; 
     int count_hi=0;
-    info("Recon NEA:\n");
+    info("Recon NEA: ");
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==3) continue;
 	const int nsa=powfs[ipowfs].saloc->nloc;
@@ -356,7 +356,7 @@ static void free_cxx(RECON_T *recon){
 */
 void
 setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
-    info("setup_recon_tomo_prep.\n");
+    info2("setup_recon_tomo_prep.\n");
     /*Free existing struct if already exist.  */
     free_cxx(recon);
     if(parms->tomo.assemble){
@@ -515,7 +515,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
     /*Free OLD matrices if any. */
     muv_free(&recon->RR);
     muv_free(&recon->RL);
-    info("Before assembling tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    print_mem("Before assembling tomo matrix");
 
     if(parms->load.tomo){
 	/*right hand side. */
@@ -537,7 +537,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    recon->RL.MI=dread("RLMI");
 	}
     }else{
-	info("Building recon->RR\n");
+	info2("Building recon->RR\n");
 	dspcell* GX=recon->GX/*PDSPCELL*/;
 	const dspcell *saneai=recon->saneai;
 	/*
@@ -556,12 +556,12 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    recon->RR.V=dcelltrans(recon->PTTF);
 	}
  
-	info("Building recon->RL\n"); /*left hand side matrix */
+	info2("Building recon->RL\n"); /*left hand side matrix */
 	recon->RL.M=dcellmm2(recon->RR.M,recon->GXtomo, "nn");
 	dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
 	if(parms->tomo.piston_cr){ 
 	    /*single point piston constraint. no need tikholnov.*/
-	    info("Adding ZZT to RLM\n");
+	    info2("Adding ZZT to RLM\n");
 	    for(int ips=0; ips<npsr; ips++){
 		dspadd(PP(RLM,ips,ips), 1, recon->ZZT->p[ips+ips*npsr], 1);
 	    }
@@ -572,8 +572,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    /*Estimated from the Formula */
 	    real maxeig=pow(recon->neamhi * recon->xloc->p[0]->dx, -2);
 	    real tikcr=parms->tomo.tikcr;
-	    info("Adding tikhonov constraint of %g to RLM\n",tikcr);
-	    info("The maximum eigen value is estimated to be around %g\n", maxeig);
+	    info2("Adding tikhonov constraint of %g to RLM\n",tikcr);
+	    info2("The maximum eigen value is estimated to be around %g\n", maxeig);
 	    dcelladdI(recon->RL.M, tikcr*maxeig);
 	}
 	/*add L2 and ZZT */
@@ -624,7 +624,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 	    dcellfree(GPTTDF);
 	}else{
-	    info("Skipping RL Low rank terms in split tomography\n");
+	    info2("Skipping RL Low rank terms in split tomography\n");
 	}
 	dcellfree(ULo);
 	dcellfree(VLo);
@@ -661,7 +661,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		}
 	    }
 	}
-	info("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr,nll);
+	info2("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr,nll);
 	if(parms->save.recon){
 	    writebin(recon->RR.M,"RRM");
 	    writebin(recon->RR.U,"RRU");
@@ -689,7 +689,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	if(!recon->RL.C && !recon->RL.MI){
 	    muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
 	}
-	info("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+	print_mem("After cholesky/svd");
     }
 
     if(parms->save.recon){
@@ -714,7 +714,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     /*Don't free PTT. Used in forming LGS uplink err */
-    info("After assemble tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    print_mem("After assemble tomo matrix");
 }
 
 static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *locs, lmat *mask){
@@ -848,7 +848,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
 	}else{/*BGS */
 	    muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
 	}
-	info("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+	print_mem("After cholesky/svd");
     }
 
     if(parms->recon.split==2){
@@ -872,7 +872,7 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].trs==0 && parms->powfs[ipowfs].order>1 && parms->powfs[ipowfs].skip!=2){
-		    info("wfs %d will be used to track focus\n", iwfs);
+		    info2("wfs %d will be used to track focus\n", iwfs);
 		}else{
 		    continue;
 		}
@@ -1440,7 +1440,7 @@ void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
 	    sigma2e+=parms->evl.wt->p[ievl]*(sigma2i/eloc->nloc);
 	}
 	recon->sigmanhi=sigma2e;
-	info("High order WFS mean noise propagation is %g nm\n", sqrt(sigma2e)*1e9);
+	info2("High order WFS mean noise propagation is %g nm\n", sqrt(sigma2e)*1e9);
 	if(parms->save.setup){
 	    writebin(ecnn, "psd_ecnn");
 	}

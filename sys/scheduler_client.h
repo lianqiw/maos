@@ -18,6 +18,7 @@
 #ifndef AOS_SCHEDULER_CLIENT_H
 #define AOS_SCHEDULER_CLIENT_H
 #include "scheduler.h"
+#include "thread.h"
 /**
    \file scheduler_client.h
    Contains routines that will be used to talk to the scheduler.
@@ -27,23 +28,26 @@ extern uint16_t PORT;
 extern int nhost;
 extern char **hosts;
 extern char **hostsaddr;
+
 void parse_host(char *line);
 void free_hosts();
 void init_hosts();
 /*called by maos */
-void* scheduler_listen(void(*fun)(int));
-int scheduler_start(char *path, int nthread, int ngpu, int waiting);
+int scheduler_listen(thread_fun fun);
+void scheduler_start(char *path, int nthread, int ngpu, int waiting);
 int scheduler_wait(void);
-int scheduler_finish(int status);
-int scheduler_report(STATUS_T *status);
+void scheduler_finish(int status);
+void scheduler_report(STATUS_T *status);
 /*called by monitor */
-int scheduler_launch_drawdaemon(char *fifo);
-char* scheduler_get_drawdaemon(int pid, int direct);
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]);
-/*Handling backtrace*/
-int call_addr2line(char *ans, int nans, const char *cmd);
-void print_backtrace_symbol(void *const *buffer, int size);
 /*save a socket for draw()*/
 int scheduler_send_socket(int sfd, int id);
 int scheduler_recv_socket(int *sfd, int id);
+
+/*Handling backtrace*/
+int call_addr2line(char *ans, int nans, const char *cmd);
+void print_backtrace_symbol(void *const *buffer, int size);
+
+void print_backtrace();
+
 #endif

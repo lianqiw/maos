@@ -44,7 +44,7 @@ static void read_env(){
     READ_ENV_INT(NO_EVL,0,1);
     READ_ENV_INT(NO_RECON,0,1);
     READ_ENV_INT(KEEP_MEM,0,1);
-    info("TOMOSCALE=%g\n", TOMOSCALE);
+    info2("TOMOSCALE=%g\n", TOMOSCALE);
 }
 void maos_setup(const PARMS_T *parms){
     TIC;tic;
@@ -79,10 +79,10 @@ void maos_setup(const PARMS_T *parms){
 #endif
     THREAD_POOL_INIT(NTHREAD);
     global->aper=aper=setup_aper(parms);
-    info("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
+    print_mem("After setup_aper");
     if(!parms->sim.evlol){
 	global->powfs=powfs=setup_powfs_init(parms, aper);
-	info("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
+	print_mem("After setup_powfs");
 	/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
 	global->recon=recon=setup_recon_prep(parms, aper, powfs);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
@@ -110,7 +110,7 @@ void maos_setup(const PARMS_T *parms){
 	if(parms->recon.alg==0 && parms->nmoao){
 	    setup_recon_moao(recon, parms);
 	}
-	info("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
+	print_mem("After setup_recon");
 	if(parms->dbg.wfslinearity!=-1){
 	    int iwfs=parms->dbg.wfslinearity;
 	    assert(iwfs>-1 || iwfs<parms->nwfs);

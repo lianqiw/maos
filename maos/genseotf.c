@@ -70,7 +70,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(powfs[ipowfs].loc_tel){
 	notf=MAX(notf,parms->powfs[ipowfs].nwfs);
     }
-    info("notf=%d\n", notf);
+    info2("notf=%d\n", notf);
     if(powfs[ipowfs].intstat->otf){
 	cellfree(powfs[ipowfs].intstat->otf);
     }
@@ -83,7 +83,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	for(int iotf=0; iotf<notf; iotf++){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
 	    real thres=opdbias?1:(1-1e-10);
-	    info("There is %s bias\n", opdbias?"NCPA":"no");
+	    info2("There is %s bias\n", opdbias?"NCPA":"no");
 	    //OTFs are always generated with native sampling. It is upsampled at gensepsf if necessary.
 	    OMPTASK_SINGLE
 		genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
@@ -108,7 +108,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	key=dhash(powfs[ipowfs].amp, key);
     }
     key=dhash(parms->powfs[ipowfs].wvl, key);
-    info("powfs %d: ncpa_method=%d, opdbias=%p\n",
+    info2("powfs %d: ncpa_method=%d, opdbias=%p\n",
 	 ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
     if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
 	for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
@@ -140,7 +140,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
 	    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 	    if(fd>=0){/*succeed */
-		info("Generating WFS OTF for %s...", fnotf);
+		info2("Generating WFS OTF for %s...", fnotf);
 		TIC;tic; genseotf_do(parms,powfs,ipowfs); toc("done");
 		writebin(intstat->otf, "%s", fnotf);
 	    }else{
@@ -149,7 +149,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    }
 	    close(fd); remove(fnlock);
 	}else{
-	    info("Reading WFS OTF from %s\n", fnotf);
+	    info2("Reading WFS OTF from %s\n", fnotf);
 	    intstat->otf=cccellread("%s",fnotf);
 	}
     }
@@ -230,7 +230,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	if(exist(fnlock) || !zfexist(fnlotf)){/*need to create data */
 	    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 	    if(fd>=0){/*succeed */
-		info("Generating WFS LLT OTF for %s\n", fnlotf);
+		info2("Generating WFS LLT OTF for %s\n", fnlotf);
 		genselotf_do(parms,powfs,ipowfs);
 		writebin(intstat->lotf, "%s",fnlotf);
 	    }else{//waiting by retry locking with blocking.
@@ -239,7 +239,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    }
 	    close(fd); remove(fnlock);
 	}else{
-	    info("Reading WFS LLT OTF from %s\n", fnlotf);
+	    info2("Reading WFS LLT OTF from %s\n", fnlotf);
 	    intstat->lotf=ccellread("%s",fnlotf);
 	    if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
 	}
@@ -264,7 +264,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 		cfft2i(psfhat, 1);
 		cfftshift(psfhat);
 		creal2d(&psf, 0, psfhat, 1);
-		info("illt %d, iwvl %d has FWHM of %g\"\n",
+		info2("illt %d, iwvl %d has FWHM of %g\"\n",
 		      illt, iwvl, sqrt(4.*(real)dfwhm(psf)/M_PI)*dpsf);
 		free(psf->header); psf->header=strdup(header);
 		zfarr_push(lltpsfsave, illt*nwvl+iwvl, psf);
@@ -413,7 +413,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	ni0=parms->powfs[ipowfs].nwfs;
     }
     if(ni0>1){
-	info("number of i0 for matched filter is %d\n",ni0);
+	info2("number of i0 for matched filter is %d\n",ni0);
     }
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("Number of i0 must be either 1 or %d, but is %d\n",
@@ -718,7 +718,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	dfree(nea2);
 
 	if(mtchadp){
-	    info("Mtched filter contraint are disabled for %d subaps out of %d.\n",
+	    info2("Mtched filter contraint are disabled for %d subaps out of %d.\n",
 		  ncrdisable, nsa);
 	}
 	intstat->i0sumsum->p[ii0]=i0sumsum;
@@ -774,7 +774,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	writebin(sanea, "powfs%d_sanea", ipowfs);
     }
     if(parms->powfs[ipowfs].phytype_recon==1 && parms->recon.glao && ni0>0){
-	info("Averaging saneaxy of different WFS for GLAO mode\n");
+	info2("Averaging saneaxy of different WFS for GLAO mode\n");
 	dmat *sanea2=0;
 	real scale=1./ni0;
 	for(int ii0=0; ii0<ni0; ii0++){

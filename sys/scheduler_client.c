@@ -34,13 +34,10 @@
 #include "sock.h"
 #include "sockio.h"
 #include "process.h"
-#include "daemonize.h"
-#include "common.h"
 #include "misc.h"
 #include "hashlittle.h"
-#include "scheduler.h"
 #include "scheduler_client.h"
-#include "thread.h"
+#include "daemonize.h"
 
 /**
    Contains routines that will be used to talk to the scheduler. The following usage are supported:
@@ -55,27 +52,32 @@ int is_scheduler=0;
 #ifndef MAOS_DISABLE_SCHEDULER
 #define MAOS_DISABLE_SCHEDULER 0
 #endif
+
+
 #if MAOS_DISABLE_SCHEDULER
-int scheduler_start(char *path, int nthread, int ngpu, int waiting){
+void parse_host(char *line){
+    (void)line;
+}
+void init_hosts(){}
+void free_hosts(){}
+void scheduler_start(char *path, int nthread, int ngpu, int waiting){
     (void)path;
     (void)nthread;
     (void)waiting;
     (void)ngpu;
-    return -1;
 }
 int scheduler_wait(void){
-    return -1;
+    return 0;
 }
-int scheduler_finish(int status){
+void scheduler_finish(int status){
     (void)status; 
-    return -1;
 }
-int scheduler_report(STATUS_T *status){
-    (void)status; return -1;
+void scheduler_report(STATUS_T *status){
+    (void)status; 
 }
-void* scheduler_listen(void(*fun)(int)){
+int scheduler_listen(thread_fun fun){
     (void)fun;
-    return (void*)-1;
+    return 0;
 }
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     (void)host;
@@ -93,6 +95,7 @@ int scheduler_recv_socket(int *sfd, int id){
     (void)id;
     return -1;
 }
+
 #else
 uint16_t PORT=0;
 char** hosts=0;
@@ -258,30 +261,28 @@ static void scheduler_report_path(char *path){
     stwriteintarr(psock, cmd, 2);
     stwritestr(psock,path_save);
 }
-#define CATCH_ERR(A) if(A){psock=-1; return -1;}
+#define CATCH_ERR(A) if(A){psock=-1;}
 
 /**
    Started by maos to listen to the sock which connects to the
    scheduler for commands
 */
-void* scheduler_listen(void(*fun)(int)){
+int scheduler_listen(thread_fun fun){
     if(psock!=-1 && fun){
-	fun(psock);
-	return NULL;
+	thread_new(fun, (void*)(long)psock);
+	return 0;
     }else{
-	return (void*)-1;
+	return -1;
     }
 }
 
 /**
    Called by maos to report a job start to scheduler.
  */
-int scheduler_start(char *path, int nthread, int ngpu, int waiting){
+void scheduler_start(char *path, int nthread, int ngpu, int waiting){
     psock=scheduler_connect_self(1);
     if(psock==-1){
 	warning_time("Failed to connect to scheduler\n");
-	exit(0);
-	return -1;
     }
     scheduler_report_path(path);
     int cmd[4];
@@ -290,7 +291,6 @@ int scheduler_start(char *path, int nthread, int ngpu, int waiting){
     cmd[2]=nthread;
     cmd[3]=(waiting?1:0) | (ngpu << 1);;
     CATCH_ERR(stwriteintarr(psock,cmd,4));
-    return 0;
 }
 
 /**
@@ -312,38 +312,34 @@ int scheduler_wait(void){
 }
 /**
    Called by maos to notify scheduler the completion of a job */
-int scheduler_finish(int status){
-    if(psock==-1){
-	psock=scheduler_connect_self(0);
-	scheduler_report_path(NULL);
-	if(psock==-1) return -1;
+void scheduler_finish(int status){
+    if(psock!=-1){
+	int cmd[2];
+	if(status==0){
+	    cmd[0]=CMD_FINISH;
+	}else{
+	    cmd[0]=CMD_CRASH;
+	}
+	cmd[1]=getpid();
+	CATCH_ERR(stwriteintarr(psock,cmd,2));
+	close(psock);psock=-1;
     }
-    int cmd[2];
-    if(status==0){
-	cmd[0]=CMD_FINISH;
-    }else{
-	cmd[0]=CMD_CRASH;
-    }
-    cmd[1]=getpid();
-    CATCH_ERR(stwriteintarr(psock,cmd,2));
-    close(psock);psock=-1;
-    return 0;
 }
 
 /**
    called by sim.c to report job status */
-int scheduler_report(STATUS_T *status){
+void scheduler_report(STATUS_T *status){
     if(psock==-1){
 	psock=scheduler_connect_self(0);
 	scheduler_report_path(NULL);
-	if(psock==-1) return -1;
     }
-    int cmd[2];
-    cmd[0]=CMD_STATUS;
-    cmd[1]=getpid();
-    CATCH_ERR(stwriteintarr(psock,cmd,2));
-    CATCH_ERR(stwrite(psock,status,sizeof(STATUS_T)));
-    return 0;
+    if(psock!=-1){
+	int cmd[2];
+	cmd[0]=CMD_STATUS;
+	cmd[1]=getpid();
+	CATCH_ERR(stwriteintarr(psock,cmd,2));
+	CATCH_ERR(stwrite(psock,status,sizeof(STATUS_T)));
+    }
 }
 
 /**
@@ -515,6 +511,7 @@ void print_backtrace(){
     sync();
 }
 #else
-void print_backtrace(){
-}
+void print_backtrace(){}
 #endif
+
+
