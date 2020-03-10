@@ -170,7 +170,7 @@ static void add_host(gpointer data){
     }
     UNLOCK(mhost);
     if(todo){
-	int sock=connect_port(hostsaddr[ihost], PORT, 0, 0);
+	int sock=connect_port(hosts[ihost], PORT, 0, 0);
 	if(sock>-1){
 	    int cmd[2];
 	    cmd[0]=CMD_MONITOR;
@@ -335,7 +335,7 @@ void listen_host(){
 int scheduler_display(int ihost, int pid){
     /*connect to scheduler with a new port. The schedule pass the other
       end of the port to drawdaemon so we can communicate with it.*/
-    int sock=connect_port(hostsaddr[ihost], PORT, 0, 0);
+    int sock=connect_port(hosts[ihost], PORT, 0, 0);
     int ans=1;
     int cmd[2]={CMD_DISPLAY, pid};
     if(stwriteintarr(sock, cmd, 2)){

@@ -61,7 +61,7 @@ void  (*free_custom)(void *);
 
 static int MEM_VERBOSE=0;
 static int MEM_DEBUG=0;
-int LOG_LEVEL=1;
+int LOG_LEVEL=0;
 int mem_debug=0;
 PNEW(mutex_mem);
 static void *MROOT=NULL;

@@ -27,11 +27,11 @@
 extern uint16_t PORT;
 extern int nhost;
 extern char **hosts;
-extern char **hostsaddr;
-
+/*hosts*/
 void parse_host(char *line);
 void free_hosts();
 void init_hosts();
+const char *lookup_host(const char *hostname);
 /*called by maos */
 int scheduler_listen(thread_fun fun);
 void scheduler_start(char *path, int nthread, int ngpu, int waiting);

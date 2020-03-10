@@ -99,7 +99,7 @@ int scheduler_recv_socket(int *sfd, int id){
 #else
 uint16_t PORT=0;
 char** hosts=0;
-char** hostsaddr=0;
+static char** hostsaddr=0;
 int nhost=0;
 PNEW(mutex_hosts);
 /**
@@ -185,7 +185,18 @@ void init_hosts(){
 	parse_host("localhost");//use local machine 
 	}*/
 }
-
+/**
+   Translate hostname to based on ~/.aos/hosts
+*/
+const char *lookup_host(const char *hostname){
+    if(!hostname) return NULL;
+    for(int ihost=0; ihost<nhost; ihost++){
+	if(!strcmp(hosts[ihost], hostname)){
+	    return hostsaddr[ihost];
+	}
+    }
+    return hostname;
+}
 /**
    Launch the scheduler. We already obtained singleton lock and is in a forked process.
 */

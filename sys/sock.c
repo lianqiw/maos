@@ -427,6 +427,7 @@ int connect_port(const char *hostname,/**<The hostname can be just name or name:
 	    hints.ai_socktype=SOCK_STREAM;
 	    char hoststr[512];
 	    char portstr[32];
+	    hostname=lookup_host(hostname);
 	    const char *col=strchr(hostname,':');
 	    if(col && strlen(col+1)>0){//port is part of hostname
 		size_t nn=col-hostname;
