@@ -236,7 +236,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    recon->xloc->p[ips]=map2loc(map, 0);
 	    loc_create_stat(recon->xloc->p[ips]);
-	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
+	    info2("    layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
 		  ips, map->nx,map->ny,dxr, recon->xloc->p[ips]->nloc);
 	    mapfree(map);
 	}
@@ -339,7 +339,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    }else{
 		create_metapupil(&map,0,0,parms->dirs, parms->aper.d,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    }
-	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
+	    info2("    DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc->p[idm]=map2loc(map, 0);
 	    mapfree(map);
 	}

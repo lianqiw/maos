@@ -1,7 +1,7 @@
 AC_INIT(maos, 2.4.0, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
-AM_INIT_AUTOMAKE([1.9.6 foreign -Wall -Werror no-define subdir-objects dist-bzip2])
+AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects dist-bzip2])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
@@ -62,11 +62,15 @@ BUILD_DIR=$(pwd)
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 
+die(){
+    shift
+    echo "Error:$@"
+    exit
+}
+
 USE_CPP=0
 #find the real flavor of CC
 CCv=`$CC -v 2>&1`
-#if $CC -v 2>&1 |grep clang ;then
-
 if grep clang++ <<< $CCv ;then
     CN=CLANG
     USE_CPP=1
@@ -145,7 +149,7 @@ AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverag
 AC_ARG_ENABLE(double, AS_HELP_STRING([--disable-double],[Disable double precision]), [use_double="$enableval"],[use_double="default"])
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
-AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
+AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets]), [use_websockets="$enableval"], [use_websockets="yes"])
 AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_mkl="$enableval"], [use_mkl="default"])
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
@@ -193,7 +197,7 @@ fi
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-    OPTScommon+=" -Wshadow -Wall -Wextra -Werror -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
+    OPTScommon+=" -Wshadow -Wall -Wextra -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
 fi
 LDEXE=
 OPTS=
@@ -287,17 +291,6 @@ OPTScc="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
 echo OPTScc=$OPTScc
 unset optname1 optname2 optname3 optname4
 
-if test -z "$OPENMP_CFLAGS" ;then
-    OPTScc+=" -pthread" #enables pthreads feature and links in the library
-    with_openmp="no"
-    has_openmp=0
-else
-    OPTScc+=" $OPENMP_CFLAGS"
-    with_openmp="yes"
-    has_openmp=1
-fi
-AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
-
 OPTSextra=""
 
 #Used for embedding conf folder in maos exe
@@ -345,6 +338,8 @@ case "$host_os" in
 	if test "$CN" = "CLANG" ;then
 	    CFLAGS+=" -stdlib=libc++"
 	fi
+	#MACOS supports openmp with separate omp library
+	AC_CHECK_LIB([omp],[omp_set_num_threads],[OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+="-lomp" libtool_fix_openmp=1],[])
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
@@ -363,6 +358,15 @@ case "$host_os" in
 	echo host_os=$host_os
 	AC_MSG_ERROR([Unrecognized OS])
 esac
+AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1"])
+if test -z "$OPENMP_CFLAGS" ;then
+    OPTScc+=" -pthread" #enables pthreads feature and links in the library
+    has_openmp=0
+else
+    OPTScc+=" $OPENMP_CFLAGS"
+    has_openmp=1
+fi
+AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
 
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
 PRE_DIR="${HOME}/.aos/"          #prefix for installation
@@ -387,11 +391,6 @@ if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
 fi
 unset mflag
 
-die(){
-    shift
-    echo "Error:$@"
-    exit
-}
 
 
 #Discover default download method
@@ -678,6 +677,7 @@ if test "$use_websockets" = "yes" ;then
 	AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
     else
 	AC_MSG_NOTICE(["libwebsocket library or header is not available"])
+	use_websockets="no"
     fi
 fi
 comp_draw="0" #for drawdaemon
@@ -1027,16 +1027,15 @@ if test "$with_matlab" != "no" ;then
 fi
 echo
 echo Compiling options:
-echo
 echo 
 
-echo "OpenMP:          $with_openmp"
+echo "OpenMP:          $has_openmp"
 echo "Double:          $use_double"
 echo "Drawdaemon:      $comp_draw"
 echo "Monitor:         $((gtk_ver>0)) (libnotify: $comp_monn)"
 echo "GTK version:     ${gtk_ver}"
 
-echo "Websocket:       $has_lws"
+echo "Websocket:       $use_websockets"
 echo "CUDA:            $cudaver (double: $cuda_double)"
 echo "MATLAB MEX:      $with_matlab"
 

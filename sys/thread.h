@@ -99,7 +99,6 @@ long thread_id(void);
 static inline void THREAD_POOL_INIT(int nthread){
     info2("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
-    omp_set_nested(0);//make sure nested is not enabled
 }
 static inline void QUEUE(long *group, thread_wrapfun fun, void *arg, int nthread, int urgent){
     (void) group;

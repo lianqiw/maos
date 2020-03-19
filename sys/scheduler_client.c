@@ -58,6 +58,9 @@ int is_scheduler=0;
 void parse_host(char *line){
     (void)line;
 }
+const char *lookup_host(const char *hostname){
+    return hostname;
+}
 void init_hosts(){}
 void free_hosts(){}
 void scheduler_start(char *path, int nthread, int ngpu, int waiting){

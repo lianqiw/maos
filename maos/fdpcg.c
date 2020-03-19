@@ -464,7 +464,6 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	real dispy[nps];
 	int iwfs=parms->powfs[hipowfs].wfsr->p[jwfs];
 	real neai=recon->neam->p[iwfs];
-	info2("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
 	for(long ips=0; ips<nps; ips++){
 	    /*
 	      2010-05-28: The cone effect cancels with the cone
@@ -558,7 +557,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	writebin(fdpcg->Mbinv,"fdpcg_Mhatb");
     }
     real svd_thres=1e-7;
-    info2("FDPCG SVD Threshold is %g...", svd_thres);
+    info2("fdpcg svd threshold is %g\n", svd_thres);
 #pragma omp parallel for
     for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In

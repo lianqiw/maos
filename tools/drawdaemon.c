@@ -21,7 +21,7 @@
 int sock;
 int sock_block=0;
 int cumu=0;
-#ifdef MAC_INTEGRATION
+#if MAC_INTEGRATION
 #include <gtkosxapplication.h>
 #endif
 GdkPixbuf *icon_main=NULL;
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
     }
 #endif
     gtk_init(&argc, &argv);
-#ifdef MAC_INTEGRATION
+#if MAC_INTEGRATION
     GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 #endif
     icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
     //dbg("sock=%d\n", sock);
     socket_block(sock, 0);
     
-#ifdef MAC_INTEGRATION
+#if MAC_INTEGRATION
     gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
     gtkosx_application_ready(theApp);
 #endif

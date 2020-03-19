@@ -318,9 +318,6 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int notfx=powfs[ipowfs].notfx;
     const int notfy=powfs[ipowfs].notfy;
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
-	//int iotf=notf>1?isepsf:0;
-	//int ilotf=nlotf>1?isepsf:0;
-	//cmat **lotf=nlotf>0?(powfs[ipowfs].intstat->lotf->p+ilotf*nwvl):NULL;
 	ccell* otf=PR(powfs[ipowfs].intstat->otf, isepsf, 0);//->p[iotf];
 	powfs[ipowfs].intstat->sepsf->p[isepsf]=dcellnew(nsa,nwvl);
 	dcell*  psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf];
@@ -441,9 +438,9 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
     }
     /* subaperture rotation angle. */
-    dcell*  i0=intstat->i0/*PDELL*/;
-    dcell*  gx=intstat->gx/*PDELL*/;
-    dcell*  gy=intstat->gy/*PDELL*/;
+    dcell*  i0=intstat->i0;
+    dcell*  gx=intstat->gx;
+    dcell*  gy=intstat->gy;
   
     /*
       Notice, the generation of shifted i0s are not accurate
@@ -472,8 +469,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    =powfs[ipowfs].dtf[iwvl].si->ny>1?1:0;
 	const int idtfisa_multiplier
 	    =powfs[ipowfs].dtf[iwvl].si->nx>1?1:0;
-	const comp *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
-	const comp *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 	
 	const real norm=1./(real)(notfx*notfy);
 	const ccell *petf=NULL;
@@ -497,9 +492,9 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
 	    real wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
-	    dcell*  psepsf=intstat->sepsf->p[isepsf]/*PDELL*/;
-	    cmat **nominals=powfs[ipowfs].dtf[iwvl].fused?0:(powfs[ipowfs].dtf[iwvl].nominal->p+powfs[ipowfs].dtf[iwvl].nominal->nx*idtf);
-	    dsp **sis=powfs[ipowfs].dtf[iwvl].si->p+powfs[ipowfs].dtf[iwvl].si->nx*idtf;
+	    dcell*  psepsf=intstat->sepsf->p[isepsf];
+	    cmat **nominals=powfs[ipowfs].dtf[iwvl].fused?0:PCOL(powfs[ipowfs].dtf[iwvl].nominal, idtf);
+	    dsp **sis=PCOL(powfs[ipowfs].dtf[iwvl].si, idtf);
 	    real *angles=nllt?(powfs[ipowfs].srot->p[irot]->p):0;
 	    ccell *se_save=ccellnew(3, NTHREAD);
 #ifdef _OPENMP
@@ -557,13 +552,15 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    ccp(&intstat->fotf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
 		}
 		cfft2(seotfk,1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
-		/*no need fftshift becaose nominal is pre-treated */
+		/*no need fftshift because nominal is pre-treated */
 		dspmulcreal(P(i0,isa,ii0)->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);
-		if(radgx){
-		    real angleg=angles[isa];/*angle to derivative of i0 to r/a from x/y */
-		    real ct=cos(angleg);
-		    real st=sin(angleg);
+		if(radgx){//Apply derivative in rotated coordinate
+		    const comp *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
+		    const comp *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
+		    const real angleg=angles[isa];/*angle to derivative of i0 to r/a from x/y */
+		    const real ct=cos(angleg);
+		    const real st=sin(angleg);
 		
 		    for(int iy=0; iy<notfy; iy++){
 			for(int ix=0; ix<notfx; ix++){
@@ -615,8 +612,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     intstat->i0sumsum=dnew(ni0, 1);
 
     const dcell *i0s=intstat->i0;
-    const dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx/*PDELL*/;
-    const dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy/*PDELL*/;
+    const dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx;
+    const dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy;
     dmat *i0sum=intstat->i0sum;
     long npix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
     dcell *mtche=intstat->mtche=dcellnew_same(nsa,ni0,2,npix);

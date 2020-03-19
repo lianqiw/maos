@@ -289,8 +289,8 @@ setup_fit_matrix(FIT_T *fit){
 		nact+=fit->aloc->p[idm]->nloc;
 	    }
 	    real maxeig=4./nact;
-	    info2("Adding tikhonov constraint of %g to FLM\n", tikcr);
-	    info2("The maximum eigen value is estimated to be around %e\n", maxeig);
+	    info2("Adding tikhonov constraint of %.1e to FLM\n", tikcr);
+	    info2("The maximum eigen value is estimated to be around %.1e\n", maxeig);
 	    dcelladdI(fit->FL.M,tikcr*maxeig);
 	}
 

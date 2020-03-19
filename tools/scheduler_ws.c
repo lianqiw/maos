@@ -15,7 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <getopt.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -419,8 +421,6 @@ static struct lws_protocols protocols[] = {
 
 static struct lws_context *context=0;
 int ws_start(short port){
-    int logs=LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE;
-    lws_set_log_level(logs, NULL);
     struct lws_context_creation_info info;
     memset(&info, 0, sizeof info);
     info.port = port;

@@ -572,8 +572,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    /*Estimated from the Formula */
 	    real maxeig=pow(recon->neamhi * recon->xloc->p[0]->dx, -2);
 	    real tikcr=parms->tomo.tikcr;
-	    info2("Adding tikhonov constraint of %g to RLM\n",tikcr);
-	    info2("The maximum eigen value is estimated to be around %g\n", maxeig);
+	    info2("Adding tikhonov constraint of %.1e to RLM\n",tikcr);
+	    info2("The maximum eigen value is estimated to be around %.1e\n", maxeig);
 	    dcelladdI(recon->RL.M, tikcr*maxeig);
 	}
 	/*add L2 and ZZT */
