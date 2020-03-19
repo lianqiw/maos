@@ -511,7 +511,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 #pragma omp for 
 	    for(int isa=0; isa<nsa; isa++){
 		int ith=0;
-		real angleg=0;/*angle to derivative of i0 to r/a from x/y */
 
 #ifdef _OPENMP
 		ith = omp_get_thread_num();
@@ -528,11 +527,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		int isadtf=isa*idtfisa_multiplier;
 		if(nominals) nominal=nominals[isadtf];
 		si=sis[isadtf];
-		if(nllt && parms->powfs[ipowfs].radpix){
-		    if(radgx){
-			angleg=angles[isa];
-		    }
-		}
 		real pgrad[2];
 		/*loaded psepsf. sum to 1 for full sa. peak in center */
 		if(parms->powfs[ipowfs].mtchstc){
@@ -566,14 +560,16 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		/*no need fftshift becaose nominal is pre-treated */
 		dspmulcreal(P(i0,isa,ii0)->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);
+		if(radgx){
+		    real angleg=angles[isa];/*angle to derivative of i0 to r/a from x/y */
+		    real ct=cos(angleg);
+		    real st=sin(angleg);
 		
-		real ct=cos(angleg);
-		real st=sin(angleg);
-		
-		for(int iy=0; iy<notfy; iy++){
-		    for(int ix=0; ix<notfx; ix++){
-			P(seotfk,ix,iy)*=ct*Ux[ix]+st*Uy[iy];
-			P(seotfj,ix,iy)*=-st*Ux[ix]+ct*Uy[iy];
+		    for(int iy=0; iy<notfy; iy++){
+			for(int ix=0; ix<notfx; ix++){
+			    P(seotfk,ix,iy)*=ct*Ux[ix]+st*Uy[iy];
+			    P(seotfj,ix,iy)*=-st*Ux[ix]+ct*Uy[iy];
+			}
 		    }
 		}
 		cfft2(seotfk,1);

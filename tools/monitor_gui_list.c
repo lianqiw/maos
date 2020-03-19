@@ -374,14 +374,33 @@ static void clipboard_append(const char *jobinfo){
 	free(newer);
     }
 }
+typedef struct{
+    const char *menu;
+    const char *action;
+    int command;
+}menudata_t;
+gint cur_host=-1;
+menudata_t menudata[]={
+    {"Kill selected jobs", "Kill", CMD_KILL},
+    {"Restart selected jobs", "Restart", CMD_RESTART},
+    {"Plot selected jobs", "Plot", CMD_DISPLAY},
+    {"Clear selected jobs", "Remove", CMD_REMOVE},
+    {"Copy cmdline selected jobs", "Copy", -1},
+    {"Copy path of selected jobs", "CopyPath", -1},
+    {"Copy output path of selected jobs", "CopyOutPath", -1}
+};
 /*A general routine handle actions to each item.*/
-static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data, int cmd, const char *action){
+static void handle_selection(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
     (void)path;
-    gint ihost=GPOINTER_TO_INT(user_data);
+    menudata_t *data=user_data;
+    int ihost=cur_host;
+    int cmd=data->command;
+    const char *action=data->action;
     GValue value=G_VALUE_INIT;
     gtk_tree_model_get_value(model, iter, COL_PID, &value);
     int pid=strtol(g_value_get_string(&value), NULL, 10);
     g_value_unset(&value);
+
     if(cmd<0){
 	switch(cmd){
 	case -1:{
@@ -405,33 +424,12 @@ static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter 
 	}
     }
 }
-/*wrapper routines for each item.*/
-static void kill_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
-    handle_selected(model, path, iter, user_data, CMD_KILL, "Kill");
-}
-static void restart_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
-    handle_selected(model, path, iter, user_data, CMD_RESTART, "Restart");
-}
-static void plot_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
-    handle_selected(model, path, iter, user_data, CMD_DISPLAY, "Plot");
-}
-static void clear_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
-    handle_selected(model, path, iter, user_data, CMD_REMOVE, "Remove");
-}
-static void copy_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
-    handle_selected(model, path, iter, user_data, -1, "Copy");
-}
-static void copy_selected_path(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
-    handle_selected(model, path, iter, user_data, -1, "CopyPath");
-}
-static void copy_selected_outpath(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
-    handle_selected(model, path, iter, user_data, -1, "CopyOutPath");
-}
+
 /*Handles menu item clicks in a general way.*/
-static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, GtkTreeSelectionForeachFunc func, const char *action){
+static void handle_menu_event(GtkMenuItem *menuitem, gpointer user_data){
     (void)menuitem;
-    gint ihost=GPOINTER_TO_INT(user_data);
-    GtkWidget *view=views[ihost];
+    menudata_t *data=user_data;
+    GtkWidget *view=views[cur_host];
     GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
     int nsel=gtk_tree_selection_count_selected_rows(selection);
     if(nsel<1) {
@@ -439,6 +437,7 @@ static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, Gtk
 	return;
     }
     int result=GTK_RESPONSE_YES;
+    const char *action=data->action;
     /*Alert user in Kill or Restart event*/
     if(!strcmp(action, "Kill") || !strcmp(action, "Restart")){
 	GtkWidget *dia=gtk_message_dialog_new
@@ -450,33 +449,8 @@ static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, Gtk
 	gtk_widget_destroy (dia);
     }
     if(result==GTK_RESPONSE_YES){
-	gtk_tree_selection_selected_foreach(selection, func, GINT_TO_POINTER(ihost));
+	gtk_tree_selection_selected_foreach(selection, handle_selection, user_data);
     }
-}
-/* The following routines respond to menu item clicks.*/
-static void kill_selected_event(GtkMenuItem *menuitem, gpointer user_data){
-    handle_selected_event(menuitem, user_data, kill_selected, "Kill");
-}
-static void restart_selected_event(GtkMenuItem *menuitem, gpointer user_data){
-    handle_selected_event(menuitem, user_data, restart_selected, "Restart");
-}
-static void plot_selected_event(GtkMenuItem *menuitem, gpointer user_data){
-    handle_selected_event(menuitem, user_data, plot_selected, "Plot");
-}
-static void clear_selected_event(GtkMenuItem *menuitem, gpointer user_data){
-    handle_selected_event(menuitem, user_data, clear_selected, "Clear");
-}
-static void copy_selected_event(GtkMenuItem *menuitem, gpointer user_data){
-    clipboard_clear();
-    handle_selected_event(menuitem, user_data, copy_selected, "Copy");
-}
-static void copy_selected_path_event(GtkMenuItem *menuitem, gpointer user_data){
-    clipboard_clear();
-    handle_selected_event(menuitem, user_data, copy_selected_path, "Copy Path of ");
-}
-static void copy_selected_outpath_event(GtkMenuItem *menuitem, gpointer user_data){
-    clipboard_clear();
-    handle_selected_event(menuitem, user_data, copy_selected_outpath, "Copy Output Path of ");
 }
 
 static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
@@ -491,38 +465,18 @@ static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     menuitem=gtk_separator_menu_item_new();
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+  
     if(nsel>0){
-	menuitem=gtk_menu_item_new_with_label("Kill selected jobs");
-	g_signal_connect(menuitem, "activate", G_CALLBACK(kill_selected_event), user_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-	menuitem=gtk_menu_item_new_with_label("Restart selected jobs");
-	g_signal_connect(menuitem, "activate", G_CALLBACK(restart_selected_event), user_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-	menuitem=gtk_menu_item_new_with_label("Plot selected jobs");
-	g_signal_connect(menuitem, "activate", G_CALLBACK(plot_selected_event), user_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-	menuitem=gtk_separator_menu_item_new();
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-	menuitem=gtk_menu_item_new_with_label("Clear selected jobs");
-	g_signal_connect(menuitem, "activate", G_CALLBACK(clear_selected_event), user_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-	menuitem=gtk_menu_item_new_with_label("Copy cmdline selected jobs");
-	g_signal_connect(menuitem, "activate", G_CALLBACK(copy_selected_event), user_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-	menuitem=gtk_menu_item_new_with_label("Copy path of selected jobs");
-	g_signal_connect(menuitem, "activate", G_CALLBACK(copy_selected_path_event), user_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-	menuitem=gtk_menu_item_new_with_label("Copy output path of selected jobs");
-	g_signal_connect(menuitem, "activate", G_CALLBACK(copy_selected_outpath_event), user_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-	
+	cur_host=GPOINTER_TO_INT(user_data);
+	for(size_t i=0; i<7; i++){
+	    menuitem=gtk_menu_item_new_with_label(menudata[i].menu);
+	    g_signal_connect(menuitem, "activate", G_CALLBACK(handle_menu_event), menudata+i);
+	    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+	    if(i==3){
+		menuitem=gtk_separator_menu_item_new();
+		gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+	    }
+	}
     }
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, gtk_get_current_event_time());
@@ -553,8 +507,9 @@ static gboolean view_click_event(GtkWidget *view, GdkEventButton *event, gpointe
     view_popup_menu(view, user_data);
     return TRUE;
 }
+/* Handle click on icon column to handle individual jobs*/
 static gboolean view_release_event(GtkWidget *view, GdkEventButton *event, gpointer user_data){
-    if(event->button!=1) return FALSE;
+    if(event->button!=1) return FALSE;//only handle left click
     GtkTreePath *path=NULL;
     GtkTreeViewColumn *column=NULL;
     if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
@@ -583,12 +538,39 @@ static gboolean view_release_event(GtkWidget *view, GdkEventButton *event, gpoin
     }
     return TRUE;
 }
+static void concat_selected_path(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+    (void)path;
+    GValue value=G_VALUE_INIT;
+    gtk_tree_model_get_value(model, iter, COL_FULL, &value);
+    const gchar *val=g_value_get_string(&value);
+    gchar **buf=(gchar**)user_data;
+    if(!*buf){
+	*buf=g_strdup(val);
+    }else{
+	*buf=g_strjoin("\n", *buf, val, NULL);
+    }
+}
+/*
+  handle section change event to update the GtkTextBuffer buffers[ihost]
+ */
+void view_selection_event(GtkTreeSelection *selection, gpointer user_data){
+    int ihost=GPOINTER_TO_INT(user_data);
+    int nsel=gtk_tree_selection_count_selected_rows(selection);
+    if(nsel){
+	gchar *buf=0;
+	gtk_tree_selection_selected_foreach(selection, concat_selected_path, &buf);
+	gtk_text_buffer_set_text(buffers[ihost], buf, -1);
+	g_free(buf);
+    }
+}
 GtkWidget *new_page(int ihost){
     if(!lists){
 	lists=mycalloc(nhost,GtkListStore*);
 	views=mycalloc(nhost,GtkWidget*);
     }
-
+    if(views[ihost]){
+	return views[ihost];
+    }
     lists[ihost]=gtk_list_store_new(COL_TOT,
 				    G_TYPE_STRING,/*DATE */
 				    G_TYPE_STRING,/*PID */
@@ -620,6 +602,7 @@ GtkWidget *new_page(int ihost){
     GtkTreeSelection *viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
     /*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
     gtk_tree_selection_set_mode(viewsel,GTK_SELECTION_MULTIPLE);
+    g_signal_connect(viewsel, "changed", G_CALLBACK(view_selection_event), GINT_TO_POINTER(ihost));
     gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(view), COL_FULL);
     /*
       The implementation of GtkTreeView hardcoded GDK_LINE_ON_OFF_DASH in

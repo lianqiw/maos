@@ -41,19 +41,19 @@
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
-#ifdef MAC_INTEGRATION
+#include "monitor.h"
+#ifdef MAC_INTEGRATION //In newer GTK>3.6, using GtkApplication instead of this extension.
 #include <gtkosxapplication.h>
 #endif
 #if WITH_NOTIFY
 #include <libnotify/notify.h>
 static int notify_daemon=1;
 #endif
-#include "../sys/sys.h"
-#include "monitor.h"
+
 #include "icon-monitor.h"
 #include "icon-finished.h"
-#include "icon-running.h"
-#include "icon-failed.h"
+#include "icon-play.h"
+#include "icon-error.h"
 #include "icon-waiting.h"
 #include "icon-cancel.h"
 #include "icon-save.h"
@@ -78,6 +78,7 @@ static GtkWidget *window=NULL;
 static GtkWidget **tabs;
 static GtkWidget **titles;
 static GtkWidget **cmdconnect;
+GtkTextBuffer **buffers;
 double *usage_cpu, *usage_cpu2;
 double *usage_mem, *usage_mem2;
 static GtkWidget **prog_cpu;
@@ -389,33 +390,41 @@ static void kill_all_jobs(GtkButton *btn, gpointer data){
 	}
     }
 }
-static void status_icon_on_click(GtkStatusIcon *status_icon0, 
-			       gpointer data){
-    (void)status_icon0;
+static void status_icon_on_click(void *widget,
+				 gpointer data){
+    (void)widget;
     (void)data;
     static int cx=0, cy=0;
-    static int x=600, y=400;
-    if(GTK_WIDGET_VISIBLE(window)){
+    static int x=0, y=0;
+    int force_show=GPOINTER_TO_INT(data);
+    if(GTK_WIDGET_VISIBLE(window) && !force_show){
 	gtk_window_get_size(GTK_WINDOW(window), &x, &y);
 	gtk_window_get_position(GTK_WINDOW(window), &cx, &cy);
 	gtk_widget_hide(window);
     }else{
-	gtk_window_set_default_size(GTK_WINDOW(window), x, y);
-	gtk_window_move(GTK_WINDOW(window), cx, cy);
+	if(x && y){
+	    gtk_window_set_default_size(GTK_WINDOW(window), x, y);
+	    gtk_window_move(GTK_WINDOW(window), cx, cy);
+	}
 	gtk_widget_show(window);
-	gtk_window_deiconify(GTK_WINDOW(window));
+	//gtk_window_deiconify(GTK_WINDOW(window));
     }
 }
-static void trayIconPopup(GtkStatusIcon *status_icon0, guint button, 
-			  guint32 activate_time, gpointer popUpMenu){
-    gtk_menu_popup(GTK_MENU(popUpMenu),NULL,NULL,
+static void status_icon_on_popup(GtkStatusIcon *status_icon0, guint button, 
+				 guint32 activate_time, gpointer user_data){
+    (void)status_icon0;
+    (void) button;
+    (void)activate_time;
+    /*gtk_menu_popup(GTK_MENU(user_data),NULL,NULL,
 		   gtk_status_icon_position_menu,
-		   status_icon0,button,activate_time);
+		   status_icon0,button,activate_time);*/
+    status_icon_on_click(NULL, user_data);
 }
 static void create_status_icon(){
     status_icon = gtk_status_icon_new_from_pixbuf(icon_main);
-    g_signal_connect(G_OBJECT(status_icon),"activate", G_CALLBACK(status_icon_on_click), NULL);
-    GtkWidget *menu, *menuItemShow,*menuItemExit;
+    //g_signal_connect(GTK_STATUS_ICON(status_icon),"activate", G_CALLBACK(status_icon_on_click),0);//useless.
+    g_signal_connect(GTK_STATUS_ICON(status_icon),"popup-menu",G_CALLBACK(status_icon_on_popup), 0);
+    /*GtkWidget *menu, *menuItemShow,*menuItemExit;
     menu=gtk_menu_new();
     menuItemShow=gtk_menu_item_new_with_label("Show/Hide");
     menuItemExit=gtk_menu_item_new_with_mnemonic("_Exit");
@@ -431,19 +440,19 @@ static void create_status_icon(){
 #if GTK_MAJOR_VERSION >=3 || GTK_MINOR_VERSION>=16
     gtk_status_icon_set_tooltip_text(status_icon, "MAOS Job Monitoring");
 #endif
-    gtk_status_icon_set_visible(status_icon, TRUE);
+    gtk_status_icon_set_visible(status_icon, TRUE);*/
 }
 
-
+/*
 static gboolean delete_window(void){
     if(status_icon && gtk_status_icon_is_embedded(status_icon)){
 	gtk_widget_hide(window);
-	return TRUE;/*do not quit */
+	return TRUE;//do not quit 
     }else{
-	return FALSE;/*quit. */
+        return FALSE;//quit. 
     }
-}
-
+}*/
+/*
 static gboolean 
 window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
     (void)data;
@@ -455,7 +464,7 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	    gtk_widget_hide (GTK_WIDGET(widget));
 	}
     return TRUE;
-}
+    }*/
 static int test_jobs(int status, double frac, int flag){
     switch(flag){
     case 1://finished
@@ -665,27 +674,21 @@ int main(int argc, char *argv[])
 
     icon_main=gdk_pixbuf_new_from_inline(-1,icon_inline_monitor, FALSE, NULL);
     icon_finished=gdk_pixbuf_new_from_inline(-1,icon_inline_finished,FALSE,NULL);
-    icon_failed=gdk_pixbuf_new_from_inline(-1,icon_inline_failed,FALSE,NULL);
-    icon_running=gdk_pixbuf_new_from_inline(-1,icon_inline_running,FALSE,NULL);
+    icon_failed=gdk_pixbuf_new_from_inline(-1,icon_inline_error,FALSE,NULL);
+    icon_running=gdk_pixbuf_new_from_inline(-1,icon_inline_play,FALSE,NULL);
     icon_waiting=gdk_pixbuf_new_from_inline(-1,icon_inline_waiting,FALSE,NULL);
     icon_cancel=gdk_pixbuf_new_from_inline(-1,icon_inline_cancel,FALSE,NULL);
     icon_save=gdk_pixbuf_new_from_inline(-1,icon_inline_save,FALSE,NULL);
     icon_skip=gdk_pixbuf_new_from_inline(-1,icon_inline_skip,FALSE,NULL);
     icon_clear=gdk_pixbuf_new_from_inline(-1,icon_inline_clear,FALSE,NULL);
     icon_connect=gdk_pixbuf_new_from_inline(-1,icon_inline_connect,FALSE,NULL);
-    /*GtkWidget *image_finished=gtk_image_new_from_stock(GTK_STOCK_APPLY, GTK_ICON_SIZE_MENU);
-    gtk_widget_show(image_finished);
-    icon_finished=gtk_image_get_pixbuf(GTK_IMAGE(image_finished));
-    */
+
     create_status_icon();
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window),"MAOS Monitor");
 
     gtk_window_set_icon(GTK_WINDOW(window),icon_main);
-#ifdef MAC_INTEGRATION
-    gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
-    gtkosx_application_ready(theApp);
-#endif
+
 #if GTK_MAJOR_VERSION<3
     gtk_rc_parse_string(rc_string_widget); 
     gtk_rc_parse_string(rc_string_treeview);
@@ -706,41 +709,44 @@ int main(int argc, char *argv[])
     provider_red=gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider_red, prog_red, strlen(prog_red), NULL);
     /*Properties not belonging to GtkWidget need to begin with -WidgetClassName*/
+    /*four sides: 4 values:top right bottom left;3 values:top horizontal bottom;2 values:vertical horizontal;1 value:all*/
     const gchar *all_style=
-		      "progress, trough {\n"
-		      "min-height:4px;\n"
-		      "min-width: 4px;\n"
-		      "padding: 1px;\n"
+		      "progress, trough {\n" 
+		      "min-height:4px;"
+		      "min-width: 4px;"
 		      "}\n"
 		      "*{\n"
-		      "padding:0px;\n"
-		      "border-radius:0px;\n"
-		      "border-width:1px;\n"
-		      "font:11px Sans;\n"
-		      "-GtkToolbar-button-releaf:0px;\n"
+		      "padding:1px;" //OK.
+		      "border-radius:1px;" //OK
+		      "border-width:1px;" //OK
+		      "font:12px Sans;"
 		      "}\n"
-		      ".notebook{\n"
-		      "background-color:@theme_bg_color;\n"
+		      "notebook{\n"
+		      "background-color:@theme_bg_color;"
 		      "}\n"
-		      ".notebook tab{\n"
-		      "-adwaita-focus-border-radius: 5px;\n"
-		      "border-width: 0px;\n"
-		      "padding: 1px 1px 1px;\n"
-		      "background-color:@theme_bg_color;\n"
+		      "notebook tab{\n" //OK
+		      "border-width: 1px 0px 0px 0px;" //OK
+		      "border-color: #FF0000;"
+		      "border-style: none;"
+		      "border-radius:4px 4px 0px 0px;"  //OK
+		      "padding: 0px 0px 0px 0px;" //OK
+		      "background-color:@selected_bg_color;" //OK
 		      "}\n"
-		      ".notebook tab:active{\n"
-		      "border-width: 1px;\n"
-		      "padding: 0px 0px 0px;\n"
-		      "background-color:#FFFFFF;\n"
+		      "notebook tab:checked{\n" //OK
+		      "background-color:@theme_bg_color;"
+		      "}\n"
+		      "textview{\n"
+		      "font:16px Sans;"
+		      "border-width:3px;" 
 		      "}\n"
 		      ".entry.progressbar{\n"
-		      "-GtkEntry-has-frame:1;\n"
-		      "-GtkEntry-progress-border:0px,0px,0px,0px;\n"
-		      "-GtkEntry-inner-border:0px,0px,0px,0px;\n"
-		      "background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));\n"
-		      "border-width:1px;\n"
+		      "-GtkEntry-has-frame:1;"
+		      "-GtkEntry-progress-border:0px,0px,0px,0px;"
+		      "-GtkEntry-inner-border:0px,0px,0px,0px;"
+		      "background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));"
+		      "border-width:1px;"
 		      "border-style:none; \n"
-		      "border-color:#000000;\n"
+		      "border-color:#000000;"
 		      "}\n"
 ;
 
@@ -792,6 +798,7 @@ int main(int argc, char *argv[])
     pproc=mycalloc(nhost,PROC_T*);
     nproc=mycalloc(nhost,int);
     cmdconnect=mycalloc(nhost,GtkWidget*);
+    buffers=mycalloc(nhost, GtkTextBuffer*);
     hsock=mycalloc(nhost,int);
     for(int i=0; i<nhost; i++){
 	hsock[i]=-1;
@@ -837,14 +844,26 @@ int main(int argc, char *argv[])
 
 	cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
 	g_signal_connect(cmdconnect[ihost],"clicked", G_CALLBACK(add_host_event), GINT_TO_POINTER(ihost));
-	GtkWidget *hbox=gtk_hbox_new(FALSE,0);
-	gtk_box_pack_start(GTK_BOX(hbox),cmdconnect[ihost],TRUE,FALSE,0);
-
 	pages[ihost]=gtk_vbox_new(FALSE,0);
-	gtk_box_pack_end(GTK_BOX(pages[ihost]),hbox,FALSE,FALSE,0);
-	GtkWidget *page=new_page(ihost);
-	if(page){
-	    gtk_box_pack_start(GTK_BOX(pages[ihost]),page,FALSE,FALSE,0);
+	{// button for reconnection
+	    GtkWidget *hbox=gtk_hbox_new(FALSE,0);
+	    gtk_box_pack_start(GTK_BOX(hbox),cmdconnect[ihost],TRUE,FALSE,0);
+	    gtk_box_pack_end(GTK_BOX(pages[ihost]),hbox,FALSE,FALSE,0);
+	}
+	{//area for showing list of jobs
+	    GtkWidget *page=new_page(ihost);
+	    if(page){
+		gtk_box_pack_start(GTK_BOX(pages[ihost]),page,FALSE,FALSE,0);
+	    }
+	}
+	{//text are to show details job information
+	    GtkWidget *seperator=gtk_hseparator_new();
+	    gtk_box_pack_start(GTK_BOX(pages[ihost]),seperator,FALSE,FALSE,0);
+	    GtkWidget *view=gtk_text_view_new();
+	    buffers[ihost]=gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+	    gtk_box_pack_start(GTK_BOX(pages[ihost]),view,FALSE,FALSE,0);
+	    gtk_text_buffer_set_text(buffers[ihost], "",-1);
+	    gtk_text_view_set_editable(GTK_TEXT_VIEW(view), 0);
 	}
 	tabs[ihost]=gtk_scrolled_window_new(NULL,NULL);
 	gtk_scrolled_window_set_policy
@@ -872,5 +891,10 @@ int main(int argc, char *argv[])
 	add_host_wrap(ihost);
     }
     gtk_widget_show_all(window);
+#ifdef MAC_INTEGRATION
+    gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
+    //g_signal_connect(theApp,"NSApplicationDidBecomeActive", G_CALLBACK(status_icon_on_click), GINT_TO_POINTER(1));//useless
+    gtkosx_application_ready(theApp);
+#endif
     gtk_main();
 }

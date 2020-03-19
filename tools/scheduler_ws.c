@@ -17,16 +17,16 @@
 */
 
 #include <getopt.h>
-
-
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <syslog.h>
 #include <sys/time.h>
-
 #include <libwebsockets.h>
-#include "../sys/sys.h"
+//#include "../sys/sys.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h" 
+#endif
 #include "scheduler_ws.h"
 /**
    Contains code for handling websocket connection using libwebsockets. Part of
@@ -148,7 +148,7 @@ static int callback_http(struct lws *wsi,
     int n;
     switch (reason) {
     case LWS_CALLBACK_HTTP:
-	dump_handshake_dbg(wsi);
+	//dump_handshake_dbg(wsi);
 	if (len < 1) {
 	    lws_return_http_status(wsi, HTTP_STATUS_BAD_REQUEST, NULL);
 	    return -1;
@@ -419,6 +419,8 @@ static struct lws_protocols protocols[] = {
 
 static struct lws_context *context=0;
 int ws_start(short port){
+    int logs=LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE;
+    lws_set_log_level(logs, NULL);
     struct lws_context_creation_info info;
     memset(&info, 0, sizeof info);
     info.port = port;
@@ -426,7 +428,6 @@ int ws_start(short port){
 		"(C) Copyright 2010-2013 Andy Green <andy@warmcat.com> - "
 		"licensed under LGPL2.1\n");
     info.protocols = protocols;
-    //info.extensions = lws_get_internal_extensions();
     /*this is critical. otherwise UTF-8 error in client.*/
     info.gid = -1;
     info.uid = -1;

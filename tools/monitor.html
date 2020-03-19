@@ -256,10 +256,10 @@
 	     return button;
 	 }
 
-	 var button_wait=new_button("button-wait.png")
-	 var button_ok=new_button("button-ok.png")
-	 var button_play=new_button("button-play.png");
-	 var button_err=new_button("button-err.png");
+	 var button_wait=new_button("icon-waiting.png")
+	 var button_ok=new_button("icon-finished.png")
+	 var button_play=new_button("icon-running.png");
+	 var button_err=new_button("icon-error.png");
 	 var pos = 0;
 	 function sec2str(secstr){
 	     var sec=parseInt(secstr);
@@ -422,13 +422,13 @@
 				     cell_tim.innerHTML="Skipped";
 				 }else{
 				     if(cell_btn.firstChild){//change of status
-					 notify('task '+row.cells[cols.PID].innerHTML+' finished on '+hostname2, hostname2+'_ok', "button-ok.png");
+					 notify('task '+row.cells[cols.PID].innerHTML+' finished on '+hostname2, hostname2+'_ok', "icon-finished.png");
 				     }
 				 }
 				 setchild(cell_btn, button_ok);
 			     }else if(i[3]==12 || i[3]==15){//crashed or killed
 				 if(cell_btn.firstChild){//change of status
-				     notify('task '+row.cells[cols.PID].innerHTML+' crashed on '+hostname2, hostname2+'_err', "button-err.png");
+				     notify('task '+row.cells[cols.PID].innerHTML+' crashed on '+hostname2, hostname2+'_err', "icon-error.png");
 				 }
 				 setchild(cell_btn, button_err);
 				 row.cells[cols.SEED].firstChild.style.background="red";

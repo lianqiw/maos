@@ -150,7 +150,7 @@ AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_m
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
-AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="default"])
+AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="yes"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 
@@ -343,7 +343,7 @@ case "$host_os" in
 	    CFLAGS+=" -mmacosx-version-min=10.7"
 	fi
 	if test "$CN" = "CLANG" ;then
-	    CFLAGS+= "-stdlib=libc++"
+	    CFLAGS+=" -stdlib=libc++"
 	fi
 	;;
     *bsd*)
@@ -680,10 +680,10 @@ if test "$use_websockets" = "yes" ;then
 	AC_MSG_NOTICE(["libwebsocket library or header is not available"])
     fi
 fi
-comp_draw="no" #for drawdaemon
-comp_mon="no" #for parital monitor without notify
-comp_monn="no" #for full monitor with notify
-
+comp_draw="0" #for drawdaemon
+comp_mon="0" #for parital monitor without notify
+comp_monn="0" #for full monitor with notify
+PKG_PROG_PKG_CONFIG
 if test "$with_gtk" != "no" ;then
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
@@ -696,68 +696,53 @@ if test "$with_gtk" != "no" ;then
 	    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig"
 	fi
     fi
-    PKG_CHECK_MODULES(GTK3, gtk+-3.0,           [gtk_3="yes"], [gtk_3="no"])
-    PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2,    [gtk_2="yes"], [gtk_2="no"])
+    AS_IF([test "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0,           [gtk_ver="3"], [gtk_ver="0"])])
+    AS_IF([test "$gtk_ver" != "3"],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
 
-    #if test x$($PKG_CONFIG --variable=target gdk-2.0) = xquartz ;then
-#	macint=gtk-mac-integration
-    #fi
-    if test "$gtk_2" = "yes" -a "$use_gtk_3" != "yes"; then #prefer gtk+-2
-	PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 $macint cairo >= 1.4,     [comp_draw="yes"],[comp_draw="no"])
-	PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2 $macint ,                 [comp_mon="yes"], [comp_mon="no"])
-	PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 $macint libnotify >= 0.1, [comp_monn="no"],[comp_monn="no"])
-	gtk_ver=2
-    elif test "$gtk_3" = "yes" ;then
-	PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
-	PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])
-	PKG_CHECK_MODULES(MONN, gtk+-3.0 >= 0.0 libnotify >= 0.0, [comp_monn="yes"],[comp_monn="no"])
-	gtk_ver=3
-    fi
-    if test -n "$GTKDIR" ;then
+    PKG_CHECK_MODULES(DRAW, cairo >= 1.4,    [comp_draw="1"],[comp_draw="0"])
+    PKG_CHECK_MODULES(MONN, libnotify >= 0.1,[comp_monn="1"],[comp_monn="0"])
+    PKG_CHECK_MODULES(MAC,  gtk-mac-integration-gtk${gtk_ver}, [comp_mac="1"], [comp_mac="0"])
+
+    if test -n "$GTKDIR" ;then #User specified GTK directory
 	TT=-I$GTKDIR/include
 	GTK_CFLAGS="$TT $TT/cairo $TT/atk-1.0 $TT/gtk-${gtk_ver}.0 $TT/glib-2.0 $TT/pango-1.0 $TT/gdk-pixbuf-2.0 -I$GTKDIR/lib/glib-2.0/include -I${GTKDIR}/lib/gtk-2.0/include"
 	GTK_LIBS="-L$GTKDIR/lib/ -Wl,-rpath,$GTKDIR/lib/"
 	if test -d "$GTKDIR/bin" ;then
 	    GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
 	fi
-    else
-	GTK_CFLAGS=""
-	GTK_LIBS=""
     fi
     if false ;then
 	#Temporarily include GTK_CFLAGS in CFLAGS to enable header search.
 	CFLAGS_SAVE=$CFLAGS
-	CFLAGS="$CFLAGS $GTK_CFLAGS $MON_CFLAGS"
-	AC_CHECK_HEADERS([gtk/gtk.h], [], [comp_draw="no"; comp_mon="no"])
-	AC_CHECK_HEADERS([libnotify/notify.h], [], [comp_monn="no"])
+	CFLAGS="$CFLAGS $GTK_CFLAGS $MONN_CFLAGS"
+	AC_CHECK_HEADERS([gtk/gtk.h], [], [comp_draw="0"; comp_mon="0"])
+	AC_CHECK_HEADERS([libnotify/notify.h], [], [comp_monn="0"])
 	CFLAGS=$CFLAGS_SAVE
     fi
  
-    if test "$comp_mon" = "yes" ;then
-	if ! echo "$MON_LIBS" | grep -q gthread ;then
+    if test "$gtk_ver" = "2" ;then
+	if ! echo "$GTK_LIBS" | grep -q gthread ;then
 	    #OLD GLIB has GTHREAD separated
 	    PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
 	    if test -n "$GTHREAD_LIBS" ;then
-		DRAW_LIBS="$DRAW_LIBS $GTHREAD_LIBS"
-		MON_LIBS="$MON_LIBS $GTHREAD_LIBS"
-		MONN_LIBS="$MONN_LIBS $GTHREAD_LIBS"
+		GTK_LIBS+=" $GTHREAD_LIBS"
 	    fi
 	fi
     fi
+    AC_DEFINE_UNQUOTED(MAC_INTEGRATION, [$comp_mac], ["Mac integration"])
     #The following will substitute the variables name 
-    AC_SUBST(DRAW_CFLAGS)
-    AC_SUBST(DRAW_LIBS)
-    AC_SUBST(MON_CFLAGS)
-    AC_SUBST(MON_LIBS)
-    AC_SUBST(MONN_LIBS)
-    AC_SUBST(MONN_CFLAGS)
+    #AC_SUBST(DRAW_CFLAGS)
+    #AC_SUBST(DRAW_LIBS)
+    #AC_SUBST(MONN_LIBS)
+    #AC_SUBST(MONN_CFLAGS)
     AC_SUBST(GTK_CFLAGS)
     AC_SUBST(GTK_LIBS)
+
 fi
 
-AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
-AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
-AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
+AM_CONDITIONAL(DRAW, test x$comp_draw = x1)
+AM_CONDITIONAL(MON,  test x$gtk_ver  != x0)
+AM_CONDITIONAL(MONN, test x$comp_monn = x1)
 
 AC_CHECK_HEADERS([unistd.h])
 OPTS+=" $OPTScommon $OPTScc $OPTSprof $OPTSextra"
@@ -1026,7 +1011,7 @@ echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
 echo LDEXE_FULL=$LDEXE_FULL
-if test "$with_gtk" != "no" ;then
+if test "$gtk_ver" != "0" ;then
     echo DRAW_LIBS=$DRAW_LIBS
     echo GTK_LIBS=$GTK_LIBS
 fi
@@ -1048,7 +1033,7 @@ echo
 echo "OpenMP:          $with_openmp"
 echo "Double:          $use_double"
 echo "Drawdaemon:      $comp_draw"
-echo "Monitor:         $comp_mon (libnotify: $comp_monn)"
+echo "Monitor:         $((gtk_ver>0)) (libnotify: $comp_monn)"
 echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       $has_lws"

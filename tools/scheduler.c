@@ -1108,7 +1108,7 @@ int main(){
     }
     {
 	//Find out number of gpus.
-	FILE *fpcmd=popen("nvidia-smi -L", "r");
+	FILE *fpcmd=popen("nvidia-smi -L 2>/dev/null", "r");
 	if(!fpcmd){
 	    NGPU=0;
 	}else{
@@ -1126,7 +1126,7 @@ int main(){
     }
     double timeout=0.5;
 #if HAS_LWS
-    ws_start(PORT+1);
+    ws_start(PORT+100);
     ws_service();
     timeout=0.1;//let lws do timeout. don't use 0 which blocks
 #endif

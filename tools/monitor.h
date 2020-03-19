@@ -76,6 +76,7 @@ extern GdkPixbuf *icon_failed;
 extern GdkPixbuf *icon_running;
 extern GdkPixbuf *icon_waiting;
 extern GdkPixbuf *icon_skip;
+extern GtkTextBuffer **buffers;
 gboolean update_title(gpointer data);
 GtkWidget *new_page(int ihost);
 gboolean remove_entry(PROC_T *p);
