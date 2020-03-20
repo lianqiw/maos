@@ -225,28 +225,18 @@ void single_instance_daemonize(const char *lockfolder_in,
 }
 int detached=0;
 typedef struct{
-    int pfd;
-    int stdoutfd;
-    char *fn;
+    int pfd;//in
+    FILE **fps;
+    int nfp;
 }dup_stdout_t;
 
 static void* dup_stdout(dup_stdout_t *data){
-    int fd=data->pfd;
-    int stdoutfd=data->stdoutfd;
-    char *fn=data->fn;
-    free(data);
-    FILE *fpout[2];
-    fpout[0]=fdopen(stdoutfd, "w");
-    fpout[1]=fopen(fn, "w");
-    free(fn);
-    setbuf(fpout[0], NULL);
-    setbuf(fpout[1], NULL);
-    if(!fpout[0] || !fpout[1]) {
-	printf("open stderr failed\n");
-	return 0;
-    }
+    int fd=data->pfd;//read.
+    FILE** fpout=data->fps;
+    int nfp=data->nfp;
     char buf[400];
-    while(fpout[0] || fpout[1]){
+    int nactive=nfp;
+    while(nactive){
 	int len=read(fd, buf, sizeof buf);
 	if(len<=0 && errno == EINTR){
 	    continue;
@@ -254,9 +244,14 @@ static void* dup_stdout(dup_stdout_t *data){
 	if(len<=0){/*pipe closed. parent exited. we exit also.*/
 	    break;
 	}
+	nactive=0;
 	for(int i=0; i<2; i++){
-	    if(fpout[i] && fwrite(buf, len, 1, fpout[i])!=1){
-		fpout[i]=NULL;
+	    if(fpout[i]){
+		if(fwrite(buf, len, 1, fpout[i])!=1){
+		    fpout[i]=NULL;
+		}else{
+		    nactive++;
+		}
 	    }
 	}
     }
@@ -296,6 +291,7 @@ static void redirect2fn(const char *fn){
   Redirect output. 
   If we are in detached mode, will output to file, otherwise will output to both file and screen.
 */
+FILE *fpconsole=0;
 void redirect(void){
     extern int disable_save;
     if(disable_save) return;
@@ -309,17 +305,18 @@ void redirect(void){
 	   console output fd. The stdout and stderr is redirected to one of of
 	   the pipe and the other end of the pipe is output to the screen and file.
 	 */
-	int stdoutfd=dup(fileno(stdout));
 	int pfd[2];
 	if(pipe(pfd)){//fail to create pipe.
-	    close(stdoutfd);
 	    warning("pipe failed, failed to redirect stdout.\n");
 	}else{
+	    fpconsole=fdopen(dup(fileno(stdout)),"w");
 	    dup_stdout_t *data=mycalloc(1,dup_stdout_t);
+	    data->nfp=2;
+	    data->fps=mycalloc(data->nfp, FILE*);
+	    data->fps[0]=fpconsole;
+	    data->fps[1]=fopen(fn, "w");
 	    data->pfd=pfd[0];//read
-	    data->stdoutfd=stdoutfd;//write to console
-	    data->fn=strdup(fn);
-	    //spawn a thread to handle output.
+	    //spawn a thread to duplicate output to both console and file.
 	    pthread_t thread;
 	    //child thread read from pfd[0] and write to stdout.
 	    pthread_create(&thread, NULL, (void *(*)(void *))dup_stdout, data);

@@ -105,7 +105,7 @@ static void mvm_direct_igpu(thread_t *info){
 	ctoc_init(10);
 	if(info->ithread==0){
 	    if(!detached){
-		info_stderr("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
+		info_console("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
 	    }else if(ig % 100==0){
 		info2("%6d of %6ld\n", ig*NGPU, ntotgrad);
 	    }

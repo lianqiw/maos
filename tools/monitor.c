@@ -864,6 +864,7 @@ int main(int argc, char *argv[])
 	    gtk_box_pack_start(GTK_BOX(pages[ihost]),view,FALSE,FALSE,0);
 	    gtk_text_buffer_set_text(buffers[ihost], "",-1);
 	    gtk_text_view_set_editable(GTK_TEXT_VIEW(view), 0);
+	    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
 	}
 	tabs[ihost]=gtk_scrolled_window_new(NULL,NULL);
 	gtk_scrolled_window_set_policy

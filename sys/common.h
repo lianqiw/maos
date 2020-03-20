@@ -97,7 +97,7 @@ extern int detached;
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
 
 extern int LOG_LEVEL;
-
+extern FILE *fpconsole;
 #define error(format,...) ({printf("%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
 #define warning(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK)
 #define warning_time(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d)[%s]: " format "%s", RED, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__, BLACK)
@@ -105,7 +105,7 @@ extern int LOG_LEVEL;
 
 #define info(A...)  if(LOG_LEVEL>-2) printf(A)
 #define info2(A...)  if(LOG_LEVEL>-1) printf(A)
-#define info_stderr(A...) if(LOG_LEVEL>-2) fprintf(stderr, A) //stderr is not directed to file.
+#define info_console(A...) if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A) //stderr is not directed to file.
 #define info_once(A...) if(LOG_LEVEL>-2){static int done=0; if(!done){done=1; info(A);}}
 
 #define dbg(format,...) if(LOG_LEVEL>0) printf("Debug(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)

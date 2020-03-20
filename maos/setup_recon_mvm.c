@@ -58,7 +58,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	dcell *eyec=d2cellref(eye, ngrad, nwfs);
 	for(int ig=0; ig<ntotgrad; ig++){
 	    if(!detached){
-		info_stderr("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
+		info_console("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
 	    }else if(ig%100==0){
 		info2("%6d of %6d\n", ig, ntotgrad);
 	    }
@@ -137,7 +137,7 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 	}
 	if(info->ithread==0){
 	    if(!detached){
-		info_stderr("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
+		info_console("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
 	    }else if(iact % 100==0){
 		info2("%6ld of %6ld\n", iact*nthread, ntotact);
 	    }
