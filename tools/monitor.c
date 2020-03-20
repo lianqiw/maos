@@ -42,7 +42,7 @@
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
 #include "monitor.h"
-#ifdef MAC_INTEGRATION //In newer GTK>3.6, using GtkApplication instead of this extension.
+#if MAC_INTEGRATION //In newer GTK>3.6, using GtkApplication instead of this extension.
 #include <gtkosxapplication.h>
 #endif
 #if WITH_NOTIFY
@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
     }
 #endif
     gtk_init(&argc, &argv);
-#ifdef MAC_INTEGRATION
+#if MAC_INTEGRATION
     GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 #endif
 #if WITH_NOTIFY
@@ -891,7 +891,7 @@ int main(int argc, char *argv[])
 	add_host_wrap(ihost);
     }
     gtk_widget_show_all(window);
-#ifdef MAC_INTEGRATION
+#if MAC_INTEGRATION
     gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
     //g_signal_connect(theApp,"NSApplicationDidBecomeActive", G_CALLBACK(status_icon_on_click), GINT_TO_POINTER(1));//useless
     gtkosx_application_ready(theApp);
