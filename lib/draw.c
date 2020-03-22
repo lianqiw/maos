@@ -335,7 +335,7 @@ static int get_drawdaemon(){
    4) pause must not be set set.
 */
 static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
-    if(disable_draw || sock_draws[ifd].pause) return 0;
+    if(disable_draw || sock_draws[ifd].fd==-1 || sock_draws[ifd].pause) return 0;
     if(!draw_single) return 1;
     list_t *child=0;
     list_search(&sock_draws[ifd].list, &child, fig, add);
@@ -361,7 +361,7 @@ void draw_final(int reuse){
 }
 
 /**
-   Check whether what we are drawing is current page.
+   Check whether what we are drawing is current page of any drawdaemon.
 */
 int draw_current(const char *fig, const char *fn){
     if(disable_draw) return 0;
@@ -402,9 +402,6 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 	for(int ifd=0; ifd<sock_ndraw; ifd++){
 	    /*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	    int sock_draw=sock_draws[ifd].fd;
-	    if(sock_draw==-1) {
-		continue;
-	    }
 	    if(!check_figfn(ifd, fig, fn, 1)) continue;
 	    STWRITEINT(DRAW_FLOAT); STWRITEINT(sizeof(real));
 	    STWRITEINT(DRAW_START);
@@ -519,7 +516,6 @@ static void imagesc_do(imagesc_t *data){
 	for(int ifd=0; ifd<sock_ndraw; ifd++){
 	    /*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	    int sock_draw=sock_draws[ifd].fd;
-	    if(sock_draw==-1) continue;
 	    if(!check_figfn(ifd, fig, fn, 1)) continue;
 	    int32_t header[2];
 	    header[0]=nx;
@@ -558,6 +554,11 @@ static void imagesc_do(imagesc_t *data){
     free(data->fn);
     free(data);
 }
+/*
+  Use a separate thread to avoid slowing down the simulation. Skip if busy.
+
+  /todo: consider implement an actor pattern for this.
+ */
 int imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
 	     long ny,   /**<the image is of size nx*ny*/
@@ -604,7 +605,7 @@ int imagesc(const char *fig, /**<Category of the figure*/
     data->fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
-    QUEUE(&group, (thread_wrapfun)imagesc_do, (void*)data, 1, 0);
+    thread_new((thread_fun)imagesc_do, data);
     return 1;
 }
 
