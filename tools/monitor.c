@@ -98,6 +98,7 @@ GtkWidget *toptoolbar;
 //GtkCssProvider *provider_prog;
 GtkCssProvider *provider_red;
 GtkCssProvider *provider_blue;
+#include "gtk3-css.h"
 #endif
 int *hsock;
 #define MAX_HOST 20
@@ -710,46 +711,6 @@ int main(int argc, char *argv[])
     gtk_css_provider_load_from_data(provider_red, prog_red, strlen(prog_red), NULL);
     /*Properties not belonging to GtkWidget need to begin with -WidgetClassName*/
     /*four sides: 4 values:top right bottom left;3 values:top horizontal bottom;2 values:vertical horizontal;1 value:all*/
-    const gchar *all_style=
-		      "progress, trough {\n" 
-		      "min-height:4px;"
-		      "min-width: 4px;"
-		      "}\n"
-		      "*{\n"
-		      "padding:1px;" //OK.
-		      "border-radius:1px;" //OK
-		      "border-width:1px;" //OK
-		      "font:12px Sans;"
-		      "}\n"
-		      "notebook{\n"
-		      "background-color:@theme_bg_color;"
-		      "}\n"
-		      "notebook tab{\n" //OK
-		      "border-width: 1px 0px 0px 0px;" //OK
-		      "border-color: #FF0000;"
-		      "border-style: none;"
-		      "border-radius:4px 4px 0px 0px;"  //OK
-		      "padding: 0px 0px 0px 0px;" //OK
-		      "background-color:@selected_bg_color;" //OK
-		      "}\n"
-		      "notebook tab:checked{\n" //OK
-		      "background-color:@theme_bg_color;"
-		      "}\n"
-		      "textview{\n"
-		      "font:16px Sans;"
-		      "border-width:3px;" 
-		      "}\n"
-		      ".entry.progressbar{\n"
-		      "-GtkEntry-has-frame:1;"
-		      "-GtkEntry-progress-border:0px,0px,0px,0px;"
-		      "-GtkEntry-inner-border:0px,0px,0px,0px;"
-		      "background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));"
-		      "border-width:1px;"
-		      "border-style:none; \n"
-		      "border-color:#000000;"
-		      "}\n"
-;
-
     GtkCssProvider *provider_default=gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);
     GtkStyleContext *all_context=gtk_widget_get_style_context(window);
@@ -757,7 +718,6 @@ int main(int argc, char *argv[])
     gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default), GTK_STYLE_PROVIDER_PRIORITY_USER);
     
 #endif
-
 
     GtkWidget *vbox=gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);

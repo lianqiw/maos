@@ -75,7 +75,7 @@ sockinfo_t sock_draws[MAXDRAW];
 #define CATCH(A) if(A){\
 	warning("stwrite to %d failed with %s\n", sock_draw, strerror(errno)); \
 	draw_remove(sock_draw,0);					\
-	continue;							\
+	goto end;							\
     }
 #define STWRITESTR(A) CATCH(stwritestr(sock_draw,A))
 #define STWRITEINT(A) CATCH(stwriteint(sock_draw,A))
@@ -181,9 +181,7 @@ int draw_add(int fd){
 static void draw_remove(int fd, int reuse){
     if(fd<0) return;
     if(reuse){
-	if(scheduler_send_socket(fd, DRAW_ID)){
-	    close(fd);
-	}
+	scheduler_send_socket(fd, DRAW_ID);
     }
     close(fd);
     int found=0;
@@ -200,7 +198,7 @@ static void draw_remove(int fd, int reuse){
     if(found){
 	sock_ndraw2--;
     }else{
-	warning("draw_remove: fd=%d is not found\n", fd);
+	dbg("draw_remove: fd=%d is not found\n", fd);
     }
     if(sock_ndraw2<=0){
 	disable_draw=1;//do not try to restart drawdaemon
@@ -296,6 +294,7 @@ static int get_drawdaemon(){
 	sock=-1;
     }else{//test whether drawdaemon is still running
 	if(stwriteint(sock, DRAW_FINAL)){
+	    dbg("received socket=%d is already closed.\n", sock);
 	    close(sock);
 	    sock=-1;
 	}
@@ -355,6 +354,7 @@ void draw_final(int reuse){
 	int sock_draw=sock_draws[ifd].fd;
 	if(sock_draw==-1) continue;
 	STWRITEINT(DRAW_FINAL);
+      end:
 	draw_remove(sock_draw, reuse);
     }
     UNLOCK(lock);
@@ -476,6 +476,7 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 	    STWRITECMDSTR(DRAW_XLABEL,xlabel);
 	    STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	    STWRITEINT(DRAW_END);
+	  end:
 	    ans=1;
 	}
     }
@@ -487,13 +488,16 @@ int plot_points(const char *fig,    /**<Category of the figure*/
    Draw an image.
 */
 //Data structure for imagesc
+#define MAXNX 1000 //downsample
+typedef float dtype;
 typedef struct imagesc_t{
     char *fig; /**<Category of the figure*/
     long nx;   /**<the image is of size nx*ny*/
     long ny;   /**<the image is of size nx*ny*/
-    real *limit; /**<x min; xmax; ymin and ymax*/
-    real *zlim;/**< min;max; the data*/
-    real *p; /**<The image*/
+    long bsize;/**<bytes of each element*/
+    dtype *limit; /**<x min; xmax; ymin and ymax*/
+    dtype *zlim;/**< min;max; the data*/
+    dtype *p; /**<The image*/
     char *title;  /**<title of the plot*/
     char *xlabel; /**<x axis label*/
     char *ylabel; /**<y axis label*/
@@ -506,9 +510,9 @@ static void imagesc_do(imagesc_t *data){
 	char *fig=data->fig;
 	long nx=data->nx;
 	long ny=data->ny;
-	real *limit=data->limit;
-	real *zlim=data->zlim;
-	real *p=data->p;
+	dtype *limit=data->limit;
+	dtype *zlim=data->zlim;
+	dtype *p=data->p;
 	char *title=data->title;
 	char *xlabel=data->xlabel;
 	char *ylabel=data->ylabel;
@@ -520,18 +524,19 @@ static void imagesc_do(imagesc_t *data){
 	    int32_t header[2];
 	    header[0]=nx;
 	    header[1]=ny;
-	    STWRITEINT(DRAW_FLOAT); STWRITEINT(sizeof(real));
+	    STWRITEINT(DRAW_FLOAT);
+	    STWRITEINT(sizeof(dtype));
 	    STWRITEINT(DRAW_START);
 	    STWRITEINT(DRAW_DATA);
 	    STWRITE(header, sizeof(int32_t)*2);
-	    STWRITE(p, sizeof(real)*nx*ny);
+	    STWRITE(p, sizeof(dtype)*nx*ny);
 	    if(zlim){
 		STWRITEINT(DRAW_ZLIM);
-		STWRITE(zlim,sizeof(real)*2);
+		STWRITE(zlim,sizeof(dtype)*2);
 	    }
 	    if(limit){/*xmin,xmax,ymin,ymax */
 		STWRITEINT(DRAW_LIMIT);
-		STWRITE(limit, sizeof(real)*4);
+		STWRITE(limit, sizeof(dtype)*4);
 	    }
 	    if(fn){
 		STWRITECMDSTR(DRAW_NAME,fn);
@@ -541,6 +546,7 @@ static void imagesc_do(imagesc_t *data){
 	    STWRITECMDSTR(DRAW_XLABEL,xlabel);
 	    STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	    STWRITEINT(DRAW_END);
+	  end:;
 	}
     }
     UNLOCK(lock);
@@ -571,7 +577,7 @@ int imagesc(const char *fig, /**<Category of the figure*/
 	     const char *format, /**<subcategory of the plot.*/
 	     ...){
     format2fn;
-    if(!draw_current(fig, fn)){
+    if(!p || !draw_current(fig, fn)){
 	return 0;
     }
     if (draw_single){
@@ -585,20 +591,38 @@ int imagesc(const char *fig, /**<Category of the figure*/
     //We copy all the data and put the imagesc job into a task
     //The task will free the data after it finishes.
     imagesc_t *data=mycalloc(1, imagesc_t);
-    data->nx=nx;
-    data->ny=ny;
 #define datastrdup(x) data->x=(x)?strdup(x):0
-#define datamemdup(x, size,type)		\
+#define datamemdup(x, size, type)		\
     if(x){					\
-	data->x=mymalloc(size,type);		\
-	memcpy(data->x, x,size*sizeof(type));	\
+	data->x=mymalloc(size, type);		\
+	for(long i=0; i<size; i++){		\
+	    data->x[i]=(type)x[i];		\
+	}					\
     }else{					\
 	data->x=0;				\
     }
     datastrdup(fig);
-    datamemdup(limit, 4, real);
-    datamemdup(zlim, 2, real);
-    datamemdup(p, nx*ny, real);
+    data->bsize=sizeof(dtype);//always send float.
+    datamemdup(limit, 4, dtype);
+    datamemdup(zlim, 2, dtype);
+    {
+	//down sampling and change to float
+	int xstep=(nx+MAXNX-1)/MAXNX;
+	int ystep=(ny+MAXNX-1)/MAXNX;
+	int nx2=(nx)/xstep;
+	int ny2=(ny)/ystep;
+
+	data->p=malloc(nx2*ny2*sizeof(dtype));
+	for(int iy=0; iy<ny2; iy++){
+	    dtype *p2=data->p+iy*nx2;
+	    const real *p1=p+iy*ystep*nx;
+	    for(int ix=0; ix<nx2; ix++){
+		p2[ix]=(dtype)p1[ix*xstep];
+	    }
+	}
+	data->nx=nx2;
+	data->ny=ny2;
+    }
     datastrdup(title);
     datastrdup(xlabel);
     datastrdup(ylabel);

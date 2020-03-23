@@ -50,7 +50,7 @@ static GtkRcStyle *btn_rcstyle=NULL;
 PangoFontDescription *desc=NULL;
 int font_name_version=0;
 char *font_name=NULL;
-double font_size;
+float font_size;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
 static int cursor_type=0;/*cursor type of the drawing area. */
@@ -68,6 +68,9 @@ static const char *rc_string_notebook={
     "}                                        \n"
     "class \"GtkNoteBook\" style \"noborder\" \n"
 };
+#endif
+#if GTK_MAJOR_VERSION>=3
+#include "gtk3-css.h"
 #endif
 
 #define error_msg(A...) {				\
@@ -402,7 +405,7 @@ static const char *subnb_label_get(GtkWidget *subnb, GtkWidget *page){
     GList *list=gtk_container_get_children(GTK_CONTAINER(label));
     return gtk_label_get_text(GTK_LABEL(g_list_first(list)->data));
 }
-static void do_move(drawdata_t *drawdata, double xdiff, double ydiff){
+static void do_move(drawdata_t *drawdata, float xdiff, float ydiff){
     drawdata->offx+=xdiff/drawdata->zoomx;
     drawdata->offy+=ydiff/drawdata->zoomy;
     delayed_update_pixmap(drawdata);/*no need delay since motion notify already did it. */
@@ -414,10 +417,10 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
     drawdata_t *drawdata=*drawdatawrap;
     if(((event->state & GDK_BUTTON1_MASK) || (event->state & GDK_BUTTON3_MASK))
        && drawdata->valid){
-	double x, y;
+	float x, y;
 	x = event->x;
 	y = event->y;
-	double dx, dy;
+	float dx, dy;
 	dx = x - drawdata->mxdown;
 	dy = y - drawdata->mydown;
 	/*move with left cursor */
@@ -427,9 +430,9 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	    drawdata->mydown=y;
 	}else if(event->state & GDK_BUTTON3_MASK){/*select and zoom. */
 	    if(drawdata->square && !drawdata->image){/*for a square */
-		double ratio=1;
+		float ratio=1;
 		if(drawdata->image){
-		    ratio=(double)drawdata->nx/(double)drawdata->ny;
+		    ratio=(float)drawdata->nx/(float)drawdata->ny;
 		}
 		if(fabs(dx)<fabs(dy)*ratio){
 		    dy*=fabs(dx/(dy*ratio));
@@ -476,8 +479,8 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	    gtk_widget_set_has_tooltip(widget, 1);
 	}
 	{
-	    double x=(event->x-drawdata->xoff)/(double)(drawdata->widthim);
-	    double y=(event->y-drawdata->yoff)/(double)(drawdata->heightim);
+	    float x=(event->x-drawdata->xoff)/(float)(drawdata->widthim);
+	    float y=(event->y-drawdata->yoff)/(float)(drawdata->heightim);
 	    x=(1.-x)*drawdata->limit0[0]+x*drawdata->limit0[1];
 	    y=(1.-y)*drawdata->limit0[3]+y*drawdata->limit0[2];
 	    if(drawdata->xylog[0]!='n') x=pow(10, x);
@@ -496,9 +499,9 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 }
 
 
-static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
-    double old_zoomx=drawdata->zoomx;
-    double old_zoomy=drawdata->zoomy;
+static void do_zoom(drawdata_t *drawdata, float xdiff, float ydiff, int mode){
+    float old_zoomx=drawdata->zoomx;
+    float old_zoomy=drawdata->zoomy;
     if(mode==1){/*zoom in */
 	drawdata->zoomx*=1.2;
 	drawdata->zoomy*=1.2;
@@ -522,9 +525,9 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
 	drawdata->zoomy=MAX_ZOOM;
     }
     if(mode){/*not zero. */
-	double factorx=1/old_zoomx-1/drawdata->zoomx;
+	float factorx=1/old_zoomx-1/drawdata->zoomx;
 	drawdata->offx-=xdiff*factorx;
-	double factory=1/old_zoomy-1/drawdata->zoomy;
+	float factory=1/old_zoomy-1/drawdata->zoomy;
 	drawdata->offy-=ydiff*factory;
     }
     delayed_update_pixmap(drawdata);
@@ -534,8 +537,8 @@ static gboolean scroll_event(GtkWidget *widget, GdkEventScroll *event,
 			     drawdata_t **drawdatawrap){
     (void)widget;
     drawdata_t *drawdata=*drawdatawrap;
-    double xdiff=event->x-drawdata->centerx;
-    double ydiff=-(event->y-drawdata->centery);
+    float xdiff=event->x-drawdata->centerx;
+    float ydiff=-(event->y-drawdata->centery);
     if(event->direction == GDK_SCROLL_UP){
 	do_zoom(drawdata,xdiff,ydiff,1);
     }else if(event->direction == GDK_SCROLL_DOWN){
@@ -566,21 +569,21 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
     (void) widget;
     drawdata_t *drawdata=*drawdatawrap;
     if(!drawdata->valid) return FALSE;
-    double x, y;
+    float x, y;
     x = event->x;
     y = event->y;
-    double dx = x - drawdata->mxdown;
-    double dy = y - drawdata->mydown;
+    float dx = x - drawdata->mxdown;
+    float dy = y - drawdata->mydown;
     if((cursor_type==0 && event->button==1)
        ||(cursor_type==1 && event->button==3)){/*move only on left button */
 	do_move(drawdata, dx, -dy);
     }else if(fabs(dx)>2 && fabs(dy)>2){/*select and zoom. */
-	double xx = drawdata->mxdown;
-	double yy = drawdata->mydown;
+	float xx = drawdata->mxdown;
+	float yy = drawdata->mydown;
 	if(drawdata->square && !drawdata->image){
-	    double ratio=1;
+	    float ratio=1;
 	    if(drawdata->image){
-		ratio=(double)drawdata->nx/(double)drawdata->ny;
+		ratio=(float)drawdata->nx/(float)drawdata->ny;
 	    }
 	    if(fabs(dx)<fabs(dy)*ratio){
 		dy*=fabs(dx/(dy*ratio));
@@ -590,8 +593,8 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
 	}
 	if(dx<0) xx+=dx;
 	if(dy>0) yy+=dy;
-	double diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
-	double diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
+	float diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
+	float diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
 	drawdata->limit0[0]+=diffx*(xx-drawdata->xoff);
 	drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(dx);
 	drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
@@ -771,10 +774,10 @@ gboolean addpage(gpointer indata){
 	gtk_widget_add_events (GTK_WIDGET(eventbox), GDK_BUTTON_PRESS);
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox),FALSE);
 	g_signal_connect(eventbox, "button-press-event", G_CALLBACK(tab_button_cb), subnb);
-	gtk_widget_show_all(eventbox);
 	gtk_notebook_insert_page(GTK_NOTEBOOK(topnb),subnb,eventbox, itab);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), subnb, TRUE);
+	gtk_widget_show_all(eventbox);
     }
     GtkWidget *page=NULL;
     GtkWidget *subnb=NULL;
@@ -822,14 +825,14 @@ gboolean addpage(gpointer indata){
 	drawdata_old->legend=drawdata->legend;
 	if(drawdata->limit_data){
 	    if(!drawdata_old->limit_data){
-		drawdata_old->limit_data=mycalloc(4,double);
+		drawdata_old->limit_data=mycalloc(4,float);
 	    }
 	    for(int i=0; i<4; i++){//data has different size. Reset the zoom/off.
 		if(fabs(drawdata_old->limit_data[i]-drawdata->limit_data[i])>0.1){
 		    do_zoom(drawdata_old, 0, 0, 0);//resets zoom, offset.
 		}
 	    }
-	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
+	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(float)*4);
 	}else{
 	    /*free(drawdata_old->limit_data);
 	      drawdata_old->limit_data=NULL;*/
@@ -1052,13 +1055,13 @@ static void tool_zoom(GtkToolButton *button, gpointer data){
     delayed_update_pixmap(drawdata_dialog);
     }*/
 
-static void limit_change(GtkSpinButton *spin, gdouble *val){
+static void limit_change(GtkSpinButton *spin, gfloat *val){
     *val=gtk_spin_button_get_value(spin);
     drawdata_dialog->limit_changed=1;
     delayed_update_pixmap(drawdata_dialog);
 }
 
-static void limit_change2(GtkSpinButton *spin, gdouble *val){
+static void limit_change2(GtkSpinButton *spin, gfloat *val){
     *val=gtk_spin_button_get_value(spin);
     drawdata_dialog->limit_changed=2;
     delayed_update_pixmap(drawdata_dialog);
@@ -1070,7 +1073,7 @@ static void checkbtn_toggle(GtkToggleButton *btn, gint *key){
 	gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);	
     }
 }
-static void range_changed(GtkRange *range, gdouble *val){
+static void range_changed(GtkRange *range, gfloat *val){
     *val=gtk_range_get_value(range);
     delayed_update_pixmap(drawdata_dialog);
 }
@@ -1080,7 +1083,7 @@ static void entry_changed(GtkEditable *entry, char **key){
     drawdata_dialog->drawn=0;
     delayed_update_pixmap(drawdata_dialog);
 }
-static void spin_changed(GtkSpinButton *spin, gdouble *val){
+static void spin_changed(GtkSpinButton *spin, gfloat *val){
     *val=gtk_spin_button_get_value(spin);
     drawdata_dialog->drawn=0;
     delayed_update_pixmap(drawdata_dialog);
@@ -1129,7 +1132,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
     GtkWidget *checkbtn, *label,*entry,*spin;
     int n;
     GtkWidget *spins[6];
-    double diff[3];
+    float diff[3];
     diff[0]=(drawdata->limit0[1]-drawdata->limit0[0]);
     diff[1]=(drawdata->limit0[3]-drawdata->limit0[2]);
     if(drawdata->zlim){
@@ -1143,9 +1146,9 @@ static void tool_property(GtkToolButton *button, gpointer data){
 	if(diff[i/2]<EPS){
 	    diff[i/2]=1;
 	}
-	double step=pow(10,floor(log10(fabs(diff[i/2])))-2);
+	float step=pow(10,floor(log10(fabs(diff[i/2])))-2);
 	spins[i]=gtk_spin_button_new_with_range(drawdata->limit0[i]-1000*step, drawdata->limit0[i]+1000*step, step);
-	double *val;
+	float *val;
 	if(i<4){
 	    val=&drawdata->limit0[i];
 	    g_signal_connect(spins[i], "value-changed", G_CALLBACK(limit_change), val);
@@ -1311,12 +1314,12 @@ static void tool_font_set(GtkFontButton *btn){
     int size=pango_font_description_get_size(pfd);
     /*get font_size in device unit (dots, pixels); */
     if(pango_font_description_get_size_is_absolute(pfd)){
-	font_size=(double)size/(double)PANGO_SCALE;
+	font_size=(float)size/(float)PANGO_SCALE;
 	fprintf(stderr, "absolute: font_size=%g\n", font_size);
     }else{
-	gdouble dpi=gdk_screen_get_resolution(gdk_screen_get_default());
+	gfloat dpi=gdk_screen_get_resolution(gdk_screen_get_default());
 	if(dpi<0) dpi=96;
-	font_size=(double)size/(double)PANGO_SCALE*(double)dpi/72.;
+	font_size=(float)size/(float)PANGO_SCALE*(float)dpi/72.;
     }
     SP_XL=font_size*2.4+8;
     SP_YT=font_size*1.3+12;
@@ -1397,57 +1400,12 @@ GtkWidget *create_window(){
     }
     gtk_window_set_title(GTK_WINDOW(window), title);
 #if GTK_MAJOR_VERSION>=3
-    const gchar *all_style="*{"
-	"padding:0;\n"
-	"border-radius:4;\n"
-	"font:Sans 10;\n"
-	"-GtkToolbar-button-relief:1\n"
-	"background-color:#FFFFFF;"
-	"border-width:1;"
-	"}"
-	".toolbar{"
-	"padding: 1;"
-	"}"
-	".hbox{"
-	"background-color:#FF0000"
-	"}"
-	".button{"
-	"-GtkButton-default-border : 0px;\n"
-                "-GtkButton-default-outside-border : 0px;\n" 
-                "-GtkButton-inner-border: 0px;\n" 
-                "-GtkWidget-focus-line-width : 0px;\n" 
-                "-GtkWidget-focus-padding : 0px;\n" 
-                "padding: 0px;\n" 
-	"}"
-	".notebook *{"
-	"border-width:0 0 0 0;"
-	"padding: 0;"
-	"}"
-	".notebook{"
-	"-GtkNotebook-tab-overlap: 2;"
-	"-GtkNotebook-tab-curvature: 0;"
-	"-GtkWidget-focus-line-width: 0;"
-	"border-width:0 0 0 0;"
-	"padding: 0;"
-	"}"
-	".notebook tab{"
-	"border-width: 0;"
-	"padding: 4 5 0 5;" //top, right, bottom, left
-	"background-color:@theme_bg_color;"
-	"background-image:none;"
-	"}"
-	"GtkNotebook tab:active{"
-	"border-width: 1 1 0 1;"
-	"padding: 3 4 0 4;"
-	"background-color:#FFFFFF;"
-	"background-image:none;"
-	"}";
     GtkCssProvider *provider_default=gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);
     GtkStyleContext *all_context=gtk_widget_get_style_context(window);
     GdkScreen *screen=gtk_style_context_get_screen(all_context);
     gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default),
-    GTK_STYLE_PROVIDER_PRIORITY_USER);
+					      GTK_STYLE_PROVIDER_PRIORITY_USER);
 #endif
 #if GTK_MAJOR_VERSION<3
     if(!btn_rcstyle){

@@ -51,6 +51,7 @@ int main(int argc, char *argv[]){
 #if MAC_INTEGRATION
     GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 #endif
+
     icon_main=gdk_pixbuf_new_from_inline(-1,icon_inline_draw,FALSE,NULL);
     if(argc<2){
 	error("Must call drawdaemon with the socket fd.\n");
