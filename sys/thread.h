@@ -224,7 +224,6 @@ int lockadd(int *src, int step);
 int thread_new(thread_fun fun, void* arg);
 void thread_block_signal();
 
-
 static inline int cmpxchg(int *ptr, int old, int newval){
     volatile int *__ptr = (volatile int *)(ptr);	
     int __ret;                                     

@@ -168,7 +168,7 @@ static void *find_var(const char *name){
 		}
 	    }
 	    {
-		static cell* dummy=0;
+		static cell* dummy=NULL;
 		if(!dummy){
 		    dummy=cellnew(0,0);
 		    const char *msg0="Available variables are:\n";
@@ -210,7 +210,7 @@ static void *maos_var(void* psock){
 	case MAOS_VAR:
 	    {
 		if(cmd[1]==1 || cmd[1]==2){//get or put
-		    char *name=0;
+		    char *name=NULL;
 		    streadstr(sock, &name);
 		    cell *var=(cell*)find_var(name);
 		    info("maos_var: request[%d] %s %p\n", cmd[1], name, var);
@@ -382,9 +382,9 @@ int main(int argc, const char *argv[]){
     maos_version();
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg->conf, arg->confcmd, arg->over);
-    free(arg->conf); arg->conf=0;
+    free(arg->conf); arg->conf=NULL;
     if(arg->confcmd){
-	remove(arg->confcmd); free(arg->confcmd); arg->confcmd=0;
+	remove(arg->confcmd); free(arg->confcmd); arg->confcmd=NULL;
     }
     if(parms->sim.nseed>0){
 	/*register signal handler */

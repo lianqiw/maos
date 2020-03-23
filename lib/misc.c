@@ -247,14 +247,14 @@ dmat *loc_calib(const dsp *GA,     /**<[in] Measured interaction matrix*/
     dresize(gloc, ng, 2);
 
     //Calculate gradients for this poke pattern.
-    dmat *gg=0;
+    dmat *gg=NULL;
     dspmm(&gg, GA, opd, "nn", 1);
     dfree(opd);
-    dmat *opd2=0;
+    dmat *opd2=NULL;
     //Use cure to reconstruct OPD of poke pattern
     cure_loc(&opd2, gg, saloc);
     dfree(gg);
-    dmat *cg=0;
+    dmat *cg=NULL;
     //Determine actual poke position using CoG.
     cog_multi(&cg, opd2, gloc, period-2);
 

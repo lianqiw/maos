@@ -193,7 +193,7 @@ void free_parms(PARMS_T *parms){
     dfree(parms->dbg.draw_gmax);
     free(parms);
 }
-static inline int sum_intarr(int n, long *a){
+/*static inline int sum_intarr(int n, long *a){
     int sum=0;
     for(int i=0; i<n; i++){
 	sum+=(a[i]!=0);
@@ -206,7 +206,7 @@ static inline int sum_dblarr(int n, real *a){
 	sum+=(a[i]!=0);
     }
     return sum;
-}
+    }*/
 
 #define MAX_STRLEN 80
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
@@ -586,7 +586,7 @@ static void readcfg_dm(PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    if(nstroke==ndm){
 		parms->dm[idm].stroke=readstr_dmat(tmp[idm]);
-		free(tmp[idm]); tmp[idm]=0;
+		free(tmp[idm]); tmp[idm]=NULL;
 	    }else if(nstroke==1){
 		parms->dm[idm].stroke=readstr_dmat(tmp[0]);
 	    }else{
@@ -2179,6 +2179,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 /*
   Find entry  that equals to val in array of length n. Append if not exist yet.
 */
+/*
 static int arrind(real *arr, int *n, real val){
     for(long i=0; i<(*n); i++){
 	if(fabs(arr[i]-val)<EPS){
@@ -2189,7 +2190,7 @@ static int arrind(real *arr, int *n, real val){
     (*n)++;
     return (*n)-1;
 }
-
+*/
 /**
    Setting up DM parameters in order to do DM caching during simulation. High
    resolution metapupils are created for each DM at each magnitude level to
@@ -2574,7 +2575,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
     }
     if(parms->sim.psfr){
-	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psfr->p);
+	int fnd=lsum(parms->evl.psfr);
 	if(fnd==0){
 	    error("sim.psfr is specified, but evl.psfr are all zero\n");
 	}else{
@@ -2687,7 +2688,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int over_ride){
     }
    
     if(parms->evl.psfmean || parms->evl.psfhist){
-	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psf->p);
+	int fnd=lsum(parms->evl.psf);
 	if(fnd==0){
 	    warning("Required to output PSF, but evl.psf are all zero\n");
 	}else{

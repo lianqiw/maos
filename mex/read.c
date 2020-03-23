@@ -30,7 +30,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
       Only the first call to readdata will possibly have howmany!=0
     */
     if(fp->eof) return NULL;
-    header_t header2={0,0,0,0};
+    header_t header2={0,0,0,0,0};
     if(read_header2(&header2, fp)){
 	return NULL;
     }

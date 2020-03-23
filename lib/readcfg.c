@@ -164,7 +164,7 @@ static char *squeeze(char *line){
     }
     return sline;
 }
-static FILE *fpout=0;
+static FILE *fpout=NULL;
 static void print_key(const void *key, VISIT which, int level){
     const STORE_T *store=*((const STORE_T**)key);
     (void)level;
@@ -224,8 +224,7 @@ void close_config(const char *format, ...){
 	info2("Used %ld of %ld supplied keys\n",nused, nstore);
 	if(fnout && strlen(fnout)>0 && !disable_save) fpout=fopen(fnout, "w");
 	twalk(MROOT, print_key);
-	if(fpout) fclose(fpout);
-	fpout=0;
+	if(fpout) {fclose(fpout); fpout=NULL;}
     }
     erase_config(); 
 }
@@ -291,7 +290,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    if(p0){
 		config_line=p0+1;
 	    }else{
-		config_line=0;
+		config_line=NULL;
 	    }
 	}
 	sline=squeeze(line);
@@ -446,7 +445,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			/*free old value */
 			free(oldstore->data);
 			/*move pointer of new value. */
-			oldstore->data=store->data; store->data=0;
+			oldstore->data=store->data; store->data=NULL;
 			oldstore->priority=priority;
 			oldstore->used=store->used;
 		    }
@@ -483,7 +482,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
  */
 static const STORE_T* getrecord(char *key, int mark){
     STORE_T store;
-    void *found=0;
+    void *found=NULL;
     strtrim(&key);
     store.key=key;
     if((found=tfind(&store, &MROOT, key_cmp))){
@@ -605,13 +604,13 @@ int readcfg_intarr(int **ret, const char *format,...){
    Read as an lmat.
  */
 lmat *readcfg_lmat_do(int n, char *key){
-    long *val=0;
+    long *val=NULL;
     //long **ret=&val;
     int nx, ny;
     readstr_numarr((void**)&val, n, &nx, &ny, M_LONG, getrecord(key, 1)->data);
-    lmat *res=0;
+    lmat *res=NULL;
     if(!nx || !ny){
-	free(val); val=0;
+	free(val); val=NULL;
     }
     res=lnew_do(nx,ny, val, mem_new(val));
     return res;
@@ -669,7 +668,7 @@ static dmat *readstr_dmat_do(int n, const char *str){
     if(!str){
 	return 0;
     }
-    dmat *res=0;
+    dmat *res=NULL;
     char *fn=strextract(str);    
     if(check_suffix(fn, ".gz") || check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
 	res=dread("%s", fn);
@@ -679,7 +678,7 @@ static dmat *readstr_dmat_do(int n, const char *str){
         real **pval=&val;
 	readstr_numarr((void**)pval, n, &nx, &ny,M_REAL, fn);
 	if(!nx || !ny) {
-	    free(val); val=0;
+	    free(val); val=NULL;
 	}
 	res=dnew_do(nx, ny, val, mem_new(val));
     }

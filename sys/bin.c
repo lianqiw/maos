@@ -131,7 +131,7 @@ static char* procfn(const char *fn, const char *mod){
 	    //When saving is disabled, allow writing to cache folder.
 	    warning("Saving is disabled for %s.\n", fn2);
 	    free(fn2);
-	    fn2=0;
+	    fn2=NULL;
 	}
 	if(fn2 && islink(fn2)){/*remove old file to avoid write over a symbolic link. */
 	    if(remove(fn2)){
@@ -307,7 +307,7 @@ file_t* zfopen_try(const char *fni, const char *mod){
     return fp;
   fail:
     //UNLOCK(lock);
-    free(fp->fn); free(fp); fp=0;
+    free(fp->fn); free(fp); fp=NULL;
     return fp;
 }
 /**

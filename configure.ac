@@ -196,20 +196,21 @@ fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
-if test "${USER}" = "lianqiw" ;then
-    OPTScommon+=" -Wshadow -Wall -Wextra -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
-fi
+#if test "${USER}" = "lianqiw" ;then
+#    OPTScommon+=" -Wshadow -Wall -Wextra "
+    #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
+#fi
 LDEXE=
 OPTS=
+COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-unknown-pragmas"
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-COMMON_GCC=" -Wno-deprecated-declarations -fms-extensions -static-libgcc"
-COMMON_CLANG="-Wno-deprecated-declarations -Qunused-arguments "
-COMMON_ALL=""
+COMMON_GCC=" -Wno-deprecated-declarations -fms-extensions -static-libgcc "
+COMMON_CLANG="-Wno-deprecated-declarations " #"-Qunused-arguments "
 
 OPTIM_ALL="-O3 "
-OPTIM_GCC=" -ftree-vectorize -ffast-math -fno-finite-math-only " #minimum 4.
+OPTIM_GCC=" -ftree-vectorize -ffast-math -fno-finite-math-only -Wstrict-overflow=5" #minimum 4.
 
 DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"

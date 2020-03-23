@@ -1523,7 +1523,7 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	muv_free(&recon->RL);
 	muv_free(&recon->LR);
 	muv_free(&recon->LL);
-	free_fit(recon->fit,1); recon->fit=0;
+	free_fit(recon->fit,1); recon->fit=NULL;
 	fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
 	if(parms->gpu.tomo && parms->gpu.fit){
 	    dfree(recon->MVM);//keep GPU copy.
@@ -1538,7 +1538,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     ngsmod_free(recon->ngsmod); recon->ngsmod=0;
     free_recon_unused(parms, recon);
     free_recon_moao(recon, parms);
-    free_fit(recon->fit,1); recon->fit=0;
+    free_fit(recon->fit,1); recon->fit=NULL;
     dfree(recon->ht);
     dfree(recon->os);
     dfree(recon->wt);

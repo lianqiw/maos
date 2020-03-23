@@ -45,7 +45,6 @@ public:
     Array<int> nembed;
     Array<int> psfsize;
     Array<Real> wvls;
-    //Array<stream_t>   stream;
     Array<cufftHandle>    plan;
     curcell surf;
     curcell opd;
@@ -58,18 +57,5 @@ public:
     curcell cc_ol, cc_cl, coeff;
     Array<Array<Real,Pinned> >ccb_ol;
     Array<Array<Real,Pinned> >ccb_cl;
-    /*Real **ccb_ol, **ccb_cl;
-    cuperf_g():ccb_ol(0),ccb_cl(0){
-    }
-    ~cuperf_g(){
-	if(ccb_cl){
-	    for(int ievl=0; ievl<nevl; ievl++){
-		free4async(ccb_cl[ievl]);
-		free4async(ccb_ol[ievl]);
-	    }
-	    free(ccb_cl); ccb_cl=0;
-	    free(ccb_ol); ccb_ol=0;
-	}
-	}*/
 };
 #endif

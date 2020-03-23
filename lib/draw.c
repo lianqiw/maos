@@ -190,8 +190,8 @@ static void draw_remove(int fd, int reuse){
 	    found=1;
 	    sock_draws[ifd].fd=-1;
 	    list_destroy(&sock_draws[ifd].list);
-	    free(sock_draws[ifd].figfn[0]);sock_draws[ifd].figfn[0]=0;
-	    free(sock_draws[ifd].figfn[1]);sock_draws[ifd].figfn[1]=0;
+	    free(sock_draws[ifd].figfn[0]);sock_draws[ifd].figfn[0]=NULL;
+	    free(sock_draws[ifd].figfn[1]);sock_draws[ifd].figfn[1]=NULL;
 	}
     }
   
@@ -503,8 +503,8 @@ typedef struct imagesc_t{
     char *ylabel; /**<y axis label*/
     char *fn;
 }imagesc_t;
-static void imagesc_do(imagesc_t *data){
-    if(disable_draw) return;
+static void* imagesc_do(imagesc_t *data){
+    if(disable_draw) return NULL;
     LOCK(lock);
     if(!get_drawdaemon()){
 	char *fig=data->fig;
@@ -559,6 +559,7 @@ static void imagesc_do(imagesc_t *data){
     free(data->ylabel);
     free(data->fn);
     free(data);
+    return NULL;
 }
 /*
   Use a separate thread to avoid slowing down the simulation. Skip if busy.

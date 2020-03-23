@@ -150,7 +150,7 @@ static int callback_http(struct lws *wsi,
     int n;
     switch (reason) {
     case LWS_CALLBACK_HTTP:
-	//dump_handshake_dbg(wsi);
+	dump_handshake_dbg(wsi);
 	if (len < 1) {
 	    lws_return_http_status(wsi, HTTP_STATUS_BAD_REQUEST, NULL);
 	    return -1;
@@ -409,14 +409,18 @@ static struct lws_protocols protocols[] = {
 	callback_http,		/* callback */
 	sizeof (struct per_session_data__http),	/* per_session_data_size */
 	0,			/* max frame size / rx buffer */
+	0,                      //id unused
+	0,                      //user unused
     },
     {
 	"maos-monitor-protocol",
 	callback_maos_monitor,
 	sizeof(struct per_session_data__maos_monitor),
 	1024,                   /* max frame size / rx buffer */
+	0,                      //id unused
+	0,                      //user unused
     },
-    { NULL, NULL, 0, 0 } /* terminator */
+    { NULL, NULL, 0, 0, 0, 0 } /* terminator */
 };
 
 static struct lws_context *context=0;

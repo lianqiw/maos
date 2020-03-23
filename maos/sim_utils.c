@@ -126,7 +126,8 @@ static mapcell *genatm_do(SIM_T *simu){
    overlay atm2 with atm2 according to wind direction angle and required
    overlapping region of at least overx*overy.
 */
-static void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy){
+
+void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy){
     const long nx=atm1->nx;
     const long ny=atm1->ny;
     int ca=0;
@@ -794,10 +795,10 @@ static void init_simu_wfs(SIM_T *simu){
 		}
 	    }
 	}
-	simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
-			       parms->sim.dthi, parms->sim.epfsm);
-
-
+	if(parms->sim.closeloop){
+	    simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
+				   parms->sim.dthi, parms->sim.epfsm);
+	}
     }
   
     {/*MMAP the LGS fsmlink error/command output */
@@ -1184,8 +1185,10 @@ static void init_simu_dm(SIM_T *simu){
     }
 #endif
     simu->wfspsol=dccellnew(parms->npowfs, 1);
-    simu->dmint=servo_new(simu->dmerr_store, parms->sim.aphi, parms->sim.alhi, 
-			  parms->sim.dthi, parms->sim.ephi);
+    if(parms->sim.closeloop){
+	simu->dmint=servo_new(simu->dmerr_store, parms->sim.aphi, parms->sim.alhi, 
+			      parms->sim.dthi, parms->sim.ephi);
+    }
     if(parms->dbg.ncpa_preload && recon->dm_ncpa){//set the integrator
 	warning_once("Preload integrator with NCPA\n");
 	dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);
@@ -1193,9 +1196,11 @@ static void init_simu_dm(SIM_T *simu){
     if(parms->recon.split){
 	simu->Merr_lo_store=dcellnew_same(1,1,recon->ngsmod->nmod,1);
 	simu->Merr_lo2=dcellnew_same(1,1,recon->ngsmod->nmod,1);
-	simu->Mint_lo=servo_new(simu->Merr_lo_store, 
-				parms->sim.aplo, parms->sim.allo,
-				parms->sim.dtlo, parms->sim.eplo);
+	if(parms->sim.closeloop){
+	    simu->Mint_lo=servo_new(simu->Merr_lo_store, 
+				    parms->sim.aplo, parms->sim.allo,
+				    parms->sim.dtlo, parms->sim.eplo);
+	}
     }
     {/* History */
 	int dm_hist=0;

@@ -789,8 +789,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
     info("\ndefault_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
     int cancel_action=0;
-    struct sigaction act={{0}};
-    act.sa_flags=0;
+    struct sigaction act={0};
     act.sa_handler=SIG_DFL;
     sigaction(sig, &act, 0);
     /*prevent recursive call of handler*/
@@ -829,7 +828,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
    Register signal handler
 */
 void register_signal_handler(int (*func)(int)){
-    struct sigaction act={{0}};
+    struct sigaction act={0};
     act.sa_sigaction=default_signal_handler;
     act.sa_flags=SA_SIGINFO;
     sigaction(SIGBUS, &act, 0);

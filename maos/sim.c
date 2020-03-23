@@ -260,7 +260,7 @@ void maos_sim(){
     dbg("PARALLEL=%d\n", PARALLEL);
     real restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
-	SIM_T *simu=0;
+	SIM_T *simu=NULL;
 	while(!(simu=maos_iseed(iseed))){
 	    iseed++;
 	}
@@ -271,7 +271,7 @@ void maos_sim(){
 #ifdef HAVE_NUMA_H
 	numa_set_localalloc();
 #endif
-	if(PARALLEL==2){
+	if(PARALLEL==2){//event driven synchronization
 #pragma omp parallel
 #pragma omp sections
 	    {
@@ -333,7 +333,7 @@ void maos_sim(){
 	    rescount++;
 	}
 	free_simu(simu);
-	global->simu=0;
+	global->simu=NULL;
     }/*seed */
     info("Mean: %.2f\n", sqrt(restot/rescount)*1e9);
 }

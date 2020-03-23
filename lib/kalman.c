@@ -293,14 +293,14 @@ static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, real tmax_fit){
 /**
    Estiamte the total PSD power for vibration peaks using FWHM*peak
  */
-static real sde_vib_est(real c1, real c2){
+/*static real sde_vib_est(real c1, real c2){
     real sqrt4ac=sqrt(c1*c1+c2*4);
     real omega1=sqrt(0.5*((c2*2-c1*c1)-sqrt4ac));
     real omega2=sqrt(0.5*((c2*2-c1*c1)+sqrt4ac));
     real fwhm=(omega2-omega1)/(2*M_PI);
     real peak=1./(c1*c1*c2);
     return fwhm*peak;
-}
+    }*/
 /**
    If coeff0 is not null, use it immediately, otherwise, do vibration identification
  */

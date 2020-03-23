@@ -304,7 +304,7 @@ map_t *genatm_simple(real r0, real L0, real dx, long nx){
     rand_t rstat;
     seed_rand(&rstat, 1);
     real wt=1.;
-    GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, nx, nx, 1, 0, 0, 0, 0};
+    GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, nx, nx, 1, 0, 0, 0, 0, 0};
     mapcell *screens=vonkarman_screen(&cfg);
     map_t *out=mapref(screens->p[0]);
     cellfree(screens);

@@ -110,7 +110,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define lfree(A)     ({lfree_do(A);A=NULL;})
 #define lcellfree(A) ({cellfree_do(A);A=NULL;})
 
-#define cellfree(A) ({cellfree_do(A); A=0;})
+#define cellfree(A) ({cellfree_do(A); A=NULL;})
 
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP, 0, A)

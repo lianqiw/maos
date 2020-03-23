@@ -96,7 +96,7 @@ __global__ static void mvm_g_mul_do(const Real *restrict mvm, ATYPE *restrict a,
     }
 }
 /*A couple of threads that does jobs upon available.*/
-static void mvm_thread(void* ithread0){
+static void* mvm_thread(void* ithread0){
     long ithread=(long) ithread0;
     int nact=mvm_data->nact;
     int nact1=(nact+NCPU-1)/NCPU;
@@ -106,7 +106,8 @@ static void mvm_thread(void* ithread0){
     if(ithread<NGPU){
 	gpu_set(ithread);
     }
-    while(1){
+    int listen=1;
+    while(listen){
 	switch(cmds[ithread]){
 	case 0:
 	    usleep(10);
@@ -169,9 +170,12 @@ static void mvm_thread(void* ithread0){
 	    cmds[ithread]=0;//mark we are done.
 	}
 	    break;
-	    
+	default:
+	    listen=0;
+	    break;
 	}
     }
+    return NULL;
 }
 static void mvm_data_free(void){
     free(mvm_data->icols);
@@ -224,7 +228,7 @@ static int respond(int sock){
 	    cmds=(int*)calloc(NCPU, sizeof(int));
 	    for(long i=0; i<NCPU; i++){
 		cmds[i]=CMD_MCOPY;
-		pthread_create(threads+i, NULL, (void*(*)(void*))mvm_thread, (void*)i);
+		pthread_create(threads+i, NULL, (thread_fun)mvm_thread, (void*)i);
 	    }
 	}
 	//Wait for all copying to be finish.

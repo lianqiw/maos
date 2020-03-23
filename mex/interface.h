@@ -317,7 +317,7 @@ dcell *mx2dcell(const mxArray *A){
     }
     return out;
     }*/
-static void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
+void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
     if(!A) return NULL;
     else if(!mxIsCell(A)){
 	if(fun){
@@ -353,26 +353,26 @@ static void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
 	return out;
     }
 }
-static dcell *mx2dcell(const mxArray *A){
+dcell *mx2dcell(const mxArray *A){
     return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2d);
 }
-static dcell *mx2ccell(const mxArray *A){
+dcell *mx2ccell(const mxArray *A){
     return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2c);
 }
-static lcell *mx2lcell(const mxArray *A){
+lcell *mx2lcell(const mxArray *A){
     return (lcell*)mx2any(A, (void*(*)(const mxArray*))mx2l);
 }
-static loccell *mx2loccell(const mxArray *A){
+loccell *mx2loccell(const mxArray *A){
     return (loccell*)mx2any(A, (void*(*)(const mxArray*))mx2loc);
 }
-static dcell *mx2dspcell(const mxArray *A){
+dcell *mx2dspcell(const mxArray *A){
     return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2dsp);
 }
-static cell *mx2cell(const mxArray*A){
+cell *mx2cell(const mxArray*A){
     return (cell*) mx2any(A, NULL);
 }
 
-static kalman_t *mx2kalman(const mxArray*A){
+inline kalman_t *mx2kalman(const mxArray*A){
     kalman_t *kalman=(kalman_t*)calloc(1, sizeof(kalman_t));
     kalman->Ad=mx2d(mxGetField(A,0,"Ad"));
     kalman->Cd=mx2dcell(mxGetField(A,0,"Cd"));
@@ -386,7 +386,7 @@ static kalman_t *mx2kalman(const mxArray*A){
     kalman->Rwfs=mx2dcell(mxGetField(A,0,"Rwfs"));
     return kalman;
 }
-static mxArray* kalman2mx(kalman_t *kalman){
+inline mxArray* kalman2mx(kalman_t *kalman){
     const int nfield=12;
     const char *fieldnames[]={"Ad","Cd","AdM","FdM","Qn","Rn","M","P", "dthi", "dtrat", "Gwfs", "Rwfs"};
     mxArray *A=mxCreateStructMatrix(1,1,nfield,fieldnames);
@@ -408,7 +408,7 @@ static mxArray* kalman2mx(kalman_t *kalman){
     }
     return A;
 }
-static mxArray *cn2est2mx(cn2est_t *cn2est){
+inline mxArray *cn2est2mx(cn2est_t *cn2est){
     const int nfield=12;
     const char *fieldnames[]={"htrecon","wtrecon","r0m","ht","wt","r0","Pnk","iPnk","wtconvert","overlapi","cov2","cov1"};
     int pos=0;
@@ -431,7 +431,7 @@ static mxArray *cn2est2mx(cn2est_t *cn2est){
     return A;
 
 }
-static mxArray *dtf2mx(DTF_T *dtf){
+inline mxArray *dtf2mx(DTF_T *dtf){
     const int nfield=2;
     const char *fieldnames[]={"nominal","si"};
     mxArray *A=mxCreateStructMatrix(dtf->nwvl,1,nfield,fieldnames);
@@ -446,19 +446,19 @@ static mxArray *dtf2mx(DTF_T *dtf){
     return A;
 }
 
-char *mx2str(const mxArray *A){
+inline char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=(char*)malloc(nlen);
     mxGetString(A, fn, nlen);
     return fn;
 }
-rand_t *mx2rand(const mxArray *A){
+inline rand_t *mx2rand(const mxArray *A){
     int seed=(int)mxGetScalar(A);
     rand_t *out=(rand_t*)malloc(sizeof(rand_t));
     seed_rand(out, seed);
     return out;
 }
-static void mex_signal_handler(int sig){
+void mex_signal_handler(int sig){
     if(sig){
 	mexErrMsgTxt("Signal caught.\n");
     }else{
@@ -466,7 +466,7 @@ static void mex_signal_handler(int sig){
     }
 }
 static jmp_buf *exception_env;
-static void mex_quitfun(const char *msg){
+void mex_quitfun(const char *msg){
     if(exception_env){
 	info("error: %s\n", msg);
 	longjmp(*exception_env, 1);
@@ -476,22 +476,22 @@ static void mex_quitfun(const char *msg){
     }
 }
 static void(*default_handler)(int)=NULL;
-static void *calloc_mex(size_t nmemb, size_t size){
+inline void *calloc_mex(size_t nmemb, size_t size){
     void *p=mxCalloc(nmemb, size);
     mexMakeMemoryPersistent(p);
     return p;
 }
-static void *malloc_mex(size_t size){
+inline void *malloc_mex(size_t size){
     void *p=mxMalloc(size);
     mexMakeMemoryPersistent(p);
     return p;
 }
-static void *realloc_mex(void *p, size_t size){
+inline void *realloc_mex(void *p, size_t size){
     p=mxRealloc(p, size);
     mexMakeMemoryPersistent(p);
     return p;
 }
-static void free_mex(void*p){
+inline void free_mex(void*p){
     mxFree(p);
 }
 static __attribute__((constructor)) void init(){

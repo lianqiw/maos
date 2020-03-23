@@ -52,12 +52,7 @@ typedef enum CEMBED{
     struct mem_t *mem /**< Memory management*/	\
     
 
-#define CELLARR(T)struct{			\
-	ARR(T);					\
-	T m; /*store continuous data*/		\
-    }
-
-#define SPMATARR(T) struct{						\
+#define SPMATDEF(T,S) typedef struct S{					\
 	uint32_t id;         /**<to identify the array type*/		\
 	T *restrict x;       /**< numerical values, size nzmax */	\
 	long nx;             /**< number of rows */			\
@@ -67,29 +62,25 @@ typedef enum CEMBED{
         spint *restrict p ;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
 	spint *restrict i ;  /**< row indices, size nzmax */		\
 	int *nref;           /**< reference counting like dmat */	\
-    }
+    }S;
 
-typedef struct{MATARR(float);} smat;
-typedef struct{MATARR(fcomplex);} zmat;
-#ifdef USE_DOUBLE
-typedef struct{MATARR(real);} dmat;/*a real matrix object contains 2-d array of real numbers*/
-typedef struct{MATARR(comp);} cmat;
-#else
-typedef smat dmat;
-typedef zmat cmat;
-#endif
-typedef struct{MATARR(long);} lmat;
-typedef struct{MATARR(int);} imat;
+#define MATDEF(T,S) typedef struct S{MATARR(T);} S;
+MATDEF(float, smat);
+MATDEF(fcomplex, zmat);
 
-typedef SPMATARR(float) ssp;
-typedef SPMATARR(fcomplex) zsp;
-#ifdef USE_DOUBLE
-typedef SPMATARR(real) dsp;
-typedef SPMATARR(comp) csp;
-#else
-typedef ssp dsp;
-typedef zsp csp;
-#endif
+MATDEF(real, dmat);
+MATDEF(comp, cmat);
+
+MATDEF(long, lmat);
+MATDEF(int, imat);
+
+SPMATDEF(float, ssp);
+SPMATDEF(fcomplex, zsp);
+
+SPMATDEF(real, dsp);
+SPMATDEF(comp, csp);
+
+
 
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
@@ -191,41 +182,44 @@ typedef struct pts_t{
     real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;
 
-typedef CELLARR(cmat*) ccell;
-typedef CELLARR(zmat*) zcell;
-typedef CELLARR(dmat*) dcell;
-typedef CELLARR(smat*) scell;
-typedef CELLARR(lmat*) lcell;
+#define CELLDEF(T,S) typedef struct S{		\
+	ARR(struct T*);				\
+	struct T* m; /*continuous data*/	\
+    }S;
 
-typedef CELLARR(dsp*) dspcell;
-typedef CELLARR(ssp*) sspcell;
-typedef CELLARR(csp*) cspcell;
-typedef CELLARR(zsp*) zspcell;
+CELLDEF(cmat,ccell);
+CELLDEF(zmat,zcell);
+CELLDEF(dmat,dcell);
+CELLDEF(smat,scell);
+CELLDEF(lmat,lcell);
 
-typedef CELLARR(ccell*) cccell;
-typedef CELLARR(zcell*) zccell;
-typedef CELLARR(dcell*) dccell;
-typedef CELLARR(scell*) sccell;
-typedef CELLARR(lcell*) iccell;
+CELLDEF(dsp,dspcell);
+CELLDEF(ssp,sspcell);
+CELLDEF(csp,cspcell);
+CELLDEF(zsp,zspcell);
 
-typedef CELLARR(cccell*) ccccell;
-typedef CELLARR(zccell*) zcccell;
-typedef CELLARR(dccell*) dcccell;
-typedef CELLARR(sccell*) scccell;
-typedef CELLARR(iccell*) icccell;
+CELLDEF(ccell,cccell);
+CELLDEF(zcell,zccell);
+CELLDEF(dcell,dccell);
+CELLDEF(scell,sccell);
+CELLDEF(lcell,iccell);
 
-typedef CELLARR(map_t*) mapcell;
-typedef CELLARR(rmap_t*) rmapcell;
-typedef CELLARR(loc_t*) loccell;
+CELLDEF(cccell,ccccell);
+CELLDEF(zccell,zcccell);
+CELLDEF(dccell,dcccell);
+CELLDEF(sccell,scccell);
+CELLDEF(iccell,icccell);
 
-typedef CELLARR(mapcell*) mapccell;
-typedef CELLARR(rmapcell*) rmapccell;
-typedef CELLARR(loccell*) locccell;
+CELLDEF(map_t,mapcell);
+CELLDEF(rmap_t,rmapcell);
+CELLDEF(loc_t,loccell);
 
-typedef struct cell{
-    ARR(struct cell*);
-    struct cell *m;
-}cell;
+CELLDEF(mapcell,mapccell);
+CELLDEF(rmapcell,rmapccell);
+CELLDEF(loccell,locccell);
+
+CELLDEF(cell,cell);
+
 #undef ARR
 #undef CELLARR
 #undef MATARR

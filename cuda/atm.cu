@@ -29,7 +29,7 @@
 
 
 
-static void atm_prep(atm_prep_t *data){
+static void* atm_prep(atm_prep_t *data){
     PNEW(lock);
     LOCK(lock);/*make sure we only read one layer at a time. */
     //TIC;tic;
@@ -74,6 +74,7 @@ static void atm_prep(atm_prep_t *data){
     }
     //toc("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
     UNLOCK(lock);
+    return NULL;
 }
 /**
    Transfer atmospheric data to GPU.
@@ -256,7 +257,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	    prep_data[ips].atm=atm[ips];
 	    
 	    /*launch an independent thread to pull data in. thread will be joined when needed.*/
-	    pthread_create(&prep_data[ips].threads, NULL, (void *(*)(void *))atm_prep, prep_data+ips);
+	    pthread_create(&prep_data[ips].threads, NULL, (thread_fun)atm_prep, prep_data+ips);
 	}/*need to cpy atm to next_atm. */
     }
     for(int ips=0; ips<nps; ips++) {

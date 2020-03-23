@@ -26,6 +26,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, APER_T *aper,RECON_T *reco
 void free_simu(SIM_T *simu);
 void print_progress(SIM_T *simu);
 void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms);
+void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy);
 void genatm(SIM_T *simu);
 void setup_recon_HXW_predict(SIM_T *simu);
 #endif

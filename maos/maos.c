@@ -207,5 +207,5 @@ void maos_reset(){
 	gpu_cleanup();
     }
 #endif
-    free(global); global=0;
+    free(global); global=NULL;
 }
