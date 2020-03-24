@@ -135,8 +135,11 @@ extern FILE *fpconsole;
 
    Decision: use customize function myclockd() in utils.c which returns a double for second. 
 */
+#ifdef tk
+#undef tk
+#endif
 #define TIC double tk
-#define tic tk=myclockd();
+#define tic tk=myclockd()
 #define toc(format,...) info2(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 

@@ -16,8 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//#include <sys/mman.h>
-//#include <sys/file.h>
 #include "map.h"
 
 /**

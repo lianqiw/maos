@@ -26,10 +26,8 @@ typedef int16_t char16_t;
 #include <mex.h>
 #include "../lib/aos.h"
 
-#define REFERENCE 0
 /*
-  2014-07-08:
-  We reference data instead of copying.
+  2020-03-24: removed data reference from C to matlab capability. 
  */
 extern int donotquit;
 mxArray *loc2mx(const loc_t*loc){
@@ -42,21 +40,10 @@ mxArray *loc2mx(const loc_t*loc){
 mxArray *dsp2mx(const dsp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxREAL);
     mxArray *out=0;
-    if(REFERENCE){
-	out=mxCreateSparse(0, 0, 0, mxREAL);
-	mxSetPr(out, A->x);
-	mxSetJc(out, (mwIndex*)A->p);
-	mxSetIr(out, (mwIndex*)A->i);
-	mxSetM(out, A->nx);
-	mxSetN(out, A->ny);
-	mxSetNzmax(out, A->nzmax);
-	if(A->nref) A->nref[0]++;
-    }else{
-	out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxREAL);
-	memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
-	memcpy(mxGetJc(out),A->p,(A->ny+1)*sizeof(long));
-	memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
-    }
+    out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxREAL);
+    memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
+    memcpy(mxGetJc(out),A->p,(A->ny+1)*sizeof(long));
+    memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
     return out;
 }
 mxArray *csp2mx(const csp*A){
@@ -80,16 +67,8 @@ mxArray *csp2mx(const csp*A){
 mxArray *d2mx(const dmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out=0;
-    if(REFERENCE){
-	out=mxCreateDoubleMatrix(0,0,mxREAL);
-	mxSetPr(out, A->p);
-	mxSetM(out, A->nx);
-	mxSetN(out, A->ny);
-	mem_ref(A->mem);
-    }else{
-	out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
-	memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
-    }
+    out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
+    memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
     return out;
 }
 mxArray *c2mx(const cmat *A){
@@ -499,19 +478,6 @@ static __attribute__((constructor)) void init(){
 	default_handler=signal(SIGTERM, mex_signal_handler);
     }
     quitfun=mex_quitfun;
-
-    if(REFERENCE){
-	extern int mem_debug;
-	mem_debug=1;
-	extern void *(*calloc_custom)(size_t, size_t);
-	extern void *(*malloc_custom)(size_t);
-	extern void *(*realloc_custom)(void *, size_t);
-	extern void  (*free_custom)(void *);
-	calloc_custom=calloc_mex;
-	malloc_custom=malloc_mex;
-	realloc_custom=realloc_mex;
-	free_custom=free_mex;
-    }
 }
 static __attribute__((destructor)) void deinit(){
     fprintf(stderr, "mex unloaded\n");

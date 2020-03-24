@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sys/file.h>
 #include "../sys/sys.h"
 #include <fftw3.h>
 #include "mathdef.h"

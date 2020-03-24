@@ -17,7 +17,6 @@
 */
 
 #define MAT_VERBOSE 0
-#include <sys/mman.h>
 #include "../sys/sys.h"
 #include "random.h"
 #include "mathmisc.h"

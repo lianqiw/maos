@@ -17,10 +17,9 @@
 */
 #include <sys/types.h>
 #include <sys/time.h>
-#include <sys/stat.h>
+#include <sys/stat.h> //fstat
 #include <sys/statvfs.h>
 #include <sys/resource.h>
-#include <sys/mman.h>
 #include <utime.h>
 #include <fcntl.h>           /* For O_* constants */
 #include <limits.h>

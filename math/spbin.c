@@ -15,12 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-
-#include <fcntl.h>
-
 #include "type.h"
 #include "spbin.h"
 #include "defs.h"

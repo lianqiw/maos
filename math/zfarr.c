@@ -15,7 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <sys/file.h>
 #include "zfarr.h"
 #include "mathdef.h"
 struct zfarr{
