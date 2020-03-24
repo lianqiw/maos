@@ -121,7 +121,7 @@ typedef struct rmap_t{
 typedef struct locstatcol_t{
     real xstart; /**<starting x of this column*/
     real ystart; /**<starting y of this column*/
-    long   pos;    /**<starting index of this column*/
+    long pos;    /**<starting index of this column*/
 }locstatcol_t;
 
 /**
@@ -134,8 +134,8 @@ typedef struct locstat_t{
     real dy;          /**<Sampling of the grid along y*/
     real xmin;        /**<Minimum x*/
     real ymin;        /**<Minimum y*/
-    long   ncol;        /**<Number of consecutive columns found*/
-    long   nx,ny;       /**<Size for embedding*/
+    long ncol;        /**<Number of consecutive columns found*/
+    long nx,ny;       /**<Size for embedding*/
 }locstat_t;
 
 /**
@@ -145,7 +145,7 @@ typedef struct loc_t{
     uint32_t id;
     real *locx;  /**< x coordinates of each point*/
     real *locy;  /**< y coordinates of each point*/
-    long   nloc;   /**< number of points*/
+    long nloc;   /**< number of points*/
     real dx;     /**< Sampling along x*/
     real dy;     /**< Sampling along y*/
     real ht;     /**< Conjugation height of the loc grid.*/

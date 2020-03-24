@@ -95,7 +95,7 @@ X(mat) *X(mat_cast)(const void *A){
 void X(free_do)(X(mat) *A){
     if(!A) return;
     assert_mat(A);
-    mem_unref(A->mem);//takes care of freeing memory.
+    mem_unref(&A->mem);//takes care of freeing memory.
 #ifndef USE_LONG
     X(fft_free_plan)(A->fft);
 #endif

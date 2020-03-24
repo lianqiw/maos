@@ -320,8 +320,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 */
 static void
 setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms){
-    dcellfree(recon->PTT);
-    dcellfree(recon->PDF);
+    cellfree(recon->PTT);
+    cellfree(recon->PDF);
     cellfree(recon->PTTF);
 
     recon->PTT=dcellpinv(recon->TT,recon->saneai);

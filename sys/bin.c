@@ -987,8 +987,9 @@ void writearr(const void *fpn,     /**<[in] The file pointer*/
 /**
    Unreference the mmaped memory. When the reference drops to zero free or unmap it.
 */
-void mem_unref(struct mem_t *in){
-    if(in && !atomicadd(&(in->nref), -1)){
+void mem_unref(mem_t **pin){
+    mem_t *in=*pin;
+    if(in && !atomicadd(&(in->nref), -1)){//deallocate
 	switch(in->kind){
 	case 0:
 	    free(in->p);
@@ -1003,6 +1004,7 @@ void mem_unref(struct mem_t *in){
 	    shm_unlink(in->shm);
 	}
 	free(in);
+	pin=0;//this is important to avoid dangling pointer.
     }
 }
 /**
@@ -1010,8 +1012,8 @@ void mem_unref(struct mem_t *in){
 
    Notice that nref is set to 0. Default is set to reference heap memory.
 */
-struct mem_t *mem_new(void *p){
-    struct mem_t *out=mycalloc(1,struct mem_t);
+mem_t *mem_new(void *p){
+    mem_t *out=mycalloc(1,mem_t);
     out->p=p;
     return out;
 }

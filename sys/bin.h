@@ -145,9 +145,9 @@ void read_header(header_t *header, file_t *fp);
 void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 typedef struct mem_t mem_t;
-struct mem_t *mem_new(void *p);
-void mem_unref(struct mem_t *in);
-mem_t*mem_ref(mem_t *in);
+struct mem_t *mem_new(void *p)__attribute__((warn_unused_result));
+void mem_unref(mem_t **in);
+mem_t*mem_ref(mem_t *in)__attribute__((warn_unused_result));
 void mem_replace(mem_t *in, void *p);
 int mem_isref(const mem_t *in);
 void* mem_p(const mem_t *in);

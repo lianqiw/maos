@@ -265,7 +265,6 @@ unamespace std{
 	return mem_debug?realloc_custom(p, size):realloc_default(p,size);
     }
     void free_maos(void *p){
-	if(p==(void*)0xffffffff00000000){warning("%p found\n", p);return;}
 	if(mem_debug) free_custom(p); else free_default(p);
     }
 #ifdef __cpluspluc

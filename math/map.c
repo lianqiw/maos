@@ -54,7 +54,7 @@ map_t *mapref(map_t*in){
     if(!in) return NULL;
     map_t *out=mycalloc(1,map_t);
     memcpy(out,in,sizeof(map_t));
-    mem_ref(in->mem);
+    out->mem=mem_ref(in->mem);
     return out;
 }
 

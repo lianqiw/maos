@@ -1149,17 +1149,13 @@ static void init_simu_dm(SIM_T *simu){
 	    dset((dmat*)simu->dmprojsq->p[idm], NAN);
 	}
 	if(parms->fit.square){/*dmreal is already square.*/
-//	    free(simu->dmrealsq->p[idm]->p);
-	    mem_unref(simu->dmrealsq->p[idm]->mem);
+	    mem_unref(&simu->dmrealsq->p[idm]->mem);
 	    simu->dmrealsq->p[idm]->p=simu->dmreal->p[idm]->p;
-	    mem_ref(simu->dmreal->p[idm]->mem);
-//	    free(simu->dmrealsq->p[idm]->nref);
-//	    simu->dmrealsq->p[idm]->nref=NULL;
+	    simu->dmrealsq->p[idm]->mem=mem_ref(simu->dmreal->p[idm]->mem);
 	    if(simu->dmprojsq){
-		mem_unref(simu->dmprojsq->p[idm]->mem);
+		mem_unref(&simu->dmprojsq->p[idm]->mem);
 		simu->dmprojsq->p[idm]->p=simu->dmproj->p[idm]->p;
-		mem_ref(simu->dmprojsq->p[idm]->mem);
-//		simu->dmprojsq->p[idm]->nref=NULL;
+		simu->dmprojsq->p[idm]->mem=mem_ref(simu->dmprojsq->p[idm]->mem);
 	    }
 	}
     }
