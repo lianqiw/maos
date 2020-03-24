@@ -617,7 +617,6 @@ if test "$builtin_fftw" = "yes";then
 else
     #Check for FFTW3 header and library.
     AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
-    AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 	FLAGS="--enable-threads --enable-shared --enable-static"
 	if test -n "$OPENMP_CFLAGS" ;then
@@ -628,6 +627,7 @@ else
 	unset ac_cv_lib_fftw3_fftw_execute
 	AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
     fi
+    AC_CHECK_HEADERS([fftw3.h],[], [AC_MSG_ERROR([FFTW header is not found])])
 
     if test "$with_matlab" != "no" ;then
 	#cannot compile with single precision floating fft when compiling mex routines
@@ -650,12 +650,16 @@ AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 thread
 
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
-AC_CHECK_HEADERS([cholmod.h], [], [has_chol="no"])
 if test "$has_chol" = "no" ;then
     compile CHOLMOD cholmod.tar.bz2
     unset ac_cv_lib_cholmod_${chol_fun}
-    AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Invalid CHOLMOD library])], [$LAPACK -lm])
+    AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 fi
+AC_CHECK_HEADERS([cholmod.h], [], 
+    [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], 
+	    [AC_MSG_ERROR([Suitesparse header is not found, -devel package missing?])])])
+
+
 LDCHOL="-lcholmod"
 
 #Check for libwebsocket
@@ -957,6 +961,7 @@ AC_CONFIG_FILES( [Makefile
 	tools/Makefile
 	maos/Makefile 
 	skyc/Makefile
+	bin/Makefile
 	mex/Makefile
 	cuda/Makefile
 	])

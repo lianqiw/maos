@@ -16,12 +16,25 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h" 
+#endif
+#if HAVE_CHOLMOD_H
+#include <cholmod.h>
+#elif HAVE_SUITESPARSE_CHOLMOD_H
+#include <suitesparse/cholmod.h>
+#else
+#error cholmod.h is not vailable
+#endif
+
 #include "../sys/sys.h"
+
 #include "mathdef.h"
 #ifdef I
 #undef I
 #endif
-#include "cholmod.h"
+
+
 #include "chol.h"
 #if defined(DLONG)
 #define MOD(A) cholmod_l_##A
