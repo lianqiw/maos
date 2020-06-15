@@ -178,6 +178,7 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(nwvl!=1){
 	warning("LGS has multi-color!\n");
     }
+    real ampsum2=dsumsq(powfs[ipowfs].llt->amp);
     //const int notfx=powfs[ipowfs].notfx;//keep LOTF and OTF same sampling
     //const int notfy=powfs[ipowfs].notfy;//keep LOTF and OTF same sampling
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -187,8 +188,9 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    genotf(PP(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
 		   0, thres, wvl, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 		   npsfx,npsfy, 1, 1);
-	    if(!PP(lotf,iwvl,ilotf)){
-		error("lotf is empty\n");
+	    if(ampsum2<1){//LLT amp is normalized so that sum(amp.^2) is the total throughput.
+		warning("Scale lotf by %g\n", ampsum2);
+		cscale(P(lotf,iwvl,ilotf), ampsum2);
 	    }
 	}
     }/*iwvl */
@@ -216,7 +218,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	mymkdir("%s",fnlotf);
     }
     snprintf(fnlotf,sizeof(fnlotf),"%s/SELOTF/%s_"
-	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_embfac%d_v2",
+	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_embfac%d_v3",
 	     CACHE, fnprefix,
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].llt->pts->dsa,

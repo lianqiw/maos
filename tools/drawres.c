@@ -60,7 +60,13 @@ static ARG_T * parse_args(int argc, char **argv){
     arg->iarg=optind;
     return arg;
 }
-
+void fixnan(dmat *res){
+    for(long i=0; i<res->nx*res->ny; i++){
+	if(isnan(res->p[i])){
+	    res->p[i]=0;
+	}
+    }
+}
 /**
    The main.
 */
@@ -100,13 +106,15 @@ int main(int argc, char *argv[]){
 	struct dirent *dp;
 	int nseedfound=0;
 	while((dp=readdir(dir))){
-	    if(dp->d_type==DT_DIR && dp->d_name[0]!='.'){
-		if(npath==mpath){
-		    mpath*=2;
-		    path=realloc(path, sizeof(char*)*mpath);
+	    if(dp->d_type==DT_DIR){
+		if(dp->d_name[0]!='.' && strcmp(dp->d_name, "skysim")){
+		    if(npath==mpath){
+			mpath*=2;
+			path=realloc(path, sizeof(char*)*mpath);
+		    }
+		    path[npath]=stradd(path[ipath],"/", dp->d_name, NULL);
+		    npath++;
 		}
-		path[npath]=stradd(path[ipath],"/", dp->d_name, NULL);
-		npath++;
 	    }else if(!strncmp(dp->d_name, "Res", 3) && check_suffix(dp->d_name, ".bin")){
 		long seedi, seedi2;
 		int found=0;
@@ -143,7 +151,8 @@ int main(int argc, char *argv[]){
 		}else if(sscanf(dp->d_name, "Res%ld_%ld.bin",&seedi, &seedi2)==2){
 		    //Sky coverage results
 		    if(restype!=-1 && restype!=2){
-			error("Only maos or skyc results can display together\n");
+			warning("Only maos or skyc results can display together\n");
+			continue;
 		    }
 		    restype=2;
 		    
@@ -295,6 +304,7 @@ int main(int argc, char *argv[]){
 		res->p[P_HI]->p[ii]=dtrans(tmp);
 		dfree(tmp);
 		tmp=dsub(ires->p[ind], indlo, 1, 0, 0);
+		fixnan(tmp);
 		res->p[P_LO]->p[ii]=dtrans(tmp);
 		dfree(tmp);
 		dadd(&res->p[P_TOT]->p[ii], 1, res->p[P_LO]->p[ii], 1);
@@ -302,11 +312,13 @@ int main(int argc, char *argv[]){
 		    
 		if(indfocus>-1){
 		    tmp=dsub(ires->p[ind], indfocus, 1, 0, 0);
+		    fixnan(tmp);
 		    res->p[P_F]->p[ii]=dtrans(tmp);
 		    dfree(tmp);
 		}
 		if(indtt>-1){
 		    tmp=dsub(ires->p[ind], indtt, 1, 0, 0);
+		    fixnan(tmp);
 		    res->p[P_TT]->p[ii]=dtrans(tmp);
 		    dfree(tmp);
 		    dadd(&res->p[P_PS]->p[ii], 1, res->p[P_LO]->p[ii], 1);

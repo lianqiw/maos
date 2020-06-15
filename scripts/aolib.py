@@ -251,3 +251,11 @@ def figure(*args, **kargs):
     
 def width_at(x, y, height):
     return len(np.argwhere(y>=max(y)*height))*(x[1]-x[0])
+
+def cellsum(x):
+    xsum=np.zeros(x.shape)
+    for ii in range(x.size):
+        jj=np.unravel_index(ii, x.shape)
+        xsum[jj]=x[jj].sum()
+
+    return xsum

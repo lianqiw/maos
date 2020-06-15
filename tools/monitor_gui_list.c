@@ -347,13 +347,13 @@ static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...
 /**
    Clear the clipboard so we can append to it multiple times.
  */
-static void clipboard_clear(){
+/*static void clipboard_clear(){
     GdkAtom atoms[2]={GDK_SELECTION_CLIPBOARD, GDK_SELECTION_PRIMARY};
     for(int iatom=0; iatom<2; iatom++){
 	GtkClipboard *clip=gtk_clipboard_get(atoms[iatom]);
 	gtk_clipboard_set_text(clip,"",-1);
     }
-}
+    }*/
 /**
    Append text to clipboard (primary and default).
 */

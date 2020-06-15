@@ -1139,9 +1139,9 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     real lltdsa=MAX(lltd, powfs[ipowfs].pts->dsa);
     int nx=round(lltdsa/dx); lltdsa=dx*nx;
     pts_t *lpts=llt->pts=ptsnew(1, lltdsa, lltdsa, nx, dx, dx);
-
-    real oy=llt->pts->origx[0]=(dx-lltdsa)*0.5;
-    real ox=llt->pts->origy[0]=(dx-lltdsa)*0.5;
+    llt->pts->origx[0]=(dx-lltdsa)*0.5;
+    llt->pts->origy[0]=(dx-lltdsa)*0.5;
+    
     real sumamp2=0;
     llt->amp=dnew(nx*nx, 1);
     if(lltcfg->fnamp){
@@ -1151,25 +1151,30 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	mapfree(lltamp);
     }else{
 	real *amps=llt->amp->p;
-	real l2max =pow(lltd*0.5,2);
+	const real l2max =pow(lltd*0.5,2);
 	/*the waist is defined as the radius where amplitude
 	  drop to 1/e or intensity to 1/e^2.*/
 	real r2waist=pow(lltd*0.5*parms->powfs[ipowfs].llt->widthp,2);
+	//misreg is treated as pupil centering error. It clips the laser
+	const real misregx=parms->powfs[ipowfs].llt->misreg->p[0];
+	const real misregy=parms->powfs[ipowfs].llt->misreg->p[1];
+	const real ox=llt->pts->origx[0];
+	const real oy=llt->pts->origy[0];
 	for(int iy=0; iy<nx; iy++){
 	    real yy=iy*dx+oy;
-	    yy*=yy;
 	    for(int ix=0; ix<nx; ix++){
 		real xx=ix*dx+ox;
-		xx*=xx;
-		real r2=xx+yy;
+		real r2=xx*xx+yy*yy;
+		real r2m=pow(xx-misregx,2)+pow(yy-misregy,2);
+		real amp=exp(-r2m/r2waist);
+		sumamp2+=pow(amp, 2);
 		if(r2<=l2max){
-		    amps[iy*nx+ix]=exp(-r2/r2waist);
-		    sumamp2+=pow(amps[iy*nx+ix],2);
+		    amps[iy*nx+ix]=amp;
 		}
 	    }
 	}
     }
-    /*normalized so that max(otf)=1; */
+    /*normalized so that max(otf)=1 for unclipped beam; */
     sumamp2=1./(sqrt(sumamp2));
     dscale(llt->amp, sumamp2);
     if(lltcfg->fnsurf){
