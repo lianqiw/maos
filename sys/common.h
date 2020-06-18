@@ -98,9 +98,9 @@ extern int detached;
 
 extern int LOG_LEVEL;
 extern FILE *fpconsole;
-#define error(format,...) ({printf("%sError(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
-#define warning(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__, ##__VA_ARGS__, BLACK)
-#define warning_time(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d)[%s]: " format "%s", RED, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__, BLACK)
+#define error(format,...) ({printf("%sError(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__, __func__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
+#define warning(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__,__func__, ##__VA_ARGS__, BLACK)
+#define warning_time(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d,%s)[%s]: " format "%s", RED, BASEFILE, __LINE__, __func__,myasctime(), ##__VA_ARGS__, BLACK)
 #define warning_once(A...)  if(LOG_LEVEL>-3){static int done=0; if(!done){done=1; warning(A);}}
 
 #define info(A...)  if(LOG_LEVEL>-2) printf(A)
@@ -108,13 +108,13 @@ extern FILE *fpconsole;
 #define info_console(A...) if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A) //stderr is not directed to file.
 #define info_once(A...) if(LOG_LEVEL>-2){static int done=0; if(!done){done=1; info(A);}}
 
-#define dbg(format,...) if(LOG_LEVEL>0) printf("Debug(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
-#define dbg2(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
-#define dbg3(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg( format,...) if(LOG_LEVEL>0) printf( "Debug(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
+#define dbg2(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
+#define dbg3(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
 
-#define dbg_time(format,...) if(LOG_LEVEL>0) printf("Debug(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
-#define dbg2_time(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
-#define dbg3_time(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d)[%s]: " format, BASEFILE, __LINE__, myasctime(), ##__VA_ARGS__)
+#define dbg_time( format,...) if(LOG_LEVEL>0) printf( "Debug(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
+#define dbg2_time(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
+#define dbg3_time(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
 
 
 #ifndef assert

@@ -2731,7 +2731,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int over_ride){
 static void print_parms(const PARMS_T *parms){
     
     int i;
-    const char *phytype[]={
+    const char* const phytype[]={
 	"Skip",
 	"matched filter",
 	"CoG",
@@ -2740,12 +2740,12 @@ static void print_parms(const PARMS_T *parms){
 	"correlation (sum first)",
 	"Invalid"
     };
-    const char* tomo_precond[]={
+    const char* const tomo_precond[]={
 	"No",
 	"Fourer Domain",
 	"Invalid"
     };
-    const char *closeloop[]={
+    const char *const closeloop[]={
 	"open",
 	"close"
     };

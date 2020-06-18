@@ -68,9 +68,11 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
 	long my=nny?((long)nny>0?nny[ix]:(-(long)nny)):1;
 	const char *header2i=header2?header2[ix]:NULL;
 	mmap_write_header(&map, M_T, mx, my, header2i);
-	out->p[ix]=X(new_do)(mx, my, (T*)map, mem);
+	if(mx && my){
+	    out->p[ix]=X(new_do)(mx, my, (T*)map, mem);
+	}
 	memset(map, 0, mx*my*sizeof(T));//Is this necessary?
-	map+=nnx[ix]*my*sizeof(T);
+	map+=mx*my*sizeof(T);
 	if(header2i) out->p[ix]->header=strdup(header2i);
     }
     
@@ -108,7 +110,7 @@ X(mat*) X(read_mmap)(const char *format, ...){
     format2fn;
     mem_t *mem=mmap_open(fn, 0, 0);
     char *map=(char*)mem_p(mem);
-    X(mat) *out=X(readdata_mmap)(&map, mem);//mem_new(fd, map0,msize));
+    X(mat) *out=X(readdata_mmap)(&map, mem);
     return out;
 }
 
