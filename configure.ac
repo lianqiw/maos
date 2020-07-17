@@ -340,7 +340,7 @@ case "$host_os" in
 	    CFLAGS+=" -stdlib=libc++"
 	fi
 	#MACOS supports openmp with separate omp library
-	AC_CHECK_LIB([omp],[omp_set_num_threads],[OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+="-lomp" libtool_fix_openmp=1],[])
+	#AC_CHECK_LIB([omp],[omp_set_num_threads],[OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+="-lomp" libtool_fix_openmp=1],[])
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
