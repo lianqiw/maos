@@ -4,5 +4,5 @@ var page33_example =
     [ "SCAO", "scao_base_example.html", null ],
     [ "SCAO LGS", "scao_lgs_example.html", null ],
     [ "SCAO NGS", "scao_ngs_example.html", null ],
-    [ "Config file list", "page34_conf.html", "page34_conf" ]
+    [ "Config File List", "page34_conf.html", "page34_conf" ]
 ];

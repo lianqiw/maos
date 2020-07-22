@@ -225,6 +225,8 @@ var NAVTREEINDEX5 =
 "sim__utils_8c.html#af566f334aaf19cf9ad3ed5a847c2aee9":[9,0,2,20,9],
 "sim__utils_8c.html#afc7ef7c79f36d7cb5f5f89fb928de22e":[9,0,2,20,0],
 "sim__utils_8c.html#afce4363970d1fde0eca6130b82b2d28e":[9,0,2,20,1],
+"skyc_10.html":[4,4,38],
+"skyc_20.html":[4,4,39],
 "skyc_2mtch_8c.html":[9,0,4,1],
 "skyc_2mtch_8c.html#a821909ad6049433a39b0f0c318a6448b":[9,0,4,1,0],
 "skyc_2mtch_8c.html#aa1d2dac6933f82611879625b3e274558":[9,0,4,1,1],
@@ -247,7 +249,5 @@ var NAVTREEINDEX5 =
 "skysim__utils_8c.html#ab5132d31365be41bf0a2b423bacf3124":[9,0,4,10,1],
 "slaving_8h.html":[9,0,1,19],
 "slaving_8h.html#a3b37cf698f5019d025dc68b0d5e714af":[9,0,1,19,1],
-"slaving_8h.html#a4dd509feae130cc64f3cc381bea87f54":[9,0,1,19,2],
-"slaving_8h.html#a53e10de2539b3b8ef96af88a7716ff30":[9,0,1,19,7],
-"slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5":[9,0,1,19,8]
+"slaving_8h.html#a4dd509feae130cc64f3cc381bea87f54":[9,0,1,19,2]
 };

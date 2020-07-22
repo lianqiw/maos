@@ -1,5 +1,7 @@
 var NAVTREEINDEX7 =
 {
+"structDTF__T.html#a0f20ddad07711a0e31ca1546ab3bc756":[8,0,49,3],
+"structDTF__T.html#a25177a666b0bfb312565054d2c420d1f":[8,0,49,6],
 "structDTF__T.html#a3f8665eeff959af9f8c25a2e1f83f8f4":[8,0,49,9],
 "structDTF__T.html#a5409038f9bc5229c4133b98950d62b2e":[8,0,49,1],
 "structDTF__T.html#a56335bbc907da081ba1a8b9602799f28":[8,0,49,4],
@@ -247,7 +249,5 @@ var NAVTREEINDEX7 =
 "structMAOS__S.html#a0cd90841bd3e9e532f3b15435e96e089":[8,0,90,4],
 "structMAOS__S.html#a112ae247ebddb054b8901318153448b2":[8,0,90,0],
 "structMAOS__S.html#a15ec163821fc7f7a296b22d7821a6b68":[8,0,90,29],
-"structMAOS__S.html#a18d93a9b1fbc237e8066bf23748518c7":[8,0,90,3],
-"structMAOS__S.html#a1ed561dcafbc109c0489568658121a1a":[8,0,90,13],
-"structMAOS__S.html#a22ca2a7cd63d217b474702c9a478d219":[8,0,90,9]
+"structMAOS__S.html#a18d93a9b1fbc237e8066bf23748518c7":[8,0,90,3]
 };

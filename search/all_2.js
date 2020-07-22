@@ -141,6 +141,6 @@ var searchData=
   ['cxxalg_292',['cxxalg',['../structTOMO__CFG__T.html#ae33e4880a63e4ab5e72fc33dc6b32bfc',1,'TOMO_CFG_T::cxxalg()'],['../structRECON__T.html#aad34a39bfc1237ca74811be05921dfbf',1,'RECON_T::cxxalg()']]],
   ['cxxscale_293',['cxxscale',['../structTOMO__CFG__T.html#a6fb42a09882528870cd0a9d7e1d6760b',1,'TOMO_CFG_T']]],
   ['compile_20the_20code_294',['Compile the Code',['../page20_compile.html',1,'']]],
-  ['config_20file_20list_295',['Config file list',['../page34_conf.html',1,'page33_example']]],
+  ['config_20file_20list_295',['Config File List',['../page34_conf.html',1,'page33_example']]],
   ['c_20fundementals_296',['C Fundementals',['../page91_clang.html',1,'page90_devel']]]
 ];
