@@ -47,7 +47,7 @@
        - \ref shwfs_ttf
        - \ref shwfs_tt
 
-   - \ref fov_sq34 to define the science fov for performance evaluation with IRIS.
+   - \ref fov_sq34 (\ref fit_sq34 and \ref evl_sq34) to define the science fov for performance evaluation with IRIS.
 
    - \ref recon to define the parameters about turbulence reconstruction and DM fitting
 
@@ -74,11 +74,11 @@
 
    \page scao_ngs_example SCAO NGS
    
-   The classic NGS AO is defined in \ref scao_ngs which supplements the basic SCAO definition \ref scao_base_example with NGS WFS \ref shwfs_ngs. 
+   The classic NGS AO is defined in \ref scao_ngs which supplements the basic \ref scao_base_example definition with NGS WFS \ref shwfs_ngs. 
    
    \page scao_lgs_example SCAO LGS
    
-   The classic LGS AO is defined in \ref scao_lgs which supplements the basic SCAO definition \ref scao_base_example with an LGS WFS \ref shwfs_lgs and a Tip/Tilt/Focus NGS WFS \ref shwfs_ttf. 
+   The classic LGS AO is defined in \ref scao_lgs which supplements the basic \ref scao_base_example definition with an LGS WFS \ref shwfs_lgs and a Tip/Tilt/Focus NGS WFS \ref shwfs_ttf. 
 
  */
 
