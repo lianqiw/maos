@@ -1607,7 +1607,9 @@ loc_t *locreaddata(file_t *fp, header_t *header){
     }
     return out;
 }
-
+/**
+   Write the actual data to file pointer.
+*/
 void locwritedata(file_t *fp, const loc_t *loc){
     char str[120];
     snprintf(str,120,"dx=%.15g;\ndy=%.15g;iac=%.15g\n",loc->dx,loc->dy,loc->iac);

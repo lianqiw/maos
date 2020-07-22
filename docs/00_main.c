@@ -16,35 +16,23 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** 
-    \mainpage MAOS Documentation
+    \mainpage Overview
 
-    Multi-Thread Adaptive Optics Simulator (MAOS) is a end-to-end adaptive
-    optics system simulator. It has the capability to simulate all kinds of
+    Multi-Thread Adaptive Optics Simulator (MAOS) is an end-to-end adaptive
+    optics system simulator that is capable to simulate many kinds of
     astronominal adaptive optics systems, including conventional single
     conjugate AO (SCAO), multi-conjugate AO (MCAO), laser tomography AO (LTAO),
-    multi-object AO (MOAO), and ground layer AO (GLAO).
+    multi-object AO (MOAO), and ground layer AO (GLAO). Please follow the
+    following links for relevant information.
 
     <p>
 
-    - \ref page10 
-
-    - \ref page20 
-
-    - \ref page25
-
-    - \ref simulation 
-
-    - \ref page40 
-    
-    - \ref page41 
-    
-    - \ref page42 
-
-    - \ref page50 
-
-    - \ref page60 
-
-    - \ref page70 
+    - \ref page10_intro 
+    - \ref page20_compile 
+    - \ref page30_run
+    - \ref page33_example
+    - \ref page40_results 
+    - \ref page90_devel
 
     <a href="https://github.com/downloads/lianqiw/files/maos_gpu.pdf">AO4ELT2 Paper on MAOS</a>
 

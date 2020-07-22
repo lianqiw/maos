@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page70 C Fundementals
+   \page page91_clang C Fundementals
 
    The user is required to have a good understanding of the C fundementals, like
    the pointer, to study and improve the code. Here we list a few to remind the
@@ -53,8 +53,8 @@
    For example: <code>double *p;</code> if p contains value of 0xFF00.<p>
    <code>p[0]=1;</code>will store a double 1 into memory region at 0xFF00<p>
    <code>p[1]=1;</code>will store a double 1 into memory region at 0xFF08
-   because a double requires 8 bytes.<p> <code>p=p+1;</code>p will now contain
-   0xFF08, i.e., points to the next element, instead of 0xFF01<p>
+   because a double requires 8 bytes.<p> <code>p=p+1;</code> p will now contain
+   0xFF08, i.e., points to the next element, instead of 0xFF01 <p>
    <code>p[0]=1;</code> is strictly equivalent to <code>*p=1;</code> *p means
    visit the memory pointed by p instead of p itself.  <code>p[1]=1;</code> is
    strictly equivalent to <code>*(p+1)=1;</code><p>

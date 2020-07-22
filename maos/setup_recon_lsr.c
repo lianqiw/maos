@@ -20,29 +20,7 @@
 #include "setup_recon.h"
 #include "ahst.h"
 
-/**
-   \page simulation
-   \section Actuator Slaving
 
-   Due to pupil obscuration, there may be actuators that are not sensed
-   by the WFS and therefore cannot be accurately reconstructed. The
-   actuator coupling coefficient, computed using HA or GA, is used to
-   determine how accurately an actuator is sensed/controlled. 
-
-   - Scenario 1, enabled by lsr.actslave>0, and lsr.actthres 
-
-   When an actuator is outside of the pupil, its coupling coefficient is
-   usually very small. When it is below lsr.acthres, its value is slaved
-   to its neighboring actuators.
-	   
-   - Scenario 2, enabled by lsr.actslave>1, and lsr.actthres2: 
-
-   When an actautor is hidden by secondary mirror support struts, it may
-   still have relatively strong coupling, but regions separated by the
-   structs may have different piston values, so called island
-   effect. The mitigation method is to limit the value gap around such
-   actautors whoes coupling is below lsr.actthres2.
-*/
 
 /**
    Setup the least square reconstruct by directly inverting GA matrix. 

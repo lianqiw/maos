@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page50 Programming Guidelines
+   \page page93_guidelines Programming Guidelines
 
    \section sect-guide Guidelines
 

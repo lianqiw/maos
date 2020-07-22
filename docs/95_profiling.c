@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page60 Profiling MAOS 
+   \page page95_profiling Profiling MAOS 
 
    MAOS is a pthread enabled software, and in the current stage, the gprof based
    profiling does not generate useful information. Instead, we have to reply on

@@ -289,7 +289,7 @@ void prop(thread_t *data){
 
 #define PREPOUT_STAT				\
     const real dxout  = ostat->dx;		\
-    if(colend==0) colend = ostat->ncol;
+    if(end==0) end = ostat->ncol;
 
 #define RUNTIME_LINEAR				\
     real dplocx, dplocy;			\
@@ -425,11 +425,7 @@ DEF_ENV_FLAG(PROP_GRID_MAP_OPTIM, 1);
    beam on the input grid.  scale is the cone effect.*/
 void prop_grid(ARGIN_GRID,
 	       ARGOUT_LOC,
-	       ARG_PROP,
-	       int wrap,           /**<[in] wrap input OPD or not*/
-	       long start,         /**<[in] First point to do*/
-	       long end            /**<[in] Last point to do*/
-    ){
+	       ARG_PROP_WRAP){
     if(mapin->iac){
 	if(wrap) error("wrap=1 is invalid for cubic\n");
 	prop_grid_cubic(ARGIN_GRID2, ARGOUT_LOC2, ARG_PROP2, mapin->iac, start, end);
@@ -487,9 +483,7 @@ void prop_grid(ARGIN_GRID,
    effect. See prop_grid() for definition of other parameters.*/
 void prop_nongrid(ARGIN_NONGRID,
 		  ARGOUT_LOC,
-		  ARG_PROP,
-		  long start,          /**<[in] First point to do*/
-		  long end             /**<[in] Last point to do*/
+		  ARG_PROP_NOWRAP
     ){
     if(locin->iac){
 	prop_nongrid_cubic(ARGIN_NONGRID2, ARGOUT_LOC2, ARG_PROP2, locin->iac, start, end);
@@ -517,9 +511,7 @@ void prop_nongrid(ARGIN_NONGRID,
    beam on the input grid.  scale is the cone effect. */
 void prop_nongrid_map(ARGIN_NONGRID,
 		      ARGOUT_MAP,
-		      ARG_PROP,
-		      long start,       /**<[in] First point to do*/
-		      long end          /**<[in] Last point to do*/
+		      ARG_PROP_NOWRAP
     ){
     if(locin->iac){
 	prop_nongrid_map_cubic(ARGIN_NONGRID2, ARGOUT_MAP2, ARG_PROP2, locin->iac, start, end);
@@ -557,9 +549,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
    beam on the input grid.  scale is the cone effect. See prop_groid().*/
 void prop_nongrid_pts(ARGIN_NONGRID,
 		      ARGOUT_PTS,
-		      ARG_PROP,
-		      long start,           /**<[in] First point to do*/
-		      long end              /**<[in] Last point to do*/
+		      ARG_PROP_NOWRAP
     ){
     if(locin->iac){
 	prop_nongrid_pts_cubic(ARGIN_NONGRID2, ARGOUT_PTS2, ARG_PROP2, locin->iac, start, end);
@@ -608,10 +598,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 */
 void prop_grid_cubic(ARGIN_GRID,
 		     ARGOUT_LOC,
-		     ARG_PROP,
-		     real cubic_iac,   /**<[in] inter-actuator-coupling for cubic*/
-		     long start,         /**<[in] First point to do*/
-		     long end            /**<[in] Last point to do*/
+		     ARG_PROP_CUBIC
     ){
     PREPIN_GRID(1);
     (void)nymin;
@@ -646,10 +633,7 @@ void prop_grid_cubic(ARGIN_GRID,
 */
 void prop_grid_pts_cubic(ARGIN_GRID,
 			 ARGOUT_PTS,
-			 ARG_PROP,
-			 real cubic_iac,   /**<[in] inter-actuator-coupling for cubic*/
-			 long start,         /**<[in] First point to do*/
-			 long end            /**<[in] Last point to do*/
+			 ARG_PROP_CUBIC
     ){
     PREPIN_GRID(1);
     PREPOUT_PTS;
@@ -692,9 +676,8 @@ void prop_grid_pts_cubic(ARGIN_GRID,
    inter-actuator-coupling. */
 void prop_grid_map_cubic(ARGIN_GRID,
 			 ARGOUT_MAP,
-			 ARG_PROP,
-			 real cubic_iac,
-			 long start, long end){
+			 ARG_PROP_CUBIC
+    ){
     PREPIN_GRID(1);
     PREPOUT_MAP;
     PREP_CUBIC_PARAM;
@@ -729,13 +712,12 @@ void prop_grid_map_cubic(ARGIN_GRID,
 */
 void prop_grid_stat_cubic(ARGIN_GRID,
 			  ARGOUT_STAT,
-			  ARG_PROP,
-			  real cubic_iac,
-			  long colstart, long colend){
+			  ARG_PROP_CUBIC
+    ){
     PREPIN_GRID(1);
     PREPOUT_STAT;
     PREP_CUBIC_PARAM;
-    OMPTASK_FOR(icol, colstart, colend){
+    OMPTASK_FOR(icol, start, end){
 	RUNTIME_CUBIC;
 	dplocy=myfma(ostat->cols[icol].ystart,dy_in2,displacey);
 	if(dplocy>=nymin && dplocy<=nymax){
@@ -769,9 +751,8 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 */
 void prop_nongrid_cubic(ARGIN_NONGRID,
 			ARGOUT_LOC,
-			ARG_PROP,
-			real cubic_iac,
-			long start, long end){
+			ARG_PROP_CUBIC
+    ){
     PREPIN_NONGRID(1);
     PREPOUT_LOC;
     PREP_CUBIC_PARAM;
@@ -799,9 +780,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
    inter-actuator-coupling.  */
 void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 			    ARGOUT_PTS,
-			    ARG_PROP,
-			    real cubic_iac, 
-			    long start, long end){
+			    ARG_PROP_CUBIC){
     PREPIN_NONGRID(1);
     PREPOUT_PTS;
     PREP_CUBIC_PARAM;
@@ -842,9 +821,8 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
    inter-actuator-coupling. */
 void prop_nongrid_map_cubic(ARGIN_NONGRID,
 			    ARGOUT_MAP,
-			    ARG_PROP,
-			    real cubic_iac,
-			    long start, long end){
+			    ARG_PROP_CUBIC){
+
     PREPIN_NONGRID(1);
     PREPOUT_MAP;
     PREP_CUBIC_PARAM;

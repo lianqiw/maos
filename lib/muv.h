@@ -43,8 +43,8 @@ typedef struct MUV_T{
     void *extra;   /**<Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute*/
     /*And the following are the inversion of above */
     spchol *C;     /**<Cholesky factor.*/
-    dmat  *Up;     /**<M\U*/
-    dmat  *Vp;     /**<M\[V*(I-Up'*V)^{-1}]*/
+    dmat  *Up;     /**<\f$M^{-1}U\f$*/
+    dmat  *Vp;     /**<\f$M^{-1}[V*(I-Up'*V)^{-1}]\f$*/
     dmat  *MI;     /**<Inverse of M via svd*/
     /*The following are for Block Gaussian Seidel Method. */
     dcell *MIB;    /**<Inverse of each diagonal element of M via svd*/

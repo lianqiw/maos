@@ -378,15 +378,11 @@ FUN_NAME_BLOCK(CONST_IN real *phiin, long nxin, long nyin,
 */
 void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		   CONST_OUT map_t *mapout, /**<[in,out] output OPD defined on a square grid*/
-		   ARG_PROP,
-		   int wrap,           /**<[in] wrap input OPD or not*/
-		   long colstart,      /**<[in] First column to do ray tracing*/
-		   long colend         /**<[in] Last column (exclusive) to do ray tracing*/
-    ){
+		   ARG_PROP_WRAP){
     if(mapin->iac){
 #if TRANSPOSE == 0
 	if(wrap) error("wrap=1 is invalid for cubic\n");
-	prop_grid_map_cubic(mapin, mapout, ARG_PROP2, mapin->iac, colstart, colend);
+	prop_grid_map_cubic(mapin, mapout, ARG_PROP2, mapin->iac, start, end);
 	return;
 #else
 	error("transpose ray tracing is not available with iac\n");
@@ -397,7 +393,7 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
     CONST_IN real *phiin  = mapin->p;
     /*With OpenMP compiler complained uninitialized value for the following
       because they are treated as firstprivate*/
-    if(colend==0) colend = mapout->ny;
+    if(end==0) end = mapout->ny;
     const long nxin = mapin->nx;
     const long nyin = mapin->ny;
     /*
@@ -413,8 +409,8 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
     const real oyout=mapout->oy*dy_in1*scale+displacey;
     const long nxout=mapout->nx;
     int missing=FUN_NAME_BLOCK(phiin, nxin, nyin, 
-			       phiout+colstart*nxout, nxout, colend-colstart,
-			       dxout, dyout, oxout, oyout+dyout*colstart, 
+			       phiout+start*nxout, nxout, end-start,
+			       dxout, dyout, oxout, oyout+dyout*start, 
 			       alpha, wrap);
     WARN_MISSING;
 }
@@ -422,15 +418,11 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
 void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		  const pts_t *pts,/**<[in] coordinate of destination grid*/
 		  CONST_OUT real *phiout, /**<[in,out] OPD defined on locout*/
-		  ARG_PROP,
-		  int wrap,           /**<[in] wrap input OPD or not*/
-		  long sastart,       /**<[in] The starting subaperture to trace ray*/
-		  long saend          /**<[in] The last (exclusive) subaperture to trace ray*/
-    ){
+		  ARG_PROP_WRAP){
     if(mapin->iac){
 #if TRANSPOSE == 0
 	if(wrap) error("wrap=1 is invalid for cubic\n");
-	prop_grid_pts_cubic(mapin, pts, phiout, ARG_PROP2, mapin->iac, sastart, saend);
+	prop_grid_pts_cubic(mapin, pts, phiout, ARG_PROP2, mapin->iac, start, end);
 	return;
 #else
 	error("transpose ray tracing is not available with iac\n");
@@ -449,10 +441,10 @@ void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     displacey = (displacey-mapin->oy)*dy_in1;
     long nxout=pts->nx;
     long nyout=pts->ny?pts->ny:pts->nx;
-    if(!saend) saend=pts->nsa;
+    if(!end) end=pts->nsa;
     int missing=0;
-    OMPTASK_FOR(isa, sastart, saend,shared(missing)){
-	//for(long isa=sastart; isa<saend; isa++){
+    OMPTASK_FOR(isa, start, end,shared(missing)){
+	//for(long isa=start; isa<end; isa++){
 	const real oxout=pts->origx[isa]*dx_in1*scale+displacex;
 	const real oyout=pts->origy[isa]*dy_in1*scale+displacey;
 	missing+=FUN_NAME_BLOCK(mapin->p, nxin, nyin, 
@@ -467,14 +459,10 @@ void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    const locstat_t *ostat, /**<[in] information about each clumn of a output loc grid*/
 		    CONST_OUT real *phiout,    /**<[in,out] OPD defined on ostat*/
-		    ARG_PROP,
-		    int wrap,           /**<[in] wrap input OPD or not*/
-		    long colstart,      /**<[in] First column to do ray tracing*/
-		    long colend         /**<[in] Last column (exclusive) to do ray tracing*/
-    ){
+		    ARG_PROP_WRAP){
     if(mapin->iac){
 #if TRANSPOSE == 0
-	prop_grid_stat_cubic(mapin, ostat, phiout, ARG_PROP2, mapin->iac, colstart, colend);
+	prop_grid_stat_cubic(mapin, ostat, phiout, ARG_PROP2, mapin->iac, start, end);
 	return;
 #else
 	error("transpose ray tracing is not available with iac\n");
@@ -493,8 +481,8 @@ void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*
     displacey = (displacey-mapin->oy)*dy_in1;
     const long nyout=1;
     int missing=0;
-    if(colend==0) colend = ostat->ncol;
-    OMPTASK_FOR(icol, colstart, colend,shared(missing)){
+    if(end==0) end = ostat->ncol;
+    OMPTASK_FOR(icol, start, end,shared(missing)){
 	const long offset=ostat->cols[icol].pos;
 	const long nxout=ostat->cols[icol+1].pos-offset;
 	const real oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;

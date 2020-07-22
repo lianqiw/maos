@@ -15,26 +15,30 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 /**
-   \page page20  Compile the Code
+   \page page20_compile  Compile the Code
+
+   \tableofcontents
 
    This step can be skipped if the user choose to use the precompiled binary files,
    which are available for all the popular plateforms: Windows, Mac, and
    Linux. Please notice that the job scheduling and monitoring utilities are not
-   included in the released binaries.
+   included in the released binaries (the binaries may not be up to data).
 
    \section sect-requirement Requirements
 
-   - C99 compliant compiler: GCC, Intel ICC, or llvm-clang.
+   - C99 compliant compiler: GCC, Intel ICC, or clang.
 
-   - (Optional) GTK+ and Cairo. For drawdaemon and monitor.
+   - (Optional) GTK+. For drawdaemon and monitor.
 
-   - (Optional in Linux/Mac) FFTW version 3. Will download from MAOS site if not available in the system.
+   - FFTW version 3. Will download from MAOS site if not available in the system.
     
-   - (Optional in Linux/Mac) Optimized blas and lapack. Blas and lapack can
-   usually be installed through the linux distribution official
-   repository. Will download from MAOS site if not available in the system.
+   - Optimized blas and lapack. Blas and lapack can usually be installed through
+   the linux distribution official repository. Will download from MAOS site if
+   not available in the system.
     
+   - (Optional) libwebsocket. For web based job monitoring. It requires cmake to compile.
     
    \section sect-prep Preparing the folders and compiling
     
@@ -70,22 +74,34 @@
    make -j4 #this will compile using 4 threads.
    \endverbatim
 
-   which will config the compiling folder with GCC compiler and default
-   optimization flags and compile the code. There are a few optional switches
-   or additional components that can be enabled when calling configure.
+   For clusters that use job management tools, disable the built-in scheduler by using
+   \verbatim
+   $src_dir/configure --disable-scheduler
+   \endverbatim
+
+   The compiled executable is maos in the sub-folder “bin” of the compiling
+   folder. You do not have to do "make install" to run the simulations.
+
+   \subsection sect-compiler Compiler options 
+
+   The default compiler for the system is used with optimization flags. There
+   are a few optional switches or additional components that can be enabled when
+   calling configure.
     
    To use a different compiler:
    \verbatim
    $src_dir/configure CC=icc    #ICC compiler
    $src_dir/configure CC=clang  #clang compiler
    $src_dir/configure CC=gcc4.5 #use gcc4.5
+   $src_dir/configure --enable-debug #enable debugging
    \endverbatim
 
+   \subsection sect-cuda GPU acceleration
+
    To enable GPU computing, first install nvidia graphics driver and cuda
-   runtime library. Issue the following command to ensure graphics
-   configuration is correct:
-   \verbatim nvidia-smi \endverbatim 
-   You should see all your nvidia graphics gpus are listed.
+   software development toolkit (SDK). Issue the following command to ensure
+   graphics configuration is correct: \c nvidia-smi. You should see all your
+   nvidia graphics gpus are listed.
     
    The configure can automatically detect cuda if nvcc is in the path, or if
    cuda is installed in /opt/cuda or /usr/local/cuda. For other locations, you
@@ -99,11 +115,14 @@
    set of GPU can also be selected by passing one or multiple -gn: 
     
    \verbatim 
-   $maos -g-1 #disable GPU compute 
+   $maos -g-1    #disable GPU compute 
    $maos -g0 -g2 #Only use gpu 0 and 2
+   $maos -G2     #Automatically choose 2 gpus.
    \endverbatim
     
-   To compile mex routines for matlab, pass the matlab directory to configure:
+   \subsection sect-mex Matlab Mex Routines
+
+   To compile mex routines for matlab, pass the matlab directory to configure if it is not in \c $PATH:
     
    \verbatim
    $src_dir/configure --with-matlab=matlab_dir
@@ -111,24 +130,21 @@
 
    The compiled mex routines are in \c mex folder in the compilation
    directory. The \c read and \c write are for handling .bin and .fits files
-   used by maos. The \c aolib exports a few internal function of maos for use in
+   used by maos. The \c aolib exports many useful routines for use in
    matlab, including maos itself.
-
-   To enable debug mode
-   \verbatim
-   $src_dir/configure --enable-debug
-   \endverbatim
+   
     
     
-   For clusters that use job management tools, disable the built-in scheduler by using
-   \verbatim
-   $src_dir/configure --disable-scheduler
-   \endverbatim
-    
-   The compiled executable is maos in the sub-folder “bin” of the compiling
-   folder. You do not have to do "make install" to run the simulations.
+ 
 
    \subsection sect-mac-gtk Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon
+
+   It is simpliest to install gtk using macport or homebrew. For manual install,
+   follow the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for
+   osx. The environmental variables are set by jhbuild, here we take important
+   ones and put them in our .bash_profile to avoid running jhbuild each
+   time. Put the following in your .bash_profile. Adjust the path accordingly if
+   you changed gtk-osx installing options.
 
    First, if xcode is not installed in full, make sure the following packages are installed
 
@@ -142,12 +158,6 @@
    \endverbatim
    Then download and install pkg-config from pkgconfig.freedesktop.org/releases/     
 
-   It is simpliest to install gtk using macport. For manual install, follow the
-   instructions on page gtk-osx.sourceforge.net/ to install gtk+ for osx. The
-   environmental variables are set by jhbuild, here we take important ones and
-   put them in our .bash_profile to avoid running jhbuild each time. Put the
-   following in your .bash_profile. Adjust the path accordingly if you changed
-   gtk-osx installing options.
 
    \verbatim
    export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig"
@@ -167,27 +177,30 @@
     
    \subsection sect-monitor Using the job monitor
     
-   When reasonably recent GTK+ and Cairo libraries are present in the system,
-   two additional executives will be compiled, “drawdaemon” and “monitor”. The
-   plotting utility “drawdaemon” is located in sub-folder “lib”. It is launched
-   automatically when plotting commands are issued in the software. The
-   monitoring utility “monitor” is located in sub-folder “bin”.  Link monitor to
-   a folder that is in your PATH and type “monitor” in the command line to use
-   it.
+   When GTK+ libraries are present in the system, additional executives will
+   be compiled, \c drawdaemon, \c drawres, \c drawbin and \c monitor in the \c bin folder. 
+
+   - The plotting utility \c drawdaemon launched automatically when plotting
+   commands are issued in the software.
+
+   - The monitoring utility \c monitor can be used to monitor jobs in this and linked machines.
+
+   - The \c drawres can be used to automatically plot the results folder. 
+
+   - The \c drawbin can be used to automatically plot the OPDs or maps.
+
 
    In order to use monitor to monitor jobs in different machines, follow these steps:
 
    Create a folder .aos in your home folder, create two files in there. Put
-   these files in all the machines you want to monitor.
-   \verbatim
-   ~/.aos/hosts  Each line contains a machine's hostname you want to monitor. 
-   They should be the names returned by command "hostname", 
-   and you should be able to log into those machines 
-   with these names. Set up /etc/hosts properly to ensure this.
-   ~/.aos/port   contains the port you want the scheduler to bind to 
-   so that the monitor can connect to it. 
-   Any non-previledged port numbers are fine (like 10000). 
-   Different users should have different port number. 
-   The port has to be the same on all the machines. 
-   \endverbatim
+   these files in all the machines you want to monitor. 
+
+   - \c ~/.aos/hosts Each line contains a machine's hostname you want to monitor. It also supports the
+   full format \c prettyname=full_hostname:port 
+
+   - \c ~/.aos/port contains the port you want the \c scheduler to bind to so that the
+   monitor can connect to it.  Any non-previledged port numbers are fine (like
+   10000).  Different users should have different port number.  The port hust to
+   be the same on all the machines. Make sure the firewall allows them.
+
 */

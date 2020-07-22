@@ -126,8 +126,10 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const real alpha){
 */
 /**
    Prepare the low rank terms:
+   \f[
    Up=M^{-1}*U, 
    Vp=M^{-1}*[V*(I-Up'*V)^{-1}]
+   \f]
    Where M^{-1} is either using MI (svd) or C (CBS)
 */
 static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, dmat *U, dmat *V){
@@ -156,13 +158,15 @@ static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, d
 }
 
 /**
-  Cholesky factorization (svd=0) or svd (svd>0) on the sparse matrix and its low
-  rank terms.  if svd is less than 1, it is also used as the threshold in SVD
-  inversion.
+   Cholesky factorization (svd=0) or svd (svd>0) on the sparse matrix and its low
+   rank terms.  if svd is less than 1, it is also used as the threshold in SVD
+   inversion.
 
-  When there are low rank terms, 
-  Up=M^{-1}*U, 
-  Vp=M^{-1}*[V*(I-Up'*V)^{-1}]
+   When there are low rank terms, 
+   \f[
+       Up=M^{-1}*U, 
+       Vp=M^{-1}*[V*(I-Up'*V)^{-1}]
+    \f]
 
 */
 void muv_direct_prep(MUV_T *A, real svd){ 
@@ -208,8 +212,10 @@ void muv_direct_prep(MUV_T *A, real svd){
   used as the threshold in SVD inversion.
 
   When there are low rank terms, 
-  Up=M\U, 
-  Vp=M\[V*(I-Up'*V)^{-1}]
+      \f[
+      Up=M^{-1}U, 
+      Vp=M^{-1}[V*(I-Up'*V)^{-1}]
+      \f]
   For each diagonal block.
 */
 void muv_direct_diag_prep(MUV_T *A, real svd){ 
@@ -294,8 +300,10 @@ void muv_direct_solve_mat(dmat **xout, const MUV_T *A, dmat *xin){
     }
 }
 /**
-   Apply CBS or SVD multiply to square sparse matrix. xout = A^-1 * xin *
-   (A^-1)^T. The output is dmat if using SVD, and dsp if using CBS.
+   Apply CBS or SVD multiply to square sparse matrix. 
+       xout = A^-1 * xin *
+       (A^-1)^T. 
+   The output is dmat if using SVD, and dsp if using CBS.
  */
 void* muv_direct_spsolve(const MUV_T *A, const dsp *xin){
     void *xout=NULL;

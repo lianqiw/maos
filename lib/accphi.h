@@ -79,7 +79,7 @@ void prop(thread_t *data);/*A unified wrapper */
     map_t *mapout    /**<[in,out] Output OPD defined in a square grid*/
 #define ARGOUT_MAP2 mapout
 #define ARGOUT_STAT							\
-    const locstat_t *ostat,/*<[in] statics of columns in a loc_t*/	\
+    const locstat_t *ostat,/**<[in] statics of columns in a loc_t*/	\
     real *phiout /**<[in, out] Output OPD defined on ostat*/
 #define ARGOUT_STAT2 ostat, phiout
 #define ARG_PROP							\
@@ -89,26 +89,44 @@ void prop(thread_t *data);/*A unified wrapper */
     const real scale     /**<[in] scaling of the beam diameter (cone)*/
 #define ARG_PROP2 alpha, displacex, displacey, scale
 
-void prop_grid     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, int wrap, long start, long end);
-void prop_grid_map (ARGIN_GRID, ARGOUT_MAP, ARG_PROP, int wrap, long start, long end);
-void prop_grid_pts (ARGIN_GRID, ARGOUT_PTS, ARG_PROP, int wrap, long sastart, long saend);
-void prop_grid_stat(ARGIN_GRID, ARGOUT_STAT, ARG_PROP, int wrap, long start, long end);
+#define ARG_INDEX                               \
+    long start, /**<[in] start index*/           \
+    long end /**<[ind] end index*/
 
-void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, long start, long end);
-void prop_nongrid_map(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP, long start, long end);
-void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP, long start, long end);
+#define ARG_PROP_WRAP                           \
+    ARG_PROP,                                   \
+    int wrap, /**<[in] warp around */           \
+    ARG_INDEX
+
+#define ARG_PROP_NOWRAP                         \
+    ARG_PROP,                                   \
+    ARG_INDEX
+
+#define ARG_PROP_CUBIC                                          \
+    ARG_PROP,                                                           \
+    real cubic_iac, /**<[in] inter-actuator coupling coeffcient*/       \
+    ARG_INDEX
+
+void prop_grid     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP_WRAP);
+void prop_grid_map (ARGIN_GRID, ARGOUT_MAP, ARG_PROP_WRAP);
+void prop_grid_pts (ARGIN_GRID, ARGOUT_PTS, ARG_PROP_WRAP);
+void prop_grid_stat(ARGIN_GRID, ARGOUT_STAT,ARG_PROP_WRAP);
+
+void prop_nongrid    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP);
+void prop_nongrid_map(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_NOWRAP);
+void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_NOWRAP);
 
 /*
   A few cubic spline propagations.
 */
-void prop_grid_cubic     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, real cubic_iac, long start, long end);
-void prop_grid_map_cubic (ARGIN_GRID, ARGOUT_MAP, ARG_PROP, real cubic_iac, long start, long end);
-void prop_grid_pts_cubic (ARGIN_GRID, ARGOUT_PTS, ARG_PROP, real cubic_iac, long start, long end);
-void prop_grid_stat_cubic(ARGIN_GRID, ARGOUT_STAT, ARG_PROP, real cubic_iac, long start, long end);
+void prop_grid_cubic     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP_CUBIC);
+void prop_grid_map_cubic (ARGIN_GRID, ARGOUT_MAP, ARG_PROP_CUBIC);
+void prop_grid_pts_cubic (ARGIN_GRID, ARGOUT_PTS, ARG_PROP_CUBIC);
+void prop_grid_stat_cubic(ARGIN_GRID, ARGOUT_STAT,ARG_PROP_CUBIC);
 
-void prop_nongrid_cubic    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, real cubic_iac, long start, long end);
-void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP, real cubic_iac, long start, long end);
-void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP, real cubic_iac, long start, long end);
+void prop_nongrid_cubic    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_CUBIC);
+void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_CUBIC);
+void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_CUBIC);
 
 void prop_grid_map_transpose(map_t *mapin, const map_t *mapout, 
 			     real alpha, real displacex, real displacey, real scale,

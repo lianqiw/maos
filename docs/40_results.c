@@ -16,16 +16,34 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page40 Simulation Results
-   
-   MAOS will generate output in binary format \c .bin files (which maybe gzipped)
+   \page page40_results Simulation Results
+
+   \tableofcontents
+
+   \section bin Data Format
+
+   MAOS generates output in binary format \c .bin files (which maybe gzipped)
    as described below. PSFs are written into fits files with extensions.
 
-   \section sect-matlab Reading Results in MATLAB
+   The data are saved to the \c .bin files in a moduler way. For a simple matrix
+   (like double matrix or cell matrix), we first write a magic number (4 byte
+   unsigned int) representing the data type, and then x and y dimension (two 8
+   byte unsigned ints), and finally the data itself (if it is cell, recursively
+   write the data contained in the cell with the same method).
 
-   There are two MATLAB `mex` routines \c read and \c write
+   Each block of data may optionally be proceeded with a metadata header that
+   describes the data, for example, the sampling of a loc_t grid. The surf OPD
+   contains header information about the sampling, origin and height of the OPD
+   array. 
+
+   We use \c .bin format instead of \c .fits because it can be conveniently
+   memory mapped for best efficiency in reading or saving.
+
+   \subsection read-matlab MATLAB
+
+   There are two MATLAB \c mex routines \c read and \c write
    that can read and write \c .bin or \c .fits files in MATLAB. The source of
-   these mex routines are located in sub-folder \c mex. If \c mex is found in
+   these mex routines are located in source sub-folder \c mex. If \c mex is found in
    the system, this mex routines will be compiled automatically in the \c mex
    subfolder of the compiling folder. If it doesn't get compiled, please goto
    the \c mex subfolder in the source folder and type ./compile.sh to compile
@@ -42,23 +60,13 @@ or cle=read('Res_1.bin.gz');
    write(cle,'Res_1.bin'); will write the data to Res_1.bin without compression.
    \endverbatim
 
-   If there is any problem in compling read.c and write.c, there are two matlab
-   scripts in the scripts folder, readbin.m and writebin.m, that have most of
-   functionality of read.c, write.c albeit a bit slower and cannot handle
-   compressed files conveniently.
+   If there is any problem in compling read.c and write.c, there are also two
+   matlab scripts in the scripts folder, readbin.m and writebin.m, that have
+   most of functionality of read.c, write.c albeit a bit slower and cannot
+   handle compressed files conveniently.
 
-   The data are saved to the bin files in a moduler way. For a simple matrix (like
-   double matrix or cell matrix), we first write a magic number (4 byte unsigned
-   int) representing the data type, and then x and y dimension (two 8 byte unsigned
-   ints), and finally the data itself (if it is cell, recursively write the data
-   contained in the cell with the same method). 
 
-   Each block of data may optionally be proceeded with a metadata header that
-   describes the data, for example, the sampling of a loc_t grid. The surf OPD
-   contains header information about the sampling, origin and height of the OPD
-   array. 
-
-   \section sect-python Reading Results in Python
+   \subsection sect-python Python
 
    There is readbin.py in scripts folder for reading bin or fits files in
    python. Alternatively, it is also possible to call C routines in python,
@@ -66,12 +74,18 @@ or cle=read('Res_1.bin.gz');
    environment variable MAOS_AOLIB poing to the aolib.so file in the bin folder
    in the compiling directory. Then import scripts/aoslib.py to your python. 
 
-   \section sect-idl Reading Results in IDL
+   \subsection sect-idl IDL
 
    There are two idl scripts in the sub-folder \c script. They are readbin.pro
    for reading bin files, and writebin.pro for writing bin files.
 
-   \section sect-interpret Result Format
+   \subsection sect-fits FITS
+   
+   Certain results (e.g., PSF) are saved in \c .fits format. Any standard fits
+   reader (e.g., fv, ds9) should be able to read them. There is also an
+   executable \c bin2fits that can convert \c .bin to \c. fits files.
+
+   \section sect-interpret Simulation Results
 
    There will be several files created during simulation in the result folder. The
    number after underscore _ is the seed. For example, with seed 1 the following
@@ -151,7 +165,5 @@ results. i.e. res=read('Res_1');
 
  - \c Resupterr_1: Each cell contains the uplink tip/tilt error history in
    unit of radian.
-
-
 
  */

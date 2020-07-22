@@ -16,7 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page42 Telemetry Data
+   \page page40_results
+   \section telemetry Telemetry Data
 
    Depending on parameters enabled, the simulation telemetry data will be saved
    to files in the simulation folder. The following describes them in detail.
@@ -38,29 +39,31 @@
 
    The suffix of the file names are removed.
 
-<table border="0" cellspacing="0" cellpadding="2">
-           <tr><td>File name                </td><td>Option to enable</td><td>Description</td>
-</td></tr><tr><td>\c atm_1              </td><td>save.atm   </td><td>The atmosphere 
-</td></tr><tr><td>\c dmerr_hi_1      </td><td>save.dm   </td><td>The DM error signal for high order wfs
-</td></tr><tr><td>\c dmfit_hi_1      </td><td>save.dm   </td><td>The DM fit result for high order wfs
-</td></tr><tr><td>\c Merr_lo_1       </td><td>save.dm   </td><td>The low order mode error signal (split tomography)
-</td></tr><tr><td>\c Mint_lo_1       </td><td>save.dm   </td><td>The low order mode integrator output (split tomography)
-</td></tr><tr><td>\c dmint_hi_1      </td><td>save.dm   </td><td>The DM integrator output of high order wfs output (split integrator only)
-</td></tr><tr><td>\c dmint_1         </td><td>save.dm   </td><td>The DM integrator output (command integrator for both high/low wfs)
-</td></tr><tr><td>\c dmreal_1        </td><td>save.dm   </td><td>The real, effective DM commands applied
-</td></tr><tr><td>\c dmpttr_1        </td><td>save.dmpttr   </td><td>The piston/tip/tilt removed, effective, DM commands.
-</td></tr><tr><td>\c evl0_opdcl_1    </td><td>save.evlopd   </td><td>The closed loop opd for science fields
-</td></tr><tr><td>\c evl0_opdol_1    </td><td>save.evlopd   </td><td>The open loop opd for science fields
-</td></tr><tr><td>\c gcov_wfs0_5_10_1      </td><td>save.gcov   </td><td>The covariance between gradients of wfs 0 and 5 saved at time step 10
-</td></tr><tr><td>\c opdr_1          </td><td>save.opdr   </td><td>The tomography output, defined on xloc
-</td></tr><tr><td>\c opdx_1          </td><td>save.opdx   </td><td>The atmosphere projected onto xloc (direct fitting)
-</td></tr><tr><td>\c wfs0_gradcl_1   </td><td>save.grad  </td><td>The wfs gradient measurement.
-</td></tr><tr><td>\c wfs0_gradnf_1   </td><td>save.grad  </td><td>The wfs noise free gradient.
-</td></tr><tr><td>\c wfs0_gradol_1 </td><td>save.grad  </td><td>The wfs pseudo open loop gradient
-</td></tr><tr><td>\c wfs0_gradgeom_1 </td><td>save.gradgeom   </td><td>The wfs geometric gradient (in physical optics wfs simulations)
-</td></tr><tr><td>\c wfs0_intsnf_1   </td><td>save.ints   </td><td>The wfs subaperture images (noise free)
-</td></tr><tr><td>\c wfs0_intsny_1   </td><td>save.ints   </td><td>The wfs subaperture images (noisy)
-</td></tr><tr><td>\c wfs0_lltopd_1   </td><td>save.wfsopd   </td><td>The wfs laser launch telescope OPD.
-</td></tr><tr><td>\c wfs0_opd_1      </td><td>save.wfsopd   </td><td>The wfs OPD.
-</td></tr>
+
+File name          |Option to enable | Description
+-------------------|-----------------|-------------
+\c atm_1           |save.atm   |The atmosphere 
+\c dmerr_hi_1      |save.dm   |The DM error signal for high order wfs
+\c dmfit_hi_1      |save.dm   |The DM fit result for high order wfs
+\c Merr_lo_1       |save.dm   |The low order mode error signal (split tomography)
+\c Mint_lo_1       |save.dm   |The low order mode integrator output (split tomography)
+\c dmint_hi_1      |save.dm   |The DM integrator output of high order wfs output (split integrator only)
+\c dmint_1         |save.dm   |The DM integrator output (command integrator for both high/low wfs)
+\c dmreal_1        |save.dm   |The real, effective DM commands applied
+\c dmpttr_1        |save.dmpttr   |The piston/tip/tilt removed, effective, DM commands.
+\c evl0_opdcl_1    |save.evlopd   |The closed loop opd for science fields
+\c evl0_opdol_1    |save.evlopd   |The open loop opd for science fields
+\c gcov_wfs0_5_10_1      |save.gcov   |The covariance between gradients of wfs 0 and 5 saved at time step 10
+\c opdr_1          |save.opdr   |The tomography output, defined on xloc
+\c opdx_1          |save.opdx   |The atmosphere projected onto xloc (direct fitting)
+\c wfs0_gradcl_1   |save.grad  |The wfs gradient measurement.
+\c wfs0_gradnf_1   |save.grad  |The wfs noise free gradient.
+\c wfs0_gradol_1 |save.grad  |The wfs pseudo open loop gradient
+\c wfs0_gradgeom_1 |save.gradgeom   |The wfs geometric gradient (in physical optics wfs simulations)
+\c wfs0_intsnf_1   |save.ints   |The wfs subaperture images (noise free)
+\c wfs0_intsny_1   |save.ints   |The wfs subaperture images (noisy)
+\c wfs0_lltopd_1   |save.wfsopd   |The wfs laser launch telescope OPD.
+\c wfs0_opd_1      |save.wfsopd   |The wfs OPD.
+
+
 */

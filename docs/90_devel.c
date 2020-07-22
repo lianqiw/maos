@@ -16,8 +16,19 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page devel Development
+   \page page90_devel Development
 
+   \tableofcontents
+
+   \subpage page91_clang
+
+   \subpage page93_guidelines
+   
+   \subpage page95_profiling
+   
+   \subpage page90_design
+   
+   \page page90_design MAOS Design
    The following shows how various components are implemented.
  
 

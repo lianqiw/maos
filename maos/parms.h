@@ -463,14 +463,14 @@ typedef struct RECON_CFG_T{
     char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
 
-    real poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
-    int psd;        /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
+    real poke;       /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
+    int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
     int psddtrat_hi;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
     int psddtrat_twfs; /**<how many time step to sample for TWFS PSD computation.*/
     int psdservo_gain; /**<Gain used to update servo parameter*/
-    int psdnseg;    /**<#how many overlapping partitions of the time history to compute PSD.*/
-    char *fnsphpsd; /**<PSD of spherical aberration due to profile evolution.*/
+    int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
+    char *fnsphpsd;  /**<PSD of spherical aberration due to profile evolution.*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -559,8 +559,8 @@ typedef struct SIM_CFG_T{
     int ncpa_ttr;    /**<Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1.*/
     dmat *ncpa_thetax; /**<Coordinate for NCPA calibration (arcsec)*/
     dmat *ncpa_thetay; /**<Coordinate for NCPA calibration (arcsec)*/
-    dmat *ncpa_wt;     /**<Weight for each point.*/
-    dmat *ncpa_hs;     /**<Height of star.*/
+    dmat *ncpa_wt;   /**<Weight for each point.*/
+    dmat *ncpa_hs;   /**<Height of star.*/
     int ncpa_ndir;   /**<Number of points for NCPA calibration*/
     char *dmadd;     /**<Containing dm vector to simulate turbulence (added to integrator output). 
 			 It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty*/

@@ -463,6 +463,44 @@ setup_shwfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
     }
 }
+/*
+   
+   It is tricky to implement the misregistration of the deformable mirror and the WFS.
+   
+   Misregistration of the deformable mirror.  
+   
+   Denote the grid of actuators as saloc, and with misregistration, it becomes
+   salocm. 
+   
+   - We should use saloc for DM fitting and pseudo open loop gradient
+   computations because we are not aware of the misregistration. 
+
+   - We should use salocm for raytracing to WFS and performance evaluation
+   because this is what happens in the system, no matter whether we know the
+   misregistration or not.
+
+   Misregistration of the WFS.
+   
+   Denote the grid of the WFS entry pupil as loc, and with misregistration, it
+   becomes locm. Project the telescope amplitude map onto loc, we get amp, which
+   is what we know. Project the telescope amplitude map onto locm, we get ampm,
+   which is what happens but we don't know.
+
+   - We should use loc and amp to compute the reconstructor.
+
+   - We should use locm and ampm for tracing to WFS and performance evaluation.
+   
+   - We should use loc and ampm for matched filter, averaging gradient, or
+   zernike tip/tilt operator computation, since this is the process that happens
+   in the system, and the matched filter is updated through dithering to the
+   true amplitude map. We use loc because it is our model within the WFS.
+   
+   - We should use ptsm->area (real area) to select subapertures for use in
+   reconstruction, because in real system, the subapertures are selected by
+   their illumination level, and is affected by the real amplitude.
+
+
+ */
 void 
 setup_powfs_misreg_tel(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     int nwfsp=parms->powfs[ipowfs].nwfs;
@@ -807,18 +845,6 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	}
     }
 }
-/**
-   \page simulation
-   \section WFS gradient pixel offset
-   
-   Use powfs.pixoffx and powfs.pixoffy to set WFs gradient pix offset
-   
-   - If abs(pixoffx) is less than 1. All subapertures have uniform pixel offset along x/r: pixoffx and along y/a: pixoffy (pixel).
-   
-   - If pixoffx==1 : There is a rotational offset with maximum value of pixoffy (pixel) at the edge.
-
-   - If pixoffx==2: There is a global offset along x and y of pixoffy (pixel).
-*/
 
 /**
    Setting up Detector transfer function used to translate PSFs from FFTs to
@@ -868,6 +894,18 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
    the last \f$\theta_{i}\f$ means evaluate the function at \f$\theta_{i}\f$ by
    interpolation. When there is leaking between actuators. We can multiply the
    sinc functions with a Gaussian blurring function.
+*/
+/*
+   \section WFS gradient pixel offset
+   
+   Use powfs.pixoffx and powfs.pixoffy to set WFs gradient pix offset
+   
+   - If abs(pixoffx) is less than 1. All subapertures have uniform pixel offset along x/r: pixoffx and along y/a: pixoffy (pixel).
+   
+   - If pixoffx==1 : There is a rotational offset with maximum value of pixoffy (pixel) at the edge.
+
+   - If pixoffx==2: There is a global offset along x and y of pixoffy (pixel).
+
 */
 static void 
 setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){

@@ -1031,6 +1031,7 @@ echo "Websocket:       $use_websockets"
 echo "CUDA:            $cudaver (double: $cuda_double)"
 echo "MATLAB MEX:      $with_matlab"
 
+echo "Doxygen:         $DX_FLAG_doc (make doxygen-doc)"
 echo
 
 echo "*************************************************************************"

@@ -243,7 +243,7 @@ static void print_usage(void){
 	"Usage: maos [OPTION...] [FILE]...\n"
 	"maos is a simulation tool developed to adaptive optics systems\n\n"
 	"Examples:\n"
-	"maos   # Run the default configuration of NFIRAOS: nfiaros.conf as the baseline.\n"
+	"maos   # Run the default configuration from default.conf with all CPUs and GPUs\n\n"
 	"maos -c scao_ngs.conf sim.seeds=[1 10] -d -o scao_ngs override.conf \n"
 	"       # Run a single conjugate natural guide star case, with seed 1 and 10\n"
 	"       # detach from the terminal and output results to folder scao_ngs\n"
@@ -259,7 +259,7 @@ static void print_usage(void){
 	"                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
 	"-p, --path=dir    Add dir to the internal PATH\n"
 	"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic\n"
-	"-G, --ngpu=N'     Use a total of N gpus.\n"
+	"-G, --ngpu=N      Use a total of N gpus.\n"
 	"-r, --run=host    Run the job in another host.\n"
 	"\n"
 	"The following environment variables are supported\n"
@@ -271,8 +271,8 @@ static void print_usage(void){
 	"MAOS_KEEP_MEM=0      Set to 1 to keep temporary memory between steps\n"
 	"MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting\n"
 	"MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info\n"
-	"MAOS_LOG_LEVEL=0     Set logging level. -3: error only, -2: also warning, -1 also essential info, 0: also useful info, "
-	"                     1: also debugging info, 2: more debugging info, 3: extra more info.\n"
+	"MAOS_LOG_LEVEL=0     Set logging level. -3: error only, -2:  warning, -1  essential info, 0:  useful info, \n"
+	"                     1:  debugging info, 2: debugging info, 3: everything.\n"
 	);
 
     exit(0);

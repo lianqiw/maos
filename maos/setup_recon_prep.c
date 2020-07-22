@@ -23,7 +23,7 @@
 #include "pywfs.h"
 #include "ahst.h"
 /**
-   \file setup_recon_dm.c 
+   \file setup_recon_prep.c 
 
    Setup grid and ray tracing operators regarding DM. This is independent of
    1) WFS geometry or noise parameters

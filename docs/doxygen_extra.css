@@ -1,12 +1,30 @@
 
-/* @group Heading Levels */
+
+body {counter-reset:section;}
+h1 {counter-reset:subsection;}
+h2 {counter-reset:subsubsection;}
+h1:before
+{
+counter-increment:section;
+content:counter(section) ". ";
+}
+h2:before 
+{
+counter-increment:subsection;
+content:counter(section) "." counter(subsection) " ";
+}
+h3:before 
+{
+counter-increment:subsubsection;
+content:counter(section) "." counter(subsection) "." counter(subsubsection) " ";
+}
 
 h1.groupheader {
-	font-size: 130%;
+	font-size: 120%;
 }
 
 .title {
-	font-size: 130%;
+	font-size: 200%;
 	font-weight: bold;
 	margin: 10px 2px;
 }
@@ -14,7 +32,7 @@ h1.groupheader {
 h2.groupheader {
 	border-bottom: 1px solid #879ECB;
 	color: #354C7B;
-	font-size: 150%;
+	font-size: 110%;
 	font-weight: normal;
 	margin-top: 1.75em;
 	padding-top: 8px;

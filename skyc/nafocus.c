@@ -123,7 +123,9 @@ real nafocus_residual(real fs,   /**<[in] sampling frequency of NGS*/
 }
 dmat *nafocus_time(real alpha,/**<[in] parameter of sodium layer height PSD.*/
 		   real beta, /**<[in] parameter of sodium layer height PSD.*/
-		   real dt, long nstep, rand_t *rstat){
+		   real dt,   /**<[in] time step*/
+                   long nstep,/**<[in] number of steps*/
+                   rand_t *rstat /**<random number stat*/){
     real df=1./(nstep*dt);
     cmat *psd=cnew(nstep, 1);
     //cfft2plan(psd, -1);
