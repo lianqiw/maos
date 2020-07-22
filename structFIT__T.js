@@ -14,6 +14,7 @@ var structFIT__T =
     [ "misreg", "structFIT__T.html#a5bebd7c39acf04a29ce702be7857ca73", null ],
     [ "flag", "structFIT__T.html#ab62df5084a2aaf4bfe212124ff782a79", null ],
     [ "notrecon", "structFIT__T.html#a17942bd2bf338574f385009529c1d0c2", null ],
+    [ "isref", "structFIT__T.html#a9d699a70b164fa6efb3ce8d04787f9f6", null ],
     [ "HXF", "structFIT__T.html#a852d77ad145b585484081fe7c044090e", null ],
     [ "HA", "structFIT__T.html#aabce2dffcf90110b60c9642f5ed701f7", null ],
     [ "actcpl", "structFIT__T.html#a28d73073f0a5f09ac1749632594baee6", null ],

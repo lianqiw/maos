@@ -48,5 +48,5 @@ var structPARMS__T =
     [ "idmground", "structPARMS__T.html#a85954ed8f0966d8b614226a183046cd7", null ],
     [ "step_lo", "structPARMS__T.html#ad8b89d1fe5a384e0d17aa44e6d7f5044", null ],
     [ "step_hi", "structPARMS__T.html#a3486cdd72a5702e24b463195039c7e98", null ],
-    [ "hipowfs_hs", "structPARMS__T.html#a3fc6ebd7adfd1f443d90a01431695e71", null ]
+    [ "hipowfs_hs", "structPARMS__T.html#ae74c9325f1f0c0a3dcc63b673572d5ec", null ]
 ];

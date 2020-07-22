@@ -16,5 +16,6 @@ var maos_2types_8h =
     [ "DITHER_T", "structDITHER__T.html", "structDITHER__T" ],
     [ "SIM_T", "structSIM__T.html", "structSIM__T" ],
     [ "GLOBAL_T", "structGLOBAL__T.html", "structGLOBAL__T" ],
-    [ "CHECK_SAVE", "maos_2types_8h.html#a47895b22092692ba9ca782f61cc1d4b8", null ]
+    [ "CHECK_SAVE", "maos_2types_8h.html#a47895b22092692ba9ca782f61cc1d4b8", null ],
+    [ "wait_dmreal", "maos_2types_8h.html#abf48e98dbcfded900bbe0e5080b14a67", null ]
 ];

@@ -1,8 +1,8 @@
 var structSTAR__S =
 [
-    [ "thetax", "structSTAR__S.html#a63d20ad36dedd4dfd81515b441c7c7fc", null ],
-    [ "thetay", "structSTAR__S.html#aa32f7d5cd4938f0d5cedd9d78deab27b", null ],
-    [ "scbcs", "structSTAR__S.html#a2f3612c4d7e104d737cd9603098d395b", null ],
+    [ "thetax", "structSTAR__S.html#ac8a3834479dbada1147e4513f346bd97", null ],
+    [ "thetay", "structSTAR__S.html#a57f13bc8b94d3451bd9c9996cf5f018f", null ],
+    [ "scbcs", "structSTAR__S.html#abf7485e65d2055ef21fd7d8f031fe5fb", null ],
     [ "mags", "structSTAR__S.html#aedb9ee12559f545b7753087f431db43e", null ],
     [ "siglev", "structSTAR__S.html#a6d1b14cb866bcc4c4f8017326a960796", null ],
     [ "siglevtot", "structSTAR__S.html#aa61852ae9ecf4f9099c42fa159b4eabc", null ],

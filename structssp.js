@@ -8,6 +8,5 @@ var structssp =
     [ "nzmax", "structssp.html#a6e0547432ee13aa7262084392eabed1b", null ],
     [ "p", "structssp.html#abf4247d9c25de30321cacd104aad9684", null ],
     [ "i", "structssp.html#a94cad8a829c353ab5a15ea4db72a2472", null ],
-    [ "nz", "structssp.html#abaf1c01783f5fc25bfd5387bcc16efbf", null ],
     [ "nref", "structssp.html#a17b6e7343c42658952fa3b36fda9c5c2", null ]
 ];

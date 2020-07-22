@@ -5,7 +5,6 @@ var structzmat =
     [ "nx", "structzmat.html#a252b00e9ba675da2e7622be31419751f", null ],
     [ "ny", "structzmat.html#ad5f27e5d70b200f47027f1aa72b7d793", null ],
     [ "header", "structzmat.html#ab55914ae773780d487ee99075bd27c9b", null ],
-    [ "mmap", "structzmat.html#ae27869b57e7f021ada8992beb47192dd", null ],
-    [ "nref", "structzmat.html#aa1f6d8d373742cb6299e175f29e67dde", null ],
-    [ "fft", "structzmat.html#afdc78422f94d167f0f1f2e509d624e21", null ]
+    [ "fft", "structzmat.html#afdc78422f94d167f0f1f2e509d624e21", null ],
+    [ "mem", "structzmat.html#a8b39136e686a57fd01f3d32cd5dd49e0", null ]
 ];

@@ -1,7 +1,7 @@
 var laplacian_8h =
 [
-    [ "apply_laplacian_map", "laplacian_8h.html#aaeeac18fb36bae4577c19a1235cef451", null ],
-    [ "mklaplacian_map", "laplacian_8h.html#a8394f2cfd9866ff96d44b320697c39c6", null ],
-    [ "mklaplacian_loc", "laplacian_8h.html#a230a7e9f8f290452f9f15757f9c23418", null ],
-    [ "laplacian_coef", "laplacian_8h.html#a3f6194591de2c1649336164fdf9d65a0", null ]
+    [ "apply_laplacian_map", "laplacian_8h.html#ad50368f80512d243a668b1f4cd70e77a", null ],
+    [ "mklaplacian_map", "laplacian_8h.html#a363030bd0846634bfb7df062c81af517", null ],
+    [ "mklaplacian_loc", "laplacian_8h.html#a98d4144bdbd595a016cbac6d06113f4e", null ],
+    [ "laplacian_coef", "laplacian_8h.html#a14cd19a758bc6165318771ed461f3a73", null ]
 ];

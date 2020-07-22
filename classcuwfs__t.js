@@ -37,7 +37,7 @@ var classcuwfs__t =
     [ "gradacc", "classcuwfs__t.html#a8bc2e336f1c5a74068630ad33fbea47b", null ],
     [ "gradcalc", "classcuwfs__t.html#a726ef9ba745eeb655914b54140e15380", null ],
     [ "lltopd", "classcuwfs__t.html#a82af2650ba46b3eeaa3d657b87c28016", null ],
-    [ "lltg", "classcuwfs__t.html#a0b07a1be98793b5fcc63441434e67bd6", null ],
+    [ "lltg", "classcuwfs__t.html#a22bedcf886635df3b14bdd90828b2932", null ],
     [ "lltwvf", "classcuwfs__t.html#ac5b7f8483620021690d798b93c17dd93", null ],
     [ "lltotfc", "classcuwfs__t.html#a071136bb76cc07a777a8b7da9f6204d2", null ],
     [ "wvf", "classcuwfs__t.html#aace805efe62929bfc088d85bd8452837", null ],

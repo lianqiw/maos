@@ -11,6 +11,5 @@ var structINTSTAT__T =
     [ "i0sum", "structINTSTAT__T.html#ac3579bfed8599c928d05aac5cd109d82", null ],
     [ "i0sumsum", "structINTSTAT__T.html#acbd95e08fb4f41d270fe6c6406021137", null ],
     [ "mtche", "structINTSTAT__T.html#a0165680cc8d86944018418a1e361df81", null ],
-    [ "notf", "structINTSTAT__T.html#ac36294be21c9b94bd24d5eeea089f996", null ],
     [ "nsepsf", "structINTSTAT__T.html#a4c4e98be2b8a57d4feb99abb892574b0", null ]
 ];

@@ -14,5 +14,7 @@ var cell_8h =
     [ "read_by_id", "cell_8h.html#a40abd6f20840af65f7f3ca17c8159a22", null ],
     [ "readbin", "cell_8h.html#aefcc505a75a4fb24415fe88172ac0d9d", null ],
     [ "writebin", "cell_8h.html#a357e82aa5571115bb78a92215d477a8a", null ],
-    [ "writebindata", "cell_8h.html#a8d7bdbf9b4ae7a0c53735a6f477b95f0", null ]
+    [ "writebin2", "cell_8h.html#a938c640db5c9cdcc7e5243b64e0c96e9", null ],
+    [ "readsock", "cell_8h.html#a34da2630d81d5e01052e5636091c831d", null ],
+    [ "writesock", "cell_8h.html#a5de2e5a0f72fdccde9cf296ffd328d61", null ]
 ];

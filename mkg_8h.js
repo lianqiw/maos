@@ -1,5 +1,5 @@
 var mkg_8h =
 [
-    [ "mkg", "mkg_8h.html#a59ab59d502b1d8bc363a5001685ef202", null ],
-    [ "mkgt", "mkg_8h.html#a76b866afff48cad5a532a92080e6a922", null ]
+    [ "mkg", "mkg_8h.html#af1846dbcd182cfe9ac7525f55901bcb4", null ],
+    [ "mkgt", "mkg_8h.html#a2c948d7a9976361e86a4ef0920c7bb60", null ]
 ];

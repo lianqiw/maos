@@ -1,7 +1,6 @@
 var genotf_8h =
 [
-    [ "genotf", "genotf_8h.html#a24adbe01bdb150e6f6119e9698139a47", null ],
-    [ "mk2dcov", "genotf_8h.html#ac604b42575aced8b9d16eb89f343615f", null ],
-    [ "mtch", "genotf_8h.html#a151262ec25ca71013e720d7508618665", null ],
-    [ "derive_by_fft", "genotf_8h.html#a2b16064f1ab4b5a8f483db881f7f5dfb", null ]
+    [ "genotf", "genotf_8h.html#ac43aabf34978fdfbe9837efb0c5d512a", null ],
+    [ "genotf2", "genotf_8h.html#ad6c2098471265417fd7fdf2de94f579a", null ],
+    [ "mk2dcov", "genotf_8h.html#ab61ec7aab9356b134cd3a6ebb2db184c", null ]
 ];

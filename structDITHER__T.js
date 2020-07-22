@@ -1,11 +1,11 @@
 var structDITHER__T =
 [
-    [ "delta", "structDITHER__T.html#a408581df0957efa9df5f18d7dfac7e0d", null ],
-    [ "deltam", "structDITHER__T.html#a29289908bdfd7fc685e73957e390218b", null ],
-    [ "deltao", "structDITHER__T.html#a98d412e10c8595aa501c8bba60ecb919", null ],
-    [ "delay", "structDITHER__T.html#a4bbdfb8c9cd5c4a42dadc03bc1bc90c2", null ],
-    [ "a2m", "structDITHER__T.html#ac12f0e68989727df67e929b8dc1ac776", null ],
-    [ "a2me", "structDITHER__T.html#a5d2b943b50403fde24a5396d887cd7a6", null ],
+    [ "delta", "structDITHER__T.html#aba56015b39719b0bb68c15a27ee116b5", null ],
+    [ "deltam", "structDITHER__T.html#acaa052baedf0c040c8318907a1f48330", null ],
+    [ "deltao", "structDITHER__T.html#ae2426842af3c82eb783be1c5b76fe9ba", null ],
+    [ "delay", "structDITHER__T.html#aa427a02f29ec34b30bfb84f4056cbc00", null ],
+    [ "a2m", "structDITHER__T.html#a6593d03a3e9f29b8bc4c4909bbf327ce", null ],
+    [ "a2me", "structDITHER__T.html#a6570ff7214b981270fbb9535df3a121d", null ],
     [ "imb", "structDITHER__T.html#ac273b82162555c8f683c4fc3970582a1", null ],
     [ "imx", "structDITHER__T.html#a4bfd2148beb245d5c1b1e6b386c546ff", null ],
     [ "imy", "structDITHER__T.html#aa1525ad9fc2626f7cb47a7a8a7e28011", null ],

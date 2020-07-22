@@ -1,7 +1,8 @@
 var structLLT__CFG__T =
 [
-    [ "d", "structLLT__CFG__T.html#a45577fb34c3fb5753225c7417276d0eb", null ],
-    [ "widthp", "structLLT__CFG__T.html#a44ba41f20ea071d782ff70c5fbdc5aaa", null ],
+    [ "d", "structLLT__CFG__T.html#a16a92e4bd613e2e412828e146b16fc83", null ],
+    [ "widthp", "structLLT__CFG__T.html#a5f377ad4d13884549ef055645b2cb372", null ],
+    [ "focus", "structLLT__CFG__T.html#a6cd2648581130aa3b67ee0e1e9fb2862", null ],
     [ "ttpsd", "structLLT__CFG__T.html#a613bc29bdfa7b4a1ae7453865d35038d", null ],
     [ "fnrange", "structLLT__CFG__T.html#ac169cd8bd15a4ee86824d5d40ec9038d", null ],
     [ "fnprof", "structLLT__CFG__T.html#aeb231bd6aa8793f7297a22b04673dfc3", null ],
@@ -16,5 +17,5 @@ var structLLT__CFG__T =
     [ "colprep", "structLLT__CFG__T.html#a5248186f49c163e6b557564e17125807", null ],
     [ "colsim", "structLLT__CFG__T.html#ab98cc62458a0880ce23196c961b11008", null ],
     [ "coldtrat", "structLLT__CFG__T.html#ab02592b7a6d49ca73773ff15f550152e", null ],
-    [ "ttrat", "structLLT__CFG__T.html#a6ae74a705e349030abaabec0a66a6802", null ]
+    [ "ttrat", "structLLT__CFG__T.html#a62d5baba7fe0aa533233ffdec7614a89", null ]
 ];

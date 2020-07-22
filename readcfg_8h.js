@@ -1,7 +1,7 @@
 var readcfg_8h =
 [
     [ "format2key", "readcfg_8h.html#a0258dd21e9b70280d7b8fd9de5614c76", null ],
-    [ "open_config", "readcfg_8h.html#a81abf84c9f61c49dd58731d7f2637c00", null ],
+    [ "open_config", "readcfg_8h.html#ac5df07be610c26bf72114091f95feb4b", null ],
     [ "close_config", "readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76", null ],
     [ "readcfg_peek", "readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f", null ],
     [ "readcfg_peek_n", "readcfg_8h.html#a2e922a9c36a239462733acec6cd00827", null ],
@@ -11,9 +11,9 @@ var readcfg_8h =
     [ "readcfg_strarr_n", "readcfg_8h.html#af15ef171b1abcb5ad3658f3b21d8dacc", null ],
     [ "readcfg_strarr_nmax", "readcfg_8h.html#a6aba5be414bc11b0ce8c5719d4c02028", null ],
     [ "readcfg_int", "readcfg_8h.html#af90add8965ad5b713f08e85d11ea70a0", null ],
-    [ "readcfg_dbl", "readcfg_8h.html#a2b13907448b0ece4c728fd1f4d2eab30", null ],
+    [ "readcfg_dbl", "readcfg_8h.html#aa5be30c2caeb90e0d575ead83f3ceff0", null ],
     [ "readcfg_intarr", "readcfg_8h.html#a2ea9d60b32c652ce4fad03c84d08c3f6", null ],
-    [ "readcfg_dblarr", "readcfg_8h.html#a969fc72b01334d0fe97e6faaa562c9bf", null ],
+    [ "readcfg_dblarr", "readcfg_8h.html#aaf546b96b714c72088ba80354969756a", null ],
     [ "readstr_dmat", "readcfg_8h.html#ae2f8cc2e6faca7a9fcde66c684b4c9a1", null ],
     [ "readcfg_dmat", "readcfg_8h.html#a9a45f9445048b5f0da0573a563aeeed5", null ],
     [ "readcfg_dmat_n", "readcfg_8h.html#a57db729a2f0617087f8afed5288eea06", null ],
@@ -22,8 +22,8 @@ var readcfg_8h =
     [ "readcfg_lmat_n", "readcfg_8h.html#a840d9d01fee9bd3ab8587eddbc8ccfca", null ],
     [ "readcfg_lmat_nmax", "readcfg_8h.html#ae2c70689f05aead41deedb6abc5fc96f", null ],
     [ "readcfg_dcell", "readcfg_8h.html#a5fd72ddb2a821baf224122de60711b6d", null ],
-    [ "readcfg_dblarr_n", "readcfg_8h.html#add90c1a773600f3302d94a289b314189", null ],
+    [ "readcfg_dblarr_n", "readcfg_8h.html#aaf8fb5d5ad0eb0c3a37dfbfbeb0ec65f", null ],
     [ "readcfg_intarr_n", "readcfg_8h.html#a4b93ac243fed9ecdeb3d10d660d752ca", null ],
-    [ "readcfg_dblarr_nmax", "readcfg_8h.html#ab05d7b9c4140e2391243e7223d9c151f", null ],
+    [ "readcfg_dblarr_nmax", "readcfg_8h.html#aeeaa1ebf31ed8772ba79d10b9c866e41", null ],
     [ "readcfg_intarr_nmax", "readcfg_8h.html#ae8a2b6e6bf4ebe66fc6a81456ae5adfd", null ]
 ];

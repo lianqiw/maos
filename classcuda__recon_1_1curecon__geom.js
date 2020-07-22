@@ -5,7 +5,6 @@ var classcuda__recon_1_1curecon__geom =
     [ "npsr", "classcuda__recon_1_1curecon__geom.html#a2b73c1d2cba2812cdf61929bbb024331", null ],
     [ "ndm", "classcuda__recon_1_1curecon__geom.html#a974c5011e87c1f8ac41f4b2942a6f782", null ],
     [ "delay", "classcuda__recon_1_1curecon__geom.html#aac185d31104cba35efbef709c9663dcc", null ],
-    [ "isim", "classcuda__recon_1_1curecon__geom.html#ab47bc10bc6552890e3ff4b4059975a2f", null ],
     [ "reconisim", "classcuda__recon_1_1curecon__geom.html#ac79a597dcebb46f9fb9c726ce1084bf6", null ],
     [ "xmap", "classcuda__recon_1_1curecon__geom.html#a70119360e20fe470d20a10fe2545788d", null ],
     [ "xcmap", "classcuda__recon_1_1curecon__geom.html#ae7c369ab95d6821b4789cc135c61855d", null ],

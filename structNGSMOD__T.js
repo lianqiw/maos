@@ -1,10 +1,10 @@
 var structNGSMOD__T =
 [
-    [ "hs", "structNGSMOD__T.html#a13b17076926281174eafb963077daab5", null ],
-    [ "ht", "structNGSMOD__T.html#abfd835d27201eba2f87965d5650e3fd9", null ],
-    [ "scale", "structNGSMOD__T.html#a04fe94fcd2b18eb124a0e5b1170d9387", null ],
-    [ "aper_fcp", "structNGSMOD__T.html#a9980921108b4ea0d7f6ebafa6686304f", null ],
-    [ "lp2", "structNGSMOD__T.html#a9ea57bdf964bc3b93c4ec50fdcec5f74", null ],
+    [ "hs", "structNGSMOD__T.html#a60909883c55544dccaee6d0593be291a", null ],
+    [ "ht", "structNGSMOD__T.html#a5b39a8616732ead0269f84b71bb88e62", null ],
+    [ "scale", "structNGSMOD__T.html#a30a891b82433f207a2eb5a94077cb8f7", null ],
+    [ "aper_fcp", "structNGSMOD__T.html#ae3c1f2efe7413d27787858427fd762ec", null ],
+    [ "lp2", "structNGSMOD__T.html#af56282bbf1aae02d0e479481e301ce21", null ],
     [ "MCCP", "structNGSMOD__T.html#a9cf7a5498b9bd27b011fc3bbaa0856f2", null ],
     [ "MCC", "structNGSMOD__T.html#a7a8f4d2ffc082c0a6180fcfd67bddb18", null ],
     [ "IMCC_TT", "structNGSMOD__T.html#ab75976d620d5c445e308977b3fdb6c6b", null ],

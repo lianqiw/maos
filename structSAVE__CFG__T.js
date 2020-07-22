@@ -17,6 +17,8 @@ var structSAVE__CFG__T =
     [ "wfsopd", "structSAVE__CFG__T.html#a44632825ceb651fcec8d474525d4d643", null ],
     [ "ints", "structSAVE__CFG__T.html#a59422809ac272291a2d91bdbba8b475a", null ],
     [ "grad", "structSAVE__CFG__T.html#a8709f51f7294bbbbb52c8934f15bf1c7", null ],
+    [ "gradnf", "structSAVE__CFG__T.html#acfb4b464f50cfdfa2e23419815efd1c1", null ],
+    [ "gradpsol", "structSAVE__CFG__T.html#acbd74333ccb6bb9ec4316c40122f3fbf", null ],
     [ "gradgeom", "structSAVE__CFG__T.html#ae70fea9629e683dda5b9a10a6e1df7e5", null ],
     [ "wfsopdhi", "structSAVE__CFG__T.html#a176c03585612472231ab6a4be1211817", null ],
     [ "wfsopdlo", "structSAVE__CFG__T.html#a10d1345f20457fbeae19109b83c5d9d8", null ],

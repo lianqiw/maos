@@ -24,10 +24,10 @@ var thread_8h =
     [ "OMPTASK_END", "thread_8h.html#a7c906b430971b36c0ebdc013c3bcfc4d", null ],
     [ "ICCTASK_FOR", "thread_8h.html#a40b05fdcb5f4c47d8f9d5d285d3e838f", null ],
     [ "ICCTASK_END", "thread_8h.html#a7471fb80365f9f09c80dc488852295ae", null ],
-    [ "thread_fun", "thread_8h.html#a9bf43b411159f96adf95674c0de47d67", null ],
-    [ "thread_wrapfun", "thread_8h.html#ab1750ae8c9b2ff3be9893608e991cb25", null ],
+    [ "thread_fun", "thread_8h.html#a41f23d172c89ca8271cf0a6ebab9119f", null ],
+    [ "thread_wrapfun", "thread_8h.html#a735e98ad9d08fe72a5a2e20051ebf72a", null ],
     [ "thread_id", "thread_8h.html#a46d357a9305be4f48b8166cb27ec41ff", null ],
-    [ "thread_prep", "thread_8h.html#a0e8b5f912d940c8595204d95609f4e05", null ],
+    [ "thread_prep", "thread_8h.html#a8c1f2b6e57a822b6ae203dc855a89a96", null ],
     [ "lockadd", "thread_8h.html#a9930843fcf00924f1a4076af69232a5b", null ],
     [ "thread_new", "thread_8h.html#a026c95e6b2a9ee10f90a5a254548786a", null ],
     [ "thread_block_signal", "thread_8h.html#abcf2784ffc1cb49a293c75cdfe6d64e7", null ]

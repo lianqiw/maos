@@ -5,7 +5,7 @@ var structEVL__CFG__T =
     [ "wt", "structEVL__CFG__T.html#ab91d8d66025f550777cacbd7e7a38db2", null ],
     [ "wvl", "structEVL__CFG__T.html#ad9f136fcd4cac853765d82a2dda612c1", null ],
     [ "hs", "structEVL__CFG__T.html#a9af969cc6cdfd6a8574f7939f46c2900", null ],
-    [ "dx", "structEVL__CFG__T.html#ac168ca8161ee3edbf2009849e56a07a5", null ],
+    [ "dx", "structEVL__CFG__T.html#ad188a6b71732c328c3d96a1221f74ed4", null ],
     [ "nwvl", "structEVL__CFG__T.html#aefa7d339640d46e883615e2de461ea60", null ],
     [ "psf", "structEVL__CFG__T.html#af421340fae8a0db8e40e52093bfda8f5", null ],
     [ "psfr", "structEVL__CFG__T.html#a278b8090ac9d114571e1ba54f7b6d2b8", null ],

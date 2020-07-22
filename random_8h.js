@@ -23,8 +23,5 @@ var random_8h =
     [ "mts_refresh", "random_8h.html#a3ce2e86d641b31d24504b45709f2e86e", null ],
     [ "mts_seed32", "random_8h.html#ac0cca3dce08cec70306171f2625a85d9", null ],
     [ "randn", "random_8h.html#aae96989c948eeb8b75ffd3c41ce96268", null ],
-    [ "randp", "random_8h.html#a41f3c05ba16dc7a7701fb6bd240ae87c", null ],
-    [ "new_rand", "random_8h.html#a873a17e5d92e75eec5afd9bb88ddabd2", null ],
-    [ "writerand", "random_8h.html#af5b25f2478c2b94b8d278944911a55f2", null ],
-    [ "readrand", "random_8h.html#a35ec46ad6dcf7da3cc81b9fe4faef3a2", null ]
+    [ "randp", "random_8h.html#a41f3c05ba16dc7a7701fb6bd240ae87c", null ]
 ];

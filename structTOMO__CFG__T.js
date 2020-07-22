@@ -1,11 +1,11 @@
 var structTOMO__CFG__T =
 [
-    [ "tikcr", "structTOMO__CFG__T.html#a4e9cdc5ecfbe16d7cb897e919f52046a", null ],
-    [ "minwt", "structTOMO__CFG__T.html#ab5be0d7db20e5e69eb143812533f0e85", null ],
-    [ "iac", "structTOMO__CFG__T.html#a469e4b69724ecd060db42835bc381139", null ],
-    [ "cxxscale", "structTOMO__CFG__T.html#a13582755190bf75f11a33c5f2567e254", null ],
-    [ "svdthres", "structTOMO__CFG__T.html#a02bfdc2713f21ecb7ba8cc0c4d32feb0", null ],
-    [ "cgthres", "structTOMO__CFG__T.html#a0754884ca9327bb7ad36e1f341583ef4", null ],
+    [ "tikcr", "structTOMO__CFG__T.html#a1f51fedef08f2b0de5680f4ba23521a2", null ],
+    [ "minwt", "structTOMO__CFG__T.html#a61da1184186d3955ac1592c2442aaa27", null ],
+    [ "iac", "structTOMO__CFG__T.html#a8ac51b6f3d1e8e32c24b70ed0d317840", null ],
+    [ "cxxscale", "structTOMO__CFG__T.html#a6fb42a09882528870cd0a9d7e1d6760b", null ],
+    [ "svdthres", "structTOMO__CFG__T.html#a75c40733f9e9a80c868d81133daf3c7f", null ],
+    [ "cgthres", "structTOMO__CFG__T.html#a09365115e096a84cda510c2891fd44b5", null ],
     [ "square", "structTOMO__CFG__T.html#a97a710b09fadf4a79fa514d9eb3f3e62", null ],
     [ "cone", "structTOMO__CFG__T.html#a1f5e957ea500a631e960d18b1bdbd977", null ],
     [ "cxxalg", "structTOMO__CFG__T.html#ae33e4880a63e4ab5e72fc33dc6b32bfc", null ],

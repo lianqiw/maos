@@ -31,6 +31,7 @@ var structSIM__SAVE__T =
     [ "wfsopdol", "structSIM__SAVE__T.html#a386e6eee70296e7bdf46917b7fba0e7b", null ],
     [ "wfslltopd", "structSIM__SAVE__T.html#a8c0dc6c5f1b09edd18f7a333e5fda9a9", null ],
     [ "gradcl", "structSIM__SAVE__T.html#a9dd1acb10e8c92209f1ba709057c0b7b", null ],
+    [ "gradnf", "structSIM__SAVE__T.html#afa7626afa70cf5f25182957e55f5a3a6", null ],
     [ "gradgeom", "structSIM__SAVE__T.html#acba4437880503d1386e3637c621dce26", null ],
     [ "gradol", "structSIM__SAVE__T.html#aad325f8af995c1c1b68e2ddd26b86d47", null ],
     [ "intsny", "structSIM__SAVE__T.html#aaf9b3f394d23f9a78a6dbcb934951e86", null ],

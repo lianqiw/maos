@@ -1,10 +1,10 @@
 var classcuda__recon_1_1curecon__t =
 [
-    [ "curecon_t", "classcuda__recon_1_1curecon__t.html#a1a59217909036c599c575eff4bebbc89", null ],
+    [ "curecon_t", "classcuda__recon_1_1curecon__t.html#ac54fd3c3703eae5fa530acfa75dbf88e", null ],
     [ "~curecon_t", "classcuda__recon_1_1curecon__t.html#a60c7b3ffc6f0a9b6847e18b71fcd4e28", null ],
     [ "reset_config", "classcuda__recon_1_1curecon__t.html#afa40be20ada2ec3c5b812b8ba97b880e", null ],
     [ "reset_runtime", "classcuda__recon_1_1curecon__t.html#a876281f965e5beb65812e2cf84e2b3bd", null ],
-    [ "update", "classcuda__recon_1_1curecon__t.html#aa56dcdb2268761984ec4abd03f1f46f9", null ],
+    [ "update", "classcuda__recon_1_1curecon__t.html#a0e1c0634b4abe9e8a214bce69a36881d", null ],
     [ "update_cn2", "classcuda__recon_1_1curecon__t.html#a54f2dfb612ceae6ce68204b42ef1c196", null ],
     [ "tomo", "classcuda__recon_1_1curecon__t.html#ae78d3a4609101ea554dbb8103f9cbc22", null ],
     [ "fit", "classcuda__recon_1_1curecon__t.html#af46ad89edd0812ad075cd6c299e07d35", null ],
@@ -13,7 +13,7 @@ var classcuda__recon_1_1curecon__t =
     [ "mvm", "classcuda__recon_1_1curecon__t.html#aed39aeb52f808cfa171bda5ea2e546b0", null ],
     [ "tomo_test", "classcuda__recon_1_1curecon__t.html#afab8bfc9dfb51a7c1e167180926210d0", null ],
     [ "fit_test", "classcuda__recon_1_1curecon__t.html#a6be8c5af1c94e37e768a9619bec90f9d", null ],
-    [ "gpu_update_recon", "classcuda__recon_1_1curecon__t.html#af4b38c19a11484916ad086d7a2f507d6", null ],
+    [ "gpu_update_recon", "classcuda__recon_1_1curecon__t.html#a347c23f702f2bed50248adc9aae4337f", null ],
     [ "gpu_update_recon_cn2", "classcuda__recon_1_1curecon__t.html#ab518943d16c70c8619c9e92a068c6fc3", null ],
     [ "grid", "classcuda__recon_1_1curecon__t.html#a1d627bdde8d4cc2a5ad89f69a56e93f2", null ],
     [ "FR", "classcuda__recon_1_1curecon__t.html#a9f5329454607140f5d321c97b6fa503f", null ],

@@ -2,11 +2,11 @@ var mkdtf_8h =
 [
     [ "DTF_T", "structDTF__T.html", "structDTF__T" ],
     [ "ETF_T", "structETF__T.html", "structETF__T" ],
-    [ "dtf_free", "mkdtf_8h.html#a605c602de49507aa0a31bb3d31f08367", null ],
-    [ "etf_free", "mkdtf_8h.html#a1a637059c8d0859ae8e6efbbe24c249b", null ],
-    [ "mkdtf", "mkdtf_8h.html#aa4bdc2d77859ed66538c70e205576855", null ],
-    [ "mketf", "mkdtf_8h.html#a1b86e4d2d4600635afc1400f496f78b3", null ],
-    [ "dtf_free_do", "mkdtf_8h.html#a453e67095e8c4265fc1c99e3f87c3acc", null ],
-    [ "etf_free_do", "mkdtf_8h.html#a446ff631eac7d3f8b0303a868011b7d2", null ],
-    [ "smooth", "mkdtf_8h.html#a1019bd04997fd407aede4d92c4c1cc2a", null ]
+    [ "dtf_free", "mkdtf_8h.html#a3a970db34227c79d8b55302019889911", null ],
+    [ "etf_free", "mkdtf_8h.html#a74e74e9b6320fc56da458c784afd7368", null ],
+    [ "mkdtf", "mkdtf_8h.html#ae722de0003cbf2a4fa5d8b38af7c1161", null ],
+    [ "mketf", "mkdtf_8h.html#aa439d0eebf6550b6cb113c28249ed46a", null ],
+    [ "dtf_free_do", "mkdtf_8h.html#a19716a77285254ad96be1c657431356e", null ],
+    [ "etf_free_do", "mkdtf_8h.html#a0f1821ad7b8d5eb6abffb6a2f37696ec", null ],
+    [ "smooth", "mkdtf_8h.html#a42d0fe623bbbd35b36c395fd52904603", null ]
 ];

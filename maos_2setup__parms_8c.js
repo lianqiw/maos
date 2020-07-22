@@ -19,7 +19,7 @@ var maos_2setup__parms_8c =
     [ "free_powfs_cfg", "maos_2setup__parms_8c.html#ab4954ec0786c9b9dceb9ae6ddb60d68c", null ],
     [ "free_strarr", "maos_2setup__parms_8c.html#abb6e36b04cc59e87a10f7ef9378cb5a0", null ],
     [ "free_parms", "maos_2setup__parms_8c.html#afad950a4f059f347cede7c2f97c7e0bd", null ],
-    [ "dbl2pair", "maos_2setup__parms_8c.html#aa0a06931647e22ea5d19c69c31b1c5be", null ],
-    [ "setup_parms", "maos_2setup__parms_8c.html#a17e9b53acf321cc472b06a5813e17c44", null ],
+    [ "dbl2pair", "maos_2setup__parms_8c.html#a50d1e1908be4f7f01e229d13879426d7", null ],
+    [ "setup_parms", "maos_2setup__parms_8c.html#a98fd7ba3a36438bb616bda24c398cfe8", null ],
     [ "setup_parms_gpu", "maos_2setup__parms_8c.html#a9a36b5678c2ca8539187637c1e016a2c", null ]
 ];

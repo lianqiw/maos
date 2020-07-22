@@ -22,12 +22,12 @@ var structDBG__CFG__T =
     [ "ncpa_rmsci", "structDBG__CFG__T.html#a6f03b562abf7dfb8735e48873e1e5e37", null ],
     [ "gp_noamp", "structDBG__CFG__T.html#a4d33ffb6cce9e7e0bbeef73a18530954", null ],
     [ "atm", "structDBG__CFG__T.html#ad741967e668a06c26fbbb8106cdb5696", null ],
-    [ "gradoff_scale", "structDBG__CFG__T.html#a86418d2a1b18f2e51dcaafd4b9e62b82", null ],
+    [ "gradoff_scale", "structDBG__CFG__T.html#ae5aee3931df4c56639decac61da8f919", null ],
     [ "pwfs_psx", "structDBG__CFG__T.html#a60de87d94c23ff8686d6ba6e2bb11e1a", null ],
     [ "pwfs_psy", "structDBG__CFG__T.html#a372eb30c1042db718b4ef6427ac544a7", null ],
-    [ "pwfs_flate", "structDBG__CFG__T.html#a5ac94e783ac1243260934518a55e4b53", null ],
-    [ "pwfs_flatv", "structDBG__CFG__T.html#a36bd2419f691e5fb664ede4a0ce777f0", null ],
-    [ "pwfs_pupelong", "structDBG__CFG__T.html#a29de6460be037a9d52ea060fa422d5de", null ],
+    [ "pwfs_flate", "structDBG__CFG__T.html#abf9159b3887ddc71f481356709b595da", null ],
+    [ "pwfs_flatv", "structDBG__CFG__T.html#aae91ed4eee14bfef1c2fb02b6739cfe0", null ],
+    [ "pwfs_pupelong", "structDBG__CFG__T.html#a273cd39d995bfae7b2cf98ab8f71bf29", null ],
     [ "pwfs_side", "structDBG__CFG__T.html#a535c5a82dd068755f6f88cc82e72a91a", null ],
     [ "dmoff", "structDBG__CFG__T.html#a14d07a4b9b2339e8b9249532a0ee8b6d", null ],
     [ "gradoff", "structDBG__CFG__T.html#a39f8f180420f2e47b831bc66efaaf232", null ],
@@ -37,5 +37,7 @@ var structDBG__CFG__T =
     [ "wfs_iac", "structDBG__CFG__T.html#a7e62e533832095e2f202a64735ef0f77", null ],
     [ "fullatm", "structDBG__CFG__T.html#aa1d7b489c85e1bc2bb7d3ced1e8b0cd1", null ],
     [ "lo_blend", "structDBG__CFG__T.html#ac4efbf1e294d72ce15305e25f6854b1c", null ],
-    [ "eploscale", "structDBG__CFG__T.html#adc645d23140bb69c50463defe75ec3e7", null ]
+    [ "eploscale", "structDBG__CFG__T.html#a43abfbe453a9860d6ff002477ea7a1f8", null ],
+    [ "ahst_keepfocus", "structDBG__CFG__T.html#abb38bda7830a30de0dd0a138e6c2ae07", null ],
+    [ "recon_stuck", "structDBG__CFG__T.html#ac558d7f5a52b089929b32a44c8ece9fd", null ]
 ];

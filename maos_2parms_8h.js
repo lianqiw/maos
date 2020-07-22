@@ -33,5 +33,5 @@ var maos_2parms_8h =
     [ "setup_parms", "maos_2parms_8h.html#a441e9246520886122d956f9e9f0bc1be", null ],
     [ "setup_parms_gpu", "maos_2parms_8h.html#a9a36b5678c2ca8539187637c1e016a2c", null ],
     [ "free_parms", "maos_2parms_8h.html#afad950a4f059f347cede7c2f97c7e0bd", null ],
-    [ "plotdir", "maos_2parms_8h.html#a7f1118562492baba6abdfc30a7f49c5c", null ]
+    [ "plotdir", "maos_2parms_8h.html#ab3f25f8d7bc4a3133cd29bbda0f43885", null ]
 ];

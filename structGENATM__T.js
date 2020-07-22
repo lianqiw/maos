@@ -1,12 +1,12 @@
 var structGENATM__T =
 [
     [ "rstat", "structGENATM__T.html#a4ec289f6543f12a67a7061eb554528e1", null ],
-    [ "wt", "structGENATM__T.html#af5d9acf5dfae10cf4e5665f56fb0b436", null ],
-    [ "r0", "structGENATM__T.html#a4548fc5d88a0998cc98af452865a3320", null ],
-    [ "L0", "structGENATM__T.html#a02f549ff5c4cbae337079b37d4d4081c", null ],
-    [ "dx", "structGENATM__T.html#a03af568af858f89808053de79fe9e27e", null ],
-    [ "fmin", "structGENATM__T.html#a44d98338913926019b782ca0c393b953", null ],
-    [ "fmax", "structGENATM__T.html#aad07d5c51fda951b300a2221ebf60fd6", null ],
+    [ "wt", "structGENATM__T.html#a65c56bbea05e0b4a49e5749ff75bc5c3", null ],
+    [ "r0", "structGENATM__T.html#a2c793835c61e3402383551800b83a08c", null ],
+    [ "L0", "structGENATM__T.html#a315c6b14cda0584705ac15d29aa4a938", null ],
+    [ "dx", "structGENATM__T.html#a338df9ec518df3d44099adbb56d86f6f", null ],
+    [ "fmin", "structGENATM__T.html#aa20dd64ec297acd4195d3eea5b0ecaef", null ],
+    [ "fmax", "structGENATM__T.html#a652cde4b3eeccdf811048c01d659a9cb", null ],
     [ "nx", "structGENATM__T.html#abba391cb19084e9c3b2d75bf5961f087", null ],
     [ "ny", "structGENATM__T.html#a2f349ffbaa6e10d363927c897db15acf", null ],
     [ "nlayer", "structGENATM__T.html#abf8c06eaf6ba5b42cae2c53637784c83", null ],
