@@ -20,9 +20,17 @@
 
 #include "common.h"
 #include "sim.h"
-#define TIMING 1
-/**
-   \file wfsints.c Contains wfsints() that computes physical optics WFS
+#define TIMING 0
+#if TIMING
+#define TIM0 TIC;tic;real tk1=0,tk2=0,tk3=0,tk4=0,tk5=0,tk6=0;
+#define TIM(A) tk##A+=toc3;tic;
+#else
+#define TIM0
+#define TIM(A)
+#endif
+
+/*
+   Contains wfsints() that computes physical optics WFS
    subaperture images from OPDs.  */
 
 /**
@@ -120,6 +128,7 @@ void wfsints(thread_t *thread_data){
 	}
     }
     real *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
+    TIM0;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	const real dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;
@@ -179,11 +188,13 @@ void wfsints(thread_t *thread_data){
 	    cembed_wvf(wvf,opd->p+ioffset, 
 		       realamp+ioffset,nopd,nopd,
 		       parms->powfs[ipowfs].wvl->p[iwvl],0);
+            TIM(1);
 	    if(use1d){ /*use 1d fft */
 		cfft2partial(wvf,notf, -1);
 	    }else{
 		cfft2(wvf,-1); /*use 2d fft to form PSF. */
 	    }
+            TIM(2);
 	    if(psf!=wvf){
 		/*copy the peaks (at corner) from wvf to psf */
 		ccpcorner(psf, wvf, C_FULL);
@@ -201,9 +212,11 @@ void wfsints(thread_t *thread_data){
 	    }
 	    /* form PSF with peak in corner*/
 	    cabs2toreal(psf);
+            TIM(3);
 	    /* need to turn to otf to add llt contribution or output pixel intensities.*/
 	    if(isotf){
 		cfft2(psf,-1);   /*turn to otf. peak in corner */
+                TIM(4);
 		if(pistatout){  /*The pistat does not include uplink effect*/
 		                 /*copy to temporary array. peak in in corner*/
 		    ccp(&psftmp,psf);
@@ -224,6 +237,7 @@ void wfsints(thread_t *thread_data){
 		}
 		/* we have otf here in psf*/
 	    }/* else: we have psf here in psf*/
+            TIM(5);
 	    if(ints){
 		if(!isotf /* Need to turn PSF to OTF*/ || otf!=psf /* Need to embed*/ ){
 		    if(isotf){ /*turn back to PSF for embedding. peak in corner.*/
@@ -245,6 +259,7 @@ void wfsints(thread_t *thread_data){
 		/*Now peak in center because nominal is pre-treated.  */
 		dspmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts->p[iwvl]*norm_ints);
 	    }
+            TIM(6);
 	}/*isa */
     }/*iwvl */
     if(otf!=psf) cfree(otf);
@@ -256,4 +271,7 @@ void wfsints(thread_t *thread_data){
 	if(lwvf!=lotfc) cfree(lotfc);
 	cfree(lwvf);
     }
+#if TIMING==1
+    info("ints timing: embed %.3f fft %.3f copy %.3f otf %.3f llt %.3f dtf %.f\n",tk1,tk2,tk3,tk4,tk5,tk6);
+#endif
 }

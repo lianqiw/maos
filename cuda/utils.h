@@ -162,7 +162,7 @@ static inline void cp2gpu(Real**dest, const dmat*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-#ifdef USE_DOUBLE
+#if CPU_SINGLE==0
 static inline void cp2gpu(curmat &dest, const dmat*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
@@ -202,7 +202,7 @@ void add2cpu(smat **out, float alpha, const curmat &in, float beta, cudaStream_t
 void add2cpu(zmat **out, float alpha, const cucmat &in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(scell **out, float alpha, const curcell &in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(dcell **out, real alpha, const curcell &in, real beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
-#ifdef USE_DOUBLE
+#if CPU_SINGLE==0
 void add2cpu(double * restrict *dest, double alpha, Real *src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(dmat **out, double alpha, const curmat &in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(cmat **out, double alpha, const cucmat &in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);

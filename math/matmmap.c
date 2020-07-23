@@ -39,7 +39,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ..
     return out;
 }
 /**
-   Create a new X(cell) matrix cell object, mmapped from file. The file is
+   Create a new dense matrix cell object, mmapped from file. The file is
    truncated if already exists. 
 */
 X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, 
@@ -79,7 +79,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
     return out;
 }
 /**
-   Create a new X(cell) matrix cell object, with identical blocks, mmapped from
+   Create a new dense matrix cell object, with identical blocks, mmapped from
    file. be aware that the data is not 8-byte aligned. The file is truncated if
    already exists.  */
 X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *header,

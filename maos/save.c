@@ -16,13 +16,15 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- \file save.c Collects routines that does save and plotting to clean
- up recon.c, wfsgrad.c and perfevl.c etc.  */
+   Collects routines that does save and plotting to clean
+   up recon.c, wfsgrad.c and perfevl.c etc.  */
 #include "save.h"
 #include "ahst.h"
 #include "sim_utils.h"
 #include "sim.h"
-
+/**
+   Save pixel statistics for matched filter.
+*/
 void save_pistat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->wfsisim;
@@ -64,6 +66,9 @@ void save_pistat(SIM_T *simu){
 	}
     }
 }
+/**
+   Save open loop gradients to file and optionally occumulate gcov.
+ */
 void save_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
@@ -89,7 +94,9 @@ void save_gradol(SIM_T *simu){
 	}
     }
 }
-
+/**
+   Plot and save reconstruction data.
+ */
 void save_recon(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
@@ -228,6 +235,9 @@ void save_recon(SIM_T *simu){
 	dcellscale(simu->ecov, 1./scale); //2016-06-07: Do not reset. 
     }
 }
+/**
+   Plot and save dmproj
+*/
 void save_dmproj(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
@@ -244,6 +254,9 @@ void save_dmproj(SIM_T *simu){
 	}
     }
 }
+/**
+   Plot and save dmreal
+ */
 void save_dmreal(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;

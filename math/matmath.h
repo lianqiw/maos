@@ -18,7 +18,7 @@
 
 #ifndef AOS_LIB_MATMATH_H
 #define AOS_LIB_MATMATH_H
-#ifndef AOS_LIB_MATH_H
+#ifndef AOS_LIB_TYPE
 #error "Don't include this file directly"
 #endif
 #define AOS_MATMATH_DEF(X,XR,T,R)					\
@@ -150,6 +150,6 @@
     void X(cogreal)(R *grad,const X(mat) *i0,R offsetx,			\
 		    R offsety,R thres, R bkgrnd);			\
     void X(cogabs)(R *grad,const X(mat) *i0,R offsetx,			\
-		   R offsety,R thres, R bkgrnd);			\
-    ;
+		   R offsety,R thres, R bkgrnd);			
+
 #endif

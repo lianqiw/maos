@@ -15,12 +15,18 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file recon.h
 
+   Wavefront reconstruction and DM fitting routines. 
+
+
+*/
 #ifndef AOS_RECON_H
 #define AOS_RECON_H
 #include "common.h"
 
 void tomofit(dcell **dmout, SIM_T *simu, dcell *gradin);
-void lsr(SIM_T *simu);
+//void lsr(SIM_T *simu);
 void reconstruct(SIM_T *simu);
 #endif

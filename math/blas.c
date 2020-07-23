@@ -347,7 +347,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	ptrdiff_t nmax=M<N?N:M;
 	ptrdiff_t *iwork=mymalloc(nmax*8,ptrdiff_t);
 	info("(dgesdd)");
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 	R* rwork=0;
 	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,iwork,&info);
 #else
@@ -355,7 +355,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #endif
 	lwork=(ptrdiff_t)creal(work0[0]);
 	T *work1=mymalloc(lwork,T);
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 	rwork=mymalloc(nsvd*MAX(5*nsvd+7,2*nmax+2*nsvd+1),R);
 	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,iwork,&info);
 	free(rwork);
@@ -365,7 +365,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	free(work1);
 	free(iwork);
     }else{
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 	R* rwork=0;
 	Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
 #else
@@ -373,7 +373,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #endif
 	lwork=(ptrdiff_t)creal(work0[0]);
 	T *work1=mymalloc(lwork,T);
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 	rwork=mymalloc(nsvd*5,R);
 	Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);
 	free(rwork);
@@ -398,7 +398,9 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	close(fd);
     }
 }
-
+/**
+   Compute SVD with caching.
+ */
 void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     char fnsvd[PATH_MAX+50];
     int do_cache=0;
@@ -492,7 +494,7 @@ void X(svd_pow)(X(mat) *A, R power, R thres){
 	    p[ix]*=Sdiag->p[ix];
 	}
     }
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
     X(mm)(&A,0,VT,U,"cc",1);
 #else
     X(mm)(&A,0,VT,U,"tt",1);

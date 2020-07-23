@@ -26,7 +26,7 @@
 #include "suitesparse.c"
 #define assert_sp(A) assert(!A || A->id==M_SPT)
 /**
-   Create a nx*ny X(sp) matrix with memory for nmax max
+   Create a nx*ny sparse matrix with memory for nmax max
    elements allocated.
 */
 X(sp)* X(spnew)(long nx, long ny, long nzmax){
@@ -61,7 +61,7 @@ static void X(spfree_content)(X(sp) *sp){
     }
 }
 /**
- * free a X(sp) matrix*/
+ * free a sparse matrix*/
 void X(spfree_do)(X(sp) *sp){
     if(sp){
 	assert(issp(sp));
@@ -105,7 +105,7 @@ void X(spmove)(X(sp) *A, X(sp) *res){
 }
 
 /**
-   copy a X(sp) matrix to another.
+   copy a sparse matrix to another.
 */
 X(sp) *X(spdup)(const X(sp) *A){
     if(!A) return NULL;
@@ -120,14 +120,14 @@ X(sp) *X(spdup)(const X(sp) *A){
 }
 
 /**
-   Create a new X(sp) matrix of the same size as A.
+   Create a new sparse matrix of the same size as A.
 */
 X(sp) *X(spnew2)(const X(sp) *A){
     assert_sp(A);
     return X(spnew)(A->nx, A->ny, A->p[A->ny]);
 }
 /**
-   Create a new X(sp) matrix and fill in uniform random
+   Create a new sparse matrix and fill in uniform random
    numbers with filling factor of 'fill'
 */
 X(sp)* X(spnewrandu)(int nx, int ny, const T mean, 
@@ -166,6 +166,9 @@ X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
     X(spsetnzmax)(A,count);
     return A;
 }
+/**
+   Cast a pointer to sparse array.
+ */
 X(sp)* X(sp_cast)(const void *A){
     if(!A) return 0;
     assert(issp(A));
@@ -173,7 +176,7 @@ X(sp)* X(sp_cast)(const void *A){
     if(!B->nx || !B->ny) return 0; else return B;
 }
 /**
-   resize a X(sp) matrix
+   resize a sparse matrix
 */
 void X(spsetnzmax)(X(sp) *sp, long nzmax){
     assert(issp(sp));
@@ -185,7 +188,7 @@ void X(spsetnzmax)(X(sp) *sp, long nzmax){
 }
 
 /**
- * Display a X(sp) array*/
+ * Display a sparse array*/
 void X(spdisp)(const X(sp) *sp){
     long ic,ir;
     long imax;
@@ -197,7 +200,7 @@ void X(spdisp)(const X(sp) *sp){
 	for(ic=0; ic<sp->ny; ic++){
 	    imax=-1;
 	    for(ir=sp->p[ic];ir<sp->p[ic+1];ir++){ 
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 		printf("(%ld,%ld)=(%g,%g)\n", 
 		       (long)sp->i[ir], (long)ic, creal(sp->x[ir]),cimag(sp->x[ir]));
 #else		
@@ -213,7 +216,7 @@ void X(spdisp)(const X(sp) *sp){
     }
 }
 /**
- * Check a X(sp) array for wrong orders. Return 1 if is lower triangle, 2 if
+ * Check a sparse array for wrong orders. Return 1 if is lower triangle, 2 if
  * upper triangle, and 3 if diagonal.*/
 int X(spcheck)(const X(sp) *sp){
     assert(issp(sp));
@@ -247,7 +250,7 @@ int X(spcheck)(const X(sp) *sp){
     return (not_lower?0:1) | (not_upper?0:2);
 }
 /**
- * inplace scale X(sp) matrix elements.*/
+ * inplace scale sparse matrix elements.*/
 void X(spscale)(X(sp) *A, const T beta){
     if(A){
 	assert_sp(A);
@@ -260,7 +263,7 @@ void X(spscale)(X(sp) *A, const T beta){
     }
 }
 /**
- * inplace scale X(sp) matrix elements.*/
+ * inplace scale sparse matrix elements.*/
 void X(spscalex)(X(sp) *A, const X(mat) *xs){
     if(A){
 	assert_sp(A);
@@ -277,7 +280,7 @@ void X(spscalex)(X(sp) *A, const X(mat) *xs){
     }
 }
 /**
- * inplace scale X(sp) matrix elements.*/
+ * inplace scale sparse matrix elements.*/
 void X(spscaley)(X(sp) *A, const X(mat) *ys){
     if(A){
 	assert_sp(A);
@@ -367,11 +370,11 @@ X(mat) *X(spdiag)(const X(sp) *A){
     return out;
 }
 /**
-   Multiply a X(sp) matrix inplace with a diagonal weighting matrix whose
+   Multiply a sparse matrix inplace with a diagonal weighting matrix whose
    diagonal values are stored in w.
    W_ii=w_i; W_ij=0 if i!=j
    A=A*W*alpha; 
-   W is a diagonal X(sp) matrix. diag(W) is w
+   W is a diagonal sparse matrix. diag(W) is w
    multiply w[i] to all numbers in column[i] 
 */
 void X(spmuldiag)(X(sp) *restrict A, const T* w, T alpha){
@@ -484,6 +487,9 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
 	error("trans=%c is invalid\n", trans);
     }
 }
+/**
+   Convert dense matrix A to sparse matrix with threshold.
+ */
 X(sp) *X(2sp)(X(mat)*A, R thres){
     if(!A) return 0;
     assert(ismat(A));
@@ -599,7 +605,7 @@ X(sp) *X(sptrans)(const X(sp) *A){
    Take conjugation elementwise.
  */
 void X(spconj)(X(sp) *A){
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
     const long nzmax=A->p[A->ny];
     for(long i=0; i<nzmax; i++){
 	A->x[i]=conj(A->x[i]);
@@ -608,7 +614,9 @@ void X(spconj)(X(sp) *A){
     (void)A;    
 #endif
 }
-
+/**
+   Expand sparse matrix cell to dense matrix cell.
+ */
 void X(spcellfull)(X(cell)**out0, const X(spcell)*A, const char trans, const T alpha){
     if(!A) return;
     if(!*out0){
@@ -765,7 +773,7 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
  * Sum elements of sparse array along dimension dim*/
 X(mat) *X(spsum)(const X(sp) *A, int dim){
     if(!A) return 0;
-    /*Sum X(sp) matrix along col or row to form a vector */
+    /*Sum sparse matrix along col or row to form a vector */
     X(mat) *v=NULL;
     assert_sp(A);
     T *p;
@@ -896,7 +904,7 @@ void X(spcellsort)(X(spcell) *A){
     }
 }
 /**
-   symmetricize a X(sp) matrix and drop values below a
+   symmetricize a sparse matrix and drop values below a
    threshold. 
 */
 void X(spsym)(X(sp) **A){
@@ -908,7 +916,7 @@ void X(spsym)(X(sp) **A){
     X(spsort)(*A);/*This is important to make chol work. */
 }
 /**
-   symmetricize a X(sp) cell and drop values below a
+   symmetricize a sparse cell and drop values below a
    threshold. 
 */
 void X(spcellsym)(X(spcell) **A){
@@ -921,9 +929,9 @@ void X(spcellsym)(X(spcell) **A){
 }
 
 /**
-   Create a X(sp) convolution operator C with
+   Create a sparse convolution operator C with
    C(i,j)=A(i-j);
-   A must be very X(sp) with only a view non-zero value otherwise C will be too full.
+   A must be very sparse with only a view non-zero value otherwise C will be too full.
 */
 X(sp) *X(spconvolvop)(X(mat) *A){
     /*First collect statistics on A. */
@@ -983,7 +991,7 @@ X(sp) *X(spconvolvop)(X(mat) *A){
     return out;
 }
 /**
-   Permute rows of X(sp) matrix A;
+   Permute rows of sparse matrix A;
    let pi be the inverse order of p. pi=invperm(p);
    if reverse is 0
    B(:,i)=A(p,i); or B(pi,i)=A(:,i)
@@ -1015,7 +1023,7 @@ static X(sp) *X(sppermcol)(const X(sp) *A, int reverse, long *p){
     return B;
 }
 /**
-   Permute rows and columns of X(sp) matrix A;
+   Permute rows and columns of sparse matrix A;
 */
 X(sp) *X(spperm)(X(sp) *A, int reverse, long *pcol, long *prow){
     if(!A) return 0;
@@ -1038,10 +1046,9 @@ X(sp) *X(spperm)(X(sp) *A, int reverse, long *pcol, long *prow){
 }
 
 /**
-   Invert a SPD X(sp) matrix that is block diagonal with
+   Invert a SPD sparse matrix that is block diagonal with
    block sizes of bs.
 */
-//#ifndef USE_SINGLE
 X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
     if(!A) return 0;
     assert_sp(A);
@@ -1080,7 +1087,6 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
     X(free)(bk);
     return B;
 }
-//#endif
 /**
    Extrat the diagonal blocks of size bs into cell arrays.
 */

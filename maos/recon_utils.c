@@ -32,7 +32,6 @@
 #define toc_tm(A) toc(A);tic
 #endif
 /**
-   \file recon_utils.c
    Reusable utilities for wavefront reconstruction and DM fitting.
 */
 
@@ -428,6 +427,7 @@ void TomoRt(dcell **gout, const void *A,
     TTFR(*gout, recon->TTF, recon->PTTF);
     Tomo_nea(&data, recon->nthread, 0);
 }
+
 /**
    Apply tomography left hand side operator without using assembled matrix. Fast
    and saves memory. Only useful in CG. Accumulates to xout;
@@ -445,7 +445,6 @@ void TomoRt(dcell **gout, const void *A,
    cxx:  3.2  2.5  3.5  2.7
 */
 
-#define test_TomoL 0
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const real alpha){
     TIC_tm;tic_tm;

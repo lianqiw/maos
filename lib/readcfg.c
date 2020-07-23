@@ -576,8 +576,10 @@ char *readcfg_str(const char *format,...){
     }
     return data;
 }
+/**
+   Obtain a string array from the key.
+ */
 int readcfg_strarr(char ***res, const char *format,...){
-   /*Read str array. */
     format2key;
     *res=NULL;/*initialize */
     const STORE_T *store=getrecord(key, 1);
@@ -661,9 +663,7 @@ int readcfg_dblarr(real **ret, const char *format,...){
     format2key;
     return readstr_numarr((void**)ret, 0,NULL,NULL,M_REAL, getrecord(key, 1)->data);
 }
-/**
-   Read as a dmat. It can be a file name or an array.
- */
+
 static dmat *readstr_dmat_do(int n, const char *str){
     if(!str){
 	return 0;
@@ -685,6 +685,9 @@ static dmat *readstr_dmat_do(int n, const char *str){
     free(fn);
     return res;
 }
+/**
+   Read as a dmat. It can be a file name or an array.
+ */
 dmat *readstr_dmat(const char *str){
     return readstr_dmat_do(0, str);
 }

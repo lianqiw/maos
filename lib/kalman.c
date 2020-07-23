@@ -357,9 +357,7 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, real tmax_fit, int vibid){
 	return coeff;
     }
 }
-/**
-   Compute the reccati equation.
- */
+
 /*Notice that P may not be symmetric due to round off errors.*/
 #define RECCATI_CALC				\
     dcp(&P, P2);				\
@@ -374,7 +372,9 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, real tmax_fit, int vibid){
     dmm(&tmp, 0, CPCt, CPAt, "nn", 1);		\
     dmm(&P2, 1, APCt, tmp, "nn", -1);		\
     dadd(&P2, 1, Qn, 1)
-
+/**
+   Compute the reccati equation.
+ */
 dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn){
     real diff=1, diff2=1, lastdiff=INFINITY;
     dmat *P2=dnew(A->nx, A->ny); daddI(P2, Qn->p[0]);//Initialize P to identity
@@ -401,6 +401,9 @@ dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const d
     return Mout;
 }
 #if 1
+/**
+   Compute the reccati equation.
+ */
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs, const dcell *Rns){
     int nk=Cs->nx;
     dcell *Mout=dcellnew(nk, 1);
@@ -677,6 +680,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     dcellfree(Raddchol);
     return res;
 }
+/**free the struct*/
 void kalman_free(kalman_t *kalman){
     if(!kalman) return;
     dfree(kalman->Ad);
@@ -695,7 +699,7 @@ void kalman_free(kalman_t *kalman){
     dfree(kalman->xhat3);
     free(kalman);
 }
-/*Initialize kalman filter state*/
+/**Initialize kalman filter state*/
 void kalman_init(kalman_t *kalman){
     if(!kalman->xhat){
 	kalman->xhat=dnew(kalman->Ad->nx, 1);
@@ -707,7 +711,9 @@ void kalman_init(kalman_t *kalman){
 	dzero(kalman->xhat3);
     }
 }
-/*Update state vector when there is a measurement. It modifies meas.
+/**
+   Update state vector when there is a measurement. It modifies meas.
+
     xhat3=xhat+M*(meas-Cd*xhat)
     xhat2=AdM*xhat3;
     xhat =Ad*xhat3;
@@ -721,7 +727,11 @@ void kalman_update(kalman_t *kalman, dmat *meas, int ik){
     dmm(&kalman->xhat, 0, kalman->Ad, kalman->xhat3, "nn", 1);/*predicted state*/
     dmm(&kalman->xhat2,0, kalman->AdM, kalman->xhat3, "nn", 1);/*correction for this time step*/
 }
-/*Output correction: out=out*alpha+Fdm*(AdM*xhat2)*beta */
+/**
+   Output correction
+
+   out=out*alpha+Fdm*(AdM*xhat2)*beta 
+*/
 void kalman_output(kalman_t *kalman, dmat **out, real alpha, real beta){
     dcp(&kalman->xhat3, kalman->xhat2);
     dmm(&kalman->xhat2, 0, kalman->AdM, kalman->xhat3, "nn", 1);

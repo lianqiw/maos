@@ -56,7 +56,7 @@ static inline real phase(comp val){
 
    Tested OK: 2010-06-11
 */
-/*Determine the phase difference between Hol and -180 when abs(Hol)==1*/
+/**Determine the phase difference between Hol and -180 when abs(Hol)==1*/
 static real phase_at_gain(real *fcross, /**<[out] Cross over frequency*/
 			    const dmat *nu, /**<[in] frequency grid*/
 			    const cmat *Hol, /**<[in] open loop transfer function defined on nu*/
@@ -97,7 +97,7 @@ static real phase_at_gain(real *fcross, /**<[out] Cross over frequency*/
     return phi+M_PI;/**/
 }
 
-/*Determine the ratio in dB between Hol and 1 when phase of Hol is -180*/
+/**Determine the ratio in dB between Hol and 1 when phase of Hol is -180*/
 static real gain_at_phase(real *fcross, /**<[out] Cross over frequency*/
 			    const dmat *nu, /**<[in] frequency grid*/
 			    const cmat *Hol, /**<[in] open loop transfer function defined on nu*/
@@ -674,6 +674,9 @@ dmat* servo_test(dmat *input, real dt, int dtrat, dmat *sigma2n, dmat *gain){
     servo_free(st2t);
     return mres;
 }
+/**
+   reset the data to 0.
+*/
 void servo_reset(SERVO_T *st){
     dcellzero(st->mlead);
     dcellzero(st->merrlast);

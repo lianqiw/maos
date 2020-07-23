@@ -126,14 +126,17 @@ fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled
 MEXDIR_AUTO=
-if test -n "`which mex 2>/dev/null`" ;then
-    MEX="$(which mex)"
+unalias matlab
+if test -n "`which matlab 2>/dev/null`" ;then
+    MEX="$(which matlab)"
     if test -L "$MEX" ;then
 	MEX="$(readlink "$MEX")"
     fi
     MEXDIR_AUTO="$(dirname "$MEX")"
+    echo MEXDIR_AUTO=$MEXDIR_AUTO
+    unset MEX
 else
-    for i in /Applications/MATLAB*.app ~/Applications/MATLAB*.app /opt/MATLAB/* /usr/local/share/MATLAB/* ;do
+    for i in /Applications/MATLAB*.app $HOME/Applications/MATLAB*.app /opt/MATLAB/* /usr/local/share/MATLAB/* ;do
 	if test -x "$i/bin/mex" ;then
        	    MEXDIR_AUTO="${i}/bin"
 	    echo "Matlab found at ${i}"
@@ -146,7 +149,7 @@ fi
 AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
 AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]),[use_gcov="$enableval"],[use_gcov="no"])
-AC_ARG_ENABLE(double, AS_HELP_STRING([--disable-double],[Disable double precision]), [use_double="$enableval"],[use_double="default"])
+AC_ARG_ENABLE(single, AS_HELP_STRING([--enable-single],[Use single precision for CPU and cuda.]), [use_single="$enableval"],[use_single="no"])
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
 AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets]), [use_websockets="$enableval"], [use_websockets="yes"])
@@ -168,25 +171,19 @@ if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
 else
     with_cuda=yes
 fi
-if test "$use_double" = "default" ;then
-    if test "$with_cuda" != "no" ;then
-	use_double=yes #no
-    else
-	use_double=yes
-    fi
-fi
-AM_CONDITIONAL(USE_DOUBLE, [test "$use_double" = "yes" ])
-if test "$use_double" = "yes" ;then
-    AC_DEFINE_UNQUOTED(USE_DOUBLE, [1], ["Use double precision floating point numbers"])
-else
+if test "$use_single" = "yes" ;then
     if test "$cuda_double" = "yes" ;then
-	AC_MSG_ERROR(["cuda_double is only possible without --disable-double"])
+        AC_MSG_ERROR(["cuda_double is only possible without --enable-single"])
     fi
     if test "$with_matlab" != "no" ;then
-	AC_MSG_WARN(["MATLAB linking is only possible without --disable-double. Disabled."])
+	AC_MSG_WARN(["MATLAB linking is only possible without --enable-single. Disabled mex."])
 	with_matlab=no
     fi
+    use_single=1
+else
+    use_single=0
 fi
+AC_DEFINE_UNQUOTED(CPU_SINGLE, $use_single, "Use single precision mode")
 
 if test x$use_gcov = "xyes" ;then
     OPTSprof+="  -fprofile-arcs -ftest-coverage --coverage"
@@ -255,7 +252,7 @@ case "$CN" in
 		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
 	    if test "$major" -gt 4 -o "$minor" -ge 2 ;then
-		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
+	        OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
 	    fi
 	    #GCC introduced openmp task in 4.4
 	    if test $major -le 4 -a $minor -le 4 ;then
@@ -273,6 +270,15 @@ case "$CN" in
     *)
 	;;	
 esac
+if test "$use_release" != "yes" ;then
+    case $CFLAGS in
+        *march*)
+            ;;
+        *)
+            CFLAGS+=" -march=native"
+            ;;
+    esac
+fi
 AC_DEFINE_UNQUOTED(COMPILER, ["$CN ($CC_VERSION)"], ["Compiler"])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
@@ -488,7 +494,7 @@ compile(){
     rm -rf ${TMP_DIR}/$name
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
-    echo "Compiling $name. Check $fnlog for details"
+    echo "Compiling $name with CFLAGS=$CFLAGS. Check $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
 	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} >> $fnlog 2>&1|| \
@@ -609,7 +615,7 @@ if test "$has_z" = "no" ;then
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
-#Check for FFTW interface in MKL. Note: MKL does not support fftw_plan_r2r_1d
+#Check for FFTW interface in Lapack (MKL). Note: MKL does not support fftw_plan_r2r_1d as of 2020.
 AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
 if test "$builtin_fftw" = "yes";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
@@ -622,8 +628,8 @@ else
 	if test -n "$OPENMP_CFLAGS" ;then
             FLAGS+=" --enable-openmp"
 	fi
-	compile FFTW fftw.tar.bz2 $FLAGS
-	#compile FFTW fftw.tar.bz2 --enable-float 
+	compile FFTW fftw.tar.bz2 $FLAGS --enable-sse2 --enable-avx2 --enable-avx 
+	compile FFTW fftw.tar.bz2 $FLAGS --enable-sse2 --enable-avx2 --enable-avx --enable-float 
 	unset ac_cv_lib_fftw3_fftw_execute
 	AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
     fi
@@ -749,6 +755,7 @@ if test "$with_matlab" != "no" ;then
     else
 	AC_MSG_ERROR([mex not found at $MEXDIR. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-matlab to disable])
     fi
+    echo MEXDIR=$MEXDIR
     MEXEXT="$($MEXDIR/mexext)"
     if test -z "$MEXEXT" ;then
 	AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --without-matlab to disable mex.])
@@ -1022,16 +1029,16 @@ echo Compiling options:
 echo 
 
 echo "OpenMP:          $has_openmp"
-echo "Double:          $use_double"
+echo "Single:          $use_single"
+echo "CUDA:            $cudaver (double: $cuda_double)"
 echo "Drawdaemon:      $has_cairo"
 echo "Monitor:         $((gtk_ver>0)) (libnotify: $has_notify)"
 echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       $use_websockets"
-echo "CUDA:            $cudaver (double: $cuda_double)"
 echo "MATLAB MEX:      $with_matlab"
 
-echo "Doxygen:         $DX_FLAG_doc (make doxygen-doc)"
+echo "Doxygen:         $DX_FLAG_doc (make doc)"
 echo
 
 echo "*************************************************************************"

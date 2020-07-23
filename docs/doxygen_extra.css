@@ -13,11 +13,11 @@ h2:before
 counter-increment:subsection;
 content:counter(section) "." counter(subsection) " ";
 }
-h3:before 
+/*h3:before 
 {
 counter-increment:subsubsection;
 content:counter(section) "." counter(subsection) "." counter(subsubsection) " ";
-}
+}*/
 
 h1.groupheader {
 	font-size: 120%;

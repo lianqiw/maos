@@ -15,6 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file cure.h
+*/
 #include "../math/mathdef.h"
 void cure1d(dmat **phix, const dmat*gx, const dmat *gy, real dx);
 void cure(dmat **phix, const dmat*gx, const dmat *gy, real dx);

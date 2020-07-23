@@ -25,8 +25,7 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-/**
-   \file maos/sim_utils.c
+/*
    Contains a few support functions for simulation.
 */
 /*static real opdzlim[2]={-3e-5,3e-5}; */

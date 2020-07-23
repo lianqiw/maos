@@ -147,7 +147,7 @@ void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
     }
 }
 
-/*Calibrate the slope of hysteresis curve.*/
+/**Calibrate the slope of hysteresis curve.*/
 void hyst_calib(HYST_T *hyst, int ih){
     int N=1000;
     dmat *cmd=dnew(N,1);

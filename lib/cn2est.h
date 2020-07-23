@@ -17,7 +17,9 @@
 */
 #ifndef AOS_MAOS_CN2EST_H
 #define AOS_MAOS_CN2EST_H
-
+/**
+   \file cn2est.h
+*/
 /**
    contains the data related to Cn2 Estimation for each WFS pair.
 */

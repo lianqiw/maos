@@ -180,17 +180,18 @@ static inline fcomplex cpowf(fcomplex x, fcomplex z){
 #endif //defined(__FreeBSD__) || defined(__NetBSD__)
 #endif //#if defined(__cplusplus) 
 
-#ifdef USE_DOUBLE
-typedef double real;
-typedef dcomplex comp;
-#define M_REAL M_DBL
-#define M_COMP M_CMP
-#else
+#if CPU_SINGLE//run CPU code with single precision.
 typedef float real;
 typedef fcomplex comp;
 #define M_REAL M_FLT
 #define M_COMP M_ZMP
+#else //run CPU code with double
+typedef double real;
+typedef dcomplex comp;
+#define M_REAL M_DBL
+#define M_COMP M_CMP
 #endif
+
 #define M_MAP     0x010000 | M_REAL /*map_t, compatible with M_REAL*/
 #define M_RECTMAP 0x020000 | M_REAL /*map_t, compatible with M_REAL*/
 #define M_LOC     0x030000 | M_REAL /*loc_t, with real data*/

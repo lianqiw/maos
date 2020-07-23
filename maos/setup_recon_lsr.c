@@ -21,7 +21,6 @@
 #include "ahst.h"
 
 
-
 /**
    Setup the least square reconstruct by directly inverting GA matrix. 
    The reconstructor is simply the pseudo inverse of GA matrix:

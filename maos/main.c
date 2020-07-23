@@ -15,7 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include "common.h"
 #include "sim_utils.h"
 #include "maos.h"
@@ -291,10 +290,10 @@ static void* maos_listener(void *psock){
 void maos_version(void){
     info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
     info2("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
-#if USE_DOUBLE
-    info2(" double");
+#if CPU_SINGLE 
+    info2(" CPU(single)");
 #else
-    info2(" single");
+    info2(" CPU(double)");
 #endif
 #if USE_CUDA
 #if CUDA_DOUBLE

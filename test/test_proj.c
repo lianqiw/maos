@@ -59,9 +59,9 @@ static void test_grid_proj(){
     
     dmat *amp=dread("aper_amp.bin");
     dmat *phi2=dnew(loc2->nloc,1);
-    proj_rect_grid(mapin,M_PI*0.75,M_PI*0.5,
+    proj_rect_grid(phi2->p,mapin,M_PI*0.75,M_PI*0.5,
 		   loc2,-r_exitpupil/r_pupil,r_exitpupil/r_pupil,
-		   amp->p,phi2->p,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
+		   amp->p,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
     /*drawopdamp("test_proj",loc2,phi2,amp,"phi"); */
     
     writebin(phi2,"phi");

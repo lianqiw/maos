@@ -45,7 +45,7 @@ typedef struct SERVO_T{
 dcell* servo_optim(const dmat *psdin, real dt, long dtrat, long al, real pmargin, 
 		   const dmat* sigma2n, int servo_type);
 dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, long al, real gain, real sigma2n);
-cmat *servo_Hol(const dmat *nu, real dt, real dtrat, long al, const dmat *gain);
+//cmat *servo_Hol(const dmat *nu, real dt, real dtrat, long al, const dmat *gain);
 real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, long al, const dmat *gain, int servo_type);
 void servo_update(SERVO_T *st, const dmat *ep);
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, real dt, const dmat *ep);
@@ -53,7 +53,7 @@ int servo_filter(SERVO_T *st, const dcell *merr);
 dmat* servo_test(dmat *mideal, real dt, int dtrat, dmat* sigma2n, dmat *gain);
 void servo_reset(SERVO_T *st);
 void servo_free(SERVO_T *st);
-cmat *servo_typeII_Hol(const dmat *gain, real fs, real lgsdt);
+//cmat *servo_typeII_Hol(const dmat *gain, real fs, real lgsdt);
 /**
    struct for state space modeling of a second order harnomic oscillator with
    resonance frequency of f0 and damping ratio of zeta.

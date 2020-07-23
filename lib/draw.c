@@ -154,7 +154,7 @@ static void list_destroy(list_t **head){
 	free(p);
     }
 }
-/*Add fd to list of drawing socks*/
+/**Add fd to list of drawing socks*/
 int draw_add(int fd){
     if(fd==-1) return -1;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
@@ -561,10 +561,10 @@ static void* imagesc_do(imagesc_t *data){
     free(data);
     return NULL;
 }
-/*
-  Use a separate thread to avoid slowing down the simulation. Skip if busy.
+/**
+   Draws an image. 
 
-  /todo: consider implement an actor pattern for this.
+   It uses a separate thread to avoid slowing down the simulation. Skip if socket is busy.
  */
 int imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/

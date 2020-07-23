@@ -15,13 +15,14 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#define USE_SINGLE
-#define USE_COMPLEX
+#define COMP_SINGLE
+#define COMP_COMPLEX
 #include "mat.c"
 #include "matmath.c"
 
 #include "blas.c"
 #include "matbin.c"
+#include "matmmap.c"
 #include "matcomp.c"
 #include "fft.c"
 

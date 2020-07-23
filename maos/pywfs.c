@@ -16,10 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
-   \file pywfs.c
-   Routines related to pyramid WFS
-*/
 #include "common.h"
 #include "setup_powfs.h"
 #include "pywfs.h"
@@ -937,7 +933,9 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const char *distortion, cons
     }
     return gg;
 }
-
+/**
+   frees PYWFS_T
+*/
 void pywfs_free(PYWFS_T *pywfs){
     if(!pywfs) return;
     cellfree(pywfs->amp);

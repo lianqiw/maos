@@ -16,10 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
-   \file setup_surf.c
-   Setup additional NCPA surface.
-*/
 #include "common.h"
 #include "setup_surf.h"
 #include "recon_utils.h"
@@ -523,7 +519,9 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 	}
     }
 }
-
+/**
+   Setup common and non common OPDs from surf and tsurf
+ */
 void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     if(parms->load.ncpa){
 	if(parms->nsurf || parms->ntsurf){

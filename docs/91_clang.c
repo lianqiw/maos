@@ -16,100 +16,133 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page91_clang C Fundementals
+   \page page91_clang Fundementals
 
    The user is required to have a good understanding of the C fundementals, like
    the pointer, to study and improve the code. Here we list a few to remind the
    user. 
 
-   \section sect-array Arrays
+   \section sect-array Memory Access
    
    If you declare an array: <code>double a[1024];</code> the symbol actually
    contains the address of a 1024x8 byte memory region that is automatically
    allocated in the stack (malloc, calloc allocations memory in the
    heap). Suppost the address of the memory region is 0xFF00. Assignment
-   <code>a[0]=1;</code> puts 1 in memory started at 0xFF00 <code>a[1]=1;</code>
+   <code>a[0]=1;</code> puts 1 in memory started at 0xFF00. And <code>a[1]=1;</code>
    puts 1 in memory started at 0xFF08.
 
    Stack is the memory region allocated dynamically when calling a function. All
-   variables reside in stack are automatically deleted when the function
-   returns. 
+   variables reside in stack automatically disappear when the function returns.
    
-   Heap is the memory reservoir. The functions malloc, calloc, realloc reserves
-   memory in the heap while free removes the reservation. 
+   Heap is the memory reservoir that persists during the life time of the
+   executable. The functions \c malloc, \c calloc, \c realloc reserves memory in
+   the heap while \c free removes the reservation.
 
-   \section sect-pointer Pointers 
+   \subsection sect-pointer Pointers 
 
-   A pointer is a variable that stores the address of a memory region.
-   <code>void *p;</code><p> is a basic pointer that just stores the address and can
-   not do any thing about the memory it points to. Its value can be assigned to
-   any other non const vectr or from any vector (1d or 2d).
+   A pointer is a variable that stores the address of a memory region. For
+   example, <code>void *p;</code> is a basic pointer that just stores the
+   address and can not do any thing about the memory it points to. Its value can
+   be assigned to any other non const vector or from any vector (1d or 2d).
 
    However, a normal pointer like <code>double *p;</code> also contains
    information about the memory it points to. More specifically, the compiler
    know the length of each element so that it can compute the address offset of
-   the elements, just like arrays. 
+   the elements, just like arrays. For example: 
 
-   For example: <code>double *p;</code> if p contains value of 0xFF00.<p>
-   <code>p[0]=1;</code>will store a double 1 into memory region at 0xFF00<p>
-   <code>p[1]=1;</code>will store a double 1 into memory region at 0xFF08
-   because a double requires 8 bytes.<p> <code>p=p+1;</code> p will now contain
-   0xFF08, i.e., points to the next element, instead of 0xFF01 <p>
-   <code>p[0]=1;</code> is strictly equivalent to <code>*p=1;</code> *p means
-   visit the memory pointed by p instead of p itself.  <code>p[1]=1;</code> is
-   strictly equivalent to <code>*(p+1)=1;</code><p>
-
+       double *p; //assume p=0xFF00.
+       p[0]=1;    //stores 1 into memory region at 0xFF00
+       p[1]=1;    //stores 1 into memory region at 0xFF08 because a double requires 8 bytes.
+       p=p+1;     //now p=0xFF08, i.e., points to the next element, instead of 0xFF01 
+       p[i]=1;    //is strictly equivalent to <code>*(p+i)=1;</code> 
    
-   \subsection sect-1d-pointer 1D Pointers
+   \subsection sect-1d-pointer Array Pointers
 
-   The simplist usage of pointer is to create and index an 1-D array:
-   <code>double *p;</code>.  
+   A pointer can be used to create and index an 1-dimensional (1-d) array in the heap:
 
-   <code>p=mycalloc(1024,double);</code> Allocate a memory block of
-   1024x8 byte and store its address in p.<p> <code>p[0]=1;</code> will assign 1 to
-   the first number in the array<p>
-
-   This is equivalent to using the arrays.
-
-   <code>double a[1024];</code> Declare an 1-D array.
-
-   <code>a[0]=1;</code > will assign 1 to the first number in the array.  The
-   symbol a is like a constant pointer. We can assign it's value to a constant
-   pointer: 
-
-   <code>double *const p=a;</code><p> <code>p[0]=1;</code><p>
-
-   \subsection sect-const Const pointers vs. pointers point to const memory
+       double *p; //decleares a double array pointer.
+       p=calloc(1024,sizeof(double)); //Allocate a memory block of 1024x8 byte and store its address in p.
+       p[0]=1;    //will assign 1 to the first number in the array.
+       
+   \subsection sect-const Constness
 
    Beware about a const pointer and pointer that points to constant memory
-   regions: 
+   regions:
 
-   <code>const double *p;</code>p is a pointer that points to a memory
-   region that can not be changed. Thus <code>p[0]=1;</code> is illegal.
+       const double *p2;  //p2 is a pointer that points to a memory region that can not be changed. 
+       p2=p;              //ok
+       p2[0]=1;           //illegal.
+       double *const p3=p;//p2 is a constant pointer that can not have its value changed. 
+       p3=p;              //illegal
+       p3[0]=1;           //ok
 
-   <code>double * const p;</code>p is a constant pointer that can not have its
-   value changed. Thus <code>p=a</code> is illegal, unless you assign at
-   declaration: <code>double *const p=a</code>. However, it is legal to modify
-   the values in the memory p points to: <code>p[0]=1;</code>.
+   \subsection sect-2d-pointer Two Dimension Pointers 
 
-   \subsection sect-2d-pointer 2D Pointers 
+   A two-dimensional (2-d) pointer is like an array pointer. It stores the
+   address of a memory region. However, unlike the array pointer, the compiler
+   knows the length of the first dimension so that is can compute the memory location
+   given 2-d index like \c a[2][3]; 
 
-   A 2D pointer is like a 1D pointer. It stores the address of a memory
-   region. However, unlike the 1D pointer, the compiler knows some additional
-   infos about the 2D pointer. The compiler knows the length of the first
-   dimension so that is can compute the memory location given 2D index like
-   a[2][3]; <code>double (*p)[2]=calloc(3*2,sizeof(double))</code> can be used
-   in the same way as <code>double a[3][2]</code>. The last index changes
-   fastest.
+       double (*p)[3]=calloc(3*2,sizeof(double)); //can be used in the same way as double a[2][3];
+
+   Notice that in 2-d indexing \c a[2][3], the last index changes the fastest.   
    
-   The pointer p in our dmat (or cmat) struct points to the allocated memory. It
-   can be cast to a two-d vector to facilitize visiting of the elements. The
-   cast is conveniently done by PDMAT(a,pa) for dmat a, which simply declares a
-   2-d pointer and assign a->p to it: 
-   
-   <code>double (pa*)[2]=(void*)a->p</code>. a->p is first cast to void *
-   because it is a double * and can not be assigned to double (*)[2]
-   directly. The array elements (ix,jy) can be accessed by pa[iy][ix]. Notice
-   that ix changes fastest.
+   \section sect-maos-data MAOS Data Types
+
+   \subsection sect-maos-math Fundamental Math Types
+
+   MAOS defines and uses a few structs to manage memory for basic math
+   types. Those types are defined in the \c math folder.
+
+   For example, #dmat is used for 1-d or 2-d double array, and #cmat is
+   used for complex array. There is a predefined macro #P() to help indexing the
+   arrays:
+
+       dmat *a=dnew(10,4); //allocates memory like double a[4][10]
+       P(a,8,3)=1.;        //visits memory like a[3][8]
+       P(a,39)=1.;         //visits memory as if it is 1d array.
+       dfree(a);           //frees the memory
+       cmat *a2=cnew(10,4);
+       P(a2,7,3)=1.+1*I;
+       cfree(a2);
+
+    Sparse arrays are managed using #dsp for double and #csp for complex.
+    
+        dsp *a3=dspnew(10,8,50); //10x8 array with maximum of 50 elements.
+
+    In addition, #loc_t is used to describe x and y coordinate of uniformly
+    spaced points. #map_t is derived from #dmat and used to describe 2-d array
+    of opd or amplitude data with origin and resolution information.
+
+    Numerical arrays can be stores in #cell arrays like in matlab. Different
+    types have their specific cell definitions. For example, #dcell is used to
+    contain #dmat pointers, and #ccell is used to contain #cmat pointers. All
+    cell arrays share the same struct layout and can be allocated using
+    cellnew() and deallocated using cellfree(). However, access elements is
+    better handled with specific cell types to avoid casting. The #cell array can
+    contain arbitrary points.
+
+        dcell *c=cellnew(4,4);//allocates a cell array.
+        P(c,2,1)=a;           //stores dmat pointer in a cell.
+        cellfree(c);
+
+        ccell *c2=cellnew(4,4);
+        P(c2,2,3)=a2;
+        
+        dspcell*c3=cellnew(5,5);
+        P(c3,3,2)=a3;
+        
+        cell *c4=cellnew(5,5);
+        P(c4,0,0)=a;
+        P(c4,1,0)=a2;
+        P(c4,2,0)=a3;
+
+
+    Functions for those fundamental math types are defined using macros that works similarly to the C++ template.
+
+    \subsection Specific Types
+
+    Specific calculation related types are often encapsulated in corresponding data types. Those types are defined in the \c lib folder. 
+
  */
 

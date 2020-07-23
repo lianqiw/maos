@@ -69,12 +69,18 @@ void mvm_client_send_m(dmat *mvmd, int ngpu){
     free(fmvm);
     info(" done\n");
 }
+/**
+   Initialize connection and send the matrix.
+ */
 void mvm_client_init(const char *host, int port, dmat *mvm, int ngpu){
     if((sock_mvm=connect_port(host, port, 1, 1))<0){
 	error("Unable to connect to mvm server\n");
     }
     mvm_client_send_m(mvm, ngpu);
 }
+/**
+   Reconstruction
+*/
 void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
     if(sock_mvm==-1){
 	error("please call mvm_client_init first\n");
@@ -143,7 +149,9 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
     free(dmall);
     free(gall);
 }
-
+/**
+   Close connection
+ */
 void mvm_client_close(void){
     close(sock_mvm);
 }

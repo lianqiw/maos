@@ -51,26 +51,34 @@
 #undef PSPCELL
 #undef M_SPT
 
-#ifdef USE_LONG
+#ifdef COMP_LONG
 #define X(A) l##A
 #else
 
-#ifndef USE_SINGLE
-  #ifndef USE_COMPLEX 
-   #define X(A) d##A
-  #else
-   #define X(A) c##A
-  #endif
+/*
+  when CPU_SINGLE is enabled, and COMP_SINGLE is not set, the function prefix
+  are d, but the actual data is float.
+ */
+#ifndef COMP_SINGLE
+#ifndef COMP_COMPLEX 
+#define X(A) d##A
+#else
+#define X(A) c##A
+#endif
+#define XR(A) d##A
+#define XC(A) c##A
 #else 
- #ifndef USE_COMPLEX 
-  #define X(A) s##A
- #else
-  #define X(A) z##A
- #endif
+#ifndef COMP_COMPLEX 
+#define X(A) s##A
+#else
+#define X(A) z##A
+#endif
+#define XR(A) s##A
+#define XC(A) z##A
 #endif
 #endif
 //Long Integers
-#ifdef USE_LONG
+#ifdef COMP_LONG
 #define T long
 #define TD long
 #define R long
@@ -79,21 +87,19 @@
 #define fabs(A) labs(A)
 #define M_T M_LONG
 #define PRINT(A) info(" %ld",A);
-#else //if USE_LONG
+#else //if COMP_LONG
 
 #define MAT_TYPE
 
 /*Double precision*/
-#if !defined(USE_SINGLE) && defined(USE_DOUBLE)
-#define XR(A) d##A
-#define XC(A) c##A
+#if !defined(COMP_SINGLE) && CPU_SINGLE == 0
 #define R double
 #define RD double
 #define RI dcomplex
 #define FFTW(A) fftw_##A
 
 /*Double Real*/
-#ifndef USE_COMPLEX 
+#ifndef COMP_COMPLEX 
 #define Y(A) D##A
 #define Z(A) d##A##_
 #define T double
@@ -123,16 +129,14 @@
 #define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
 #else 
-#define USE_SINGLE
+#define COMP_SINGLE
 /*Single Precision*/
-#define XR(A) s##A
-#define XC(A) z##A
 #define R float
 #define RD double
 #define RI fcomplex
 #define FFTW(A) fftwf_##A
 /*Float */
-#ifndef USE_COMPLEX
+#ifndef COMP_COMPLEX
 #define Y(A) S##A
 #define Z(A) s##A##_
 #define T float
@@ -159,10 +163,10 @@
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
 #define EXPI(A) COMPLEX(cosf(A),sinf(A))
-#endif/*#define USE_COMPLEX */
+#endif/*#define COMP_COMPLEX */
 #endif
 /*
-#ifndef USE_COMPLEX
+#ifndef COMP_COMPLEX
 #undef conj
 #define conj
 #undef real
@@ -182,7 +186,7 @@ static inline int issp(const void *id){
     return (magic==M_SPT);
 }
 
-#endif //if USE_LONG
+#endif //if COMP_LONG
 
 #define ABS2(A) creal((A)*conj(A))
 static inline int ismat(const void *id){

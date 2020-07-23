@@ -18,7 +18,7 @@
 
 #ifndef AOS_LIB_MATBIN_H
 #define AOS_LIB_MATBIN_H
-#ifndef AOS_LIB_MATH_H
+#ifndef AOS_LIB_TYPE
 #error "Don't include this file directly"
 #endif
 

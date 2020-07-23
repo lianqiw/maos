@@ -317,6 +317,15 @@
    mitigation method is to limit the value gap around such actautors whoes
    coupling is below .actthres2.
 
+   \subsection Sodium range variation
+
+   The sodium range variation is specified through the LLT configuration key \c
+   llt.fnrange in \ref llt_CL or \ref llt_SL. When supplied by user, use \c
+   powfs0_llt.fnrange. The file should contain additional change (wrt fnprof) of
+   sodium height in meters with dimension nx1 or nxnLGS where \c n can be less
+   than, equal to or greater than the length of simulation and nLGS is the
+   number of LGS in this powfs (6 for NFIRAOS).
+
 ===
 
    See \ref page40_results for further explanation and results interpretation.

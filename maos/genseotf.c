@@ -19,22 +19,16 @@
 /*
   2009-11-26: changed to rotate OTF instead of psf to comply with the approach
   in wfsints.  this gives slightly larger intensity because max value of OTF is
-  preserved which corresponds to the sum of psf.  */
-/**
-   \file genseotf.c contains routines to generate mean short exposure (tip/tilt
-   removed) pixel intensities. Mostly used for LGS pixel intensity for its
-   matched filter. Structure functions from kolmogorov spectrum is used. Not
-   able to take into account outerscale yet.
+  preserved which corresponds to the sum of psf.  
+  
 
-   \todo find ways to factor in outerscale effect (use von karman spectrum
-   instead of kolmogorov) */
+*/
 
 #include "common.h"
 #include "genseotf.h"
 
 /**
-   Master routine that generates short exposure OTF by calling genotf() in the
-   library with p/t/t removal set.
+   see genseotf
 */
 static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     /*create a grid representing the sub-aperture. */
@@ -95,7 +89,9 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }/*iwvl */
     locfree(loc);
 }
-
+/**
+   Generates short exposure OTF by calling genotf() with p/t/t removal set.
+*/
 void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     char fnprefix[200]; fnprefix[0]='\0';
     uint32_t key=0;
@@ -155,7 +151,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
 }
 /**
-   Creating short exposure OTF caused by turbulence within LLT uplink aperture
+   see genselotf
 */
 void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
@@ -189,13 +185,16 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 		   0, thres, wvl, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 		   npsfx,npsfy, 1, 1);
 	    if(ampsum2<1){//LLT amp is normalized so that sum(amp.^2) is the total throughput.
-		warning("Scale lotf by %g\n", ampsum2);
+		dbg("Scale lotf by %g\n", ampsum2);
 		cscale(P(lotf,iwvl,ilotf), ampsum2);
 	    }
 	}
     }/*iwvl */
     locfree(loc);
 }
+/**
+   Creating short exposure OTF caused by turbulence within LLT uplink aperture
+*/
 void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt){
 	return;

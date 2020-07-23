@@ -696,9 +696,9 @@ dspcell* act_float_interp(loccell *aloc,  /**<[in] Actuator grid array*/
    Create an interpreter that make inactive actuators equal avearage of active
    neighbors if exist or all other neighbors.
 */
-dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
-		   const dmat *actcplc,/**<[in] Actuator coupling coefficiency*/
-		   const real thres  /**<[in] Threshold of coupling to turn on interpolation*/
+static dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
+                          const dmat *actcplc,/**<[in] Actuator coupling coefficiency*/
+                          const real thres  /**<[in] Threshold of coupling to turn on interpolation*/
     ){
     TIC;tic;
 
@@ -806,6 +806,10 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
 
     return out;
 }
+/**
+   Create an interpreter that make inactive actuators equal avearage of active
+   neighbors if exist or all other neighbors.
+*/
 dspcell* act_extrap(loccell *aloc,     /**<[in] Actuator grid array*/
 		    const dcell *actcplc,/**<[in] Actuator coupling coefficiency*/
 		    const real thres /**<[in] Threshold of coupling to turn on interpolation*/

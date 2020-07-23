@@ -679,7 +679,6 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx, R offsety,
    Shift the image in A to center on physical
    center+[offsetx,offsety] using cog and fft.
 */
-//#ifndef USE_SINGLE
 void X(shift2center)(X(mat) *A, R offsetx, R offsety){
     R grad[2];
     R Amax=X(max)(A);
@@ -689,7 +688,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
 	XC(mat) *B=XC(new)(A->nx,A->ny);
 	//XC(fft2plan)(B,-1);
 	//XC(fft2plan)(B,1);
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 	XC(cp)(&B,A);
 #else
 	XC(cpd)(&B,A);
@@ -701,7 +700,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
 	XC(fft2)(B,1);
 	XC(fftshift)(B);
 	XC(scale)(B,scale);
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 	XC(cp)(&A,B);
 #else
 	XC(real2d)(&A,0,B,1);
@@ -711,7 +710,6 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
 	XC(free)(B);
     }
 }
-//#endif
 
 
 /**
@@ -943,7 +941,7 @@ X(mat)* X(linspace)(R min, R dx, long n){
     }
     return out;
 }
-#ifndef USE_COMPLEX
+#ifndef COMP_COMPLEX
 /**
    Check whether xin is linearly spaced
 */
@@ -1044,7 +1042,9 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, 
     }
     return ynew;
 }
-
+/**
+   Interpolation of 1d array
+ */
 X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T ydefault){
     int free_xy=0;
     X(mat)*ynew=NULL;
@@ -1091,8 +1091,8 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y
 }
 
 #endif
-#ifndef USE_COMPLEX
-/*blend B into center of A with width of overlap. The center
+#ifndef COMP_COMPLEX
+/**blend B into center of A with width of overlap. The center
   (size is B->nx-overlap, B->ny-overlap) of A is replaced by
   center of B . The overlapping area is blended*/
 void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap){
@@ -1381,7 +1381,7 @@ long X(fwhm)(X(mat) *A){
     }
     return fwhm;
 }
-#ifndef USE_COMPLEX
+#ifndef COMP_COMPLEX
 typedef struct{
     X(mat) *enc; /**<Output*/
     X(mat) *dvec;/**<Radius wanted*/

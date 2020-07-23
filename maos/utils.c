@@ -33,8 +33,7 @@
 #endif
 #include "setup_powfs.h"
 #include "genseotf.h"
-/**
-   \file maos/utils.c
+/*
    A few utility routines
 */
 
@@ -374,7 +373,9 @@ ARG_T * parse_args(int argc, const char *argv[]){
     }
     return arg;
 }
-
+/**
+   Creates header for saving PSFs.
+ */
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, int isim){
     char header[400];
     int nembed=aper->embed->nembed->p[iwvl];
@@ -396,7 +397,10 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, i
 	     sumamp2*nembed*nembed, parms->sim.dt*(isim-parms->evl.psfisim+1));
     return strdup(header);
 }
-void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *fieldstop, real wvl){
+/**
+   Apply field stop to OPD using FFT.
+ */
+void apply_fieldstop(dmat *opd, const dmat *amp, const lmat *embed, long nembed, const dmat *fieldstop, real wvl){
     cmat *wvf=cnew(nembed, nembed);
     //cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
     real kk=2*M_PI/wvl;
@@ -417,6 +421,9 @@ void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *field
     }
     cfree(wvf);
 }
+/**
+   Plot grid points, amplitude maps and NCPA.
+ */
 void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 		const APER_T *aper, const RECON_T *recon){
     if(!parms->plot.setup) return;
@@ -467,7 +474,9 @@ dmat *mkamp(loc_t *loc, map_t *ampground, real misregx, real misregy, real D, re
     }
     return amp;
 }
-
+/**
+   Test wfs linearity.
+ */
 void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
@@ -1120,7 +1129,9 @@ dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs){
     }
     return nea;
 }
-
+/**
+   Wait for dmreal to be available in event driven simulation.
+*/
 void wait_dmreal(SIM_T *simu, int isim){
     if(PARALLEL==2){
 	//if(simu->dmreal_isim!=-1){
@@ -1138,7 +1149,9 @@ void wait_dmreal(SIM_T *simu, int isim){
 	pthread_cond_signal(&simu->dmreal_condw);
     }
 }
-
+/**
+   Concatenate and plot subaperture images.
+ */
 void draw_ints(const dcell *ints, const loc_t *saloc, int iwfs){
     dmat *ints2=0;
     if(ints->nx==1){//T

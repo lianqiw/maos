@@ -15,7 +15,17 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file genseotf.h
 
+   Contains routines to generate mean short exposure (tip/tilt
+   removed) pixel intensities. Mostly used for LGS pixel intensity for its
+   matched filter. Structure functions from kolmogorov spectrum is used. Not
+   able to take into account outerscale yet.
+
+   \todo find ways to factor in outerscale effect (use von karman spectrum
+   instead of kolmogorov) 
+*/
 #ifndef AOS_GENSEOTF_H
 #define AOS_GENSEOTF_H
 #include "common.h"

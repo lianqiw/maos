@@ -17,12 +17,11 @@
 */
 #ifndef AOS_LIB_FFT_H
 #define AOS_LIB_FFT_H
-#ifndef AOS_LIB_MATH_H
+#ifndef AOS_LIB_TYPE
 #error "Don't include this file directly"
 #endif
 #include "type.h"
 /**
-   \file fft.h
    Routines to do FFT on X(mat) or dcell.
 */
 typedef struct fft_t fft_t;

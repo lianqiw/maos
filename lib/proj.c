@@ -38,22 +38,23 @@ static inline real cosangle(real a[3], real b[3]){
 	/sqrt((a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
 	      *(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]));
 }
-
-void proj_rect_grid(rmap_t *mapin, real thetax, real thetay,
-		    const loc_t *locout,const real ratiox, const real ratioy,
-		    const real *ampout, real* phiout, 
-		    real sc, real hs, real ht,
-		    real betax, real betay){
-    /*
-      input parameters:
-      mapin: M3 surface map, NOT OPD. 
-      thetax, thetay: tilt of surface map along x or y. one has to be pi/2
-      locout: Pupil plan opd grid.
-      ratio: scaling of pupil plan to exit pupil plane.
-      sc: scaling of opd. don't include projection
-      hs: distance from exit pupil to m3.
-      betax,betay: beam angle from exit pupil to focal plane.
-     */
+/**
+   Ray tracing for tilted surface like M3
+ */
+void proj_rect_grid(real* phiout,  /**<[out] output OPD*/
+                    const rmap_t *mapin, /**<mapin: M3 surface map, NOT OPD. */
+                    real thetax,   /**<tilt of surface along x, 0 or pi/2*/
+                    real thetay,   /**<tilt of surface along y, pi/2 or 0*/
+		    const loc_t *locout, /**<output grid*/
+                    const real ratiox,   /**<pupil x scaling.*/
+                    const real ratioy,   /**<pupil y scaling.*/
+		    const real *ampout,  /**<amplitude of output grid*/
+		    real sc,       /**<scaling of OPD*/
+                    real hs,       /**<distance from exit pupil to object image*/
+                    real ht,       /**<distance from exit pupil to M3 surface*/
+		    real betax,    /**<real beam angle*/
+                    real betay     /**<real beam angle*/
+    ){
     const int wrapx1 = mapin->nx;
     const int wrapy1 = mapin->ny;
     const int wrapx = wrapx1-1;
@@ -113,7 +114,7 @@ void proj_rect_grid(rmap_t *mapin, real thetax, real thetay,
 /**
    Wraps proj_rect_grid for M3.
 */
-void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locout, real thetax, real thetay, real hs){
+void m3proj(const rmap_t *tsurf, dmat *opd, const loc_t *locout, real thetax, real thetay, real hs){
     const real alx=tsurf->txdeg/180*M_PI;
     const real aly=tsurf->tydeg/180*M_PI;
     const real ftel=tsurf->ftel;
@@ -124,22 +125,22 @@ void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locout, real thetax, real thetay, r
     const real scaley=mag;
     const real scaleopd=-2;
     const real het=fexit-fsurf;/*distance between exit pupil and M3. */
-
+    //distance from focus to image offinite distance object
     real d_img_focus=1./(1./ftel-1./hs)-ftel;
-    /*info("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
+    
     real d_img_exit=fexit+d_img_focus;
 		
     /*2010-04-02: do not put - sign */
     real bx=thetax*(d_img_focus+ftel)/d_img_exit;
     real by=thetay*(d_img_focus+ftel)/d_img_exit;
-    proj_rect_grid(tsurf,alx,aly,locout,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
+    proj_rect_grid(opd->p,tsurf,alx,aly,locout,scalex,scaley, NULL,scaleopd, d_img_exit, het, bx, by);
 }
 /**
    A convenient wrapper for m3proj() to be called from matlab or python
  */
-dmat *m3proj2(dmat *mapin_0, char *header, loc_t *locout, real thetax, real thetay, real hs){
+dmat *m3proj2(dmat *mapin_0, const char *header, const loc_t *locout, real thetax, real thetay, real hs){
     free(mapin_0->header);
-    mapin_0->header=header;
+    mapin_0->header=strdup(header);
     rmap_t *mapin=d2rmap(mapin_0);
     dmat *opd=dnew(locout->nloc, 1);
     m3proj(mapin, opd, locout, thetax, thetay, hs);

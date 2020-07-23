@@ -25,13 +25,7 @@
 #include "common.h"
 #include "ahst.h"
 #include "pywfs.h"
-/**
-   \file maos/ahst.c Contains functions to setup NGS modes and reconstructor
-   using AHST for one or more DMs.  Use parms->wfsr instead of parms->wfs for wfs
-   information, which hands GLAO mode correctly.
-
-   Notice that update of this file may require GPU code update accordingly
-
+/*
    2017-09-11: When there is misregistration/distortion between the DM and
    science pupil, the assumed NGS mode on DM remain intact, but the influence on
    Science OPD needs to use ray tracing. 
@@ -863,6 +857,9 @@ void ngsmod2science(dmat *iopd, const loc_t *loc, const NGSMOD_T *ngsmod,
 	}
     }
 }
+/**
+   frees NGSMOD_T
+*/
 void ngsmod_free(NGSMOD_T *ngsmod){
     if(!ngsmod) return;
     cellfree(ngsmod->GM);

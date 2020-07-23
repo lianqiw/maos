@@ -17,11 +17,13 @@
 */
 #include "../math/mathdef.h"
 #include "psd.h"
+
+//#define W_J(i,N2) (1-pow((real)(i-N2)/(real)N2, 2))
+#define W_J(i,N2) 1
+
 /**
    Compute the PSD from a sequence.
 */
-//#define W_J(i,N2) (1-pow((real)(i-N2)/(real)N2, 2))
-#define W_J(i,N2) 1
 dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 	    long nseg      /**<[in] Number of overlapping segments*/
     ){
@@ -81,7 +83,9 @@ dmat *psd1dt(const dmat *v, long nseg, real dt){
     return psd2;
 }
 
-/*Interpolate psd onto new f. We interpolate in log space which is more linear.*/
+/**
+   Interpolate psd onto new f. We interpolate in log space which is more linear.
+*/
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog){
     dmat *f1=drefcols(psdin, 0, 1);
     dmat *psd1=dsub(psdin, 0, 0, 1, 1);//copy
@@ -328,7 +332,7 @@ dmat *add_psd(const dmat *psd1, const dmat *psd2, real scale2){
     return out;
 }
 
-/*
+/**
   Add a PSD scaled by scale to another. The first column of each dmat is the
    frequency nu, and the second column is PSD.
 */

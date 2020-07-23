@@ -16,12 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
-   \file fdpcg.c
-   Fourier Domain Preconditioner for Tomography step.
-   2012-07-11: 
-   Do not need cfft2s any more. Minv is properly scaled to account for FFT scaling.
-*/
 /*
    Changelog
    2010-05-27:
@@ -34,6 +28,8 @@
    1) No need to do fftshift after the first fft. this is done by the incorporting
    the fftshift into the permutation vector.
 
+   2012-07-11: 
+   Do not need cfft2s any more. Minv is properly scaled to account for FFT scaling.
  */
 
 #include "common.h"

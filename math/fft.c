@@ -20,7 +20,7 @@
 #include <fftw3.h>
 #include "mathdef.h"
 #include "defs.h"
-#if !defined(USE_SINGLE) || HAS_FFTWF==1
+#if !defined(COMP_SINGLE) || HAS_FFTWF==1
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
 */
@@ -71,8 +71,8 @@ static void load_wisdom(){
 /**
    save FFT wisdom to file.
 */
-#if defined(USE_COMPLEX) && !defined (USE_SINGLE)
-//Put the following within USE_COMPLEX to avoid run multiple copies of it.
+#if defined(COMP_COMPLEX) && !defined (COMP_SINGLE)
+//Put the following within COMP_COMPLEX to avoid run multiple copies of it.
 static void save_wisdom(){
     FILE *fpwisdom;
     if((fpwisdom=fopen(fnwisdom,"w"))){
@@ -90,7 +90,7 @@ static __attribute__((destructor))void deinit(){
    executed before main()
 */
 #endif
-//#if defined(USE_COMPLEX) 
+//#if defined(COMP_COMPLEX) 
 #include <dlfcn.h>
 static void (*init_threads())(int){
     void *libfftw_threads=NULL;
@@ -98,13 +98,13 @@ static void (*init_threads())(int){
     //quitfun is not null when run in matlab.
 #if BUILTIN_FFTW_THREADS == 0
 #if _OPENMP>200805
-#if defined(USE_SINGLE)
+#if defined(COMP_SINGLE)
     fn="libfftw3f_omp." LDSUFFIX;
 #else
     fn="libfftw3_omp." LDSUFFIX;
 #endif
 #else //else 
-#if defined(USE_SINGLE)
+#if defined(COMP_SINGLE)
     fn="libfftw3f_threads." LDSUFFIX;
 #else
     fn="libfftw3_threads." LDSUFFIX;
@@ -120,7 +120,7 @@ static void (*init_threads())(int){
 	}
 	int (*p_fftw_init_threads)(void)=NULL;
 
-#ifdef USE_SINGLE
+#ifdef COMP_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
 #if BUILTIN_FFTW_THREADS
 	p_fftw_init_threads=(int(*)())fftwf_init_threads;
@@ -144,7 +144,7 @@ static void (*init_threads())(int){
 	if(!quitfun){
 	    dbg("Open FFTW thread library %s: failed\n", fn);
 	}
-#ifdef USE_SINGLE
+#ifdef COMP_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial",HOME);
 #else
 	sprintf(fnwisdom, "%s/.aos/fftw_wisdom_serial",HOME);
@@ -182,7 +182,7 @@ static void fft_threads(long nx, long ny){
 #define COMP(A) A
 #endif
 
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
    the array. So do it before filling in data.
@@ -312,8 +312,7 @@ X(mat) *X(ffttreat)(X(mat) *A){
 }
 #else
 /**
- * Create a fftw plan based on a 2 element X(mat) cell array that contains
- * real/imaginary parts respectively
+   Create a fftw plan based on a 2 element cell array that contains real/imaginary parts respectively.
  */
 static void X(cell_fft2plan)(X(cell) *dc, int dir){
     assert(abs(dir)==1);
@@ -343,6 +342,9 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
     }
     dc->fft=fft;
 }
+/**
+   Do FFT based on a 2 element cell array that contains real/imaginary parts respectively.
+ */
 void X(cell_fft2)(X(cell) *dc, int dir){
     assert(abs(dir)==1);
     if(!dc->fft || !dc->fft->plan[dir+1]){
@@ -350,7 +352,9 @@ void X(cell_fft2)(X(cell) *dc, int dir){
     }
     fft_execute(dc->fft->plan[dir+1]);
 }
-
+/**
+   Create a fftw plan for 1d real to real FFT.
+ */
 void X(fft1plan_r2hc)(X(mat) *A, int dir){
     if(A->nx!=1 && A->ny!=1){
 	error("not supported\n");
@@ -372,13 +376,15 @@ void X(fft1plan_r2hc)(X(mat) *A, int dir){
     }
     UNLOCK_FFT;
 }
-
+/**
+   Do 1d real to real FFT.
+ */
 void X(fft1)(X(mat) *A, int dir){
     assert(A->fft && abs(dir)==1);
     fft_execute(A->fft->plan[dir+1]);
 }
 
-#endif //#ifdef USE_COMPLEX
+#endif //#ifdef COMP_COMPLEX
 #else
 void X(fft_free_plan)(fft_t *fft){
     if(fft){
@@ -389,4 +395,4 @@ void X(fft2)(X(mat) *A, int dir){
     (void)A; (void)dir;
     error("libfftw3f is not available\n");
 }
-#endif //!defined(USE_SINGLE) || HAS_FFTWF==1
+#endif //!defined(COMP_SINGLE) || HAS_FFTWF==1

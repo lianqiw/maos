@@ -25,8 +25,6 @@
 #endif
 
 /**
-   \file locfft.c
-
    For routines that embed OPDs defined on loc to square(rectangular) array and do fft on it.
 */
 
@@ -70,14 +68,11 @@ locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
     }
     return locfft;
 }
-
+/**
+   Frees the struct
+*/
 void locfft_free(locfft_t *locfft){
     if(!locfft) return;
-    /*for(int iwvl=locfft->embed->nx-1; iwvl>=0; iwvl--){
-	if(locfft->embed->p[iwvl]==locfft->embed->p[0]){
-	    locfft->embed->p[iwvl]=0;
-	}
-	}*/
     cellfree(locfft->embed);
     cellfree(locfft->nembed);
     cellfree(locfft->fieldmask);

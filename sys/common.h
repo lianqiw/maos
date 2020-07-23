@@ -78,10 +78,10 @@ using std::strerror;
 #endif
 
 #undef EPS
-#ifdef USE_DOUBLE
-#define EPS 1.e-15
-#else
+#if CPU_SINGLE
 #define EPS 1.e-6
+#else
+#define EPS 1.e-15
 #endif
 
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)

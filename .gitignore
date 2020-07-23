@@ -18,7 +18,7 @@ missing
 #Ignore files that are not distributed.
 external/*
 #Ignore files that are produced by `make`
-math/tmp.c*
+math/*tmp.c*
 *.o
 *.mex???
 *.bak

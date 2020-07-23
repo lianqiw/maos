@@ -15,6 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file save.h
+*/
+
 #include "common.h"
 void save_wfsgrad(SIM_T *simu);
 void save_pistat(SIM_T *simu);

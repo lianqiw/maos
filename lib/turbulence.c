@@ -299,7 +299,9 @@ mapcell *fractal_screen(GENATM_T *data){
     data->method=T_FRACTAL;
     return create_screen(data, fractal_screen_do);
 }
-
+/**
+   A simpler interface to gerate a single screen.
+ */
 map_t *genatm_simple(real r0, real L0, real dx, long nx){
     rand_t rstat;
     seed_rand(&rstat, 1);
@@ -407,6 +409,9 @@ void spatial_psd(dmat **pout,  /**<Output*/
     }
     if(minfreq==0) psd->p[0]=0;  //remove infinite piston mode if minfreq is zero (L0 is inf).
 }
+/**
+   Compute spatial PSD of turbulence spectrum.
+ */
 dmat* turbpsd(long nx, long ny, real dx, real r0, real L0, real slope, real power){
     real strength=0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
     dmat *out=0;

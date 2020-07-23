@@ -15,17 +15,29 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 /**
-   \file fdpcg.h
-
-   Fourier Domain Preconditioner for Tomography step.
-
+   \file smath.h
 */
-#ifndef AOS_RECON_FDPCG
-#define AOS_RECON_FDPCG
-#include "common.h"
-FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, 
-		       const POWFS_T *powfs, mapcell *atm);
-void fdpcg_precond(dcell **xout, const void *A, const dcell *xin);
-void fdpcg_free(FDPCG_T *fdpcg);
+#ifndef AOS_MATH_SMATH_H
+#define AOS_MATH_SMATH_H
+#ifndef AOS_LIB_TYPE
+#define AOS_LIB_TYPE
+#include "type.h"
+#include "mat.h"
+#include "matmath.h"
+#include "sp.h"
+#include "fft.h"
+#include "matbin.h"
+#include "spbin.h"
+#endif
+
+#define AOS_SMAT(A) s##A
+//Single
+AOS_MAT_DEF(AOS_SMAT,float,float);//;to bypass doxygen problem
+AOS_MATMATH_DEF(AOS_SMAT,AOS_SMAT,float,float);
+AOS_MATBIN_DEF(AOS_SMAT,float);
+AOS_SP_DEF(AOS_SMAT,float,float,fcomplex);
+AOS_SPBIN_DEF(AOS_SMAT,float);
+AOS_FFT_DEF(AOS_SMAT);
 #endif

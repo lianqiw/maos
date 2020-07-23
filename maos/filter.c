@@ -23,14 +23,12 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-/**
-   \file filter.c
+/*
    Collection of functions for servo filtering of DM commands.
-*/
-/**
-   Apply hysterisis. Input dmcmd is command to the DM and output dmreal is the
-   actual position the DM goes to.  */
 
+   Applies hysterisis. Input dmcmd is command to the DM and output dmreal is the
+   actual position the DM goes to.  
+*/
 /**
    Add low order NGS modes to DM actuator commands for AHST and MVST
  */
@@ -441,6 +439,9 @@ static void filter_cl(SIM_T *simu){
 	dcellcp(&simu->dmreal, simu->dmcmd);
     }
 }
+/**
+   Servo filter for FSM commands.
+ */
 void filter_fsm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(simu->fsmint){

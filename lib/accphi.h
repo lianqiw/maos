@@ -128,6 +128,9 @@ void prop_nongrid_cubic    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_CUBIC);
 void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_CUBIC);
 void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_CUBIC);
 
+/**
+   Do the reverse propagation of prop_grid_map. If prop_grid_map does y+=H*x;
+   This just does x+=H'*y; */
 void prop_grid_map_transpose(map_t *mapin, const map_t *mapout, 
 			     real alpha, real displacex, real displacey, real scale,
 			     int wrap, long start, long end);

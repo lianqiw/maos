@@ -31,11 +31,11 @@ convert the function beschb.
 */
 
 #include "../sys/sys.h"
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 #error "Do not use for complex numbers"
 #endif
 #undef MYEPS
-#ifdef USE_DOUBLE
+#ifndef COMP_SINGLE
 #define MYEPS 1.0e-16
 #define FPMIN 1.0e-30
 #else

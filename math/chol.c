@@ -48,7 +48,7 @@
    2019-10-25: As of this writing, the cholmod library does not support single precision.
 */
 #define AS_DOUBLE 1 //must always be true
-#if defined(USE_DOUBLE) || AS_DOUBLE
+#if !defined(COMP_SINGLE) || AS_DOUBLE
 #define CHOL_DATA CHOLMOD_DOUBLE
 typedef double chol_real;
 #else

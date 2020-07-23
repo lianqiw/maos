@@ -40,9 +40,8 @@
 #define tic_tm tic
 #define toc_tm(A) toc(A);tic
 #endif
-/**
-   \file recon.c Wavefront reconstruction and DM fitting routines. 
 
+/*
    Since these are related to reconstruction, we don't have access to dmreal,
    which is the *actual* location of DM actuators, and only available in
    simulation. dmint should be used for dm actuator commands.*/
@@ -123,7 +122,7 @@ static void calc_gradol(SIM_T *simu){
 	}
     }
 }
-void recon_split(SIM_T *simu){
+static void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;

@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page93_guidelines Programming Guidelines
+   \page page93_guidelines MAOS Architecture
 
    \section sect-guide Guidelines
 
@@ -66,7 +66,7 @@
 
    - Avoid function casting. It will hide data type check and hide bugs.
 
-   \section sect-structure Code Structure
+   \section sect-structure Simulation Flow
 
    - main() is the entrance into the program. It calls
         - setup_parms(): to setup the parameters of types PARMS_T and check for errors.
@@ -91,6 +91,14 @@
                          - save_simu(): to save simulation telemetry data.
                          - print_progress(): to display progress data.
                     - free_simu(): to delete run time structs and close files
+
+
+   \section maos_design MAOS Design
+
+   The following shows how various components are implemented.
+ 
+   
+
 
 
  */

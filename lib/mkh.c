@@ -139,6 +139,9 @@ dsp* mkhb(const loc_t *locin, const loc_t *locout,
     dspdroptol(hback,EPS);
     return hback;
 }
+/**
+   Transposes the result from mkhb_cubic.
+ */
 dsp *mkh_cubic(const loc_t *locin, const loc_t *locout, 
 	       real displacex, real displacey, real scale, real cubic_iac){
     dsp *Hb=mkhb_cubic(locin, locout,displacex, displacey, scale, cubic_iac);

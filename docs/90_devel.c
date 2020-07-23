@@ -18,40 +18,12 @@
 /**
    \page page90_devel Development
 
-   \tableofcontents
-
    \subpage page91_clang
 
    \subpage page93_guidelines
    
    \subpage page95_profiling
    
-   \subpage page90_design
-   
-   \page page90_design MAOS Design
-   The following shows how various components are implemented.
- 
-
-   \section Fundementals
-   
-   \section Memory 
-
-   Set environment variable MAOS_MEM_DEBUG=1 before starting maos to
-   print out memory usage information. It will print all memory
-   locations that is not freed before exit. We try to free all memory
-   before exit to avoid leaking memory.
-   
-   \section Auxiliary
-   
-   \subsection Sodium range variation
-
-   The sodium range variation is specified through the LLT configuration key
-   llt.fnrange in llt_CL.song or llt_SL.conf. When supplied by user, use
-   powfs0_llt.fnrange. The file should contain additional change (wrt fnprof) of
-   sodium height in meters with dimension nx1 or nxnLGS where n can be less
-   than, equal to or greater than the length of simulation and nLGS is the
-   number of LGS in this powfs (6 for NFIRAOS).
-
 
 
 */

@@ -16,9 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "mathdef.h"
-/**
-   \file cell.c
-*/
 
 /**
    Create a generic cell array.

@@ -15,6 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file pywfs.h
+
+   Routines related to pyramid WFS
+*/
 
 #ifndef AOS_PYWFS_H
 #define AOS_PYWFS_H

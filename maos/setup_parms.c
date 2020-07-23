@@ -29,11 +29,9 @@ extern int use_cuda;
 /*
   Don't include common.h or types.h, so that we don't have to recompile
   setup_parms.c when these files change.
-*/
-/**
-   \file maos/setup_parms.c
-   This file contains necessary routines to read parametes for
-   WFS, DM and wavefront reconstruction.  */
+  
+  This file contains necessary routines to read parametes for
+  WFS, DM and wavefront reconstruction.  */
 
 void free_powfs_cfg(POWFS_CFG_T *powfscfg){
     dfree(powfscfg->wvl);

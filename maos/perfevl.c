@@ -23,13 +23,7 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-/**
-   \file perfevl.c Peformance evaluation on science FoV. Notice that the science
-   FoV can be different from the DM fitting FoV, which is tuned to better
-   sharpen the NGS 
-   
-   \todo Write a standalone routine that can plot results, using techniques
-   developped in drawdaemon.  */
+
 /*
   2009-11-02
   improve threading effiency by devoting 1 thread to do accphi
@@ -622,9 +616,18 @@ static void perfevl_save(SIM_T *simu){
 	}
     }
 }
+
+
 /**
+
+   Peformance evaluation on science FoV. 
+
    Evaluate performance by calling perfevl_ievl in parallel and then calls
-   perfevl_mean to field average.  */
+   perfevl_mean to field average. Notice that the science FoV can be different
+   from the DM fitting FoV, which is tuned to better sharpen the NGS
+   
+   \todo Write a standalone routine that can plot results, using techniques
+   developped in drawdaemon.  */
 void perfevl(SIM_T *simu){
     real tk_start=PARALLEL==1?simu->tk_0:myclockd();
     const PARMS_T *parms=simu->parms;

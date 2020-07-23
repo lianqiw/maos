@@ -19,8 +19,8 @@
 #ifndef AOS_MATARRH_TYPE_H
 #define AOS_MATARRH_TYPE_H
 #include "numtype.h"
-/**
-   \file type.h Defines the math data types like dmat, cmat, dcell, ccell,
+/*
+   Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.
 
    Don't use ulong for dimensions because subtracting a bigger ulong from a

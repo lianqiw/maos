@@ -29,14 +29,13 @@
 #include "../cuda/gpu.h"
 #endif
 
-/**
-   \file setup_recon.c Contains routines that setup the wavefront reconstructor
-   and DM fitting.  Use parms->wfsr instead of parms->wfs for wfs information,
-   which hands GLAO mode correctly.x 
-
+/*
    TOMOSCALE is used for RLM, RRM, in MVST for M, and in CUDA due to
    limited dynamic range of single precision floating point numbers.
 
+   Use parms->wfsr instead of parms->wfs for wfs information,
+   which hands GLAO mode correctly. 
+   
    2014-04-01: Scale saneai, cxx, zzt by TOMOSCALE.
 
    All routines in this file depends on saneai and may be called repeatedly during simulation.
@@ -951,10 +950,6 @@ setup_recon_twfs(RECON_T *recon, const PARMS_T *parms){
     if(parms->save.setup){
 	writebin(recon->RRtwfs, "twfs_recon");
     }
-    /*if(parms->recon.fnsphpsd){
-	recon->eptwfs=twfs_gain_optim(parms, recon, powfs);
-	warning("eptwfs is reset to %g\n", parms->sim.eptwfs);
-	}else*/
     recon->eptwfs=parms->sim.eptwfs;
     cellfree(GRtwfs);
     cellfree(neai);

@@ -23,10 +23,7 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-/**
-   \file moao.c
-   Routings to setup moao and carry out moao DM fitting.
-*/
+
 
 /**
    Free MOAO_T

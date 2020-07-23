@@ -18,7 +18,7 @@
 
 #ifndef AOS_LIB_SPBIN_H
 #define AOS_LIB_SPBIN_H
-#ifndef AOS_LIB_MATH_H
+#ifndef AOS_LIB_TYPE
 #error "Don't include this file directly"
 #endif
 

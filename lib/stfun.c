@@ -31,7 +31,7 @@ struct stfun_t{
 };
 
 /**
-   Initialize the stfun data.
+   Initialize the stfun data to calculate structure function.
 */
 stfun_t *stfun_init(long nx, long ny, real *amp){
     stfun_t *A=mycalloc(1,struct stfun_t);
@@ -52,6 +52,9 @@ stfun_t *stfun_init(long nx, long ny, real *amp){
     cfft2(A->hat0, -1);
     return A;
 }
+/**
+   Accumulate OPDs.
+ */
 void stfun_push(stfun_t *A, dmat *opd){
     A->count++;
     long ny=A->hat0->ny/2;/*maybe smaller than opd. */
@@ -79,6 +82,9 @@ void stfun_push(stfun_t *A, dmat *opd){
 	    -A->hat1->p[i]*conj(A->hat1->p[i]);
     }
 }
+/**
+   Use accumulated data to compute the structure function.
+ */
 dmat *stfun_finalize(stfun_t *A){
     cscale(A->hattot, 2./A->count);
     cfft2i(A->hattot, 1);
@@ -106,7 +112,7 @@ dmat *stfun_finalize(stfun_t *A){
     return st;
 }
 /**
-   Generate the structure function of the phase of kolmogorov spectrum 
+   Generate the structure function of the phase of kolmogorov spectrum. 
 */
 dmat* stfun_kolmogorov(loc_t *loc, real r0){
     long nloc=loc->nloc;

@@ -15,7 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file setup_recon.h
 
+   Contains routines that setup the wavefront reconstructor and DM fitting.  
+
+*/
 #ifndef SETUP_RECON_H
 #define SETUP_RECON_H
 #include "common.h"
@@ -39,10 +44,6 @@ void setup_recon_post(RECON_T *recon, const PARMS_T *parms, const APER_T *aper);
 void free_recon(const PARMS_T *parms, RECON_T *recon);
 void free_recon_unused(const PARMS_T *parms, RECON_T *recon);
 
-void test_recon_GX(RECON_T *recon, const PARMS_T *parms, 
-		   const POWFS_T *powfs);
-void test_recon_GA(RECON_T *recon, const PARMS_T *parms, 
-		   const POWFS_T *powfs);
 void setup_recon_mvst(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms);

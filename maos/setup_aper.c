@@ -22,11 +22,6 @@
 #include "common.h"
 static TIC;
 #include "setup_aper.h"
-/**
-   \file setup_aper.c
-   Contains routines that setup the telescope aperture.
-*/
-
 
 /**
    Setting up aperture cordinate grid aper_locs, and amplitude map for

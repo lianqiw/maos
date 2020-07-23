@@ -17,13 +17,7 @@
 */
 #include "maos.h"
 #include "moao.h"
-/**
-   \file maos.c
 
-   Contains main() and the entry into simulation maos(). The main() is separated
-   into main.c so that maos.c can be a part of libaos.la which is callable by
-   MATLAB.
-*/
 GLOBAL_T *global=NULL;//record for convenient access. It enables calling maos from matlab
 int use_cuda=0;
 const char *dirskysim=NULL;
@@ -46,6 +40,9 @@ static void read_env(){
     READ_ENV_INT(KEEP_MEM,0,1);
     info2("TOMOSCALE=%g\n", TOMOSCALE);
 }
+/**
+   Setup system before entering simulation.
+ */
 void maos_setup(const PARMS_T *parms){
     TIC;tic;
     global=mycalloc(1,GLOBAL_T);
@@ -194,9 +191,10 @@ void maos_setup(const PARMS_T *parms){
     toc("Presimulation");
 }
 
+/**
+   Free all allocated memory in setup_* functions. So that we
+   keep track of all the memory allocation.*/
 void maos_reset(){
-    /*Free all allocated memory in setup_* functions. So that we
-      keep track of all the memory allocation.*/
     if(!global) return;
     PARMS_T *parms=(PARMS_T*)global->parms;
     free_recon(parms,global->recon); 

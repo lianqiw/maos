@@ -15,6 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file moao.h
+   Routings to setup moao and carry out moao DM fitting.
+*/
 #ifndef MAOS_MOAO_H
 #define MAOS_MOAO_H
 #include "types.h"

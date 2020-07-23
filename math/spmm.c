@@ -294,7 +294,8 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const char trans[2
 }
 
 /**
- * Multiply two sparse arrays and add to the third: C0=C0+op(A)*op(B)*scale*/
+   Multiply two sparse arrays and add to the third: C0=C0+op(A)*op(B)*scale
+*/
 void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const char trans[2], const T scale){
     /*return C=C+ alpha*(A*B) */
     if(!A || !B) return;
@@ -327,6 +328,9 @@ void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const char trans[2]
     X(spfree)(Bt);
     X(ss_dropzeros)(*C0);
 }
+/**
+   Multiply two sparse arrays and return the result op(A)*op(B)
+*/
 X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B, const char trans[2]){
     X(sp) *res=0;
     X(spmulsp2)(&res, A, B, trans, 1);
@@ -336,6 +340,7 @@ X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B, const char trans[2]){
 
 /**
    Compute A*B and add to C0.
+
    C0=C0+op(A)*op(B)*alpha;
    op(A)=A  if trans[0]=='n'
    op(A)=A' if trans[0]=='t'
@@ -346,11 +351,10 @@ X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B, const char trans[2]){
    op(B)=conj(B') if trans[1]=='c'
    
    A may be dense or sparse matrix.
-*/
-/*
-  2009-11-09: There was initially a beta parameter It was implemented wrongly
-  for beta!=1 because for every call to dmm, the already accumulated ones are
-  scaled.  removed beta.
+
+   2009-11-09: There was initially a beta parameter It was implemented wrongly
+   for beta!=1 because for every call to dmm, the already accumulated ones are
+   scaled.  removed beta.
 */
 void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], const R alpha){
     if(!A_ || !B_) return;
@@ -409,13 +413,17 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
 	}
     }
 }
-
+/**
+   a different interface for multiplying cells.
+ */
 cell *X(cellmm2)(const void *A_, const void *B_, const char trans[2]){
     cell *res=0;
     X(cellmm)(&res, A_, B_, trans, 1);
     return res;
 }
-
+/**
+   Add alpha to diagnonal elements of A_. A_ can be matrix or sparse matrix.
+ */
 void X(celladdI)(void *A_, T alpha){
     if(!A_) return;
     cell *A=cell_cast(A_);
@@ -433,7 +441,9 @@ void X(celladdI)(void *A_, T alpha){
     }
 }
 /**
-   Takes parameters of X(mat), X(sp), X(cell), X(spcell): A=A*ac+B*bc;
+   Calculate A_=A_*ac+B_*bc;
+
+   Takes parameters of matrix, sparse matrix, or cell array of them.
  */
 void X(celladd)(void *A_, R ac, const void *B_, R bc){
     if(!A_ || !B_ || bc==0) return;
@@ -469,7 +479,9 @@ void X(celladd)(void *A_, R ac, const void *B_, R bc){
     }
 }
 /**
-   Takes parameters of X(mat), X(sp), X(cell), X(spcell): Copy B to A;
+   Copy B to A.
+
+   Takes parameters of matrix, sparse matrix, or cell array of them.
  */
 void X(cellcp)(void *A_, const void *B_){
     if(!B_){
@@ -502,14 +514,14 @@ void X(cellscale)(void *A_, R w){
 
 
 /**
-   setting all elements of a X(cell) to zero.
+   Setting all elements of a cell to zero.
 */
 void X(cellzero)(void *dc){
     X(cellscale)(dc, 0);
 }
 
 /**
-   Convert X(cell) or X(spcell) to X(mat)
+   Convert dense or sparse matrix cell to matrix.
 */
 X(mat)* X(cell2m)(const void *A_){
     if(!A_) return 0;

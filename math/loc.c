@@ -130,6 +130,9 @@ pts_t *ptsnew(long nsa, real dsax, real dsay, long nx, real dx, real dy){
     pts->nsa=nsa;
     return pts;
 }
+/**
+   apply hashlittle() to loc_t.
+ */
 uint32_t lochash(const loc_t *loc, uint32_t key){
     key=hashlittle(loc->locx, loc->nloc*sizeof(real), key);
     key=hashlittle(loc->locy, loc->nloc*sizeof(real), key);
@@ -316,7 +319,7 @@ void loc_create_map_npad(const loc_t *loc, int npad, int nx, int ny){
     }
     UNLOCK(maplock);
 }
-/*
+/**
   Embed in into dest according to map defined in loc->map. Arbitraty map cannot
   be used here for mapping.
 */
@@ -339,7 +342,7 @@ void loc_embed(map_t *dest, const loc_t *loc, const real *in){
 	}
     }
 }
-/*
+/**
   A convenient wrapper for loc_embed to be called by matlab or python
 */
 cell *loc_embed2(loc_t *loc, dmat *arr){
@@ -369,7 +372,7 @@ cell *loc_embed2(loc_t *loc, dmat *arr){
     }
 }
 
-/*
+/**
   Embed in into dest according to map defined in loc->map. Arbitraty map cannot
   be used here for mapping.
 */
@@ -390,7 +393,7 @@ void loc_embed_add(map_t *dest, const loc_t *loc, const real *in){
 	}
     }
 }
-/*
+/**
   Embed in into dest according to map defined in loc->map for cells. Arbitraty map cannot
   be used here for mapping.
 */
@@ -416,7 +419,7 @@ void loc_embed_cell(dcell **pdest, const loc_t *loc, const dcell *in){
 	}
     }
 }
-/*
+/**
   Embed in into dest according to map defined in loc->map. Arbitraty map cannot
   be used here for mapping.
 */
@@ -1235,7 +1238,8 @@ void locmean(real *xm, real *ym, const loc_t *loc){
     *ym=y/loc->nloc;
 }
 
-/**Parse string representation of polynominal to array representation.*/
+/**
+Parse string representation of polynominal to array representation.*/
 static dmat *parse_poly(const char *_ps){
     char *ps=(char *)_ps;
     int ncx=5;
@@ -1364,6 +1368,9 @@ static loc_t *loctransform_do(const loc_t *loc, const dmat *cx, const dmat *cy){
     }
     return locm;
 }
+/**
+   Transform coordinate with coefficients. See loctransform()
+ */
 loc_t *loctransform2(const loc_t *loc, const dmat *coeff){
     dmat *cx=dnew(3, coeff->nx);
     dmat *cy=dnew(3, coeff->nx);
@@ -1381,8 +1388,10 @@ loc_t *loctransform2(const loc_t *loc, const dmat *coeff){
 /**
    Transform coordinate. loc (input) contains x,y; locm (return) contains xm, ym.
    polyn contains the formula
-   xm{ip}=\{sum}_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic)))
-   ym{ip}=\{sum}_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
+   \f[
+   xm{ip}=\sum_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic)))
+   ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
+   \f]
    was using string input. New scheme uses bin files to preserve precision.
 */
 loc_t *loctransform(const loc_t *loc, const char *polycoeff){
@@ -1467,12 +1476,7 @@ void locresize(loc_t *loc, long nloc){
     loc->nloc=nloc;
 }
 
-/**
-   Embeding an OPD defined on loc to another array. 
-   Do the embeding using locstat to have best speed.
-   reverse = 0 : from oin to out: out=out*alpha+in*beta
-   reverse = 1 : from out to oin: in=in*beta+out*alpha
-*/
+
 #define LOC_EMBED_DEF(X, T, R, OPX)					\
     void X(embed_locstat)(X(mat) **restrict out, real alpha,		\
 			  loc_t *restrict loc,				\
@@ -1540,9 +1544,21 @@ void locresize(loc_t *loc, long nloc){
 }
 
 #define OPX(A) (A)
+/**
+   Embeding an OPD defined on loc to another array. 
+   Do the embeding using locstat to have best speed.
+   reverse = 0 : from oin to out: out=out*alpha+in*beta
+   reverse = 1 : from out to oin: in=in*beta+out*alpha
+*/
 LOC_EMBED_DEF(AOS_DMAT, real, real, OPX)
 #undef OPX
 #define OPX(A) creal(A)
+/**
+   Embeding an OPD defined on loc to another array. 
+   Do the embeding using locstat to have best speed.
+   reverse = 0 : from oin to out: out=out*alpha+in*beta
+   reverse = 1 : from out to oin: in=in*beta+out*alpha
+*/
 LOC_EMBED_DEF(AOS_CMAT, comp, real, OPX)
 #undef OPX
 

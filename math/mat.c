@@ -50,7 +50,7 @@ X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
 }
 
 /**
-   creat a X(mat) reference an existing X(mat). Use the reference carefully.
+   creat a reference an existing matrix. Use the reference carefully.
 */
 X(mat) *X(ref)(const X(mat) *in){
     if(!in) return NULL;
@@ -81,7 +81,7 @@ void X(init)(X(mat)**A, long nx, long ny){
     }
 }
 /**
-   cast a cell object to X(mat)
+   cast a cell object to matrix
  */
 X(mat) *X(mat_cast)(const void *A){
     if(!A) return 0;
@@ -90,13 +90,13 @@ X(mat) *X(mat_cast)(const void *A){
     if(!B->nx || !B->ny) return 0; else return B;
 }
 /**
-   free a X(mat) object. if keepdata!=0, will not free A->p.
+   free a matrix object. if keepdata!=0, will not free A->p.
 */
 void X(free_do)(X(mat) *A){
     if(!A) return;
     assert_mat(A);
     mem_unref(&A->mem);//takes care of freeing memory.
-#ifndef USE_LONG
+#ifndef COMP_LONG
     X(fft_free_plan)(A->fft);
 #endif
     free(A->header);
@@ -104,7 +104,7 @@ void X(free_do)(X(mat) *A){
 }
 
 /**
-   create an new X(mat) reference another with different shape.
+   create an new reference another with different shape.
 */
 X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
     X(mat) *out=X(ref)(in);
@@ -117,8 +117,8 @@ X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
 }
 
 /**
-   creat a new X(mat) referencing columns in existing
-   X(mat). reference counted. not used
+   creat a new matrix referencing columns in existing
+   matrix. reference counted. not used
 */
 X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
     assert_mat(in);
@@ -156,7 +156,7 @@ void X(resize)(X(mat) *A, long nx, long ny){
     if(!nx) nx=A->nx;
     if(!ny) ny=A->ny;
     if(mem_isref(A->mem)){
-	error("Trying to resize referenced array\n");
+	error("Trying to resize referenced matrix\n");
     }
     if(A->nx!=nx || A->ny!=ny){
 	if(A->nx==nx || A->ny==1){
@@ -253,7 +253,7 @@ uint32_t X(hash)(const X(mat)*A, uint32_t key){
     return key;
 }
 /**
-   copy the values from one X(mat) to another.
+   copy the values from one matrix to another.
 */
 void X(cp)(X(mat) **out0, const X(mat) *in){
     if(in && in->nx && in->ny){
@@ -273,7 +273,7 @@ void X(cp)(X(mat) **out0, const X(mat) *in){
 }
 
 /**
-   duplicate a X(mat) array
+   duplicate a matrix
 */
 X(mat) *X(dup)(const X(mat) *in){
     assert_mat(in);
@@ -283,7 +283,7 @@ X(mat) *X(dup)(const X(mat) *in){
 }
 
 /**
-   transpose a X(mat) object
+   transpose a matrix
 */
 X(mat) *X(trans)(const X(mat) *A){
     if(!A) return NULL;
@@ -301,7 +301,7 @@ X(mat) *X(trans)(const X(mat) *A){
     return B;
 }
 /**
-   set values of each element in a X(mat) to val.
+   set values of each element in an matrix to val.
 */
 void X(set)(X(mat) *A, const T val){
     if(A){
@@ -313,7 +313,7 @@ void X(set)(X(mat) *A, const T val){
 }
 
 /**
-   display a X(mat) matrix.
+   display a matrix.
 */
 void X(show)(const X(mat) *A, const char *format, ...){
     if(!A) return;
@@ -365,6 +365,9 @@ void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm){
 	}
     }
 }
+/**
+   sum of a vector using pointer and length
+ */
 T X(vecsum)(const T *restrict p, long nx){
     TD sum=0;
     for(long ix=0; ix<nx; ix++){
@@ -396,7 +399,7 @@ T X(trace)(const X(mat)*A){
     return (T)trace;
 }
 
-#ifndef USE_COMPLEX
+#ifndef COMP_COMPLEX
 static int sort_ascend(const T*A, const T*B){
     if ((*A)>(*B)) return 1; 
     else return -1;
@@ -405,7 +408,7 @@ static int sort_descend(const T*A, const T*B){
     if ((*A)>(*B)) return -1; 
     else return 1;
 }
-/*
+/**
   Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
 */
 void X(sort)(X(mat) *A, int ascend){
@@ -423,7 +426,7 @@ void X(sort)(X(mat) *A, int ascend){
 void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     R a,b;
     long i;
-#ifdef USE_LONG
+#ifdef COMP_LONG
     a=-INT_MAX;
     b=INT_MAX;
 #else
@@ -431,12 +434,12 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     b=INFINITY;
 #endif
     for(i=0; i<N; i++){
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 	R tmp=fabs(p[i]);
 #else
 	R tmp=p[i];
 #endif
-#ifndef USE_LONG	
+#ifndef COMP_LONG	
 	if(!isnan(tmp))
 #endif
 	{
@@ -503,7 +506,7 @@ void X(normalize_max)(T *restrict p, long nloc, T max){
     }
 }
 /**
-   find the maximum value of a X(mat) object
+   find the maximum value 
 */
 R X(max)(const X(mat) *A){
     R max,min;
@@ -512,13 +515,16 @@ R X(max)(const X(mat) *A){
 }
 
 /**
-   find the minimum value of a X(mat) object
+   find the minimum value
 */
 R X(min)(const X(mat) *A){
     R max,min;
     X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     return min;
 }
+/**
+   find the maximum of abs of all elements using pointer and count.
+ */
 R X(vecmaxabs)(const T*restrict p, long n){
     R max,min;
     X(maxmin)(p, n, &max, &min);
@@ -527,13 +533,13 @@ R X(vecmaxabs)(const T*restrict p, long n){
     return max>min?max:min;
 }
 /**
-   find the maximum of abs of a X(mat) object
+   find the maximum of abs of all elements
 */
 R X(maxabs)(const X(mat) *A){
     return X(vecmaxabs)(A->p, A->nx*A->ny);
 }
 /**
-   compute the sum of abs(A)
+   compute the sum of abs of all elements
 */
 R X(sumabs)(const X(mat)*A){
     R out=0;
@@ -675,7 +681,7 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
     }
 }
 /**
-   cast a cell object to X(cell) after checking.
+   cast a cell object to actual cell after checking.
  */
 X(cell) *X(cell_cast)(const void *A_){
     if(!A_) return 0;
@@ -687,8 +693,8 @@ X(cell) *X(cell_cast)(const void *A_){
     return (X(cell)*)A;
 }
 /**
-   create an new X(cell) similar to A in shape.
-   When a cell is empty, it is created with a (0,0) array and cannot be overriden.
+   create an new cell similar to A in shape.
+   When a cell is empty, it is created with an emtry matrix and cannot be overriden.
 */
 X(cell) *X(cellnew2)(const X(cell) *A){
     X(cell) *out=X(cellnew)(A->nx, A->ny);
@@ -712,7 +718,7 @@ X(cell) *X(cellnew2)(const X(cell) *A){
 }
 
 /**
-   Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
+   Create an new cell with matrix specified. Each block is stored continuously in memory.
 */
 X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     long tot=0;
@@ -734,13 +740,13 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     return out;
 }
 /**
-   Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
+   Create an new cell with matrix specified. Each block is stored continuously in memory.
 */
 X(cell) *X(cellnew_same)(long nx, long ny, long mx, long my){
     return X(cellnew3)(nx, ny, (long*)-mx, (long*)-my);
 }
 /**
-   creat a X(cell) reference an existing X(cell) by referencing the
+   creat a cell reference an existing cell by referencing the
    elements.
 */
 X(cell) *X(cellref)(const X(cell) *in){
@@ -757,7 +763,7 @@ X(cell) *X(cellref)(const X(cell) *in){
 }
 
 /**
-   setting all elements of a X(cell) to alpha.
+   setting all elements of a cell to alpha.
 */
 void X(cellset)(X(cell)*dc, T val){
     if(dc){
@@ -768,7 +774,7 @@ void X(cellset)(X(cell)*dc, T val){
 }
 
 /**
-   transpose a X(cell) object
+   transpose a cell object
 */
 X(cell) *X(celltrans)(const X(cell) *A){
     if(!A) return NULL;

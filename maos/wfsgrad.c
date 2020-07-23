@@ -29,11 +29,10 @@
 #include "../cuda/gpu.h"
 #endif
 /**
-   \file wfsgrad.c
    contains functions that computes WFS gradients in geometric or physical optics mode.
 */
 #define TIMING 0
-#if TIMING == 1
+#if TIMING
 #define TIM(A) real tk##A=myclockd()
 #else
 #define TIM(A)
@@ -1034,9 +1033,6 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    if(parms->save.dither){
 			writebin(simu->gradscale->p[iwfs], "wfs%d_gradscale_%d", iwfs, simu->wfsisim);
 		    }
-		    /*if(parms->powfs[ipowfs].skip==2 && parms->recon.fnsphpsd){//TWFS. Update TWFS gain.
-			simu->eptwfs=twfs_gain_optim(parms, simu->recon, powfs);
-			}*/
 		}
 	    }
 	    if(parms->powfs[ipowfs].phytype_sim != parms->powfs[ipowfs].phytype_sim2){

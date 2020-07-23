@@ -373,6 +373,9 @@ void free_fit(FIT_T *fit, int nfit){
     }
     free(fit);
 }
+/**
+   Setup DM fitting parameters
+*/
 void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
     FIT_T *fit=mycalloc(1, FIT_T);
     recon->fit=fit;

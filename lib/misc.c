@@ -16,8 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file misc.c
-   
    Miscellaneous routines.
 */
 #include "misc.h"

@@ -16,8 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
-   \file maos/sim.c
+/*
    Call various functions to do the simulation and evaluate performance.
 */
 #include <search.h>

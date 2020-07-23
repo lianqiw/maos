@@ -41,26 +41,6 @@
     }
 
 /**
-   \file maos/setup_powfs.c
-
-   Setting up WFS geometry. like the subaperture location, subaperture grid
-   points, physical optics detection transfer function, LGS elongation transfer
-   function, etc.
-
-   \todo isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.
-
-   Do not use sparse interpolation to replace ray tracing for fine sampled
-   destination grid, especially cubic splines. The interpolation marix takes too
-   much space.  
-
-   TODO: This routine and POWFS_T should only contain information about the
-   simulation, not about any model used during reconstruction (RTC) to avoid
-   leaking information from the "real world (simulation)" to our knowledge (RTC).
-*/
-
-
-
-/**
    Free the powfs geometric parameters
 */
 static void
@@ -96,7 +76,9 @@ static dmat *wfsamp2saa(dmat *wfsamp, long nxsa){
     }
     return saa;
 }
-
+/**
+   Creates WFS pupil mask.
+ */
 void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs){
     long nloc=loc->nloc;
     dmat *ampmask=dnew(nloc, 1);
@@ -463,7 +445,8 @@ setup_shwfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
     }
 }
-/*
+/**
+   Setup telescope to WFS pupil misregistration.
    
    It is tricky to implement the misregistration of the deformable mirror and the WFS.
    
@@ -544,7 +527,10 @@ setup_powfs_misreg_tel(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int i
 	}
     }/*if misreg */ 
 }
-void 
+/**
+   setup DM to WFS misregistration.
+*/
+void
 setup_powfs_misreg_dm(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     (void)aper;
     int nwfsp=parms->powfs[ipowfs].nwfs;
@@ -681,7 +667,6 @@ void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
 
    \todo Make LGS number of pixels depend on subapertue elongation in radial
    coordinate CCD mode. Make notfx, notfy dependent on number of pixels for radial ccd.
-   
 
 */
 static void 
@@ -1665,7 +1650,9 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
     toc("setup_powfs_init");
     return powfs;
 }
-//this is only for shwfs.
+/**
+   Setup physical optics parameters for SHWFS, such as DTF, ETF, LLT, pixel processing.
+*/
 void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
     TIC;tic;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1703,6 +1690,9 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
     }/*ipowfs */
     toc("setup_powfs_phy");
 }
+/**
+   free unused parameters before simulation starts
+*/
 void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(powfs[ipowfs].intstat){
@@ -1716,7 +1706,8 @@ void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
 	}
     }
 }
-void free_powfs_shwfs(POWFS_T *powfs, int ipowfs){
+
+static void free_powfs_shwfs(POWFS_T *powfs, int ipowfs){
     dtf_free(powfs[ipowfs].dtf);
     dspcellfree(powfs[ipowfs].GS0);
     dcellfree(powfs[ipowfs].neasim);

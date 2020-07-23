@@ -22,6 +22,9 @@
 #define INTERP_NEAREST 0 /*set to 0 after debugging */
 #define MIN_SA_OVERLAP 5 /*minimum of subaperture overlap at this separation*/
 #define COV_ROTATE 0     /*1: rotate the covariance and then cut along x. (old method).*/
+/**
+   Initialize cn2est_t
+*/
 cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indices.*/
 		     const dmat *wfstheta,/**<nwfs*2: angular direction of each WFS.*/
 		     const loc_t *saloc,  /**<nsa*2: Subaperture low left corner coordinates*/
@@ -429,6 +432,9 @@ static void cn2est_cov(cn2est_t *cn2est){
 	}
     }/*iwfspair */
 }
+/**
+   Accumulate the coveriance.
+ */
 void cn2est_push(cn2est_t *cn2est, const dcell *gradol){
     int ncol=0;
     if(gradol->nx<cn2est->nwfs){
@@ -613,6 +619,9 @@ void cn2est_free(cn2est_t *cn2est){
 
     free(cn2est);
 }
+/**
+   One stop wrapper for #cn2est_new, #cn2est_push, and #cn2est_est.
+ */
 cn2est_t *cn2est_all(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
 		     const dmat *saa, const real saat, 
 		     const dmat* hs, const dmat *htrecon, int keepht, real l0, dcell *grad){

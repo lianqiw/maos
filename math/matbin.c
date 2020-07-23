@@ -52,4 +52,4 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
     readvec(out->p, M_T, header->magic, sizeof(T), nx*ny, fp); 
     return out;
 }
-#include "matmmap.c"
+

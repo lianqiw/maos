@@ -15,7 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file setup_surf.h
+   Setup additional NCPA surface.
+*/
 #ifndef AOS_SETUP_TSURF
 #define AOS_SETUP_TSURF
 void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon);

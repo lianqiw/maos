@@ -28,5 +28,5 @@ stfun_t* stfun_init(long nx, long ny, real *amp);
 void stfun_push(stfun_t *A, dmat *opd);
 dmat *stfun_finalize(stfun_t *A);
 dmat* stfun_kolmogorov(loc_t *loc, real r0);
-dmat *vkcov(long nx, real dx, real r0, real L0);
+//dmat *vkcov(long nx, real dx, real r0, real L0);
 #endif

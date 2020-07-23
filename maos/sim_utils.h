@@ -15,7 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file sim_utils.h
+*/
 #include "common.h"
 #ifndef AOS_SIM_UTILS_H
 #define AOS_SIM_UTILS_H

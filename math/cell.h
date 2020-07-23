@@ -41,6 +41,9 @@ static inline void cellreshape(void *in_, long nx, long ny){
 	in->ny=ny;
     }
 }
+/*!free a cell array and zero the pointer.*/
+#define cellfree(A) ({cellfree_do(A); A=NULL;})
+
 void cellfree_do(void* dc);
 void writedata_by_id(file_t *fd, const void* pix, uint32_t id);
 void write_by_id(const void* dc, uint32_t id, const char* format,...) CHECK_ARG(3);

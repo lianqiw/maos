@@ -323,9 +323,23 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
 }
 
 /**
+   see KL_vonkarman()
+ */
+static dmat *KL_vonkarman_do(const loc_t *loc, real L0){
+    dmat *modz=dnew(loc->nloc, loc->nloc);
+    real val=sqrt(loc->nloc); //this ensures rms wfe is 1, or orthonormal.
+    daddI(modz, val);
+    dadds(modz, -val/loc->nloc);//this ensure every column sum to 0 (no piston)
+    dmat *cov=cov_vonkarman(loc, modz, L0);
+    dmat *kl=cov_diagnolize(modz, cov);
+    dfree(modz);
+    dfree(cov);
+    return kl;
+}
+/**
    Create Karhunen-Loeve modes for which each mode is statistically independent
    in von Karman spectrum.
-   
+
    The original method is to compute covariance of zernike modes in von Karman
    spectrum and diagnolize the covariance matrix. But this methods suffers for
    higher order systems because high order zernike modes are hard to generate on
@@ -342,18 +356,7 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
 
    In theory, the KL modes computes should be independent on the starting mode,
    as long as the modes span the whole vector space for the coordinate.
- */
-dmat *KL_vonkarman_do(const loc_t *loc, real L0){
-    dmat *modz=dnew(loc->nloc, loc->nloc);
-    real val=sqrt(loc->nloc); //this ensures rms wfe is 1, or orthonormal.
-    daddI(modz, val);
-    dadds(modz, -val/loc->nloc);//this ensure every column sum to 0 (no piston)
-    dmat *cov=cov_vonkarman(loc, modz, L0);
-    dmat *kl=cov_diagnolize(modz, cov);
-    dfree(modz);
-    dfree(cov);
-    return kl;
-}
+*/
 dmat *KL_vonkarman(const loc_t *loc, int nmod, real L0){
     if(!loc) return 0;
     uint32_t key=lochash(loc, 0);

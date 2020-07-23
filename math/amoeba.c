@@ -22,7 +22,7 @@
 #define NRANSI
 #define NR_END 1
 #define FREE_ARG char*
-#ifdef USE_COMPLEX
+#ifdef COMP_COMPLEX
 #error "Do not use for complex numbers"
 #endif
 /**

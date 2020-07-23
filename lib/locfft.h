@@ -15,6 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file locfft.h
+
+   Routines used to embed OPDs defined on loc_t to square array with embeding
+   factor and compute PSF using FFT.
+*/
 
 typedef struct{
     loc_t *loc; /*reference to the grid*/

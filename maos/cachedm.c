@@ -18,10 +18,10 @@
 
 #include "common.h"
 #include "sim.h"
-/**
-   \file maos/cachedm.c Contains routines that prepare and carry out DM shape
-   caching on fine sampled grid to speed up ray tracing.  
 
+/**
+   Prepares the DM caching structs that caches DM on fine sampled grid to speed
+   up ray tracing with linear interpolation.
 
    Because the DM has coarse sampling, and cubic influence functions, directly
    interpolate from the DM to the WFS and science OPD takes a lot of
@@ -34,9 +34,6 @@
    matches the WFS and science OPD. For the upper DM, we need to two planes, one
    at 1/64m for the LGS WFS and science OPD, and another one at 1/64 m
    *(1-11.2/90) for the LGS due to cone effect. The square grid are on axis.
- */
-/**
-   Prepares the DM caching structs.
 */
 void prep_cachedm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;

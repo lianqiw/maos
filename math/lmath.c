@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#define USE_LONG
+#define COMP_LONG
 #include "mat.c"
+
 #include "matbin.c"
+#include "matmmap.c"

@@ -15,6 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file zernike.h
+*/
 #ifndef AOS_LIB_ZERNIKE_H
 #define AOS_LIB_ZERNIKE_H
 #include "../math/mathdef.h"

@@ -43,7 +43,7 @@ typedef struct GENATM_T{
 }GENATM_T;
 map_t *genatm_simple(real r0, real L0, real dx, long nx);
 dmat *genatm_loc(loc_t *loc, real r0, real L0);
-mapcell* genatm_from_spect(GENATM_T *data);
+//mapcell* genatm_from_spect(GENATM_T *data);
 mapcell* vonkarman_screen(GENATM_T *data);
 mapcell* biharmonic_screen(GENATM_T *data);
 mapcell *fractal_screen(GENATM_T *data);

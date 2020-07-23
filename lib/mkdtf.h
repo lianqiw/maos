@@ -77,7 +77,9 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     );
 void dtf_free_do(DTF_T *dtfs);
 void etf_free_do(ETF_T *etfs);
+/**frees DTF_T */
 #define dtf_free(dtfs) ({dtf_free_do(dtfs); dtfs=NULL;})
+/**frees ETF_T */
 #define etf_free(etfs) ({etf_free_do(etfs); etfs=NULL;})
 dmat* smooth(const dmat *profile, real dxnew);
 #endif

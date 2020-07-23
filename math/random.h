@@ -19,8 +19,7 @@
 #ifndef __AOS_RANDOM_H
 #define __AOS_RANDOM_H
 #include "../sys/sys.h"
-/**
-   \file random.h
+/*
    Random number generators.
 */
 /* 

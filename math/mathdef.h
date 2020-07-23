@@ -15,17 +15,21 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file mathdef.h
 
+   Includes macro definitions for all types.
+*/
 #ifndef AOS_LIB_MATH_H
 #define AOS_LIB_MATH_H
 #include "../sys/sys.h"
 #include "type.h"
-#include "mat.h"
-#include "matmath.h"
-#include "sp.h"
-#include "fft.h"
-#include "matbin.h"
-#include "spbin.h"
+#include "dmath.h"
+#include "cmath.h"
+#include "smath.h"
+#include "zmath.h"
+#include "lmath.h"
+
 #include "cell.h"
 #include "chol.h"
 #include "zfarr.h"
@@ -34,84 +38,42 @@
 #include "map.h"
 #include "random.h"
 
-#define AOS_LMAT(A) l##A
-#define AOS_CMAT(A) c##A
-#define AOS_DMAT(A) d##A
-#define AOS_SMAT(A) s##A
-#define AOS_ZMAT(A) z##A
 #define isempty(A) (!(A) || !(A)->nx || !(A)->ny)
-
-//Single
-AOS_MAT_DEF(AOS_SMAT,float,float)
-AOS_MAT_DEF(AOS_ZMAT,fcomplex,float)
-
-AOS_MATMATH_DEF(AOS_SMAT,AOS_SMAT,float,float)
-AOS_MATMATH_DEF(AOS_ZMAT,AOS_SMAT,fcomplex,float)
-
-AOS_CMATMATH_DEF(AOS_ZMAT,AOS_SMAT,fcomplex,float)
-
-AOS_MATBIN_DEF(AOS_SMAT,float)
-AOS_MATBIN_DEF(AOS_ZMAT,fcomplex)
-
-
-AOS_SP_DEF(AOS_SMAT,float,float,fcomplex)
-AOS_SP_DEF(AOS_ZMAT,fcomplex,float,fcomplex)
-
-AOS_SPBIN_DEF(AOS_SMAT,float)
-AOS_SPBIN_DEF(AOS_ZMAT,fcomplex)
-
-AOS_FFT_DEF(AOS_SMAT)
-AOS_FFT_DEF(AOS_ZMAT)
-
-//Real, which can be double or float
-AOS_MAT_DEF(AOS_DMAT,real,real)
-AOS_MAT_DEF(AOS_CMAT,comp,real)
-
-AOS_MATMATH_DEF(AOS_DMAT,AOS_DMAT,real,real)
-AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,comp,real)
-
-AOS_CMATMATH_DEF(AOS_CMAT,AOS_DMAT,comp,real)
-
-AOS_MATBIN_DEF(AOS_DMAT,real)
-AOS_MATBIN_DEF(AOS_CMAT,comp)
-
-AOS_SP_DEF(AOS_DMAT,real,real,comp)
-AOS_SP_DEF(AOS_CMAT,comp,real,comp)
-
-AOS_SPBIN_DEF(AOS_DMAT,real)
-AOS_SPBIN_DEF(AOS_CMAT,comp)
-
-AOS_FFT_DEF(AOS_DMAT)
-AOS_FFT_DEF(AOS_CMAT)
-
-//#endif
-AOS_MAT_DEF(AOS_LMAT, long,long)
-AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define abs2(A)      ((A)*(A))
 #define cabs2f(A)    (abs2(crealf(A))+abs2(cimagf(A)))
 #define cabs2(A)     (abs2(creal(A))+abs2(cimag(A)))
-
+/*!free a dmat and zero the pointer.*/
 #define dfree(A)     ({dfree_do(A);A=NULL;})
 #define dcellfree(A) ({cellfree_do(A);A=NULL;})
 #define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
-
+/*!free a smat and zero the pointer.*/
 #define sfree(A)     ({sfree_do(A);A=NULL;})
 #define scellfree(A) ({cellfree_do(A);A=NULL;})
 #define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
-
+/*!free a cmat and zero the pointer.*/
 #define cfree(A)     ({cfree_do(A);A=NULL;})
 #define ccellfree(A) ({cellfree_do(A);A=NULL;})
 #define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
-
+/*!free a zmat and zero the pointer.*/
 #define zfree(A)     ({zfree_do(A);A=NULL;})
 #define zcellfree(A) ({cellfree_do(A);A=NULL;})
-
+/*!free a lmat and zero the pointer.*/
 #define lfree(A)     ({lfree_do(A);A=NULL;})
 #define lcellfree(A) ({cellfree_do(A);A=NULL;})
-
-#define cellfree(A) ({cellfree_do(A); A=NULL;})
-
+/*!free a dsp and zero the pointer*/
+#define dspfree(A)      {dspfree_do(A); A=NULL;}
+#define dspcellfree(A)  {dspcellfree_do(A); A=NULL;}
+/*!free a ssp and zero the pointer*/
+#define sspfree(A)      {sspfree_do(A); A=NULL;}
+#define sspcellfree(A)  {sspcellfree_do(A); A=NULL;}
+/*!free a ssp and zero the pointer*/
+#define cspfree(A)     {cspfree_do(A); A=NULL;}
+#define cspcellfree(A) {cspcellfree_do(A); A=NULL;}
+/*!free a zsp and zero the pointer*/
+#define zspfree(A)     {zspfree_do(A); A=NULL;}
+#define zspcellfree(A) {zspcellfree_do(A); A=NULL;}
+    
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP, 0, A)
 
@@ -129,7 +91,8 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define loccellread(A...) (loccell*)read_by_id(M_LOC, 1, A)
 #define loccellnew (loccell*)cellnew
 #define locccellnew (locccell*)cellnew
-/** Read needs type checking, so don't use readbin*/
+/* Read needs type checking, so don't use readbin*/
+/**read a dmat*/
 #define dread(A...)    dmat_cast(read_by_id(M_REAL, 0, A))
 #define dcellnew (dcell*)cellnew
 #define dccellnew (dccell*)cellnew
@@ -137,7 +100,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define dcellread(A...) (dcell*)read_by_id(M_REAL, 1, A)
 #define dccellread(A...) (dccell*)read_by_id(M_REAL, 2, A)
 #define dcccellread(A...) (dcccell*)read_by_id(M_REAL, 3, A)
-
+/**read a smat*/
 #define sread(A...)    smat_cast(read_by_id(M_FLT, 0, A))
 #define scellnew (scell*)cellnew
 #define sccellnew (sccell*)cellnew
@@ -145,7 +108,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define scellread(A...) (scell*)read_by_id(M_FLT, 1, A)
 #define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
 #define scccellread(A...) (scccell*)read_by_id(M_FLT, 3, A)
-
+/**read a cmat*/
 #define cread(A...)    cmat_cast(read_by_id(M_COMP, 0, A))
 #define ccellnew (ccell*)cellnew
 #define cccellnew (cccell*)cellnew
@@ -153,7 +116,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define ccellread(A...) (ccell*)read_by_id(M_COMP, 1, A)
 #define cccellread(A...) (cccell*)read_by_id(M_COMP, 2, A)
 #define ccccellread(A...) (ccccell*)read_by_id(M_COMP, 3, A)
-
+/**read a cmat*/
 #define zread(A...)    zmat_cast(read_by_id(M_ZMP, 0, A))
 #define zcellnew (zcell*)cellnew
 #define zccellnew (zccell*)cellnew
@@ -161,7 +124,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define zcellread(A...) (zcell*)read_by_id(M_ZMP, 1, A)
 #define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
 #define zcccellread(A...) (zcccell*)read_by_id(M_ZMP, 3, A)
-
+/**read a lmat*/
 #define lread(A...) lmat_cast(read_by_id(M_LONG, 0, A))
 #define lcellnew (lcell*)cellnew
 #define lccellnew (lccell*)cellnew
@@ -169,11 +132,13 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define lcellread(A...) (lcell*)read_by_id(M_LONG, 1, A)
 #define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
 #define lcccellread(A...) (lcccell*)read_by_id(M_LONG, 3, A)
-
+    
+/**read a dsp*/
 #define dspread(A...) dsp_cast(read_by_id(M_DSP, 0, A))
 #define dspcellread(A...) dspcell_cast(read_by_id(M_DSP, 1, A))
 #define sspread(A...) ssp_cast(read_by_id(M_SSP, 0, A))
 #define sspcellread(A...) sspcell_cast(read_by_id(M_SSP, 1, A))
+/**read a zsp*/
 #define cspread(A...) csp_cast(read_by_id(M_CSP, 0, A))
 #define cspcellread(A...) cspcell_cast(read_by_id(M_CSP, 1, A))
 #define zspread(A...) zsp_cast(read_by_id(M_ZSP, 0, A))
