@@ -390,34 +390,34 @@ int main(int argc, char *argv[]){
    
  
     if(npath==1){
-	char *legs0[nseed];
-	const char *legs[nseed];//work around C warning.
+	char *legs0[nseed+1];
 	for(int iseed=0; iseed<nseed; iseed++){
 	    legs0[iseed]=mymalloc(50,char);
 	    snprintf(legs0[iseed], 50, "Seed %ld", seed[iseed]);
-	    legs[iseed]=legs0[iseed];
 	}
+	legs0[nseed]=mystrdup("Seed RMS");
+	
 	for(int ic=0; ic<res->nx; ic++){
 	    if(res->p[ic]){
-		plot_points(toptab[ic], nseed, NULL, res->p[ic], NULL, NULL, xylog, NULL, legs,
-			    title[ic], xlabel,ylabel, "%s",sidetab[ic]);
+		cellresize(res->p[ic], 1, nseed+1);
+		res->p[ic]->p[nseed]=dref(resm->p[ic]->p[0]);
+		plot_points(toptab[ic], nseed+1, NULL, res->p[ic], NULL, NULL, xylog, NULL, (const char * const*)legs0,
+			    title[ic], xlabel, ylabel, "%s",sidetab[ic]);
 	    }
 	}
-	for(int iseed=0; iseed<nseed; iseed++){
+	for(int iseed=0; iseed<=nseed; iseed++){
 	    free(legs0[iseed]);
 	}
     }else{
 	char *pathtag0[npath];
-	const char *pathtag[npath];
 	char prefix[4]="A: ";
 	for(int ipath=0; ipath<npath; ipath++){
 	    prefix[0]='A'+ipath;
 	    pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
-	    pathtag[ipath]=pathtag0[ipath];
 	}
 	for(int ic=0; ic<res->nx; ic++){
 	    if(res->p[ic]){
-		plot_points(toptab[ic], npath, NULL, resm->p[ic], NULL, NULL, xylog, NULL, pathtag,
+		plot_points(toptab[ic], npath, NULL, resm->p[ic], NULL, NULL, xylog, NULL, (const char * const*)pathtag0,
 			    title[ic], xlabel,ylabel, "%s",sidetab[ic]);
 	    }
 	}
@@ -426,7 +426,7 @@ int main(int argc, char *argv[]){
 	    for(int ic=0; ic<res->nx; ic++){
 		if(res->p[ic]){
 		    dcell *tmp=dcellsub(res->p[ic], 0, 0, iseed, 1);
-		    plot_points(toptab[ic], npath, NULL, tmp , NULL, NULL, xylog, NULL, pathtag,
+		    plot_points(toptab[ic], npath, NULL, tmp , NULL, NULL, xylog, NULL, (const char * const*)pathtag0,
 				title[ic], xlabel,ylabel, "%s_%ld", sidetab[ic], seed[iseed]);
 		    dcellfree(tmp);
 		}

@@ -427,7 +427,7 @@ void reconstruct(SIM_T *simu){
     if(parms->recon.split){//low order reconstruction
 	recon_split(simu);
     }
-    if(parms->recon.psd){
+    if(parms->recon.psd && parms->sim.closeloop){
 	recon_servo_update(simu);
     }
     if(hi_output && parms->save.ecov && isim>=parms->evl.psfisim){

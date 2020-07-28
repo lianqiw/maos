@@ -104,7 +104,7 @@
    nvidia graphics gpus are listed.
     
    The configure can automatically detect cuda if nvcc is in the path, or if
-   cuda is installed in /opt/cuda or /usr/local/cuda. For other locations, you
+   cuda is installed in /usr/local/cuda. For other locations, you
    need to pass the cuda directory to configure:
 
    \verbatim $src_dir/configure --with-cuda=cuda_dir \endverbatim

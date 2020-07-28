@@ -319,7 +319,7 @@ static void add2cpu(T * restrict *dest, R alpha, const S *src, R beta, long n,
 
 add2cpu_mat(s, float,Real)
 add2cpu_mat(z, float,Comp)
-#ifdef USE_DOUBLE
+#if COMP_SINGLE==0
 add2cpu_mat(d, real, Real)
 add2cpu_mat(c, real, Comp)
 #endif
@@ -357,14 +357,14 @@ add2cpu_cell(z, float,cuccell)
 	if(pout->header) free(pout->header);				\
 	if(in.header.length()) pout->header=strdup(in.header.c_str());	\
     }
-#ifdef USE_DOUBLE
+#if COMP_SINGLE==0
 cp2cpu_same(dmat,dzero,dnew,double)
 cp2cpu_same(cmat,czero,cnew,double2)
 #endif
 cp2cpu_same(smat,szero,snew,float)
 cp2cpu_same(zmat,zzero,znew,float2)
 #if ! CUDA_DOUBLE 
-#ifdef USE_DOUBLE
+#if COMP_SINGLE==0
 void cp2cpu(dmat **out, const curmat &in, cudaStream_t stream){
     add2cpu(out, 0, in, 1, stream, 0);
 }

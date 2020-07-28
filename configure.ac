@@ -16,6 +16,9 @@ fi
 if test -z "$LIBS" ;then
     LIBS=" "
 fi
+if test -z "$CC" ;then 
+    CC="$MAOS_CC"
+fi
 AC_CONFIG_MACRO_DIR([m4])
 #After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
 AC_CONFIG_HEADER([config.h])
@@ -111,7 +114,7 @@ if test -n "`which nvcc 2>/dev/null`" ;then
 	NVCC="$(readlink "$NVCC")"
     fi
 else
-    for cuda in /opt/cuda/default /opt/cuda /usr/local/cuda ;do
+    for cuda in /usr/local/cuda ;do
 	if test -x "${cuda}/bin/nvcc" ;then
 	    NVCC="${cuda}/bin/nvcc"
 	    break;
@@ -193,10 +196,10 @@ fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
-#if test "${USER}" = "lianqiw" ;then
-#    OPTScommon+=" -Wshadow -Wall -Wextra "
+if test "${USER}" = "lianqiw" ;then
+    OPTScommon+=" -Wshadow -Wall -Wextra "
     #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
-#fi
+fi
 LDEXE=
 OPTS=
 COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-unknown-pragmas"
@@ -275,7 +278,7 @@ if test "$use_release" != "yes" ;then
         *march*)
             ;;
         *)
-            CFLAGS+=" -march=native"
+            OPTIM_ALL+=" -march=native"
             ;;
     esac
 fi
@@ -494,7 +497,7 @@ compile(){
     rm -rf ${TMP_DIR}/$name
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
-    echo "Compiling $name with CFLAGS=$CFLAGS. Check $fnlog for details"
+    echo "Compiling $name with CFLAGS=$CFLAGS $@.\nCheck $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
 	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} >> $fnlog 2>&1|| \
@@ -514,13 +517,15 @@ function set_lapack(){
 		download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
 	    fi
 	    #First use MKL if available. 
-	    LAPACK=
+
 	    if test "$host_cpu" = "x86_64" ;then
-		LAPACK+=" -lmkl_intel_lp64"
+		LAPACK="-lmkl_intel_lp64"
 	    else
-		LAPACK+=" -lmkl_intel"
+		LAPACK="-lmkl_intel"
 	    fi
+
 	    LAPACK+=" -lmkl_core"
+
 	    if false; then
 		LAPACK+=" -lmkl_sequential -lpthread"
 	    else
@@ -532,8 +537,9 @@ function set_lapack(){
 	    fi
 	 
 	    if test "$use_static" = "yes" ;then
-    		LAPACK="-Wl,--start-group,${LAPACK},--end-group"
+		LAPACK="-Wl,--start-group,${LAPACK},--end-group"
 		LAPACK=${LAPACK// /,}
+		LAPACK=${LAPACK//,,/,}
 	    fi
 	    ;;
 	pkg-config)
@@ -893,17 +899,19 @@ if test "$with_cuda" != "no" ;then
 	CCBIN="${CCBIN%% *}"
 	NVCC+=" -ccbin ${CCBIN%% *}"
     fi
-    if test "$cudaver" -lt 40 ;then
+    if test "$cudaver" -lt 70 ;then
 	#CUDA 4.0 supports compute_20
 	#CUDA 7.0 supports C++11.
 	AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
     fi
     #virtual GPUs are used here to allow JIT compilation during runtime
     #set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
-    if test "$cudaver" -lt 80 ;then
+    if test "$cudaver" -lt 90 ;then
 	CUDAOPT+=" -arch=compute_20" #<cuda-8.0 supports compute_20
-    else
+    elif test "$cudaver" -lt 110 ;then
 	CUDAOPT+=" -arch=compute_30" #compute_30 is the minimum version
+    else
+	CUDAOPT+=" -arch=compute_50" #compute_30 is the minimum version
     fi
     #To specify multiple architectures, use
     #CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
