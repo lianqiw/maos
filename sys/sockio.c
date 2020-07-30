@@ -32,7 +32,7 @@
 #endif
 int stwrite(int sfd, const void *p, size_t len){
     int is_sock=issock(sfd);
-    long nwrite;
+    ssize_t nwrite;
     long left=(long)len;
     do{
 	if(is_sock){
@@ -42,11 +42,11 @@ int stwrite(int sfd, const void *p, size_t len){
 	}
 	p=(char*)p+nwrite; left-=nwrite;
     }while(nwrite>0 && left>0);
-    return left?-1:0;
+    return (nwrite<0||left)?-1:0;//-1 indicate error/closed
 }
 int stread(int sfd, void *p, size_t len){
     int is_sock=issock(sfd);
-    long nread;
+    ssize_t nread;
     long left=len;
     do{
 	if(is_sock){
@@ -57,12 +57,12 @@ int stread(int sfd, void *p, size_t len){
 	p=(char*)p+nread; left-=nread;
     }while(nread>0 && left>0);
     //if(left) info("stread failed: nread=%ld, left=%ld\n", nread, left);
-    return left>0?-1:0;
+    return (nread<0 || (nread==0 && len!=0) || left)>0?-1:0; //-1 indicated error/closed
 }
 /*Write long messages with smaller buffer*/
 int stwrite2(int sfd, const void *p, size_t len, size_t nbuf){
     if(nbuf>len) nbuf=len;
-    size_t nwrite;
+    ssize_t nwrite;
     long left=len;//do not use size_t which is unsigned
 #ifdef __linux__
     int is_sock=issock(sfd);
@@ -77,18 +77,18 @@ int stwrite2(int sfd, const void *p, size_t len, size_t nbuf){
 	
 	p=(char*)p+nwrite; left-=nwrite;
     }while(nwrite>0 && left>0);
-    return left?-1:0;
+    return (nwrite<0 || left)?-1:0;
 }
 /*Read long messages with smaller buffer*/
 int stread2(int sfd, void *p, size_t len, size_t nbuf){
     if(nbuf>len) nbuf=len;
-    size_t nread;
+    ssize_t nread;
     long left=len;
     do{
 	nread=read(sfd, p, nbuf);
 	p=(char*)p+nread; left-=nread;
     }while(nread>0 && left>0);
-    return left?-1:0;
+    return (nread<0 || (nread==0 && len!=0) || left)?-1:0;
 }
 /**
    Write a string to socket
@@ -195,11 +195,14 @@ int streadfd(int sfd, int *fd){
     }
     return ans;
 }
-/**
-   Check whether a socket has been disconnected
+/*
+  Check whether a socket has been disconnected. Implementation is not correct.
 */
-int stcheck(int sfd){
+/*
+int stcheck(int sfd, int use_write){
     int ans=0;
+
+      //poll does not detect closed socket used for writing.
     struct pollfd data={sfd, POLLIN|POLLPRI|POLLOUT, 0 };
     if(poll(&data, 1, 1)){
 	dbg("data.revents=%d\n", data.revents);
@@ -207,6 +210,6 @@ int stcheck(int sfd){
 	    warning("socket %d is no longer valid\n", sfd);
 	    ans=1;
 	}
-    }
-    return ans;
-}
+	}
+return ans
+}*/

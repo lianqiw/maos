@@ -44,5 +44,4 @@ int stwritestrarr(int sfd, const char *const *str, int nstr);
 int streadstrarr(int sfd, char ***str, int *nstr);
 int stwritefd(int sfd, int fd);
 int streadfd(int sfd, int *fd);
-int stcheck(int sfd);
 #endif

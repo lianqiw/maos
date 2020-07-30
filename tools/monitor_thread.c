@@ -348,14 +348,9 @@ int scheduler_display(int ihost, int pid){
     int sock=connect_port(hosts[ihost], PORT, 0, 0);
     int ans=1;
     int cmd[2]={CMD_DISPLAY, pid};
-    if(stwriteintarr(sock, cmd, 2)){
-	warning("Failed to communicate to scheduler\n");
+    if(stwriteintarr(sock, cmd, 2) || streadintarr(sock, cmd, 1) || cmd[0]){
+	warning("Failed to pass sock to draw via scheduler.\n");
 	close(sock);
-    }
-    if(streadintarr(sock, cmd, 1)){
-	warning("Read response failed\n");
-    }else if(cmd[0]){
-	warning("The scheduler failed to talk to maos\n");
     }else{
 	char arg1[20];
 	snprintf(arg1, 20, "%d", sock);

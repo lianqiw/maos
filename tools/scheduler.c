@@ -719,7 +719,7 @@ static int respond(int sock){
 		for(SOCKID_T *p=head, *p_next; p && sock_save==-1; p=p_next){
 		    p_next=p->next;
 		    int badsock=0;
-		    if((badsock=stcheck(p->sock)) || (pid==0 || p->id==-pid)){
+		    if((badsock=stwrite(p->sock, &badsock, 0)) || (pid==0 || p->id==-pid)){
 			if(!badsock){
 			    sock_save=p->sock;
 			}else{
@@ -777,17 +777,16 @@ static int respond(int sock){
     case CMD_DISPLAY://12: called by monitor to enable maos to draw.*/
 	info("CMD_DISPLAY received with pid=%d\n", pid);
 	if(pid==0){//this is for pending scheduler_recv_socket
-	    if(scheduler_recv_wait!=-1){
-		if(stwriteint(scheduler_recv_wait, 0) || 
-		   stwritefd(scheduler_recv_wait, sock)){
-		    stwriteint(sock, -1);
-		    warning("failed to pass sock to draw\n");
-		}else{
-		    stwriteint(sock, 0);//success.
-		    info("passed socket to draw\n");
-		}
+	    if(scheduler_recv_wait == -1 || stwriteint(scheduler_recv_wait, 0)
+	       || stwritefd(scheduler_recv_wait, sock)){
+		stwriteint(sock, -1);
+		warning("failed to pass sock to draw\n");
+	    }else{
+		stwriteint(sock, 0);//success.
+		info("passed socket to draw\n");
 	    }
 	    scheduler_recv_wait=-1;
+	    ret=-1;
 	}else{
 	    ret=maos_command(pid, sock, MAOS_DRAW);
 	}
@@ -1089,7 +1088,7 @@ double get_usage_gpu(double* const gpu_mem){
 static void monitor_send_load(void){
     MONITOR_T *ic, *ic2;
     double mem=get_usage_mem();
-    double gpu_mem;
+    double gpu_mem=0;
     double gpu=NGPU?get_usage_gpu(&gpu_mem):0;
     int cmd[3];
     cmd[0]=MON_LOAD;

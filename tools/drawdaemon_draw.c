@@ -1076,8 +1076,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	/*first figure out the size required of longest legend entry. */
 	for(int ig=0; ig<ng; ig++){
 	    cairo_text_extents(cr, legend[ig], &extents);
-	    maxlen=MAX(maxlen, extents.width+1);/*length of text. */
-	    tall=MAX(tall, extents.height+1);/*tall of text. */
+	    maxlen=MAX(maxlen, extents.width*1.5);/*length of text. */
+	    tall=MAX(tall, extents.height*1.5);/*tall of text. */
 	    PARSE_STYLE(drawdata->style_pts[ig]);
 	    if(connectpts){
 		leglen=MAX(leglen, linelen);

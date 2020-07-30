@@ -466,8 +466,7 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	    cairo_fill_preserve(cr);
 	    cairo_set_source_rgba(cr, 0,0,0,1);
 	    cairo_stroke(cr);
-	    cairo_destroy(cr);
-	
+	    cairo_destroy(cr);	
 	}
     }
     /*we set the cursor */
