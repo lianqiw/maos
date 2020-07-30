@@ -210,7 +210,12 @@ static int respond(int sock){
 	return -1;
     }
 	break;
-    case MON_VERSION:
+    case MON_DRAWDAEMON:
+	{
+	    info("MON_DRAWDAEMON received.\n");
+	    scheduler_display(ihost,0);
+	    info("MON_DRAWDAEMON finished.\n");
+	}
 	break;
     case MON_STATUS:
 	{
@@ -254,6 +259,8 @@ static int respond(int sock){
 		tmp[0]=' ';
 	    }
 	}
+	break;
+    case MON_VERSION:
 	break;
     case MON_LOAD:
 	{

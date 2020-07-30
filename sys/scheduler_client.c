@@ -98,7 +98,8 @@ int scheduler_recv_socket(int *sfd, int id){
     (void)id;
     return -1;
 }
-
+int scheduler_launch_drawdaemon(void){
+}
 #else
 uint16_t PORT=0;
 char** hosts=0;
@@ -405,7 +406,7 @@ int scheduler_recv_socket(int *sfd, int id){
     int ans=-1;
     int ssock=scheduler_connect_self(0);
     if(ssock!=-1){
-	int cmd[2]={CMD_SOCK, -abs(id)};
+	int cmd[2]={CMD_SOCK, (id==0?0:-abs(id))};
 	int ans2=-1;
 	if(stwriteintarr(ssock, cmd, 2) || streadint(ssock, &ans2)){
 	    warning("Talk to scheduler failed\n");
@@ -421,6 +422,7 @@ int scheduler_recv_socket(int *sfd, int id){
     }
     return ans;
 }
+
 #endif /*MAOS_DISABLE_SCHEDULER*/
 
 /**

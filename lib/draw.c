@@ -281,7 +281,10 @@ static int get_drawdaemon(){
     if(disable_draw){
 	return -1;
     }
-    
+    char *display=getenv("DISPLAY");
+    if(display && !strlen(display)){//display is not set, we ask scheduler to open a drawdaemon.
+	display=0;
+    }
     if(DRAW_ID<=0){
 	DRAW_ID=getsid(0);
 	if(DRAW_ID<0){
@@ -290,7 +293,7 @@ static int get_drawdaemon(){
     }
     int sock=-1;
     //First try reusing existing idle drawdaemon
-    if(scheduler_recv_socket(&sock, DRAW_ID)){
+    if(scheduler_recv_socket(&sock, display?DRAW_ID:0)){
 	sock=-1;
     }else{//test whether drawdaemon is still running
 	if(stwriteint(sock, DRAW_FINAL)){
@@ -299,7 +302,7 @@ static int get_drawdaemon(){
 	    sock=-1;
 	}
     }
-    if(sock==-1){
+    if(sock==-1 && display){
 	if(DRAW_DIRECT || sock_helper<=-1){//directly fork and launch
 	    TIC;tic;
 	    sock=launch_drawdaemon();

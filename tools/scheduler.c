@@ -531,6 +531,7 @@ static int maos_command(int pid, int sock, int cmd){
     }
     return -1;//do not keep this connection.
 }
+static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
 /**
    respond to client requests. The fixed header is int[2] for opcode and
    pid. Optional data follows based on opcode. The disadvanced of this is that
@@ -543,9 +544,9 @@ static int respond(int sock){
        will complain Bad file descriptor
     */
     int ret=0, pid, cmd[2];
-    info("\rrespond %2d start ... ", sock);
+    //info("\rrespond %2d start ... ", sock);errno=0;
     if((ret=streadintarr(sock, cmd, 2))){
-	info("read failed: %s", strerror(errno));
+	//info("read failed: %s,ret=%d\n", strerror(errno),ret);
 	goto end;
     }
     pid=cmd[1];
@@ -713,12 +714,12 @@ static int respond(int sock){
 			head=tmp;
 		    }
 		}
-	    }else if(pid<0){//send sock to draw()
+	    }else if(pid<=0){//send sock to draw()
 		int sock_save=-1;
-		for(SOCKID_T *p=head, *p_next; p; p=p_next){
+		for(SOCKID_T *p=head, *p_next; p && sock_save==-1; p=p_next){
 		    p_next=p->next;
 		    int badsock=0;
-		    if((badsock=stcheck(p->sock)) || p->id==-pid){
+		    if((badsock=stcheck(p->sock)) || (pid==0 || p->id==-pid)){
 			if(!badsock){
 			    sock_save=p->sock;
 			}else{
@@ -736,17 +737,29 @@ static int respond(int sock){
 			free(p);	
 		    }
 		}
-		//cannot pass -1 as sock, so return a flag first.
-		if(stwriteint(sock, sock_save>-1?0:-1)){
-		    warning("Unable to talk to draw\n");
-		}
-		if(sock_save>-1){
-		    if(stwritefd(sock, sock_save)){
-			warning("send socket %d to %d failed\n", sock_save, sock);
-		    }else{//socket is transferred to draw. we close it.
-			//info("send socket %d to %d success\n",sock_save, sock);
+		if(pid==0 && sock_save==-1){//there is no available drawdameon. Need to create one.
+		    info("ask monitor to start drawdaemon\n");
+		    int moncmd[3]={MON_DRAWDAEMON,0,0};
+		    if(pmonitor){
+			stwrite(pmonitor->sock, moncmd, sizeof(moncmd));
 		    }
-		    close(sock_save);
+		    scheduler_recv_wait=sock;
+		    info("requested\n");
+		    //wait until monitor opend drawdaemon.
+		    //continue tin CMD_DISPLAY
+		}else{
+		    //cannot pass -1 as sock, so return a flag first. sock can be zero.
+		    if(stwriteint(sock, sock_save>-1?0:-1)){
+			warning("Unable to talk to draw\n");
+		    }
+		    if(sock_save>-1){
+			if(stwritefd(sock, sock_save)){
+			    warning("send socket %d to %d failed\n", sock_save, sock);
+			}else{//socket is transferred to draw. we close it.
+			    //info("send socket %d to %d success\n",sock_save, sock);
+			}
+			close(sock_save);
+		    }
 		}
 	    }
 	}
@@ -762,7 +775,22 @@ static int respond(int sock){
 	}
 	break;	  
     case CMD_DISPLAY://12: called by monitor to enable maos to draw.*/
-	ret=maos_command(pid, sock, MAOS_DRAW);
+	info("CMD_DISPLAY received with pid=%d\n", pid);
+	if(pid==0){//this is for pending scheduler_recv_socket
+	    if(scheduler_recv_wait!=-1){
+		if(stwriteint(scheduler_recv_wait, 0) || 
+		   stwritefd(scheduler_recv_wait, sock)){
+		    stwriteint(sock, -1);
+		    warning("failed to pass sock to draw\n");
+		}else{
+		    stwriteint(sock, 0);//success.
+		    info("passed socket to draw\n");
+		}
+	    }
+	    scheduler_recv_wait=-1;
+	}else{
+	    ret=maos_command(pid, sock, MAOS_DRAW);
+	}
 	break;
     case CMD_MAOS://13: create a live link to maos.
 	ret=maos_command(pid, sock, MAOS_VAR);
@@ -1032,6 +1060,7 @@ double get_usage_gpu(double* const gpu_mem){
     if(enabled){
 	FILE *fp=popen("nvidia-smi --format=csv,nounits,noheader --query-gpu=memory.used,memory.total","r");
 	if(!fp){
+	    info("popen nvidia-smi failed, disable gpu usage\n");
 	    enabled=0;
 	}else{
 	    long used0=0, total0=0;
@@ -1045,7 +1074,11 @@ double get_usage_gpu(double* const gpu_mem){
 		}
 		ngpu++;
 	    }
-	    fclose(fp);
+	    pclose(fp);
+	    if(!total0){
+		enabled=0;
+		info("total0=0, disable gpu usage.\n");
+	    }
 	    *gpu_mem=(double)used0/total0;
 	    return (double)nuse/ngpu;
 	}
@@ -1057,7 +1090,7 @@ static void monitor_send_load(void){
     MONITOR_T *ic, *ic2;
     double mem=get_usage_mem();
     double gpu_mem;
-    double gpu=get_usage_gpu(&gpu_mem);
+    double gpu=NGPU?get_usage_gpu(&gpu_mem):0;
     int cmd[3];
     cmd[0]=MON_LOAD;
     cmd[1]=0;

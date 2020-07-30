@@ -43,7 +43,6 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]);
 /*save a socket for draw()*/
 int scheduler_send_socket(int sfd, int id);
 int scheduler_recv_socket(int *sfd, int id);
-
 /*Handling backtrace*/
 int call_addr2line(char *ans, int nans, const char *cmd);
 void print_backtrace_symbol(void *const *buffer, int size);

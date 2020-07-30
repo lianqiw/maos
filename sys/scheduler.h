@@ -84,6 +84,7 @@ enum{
 };
 /*command from scheduler etc and monitor*/
 enum{
+    MON_DRAWDAEMON=2,/*start drawdaemon*/
     MON_STATUS=3,
     MON_PATH=6,
     MON_VERSION=13,
