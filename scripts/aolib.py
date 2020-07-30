@@ -188,7 +188,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             mres+=res
             nseed+=1
         if nseed>0:
-            fds.append(fd)
+            fds.append(fd[0:-1])
             mres=mres*(1/nseed)
             if resall is None:
                 resall=mres
@@ -202,9 +202,9 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             print(fdin, 'does not exist')
         else:
             print(fdin, ' has no valid results')
-    if len(fds)>1:
-        print(*fds, sep="\n")
-    #    return (resall,fds2)
+    #if len(fds)>1:
+    #    print(*fds, sep="\n")
+    return (resall,fds)
     #else:
     return resall
 def mysqrt(x):

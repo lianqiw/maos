@@ -36,20 +36,23 @@ typedef struct SERVO_T{
     dccell *merrhist;   /**<Keep a short history of merr*/
     dccell *mint;       /**<second integrator. It is array to accomodate multiple ap's*/
     int initialized;    /**<is this data initialized*/
-    int al;             /**<Additional latency*/
+    int alint;          /**<Integral part of latency*/
+    real alfrac;        /**<Fractional latency*/
     /*Servo parameters.*/
     dmat *ap;
     dmat *ep;
     real dt;
 }SERVO_T;
-dcell* servo_optim(const dmat *psdin, real dt, long dtrat, long al, real pmargin, 
+dcell* servo_optim(const dmat *psdin, real dt, long dtrat, real al, real pmargin, 
 		   const dmat* sigma2n, int servo_type);
-dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, long al, real gain, real sigma2n);
-//cmat *servo_Hol(const dmat *nu, real dt, real dtrat, long al, const dmat *gain);
-real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, long al, const dmat *gain, int servo_type);
+dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, real al, real gain, real sigma2n);
+//cmat *servo_Hol(const dmat *nu, real dt, real dtrat, real al, const dmat *gain);
+real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, real al, const dmat *gain, int servo_type);
 void servo_update(SERVO_T *st, const dmat *ep);
-SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, real dt, const dmat *ep);
+SERVO_T *servo_new(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep);
 int servo_filter(SERVO_T *st, const dcell *merr);
+void servo_add(SERVO_T *st, const dcell *madj, real alpha);
+void servo_output(const SERVO_T *st, dcell **out);
 dmat* servo_test(dmat *mideal, real dt, int dtrat, dmat* sigma2n, dmat *gain);
 void servo_reset(SERVO_T *st);
 void servo_free(SERVO_T *st);

@@ -44,6 +44,6 @@ endif
 fixlibtool:
 	sed -i '' 's/|-fopenmp|/|/g' libtool
 version:
-	@echo static const char \*GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci'`\"\; >$(srcdir)/version2.h
-	@if ! diff $(srcdir)/version.h $(srcdir)/version2.h > /dev/null; then mv $(srcdir)/version2.h $(srcdir)/version.h ; else rm $(srcdir)/version2.h; fi
+	@cd $(srcdir) && str="static const char *GIT_VERSION=\"`git show -s --format='%h %ci'`\";" && if test -n "`echo $$str | diff version.h -`" ;then echo $$str >version.h;fi
+
 .ONESHELL:

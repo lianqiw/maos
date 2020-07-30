@@ -499,9 +499,9 @@ typedef struct SIM_CFG_T{
     dmat *eplo;      /**<error gain for NGS modes (low order)*/
     dmat *apfsm;     /**<servo coefficient for for LGS uplink pointing loop.*/
     dmat *epfsm;     /**<error gain for uplink pointing*/
-    int alhi;        /**<Additional latency (*sim.dt) of the high order loop*/
-    int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
-    int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
+    real alhi;     /**<Additional latency (*sim.dt) of the high order loop besides 2 cycle delay.*/
+    real allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
+    real alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
     int commonfsm;   /**<Make FSM common for each powfs (LLT)*/
     real zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
     real f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/

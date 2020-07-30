@@ -316,18 +316,27 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	}else{
 #ifndef MAOS_DISABLE_SCHEDULER
 	    /*Detached version. Always launch through scheduler if available.*/
-	    int locally=0;
-	    if(!host){
-		locally=1;
-		host=strdup("localhost");
-	    }
-	    if(scheduler_launch_exe(host, argc, argv)){
-		if(!locally){
-		    error("Unable to launch maos at server %s.\n", host);
-		}else{
+	    if(!host){//launch locally
+		if(scheduler_launch_exe("localhost", argc, argv)){
 		    warning("Launch locally without scheduler.\n");
 		}
-	    }else{
+	    }else {
+		const char *hostend=host+strlen(host);
+		//Host maybe coma separated hostnames
+		//Host2 is hostname found. Host3 is after coma.
+		char *host3=NULL;
+		for(char *host2=host; host2 && host2<hostend; host2=host3){
+		    char* coma=strchr(host2,',');
+		    if(coma){
+			*coma='\0';
+			host3=coma+1;
+		    }else{
+			host3=NULL;
+		    }
+		    if(scheduler_launch_exe(host2, argc, argv)){
+			warning("Unable to launch maos at server %s.\n", host2);
+		    }
+		}
 		exit(EXIT_SUCCESS);
 	    }
 #else

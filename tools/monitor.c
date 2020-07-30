@@ -847,7 +847,8 @@ int main(int argc, char *argv[])
 	error("failed to create socketpair\n");
     }
     pthread_t tmp;
-    pthread_create(&tmp, NULL, (void*(*)(void*))listen_host, NULL);
+    thread_new(listen_host, NULL);
+    //pthread_create(&tmp, NULL, (void*(*)(void*))listen_host, NULL);
     for(int ihost=0; ihost<nhost; ihost++){
 	add_host_wrap(ihost);
     }

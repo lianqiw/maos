@@ -160,7 +160,7 @@ static void host_removed(int sock){
     info("disconnected from %s\n", hosts[ihost]);
 }
 //connect to scheduler(host)
-static void add_host(gpointer data){
+static void* add_host(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
     int todo=0;
     LOCK(mhost);
@@ -190,6 +190,7 @@ static void add_host(gpointer data){
 	    UNLOCK(mhost);
 	}
     }
+    return NULL;
 }
 //respond to scheduler
 static int respond(int sock){
@@ -270,7 +271,7 @@ static int respond(int sock){
     case MON_ADDHOST:
 	if(cmd[1]>-1 && cmd[1]<nhost){
 	    pthread_t tmp;
-	    pthread_create(&tmp, NULL, (void*(*)(void*))add_host, GINT_TO_POINTER(cmd[1]));
+	    pthread_create(&tmp, NULL, add_host, GINT_TO_POINTER(cmd[1]));
 	}else if(cmd[1]==-2){
 	    return -2;
 	}
@@ -288,7 +289,8 @@ static int respond(int sock){
    3) monitor connected servers for activity. Disable pages when server is disconnected.
 
    write to sock_main[1] will be caught by select in listen_host(). This wakes it up.*/
-void listen_host(){
+void* listen_host(void*dummy){
+    (void)dummy;
     htime=mycalloc(nhost,double);
     FD_ZERO(&active_fd_set);
     FD_SET(sock_main[0], &active_fd_set);
@@ -328,6 +330,7 @@ void listen_host(){
 	    FD_CLR(i, &active_fd_set);
 	}
     }
+    return NULL;
 }
 /**
    called by monitor to let a MAOS job remotely draw on this computer

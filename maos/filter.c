@@ -312,14 +312,19 @@ static void filter_cl(SIM_T *simu){
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
 	    /*accumulate to the main integrator. Use mpreint to properly account
 	     * for type II controler. Gain is already applied.*/
-	    addlow2dm(&simu->dmint->mint->p[0], simu, simu->Mint_lo->mpreint, 1);
+	    dcellzero(simu->dmtmp);
+	    addlow2dm(&simu->dmtmp, simu, simu->Mint_lo->mpreint, 1);
+	    servo_add(simu->dmint, simu->dmtmp, 1);
 	}
     }
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
-    dcellcp(&simu->dmtmp,simu->dmint->mint->p[0]);
-    if(!parms->sim.fuseint){
-	addlow2dm(&simu->dmtmp,simu,simu->Mint_lo->mint->p[0], 1);
+    servo_output(simu->dmint, &simu->dmtmp);
+    if(parms->recon.split && !parms->sim.fuseint){
+	dcell *Mtmp=0;
+	servo_output(simu->Mint_lo, &Mtmp);
+	addlow2dm(&simu->dmtmp,simu,Mtmp, 1);
+	dcellfree(Mtmp);
     }
   
     if(parms->recon.modal){
@@ -376,7 +381,7 @@ static void filter_cl(SIM_T *simu){
 	if(recon->actstuck && parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
 	if(feedback){
 	    dcelladd(&simu->dmtmp, 1, simu->dmcmd, -1); //find what is clipped
-	    dcelladd(&simu->dmint->mint->p[0], 1, simu->dmtmp, -1);//remove from integrator (anti wind up)
+	    servo_add(simu->dmint, simu->dmtmp, -1);//remove from integrator (anti wind up)
 	    dcelladd(&simu->dmpsol, 1, simu->dmtmp, -1);//remove from dmpsol.
 	}
 	if(recon->actstuck && !parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
@@ -447,15 +452,18 @@ void filter_fsm(SIM_T *simu){
     if(simu->fsmint){
 	/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
 	if(parms->sim.f0fsm>0){//Apply SHO filter
+	    dcell *ftmp=0;
+	    servo_output(simu->fsmint, &ftmp);
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		if(simu->fsmreal->p[iwfs]){
-		    real *pin=simu->fsmint->mint->p[0]->p[iwfs]->p;
+		    real *pin=ftmp->p[iwfs]->p;
 		    simu->fsmreal->p[iwfs]->p[0]=sho_step(simu->fsmsho[iwfs], pin[0], parms->sim.dt);
 		    simu->fsmreal->p[iwfs]->p[1]=sho_step(simu->fsmsho[iwfs+parms->nwfs], pin[1], parms->sim.dt);
 		}
 	    }
+	    dcellfree(ftmp);
 	}else{//Copy directly
-	    dcellcp(&simu->fsmreal, simu->fsmint->mint->p[0]);
+	    servo_output(simu->fsmint, &simu->fsmreal);
 	}
 	if(parms->sim.commonfsm && simu->fsmerr){
 	    warning_once("Using common fsm\n");

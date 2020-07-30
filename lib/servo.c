@@ -148,7 +148,7 @@ static real gain_at_phase(real *fcross, /**<[out] Cross over frequency*/
    Make basic arrays for servo analysis.
    al: additional latency
 */
-static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, real dt, long dtrat, long al){
+static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, real dt, long dtrat, real al){
     if(psdin->ny!=2){
 	error("psdin should have two columns\n");
     }
@@ -320,7 +320,7 @@ static real servo_calc_do(SERVO_CALC_T *st, real g0){
    sigma2n is a dmat array of all wanted sigma2n.
    Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n]
 */
-dcell* servo_optim(const dmat *psdin,  real dt, long dtrat, long al, real pmargin,
+dcell* servo_optim(const dmat *psdin,  real dt, long dtrat, real al, real pmargin,
 		   const dmat* sigma2n, int servo_type){
     /*The upper end must be nyquist freq so that noise transfer can be
       computed. But we need to capture the turbulence PSD beyond nyquist freq,
@@ -365,7 +365,7 @@ dcell* servo_optim(const dmat *psdin,  real dt, long dtrat, long al, real pmargi
    Convert Closed loop residual PSD back to OL psd using rejection transfer function:
    PSD_OL=(PSD_CL-sigma2n/F_nyquist)/Hrej;
  */
-dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, long al, real gain, real sigma2n){
+dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, real al, real gain, real sigma2n){
     SERVO_CALC_T st; memset(&st, 0, sizeof(st));
     servo_calc_init(&st, psdcl, dt, dtrat, al);
     const dmat *nu=st.nu;
@@ -399,7 +399,7 @@ dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, long al, real gain, r
    
    Tested OK: 2010-06-11
 */
-real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, long al, const dmat *gain, int servo_type){
+real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, real al, const dmat *gain, int servo_type){
     SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(st));
     servo_calc_init(&st, psdin, dt, dtrat, al);
     st.type=servo_type;
@@ -505,7 +505,7 @@ void servo_update(SERVO_T *st, const dmat *ep){
 /**
    Initialize. al is additional latency
 */
-SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, real dt, const dmat *ep){
+SERVO_T *servo_new(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep){
     SERVO_T *st=mycalloc(1,SERVO_T);
     if(ap){
 	st->ap=ddup(ap);
@@ -518,8 +518,9 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, real dt, const dmat *ep)
     }
     st->mint=(dccell*)cellnew(st->ap->nx, 1);
     st->dt=dt;
-    st->al=al;
-    st->merrhist=(dccell*)cellnew(st->al+1, 1);
+    st->alint=(int)floor(al);
+    st->alfrac=al-floor(al);
+    st->merrhist=(dccell*)cellnew(st->alint+1, 1);
     servo_update(st, ep);
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
 	servo_init(st, merr);
@@ -550,7 +551,7 @@ static void servo_shift_ap(SERVO_T *st){
 }
 /*A FIFO queue to add delay*/
 static const dcell*servo_shift_al(SERVO_T *st, const dcell *merr){
-    if(!st->al){
+    if(!st->alint){
 	return merr;
     }else{
 	long nhist=st->merrhist->nx;
@@ -619,7 +620,22 @@ int servo_filter(SERVO_T *st, const dcell *_merr){
     dcelladd(st->mint->p, 1, st->mpreint, 1);
     return 1;
 }
-
+/**
+   Adjust integrator content without shift.
+*/
+void servo_add(SERVO_T *st, const dcell *madj, real alpha){
+    dcelladd(&st->mint->p[0], 1, madj, alpha);
+}
+/**
+   Create servo output. It handles st->alfrac.
+ */
+void servo_output(const SERVO_T *st, dcell **out){
+    assert(st);
+    dcellcp(out, st->mint->p[0]);
+    if(st->alfrac){
+	dcelladd(out, 1.-st->alfrac, st->mint->p[1], st->alfrac);
+    }
+}
 
 /**
    test type I/II filter with ideal measurement to make sure it is implemented correctly.

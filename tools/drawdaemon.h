@@ -158,7 +158,7 @@ void apply_limit(drawdata_t *drawdata);
 GtkWidget* create_window();
 gboolean addpage(gpointer junk);
 /*from drawdaemon_io */
-void listen_draw();
+void* listen_draw(void*);
 void flt2pix(long nx, long ny, int color, const float *restrict p,  void *pout, float *info);
 void fmaxmin(const float *p, long n, float *max, float *min);
 void round_limit(float *xmin, float *xmax, int logscale);

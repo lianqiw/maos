@@ -917,9 +917,9 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.f0fsm);
     READ_DBL(sim.aptwfs);
     READ_DBL(sim.eptwfs);
-    READ_INT(sim.alhi);
-    READ_INT(sim.allo);
-    READ_INT(sim.alfsm);
+    READ_DBL(sim.alhi);
+    READ_DBL(sim.allo);
+    READ_DBL(sim.alfsm);
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.aphi->nx==1){
 	dresize(parms->sim.aphi, 2, 1);

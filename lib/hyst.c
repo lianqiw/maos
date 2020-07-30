@@ -92,10 +92,10 @@ void hyst_free(HYST_T *hyst){
 }
 
 /**
-   Apply hysteresis to DM vector.
+   Apply hysteresis to DM vector. dmreal and dmcmd may be the same
 */
 void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
-    real *restrict x=dmcmd->p;
+    const real *restrict xin=dmcmd->p;
     real *restrict xout=dmreal->p;
     real *restrict xlast=hyst->xlast->p;
     real *restrict dxlast=hyst->dxlast->p;
@@ -106,7 +106,7 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
     int nmod=hyst->coeff->ny;
     int naloc=dmcmd->nx;
     for(int ia=0; ia<naloc; ia++){
-	real xia=x[ia]*hyst->xscale;
+	real xia=xin[ia]*hyst->xscale;
 	real dx=xia-xlast[ia];
 	if(fabs(dx)>1e-14){/*There is change in command */
 	    if(dx*dxlast[ia]<0){
@@ -118,7 +118,7 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
 	    }
 	    real alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
 	    if(hyst->power){
-		alphasc*=pow((hyst->stroke-x[ia])/(hyst->stroke*2.), hyst->power);
+		alphasc*=pow((hyst->stroke-xin[ia])/(hyst->stroke*2.), hyst->power);
 	    }
 	    for(int imod=0; imod<nmod; imod++){
 		const real alpha=alphasc*P(coeff,1,imod);

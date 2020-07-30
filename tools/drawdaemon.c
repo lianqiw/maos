@@ -67,7 +67,8 @@ int main(int argc, char *argv[]){
     gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
     gtkosx_application_ready(theApp);
 #endif
-    g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
+    thread_new(listen_draw, NULL);
+    //g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
     create_window();
     gtk_main();
 }/*main */

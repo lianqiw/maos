@@ -82,7 +82,7 @@ GtkWidget *new_page(int ihost);
 gboolean remove_entry(PROC_T *p);
 GtkWidget *monitor_new_entry_progress(void);
 GtkWidget *monitor_new_progress(int vertical, int length);
-void listen_host();
+void* listen_host(void*);
 void add_host_wrap(int ihost);
 gboolean host_down(gpointer data);
 gboolean host_up(gpointer data);

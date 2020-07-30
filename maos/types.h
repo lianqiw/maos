@@ -540,7 +540,7 @@ typedef struct SIM_T{
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
     dcell *dmtmp;      /**<Holds a temporary dm vector.*/
-    dcell *dmcmd;      /**<This is the final DM command send to DME (known to RTC).*/
+    dcell *dmcmd;      /**<This is the final DM command send to DME.*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
