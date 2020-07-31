@@ -37,3 +37,4 @@ mex/aolib.c*
 version.h
 scripts/libaos.py
 lib/aolib.h
+.ipynb_checkpoints
