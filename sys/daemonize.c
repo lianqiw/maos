@@ -204,9 +204,8 @@ void single_instance_daemonize(const char *lockfolder_in,
     /*redirect stdin/stdout. */
     if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
     if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
-    if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
+    if(!dup2(fileno(stdout), fileno(stderr))) warning("Error redirect stderr\n");
     setbuf(stdout,NULL);/*disable buffering. */
-    setbuf(stderr,NULL);
  
     char strpid[60];
     snprintf(strpid,60,"%d %ld\n",getpid(),version);
@@ -277,9 +276,7 @@ static void redirect2fd(int fd){
    Redirect stdout and stderr to fn
  */
 static void redirect2fn(const char *fn){
-    if(!freopen(fn, "w", stdout)){
-	warning("Error redirecting stdout/stderr\n");
-    }
+    if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout/stderr\n");
     setbuf(stdout, NULL);
     //fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);//interferes with drawdaemon
     //2018-10-29: We no longer redirecting stderr to file to keep it clean.

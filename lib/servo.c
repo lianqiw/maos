@@ -528,7 +528,7 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep
     return st;
 }
 /**
-   prepare the integrator by shifting commands. similar to laos.
+   prepare the modified integrator by shifting commands. similar to laos.
    inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
 */
 static void servo_shift_ap(SERVO_T *st){
@@ -539,15 +539,15 @@ static void servo_shift_ap(SERVO_T *st){
     }
     if(!st->initialized) return;
     dcell **inte=st->mint->p;
-    dcell *cyclic=inte[ap->nx-1];
-    dcellscale(cyclic, ap->p[ap->nx-1]);
+    dcell *recycle=inte[ap->nx-1];
+    dcellscale(recycle, ap->p[ap->nx-1]);
     for(int iap=ap->nx-2; iap>=0; iap--){
-	dcelladd(&cyclic,1,inte[iap],ap->p[iap]);
+	dcelladd(&recycle,1,inte[iap],ap->p[iap]);
     }
     for(int iap=ap->nx-1; iap>0; iap--){
 	inte[iap]=inte[iap-1];/*shifting */
     }
-    inte[0]=cyclic;/*new command. */
+    inte[0]=recycle;/*new command. */
 }
 /*A FIFO queue to add delay*/
 static const dcell*servo_shift_al(SERVO_T *st, const dcell *merr){
@@ -555,11 +555,11 @@ static const dcell*servo_shift_al(SERVO_T *st, const dcell *merr){
 	return merr;
     }else{
 	long nhist=st->merrhist->nx;
-	dcell *cycle=st->merrhist->p[0];
+	dcell *recycle=st->merrhist->p[0];
 	for(int i=0; i<nhist-1; i++){
 	    st->merrhist->p[i]=st->merrhist->p[i+1];
 	}
-	st->merrhist->p[nhist-1]=cycle;
+	st->merrhist->p[nhist-1]=recycle;
 	if(!merr){
 	    dcellfree(st->merrhist->p[nhist-1]);
 	}else{

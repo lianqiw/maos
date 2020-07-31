@@ -33,12 +33,11 @@ int main(int argc, char *argv[]){
 	    perror("freopen");
 	    warning("Error redirect stdout\n");
 	}
-	if(!freopen(fnlog, "w", stderr)) {
+	if(!dup2(fileno(stdout), fileno(stderr))){
 	    perror("freopen");
 	    warning("Error redirect stderr\n");
 	}
 	setbuf(stdout,NULL);
-	setbuf(stderr,NULL);
     }
     info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32

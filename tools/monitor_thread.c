@@ -212,9 +212,7 @@ static int respond(int sock){
 	break;
     case MON_DRAWDAEMON:
 	{
-	    info("MON_DRAWDAEMON received.\n");
 	    scheduler_display(ihost,0);
-	    info("MON_DRAWDAEMON finished.\n");
 	}
 	break;
     case MON_STATUS:
@@ -355,7 +353,7 @@ int scheduler_display(int ihost, int pid){
 	char arg1[20];
 	snprintf(arg1, 20, "%d", sock);
 	if(spawn_process("drawdaemon", arg1, NULL)<0){
-	    warning("spwn drawdaemon failed\n");
+	    warning("spawn drawdaemon failed\n");
 	}else{
 	    ans=0;
 	}	

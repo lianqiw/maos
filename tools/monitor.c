@@ -846,9 +846,7 @@ int main(int argc, char *argv[])
     if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
 	error("failed to create socketpair\n");
     }
-    pthread_t tmp;
     thread_new(listen_host, NULL);
-    //pthread_create(&tmp, NULL, (void*(*)(void*))listen_host, NULL);
     for(int ihost=0; ihost<nhost; ihost++){
 	add_host_wrap(ihost);
     }

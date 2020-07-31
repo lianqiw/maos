@@ -865,6 +865,7 @@ static int respond(int sock){
 	}
 	ret=-1;
     }
+    sync();
     return ret;/*don't close the port yet. may be reused by the client. */
 }
 /*
@@ -962,7 +963,7 @@ static void monitor_remove(int sock){
 		pmonitor=ic->next;
 	    }
 	    //close(ic->sock); close panics accept
-	    warning_time("Remove monitor at %d\n", ic->sock);
+	    dbg("Remove monitor at %d\n", ic->sock);
 	    shutdown(ic->sock, SHUT_WR);
 	    free(ic);
 	    break;
@@ -1089,7 +1090,10 @@ static void monitor_send_load(void){
     MONITOR_T *ic, *ic2;
     double mem=get_usage_mem();
     double gpu_mem=0;
-    double gpu=NGPU?get_usage_gpu(&gpu_mem):0;
+    double gpu=0;
+    if(NGPU && 0){
+	gpu=get_usage_gpu(&gpu_mem);
+    }
     int cmd[3];
     cmd[0]=MON_LOAD;
     cmd[1]=0;
