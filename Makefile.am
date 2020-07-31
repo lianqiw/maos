@@ -45,6 +45,6 @@ fixlibtool:
 	sed -i '' 's/|-fopenmp|/|/g' libtool
 version:
 	@cd $(srcdir) && str="static const char *GIT_VERSION=\"`git show -s --format='%h %ci'`\";" && \
-		if test -n "`echo $$str | diff version.h -`" -o !-f version.h ;then echo $$str >version.h;fi
+		if test -n "`echo $$str | diff version.h -`" -o ! -f version.h ;then echo $$str >version.h;fi
 
 .ONESHELL:
