@@ -5,7 +5,7 @@ icon-clear.h icon-draw.h  icon-finished.h icon-play.h  icon-save.h  icon-waiting
 icon-clear.png icon-error.png icon-monitor.png icon-save.png  icon-waiting.png \
 icon-connect.png icon-finished.png icon-play.png  icon-skip.png
 
-noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html $(ICONS) 
+noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html gtk3-css.h $(ICONS) 
 
 PROGS=
 

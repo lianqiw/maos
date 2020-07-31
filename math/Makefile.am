@@ -1,11 +1,13 @@
+SUBDIRS=../sys
+
 AM_CFLAGS=$(OPTS) -I$(top_srcdir)
 AM_LDFLAGS=$(LDOPTS)
 
-nobase_include_HEADERS= type.h numtype.h mathmisc.h random.h mathdef.h cell.h blas.h \
- matbin.h spbin.h zfarr.h chol.h  mat.h sp.h fft.h matmath.h loc.h map.h defs.h
+nobase_include_HEADERS=blas.h chol.h defs.h fft.h loc.h matbin.h mathdef.h matmath.h random.h spbin.h type.h zmath.h\
+ cell.h cmath.h dmath.h lmath.h map.h mat.h mathmisc.h numtype.h smath.h sp.h zfarr.h
 
 EXTRA_DIST=suitesparse.c matmmap.c
-EXTRA_DIST+=mat.c matmath.c blas.c matbin.c fft.c  matcomp.c amoeba.c bessik.c sp.c spmm.c spbin.c 
+EXTRA_DIST+=mat.c matmath.c blas.c matbin.c fft.c matcomp.c amoeba.c bessik.c sp.c spmm.c spbin.c 
 
 AOMATH_SRC= dmath.c cmath.c smath.c zmath.c lmath.c mathmisc.c random.c zfarr.c chol.c loc.c map.c cell.c
 

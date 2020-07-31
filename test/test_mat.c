@@ -364,12 +364,13 @@ void test_sho(){
     dfree(y2);
 }
 void test_sde(){
-    dmat *psd=dread("psd_in.bin");
-    dmat *coeff=dread("coeff_in.bin");
-    dmat *res=sde_fit(psd, coeff, 0.1, 0);
-    writebin(res, "sde_res.bin");
+    if(zfexist("psd_in.bin")){
+	dmat *psd=dread("psd_in.bin");
+	dmat *coeff=dread("coeff_in.bin");
+	dmat *res=sde_fit(psd, coeff, 0.1, 0);
+	writebin(res, "sde_res.bin");
+    }
     exit(0);
-    
 }
 int main(int argc, char **argv){
     test_sde();

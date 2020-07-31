@@ -284,11 +284,10 @@ void X(fft2s)(X(mat) *A, int dir){/*symmetrical cfft2. */
 void X(fft2partial)(X(mat) *A, int ncomp, int dir){
     assert(abs(dir)==1);
     assert(A && A->p);
-    if(!A->fft){
+    if(!A->fft || !A->fft->plan1d[dir+1]){
 	X(fft2partialplan)(A, ncomp, dir);
     }
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1];
-    if(!plan1d) error("Please run //cfft2partialplan first\n");
     if(ncomp!=plan1d->ncomp) error("Plan and fft mismatch\n");
     for(int i=0; i<3; i++){
 	fft_execute(plan1d->plan[i]);

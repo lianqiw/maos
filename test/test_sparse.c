@@ -87,6 +87,10 @@ static void test_spsum(){//passed
     }*/
 static void test_spmul(){
     TIC;
+    if(!zfexist("RLM.bin")){
+	info("RLM.bin does not exist\n");
+	return;
+    }
     dspcell *Ac=dspcellread("RLM.bin");
     dsp *A=Ac->p[0];
     rand_t rstat;
@@ -154,10 +158,12 @@ static void test_spmul(){
     exit(0);
 }
 void test_addI(){
-    dsp *a=dspread("a.bin");
-    dspaddI(a, 1);
-    writebin(a, "a1.bin");
-    exit(0);
+    if(zfexist("a.bin")){
+	dsp *a=dspread("a.bin");
+	dspaddI(a, 1);
+	writebin(a, "a1.bin");
+	exit(0);
+    }
 }
 int main(){
     THREAD_POOL_INIT(2);

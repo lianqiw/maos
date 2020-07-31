@@ -24,6 +24,10 @@
 static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A);
 
 int main(){
+    if(!zfexist("FLM.bin")){
+	info("FLM.bin does not exist\n");
+	return 0;
+    }
     dsp *A=dspread("FLM");
     dmat *s, *u, *vt;
     dspsvd(&s, &u, &vt, A);

@@ -41,7 +41,8 @@ TIC;
 int main(int argc, char* argv[]){
     /*dsp *RLMc1=dspread("RLMc_old.bin"); */
     if(argc!=2){
-	error("Need 1 argument\n");
+	info("Need 1 argument for RLM file.\n");
+	return 0;
     }
     dspcell *RLM=dspcellread("%s",argv[1]);
     dsp *RLMc=dspcell2sp(RLM);

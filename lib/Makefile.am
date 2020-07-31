@@ -1,11 +1,11 @@
+SUBDIRS=../math
+
 AM_CFLAGS=$(OPTS) -I$(top_srcdir)
 AM_LDFLAGS=$(LDOPTS)
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
-nobase_include_HEADERS=accphi.h mkg.h readcfg.h mkh.h aos.h mkw.h turbulence.h	\
-  mkz.h proj.h laplacian.h pcg.h muv.h draw.h genotf.h fractal.h stfun.h	\
-  servo.h hyst.h slaving.h mkdtf.h psd.h kalman.h cn2est.h misc.h locfft.h	\
-  zernike.h mtch.h
+nobase_include_HEADERS=accphi.h aos.h cn2est.h cure.h draw.h fractal.h genotf.h hyst.h kalman.h laplacian.h locfft.h \
+		       misc.h mkdtf.h mkg.h mkh.h mkw.h mkz.h mtch.h muv.h pcg.h proj.h psd.h readcfg.h servo.h slaving.h stfun.h turbulence.h zernike.h
 
 EXTRA_DIST=fractal_do.c prop_grid.c 
 

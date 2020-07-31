@@ -22,6 +22,10 @@
  */
 
 static void test_grid_proj(){
+    if(!zfexist("M3_p.bin")){
+	info("M3_p.bin does not exist\n");
+	return;
+    }
     dmat *junk=dread("M3_p.bin");
     dmat *X=dread("M3_x.bin");
     dmat *Y=dread("M3_y.bin");

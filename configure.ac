@@ -1,7 +1,7 @@
 AC_INIT(maos, 2.4.0, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
-AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects dist-bzip2])
+AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
@@ -129,7 +129,6 @@ fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled
 MEXDIR_AUTO=
-unalias matlab
 if test -n "`which matlab 2>/dev/null`" ;then
     MEX="$(which matlab)"
     if test -L "$MEX" ;then

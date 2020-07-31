@@ -31,10 +31,6 @@ scripts/*.app
 */.#*
 ar-lib
 *.pyc
-mex/maos2mex.h
-mex/aolib.c*
 .nfs*
-version.h
 scripts/libaos.py
-lib/aolib.h
 .ipynb_checkpoints

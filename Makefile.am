@@ -1,16 +1,11 @@
 ACLOCAL_AMFLAGS=-I m4 --install
 
-SUBDIRS=
-SUBDIRS+=sys math lib
-if USE_CUDA
-SUBDIRS+=cuda
-endif
-SUBDIRS+=maos skyc
+SUBDIRS=bin test
 if USE_MEX
 SUBDIRS+=mex
 endif
-SUBDIRS+=tools test 
-include $(top_srcdir)/aminclude.am
+
+#include $(top_srcdir)/aminclude.am
 
 #dist-hook:
 #	rm -rf $(distdir)/configure.ac 
@@ -18,7 +13,7 @@ include $(top_srcdir)/aminclude.am
 
 #all-local:$(srcdir)/math/dtmp.c
 #For documentation only. | enforces ordering in parallel build
-.NOTPARALLEL:
+.NOTPARALLEL:doc
 doc:| tmp clear-doc doxygen-run clear-tmp
 #The following tmp files are used to by pass two doxygen limitations
 #1. files included in c files are only expanded for dependencies, not original definitions
@@ -36,15 +31,18 @@ clear-tmp:
 clear-doc:
 	@rm -rf doxygen-doc
 
-EXTRA_DIST = doxygen.cfg docs version.h scripts config
-BUILT_SOURCES=version #non existent file will always run
+EXTRA_DIST = doxygen.cfg docs scripts config 
+BUILT_SOURCES=version.h #non existent file will always run
 if LIBTOOL_FIX_OPENMP
 BUILT_SOURCES+=fixlibtool
 endif
-fixlibtool:
-	sed -i '' 's/|-fopenmp|/|/g' libtool
-version:
-	@cd $(srcdir) && str="static const char *GIT_VERSION=\"`git show -s --format='%h %ci'`\";" && \
+fixlibtool:libtool
+	@sed -i '' 's/|-fopenmp|/|/g' libtool
+version.h:FORCE #always runs
+	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || echo unknown`\";" && \
 		if test -n "`echo $$str | diff version.h -`" -o ! -f version.h ;then echo $$str >version.h;fi
-
+FORCE:
 .ONESHELL:
+
+CLEANFILES=version.h
+.PHONY: doc
