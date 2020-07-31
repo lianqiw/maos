@@ -100,7 +100,7 @@ struct drawdata_t{
     float zoomx, zoomy;/*zoom level. */
     float zoomxlast, zoomylast;/*last zoom level. */
     float offx,offy;/*off set of the center of the data. */
-    float mxdown,mydown;/*mouse pointer down. */
+    float mxdown,mydown,mtdown;/*mouse pointer down. */
     float scalex, scaley;/*scale of the data to fit the display. */
     float centerx, centery;
     float xoff, yoff;/*offset of the area to draw figure. */

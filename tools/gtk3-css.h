@@ -42,7 +42,7 @@ const gchar *all_style=
     "background-color:@theme_bg_color;"
     "}\n"
     "textview{\n"
-    "font:16px Sans;"
+    "font:14px Sans;"
     "border-width:3px;" 
     "}\n"
     ".entry.progressbar{\n"

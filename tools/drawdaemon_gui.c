@@ -555,6 +555,7 @@ static gboolean button_press(GtkWidget *widget, GdkEventButton *event, drawdata_
        && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
 	drawdata->mxdown=event->x;
 	drawdata->mydown=event->y;
+        drawdata->mtdown=myclockd();
 	drawdata->valid=1;
     }else{
 	drawdata->valid=0;
@@ -573,7 +574,10 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
     y = event->y;
     float dx = x - drawdata->mxdown;
     float dy = y - drawdata->mydown;
-    if((cursor_type==0 && event->button==1)
+    float dt = myclockd() - drawdata->mtdown;
+    if(dt<0.3){
+        info("Ignore accidental click\n");
+    }else if((cursor_type==0 && event->button==1)
        ||(cursor_type==1 && event->button==3)){/*move only on left button */
 	do_move(drawdata, dx, -dy);
     }else if(fabs(dx)>2 && fabs(dy)>2){/*select and zoom. */

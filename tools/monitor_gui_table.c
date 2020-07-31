@@ -240,8 +240,8 @@ gboolean refresh(PROC_T *p){
 }
 GtkWidget *new_page(int ihost){
     if(!tables){
-	tables=mycalloc(nhost,GtkWidget*);
-	nrows=mycalloc(nhost,gint);
+	tables=mycalloc(nhost+1,GtkWidget*);
+	nrows=mycalloc(nhost+1,gint);
     }
     nrows[ihost]=0;
     tables[ihost]=gtk_table_new(nrows[ihost],ncol,0);

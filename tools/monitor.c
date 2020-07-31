@@ -26,8 +26,6 @@
   2) Store the activity list into file when quit and reload later
 */
 
-
-
 #include <errno.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -80,9 +78,9 @@ static GtkWidget **titles;
 static GtkWidget **cmdconnect;
 GtkTextBuffer **buffers;
 double *usage_cpu, *usage_cpu2;
-double *usage_mem, *usage_mem2;
+//double *usage_mem, *usage_mem2;
 static GtkWidget **prog_cpu;
-static GtkWidget **prog_mem;
+//static GtkWidget **prog_mem;
 PangoAttrList *pango_active, *pango_down;
 GdkColor blue;
 GdkColor green;
@@ -175,7 +173,7 @@ gboolean host_down(gpointer data){
     gtk_widget_show_all(cmdconnect[ihost]);
     gtk_widget_set_sensitive(cmdconnect[ihost],1);
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
-    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
+    //gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
     gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
     return 0;
 }
@@ -219,22 +217,23 @@ static void modify_bg(GtkWidget *widget, int type){
 gboolean update_progress(gpointer input){
     int ihost=GPOINTER_TO_INT(input);
     double last_cpu=usage_cpu2[ihost];
-    double last_mem=usage_mem2[ihost];
+    //double last_mem=usage_mem2[ihost];
     usage_cpu2[ihost]=usage_cpu[ihost];
-    usage_mem2[ihost]=usage_mem[ihost];
+    //usage_mem2[ihost]=usage_mem[ihost];
     if(GTK_WIDGET_VISIBLE(window)){
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), usage_cpu[ihost]);
-	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), usage_mem[ihost]);
+	//gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), usage_mem[ihost]);
 	if(usage_cpu[ihost]>=0.8 && last_cpu<0.8){
 	    modify_bg(prog_cpu[ihost],2);
 	}else if(usage_cpu[ihost]<0.8 && last_cpu>=0.8){
 	    modify_bg(prog_cpu[ihost],1);
 	}
+        /*
 	if(usage_mem[ihost]>=0.8 && last_mem<0.8){
 	    modify_bg(prog_mem[ihost],2);
 	}else if(usage_mem[ihost]<0.8 && last_mem>=0.8){
 	    modify_bg(prog_mem[ihost],1);
-	}
+            }*/
     }
     return 0;
 }
@@ -319,7 +318,12 @@ static void quitmonitor(GtkWidget *widget, gpointer data){
 gboolean update_title(gpointer data){
     int id=GPOINTER_TO_INT(data);
     char tit[40];
-    snprintf(tit,40,"%s (%d)",hosts[id], nproc[id]);
+    if(id<nhost){
+        snprintf(tit,40,"%s (%d)",hosts[id], nproc[id]);
+    }else{
+        snprintf(tit,40,"%s", "running");
+        gtk_label_set_attributes(GTK_LABEL(titles[id]), pango_active);
+    }
     gtk_label_set_text(GTK_LABEL(titles[id]),tit);
     return 0;
 }
@@ -599,15 +603,17 @@ GtkWidget *monitor_new_progress(int vertical, int length){
     }
     return prog;
 }
-
+/*
+  Try to connect to hosts in response to button click.
+ */
 static void add_host_event(GtkButton *button, gpointer data){
     (void)button;
     int ihost=GPOINTER_TO_INT(data);
     if(ihost>-1 && ihost<nhost){
-	add_host_wrap(ihost);
+	add_host_wrap(ihost);//only this host
     }else{
 	for(ihost=0; ihost<nhost; ihost++){
-	    add_host_wrap(ihost);
+	    add_host_wrap(ihost);//all host
 	}
     }
 }
@@ -752,46 +758,48 @@ int main(int argc, char *argv[])
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(window), 1200, 800);
 
-    tabs=mycalloc(nhost,GtkWidget*);
-    pages=mycalloc(nhost,GtkWidget*);
-    titles=mycalloc(nhost,GtkWidget*);
-    pproc=mycalloc(nhost,PROC_T*);
-    nproc=mycalloc(nhost,int);
-    cmdconnect=mycalloc(nhost,GtkWidget*);
-    buffers=mycalloc(nhost, GtkTextBuffer*);
-    hsock=mycalloc(nhost,int);
-    for(int i=0; i<nhost; i++){
+    tabs=mycalloc(nhost+1,GtkWidget*);
+    pages=mycalloc(nhost+1,GtkWidget*);
+    titles=mycalloc(nhost+1,GtkWidget*);
+    pproc=mycalloc(nhost+1,PROC_T*);
+    nproc=mycalloc(nhost+1,int);
+    cmdconnect=mycalloc(nhost+1,GtkWidget*);
+    buffers=mycalloc(nhost+1, GtkTextBuffer*);
+    hsock=mycalloc(nhost+1,int);
+    for(int i=0; i<=nhost; i++){
 	hsock[i]=-1;
     }
     usage_cpu=mycalloc(nhost,double);
-    usage_mem=mycalloc(nhost,double);
+    //usage_mem=mycalloc(nhost,double);
     usage_cpu2=mycalloc(nhost,double);
-    usage_mem2=mycalloc(nhost,double);
+    //usage_mem2=mycalloc(nhost,double);
     prog_cpu=mycalloc(nhost,GtkWidget *);
-    prog_mem=mycalloc(nhost,GtkWidget *);
+    //prog_mem=mycalloc(nhost,GtkWidget *);
 
     pango_active=pango_attr_list_new();
     pango_down=pango_attr_list_new();
     pango_attr_list_insert(pango_down, pango_attr_foreground_new(0x88FF, 0x88FF, 0x88FF));
     pango_attr_list_insert(pango_active, pango_attr_foreground_new(0x0000, 0x0000, 0x0000));
 
-    for(int ihost=0; ihost<nhost; ihost++){
+    for(int ihost=0; ihost<=nhost; ihost++){//ihost==nhost is the include all tab
 	//char tit[40];
 	//snprintf(tit,40,"%s(0)",hosts[ihost]);
     	titles[ihost]=gtk_label_new(NULL);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
 	GtkWidget *hbox0=gtk_hbox_new(FALSE,0);
+        if(ihost < nhost){
 #if GTK_MAJOR_VERSION>=3
-	prog_cpu[ihost]=monitor_new_progress(1,4);
-	prog_mem[ihost]=monitor_new_progress(1,4);
+            prog_cpu[ihost]=monitor_new_progress(1,4);
+            //prog_mem[ihost]=monitor_new_progress(1,4);
 #else
-	prog_cpu[ihost]=monitor_new_progress(1,16);
-	prog_mem[ihost]=monitor_new_progress(1,16);
+            prog_cpu[ihost]=monitor_new_progress(1,16);
+            //prog_mem[ihost]=monitor_new_progress(1,16);
 #endif
-	gtk_box_pack_start(GTK_BOX(hbox0),prog_cpu[ihost], FALSE, FALSE, 1);
-	gtk_box_pack_start(GTK_BOX(hbox0),prog_mem[ihost], FALSE, FALSE, 1);
-	modify_bg(prog_cpu[ihost], 1);
-	modify_bg(prog_mem[ihost], 1);
+            gtk_box_pack_start(GTK_BOX(hbox0),prog_cpu[ihost], FALSE, FALSE, 1);
+            //gtk_box_pack_start(GTK_BOX(hbox0),prog_mem[ihost], FALSE, FALSE, 1);
+            modify_bg(prog_cpu[ihost], 1);
+            //modify_bg(prog_mem[ihost], 1);
+        }
 	gtk_box_pack_start(GTK_BOX(hbox0),titles[ihost], FALSE, TRUE, 0);
 	gtk_widget_show_all(hbox0);
 	GtkWidget *eventbox=gtk_event_box_new();
@@ -801,11 +809,12 @@ int main(int argc, char *argv[])
 	gtk_widget_show_all(eventbox);
 	gtk_event_box_set_above_child(GTK_EVENT_BOX(eventbox),TRUE);
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox),FALSE);
-
-	cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
-	g_signal_connect(cmdconnect[ihost],"clicked", G_CALLBACK(add_host_event), GINT_TO_POINTER(ihost));
 	pages[ihost]=gtk_vbox_new(FALSE,0);
-	{// button for reconnection
+        if(ihost < nhost){
+            cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
+            g_signal_connect(cmdconnect[ihost],"clicked", G_CALLBACK(add_host_event), GINT_TO_POINTER(ihost));
+        
+            // button for reconnection
 	    GtkWidget *hbox=gtk_hbox_new(FALSE,0);
 	    gtk_box_pack_start(GTK_BOX(hbox),cmdconnect[ihost],TRUE,FALSE,0);
 	    gtk_box_pack_end(GTK_BOX(pages[ihost]),hbox,FALSE,FALSE,0);
@@ -818,7 +827,7 @@ int main(int argc, char *argv[])
 	}
 	{//text are to show details job information
 	    GtkWidget *seperator=gtk_hseparator_new();
-	    gtk_box_pack_start(GTK_BOX(pages[ihost]),seperator,FALSE,FALSE,0);
+	    gtk_box_pack_start(GTK_BOX(pages[ihost]),seperator,TRUE,TRUE,0);
 	    GtkWidget *view=gtk_text_view_new();
 	    buffers[ihost]=gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	    gtk_box_pack_start(GTK_BOX(pages[ihost]),view,FALSE,FALSE,0);
@@ -836,12 +845,15 @@ int main(int argc, char *argv[])
 #else
 	gtk_container_add(GTK_CONTAINER(tabs[ihost]), pages[ihost]);
 #endif
-	gtk_notebook_append_page
-	    (GTK_NOTEBOOK(notebook),tabs[ihost],eventbox);
-	update_title(GINT_TO_POINTER(ihost));
+        if(ihost<nhost){
+            gtk_notebook_append_page(GTK_NOTEBOOK(notebook),tabs[ihost],eventbox);
+        }else{
+            gtk_notebook_insert_page(GTK_NOTEBOOK(notebook),tabs[ihost],eventbox, 0);
+        }
+        update_title(GINT_TO_POINTER(ihost));
 	gtk_widget_show_all(tabs[ihost]);
-	//gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
     }
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 0);
     extern int sock_main[2];
     if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
 	error("failed to create socketpair\n");

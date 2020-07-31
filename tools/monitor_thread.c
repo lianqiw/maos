@@ -36,7 +36,7 @@ int sock_main[2]={0,0}; /*Use to talk to the thread that blocks in select()*/
 static fd_set active_fd_set;
 
 extern double *usage_cpu, *usage_cpu2;
-extern double *usage_mem, *usage_mem2;
+//extern double *usage_mem, *usage_mem2;
 /*
 static PROC_T *proc_add(int id,int pid){
     PROC_T *iproc;
@@ -267,9 +267,9 @@ static int respond(int sock){
 		return -1;
 	    }
 	    usage_cpu[ihost]=(double)((pid>>16) & 0xFFFF)/100.;
-	    usage_mem[ihost]=(double)(pid & 0xFFFF)/100.;
+	    //usage_mem[ihost]=(double)(pid & 0xFFFF)/100.;
 	    usage_cpu[ihost]=MAX(MIN(1,usage_cpu[ihost]),0);
-	    usage_mem[ihost]=MAX(MIN(1,usage_mem[ihost]),0);
+	    //usage_mem[ihost]=MAX(MIN(1,usage_mem[ihost]),0);
 	    gdk_threads_add_idle((GSourceFunc)update_progress, GINT_TO_POINTER(ihost));
 	}
 	break;
