@@ -14,4 +14,7 @@ pipelines:
           - make
           - make check
           - make distcheck
+        artifacts:
+          - bin/*.log
+          - test/*.log
 
