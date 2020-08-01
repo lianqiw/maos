@@ -629,6 +629,13 @@ else
     #Check for FFTW3 header and library.
     AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
+	#download pre-compiled
+	download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
+	unset ac_cv_lib_fftw3_fftw_execute
+	AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
+    fi
+    if test "$has_fftw" = "no" ;then #fftw does not exist in system.
+	#compile from source
 	FLAGS="--enable-threads --enable-shared --enable-static"
 	if test -n "$OPENMP_CFLAGS" ;then
             FLAGS+=" --enable-openmp"
