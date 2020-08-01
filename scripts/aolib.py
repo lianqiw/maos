@@ -8,49 +8,6 @@ from scipy.special import erf
 from numpy import sqrt, exp, log, floor, ceil, nan
 from numpy.random import rand, randn
 
-#The magic stuff for IPython
-if 'get_ipython' not in sys.modules:
-    try:
-        from IPython import get_ipython
-        ipython = get_ipython()
-        ipython.magic("load_ext autoreload")
-        ipython.magic("autoreload 2")
-    except:
-        pass
-try:
-    import matplotlib as mpl
-    from cycler import cycler
-    mpl.rcParams['axes.prop_cycle'] = cycler(color='bgrcmyk')
-    mpl.rcParams['axes.grid']=True
-    #mpl.rcParams['grid.color'] = 'k'
-    #mpl.rcParams['grid.linestyle'] = '--'
-    #mpl.rcParams['grid.linewidth'] = 0.5
-
-    mpl.rcParams['lines.linewidth'] = 1.0
-    mpl.rcParams['lines.dashed_pattern'] = [6, 4]
-    mpl.rcParams['lines.dashdot_pattern'] = [6, 3, 1, 3] #dash off dot off
-    mpl.rcParams['lines.dotted_pattern'] = [1, 3]
-    mpl.rcParams['lines.scale_dashes'] = False
-
-    mpl.rcParams['axes.xmargin']=0
-    mpl.rcParams['axes.ymargin']=0
-    mpl.rcParams['axes.autolimit_mode']='round_numbers'
-
-    mpl.rcParams['font.size']=10
-    mpl.rcParams['savefig.dpi']=120
-    mpl.rcParams['image.cmap']='jet'
-
-    mpl.rcParams['figure.autolayout']=True
-    mpl.rcParams['figure.figsize']=[10,7]
-    #mpl.rcParams['figure.subplot.left']=0.1
-    #mpl.rcParams['figure.subplot.right']=0.9
-
-    #For ploting
-    import matplotlib.pyplot as plt
-    plt.ion() #enable interactive mode.
-except:
-    print('matplotlib is not available')
-
 try:
     from libaos import *
 except:
