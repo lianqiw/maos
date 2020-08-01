@@ -23,3 +23,7 @@ jobs:
       run: make check
     - name: make distcheck
       run: make distcheck
+    - uses: actions/upload-artifact@v2
+      with:
+              name: maos-bin
+              path: bin/
