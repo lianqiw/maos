@@ -685,13 +685,13 @@ AM_CONDITIONAL(HAS_LWS, false)
 if test "$use_websockets" = "yes" ;then
     AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
-    if test "$has_lws" = "no" ;then #first try to compile from source. Needs cmake
-	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
+    if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
+	download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
 	unset ac_cv_lib_websockets_lws_service
 	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
-    if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
-	download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
+    if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
+	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
 	unset ac_cv_lib_websockets_lws_service
 	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi

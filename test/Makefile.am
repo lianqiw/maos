@@ -10,3 +10,5 @@ bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
 #test_gpu_LDADD=../cuda/libaogpu.la $(LDADD)  $(LIBCUDA)
 #endif
 TESTS=$(bin_PROGRAMS)
+clean-local:
+	@rm -rf *.bin *.fits
