@@ -99,6 +99,7 @@ int scheduler_recv_socket(int *sfd, int id){
     return -1;
 }
 int scheduler_launch_drawdaemon(void){
+    return -1
 }
 #else
 uint16_t PORT=0;

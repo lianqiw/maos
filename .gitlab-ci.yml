@@ -16,14 +16,16 @@ build:
     - ./autogen.sh
     - mkdir -p build
     - cd build
-    - ../configure --disable-scheduler --disable-websockets 
+    - ../configure --disable-scheduler 
     - make
+    - bin/maos aper.d=5 sim.end=10
     - make check  
   artifacts:
     paths:
       - build/config.log
       - build/external/compile.log
       - build/bin/
+      when: always
   cache:
     paths:
       - ~/.aos
