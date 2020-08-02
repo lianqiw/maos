@@ -16,7 +16,7 @@ build:
     - ./autogen.sh
     - mkdir -p build
     - cd build
-    - ../configure --disable-scheduler 
+    - ../configure --enable-release 
     - make
     - bin/maos aper.d=5 sim.end=10
     - make check  

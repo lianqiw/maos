@@ -191,7 +191,10 @@ if test x$use_gcov = "xyes" ;then
     OPTSprof+="  -fprofile-arcs -ftest-coverage --coverage"
     debug="yes"
 fi
-
+if test "$use_release" = "yes" ;then
+    use_scheduler="no"
+    use_websocket="no"
+fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
@@ -253,9 +256,9 @@ case "$CN" in
 	    if test "$major" -lt 4 ;then
 		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
-	    if test "$major" -gt 4 -o "$minor" -ge 2 ;then
-	        OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
-	    fi
+#           if test "$major" -gt 4 -o "$minor" -ge 2 ;then
+#	        OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
+#	    fi
 	    #GCC introduced openmp task in 4.4
 	    if test $major -le 4 -a $minor -le 4 ;then
 		AC_MSG_WARN([OpenMP is not supported by GCC $CC_VERSION])
@@ -632,7 +635,7 @@ else
 	#download pre-compiled
 	download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
 	unset ac_cv_lib_fftw3_fftw_execute
-	AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
+        AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 	#compile from source
@@ -640,8 +643,9 @@ else
 	if test -n "$OPENMP_CFLAGS" ;then
             FLAGS+=" --enable-openmp"
 	fi
-	compile FFTW fftw.tar.bz2 $FLAGS --enable-sse2 --enable-avx2 --enable-avx 
-	compile FFTW fftw.tar.bz2 $FLAGS --enable-sse2 --enable-avx2 --enable-avx --enable-float 
+        FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
+	compile FFTW fftw.tar.bz2 $FLAGS  
+	compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
 	unset ac_cv_lib_fftw3_fftw_execute
 	AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
     fi

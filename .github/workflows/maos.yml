@@ -16,7 +16,7 @@ jobs:
     - name: autogen
       run: ./autogen.sh
     - name: configure
-      run: ./configure --disable-scheduler
+      run: ./configure --enable-release --disable-scheduler
     - name: make
       run: make
     - name: make check
