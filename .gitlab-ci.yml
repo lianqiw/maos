@@ -11,7 +11,7 @@ build:
   script: 
     # The default is to run as root, which crashes immediately.  
     # The image already has user lianqiw
-    - su lianqiw -c "whoami && ./autogen.sh && mkdir -p build && cd build && ../configure --enable-release && bin/maos aper.d=5 sim.end=10"
+    - su lianqiw -c "whoami && ./autogen.sh && mkdir -p build && cd build && ../configure --enable-release && make && bin/maos aper.d=5 sim.end=10"
   artifacts:
     when: always
     paths:
