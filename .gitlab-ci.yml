@@ -21,11 +21,11 @@ build:
     - bin/maos aper.d=5 sim.end=10
     - make check  
   artifacts:
+    when: always
     paths:
       - build/config.log
       - build/external/compile.log
       - build/bin/
-      when: always
   cache:
     paths:
       - ~/.aos
