@@ -2,65 +2,8 @@ var hierarchy =
 [
     [ "APER_CFG_T", "structAPER__CFG__T.html", null ],
     [ "APER_T", "structAPER__T.html", null ],
-    [ "ARG_S", "structARG__S.html", null ],
     [ "ARG_T", "structARG__T.html", null ],
     [ "ARGOPT_T", "structARGOPT__T.html", null ],
-    [ "Array< T, Dev >", "classArray.html", null ],
-    [ "Array< Array >", "classArray.html", null ],
-    [ "Array< Array< Comp, Gpu >, Cpu >", "classArray.html", [
-      [ "Cell< Comp, Gpu >", "classCell.html", null ]
-    ] ],
-    [ "Array< Array< culoc_t > >", "classArray.html", null ],
-    [ "Array< Array< int, Gpu >, Cpu >", "classArray.html", [
-      [ "Cell< int, Gpu >", "classCell.html", null ]
-    ] ],
-    [ "Array< Array< Real, Gpu >, Cpu >", "classArray.html", [
-      [ "Cell< Real, Gpu >", "classCell.html", null ]
-    ] ],
-    [ "Array< Array< Real, Pinned > >", "classArray.html", null ],
-    [ "Array< Array< short2, Gpu >, Cpu >", "classArray.html", [
-      [ "Cell< short2, Gpu >", "classCell.html", null ]
-    ] ],
-    [ "Array< Array< T, Cpu >, Cpu >", "classArray.html", [
-      [ "Cell< T, Dev >", "classCell.html", null ]
-    ] ],
-    [ "Array< atm_prep_t >", "classArray.html", null ],
-    [ "Array< ATYPE, Gpu >", "classArray.html", null ],
-    [ "Array< Comp *, Gpu >", "classArray.html", null ],
-    [ "Array< Comp *, Pinned >", "classArray.html", null ],
-    [ "Array< Comp, Gpu >", "classArray.html", null ],
-    [ "Array< cuda_recon::LAP_T, Gpu >", "classArray.html", null ],
-    [ "Array< cudtf_t >", "classArray.html", null ],
-    [ "Array< cufftHandle >", "classArray.html", null ],
-    [ "Array< cugrid_t >", "classArray.html", null ],
-    [ "Array< cuimat >", "classArray.html", null ],
-    [ "Array< culoc_t >", "classArray.html", null ],
-    [ "Array< cumap_t >", "classArray.html", null ],
-    [ "Array< cupowfs_t >", "classArray.html", null ],
-    [ "Array< curccell >", "classArray.html", null ],
-    [ "Array< cusp >", "classArray.html", null ],
-    [ "Array< cuwfs_t >", "classArray.html", null ],
-    [ "Array< GPU_FDPCG_T, Gpu >", "classArray.html", null ],
-    [ "Array< GPU_GP_T, Gpu >", "classArray.html", null ],
-    [ "Array< GTYPE, Gpu >", "classArray.html", null ],
-    [ "Array< int *, Gpu >", "classArray.html", null ],
-    [ "Array< int *, Pinned >", "classArray.html", null ],
-    [ "Array< int >", "classArray.html", null ],
-    [ "Array< int, Gpu >", "classArray.html", null ],
-    [ "Array< map2map >", "classArray.html", null ],
-    [ "Array< Real *, Gpu >", "classArray.html", null ],
-    [ "Array< Real *, Pinned >", "classArray.html", null ],
-    [ "Array< Real >", "classArray.html", null ],
-    [ "Array< Real, Gpu >", "classArray.html", null ],
-    [ "Array< Real, Pinned >", "classArray.html", null ],
-    [ "Array< short2 *, Gpu >", "classArray.html", null ],
-    [ "Array< short2 *, Pinned >", "classArray.html", null ],
-    [ "Array< short2, Gpu >", "classArray.html", null ],
-    [ "Array< stream_t >", "classArray.html", null ],
-    [ "Array< T *, Gpu >", "classArray.html", null ],
-    [ "Array< T *, Pinned >", "classArray.html", null ],
-    [ "Array< T, Cpu >", "classArray.html", null ],
-    [ "ASTER_S", "structASTER__S.html", null ],
     [ "ATM_CFG_T", "structATM__CFG__T.html", null ],
     [ "atm_prep_t", "structatm__prep__t.html", null ],
     [ "ATMR_CFG_T", "structATMR__CFG__T.html", null ],
@@ -75,6 +18,29 @@ var hierarchy =
     [ "CN2PAIR_T", "structCN2PAIR__T.html", null ],
     [ "Cpu< T >", "classCpu.html", [
       [ "Pinned< T >", "classPinned.html", null ]
+    ] ],
+    [ "Cpu< Array< Comp, Gpu > >", "classCpu.html", null ],
+    [ "Cpu< Array< int, Gpu > >", "classCpu.html", null ],
+    [ "Cpu< Array< Real, Gpu > >", "classCpu.html", null ],
+    [ "Cpu< Array< short2, Gpu > >", "classCpu.html", null ],
+    [ "Cpu< Array< T, Dev > >", "classCpu.html", null ],
+    [ "Cpu< Comp * >", "classCpu.html", [
+      [ "Pinned< Comp *>", "classPinned.html", null ]
+    ] ],
+    [ "Cpu< int * >", "classCpu.html", [
+      [ "Pinned< int *>", "classPinned.html", null ]
+    ] ],
+    [ "Cpu< Real * >", "classCpu.html", [
+      [ "Pinned< Real *>", "classPinned.html", null ]
+    ] ],
+    [ "Cpu< Real >", "classCpu.html", [
+      [ "Pinned< Real >", "classPinned.html", null ]
+    ] ],
+    [ "Cpu< short2 * >", "classCpu.html", [
+      [ "Pinned< short2 *>", "classPinned.html", null ]
+    ] ],
+    [ "Cpu< T * >", "classCpu.html", [
+      [ "Pinned< T *>", "classPinned.html", null ]
     ] ],
     [ "csp", "structcsp.html", null ],
     [ "cspcell", "structcspcell.html", null ],
@@ -137,7 +103,6 @@ var hierarchy =
     [ "dmat", "structdmat.html", null ],
     [ "dsp", "structdsp.html", null ],
     [ "dspcell", "structdspcell.html", null ],
-    [ "DTF_S", "structDTF__S.html", null ],
     [ "DTF_T", "structDTF__T.html", null ],
     [ "ETF_T", "structETF__T.html", null ],
     [ "event_t", "structevent__t.html", null ],
@@ -149,6 +114,20 @@ var hierarchy =
     [ "GENATM_T", "structGENATM__T.html", null ],
     [ "GLOBAL_T", "structGLOBAL__T.html", null ],
     [ "Gpu< T >", "classGpu.html", null ],
+    [ "Gpu< ATYPE >", "classGpu.html", null ],
+    [ "Gpu< Comp *>", "classGpu.html", null ],
+    [ "Gpu< Comp >", "classGpu.html", null ],
+    [ "Gpu< cuda_recon::LAP_T >", "classGpu.html", null ],
+    [ "Gpu< GPU_FDPCG_T >", "classGpu.html", null ],
+    [ "Gpu< GPU_GP_T >", "classGpu.html", null ],
+    [ "Gpu< GTYPE >", "classGpu.html", null ],
+    [ "Gpu< int *>", "classGpu.html", null ],
+    [ "Gpu< int >", "classGpu.html", null ],
+    [ "Gpu< Real *>", "classGpu.html", null ],
+    [ "Gpu< Real >", "classGpu.html", null ],
+    [ "Gpu< short2 *>", "classGpu.html", null ],
+    [ "Gpu< short2 >", "classGpu.html", null ],
+    [ "Gpu< T *>", "classGpu.html", null ],
     [ "GPU_CFG_T", "structGPU__CFG__T.html", null ],
     [ "GPU_FDPCG_T", "structGPU__FDPCG__T.html", null ],
     [ "GPU_GP_T", "structGPU__GP__T.html", null ],
@@ -180,7 +159,6 @@ var hierarchy =
     [ "Magic< float2 >", "structMagic_3_01float2_01_4.html", null ],
     [ "Magic< int >", "structMagic_3_01int_01_4.html", null ],
     [ "Magic< long int >", "structMagic_3_01long_01int_01_4.html", null ],
-    [ "MAOS_S", "structMAOS__S.html", null ],
     [ "map2map_shared_t", "structmap2map__shared__t.html", null ],
     [ "map2map_t", "structmap2map__t.html", null ],
     [ "map_t", "structmap__t.html", null ],
@@ -202,19 +180,157 @@ var hierarchy =
       [ "cuda_recon::cusolve_mvm", "classcuda__recon_1_1cusolve__mvm.html", null ],
       [ "map2map", "classmap2map.html", null ]
     ] ],
-    [ "PARMS_S", "structPARMS__S.html", null ],
     [ "PARMS_T", "structPARMS__T.html", null ],
-    [ "PISTAT_S", "structPISTAT__S.html", null ],
     [ "PLOT_CFG_T", "structPLOT__CFG__T.html", null ],
     [ "POWFS_CFG_T", "structPOWFS__CFG__T.html", null ],
-    [ "POWFS_S", "structPOWFS__S.html", null ],
     [ "POWFS_T", "structPOWFS__T.html", null ],
     [ "PROPDATA_T", "structPROPDATA__T.html", null ],
     [ "pts_t", "structpts__t.html", null ],
     [ "PYWFS_T", "structPYWFS__T.html", null ],
     [ "RECON_CFG_T", "structRECON__CFG__T.html", null ],
     [ "RECON_T", "structRECON__T.html", null ],
-    [ "RefP< T, Dev >", "classRefP.html", null ],
+    [ "RefP< T, Dev >", "classRefP.html", [
+      [ "Array< T, Dev >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Array, Dev >", "classRefP.html", [
+      [ "Array< Array >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Array< Comp, Gpu >, Cpu >", "classRefP.html", [
+      [ "Array< Array< Comp, Gpu >, Cpu >", "classArray.html", [
+        [ "Cell< Comp, Gpu >", "classCell.html", null ]
+      ] ]
+    ] ],
+    [ "RefP< Array< culoc_t >, Dev >", "classRefP.html", [
+      [ "Array< Array< culoc_t > >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Array< int, Gpu >, Cpu >", "classRefP.html", [
+      [ "Array< Array< int, Gpu >, Cpu >", "classArray.html", [
+        [ "Cell< int, Gpu >", "classCell.html", null ]
+      ] ]
+    ] ],
+    [ "RefP< Array< Real, Gpu >, Cpu >", "classRefP.html", [
+      [ "Array< Array< Real, Gpu >, Cpu >", "classArray.html", [
+        [ "Cell< Real, Gpu >", "classCell.html", null ]
+      ] ]
+    ] ],
+    [ "RefP< Array< Real, Pinned >, Dev >", "classRefP.html", [
+      [ "Array< Array< Real, Pinned > >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Array< short2, Gpu >, Cpu >", "classRefP.html", [
+      [ "Array< Array< short2, Gpu >, Cpu >", "classArray.html", [
+        [ "Cell< short2, Gpu >", "classCell.html", null ]
+      ] ]
+    ] ],
+    [ "RefP< Array< T, Dev >, Cpu >", "classRefP.html", [
+      [ "Array< Array< T, Dev >, Cpu >", "classArray.html", [
+        [ "Cell< T, Dev >", "classCell.html", null ]
+      ] ]
+    ] ],
+    [ "RefP< atm_prep_t, Dev >", "classRefP.html", [
+      [ "Array< atm_prep_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< ATYPE, Gpu >", "classRefP.html", [
+      [ "Array< ATYPE, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Comp *, Gpu >", "classRefP.html", [
+      [ "Array< Comp *, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Comp *, Pinned >", "classRefP.html", [
+      [ "Array< Comp *, Pinned >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Comp, Gpu >", "classRefP.html", [
+      [ "Array< Comp, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cuda_recon::LAP_T, Gpu >", "classRefP.html", [
+      [ "Array< cuda_recon::LAP_T, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cudtf_t, Dev >", "classRefP.html", [
+      [ "Array< cudtf_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cufftHandle, Dev >", "classRefP.html", [
+      [ "Array< cufftHandle >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cugrid_t, Dev >", "classRefP.html", [
+      [ "Array< cugrid_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cuimat, Dev >", "classRefP.html", [
+      [ "Array< cuimat >", "classArray.html", null ]
+    ] ],
+    [ "RefP< culoc_t, Dev >", "classRefP.html", [
+      [ "Array< culoc_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cumap_t, Dev >", "classRefP.html", [
+      [ "Array< cumap_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cupowfs_t, Dev >", "classRefP.html", [
+      [ "Array< cupowfs_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< curccell, Dev >", "classRefP.html", [
+      [ "Array< curccell >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cusp, Dev >", "classRefP.html", [
+      [ "Array< cusp >", "classArray.html", null ]
+    ] ],
+    [ "RefP< cuwfs_t, Dev >", "classRefP.html", [
+      [ "Array< cuwfs_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< GPU_FDPCG_T, Gpu >", "classRefP.html", [
+      [ "Array< GPU_FDPCG_T, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< GPU_GP_T, Gpu >", "classRefP.html", [
+      [ "Array< GPU_GP_T, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< GTYPE, Gpu >", "classRefP.html", [
+      [ "Array< GTYPE, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< int *, Gpu >", "classRefP.html", [
+      [ "Array< int *, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< int *, Pinned >", "classRefP.html", [
+      [ "Array< int *, Pinned >", "classArray.html", null ]
+    ] ],
+    [ "RefP< int, Dev >", "classRefP.html", [
+      [ "Array< int >", "classArray.html", null ]
+    ] ],
+    [ "RefP< int, Gpu >", "classRefP.html", [
+      [ "Array< int, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< map2map, Dev >", "classRefP.html", [
+      [ "Array< map2map >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Real *, Gpu >", "classRefP.html", [
+      [ "Array< Real *, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Real *, Pinned >", "classRefP.html", [
+      [ "Array< Real *, Pinned >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Real, Dev >", "classRefP.html", [
+      [ "Array< Real >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Real, Gpu >", "classRefP.html", [
+      [ "Array< Real, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< Real, Pinned >", "classRefP.html", [
+      [ "Array< Real, Pinned >", "classArray.html", null ]
+    ] ],
+    [ "RefP< short2 *, Gpu >", "classRefP.html", [
+      [ "Array< short2 *, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< short2 *, Pinned >", "classRefP.html", [
+      [ "Array< short2 *, Pinned >", "classArray.html", null ]
+    ] ],
+    [ "RefP< short2, Gpu >", "classRefP.html", [
+      [ "Array< short2, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< stream_t, Dev >", "classRefP.html", [
+      [ "Array< stream_t >", "classArray.html", null ]
+    ] ],
+    [ "RefP< T *, Gpu >", "classRefP.html", [
+      [ "Array< T *, Gpu >", "classArray.html", null ]
+    ] ],
+    [ "RefP< T *, Pinned >", "classRefP.html", [
+      [ "Array< T *, Pinned >", "classArray.html", null ]
+    ] ],
     [ "rmap_t", "structrmap__t.html", null ],
     [ "rmapccell", "structrmapccell.html", null ],
     [ "rmapcell", "structrmapcell.html", null ],
@@ -225,29 +341,27 @@ var hierarchy =
     [ "SERVO_T", "structSERVO__T.html", null ],
     [ "SHO_T", "structSHO__T.html", null ],
     [ "SIM_CFG_T", "structSIM__CFG__T.html", null ],
-    [ "SIM_S", "structSIM__S.html", null ],
     [ "SIM_SAVE_T", "structSIM__SAVE__T.html", null ],
     [ "SIM_T", "structSIM__T.html", null ],
-    [ "SKYC_S", "structSKYC__S.html", null ],
     [ "smat", "structsmat.html", null ],
     [ "spchol", "structspchol.html", null ],
     [ "ssp", "structssp.html", null ],
     [ "sspcell", "structsspcell.html", null ],
-    [ "STAR_S", "structSTAR__S.html", null ],
     [ "STATUS_T", "structSTATUS__T.html", null ],
     [ "stream_t", "classstream__t.html", null ],
     [ "thread_t", "structthread__t.html", null ],
     [ "TOMO_CFG_T", "structTOMO__CFG__T.html", null ],
     [ "cuda_recon::W01_T", "classcuda__recon_1_1W01__T.html", null ],
     [ "WFS_CFG_T", "structWFS__CFG__T.html", null ],
-    [ "WFS_S", "structWFS__S.html", null ],
     [ "WFSINTS_T", "structWFSINTS__T.html", null ],
-    [ "ZB_S", "structZB__S.html", null ],
     [ "zcccell", "structzcccell.html", null ],
     [ "zccell", "structzccell.html", null ],
     [ "zcell", "structzcell.html", null ],
     [ "zmat", "structzmat.html", null ],
     [ "zsp", "structzsp.html", null ],
     [ "zspcell", "structzspcell.html", null ],
+    [ "Array< T, Dev >", "classArray_3_01T_00_01Dev_01_4.html", null ],
+    [ "Array< T, Dev > *", "classArray_3_01T_00_01Dev_01_4_01_5.html", null ],
+    [ "int *", "classint_01_5.html", null ],
     [ "long", "classlong.html", null ]
 ];

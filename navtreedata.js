@@ -1,26 +1,25 @@
 /*
- @licstart  The following is the entire license notice for the JavaScript code in this file.
+@ @licstart  The following is the entire license notice for the
+JavaScript code in this file.
 
- The MIT License (MIT)
+Copyright (C) 1997-2017 by Dimitri van Heesch
 
- Copyright (C) 1997-2020 by Dimitri van Heesch
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software
- and associated documentation files (the "Software"), to deal in the Software without restriction,
- including without limitation the rights to use, copy, modify, merge, publish, distribute,
- sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
- The above copyright notice and this permission notice shall be included in all copies or
- substantial portions of the Software.
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- @licend  The above is the entire license notice for the JavaScript code in this file
+@licend  The above is the entire license notice
+for the JavaScript code in this file
 */
 var NAVTREE =
 [
@@ -45,7 +44,8 @@ var NAVTREE =
         [ "Specifying Surface OPDs", "page30_run.html#sect-surface", null ],
         [ "WFS Configuration", "page30_run.html#sect-wfs", null ],
         [ "Point Spread Function", "page30_run.html#sect-perfevl", null ],
-        [ "Actuator Slaving", "page30_run.html#sect-act", null ]
+        [ "Actuator Slaving", "page30_run.html#sect-act", null ],
+        [ "range variation", "page30_run.html#Sodium", null ]
       ] ]
     ] ],
     [ "Examples", "page33_example.html", "page33_example" ],
@@ -86,21 +86,24 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1cufit__grid.html#a4d1ad536838e86d63b0bce94315e97e5",
-"classculoc__t.html#a3174d9dc7a2917bc3c0c00225959ddcc",
-"functions_t.html",
-"maos_2setup__parms_8c.html",
-"pwfs_ngs.html",
-"slaving_8h.html#a53e10de2539b3b8ef96af88a7716ff30",
-"structDTF__T.html#a0f20ddad07711a0e31ca1546ab3bc756",
-"structMAOS__S.html#a1ed561dcafbc109c0489568658121a1a",
-"structPOWFS__CFG__T.html#a774a201bd129a62523cfaaec21015841",
-"structRECON__T.html#a9f642617e478b676e1657747d4bf1978",
-"structSIM__T.html#a1707bbe80b343268823ec06306e57328",
-"structSTATUS__T.html#a16ea080582753de2213b0c13185d0ca9",
-"structdir__t.html#a90f9183f5069ca6ef6ea06b5bf07acea",
-"structrmap__t.html#a41840a56fbfdd9eb0a25b4213f466c57",
-"thread_8h.html#aeb200d447f4bb01eaf557788b48337e2"
+"classcuda__recon_1_1cumoao__t.html",
+"classcuperf__g.html#a15ff6701594e181940d9c12f0120aef7",
+"cmath_8h.html#a6fc1f2acedbe1173af2194167055a1dd",
+"dmath_8h.html#a4d4c2db8c8067633284451e62c93c3b4",
+"globals_b.html",
+"loc_8h.html#ab929d93ab02c2d3931fb10fdd78ec4ad",
+"page40_results.html#sect-idl",
+"sim__utils_8h.html#a0970dccf08e67a9d470a1efeffb17891",
+"smath_8h.html#afec275089ac8cb58cd8495d1e6a5b3a6",
+"structFDPCG__T.html#a1bec0771a6ea6da42c3276f3360950d2",
+"structMUV__T.html#aa23779b1c9f8250a9d5cd2a4a2292894",
+"structPOWFS__T.html#ae08b1afeac4ed4dc19ccbcd4fc7d1990",
+"structSIM__CFG__T.html#a3f00f1b7c3103c5cb183c3fca5d0c8e2",
+"structSIM__T.html#afaebfdd35dd1ec5e73724ac7b64daea3",
+"structdmat.html#a983086836d817046db8588de2873dd36",
+"structrmapccell.html",
+"turbulence_8h.html",
+"zmath_8h.html#ad981232f16620240b2bc7ad817ef3993"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

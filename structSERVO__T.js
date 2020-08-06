@@ -6,7 +6,8 @@ var structSERVO__T =
     [ "merrhist", "structSERVO__T.html#a33c557ca9519e2aba8bc33ee1e4406a0", null ],
     [ "mint", "structSERVO__T.html#abec9c68e528ea49a9e19ef447305ff7b", null ],
     [ "initialized", "structSERVO__T.html#a0c8a6084de446f2b929462e9feb16f70", null ],
-    [ "al", "structSERVO__T.html#ad138cd7f0e87c6d71eeaa6ffa180ab7c", null ],
+    [ "alint", "structSERVO__T.html#a26cbd039aefdb76b795e815e571520ca", null ],
+    [ "alfrac", "structSERVO__T.html#a6c44a5deb9483d39096ab0f3fe012413", null ],
     [ "ap", "structSERVO__T.html#a93871289b43a93d1eac43673377d01dc", null ],
     [ "ep", "structSERVO__T.html#a05d172841261e607e1726184244d737c", null ],
     [ "dt", "structSERVO__T.html#ac96254caa683a167615cd360ecd567ea", null ]

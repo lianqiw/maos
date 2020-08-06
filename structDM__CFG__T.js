@@ -19,5 +19,7 @@ var structDM__CFG__T =
     [ "isground", "structDM__CFG__T.html#ab3eca0a0f00d7e45fb842d4a8dace867", null ],
     [ "actfloat", "structDM__CFG__T.html#ab74e80a86f033c5ec79c0e563c484791", null ],
     [ "actstuck", "structDM__CFG__T.html#a45f2c78574bc2daee79f724b492976ce", null ],
-    [ "hyst", "structDM__CFG__T.html#a52d20487bf78b12bfa6fdd1fb4fe678c", null ]
+    [ "hyst", "structDM__CFG__T.html#af68269b61eae2d72470925cb8ea0d9e8", null ],
+    [ "hyst_alpha", "structDM__CFG__T.html#a7f586afa5d9df8b7574ac29096a19ae4", null ],
+    [ "hyst_stroke", "structDM__CFG__T.html#ab3c3feeb1606ed518510a21c9c3ec003", null ]
 ];

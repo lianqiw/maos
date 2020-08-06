@@ -1,0 +1,37 @@
+var parms_8h =
+[
+    [ "ATM_CFG_T", "structATM__CFG__T.html", "structATM__CFG__T" ],
+    [ "ATMR_CFG_T", "structATMR__CFG__T.html", "structATMR__CFG__T" ],
+    [ "APER_CFG_T", "structAPER__CFG__T.html", "structAPER__CFG__T" ],
+    [ "LLT_CFG_T", "structLLT__CFG__T.html", "structLLT__CFG__T" ],
+    [ "POWFS_CFG_T", "structPOWFS__CFG__T.html", "structPOWFS__CFG__T" ],
+    [ "WFS_CFG_T", "structWFS__CFG__T.html", "structWFS__CFG__T" ],
+    [ "DM_CFG_T", "structDM__CFG__T.html", "structDM__CFG__T" ],
+    [ "EVL_CFG_T", "structEVL__CFG__T.html", "structEVL__CFG__T" ],
+    [ "TOMO_CFG_T", "structTOMO__CFG__T.html", "structTOMO__CFG__T" ],
+    [ "FIT_CFG_T", "structFIT__CFG__T.html", "structFIT__CFG__T" ],
+    [ "LSR_CFG_T", "structLSR__CFG__T.html", "structLSR__CFG__T" ],
+    [ "RECON_CFG_T", "structRECON__CFG__T.html", "structRECON__CFG__T" ],
+    [ "SIM_CFG_T", "structSIM__CFG__T.html", "structSIM__CFG__T" ],
+    [ "CN2EST_CFG_T", "structCN2EST__CFG__T.html", "structCN2EST__CFG__T" ],
+    [ "PLOT_CFG_T", "structPLOT__CFG__T.html", "structPLOT__CFG__T" ],
+    [ "DBG_CFG_T", "structDBG__CFG__T.html", "structDBG__CFG__T" ],
+    [ "GPU_CFG_T", "structGPU__CFG__T.html", "structGPU__CFG__T" ],
+    [ "MOAO_CFG_T", "structMOAO__CFG__T.html", "structMOAO__CFG__T" ],
+    [ "LOAD_CFG_T", "structLOAD__CFG__T.html", "structLOAD__CFG__T" ],
+    [ "SAVE_CFG_T", "structSAVE__CFG__T.html", "structSAVE__CFG__T" ],
+    [ "MISREG_CFG_T", "structMISREG__CFG__T.html", "structMISREG__CFG__T" ],
+    [ "PARMS_T", "structPARMS__T.html", "structPARMS__T" ],
+    [ "ARG_T", "structARG__T.html", "structARG__T" ],
+    [ "MAX_AMPS", "parms_8h.html#ab93557f4dd9852c6a613566e371d3547", null ],
+    [ "T_TYPE", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49", [
+      [ "T_PLOC", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49ad00d98e4373c143e2b09088a3de3017f", null ],
+      [ "T_ALOC", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49a9a160715e4a4e0ad4dfb2cea70debacd", null ],
+      [ "T_XLOC", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49a768d170364561a103dbda61d71d776aa", null ],
+      [ "T_ATM", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49a4418c1a2575f3cf5689ed32e0e904b48", null ]
+    ] ],
+    [ "setup_parms", "parms_8h.html#a441e9246520886122d956f9e9f0bc1be", null ],
+    [ "setup_parms_gpu", "parms_8h.html#a9a36b5678c2ca8539187637c1e016a2c", null ],
+    [ "free_parms", "parms_8h.html#afad950a4f059f347cede7c2f97c7e0bd", null ],
+    [ "plotdir", "parms_8h.html#ab3f25f8d7bc4a3133cd29bbda0f43885", null ]
+];

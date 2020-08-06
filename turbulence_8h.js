@@ -3,7 +3,6 @@ var turbulence_8h =
     [ "GENATM_T", "structGENATM__T.html", "structGENATM__T" ],
     [ "genatm_simple", "turbulence_8h.html#addf46c2b6461f8cd3045493cb2422b90", null ],
     [ "genatm_loc", "turbulence_8h.html#a6d2df4e268244fbc0f8ea206aa7a5b51", null ],
-    [ "genatm_from_spect", "turbulence_8h.html#a3d72cf5be3e6a6ca5f88ea5b05695778", null ],
     [ "vonkarman_screen", "turbulence_8h.html#a1ca22cd6ef9fc6877922857c0cd1b746", null ],
     [ "biharmonic_screen", "turbulence_8h.html#a1a5ee62565509406b8712a9e9f16af97", null ],
     [ "fractal_screen", "turbulence_8h.html#aeb514bab0df876eeb65154d87b58e47d", null ],

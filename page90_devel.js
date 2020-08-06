@@ -1,23 +1,21 @@
 var page90_devel =
 [
-    [ "C Fundementals", "page91_clang.html", [
-      [ "Arrays", "page91_clang.html#sect-array", null ],
-      [ "Pointers", "page91_clang.html#sect-pointer", [
-        [ "1D Pointers", "page91_clang.html#sect-1d-pointer", null ],
-        [ "Const pointers vs. pointers point to const memory", "page91_clang.html#sect-const", null ],
-        [ "2D Pointers", "page91_clang.html#sect-2d-pointer", null ]
+    [ "Fundementals", "page91_clang.html", [
+      [ "Memory Access", "page91_clang.html#sect-array", [
+        [ "Pointers", "page91_clang.html#sect-pointer", null ],
+        [ "Array Pointers", "page91_clang.html#sect-1d-pointer", null ],
+        [ "Constness", "page91_clang.html#sect-const", null ],
+        [ "Two Dimension Pointers", "page91_clang.html#sect-2d-pointer", null ]
+      ] ],
+      [ "MAOS Data Types", "page91_clang.html#sect-maos-data", [
+        [ "Fundamental Math Types", "page91_clang.html#sect-maos-math", null ],
+        [ "Types", "page91_clang.html#Specific", null ]
       ] ]
     ] ],
-    [ "Programming Guidelines", "page93_guidelines.html", [
-      [ "Guidelines", "page93_guidelines.html#sect-guide", null ],
-      [ "Code Structure", "page93_guidelines.html#sect-structure", null ]
-    ] ],
-    [ "Profiling MAOS", "page95_profiling.html", null ],
-    [ "MAOS Design", "page90_design.html", [
-      [ "Fundementals", "page90_design.html#Fundementals", null ],
-      [ "Memory", "page90_design.html#Memory", null ],
-      [ "Auxiliary", "page90_design.html#Auxiliary", [
-        [ "range variation", "page90_design.html#Sodium", null ]
-      ] ]
+    [ "MAOS Architecture", "page93_maos.html", "page93_maos" ],
+    [ "Debugging and Profiling", "page95_profiling.html", [
+      [ "Debugging", "page95_profiling.html#Debugging", null ],
+      [ "Coverage", "page95_profiling.html#Code", null ],
+      [ "Profiling", "page95_profiling.html#Profiling", null ]
     ] ]
 ];
