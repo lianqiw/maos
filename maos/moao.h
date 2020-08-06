@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file moao.h
+   \file maos/moao.h
    Routings to setup moao and carry out moao DM fitting.
 */
 #ifndef MAOS_MOAO_H

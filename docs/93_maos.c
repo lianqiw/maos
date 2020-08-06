@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page93_guidelines MAOS Architecture
+   \page page93_maos MAOS Architecture
 
    \section sect-guide Guidelines
 
@@ -96,9 +96,7 @@
    \section maos_design MAOS Design
 
    The following shows how various components are implemented.
- 
-   
 
-
+   - \subpage hysteresis 
 
  */

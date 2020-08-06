@@ -26,6 +26,7 @@
 */
 extern int DRAW_ID;/*number to use for drawdaemon, usually PID. */
 extern int DRAW_DIRECT;
+extern int draw_disabled;
 void draw_helper(void);
 int draw_add(int fd);
 void draw_final(int reuse);

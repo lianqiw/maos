@@ -17,7 +17,7 @@
 */
 
 /**
-   \file common.h
+   \file sys/common.h
    Every source file in this folder should include this file
 */
 

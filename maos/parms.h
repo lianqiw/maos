@@ -298,11 +298,9 @@ typedef struct DM_CFG_T{
     char *actfloat; /**<file containing floating actuators. nx2 coordinate*/
     char *actstuck; /**<file containing stuck actuators. nx2 coordinate.*/
 
-    char *hyst;     /**<File containing a matrix that describes the
-		       hysterisis. The matrix should have 3 rows, and multiple
-		       columns. Each column describe the parameters for a mode,
-		       and the rows are: 1) weight 2) alpha, 3) beta. See
-		       "Hysteresis Modeling and Simulation" by Luc Gilles*/
+    real hyst;       /**<The hysteresis amount (ratio)*/
+    real hyst_alpha; /**<The DM hysteresis model alpha parameter*/
+    real hyst_stroke;/**<The surface stroke that the hysteresis is measured at*/
 }DM_CFG_T;
 /**
    contarins input parameters all evaluation directions.  */

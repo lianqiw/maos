@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file utils.h
+   \file maos/utils.h
 */
 
 #ifndef __AOS_UTILS_H

@@ -21,7 +21,7 @@
 #include "../math/mathdef.h"
 
 /**
-   \file pcg.h
+   \file lib/pcg.h
    Implements preconditioned conjugate gradient method.
 */
 typedef void (*CGFUN) (dcell **xout, const void *A, const dcell *xin, const real alpha);

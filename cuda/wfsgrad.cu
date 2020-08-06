@@ -628,7 +628,7 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 	    if(save_gradgeom){//also do geom grad during phy grad sims
 		zfarr_push(simu->save->gradgeom[iwfs], simu->wfsisim, gradacc, stream);
 	    }
-	    if(parms->plot.run){// && parms->powfs[ipowfs].lo){
+	    if(parms->plot.run && !draw_disabled){// && parms->powfs[ipowfs].lo){
 		cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints, stream);
 	    }
 	}else{

@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file recon.h
+   \file maos/recon.h
 
    Wavefront reconstruction and DM fitting routines. 
 

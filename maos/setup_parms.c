@@ -145,7 +145,6 @@ void free_parms(PARMS_T *parms){
     }
     free(parms->wfs);
     for(int idm=0; idm<parms->ndm; idm++){
-	free(parms->dm[idm].hyst);
 	free(parms->dm[idm].actstuck);
 	free(parms->dm[idm].actfloat);
 	free(parms->dm[idm].iastrokefn);
@@ -601,7 +600,9 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM_RELAX(int,histn);
     READ_DM_RELAX(int,hist); 
     READ_DM_RELAX(dbl,iac);
-    READ_DM_RELAX(str,hyst);
+    READ_DM_RELAX(dbl,hyst);
+    READ_DM_RELAX(dbl,hyst_alpha);
+    READ_DM_RELAX(dbl,hyst_stroke);
     READ_DM_RELAX(str,actfloat);
     READ_DM_RELAX(str,actstuck);
     free(strtmp);

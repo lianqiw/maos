@@ -20,7 +20,7 @@
 #define AOS_SYS_MISC_H
 #include "common.h"
 /**
-   \file misc.h
+   \file sys/misc.h
    misc routines.
 */
 char *mybasename(const char *fn);

@@ -7,6 +7,7 @@ np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec'
 from scipy.special import erf
 from numpy import sqrt, exp, log, floor, ceil, nan
 from numpy.random import rand, randn
+import matplotlib.pyplot as plt
 
 try:
     from libaos import *
@@ -59,8 +60,6 @@ def isequal(a, b):
 
 
 def test_read():
-    import matplotlib.pyplot as plt
-    import os
     path=b'/home/lianqiw/work/aos/comp/optim/bin/test/setup/'
     
     loc=readbin(path+b'aloc.bin')[0,0]

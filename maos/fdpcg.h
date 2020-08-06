@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file fdpcg.h
+   \file maos/fdpcg.h
 
    Fourier Domain Preconditioner for Tomography step.
 

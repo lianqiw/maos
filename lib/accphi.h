@@ -21,7 +21,7 @@
 #include "../math/mathdef.h"
 
 /**
-   \file accphi.h
+   \file lib/accphi.h
 
    Contains ray tracing routines optimized for different input/output
    formats. Notice that the OPDs are accumulated.

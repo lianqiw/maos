@@ -16,7 +16,7 @@ else:
 simu_all=list();
 
 headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
-          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h']
+          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h','lib/hyst.h']
 structs=maos.parse_structs(srcdir, headlist)
 
 funcs=maos.parse_func(srcdir, structs, ['mex/aolib.h'])
@@ -40,7 +40,7 @@ def handle_type(argtype):
         mx2c='mx2loc'
         c2mx='loc2mx'
         free_c='locfree'
-    elif argtype=='int' or argtype=='long' or argtype=='double':
+    elif argtype=='int' or argtype=='long' or argtype=='double' or argtype=='real' or argtype=='float':
         mx2c='('+argtype+')mxGetScalar'
         c2mx='mxCreateDoubleScalar'
         free_c=''

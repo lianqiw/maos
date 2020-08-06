@@ -1107,10 +1107,7 @@ static void init_simu_dm(SIM_T *simu){
 	    if(!simu->hyst){
 		simu->hyst = mycalloc(parms->ndm,HYST_T*);
 	    }
-	    dmat *coeff=dread("%s",parms->dm[idm].hyst);
-	    simu->hyst[idm]=hyst_new(coeff, recon->aloc->p[idm]->nloc);
-	    hyst_calib(simu->hyst[idm], idm);
-	    dfree(coeff);
+	    simu->hyst[idm]=hyst_new(parms->dm[idm].hyst, parms->dm[idm].hyst_alpha, parms->dm[idm].hyst_stroke, recon->aloc->p[idm]->nloc);
 	}
     }
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */

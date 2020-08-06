@@ -21,7 +21,7 @@ else:
 simu_all=list();
 
 headlist=['lib/accphi.h','lib/cn2est.h','lib/kalman.h', 'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h',
-          'lib/mkdtf.h', 'math/chol.h','sys/scheduler.h']
+          'lib/mkdtf.h','lib/hyst.h', 'math/chol.h','sys/scheduler.h']
 structs=maos.parse_structs(srcdir, headlist)
 
 #funcs=maos.parse_func(srcdir, structs, ['lib/aolib.h'])
@@ -51,6 +51,7 @@ aotype2py={
     'char':'c_char',
     'double':'c_double',
     'float':'c_float',
+    'real':'c_double',
     'size_t':'c_size_t',
     'long':'c_long',
     'int':'c_int',

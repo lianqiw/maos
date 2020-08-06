@@ -17,53 +17,86 @@
 */
 
 #include "hyst.h"
+/**
+    \page hysteresis DM Hysteresis 
+
+   The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope"
+   J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000
+
+   Formula (2) is used with  V replaced by command x, and x replaced by actual DM position y
+    \f[
+       \frac{dy}{dx}=\alpha sign(dx) (\beta x-y)+(\beta-u)
+    \f]
+
+
+    For closed hyteresis loop within the stroke limit \f$S\f$, the linear ordinary differential equation can be solved analytically:
+    \f{eqnarray*}{
+        y_{t/r}(x)=\beta x \mp \frac{u}{\alpha}\left(1-\frac{2\exp(\mp\alpha x)}{\exp(-\alpha S)+\exp(\alpha S)}\right)
+    \f} 
+
+    where t and r represents trace and retrace directions. It is desirable to have y be 
+    within the same range as x to simulate calibrated command: 
+
+    \f$y_{t/r}(S)=S\f$. Let the hysteresis ratio be \f$h\f$, we have
+
+    \f{eqnarray*}{
+        \frac{y_r(0)}{S}&=&\frac{u}{\alpha S}\left(1-\frac{2}{\exp(-\alpha S)+exp(\alpha S)}\right)=h \\
+        \frac{y_{t/r}(S)}{S}&=&\beta-\frac{u}{\alpha S}\left(1-\frac{2\exp(-\alpha S)}{\exp(-\alpha S)+\exp(\alpha S)}\right) = 1
+    \f}
+    
+    The equation can be solved uniquely when \f$\alpha S\f$ is fixed. 
+    The hysteresis curve is a weak function of \f$\alpha S\f$ and having \f$\alpha S=2\f$ produces a good looking curve. 
+    Smaller \f$\alpha S\f$ has slower convergence of the hysteresis curve. 
+    
+    The hysteresis model is simulated using simple integration. For each step with a new x, the position y is updated as
+    \f{eqnarray*}{
+       dx &=& x-x_{last} \\
+       dy &=& \alpha*abs(dx)*(\beta*x_{last}-y_{last})+dx*(\beta-u) \\
+       y_{last}&\mathrel{+}=&dy \\
+       x_{last}&=&x \\
+       y&=&y_{last}  
+    \f}
+  
+*/
 
 /**
    contains data related to DM hysterisis modeling for all the common DMs (not
 MOAO). let input be x, and output of each mode be y.  */
 struct HYST_T{
-    dmat *coeff;      /**<contains data from parms->dm.hyst*/
+    real alpha;       /**<Material constant*/
+    real beta;        /**<constants*/
+    real beta_m_u;    /**<constants, beta-u*/
     dmat *xlast;      /**<Record x from last time step*/
     dmat *ylast;      /**<Record y from last time step*/
-    dmat *dxlast;     /**<Change of x*/
-    dmat *x0;         /**<Initial x (before dx changes sign)*/
-    dmat *y0;         /**<Initial y*/
-    real stroke;    /**<Surface stroke of DM. coeff->alpha is scaled by this*/
-    real power;     /**<Slope of changing alpha*/
-    real xscale;    /**<Scaling of x to fix overal slope error.*/
+
 };
 
 /**
-  Hysteresis modeling. Create the hysteresis model
+  Hysteresis modeling. Create the hysteresis model. It assumes that the hysteresis is measured with a stroke.
 */
-HYST_T *hyst_new(dmat *coeff, int naloc){
+HYST_T *hyst_new(
+        real hysteresis,   /**<The ratio of the maximum difference of ascending/descending curve over 2*stroke. */
+        real alpha,        /**<The alpha parameter*/
+        real stroke,       /**<The DM command is from -stroke to stroke*/
+        long nact          /**<Number of actuators*/
+        ){
     HYST_T *hyst=mycalloc(1,HYST_T);
-    int nhmod=coeff->ny;
-    if(coeff->nx!=3 || nhmod<1){
-	error("DM hystereis has wrong format. Expect 3 rows, but has %ldx%ld\n", coeff->nx, coeff->ny);
+    hyst->xlast=dnew(nact,1);
+    hyst->ylast=dnew(nact,1);
+    if(hysteresis<0 || hysteresis>1){
+        error("Hysteresis should be between 0 and 1\n");
     }
-    hyst->coeff=dref(coeff);
-    hyst->xlast=dnew(naloc,1);
-    hyst->ylast=dnew(nhmod,naloc);
-    hyst->dxlast=dnew(naloc,1);
-    hyst->x0=dnew(naloc,1);
-    hyst->y0=dnew(nhmod,naloc);
-    hyst->xscale=1;
-    if(coeff->header){
-	real stroke=search_header_num(coeff->header, "stroke");
-	if(isfinite(stroke)){
-	    warning("stroke=%g\n", stroke);
-	    for(int i=0; i<coeff->ny; i++){
-		coeff->p[i*coeff->nx+1]*=stroke;
-	    }
-	    hyst->stroke=stroke;
-	}
-	real alpha_power=search_header_num(coeff->header, "alpha_power");
-	if(isfinite(alpha_power)){
-	    warning("alpha_power=%g\n", alpha_power);
-	    hyst->power=alpha_power;
-	}
+    if(isinf(stroke)){
+        stroke=10e-6;
     }
+    if(alpha<0) alpha=2; //a good default
+    real eas=exp(alpha);
+    real enas=1./eas;
+    real u=hysteresis*alpha/(1.-2./(eas+enas));
+    hyst->beta=u/alpha*(1.-2.*enas/(eas+enas))+1.;
+    hyst->beta_m_u=hyst->beta-u;
+    hyst->alpha=alpha/stroke; 
+    info("hyst_new: stroke=%g, alpha=%g, beta=%g, u=%g, nact=%ld\n", stroke, alpha, hyst->beta, u, nact);
     return hyst;
 }
 
@@ -73,21 +106,14 @@ HYST_T *hyst_new(dmat *coeff, int naloc){
 void hyst_reset(HYST_T *hyst){
     dzero(hyst->xlast);
     dzero(hyst->ylast);
-    dzero(hyst->dxlast);
-    dzero(hyst->x0);
-    dzero(hyst->y0);
 }
 
 /**
    Free hysteresis model.
 */
 void hyst_free(HYST_T *hyst){
-    dfree(hyst->coeff);
     dfree(hyst->xlast);
     dfree(hyst->ylast);
-    dfree(hyst->dxlast);
-    dfree(hyst->x0);
-    dfree(hyst->y0);
     free(hyst);
 }
 
@@ -95,45 +121,18 @@ void hyst_free(HYST_T *hyst){
    Apply hysteresis to DM vector. dmreal and dmcmd may be the same
 */
 void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
-    const real *restrict xin=dmcmd->p;
-    real *restrict xout=dmreal->p;
     real *restrict xlast=hyst->xlast->p;
-    real *restrict dxlast=hyst->dxlast->p;
-    real *restrict x0=hyst->x0->p;
-    dmat*  ylast=hyst->ylast;
-    dmat*  py0=hyst->y0;
-    dmat*  coeff=hyst->coeff;
-    int nmod=hyst->coeff->ny;
-    int naloc=dmcmd->nx;
-    for(int ia=0; ia<naloc; ia++){
-	real xia=xin[ia]*hyst->xscale;
-	real dx=xia-xlast[ia];
-	if(fabs(dx)>1e-14){/*There is change in command */
-	    if(dx*dxlast[ia]<0){
-		/*Changes in moving direction, change the initial condition */
-		x0[ia]=xlast[ia];
-		for(int imod=0; imod<nmod; imod++){
-		    P(py0,imod,ia)=P(ylast,imod,ia);
-		}
-	    }
-	    real alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
-	    if(hyst->power){
-		alphasc*=pow((hyst->stroke-xin[ia])/(hyst->stroke*2.), hyst->power);
-	    }
-	    for(int imod=0; imod<nmod; imod++){
-		const real alpha=alphasc*P(coeff,1,imod);
-		const real alphabeta=alpha*P(coeff,2,imod);
-		P(ylast,imod,ia)=xia-alphabeta+(P(py0,imod,ia)-x0[ia]+alphabeta)*exp(-(xia-x0[ia])/alpha);
-	    }
-	    xlast[ia]=xia;
-	    dxlast[ia]=dx;
-	}/*else: no change in voltage, no change in output. */
-	/*update output. */
-	real y=0;
-	for(int imod=0; imod<nmod; imod++){
-	    y+=P(ylast,imod,ia)*P(coeff,0,imod);
-	}
-	xout[ia]=y;
+    real *restrict ylast=hyst->ylast->p;
+    assert(dmcmd->nx==hyst->xlast->nx);
+    for(int it=0; it<dmcmd->ny; it++){
+        for(int ia=0; ia<dmcmd->nx; ia++){
+            real xia=P(dmcmd, ia, it);
+            real dx=xia-xlast[ia];
+            real dy=fabs(dx)*hyst->alpha*(hyst->beta*xlast[ia]-ylast[ia])+dx*(hyst->beta_m_u);
+            xlast[ia]=xia;
+            ylast[ia]+=dy;
+            P(dmreal, ia, it)=ylast[ia];
+        }
     }
 }
 
@@ -147,36 +146,13 @@ void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
     }
 }
 
-/**Calibrate the slope of hysteresis curve.*/
-void hyst_calib(HYST_T *hyst, int ih){
-    int N=1000;
-    dmat *cmd=dnew(N,1);
-    dmat *output=dnew(N,1);
-    dmat *cmd0=dnew(1,1);
-    dmat *output0=dnew(1,1);
-    real stroke=hyst->stroke;
-    if(!hyst->stroke){
-	stroke=10e-6;
-    }
-    for(int i=0; i<N; i++){
-	cmd0->p[0]=cmd->p[i]=sin(i*M_PI*0.01)*stroke;
-	hyst_dmat(hyst, output0, cmd0);
-	output->p[i]=output0->p[0];
-    }
-    hyst_reset(hyst);
-    hyst->xscale*=(dmax(cmd)-dmin(cmd))/(dmax(output)-dmin(output));
-    warning("x would be multiplied by %g\n", hyst->xscale);
-    writebin(output, "hyst%d_output", ih);
-    writebin(cmd,  "hyst%d_cmd", ih);
-    for(int i=0; i<N; i++){
-	cmd0->p[0]=cmd->p[i];
-	hyst_dmat(hyst, output0, cmd0);
-	output->p[i]=output0->p[0];
-    }
-    hyst_reset(hyst);
-    writebin(output, "hyst%d_output_calib", ih);
-    dfree(cmd);
-    dfree(output);
-    dfree(cmd0);
-    dfree(output0);
+/**
+ * Test hysteresis model. Dmcmd has dimensions of nact*ntime
+ * */
+dmat* hyst_test(real hysteresis, real hyst_alpha, real hyst_stroke, const dmat *dmcmd){
+    HYST_T *hyst=hyst_new(hysteresis, hyst_alpha, hyst_stroke, dmcmd->nx);
+    dmat *dmreal=dnew(dmcmd->nx, dmcmd->ny);
+    hyst_dmat(hyst, dmreal, dmcmd);
+    hyst_free(hyst);
+    return dmreal;
 }

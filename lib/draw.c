@@ -26,7 +26,7 @@
 #include "cure.h"
 int DRAW_ID=0;
 int DRAW_DIRECT=0;
-int disable_draw=0; /*if 1, draw will be disabled  */
+int draw_disabled=0; /*if 1, draw will be disabled  */
 PNEW(lock);
 #define MAXDRAW 1024
 static int sock_helper=-1;
@@ -162,7 +162,7 @@ int draw_add(int fd){
 	    sock_draws[ifd].fd=fd;
 	    sock_ndraw2++;
 	    thread_new((thread_fun)listen_drawdaemon, &sock_draws[ifd]);
-	    disable_draw=0;
+	    draw_disabled=0;
 	    return 0;
 	}
     }
@@ -172,7 +172,7 @@ int draw_add(int fd){
 	thread_new((thread_fun)listen_drawdaemon, &sock_draws[sock_ndraw]);
 	sock_ndraw++;
 	sock_ndraw2++;
-	disable_draw=0;
+	draw_disabled=0;
 	return 0;
     }else{
 	return -1;
@@ -201,7 +201,7 @@ static void draw_remove(int fd, int reuse){
 	dbg("draw_remove: fd=%d is not found\n", fd);
     }
     if(sock_ndraw2<=0){
-	disable_draw=1;//do not try to restart drawdaemon
+	draw_disabled=1;//do not try to restart drawdaemon
     }
 }
 static int launch_drawdaemon(){
@@ -220,7 +220,7 @@ static int launch_drawdaemon(){
     }else{
 	perror("socketpair");
 	warning("socket pair failed, cannot launch drawdaemon\n");
-	disable_draw=1;
+	draw_disabled=1;
 	sv2[0]=-1;
     }
     return sv2[0];
@@ -244,7 +244,7 @@ void draw_helper(void){
     if(socketpair(AF_UNIX, SOCK_STREAM, 0, sv)){
 	perror("socketpair");
 	warning("socketpair failed, disable drawing.\n"); 
-	disable_draw=1;
+	draw_disabled=1;
     }else{
 	info("draw_helper started\n");
     }
@@ -278,7 +278,7 @@ static int get_drawdaemon(){
     if(sock_ndraw2){//drawdaemon already connected
 	return 0;
     }
-    if(disable_draw){
+    if(draw_disabled){
 	return -1;
     }
     char *display=getenv("DISPLAY");
@@ -310,7 +310,7 @@ static int get_drawdaemon(){
 	}else{//use helper to launch
 	    if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
 		sock=-1;
-		disable_draw=1;
+		draw_disabled=1;
 		close(sock_helper);
 		sock_helper=-1;
 		warning("Unable to talk to the helper to launch drawdaemon\n");
@@ -337,7 +337,7 @@ static int get_drawdaemon(){
    4) pause must not be set set.
 */
 static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
-    if(disable_draw || sock_draws[ifd].fd==-1 || sock_draws[ifd].pause) return 0;
+    if(draw_disabled || sock_draws[ifd].fd==-1 || sock_draws[ifd].pause) return 0;
     if(!draw_single) return 1;
     list_t *child=0;
     list_search(&sock_draws[ifd].list, &child, fig, add);
@@ -367,7 +367,7 @@ void draw_final(int reuse){
    Check whether what we are drawing is current page of any drawdaemon.
 */
 int draw_current(const char *fig, const char *fn){
-    if(disable_draw) return 0;
+    if(draw_disabled) return 0;
     if(!draw_single) return 1;
     int current=0;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
@@ -397,7 +397,7 @@ int plot_points(const char *fig,    /**<Category of the figure*/
 		const char *ylabel, /**<y axis label*/
 		const char *format, /**<subcategory of the plot.*/
 		...){
-    if(disable_draw) return 0;
+    if(draw_disabled) return 0;
     format2fn;
     LOCK(lock);
     int ans=0;
@@ -507,7 +507,7 @@ typedef struct imagesc_t{
     char *fn;
 }imagesc_t;
 static void* imagesc_do(imagesc_t *data){
-    if(disable_draw) return NULL;
+    if(draw_disabled) return NULL;
     LOCK(lock);
     if(!get_drawdaemon()){
 	char *fig=data->fig;

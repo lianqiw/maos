@@ -20,7 +20,7 @@
 
    \subpage page91_clang
 
-   \subpage page93_guidelines
+   \subpage page93_maos
    
    \subpage page95_profiling
    

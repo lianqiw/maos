@@ -4,8 +4,8 @@ SUBDIRS=bin test
 if USE_MEX
 SUBDIRS+=mex
 endif
-
-#include $(top_srcdir)/aminclude.am
+# include doxygen definition.
+include $(top_srcdir)/aminclude.am
 
 #dist-hook:
 #	rm -rf $(distdir)/configure.ac 

@@ -580,7 +580,7 @@ void gpu_tomo(SIM_T *simu, dcell *gradin){
     if(parms->dbg.tomo){
 	curecon->tomo_test(simu);
     }else{
-	int copy2cpu=(parms->plot.run>1 
+	int copy2cpu=((parms->plot.run>1 &&!draw_disabled)
 		      || !parms->gpu.fit 
 		      || parms->save.opdr 
 		      || (recon->moao && !parms->gpu.moao)
