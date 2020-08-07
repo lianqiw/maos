@@ -93,18 +93,22 @@ $(document).ready(function(){initNavTree('hysteresis.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope" J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000</p>
-<p>Formula (2) is used with V replaced by command x, and x replaced by actual DM position y </p><pre class="fragment">dy/dx=alpha*sign(dx)*(b*x-y)+(beta-u)
-</pre><p>For each step with a new x, the position y is updated as </p><pre class="fragment">dx=x-xlast
-dy=alpha*abs(dx)*(beta*xlast-ylast+sign(dx)*(beta-u)
-ylast+=dy
-y=ylast
-</pre><p>Both x and y are normalized by the DM stroke. Beta affects dy at x=+/-1, but does not effect dy at x=0. Alpha and u affects affects both dy at 0 and extreme. For different amount of hysteresis, the amount alpha can be kept constant, and we solve for u and beta to meet the boundary conditions: </p><pre class="fragment">y=+/-1 at x=+/-1
-y=+/-hysteresis at x=0
-</pre><p>at x=0, y=+/- (u/alpha)*(1-2/(exp(-alpha)+exp(alpha))) at x=+/-1, y=+/- (beta-u/alpha*(1-2*exp(-alpha)/(exp(-alpha)+exp(alpha))))</p>
-<p>From this, we can solve u and then beta.</p>
-<p>Alpha=2 is a good value. Smaller alpha has slower convergence of the hysteresis curve. Alpha effects the hysteresis amount for difference sized loops.</p>
-<p>Alpha is proportional to the stroke in un-normalized case. </p>
-</div></div><!-- contents -->
+<p>Formula (2) is used with V replaced by command x, and x replaced by actual DM position y </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\[ \frac{dy}{dx}=\alpha sign(dx) (\beta x-y)+(\beta-u) \]" src="form_5.png"/>
+</p>
+<p>For closed hyteresis loop within the stroke limit <img class="formulaInl" alt="$S$" src="form_6.png"/>, the linear ordinary differential equation can be solved analytically: </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\begin{eqnarray*} y_{t/r}(x)=\beta x \mp \frac{u}{\alpha}\left(1-\frac{2\exp(\mp\alpha x)}{\exp(-\alpha S)+\exp(\alpha S)}\right) \end{eqnarray*}" src="form_7.png"/>
+</p>
+<p>where t and r represents trace and retrace directions. It is desirable to have y be within the same range as x to simulate calibrated command:</p>
+<p><img class="formulaInl" alt="$y_{t/r}(S)=S$" src="form_8.png"/>. Let the hysteresis ratio be <img class="formulaInl" alt="$h$" src="form_9.png"/>, we have</p>
+<p class="formulaDsp">
+<img class="formulaDsp" alt="\begin{eqnarray*} \frac{y_r(0)}{S}&amp;=&amp;\frac{u}{\alpha S}\left(1-\frac{2}{\exp(-\alpha S)+exp(\alpha S)}\right)=h \\ \frac{y_{t/r}(S)}{S}&amp;=&amp;\beta-\frac{u}{\alpha S}\left(1-\frac{2\exp(-\alpha S)}{\exp(-\alpha S)+\exp(\alpha S)}\right) = 1 \end{eqnarray*}" src="form_10.png"/>
+</p>
+<p>The equation can be solved uniquely when <img class="formulaInl" alt="$\alpha S$" src="form_11.png"/> is fixed. The hysteresis curve is a weak function of <img class="formulaInl" alt="$\alpha S$" src="form_11.png"/> and having <img class="formulaInl" alt="$\alpha S=2$" src="form_12.png"/> produces a good looking curve. Smaller <img class="formulaInl" alt="$\alpha S$" src="form_11.png"/> has slower convergence of the hysteresis curve.</p>
+<p>The hysteresis model is simulated using simple integration. For each step with a new x, the position y is updated as </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\begin{eqnarray*} dx &amp;=&amp; x-x_{last} \\ dy &amp;=&amp; \alpha*abs(dx)*(\beta*x_{last}-y_{last})+dx*(\beta-u) \\ y_{last}&amp;\mathrel{+}=&amp;dy \\ x_{last}&amp;=&amp;x \\ y&amp;=&amp;y_{last} \end{eqnarray*}" src="form_13.png"/>
+</p>
+ </div></div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

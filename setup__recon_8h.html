@@ -369,10 +369,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
 </div><div class="memdoc">
 <p>assemble tomography matrix. In CG mode, this function is not executed if tomo.assemble=0, Instead, the algorithm is contained in recon.c. When you modify anything, make sure you also do it there. <br />
  For integrated tomograhy:</p>
-<p><img class="formulaInl" alt="$\hat{x}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1}+G_{ngs}^{T}C_{ngs}^{-1} G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\equiv}RL^{-1}RR s.$" src="form_39.png"/></p>
+<p><img class="formulaInl" alt="$\hat{x}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1}+G_{ngs}^{T}C_{ngs}^{-1} G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\equiv}RL^{-1}RR s.$" src="form_48.png"/></p>
 <p>For split tomography, the terms regarding NGS are dropped:</p>
-<p><img class="formulaInl" alt="$\hat{x}_{lgs}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1})^{-1} G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.$" src="form_40.png"/></p>
-<p>The left hand side of linear equation (inside the inverse) is stored in RL. The right hand side of the linear equation (outside of the inverse) is stored in RR. The terms regarding the NGS are handled using low rank terms. The gradients from LGS and NGS and concatenated to <img class="formulaInl" alt="$s$" src="form_41.png"/>.</p>
+<p><img class="formulaInl" alt="$\hat{x}_{lgs}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1})^{-1} G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.$" src="form_49.png"/></p>
+<p>The left hand side of linear equation (inside the inverse) is stored in RL. The right hand side of the linear equation (outside of the inverse) is stored in RR. The terms regarding the NGS are handled using low rank terms. The gradients from LGS and NGS and concatenated to <img class="formulaInl" alt="$s$" src="form_50.png"/>.</p>
 <p>In the LGS part, there is a global tip/tilt removal operator because LGS is insensitive to global tip/tilts.</p>
 <p>For details see www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803 </p>
 
@@ -472,7 +472,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
       </table>
 </div><div class="memdoc">
 <p>Setup the least square reconstruct by directly inverting GA matrix. The reconstructor is simply the pseudo inverse of GA matrix: </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[\hat{x}=(G_a^TC_g^{-1}G_a)^{-1}G_a^TC_g^{-1}\]" src="form_63.png"/>
+<img class="formulaDsp" alt="\[\hat{x}=(G_a^TC_g^{-1}G_a)^{-1}G_a^TC_g^{-1}\]" src="form_72.png"/>
 </p>
 <p>This is very close to RR except replacing GX with GA.</p>
 <p>We use the tomograhy parameters for lsr, since lsr is simply "tomography" onto DM directly. </p>
@@ -706,28 +706,28 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
 <p>2010-03-16: New Implementation.</p>
 <p>Definition:</p>
 <ul>
-<li><img class="formulaInl" alt="$G_{lgs}$" src="form_42.png"/> is LGS gradient operator from xloc, contained in recon-&gt;GXtomo as dspcell</li>
-<li><img class="formulaInl" alt="$G_{ngs}$" src="form_43.png"/> is NGS gradient operator from xloc, contained in recon-&gt;GXL as dense matrix</li>
-<li><img class="formulaInl" alt="$C_{lgs}, C_{ngs}$" src="form_44.png"/> is the LGS, and NGS measurement noise covariance matrix.</li>
-<li><img class="formulaInl" alt="$\hat{x}_{lgs}$" src="form_45.png"/> is LGS tomography output</li>
-<li><img class="formulaInl" alt="$\hat{x}_{ngs}$" src="form_46.png"/> is NGS minimum variance split tomography output</li>
-<li><img class="formulaInl" alt="$a_{ngs}$" src="form_47.png"/> is NGS minimum variance DM output.</li>
-<li><img class="formulaInl" alt="$F$" src="form_48.png"/> is the fitting operator</li>
-<li><img class="formulaInl" alt="$H_A$" src="form_49.png"/> is the ray tracing operator from aloc to ploc, contained in recon-&gt;HA.</li>
-<li><img class="formulaInl" alt="$MVModes$" src="form_50.png"/> is the MVST NGS modes</li>
-<li><img class="formulaInl" alt="$MVRngs$" src="form_51.png"/> is the MVST NGS reconstructor</li>
+<li><img class="formulaInl" alt="$G_{lgs}$" src="form_51.png"/> is LGS gradient operator from xloc, contained in recon-&gt;GXtomo as dspcell</li>
+<li><img class="formulaInl" alt="$G_{ngs}$" src="form_52.png"/> is NGS gradient operator from xloc, contained in recon-&gt;GXL as dense matrix</li>
+<li><img class="formulaInl" alt="$C_{lgs}, C_{ngs}$" src="form_53.png"/> is the LGS, and NGS measurement noise covariance matrix.</li>
+<li><img class="formulaInl" alt="$\hat{x}_{lgs}$" src="form_54.png"/> is LGS tomography output</li>
+<li><img class="formulaInl" alt="$\hat{x}_{ngs}$" src="form_55.png"/> is NGS minimum variance split tomography output</li>
+<li><img class="formulaInl" alt="$a_{ngs}$" src="form_56.png"/> is NGS minimum variance DM output.</li>
+<li><img class="formulaInl" alt="$F$" src="form_57.png"/> is the fitting operator</li>
+<li><img class="formulaInl" alt="$H_A$" src="form_58.png"/> is the ray tracing operator from aloc to ploc, contained in recon-&gt;HA.</li>
+<li><img class="formulaInl" alt="$MVModes$" src="form_59.png"/> is the MVST NGS modes</li>
+<li><img class="formulaInl" alt="$MVRngs$" src="form_60.png"/> is the MVST NGS reconstructor</li>
 </ul>
 <p>We have</p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} \hat{x}_{lgs}&amp;=&amp;A^{-1}G^{T}_{lgs}C_{lgs}^{-1}s_{lgs}\\ Uw&amp;=&amp;A^{-1}G_{ngs}^TC_{ngs}^{-1}\\ \hat{x}_{ngs}&amp;=&amp;Uw(1+G_{ngs}Uw)^{-1}(s_{ngs}-G_{ngs}\hat{x}_{lgs});\\ a_{NGS}&amp;=&amp;F\hat{x}_{ngs}\\ MVModes&amp;=&amp;F\cdot Uw\\ MVRngs&amp;=&amp;(1+G_{ngs}Uw)^{-1} \end{eqnarray*}" src="form_52.png"/>
+<img class="formulaDsp" alt="\begin{eqnarray*} \hat{x}_{lgs}&amp;=&amp;A^{-1}G^{T}_{lgs}C_{lgs}^{-1}s_{lgs}\\ Uw&amp;=&amp;A^{-1}G_{ngs}^TC_{ngs}^{-1}\\ \hat{x}_{ngs}&amp;=&amp;Uw(1+G_{ngs}Uw)^{-1}(s_{ngs}-G_{ngs}\hat{x}_{lgs});\\ a_{NGS}&amp;=&amp;F\hat{x}_{ngs}\\ MVModes&amp;=&amp;F\cdot Uw\\ MVRngs&amp;=&amp;(1+G_{ngs}Uw)^{-1} \end{eqnarray*}" src="form_61.png"/>
 </p>
-<p>If we want to orthnormalize the NGS modes. Propagate the NGS modes <img class="formulaInl" alt="$F\cdot Uw$" src="form_53.png"/> to fitting directions and compute the cross-coupling matrix with weighting on <img class="formulaInl" alt="$W_0, W_1$" src="form_54.png"/>, we have</p>
+<p>If we want to orthnormalize the NGS modes. Propagate the NGS modes <img class="formulaInl" alt="$F\cdot Uw$" src="form_62.png"/> to fitting directions and compute the cross-coupling matrix with weighting on <img class="formulaInl" alt="$W_0, W_1$" src="form_63.png"/>, we have</p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} Q&amp;=&amp;H_A\cdot F \cdot Uw\\ M_{CC}&amp;=&amp;Q^T(W_0-W_1 W_1^T)Q\\ \end{eqnarray*}" src="form_55.png"/>
+<img class="formulaDsp" alt="\begin{eqnarray*} Q&amp;=&amp;H_A\cdot F \cdot Uw\\ M_{CC}&amp;=&amp;Q^T(W_0-W_1 W_1^T)Q\\ \end{eqnarray*}" src="form_64.png"/>
 </p>
-<p>Do SVD on <img class="formulaInl" alt="$MCC$" src="form_56.png"/> we have <img class="formulaInl" alt="$M_{CC}=u\Sigma v^T $" src="form_57.png"/> where <img class="formulaInl" alt="$u{\equiv}v$" src="form_58.png"/> because <img class="formulaInl" alt="$MCC$" src="form_56.png"/> is symmetric. Redefine the NGS modes and reconstructor as</p>
+<p>Do SVD on <img class="formulaInl" alt="$MCC$" src="form_65.png"/> we have <img class="formulaInl" alt="$M_{CC}=u\Sigma v^T $" src="form_66.png"/> where <img class="formulaInl" alt="$u{\equiv}v$" src="form_67.png"/> because <img class="formulaInl" alt="$MCC$" src="form_65.png"/> is symmetric. Redefine the NGS modes and reconstructor as</p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} MVModes&amp;=&amp;F\cdot Uw\cdot u \Sigma^{-1/2}\\ MVRngs&amp;=&amp;\Sigma^{1/2}u^T (1+G_{ngs}A^{-1}G_{ngs}^T C_{ngs}^{-1})^{-1} \end{eqnarray*}" src="form_59.png"/>
+<img class="formulaDsp" alt="\begin{eqnarray*} MVModes&amp;=&amp;F\cdot Uw\cdot u \Sigma^{-1/2}\\ MVRngs&amp;=&amp;\Sigma^{1/2}u^T (1+G_{ngs}A^{-1}G_{ngs}^T C_{ngs}^{-1})^{-1} \end{eqnarray*}" src="form_68.png"/>
 </p>
  
 </div>

@@ -198,7 +198,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Decomposes a matrix into sparse and low rank terms and do math operations.</p>
 <p>The forward operations can be represented by a matrix M and two low rank terms as y = ( M - u*v' ) *x , or by a function Mfun and corresponding argument Mdata.</p>
-<p>This can also be used to solve linear equations using <a class="el" href="muv_8h.html#a280153250fda7a0bfaeb8873f7c08ed9">muv_solve()</a> or <a class="el" href="muv_8h.html#a133ad085946cc17f97c776c98c026460">muv_bgs_solve()</a>. Apply the sparse plus low rank compuation to xin with scaling of alpha: <img class="formulaInl" alt="$xout=(A.M-A.U*A.V')*xin*alpha$" src="form_13.png"/>; U,V are low rank. </p>
+<p>This can also be used to solve linear equations using <a class="el" href="muv_8h.html#a280153250fda7a0bfaeb8873f7c08ed9">muv_solve()</a> or <a class="el" href="muv_8h.html#a133ad085946cc17f97c776c98c026460">muv_bgs_solve()</a>. Apply the sparse plus low rank compuation to xin with scaling of alpha: <img class="formulaInl" alt="$xout=(A.M-A.U*A.V')*xin*alpha$" src="form_22.png"/>; U,V are low rank. </p>
 
 </div>
 </div>
@@ -239,7 +239,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the transpose of operation <a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv()</a>; Apply the sparse plug low rand compuation to xin with scaling of alpha: <img class="formulaInl" alt="$xout=(A.M-A.V*A.U')*xin*alpha$" src="form_14.png"/>; U,V are low rank. </p>
+<p>Apply the transpose of operation <a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv()</a>; Apply the sparse plug low rand compuation to xin with scaling of alpha: <img class="formulaInl" alt="$xout=(A.M-A.V*A.U')*xin*alpha$" src="form_23.png"/>; U,V are low rank. </p>
 
 </div>
 </div>
@@ -280,7 +280,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb): <img class="formulaInl" alt="$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha$" src="form_15.png"/>; U,V are low rank. </p>
+<p>Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb): <img class="formulaInl" alt="$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha$" src="form_24.png"/>; U,V are low rank. </p>
 
 </div>
 </div>
@@ -381,7 +381,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Cholesky factorization (svd=0) or svd (svd&gt;0) on the sparse matrix and its low rank terms. if svd is less than 1, it is also used as the threshold in SVD inversion.</p>
 <p>When there are low rank terms, </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ Up=M^{-1}*U, Vp=M^{-1}*[V*(I-Up'*V)^{-1}] \]" src="form_16.png"/>
+<img class="formulaDsp" alt="\[ Up=M^{-1}*U, Vp=M^{-1}*[V*(I-Up'*V)^{-1}] \]" src="form_25.png"/>
 </p>
  
 </div>
@@ -595,7 +595,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Cholesky factorization (svd=0) or svd (svd&gt;0) on each diagonal element of the block sparse matrix and its low rank terms. if svd is less than 1, it is also used as the threshold in SVD inversion.</p>
 <p>When there are low rank terms, </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ Up=M^{-1}U, Vp=M^{-1}[V*(I-Up'*V)^{-1}] \]" src="form_17.png"/>
+<img class="formulaDsp" alt="\[ Up=M^{-1}U, Vp=M^{-1}[V*(I-Up'*V)^{-1}] \]" src="form_26.png"/>
 </p>
 <p> For each diagonal block. </p>
 

@@ -4545,27 +4545,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
 </div><div class="memdoc">
 <p>1D Cubic spline interpolation preparation. if x has only 1 column: x is the coordinate. y is the function value. if x has two columns: first column is the coordinate, y is null.</p>
 <p>It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .</p>
-<p>If the values of a function <img class="formulaInl" alt="$f(x)$" src="form_68.png"/> and its derivative are know at x=0, and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.</p>
+<p>If the values of a function <img class="formulaInl" alt="$f(x)$" src="form_77.png"/> and its derivative are know at x=0, and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.</p>
 <p>A third degree polynomial and its derivative: </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f(x)=ax^3+bx^2+cx+d \]" src="form_69.png"/>
+<img class="formulaDsp" alt="\[ f(x)=ax^3+bx^2+cx+d \]" src="form_78.png"/>
 </p>
  <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f(x)=3ax^3+2bx+c \]" src="form_70.png"/>
+<img class="formulaDsp" alt="\[ f(x)=3ax^3+2bx+c \]" src="form_79.png"/>
 </p>
 <p> The coefficients can be derived from the value and derivatives: </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&amp;=&amp;-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&amp;=&amp;f^\prime(0)\\ d&amp;=&amp;f(0)\\ \end{eqnarray*}" src="form_71.png"/>
+<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&amp;=&amp;-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&amp;=&amp;f^\prime(0)\\ d&amp;=&amp;f(0)\\ \end{eqnarray*}" src="form_80.png"/>
 </p>
 <p> the derivatives can be computed as </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} f^\prime(0)&amp;=&amp;\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&amp;=&amp;\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}" src="form_72.png"/>
+<img class="formulaDsp" alt="\begin{eqnarray*} f^\prime(0)&amp;=&amp;\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&amp;=&amp;\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}" src="form_81.png"/>
 </p>
 <p> so we have the formula </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&amp;=&amp; f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&amp;=&amp;-0.5 f(-1) + 0.5 f(1) \\ d&amp;=&amp; f(0) \\ \end{eqnarray*}" src="form_73.png"/>
+<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&amp;=&amp; f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&amp;=&amp;-0.5 f(-1) + 0.5 f(1) \\ d&amp;=&amp; f(0) \\ \end{eqnarray*}" src="form_82.png"/>
 </p>
 <p>for the boundary pints, replace </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_65.png"/>
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_74.png"/>
 </p>
 <p> by </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_66.png"/>
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_75.png"/>
 </p>
 <p> Otehr type of boundaries are handled in the same way.</p>
 <p>see www.paulinternet.nl/?page=bicubicx </p>
@@ -5136,7 +5136,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the pseudo inverse of block matrix A. A is n*p cell, wt n*n cell or sparse cell. <img class="formulaInl" alt="$B=inv(A'*W*A)*A'*W$" src="form_64.png"/> </p>
+<p>compute the pseudo inverse of block matrix A. A is n*p cell, wt n*n cell or sparse cell. <img class="formulaInl" alt="$B=inv(A'*W*A)*A'*W$" src="form_73.png"/> </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
@@ -5413,10 +5413,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
 </div><div class="memdoc">
 <p>2D cubic spline interpolation preparation. x is the x coordinate vector of the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the 2-d grid. It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .</p>
 <p>The boundaries are handled in the same way is X(spline). i.e. replace </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_65.png"/>
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_74.png"/>
 </p>
 <p> by </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_66.png"/>
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_75.png"/>
 </p>
 <p> Otehr type of boundaries are handled in the same way. </p>
 
