@@ -12,7 +12,7 @@ var searchData=
   ['wfspupmask',['wfspupmask',['../setup__powfs_8h.html#a288841084a9b4fa93af59ad631299b60',1,'setup_powfs.c']]],
   ['write_5fheader',['write_header',['../bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e',1,'bin.c']]],
   ['writearr',['writearr',['../bin_8h.html#a9471eeb77e74e8c66ec913534df2d72d',1,'bin.c']]],
-  ['writebin',['writebin',['../cell_8c.html#a990247f2c1fa8e4c407676773bacd9fd',1,'writebin(const void *A, const char *format,...):&#160;cell.c'],['../cell_8h.html#a357e82aa5571115bb78a92215d477a8a',1,'writebin(const void *dc, const char *format,...):&#160;cell.c']]],
-  ['writebin2',['writebin2',['../cell_8c.html#afefafc72613f47c45f524d5ee5b9bf79',1,'writebin2(void *A, const char *header, const char *format,...):&#160;cell.c'],['../cell_8h.html#a938c640db5c9cdcc7e5243b64e0c96e9',1,'writebin2(void *dc, const char *header, const char *format,...):&#160;cell.c']]],
-  ['writesock',['writesock',['../cell_8c.html#afaa36e767b653e2b34150fdf5a8edec6',1,'writesock(const void *A, int sock):&#160;cell.c'],['../cell_8h.html#a5de2e5a0f72fdccde9cf296ffd328d61',1,'writesock(const void *dc, int sock):&#160;cell.c']]]
+  ['writebin',['writebin',['../cell_8h.html#a357e82aa5571115bb78a92215d477a8a',1,'cell.c']]],
+  ['writebin2',['writebin2',['../cell_8h.html#a938c640db5c9cdcc7e5243b64e0c96e9',1,'cell.c']]],
+  ['writesock',['writesock',['../cell_8h.html#a5de2e5a0f72fdccde9cf296ffd328d61',1,'cell.c']]]
 ];

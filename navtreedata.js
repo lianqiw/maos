@@ -86,24 +86,24 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1cumoao__t.html",
-"classcuperf__g.html#a15ff6701594e181940d9c12f0120aef7",
-"cmath_8h.html#a6fc1f2acedbe1173af2194167055a1dd",
-"dmath_8h.html#a4d4c2db8c8067633284451e62c93c3b4",
-"globals_b.html",
-"loc_8h.html#ab929d93ab02c2d3931fb10fdd78ec4ad",
-"page40_results.html#sect-idl",
-"sim__utils_8h.html#a0970dccf08e67a9d470a1efeffb17891",
-"smath_8h.html#afec275089ac8cb58cd8495d1e6a5b3a6",
-"structFDPCG__T.html#a1bec0771a6ea6da42c3276f3360950d2",
-"structMUV__T.html#aa23779b1c9f8250a9d5cd2a4a2292894",
-"structPOWFS__T.html#ae08b1afeac4ed4dc19ccbcd4fc7d1990",
-"structSIM__CFG__T.html#a3f00f1b7c3103c5cb183c3fca5d0c8e2",
-"structSIM__T.html#afaebfdd35dd1ec5e73724ac7b64daea3",
-"structdmat.html#a983086836d817046db8588de2873dd36",
-"structrmapccell.html",
-"turbulence_8h.html",
-"zmath_8h.html#ad981232f16620240b2bc7ad817ef3993"
+"classcuda__recon_1_1curecon__geom.html#a974c5011e87c1f8ac41f4b2942a6f782",
+"classcuperf__t.html",
+"cmath_8h.html#a7fd8927e7ba4416f6f4fc8df9d3b1a59",
+"dmath_8h.html#a68cd0fb4c765694df6f15d8d9e8f598c",
+"globals_func_m.html",
+"maos_2fdpcg_8h.html#a2fe70a98a8797a50a58639f9c032a996",
+"page95_profiling.html",
+"slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3",
+"stfun_8h.html",
+"structFIT__CFG__T.html#a321f4dadc5f59cf43c4aa821131400b2",
+"structMagic_3_01long_01int_01_4.html#acddfc917440d926bf60efefcbfc5f0f6abd3d7279e1e77a816744fcfdf1727f69",
+"structPROPDATA__T.html#aa2e6033fd5553282c94935617651de0b",
+"structSIM__CFG__T.html#a7939a4003b5c376eb09702a8a1572ce5",
+"structSTATUS__T.html#a68375cc932d1833c40a3d5897b19c8c8",
+"structdspcell.html#aa59a5c0a98e31997f5b9f83d106f3dc9",
+"structscccell.html#a184dc077e7e9573e7c871babaaca2a87",
+"wfs_lgs_ttf_tt_tt.html",
+"zmath_8h.html#af31d35738eeaccc8a619594dd55dd4ad"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -2,7 +2,7 @@ var searchData=
 [
   ['read_5fheader',['read_header',['../bin_8h.html#a5ed0da59c78ad3c8ada5c0ce67fa1c94',1,'bin.c']]],
   ['read_5fheader2',['read_header2',['../bin_8h.html#a972a1cdff7d5f045daa2ffe7fb43ecc0',1,'bin.c']]],
-  ['readbin',['readbin',['../cell_8c.html#aefcc505a75a4fb24415fe88172ac0d9d',1,'readbin(const char *format,...):&#160;cell.c'],['../cell_8h.html#aefcc505a75a4fb24415fe88172ac0d9d',1,'readbin(const char *format,...):&#160;cell.c']]],
+  ['readbin',['readbin',['../cell_8h.html#aefcc505a75a4fb24415fe88172ac0d9d',1,'cell.c']]],
   ['readcfg_5fdbl',['readcfg_dbl',['../readcfg_8h.html#aa5be30c2caeb90e0d575ead83f3ceff0',1,'readcfg.c']]],
   ['readcfg_5fdblarr',['readcfg_dblarr',['../readcfg_8h.html#aaf546b96b714c72088ba80354969756a',1,'readcfg.c']]],
   ['readcfg_5fdblarr_5fn',['readcfg_dblarr_n',['../readcfg_8h.html#aaf8fb5d5ad0eb0c3a37dfbfbeb0ec65f',1,'readcfg.c']]],
@@ -25,7 +25,7 @@ var searchData=
   ['readcfg_5fstrarr',['readcfg_strarr',['../readcfg_8h.html#a9511bcf6918f17458ee5a33fb2463797',1,'readcfg.c']]],
   ['readcfg_5fstrarr_5fn',['readcfg_strarr_n',['../readcfg_8h.html#af15ef171b1abcb5ad3658f3b21d8dacc',1,'readcfg.c']]],
   ['readcfg_5fstrarr_5fnmax',['readcfg_strarr_nmax',['../readcfg_8h.html#a6aba5be414bc11b0ce8c5719d4c02028',1,'readcfg.c']]],
-  ['readsock',['readsock',['../cell_8c.html#a34da2630d81d5e01052e5636091c831d',1,'readsock(int sock):&#160;cell.c'],['../cell_8h.html#a34da2630d81d5e01052e5636091c831d',1,'readsock(int sock):&#160;cell.c']]],
+  ['readsock',['readsock',['../cell_8h.html#a34da2630d81d5e01052e5636091c831d',1,'cell.c']]],
   ['readspint',['readspint',['../mathmisc_8h.html#a17976d85cba2939873589c6a8bc3e08b',1,'mathmisc.c']]],
   ['readstr_5fdmat',['readstr_dmat',['../readcfg_8h.html#ae2f8cc2e6faca7a9fcde66c684b4c9a1',1,'readcfg.c']]],
   ['readstr_5fintarr_5fnmax',['readstr_intarr_nmax',['../readstr_8h.html#aa8708b4c5638fbcc7cd84373027f4869',1,'readstr.c']]],
