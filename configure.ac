@@ -39,21 +39,6 @@ AC_DISABLE_SHARED
 AC_ENABLE_STATIC
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_LIBTOOL
-#Doxygen Features
-DX_HTML_FEATURE(ON)
-DX_CHM_FEATURE(OFF)
-DX_CHI_FEATURE(OFF)
-DX_MAN_FEATURE(OFF)
-DX_RTF_FEATURE(OFF)
-DX_XML_FEATURE(OFF)
-DX_PDF_FEATURE(OFF)
-DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
-if test x$DX_FLAG_doc = x0 ;then
-    AM_CONDITIONAL(DO_DOXYGEN, false)
-else
-    AM_CONDITIONAL(DO_DOXYGEN, true)
-fi
 
 AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
 AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
@@ -162,6 +147,7 @@ AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKD
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="yes"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
+AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
@@ -386,6 +372,7 @@ TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 CFLAGS+=" -I${PRE_DIR}/include "
+PATH+=":${PRE_DIR}/bin"
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 OPTS+=" $CFLAGS_EXTRA "
 if test "$system" = "win" ;then
@@ -979,6 +966,26 @@ else
     AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
 
+#Doxygen Features
+if test "$enable_doxygen" = "yes" ;then
+    if ! which doxygen ;then
+        download DOXYGEN doxygen${libsuffix}.tar.bz2 ${PRE_DIR}
+    fi
+fi
+DX_HTML_FEATURE(ON)
+DX_CHM_FEATURE(OFF)
+DX_CHI_FEATURE(OFF)
+DX_MAN_FEATURE(OFF)
+DX_RTF_FEATURE(OFF)
+DX_XML_FEATURE(OFF)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
+if test x$DX_FLAG_doc = x0 ;then
+    AM_CONDITIONAL(DO_DOXYGEN, false)
+else
+    AM_CONDITIONAL(DO_DOXYGEN, true)
+fi
 AC_CONFIG_FILES( [Makefile
 	sys/Makefile
 	math/Makefile
