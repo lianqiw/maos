@@ -486,7 +486,7 @@ compile(){
     rm -rf ${TMP_DIR}/$name
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
-    echo "Compiling $name with CFLAGS=$CFLAGS $@.\nCheck $fnlog for details"
+    echo "Compiling $name with CFLAGS=$CFLAGS $@. Check $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
 	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} >> $fnlog 2>&1|| \
@@ -971,9 +971,9 @@ if test "$enable_doxygen" = "yes" ;then
     if ! which doxygen ;then
         download DOXYGEN doxygen${libsuffix}.tar.bz2 ${PRE_DIR}
     fi
+    PATH+=":${HOME}/bin"
     if ! which latex ;then
         wget -qO- "https://yihui.org/gh/tinytex/tools/install-unx.sh" | sh
-        PATH+=:$HOME/bin
     fi
 fi
 DX_HTML_FEATURE(ON)
