@@ -12,18 +12,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: checkout maos
+      uses: actions/checkout@v2
+      with:
+        path: maos
     - name: autogen
-      run: ./autogen.sh
+      run: cd maos && ./autogen.sh
     - name: configure
-      run: ./configure --enable-release --disable-scheduler
+      run: mkdir build && cd build && ../maos/configure --enable-release --enable-doxygen
     - name: make
-      run: make
+      run: cd build && make && make doc
+    - name: checkout gh-pages and update
+      uses: actions/checkout@v2
+      with:
+        ref: gh-pages
+        path: doc
+      run: | 
+        cd  doc
+        rm -rf *
+        cp -a ../build/doxygen-doc/html/* .
+        git config user.name Lianqi Wang
+        git config user.email lianqiw@gmail.com
+        git add .
+        git commit -m "Automatically updated"
+        git push
     - name: make check
-      run: make check
+      run: cd build && make check
     - name: make distcheck
-      run: make distcheck
+      run: cd build && make distcheck
     - uses: actions/upload-artifact@v2
       with:
-              name: maos-bin
-              path: bin/
+        name: maos-bin
+        path: build/bin/
+    
