@@ -22,11 +22,12 @@ jobs:
       run: mkdir build && cd build && ../maos/configure --enable-release --enable-doxygen
     - name: make
       run: cd build && make && make doc
-    - name: checkout gh-pages and update
+    - name: checkout gh-pages 
       uses: actions/checkout@v2
       with:
         ref: gh-pages
         path: doc
+    - name: update doc and commit
       run: | 
         cd  doc
         rm -rf *
