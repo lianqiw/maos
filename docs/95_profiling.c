@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page95_profiling Debugging and Profiling
+   \page page95_profiling Debugging
 
    \section Debugging
    

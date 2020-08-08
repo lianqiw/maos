@@ -18,7 +18,9 @@
 
 #include "hyst.h"
 /**
-    \page hysteresis DM Hysteresis 
+    \page algorithm
+    
+    \section hysteresis DM Hysteresis 
 
    The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope"
    J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000

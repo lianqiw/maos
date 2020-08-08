@@ -16,16 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \page page90_devel Development
-
-   \subpage page91_basics
-
-   \subpage page93_maos
-
-   \subpage algorithm
+   \page algorithm Algorithm Details
    
-   \subpage page95_profiling
-   
+   The following shows how various algorithms are implemented.
 
-
-*/
+   */
