@@ -40,7 +40,7 @@ fixlibtool:libtool
 	@sed -i '' 's/|-fopenmp|/|/g' libtool
 version.h:FORCE #always runs
 	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || echo unknown`\";" && \
-		if test -n "`echo $$str | diff version.h -`" -o ! -f version.h ;then echo $$str >version.h;fi
+	if test ! -f version.h -o -n "`echo $$str | diff version.h -`" ;then echo $$str >version.h;fi
 FORCE:
 .ONESHELL:
 

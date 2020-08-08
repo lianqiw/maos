@@ -971,6 +971,10 @@ if test "$enable_doxygen" = "yes" ;then
     if ! which doxygen ;then
         download DOXYGEN doxygen${libsuffix}.tar.bz2 ${PRE_DIR}
     fi
+    if ! which latex ;then
+        wget -qO- "https://yihui.org/gh/tinytex/tools/install-unx.sh" | sh
+        PATH+=:$HOME/bin
+    fi
 fi
 DX_HTML_FEATURE(ON)
 DX_CHM_FEATURE(OFF)
