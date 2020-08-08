@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
-<title>MAOS: DM Hysteresis</title>
+<title>MAOS: Algorithm Details</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,7 +33,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">A Fast End to End Adaptive Optics Simulator</div>
+   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -69,7 +69,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('hysteresis.html','');});
+$(document).ready(function(){initNavTree('algorithm.html','');});
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -89,10 +89,13 @@ $(document).ready(function(){initNavTree('hysteresis.html','');});
 
 <div class="header">
   <div class="headertitle">
-<div class="title">DM Hysteresis </div>  </div>
+<div class="title">Algorithm Details </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope" J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000</p>
+<div class="textblock"><p>The following shows how various algorithms are implemented.</p>
+<h1><a class="anchor" id="hysteresis"></a>
+DM Hysteresis</h1>
+<p>The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope" J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000</p>
 <p>Formula (2) is used with V replaced by command x, and x replaced by actual DM position y </p><p class="formulaDsp">
 <img class="formulaDsp" alt="\[ \frac{dy}{dx}=\alpha sign(dx) (\beta x-y)+(\beta-u) \]" src="form_5.png"/>
 </p>

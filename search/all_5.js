@@ -85,5 +85,5 @@ var searchData=
   ['fun',['fun',['../structATM__CFG__T.html#ae6bfb0a98d8dedaa7c19138872723586',1,'ATM_CFG_T']]],
   ['fused',['fused',['../structDTF__T.html#ad32f72ad19d1f4f2fb6fd34f8d074323',1,'DTF_T']]],
   ['fuseint',['fuseint',['../structSIM__CFG__T.html#a16a3a1b709068ad2f3ed43b343cce6d6',1,'SIM_CFG_T']]],
-  ['fundementals',['Fundementals',['../page91_clang.html',1,'page90_devel']]]
+  ['fundementals',['Fundementals',['../page91_basics.html',1,'page90_devel']]]
 ];

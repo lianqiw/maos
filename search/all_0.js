@@ -34,6 +34,7 @@ var searchData=
   ['alfrac',['alfrac',['../structSERVO__T.html#a6c44a5deb9483d39096ab0f3fe012413',1,'SERVO_T']]],
   ['alfsm',['alfsm',['../structSIM__CFG__T.html#ab7ea4b9e6b4fdcd1b257985fd709c4b6',1,'SIM_CFG_T']]],
   ['alg',['alg',['../structMUV__T.html#a0c083ce5679aef0f7ea31ef176be8046',1,'MUV_T::alg()'],['../structTOMO__CFG__T.html#a78278efa786e9d15e8de3a3af9525101',1,'TOMO_CFG_T::alg()'],['../structFIT__CFG__T.html#a816490fc8c78b35c2fcd85934d7972bb',1,'FIT_CFG_T::alg()'],['../structLSR__CFG__T.html#ab36a6c21ad95c9d9d92becded22c2b41',1,'LSR_CFG_T::alg()'],['../structRECON__CFG__T.html#a873442b1b38b3dad7ac1b169e93b08a3',1,'RECON_CFG_T::alg()']]],
+  ['algorithm_20details',['Algorithm Details',['../algorithm.html',1,'page90_devel']]],
   ['alhi',['alhi',['../structSIM__CFG__T.html#a9a90aedce1a601701b5da748e2c5936b',1,'SIM_CFG_T']]],
   ['alint',['alint',['../structSERVO__T.html#a26cbd039aefdb76b795e815e571520ca',1,'SERVO_T']]],
   ['all',['all',['../structPLOT__CFG__T.html#a96fb1da1c4f90132e325694ea7ecf2d4',1,'PLOT_CFG_T::all()'],['../structSAVE__CFG__T.html#a7df62648115ba52824f4ffe8dfe8c0da',1,'SAVE_CFG_T::all()']]],
@@ -136,5 +137,6 @@ var searchData=
   ['atmr_5fsingle_2econf',['atmr_single.conf',['../atmr_single.html',1,'page34_conf']]],
   ['atmscale',['atmscale',['../classcuglobal__t.html#a32ac54af9897a0ae590b911719f1ca3e',1,'cuglobal_t::atmscale()'],['../structSIM__T.html#ab5a06662fe559942a0a38fbff77570db',1,'SIM_T::atmscale()']]],
   ['atmwd_5frand',['atmwd_rand',['../structSIM__T.html#a36bd8e4187d641743b7e7a9982d31d48',1,'SIM_T']]],
-  ['available_5fspace',['available_space',['../sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4',1,'misc.c']]]
+  ['available_5fspace',['available_space',['../sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4',1,'misc.c']]],
+  ['architecture',['Architecture',['../page93_maos.html',1,'page90_devel']]]
 ];

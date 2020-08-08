@@ -1,5 +1,6 @@
 var NAVTREEINDEX6 =
 {
+"maos_2fdpcg_8h.html":[9,0,2,1],
 "maos_2fdpcg_8h.html#a2fe70a98a8797a50a58639f9c032a996":[9,0,2,1,1],
 "maos_2fdpcg_8h.html#a39d6c9be2ba21e2556b11d2e56d215fe":[9,0,2,1,2],
 "maos_2fdpcg_8h.html#a8b3477417f7ceb8183f072392ec551ca":[9,0,2,1,0],
@@ -237,17 +238,16 @@ var NAVTREEINDEX6 =
 "page40_results.html#sect-python":[5,0,1],
 "page40_results.html#telemetry":[5,3],
 "page90_devel.html":[6],
-"page91_clang.html":[6,0],
-"page91_clang.html#Specific":[6,0,1,1],
-"page91_clang.html#sect-1d-pointer":[6,0,0,1],
-"page91_clang.html#sect-2d-pointer":[6,0,0,3],
-"page91_clang.html#sect-array":[6,0,0],
-"page91_clang.html#sect-const":[6,0,0,2],
-"page91_clang.html#sect-maos-data":[6,0,1],
-"page91_clang.html#sect-maos-math":[6,0,1,0],
-"page91_clang.html#sect-pointer":[6,0,0,0],
+"page91_basics.html":[6,0],
+"page91_basics.html#Specific":[6,0,1,1],
+"page91_basics.html#sect-1d-pointer":[6,0,0,1],
+"page91_basics.html#sect-2d-pointer":[6,0,0,3],
+"page91_basics.html#sect-array":[6,0,0],
+"page91_basics.html#sect-const":[6,0,0,2],
+"page91_basics.html#sect-guide":[6,0,2],
+"page91_basics.html#sect-maos-data":[6,0,1],
+"page91_basics.html#sect-maos-math":[6,0,1,0],
+"page91_basics.html#sect-pointer":[6,0,0,0],
 "page93_maos.html":[6,1],
-"page93_maos.html#maos_design":[6,1,2],
-"page93_maos.html#sect-guide":[6,1,0],
-"page93_maos.html#sect-structure":[6,1,1]
+"page93_maos.html#sect-structure":[6,1,0]
 };

@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
-<title>MAOS: MAOS Architecture</title>
+<title>MAOS: Architecture</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,7 +33,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">A Fast End to End Adaptive Optics Simulator</div>
+   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -89,75 +89,74 @@ $(document).ready(function(){initNavTree('page93_maos.html','');});
 
 <div class="header">
   <div class="headertitle">
-<div class="title">MAOS Architecture </div>  </div>
+<div class="title">Architecture </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="sect-guide"></a>
-Guidelines</h1>
-<p>When modifying the code, please adhere to the following guidelines as strictly as possible.</p>
-<p>Memory allocation:</p>
-<ul>
-<li>When declaring a struct, always initialize it to zero by calling calloc or memset, unless you have a good reason not to.</li>
-<li>Use calloc instead of malloc to initialize the memory unless for large arrays that you will initialize immediately.</li>
-</ul>
-<p>Functions:</p>
-<ul>
-<li>The input parameters that is also the output should be grouped in the beginning.</li>
-<li>In any function, there should usually be at most 1 return statement unless NULL or error code are returned before matural.</li>
-<li>One utility function should be handle only one major mask to maximize reusability.</li>
-<li>Input arguments to utility functions (in lib folder) should be basic types to maximize resuability. Input arguments to simulation functions can be wrapped (like simu) to maximum readability.</li>
-</ul>
-<p>Others:</p>
-<ul>
-<li>Avoid non constant static variables/pointers unless you have a good reason to do so. static variables are bad for multi-threading and hard to free after usage.</li>
-<li>whenever modify something temporarily for debugging, make a warning. let it easily identifiable. not make a hidden bug.</li>
-<li>Do not hard code adjustable parameters.</li>
-<li>Always declare unchanged variables to constants. declare pointers as restrict if possible.</li>
-<li>Do not include system headers in header files unless necessary. include thoese headers in .c file.</li>
-<li>Avoid function casting. It will hide data type check and hide bugs.</li>
-</ul>
-<h1><a class="anchor" id="sect-structure"></a>
+<div class="textblock"><h1><a class="anchor" id="sect-structure"></a>
 Simulation Flow</h1>
 <ul>
 <li>main() is the entrance into the program. It calls<ul>
 <li><a class="el" href="parms_8h.html#a441e9246520886122d956f9e9f0bc1be">setup_parms()</a>: to setup the parameters of types <a class="el" href="structPARMS__T.html">PARMS_T</a> and check for errors.</li>
-<li>maos(): calls the following to do simulation.<ul>
-<li><a class="el" href="setup__aper_8h.html#a289d4964c7b13294b9138257f32416ed">setup_aper()</a>: to setup the aperture (of type <a class="el" href="structAPER__T.html">APER_T</a>)</li>
-<li>setup_powfs(): to setup the wfs type information (of type <a class="el" href="structPOWFS__T.html">POWFS_T</a>)</li>
-<li><a class="el" href="setup__recon_8h.html#a2d13900f0063afbade21324718aa1eaa">setup_recon()</a>: to setup the wavefront reconstructor and dm fit structs (of type <a class="el" href="structRECON__T.html">RECON_T</a>)</li>
-<li>sim(): to start the simulation. It then calls<ul>
-<li><a class="el" href="sim__utils_8h.html#af566f334aaf19cf9ad3ed5a847c2aee9">save_skyc()</a>: (optional) to save information for sky coverage postproc</li>
-<li>FOR EACH SEED<ul>
-<li><a class="el" href="sim__utils_8h.html#a27c195134fbcb70dbf90b5ff2ee82a84">init_simu()</a>: to initialize the run time structs</li>
-<li>genscreen(): (in closed loop) to generate atmosphere turbulence</li>
-<li>FOR EACH TIME STEP<ul>
-<li><a class="el" href="sim__utils_8h.html#ade5601f0c0ffa73c27aa90ec087d54ac">sim_update_etf()</a>: (optional) to update the sodium profile</li>
-<li>genscreen(): (in open loop) to generate atmosphere turbulence</li>
+<li><a class="el" href="parms_8h.html#a9a36b5678c2ca8539187637c1e016a2c">setup_parms_gpu()</a>: to setup the GPU usage for various tasks</li>
+<li><a class="el" href="maos_8h.html#a0d93ecccfeb2fc3505b762776178ff44">maos_setup()</a>: to setup the AO system geometry and data structs. It calls<ul>
+<li><a class="el" href="setup__aper_8h.html#a289d4964c7b13294b9138257f32416ed">setup_aper()</a>: to setup the aperture grid and amplitude map (of type <a class="el" href="structAPER__T.html">APER_T</a>)</li>
+<li><a class="el" href="setup__powfs_8h.html#ab5c6252f2e6a017bf057d45f5447c049">setup_powfs_init()</a>: to setup the WFS subapertures geoemtry</li>
+<li><a class="el" href="setup__recon_8h.html#a91d1b906cb2bdf5a5553784aaefa8566">setup_recon_prep()</a>: to setup reconstruction grid (ploc, aloc, floc, GP, GX, etc.)</li>
+<li><a class="el" href="setup__surf_8h.html#a96e789600919c635039b31a71f2dc720">setup_surf()</a>: to setup NCPA</li>
+<li><a class="el" href="setup__powfs_8h.html#ac1fbeda2f6ec733c358e17742e5029f7">setup_powfs_phy()</a>: to setup physical optics (dtf, etf, i0, mtch, cog)</li>
+<li>setup_powfs_neasim(): to setup grad noise model if not using photon noise.</li>
+<li>setup_powfs_calib(): NCPA calibration</li>
+<li><a class="el" href="setup__recon_8h.html#a02f6dc30452af580b58729436cc005d8">setup_recon_prep2()</a>: to setup GA, GF, GR, ngsmod geometry, t/t removal</li>
+<li><a class="el" href="setup__recon_8h.html#a2d13900f0063afbade21324718aa1eaa">setup_recon()</a>: to setup sanea, t/t removal, read MVM, ngsmod recon</li>
+<li><a class="el" href="setup__recon_8h.html#ae385e49d2cbb3bbdb38a3b87fede2560">setup_recon_fit()</a>: to setup DM fitting algorithm</li>
+<li><a class="el" href="setup__recon_8h.html#a0936d2acb635fd90fe714a7bdcf68e9e">setup_powfs_fit()</a>: to setup fitting to WFS subaperture algorithm</li>
+<li><a class="el" href="maos_2moao_8h.html#ac70e508023f8816854d7d4eaf0452aa6">setup_recon_moao()</a>: to setup MOAO</li>
+<li><a class="el" href="setup__recon_8h.html#a7fcedc4ded335940d8c6ba70fc4fc4b6">setup_recon_mvm()</a>: to calculate MVM control matrix</li>
+<li>gpu_setup_recon_mvm(): #to setup recon in all GPUs and calculate MVM control matrix</li>
+<li>gpu_setup_recon(): to setup recon in the preferred GPU</li>
+<li>gpu_perfevl_init(): to initialize GPU performance evaluation parameters</li>
+<li>gpu_wfssurf2gpu(): to copy NCPA OPDs to gpu</li>
+<li><a class="el" href="setup__recon_8h.html#ac77b103ae7e42781d477ff2e8d65c76c">setup_recon_post()</a>: to compute PSD, etc.</li>
+<li><a class="el" href="maos_2utils_8h.html#a02d7d174efd394be9afc432ca1835071">plot_setup()</a>: to plot the geometry (ploc, floc, aloc, amplitude map, etc.).</li>
+</ul>
+</li>
+<li><a class="el" href="maos_8h.html#a5935e0612a22d888703e8eee46a930bf">maos_sim()</a>: to start the simulation. It then calls<ul>
+<li><a class="el" href="maos_8h.html#a5332613c93902884c54be80cf6027a98">maos_iseed()</a>: to initialize runtime data for each seed including turbulence</li>
+<li>In event driven simulation mode (PARALLEL=2). It calls the following in parallel each in a loop<ul>
+<li><a class="el" href="sim_8h.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a> &amp; <a class="el" href="sim__utils_8h.html#a0970dccf08e67a9d470a1efeffb17891">print_progress()</a>: performance simulation</li>
+<li><a class="el" href="sim_8h.html#a99e7e23b2226afc767fc176f352f6e11">wfsgrad()</a> and <a class="el" href="recon__utils_8h.html#a9cdd8da33de20c241e64bdf98cae94bf">shift_grad()</a>: compute gradients and shift to gradlast</li>
+<li><a class="el" href="maos_2recon_8h.html#a7a1d62d90b85cb3eeaa156e2a6d9784f">reconstruct()</a> &amp; filter_dm: wfs reconstruction and servo filtering</li>
+</ul>
+</li>
+<li>In parallel simulation, calls <a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> for each step. It then calls<ul>
+<li><a class="el" href="sim__utils_8h.html#ade5601f0c0ffa73c27aa90ec087d54ac">sim_update_etf()</a>: update sodium profile if needed</li>
+<li><a class="el" href="sim__utils_8h.html#afce4363970d1fde0eca6130b82b2d28e">genatm()</a>: update turbulence if not using frozenflow</li>
+<li>In parallel mode (PARALLEL=1)<ul>
+<li>perfevl_pre: wfsgrad_prep, <a class="el" href="maos_2recon_8h.html#a7a1d62d90b85cb3eeaa156e2a6d9784f">reconstruct()</a> in parallel and then wait</li>
+<li><a class="el" href="sim_8h.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a>: <a class="el" href="sim_8h.html#a99e7e23b2226afc767fc176f352f6e11">wfsgrad()</a>, in parallel and then wait</li>
+<li><a class="el" href="recon__utils_8h.html#a9cdd8da33de20c241e64bdf98cae94bf">shift_grad()</a>: copy from grad to gradlast for <a class="el" href="maos_2recon_8h.html#a7a1d62d90b85cb3eeaa156e2a6d9784f">reconstruct()</a></li>
+<li><a class="el" href="sim_8h.html#a78085c7163dd0867b7346204222b31e9">filter_dm()</a>: servo filtering (dmreal)</li>
+</ul>
+</li>
+<li>In serial mode (PARALLEL=0), calls the following in sequence<ul>
 <li><a class="el" href="sim_8h.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a>: (in closed loop) to evaluate the performance ins cience field</li>
 <li><a class="el" href="sim_8h.html#a99e7e23b2226afc767fc176f352f6e11">wfsgrad()</a>: to compute WFS gradients</li>
-<li><a class="el" href="maos_2recon_8h.html#a930531540b7291036352d7b18436ce47">tomofit()</a>: to do tomography and DM fit</li>
-<li>filter(): to do temporal filtering of DM commands.</li>
-<li><a class="el" href="maos_2moao_8h.html#af62a4685464fea7bdd37d04c821c3caf">moao_recon()</a>: (optional) to compute MOAO DM commands.</li>
-<li><a class="el" href="sim_8h.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a>: (in open loop) to performance evaluation</li>
-<li>save_simu(): to save simulation telemetry data.</li>
-<li><a class="el" href="sim__utils_8h.html#a0970dccf08e67a9d470a1efeffb17891">print_progress()</a>: to display progress data.</li>
+<li><a class="el" href="maos_2recon_8h.html#a7a1d62d90b85cb3eeaa156e2a6d9784f">reconstruct()</a>:</li>
+<li><a class="el" href="recon__utils_8h.html#a9cdd8da33de20c241e64bdf98cae94bf">shift_grad()</a>:</li>
+<li><a class="el" href="sim_8h.html#a78085c7163dd0867b7346204222b31e9">filter_dm()</a>:</li>
+<li><a class="el" href="sim_8h.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl()</a>:</li>
 </ul>
 </li>
-<li><a class="el" href="sim__utils_8h.html#a84b825eee317f2e6b919c95773cd847f">free_simu()</a>: to delete run time structs and close files</li>
+<li><a class="el" href="setup__recon_8h.html#aa860829623f5076a779fa20d62f5b6d9">setup_recon_tomo_update()</a>: Update tomography parameter when needed</li>
+<li><a class="el" href="setup__recon_8h.html#a76a216af9a5d20249980e3af4ed66be4">setup_recon_update()</a>: Update recon parameters when needed.</li>
+<li><a class="el" href="sim__utils_8h.html#a0970dccf08e67a9d470a1efeffb17891">print_progress()</a>: show progress</li>
 </ul>
 </li>
-</ul>
-</li>
-</ul>
-</li>
+<li><a class="el" href="sim__utils_8h.html#a84b825eee317f2e6b919c95773cd847f">free_simu()</a>: to delete run time structs and close files </li>
 </ul>
 </li>
 </ul>
-<h1><a class="anchor" id="maos_design"></a>
-MAOS Design</h1>
-<p>The following shows how various components are implemented.</p>
-<ul>
-<li><a class="el" href="hysteresis.html">DM Hysteresis</a> </li>
+</li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

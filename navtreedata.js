@@ -86,12 +86,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1curecon__geom.html#a974c5011e87c1f8ac41f4b2942a6f782",
-"classcuperf__t.html",
-"cmath_8h.html#a7fd8927e7ba4416f6f4fc8df9d3b1a59",
-"dmath_8h.html#a68cd0fb4c765694df6f15d8d9e8f598c",
-"globals_func_m.html",
-"maos_2fdpcg_8h.html#a2fe70a98a8797a50a58639f9c032a996",
+"classcuda__recon_1_1curecon__geom.html#a70119360e20fe470d20a10fe2545788d",
+"classcuperf__g.html#ae5e58c3c921920967155173ca42e11cc",
+"cmath_8h.html#a7d4b5babf76c56a6b95acca5e12af0d6",
+"dmath_8h.html#a67379990f0901126143cebeb9fbe503e",
+"globals_func_k.html",
+"maos_2fdpcg_8h.html",
 "page95_profiling.html",
 "slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3",
 "stfun_8h.html",

@@ -1,5 +1,7 @@
 var NAVTREEINDEX5 =
 {
+"globals_func_k.html":[9,1,1,9],
+"globals_func_l.html":[9,1,1,10],
 "globals_func_m.html":[9,1,1,11],
 "globals_func_n.html":[9,1,1,12],
 "globals_func_o.html":[9,1,1,13],
@@ -43,7 +45,6 @@ var NAVTREEINDEX5 =
 "hyst_8h.html#aa83ca9bfb93e3dec17342aac19f9fdd1":[9,0,1,6,2],
 "hyst_8h.html#ad4a31ea205a497f29de3b69f6a929e11":[9,0,1,6,4],
 "hyst_8h.html#af7d8e92a898cae2b5e8b3e112c893fb5":[9,0,1,6,0],
-"hysteresis.html":[6,1,3],
 "index.html":[],
 "index.html":[0],
 "kalman_8h.html":[9,0,1,7],
@@ -248,6 +249,5 @@ var NAVTREEINDEX5 =
 "locfft_8h.html#a98ad6dd510558a695621390d6d5f2a0f":[9,0,1,9,2],
 "locfft_8h.html#ad6a8b056a1313211eb30662fe342937c":[9,0,1,9,4],
 "locfft_8h.html#ae0b08b7e9e173d8c717d8edcffda2bd7":[9,0,1,9,3],
-"ltao.html":[4,4,18],
-"maos_2fdpcg_8h.html":[9,0,2,1]
+"ltao.html":[4,4,18]
 };

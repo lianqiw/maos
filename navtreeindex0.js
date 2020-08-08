@@ -9,6 +9,8 @@ var NAVTREEINDEX0 =
 "ahst_8h.html#aabb9e658d5f0d2a663c27425206f849b":[9,0,2,0,1],
 "ahst_8h.html#ac11262023c447185fc5f178daae87abc":[9,0,2,0,5],
 "ahst_8h.html#ac8967f5146174c863ff0d957d92fa327":[9,0,2,0,2],
+"algorithm.html":[6,2],
+"algorithm.html#hysteresis":[6,2,0],
 "annotated.html":[8,0],
 "atm_mk13n50p.html":[4,4,0],
 "atmr_single.html":[4,4,1],
@@ -247,7 +249,5 @@ var NAVTREEINDEX0 =
 "classcuda__recon_1_1curecon__geom.html#a56ffb202bd7b92d48f38052b304c30c8":[8,0,0,4,17],
 "classcuda__recon_1_1curecon__geom.html#a5b6a8fa59fadce1e3b190139fba73eb6":[8,0,0,4,12],
 "classcuda__recon_1_1curecon__geom.html#a6134361fe68ac554d6e9ca7a492811f8":[8,0,0,4,11],
-"classcuda__recon_1_1curecon__geom.html#a61e4677543e01fa1b28ad533de0d8dee":[8,0,0,4,10],
-"classcuda__recon_1_1curecon__geom.html#a70119360e20fe470d20a10fe2545788d":[8,0,0,4,6],
-"classcuda__recon_1_1curecon__geom.html#a7f73b5e1b8a8ce96f74e8d7763d0dc63":[8,0,0,4,9]
+"classcuda__recon_1_1curecon__geom.html#a61e4677543e01fa1b28ad533de0d8dee":[8,0,0,4,10]
 };

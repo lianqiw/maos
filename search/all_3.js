@@ -340,7 +340,6 @@ var searchData=
   ['dy',['dy',['../structDM__CFG__T.html#a4ff4c741469c1fc6707e12bf5c0a65fc',1,'DM_CFG_T::dy()'],['../structmap__t.html#a67eb3911c023e67c247677e03642927e',1,'map_t::dy()'],['../structrmap__t.html#a474494d88a42277ef93802de47a0be62',1,'rmap_t::dy()'],['../structlocstat__t.html#aeb40fac426ae3bc474f3edb78bef3844',1,'locstat_t::dy()'],['../structloc__t.html#af9af538ff99023b4c999993bdffc791c',1,'loc_t::dy()'],['../structpts__t.html#a494f53b2987007bb4550f3c548ff1bf6',1,'pts_t::dy()']]],
   ['dzero',['dzero',['../dmath_8h.html#acd4853c2bc5855ba4b332adfb6c315e2',1,'dtmp.c']]],
   ['dzerocol',['dzerocol',['../dmath_8h.html#a8ac40b8ab5aa0904afbbb621dba4a217',1,'dtmp.c']]],
-  ['dm_20hysteresis',['DM Hysteresis',['../hysteresis.html',1,'page93_maos']]],
   ['development',['Development',['../page90_devel.html',1,'']]],
-  ['debugging_20and_20profiling',['Debugging and Profiling',['../page95_profiling.html',1,'page90_devel']]]
+  ['debugging',['Debugging',['../page95_profiling.html',1,'page90_devel']]]
 ];

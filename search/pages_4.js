@@ -6,5 +6,5 @@ var searchData=
   ['fov_5foa_2econf',['fov_oa.conf',['../fov_oa.html',1,'page34_conf']]],
   ['fov_5fpmos_2econf',['fov_pmos.conf',['../fov_pmos.html',1,'page34_conf']]],
   ['fov_5fsq34_2econf',['fov_sq34.conf',['../fov_sq34.html',1,'page34_conf']]],
-  ['fundementals',['Fundementals',['../page91_clang.html',1,'page90_devel']]]
+  ['fundementals',['Fundementals',['../page91_basics.html',1,'page90_devel']]]
 ];
