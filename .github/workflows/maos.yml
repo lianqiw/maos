@@ -21,7 +21,11 @@ jobs:
     - name: configure
       run: mkdir build && cd build && ../maos/configure --enable-release --enable-doxygen
     - name: make
-      run: cd build && make && make doc
+      run: |
+        cd build 
+        make 
+        PATH+=":$HOME/bin"
+        make doc
     - name: checkout gh-pages 
       uses: actions/checkout@v2
       with:
@@ -35,8 +39,7 @@ jobs:
         git config user.name Lianqi Wang
         git config user.email lianqiw@gmail.com
         git add .
-        git commit -m "Automatically updated"
-        git push
+        git commit -m "Automatically updated" && git push
     - name: make check
       run: cd build && make check
     - name: make distcheck
