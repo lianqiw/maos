@@ -45,4 +45,3 @@ FORCE:
 .ONESHELL:
 
 CLEANFILES=version.h
-.PHONY: doc
