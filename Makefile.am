@@ -45,3 +45,5 @@ FORCE:
 .ONESHELL:
 
 CLEANFILES=version.h
+
+MAKEOVERRIDES=--no-print-directory
