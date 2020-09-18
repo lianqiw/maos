@@ -58,14 +58,17 @@ void init_process(void){
 #endif
     //Local host name
     if(gethostname(HOST,255)){
-	warning("Unable to get hostname, set to localhost\n");
-	sprintf(HOST, "localhost");
+        warning("Unable to get hostname, set to localhost\n");
+        sprintf(HOST, "localhost");
     }
 
     //Get User
     USER=getenv("USER");
     if(!USER){
-	USER=getenv("USERNAME");
+        USER=getenv("USERNAME");
+    }
+    if(!USER){
+        USER="nobody";
     }
     //Get Home
 #if defined(__CYGWIN__)
@@ -74,8 +77,11 @@ void init_process(void){
 #else
     HOME=getenv("HOME");
 #endif
+    if(!HOME){
+        HOME="/tmp";
+    }
     
-//Get Temp directory
+    //Get Temp directory
 #if defined(__CYGWIN__)
     char temp2[PATH_MAX];
     snprintf(temp2, PATH_MAX, "%s/.aos/tmp-%s", HOME, HOST);
@@ -90,7 +96,7 @@ void init_process(void){
 
     snprintf(CACHE, PATH_MAX, "%s/.aos/cache", HOME);
     if(!getcwd(DIRSTART, PATH_MAX)){
-	snprintf(DIRSTART, PATH_MAX, "./");
+        snprintf(DIRSTART, PATH_MAX, "./");
     }
     //Create temporary folders
     mymkdir("%s",TEMP);
@@ -98,29 +104,29 @@ void init_process(void){
     mymkdir("%s", CACHE);
 
     {/*PATH to executable*/
-	char exepath[PATH_MAX];
-	if(!get_job_progname(exepath, PATH_MAX, 0)){
-	    char *tmp=strrchr(exepath,'/');
-	    if(exepath[0]=='/' && tmp){
-		*tmp=0;
-	    }else{
-		strncpy(exepath, mygetcwd(), PATH_MAX-1); 
-	    }
-	    strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]=0;
-	}else{
-	    EXEP[0]=0;
-	}
+        char exepath[PATH_MAX];
+        if(!get_job_progname(exepath, PATH_MAX, 0)){
+            char *tmp=strrchr(exepath,'/');
+            if(exepath[0]=='/' && tmp){
+                *tmp=0;
+            }else{
+                strncpy(exepath, mygetcwd(), PATH_MAX-1); 
+            }
+            strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]=0;
+        }else{
+            EXEP[0]=0;
+        }
     }
 
     NCPU= get_ncpu();
     MAXTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
 #if _OPENMP>200805
-//The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
+    //The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
     if(getenv("OMP_NUM_THREADS")){
-	int nthread=strtol(getenv("OMP_NUM_THREADS"), 0, 10);
-	if(nthread<MAXTHREAD && nthread>0){
-	    MAXTHREAD=nthread;
-	}
+        int nthread=strtol(getenv("OMP_NUM_THREADS"), 0, 10);
+        if(nthread<MAXTHREAD && nthread>0){
+            MAXTHREAD=nthread;
+        }
     }
 #endif
     NTHREAD=MAXTHREAD;
@@ -128,9 +134,9 @@ void init_process(void){
 #if defined(__linux__)
     FILE *fp=fopen("/proc/meminfo","r");
     if(fp && fscanf(fp, "%*s %ld %*s", &NMEM)==1){
-	NMEM=NMEM*1024; 
+        NMEM=NMEM*1024; 
     }else{
-	NMEM=0;
+        NMEM=0;
     }
     fclose(fp);
 #else
@@ -149,19 +155,19 @@ double get_usage_cpu(void){
     static double cent=1;
     long user2=0, tot2=0;
     if(thistime >=lasttime+2){/*information was too old. */
-	read_cpu_counter(&user1, &tot1);
-	usleep(50000);
+        read_cpu_counter(&user1, &tot1);
+        usleep(50000);
     }
     if(thistime <=lasttime+0.1){
-	return cent;
+        return cent;
     }
     read_cpu_counter(&user2, &tot2);
     long user=user2-user1;
     long tot=tot2-tot1;
     if(tot==0) 
-	cent=0;
+        cent=0;
     else
-	cent=(double)user/(double)tot;
+        cent=(double)user/(double)tot;
     lasttime=thistime;
     user1=user2;
     tot1=tot2;
@@ -178,11 +184,11 @@ int get_cpu_avail(void){
     int nrunning=get_usage_running();
     //info("load=%g, %d%%, nrun=%d, ncpu=%d\n", load, (int)(cent*100), nrunning, NCPU);
     if(load>NCPU+1){/*don't want to put too much load on the machine. */
-	return 0;
+        return 0;
     }
     avail=(int)round((1.-cent)*NCPU);
     if(avail>NCPU-nrunning){
-	avail=NCPU-nrunning;
+        avail=NCPU-nrunning;
     }
     if(avail<0) avail=0;
     /*dbg("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail); */
@@ -197,7 +203,7 @@ void wait_cpu(int nthread){
     int fd;
     fd=lock_file(fnlock,1,-1);
     while(get_cpu_avail()<nthread-1){
-	sleep(5);
+        sleep(5);
     }
     close(fd);/*remove lock */
 }
