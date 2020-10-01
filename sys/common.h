@@ -105,6 +105,7 @@ extern FILE *fpconsole;
 
 #define info(A...)  if(LOG_LEVEL>-2) printf(A)
 #define info2(A...)  if(LOG_LEVEL>-1) printf(A)
+#define info3(A...)  if(LOG_LEVEL>0) printf(A)
 #define info_console(A...) if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A) //stderr is not directed to file.
 #define info_once(A...) if(LOG_LEVEL>-2){static int done=0; if(!done){done=1; info(A);}}
 
@@ -140,7 +141,7 @@ extern FILE *fpconsole;
 #endif
 #define TIC double tk
 #define tic tk=myclockd()
-#define toc(format,...) info2(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
+#define toc(format,...) info3(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

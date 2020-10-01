@@ -245,15 +245,16 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
 	}
     }
-    if(parms->save.setup){//Save uplink PSF.
 	int nwvl=intstat->lotf->nx;
-	ccell*  lotf=intstat->lotf/*PCELL*/;
+	const ccell*  lotf=intstat->lotf;
 	int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 	cmat *psfhat=0;//cnew(nlpsf, nlpsf);
 	dmat *psf=0;//dnew(nlpsf, nlpsf);
 	char header[64];
 	zfarr *lltpsfsave=NULL;
-	lltpsfsave=zfarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
+	if(parms->save.setup){//Save uplink PSF.
+		lltpsfsave=zfarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
+	}
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    const real dx=powfs[ipowfs].llt->pts->dx;
 	    const real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
@@ -265,16 +266,18 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 		cfft2i(psfhat, 1);
 		cfftshift(psfhat);
 		creal2d(&psf, 0, psfhat, 1);
+		real fwhm=sqrt(4.*(real)dfwhm(psf)/M_PI)*dpsf;
 		info2("illt %d, iwvl %d has FWHM of %g\"\n",
-		      illt, iwvl, sqrt(4.*(real)dfwhm(psf)/M_PI)*dpsf);
+		      illt, iwvl, fwhm);
 		free(psf->header); psf->header=strdup(header);
-		zfarr_push(lltpsfsave, illt*nwvl+iwvl, psf);
+		if(lltpsfsave){
+			zfarr_push(lltpsfsave, illt*nwvl+iwvl, psf);
+		}
 	    }
 	}
 	zfarr_close(lltpsfsave);
 	cfree(psfhat);
 	dfree(psf);
-    }
 }
 /**
    Upsample the otf in to out while preserving the PSF.

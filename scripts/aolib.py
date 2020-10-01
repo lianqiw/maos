@@ -94,12 +94,12 @@ def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Resclep", seeds, iframe1, iframe2)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
-    fds2=glob.glob(fdin+"/",recursive=1)
+    fds2=sorted(glob.glob(fdin+"/",recursive=1))
     fds=[]
     resall=None
     for fd in fds2: #loop over directory
         if seeds is None:
-            fns=glob.glob(fd+"/"+name+"_*.bin")
+            fns=sorted(glob.glob(fd+"/"+name+"_*.bin"))
         else:
             fns=list()
             for seed in seeds:

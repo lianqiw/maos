@@ -38,7 +38,7 @@ static void read_env(){
     READ_ENV_INT(NO_EVL,0,1);
     READ_ENV_INT(NO_RECON,0,1);
     READ_ENV_INT(KEEP_MEM,0,1);
-    info2("TOMOSCALE=%g\n", TOMOSCALE);
+    dbg("TOMOSCALE=%g\n", TOMOSCALE);
 }
 /**
    Setup system before entering simulation.

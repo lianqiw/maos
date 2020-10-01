@@ -88,9 +88,9 @@ static void gpu_atm2gpu_full(const mapcell *atm){
 #endif
     {
 	gpu_set(im);
-	gpu_print_mem("atm in full");
+	//gpu_print_mem("atm in full");
 	cp2gpu(cudata->atm, atm);
-	gpu_print_mem("atm out");
+	//gpu_print_mem("atm out");
     }
 #if _OPENMP >= 200805 
 #pragma omp taskwait

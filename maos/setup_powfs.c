@@ -1254,7 +1254,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    dadd(&llt->ncpa->p[ic], 1, focus, lltcfg->focus*1e-9/var);
 	}
 	cellfree(focus);
-	info2("Adding focus %g nm to LLT ncpa\n", lltcfg->focus);
+	info2("Adding focus %g nm (unweighted) to LLT ncpa\n", lltcfg->focus);
     }
     /*Remove tip/tilt/focus from ncpa */
     if(llt->ncpa && parms->powfs[ipowfs].llt->ttfr){
