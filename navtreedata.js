@@ -102,8 +102,8 @@ var NAVTREEINDEX =
 "structSTATUS__T.html#a68375cc932d1833c40a3d5897b19c8c8",
 "structdspcell.html#aa59a5c0a98e31997f5b9f83d106f3dc9",
 "structscccell.html#a184dc077e7e9573e7c871babaaca2a87",
-"wfs_lgs_ttf_tt_tt.html",
-"zmath_8h.html#af31d35738eeaccc8a619594dd55dd4ad"
+"wfs_lgs_ttf_tt.html",
+"zmath_8h.html#af1c66a7b92c453fec32ad46a68ac5656"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

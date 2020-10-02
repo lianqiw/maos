@@ -155,6 +155,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a57551296bf9e99969b62d6c06c1aed51"><td class="memItemLeft" align="right" valign="top"><a id="a57551296bf9e99969b62d6c06c1aed51"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info2</b>(A...)&#160;&#160;&#160;if(LOG_LEVEL&gt;-1) printf(A)</td></tr>
 <tr class="separator:a57551296bf9e99969b62d6c06c1aed51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa30612d0b25f8f68181596f70d352efb"><td class="memItemLeft" align="right" valign="top"><a id="aa30612d0b25f8f68181596f70d352efb"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>info3</b>(A...)&#160;&#160;&#160;if(LOG_LEVEL&gt;0) printf(A)</td></tr>
+<tr class="separator:aa30612d0b25f8f68181596f70d352efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acbbb641e671fa06a7061e1845ccda317"><td class="memItemLeft" align="right" valign="top"><a id="acbbb641e671fa06a7061e1845ccda317"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_console</b>(A...)&#160;&#160;&#160;if(LOG_LEVEL&gt;-2 &amp;&amp; <a class="el" href="sys_2common_8h.html#a7fd37fe51b259765f4ab9ca9000ee60b">fpconsole</a>) fprintf(<a class="el" href="sys_2common_8h.html#a7fd37fe51b259765f4ab9ca9000ee60b">fpconsole</a>, A)</td></tr>
 <tr class="separator:acbbb641e671fa06a7061e1845ccda317"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -192,7 +195,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>tic</b>&#160;&#160;&#160;tk=<a class="el" href="sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()</td></tr>
 <tr class="separator:a3fb5a5a0838cf7bc55c3eb40a34cb942"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afaece5ad9cda01b33f134d1d6d8c3fb3"><td class="memItemLeft" align="right" valign="top"><a id="afaece5ad9cda01b33f134d1d6d8c3fb3"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>toc</b>(format, ...)&#160;&#160;&#160;info2(format &quot; takes %.6f seconds.\n&quot;, ##__VA_ARGS__, myclockd()-tk)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>toc</b>(format, ...)&#160;&#160;&#160;info3(format &quot; takes %.6f seconds.\n&quot;, ##__VA_ARGS__, myclockd()-tk)</td></tr>
 <tr class="separator:afaece5ad9cda01b33f134d1d6d8c3fb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fade71545b5da6ed1a62dfa2b8bacfa"><td class="memItemLeft" align="right" valign="top"><a id="a9fade71545b5da6ed1a62dfa2b8bacfa"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>toc3</b>&#160;&#160;&#160;(<a class="el" href="sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()-tk)</td></tr>

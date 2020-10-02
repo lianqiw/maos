@@ -1,5 +1,6 @@
 var NAVTREEINDEX17 =
 {
+"wfs_lgs_ttf_tt.html":[4,4,45],
 "wfs_lgs_ttf_tt_tt.html":[4,4,46],
 "wfs_lgs_ttf_tt_twfs.html":[4,4,47],
 "wfs_ngs_tt.html":[4,4,48],
@@ -248,6 +249,5 @@ var NAVTREEINDEX17 =
 "zmath_8h.html#aeda4ecbcc71390bb81a267390a7a102f":[9,0,3,11,175],
 "zmath_8h.html#af0fa0e263e406042183e48074bc54832":[9,0,3,11,132],
 "zmath_8h.html#af186a0a139cdc952daa89de4490cf37b":[9,0,3,11,66],
-"zmath_8h.html#af1bf77b63a1200dec84be0e558518949":[9,0,3,11,40],
-"zmath_8h.html#af1c66a7b92c453fec32ad46a68ac5656":[9,0,3,11,57]
+"zmath_8h.html#af1bf77b63a1200dec84be0e558518949":[9,0,3,11,40]
 };

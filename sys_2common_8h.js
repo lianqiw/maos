@@ -15,6 +15,7 @@ var sys_2common_8h =
     [ "warning_once", "sys_2common_8h.html#a62dee209121f1ac5d2306b9f6234a1b5", null ],
     [ "info", "sys_2common_8h.html#a71ca8e156af74e00cb46374435f5fb4b", null ],
     [ "info2", "sys_2common_8h.html#a57551296bf9e99969b62d6c06c1aed51", null ],
+    [ "info3", "sys_2common_8h.html#aa30612d0b25f8f68181596f70d352efb", null ],
     [ "info_console", "sys_2common_8h.html#acbbb641e671fa06a7061e1845ccda317", null ],
     [ "info_once", "sys_2common_8h.html#aecfbb1e9291f15553ecf346710b28398", null ],
     [ "dbg", "sys_2common_8h.html#a21c6874582a101a2c1837970cc103a15", null ],
