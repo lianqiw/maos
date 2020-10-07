@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define COMP_SINGLE
+#include "vec.c"
 #include "mat.c"
 #include "matmath.c"
 

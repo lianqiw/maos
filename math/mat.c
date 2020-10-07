@@ -24,7 +24,7 @@
 
 //Check that A is valid and has mat type and has non zero size.
 #define check_mat(A) (A?(ismat(A)?(A->nx?(A->ny?1:0):0):(error("A is not mat\n"),0)):0)
-#define check_vec(p,N) (p?(N?1:0):(N?(error("p is null but N is not 0\n"),0):0))
+
 /**
    The only function that actually creats the matrix object. It ensures that all
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
@@ -362,18 +362,6 @@ void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm){
     }
 }
 /**
-   sum of a vector using pointer and length
- */
-T X(vecsum)(const T *restrict p, long nx){
-    TD sum=0;
-    if(check_vec(p, nx)){
-        for(long ix=0; ix<nx; ix++){
-            sum+=p[ix];
-        }
-    }
-    return (T)sum;
-}
-/**
    create sum of all the elements in A.
 */
 T X(sum)(const X(mat) *A){
@@ -420,92 +408,6 @@ void X(sort)(X(mat) *A, int ascend){
 
 
 /**
-   Compute max, min and sum. Has to handle NAN nicely. Complex values are
-   converted into magnitude during comparison. */
-void X(maxmin)(const T *restrict p, long N, R *max, R *min){
-    if(!check_vec(p, N)) return; 
-    R a,b;
-    long i;
-#ifdef COMP_LONG
-    a=-INT_MAX;
-    b=INT_MAX;
-#else
-    a=-INFINITY;
-    b=INFINITY;
-#endif
-    for(i=0; i<N; i++){
-#ifdef COMP_COMPLEX
-	R tmp=fabs(p[i]);
-#else
-	R tmp=p[i];
-#endif
-#ifndef COMP_LONG	
-	if(!isnan(tmp))
-#endif
-	{
-	    if(tmp>a) a=tmp;
-	    if(tmp<b) b=tmp;
-	}
-    }
-    if(max)*max=a; 
-    if(min)*min=b; 
-}
-/**
-   compute sum(p1.*p2.*p3)*/
-
-T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n){
-    TD ans=0;
-    if(p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
-    }else if(!p1 && p2 && p3){
-	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
-    }else if(p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
-    }else if(!p1 && !p2 && p3){
-	for(long i=0; i<n; i++) ans+=p3[i];
-    }else if(p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
-    }else if(!p1 && p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p2[i];
-    }else if(p1 && !p2 && !p3){
-	for(long i=0; i<n; i++) ans+=p1[i];
-    }else if(!p1 && !p2 && !p3){
-	ans=(T)n;/*assume all ones. */
-    }
-    return  (T)ans;
-}
-/**
-   normalize vector to sum to norm;*/
-void X(normalize_sum)(T *restrict p, long nx, T norm){
-    if(!check_vec(p, nx)) return;
-    T ss=norm/X(vecdot)(p,NULL,NULL,nx);
-    for(int i=0; i<nx; i++){
-		p[i]*=ss;
-    }
-}
-/**
-   normalize vector to sum of abs to norm;*/
-void X(normalize_sumabs)(T *restrict p, long nx, T norm){
-    if(!check_vec(p, nx)) return;
-    TD ss=0;
-    for (long i=0; i<nx; i++){
-		ss+=fabs(p[i]);
-    }
-    ss=norm/ss;
-    for(int i=0; i<nx; i++){
-		p[i]*=ss;
-    }
-}
-/**
-   normalize vector to max to max;*/
-void X(normalize_max)(T *restrict p, long nx, T max){
-    if(!check_vec(p,nx)) return;
-    T ss=max/X(vecmaxabs)(p, nx);
-    for(int i=0; i<nx; i++){
-		p[i]*=ss;
-    }
-}
-/**
    find the maximum value 
 */
 R X(max)(const X(mat) *A){
@@ -523,17 +425,6 @@ R X(min)(const X(mat) *A){
     R max,min;
     X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     return min;
-}
-/**
-   find the maximum of abs of all elements using pointer and count.
- */
-R X(vecmaxabs)(const T*restrict p, long n){
-    if(!check_vec(p, n)) return 0;
-    R max,min;
-    X(maxmin)(p, n, &max, &min);
-    max=fabs(max);
-    min=fabs(min);
-    return max>min?max:min;
 }
 /**
    find the maximum of abs of all elements

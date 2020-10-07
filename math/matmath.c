@@ -21,7 +21,9 @@
 #include "mathdef.h"
 #include "defs.h"
 
-
+/*
+Math routines that are not included in mat.c
+*/
 /**
    scale each element of A by w.
 */

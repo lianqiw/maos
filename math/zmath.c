@@ -17,6 +17,7 @@
 */
 #define COMP_SINGLE
 #define COMP_COMPLEX
+#include "vec.c"
 #include "mat.c"
 #include "matmath.c"
 
