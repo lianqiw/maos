@@ -281,7 +281,8 @@ static int get_drawdaemon(){
     if(draw_disabled){
 	return -1;
     }
-    char *display=getenv("DISPLAY");
+	info("get_drawdaemon()");
+	char* display=getenv("DISPLAY");
     if(display && !strlen(display)){//display is not set, we ask scheduler to open a drawdaemon.
 	display=0;
     }
@@ -353,6 +354,7 @@ static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
 */
 void draw_final(int reuse){
     LOCK(lock);
+	info("draw_final()");
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	int sock_draw=sock_draws[ifd].fd;
 	if(sock_draw==-1) continue;

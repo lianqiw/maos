@@ -1084,55 +1084,57 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, double deltah, int ip
 		     powfs[ipowfs].srsa,
 		     !parms->dbg.na_interp, 0};
     if(mode==0){/*preparation. */
-	if(powfs[ipowfs].etfprep && powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
-	    etf_free(powfs[ipowfs].etfprep);
-	}
-	powfs[ipowfs].etfprep=mketf_wrap(&etfdata);
+		if(powfs[ipowfs].etfprep && powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
+			etf_free(powfs[ipowfs].etfprep);
+		}
+		powfs[ipowfs].etfprep=mketf_wrap(&etfdata);
     }else{/*simulation*/
-	if(mode==1){/*first pair for interpolation*/
-	    if(powfs[ipowfs].etfsim==powfs[ipowfs].etfprep){
-		powfs[ipowfs].etfsim=0;
-	    }
-	    etf_free(powfs[ipowfs].etfsim); powfs[ipowfs].etfsim=0;
-	    if(powfs[ipowfs].etfsim2 && icol==powfs[ipowfs].etfsim2->icol && deltah==0){//reuse etfsim2 as etfsim
-		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
-		powfs[ipowfs].etfsim2=0;
-	    }else{
-		powfs[ipowfs].etfsim=mketf_wrap(&etfdata);
-	    }
-	}else if(mode==2){/*second pair for interpolation*/
-	    static pthread_t etfthread=0;
-	    ETF_T *etfasync=0;
-	    etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
-	    if(etfthread){//preparation already running in a thread
-		pthread_join(etfthread, (void**)(void*)&etfasync);
-		if(etfasync->icol!=icol){
-		    warning("Async prepared etfsim2 (%d) is not correct (%d)\n",
-			    etfasync->icol, icol);
+		if(mode==1){/*first pair for interpolation*/
+			if(powfs[ipowfs].etfsim==powfs[ipowfs].etfprep){
+				powfs[ipowfs].etfsim=0;
+			}
+			etf_free(powfs[ipowfs].etfsim); powfs[ipowfs].etfsim=0;
+			if(powfs[ipowfs].etfsim2 && icol==powfs[ipowfs].etfsim2->icol && !deltah){
+				//reuse etfsim2 as etfsim
+				powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
+				powfs[ipowfs].etfsim2=0;
+			}else{
+				powfs[ipowfs].etfsim=mketf_wrap(&etfdata);
+			}
+		}else if(mode==2){/*second pair for interpolation*/
+			static pthread_t etfthread=0;
+			ETF_T *etfasync=0;
+			etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
+			if(etfthread){ 
+				//preparation already running in a thread
+				pthread_join(etfthread, (void**)(void*)&etfasync);
+				if(etfasync->icol!=icol){
+					warning("Async prepared etfsim2 (%d) is not correct (%d)\n",
+					etfasync->icol, icol);
+				}else{
+					powfs[ipowfs].etfsim2=etfasync;
+				}
+				etfthread=0;
+			}
+			if(!powfs[ipowfs].etfsim2){
+				powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
+			}
+			if(!deltah){
+				//asynchronously preparing for next update.
+				//Copy data to heap so that they don't disappear during thread execution
+				mketf_t *etfdata2=mycalloc(1,mketf_t);//freed by mketf_wrap.
+				memcpy(etfdata2, &etfdata, sizeof(mketf_t));
+				etfdata2->icol++;
+				etfdata2->free=1;
+				if(pthread_create(&etfthread, NULL, (void*(*)(void *))mketf_wrap, etfdata2)){
+					warning_once("Thread creation failed\n");
+					free(etfdata2);
+					etfthread=0;
+				}
+			}
 		}else{
-		    powfs[ipowfs].etfsim2=etfasync;
+			error("Invalid mode=%d\n", mode);
 		}
-		etfthread=0;
-	    }
-	    if(!powfs[ipowfs].etfsim2){//no async available
-		powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
-	    }
-	    if(0){//Disable incase deltah is not zero.
-		//asynchronously preparing for next update.
-		//Copy data to heap so that they don't disappear during thread execution
-		mketf_t *etfdata2=mycalloc(1,mketf_t);//freed by mketf_wrap.
-		memcpy(etfdata2, &etfdata, sizeof(mketf_t));
-		etfdata2->icol++;
-		etfdata2->free=1;
-		if(pthread_create(&etfthread, NULL, (void*(*)(void *))mketf_wrap, etfdata2)){
-		    warning_once("Thread creation failed\n");
-		    free(etfdata2);
-		    etfthread=0;
-		}
-	    }
-	}else{
-	    error("Invalid mode=%d\n", mode);
-	}
     }
     print_mem("After setup_powfs_etf");
 }

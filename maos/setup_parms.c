@@ -1434,7 +1434,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->phystep=0;
 	}
 	if(powfsi->dither && powfsi->phystep!=0){
-	    warning("Dither requrie physical optics mode from the beginning, changed.\n");
+	    warning("Dither requires physical optics mode from the beginning, changed.\n");
 	    powfsi->phystep=0;
 	}
 	if(powfsi->phystep>0){
@@ -1470,59 +1470,58 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	real wvlmax=dmax(powfsi->wvl);
 	if(powfsi->type==0 && powfsi->usephy){//shwfs, physical optics mode
 	    if(powfsi->phytype_sim==-1){
-		powfsi->phytype_sim=powfsi->phytype_recon;
+			powfsi->phytype_sim=powfsi->phytype_recon;
 	    }
 	    if(powfsi->phytype_sim2==-1){
-		powfsi->phytype_sim2=powfsi->phytype_sim;
+			powfsi->phytype_sim2=powfsi->phytype_sim;
 	    }
 	    if(powfsi->phyusenea==-1){
-		if(powfsi->phytype_recon==2){
-		    //COG use NEA by default
-		    powfsi->phyusenea=1;
-		}else{
-		    powfsi->phyusenea=0;
-		}
+			if(powfsi->phytype_recon==2){
+				powfsi->phyusenea=1;//COG use NEA by default
+			}else{
+				powfsi->phyusenea=0;
+			}
 	    }
 	    long pixpsay=powfsi->pixpsa;
 	    long pixpsax=powfsi->radpix;
 	    if(!pixpsax) pixpsax=pixpsay;
 	    if(pixpsax*pixpsay<4){
-		powfsi->mtchcr=0;//cannot do constraint.
+			powfsi->mtchcr=0;//cannot do constraint.
 	    }
 	    /*Convert pixtheta to radian and do senity check*/
 	    if(powfsi->pixtheta<=0){//minus means ratio to lambda/dsa
-		powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
+			powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
 	    }else if(powfsi->pixtheta<1e-4){
-		warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
+			warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
 	    }else{//input is arcsecond.
-		powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
+			powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
 	    }
 	    if(!powfsi->radpixtheta){
-		powfsi->radpixtheta=powfsi->pixtheta;
+			powfsi->radpixtheta=powfsi->pixtheta;
 	    }else{
-		if(powfsi->radpixtheta>1e-4){
-		    powfsi->radpixtheta/=206265.;
-		}else if(powfsi->radpixtheta<0){
-		    error("powfs %d radpixtheta<0\n", ipowfs);
-		}
+			if(powfsi->radpixtheta>1e-4){
+				powfsi->radpixtheta/=206265.;
+			}else if(powfsi->radpixtheta<0){
+				error("powfs %d radpixtheta<0\n", ipowfs);
+			}
 	    }
 	    if(powfsi->phytype_sim==2 || powfsi->phytype_sim2==2){//COG
-		if(powfsi->cogthres<0){
-		    powfsi->cogthres*=-powfsi->rne;
-		}
-		if(powfsi->cogoff<0){
-		    powfsi->cogoff*=-powfsi->rne;
-		}
-		if((powfsi->cogthres || powfsi->cogoff) && powfsi->sigmatch!=1){
-		    error("When cogthres or cogoff is set, only sigmatch==1 is supported\n");
-		}
+			if(powfsi->cogthres<0){
+				powfsi->cogthres*=-powfsi->rne;
+			}
+			if(powfsi->cogoff<0){
+				powfsi->cogoff*=-powfsi->rne;
+			}
+			if((powfsi->cogthres || powfsi->cogoff) && powfsi->sigmatch!=1){
+				error("When cogthres or cogoff is set, only sigmatch==1 is supported\n");
+			}
 	    }
 	    if(powfsi->radgx && !powfsi->radpix){
-		powfsi->radgx=0;
+			powfsi->radgx=0;
 	    }
 	    if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
-		powfsi->mtchcpl=1;
-		warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
+			powfsi->mtchcpl=1;
+			warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
 	    }
 	}else if(powfsi->type==1){//pywfs only uses quad-cell algorithm
 	    powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
@@ -1530,9 +1529,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    //Input of modulate is in unit of wvl/D. Convert to radian
 	    powfsi->modulate*=wvlmax/parms->aper.d;
 	    if(powfsi->phyusenea==-1){
-		powfsi->phyusenea=1;
+			powfsi->phyusenea=1;
 	    }else if(powfsi->phyusenea!=1){
-		error("PWFS must have phyusenea=1;\n");
+			error("PWFS must have phyusenea=1;\n");
 	    }
 	}
 	if(powfsi->qe){
@@ -1542,20 +1541,20 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(!pixpsax) pixpsax=pixpsay;
 	    
 	    if(powfsi->qe->nx*powfsi->qe->ny !=pixpsax*pixpsay){
-		error("Input qe [%ldx%ld] does not match subaperture pixel [%ldx%ld]\n.", 
-		      powfsi->qe->nx, powfsi->qe->ny, pixpsax, pixpsay);
+			error("Input qe [%ldx%ld] does not match subaperture pixel [%ldx%ld]\n.", 
+			powfsi->qe->nx, powfsi->qe->ny, pixpsax, pixpsay);
 	    }
 	}
 
 	if(powfsi->fieldstop>0){
 	    if(powfsi->fieldstop>10 || powfsi->fieldstop<1e-4){
-		warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+			warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
 	    }
 	    powfsi->fieldstop/=206265.;
 	    if(powfsi->type == 1 && powfsi->fieldstop < powfsi->modulate*2+0.5/206265.){
-		warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
+			warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
 			powfsi->fieldstop*206265, powfsi->modulate*206265*2);
-		powfsi->fieldstop=powfsi->modulate*2+0.5/206265.;
+			powfsi->fieldstop=powfsi->modulate*2+0.5/206265.;
 	    }
 	}
 
@@ -1584,12 +1583,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].llt){
 	    parms->powfs[ipowfs].llt->i=lnew(mwfs, 1);/*default to zero. */
 	    if(parms->powfs[ipowfs].llt->n>1){
-		/*this is single llt for this powfs. */
-		if(parms->powfs[ipowfs].llt->n!=mwfs)
-		    error("# of llts should either be 1 or match nwfs for this powfs");
-		for(int iwfs=0; iwfs<parms->powfs[ipowfs].llt->n; iwfs++){
-		    parms->powfs[ipowfs].llt->i->p[iwfs]=iwfs;
-		}
+			/*this is single llt for this powfs. */
+			if(parms->powfs[ipowfs].llt->n!=mwfs)
+				error("# of llts should either be 1 or match nwfs for this powfs");
+			for(int iwfs=0; iwfs<parms->powfs[ipowfs].llt->n; iwfs++){
+				parms->powfs[ipowfs].llt->i->p[iwfs]=iwfs;
+			}
 	    }
 	}
 
@@ -1603,20 +1602,20 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	wfs_hs/=parms->powfs[ipowfs].nwfs;
 	wfs_hc/=parms->powfs[ipowfs].nwfs;
 	if(parms->powfs[ipowfs].hs==0){
-	    if(wfs_hs){
-		parms->powfs[ipowfs].hs=wfs_hs;
-		warning("powfs[%d].hs is set to average of wfs[].hs: %g\n", ipowfs, parms->powfs[ipowfs].hs);
-	    }else{
-		error("either wfs.hs or powfs.hs has to be specified\n");
-	    }
+		if(wfs_hs){
+			parms->powfs[ipowfs].hs=wfs_hs;
+			warning("powfs[%d].hs is set to average of wfs[].hs: %g\n", ipowfs, parms->powfs[ipowfs].hs);
+		}else{
+			error("either wfs.hs or powfs.hs has to be specified\n");
+		}
 	}else if(wfs_hs && fabs(wfs_hs-parms->powfs[ipowfs].hs)>100){
-	    warning("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
+		warning("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
 	}
 	if(parms->powfs[ipowfs].hc==0 && wfs_hc){
-	    parms->powfs[ipowfs].hs=wfs_hc;
-	    warning("powfs[%d].hc is set to average of wfs[].hc: %g\n", ipowfs, parms->powfs[ipowfs].hc);
+		parms->powfs[ipowfs].hs=wfs_hc;
+		warning("powfs[%d].hc is set to average of wfs[].hc: %g\n", ipowfs, parms->powfs[ipowfs].hc);
 	}else if(wfs_hc>0 && fabs(wfs_hc-parms->powfs[ipowfs].hc)>100){
-	    warning("powfs[%d].hc is %g, but wfs average hc is %g\n", ipowfs, parms->powfs[ipowfs].hc, wfs_hc);
+		warning("powfs[%d].hc is %g, but wfs average hc is %g\n", ipowfs, parms->powfs[ipowfs].hc, wfs_hc);
 	}
     }//for ipowfs
     

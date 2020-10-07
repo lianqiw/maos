@@ -473,6 +473,20 @@ typedef struct DITHER_T{
     dcell *mr;    /**<Mode reconstructed from actuator and gradients*/
 }DITHER_T;
 /**
+ * A collection of flags during simulation for each powfs.
+ * */
+typedef struct {
+    int do_phy;   /**<Do physical optics*/
+    int do_pistat;/**<Collect pixel intensity statistics*/
+    int gradout;  /**<Gradient output*/
+    int gradcount;/**<Gradient count*/
+    int pllcount;  /**<Number of PLL accumulations*/
+    int pllout;   /**<PLL output*/
+    int ogcount;   /**<Number of optical gain accumulations*/
+    int ogupdate; /**<OG update with PLL output*/
+    int ogout;    /**<OG output*/
+}WFSFLAGS_T;
+/**
    contains all the run time data struct.
 */
 typedef struct SIM_T{
@@ -662,6 +676,7 @@ typedef struct SIM_T{
     int wfsisim;       /**<record current simulations step for wfs.*/
     int perfisim;      /**<record current simulations step for pefevl.*/
     int reconisim;     /**<The time step for the gradlast data struct. =isim for OL, =isim-1 for CL*/
+    WFSFLAGS_T *wfsflags;/**<Runtime flags for each wfs*/
     /*maintain pointer of other structs for use in thread functions.*/
     const PARMS_T *parms; /**<pointer to parms*/
     const APER_T *aper;/**<pointer to aper*/

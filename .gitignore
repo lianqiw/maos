@@ -23,6 +23,7 @@
 .nfs*
 .svn
 .stignore
+.vscode
 Makefile
 Makefile.in
 autom4te.cache

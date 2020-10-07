@@ -375,10 +375,12 @@ typedef struct{
 }menudata_t;
 gint cur_host=-1;
 menudata_t menudata[]={
-    {"Kill selected jobs", "Kill", CMD_KILL},
-    {"Restart selected jobs", "Restart", CMD_RESTART},
     {"Plot selected jobs", "Plot", CMD_DISPLAY},
     {"Clear selected jobs", "Remove", CMD_REMOVE},
+    {NULL, NULL, -1},
+    {"Kill selected jobs", "Kill", CMD_KILL},
+    {"Restart selected jobs", "Restart", CMD_RESTART},
+    {NULL, NULL, -1},
     {"Copy cmdline selected jobs", "Copy", -1},
     {"Copy path of selected jobs", "CopyPath", -1},
     {"Copy output path of selected jobs", "CopyOutPath", -1}
@@ -462,14 +464,14 @@ static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
   
     if(nsel>0){
 	cur_host=GPOINTER_TO_INT(user_data);
-	for(size_t i=0; i<7; i++){
-	    menuitem=gtk_menu_item_new_with_label(menudata[i].menu);
-	    g_signal_connect(menuitem, "activate", G_CALLBACK(handle_menu_event), menudata+i);
-	    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-	    if(i==3){
-		menuitem=gtk_separator_menu_item_new();
-		gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+	for(size_t i=0; i<sizeof(menudata)/sizeof(menudata_t); i++){
+        if(menudata[i].menu){
+            menuitem=gtk_menu_item_new_with_label(menudata[i].menu);
+            g_signal_connect(menuitem,"activate",G_CALLBACK(handle_menu_event),menudata+i);
+        }else{
+			menuitem=gtk_separator_menu_item_new();
 	    }
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu),menuitem);
 	}
     }
     gtk_widget_show_all(menu);

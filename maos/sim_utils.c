@@ -345,7 +345,7 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 	}
     }
 }
-
+int update_etf = 0;//set this variable to trigger ETF update
 /**
    Evolving the Sodium layer by updating the elongation transfer function.
 */
@@ -353,36 +353,74 @@ void sim_update_etf(SIM_T *simu){
     int isim=simu->wfsisim;
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
-    extern int update_etf;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	/* Update ETF if necessary. */
-	if((parms->powfs[ipowfs].usephy
-	    ||parms->powfs[ipowfs].psfout
-	    ||parms->powfs[ipowfs].pistatout) 
-	   && parms->powfs[ipowfs].llt
-	   && parms->powfs[ipowfs].llt->coldtrat>0
-	   && (update_etf||isim %parms->powfs[ipowfs].llt->coldtrat == 0)){
-	    int dtrat=parms->powfs[ipowfs].llt->coldtrat;
-	    int colsim=parms->powfs[ipowfs].llt->colsim;
-	    double deltah=0;
-	    if(simu->zoomreal){
-		deltah=-simu->zoomreal->p[parms->powfs[ipowfs].wfs->p[0]];
-		deltah/=0.5*pow(1./parms->powfs[ipowfs].hs,2);//focus to range.
-	    }
-	    info2("Step %d: powfs %d: Updating ETF using column %d with dh=%g\n",isim, ipowfs,
-		  colsim+isim/dtrat+1, deltah);
-	    setup_powfs_etf(powfs,parms,deltah,ipowfs,1, colsim+isim/dtrat);
-	    setup_powfs_etf(powfs,parms,deltah,ipowfs,2, colsim+isim/dtrat+1);
-#if USE_CUDA
-	    if(parms->gpu.wfs){
-		gpu_wfsgrad_update_etf(parms, powfs);
-	    }
-#endif
-	}
+		/* Update ETF if necessary. */
+		if((parms->powfs[ipowfs].usephy
+			||parms->powfs[ipowfs].psfout
+			||parms->powfs[ipowfs].pistatout) 
+		&& parms->powfs[ipowfs].llt 
+		&& ((parms->powfs[ipowfs].llt->coldtrat>0 && isim %parms->powfs[ipowfs].llt->coldtrat == 0) || update_etf)){
+			int icol=0, icol2=0;
+			if(parms->powfs[ipowfs].llt->coldtrat>0){
+				int dtrat=parms->powfs[ipowfs].llt->coldtrat;
+				int colsim=parms->powfs[ipowfs].llt->colsim;
+				icol=colsim+isim/dtrat;
+				icol2=icol+1;
+			}
+			double deltah=0;
+			if(simu->zoomreal){
+				deltah=-simu->zoomreal->p[parms->powfs[ipowfs].wfs->p[0]];
+				deltah/=0.5*pow(1./parms->powfs[ipowfs].hs,2);//focus to range.
+			}
+			info2("Step %d: powfs %d: Updating ETF using column %d with dh=%g\n",isim, ipowfs, icol2, deltah);
+			setup_powfs_etf(powfs,parms,deltah,ipowfs,1, icol);
+			if(icol2!=icol){
+				setup_powfs_etf(powfs,parms,deltah,ipowfs,2,icol2);
+			}
+	#if USE_CUDA
+			if(parms->gpu.wfs){
+			gpu_wfsgrad_update_etf(parms, powfs);
+			}
+	#endif
+		}
     }
     update_etf=0;
 }
-
+/**
+ * Update flags
+ * */
+void sim_update_flags(SIM_T *simu, int isim){
+	const PARMS_T *parms=simu->parms;
+	simu->wfsisim=isim;
+    simu->perfisim=isim;
+    simu->status->isim=isim;
+    if(!parms->sim.closeloop){
+	simu->reconisim=isim;
+    }else{//work on gradients from last time step for parallelization.
+	simu->reconisim=isim-1;
+    }
+	if(!simu->wfsflags){
+		simu->wfsflags=mycalloc(parms->npowfs, WFSFLAGS_T);
+	}
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		WFSFLAGS_T *wfsflags=simu->wfsflags+ipowfs;
+		const int dtrat=parms->powfs[ipowfs].dtrat;
+		wfsflags->gradout=!parms->sim.closeloop || ((simu->wfsisim+1)%dtrat==0 && simu->wfsisim+1>parms->powfs[ipowfs].step);
+		wfsflags->gradcount=(simu->wfsisim-parms->powfs[ipowfs].step+1)/dtrat;
+		wfsflags->do_phy=parms->powfs[ipowfs].usephy && simu->wfsisim>=parms->powfs[ipowfs].phystep;
+		wfsflags->do_pistat=parms->powfs[ipowfs].pistatout&&simu->wfsisim>=parms->powfs[ipowfs].pistatstart;
+        if(parms->powfs[ipowfs].dither){
+			const int pllrat=parms->powfs[ipowfs].dither_pllrat;
+            wfsflags->pllcount=(simu->wfsisim-parms->powfs[ipowfs].dither_pllskip+1)/dtrat;
+            wfsflags->pllout=(wfsflags->pllcount>0) && (wfsflags->pllcount % pllrat)==0;
+			const int ograt=parms->powfs[ipowfs].dither_ograt;//multiple of pllrat
+			wfsflags->ogcount=(simu->wfsisim-parms->powfs[ipowfs].dither_ogskip+1)/dtrat;
+			wfsflags->ogupdate=wfsflags->ogcount>0 && (wfsflags->ogcount % pllrat)==0;
+			wfsflags->ogout=wfsflags->ogcount>0 && (wfsflags->ogcount % ograt)==0;
+		}	
+	}
+	
+}
 /**
    use random number dirived from input seed to seed other stream.  necessary to
    have independant streams for different wfs in threading routines to avoid
@@ -780,24 +818,24 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->ngsfocuslpf=0;
     }
     if(parms->nphypowfs){
-	simu->fsmerr_store=dcellnew(nwfs,1);
-	simu->fsmreal=dcellnew(nwfs,1);
-	simu->fsmsho=mycalloc(nwfs*2,SHO_T*);
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither==1){
-		simu->fsmerr_store->p[iwfs]=dnew(2,1);
-		simu->fsmreal->p[iwfs]=dnew(2,1);
-		if(parms->sim.f0fsm>0){
-		    simu->fsmsho[iwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//x
-		    simu->fsmsho[iwfs+nwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//y
-		}
-	    }
-	}
-	if(parms->sim.closeloop){
-	    simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
-				   parms->sim.dthi, parms->sim.epfsm);
-	}
+        simu->fsmerr_store=dcellnew(nwfs,1);
+        simu->fsmreal=dcellnew(nwfs,1);
+        simu->fsmsho=mycalloc(nwfs*2,SHO_T*);
+        for(int iwfs=0; iwfs<nwfs; iwfs++){
+            int ipowfs=parms->wfs[iwfs].powfs;
+            if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither==1){
+                simu->fsmerr_store->p[iwfs]=dnew(2,1);
+                simu->fsmreal->p[iwfs]=dnew(2,1);
+                if(parms->sim.f0fsm>0){
+                    simu->fsmsho[iwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//x
+                    simu->fsmsho[iwfs+nwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//y
+                }
+            }
+        }
+        if(parms->sim.closeloop){
+            simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
+            parms->sim.dthi, parms->sim.epfsm);
+        }
     }
   
     {/*MMAP the LGS fsmlink error/command output */

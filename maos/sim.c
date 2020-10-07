@@ -95,9 +95,9 @@ SIM_T *maos_iseed(int iseed){
    Callable from matlab.
 */
 void maos_isim(int isim){
-    const PARMS_T *parms=global->parms;
-    RECON_T *recon=global->recon;
-    SIM_T   *simu =global->simu;
+    SIM_T *simu=global->simu;
+	const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
     int iseed=global->iseed;
     int simstart=parms->sim.start;
     int simend=parms->sim.end;
@@ -110,14 +110,8 @@ void maos_isim(int isim){
 	draw_single=0;
     }
     real ck_0=myclockd();
-    simu->wfsisim=isim;
-    simu->perfisim=isim;
-    simu->status->isim=isim;
-    if(!parms->sim.closeloop){
-	simu->reconisim=isim;
-    }else{//work on gradients from last time step for parallelization.
-	simu->reconisim=isim-1;
-    }
+    
+	sim_update_flags(simu, isim);
     sim_update_etf(simu);
     if(!parms->atm.frozenflow){
 	//Do not put this one inside parallel 

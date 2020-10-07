@@ -23,6 +23,7 @@
 #define AOS_SIM_UTILS_H
 void atm2xloc(dcell **opdx, const SIM_T *simu);
 void sim_update_etf(SIM_T *simu);
+void sim_update_flags(SIM_T *simu, int isim);
 void seeding(SIM_T *simu);
 SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, APER_T *aper,RECON_T *recon,int iseed);
 void free_simu(SIM_T *simu);

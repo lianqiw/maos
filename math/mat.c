@@ -21,8 +21,10 @@
 #include "random.h"
 #include "mathdef.h"
 #include "defs.h"/*Defines T, X, etc */
-//Check for correct type and for possible memory corruption
-#define assert_mat(A) assert(!A || ismat(A))
+
+//Check that A is valid and has mat type and has non zero size.
+#define check_mat(A) (A?(ismat(A)?(A->nx?(A->ny?1:0):0):(error("A is not mat\n"),0)):0)
+#define check_vec(p,N) (p?(N?1:0):(N?(error("p is null but N is not 0\n"),0):0))
 /**
    The only function that actually creats the matrix object. It ensures that all
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
@@ -53,8 +55,7 @@ X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
    creat a reference an existing matrix. Use the reference carefully.
 */
 X(mat) *X(ref)(const X(mat) *in){
-    if(!in) return NULL;
-    assert_mat(in);
+    if(!check_mat(in)) return NULL;
     X(mat)* out=X(new_do)(in->nx, in->ny, in->p, in->mem);
     if(in->header) out->header=strdup(in->header);
     return out;
@@ -71,35 +72,37 @@ X(mat) *X(new)(long nx, long ny){
 */
 void X(init)(X(mat)**A, long nx, long ny){
     if(*A && (*A)->nx > 0 && (*A)->ny > 0){
-	if((*A)->nx != nx || (*A)->ny!=ny){
-	    error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
-		  (*A)->nx, (*A)->ny, nx, ny);
-	}
+		if((*A)->nx != nx || (*A)->ny!=ny){
+			error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
+			(*A)->nx, (*A)->ny, nx, ny);
+		}
     }else{
-	X(free)(*A);
-	*A=X(new)(nx, ny);
+		X(free)(*A);
+		*A=X(new)(nx, ny);
     }
 }
 /**
    cast a cell object to matrix
  */
 X(mat) *X(mat_cast)(const void *A){
-    if(!A) return 0;
-    assert(ismat(A));
+    if(!ismat(A)) return 0;
     X(mat)*B=(X(mat)*)A;
-    if(!B->nx || !B->ny) return 0; else return B;
+    if(!B->nx || !B->ny) 
+        return 0; 
+    else 
+        return B;
 }
 /**
    free a matrix object. if keepdata!=0, will not free A->p.
 */
 void X(free_do)(X(mat) *A){
-    if(!A) return;
-    assert_mat(A);
-    mem_unref(&A->mem);//takes care of freeing memory.
+    if(check_mat(A)){
+        mem_unref(&A->mem);//takes care of freeing memory.
 #ifndef COMP_LONG
-    X(fft_free_plan)(A->fft);
+        X(fft_free_plan)(A->fft);
 #endif
-    free(A->header);
+        free(A->header);
+    }
     free(A);
 }
 
@@ -107,6 +110,7 @@ void X(free_do)(X(mat) *A){
    create an new reference another with different shape.
 */
 X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
+    if(!check_mat(in)) return NULL;
     X(mat) *out=X(ref)(in);
     if(in->nx*in->ny!=nx*ny){
 	error("Must not change number of elements\n");
@@ -121,7 +125,7 @@ X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
    matrix. reference counted. not used
 */
 X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
-    assert_mat(in);
+    if(!check_mat(in)) return NULL;
     return X(new_do)(in->nx, ncol, PCOL(in, icol), in->mem);
 }
 
@@ -129,8 +133,7 @@ X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
    Create a new sub matrix of nx*ny starting from(sx,sy) and copy the data.
 */
 X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
-    if(!in) return 0;
-    assert_mat(in);
+    if(!check_mat(in)) return NULL;
     if(nx<=0){
 	nx=in->nx-sx;
     }
@@ -152,35 +155,35 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
    possible.
 */
 void X(resize)(X(mat) *A, long nx, long ny){
-    assert_mat(A);
+    if(!check_mat(A)) return;
     if(!nx) nx=A->nx;
     if(!ny) ny=A->ny;
     if(mem_isref(A->mem)){
-	error("Trying to resize referenced matrix\n");
+		error("Trying to resize referenced matrix\n");
     }
     if(A->nx!=nx || A->ny!=ny){
-	if(A->nx==nx || A->ny==1){
-	    A->p=myrealloc(A->p,nx*ny,T);
-	    if(nx*ny>A->nx*A->ny){
-		memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
-	    }
-	}else{/*copy memory to preserve data*/
-	    T *p=mycalloc(nx*ny,T);
-	    long minx=A->nx<nx?A->nx:nx;
-	    long miny=A->ny<ny?A->ny:ny;
-	    for(long iy=0; iy<miny; iy++){
-		memcpy(p+iy*nx, PCOL(A, iy), sizeof(T)*minx);
-	    }
-	    free(A->p);
-	    A->p=p;
-	}
-	if(A->mem){
-	    mem_replace(A->mem, A->p);
-	}else{
-	    A->mem=mem_ref(mem_new(A->p));
-	}
-	A->nx=nx;
-	A->ny=ny;
+        if(A->nx==nx || A->ny==1){
+            A->p=myrealloc(A->p,nx*ny,T);
+            if(nx*ny>A->nx*A->ny){
+				memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
+            }
+        }else{/*copy memory to preserve data*/
+            T *p=mycalloc(nx*ny,T);
+            long minx=A->nx<nx?A->nx:nx;
+            long miny=A->ny<ny?A->ny:ny;
+            for(long iy=0; iy<miny; iy++){
+				memcpy(p+iy*nx, PCOL(A, iy), sizeof(T)*minx);
+            }
+            free(A->p);
+            A->p=p;
+        }
+        if(A->mem){
+            mem_replace(A->mem, A->p);
+        }else{
+            A->mem=mem_ref(mem_new(A->p));
+        }
+        A->nx=nx;
+        A->ny=ny;
     }
 }
 
@@ -188,17 +191,15 @@ void X(resize)(X(mat) *A, long nx, long ny){
    Concatenate two matrixes into 1 along dimension "dim"
 */
 X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
-    if(!in2){
-	if(in1){
-	    return X(dup)(in1);
-	}else{
-	    return NULL;
-	}
-    }else if(!in1){
-	return X(dup)(in2);
+    if(!check_mat(in2)){
+        if(check_mat(in1)){
+            return X(dup)(in1);
+        }else{
+            return NULL;
+        }
+    }else if(!check_mat(in1)){
+		return X(dup)(in2);
     }
-    assert_mat(in1);
-    assert_mat(in2);
     X(mat) *out=NULL;
 
     if(dim==1){
@@ -230,25 +231,25 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
    Set elements to zero.
 */
 void X(zero)(X(mat)*A){
-    if(A){
-	memset(A->p, 0, sizeof(T)*A->nx*A->ny);
+    if(check_mat(A)){
+		memset(A->p, 0, sizeof(T)*A->nx*A->ny);
     }
 }
 /**
    Set column elements to zero.
 */
 void X(zerocol)(X(mat)*A, int icol){
-    if(A){
-	assert(icol>=0 && icol<A->ny);
-	memset(PCOL(A, icol), 0, sizeof(T)*A->nx);
+    if(check_mat(A)){
+		assert(icol>=0 && icol<A->ny);
+		memset(PCOL(A, icol), 0, sizeof(T)*A->nx);
     }
 }
 /**
    Compute the hashlittle
  */
 uint32_t X(hash)(const X(mat)*A, uint32_t key){
-    if(A){
-	key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
+    if(check_mat(A)){
+		key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
     }
     return key;
 }
@@ -256,19 +257,18 @@ uint32_t X(hash)(const X(mat)*A, uint32_t key){
    copy the values from one matrix to another.
 */
 void X(cp)(X(mat) **out0, const X(mat) *in){
-    if(in && in->nx && in->ny){
-	assert_mat(in);
-	X(init)(out0, in->nx, in->ny);
-	X(mat) *out=*out0;
-	if(in->header){
-	    free(out->header);
-	    out->header=strdup(in->header);
-	}
-	if(out->p!=in->p){
-	    memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
-	}
+    if(check_mat(in)){
+        X(init)(out0, in->nx, in->ny);
+        X(mat) *out=*out0;
+        if(in->header){
+            free(out->header);
+            out->header=strdup(in->header);
+        }
+        if(out->p!=in->p){
+            memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
+        }
     }else{
-	X(zero)(*out0);
+		X(zero)(*out0);
     }
 }
 
@@ -276,7 +276,7 @@ void X(cp)(X(mat) **out0, const X(mat) *in){
    duplicate a matrix
 */
 X(mat) *X(dup)(const X(mat) *in){
-    assert_mat(in);
+    if(!check_mat(in)) return NULL;
     X(mat) *out=NULL;
     X(cp)(&out, in);
     return out;
@@ -286,8 +286,7 @@ X(mat) *X(dup)(const X(mat) *in){
    transpose a matrix
 */
 X(mat) *X(trans)(const X(mat) *A){
-    if(!A) return NULL;
-    assert_mat(A);
+    if(!check_mat(A)) return NULL;
     X(mat) *B=X(new)(A->ny,A->nx);
     if(A->nx==1 || A->ny==1){
 	memcpy(B->p, A->p, A->nx*A->ny*sizeof(T));
@@ -304,20 +303,17 @@ X(mat) *X(trans)(const X(mat) *A){
    set values of each element in an matrix to val.
 */
 void X(set)(X(mat) *A, const T val){
-    if(A){
-	assert_mat(A);
+    if(!check_mat(A)) return;
 	for(long i=0; i<A->nx*A->ny; i++){
 	    A->p[i]=val;
 	}
-    }
 }
 
 /**
    display a matrix.
 */
 void X(show)(const X(mat) *A, const char *format, ...){
-    if(!A) return;
-    assert_mat(A);
+    if(!check_mat(A)) return;
     format2fn;
     info("Displaying content of %s:\n",fn);
     int colmax=10;
@@ -340,14 +336,14 @@ void X(show)(const X(mat) *A, const char *format, ...){
    out(:)=in(p);
 */
 void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm){
-    if(!in || !out) return;
+    if(!check_mat(in) || !check_mat(out)) return;
     assert(in->nx*in->ny == out->nx*out->ny);
     for(long i=0; i<in->nx*in->ny; i++){
-	if(perm[i]>0){
-	    P(out,i)=P(in, perm[i]);
-	}else{
-	    P(out,i)=conj(P(in,-perm[i]));
-	}
+        if(perm[i]>0){
+            P(out,i)=P(in, perm[i]);
+        }else{
+            P(out,i)=conj(P(in,-perm[i]));
+        }
     }
 }
 /**
@@ -355,14 +351,14 @@ void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm){
    out(p)=in(:);
 */
 void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm){
-    if(!in || !out) return;
+    if(!check_mat(in) || !check_mat(out)) return;
     assert(in->nx*in->ny == out->nx*out->ny);
     for(long i=0; i<in->nx*in->ny; i++){
-	if(perm[i]>0){
-	    P(out, perm[i])=P(in, i);
-	}else{
-	    P(out, -perm[i])=conj(P(in, i));
-	}
+        if(perm[i]>0){
+            P(out, perm[i])=P(in, i);
+        }else{
+            P(out, -perm[i])=conj(P(in, i));
+        }
     }
 }
 /**
@@ -370,8 +366,10 @@ void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm){
  */
 T X(vecsum)(const T *restrict p, long nx){
     TD sum=0;
-    for(long ix=0; ix<nx; ix++){
-	sum+=p[ix];
+    if(check_vec(p, nx)){
+        for(long ix=0; ix<nx; ix++){
+            sum+=p[ix];
+        }
     }
     return (T)sum;
 }
@@ -380,9 +378,8 @@ T X(vecsum)(const T *restrict p, long nx){
 */
 T X(sum)(const X(mat) *A){
     T v=0;
-    if(A){
-	assert_mat(A);
-	v=X(vecsum)(A->p, A->nx*A->ny);
+    if(check_mat(A)){
+		v=X(vecsum)(A->p, A->nx*A->ny);
     }
     return v;
 }
@@ -391,10 +388,11 @@ T X(sum)(const X(mat) *A){
 */
 T X(trace)(const X(mat)*A){
     TD trace=0;
-    assert_mat(A);
-    long n=MIN(A->nx, A->ny);
-    for(long i=0; i<n; i++){
-	trace+=A->p[i*(1+A->nx)];
+    if(check_mat(A)){
+        long n=MIN(A->nx, A->ny);
+        for(long i=0; i<n; i++){
+            trace+=A->p[i*(1+A->nx)];
+        }
     }
     return (T)trace;
 }
@@ -412,6 +410,7 @@ static int sort_descend(const T*A, const T*B){
   Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
 */
 void X(sort)(X(mat) *A, int ascend){
+    if(!check_mat(A)) return;
     for(int i=0; i<A->ny; i++){
 	qsort(PCOL(A, i), A->nx, sizeof(R), 
 	      (int(*)(const void*,const void*))(ascend?sort_ascend:sort_descend));
@@ -424,6 +423,7 @@ void X(sort)(X(mat) *A, int ascend){
    Compute max, min and sum. Has to handle NAN nicely. Complex values are
    converted into magnitude during comparison. */
 void X(maxmin)(const T *restrict p, long N, R *max, R *min){
+    if(!check_vec(p, N)) return; 
     R a,b;
     long i;
 #ifdef COMP_LONG
@@ -476,39 +476,40 @@ T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, lo
 }
 /**
    normalize vector to sum to norm;*/
-void X(normalize_sum)(T *restrict p, long nloc, T norm){
-    if(!nloc) return;
-    T ss=norm/X(vecdot)(p,NULL,NULL,nloc);
-    for(int i=0; i<nloc; i++){
-	p[i]*=ss;
+void X(normalize_sum)(T *restrict p, long nx, T norm){
+    if(!check_vec(p, nx)) return;
+    T ss=norm/X(vecdot)(p,NULL,NULL,nx);
+    for(int i=0; i<nx; i++){
+		p[i]*=ss;
     }
 }
 /**
    normalize vector to sum of abs to norm;*/
-void X(normalize_sumabs)(T *restrict p, long nloc, T norm){
-    if(!nloc) return;
+void X(normalize_sumabs)(T *restrict p, long nx, T norm){
+    if(!check_vec(p, nx)) return;
     TD ss=0;
-    for (long i=0; i<nloc; i++){
-	ss+=fabs(p[i]);
+    for (long i=0; i<nx; i++){
+		ss+=fabs(p[i]);
     }
     ss=norm/ss;
-    for(int i=0; i<nloc; i++){
-	p[i]*=ss;
+    for(int i=0; i<nx; i++){
+		p[i]*=ss;
     }
 }
 /**
    normalize vector to max to max;*/
-void X(normalize_max)(T *restrict p, long nloc, T max){
-    if(!nloc) return;
-    T ss=max/X(vecmaxabs)(p, nloc);
-    for(int i=0; i<nloc; i++){
-	p[i]*=ss;
+void X(normalize_max)(T *restrict p, long nx, T max){
+    if(!check_vec(p,nx)) return;
+    T ss=max/X(vecmaxabs)(p, nx);
+    for(int i=0; i<nx; i++){
+		p[i]*=ss;
     }
 }
 /**
    find the maximum value 
 */
 R X(max)(const X(mat) *A){
+    if(!check_mat(A)) return 0;
     R max,min;
     X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     return max;
@@ -518,6 +519,7 @@ R X(max)(const X(mat) *A){
    find the minimum value
 */
 R X(min)(const X(mat) *A){
+    if(!check_mat(A)) return 0;
     R max,min;
     X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     return min;
@@ -526,6 +528,7 @@ R X(min)(const X(mat) *A){
    find the maximum of abs of all elements using pointer and count.
  */
 R X(vecmaxabs)(const T*restrict p, long n){
+    if(!check_vec(p, n)) return 0;
     R max,min;
     X(maxmin)(p, n, &max, &min);
     max=fabs(max);
@@ -536,12 +539,14 @@ R X(vecmaxabs)(const T*restrict p, long n){
    find the maximum of abs of all elements
 */
 R X(maxabs)(const X(mat) *A){
+    if(!check_mat(A)) return 0;
     return X(vecmaxabs)(A->p, A->nx*A->ny);
 }
 /**
    compute the sum of abs of all elements
 */
 R X(sumabs)(const X(mat)*A){
+    if(!check_mat(A)) return 0;
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
 	out+=fabs(A->p[i]);
@@ -552,9 +557,10 @@ R X(sumabs)(const X(mat)*A){
    compute the sum of A.*A
 */
 R X(sumsq)(const X(mat)*A){
+    if(!check_mat(A)) return 0;
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	out+=ABS2(A->p[i]);
+		out+=ABS2(A->p[i]);
     }
     return out;
 }
@@ -562,10 +568,11 @@ R X(sumsq)(const X(mat)*A){
    compute the sum of A.*A
 */
 R X(sumdiffsq)(const X(mat)*A, const X(mat)*B){
-    RD out=0;
+    if(!check_mat(A) || !check_mat(B)) return 0;
+    RD out = 0;
     assert(A->nx==B->nx && A->ny==B->ny);
     for(long i=0; i<A->nx*A->ny; i++){
-	out+=ABS2(A->p[i]-B->p[i]);
+		out+=ABS2(A->p[i]-B->p[i]);
     }
     return (R)out;
 }
@@ -575,7 +582,7 @@ R X(sumdiffsq)(const X(mat)*A, const X(mat)*B){
    shift frequency components by n/2
 */
 void X(fftshift)(X(mat) *A){
-    assert_mat(A);
+    if(!check_mat(A)) return;
     long i;
     const long nx=A->nx;
     const long ny=A->ny;
@@ -622,8 +629,7 @@ void X(fftshift)(X(mat) *A){
    \endverbatim
 */
 void X(cpcorner2center)(X(mat) *A, const X(mat)*B){
-    assert_mat(A);
-    assert_mat(B);
+    if(!check_mat(A) || !check_mat(B)) return; 
     const long nx=A->nx;
     const long ny=A->ny;
     T *Ap=A->p;
@@ -658,6 +664,7 @@ void X(cpcorner2center)(X(mat) *A, const X(mat)*B){
    \endverbatim
 */
 void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
+    if(!B0 || !check_mat(A)) return;
     X(init)(B0, A->nx, A->ny);
     X(mat) *B=*B0;
 
@@ -684,11 +691,13 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
    cast a cell object to actual cell after checking.
  */
 X(cell) *X(cell_cast)(const void *A_){
-    if(!A_) return 0;
+    if(!A_) return NULL;
     cell *A=(cell*)A_;
-    assert(iscell(A));
+    if(!iscell(A)) return NULL;
     for(int i=0; i<A->nx*A->ny; i++){
-	assert(!A->p[i] || ismat(A->p[i]));
+		if(A->p[i] && !ismat(A->p[i])){
+            return NULL;
+        }
     }
     return (X(cell)*)A;
 }
@@ -697,22 +706,23 @@ X(cell) *X(cell_cast)(const void *A_){
    When a cell is empty, it is created with an emtry matrix and cannot be overriden.
 */
 X(cell) *X(cellnew2)(const X(cell) *A){
+    if(!A) return NULL;
     X(cell) *out=X(cellnew)(A->nx, A->ny);
     long tot=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	if(!isempty(A->p[i])){
-	    tot+=A->p[i]->nx*A->p[i]->ny;
-	}
+		if(!isempty(A->p[i])){
+			tot+=A->p[i]->nx*A->p[i]->ny;
+		}
     }
     out->m=X(new)(tot,1);
     tot=0;
     for(int i=0; i<A->nx*A->ny; i++){
-	if(!isempty(A->p[i])){
-	    out->p[i]=X(new_do)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot, out->m->mem);
-	    tot+=A->p[i]->nx*A->p[i]->ny;
-	}else{
-	    out->p[i]=X(new)(0,0);//place holder to avoid been overriden.
-	}
+        if(!isempty(A->p[i])){
+            out->p[i]=X(new_do)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot, out->m->mem);
+            tot+=A->p[i]->nx*A->p[i]->ny;
+        }else{
+            out->p[i]=X(new)(0,0);//place holder to avoid been overriden.
+        }
     }
     return out;
 }
@@ -723,19 +733,19 @@ X(cell) *X(cellnew2)(const X(cell) *A){
 X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     long tot=0;
     for(long i=0; i<nx*ny; i++){
-	long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
-	long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
-	tot+=mx*my;
+		long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
+		long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
+		tot+=mx*my;
     }
     if(!tot) return NULL;
     X(cell) *out=X(cellnew)(nx,ny);
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){
-	long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
-	long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
-	out->p[i]=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
-	tot+=mx*my;
+		long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
+		long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
+		out->p[i]=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
+		tot+=mx*my;
     }
     return out;
 }
@@ -753,10 +763,10 @@ X(cell) *X(cellref)(const X(cell) *in){
     if(!in) return NULL;
     X(cell) *out=X(cellnew)(in->nx, in->ny);
     if(in->m){
-	out->m=X(ref)(in->m);
+		out->m=X(ref)(in->m);
     }
     for(int i=0; i<in->nx*in->ny; i++){
-	out->p[i]=X(ref)(in->p[i]);
+		out->p[i]=X(ref)(in->p[i]);
     }
     if(in->header) out->header=strdup(in->header);
     return out;
@@ -767,9 +777,9 @@ X(cell) *X(cellref)(const X(cell) *in){
 */
 void X(cellset)(X(cell)*dc, T val){
     if(dc){
-	for(int ix=0; ix<dc->nx*dc->ny; ix++){
-	    X(set)(dc->p[ix], val);
-	}
+        for(int ix=0; ix<dc->nx*dc->ny; ix++){
+            X(set)(dc->p[ix], val);
+        }
     }
 }
 
@@ -780,9 +790,9 @@ X(cell) *X(celltrans)(const X(cell) *A){
     if(!A) return NULL;
     X(cell) *B=X(cellnew)(A->ny, A->nx);
     for(int ix=0; ix<A->nx; ix++){
-	for(int iy=0; iy<A->ny; iy++){
-	    P(B,iy,ix)=X(trans)(P(A,ix,iy));
-	}
+        for(int iy=0; iy<A->ny; iy++){
+            P(B,iy,ix)=X(trans)(P(A,ix,iy));
+        }
     }
     return B;
 }
@@ -797,36 +807,36 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
     celldim(A, &nx, &ny, &nxs, &nys);
     if(nx==0 || ny==0) return NULL;
     if(dim==1){
-	out=X(cellnew)(1, A->ny);
-	for(long iy=0; iy<A->ny; iy++){
-	    if(nys[iy]==0) continue;
-	    out->p[iy]=X(new)(nx,nys[iy]);
-	    for(long icol=0; icol<nys[iy]; icol++){
-		long kr=0;
-		for(long ix=0; ix<A->nx; ix++){
-		    if(!isempty(P(A,ix,iy))){
-			memcpy(PP(out->p[iy], kr, icol), PCOL(P(A,ix,iy),icol),
-			       nxs[ix]*sizeof(T));
-		    }			
-		    kr+=nxs[ix];
-		}
-	    }
-	}
+        out=X(cellnew)(1, A->ny);
+        for(long iy=0; iy<A->ny; iy++){
+            if(nys[iy]==0) continue;
+            out->p[iy]=X(new)(nx,nys[iy]);
+            for(long icol=0; icol<nys[iy]; icol++){
+                long kr=0;
+                for(long ix=0; ix<A->nx; ix++){
+                    if(!isempty(P(A,ix,iy))){
+                    memcpy(PP(out->p[iy], kr, icol), PCOL(P(A,ix,iy),icol),
+                        nxs[ix]*sizeof(T));
+                    }			
+                    kr+=nxs[ix];
+                }
+            }
+        }
     }else if(dim==2){
-	out=X(cellnew)(A->nx,1);
-	for(long ix=0; ix<A->nx; ix++){
-	    if(nxs[ix]==0) continue;
-	    out->p[ix]=X(new)(nxs[ix],ny);
-	    long kr=0;
-	    for(long iy=0; iy<A->ny; iy++){
-		if(!isempty(P(A,ix,iy))){
-		    memcpy(PCOL(out->p[ix], kr), P(A,ix,iy)->p, nxs[ix]*nys[iy]*sizeof(T));
-		}
-		kr+=nys[iy];
-	    }
-	}
+        out=X(cellnew)(A->nx,1);
+        for(long ix=0; ix<A->nx; ix++){
+            if(nxs[ix]==0) continue;
+            out->p[ix]=X(new)(nxs[ix],ny);
+            long kr=0;
+            for(long iy=0; iy<A->ny; iy++){
+            if(!isempty(P(A,ix,iy))){
+                memcpy(PCOL(out->p[ix], kr), P(A,ix,iy)->p, nxs[ix]*nys[iy]*sizeof(T));
+            }
+            kr+=nys[iy];
+            }
+        }
     }else{
-	error("Invalid dim=%d\n",dim);
+		error("Invalid dim=%d\n",dim);
     }
     free(nxs);
     free(nys);
@@ -837,76 +847,77 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
    drop empty rows or columns. size of *A0 is changed.
 */
 void X(celldropempty)(X(cell) **A0, int dim){
+    if(!A0) return;
     X(cell) *A=*A0;
     if(!A) return;
     if(dim==1){
-	/*drop rows */
-	int keep[A->nx];
-	int ndrop=0;
-	for(int ix=0; ix<A->nx; ix++){
-	    keep[ix]=0;
-	    for(int iy=0; iy<A->ny; iy++){
-		if(!isempty(P(A,ix,iy))){
-		    keep[ix]=1;
-		    break;
-		}
-	    }
-	    if(keep[ix]==0){
-		ndrop++;
-	    }
-	}
-	if(ndrop){
-	    if(ndrop==A->nx){
-		X(cellfree)(A);
-		*A0=NULL;
-	    }else{
-		X(cell) *B=X(cellnew)(A->nx-ndrop,A->ny);
-		int count=0;
-		for(int ix=0; ix<A->nx; ix++){
-		    if(keep[ix]){
-			if(count!=ix){
-			    for(int iy=0; iy<A->ny; iy++){
-				P(B,count,iy)=P(A,ix,iy);
-			    }
-			}
-			count++;
-		    }else{
-			warning("row %d dropped\n", ix);
-		    }
-		}
-		free(A->p); free(A);
-		A=B;
-	    }
-	}
+        /*drop rows */
+        int keep[A->nx];
+        int ndrop=0;
+        for(int ix=0; ix<A->nx; ix++){
+            keep[ix]=0;
+            for(int iy=0; iy<A->ny; iy++){
+				if(!isempty(P(A,ix,iy))){
+					keep[ix]=1;
+					break;
+				}
+            }
+            if(keep[ix]==0){
+				ndrop++;
+            }
+        }
+        if(ndrop){
+            if(ndrop==A->nx){
+				X(cellfree)(A);
+				*A0=NULL;
+            }else{
+				X(cell) *B=X(cellnew)(A->nx-ndrop,A->ny);
+            int count=0;
+            for(int ix=0; ix<A->nx; ix++){
+                if(keep[ix]){
+                if(count!=ix){
+                    for(int iy=0; iy<A->ny; iy++){
+                    P(B,count,iy)=P(A,ix,iy);
+                    }
+                }
+                count++;
+                }else{
+                warning("row %d dropped\n", ix);
+                }
+            }
+            free(A->p); free(A);
+            A=B;
+            }
+        }
     }else if(dim==2){
-	/*drop cols */
-	int count=0;
-	for(int iy=0; iy<A->ny; iy++){
-	    int keep=0;
-	    for(int ix=0; ix<A->nx; ix++){
-		if(!isempty(P(A,ix,iy))){
-		    keep=1;
-		    break;
-		}
-	    }
-	    if(keep){
-		for(int ix=0; ix<A->nx; ix++){
-		    P(A,ix,count)=P(A,ix,iy);
-		}
-		count++;
-	    }else{
-		/*warning("Col %d dropped\n", iy); */
-	    }
-	}
-	A->ny=count;
-	if(count==0){
-	    X(cellfree)(A);
-	    *A0=NULL;
-	}else{
-	    A->p=myrealloc(A->p,A->ny*A->nx,X(mat)*);
-	}
+        /*drop cols */
+        int count=0;
+        for(int iy=0; iy<A->ny; iy++){
+            int keep=0;
+            for(int ix=0; ix<A->nx; ix++){
+                if(!isempty(P(A,ix,iy))){
+                    keep=1;
+                    break;
+                }
+            }
+            if(keep){
+                for(int ix=0; ix<A->nx; ix++){
+                    P(A,ix,count)=P(A,ix,iy);
+                }
+                count++;
+            }else{
+            /*warning("Col %d dropped\n", iy); */
+            }
+        }
+        A->ny=count;
+        if(count==0){
+            X(cellfree)(A);
+            *A0=NULL;
+        }else{
+            A->p=myrealloc(A->p,A->ny*A->nx,X(mat)*);
+        }
     }else{
-	error("Invalid dim: %d\n",dim);
+		error("Invalid dim: %d\n",dim);
     }
  
 }
@@ -985,6 +996,7 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
    Create a new sub cell matrix of nx*ny starting from(sx,sy)
 */
 X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
+    if(!in) return NULL;
     if(nx<=0){
 	nx=in->nx-sx;
     }
@@ -1007,6 +1019,7 @@ X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
    input is nsa*ncol cell. each cell has npix=nx*ny elements. Extract icol of cell as npix*nsa array.
 */
 X(mat) *X(cell_col)(X(cell) *input, long icol){
+    if(!input) return NULL;
     long npix=PN(P(input,0,0));
     long nsa=input->nx;
     if(input->m){
