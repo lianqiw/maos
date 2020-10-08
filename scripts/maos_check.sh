@@ -67,23 +67,24 @@ ii=0
 function run_maos(){
     ./maos sim.end=1000 $args "$*" >> $fnlog
     if [ $? == 0 ];then
-	RMS[ii]=$(grep 'Mean:' $fnlog |tail -n1 |cut -d ':' -f 2)
-	a=${RMS[$ii]%.*}
+		RMS[ii]=$(grep 'Mean:' $fnlog |tail -n1 |cut -d ':' -f 2)
+		a=${RMS[$ii]%.*}
     else
-	RMS[ii]='error'
-	a=0
-	ans=1
+		RMS[ii]='error'
+		a=0
+		ans=1
     fi
 
     b=${REF[$ii]%.*}
     echo -n "${RMS[$ii]} nm, Ref: ${REF[$ii]} nm, "
     if [ "$a" != "0" -a "$b" != "error" ];then
-	echo $(((a-b)*100/a))%
+		echo $(((a-b)*100/a))%
     else
-	echo
+		echo
     fi
     ii=$((ii+1)) 
 }
+export MAOS_LOG_LEVEL=-1
 
 echo "D is ${D}m. DM order is $((D*2))."
 
