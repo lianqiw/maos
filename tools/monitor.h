@@ -89,4 +89,5 @@ gboolean host_up(gpointer data);
 gboolean update_progress(gpointer input);
 PROC_T* proc_get(int id, int pid);
 void kill_job(PROC_T* p);
+int host2i(const char* hostn);
 #endif

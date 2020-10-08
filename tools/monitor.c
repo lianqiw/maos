@@ -177,7 +177,18 @@ gboolean host_down(gpointer data){
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
 	return 0;
 }
-
+/**
+* determine host index from name
+*/
+int host2i(const char *hostn){
+	for(int ihost=0; ihost<nhost; ihost++){
+		if(!strcmp(hosts[ihost], hostn)){
+			return ihost;
+		}
+	}
+	warning("host %s is not found\n", hostn);
+	return -1;
+}
 /**
    modifies the color of progress bar*/
 static void modify_bg(GtkWidget* widget, int type){

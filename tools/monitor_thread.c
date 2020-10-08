@@ -341,6 +341,7 @@ void* listen_host(void* dummy){
    called by monitor to let a MAOS job remotely draw on this computer
 */
 int scheduler_display(int ihost, int pid){
+	if(ihost<0) return 0;
 	/*connect to scheduler with a new port. The schedule pass the other
 	  end of the port to drawdaemon so we can communicate with it.*/
 	int sock=connect_port(hosts[ihost], PORT, 0, 0);
@@ -365,6 +366,7 @@ int scheduler_display(int ihost, int pid){
    called by monitor to talk to scheduler.
 */
 int scheduler_cmd(int host, int pid, int command){
+	if(host<0) return 0;
 	if(command==CMD_DISPLAY){
 		return scheduler_display(host, pid);
 	} else{
