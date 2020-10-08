@@ -1,6 +1,5 @@
 var NAVTREEINDEX1 =
 {
-"classcuda__recon_1_1curecon__geom.html#a70119360e20fe470d20a10fe2545788d":[8,0,0,4,6],
 "classcuda__recon_1_1curecon__geom.html#a7f73b5e1b8a8ce96f74e8d7763d0dc63":[8,0,0,4,9],
 "classcuda__recon_1_1curecon__geom.html#a974c5011e87c1f8ac41f4b2942a6f782":[8,0,0,4,3],
 "classcuda__recon_1_1curecon__geom.html#aa8b7e35bd31dbad9e72846501edb7068":[8,0,0,4,15],
@@ -234,20 +233,21 @@ var NAVTREEINDEX1 =
 "classcumap__t.html#adb392432f6b20066f5117fdbe5ddd0ec":[8,0,28,4],
 "classcumap__t.html#aded7950de89178f4a94c853f3c1556e6":[8,0,28,0],
 "classcuperf__g.html":[8,0,29],
+"classcuperf__g.html#a03cbbc431ab84e8f662bd97aa4ad91e5":[8,0,29,17],
 "classcuperf__g.html#a15ff6701594e181940d9c12f0120aef7":[8,0,29,15],
-"classcuperf__g.html#a248da20b3ab4da303ee30bd5c8d4f6bc":[8,0,29,17],
 "classcuperf__g.html#a268f2ae9e0ed24752ebee28f6bc01cd5":[8,0,29,5],
 "classcuperf__g.html#a35c5b8197c11c7aa073b3ff49b185a3a":[8,0,29,13],
 "classcuperf__g.html#a43d03a43efc136b4dfc559b304f625e9":[8,0,29,9],
 "classcuperf__g.html#a531a61bea43e38f261b05221afa1f6ea":[8,0,29,6],
 "classcuperf__g.html#a631c117d16ca2e0461b7325328512ee2":[8,0,29,3],
 "classcuperf__g.html#a68bb02b660ad48ae2a26cf03b74f178c":[8,0,29,14],
-"classcuperf__g.html#a6b95bc7d7040ac6d5efcbf12f409c0f4":[8,0,29,16],
 "classcuperf__g.html#a7fa7685d40084e639b37c774579517ea":[8,0,29,10],
 "classcuperf__g.html#a87dbc0d896167a7404772cf3a846b698":[8,0,29,11],
 "classcuperf__g.html#a8f8e120565e4aa9fd655d970306d8dc2":[8,0,29,0],
 "classcuperf__g.html#a90ab9dfcc118c3af409c136f9f05a226":[8,0,29,7],
 "classcuperf__g.html#a992f92d5c629650fdc145d93438fc395":[8,0,29,12],
 "classcuperf__g.html#a9ec0d9f1f93a60f29b53bab5d4548ab9":[8,0,29,4],
-"classcuperf__g.html#aa324647a9dcac80ea68745d71def89b3":[8,0,29,8]
+"classcuperf__g.html#aa324647a9dcac80ea68745d71def89b3":[8,0,29,8],
+"classcuperf__g.html#aa3aa1d377db1fd0dadec88f8637d3650":[8,0,29,16],
+"classcuperf__g.html#ae5e58c3c921920967155173ca42e11cc":[8,0,29,1]
 };

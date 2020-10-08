@@ -23,6 +23,7 @@ var searchData=
   ['wfs_5frand',['wfs_rand',['../structSIM__T.html#aab7097204306d1dccab994da046db694',1,'SIM_T']]],
   ['wfsalias',['wfsalias',['../structSIM__CFG__T.html#a62477737faf5f1a080fc5c46cf9246fd',1,'SIM_CFG_T']]],
   ['wfscov',['wfscov',['../structcn2est__t.html#acf9e43246eeca25e3074bad34e70a27c',1,'cn2est_t']]],
+  ['wfsflags',['wfsflags',['../structSIM__T.html#a1cb1ad9b4ff522d32f113597bc66b601',1,'SIM_T']]],
   ['wfsgrad_5fpost',['wfsgrad_post',['../structSIM__T.html#a0684eac96521b08e1052f6a571999b25',1,'SIM_T']]],
   ['wfsind',['wfsind',['../structPOWFS__CFG__T.html#ad31ed2c443b594815d66fd49b8e16a06',1,'POWFS_CFG_T']]],
   ['wfsints_5fisa',['wfsints_isa',['../structSIM__T.html#ad315103cb3314a69188f3618dd6100db',1,'SIM_T']]],

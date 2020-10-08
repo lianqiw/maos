@@ -69,8 +69,6 @@ var zmath_8h =
     [ "zscale", "zmath_8h.html#af186a0a139cdc952daa89de4490cf37b", null ],
     [ "zinn", "zmath_8h.html#a8d813209dae3728defaab500ba28a377", null ],
     [ "zwdot", "zmath_8h.html#ae4331037f7c1f5c2200cdbd9aa0ba6cb", null ],
-    [ "zwdot2", "zmath_8h.html#aa5ebbd2e868c8b2615f43c4efc50e62c", null ],
-    [ "zwdot3", "zmath_8h.html#a535565c243a6a0a9e89f9c2986b23615", null ],
     [ "zcwm", "zmath_8h.html#aa5cca07e599b0ed57306ba037b205dfb", null ],
     [ "zcwm2", "zmath_8h.html#a8b377e63c25cc3df101765f7509a336d", null ],
     [ "zcwm3", "zmath_8h.html#a9ebcb15e1a1302d2c94e21f4fb23bc47", null ],

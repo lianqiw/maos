@@ -11,6 +11,6 @@ var classCell =
     [ "init", "classCell.html#a8375b8f93fad1e994c72a72ec4387dd2", null ],
     [ "New", "classCell.html#ab338d6db56a4b1bc0ad5ae92821fe59a", null ],
     [ "replace", "classCell.html#a3f273d2f404385c7d16f19bc9ed98732", null ],
-    [ "pm_cpu", "classCell.html#afde74d6313273d319c4c079515f354f2", null ],
-    [ "pm", "classCell.html#a188f4488bc1896206ec9769ca86e218d", null ]
+    [ "pm_cpu", "classCell.html#abbc95d836f618ae1a358fa4474d53413", null ],
+    [ "pm", "classCell.html#a5c0442b26553c599a04b4155ab5a4b8c", null ]
 ];

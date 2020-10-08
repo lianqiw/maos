@@ -68,8 +68,6 @@ var smath_8h =
     [ "sscale", "smath_8h.html#a430271b5e1e151958bd4bd7aebd84622", null ],
     [ "sinn", "smath_8h.html#abe5974c21a719b81963e8116282c87c8", null ],
     [ "swdot", "smath_8h.html#abafc33486d3c08c3550727a9a4736c1f", null ],
-    [ "swdot2", "smath_8h.html#af21db60a7e13cdb5bcf21b465fd41c2b", null ],
-    [ "swdot3", "smath_8h.html#a4ca69c5f44f676a4b2eb4bf4da6b2364", null ],
     [ "scwm", "smath_8h.html#af956788b4f2ba6956ad09f77ba845efb", null ],
     [ "scwm2", "smath_8h.html#aa9c3e9f38857fcbd803f59a9b0430c40", null ],
     [ "scwm3", "smath_8h.html#a5a7650f21930290cd709bb498f93e95c", null ],

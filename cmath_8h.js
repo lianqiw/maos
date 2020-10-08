@@ -69,8 +69,6 @@ var cmath_8h =
     [ "cscale", "cmath_8h.html#a28e2379f0cf6c55321a56b7591857b51", null ],
     [ "cinn", "cmath_8h.html#a8687fd6aa73cddb1c0e79fab2dcf223f", null ],
     [ "cwdot", "cmath_8h.html#a0dd4275a60901fe0c99abab961bce358", null ],
-    [ "cwdot2", "cmath_8h.html#a7bebd0bb1ae63ed62f2e8c26ebaf2c03", null ],
-    [ "cwdot3", "cmath_8h.html#aa363f94193efb7b648e04f48964f6137", null ],
     [ "ccwm", "cmath_8h.html#a7fe3b375701efb354d19e28f7d8205d6", null ],
     [ "ccwm2", "cmath_8h.html#af8f56200dd715328019f56ab28d784f5", null ],
     [ "ccwm3", "cmath_8h.html#aac7b5779299b899bde26fa97f874f160", null ],

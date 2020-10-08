@@ -265,12 +265,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sscale</b> (<a class=
 <tr class="memitem:abafc33486d3c08c3550727a9a4736c1f"><td class="memItemLeft" align="right" valign="top"><a id="abafc33486d3c08c3550727a9a4736c1f"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>swdot</b> (const float *a, const <a class="el" href="structsmat.html">smat</a> *w, const float *b)</td></tr>
 <tr class="separator:abafc33486d3c08c3550727a9a4736c1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af21db60a7e13cdb5bcf21b465fd41c2b"><td class="memItemLeft" align="right" valign="top"><a id="af21db60a7e13cdb5bcf21b465fd41c2b"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>swdot2</b> (const float *a, const <a class="el" href="structsmat.html">smat</a> *w, const float *b)</td></tr>
-<tr class="separator:af21db60a7e13cdb5bcf21b465fd41c2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ca69c5f44f676a4b2eb4bf4da6b2364"><td class="memItemLeft" align="right" valign="top"><a id="a4ca69c5f44f676a4b2eb4bf4da6b2364"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>swdot3</b> (const float *a, const <a class="el" href="structsmat.html">smat</a> *w, const float *b)</td></tr>
-<tr class="separator:a4ca69c5f44f676a4b2eb4bf4da6b2364"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af956788b4f2ba6956ad09f77ba845efb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#af956788b4f2ba6956ad09f77ba845efb">scwm</a> (<a class="el" href="structsmat.html">smat</a> *A, const <a class="el" href="structsmat.html">smat</a> *B)</td></tr>
 <tr class="separator:af956788b4f2ba6956ad09f77ba845efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9c3e9f38857fcbd803f59a9b0430c40"><td class="memItemLeft" align="right" valign="top"><a id="aa9c3e9f38857fcbd803f59a9b0430c40"></a>
@@ -1419,7 +1413,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the sum of A.*A </p>
+<p>compute the sum of (A-B)^2 </p>
 
 </div>
 </div>
@@ -1472,7 +1466,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
 * * * *
 * * * *
 2 * * 1
-</pre><p> to </p><pre class="fragment">1 2 
+</pre><p> to </p><pre class="fragment">1 2
 3 4
 </pre> 
 </div>
@@ -2405,8 +2399,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>cyclic shift A by nx and ny to B. </p><pre class="fragment">4   3     1   2 
-   
+<p>cyclic shift A by nx and ny to B. </p><pre class="fragment">4   3     1   2
+
 2   1 to  3   4
 </pre> 
 </div>

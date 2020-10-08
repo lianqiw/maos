@@ -185,6 +185,7 @@ var searchData=
   ['sim_5fsave_5ft',['SIM_SAVE_T',['../structSIM__SAVE__T.html',1,'']]],
   ['sim_5ft',['SIM_T',['../structSIM__T.html',1,'']]],
   ['sim_5fupdate_5fetf',['sim_update_etf',['../sim__utils_8h.html#ade5601f0c0ffa73c27aa90ec087d54ac',1,'sim_utils.c']]],
+  ['sim_5fupdate_5fflags',['sim_update_flags',['../sim__utils_8h.html#a7f212f681e274b3933081154c9ca9099',1,'sim_utils.c']]],
   ['sim_5futils_2eh',['sim_utils.h',['../sim__utils_8h.html',1,'']]],
   ['simcc',['simcc',['../smath_8h.html#a9989aecbfb72055d314c9a4d33ef929f',1,'stmp.c']]],
   ['single_5finstance_5fdaemonize',['single_instance_daemonize',['../daemonize_8h.html#a11994e1abb814e3885025b3fa9088602',1,'daemonize.c']]],

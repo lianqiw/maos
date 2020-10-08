@@ -14,6 +14,7 @@ var maos_2types_8h =
     [ "SIM_SAVE_T", "structSIM__SAVE__T.html", "structSIM__SAVE__T" ],
     [ "WFSINTS_T", "structWFSINTS__T.html", "structWFSINTS__T" ],
     [ "DITHER_T", "structDITHER__T.html", "structDITHER__T" ],
+    [ "WFSFLAGS_T", "structWFSFLAGS__T.html", "structWFSFLAGS__T" ],
     [ "SIM_T", "structSIM__T.html", "structSIM__T" ],
     [ "GLOBAL_T", "structGLOBAL__T.html", "structGLOBAL__T" ],
     [ "CHECK_SAVE", "maos_2types_8h.html#a47895b22092692ba9ca782f61cc1d4b8", null ],

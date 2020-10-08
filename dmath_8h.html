@@ -251,10 +251,6 @@ Functions</h2></td></tr>
 <tr class="separator:a329eb26031f9567dcb26c67d62170161"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5f1f7191d68f2629d767d4c04b19936"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ab5f1f7191d68f2629d767d4c04b19936">dwdot</a> (const real *a, const <a class="el" href="structdmat.html">dmat</a> *w, const real *b)</td></tr>
 <tr class="separator:ab5f1f7191d68f2629d767d4c04b19936"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a478508e421d26b1d7d56d00a3dd828ca"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a478508e421d26b1d7d56d00a3dd828ca">dwdot2</a> (const real *a, const <a class="el" href="structdmat.html">dmat</a> *w, const real *b)</td></tr>
-<tr class="separator:a478508e421d26b1d7d56d00a3dd828ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27061b2a5a3e773dea81729fc41b89bb"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a27061b2a5a3e773dea81729fc41b89bb">dwdot3</a> (const real *a, const <a class="el" href="structdmat.html">dmat</a> *w, const real *b)</td></tr>
-<tr class="separator:a27061b2a5a3e773dea81729fc41b89bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf36a4c01ef10127030a2f26bde8f47e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#acf36a4c01ef10127030a2f26bde8f47e">dcwm</a> (<a class="el" href="structdmat.html">dmat</a> *A, const <a class="el" href="structdmat.html">dmat</a> *B)</td></tr>
 <tr class="separator:acf36a4c01ef10127030a2f26bde8f47e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08aba36db07b7963b9f3288220018b09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a08aba36db07b7963b9f3288220018b09">dcwm2</a> (<a class="el" href="structdmat.html">dmat</a> *A, const <a class="el" href="structdmat.html">dmat</a> *B1, real wt1, const <a class="el" href="structdmat.html">dmat</a> *B2, real wt2)</td></tr>
@@ -1407,7 +1403,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
-          <td class="paramname"><em>nloc</em>, </td>
+          <td class="paramname"><em>nx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1442,7 +1438,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
-          <td class="paramname"><em>nloc</em>, </td>
+          <td class="paramname"><em>nx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1477,7 +1473,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
-          <td class="paramname"><em>nloc</em>, </td>
+          <td class="paramname"><em>nx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1645,7 +1641,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the sum of A.*A </p>
+<p>compute the sum of (A-B)^2 </p>
 
 </div>
 </div>
@@ -1698,7 +1694,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
 * * * *
 * * * *
 2 * * 1
-</pre><p> to </p><pre class="fragment">1 2 
+</pre><p> to </p><pre class="fragment">1 2
 3 4
 </pre> 
 </div>
@@ -2427,76 +2423,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
       </table>
 </div><div class="memdoc">
 <p>compute weighted dot product a'*(w*b) </p>
-
-</div>
-</div>
-<a id="a478508e421d26b1d7d56d00a3dd828ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a478508e421d26b1d7d56d00a3dd828ca">&#9670;&nbsp;</a></span>dwdot2()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">real dwdot2 </td>
-          <td>(</td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>a</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
-          <td class="paramname"><em>w</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>b</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>special version of dwdot for just 2 element vectors. </p>
-
-</div>
-</div>
-<a id="a27061b2a5a3e773dea81729fc41b89bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a27061b2a5a3e773dea81729fc41b89bb">&#9670;&nbsp;</a></span>dwdot3()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">real dwdot3 </td>
-          <td>(</td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>a</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
-          <td class="paramname"><em>w</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>b</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>special version of dwdot for just 3 element vectors. </p>
 
 </div>
 </div>
@@ -3387,8 +3313,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>cyclic shift A by nx and ny to B. </p><pre class="fragment">4   3     1   2 
-   
+<p>cyclic shift A by nx and ny to B. </p><pre class="fragment">4   3     1   2
+
 2   1 to  3   4
 </pre> 
 </div>

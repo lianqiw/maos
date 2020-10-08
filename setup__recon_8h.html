@@ -367,8 +367,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>assemble tomography matrix. In CG mode, this function is not executed if tomo.assemble=0, Instead, the algorithm is contained in recon.c. When you modify anything, make sure you also do it there. <br />
- For integrated tomograhy:</p>
+<p>assemble tomography matrix. In CG mode, this function is not executed if tomo.assemble=0, Instead, the algorithm is contained in recon.c. When you modify anything, make sure you also do it there.</p>
+<p>For integrated tomograhy:</p>
 <p><img class="formulaInl" alt="$\hat{x}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1}+G_{ngs}^{T}C_{ngs}^{-1} G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\equiv}RL^{-1}RR s.$" src="form_48.png"/></p>
 <p>For split tomography, the terms regarding NGS are dropped:</p>
 <p><img class="formulaInl" alt="$\hat{x}_{lgs}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1})^{-1} G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.$" src="form_49.png"/></p>

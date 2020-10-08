@@ -122,6 +122,7 @@ var searchData=
   ['sho_5fstep',['sho_step',['../servo_8h.html#a114446d3cf13c9de532578aa3a51d411',1,'servo.c']]],
   ['shwfs_5fgrad',['shwfs_grad',['../maos_2utils_8h.html#a042cc2fc9a27fae7528d0958fa0ff5f2',1,'utils.c']]],
   ['sim_5fupdate_5fetf',['sim_update_etf',['../sim__utils_8h.html#ade5601f0c0ffa73c27aa90ec087d54ac',1,'sim_utils.c']]],
+  ['sim_5fupdate_5fflags',['sim_update_flags',['../sim__utils_8h.html#a7f212f681e274b3933081154c9ca9099',1,'sim_utils.c']]],
   ['simcc',['simcc',['../smath_8h.html#a9989aecbfb72055d314c9a4d33ef929f',1,'stmp.c']]],
   ['single_5finstance_5fdaemonize',['single_instance_daemonize',['../daemonize_8h.html#a11994e1abb814e3885025b3fa9088602',1,'daemonize.c']]],
   ['sinit',['sinit',['../smath_8h.html#a103f199d42c3eebbdc9c55711ef11514',1,'stmp.c']]],

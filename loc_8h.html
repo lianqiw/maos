@@ -101,10 +101,10 @@ $(document).ready(function(){initNavTree('loc_8h.html','');});
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a0d5e49614dad13b4bf1c931d52bb7f09"><td class="memItemLeft" align="right" valign="top"><a id="a0d5e49614dad13b4bf1c931d52bb7f09"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>locfree</b>(A)&#160;&#160;&#160;({<a class="el" href="loc_8h.html#aa53d0ffe413fe5002244699bfb7d641b">locfree_do</a>(A);A=NULL;})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>locfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="loc_8h.html#aa53d0ffe413fe5002244699bfb7d641b">locfree_do</a>(A);A=NULL;}</td></tr>
 <tr class="separator:a0d5e49614dad13b4bf1c931d52bb7f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0200f152b9da89214d5bfc129b47e7a5"><td class="memItemLeft" align="right" valign="top"><a id="a0200f152b9da89214d5bfc129b47e7a5"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ptsfree</b>(A)&#160;&#160;&#160;({<a class="el" href="loc_8h.html#aa53d0ffe413fe5002244699bfb7d641b">locfree_do</a>((<a class="el" href="structloc__t.html">loc_t</a>*)A);A=NULL;})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>ptsfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="loc_8h.html#aa53d0ffe413fe5002244699bfb7d641b">locfree_do</a>((<a class="el" href="structloc__t.html">loc_t</a>*)A);A=NULL;}</td></tr>
 <tr class="separator:a0200f152b9da89214d5bfc129b47e7a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af55a6c63c302ab619b87eca05e4e3c17"><td class="memItemLeft" align="right" valign="top"><a id="af55a6c63c302ab619b87eca05e4e3c17"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>locarrfree</b>(A,  B)&#160;&#160;&#160;({<a class="el" href="loc_8h.html#a09a53c4553b6b5edea84a81470d530df">locarrfree_do</a>(A,B);A=NULL;})</td></tr>

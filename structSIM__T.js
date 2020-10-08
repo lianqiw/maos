@@ -140,6 +140,7 @@ var structSIM__T =
     [ "wfsisim", "structSIM__T.html#a47080fa95f0d703f4f013c3494083586", null ],
     [ "perfisim", "structSIM__T.html#a33660eec1b60e777cc6e082e283425b2", null ],
     [ "reconisim", "structSIM__T.html#a327c6895c71b3ec9b2e6399ec916df5f", null ],
+    [ "wfsflags", "structSIM__T.html#a1cb1ad9b4ff522d32f113597bc66b601", null ],
     [ "parms", "structSIM__T.html#a085df4ec8f2e9f439643ca1fff3db942", null ],
     [ "aper", "structSIM__T.html#a32c1411e2b4624790b8506e9b54449d4", null ],
     [ "recon", "structSIM__T.html#a632412546828fc6e45a9538c42f9ed53", null ],

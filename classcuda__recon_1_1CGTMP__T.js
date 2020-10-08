@@ -7,7 +7,7 @@ var classcuda__recon_1_1CGTMP__T =
     [ "p0", "classcuda__recon_1_1CGTMP__T.html#ae19fe6a1a0b7baffba29eff920deec7a", null ],
     [ "Ap", "classcuda__recon_1_1CGTMP__T.html#a445fa703ba29abd3c41cb39ac3d01a64", null ],
     [ "store", "classcuda__recon_1_1CGTMP__T.html#a41f5bfeae3730d33734a172e518b8625", null ],
-    [ "diff", "classcuda__recon_1_1CGTMP__T.html#a80fd2c40e7767e2d42039565a7b591a2", null ],
+    [ "diff", "classcuda__recon_1_1CGTMP__T.html#a6d6089a8429d37592159fc0ad30212ff", null ],
     [ "count_fail", "classcuda__recon_1_1CGTMP__T.html#ae31c975b9427b2634ea87c84e717bc7d", null ],
     [ "count", "classcuda__recon_1_1CGTMP__T.html#af7ace8b781cf8df433e7d2b5c694e75c", null ]
 ];

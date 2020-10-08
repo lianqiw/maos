@@ -195,8 +195,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 </div><div class="memdoc">
 <p>Setup telescope to WFS pupil misregistration.</p>
 <p>It is tricky to implement the misregistration of the deformable mirror and the WFS.</p>
-<p>Misregistration of the deformable mirror. <br />
- Denote the grid of actuators as saloc, and with misregistration, it becomes salocm.</p>
+<p>Misregistration of the deformable mirror.</p>
+<p>Denote the grid of actuators as saloc, and with misregistration, it becomes salocm.</p>
 <ul>
 <li>We should use saloc for DM fitting and pseudo open loop gradient computations because we are not aware of the misregistration.</li>
 <li>We should use salocm for raytracing to WFS and performance evaluation because this is what happens in the system, no matter whether we know the misregistration or not.</li>

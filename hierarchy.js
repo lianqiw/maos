@@ -51,8 +51,8 @@ var hierarchy =
     [ "cugrid_t", "classcugrid__t.html", [
       [ "cumap_t", "classcumap__t.html", null ]
     ] ],
-    [ "cuda_wfs::cullt_t", "classcuda__wfs_1_1cullt__t.html", null ],
     [ "cullt_t", "structcullt__t.html", null ],
+    [ "cuda_wfs::cullt_t", "classcuda__wfs_1_1cullt__t.html", null ],
     [ "culoc_t", "classculoc__t.html", [
       [ "cupts_t", "classcupts__t.html", null ]
     ] ],
@@ -353,6 +353,7 @@ var hierarchy =
     [ "TOMO_CFG_T", "structTOMO__CFG__T.html", null ],
     [ "cuda_recon::W01_T", "classcuda__recon_1_1W01__T.html", null ],
     [ "WFS_CFG_T", "structWFS__CFG__T.html", null ],
+    [ "WFSFLAGS_T", "structWFSFLAGS__T.html", null ],
     [ "WFSINTS_T", "structWFSINTS__T.html", null ],
     [ "zcccell", "structzcccell.html", null ],
     [ "zccell", "structzccell.html", null ],

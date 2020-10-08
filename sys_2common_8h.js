@@ -9,6 +9,7 @@ var sys_2common_8h =
     [ "RED", "sys_2common_8h.html#a8d23feea868a983c8c2b661e1e16972f", null ],
     [ "GREEN", "sys_2common_8h.html#acfbc006ea433ad708fdee3e82996e721", null ],
     [ "QUIT_FUN", "sys_2common_8h.html#a10f70b101a20e7aa118bf0c944475b06", null ],
+    [ "logstd", "sys_2common_8h.html#a25109b9068a7577def63faa4bf329664", null ],
     [ "error", "sys_2common_8h.html#a5b9a882fdc463a3d4dcc99840fd0adb8", null ],
     [ "warning", "sys_2common_8h.html#a5d3ff0e9f81516a70ebb38e09b9ef34e", null ],
     [ "warning_time", "sys_2common_8h.html#a01167927cc103474971c102a622429bb", null ],

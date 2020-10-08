@@ -16,6 +16,6 @@ var classcuperf__g =
     [ "cc_ol", "classcuperf__g.html#a35c5b8197c11c7aa073b3ff49b185a3a", null ],
     [ "cc_cl", "classcuperf__g.html#a68bb02b660ad48ae2a26cf03b74f178c", null ],
     [ "coeff", "classcuperf__g.html#a15ff6701594e181940d9c12f0120aef7", null ],
-    [ "ccb_ol", "classcuperf__g.html#a6b95bc7d7040ac6d5efcbf12f409c0f4", null ],
-    [ "ccb_cl", "classcuperf__g.html#a248da20b3ab4da303ee30bd5c8d4f6bc", null ]
+    [ "ccb_ol", "classcuperf__g.html#aa3aa1d377db1fd0dadec88f8637d3650", null ],
+    [ "ccb_cl", "classcuperf__g.html#a03cbbc431ab84e8f662bd97aa4ad91e5", null ]
 ];

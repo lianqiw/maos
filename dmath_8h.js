@@ -68,8 +68,6 @@ var dmath_8h =
     [ "dscale", "dmath_8h.html#a7d02ee8f819768a1b096b47b561ff5ca", null ],
     [ "dinn", "dmath_8h.html#a329eb26031f9567dcb26c67d62170161", null ],
     [ "dwdot", "dmath_8h.html#ab5f1f7191d68f2629d767d4c04b19936", null ],
-    [ "dwdot2", "dmath_8h.html#a478508e421d26b1d7d56d00a3dd828ca", null ],
-    [ "dwdot3", "dmath_8h.html#a27061b2a5a3e773dea81729fc41b89bb", null ],
     [ "dcwm", "dmath_8h.html#acf36a4c01ef10127030a2f26bde8f47e", null ],
     [ "dcwm2", "dmath_8h.html#a08aba36db07b7963b9f3288220018b09", null ],
     [ "dcwm3", "dmath_8h.html#a0034c29e2976bef5c3adc84f28e2b81a", null ],

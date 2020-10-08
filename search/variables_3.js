@@ -55,6 +55,8 @@ var searchData=
   ['dmrealsq',['dmrealsq',['../structSIM__T.html#aebbd3b2fb7d3ac8c14feadbe46414cee',1,'SIM_T']]],
   ['dmtmp',['dmtmp',['../structSIM__T.html#a76cba50217edf338d3a6eceb6d9aa184',1,'SIM_T']]],
   ['dmtt',['DMTT',['../structRECON__T.html#a17bf0b9bf43600f738869fd8ac965819',1,'RECON_T']]],
+  ['do_5fphy',['do_phy',['../structWFSFLAGS__T.html#abcf9d231b4aa7607f7f554f7e2a5e57d',1,'WFSFLAGS_T']]],
+  ['do_5fpistat',['do_pistat',['../structWFSFLAGS__T.html#adbe3511e9b1f8ed9b42983b2d4e6ce52',1,'WFSFLAGS_T']]],
   ['draw_5fgmax',['draw_gmax',['../structDBG__CFG__T.html#aa9cb08b3668c5798dcfe6f80d1863582',1,'DBG_CFG_T']]],
   ['draw_5fopdmax',['draw_opdmax',['../structDBG__CFG__T.html#a87251425bd658d7ded32c8abe35aee77',1,'DBG_CFG_T']]],
   ['dsa',['dsa',['../structPOWFS__CFG__T.html#a7c483337c6dd397696e17cbd06cfa619',1,'POWFS_CFG_T::dsa()'],['../structpts__t.html#ae658762534260260fd3626816b364097',1,'pts_t::dsa()']]],

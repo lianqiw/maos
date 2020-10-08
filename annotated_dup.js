@@ -150,6 +150,7 @@ var annotated_dup =
     [ "thread_t", "structthread__t.html", "structthread__t" ],
     [ "TOMO_CFG_T", "structTOMO__CFG__T.html", "structTOMO__CFG__T" ],
     [ "WFS_CFG_T", "structWFS__CFG__T.html", "structWFS__CFG__T" ],
+    [ "WFSFLAGS_T", "structWFSFLAGS__T.html", "structWFSFLAGS__T" ],
     [ "WFSINTS_T", "structWFSINTS__T.html", "structWFSINTS__T" ],
     [ "zcccell", "structzcccell.html", "structzcccell" ],
     [ "zccell", "structzccell.html", "structzccell" ],

@@ -34,7 +34,7 @@ var searchData=
   ['cufit_5fgrid',['cufit_grid',['../classcuda__recon_1_1cufit__grid.html',1,'cuda_recon']]],
   ['cuglobal_5ft',['cuglobal_t',['../classcuglobal__t.html',1,'']]],
   ['cugrid_5ft',['cugrid_t',['../classcugrid__t.html',1,'']]],
-  ['cullt_5ft',['cullt_t',['../classcuda__wfs_1_1cullt__t.html',1,'cuda_wfs::cullt_t'],['../structcullt__t.html',1,'cullt_t']]],
+  ['cullt_5ft',['cullt_t',['../structcullt__t.html',1,'cullt_t'],['../classcuda__wfs_1_1cullt__t.html',1,'cuda_wfs::cullt_t']]],
   ['culoc_5ft',['culoc_t',['../classculoc__t.html',1,'']]],
   ['cumap_5ft',['cumap_t',['../classcumap__t.html',1,'']]],
   ['cumoao_5ft',['cumoao_t',['../classcuda__recon_1_1cumoao__t.html',1,'cuda_recon']]],

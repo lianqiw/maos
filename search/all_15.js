@@ -38,6 +38,8 @@ var searchData=
   ['wfs_5fsgra_2econf',['wfs_sgra.conf',['../wfs_sgra.html',1,'page34_conf']]],
   ['wfsalias',['wfsalias',['../structSIM__CFG__T.html#a62477737faf5f1a080fc5c46cf9246fd',1,'SIM_CFG_T']]],
   ['wfscov',['wfscov',['../structcn2est__t.html#acf9e43246eeca25e3074bad34e70a27c',1,'cn2est_t']]],
+  ['wfsflags',['wfsflags',['../structSIM__T.html#a1cb1ad9b4ff522d32f113597bc66b601',1,'SIM_T']]],
+  ['wfsflags_5ft',['WFSFLAGS_T',['../structWFSFLAGS__T.html',1,'']]],
   ['wfsfocusadj',['wfsfocusadj',['../maos_2utils_8h.html#ae113c7c5359792c010f699e1e5e14c14',1,'utils.c']]],
   ['wfsgrad',['wfsgrad',['../sim_8h.html#a99e7e23b2226afc767fc176f352f6e11',1,'wfsgrad.c']]],
   ['wfsgrad_5fiwfs',['wfsgrad_iwfs',['../sim_8h.html#a7d7d20b6b274be139712a0c74329803d',1,'wfsgrad.c']]],
