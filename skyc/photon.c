@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -48,75 +48,75 @@ const real MB_K=(13.0+12.7)/2;//kshort
    Compute subaperture star flux from magnitude, subaperture size, sample
    period, etc.
  */
-void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitude flux*/
-		 real *Np,      /**<[out] number of total signal at each wvl.*/
-		 real *Nptot,   /**<[out] total signal (sum of Np).*/
-		 real *Nbtot,   /**<[out] number of background photon per pixel*/
-		 real *QCSNR,   /**<[out] signal to noise ratio for a Quadcell*/
-		 real *QCNEA,   /**<[out] noise equivalent angle for a Quadcell with Nyquist sampling*/
-		 int nwvl,        /**<[in] number of wavelength.*/ 
-		 real* wvls,    /**<[in] vector of wavelength*/
-		 real *mags,    /**<[in] vector of magnitudes*/
-		 real dxsa,     /**<[in] subaperture side length*/
-		 int iscircle,    /**<[in] where the subaperture is circle/part of a circle. true for TT/TTFA sensors.*/
-		 real pixtheta, /**<[in] pixel extense in radian*/
-		 real dt,       /**<[in] sampling period in seconds*/
-		 real za,       /**<[in] zenith angle*/
-		 real *strehl,  /**<[in] Strehl of the image. set to 1 for full flux.*/
-		 real imperrnm, /**<[in] Implementation error in nm*/
-		 real *thruput, /**<[in] end to end optical throughput*/
-		 real *qe,      /**<[in] detector quantum efficiency.*/
-		 real rne       /**<[in] detector read out noise.*/
-		 ){
-    /*
-       Written 2010-06-09;
-       Tested PASS 2010-06-09;
-     */
-    real pixas=pixtheta*206265;/*in arcsec. */
-    real Npsum=0;
-    real Nbsum=0;
-    real saa;
-    if(iscircle){
-	saa=M_PI*pow(dxsa*0.5,2);
-    }else{
-	saa=pow(dxsa,2);
-    }
-    if(!Np){
-	Np=myalloca(nwvl, real);
-    }
-    real Npwvl=0;
-    for(int iwvl=0; iwvl<nwvl; iwvl++){
-	real wvl=wvls[iwvl];
-	real Z=0, ZB=0;
-	real imperr_rad2=pow(imperrnm*1e-9*(2*M_PI/wvl),2);
-	real imperr_strehl=exp(-imperr_rad2);
-	if(fabs(wvl-1.25e-6)<1.e-7){ /*J band */
-	    Z=zb->ZJ; ZB=pow(10,-zb->BJ/2.5)*Z;
-	}else if(fabs(wvl-1.65e-6)<1.e-7){/*H band */
-	    Z=zb->ZH; ZB=pow(10,-zb->BH/2.5)*Z;
-	}else if(fabs(wvl-2.2e-6)<1.e-7){/*K band */
-	    Z=zb->ZK; ZB=pow(10,-zb->BK/2.5)*Z;
-	}else{
-	    error("Invalid");
+void photon_flux(const ZB_S* zb,        /**<[in] Sky background and zero magnitude flux*/
+	real* Np,      /**<[out] number of total signal at each wvl.*/
+	real* Nptot,   /**<[out] total signal (sum of Np).*/
+	real* Nbtot,   /**<[out] number of background photon per pixel*/
+	real* QCSNR,   /**<[out] signal to noise ratio for a Quadcell*/
+	real* QCNEA,   /**<[out] noise equivalent angle for a Quadcell with Nyquist sampling*/
+	int nwvl,        /**<[in] number of wavelength.*/
+	real* wvls,    /**<[in] vector of wavelength*/
+	real* mags,    /**<[in] vector of magnitudes*/
+	real dxsa,     /**<[in] subaperture side length*/
+	int iscircle,    /**<[in] where the subaperture is circle/part of a circle. true for TT/TTFA sensors.*/
+	real pixtheta, /**<[in] pixel extense in radian*/
+	real dt,       /**<[in] sampling period in seconds*/
+	real za,       /**<[in] zenith angle*/
+	real* strehl,  /**<[in] Strehl of the image. set to 1 for full flux.*/
+	real imperrnm, /**<[in] Implementation error in nm*/
+	real* thruput, /**<[in] end to end optical throughput*/
+	real* qe,      /**<[in] detector quantum efficiency.*/
+	real rne       /**<[in] detector read out noise.*/
+){
+/*
+   Written 2010-06-09;
+   Tested PASS 2010-06-09;
+ */
+	real pixas=pixtheta*206265;/*in arcsec. */
+	real Npsum=0;
+	real Nbsum=0;
+	real saa;
+	if(iscircle){
+		saa=M_PI*pow(dxsa*0.5, 2);
+	} else{
+		saa=pow(dxsa, 2);
 	}
-	real absorp=(1./cos(za)-1)*(-log(0.98));/*atmosphere absorption. */
-	real strehl_iwvl=1;
-	if(strehl){
-	    strehl_iwvl=strehl[iwvl];
+	if(!Np){
+		Np=myalloca(nwvl, real);
 	}
-	Np[iwvl]=dt*saa*pow(10,-(absorp+mags[iwvl])/2.5)*Z
-	    *thruput[iwvl]*qe[iwvl]*strehl_iwvl*imperr_strehl;
-	Npsum+=Np[iwvl];
-	Nbsum+=dt*saa*pow(pixas,2)*ZB*thruput[iwvl]*qe[iwvl]/cos(za);//background scale with sec(za). 2012-10-31.
-	Npwvl+=Np[iwvl]/wvl;
-    }
-    //warning_once("How does background scale with zenith angle? Surface brightness is independent of distance\n");
-    real wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
-    real deltheta=wvlm/dxsa;
-    real thetaB=3.*M_PI*deltheta/16.;
-    real snr=Npsum/sqrt(Npsum+4*Nbsum+4.*pow(rne,2));
-    if(Nptot) *Nptot=Npsum;
-    if(Nbtot) *Nbtot=Nbsum;
-    if(QCSNR) *QCSNR=snr;
-    if(QCNEA) *QCNEA=thetaB/snr;
+	real Npwvl=0;
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+		real wvl=wvls[iwvl];
+		real Z=0, ZB=0;
+		real imperr_rad2=pow(imperrnm*1e-9*(2*M_PI/wvl), 2);
+		real imperr_strehl=exp(-imperr_rad2);
+		if(fabs(wvl-1.25e-6)<1.e-7){ /*J band */
+			Z=zb->ZJ; ZB=pow(10, -zb->BJ/2.5)*Z;
+		} else if(fabs(wvl-1.65e-6)<1.e-7){/*H band */
+			Z=zb->ZH; ZB=pow(10, -zb->BH/2.5)*Z;
+		} else if(fabs(wvl-2.2e-6)<1.e-7){/*K band */
+			Z=zb->ZK; ZB=pow(10, -zb->BK/2.5)*Z;
+		} else{
+			error("Invalid");
+		}
+		real absorp=(1./cos(za)-1)*(-log(0.98));/*atmosphere absorption. */
+		real strehl_iwvl=1;
+		if(strehl){
+			strehl_iwvl=strehl[iwvl];
+		}
+		Np[iwvl]=dt*saa*pow(10, -(absorp+mags[iwvl])/2.5)*Z
+			*thruput[iwvl]*qe[iwvl]*strehl_iwvl*imperr_strehl;
+		Npsum+=Np[iwvl];
+		Nbsum+=dt*saa*pow(pixas, 2)*ZB*thruput[iwvl]*qe[iwvl]/cos(za);//background scale with sec(za). 2012-10-31.
+		Npwvl+=Np[iwvl]/wvl;
+	}
+	//warning_once("How does background scale with zenith angle? Surface brightness is independent of distance\n");
+	real wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
+	real deltheta=wvlm/dxsa;
+	real thetaB=3.*M_PI*deltheta/16.;
+	real snr=Npsum/sqrt(Npsum+4*Nbsum+4.*pow(rne, 2));
+	if(Nptot) *Nptot=Npsum;
+	if(Nbtot) *Nbtot=Nbsum;
+	if(QCSNR) *QCSNR=snr;
+	if(QCNEA) *QCNEA=thetaB/snr;
 }

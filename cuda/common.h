@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -76,8 +76,8 @@ typedef smat rmat;
 #undef EPS
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 typedef Real Real2[2];
-int mycudaFree(void *p);//Unreference deduplicated memory
-int mycudaMalloc(void **p, size_t size);
+int mycudaFree(void* p);//Unreference deduplicated memory
+int mycudaMalloc(void** p, size_t size);
 /*static int tot_mem=0; */
 #undef cudaMalloc
 #undef cudaFree
@@ -94,47 +94,47 @@ int current_gpu();
 #define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){print_backtrace(); error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define DORELAX(A...) ({int _ans=(int)(A); static int counter=0; if(_ans!=0&& _ans!=cudaErrorNotReady){counter++; if(counter>5) error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));else warning("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define TO_IMPLEMENT error("Please implement")
-static inline __host__ __device__ float2 operator*(const float2 &a, const float2 &b){
-    return cuCmulf(a,b);
+static inline __host__ __device__ float2 operator*(const float2& a, const float2& b){
+	return cuCmulf(a, b);
 }
-static inline __host__ __device__ float2 operator+(const float2 &a, const float2 &b){
-    return cuCaddf(a,b);
+static inline __host__ __device__ float2 operator+(const float2& a, const float2& b){
+	return cuCaddf(a, b);
 }
-static inline __host__ __device__ float2&operator*=(float2 &a, const float2 &b){
-    a=cuCmulf(a,b);
-    return a;
+static inline __host__ __device__ float2& operator*=(float2& a, const float2& b){
+	a=cuCmulf(a, b);
+	return a;
 }
-static inline __host__ __device__ float2 operator*(const float2 &a, const float b){
-    float2 tmp;
-    tmp.x=a.x*b;
-    tmp.y=a.y*b;
-    return tmp;
+static inline __host__ __device__ float2 operator*(const float2& a, const float b){
+	float2 tmp;
+	tmp.x=a.x*b;
+	tmp.y=a.y*b;
+	return tmp;
 }
-static inline __host__ __device__ float2&operator*=(float2 &a, const float b){
-    a.x*=b;
-    a.y*=b;
-    return a;
+static inline __host__ __device__ float2& operator*=(float2& a, const float b){
+	a.x*=b;
+	a.y*=b;
+	return a;
 }
-static inline __host__ __device__ double2 operator*(const double2 &a, const double2 &b){
-    return cuCmul(a,b);
+static inline __host__ __device__ double2 operator*(const double2& a, const double2& b){
+	return cuCmul(a, b);
 }
-static inline __host__ __device__ double2 operator+(const double2 &a, const double2 &b){
-    return cuCadd(a,b);
+static inline __host__ __device__ double2 operator+(const double2& a, const double2& b){
+	return cuCadd(a, b);
 }
-static inline __host__ __device__ double2&operator*=(double2 &a, const double2 &b){
-    a=cuCmul(a,b);
-    return a;
+static inline __host__ __device__ double2& operator*=(double2& a, const double2& b){
+	a=cuCmul(a, b);
+	return a;
 }
-static inline __host__ __device__ double2 operator*(const double2 &a, const double b){
-    double2 tmp;
-    tmp.x=a.x*b;
-    tmp.y=a.y*b;
-    return tmp;
+static inline __host__ __device__ double2 operator*(const double2& a, const double b){
+	double2 tmp;
+	tmp.x=a.x*b;
+	tmp.y=a.y*b;
+	return tmp;
 }
-static inline __host__ __device__ double2&operator*=(double2 &a, const double b){
-    a.x*=b;
-    a.y*=b;
-    return a;
+static inline __host__ __device__ double2& operator*=(double2& a, const double b){
+	a.x*=b;
+	a.y*=b;
+	return a;
 }
 
 extern int NULL_STREAM;
@@ -211,81 +211,81 @@ extern pthread_mutex_t cufft_mutex;
 #define ctoc_final(A...)
 #endif
 
-extern const char *cufft_str[];
-static inline void CUFFT2(cufftHandle plan, Comp *in, Comp *out, int dir){
-    LOCK_CUFFT;						
-    int _ans=FFT_C2C(plan, in, out, dir);		
-    UNLOCK_CUFFT;						
-    if(_ans){						
-	error("cufft failed: %s\n", cufft_str[_ans]);	
-    }							
+extern const char* cufft_str[];
+static inline void CUFFT2(cufftHandle plan, Comp* in, Comp* out, int dir){
+	LOCK_CUFFT;
+	int _ans=FFT_C2C(plan, in, out, dir);
+	UNLOCK_CUFFT;
+	if(_ans){
+		error("cufft failed: %s\n", cufft_str[_ans]);
+	}
 }
-static inline void CUFFTR2C(cufftHandle plan, const Real *in, Comp *out){	
-    LOCK_CUFFT;						
-    int _ans=FFT_R2C(plan, (Real*)in, out);		
-    UNLOCK_CUFFT;						
-    if(_ans){						
-	error("cufft failed: %s\n", cufft_str[_ans]);	
-    }							
+static inline void CUFFTR2C(cufftHandle plan, const Real* in, Comp* out){
+	LOCK_CUFFT;
+	int _ans=FFT_R2C(plan, (Real*)in, out);
+	UNLOCK_CUFFT;
+	if(_ans){
+		error("cufft failed: %s\n", cufft_str[_ans]);
+	}
 }
-static inline void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){	
-    LOCK_CUFFT;						
-    int _ans=FFT_C2R(plan, (Comp*)in, out);		
-    UNLOCK_CUFFT;						
-    if(_ans){						
-	error("cufft failed: %s\n", cufft_str[_ans]);	
-    }							
+static inline void CUFFTC2R(cufftHandle plan, const Comp* in, Real* out){
+	LOCK_CUFFT;
+	int _ans=FFT_C2R(plan, (Comp*)in, out);
+	UNLOCK_CUFFT;
+	if(_ans){
+		error("cufft failed: %s\n", cufft_str[_ans]);
+	}
 }
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 class stream_t{
-    cudaStream_t stream;
-    cublasHandle_t handle;
-    cusparseHandle_t sphandle;
+	cudaStream_t stream;
+	cublasHandle_t handle;
+	cusparseHandle_t sphandle;
 public:
-    stream_t(){
-	init();
-    }
-    void init(){
-	STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
-	HANDLE_NEW(handle, stream);
-	SPHANDLE_NEW(sphandle, stream);
-    }
-    ~stream_t(){
-	deinit();
-    }
-    void deinit(){
-	SPHANDLE_DONE(sphandle);
-	HANDLE_DONE(handle);
-	STREAM_DONE(stream);
-    }
-    void reset(){//to place on correct gpu.
-	deinit();
-	init();
-    }
-    void sync(){
+	stream_t(){
+		init();
+	}
+	void init(){
+		STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
+		HANDLE_NEW(handle, stream);
+		SPHANDLE_NEW(sphandle, stream);
+	}
+	~stream_t(){
+		deinit();
+	}
+	void deinit(){
+		SPHANDLE_DONE(sphandle);
+		HANDLE_DONE(handle);
+		STREAM_DONE(stream);
+	}
+	void reset(){//to place on correct gpu.
+		deinit();
+		init();
+	}
+	void sync(){
 	//assert(this);
-	DO(cudaStreamSynchronize(stream));
-    }
-    operator cudaStream_t(){
+		DO(cudaStreamSynchronize(stream));
+	}
+	operator cudaStream_t(){
 	//assert(this);
-	return stream;
-    }
-    /*
-      cuda 10.0 complains multiple conversion function to void *
-      operator cublasHandle_t(){
+		return stream;
+	}
+	/*
+	  cuda 10.0 complains multiple conversion function to void *
+	  operator cublasHandle_t(){
 	return handle;
-    }
-    operator cusparseHandle_t(){
+	}
+	operator cusparseHandle_t(){
 	return sphandle;
-    }*/
-    cublasHandle_t blas(){
-	return handle;
-    }
-    cusparseHandle_t sparse(){
-	return sphandle;
-    }
+	}*/
+	cublasHandle_t blas(){
+		return handle;
+	}
+	cusparseHandle_t sparse(){
+		return sphandle;
+	}
 private://do not allow copy.
-    stream_t & operator=(const stream_t &in);
+	stream_t& operator=(const stream_t& in);
 /*
 	deinit();
 	stream=in.stream;
@@ -293,41 +293,41 @@ private://do not allow copy.
 	sphandle=in.sphandle;
 	return *this;
 */
-    stream_t(const stream_t &);
+	stream_t(const stream_t&);
 
 };
 typedef struct event_t{
-    cudaEvent_t event;
-    event_t(unsigned int flag=cudaEventDefault){
-	DO(cudaEventCreateWithFlags(&event, flag));
-    }
-    ~event_t(){
-	cudaEventDestroy(event);
-    }
-    void record(cudaStream_t stream){
-	DO(cudaEventRecord(event, stream));
-    }
-    operator cudaEvent_t(){
+	cudaEvent_t event;
+	event_t(unsigned int flag=cudaEventDefault){
+		DO(cudaEventCreateWithFlags(&event, flag));
+	}
+	~event_t(){
+		cudaEventDestroy(event);
+	}
+	void record(cudaStream_t stream){
+		DO(cudaEventRecord(event, stream));
+	}
+	operator cudaEvent_t(){
 	//assert(this);
-	return event;
-    }
+		return event;
+	}
 }event_t;
-static inline void X(pagelock)(X(mat) *A, ...){
-    va_list ap;
-    va_start(ap, A);
-    do{
-	cudaHostRegister(A->p, A->nx*A->ny*sizeof(Real), cudaHostRegisterPortable);
-	A=va_arg(ap, X(mat) *);
-    }while(A);
-    va_end(ap);
+static inline void X(pagelock)(X(mat)* A, ...){
+	va_list ap;
+	va_start(ap, A);
+	do{
+		cudaHostRegister(A->p, A->nx*A->ny*sizeof(Real), cudaHostRegisterPortable);
+		A=va_arg(ap, X(mat)*);
+	} while(A);
+	va_end(ap);
 }
-static inline void X(pageunlock)(X(mat) *A, ...){
-    va_list ap;
-    va_start(ap, A);
-    do{
-	cudaHostUnregister(A->p);
-	A=va_arg(ap, X(mat) *);
-    }while(A);
-    va_end(ap);
+static inline void X(pageunlock)(X(mat)* A, ...){
+	va_list ap;
+	va_start(ap, A);
+	do{
+		cudaHostUnregister(A->p);
+		A=va_arg(ap, X(mat)*);
+	} while(A);
+	va_end(ap);
 }
 #endif

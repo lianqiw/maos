@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -44,36 +44,36 @@
 #define cabs2f(A)    (abs2(crealf(A))+abs2(cimagf(A)))
 #define cabs2(A)     (abs2(creal(A))+abs2(cimag(A)))
 /*!free a dmat and zero the pointer.*/
-#define dfree(A)     ({dfree_do(A);A=NULL;})
-#define dcellfree(A) ({cellfree_do(A);A=NULL;})
-#define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
+#define dfree(A)     if(A){dfree_do(A);A=NULL;}
+#define dcellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define dcellfreearr(A,n) if((A)&&(n)>0){for(int in=0; in<n; in++){dcellfree(A[in]);};free(A);A=NULL;}
 /*!free a smat and zero the pointer.*/
-#define sfree(A)     ({sfree_do(A);A=NULL;})
-#define scellfree(A) ({cellfree_do(A);A=NULL;})
-#define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
+#define sfree(A)     if(A){sfree_do(A);A=NULL;}
+#define scellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define scellfreearr(A,n) if((A)&&(n)>0){for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;}
 /*!free a cmat and zero the pointer.*/
-#define cfree(A)     ({cfree_do(A);A=NULL;})
-#define ccellfree(A) ({cellfree_do(A);A=NULL;})
-#define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
+#define cfree(A)     if(A){cfree_do(A);A=NULL;}
+#define ccellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define ccellfreearr(A,n) if((A)&&(n)>0){for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;}
 /*!free a zmat and zero the pointer.*/
-#define zfree(A)     ({zfree_do(A);A=NULL;})
-#define zcellfree(A) ({cellfree_do(A);A=NULL;})
+#define zfree(A)     if(A){zfree_do(A);A=NULL;}
+#define zcellfree(A) if(A){cellfree_do(A);A=NULL;}
 /*!free a lmat and zero the pointer.*/
-#define lfree(A)     ({lfree_do(A);A=NULL;})
-#define lcellfree(A) ({cellfree_do(A);A=NULL;})
+#define lfree(A)     if(A){lfree_do(A);A=NULL;}
+#define lcellfree(A) if(A){cellfree_do(A);A=NULL;}
 /*!free a dsp and zero the pointer*/
-#define dspfree(A)      {dspfree_do(A); A=NULL;}
-#define dspcellfree(A)  {dspcellfree_do(A); A=NULL;}
+#define dspfree(A)      if(A){dspfree_do(A); A=NULL;}
+#define dspcellfree(A)  if(A){dspcellfree_do(A); A=NULL;}
 /*!free a ssp and zero the pointer*/
-#define sspfree(A)      {sspfree_do(A); A=NULL;}
-#define sspcellfree(A)  {sspcellfree_do(A); A=NULL;}
+#define sspfree(A)      if(A){sspfree_do(A); A=NULL;}
+#define sspcellfree(A)  if(A){sspcellfree_do(A); A=NULL;}
 /*!free a ssp and zero the pointer*/
-#define cspfree(A)     {cspfree_do(A); A=NULL;}
-#define cspcellfree(A) {cspcellfree_do(A); A=NULL;}
+#define cspfree(A)     if(A){cspfree_do(A); A=NULL;}
+#define cspcellfree(A) if(A){cspcellfree_do(A); A=NULL;}
 /*!free a zsp and zero the pointer*/
-#define zspfree(A)     {zspfree_do(A); A=NULL;}
-#define zspcellfree(A) {zspcellfree_do(A); A=NULL;}
-    
+#define zspfree(A)     if(A){zspfree_do(A); A=NULL;}
+#define zspcellfree(A) if(A){zspcellfree_do(A); A=NULL;}
+
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP, 0, A)
 
@@ -85,7 +85,7 @@
 #define rmapwrite(out, A...)   write_by_id((void*)out, M_RECTMAP, A)
 #define rmapcellnew  (rmapcell*)cellnew
 #define rmapccellnew (rmapccell*)cellnew
-    
+
 #define locwrite(out, A...) write_by_id((void*)out, M_LOC, A)
 #define locread(A...)    (loc_t*)read_by_id(M_LOC, 0, A)
 #define loccellread(A...) (loccell*)read_by_id(M_LOC, 1, A)
@@ -132,7 +132,7 @@
 #define lcellread(A...) (lcell*)read_by_id(M_LONG, 1, A)
 #define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
 #define lcccellread(A...) (lcccell*)read_by_id(M_LONG, 3, A)
-    
+
 /**read a dsp*/
 #define dspread(A...) dsp_cast(read_by_id(M_DSP, 0, A))
 #define dspcellread(A...) dspcell_cast(read_by_id(M_DSP, 1, A))

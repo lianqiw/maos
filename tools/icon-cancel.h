@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -21,11 +21,11 @@
 #pragma align 4 (icon_inline_cancel)
 #endif
 #ifdef __GNUC__
-static const guint8 icon_inline_cancel[] __attribute__ ((__aligned__ (4))) = 
+static const guint8 icon_inline_cancel[] __attribute__((__aligned__(4)))=
 #else
-static const guint8 icon_inline_cancel[] = 
+static const guint8 icon_inline_cancel[]=
 #endif
-{ ""
+{""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
   /* length: header (24) + pixel_data (1024) */

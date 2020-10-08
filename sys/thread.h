@@ -97,7 +97,7 @@ long thread_id(void);
 #define OMP_TASK(urgent) DO_PRAGMA(omp task)
 #endif
 static inline void THREAD_POOL_INIT(int nthread){
-    info2("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
+    info("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
 }
 static inline void QUEUE(long *group, thread_wrapfun fun, void *arg, int nthread, int urgent){
@@ -190,7 +190,7 @@ static inline void  CALL_THREAD(thread_t *A, int urgent){
     }
 }
 
-#define THREAD_POOL_INIT(A) ({thread_pool_init(A);info2("Using thread pool with %d threads\n", A);})
+#define THREAD_POOL_INIT(A) ({thread_pool_init(A);info("Using thread pool with %d threads\n", A);})
 #define THREAD_YIELD thread_pool_do_job_once()
 #endif
 

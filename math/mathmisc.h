@@ -24,10 +24,7 @@
    A few math routines
 */
 long double factorial(long n1, long n2);
-
-
 #define sinc(x) (fabs(x)<1.e-5?1:sin(M_PI*x)/(M_PI*x))
-
 void invsq(long n, double *restrict A);
 #define mysqrt(A) (A<0?-sqrt(-A):sqrt(A))
 long *invperm(long *p, long np);

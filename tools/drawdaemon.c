@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -24,50 +24,50 @@ int cumu=0;
 #if MAC_INTEGRATION
 #include <gtkosxapplication.h>
 #endif
-GdkPixbuf *icon_main=NULL;
-int main(int argc, char *argv[]){
-    {
-	char fnlog[PATH_MAX];
-	snprintf(fnlog, PATH_MAX,"%s/drawdaemon.log", TEMP);
-	if(!freopen(fnlog, "w", stdout)) {
-	    perror("freopen");
-	    warning("Error redirect stdout\n");
+GdkPixbuf* icon_main=NULL;
+int main(int argc, char* argv[]){
+	{
+		char fnlog[PATH_MAX];
+		snprintf(fnlog, PATH_MAX, "%s/drawdaemon.log", TEMP);
+		if(!freopen(fnlog, "w", stdout)){
+			perror("freopen");
+			warning("Error redirect stdout\n");
+		}
+		if(!dup2(fileno(stdout), fileno(stderr))){
+			perror("freopen");
+			warning("Error redirect stderr\n");
+		}
+		setbuf(stdout, NULL);
 	}
-	if(!dup2(fileno(stdout), fileno(stderr))){
-	    perror("freopen");
-	    warning("Error redirect stderr\n");
-	}
-	setbuf(stdout,NULL);
-    }
-    info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
+	info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
-    if(!g_thread_supported()){
-	g_thread_init(NULL);
-	gdk_threads_init();
-    }
+	if(!g_thread_supported()){
+		g_thread_init(NULL);
+		gdk_threads_init();
+	}
 #endif
-    gtk_init(&argc, &argv);
+	gtk_init(&argc, &argv);
 #if MAC_INTEGRATION
-    GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 #endif
 
-    icon_main=gdk_pixbuf_new_from_inline(-1,icon_inline_draw,FALSE,NULL);
-    if(argc<2){
-	error("Must call drawdaemon with the socket fd.\n");
-    }
-    sock=strtol(argv[1], NULL, 10);
-    if(sock<0){
-	error("sock=%d\n", sock);
-    }
-    //dbg("sock=%d\n", sock);
-    socket_block(sock, 0);
-    
+	icon_main=gdk_pixbuf_new_from_inline(-1, icon_inline_draw, FALSE, NULL);
+	if(argc<2){
+		error("Must call drawdaemon with the socket fd.\n");
+	}
+	sock=strtol(argv[1], NULL, 10);
+	if(sock<0){
+		error("sock=%d\n", sock);
+	}
+	//dbg("sock=%d\n", sock);
+	socket_block(sock, 0);
+
 #if MAC_INTEGRATION
-    gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
-    gtkosx_application_ready(theApp);
+	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
+	gtkosx_application_ready(theApp);
 #endif
-    thread_new(listen_draw, NULL);
-    //g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
-    create_window();
-    gtk_main();
+	thread_new(listen_draw, NULL);
+	//g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
+	create_window();
+	gtk_main();
 }/*main */

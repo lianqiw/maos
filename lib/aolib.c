@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -20,30 +20,30 @@
 #include <stdio.h>
 #include "aos.h"
 //jmp_buf exception_return;
-static void py_quitfun(const char *msg){
-    info("%s", msg);
-    //longjmp(exception_return, 1);
+static void py_quitfun(const char* msg){
+	info2("%s", msg);
+	//longjmp(exception_return, 1);
 }
 static void py_signal_handler(int sig){
-    info("%d caught\n", sig);
-    //longjmp(exception_return, sig);
+	info2("%d caught\n", sig);
+	//longjmp(exception_return, sig);
 }
 static void(*default_handler)(int)=NULL;
 static __attribute__((constructor)) void init(){
-    if(!default_handler){
-	default_handler=signal(SIGTERM, py_signal_handler);
-    }
-    quitfun=py_quitfun;
-    //function that calls setjmp() cannot return before you call longjmp().
-    //if(setjmp(exception_return)){
-//	info("Error setting jmp_buf\n");
-    // }
+	if(!default_handler){
+		default_handler=signal(SIGTERM, py_signal_handler);
+	}
+	quitfun=py_quitfun;
+	//function that calls setjmp() cannot return before you call longjmp().
+	//if(setjmp(exception_return)){
+//	info2("Error setting jmp_buf\n");
+	// }
 }
 static __attribute__((destructor)) void deinit(){
-    fprintf(stderr, "aolib unloaded\n");
-    if(default_handler){
-	signal(SIGTERM, default_handler);
-    }else{
-	signal(SIGTERM, SIG_DFL);
-    }
+	fprintf(stderr, "aolib unloaded\n");
+	if(default_handler){
+		signal(SIGTERM, default_handler);
+	} else{
+		signal(SIGTERM, SIG_DFL);
+	}
 }

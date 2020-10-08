@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -83,47 +83,47 @@ typedef complex<float> fcomplex;
 #define csqrtf sqrt
 #define clogf log
 #define cargf arg
-static inline fcomplex operator*(double A, const fcomplex &B){
-    return B*(float)A;
+static inline fcomplex operator*(double A, const fcomplex& B){
+	return B*(float)A;
 }
-static inline fcomplex operator*(const fcomplex &B, double A){
-    return B*(float)A;
+static inline fcomplex operator*(const fcomplex& B, double A){
+	return B*(float)A;
 }
-static inline dcomplex operator*(float A, const dcomplex &B){
-    return B*(double)A;
+static inline dcomplex operator*(float A, const dcomplex& B){
+	return B*(double)A;
 }
-static inline dcomplex operator*(const dcomplex &B, float A){
-    return B*(double)A;
+static inline dcomplex operator*(const dcomplex& B, float A){
+	return B*(double)A;
 }
-static inline fcomplex operator+(double A, const fcomplex &B){
-    return B+(float)A;
+static inline fcomplex operator+(double A, const fcomplex& B){
+	return B+(float)A;
 }
-static inline fcomplex operator+(const fcomplex &B, double A){
-    return B+(float)A;
+static inline fcomplex operator+(const fcomplex& B, double A){
+	return B+(float)A;
 }
-static inline dcomplex operator+(float A, const dcomplex &B){
-    return B+(double)A;
+static inline dcomplex operator+(float A, const dcomplex& B){
+	return B+(double)A;
 }
-static inline dcomplex operator+(const dcomplex &B, float A){
-    return B+(double)A;
+static inline dcomplex operator+(const dcomplex& B, float A){
+	return B+(double)A;
 }
-static inline fcomplex operator-(double A, const fcomplex &B){
-    return (float)A-B;
+static inline fcomplex operator-(double A, const fcomplex& B){
+	return (float)A-B;
 }
-static inline fcomplex operator-(const fcomplex &B, double A){
-    return B-(float)A;
+static inline fcomplex operator-(const fcomplex& B, double A){
+	return B-(float)A;
 }
-static inline dcomplex operator-(float A, const dcomplex &B){
-    return (double)A-B;
+static inline dcomplex operator-(float A, const dcomplex& B){
+	return (double)A-B;
 }
-static inline dcomplex operator-(const dcomplex &B, float A){
-    return B-(double)A;
+static inline dcomplex operator-(const dcomplex& B, float A){
+	return B-(double)A;
 }
 static inline double conj(double A){
-    return A;
+	return A;
 }
 static inline double real(double A){
-    return A;
+	return A;
 }
 
 #endif//#ifndef AOS_CUDA_GPU_H
@@ -166,16 +166,16 @@ float cargf(fcomplex);
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 /*BSD lacks few routines in C99 implementation*/
 static inline dcomplex clog(dcomplex x){
-  return log(cabs(x))+I*carg(x);
+	return log(cabs(x))+I*carg(x);
 }
 static inline fcomplex clogf(fcomplex x){
-  return logf(cabsf(x))+I*cargf(x);
+	return logf(cabsf(x))+I*cargf(x);
 }
 static inline dcomplex cpow(dcomplex x, dcomplex z){
-  return cexp(clog(x)*z);
+	return cexp(clog(x)*z);
 }
 static inline fcomplex cpowf(fcomplex x, fcomplex z){
-  return cexpf(clogf(x)*z);
+	return cexpf(clogf(x)*z);
 }
 #endif //defined(__FreeBSD__) || defined(__NetBSD__)
 #endif //#if defined(__cplusplus) 

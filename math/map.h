@@ -25,8 +25,8 @@
    This file defines functions relates to map_t, etc.
 */
 
-#define rmapfree(A) ({dfree_do((dmat*)A);A=NULL;})
-#define mapfree(A) ({dfree_do((dmat*)A);A=NULL;})
+#define rmapfree(A) if(A){dfree_do((dmat*)A);A=NULL;}
+#define mapfree(A) if(A){dfree_do((dmat*)A);A=NULL;}
 map_t *mapnew(long nx, long ny, real dx, real dy);
 map_t *mapnew2(map_t *A);
 map_t *mapref(map_t *A);

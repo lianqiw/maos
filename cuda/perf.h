@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -23,39 +23,38 @@
  */
 class cuperf_t{
 public:
-    culoc_t locs;
-    Array<Array<culoc_t> > locs_dm;
-    curmat imcc;
-    curmat amp;
-    Array<cuimat> embed;
+	culoc_t locs;
+	Array<Array<culoc_t> > locs_dm;
+	curmat imcc;
+	curmat amp;
+	Array<cuimat> embed;
 
-    curcell psfol;
-    curmat  opdcovol;
-    curmat  opdmeanol;
-    cuperf_t(){
-    }
-    ~cuperf_t(){};
+	curcell psfol;
+	curmat  opdcovol;
+	curmat  opdmeanol;
+	cuperf_t(){}
+	~cuperf_t(){};
 };
 /**
    Global data independent of GPU.
 */
 class cuperf_g{
 public:
-    int nevl;
-    Array<int> nembed;
-    Array<int> psfsize;
-    Array<Real> wvls;
-    Array<cufftHandle>    plan;
-    curcell surf;
-    curcell opd;
-    curcell psfcl;
-    curcell psfcl_ngsr;
-    curcell opdcov;
-    curcell opdcov_ngsr;
-    curcell opdmean;
-    curcell opdmean_ngsr;
-    curcell cc_ol, cc_cl, coeff;
-    Array<Array<Real,Pinned> >ccb_ol;
-    Array<Array<Real,Pinned> >ccb_cl;
+	int nevl;
+	Array<int> nembed;
+	Array<int> psfsize;
+	Array<Real> wvls;
+	Array<cufftHandle>    plan;
+	curcell surf;
+	curcell opd;
+	curcell psfcl;
+	curcell psfcl_ngsr;
+	curcell opdcov;
+	curcell opdcov_ngsr;
+	curcell opdmean;
+	curcell opdmean_ngsr;
+	curcell cc_ol, cc_cl, coeff;
+	Array<Array<Real, Pinned> >ccb_ol;
+	Array<Array<Real, Pinned> >ccb_cl;
 };
 #endif

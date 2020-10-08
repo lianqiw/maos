@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -27,7 +27,7 @@ extern "C"{
 /*
    The following are blas and lapack fortran function definitions. Notice that when
    generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack
-   routines to be compatible when usual blas/lapack definitions. 
+   routines to be compatible when usual blas/lapack definitions.
 
    2013-12-17: replaced int* by ptrdiff_t* to be compatible with blas/lapack that expect 64 bit integers. Still backward compatible with 32bit integers because only one number will be used and we are using little indians.
    2014-03-19: replaced ptrdiff_t by long.
@@ -71,22 +71,18 @@ extern "C"{
 #ifndef COMP_SINGLE
 #define BLAS_D(A) d##A##_
 #define BLAS_C(A) z##A##_
-    BLAS_DEF(BLAS_D,real);
-    BLAS_DEF(BLAS_C,comp);
-    BLAS_DEF_REAL(BLAS_D,real);
-    BLAS_DEF_COMP(BLAS_C,comp,real);
+	BLAS_DEF(BLAS_D, real);
+	BLAS_DEF(BLAS_C, comp);
+	BLAS_DEF_REAL(BLAS_D, real);
+	BLAS_DEF_COMP(BLAS_C, comp, real);
 #endif
 
 #define BLAS_S(A) s##A##_
 #define BLAS_Z(A) c##A##_
-
-
-    BLAS_DEF(BLAS_S,float);
-    BLAS_DEF(BLAS_Z,fcomplex);
-    
-    BLAS_DEF_REAL(BLAS_S,float);
-    BLAS_DEF_COMP(BLAS_Z,fcomplex,float);
-    
+	BLAS_DEF(BLAS_S, float);
+	BLAS_DEF(BLAS_Z, fcomplex);
+	BLAS_DEF_REAL(BLAS_S, float);
+	BLAS_DEF_COMP(BLAS_Z, fcomplex, float);
 #ifdef __cplusplus
 }
 #endif

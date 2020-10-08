@@ -53,5 +53,5 @@ extern char CACHE[]; /*the caching folder */
 extern char EXEP[];/*the exe path*/
 extern char DIRSTART[]; /*the startup directory*/
 int get_ncpu(void);
-#define print_mem(A,...) info2(A ":\t%.1f MiB.\n", ##__VA_ARGS__, get_job_mem()/1024.);
+#define print_mem(A,...) info(A ":\t%.1f MiB.\n", ##__VA_ARGS__, get_job_mem()/1024.);
 #endif

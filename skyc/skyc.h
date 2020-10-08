@@ -18,11 +18,8 @@
 #ifndef __AOS_SKYC_H
 #define __AOS_SKYC_H
 
-
-
 #include <sys/time.h>
 #include <sys/times.h>
-
 
 #include <search.h>
 #ifdef HAVE_CONFIG_H

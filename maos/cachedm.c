@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -35,66 +35,66 @@
    at 1/64m for the LGS WFS and science OPD, and another one at 1/64 m
    *(1-11.2/90) for the LGS due to cone effect. The square grid are on axis.
 */
-void prep_cachedm(SIM_T *simu){
-    const PARMS_T *parms=simu->parms;
-    if(!parms->ndm || !(parms->sim.cachedm || parms->plot.run)){
-	warning("DM cache is not needed\n");
-	return;
-    }else{
-	info("DM cache with grid");
-    }
-    if(!simu->cachedm){
-	simu->cachedm=mapcellnew(parms->ndm, 1);
+void prep_cachedm(SIM_T* simu){
+	const PARMS_T* parms=simu->parms;
+	if(!parms->ndm||!(parms->sim.cachedm||parms->plot.run)){
+		warning("DM cache is not needed\n");
+		return;
+	} else{
+		info("DM cache with grid");
+	}
+	if(!simu->cachedm){
+		simu->cachedm=mapcellnew(parms->ndm, 1);
+		for(int idm=0; idm<parms->ndm; idm++){
+			real dx=parms->dm[idm].dx/(parms->sim.cachedm>3?parms->sim.cachedm:4);
+			info(" dm[%d]@1/%gm", idm, 1./dx);
+			create_metapupil(&simu->cachedm->p[idm], 0, 0, parms->dirs, parms->aper.d,
+				parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
+				0, 2, 0, 0, 0, 0);
+		}
+	}
+	info("\n");
+	//cachedm_ha doesn't help because it is not much faster than ray tracing and
+	//is not parallelized as ray tracing.
+	/*new scheme for ray tracing */
+	simu->cachedm_prop=mycalloc(parms->ndm, thread_t*);
+	simu->cachedm_propdata=mycalloc(parms->ndm, PROPDATA_T);
+	PROPDATA_T* cpropdata=simu->cachedm_propdata;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    real dx=parms->dm[idm].dx/(parms->sim.cachedm>3?parms->sim.cachedm:4);
-	    info(" dm[%d]@1/%gm", idm, 1./dx);
-	    create_metapupil(&simu->cachedm->p[idm], 0, 0, parms->dirs, parms->aper.d,
-			     parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
-			     0, 2, 0,0,0,0);
+		simu->cachedm_prop[idm]=mycalloc(NTHREAD, thread_t);
+		if(simu->dmrealsq){
+			cpropdata[idm].mapin=simu->dmrealsq->p[idm];
+		} else{
+			cpropdata[idm].locin=simu->recon->aloc->p[idm];
+			cpropdata[idm].phiin=simu->dmreal->p[idm]->p;
+		}
+		cpropdata[idm].mapout=simu->cachedm->p[idm];
+		cpropdata[idm].alpha=1;
+		cpropdata[idm].displacex0=0;
+		cpropdata[idm].displacey0=0;
+		cpropdata[idm].displacex1=0;
+		cpropdata[idm].displacey1=0;
+		cpropdata[idm].scale=1;
+		thread_prep(simu->cachedm_prop[idm], 0, cpropdata[idm].mapout->ny,
+			NTHREAD, prop, (void*)&cpropdata[idm]);
 	}
-    }
-    info("\n");
-    //cachedm_ha doesn't help because it is not much faster than ray tracing and
-    //is not parallelized as ray tracing.
-    /*new scheme for ray tracing */
-    simu->cachedm_prop=mycalloc(parms->ndm,thread_t*);
-    simu->cachedm_propdata=mycalloc(parms->ndm,PROPDATA_T);
-    PROPDATA_T *cpropdata=simu->cachedm_propdata;
-    for(int idm=0; idm<parms->ndm; idm++){
-	simu->cachedm_prop[idm]=mycalloc(NTHREAD,thread_t);
-	if(simu->dmrealsq){
-	    cpropdata[idm].mapin=simu->dmrealsq->p[idm];
-	}else{
-	    cpropdata[idm].locin=simu->recon->aloc->p[idm];
-	    cpropdata[idm].phiin=simu->dmreal->p[idm]->p;
-	}
-	cpropdata[idm].mapout=simu->cachedm->p[idm];
-	cpropdata[idm].alpha=1;
-	cpropdata[idm].displacex0=0;
-	cpropdata[idm].displacey0=0;
-	cpropdata[idm].displacex1=0;
-	cpropdata[idm].displacey1=0;
-	cpropdata[idm].scale=1;
-	thread_prep(simu->cachedm_prop[idm], 0, cpropdata[idm].mapout->ny, 
-		    NTHREAD, prop, (void*)&cpropdata[idm]);
-    }
 }
 
 /**
    Partition the ray tracing by DM/Destination combinations, as well as
    segments in each combination to maximum efficiency.
 */
-void calc_cachedm(SIM_T *simu){
-    if(simu->cachedm){
-	real tk_start=myclockd();
-	long group=0;
-	/*zero out the data. */
-	for(int idm=0; idm<simu->parms->ndm; idm++){
-	    dzero((dmat*)simu->cachedm->p[idm]);
-	    /*do the multi-threaded ray tracing */
-	    QUEUE_THREAD(&group,(simu->cachedm_prop[idm]), 1);
+void calc_cachedm(SIM_T* simu){
+	if(simu->cachedm){
+		real tk_start=myclockd();
+		long group=0;
+		/*zero out the data. */
+		for(int idm=0; idm<simu->parms->ndm; idm++){
+			dzero((dmat*)simu->cachedm->p[idm]);
+			/*do the multi-threaded ray tracing */
+			QUEUE_THREAD(&group, (simu->cachedm_prop[idm]), 1);
+		}
+		WAIT(group);
+		simu->tk_cache=myclockd()-tk_start;
 	}
-	WAIT(group);
-	simu->tk_cache=myclockd()-tk_start;
-    }
 }

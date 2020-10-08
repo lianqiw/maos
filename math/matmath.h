@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -30,8 +30,6 @@
     void X(scale)(X(mat) *A, R w);					\
     T X(inn)(const X(mat)*A, const X(mat) *B);				\
     T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
-    T X(wdot2)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
-    T X(wdot3)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     void X(cwm)(X(mat) *A, const X(mat) *B);				\
     void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2);\
     void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W , const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \

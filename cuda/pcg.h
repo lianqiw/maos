@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -24,25 +24,23 @@ namespace cuda_recon{
 */
 class CGTMP_T{
 public:
-    curcell r0;
-    curcell z0;
-    curcell p0;
-    curcell Ap;
-    curmat store;
-    Array<Real,Pinned> diff;
-    int count_fail, count;
+	curcell r0;
+	curcell z0;
+	curcell p0;
+	curcell Ap;
+	curmat store;
+	Array<Real, Pinned> diff;
+	int count_fail, count;
 
-    CGTMP_T():count_fail(0),count(0){
-    }
-    ~CGTMP_T(){
-    }
+	CGTMP_T():count_fail(0), count(0){}
+	~CGTMP_T(){}
 };
 //typedef void (*G_CGFUN)(curcell**, Real, const curcell*, Real, stream_t &stream);
 //typedef void (*G_PREFUN)(curcell**, const curcell*, stream_t &stream);
 class cusolve_cg;
 class cusolve_cgpre;
-Real pcg(curcell &x0, cusolve_cg *Amul, cusolve_cgpre *Mmul,
-	 const curcell &b, CGTMP_T &cg_data, int warm, int maxiter, 
-	 stream_t &stream, Real cgthres=-1);
+Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
+	const curcell& b, CGTMP_T& cg_data, int warm, int maxiter,
+	stream_t& stream, Real cgthres=-1);
 }//namespace
 #endif

@@ -96,26 +96,27 @@ extern int detached;
 
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
 
-extern int LOG_LEVEL;
+extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
 extern FILE *fpconsole;
-#define error(format,...) ({printf("%sError(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__, __func__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
-#define warning(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__,__func__, ##__VA_ARGS__, BLACK)
-#define warning_time(format,...) if(LOG_LEVEL>-3) printf("%sWarning(%s:%d,%s)[%s]: " format "%s", RED, BASEFILE, __LINE__, __func__,myasctime(), ##__VA_ARGS__, BLACK)
-#define warning_once(A...)  if(LOG_LEVEL>-3){static int done=0; if(!done){done=1; warning(A);}}
+#define logstd(level, A...) ({if(LOG_LEVEL>level){printf(A);}})
+#define error(format,...) ({logstd(-10, "%sError(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__, __func__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
+#define warning(format,...) ({logstd(-3, "%sWarning(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__,__func__, ##__VA_ARGS__, BLACK);})
+#define warning_time(format,...) ({logstd(-3,"%sWarning(%s:%d,%s)[%s]: " format "%s", RED, BASEFILE, __LINE__, __func__,myasctime(), ##__VA_ARGS__, BLACK);})
+#define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
+//all info are shown at default log level
+#define info(A...)  logstd(-1, A) //least important info
+#define info2(A...) logstd(-2, A)
+#define info3(A...) logstd(-3, A) //most important info
+#define info_console(A...) ({if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A);}) //stderr is not directed to file.
+#define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
+//dbg are not shown at default log level
+#define dbg( format,...) logstd(0, "Debug(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
+#define dbg2(format,...) logstd(1, "Debug2(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
+#define dbg3(format,...) logstd(2, "Debug3(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
 
-#define info(A...)  if(LOG_LEVEL>-2) printf(A)
-#define info2(A...)  if(LOG_LEVEL>-1) printf(A)
-#define info3(A...)  if(LOG_LEVEL>0) printf(A)
-#define info_console(A...) if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A) //stderr is not directed to file.
-#define info_once(A...) if(LOG_LEVEL>-2){static int done=0; if(!done){done=1; info(A);}}
-
-#define dbg( format,...) if(LOG_LEVEL>0) printf( "Debug(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
-#define dbg2(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
-#define dbg3(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
-
-#define dbg_time( format,...) if(LOG_LEVEL>0) printf( "Debug(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
-#define dbg2_time(format,...) if(LOG_LEVEL>1) printf("Debug2(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
-#define dbg3_time(format,...) if(LOG_LEVEL>2) printf("Debug3(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
+#define dbg_time( format,...) logstd(0, "Debug(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
+#define dbg2_time(format,...) logstd(1, "Debug2(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
+#define dbg3_time(format,...) logstd(2, "Debug3(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
 
 
 #ifndef assert
@@ -125,7 +126,11 @@ extern FILE *fpconsole;
 #define assert(A)
 #endif
 #endif
-#define check(A) if(!(A)) error("check failed: %s\n", #A)
+#if DEBUG
+#define check(A) ((A)?1:(error("check failed: %s\n", #A),0))
+#else
+#define check(A) (A)
+#endif
 /*
    Functions that return realtime:
    time(): resolution is in integer second. not enough resolution.
@@ -141,7 +146,7 @@ extern FILE *fpconsole;
 #endif
 #define TIC double tk
 #define tic tk=myclockd()
-#define toc(format,...) info3(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
+#define toc(format,...) dbg(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

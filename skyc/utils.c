@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -19,33 +19,33 @@
 #include "skyc.h"
 #include "parms.h"
 #include "utils.h"
-char *dirsetup;
+char* dirsetup;
 /**
    Print out usage information.
  */
 static void print_usage(void){
-    info(
-	  "Usage: skyc [OPTION...] [FILE]...\n"
-	  "skyc is a simulation tool developed to do sky coveragepostprocessing\n\n"
-	  "Options: \n"
-	  "-h, --help        to print out this message\n"
-	  "-d, --detach      to detach from terminal and run in background\n"
-	  "-f, --force       force starting simulation without scheduler\n"
-	  "-n N, --nthread=N Use N threads, default is 1\n"
-	  "-o DIR, --output=DIR\n"
-	  "                  output the results to DIR.\n"
-	  "-c FILE.conf, --conf=FILE.conf\n"
-	  "                  Use FILE.conf as the baseline config instead of maos.conf\n"
-	  );
-    exit(0);
+	info(
+		"Usage: skyc [OPTION...] [FILE]...\n"
+		"skyc is a simulation tool developed to do sky coveragepostprocessing\n\n"
+		"Options: \n"
+		"-h, --help        to print out this message\n"
+		"-d, --detach      to detach from terminal and run in background\n"
+		"-f, --force       force starting simulation without scheduler\n"
+		"-n N, --nthread=N Use N threads, default is 1\n"
+		"-o DIR, --output=DIR\n"
+		"                  output the results to DIR.\n"
+		"-c FILE.conf, --conf=FILE.conf\n"
+		"                  Use FILE.conf as the baseline config instead of maos.conf\n"
+	);
+	exit(0);
 }
 /**
    Parse command line arguments argc, argv
  */
-ARG_S *parse_args(int argc, const char *argv[]){
-    ARG_S *arg=mycalloc(1,ARG_S);
-    char *host=NULL; int local=0;
-    ARGOPT_T options[]={
+ARG_S* parse_args(int argc, const char* argv[]){
+	ARG_S* arg=mycalloc(1, ARG_S);
+	char* host=NULL; int local=0;
+	ARGOPT_T options[]={
 	{"help",  'h', M_INT, 0, 1, (void*)print_usage, NULL},
 	{"detach", 'd',M_INT, 0, 0, &arg->detach, NULL},
 	{"override",'O',M_INT,0, 0, &arg->override, NULL},
@@ -57,80 +57,80 @@ ARG_S *parse_args(int argc, const char *argv[]){
 	{"run",    'r',M_STR, 1, 0, &host, NULL},
 	{"local",  'l',M_INT, 0, 0, &local, NULL},
 	{NULL, 0,0,0,0, NULL, NULL}
-    };
-    char *cmds=strnadd(argc-1, argv+1, " ");
-    parse_argopt(cmds, options);
-    if(!host && !arg->detach){//foreground running
-	arg->force=1;
-    }else if(local || getenv("MAOS_DIRECT_LAUNCH")){
+	};
+	char* cmds=strnadd(argc-1, argv+1, " ");
+	parse_argopt(cmds, options);
+	if(!host&&!arg->detach){//foreground running
+		arg->force=1;
+	} else if(local||getenv("MAOS_DIRECT_LAUNCH")){
 	/*lanched through scheduler to run locally. We are already detached, so
 	  don't daemonize again.*/
-	arg->detach=0;
-	arg->force=0;
-	detached=1;
-    }else{
+		arg->detach=0;
+		arg->force=0;
+		detached=1;
+	} else{
 #ifndef MAOS_DISABLE_SCHEDULER
 	/*Detached version. Always launch through scheduler if available.*/
-	if(!host){
-	    host=strdup(HOST);
-	}
-	if(scheduler_launch_exe(host, argc, argv)){
-	    error("Unable to launch skyc at server %s\n", host);
-	}else{
-	    exit(EXIT_SUCCESS);
-	}
+		if(!host){
+			host=strdup(HOST);
+		}
+		if(scheduler_launch_exe(host, argc, argv)){
+			error("Unable to launch skyc at server %s\n", host);
+		} else{
+			exit(EXIT_SUCCESS);
+		}
 #endif
-    }
-    free(host);
-    /*do not use NTHREAD here. causes too much cpu load*/
-    if(arg->nthread>NCPU || arg->nthread<=0){
-	arg->nthread=NCPU;
-    }else{
-        NTHREAD=arg->nthread;
-    }
-    char fntmp[PATH_MAX];
-    snprintf(fntmp,PATH_MAX,"%s/skyc_%ld.conf",TEMP,(long)getpid());
-    FILE *fptmp=fopen(fntmp,"w");
-    if(cmds){
-	fputs(cmds, fptmp);
-	fclose(fptmp);
-	free(cmds); cmds=NULL;
-    }
-    arg->confcmd=strdup(fntmp);
-    if(!arg->dirout){
-	arg->dirout=strtime();
-    }
-    if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
-	arg->conf=strdup("maos.conf");
-    }
-    addpath2(".", 2);
-    mymkdir("%s",arg->dirout);
-    if(chdir(arg->dirout)){
-	error("Unable to chdir to %s\n", arg->dirout);
-    }
-    return arg;
+	}
+	free(host);
+	/*do not use NTHREAD here. causes too much cpu load*/
+	if(arg->nthread>NCPU||arg->nthread<=0){
+		arg->nthread=NCPU;
+	} else{
+		NTHREAD=arg->nthread;
+	}
+	char fntmp[PATH_MAX];
+	snprintf(fntmp, PATH_MAX, "%s/skyc_%ld.conf", TEMP, (long)getpid());
+	FILE* fptmp=fopen(fntmp, "w");
+	if(cmds){
+		fputs(cmds, fptmp);
+		fclose(fptmp);
+		free(cmds); cmds=NULL;
+	}
+	arg->confcmd=strdup(fntmp);
+	if(!arg->dirout){
+		arg->dirout=strtime();
+	}
+	if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
+		arg->conf=strdup("maos.conf");
+	}
+	addpath2(".", 2);
+	mymkdir("%s", arg->dirout);
+	if(chdir(arg->dirout)){
+		error("Unable to chdir to %s\n", arg->dirout);
+	}
+	return arg;
 }
 /**
    Rename the log files when simulation exits.
  */
 void rename_file(int sig){
-    if(sig==0){
-	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-	remove("run_done.log");
-	mysymlink(fn, "run_done.log");
-	
-	snprintf(fn, PATH_MAX, "skyc_%s_%ld.conf", HOST, (long)getpid());
-	remove("skyc_done.conf");
-	mysymlink(fn, "skyc_done.conf");
-    }
+	if(sig==0){
+		char fn[PATH_MAX];
+		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+		remove("run_done.log");
+		mysymlink(fn, "run_done.log");
+
+		snprintf(fn, PATH_MAX, "skyc_%s_%ld.conf", HOST, (long)getpid());
+		remove("skyc_done.conf");
+		mysymlink(fn, "skyc_done.conf");
+	}
 }
 /**
-   Handles signals. 
+   Handles signals.
  */
 int skyc_signal_handler(int sig){
-    info("skyc: %s", sys_siglist[sig]);
-    rename_file(sig);/*handles signal */
-    scheduler_finish(sig);
-    return 0;
+	info("skyc: %s", sys_siglist[sig]);
+	rename_file(sig);/*handles signal */
+	scheduler_finish(sig);
+	return 0;
 }

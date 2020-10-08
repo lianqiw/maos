@@ -17,6 +17,9 @@
 */
 #include "zfarr.h"
 #include "mathdef.h"
+/**
+  Routines for streaming data to file.
+*/
 struct zfarr{
     file_t *fp;     /**<pointer to file*/
     long cur;       /**<Current element*/

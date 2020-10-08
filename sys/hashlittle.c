@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -71,38 +71,36 @@
    hash the data and return an hash number.
    \return a hash number
 */
-uint32_t hashlittle( const void *key, /**<[in] The data*/
-		     size_t length,   /**<[in] The length of the data in byte*/
-		     uint32_t initval /**<[in] The initial hash number*/
-					 )
-{
-  
-  uint32_t a,b,c;                                          /* internal state */
-  size_t dstep=(length/10000);/*jump */
-  dstep=dstep<1?1:dstep;
+uint32_t hashlittle(const void* key, /**<[in] The data*/
+	size_t length,   /**<[in] The length of the data in byte*/
+	uint32_t initval /**<[in] The initial hash number*/
+){
 
-  size_t dstep12=dstep*12;
-  size_t dstep3=dstep*3;
+	uint32_t a, b, c;                                          /* internal state */
+	size_t dstep=(length/10000);/*jump */
+	dstep=dstep<1?1:dstep;
 
-  /* Set up the internal state */
-  a = b = c = 0xdeadbeef + ((uint32_t)length) + initval;
+	size_t dstep12=dstep*12;
+	size_t dstep3=dstep*3;
+
+	/* Set up the internal state */
+	a=b=c=0xdeadbeef+((uint32_t)length)+initval;
 
 
-  const uint32_t *k = (const uint32_t *)key;         /* read 32-bit chunks */
+	const uint32_t* k=(const uint32_t*)key;         /* read 32-bit chunks */
 
-  /*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */
-  while (length > dstep12)
-    {
-      a += k[0];
-      b += k[1];
-      c += k[2];
-      mix(a,b,c);
-      length -= dstep12;
-      k += dstep3;
-    }
+	/*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */
+	while(length>dstep12){
+		a+=k[0];
+		b+=k[1];
+		c+=k[2];
+		mix(a, b, c);
+		length-=dstep12;
+		k+=dstep3;
+	}
 
   /*----------------------------- handle the last (probably partial) block */
-  /* 
+  /*
    * "k[2]&0xffffff" actually reads beyond the end of the string, but
    * then masks off the part it's not allowed to read.  Because the
    * string is aligned, the masked-off tail is in the same word as the
@@ -113,45 +111,43 @@ uint32_t hashlittle( const void *key, /**<[in] The data*/
    */
 #ifndef VALGRIND
 
-  switch(length)
-    {
-    case 12: c+=k[2]; b+=k[1]; a+=k[0]; break;
-    case 11: c+=k[2]&0xffffff; b+=k[1]; a+=k[0]; break;
-    case 10: c+=k[2]&0xffff; b+=k[1]; a+=k[0]; break;
-    case 9 : c+=k[2]&0xff; b+=k[1]; a+=k[0]; break;
-    case 8 : b+=k[1]; a+=k[0]; break;
-    case 7 : b+=k[1]&0xffffff; a+=k[0]; break;
-    case 6 : b+=k[1]&0xffff; a+=k[0]; break;
-    case 5 : b+=k[1]&0xff; a+=k[0]; break;
-    case 4 : a+=k[0]; break;
-    case 3 : a+=k[0]&0xffffff; break;
-    case 2 : a+=k[0]&0xffff; break;
-    case 1 : a+=k[0]&0xff; break;
-    case 0 : return c;              /* zero length strings require no mixing */
-    }
+	switch(length){
+	case 12: c+=k[2]; b+=k[1]; a+=k[0]; break;
+	case 11: c+=k[2]&0xffffff; b+=k[1]; a+=k[0]; break;
+	case 10: c+=k[2]&0xffff; b+=k[1]; a+=k[0]; break;
+	case 9: c+=k[2]&0xff; b+=k[1]; a+=k[0]; break;
+	case 8: b+=k[1]; a+=k[0]; break;
+	case 7: b+=k[1]&0xffffff; a+=k[0]; break;
+	case 6: b+=k[1]&0xffff; a+=k[0]; break;
+	case 5: b+=k[1]&0xff; a+=k[0]; break;
+	case 4: a+=k[0]; break;
+	case 3: a+=k[0]&0xffffff; break;
+	case 2: a+=k[0]&0xffff; break;
+	case 1: a+=k[0]&0xff; break;
+	case 0: return c;              /* zero length strings require no mixing */
+	}
 
 #else /* make valgrind happy */
-  {
-  const uint8_t  *k8;
-  k8 = (const uint8_t *)k;
-  switch(length)
-    {
-    case 12: c+=k[2]; b+=k[1]; a+=k[0]; break;
-    case 11: c+=((uint32_t)k8[10])<<16;  /* fall through */
-    case 10: c+=((uint32_t)k8[9])<<8;    /* fall through */
-    case 9 : c+=k8[8];                   /* fall through */
-    case 8 : b+=k[1]; a+=k[0]; break;
-    case 7 : b+=((uint32_t)k8[6])<<16;   /* fall through */
-    case 6 : b+=((uint32_t)k8[5])<<8;    /* fall through */
-    case 5 : b+=k8[4];                   /* fall through */
-    case 4 : a+=k[0]; break;
-    case 3 : a+=((uint32_t)k8[2])<<16;   /* fall through */
-    case 2 : a+=((uint32_t)k8[1])<<8;    /* fall through */
-    case 1 : a+=k8[0]; break;
-    case 0 : return c;
-    }
-  }
+	{
+		const uint8_t* k8;
+		k8=(const uint8_t*)k;
+		switch(length){
+		case 12: c+=k[2]; b+=k[1]; a+=k[0]; break;
+		case 11: c+=((uint32_t)k8[10])<<16;  /* fall through */
+		case 10: c+=((uint32_t)k8[9])<<8;    /* fall through */
+		case 9: c+=k8[8];                   /* fall through */
+		case 8: b+=k[1]; a+=k[0]; break;
+		case 7: b+=((uint32_t)k8[6])<<16;   /* fall through */
+		case 6: b+=((uint32_t)k8[5])<<8;    /* fall through */
+		case 5: b+=k8[4];                   /* fall through */
+		case 4: a+=k[0]; break;
+		case 3: a+=((uint32_t)k8[2])<<16;   /* fall through */
+		case 2: a+=((uint32_t)k8[1])<<8;    /* fall through */
+		case 1: a+=k8[0]; break;
+		case 0: return c;
+		}
+	}
 #endif /* !valgrind */
-  final(a,b,c);
-  return c;
+	final(a, b, c);
+	return c;
 }

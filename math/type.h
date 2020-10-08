@@ -224,21 +224,20 @@ CELLDEF(cell,cell);
 #undef CELLARR
 #undef MATARR
 static inline int iscell(const void *id){
-    const uint32_t magic=*((const uint32_t*)id);
-    return magic==MCC_ANY;
+    return id?(*(const uint32_t*)id==MCC_ANY):0;
     //return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
 }
 /*A method to simulate operator overloading for indexing arrys*/
 #if DEBUG
 static inline long index_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
-	error("%ld is out of range for (%ld,%ld) array\n", i, nx, ny);
+		error("%ld is out of range for (%ld,%ld) array\n", i, nx, ny);
     }
     return i;
 }
 static inline long index_2d(long ix, long iy, long nx, long ny){
     if(ix<0 || ix>=nx || iy<0 || iy>=ny){
-	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
+		error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }
     return ix+iy*nx;
 }

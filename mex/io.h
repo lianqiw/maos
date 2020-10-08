@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -31,11 +31,11 @@ typedef int16_t char16_t;
 typedef unsigned int mwIndex;
 #endif
 //#if !MX_HAS_INTERLEAVED_COMPLEX //Matlab R2018a uses interleaved memory in 2018a and after
-double *mxGetPiIsDeprecated(mxArray*);
+double* mxGetPiIsDeprecated(mxArray*);
 //#endif
 #define MAX(A,B) (A)>(B)?(A):(B)
-typedef struct {float x; float y;} fcomplex;
-typedef struct {double x; double y;} dcomplex;
+typedef struct{ float x; float y; } fcomplex;
+typedef struct{ double x; double y; } dcomplex;
 #define dbg(A...) fprintf(stderr,A)
 #define warning(A...)							\
     do{									\
@@ -60,11 +60,11 @@ typedef struct {double x; double y;} dcomplex;
     }while(0)
 
 typedef struct file_t{
-    void *p;
-    int fd;
-    int isgzip;
-    int isfits;
-    int eof;
+	void* p;
+	int fd;
+	int isgzip;
+	int isfits;
+	int eof;
 }file_t;
 #define M_CSP64 0x6400
 #define M_DSP64  0x6401
@@ -104,18 +104,18 @@ typedef struct file_t{
 #define MAT_CSP 0xFF02
 #define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
 
-typedef struct {
-    uint32_t magic;
-    uint64_t ntot;
-    uint64_t ndim;
-    mwSize *dims;
-    char *str;
+typedef struct{
+	uint32_t magic;
+	uint64_t ntot;
+	uint64_t ndim;
+	mwSize* dims;
+	char* str;
 }header_t;
-file_t* zfopen(const char *fn, const char *mod);
-void zfclose(file_t *fp);
-void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
-void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);
-void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_t *fp);
+file_t* zfopen(const char* fn, const char* mod);
+void zfclose(file_t* fp);
+void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp);
+void zfwrite_dcomplex(const double* pr, const double* pi, const size_t nmemb, file_t* fp);
+void zfwrite_fcomplex(const float* pr, const float* pi, const size_t nmemb, file_t* fp);
 int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 /**
    Read from the file. if in gzip mode, calls gzread, otherwise calls
@@ -126,14 +126,14 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 	fp->eof=1;							\
 	warning("Error happened while reading: %s\n", strerror(errno));	\
     }
-int zfeof(file_t *fp);
-long zftell(file_t *fp);
-int zfseek(file_t *fp, long offset, int whence);
-void zfwritelarr(file_t *fp, int count, ...);
-void zfreadlarr(file_t* fp,int count, ...);
-void write_header(const header_t *header, file_t *fp);
-int read_header2(header_t *header, file_t *fp);
-void read_header(header_t *header, file_t *fp);
-int search_header_int(const char *header, const char *name);
-double search_header_dbl(const char *header, const char *name);
+int zfeof(file_t* fp);
+long zftell(file_t* fp);
+int zfseek(file_t* fp, long offset, int whence);
+void zfwritelarr(file_t* fp, int count, ...);
+void zfreadlarr(file_t* fp, int count, ...);
+void write_header(const header_t* header, file_t* fp);
+int read_header2(header_t* header, file_t* fp);
+void read_header(header_t* header, file_t* fp);
+int search_header_int(const char* header, const char* name);
+double search_header_dbl(const char* header, const char* name);
 #endif

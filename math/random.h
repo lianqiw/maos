@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -22,12 +22,12 @@
 /*
    Random number generators.
 */
-/* 
+/*
    extracted from mtwist.h/c
    The Web page on the Mersenne Twist algorithm is at:
-   www.math.keio.ac.jp/~matumoto/emt.html 
+   www.math.keio.ac.jp/~matumoto/emt.html
    These functions were written by Geoffrey H. Kuenning, Claremont, CA.
-   
+
    * This software is based on LGPL-ed code by Takuji Nishimura.  It has
    * also been heavily influenced by code written by Shawn Cokus, and
    * somewhat influenced by code written by Richard J. Wagner.  It is
@@ -83,11 +83,10 @@ typedef unsigned int	mt_u32bit_t;
 /**
    Contains state of a random stream.
  */
-typedef struct
-{
-    mt_u32bit_t		statevec[MT_STATE_SIZE]; /**< Vector holding current state */
-    int			stateptr;	/**< Next state entry to be used */
-    int			initialized;	/**< NZ if state was initialized */
+typedef struct{
+	mt_u32bit_t		statevec[MT_STATE_SIZE]; /**< Vector holding current state */
+	int			stateptr;	/**< Next state entry to be used */
+	int			initialized;	/**< NZ if state was initialized */
 }mt_state;
 #define MT_TEMPERING_MASK_B 0x9d2c5680
 #define MT_TEMPERING_MASK_C 0xefc60000
@@ -129,73 +128,68 @@ void mts_refresh(register mt_state* state);
 /* Mult'r to cvt long long to dbl */
 
 static inline unsigned long mts_lrand(/*32 bit val */
-    register mt_state*	state)		/* State for the PRNG */
-    {
-    register unsigned long random_value;	/* Pseudorandom value generated */
+	register mt_state* state)		/* State for the PRNG */
+{
+	register unsigned long random_value;	/* Pseudorandom value generated */
 
-    if (state->stateptr <= 0)
-	mts_refresh(state);
+	if(state->stateptr<=0)
+		mts_refresh(state);
 
-    random_value = state->statevec[--state->stateptr];
-    MT_PRE_TEMPER(random_value);
-    return MT_FINAL_TEMPER(random_value);
-    }
+	random_value=state->statevec[--state->stateptr];
+	MT_PRE_TEMPER(random_value);
+	return MT_FINAL_TEMPER(random_value);
+}
 static inline double mts_drand( /*32 bit precision double. [0,1) */
-    register mt_state*	state)		/* State for the PRNG */
-    {
-    register unsigned long random_value;	/* Pseudorandom value generated */
+	register mt_state* state)		/* State for the PRNG */
+{
+	register unsigned long random_value;	/* Pseudorandom value generated */
 
-    if (state->stateptr <= 0)
-	mts_refresh(state);
+	if(state->stateptr<=0)
+		mts_refresh(state);
 
-    random_value = state->statevec[--state->stateptr];
-    MT_TEMPER(random_value);
+	random_value=state->statevec[--state->stateptr];
+	MT_TEMPER(random_value);
 
-    return random_value * mt_32_to_double;
-    }
+	return random_value*mt_32_to_double;
+}
 static inline double mts_ldrand( /*64 bit precision double */
-    register mt_state*	state)		/* State for the PRNG */
-    {
+	register mt_state* state)		/* State for the PRNG */
+{
 #if MT_MACHINE_BITS == 64
-    unsigned long long	final_value;	/* Final (integer) value */
+	unsigned long long	final_value;	/* Final (integer) value */
 #endif /* MT_MACHINE_BITS */
-    register unsigned long random_value_1;	/* 1st pseudorandom value generated */
-    register unsigned long random_value_2;	/* 2nd pseudorandom value generated */
+	register unsigned long random_value_1;	/* 1st pseudorandom value generated */
+	register unsigned long random_value_2;	/* 2nd pseudorandom value generated */
 
-    /*
-     * For maximum speed, we'll handle the two overflow cases
-     * together.  That will save us one test in the common case, at
-     * the expense of an extra one in the overflow case.
-     */
-    if (--state->stateptr <= 0)
-	{
-	if (state->stateptr < 0)
-	    {
-	    mts_refresh(state);
-	    random_value_1 = state->statevec[--state->stateptr];
-	    }
-	else
-	    {
-	    random_value_1 = state->statevec[state->stateptr];
-	    mts_refresh(state);
-	    }
-	}
-    else
-	random_value_1 = state->statevec[--state->stateptr];
+	/*
+	 * For maximum speed, we'll handle the two overflow cases
+	 * together.  That will save us one test in the common case, at
+	 * the expense of an extra one in the overflow case.
+	 */
+	if(--state->stateptr<=0){
+		if(state->stateptr<0){
+			mts_refresh(state);
+			random_value_1=state->statevec[--state->stateptr];
+		} else{
+			random_value_1=state->statevec[state->stateptr];
+			mts_refresh(state);
+		}
+	} else
+		random_value_1=state->statevec[--state->stateptr];
 
-    MT_TEMPER(random_value_1);
+	MT_TEMPER(random_value_1);
 
-    random_value_2 = state->statevec[--state->stateptr];
-    MT_TEMPER(random_value_2);
+	random_value_2=state->statevec[--state->stateptr];
+	MT_TEMPER(random_value_2);
 
 #if MT_MACHINE_BITS == 64
-    final_value = ((unsigned long long) random_value_1 << 32)
-      | (unsigned long long) random_value_2;
-    return final_value * mt_64_to_double;
+	final_value=((unsigned long long) random_value_1<<32)
+		|(unsigned long long) random_value_2;
+	return final_value*mt_64_to_double;
 #else /* MT_MACHINE_BITS */
-    return random_value_1 * mt_32_to_double + random_value_2 * mt_64_to_double;
+	return random_value_1*mt_32_to_double+random_value_2*mt_64_to_double;
 #endif /* MT_MACHINE_BITS */
-    }
+}
 
 void mts_seed32(mt_state* state, unsigned long	seed);
 typedef mt_state  rand_t;
@@ -203,6 +197,6 @@ typedef mt_state  rand_t;
 #define lrand     mts_lrand /*rand integer */
 #define randu     mts_drand /*rand double [0,1) */
 #define lrandu    mts_ldrand/*rand double with 64 bit precision within [0,1) */
-double randn(rand_t *rstat);/*normal distribution with 1*/
-long   randp(rand_t *rstat, double xm);
+double randn(rand_t* rstat);/*normal distribution with 1*/
+long   randp(rand_t* rstat, double xm);
 #endif

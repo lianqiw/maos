@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -19,36 +19,36 @@
 #include "process.h"
 
 /*Largely not implemented. */
-int get_job_progname(char *res, int nres, int pid){
-  (void)pid;
-  strncpy(res, "maos", nres); res[nres-1]=0;
-    return 0;
+int get_job_progname(char* res, int nres, int pid){
+	(void)pid;
+	strncpy(res, "maos", nres); res[nres-1]=0;
+	return 0;
 }
 int get_job_mem(void){
-    return 0;
+	return 0;
 }
 double get_job_launchtime(int pid){
-    (void) pid;
-    return 0;
+	(void)pid;
+	return 0;
 }
 int get_usage_running(void){
-    return 0;
+	return 0;
 }
 double get_usage_load(void){
-    return 0;
+	return 0;
 }
 double get_usage_mem(void){
-    return 0;
+	return 0;
 }
 double read_self_cpu(void){
-    return 0;
+	return 0;
 }
-int read_cpu_counter(long *user, long *tot){
-    *user=0;
-    *tot=0;
-    return 0;
+int read_cpu_counter(long* user, long* tot){
+	*user=0;
+	*tot=0;
+	return 0;
 }
 int get_ncpu(void){
-    return 1;
+	return 1;
 }
 #endif

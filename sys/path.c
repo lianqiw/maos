@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -32,167 +32,167 @@
    The linked list to store path where we look for files.
 */
 typedef struct PATH_T{
-    char *path;
-    int priority;
-    struct PATH_T *next;
+	char* path;
+	int priority;
+	struct PATH_T* next;
 }PATH_T;
-static PATH_T *PATH=NULL;/*privately maintained path to locate config files. */
+static PATH_T* PATH=NULL;/*privately maintained path to locate config files. */
 PNEW(mutex_path);
 /**
    Add a directory to path. Higher priority is searched first.
 */
-void addpath2(const char*path, int priority){
-    char *abspath=myabspath(path);
-    if(!path || !abspath){
-	warning("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath,mygetcwd());
-	return;
-    }
-    PATH_T *node=mycalloc(1,PATH_T);
-    node->path=abspath;
-    node->priority=priority;
-    LOCK(mutex_path);
-    PATH_T *ia1=0, *ia2=0;
-    for(ia1=PATH; ia1; ia2=ia1,ia1=ia1->next){
-	if(ia1->priority<=priority){
-	    break;
+void addpath2(const char* path, int priority){
+	char* abspath=myabspath(path);
+	if(!path||!abspath){
+		warning("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath, mygetcwd());
+		return;
 	}
-    }
-    node->next=ia1;
-    if(ia2){
-	ia2->next=node;
-    }else{
-	PATH=node;
-    }
-    UNLOCK(mutex_path);
+	PATH_T* node=mycalloc(1, PATH_T);
+	node->path=abspath;
+	node->priority=priority;
+	LOCK(mutex_path);
+	PATH_T* ia1=0, * ia2=0;
+	for(ia1=PATH; ia1; ia2=ia1, ia1=ia1->next){
+		if(ia1->priority<=priority){
+			break;
+		}
+	}
+	node->next=ia1;
+	if(ia2){
+		ia2->next=node;
+	} else{
+		PATH=node;
+	}
+	UNLOCK(mutex_path);
 }
-void addpath(const char *path){
-    addpath2(path, 0);
+void addpath(const char* path){
+	addpath2(path, 0);
 }
 /**
    Remove a directory from path.
  */
-void rmpath(const char *path){
-    char *abspath=myabspath(path);
-    PATH_T *ia,*ib=NULL;
-    LOCK(mutex_path);
-    for(ia=PATH;ia;ia=ia->next){
-	if(!strcmp(ia->path,abspath)){/*found */
-	    if(ib){/*there is parent node */
-		ib->next=ia->next;
-	    }else{
-		PATH=ia->next;
-	    }
-	    free(ia->path);
-	    free(ia);
-	    ia=ib;
-	}else{
-	    ib=ia;
+void rmpath(const char* path){
+	char* abspath=myabspath(path);
+	PATH_T* ia, * ib=NULL;
+	LOCK(mutex_path);
+	for(ia=PATH;ia;ia=ia->next){
+		if(!strcmp(ia->path, abspath)){/*found */
+			if(ib){/*there is parent node */
+				ib->next=ia->next;
+			} else{
+				PATH=ia->next;
+			}
+			free(ia->path);
+			free(ia);
+			ia=ib;
+		} else{
+			ib=ia;
+		}
 	}
-    }
-    UNLOCK(mutex_path);
-    free(abspath);
+	UNLOCK(mutex_path);
+	free(abspath);
 }
 /**
    Print current path.
 */
 void printpath(void){
-    info("PATH is :\n");
-    for(PATH_T *ia=PATH;ia;ia=ia->next){
-	info("%s\n",ia->path);
-    }
+	info("PATH is :\n");
+	for(PATH_T* ia=PATH;ia;ia=ia->next){
+		info("%s\n", ia->path);
+	}
 }
 /**
    Empty the path.
 */
 void freepath(void){
-    LOCK(mutex_path);
-    for(PATH_T *ia=PATH;ia;ia=PATH){
-	PATH=ia->next;
-	free(ia->path);
-	free(ia);
-    }
-    UNLOCK(mutex_path);
+	LOCK(mutex_path);
+	for(PATH_T* ia=PATH;ia;ia=PATH){
+		PATH=ia->next;
+		free(ia->path);
+		free(ia);
+	}
+	UNLOCK(mutex_path);
 }
 /**
    Try to find a file in path and return its absolute filename if exist, NULL
 otherwise.  */
-char *search_file(const char *fn){
-    if(!fn) return NULL;
-    char *fnout=NULL;
-    if(exist(fn)){
-	fnout=strdup(fn);
-    }else{
-	PATH_T *ia;
-	char fntmp[PATH_MAX];
-	for(ia=PATH;ia;ia=ia->next){
-	    strcpy(fntmp,ia->path);
-	    if(strlen(ia->path)>0 && fntmp[strlen(ia->path)-1]!='/') 
-		strcat(fntmp,"/");
-	    strcat(fntmp,fn);
-	    if(exist(fntmp)){
-		if(!fnout){
-		    fnout=strdup(fntmp);
-		}else if(strcmp(fnout, fntmp)){
-		    info("at %s\n", fnout);
-		    info("at %s\n", fntmp);
-		    error("Found multiple %s. Please rename.\n", fn);
+char* search_file(const char* fn){
+	if(!fn) return NULL;
+	char* fnout=NULL;
+	if(exist(fn)){
+		fnout=strdup(fn);
+	} else{
+		PATH_T* ia;
+		char fntmp[PATH_MAX];
+		for(ia=PATH;ia;ia=ia->next){
+			strcpy(fntmp, ia->path);
+			if(strlen(ia->path)>0&&fntmp[strlen(ia->path)-1]!='/')
+				strcat(fntmp, "/");
+			strcat(fntmp, fn);
+			if(exist(fntmp)){
+				if(!fnout){
+					fnout=strdup(fntmp);
+				} else if(strcmp(fnout, fntmp)){
+					info("at %s\n", fnout);
+					info("at %s\n", fntmp);
+					error("Found multiple %s. Please rename.\n", fn);
+				}
+			}
 		}
-	    }
 	}
-    }
-    return fnout;
+	return fnout;
 }
 /**
    Locate a file in path and return its absolute filename. Will emit error if
    not found.
  */
-char *find_file(const char *fn){
-    char *fnout=search_file(fn);
-    if(!fnout || !exist(fnout)){
-	dbg("Looking for %s, found %s\n",fn, fnout);
-	printpath();
-	error("Unable to find file %s.\n",fn);
-	return NULL;
-    }
-    return fnout;
+char* find_file(const char* fn){
+	char* fnout=search_file(fn);
+	if(!fnout||!exist(fnout)){
+		dbg("Looking for %s, found %s\n", fn, fnout);
+		printpath();
+		error("Unable to find file %s.\n", fn);
+		return NULL;
+	}
+	return fnout;
 }
 /**
    Find the directory that hold the configuration files. name is "maos" for
 maos, "skyc" for skyc.  */
-char *find_config(const char *name){
-    const char *maos_config_path=getenv("MAOS_CONFIG_PATH");
-    char *config_path=NULL;
-    if(!exist(config_path) && EXEP[0]){
+char* find_config(const char* name){
+	const char* maos_config_path=getenv("MAOS_CONFIG_PATH");
+	char* config_path=NULL;
+	if(!exist(config_path)&&EXEP[0]){
 	/*If not found, try the folder that contains the exe*/
-	free(config_path);
-	config_path=stradd(EXEP,"/config/",name,NULL);
-    }
-    if(!exist(config_path) && maos_config_path){
-	config_path=stradd(maos_config_path,"/config/",name,NULL);
-	if(!exist(config_path)){
-	    free(config_path);
-	    config_path=stradd(maos_config_path,"/",name,NULL);
+		free(config_path);
+		config_path=stradd(EXEP, "/config/", name, NULL);
 	}
-    }
-    if(!exist(config_path) && exist(SRCDIR)){
+	if(!exist(config_path)&&maos_config_path){
+		config_path=stradd(maos_config_path, "/config/", name, NULL);
+		if(!exist(config_path)){
+			free(config_path);
+			config_path=stradd(maos_config_path, "/", name, NULL);
+		}
+	}
+	if(!exist(config_path)&&exist(SRCDIR)){
 	/*If not specified, assume it is in the source tree*/
-	free(config_path);
-	config_path=stradd(SRCDIR,"/config/",name,NULL);
-    }
+		free(config_path);
+		config_path=stradd(SRCDIR, "/config/", name, NULL);
+	}
 
-    if(!exist(config_path) && HOME){
+	if(!exist(config_path)&&HOME){
 	/*If not found, try .aos folder*/
-	free(config_path);
-	config_path=stradd(HOME,"/.aos/config-",PACKAGE_VERSION,"/",name,NULL);
-    }
-    if(!exist(config_path)){
-	free(config_path);
-	config_path=NULL;
-	warning("Unable to determine the path to the configuration files.\n");
-	warning("Tried %s/config/%s\n", SRCDIR, name);
-	warning("Tried %s/config/%s\n", EXEP, name);
-	warning("Tried %s/.aos/config-%s/%s\n", HOME, PACKAGE_VERSION, name);
-	warning("Please set env MAOS_CONFIG_PATH=/path/to/config");
-    }
-    return config_path;
+		free(config_path);
+		config_path=stradd(HOME, "/.aos/config-", PACKAGE_VERSION, "/", name, NULL);
+	}
+	if(!exist(config_path)){
+		free(config_path);
+		config_path=NULL;
+		warning("Unable to determine the path to the configuration files.\n");
+		warning("Tried %s/config/%s\n", SRCDIR, name);
+		warning("Tried %s/config/%s\n", EXEP, name);
+		warning("Tried %s/.aos/config-%s/%s\n", HOME, PACKAGE_VERSION, name);
+		warning("Please set env MAOS_CONFIG_PATH=/path/to/config");
+	}
+	return config_path;
 }

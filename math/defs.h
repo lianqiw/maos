@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -18,14 +18,9 @@
 /*
   To be included in mat.c, cell.c and matbin.c
 */
-#if MAT_VERBOSE == 1
-#define matdbg(A...) {dbg( A);}
-#else
-#define matdbg(A...)
-#endif
 #ifndef AOS_MATH_DEFS_H
 #define AOS_MATH_DEFS_H
-
+#include "numtype.h"
 #undef COMPLEX
 #undef IMAG
 #undef REAL
@@ -181,15 +176,23 @@
 #else
 #define M_SPT M_SPT32
 #endif
-static inline int issp(const void *id){
-    return id?(*((const uint32_t*)id)==M_SPT):0;
+static inline int issp(const void* id){
+	return id?(*((const uint32_t*)id)==M_SPT):0;
 }
 
 #endif //if COMP_LONG
 
 #define ABS2(A) creal((A)*conj(A))
-static inline int ismat(const void *id){
-    return id?(*((const uint32_t*)id)==M_T):0;
+static inline int ismat(const void* id){
+	return id?(*((const uint32_t*)id)==M_T):0;
 }
 
+//Check that A is valid and has mat type and has non zero size.
+
+#define check_mat1(A) ((A)?(check(ismat(A))?1:(warning("type id mismatch\n"),0)):0)
+#define check_mat2(A,B) (check_mat1(A) && check_mat1(B))
+#define check_mat3(A,B,C) (check_mat1(A) && check_mat1(B) && check_mat1(C))
+#define check_mat(...) P_GET(_0,__VA_ARGS__,check_mat3,check_mat2,check_mat1)(__VA_ARGS__)
+#define check_match(A,B) ((check_mat(A,B) && check((A)->nx==(B)->nx) && check((A)->ny==(B)->ny))?1:0)
+#define check_match_vec(A,B) ((check_mat(A,B) && check((A)->nx*(A)->ny==(B)->nx*(B)->ny))?1:0)
 #endif //ifndef AOS_MATH_DEFS_H

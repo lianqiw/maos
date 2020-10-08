@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -27,53 +27,53 @@
 #include "../sys/sys.h"
 /**
    \file record_cpu.c
-   
+
    Records the cpu consumption of a process.
 
    Usage: record_cpu pid
 */
-int main(int argc, char**argv){
-    if(argc<2){
-	error("Usage: record_cpu PID second\n");
-    }
-    long pid=strtol(argv[1],NULL,10);
-    double sec;
-    if(argc>2){
-	sec=strtod(argv[2], NULL);
-    }else{
-	sec=0.1;
-    }
-    unsigned int usec=(int)(sec*1e6);
-    char fn[PATH_MAX];
-    snprintf(fn,PATH_MAX,"/proc/%ld/stat", pid);
-    FILE *fp=fopen(fn,"r");
-    if(!fp){
-	return 1;
-    }
-    long stime,utime;
-    double tck=sysconf(_SC_CLK_TCK)*sec;
-    snprintf(fn,PATH_MAX,"%ld.cpu",pid);
-    dbg("Recording PID %ld every %g second, and save to %s\n", pid, sec, fn);
-    FILE *fpout=fopen(fn,"w");
-    if(fscanf(fp,"%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
-	      &stime, &utime)!=2){
-	error("Unable to read\n");
-    }
-    long last=utime+stime;
-    rewind(fp);
-    usleep(usec);
-    setbuf(fp,NULL);
-    for(int count=0; count<1000;count++){
-	if(fscanf(fp,"%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
-		  &stime, &utime)!=2){
-	    error("Unable to read\n");
+int main(int argc, char** argv){
+	if(argc<2){
+		error("Usage: record_cpu PID second\n");
 	}
-	fprintf(fpout,"%g\n",(double)(stime+utime-last)/tck);
-	fflush(fpout);
+	long pid=strtol(argv[1], NULL, 10);
+	double sec;
+	if(argc>2){
+		sec=strtod(argv[2], NULL);
+	} else{
+		sec=0.1;
+	}
+	unsigned int usec=(int)(sec*1e6);
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "/proc/%ld/stat", pid);
+	FILE* fp=fopen(fn, "r");
+	if(!fp){
+		return 1;
+	}
+	long stime, utime;
+	double tck=sysconf(_SC_CLK_TCK)*sec;
+	snprintf(fn, PATH_MAX, "%ld.cpu", pid);
+	dbg("Recording PID %ld every %g second, and save to %s\n", pid, sec, fn);
+	FILE* fpout=fopen(fn, "w");
+	if(fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
+		&stime, &utime)!=2){
+		error("Unable to read\n");
+	}
+	long last=utime+stime;
 	rewind(fp);
-	last=stime+utime;
 	usleep(usec);
-    }
-    fclose(fpout);
+	setbuf(fp, NULL);
+	for(int count=0; count<1000;count++){
+		if(fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
+			&stime, &utime)!=2){
+			error("Unable to read\n");
+		}
+		fprintf(fpout, "%g\n", (double)(stime+utime-last)/tck);
+		fflush(fpout);
+		rewind(fp);
+		last=stime+utime;
+		usleep(usec);
+	}
+	fclose(fpout);
 }
 #endif

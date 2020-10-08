@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -21,76 +21,76 @@
 #include "fit.h"
 
 namespace cuda_recon{
-cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon_geom *_grid)
-    :cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
-     nfit(0),dir(0){
-    if(!parms || !recon) return;
-    /*Initialize*/
-    const int ndm=parms->ndm;
-    const int npsr=recon->npsr;
-    nfit=parms->fit.nfit;
-  
-    if(parms->fit.cachedm){
-	acmap=cugridcell(ndm, 1);
-	for(int idm=0; idm<ndm; idm++){
-	    acmap[idm]=(recon->acmap->p[idm]);
+cufit_grid::cufit_grid(const PARMS_T* parms, const RECON_T* recon, const curecon_geom* _grid)
+	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0), grid(_grid),
+	nfit(0), dir(0){
+	if(!parms||!recon) return;
+	/*Initialize*/
+	const int ndm=parms->ndm;
+	const int npsr=recon->npsr;
+	nfit=parms->fit.nfit;
+
+	if(parms->fit.cachedm){
+		acmap=cugridcell(ndm, 1);
+		for(int idm=0; idm<ndm; idm++){
+			acmap[idm]=(recon->acmap->p[idm]);
+		}
 	}
-    }
-    if(parms->sim.idealfit){
-	idealfit=1;
-	floc=culoc_t(recon->floc);
-    }
-    dir=new dir_t[nfit];
-    for(int ifit=0; ifit<nfit; ifit++){
-	dir[ifit].thetax=parms->fit.thetax->p[ifit];
-	dir[ifit].thetay=parms->fit.thetay->p[ifit];
-	dir[ifit].hs=parms->fit.hs->p[ifit];
-	dir[ifit].skip=0;
-    }
-    /*Various*/
-    if(recon->fit->NW){
-	dmat *_fitNW=dcell2m(recon->fit->NW);
-	cp2gpu(fitNW, _fitNW);
-	dfree(_fitNW);
-	dotNW=curmat(fitNW.Ny(), 1);
-    }
-    if(recon->fit->actslave){
-	cp2gpu(actslave, recon->fit->actslave, 1);
-    }
-    if(parms->fit.cachedm){
-	long acnx[ndm], acny[ndm];
-	for(int idm=0; idm<ndm; idm++){
-	    acnx[idm]=acmap[idm].nx;
-	    acny[idm]=acmap[idm].ny;
+	if(parms->sim.idealfit){
+		idealfit=1;
+		floc=culoc_t(recon->floc);
 	}
-	dmcache=curcell(ndm, 1, acnx, acny);
-    }
-    if(parms->fit.cachex){
-	long xcnx[npsr], xcny[npsr];
-	for(int ips=0; ips<npsr; ips++){
-	    xcnx[ips]=grid->xcmap[ips].nx;
-	    xcny[ips]=grid->xcmap[ips].ny;
+	dir=new dir_t[nfit];
+	for(int ifit=0; ifit<nfit; ifit++){
+		dir[ifit].thetax=parms->fit.thetax->p[ifit];
+		dir[ifit].thetay=parms->fit.thetay->p[ifit];
+		dir[ifit].hs=parms->fit.hs->p[ifit];
+		dir[ifit].skip=0;
 	}
-	xcache=curcell(npsr, 1, xcnx, xcny);
-    } 
-    cp2gpu(fitwt, recon->fit->wt);
- 
-    opdfit=curcell(nfit, 1, grid->fmap.nx, grid->fmap.ny);
-    opdfit2=curcell(nfit, 1, grid->fmap.nx, grid->fmap.ny);
-    /*Data for ray tracing*/
-    //dm -> floc
-    if(parms->fit.cachex){
-	hxp0.init_l2l(grid->xcmap, grid->xmap);
-	hxp1.init_l2d(grid->fmap, dir, nfit, grid->xcmap);
-    }else{
-	hxp.init_l2d(grid->fmap, dir, nfit,grid->xmap);
-    }
-    if(parms->fit.cachedm){
-	ha0.init_l2l(acmap, grid->amap);
-	ha1.init_l2d(grid->fmap, dir, nfit, acmap);
-    }else{
-	ha.init_l2d(grid->fmap, dir, nfit, grid->amap);
-    }
+	/*Various*/
+	if(recon->fit->NW){
+		dmat* _fitNW=dcell2m(recon->fit->NW);
+		cp2gpu(fitNW, _fitNW);
+		dfree(_fitNW);
+		dotNW=curmat(fitNW.Ny(), 1);
+	}
+	if(recon->fit->actslave){
+		cp2gpu(actslave, recon->fit->actslave, 1);
+	}
+	if(parms->fit.cachedm){
+		long acnx[ndm], acny[ndm];
+		for(int idm=0; idm<ndm; idm++){
+			acnx[idm]=acmap[idm].nx;
+			acny[idm]=acmap[idm].ny;
+		}
+		dmcache=curcell(ndm, 1, acnx, acny);
+	}
+	if(parms->fit.cachex){
+		long xcnx[npsr], xcny[npsr];
+		for(int ips=0; ips<npsr; ips++){
+			xcnx[ips]=grid->xcmap[ips].nx;
+			xcny[ips]=grid->xcmap[ips].ny;
+		}
+		xcache=curcell(npsr, 1, xcnx, xcny);
+	}
+	cp2gpu(fitwt, recon->fit->wt);
+
+	opdfit=curcell(nfit, 1, grid->fmap.nx, grid->fmap.ny);
+	opdfit2=curcell(nfit, 1, grid->fmap.nx, grid->fmap.ny);
+	/*Data for ray tracing*/
+	//dm -> floc
+	if(parms->fit.cachex){
+		hxp0.init_l2l(grid->xcmap, grid->xmap);
+		hxp1.init_l2d(grid->fmap, dir, nfit, grid->xcmap);
+	} else{
+		hxp.init_l2d(grid->fmap, dir, nfit, grid->xmap);
+	}
+	if(parms->fit.cachedm){
+		ha0.init_l2l(acmap, grid->amap);
+		ha1.init_l2d(grid->fmap, dir, nfit, acmap);
+	} else{
+		ha.init_l2d(grid->fmap, dir, nfit, grid->amap);
+	}
 }
 
 /*
@@ -99,117 +99,117 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon
 
 /**
    do HXp operation, opdfit+=Hxp*xin*/
-void cufit_grid::do_hxp(const curcell &xin, stream_t &stream){
-    cuzero(opdfit.M(), stream);
-    if(idealfit){//ideal fiting.
-	for(int ifit=0; ifit<nfit; ifit++){
-	    atm2loc(opdfit[ifit](), floc, INFINITY, 0,
-		    dir[ifit].thetax, dir[ifit].thetay,
-		    0, 0, grid->dt, grid->reconisim, 1, stream);
+void cufit_grid::do_hxp(const curcell& xin, stream_t& stream){
+	cuzero(opdfit.M(), stream);
+	if(idealfit){//ideal fiting.
+		for(int ifit=0; ifit<nfit; ifit++){
+			atm2loc(opdfit[ifit](), floc, INFINITY, 0,
+				dir[ifit].thetax, dir[ifit].thetay,
+				0, 0, grid->dt, grid->reconisim, 1, stream);
+		}
+	} else{
+		if(xcache){//caching
+			cuzero(xcache.M(), stream);
+			hxp0.forward(xcache.pm, xin.pm, 1, NULL, stream);
+			hxp1.forward(opdfit.pm, xcache.pm, 1, NULL, stream);
+		} else{
+			hxp.forward(opdfit.pm, xin.pm, 1, NULL, stream);
+		}
 	}
-    }else{
-	if(xcache){//caching
-	    cuzero(xcache.M(), stream);
-	    hxp0.forward(xcache.pm, xin.pm, 1, NULL, stream);
-	    hxp1.forward(opdfit.pm, xcache.pm, 1, NULL, stream);
-	}else{
-	    hxp.forward(opdfit.pm, xin.pm, 1, NULL, stream);
-	}
-    }
 }
 /**
    do HXp' operation, xout+=alpha*Hxp'*opdfit2*/
-void cufit_grid::do_hxpt(const curcell &xout, Real alpha, stream_t &stream){
-    if(xcache){
-	cuzero(xcache.M(), stream);
-	hxp1.backward(opdfit2.pm, xcache.pm, alpha, fitwt(), stream);
-	hxp0.backward(xcache.pm, xout.pm, alpha, NULL, stream);
-    }else{
-	hxp.backward(opdfit2.pm, xout.pm, alpha, fitwt(), stream);
-    }
+void cufit_grid::do_hxpt(const curcell& xout, Real alpha, stream_t& stream){
+	if(xcache){
+		cuzero(xcache.M(), stream);
+		hxp1.backward(opdfit2.pm, xcache.pm, alpha, fitwt(), stream);
+		hxp0.backward(xcache.pm, xout.pm, alpha, NULL, stream);
+	} else{
+		hxp.backward(opdfit2.pm, xout.pm, alpha, fitwt(), stream);
+	}
 }
 
 /**
    opdfit+=Ha*xin;
 */
-void cufit_grid::do_ha(const curcell &xin, stream_t &stream){
-    cuzero(opdfit.M(), stream); 
-    if(dmcache){
-	/*xout->dmcache*/ 
-	cuzero(dmcache.M(), stream); 
-	ha0.forward(dmcache.pm, xin.pm, 1.f, NULL, stream);
-	/*dmcache->opdfit*/ 
-	ha1.forward(opdfit.pm, dmcache.pm, 1.f, NULL, stream);
-    }else{ 
-	/*xout->opfit*/ 
-	ha.forward(opdfit.pm, xin.pm, 1.f, NULL, stream);
-    }
+void cufit_grid::do_ha(const curcell& xin, stream_t& stream){
+	cuzero(opdfit.M(), stream);
+	if(dmcache){
+	/*xout->dmcache*/
+		cuzero(dmcache.M(), stream);
+		ha0.forward(dmcache.pm, xin.pm, 1.f, NULL, stream);
+		/*dmcache->opdfit*/
+		ha1.forward(opdfit.pm, dmcache.pm, 1.f, NULL, stream);
+	} else{
+	/*xout->opfit*/
+		ha.forward(opdfit.pm, xin.pm, 1.f, NULL, stream);
+	}
 }
 
 /**
    xout+=alpha*HA'*opdfit2*/
-void cufit_grid::do_hat(curcell &xout,  Real alpha, stream_t &stream){
-    if(dmcache){ 
-	/*opdfit2->dmcache*/ 
-	cuzero(dmcache.M(), stream); 
-	ha1.backward(opdfit2.pm, dmcache.pm, alpha, fitwt(), stream);
-	/*dmcache->xout*/ 
-	ha0.backward(dmcache.pm, xout.pm, 1, NULL, stream);
-    }else{ 
-	/*opfit2->xout	*/ 
-	ha.backward(opdfit2.pm, xout.pm, alpha, fitwt(), stream);
-    } 
+void cufit_grid::do_hat(curcell& xout, Real alpha, stream_t& stream){
+	if(dmcache){
+	/*opdfit2->dmcache*/
+		cuzero(dmcache.M(), stream);
+		ha1.backward(opdfit2.pm, dmcache.pm, alpha, fitwt(), stream);
+		/*dmcache->xout*/
+		ha0.backward(dmcache.pm, xout.pm, 1, NULL, stream);
+	} else{
+	/*opfit2->xout	*/
+		ha.backward(opdfit2.pm, xout.pm, alpha, fitwt(), stream);
+	}
 }
 
 /*
-  Right hand side operator. 
+  Right hand side operator.
 */
-void cufit_grid::R(curcell &xout, Real beta,  curcell &xin, Real alpha, stream_t &stream){
-    if(!xout){
-	xout=curcell(grid->ndm, 1, grid->anx, grid->any);
-    }else{
-	curscale(xout.M(), beta, stream);
-    }
-    do_hxp(xin, stream);//xin->opdfit. 153 us
-    //cuwrite(opdfit.M(), "GPU_FitR_x1");
-    grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);//opdfit->opdfit2. 123 us
-    //cuwrite(opdfit2.M(), "GPU_FitR_x2");
-    do_hat(xout, alpha, stream);//opdfit2->xout. 390 us
-    //cuwrite(xout, "GPU_FitR_x3");
+void cufit_grid::R(curcell& xout, Real beta, curcell& xin, Real alpha, stream_t& stream){
+	if(!xout){
+		xout=curcell(grid->ndm, 1, grid->anx, grid->any);
+	} else{
+		curscale(xout.M(), beta, stream);
+	}
+	do_hxp(xin, stream);//xin->opdfit. 153 us
+	//cuwrite(opdfit.M(), "GPU_FitR_x1");
+	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);//opdfit->opdfit2. 123 us
+	//cuwrite(opdfit2.M(), "GPU_FitR_x2");
+	do_hat(xout, alpha, stream);//opdfit2->xout. 390 us
+	//cuwrite(xout, "GPU_FitR_x3");
 }
-void cufit_grid::Rt(curcell &xout, Real beta,  const curcell &xin, Real alpha, stream_t &stream){
-    if(!xout){
-	xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
-    }else{
-	curscale(xout.M(), beta, stream);
-    }
-    do_ha(xin, stream);
-    grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
-    do_hxpt(xout, alpha, stream);
+void cufit_grid::Rt(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
+	if(!xout){
+		xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
+	} else{
+		curscale(xout.M(), beta, stream);
+	}
+	do_ha(xin, stream);
+	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
+	do_hxpt(xout, alpha, stream);
 }
-void cufit_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream){
-    const int ndm=grid->ndm;
-    ctoc_init(10);
-    if(!xout){
-	xout=curcell(ndm, 1, grid->anx, grid->any);
-    }else{
-	curscale(xout.M(), beta, stream);
-    }   
-    do_ha(xin, stream);//112 us
-    ctoc("HA");
-    grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
-    ctoc("W");
-    do_hat(xout, alpha, stream);//390 us
-    ctoc("HAT");
-    if(fitNW){
-	curmv(dotNW(), 0, fitNW, xin.M()(), 't', 1, stream);
-	curmv(xout.M()(), 1, fitNW, dotNW(), 'n', alpha, stream);
-    }
-    ctoc("NW");
-    if(actslave){
-	cuspmul(xout.M()(), actslave, xin.M()(), 1,'n', alpha, stream);
-    }
-    ctoc("SL");
-    ctoc_final("FitL");
+void cufit_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
+	const int ndm=grid->ndm;
+	ctoc_init(10);
+	if(!xout){
+		xout=curcell(ndm, 1, grid->anx, grid->any);
+	} else{
+		curscale(xout.M(), beta, stream);
+	}
+	do_ha(xin, stream);//112 us
+	ctoc("HA");
+	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
+	ctoc("W");
+	do_hat(xout, alpha, stream);//390 us
+	ctoc("HAT");
+	if(fitNW){
+		curmv(dotNW(), 0, fitNW, xin.M()(), 't', 1, stream);
+		curmv(xout.M()(), 1, fitNW, dotNW(), 'n', alpha, stream);
+	}
+	ctoc("NW");
+	if(actslave){
+		cuspmul(xout.M()(), actslave, xin.M()(), 1, 'n', alpha, stream);
+	}
+	ctoc("SL");
+	ctoc_final("FitL");
 }
 }//namespace

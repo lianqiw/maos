@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -23,58 +23,58 @@
 
 #include "../lib/aos.h"
 
-int main(int argc, char *argv[]){
-    if(argc==1){
-	dbg("Usage: %s file1.bin file2.bin \n", argv[0]);
-	exit(0);
-    }
-    int jarg=1;
-    char **header=NULL;
-    if(!strcmp(argv[jarg], "gc")){
-	jarg++;
-	dbg("Creating headers for GC\n");
-	header=mymalloc(25,char*);
-	char tmp[320];
-	double wvl[5]={0.9, 0.975, 1, 1.025, 1.1};
-	for(int iwvl=0; iwvl<5; iwvl++){
-	    wvl[iwvl]*=2.12e-6;
+int main(int argc, char* argv[]){
+	if(argc==1){
+		dbg("Usage: %s file1.bin file2.bin \n", argv[0]);
+		exit(0);
 	}
-	int psfgrid=1024;
-	double psfsum=6.34772385106148;
-	double dx=1./16.;
-	for(int istep=0; istep<5; istep++){
-	    for(int iwvl=0; iwvl<5; iwvl++){
-		snprintf(tmp, 320, 
-			 "Turbulence: r0=0.1987m, l0=30m\n"
-			 "Wavelength:   %gm\n"
-			 "OPD Sampling: %gm\n"
-			 "FFT Grid: %dx%d\n"
-			 "PSF Sampling: %g arcsec\n"
-			 "PSF Sum to %g\n"
-			 "Exposure: %gs\n",
-			 wvl[iwvl], dx, psfgrid, psfgrid,  wvl[iwvl]/(dx*psfgrid)*206265,
-			 psfsum,  (double)((istep+1)*4));
-		header[iwvl+istep*5]=strdup(tmp);
-	    }
+	int jarg=1;
+	char** header=NULL;
+	if(!strcmp(argv[jarg], "gc")){
+		jarg++;
+		dbg("Creating headers for GC\n");
+		header=mymalloc(25, char*);
+		char tmp[320];
+		double wvl[5]={0.9, 0.975, 1, 1.025, 1.1};
+		for(int iwvl=0; iwvl<5; iwvl++){
+			wvl[iwvl]*=2.12e-6;
+		}
+		int psfgrid=1024;
+		double psfsum=6.34772385106148;
+		double dx=1./16.;
+		for(int istep=0; istep<5; istep++){
+			for(int iwvl=0; iwvl<5; iwvl++){
+				snprintf(tmp, 320,
+					"Turbulence: r0=0.1987m, l0=30m\n"
+					"Wavelength:   %gm\n"
+					"OPD Sampling: %gm\n"
+					"FFT Grid: %dx%d\n"
+					"PSF Sampling: %g arcsec\n"
+					"PSF Sum to %g\n"
+					"Exposure: %gs\n",
+					wvl[iwvl], dx, psfgrid, psfgrid, wvl[iwvl]/(dx*psfgrid)*206265,
+					psfsum, (double)((istep+1)*4));
+				header[iwvl+istep*5]=strdup(tmp);
+			}
+		}
 	}
-    }
-    for(int iarg=jarg; iarg<argc; iarg++){
-	const char *fn=argv[iarg];
-	char fn2[strlen(fn)+1]; strcpy(fn2, fn);
-	char *tmp=strstr(fn2, ".bin");
-	if(!tmp){
-	    warning("Entry %s has invalid format, skip it\n", fn);
-	    continue;
+	for(int iarg=jarg; iarg<argc; iarg++){
+		const char* fn=argv[iarg];
+		char fn2[strlen(fn)+1]; strcpy(fn2, fn);
+		char* tmp=strstr(fn2, ".bin");
+		if(!tmp){
+			warning("Entry %s has invalid format, skip it\n", fn);
+			continue;
+		}
+		strcpy(tmp, ".fits");
+		info("Copying from %s to %s\n", fn, fn2);
+		dcell* temp=dcellread("%s", fn);
+		if(header){
+			for(int i=0; i<temp->nx*temp->ny; i++){
+				temp->p[i]->header=strdup(header[i]);
+			}
+		}
+		writebin(temp, "%s", fn2);
+		dcellfree(temp);
 	}
-	strcpy(tmp, ".fits");
-	info("Copying from %s to %s\n", fn, fn2);
-	dcell *temp=dcellread("%s", fn);
-	if(header){
-	    for(int i=0; i<temp->nx*temp->ny; i++){
-		temp->p[i]->header=strdup(header[i]);
-	    }
-	}
-	writebin(temp, "%s", fn2);
-	dcellfree(temp);
-    }
 }

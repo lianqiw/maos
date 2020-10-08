@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -34,12 +34,12 @@
 #define AOS_CMAT(A) c##A
 #define AOS_DMAT(A) d##A
 //Real, which can be double or float
-AOS_MAT_DEF(AOS_CMAT,comp,real);//; to bypass doxygen problem
-AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,comp,real);
-AOS_CMATMATH_DEF(AOS_CMAT,AOS_DMAT,comp,real);
-AOS_MATBIN_DEF(AOS_CMAT,comp);
-AOS_SP_DEF(AOS_CMAT,comp,real,comp);
-AOS_SPBIN_DEF(AOS_CMAT,comp);
+AOS_MAT_DEF(AOS_CMAT, comp, real);//; to bypass doxygen problem
+AOS_MATMATH_DEF(AOS_CMAT, AOS_DMAT, comp, real);
+AOS_CMATMATH_DEF(AOS_CMAT, AOS_DMAT, comp, real);
+AOS_MATBIN_DEF(AOS_CMAT, comp);
+AOS_SP_DEF(AOS_CMAT, comp, real, comp);
+AOS_SPBIN_DEF(AOS_CMAT, comp);
 AOS_FFT_DEF(AOS_CMAT);
 #endif
 
