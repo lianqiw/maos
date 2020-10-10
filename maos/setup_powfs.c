@@ -1109,7 +1109,7 @@ void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ip
 				//preparation already running in a thread
 				pthread_join(etfthread, (void**)(void*)&etfasync);
 				if(etfasync->icol!=icol){
-					warning("Async prepared etfsim2 (%d) is not correct (%d)\n",
+					dbg("Async prepared etfsim2 (%d) is not correct (%d)\n",
 						etfasync->icol, icol);
 				} else{
 					powfs[ipowfs].etfsim2=etfasync;
@@ -1119,7 +1119,7 @@ void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ip
 			if(!powfs[ipowfs].etfsim2){
 				powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
 			}
-			if(!deltah){
+			if(!deltah && icol>0){
 				//asynchronously preparing for next update.
 				//Copy data to heap so that they don't disappear during thread execution
 				mketf_t* etfdata2=mycalloc(1, mketf_t);//freed by mketf_wrap.
@@ -1136,7 +1136,7 @@ void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ip
 			error("Invalid mode=%d\n", mode);
 		}
 	}
-	print_mem("After setup_powfs_etf");
+//	print_mem("After setup_powfs_etf");
 }
 
 /**

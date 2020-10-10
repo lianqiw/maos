@@ -631,6 +631,7 @@ typedef struct DBG_CFG_T{
     dcell *dmoff;    /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;  /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
     int twfsflag;    /**<use TWFS to control 0: all modes, 1: radial only*/
+	int twfsrmax;    /**<TWFS maximum zernike radial order.*/
     dmat* draw_opdmax;/**<Set zlim for OPD drawing*/
     dmat* draw_gmax; /**<Set zlim for gradient drawing*/
     int wfs_iac;     /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/

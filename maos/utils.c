@@ -862,13 +862,8 @@ real wfsfocusadj(SIM_T* simu, int iwfs){
 			focus+=PR(powfs[ipowfs].focus, isim, wfsind);
 		}
 		/*
-		  The following has been migrated to sim_update_etf to change the hs directly.
-		  if(simu->zoomreal && parms->powfs[ipowfs].llt){
-		  if(simu->zoompos && simu->zoompos->p[iwfs]){//save
-		  simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
-		  }
-		  focus-=simu->zoomreal->p[iwfs];
-		  }*/
+		  The simu->zoomint has been migrated to sim_update_etf to change the hs directly.
+		  */
 	}
 	if(simu->telfocusreal){
 		focus-=simu->telfocusreal->p[0]->p[0];
@@ -1179,4 +1174,23 @@ void draw_ints(const dcell* ints, const loc_t* saloc, int iwfs){
 	ddraw("Ints", ints2, NULL, NULL, "WFS Subaperture Images",
 		"x", "y", "wfs %d", iwfs);
 	dfree(ints2);
+}
+/**
+* average per powfs. replace the content when replace is set.
+* */
+real average_powfs(dmat *A, lmat *wfsindex, int replace){
+	real avg=0;
+	int nwfs=wfsindex->nx;
+	for(int jwfs=0; jwfs<nwfs; jwfs++){
+		int iwfs=wfsindex->p[jwfs];
+		avg+=P(A, iwfs);
+	}
+	avg/=nwfs;
+	if(replace){
+		for(int jwfs=0; jwfs<nwfs; jwfs++){
+			int iwfs=wfsindex->p[jwfs];
+			P(A, iwfs)=avg;
+		}
+	}
+	return avg;
 }

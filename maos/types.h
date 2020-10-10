@@ -485,6 +485,7 @@ typedef struct {
     int ogcount;   /**<Number of optical gain accumulations*/
     int ogupdate; /**<OG update with PLL output*/
     int ogout;    /**<OG output*/
+	int zoomout;  /**<Trombone zoom output*/
 }WFSFLAGS_T;
 /**
    contains all the run time data struct.
@@ -591,10 +592,8 @@ typedef struct SIM_T{
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     real ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
-    dmat *zoomerr2;   /**<Trombone error signal from drift im*/
     dmat *zoomint;    /**<Trombone integrator*/
     dmat *zoomavg;    /**<Trombone averager from gradients*/
-    dmat *zoomreal;   /**<Trombone real position*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
     /*focus offloading*/
     dcell *telfocusint; /**<Telescope focus integrated*/

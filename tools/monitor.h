@@ -68,6 +68,7 @@ extern GdkColor color_odd;
 
 extern PROC_T** pproc;
 extern int* nproc;
+extern GtkWidget* window;
 extern GtkWidget* notebook;
 extern GtkWidget** pages;
 extern GdkPixbuf* icon_main;

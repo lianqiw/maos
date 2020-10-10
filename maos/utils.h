@@ -58,4 +58,5 @@ static inline real fc2lp(real fc, real dt){
 	return 1-exp(-2*M_PI*fc*dt);
     }
 }
+real average_powfs(dmat* A, lmat* wfsindex, int replace);
 #endif

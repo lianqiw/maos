@@ -368,8 +368,8 @@ void sim_update_etf(SIM_T* simu){
 				icol2=icol+1;
 			}
 			double deltah=0;
-			if(simu->zoomreal){
-				deltah=-simu->zoomreal->p[parms->powfs[ipowfs].wfs->p[0]];
+			if(simu->zoomint){
+				deltah=-simu->zoomint->p[parms->powfs[ipowfs].wfs->p[0]];
 				deltah/=0.5*pow(1./parms->powfs[ipowfs].hs, 2);//focus to range.
 			}
 			info("Step %d: powfs %d: Updating ETF using column %d with dh=%g\n", isim, ipowfs, icol2, deltah);
@@ -417,6 +417,9 @@ void sim_update_flags(SIM_T* simu, int isim){
 			wfsflags->ogcount=(simu->wfsisim-parms->powfs[ipowfs].dither_ogskip+1)/dtrat;
 			wfsflags->ogupdate=wfsflags->ogcount>0&&(wfsflags->ogcount%pllrat)==0;
 			wfsflags->ogout=wfsflags->ogcount>0&&(wfsflags->ogcount%ograt)==0;
+		}
+		if(parms->powfs[ipowfs].llt){
+			wfsflags->zoomout=(simu->wfsisim+1)%parms->powfs[ipowfs].zoomdtrat==0;
 		}
 	}
 
@@ -1064,7 +1067,6 @@ static void init_simu_wfs(SIM_T* simu){
 		simu->LGSfocus=dcellnew(parms->nwfs, 1);
 		simu->LGSfocus_drift=dcellnew(parms->nwfs, 1);
 		simu->zoomerr=dnew(parms->nwfs, 1);
-		simu->zoomerr2=dnew(parms->nwfs, 1);
 		simu->zoomint=dnew(parms->nwfs, 1);
 		simu->zoomavg=dnew(parms->nwfs, 1);
 		if(!disable_save){
@@ -1601,8 +1603,6 @@ void free_simu(SIM_T* simu){
 	dcellfree(simu->telfocusint);
 	dcellfree(simu->telfocusreal);
 	dfree(simu->zoomerr);
-	dfree(simu->zoomerr2);
-	dfree(simu->zoomreal);
 	dfree(simu->zoomavg);
 	dfree(simu->zoomint);
 	if(parms->recon.split){

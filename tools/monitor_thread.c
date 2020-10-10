@@ -212,6 +212,7 @@ static int respond(int sock){
 		   break;
 	case MON_DRAWDAEMON:
 	{
+		dbg_time("Received drawdaemon request\n");
 		scheduler_display(ihost, 0);
 	}
 	break;
@@ -342,6 +343,7 @@ void* listen_host(void* dummy){
 */
 int scheduler_display(int ihost, int pid){
 	if(ihost<0) return 0;
+	dbg_time("schedueler_display: %s, pid=%d", hosts[ihost], pid);
 	/*connect to scheduler with a new port. The schedule pass the other
 	  end of the port to drawdaemon so we can communicate with it.*/
 	int sock=connect_port(hosts[ihost], PORT, 0, 0);

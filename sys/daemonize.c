@@ -203,8 +203,7 @@ void single_instance_daemonize(const char* lockfolder_in,
 	PID=getpid();
 	/*redirect stdin/stdout. */
 	if(!freopen("/dev/null", "r", stdin)) warning("Error closing stdin\n");
-	if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
-	if(!dup2(fileno(stdout), fileno(stderr))) warning("Error redirect stderr\n");
+	if(!freopen(fnlog, "w", stdout) || dup2(1,2)==-1) warning("Error redirect stdout or stderr\n");
 	setbuf(stdout, NULL);/*disable buffering. */
 
 	char strpid[60];
@@ -228,7 +227,9 @@ typedef struct{
 	FILE** fps;
 	int nfp;
 }dup_stdout_t;
-
+/**
+  Replicate stream written to stdout to both stdout and file.
+* */
 static void* dup_stdout(dup_stdout_t* data){
 	int fd=data->pfd;//read.
 	FILE** fpout=data->fps;
@@ -256,34 +257,7 @@ static void* dup_stdout(dup_stdout_t* data){
 	}
 	return 0;
 }
-/**
-   Redirect stdout (1) and stderr (2) to fd
- */
-static void redirect2fd(int fd){
-	if(dup2(fd, 1)<0){
-		warning("Error redirecting stdout\n");
-	}
-	setbuf(stdout, NULL);//disable buffering to see immediate output.
-	//fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);//interferes with drawdaemon
-	//2018-10-29: We no longer redirecting stderr to file to keep it clean.
-	/*if(dup2(fd, 2)<0){
-	  warning("Error redirecting stderr\n");
-	  }*/
 
-	//setbuf(stderr, NULL);
-}
-/*
-   Redirect stdout and stderr to fn
- */
-static void redirect2fn(const char* fn){
-	if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout/stderr\n");
-	setbuf(stdout, NULL);
-	//fcntl(fileno(stdout), F_SETFD, FD_CLOEXEC);//interferes with drawdaemon
-	//2018-10-29: We no longer redirecting stderr to file to keep it clean.
-	//Redirect stderr to stdout 
-	//dup2(fileno(stdout), fileno(stderr));
-	//setbuf(stderr, NULL);
-}
 /**
   Redirect output.
   If we are in detached mode, will output to file, otherwise will output to both file and screen.
@@ -295,7 +269,8 @@ void redirect(void){
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	if(detached){//only output to file
-		redirect2fn(fn);
+		if(!freopen(fn, "w", stdout) || dup2(1,2)==-1) warning("Error redirecting stdout or stderr.\n");
+		//don't close stdin to prevent fd=0 from being used by file.
 		if(!freopen("/dev/null", "r", stdin)) warning("Error redirecting stdin\n");
 	} else{
 	/* output to both file and screen. we first keep a reference to our
@@ -318,9 +293,12 @@ void redirect(void){
 			//child thread read from pfd[0] and write to stdout.
 			pthread_create(&thread, NULL, (void* (*)(void*))dup_stdout, data);
 			//master threads redirects stderr and stdout to pfd[1]
-			redirect2fd(pfd[1]);
+			if(dup2(pfd[1], 1)==-1 || dup2(pfd[1],2)==-1){
+				warning("Error redirecting stdout or stderr");
+			}
 		}
 	}
+	setbuf(stdout, NULL);
 }
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.

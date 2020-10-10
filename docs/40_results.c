@@ -19,8 +19,18 @@
    \page page40_results Simulation Results
 
    \tableofcontents
+   \section drawres Plotting Results
 
-   \section bin Data Format
+   The wavefront error time history can be processed using the built in tool 
+   `drawres` and plotted using the Gtk based `drawdaemon`. 
+   \code
+   drawres folder1 folder2 ...
+   \endcode
+   If the specified folder contains subfolders with results, they will be plotted 
+   together. When using on a text terminal with `DISPLAY` not set, if there is
+   `monitor` running in a connected computer, it will launch `drawdaemon`.
+
+   \section bin Reading Results
 
    MAOS generates output in binary format \c .bin files (which maybe gzipped)
    as described below. PSFs are written into fits files with extensions.
@@ -85,7 +95,7 @@ or cle=read('Res_1.bin.gz');
    reader (e.g., \c fv, \c ds9) should be able to read them. There is also an
    executable \c bin2fits that can convert \c .bin to \c. fits files.
 
-   \section sect-interpret Simulation Results
+   \section sect-interpret Result Files
 
    There will be several files created during simulation in the result
    folder. The number after underscore _ is the seed. For example, with seed 1

@@ -72,7 +72,7 @@ GdkPixbuf* icon_connect=NULL;
 static GtkStatusIcon* status_icon=0;
 GtkWidget* notebook=NULL;
 GtkWidget** pages;
-static GtkWidget* window=NULL;
+GtkWidget* window=NULL;
 static GtkWidget** tabs;
 static GtkWidget** titles;
 static GtkWidget** cmdconnect;
@@ -343,7 +343,7 @@ gboolean update_title(gpointer data){
 */
 void kill_job(PROC_T* p){
 	GtkWidget* dia=gtk_message_dialog_new
-	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
 		"Kill job %d on server %s?",
@@ -379,10 +379,10 @@ void kill_job_event(GtkWidget* btn, GdkEventButton* event, PROC_T* p){
 static void kill_all_jobs(GtkButton* btn, gpointer data){
 	(void)btn;
 	(void)data;
-	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook))-1;
 
 	GtkWidget* dia=gtk_message_dialog_new
-	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
 		"Kill all jobs on server %s or all servers?", hosts[this_host]);

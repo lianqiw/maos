@@ -617,9 +617,7 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 					dmat* focus=dnew(1, 1);
 					dmat* RFlgsg=P(recon->RFlgsg, iwfs, iwfs);
 					dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
-					//zoomerr is adjust by the gain, and scaling due to zoh for pllrat frames.
-					simu->zoomerr2->p[iwfs]=focus->p[0]*(parms->powfs[ipowfs].zoomgain/pllrat);
-					//if(iwfs==0) info2("zoomerr_ib[%d]=%g nm\n", isim, focus->p[0]*1e9);
+					simu->zoomerr->p[iwfs]+=focus->p[0];
 					dfree(focus);
 				}
 				dfree(ibgrad);
@@ -699,18 +697,12 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 			}
 		}
 
-		//In RTC. LPF can be put after using the value to put it off critical path.
-		real lpfocus=parms->sim.lpfocushi;
-		real infocus=0;
+		
 		const int zoomset=(parms->powfs[ipowfs].zoomset
 			&&simu->wfsisim==parms->sim.start
 			&&parms->powfs[ipowfs].phytype_sim!=1);
-
-//For those WFS that dither and run mtch, use focus error from ib instead
-		const int zoom_from_grad=1;//(parms->powfs[ipowfs].dither!=1 || parms->powfs[ipowfs].phytype_sim2!=1);
-		const int zoomavg_output=((simu->reconisim+1)%parms->powfs[ipowfs].zoomdtrat==0);
+	
 		real lgsfocusm=0;
-
 		if(parms->powfs[ipowfs].zoomshare||parms->sim.mffocus==2){
 			lgsfocusm=0;
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -718,7 +710,6 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 				lgsfocusm+=LGSfocus->p[iwfs]->p[0];
 			}
 			lgsfocusm/=parms->powfs[ipowfs].nwfs;
-			//info2("powfs[%d] focus: %gnm\n", ipowfs, lgsfocusm*1e9);
 		}
 
 		/*Here we set trombone position according to focus in the first
@@ -727,74 +718,52 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 		  step. No need if start with pre-built matched filter.*/
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			real zoomerr=parms->powfs[ipowfs].zoomshare?lgsfocusm:LGSfocus->p[iwfs]->p[0];
 			if(zoomset){
-				if(parms->powfs[ipowfs].zoomshare){
-					simu->zoomint->p[iwfs]=lgsfocusm;
-				} else{
-					simu->zoomint->p[iwfs]=LGSfocus->p[iwfs]->p[0];
-				}
-				//LGSfocus->p[iwfs]->p[0]-=simu->zoomint->p[iwfs];
-				//dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->zoomint->p[iwfs]);
+				simu->zoomint->p[iwfs]=zoomerr;
 				if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
 					info2("wfs %d: Move trombone focus by %g nm.\n", iwfs, 1e9*simu->zoomint->p[iwfs]);
 				}
 				update_etf=1;//this is important in bootstraping.
 			} else{
-				if(zoom_from_grad){//Trombone from gradients 
-					if(parms->powfs[ipowfs].zoomshare){//all lgs share the same trombone.
-						simu->zoomavg->p[iwfs]+=lgsfocusm;
-					} else{//each lgs has individual zoom mechanism.
-						simu->zoomavg->p[iwfs]+=LGSfocus->p[iwfs]->p[0];
-					}
-					if(zoomavg_output){
-						/*zoom error is zero order hold even if no output from averager*/
-						simu->zoomerr->p[iwfs]=simu->zoomavg->p[iwfs]*parms->powfs[ipowfs].zoomgain
-							*pow(parms->powfs[ipowfs].zoomdtrat, -2);
-						simu->zoomavg->p[iwfs]=0;
-					}
-				}
-				if(parms->sim.mffocus){//Focus HPF
-					if(parms->sim.mffocus==1){//remove LPF focus from each lgs
-						infocus=LGSfocus->p[iwfs]->p[0];
-					} else{//remove powfs averaged focus form each lgs.
-						infocus=lgsfocusm;
-					}
-					simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+infocus*lpfocus;
-					dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
-					//info2("lgs focus: %d %g\n", iwfs, infocus);
+				//Trombone from gradients. always enable
+				simu->zoomavg->p[iwfs]+=zoomerr;//zoom averager.
+				if(simu->wfsflags[ipowfs].zoomout){
+					/*zoom error is zero order hold even if no output from averager*/
+					simu->zoomerr->p[iwfs]+=simu->zoomavg->p[iwfs]/parms->powfs[ipowfs].zoomdtrat;
+					simu->zoomavg->p[iwfs]=0;
 				}
 			}
-		}
-		//average zoomerr computed from ib.
-		if(parms->powfs[ipowfs].zoomshare){
-			real zoomerr=0;
-			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-				zoomerr+=simu->zoomerr2->p[iwfs];
-			}
-			zoomerr/=parms->powfs[ipowfs].nwfs;
-			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-				simu->zoomerr2->p[iwfs]=zoomerr;
+			if(parms->sim.mffocus){//Focus HPF
+				real infocus=parms->sim.mffocus==2?lgsfocusm:LGSfocus->p[iwfs]->p[0];
+				//In RTC. LPF can be put after using the value to put it off critical path.
+				real lpfocus=parms->sim.lpfocushi;
+				simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+infocus*lpfocus;
+				dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
 			}
 		}
 	}
 
 	/*The zoomerr is prescaled, and ZoH. moved from filter.c as it only relates to WFS.*/
 	//Do not trigger update_etf here as it will interfere with i0 accumulation.
-	dcp(&simu->zoomreal, simu->zoomint);
-	dadd(&simu->zoomint, 1, simu->zoomerr, 1);//from gradients
-	dadd(&simu->zoomint, 1, simu->zoomerr2, 1);//from matched filter 
-	if(simu->zoomreal&&simu->zoompos){
-		//save results.
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			if(simu->zoompos->p[iwfs]){
-				simu->zoompos->p[iwfs]->p[simu->wfsisim]=simu->zoomreal->p[iwfs];
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(simu->wfsflags[ipowfs].zoomout){
+			real zoomgain=parms->powfs[ipowfs].zoomgain;
+			if(parms->powfs[ipowfs].zoomshare){//average zoomerr
+				average_powfs(simu->zoomerr, parms->powfs[ipowfs].wfs, 1);
 			}
+			
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+				int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+				simu->zoomint->p[iwfs]+=simu->zoomerr->p[iwfs]*zoomgain;
+				simu->zoomerr->p[iwfs]=0;
+				if(simu->zoompos&&simu->zoompos->p[iwfs]){
+					simu->zoompos->p[iwfs]->p[simu->wfsisim]=simu->zoomint->p[iwfs];
+				}
+			}
+			update_etf=1;
 		}
 	}
-	//if(update_etf) sim_update_etf(simu);//force an update. Otherwise, zoomreal is absorbed with next ETF.
-	//if(simu->zoomreal) info2("zoomreal focus: %gnm\n", simu->zoomreal->p[0]*1e9);
 }
 
 /**

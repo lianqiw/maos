@@ -389,7 +389,7 @@ int scheduler_send_socket(int sfd, int id){
 	int ans=-1;
 	int ssock=scheduler_connect_self(0);
 	if(ssock!=-1&&sfd!=-1){
-		int cmd[2]={CMD_SOCK, abs(id)};
+		int cmd[2]={CMD_SOCK, id?abs(id):1};
 		if(stwriteintarr(ssock, cmd, 2)||stwritefd(ssock, sfd)){
 			ans=-1;
 			warning("Talk to scheduler failed\n");
@@ -401,7 +401,7 @@ int scheduler_send_socket(int sfd, int id){
 	return ans;
 }
 /**
-   get a socket from the scheduler for reuse
+   get a socket from the scheduler for reuse. return 0 when success.
 */
 int scheduler_recv_socket(int* sfd, int id){
 	int ans=-1;

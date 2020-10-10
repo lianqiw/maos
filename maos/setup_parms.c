@@ -1068,6 +1068,7 @@ static void readcfg_dbg(PARMS_T* parms){
 	READ_DCELL(dbg.dmoff);
 	READ_DCELL(dbg.gradoff);
 	READ_INT(dbg.twfsflag);
+	READ_INT(dbg.twfsrmax);
 	parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
 	parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
 	READ_INT(dbg.wfs_iac);

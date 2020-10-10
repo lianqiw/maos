@@ -181,7 +181,7 @@ int draw_add(int fd){
 static void draw_remove(int fd, int reuse){
 	if(fd<0) return;
 	if(reuse){
-		scheduler_send_socket(fd, DRAW_ID);
+		scheduler_send_socket(fd, DRAW_ID?DRAW_ID:1);
 	}
 	close(fd);
 	int found=0;
@@ -288,37 +288,42 @@ static int get_drawdaemon(){
 	}
 	if(DRAW_ID<=0){
 		DRAW_ID=getsid(0);
-		if(DRAW_ID<0){
+		if(DRAW_ID<=0){
 			DRAW_ID=1;
 		}
 	}
 	int sock=-1;
 	//First try reusing existing idle drawdaemon
-	if(scheduler_recv_socket(&sock, display?DRAW_ID:0)){
-		sock=-1;
-	} else{//test whether drawdaemon is still running
+	if(!scheduler_recv_socket(&sock,DRAW_ID)){
+		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_FINAL)){
 			dbg("received socket=%d is already closed.\n", sock);
 			close(sock);
 			sock=-1;
 		}
 	}
-	if(sock==-1&&display){
-		if(DRAW_DIRECT||sock_helper<=-1){//directly fork and launch
-			TIC;tic;
-			sock=launch_drawdaemon();
-			toc("Directly launch drawdaemon");
-		} else{//use helper to launch
-			if(stwriteint(sock_helper, DRAW_ID)||streadfd(sock_helper, &sock)){
-				sock=-1;
-				draw_disabled=1;
-				close(sock_helper);
-				sock_helper=-1;
-				warning("Unable to talk to the helper to launch drawdaemon\n");
+	if(sock==-1){
+		if(display){
+			if(DRAW_DIRECT||sock_helper<=-1){//directly fork and launch
+				TIC;tic;
+				sock=launch_drawdaemon();
+				toc("Directly launch drawdaemon");
+			} else{//use helper to launch
+				if(stwriteint(sock_helper, DRAW_ID)||streadfd(sock_helper, &sock)){
+					sock=-1;
+					draw_disabled=1;
+					close(sock_helper);
+					sock_helper=-1;
+					warning("Unable to talk to the helper to launch drawdaemon\n");
+				}
+				dbg("launch using sock helper: sock=%d\n", sock);
 			}
-			dbg("launch using sock helper: sock=%d\n", sock);
+		}else{//no display is available. use scheduler to launch drawdaemon
+			dbg("launch using scheduler\n");
+			scheduler_recv_socket(&sock, 0);
 		}
 	}
+
 	if(sock!=-1){
 		draw_add(sock);
 	}
@@ -422,8 +427,7 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 					warning("both loc and dc are specified, ignore dc.\n");
 				}
 			} else if(dc){
-				if(ngroup!=dc->nx*dc->ny){
-					warning("ngroup and dimension of dc mismatch\n");
+				if(ngroup>dc->nx*dc->ny || ngroup==0){
 					ngroup=dc->nx*dc->ny;
 				}
 				for(int ig=0; ig<ngroup; ig++){

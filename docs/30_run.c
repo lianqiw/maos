@@ -54,7 +54,7 @@
    -r, --run=host    Run the job in another host.
 
    The following environment variables are supported
-   MAOS_TOMO_SCALE=1e12 Rebalance tomography terms for single precision calculation
+   MAOS_TOMOSCALE=1e12 Rebalance tomography terms for single precision calculation
    MAOS_PARALLEL=1      Set to 0 to disable parallel launch
    MAOS_NO_WFS=0        Set to 1 to disable all WFS calls
    MAOS_NO_EVL=0        Set to 1 to disable evaluation calls
@@ -62,8 +62,9 @@
    MAOS_KEEP_MEM=0      Set to 1 to keep temporary memory between steps
    MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting
    MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info
-   MAOS_LOG_LEVEL=0     Set logging level. -3: error only, -2:  warning, -1  essential info, 0:  useful info,
-                        1:  debugging info, 2: debugging info, 3: everything.
+   MAOS_LOG_LEVEL=0     Set logging level. -3: error and warning only, 
+							-2:  essential info, -1  useful info, 0:  all info,
+							1:  debugging info, 2: more debugging info, 3: everything.
 
    \endverbatim
 
@@ -317,14 +318,16 @@
    mitigation method is to limit the value gap around such actautors whoes
    coupling is below .actthres2.
 
-   \subsection Sodium range variation
+   \subsection sect-sodium Sodium range variation
 
    The sodium range variation is specified through the LLT configuration key \c
    llt.fnrange in \ref llt_CL or \ref llt_SL. When supplied by user, use \c
    powfs0_llt.fnrange. The file should contain additional change (wrt fnprof) of
    sodium height in meters with dimension nx1 or nxnLGS where \c n can be less
    than, equal to or greater than the length of simulation and nLGS is the
-   number of LGS in this powfs (6 for NFIRAOS).
+   number of LGS in this powfs (6 for NFIRAOS). 
+
+   The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront.
 
 ===
 

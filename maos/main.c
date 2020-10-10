@@ -61,7 +61,6 @@ static void* find_var(const char* name){
 	VAR_GET(simu,LGSfocus),
 	VAR_GET(simu,zoomerr),
 	VAR_GET(simu,zoomint),
-	VAR_GET(simu,zoomreal),
 	VAR_GET(simu,evlopd),
 	{NULL, NULL}//mark the end
 	};

@@ -440,7 +440,7 @@ static void handle_menu_event(GtkMenuItem* menuitem, gpointer user_data){
 	/*Alert user in Kill or Restart event*/
 	if(!strcmp(action, "Kill")||!strcmp(action, "Restart")){
 		GtkWidget* dia=gtk_message_dialog_new
-		(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+		(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 			GTK_MESSAGE_QUESTION,
 			GTK_BUTTONS_YES_NO,
 			"%s %d jobs?", action, nsel);

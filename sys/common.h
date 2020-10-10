@@ -98,10 +98,11 @@ extern int detached;
 
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
 extern FILE *fpconsole;
-#define logstd(level, A...) ({if(LOG_LEVEL>level){printf(A);}})
-#define error(format,...) ({logstd(-10, "%sError(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__, __func__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
-#define warning(format,...) ({logstd(-3, "%sWarning(%s:%d,%s): " format "%s", RED, BASEFILE, __LINE__,__func__, ##__VA_ARGS__, BLACK);})
-#define warning_time(format,...) ({logstd(-3,"%sWarning(%s:%d,%s)[%s]: " format "%s", RED, BASEFILE, __LINE__, __func__,myasctime(), ##__VA_ARGS__, BLACK);})
+#define logstd(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);}})
+#define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(stderr, A);}})
+#define error(format,...) ({logerr(-4, "%sError(%s:%d): " format "%s", RED,BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
+#define warning(format,...) ({logerr(-4, "%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__,##__VA_ARGS__, BLACK);})
+#define warning_time(format,...) ({logerr(-4,"[%s]%sWarning(%s:%d): " format "%s", myasctime(),RED, BASEFILE, __LINE__,  ##__VA_ARGS__, BLACK);})
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
 //all info are shown at default log level
 #define info(A...)  logstd(-1, A) //least important info
@@ -110,13 +111,14 @@ extern FILE *fpconsole;
 #define info_console(A...) ({if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A);}) //stderr is not directed to file.
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
 //dbg are not shown at default log level
-#define dbg( format,...) logstd(0, "Debug(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
-#define dbg2(format,...) logstd(1, "Debug2(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
-#define dbg3(format,...) logstd(2, "Debug3(%s:%d,%s): " format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)
+//use __func__ to indicate function name
+#define dbg( format,...) logerr(0, "Debug1(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg2(format,...) logerr(1, "Debug2(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg3(format,...) logerr(2, "Debug3(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
 
-#define dbg_time( format,...) logstd(0, "Debug(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
-#define dbg2_time(format,...) logstd(1, "Debug2(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
-#define dbg3_time(format,...) logstd(2, "Debug3(%s:%d,%s)[%s]: " format, BASEFILE, __LINE__, __func__, myasctime(), ##__VA_ARGS__)
+#define dbg_time( format,...) logerr(0, "[%s]Debug1(%s:%d): " format, myasctime(),BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg2_time(format,...) logerr(1, "[%s]Debug2(%s:%d): " format, myasctime(),BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg3_time(format,...) logerr(2, "[%s]Debug3(%s:%d): " format, myasctime(),BASEFILE, __LINE__,  ##__VA_ARGS__)
 
 
 #ifndef assert

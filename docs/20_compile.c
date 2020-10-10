@@ -175,13 +175,13 @@
    Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin
    And cd to scripts/bundle folder, run build.sh. .app files should appear in your desktop.
     
-   \subsection sect-monitor Using the job monitor
+   \section sect-gui Graphical User Interface
     
-   When GTK+ libraries are present in the system, additional executives will
+   When GTK+ libraries are present in the system, additional executables will
    be compiled, \c drawdaemon, \c drawres, \c drawbin and \c monitor in the \c bin folder. 
 
-   - The plotting utility \c drawdaemon launched automatically when plotting
-   commands are issued in the software.
+   - The plotting utility \c drawdaemon is launched automatically when plotting
+   commands are issued in simulation (`maos plot.all=1`) or in post processing with \c drawres or \c drawbin
 
    - The monitoring utility \c monitor can be used to monitor jobs in this and linked machines.
 
@@ -189,6 +189,7 @@
 
    - The \c drawbin can be used to automatically plot the OPDs or maps.
 
+   \subsection subsect-monitor Monitor
 
    In order to use monitor to monitor jobs in different machines, follow these steps:
 
@@ -200,7 +201,17 @@
 
    - \c ~/.aos/port contains the port you want the \c scheduler to bind to so that the
    monitor can connect to it.  Any non-previledged port numbers are fine (like
-   10000).  Different users should have different port number.  The port hust to
-   be the same on all the machines. Make sure the firewall allows them.
+   10000).  Different users should have different port number.  The port has to
+   be the same on all the machines. Make sure the firewall allows them. If not set, the number will be automatically computed based on username.
+   
+   \subsection subsect-draw Drawdaemon
+
+   Once the monitor is running, it will display running jobs on each connected host. 
+   Right click on a running job and select `Plot sected jobs` will launch drawdaemon 
+   and start plotting the telemetry data in realtime. This works for local and remote host. 
+   Multiple drawedaemons can be started for the same or different jobs.
+
+   An alternative way to launch drawdaemon is to include \c plot.setup=1 \c plot.run=1 or \c plot.all=1 in maos command line. 
+   This method can only invoke the drawdaemon locally.
 
 */
