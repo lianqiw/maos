@@ -120,7 +120,7 @@ def draw(*args, **kargs):
         else:
             plt.imshow(args[0], origin='lower', cmap='jet')
         plt.colorbar()
-
+        plt.grid(False)
 
 # Use as standalone script
 if __name__ == "__main__":

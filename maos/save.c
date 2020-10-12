@@ -77,7 +77,7 @@ void save_gradol(SIM_T* simu){
 		if(!parms->powfs[ipowfs].psol||!simu->gradlastol->p[iwfs]) continue;
 		if(parms->plot.run){
 			drawgrad("Gpol", powfs[ipowfs].saloc, simu->gradlastol->p[iwfs],
-				parms->dbg.draw_opdmax->p, parms->plot.grad2opd,
+				parms->plot.grad2opd, parms->dbg.draw_opdmax->p,
 				"WFS Pseudo Openloop Gradients ", "x (m)", "y (m)", "Gpol %d", iwfs);
 		}
 		if(simu->save->gradol[iwfs]&&(simu->reconisim+1)%parms->powfs[ipowfs].dtrat==0){

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -22,7 +22,7 @@
 #include "../math/mathdef.h"
 /**
    \file draw.h
-   Contains functions for data visualization. 
+   Contains functions for data visualization.
 */
 extern int DRAW_ID;/*number to use for drawdaemon, usually PID. */
 extern int DRAW_DIRECT;
@@ -30,50 +30,52 @@ extern int draw_disabled;
 void draw_helper(void);
 int draw_add(int fd);
 void draw_final(int reuse);
-int draw_current(const char *fig, const char *fn);
-int imagesc(const char *fig, long nx, long ny, const real *limit, const real *zlimit,
-	     const real *p, const char *title, const char *xlabel, const char *ylabel,
-	     const char *format,...) CHECK_ARG(10);
-int imagesc_cmp_ri(const char *fig, long nx, long ny, const real *limit, const real *zlim,
-		    const comp *p, const char *title, const char *xlabel, const char *ylabel, 
-		    const char *format,...) CHECK_ARG(10);
-int imagesc_cmp_ap(const char *fig, long nx, long ny, const real *limit, const real *zlim,
-		    const comp *p, const char *title, const char *xlabel, const char *ylabel,
-		    const char *format,...) CHECK_ARG(10);
-int imagesc_cmp_abs(const char *fig, long nx, long ny, const real *limit,const real *zlim,
-		    const comp *p, const char *title, const char *xlabel, const char *ylabel,
-		     const char *format,...) CHECK_ARG(10);
-int plot_points(const char *fig, long ngroup, loc_t **loc, const dcell *dc,
-		 const int32_t *style, const real *limit, const char *xylog, const dmat *cir, 
-		 const char *const* const legend, const char *title, const char *xlabel, const char *ylabel,
-		 const char *format,...) CHECK_ARG(13);
-int ddraw(const char *fig, const dmat *A, real *xylim, real *zlim,
-	   const char *title, const char *xlabel, const char *ylabel,
-	   const char *format,...) CHECK_ARG(8);
-int cdraw(const char *fig, const cmat *A, real *xylim, real *zlim,
-	   const char *title, const char *xlabel, const char *ylabel,
-	   const char *format,...) CHECK_ARG(8);
-int cdrawabs(const char *fig, const cmat *A, real *xylim, real *zlim,
-	      const char *title, const char *xlabel, const char *ylabel,
-	      const char *format,...) CHECK_ARG(8);
-int cdrawri(const char *fig, const cmat *A, real *xylim, real *zlim,
-	     const char *title, const char *xlabel, const char *ylabel,
-	     const char *format,...) CHECK_ARG(8);
+int draw_current(const char* fig, const char* fn);
+int imagesc(const char* fig, long nx, long ny, const real* limit, const real* zlimit,
+	const real* p, const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(10);
+int imagesc_cmp_ri(const char* fig, long nx, long ny, const real* limit, const real* zlim,
+	const comp* p, const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(10);
+int imagesc_cmp_ap(const char* fig, long nx, long ny, const real* limit, const real* zlim,
+	const comp* p, const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(10);
+int imagesc_cmp_abs(const char* fig, long nx, long ny, const real* limit, const real* zlim,
+	const comp* p, const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(10);
+int plot_points(const char* fig, long ngroup, loc_t** loc, const dcell* dc,
+	const int32_t* style, const real* limit, const char* xylog, const dmat* cir,
+	const char* const* const legend, const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(13);
+int ddraw(const char* fig, const dmat* A, real* xylim, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(8);
+int cdraw(const char* fig, const cmat* A, real* xylim, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(8);
+int cdrawabs(const char* fig, const cmat* A, real* xylim, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(8);
+int cdrawri(const char* fig, const cmat* A, real* xylim, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(8);
 
-int drawmap(const char *fig, const map_t *map,  real *zlim,
-	     const char *title, const char *xlabel, const char *ylabel,
-	     const char *format,...) CHECK_ARG(7);
-int drawloc(const char *fig, loc_t *loc,  real *zlim,
-	     const char *title, const char *xlabel, const char *ylabel,
-	     const char *format,...) CHECK_ARG(7);
-int drawopd(const char *fig, loc_t *loc, const real *opd,  real *zlim,
-	     const char *title, const char *xlabel, const char *ylabel, 
-	     const char *format,...) CHECK_ARG(8);
-int drawgrad(const char *fig, loc_t *saloc, const dmat *grad,  real *zlim, int grad2opd,
-	     const char *title, const char *xlabel, const char *ylabel, 
-	     const char *format,...) CHECK_ARG(9);
-int drawopdamp(const char *fig, loc_t *loc, const real *opd, const real *amp, real *zlim,
-		const char *title, const char *xlabel, const char *ylabel,
-		const char *format,...) CHECK_ARG(9);
-
+int drawmap(const char* fig, const map_t* map, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(7);
+int drawloc(const char* fig, loc_t* loc, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(7);
+int drawopd(const char* fig, loc_t* loc, const real* opd, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(8);
+int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(9);
+int drawopdamp(const char* fig, loc_t* loc, const real* opd, const real* amp, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...) CHECK_ARG(9);
+int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...);
 #endif

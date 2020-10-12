@@ -463,7 +463,7 @@ void plot_setup(const PARMS_T* parms, const POWFS_T* powfs,
 			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 			if(powfs[ipowfs].gradncpa){
 				drawgrad("Goff", powfs[ipowfs].saloc, powfs[ipowfs].gradncpa->p[jwfs],
-					NULL, parms->plot.grad2opd,
+					parms->plot.grad2opd, NULL,
 					"WFS Offset", "x (m)", "y (m)", "Goff %d", iwfs);
 			}
 		}
@@ -1153,28 +1153,7 @@ void wait_dmreal(SIM_T* simu, int isim){
 		pthread_cond_signal(&simu->dmreal_condw);
 	}
 }
-/**
-   Concatenate and plot subaperture images.
- */
-void draw_ints(const dcell* ints, const loc_t* saloc, int iwfs){
-	dmat* ints2=0;
-	if(ints->nx==1){//T
-		ints2=dref(ints->p[0]);
-	} else if(ints->nx==4){//TTF
-		dcell* ints3=dcellref(ints);
-		cellreshape(ints3, 2, 2);
-		ints2=dcell2m(ints3);
-		dcellfree(ints3);
-	} else{
-		dcell* ints3=0;
-		loc_embed_cell(&ints3, saloc, ints);
-		ints2=dcell2m(ints3);
-		dcellfree(ints3);
-	}
-	ddraw("Ints", ints2, NULL, NULL, "WFS Subaperture Images",
-		"x", "y", "wfs %d", iwfs);
-	dfree(ints2);
-}
+
 /**
 * average per powfs. replace the content when replace is set.
 * */

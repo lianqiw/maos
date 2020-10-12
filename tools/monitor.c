@@ -55,7 +55,7 @@ static int notify_daemon=1;
 #include "icon-waiting.h"
 #include "icon-cancel.h"
 #include "icon-save.h"
-#include "icon-skip.h"
+//#include "icon-skip.h"
 #include "icon-clear.h"
 #include "icon-connect.h"
 
@@ -66,7 +66,7 @@ GdkPixbuf* icon_running=NULL;
 GdkPixbuf* icon_waiting=NULL;
 GdkPixbuf* icon_cancel=NULL;
 GdkPixbuf* icon_save=NULL;
-GdkPixbuf* icon_skip=NULL;
+//GdkPixbuf* icon_skip=NULL;
 GdkPixbuf* icon_clear=NULL;
 GdkPixbuf* icon_connect=NULL;
 static GtkStatusIcon* status_icon=0;
@@ -481,14 +481,14 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	}
 	return TRUE;
 	}*/
-static int test_jobs(int status, double frac, int flag){
+static int test_jobs(int status, int flag){
 	switch(flag){
 	case 1://finished
 		return status==S_FINISH;
 		break;
-	case 2://skipped
+	/*case 2://skipped
 		return status==S_FINISH&&frac<1;
-		break;
+		break;*/
 	case 3://crashed
 		return status==S_CRASH||status==S_KILLED||status==S_TOKILL;
 		break;
@@ -509,7 +509,7 @@ static void clear_jobs(GtkButton* btn, gpointer flag){
 		int cmd[2];
 		cmd[0]=CMD_REMOVE;
 		for(PROC_T* iproc=pproc[ihost]; iproc; iproc=iproc->next){
-			if(test_jobs(iproc->status.info, iproc->frac, GPOINTER_TO_INT(flag))){
+			if(test_jobs(iproc->status.info, GPOINTER_TO_INT(flag))){
 				cmd[1]=iproc->pid;
 				if(stwriteintarr(sock, cmd, 2)){
 					warning("write to socket %d failed\n", sock);
@@ -696,7 +696,7 @@ int main(int argc, char* argv[]){
 	icon_waiting=gdk_pixbuf_new_from_inline(-1, icon_inline_waiting, FALSE, NULL);
 	icon_cancel=gdk_pixbuf_new_from_inline(-1, icon_inline_cancel, FALSE, NULL);
 	icon_save=gdk_pixbuf_new_from_inline(-1, icon_inline_save, FALSE, NULL);
-	icon_skip=gdk_pixbuf_new_from_inline(-1, icon_inline_skip, FALSE, NULL);
+	//icon_skip=gdk_pixbuf_new_from_inline(-1, icon_inline_skip, FALSE, NULL);
 	icon_clear=gdk_pixbuf_new_from_inline(-1, icon_inline_clear, FALSE, NULL);
 	icon_connect=gdk_pixbuf_new_from_inline(-1, icon_inline_connect, FALSE, NULL);
 
@@ -741,7 +741,7 @@ int main(int argc, char* argv[]){
 		toptoolbar=gtk_toolbar_new();
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("computer", icon_connect, "Connect", add_host_event, -1), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", icon_skip, "Clear skipped jobs", clear_jobs, 2), -1);
+		//gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", icon_skip, "Clear skipped jobs", clear_jobs, 2), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select", icon_finished, "Clear finished jobs", clear_jobs, 1), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, 3), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, 4), -1);

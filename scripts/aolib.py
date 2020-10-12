@@ -5,7 +5,7 @@ import sys
 import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
-from numpy import sqrt, exp, log, floor, ceil, nan
+from numpy import sqrt, exp, log, floor, ceil, nan, pi
 from numpy.random import rand, randn
 import matplotlib.pyplot as plt
 
@@ -215,3 +215,14 @@ def cellsum(x):
         xsum[jj]=x[jj].sum()
 
     return xsum
+def gauss_width(w0, z, wvl=0.589e-6):
+    """returns gaussian beam width"""
+    return w0*sqrt(1+(z*wvl/(np.pi*w0**2)))
+def gauss_roc(w0, z, wvl=0.589e-6):
+    """returns gaussian beam roc"""
+    zr=np.pi*w0**2/wvl;
+    return z+zr**2/z;
+
+def gauss_dist(w0, w, wvl=0.589e-6):
+    """returns gaussian beam propagation distance to have width of w"""
+    return sqrt((w/w0)**2-1)*(np.pi*w0**2/wvl)

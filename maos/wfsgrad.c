@@ -697,11 +697,11 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 			}
 		}
 
-		
+
 		const int zoomset=(parms->powfs[ipowfs].zoomset
 			&&simu->wfsisim==parms->sim.start
 			&&parms->powfs[ipowfs].phytype_sim!=1);
-	
+
 		real lgsfocusm=0;
 		if(parms->powfs[ipowfs].zoomshare||parms->sim.mffocus==2){
 			lgsfocusm=0;
@@ -752,7 +752,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 			if(parms->powfs[ipowfs].zoomshare){//average zoomerr
 				average_powfs(simu->zoomerr, parms->powfs[ipowfs].wfs, 1);
 			}
-			
+
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 				simu->zoomint->p[iwfs]+=simu->zoomerr->p[iwfs]*zoomgain;
@@ -815,11 +815,12 @@ void wfsgrad_post(thread_t* info){
 				zfarr_push(simu->save->gradcl[iwfs], isim, gradcl);
 			}
 			if(parms->plot.run){
-				drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl,
-					parms->dbg.draw_gmax->p, parms->plot.grad2opd,
+				drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl, 
+					parms->plot.grad2opd, parms->dbg.draw_gmax->p,
 					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);
 				if(do_phy){
-					draw_ints(simu->ints->p[iwfs], simu->powfs[ipowfs].saloc, iwfs);
+					drawints("Ints", simu->powfs[ipowfs].saloc, simu->ints->p[iwfs], NULL,
+						"WFS Subaperture Images", "x", "y", "wfs %d", iwfs);
 				}
 			}
 		}
@@ -1059,7 +1060,7 @@ void wfsgrad_twfs_recon(SIM_T* simu){
 
 				if(parms->plot.run){
 					drawgrad("Goff", simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs],
-						parms->dbg.draw_gmax->p, parms->plot.grad2opd,
+						parms->plot.grad2opd, parms->dbg.draw_gmax->p,
 						"WFS Offset", "x (m)", "y (m)", "Goff %d", iwfs);
 				}
 			}

@@ -334,26 +334,6 @@ static int get_drawdaemon(){
 		return 1;
 	}
 }
-
-/*
-   Check whether we need to draw current page. True if
-   1) not yet exist in the list. it is inserted into the list if add is valid and set as current page.
-   2) is current page.
-   3) when draw_single is not set.
-   4) pause must not be set set.
-*/
-static int check_figfn(int ifd, const char* fig, const char* fn, int add){
-	if(draw_disabled||sock_draws[ifd].fd==-1||sock_draws[ifd].pause) return 0;
-	if(!draw_single) return 1;
-	list_t* child=0;
-	list_search(&sock_draws[ifd].list, &child, fig, add);
-	int found=0;
-	if(child){
-		found=list_search(&child->child, NULL, fn, add);
-	}
-	char** figfn=sock_draws[ifd].figfn;
-	return (!found||(!mystrcmp(figfn[0], fig)&&!mystrcmp(figfn[1], fn)));
-}
 /**
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
 */
@@ -370,6 +350,42 @@ end:
 	UNLOCK(lock);
 }
 
+/*
+   Check whether we need to draw current page. True if
+   1) not yet exist in the list. it is inserted into the list if add is valid and set as current page.
+   2) is current page.
+   3) when draw_single is not set.
+   4) pause must not be set set.
+*/
+static int check_figfn(int ifd, const char* fig, const char* fn, int add){
+	if(draw_disabled||sock_draws[ifd].fd==-1||sock_draws[ifd].pause) return 0;
+	if(!draw_single) return 1;
+	list_t* child=0;
+	list_search(&sock_draws[ifd].list, &child, fig, add);
+	int found=0;
+	if(child){
+		if(fn){
+			found=list_search(&child->child, NULL, fn, add);
+		}else{//don't check fn
+			found=1;
+		}
+	}
+	int ans=0;//default is false
+	if(!found){
+		ans=1; //draw without test lock
+	} else{
+		char** figfn=sock_draws[ifd].figfn;
+		if(!mystrcmp(figfn[0], fig)){
+			if(!fn){
+				ans=1;//draw without test lock
+			} else if(!mystrcmp(figfn[1], fn)){
+				ans=2;//draw if lock success
+			}
+		}
+	}
+	return ans;
+}
+
 /**
    Check whether what we are drawing is current page of any drawdaemon.
 */
@@ -381,8 +397,16 @@ int draw_current(const char* fig, const char* fn){
 		int sock_draw=sock_draws[ifd].fd;
 		if(sock_draw==-1) continue;
 		/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-		if(check_figfn(ifd, fig, fn, 0)){
-			current=1;
+		if((current=check_figfn(ifd, fig, fn, 0))){
+			break;
+		}
+	}
+	if(current==2){//check whether draw is busy
+		if((TRYLOCK(lock))){//lock failed
+			current=0;
+			dbg("line busy, skip drawing current page\n");
+		} else{
+			UNLOCK(lock);
 		}
 	}
 	return current;
@@ -590,14 +614,7 @@ int imagesc(const char* fig, /**<Category of the figure*/
 	if(!p||!draw_current(fig, fn)){
 		return 0;
 	}
-	if(draw_single){
-	//Skip this drawing if line is busy.
-		if((TRYLOCK(lock))){//lock failed
-			return 1;
-		} else{
-			UNLOCK(lock);
-		}
-	}
+
 	//We copy all the data and put the imagesc job into a task
 	//The task will free the data after it finishes.
 	imagesc_t* data=mycalloc(1, imagesc_t);
@@ -852,7 +869,7 @@ int drawopd(const char* fig, loc_t* loc, const real* opd, real* zlim,
 /**
    Plot gradients using CuReD
 */
-int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, real* zlim, int grad2opd,
+int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -913,5 +930,31 @@ int drawopdamp(const char* fig, loc_t* loc, const real* opd, const real* amp, re
 	limit[3]=limit[2]+loc->dx*ny;
 	imagesc(fig, nx, ny, limit, zlim, opd0, title, xlabel, ylabel, "%s", fn);
 	free(opd0);
+	return 1;
+}
+/**
+   Concatenate and plot subaperture images.
+ */
+int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...){
+	format2fn;
+	if(!draw_current(fig, fn)) return 0;
+	dmat* ints2=0;
+	if(ints->nx==1){//T
+		ints2=dref(ints->p[0]);
+	} else if(ints->nx==4){//TTF
+		dcell* ints3=dcellref(ints);
+		cellreshape(ints3, 2, 2);
+		ints2=dcell2m(ints3);
+		dcellfree(ints3);
+	} else{
+		dcell* ints3=0;
+		loc_embed_cell(&ints3, saloc, ints);
+		ints2=dcell2m(ints3);
+		dcellfree(ints3);
+	}
+	ddraw("Ints", ints2, NULL, zlim, title, xlabel, ylabel, "%s", fn);
+	dfree(ints2);
 	return 1;
 }
