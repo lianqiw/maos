@@ -213,7 +213,7 @@ static void launch_scheduler_do(void* junk){
 	char* fn_scheduler=stradd(BUILDDIR, "/bin/scheduler", NULL);
 #endif
 	if(exist(fn_scheduler)){
-		info("Run %s\n", fn_scheduler);
+		dbg_time("Run %s as %d\n", fn_scheduler, getpid());
 		execl(fn_scheduler, "scheduler", NULL);
 	} else{/*fall back. this won't have the right argv set. */
 		info("Launch scheduler using shell\n");
@@ -224,11 +224,11 @@ static void launch_scheduler_do(void* junk){
 }
 
 static void launch_scheduler(void){
-	char lockpath[PATH_MAX];
-	snprintf(lockpath, PATH_MAX, "%s", TEMP);
+	dbg_time("launch_scheduler");
 	/*launch scheduler if it is not already running. */
-	single_instance_daemonize(lockpath, "scheduler", scheduler_version,
+	single_instance_daemonize(TEMP, "scheduler", scheduler_version,
 		(void(*)(void*))launch_scheduler_do, NULL);
+	sleep(1);
 }
 
 /**
@@ -247,9 +247,8 @@ static int scheduler_connect_self(int block){
 			sock=connect_port(fn, PORT, 0, 0);
 		}
 		if(sock<0){
-	  /*start the scheduler if it is not running*/
+	        /*start the scheduler if it is not running*/
 			launch_scheduler();
-			sleep(1);
 		}
 		retry++;
 	} while(sock<0&&block&&retry<3);
@@ -285,7 +284,7 @@ static void scheduler_report_path(char* path){
 */
 int scheduler_listen(thread_fun fun){
 	if(psock!=-1&&fun){
-		thread_new(fun, (void*)(long)psock);
+		thread_new(fun, &psock);
 		return 0;
 	} else{
 		return -1;

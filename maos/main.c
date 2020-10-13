@@ -201,7 +201,7 @@ static void* find_var(const char* name){
 static void* maos_var(void* psock){
 	thread_block_signal();
 	int cmd[2];
-	int sock=(int)(long)psock;
+	int sock=*(int*)psock;
 	while(!streadintarr(sock, cmd, 2)){
 		info2("maos_var: cmd=%d, %d\n", cmd[0], cmd[1]);
 		switch(cmd[0]){
@@ -242,16 +242,24 @@ static void* maos_var(void* psock){
 
 //Listen to commands coming from scheduler
 static void* maos_listener(void* psock){
-	int sock=(int)(long)psock;
+	int sock=*(int*)psock;
 	thread_block_signal();
 	int cmd[2];
-	while(!streadintarr(sock, cmd, 2)){
+	while(sock!=-1 && !streadintarr(sock, cmd, 2)){
 		switch(cmd[0]){
+		case -1://requested to close connection.
+		{
+			dbg_time("Received scheduler close request\n");
+			*(int*)psock=-1;
+			close(sock);
+			sock=-1;
+		}
+		break;
 		case MAOS_DRAW://Starting draw to received fd.
 		{
 			int fd;
 			if(streadfd(sock, &fd)){
-				warning("unable to read fd from %d\n", sock);
+				warning_time("unable to read fd from %d\n", sock);
 				continue;
 			} else{
 				info2("got fd=%d\n", fd);
@@ -270,17 +278,17 @@ static void* maos_listener(void* psock){
 		{
 			int fd;
 			if(streadfd(sock, &fd)){
-				warning("unable to read fd from %d\n", sock);
+				warning_time("unable to read fd from %d\n", sock);
 				continue;
 			} else{
 				info2("got fd=%d\n", fd);
 			}
-			thread_new(maos_var, (void*)(long)fd);
+			thread_new(maos_var, &fd);
 
 		}break;
 
 		default:
-			warning("unknown cmd %d\n", cmd[0]);
+			warning_time("unknown cmd %d\n", cmd[0]);
 			break;
 		}
 	}

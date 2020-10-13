@@ -190,11 +190,15 @@ int myclocki(){
    contains spaces and is not suitable to use in filename. The
    returned string should not be modified.  */
 const char* myasctime(void){
-	static char st[64];
+	static char st[20];
 	time_t a;
+	struct tm am;
 	time(&a);
-	ctime_r(&a, st);
-	st[strlen(st)-1]='\0';/*remove final \n */
+	localtime_r(&a, &am);
+	snprintf(st, sizeof(st), "%04d/%02d/%02d %02d:%02d:%02d",
+		am.tm_year+1900, am.tm_mon, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec);
+	//ctime_r(&a, st);
+	//st[strlen(st)-1]='\0';/*remove final \n */
 	return st;
 }
 /**
@@ -786,7 +790,7 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	(void)unused;
-	info("\ndefault_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
+	info("\nSignal caught: %s (%d).\n", sys_siglist[sig], sig);sync();
 	int cancel_action=0;
 	struct sigaction act={0};
 	act.sa_handler=SIG_DFL;
@@ -794,7 +798,7 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	/*prevent recursive call of handler*/
 	sync();
 	if(sig==0){
-		info("Signal 0 caught. do nothing\n");
+		dbg_time("Signal 0 caught. do nothing\n");
 		return;
 	}
 	if(fatal_error_in_progress){
@@ -803,23 +807,27 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	extern int exit_fail;
 	exit_fail=1;
 	fatal_error_in_progress++;
-	if(sig!=SIGABRT&&siginfo&&siginfo->si_addr){
-		info("Memory location: %p\n", siginfo->si_addr);
-	}
-	//It is not save to call backtrace in SIGSEGV.
-	if(sig==SIGBUS||sig==SIGILL||sig==SIGABRT){
+	if(sig==SIGSEGV||sig==SIGILL||sig==SIGFPE){
+		if(siginfo&&siginfo->si_addr){
+			info("Memory location: %p\n", siginfo->si_addr);
+		}
+		//It is not safe to call backtrace in SIGSEGV, so may hang.
 		print_backtrace();
 	}
-	if(signal_handler){
-		if(signal_handler(sig)){
-			cancel_action=1;
-		}
+	dbg_time("Call signal_handler %p\n", signal_handler);
+	if(signal_handler && signal_handler(sig)){
+		cancel_action=1;
 	}
 	sync();
 	if(!cancel_action){//Propagate signal to default handler.
 		act.sa_handler=SIG_DFL;
 		sigaction(sig, &act, 0);
 		raise(sig);
+	}else{//cancel signal, keep going
+		act.sa_handler=NULL;
+		act.sa_sigaction=default_signal_handler;
+		act.sa_flags=SA_SIGINFO;
+		sigaction(sig, &act, 0);
 	}
 }
 

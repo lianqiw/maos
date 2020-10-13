@@ -268,10 +268,12 @@ void wfsgrad_iwfs(thread_t* info){
 					const real hl=atm->p[ips]->h;
 					const real scale=1.-hl/hs;
 					if(scale<0) continue;
-					const real thetax=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
-					const real thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
-					const real displacex=-atm->p[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg->p[0];
-					const real displacey=-atm->p[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg->p[1];
+					const real ox=parms->powfs[ipowfs].llt->ox->p[illt];
+					const real oy=parms->powfs[ipowfs].llt->oy->p[illt];
+					const real thetax=parms->wfs[iwfs].thetax-ox/hs;
+					const real thetay=parms->wfs[iwfs].thetay-oy/hs;
+					const real displacex=-atm->p[ips]->vx*isim*dt+thetax*hl+ox;
+					const real displacey=-atm->p[ips]->vy*isim*dt+thetay*hl+oy;
 					prop_grid_pts(atm->p[ips], powfs[ipowfs].llt->pts,
 						lltopd->p, atmscale, displacex, displacey,
 						scale, 1., 0, 0);

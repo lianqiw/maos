@@ -343,7 +343,7 @@ static void readcfg_powfs(PARMS_T* parms){
 	READ_POWFS_RELAX(int, dither_ogsingle);
 	READ_POWFS_RELAX(dbl, dither_gog);
 	READ_POWFS_RELAX(dbl, dither_gdrift);
-
+	
 	READ_POWFS_RELAX(int, zoomdtrat);
 	READ_POWFS_RELAX(int, zoomshare);
 	READ_POWFS_RELAX(dbl, zoomgain);
@@ -379,27 +379,29 @@ static void readcfg_powfs(PARMS_T* parms){
 			free(powfsi->fnllt);
 			powfsi->fnllt=NULL;
 		}
+		char prefix[60];
+		snprintf(prefix, 60, "powfs%d_", ipowfs);
+
 		if(powfsi->fnllt){
-			char prefix[60];
-			snprintf(prefix, 60, "powfs%d_", ipowfs);
+#define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
 			open_config(powfsi->fnllt, prefix, 0);
 			powfsi->llt=mycalloc(1, LLT_CFG_T);
-			powfsi->llt->d=readcfg_dbl("%sllt.d", prefix);
-			powfsi->llt->widthp=readcfg_dbl("%sllt.widthp", prefix);
-			powfsi->llt->ttrat=readcfg_dbl("%sllt.ttrat", prefix);
-			powfsi->llt->ttpsd=readcfg_str("%sllt.ttpsd", prefix);
-			powfsi->llt->fnrange=readcfg_str("%sllt.fnrange", prefix);
-			powfsi->llt->fnprof=readcfg_str("%sllt.fnprof", prefix);
-			powfsi->llt->fnamp=readcfg_str("%sllt.fnamp", prefix);
-			powfsi->llt->fnsurf=readcfg_str("%sllt.fnsurf", prefix);
-			powfsi->llt->focus=readcfg_dbl("%sllt.focus", prefix);
-			powfsi->llt->ttfr=readcfg_int("%sllt.ttfr", prefix);
-			powfsi->llt->colprep=readcfg_int("%sllt.colprep", prefix);
-			powfsi->llt->colsim=readcfg_int("%sllt.colsim", prefix);
-			powfsi->llt->coldtrat=readcfg_int("%sllt.coldtrat", prefix);
-			powfsi->llt->misreg=readcfg_dmat_n(2, "%sllt.misreg", prefix);
-			powfsi->llt->ox=readcfg_dmat("%sllt.ox", prefix);
-			powfsi->llt->oy=readcfg_dmat("%sllt.oy", prefix);
+			READ_LLT(dbl, d);
+			READ_LLT(dbl, widthp);
+			READ_LLT(dbl, ttrat);
+			READ_LLT(str, ttpsd);
+			READ_LLT(str, fnrange);
+			READ_LLT(str, fnprof);
+			READ_LLT(str, fnamp);
+			READ_LLT(str, fnsurf);
+			READ_LLT(dbl, focus);
+			READ_LLT(int, ttfr);
+			READ_LLT(int, colprep);
+			READ_LLT(int, colsim);
+			READ_LLT(int, coldtrat);
+			READ_LLT(dmat, misreg);
+			READ_LLT(dmat, ox);
+			READ_LLT(dmat, oy);
 			powfsi->llt->n=powfsi->llt->ox->nx;
 		} else{/*there is no LLT. */
 			powfsi->llt=NULL;
@@ -412,9 +414,23 @@ static void readcfg_powfs(PARMS_T* parms){
 				powfsi->radpix=0;
 			}
 		}
-		if(parms->powfs[ipowfs].dither&&parms->powfs[ipowfs].dither_gpll<0.1){
-			error("dither_gpll is now scaled by pllrat. A larger number is needed\n");
-		}
+		/*
+		if(powfsi->fndither){
+			open_config(powfsi->fndither, prefix, 0);
+			powfsi->dither=mycalloc(1, DITHER_CFG_T);
+#define READ_DITHER(type,key) powfsi->dither->key=readcfg_##type("%sdither."#key, prefix)
+			READ_DITHER(int, mode);
+			READ_DITHER(dbl, amp);
+			READ_DITHER(int, npoint);
+			READ_DITHER(int, pllskip);
+			READ_DITHER(int, pllrat);
+			READ_DITHER(dbl, gpll);
+			READ_DITHER(int, ogskip);
+			READ_DITHER(int, ograt);
+			READ_DITHER(int, ogsingle);
+			READ_DITHER(dbl, gog);
+			READ_DITHER(dbl, gdrift);
+		}*/	
 	}
 	free(inttmp);
 	free(dbltmp);
@@ -2754,10 +2770,10 @@ static void print_parms(const PARMS_T* parms){
 	real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, parms->atm.ws->p, parms->atm.wt->p);
 	real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
 
-	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.", 
+	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.",
 		GREEN, parms->sim.zadeg, BLACK, parms->atm.r0, parms->atm.L0->p[0], parms->atm.nps);
-	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f.\"", 
-		  fgreen, theta0z*206265);
+	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f.\"",
+		fgreen, theta0z*206265);
 	if(parms->ndm==2){
 		real H1=parms->dm[0].ht;
 		real H2=parms->dm[1].ht;
@@ -2777,7 +2793,7 @@ static void print_parms(const PARMS_T* parms){
 	}
 	if(parms->recon.alg==0){
 		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n", GREEN, BLACK,
-			parms->atmr.r0, parms->atmr.L0,			
+			parms->atmr.r0, parms->atmr.L0,
 			parms->atmr.nps, (parms->tomo.cone?" use cone coordinate.":""));
 
 		for(int ips=0; ips<parms->atmr.nps; ips++){

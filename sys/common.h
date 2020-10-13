@@ -102,7 +102,7 @@ extern FILE *fpconsole;
 #define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(stderr, A);}})
 #define error(format,...) ({logerr(-4, "%sError(%s:%d): " format "%s", RED,BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
 #define warning(format,...) ({logerr(-4, "%sWarning(%s:%d): " format "%s", RED, BASEFILE, __LINE__,##__VA_ARGS__, BLACK);})
-#define warning_time(format,...) ({logerr(-4,"[%s]%sWarning(%s:%d): " format "%s", myasctime(),RED, BASEFILE, __LINE__,  ##__VA_ARGS__, BLACK);})
+#define warning_time(format,...) ({logerr(-4,"%s[%s WARN] (%s:%d): " format "%s", RED,myasctime(),BASEFILE, __LINE__,  ##__VA_ARGS__, BLACK);})
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
 //all info are shown at default log level
 #define info(A...)  logstd(-1, A) //least important info
@@ -112,13 +112,14 @@ extern FILE *fpconsole;
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
 //dbg are not shown at default log level
 //use __func__ to indicate function name
-#define dbg( format,...) logerr(0, "Debug1(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
-#define dbg2(format,...) logerr(1, "Debug2(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
-#define dbg3(format,...) logerr(2, "Debug3(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg( format,...) logerr(0, "DBG1(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg1(A...)       logerr(0, A)
+#define dbg2(format,...) logerr(1, "DBG2(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg3(format,...) logerr(2, "DBG3(%s:%d): " format, BASEFILE, __LINE__, ##__VA_ARGS__)
 
-#define dbg_time( format,...) logerr(0, "[%s]Debug1(%s:%d): " format, myasctime(),BASEFILE, __LINE__, ##__VA_ARGS__)
-#define dbg2_time(format,...) logerr(1, "[%s]Debug2(%s:%d): " format, myasctime(),BASEFILE, __LINE__, ##__VA_ARGS__)
-#define dbg3_time(format,...) logerr(2, "[%s]Debug3(%s:%d): " format, myasctime(),BASEFILE, __LINE__,  ##__VA_ARGS__)
+#define dbg_time( format,...) logerr(0, "[%s DBG1] (%s:%d): " format, myasctime(),BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg2_time(format,...) logerr(1, "[%s DBG2] (%s:%d): " format, myasctime(),BASEFILE, __LINE__, ##__VA_ARGS__)
+#define dbg3_time(format,...) logerr(2, "[%s DBG3] (%s:%d): " format, myasctime(),BASEFILE, __LINE__,  ##__VA_ARGS__)
 
 
 #ifndef assert

@@ -34,7 +34,7 @@ ___bin_drawdaemon_LDADD=../sys/libaosys.la $(CAIRO_LIBS) $(GTK_LIBS) $(MAC_LIBS)
 endif
 if USE_SCHEDULER
 PROGS+=../bin/monitor 
-___bin_monitor_SOURCES=monitor_gui_list.c monitor.c monitor_thread.c
+___bin_monitor_SOURCES=monitor_gui.c monitor.c monitor_thread.c
 ___bin_monitor_CFLAGS=$(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
 ___bin_monitor_LDADD=../sys/libaosys.la  $(GTK_LIBS) $(MAC_LIBS) #$(LDOPTS)
 if NOTIFY

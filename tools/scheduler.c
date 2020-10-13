@@ -41,7 +41,7 @@
 #if HAS_LWS
 #include "scheduler_ws.h"
 #endif
-static char* scheduler_fnlog=NULL;
+//static char* scheduler_fnlog=NULL;
 static int NGPU=0;
 /**
    Struct to hold information of running jobs.
@@ -110,13 +110,13 @@ static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
 	case 1:
 		ncpu+=nthread;
 		ngpu+=ngpu_used;
-		dbg_time("%d: ncpu %d->%d. ngpu %d->%d.\n",
+		dbg2_time("%d: ncpu %d->%d. ngpu %d->%d.\n",
 			pid, ncpu-nthread, ncpu, ngpu-ngpu_used, ngpu);
 		break;
 	case 2:
 		ncpu-=nthread;
 		ngpu-=ngpu_used;
-		dbg_time("%d: ncpu %d->%d. ngpu %d->%d.\n",
+		dbg2_time("%d: ncpu %d->%d. ngpu %d->%d.\n",
 			pid, ncpu+nthread, ncpu, ngpu+ngpu_used, ngpu);
 		if(ncpu<0){
 			warning_time("ncpu=%d\n", ncpu);
@@ -249,7 +249,7 @@ static void runned_restart(int pid){
 static RUN_T* running_add(int pid, int sock){
 	RUN_T* irun;
 	if((irun=running_get(pid))){
-		dbg_time("PID %d is already in running.\n", pid); /*create the node */
+		dbg2_time("PID %d is already in running.\n", pid); /*create the node */
 		if(irun->sock!=sock) irun->sock=sock;
 		return irun;
 	} else{
@@ -260,7 +260,7 @@ static RUN_T* running_add(int pid, int sock){
 			}
 		}
 
-		dbg_time("adding %d to running\n", pid); /*create the node */
+		dbg2_time("adding %d to running\n", pid); /*create the node */
 		irun=mycalloc(1, RUN_T);
 		irun->pidnew=irun->pid=pid;
 		irun->sock=sock;
@@ -341,7 +341,7 @@ static void running_remove(int pid, int status){
 			/*move irun to runned */
 			runned_add(irun);
 			//log the run.
-			{
+			/*{
 				const char* statusstr=NULL;
 				switch(irun->status.info){
 				case S_CRASH:
@@ -359,7 +359,7 @@ static void running_remove(int pid, int status){
 						myasctime(), HOST, pid, statusstr, irun->path);
 					fclose(fp);
 				}
-			}
+			}*/
 			break;
 		}
 	}
@@ -408,7 +408,7 @@ static void check_jobs(void){
 		for(irun=running; irun; irun=irun2){
 			irun2=irun->next;
 			if(irun->pid>0&&kill(irun->pid, 0)){
-				dbg_time("check_jobs: Job %d no longer exists\n", irun->pid);
+				dbg2_time("check_jobs: Job %d no longer exists\n", irun->pid);
 				running_remove(irun->pid, S_NONEXIST);
 			}
 		}
@@ -448,13 +448,13 @@ static void process_queue(void){
 				irun->status.timstart=myclocki();
 				irun->status.info=S_START;
 				monitor_send(irun, NULL);
-				FILE* fp=fopen(scheduler_fnlog, "a");
+				/*FILE* fp=fopen(scheduler_fnlog, "a");
 				if(fp){
 					fprintf(fp, "[%s] %s %5d  started '%s'\n", myasctime(), HOST, irun->pid, irun->path);
 					fclose(fp);
 				} else{
 					warning_time("fopen %s failed: %s\n", scheduler_fnlog, strerror(errno));
-				}
+				}*/
 			}
 		} else{
 			warning_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
@@ -550,7 +550,7 @@ static int respond(int sock){
 		goto end;
 	}
 	pid=cmd[1];
-	dbg_time("\rrespond %d got %d %d. ", sock, cmd[0], cmd[1]);
+	dbg3_time("respond %d got %d %d. \n", sock, cmd[0], cmd[1]);
 	switch(cmd[0]){
 	case CMD_START://1: Called by maos when job starts.
 	{
@@ -676,7 +676,7 @@ static int respond(int sock){
 		free(buf);
 	}
 	break;
-	case CMD_UNUSED0://9: not used
+	case CMD_PROBE://9: not used
 		break;
 	case CMD_SOCK://10:Called by draw() to cache a fd. Valid over UNIX socket only.
 	{
@@ -969,7 +969,7 @@ static void monitor_remove(int sock){
 				pmonitor=ic->next;
 			}
 			//close(ic->sock); close panics accept
-			dbg("Remove monitor at %d\n", ic->sock);
+			dbg_time("Removed monitor at %d\n", ic->sock);
 			shutdown(ic->sock, SHUT_WR);
 			free(ic);
 			break;
@@ -1143,11 +1143,11 @@ int main(){
 	remove(slocal);
 	extern int is_scheduler;
 	is_scheduler=1;
-	{
+	/*{
 		char slocal2[PATH_MAX];
 		snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, HOST);
 		scheduler_fnlog=strdup(slocal2);
-	}
+	}*/
 	{
 	//Find out number of gpus.
 		FILE* fpcmd=popen("nvidia-smi -L 2>/dev/null", "r");
@@ -1167,10 +1167,10 @@ int main(){
 		dbg("NGPU=%d\n", NGPU);
 	}
 	double timeout=0.5;
-	info("scheduler started with time out %g\n", timeout);
+	dbg_time("scheduler started with time out %g\n", timeout);
 #if HAS_LWS
 	ws_start(PORT+100);
-	ws_service();
+	//ws_service();//service happens in scheduler_timeout()
 	timeout=0.1;//let lws do timeout. don't use 0 which blocks
 #endif
 	listen_port(PORT, slocal, respond, timeout, scheduler_timeout, 0);

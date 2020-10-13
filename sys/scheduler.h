@@ -58,7 +58,7 @@ enum{
     CMD_PATH,/*6 */
     CMD_KILL,
     CMD_TRACE,/*8 */
-    CMD_UNUSED0,
+    CMD_PROBE,/*9 just for probe connection*/
     CMD_SOCK,  /**<10 We are pass a socket*/
     CMD_REMOVE,/**<11 Remove a job*/
     CMD_DISPLAY,/**<12 Remote display for telemetry*/

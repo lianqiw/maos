@@ -170,12 +170,12 @@ static int bind_socket_local(char* sockpath){
 	strncpy(addr.sun_path, sockpath, sizeof(addr.sun_path)-1);
 	if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))==-1){
 		perror("bind");
-		warning("bind to %s failed\n", sockpath);
+		warning_time("bind to %s failed\n", sockpath);
 		close(sock);
 		sock=-1;
 	}
 	if(sock!=-1){
-		info("binded to %s at sock %d\n", sockpath, sock);
+		dbg_time("binded to %s at sock %d\n", sockpath, sock);
 	}
 	return sock;
 }
@@ -216,16 +216,15 @@ static int bind_socket(char* ip, uint16_t port){
 		}
 	}
 	if(sock!=-1){
-		info("binded to port %hd at sock %d\n", port, sock);
+		dbg_time("binded to port %hd at sock %d\n", port, sock);
 	}
 	return sock;
 }
 
 static volatile int quit_listen=0;
-static int scheduler_signal_handler(int sig){
+static int listen_signal_handler(int sig){
 	/*quit listening upon signal and do clean up.*/
-	info("scheduler: %s", sys_siglist[sig]);
-	if(sig!=15) print_backtrace();
+	dbg_time("scheduler caught: %s(%d)\n", sys_siglist[sig],sig);
 	quit_listen=1;
 	return 1;
 }
@@ -239,7 +238,6 @@ static int scheduler_signal_handler(int sig){
  */
 void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	double timeout_sec, void (*timeout_fun)(), int nodelay){
-	register_signal_handler(scheduler_signal_handler);
 
 	fd_set read_fd_set;
 	fd_set active_fd_set;
@@ -251,7 +249,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			//also bind to AF_UNIX
 			sock_local=bind_socket_local(localpath);
 			if(sock_local==-1){
-				dbg("bind to %s failed\n", localpath);
+				dbg_time("bind to %s failed\n", localpath);
 			} else{
 				if(!listen(sock_local, 1)){
 					FD_SET(sock_local, &active_fd_set);
@@ -265,7 +263,6 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			ip=localpath;
 		}
 	}
-
 	int sock=bind_socket(ip, port);
 	if(nodelay){//turn off tcp caching.
 		socket_tcp_nodelay(sock);
@@ -274,10 +271,10 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
-
 	FD_SET(sock, &active_fd_set);
-
-	while(quit_listen!=2){
+	register_signal_handler(listen_signal_handler);
+	int nlisten=2;
+	while(quit_listen!=2 && nlisten){
 		if(quit_listen==1){
 			/*
 			  shutdown(sock, SHUT_WR) sends a FIN to the peer, therefore
@@ -292,15 +289,29 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			//shutdown(sock, SHUT_RDWR);
 			//shutdown(sock_local, SHUT_RDWR);
 			/*Notice existing client to shutdown*/
+			dbg_time("terminate pending: ask all clients (count=%d) to close.\n", nlisten);
+			static double quit_time=0;
+			if(!quit_time) quit_time=myclockd(); 
+			//stop listening.
+			FD_CLR(sock, &active_fd_set);
+			close(sock);
+			if(sock_local!=-1){
+				FD_CLR(sock_local, &active_fd_set);
+				close(sock_local);
+			}
+			
+			//We ask the client to actively close the connection
 			for(int i=0; i<FD_SETSIZE; i++){
-				if(FD_ISSET(i, &active_fd_set)&&i!=sock&&i!=sock_local){
+				if(FD_ISSET(i, &active_fd_set)){
 					int cmd[3]={-1, 0, 0};
-					stwrite(i, cmd, 3*sizeof(int)); //We ask the client to actively close the connection
-					//shutdown(i, SHUT_WR);
+					stwrite(i, cmd, 3*sizeof(int)); 
 				}
 			}
-			usleep(1e5);
-			quit_listen=2;
+			
+			if(myclockd()>quit_time+5){//wait for 2 seconds before force terminate.
+				dbg_time("force terminate while %d clients remaining.\n", nlisten);
+				quit_listen=2;//force quit.
+			}
 			//don't break. Listen for connection close events.
 		}
 		if(timeout_fun){
@@ -313,13 +324,13 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 		read_fd_set=active_fd_set;
 		if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0)<0){
 			if(errno==EINTR){
-				warning("select failed: %s\n", strerror(errno));
+				warning_time("select failed: %s\n", strerror(errno));
 				continue;
 			} else if(errno==EBADF){
-				warning("bad file descriptor: %s\n", strerror(errno));
+				warning_time("bad file descriptor: %s\n", strerror(errno));
 				break;//bad file descriptor
 			} else{
-				warning("unknown error: %s\n", strerror(errno));
+				warning_time("unknown error: %s\n", strerror(errno));
 				break;
 			}
 		}
@@ -331,11 +342,11 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 					struct sockaddr_in clientname;
 					int port2=accept(i, (struct sockaddr*)&clientname, &size);
 					if(port2<0){
-						warning("accept failed: %s. close port %d\n", strerror(errno), i);
+						warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
 						FD_CLR(i, &active_fd_set);
 						close(i);
 					} else{
-						info("port %d is connected\n", port2);
+						dbg_time("port %d is connected\n", port2);
 						FD_SET(port2, &active_fd_set);
 					}
 				} else if(i==sock_local){
@@ -343,11 +354,11 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 					struct sockaddr_un clientname;
 					int port2=accept(i, (struct sockaddr*)&clientname, &size);
 					if(port2<0){
-						warning("accept failed: %s. close port %d\n", strerror(errno), i);
+						warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
 						FD_CLR(i, &active_fd_set);
 						close(i);
 					} else{
-						info("port %d is connected locally\n", port2);
+						dbg_time("port %d is connected locally\n", port2);
 						FD_SET(port2, &active_fd_set);
 					}
 				} else{
@@ -363,11 +374,20 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 							//warning("close port %d\n", i);
 							close(i);
 						} else{
-							warning("ans=%d is not understood.\n", ans);
+							warning_time("ans=%d is not understood.\n", ans);
 						}
 					}
 				}
 			}
+		}
+		nlisten=0;
+		for(int i=0; i<FD_SETSIZE; i++){
+			if(FD_ISSET(i, &active_fd_set)){
+				nlisten++;
+			}
+		}
+		if(!nlisten){
+			dbg_time("all clients have closed.\n");
 		}
 	}
 	/* Error happened. We close all connections and this server socket.*/
@@ -375,10 +395,10 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	close(sock_local);
 	FD_CLR(sock, &active_fd_set);
 	FD_CLR(sock_local, &active_fd_set);
-	warning("listen_port exited\n");
+	warning_time("listen_port exited\n");
 	for(int i=0; i<FD_SETSIZE; i++){
 		if(FD_ISSET(i, &active_fd_set)){
-			warning("sock %d is still connected\n", i);
+			warning_time("sock %d is still connected\n", i);
 			close(i);
 			FD_CLR(i, &active_fd_set);
 		}
@@ -448,7 +468,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 			freeaddrinfo(result);
 			/* Give the socket the target hostname. */
 			if(res<0){
-				warning("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
+				//warning_once("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
 				close(sock);
 				if(!block){
 					return -1;

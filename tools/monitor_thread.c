@@ -176,7 +176,7 @@ static void* add_host(gpointer data){
 			cmd[0]=CMD_MONITOR;
 			cmd[1]=scheduler_version;
 			if(stwriteintarr(sock, cmd, 2)){//write failed.
-				warning("Rare event: Failed to write to scheduler at %s\n", hosts[ihost]);
+				warning_time("Failed to write to scheduler at %s\n", hosts[ihost]);
 				close(sock);
 				LOCK(mhost);
 				hsock[ihost]=-1;
@@ -185,6 +185,7 @@ static void* add_host(gpointer data){
 				host_added(ihost, sock);
 			}
 		} else{
+			dbg_time("Cannot reach %s", hosts[ihost]);
 			LOCK(mhost);
 			hsock[ihost]=-1;
 			UNLOCK(mhost);
@@ -192,7 +193,7 @@ static void* add_host(gpointer data){
 	}
 	return NULL;
 }
-//respond to scheduler
+//called by listen_host to respond to scheduler
 static int respond(int sock){
 	int cmd[3];
 	//read fixed length header info.
@@ -275,10 +276,14 @@ static int respond(int sock){
 	}
 	break;
 	case MON_ADDHOST:
-		if(cmd[1]>-1&&cmd[1]<nhost){
-			pthread_t tmp;
-			pthread_create(&tmp, NULL, add_host, GINT_TO_POINTER(cmd[1]));
-		} else if(cmd[1]==-2){
+		if(cmd[1]>-1&&cmd[1]<nhost){			
+			if(hsock[cmd[1]]==-1){
+				pthread_t tmp;
+				pthread_create(&tmp, NULL, add_host, GINT_TO_POINTER(cmd[1]));
+			}else{
+				dbg_time("MON_ADDHOST: hsock[%d]=%d\n", ihost, hsock[cmd[1]]);
+			}
+		} else if(cmd[1]==-2){//quit
 			return -2;
 		}
 		break;
@@ -299,11 +304,12 @@ void* listen_host(void* dummy){
 	(void)dummy;
 	htime=mycalloc(nhost, double);
 	FD_ZERO(&active_fd_set);
-	FD_SET(sock_main[0], &active_fd_set);
+	FD_SET(sock_main[0], &active_fd_set);//listen to monitor itself
 	int keep_listen=1;
 	while(keep_listen){
 		fd_set read_fd_set=active_fd_set;
-		if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL)<0){
+		struct timeval timeout={5,0};
+		if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, &timeout)<0){
 			perror("select");
 			continue;
 		}
@@ -321,12 +327,18 @@ void* listen_host(void* dummy){
 		}
 		double ntime=myclockd();
 		for(int ihost=0; ihost<nhost; ihost++){
-			if(hsock[ihost]>-1){
-				if(htime[ihost]+100<ntime){
-					//10 seconds grace period
-					info("100 seconds no respond. disconnect\n");
-					host_removed(hsock[ihost]);
+			if(ntime>htime[ihost]+10){//no activity for 10 seconds.
+				if(hsock[ihost]>-1){//check host connection 
+					dbg_time("10 seconds no respond. probing server %s.\n", hosts[ihost]);
+					scheduler_cmd(ihost, 0, CMD_PROBE);
+					if(htime[ihost]+20<ntime){
+						host_removed(hsock[ihost]);
+						dbg_time("20 seconds no respond. disconnect server %s.\n", hosts[ihost]);
+					}
+				} else{
+					add_host_wrap(ihost);
 				}
+				htime[ihost]=ntime;
 			}
 		}
 	}
@@ -367,23 +379,24 @@ int scheduler_display(int ihost, int pid){
 /**
    called by monitor to talk to scheduler.
 */
-int scheduler_cmd(int host, int pid, int command){
-	if(host<0) return 0;
+int scheduler_cmd(int ihost, int pid, int command){
+	if(ihost<0) return 0;
 	if(command==CMD_DISPLAY){
-		return scheduler_display(host, pid);
+		return scheduler_display(ihost, pid);
 	} else{
-		int sock=hsock[host];
+		int sock=hsock[ihost];
 		if(sock==-1){
-			add_host_wrap(host);
+			add_host_wrap(ihost);
 			sleep(1);
+			sock=hsock[ihost];
 		}
-		if(sock==-1) return 1;
+		if(sock<0) return 1;
 		int cmd[2];
 		cmd[0]=command;
 		cmd[1]=pid;/*pid */
 		int ans=stwriteintarr(sock, cmd, 2);
 		if(ans){/*communicated failed.*/
-			close(sock);
+			host_removed(ihost);
 		}
 		return ans;
 	}

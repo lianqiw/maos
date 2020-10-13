@@ -53,14 +53,13 @@ int lock_file(const char* fnlock, /**<The filename to lock on*/
 	int fd;
 	int count=0;
 retry:
-	if(count>10){
+	if((count++)>10){
 		fd=-1;
 		return fd;
 	}
-	count++;
 	fd=open(fnlock, O_RDWR|O_CREAT, 0644);
 	if(fd>=0){
-		fcntl(fd, F_SETFD, FD_CLOEXEC);
+		//fcntl(fd, F_SETFD, FD_CLOEXEC);//do not set CLOEXEC to hold the lock after fork/exec.
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
 		if(flock(fd, op)){/*lock faild. */
@@ -78,8 +77,7 @@ retry:
 				goto retry;
 			} else{
 				if(kill(pid, 0)){
-					warning("Unknown process %ld already locks file %s. (NFS mounted system?)\n",
-						pid, fnlock);
+					warning_time("Unknown process %ld already locks file %s. (NFS mounted system?)\n", pid, fnlock);
 					return -1;
 				} else{/*already running. check version */
 					/*warning("Process %ld already locks file %s\n",pid,fnlock); */
@@ -112,14 +110,14 @@ retry:
 			snprintf(strpid, 60, "%d %ld\n", getpid(), version);
 			lseek(fd, 0, SEEK_SET);
 			if(ftruncate(fd, 0)<0)
-				warning("Unable to truncate the file\n");
+				warning_time("Unable to truncate the file\n");
 			if(write(fd, strpid, strlen(strpid)+1)!=(long)strlen(strpid)+1){
-				warning("Write pid %d to %s failed\n", getpid(), fnlock);
+				warning_time("Write pid %d to %s failed\n", getpid(), fnlock);
 			}
 			fsync(fd);/*don't close file. maintain lock. */
 		}
 	} else{
-		warning("Open file failed. This should never happen\n");
+		warning_time("Open file failed. This should never happen\n");
 		sleep(1);
 		goto retry;
 	}
@@ -143,21 +141,17 @@ void single_instance_daemonize(const char* lockfolder_in,
 	void* daemon_arg){
 	int fd=-1;
 	char* lockfolder=expand_filename(lockfolder_in);
-	char* fnlock0=stradd(lockfolder, "/", progname, ".pid", NULL);
-	char* fnlog0=stradd(lockfolder, "/", progname, ".log", NULL);
-	/*Make those stack variable so that we don't have to free them. */
-	char* fnlock=(char*)alloca(strlen(fnlock0)+1);
-	strcpy(fnlock, fnlock0);
-	char* fnlog=(char*)alloca(strlen(fnlog0)+1);
-	strcpy(fnlog, fnlog0);
+	char fnlock[PATH_MAX];
+	char fnlog[PATH_MAX];
+	snprintf(fnlock, PATH_MAX, "%s/%s.pid", lockfolder, progname);
+	snprintf(fnlog, PATH_MAX, "%s/%s.log", lockfolder, progname);
 	free(lockfolder);
-	free(fnlog0);
-	free(fnlock0);
-
-	fd=lock_file(fnlock, 0, version);
+	
+	fd=lock_file(fnlock, 0, version);//non-blocking lock
 	if(fd<0){
 	/*lock failed. daemon already running. no need to start the daemon. */
 		if(daemon_func){
+			dbg_time("failed to lock_file. return\n");
 			return;
 		} else{
 			_exit(EXIT_SUCCESS);
@@ -176,7 +170,7 @@ void single_instance_daemonize(const char* lockfolder_in,
 			sleep(3);
 			return;
 		} else{
-			exit(EXIT_SUCCESS);
+			_exit(EXIT_SUCCESS);
 		}
 	}
 	//child process keeps on
@@ -188,7 +182,7 @@ void single_instance_daemonize(const char* lockfolder_in,
 	   controller terminal. We don't want this to happen. So
 	   we fork again after setsid.*/
 	if(setsid()==-1) warning("Error setsid\n");
-	if(chdir("/")) warning("Error chdir\n");
+	if(chdir(TEMP)) warning("Error chdir\n");
 	umask(0077);
 	/*We fork again. after this fork, the process is not the
 	  session leader (the leader has exited) and no
@@ -198,12 +192,12 @@ void single_instance_daemonize(const char* lockfolder_in,
 		exit(EXIT_FAILURE);
 	} else if(pid>0){/*exit first parent. */
 		close(fd);/*close and release lock */
-		exit(EXIT_SUCCESS);
+		_exit(EXIT_SUCCESS);
 	}
 	PID=getpid();
 	/*redirect stdin/stdout. */
 	if(!freopen("/dev/null", "r", stdin)) warning("Error closing stdin\n");
-	if(!freopen(fnlog, "w", stdout) || dup2(1,2)==-1) warning("Error redirect stdout or stderr\n");
+	if(!freopen(fnlog, "w", stdout)||dup2(1, 2)==-1) warning("Error redirect stdout or stderr\n");
 	setbuf(stdout, NULL);/*disable buffering. */
 
 	char strpid[60];
@@ -269,7 +263,7 @@ void redirect(void){
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	if(detached){//only output to file
-		if(!freopen(fn, "w", stdout) || dup2(1,2)==-1) warning("Error redirecting stdout or stderr.\n");
+		if(!freopen(fn, "w", stdout)||dup2(1, 2)==-1) warning("Error redirecting stdout or stderr.\n");
 		//don't close stdin to prevent fd=0 from being used by file.
 		if(!freopen("/dev/null", "r", stdin)) warning("Error redirecting stdin\n");
 	} else{
@@ -293,7 +287,7 @@ void redirect(void){
 			//child thread read from pfd[0] and write to stdout.
 			pthread_create(&thread, NULL, (void* (*)(void*))dup_stdout, data);
 			//master threads redirects stderr and stdout to pfd[1]
-			if(dup2(pfd[1], 1)==-1 || dup2(pfd[1],2)==-1){
+			if(dup2(pfd[1], 1)==-1||dup2(pfd[1], 2)==-1){
 				warning("Error redirecting stdout or stderr");
 			}
 		}
@@ -406,35 +400,6 @@ char* find_exe(const char* name){
    fork twice and launch exename, with arguments args. Returns PID of the grandchild process.
 */
 int spawn_process(const char* exename, const char* args, const char* path){
-	/*pid_t pid;
-	if((pid=fork())<0){
-	warning("forked failed\n");
-	return -1;
-	}else if(pid>0){
-	waitpid(pid, NULL, 0);
-	return 0;
-	}else{
-	detached=1;
-	setsid();
-	pid=fork();
-	if(pid<0){
-		exit(1);
-	}else if(pid>0){
-		_exit(0);
-	}
-	if(path && chdir(path)){
-		warning("Error chdir to %s\n", path);
-	}
-	char *fn=find_exe(exename);
-	if(fn){
-		execl(fn, exename, arg1,  NULL);
-	}else{
-		execlp(exename, exenmae, arg1, NULL);
-	}
-	exit(0);//in case child comes here. quit.
-	}*/
-
-
 	int pipfd[2];
 	if(pipe(pipfd)){
 		warning("unable to create pipe\n");

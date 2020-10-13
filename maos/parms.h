@@ -101,17 +101,31 @@ typedef struct LLT_CFG_T{
     char *fnamp;   /**<Pupil amplitude map. overrides widthp*/
     dmat *ox;    /**<location x of LLT center wrt telescope aperture center*/
     dmat *oy;    /**<see ox.*/
-    dmat *misreg;
+    dmat *misreg; /*beam to pupil misregistration (centering error)*/
     lmat *i;        /**<Index into llt for this iwfs.*/
     int ttfr;      /**<Remove piston/tip/tilt and focus (if = 2) from ncpa*/
     int n;         /**<number of launch telescopes in this powfs*/
-    int colprep;   /**<starting column to use in fn for ETF in preparation of
-		      matched filter*/
+    int colprep;   /**<starting column to use in fn for ETF in preparation of matched filter*/
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
-    int coldtrat;/**<change to next sodium profile during simulation every
-		       coldtrat time step*/
+    int coldtrat;/**<change to next sodium profile during simulation every coldtrat time step*/
     real ttrat;  /**<Ratio of uplink jitter to downlink jitter due to M2 windshake.*/
 } LLT_CFG_T;
+/**
+* parameters for dithering
+* */
+typedef struct DITHER_CFG_T{
+	int mode;
+	real amp; /**<Dither amplitude.*/
+	real gpll;/**<Gain of phase locked loop*/
+	real gog; /**<Gain for updating optical gain for cog*/
+	real gdrift;/**<Gain for drift control*/
+	int npoint;/**<Number of points in each dither peroid (4)*/
+	int pllskip;/**<Skip WFS frames for uplink loop to stable*/
+	int pllrat; /**<Number of WFS frames for updating PLL.*/
+	int ogskip; /**<Number of WFS frames to skip before computing averaged images*/
+	int ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
+	int ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
+} DITHER_CFG_T;
 /**
    contains input parameters for each type of wfs (powfs).
 */
@@ -228,17 +242,18 @@ typedef struct POWFS_CFG_T{
     int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
     int i0save;     /**<Save time averaged subaperture images.*/
     char *i0load;   /**<load i0,gx,gy from this folder.*/
-    real gradscale;/**<Scale CL gradients. For testing*/
-    real dither_amp; /**<Dither amplitude.*/
-    real dither_gpll;/**<Gain of phase locked loop*/
-    real dither_gog; /**<Gain for updating optical gain for cog*/
-    real dither_gdrift;/**<Gain for drift control*/
-    int dither_npoint;/**<Number of points in each dither peroid (4)*/
-    int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
-    int dither_pllrat; /**<Number of WFS frames for updating PLL.*/
-    int dither_ogskip; /**<Number of WFS frames to skip before computing averaged images*/
-    int dither_ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
-    int dither_ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
+    real gradscale; /**<Scale CL gradients. For testing*/
+	//char* fndither; /**<Configuration for dither*/
+	real dither_amp; /**<Dither amplitude.*/
+	real dither_gpll;/**<Gain of phase locked loop*/
+	real dither_gog; /**<Gain for updating optical gain for cog*/
+	real dither_gdrift;/**<Gain for drift control*/
+	int dither_npoint;/**<Number of points in each dither peroid (4)*/
+	int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
+	int dither_pllrat; /**<Number of WFS frames for updating PLL.*/
+	int dither_ogskip; /**<Number of WFS frames to skip before computing averaged images*/
+	int dither_ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
+	int dither_ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
     //options for zoom corrector
     int zoomdtrat;   /**<dtrat of the trombone averager*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
