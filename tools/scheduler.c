@@ -119,11 +119,11 @@ static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
 		dbg2_time("%d: ncpu %d->%d. ngpu %d->%d.\n",
 			pid, ncpu+nthread, ncpu, ngpu+ngpu_used, ngpu);
 		if(ncpu<0){
-			warning_time("ncpu=%d\n", ncpu);
+			dbg_time("ncpu=%d\n", ncpu);
 			ncpu=0;
 		}
 		if(ngpu<0){
-			warning_time("ngpu=%d\n", ngpu);
+			dbg_time("ngpu=%d\n", ngpu);
 			ngpu=0;
 		}
 		break;
@@ -209,7 +209,7 @@ static void runned_restart(int pid){
 	for(irun=runned; irun; irun_prev=irun, irun=irun->next){
 		if(irun->pid==pid){
 			if(irun->status.info<10){
-				warning_time("status.info=%d\n", irun->status.info);
+				dbg_time("status.info=%d\n", irun->status.info);
 				break;
 			}
 			if(irun_prev){//not start of list
@@ -526,7 +526,7 @@ static int maos_command(int pid, int sock, int cmd){
 		warning_time("Unable to pass socket to maos\n");
 		stwriteint(sock, -1);//respond failure message.
 	} else{
-		warning_time("Successfully passed socket to maos\n");
+		dbg_time("Successfully passed socket to maos\n");
 		stwriteint(sock, 0);//respond succeed
 	}
 	return -1;//do not keep this connection.

@@ -288,6 +288,7 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 			  We replace the above interpolation (and FFT) by doing summation directly
 			  ETF(k_i)=\sum_j exp(-2*\pi*I*k_i*(rsa/h_j-rsa/hs))P(h_j)
 			*/
+			TIC;tic;
 			const int npad=2;/*zero padding to reduce aliasing */
 			const int nover=2;/*enough size for rotation*/
 			const int netf=notfx*nover*npad;
@@ -386,6 +387,7 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 			}//for illt.
 			cfree(etf);
 			free(thetas);
+			toc("ETF");
 		}//if na_interp
 		//fuse nominal to etf to avoid multiply again.
 		ccell* pnominal=dtfs[iwvl].nominal;

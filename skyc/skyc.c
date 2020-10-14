@@ -44,7 +44,7 @@ void skyc_version(void){
 	info2("Launched at %s in %s with PID %ld.\n", myasctime(), HOST, (long)getpid());
 #if HAS_LWS
 	extern uint16_t PORT;
-	info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
+	info2("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
 #endif
 }
 /**

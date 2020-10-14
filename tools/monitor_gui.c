@@ -372,19 +372,20 @@ static void clipboard_append(const char* jobinfo){
 typedef struct{
 	const char* menu;
 	const char* action;
+	GdkPixbuf** icon;
 	int command;
 }menudata_t;
 gint cur_page=-1;
 menudata_t menudata[]={
-	{"Plot selected jobs", "Plot", CMD_DISPLAY},
-	{"Clear selected jobs", "Remove", CMD_REMOVE},
-	{NULL, NULL, -1},
-	{"Kill selected jobs", "Kill", CMD_KILL},
-	{"Restart selected jobs", "Restart", CMD_RESTART},
-	{NULL, NULL, -1},
-	{"Copy cmdline selected jobs", "Copy", -1},
-	{"Copy path of selected jobs", "CopyPath", -1},
-	{"Copy output path of selected jobs", "CopyOutPath", -1}
+	{"Plot selected jobs", "Plot", NULL, CMD_DISPLAY},
+	{"Clear selected jobs", "Remove", NULL, CMD_REMOVE},
+	{NULL, NULL, NULL, -1},
+	{"Kill selected jobs", "Kill", &icon_failed, CMD_KILL},
+	{"Restart selected jobs", "Restart", NULL, CMD_RESTART},
+	{NULL, NULL, NULL, -1},
+	{"Copy cmdline selected jobs", "Copy", NULL, -1},
+	{"Copy path of selected jobs", "CopyPath", NULL, -1},
+	{"Copy output path of selected jobs", "CopyOutPath", NULL, -1}
 };
 /*A general routine handle actions to each item.*/
 static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, gpointer user_data){
@@ -470,7 +471,19 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 		cur_page=GPOINTER_TO_INT(user_data);
 		for(size_t i=0; i<sizeof(menudata)/sizeof(menudata_t); i++){
 			if(menudata[i].menu){
-				menuitem=gtk_menu_item_new_with_label(menudata[i].menu);
+				if(menudata[i].icon && *menudata[i].icon){
+					menuitem=gtk_menu_item_new();
+					GtkWidget* box=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+					GtkWidget* icon=gtk_image_new_from_pixbuf(*menudata[i].icon);
+					GtkWidget* label=gtk_label_new(menudata[i].menu);
+					gtk_container_add(GTK_CONTAINER(box), label);
+					gtk_box_pack_end(GTK_BOX(box), icon, TRUE, FALSE, 0);
+					//gtk_container_add(GTK_CONTAINER(box), icon);
+					gtk_container_add(GTK_CONTAINER(menuitem), box);
+				} else{
+					menuitem=gtk_menu_item_new_with_label(menudata[i].menu);
+					//gtk_widget_set_margin_start(menuitem, 16);
+				}
 				g_signal_connect(menuitem, "activate", G_CALLBACK(handle_menu_event), menudata+i);
 			} else{
 				menuitem=gtk_separator_menu_item_new();
