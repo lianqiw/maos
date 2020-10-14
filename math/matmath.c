@@ -530,9 +530,7 @@ void X(rotvecnn)(X(mat)** B0, const X(mat)* A, R theta){
 		warning("A has wrong dimension");
 		return;
 	}
-	if(!*B0){
-		*B0=X(new)(2, 2);
-	}
+	X(new2)(B0, 2, 2);
 	X(mat)* B=*B0;
 	assert(B->nx==2&&B->ny==2);
 	const T ctheta=cos(theta);
@@ -844,17 +842,17 @@ void X(addI)(X(mat)* A, T val){
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
 */
 void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
-	if(A&&A->nx&&fabs(ac)>EPS){
+	if(A&&A->nx&&ac){
 		if(!*B0){
-			*B0=X(new)(A->nx, A->ny);
 			bc=0;/*no bother to accumulate. */
 		}
+		X(new2)(B0, A->nx, A->ny);
 		X(mat)* B=*B0;
 		if(A->nx!=B->nx||A->ny!=B->ny){
 			error("A is %ldx%ld, B is %ldx%ld. They should match\n",
 				A->nx, A->ny, B->nx, B->ny);
 		}
-		if(fabs(bc)>EPS){
+		if(bc){
 			for(int i=0; i<A->nx*A->ny; i++){
 				B->p[i]=B->p[i]*bc+A->p[i]*ac;
 			}
@@ -874,11 +872,11 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
 */
 void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
-	if(A&&A->nx&&fabs(ac)>EPS){
+	if(A&&A->nx&&ac){
 		if(!*B0){
-			*B0=X(new)(A->nx, A->ny);
 			bc=0;/*no bother to accumulate. */
 		}
+		X(new2)(B0, A->nx, A->ny);
 		X(mat)* B=*B0;
 		long nx=MIN(A->nx, B->nx);
 		long ny=MIN(A->ny, B->ny);
@@ -1127,7 +1125,7 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
 	R center, R spacing, int n){
 	if(!A||!A->p) return;
 	int nn=A->nx*A->ny;
-	X(init)(out, n, nn);
+	X(new2)(out, n, nn);
 	X(mat)* Op=*out;
 	const T* restrict Ap=A->p;
 	const R spacingi=1./spacing;

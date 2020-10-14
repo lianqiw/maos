@@ -63,9 +63,9 @@ X(mat)* X(new)(long nx, long ny){
 	return X(new_do)(nx, ny, NULL, 0);
 }
 /**
-   check the size of matrix if exist. Otherwise create it.
+   check the size of matrix if exist. Otherwise create it. content is not zeroed. 
 */
-void X(init)(X(mat)** A, long nx, long ny){
+void X(new2)(X(mat)** A, long nx, long ny){
 	if(!*A){
 		*A=X(new)(nx, ny);
 	}else if((*A)->nx==0 || (*A)->ny==0){
@@ -73,8 +73,6 @@ void X(init)(X(mat)** A, long nx, long ny){
 	}else if((*A)->nx!=nx||(*A)->ny!=ny){
 		error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
 		(*A)->nx, (*A)->ny, nx, ny);
-	}else{
-		X(zero)(*A);
 	}
 }
 /**
@@ -265,7 +263,7 @@ uint32_t X(hash)(const X(mat)* A, uint32_t key){
 */
 void X(cp)(X(mat)** out0, const X(mat)* in){
 	if(check_mat(in)){
-		X(init)(out0, in->nx, in->ny);
+		X(new2)(out0, in->nx, in->ny);
 		X(mat)* out=*out0;
 		if(in->header){
 			free(out->header);
@@ -561,7 +559,7 @@ void X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 */
 void X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 	if(!check_mat(A)) return;
-	X(init)(B0, A->nx, A->ny);
+	X(new2)(B0, A->nx, A->ny);
 	X(mat)* B=*B0;
 
 	const int nx=A->nx;

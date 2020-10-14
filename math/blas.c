@@ -44,14 +44,7 @@ void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	}
 	if(k!=k2) error("dmm: Matrix doesn't match: A: %tdx%td, B: %tdx%td, trans=%s\n",
 		m, k, k2, n, trans);
-
-	if(!*C0){
-		*C0=X(new)(m, n);
-	} else if(m!=(*C0)->nx||n!=(*C0)->ny){
-	//Resizing the array is dangerous as it may be part of a cell that has m array.
-		error("dmm: Matrix doesn't match: C: %tdx%td, C0: %ldx%ld\n",
-			m, n, (*C0)->nx, (*C0)->ny);
-	}
+	X(new2)(C0, m, n);
 	X(mat)* C=*C0;
 	lda=A->nx;
 	ldb=B->nx;

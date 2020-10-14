@@ -26,7 +26,7 @@
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;		\
     X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
     X(mat) *X(mat_cast)(const void *A) CHECK_UNUSED_RESULT;		\
-    void X(init)(X(mat)**A, long nx, long ny) ;				\
+    void X(new2)(X(mat)**A, long nx, long ny) ;				\
     void X(free_do)(X(mat) *A);						\
     X(mat) *X(ref)(const X(mat) *in) CHECK_UNUSED_RESULT;		\
     X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny) CHECK_UNUSED_RESULT; \

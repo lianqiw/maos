@@ -84,5 +84,3 @@ dmat* poly2fit(const dmat* in, const dmat* out, int maxorder);
 loc_t* loctransform2(const loc_t* loc, const dmat* coeff);
 dsp* chol_factorize2(long** Cp, const dsp* A_in);
 dmat* hyst_test(real hysteresis, real hyst_alpha, real hyst_stroke, const dmat* dmcmd);
-void dinit(dmat** arr, long nx, long ny);//testing
-void dresize(dmat* arr, long nx, long ny);//testing

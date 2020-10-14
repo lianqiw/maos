@@ -134,11 +134,7 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const int transy, const T alpha){
 	if(!A||!x) return;
 	mm_t D=parse_trans((cell*)A, (cell*)x, trans);
-	if(transy){
-		X(init)(yout, D.ny, D.nx);
-	} else{
-		X(init)(yout, D.nx, D.ny);
-	}
+	X(new2)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
 	X(mat)* y=*yout;
 	if(x->ny==1&&trans[1]=='n'&&transy==0){
 		X(spmulvec)(y->p, A, x->p, trans[0], alpha);
