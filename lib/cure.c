@@ -161,8 +161,9 @@ void cure1d(dmat** pphix,   /**<Output: opd*/
 	// writebin(lx, "lx_2");
 	//Extrapolate from x chain defined on edge to corner points
 	if(*pphix){
-		if(lx->nx<nx+1||lx->ny<ny+1){
-			error("Output array is too small\n");
+		if((*pphix)->nx<nx+1||(*pphix)->ny<ny+1){
+			warning("Output array is too small, resize\n");
+			dresize(*pphix, nx+1, ny+1);
 		}
 	} else{
 		*pphix=dnew(nx+1, ny+1);//x chains: integration of gx along x
@@ -221,6 +222,11 @@ void cure(dmat** phi, const dmat* gx, const dmat* gy, real dx){
    An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid.
 */
 void cure_loc(dmat** phix, const dmat* grad, const loc_t* saloc){
+	if(grad->nx*grad->ny!=saloc->nloc*2){
+		warning("Incorrect dimensions: grad %ldx%ld, saloc %ldx2",
+			grad->nx, grad->ny, saloc->nloc);
+		return;
+	}
 	loc_create_map(saloc);
 	int nxm=saloc->map->nx;
 	int npad=saloc->npad;

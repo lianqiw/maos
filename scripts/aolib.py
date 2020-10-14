@@ -160,9 +160,10 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             print(fdin, ' has no valid results')
     #if len(fds)>1:
     #    print(*fds, sep="\n")
-    return (resall,fds)
+    print(len(fds), ' resutls are read')
+    return (resall,np.array(fds))
     #else:
-    return resall
+    #return resall
 def mysqrt(x):
     if type(x) is np.ndarray:
         return np.sign(x)*np.sqrt(np.abs(x))

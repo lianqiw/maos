@@ -2,16 +2,22 @@
 
 #Use ctypes to interface with C libraries
 #POINTER is the class type of pointer
+#pointer() acts on actual array, while POINTER() works on class type.
+#pointer(cell(arr)) #creates cell Structure for np.array type arr and makes a pointer
+#pcell=POINTER(cell) ; pcell() #Creates a class for cell Structure and then makes an object pointer with no content.
+
 #c_int is a ctypes type
 #a=c_int(42) #creates a ctypes int object
-#p=pointer(a) creates pointers to object a
+#p=pointer(a) creates C compatible pointers to object a
 #p.contents retreates the contents of pointer p
 #addressof(p) retreates the address of p
 #use pd=cast(p, POINTER(c_double)) to convert pointer p to c_double pointer 
 #use pd=cast(address, POINTER(c_double)) to convert address in c_double pointer
 #cast(addressof(a), POINTER(c_double)).contents #reinterpreted int a as double
 
-#Use byref() or pointer() to obtain pointer to an object
+#pointer() creates a real pointer to a ctype object (Sturecture)
+#byref() is a simplified version of pointer(). It cannot be used as byref(byref())
+#can use byref(pointer())
 #Set restype to return correct value
 #Set argtypes for type checking for input into C code
 #be careful regarding memory management.
@@ -83,20 +89,20 @@ def py2cell(arr):
     else:
         return cell(arr)
 
-#convert numpy array to any C array adaptively
+#convert numpy array to any C array pointer adaptively
 def py2cellref(arr):
     if type(arr) is list:
-        arr=np.asarray(arr)
-    elif type(arr) is not np.ndarray:
-        print('py2cellref does not take ', type(arr))
-        return None
-    if arr.size==0:
-        return None #turn empty ndarray to Null pointer. do not use 0
-    elif sp.isspmatrix_csc(arr):
-        return byref(csc(arr))
+        arr = np.asarray(arr)
+        
+    if type(arr) is np.ndarray:        
+        if arr.size==0:
+            return None #turn empty ndarray to Null pointer. do not use 0
+        elif sp.isspmatrix_csc(arr):
+            return byref(csc(arr))
+        else:
+            return byref(cell(arr))
     else:
-        return byref(cell(arr))
-
+        return byref(arr)
 class cell(Structure):
     _fields_ = [ #fields compatible with C type
         ('id', c_uint32),
@@ -136,7 +142,7 @@ class cell(Structure):
                     self.ny=0
             if self.nx==0:
                 self.p=0
-            elif arr.dtype.kind is not 'O':
+            elif arr.dtype.kind != 'O':
                 self.p=arr.ctypes.data_as(c_void_p)
             else:
                 self.qarr=np.zeros(self.shape(1), dtype=object)
@@ -201,8 +207,8 @@ class cell(Structure):
             print('as_array: Unknown data, id='+ str(self.id))
             return np.empty((),dtype=object)
     def free(self):
-        lib.cellfree_do(byref(self))
-
+        lib.cellfree_do(byref(self)) #will fail if memory is not allocated by C
+        
 class loc(Structure):
     _fields_ = [
         ('id', c_uint32),

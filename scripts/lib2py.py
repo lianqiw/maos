@@ -105,7 +105,7 @@ def handle_type(argtype, argname):
 
 
     if isout:
-        prep1=argname+'=POINTER('+pytype+')'
+        prep1=argname+'=POINTER('+pytype+')()'
         prep2='pt2py('+argname+')'
     else:
         prep1=''

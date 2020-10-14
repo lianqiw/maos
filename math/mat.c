@@ -66,14 +66,15 @@ X(mat)* X(new)(long nx, long ny){
    check the size of matrix if exist. Otherwise create it.
 */
 void X(init)(X(mat)** A, long nx, long ny){
-	if(*A&&(*A)->nx>0&&(*A)->ny>0){
-		if((*A)->nx!=nx||(*A)->ny!=ny){
-			error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
-				(*A)->nx, (*A)->ny, nx, ny);
-		}
-	} else{
-		X(free)(*A);
+	if(!*A){
 		*A=X(new)(nx, ny);
+	}else if((*A)->nx==0 || (*A)->ny==0){
+		X(resize)(*A, nx, ny);
+	}else if((*A)->nx!=nx||(*A)->ny!=ny){
+		error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
+		(*A)->nx, (*A)->ny, nx, ny);
+	}else{
+		X(zero)(*A);
 	}
 }
 /**
@@ -88,7 +89,7 @@ X(mat)* X(mat_cast)(const void* A){
 		return B;
 }
 /**
-   free a matrix object. if keepdata!=0, will not free A->p.
+   free a matrix object. 
 */
 void X(free_do)(X(mat)* A){
 	if(check_mat(A)){
@@ -150,7 +151,15 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
    possible.
 */
 void X(resize)(X(mat)* A, long nx, long ny){
-	if(!check_mat(A)) return;
+	if(!A) return;
+	else if(!ismat(A)){
+		if(iscell(A) && !A->p && (A->nx==0 || A->ny==0 )){
+			A->id=M_T;//convert empty cell to mat.
+		}else{
+			warning("Incorrect type: id=%d\n", A->id);
+			return ;
+		}
+	}
 	if(!nx) nx=A->nx;
 	if(!ny) ny=A->ny;
 	if(mem_isref(A->mem)){

@@ -528,7 +528,7 @@ typedef struct SIM_CFG_T{
     int mffocus;     /**<method for focus blending between LGS and LO NGS
 			- 0: no focus blending.
 			- 1: Focus blending using CL gradients, for each LGS independently.
-			- 2: Focus blending using CL gradinets, for common LGS focus only.
+			- 2: Focus blending using CL gradinets, for common LGS focus only (not preferred).
 		     */
     int idealfsm;    /**<ideal compensation for uplink pointing*/
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/
