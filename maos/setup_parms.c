@@ -384,7 +384,7 @@ static void readcfg_powfs(PARMS_T* parms){
 
 		if(powfsi->fnllt){
 #define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
-			open_config(powfsi->fnllt, prefix, 0);
+			open_config(powfsi->fnllt, prefix, -1);
 			powfsi->llt=mycalloc(1, LLT_CFG_T);
 			READ_LLT(dbl, d);
 			READ_LLT(dbl, widthp);
@@ -1075,6 +1075,7 @@ static void readcfg_dbg(PARMS_T* parms){
 	READ_INT(dbg.ncpa_rmsci);
 	READ_INT(dbg.gp_noamp);
 	READ_DBL(dbg.gradoff_scale);
+	READ_INT(dbg.gradoff_reset);
 	READ_DMAT(dbg.pwfs_psx);
 	READ_DMAT(dbg.pwfs_psy);
 	READ_INT(dbg.pwfs_side);
@@ -1441,6 +1442,9 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 		if(!parms->sim.closeloop&&parms->powfs[ipowfs].dtrat!=1){
 			warning("powfs %d: in open loop mode, only dtrat=1 is supported. Changed\n", ipowfs);
 			parms->powfs[ipowfs].dtrat=1;
+		}else if(parms->powfs[ipowfs].dtrat==0){
+			parms->powfs[ipowfs].dtrat=1;
+			parms->powfs[ipowfs].step=INT_MAX;
 		}
 		if(parms->sim.wfsalias){
 			parms->powfs[ipowfs].noisy=0;
@@ -1584,11 +1588,15 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 			}
 			//Convert all rate in unit of WFS frame rate
 			//pllrat was already in WFS frame rate.
+			powfsi->dither_npoint*=powfsi->dtrat;
+			powfsi->dither_pllrat*=powfsi->dtrat;
+			powfsi->dither_pllskip*=powfsi->dtrat;
+			if(powfsi->dtrat>1){
+				warning("dither_npoint, pllrat, pllskip scaled by dtrat=%d", powfsi->dtrat);
+			}
 			powfsi->dither_ograt*=powfsi->dither_pllrat;
 			powfsi->dither_ogskip=powfsi->dither_ogskip*powfsi->dither_pllrat+powfsi->dither_pllskip;
 			//Convert all in simulation rate (sim.dt).
-			powfsi->dither_pllskip*=powfsi->dtrat;
-			powfsi->dither_ogskip*=powfsi->dtrat;
 			if(powfsi->dither_ograt<=0||powfsi->dither_pllrat<=0){
 				error("dither_ograt or _pllrat must be positive\n");
 			}
@@ -1656,11 +1664,6 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 			int lgspowfs=parms->ilgspowfs;
 			if(lgspowfs!=-1){
 				info("powfs %d is TWFS for powfs %d\n", ipowfs, lgspowfs);
-				if(parms->powfs[ipowfs].dtrat<1){//automatic dtrat: matched filter update rate.
-					int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_ograt;
-					parms->powfs[ipowfs].dtrat=mtchdtrat;
-					info("powfs %d dtrat is set to %d\n", ipowfs, mtchdtrat);
-				}
 				//Set TWFS integration start time to pll start time to synchronize with matched filter update.
 				if(parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
 					parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_pllskip;
@@ -1670,7 +1673,9 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 		//floor to multiple of dtrat.
 		const int dtrat=parms->powfs[ipowfs].dtrat;
 		if(parms->powfs[ipowfs].step<0) parms->powfs[ipowfs].step=0;
-		parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
+		if(dtrat>0){
+			parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
+		}
 		//warning("powfs %d step is set to %d, dtrat=%d\n", ipowfs, parms->powfs[ipowfs].step, dtrat);
 	}
 	parms->hipowfs_hs=INFINITY;

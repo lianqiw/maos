@@ -816,18 +816,19 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_stroke(cr);//stroke all together.
 				toc("stroke");
 				}*/
-				if(ptsnx>0&&drawdata->legendcurve){
+				if(ptsnx>0 && (drawdata->cumu || drawdata->legendcurve)){
 					cairo_save(cr);
 					cairo_translate(cr, ix+2, round((iy-font_size*0.5)/1)*1);
 					cairo_scale(cr, 1, -1);
+					char val[80]; val[1]=0;
+					if(drawdata->legend && connectpts){
+						val[0]=drawdata->legend[ipts][0];
+					}
 					if(drawdata->cumu){
-						char val[80];
-						snprintf(val, 80, "%.2f", y);
-						pango_text(cr, layout, 0, 0, val, 1, 1, 0);
+						snprintf(val, sizeof(val), "%c(%.2f)", val[0], y);
 					}
-					if(drawdata->legend&&connectpts){
-						pango_text(cr, layout, 0, 0, drawdata->legend[ipts], 0, 1, 0);
-					}
+					pango_text(cr, layout, 0, 0, val, 0, 1, 0);
+					
 					cairo_restore(cr);
 				}
 				cairo_restore(cr);

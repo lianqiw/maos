@@ -19,7 +19,7 @@
 #include "drawdaemon.h"
 #include "icon-draw.h"
 int sock;
-int sock_block=0;
+int sock_idle=0;
 int cumu=0;
 #if MAC_INTEGRATION
 #include <gtkosxapplication.h>

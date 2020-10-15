@@ -47,7 +47,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 	real ak, bk;
 	real r0z0=dcellinn(b, b);/*|b| */
 	real res[maxiter+1];
-	dbg("CPU %sCG %d:", M?"P":"", maxiter);
+	dbg2("CPU %sCG %d:", M?"P":"", maxiter);
 
 	for(int k=0; k<maxiter; k++){
 		if(k%100==0){ /*restart every 100 steps exclude beginning */
@@ -62,7 +62,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 			dcellcp(&p0, z0);
 			r0z1=dcellinn(r0, z0);
 		}
-		if(LOG_LEVEL>0){
+		if(LOG_LEVEL>1){
 			if(Mmul){
 				res[k]=sqrt(dcellinn(r0, r0)/r0z0);
 			} else{
@@ -70,7 +70,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 			}
 		}
 
-		dbg1(" %.5f", res[k]);
+		dbg2(" %.5f", res[k]);
 
 		if(Ap) dcellzero(Ap);
 		(*Amul)(&Ap, A, p0, 1);
@@ -95,7 +95,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 		dcelladd(&p0, bk, z0, 1.);/*p0=bk*pi+r0 */
 		r0z1=r0z2;
 	}
-	dbg1(" ==> %.5f\n", res[maxiter]);
+	dbg2(" ==> %.5f\n", res[maxiter]);
 end:
 	dcellfree(r0);
 	if(Mmul){

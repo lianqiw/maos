@@ -107,7 +107,7 @@ void* listen_draw(void* dummy){
 	int cmd=0;
 	while(!streadint(sock, &cmd)){
 	//dbg("cmd=%d\n", cmd);
-		sock_block=0;//Indicate connection is active
+		sock_idle=0;//Indicate connection is active
 		switch(cmd){
 		case DRAW_START:
 			//tic;
@@ -150,6 +150,8 @@ void* listen_draw(void* dummy){
 			}
 		}
 		break;
+		case DRAW_SHM:/*no action*/
+			break;
 		case DRAW_POINTS:
 		{
 		//dbg("DRAW_POINTS\n");
@@ -221,7 +223,7 @@ void* listen_draw(void* dummy){
 			break;
 		case DRAW_FINAL:
 			//dbg("client is done\n");
-			sock_block=1;
+			sock_idle=1;
 			break;
 		case DRAW_FLOAT:
 			STREADINT(byte_float);
@@ -300,7 +302,7 @@ void* listen_draw(void* dummy){
 	}/*while */
 end:
 	sock=-1;
-	sock_block=1;
+	sock_idle=1;
 	warning("Read failed, stop listening.\n");
 	return NULL;
 }

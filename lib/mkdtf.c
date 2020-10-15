@@ -294,28 +294,33 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 			const int netf=notfx*nover*npad;
 			const real dtetf=dtheta/nover;
 			const real dusc=(netf*dtetf)/(dtheta*notfx);
-			cmat* etf=cnew(netf, 1);
-			real* thetas=mycalloc(netf, real);
+			dmat* thetas=dnew(netf, 1);
+			//real* thetas=mycalloc(netf, real);
 			const int netf2=netf>>1;
 			/*Only interpolating the center part. the rest is padding. */
 			const int etf0=netf2-(int)round(notfx2*(dtheta/dtetf));
 			const int etf1=etf0+(int)round(notfx*(dtheta/dtetf));
 			if(etf0<0) error("Invalid configuration\n");
 			for(int it=etf0; it<etf1; it++){
-				thetas[it]=(it-netf2)*dtetf;
+				P(thetas,it)=(it-netf2)*dtetf;
 			}
 			//info("etf0=%d, etf1=%d, netf=%d\n", etf0, etf1, netf);
 			//cfft2plan(etf, -1);
 
 			for(int illt=0; illt<nllt; illt++){
-				for(int isa=0; isa<nsa; isa++){
+#pragma omp parallel for default(shared)				
+				for(long isa=0; isa<nsa; isa++)
+				//OMPTASK_SINGLE
+				//OMPTASK_FOR(isa,0,nsa)
+				{
+					cmat* etf=cnew(netf, 1);
 					/*1d ETF along radius. */
 					real rsa=srsa->p[illt]->p[isa];
 					real etf2sum=0;
 					czero(etf);
 					for(int icomp=etf0; icomp<etf1; icomp++){
 					/*peak in center */
-						const real itheta=thetas[icomp];
+						const real itheta=P(thetas,icomp);
 						/*non linear mapping. changed from - to + on 2014-05-07.*/
 						const real ih=hs*rsa/(rsa+itheta*hs);
 						/*interpolating to get Na profile strenght. */
@@ -348,8 +353,8 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 						//check for truncation
 						double ratio_edge=0.5*creal(etf->p[etf0]+etf->p[etf1-1])/creal(etf->p[netf2]);
 						if(ratio_edge>0.1){
-							writebin(etf, "etf_%d", isa);
-							error("sa %d: sodium profile is cropped when computing etf. Increase powfs.pixpsa or powfs.notf.\n", isa);
+							writebin(etf, "etf_%ld", isa);
+							error("sa %ld: sodium profile is cropped when computing etf. Increase powfs.pixpsa or powfs.notf.\n", isa);
 						}
 						cfftshift(etf);/*put peak in corner; */
 						cfft2(etf, -1);
@@ -362,7 +367,7 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 						real st=sin(theta);
 						P(petf, isa, illt)=cnew(notfx, notfy);
 						cmat* etf2d=P(petf, isa, illt);
-#pragma omp parallel for default(shared)
+//#pragma omp parallel for default(shared)
 						for(int icompy=0; icompy<notfy; icompy++){
 							real iy=(icompy-notfy2);
 							for(int icompx=0; icompx<notfx; icompx++){
@@ -383,10 +388,10 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 						P(petf, isa, illt)=cnew(notfx, notfy);
 						cset(P(petf, isa, illt), 1);
 					}
+					cfree(etf);
 				}//for isa
 			}//for illt.
-			cfree(etf);
-			free(thetas);
+			dfree(thetas);
 			toc("ETF");
 		}//if na_interp
 		//fuse nominal to etf to avoid multiply again.

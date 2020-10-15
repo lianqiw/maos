@@ -637,6 +637,7 @@ typedef struct DBG_CFG_T{
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
     dmat *atm;       /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     real gradoff_scale;/**<Scale the reference vector*/
+	int gradoff_reset;/**<reset gradoff after creating matched filter with dithering*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
     real pwfs_flate;/**<pyramid flat edge angular width */

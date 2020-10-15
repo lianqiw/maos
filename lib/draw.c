@@ -338,16 +338,18 @@ static int get_drawdaemon(){
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
 */
 void draw_final(int reuse){
-	LOCK(lock);
-	dbg("draw_final()");
-	for(int ifd=0; ifd<sock_ndraw; ifd++){
-		int sock_draw=sock_draws[ifd].fd;
-		if(sock_draw==-1) continue;
-		STWRITEINT(DRAW_FINAL);
+	if(sock_ndraw){
+		LOCK(lock);
+		dbg("draw_final()");
+		for(int ifd=0; ifd<sock_ndraw; ifd++){
+			int sock_draw=sock_draws[ifd].fd;
+			if(sock_draw==-1) continue;
+			STWRITEINT(DRAW_FINAL);
 end:
-		draw_remove(sock_draw, reuse);
+			draw_remove(sock_draw, reuse);
+		}
+		UNLOCK(lock);
 	}
-	UNLOCK(lock);
 }
 
 /*

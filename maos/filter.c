@@ -464,7 +464,7 @@ void filter_fsm(SIM_T* simu){
 		} else{//Copy directly
 			servo_output(simu->fsmint, &simu->fsmreal);
 		}
-		if(parms->sim.commonfsm&&simu->fsmerr){
+		if(parms->sim.commonfsm&&simu->fsmerr){//not good
 			warning_once("Using common fsm\n");
 			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 				if(parms->powfs[ipowfs].llt){
@@ -487,12 +487,12 @@ void filter_fsm(SIM_T* simu){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].dither==1){//T/T dithering.
-			//adjust delay due to propagation, and computation delay.
-				const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
+			    //adjust delay due to propagation, and computation delay.
+				const double adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat+0.5;//0.5 is for testing. the value here shouldn't matter
 				//Use isim+1 because the command is for next time step.
 				//minus adjust for delay
 				real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-				real angle=((simu->wfsisim+1-adjust)/parms->powfs[ipowfs].dtrat)*anglei;
+				real angle=(simu->wfsisim+1-adjust)*anglei;
 				simu->fsmreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
 				simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 			}

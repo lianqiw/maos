@@ -372,7 +372,7 @@ void sim_update_etf(SIM_T* simu){
 				deltah=-simu->zoomint->p[parms->powfs[ipowfs].wfs->p[0]];
 				deltah/=0.5*pow(1./parms->powfs[ipowfs].hs, 2);//focus to range.
 			}
-			info("Step %6d: powfs %d: Updating ETF using column %d with dh=%g\n", isim, ipowfs, icol2, deltah);
+			info("Step %5d: powfs %d: Updating ETF using column %d with dh=%g\n", isim, ipowfs, icol2, deltah);
 			TIC;tic;
 			setup_powfs_etf(powfs, parms, deltah, ipowfs, 1, icol);
 			if(icol2!=icol){

@@ -664,7 +664,7 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event,
 }
 static void page_changed(int topn, int subn){
 	//dbg("page changed. sock=%d. topn=%d, subn=%d\n", sock, topn, subn);
-	if(sock==-1||sock_block) return;
+	if(sock==-1||sock_idle) return;
 	GtkWidget* topnb=curtopnb;
 	GtkWidget* subnb, * subpage;
 	if(topn>-1){
@@ -686,7 +686,7 @@ static void page_changed(int topn, int subn){
 		stwritestr(sock, fig)||
 		stwritestr(sock, fn)){
 		warning("Talk to client failed\n");
-		sock_block=1;
+		sock_idle=1;
 	}
 	//info("done\n");
 }
@@ -1102,14 +1102,14 @@ static void toolbutton_cumu_click(GtkToggleToolButton* btn){
 }
 static void toolbutton_stop(GtkToolButton* btn){
 	(void)btn;
-	close(sock); sock=-1; sock_block=1;
+	close(sock); sock=-1; sock_idle=1;
 }
 static void togglebutton_pause(GtkToggleToolButton* btn){
-	if(sock_block) return;
+	if(sock_idle) return;
 	if(gtk_toggle_tool_button_get_active(btn)){
-		if(stwriteint(sock, DRAW_PAUSE)) sock_block=1;
+		if(stwriteint(sock, DRAW_PAUSE)) sock_idle=1;
 	} else{
-		if(stwriteint(sock, DRAW_RESUME)) sock_block=1;
+		if(stwriteint(sock, DRAW_RESUME)) sock_idle=1;
 	}
 }
 /**
@@ -1511,7 +1511,7 @@ GtkWidget* create_window(){
 	g_signal_connect(window, "destroy", G_CALLBACK(close_window), NULL);
 	gtk_window_set_position(GTK_WINDOW(window),
 		GTK_WIN_POS_CENTER);
-	gtk_window_set_default_size(GTK_WINDOW(window), 800, 700);
+	gtk_window_set_default_size(GTK_WINDOW(window), 1050, 900);
 	gtk_widget_add_events(GTK_WIDGET(window), GDK_FOCUS_CHANGE_MASK);/*in case this is not on. */
 	g_signal_connect(GTK_WIDGET(window), "event", G_CALLBACK(window_state), NULL);
 	gtk_widget_show_all(window);
