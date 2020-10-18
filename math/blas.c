@@ -295,7 +295,7 @@ X(mat)* X(chol)(const X(mat)* A){
 	}
 	return B;
 }
-
+DEF_ENV_FLAG(SVD_SDD_THRES, 0);
 /**
    Compute SVD of a general matrix A.
    A=U*diag(S)*V';
@@ -328,9 +328,9 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	ptrdiff_t lwork=-1;
 	T work0[1];
 	ptrdiff_t info=0;
-	DEF_ENV_FLAG_LOCAL(USE_SDD, 500, 0, INT_MAX);
+	
 	char jobuv='S';
-	if(USE_SDD&&M>USE_SDD){
+	if(SVD_SDD_THRES&&M>SVD_SDD_THRES){
 		ptrdiff_t nmax=M<N?N:M;
 		ptrdiff_t* iwork=mymalloc(nmax*8, ptrdiff_t);
 		info("(dgesdd)");

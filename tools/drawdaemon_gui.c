@@ -778,7 +778,7 @@ gboolean addpage(gpointer indata){
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
 		g_signal_connect(eventbox, "button-press-event", G_CALLBACK(tab_button_cb), subnb);
 		gtk_notebook_insert_page(GTK_NOTEBOOK(topnb), subnb, eventbox, itab);
-		gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), subnb, TRUE);
+		gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), subnb, FALSE);
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 		gtk_widget_show_all(eventbox);
 	}
@@ -907,7 +907,7 @@ gboolean addpage(gpointer indata){
 #endif
 		GtkWidget* button=subnb_label_new(drawdatawrap);
 		gtk_notebook_insert_page(GTK_NOTEBOOK(subnb), page, button, itab);
-		gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(subnb), page, TRUE);
+		gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(subnb), page, FALSE);
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(subnb), page, TRUE);
 #if GTK_MAJOR_VERSION>=3
 		g_signal_connect(drawarea, "draw",

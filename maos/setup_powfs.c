@@ -1069,10 +1069,16 @@ ETF_T* mketf_wrap(mketf_t* data){
 	if(data->free) free(data);
 	return result;
 }
+static pthread_t etfthread=0;
+static int etf_match(ETF_T *etf, mketf_t *etfdata){
+	const double thres_dh=4;//allow 4 meter difference
+	return (etf && etfdata && etf->icol==etfdata->icol && fabs(etf->hs-etfdata->hs)<thres_dh);
+}
 /**
    Compute Elongation Transfer function.
    - mode=0: for preparation.
    - mode=1: for simulation.
+   - mode=2: for simulation, next profile (linear interpolation.)
 */
 void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ipowfs, int mode, int icol){
 	if(!parms->powfs[ipowfs].llt) return;
@@ -1093,43 +1099,50 @@ void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ip
 			if(powfs[ipowfs].etfsim==powfs[ipowfs].etfprep){
 				powfs[ipowfs].etfsim=0;
 			}
-			etf_free(powfs[ipowfs].etfsim); powfs[ipowfs].etfsim=0;
-			if(powfs[ipowfs].etfsim2&&icol==powfs[ipowfs].etfsim2->icol&&!deltah){
-				//reuse etfsim2 as etfsim
-				powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
-				powfs[ipowfs].etfsim2=0;
+			if(etf_match(powfs[ipowfs].etfsim, &etfdata)){
+				dbg("No need to update ETF\n");
 			} else{
-				powfs[ipowfs].etfsim=mketf_wrap(&etfdata);
+				etf_free(powfs[ipowfs].etfsim); powfs[ipowfs].etfsim=0;
+				if(etf_match(powfs[ipowfs].etfsim2, &etfdata)){
+					//reuse etfsim2 as etfsim
+					powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
+					powfs[ipowfs].etfsim2=0;
+				} else{
+					powfs[ipowfs].etfsim=mketf_wrap(&etfdata);
+				}
 			}
 		} else if(mode==2){/*second pair for interpolation*/
-			static pthread_t etfthread=0;
-			ETF_T* etfasync=0;
-			etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
-			if(etfthread){
-				//preparation already running in a thread
-				pthread_join(etfthread, (void**)(void*)&etfasync);
-				if(etfasync->icol!=icol){
-					dbg("Async prepared etfsim2 (%d) is not correct (%d)\n",
-						etfasync->icol, icol);
-				} else{
-					powfs[ipowfs].etfsim2=etfasync;
-				}
-				etfthread=0;
-			}
-			if(!powfs[ipowfs].etfsim2){
-				powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
-			}
-			if(!deltah && icol>0){
-				//asynchronously preparing for next update.
-				//Copy data to heap so that they don't disappear during thread execution
-				mketf_t* etfdata2=mycalloc(1, mketf_t);//freed by mketf_wrap.
-				memcpy(etfdata2, &etfdata, sizeof(mketf_t));
-				etfdata2->icol++;
-				etfdata2->free=1;
-				if(pthread_create(&etfthread, NULL, (void* (*)(void*))mketf_wrap, etfdata2)){
-					warning_once("Thread creation failed\n");
-					free(etfdata2);
+			if(etf_match(powfs[ipowfs].etfsim2, &etfdata)){
+				dbg("No need to update ETF\n");
+			} else{
+				ETF_T* etfasync=0;
+				etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
+				if(etfthread){
+					//preparation already running in a thread
+					pthread_join(etfthread, (void**)(void*)&etfasync);
 					etfthread=0;
+					if(etf_match(etfasync, &etfdata)){
+						powfs[ipowfs].etfsim2=etfasync;
+					}else{
+						dbg("Async prepared etfsim2 (%d) is not correct (%d)\n", etfasync->icol, icol);
+						etf_free(etfasync);
+					}
+				}
+				if(!powfs[ipowfs].etfsim2){
+					powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
+				}
+				if(icol>0){
+					//asynchronously preparing for next update.
+					//Copy data to heap so that they don't disappear during thread execution
+					mketf_t* etfdata2=mycalloc(1, mketf_t);//freed by mketf_wrap.
+					memcpy(etfdata2, &etfdata, sizeof(mketf_t));
+					etfdata2->icol++;
+					etfdata2->free=1;
+					if(pthread_create(&etfthread, NULL, (void* (*)(void*))mketf_wrap, etfdata2)){
+						warning_once("Thread creation failed\n");
+						free(etfdata2);
+						etfthread=0;
+					}
 				}
 			}
 		} else{
@@ -1726,14 +1739,13 @@ static void free_powfs_shwfs(POWFS_T* powfs, int ipowfs){
 		free(intstat);
 		powfs[ipowfs].intstat=NULL;
 	}
-	{
-		dcellfree(powfs[ipowfs].srot);
-		dcellfree(powfs[ipowfs].srsa);
-		dfree(powfs[ipowfs].srsamax);
-		dcellfree(powfs[ipowfs].sprint);
-		dfree(powfs[ipowfs].pixoffx);
-		dfree(powfs[ipowfs].pixoffy);
-	}
+	
+	dcellfree(powfs[ipowfs].srot);
+	dcellfree(powfs[ipowfs].srsa);
+	dfree(powfs[ipowfs].srsamax);
+	dcellfree(powfs[ipowfs].sprint);
+	dfree(powfs[ipowfs].pixoffx);
+	dfree(powfs[ipowfs].pixoffy);
 
 	cellfree(powfs[ipowfs].saimcc);
 	if(powfs[ipowfs].llt){
@@ -1760,6 +1772,12 @@ static void free_powfs_shwfs(POWFS_T* powfs, int ipowfs){
    Free all parameters of powfs at the end of simulation.
 */
 void free_powfs(const PARMS_T* parms, POWFS_T* powfs){
+	if(etfthread){//cleanup
+		ETF_T* etfasync=0;
+		pthread_join(etfthread, (void**)(void*)&etfasync);
+		etf_free(etfasync);
+		etfthread=0;
+	}
 	free_powfs_unused(parms, powfs);
 	free_powfs_fit(powfs, parms);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

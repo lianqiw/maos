@@ -33,6 +33,7 @@ static void etf2gpu(cucmat& cuetf, ETF_T* etf, int icol){
 */
 void gpu_wfsgrad_update_etf(const PARMS_T* parms, const POWFS_T* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
+	TIC;tic;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 		Array<cuwfs_t>& cuwfs=cuglobal->wfs;
@@ -54,6 +55,7 @@ void gpu_wfsgrad_update_etf(const PARMS_T* parms, const POWFS_T* powfs){
 			}
 		}
 	}
+	toc("gpu_wfsgrad_update_etf");
 }
 void gpu_wfsgrad_update_mtche(const PARMS_T* parms, const POWFS_T* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();

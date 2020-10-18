@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -29,7 +29,7 @@
 
 typedef void (*quitfun_t)(const char*);
 extern quitfun_t quitfun;
-void default_quitfun(const char *msg);
+void default_quitfun(const char* msg);
 
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
@@ -100,7 +100,7 @@ extern int detached;
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
 
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
-extern FILE *fpconsole;
+extern FILE* fpconsole;
 #define logstd(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);}})
 #define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(stderr, A);}})
 #define error(format,...) ({logerr(-4, "%sError(%s:%d): " format "%s", RED,BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
@@ -147,7 +147,7 @@ extern FILE *fpconsole;
    times(): the argument can not be NULL in Mac. obsolete by gettimeofday in Mac
    clock(): returns processor time, not real time.
 
-   Decision: use customize function myclockd() in utils.c which returns a double for second. 
+   Decision: use customize function myclockd() in utils.c which returns a double for second.
 */
 #ifdef tk
 #undef tk
@@ -192,32 +192,32 @@ extern FILE *fpconsole;
 #define CHECK_NULL_TERMINATED
 #endif
 
-#define READ_ENV_INT(A,min,max)						\
+#define READ_ENV_INT(A,min,max)					\
     if(getenv("MAOS_"#A)){						\
-	A=strtol(getenv("MAOS_"#A),NULL,10);				\
-	dbg(#A"=%d\n", A);						\
-	if(A>max || A<min){						\
-	    error("MAOS_%s is not between [%s %s]\n", #A, #min, #max);	\
-	}								\
+		int B=strtol(getenv("MAOS_"#A),NULL,10);\
+		if(A!=B){ 								\
+			A=MIN(MAX(B, min), max);			\
+			dbg(#A" changed to %d\n", A);		\
+		}										\
     }
-#define READ_ENV_DBL(A,min,max)						\
+#define READ_ENV_DBL(A,min,max)					\
     if(getenv("MAOS_"#A)){						\
-	A=strtod(getenv("MAOS_"#A),NULL);				\
-	dbg(#A"=%g\n", A);						\
-	if(A>max || A<min){						\
-	    error("MAOS_%s is not between [%s %s]\n", #A, #min, #max);	\
-	}								\
+		real B=strtod(getenv("MAOS_"#A),NULL);	\
+		if(A!=B){								\
+			A=MIN(MAX(B, min), max);			\
+			dbg(#A" changed to %g\n", A);		\
+		}								        \
     }
 #define DEF_ENV_FLAG(A,default_val)			\
     static int A=default_val;				\
     static __attribute__((constructor)) void init(){	\
-	READ_ENV_INT(A, 0, 1);				\
+		READ_ENV_INT(A, 0, 1);				\
     }
-#define DEF_ENV_FLAG_LOCAL(A, default_val, min_val, max_val)	\
+/*#define DEF_ENV_FLAG_LOCAL(A, default_val, min_val, max_val)	\
     static int A=-1;						\
-    if(A==-1){					\
-	A=default_val;				\
-	READ_ENV_INT(A, min_val, max_val);	\
-    }
+    if(A==-1){					 			\
+		A=default_val;						\
+		READ_ENV_INT(A, min_val, max_val);	\
+    }*/
 #endif
 

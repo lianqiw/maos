@@ -73,8 +73,8 @@ void fixnan(dmat* res){
 int main(int argc, char* argv[]){
 	ARG_T* arg=parse_args(argc, argv);
 	/*use the parent pid so same bash session has the same drawdaemon. */
-	DRAW_ID=getsid(0)+2e6;/*variables in draw.c */
-	DRAW_DIRECT=1;/*launch drawdaemon directly, without going through server. */
+	draw_id=getsid(0)+2e6;/*variables in draw.c */
+	draw_direct=1;/*launch drawdaemon directly, without going through server. */
 	char** path;
 	int npath;
 	if(arg->iarg<argc){
@@ -193,49 +193,49 @@ int main(int argc, char* argv[]){
 	info("\n");
 
 	enum{
-		P_OLTOT,
-		P_OLHI,
-		P_OLLO,
 		P_TOT,
 		P_HI,
 		P_LO,
 		P_TT,
 		P_PS,
 		P_F,
+		P_OLTOT,
+		P_OLHI,
+		P_OLLO,
 		N_ALL,
 	};
 	const char* toptab[]={
-	"OL",
-	"OL hi",
-	"OL lo",
 	"CL",
 	"CL hi",
 	"CL lo",
 	"CL lo",
 	"CL lo",
-	"CL lo"
+	"CL lo",
+	"OL",//Openloop
+	"OL hi",
+	"OL lo"
 	};
 	const char* sidetab[]={
 	"Total",
 	"High",
 	"Low",
-	"Total",
-	"High",
-	"Low",
 	"Low_TT",
 	"Low_PS",
-	"Low_Focus"
+	"Low_Focus",
+	"Total",//OpenLoop
+	"High",
+	"Low"
 	};
 	const char* title[]={
-	"Total Wavefront Error",
-	"High Order Wavefront Error",
-	"Low Order Wavefront Error",
 	"Total Wavefront Error",
 	"High Order Wavefront Error",
 	"Low Order Wavefront Error",
 	"Tip/Tilt Wavefront Error",
 	"Plate Scale Wavefront Error",
 	"Focus Mode Wavefront Error",
+	"Total Wavefront Error",
+	"High Order Wavefront Error",
+	"Low Order Wavefront Error",
 	};
 
 
@@ -425,14 +425,15 @@ int main(int argc, char* argv[]){
 					title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 			}
 		}
-
-		for(int iseed=0; iseed<nseed; iseed++){
-			for(int ic=0; ic<res->nx; ic++){
-				if(res->p[ic]){
-					dcell* tmp=dcellsub(res->p[ic], 0, 0, iseed, 1);
-					plot_points(toptab[ic], npath, NULL, tmp, NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
-						title[ic], xlabel, ylabel, "%s_%ld", sidetab[ic], seed[iseed]);
-					dcellfree(tmp);
+		if(nseed>1){
+			for(int iseed=0; iseed<nseed; iseed++){
+				for(int ic=0; ic<res->nx; ic++){
+					if(res->p[ic]){
+						dcell* tmp=dcellsub(res->p[ic], 0, 0, iseed, 1);
+						plot_points(toptab[ic], npath, NULL, tmp, NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
+							title[ic], xlabel, ylabel, "%s_%ld", sidetab[ic], seed[iseed]);
+						dcellfree(tmp);
+					}
 				}
 			}
 		}
@@ -440,6 +441,7 @@ int main(int argc, char* argv[]){
 	draw_final(1);
 	cellfree(res);
 	cellfree(resm);
+
 	/*
 	  writebin(upterr, "upterr");
 	  if(upterr && upterr->p[0]){

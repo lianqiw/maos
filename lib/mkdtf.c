@@ -199,6 +199,7 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 	int nwvl=dtfs[0].nwvl;
 	ETF_T* etfs=mycalloc(nwvl, ETF_T);
 	etfs->nwvl=nwvl;
+	etfs->hs=hs;
 	/*setup elongation along radial direction. don't care azimuthal. */
 	if(!srot) error("srot is required");
 	const int nllt=MAX(srot->nx, sodium->nx);
@@ -250,7 +251,7 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 		  PSF/OTF/ETF is defined in x/y coordinate.
 		  2010-01-04: Fuse dtf nominal into etf for this case.
 		*/
-		petf=etfs[iwvl].etf=ccellnew(nsa, nllt);
+		petf=etfs[iwvl].etf=ccellnew_same(nsa, nllt, notfx, notfy);
 
 		etfs[iwvl].icol=icol;
 		if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
@@ -261,7 +262,6 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 					const real theta=psrot[illt][isa];
 					const real ct=cos(theta);
 					const real st=sin(theta);
-					P(petf, isa, illt)=cnew(notfx, notfy);
 					cmat* etf2d=P(petf, isa, illt);
 #pragma omp parallel for default(shared)
 					for(int icompy=0; icompy<notfy; icompy++){
@@ -288,14 +288,13 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 			  We replace the above interpolation (and FFT) by doing summation directly
 			  ETF(k_i)=\sum_j exp(-2*\pi*I*k_i*(rsa/h_j-rsa/hs))P(h_j)
 			*/
-			TIC;tic;
 			const int npad=2;/*zero padding to reduce aliasing */
 			const int nover=2;/*enough size for rotation*/
 			const int netf=notfx*nover*npad;
 			const real dtetf=dtheta/nover;
 			const real dusc=(netf*dtetf)/(dtheta*notfx);
 			dmat* thetas=dnew(netf, 1);
-			//real* thetas=mycalloc(netf, real);
+			cmat* etf=cnew(netf, 1);
 			const int netf2=netf>>1;
 			/*Only interpolating the center part. the rest is padding. */
 			const int etf0=netf2-(int)round(notfx2*(dtheta/dtetf));
@@ -304,16 +303,10 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 			for(int it=etf0; it<etf1; it++){
 				P(thetas,it)=(it-netf2)*dtetf;
 			}
-			//info("etf0=%d, etf1=%d, netf=%d\n", etf0, etf1, netf);
-			//cfft2plan(etf, -1);
 
 			for(int illt=0; illt<nllt; illt++){
-#pragma omp parallel for default(shared)				
 				for(long isa=0; isa<nsa; isa++)
-				//OMPTASK_SINGLE
-				//OMPTASK_FOR(isa,0,nsa)
 				{
-					cmat* etf=cnew(netf, 1);
 					/*1d ETF along radius. */
 					real rsa=srsa->p[illt]->p[isa];
 					real etf2sum=0;
@@ -365,9 +358,8 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 						real theta=psrot[illt][isa];
 						real ct=cos(theta);
 						real st=sin(theta);
-						P(petf, isa, illt)=cnew(notfx, notfy);
 						cmat* etf2d=P(petf, isa, illt);
-//#pragma omp parallel for default(shared)
+#pragma omp parallel for default(shared)
 						for(int icompy=0; icompy<notfy; icompy++){
 							real iy=(icompy-notfy2);
 							for(int icompx=0; icompx<notfx; icompx++){
@@ -385,14 +377,13 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 						cfftshift(P(petf, isa, illt));/*peak in corner; */
 					} else{
 						warning_once("Wrong focus!\n");
-						P(petf, isa, illt)=cnew(notfx, notfy);
 						cset(P(petf, isa, illt), 1);
 					}
-					cfree(etf);
+					
 				}//for isa
 			}//for illt.
+			cfree(etf);
 			dfree(thetas);
-			toc("ETF");
 		}//if na_interp
 		//fuse nominal to etf to avoid multiply again.
 		ccell* pnominal=dtfs[iwvl].nominal;

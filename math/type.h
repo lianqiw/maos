@@ -247,10 +247,10 @@ static inline long index_2d(long ix, long iy, long nx, long ny){
 #endif
     
 #define P0(A)  ((A)->p)
-
 #define P1(A,i)     (A)->p[index_1d((i),        (A)->nx, (A)->ny)]
 #define P2(A,ix,iy) (A)->p[index_2d((ix), (iy), (A)->nx, (A)->ny)]
 
+#define PP0(A)  ((A)->p)
 #define PP1(A,i)     ((A)->p+index_1d((i),        (A)->nx, (A)->ny))
 #define PP2(A,ix,iy) ((A)->p+index_2d((ix), (iy), (A)->nx, (A)->ny))
 

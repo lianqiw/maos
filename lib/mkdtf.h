@@ -48,6 +48,7 @@ typedef struct DTF_T{
 
 typedef struct ETF_T{
     ccell *etf;          /**<Store the 2D ETF when*/
+	double hs;           /**<Guide star height*/
     int icol;            /**<Store the column index*/
     int nwvl;            /**<Number of DTF_T*/
 }ETF_T;
@@ -78,8 +79,8 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 void dtf_free_do(DTF_T *dtfs);
 void etf_free_do(ETF_T *etfs);
 /**frees DTF_T */
-#define dtf_free(dtfs) ({dtf_free_do(dtfs); dtfs=NULL;})
+#define dtf_free(dtfs) if(dtfs){dtf_free_do(dtfs); dtfs=NULL;}
 /**frees ETF_T */
-#define etf_free(etfs) ({etf_free_do(etfs); etfs=NULL;})
+#define etf_free(etfs) if(etfs){etf_free_do(etfs); etfs=NULL;}
 dmat* smooth(const dmat *profile, real dxnew);
 #endif

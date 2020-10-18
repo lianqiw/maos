@@ -518,7 +518,7 @@ FDPCG_T* fdpcg_prepare(const PARMS_T* parms, const RECON_T* recon, const POWFS_T
 	}
 	fdpcg->bs=bs;
 	long nb=(nx[0]/os[0])*(ny[0]/os[0]);
-	info("fdpcg: Block size is %d, there are %ld blocks\n", bs, nb);
+	dbg("fdpcg: Block size is %d, there are %ld blocks\n", bs, nb);
 	/*Permutation vector */
 	fdpcg->scale=needscale;
 	lmat* perm=fdpcg_perm(nx, ny, os, bs, nps, 0, 0);
@@ -553,7 +553,7 @@ FDPCG_T* fdpcg_prepare(const PARMS_T* parms, const RECON_T* recon, const POWFS_T
 		writebin(fdpcg->Mbinv, "fdpcg_Mhatb");
 	}
 	real svd_thres=1e-7;
-	info("fdpcg svd threshold is %g\n", svd_thres);
+	dbg("fdpcg svd threshold is %g\n", svd_thres);
 #pragma omp parallel for
 	for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In

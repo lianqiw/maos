@@ -2775,7 +2775,7 @@ static void print_parms(const PARMS_T* parms){
 	real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, parms->atm.ws->p, parms->atm.wt->p);
 	real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
 
-	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.",
+	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
 		GREEN, parms->sim.zadeg, BLACK, parms->atm.r0, parms->atm.L0->p[0], parms->atm.nps);
 	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f.\"",
 		fgreen, theta0z*206265);
@@ -2783,9 +2783,10 @@ static void print_parms(const PARMS_T* parms){
 		real H1=parms->dm[0].ht;
 		real H2=parms->dm[1].ht;
 		real theta2z=calc_aniso2(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p, H1, H2);
-		info(", generalized is %.2f\"", theta2z*206265);
+		info(", generalized is %.2f\"\n", theta2z*206265);
+	} else{
+		info("\n");
 	}
-	info("\n");
 	info("    Sampled %dx%d at 1/%gm. wind dir is%s randomized.\n",
 		parms->atm.nx, parms->atm.ny, 1./parms->atm.dx,
 		(parms->atm.wdrand?"":" not"));

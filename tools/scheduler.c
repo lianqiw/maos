@@ -227,8 +227,8 @@ static void runned_restart(int pid){
 				running_end=irun;
 			}
 			//update status
+			memset(&irun->status, 0, sizeof(STATUS_T));
 			irun->status.info=S_QUEUED;
-			irun->status.done=0;
 			//pidnew changed to be different from pid to indicate restarted job.
 			irun->pidnew=--counter;
 			monitor_send(irun, NULL);

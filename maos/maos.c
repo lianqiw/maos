@@ -31,7 +31,7 @@ int NO_WFS=0;
 int NO_EVL=0;
 int NO_RECON=0;
 /** end*/
-static void read_env(){
+static void read_sim_env(){
 	READ_ENV_DBL(TOMOSCALE, 0, INFINITY);
 	READ_ENV_INT(PARALLEL, 0, 2);
 	READ_ENV_INT(NO_WFS, 0, 1);
@@ -50,7 +50,7 @@ void maos_setup(const PARMS_T* parms){
 	APER_T* aper=NULL;
 	POWFS_T* powfs=NULL;
 	RECON_T* recon=NULL;
-	read_env();
+	read_sim_env();
 	if(PARALLEL&&(parms->sim.closeloop==0||parms->evl.tomo)){
 		PARALLEL=0;	/*need to disable parallelizing the big loop. */
 	}

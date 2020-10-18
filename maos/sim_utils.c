@@ -1693,7 +1693,7 @@ void free_simu(SIM_T* simu){
 	zfarr_close_n(save->intsnf, nwfs);
 	zfarr_close_n(save->dm_evl, nevl);
 	zfarr_close_n(save->dm_wfs, nwfs);
-
+	free(simu->wfsflags);
 	dfree(simu->winddir);
 	if(parms->fdlock){
 	/*release the lock and close the file. */

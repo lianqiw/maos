@@ -587,7 +587,7 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 		if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
 			const real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
 			const real scale=1./parms->powfs[ipowfs].dither_amp;
-			info2("Step %d wfs%d PLL: delay=%.2f frame, dither amplitude=%.1fx, estimate=%.1fx\n",
+			info2("Step %5d: wfs%d PLL: delay=%.2f frame, dither amplitude=%.1fx, estimate=%.1fx\n",
 				isim, iwfs, pd->deltam/anglei, pd->a2m*scale, pd->a2me*scale);
 		}
 		if(simu->resdither){
@@ -643,7 +643,7 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 		real amp=pd->a2me;
 		real tt[2]={-cs*amp, -ss*amp};
 		if(parms->powfs[ipowfs].trs){
-			info("fsmerr: %g %g %g %g\n", simu->fsmerr->p[iwfs]->p[0], simu->fsmerr->p[iwfs]->p[1], -tt[0], -tt[1]);
+			//info("fsmerr: %g %g %g %g\n", simu->fsmerr->p[iwfs]->p[0], simu->fsmerr->p[iwfs]->p[1], -tt[0], -tt[1]);
 			if(!amp){//no estimate yet, do not close up FSM loop.
 				simu->fsmerr->p[iwfs]->p[0]=0;
 				simu->fsmerr->p[iwfs]->p[1]=0;
@@ -856,7 +856,7 @@ static void wfsgrad_dither_post(SIM_T* simu){
 			const int nsa=powfs[ipowfs].saloc->nloc;
 			real scale1=(real)parms->powfs[ipowfs].dither_pllrat/(real)parms->powfs[ipowfs].dither_ograt;
 			if(parms->powfs[ipowfs].phytype_sim2==1&&parms->powfs[ipowfs].type==0){
-				info2("Step %d: Update matched filter for powfs %d\n", isim, ipowfs);
+				info2("Step %5d: Update matched filter for powfs %d\n", isim, ipowfs);
 				//For matched filter
 				if(!powfs[ipowfs].intstat){
 					powfs[ipowfs].intstat=mycalloc(1, INTSTAT_T);
@@ -911,7 +911,7 @@ static void wfsgrad_dither_post(SIM_T* simu){
 							//Remove focus drift control in LGS WFS as it is fixed using HFP and trombone.
 							dmat* focus=dnew(1, 1);
 							dmm(&focus, 0, P(simu->recon->RFlgsg, iwfs, iwfs), goff, "nn", 1);
-							info2("Step %d, wfs %d: removing focus=%g\n", isim, iwfs, focus->p[0]);
+							dbg("Step %5d, wfs %d: removing focus=%g\n", isim, iwfs, focus->p[0]);
 							dadd(&goff, 1, simu->recon->GFall->p[iwfs], -focus->p[0]);
 							dfree(focus);
 						}
@@ -939,7 +939,9 @@ static void wfsgrad_dither_post(SIM_T* simu){
 							}
 							theta*=0.5/nsa;
 							pd->deltao=-theta;
-							info2("Step %5d: wfs[%d] deltao is %g.\n", isim, iwfs, pd->deltao);
+							dfree(i0sx);
+							dfree(i0sy);
+							dbg("Step %5d: wfs[%d] deltao is %g.\n", isim, iwfs, pd->deltao);
 						}
 					}
 					dfree(goff);
@@ -1039,7 +1041,7 @@ static void wfsgrad_dither_post(SIM_T* simu){
 				}
 #if USE_CUDA
 				if(parms->gpu.wfs){
-					info2("Update matched filter in GPU\n");
+					dbg("Update matched filter in GPU\n");
 					gpu_wfsgrad_update_mtche(parms, powfs);
 				}
 #endif

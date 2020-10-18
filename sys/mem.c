@@ -54,15 +54,14 @@ void* (*malloc_default)(size_t);
 void* (*realloc_default)(void*, size_t);
 void  (*free_default)(void*);
 
-void* (*calloc_custom)(size_t, size_t);
+/*void* (*calloc_custom)(size_t, size_t);
 void* (*malloc_custom)(size_t);
 void* (*realloc_custom)(void*, size_t);
 void  (*free_custom)(void*);
-
+*/
 static int MEM_VERBOSE=0;
 static int MEM_DEBUG=0;
 int LOG_LEVEL=0;
-int mem_debug=0;
 PNEW(mutex_mem);
 static void* MROOT=NULL;
 static long  memcnt=0;
@@ -242,7 +241,7 @@ static void free_dbg(void* p){
    Register a function or data to call or free upon exit
 */
 void register_deinit(void (*fun)(void), void* data){
-	if(mem_debug){
+	if(MEM_DEBUG){
 		T_DEINIT* node=(T_DEINIT*)calloc_default(1, sizeof(T_DEINIT));
 		node->fun=fun;
 		node->data=data;
@@ -256,16 +255,16 @@ void register_deinit(void (*fun)(void), void* data){
 unamespace std{
 #endif
 	void* malloc_maos(size_t size){
-	return mem_debug?malloc_custom(size):malloc_default(size);
+		return MEM_DEBUG?malloc_dbg(size):malloc_default(size);
 	}
 	void* calloc_maos(size_t nmemb, size_t size){
-	return mem_debug?calloc_custom(nmemb, size):calloc_default(nmemb, size);
+		return MEM_DEBUG?calloc_dbg(nmemb, size):calloc_default(nmemb, size);
 	}
 	void* realloc_maos(void* p, size_t size){
-	return mem_debug?realloc_custom(p, size):realloc_default(p,size);
+		return MEM_DEBUG?realloc_dbg(p, size):realloc_default(p,size);
 	}
 	void free_maos(void* p){
-	if(mem_debug) free_custom(p); else free_default(p);
+		if(MEM_DEBUG) free_dbg(p); else free_default(p);
 	}
 #ifdef __cpluspluc
 }
@@ -285,22 +284,24 @@ static void print_mem_debug(){
 	info("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
 	info("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 }
+void read_sys_env(){
+	READ_ENV_INT(MEM_DEBUG, 0, 1);
+	READ_ENV_INT(MEM_VERBOSE, 0, 2);
+	READ_ENV_INT(LOG_LEVEL, -5, 5);
+	/*if(MEM_DEBUG){
+		malloc_custom=malloc_dbg;
+		realloc_custom=realloc_dbg;
+		calloc_custom=calloc_dbg;
+		free_custom=free_dbg;
+	}*/
+}
 static __attribute__((constructor)) void init(){
 #define RTLD_MINE RTLD_DEFAULT
 	calloc_default=(void* (*)(size_t, size_t))dlsym(RTLD_MINE, "calloc");
 	malloc_default=(void* (*)(size_t))dlsym(RTLD_MINE, "malloc");
 	realloc_default=(void* (*)(void*, size_t))dlsym(RTLD_MINE, "realloc");
 	free_default=(void(*)(void*))dlsym(RTLD_MINE, "free");
-	READ_ENV_INT(MEM_DEBUG, 0, 1);
-	READ_ENV_INT(MEM_VERBOSE, 0, 2);
-	READ_ENV_INT(LOG_LEVEL, -5, 5);
-	mem_debug=MEM_DEBUG;
-	if(mem_debug){
-		malloc_custom=malloc_dbg;
-		realloc_custom=realloc_dbg;
-		calloc_custom=calloc_dbg;
-		free_custom=free_dbg;
-	}
+	read_sys_env();
 	void init_process(void);
 	init_process();
 	init_hosts();
@@ -322,9 +323,9 @@ static __attribute__((destructor)) void deinit(){
 		//if(p1->data) myfree(p1->data);
 		free_default(p1);
 	}
-	if(mem_debug){
+	if(MEM_DEBUG){
 		if(!exit_fail){
-			if(!mem_debug) return;
+			if(!MEM_DEBUG) return;
 			print_mem_debug();
 		} else{
 			dbg("exit_fail=%d\n", exit_fail);

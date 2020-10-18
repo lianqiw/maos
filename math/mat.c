@@ -922,6 +922,7 @@ X(mat)* X(cell_col)(X(cell)* input, long icol){
 		}
 		return X(new_do)(npix, nsa, P(input->m)+(npix*nsa)*icol, NULL);
 	} else{
+		dbg("Consider using m to speed up\n");
 		X(mat)* output=X(new)(npix, nsa);
 		for(long isa=0; isa<nsa; isa++){
 			if(PN(P(input, isa, icol))!=npix){

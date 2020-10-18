@@ -65,9 +65,7 @@ static void genseotf_do(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 		notf=MAX(notf, parms->powfs[ipowfs].nwfs);
 	}
 	info("notf=%d\n", notf);
-	if(powfs[ipowfs].intstat->otf){
-		cellfree(powfs[ipowfs].intstat->otf);
-	}
+	cellfree(powfs[ipowfs].intstat->otf);
 	powfs[ipowfs].intstat->otf=cccellnew(notf, 1);
 	for(int iotf=0; iotf<notf; iotf++){
 		powfs[ipowfs].intstat->otf->p[iotf]=ccellnew(nsa, nwvl);
@@ -166,9 +164,7 @@ void genselotf_do(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 	if(ncpa){
 		nlotf=ncpa->nx*ncpa->ny;
 	}
-	if(powfs[ipowfs].intstat->lotf){
-		ccellfree(powfs[ipowfs].intstat->lotf);
-	}
+	ccellfree(powfs[ipowfs].intstat->lotf);
 	powfs[ipowfs].intstat->lotf=ccellnew(nwvl, nlotf);
 	ccell* lotf=powfs[ipowfs].intstat->lotf/*PCELL*/;
 	if(nwvl!=1){
@@ -306,11 +302,11 @@ void gensepsf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 	const int nlotf=nllt>0?powfs[ipowfs].intstat->lotf->ny:0;
 	const int notf=powfs[ipowfs].intstat->otf->nx;
 	powfs[ipowfs].intstat->nsepsf=MAX(notf, nlotf);//notf>nlotf?notf:nlotf;
-	assert(powfs[ipowfs].intstat->nsepsf==1
-		||powfs[ipowfs].intstat->nsepsf==parms->powfs[ipowfs].nwfs);
-	if(powfs[ipowfs].intstat->sepsf){
-		cellfree(powfs[ipowfs].intstat->sepsf);
+	if(!(powfs[ipowfs].intstat->nsepsf==1	||powfs[ipowfs].intstat->nsepsf==parms->powfs[ipowfs].nwfs)){
+		error("nsepsf should be either 1 or %d", parms->powfs[ipowfs].nwfs);	
 	}
+	
+	cellfree(powfs[ipowfs].intstat->sepsf);
 	powfs[ipowfs].intstat->sepsf=dccellnew(powfs[ipowfs].intstat->nsepsf, 1);
 	const int notfx=powfs[ipowfs].notfx;
 	const int notfy=powfs[ipowfs].notfy;
@@ -419,9 +415,12 @@ done:
 	cellfree(intstat->fotf);
 	cellfree(intstat->potf);
 
-	intstat->i0=dcellnew(nsa, ni0);
-	intstat->gx=dcellnew(nsa, ni0);
-	intstat->gy=dcellnew(nsa, ni0);
+	const int pixpsax=powfs[ipowfs].pixpsax;
+	const int pixpsay=powfs[ipowfs].pixpsay;
+
+	intstat->i0=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
+	intstat->gx=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
+	intstat->gy=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
 	if(parms->powfs[ipowfs].phytype_sim==3){
 		intstat->fotf=cccellnew(nsepsf, 1);
 		for(int i=0; i<nsepsf; i++){
@@ -434,7 +433,6 @@ done:
 			intstat->potf->p[i]=ccellnew(nsa, nwvl);
 		}
 	}
-	/* subaperture rotation angle. */
 	dcell* i0=intstat->i0;
 	dcell* gx=intstat->gx;
 	dcell* gy=intstat->gy;
@@ -444,9 +442,7 @@ done:
 	  because the PSF is not enough to cover the size.
 	  Disable the computation.
 	*/
-	const int pixpsax=powfs[ipowfs].pixpsax;
-	const int pixpsay=powfs[ipowfs].pixpsay;
-
+	/*
 	for(int ii0=0; ii0<ni0; ii0++){
 		for(int isa=0; isa<nsa; isa++){
 			P(i0, isa, ii0)=dnew(pixpsax, pixpsay);
@@ -454,7 +450,7 @@ done:
 			P(gy, isa, ii0)=dnew(pixpsax, pixpsay);
 		}
 	}
-
+	*/
 	const int i0scale=parms->powfs[ipowfs].i0scale;
 	if(i0scale){
 		warning("i0 is scaled to match sa area\n");
@@ -597,19 +593,22 @@ void genmtch(const PARMS_T* parms, POWFS_T* powfs, const int ipowfs){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	//Prevent printing of NEA during recomputing of matched filter
 	const int print_nea=intstat->mtche?0:1;
-	dcellfree(intstat->mtche);
-	dfree(intstat->i0sum);
+	
+	
 
 	dcellfree(powfs[ipowfs].sanea);
-	dcell* sanea=powfs[ipowfs].sanea=dcellnew(ni0, 1);
-	intstat->i0sum=dnew(nsa, ni0);
+	dcell* sanea=powfs[ipowfs].sanea=dcellnew_same(ni0, 1, nsa, 3);
+	dfree(intstat->i0sum);
+	dmat* i0sum=intstat->i0sum=dnew(nsa, ni0);
+	dfree(intstat->i0sumsum);
 	intstat->i0sumsum=dnew(ni0, 1);
 
 	const dcell* i0s=intstat->i0;
 	const dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx;
 	const dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy;
-	dmat* i0sum=intstat->i0sum;
+	
 	long npix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
+	dcellfree(intstat->mtche);
 	dcell* mtche=intstat->mtche=dcellnew_same(nsa, ni0, 2, npix);
 
 	//dcell *saneaxy=powfs[ipowfs].saneaxy;
@@ -637,7 +636,7 @@ void genmtch(const PARMS_T* parms, POWFS_T* powfs, const int ipowfs){
 			int irot=ii0*irot_multiplier;
 			srot=powfs[ipowfs].srot->p[irot]->p;
 		}
-		sanea->p[ii0]=dnew(nsa, 3);
+		//sanea->p[ii0]=dnew(nsa, 3);
 		dmat* psanea=sanea->p[ii0]/*PDMAT*/;
 		real i0sumsum=0;
 		int crdisable=0;/*adaptively disable mtched filter based in FWHM. */

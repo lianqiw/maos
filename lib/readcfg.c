@@ -349,6 +349,10 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			addpath2(val2, 99);
 			info("addpath %s\n", val2);
 			free(val2);
+		} else if(!strncmp(var, "MAOS_", 5)){
+			//This is environment variable.
+			setenv(var, value, 1);
+			read_sys_env();
 		} else if(!strcmp(var, "include")){
 			/*dbg("Opening embeded config file %s\n",value); */
 			char* embeded=strextract(value);
@@ -358,11 +362,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			}
 		} else{
 #if COMPATIBILITY == 1	    
-		/*
-		  Compatibility mode: rename old key names to new key names. Will
-		  remove in the future.
-		*/
-		/*RENAME(atm.fractal, atm.method);*/
+			/*
+			Compatibility mode: rename old key names to new key names. Will
+			remove in the future.
+			*/
+			/*RENAME(atm.fractal, atm.method);*/
 			RENAME(atm.zadeg, sim.zadeg);
 			/*Added on 2011-04-28 */
 			/*RENAME(dbg.noatm, sim.noatm);
@@ -434,6 +438,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 						oldstore->data=myrealloc(oldstore->data, (nolddata+nnewdata), char);
 						oldstore->data[nolddata-1]=' ';
 						strncat(oldstore->data, newdata+1, nnewdata-1);
+						oldstore->priority=priority;
 					}
 				} else if(diffval){
 					if(oldstore->priority>priority){

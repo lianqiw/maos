@@ -24,8 +24,8 @@
 #include "../math/mathdef.h"
 #include "draw.h"
 #include "cure.h"
-int DRAW_ID=0;
-int DRAW_DIRECT=0;
+int draw_id=0;
+int draw_direct=0;
 int draw_disabled=0; /*if 1, draw will be disabled  */
 PNEW(lock);
 #define MAXDRAW 1024
@@ -48,12 +48,12 @@ long group=0;
    the end maos has direct connect to drawdaemon using sockets. draw() will
    write to the sockets the information to display.
 
-   2) If DRAW_DIRECT=0, get_drawdaemon() will talk to draw_helper() (a
+   2) If draw_direct=0, get_drawdaemon() will talk to draw_helper() (a
    fork()'ed process) with pid through a socket pair (AF_UNIX type). The
    draw_helper() will then create another socket_pair, pass one end of it to
    draw(), and the other end to drawdaemon() by fork()+exec().
 
-   3 If DRAW_DIRECT=1, get_drawdaemon() will launch drawdaemon directly.
+   3 If draw_direct=1, get_drawdaemon() will launch drawdaemon directly.
 
 */
 /* List of list*/
@@ -92,7 +92,7 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 	//info("draw is listening to drawdaemon at %d\n", sock_draw);
 	int cmd;
 	while(sock_data->fd!=-1&&!streadint(sock_draw, &cmd)){
-		switch(cmd){
+		switch(cmd){	
 		case DRAW_FIGFN:
 		{
 			char* fig=0, * fn=0;
@@ -181,7 +181,7 @@ int draw_add(int fd){
 static void draw_remove(int fd, int reuse){
 	if(fd<0) return;
 	if(reuse){
-		scheduler_send_socket(fd, DRAW_ID?DRAW_ID:1);
+		scheduler_send_socket(fd, draw_id?draw_id:1);
 	}
 	close(fd);
 	int found=0;
@@ -232,8 +232,8 @@ static int launch_drawdaemon(){
    to fork a process that consumes Gig's of memory.
 */
 void draw_helper(void){
-	if(DRAW_DIRECT){
-		info("DRAW_DIRECT=1, skip draw_helper\n");
+	if(draw_direct){
+		info("draw_direct=1, skip draw_helper\n");
 		return;
 	}
 	if(sock_helper>-1){
@@ -286,15 +286,15 @@ static int get_drawdaemon(){
 	if(display&&!strlen(display)){//display is not set, we ask scheduler to open a drawdaemon.
 		display=0;
 	}
-	if(DRAW_ID<=0){
-		DRAW_ID=getsid(0);
-		if(DRAW_ID<=0){
-			DRAW_ID=1;
+	if(draw_id<=0){
+		draw_id=getsid(0);
+		if(draw_id<=0){
+			draw_id=1;
 		}
 	}
 	int sock=-1;
 	//First try reusing existing idle drawdaemon
-	if(!scheduler_recv_socket(&sock,DRAW_ID)){
+	if(!scheduler_recv_socket(&sock,draw_id)){
 		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_FINAL)){
 			dbg("received socket=%d is already closed.\n", sock);
@@ -304,12 +304,12 @@ static int get_drawdaemon(){
 	}
 	if(sock==-1){
 		if(display){
-			if(DRAW_DIRECT||sock_helper<=-1){//directly fork and launch
+			if(draw_direct||sock_helper<=-1){//directly fork and launch
 				TIC;tic;
 				sock=launch_drawdaemon();
 				toc("Directly launch drawdaemon");
 			} else{//use helper to launch
-				if(stwriteint(sock_helper, DRAW_ID)||streadfd(sock_helper, &sock)){
+				if(stwriteint(sock_helper, draw_id)||streadfd(sock_helper, &sock)){
 					sock=-1;
 					draw_disabled=1;
 					close(sock_helper);
