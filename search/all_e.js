@@ -51,6 +51,8 @@ var searchData=
   ['plan_5ffs',['plan_fs',['../classcuwfs__t.html#a75ad2ecf41255346377406f2bdff3c5a',1,'cuwfs_t']]],
   ['pllcount',['pllcount',['../structWFSFLAGS__T.html#a2b54fa11e359aad681031bfdc453491c',1,'WFSFLAGS_T']]],
   ['pllout',['pllout',['../structWFSFLAGS__T.html#a466865079009eaf3e032e5fd9bcb252a',1,'WFSFLAGS_T']]],
+  ['pllrat',['pllrat',['../structDITHER__CFG__T.html#a81071c992390026b96c41ee2b56304da',1,'DITHER_CFG_T']]],
+  ['pllskip',['pllskip',['../structDITHER__CFG__T.html#ae832acf1dc42797538f776c5ecae4b06',1,'DITHER_CFG_T']]],
   ['ploc',['ploc',['../structLOAD__CFG__T.html#a28b02d2097e9869b59af91324f5b9031',1,'LOAD_CFG_T::ploc()'],['../structRECON__T.html#a65235f2ce28fd2c564432c722a703fd8',1,'RECON_T::ploc()']]],
   ['ploc_5ftel',['ploc_tel',['../structRECON__T.html#a36faf10111a9dff0e0eae262a9a47edb',1,'RECON_T']]],
   ['plot',['plot',['../structPARMS__T.html#a8d13a796ed190abb42f190c74d52b5b1',1,'PARMS_T']]],

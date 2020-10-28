@@ -145,6 +145,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:ad741967e668a06c26fbbb8106cdb5696"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5aee3931df4c56639decac61da8f919"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#ae5aee3931df4c56639decac61da8f919">gradoff_scale</a></td></tr>
 <tr class="separator:ae5aee3931df4c56639decac61da8f919"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e4dfe0c7025150a244a1fb590a97633"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a9e4dfe0c7025150a244a1fb590a97633">gradoff_reset</a></td></tr>
+<tr class="separator:a9e4dfe0c7025150a244a1fb590a97633"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60de87d94c23ff8686d6ba6e2bb11e1a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a60de87d94c23ff8686d6ba6e2bb11e1a">pwfs_psx</a></td></tr>
 <tr class="separator:a60de87d94c23ff8686d6ba6e2bb11e1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a372eb30c1042db718b4ef6427ac544a7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a372eb30c1042db718b4ef6427ac544a7">pwfs_psy</a></td></tr>
@@ -163,6 +165,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:a39f8f180420f2e47b831bc66efaaf232"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23aa773f603c0752c6de6fd7fc5baef5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a23aa773f603c0752c6de6fd7fc5baef5">twfsflag</a></td></tr>
 <tr class="separator:a23aa773f603c0752c6de6fd7fc5baef5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94c88bece87f32c7ffb22f6e4c3b7a66"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a94c88bece87f32c7ffb22f6e4c3b7a66">twfsrmax</a></td></tr>
+<tr class="separator:a94c88bece87f32c7ffb22f6e4c3b7a66"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87251425bd658d7ded32c8abe35aee77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a87251425bd658d7ded32c8abe35aee77">draw_opdmax</a></td></tr>
 <tr class="separator:a87251425bd658d7ded32c8abe35aee77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9cb08b3668c5798dcfe6f80d1863582"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#aa9cb08b3668c5798dcfe6f80d1863582">draw_gmax</a></td></tr>
@@ -528,6 +532,21 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a id="a9e4dfe0c7025150a244a1fb590a97633"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e4dfe0c7025150a244a1fb590a97633">&#9670;&nbsp;</a></span>gradoff_reset</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int DBG_CFG_T::gradoff_reset</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>reset gradoff after creating matched filter with dithering </p>
+
+</div>
+</div>
 <a id="a60de87d94c23ff8686d6ba6e2bb11e1a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a60de87d94c23ff8686d6ba6e2bb11e1a">&#9670;&nbsp;</a></span>pwfs_psx</h2>
 
@@ -660,6 +679,21 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>use TWFS to control 0: all modes, 1: radial only </p>
+
+</div>
+</div>
+<a id="a94c88bece87f32c7ffb22f6e4c3b7a66"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94c88bece87f32c7ffb22f6e4c3b7a66">&#9670;&nbsp;</a></span>twfsrmax</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int DBG_CFG_T::twfsrmax</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>TWFS maximum zernike radial order. </p>
 
 </div>
 </div>

@@ -76,6 +76,7 @@ var searchData=
   ['notfy',['notfy',['../structDTF__T.html#a878eeab5a2a6e7022fc0f12e1d769582',1,'DTF_T::notfy()'],['../structPOWFS__T.html#ac93058cb483e1615a450a3403fef7f2c',1,'POWFS_T::notfy()']]],
   ['notrecon',['notrecon',['../structFIT__T.html#a17942bd2bf338574f385009529c1d0c2',1,'FIT_T']]],
   ['nphypowfs',['nphypowfs',['../structPARMS__T.html#a814fdc65d3853115b2db47b546ad11bc',1,'PARMS_T']]],
+  ['npoint',['npoint',['../structDITHER__CFG__T.html#ab6a0139ab09b737157d3a9618a7b25a0',1,'DITHER_CFG_T']]],
   ['npowfs',['npowfs',['../structPARMS__T.html#a184dc967ffbedc29f2d48cd49889ddd2',1,'PARMS_T']]],
   ['nps',['nps',['../structATM__CFG__T.html#af377ac265c4e8778949386b5c78c9ba6',1,'ATM_CFG_T::nps()'],['../structATMR__CFG__T.html#a14584f027f0a847b43f47fbbf53e6324',1,'ATMR_CFG_T::nps()']]],
   ['npsf',['npsf',['../structEVL__CFG__T.html#a93a2b47b0ff2f1e9be0d9453d10c0b44',1,'EVL_CFG_T']]],

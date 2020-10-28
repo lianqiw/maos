@@ -6,7 +6,7 @@ var dmath_8h =
     [ "dnew", "dmath_8h.html#a0d7497e2dbb79adb228de6bdde4a201e", null ],
     [ "dnew_do", "dmath_8h.html#a86fe6fb768ee1be1720318e600af104b", null ],
     [ "dmat_cast", "dmath_8h.html#a8d7a0dc35f5202eb52bc9654f2ae8ea9", null ],
-    [ "dinit", "dmath_8h.html#a32e4981ef3fff75eb73e5ce6ac632d0d", null ],
+    [ "dnew2", "dmath_8h.html#a8ac7b4ae84cea7e56b574b704b4d15c8", null ],
     [ "dfree_do", "dmath_8h.html#a0626a73b51a8917f0944c8f5f946478f", null ],
     [ "dref", "dmath_8h.html#a2e1ff58653a461432804d20406207982", null ],
     [ "dref_reshape", "dmath_8h.html#a68cd0fb4c765694df6f15d8d9e8f598c", null ],

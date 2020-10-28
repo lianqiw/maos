@@ -4,6 +4,7 @@ var parms_8h =
     [ "ATMR_CFG_T", "structATMR__CFG__T.html", "structATMR__CFG__T" ],
     [ "APER_CFG_T", "structAPER__CFG__T.html", "structAPER__CFG__T" ],
     [ "LLT_CFG_T", "structLLT__CFG__T.html", "structLLT__CFG__T" ],
+    [ "DITHER_CFG_T", "structDITHER__CFG__T.html", "structDITHER__CFG__T" ],
     [ "POWFS_CFG_T", "structPOWFS__CFG__T.html", "structPOWFS__CFG__T" ],
     [ "WFS_CFG_T", "structWFS__CFG__T.html", "structWFS__CFG__T" ],
     [ "DM_CFG_T", "structDM__CFG__T.html", "structDM__CFG__T" ],

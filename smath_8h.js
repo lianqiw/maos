@@ -6,7 +6,7 @@ var smath_8h =
     [ "snew", "smath_8h.html#aafbf7ec13e8ccf10c1f492d83b56635c", null ],
     [ "snew_do", "smath_8h.html#acc3af8ba3285a3de3398fd807e5b6298", null ],
     [ "smat_cast", "smath_8h.html#ac0c83323d5a168d8ff2d8031019c91c9", null ],
-    [ "sinit", "smath_8h.html#a103f199d42c3eebbdc9c55711ef11514", null ],
+    [ "snew2", "smath_8h.html#a7009b83b378e6e7f7cc89d3b4c53391e", null ],
     [ "sfree_do", "smath_8h.html#a061ae93168e5bc1bd962a0763953c1eb", null ],
     [ "sref", "smath_8h.html#a1dc61e5e5658d02897a0c61e5f51df3c", null ],
     [ "sref_reshape", "smath_8h.html#ab482e2894ec1fa75eff33b00e4798b7c", null ],

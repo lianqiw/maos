@@ -52,6 +52,7 @@ var searchData=
   ['turbpsd',['turbpsd',['../turbulence_8h.html#a5ac871dc0baf2241c719fa67f892f292',1,'turbulence.c']]],
   ['turbulence_2eh',['turbulence.h',['../turbulence_8h.html',1,'']]],
   ['twfsflag',['twfsflag',['../structDBG__CFG__T.html#a23aa773f603c0752c6de6fd7fc5baef5',1,'DBG_CFG_T']]],
+  ['twfsrmax',['twfsrmax',['../structDBG__CFG__T.html#a94c88bece87f32c7ffb22f6e4c3b7a66',1,'DBG_CFG_T']]],
   ['txdeg',['txdeg',['../structrmap__t.html#a4f35e852650c8627a3eebbfadf00de0a',1,'rmap_t']]],
   ['tydeg',['tydeg',['../structrmap__t.html#a0ba307d3338a9bc91061214106f9f90c',1,'rmap_t']]],
   ['type',['type',['../structPOWFS__CFG__T.html#a098c61788957d2fc71f4a3be77aa1e53',1,'POWFS_CFG_T::type()'],['../structARGOPT__T.html#a41cb6584b5615bb40bc5d59a10dc9da8',1,'ARGOPT_T::type()']]],

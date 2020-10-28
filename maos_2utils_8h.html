@@ -131,8 +131,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 <tr class="separator:a042cc2fc9a27fae7528d0958fa0ff5f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29ab479d13329c12e938cff513a2e2e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a29ab479d13329c12e938cff513a2e2e9">dcellread_prefix</a> (const char *file, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs)</td></tr>
 <tr class="separator:a29ab479d13329c12e938cff513a2e2e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46e4c5d7312da96e3e8759d8f01a7559"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a46e4c5d7312da96e3e8759d8f01a7559">draw_ints</a> (const <a class="el" href="structdcell.html">dcell</a> *ints, const <a class="el" href="structloc__t.html">loc_t</a> *saloc, int iwfs)</td></tr>
-<tr class="separator:a46e4c5d7312da96e3e8759d8f01a7559"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3c976283684c703e5ed8b35bfeac3b8"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#aa3c976283684c703e5ed8b35bfeac3b8">average_powfs</a> (<a class="el" href="structdmat.html">dmat</a> *A, <a class="el" href="structlmat.html">lmat</a> *wfsindex, int replace)</td></tr>
+<tr class="separator:aa3c976283684c703e5ed8b35bfeac3b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="af943255a0077c58705a9fbd340077789"></a>
@@ -772,29 +772,29 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a46e4c5d7312da96e3e8759d8f01a7559"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a46e4c5d7312da96e3e8759d8f01a7559">&#9670;&nbsp;</a></span>draw_ints()</h2>
+<a id="aa3c976283684c703e5ed8b35bfeac3b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3c976283684c703e5ed8b35bfeac3b8">&#9670;&nbsp;</a></span>average_powfs()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void draw_ints </td>
+          <td class="memname">real average_powfs </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&#160;</td>
-          <td class="paramname"><em>ints</em>, </td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
-          <td class="paramname"><em>saloc</em>, </td>
+          <td class="paramtype"><a class="el" href="structlmat.html">lmat</a> *&#160;</td>
+          <td class="paramname"><em>wfsindex</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>iwfs</em>&#160;</td>
+          <td class="paramname"><em>replace</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -803,7 +803,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Concatenate and plot subaperture images. </p>
+<p>average per powfs. replace the content when replace is set. </p>
 
 </div>
 </div>

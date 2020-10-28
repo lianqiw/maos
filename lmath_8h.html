@@ -121,8 +121,8 @@ Functions</h2></td></tr>
 <tr class="separator:afbd472f639e70eec689fe486df62b6d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c96e62be5ebf02414c5a270ffd428f4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a7c96e62be5ebf02414c5a270ffd428f4">lmat_cast</a> (const void *A)</td></tr>
 <tr class="separator:a7c96e62be5ebf02414c5a270ffd428f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa924ec8d18248737757a6c544b5e50fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#aa924ec8d18248737757a6c544b5e50fd">linit</a> (<a class="el" href="structlmat.html">lmat</a> **A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
-<tr class="separator:aa924ec8d18248737757a6c544b5e50fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a156cb1cdac79c25b93d62a5d1731ed67"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a156cb1cdac79c25b93d62a5d1731ed67">lnew2</a> (<a class="el" href="structlmat.html">lmat</a> **A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
+<tr class="separator:a156cb1cdac79c25b93d62a5d1731ed67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15ceffb00e7bb7e57793410cecd33cbd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a15ceffb00e7bb7e57793410cecd33cbd">lfree_do</a> (<a class="el" href="structlmat.html">lmat</a> *A)</td></tr>
 <tr class="separator:a15ceffb00e7bb7e57793410cecd33cbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58ac729e8fc54bad45f2306f5853df4e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a58ac729e8fc54bad45f2306f5853df4e">lref</a> (const <a class="el" href="structlmat.html">lmat</a> *in)</td></tr>
@@ -309,14 +309,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
 
 </div>
 </div>
-<a id="aa924ec8d18248737757a6c544b5e50fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa924ec8d18248737757a6c544b5e50fd">&#9670;&nbsp;</a></span>linit()</h2>
+<a id="a156cb1cdac79c25b93d62a5d1731ed67"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a156cb1cdac79c25b93d62a5d1731ed67">&#9670;&nbsp;</a></span>lnew2()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void linit </td>
+          <td class="memname">void lnew2 </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structlmat.html">lmat</a> **&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -340,7 +340,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
         </tr>
       </table>
 </div><div class="memdoc">
-<p>check the size of matrix if exist. Otherwise create it. </p>
+<p>check the size of matrix if exist. Otherwise create it. content is not zeroed. </p>
 
 </div>
 </div>
@@ -359,7 +359,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
         </tr>
       </table>
 </div><div class="memdoc">
-<p>free a matrix object. if keepdata!=0, will not free A-&gt;p. </p>
+<p>free a matrix object. </p>
 
 </div>
 </div>

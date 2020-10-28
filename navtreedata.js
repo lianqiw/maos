@@ -32,8 +32,11 @@ var NAVTREE =
         [ "Compiler options", "page20_compile.html#sect-compiler", null ],
         [ "GPU acceleration", "page20_compile.html#sect-cuda", null ],
         [ "Matlab Mex Routines", "page20_compile.html#sect-mex", null ],
-        [ "Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon", "page20_compile.html#sect-mac-gtk", null ],
-        [ "Using the job monitor", "page20_compile.html#sect-monitor", null ]
+        [ "Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon", "page20_compile.html#sect-mac-gtk", null ]
+      ] ],
+      [ "Graphical User Interface", "page20_compile.html#sect-gui", [
+        [ "Monitor", "page20_compile.html#subsect-monitor", null ],
+        [ "Drawdaemon", "page20_compile.html#subsect-draw", null ]
       ] ]
     ] ],
     [ "Run simulations", "page30_run.html", [
@@ -45,18 +48,19 @@ var NAVTREE =
         [ "WFS Configuration", "page30_run.html#sect-wfs", null ],
         [ "Point Spread Function", "page30_run.html#sect-perfevl", null ],
         [ "Actuator Slaving", "page30_run.html#sect-act", null ],
-        [ "range variation", "page30_run.html#Sodium", null ]
+        [ "Sodium range variation", "page30_run.html#sect-sodium", null ]
       ] ]
     ] ],
     [ "Examples", "page33_example.html", "page33_example" ],
     [ "Simulation Results", "page40_results.html", [
-      [ "Data Format", "page40_results.html#bin", [
+      [ "Plotting Results", "page40_results.html#drawres", null ],
+      [ "Reading Results", "page40_results.html#bin", [
         [ "MATLAB", "page40_results.html#read-matlab", null ],
         [ "Python", "page40_results.html#sect-python", null ],
         [ "IDL", "page40_results.html#sect-idl", null ],
         [ "FITS", "page40_results.html#sect-fits", null ]
       ] ],
-      [ "Simulation Results", "page40_results.html#sect-interpret", null ],
+      [ "Result Files", "page40_results.html#sect-interpret", null ],
       [ "Geometry Data", "page40_results.html#geometry", null ],
       [ "Telemetry Data", "page40_results.html#telemetry", null ]
     ] ],
@@ -89,21 +93,21 @@ var NAVTREEINDEX =
 "classcuda__recon_1_1curecon__geom.html#a7f73b5e1b8a8ce96f74e8d7763d0dc63",
 "classcuperf__g.html#ae9bb8a2aa54ef2dced026ec213bc2c56",
 "cmath_8h.html#a7fd8927e7ba4416f6f4fc8df9d3b1a59",
-"dmath_8h.html#a6a40edb4a2dc17f6dd445ab76073227e",
-"globals_func_p.html",
-"maos_2moao_8h.html#aaaf77736de33764e12edc12f46b18c64",
-"parms_8h.html",
-"smath_8h.html#a00259ef4be59b306d5359e1135c77c54",
-"structAPER__CFG__T.html#a7994143f2b421ef6e9951cbf578f5ae9",
-"structFIT__CFG__T.html#a6e582e718e6c2418d8b9238fdcdfcb9d",
-"structNGSMOD__T.html#a30a891b82433f207a2eb5a94077cb8f7",
-"structPROPDATA__T.html#afbffefa96db9c2c91751dea711e353bf",
-"structSIM__CFG__T.html#a8d3b6865ffc87d7df941e43613117995",
-"structSTATUS__T.html#ac5fb22e6b7250a8023e024a52f1f7377",
-"structdspcell.html#a059530fc3605355e473c2bb0a2be7a7f",
-"structrmapcell.html#ac89e9a0af7111fc8133065ccf4eff363",
-"turbulence_8h.html#af56dc39765ac225d9183cccfa7583a02",
-"zmath_8h.html#aeda4ecbcc71390bb81a267390a7a102f"
+"dmath_8h.html#a6b5d0810af2c12e7a53415611511867e",
+"globals_func_o.html",
+"maos_2moao_8h.html",
+"page95_profiling.html#Code",
+"slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3",
+"stfun_8h.html#a4c9ecd1d7433204924e32cc095772364",
+"structFDPCG__T.html#a86c4fc6d90812b606f9ec1a804b10681",
+"structMUV__T.html#afa9644721152188dc815327f091610c0",
+"structPOWFS__T.html#af49935106ffcdcc195c2d6654d070722",
+"structSIM__CFG__T.html#a4813d011fa1383563d776ed0d3a75eb3",
+"structSTATUS__T.html#a093b6843684e59be66f2cf39611078d8",
+"structdmat.html#a690854282ff0f4fbd5d734d6c377c9b2",
+"structrmap__t.html#a990426f785bfea3367aa8bfe6ec861b4",
+"thread_8h.html#abcf2784ffc1cb49a293c75cdfe6d64e7",
+"zmath_8h.html#ad28b46d2a2dbcf3ec0c8734f828c4bd9"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -97,6 +97,7 @@ var hierarchy =
     [ "dccell", "structdccell.html", null ],
     [ "dcell", "structdcell.html", null ],
     [ "dir_t", "structdir__t.html", null ],
+    [ "DITHER_CFG_T", "structDITHER__CFG__T.html", null ],
     [ "dither_t", "classdither__t.html", null ],
     [ "DITHER_T", "structDITHER__T.html", null ],
     [ "DM_CFG_T", "structDM__CFG__T.html", null ],

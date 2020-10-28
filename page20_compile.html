@@ -98,7 +98,10 @@ $(document).ready(function(){initNavTree('page20_compile.html','');});
 <li class="level2"><a href="#sect-cuda">GPU acceleration</a></li>
 <li class="level2"><a href="#sect-mex">Matlab Mex Routines</a></li>
 <li class="level2"><a href="#sect-mac-gtk">Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon</a></li>
-<li class="level2"><a href="#sect-monitor">Using the job monitor</a></li>
+</ul>
+</li>
+<li class="level1"><a href="#sect-gui">Graphical User Interface</a><ul><li class="level2"><a href="#subsect-monitor">Monitor</a></li>
+<li class="level2"><a href="#subsect-draw">Drawdaemon</a></li>
 </ul>
 </li>
 </ul>
@@ -172,21 +175,27 @@ export C_INCLUDE_PATH="$HOME/gtk/inst/include"
 </pre><p> Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now.</p>
 <p>To make the app bundles. First, install quartz engine and ige-mac-buildler. sourceforge.net/apps/trac/gtk-osx/wiki/Bundle jhbuild build gtk-quartz-engine</p>
 <p>Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin And cd to scripts/bundle folder, run build.sh. .app files should appear in your desktop.</p>
-<h2><a class="anchor" id="sect-monitor"></a>
-Using the job monitor</h2>
-<p>When GTK+ libraries are present in the system, additional executives will be compiled, <code>drawdaemon</code>, <code>drawres</code>, <code>drawbin</code> and <code>monitor</code> in the <code>bin</code> folder.</p>
+<h1><a class="anchor" id="sect-gui"></a>
+Graphical User Interface</h1>
+<p>When GTK+ libraries are present in the system, additional executables will be compiled, <code>drawdaemon</code>, <code>drawres</code>, <code>drawbin</code> and <code>monitor</code> in the <code>bin</code> folder.</p>
 <ul>
-<li>The plotting utility <code>drawdaemon</code> launched automatically when plotting commands are issued in the software.</li>
+<li>The plotting utility <code>drawdaemon</code> is launched automatically when plotting commands are issued in simulation (<code>maos plot.all=1</code>) or in post processing with <code>drawres</code> or <code>drawbin</code> </li>
 <li>The monitoring utility <code>monitor</code> can be used to monitor jobs in this and linked machines.</li>
 <li>The <code>drawres</code> can be used to automatically plot the results folder.</li>
 <li>The <code>drawbin</code> can be used to automatically plot the OPDs or maps.</li>
 </ul>
+<h2><a class="anchor" id="subsect-monitor"></a>
+Monitor</h2>
 <p>In order to use monitor to monitor jobs in different machines, follow these steps:</p>
 <p>Create a folder .aos in your home folder, create two files in there. Put these files in all the machines you want to monitor.</p>
 <ul>
 <li><code>~/</code>.aos/hosts Each line contains a machine's hostname you want to monitor. It also supports the full format <code>prettyname=full_hostname:port</code> </li>
-<li><code>~/</code>.aos/port contains the port you want the <code>scheduler</code> to bind to so that the monitor can connect to it. Any non-previledged port numbers are fine (like 10000). Different users should have different port number. The port hust to be the same on all the machines. Make sure the firewall allows them. </li>
+<li><code>~/</code>.aos/port contains the port you want the <code>scheduler</code> to bind to so that the monitor can connect to it. Any non-previledged port numbers are fine (like 10000). Different users should have different port number. The port has to be the same on all the machines. Make sure the firewall allows them. If not set, the number will be automatically computed based on username.</li>
 </ul>
+<h2><a class="anchor" id="subsect-draw"></a>
+Drawdaemon</h2>
+<p>Once the monitor is running, it will display running jobs on each connected host. Right click on a running job and select <code>Plot sected jobs</code> will launch drawdaemon and start plotting the telemetry data in realtime. This works for local and remote host. Multiple drawedaemons can be started for the same or different jobs.</p>
+<p>An alternative way to launch drawdaemon is to include <code>plot.setup=1</code> <code>plot.run=1</code> or <code>plot.all=1</code> in maos command line. This method can only invoke the drawdaemon locally. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 

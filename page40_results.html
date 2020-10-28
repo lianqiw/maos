@@ -93,19 +93,23 @@ $(document).ready(function(){initNavTree('page40_results.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
-<ul><li class="level1"><a href="#bin">Data Format</a><ul><li class="level2"><a href="#read-matlab">MATLAB</a></li>
+<ul><li class="level1"><a href="#drawres">Plotting Results</a></li>
+<li class="level1"><a href="#bin">Reading Results</a><ul><li class="level2"><a href="#read-matlab">MATLAB</a></li>
 <li class="level2"><a href="#sect-python">Python</a></li>
 <li class="level2"><a href="#sect-idl">IDL</a></li>
 <li class="level2"><a href="#sect-fits">FITS</a></li>
 </ul>
 </li>
-<li class="level1"><a href="#sect-interpret">Simulation Results</a></li>
+<li class="level1"><a href="#sect-interpret">Result Files</a></li>
 <li class="level1"><a href="#geometry">Geometry Data</a></li>
 <li class="level1"><a href="#telemetry">Telemetry Data</a></li>
 </ul>
 </div>
-<div class="textblock"><h1><a class="anchor" id="bin"></a>
-Data Format</h1>
+<div class="textblock"><h1><a class="anchor" id="drawres"></a>
+Plotting Results</h1>
+<p>The wavefront error time history can be processed using the built in tool <code>drawres</code> and plotted using the Gtk based <code>drawdaemon</code>. </p><div class="fragment"><div class="line">drawres folder1 folder2 ...</div></div><!-- fragment --><p> If the specified folder contains subfolders with results, they will be plotted together. When using on a text terminal with <code>DISPLAY</code> not set, if there is <code>monitor</code> running in a connected computer, it will launch <code>drawdaemon</code>.</p>
+<h1><a class="anchor" id="bin"></a>
+Reading Results</h1>
 <p>MAOS generates output in binary format <code></code>.bin files (which maybe gzipped) as described below. PSFs are written into fits files with extensions.</p>
 <p>The data are saved to the <code></code>.bin files in a moduler way. For a simple matrix (like double matrix or cell matrix), we first write a magic number (4 byte unsigned int) representing the data type, and then x and y dimension (two 8 byte unsigned ints), and finally the data itself (if it is cell, recursively write the data contained in the cell with the same method).</p>
 <p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <a class="el" href="structloc__t.html">loc_t</a> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
@@ -130,7 +134,7 @@ IDL</h2>
 FITS</h2>
 <p>Certain results (e.g., PSF) are saved in <code></code>.fits format. Any standard fits reader (e.g., <code>fv</code>, <code>ds9</code>) should be able to read them. There is also an executable <code>bin2fits</code> that can convert <code></code>.bin to <code></code>. fits files.</p>
 <h1><a class="anchor" id="sect-interpret"></a>
-Simulation Results</h1>
+Result Files</h1>
 <p>There will be several files created during simulation in the result folder. The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these files using provided mex function <code>read</code> in MATLAB. Notice that the suffix <code></code>.bin or <code></code>.bin.gz has been removed. You do not need to add the suffix when use <code>read</code>.</p>
 <ul>
 <li><code>Res_1:</code> A binary file containing a cell array that include the main results. i.e. res=read('Res_1');<ul>

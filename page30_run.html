@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('page30_run.html','');});
 <li class="level2"><a href="#sect-wfs">WFS Configuration</a></li>
 <li class="level2"><a href="#sect-perfevl">Point Spread Function</a></li>
 <li class="level2"><a href="#sect-act">Actuator Slaving</a></li>
-<li class="level2"><a href="#Sodium">range variation</a></li>
+<li class="level2"><a href="#sect-sodium">Sodium range variation</a></li>
 </ul>
 </li>
 </ul>
@@ -133,7 +133,7 @@ Usage</h1>
    -r, --run=host    Run the job in another host.
 
    The following environment variables are supported
-   MAOS_TOMO_SCALE=1e12 Rebalance tomography terms for single precision calculation
+   MAOS_TOMOSCALE=1e12 Rebalance tomography terms for single precision calculation
    MAOS_PARALLEL=1      Set to 0 to disable parallel launch
    MAOS_NO_WFS=0        Set to 1 to disable all WFS calls
    MAOS_NO_EVL=0        Set to 1 to disable evaluation calls
@@ -141,8 +141,9 @@ Usage</h1>
    MAOS_KEEP_MEM=0      Set to 1 to keep temporary memory between steps
    MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting
    MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info
-   MAOS_LOG_LEVEL=0     Set logging level. -3: error only, -2:  warning, -1  essential info, 0:  useful info,
-                        1:  debugging info, 2: debugging info, 3: everything.</pre><h1><a class="anchor" id="sect-config"></a>
+   MAOS_LOG_LEVEL=0     Set logging level. -3: error and warning only, 
+                            -2:  essential info, -1  useful info, 0:  all info,
+                            1:  debugging info, 2: more debugging info, 3: everything.</pre><h1><a class="anchor" id="sect-config"></a>
 Configuration Files</h1>
 <p>All user modifiable options are configured through config files with suffix <code></code>.conf or key=value in the command line. The supplied default setup files are stored in sub-folder <code>config/maos</code>. The config files are organized in a modular way. One <code></code>.conf file can include another <code></code>.conf file with <code>include=filename.conf</code>. The <code></code>.conf files in <code>config/maos</code> file are self-documented.</p>
 <p>All the options are in the form of <code>key=value</code>. The usually convention is: if the entry in <code>parms</code> called <code>parms-&gt;wfs.thetax</code>, the entry in .conf file will be in the form <code>wfs.thetax=value</code>.</p>
@@ -254,9 +255,10 @@ fit.actslave=1 #or 2, for mvr
 <li><code>actslave=1</code> enables implementation with threshold <code></code>.actthres. When an actuator is outside of the pupil, its coupling coefficient is usually very small. When it is below lsr.acthres, its value is slaved to its neighboring actuators.</li>
 <li><code>actslave=2</code> in addition enables implementation with threshold <code></code>.actthres2. When an actautor is hidden by secondary mirror support struts, it may still have relatively strong coupling, but regions separated by the structs may have different piston values, so called island effect. The mitigation method is to limit the value gap around such actautors whoes coupling is below .actthres2.</li>
 </ul>
-<h2><a class="anchor" id="Sodium"></a>
-range variation</h2>
-<p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="llt_CL.html">llt_CL.conf</a> or <a class="el" href="llt_SL.html">llt_SL.conf</a>. When supplied by user, use <code>powfs0_llt.fnrange</code>. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS). </p><hr/>
+<h2><a class="anchor" id="sect-sodium"></a>
+Sodium range variation</h2>
+<p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="llt_CL.html">llt_CL.conf</a> or <a class="el" href="llt_SL.html">llt_SL.conf</a>. When supplied by user, use <code>powfs0_llt.fnrange</code>. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS).</p>
+<p>The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront. </p><hr/>
 <p>See <a class="el" href="page40_results.html">Simulation Results</a> for further explanation and results interpretation. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

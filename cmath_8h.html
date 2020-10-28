@@ -131,8 +131,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa5c54717bb94a81ed8dd71d4b29b553b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b024370283dd8b111e1b7d4ac14ce88"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a7b024370283dd8b111e1b7d4ac14ce88">cmat_cast</a> (const void *A)</td></tr>
 <tr class="separator:a7b024370283dd8b111e1b7d4ac14ce88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab66261d868db34e1aa325004f7e3d3e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aab66261d868db34e1aa325004f7e3d3e">cinit</a> (<a class="el" href="structcmat.html">cmat</a> **A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
-<tr class="separator:aab66261d868db34e1aa325004f7e3d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d1f4cb9f176235f4dc33f577b113947"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a9d1f4cb9f176235f4dc33f577b113947">cnew2</a> (<a class="el" href="structcmat.html">cmat</a> **A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
+<tr class="separator:a9d1f4cb9f176235f4dc33f577b113947"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bae6b315a59ab56fc667b6c769e1804"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a8bae6b315a59ab56fc667b6c769e1804">cfree_do</a> (<a class="el" href="structcmat.html">cmat</a> *A)</td></tr>
 <tr class="separator:a8bae6b315a59ab56fc667b6c769e1804"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5acbf30c164ae75415b4301ee329d1f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ab5acbf30c164ae75415b4301ee329d1f">cref</a> (const <a class="el" href="structcmat.html">cmat</a> *in)</td></tr>
@@ -733,14 +733,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
 
 </div>
 </div>
-<a id="aab66261d868db34e1aa325004f7e3d3e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aab66261d868db34e1aa325004f7e3d3e">&#9670;&nbsp;</a></span>cinit()</h2>
+<a id="a9d1f4cb9f176235f4dc33f577b113947"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d1f4cb9f176235f4dc33f577b113947">&#9670;&nbsp;</a></span>cnew2()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void cinit </td>
+          <td class="memname">void cnew2 </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structcmat.html">cmat</a> **&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -764,7 +764,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>check the size of matrix if exist. Otherwise create it. </p>
+<p>check the size of matrix if exist. Otherwise create it. content is not zeroed. </p>
 
 </div>
 </div>
@@ -783,7 +783,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>free a matrix object. if keepdata!=0, will not free A-&gt;p. </p>
+<p>free a matrix object. </p>
 
 </div>
 </div>

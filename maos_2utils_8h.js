@@ -16,5 +16,5 @@ var maos_2utils_8h =
     [ "dither_position", "maos_2utils_8h.html#a69cccbd79992ae4b41973a64fa9e5097", null ],
     [ "shwfs_grad", "maos_2utils_8h.html#a042cc2fc9a27fae7528d0958fa0ff5f2", null ],
     [ "dcellread_prefix", "maos_2utils_8h.html#a29ab479d13329c12e938cff513a2e2e9", null ],
-    [ "draw_ints", "maos_2utils_8h.html#a46e4c5d7312da96e3e8759d8f01a7559", null ]
+    [ "average_powfs", "maos_2utils_8h.html#aa3c976283684c703e5ed8b35bfeac3b8", null ]
 ];

@@ -8,5 +8,6 @@ var structWFSFLAGS__T =
     [ "pllout", "structWFSFLAGS__T.html#a466865079009eaf3e032e5fd9bcb252a", null ],
     [ "ogcount", "structWFSFLAGS__T.html#a4447e007dede97cb301c41da1e81b1da", null ],
     [ "ogupdate", "structWFSFLAGS__T.html#a30983d0fccfb921adb2498643c06cc59", null ],
-    [ "ogout", "structWFSFLAGS__T.html#a27bb5579b219d5fbbfde9abd3c98d880", null ]
+    [ "ogout", "structWFSFLAGS__T.html#a27bb5579b219d5fbbfde9abd3c98d880", null ],
+    [ "zoomout", "structWFSFLAGS__T.html#a6e758c0ca88d4ffd9c98f8be7e3c8339", null ]
 ];

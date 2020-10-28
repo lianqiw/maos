@@ -134,20 +134,35 @@ Macros</h2></td></tr>
 <tr class="memitem:acfbc006ea433ad708fdee3e82996e721"><td class="memItemLeft" align="right" valign="top"><a id="acfbc006ea433ad708fdee3e82996e721"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>GREEN</b>&#160;&#160;&#160;(detached?&quot;&quot;:&quot;\033[0;32m&quot;)</td></tr>
 <tr class="separator:acfbc006ea433ad708fdee3e82996e721"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf681265909adf3d3e8116c93c0ba179"><td class="memItemLeft" align="right" valign="top"><a id="abf681265909adf3d3e8116c93c0ba179"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>YELLOW</b>&#160;&#160;&#160;(detached?&quot;&quot;:&quot;\033[0;33m&quot;)</td></tr>
+<tr class="separator:abf681265909adf3d3e8116c93c0ba179"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79d10e672abb49ad63eeaa8aaef57c38"><td class="memItemLeft" align="right" valign="top"><a id="a79d10e672abb49ad63eeaa8aaef57c38"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>BLUE</b>&#160;&#160;&#160;(detached?&quot;&quot;:&quot;\033[0;34m&quot;)</td></tr>
+<tr class="separator:a79d10e672abb49ad63eeaa8aaef57c38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f699060902f800f12aaae150f3a708e"><td class="memItemLeft" align="right" valign="top"><a id="a6f699060902f800f12aaae150f3a708e"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MAGENTA</b>&#160;&#160;&#160;(detached?&quot;&quot;:&quot;\033[0;35m&quot;)</td></tr>
+<tr class="separator:a6f699060902f800f12aaae150f3a708e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad243f93c16bc4c1d3e0a13b84421d760"><td class="memItemLeft" align="right" valign="top"><a id="ad243f93c16bc4c1d3e0a13b84421d760"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CYAN</b>&#160;&#160;&#160;(detached?&quot;&quot;:&quot;\033[0;36m&quot;)</td></tr>
+<tr class="separator:ad243f93c16bc4c1d3e0a13b84421d760"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10f70b101a20e7aa118bf0c944475b06"><td class="memItemLeft" align="right" valign="top"><a id="a10f70b101a20e7aa118bf0c944475b06"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>QUIT_FUN</b>(A)&#160;&#160;&#160;quitfun?quitfun(A):default_quitfun(A);</td></tr>
 <tr class="separator:a10f70b101a20e7aa118bf0c944475b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25109b9068a7577def63faa4bf329664"><td class="memItemLeft" align="right" valign="top"><a id="a25109b9068a7577def63faa4bf329664"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logstd</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){printf(A);}})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logstd</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){fprintf(stdout, A);}})</td></tr>
 <tr class="separator:a25109b9068a7577def63faa4bf329664"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0159bca619b48f22e593fe9b33a36b8"><td class="memItemLeft" align="right" valign="top"><a id="ad0159bca619b48f22e593fe9b33a36b8"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logerr</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){fprintf(stderr, A);}})</td></tr>
+<tr class="separator:ad0159bca619b48f22e593fe9b33a36b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b9a882fdc463a3d4dcc99840fd0adb8"><td class="memItemLeft" align="right" valign="top"><a id="a5b9a882fdc463a3d4dcc99840fd0adb8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>error</b>(format, ...)&#160;&#160;&#160;({logstd(-10, &quot;%sError(%s:%d,%s): &quot; format &quot;%s&quot;, RED, BASEFILE, __LINE__, __func__, ##__VA_ARGS__, BLACK); QUIT_FUN(&quot;Error happened&quot;);})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>error</b>(format, ...)&#160;&#160;&#160;({logerr(-4, &quot;%sError(%s:%d): &quot; format &quot;%s&quot;, RED,BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN(&quot;Error happened&quot;);})</td></tr>
 <tr class="separator:a5b9a882fdc463a3d4dcc99840fd0adb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d3ff0e9f81516a70ebb38e09b9ef34e"><td class="memItemLeft" align="right" valign="top"><a id="a5d3ff0e9f81516a70ebb38e09b9ef34e"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>warning</b>(format, ...)&#160;&#160;&#160;({logstd(-3, &quot;%sWarning(%s:%d,%s): &quot; format &quot;%s&quot;, RED, BASEFILE, __LINE__,__func__, ##__VA_ARGS__, BLACK);})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>warning</b>(format, ...)&#160;&#160;&#160;({logerr(-4, &quot;%sWarning(%s:%d): &quot; format &quot;%s&quot;, YELLOW, BASEFILE, __LINE__,##__VA_ARGS__, BLACK);})</td></tr>
 <tr class="separator:a5d3ff0e9f81516a70ebb38e09b9ef34e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01167927cc103474971c102a622429bb"><td class="memItemLeft" align="right" valign="top"><a id="a01167927cc103474971c102a622429bb"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>warning_time</b>(format, ...)&#160;&#160;&#160;({logstd(-3,&quot;%sWarning(%s:%d,%s)[%s]: &quot; format &quot;%s&quot;, RED, BASEFILE, __LINE__, __func__,<a class="el" href="sys_2misc_8h.html#ac14e730f72f719556018731d840694fe">myasctime</a>(), ##__VA_ARGS__, BLACK);})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>warning_time</b>(format, ...)&#160;&#160;&#160;({logerr(-4,&quot;%s[%s] (%s:%d): &quot; format &quot;%s&quot;, YELLOW,<a class="el" href="sys_2misc_8h.html#ac14e730f72f719556018731d840694fe">myasctime</a>(),BASEFILE, __LINE__,  ##__VA_ARGS__, BLACK);})</td></tr>
 <tr class="separator:a01167927cc103474971c102a622429bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62dee209121f1ac5d2306b9f6234a1b5"><td class="memItemLeft" align="right" valign="top"><a id="a62dee209121f1ac5d2306b9f6234a1b5"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>warning_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; warning(A);}})</td></tr>
@@ -167,24 +182,30 @@ Macros</h2></td></tr>
 <tr class="memitem:aecfbb1e9291f15553ecf346710b28398"><td class="memItemLeft" align="right" valign="top"><a id="aecfbb1e9291f15553ecf346710b28398"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; info(A);}})</td></tr>
 <tr class="separator:aecfbb1e9291f15553ecf346710b28398"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21c6874582a101a2c1837970cc103a15"><td class="memItemLeft" align="right" valign="top"><a id="a21c6874582a101a2c1837970cc103a15"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg</b>(format, ...)&#160;&#160;&#160;logstd(0, &quot;Debug(%s:%d,%s): &quot; format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)</td></tr>
-<tr class="separator:a21c6874582a101a2c1837970cc103a15"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab33126417afba80889d1f798dc099bb1"><td class="memItemLeft" align="right" valign="top"><a id="ab33126417afba80889d1f798dc099bb1"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg2</b>(format, ...)&#160;&#160;&#160;logstd(1, &quot;Debug2(%s:%d,%s): &quot; format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)</td></tr>
-<tr class="separator:ab33126417afba80889d1f798dc099bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a672893e5d3f5d8bd3054f512ef125d33"><td class="memItemLeft" align="right" valign="top"><a id="a672893e5d3f5d8bd3054f512ef125d33"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3</b>(format, ...)&#160;&#160;&#160;logstd(2, &quot;Debug3(%s:%d,%s): &quot; format, BASEFILE, __LINE__, __func__, ##__VA_ARGS__)</td></tr>
-<tr class="separator:a672893e5d3f5d8bd3054f512ef125d33"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75c2c4fb63fa367b5610866557d5b068"><td class="memItemLeft" align="right" valign="top"><a id="a75c2c4fb63fa367b5610866557d5b068"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_time</b>(format, ...)&#160;&#160;&#160;logstd(0, &quot;Debug(%s:%d,%s)[%s]: &quot; format, BASEFILE, __LINE__, __func__, <a class="el" href="sys_2misc_8h.html#ac14e730f72f719556018731d840694fe">myasctime</a>(), ##__VA_ARGS__)</td></tr>
-<tr class="separator:a75c2c4fb63fa367b5610866557d5b068"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1c78f22034ac8f5e8a1561152787611"><td class="memItemLeft" align="right" valign="top"><a id="ab1c78f22034ac8f5e8a1561152787611"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg2_time</b>(format, ...)&#160;&#160;&#160;logstd(1, &quot;Debug2(%s:%d,%s)[%s]: &quot; format, BASEFILE, __LINE__, __func__, <a class="el" href="sys_2misc_8h.html#ac14e730f72f719556018731d840694fe">myasctime</a>(), ##__VA_ARGS__)</td></tr>
-<tr class="separator:ab1c78f22034ac8f5e8a1561152787611"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a2d1ac7836aa8b43de57d86f25df20c"><td class="memItemLeft" align="right" valign="top"><a id="a1a2d1ac7836aa8b43de57d86f25df20c"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3_time</b>(format, ...)&#160;&#160;&#160;logstd(2, &quot;Debug3(%s:%d,%s)[%s]: &quot; format, BASEFILE, __LINE__, __func__, <a class="el" href="sys_2misc_8h.html#ac14e730f72f719556018731d840694fe">myasctime</a>(), ##__VA_ARGS__)</td></tr>
-<tr class="separator:a1a2d1ac7836aa8b43de57d86f25df20c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a625bac7b464519d4050f5ac672c5399a"><td class="memItemLeft" align="right" valign="top"><a id="a625bac7b464519d4050f5ac672c5399a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  format, ...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;(level)){fprintf(stderr, &quot;%s&quot; format &quot;%s&quot;, CYAN, ##__VA_ARGS__, BLACK);}})</td></tr>
+<tr class="separator:a625bac7b464519d4050f5ac672c5399a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7033895ed53df94af8dc30f4ae8a2e0e"><td class="memItemLeft" align="right" valign="top"><a id="a7033895ed53df94af8dc30f4ae8a2e0e"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg</b>(A...)&#160;&#160;&#160;logdbg(0, A)</td></tr>
+<tr class="separator:a7033895ed53df94af8dc30f4ae8a2e0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9cf96b2f370da5366df0efdecdaea2fc"><td class="memItemLeft" align="right" valign="top"><a id="a9cf96b2f370da5366df0efdecdaea2fc"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg2</b>(A...)&#160;&#160;&#160;logdbg(1, A)</td></tr>
+<tr class="separator:a9cf96b2f370da5366df0efdecdaea2fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e51e36b584b061b950ce05578aee507"><td class="memItemLeft" align="right" valign="top"><a id="a2e51e36b584b061b950ce05578aee507"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3</b>(A...)&#160;&#160;&#160;logdbg(2, A)</td></tr>
+<tr class="separator:a2e51e36b584b061b950ce05578aee507"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memItemLeft" align="right" valign="top"><a id="a825b7a63a48fc88a5c00e7ffd20b739b"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg_time</b>(level,  format, ...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;(level)){fprintf(stderr, &quot;%s[%s]: &quot; format &quot;%s&quot;, CYAN, <a class="el" href="sys_2misc_8h.html#ac14e730f72f719556018731d840694fe">myasctime</a>(), ##__VA_ARGS__, BLACK);}})</td></tr>
+<tr class="separator:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f66603a37f378b1bc4d794c34526973"><td class="memItemLeft" align="right" valign="top"><a id="a7f66603a37f378b1bc4d794c34526973"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_time</b>(A...)&#160;&#160;&#160;logdbg_time(0, A)</td></tr>
+<tr class="separator:a7f66603a37f378b1bc4d794c34526973"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbd0891d9ca256fe2ae264ce78a91807"><td class="memItemLeft" align="right" valign="top"><a id="abbd0891d9ca256fe2ae264ce78a91807"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg2_time</b>(A...)&#160;&#160;&#160;logdbg_time(1, A)</td></tr>
+<tr class="separator:abbd0891d9ca256fe2ae264ce78a91807"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4d4cf56c4bf1313fb881373e3f58caa"><td class="memItemLeft" align="right" valign="top"><a id="af4d4cf56c4bf1313fb881373e3f58caa"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3_time</b>(A...)&#160;&#160;&#160;logdbg_time(2, A)</td></tr>
+<tr class="separator:af4d4cf56c4bf1313fb881373e3f58caa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a742396b7da9970f25d52858fa166fc6f"><td class="memItemLeft" align="right" valign="top"><a id="a742396b7da9970f25d52858fa166fc6f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>assert</b>(A)</td></tr>
 <tr class="separator:a742396b7da9970f25d52858fa166fc6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -230,9 +251,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a09be4f80cada4e5b2082a65011fc90db"><td class="memItemLeft" align="right" valign="top"><a id="a09be4f80cada4e5b2082a65011fc90db"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>DEF_ENV_FLAG</b>(A,  default_val)</td></tr>
 <tr class="separator:a09be4f80cada4e5b2082a65011fc90db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0862ca3970c77912d4e1ca4920c04558"><td class="memItemLeft" align="right" valign="top"><a id="a0862ca3970c77912d4e1ca4920c04558"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DEF_ENV_FLAG_LOCAL</b>(A,  default_val,  min_val,  max_val)</td></tr>
-<tr class="separator:a0862ca3970c77912d4e1ca4920c04558"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>

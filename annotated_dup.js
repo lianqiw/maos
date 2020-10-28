@@ -58,6 +58,7 @@ var annotated_dup =
     [ "dccell", "structdccell.html", "structdccell" ],
     [ "dcell", "structdcell.html", "structdcell" ],
     [ "dir_t", "structdir__t.html", "structdir__t" ],
+    [ "DITHER_CFG_T", "structDITHER__CFG__T.html", "structDITHER__CFG__T" ],
     [ "dither_t", "classdither__t.html", "classdither__t" ],
     [ "DITHER_T", "structDITHER__T.html", "structDITHER__T" ],
     [ "DM_CFG_T", "structDM__CFG__T.html", "structDM__CFG__T" ],
