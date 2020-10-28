@@ -119,11 +119,11 @@ static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
 		dbg2_time("%d: ncpu %d->%d. ngpu %d->%d.\n",
 			pid, ncpu+nthread, ncpu, ngpu+ngpu_used, ngpu);
 		if(ncpu<0){
-			dbg_time("ncpu=%d\n", ncpu);
+			dbg2_time("ncpu=%d\n", ncpu);
 			ncpu=0;
 		}
 		if(ngpu<0){
-			dbg_time("ngpu=%d\n", ngpu);
+			dbg2_time("ngpu=%d\n", ngpu);
 			ngpu=0;
 		}
 		break;
@@ -442,7 +442,7 @@ static void process_queue(void){
 			//dbg_time("process_queue: Start %d at %d\n", irun->pid, irun->sock);
 				if(stwriteint(irun->sock, S_START)){
 					perror("stwriteint");
-					warning_time("failed to notify maos\n");
+					warning_time("stwriteint to maos failed: %s\n", strerror(errno));
 				}
 				nrun_add(irun->pid, nthread, irun->ngpu);
 				irun->status.timstart=myclocki();
@@ -457,7 +457,7 @@ static void process_queue(void){
 				}*/
 			}
 		} else{
-			warning_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
+			dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
 		}
 	} else{
 		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){
@@ -504,7 +504,7 @@ static char* remove_endl(const char* path0){
 static void new_job(const char* exename, const char* execmd){
 	RUN_T* irun=running_add(--counter, -1);
 	if(!irun){
-		warning_time("scheduler: running_add\n");
+		warning_time("scheduler: running_add failed.\n");
 		return;
 	}
 	irun->status.info=S_QUEUED;

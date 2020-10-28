@@ -314,15 +314,14 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			}
 			//don't break. Listen for connection close events.
 		}
-		if(timeout_fun){
-			timeout_fun();
-		}
+		
 
 		struct timeval timeout;
 		timeout.tv_sec=timeout_sec;
 		timeout.tv_usec=(timeout_sec-timeout.tv_sec)*1e6;
 		read_fd_set=active_fd_set;
-		if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0)<0){
+		int navail=select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0);
+		if(navail<0){//select failed
 			if(errno==EINTR){
 				warning_time("select failed: %s\n", strerror(errno));
 				continue;
@@ -333,48 +332,53 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 				warning_time("unknown error: %s\n", strerror(errno));
 				break;
 			}
-		}
-		for(int i=0; i<FD_SETSIZE; i++){
-			if(FD_ISSET(i, &read_fd_set)){
-				if(i==sock){
-					/* Connection request on original socket. */
-					socklen_t size=sizeof(struct sockaddr_in);
-					struct sockaddr_in clientname;
-					int port2=accept(i, (struct sockaddr*)&clientname, &size);
-					if(port2<0){
-						warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
-						FD_CLR(i, &active_fd_set);
-						close(i);
-					} else{
-						dbg_time("port %d is connected\n", port2);
-						FD_SET(port2, &active_fd_set);
-					}
-				} else if(i==sock_local){
-					socklen_t size=sizeof(struct sockaddr_un);
-					struct sockaddr_un clientname;
-					int port2=accept(i, (struct sockaddr*)&clientname, &size);
-					if(port2<0){
-						warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
-						FD_CLR(i, &active_fd_set);
-						close(i);
-					} else{
-						dbg_time("port %d is connected locally\n", port2);
-						FD_SET(port2, &active_fd_set);
-					}
-				} else{
-					/* Data arriving on an already-connected socket. Call responder to handle.
-					   On return:
-					   negative value: Close read of socket.
-					   -1: also close the socket.
-					 */
-					int ans=responder(i);
-					if(ans<0){
-						FD_CLR(i, &active_fd_set);
-						if(ans==-1){
-							//warning("close port %d\n", i);
+		}else if(navail==0){//timeout
+			if(timeout_fun){
+				timeout_fun();
+			}
+		} else{//fd available
+			for(int i=0; i<FD_SETSIZE; i++){
+				if(FD_ISSET(i, &read_fd_set)){
+					if(i==sock){
+						/* Connection request on original socket. */
+						socklen_t size=sizeof(struct sockaddr_in);
+						struct sockaddr_in clientname;
+						int port2=accept(i, (struct sockaddr*)&clientname, &size);
+						if(port2<0){
+							warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
+							FD_CLR(i, &active_fd_set);
 							close(i);
 						} else{
-							warning_time("ans=%d is not understood.\n", ans);
+							dbg_time("port %d is connected\n", port2);
+							FD_SET(port2, &active_fd_set);
+						}
+					} else if(i==sock_local){
+						socklen_t size=sizeof(struct sockaddr_un);
+						struct sockaddr_un clientname;
+						int port2=accept(i, (struct sockaddr*)&clientname, &size);
+						if(port2<0){
+							warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
+							FD_CLR(i, &active_fd_set);
+							close(i);
+						} else{
+							dbg_time("port %d is connected locally\n", port2);
+							FD_SET(port2, &active_fd_set);
+						}
+					} else{
+						/* Data arriving on an already-connected socket. Call responder to handle.
+						   On return:
+						   negative value: Close read of socket.
+						   -1: also close the socket.
+						 */
+						int ans=responder(i);
+						if(ans<0){
+							FD_CLR(i, &active_fd_set);
+							if(ans==-1){
+								//warning("close port %d\n", i);
+								close(i);
+							} else{
+								warning_time("ans=%d is not understood.\n", ans);
+							}
 						}
 					}
 				}

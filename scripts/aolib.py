@@ -136,11 +136,15 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
                 n2=round(iframe2*res.shape[0])
             else:
                 n2=iframe2
-            res=res[n1:n2,:]
+            if n1 > n2 or n2 > res.shape[0]:
+                print(fn, 'Invalid range',n1,n2,'>',res.shape[0])
+                res = np.nan * res[0:1,:]
+            else:
+                res=res[n1:n2,:]
             if max(res[-1,:])==0:
                 print(fn, 'Incomplete result')
                 continue #unfinished result
-            res=res.mean(0)*1e18
+            res=res.mean(0,keepdims=1)*1e18
             mres+=res
             nseed+=1
         if nseed>0:
@@ -184,10 +188,10 @@ def styles(ii):
 def reset_color():
     plt.gca().set_prop_cycle(None)
 
-
+"""
 import inspect, dis
 def nargout():
-    """Return how many values the caller is expecting"""
+    "Return how many values the caller is expecting"
     f = inspect.currentframe()
     f = f.f_back.f_back
     c = f.f_code
@@ -200,7 +204,7 @@ def nargout():
     elif instruction == dis.opmap['POP_TOP']:
         return 0
     return 1
-
+"""
 def figure(*args, **kargs):
     plt.figure(*args, **kargs)
     plt.clf()
@@ -216,9 +220,13 @@ def cellsum(x):
         xsum[jj]=x[jj].sum()
 
     return xsum
+def gauss_zr(w0, wvl=0.589e-6):
+    """return gaussian beam rayleigh range"""
+    return np.pi*w0**2/wvl
 def gauss_width(w0, z, wvl=0.589e-6):
     """returns gaussian beam width"""
-    return w0*sqrt(1+(z*wvl/(np.pi*w0**2)))
+    zr=gauss_zr(w0, wvl)
+    return w0*sqrt(1+(z/zr)**2)
 def gauss_roc(w0, z, wvl=0.589e-6):
     """returns gaussian beam roc"""
     zr=np.pi*w0**2/wvl;

@@ -114,11 +114,18 @@ def draw(*args, **kargs):
                 plt.subplot(ny, nx, iframe+1)
             draw(args[0][iframe, ], **kargs)
     else:
+        img = np.squeeze(args[0])
+        if len(img.shape) == 1:
+            nx = int(np.sqrt(img.shape[0]))
+            ny = int(img.shape[0] / nx)
+            if nx*ny==img.shape[0]:
+                img.shape=(nx, ny)
+            else:
+                raise(Exception('Unable to reshape 1d array'))
         if 'ext' in kargs:
-            plt.imshow(args[0], extent=kargs['ext'],
-                       origin='lower', cmap='jet')
+            plt.imshow(img, extent=kargs['ext'], origin='lower', cmap='jet')
         else:
-            plt.imshow(args[0], origin='lower', cmap='jet')
+            plt.imshow(img, origin='lower', cmap='jet')
         plt.colorbar()
         plt.grid(False)
 

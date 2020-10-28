@@ -433,7 +433,6 @@ typedef struct SIM_SAVE_T{
     zfarr **intsnf;
     zfarr **dm_evl;
     zfarr **dm_wfs;
-    /*covariances */
 }SIM_SAVE_T;
 /*
   data wrap for wfsints.

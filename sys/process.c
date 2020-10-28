@@ -77,9 +77,7 @@ void init_process(void){
 #else
 	HOME=getenv("HOME");
 #endif
-	if(!HOME){
-		HOME="/tmp";
-	}
+	
 
 	//Get Temp directory
 #if defined(__CYGWIN__)
@@ -93,7 +91,9 @@ void init_process(void){
 	strcpy(TEMP, temp);
 	strcat(TEMP, "/maos-");
 	strcat(TEMP, USER);
-
+	if(!HOME){
+		HOME=TEMP;
+	}
 	snprintf(CACHE, PATH_MAX, "%s/.aos/cache", HOME);
 	if(!getcwd(DIRSTART, PATH_MAX)){
 		snprintf(DIRSTART, PATH_MAX, "./");

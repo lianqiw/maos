@@ -575,12 +575,12 @@ static gboolean button_release(GtkWidget* widget, GdkEventButton* event, drawdat
 	float dx=x-drawdata->mxdown;
 	float dy=y-drawdata->mydown;
 	float dt=myclockd()-drawdata->mtdown;
-	if(dt<0.3){
-		info("Ignore accidental click\n");
+	if(dt<0.3 || fabs(dx)<5 || fabs(dy)<5){
+		dbg_time("Ignore accidental click\n");
 	} else if((cursor_type==0&&event->button==1)
 		||(cursor_type==1&&event->button==3)){/*move only on left button */
 		do_move(drawdata, dx, -dy);
-	} else if(fabs(dx)>2&&fabs(dy)>2){/*select and zoom. */
+	} else if(event->button==2){/*right button select and zoom. */
 		float xx=drawdata->mxdown;
 		float yy=drawdata->mydown;
 		if(drawdata->square&&!drawdata->image){
@@ -1150,7 +1150,8 @@ static void tool_property(GtkToolButton* button, gpointer data){
 			diff[i/2]=1;
 		}
 		float step=pow(10, floor(log10(fabs(diff[i/2])))-2);
-		spins[i]=gtk_spin_button_new_with_range(drawdata->limit0[i]-1000*step, drawdata->limit0[i]+1000*step, step);
+		spins[i]=gtk_spin_button_new_with_range(drawdata->limit0[i]-100*step, drawdata->limit0[i]+100*step, step);
+		
 		float* val;
 		if(i<4){
 			val=&drawdata->limit0[i];

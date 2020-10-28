@@ -592,7 +592,7 @@ void genmtch(const PARMS_T* parms, POWFS_T* powfs, const int ipowfs){
 	}
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	//Prevent printing of NEA during recomputing of matched filter
-	const int print_nea=intstat->mtche?0:1;
+	//const int print_nea=intstat->mtche?0:1;
 	
 	
 
@@ -708,7 +708,7 @@ void genmtch(const PARMS_T* parms, POWFS_T* powfs, const int ipowfs){
 		}
 		intstat->i0sumsum->p[ii0]=i0sumsum;
 	}/*ii0 */
-	if(print_nea){
+	if(1 /*print_nea*/){
 		info2("Matched filter sanea:\n");
 		if(powfs[ipowfs].sprint){/*print nea for select subapertures.*/
 			for(int ii0=0; ii0<ni0; ii0++){
