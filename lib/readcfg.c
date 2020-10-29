@@ -75,7 +75,7 @@ static void strtrim(char** str){
 	int iend;
 	/*turn non-printable characters, coma, and semicolumn, to space */
 	for(char* tmp=*str; !is_end(*tmp); tmp++){
-		if(!isgraph((int)*tmp)||isspace(*tmp)||*tmp==','){
+		if(!isgraph((int)*tmp)||isspace(*tmp)){
 			*tmp=' ';
 		}
 	}

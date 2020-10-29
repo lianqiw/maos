@@ -119,6 +119,7 @@ typedef struct DITHER_CFG_T{
 	real gpll;/**<Gain of phase locked loop*/
 	real gog; /**<Gain for updating optical gain for cog*/
 	real gdrift;/**<Gain for drift control*/
+	real glpf; /**<LPF gain for i0,gx,gy update (matched filter)*/
 	int npoint;/**<Number of points in each dither peroid (4)*/
 	int pllskip;/**<Skip WFS frames for uplink loop to stable*/
 	int pllrat; /**<Number of WFS frames for updating PLL.*/
@@ -225,6 +226,7 @@ typedef struct POWFS_CFG_T{
     int mtchfft;    /**<Compute gx, gy using i0 with FFT derivative instead of PSF.*/
     real cogthres;/**<CoG threshold, relative to max(im)*/
     real cogoff;  /**<CoG offset to remove, relative to max(im). */
+	dmat* ncpa;     /**<Description of NCPA; 2xn; first row is rms in meter, second row is zernike mode or negative for power law.*/
     int needGS0;    /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */
     int ncpa_method;/**<Method to correct ncpa.
@@ -248,6 +250,7 @@ typedef struct POWFS_CFG_T{
 	real dither_gpll;/**<Gain of phase locked loop*/
 	real dither_gog; /**<Gain for updating optical gain for cog*/
 	real dither_gdrift;/**<Gain for drift control*/
+	real dither_glpf; /**<LPF gain for i0,gx,gy update (matched filter)*/
 	int dither_npoint;/**<Number of points in each dither peroid (4)*/
 	int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
 	int dither_pllrat; /**<Number of WFS frames for updating PLL.*/

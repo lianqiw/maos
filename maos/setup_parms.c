@@ -325,6 +325,7 @@ static void readcfg_powfs(PARMS_T* parms){
 	READ_POWFS_RELAX(int, mtchfft);
 	READ_POWFS_RELAX(dbl, cogthres);
 	READ_POWFS_RELAX(dbl, cogoff);
+	READ_POWFS_MAT(d, ncpa);
 	READ_POWFS_RELAX(int, ncpa_method);
 	READ_POWFS_RELAX(int, i0scale);
 	READ_POWFS_RELAX(int, i0save);
@@ -343,7 +344,7 @@ static void readcfg_powfs(PARMS_T* parms){
 	READ_POWFS_RELAX(int, dither_ogsingle);
 	READ_POWFS_RELAX(dbl, dither_gog);
 	READ_POWFS_RELAX(dbl, dither_gdrift);
-	
+	READ_POWFS_RELAX(dbl, dither_glpf);
 	READ_POWFS_RELAX(int, zoomdtrat);
 	READ_POWFS_RELAX(int, zoomshare);
 	READ_POWFS_RELAX(dbl, zoomgain);
@@ -1439,10 +1440,10 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 			}
 			parms->powfs[ipowfs].dx=dx;
 		}
-		if(!parms->sim.closeloop&&parms->powfs[ipowfs].dtrat!=1){
-			warning("powfs %d: in open loop mode, only dtrat=1 is supported. Changed\n", ipowfs);
+		if(!parms->sim.closeloop&&parms->powfs[ipowfs].dtrat){
 			parms->powfs[ipowfs].dtrat=1;
-		}else if(parms->powfs[ipowfs].dtrat==0){
+			parms->powfs[ipowfs].step=0;
+		}else if(parms->powfs[ipowfs].dtrat==0){//wfs disabled.
 			parms->powfs[ipowfs].dtrat=1;
 			parms->powfs[ipowfs].step=INT_MAX;
 		}
@@ -1600,6 +1601,7 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 			if(powfsi->dither_ograt<=0||powfsi->dither_pllrat<=0){
 				error("dither_ograt or _pllrat must be positive\n");
 			}
+			if(powfsi->dither_glpf==0) powfsi->dither_glpf=1;
 		}
 	}/*ipowfs */
 	/*link wfs with powfs*/
@@ -1739,7 +1741,7 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 			warning("powfs %d: there is sky background, but is using geometric wfs. "
 				"background won't be effective.\n", ipowfs);
 		}
-		if(parms->sim.ncpa_calib&&(parms->nsurf||parms->ntsurf||parms->load.ncpa)){
+		if(parms->sim.ncpa_calib){
 			if(parms->powfs[ipowfs].ncpa_method==-1){//auto
 				if(parms->powfs[ipowfs].type==1&&parms->powfs[ipowfs].phytype_sim==1){//mtch
 					parms->powfs[ipowfs].ncpa_method=2;//default to 2

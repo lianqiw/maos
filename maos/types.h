@@ -92,7 +92,7 @@ typedef struct POWFS_T{
     dcell *saa_tel;        /**<mis-registered saa, if any*/
     real areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
-    dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
+    dcell *opdbias;     /**<OPD NCPA for NCPA calibration*/
     dcell *gradncpa;    /**<Offset to grads due to ncpa. Copied to simu->gradoff*/
     /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
@@ -477,13 +477,12 @@ typedef struct DITHER_T{
 typedef struct {
     int do_phy;   /**<Do physical optics*/
     int do_pistat;/**<Collect pixel intensity statistics*/
-    int gradout;  /**<Gradient output*/
-    int gradcount;/**<Gradient count*/
+    int gradout;  /**<Gradient count or 0 if no output*/
     int pllcount;  /**<Number of PLL accumulations*/
-    int pllout;   /**<PLL output*/
-    int ogcount;   /**<Number of optical gain accumulations*/
-    int ogupdate; /**<OG update with PLL output*/
-    int ogout;    /**<OG output*/
+    int pllout;   /**<PLL output count or 0 if no update*/
+    //int ogcount;   /**<Number of optical gain accumulations*/
+    int ogacc;    /**<OG accumulation count or 0 if no action*/
+    int ogout;    /**<OG output count or 0 if no update*/
 	int zoomout;  /**<Trombone zoom output*/
 }WFSFLAGS_T;
 /**

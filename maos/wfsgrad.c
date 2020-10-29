@@ -597,7 +597,7 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 			P(simu->resdither->p[iwfs], 2, ic)=pd->a2me;
 		}
 	}
-	if(simu->wfsflags[ipowfs].ogupdate){//Gain update statistics
+	if(simu->wfsflags[ipowfs].ogacc){//Gain update statistics
 		if(parms->powfs[ipowfs].dither==1){//TT Dither
 			real scale1=1./pllrat;
 			real amp=pd->a2m;
@@ -863,6 +863,7 @@ static void wfsgrad_dither_post(SIM_T* simu){
 				}
 				INTSTAT_T* intstat=powfs[ipowfs].intstat;
 				parms->powfs[ipowfs].radgx=0;//ensure derivate is interpreted as along x/y.
+
 				if(!intstat->i0||intstat->i0->ny!=nwfs){
 					dcellfree(intstat->i0);
 					dcellfree(intstat->gx);
@@ -872,15 +873,20 @@ static void wfsgrad_dither_post(SIM_T* simu){
 					intstat->gx=dcellnew(nsa, nwfs);
 					intstat->gy=dcellnew(nsa, nwfs);
 				}
-
+				real g2=parms->powfs[ipowfs].dither_glpf;
+				if(simu->wfsflags[ipowfs].ogout*g2<1){//not enough accumulations yet.
+					g2=1./(simu->wfsflags[ipowfs].ogout);
+				}
+				info("Applying LPF with gain %.2f to i0/gx/gy update\n", g2);
+				
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 					DITHER_T* pd=simu->dither[iwfs];
 					//Scale the output due to accumulation
 					for(int isa=0; isa<nsa; isa++){
-						dadd(intstat->i0->p+isa+jwfs*nsa, 0, pd->i0->p[isa], scale1);
-						dadd(intstat->gx->p+isa+jwfs*nsa, 0, pd->gx->p[isa], scale1);
-						dadd(intstat->gy->p+isa+jwfs*nsa, 0, pd->gy->p[isa], scale1);
+						dadd(intstat->i0->p+isa+jwfs*nsa, 1-g2, pd->i0->p[isa], scale1*g2);
+						dadd(intstat->gx->p+isa+jwfs*nsa, 1-g2, pd->gx->p[isa], scale1*g2);
+						dadd(intstat->gy->p+isa+jwfs*nsa, 1-g2, pd->gy->p[isa], scale1*g2);
 					}
 					dcellzero(pd->i0);
 					dcellzero(pd->gx);
@@ -892,12 +898,13 @@ static void wfsgrad_dither_post(SIM_T* simu){
 						  jump of gradient measurement.*/
 						shwfs_grad(&goff, intstat->i0->p+jwfs*nsa, parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 						dadd(&simu->gradoff->p[iwfs], 1, goff, -1);
+						if(parms->save.dither){
+							writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_%d_mf", iwfs, isim);
+						}
 					} else{
 						dzero(simu->gradoff->p[iwfs]);
 					}
-					if(parms->save.dither){
-						writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_%d", iwfs, isim);
-					}
+					
 					if(parms->powfs[ipowfs].dither_gdrift>0){
 						//outer loop to prevent i0 from drifting 
 						//Compute CoG of i0 + goff and drive it toward gradncpa with low gain (0.1)
@@ -916,6 +923,9 @@ static void wfsgrad_dither_post(SIM_T* simu){
 							dfree(focus);
 						}
 						dadd(&simu->gradoff->p[iwfs], 1, goff, -parms->powfs[ipowfs].dither_gdrift);
+						if(parms->save.dither){
+							writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_%d_drift", iwfs, isim);
+						}
 						if(1){
 							//outer loop to prevent gx/gy direction from drifting.
 							//It computes CoG of shifted images (i0+gx/gy) and make sure the angle stays the same.
@@ -945,9 +955,6 @@ static void wfsgrad_dither_post(SIM_T* simu){
 						}
 					}
 					dfree(goff);
-					if(parms->save.dither){
-						writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_drift_%d", iwfs, isim);
-					}
 				}
 				if(parms->save.dither){
 					writebin(intstat->i0, "powfs%d_i0_%d", ipowfs, isim);
@@ -1066,7 +1073,7 @@ void wfsgrad_twfs_recon(SIM_T* simu){
 		dcell* Rmod=0;
 		//Build radial mode error using closed loop TWFS measurements from this time step.
 		dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
-		memcpy(PCOL(simu->restwfs, simu->wfsflags[itpowfs].gradcount-1),
+		memcpy(PCOL(simu->restwfs, simu->wfsflags[itpowfs].gradout-1),
 			Rmod->p[0]->p, sizeof(real)*simu->restwfs->nx);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
@@ -1079,17 +1086,12 @@ void wfsgrad_twfs_recon(SIM_T* simu){
 						"WFS Offset", "x (m)", "y (m)", "Goff %d", iwfs);
 				}
 			}
-			if(parms->save.dither){
-				writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_twfs_%d", iwfs, simu->wfsisim);
-			}
 		}
-		if(parms->save.dither){
-			writebin(Rmod, "Rmod_%d", simu->wfsisim);
-		}
+		
 		dcellfree(Rmod);
 
 		if(parms->recon.psd&&parms->recon.psddtrat_twfs){//Do not enable. not working.
-			const int ntacc=simu->wfsflags[itpowfs].gradcount;
+			const int ntacc=simu->wfsflags[itpowfs].gradout;
 			const int dtrat=parms->recon.psddtrat_twfs;
 			if(ntacc%dtrat==0){//output
 				dbg("Step %5d: TWFS output psd\n", simu->wfsisim);

@@ -407,18 +407,18 @@ void sim_update_flags(SIM_T* simu, int isim){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		WFSFLAGS_T* wfsflags=simu->wfsflags+ipowfs;
 		const int dtrat=parms->powfs[ipowfs].dtrat;
-		wfsflags->gradout=!parms->sim.closeloop||((simu->wfsisim+1)%dtrat==0&&simu->wfsisim+1>parms->powfs[ipowfs].step);
-		wfsflags->gradcount=(simu->wfsisim-parms->powfs[ipowfs].step+1)/dtrat;
+		const int wfsframe=simu->wfsisim+1-parms->powfs[ipowfs].step;
+		wfsflags->gradout=(wfsframe>0&&wfsframe%dtrat==0)?(wfsframe/dtrat):0;
 		wfsflags->do_phy=parms->powfs[ipowfs].usephy&&simu->wfsisim>=parms->powfs[ipowfs].phystep;
 		wfsflags->do_pistat=parms->powfs[ipowfs].pistatout&&simu->wfsisim>=parms->powfs[ipowfs].pistatstart;
 		if(parms->powfs[ipowfs].dither){
 			const int pllrat=parms->powfs[ipowfs].dither_pllrat;
 			wfsflags->pllcount=(simu->wfsisim-parms->powfs[ipowfs].dither_pllskip+1)/dtrat;
-			wfsflags->pllout=(wfsflags->pllcount>0)&&(wfsflags->pllcount%pllrat)==0;
+			wfsflags->pllout=((wfsflags->pllcount>0)&&(wfsflags->pllcount%pllrat)==0)?(wfsflags->pllcount/pllrat):0;
 			const int ograt=parms->powfs[ipowfs].dither_ograt;//multiple of pllrat
-			wfsflags->ogcount=(simu->wfsisim-parms->powfs[ipowfs].dither_ogskip+1)/dtrat;
-			wfsflags->ogupdate=wfsflags->ogcount>0&&(wfsflags->ogcount%pllrat)==0;
-			wfsflags->ogout=wfsflags->ogcount>0&&(wfsflags->ogcount%ograt)==0;
+			const int ogcount=(simu->wfsisim-parms->powfs[ipowfs].dither_ogskip+1)/dtrat;
+			wfsflags->ogacc=(ogcount>0&&(ogcount%pllrat)==0)?(ogcount/pllrat):0;
+			wfsflags->ogout=(ogcount>0&&(ogcount%ograt)==0)?(ogcount/ograt):0;
 		}
 		if(parms->powfs[ipowfs].llt){
 			wfsflags->zoomout=(simu->wfsisim+1)%parms->powfs[ipowfs].zoomdtrat==0;

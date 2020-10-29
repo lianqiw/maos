@@ -69,8 +69,10 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	const long nloc=loc->nloc;
 	int nmod=0;
 	if(flag>0){//radial only
-		nmod=rmax-rmin+1;
-	} else{//a specific mode
+		nmod=rmax/2-(rmin+1)/2+1;
+	}else if(flag<0){//a specific mode
+		nmod=1;
+	}else{
 		nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
 	}
 	real D2=loc_diam(loc);
@@ -103,54 +105,51 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 		warning("%ld/%ld points outside unit circle with maximum radius %g\n",
 			nover, nloc, rover);
 	}
-	int cmod=0;
+	int cmod=0;//index into opd
+	int imod=0;//Noll's count of modes
 	TIC;tic;
 	for(int ir=rmin; ir<=rmax; ir++){
 		if(toc3>1){
 			info("Zernike radial order %d of %d\n", ir, rmax);
 			tic;
 		}
+		imod=(ir)*(ir+1)/2+1;
 		for(int im=0; im<=ir; im++){
-			if((ir-im)%2!=0) continue;
+			if((ir-im)%2!=0) continue;//invalid combo
 			if(flag>0&&im!=0) continue;//we want radial only
+			
 			dmat* Rnm=zernike_Rnm(locr, ir, im);
 			if(im==0){/*Radial*/
 				real coeff=sqrt(ir+1.);
-				real* restrict pmod=opd->p+nloc*cmod;
+				real* restrict pmod=PCOL(opd, cmod); //opd->p+nloc*cmod;
 #pragma omp parallel for
 				for(long iloc=0; iloc<nloc; iloc++){
 					pmod[iloc]=Rnm->p[iloc]*coeff;
 				}
 				cmod++;
+				imod++;
 			} else if(flag<=0){
 				real coeff=sqrt(2*(ir+1.));
-				real* restrict pmodc;
-				real* restrict pmods;
-				if((cmod+1)%2==1){
-					pmods=opd->p+nloc*cmod;
-					pmodc=opd->p+nloc*(cmod+1);
-				} else{
-					pmodc=opd->p+nloc*cmod;
-					pmods=opd->p+nloc*(cmod+1);
-				}
+				int off1=(imod)%2==1?0:1;
+				if(!flag||(imod+off1+flag)==0){
+					real* restrict pmods=PCOL(opd, flag?0:(cmod+off1));//odd imod for sin
 #pragma omp parallel for
-				for(long iloc=0; iloc<nloc; iloc++){
-					pmods[iloc]=Rnm->p[iloc]*coeff*sin(im*locs->p[iloc]);
-					pmodc[iloc]=Rnm->p[iloc]*coeff*cos(im*locs->p[iloc]);
+					for(long iloc=0; iloc<nloc; iloc++){
+						pmods[iloc]=Rnm->p[iloc]*coeff*sin(im*locs->p[iloc]);
+					}
 				}
-				cmod+=2;
+				if(!flag||(imod+1-off1+flag)==0){
+					real* restrict pmodc=PCOL(opd, flag?0:(cmod+1-off1));//even imod for cos
+#pragma omp parallel for
+					for(long iloc=0; iloc<nloc; iloc++){
+						pmodc[iloc]=Rnm->p[iloc]*coeff*cos(im*locs->p[iloc]);
+					}
+					cmod+=2;
+				}
+				imod+=2;
 			}
 			dfree(Rnm);
 		}
-	}
-	if(flag<0){//select only one mode
-		dmat* opd0=opd;
-		opd=dsub(opd0, 0, 0, -flag-(rmin)*(rmin+1)/2-1, 1);
-		dfree(opd0);
-	} else if(nmod>cmod){
-		dresize(opd, nloc, cmod);
-	} else if(nmod<cmod){
-		error("over flow\n");
 	}
 	dfree(locr);
 	dfree(locs);

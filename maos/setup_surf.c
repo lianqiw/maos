@@ -561,26 +561,45 @@ void setup_surf(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* rec
 			}
 		}
 	} else{
-		if(parms->nsurf||parms->ntsurf){
-			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			if(parms->powfs[ipowfs].ncpa){
+				const dmat* ncpa=parms->powfs[ipowfs].ncpa;
+				info("ncpa shape is %ldx%ld\n", ncpa->nx, ncpa->ny);
+				if(ncpa->nx!=2){
+					error("NCPA is in wrong format: %ldx%ld\n", ncpa->nx, ncpa->ny);
+				}
 				if(!powfs[ipowfs].opdadd){
-					powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
+					powfs[ipowfs].opdadd=dcellnew_same(parms->powfs[ipowfs].nwfs, 1, powfs[ipowfs].loc->nloc, 1);
+				}
+				rand_t rstat;
+				seed_rand(&rstat, 1);
+				for(long im=0; im<ncpa->ny; im++){
+					const real rms=P(ncpa, 0, im);
+					const int mod=(int)P(ncpa, 1, im);
+					if(mod>0){
+						dmat* zer=zernike(powfs[ipowfs].loc, parms->aper.d, 0, 0, -mod);
+						for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+							real rms2=rms<0?-rms:rms*(2*randu(&rstat)-1);
+							dadd(PP(powfs[ipowfs].opdadd, jwfs,0), 1, zer, rms2);
+						}
+						dfree(zer);
+					}else{
+						error("power law to be implemented\n");
 					}
 				}
 			}
-			if(!aper->opdadd){
-				aper->opdadd=dcellnew(parms->evl.nevl, 1);
-				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-					aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
+		}
+		if(parms->nsurf||parms->ntsurf){
+			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+				if(!powfs[ipowfs].opdadd){
+					powfs[ipowfs].opdadd=dcellnew_same(parms->powfs[ipowfs].nwfs, 1, powfs[ipowfs].loc->nloc, 1);
 				}
 			}
+			if(!aper->opdadd){
+				aper->opdadd=dcellnew_same(parms->evl.nevl, 1, aper->locs->nloc, 1);
+			}
 			if(!aper->opdfloc&&parms->sim.ncpa_calib){
-				aper->opdfloc=dcellnew(parms->sim.ncpa_ndir, 1);
-				for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
-					aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
-				}
+				aper->opdfloc=dcellnew_same(parms->sim.ncpa_ndir, 1, recon->floc->nloc, 1);
 			}
 
 			TIC;tic;
@@ -637,11 +656,9 @@ void setup_surf(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* rec
 					real thetax=parms->wfs[iwfs].thetax;
 					real thetay=parms->wfs[iwfs].thetay;
 					if(!powfs[ipowfs].opdbias){
-						powfs[ipowfs].opdbias=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+						powfs[ipowfs].opdbias=dcellnew_same(parms->powfs[ipowfs].nwfs, 1, powfs[ipowfs].loc->nloc, 1);
 					}
-					if(!powfs[ipowfs].opdbias->p[jwfs]){
-						powfs[ipowfs].opdbias->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
-					}
+					
 					for(int idm=0; idm<parms->ndm; idm++){
 						if(!recon->dm_ncpa->p[idm]||recon->dm_ncpa->p[idm]->nx==0) continue;
 						real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
