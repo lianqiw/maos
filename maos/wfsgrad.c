@@ -536,8 +536,8 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 			+cs*(simu->fsmerr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
 		pd->delta+=parms->powfs[ipowfs].dither_gpll*(err/pllrat);
 
-		//For CoG gaim update.
-		if(parms->powfs[ipowfs].type==0&&parms->powfs[ipowfs].phytype_sim2!=1){
+		//For SHWFS CoG gaim update.
+		if(parms->powfs[ipowfs].type==0&&parms->powfs[ipowfs].phytype_sim2!=1&&isim>=parms->powfs[ipowfs].dither_ogskip){
 			const int nsa=powfs[ipowfs].saloc->nloc;
 			if(!pd->ggm){
 				pd->ggm=dnew(nsa*2, 1);
@@ -584,10 +584,10 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 			dfree(tmp);
 		}
 		//Print PLL phase
-		if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
+		if(1 || iwfs==parms->powfs[ipowfs].wfs->p[0]){
 			const real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
 			const real scale=1./parms->powfs[ipowfs].dither_amp;
-			info2("Step %5d: wfs%d PLL: delay=%.2f frame, dither amplitude=%.1fx, estimate=%.1fx\n",
+			info2("Step %5d: wfs%d PLL: delay=%.2f frame, dither amplitude=%.2fx, estimate=%.2fx\n",
 				isim, iwfs, pd->deltam/anglei, pd->a2m*scale, pd->a2me*scale);
 		}
 		if(simu->resdither){
@@ -652,9 +652,8 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 				simu->fsmerr->p[iwfs]->p[1]+=tt[1];
 			}
 		} 
-		//all remove from gradient measurements.
-		dmulvec(simu->gradcl->p[iwfs]->p, P(recon->TT, iwfsr), tt, 1);
-		
+		//also remove from gradient measurements.
+		dmulvec(simu->gradcl->p[iwfs]->p, P(recon->TT, iwfsr, iwfsr), tt, 1);
 	}
 }
 
@@ -800,13 +799,30 @@ void wfsgrad_post(thread_t* info){
 			P(simu->fsmcmds->p[iwfs], 1, isim)=simu->fsmreal->p[iwfs]->p[1];
 		}
 		if(simu->wfsflags[ipowfs].gradout){
+			if(parms->plot.run){
+				/*drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl,
+					parms->plot.grad2opd, parms->dbg.draw_gmax->p,
+					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);*/
+				if(do_phy){
+					drawints("Ints", simu->powfs[ipowfs].saloc, simu->ints->p[iwfs], NULL,
+						"WFS Subaperture Images", "x", "y", "wfs %d", iwfs);
+				}
+			}
 			//scaling gradcl
 			if(simu->gradscale->p[iwfs]){
 				dcwm(gradcl, simu->gradscale->p[iwfs]);
 			} else{
 				dscale(gradcl, parms->powfs[ipowfs].gradscale);
 			}
-
+			if(simu->gradoff->p[iwfs]){
+				dadd(&simu->gradcl->p[iwfs], 1, simu->gradoff->p[iwfs], -parms->dbg.gradoff_scale);
+			}
+			if(parms->dbg.gradoff){
+				info_once("Add dbg.gradoff to gradient vector\n");
+				int icol=(simu->wfsisim+1)%parms->dbg.gradoff->ny;
+				dadd(&simu->gradcl->p[iwfs], 1, P(parms->dbg.gradoff, iwfs, icol), -1);
+			}
+		
 			if(do_phy){
 				if(simu->fsmerr_store->p[iwfs]){
 					wfsgrad_fsm(simu, iwfs);
@@ -823,15 +839,6 @@ void wfsgrad_post(thread_t* info){
 			}
 			if(parms->save.grad->p[iwfs]){
 				zfarr_push(simu->save->gradcl[iwfs], isim, gradcl);
-			}
-			if(parms->plot.run){
-				drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl,
-					parms->plot.grad2opd, parms->dbg.draw_gmax->p,
-					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);
-				if(do_phy){
-					drawints("Ints", simu->powfs[ipowfs].saloc, simu->ints->p[iwfs], NULL,
-						"WFS Subaperture Images", "x", "y", "wfs %d", iwfs);
-				}
 			}
 		}
 	}//for iwfs
@@ -854,7 +861,7 @@ static void wfsgrad_dither_post(SIM_T* simu){
 
 		if(simu->wfsflags[ipowfs].ogout){//This is matched filter or cog update
 			const int nsa=powfs[ipowfs].saloc->nloc;
-			real scale1=(real)parms->powfs[ipowfs].dither_pllrat/(real)parms->powfs[ipowfs].dither_ograt;
+			const real scale1=(real)parms->powfs[ipowfs].dither_pllrat/(real)parms->powfs[ipowfs].dither_ograt;
 			if(parms->powfs[ipowfs].phytype_sim2==1&&parms->powfs[ipowfs].type==0){
 				info2("Step %5d: Update matched filter for powfs %d\n", isim, ipowfs);
 				//For matched filter
@@ -1136,7 +1143,14 @@ void wfsgrad(SIM_T* simu){
 	if(parms->itpowfs!=-1){
 		wfsgrad_twfs_recon(simu);
 	}
-
+	if(parms->plot.run){
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			int ipowfs=parms->wfs[iwfs].powfs;
+			drawgrad("Gcal", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs],
+				parms->plot.grad2opd, parms->dbg.draw_gmax->p,
+				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcal %d", iwfs);
+		}
+	}
 	//todo: split filter_fsm to per WFS.
 	filter_fsm(simu);
 	if(1+simu->wfsisim==parms->sim.end){

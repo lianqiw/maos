@@ -120,7 +120,7 @@ void* listen_draw(void* dummy){
 			UNLOCK(drawdata_mutex);
 			drawdata->zoomx=1;
 			drawdata->zoomy=1;
-			drawdata->square=1;/*default to square. */
+			drawdata->square=-1;
 			drawdata->name=NULL;
 			drawdata->format=(cairo_format_t)0;
 			drawdata->gray=0;
@@ -148,6 +148,7 @@ void* listen_draw(void* dummy){
 			if(nx*ny>0){
 				STREADFLT(drawdata->p0, nx*ny);
 			}
+			drawdata->square=1;//default to square for images.
 		}
 		break;
 		case DRAW_SHM:/*no action*/
@@ -274,7 +275,7 @@ void* listen_draw(void* dummy){
 					}
 				}
 			}
-			if(!drawdata->fig) drawdata->fig=strdup("unkown");
+			if(!drawdata->fig) drawdata->fig=strdup("unknown");
 			drawdata_t** drawdatawrap=mycalloc(1, drawdata_t*);
 			drawdatawrap[0]=drawdata;
 			gdk_threads_add_idle(addpage, drawdatawrap);

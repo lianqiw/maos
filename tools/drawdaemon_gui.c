@@ -193,12 +193,14 @@ static void update_pixmap(drawdata_t* drawdata){
 		drawdata->pixmap=gdk_pixmap_new(curwindow->window, width, height, -1);
 #endif
 	}
-	/*cairo_t is destroyed in draw */
+	if(drawdata->p0||drawdata->npts){
+		/*cairo_t is destroyed in draw */
 #if GTK_MAJOR_VERSION>=3 
-	cairo_draw(cairo_create(drawdata->pixmap), drawdata, width, height);
+		cairo_draw(cairo_create(drawdata->pixmap), drawdata, width, height);
 #else
-	cairo_draw(gdk_cairo_create(drawdata->pixmap), drawdata, width, height);
+		cairo_draw(gdk_cairo_create(drawdata->pixmap), drawdata, width, height);
 #endif
+	}
 	gtk_widget_queue_draw(drawdata->drawarea);
 }
 static gboolean update_pixmap_timer(updatetimer_t* timer){
@@ -848,6 +850,7 @@ gboolean addpage(gpointer indata){
 		drawdata_old->format=drawdata->format;
 		drawdata_old->gray=drawdata->gray;
 		drawdata_old->drawn=0;/*need redraw. */
+		if(drawdata_old->square==-1) drawdata_old->square=drawdata->square;//otherwise keep old value.
 		/*we preserve the limit instead of off, zoom in case we are drawing curves */
 		//if(drawdata_old->npts){
 		//    drawdata_old->limit_changed=-1;
@@ -865,7 +868,7 @@ gboolean addpage(gpointer indata){
 			page_changed(-1, -1);
 		}
 	} else{
-	/*new tab inside the fig to contain the plot. */
+		/*new tab inside the fig to contain the plot. */
 		drawdata->page=page=gtk_scrolled_window_new(NULL, NULL);
 		drawdata->dtime=INFINITY;
 		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page),

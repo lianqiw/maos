@@ -179,8 +179,10 @@ def readbin_do(fp, isfits):
             datatype=datatype.newbyteorder('>')
 
         out=readvec(fp, datatype, nx*ny)
-        out.shape=(ny, nx)
-
+        if len(out)==nx*ny:
+            out.shape=(ny, nx)
+        else:
+            print('wrong length is read. Got', len(out), ' expect ', nx*ny)
         if ny==1:
             out=out[0,]
 

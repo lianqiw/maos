@@ -64,6 +64,7 @@ struct file_t{
 	int isfits;/**<Is the file fits.*/
 	char* fn;  /**<The disk file name*/
 	int fd;    /**<The underlying file descriptor, used for locking. */
+	int eof;   /**<end of file*/
 };
 /*
   Describes the information about mmaped data. Don't unmap a segment of mmaped
@@ -370,7 +371,7 @@ void zfclose(file_t* fp){
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
   fwrite. Follows the interface of fwrite.
 */
-void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
+void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int ans=0;
 	long ret=0;
 	if(fp->fd&&!fp->p){//use raw io
@@ -389,7 +390,7 @@ void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, const fi
 /**
    Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
 */
-void zfwrite(const void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
+void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
 	if(fp->isfits&&BIGENDIAN==0){
 		int length=size*nmemb;
@@ -450,7 +451,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, const file_
    Read from the file. If in gzip mode, calls gzread, otherwise, calls
    fread. Follows the interface of fread.
 */
-int zfread_do(void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
+int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int err=0;
 	ssize_t tot=size*nmemb;
 	if(fp->fd&&!fp->p){//raw io. read until all needed data is done.
@@ -473,12 +474,15 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, const file_t* fp
 	} else{
 		err=(fread(ptr, size, nmemb, (FILE*)fp->p)!=nmemb);
 	}
+	if(err){
+		fp->eof=1;
+	}
 	return err;
 }
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
 */
-int zfread_try(void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
+int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
 	int ans=0;
 	if(fp->isfits&&size>1){/*need to do byte swapping.*/
@@ -520,7 +524,8 @@ int zfread_try(void* ptr, const size_t size, const size_t nmemb, const file_t* f
 				}
 				break;
 			default:
-				error("Invalid\n");
+				fp->eof=1;
+				warning("Invalid size=%ld\n", size);
 			}
 			out+=bs;
 			length-=bs;
@@ -533,10 +538,10 @@ int zfread_try(void* ptr, const size_t size, const size_t nmemb, const file_t* f
 /**
    Wraps zfread_try and do error checking.
 */
-void zfread(void* ptr, const size_t size, const size_t nmemb, const file_t* fp){
+void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int ans=zfread_try(ptr, size, nmemb, fp);
 	if(ans){
-		error("Error (%d) happened while reading %s\n", ans, fp->fn);
+		warning("Error (%d) happened while reading %s\n", ans, fp->fn);
 	}
 }
 /**
@@ -555,7 +560,7 @@ int zfseek(file_t* fp, long offset, int whence){
 void zfrewind(file_t* fp){
 	if(fp->isgzip){
 		if(gzrewind((voidp)fp->p)){
-			error("Failed to rewind\n");
+			warning("Failed to rewind\n");
 		}
 	} else{
 		rewind((FILE*)fp->p);
@@ -575,7 +580,7 @@ int zfpos(file_t* fp){
    Return 1 if end of file is reached.
 */
 int zfeof(file_t* fp){
-	return zfseek(fp, 1, SEEK_CUR)<0?1:0;
+	return fp->eof || zfseek(fp, 1, SEEK_CUR)<0?1:0;
 }
 /**
    Flush the buffer.
@@ -596,10 +601,16 @@ static int
 read_bin_header(header_t* header, file_t* fp){
 	uint32_t magic, magic2;
 	uint64_t nlen, nlen2;
-	if(fp->isfits) error("fits file is not supported\n");
+	if(fp->isfits){
+		warning("fits file is not supported\n");
+		return -1;
+	}
 	while(1){
 	/*read the magic number.*/
-		if(zfread_try(&magic, sizeof(uint32_t), 1, fp)) return -1;
+		if(zfread_try(&magic, sizeof(uint32_t), 1, fp)){
+			fp->eof=1;
+			return -1;
+		}
 		/*If it is hstr, read or skip it.*/
 		if((magic&M_SKIP)==M_SKIP){
 			continue;
@@ -622,7 +633,8 @@ read_bin_header(header_t* header, file_t* fp){
 			if(magic!=magic2||nlen!=nlen2){
 				dbg("magic=%u, magic2=%u, nlen=%lu, nlen2=%lu\n",
 					magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
-				error("Header string verification failed\n");
+				fp->eof=1;
+				warning("Header string verification failed\n");
 			}
 		} else{ //Finish
 			header->magic=magic;
@@ -631,7 +643,6 @@ read_bin_header(header_t* header, file_t* fp){
 			return 0;
 		}
 	}/*while*/
-	return -1;
 }
 
 /*
@@ -882,6 +893,7 @@ read_fits_header(header_t* header, file_t* fp){
 		header->magic=M_INT8;
 		break;
 	default:
+		fp->eof=1;
 		error("Invalid\n");
 	}
 	return 0;
@@ -912,7 +924,9 @@ void write_header(const header_t* header, file_t* fp){
 int read_header2(header_t* header, file_t* fp){
 	int ans;
 	header->str=NULL;
-	if(fp->isfits){
+	if(fp->eof){
+		ans=-1;
+	} else if(fp->isfits){
 		ans=read_fits_header(header, fp);
 	} else{
 		ans=read_bin_header(header, fp);
@@ -922,8 +936,9 @@ int read_header2(header_t* header, file_t* fp){
 /**
    calls read_header2 and abort if error happens.*/
 void read_header(header_t* header, file_t* fp){
-	if(read_header2(header, fp)){
-		error("read_header failed for %s. Empty file?\n", fp->fn);
+	if(fp->eof || read_header2(header, fp)){
+		fp->eof=1;
+		warning("read_header failed for %s. Empty file?\n", fp->fn);
 	}
 }
 /**

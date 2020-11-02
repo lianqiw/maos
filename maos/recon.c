@@ -398,9 +398,7 @@ void reconstruct(SIM_T* simu){
 		}
 		if(parms->recon.psol){
 			//form error signal in PSOL mode
-			if(0){
-				warning_once("temporarily disable recon->actinterp\n");
-			} else if(simu->recon->actinterp){
+			if(simu->recon->actinterp){
 			//extrapolate DM fitting result to float and edge actuators
 				dcellcp(&simu->dmtmp, simu->dmerr);
 				dcellzero(simu->dmerr);

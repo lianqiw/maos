@@ -358,6 +358,11 @@ end:
    2) is current page.
    3) when draw_single is not set.
    4) pause must not be set set.
+
+   return
+   1: always draw
+   2: draw if lock success
+   3: create an empty page.
 */
 static int check_figfn(int ifd, const char* fig, const char* fn, int add){
 	if(draw_disabled||sock_draws[ifd].fd==-1||sock_draws[ifd].pause) return 0;
@@ -373,9 +378,9 @@ static int check_figfn(int ifd, const char* fig, const char* fn, int add){
 		}
 	}
 	int ans=0;//default is false
-	if(!found){
-		ans=1; //draw without test lock
-	} else{
+	if(!found){//page is not found
+		ans=3; //draw without test lock
+	} else{//page is found
 		char** figfn=sock_draws[ifd].figfn;
 		if(!mystrcmp(figfn[0], fig)){
 			if(!fn){
@@ -438,78 +443,85 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 		for(int ifd=0; ifd<sock_ndraw; ifd++){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 			int sock_draw=sock_draws[ifd].fd;
-			if(!check_figfn(ifd, fig, fn, 1)) continue;
+			int needed=check_figfn(ifd, fig, fn, 1);
+			if(!needed){
+				continue;
+			}
 			STWRITEINT(DRAW_FLOAT); STWRITEINT(sizeof(real));
 			STWRITEINT(DRAW_START);
-			if(loc){/*there are points to plot. */
-				for(int ig=0; ig<ngroup; ig++){
-					STWRITEINT(DRAW_POINTS); STWRITEINT(loc[ig]->nloc);
-					STWRITEINT(2);
-					STWRITEINT(1);
-					STWRITE(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
-					STWRITE(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
-				}
-				if(dc){
-					warning("both loc and dc are specified, ignore dc.\n");
-				}
-			} else if(dc){
-				if(ngroup>dc->nx*dc->ny || ngroup==0){
-					ngroup=dc->nx*dc->ny;
-				}
-				for(int ig=0; ig<ngroup; ig++){
-					int nx=0, ny=0;
-					real* p=NULL;
-					if(dc->p[ig]){
-						nx=dc->p[ig]->nx;
-						ny=dc->p[ig]->ny;
-						p=dc->p[ig]->p;
-					}
-					STWRITEINT(DRAW_POINTS);
-					STWRITEINT(nx);
-					STWRITEINT(ny);
-					STWRITEINT(0);
-					if(p){
-						STWRITE(p, sizeof(real)*dc->p[ig]->nx*dc->p[ig]->ny);
-					}
-				}
-			} else{
-				error("Invalid Usage\n");
-			}
-			if(style){
-				STWRITEINT(DRAW_STYLE);
-				STWRITEINT(ngroup);
-				STWRITE(style, sizeof(uint32_t)*ngroup);
-			}
-			if(cir){
-				if(cir->nx!=4){
-					error("Cir should have 4 rows\n");
-				}
-				STWRITEINT(DRAW_CIRCLE);
-				STWRITEINT(cir->ny);
-				STWRITE(cir->p, sizeof(real)*cir->nx*cir->ny);
-			}
-			if(limit){/*xmin,xmax,ymin,ymax */
-				STWRITEINT(DRAW_LIMIT);
-				STWRITE(limit, sizeof(real)*4);
-			}
-			if(xylog){
-				STWRITEINT(DRAW_XYLOG);
-				STWRITE(xylog, sizeof(const char)*2);
-			}
-			if(format){
-				STWRITEINT(DRAW_NAME);
-				STWRITESTR(fn);
-			}
-			if(legend){
-				STWRITEINT(DRAW_LEGEND);
-				for(int ig=0; ig<ngroup; ig++){
-					STWRITESTR(legend[ig]);
-				}
-			}
 			STWRITECMDSTR(DRAW_FIG, fig);
-			STWRITECMDSTR(DRAW_TITLE, title);
-			STWRITECMDSTR(DRAW_XLABEL, xlabel);
-			STWRITECMDSTR(DRAW_YLABEL, ylabel);
+			if(fn) STWRITECMDSTR(DRAW_NAME, fn);
+			if(needed!=3){//current page
+				if(loc){/*there are points to plot. */
+					for(int ig=0; ig<ngroup; ig++){
+						STWRITEINT(DRAW_POINTS); STWRITEINT(loc[ig]->nloc);
+						STWRITEINT(2);
+						STWRITEINT(1);
+						STWRITE(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
+						STWRITE(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
+					}
+					if(dc){
+						warning("both loc and dc are specified, ignore dc.\n");
+					}
+				} else if(dc){
+					if(ngroup>dc->nx*dc->ny||ngroup==0){
+						ngroup=dc->nx*dc->ny;
+					}
+					for(int ig=0; ig<ngroup; ig++){
+						int nx=0, ny=0;
+						real* p=NULL;
+						if(dc->p[ig]){
+							nx=dc->p[ig]->nx;
+							ny=dc->p[ig]->ny;
+							p=dc->p[ig]->p;
+						}
+						STWRITEINT(DRAW_POINTS);
+						STWRITEINT(nx);
+						STWRITEINT(ny);
+						STWRITEINT(0);
+						if(p){
+							STWRITE(p, sizeof(real)*dc->p[ig]->nx*dc->p[ig]->ny);
+						}
+					}
+				} else{
+					error("Invalid Usage\n");
+				}
+				if(style){
+					STWRITEINT(DRAW_STYLE);
+					STWRITEINT(ngroup);
+					STWRITE(style, sizeof(uint32_t)*ngroup);
+				}
+				if(cir){
+					if(cir->nx!=4){
+						error("Cir should have 4 rows\n");
+					}
+					STWRITEINT(DRAW_CIRCLE);
+					STWRITEINT(cir->ny);
+					STWRITE(cir->p, sizeof(real)*cir->nx*cir->ny);
+				}
+				if(limit){/*xmin,xmax,ymin,ymax */
+					STWRITEINT(DRAW_LIMIT);
+					STWRITE(limit, sizeof(real)*4);
+				}
+				if(xylog){
+					STWRITEINT(DRAW_XYLOG);
+					STWRITE(xylog, sizeof(const char)*2);
+				}
+				/*if(format){
+					STWRITEINT(DRAW_NAME);
+					STWRITESTR(fn);
+				}*/
+				if(legend){
+					STWRITEINT(DRAW_LEGEND);
+					for(int ig=0; ig<ngroup; ig++){
+						STWRITESTR(legend[ig]);
+					}
+				}
+			
+				STWRITECMDSTR(DRAW_TITLE, title);
+				STWRITECMDSTR(DRAW_XLABEL, xlabel);
+				STWRITECMDSTR(DRAW_YLABEL, ylabel);
+			}
 			STWRITEINT(DRAW_END);
 end:
 			ans=1;
@@ -555,31 +567,34 @@ static void* imagesc_do(imagesc_t* data){
 		for(int ifd=0; ifd<sock_ndraw; ifd++){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 			int sock_draw=sock_draws[ifd].fd;
-			if(!check_figfn(ifd, fig, fn, 1)) continue;
-			int32_t header[2];
-			header[0]=nx;
-			header[1]=ny;
+			int needed=check_figfn(ifd, fig, fn, 1);
+			if(!needed) continue;
+			
 			STWRITEINT(DRAW_FLOAT);
 			STWRITEINT(sizeof(dtype));
 			STWRITEINT(DRAW_START);
-			STWRITEINT(DRAW_DATA);
-			STWRITE(header, sizeof(int32_t)*2);
-			STWRITE(p, sizeof(dtype)*nx*ny);
-			if(zlim){
-				STWRITEINT(DRAW_ZLIM);
-				STWRITE(zlim, sizeof(dtype)*2);
-			}
-			if(limit){/*xmin,xmax,ymin,ymax */
-				STWRITEINT(DRAW_LIMIT);
-				STWRITE(limit, sizeof(dtype)*4);
-			}
-			if(fn){
-				STWRITECMDSTR(DRAW_NAME, fn);
-			}
+			if(fn) STWRITECMDSTR(DRAW_NAME, fn);
 			STWRITECMDSTR(DRAW_FIG, fig);
-			STWRITECMDSTR(DRAW_TITLE, title);
-			STWRITECMDSTR(DRAW_XLABEL, xlabel);
-			STWRITECMDSTR(DRAW_YLABEL, ylabel);
+			if(needed!=3){
+				STWRITEINT(DRAW_DATA);
+				int32_t header[2];
+				header[0]=nx;
+				header[1]=ny;
+				STWRITE(header, sizeof(int32_t)*2);
+				STWRITE(p, sizeof(dtype)*nx*ny);
+				if(zlim){
+					STWRITEINT(DRAW_ZLIM);
+					STWRITE(zlim, sizeof(dtype)*2);
+				}
+				if(limit){/*xmin,xmax,ymin,ymax */
+					STWRITEINT(DRAW_LIMIT);
+					STWRITE(limit, sizeof(dtype)*4);
+				}
+				
+				STWRITECMDSTR(DRAW_TITLE, title);
+				STWRITECMDSTR(DRAW_XLABEL, xlabel);
+				STWRITECMDSTR(DRAW_YLABEL, ylabel);
+			}
 			STWRITEINT(DRAW_END);
 end:;
 		}

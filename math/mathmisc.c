@@ -182,7 +182,7 @@ spint* readspint(file_t* fp, long* nx, long* ny){
 /**
    Read a vector from file and perform conversion if type mismatches.
 */
-void readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, const file_t* fp){
+void readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t* fp){
 	if(!p||!fp) return;
 	if(nmemb==0) return;
 	magic_p&=0xFFFF;

@@ -300,97 +300,112 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){
 		header=&header2;
-		read_header(header, fp);
+		if(read_header2(header, fp)){
+			warning("read_header failed\n");
+			return NULL;
+		}
 	}
+	//info("level=%d, magic=%x\n", level, header->magic);
 	void* out=0;
-	if(level<0&&!iscell(&header->magic)){
-		level=0;
-	}
-	if(zfisfits(fp)||level==0){
-		switch(level){
-		case 0:/*read array*/
-			if(!id) id=header->magic;
-			switch(id){
-			case M_DBL:
-				out=dreaddata(fp, header);break;
-			case M_FLT:
-				out=sreaddata(fp, header);break;
-			case M_CMP:
-				out=creaddata(fp, header);break;
-			case M_ZMP:
-				out=zreaddata(fp, header);break;
-			case M_LONG:
-				out=lreaddata(fp, header);break;
-			case M_LOC64: case M_LOC32:
-				out=locreaddata(fp, header); break;
-			case M_MAP64: case M_MAP32:
-			{
-				dmat* tmp=dreaddata(fp, header);
-				out=d2map(tmp);
-				dfree(tmp);
-			}
-			break;
-			case M_RECTMAP64: case M_RECTMAP32:
-			{
-				dmat* tmp=dreaddata(fp, header);
-				out=d2rmap(tmp);
-				dfree(tmp);
-			}
-			break;
-			case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
-				out=dspreaddata(fp, header);break;
-			case M_SSP32: case M_SSP64:
-				out=sspreaddata(fp, header);break;
-			case M_CSP32: case M_CSP64:
-				out=cspreaddata(fp, header);break;
-			case M_ZSP64: case M_ZSP32:
-				out=zspreaddata(fp, header);break;
-			default:error("data type id=%u not supported\n", id);
-			}
-			break;
-		case 1:{/*read a cell from fits*/
-			int maxlen=10;
-			void** tmp=mymalloc(maxlen, void*);
-			int nx=0;
-			do{
-				if(nx>=maxlen){
-					maxlen*=2;
-					tmp=myrealloc(tmp, maxlen, void*);
-				}
-				tmp[nx++]=readdata_by_id(fp, id, 0, header);
-				free(header->str);header->str=0;
-			} while(!read_header2(header, fp));
-			cell* dcout=cellnew(nx, 1);
-			memcpy(dcout->p, tmp, sizeof(void*)*nx);
-			free(tmp);
-			out=dcout;
+	//scane file in automatic mode or when cell dimension is 0 or when request cell but data is not cell.
+	if((level==0||level<-1)&&!iscell(&header->magic)){
+		//info("level==0 && !iscell\n");
+		if(!id) id=header->magic;
+		switch(id){
+		case M_DBL:
+			out=dreaddata(fp, header);break;
+		case M_FLT:
+			out=sreaddata(fp, header);break;
+		case M_CMP:
+			out=creaddata(fp, header);break;
+		case M_ZMP:
+			out=zreaddata(fp, header);break;
+		case M_LONG:
+			out=lreaddata(fp, header);break;
+		case M_LOC64: case M_LOC32:
+			out=locreaddata(fp, header); break;
+		case M_MAP64: case M_MAP32:
+		{
+			dmat* tmp=dreaddata(fp, header);
+			out=d2map(tmp);
+			dfree(tmp);
 		}
-			  break;
+		break;
+		case M_RECTMAP64: case M_RECTMAP32:
+		{
+			dmat* tmp=dreaddata(fp, header);
+			out=d2rmap(tmp);
+			dfree(tmp);
+		}
+		break;
+		case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
+			out=dspreaddata(fp, header);break;
+		case M_SSP32: case M_SSP64:
+			out=sspreaddata(fp, header);break;
+		case M_CSP32: case M_CSP64:
+			out=cspreaddata(fp, header);break;
+		case M_ZSP64: case M_ZSP32:
+			out=zspreaddata(fp, header);break;
 		default:
-			error("Only support zero or one level of cell when reading fits file\n");
+			warning("data type id=%u not supported\n", id);
+			out=NULL;
 		}
-	} else{
-		if(!iscell(&header->magic)){//wrap array into 1x1 cell
-			cell* dcout=cellnew(1, 1);
-			dcout->p[0]=readdata_by_id(fp, id, level-1, header);
-			out=dcout;
-		} else{//cell array
-			long nx=header->nx;
-			long ny=header->ny;
-			cell* dcout=cellnew(nx, ny);
-			dcout->header=header->str; header->str=0;
-			header_t headerc={0,0,0,0};
-			for(long i=0; i<nx*ny; i++){
-				read_header(&headerc, fp);
-				if(!headerc.str&&dcout->header){//copy str from cell to mat.
-					headerc.str=strdup(dcout->header);
-				}
-				dcout->p[i]=readdata_by_id(fp, id, level-1, &headerc);
+	}else if(iscell(&header->magic) && header->nx>0 && header->ny>0){//cell array with known dimensions
+		//info("iscell && nx, ny >0\n");
+		long nx=header->nx;
+		long ny=header->ny;
+		cell* dcout=cellnew(nx, ny);
+		dcout->header=header->str; header->str=0;
+		header_t headerc={0,0,0,0};
+		for(long i=0; i<nx*ny; i++){
+			read_header(&headerc, fp);
+			if(!headerc.str&&dcout->header){//copy str from cell to mat.
+				headerc.str=strdup(dcout->header);
 			}
-			out=dcout;
+			dcout->p[i]=readdata_by_id(fp, id, level-1, &headerc);
 		}
+		out=dcout;
+	}else if(level>-2){//scan file only when auto.
+		//info("do scan, level=%d, iscell=%d, nx=%ld, ny=%ld.\n", level, iscell(&header->magic), header->nx, header->ny);
+		int maxlen=10;
+		void** tmp=mymalloc(maxlen, void*);
+		int nx=0;
+		if(iscell(&header->magic)){
+			read_header2(header, fp);
+		}
+		do{
+			if(nx>=maxlen){
+				maxlen*=2;
+				tmp=myrealloc(tmp, maxlen, void*);
+			}
+			void* tmp2=readdata_by_id(fp, id, level-1, header);
+			free(header->str);header->str=0;
+			if(tmp2){
+				tmp[nx++]=tmp2;
+			}else{
+				break;
+			}
+		} while(!read_header2(header, fp));
+		cell* dcout=cellnew(nx, 1);
+		memcpy(dcout->p, tmp, sizeof(void*)*nx);
+		free(tmp);
+		out=dcout;
 	}
 	free(header->str);header->str=0;
+	if(level==0){//take first none-cell element.
+		while(out && iscell(out)){
+			cell* out2=((cell*)out)->p[0];
+			((cell*)out)->p[0]=0;
+			cellfree(out);
+			out=out2;
+		}
+	} else if(level<0&&!iscell(&header->magic)&&out&&iscell(out)&&((cell*)out)->nx==1&&((cell*)out)->ny==1){
+		//automatic mode with only one element
+		cell* out2=((cell*)out)->p[0];
+		((cell*)out)->p[0]=0;
+		cellfree(out);
+		out=out2;
+	}
 	return (cell*)out;
 }
 

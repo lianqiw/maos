@@ -28,7 +28,10 @@ Math routines that are not included in mat.c
    scale each element of A by w.
 */
 void X(scale)(X(mat)* A, R w){
-	if(!check_mat(A)) return;
+	if(!check_mat(A)){
+		warning("Input is not valid");
+		return;
+	} 
 	if(w==(T)0){
 		memset(A->p, 0, sizeof(T)*A->nx*A->ny);
 	} else{
@@ -71,7 +74,10 @@ R X(std)(const X(mat)* A){
    Fill A with random uniform numbers between [0, 1]*max
 */
 void X(randu)(X(mat)* A, const T max, rand_t* rstat){
-	if(!check_mat(A)) return;
+	if(!check_mat(A)){
+		warning("Input is not valid");
+		return;
+	}
 	for(int i=0; i<A->nx*A->ny; i++){
 		A->p[i]=RANDU(rstat)*max;
 	}
@@ -81,7 +87,10 @@ void X(randu)(X(mat)* A, const T max, rand_t* rstat){
    standard deviation of sigma.
 */
 void X(randn)(X(mat)* A, const T sigma, rand_t* rstat){
-	if(!check_mat(A)) return;
+	if(!check_mat(A)){
+		warning("Input is not valid");
+		return;
+	}
 	for(int i=0; i<A->nx*A->ny; i++){
 		A->p[i]=RANDN(rstat)*sigma;
 	}
@@ -130,7 +139,10 @@ T X(wdot)(const T* a, const X(mat)* w, const T* b){
    Compute component wise multiply A=A.*B
 */
 void X(cwm)(X(mat)* A, const X(mat)* B){
-	if(!check_mat(A, B)||!check_match(A, B)) return;
+	if(!check_mat(A, B)||!check_match(A, B)){
+		warning("Input is not valid\n");
+		return;
+	}
 	for(long i=0; i<B->nx*B->ny; i++){
 		A->p[i]*=B->p[i];
 	}
@@ -139,7 +151,10 @@ void X(cwm)(X(mat)* A, const X(mat)* B){
    Compute component wise multiply A=A.*(B1*wt1+B2*wt2)
 */
 void X(cwm2)(X(mat)* A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt2){
-	if(!check_mat(A)) return;
+	if(!check_mat(A)){
+		warning("A is not valid\n");
+		return;
+	}
 	int has_b1=B1&&wt1&&check_match(A, B1);
 	int has_b2=B2&&wt2&&check_match(A, B2);
 	if(has_b1&&has_b2){
@@ -164,7 +179,10 @@ void X(cwm2)(X(mat)* A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt2){
 */
 void X(cwm3)(X(mat)* restrict A, const X(mat)* restrict W,
 	const X(mat)* restrict B1, R wt1, const X(mat)* restrict B2, R wt2){
-	if(!check_mat(A))return;
+	if(!check_mat(A)){
+		warning("A is not valid\n");
+		return;
+	}
 	if(!W){
 		X(cwm2)(A, B1, wt1, B2, wt2);
 	} else{
@@ -208,7 +226,10 @@ void X(cwmcol)(X(mat)* restrict A, const X(mat)* restrict B){
 void X(cwmcol2)(X(mat)* restrict A,
 	const X(mat)* restrict B1, const R wt1,
 	const X(mat)* restrict B2, const R wt2){
-	if(!check_mat(A)) return;
+	if(!check_mat(A)){
+		warning("A is not valid\n");
+		return;
+	}
 	int has_b1=check_mat(B1)&&wt1&&(A->nx==B1->nx)&&(B1->ny==1);
 	int has_b2=check_mat(B2)&&wt2&&(A->nx==B2->nx)&&(B2->ny==1);
 	if(has_b1&&has_b2){
@@ -269,7 +290,10 @@ void X(cwm3col)(X(mat)* restrict A, const X(mat)* restrict W,
    A(i,:)=A(i,:)*B
 */
 void X(cwmrow)(X(mat)* restrict A, const X(mat)* restrict B){
-	if(!A||!B||!check(A->ny==B->nx&&B->ny==1)) return;
+	if(!A||!B||!check(A->ny==B->nx&&B->ny==1)){
+		warning("Input is not valid\n");
+		return;
+	}
 	T* B1=B->p;
 	for(long iy=0; iy<A->ny; iy++){
 		T junk=B1[iy];
@@ -286,7 +310,10 @@ void X(cwmrow)(X(mat)* restrict A, const X(mat)* restrict B){
 void X(cwmrow2)(X(mat)* restrict A,
 	const X(mat)* restrict B1, const R wt1,
 	const X(mat)* restrict B2, const R wt2){
-	if(!check_mat(A)) return;
+	if(!check_mat(A)){
+		warning("A is not valid\n");
+		return;
+	}
 	int has_b1=check_mat(B1)&&wt1&&check(A->nx==B1->ny&&B1->nx==1);
 	int has_b2=check_mat(B2)&&wt2&&check(A->nx==B2->ny&&B2->nx==1);
 
@@ -313,7 +340,10 @@ void X(cwmrow2)(X(mat)* restrict A,
    Component wise division B=B./A. 0/0 is replace by 'value';
 */
 void X(cwdiv)(X(mat)* B, const X(mat)* A, T value){
-	if(!check_match(A, B)) return;
+	if(!check_match(A, B)){
+		warning("Input does not match\n");
+		return;
+	}
 	for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]/=A->p[i];
 		if(isnan(creal(B->p[i]))) B->p[i]=value;
@@ -325,7 +355,10 @@ void X(cwdiv)(X(mat)* B, const X(mat)* A, T value){
 */
 void X(mulvec)(T* restrict y, const X(mat)* restrict A,
 	const T* restrict x, const T alpha){
-	if(!check(y&&x&&A))return;
+	if(!check(y&&x&&A)){
+		warning("input is not valid\n");
+		return;
+	}
 	if(fabs(alpha-(T)1.)>1.e-15){
 		for(int iy=0; iy<A->ny; iy++){
 			T tmp=x[iy]*alpha;
@@ -347,7 +380,10 @@ void X(mulvec)(T* restrict y, const X(mat)* restrict A,
    three values.  y=A*x;
 */
 void X(mulvec3)(T* y, const X(mat)* A, const T* x){
-	if(!check_mat(A)||!check(A->nx==3&&A->ny==3)) return;
+	if(!check_mat(A)||!check(A->nx==3&&A->ny==3)){
+		warning("Input is not valid");
+		return;
+	}
 	/*calculate y=A*x for 3. */
 	y[0]=P(A, 0, 0)*x[0]+P(A, 0, 1)*x[1]+P(A, 0, 2)*x[2];
 	y[1]=P(A, 1, 0)*x[0]+P(A, 1, 1)*x[1]+P(A, 1, 2)*x[2];
@@ -415,8 +451,10 @@ T X(diff)(const X(mat)* A, const X(mat)* B){
    'val'
 */
 void X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
-	if(!check_mat(A)) return;
-	if(r<0) return;
+	if(!check_mat(A)||r<0){
+		warning("Input is not valid");
+		return;
+	}
 	const int nres=10;
 	const R res=(R)(2./nres);
 	const R res2=(R)(res*res);
@@ -459,7 +497,10 @@ void X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
    the point valid. Parameters are the same as X(circle).
 */
 void X(circle_symbolic)(X(mat)* A, R cx, R cy, R dx, R dy, R r){
-	if(!check_mat(A)) return;
+	if(!check_mat(A)){
+		warning("A is not valid");
+		return;
+	}
 	R r2=r*r;
 	R r2l=(r-1.5)*(r-1.5);//lower limit
 	R r2u=(r+2.5)*(r+2.5);//upper limit
@@ -492,8 +533,10 @@ void X(circle_symbolic)(X(mat)* A, R cx, R cy, R dx, R dy, R r){
    A is nx2 while A(:,1) is x, A(:,2) is y.
 */
 void X(rotvec)(X(mat)* A, const R theta){
-	if(!check_mat(A)) return;
-	if(A->ny!=2) error("A has wrong dimension\n");
+	if(!check_mat(A) || A->ny!=2){
+		warning("A is not valid");
+		return;
+	}
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
 	for(int i=0; i<A->nx; i++){
@@ -527,7 +570,7 @@ void X(rotvect)(X(mat)* A, const R theta){
 */
 void X(rotvecnn)(X(mat)** B0, const X(mat)* A, R theta){
 	if(!check_mat(A)||!check(A->nx==2&&A->ny==2)){
-		warning("A has wrong dimension");
+		warning("A has wrong dimension\n");
 		return;
 	}
 	X(new2)(B0, 2, 2);

@@ -38,6 +38,6 @@ double golden_section_search(golden_section_fun f, void *param,
 			     double x1, double x4, double tau);
 void readspintdata(file_t *fp, uint32_t magic, spint *out, long len);
 spint *readspint(file_t *fp, long* nx, long* ny);
-void readvec(void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, const file_t *fp);
+void readvec(void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t *fp);
 
 #endif

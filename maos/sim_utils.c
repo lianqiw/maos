@@ -1103,7 +1103,7 @@ static void init_simu_wfs(SIM_T* simu){
 				}
 			}
 		}
-		if(parms->save.extra){
+		if(parms->save.extra || 1){
 			long nnx[nwfs];
 			long nny[nwfs];
 			for(int iwfs=0; iwfs<nwfs; iwfs++){

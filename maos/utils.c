@@ -435,7 +435,9 @@ void apply_fieldstop(dmat* opd, const dmat* amp, const lmat* embed, long nembed,
  */
 void plot_setup(const PARMS_T* parms, const POWFS_T* powfs,
 	const APER_T* aper, const RECON_T* recon){
-	if(!parms->plot.setup) return;
+	extern int draw_single;
+	int draw_single_save=draw_single;
+	draw_single=0;
 	plotdir("Aperture", parms, parms->sim.fov*206265, "fov");/*plot wfs/evaluation direction */
 	plotloc("Aperture", parms, recon->ploc, 0, "ploc");
 	plotloc("Aperture", parms, recon->floc, 0, "floc");
@@ -468,6 +470,7 @@ void plot_setup(const PARMS_T* parms, const POWFS_T* powfs,
 			}
 		}
 	}
+	draw_single=draw_single_save;
 }
 
 
