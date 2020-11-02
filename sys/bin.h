@@ -52,7 +52,7 @@
 #define M_ZSP64  0x6432  /*single precision complex + int64 */
 #define M_ZSP32  0x6433  /*single precision complex + int32 */
 
-#define M_HEADER 0x6500  /*header. */
+#define M_COMMENT 0x6500 /*data comments. */
 #define M_SKIP   0x6600  /*the padding of magic number. */
 
 #if LONG_MAX==2147483647L //long is 32 bit
@@ -135,12 +135,11 @@ int zfisfits(file_t *fp);
 void zfclose(file_t *fp);
 void zflush(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
-void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
+int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 uint64_t bytes_header(const char *header);
 void write_timestamp(file_t *fp);
 void write_header(const header_t *header, file_t *fp);
-int read_header2(header_t *header, file_t *fp);
-void read_header(header_t *header, file_t *fp);
+int read_header(header_t *header, file_t *fp);
 /**Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension.*/
 void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);

@@ -470,7 +470,7 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 		}
 	} else if(fp->isgzip){
 		err=(gzread((voidp)fp->p, ptr, tot)!=tot);
-		if(err) gzerror((voidp)fp->p, &err);
+		//do not use gzerror. It modifies the error value and does not give correct string error.
 	} else{
 		err=(fread(ptr, size, nmemb, (FILE*)fp->p)!=nmemb);
 	}
@@ -482,10 +482,12 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
 */
-int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
 	int ans=0;
-	if(fp->isfits&&size>1){/*need to do byte swapping.*/
+	if(fp->eof){
+		ans=-1;
+	}else if(fp->isfits&&size>1){/*need to do byte swapping.*/
 		const long bs=2880;
 		char junk[bs];
 		long length=size*nmemb;
@@ -526,6 +528,7 @@ int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 			default:
 				fp->eof=1;
 				warning("Invalid size=%ld\n", size);
+				ans=-1;
 			}
 			out+=bs;
 			length-=bs;
@@ -538,12 +541,14 @@ int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 /**
    Wraps zfread_try and do error checking.
 */
+/*
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int ans=zfread_try(ptr, size, nmemb, fp);
 	if(ans){
 		warning("Error (%d) happened while reading %s\n", ans, fp->fn);
+		fp->eof=1;
 	}
-}
+}*/
 /**
    Move the current position pointer, like fseek
 */
@@ -592,7 +597,7 @@ void zflush(file_t* fp){
 		fflush((FILE*)fp->p);
 	}
 }
-
+#define zfread_check(A...) if(zfread(A)) goto read_error
 /*
   Obtain the current magic number, string header, and array size from a bin
   format file. In file, the string header is located before the data magic.
@@ -601,25 +606,24 @@ static int
 read_bin_header(header_t* header, file_t* fp){
 	uint32_t magic, magic2;
 	uint64_t nlen, nlen2;
+	memset(header, 0, sizeof(header_t));
+	
 	if(fp->isfits){
 		warning("fits file is not supported\n");
 		return -1;
 	}
-	while(1){
-	/*read the magic number.*/
-		if(zfread_try(&magic, sizeof(uint32_t), 1, fp)){
-			fp->eof=1;
-			return -1;
-		}
+	while(!fp->eof){
+		/*read the magic number.*/
+		zfread_check(&magic, sizeof(uint32_t), 1, fp);
 		/*If it is hstr, read or skip it.*/
-		if((magic&M_SKIP)==M_SKIP){
+		if((magic&M_SKIP)==M_SKIP){//dummy
 			continue;
-		} else if(magic==M_HEADER){
-			zfread(&nlen, sizeof(uint64_t), 1, fp);
+		} else if(magic==M_COMMENT){//comment
+			zfread_check(&nlen, sizeof(uint64_t), 1, fp);
 			if(nlen>0){
-			/*zfseek failed in cygwin (gzseek). so we always read in the hstr instead.*/
+				/*zfseek failed in cygwin (gzseek). so we always read in the hstr instead.*/
 				char hstr2[nlen];
-				zfread(hstr2, 1, nlen, fp);
+				zfread_check(hstr2, 1, nlen, fp);
 				hstr2[nlen-1]='\0'; /*make sure it is NULL terminated. */
 				if(header->str){
 					header->str=(char*)realloc(header->str, ((header->str)?strlen(header->str):0)+strlen(hstr2)+1);
@@ -628,21 +632,34 @@ read_bin_header(header_t* header, file_t* fp){
 					header->str=strdup(hstr2);
 				}
 			}
-			zfread(&nlen2, sizeof(uint64_t), 1, fp);
-			zfread(&magic2, sizeof(uint32_t), 1, fp);
+			zfread_check(&nlen2, sizeof(uint64_t), 1, fp);
+			zfread_check(&magic2, sizeof(uint32_t), 1, fp);
 			if(magic!=magic2||nlen!=nlen2){
 				dbg("magic=%u, magic2=%u, nlen=%lu, nlen2=%lu\n",
 					magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
 				fp->eof=1;
+				goto read_error;
 				warning("Header string verification failed\n");
 			}
 		} else{ //Finish
 			header->magic=magic;
-			zfread(&header->nx, sizeof(uint64_t), 1, fp);
-			zfread(&header->ny, sizeof(uint64_t), 1, fp);
-			return 0;
+			zfread_check(&header->nx, sizeof(uint64_t), 1, fp);
+			zfread_check(&header->ny, sizeof(uint64_t), 1, fp);
+			if((magic & 0x6400) != 0x6400){
+				warning("wrong magic number=%x. cancelled.\n", magic);
+				goto read_error;
+			} else{
+				return 0;
+			}
 		}
 	}/*while*/
+read_error:
+	dbg("read_bin_header: eof or error happened\n");
+	header->magic=0;
+	header->nx=0;
+	header->ny=0;
+	fp->eof=1;
+	return -1;
 }
 
 /*
@@ -663,7 +680,7 @@ static void
 write_bin_headerstr(const char* str, file_t* fp){
 	if(!str||!strlen(str)) return;
 	assert(!fp->isfits);
-	uint32_t magic=M_HEADER;
+	uint32_t magic=M_COMMENT;
 	uint64_t nlen=strlen(str)+1;
 	uint64_t nlen2=(nlen%8)?((nlen/8+1)*8):(nlen);
 	char zero[8]={0};
@@ -804,27 +821,25 @@ read_fits_header(header_t* header, file_t* fp){
 	while(!end){
 		int start=0;
 		if(page==0){
-			if(zfread_try(line, 1, 80, fp)){
-				return -1;
-			}
+			zfread_check(line, 1, 80, fp);
 			line[80]='\0';
 			if(strncmp(line, "SIMPLE", 6)&&strncmp(line, "XTENSION= 'IMAGE", 16)){
 				warning("Garbage in fits file %s\n", fp->fn);
 				return -1;
 			}
-			zfread(line, 1, 80, fp); line[80]='\0';
+			zfread_check(line, 1, 80, fp); line[80]='\0';
 			if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
-			zfread(line, 1, 80, fp); line[80]='\0';
+			zfread_check(line, 1, 80, fp); line[80]='\0';
 			if(sscanf(line+10, "%20d", &naxis)!=1) error("Unable to determine naxis\n");
 			if(naxis>2) error("Data type not supported\n");
 			if(naxis>0){
-				zfread(line, 1, 80, fp); line[80]='\0';
+				zfread_check(line, 1, 80, fp); line[80]='\0';
 				if(sscanf(line+10, "%20lu", (unsigned long*)&header->nx)!=1) error("Unable to determine nx\n");
 			} else{
 				header->nx=0;
 			}
 			if(naxis>1){
-				zfread(line, 1, 80, fp); line[80]='\0';
+				zfread_check(line, 1, 80, fp); line[80]='\0';
 				if(sscanf(line+10, "%20lu", (unsigned long*)&header->ny)!=1) error("Unable to determine ny\n");
 			} else{
 				header->ny=0;
@@ -832,7 +847,7 @@ read_fits_header(header_t* header, file_t* fp){
 			start=3+naxis;
 		}
 		for(int i=start; i<36; i++){
-			zfread(line, 1, 80, fp); line[80]='\0';
+			zfread_check(line, 1, 80, fp); line[80]='\0';
 			if(!strncmp(line, "END", 3)){
 				end=1;
 			} else{
@@ -897,6 +912,13 @@ read_fits_header(header_t* header, file_t* fp){
 		error("Invalid\n");
 	}
 	return 0;
+read_error:
+	dbg("read_fits_header: error happened\n");
+	header->magic=0;
+	header->nx=0;
+	header->ny=0;
+	fp->eof=1;
+	return -1;
 }
 /**
    A unified header writing routine for .bin and .fits files. It write the array
@@ -921,7 +943,7 @@ void write_header(const header_t* header, file_t* fp){
 /**
    A unified header reading routine for .bin and .fits files. It read the array
    information and string header if any.  Return non zero value if reading failed*/
-int read_header2(header_t* header, file_t* fp){
+int read_header(header_t* header, file_t* fp){
 	int ans;
 	header->str=NULL;
 	if(fp->eof){
@@ -932,14 +954,6 @@ int read_header2(header_t* header, file_t* fp){
 		ans=read_bin_header(header, fp);
 	}
 	return ans;
-}
-/**
-   calls read_header2 and abort if error happens.*/
-void read_header(header_t* header, file_t* fp){
-	if(fp->eof || read_header2(header, fp)){
-		fp->eof=1;
-		warning("read_header failed for %s. Empty file?\n", fp->fn);
-	}
 }
 /**
  * Get the length of mem to storge the header and its dimension, rounded to multiple of 8.
@@ -1126,11 +1140,11 @@ void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* 
 	/*Always have a header to align the data. */
 	if(header){
 		uint64_t nlen=bytes_header(header)-24;
-		((uint32_t*)p)[0]=(uint32_t)M_HEADER; p+=4;
+		((uint32_t*)p)[0]=(uint32_t)M_COMMENT; p+=4;
 		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
 		memcpy(p, header, strlen(header)+1); p+=nlen;
 		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
-		((uint32_t*)p)[0]=(uint32_t)M_HEADER;p+=4;
+		((uint32_t*)p)[0]=(uint32_t)M_COMMENT;p+=4;
 	}
 	((uint32_t*)p)[0]=(uint32_t)M_SKIP; p+=4;
 	((uint32_t*)p)[0]=(uint32_t)magic; p+=4;
@@ -1145,14 +1159,14 @@ void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* 
 void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char** header0){
 	char* p=*p0;
 	char* header=NULL;
-	while(((uint32_t*)p)[0]==M_HEADER){
+	while(((uint32_t*)p)[0]==M_COMMENT){
 		p+=4;
 		uint64_t nlen=((uint64_t*)p)[0];p+=8;
 		header=p;
 		p+=nlen;
 		if(nlen==((uint64_t*)p)[0]){
 			p+=8;
-			if(((uint32_t*)p)[0]==M_HEADER){
+			if(((uint32_t*)p)[0]==M_COMMENT){
 				p+=4;
 			} else{
 				header=NULL;

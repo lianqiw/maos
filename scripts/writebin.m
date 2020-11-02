@@ -39,16 +39,16 @@ function writebin(data,varargin)
     
     fclose(fid);
 function writeheader_do(header, fid)
-     M_HEADER=25856;
+    M_COMMENT=25856;
     if ~ischar(header)
         error('header must be char type');
     end
-    fwrite(fid,uint32(M_HEADER),'uint32');
+    fwrite(fid,uint32(M_COMMENT),'uint32');
     fwrite(fid,uint64(length(header)+1),'uint64');
     fwrite(fid,header,'char');
     fwrite(fid,0,'char');
     fwrite(fid,uint64(length(header)+1),'uint64');
-    fwrite(fid,uint32(M_HEADER),'uint32');
+    fwrite(fid,uint32(M_COMMENT),'uint32');
     
 function writebin_do(data,header,fid)
     M_CSP64=25600;
@@ -62,7 +62,7 @@ function writebin_do(data,header,fid)
     MCC_ANY=25633;
     MAT_SP=65281;
     MAT_CSP=65282;
-    M_HEADER=25856;
+    M_COMMENT=25856;
     if length(size(data))>2
         error('We do not handle more than 2 dimensions');
     end

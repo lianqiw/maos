@@ -459,7 +459,7 @@ static void write_bin_header(const char* header, file_t* fp){
 		zfclose(fp);
 		error("fits file is not supported\n");
 	}
-	uint32_t magic=M_HEADER;
+	uint32_t magic=M_COMMENT;
 	uint64_t nlen=strlen(header)+1;
 	/*make header 8 byte alignment.*/
 	uint64_t nlen2=(nlen/8+1)*8;
@@ -497,7 +497,7 @@ uint32_t read_bin_magic(file_t* fp, char** header){
 		/*If it is header, read or skip it.*/
 		if(magic==M_SKIP){
 			continue;
-		} else if(magic==M_HEADER){
+		} else if(magic==M_COMMENT){
 			zfread(&nlen, sizeof(uint64_t), 1, fp);
 			if(nlen>0){
 				if(header){

@@ -29,7 +29,7 @@ magic2dname={
     25633: 'MCC_ANY',
     25634: 'MCC_DBL',
     25636: 'MCC_CMP',
-    25856: 'M_HEADER',
+    25856: 'M_COMMENT',
     26112: 'M_SKIP'
 }
 
@@ -40,7 +40,7 @@ dname2type={
     'M_CSP64': np.complex128,
     'M_DBL': np.double,
     'M_FLT': np.float32,
-    'M_HEADER': object,
+    'M_COMMENT': object,
     'M_INT16': np.int16,
     'M_INT32': np.int32,
     'M_INT64': np.int64,
@@ -246,10 +246,10 @@ def readbin_magic(fp):
     return magic
 def readbin_header(fp):
     M_SKIP=26112;
-    M_HEADER=25856;
+    M_COMMENT=25856;
     magic=readbin_magic(fp)
     header=''
-    while magic==M_HEADER:
+    while magic==M_COMMENT:
         nlen=readuint64(fp)
         header+=fp.read(nlen).strip().decode('utf-8')
         nlen2=readuint64(fp)

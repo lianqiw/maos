@@ -125,19 +125,19 @@ function [magic, nx, ny, header]=readfits_header(fid)
 
 function [magic, nx, ny, header]=readbin_header(fid)
     M_SKIP=26112;
-    M_HEADER=25856;
+    M_COMMENT=25856;
 
     magic=fread(fid,1,'uint32=>uint32');
     if magic==M_SKIP
         magic=fread(fid,1,'uint32=>uint32');
     end
     header='';
-    while magic==M_HEADER
+    while magic==M_COMMENT
         nlen=fread(fid, 1, 'uint64=>uint64');
         header=[header char(fread(fid, nlen, 'char*1=>char*1')')];
         nlen2=fread(fid, 1, 'uint64=>uint64');
         magic2=fread(fid, 1, 'uint32=>uint32');
-        if nlen~=nlen2 || magic2~=M_HEADER
+        if nlen~=nlen2 || magic2~=M_COMMENT
             error('Header verification failed\n');
         end
         magic=fread(fid,1,'uint32=>uint32');

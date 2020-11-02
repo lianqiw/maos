@@ -49,7 +49,9 @@ X(mat)* X(readdata)(file_t* fp, header_t* header){
 
 	X(mat)* out=X(new)((long)nx, (long)ny);
 	out->header=header->str; header->str=NULL;
-	readvec(out->p, M_T, header->magic, sizeof(T), nx*ny, fp);
+	if(nx&&ny){
+		readvec(out->p, M_T, header->magic, sizeof(T), nx*ny, fp);
+	}
 	return out;
 }
 

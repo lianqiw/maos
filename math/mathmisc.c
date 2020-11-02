@@ -171,8 +171,12 @@ spint* readspint(file_t* fp, long* nx, long* ny){
 	if(nx!=0&&ny!=0){
 		*nx=(long)header.nx;
 		*ny=(long)header.ny;
-		out=mymalloc((*nx)*(*ny), spint);
-		readspintdata(fp, header.magic, out, (*nx)*(*ny));
+		size_t len=(*nx)*(*ny);
+		out=mymalloc(len, spint);
+		if(readvec(out, M_SPINT, header.magic, sizeof(spint), len, fp)){
+			free(out);
+			return NULL;
+		}
 	} else{
 		*nx=0;
 		*ny=0;
@@ -182,25 +186,26 @@ spint* readspint(file_t* fp, long* nx, long* ny){
 /**
    Read a vector from file and perform conversion if type mismatches.
 */
-void readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t* fp){
-	if(!p||!fp) return;
-	if(nmemb==0) return;
+int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t* fp){
+	if(!p||!fp) return -1;
+	if(nmemb==0) return 0;
+	int ans=0;
 	magic_p&=0xFFFF;
 	magic_file&=0xFFFF;
-#define TEST_CONVERT(M1, T1, M2, T2)				\
-    else if(magic_p==M1 && magic_file==M2){			\
-	T2 *p2=mymalloc(nmemb,T2);				\
-	zfread(p2, sizeof(T2), nmemb, fp);			\
-	for(size_t i=0; i<nmemb; i++){				\
-	    ((T1*)p)[i]=p2[i];					\
-	}							\
-	free(p2);						\
+#define TEST_CONVERT(M1, T1, M2, T2)		\
+    else if(magic_p==M1 && magic_file==M2){	\
+		T2 *p2=mymalloc(nmemb,T2);			\
+		if(!(ans=zfread(p2, sizeof(T2), nmemb, fp))){\
+		for(size_t i=0; i<nmemb; i++){		\
+			((T1*)p)[i]=p2[i];				\
+		}}							        \
+		free(p2);					        \
     }
 
 	if(magic_p==magic_file){
-		zfread(p, size, nmemb, fp);
+		ans=zfread(p, size, nmemb, fp);
 	}
-	TEST_CONVERT(M_DBL, double, M_FLT, float)
+		TEST_CONVERT(M_DBL, double, M_FLT, float)
 		TEST_CONVERT(M_DBL, double, M_CMP, dcomplex)
 		TEST_CONVERT(M_DBL, double, M_ZMP, fcomplex)
 		TEST_CONVERT(M_DBL, double, M_INT32, int)
@@ -243,9 +248,9 @@ void readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t
 		TEST_CONVERT(M_SPINT, spint, M_INT32, int)
 		TEST_CONVERT(M_SPINT, spint, M_INT64, int64_t)
 	else{
-		error("Please implement conversion from %x to %x\n", magic_file, magic_p);
+		ans=-1;
+		warning("Please implement conversion from %x to %x\n", magic_file, magic_p);
 	}
+	return ans;
 }
-void readspintdata(file_t* fp, uint32_t magic, spint* out, long len){
-	readvec(out, M_SPINT, magic, sizeof(spint), len, fp);
-}
+

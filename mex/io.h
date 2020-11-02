@@ -97,7 +97,7 @@ typedef struct file_t{
 /*#define MCC_DBL 0x6422
 #define MCC_CMP 0x6424
 */
-#define M_HEADER 0x6500
+#define M_COMMENT 0x6500
 #define M_SKIP   0x6600
 
 #define MAT_SP 0xFF01

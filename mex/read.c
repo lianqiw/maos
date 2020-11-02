@@ -173,7 +173,7 @@ static mxArray* readdata(file_t* fp, mxArray** header, int start, int howmany){
 			error("Seek failed\n");
 		}
 		out=SKIPPED;
-	} else if(magic!=M_HEADER){
+	} else if(magic!=M_COMMENT){
 		if(issp){//sparse matrix
 			int64_t nzmax;
 			int64_t nx, ny;

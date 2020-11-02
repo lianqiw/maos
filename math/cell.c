@@ -300,8 +300,7 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){
 		header=&header2;
-		if(read_header2(header, fp)){
-			warning("read_header failed\n");
+		if(read_header(header, fp)){
 			return NULL;
 		}
 	}
@@ -358,7 +357,9 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 		dcout->header=header->str; header->str=0;
 		header_t headerc={0,0,0,0};
 		for(long i=0; i<nx*ny; i++){
-			read_header(&headerc, fp);
+			if(read_header(&headerc, fp)){
+				break;
+			}
 			if(!headerc.str&&dcout->header){//copy str from cell to mat.
 				headerc.str=strdup(dcout->header);
 			}
@@ -366,30 +367,28 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 		}
 		out=dcout;
 	}else if(level>-2){//scan file only when auto.
-		//info("do scan, level=%d, iscell=%d, nx=%ld, ny=%ld.\n", level, iscell(&header->magic), header->nx, header->ny);
-		int maxlen=10;
-		void** tmp=mymalloc(maxlen, void*);
-		int nx=0;
-		if(iscell(&header->magic)){
-			read_header2(header, fp);
+		if(!iscell(&header->magic)||!read_header(header, fp)){
+			int maxlen=10;
+			void** tmp=mymalloc(maxlen, void*);
+			int nx=0;
+			do{
+				if(nx>=maxlen){
+					maxlen*=2;
+					tmp=myrealloc(tmp, maxlen, void*);
+				}
+				void* tmp2=readdata_by_id(fp, id, level-1, header);
+				free(header->str);header->str=0;
+				if(tmp2){
+					tmp[nx++]=tmp2;
+				} else{
+					break;
+				}
+			} while(!read_header(header, fp));
+			cell* dcout=cellnew(nx, 1);
+			memcpy(dcout->p, tmp, sizeof(void*)*nx);
+			free(tmp);
+			out=dcout;
 		}
-		do{
-			if(nx>=maxlen){
-				maxlen*=2;
-				tmp=myrealloc(tmp, maxlen, void*);
-			}
-			void* tmp2=readdata_by_id(fp, id, level-1, header);
-			free(header->str);header->str=0;
-			if(tmp2){
-				tmp[nx++]=tmp2;
-			}else{
-				break;
-			}
-		} while(!read_header2(header, fp));
-		cell* dcout=cellnew(nx, 1);
-		memcpy(dcout->p, tmp, sizeof(void*)*nx);
-		free(tmp);
-		out=dcout;
 	}
 	free(header->str);header->str=0;
 	if(level==0){//take first none-cell element.
