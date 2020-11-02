@@ -1,7 +1,5 @@
 var NAVTREEINDEX7 =
 {
-"page95_profiling.html#Code":[6,3,1],
-"page95_profiling.html#Debugging":[6,3,0],
 "page95_profiling.html#Profiling":[6,3,2],
 "pages.html":[],
 "parms_8h.html":[9,0,2,5],
@@ -249,5 +247,7 @@ var NAVTREEINDEX7 =
 "slaving_8h.html#a4dd509feae130cc64f3cc381bea87f54":[9,0,1,23,2],
 "slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5":[9,0,1,23,7],
 "slaving_8h.html#a7bcbb1b8de1d45851f3ac5c1c2b34d01":[9,0,1,23,0],
-"slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf":[9,0,1,23,3]
+"slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf":[9,0,1,23,3],
+"slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3":[9,0,1,23,5],
+"slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7":[9,0,1,23,4]
 };

@@ -24,7 +24,7 @@ var searchData=
   ['zfopen',['zfopen',['../bin_8h.html#a43fd0b9636dd5ca782e8c718eeb8b7f1',1,'bin.c']]],
   ['zfopen_5ftry',['zfopen_try',['../bin_8h.html#a2cfcc67ae6d2bd846287f97ae03f181b',1,'bin.c']]],
   ['zfpos',['zfpos',['../bin_8h.html#a1d046d102635bba171fb6eaf42ff54fc',1,'bin.c']]],
-  ['zfread',['zfread',['../bin_8h.html#a6f90c7b343cad172afd005feb5112c30',1,'bin.c']]],
+  ['zfread',['zfread',['../bin_8h.html#ac266a2663e090233d93f35fc2453a753',1,'bin.c']]],
   ['zfree',['zfree',['../mathdef_8h.html#af53919eda079c37305116f16aa2d17d6',1,'mathdef.h']]],
   ['zfrewind',['zfrewind',['../bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289',1,'bin.c']]],
   ['zfseek',['zfseek',['../bin_8h.html#a3d718e30cd4faabe0c6b902e3ede141c',1,'bin.c']]],

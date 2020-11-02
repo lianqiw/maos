@@ -161,9 +161,9 @@ Macros</h2></td></tr>
 <tr class="memitem:adedb9d54eaa8584c93060ff4c26477db"><td class="memItemLeft" align="right" valign="top"><a id="adedb9d54eaa8584c93060ff4c26477db"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>M_ZSP32</b>&#160;&#160;&#160;0x6433  /*single precision complex + int32 */</td></tr>
 <tr class="separator:adedb9d54eaa8584c93060ff4c26477db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d1dcb7b64bfdded6d673609bba169c2"><td class="memItemLeft" align="right" valign="top"><a id="a5d1dcb7b64bfdded6d673609bba169c2"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>M_HEADER</b>&#160;&#160;&#160;0x6500  /*header. */</td></tr>
-<tr class="separator:a5d1dcb7b64bfdded6d673609bba169c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2721460f4d4a14920fcc1f619564dc45"><td class="memItemLeft" align="right" valign="top"><a id="a2721460f4d4a14920fcc1f619564dc45"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>M_COMMENT</b>&#160;&#160;&#160;0x6500 /*data comments. */</td></tr>
+<tr class="separator:a2721460f4d4a14920fcc1f619564dc45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb0e258682dcbcea29dee8ecbacb01ca"><td class="memItemLeft" align="right" valign="top"><a id="adb0e258682dcbcea29dee8ecbacb01ca"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>M_SKIP</b>&#160;&#160;&#160;0x6600  /*the padding of magic number. */</td></tr>
 <tr class="separator:adb0e258682dcbcea29dee8ecbacb01ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -266,8 +266,8 @@ file_t *&#160;</td><td class="memItemRight" valign="bottom"><b>zfdopen</b> (int 
 <tr class="separator:a956297097c436bc2e8eaf8789fa522ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a67c349fe1033d91feb34b436dbb7e6b3">zfwrite</a> (const void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr class="separator:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f90c7b343cad172afd005feb5112c30"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a6f90c7b343cad172afd005feb5112c30">zfread</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
-<tr class="separator:a6f90c7b343cad172afd005feb5112c30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac266a2663e090233d93f35fc2453a753"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ac266a2663e090233d93f35fc2453a753">zfread</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
+<tr class="separator:ac266a2663e090233d93f35fc2453a753"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a343d68b2551eff30cf94bb976cafb0ff"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a343d68b2551eff30cf94bb976cafb0ff">bytes_header</a> (const char *header)</td></tr>
 <tr class="separator:a343d68b2551eff30cf94bb976cafb0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top"><a id="a1825ca342f947862c152e0408e923189"></a>
@@ -275,10 +275,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 <tr class="separator:a1825ca342f947862c152e0408e923189"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeafd15c22e61f56f291b709b43ddb04e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e">write_header</a> (const <a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
 <tr class="separator:aeafd15c22e61f56f291b709b43ddb04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a972a1cdff7d5f045daa2ffe7fb43ecc0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a972a1cdff7d5f045daa2ffe7fb43ecc0">read_header2</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
-<tr class="separator:a972a1cdff7d5f045daa2ffe7fb43ecc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ed0da59c78ad3c8ada5c0ce67fa1c94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a5ed0da59c78ad3c8ada5c0ce67fa1c94">read_header</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
-<tr class="separator:a5ed0da59c78ad3c8ada5c0ce67fa1c94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adae7a5ada62a1a4bb2f5934e2ebc538f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#adae7a5ada62a1a4bb2f5934e2ebc538f">read_header</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
+<tr class="separator:adae7a5ada62a1a4bb2f5934e2ebc538f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9471eeb77e74e8c66ec913534df2d72d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a9471eeb77e74e8c66ec913534df2d72d">writearr</a> (const void *fpn, const int <a class="el" href="sys_2misc_8h.html#a251424e05fad4be552824c5a51e94ce0">isfile</a>, const size_t size, const uint32_t magic, const char *header, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
 <tr class="separator:a9471eeb77e74e8c66ec913534df2d72d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35de71ea607603a92f4713654866764f"><td class="memItemLeft" align="right" valign="top">struct mem_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a35de71ea607603a92f4713654866764f">mem_new</a> (void *p) __attribute__((warn_unused_result))</td></tr>
@@ -432,7 +430,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Move the current position pointer, like fseek </p>
+<p>Wraps zfread_try and do error checking. Move the current position pointer, like fseek </p>
 
 </div>
 </div>
@@ -632,14 +630,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 
 </div>
 </div>
-<a id="a6f90c7b343cad172afd005feb5112c30"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f90c7b343cad172afd005feb5112c30">&#9670;&nbsp;</a></span>zfread()</h2>
+<a id="ac266a2663e090233d93f35fc2453a753"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac266a2663e090233d93f35fc2453a753">&#9670;&nbsp;</a></span>zfread()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void zfread </td>
+          <td class="memname">int zfread </td>
           <td>(</td>
           <td class="paramtype">void *&#160;</td>
           <td class="paramname"><em>ptr</em>, </td>
@@ -669,7 +667,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wraps zfread_try and do error checking. </p>
+<p>Handles byteswapping in fits file format then call zfread_do to do the actual writing. </p>
 
 </div>
 </div>
@@ -721,14 +719,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 
 </div>
 </div>
-<a id="a972a1cdff7d5f045daa2ffe7fb43ecc0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a972a1cdff7d5f045daa2ffe7fb43ecc0">&#9670;&nbsp;</a></span>read_header2()</h2>
+<a id="adae7a5ada62a1a4bb2f5934e2ebc538f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adae7a5ada62a1a4bb2f5934e2ebc538f">&#9670;&nbsp;</a></span>read_header()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int read_header2 </td>
+          <td class="memname">int read_header </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>, </td>
@@ -747,35 +745,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
       </table>
 </div><div class="memdoc">
 <p>A unified header reading routine for .bin and .fits files. It read the array information and string header if any. Return non zero value if reading failed </p>
-
-</div>
-</div>
-<a id="a5ed0da59c78ad3c8ada5c0ce67fa1c94"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5ed0da59c78ad3c8ada5c0ce67fa1c94">&#9670;&nbsp;</a></span>read_header()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void read_header </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">file_t *&#160;</td>
-          <td class="paramname"><em>fp</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>calls read_header2 and abort if error happens. </p>
 
 </div>
 </div>

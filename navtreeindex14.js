@@ -1,7 +1,5 @@
 var NAVTREEINDEX14 =
 {
-"structSTATUS__T.html":[8,0,128],
-"structSTATUS__T.html#a01660dd3bad0dcc8bd2de68f30c5a27f":[8,0,128,9],
 "structSTATUS__T.html#a063e2d72f863c1152072886540d6ca56":[8,0,128,13],
 "structSTATUS__T.html#a093b6843684e59be66f2cf39611078d8":[8,0,128,5],
 "structSTATUS__T.html#a0bb96bab9feabde8c982579de33b9854":[8,0,128,1],
@@ -249,5 +247,7 @@ var NAVTREEINDEX14 =
 "structdir__t.html#aa3017b821bec4b5ce1d3f606cd1d6526":[8,0,39,7],
 "structdir__t.html#af35bc56c327be387494c9349fd1dc64a":[8,0,39,8],
 "structdir__t.html#af76c53b3abc71cde43f87c25a2d960ed":[8,0,39,2],
-"structdmat.html":[8,0,44]
+"structdmat.html":[8,0,44],
+"structdmat.html#a3faf8be289e8fc9410bacafc42b7cae5":[8,0,44,4],
+"structdmat.html#a690854282ff0f4fbd5d734d6c377c9b2":[8,0,44,3]
 };

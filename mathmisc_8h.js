@@ -11,7 +11,6 @@ var mathmisc_8h =
     [ "nextfftsize", "mathmisc_8h.html#ab2457f6b21851a0a5d62695be54331ca", null ],
     [ "mylog2", "mathmisc_8h.html#ae0a9c8af7043c7b58bf51d49d8a48ea9", null ],
     [ "golden_section_search", "mathmisc_8h.html#a1ce6ad13180bb05668fcea47b866d4cb", null ],
-    [ "readspintdata", "mathmisc_8h.html#aa4fdbbb160f78db3e75593887b597d51", null ],
     [ "readspint", "mathmisc_8h.html#a17976d85cba2939873589c6a8bc3e08b", null ],
-    [ "readvec", "mathmisc_8h.html#a25618411f97630b2ee5b1b95cb762fb9", null ]
+    [ "readvec", "mathmisc_8h.html#a35d1cc335d45d63efe5d6692256b9438", null ]
 ];

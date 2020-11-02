@@ -1,6 +1,5 @@
 var NAVTREEINDEX4 =
 {
-"dmath_8h.html#a6b5d0810af2c12e7a53415611511867e":[9,0,3,3,164],
 "dmath_8h.html#a6d616d187ac43db30de304b02ef77842":[9,0,3,3,130],
 "dmath_8h.html#a7040fd5588d1a5699ad5bdc9fdbce8da":[9,0,3,3,23],
 "dmath_8h.html#a704f6023ea9716d69b2f274df93c5916":[9,0,3,3,205],
@@ -249,5 +248,6 @@ var NAVTREEINDEX4 =
 "globals_func_k.html":[9,1,1,9],
 "globals_func_l.html":[9,1,1,10],
 "globals_func_m.html":[9,1,1,11],
-"globals_func_n.html":[9,1,1,12]
+"globals_func_n.html":[9,1,1,12],
+"globals_func_o.html":[9,1,1,13]
 };
