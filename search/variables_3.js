@@ -17,6 +17,7 @@ var searchData=
   ['dither_5famp',['dither_amp',['../structPOWFS__CFG__T.html#a29b9989ef9c8a7df945a524027f22305',1,'POWFS_CFG_T']]],
   ['dither_5fdtrat',['dither_dtrat',['../structRECON__T.html#af710a2a84228c871d9fab45fe8e2f884',1,'RECON_T']]],
   ['dither_5fgdrift',['dither_gdrift',['../structPOWFS__CFG__T.html#a3b89ecf89b0aa532473e3aff21ad1fa5',1,'POWFS_CFG_T']]],
+  ['dither_5fglpf',['dither_glpf',['../structPOWFS__CFG__T.html#a0b42e9ab8d0fce5eb9fcebb9d028d3ca',1,'POWFS_CFG_T']]],
   ['dither_5fgog',['dither_gog',['../structPOWFS__CFG__T.html#ab28c0719a099a04b93607dcfbf952c4f',1,'POWFS_CFG_T']]],
   ['dither_5fgpll',['dither_gpll',['../structPOWFS__CFG__T.html#a080de697a097c3f79a92507224a455ec',1,'POWFS_CFG_T']]],
   ['dither_5fm',['dither_m',['../structRECON__T.html#a1be07998af98128e270646645cf804aa',1,'RECON_T']]],

@@ -249,6 +249,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:a87e86f67b0051366b93965ac14f0d0bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9006ea80135af46884c84a28c87f7210"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a9006ea80135af46884c84a28c87f7210">cogoff</a></td></tr>
 <tr class="separator:a9006ea80135af46884c84a28c87f7210"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75ec951d395ce362181fa5f20befad92"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a75ec951d395ce362181fa5f20befad92">ncpa</a></td></tr>
+<tr class="separator:a75ec951d395ce362181fa5f20befad92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a154de8530f467cd40a67f147a59ecf96"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a154de8530f467cd40a67f147a59ecf96">needGS0</a></td></tr>
 <tr class="separator:a154de8530f467cd40a67f147a59ecf96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf2e5e35af169d9d5e702ef4c42b7163"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#adf2e5e35af169d9d5e702ef4c42b7163">noisy</a></td></tr>
@@ -287,6 +289,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:ab28c0719a099a04b93607dcfbf952c4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b89ecf89b0aa532473e3aff21ad1fa5"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a3b89ecf89b0aa532473e3aff21ad1fa5">dither_gdrift</a></td></tr>
 <tr class="separator:a3b89ecf89b0aa532473e3aff21ad1fa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b42e9ab8d0fce5eb9fcebb9d028d3ca"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a0b42e9ab8d0fce5eb9fcebb9d028d3ca">dither_glpf</a></td></tr>
+<tr class="separator:a0b42e9ab8d0fce5eb9fcebb9d028d3ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a966510dcb7e7ee2b215d323fe687f7f5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a966510dcb7e7ee2b215d323fe687f7f5">dither_npoint</a></td></tr>
 <tr class="separator:a966510dcb7e7ee2b215d323fe687f7f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa4e7070307745bf51916299e0d4c2711"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#aa4e7070307745bf51916299e0d4c2711">dither_pllskip</a></td></tr>
@@ -1452,6 +1456,21 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a id="a75ec951d395ce362181fa5f20befad92"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75ec951d395ce362181fa5f20befad92">&#9670;&nbsp;</a></span>ncpa</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* POWFS_CFG_T::ncpa</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Description of NCPA; 2xn; first row is rms in meter, second row is zernike mode or negative for power law. </p>
+
+</div>
+</div>
 <a id="a154de8530f467cd40a67f147a59ecf96"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a154de8530f467cd40a67f147a59ecf96">&#9670;&nbsp;</a></span>needGS0</h2>
 
@@ -1738,6 +1757,21 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Gain for drift control </p>
+
+</div>
+</div>
+<a id="a0b42e9ab8d0fce5eb9fcebb9d028d3ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b42e9ab8d0fce5eb9fcebb9d028d3ca">&#9670;&nbsp;</a></span>dither_glpf</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real POWFS_CFG_T::dither_glpf</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>LPF gain for i0,gx,gy update (matched filter) </p>
 
 </div>
 </div>

@@ -33,7 +33,7 @@ var searchData=
   ['readstr_5fnum',['readstr_num',['../readstr_8h.html#a0f23448c252708e467790d7edf1d0fd0',1,'readstr.c']]],
   ['readstr_5fnumarr',['readstr_numarr',['../readstr_8h.html#a038cb517bca7318b353919bf81361f28',1,'readstr.c']]],
   ['readstr_5fstrarr',['readstr_strarr',['../readstr_8h.html#ac4e8a5fd8356383ad30696d4140fa47f',1,'readstr.c']]],
-  ['readvec',['readvec',['../mathmisc_8h.html#ad133ac7aa177005f861a42c2ffa9ecf5',1,'mathmisc.c']]],
+  ['readvec',['readvec',['../mathmisc_8h.html#a25618411f97630b2ee5b1b95cb762fb9',1,'mathmisc.c']]],
   ['reccati',['reccati',['../kalman_8h.html#a60da77ab16d78a7f59ae6d836eabdf89',1,'kalman.c']]],
   ['reccati_5fcell',['reccati_cell',['../kalman_8h.html#a582c8e71c677f4502b2e7056a10bd124',1,'kalman.c']]],
   ['reconstruct',['reconstruct',['../maos_2recon_8h.html#a7a1d62d90b85cb3eeaa156e2a6d9784f',1,'recon.c']]],

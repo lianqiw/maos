@@ -5,6 +5,7 @@ var structDITHER__CFG__T =
     [ "gpll", "structDITHER__CFG__T.html#a5ebfff1999103f50dedc1a08b68f7375", null ],
     [ "gog", "structDITHER__CFG__T.html#a33dcbb5224ea7f2a59e77bd476f32f37", null ],
     [ "gdrift", "structDITHER__CFG__T.html#a45f1231501d1b832796b387b102bb5bc", null ],
+    [ "glpf", "structDITHER__CFG__T.html#afcc9d53e9ef116632f56e4cfc44bafa9", null ],
     [ "npoint", "structDITHER__CFG__T.html#ab6a0139ab09b737157d3a9618a7b25a0", null ],
     [ "pllskip", "structDITHER__CFG__T.html#ae832acf1dc42797538f776c5ecae4b06", null ],
     [ "pllrat", "structDITHER__CFG__T.html#a81071c992390026b96c41ee2b56304da", null ],

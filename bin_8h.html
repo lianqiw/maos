@@ -264,10 +264,10 @@ file_t *&#160;</td><td class="memItemRight" valign="bottom"><b>zfdopen</b> (int 
 <tr class="separator:a4ed840d37c980314e41e565e7dd617d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a956297097c436bc2e8eaf8789fa522ee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a956297097c436bc2e8eaf8789fa522ee">zflush</a> (file_t *fp)</td></tr>
 <tr class="separator:a956297097c436bc2e8eaf8789fa522ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba83ec1a95fb545bcd6df17d4291ed41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aba83ec1a95fb545bcd6df17d4291ed41">zfwrite</a> (const void *ptr, const size_t size, const size_t nmemb, const file_t *fp)</td></tr>
-<tr class="separator:aba83ec1a95fb545bcd6df17d4291ed41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b2d44b6284b863d7654a89df72bc60b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a8b2d44b6284b863d7654a89df72bc60b">zfread</a> (void *ptr, const size_t size, const size_t nmemb, const file_t *fp)</td></tr>
-<tr class="separator:a8b2d44b6284b863d7654a89df72bc60b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a67c349fe1033d91feb34b436dbb7e6b3">zfwrite</a> (const void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
+<tr class="separator:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f90c7b343cad172afd005feb5112c30"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a6f90c7b343cad172afd005feb5112c30">zfread</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
+<tr class="separator:a6f90c7b343cad172afd005feb5112c30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a343d68b2551eff30cf94bb976cafb0ff"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a343d68b2551eff30cf94bb976cafb0ff">bytes_header</a> (const char *header)</td></tr>
 <tr class="separator:a343d68b2551eff30cf94bb976cafb0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top"><a id="a1825ca342f947862c152e0408e923189"></a>
@@ -591,8 +591,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 
 </div>
 </div>
-<a id="aba83ec1a95fb545bcd6df17d4291ed41"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aba83ec1a95fb545bcd6df17d4291ed41">&#9670;&nbsp;</a></span>zfwrite()</h2>
+<a id="a67c349fe1033d91feb34b436dbb7e6b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a67c349fe1033d91feb34b436dbb7e6b3">&#9670;&nbsp;</a></span>zfwrite()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -618,7 +618,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const file_t *&#160;</td>
+          <td class="paramtype">file_t *&#160;</td>
           <td class="paramname"><em>fp</em>&#160;</td>
         </tr>
         <tr>
@@ -632,8 +632,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 
 </div>
 </div>
-<a id="a8b2d44b6284b863d7654a89df72bc60b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8b2d44b6284b863d7654a89df72bc60b">&#9670;&nbsp;</a></span>zfread()</h2>
+<a id="a6f90c7b343cad172afd005feb5112c30"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f90c7b343cad172afd005feb5112c30">&#9670;&nbsp;</a></span>zfread()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -659,7 +659,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const file_t *&#160;</td>
+          <td class="paramtype">file_t *&#160;</td>
           <td class="paramname"><em>fp</em>&#160;</td>
         </tr>
         <tr>

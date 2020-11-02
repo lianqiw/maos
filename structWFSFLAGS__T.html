@@ -105,16 +105,12 @@ Data Fields</h2></td></tr>
 <tr class="separator:adbe3511e9b1f8ed9b42983b2d4e6ce52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1786abc05c87f62800a8634c9961e0f2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a1786abc05c87f62800a8634c9961e0f2">gradout</a></td></tr>
 <tr class="separator:a1786abc05c87f62800a8634c9961e0f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a0b38135ca14e5edf20ff9b853cd15c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a3a0b38135ca14e5edf20ff9b853cd15c">gradcount</a></td></tr>
-<tr class="separator:a3a0b38135ca14e5edf20ff9b853cd15c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b54fa11e359aad681031bfdc453491c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a2b54fa11e359aad681031bfdc453491c">pllcount</a></td></tr>
 <tr class="separator:a2b54fa11e359aad681031bfdc453491c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a466865079009eaf3e032e5fd9bcb252a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a466865079009eaf3e032e5fd9bcb252a">pllout</a></td></tr>
 <tr class="separator:a466865079009eaf3e032e5fd9bcb252a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4447e007dede97cb301c41da1e81b1da"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a4447e007dede97cb301c41da1e81b1da">ogcount</a></td></tr>
-<tr class="separator:a4447e007dede97cb301c41da1e81b1da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30983d0fccfb921adb2498643c06cc59"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a30983d0fccfb921adb2498643c06cc59">ogupdate</a></td></tr>
-<tr class="separator:a30983d0fccfb921adb2498643c06cc59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a70c1b4c9e678f1c138ad134c6104ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a4a70c1b4c9e678f1c138ad134c6104ba">ogacc</a></td></tr>
+<tr class="separator:a4a70c1b4c9e678f1c138ad134c6104ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27bb5579b219d5fbbfde9abd3c98d880"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a27bb5579b219d5fbbfde9abd3c98d880">ogout</a></td></tr>
 <tr class="separator:a27bb5579b219d5fbbfde9abd3c98d880"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e758c0ca88d4ffd9c98f8be7e3c8339"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFSFLAGS__T.html#a6e758c0ca88d4ffd9c98f8be7e3c8339">zoomout</a></td></tr>
@@ -164,22 +160,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Gradient output </p>
-
-</div>
-</div>
-<a id="a3a0b38135ca14e5edf20ff9b853cd15c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a0b38135ca14e5edf20ff9b853cd15c">&#9670;&nbsp;</a></span>gradcount</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int WFSFLAGS_T::gradcount</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Gradient count </p>
+<p>Gradient count or 0 if no output </p>
 
 </div>
 </div>
@@ -209,37 +190,22 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>PLL output </p>
+<p>PLL output count or 0 if no update </p>
 
 </div>
 </div>
-<a id="a4447e007dede97cb301c41da1e81b1da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4447e007dede97cb301c41da1e81b1da">&#9670;&nbsp;</a></span>ogcount</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int WFSFLAGS_T::ogcount</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Number of optical gain accumulations </p>
-
-</div>
-</div>
-<a id="a30983d0fccfb921adb2498643c06cc59"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30983d0fccfb921adb2498643c06cc59">&#9670;&nbsp;</a></span>ogupdate</h2>
+<a id="a4a70c1b4c9e678f1c138ad134c6104ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a70c1b4c9e678f1c138ad134c6104ba">&#9670;&nbsp;</a></span>ogacc</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int WFSFLAGS_T::ogupdate</td>
+          <td class="memname">int WFSFLAGS_T::ogacc</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>OG update with PLL output </p>
+<p>OG accumulation count or 0 if no action </p>
 
 </div>
 </div>
@@ -254,7 +220,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>OG output </p>
+<p>OG output count or 0 if no update </p>
 
 </div>
 </div>

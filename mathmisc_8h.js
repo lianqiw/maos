@@ -13,5 +13,5 @@ var mathmisc_8h =
     [ "golden_section_search", "mathmisc_8h.html#a1ce6ad13180bb05668fcea47b866d4cb", null ],
     [ "readspintdata", "mathmisc_8h.html#aa4fdbbb160f78db3e75593887b597d51", null ],
     [ "readspint", "mathmisc_8h.html#a17976d85cba2939873589c6a8bc3e08b", null ],
-    [ "readvec", "mathmisc_8h.html#ad133ac7aa177005f861a42c2ffa9ecf5", null ]
+    [ "readvec", "mathmisc_8h.html#a25618411f97630b2ee5b1b95cb762fb9", null ]
 ];

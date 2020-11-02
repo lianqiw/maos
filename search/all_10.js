@@ -45,7 +45,7 @@ var searchData=
   ['readstr_5fnum',['readstr_num',['../readstr_8h.html#a0f23448c252708e467790d7edf1d0fd0',1,'readstr.c']]],
   ['readstr_5fnumarr',['readstr_numarr',['../readstr_8h.html#a038cb517bca7318b353919bf81361f28',1,'readstr.c']]],
   ['readstr_5fstrarr',['readstr_strarr',['../readstr_8h.html#ac4e8a5fd8356383ad30696d4140fa47f',1,'readstr.c']]],
-  ['readvec',['readvec',['../mathmisc_8h.html#ad133ac7aa177005f861a42c2ffa9ecf5',1,'mathmisc.c']]],
+  ['readvec',['readvec',['../mathmisc_8h.html#a25618411f97630b2ee5b1b95cb762fb9',1,'mathmisc.c']]],
   ['realamp',['realamp',['../structPOWFS__T.html#ac5efc221b9c619f4d93d5e9188369c8f',1,'POWFS_T']]],
   ['realsaa',['realsaa',['../structPOWFS__T.html#a4e417bafe34dc0bf4f81cf5e066a0c7e',1,'POWFS_T']]],
   ['reccati',['reccati',['../kalman_8h.html#a60da77ab16d78a7f59ae6d836eabdf89',1,'kalman.c']]],

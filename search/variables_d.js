@@ -1,12 +1,11 @@
 var searchData=
 [
   ['offset',['offset',['../structDM__CFG__T.html#a092a571a9292e2573d9e41d6ca24617a',1,'DM_CFG_T']]],
-  ['ogcount',['ogcount',['../structWFSFLAGS__T.html#a4447e007dede97cb301c41da1e81b1da',1,'WFSFLAGS_T']]],
+  ['ogacc',['ogacc',['../structWFSFLAGS__T.html#a4a70c1b4c9e678f1c138ad134c6104ba',1,'WFSFLAGS_T']]],
   ['ogout',['ogout',['../structWFSFLAGS__T.html#a27bb5579b219d5fbbfde9abd3c98d880',1,'WFSFLAGS_T']]],
   ['ograt',['ograt',['../structDITHER__CFG__T.html#a1b744b4db9d5d4e89a24d7f30fb03a2c',1,'DITHER_CFG_T']]],
   ['ogsingle',['ogsingle',['../structDITHER__CFG__T.html#a2046290f88af48d4560e23b03dbef9cc',1,'DITHER_CFG_T']]],
   ['ogskip',['ogskip',['../structDITHER__CFG__T.html#a62e3c22423e5d06635118afc8cabf43c',1,'DITHER_CFG_T']]],
-  ['ogupdate',['ogupdate',['../structWFSFLAGS__T.html#a30983d0fccfb921adb2498643c06cc59',1,'WFSFLAGS_T']]],
   ['ole',['ole',['../structSIM__T.html#acb6e3153c3ba12a9310f503d1cb5fa8e',1,'SIM_T']]],
   ['olengsm',['oleNGSm',['../structSIM__T.html#a5255e5340549e998f7c51a8c9f1bd136',1,'SIM_T']]],
   ['olengsmp',['oleNGSmp',['../structSIM__T.html#a0d5c2c974049a8441c750ddc40d52eae',1,'SIM_T']]],

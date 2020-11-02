@@ -8,7 +8,7 @@ var searchData=
   ['nbx',['nbx',['../structFDPCG__T.html#acf097e8554615989d10a294089b8b260',1,'FDPCG_T']]],
   ['nby',['nby',['../structFDPCG__T.html#a86c4fc6d90812b606f9ec1a804b10681',1,'FDPCG_T']]],
   ['ncol',['ncol',['../structlocstat__t.html#a97e5f52c821e34ebf38586a6a019d652',1,'locstat_t']]],
-  ['ncpa',['ncpa',['../structLOAD__CFG__T.html#aa373213cdf51ce277a2bce636eecb390',1,'LOAD_CFG_T::ncpa()'],['../structSAVE__CFG__T.html#a54b9df0f0ca9410a85f069a08e1d1cd9',1,'SAVE_CFG_T::ncpa()'],['../structLLT__T.html#a9925703274a87d0faef78c8b96d91f5f',1,'LLT_T::ncpa()']]],
+  ['ncpa',['ncpa',['../structPOWFS__CFG__T.html#a75ec951d395ce362181fa5f20befad92',1,'POWFS_CFG_T::ncpa()'],['../structLOAD__CFG__T.html#aa373213cdf51ce277a2bce636eecb390',1,'LOAD_CFG_T::ncpa()'],['../structSAVE__CFG__T.html#a54b9df0f0ca9410a85f069a08e1d1cd9',1,'SAVE_CFG_T::ncpa()'],['../structLLT__T.html#a9925703274a87d0faef78c8b96d91f5f',1,'LLT_T::ncpa()']]],
   ['ncpa_5fcalib',['ncpa_calib',['../structSIM__CFG__T.html#a9def20dce4869ad66b8922c698ca2a22',1,'SIM_CFG_T']]],
   ['ncpa_5fhs',['ncpa_hs',['../structSIM__CFG__T.html#a64508de5cde5dadf9087c23faf7048a6',1,'SIM_CFG_T']]],
   ['ncpa_5fmethod',['ncpa_method',['../structPOWFS__CFG__T.html#abeee70263e01f8571a2c5884760e6051',1,'POWFS_CFG_T']]],
