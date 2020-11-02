@@ -258,8 +258,8 @@ gboolean refresh(PROC_T* p){
 		break;
 	case S_FINISH:/*Finished */
 		list_update_progress(p);
-		//list_modify_icon(p, p->frac==0?icon_skip:icon_finished);
-		list_modify_icon(p, icon_finished);
+		list_modify_icon(p, p->frac==0?NULL:icon_finished);
+		//list_modify_icon(p, icon_finished);
 		//list_modify_color(p,"#00DD00");
 		notify_user(p);
 		break;
@@ -591,8 +591,9 @@ static gboolean filter_host(GtkTreeModel* model, GtkTreeIter* iter, gpointer hos
 }
 static gboolean filter_status(GtkTreeModel* model, GtkTreeIter* iter, gpointer status){
 	GdkPixbuf* status2=0;
+	(void)status;
 	gtk_tree_model_get(model, iter, COL_ACTION, &status2, -1);
-	return (status2==(GdkPixbuf*)status);
+	return (status2==icon_running || status2==icon_finished);
 }
 GtkWidget* new_page(int ihost){
 	if(!listall){
@@ -626,7 +627,7 @@ GtkWidget* new_page(int ihost){
 	if(ihost<nhost){
 		gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(lists[ihost]), filter_host, hosts[ihost], NULL);
 	} else{
-		gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(lists[ihost]), filter_status, icon_running, NULL);
+		gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(lists[ihost]), filter_status, NULL, NULL);
 	}
 	GtkWidget* view;
 	views[ihost]=view=gtk_tree_view_new_with_model(GTK_TREE_MODEL(lists[ihost]));

@@ -332,7 +332,7 @@ gboolean update_title(gpointer data){
 	if(id<nhost){
 		snprintf(tit, 40, "%s (%d)", hosts[id], nproc[id]);
 	} else{
-		snprintf(tit, 40, "%s", "running");
+		snprintf(tit, 40, "%s", "All");
 		gtk_label_set_attributes(GTK_LABEL(titles[id]), pango_active);
 	}
 	gtk_label_set_text(GTK_LABEL(titles[id]), tit);
