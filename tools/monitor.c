@@ -73,7 +73,7 @@ static GtkStatusIcon* status_icon=0;
 GtkWidget* notebook=NULL;
 GtkWidget** pages;
 GtkWidget* window=NULL;
-static GtkWidget** tabs;
+//static GtkWidget** tabs;
 static GtkWidget** titles;
 static GtkWidget** cmdconnect;
 GtkTextBuffer** buffers;
@@ -768,7 +768,7 @@ int main(int argc, char* argv[]){
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	gtk_window_set_default_size(GTK_WINDOW(window), 1200, 800);
 
-	tabs=mycalloc(nhost+1, GtkWidget*);
+	//tabs=mycalloc(nhost+1, GtkWidget*);
 	pages=mycalloc(nhost+1, GtkWidget*);
 	titles=mycalloc(nhost+1, GtkWidget*);
 	pproc=mycalloc(nhost+1, PROC_T*);
@@ -823,7 +823,6 @@ int main(int argc, char* argv[]){
 		if(ihost<nhost){
 			cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
 			g_signal_connect(cmdconnect[ihost], "clicked", G_CALLBACK(add_host_event), GINT_TO_POINTER(ihost));
-
 			// button for reconnection
 			GtkWidget* hbox=gtk_hbox_new(FALSE, 0);
 			gtk_box_pack_start(GTK_BOX(hbox), cmdconnect[ihost], TRUE, FALSE, 0);
@@ -832,12 +831,16 @@ int main(int argc, char* argv[]){
 		{//area for showing list of jobs
 			GtkWidget* page=new_page(ihost);
 			if(page){
-				gtk_box_pack_start(GTK_BOX(pages[ihost]), page, FALSE, FALSE, 0);
+				GtkWidget* scroll=gtk_scrolled_window_new(NULL, NULL);
+				gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+				gtk_container_add(GTK_CONTAINER(scroll), page);//page is scrollable.
+				gtk_box_pack_start(GTK_BOX(pages[ihost]), scroll, TRUE, TRUE, 0);
 			}
 		}
 		{//text are to show details job information
 			GtkWidget* seperator=gtk_hseparator_new();
-			gtk_box_pack_start(GTK_BOX(pages[ihost]), seperator, TRUE, TRUE, 0);
+			gtk_box_pack_start(GTK_BOX(pages[ihost]), seperator, FALSE, FALSE, 0);
 			GtkWidget* view=gtk_text_view_new();
 			buffers[ihost]=gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 			gtk_box_pack_start(GTK_BOX(pages[ihost]), view, FALSE, FALSE, 0);
@@ -845,23 +848,14 @@ int main(int argc, char* argv[]){
 			gtk_text_view_set_editable(GTK_TEXT_VIEW(view), 0);
 			gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
 		}
-		tabs[ihost]=gtk_scrolled_window_new(NULL, NULL);
-		gtk_scrolled_window_set_policy
-		(GTK_SCROLLED_WINDOW(tabs[ihost]),
-			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-#if GTK_MAJOR_VERSION<3 || GTK_MINOR_VERSION < 6
-		gtk_scrolled_window_add_with_viewport
-		(GTK_SCROLLED_WINDOW(tabs[ihost]), pages[ihost]);
-#else
-		gtk_container_add(GTK_CONTAINER(tabs[ihost]), pages[ihost]);
-#endif
+		
 		if(ihost<nhost){
-			gtk_notebook_append_page(GTK_NOTEBOOK(notebook), tabs[ihost], eventbox);
+			gtk_notebook_append_page(GTK_NOTEBOOK(notebook), pages[ihost], eventbox);
 		} else{
-			gtk_notebook_insert_page(GTK_NOTEBOOK(notebook), tabs[ihost], eventbox, 0);
+			gtk_notebook_insert_page(GTK_NOTEBOOK(notebook), pages[ihost], eventbox, 0);
 		}
 		update_title(GINT_TO_POINTER(ihost));
-		gtk_widget_show_all(tabs[ihost]);
+		gtk_widget_show_all(pages[ihost]);
 	}
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 0);
 	extern int sock_main[2];

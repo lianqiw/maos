@@ -68,7 +68,7 @@ PROC_T* proc_get(int id, int pid){
 	if(!iproc){
 		//info("%s: %d is not found\n", hosts[id], pid);
 		iproc=mycalloc(1, PROC_T);
-		iproc->iseed_old=-1;
+		//iproc->iseed_old=-1;
 		iproc->pid=pid;
 		iproc->hid=id;
 

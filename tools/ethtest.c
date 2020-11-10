@@ -20,10 +20,6 @@
    \file ethtest.c
    Testing network throughput.
 */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 
-#endif
-
 #include <errno.h>
 #include <sched.h>
 #include <sys/types.h>

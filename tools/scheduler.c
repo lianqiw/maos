@@ -49,8 +49,8 @@ static int NGPU=0;
 typedef struct RUN_T{
 	struct RUN_T* next;
 	STATUS_T status;
-	double started;/*started execution. */
-	double launchtime;
+	double launch_time;
+	double last_time; //time of last report
 	int pid;
 	int pidnew;//the new pid
 	int sock;
@@ -269,13 +269,13 @@ static RUN_T* running_add(int pid, int sock){
 		}
 		/*record the launch time */
 		if(pid>0){
-			irun->launchtime=get_job_launchtime(pid);
+			irun->launch_time=get_job_launchtime(pid);
 		} else{
-			irun->launchtime=INFINITY;
+			irun->launch_time=INFINITY;
 		}
 		irun->next=NULL;
 		if(running_end){/*list is not empty*/
-			if(pid<=0||running_end->launchtime<=irun->launchtime){
+			if(pid<=0||running_end->launch_time<=irun->launch_time){
 			/*append the node to the end. */
 				running_end->next=irun;
 				running_end=irun;
@@ -283,7 +283,7 @@ static RUN_T* running_add(int pid, int sock){
 			/*insert the node in the middle. */
 				RUN_T* jrun, * jrun2=NULL;
 				for(jrun=running; jrun; jrun2=jrun, jrun=jrun->next){
-					if(jrun->launchtime>=irun->launchtime){
+					if(jrun->launch_time>=irun->launch_time){
 						irun->next=jrun;
 						if(jrun2){
 							jrun2->next=irun;
@@ -407,9 +407,14 @@ static void check_jobs(void){
 	if(running){
 		for(irun=running; irun; irun=irun2){
 			irun2=irun->next;
-			if(irun->pid>0&&kill(irun->pid, 0)){
-				dbg2_time("check_jobs: Job %d no longer exists\n", irun->pid);
-				running_remove(irun->pid, S_NONEXIST);
+			if(irun->pid>0){
+				if(kill(irun->pid, 0)){
+					dbg2_time("check_jobs: Job %d no longer exists\n", irun->pid);
+					running_remove(irun->pid, S_NONEXIST);
+				} else if((irun->last_time+600<myclockd()) && irun->status.info==S_RUNNING){
+					dbg_time("check_jobs: Job %d does not update after 10 minutes, kill it.\n", irun->pid);
+					kill(irun->pid, SIGTERM);
+				}
 			}
 		}
 	}
@@ -614,6 +619,7 @@ static int respond(int sock){
 		if(sizeof(STATUS_T)!=read(sock, &(irun->status), sizeof(STATUS_T))){
 			warning_time("Error reading\n");
 		}
+		irun->last_time=myclockd();
 		monitor_send(irun, NULL);
 	}
 	break;
@@ -990,7 +996,7 @@ void html_convert(RUN_T* irun, char* path, char** dest, size_t* plen, long prepa
 		STATUS_T* st=&irun->status;
 		struct tm* tim=localtime(&(st->timstart));
 		char stime[80];
-		strftime(stime, 80, "[%a %k:%M:%S]", tim);
+		strftime(stime, 80, "[%a %H:%M:%S]", tim);
 		len=snprintf(temp, 4096, "%d&STATUS&%d&%d" /*pid, key, pidnew, status*/
 			"&%s&%.2f&%.2f" /*start time, errhi, errlo*/
 			"&%d&%d&%d&%d" /*iseed, nseed, isim, nsim*/

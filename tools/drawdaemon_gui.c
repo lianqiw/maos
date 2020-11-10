@@ -156,7 +156,7 @@ static gboolean tab_button_cb(GtkWidget* widget, GdkEventButton* event, GtkWidge
 	GtkWidget* topnb=gtk_widget_get_parent(page);
 	int n=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), page);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(topnb), n);
-	if(event->button==3){
+	if(event->button==GDK_BUTTON_SECONDARY){
 		if(gtk_menu_get_attach_widget(GTK_MENU(contexmenu))){
 			gtk_menu_detach(GTK_MENU(contexmenu));
 		}
@@ -358,7 +358,7 @@ static void delete_page(GtkButton* btn, drawdata_t** drawdatawrap){
 static void delete_page_event(GtkWidget* widget, GdkEventButton* event, drawdata_t** drawdatawrap){
 	(void)widget;
 	(void)event;
-	if(event->button==1&&event->type==GDK_BUTTON_PRESS){
+	if(event->button==GDK_BUTTON_PRIMARY&&event->type==GDK_BUTTON_PRESS){
 		delete_page(NULL, drawdatawrap);
 	}
 }
@@ -576,13 +576,14 @@ static gboolean button_release(GtkWidget* widget, GdkEventButton* event, drawdat
 	y=event->y;
 	float dx=x-drawdata->mxdown;
 	float dy=y-drawdata->mydown;
-	float dt=myclockd()-drawdata->mtdown;
-	if(dt<0.3 || fabs(dx)<5 || fabs(dy)<5){
+	//float dt=myclockd()-drawdata->mtdown;
+	if((fabs(dx)<5 && fabs(dy)<5)){
 		dbg_time("Ignore accidental click\n");
-	} else if((cursor_type==0&&event->button==1)
-		||(cursor_type==1&&event->button==3)){/*move only on left button */
+	}else 
+	if((cursor_type==0&&event->button==GDK_BUTTON_PRIMARY)
+		||(cursor_type==1&&event->button==GDK_BUTTON_MIDDLE)){/*move only on left button */
 		do_move(drawdata, dx, -dy);
-	} else if(event->button==2){/*right button select and zoom. */
+	}else if(event->button==GDK_BUTTON_SECONDARY){/*right button select and zoom. */
 		float xx=drawdata->mxdown;
 		float yy=drawdata->mydown;
 		if(drawdata->square&&!drawdata->image){

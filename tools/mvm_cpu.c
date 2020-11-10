@@ -20,9 +20,6 @@
    \file mvm_cpu.c
    Testing mvm on CPU
 */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 
-#endif
 #include <errno.h>
 #include "../lib/aos.h"
 

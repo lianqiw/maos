@@ -319,6 +319,8 @@ ARG_T* parse_args(int argc, const char* argv[]){
 			if(!host){//launch locally
 				if(scheduler_launch_exe("localhost", argc, argv)){
 					warning("Launch locally without scheduler.\n");
+				}else{
+					exit(EXIT_SUCCESS);
 				}
 			} else{
 				const char* hostend=host+strlen(host);

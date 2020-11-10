@@ -31,7 +31,7 @@ typedef struct PROC_T{
 	int pid;
 	double frac;
 	int oldinfo;
-	int iseed_old;
+	//int iseed_old;
 	char* path;
 	STATUS_T status;
 	GtkWidget* entry_start;

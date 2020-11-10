@@ -49,8 +49,9 @@ enum{
 	COL_START,/*starting path*/
 	COL_ARGS,/*arguments*/
 	COL_OUT, /*output folder*/
-	COL_SEED,
-	COL_SEEDP,/*gint */
+	//COL_SEED,
+	//COL_SEEDP,/*gint */
+	COL_STEPT,
 	COL_STEP,
 	COL_STEPP,/*gint */
 	COL_TIMING,
@@ -108,7 +109,7 @@ static void list_update_progress(PROC_T* p){
 	const long restm=(rest-resth*3600)/60;
 	const long rests=rest-resth*3600-restm*60;
 	const double step=p->status.tot*tkmean;
-	if(p->status.iseed!=p->iseed_old){
+	/*if(p->status.iseed!=p->iseed_old){
 		char tmp[64];
 		snprintf(tmp, 64, "%d/%d", p->status.iseed+1, p->status.nseed);
 		gtk_list_store_set(listall, &iter,
@@ -116,24 +117,27 @@ static void list_update_progress(PROC_T* p){
 			COL_SEEDP, (100*(p->status.iseed+1)/p->status.nseed),
 			-1);
 		p->iseed_old=p->status.iseed;
-	}
+	}*/
+	char stmp[8];
+	snprintf(stmp, 8, "%.2f", step);
 	char tmp[64];
-
 	if(toth>99){
-		snprintf(tmp, 64, "%d/%d %.3fs %ldh/%ldh", p->status.isim+1, p->status.simend, step, resth, toth);
+		snprintf(tmp, 64, "%d/%d %d/%d %ldh/%ldh", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, toth);
 	} else if(toth>0){
-		snprintf(tmp, 64, "%d/%d %.3fs %ldh%02ld/%ldh%02ld", p->status.isim+1, p->status.simend, step, resth, restm, toth, totm);
+		snprintf(tmp, 64, "%d/%d %d/%d %ldh%02ld/%ldh%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, restm, toth, totm);
 	} else{
-		snprintf(tmp, 64, "%d/%d %.3fs %2ld:%02ld/%ld:%02ld", p->status.isim+1, p->status.simend, step, restm, rests, totm, tots);
+		snprintf(tmp, 64, "%d/%d %d/%d %02ld:%02ld/%02ld:%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, restm, rests, totm, tots);
 	}
+	
 	gtk_list_store_set(listall, &iter,
+		COL_STEPT, stmp,
 		COL_STEP, tmp,
 		COL_STEPP, (gint)(p->frac*100),
 		-1);
 
-	snprintf(tmp, 64, "%.2f", p->status.clerrlo);
+	snprintf(tmp, 64, "%.1f", p->status.clerrlo);
 	gtk_list_store_set(listall, &iter, COL_ERRLO, tmp, -1);
-	snprintf(tmp, 64, "%.2f", p->status.clerrhi);
+	snprintf(tmp, 64, "%.1f", p->status.clerrhi);
 	gtk_list_store_set(listall, &iter, COL_ERRHI, tmp, -1);
 
 }
@@ -145,18 +149,19 @@ static void list_modify_reset(PROC_T* p){
 
 	char sdate[80];
 	struct tm* tim=localtime(&p->status.timstart);
-	strftime(sdate, 80, "%m-%d %k:%M:%S", tim);
+	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
 	gtk_list_store_set(listall, &iter,
 		COL_DATE, sdate,
 		COL_PID, spid,
-		COL_SEED, " ",
-		COL_SEEDP, 0, //Don't use 0.
+		//COL_SEED, " ",
+		//COL_SEEDP, 0, //Don't use 0.
+		COL_STEPT," ",
 		COL_STEP, " ",
 		COL_STEPP, 0,
 		COL_ERRHI, " ",
 		COL_ERRLO, " ",
 		-1);
-	p->iseed_old=-1;
+	//p->iseed_old=-1;
 }
 gboolean remove_entry(PROC_T* p){
 	if(p->row){
@@ -178,7 +183,7 @@ gboolean refresh(PROC_T* p){
 		char spid[12];
 		snprintf(spid, 12, " %d ", p->pid);
 		struct tm* tim=localtime(&p->status.timstart);
-		strftime(sdate, 80, "%m-%d %k:%M:%S", tim);
+		strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
 		char* spath=p->path;
 		char* sstart=NULL, * sout=NULL, * sargs=NULL;
 		if(spath){
@@ -220,8 +225,9 @@ gboolean refresh(PROC_T* p){
 			COL_OUT, sout?sout:" ",
 			COL_ERRHI, " ",
 			COL_ERRLO, " ",
-			COL_SEED, " ",
-			COL_SEEDP, 0,
+			//COL_SEED, " ",
+			//COL_SEEDP, 0,
+			COL_STEPT," ",
 			COL_STEP, " ",
 			COL_STEPP, 0,
 			COL_HOST, hosts[p->hid],
@@ -317,15 +323,13 @@ static GtkTreeViewColumn* new_column(int type, int width, const char* title, ...
 	gtk_tree_view_column_set_alignment(col, 1);
 	//resizeable makes the column very small if not expand.
 	gtk_tree_view_column_set_resizable(col, (width)?TRUE:FALSE);
-	gtk_tree_view_column_set_expand(col, (width&&width!=-2)?TRUE:FALSE);
+	gtk_tree_view_column_set_expand(col, (width<0)?TRUE:FALSE);
 
 	//column only hides text when 1) maxwidth is set, 2) ellipsize is set
-	if(width>0){
-		gtk_tree_view_column_set_min_width(col, width);
-		//gtk_tree_view_column_set_max_width(col,width*5);
+	if(width){
+		gtk_tree_view_column_set_min_width(col, abs(width));
 	}
-	if(type==0&&width&&width!=-2){
-	//set ellipsize makes it prefer to shrink
+	if(type==0&&width){//set ellipsize makes it shrinkable
 		g_object_set(G_OBJECT(render), "ellipsize", PANGO_ELLIPSIZE_START, NULL);
 	}
 
@@ -559,14 +563,15 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 }
 static void concat_selected_path(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, gpointer user_data){
 	(void)path;
-	GValue value=G_VALUE_INIT;
-	gtk_tree_model_get_value(model, iter, COL_FULL, &value);
-	const gchar* val=g_value_get_string(&value);
 	gchar** buf=(gchar**)user_data;
 	if(!*buf){
+		GValue value=G_VALUE_INIT;
+		gtk_tree_model_get_value(model, iter, COL_FULL, &value);
+		const gchar* val=g_value_get_string(&value);
 		*buf=g_strdup(val);
+		g_value_unset(&value);
 	} else{
-		*buf=g_strjoin("\n", *buf, val, NULL);
+		//*buf=g_strjoin("\n", *buf, val, NULL);
 	}
 }
 /*
@@ -604,8 +609,9 @@ GtkWidget* new_page(int ihost){
 			G_TYPE_STRING,/*PATH */
 			G_TYPE_STRING,/*ARGS */
 			G_TYPE_STRING,/*OUT */
-			G_TYPE_STRING,/*SEED */
-			G_TYPE_INT, /*SEEDP */
+			//G_TYPE_STRING,/*SEED */
+			//G_TYPE_INT, /*SEEDP */
+			G_TYPE_STRING,/*STEPT*/
 			G_TYPE_STRING,/*STEP */
 			G_TYPE_INT, /*STEPP */
 			G_TYPE_STRING,/*TIMING */
@@ -619,6 +625,7 @@ GtkWidget* new_page(int ihost){
 		);
 		lists=mycalloc(nhost+1, GtkTreeModel*);
 		views=mycalloc(nhost+1, GtkWidget*);
+		//gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(listall), COL_DATE, GTK_SORT_ASCENDING);
 	}
 	if(views[ihost]){
 		return views[ihost];
@@ -629,6 +636,7 @@ GtkWidget* new_page(int ihost){
 	} else{
 		gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(lists[ihost]), filter_status, NULL, NULL);
 	}
+	
 	GtkWidget* view;
 	views[ihost]=view=gtk_tree_view_new_with_model(GTK_TREE_MODEL(lists[ihost]));
 	//g_object_unref(lists[ihost]);
@@ -660,17 +668,19 @@ GtkWidget* new_page(int ihost){
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
 	if(ihost==nhost){
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Host", "text", COL_HOST, NULL));
+	} else{
+		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
 	}
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Path", "text", COL_START, NULL));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Args", "text", COL_ARGS, NULL));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -2, "Out", "text", COL_OUT, NULL));
+	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Path", "text", COL_START, NULL));
+	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Args", "text", COL_ARGS, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Out", "text", COL_OUT, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low", "text", COL_ERRLO, "foreground", COL_COLOR, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, "foreground", COL_COLOR, NULL));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value", COL_SEEDP, NULL));
+	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value", COL_SEEDP, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_STEPT, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value", COL_STEPP, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
-
+	gtk_tree_view_columns_autosize(GTK_TREE_VIEW(view));
 	return view;
 }
 
