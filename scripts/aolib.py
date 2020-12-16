@@ -164,7 +164,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             print(fdin, ' has no valid results')
     #if len(fds)>1:
     #    print(*fds, sep="\n")
-    print(len(fds), ' resutls are read')
+    print(len(fds), ' results are read')
     return (resall,np.array(fds))
     #else:
     #return resall
@@ -220,18 +220,3 @@ def cellsum(x):
         xsum[jj]=x[jj].sum()
 
     return xsum
-def gauss_zr(w0, wvl=0.589e-6):
-    """return gaussian beam rayleigh range"""
-    return np.pi*w0**2/wvl
-def gauss_width(w0, z, wvl=0.589e-6):
-    """returns gaussian beam width"""
-    zr=gauss_zr(w0, wvl)
-    return w0*sqrt(1+(z/zr)**2)
-def gauss_roc(w0, z, wvl=0.589e-6):
-    """returns gaussian beam roc"""
-    zr=np.pi*w0**2/wvl;
-    return z+zr**2/z;
-
-def gauss_dist(w0, w, wvl=0.589e-6):
-    """returns gaussian beam propagation distance to have width of w"""
-    return sqrt((w/w0)**2-1)*(np.pi*w0**2/wvl)

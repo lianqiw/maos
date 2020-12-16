@@ -296,6 +296,16 @@ void write_by_id(const void* A, uint32_t id, const char* format, ...){
 	writedata_by_id(fp, A, id);
 	zfclose(fp);
 }
+/**
+ * Read data from file. 
+ * Usage: level=0: array of fundamental data. 
+ * 		  level=1: cell of fundamental data. 
+ * 		  level>1: cell of cell ...
+ * 	      level<0: automatically identify and read all data
+ * 
+ * id: magic number of request fundamental data. data is converted if it does not match magic number from the file. 
+ * Cell dimension may be zero. In this case the dimension will be automatically detected.
+ *  */
 cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){
