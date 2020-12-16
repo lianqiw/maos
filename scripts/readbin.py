@@ -55,6 +55,7 @@ dname2type={
 bitpix2magic={
     -32:0x6408,
     -64:0x6402,
+    64:0x6403, 
     32:0x6405,
     16:0x640B,
     8:0x640,
@@ -78,7 +79,7 @@ def readbin(file, want_header=0):
     isfits=False
     isfile=True
     out=np.array(())
-    header=b''
+    header={}
     if isinstance(file, socket.socket):
         file=file.fileno()
         isfits=False
@@ -140,7 +141,7 @@ def readbin_auto(fp, isfits, scan=0):
 
 def readbin_do(fp, isfits):
     err=0
-    header=''
+    header={}
     if isfits:
         [magic, nx, ny, header]=readfits_header(fp)
     else:
@@ -205,7 +206,7 @@ def readbin_do(fp, isfits):
             byteread=datatype.itemsize*nx*ny
             byteleft=byteread%2880
             if byteleft:
-                fp.seek(2880-byteleft,1) #skip
+                fp.read(2880-byteleft) #avoid seek, which doesn't work with gzip
     else:
         out=np.array(())
     return (out, header, err)
@@ -217,7 +218,7 @@ def readfits_header(fp):
     bitpix=0
     nx=0
     ny=0
-    header=b''
+    header={}
     while END==0:
         start=0
         if page==0: #first page
@@ -226,17 +227,13 @@ def readfits_header(fp):
                 END=2
                 break
             elif res[0:6] !=b'SIMPLE' and res[0:16] != b"XTENSION= 'IMAGE":
-                END=3
-                print('Unknown data format in fits file', END, page, start, len(res), fp.tell(), res)
-                break
+                raise ValueError('Unknown data format in fits file at {}: {}'.format(fp.tell(), res))
             res=fp.read(80)
             bitpix=int(res[10:30])
             res=fp.read(80)
             naxis=int(res[10:30])
             if naxis>2:
-                print('Data type not supported')
-                END=4
-                break
+                raise ValueError('readbin only support naxis<=2')
             if naxis>0:
                 res=fp.read(80)
                 nx=int(res[10:30])
@@ -246,17 +243,30 @@ def readfits_header(fp):
             start=3+naxis
         for i in range(start, 36):
             res=fp.read(80)
-            if res[0:7]==b'COMMENT':
-                header+=res[10:].rstrip()
-            elif res[0:3]==b'END':
-                END=1 #do not break. let all data be read
+            if not END:
+                key=res[0:7].strip().decode('ascii')
+                value=res[9:].strip().decode('ascii')
+                if key=='END':
+                    END=1 #do not break. let all data be read
+                elif key=='COMMENT' or key == 'HISTORY':
+                    header[key]=header.get(key,'')+value
+                elif key=='PCOUNT':
+                    value=int(value.split('/')[0])
+                    if value != 0:
+                        raise(ValueError('readbin only support PCOUNT=0, but is {}'.format(value)))
+                elif key=='GCOUNT':
+                    value=int(value.split('/')[0])
+                    if value != 1:
+                        raise(ValueError('readbin only support GCOUNT=1, but is {}'.format(value)))
+                elif key!='EXTEND':
+                    header[key]=value
         page=page+1
     if END == 1:
         return (bitpix2magic[bitpix], nx, ny, header)
     elif END == 2: #end of file
-        return (0, 0, 0, '')
+        return (0, 0, 0, header)
     else:
-        return (-1, 0, 0, '')
+        return (-1, 0, 0, header)
 def readbin_magic(fp):
     magic=readuint32(fp)
     M_SKIP=26112
@@ -265,12 +275,12 @@ def readbin_magic(fp):
     return magic
 def readbin_header(fp):
     M_COMMENT=25856
-    header=b''
-  
+    header={}
     magic=readbin_magic(fp)
     while magic&0xFFFF==M_COMMENT:
         nlen=readuint64(fp)
-        header+=fp.read(nlen).strip() #.decode('utf-8')
+        header['COMMENT']=header.get('COMMENT','')+fp.read(nlen).strip().decode('ascii')
+        #header+=fp.read(nlen).strip() #.decode('utf-8')
         nlen2=readuint64(fp)
         magic2=readbin_magic(fp)
         if nlen!=nlen2 or magic!=magic2:

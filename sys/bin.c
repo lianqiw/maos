@@ -898,6 +898,9 @@ read_fits_header(header_t* header, file_t* fp){
 	case -64:
 		header->magic=M_DBL;
 		break;
+	case 64:
+		header->magic=M_INT64;
+		break;
 	case 32:
 		header->magic=M_INT32;
 		break;
