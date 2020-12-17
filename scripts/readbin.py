@@ -69,11 +69,11 @@ def readuint32(fp):
 def readuint64(fp):
     return struct.unpack("<Q", fp.read(8))[0]
 def readvec(fp, datatype, nxy):#enable read from socket and file
-    if fp.seekable():
+    #fp.fromefile is not good for gzip file.
+    if fp.seekable() and fp.__class__!=gzip.GzipFile:
         return np.fromfile(fp, dtype=datatype, count=nxy, sep='')
-    else:#for socket reading, fromfile fails.
-        buf=fp.read(nxy*datatype.itemsize)
-        return np.frombuffer(buf, dtype=datatype)
+    else:#for socket reading, or gzip
+        return np.frombuffer(fp.read(nxy*datatype.itemsize), dtype=datatype)
 
 def readbin(file, want_header=0):
     isfits=False
@@ -198,7 +198,7 @@ def readbin_do(fp, isfits):
             datatype=datatype.newbyteorder('>')
         out=readvec(fp, datatype, nx*ny)
         if len(out) != nx*ny:
-            print('Wrong length is read. Got', len(out), ' expect ', nx*ny, fp.name)
+            print('Wrong length is read. Got', len(out), ' expect ', nx*ny, ' at ', fp.tell(), fp.name)
         elif ny>1:
             out.shape=(ny, nx)
         

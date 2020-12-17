@@ -35,7 +35,7 @@ static void draw_map(file_t* fp, int id){
 	} else{
 		do{
 			dmat* in=dreaddata(fp, &header);
-			if(!in) break;
+			if(!in || in->nx==0 ) break;
 			map_t* data=d2map(in);
 			drawmap("map", data, NULL, name, "x", "y", "%s[%d]", name, id++);
 			mapfree(data);

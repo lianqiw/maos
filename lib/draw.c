@@ -673,7 +673,11 @@ int imagesc(const char* fig, /**<Category of the figure*/
 	data->fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
-	thread_new((thread_fun)imagesc_do, data);
+	if(draw_single){
+		thread_new((thread_fun)imagesc_do, data);
+	}else{
+		imagesc_do(data);
+	}
 	return 1;
 }
 

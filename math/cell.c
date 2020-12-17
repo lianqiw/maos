@@ -310,9 +310,9 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){
 		header=&header2;
-		if(read_header(header, fp)){
-			return NULL;
-		}
+	}
+	if(header->magic==0 && read_header(header, fp)){
+		return NULL;
 	}
 	//info("level=%d, magic=%x\n", level, header->magic);
 	void* out=0;
@@ -415,6 +415,7 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 		cellfree(out);
 		out=out2;
 	}
+	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
 	return (cell*)out;
 }
 
@@ -450,7 +451,7 @@ void writebin2(void* A, const char* header, const char* format, ...){
 		free(Ac->header);
 		Ac->header=strdup(header);
 	}
-	write_by_id(A, 0, "%s", fn);
+	write_by_id(Ac, 0, "%s", fn);
 }
 /**
    A generic routine for reading data from socket. User need to cast the result.

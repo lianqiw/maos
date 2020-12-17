@@ -764,22 +764,23 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 	}
 	if(str){
 		const char* str_end=str+strlen(str);
-		while(str<str_end){
+		info(str);
+		while(isspace(str[0]) && str<str_end) str++;
+		while(str && str<str_end){
 			FLUSH_OUT;
-			const char* nl=strchr(str, '\n');
+			const char* nl=strchr(str, '\n');//separation of keys
+			const char* nc=strchr(str, ';');//separation of keys
 			const char* eq=strchr(str, '=');
-			if(!nl||eq>nl) eq=0;
+			if(!nl) nl=str+strlen(str);
+			if(nc && nc<nl) nl=nc;
+			if(eq>nl) eq=0;
 			int length;
-			if(nl){
-				if(eq){
-					length=nl-eq;
-				} else{
-					length=nl-str+1;
-				}
-			} else{
-				length=strlen(str)+1;
+			if(eq){
+				length=nl-eq;
+			}else{
+				length=nl-str+1;
 			}
-			if(length>70) length=70;
+			if(length>70) length=70;//each line can contain maximum 70 values
 
 			if(eq){//there is an equal sign.
 				strncpy(header[hc], str, MIN(8, (eq-str)));
@@ -790,8 +791,8 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 				strncpy(header[hc], "COMMENT   ", 11);
 				strncpy(header[hc]+10, str, length);
 			}
-			if(nl){//Replace \n by ;
-				header[hc][10+length-1]=';';
+			if(nl){//Replace \n by space
+				header[hc][10+length-1]=' ';
 			}
 			hc++;
 			//update str to after \n
@@ -800,6 +801,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 			} else{
 				str+=length;
 			}
+			while(isspace(str[0]) && str<str_end) str++;
 		}
 	}
 	FLUSH_OUT;
@@ -846,6 +848,7 @@ read_fits_header(header_t* header, file_t* fp){
 			}
 			start=3+naxis;
 		}
+		int was_comment=0;
 		for(int i=start; i<36; i++){
 			zfread_check(line, 1, 80, fp); line[80]='\0';
 			if(!strncmp(line, "END", 3)){
@@ -853,7 +856,7 @@ read_fits_header(header_t* header, file_t* fp){
 			} else{
 				char* hh=line;
 				int length=80;
-				int newline=1;
+				int is_comment=0;
 				//Ignore a few keys
 				if(!strncmp(line, "EXTEND", 6)){
 					continue;
@@ -864,29 +867,26 @@ read_fits_header(header_t* header, file_t* fp){
 				} else if(!strncmp(line, "COMMENT", 7)){
 					hh=line+10;
 					length-=10;
-					newline=0;
+					is_comment=1;
 				}
 				//Remove trailing space.
-				for(int j=length-1; j>=0; j--){
-					if(isspace((int)hh[j])){
-						hh[j]='\0';
-						length--;
-					} else{
-						if(newline){
-							hh[j+1]='\n';
-							hh[j+2]='\0';
-						}
-						break;
-					}
+				while(length>0 && isspace((int)hh[length-1])){
+					hh[length-1]='\0';
+					length--;
 				}
+				
 				if(length>0){
 					if(header->str){
-						header->str=myrealloc(header->str, strlen(header->str)+length+1+newline, char);
+						if(!(is_comment && was_comment)){
+							strcat(header->str, ";\0");
+						}
+						header->str=myrealloc(header->str, strlen(header->str)+length+3, char);
 					} else{
-						header->str=(char*)malloc(length+1+newline); (header->str)[0]='\0';
+						header->str=(char*)malloc(length+3); (header->str)[0]='\0';
 					}
 					strcat(header->str, hh);
 				}
+				was_comment=is_comment;
 			}
 		}
 		page++;

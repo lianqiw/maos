@@ -41,6 +41,8 @@ X(mat)* X(readdata)(file_t* fp, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){
 		header=&header2;
+	}
+	if(header->magic==0){
 		read_header(header, fp);
 	}
 	uint64_t nx, ny;
@@ -52,6 +54,7 @@ X(mat)* X(readdata)(file_t* fp, header_t* header){
 	if(nx&&ny){
 		readvec(out->p, M_T, header->magic, sizeof(T), nx*ny, fp);
 	}
+	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;
 }
 

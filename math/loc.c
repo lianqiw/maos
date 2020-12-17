@@ -1641,6 +1641,8 @@ loc_t* locreaddata(file_t* fp, header_t* header){
 	header_t header2;
 	if(!header){
 		header=&header2;
+	}
+	if(header->magic==0){
 		read_header(header, fp);
 	}
 	if((header->magic&M_REAL)!=M_REAL){
@@ -1662,6 +1664,7 @@ loc_t* locreaddata(file_t* fp, header_t* header){
 
 		loc_dxdy(out);
 	}
+	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;
 }
 /**

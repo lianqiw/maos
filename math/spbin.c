@@ -51,6 +51,8 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){
 		header=&header2;
+	}
+	if(header->magic==0){
 		read_header(header, fp);
 	}
 	long m=header->nx;
@@ -89,6 +91,7 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 			readvec(out->x, M_T, magic1, sizeof(T), nzmax, fp);
 		}
 	}
-	free(header->str);
+	free(header->str); header->str=NULL;
+	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;
 }
