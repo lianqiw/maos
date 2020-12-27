@@ -99,7 +99,7 @@ if test -n "`which nvcc 2>/dev/null`" ;then
 	NVCC="$(readlink "$NVCC")"
     fi
 else
-    for cuda in /usr/local/cuda ;do
+    for cuda in /usr/local/cuda /etc/alternatives/cuda /opt/cuda /usr/local/cuda-* /opt/cuda-*;do
 	if test -x "${cuda}/bin/nvcc" ;then
 	    NVCC="${cuda}/bin/nvcc"
 	    break;
@@ -145,6 +145,7 @@ AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDA
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="yes"])
+AC_ARG_ENABLE(gtk-4, AS_HELP_STRING([--enable-gtk-4],[Using GTK4]), [use_gtk_4="$enableval"], [use_gtk_4="no"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
@@ -700,23 +701,25 @@ if test "$with_gtk" != "no" ;then
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
     #make sure there are spaces before and after >=
+	gtk_ver="0"
     if test -n "$GTKDIR" ;then #User specified GTK directory
-	if test -d "$GTKDIR/pkgconfig" ;then
-	    GTKDIR="$GTKDIR/../"
-	fi
-	if test -d "$GTKDIR/lib/pkgconfig" ;then
-	    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig"
-	fi
-	TT=-I$GTKDIR/include
-	GTK_CFLAGS="$TT $TT/cairo $TT/atk-1.0 $TT/gtk-${gtk_ver}.0 $TT/glib-2.0 $TT/pango-1.0 $TT/gdk-pixbuf-2.0 -I$GTKDIR/lib/glib-2.0/include -I${GTKDIR}/lib/gtk-2.0/include"
-	GTK_LIBS="-L$GTKDIR/lib/ -Wl,-rpath,$GTKDIR/lib/"
-	if test -d "$GTKDIR/bin" ;then
-	    GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
-	fi
-	gtk_ver="2"
+		if test -d "$GTKDIR/pkgconfig" ;then
+			GTKDIR="$GTKDIR/../"
+		fi
+		if test -d "$GTKDIR/lib/pkgconfig" ;then
+			export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig"
+		fi
+		TT=-I$GTKDIR/include
+		GTK_CFLAGS="$TT $TT/cairo $TT/atk-1.0 $TT/gtk-${gtk_ver}.0 $TT/glib-2.0 $TT/pango-1.0 $TT/gdk-pixbuf-2.0 -I$GTKDIR/lib/glib-2.0/include -I${GTKDIR}/lib/gtk-2.0/include"
+		GTK_LIBS="-L$GTKDIR/lib/ -Wl,-rpath,$GTKDIR/lib/"
+		if test -d "$GTKDIR/bin" ;then
+			GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
+		fi
+		gtk_ver="2"
     else
-	AS_IF([test "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0,           [gtk_ver="3"], [gtk_ver="0"])])
-	AS_IF([test "$gtk_ver" != "3"],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
+		AS_IF([test "$use_gtk_4" != "no" ], [PKG_CHECK_MODULES([GTK], gtk4,               [gtk_ver="4"], [gtk_ver="0"])])
+		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0,           [gtk_ver="3"], [gtk_ver="0"])])
+		AS_IF([test "$gtk_ver" = "0" ],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
     fi
     AS_IF([test "$gtk_ver" != "0"], [
 	      PKG_CHECK_MODULES(DRAW,   cairo >= 1.4,    [has_cairo="1"], [has_cairo="0"])
@@ -725,13 +728,13 @@ if test "$with_gtk" != "no" ;then
 	      ])
  
     if test "$gtk_ver" = "2" ;then
-	if ! echo "$GTK_LIBS" | grep -q gthread ;then
-	    #OLD GLIB has GTHREAD separated
-	    PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
-	    if test -n "$GTHREAD_LIBS" ;then
-		GTK_LIBS+=" $GTHREAD_LIBS"
-	    fi
-	fi
+		if ! echo "$GTK_LIBS" | grep -q gthread ;then
+			#OLD GLIB has GTHREAD separated
+			PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
+			if test -n "$GTHREAD_LIBS" ;then
+			GTK_LIBS+=" $GTHREAD_LIBS"
+			fi
+		fi
     fi
     AC_DEFINE_UNQUOTED(MAC_INTEGRATION, [$has_mac], ["Mac integration"])
     #The following will substitute the variables name 

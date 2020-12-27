@@ -764,7 +764,6 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 	}
 	if(str){
 		const char* str_end=str+strlen(str);
-		info(str);
 		while(isspace(str[0]) && str<str_end) str++;
 		while(str && str<str_end){
 			FLUSH_OUT;

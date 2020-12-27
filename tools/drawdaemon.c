@@ -46,7 +46,11 @@ int main(int argc, char* argv[]){
 		gdk_threads_init();
 	}
 #endif
+#if GTK_MAJOR_VERSION<4
 	gtk_init(&argc, &argv);
+#else
+	gtk_init();
+#endif
 #if MAC_INTEGRATION
 	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 #endif
