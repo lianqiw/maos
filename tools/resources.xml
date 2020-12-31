@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+    <gresource prefix="/maos">
+    	<file>icon-clear.png</file>
+		<file>icon-connect.png</file>
+		<file>icon-draw.png</file>
+		<file>icon-error.png</file>
+		<file>icon-finished.png</file>
+		<file>icon-monitor.png</file>
+		<file>icon-play.png</file>
+		<file>icon-save.png</file>
+		<file>icon-skip.png</file>
+		<file>icon-waiting.png</file>
+    </gresource>
+</gresources>
+<!--
+	use the following to convert resources.xml to resources.c and include resources.c in Makefile.am sources
+	glib-compile-resources resources.xml --generate-source --target=resources.c
+	then use in code
+	gtk_window_set_icon_from_file (window, "resource:///maos/icon.png", NULL);
+	gdk_pixbuf_new_from_resource("/maos/icon.png", NULL);
+-->

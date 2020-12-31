@@ -1,8 +1,6 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDOPTS) $(LDEXE)
-ICONS=icon-cancel.h icon-connect.h icon-error.h icon-monitor.h icon-running.h icon-skip.h \
-icon-clear.h icon-draw.h  icon-finished.h icon-play.h  icon-save.h  icon-waiting.h \
-icon-clear.png icon-error.png icon-monitor.png icon-save.png  icon-waiting.png \
+ICONS=icon-clear.png icon-error.png icon-monitor.png icon-save.png  icon-waiting.png \
 icon-connect.png icon-finished.png icon-play.png  icon-skip.png
 
 noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html gtk3-css.h $(ICONS) 
@@ -28,13 +26,13 @@ endif
 if GUI
 if CAIRO
 PROGS+=../bin/drawdaemon 
-___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
+___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c resources.c
 ___bin_drawdaemon_CFLAGS=$(CAIRO_CFLAGS) $(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
 ___bin_drawdaemon_LDADD=../sys/libaosys.la $(CAIRO_LIBS) $(GTK_LIBS) $(MAC_LIBS) -lgthread-2.0
 endif
 if USE_SCHEDULER
 PROGS+=../bin/monitor 
-___bin_monitor_SOURCES=monitor_gui.c monitor.c monitor_thread.c
+___bin_monitor_SOURCES=monitor_gui.c monitor.c monitor_thread.c resources.c
 ___bin_monitor_CFLAGS=$(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
 ___bin_monitor_LDADD=../sys/libaosys.la  $(GTK_LIBS) $(MAC_LIBS) #$(LDOPTS)
 if NOTIFY

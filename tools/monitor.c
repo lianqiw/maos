@@ -48,17 +48,6 @@
 static int notify_daemon=1;
 #endif
 
-#include "icon-monitor.h"
-#include "icon-finished.h"
-#include "icon-play.h"
-#include "icon-error.h"
-#include "icon-waiting.h"
-#include "icon-cancel.h"
-#include "icon-save.h"
-//#include "icon-skip.h"
-#include "icon-clear.h"
-#include "icon-connect.h"
-
 GdkPixbuf* icon_main=NULL;
 GdkPixbuf* icon_finished=NULL;
 GdkPixbuf* icon_failed=NULL;
@@ -69,7 +58,7 @@ GdkPixbuf* icon_save=NULL;
 //GdkPixbuf* icon_skip=NULL;
 GdkPixbuf* icon_clear=NULL;
 GdkPixbuf* icon_connect=NULL;
-static GtkStatusIcon* status_icon=0;
+
 GtkWidget* notebook=NULL;
 GtkWidget** pages;
 GtkWidget* window=NULL;
@@ -82,6 +71,8 @@ double* usage_cpu, * usage_cpu2;
 static GtkWidget** prog_cpu;
 //static GtkWidget **prog_mem;
 PangoAttrList* pango_active, * pango_down;
+#if GTK_MAJOR_VERSION<3
+static GtkStatusIcon* status_icon=0;
 GdkColor blue;
 GdkColor green;
 GdkColor red;
@@ -89,7 +80,7 @@ GdkColor yellow;
 GdkColor white;
 GdkColor color_even;
 GdkColor color_odd;
-
+#endif
 GtkActionGroup* topgroup;
 GtkWidget* toptoolbar;
 #if GTK_MAJOR_VERSION>=3 
@@ -406,6 +397,7 @@ static void kill_all_jobs(GtkButton* btn, gpointer data){
 		}
 	}
 }
+#if GTK_MAJOR_VERSION < 3
 static void status_icon_on_click(void* widget,
 	gpointer data){
 	(void)widget;
@@ -436,10 +428,13 @@ static void status_icon_on_popup(GtkStatusIcon* status_icon0, guint button,
 		   status_icon0,button,activate_time);*/
 	status_icon_on_click(NULL, user_data);
 }
+#endif
 static void create_status_icon(){
+#if GTK_MAJOR_VERSION < 3
 	status_icon=gtk_status_icon_new_from_pixbuf(icon_main);
 	//g_signal_connect(GTK_STATUS_ICON(status_icon),"activate", G_CALLBACK(status_icon_on_click),0);//useless.
 	g_signal_connect(GTK_STATUS_ICON(status_icon), "popup-menu", G_CALLBACK(status_icon_on_popup), 0);
+#endif
 	/*GtkWidget *menu, *menuItemShow,*menuItemExit;
 	menu=gtk_menu_new();
 	menuItemShow=gtk_menu_item_new_with_label("Show/Hide");
@@ -680,6 +675,7 @@ int main(int argc, char* argv[]){
 	} else if(nhost==1){
 		info("Using '%s host1 host2' to monitor other machines, or put their hostnames in ~/.aos/hosts\n", argv[0]);
 	}
+#if GDK_MAJOR_VERSION < 3
 	gdk_color_parse("#EE0000", &red);
 	gdk_color_parse("#00CC00", &green);
 	gdk_color_parse("#FFFF33", &yellow);
@@ -687,18 +683,16 @@ int main(int argc, char* argv[]){
 	gdk_color_parse("#0099FF", &blue);
 	gdk_color_parse("#FFFFAB", &color_even);
 	gdk_color_parse("#FFFFFF", &color_odd);
-
-
-	icon_main=gdk_pixbuf_new_from_inline(-1, icon_inline_monitor, FALSE, NULL);
-	icon_finished=gdk_pixbuf_new_from_inline(-1, icon_inline_finished, FALSE, NULL);
-	icon_failed=gdk_pixbuf_new_from_inline(-1, icon_inline_error, FALSE, NULL);
-	icon_running=gdk_pixbuf_new_from_inline(-1, icon_inline_play, FALSE, NULL);
-	icon_waiting=gdk_pixbuf_new_from_inline(-1, icon_inline_waiting, FALSE, NULL);
-	icon_cancel=gdk_pixbuf_new_from_inline(-1, icon_inline_cancel, FALSE, NULL);
-	icon_save=gdk_pixbuf_new_from_inline(-1, icon_inline_save, FALSE, NULL);
-	//icon_skip=gdk_pixbuf_new_from_inline(-1, icon_inline_skip, FALSE, NULL);
-	icon_clear=gdk_pixbuf_new_from_inline(-1, icon_inline_clear, FALSE, NULL);
-	icon_connect=gdk_pixbuf_new_from_inline(-1, icon_inline_connect, FALSE, NULL);
+#endif
+	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-main.png", NULL);
+	icon_finished=gdk_pixbuf_new_from_resource("/maos/icon-finished.png", NULL);
+	icon_failed=gdk_pixbuf_new_from_resource("/maos/icon-failed.png", NULL);
+	icon_running=gdk_pixbuf_new_from_resource("/maos/icon-running.png", NULL);
+	icon_waiting=gdk_pixbuf_new_from_resource("/maos/icon-waiting.png", NULL);
+	icon_cancel=gdk_pixbuf_new_from_resource("/maos/icon-cancel.png", NULL);
+	icon_save=gdk_pixbuf_new_from_resource("/maos/icon-save.png", NULL);
+	icon_clear=gdk_pixbuf_new_from_resource("/maos/icon-clear.png", NULL);
+	icon_connect=gdk_pixbuf_new_from_resource("/maos/icon-connect.png", NULL);
 
 	create_status_icon();
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);

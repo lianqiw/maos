@@ -101,12 +101,15 @@ struct drawdata_t{
 	float zoomxlast, zoomylast;/*last zoom level. */
 	float offx, offy;/*off set of the center of the data. */
 	float mxdown, mydown, mtdown;/*mouse pointer down. */
+	float dxdown, dydown; /*length of rectangular*/
+	int draw_rect; /*draw a rectangular with mxdown, mydown, dxdown, dydown*/
+	
 	float scalex, scaley;/*scale of the data to fit the display. */
 	float centerx, centery;
 	float xoff, yoff;/*offset of the area to draw figure. */
 	int ncxoff, ncyoff;/*offset of ncx, ncy */
 	float limit0[4];/*x,y limit of displayed region. */
-
+	
 	int square;/*make x/y scaling be the same, for image and coordinate display */
 	int valid;/*move is valid. */
 	int font_name_version;
@@ -155,7 +158,7 @@ void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);
 void apply_limit(drawdata_t* drawdata);
 /*from drawdaemon_gui */
-GtkWidget* create_window();
+GtkWidget* create_window(GtkWidget *window);
 gboolean addpage(gpointer junk);
 /*from drawdaemon_io */
 void* listen_draw(void*);

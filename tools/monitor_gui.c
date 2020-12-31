@@ -477,7 +477,11 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 			if(menudata[i].menu){
 				if(menudata[i].icon && *menudata[i].icon){
 					menuitem=gtk_menu_item_new();
+#if GTK_MAJOR_VERSION >=3
 					GtkWidget* box=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+#else
+					GtkWidget* box=gtk_hbox_new(0, 6);
+#endif
 					GtkWidget* icon=gtk_image_new_from_pixbuf(*menudata[i].icon);
 					GtkWidget* label=gtk_label_new(menudata[i].menu);
 					gtk_container_add(GTK_CONTAINER(box), label);
@@ -496,7 +500,11 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 		}
 	}
 	gtk_widget_show_all(menu);
+#if GTK_MAJOR_VERSION>=3 		
+	gtk_menu_popup_at_pointer(GTK_MENU(menu), NULL);
+#else
 	gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, gtk_get_current_event_time());
+#endif
 	return TRUE;
 }
 /* Handle click on treeview */
@@ -663,7 +671,7 @@ GtkWidget* new_page(int ihost){
 	gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(view), GTK_TREE_VIEW_GRID_LINES_VERTICAL);
 	gtk_tree_view_set_enable_search(GTK_TREE_VIEW(view), TRUE);
 	/*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */
-	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
+	//gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
 	//gtk_tree_view_set_headers_clickable(GTK_TREE_VIEW(view), TRUE);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
 	if(ihost==nhost){

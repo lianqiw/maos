@@ -17,7 +17,6 @@
 */
 
 #include "drawdaemon.h"
-#include "icon-draw.h"
 int sock;
 int sock_idle=0;
 int cumu=0;
@@ -25,6 +24,16 @@ int cumu=0;
 #include <gtkosxapplication.h>
 #endif
 GdkPixbuf* icon_main=NULL;
+#if GTK_MAJOR_VERSION>=4
+static void
+activate (GtkApplication *app,
+          gpointer        user_data)
+{
+	(void)user_data;
+	GtkWidget *window = gtk_application_window_new (app);
+	create_window(window);
+}
+#endif
 int main(int argc, char* argv[]){
 	{
 		char fnlog[PATH_MAX];
@@ -51,11 +60,9 @@ int main(int argc, char* argv[]){
 #else
 	gtk_init();
 #endif
-#if MAC_INTEGRATION
-	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-#endif
 
-	icon_main=gdk_pixbuf_new_from_inline(-1, icon_inline_draw, FALSE, NULL);
+
+	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-draw.png", NULL);
 	if(argc<2){
 		error("Must call drawdaemon with the socket fd.\n");
 	}
@@ -67,11 +74,22 @@ int main(int argc, char* argv[]){
 	socket_block(sock, 0);
 
 #if MAC_INTEGRATION
+	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	gtkosx_application_ready(theApp);
 #endif
 	thread_new(listen_draw, NULL);
 	//g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
-	create_window();
+#if GTK_MAJOR_VERSION<4
+	create_window(NULL);
 	gtk_main();
+#else
+	GtkApplication *app;
+  	int status;
+
+  app = gtk_application_new ("maos.drawdaemon", G_APPLICATION_FLAGS_NONE);
+  g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+  status = g_application_run (G_APPLICATION (app), argc, argv);
+  g_object_unref (app);
+#endif
 }/*main */

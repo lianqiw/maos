@@ -140,7 +140,7 @@ static void topnb_detach(GtkMenuItem* menu){
 	g_object_ref(page);
 	g_object_ref(label);
 	gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), n);
-	GtkWidget* window=create_window();/*create a new window. */
+	GtkWidget* window=create_window(NULL);/*create a new window. */
 	topnb=get_topnb(window);/*another topnb */
 	gtk_notebook_append_page(GTK_NOTEBOOK(topnb), page, label);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), page, TRUE);
@@ -156,12 +156,16 @@ static gboolean tab_button_cb(GtkWidget* widget, GdkEventButton* event, GtkWidge
 	GtkWidget* topnb=gtk_widget_get_parent(page);
 	int n=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), page);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(topnb), n);
-	if(event->button==GDK_BUTTON_SECONDARY){
+	if(event->button==3){
 		if(gtk_menu_get_attach_widget(GTK_MENU(contexmenu))){
 			gtk_menu_detach(GTK_MENU(contexmenu));
 		}
 		gtk_menu_attach_to_widget(GTK_MENU(contexmenu), widget, NULL);
+#if GTK_MAJOR_VERSION>=3 		
+		gtk_menu_popup_at_pointer(GTK_MENU(contexmenu), NULL);
+#else
 		gtk_menu_popup(GTK_MENU(contexmenu), NULL, NULL, NULL, NULL, 3, gtk_get_current_event_time());
+#endif
 	}
 	return FALSE;
 }
@@ -254,6 +258,15 @@ on_draw_event(GtkWidget* widget, cairo_t* cr, gpointer pdata){
 	}
 	cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
 	cairo_paint(cr);
+	if(drawdata->draw_rect){
+		cairo_set_source_rgba(cr, 0, 0, 1, 0.1);
+		cairo_set_line_width(cr, 1);
+		cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, drawdata->dxdown, drawdata->dydown);
+		cairo_fill_preserve(cr);
+		cairo_set_source_rgba(cr, 0, 0, 0, 1);
+		cairo_stroke(cr);
+		drawdata->draw_rect=0;
+	}
 	return FALSE;
 }
 #else
@@ -271,6 +284,17 @@ on_expose_event(GtkWidget* widget, GdkEventExpose* event, gpointer pdata){
 			event->area.x, event->area.y,
 			event->area.x, event->area.y,
 			event->area.width, event->area.height);
+		if(drawdata->draw_rect){
+			cairo_t* cr=gdk_cairo_create(widget->window);
+			cairo_set_source_rgba(cr, 0, 0, 1, 0.1);
+			cairo_set_line_width(cr, 1);
+			cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, drawdata->dxdown, drawdata->dydown);
+			cairo_fill_preserve(cr);
+			cairo_set_source_rgba(cr, 0, 0, 0, 1);
+			cairo_stroke(cr);
+			cairo_destroy(cr);
+			drawdata->draw_rect=0;
+		}
 	} else{
 		warning("pixmap is empty\n");
 	}
@@ -358,7 +382,7 @@ static void delete_page(GtkButton* btn, drawdata_t** drawdatawrap){
 static void delete_page_event(GtkWidget* widget, GdkEventButton* event, drawdata_t** drawdatawrap){
 	(void)widget;
 	(void)event;
-	if(event->button==GDK_BUTTON_PRIMARY&&event->type==GDK_BUTTON_PRESS){
+	if(event->button==1&&event->type==GDK_BUTTON_PRESS){
 		delete_page(NULL, drawdatawrap);
 	}
 }
@@ -366,12 +390,14 @@ static void delete_page_event(GtkWidget* widget, GdkEventButton* event, drawdata
 static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	GtkWidget* out;
 	out=gtk_hbox_new(FALSE, 0);
+
+	GtkWidget* image=gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
+
 #if defined(__linux__)
 	GtkWidget* close_btn;
 	close_btn=gtk_button_new();
 	gtk_button_set_focus_on_click(GTK_BUTTON(close_btn), FALSE);
-	gtk_container_add(GTK_CONTAINER(close_btn),
-		gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU));
+	gtk_container_add(GTK_CONTAINER(close_btn), image);
 	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
 	/* make button as small as possible */
 #if GTK_MAJOR_VERSION<3
@@ -384,7 +410,7 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	gtk_box_pack_end(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
 #else
 	GtkWidget* ebox=gtk_event_box_new();
-	GtkWidget* image=gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
+	
 	gtk_container_add(GTK_CONTAINER(ebox), image);
 	g_signal_connect(ebox, "button_press_event", G_CALLBACK(delete_page_event), drawdatawrap);
 	gtk_box_pack_end(GTK_BOX(out), ebox, FALSE, FALSE, 0);
@@ -394,8 +420,17 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	drawdata_t* drawdata=*drawdatawrap;
 	const gchar* str=drawdata->name;
 	GtkWidget* label=gtk_label_new(str);
-	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+	//
+#if GTK_MAJOR_VERSION >= 3
+	gtk_widget_set_halign(label, GTK_ALIGN_START);
+	gtk_widget_set_margin_start(label, 0);
+	gtk_widget_set_margin_end(label, 0);
+	gtk_widget_set_margin_top(label, 0);
+	gtk_widget_set_margin_bottom(label, 0);
+#else	
 	gtk_misc_set_padding(GTK_MISC(label), 0, 0);
+	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+#endif
 	gtk_label_set_width_chars(GTK_LABEL(label), 12);
 	gtk_box_pack_start(GTK_BOX(out), label, TRUE, TRUE, 0);
 	gtk_widget_show_all(out);
@@ -442,33 +477,12 @@ static gboolean motion_notify(GtkWidget* widget, GdkEventMotion* event,
 					dx*=fabs(dy*ratio/dx);
 				}
 			}
+			drawdata->dxdown=dx;
+			drawdata->dydown=dy;
+			drawdata->draw_rect=1;
 			if(drawdata->pixmap){/*force a refresh to remove previous rectangule */
-#if GTK_MAJOR_VERSION>=3
-				cairo_t* cr=gdk_cairo_create(gtk_widget_get_window(widget));
-				cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
-				cairo_paint(cr);
-				cairo_destroy(cr);
-#else
-				gdk_draw_drawable(widget->window,
-					widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
-					drawdata->pixmap,
-					0, 0, 0, 0, -1, -1);
-#endif
+				gtk_widget_queue_draw(widget);
 			}
-			/*do not draw to pixmap, use window */
-#if GTK_MAJOR_VERSION>=3
-			cairo_t* cr=gdk_cairo_create(gtk_widget_get_window(widget));
-#else
-			cairo_t* cr=gdk_cairo_create(widget->window);
-#endif
-		//cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
-			cairo_set_source_rgba(cr, 0, 0, 1, 0.1);
-			cairo_set_line_width(cr, 1);
-			cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, dx, dy);
-			cairo_fill_preserve(cr);
-			cairo_set_source_rgba(cr, 0, 0, 0, 1);
-			cairo_stroke(cr);
-			cairo_destroy(cr);
 		}
 	}
 	/*we set the cursor */
@@ -580,10 +594,10 @@ static gboolean button_release(GtkWidget* widget, GdkEventButton* event, drawdat
 	if((fabs(dx)<5 && fabs(dy)<5)){
 		dbg_time("Ignore accidental click\n");
 	}else 
-	if((cursor_type==0&&event->button==GDK_BUTTON_PRIMARY)
-		||(cursor_type==1&&event->button==GDK_BUTTON_MIDDLE)){/*move only on left button */
+	if((cursor_type==0&&event->button==1)
+		||(cursor_type==1&&event->button==2)){/*move only on left button */
 		do_move(drawdata, dx, -dy);
-	}else if(event->button==GDK_BUTTON_SECONDARY){/*right button select and zoom. */
+	}else if(event->button==3){/*right button select and zoom. */
 		float xx=drawdata->mxdown;
 		float yy=drawdata->mydown;
 		if(drawdata->square&&!drawdata->image){
@@ -950,8 +964,8 @@ retry:
 	("Select a file to save",
 		GTK_WINDOW(curwindow),
 		GTK_FILE_CHOOSER_ACTION_SAVE,
-		GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-		GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+		"_Cancel", GTK_RESPONSE_CANCEL,
+		"_Save", GTK_RESPONSE_ACCEPT,
 		NULL);
 	gtk_file_chooser_set_do_overwrite_confirmation
 	(GTK_FILE_CHOOSER(dialog), TRUE);
@@ -1130,8 +1144,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	GtkWidget* dialog=gtk_dialog_new_with_buttons("Figure Properties",
 		GTK_WINDOW(curwindow),
 		(GtkDialogFlags)(GTK_DIALOG_DESTROY_WITH_PARENT),
-		GTK_STOCK_OK,
-		GTK_RESPONSE_ACCEPT,
+		"_OK", GTK_RESPONSE_ACCEPT,
 		NULL);
 	GtkWidget* content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 	GtkWidget* vbox=gtk_vbox_new(FALSE, 0);
@@ -1293,7 +1306,11 @@ static void tool_property(GtkToolButton* button, gpointer data){
 
 
 static void tool_font_set(GtkFontButton* btn){
+#if GTK_MAJOR_VERSION >=3
+	const char* font_name_new=gtk_font_chooser_get_font(GTK_FONT_CHOOSER(btn));
+#else	
 	const char* font_name_new=gtk_font_button_get_font_name(btn);
+#endif
 	desc=pango_font_description_from_string(font_name_new);
 	PangoFontDescription* pfd
 		=pango_font_description_from_string(font_name_new);
@@ -1374,7 +1391,7 @@ static gboolean window_state(GtkWidget* window, GdkEvent* event){
 	}
 	return FALSE;
 }
-GtkWidget* create_window(){
+GtkWidget* create_window(GtkWidget *window){
 	if(!cursors[1]){
 		GdkDisplay* display=gdk_display_get_default();
 		cursors[0]=gdk_cursor_new_from_name(display, "default");
@@ -1392,7 +1409,9 @@ GtkWidget* create_window(){
 		g_object_ref(contexmenu);
 	}
 
-	GtkWidget* window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	if(!window){
+		window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	}
 	//gtk_window_stick(GTK_WINDOW(window));
 	curwindow=window;
 	windows=g_slist_append(windows, window);
