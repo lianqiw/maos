@@ -14,14 +14,11 @@ var structcn2est__t =
     [ "iPnk", "structcn2est__t.html#adec362cfdb0ff98f576986c69fbb65f6", null ],
     [ "ht", "structcn2est__t.html#af00b98f925af00569db5aabb0c6344e6", null ],
     [ "hmax", "structcn2est__t.html#ab1237fbab56662e7e492891f11d8ad0d", null ],
-    [ "r0", "structcn2est__t.html#aaff2ae6180b96170c04dfe43ad373002", null ],
     [ "htrecon", "structcn2est__t.html#aacc1db72113dbbae90a182976bfba7e8", null ],
     [ "os", "structcn2est__t.html#a111bffff3aa695200480f268920e3932", null ],
     [ "dx", "structcn2est__t.html#a8dcf47a0398de762b2e0222ac1141d17", null ],
     [ "dmht", "structcn2est__t.html#a41a5764f2e746d7bceffc851890ab6b7", null ],
-    [ "wtrecon", "structcn2est__t.html#adbdcc35a9f621892d1109f4d74fe9cb1", null ],
     [ "wtconvert", "structcn2est__t.html#a5b16633e19e68c0f6baa4304da3f79ea", null ],
-    [ "r0m", "structcn2est__t.html#a3de88650635ca13c389e4f4aeca267e3", null ],
     [ "L0", "structcn2est__t.html#a2120497db431467763e67c668036d8ec", null ],
     [ "gxs", "structcn2est__t.html#add4267930a25c4445988804458f7365c", null ],
     [ "gys", "structcn2est__t.html#ad6db7c0ef48707caff739ed7ec8699b2", null ],
@@ -30,5 +27,8 @@ var structcn2est__t =
     [ "cov1", "structcn2est__t.html#a85c52f069202f7e0288d638f58bbfdef", null ],
     [ "wt", "structcn2est__t.html#a1795f90bfc25ec51c6df9c4473336e53", null ],
     [ "covc", "structcn2est__t.html#a3e45d1881820d3dcf7df584de2cb7615", null ],
-    [ "count", "structcn2est__t.html#ac96307ff7b969dc9d8ea4ffb8a014b30", null ]
+    [ "count", "structcn2est__t.html#ac96307ff7b969dc9d8ea4ffb8a014b30", null ],
+    [ "r0", "structcn2est__t.html#aaff2ae6180b96170c04dfe43ad373002", null ],
+    [ "r0m", "structcn2est__t.html#a3de88650635ca13c389e4f4aeca267e3", null ],
+    [ "wtrecon", "structcn2est__t.html#adbdcc35a9f621892d1109f4d74fe9cb1", null ]
 ];

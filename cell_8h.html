@@ -124,8 +124,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>writedata_by_id</b> (
 <tr class="memitem:ab505ad351f3d76f8122e416b0dbee23c"><td class="memItemLeft" align="right" valign="top"><a id="ab505ad351f3d76f8122e416b0dbee23c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (const void *dc, uint32_t id, const char *format,...)</td></tr>
 <tr class="separator:ab505ad351f3d76f8122e416b0dbee23c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a223dc5824d7dd17786ca2ecf5b385fd2"><td class="memItemLeft" align="right" valign="top"><a id="a223dc5824d7dd17786ca2ecf5b385fd2"></a>
-<a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>readdata_by_id</b> (file_t *fp, uint32_t id, int level, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="memitem:a223dc5824d7dd17786ca2ecf5b385fd2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a223dc5824d7dd17786ca2ecf5b385fd2">readdata_by_id</a> (file_t *fp, uint32_t id, int level, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
 <tr class="separator:a223dc5824d7dd17786ca2ecf5b385fd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40abd6f20840af65f7f3ca17c8159a22"><td class="memItemLeft" align="right" valign="top"><a id="a40abd6f20840af65f7f3ca17c8159a22"></a>
 <a class="el" href="structcell.html">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>read_by_id</b> (uint32_t id, int level, const char *format,...)</td></tr>
@@ -374,6 +373,48 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
       </table>
 </div><div class="memdoc">
 <p>free a mat or cell object. </p>
+
+</div>
+</div>
+<a id="a223dc5824d7dd17786ca2ecf5b385fd2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a223dc5824d7dd17786ca2ecf5b385fd2">&#9670;&nbsp;</a></span>readdata_by_id()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcell.html">cell</a>* readdata_by_id </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>level</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramname"><em>header</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read data from file. Usage: level=0: array of fundamental data. level=1: cell of fundamental data. level&gt;1: cell of cell ... level&lt;0: automatically identify and read all data</p>
+<p>id: magic number of request fundamental data. data is converted if it does not match magic number from the file. <a class="el" href="classCell.html">Cell</a> dimension may be zero. In this case the dimension will be automatically detected. </p>
 
 </div>
 </div>
