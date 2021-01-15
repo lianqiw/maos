@@ -208,7 +208,7 @@ Sample Runs</h1>
 Advanced configuration</h1>
 <h2><a class="anchor" id="sect-surface"></a>
 Specifying Surface OPDs</h2>
-<p>We can optionally setup one or more static surfaces that cover science fields and/or wavefront sensors. Each surface file must contain a 2-d array of the OPD with a header specifying the following keys:</p>
+<p>We can optionally setup one or more static surfaces that cover science fields and/or wavefront sensors. Each surface file must contain a 2-d array of the OPD with a header specifying the following keys. If header is not available, the OPD is assumed to have 1/64 sampling and centered on the pupil.</p>
 <pre class="fragment">   dx  the sampling in x direction (first dimension).
    dy  the sampling in y direction (second dimension).
    ox  the origin in x direction.
@@ -216,11 +216,11 @@ Specifying Surface OPDs</h2>
    h   the height conjugation of this surface
    vx  the frozen flow wind speed along x of this surface (0 for static)
    vy  the frozen flow wind speed along y of this surface (0 for static)</pre><p>Optionally, the header can also include the following keys to indicate its coverage</p>
-<pre class="fragment">   SURFNAME #M1 or M2 for the primary or secondary mirror
-   SURFEVL=[0 1 2] #covers science evaluation directions 0 1 2
-   SURFWFS=[0 1 2] #covers WFS 0 1 2</pre><p>Use the <code>write</code> mex routine, <code>writebin.m</code>, or <code>writebin.py</code> to write the bin file: </p><pre class="fragment">write(OPD, header, 'opd1.bin')
-</pre><p>Put the list of surface <code>.bin</code> files in key <code>surf</code>. </p><pre class="fragment">maos surf=['opd1.bin','opd2.bin']
-</pre><p>The amplitude map of the telescope can be specified with <code>aper.fnamp=aper.bin</code> with a similar data format, with OPD replaced by amplitude map between 0 and 1.</p>
+<pre class="fragment">   SURFNAME=name       #name of the surface. M1 or M2 for the primary or secondary mirror
+   SURFEVL=[1 1 1 ...] #length: nevl. 1: enabled for this science evaluation direction (assume all 1 if omitted)
+   SURFWFS=[1 1 1 ...] #length: nwfs. 1: enabled for this WFS (assume all 1 if ommitted)</pre><p>Use the <code>write</code> mex routine, <code>writebin.m</code>, or <code>aolib.writebin</code> to write the bin file: </p><pre class="fragment">write(OPD, header, 'opd1.bin')
+</pre><p>Or simply use fits format. Put the list of surface file names in key <code>surf</code>. </p><pre class="fragment">maos surf=['opd1.bin','opd2.bin', 'opd3.fits']
+</pre><p>The amplitude map of the telescope can be specified with <code>aper.fnamp=aper.bin</code> with a similar data format, with OPD replaced by amplitude map between 0 and 1. By default, NCPA are calibrated, use <code>sim.ncpa_method=0</code> to disable calibration</p>
 <p>We can also setup one or more tilted M3 surfaces that are common to science fields and wavefront sensors. Put the list of surface files in key <code>tsurf</code>. Each surface file must contain a 2-d array with a header specifying the following keys:</p>
 <pre class="fragment">   dx    the sampling in x direction (first dimension).
    dy    the sampling in y direction (second dimension).
