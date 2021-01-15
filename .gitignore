@@ -42,5 +42,6 @@ version.h
 test/*
 !test/*.[chm]
 bin/*
+build
 !Makefile.am
 !Makefile.mex

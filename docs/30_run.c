@@ -207,7 +207,8 @@
 
    We can optionally setup one or more static surfaces that cover science fields
    and/or wavefront sensors. Each surface file must contain a 2-d array of the
-   OPD with a header specifying the following keys:
+   OPD with a header specifying the following keys. If header is not available, 
+   the OPD is assumed to have 1/64 sampling and centered on the pupil.
 
    \verbatim
    dx  the sampling in x direction (first dimension).
@@ -222,22 +223,22 @@
    Optionally, the header can also include the following keys to indicate its coverage
 
    \verbatim
-   SURFNAME #M1 or M2 for the primary or secondary mirror
-   SURFEVL=[0 1 2] #covers science evaluation directions 0 1 2
-   SURFWFS=[0 1 2] #covers WFS 0 1 2
+   SURFNAME=name       #name of the surface. M1 or M2 for the primary or secondary mirror
+   SURFEVL=[1 1 1 ...] #length: nevl. 1: enabled for this science evaluation direction (assume all 1 if omitted)
+   SURFWFS=[1 1 1 ...] #length: nwfs. 1: enabled for this WFS (assume all 1 if ommitted)
    \endverbatim
     
-   Use the \c write mex routine, \c writebin.m, or \c writebin.py to write the bin file:
+   Use the \c write mex routine, \c writebin.m, or \c aolib.writebin to write the bin file:
 
        write(OPD, header, 'opd1.bin')
     
-   Put the list of surface `.bin` files in key \c surf.
+   Or simply use fits format. Put the list of surface file names in key \c surf.
 
-       maos surf=['opd1.bin','opd2.bin']
+       maos surf=['opd1.bin','opd2.bin', 'opd3.fits']
 
    The amplitude map of the telescope can be specified with
    `aper.fnamp=aper.bin` with a similar data format, with OPD replaced by
-   amplitude map between 0 and 1.
+   amplitude map between 0 and 1. By default, NCPA are calibrated, use `sim.ncpa_method=0` to disable calibration
 
    We can also setup one or more tilted M3 surfaces that are common to science
    fields and wavefront sensors. Put the list of surface files in key \c

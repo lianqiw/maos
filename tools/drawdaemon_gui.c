@@ -396,7 +396,11 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 #if defined(__linux__)
 	GtkWidget* close_btn;
 	close_btn=gtk_button_new();
+#if GTK_MAJOR_VERSION>=3
+	gtk_widget_set_focus_on_click(close_btn, FALSE);
+#else
 	gtk_button_set_focus_on_click(GTK_BUTTON(close_btn), FALSE);
+#endif
 	gtk_container_add(GTK_CONTAINER(close_btn), image);
 	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
 	/* make button as small as possible */
