@@ -1,7 +1,6 @@
 var searchData=
 [
   ['bgs',['bgs',['../structMUV__T.html#a79117dc5588e825823343d82ad942059',1,'MUV_T::bgs()'],['../structTOMO__CFG__T.html#ab86fba2401ef6e70b161e05e4eb90b90',1,'TOMO_CFG_T::bgs()'],['../structFIT__CFG__T.html#a4ebdefef0d3e46922e879fd72af86b32',1,'FIT_CFG_T::bgs()'],['../structLSR__CFG__T.html#aa0e18ff2e89ca55058dcdb3653fc1132',1,'LSR_CFG_T::bgs()']]],
-  ['biharmonic_5fscreen',['biharmonic_screen',['../turbulence_8h.html#a1a5ee62565509406b8712a9e9f16af97',1,'turbulence.c']]],
   ['bin_2eh',['bin.h',['../bin_8h.html',1,'']]],
   ['bkgrnd',['bkgrnd',['../structPOWFS__CFG__T.html#ab77a4e4ea9c20e820fe3524bd71914af',1,'POWFS_CFG_T::bkgrnd()'],['../structPOWFS__T.html#ace22bc0f58b30c9ef182186ef59d18e1',1,'POWFS_T::bkgrnd()']]],
   ['bkgrnd2',['bkgrnd2',['../classcuwfs__t.html#afefe432f2f46393338bd42e38599362b',1,'cuwfs_t']]],

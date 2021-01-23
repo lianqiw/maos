@@ -16,7 +16,7 @@ var searchData=
   ['merrhist',['merrhist',['../structSERVO__T.html#a33c557ca9519e2aba8bc33ee1e4406a0',1,'SERVO_T']]],
   ['merrlast',['merrlast',['../structSERVO__T.html#adbd88e36a5feee28d9c5bfce1a83ebbd',1,'SERVO_T']]],
   ['merrts',['Merrts',['../structSIM__T.html#afb3a4241a8c729d6129710c4fc5556c2',1,'SIM_T']]],
-  ['method',['method',['../structGENATM__T.html#acd307b30a065f6db454614aba6cbff0e',1,'GENATM_T::method()'],['../structATM__CFG__T.html#a2ec8db6a2cb91139500968eecfd0a56e',1,'ATM_CFG_T::method()']]],
+  ['method',['method',['../structATM__CFG__T.html#a2ec8db6a2cb91139500968eecfd0a56e',1,'ATM_CFG_T']]],
   ['mffocus',['mffocus',['../structSIM__CFG__T.html#abf0ce35fd4cdfa16eefa42aea7c3300e',1,'SIM_CFG_T']]],
   ['mfun',['Mfun',['../structMUV__T.html#a2f53d74f41c345e62386a677e9d14597',1,'MUV_T']]],
   ['mi',['MI',['../structMUV__T.html#aa2b9b2f441ec5f6b968efe6035c197eb',1,'MUV_T']]],

@@ -14,7 +14,6 @@ var structATM__CFG__T =
     [ "size", "structATM__CFG__T.html#a5c949de072c8ee255a86b11f07cdd586", null ],
     [ "overx", "structATM__CFG__T.html#ad7d78a1cdb798eaa539d9da28f70e5da", null ],
     [ "overy", "structATM__CFG__T.html#a9f04f9c11d6b3fa61800a5d51d20c5bb", null ],
-    [ "fun", "structATM__CFG__T.html#ae6bfb0a98d8dedaa7c19138872723586", null ],
     [ "nps", "structATM__CFG__T.html#af377ac265c4e8778949386b5c78c9ba6", null ],
     [ "wdrand", "structATM__CFG__T.html#a9816d084ed9a1126c1edbcf2f38955f6", null ],
     [ "iground", "structATM__CFG__T.html#ad776c7ea8c0f802bd0e025afc6202083", null ],

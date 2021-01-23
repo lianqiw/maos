@@ -1,7 +1,5 @@
 var NAVTREEINDEX13 =
 {
-"structSIM__CFG__T.html#a452f7e49cf76b011d5f68af53e2476ee":[8,0,121,14],
-"structSIM__CFG__T.html#a4813d011fa1383563d776ed0d3a75eb3":[8,0,121,65],
 "structSIM__CFG__T.html#a5212faa1072d9348edac13ea4e8d9d1a":[8,0,121,32],
 "structSIM__CFG__T.html#a52e4d85022e4094f2e3250b8368e96bd":[8,0,121,30],
 "structSIM__CFG__T.html#a542af1d1dc42b86f4f6e516a3d27660a":[8,0,121,16],
@@ -249,5 +247,7 @@ var NAVTREEINDEX13 =
 "structSIM__T.html#afb3a4241a8c729d6129710c4fc5556c2":[8,0,123,82],
 "structSIM__T.html#affab8576cfd7c8b1bf262cf3fe720ed3":[8,0,123,51],
 "structSTATUS__T.html":[8,0,128],
-"structSTATUS__T.html#a01660dd3bad0dcc8bd2de68f30c5a27f":[8,0,128,9]
+"structSTATUS__T.html#a01660dd3bad0dcc8bd2de68f30c5a27f":[8,0,128,9],
+"structSTATUS__T.html#a063e2d72f863c1152072886540d6ca56":[8,0,128,13],
+"structSTATUS__T.html#a093b6843684e59be66f2cf39611078d8":[8,0,128,5]
 };

@@ -1,7 +1,5 @@
 var NAVTREEINDEX11 =
 {
-"structMagic.html":[8,0,81],
-"structMagic_3_01double2_01_4.html":[8,0,83],
 "structMagic_3_01double2_01_4.html#aecb40837405ee5b175d05242246731faa23a3592ae9724fa4cd7d272981917626":[8,0,83,0],
 "structMagic_3_01double_01_4.html":[8,0,82],
 "structMagic_3_01double_01_4.html#a242eeac97f1a4e8ce5f8e66d84f45a67ad0c3ae566a8592a5dcd9d01fffd295b9":[8,0,82,0],
@@ -249,5 +247,7 @@ var NAVTREEINDEX11 =
 "structPOWFS__T.html#ae08b1afeac4ed4dc19ccbcd4fc7d1990":[8,0,105,32],
 "structPOWFS__T.html#ae9fc7510d040ab4d3b80fdd1b4194f9e":[8,0,105,13],
 "structPOWFS__T.html#aea6033b9b4ae750ed6e7ad967f81d652":[8,0,105,34],
-"structPOWFS__T.html#aef05d76e01b324b0e7915416b1304349":[8,0,105,43]
+"structPOWFS__T.html#aef05d76e01b324b0e7915416b1304349":[8,0,105,43],
+"structPOWFS__T.html#af05e3e57eed3b132f01d6f07a9df121b":[8,0,105,4],
+"structPOWFS__T.html#af49935106ffcdcc195c2d6654d070722":[8,0,105,20]
 };

@@ -1,7 +1,5 @@
 var NAVTREEINDEX7 =
 {
-"page95_profiling.html#Profiling":[6,3,2],
-"pages.html":[],
 "parms_8h.html":[9,0,2,5],
 "parms_8h.html#a441e9246520886122d956f9e9f0bc1be":[9,0,2,5,26],
 "parms_8h.html#a9a36b5678c2ca8539187637c1e016a2c":[9,0,2,5,27],
@@ -100,6 +98,7 @@ var NAVTREEINDEX7 =
 "readstr_8h.html#abefda2be23c35c49761c61084c86b936":[9,0,4,7,8],
 "readstr_8h.html#ac4e8a5fd8356383ad30696d4140fa47f":[9,0,4,7,0],
 "readstr_8h.html#adf3e8d275430f33c2cd8262fac88cac8":[9,0,4,7,6],
+"readstr_8h.html#aefabb4a29a2294c86edc668c06c088b5":[9,0,4,7,9],
 "readstr_8h.html#af916b0aa443255291534c8a9222dd585":[9,0,4,7,7],
 "recon.html":[4,4,26],
 "recon__utils_8h.html":[9,0,2,8],
@@ -249,5 +248,6 @@ var NAVTREEINDEX7 =
 "slaving_8h.html#a7bcbb1b8de1d45851f3ac5c1c2b34d01":[9,0,1,23,0],
 "slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf":[9,0,1,23,3],
 "slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3":[9,0,1,23,5],
-"slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7":[9,0,1,23,4]
+"slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7":[9,0,1,23,4],
+"slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7":[9,0,1,23,6]
 };

@@ -117,6 +117,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
 <tr class="separator:af916b0aa443255291534c8a9222dd585"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abefda2be23c35c49761c61084c86b936"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#abefda2be23c35c49761c61084c86b936">search_header_num_valid</a> (const char *header, const char *key)</td></tr>
 <tr class="separator:abefda2be23c35c49761c61084c86b936"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefabb4a29a2294c86edc668c06c088b5"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aefabb4a29a2294c86edc668c06c088b5">search_header_num_default</a> (const char *header, const char *key, double value0)</td></tr>
+<tr class="separator:aefabb4a29a2294c86edc668c06c088b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Group all routines that are used to parse values from string that contain key=value pairs. </p>
@@ -435,6 +437,41 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
       </table>
 </div><div class="memdoc">
 <p>Read a number from the header and verify. </p>
+
+</div>
+</div>
+<a id="aefabb4a29a2294c86edc668c06c088b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefabb4a29a2294c86edc668c06c088b5">&#9670;&nbsp;</a></span>search_header_num_default()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double search_header_num_default </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>value0</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read a number from the header and use value0 if not found. </p>
 
 </div>
 </div>

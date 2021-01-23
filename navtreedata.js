@@ -95,19 +95,19 @@ var NAVTREEINDEX =
 "cmath_8h.html#a7fe3b375701efb354d19e28f7d8205d6",
 "dmath_8h.html#a6d616d187ac43db30de304b02ef77842",
 "globals_func_p.html",
-"maos_2moao_8h.html#aaaf77736de33764e12edc12f46b18c64",
-"page95_profiling.html#Profiling",
-"slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7",
-"stfun_8h.html#acb665bf663de60baa366796d561fbeae",
-"structFDPCG__T.html#a9fb7df12e08b7dbe61a764f351b323e7",
-"structMagic.html",
-"structPOWFS__T.html#af05e3e57eed3b132f01d6f07a9df121b",
-"structSIM__CFG__T.html#a452f7e49cf76b011d5f68af53e2476ee",
-"structSTATUS__T.html#a063e2d72f863c1152072886540d6ca56",
-"structdmat.html#a77edc290c9de7c66121724d00fa18324",
-"structrmap__t.html#aa8430be54aad671567a6da1b160afd65",
-"thread_8h.html#acc5e3b3ac8bfc1d3140b074cf961ff98",
-"zmath_8h.html#ad3174aac7d6f105eb2fcf83f1c220dea"
+"maos_2moao_8h.html#af62a4685464fea7bdd37d04c821c3caf",
+"parms_8h.html",
+"smath_8h.html",
+"structAPER__CFG__T.html",
+"structFDPCG__T.html#abefe9064fa1192a3b075bf4555c0a72c",
+"structMagic_3_01double2_01_4.html#aecb40837405ee5b175d05242246731faa23a3592ae9724fa4cd7d272981917626",
+"structPOWFS__T.html#afd0302013032e547054f9431d7aee502",
+"structSIM__CFG__T.html#a5212faa1072d9348edac13ea4e8d9d1a",
+"structSTATUS__T.html#a0bb96bab9feabde8c982579de33b9854",
+"structdmat.html#a96d8072a544deffdd44ce12f0c74ef1a",
+"structrmap__t.html#ae7d2a5dcbd82bda42d42ee23c3117981",
+"thread__pool_8h.html",
+"zmath_8h.html#ad4c1fb7b396f8c2621d44de3749c804b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -67,6 +67,7 @@ var searchData=
   ['search_5ffile',['search_file',['../path_8h.html#a0e3cda5e813f058b64cceb451bf88e64',1,'path.c']]],
   ['search_5fheader',['search_header',['../readstr_8h.html#adf3e8d275430f33c2cd8262fac88cac8',1,'readstr.c']]],
   ['search_5fheader_5fnum',['search_header_num',['../readstr_8h.html#af916b0aa443255291534c8a9222dd585',1,'readstr.c']]],
+  ['search_5fheader_5fnum_5fdefault',['search_header_num_default',['../readstr_8h.html#aefabb4a29a2294c86edc668c06c088b5',1,'readstr.c']]],
   ['search_5fheader_5fnum_5fvalid',['search_header_num_valid',['../readstr_8h.html#abefda2be23c35c49761c61084c86b936',1,'readstr.c']]],
   ['seeding',['seeding',['../sim__utils_8h.html#a77fdd69488c4c7061a098e3d10b09abe',1,'sim_utils.c']]],
   ['senc',['senc',['../smath_8h.html#aca3c5fdfa929c201c8f4f40be26a3118',1,'stmp.c']]],

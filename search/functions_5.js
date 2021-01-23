@@ -14,7 +14,6 @@ var searchData=
   ['fitr',['FitR',['../recon__utils_8h.html#a29d19a65f0634a6fdf5a1e0ece0df03a',1,'recon_utils.c']]],
   ['flen',['flen',['../sys_2misc_8h.html#aacef5bd348c27f93f11a5372a5730f2c',1,'misc.c']]],
   ['fmtime',['fmtime',['../sys_2misc_8h.html#a42a3bc3c2a34efcb0f2e10c7a70fd8ff',1,'misc.c']]],
-  ['fractal_5fscreen',['fractal_screen',['../turbulence_8h.html#aeb514bab0df876eeb65154d87b58e47d',1,'turbulence.c']]],
   ['free_5faper',['free_aper',['../setup__aper_8h.html#aea65e60525339d2921549850d52e8464',1,'setup_aper.c']]],
   ['free_5fhosts',['free_hosts',['../scheduler__client_8h.html#a50dc7ae9fb4bbbc2a86f46e57561b9e2',1,'scheduler_client.c']]],
   ['free_5fparms',['free_parms',['../parms_8h.html#afad950a4f059f347cede7c2f97c7e0bd',1,'setup_parms.c']]],

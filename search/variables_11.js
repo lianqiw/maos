@@ -35,6 +35,7 @@ var searchData=
   ['size',['size',['../structATM__CFG__T.html#a5c949de072c8ee255a86b11f07cdd586',1,'ATM_CFG_T']]],
   ['skip',['skip',['../structdir__t.html#af35bc56c327be387494c9349fd1dc64a',1,'dir_t::skip()'],['../structPOWFS__CFG__T.html#a739bbaabd783dfcd5900399f8cb47a72',1,'POWFS_CFG_T::skip()']]],
   ['skysim',['skysim',['../structSIM__CFG__T.html#a8615676f068e88311d6f774e6cb92354',1,'SIM_CFG_T']]],
+  ['slope',['slope',['../structGENATM__T.html#a67d0346acfd4dfb37b0dfea2d895dca1',1,'GENATM_T']]],
   ['sninfile',['sninfile',['../structPOWFS__CFG__T.html#a77559cb14c04ad5c3f03af083e3e953f',1,'POWFS_CFG_T']]],
   ['sodium',['sodium',['../structPOWFS__T.html#abe8bcc3a88aa34ad34dae69e56c25c45',1,'POWFS_T']]],
   ['split',['split',['../structRECON__CFG__T.html#a08f0d3a4cff587feaf64bb1d0774fcdd',1,'RECON_CFG_T']]],

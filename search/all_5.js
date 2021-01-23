@@ -59,7 +59,6 @@ var searchData=
   ['fr',['FR',['../structFIT__T.html#ae6e756211fb315aa669194a53b862dbd',1,'FIT_T']]],
   ['fractal',['fractal',['../structRECON__T.html#a7e1ef27831e0d41e7ea7e1982d352f9e',1,'RECON_T']]],
   ['fractal_2eh',['fractal.h',['../fractal_8h.html',1,'']]],
-  ['fractal_5fscreen',['fractal_screen',['../turbulence_8h.html#aeb514bab0df876eeb65154d87b58e47d',1,'turbulence.c']]],
   ['fractal_5ft',['FRACTAL_T',['../structFRACTAL__T.html',1,'']]],
   ['free_5faper',['free_aper',['../setup__aper_8h.html#aea65e60525339d2921549850d52e8464',1,'setup_aper.c']]],
   ['free_5fhosts',['free_hosts',['../scheduler__client_8h.html#a50dc7ae9fb4bbbc2a86f46e57561b9e2',1,'scheduler_client.c']]],
@@ -82,7 +81,6 @@ var searchData=
   ['fsurf',['fsurf',['../structrmap__t.html#a8a82dce54716bb5f11ece361ebc64b8c',1,'rmap_t']]],
   ['ftel',['ftel',['../structrmap__t.html#a41840a56fbfdd9eb0a25b4213f466c57',1,'rmap_t']]],
   ['fullatm',['fullatm',['../structDBG__CFG__T.html#aa1d7b489c85e1bc2bb7d3ced1e8b0cd1',1,'DBG_CFG_T']]],
-  ['fun',['fun',['../structATM__CFG__T.html#ae6bfb0a98d8dedaa7c19138872723586',1,'ATM_CFG_T']]],
   ['fused',['fused',['../structDTF__T.html#ad32f72ad19d1f4f2fb6fd34f8d074323',1,'DTF_T']]],
   ['fuseint',['fuseint',['../structSIM__CFG__T.html#a16a3a1b709068ad2f3ed43b343cce6d6',1,'SIM_CFG_T']]],
   ['fundementals',['Fundementals',['../page91_basics.html',1,'page90_devel']]]

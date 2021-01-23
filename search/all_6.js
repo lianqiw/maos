@@ -17,6 +17,8 @@ var searchData=
   ['genotf',['genotf',['../genotf_8h.html#ac43aabf34978fdfbe9837efb0c5d512a',1,'genotf.c']]],
   ['genotf_2eh',['genotf.h',['../genotf_8h.html',1,'']]],
   ['genotf2',['genotf2',['../genotf_8h.html#ad6c2098471265417fd7fdf2de94f579a',1,'genotf.c']]],
+  ['genscreen',['genscreen',['../turbulence_8h.html#a3dbbb50b2cfbf2c2df7dc442407c1f8f',1,'turbulence.c']]],
+  ['genscreen_5fstr',['genscreen_str',['../turbulence_8h.html#abfcf4de914d7418af0b4d0ca4fc10885',1,'turbulence.c']]],
   ['gensei',['gensei',['../genseotf_8h.html#a5b7605cad8168d3a00b8c10faefc9d69',1,'genseotf.c']]],
   ['genselotf',['genselotf',['../genseotf_8h.html#a4ffba9d4d90f4b65147fc4a3440c78d8',1,'genseotf.c']]],
   ['genseotf',['genseotf',['../genseotf_8h.html#a8af32636d2faf44199899565c2f16a72',1,'genseotf.c']]],
