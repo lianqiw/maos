@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -19,9 +19,9 @@
    \page page30_run Run simulations
    \tableofcontents
    \section sect-run Usage
-   
+
    We assume that maos is already in the PATH so we can type "maos" to launch it.
-   
+
    Use the following command to get the help message:
    \verbatim
    maos -h  #will print the help message and exit.
@@ -62,14 +62,14 @@
    MAOS_KEEP_MEM=0      Set to 1 to keep temporary memory between steps
    MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting
    MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info
-   MAOS_LOG_LEVEL=0     Set logging level. -3: error and warning only, 
-							-2:  essential info, -1  useful info, 0:  all info,
-							1:  debugging info, 2: more debugging info, 3: everything.
+   MAOS_LOG_LEVEL=0     Set logging level. -3: error and warning only,
+                            -2:  essential info, -1  useful info, 0:  all info,
+                            1:  debugging info, 2: more debugging info, 3: everything.
 
    \endverbatim
 
    \section sect-config Configuration Files
-   
+
    All user modifiable options are configured through config files with suffix
    \c .conf or key=value in the command line. The supplied default setup files
    are stored in sub-folder \c config/maos. The config files are organized in a
@@ -79,15 +79,15 @@
 
    All the options are in the form of \c key=value. The usually convention is:
    if the entry in `parms` called `parms->wfs.thetax`, the entry in .conf file will
-   be in the form `wfs.thetax=value`. 
+   be in the form `wfs.thetax=value`.
 
    Some of the rules are:
 
    - array values must be embraced by \c [] and separated by \c ,
-   - string are embraced by double or single quotes ('' or "").  
-   - A line ended with \ will be concatenated with the next line. 
-   - Anything after comment string # will be ignored during reading. 
-    
+   - string are embraced by double or single quotes ('' or "").
+   - A line ended with \ will be concatenated with the next line.
+   - Anything after comment string # will be ignored during reading.
+
    The config `key=value` can be specified multiple times for any key, in which
    case the latter value will override the previous value, except when \c
    key+=value is used which causes it to append instead. The software will
@@ -109,14 +109,14 @@
    code development and should not be modified by the end user. Use overriding
    \c .conf files in simulation folders or embed configurations in the command
    line to modify the values.
-    
+
    In the \c config/maos folder, there are a few
    sample \c .conf files that is complete for each configuration:
-    
+
    - \ref mcao_lgs for NFIRAOS mcao simulations (the default),
    - \ref mcao_ngs for NGS mcao simulations
    - \ref scao_lgs for single conjugate LGS simulation
-   - \ref scao_ngs for single conjugate NGS simulation. 
+   - \ref scao_ngs for single conjugate NGS simulation.
    - \ref scao_pwfs for Pyramid WFS NGS simulation.
 
    Each of this file include a few other \c .conf files by specifying \c
@@ -125,16 +125,16 @@
    simulation mode or geometry.
 
    - \ref sim to specify general simulation parameters such as loop gain, number of time steps, etc,
-   - \ref recon to specify reconstruction parameters in closed loop, 
-   - \ref dbg to specify debugging parameters. 
+   - \ref recon to specify reconstruction parameters in closed loop,
+   - \ref dbg to specify debugging parameters.
 
    The following list the exclusive `.conf` files used to specified particular
    set of configurations. Each group should only appear once.
-    
+
    - `atm_*.conf`: set to a different preconfigured turbulence profile.
    - `dm_*.conf`: set deformable mirror configuration.
    - `fov_*.conf`: set the science FoV.
-   - `wfs_*.conf`: set the wfs group type 
+   - `wfs_*.conf`: set the wfs group type
 
    For example, the baseline configuration for TMT MCAO system `mcao_lgs.conf`
    includes `atm_mk13n50p.conf` to specify MK13N median seeing turbulence
@@ -148,7 +148,7 @@
    \section sect-exe Sample Runs
 
    To run predefined AO modes
-   
+
    \verbatim
    maos -o mcao # default is dual conjugate AO, save results to folder mcao
    maos -c mcao_ngs.conf  # NGS MCAO
@@ -156,8 +156,8 @@
    maos -c scao_pwfs.conf # NGS SCAO using PWFS
    maos -c scao_lgs.conf  # LGS SCAO
    \endverbatim
-   
-   To customize 
+
+   To customize
 
    \verbatim
    maos dm_single.conf wfs_lgs_only.conf recon.glao=1 # LGS GLAO
@@ -165,7 +165,7 @@
    maos wfs_lgs_ttf_tt_twfs.conf  # with LGS, TTF, TT, and TWFS
    maos evl_x.conf #evaluate performance along x axis.
    \endverbatim
-   
+
    Change aperture
 
    \verbatim
@@ -179,7 +179,7 @@
    Override keys listed in \c atm_mk13n50p.conf
 
    \verbatim
-   maos atm.r0z=0.1     # change r0 at zenith to 0.1m 
+   maos atm.r0z=0.1     # change r0 at zenith to 0.1m
    maos sim.zadeg=30    # change zenith angle to 30 degrees
    maos atm_single.conf # use single ground layer turbulence
    \endverbatim
@@ -196,18 +196,18 @@
    is a type of WFS. Each type can have multiple WFS.
 
    Adjust the controller
-   
+
    \verbatim
    maos sim.ephi=0.3 #Change gain of the main integrator to 0.3
    \endverbatim
- 
+
    \section advanced Advanced configuration
- 
+
    \subsection sect-surface Specifying Surface OPDs
 
    We can optionally setup one or more static surfaces that cover science fields
    and/or wavefront sensors. Each surface file must contain a 2-d array of the
-   OPD with a header specifying the following keys. If header is not available, 
+   OPD with a header specifying the following keys. If header is not available,
    the OPD is assumed to have 1/64 sampling and centered on the pupil.
 
    \verbatim
@@ -227,14 +227,22 @@
    SURFEVL=[1 1 1 ...] #length: nevl. 1: enabled for this science evaluation direction (assume all 1 if omitted)
    SURFWFS=[1 1 1 ...] #length: nwfs. 1: enabled for this WFS (assume all 1 if ommitted)
    \endverbatim
-    
+
    Use the \c write mex routine, \c writebin.m, or \c aolib.writebin to write the bin file:
-
-       write(OPD, header, 'opd1.bin')
-    
+   \verbatim
+    write(OPD, header, 'opd1.bin')
+   \endverbatim
    Or simply use fits format. Put the list of surface file names in key \c surf.
+   \verbatim
+    maos surf=['opd1.bin','opd2.bin', 'opd3.fits']
+   \endverbatim
 
-       maos surf=['opd1.bin','opd2.bin', 'opd3.fits']
+   It is also possible to specify NCPA with inline configuration:
+   \verbatim
+   maos surf=["'r0=0.1;slope=-4;SURFEVL=1;', 'r0=0.2; slope=-4;SURFWFS=1 1 1 1 1 1 0 0 0'"]
+   maos surf=["'r0=0.1;slope=-4;L0=30;nx=2048;dx=1./64;SURFEVL=1;SURFWFS=0'"]
+   \endverbatim
+   The double quote is necessary here to group the single quoted entries together.
 
    The amplitude map of the telescope can be specified with
    `aper.fnamp=aper.bin` with a similar data format, with OPD replaced by
@@ -304,10 +312,10 @@
    reconstruction) or gradient interaction matrix (GA in least squares
    reconstruction), is used to determine how accurately an actuator is
    sensed/controlled. Activated by
-   
+
        lsr.actslave=1 #or 2, for lsr
        fit.actslave=1 #or 2, for mvr
-   
+
    - \c actslave=1 enables implementation with threshold \c .actthres.  When an
    actuator is outside of the pupil, its coupling coefficient is usually very
    small. When it is below lsr.acthres, its value is slaved to its neighboring
@@ -326,7 +334,7 @@
    powfs0_llt.fnrange. The file should contain additional change (wrt fnprof) of
    sodium height in meters with dimension nx1 or nxnLGS where \c n can be less
    than, equal to or greater than the length of simulation and nLGS is the
-   number of LGS in this powfs (6 for NFIRAOS). 
+   number of LGS in this powfs (6 for NFIRAOS).
 
    The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront.
 

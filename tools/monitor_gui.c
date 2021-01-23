@@ -119,16 +119,21 @@ static void list_update_progress(PROC_T* p){
 		p->iseed_old=p->status.iseed;
 	}*/
 	char stmp[8];
-	snprintf(stmp, 8, "%.2f", step);
-	char tmp[64];
-	if(toth>99){
-		snprintf(tmp, 64, "%d/%d %d/%d %ldh/%ldh", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, toth);
-	} else if(toth>0){
-		snprintf(tmp, 64, "%d/%d %d/%d %ldh%02ld/%ldh%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, restm, toth, totm);
-	} else{
-		snprintf(tmp, 64, "%d/%d %d/%d %02ld:%02ld/%02ld:%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, restm, rests, totm, tots);
+	if(snprintf(stmp, 8, "%.2f", step)>=8){
+		warning_once("format is truncated\n");
 	}
-	
+	char tmp[64];
+	size_t np=0;
+	if(toth>99){
+		np=snprintf(tmp, 64, "%d/%d %d/%d %ldh/%ldh", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, toth);
+	} else if(toth>0){
+		np=snprintf(tmp, 64, "%d/%d %d/%d %ldh%02ld/%ldh%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, restm, toth, totm);
+	} else{
+		np=snprintf(tmp, 64, "%d/%d %d/%d %02ld:%02ld/%02ld:%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, restm, rests, totm, tots);
+	}
+	if(np>=sizeof(tmp)){
+		warning_once("format is truncated\n");
+	}
 	gtk_list_store_set(listall, &iter,
 		COL_STEPT, stmp,
 		COL_STEP, tmp,

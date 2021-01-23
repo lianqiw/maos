@@ -195,10 +195,10 @@ const char* myasctime(void){
 	struct tm am;
 	time(&a);
 	localtime_r(&a, &am);
-	snprintf(st, sizeof(st), "%04d/%02d/%02d %02d:%02d:%02d",
-		am.tm_year+1900, am.tm_mon, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec);
-	//ctime_r(&a, st);
-	//st[strlen(st)-1]='\0';/*remove final \n */
+	if(snprintf(st, sizeof(st), "%04d/%02d/%02d %02d:%02d:%02d",
+		am.tm_year+1900, am.tm_mon, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec)>=(int)sizeof(st)){
+		warning_once("snprintf truncated\n");
+	}
 	return st;
 }
 /**

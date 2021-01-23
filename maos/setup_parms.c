@@ -2018,20 +2018,7 @@ static void setup_parms_postproc_atm(PARMS_T* parms){
 	if(!parms->atm.frozenflow||parms->dbg.atm){
 		parms->atm.r0evolve=0;/*disable r0 evolution*/
 	}
-	if(!parms->dbg.atm){
-		switch(parms->atm.method){
-		case 0:
-			parms->atm.fun=vonkarman_screen;
-			break;
-		case 1:
-			parms->atm.fun=fractal_screen;
-			break;
-		case 2:
-			parms->atm.fun=biharmonic_screen;
-		}
-	} else{
-		parms->atm.fun=NULL;
-	}
+	
 	if(!parms->atm.frozenflow){
 		if(parms->sim.end>parms->sim.start+10){
 			warning("Disable turbulence file based sharing in open loop nonfrozenflow simulation\n");

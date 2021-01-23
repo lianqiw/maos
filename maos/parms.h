@@ -45,7 +45,6 @@ typedef struct ATM_CFG_T{
     dmat *size; /**<size of atm in meter, [0 0]: automatic*/
     lmat *overx;  /**<maximum pixel distance in x direction the beam can be without wrapping*/
     lmat *overy;  /**<maximum pixel distance in y direction the beam can be without wrapping*/
-    mapcell *(*fun)(GENATM_T*); /**<Points to the function used to generated atmosphere. (derived)*/
     int nps;      /**<number of phase screens*/
     int wdrand;   /**<randomize wind direction*/
     int iground;  /**<index into the ground layer*/

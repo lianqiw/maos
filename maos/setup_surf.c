@@ -192,10 +192,16 @@ setup_surf_perp(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* rec
 	for(int isurf=0; isurf<parms->nsurf; isurf++){
 		char* fn=parms->surf[isurf];
 		if(!fn) continue;
-		info2("Loading surface OPD from %s\n", fn);
-		map_t* surf=mapread("%s", fn);
-		if(surf->ny<2||surf->nx<2){
-			error("%s: size is %ldx%ld, we expect a 2d map\n", fn, surf->nx, surf->ny);
+		map_t *surf=0;
+		if(zfexist("%s",fn)){
+			info2("Loading surface OPD from %s\n", fn);
+			surf=mapread("%s", fn);
+			if(surf->ny<2||surf->nx<2){
+				error("%s: size is %ldx%ld, we expect a 2d map\n", fn, surf->nx, surf->ny);
+			}
+		}else{
+			info2("Generating surface OPD from %s\n", fn);
+			surf=genscreen_str(fn);
 		}
 		//writebin((dmat*)surf, "surf_%d", isurf);
 		const char* strname=search_header(surf->header, "SURFNAME");

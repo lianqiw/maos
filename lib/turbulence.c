@@ -25,14 +25,7 @@
 #include "turbulence.h"
 #include "fractal.h"
 #include "accphi.h"
-/**
-   Contains routines to generate atmospheric turbulence screens
-*/
-enum{
-	T_VONKARMAN=0,
-	T_FRACTAL,
-	T_BIHARMONIC
-};
+
 
 /**
  * hash the data to get a unique file name
@@ -56,10 +49,19 @@ static char* create_fnatm(GENATM_T* data){
 	char diratm[PATH_MAX];
 	snprintf(diratm, PATH_MAX, "%s/atm", CACHE);
 	if(!exist(diratm)) mymkdir("%s", diratm);
-	const char* types[]={"vonkarman","fractal","biharmonic"};
+	const char *prefix=NULL;
+	if(fabs(data->slope+11./3.)<EPS){
+		prefix="vonkarman";
+	}else if(fabs(data->slope+4.)<EPS){
+		prefix="biharmonic";
+	}else if(data->slope==0){
+		prefix="fractal";
+	}else{
+		prefix="spect";
+	}
 	char fnatm[PATH_MAX+100];
 	snprintf(fnatm, sizeof(fnatm), "%s/%s_%ld_%ldx%ld_%g_%ud.bin",
-		diratm, types[data->method], data->nlayer, data->nx, data->ny, data->dx, key);
+		diratm, prefix, data->nlayer, data->nx, data->ny, data->dx, key);
 	long avail=available_space(diratm);
 	long need=data->nx*data->ny*data->nlayer*sizeof(real)+500000000;
 	if(avail>need){
@@ -74,18 +76,8 @@ static char* create_fnatm(GENATM_T* data){
  * NULL. Handles large screens well without using the full storage.
  */
 static void spect_screen_do(zfarr* fc, GENATM_T* data){
-	real slope=0;
-	switch(data->method){
-	case T_VONKARMAN:
-		slope=-11./3.;
-		break;
-	case T_BIHARMONIC:
-		slope=-4.;
-		break;
-	default:
-		error("Invalid call\n");
-	}
-
+	real slope=data->slope;
+	if(!slope) slope=data->slope=-11./3.;
 	rand_t* rstat=data->rstat;
 	real* wt=data->wt;
 	int nlayer=data->nlayer;
@@ -218,13 +210,19 @@ static void fractal_screen_do(zfarr* fc, GENATM_T* data){
 		OMPTASK_END;
 	}
 }
-
+static void genscreen_do(zfarr* fc, GENATM_T *data){
+	if(fabs(data->slope+1)<EPS){
+		fractal_screen_do(fc, data);
+	}else{
+		spect_screen_do(fc, data);
+	}
+}
 /**
  * Generates multiple screens from spectrum. Note that if data->share=1, the
  * atmosphere will be different from data->share=0 due to different algorithms
  * used.
  */
-static mapcell* create_screen(GENATM_T* data, void (*atmfun)(zfarr* fc, GENATM_T* data)){
+mapcell* genscreen(GENATM_T* data){
 	mapcell* screen;
 	long nlayer=data->nlayer;
 	char* fnatm=NULL;
@@ -246,7 +244,7 @@ static mapcell* create_screen(GENATM_T* data, void (*atmfun)(zfarr* fc, GENATM_T
 					char fntmp[PATH_MAX];
 					snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnatm);
 					zfarr* fc=zfarr_init(nlayer, 1, "%s", fntmp);
-					atmfun(fc, data);
+					genscreen_do(fc, data);
 					zfarr_close(fc);
 					if(rename(fntmp, fnatm)){
 						error("Unable to rename %s to %s\n", fntmp, fnatm);
@@ -270,34 +268,38 @@ static mapcell* create_screen(GENATM_T* data, void (*atmfun)(zfarr* fc, GENATM_T
 			screen->p[ilayer]=mapnew(nx, ny, dx, dx);
 		}
 		data->screen=screen;
-		atmfun(0, data);
+		genscreen_do(0, data);
+		data->screen=0;
 	}
 	return screen;
 }
 /**
- *  Generate vonkarman screens from turbulence statistics.
+ * Generate screen according to a header with the following keys
+ * r0
+ * L0
+ * dx
+ * slope
+ * nx
+ * seed
  */
-mapcell* vonkarman_screen(GENATM_T* data){
-	data->method=T_VONKARMAN;
-	mapcell* screen=create_screen(data, spect_screen_do);
-	return screen;
-}
-
-/**
- * Generate screens from PSD with power of 12/3 instead of 11/3.
- */
-mapcell* biharmonic_screen(GENATM_T* data){
-	data->method=T_BIHARMONIC;
-	mapcell* screen=create_screen(data, spect_screen_do);
-	return screen;
-}
-
-/**
- * Generate Fractal screens. Not good statistics.
- */
-mapcell* fractal_screen(GENATM_T* data){
-	data->method=T_FRACTAL;
-	return create_screen(data, fractal_screen_do);
+map_t *genscreen_str(const char *header){
+	static real seed=0;//avoid using the same seed
+	real r0=search_header_num_valid(header, "r0");
+	real L0=search_header_num_default(header, "L0", 30);
+	real dx=search_header_num_default(header, "dx", 1./64.);
+	real slope=search_header_num_default(header, "slope", -11./3.);
+	real nx=search_header_num_default(header, "nx", 2048);
+	seed=search_header_num_default(header, "seed", seed+1);
+	
+	rand_t rstat;
+	seed_rand(&rstat, (int)seed);
+	real wt=1;
+	GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
+	mapcell* screen=genscreen(&cfg);
+	map_t *out=mapref(screen->p[0]);
+	out->header=strdup(header);
+	cellfree(screen);
+	return out;
 }
 /**
    A simpler interface to gerate a single screen.
@@ -306,8 +308,8 @@ map_t* genatm_simple(real r0, real L0, real dx, long nx){
 	rand_t rstat;
 	seed_rand(&rstat, 1);
 	real wt=1.;
-	GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, nx, nx, 1, 0, 0, 0, 0, 0};
-	mapcell* screens=vonkarman_screen(&cfg);
+	GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, -11./3., nx, nx, 1, 0, 0, 0, 0};
+	mapcell* screens=genscreen(&cfg);
 	map_t* out=mapref(screens->p[0]);
 	cellfree(screens);
 	return out;

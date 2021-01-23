@@ -184,18 +184,19 @@ if test "$use_release" = "yes" ;then
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
-OPTScommon=
-if test "${USER}" = "lianqiw" ;then
-    OPTScommon+=" -Wshadow -Wall -Wextra "
-    #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
-fi
+#OPTScommon=
+#if test "${USER}" = "lianqiw" ;then
+#    OPTScommon+=" -Wshadow -Wall -Wextra "
+#    #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
+#fi
 LDEXE=
 OPTS=
-COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-unknown-pragmas"
+COMMON_ALL="-Wall -Wshadow -Wextra " 
+#COMMON_ALL+=" -Wno-missing-braces -Wno-unknown-pragmas"
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-COMMON_GCC="-fms-extensions -static-libgcc -Wno-missing-field-initializers -Wno-format-truncation"
+#COMMON_GCC="-fms-extensions -static-libgcc -Wno-missing-field-initializers -Wno-format-truncation"
 #COMMON_GCC+=" -Wno-deprecated-declarations "
 #COMMON_CLANG="-Wno-deprecated-declarations " #"-Qunused-arguments "
 
@@ -224,8 +225,8 @@ case "$CN" in
 	    minor=${CC_VERSION#*.}
 	    minor=${minor%%.*}
 	    if test $major -lt 11 ;then
-		AC_MSG_ERROR([OpenMP is not supported by ICC $CC_VERSION])
-		unset OPENMP_CFLAGS
+			AC_MSG_ERROR([OpenMP is not supported by ICC $CC_VERSION])
+			unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
@@ -236,29 +237,27 @@ case "$CN" in
 	    major=${CC_VERSION%%.*}
 	    minor=${CC_VERSION#*.}
 	    if test $minor = $CC_VERSION ;then
-		minor=0
+			minor=0
 	    else
-		minor=${minor%%.*}
+			minor=${minor%%.*}
 	    fi
 	    echo major=$major minor=$minor
 	    if test "$major" -lt 4 ;then
-		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
+			AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
-#           if test "$major" -gt 4 -o "$minor" -ge 2 ;then
-#	        OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
-#	    fi
+
 	    #GCC introduced openmp task in 4.4
 	    if test $major -le 4 -a $minor -le 4 ;then
-		AC_MSG_WARN([OpenMP is not supported by GCC $CC_VERSION])
-		unset OPENMP_CFLAGS
+			AC_MSG_WARN([OpenMP is not supported by GCC $CC_VERSION])
+			unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
     CLANG)
-	CC_VERSION=$($CC -dumpversion)
-	if test "$system" = "apple" ;then
-	    CFLAGS+=" -stdlib=libc++"
-	fi
+		CC_VERSION=$($CC -dumpversion)
+		if test "$system" = "apple" ;then
+			CFLAGS+=" -stdlib=libc++"
+		fi
 	;;
     *)
 	;;	
@@ -291,8 +290,6 @@ OPTScc="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
 echo OPTScc=$OPTScc
 unset optname1 optname2 optname3 optname4
 
-OPTSextra=""
-
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
@@ -306,45 +303,45 @@ mkl_avail="no"
 echo host_os=$host_os
 case "$host_os" in
     *linux*)
-	AM_CONDITIONAL(LINUX, true)
-	LDEXE+=" -lrt" #need real time library.
-	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
-	CFLAGS+=" -fPIC"
-	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
-	if test "$use_release" = "yes" ;then
-	    CFLAGS+=" -D_GLIBC_2_5_SOURCE"
-	fi
-	if test "${host_cpu}" = "x86_64" ;then
-	    libsuffix="64"
-	else
-	    libsuffix="32"
-	fi
-	mkl_avail="yes"
-	system="linux"
-	ldsuffix="so"
+		AM_CONDITIONAL(LINUX, true)
+		LDEXE+=" -lrt" #need real time library.
+		LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
+		CFLAGS+=" -fPIC"
+		CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
+		if test "$use_release" = "yes" ;then
+			CFLAGS+=" -D_GLIBC_2_5_SOURCE"
+		fi
+		if test "${host_cpu}" = "x86_64" ;then
+			libsuffix="64"
+		else
+			libsuffix="32"
+		fi
+		mkl_avail="yes"
+		system="linux"
+		ldsuffix="so"
 	;;
     *darwin*)
-	AM_CONDITIONAL(DARWIN, true)
-	CFLAGS+=" -fPIC"
-	CFLAGS_EXTRA=
-	mkl_avail="no"
-	libsuffix=fat
-	system="apple"
-	ldsuffix="dylib"
-	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	if test "$use_release" = "yes" ;then
-	    CFLAGS+=" -mmacosx-version-min=10.7"
-	fi
-	if test "$CN" = "CLANG" ;then
-	    CFLAGS+=" -stdlib=libc++"
-	fi
-	#MACOS supports openmp with separate omp library
-	#AC_CHECK_LIB([omp],[omp_set_num_threads],[OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+="-lomp" libtool_fix_openmp=1],[])
+		AM_CONDITIONAL(DARWIN, true)
+		CFLAGS+=" -fPIC"
+		CFLAGS_EXTRA=
+		mkl_avail="no"
+		libsuffix=fat
+		system="apple"
+		ldsuffix="dylib"
+		#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
+		if test "$use_release" = "yes" ;then
+			CFLAGS+=" -mmacosx-version-min=10.7"
+		fi
+		if test "$CN" = "CLANG" ;then
+			CFLAGS+=" -stdlib=libc++"
+		fi
+		#MACOS supports openmp with separate omp library
+		#AC_CHECK_LIB([omp],[omp_set_num_threads],[OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+="-lomp" libtool_fix_openmp=1],[])
 	;;
     *bsd*)
-	AM_CONDITIONAL(BSD, true)
-	system="bsd"
-	ldsuffix="so"
+		AM_CONDITIONAL(BSD, true)
+		system="bsd"
+		ldsuffix="so"
 	;;
     *cygwin*|*mingw*)
 	AM_CONDITIONAL(WIN, true)
@@ -749,7 +746,7 @@ AM_CONDITIONAL(CAIRO, test x$has_cairo = x1)
 AM_CONDITIONAL(NOTIFY, test x$has_notify = x1)
 
 AC_CHECK_HEADERS([unistd.h])
-OPTS+=" $OPTScommon $OPTScc $OPTSprof $OPTSextra"
+OPTS+=" $OPTScommon $OPTScc $OPTSprof "
 
 if test "$with_matlab" != "no" ;then
     if test ${MEXDIR:0:1} = '~' ;then
@@ -928,7 +925,7 @@ if test "$with_cuda" != "no" ;then
     fi
     #CUDAOPT+=" -std=c++11"
     CUDAOPT+=" -Wno-deprecated-gpu-targets"
-    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS -Wno-unused-parameter"
+    CCBINOPT="$OPTScommon $OPTSprof -fPIC $CFLAGS -Wno-unused-parameter"
     CCBINOPT="${CCBINOPT/-fpermissive/}"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     if $CCBIN -v 2>&1 |grep clang ;then
@@ -1024,7 +1021,6 @@ AC_SUBST(LAPACK)
 AC_SUBST(LDEXE)
 AC_SUBST(LDEXE_FULL)
 AC_SUBST(LDEXE_MAOS)
-AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 AC_SUBST(LIBS)

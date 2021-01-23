@@ -31,6 +31,7 @@ typedef struct GENATM_T{
     real dx;       /**<The sampling*/
     real fmin;     /**<Minimum spatial frequency*/
     real fmax;     /**<Maximum spatial frequency*/
+    real slope;    /**<Power slope of PSD. -11/3 for Von Karman, -4 for Biharmonic. -1 for fractal. */
     long nx;         /**<Number of pixels along x*/
     long ny;         /**<Number of pixels along y*/
     long nlayer;     /**<The number of layers*/
@@ -39,14 +40,12 @@ typedef struct GENATM_T{
     dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)=beta*f^alpha. [alpha, beta, minfreq, maxfreq]*/
     /*The following are private data. do not set when call. */
     mapcell *screen;  /**<The destination screen pointer*/
-    long method;     /**<The method*/
 }GENATM_T;
 map_t *genatm_simple(real r0, real L0, real dx, long nx);
 dmat *genatm_loc(loc_t *loc, real r0, real L0);
 //mapcell* genatm_from_spect(GENATM_T *data);
-mapcell* vonkarman_screen(GENATM_T *data);
-mapcell* biharmonic_screen(GENATM_T *data);
-mapcell *fractal_screen(GENATM_T *data);
+mapcell* genscreen(GENATM_T *data);
+map_t *genscreen_str(const char *header);
 dmat* turbcov(dmat *r, real rmax, real r0, real L0);
 void spatial_psd(dmat **out, long nx, long ny, real dx, real strength, real L0,
 		 real fmin, real fmax, real slope, real power);

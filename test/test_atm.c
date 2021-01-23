@@ -42,6 +42,7 @@ int main(){
     data.L0=L0;
     data.wt=wt;
     data.nlayer=nlayer;
-    mapcell *map=vonkarman_screen(&data);
+    data.slope=-11./3.;
+    mapcell *map=genscreen(&data);
     writebin(map, "atm.bin");
 }

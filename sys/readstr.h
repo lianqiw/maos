@@ -49,4 +49,4 @@ void readstr_intarr_relax(int **ret, int len, const char *data);
 const char *search_header(const char *header, const char *key);
 double search_header_num(const char *header, const char *key);
 double search_header_num_valid(const char *header, const char *key);
-
+double search_header_num_default(const char *header, const char *key, double value0);

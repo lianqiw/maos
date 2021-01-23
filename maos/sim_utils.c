@@ -55,10 +55,23 @@ static mapcell* genatm_do(SIM_T* simu){
 				dbg("Scaling turbulence screen spatially\n");
 				gs->r0logpsds=atm->r0logpsds;
 			}
+			switch(parms->atm.method){
+			case 0:
+				gs->slope=-11./3.;
+				break;
+			case 1:
+				gs->slope=-1.;
+				break;
+			case 2:
+				gs->slope=-4.;
+				break;
+			default:
+				gs->slope=parms->atm.method;
+			}
 		}
 		info("Generating Atmospheric Screen...\n");
 		tic;
-		screens=parms->atm.fun(gs);
+		screens=genscreen(gs);
 		toc("Atmosphere ");
 	} else{
 	/*

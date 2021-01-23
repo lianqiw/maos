@@ -137,13 +137,13 @@ double readstr_num(const char* data, /**<[in] Input string*/
 	char** endptr0    /**<[out] Location in Input string after readed number.*/
 ){
 	if(!data||strlen(data)==0){
-		error("{%s}: Unable to parse for a number\n", data);
+		warning("{%s}: Unable to parse for a number\n", data);
 		return NAN;
 	}
 	char* endptr;
 	double res=strtod(data, &endptr);
 	if(data==endptr){
-		error("{%s}: Unable to parse for a number\n", data);
+		warning("{%s}: Unable to parse for a number\n", data);
 		return NAN;
 	}
 	while(isspace(endptr[0])) endptr++;
@@ -337,6 +337,7 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 		/*parse the string for a floating point number.  */
 		double res=readstr_num(startptr, (char**)&endptr);
 		startptr=endptr;
+		if(isnan(res)) break;
 		/*apply the factors appear before or after [] */
 		if(power==1){
 			res=fact*res;
@@ -528,6 +529,16 @@ double search_header_num_valid(const char* header, const char* key){
 	double val=search_header_num(header, key);
 	if(!(val==val)){
 		error("{%s}: Unable to parse a number for %s from %s\n", header, key, search_header(header, key));
+	}
+	return val;
+}
+/**
+   Read a number from the header and use value0 if not found.
+*/
+double search_header_num_default(const char* header, const char* key, double value0){
+	double val=search_header_num(header, key);
+	if(!(val==val)){
+		val=value0;
 	}
 	return val;
 }
