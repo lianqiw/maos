@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2020 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
