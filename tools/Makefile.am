@@ -1,7 +1,8 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDOPTS) $(LDEXE)
-ICONS=icon-clear.png icon-error.png icon-monitor.png icon-save.png  icon-waiting.png \
-icon-connect.png icon-finished.png icon-play.png  icon-skip.png
+ICONS=icon-clear.png icon-draw.png icon-finished.png icon-play.png icon-skip.png \
+icon-connect.png icon-error.png icon-monitor.png icon-save.png icon-waiting.png icon-cancel.png
+
 
 noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html gtk3-css.h $(ICONS) 
 
@@ -34,7 +35,7 @@ if USE_SCHEDULER
 PROGS+=../bin/monitor 
 ___bin_monitor_SOURCES=monitor_gui.c monitor.c monitor_thread.c resources.c
 ___bin_monitor_CFLAGS=$(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
-___bin_monitor_LDADD=../sys/libaosys.la  $(GTK_LIBS) $(MAC_LIBS) #$(LDOPTS)
+___bin_monitor_LDADD=../sys/libaosys.la $(GTK_LIBS) $(MAC_LIBS) #$(LDOPTS)
 if NOTIFY
 ___bin_monitor_CFLAGS+=$(NOTIFY_CFLAGS) -DWITH_NOTIFY=1
 ___bin_monitor_LDADD+=$(NOTIFY_LIBS)
@@ -52,3 +53,6 @@ ___bin_mvm_cpu_SOURCES=mvm_cpu.c
 ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
 bin_PROGRAMS=$(PROGS)
+
+resources.c:$(ICONS)
+	@cd $(srcdir) && glib-compile-resources resources.xml --generate-source --target=resources.c

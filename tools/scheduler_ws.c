@@ -431,8 +431,6 @@ int ws_start(short port){
 	/*this is critical. otherwise UTF-8 error in client.*/
 	info.gid=-1;
 	info.uid=-1;
-	info.ka_time=100;
-	info.ka_interval=60;
 	context=lws_create_context(&info);
 	if(!context){
 		lwsl_err("libwebsocket init failed\n");
@@ -447,18 +445,19 @@ void ws_end(){
 		lwsl_notice("libwebsockets-test-server exited cleanly\n");
 	}
 }
-int ws_service(){
-	/*returns immediately if no task is pending.*/
-	if(context){
-		int ans=lws_service(context, 0);
+//Run in a separate thread.
+void* ws_service(void* data){
+	ws_start((short)(long)data);
+	/*returns immediately if no task is pending when timeout is 0 ms.*/
+	while(context){
+		int ans=lws_service(context, 100000000);
 		if(ans<0){
 			ws_end();
 			context=0;
 		}
-		return ans;
-	} else{
-		return -1;
 	}
+	ws_end();
+	return NULL;
 }
 void ws_push(const char* in, int len){
 	if(!context) return;

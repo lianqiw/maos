@@ -3,6 +3,7 @@
     <gresource prefix="/maos">
     	<file>icon-clear.png</file>
 		<file>icon-connect.png</file>
+		<file>icon-cancel.png</file>
 		<file>icon-draw.png</file>
 		<file>icon-error.png</file>
 		<file>icon-finished.png</file>

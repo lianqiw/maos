@@ -655,9 +655,6 @@ int main(int argc, char* argv[]){
 	}
 #endif
 	gtk_init(&argc, &argv);
-#if MAC_INTEGRATION
-	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-#endif
 #if WITH_NOTIFY
 	if(!notify_init("AOS Notification")){
 		notify_daemon=0;
@@ -684,10 +681,10 @@ int main(int argc, char* argv[]){
 	gdk_color_parse("#FFFFAB", &color_even);
 	gdk_color_parse("#FFFFFF", &color_odd);
 #endif
-	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-main.png", NULL);
+	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-monitor.png", NULL);
 	icon_finished=gdk_pixbuf_new_from_resource("/maos/icon-finished.png", NULL);
-	icon_failed=gdk_pixbuf_new_from_resource("/maos/icon-failed.png", NULL);
-	icon_running=gdk_pixbuf_new_from_resource("/maos/icon-running.png", NULL);
+	icon_failed=gdk_pixbuf_new_from_resource("/maos/icon-error.png", NULL);
+	icon_running=gdk_pixbuf_new_from_resource("/maos/icon-play.png", NULL);
 	icon_waiting=gdk_pixbuf_new_from_resource("/maos/icon-waiting.png", NULL);
 	icon_cancel=gdk_pixbuf_new_from_resource("/maos/icon-cancel.png", NULL);
 	icon_save=gdk_pixbuf_new_from_resource("/maos/icon-save.png", NULL);
@@ -697,7 +694,6 @@ int main(int argc, char* argv[]){
 	create_status_icon();
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), "MAOS Monitor");
-
 	gtk_window_set_icon(GTK_WINDOW(window), icon_main);
 
 #if GTK_MAJOR_VERSION<3
@@ -862,6 +858,7 @@ int main(int argc, char* argv[]){
 	}
 	gtk_widget_show_all(window);
 #if MAC_INTEGRATION
+	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	//g_signal_connect(theApp,"NSApplicationDidBecomeActive", G_CALLBACK(status_icon_on_click), GINT_TO_POINTER(1));//useless
 	gtkosx_application_ready(theApp);

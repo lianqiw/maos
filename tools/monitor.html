@@ -1,92 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-	<meta charset=utf-8 http-equiv="Content-Language" content="en"/>
+
+<head>
+	<meta charset=utf-8 http-equiv="Content-Language" content="en" />
+	<link rel="icon" href="icon-monitor.png">
 	<title>MAOS Monitor</title>
 	<style type="text/css">
-	 .title { 
-	     font-size:24pt; 
-	     font: Arial; 
-	     font-weight:normal; 
-	     text-align:center; 
-	     color:#000; 
-	 }
-	 
-	 table.monitor{
-	     border-spacing:0 0;
-	     border-style:solid;
-	     border-color:black;
-	     border-width:2px 1px 1px 2px;
-	     table-layout:fixed;
-	     max-width:100%;
-	 }
-	 table.monitor tr td,th
-	 {
-	     border-width:0px 1px 1px 0;
-	     border-style:solid;
-	     border-color:#AAA;
-	     vertical-align:top;
-	     white-space:nowrap;
-	 }
-	 table.monitor tr th{
-	     border-width:0px 1px 1px 0;
-	     text-align: center;
-	 }
-	 table.monitor tr:nth-child(odd){
-	     background-color:#EEE
-	 }
-	 table.monitor tr .expandable{
-	     width:100%;
-	     white-space:normal;
-	     text-align:left;
-	 }
-	 div.progress {
-	     background: white;
-	     position: relative;
-	     text-align:left;
-	 }
-	 div.bar {
-	     background: #10DD10;
-	     color: white;
-	     height: 20px;
-	     vertical-align:middle
-	 } 
-	 span.bar {
-	     position: absolute;
-	     top: 0px;
-	     vertical-align:middle
-	     z-index: 2;
-	     color: #000;
-	     text-align: center;
-	     width: 100%;
-	 }
+		html {
+			font: Arial;
+		}
 
-	 /* for tab*/
-	 {
-	     -webkit-box-sizing: border-box;
-	     -moz-box-sizing: border-box;
-	     box-sizing: border-box;
-	 }
-	 .tabs {
-	     width: 100%;
-	     margin: auto;
-	     overflow: hidden;   
-	     background: #BFBFBF;
-	 }
-	 .tabs ul {
-	     list-style: none;
-	     overflow: hidden;
-	     padding: 0;
-	     margin: 0;      
-	 }
-	 .tabs ul li {
-	     padding: 2 0;
-	     display: inline;
-	     cursor: pointer;
-	 }
-	 /*.tabhost {*/
-	 .tabs ul li {
-	     /*color: #444444;
+		.title {
+			font-size: 24pt;
+			font: Arial;
+			font-weight: normal;
+			text-align: center;
+			color: #000;
+		}
+
+		table.monitor {
+			border-spacing: 0 0;
+			border-style: solid;
+			border-color: black;
+			border-width: 2px 1px 1px 2px;
+			table-layout: fixed;
+			max-width: 100%;
+		}
+
+		table.monitor tr td,
+		th {
+			border-width: 0px 1px 1px 0;
+			border-style: solid;
+			border-color: #AAA;
+			vertical-align: top;
+			white-space: nowrap;
+		}
+
+		table.monitor tr th {
+			border-width: 0px 1px 1px 0;
+			text-align: center;
+		}
+
+		table.monitor tr:nth-child(odd) {
+			background-color: #EEE
+		}
+
+		table.monitor tr .expandable {
+			width: 100%;
+			white-space: normal;
+			text-align: left;
+		}
+
+		div.progress {
+			background: white;
+			position: relative;
+			text-align: left;
+		}
+
+		div.bar {
+			background: #4885DD;
+			color: white;
+			height: 20px;
+			vertical-align: middle
+		}
+
+		span.bar {
+			position: absolute;
+			top: 0px;
+			vertical-align: middle;
+			z-index: 2;
+			color: #000;
+			text-align: center;
+			width: 100%;
+		}
+
+		/* for tab*/
+			{
+			-webkit-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			box-sizing: border-box;
+		}
+
+		.tabs {
+			width: 100%;
+			margin: auto;
+			overflow: hidden;
+			background: #BFBFBF;
+		}
+
+		.tabs ul {
+			list-style: none;
+			overflow: hidden;
+			padding: 0;
+			margin: 0;
+		}
+
+		.tabs ul li {
+			padding: 2 0;
+			display: inline;
+			cursor: pointer;
+		}
+
+		/*.tabhost {*/
+		.tabs ul li {
+			/*color: #444444;
 	     background:#gray;
 	     float: left;
 	     font-weight:bold;   
@@ -97,22 +114,25 @@
 	     border-left:1px solid #d9d9d9;
 	     border-bottom:1px solid #d9d9d9;
 */
-	     border:none;
-	     outline: none;
-	     padding: 5px 8px;
-	     background: #BFBFBF;
-	     cursor: pointer;
-	     font-size: 14px;
-	 }
-	 .tabs ul li:hover, .tabs ul li.active{
-	     /*.tabs li button:hover, .active {*/
-	     color: #7d7d7d; 
-	     background:#EFEFEF;
-	 }
-	 /*.tabs li:first-child button {
+			border: none;
+			outline: none;
+			padding: 5px 8px;
+			background: #BFBFBF;
+			cursor: pointer;
+			font-size: 14px;
+		}
+
+		.tabs ul li:hover,
+		.tabs ul li.active {
+			/*.tabs li button:hover, .active {*/
+			color: #7d7d7d;
+			background: #EFEFEF;
+		}
+
+		/*.tabs li:first-child button {
 	     border-left:none;
 	 }*/
-	 /*
+		/*
 	 .tabs li button.active {
 	     background:#FFFFFF;
 	     border:none;
@@ -130,15 +150,17 @@
 	 }
 */
 	</style>
-    </head>
+</head>
 
-    <body>
+<body>
 	<header></header>
 	<article>
-	    <table width="100%">
-		<tr><td class="title">MAOS Monitor</td></tr>
-	    </table>
-	    <!--
+		<table width="100%">
+			<tr>
+				<td class="title">MAOS Monitor</td>
+			</tr>
+		</table>
+		<!--
 	    <table>
 		<tr>
 		    <td><button onclick="clear_all(0)">Clear Finished</button></td>
@@ -150,393 +172,411 @@
 		</tr>
 	    </table>
 	    -->
-	    <div class="tabs">
-		<ul id="tab_hosts">
-		     <li><span onclick="clear_all(0)">Clear Finished</span></li>
-		    <li><span onclick="clear_all(1)">Clear Skipped</span></li>
-		    <li><span onclick="clear_all(2)">Clear Crashed</span></li>
-		    <li><span onclick="kill_all()">Kill All</span></li>
-		    <li><input id="hostname_input"></li>
-		    <li><span onclick="add_host()">Add host</span></li>
-		</ul>
-	    </div>
+		<div class="tabs">
+			<ul id="tab_hosts">
+				<li><span onclick="clear_all(0)">Clear Finished</span></li>
+				<li><span onclick="clear_all(1)">Clear Skipped</span></li>
+				<li><span onclick="clear_all(2)">Clear Crashed</span></li>
+				<li><span onclick="kill_all()">Kill All</span></li>
+				<li><input id="hostname_input"></li>
+				<li><span onclick="add_host()">Add host</span></li>
+			</ul>
+		</div>
 	</article>
-	
+
 	<script>
-	 var hostname;//current active hostname
-	 function notify(msg, host, iconurl){
-	     if(!("Notification" in window)){
-		 return;
-	     } else if(Notification.permission==="granted"){
-		 notification=new Notification(msg, {tag:'maos_'+host, icon:iconurl});
-	     } else if(Notification.permission!=="denied"){
-		 Notification.requestPermission(function (permission){
-		     if(permission==="granted"){
-			 notification=new Notification(msg, {tag:'maos_'+host, icon:iconurl});
-		     }
-		 });
-	     }
-	 }
-	 var socket_lms={};
-	 function clear_all(kind){
-	     var joblist=document.getElementById("joblist_"+hostname.split(":")[0]);
-	     cmd=[];
-	     for (irow=1; irow<joblist.rows.length; irow++){
-                 var status=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
-		 var timing=joblist.rows[irow].cells[cols.TIMING].innerHTML;
-                 if((status==11 && kind==0)|| (timing=='Skipped') || (status>11 && kind==2)){
-                     var pid=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
-		     cmd[cmd.length]=pid+"&REMOVE;";
-	         }
-	     }
-	     for(icmd=0; icmd<cmd.length; icmd++){
-		 socket_lms[hostname].send(cmd[icmd]);
-	     }
-	 }
-	 function kill_all(){
-	     if(!window.confirm("Kill all jobs?")){
-	         return;
-	     }
-	     cmd=[];
-	     var joblist=document.getElementById("joblist_"+hostname.split(":")[0]);
-	     for (irow=1; irow<joblist.rows.length; irow++){
-                 var status=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
-                 var pid=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
-                 if(status<10){
-		     cmd[cmd.length]=pid+"&KILL;";
-	         }
-	     }
-	     for(icmd=0; icmd<cmd.length; icmd++){
-		 socket_lms[hostname].send(cmd[icmd]);
-	     }
-	 }
+		var hostname;//current active hostname
+		document.getElementById("hostname_input").addEventListener("keyup", function (event) {
+			if (event.key === "Enter") {
+				add_host()
+			}
+		})
+		function notify(msg, host, iconurl) {
+			if (!("Notification" in window)) {
+				return;
+			} else if (Notification.permission === "granted") {
+				notification = new Notification(msg, { tag: 'maos_' + host, icon: iconurl });
+			} else if (Notification.permission !== "denied") {
+				Notification.requestPermission(function (permission) {
+					if (permission === "granted") {
+						notification = new Notification(msg, { tag: 'maos_' + host, icon: iconurl });
+					}
+				});
+			}
+		}
+		var socket_lms = {};
+		function clear_all(kind) {
+			var joblist = document.getElementById("joblist_" + hostname.split(":")[0]);
+			cmd = [];
+			for (irow = 1; irow < joblist.rows.length; irow++) {
+				var status = joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
+				var timing = joblist.rows[irow].cells[cols.TIMING].innerHTML;
+				if ((status == 11 && kind == 0) || (timing == 'Skipped') || (status > 11 && kind == 2)) {
+					var pid = joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
+					cmd[cmd.length] = pid + "&REMOVE;";
+				}
+			}
+			for (icmd = 0; icmd < cmd.length; icmd++) {
+				socket_lms[hostname].send(cmd[icmd]);
+			}
+		}
+		function kill_all() {
+			if (!window.confirm("Kill all jobs?")) {
+				return;
+			}
+			cmd = [];
+			var joblist = document.getElementById("joblist_" + hostname.split(":")[0]);
+			for (irow = 1; irow < joblist.rows.length; irow++) {
+				var status = joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
+				var pid = joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
+				if (status < 10) {
+					cmd[cmd.length] = pid + "&KILL;";
+				}
+			}
+			for (icmd = 0; icmd < cmd.length; icmd++) {
+				socket_lms[hostname].send(cmd[icmd]);
+			}
+		}
 
-	 var pcol;
+		var pcol;
 
-	 var cols={
-	     TIME:0,
-	     PID:1,
-	     PATH:2,
-	     OUT:3,
-	     LOW:4,
-	     HIGH:5,
-	     SEED:6,
-	     STEP:7,
-	     TIMING:8,
-	     ICON:9,
-	     TOT:10,
-	 }
-	 function new_progbar(width){
-	     var div1=document.createElement("div");
-	     div1.className="progress";
-	     div1.style.width=width;
-	     var div2=document.createElement("div");
-	     div2.className="bar";
-	     div2.style.width="0%";
-	     var span1=document.createElement("span");
-	     span1.className="bar";
-	     span1.innerHTML="test";
-	     div1.appendChild(div2);
-	     div1.appendChild(span1);
-	     return div1;
-	 }
-	 function progbar_set(progbar, i1, i2){
-	     frac=0;
-	     if(parseInt(i2)>0){
-		 frac=Math.round(parseInt(i1)/parseInt(i2)*100);
-	     }
-	     progbar.childNodes[0].style.width=frac+'%';
-	     progbar.childNodes[1].innerHTML=i1+'/'+i2;
-	 }
-	 function new_button(name){
-	     var button=document.createElement("input");
-	     button.type="image";
-	     button.src=name;
-	     button.setAttribute("url", name);
-	     return button;
-	 }
+		var cols = {
+			TIME: 0,
+			PID: 1,
+			PATH: 2,
+			OUT: 3,
+			LOW: 4,
+			HIGH: 5,
+			SEED: 6,
+			STEP: 7,
+			TIMING: 8,
+			ICON: 9,
+			TOT: 10,
+		}
+		function new_progbar(width) {
+			var div1 = document.createElement("div");
+			div1.className = "progress";
+			div1.style.width = width;
+			var div2 = document.createElement("div");
+			div2.className = "bar";
+			div2.style.width = "0%";
+			var span1 = document.createElement("span");
+			span1.className = "bar";
+			span1.innerHTML = "test";
+			div1.appendChild(div2);
+			div1.appendChild(span1);
+			return div1;
+		}
+		function progbar_set(progbar, i1, i2) {
+			frac = 0;
+			if (parseInt(i2) > 0) {
+				frac = Math.round(parseInt(i1) / parseInt(i2) * 100);
+			}
+			progbar.childNodes[0].style.width = frac + '%';
+			progbar.childNodes[1].innerHTML = i1 + '/' + i2;
+		}
+		function new_button(name) {
+			var button = document.createElement("input");
+			button.type = "image";
+			button.src = name;
+			button.setAttribute("url", name);
+			return button;
+		}
 
-	 var button_wait=new_button("icon-waiting.png")
-	 var button_ok=new_button("icon-finished.png")
-	 var button_play=new_button("icon-running.png");
-	 var button_err=new_button("icon-error.png");
-	 var pos = 0;
-	 function sec2str(secstr){
-	     var sec=parseInt(secstr);
-	     var min=Math.floor(sec/60);
-	     var hr=Math.floor(min/60);
-	     return hr+':'+min;
-	 }
-	 function get_hostname()
-	 {
+		var button_wait = new_button("icon-waiting.png")
+		var button_ok = new_button("icon-finished.png")
+		var button_play = new_button("icon-play.png");
+		var button_err = new_button("icon-error.png");
+		var pos = 0;
+		function sec2str(secstr) {
+			var sec = parseInt(secstr);
+			var min = Math.floor(sec / 60);
+			var hr = Math.floor(min / 60);
+			return hr + ':' + min;
+		}
+		function get_hostname() {
 
-	     /*
-	      * We open the websocket encrypted if this page came on an
-	      * https:// url itself, otherwise unencrypted
-	      */
-	     u=document.URL;
-	     if (u.substring(0, 5) == "https") {
-		 pcol = "wss://";
-		 u = u.substr(8);
-	     } else {
-		 pcol = "ws://";
-		 if (u.substring(0, 4) == "http")
-		 u = u.substr(7);
-	     }
+			/*
+			 * We open the websocket encrypted if this page came on an
+			 * https:// url itself, otherwise unencrypted
+			 */
+			u = document.URL;
+			if (u.substring(0, 5) == "https") {
+				pcol = "wss://";
+				u = u.substr(8);
+			} else {
+				pcol = "ws://";
+				if (u.substring(0, 4) == "http")
+					u = u.substr(7);
+			}
 
-	     u = u.split('/');
+			u = u.split('/');
 
-	     /* + "/xxx" bit is for IE10 workaround */
-	     return u[0];
-	 }
+			/* + "/xxx" bit is for IE10 workaround */
+			return u[0];
+		}
 
-	 /* maos-monitor protocol */
-	 function setchild(cell, button){
-	     if(cell.firstChild){
-		 cell.replaceChild(button.cloneNode(false), cell.firstChild);
-	     }else{
-		 cell.appendChild(button.cloneNode(false));
-	     }
-	 }
-	 function websocket_start(node){
-	     hostname=node.id;
-	     console.log("Connecting to "+hostname);
-	     var socket_lm;
-	     var hostname2=hostname.split(':')[0];
-	     var joblist=document.getElementById("joblist_"+hostname2);
-	     if(!joblist) return 0;
-	     if (typeof MozWebSocket != "undefined") {
-		 socket_lm = new MozWebSocket(pcol+hostname+"/xxx", "maos-monitor-protocol");
-	     } else {
-		 socket_lm = new WebSocket(pcol+hostname+"/xxx", "maos-monitor-protocol");
-	     }
-	     if(typeof(Storage)!="undefined"){
-		 //Notice that local storage only support strings.
-				 localStorage.hosts+=";"+hostname;
-		 console.log("localStorage.hosts= " + localStorage.hosts)
-	     }  
-	     socket_lm.onopen = function() {//change tab color upon connecton
-		 node.style.color="#40dd40";
-		 var nrow=joblist.rows.length;
-		 for(irow=1; irow<nrow; irow++){
-		     joblist.deleteRow(-1);
-		 }
-	     }
-	     socket_lm.onerror = function(error){
-		 console.log('Websocket error: ' + error);
-		 socket_lm.onclose();
-	     }
-	     socket_lm.onclose = function(){//try to auto-reconnect
-		 node.style.color="#dd4040";
-		 //setTimeout(websocket_start(node), 5000);
-	     }
-	     socket_lm.onmessage =function got_packet(msg) {
-		 j = msg.data.split(';');
-		 //console.log(msg.data);
-		 //pid, STATUS/PATH, pidnew, status, start time, errhi, errlo, iseed, nseed, isim, nsim, rest, tot, step timing
-		 for (var f=0; f < j.length - 1; f++) {
+		/* maos-monitor protocol */
+		function setchild(cell, button) {
+			if (cell.firstChild) {
+				cell.replaceChild(button.cloneNode(false), cell.firstChild);
+			} else {
+				cell.appendChild(button.cloneNode(false));
+			}
+		}
+		function websocket_start(node) {
+			hostname = node.id;
+			console.log("Connecting to " + hostname);
+			var socket_lm;
+			var hostname2 = hostname.split(':')[0];
+			var joblist = document.getElementById("joblist_" + hostname2);
+			if (!joblist) return 0;
+			if (typeof MozWebSocket != "undefined") {
+				socket_lm = new MozWebSocket(pcol + hostname + "/xxx", "maos-monitor-protocol");
+			} else {
+				socket_lm = new WebSocket(pcol + hostname + "/xxx", "maos-monitor-protocol");
+			}
+			socket_lm.onopen = function () {//change tab color upon connecton
+				node.style.color = "#4885DD";
+				var nrow = joblist.rows.length;
+				for (irow = 1; irow < nrow; irow++) {
+					joblist.deleteRow(-1);
+				}
+			}
+			socket_lm.onerror = function (error) {
+				console.log('Websocket error: ' + error);
+				socket_lm.onclose();
+			}
+			socket_lm.onclose = function () {//try to auto-reconnect
+				node.style.color = "#9d4040";
+				//setTimeout(websocket_start(node), 5000);
+			}
+			socket_lm.onmessage = function got_packet(msg) {
+				j = msg.data.split(';');
+				//console.log(msg.data);
+				//pid, STATUS/PATH, pidnew, status, start time, errhi, errlo, iseed, nseed, isim, nsim, rest, tot, step timing
+				for (var f = 0; f < j.length - 1; f++) {
 
-		     i = j[f].split('&');
-		     var row=null;
-		     var irow;
-		     for(irow=1; irow<joblist.rows.length; irow++){
-			 if(joblist.rows[irow].cells[cols.PID].innerHTML == i[0]){
-			     row=joblist.rows[irow];
-			     break;
-			 }
-		     }
-		     if(i[3]==14){/*remove*/
-			 if(row){
-			     joblist.deleteRow(irow);
-			 }
-			 continue;
-		     }
-		     if(!row){
-			 row=joblist.insertRow(-1);
-			 for(var j=0; j<cols.TOT; j++){
-			     row.insertCell(-1);
-			     row.cells[j].align="right";
-			     if(j==cols.PATH){
-				 row.cells[cols.PATH].className="expandable";
-			     }
-			 }
-			 row.cells[cols.PID].innerHTML=i[0];
-			 row.cells[cols.SEED].appendChild(new_progbar("50px"));
-			 row.cells[cols.STEP].appendChild(new_progbar("120px"));
-		     }
-		     if(i[1]=='PATH'){//Only path is sent
-			 var io=i[2].lastIndexOf("-o");
-			 if(io>-1){
-			     row.cells[cols.OUT].innerHTML=i[2].substr(io+2).trim().split(' ')[0];
-			     i[2]=i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g," ");
-			 }
-			 var slash;
-			 if(i[2].length>100){
-			     slash=i[2].indexOf(" ");
-			 }else{
-			     slash=-1;
-			 }
-			 if(slash>-1){
-			     row.cells[cols.PATH].innerHTML='<details><summary>'+i[2].substr(0, slash+1)+'</summary>'+i[2].substr(slash+1)+'</details>'
-			 }else{
-			     row.cells[cols.PATH].innerHTML=i[2];
-			 }
-		     }else{//status update
-			 if(i[0]!=i[2]){
-			     row.cells[cols.PID].innerHTML=i[2];
-			     i[0]=i[2];
-			 }
-			 row.cells[cols.TIME].innerHTML=i[4];
-			 row.cells[cols.LOW].innerHTML=i[6];
-			 row.cells[cols.HIGH].innerHTML=i[5];
-			 var frac=0;
-			 if(parseInt(i[8])>0){
-			     frac=Math.round(parseInt(i[7])/parseInt(i[8])*100);
-			 }
-			 progbar_set(row.cells[cols.SEED].firstChild, i[7], i[8]);
-			 frac=0;
-			 if(parseInt(i[10])>0){
-			     frac=Math.round(parseInt(i[9])/parseInt(i[10])*100);
-			 }
-			 progbar_set(row.cells[cols.STEP].firstChild, i[9], i[10]);
-			 if(i[3]==1 || i[3]>10){
-			     row.cells[cols.TIMING].innerHTML=i[13]+'s '+sec2str(i[11])+'/'+sec2str(i[12]);
-			 }
-			 if(row.cells[cols.PID].getAttribute("status")!=i[3]){
-			     row.cells[cols.PID].setAttribute("status", i[3]);
-			     var cell_tim=row.cells[cols.TIMING];
-			     var cell_btn=row.cells[cols.ICON];
-			     if(i[3]==1){//running
-				 setchild(cell_btn, button_play);
-			     }else if(i[3]==2){
-				 cell_tim.innerHTML="Waiting";
-				 setchild(cell_btn, button_wait);
-			     }else if(i[3]==3){
-				 cell_tim.innerHTML="Started";
-				 setchild(cell_btn, button_play);
-			     }else if(i[3]==4){
-				 cell_tim.innerHTML="Queued";
-				 setchild(cell_btn, button_wait);
-			     }else if(i[3]==11){//finished
-				 if(i[10]=='0'){
-				     cell_tim.innerHTML="Skipped";
-				 }else{
-				     if(cell_btn.firstChild){//change of status
-					 notify('task '+row.cells[cols.PID].innerHTML+' finished on '+hostname2, hostname2+'_ok', "icon-finished.png");
-				     }
-				 }
-				 setchild(cell_btn, button_ok);
-			     }else if(i[3]==12 || i[3]==15){//crashed or killed
-				 if(cell_btn.firstChild){//change of status
-				     notify('task '+row.cells[cols.PID].innerHTML+' crashed on '+hostname2, hostname2+'_err', "icon-error.png");
-				 }
-				 setchild(cell_btn, button_err);
-				 row.cells[cols.SEED].firstChild.style.background="red";
-				 row.cells[cols.STEP].firstChild.style.background="red";
-			     }
-			     cell_btn.firstChild.setAttribute("pid", i[0]);
-			     cell_btn.firstChild.setAttribute("status", i[3]);
-			     cell_btn.firstChild.onclick=function(){
-				 pid=this.getAttribute("pid");
-				 status=this.getAttribute("status");
-				 if(status<10){
-				     if(window.confirm("Kill the job "+pid+"?")){
-					 socket_lm.send(pid+"&KILL;");
-				     }
-				 }else{
-				     socket_lm.send(pid+"&REMOVE;");
-				 }
-			     }
+					i = j[f].split('&');
+					var row = null;
+					var irow;
+					for (irow = 1; irow < joblist.rows.length; irow++) {
+						if (joblist.rows[irow].cells[cols.PID].innerHTML == i[0]) {
+							row = joblist.rows[irow];
+							break;
+						}
+					}
+					if (i[3] == 14) {/*remove*/
+						if (row) {
+							joblist.deleteRow(irow);
+						}
+						continue;
+					}
+					if (!row) {
+						row = joblist.insertRow(-1);
+						for (var j = 0; j < cols.TOT; j++) {
+							row.insertCell(-1);
+							row.cells[j].align = "right";
+							if (j == cols.PATH) {
+								row.cells[cols.PATH].className = "expandable";
+							}
+						}
+						row.cells[cols.PID].innerHTML = i[0];
+						row.cells[cols.SEED].appendChild(new_progbar("50px"));
+						row.cells[cols.STEP].appendChild(new_progbar("120px"));
+					}
+					if (i[1] == 'PATH') {//Only path is sent
+						var io = i[2].lastIndexOf("-o");
+						if (io > -1) {
+							row.cells[cols.OUT].innerHTML = i[2].substr(io + 2).trim().split(' ')[0];
+							i[2] = i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g, " ");
+						}
+						var slash;
+						if (i[2].length > 100) {
+							slash = i[2].indexOf(" ");
+						} else {
+							slash = -1;
+						}
+						if (slash > -1) {
+							row.cells[cols.PATH].innerHTML = '<details><summary>' + i[2].substr(0, slash + 1) + '</summary>' + i[2].substr(slash + 1) + '</details>'
+						} else {
+							row.cells[cols.PATH].innerHTML = i[2];
+						}
+					} else {//status update
+						if (i[0] != i[2]) {
+							row.cells[cols.PID].innerHTML = i[2];
+							i[0] = i[2];
+						}
+						row.cells[cols.TIME].innerHTML = i[4];
+						row.cells[cols.LOW].innerHTML = i[6];
+						row.cells[cols.HIGH].innerHTML = i[5];
+						var frac = 0;
+						if (parseInt(i[8]) > 0) {
+							frac = Math.round(parseInt(i[7]) / parseInt(i[8]) * 100);
+						}
+						progbar_set(row.cells[cols.SEED].firstChild, i[7], i[8]);
+						frac = 0;
+						if (parseInt(i[10]) > 0) {
+							frac = Math.round(parseInt(i[9]) / parseInt(i[10]) * 100);
+						}
+						progbar_set(row.cells[cols.STEP].firstChild, i[9], i[10]);
+						if (i[3] == 1 || i[3] > 10) {
+							row.cells[cols.TIMING].innerHTML = i[13] + 's ' + sec2str(i[11]) + '/' + sec2str(i[12]);
+						}
+						if (row.cells[cols.PID].getAttribute("status") != i[3]) {
+							row.cells[cols.PID].setAttribute("status", i[3]);
+							var cell_tim = row.cells[cols.TIMING];
+							var cell_btn = row.cells[cols.ICON];
+							if (i[3] == 1) {//running
+								setchild(cell_btn, button_play);
+							} else if (i[3] == 2) {
+								cell_tim.innerHTML = "Waiting";
+								setchild(cell_btn, button_wait);
+							} else if (i[3] == 3) {
+								cell_tim.innerHTML = "Started";
+								setchild(cell_btn, button_play);
+							} else if (i[3] == 4) {
+								cell_tim.innerHTML = "Queued";
+								setchild(cell_btn, button_wait);
+							} else if (i[3] == 11) {//finished
+								if (i[10] == '0') {
+									cell_tim.innerHTML = "Skipped";
+								} else {
+									if (cell_btn.firstChild) {//change of status
+										notify('task ' + row.cells[cols.PID].innerHTML + ' finished on ' + hostname2, hostname2 + '_ok', "icon-finished.png");
+									}
+								}
+								setchild(cell_btn, button_ok);
+							} else if (i[3] == 12 || i[3] == 15) {//crashed or killed
+								if (cell_btn.firstChild) {//change of status
+									notify('task ' + row.cells[cols.PID].innerHTML + ' crashed on ' + hostname2, hostname2 + '_err', "icon-error.png");
+								}
+								setchild(cell_btn, button_err);
+								row.cells[cols.SEED].firstChild.style.background = "red";
+								row.cells[cols.STEP].firstChild.style.background = "red";
+							}
+							cell_btn.firstChild.setAttribute("pid", i[0]);
+							cell_btn.firstChild.setAttribute("status", i[3]);
+							cell_btn.firstChild.onclick = function () {
+								pid = this.getAttribute("pid");
+								status = this.getAttribute("status");
+								if (status < 10) {
+									if (window.confirm("Kill the job " + pid + "?")) {
+										socket_lm.send(pid + "&KILL;");
+									}
+								} else {
+									socket_lm.send(pid + "&REMOVE;");
+								}
+							}
 
-			 }
-		     }
-		 }
-	     }
+						}
+					}
+				}
+			}
 
-	     return socket_lm;
-	 }
+			return socket_lm;
+		}
 
 
-	 function switch_tabs(li) {
-	     node=li.firstChild;
-	     console.log("switch_tabs:"+node.id);
-	  
-	     var nodes=document.getElementsByClassName("tabhost");
-	     for(var x=0; x<nodes.length; x++){
-		 nodes[x].className=nodes[x].className.replace(" active","");
-	     }
-	     li.className+=" active";
-	     hostname=node.id;
-	 
-	     // contents for each host.
-	     var s_tab_content = "tab_content_" + hostname;
-	     var contents = document.getElementsByClassName("tab_content");
-	     var found=0;
-	     for(var x=0; x<contents.length; x++) {
-		 if (contents[x].id == s_tab_content) {
-		     contents[x].style.display = "block";                        
-		     found=1;
-		 } else {
-		     contents[x].style.display = "none";
-		 }
-	     }   
-	     if(found==0){
-		 //Create a div for containing host data
-		 newdiv=document.createElement('div');
-		 newdiv.name="tab_content";
-		 newdiv.id=s_tab_content;
-		 newdiv.className="tab_content"
-		 //Create a table for containing jobs
-		 newtable=document.createElement('table');
-		 newtable.id="joblist_"+hostname.split(':')[0];
-		 newtable.className="monitor"
-		 newtable.innerHTML=' <tr> <th>Time</th> <th>PID</th> <th class="expandable">Path</th> <th>Out</th> <th>Low</th> <th>High</th> <th>Seed</th> <th>Step</th> <th>Timing</th> <th> </th> </tr>'
-		 newdiv.appendChild(newtable);
-		 document.body.appendChild(newdiv);
-	     }
-	     if(typeof hostname !='undefined' && typeof socket_lms[hostname]=='undefined'){
-		 socket_lms[hostname]=websocket_start(node);
-	     }
-	 }
-	 function add_host(hostname){
-	     if(!hostname){
-		 hostname=document.getElementById("hostname_input").value;
-	     }	     
-	     if(hostname.length==0) return;
-	     if(localStorage.hosts.split(";").includes(hostname)) return;
-	     console.log("add_host:"+hostname)
+		function switch_tabs(li) {
+			node = li.firstChild;
+			console.log("switch_tabs:" + node.id);
 
-	     var hosts=document.getElementsByClassName("tabhost");
-	     for(var ih=0; ih<hosts.length; ih++){
-		 if(hosts[ih].firstChild.innerHTML==hostname){
-		     console.log("Host "+hostname+" already exists");
-		     return;
-		 }
-	     }
-	     var li=document.createElement("li");
-	     li.className="tabhost";
+			var nodes = document.getElementsByClassName("tabhost");
+			for (var x = 0; x < nodes.length; x++) {
+				nodes[x].className = nodes[x].className.replace(" active", "");
+			}
+			li.className += " active";
+			hostname = node.id;
 
-	     var node=document.createElement("span");
-	     node.appendChild(document.createTextNode(hostname.split(':')[0]));
-	     node.id=hostname;
+			// contents for each host.
+			var s_tab_content = "tab_content_" + hostname;
+			var contents = document.getElementsByClassName("tab_content");
+			var found = 0;
+			for (var x = 0; x < contents.length; x++) {
+				if (contents[x].id == s_tab_content) {
+					contents[x].style.display = "block";
+					found = 1;
+				} else {
+					contents[x].style.display = "none";
+				}
+			}
+			if (found == 0) {
+				//Create a div for containing host data
+				newdiv = document.createElement('div');
+				newdiv.name = "tab_content";
+				newdiv.id = s_tab_content;
+				newdiv.className = "tab_content"
+				//Create a table for containing jobs
+				newtable = document.createElement('table');
+				newtable.id = "joblist_" + hostname.split(':')[0];
+				newtable.className = "monitor"
+				newtable.innerHTML = ' <tr> <th>Time</th> <th>PID</th> <th class="expandable">Path</th> <th>Out</th> <th>Low</th> <th>High</th> <th>Seed</th> <th>Step</th> <th>Timing</th> <th> </th> </tr>'
+				newdiv.appendChild(newtable);
+				document.body.appendChild(newdiv);
+			}
+			if (typeof hostname != 'undefined' && typeof socket_lms[hostname] == 'undefined') {
+				socket_lms[hostname] = websocket_start(node);
+			}
+		}
+		function add_host(hostname) {
+			if (!hostname) {
+				hostname = document.getElementById("hostname_input").value;
+			}
+			if (hostname.length == 0) return;
+			hostname2 = hostname.split(':')[0]
+			if (hostname2.length == 0) {
+				console.log("Host " + hostname + " is invalid");
+				remove_hostname(hostname)
+				return
+			}
+			save_hostname(hostname)
+			var hosts = document.getElementsByClassName("tabhost");
+			for (var ih = 0; ih < hosts.length; ih++) {
+				//if (hosts[ih].firstChild.innerHTML == hostname.split(':')[0]) {
+				if (hosts[ih].firstChild.id == hostname) {
+					console.log("Host " + hostname + " already exists");
+					return;
+				}
+			}
+			var li = document.createElement("li");
+			li.className = "tabhost";
 
-	     node.onclick=function(){switch_tabs(li);};
-	     
-	     var closebtn=document.createElement("span");
-	     closebtn.appendChild(document.createTextNode("\u00D7"));
-	     closebtn.className="close";
+			var node = document.createElement("span");
+			node.appendChild(document.createTextNode(hostname2));
+			node.id = hostname;
 
-	     li.appendChild(node);
-	     li.appendChild(closebtn);
-	     document.getElementById("tab_hosts").appendChild(li);
-	     
-	     node.onclick();
-	 }
-	 var hosts=get_hostname() + ";" + localStorage.hosts;
-	 localStorage.hosts="";
-	 console.log("localStorage.hosts="+hosts)
-	 hosts.split(";").forEach(function(host){add_host(host);});
+			node.onclick = function () { switch_tabs(li); };
+
+			var closebtn = document.createElement("span");
+			closebtn.appendChild(document.createTextNode(" \u00D7 "));
+			closebtn.className = "close";
+			closebtn.onclick = function () {
+				li.parentNode.removeChild(li)
+				remove_hostname(hostname)
+			}
+			li.appendChild(node);
+			li.appendChild(closebtn);
+			document.getElementById("tab_hosts").appendChild(li);
+
+			node.onclick();
+		}
+		function remove_hostname(host){
+			localStorage.hosts = localStorage.hosts.replace(';' + host, '')
+		}
+		function save_hostname(host) {
+			if (!localStorage.hosts.includes(";" + host + ";")) {
+				localStorage.hosts += host + ";"
+			}
+		}
+		if (typeof (localStorage.hosts) === "undefined") {
+			localStorage.hosts = ";"
+		}
+		save_hostname(get_hostname())
+		console.log("localStorage.hosts=" + localStorage.hosts)
+		localStorage.hosts.split(";").forEach(function (host) { add_host(host); });
 	</script>
 
-    </body>
+</body>
+
 </html>

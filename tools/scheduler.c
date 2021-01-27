@@ -92,6 +92,7 @@ static RUN_T* running_get_by_sock(int sock);
 //static MONITOR_T *monitor_get(int hostid);
 static void monitor_remove(int hostid);
 static MONITOR_T* monitor_add(int hostid);
+static void scheduler_timeout(void);
 static void monitor_send(RUN_T* run, char* path);
 static void monitor_send_initial(MONITOR_T* ic);
 static void monitor_send_load(void);
@@ -537,6 +538,7 @@ static int maos_command(int pid, int sock, int cmd){
 	return -1;//do not keep this connection.
 }
 static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
+PNEW(mutex_sch);//respond() and scheduler_handle_ws() much lock this before preceed.
 /**
    respond to client requests. The fixed header is int[2] for opcode and
    pid. Optional data follows based on opcode. The disadvanced of this is that
@@ -556,6 +558,7 @@ static int respond(int sock){
 	}
 	pid=cmd[1];
 	dbg3_time("respond %d got %d %d. \n", sock, cmd[0], cmd[1]);
+	LOCK(mutex_sch);
 	switch(cmd[0]){
 	case CMD_START://1: Called by maos when job starts.
 	{
@@ -600,7 +603,7 @@ static int respond(int sock){
 	break;
 	case CMD_FINISH://2: Called by MAOS when job finishes.
 		running_remove(pid, S_FINISH);
-		return -1;
+		ret=-1;
 		break;
 	case CMD_STATUS://3: Called by MAOS to report status at every time step
 	{
@@ -625,7 +628,7 @@ static int respond(int sock){
 	break;
 	case CMD_CRASH://4: called by MAOS when job crashes
 		running_remove(pid, S_CRASH);
-		return -1;
+		ret=-1;
 		break;
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
@@ -877,7 +880,9 @@ end:
 		}
 		ret=-1;
 	}
+	scheduler_timeout();
 	sync();
+	UNLOCK(mutex_sch);
 	return ret;/*don't close the port yet. may be reused by the client. */
 }
 /*
@@ -901,6 +906,7 @@ void scheduler_handle_ws(char* in, size_t len){
 	if((tmp=strchr(sep, ';'))){
 		*tmp='\0';
 	}
+	LOCK(mutex_sch);
 	if(!strcmp(sep, "REMOVE")){
 		RUN_T* irun=runned_get(pid);
 		if(irun){
@@ -924,15 +930,13 @@ void scheduler_handle_ws(char* in, size_t len){
 	} else{
 		warning_time("Unknown action: %s\n", sep);
 	}
+	UNLOCK(mutex_sch);
 }
 static void scheduler_timeout(void){
 	static double lasttime1=0;//every 1 second
 	static double lasttime3=0;//every 3 seconds
 	static double lasttime10=0;//every 10 seconds
 
-#if HAS_LWS
-	ws_service();
-#endif
 	double thistime=myclockd();
 	/*Process job every 1 second*/
 	if(thistime>=(lasttime1+1)){
@@ -1030,6 +1034,7 @@ static void html_convert_all_do(RUN_T* irun, l_message** head, l_message** tail,
 }
 
 void html_convert_all(l_message** head, l_message** tail, long prepad, long postpad){
+	LOCK(mutex_sch);
 	*head=*tail=0;
 	for(RUN_T* irun=runned; irun; irun=irun->next){
 		html_convert_all_do(irun, head, tail, prepad, postpad);
@@ -1037,6 +1042,7 @@ void html_convert_all(l_message** head, l_message** tail, long prepad, long post
 	for(RUN_T* irun=running; irun; irun=irun->next){
 		html_convert_all_do(irun, head, tail, prepad, postpad);
 	}
+	UNLOCK(mutex_sch);
 }
 #endif
 static int monitor_send_do(RUN_T* irun, char* path, int sock){
@@ -1172,17 +1178,13 @@ int main(){
 		pclose(fpcmd);
 		dbg("NGPU=%d\n", NGPU);
 	}
-	double timeout=0.5;
-	dbg_time("scheduler started with time out %g\n", timeout);
 #if HAS_LWS
-	ws_start(PORT+100);
-	//ws_service();//service happens in scheduler_timeout()
-	timeout=0.1;//let lws do timeout. don't use 0 which blocks
+	//launch in a separate thread to avoid excessive idle wakeup.
+	//Must acquire mutex_sch before handling run_t
+	thread_new(ws_service, (void*)(long)(PORT+100));
 #endif
-	listen_port(PORT, slocal, respond, timeout, scheduler_timeout, 0);
+	listen_port(PORT, slocal, respond, 0, NULL, 0);
 	remove(slocal);
-#if HAS_LWS
-	ws_end();
-#endif
+
 	exit(0);
 }

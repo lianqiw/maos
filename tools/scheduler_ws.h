@@ -17,9 +17,8 @@
 */
 #ifndef AOS_SCHEDULER_WS_H
 #define AOS_SCHEDULER_WS_H
-int ws_start(short port);
-void ws_end();
-int ws_service();
+
+void* ws_service(void*);
 struct l_message{
 	char* payload;
 	size_t len;
