@@ -24,7 +24,7 @@ Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	if((ans=pcg(xout, this, precond, xin, cgtmp,
 		warm_restart, maxit, stream))>1){
 		cgtmp.count_fail++;
-		warning("CG %5d(%5d) does not converge: residual=%.5f, maxit=%d.",
+		info("CG %5d(%5d) does not converge: residual=%.5f, maxit=%d.",
 			cgtmp.count, cgtmp.count_fail, ans, maxit);
 		if(!disable_save&&cgtmp.count_fail<10){
 			info("Result saved.\n");

@@ -357,8 +357,8 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 		/*
 		  iPnk is a block diagonal matrix for Cn2 Estimation.
 		*/
-		cn2est->Pnk->p[iwfspair+iwfspair*nwfspair]=dref(Pnk);
-		cn2est->iPnk->p[iwfspair+iwfspair*nwfspair]=dpinv(Pnk, 0);
+		P(cn2est->Pnk, iwfspair, iwfspair)=dref(Pnk);
+		P(cn2est->iPnk, iwfspair, iwfspair)=dpinv(Pnk, 0);
 		cn2est->wtconvert->p[iwfspair]=mkhbin1d(cn2est->ht->p[iwfspair], cn2est->htrecon);
 		dfree(Pnk);
 		cfree(mc);
@@ -503,7 +503,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 			  negatives, we just zero them. For significant ones, we remove the
 			  layer from being estimated to avoid biasing the result.
 			*/
-			dmat* Pnk=ddup(cn2est->Pnk->p[iwfspair+iwfspair*nwfspair]);
+			dmat* Pnk=ddup(P(cn2est->Pnk, iwfspair, iwfspair));
 			//number of negative layers found. 
 			int nfd=0, nfdi=0;
 			do{
@@ -525,7 +525,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 					}
 				}
 				if(nfdi>0){
-					warning_once("Ignore %d negative weights. set MAOS_CN2EST_NO_NEGATIVE=0 in your shell to disable this feature.\n", nfd);
+					info_once("Ignore %d negative weights. set MAOS_CN2EST_NO_NEGATIVE=0 in your shell to disable this feature.\n", nfd);
 					dmat* iPnk2=dpinv(Pnk, NULL);
 					//compute the new result 
 					dmm(&wt, 0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);

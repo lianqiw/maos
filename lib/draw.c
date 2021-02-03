@@ -871,11 +871,7 @@ int drawopd(const char* fig, loc_t* loc, const real* opd, real* zlim,
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
-			if(ii>0){
-				opd0->p[ix+iy*nx]=opd[ii-1];
-			} else{
-				opd0->p[ix+iy*nx]=NAN;
-			}
+			P(opd0,ix,iy)=ii>0?opd[ii-1]:NAN;
 		}
 	}
 	real limit[4];

@@ -177,8 +177,8 @@ static real sde_diff(const real* coeff, void* pdata){
 */
 static void sde_scale_coeff(dmat* coeff, real var_in, dmat* psdcov_sde, const dmat* freq, int ncov){
 	for(int iy=0; iy<coeff->ny; iy++){
-		if(coeff->p[2+iy*3]<=0){
-			coeff->p[2+iy*3]=1;
+		if(P(coeff,2,iy)<=0){
+			P(coeff,2,iy)=1;
 		}
 	}
 	real ratio;
@@ -194,7 +194,7 @@ static void sde_scale_coeff(dmat* coeff, real var_in, dmat* psdcov_sde, const dm
 	}
 	ratio=sqrt(var_in/var_sde);
 	for(int iy=0; iy<coeff->ny; iy++){
-		coeff->p[2+iy*3]*=ratio;
+		P(coeff,2,iy)*=ratio;
 	}
 }
 /**

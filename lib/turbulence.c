@@ -290,7 +290,8 @@ map_t *genscreen_str(const char *header){
 	real slope=search_header_num_default(header, "slope", -11./3.);
 	real nx=search_header_num_default(header, "nx", 2048);
 	seed=search_header_num_default(header, "seed", seed+1);
-	
+	info("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n", 
+		r0, L0, dx, slope, nx, seed);
 	rand_t rstat;
 	seed_rand(&rstat, (int)seed);
 	real wt=1;

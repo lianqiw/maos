@@ -239,11 +239,11 @@ void cure_loc(dmat** phix, const dmat* grad, const loc_t* saloc){
 		for(int ix=0; ix<nx; ix++){
 			long ii=saloc->map->p[(ix+npad)+(iy+npad)*nxm];
 			if(ii>0){
-				gx->p[ix+iy*nx]=P(grad, ii-1, 0);
-				gy->p[ix+iy*nx]=P(grad, ii-1+nsa, 0);
+				P(gx,ix,iy)=P(grad, ii-1, 0);
+				P(gy,ix,iy)=P(grad, ii-1+nsa, 0);
 			} else{
-				gx->p[ix+iy*nx]=NAN;
-				gy->p[ix+iy*nx]=NAN;
+				P(gx,ix,iy)=NAN;
+				P(gy,ix,iy)=NAN;
 			}
 		}
 	}

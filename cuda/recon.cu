@@ -307,7 +307,7 @@ Real curecon_t::moao_recon(dcell* _dmfit, dcell* _opdr){
 }
 
 void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
-	warning_once("MOAO temporal filter implemented with LPF\n");
+	info_once("MOAO temporal filter implemented with LPF\n");
 	const int* wfsgpu=cuglobal->wfsgpu();
 	if(dm_wfs){
 		int nwfs=dm_wfs.Nx();

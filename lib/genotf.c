@@ -75,14 +75,14 @@ static dmat* pttr_B(const dmat* B,   /**<The B matrix. */
 	dmat* Mtmp=dnew(3, nloc);/*B'*MW; */
 
 	for(long iloc=0; iloc<nloc; iloc++){
-		M->p[iloc]=1;
+		P(M,iloc,0)=1;
 	}
-	memcpy(M->p+nloc, locx, nloc*sizeof(real));
-	memcpy(M->p+nloc*2, locy, nloc*sizeof(real));
+	memcpy(PCOL(M, 1), locx, nloc*sizeof(real));
+	memcpy(PCOL(M, 2), locy, nloc*sizeof(real));
 	for(long iloc=0; iloc<nloc; iloc++){
-		MW->p[iloc]=amp[iloc];
-		MW->p[iloc+nloc]=amp[iloc]*locx[iloc];
-		MW->p[iloc+nloc*2]=amp[iloc]*locy[iloc];
+		P(MW,iloc,0)=amp[iloc];
+		P(MW,iloc,1)=amp[iloc]*locx[iloc];
+		P(MW,iloc,2)=amp[iloc]*locy[iloc];
 	}
 	/* MCC = - cci' *M' */
 	dmm(&MCC, 0, mcc, M, "tt", -1);

@@ -2544,9 +2544,9 @@ static void setup_parms_postproc_recon(PARMS_T* parms){
 	if(parms->sim.mffocus>0){
 		if(!parms->recon.split||!parms->nlgspowfs||parms->sim.idealfit){
 			if(!parms->recon.split){
-				warning("Focus blending is not implemented yet for integrated tomography\n");
+				info("Focus blending is not implemented yet for integrated tomography\n");
 			}
-			warning("parms->sim.mffocus is reset to 0\n");
+			info("parms->sim.mffocus is reset to 0\n");
 			parms->sim.mffocus=0;
 		}
 	}

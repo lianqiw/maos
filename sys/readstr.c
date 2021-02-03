@@ -483,31 +483,39 @@ void readstr_intarr_relax(int** ret, /**<[out] Result*/
 	free(ret2);
 }
 /**
-   Search and return the value correspond to key. NULL if not found. Do not free the
-   returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace),
+   Search and return the value correspond to key. Case is ignored; 
+   NULL if not found. Do not free the returned pointer. 
+   The key must be preceeded by space, semicolon, coma or new line (isspace),
    and succeeded by = sign. */
 const char* search_header(const char* header, const char* key){
 	if(!header) return NULL;
 	const char* ans=NULL;
-	const char* val=header;
-	while(val[0]!='\0'&&(val=strstr(val, key))){
-		if(val>header){
-			char prev=*(val-1);
-			if(!isspace((int)prev)&&prev!=';'&&prev!=','){
-				val=val+strlen(key);
-				continue;/*Invalid */
+	//const char* val=header;
+	const char* end=header+strlen(header);
+	const int nkey=strlen(key);
+	int was_space=1;
+	for(const char *p=header; p<end; p++){
+		const char c=*p;
+		if(!isspace((int)c)&&c!=';'&&c!=','){
+			if(was_space){//start of key
+				if(!strncasecmp(p, key, nkey)){//match regardless of case.
+					p+=nkey;
+					while(isspace((int)*p) && p<end) p++;
+					if(*p=='='){
+						p++;
+						while(isspace((int)*p) && p<end) p++;
+						ans=p;
+						break;
+					}else{
+						p--;
+					}
+				}
 			}
-		}
-		val=val+strlen(key);
-		while(val[0]==' ') val++;
-		if(val[0]=='='){
-			val++;
-			while(val[0]==' ') val++;
-			ans=val;
-			break;
+			was_space=0;
+		}else{
+			was_space=1;
 		}
 	}
-	//if(!ans) ans=ans_bak;
 	return ans;
 }
 /**

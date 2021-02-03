@@ -895,7 +895,7 @@ void remove_dm_ngsmod(SIM_T* simu, dcell* dmerr){
 			simu->ngsmodlpf=dnew(3, 1);
 		}
 		const real lpfocus=parms->sim.lpfocushi;
-		warning_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
+		info_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
 		simu->ngsmodlpf->p[0]=simu->ngsmodlpf->p[0]*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
 		simu->ngsmodlpf->p[1]=simu->ngsmodlpf->p[1]*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
 		simu->ngsmodlpf->p[2]=simu->ngsmodlpf->p[2]*(1-lpfocus)+mngs[ngsmod->indastig+1]*lpfocus;
