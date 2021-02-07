@@ -231,7 +231,7 @@ setup_surf_perp(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* rec
 		} else{
 			readstr_intarr_relax(&evlcover, nevl, strevl);
 			for(int ievl=0; ievl<nevl; ievl++){
-				evlct+=evlcover[ievl]?1:0;
+				evlct+=evlcover[ievl]==1?1:0;
 			}
 			if(evlct>0){
 				info2("%s covers evl", fn);
