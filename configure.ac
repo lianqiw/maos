@@ -149,7 +149,7 @@ AC_ARG_ENABLE(gtk-4, AS_HELP_STRING([--enable-gtk-4],[Using GTK4]), [use_gtk_4="
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
-
+AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -488,13 +488,12 @@ compile(){
     echo "Compiling $name with CFLAGS=$CFLAGS $@. Check $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
-	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} >> $fnlog 2>&1|| \
-	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ >> $fnlog 2>&1 ) && \
-	make -j4 install >> $fnlog 2>&1) ;then
-	echo "Compiled $name successfully."
+		((./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} && make -j4 install) ||
+		 (mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install)))	>> $fnlog 2>&1 ;then
+		echo "Compiled $name successfully."
     else
-	echo "Failed to compile $name. Please see $fnlog for details"
-	cat $fnlog
+		echo "Failed to compile $name. Please see $fnlog for details"
+		cat $fnlog
     fi
 }
 function set_lapack(){
@@ -502,32 +501,32 @@ function set_lapack(){
     case $type in
 	mkl*)
 	    if test "$type" = "mkl-download" -a "$mkl_avail" = "yes";then
-		download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
+			download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
 	    fi
 	    #First use MKL if available. 
 
 	    if test "$host_cpu" = "x86_64" ;then
-		LAPACK="-lmkl_intel_lp64"
+			LAPACK="-lmkl_intel_lp64"
 	    else
-		LAPACK="-lmkl_intel"
+			LAPACK="-lmkl_intel"
 	    fi
 
 	    LAPACK+=" -lmkl_core"
 
 	    if false; then
-		LAPACK+=" -lmkl_sequential -lpthread"
+			LAPACK+=" -lmkl_sequential -lpthread"
 	    else
-		if test "$CN" = "GCC" ;then
-		    LAPACK+=" -lmkl_gnu_thread -lgomp"
-		else #ICC or others
-		    LAPACK+=" -lmkl_intel_thread -liomp5"
-		fi
+			if test "$CN" = "GCC" ;then
+				LAPACK+=" -lmkl_gnu_thread -lgomp"
+			else #ICC or others
+				LAPACK+=" -lmkl_intel_thread -liomp5"
+			fi
 	    fi
 	 
 	    if test "$use_static" = "yes" ;then
-		LAPACK="-Wl,--start-group,${LAPACK},--end-group"
-		LAPACK=${LAPACK// /,}
-		LAPACK=${LAPACK//,,/,}
+			LAPACK="-Wl,--start-group,${LAPACK},--end-group"
+			LAPACK=${LAPACK// /,}
+			LAPACK=${LAPACK//,,/,}
 	    fi
 	    ;;
 	pkg-config)
@@ -586,14 +585,14 @@ esac
 
 for try in ${trys}; do
     if test "$has_lapack" = "no" -o "$has_blas" = "no";then
-	unset nset ac_cv_lib_m_dgemm_
-	unset nset ac_cv_lib_m_dposv_
-	set_lapack ${try}
-	if test -n "$LAPACK" ;then
-	    #the trailing -lm is necessary for ubuntu-16.04 with mkl
-	    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm])
-	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK -lm])
-	fi
+		unset nset ac_cv_lib_m_dgemm_
+		unset nset ac_cv_lib_m_dposv_
+		set_lapack ${try}
+		if test -n "$LAPACK" ;then
+			#the trailing -lm is necessary for ubuntu-16.04 with mkl
+			AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm])
+			AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK -lm])
+		fi
     fi
 done
 
@@ -618,39 +617,39 @@ else
     #Check for FFTW3 header and library.
     AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-	#download pre-compiled
-	download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
-	unset ac_cv_lib_fftw3_fftw_execute
+		#download pre-compiled
+		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
+		unset ac_cv_lib_fftw3_fftw_execute
         AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-	#compile from source
-	FLAGS="--enable-threads --enable-shared --enable-static"
-	if test -n "$OPENMP_CFLAGS" ;then
-            FLAGS+=" --enable-openmp"
+		#compile from source
+		FLAGS="--enable-threads --enable-shared --enable-static"
+		if test -n "$OPENMP_CFLAGS" ;then
+			FLAGS+=" --enable-openmp"
+		fi
+		FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
+		compile FFTW fftw.tar.bz2 $FLAGS  
+		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
+		unset ac_cv_lib_fftw3_fftw_execute
+		AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
 	fi
-        FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
-	compile FFTW fftw.tar.bz2 $FLAGS  
-	compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
-	unset ac_cv_lib_fftw3_fftw_execute
-	AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
-    fi
-    AC_CHECK_HEADERS([fftw3.h],[], [AC_MSG_ERROR([FFTW header is not found])])
+	AC_CHECK_HEADERS([fftw3.h],[], [AC_MSG_ERROR([FFTW header is not found])])
 
-    if test "$with_matlab" != "no" ;then
-	#cannot compile with single precision floating fft when compiling mex routines
-	has_fftwf=0
-    else
-	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
-    fi
-    AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
-    if test x$has_fftwf = x1 ;then
-	LDFFT="-lfftw3 -lfftw3f"
-    else
-	LDFFT="-lfftw3"
-	if test "$use_double" = "no" ;then
-	    AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])
+	if test "$with_matlab" != "no" ;then
+		#cannot compile with single precision floating fft when compiling mex routines
+		has_fftwf=0
+	else
+		AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
 	fi
+	AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
+	if test x$has_fftwf = x1 ;then
+		LDFFT="-lfftw3 -lfftw3f"
+	else
+		LDFFT="-lfftw3"
+		if test "$use_double" = "no" ;then
+			AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])
+		fi
     fi
     fftw_threads=0 #To avoid crush in matlab, we use optional dynamic loading from sys/fft.c instead.
 fi
@@ -676,21 +675,21 @@ if test "$use_websockets" = "yes" ;then
     AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
-	download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
-	unset ac_cv_lib_websockets_lws_service
-	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
+		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
+		unset ac_cv_lib_websockets_lws_service
+		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
     if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
-	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
-	unset ac_cv_lib_websockets_lws_service
-	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
-    fi
+		compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
+		unset ac_cv_lib_websockets_lws_service
+		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
+	fi
     if test "$has_lws" != "no" ;then
-	AM_CONDITIONAL(HAS_LWS, true)
-	AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
+		AM_CONDITIONAL(HAS_LWS, true)
+		AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
     else
-	AC_MSG_NOTICE(["libwebsocket library or header is not available"])
-	use_websockets="no"
+		AC_MSG_NOTICE(["libwebsocket library or header is not available"])
+		use_websockets="no"
     fi
 fi
 
@@ -750,19 +749,19 @@ OPTS+=" $OPTScommon $OPTScc $OPTSprof "
 
 if test "$with_matlab" != "no" ;then
     if test ${MEXDIR:0:1} = '~' ;then
-	MEXDIR=$HOME:${MEXDIR:1}
+		MEXDIR=$HOME:${MEXDIR:1}
     fi
     if test -x "${MEXDIR}/mex" ;then
-	MEXDIR="${MEXDIR}"
+		MEXDIR="${MEXDIR}"
     elif test -x "${MEXDIR}/bin/mex" ;then
-	MEXDIR="${MEXDIR}/bin"
+		MEXDIR="${MEXDIR}/bin"
     else
-	AC_MSG_ERROR([mex not found at $MEXDIR. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-matlab to disable])
+		AC_MSG_ERROR([mex not found at $MEXDIR. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-matlab to disable])
     fi
     echo MEXDIR=$MEXDIR
     MEXEXT="$($MEXDIR/mexext)"
     if test -z "$MEXEXT" ;then
-	AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --without-matlab to disable mex.])
+		AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --without-matlab to disable mex.])
     fi
     case $MEXEXT in
    	mexglx)
@@ -833,7 +832,7 @@ fi
 
 if test "$with_cuda" != "no" ;then
     if test -n "$with_cuda" ;then
-	user_enable_cuda=yes
+		user_enable_cuda=yes
     fi
     #if test "$use_static" = "yes"; then
 	#AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
@@ -841,49 +840,49 @@ if test "$with_cuda" != "no" ;then
     AC_MSG_NOTICE([Enabling CUDA])
     #Check for nvcc executable
     if test ${CUDADIR:0:1} = '~' ;then
-	CUDADIR=$HOME:${CUDADIR:1}
+		CUDADIR=$HOME:${CUDADIR:1}
     fi
     NVCC="$CUDADIR/bin/nvcc"
     if test ! -x "$NVCC" ;then
-	NVCC="$CUDADIR/nvcc"
-	CUDADIR="$(dirname $CUDADIR)"
-	if test ! -x "$NVCC" ;then
+		NVCC="$CUDADIR/nvcc"
+		CUDADIR="$(dirname $CUDADIR)"
+		if test ! -x "$NVCC" ;then
             AC_MSG_NOTICE([nvcc not found])
-	    with_cuda="no"
-	fi
+	    	with_cuda="no"
+		fi
     fi
     #Check cor cuda library
     if test -f "${CUDADIR}/lib${libsuffix}/libcudart.$ldsuffix" ;then
-	CUDA_L="${CUDADIR}/lib${libsuffix}"
+		CUDA_L="${CUDADIR}/lib${libsuffix}"
     elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
-	CUDA_L="${CUDADIR}/lib"
+		CUDA_L="${CUDADIR}/lib"
     elif test -f "${CUDADIR}/lib/x64/cudart.lib" ;then
     	CUDA_L="${CUDADIR}/lib/x64"
     else
-	CUDA_L=""
+		CUDA_L=""
     fi
     if test -d "$CUDA_L" ;then
-	LIBCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
+		LIBCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
     else
-	LIBCUDA=
-	AC_MSG_NOTICE([CUDA library not found])
-	with_cuda="no"
+		LIBCUDA=
+		AC_MSG_NOTICE([CUDA library not found])
+		with_cuda="no"
     fi
     AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LIBCUDA])
 
     #Check for cuda header
     if test -f "${CUDADIR}/include/cuda.h" ;then
-	CUDAOPT="-I${CUDADIR}/include"
+		CUDAOPT="-I${CUDADIR}/include"
     else
-	AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]);with_cuda="no"])
-	CUDAOPT=
+		AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]);with_cuda="no"])
+		CUDAOPT=
     fi
     if test "$with_cuda" = "no" ;then
-	if test "$user_enable_cuda" = "yes" ;then
-       	    AC_MSG_ERROR([Specified cuda DIR is not valid])
-	else
-            AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR in configure to specify CUDA location or disable cuda use --without-cuda"])
-	fi
+		if test "$user_enable_cuda" = "yes" ;then
+			AC_MSG_ERROR([Specified cuda DIR is not valid])
+		else
+			AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR in configure to specify CUDA location or disable cuda use --without-cuda"])
+		fi
     fi
 fi
 
@@ -894,22 +893,22 @@ if test "$with_cuda" != "no" ;then
     echo CUDA toolkit is $cudaver
     NVCC+=" $CFLAGS_CPU"
     if test -n "$CCBIN" -a "$with_ccbin" != "no" ;then
-	CCBIN="${CCBIN%% *}"
-	NVCC+=" -ccbin ${CCBIN%% *}"
+		CCBIN="${CCBIN%% *}"
+		NVCC+=" -ccbin ${CCBIN%% *}"
     fi
     if test "$cudaver" -lt 70 ;then
-	#CUDA 4.0 supports compute_20
-	#CUDA 7.0 supports C++11.
-	AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
+		#CUDA 4.0 supports compute_20
+		#CUDA 7.0 supports C++11.
+		AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
     fi
     #virtual GPUs are used here to allow JIT compilation during runtime
     #set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
     if test "$cudaver" -lt 90 ;then
-	CUDAOPT+=" -arch=compute_20" #<cuda-8.0 supports compute_20
+		CUDAOPT+=" -arch=compute_20" #<cuda-8.0 supports compute_20
     elif test "$cudaver" -lt 110 ;then
-	CUDAOPT+=" -arch=compute_30" #compute_30 is the minimum version
+		CUDAOPT+=" -arch=compute_30" #compute_30 is the minimum version
     else
-	CUDAOPT+=" -arch=compute_50" #compute_30 is the minimum version
+		CUDAOPT+=" -arch=compute_50" #compute_30 is the minimum version
     fi
     #To specify multiple architectures, use
     #CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
@@ -929,15 +928,15 @@ if test "$with_cuda" != "no" ;then
     CCBINOPT="${CCBINOPT/-fpermissive/}"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     if $CCBIN -v 2>&1 |grep clang ;then
-	CCN=CLANG
-	LIBCUDA+=" -lstdc++"
+		CCN=CLANG
+		LIBCUDA+=" -lstdc++"
     elif $CCBIN -v 2>&1 |grep icc ;then
-	 CCN=ICC
-	 LIBCUDA+=" -lstdc++"
+	 	CCN=ICC
+	 	LIBCUDA+=" -lstdc++"
     else
-	CCN=GCC
-	CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
-	LIBCUDA+=" -lstdc++"
+		CCN=GCC
+		CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
+		LIBCUDA+=" -lstdc++"
     fi
     optname=${ccprefix}_${CCN}
     CCBINOPT+=" ${!optname}"
@@ -949,11 +948,11 @@ else
 fi
 if test "$with_cuda" != "no" ;then
     if test "$cuda_double" = "yes" ;then
-	AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
-	AM_CONDITIONAL(CUDA_DOUBLE, true)
+		AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
+		AM_CONDITIONAL(CUDA_DOUBLE, true)
     else
-	AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
-	AM_CONDITIONAL(CUDA_DOUBLE, false)
+		AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
+		AM_CONDITIONAL(CUDA_DOUBLE, false)
     fi
     AM_CONDITIONAL(USE_CUDA, true)
     AC_DEFINE(USE_CUDA, [1], "Has Cuda")
@@ -966,7 +965,23 @@ else
     AM_CONDITIONAL(CUDA_DOUBLE, false)
     AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
-
+if test "$enable_cmocka" != "no" ;then
+	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	if test "$enable_cmocka" = "no" ;then
+		compile CMOCKA cmocka.tar.xz
+		unset ac_cv_lib_cmocka_mock_assert
+		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	fi
+	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
+		#include <stdarg.h>
+		#include <stddef.h>
+		#include <stdint.h>
+		#include <setjmp.h>])
+	if test "$enable_cmocka" != "no" ;then
+		AC_DEFINE(USE_CMOCKA, [1], "Enable unit testing with cmocka")
+	fi
+fi
+AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
     if ! which doxygen ;then
@@ -1068,6 +1083,7 @@ echo "Websocket:       $use_websockets"
 echo "MATLAB MEX:      $with_matlab"
 
 echo "Doxygen:         $DX_FLAG_doc (make doc)"
+echo "CMOCKA:          $enable_cmocka"
 echo
 
 echo "*************************************************************************"
