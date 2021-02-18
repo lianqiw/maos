@@ -224,7 +224,7 @@ static int bind_socket(char* ip, uint16_t port){
 static volatile int quit_listen=0;
 static int listen_signal_handler(int sig){
 	/*quit listening upon signal and do clean up.*/
-	dbg_time("scheduler caught: %s(%d)\n", sys_siglist[sig],sig);
+	dbg_time("scheduler caught: %s(%d)\n", strsignal(sig), sig);
 	quit_listen=1;
 	return 1;
 }

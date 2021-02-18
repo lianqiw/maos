@@ -365,18 +365,12 @@ pid_t launch_exe(const char* exepath, const char* cmd){
 		}
 	}
 	pid_t ans=-1;
-	if(args){
-		args=strstr(args, exename);
-		if(!args){
-			warning("args=(%s) has wrong format\n", args);
-			goto end;
-		}
+	if(args && (args=strstr(args, exename))){
 		args+=strlen(exename)+1;
 		ans=spawn_process(exepath, args, cwd);
 	} else{
-		warning("Unabel to interpret %s\n", cmd);
+		warning("Unable to interpret %s\n", cmd);
 	}
-end:
 	free(cwd);
 	free(cmd2);
 	return ans;

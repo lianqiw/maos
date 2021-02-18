@@ -226,7 +226,7 @@ void rename_file(int sig){
    Handles signals.
 */
 int maos_signal_handler(int sig){
-	info2("maos: %s", sys_siglist[sig]);
+	info2("maos: %s", strsignal(sig));
 	rename_file(sig);/*handles signal */
 	if(global&&global->parms&&global->parms->sim.mvmport){
 		mvm_client_close();

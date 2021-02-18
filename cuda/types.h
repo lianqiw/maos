@@ -449,6 +449,11 @@ class cusp{
 	int nzmax;
 	int* nref;
 	enum TYPE_SP type;
+#if __CUDACC_VER_MAJOR__ > 10	
+	cusparseSpMatDescr_t desc;
+#else
+	void* desc;
+#endif
 public:
 	enum TYPE_SP Type()const{
 		return type;
@@ -481,9 +486,14 @@ public:
 	const Real* Px() const{
 		return x;
 	}
-	cusp():p(0), i(0), x(0), nx(0), ny(0), nzmax(0), nref(0), type(SP_CSC){}
+#if __CUDACC_VER_MAJOR__ > 10	
+	cusparseSpMatDescr_t Desc() const{
+		return desc;
+	}
+#endif
+	cusp():p(0), i(0), x(0), nx(0), ny(0), nzmax(0), nref(0), type(SP_CSC), desc(0){}
 	cusp(const dsp* in, int tocsr=0, int transp=0);
-	cusp(const cusp& in):p(in.p), i(in.i), x(in.x), nx(in.nx), ny(in.ny), nzmax(in.nzmax), nref(in.nref), type(in.type){
+	cusp(const cusp& in):p(in.p), i(in.i), x(in.x), nx(in.nx), ny(in.ny), nzmax(in.nzmax), nref(in.nref), type(in.type), desc(in.desc){
 		if(nref) nref[0]++;
 	}
 	cusp& operator=(const cusp& in){
@@ -498,6 +508,7 @@ public:
 			nref=in.nref;
 			if(nref) nref[0]++;
 			type=in.type;
+			desc=in.desc;
 		}
 		return *this;
 	}
@@ -506,6 +517,9 @@ public:
 	}
 	void deinit(){
 		if(nref&&!atomicadd(nref, -1)){
+#if __CUDACC_VER_MAJOR__ > 10	
+			cusparseDestroySpMat(desc);
+#endif
 			cudaFree(p);
 			cudaFree(i);
 			cudaFree(x);

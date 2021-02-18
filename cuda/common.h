@@ -44,6 +44,7 @@ typedef double  Real;
 typedef dmat rmat;
 #define CUSP(A) cusparseD##A
 #define CUBL(A) cublasD##A
+#define CUDA_R CUDA_R_64F
 #define X(A) d##A
 #define XC(A) c##A
 #define Z(A) A
@@ -61,6 +62,7 @@ typedef float Real;
 typedef smat rmat;
 #define CUSP(A) cusparseS##A
 #define CUBL(A) cublasS##A
+#define CUDA_R CUDA_R_32F
 #define X(A) s##A
 #define XC(A) z##A
 #define Z(A) A##f

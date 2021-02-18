@@ -577,7 +577,7 @@ static void init_simu_evl(SIM_T* simu){
 					parms->evl.wvl->p[iwvl],
 					parms->evl.wvl->p[iwvl]/(nembed*parms->evl.dx),
 					aper->sumamp2*nembed*nembed);
-				strcat(header, headeri);
+				strncat(header, headeri, sizeof(header)-strlen(header)-1);
 			}
 		}
 		header[sizeof(header)-1]='\0';

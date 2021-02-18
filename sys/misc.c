@@ -27,6 +27,7 @@
 #include <dirent.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <string.h>
 #include "common.h"
 #include "thread.h"
 #include "process.h"
@@ -790,7 +791,7 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	(void)unused;
-	info("\nSignal caught: %s (%d).\n", sys_siglist[sig], sig);sync();
+	info("\nSignal caught: %s (%d).\n", strsignal(sig), sig);sync();
 	int cancel_action=0;
 	struct sigaction act={0};
 	act.sa_handler=SIG_DFL;

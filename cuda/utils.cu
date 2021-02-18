@@ -66,7 +66,7 @@ void cp2gpu(cumapcell& dest, const mapcell* source){
 */
 cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	int tocsr,        /**<0: Keep in CSC. 1: Convert to CSR */
-	int transp        /**<1: transpost*/
+	int transp        /**<1: transpose*/
 )
 	:p(NULL), i(NULL), x(NULL), nx(0), ny(0), nzmax(0), type(tocsr?SP_CSR:SP_CSC), nref(0){
 	if(!src_csc) return;
@@ -89,6 +89,11 @@ cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	if(src_trans){
 		dspfree(src_trans);
 	}
+#if __CUDACC_VER_MAJOR__ > 10	
+	int nrow=(type==SP_CSR?nx:ny);
+	int ncol=(type==SP_CSR?ny:nx);
+	cusparseCreateCsr(&desc, nrow, ncol, nzmax, p, i, x, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_BASE_ZERO, CUDA_R);
+#endif
 }
 void cp2gpu(cusp& dest, const dspcell* srcc, int tocsr){
 	dsp* src=dspcell2sp(srcc);
@@ -143,14 +148,34 @@ void cuspmul(Real* y, const cusp& A, const Real* x, int ncolvec, char trans, Rea
 	int status;
 	Real one=1.f;
 	if(ncolvec==1){
+#if __CUDACC_VER_MAJOR__ > 10
+		size_t bsize;
+		void *buffer;
+		cusparseDnVecDescr_t xv, yv;
+		size_t ny=istrans?ncol:nrow;
+		size_t nx=istrans?nrow:ncol;
+		cusparseCreateDnVec(&xv, nx, (void*)x, CUDA_R);
+		cusparseCreateDnVec(&yv, ny, (void*)y, CUDA_R);
+		status=CUSP(pMV_bufferSize)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, CUSPARSE_MV_ALG_DEFAULT, &bsize);
+		DO(cudaMalloc(&buffer, bsize));
+		status=CUSP(pMV)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, CUSPARSE_MV_ALG_DEFAULT, buffer);
+		DO(cudaFree(buffer));
+		cusparseDestroyDnVec(yv);
+		cusparseDestroyDnVec(xv);
+#else		
 		status=CUSP(csrmv)(stream.sparse(), opr,
 			nrow, ncol, A.Nzmax(), &alpha, spdesc,
 			A.Px(), A.Pp(), A.Pi(), x, &one, y);
+#endif
 	} else{
+#if __CUDACC_VER_MAJOR__ > 10
+		error("Please implement.\n");
+#else
 		int nlead=istrans?nrow:ncol;
 		status=CUSP(csrmm)(stream.sparse(), opr,
 			nrow, ncolvec, ncol, A.Nzmax(), &alpha, spdesc,
 			A.Px(), A.Pp(), A.Pi(), x, nlead, &one, y, nlead);
+#endif
 	}
 	if(status!=0){
 		error("cusparseScsrmv(m) failed with status '%s'\n", scsrmv_err[status]);
