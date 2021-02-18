@@ -137,12 +137,14 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 	if(sx+nx>in->nx||sy+ny>in->ny){
 		error("Invalid parameter range: (%ld-%ld)x(%ld-%ld) is outside of %ldx%ld\n",
 			sx, sx+nx, sy, sy+ny, in->nx, in->ny);
+		return NULL;
+	} else{
+		X(mat)* out=X(new)(nx, ny);
+		for(int iy=0; iy<ny; iy++){
+			memcpy(PCOL(out, iy), PP(in, sx, iy+sy), sizeof(T)*nx);
+		}
+		return out;
 	}
-	X(mat)* out=X(new)(nx, ny);
-	for(int iy=0; iy<ny; iy++){
-		memcpy(PCOL(out, iy), PP(in, sx, iy+sy), sizeof(T)*nx);
-	}
-	return out;
 }
 /**
    Resize a matrix by adding or removing columns or rows. Data is kept whenever
@@ -162,6 +164,7 @@ void X(resize)(X(mat)* A, long nx, long ny){
 	if(!ny) ny=A->ny;
 	if(mem_isref(A->mem)){
 		error("Trying to resize referenced matrix\n");
+		return;
 	}
 	if(A->nx!=nx||A->ny!=ny){
 		if(A->nx==nx||A->ny==1){
@@ -205,27 +208,29 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 	X(mat)* out=NULL;
 
 	if(dim==1){
-	/*along x. */
+		/*along x. */
 		if(in1->ny!=in2->ny){
 			error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld)\n",
 				in1->nx, in1->ny, in2->nx, in2->ny);
-		}
-		out=X(new)(in1->nx+in2->nx, in1->ny);
-		for(long iy=0; iy<in1->ny; iy++){
-			memcpy(PCOL(out, iy), PCOL(in1, iy), in1->nx*sizeof(T));
-			memcpy(PCOL(out, iy)+in1->nx, PCOL(in2, iy), in2->nx*sizeof(T));
+		} else{
+			out=X(new)(in1->nx+in2->nx, in1->ny);
+			for(long iy=0; iy<in1->ny; iy++){
+				memcpy(PCOL(out, iy), PCOL(in1, iy), in1->nx*sizeof(T));
+				memcpy(PCOL(out, iy)+in1->nx, PCOL(in2, iy), in2->nx*sizeof(T));
+			}
 		}
 	} else if(dim==2){
    /*along y. */
 		if(in1->nx!=in2->nx){
 			error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld)\n",
 				in1->nx, in1->ny, in2->nx, in2->ny);
+		} else{
+			out=X(new)(in1->nx, in1->ny+in2->ny);
+			memcpy(out->p, in1->p, in1->nx*in1->ny*sizeof(T));
+			memcpy(out->p+in1->nx*in1->ny, in2->p, in2->nx*in2->ny*sizeof(T));
 		}
-		out=X(new)(in1->nx, in1->ny+in2->ny);
-		memcpy(out->p, in1->p, in1->nx*in1->ny*sizeof(T));
-		memcpy(out->p+in1->nx*in1->ny, in2->p, in2->nx*in2->ny*sizeof(T));
 	} else{
-		error("Invalid dim\n");
+		error("Invalid dim, excepts 1 or 2.\n");
 	}
 	return out;
 }
@@ -327,12 +332,12 @@ void X(show)(const X(mat)* A, const char* format, ...){
 	for(iset=0; iset<nset; iset++){
 		int ncol=(iset+1)*colmax;
 		if(ncol>A->ny) ncol=A->ny;
-		printf("Cols %d to %d\n", iset, ncol-1);
+		info("Cols %d to %d\n", iset, ncol-1);
 		for(j=0; j<A->nx; j++){
 			for(i=iset*colmax; i<ncol; i++){
 				PRINT(P(A, j, i));
 			}
-			printf("\n");
+			info("\n");
 		}
 	}
 }

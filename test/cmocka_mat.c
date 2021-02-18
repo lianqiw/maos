@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -22,25 +22,118 @@
 #include <stdint.h>
 #include <cmocka.h>
 #include "../lib/aos.h"
-static void mat_ref(void** state){
-	(void)state;
-	dmat *a=dnew(3,3);
-	assert_int_equal(mem_isref(a->mem), 0);
-  dmat *b=dref(a);
-	P(b,2,2)=1;
-	assert_float_equal(P(a,2,2), 1,0);
-	assert_int_equal(mem_isref(b->mem), 1);
-	dfree(a);
-	assert_null(a);
-	assert_int_equal(mem_isref(b->mem), 0);
-	dfree(b);
-	assert_null(b);
+static void dummy_quitfun(const char *msg){
+    info("quitfun called with %s.\n", msg);
 }
 
-int main(void)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(mat_ref),
+static void mat_basic(void** state){
+    (void)state;
+    dmat* b=NULL;
+    {
+        dmat* a=dnew(3, 3);
+        assert_int_equal(mem_isref(a->mem), 0);
+        b=dref(a);
+        P(b, 2, 2)=1;
+        assert_float_equal(P(a, 2, 2), 1, 0);
+        dset(a, 2);
+        assert_float_equal(P(b, 2, 2), 2, 0);
+        assert_int_equal(mem_isref(b->mem), 1);
+        dfree(a);
+        assert_null(a);
+        assert_int_equal(mem_isref(b->mem), 0);
+    }
+    {
+        dmat* c=dmat_cast(b);
+        assert_ptr_equal(c, b);
+    }
+    {
+        dmat* c=dref_reshape(b, 9, 1);
+        assert_int_equal(mem_isref(b->mem), 1);
+        assert_float_equal(P(c, 8), 2, 0);
+        dfree(c);
+    }
+    {
+        dmat* d=drefcols(b, 1, 2);
+        assert_int_equal(b->nx, d->nx);
+        assert_int_equal(d->ny, 2);
+        assert_ptr_equal(PP(b, 0, 1), PP(d, 0, 0));
+        dresize(d, 2, 3);
+        dfree(d);
+    }
+    {
+        dmat* e=dsub(b, 1, 2, 2, 1);
+        assert_int_equal(mem_isref(e->mem), 0);
+        assert_int_equal(e->nx, 2);
+        assert_int_equal(e->ny, 1);
+        assert_int_equal(P(b, 1, 2), P(e,0, 0));
+        dfree(e);
+        e=dsub(b, 1, 2, 2, 2);
+        assert_null(e);
+    }
+    {// test dcat
+        dmat* f=ddup(b);
+        assert_int_equal(mem_isref(f->mem), 0);
+        assert_int_equal(mem_isref(b->mem), 0);
+        dmat* f2=dcat(b, f, 0);
+        assert_null(f2);
+        f2=dcat(b, f, 1);
+        assert_int_equal(f2->nx, 6);
+        assert_int_equal(f2->ny, 3);
+        dfree(f2);
+        f2=dcat(b, f, 2);
+        assert_int_equal(f2->nx, 3);
+        assert_int_equal(f2->ny, 6);
+        dfree(f2);
+        dmat* fv=dref_reshape(f, 6, 1);
+        f2=dcat(b, fv, 1);
+        assert_null(f2);
+        f2=dcat(b, fv, 2);
+        assert_null(f2);
+        dfree(fv);
+        dfree(f2);
+    }
+    {
+        dmat* c=ddup(b);
+        dzerocol(c, 1);
+        assert_float_equal(P(c, 0, 1), 0, 0); 
+        assert_float_equal(P(c, 1, 1), 0, 0);
+        assert_float_equal(P(c, 2, 1), 0, 0);
+        assert_float_equal(dsum(c), 12, 0);
+        
+        dmat* d=dtrans(c);
+        dshow(c,"c");
+        assert_float_equal(P(d, 1, 0), 0, 0);
+        assert_float_equal(P(d, 1, 1), 0, 0);
+        assert_float_equal(P(d, 1, 2), 0, 0);
+        assert_float_equal(dsum(d), 12, 0);
+        
+        dsort(d, 1);
+        assert_float_equal(P(d, 0, 0), 0, 0);
+        assert_float_equal(P(d, 2, 0), 2, 0);
+        dsort(d, 0);
+        assert_float_equal(P(d, 0, 0), 2, 0);
+        assert_float_equal(P(d, 2, 0), 0, 0);
+        
+        dzero(c);
+        assert_float_equal(dsum(c), 0, 0);
+        assert_float_equal(dsum(b), 18, 0);
+        dcp(&c, b);
+        assert_float_equal(dsum(c), 18, 0);
+        assert_float_equal(dtrace(c), 6, 0);
+    }
+    {
+        uint32_t d=dhash(b, 1);
+        assert_int_equal(d, 2756278489);
+    }
+    dfree(b);
+    assert_null(b);
+}
+
+int main(void){
+    quitfun=dummy_quitfun;
+    LOG_LEVEL=-4;
+    const struct CMUnitTest tests[]={
+        cmocka_unit_test(mat_basic),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

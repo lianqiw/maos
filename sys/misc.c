@@ -776,7 +776,7 @@ void set_realtime(int icpu, int niceness){
 		warning("Please run program as setsid or as root to lift priority\n");
 	}
 }
-quitfun_t quitfun=0;
+quitfun_t quitfun=NULL;
 void default_quitfun(const char* msg){
 	info("%s", msg);
 	sync();

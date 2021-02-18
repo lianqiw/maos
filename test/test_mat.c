@@ -62,14 +62,7 @@ static void test_dcp(){
     dfree(A);
     dfree(B);
 }
-static void test_dref(){
-    dmat *A=dnew(10,10);
-    dmat *B=dref(A);
-    dmat *C=dref(A);
-    dfree(A);
-    dfree(B);
-    dfree(C);
-}
+
 static void test_dcircle(){
     dmat *A=dnew(100,100);
     real r=45;
@@ -394,7 +387,5 @@ int main(int argc, char **argv){
     test_dshift2center();
     test_dcircle();
     test_d2cell();
-    test_dref();
-
     test_dcp();
 }
