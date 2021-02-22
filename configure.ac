@@ -692,7 +692,23 @@ if test "$use_websockets" = "yes" ;then
 		use_websockets="no"
     fi
 fi
-
+if test "$enable_cmocka" != "no" ;then
+	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	if test "$enable_cmocka" = "no" ;then
+		compile CMOCKA cmocka.tar.xz
+		unset ac_cv_lib_cmocka_mock_assert
+		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	fi
+	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
+		#include <stdarg.h>
+		#include <stddef.h>
+		#include <stdint.h>
+		#include <setjmp.h>])
+	if test "$enable_cmocka" != "no" ;then
+		AC_DEFINE(USE_CMOCKA, [1], "Enable unit testing with cmocka")
+	fi
+fi
+AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
 PKG_PROG_PKG_CONFIG
 if test "$with_gtk" != "no" ;then
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
@@ -904,12 +920,13 @@ if test "$with_cuda" != "no" ;then
     #virtual GPUs are used here to allow JIT compilation during runtime
     #set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
     if test "$cudaver" -lt 90 ;then
-		CUDAOPT+=" -arch=compute_20" #<cuda-8.0 supports compute_20
+		cuarch=20 #<cuda-8.0 supports compute_20
     elif test "$cudaver" -lt 110 ;then
-		CUDAOPT+=" -arch=compute_30" #compute_30 is the minimum version
-    else
-		CUDAOPT+=" -arch=compute_50" #compute_30 is the minimum version
+		cuarch=30 #compute_30 is the minimum version
+	else
+		cuarch=50 #compute_50 is the minimum version
     fi
+	CUDAOPT+=" -arch=compute_$cuarch" 
     #To specify multiple architectures, use
     #CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
     if test "$debug" = "yes" ;then
@@ -965,23 +982,7 @@ else
     AM_CONDITIONAL(CUDA_DOUBLE, false)
     AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
-if test "$enable_cmocka" != "no" ;then
-	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
-	if test "$enable_cmocka" = "no" ;then
-		compile CMOCKA cmocka.tar.xz
-		unset ac_cv_lib_cmocka_mock_assert
-		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
-	fi
-	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
-		#include <stdarg.h>
-		#include <stddef.h>
-		#include <stdint.h>
-		#include <setjmp.h>])
-	if test "$enable_cmocka" != "no" ;then
-		AC_DEFINE(USE_CMOCKA, [1], "Enable unit testing with cmocka")
-	fi
-fi
-AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
+
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
     if ! which doxygen ;then
@@ -1074,7 +1075,7 @@ echo
 
 echo "OpenMP:          $has_openmp"
 echo "Single:          $use_single"
-echo "CUDA:            $cudaver (double: $cuda_double)"
+echo "CUDA:            $cudaver (double: $cuda_double, arch: $cuarch)"
 echo "Drawdaemon:      $has_cairo"
 echo "Monitor:         $((gtk_ver>0)) (libnotify: $has_notify)"
 echo "GTK version:     ${gtk_ver}"

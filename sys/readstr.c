@@ -483,6 +483,32 @@ void readstr_intarr_relax(int** ret, /**<[out] Result*/
 	free(ret2);
 }
 /**
+	update header and end to point to valid region. Does not modify the string
+*/
+int trim_header(const char **pheader, const char **pend){
+	if(!pheader||!pend) return 1;
+	const char* header=*pheader;
+	const char* end=header+strlen(header);
+	while(isspace((int)header[0]) && header<end) header++;
+	while(isspace((int)end[-1])&& header<end) end--;
+	if(header>=end){ 
+		header=NULL;
+		end=NULL;
+	} else{
+		if(header[0]=='\''||header[0]=='"'){
+			if(end[-1]!=header[0]){
+				warning("Quote is not matched: {%s}\n", *pheader);
+			} else{
+				end--;
+			}
+			header++;
+		}
+	}
+	*pheader=header;
+	*pend=end;
+	return 0;
+}
+/**
    Search and return the value correspond to key. Case is ignored; 
    NULL if not found. Do not free the returned pointer. 
    The key must be preceeded by space, semicolon, coma or new line (isspace),
@@ -491,29 +517,32 @@ const char* search_header(const char* header, const char* key){
 	if(!header) return NULL;
 	const char* ans=NULL;
 	//const char* val=header;
-	const char* end=header+strlen(header);
-	const int nkey=strlen(key);
-	int was_space=1;
-	for(const char *p=header; p<end; p++){
-		const char c=*p;
-		if(!isspace((int)c)&&c!=';'&&c!=','){
-			if(was_space){//start of key
-				if(!strncasecmp(p, key, nkey)){//match regardless of case.
-					p+=nkey;
-					while(isspace((int)*p) && p<end) p++;
-					if(*p=='='){
-						p++;
-						while(isspace((int)*p) && p<end) p++;
-						ans=p;
-						break;
-					}else{
-						p--;
+	const char* end=NULL;
+	trim_header(&header, &end);
+	if(header&&end){
+		const int nkey=strlen(key);
+		int was_space=1;
+		for(const char* p=header; p<end; p++){
+			const char c=*p;
+			if(!isspace((int)c)&&c!=';'&&c!=','){
+				if(was_space){//start of key
+					if(!strncasecmp(p, key, nkey)){//match regardless of case.
+						p+=nkey;
+						while(isspace((int)*p)&&p<end) p++;
+						if(*p=='='){
+							p++;
+							while(isspace((int)*p)&&p<end) p++;
+							ans=p;
+							break;
+						} else{
+							p--;
+						}
 					}
 				}
+				was_space=0;
+			} else{
+				was_space=1;
 			}
-			was_space=0;
-		}else{
-			was_space=1;
 		}
 	}
 	return ans;

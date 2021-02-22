@@ -89,7 +89,7 @@ cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	if(src_trans){
 		dspfree(src_trans);
 	}
-#if __CUDACC_VER_MAJOR__ > 10	
+#if __CUDACC_VER_MAJOR__ >= 10	
 	int nrow=(type==SP_CSR?nx:ny);
 	int ncol=(type==SP_CSR?ny:nx);
 	cusparseCreateCsr(&desc, nrow, ncol, nzmax, p, i, x, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_BASE_ZERO, CUDA_R);
@@ -122,7 +122,9 @@ static const char* scsrmv_err[]={
 };
 
 /*
-  y=A*x where A is sparse. x, y are vectors. Slow for GS0.
+	y=A*x where A is sparse. x, y are vectors or matrices. (Slow for GS0.)
+	Y = α op (A) ⋅ X + β Y or Y = α op (A) ⋅ X + β Y with β=1
+	Converted cuSparse generic API for CUDA version 11 which removed old API.
 */
 
 void cuspmul(Real* y, const cusp& A, const Real* x, int ncolvec, char trans, Real alpha, stream_t& stream){
@@ -147,38 +149,90 @@ void cuspmul(Real* y, const cusp& A, const Real* x, int ncolvec, char trans, Rea
 	}
 	int status;
 	Real one=1.f;
+	
+#if __CUDACC_VER_MAJOR__ >= 10
+	/*
+cusparseStatus_t
+cusparseSpMVcusparseHandle_t     handle,
+					cusparseOperation_t  opA,
+					const void*          alpha,
+					cusparseSpMatDescr_t matA,
+					cusparseDnVecDescr_t vecX,
+					const void*          beta,
+					cusparseDnVecDescr_t vecY,
+					cudaDataType         computeType,
+					cusparseSpMVAlg_t    alg,
+					void*                externalBuffer)
+					
+cusparseStatus_t
+cusparseSpMM(cusparseHandle_t     handle,
+			cusparseOperation_t  opA,
+			cusparseOperation_t  opB,
+			const void*          alpha,
+			cusparseSpMatDescr_t matA,
+			cusparseDnMatDescr_t matB,
+			const void*          beta,
+			cusparseDnMatDescr_t matC,
+			cudaDataType         computeType,
+			cusparseSpMMAlg_t    alg,
+			void*                externalBuffer)
+
+	*/
+	size_t bsize;
+	void *buffer;
+	size_t ny=istrans?ncol:nrow;
+	size_t nx=istrans?nrow:ncol;
 	if(ncolvec==1){
-#if __CUDACC_VER_MAJOR__ > 10
-		size_t bsize;
-		void *buffer;
 		cusparseDnVecDescr_t xv, yv;
-		size_t ny=istrans?ncol:nrow;
-		size_t nx=istrans?nrow:ncol;
 		cusparseCreateDnVec(&xv, nx, (void*)x, CUDA_R);
 		cusparseCreateDnVec(&yv, ny, (void*)y, CUDA_R);
-		status=CUSP(pMV_bufferSize)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, CUSPARSE_MV_ALG_DEFAULT, &bsize);
+#if __CUDACC_VER_MAJOR__ >= 11
+		cusparseSpMVAlg_t alg=CUSPARSE_SPMV_ALG_DEFAULT;
+#else
+		cusparseSpMVAlg_t alg=CUSPARSE_MV_ALG_DEFAULT;
+#endif
+		DO(status=CUSP(pMV_bufferSize)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, &bsize));
 		DO(cudaMalloc(&buffer, bsize));
-		status=CUSP(pMV)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, CUSPARSE_MV_ALG_DEFAULT, buffer);
+		DO(status=CUSP(pMV)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, buffer));
 		DO(cudaFree(buffer));
 		cusparseDestroyDnVec(yv);
 		cusparseDestroyDnVec(xv);
+	}else{
+		cusparseDnMatDescr_t Bm, Cm;
+		cusparseCreateDnMat(&Bm, nx, ncolvec, nx, (void*)x, CUDA_R, CUSPARSE_ORDER_COL);
+		cusparseCreateDnMat(&Cm, ny, ncolvec, ny, (void*)y, CUDA_R, CUSPARSE_ORDER_COL);
+		cusparseOperation_t opB=CUSPARSE_OPERATION_NON_TRANSPOSE;
+#if __CUDACC_VER_MAJOR__ >= 11
+		cusparseSpMMAlg_t alg=CUSPARSE_SPMM_ALG_DEFAULT;
+#else
+		cusparseSpMMAlg_t alg=CUSPARSE_MM_ALG_DEFAULT;
+#endif
+		DO(status=CUSP(pMM_bufferSize)(stream.sparse(), opr, opB, &alpha,
+			A.Desc(), Bm, &one, Cm, CUDA_R, alg, &bsize));
+		DO(cudaMalloc(&buffer, bsize));
+		
+		DO(status=CUSP(pMM)(stream.sparse(), opr, opB, &alpha,
+			A.Desc(), Bm, &one, Cm, CUDA_R, alg, buffer));
+		DO(cudaFree(buffer));
+		cusparseDestroyDnMat(Bm);
+		cusparseDestroyDnMat(Cm);
+	}
 #else		
+	if(ncolvec==1){
 		status=CUSP(csrmv)(stream.sparse(), opr,
 			nrow, ncol, A.Nzmax(), &alpha, spdesc,
 			A.Px(), A.Pp(), A.Pi(), x, &one, y);
-#endif
+
 	} else{
-#if __CUDACC_VER_MAJOR__ > 10
-		error("Please implement.\n");
-#else
-		int nlead=istrans?nrow:ncol;
+		int nleadx=istrans?nrow:ncol;
+		int nleady=istrans?ncol:nrow;
 		status=CUSP(csrmm)(stream.sparse(), opr,
 			nrow, ncolvec, ncol, A.Nzmax(), &alpha, spdesc,
-			A.Px(), A.Pp(), A.Pi(), x, nlead, &one, y, nlead);
-#endif
+			A.Px(), A.Pp(), A.Pi(), x, nleadx, &one, y, nleady);
 	}
+#endif
 	if(status!=0){
-		error("cusparseScsrmv(m) failed with status '%s'\n", scsrmv_err[status]);
+		error("cuspmul failed with status '%s'\n", scsrmv_err[status]);
 	}
 }
 
