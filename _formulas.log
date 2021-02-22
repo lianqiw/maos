@@ -1,24 +1,24 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=latex 2021.2.18)  18 FEB 2021 22:41
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=latex 2021.2.22)  22 FEB 2021 23:22
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **_formulas.tex
 (./_formulas.tex
 LaTeX2e <2020-10-01> patch level 4
-L3 programming layer <2021-02-06>
+L3 programming layer <2021-02-18>
 (/home/runner/.TinyTeX/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2020/04/10 v1.4m Standard LaTeX document class
 (/home/runner/.TinyTeX/texmf-dist/tex/latex/base/size10.clo
 File: size10.clo 2020/04/10 v1.4m Standard LaTeX file (size option)
 )
-\c@part=\count177
-\c@section=\count178
-\c@subsection=\count179
-\c@subsubsection=\count180
-\c@paragraph=\count181
-\c@subparagraph=\count182
-\c@figure=\count183
-\c@table=\count184
+\c@part=\count179
+\c@section=\count180
+\c@subsection=\count181
+\c@subsubsection=\count182
+\c@paragraph=\count183
+\c@subparagraph=\count184
+\c@figure=\count185
+\c@table=\count186
 \abovecaptionskip=\skip47
 \belowcaptionskip=\skip48
 \bibindent=\dimen138
@@ -61,13 +61,13 @@ Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 ) (/home/runner/.TinyTeX/texmf-dist/tex/latex/amsmath/amsopn.sty
 Package: amsopn 2016/03/08 v2.02 operator names
 )
-\inf@bad=\count185
+\inf@bad=\count187
 LaTeX Info: Redefining \frac on input line 234.
-\uproot@=\count186
-\leftroot@=\count187
+\uproot@=\count188
+\leftroot@=\count189
 LaTeX Info: Redefining \overline on input line 399.
-\classnum@=\count188
-\DOTSCASE@=\count189
+\classnum@=\count190
+\DOTSCASE@=\count191
 LaTeX Info: Redefining \ldots on input line 496.
 LaTeX Info: Redefining \dots on input line 499.
 LaTeX Info: Redefining \cdots on input line 620.
@@ -76,15 +76,15 @@ LaTeX Info: Redefining \cdots on input line 620.
 \big@size=\dimen145
 LaTeX Font Info:    Redeclaring font encoding OML on input line 743.
 LaTeX Font Info:    Redeclaring font encoding OMS on input line 744.
-\macc@depth=\count190
-\c@MaxMatrixCols=\count191
+\macc@depth=\count192
+\c@MaxMatrixCols=\count193
 \dotsspace@=\muskip16
-\c@parentequation=\count192
-\dspbrk@lvl=\count193
+\c@parentequation=\count194
+\dspbrk@lvl=\count195
 \tag@help=\toks17
-\row@=\count194
-\column@=\count195
-\maxfields@=\count196
+\row@=\count196
+\column@=\count197
+\maxfields@=\count198
 \andhelp@=\toks18
 \eqnshift@=\dimen146
 \alignsep@=\dimen147
@@ -106,14 +106,14 @@ LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 ) (/home/runner/.TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-dvips.def
-File: l3backend-dvips.def 2021-02-06 L3 backend support: dvips
+File: l3backend-dvips.def 2021-02-18 L3 backend support: dvips
 \l__pdf_internal_box=\box49
-\g__pdf_backend_object_int=\count197
+\g__pdf_backend_object_int=\count199
 \l__pdf_backend_content_box=\box50
 \l__pdf_backend_model_box=\box51
-\g__pdf_backend_annotation_int=\count198
-\g__pdf_backend_link_int=\count199
-\g__pdf_backend_link_sf_int=\count266
+\g__pdf_backend_annotation_int=\count266
+\g__pdf_backend_link_int=\count267
+\g__pdf_backend_link_sf_int=\count268
 )
 No file _formulas.aux.
 \openout1 = `_formulas.aux'.
@@ -184,10 +184,10 @@ n/10 [1](1\OML/cmm/m/it/10 ; ic\OT1/cmr/m/n/10 )) \OMS/cmsy/m/n/10 ^^C \OML/cmm
 
 [84] (./_formulas.aux) ) 
 Here is how much of TeX's memory you used:
- 1542 strings out of 481251
- 21928 string characters out of 5915603
- 298021 words of memory out of 5000000
- 18512 multiletter control sequences out of 15000+600000
+ 1523 strings out of 480972
+ 21361 string characters out of 5907749
+ 310507 words of memory out of 5000000
+ 18772 multiletter control sequences out of 15000+600000
  405129 words of font info for 35 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  83i,12n,88p,356b,128s stack positions out of 5000i,500n,10000p,200000b,80000s

@@ -97,17 +97,17 @@ var NAVTREEINDEX =
 "globals_func_p.html",
 "maos_2moao_8h.html#af62a4685464fea7bdd37d04c821c3caf",
 "parms_8h.html",
-"smath_8h.html",
-"structAPER__CFG__T.html",
-"structFDPCG__T.html#abefe9064fa1192a3b075bf4555c0a72c",
-"structMagic_3_01double2_01_4.html#aecb40837405ee5b175d05242246731faa23a3592ae9724fa4cd7d272981917626",
-"structPOWFS__T.html#afd0302013032e547054f9431d7aee502",
-"structSIM__CFG__T.html#a5212faa1072d9348edac13ea4e8d9d1a",
-"structSTATUS__T.html#a0bb96bab9feabde8c982579de33b9854",
-"structdmat.html#a96d8072a544deffdd44ce12f0c74ef1a",
-"structrmap__t.html#ae7d2a5dcbd82bda42d42ee23c3117981",
-"thread__pool_8h.html",
-"zmath_8h.html#ad4c1fb7b396f8c2621d44de3749c804b"
+"slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7",
+"stfun_8h.html#acb665bf663de60baa366796d561fbeae",
+"structFDPCG__T.html#aad7247977bffff075d7481eada6969c0",
+"structMagic_3_01double2_01_4.html",
+"structPOWFS__T.html#af49935106ffcdcc195c2d6654d070722",
+"structSIM__CFG__T.html#a4813d011fa1383563d776ed0d3a75eb3",
+"structSTATUS__T.html#a093b6843684e59be66f2cf39611078d8",
+"structdmat.html#a88d7f7e053b7232e17f99ac09168de4b",
+"structrmap__t.html#ae57dd7d071af3a560a2914e7b52db00a",
+"thread_8h.html#aeb200d447f4bb01eaf557788b48337e2",
+"zmath_8h.html#ad47721cb8d14cb6e6baf75ca33297142"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

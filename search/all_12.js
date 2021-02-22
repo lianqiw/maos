@@ -41,6 +41,7 @@ var searchData=
   ['tomor',['TomoR',['../recon__utils_8h.html#aaa04e0ea1c4aad353e807344b6e35f67',1,'recon_utils.c']]],
   ['tomort',['TomoRt',['../recon__utils_8h.html#a060ae9b2bc6a20378d32564512e04f2a',1,'recon_utils.c']]],
   ['tomoscale',['TOMOSCALE',['../parms_8h.html#a65cb820cf4f1a3b1be3f9fc4fbe17c21',1,'maos.c']]],
+  ['trim_5fheader',['trim_header',['../readstr_8h.html#a7a27fceb5312fbab52a17a26f369ca1c',1,'readstr.c']]],
   ['trs',['trs',['../structPOWFS__CFG__T.html#a979789ab45a1f87cf251469dbedebe00',1,'POWFS_CFG_T']]],
   ['tsurf',['tsurf',['../structPARMS__T.html#a8f85b3977b13fda7201dde02c10126de',1,'PARMS_T::tsurf()'],['../structSIM__T.html#acef80f47b848aea1bbfd7e169807bde5',1,'SIM_T::tsurf()']]],
   ['tt',['TT',['../structRECON__T.html#a0dc1c5f640a8d583f4b3b6b0737c777b',1,'RECON_T']]],

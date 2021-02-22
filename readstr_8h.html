@@ -111,6 +111,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
 <tr class="separator:aa8708b4c5638fbcc7cd84373027f4869"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d29469601ed39c1cc611626f89d27d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a9d29469601ed39c1cc611626f89d27d4">readstr_intarr_relax</a> (int **ret, int len, const char *data)</td></tr>
 <tr class="separator:a9d29469601ed39c1cc611626f89d27d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a27fceb5312fbab52a17a26f369ca1c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a7a27fceb5312fbab52a17a26f369ca1c">trim_header</a> (const char **pheader, const char **pend)</td></tr>
+<tr class="separator:a7a27fceb5312fbab52a17a26f369ca1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf3e8d275430f33c2cd8262fac88cac8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#adf3e8d275430f33c2cd8262fac88cac8">search_header</a> (const char *header, const char *key)</td></tr>
 <tr class="separator:adf3e8d275430f33c2cd8262fac88cac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af916b0aa443255291534c8a9222dd585"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#af916b0aa443255291534c8a9222dd585">search_header_num</a> (const char *header, const char *key)</td></tr>
@@ -350,6 +352,35 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a7a27fceb5312fbab52a17a26f369ca1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a27fceb5312fbab52a17a26f369ca1c">&#9670;&nbsp;</a></span>trim_header()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int trim_header </td>
+          <td>(</td>
+          <td class="paramtype">const char **&#160;</td>
+          <td class="paramname"><em>pheader</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char **&#160;</td>
+          <td class="paramname"><em>pend</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>update header and end to point to valid region. Does not modify the string </p>
 
 </div>
 </div>
