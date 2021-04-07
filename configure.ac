@@ -5,10 +5,8 @@ AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURLS=
-BASEURLS+=" https://github.com/lianqiw/files/raw/master/"
-BASEURLS+=" https://sourceforge.net/projects/lianqiw/files/external"
-BASEURLS+=" https://bitbucket.org/lianqiw/files/downloads/"
+BASEURLS="https://github.com/lianqiw/files/raw/master/"
+
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
     CFLAGS=" "
@@ -21,7 +19,7 @@ if test -z "$CC" ;then
 fi
 AC_CONFIG_MACRO_DIR([m4])
 #After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 #defines host host_os host_cpu host_vendor etc
 AC_CANONICAL_HOST
 AC_LANG([C])
@@ -487,7 +485,7 @@ compile(){
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name with CFLAGS=$CFLAGS $@. Check $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
-    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
+    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3 -Wno-error"  && \
 		((./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} && make -j4 install) ||
 		 (mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install)))	>> $fnlog 2>&1 ;then
 		echo "Compiled $name successfully."
@@ -710,6 +708,11 @@ if test "$enable_cmocka" != "no" ;then
 fi
 AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
 PKG_PROG_PKG_CONFIG
+if test -z "$PKG_CONFIG" ;then
+	with_gtk="no"
+	AC_MSG_ERROR(["Please install pkgconfig"])
+fi
+
 if test "$with_gtk" != "no" ;then
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
@@ -1002,11 +1005,14 @@ DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
-if test x$DX_FLAG_doc = x0 ;then
+if test x$DOXYGEN_AVAILABLE = x ;then
     AM_CONDITIONAL(DO_DOXYGEN, false)
+	do_doxygen=0
 else
     AM_CONDITIONAL(DO_DOXYGEN, true)
+	do_doxygen=1
 fi
+
 AC_CONFIG_FILES( [Makefile
 	sys/Makefile
 	math/Makefile
@@ -1083,7 +1089,7 @@ echo "GTK version:     ${gtk_ver}"
 echo "Websocket:       $use_websockets"
 echo "MATLAB MEX:      $with_matlab"
 
-echo "Doxygen:         $DX_FLAG_doc (make doc)"
+echo "Doxygen:         $do_doxygen (make doc)"
 echo "CMOCKA:          $enable_cmocka"
 echo
 
