@@ -40,7 +40,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 	exception_env=(jmp_buf*)malloc(sizeof(jmp_buf));
 	if(setjmp(*exception_env)){
 	//We use longjump because calling mexErrMsgTxt causing matlab to crash (bug?)
-		info("Exception happened\n");
+		printf("Exception happened\n");
 		return;
 	} else{
 		const PARMS_T* parms=0;
@@ -59,11 +59,11 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 			}
 		}
 		if(nrhs==0||(strcmp(cmd, "setup")&&strcmp(cmd, "sim")&&strcmp(cmd, "get"))){
-			printf("Usage: "
+			printf("Usage: \n"
 				"       maos('setup', '-o dirout -n N -c scao_ngs.conf -g0')\n"
 				"  simu=maos('sim', nstep)\n"
 				"       maos('reset')\n"
-				"  simu=maos('get','simu')\n"
+				"  simu=maos('get','sim')\n"
 				" parms=maos('get','parms')\n"
 			);
 			return;
@@ -120,7 +120,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 			}
 			addpath(".");
 			if(dirout){
-				info("dirout=%s\n", dirout);
+				printf("dirout=%s\n", dirout);
 				mymkdir("%s", dirout);
 				if(chdir(dirout)){
 					error("Unable to chdir to %s\n", dirout);
@@ -130,7 +130,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 				disable_save=1;
 			}
 			parms=setup_parms(mainconf, conf, over_ride);
-			info("setup_parms done\n");
+			printf("setup_parms done\n");
 			setup_parms_gpu((PARMS_T*)parms, gpus, ngpu);
 			maos_setup(parms);//sets global
 		}
@@ -155,7 +155,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 						while(!(simu=maos_iseed(iseed))){
 							iseed++;
 							if(iseed==parms->sim.nseed){
-								info("All seeds are finished\n");
+								printf("All seeds are finished\n");
 								goto end;
 							}
 						}
@@ -170,13 +170,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 							iseed++;
 							break;
 						}
-						if(utIsInterruptPending()){
-							info("Simulation interrupted\n");
-							goto end;
-						}
 					}
 				} else{
-					info("Simulation finished\n");
+					printf("Simulation finished\n");
 				}
 			}
 		}
