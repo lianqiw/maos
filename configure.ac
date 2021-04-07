@@ -5,7 +5,7 @@ AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURLS="https://github.com/lianqiw/files/raw/master/"
+BASEURL="https://github.com/lianqiw/files/raw/master/"
 
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
@@ -455,23 +455,13 @@ download(){
 	extract "${fn}" "$OUTDIR"
     fi
     if ! test -f ${DOWNLOAD_DIR}/${fn} ;then
-	echo Downloading $1 from the MAOS website to ${DOWNLOAD_DIR}/${fn}
-	for BASEURL in $BASEURLS ; do
-	    echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
-	    if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
-		if extract "$fn" "$OUTDIR" ;then
-		    break
+		echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
+		$wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
+		if ! extract "$fn" "$OUTDIR" ;then
+			AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 		fi
-	    else
 		rm -rf ${DOWNLOAD_DIR}/${fn}
-		AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
-	    fi
-	done
-	if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
-	    AC_MSG_NOTICE(["Failed to download. Please download it manually and put in ${DOWNLOAD_DIR}/${fn}"])
-	fi
     fi
-    
 }
 #compile LIBNAME srcfile.tar.gz [compile options]
 compile(){
@@ -622,7 +612,7 @@ else
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#compile from source
-		FLAGS="--enable-threads --enable-shared --enable-static"
+		FLAGS="--enable-threads --enable-static" #--enable-shared
 		if test -n "$OPENMP_CFLAGS" ;then
 			FLAGS+=" --enable-openmp"
 		fi
@@ -656,9 +646,14 @@ AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 thread
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 if test "$has_chol" = "no" ;then
-    compile CHOLMOD cholmod.tar.bz2
-    unset ac_cv_lib_cholmod_${chol_fun}
-    AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
+	download CHOLMOD "libcholmod${libsuffix}.tar.bz2" ${PRE_DIR}
+	unset ac_cv_lib_cholmod_${chol_fun}
+	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
+fi
+if test "$has_chol" = "no" ;then
+   	compile CHOLMOD cholmod.tar.bz2
+   	unset ac_cv_lib_cholmod_${chol_fun}
+   	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 fi
 AC_CHECK_HEADERS([cholmod.h], [], 
     [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], 
@@ -692,6 +687,11 @@ if test "$use_websockets" = "yes" ;then
 fi
 if test "$enable_cmocka" != "no" ;then
 	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	if test "$enable_cmocka" = "no" ;then
+		download CMOCKA libcmocka${libsuffix}.tar.bz2 ${PRE_DIR}
+		unset ac_cv_lib_cmocka_mock_assert
+		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	fi
 	if test "$enable_cmocka" = "no" ;then
 		compile CMOCKA cmocka.tar.xz
 		unset ac_cv_lib_cmocka_mock_assert
@@ -993,7 +993,7 @@ if test "$enable_doxygen" = "yes" ;then
     fi
     PATH+=":${HOME}/bin"
     if ! which latex ;then
-        wget -qO- "https://yihui.org/gh/tinytex/tools/install-unx.sh" | sh
+        $wget "https://yihui.org/gh/tinytex/tools/install-unx.sh" $wgetoutput - | sh
     fi
 fi
 DX_HTML_FEATURE(ON)

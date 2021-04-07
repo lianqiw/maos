@@ -47,3 +47,6 @@ FORCE:
 CLEANFILES=version.h
 
 MAKEOVERRIDES=--no-print-directory
+
+clean-local:
+	-rm -rf external
