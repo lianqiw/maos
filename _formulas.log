@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=latex 2021.2.22)  22 FEB 2021 23:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=latex 2021.4.7)  7 APR 2021 00:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -106,7 +106,7 @@ LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 ) (/home/runner/.TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-dvips.def
-File: l3backend-dvips.def 2021-02-18 L3 backend support: dvips
+File: l3backend-dvips.def 2021-03-18 L3 backend support: dvips
 \l__pdf_internal_box=\box49
 \g__pdf_backend_object_int=\count199
 \l__pdf_backend_content_box=\box50
@@ -184,10 +184,10 @@ n/10 [1](1\OML/cmm/m/it/10 ; ic\OT1/cmr/m/n/10 )) \OMS/cmsy/m/n/10 ^^C \OML/cmm
 
 [84] (./_formulas.aux) ) 
 Here is how much of TeX's memory you used:
- 1523 strings out of 480972
- 21361 string characters out of 5907749
- 310507 words of memory out of 5000000
- 18772 multiletter control sequences out of 15000+600000
+ 1523 strings out of 480955
+ 21362 string characters out of 5907336
+ 308330 words of memory out of 5000000
+ 18784 multiletter control sequences out of 15000+600000
  405129 words of font info for 35 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  83i,12n,88p,356b,128s stack positions out of 5000i,500n,10000p,200000b,80000s
