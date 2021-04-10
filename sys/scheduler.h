@@ -20,7 +20,7 @@
 /**
    Status about each process. Timing, wavefront error, etc.
  */
-typedef struct STATUS_T{
+typedef struct status_t{
     /*Individual timing */
     double wfs;
     double recon;
@@ -47,7 +47,7 @@ typedef struct STATUS_T{
     int info;
     time_t timstart;
     time_t timend;
-}STATUS_T;
+}status_t;
 /*For scheduler()*/
 enum{
     CMD_START=1,

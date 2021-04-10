@@ -26,7 +26,7 @@
    pixel coordinates so that they are aranged along the radial and azimuthal
    direction.
  */
-DTF_T* mkdtf(const dmat* wvls, /**<List of wavelength*/
+dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	real dxsa,        /**<Subaperture size*/
 	real embfac,      /**<Embedding factor (2)*/
 	long notfx,       /**<FFT size along x*/
@@ -42,7 +42,7 @@ DTF_T* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	int radpix        /**<1: Pixels are along radial/azimuthal direction*/
 ){
 	int nwvl=wvls->nx*wvls->ny;
-	DTF_T* dtfs=mycalloc(nwvl, DTF_T);
+	dtf_t* dtfs=mycalloc(nwvl, dtf_t);
 	dtfs->nwvl=nwvl;
 	const real blurx=pixblur*pixthetax;
 	const real blury=pixblur*pixthetay;
@@ -188,7 +188,7 @@ static inline int wrap_seq(long index, long n){
 	return index;
 }
 
-ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
+etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	real hs,      /**<LGS WFS focus altitude*/
 	const dcell* sodium,/**<The sodium profile. In each cell First column is coordinate.*/
 	int icol,     /**<Which sodium profile to use*/
@@ -197,7 +197,7 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 	int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
 ){
 	int nwvl=dtfs[0].nwvl;
-	ETF_T* etfs=mycalloc(nwvl, ETF_T);
+	etf_t* etfs=mycalloc(nwvl, etf_t);
 	etfs->nwvl=nwvl;
 	etfs->hs=hs;
 	/*setup elongation along radial direction. don't care azimuthal. */
@@ -406,7 +406,7 @@ ETF_T* mketf(DTF_T* dtfs,  /**<The dtfs*/
 	return etfs;
 }
 
-void dtf_free_do(DTF_T* dtfs){
+void dtf_free_do(dtf_t* dtfs){
 	if(!dtfs) return;
 	for(int iwvl=0;iwvl<dtfs->nwvl;iwvl++){
 		ccellfree(dtfs[iwvl].nominal);
@@ -417,7 +417,7 @@ void dtf_free_do(DTF_T* dtfs){
 	free(dtfs);
 }
 
-void etf_free_do(ETF_T* etfs){
+void etf_free_do(etf_t* etfs){
 	if(!etfs) return;
 	for(int iwvl=0;iwvl<etfs->nwvl;iwvl++){
 		ccellfree(etfs[iwvl].etf);

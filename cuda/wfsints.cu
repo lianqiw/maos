@@ -298,13 +298,13 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp* restrict otf, int nx, int
 
    stream is no longer an input parameter, as the FFT plan depends on it.
 */
-void wfsints(SIM_T* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
+void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	//TIC;tic;
 	Array<cupowfs_t>& cupowfs=cudata->powfs;
 	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
 	stream_t& stream=cuwfs[iwfs].stream;
-	const PARMS_T* parms=simu->parms;
-	const POWFS_T* powfs=simu->powfs;
+	const parms_t* parms=simu->parms;
+	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const Real hs=parms->wfs[iwfs].hs;

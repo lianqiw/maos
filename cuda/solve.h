@@ -44,7 +44,7 @@ public:
 
 class cusolve_cg:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorithm*/
     int maxit, warm_restart;
-    CGTMP_T cgtmp;
+    cgtmp_t cgtmp;
 protected:
     cusolve_cgpre *precond;
 public:
@@ -74,7 +74,7 @@ class cusolve_muv:public nonCopyable{
     int nx, ny, *nxs, *nys;
  public:
     cusolve_muv():nx(0),ny(0),nxs(0),nys(0){};
-    void init(const MUV_T *in);
+    void init(const muv_t *in);
     ~cusolve_muv(){
 	delete[] nxs;
 	delete[] nys;
@@ -90,7 +90,7 @@ class cusolve_sparse:public cusolve_r,public cusolve_cg{
 protected:
     cusolve_muv CR, CL;
 public:
-    cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L);
+    cusolve_sparse(int _maxit, int _warm_restart, muv_t *_R, muv_t *_L);
     virtual void R(curcell &out, Real beta, 
 		   curcell &xin, Real alpha, stream_t &stream){
 	CR.Forward(out, beta, xin, alpha, stream);

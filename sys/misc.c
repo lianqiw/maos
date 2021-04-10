@@ -562,7 +562,7 @@ static char* cmd_string(char* start, char** end2){
    Parse command line arguments. The remaining string contains whatever is not yet parsed.
    This is more relaxed than the built in getopd
 */
-void parse_argopt(char* cmds, ARGOPT_T* options){
+void parse_argopt(char* cmds, argopt_t* options){
 	char* cmds_end=cmds+(cmds?strlen(cmds):0);
 	char* start=cmds;
 	while(start<cmds_end){

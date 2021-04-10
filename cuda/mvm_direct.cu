@@ -33,8 +33,8 @@ static int* gpu_avail=NULL;//implementes a single stack to manage available GPUs
 static int gpu_pos=0;
 PNEW(gpu_mutex);
 typedef struct{
-	const PARMS_T* parms;
-	const RECON_T* recon;
+	const parms_t* parms;
+	const recon_t* recon;
 	dmat* residual;
 	dmat* residualfit;
 	long ntotact;
@@ -42,7 +42,7 @@ typedef struct{
 	long ntotxloc;
 	X(mat)* mvmc;
 	X(mat)* mvmi;
-}MVM_IGPU_T;
+}mvm_igpu_t;
 
 static void mvm_direct_igpu(thread_t* info){
 	int igpu=info->ithread;
@@ -60,9 +60,9 @@ static void mvm_direct_igpu(thread_t* info){
 	gpu_set(igpu);
 	info("thread %ld is using GPU %d\n", info->ithread, igpu);
 
-	MVM_IGPU_T* data=(MVM_IGPU_T*)info->data;
-	const PARMS_T* parms=data->parms;
-	const RECON_T* recon=data->recon;
+	mvm_igpu_t* data=(mvm_igpu_t*)info->data;
+	const parms_t* parms=data->parms;
+	const recon_t* recon=data->recon;
 	const long ntotact=data->ntotact;
 	const long ntotgrad=data->ntotgrad;
 	const long ntotxloc=data->ntotxloc;
@@ -148,7 +148,7 @@ static void mvm_direct_igpu(thread_t* info){
 /**
    Assemble the MVM control matrix.
 */
-void gpu_setup_recon_mvm_direct(const PARMS_T* parms, RECON_T* recon){
+void gpu_setup_recon_mvm_direct(const parms_t* parms, recon_t* recon){
 	TIC;tic;
 	if(parms->recon.alg!=0){
 		error("Please adapt to LSR\n");
@@ -185,7 +185,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T* parms, RECON_T* recon){
 		}
 		dmat* residual=dnew(ntotgrad, 1);
 		dmat* residualfit=dnew(ntotgrad, 1);
-		MVM_IGPU_T data={parms, recon, residual, residualfit, ntotact, ntotgrad, ntotxloc, mvmc, mvmi};
+		mvm_igpu_t data={parms, recon, residual, residualfit, ntotact, ntotgrad, ntotxloc, mvmc, mvmi};
 		int nthread=NGPU;
 		if(parms->load.mvmi||parms->save.mvmi){
 			/*Each GPU cannot handle all the mvmi if just divide to NGPU

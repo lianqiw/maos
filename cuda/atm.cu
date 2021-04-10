@@ -100,7 +100,7 @@ static void gpu_atm2gpu_full(const mapcell* atm){
 /**
    Transfer atmosphere or update atmosphere in GPU.
 */
-void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const PARMS_T* parms, int iseed, int isim){
+void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms, int iseed, int isim){
 	if(!atmc) return;
 	map_t** atm=atmc->p;
 	const int nps=parms->atm.nps;

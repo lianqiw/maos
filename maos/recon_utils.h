@@ -42,11 +42,11 @@ void FitR(dcell **xout, const void *A,
 	  const dcell *xin, const real alpha);
 
 dsp *nea2sp(dmat **nea, long nsa);
-void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
-void shift_grad(SIM_T *simu);
+void psfr_calc(sim_t *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
+void shift_grad(sim_t *simu);
 lmat* loc_coord2ind(loc_t *aloc, const char *fndead);
-cn2est_t* cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs);
-void cn2est_isim(dcell *cn2res, RECON_T *recon, const PARMS_T *parms, const dcell *grad, int *tomo_update);
+cn2est_t* cn2est_prepare(const parms_t *parms, const powfs_t *powfs);
+void cn2est_isim(dcell *cn2res, recon_t *recon, const parms_t *parms, const dcell *grad, int *tomo_update);
 void nea_chol(dmat **pout, const dmat *in);
 void nea_inv(dmat **pout, const dmat *in);
 void nea_mm(dmat **pout, const dmat *in);

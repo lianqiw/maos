@@ -23,7 +23,7 @@
 #ifndef AOS_SETUP_APER
 #define AOS_SETUP_APER
 #include "common.h"
-APER_T* setup_aper (const PARMS_T *parms);
-void free_aper(APER_T *aper);
+aper_t* setup_aper (const parms_t *parms);
+void free_aper(aper_t *aper);
 #endif
 

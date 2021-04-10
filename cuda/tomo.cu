@@ -139,7 +139,7 @@ static curmat convert_neai(dsp* nea){
 	return neai_gpu;
 }
 
-void cutomo_grid::init_hx(const PARMS_T* parms, const RECON_T* recon){
+void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 	dir_t* dir=new dir_t[nwfs];
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -156,7 +156,7 @@ void cutomo_grid::init_hx(const PARMS_T* parms, const RECON_T* recon){
 	}
 	hx.init_l2d(grid->pmap, dir, nwfs, grid->xmap);
 	delete[] dir;
-	LAP_T lapc[recon->npsr];
+	lap_t lapc[recon->npsr];
 	for(int ips=0; ips<recon->npsr; ips++){
 		Real tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap->p[ips]->dx)*0.25f;
 		lapc[ips].nxps=recon->xmap->p[ips]->nx;
@@ -169,11 +169,11 @@ void cutomo_grid::init_hx(const PARMS_T* parms, const RECON_T* recon){
 			lapc[ips].zzi=-1;
 		}
 	}
-	lap=Array<LAP_T, Gpu>(recon->npsr, 1);
-	cudaMemcpy(lap(), lapc, sizeof(LAP_T)*recon->npsr, cudaMemcpyHostToDevice);
+	lap=Array<lap_t, Gpu>(recon->npsr, 1);
+	cudaMemcpy(lap(), lapc, sizeof(lap_t)*recon->npsr, cudaMemcpyHostToDevice);
 }
 
-cutomo_grid::cutomo_grid(const PARMS_T* parms, const RECON_T* recon, const curecon_geom* _grid)
+cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
 	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
 	grid(_grid), ptt(0), nwfs(0){
 	nwfs=parms->nwfsr;
@@ -252,8 +252,8 @@ cutomo_grid::cutomo_grid(const PARMS_T* parms, const RECON_T* recon, const curec
 	init_hx(parms, recon);
 
 	{
-		Array<GPU_GP_T, Cpu> GPDATA(nwfs, 1);
-		//GPU_GP_T *GPDATA=new GPU_GP_T[nwfs];
+		Array<gpu_gp_t, Cpu> GPDATA(nwfs, 1);
+		//gpu_gp_t *GPDATA=new gpu_gp_t[nwfs];
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			const int ipowfs=parms->wfsr[iwfs].powfs;
 			if(parms->powfs[ipowfs].skip) continue;
@@ -281,8 +281,8 @@ cutomo_grid::cutomo_grid(const PARMS_T* parms, const RECON_T* recon, const curec
 			GPDATA[iwfs].oxp=recon->pmap->ox;
 			GPDATA[iwfs].oyp=recon->pmap->oy;
 		}
-		gpdata=Array<GPU_GP_T, Gpu>(nwfs, 1);
-		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
+		gpdata=Array<gpu_gp_t, Gpu>(nwfs, 1);
+		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, cudaMemcpyHostToDevice));
 		//delete [] GPDATA;
 	}
 
@@ -330,7 +330,7 @@ cutomo_grid::cutomo_grid(const PARMS_T* parms, const RECON_T* recon, const curec
 /*
   If merge the operation in to gpu_prop_grid_do, need to do atomic
   operation because previous retracing starts at offo, not 0.  */
-__global__ void gpu_laplacian_do(LAP_T* datai, Real* const* outall, const Real* const* inall, int nwfs, Real alpha){
+__global__ void gpu_laplacian_do(lap_t* datai, Real* const* outall, const Real* const* inall, int nwfs, Real alpha){
 	const int ips=blockIdx.z;
 	const Real* in=inall[ips];
 	Real* out=outall[ips];
@@ -373,13 +373,13 @@ __global__ void gpu_laplacian_do(LAP_T* datai, Real* const* outall, const Real* 
    Handles TTDF*GP
 */
 #define DIM_GP 128
-__global__ static void gpu_gp_do(GPU_GP_T* data, Real* const* gout, Real* ttout, Real* dfout, Real* const* wfsopd, int ptt){
+__global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttout, Real* dfout, Real* const* wfsopd, int ptt){
 	__shared__ Real gx[DIM_GP];
 	__shared__ Real gy[DIM_GP];
 	__shared__ Real gdf[DIM_GP];
 	const int iwfs=blockIdx.z;
 	const int nwfs=gridDim.z;
-	GPU_GP_T* datai=data+iwfs;
+	gpu_gp_t* datai=data+iwfs;
 	const int pos=datai->pos;
 	if(!pos) return;
 	const int nsa=datai->nsa;
@@ -496,10 +496,10 @@ __global__ static void gpu_gp_do(GPU_GP_T* data, Real* const* gout, Real* ttout,
    Handles GP'*nea*(1-TTDF)
    Be carefulll about the ptt flag. It is always 1 for Right hand side, but may be zero for Left hand side.
 */
-__global__ static void gpu_gpt_do(GPU_GP_T* data, Real* const* wfsopd, const Real* ttin, const Real* dfin, Real* const* gin, int ptt){
+__global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Real* ttin, const Real* dfin, Real* const* gin, int ptt){
 	const int iwfs=blockIdx.z;
 	const int nwfs=gridDim.z;
-	GPU_GP_T* datai=data+iwfs;
+	gpu_gp_t* datai=data+iwfs;
 	const int pos=datai->pos;
 	if(!pos) return;
 	const int step=blockDim.x*gridDim.x;

@@ -24,7 +24,7 @@
    This file is work in progress and is not used.
  */
 namespace cuda_wfs{
-cuwfs_info::cuwfs_dbg(const PARMS_T* parms, const POWFS_T* powfs, int _iwfs, int _igpu)
+cuwfs_info::cuwfs_dbg(const parms_t* parms, const powfs_t* powfs, int _iwfs, int _igpu)
 	:iwfs(_iwfs), igpu(_igpu){
 	dbg("cuwfs_info[%d]\n", iwfs);
 	int ipowfs=parms->wfs[iwfs].powfs;
@@ -68,13 +68,13 @@ curand_t::curand_t(int seed, int nsa){
 	setup_rand<<<nb, nt>>>(rstat, seed);
 }
 struct wfscfg_t{
-	const PARMS_T* parms;
-	const POWFS_T* powfs;
+	const parms_t* parms;
+	const powfs_t* powfs;
 	int iwfs;
 	int ipowfs;
 	int wfsind;
 	stream_t& stream;
-	wfscfg_t(const PARMS_T* _parms, const POWFS_T* _powfs, int _iwfs, stream_t& _stream)
+	wfscfg_t(const parms_t* _parms, const powfs_t* _powfs, int _iwfs, stream_t& _stream)
 		:parms(_parms), powfs(_powfs), iwfs(_iwfs), ipowfs(parms->wfs[_iwfs].powfs),
 		wfsind(parms->powfs[ipowfs].wfsind->p[_iwfs]), stream(_stream){};
 
@@ -90,8 +90,8 @@ cushgeom_t::cushgeom_t(wfscfg_t* wfscfg)
 	:nea(0), gradacc(0), cushwfs_t(wfscfg){
 	const int ipowfs=wfscfg->ipowfs;
 	const int wfsind=wfscfg->wfsind;
-	const PARMS_T* parms=wfscfg->parms;
-	const POWFS_T* powfs=wfscfg->powfs;
+	const parms_t* parms=wfscfg->parms;
+	const powfs_t* powfs=wfscfg->powfs;
 	cp2gpu(&nea, powfs[ipowfs].neasim->p[wfsind]);
 	gradacc=curnew(nsa*2, 1);
 	if(!parms->powfs[ipowfs].pistatout
@@ -123,7 +123,7 @@ void cushgeom_t::acc(curmat* opd){
 }
 cushg_t::cushg_t(wfscfg_t* wfscfg)
 	:cushgeom_t(wfscfg), GS0(0){
-	const POWFS_T* powfs=wfscfg->powfs;
+	const powfs_t* powfs=wfscfg->powfs;
 	const int ipowfs=wfscfg->ipowfs;
 	const int wfsind=wfscfg->wfsind;
 	GS0=new cusp(powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0], 1);
@@ -133,7 +133,7 @@ void cushg_t::calcg(curmat& opd, Real ratio){
 }
 cushz_t::cushz_t(wfscfg_t* wfscfg)
 	:cushgeom_t(wfscfg), imcc(0){
-	const POWFS_T* powfs=wfscfg->powfs;
+	const powfs_t* powfs=wfscfg->powfs;
 	const int ipowfs=wfscfg->ipowfs;
 	const int wfsind=wfscfg->wfsind;
 	void* _imcc[nsa];
@@ -152,8 +152,8 @@ void cushz_t::calcg(curmat& opd, Real ratio){
 }
 cullt_t::cullt_t(wfscfg_t* wfscfg)
 	:pts(0), loc(0), amp(0), ncpa(0), imcc(0){
-	const PARMS_T* parms=wfscfg->parms;
-	const POWFS_T* powfs=wfscfg->powfs;
+	const parms_t* parms=wfscfg->parms;
+	const powfs_t* powfs=wfscfg->powfs;
 	const int ipowfs=wfscfg->ipowfs;
 	const int wfsind=wfscfg->wfsind;
 	pts=new cupts_t(powfs[ipowfs].llt->pts);
@@ -204,8 +204,8 @@ def_concat(s, d);
 cushphy_t::cushphy_t(wfscfg_t* wfscfg)
 	:dtf(0), srot(0), bkgrnd2(0), bkgrnd2c(0), mtche(0), i0sum(0), cogcoeff(0), ints(0), pistatout(0),
 	cushwfs_t(wfscfg){
-	const PARMS_T* parms=wfscfg->parms;
-	const POWFS_T* powfs=wfscfg->powfs;
+	const parms_t* parms=wfscfg->parms;
+	const powfs_t* powfs=wfscfg->powfs;
 	const int ipowfs=wfscfg->ipowfs;
 	const int wfsind=wfscfg->wfsind;
 	{ /*FFT plans*/
@@ -318,7 +318,7 @@ cushphy_t::cushphy_t(wfscfg_t* wfscfg)
 	}
 }
 
-cuwfs_t::cuwfs_t(const PARMS_T* parms, const POWFS_T* powfs, int iwfs, int igpu)
+cuwfs_t::cuwfs_t(const parms_t* parms, const powfs_t* powfs, int iwfs, int igpu)
 	:gradoff(0), opdadd(0), opd(0), geom(0), phy(0), llt(0){
 	gpu_set(igpu);
 	wfsinfo=new cuwfs_dbg(parms, powfs, iwfs, igpu);
@@ -368,7 +368,7 @@ void cuwfs_t::seeding(int seed){
 	phy->seeding(seed);
 }
 }//namespace
-void gpu_wfs_init_new(const PARMS_T* parms, const POWFS_T* powfs){
+void gpu_wfs_init_new(const parms_t* parms, const powfs_t* powfs){
 	cuda_wfs::cuwfs_t** cuwfs;
 	cuwfs=new cuda_wfs::cuwfs_t*[parms->nwfs];
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -379,14 +379,14 @@ void gpu_wfs_init_new(const PARMS_T* parms, const POWFS_T* powfs){
 		cuwfs[iwfs]=new cuda_wfs::cuwfs_t(parms, powfs, iwfs, igpu);
 	}
 }
-void gpu_wfs_initsim(const PARMS_T* parms, const POWFS_T* powfs){
+void gpu_wfs_initsim(const parms_t* parms, const powfs_t* powfs){
 	error("obtain cuwfs from cudata\n");
 	/*cuda_wfs::cuwfs_t **cuwfs;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	cuwfs[iwfs]->initsim();
 	}*/
 }
-void gpu_wfs_seeing(const PARMS_T* parms, const POWFS_T* powfs, rand_t* rstat){
+void gpu_wfs_seeing(const parms_t* parms, const powfs_t* powfs, rand_t* rstat){
 	/*cuda_wfs::cuwfs_t **cuwfs;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	cuwfs[iwfs]->seeding(lrand(rstat));

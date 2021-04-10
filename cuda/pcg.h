@@ -22,7 +22,7 @@ namespace cuda_recon{
 /**
    hold data struct for temporary data used for CG to avoid alloc/free at every call to CG.
 */
-class CGTMP_T{
+class cgtmp_t{
 public:
 	curcell r0;
 	curcell z0;
@@ -32,15 +32,15 @@ public:
 	Array<Real, Pinned> diff;
 	int count_fail, count;
 
-	CGTMP_T():count_fail(0), count(0){}
-	~CGTMP_T(){}
+	cgtmp_t():count_fail(0), count(0){}
+	~cgtmp_t(){}
 };
-//typedef void (*G_CGFUN)(curcell**, Real, const curcell*, Real, stream_t &stream);
-//typedef void (*G_PREFUN)(curcell**, const curcell*, stream_t &stream);
+//typedef void (*G_cgfun_t)(curcell**, Real, const curcell*, Real, stream_t &stream);
+//typedef void (*G_prefun_t)(curcell**, const curcell*, stream_t &stream);
 class cusolve_cg;
 class cusolve_cgpre;
 Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
-	const curcell& b, CGTMP_T& cg_data, int warm, int maxiter,
+	const curcell& b, cgtmp_t& cg_data, int warm, int maxiter,
 	stream_t& stream, Real cgthres=-1);
 }//namespace
 #endif

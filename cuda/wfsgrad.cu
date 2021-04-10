@@ -287,7 +287,7 @@ dither_t::dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
 }
 
 /**Accumulate for matched filter updating*/
-void dither_t::acc(DITHER_T* dither, curcell& ints, Real cs, Real ss, int npll, cudaStream_t stream){
+void dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, cudaStream_t stream){
 	const int nsa=ints.N();
 	const int pixpsa=ints[0].N();
 	dither_acc_do<<<nsa, pixpsa, 0, stream>>>
@@ -306,7 +306,7 @@ void dither_t::acc(DITHER_T* dither, curcell& ints, Real cs, Real ss, int npll, 
    Calculate SHWFS gradients
 */
 static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cuwfs, Array<cupowfs_t>& cupowfs,
-	const PARMS_T* parms, const POWFS_T* powfs, SIM_T* simu, int iwfs, int ipowfs, stream_t& stream){
+	const parms_t* parms, const powfs_t* powfs, sim_t* simu, int iwfs, int ipowfs, stream_t& stream){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	CUDA_CHECK_ERROR;
 	cuzero(gradcalc, stream);
@@ -364,15 +364,15 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
    data back to CPU.
 */
 void gpu_wfsgrad_queue(thread_t* info){
-	SIM_T* simu=(SIM_T*)info->data;
+	sim_t* simu=(sim_t*)info->data;
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	//info("thread %ld gpu %d iwfs %d start\n", thread_id(), cudata->igpu, iwfs);
 		gpu_set(cuglobal->wfsgpu[iwfs]);
 		Array<cupowfs_t>& cupowfs=cudata->powfs;
 		Array<cuwfs_t>& cuwfs=cuglobal->wfs;
-		const PARMS_T* parms=simu->parms;
-		const POWFS_T* powfs=simu->powfs;
-		const RECON_T* recon=simu->recon;
+		const parms_t* parms=simu->parms;
+		const powfs_t* powfs=simu->powfs;
+		const recon_t* recon=simu->recon;
 		/*output */
 		const int CL=parms->sim.closeloop;
 		const int isim=simu->wfsisim;
@@ -605,8 +605,8 @@ void gpu_wfsgrad_queue(thread_t* info){
 	}//for iwfs
 }
 
-void gpu_wfsgrad_sync(SIM_T* simu, int iwfs){
-	const PARMS_T* parms=simu->parms;
+void gpu_wfsgrad_sync(sim_t* simu, int iwfs){
+	const parms_t* parms=simu->parms;
 	gpu_set(cuglobal->wfsgpu[iwfs]);
 	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
 	stream_t& stream=cuwfs[iwfs].stream;
@@ -636,8 +636,8 @@ void gpu_wfsgrad_sync(SIM_T* simu, int iwfs){
 		}
 	}
 }
-void gpu_save_pistat(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void gpu_save_pistat(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	const int isim=simu->wfsisim;
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
 		gpu_set(cuglobal->wfsgpu[iwfs]);

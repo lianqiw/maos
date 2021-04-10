@@ -324,7 +324,7 @@ fdpcg_prop(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* disp
 /**
   Prepare data for Tomography Fourier Domain Preconditioner. atm is used to provide wind velocity information.
 */
-FDPCG_T* fdpcg_prepare(const PARMS_T* parms, const RECON_T* recon, const POWFS_T* powfs, mapcell* atm){
+fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t* powfs, mapcell* atm){
 	TIC;tic;
 	int hipowfs=-1;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -509,7 +509,7 @@ FDPCG_T* fdpcg_prepare(const PARMS_T* parms, const RECON_T* recon, const POWFS_T
 	if(parms->save.fdpcg){
 		writebin(Mhat, "fdpcg_Mhat");
 	}
-	FDPCG_T* fdpcg=mycalloc(1, FDPCG_T);
+	fdpcg_t* fdpcg=mycalloc(1, fdpcg_t);
 	/*Now invert each block. */
 	/*bs: blocksize. */
 	int bs=0;
@@ -579,7 +579,7 @@ typedef struct{
 	cmat* xhat2;
 	ccell* xhati;
 	ccell* xhat2i;
-	FDPCG_T* fdpcg;
+	fdpcg_t* fdpcg;
 	const dcell* xin;
 	dcell* xout;
 }fdpcg_info_t;
@@ -588,7 +588,7 @@ typedef struct{
 */
 static void fdpcg_fft(thread_t* info){
 	fdpcg_info_t* data=(fdpcg_info_t*)info->data;
-	FDPCG_T* fdpcg=data->fdpcg;
+	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhati=data->xhati;
 	const dcell* xin=data->xin;
 	for(int ips=info->start; ips<info->end; ips++){
@@ -617,7 +617,7 @@ static void fdpcg_fft(thread_t* info){
  */
 static void fdpcg_mulblock(thread_t* info){
 	fdpcg_info_t* data=(fdpcg_info_t*)info->data;
-	FDPCG_T* fdpcg=data->fdpcg;
+	fdpcg_t* fdpcg=data->fdpcg;
 	long bs=fdpcg->Mbinv->p[0]->nx;
 	for(int ib=info->start; ib<info->end; ib++){
 		cmulvec(data->xhat->p+ib*bs, fdpcg->Mbinv->p[ib], data->xhat2->p+ib*bs, 1);
@@ -629,7 +629,7 @@ static void fdpcg_mulblock(thread_t* info){
  */
 static void fdpcg_ifft(thread_t* info){
 	fdpcg_info_t* data=(fdpcg_info_t*)info->data;
-	FDPCG_T* fdpcg=data->fdpcg;
+	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhat2i=data->xhat2i;
 	dcell* xout=data->xout;
 	for(int ips=info->start; ips<info->end; ips++){
@@ -656,12 +656,12 @@ static void fdpcg_ifft(thread_t* info){
  */
 void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	TIC_tm; tic_tm;
-	const RECON_T* recon=(RECON_T*)A;
+	const recon_t* recon=(recon_t*)A;
 	if(xin->ny!=1){
 		error("Invalid\n");
 	}
 	const long nps=recon->npsr;
-	FDPCG_T* fdpcg=recon->fdpcg;
+	fdpcg_t* fdpcg=recon->fdpcg;
 	//long nxtot=fdpcg->nxtot;
 	ccell* xhati=ccellnew3(nps, 1, recon->xnx->p, recon->xny->p);
 	ccell* xhat2i=ccellnew3(nps, 1, recon->xnx->p, recon->xny->p);
@@ -724,7 +724,7 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 /**
    Free fdpcg related data structs.
 */
-void fdpcg_free(FDPCG_T* fdpcg){
+void fdpcg_free(fdpcg_t* fdpcg){
 	if(!fdpcg) return;
 	cspfree(fdpcg->Minv);
 	lfree(fdpcg->perm);

@@ -33,10 +33,10 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-void maos_setup(const PARMS_T *parms);
+void maos_setup(const parms_t *parms);
 void maos_reset();
 void maos_sim();
 void maos_isim(int isim);
-SIM_T *maos_iseed(int iseed);
+sim_t *maos_iseed(int iseed);
 #endif
 

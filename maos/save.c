@@ -25,8 +25,8 @@
 /**
    Save pixel statistics for matched filter.
 */
-void save_pistat(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void save_pistat(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	const int isim=simu->wfsisim;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
@@ -69,9 +69,9 @@ void save_pistat(SIM_T* simu){
 /**
    Save open loop gradients to file and optionally occumulate gcov.
  */
-void save_gradol(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const POWFS_T* powfs=simu->powfs;
+void save_gradol(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const powfs_t* powfs=simu->powfs;
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(!parms->powfs[ipowfs].psol||!simu->gradlastol->p[iwfs]) continue;
@@ -97,9 +97,9 @@ void save_gradol(SIM_T* simu){
 /**
    Plot and save reconstruction data.
  */
-void save_recon(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+void save_recon(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	if(simu->reconisim<0) return;
 	if(parms->plot.run){
 		if(simu->dm_wfs){
@@ -238,9 +238,9 @@ void save_recon(SIM_T* simu){
 /**
    Plot and save dmproj
 */
-void save_dmproj(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+void save_dmproj(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	if(parms->save.dm){
 		zfarr_push(simu->save->dmproj, simu->wfsisim, simu->dmproj);
 	}
@@ -257,9 +257,9 @@ void save_dmproj(SIM_T* simu){
 /**
    Plot and save dmreal
  */
-void save_dmreal(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+void save_dmreal(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	if(parms->plot.run){
 		if(parms->sim.closeloop){
 			for(int idm=0; idm<parms->ndm; idm++){

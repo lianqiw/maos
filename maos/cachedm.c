@@ -35,8 +35,8 @@
    at 1/64m for the LGS WFS and science OPD, and another one at 1/64 m
    *(1-11.2/90) for the LGS due to cone effect. The square grid are on axis.
 */
-void prep_cachedm(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void prep_cachedm(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	if(!parms->ndm||!(parms->sim.cachedm||parms->plot.run)){
 		warning("DM cache is not needed\n");
 		return;
@@ -58,8 +58,8 @@ void prep_cachedm(SIM_T* simu){
 	//is not parallelized as ray tracing.
 	/*new scheme for ray tracing */
 	simu->cachedm_prop=mycalloc(parms->ndm, thread_t*);
-	simu->cachedm_propdata=mycalloc(parms->ndm, PROPDATA_T);
-	PROPDATA_T* cpropdata=simu->cachedm_propdata;
+	simu->cachedm_propdata=mycalloc(parms->ndm, propdata_t);
+	propdata_t* cpropdata=simu->cachedm_propdata;
 	for(int idm=0; idm<parms->ndm; idm++){
 		simu->cachedm_prop[idm]=mycalloc(NTHREAD, thread_t);
 		if(simu->dmrealsq){
@@ -84,7 +84,7 @@ void prep_cachedm(SIM_T* simu){
    Partition the ray tracing by DM/Destination combinations, as well as
    segments in each combination to maximum efficiency.
 */
-void calc_cachedm(SIM_T* simu){
+void calc_cachedm(sim_t* simu){
 	if(simu->cachedm){
 		real tk_start=myclockd();
 		long group=0;

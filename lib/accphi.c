@@ -28,7 +28,7 @@
 /**
    Identify the index of this ray tracing.
 */
-static void prop_index(PROPDATA_T* propdata){
+static void prop_index(propdata_t* propdata){
 	if(!propdata) return;
 	int done=0;
 	if(propdata->mapin){
@@ -138,7 +138,7 @@ static void prop_index(PROPDATA_T* propdata){
 */
 void prop(thread_t* data){
 	if(!data) return;
-	PROPDATA_T* propdata=(PROPDATA_T*)data->data;
+	propdata_t* propdata=(propdata_t*)data->data;
 	if(!propdata->index){
 		prop_index(propdata);
 	}

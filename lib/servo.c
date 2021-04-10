@@ -425,7 +425,7 @@ real servo_residual(real* noise_amp, const dmat* psdin, real dt, long dtrat, rea
    Apply type II servo filter on measurement error and output integrator.  gain
    must be 3x1 or 3x5.  */
 static inline void
-servo_typeII_filter(SERVO_T* st, const dcell* merrc){
+servo_typeII_filter(servo_t* st, const dcell* merrc){
 	if(!merrc) return;
 	const dmat* gain=st->ep;
 	int indmul=0;
@@ -468,9 +468,9 @@ servo_typeII_filter(SERVO_T* st, const dcell* merrc){
 	dcellcp(&st->merrlast, merrc);
 	dcelladd(&st->mpreint, 1, st->mlead, 1);
 }
-static void servo_init(SERVO_T* st, const dcell* merr){
+static void servo_init(servo_t* st, const dcell* merr){
 	if(!merr||st->initialized){
-		error("merr must be valid and SERVO_T must be not yet initialized\n");
+		error("merr must be valid and servo_t must be not yet initialized\n");
 	}
 	if(st->ep->nx>1){
 		st->mpreint=dcellnew2(merr);
@@ -487,7 +487,7 @@ static void servo_init(SERVO_T* st, const dcell* merr){
 /**
    Update servo parameters
 */
-void servo_update(SERVO_T* st, const dmat* ep){
+void servo_update(servo_t* st, const dmat* ep){
 	dfree(st->ep);
 	if(ep->nx!=3){//type I
 		st->ep=ddup(ep);
@@ -505,8 +505,8 @@ void servo_update(SERVO_T* st, const dmat* ep){
 /**
    Initialize. al is additional latency
 */
-SERVO_T* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep){
-	SERVO_T* st=mycalloc(1, SERVO_T);
+servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep){
+	servo_t* st=mycalloc(1, servo_t);
 	if(ap){
 		st->ap=ddup(ap);
 	} else{
@@ -531,7 +531,7 @@ SERVO_T* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
    prepare the modified integrator by shifting commands. similar to laos.
    inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
 */
-static void servo_shift_ap(SERVO_T* st){
+static void servo_shift_ap(servo_t* st){
 	const dmat* ap=st->ap;
 	if(!ap) return; //no need to shift.
 	if(st->mint->nx<ap->nx){
@@ -550,7 +550,7 @@ static void servo_shift_ap(SERVO_T* st){
 	inte[0]=recycle;/*new command. */
 }
 /*A FIFO queue to add delay*/
-static const dcell* servo_shift_al(SERVO_T* st, const dcell* merr){
+static const dcell* servo_shift_al(servo_t* st, const dcell* merr){
 	if(!st->alint){
 		return merr;
 	} else{
@@ -571,7 +571,7 @@ static const dcell* servo_shift_al(SERVO_T* st, const dcell* merr){
 /**
    Applies type I or type II filter based on number of entries in gain.
 */
-int servo_filter(SERVO_T* st, const dcell* _merr){
+int servo_filter(servo_t* st, const dcell* _merr){
 	if(!st->initialized&&_merr){
 		servo_init(st, _merr);
 	}
@@ -579,7 +579,7 @@ int servo_filter(SERVO_T* st, const dcell* _merr){
 	if(!merr) return 0;
 	servo_shift_ap(st);
 	if(!st->mint){
-		error("SERVO_T must be created using servo_new()\n");
+		error("servo_t must be created using servo_new()\n");
 	}
 	if(st->ep->ny==1&&st->ep->nx>3){
 		st->ep->ny=st->ep->nx;
@@ -623,13 +623,13 @@ int servo_filter(SERVO_T* st, const dcell* _merr){
 /**
    Adjust integrator content without shift.
 */
-void servo_add(SERVO_T* st, const dcell* madj, real alpha){
+void servo_add(servo_t* st, const dcell* madj, real alpha){
 	dcelladd(&st->mint->p[0], 1, madj, alpha);
 }
 /**
    Create servo output. It handles st->alfrac.
  */
-void servo_output(const SERVO_T* st, dcell** out){
+void servo_output(const servo_t* st, dcell** out){
 	assert(st);
 	dcellcp(out, st->mint->p[0]);
 	if(st->alfrac){
@@ -656,7 +656,7 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 	}
 	dcell* meas=dcellnew(1, 1);
 	dmat* noise=dnew(nmod, 1);
-	SERVO_T* st2t=servo_new(NULL, NULL, 0, dt*dtrat, gain);
+	servo_t* st2t=servo_new(NULL, NULL, 0, dt*dtrat, gain);
 	rand_t rstat;
 	seed_rand(&rstat, 1);
 	dmat* pmres=mres;
@@ -693,7 +693,7 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 /**
    reset the data to 0.
 */
-void servo_reset(SERVO_T* st){
+void servo_reset(servo_t* st){
 	dcellzero(st->mlead);
 	dcellzero(st->merrlast);
 	dcellzero(st->mpreint);
@@ -709,9 +709,9 @@ void servo_reset(SERVO_T* st){
 	}
 }
 /**
-   Free SERVO_T struct
+   Free servo_t struct
 */
-void servo_free(SERVO_T* st){
+void servo_free(servo_t* st){
 	if(!st) return;
 	dcellfree(st->mlead);
 	dcellfree(st->merrlast);
@@ -725,9 +725,9 @@ void servo_free(SERVO_T* st){
 /**
    Second harmonic oscillator. Initialization.
  */
-SHO_T* sho_new(real f0,   /**<Resonance frequency*/
+sho_t* sho_new(real f0,   /**<Resonance frequency*/
 	real zeta  /**<Damping*/){
-	SHO_T* out=mycalloc(1, SHO_T);
+	sho_t* out=mycalloc(1, sho_t);
 	const real omega0=2*M_PI*f0;
 	out->dt=0.01/f0;
 	out->c1=2*zeta*omega0;
@@ -738,7 +738,7 @@ SHO_T* sho_new(real f0,   /**<Resonance frequency*/
 /**
    Second harmonic oscillator. Step.
  */
-real sho_step(SHO_T* sho, real xi, real dt){
+real sho_step(sho_t* sho, real xi, real dt){
 	//divide dt to multiple time to do proper integration.
 	long nover=(long)ceil(dt/sho->dt);
 	real dti=dt/nover;
@@ -752,7 +752,7 @@ real sho_step(SHO_T* sho, real xi, real dt){
 /**
    Second harmonic oscillator. Reset.
 */
-void sho_reset(SHO_T* sho){
+void sho_reset(sho_t* sho){
 	sho->x1=sho->x2=0;
 }
 /**
@@ -762,7 +762,7 @@ dmat* sho_filter(const dmat* x,/**<Input time series*/
 	real dt,     /**<Input time series sampling*/
 	real f0,    /**<Resonance frequency*/
 	real zeta  /**<Damping*/){
-	SHO_T* sho=sho_new(f0, zeta);
+	sho_t* sho=sho_new(f0, zeta);
 	dmat* xi=dref(x);
 	if(xi->nx==1){
 		xi->nx=xi->ny;

@@ -40,7 +40,7 @@ typedef struct cupowfs_t{
 	curcell fieldstop; /**<mask for field stop computation*/
 	cullt_t llt;       /**<Laser launch telescope*/
 	/*For Pyramid*/
-	struct PYWFS_T* pywfs;//points to powfs[ipowfs].pywfs
+	struct pywfs_t* pywfs;//points to powfs[ipowfs].pywfs
 	cuccell pyramid;
 	cucmat pynominal;
 	curmat saa;
@@ -58,7 +58,7 @@ class dither_t{
 public:
 	dither_t():imc(0){}
 	dither_t(int nsa, int pixpsax, int pixpsay);
-	void acc(DITHER_T* dither, curcell& ints, Real cs, Real ss, int nstat, cudaStream_t stream);
+	void acc(dither_t* dither, curcell& ints, Real cs, Real ss, int nstat, cudaStream_t stream);
 };
 class cuwfs_t{//one for each WFS.
 public:
@@ -124,14 +124,14 @@ public:
 	cuwfs_t():powfs(0), msa(0), custatb(0), custatt(0), i0sumsum(0){}
 };
 
-void wfsints(SIM_T* simu, Real* phiout, curmat& gradref, int iwfs, int isim);
+void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim);
 
 void cuztilt(Real* restrict g, Real* restrict opd,
 	const int nsa, const Real dx, const int nx, Real* imcc,
 	const Real(*orig)[2], const Real* restrict amp, Real alpha, cudaStream_t stream);
 __global__ void cpcenter_do(Comp* restrict out, int noutx, int nouty,
 	const Comp* restrict in, int ninx, int niny);
-void pywfs_grad(curmat& grad, const curmat& ints, const curmat& saa, curmat& isum, const curmat& goff, const PYWFS_T* pywfs, cudaStream_t stream);
+void pywfs_grad(curmat& grad, const curmat& ints, const curmat& saa, curmat& isum, const curmat& goff, const pywfs_t* pywfs, cudaStream_t stream);
 void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev);
-//dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
+//dsp *gpu_pywfs_mkg(const parms_t *parms, const powfs_t *powfs, loc_t *aloc, int iwfs, int idm);
 #endif

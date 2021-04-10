@@ -266,7 +266,7 @@ static void* maos_listener(void* psock){
 			}
 			draw_add(fd);
 			if(global){
-				PARMS_T* parms=(PARMS_T*)global->parms;//cast away constness
+				parms_t* parms=(parms_t*)global->parms;//cast away constness
 				parms->plot.setup=1;
 				parms->plot.run=1;
 				if(global->setupdone){//setup is already finished. request plot setup.
@@ -365,7 +365,7 @@ void maos_version(void){
 */
 int main(int argc, const char* argv[]){
 	char* scmd=argv2str(argc, argv, " ");
-	ARG_T* arg=parse_args(argc, argv);/*does chdir */
+	arg_t* arg=parse_args(argc, argv);/*does chdir */
 	if(arg->detach){
 		daemonize();
 	} else{
@@ -387,7 +387,7 @@ int main(int argc, const char* argv[]){
 
 	maos_version();
 	/*setting up parameters before asking scheduler to check for any errors. */
-	PARMS_T* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
+	parms_t* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
 	free(arg->conf); arg->conf=NULL;
 	if(arg->confcmd){
 		remove(arg->confcmd); free(arg->confcmd); arg->confcmd=NULL;

@@ -240,7 +240,7 @@ gboolean update_progress(gpointer input){
 	return 0;
 }
 
-void notify_user(PROC_T* p){
+void notify_user(proc_t* p){
 	if(p->status.done||p->status.info==S_START) return;
 #if WITH_NOTIFY
 	if(!notify_daemon) return;
@@ -332,7 +332,7 @@ gboolean update_title(gpointer data){
 /**
    respond to the kill job event
 */
-void kill_job(PROC_T* p){
+void kill_job(proc_t* p){
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
@@ -361,7 +361,7 @@ void kill_job(PROC_T* p){
 	break;
 	}
 }
-void kill_job_event(GtkWidget* btn, GdkEventButton* event, PROC_T* p){
+void kill_job_event(GtkWidget* btn, GdkEventButton* event, proc_t* p){
 	(void)btn;
 	if(event->button==1){
 		kill_job(p);
@@ -385,7 +385,7 @@ static void kill_all_jobs(GtkButton* btn, gpointer data){
 			if(result==1&&ihost!=this_host){
 				continue;
 			}
-			for(PROC_T* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+			for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 				if(iproc->hid==ihost&&(iproc->status.info<11)){
 					if(scheduler_cmd(iproc->hid, iproc->pid, CMD_KILL)){
 						warning("Failed to kill the job\n");
@@ -503,7 +503,7 @@ static void clear_jobs(GtkButton* btn, gpointer flag){
 		if(sock==-1) continue;
 		int cmd[2];
 		cmd[0]=CMD_REMOVE;
-		for(PROC_T* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 			if(test_jobs(iproc->status.info, GPOINTER_TO_INT(flag))){
 				cmd[1]=iproc->pid;
 				if(stwriteintarr(sock, cmd, 2)){
@@ -536,7 +536,7 @@ static void save_all_jobs(GtkButton* btn, gpointer data){
 			fnall=strdup(fn);
 		}
 		char* lastpath[2]={NULL,NULL};
-		for(PROC_T* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 			char* spath=iproc->path;
 			char* pos=NULL;
 			int id;
@@ -761,7 +761,7 @@ int main(int argc, char* argv[]){
 	//tabs=mycalloc(nhost+1, GtkWidget*);
 	pages=mycalloc(nhost+1, GtkWidget*);
 	titles=mycalloc(nhost+1, GtkWidget*);
-	pproc=mycalloc(nhost+1, PROC_T*);
+	pproc=mycalloc(nhost+1, proc_t*);
 	nproc=mycalloc(nhost+1, int);
 	cmdconnect=mycalloc(nhost+1, GtkWidget*);
 	buffers=mycalloc(nhost+1, GtkTextBuffer*);

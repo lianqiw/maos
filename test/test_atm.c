@@ -32,8 +32,8 @@ int main(){
     int m=4096*2;
     NTHREAD=6;
     THREAD_POOL_INIT(NTHREAD);
-    GENATM_T data;
-    memset(&data, 0, sizeof(GENATM_T));
+    genatm_t data;
+    memset(&data, 0, sizeof(genatm_t));
     data.rstat=&rstat;
     data.nx=m;
     data.ny=m;

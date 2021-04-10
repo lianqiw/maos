@@ -156,7 +156,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	/*height of layers for each wfs pair of slodar output. */
 	cn2est->ht=dcellnew(nwfspair, 1);
 	/*record sapair to use for each separation */
-	cn2est->pair=mycalloc(nwfspair, CN2PAIR_T);
+	cn2est->pair=mycalloc(nwfspair, cn2est_pair_t);
 	long nhtsx[nwfspair];
 	long nhtsy[nwfspair];
 	real hmin, hmax;
@@ -181,7 +181,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	cn2est->L0=L0;
 	for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	/*get pointer for this pair */
-		CN2PAIR_T* pair=cn2est->pair+iwfspair;
+		cn2est_pair_t* pair=cn2est->pair+iwfspair;
 		/*The WFS in this pair. */
 		const int wfs0=wfspair->p[iwfspair*2];
 		const int wfs1=wfspair->p[iwfspair*2+1];
@@ -474,7 +474,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 	//roate and embed;
 		dembed(covr, cn2est->cov2->p[iwfspair], -cn2est->pair[iwfspair].beta);
 		real* cc=cn2est->cov1->p[iwfspair]->p;
-		CN2PAIR_T* pair=cn2est->pair+iwfspair;
+		cn2est_pair_t* pair=cn2est->pair+iwfspair;
 		int off=cn2est->nembed/2;
 		for(long isep=pair->iht0; isep<pair->iht1; isep++){
 			cc[isep-pair->iht0]=P(covr, off+isep, off)*P(cn2est->overlapi, off+isep, off);

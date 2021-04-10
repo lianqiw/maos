@@ -44,7 +44,7 @@
    Free the powfs geometric parameters
 */
 static void
-free_powfs_geom(POWFS_T* powfs, int ipowfs){
+free_powfs_geom(powfs_t* powfs, int ipowfs){
 	ptsfree(powfs[ipowfs].pts);
 	dfree(powfs[ipowfs].saa);
 	locfree(powfs[ipowfs].saloc);
@@ -79,7 +79,7 @@ static dmat* wfsamp2saa(dmat* wfsamp, long nxsa){
 /**
    Creates WFS pupil mask.
  */
-void wfspupmask(const PARMS_T* parms, loc_t* loc, dmat* amp, int iwfs){
+void wfspupmask(const parms_t* parms, loc_t* loc, dmat* amp, int iwfs){
 	long nloc=loc->nloc;
 	dmat* ampmask=dnew(nloc, 1);
 	real ht=parms->atm.hmax*0.7;
@@ -98,7 +98,7 @@ void wfspupmask(const PARMS_T* parms, loc_t* loc, dmat* amp, int iwfs){
 	dfree(ampmask);
 }
 static void
-sa_reduce(POWFS_T* powfs, int ipowfs, real thresarea){
+sa_reduce(powfs_t* powfs, int ipowfs, real thresarea){
 	dmat* saa=NULL;//create a temporary sa area array
 	if(powfs[ipowfs].saa_tel){
 	//We expact subaperture to union of all wfs
@@ -228,8 +228,8 @@ sa_reduce(POWFS_T* powfs, int ipowfs, real thresarea){
 
 */
 static void
-setup_shwfs_geom(POWFS_T* powfs, const PARMS_T* parms,
-	APER_T* aper, int ipowfs){
+setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
+	aper_t* aper, int ipowfs){
 	free_powfs_geom(powfs, ipowfs);
 	int nwfsp=parms->powfs[ipowfs].nwfs;
 	/*order of the system. 60 for TMT */
@@ -485,7 +485,7 @@ setup_shwfs_geom(POWFS_T* powfs, const PARMS_T* parms,
 
  */
 void
-setup_powfs_misreg_tel(POWFS_T* powfs, const PARMS_T* parms, APER_T* aper, int ipowfs){
+setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
 	int nwfsp=parms->powfs[ipowfs].nwfs;
 	if(parms->misreg.tel2wfs){
 		TIC;tic;
@@ -531,7 +531,7 @@ setup_powfs_misreg_tel(POWFS_T* powfs, const PARMS_T* parms, APER_T* aper, int i
    setup DM to WFS misregistration.
 */
 void
-setup_powfs_misreg_dm(POWFS_T* powfs, const PARMS_T* parms, APER_T* aper, int ipowfs){
+setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
 	(void)aper;
 	int nwfsp=parms->powfs[ipowfs].nwfs;
 	if(parms->misreg.dm2wfs){
@@ -567,7 +567,7 @@ setup_powfs_misreg_dm(POWFS_T* powfs, const PARMS_T* parms, APER_T* aper, int ip
    ray tracing.  This is simulation, not RTC, so use real system distortion,
    misregistration, etc. */
 static void
-setup_shwfs_grad(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
+setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(parms->powfs[ipowfs].gtype_recon==0||parms->powfs[ipowfs].gtype_sim==0){
 		dspcellfree(powfs[ipowfs].GS0);
 		/*Setting up every gradient tilt (g-ztilt) */
@@ -613,7 +613,7 @@ setup_shwfs_grad(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
 		}
 	}
 }
-void setup_powfs_neasim(const PARMS_T* parms, POWFS_T* powfs){
+void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const long nsa=powfs[ipowfs].saloc->nloc;
 		dcell* nea=0;
@@ -670,7 +670,7 @@ void setup_powfs_neasim(const PARMS_T* parms, POWFS_T* powfs){
 
 */
 static void
-setup_powfs_prep_phy(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
+setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	const real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	const real pixthetay=parms->powfs[ipowfs].pixtheta;
 	const int pixpsay=parms->powfs[ipowfs].pixpsa;
@@ -893,7 +893,7 @@ setup_powfs_prep_phy(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
 
 */
 static void
-setup_powfs_dtf(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
+setup_powfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	dmat* pixoffx=0;
 	dmat* pixoffy=0;
 	if(parms->powfs[ipowfs].pixoffx||parms->powfs[ipowfs].pixoffy){
@@ -992,7 +992,7 @@ setup_powfs_dtf(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
 /**
    setup the range to sodium layer as an additional parameter.
 */
-static void setup_powfs_focus(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
+static void setup_powfs_focus(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(!parms->powfs[ipowfs].llt||!parms->powfs[ipowfs].llt->fnrange) return;
 	char* fnrange=parms->powfs[ipowfs].llt->fnrange;
 	warning("loading sodium range variation from %s\n", fnrange);
@@ -1018,7 +1018,7 @@ static void setup_powfs_focus(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
    scaling factor of the signal level.
 
 */
-static void setup_powfs_sodium(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
+static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	char* fnprof=parms->powfs[ipowfs].llt->fnprof;
 	dcell* Nains=dcellread("%s", fnprof);
 	int nprof=Nains->nx*Nains->ny;
@@ -1054,7 +1054,7 @@ static void setup_powfs_sodium(POWFS_T* powfs, const PARMS_T* parms, int ipowfs)
 	}
 }
 typedef struct{
-	DTF_T* dtfs;  /**<The dtfs*/
+	dtf_t* dtfs;  /**<The dtfs*/
 	real hs;    /**<Guide star focus range*/
 	dcell* sodium;/**<The sodium profile. First column is coordinate.*/
 	int icol;     /**<Which sodium profile to use*/
@@ -1063,14 +1063,14 @@ typedef struct{
 	int no_interp;/**<Use direct sum instead of interpolation + FFT. Slower */
 	int free;     /**<Free this array after using?*/
 }mketf_t;
-ETF_T* mketf_wrap(mketf_t* data){
-	ETF_T* result=mketf(data->dtfs, data->hs, data->sodium, data->icol,
+etf_t* mketf_wrap(mketf_t* data){
+	etf_t* result=mketf(data->dtfs, data->hs, data->sodium, data->icol,
 		data->srot, data->srsa, data->no_interp);
 	if(data->free) free(data);
 	return result;
 }
 static pthread_t etfthread=0;
-static int etf_match(ETF_T *etf, mketf_t *etfdata){
+static int etf_match(etf_t *etf, mketf_t *etfdata){
 	const double thres_dh=4;//allow 4 meter difference
 	return (etf && etfdata && etf->icol==etfdata->icol && fabs(etf->hs-etfdata->hs)<thres_dh);
 }
@@ -1080,7 +1080,7 @@ static int etf_match(ETF_T *etf, mketf_t *etfdata){
    - mode=1: for simulation.
    - mode=2: for simulation, next profile (linear interpolation.)
 */
-void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ipowfs, int mode, int icol){
+void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, double deltah, int ipowfs, int mode, int icol){
 	if(!parms->powfs[ipowfs].llt) return;
 	mketf_t etfdata={powfs[ipowfs].dtf,
 			 parms->powfs[ipowfs].hs+deltah,
@@ -1115,7 +1115,7 @@ void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ip
 			if(etf_match(powfs[ipowfs].etfsim2, &etfdata)){
 				dbg("No need to update ETF\n");
 			} else{
-				ETF_T* etfasync=0;
+				etf_t* etfasync=0;
 				etf_free(powfs[ipowfs].etfsim2); powfs[ipowfs].etfsim2=0;
 				if(etfthread){
 					//preparation already running in a thread
@@ -1156,12 +1156,12 @@ void setup_powfs_etf(POWFS_T* powfs, const PARMS_T* parms, double deltah, int ip
    setting up uplink pts/amp lotf
 */
 static void
-setup_powfs_llt(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
+setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(!parms->powfs[ipowfs].llt) return;
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	real wvl0=parms->powfs[ipowfs].wvl->p[0];
-	LLT_T* llt=powfs[ipowfs].llt=mycalloc(1, LLT_T);
-	const LLT_CFG_T* lltcfg=parms->powfs[ipowfs].llt;
+	llt_t* llt=powfs[ipowfs].llt=mycalloc(1, llt_t);
+	const llt_cfg_t* lltcfg=parms->powfs[ipowfs].llt;
 
 	real lltd=lltcfg->d;
 	real dx;
@@ -1359,7 +1359,7 @@ typedef struct{
    Setup CoG gradient offset for simulation and NEA for reconstruction.
 */
 static void
-setup_powfs_cog(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
+setup_powfs_cog(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	TIC;tic;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int nsa=powfs[ipowfs].saloc->nloc;
@@ -1370,7 +1370,7 @@ setup_powfs_cog(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 	const real rne=parms->powfs[ipowfs].rne;
 	const real bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 	const real bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
-	INTSTAT_T* intstat=powfs[ipowfs].intstat;
+	intstat_t* intstat=powfs[ipowfs].intstat;
 	int do_nea=0;
 	rand_t rstat;
 	if(!intstat||!intstat->i0){
@@ -1460,7 +1460,7 @@ setup_powfs_cog(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
    Setup the (matched filter or CoG) pixel processing parameters for physical optics wfs.
 */
 static void
-setup_powfs_phygrad(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
+setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	long nsa=powfs[ipowfs].saloc->nloc;
 	if(powfs[ipowfs].intstat){
 		error("Should only be called once\n");
@@ -1469,7 +1469,7 @@ setup_powfs_phygrad(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
 		||(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==2)
 		||parms->powfs[ipowfs].phytype_sim==4
 		){
-		INTSTAT_T* intstat=powfs[ipowfs].intstat=mycalloc(1, INTSTAT_T);
+		intstat_t* intstat=powfs[ipowfs].intstat=mycalloc(1, intstat_t);
 		if(parms->powfs[ipowfs].i0load){
 			info("Loading i0, gx, gy\n");
 			if(zfexist("%s/powfs%d_i0", parms->powfs[ipowfs].i0load, ipowfs)){
@@ -1567,7 +1567,7 @@ setup_powfs_phygrad(POWFS_T* powfs, const PARMS_T* parms, int ipowfs){
   WFS due to optics, without DM correction. opdbias is the wavefront aberration
   in WFS after DM system flat is applied.
 */
-void setup_powfs_calib(const PARMS_T* parms, POWFS_T* powfs){
+void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//if opdadd is null, but dm_ncpa is not, there will still be opdbias.
 		if(powfs[ipowfs].opdbias){
@@ -1646,9 +1646,9 @@ void setup_powfs_calib(const PARMS_T* parms, POWFS_T* powfs){
 /**
    Setup the powfs struct based on parms and aper. Everything about wfs are
    setup here.  \callgraph */
-POWFS_T* setup_powfs_init(const PARMS_T* parms, APER_T* aper){
+powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 	TIC;tic;
-	POWFS_T* powfs=mycalloc(parms->npowfs, POWFS_T);
+	powfs_t* powfs=mycalloc(parms->npowfs, powfs_t);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].nwfs==0) continue;
 		if(parms->powfs[ipowfs].type==0){
@@ -1668,7 +1668,7 @@ POWFS_T* setup_powfs_init(const PARMS_T* parms, APER_T* aper){
 /**
    Setup physical optics parameters for SHWFS, such as DTF, ETF, LLT, pixel processing.
 */
-void setup_powfs_phy(const PARMS_T* parms, POWFS_T* powfs){
+void setup_powfs_phy(const parms_t* parms, powfs_t* powfs){
 	TIC;tic;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].nwfs&&parms->powfs[ipowfs].type==0
@@ -1708,7 +1708,7 @@ void setup_powfs_phy(const PARMS_T* parms, POWFS_T* powfs){
 /**
    free unused parameters before simulation starts
 */
-void free_powfs_unused(const PARMS_T* parms, POWFS_T* powfs){
+void free_powfs_unused(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(powfs[ipowfs].intstat){
 			cellfree(powfs[ipowfs].intstat->sepsf);
@@ -1722,14 +1722,14 @@ void free_powfs_unused(const PARMS_T* parms, POWFS_T* powfs){
 	}
 }
 
-static void free_powfs_shwfs(POWFS_T* powfs, int ipowfs){
+static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 	dtf_free(powfs[ipowfs].dtf);
 	dspcellfree(powfs[ipowfs].GS0);
 	dcellfree(powfs[ipowfs].neasim);
 	dcellfree(powfs[ipowfs].sanea);
 	cellfree(powfs[ipowfs].cogcoeff);
 	if(powfs[ipowfs].intstat){
-		INTSTAT_T* intstat=powfs[ipowfs].intstat;
+		intstat_t* intstat=powfs[ipowfs].intstat;
 		cellfree(intstat->fotf);
 		cellfree(intstat->potf);
 		cellfree(intstat->mtche);
@@ -1771,9 +1771,9 @@ static void free_powfs_shwfs(POWFS_T* powfs, int ipowfs){
 /**
    Free all parameters of powfs at the end of simulation.
 */
-void free_powfs(const PARMS_T* parms, POWFS_T* powfs){
+void free_powfs(const parms_t* parms, powfs_t* powfs){
 	if(etfthread){//cleanup
-		ETF_T* etfasync=0;
+		etf_t* etfasync=0;
 		pthread_join(etfthread, (void**)(void*)&etfasync);
 		etf_free(etfasync);
 		etfthread=0;

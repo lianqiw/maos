@@ -84,7 +84,7 @@ int pcg_save=0;
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
 */
 Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
-	const curcell& b, CGTMP_T& cg_data, int warm, int maxiter,
+	const curcell& b, cgtmp_t& cg_data, int warm, int maxiter,
 	stream_t& stream, Real cgthres){
 	curcell& r0=cg_data.r0;
 	curcell& z0=cg_data.z0;/*Is reference to r0 or preconditioned value. */

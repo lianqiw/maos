@@ -900,7 +900,7 @@ if test "$with_cuda" != "no" ;then
 		if test "$user_enable_cuda" = "yes" ;then
 			AC_MSG_ERROR([Specified cuda DIR is not valid])
 		else
-			AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR in configure to specify CUDA location or disable cuda use --without-cuda"])
+			AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR to specify CUDA location or --without-cuda"])
 		fi
     fi
 fi
@@ -1005,13 +1005,6 @@ DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
-if test x$DOXYGEN_AVAILABLE = x ;then
-    AM_CONDITIONAL(DO_DOXYGEN, false)
-	do_doxygen=0
-else
-    AM_CONDITIONAL(DO_DOXYGEN, true)
-	do_doxygen=1
-fi
 
 AC_CONFIG_FILES( [Makefile
 	sys/Makefile
@@ -1089,7 +1082,7 @@ echo "GTK version:     ${gtk_ver}"
 echo "Websocket:       $use_websockets"
 echo "MATLAB MEX:      $with_matlab"
 
-echo "Doxygen:         $do_doxygen (make doc)"
+echo "Doxygen:         $DX_DOXYGEN (make doc)"
 echo "CMOCKA:          $enable_cmocka"
 echo
 

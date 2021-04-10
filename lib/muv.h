@@ -29,17 +29,17 @@
 /**
    Avoid function casting. It will hide data safety check and hide bugs.
 */
-typedef void (*EXFUN) (dcell **xout, const void *A, const dcell *xin, const real alpha, int xb, int yb);
+typedef void (*exfun_t) (dcell **xout, const void *A, const dcell *xin, const real alpha, int xb, int yb);
 /**
    Decompose an operator into a sparse operator and optional low rank
    terms. M-U*V'; M is usually symmetrical.
  */
-typedef struct MUV_T{
+typedef struct muv_t{
     /*The forward computation can be done by the following 3 matrices, together with exfun, extra (data) */
     cell *M;       /**<block sparse matrix or dense matrix*/
     dcell  *U;     /**<low rank terms U*/
     dcell  *V;     /**<low rank terms V*/
-    EXFUN exfun;   /**<Optionally attach an extra function that applies extra data*/
+    exfun_t exfun;   /**<Optionally attach an extra function that applies extra data*/
     void *extra;   /**<Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute*/
     /*And the following are the inversion of above */
     spchol *C;     /**<Cholesky factor.*/
@@ -53,31 +53,31 @@ typedef struct MUV_T{
     dcell *VpB;    /**<Vp for each diagonal component*/
     int nb;        /**<Number of blocks in CB;*/
     /*The operation of M can be done with the folloing function and data */
-    CGFUN Mfun;    /**<Do M*x with a function*/
-    CGFUN Mtfun;   /**<Do M'*x with a function*/
+    cgfun_t Mfun;    /**<Do M*x with a function*/
+    cgfun_t Mtfun;   /**<Do M'*x with a function*/
     void *Mdata;   /**<Parameter to Mfun*/
     /*For CG purpose, the preconditioner function and data */
-    PREFUN pfun;   /**<The preconditioner function*/
+    prefun_t pfun;   /**<The preconditioner function*/
     void *pdata;   /**<The precondtioner data*/
     /*For solving the linear problem, a few arguments. */
     int alg;       /**<The algorithm: 0: CBS, 1: CG, 2: SVD*/
     int bgs;       /**<Whether use BGS (Block Gauss Seidel) method, and how many iterations*/
     int warm;      /**<Whether use warm restart*/
     int maxit;     /**<How many iterations*/
-}MUV_T;
+}muv_t;
 
 void muv(dcell **xout, const void *A, const dcell *xin, const real alpha);
 void muv_trans(dcell **xout, const void *A, const dcell *xin, const real alpha);
 void muv_ib(dcell **xout, const void *A, const dcell *xin, const real alpha);
-void muv_direct_solve(dcell **xout, const MUV_T *A, dcell *xin);
-void muv_direct_solve_mat(dmat **xout, const MUV_T *A, dmat *xin);
-void muv_direct_prep(MUV_T *muv, real svd);
-void muv_direct_free(MUV_T *muv);
-void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib);
-void muv_bgs_solve(dcell **px, const MUV_T *A, const dcell *b);
-real muv_solve(dcell **px, const MUV_T *L, const MUV_T *R, dcell *b);
-void* muv_direct_spsolve(const MUV_T *A, const dsp *xin);
-void muv_direct_diag_prep(MUV_T *muv, real svd);
-void muv_direct_diag_free(MUV_T *muv);
-void muv_free(MUV_T *A);
+void muv_direct_solve(dcell **xout, const muv_t *A, dcell *xin);
+void muv_direct_solve_mat(dmat **xout, const muv_t *A, dmat *xin);
+void muv_direct_prep(muv_t *muv, real svd);
+void muv_direct_free(muv_t *muv);
+void muv_direct_diag_solve(dmat **xout, const muv_t *A, dmat *xin, int ib);
+void muv_bgs_solve(dcell **px, const muv_t *A, const dcell *b);
+real muv_solve(dcell **px, const muv_t *L, const muv_t *R, dcell *b);
+void* muv_direct_spsolve(const muv_t *A, const dsp *xin);
+void muv_direct_diag_prep(muv_t *muv, real svd);
+void muv_direct_diag_free(muv_t *muv);
+void muv_free(muv_t *A);
 #endif

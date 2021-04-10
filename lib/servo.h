@@ -29,7 +29,7 @@
 /**
    Struct for servo filtering
 */
-typedef struct SERVO_T{
+typedef struct servo_t{
     dcell *mlead;       /**<lead filter temporary storage*/
     dcell *merrlast;    /**<recorded errro signal from last step*/
     dcell *mpreint;     /**<first integrator or other value.*/
@@ -42,34 +42,34 @@ typedef struct SERVO_T{
     dmat *ap;
     dmat *ep;
     real dt;
-}SERVO_T;
+}servo_t;
 dcell* servo_optim(const dmat *psdin, real dt, long dtrat, real al, real pmargin, 
 		   const dmat* sigma2n, int servo_type);
 dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, real al, real gain, real sigma2n);
 //cmat *servo_Hol(const dmat *nu, real dt, real dtrat, real al, const dmat *gain);
 real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, real al, const dmat *gain, int servo_type);
-void servo_update(SERVO_T *st, const dmat *ep);
-SERVO_T *servo_new(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep);
-int servo_filter(SERVO_T *st, const dcell *merr);
-void servo_add(SERVO_T *st, const dcell *madj, real alpha);
-void servo_output(const SERVO_T *st, dcell **out);
+void servo_update(servo_t *st, const dmat *ep);
+servo_t *servo_new(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep);
+int servo_filter(servo_t *st, const dcell *merr);
+void servo_add(servo_t *st, const dcell *madj, real alpha);
+void servo_output(const servo_t *st, dcell **out);
 dmat* servo_test(dmat *mideal, real dt, int dtrat, dmat* sigma2n, dmat *gain);
-void servo_reset(SERVO_T *st);
-void servo_free(SERVO_T *st);
+void servo_reset(servo_t *st);
+void servo_free(servo_t *st);
 //cmat *servo_typeII_Hol(const dmat *gain, real fs, real lgsdt);
 /**
    struct for state space modeling of a second order harnomic oscillator with
    resonance frequency of f0 and damping ratio of zeta.
 */
-typedef struct SHO_T{
+typedef struct sho_t{
     real dt;//minimum dt for advancing state.
     real c1;//2*zeta*omega0; omega0=2*pi*f0;
     real c2;//omega0^2;
     real x1;//status (derivative)
     real x2;//status (position)
-}SHO_T;
-SHO_T *sho_new(real f0, real zeta);
-real sho_step(SHO_T *sho, real xi, real dt);
-void sho_reset(SHO_T *sho);
+}sho_t;
+sho_t *sho_new(real f0, real zeta);
+real sho_step(sho_t *sho, real xi, real dt);
+void sho_reset(sho_t *sho);
 dmat *sho_filter(const dmat *xi, real dt, real f0, real zeta);
 #endif

@@ -23,7 +23,7 @@
 namespace cuda_recon{
 
 /*Data for aperture bi-linear weighting, used in fitting*/
-class W01_T{
+class w01_t{
 	curmat W1;    /**< The aperture weighting, piston removal*/
 	cusp   W0p;   /**< W0 for partial points*/
 	cuimat W0f;/**< index for fully illuminated points.*/
@@ -31,7 +31,7 @@ class W01_T{
 	int     nxx;  /**< First dimension of grid*/
 	mutable curmat pis;   /**< Temporary data*/
 public:
-	W01_T(const dsp* R_W0, const dmat* R_W1, int R_nxx);
+	w01_t(const dsp* R_W0, const dmat* R_W1, int R_nxx);
 	void apply(Real* restrict out, const Real* in, int ndir, stream_t& stream) const;
 };
 
@@ -51,12 +51,12 @@ public:
 	cugridcell amap;
 	cugrid_t pmap; /*Pupil map for tomo*/
 	cugrid_t fmap; /*Pupil map for fit*/
-	W01_T W01;    /**< The aperture weighting defined on floc*/
+	w01_t W01;    /**< The aperture weighting defined on floc*/
 	long* xnx, * xny;/*do not free*/
 	long* anx, * any;/*do not free*/
 	long* anloc, * ngrad;/*do not free*/
 	Real dt;
-	curecon_geom(const PARMS_T* parms, const RECON_T* recon);
+	curecon_geom(const parms_t* parms, const recon_t* recon);
 	~curecon_geom(){}
 };
 

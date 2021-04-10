@@ -64,7 +64,7 @@
 /**
    contains data related to DM hysterisis modeling for all the common DMs (not
 MOAO). let input be x, and output of each mode be y.  */
-struct HYST_T{
+struct hyst_t{
 	real alpha;       /**<Material constant*/
 	real beta;        /**<constants*/
 	real beta_m_u;    /**<constants, beta-u*/
@@ -76,13 +76,13 @@ struct HYST_T{
 /**
   Hysteresis modeling. Create the hysteresis model. It assumes that the hysteresis is measured with a stroke.
 */
-HYST_T* hyst_new(
+hyst_t* hyst_new(
 	real hysteresis,   /**<The ratio of the maximum difference of ascending/descending curve over 2*stroke. */
 	real alpha,        /**<The alpha parameter*/
 	real stroke,       /**<The DM command is from -stroke to stroke*/
 	long nact          /**<Number of actuators*/
 ){
-	HYST_T* hyst=mycalloc(1, HYST_T);
+	hyst_t* hyst=mycalloc(1, hyst_t);
 	hyst->xlast=dnew(nact, 1);
 	hyst->ylast=dnew(nact, 1);
 	if(hysteresis<0||hysteresis>1){
@@ -105,7 +105,7 @@ HYST_T* hyst_new(
 /**
    Reset hysteresis state
 */
-void hyst_reset(HYST_T* hyst){
+void hyst_reset(hyst_t* hyst){
 	dzero(hyst->xlast);
 	dzero(hyst->ylast);
 }
@@ -113,7 +113,7 @@ void hyst_reset(HYST_T* hyst){
 /**
    Free hysteresis model.
 */
-void hyst_free(HYST_T* hyst){
+void hyst_free(hyst_t* hyst){
 	dfree(hyst->xlast);
 	dfree(hyst->ylast);
 	free(hyst);
@@ -122,7 +122,7 @@ void hyst_free(HYST_T* hyst){
 /**
    Apply hysteresis to DM vector. dmreal and dmcmd may be the same
 */
-void hyst_dmat(HYST_T* hyst, dmat* dmreal, const dmat* dmcmd){
+void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
 	real* restrict xlast=hyst->xlast->p;
 	real* restrict ylast=hyst->ylast->p;
 	assert(dmcmd->nx==hyst->xlast->nx);
@@ -141,7 +141,7 @@ void hyst_dmat(HYST_T* hyst, dmat* dmreal, const dmat* dmcmd){
 /**
    Apply hysteresis to set of DM vectors
 */
-void hyst_dcell(HYST_T** hyst, dcell* dmreal, const dcell* dmcmd){
+void hyst_dcell(hyst_t** hyst, dcell* dmreal, const dcell* dmcmd){
 	if(!hyst) return;
 	for(int idm=0; idm<dmcmd->nx*dmcmd->ny; idm++){
 		hyst_dmat(hyst[idm], dmreal->p[idm], dmcmd->p[idm]);
@@ -152,7 +152,7 @@ void hyst_dcell(HYST_T** hyst, dcell* dmreal, const dcell* dmcmd){
  * Test hysteresis model. Dmcmd has dimensions of nact*ntime
  * */
 dmat* hyst_test(real hysteresis, real hyst_alpha, real hyst_stroke, const dmat* dmcmd){
-	HYST_T* hyst=hyst_new(hysteresis, hyst_alpha, hyst_stroke, dmcmd->nx);
+	hyst_t* hyst=hyst_new(hysteresis, hyst_alpha, hyst_stroke, dmcmd->nx);
 	dmat* dmreal=dnew(dmcmd->nx, dmcmd->ny);
 	hyst_dmat(hyst, dmreal, dmcmd);
 	hyst_free(hyst);

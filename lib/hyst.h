@@ -26,11 +26,11 @@
 
 #include "../math/mathdef.h"
 
-typedef struct HYST_T HYST_T;
-HYST_T *hyst_new(real hysteresis, real alpha, real stroke, long nact);
-void hyst_reset(HYST_T *hyst);
-void hyst_free(HYST_T *in);
-void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd);
-void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd);
+typedef struct hyst_t hyst_t;
+hyst_t *hyst_new(real hysteresis, real alpha, real stroke, long nact);
+void hyst_reset(hyst_t *hyst);
+void hyst_free(hyst_t *in);
+void hyst_dmat(hyst_t *hyst, dmat *dmreal, const dmat *dmcmd);
+void hyst_dcell(hyst_t **hyst, dcell *dmreal, const dcell *dmcmd);
 dmat* hyst_test(real hysteresis, real hyst_alpha, real hyst_stroke, const dmat *dmcmd);
 #endif

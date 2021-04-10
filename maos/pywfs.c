@@ -23,7 +23,7 @@
 #define PYWFS_GUARD 1.5 //separate the pupil by this amount in relative
 #define PWFS_DEBUG 0 //For testing
 
-static void pywfs_mksi(PYWFS_T* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, real pupelong){
+static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, real pupelong){
 	dspcellfree(pywfs->si);
 	cellfree(pywfs->msaloc);
 	const int pyside=pywfs->nside;
@@ -94,9 +94,9 @@ static void pywfs_mksi(PYWFS_T* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 /**
    Setup pyramid WFS based on configuration.
 */
-void pywfs_setup(POWFS_T* powfs, const PARMS_T* parms, APER_T* aper, int ipowfs){
+void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
 	pywfs_free(powfs[ipowfs].pywfs);
-	PYWFS_T* pywfs=powfs[ipowfs].pywfs=mycalloc(1, PYWFS_T);
+	pywfs_t* pywfs=powfs[ipowfs].pywfs=mycalloc(1, pywfs_t);
 	const int pyside=pywfs->nside=parms->dbg.pwfs_side;
 	map_t* map=0;
 	pywfs->hs=parms->powfs[ipowfs].hs;
@@ -555,7 +555,7 @@ void pywfs_setup(POWFS_T* powfs, const PARMS_T* parms, APER_T* aper, int ipowfs)
    Perform FFT over the complex PSF with additional phases caused by the
    pyramid. FFT on each quadrant of the PSF creates diffraction effects.
 */
-void pywfs_fft(dmat** ints, const PYWFS_T* pywfs, const dmat* opd){
+void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
 	locfft_t* locfft=pywfs->locfft;
 	ccell* psfs=0;
 	locfft_psf(&psfs, locfft, opd, NULL, 1);//psfs.^2 sum to 1. peak in center
@@ -638,7 +638,7 @@ void pywfs_fft(dmat** ints, const PYWFS_T* pywfs, const dmat* opd){
 /**
    Compute gradients. It replaces the result, not accumulate.
  */
-void pywfs_grad(dmat** pgrad, const PYWFS_T* pywfs, const dmat* ints){
+void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 	const long nsa=ints->nx;
 	const int pyside=pywfs->nside;
 	if(!*pgrad){
@@ -692,7 +692,7 @@ void pywfs_grad(dmat** pgrad, const PYWFS_T* pywfs, const dmat* ints){
 /**
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
-dmat* pywfs_tt(const PYWFS_T* pywfs){
+dmat* pywfs_tt(const pywfs_t* pywfs){
 	TIC;tic;info2("Computing pywfs_tt...");
 	const loc_t* loc=pywfs->locfft->loc;
 	dmat* opd=dnew(loc->nloc, 1);
@@ -724,11 +724,11 @@ dmat* pywfs_tt(const PYWFS_T* pywfs){
 	writebin(ints, "pwfs_tty");
 #endif
 #if PWFS_DEBUG
-#define PYWFS_TT_DUAL 1
+#define pywfs_tT_DUAL 1
 #else
-#define PYWFS_TT_DUAL 0
+#define pywfs_tT_DUAL 0
 #endif
-#if PYWFS_TT_DUAL
+#if pywfs_tT_DUAL
 	dmat* gradx2=dnew(nsa*2, 1);
 	dmat* grady2=dnew(nsa*2, 1);
 	//-x
@@ -764,7 +764,7 @@ dmat* pywfs_tt(const PYWFS_T* pywfs){
 	toc("done");
 	return out;
 }
-static uint32_t pywfs_hash(const PYWFS_T* pywfs, uint32_t key){
+static uint32_t pywfs_hash(const pywfs_t* pywfs, uint32_t key){
 	key=lochash(pywfs->loc, key);
 	key=dhash(pywfs->amp, key);
 	key=dhash(pywfs->saa, key);
@@ -781,7 +781,7 @@ static uint32_t pywfs_hash(const PYWFS_T* pywfs, uint32_t key){
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
    same conditions.
  */
-static dmat* pywfs_mkg_do(const PYWFS_T* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod,
+static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod,
 	real displacex, real displacey){
 #if USE_CUDA
 	if(pywfs->gpu){
@@ -858,7 +858,7 @@ static dmat* pywfs_mkg_do(const PYWFS_T* pywfs, const loc_t* locin, const loc_t*
 /**
    locin is on pupil.
  */
-dmat* pywfs_mkg(PYWFS_T* pywfs, const loc_t* locin, const char* distortion, const dmat* mod, const dmat* opdadd,
+dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, const dmat* mod, const dmat* opdadd,
 	real displacex, real displacey){
 	if(opdadd){
 		dfree(pywfs->opdadd);
@@ -903,7 +903,7 @@ dmat* pywfs_mkg(PYWFS_T* pywfs, const loc_t* locin, const char* distortion, cons
 	real poke=1e-9;
 	real step=pow(10,0.25);
 	for(int ig=0; ig<gg1->nx; ig++){
-		((PYWFS_T*)pywfs)->poke=poke;
+		((pywfs_t*)pywfs)->poke=poke;
 		gg1->p[ig]=pywfs_mkg_do(pywfs, locin, locfft, mod1, displacex, displacey);
 		poke=poke*step;
 	}
@@ -934,9 +934,9 @@ retry:
 	return gg;
 }
 /**
-   frees PYWFS_T
+   frees pywfs_t
 */
-void pywfs_free(PYWFS_T* pywfs){
+void pywfs_free(pywfs_t* pywfs){
 	if(!pywfs) return;
 	cellfree(pywfs->amp);
 	locfree(pywfs->loc);

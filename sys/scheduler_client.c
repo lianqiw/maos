@@ -75,7 +75,7 @@ int scheduler_wait(void){
 void scheduler_finish(int status){
 	(void)status;
 }
-void scheduler_report(STATUS_T* status){
+void scheduler_report(status_t* status){
 	(void)status;
 }
 int scheduler_listen(thread_fun fun){
@@ -108,9 +108,12 @@ static char** hostsaddr=0;
 int nhost=0;
 PNEW(mutex_hosts);
 /**
-   Parse and add host info to hosts[] and hostaddr[]. The format is hostname[=hostaddr:port]
+   Parse and add host info to hosts[] and hostaddr[]. 
+   hosts contains the shortcut name, without dot
+   and hostaddr contains the FQDN and optionally the port
 */
-void parse_host(char* line){
+void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
+){
 	static int memhost=0;
 	if(strlen(line)>0&&line[0]!='#'){
 		LOCK(mutex_hosts);
@@ -121,13 +124,11 @@ void parse_host(char* line){
 		}
 
 		char* eq=strchr(line, '=');
-		if(eq){
-			eq[0]='\0'; eq++;
-		} else{
-			eq=line;
-		}
-		hosts[nhost]=strdup(line);
-		hostsaddr[nhost]=strdup(eq);
+		hostsaddr[nhost]=strdup(eq?(eq+1):line);
+		char *dot=strchr(line, '.');
+		int n0=strlen(line);
+		int n=MIN(dot?(dot-line):n0, eq?(eq-line):n0);
+		hosts[nhost]=strndup(line, n?n:n0);
 		nhost++;
 		UNLOCK(mutex_hosts);
 	}
@@ -343,7 +344,7 @@ void scheduler_finish(int status){
 
 /**
    called by sim.c to report job status */
-void scheduler_report(STATUS_T* status){
+void scheduler_report(status_t* status){
 	if(psock==-1){
 		psock=scheduler_connect_self(0);
 		scheduler_report_path(NULL);
@@ -353,7 +354,7 @@ void scheduler_report(STATUS_T* status){
 		cmd[0]=CMD_STATUS;
 		cmd[1]=getpid();
 		CATCH_ERR(stwriteintarr(psock, cmd, 2));
-		CATCH_ERR(stwrite(psock, status, sizeof(STATUS_T)));
+		CATCH_ERR(stwrite(psock, status, sizeof(status_t)));
 	}
 }
 

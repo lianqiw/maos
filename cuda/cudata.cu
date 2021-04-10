@@ -137,7 +137,7 @@ static int task_cmp(const task_t* a, const task_t* b){
    when mix Tesla and GTX cards, the ordering the GPUs may be different in CUDA
    and NVML, causing the selection of GPUs to fail. Do not use NVML
 */
-int gpu_init(const PARMS_T* parms, int* gpus, int ngpu){
+int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	//Set the CUDA CACHE size big enough if user didn't set it.
 	setenv("CUDA_CACHE_MAXSIZE", "1000000000", 0);
 

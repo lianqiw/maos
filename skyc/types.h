@@ -140,7 +140,7 @@ typedef struct SIM_S{
     dmat *mideal;      /**<ideal NGS modes*/
     dmat *mideal_oa;   /**<ideal NGS modes on axis (dot product only)*/
     real varol;      /**<open loop error*/
-    STATUS_T *status;  /**<to report status to the scheduler*/
+    status_t *status;  /**<to report status to the scheduler*/
     STAR_S *star;      /**<STAR_S*/
     int iseed;         /**<Current seed index*/
     int seed_maos;     /**<Current MAOS seed to read in PSF*/

@@ -20,9 +20,9 @@
 */
 
 #include "common.h"
-void save_wfsgrad(SIM_T *simu);
-void save_pistat(SIM_T *simu);
-void save_gradol(SIM_T *simu);
-void save_recon(SIM_T *simu);
-void save_dmproj(SIM_T *simu);
-void save_dmreal(SIM_T *simu);
+void save_wfsgrad(sim_t *simu);
+void save_pistat(sim_t *simu);
+void save_gradol(sim_t *simu);
+void save_recon(sim_t *simu);
+void save_dmproj(sim_t *simu);
+void save_dmreal(sim_t *simu);

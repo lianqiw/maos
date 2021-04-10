@@ -23,7 +23,7 @@
    Contains routines to generate atmospheric turbulence screens
 */
 #include "../math/mathdef.h"
-typedef struct GENATM_T{
+typedef struct genatm_t{
     rand_t *rstat;   /**<The random stream*/
     real *wt;      /**<The layer weights*/
     real r0;       /**<The Fried Parameter*/
@@ -40,11 +40,11 @@ typedef struct GENATM_T{
     dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)=beta*f^alpha. [alpha, beta, minfreq, maxfreq]*/
     /*The following are private data. do not set when call. */
     mapcell *screen;  /**<The destination screen pointer*/
-}GENATM_T;
+}genatm_t;
 map_t *genatm_simple(real r0, real L0, real dx, long nx);
 dmat *genatm_loc(loc_t *loc, real r0, real L0);
-//mapcell* genatm_from_spect(GENATM_T *data);
-mapcell* genscreen(GENATM_T *data);
+//mapcell* genatm_from_spect(genatm_t *data);
+mapcell* genscreen(genatm_t *data);
 map_t *genscreen_str(const char *header);
 dmat* turbcov(dmat *r, real rmax, real r0, real L0);
 void spatial_psd(dmat **out, long nx, long ny, real dx, real strength, real L0,

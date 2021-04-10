@@ -18,7 +18,7 @@
 #include "maos.h"
 #include "moao.h"
 
-GLOBAL_T* global=NULL;//record for convenient access. It enables calling maos from matlab
+global_t* global=NULL;//record for convenient access. It enables calling maos from matlab
 int use_cuda=0;
 const char* dirskysim=NULL;
 
@@ -43,13 +43,13 @@ static void read_sim_env(){
 /**
    Setup system before entering simulation.
  */
-void maos_setup(const PARMS_T* parms){
+void maos_setup(const parms_t* parms){
 	TIC;tic;
-	global=mycalloc(1, GLOBAL_T);
+	global=mycalloc(1, global_t);
 	global->parms=parms;
-	APER_T* aper=NULL;
-	POWFS_T* powfs=NULL;
-	RECON_T* recon=NULL;
+	aper_t* aper=NULL;
+	powfs_t* powfs=NULL;
+	recon_t* recon=NULL;
 	read_sim_env();
 	if(PARALLEL&&(parms->sim.closeloop==0||parms->evl.tomo)){
 		PARALLEL=0;	/*need to disable parallelizing the big loop. */
@@ -113,14 +113,14 @@ void maos_setup(const PARMS_T* parms){
 			assert(iwfs>-1||iwfs<parms->nwfs);
 			info2("Studying wfslineariy for WFS %d\n", iwfs);
 			wfslinearity(parms, powfs, iwfs);
-			((PARMS_T*)parms)->sim.end=parms->sim.start;//indicate no simulation
+			((parms_t*)parms)->sim.end=parms->sim.start;//indicate no simulation
 		}
 		{
 			int LGS_SPH_PSD=-1;
 			READ_ENV_INT(LGS_SPH_PSD, -1, INFINITY);
 			if(LGS_SPH_PSD>-1){
 				lgs_wfs_sph_psd(parms, powfs, recon, LGS_SPH_PSD);
-				((PARMS_T*)parms)->sim.end=parms->sim.start;//indicate no simulation
+				((parms_t*)parms)->sim.end=parms->sim.start;//indicate no simulation
 			}
 		}
 	}
@@ -196,7 +196,7 @@ void maos_setup(const PARMS_T* parms){
    keep track of all the memory allocation.*/
 void maos_reset(){
 	if(!global) return;
-	PARMS_T* parms=(PARMS_T*)global->parms;
+	parms_t* parms=(parms_t*)global->parms;
 	free_recon(parms, global->recon);
 	free_powfs(parms, global->powfs);
 	free_aper(global->aper);

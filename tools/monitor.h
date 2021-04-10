@@ -26,14 +26,14 @@
 /**
    Information for each process.
 */
-typedef struct PROC_T{
+typedef struct proc_t{
 	int hid;/*host id. hosts[hid] gives hostname. */
 	int pid;
 	double frac;
 	int oldinfo;
 	//int iseed_old;
 	char* path;
-	STATUS_T status;
+	status_t status;
 	GtkWidget* entry_start;
 	GtkWidget* entry_pid;
 	GtkWidget* entry_path;
@@ -48,17 +48,17 @@ typedef struct PROC_T{
 	char time3[80];
 	GtkTreeRowReference* row;
 	gulong btnhandler;
-	struct PROC_T* next;
-}PROC_T;
+	struct proc_t* next;
+}proc_t;
 /*void proc_remove(int id,int pid, int flag); */
-gboolean refresh(PROC_T* p);
-void kill_job_event(GtkWidget* btn, GdkEventButton* event, PROC_T* p);
+gboolean refresh(proc_t* p);
+void kill_job_event(GtkWidget* btn, GdkEventButton* event, proc_t* p);
 void kill_selected_jobs(GtkAction* btn);
-void notify_user(PROC_T* p);
+void notify_user(proc_t* p);
 int scheduler_cmd(int host, int pid, int command);
 int scheduler_display(int ihost, int pid);
 
-extern PROC_T** pproc;
+extern proc_t** pproc;
 extern int* nproc;
 extern GtkWidget* window;
 extern GtkWidget* notebook;
@@ -72,7 +72,7 @@ extern GdkPixbuf* icon_skip;
 extern GtkTextBuffer** buffers;
 gboolean update_title(gpointer data);
 GtkWidget* new_page(int ihost);
-gboolean remove_entry(PROC_T* p);
+gboolean remove_entry(proc_t* p);
 GtkWidget* monitor_new_entry_progress(void);
 GtkWidget* monitor_new_progress(int vertical, int length);
 void* listen_host(void*);
@@ -80,7 +80,7 @@ void add_host_wrap(int ihost);
 gboolean host_down(gpointer data);
 gboolean host_up(gpointer data);
 gboolean update_progress(gpointer input);
-PROC_T* proc_get(int id, int pid);
-void kill_job(PROC_T* p);
+proc_t* proc_get(int id, int pid);
+void kill_job(proc_t* p);
 int host2i(const char* hostn);
 #endif

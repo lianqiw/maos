@@ -62,7 +62,7 @@ char *mystrdup(const char *A);
 #undef strdup
 #define strdup mystrdup /*our strdup handles NULL correctly, and talk to mem.c */
 
-typedef struct ARGOPT_T{
+typedef struct argopt_t{
     const char *name;    /**<The long name*/
     char key;      /**<The short name*/
     int type;      /**<The type of result expected*/
@@ -75,8 +75,8 @@ typedef struct ARGOPT_T{
 		      1: A function pointer to call. */
     void *val;  /**<The address to put the return result.*/
     int *nval;  /**<If val is array, this is the counter.*/
-}ARGOPT_T;
-void parse_argopt(char *cmds, ARGOPT_T *options);
+}argopt_t;
+void parse_argopt(char *cmds, argopt_t *options);
 //sem_lock is removed in favor of lock_file which can recover when a process exits.
 //int sig_block(int block);
 //int sem_lock(const char *key, int lock);

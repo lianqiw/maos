@@ -27,7 +27,7 @@
    to gradients to get DM commands.
  */
 static void
-setup_recon_lsr_mvm(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
+setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	info("Assembling LSR MVM in CPU\n");
 	dcell* MVM=NULL;
 	if(recon->LR.Mfun||parms->lsr.alg==1){
@@ -105,8 +105,8 @@ setup_recon_lsr_mvm(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
 
 
 typedef struct{
-	const PARMS_T* parms;
-	RECON_T* recon;
+	const parms_t* parms;
+	recon_t* recon;
 	dcell* MVMt;
 	long(*curp)[2];
 	long ntotact;
@@ -114,8 +114,8 @@ typedef struct{
 static void
 setup_recon_mvr_mvm_iact(thread_t* info){
 	MVR_MVM_T* data=(MVR_MVM_T*)info->data;
-	const PARMS_T* parms=data->parms;
-	RECON_T* recon=data->recon;
+	const parms_t* parms=data->parms;
+	recon_t* recon=data->recon;
 	const int ndm=parms->ndm;
 	const int nwfs=parms->nwfsr;
 	const long ntotact=data->ntotact;
@@ -187,7 +187,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
    to gradients to get DM commands.
  */
 static void
-setup_recon_mvr_mvm(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
+setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	info("Assembling MVR MVM in CPU\n");
 	const int ndm=parms->ndm;
 	const int nwfs=parms->nwfsr;
@@ -230,7 +230,7 @@ setup_recon_mvr_mvm(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
    Assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used.
 */
 
-void setup_recon_mvm(const PARMS_T* parms, RECON_T* recon, POWFS_T* powfs){
+void setup_recon_mvm(const parms_t* parms, recon_t* recon, powfs_t* powfs){
 	TIC;tic;
 	if(!parms->recon.mvm) return;
 	if(!recon->MVM){//GPU has not assembled the MVM.

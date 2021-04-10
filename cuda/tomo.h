@@ -21,7 +21,7 @@
 #include "recon_geom.h"
 #include "fdpcg.h"
 namespace cuda_recon{
-typedef struct GPU_GP_T{
+typedef struct gpu_gp_t{
 	int ipowfs;
 	int nwfs; //number of wfs in this group
 	int jwfs; //wfs index in this group.
@@ -39,9 +39,9 @@ typedef struct GPU_GP_T{
 	Real oxp, oyp;/*pmap origin*/
 	const Real(*neai)[3];
 	//Must have empty constructor since the array may be in GPU memory.
-	GPU_GP_T(){};//:ipowfs(0),nwfs(0),jwfs(0),saptr(0),PTT(0),PDF(0),PDFTT(0),dsa(0),nsa(0),GPp(0),GPscale(0),pos(0),nxp(0),dxp(0),dyp(0),oxp(0),oyp(0){}
-}GPU_GP_T;
-struct LAP_T{
+	gpu_gp_t(){};//:ipowfs(0),nwfs(0),jwfs(0),saptr(0),PTT(0),PDF(0),PDFTT(0),dsa(0),nsa(0),GPp(0),GPscale(0),pos(0),nxp(0),dxp(0),dyp(0),oxp(0),oyp(0){}
+}gpu_gp_t;
+struct lap_t{
 	int nxps, nyps;
 	Real l2c;
 	int zzi;
@@ -68,15 +68,15 @@ class cutomo_grid:public cusolve_r, public cusolve_cg{
 	int ptt;       /**< piston/tip/tilt removal in L()*/
 	int nwfs;
 	map2map hx;
-	Array<GPU_GP_T, Gpu>gpdata;
-	Array<LAP_T, Gpu> lap;
+	Array<gpu_gp_t, Gpu>gpdata;
+	Array<lap_t, Gpu> lap;
 
 	void do_gp(curcell& grad, const curcell& opdwfs, int ptt, stream_t& stream);
 	void do_gpt(curcell& opdwfs, curcell& grad, int ptt, stream_t& stream);
 public:
-	cutomo_grid(const PARMS_T* parms, const RECON_T* recon, const curecon_geom* _grid);
-	void init_hx(const PARMS_T* parms, const RECON_T* recon);
-	void update_fdpcg(FDPCG_T* fdpcg){
+	cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid);
+	void init_hx(const parms_t* parms, const recon_t* recon);
+	void update_fdpcg(fdpcg_t* fdpcg){
 		dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);
 	}
 	void HX(const curcell& xin, Real alpha, stream_t& stream);

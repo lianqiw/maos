@@ -27,7 +27,7 @@
 /**
    Parameters used by Pyramid WFS
  */
-typedef struct PYWFS_T{
+typedef struct pywfs_t{
     real hs;         /**<Height of guide star*/
     real hc;         /**<Conjugation height of WFS pupil*/
     real poke;       /**<How much to poke for mkg*/
@@ -54,14 +54,14 @@ typedef struct PYWFS_T{
     int sigmatch;      /**<Scale gradients by matching intensity (1: locally, 2: globally).*/
     real siglev;     /**<Nominal siglev per subaperture*/
     dmat *opdadd;      /**<Aberrations along the WFS path (on locfft grid)*/
-}PYWFS_T;
+}pywfs_t;
 
-void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);
-void pywfs_free(PYWFS_T *pywfs);
-void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints);
-void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd);
-dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* ploc, const char *distortion, 
+void pywfs_setup(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+void pywfs_free(pywfs_t *pywfs);
+void pywfs_grad(dmat **pgrad, const pywfs_t *pywfs, const dmat *ints);
+void pywfs_fft(dmat **ints, const pywfs_t *pywfs, const dmat *opd);
+dmat* pywfs_mkg(pywfs_t *pywfs, const loc_t* ploc, const char *distortion, 
 		const dmat *mod, const dmat *opdadd, real displacex,  real displacey);
-dmat *pywfs_tt(const PYWFS_T *pywfs);
+dmat *pywfs_tt(const pywfs_t *pywfs);
 
 #endif

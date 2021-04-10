@@ -47,7 +47,7 @@ extern "C"{
   The caller must specify current GPU.
 */
 namespace cuda_recon{
-curecon_t::curecon_t(const PARMS_T* parms, RECON_T* recon)
+curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	:grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0), moao(0){
 	if(!parms) return;
 	if((parms->recon.alg==0&&parms->gpu.fit||parms->recon.mvm||parms->gpu.moao)
@@ -98,7 +98,7 @@ void curecon_t::reset_config(){
 		moao=0; nmoao=0;
 	}
 }
-void curecon_t::update(const PARMS_T* parms, RECON_T* recon){
+void curecon_t::update(const parms_t* parms, recon_t* recon){
 	reset_config();
 	int skip_tomofit=0;
 	if(parms->recon.mvm){
@@ -234,7 +234,7 @@ void curecon_t::update(const PARMS_T* parms, RECON_T* recon){
 		}
 	}
 }
-void curecon_t::update_cn2(const PARMS_T* parms, RECON_T* recon){
+void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
 	if(parms->tomo.predict){
 		for(int ips=0; ips<recon->npsr; ips++){
 			int ips0=parms->atmr.indps->p[ips];
@@ -355,11 +355,11 @@ void curecon_t::mvm(dcell** _dmerr, dcell* _gradin){
 	cgstream.sync();
 }
 
-void curecon_t::tomo_test(SIM_T* simu){
+void curecon_t::tomo_test(sim_t* simu){
 	gpu_set(cuglobal->recongpu);
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	stream_t stream;
-	RECON_T* recon=simu->recon;
+	recon_t* recon=simu->recon;
 	//Debugging. 
 	dcell* rhsc=NULL;
 	dcell* lc=NULL;
@@ -419,10 +419,10 @@ void curecon_t::tomo_test(SIM_T* simu){
 	CUDA_SYNC_DEVICE;
 	exit(0);
 }
-void curecon_t::fit_test(SIM_T* simu){	//Debugging. 
+void curecon_t::fit_test(sim_t* simu){	//Debugging. 
 	gpu_set(cuglobal->recongpu);
 	stream_t stream;
-	const RECON_T* recon=simu->recon;
+	const recon_t* recon=simu->recon;
 	dcell* rhsc=NULL;
 	dcell* lc=NULL;
 	if(!simu->opdr&&opdr_vec){
@@ -480,7 +480,7 @@ void curecon_t::fit_test(SIM_T* simu){	//Debugging.
 }//namespace
 
 typedef cuda_recon::curecon_t curecon_t;
-void gpu_setup_recon(const PARMS_T* parms, RECON_T* recon){
+void gpu_setup_recon(const parms_t* parms, recon_t* recon){
 	gpu_set(cuglobal->recongpu);
 	if(cudata->recon){
 		delete cudata->recon;
@@ -488,7 +488,7 @@ void gpu_setup_recon(const PARMS_T* parms, RECON_T* recon){
 	cudata->recon=new curecon_t(parms, recon);
 }
 
-void gpu_setup_recon_mvm(const PARMS_T* parms, RECON_T* recon){
+void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 	//The following routine assemble MVM and put in recon->MVM
 	if(!recon->MVM){
 		for(int igpu=0; igpu<NGPU; igpu++){
@@ -521,7 +521,7 @@ void gpu_setup_recon_mvm(const PARMS_T* parms, RECON_T* recon){
 	}
 	gpu_print_mem("MVM");
 }
-void gpu_update_recon(const PARMS_T* parms, RECON_T* recon){
+void gpu_update_recon(const parms_t* parms, recon_t* recon){
 	if(!parms->gpu.tomo) return;
 	for(int igpu=0; igpu<NGPU; igpu++){
 		if((parms->recon.mvm&&parms->gpu.tomo&&parms->gpu.fit&&!parms->load.mvm)
@@ -533,7 +533,7 @@ void gpu_update_recon(const PARMS_T* parms, RECON_T* recon){
 		}
 	}
 }
-void gpu_update_recon_cn2(const PARMS_T* parms, RECON_T* recon){
+void gpu_update_recon_cn2(const parms_t* parms, recon_t* recon){
 	if(!parms->gpu.tomo) return;
 	for(int igpu=0; igpu<NGPU; igpu++){
 		if((parms->recon.mvm&&parms->gpu.tomo&&parms->gpu.fit&&!parms->load.mvm)
@@ -545,7 +545,7 @@ void gpu_update_recon_cn2(const PARMS_T* parms, RECON_T* recon){
 		}
 	}
 }
-void gpu_recon_reset(const PARMS_T* parms){//reset warm restart.
+void gpu_recon_reset(const parms_t* parms){//reset warm restart.
 	for(int igpu=0; igpu<NGPU; igpu++){
 		gpu_set(igpu);
 		curecon_t* curecon=cudata->recon;
@@ -571,12 +571,12 @@ void gpu_recon_reset(const PARMS_T* parms){//reset warm restart.
 		CUDA_SYNC_DEVICE;
 	}
 }
-void gpu_tomo(SIM_T* simu, dcell* gradin){
+void gpu_tomo(sim_t* simu, dcell* gradin){
 	gpu_set(cuglobal->recongpu);
 	curecon_t* curecon=cudata->recon;
 	curecon->grid->reconisim=simu->reconisim;
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
 	if(parms->dbg.tomo){
 		curecon->tomo_test(simu);
 	} else{
@@ -590,11 +590,11 @@ void gpu_tomo(SIM_T* simu, dcell* gradin){
 	}
 }
 
-void gpu_fit(dcell** dmout, SIM_T* simu){
+void gpu_fit(dcell** dmout, sim_t* simu){
 	gpu_set(cuglobal->recongpu);
 	curecon_t* curecon=cudata->recon;
 	curecon->grid->reconisim=simu->reconisim;
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	if(parms->dbg.fit){
 		curecon->fit_test(simu);
 	} else{
@@ -609,14 +609,14 @@ void gpu_recon_mvm(dcell** dmout, dcell* gradin){
 	curecon->mvm(dmout, gradin);
 }
 
-void gpu_moao_recon(SIM_T* simu){
+void gpu_moao_recon(sim_t* simu){
 	gpu_set(cuglobal->recongpu);
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	curecon_t* curecon=cudata->recon;
 	curecon->moao_recon(parms->gpu.fit?NULL:simu->dmfit, (parms->gpu.tomo||parms->gpu.fit)?NULL:simu->opdr);
 }
 
-void gpu_moao_filter(SIM_T* simu){
+void gpu_moao_filter(sim_t* simu){
 	gpu_set(cuglobal->recongpu);
 	curecon_t* curecon=cudata->recon;
 	curecon->moao_filter(simu->dm_wfs, simu->dm_evl);

@@ -27,13 +27,13 @@ static void usage(){
    \file drawres.c
    Plot MAOS Results
 */
-typedef struct ARG_T{
+typedef struct arg_t{
 	int iarg;
 	int nseed;
 	long* seeds;
-}ARG_T;
-static ARG_T* parse_args(int argc, char** argv){
-	ARG_T* arg=mycalloc(1, ARG_T);
+}arg_t;
+static arg_t* parse_args(int argc, char** argv){
+	arg_t* arg=mycalloc(1, arg_t);
 	static struct option long_options[]={
 	{"help",0,0,'h'},
 	{"seed",1,0,'s'},
@@ -71,7 +71,7 @@ void fixnan(dmat* res){
    The main.
 */
 int main(int argc, char* argv[]){
-	ARG_T* arg=parse_args(argc, argv);
+	arg_t* arg=parse_args(argc, argv);
 	/*use the parent pid so same bash session has the same drawdaemon. */
 	draw_id=getsid(0)+2e6;/*variables in draw.c */
 	draw_direct=1;/*launch drawdaemon directly, without going through server. */

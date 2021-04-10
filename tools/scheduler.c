@@ -48,7 +48,7 @@ static int NGPU=0;
 */
 typedef struct RUN_T{
 	struct RUN_T* next;
-	STATUS_T status;
+	status_t status;
 	double launch_time;
 	double last_time; //time of last report
 	int pid;
@@ -228,7 +228,7 @@ static void runned_restart(int pid){
 				running_end=irun;
 			}
 			//update status
-			memset(&irun->status, 0, sizeof(STATUS_T));
+			memset(&irun->status, 0, sizeof(status_t));
 			irun->status.info=S_QUEUED;
 			//pidnew changed to be different from pid to indicate restarted job.
 			irun->pidnew=--counter;
@@ -619,7 +619,7 @@ static int respond(int sock){
 			irun->nthread=irun->status.nthread;
 			nrun_add(pid, irun->nthread, irun->ngpu);
 		}
-		if(sizeof(STATUS_T)!=read(sock, &(irun->status), sizeof(STATUS_T))){
+		if(sizeof(status_t)!=read(sock, &(irun->status), sizeof(status_t))){
 			warning_time("Error reading\n");
 		}
 		irun->last_time=myclockd();
@@ -997,7 +997,7 @@ void html_convert(RUN_T* irun, char* path, char** dest, size_t* plen, long prepa
 	if(path){
 		len=snprintf(temp, 4096, "%d&PATH&%s;", irun->pid, path);
 	} else{
-		STATUS_T* st=&irun->status;
+		status_t* st=&irun->status;
 		struct tm* tim=localtime(&(st->timstart));
 		char stime[80];
 		strftime(stime, 80, "[%a %H:%M:%S]", tim);
@@ -1054,7 +1054,7 @@ static int monitor_send_do(RUN_T* irun, char* path, int sock){
 		return (stwrite(sock, cmd, 3*sizeof(int))||stwritestr(sock, path));
 	} else{
 		cmd[0]=MON_STATUS;
-		return (stwrite(sock, cmd, 3*sizeof(int))||stwrite(sock, &irun->status, sizeof(STATUS_T)));
+		return (stwrite(sock, cmd, 3*sizeof(int))||stwrite(sock, &irun->status, sizeof(status_t)));
 	}
 }
 /* Notify alreadyed connected monitors job update. */

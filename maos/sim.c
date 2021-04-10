@@ -45,19 +45,19 @@ static real tk_atm=0;
 /**
    Initialize the simulation runtime data struct.
  */
-SIM_T* maos_iseed(int iseed){
+sim_t* maos_iseed(int iseed){
 	if(iseed==0) tk_0=myclockd();
 	tk_1=myclockd();
-	const PARMS_T* parms=global->parms;
-	POWFS_T* powfs=global->powfs;
-	APER_T* aper=global->aper;
-	RECON_T* recon=global->recon;
+	const parms_t* parms=global->parms;
+	powfs_t* powfs=global->powfs;
+	aper_t* aper=global->aper;
+	recon_t* recon=global->recon;
 	if(parms->fdlock&&parms->fdlock->p[iseed]<0){
 		warning("Another MAOS is already running. Skip seed %ld\n",
 			parms->sim.seeds->p[iseed]);
 		return 0;
 	}
-	SIM_T* simu=init_simu(parms, powfs, aper, recon, iseed);
+	sim_t* simu=init_simu(parms, powfs, aper, recon, iseed);
 	global->simu=simu;
 	if(!simu->pause){
 		draw_single=1;//Only draw active frame.
@@ -95,9 +95,9 @@ SIM_T* maos_iseed(int iseed){
    Callable from matlab.
 */
 void maos_isim(int isim){
-	SIM_T* simu=global->simu;
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
+	sim_t* simu=global->simu;
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
 	int iseed=global->iseed;
 	int simstart=parms->sim.start;
 	int simend=parms->sim.end;
@@ -245,15 +245,15 @@ void maos_isim(int isim){
    maos_isim() can be called from matlab.
 */
 void maos_sim(){
-	const PARMS_T* parms=global->parms;
-	RECON_T* recon=global->recon;
+	const parms_t* parms=global->parms;
+	recon_t* recon=global->recon;
 	int simend=parms->sim.end;
 	int simstart=parms->sim.start;
 
 	dbg("PARALLEL=%d\n", PARALLEL);
 	real restot=0; long rescount=0;
 	for(int iseed=0; iseed<parms->sim.nseed; iseed++){
-		SIM_T* simu=NULL;
+		sim_t* simu=NULL;
 		while(!(simu=maos_iseed(iseed))){
 			iseed++;
 		}

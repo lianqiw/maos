@@ -30,7 +30,7 @@
 /**
    see genseotf
 */
-static void genseotf_do(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
+static void genseotf_do(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	/*create a grid representing the sub-aperture. */
 	loc_t* loc=mksqloc_auto(powfs[ipowfs].pts->nx,
 		powfs[ipowfs].pts->nx,
@@ -90,7 +90,7 @@ static void genseotf_do(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 /**
    Generates short exposure OTF by calling genotf() with p/t/t removal set.
 */
-void genseotf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
+void genseotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	char fnprefix[200]; fnprefix[0]='\0';
 	uint32_t key=0;
 	strcat(fnprefix, "SEOTF");
@@ -129,7 +129,7 @@ void genseotf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 		powfs[ipowfs].pts->dsa, nsa,
 		1./powfs[ipowfs].pts->dx, parms->powfs[ipowfs].embfac);
 	snprintf(fnlock, sizeof(fnlock), "%s.lock", fnotf);
-	INTSTAT_T* intstat=powfs[ipowfs].intstat;
+	intstat_t* intstat=powfs[ipowfs].intstat;
 	while(!intstat->otf){
 		if(exist(fnlock)||!zfexist(fnotf)){/*need to create data */
 			int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
@@ -151,7 +151,7 @@ void genseotf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 /**
    see genselotf
 */
-void genselotf_do(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
+void genselotf_do(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	if(!parms->powfs[ipowfs].llt) return;
 	pts_t* lltpts=powfs[ipowfs].llt->pts;
 	loc_t* loc=pts2loc(lltpts);
@@ -191,7 +191,7 @@ void genselotf_do(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 /**
    Creating short exposure OTF caused by turbulence within LLT uplink aperture
 */
-void genselotf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
+void genselotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	if(!parms->powfs[ipowfs].llt){
 		return;
 	}
@@ -222,7 +222,7 @@ void genselotf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
 
 	char fnlock[PATH_MAX+10];
 	snprintf(fnlock, sizeof(fnlock), "%s.lock", fnlotf);
-	INTSTAT_T* intstat=powfs[ipowfs].intstat;
+	intstat_t* intstat=powfs[ipowfs].intstat;
 	while(!intstat->lotf){
 		if(exist(fnlock)||!zfexist(fnlotf)){/*need to create data */
 			int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
@@ -295,7 +295,7 @@ static void upsample_otf(cmat* out, const cmat* in){
 /**
    Createing subaperture short exposure PSF from the tip/tilt removed turbulence
    OTF and uplink OTF. Not including detector or elongation characteristics.  */
-void gensepsf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
+void gensepsf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
@@ -351,8 +351,8 @@ void gensepsf(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
    generate subaperture short exposure average pixel intensities sampled on
    detector from short expsoure PSF, the elongation transfer function of the
    sodium layer, and the detector transfer function. */
-void gensei(const PARMS_T* parms, POWFS_T* powfs, int ipowfs){
-	INTSTAT_T* intstat=powfs[ipowfs].intstat;
+void gensei(const parms_t* parms, powfs_t* powfs, int ipowfs){
+	intstat_t* intstat=powfs[ipowfs].intstat;
 	const int notfx=powfs[ipowfs].notfx;
 	const int notfy=powfs[ipowfs].notfy;
 	const int nwvl=parms->powfs[ipowfs].nwvl;
@@ -578,8 +578,8 @@ done:
    The routine used to generate matched filter from WFS mean short exposure
    pixel intensities.
  */
-void genmtch(const PARMS_T* parms, POWFS_T* powfs, const int ipowfs){
-	INTSTAT_T* intstat=powfs[ipowfs].intstat;
+void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
+	intstat_t* intstat=powfs[ipowfs].intstat;
 	const real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	const real pixthetay=parms->powfs[ipowfs].pixtheta;
 	const real rne=parms->powfs[ipowfs].rne;

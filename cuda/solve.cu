@@ -71,7 +71,7 @@ void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, 
 		curmv(out.M()(), 1, V, Vx(), 'n', -alpha, stream);
 	}
 }
-void cusolve_muv::init(const MUV_T* in){
+void cusolve_muv::init(const muv_t* in){
 	if(!in||!in->M) return;
 	dspcell* inM=dspcell_cast(in->M);
 	dsp* Mc=dspcell2sp(inM);
@@ -94,7 +94,7 @@ void cusolve_muv::init(const MUV_T* in){
 	Vx=curmat(V.Ny(), 1);
 }
 
-cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T* _R, MUV_T* _L)
+cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, muv_t* _R, muv_t* _L)
 	:cusolve_cg(_maxit, _warm_restart){
 	CR.init(_R);
 	CL.init(_L);

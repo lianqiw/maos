@@ -35,7 +35,7 @@
    Apply the sparse plus low rank compuation to xin with scaling of alpha:
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
 void muv(dcell** xout, const void* A_, const dcell* xin, const real alpha){
-	const MUV_T* A=(const MUV_T*)A_;//A_ is declared void for cg to use without casting.
+	const muv_t* A=(const muv_t*)A_;//A_ is declared void for cg to use without casting.
 	if(A->M&&xin){
 		dcellmm(xout, A->M, xin, "nn", alpha);
 		if(A->U&&A->V){
@@ -56,7 +56,7 @@ void muv(dcell** xout, const void* A_, const dcell* xin, const real alpha){
    compuation to xin with scaling of alpha: \f$xout=(A.M-A.V*A.U')*xin*alpha\f$;
    U,V are low rank.  */
 void muv_trans(dcell** xout, const void* A_, const dcell* xin, const real alpha){
-	const MUV_T* A=(const MUV_T*)A_;
+	const muv_t* A=(const muv_t*)A_;
 	if(A->M){
 		if(!xin) return;
 		dcellmm(xout, A->M, xin, "tn", alpha);
@@ -80,7 +80,7 @@ void muv_trans(dcell** xout, const void* A_, const dcell* xin, const real alpha)
   Wrap of data for call with muv_ib.
  */
 typedef struct{
-	const MUV_T* A;
+	const muv_t* A;
 	int xb;
 	int yb;
 }MUV_IB_T;
@@ -91,7 +91,7 @@ void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
 	const MUV_IB_T* C=(const MUV_IB_T*)B;
 	int xb=C->xb;
 	int yb=C->yb;
-	const MUV_T* A=C->A;
+	const muv_t* A=C->A;
 	assert(xin->ny==1);/*if this is not true, make a loop here. */
 	if(xb==-1||yb==-1){
 		muv(xout, A, xin, alpha);
@@ -169,7 +169,7 @@ static void muv_direct_prep_lowrank(dmat** Up, dmat** Vp, spchol* C, dmat* MI, d
 	\f]
 
 */
-void muv_direct_prep(MUV_T* A, real svd){
+void muv_direct_prep(muv_t* A, real svd){
 	int use_svd=fabs(svd)>0;
 	if(!A->M) error("M has to be none NULL\n");
 	if(A->extra) error("Direct solutions does not support extra/exfun\n");
@@ -218,7 +218,7 @@ void muv_direct_prep(MUV_T* A, real svd){
 	  \f]
   For each diagonal block.
 */
-void muv_direct_diag_prep(MUV_T* A, real svd){
+void muv_direct_diag_prep(muv_t* A, real svd){
 	int use_svd=fabs(svd)>0;
 	if(!A->M) error("M has to be none NULL\n");
 	if(A->extra) error("Direct solutions does not support extra/exfun\n");
@@ -277,7 +277,7 @@ void muv_direct_diag_prep(MUV_T* A, real svd){
    Apply CBS or SVD multiply to xin to get xout. Create xout is not exist
    already.  xout = A^-1 * xin; xin and xout can be the same for in place operation.*/
 
-void muv_direct_solve_mat(dmat** xout, const MUV_T* A, dmat* xin){
+void muv_direct_solve_mat(dmat** xout, const muv_t* A, dmat* xin){
 	dmat* dotpt=NULL;
 	if(A->Up&&A->Vp){
 		dmm(&dotpt, 0, A->Vp, xin, "tn", -1);
@@ -305,7 +305,7 @@ void muv_direct_solve_mat(dmat** xout, const MUV_T* A, dmat* xin){
 	   (A^-1)^T.
    The output is dmat if using SVD, and dsp if using CBS.
  */
-void* muv_direct_spsolve(const MUV_T* A, const dsp* xin){
+void* muv_direct_spsolve(const muv_t* A, const dsp* xin){
 	void* xout=NULL;
 	if(A->MI){
 		dmat* x1=NULL;
@@ -327,7 +327,7 @@ void* muv_direct_spsolve(const MUV_T* A, const dsp* xin){
    Apply cholesky backsubstitution solve to xin to get xout. Create xout is not
    exist already.  xin and xout can be the same for in place operation. */
 
-void muv_direct_diag_solve(dmat** xout, const MUV_T* A, dmat* xin, int ib){
+void muv_direct_diag_solve(dmat** xout, const muv_t* A, dmat* xin, int ib){
 	if(!xin) return;
 	dmat* dotpt=NULL;
 	if(A->UpB&&A->VpB){
@@ -352,7 +352,7 @@ void muv_direct_diag_solve(dmat** xout, const MUV_T* A, dmat* xin, int ib){
 }
 /**
    convert the data from dcell to dmat and apply muv_direct_solve() . May be done in place.*/
-void muv_direct_solve(dcell** xout, const MUV_T* A, dcell* xin){
+void muv_direct_solve(dcell** xout, const muv_t* A, dcell* xin){
 	if(!xin) return;
 	if(xin->nx*xin->ny==1){/*there is only one cell. */
 		if(!*xout) *xout=dcellnew(1, 1);
@@ -368,7 +368,7 @@ void muv_direct_solve(dcell** xout, const MUV_T* A, dcell* xin){
    solve A*x=b using the Block Gauss Seidel algorithm. The matrix is always
    assembled. We use routines from muv. to do the computation.  */
 void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm restart.*/
-	const MUV_T* A,/**<[in] Contain info about the The left hand side matrix A*/
+	const muv_t* A,/**<[in] Contain info about the The left hand side matrix A*/
 	const dcell* b /**<[in] The right hand side vector to solve*/
 ){
 	if(!b) return;
@@ -423,8 +423,8 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
    solve x=A^-1*B*b using algorithms depend on algorithm, wrapper.
 */
 real muv_solve(dcell** px,    /**<[in,out] The output vector. input for warm restart.*/
-	const MUV_T* L,/**<[in] Contain info about the left hand side matrix A*/
-	const MUV_T* R,/**<[in] Contain info about the right hand side matrix B*/
+	const muv_t* L,/**<[in] Contain info about the left hand side matrix A*/
+	const muv_t* R,/**<[in] Contain info about the right hand side matrix B*/
 	dcell* b       /**<[in] The right hand side vector to solve. null is special case*/
 ){
 	dcell* rhs=NULL;
@@ -456,7 +456,7 @@ real muv_solve(dcell** px,    /**<[in,out] The output vector. input for warm res
 /**
    Free cholesky decompositions or SVD.
  */
-void muv_direct_free(MUV_T* A){
+void muv_direct_free(muv_t* A){
 	if(A->C){
 		chol_free(A->C);
 		A->C=NULL;
@@ -470,7 +470,7 @@ void muv_direct_free(MUV_T* A){
 /**
    Free cholesky decompositions or SVD.
  */
-void muv_direct_diag_free(MUV_T* A){
+void muv_direct_diag_free(muv_t* A){
 	if(A->CB){
 		for(int i=0; i<A->nb; i++){
 			chol_free(A->CB[i]);
@@ -484,9 +484,9 @@ void muv_direct_diag_free(MUV_T* A){
 	dcellfree(A->VpB);
 }
 /**
-   Free MUV_T struct
+   Free muv_t struct
 */
-void muv_free(MUV_T* A){
+void muv_free(muv_t* A){
 	cellfree(A->M);
 	dcellfree(A->U);
 	dcellfree(A->V);
@@ -495,6 +495,6 @@ void muv_free(MUV_T* A){
 	}
 	muv_direct_free(A);
 	muv_direct_diag_free(A);
-	memset(A, 0, sizeof(MUV_T));
+	memset(A, 0, sizeof(muv_t));
 }
 

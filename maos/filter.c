@@ -32,7 +32,7 @@
 /**
    Add low order NGS modes to DM actuator commands for AHST and MVST
  */
-void addlow2dm(dcell** dmval, const SIM_T* simu, const dcell* low_val, real gain){
+void addlow2dm(dcell** dmval, const sim_t* simu, const dcell* low_val, real gain){
 	switch(simu->parms->recon.split){
 	case 0:
 		break;/*nothing to do. */
@@ -66,7 +66,7 @@ static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long s
 /**
    Send LPF TT to TTM. Use DMTT, DMPTT to take into account possible stuck actuators.
 */
-static inline void ttsplit_do(RECON_T* recon, dcell* dmcmd, dmat* ttm, real lp){
+static inline void ttsplit_do(recon_t* recon, dcell* dmcmd, dmat* ttm, real lp){
 #if 1
 	int ndm=dmcmd->nx;
 	real totaltt[2]={0,0};
@@ -95,8 +95,8 @@ static inline void ttsplit_do(RECON_T* recon, dcell* dmcmd, dmat* ttm, real lp){
 #endif
 }
 
-static inline void clipdm(SIM_T* simu, dcell* dmcmd){
-	const PARMS_T* parms=simu->parms;
+static inline void clipdm(sim_t* simu, dcell* dmcmd){
+	const parms_t* parms=simu->parms;
 	if(!dmcmd) return;
 	/*
 	  clip integrator. This both limits the output and
@@ -138,10 +138,10 @@ static inline void clipdm(SIM_T* simu, dcell* dmcmd){
 		}
 	}
 }
-static inline void clipdm_dead(const SIM_T* simu, dcell* dmcmd){
+static inline void clipdm_dead(const sim_t* simu, dcell* dmcmd){
 	if(!dmcmd) return;
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	if(!recon->actstuck) return;
 	for(int idm=0; idm<parms->ndm; idm++){
 		if(!recon->actstuck->p[idm]) continue;
@@ -155,11 +155,11 @@ static inline void clipdm_dead(const SIM_T* simu, dcell* dmcmd){
 	}
 }
 
-static inline void clipdm_ia(const SIM_T* simu, dcell* dmcmd){
+static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 	if(!dmcmd) return;
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	if(!parms->sim.dmclipia) return;
-	RECON_T* recon=simu->recon;
+	recon_t* recon=simu->recon;
 	/*Clip interactuator stroke*/
 	for(int idm=0; idm<parms->ndm; idm++){
 	/* Embed DM commands to a square array (borrow dmrealsq) */
@@ -233,7 +233,7 @@ static inline void clipdm_ia(const SIM_T* simu, dcell* dmcmd){
 /**
    Update DM command for next cycle using info from last cycle (two cycle delay)
 in closed loop mode */
-static void filter_cl(SIM_T* simu){
+static void filter_cl(sim_t* simu){
 	/*
 	  2009-11-02: Moved to the end of isim loop to update
 	  for next step.  only need to cache a single dmerrlast
@@ -253,11 +253,11 @@ static void filter_cl(SIM_T* simu){
 	  a(n)=a(n-1)+ep*e(n-2) or
 	  a(n)=0.5*(a(n-1)+a(n-2))+ep*e(n-2);
 	*/
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
 	assert(parms->sim.closeloop);
 	/*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
-	const SIM_CFG_T* simcfg=&(parms->sim);
+	const sim_cfg_t* simcfg=&(parms->sim);
 	const int isim=simu->reconisim;
 	//dbg("reconisim=%d\n", isim);
 	{/*Auto adjusting ephi for testing different ephi*/
@@ -446,8 +446,8 @@ static void filter_cl(SIM_T* simu){
 /**
    Servo filter for FSM commands.
  */
-void filter_fsm(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void filter_fsm(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	if(simu->fsmint){
 	/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
 		if(parms->sim.f0fsm>0){//Apply SHO filter
@@ -503,8 +503,8 @@ void filter_fsm(SIM_T* simu){
 /**
    filter DM commands in open loop mode by simply copy the output
  */
-static void filter_ol(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+static void filter_ol(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	assert(!parms->sim.closeloop);
 	if(simu->dmerr&&parms->sim.ephi->p[0]>0){
 		dcellcp(&simu->dmcmd, simu->dmerr);
@@ -546,8 +546,8 @@ static void filter_ol(SIM_T* simu){
 /**
    Simulate turbulence on the DM
 */
-void turb_dm(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void turb_dm(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	if(!simu->dmadd) return;
 	for(int idm=0; idm<parms->ndm; idm++){
 		if(!simu->dmadd->p[idm]) continue;
@@ -566,8 +566,8 @@ void turb_dm(SIM_T* simu){
 /**
    Update various quantities upon updating dmreal.
 */
-void update_dm(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void update_dm(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	if(!parms->fit.square&&simu->dmrealsq){
 	/* Embed DM commands to a square array for fast ray tracing */
 		for(int idm=0; idm<parms->ndm; idm++){
@@ -585,8 +585,8 @@ void update_dm(SIM_T* simu){
 /**
    Does the servo filtering by calling filter_cl() or filter_ol()
  */
-void filter_dm(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void filter_dm(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	if(parms->sim.evlol) return;
 	if(parms->sim.closeloop){
 		filter_cl(simu);

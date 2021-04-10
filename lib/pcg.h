@@ -24,8 +24,8 @@
    \file lib/pcg.h
    Implements preconditioned conjugate gradient method.
 */
-typedef void (*CGFUN) (dcell **xout, const void *A, const dcell *xin, const real alpha);
-typedef void (*PREFUN) (dcell **xout, const void *A, const dcell *xin);
-real pcg(dcell **px, CGFUN Amul, const void *A, PREFUN Mmul, const void *M, const dcell *b, 
+typedef void (*cgfun_t) (dcell **xout, const void *A, const dcell *xin, const real alpha);
+typedef void (*prefun_t) (dcell **xout, const void *A, const dcell *xin);
+real pcg(dcell **px, cgfun_t Amul, const void *A, prefun_t Mmul, const void *M, const dcell *b, 
 	   int warm, int maxiter);
 #endif

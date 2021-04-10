@@ -521,7 +521,7 @@ void skysim(const PARMS_S* parms){
 	}*/
 	const int npowfs=parms->maos.npowfs;
 	SIM_S* simu=mycalloc(1, SIM_S);
-	simu->status=mycalloc(1, STATUS_T);
+	simu->status=mycalloc(1, status_t);
 	simu->status->info=S_RUNNING;
 	simu->status->scale=1;
 	simu->status->nseed=parms->maos.nseed;

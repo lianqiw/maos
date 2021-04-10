@@ -45,7 +45,7 @@ static void print_usage(void){
 ARG_S* parse_args(int argc, const char* argv[]){
 	ARG_S* arg=mycalloc(1, ARG_S);
 	char* host=NULL; int local=0;
-	ARGOPT_T options[]={
+	argopt_t options[]={
 	{"help",  'h', M_INT, 0, 1, (void*)print_usage, NULL},
 	{"detach", 'd',M_INT, 0, 0, &arg->detach, NULL},
 	{"override",'O',M_INT,0, 0, &arg->override, NULL},

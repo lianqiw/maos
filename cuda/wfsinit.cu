@@ -31,7 +31,7 @@ static void etf2gpu(cucmat& cuetf, ETF_T* etf, int icol){
 /**
    Initialize or update etf.
 */
-void gpu_wfsgrad_update_etf(const PARMS_T* parms, const POWFS_T* powfs){
+void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
 	TIC;tic;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -57,7 +57,7 @@ void gpu_wfsgrad_update_etf(const PARMS_T* parms, const POWFS_T* powfs){
 	}
 	toc("gpu_wfsgrad_update_etf");
 }
-void gpu_wfsgrad_update_mtche(const PARMS_T* parms, const POWFS_T* powfs){
+void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
@@ -100,7 +100,7 @@ void gpu_wfsgrad_update_mtche(const PARMS_T* parms, const POWFS_T* powfs){
 /**
    Initialize other arrays
 */
-void gpu_wfsgrad_init(const PARMS_T* parms, const POWFS_T* powfs){
+void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
 	cuglobal->wfs=Array<cuwfs_t>(parms->nwfs, 1);
 	for(int im=0; im<NGPU; im++){
@@ -405,7 +405,7 @@ void gpu_wfsgrad_init(const PARMS_T* parms, const POWFS_T* powfs){
 	gpu_wfsgrad_update_mtche(parms, powfs);
 	gpu_print_mem("wfs init");
 }
-void gpu_wfs_init_sim(const PARMS_T* parms, POWFS_T* powfs){
+void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){
 	int* wfsgpu=cuglobal->wfsgpu();
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
@@ -445,7 +445,7 @@ void gpu_wfs_init_sim(const PARMS_T* parms, POWFS_T* powfs){
 		CUDA_SYNC_DEVICE;
 	}
 }
-void gpu_wfssurf2gpu(const PARMS_T* parms, POWFS_T* powfs){
+void gpu_wfssurf2gpu(const parms_t* parms, powfs_t* powfs){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		gpu_set(cuglobal->wfsgpu[iwfs]);
 		Array<cuwfs_t>& cuwfs=cuglobal->wfs;
@@ -463,7 +463,7 @@ __global__ static void setup_rand(curandState* rstat, int seed){
 /**
    Seed the random number genrator
 */
-void gpu_wfsgrad_seeding(const PARMS_T* parms, const POWFS_T* powfs, rand_t* rstat){
+void gpu_wfsgrad_seeding(const parms_t* parms, const powfs_t* powfs, rand_t* rstat){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		gpu_set(cuglobal->wfsgpu[iwfs]);
 		Array<cuwfs_t>& cuwfs=cuglobal->wfs;

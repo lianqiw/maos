@@ -38,7 +38,7 @@
 */
 
 static void
-setup_surf_tilt(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* recon){
+setup_surf_tilt(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* recon){
 	info2("Setting up tilt surface (M3)\n");
 	rmapcell* tsurf=rmapcellnew(parms->ntsurf, 1);
 	for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
@@ -80,10 +80,10 @@ setup_surf_tilt(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* rec
 }
 
 typedef struct{
-	const PARMS_T* parms;
-	APER_T* aper;
-	POWFS_T* powfs;
-	RECON_T* recon;
+	const parms_t* parms;
+	aper_t* aper;
+	powfs_t* powfs;
+	recon_t* recon;
 	map_t* surf;
 	int isurf;
 	int nevl;
@@ -97,8 +97,8 @@ typedef struct{
 
 static void prop_surf_evl(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
-	const PARMS_T* parms=data->parms;
-	const APER_T* aper=data->aper;
+	const parms_t* parms=data->parms;
+	const aper_t* aper=data->aper;
 	const map_t* surf=data->surf;
 	const real hl=surf->h;
 	const int* evlcover=data->evlcover;
@@ -116,9 +116,9 @@ static void prop_surf_evl(thread_t* info){
 
 static void prop_surf_ncpa(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
-	const PARMS_T* parms=data->parms;
-	const APER_T* aper=data->aper;
-	const RECON_T* recon=data->recon;
+	const parms_t* parms=data->parms;
+	const aper_t* aper=data->aper;
+	const recon_t* recon=data->recon;
 	const map_t* surf=data->surf;
 	const real hl=surf->h;
 	const int* ncpacover=data->ncpacover;
@@ -134,8 +134,8 @@ static void prop_surf_ncpa(thread_t* info){
 
 static void prop_surf_wfs(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
-	const PARMS_T* parms=data->parms;
-	const POWFS_T* powfs=data->powfs;
+	const parms_t* parms=data->parms;
+	const powfs_t* powfs=data->powfs;
 	const map_t* surf=data->surf;
 	const real hl=surf->h;
 	const int* wfscover=data->wfscover;
@@ -167,7 +167,7 @@ static void prop_surf_wfs(thread_t* info){
    WFS and Science grid
 */
 static void
-setup_surf_perp(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* recon){
+setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* recon){
 	info2("Setting up surface OPD (M1/M2/M3)\n");
 	if(fabs(parms->misreg.pupil->p[0])>EPS||fabs(parms->misreg.pupil->p[1])>EPS){
 		warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
@@ -328,8 +328,8 @@ setup_surf_perp(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* rec
 
 /** We trace rays from Science focal plan OPD to ploc along evaluation
 	directions (type=1) or on axis only (type=2).*/
-static void FitR_NCPA(dcell** xout, RECON_T* recon, APER_T* aper){
-	const PARMS_T* parms=global->parms;
+static void FitR_NCPA(dcell** xout, recon_t* recon, aper_t* aper){
+	const parms_t* parms=global->parms;
 	dcell* xp=NULL;
 	if(aper->opdfloc){
 		xp=dcelldup(aper->opdfloc);
@@ -349,8 +349,8 @@ static void FitR_NCPA(dcell** xout, RECON_T* recon, APER_T* aper){
 }
 void FitL_NCPA(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
-	const RECON_T* recon=(const RECON_T*)A;
-	const PARMS_T* parms=global->parms;
+	const recon_t* recon=(const recon_t*)A;
+	const parms_t* parms=global->parms;
 	dcell* xp=NULL;
 	dcellmm(&xp, recon->HA_ncpa, xin, "nn", 1.);
 	applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
@@ -363,7 +363,7 @@ void FitL_NCPA(dcell** xout, const void* A,
 	dcellmm(xout, recon->actslave, xin, "nn", 1);
 	}*/
 }
-static void setup_recon_HAncpa(RECON_T* recon, const PARMS_T* parms){
+static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 	const int nevl=parms->sim.ncpa_ndir;
 	const int ndm=parms->ndm;
 	recon->HA_ncpa=dspcellnew(nevl, ndm);
@@ -396,7 +396,7 @@ static void setup_recon_HAncpa(RECON_T* recon, const PARMS_T* parms){
 		writebin(recon->HA_ncpa, "HA_ncpa");
 	}
 }
-void lenslet_saspherical(const PARMS_T* parms, POWFS_T* powfs){
+void lenslet_saspherical(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//Spherical aberration
 		if(parms->powfs[ipowfs].saspherical!=0){
@@ -491,7 +491,7 @@ void lenslet_saspherical(const PARMS_T* parms, POWFS_T* powfs){
 		}
 	}
 }
-void lenslet_safocuspv(const PARMS_T* parms, POWFS_T* powfs){
+void lenslet_safocuspv(const parms_t* parms, powfs_t* powfs){
 	//defocus specified as P/V
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].safocuspv!=0){
@@ -528,7 +528,7 @@ void lenslet_safocuspv(const PARMS_T* parms, POWFS_T* powfs){
 /**
    Setup common and non common OPDs from surf and tsurf
  */
-void setup_surf(const PARMS_T* parms, APER_T* aper, POWFS_T* powfs, RECON_T* recon){
+void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* recon){
 	if(parms->load.ncpa){
 		if(parms->nsurf||parms->ntsurf){
 			error("Please disable surf and tsurf when load.ncpa is set\n");

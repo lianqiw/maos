@@ -48,7 +48,7 @@ typedef struct{
 	cudaEvent_t event_gall;
 	cudaEvent_t event_mvm;
 	event_t* event_a;
-}GPU_DATA_T;
+}gpu_data_t;
 /*Only do MVM test. just test the bandwidth*/
 void mvm_only(int* gpus, int ngpu, int nstep){
 #if 1
@@ -116,13 +116,13 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 	X(pagelock)(mvm1, mvm2, grad1, grad2, dmres, NULL);
 
 	int nc=10;//each time copy nc column of mvm.
-	GPU_DATA_T** data=new GPU_DATA_T*[ngpu];
+	gpu_data_t** data=new gpu_data_t*[ngpu];
 	const int gstep=ng;
 
 	const int sect_gpu=(ng+gstep*ngpu-1)/(gstep*ngpu);
 	for(int igpu=0; igpu<ngpu; igpu++){
 		cudaSetDevice(gpus[igpu]);
-		data[igpu]=new GPU_DATA_T;
+		data[igpu]=new gpu_data_t;
 		data[igpu]->cumvm1=curmat(mvm1->nx, ng);
 		data[igpu]->cumvm2=curmat(mvm2->nx, ng);
 		data[igpu]->cumvm=data[igpu]->cumvm1;
@@ -167,7 +167,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 		for(int ig=0, igpu=0; ig<ng; ig+=gstep, igpu=((igpu+1)%ngpu)){
 			int nleft=(ng-ig)<gstep?(ng-ig):gstep;
 			cudaSetDevice(gpus[igpu]);
-			GPU_DATA_T* datai=data[igpu];
+			gpu_data_t* datai=data[igpu];
 			//One stream handling the memcpy
 			DO(cudaMemcpyAsync(datai->grad()+ig, grad->p+ig, sizeof(Real)*nleft,
 				cudaMemcpyHostToDevice, datai->stream_g));
@@ -187,7 +187,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 			datai->count_g++;
 		}
 		for(int igpu=0; igpu<ngpu; igpu++){
-			GPU_DATA_T* datai=data[igpu];
+			gpu_data_t* datai=data[igpu];
 			datai->count_g=0;
 			cudaSetDevice(gpus[igpu]);
 			//record event when all grads are copied so mvm copy can start.

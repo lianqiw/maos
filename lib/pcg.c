@@ -25,9 +25,9 @@
    positive definite (SPD) matrix plus low rand terms.  x0 contains the initial
    guess. Amul is the operator that applies A to x.  */
 real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*/
-	CGFUN Amul,    /**<[in] The function that applies y=y+A*x*alpha: (*Amul)(&y,A,x,alpha)*/
+	cgfun_t Amul,    /**<[in] The function that applies y=y+A*x*alpha: (*Amul)(&y,A,x,alpha)*/
 	const void* A, /**<[in] Contain info about the The left hand side matrix A*/
-	PREFUN Mmul,   /**<[in] The precond func that applies y=M^-1*x;*/
+	prefun_t Mmul,   /**<[in] The precond func that applies y=M^-1*x;*/
 	const void* M, /**<[in] Contains info about preconditioner matrix M.*/
 	const dcell* b,/**<[in] The right hand side vector to solve*/
 	int warm,      /**<[in] Use warm restart (use the value contained in px)*/

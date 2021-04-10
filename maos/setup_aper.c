@@ -26,8 +26,8 @@ static TIC;
 /**
    Setting up aperture cordinate grid aper_locs, and amplitude map for
 performance evaluation. */
-APER_T* setup_aper(const PARMS_T* const parms){
-	APER_T* aper=mycalloc(1, APER_T);
+aper_t* setup_aper(const parms_t* const parms){
+	aper_t* aper=mycalloc(1, aper_t);
 	tic;
 	if(parms->aper.fnamp){
 		info2("Reading aperture amplitude map from %s\n", parms->aper.fnamp);
@@ -157,7 +157,7 @@ APER_T* setup_aper(const PARMS_T* const parms){
 }
 /**
    Free the aper structure after simulation*/
-void free_aper(APER_T* aper){
+void free_aper(aper_t* aper){
 	/*aper->ampground is freed on setup_recon*/
 	locfree(aper->locs);
 	cellfree(aper->locs_dm);

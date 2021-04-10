@@ -45,9 +45,9 @@
 */
 void wfsints(thread_t* thread_data){
 	/* first, unwrap the data */
-	WFSINTS_T* data=(WFSINTS_T*)thread_data->data;
-	const PARMS_T* parms=global->parms;
-	const POWFS_T* powfs=global->powfs;
+	wfsints_t* data=(wfsints_t*)thread_data->data;
+	const parms_t* parms=global->parms;
+	const powfs_t* powfs=global->powfs;
 	const int iwfs=data->iwfs;
 	const dmat* opd=data->opd;
 	const dmat* lltopd=data->lltopd;

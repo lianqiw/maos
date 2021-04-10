@@ -50,7 +50,7 @@ typedef struct{
 	event_t* event_g;
 	event_t* event_pall;
 
-}GPU_DATA_T;
+}gpu_data_t;
 /*Does matched filter*/
 static void __global__ mtch_do(const Real* mtch, const Real* pix, Real* grad, int pixpsa, int nsa){
 	extern __shared__ Real cum[];//for cumulation and reduction
@@ -119,7 +119,7 @@ void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, co
 		const int sastep=mtch_dimy*mtch_ngrid/2;
 		const int nact=mvm1->nx;
 
-		GPU_DATA_T* data=(GPU_DATA_T*)calloc(ngpu, sizeof(GPU_DATA_T));
+		gpu_data_t* data=(gpu_data_t*)calloc(ngpu, sizeof(gpu_data_t));
 		const int sect_gpu=(nsa+sastep*ngpu-1)/(sastep*ngpu);
 		for(int igpu=0; igpu<ngpu; igpu++){
 			cudaSetDevice(gpus[igpu]);
@@ -174,7 +174,7 @@ void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, co
 
 			for(int isa=0, igpu=0; isa<nsa; isa+=sastep, igpu=((igpu+1)%ngpu)){
 				cudaSetDevice(gpus[igpu]);
-				GPU_DATA_T* datai=&data[igpu];
+				gpu_data_t* datai=&data[igpu];
 				int ism=datai->ism=(datai->ism+1)%nsm;
 				int nleft=(nsa-isa)<sastep?(nsa-isa):sastep;
 
@@ -211,7 +211,7 @@ void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, co
 
 			//Copy DM commands back to CPU
 			for(int igpu=0; igpu<ngpu; igpu++){
-				GPU_DATA_T* datai=&data[igpu];
+				gpu_data_t* datai=&data[igpu];
 				cudaSetDevice(gpus[igpu]);
 				for(int ism=0; ism<nsm; ism++){
 					datai->stream[ism].sync();

@@ -41,9 +41,9 @@
 /**
    Propagate atm onto WFS subaperture grid, and then to fine lenslet grid.
 */
-void wfs_ideal_atm(SIM_T* simu, dmat* opd, int iwfs, real alpha){
-	const PARMS_T* parms=simu->parms;
-	POWFS_T* powfs=simu->powfs;
+void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
+	const parms_t* parms=simu->parms;
+	powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const real hs=parms->wfs[iwfs].hs;
@@ -51,7 +51,7 @@ void wfs_ideal_atm(SIM_T* simu, dmat* opd, int iwfs, real alpha){
 	if(parms->sim.wfsalias==2||parms->sim.idealwfs==2){
 		loc_t* aloc=powfs[ipowfs].fit[jwfs].aloc->p[0];
 		dcell* wfsopd=dcellnew(1, 1); wfsopd->p[0]=dnew(aloc->nloc, 1);
-		FIT_T* fit=&powfs[ipowfs].fit[jwfs];
+		fit_t* fit=&powfs[ipowfs].fit[jwfs];
 		muv_solve(&wfsopd, &fit->FL, &fit->FR, 0);
 		prop_nongrid(aloc, wfsopd->p[0]->p, powfs[ipowfs].loc, opd->p, alpha, 0, 0, 1, 0, 0);
 		dcellfree(wfsopd);
@@ -77,10 +77,10 @@ void wfs_ideal_atm(SIM_T* simu, dmat* opd, int iwfs, real alpha){
    physical optics mode.  */
 
 void wfsgrad_iwfs(thread_t* info){
-	SIM_T* simu=(SIM_T*)info->data;
+	sim_t* simu=(sim_t*)info->data;
 	const int isim=simu->wfsisim;
 	const int iwfs=info->start;
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	//if(isim<parms->powfs[ipowfs].step) return;
 	assert(iwfs<parms->nwfs);
@@ -92,8 +92,8 @@ void wfsgrad_iwfs(thread_t* info){
 	/*input */
 
 	mapcell* atm=simu->atm;
-	const RECON_T* recon=simu->recon;
-	const POWFS_T* powfs=simu->powfs;
+	const recon_t* recon=simu->recon;
+	const powfs_t* powfs=simu->powfs;
 	/*output */
 	const int CL=parms->sim.closeloop;
 	const int nps=parms->atm.nps;
@@ -129,7 +129,7 @@ void wfsgrad_iwfs(thread_t* info){
 		||(!parms->sim.wfsalias&&parms->powfs[ipowfs].lo))){
 		for(int ips=0; ips<nps; ips++){
 			thread_t* wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
-			PROPDATA_T* wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
+			propdata_t* wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
 			wfs_propdata->phiout=opd->p;
 			wfs_propdata->displacex1=-atm->p[ips]->vx*dt*isim;
 			wfs_propdata->displacey1=-atm->p[ips]->vy*dt*isim;
@@ -175,7 +175,7 @@ void wfsgrad_iwfs(thread_t* info){
 		wait_dmreal(simu, simu->wfsisim);
 		for(int idm=0; idm<parms->ndm; idm++){
 			thread_t* wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
-			PROPDATA_T* wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
+			propdata_t* wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 			wfs_propdata->phiout=opd->p;
 			CALL_THREAD(wfs_prop, 0);
 		}/*idm */
@@ -313,7 +313,7 @@ void wfsgrad_iwfs(thread_t* info){
 			}
 		}
 		if(parms->powfs[ipowfs].type==0){//SHWFS
-			WFSINTS_T* intsdata=simu->wfs_intsdata+iwfs;
+			wfsints_t* intsdata=simu->wfs_intsdata+iwfs;
 			intsdata->ints=ints;
 			intsdata->psfout=psfout;
 			intsdata->pistatout=simu->pistatout->p[iwfs];
@@ -381,7 +381,7 @@ void wfsgrad_iwfs(thread_t* info){
 			if(parms->powfs[ipowfs].dither==1&&isim>=parms->powfs[ipowfs].dither_ogskip
 				&&parms->powfs[ipowfs].type==0&&parms->powfs[ipowfs].phytype_sim2==1){
 				 /*Collect statistics with dithering*/
-				DITHER_T* pd=simu->dither[iwfs];
+				dither_t* pd=simu->dither[iwfs];
 				real cs, ss;
 				dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
 					parms->powfs[ipowfs].dither_npoint, isim, pd->deltam);
@@ -480,9 +480,9 @@ static real calc_dither_amp(dmat* signal, /**<array of data. nmod*nsim */
 }
 
 /*Compute global tip/tilt error for each WFS*/
-static void wfsgrad_fsm(SIM_T* simu, int iwfs){
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
+static void wfsgrad_fsm(sim_t* simu, int iwfs){
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int isim=simu->wfsisim;
 	/*Uplink FSM*/
@@ -507,10 +507,10 @@ static void wfsgrad_fsm(SIM_T* simu, int iwfs){
    - Subtract t/t from gradients for non-comon-path (TT) dithering.
 
 */
-static void wfsgrad_dither(SIM_T* simu, int iwfs){
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
-	POWFS_T* powfs=simu->powfs;
+static void wfsgrad_dither(sim_t* simu, int iwfs){
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
+	powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int iwfsr=parms->recon.glao?ipowfs:iwfs;
 	const int isim=simu->wfsisim;
@@ -519,7 +519,7 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
 		return;
 	}
 	real cs, ss; //Current phase of tip/tilt dithering signal
-	DITHER_T* pd=simu->dither[iwfs];
+	dither_t* pd=simu->dither[iwfs];
 	if(parms->powfs[ipowfs].dither==1){ //T/T dithering.
 		//Current dithering signal phase
 		dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
@@ -674,9 +674,9 @@ static void wfsgrad_dither(SIM_T* simu, int iwfs){
    present and powfs.dfrs need to be set to 1 to handle it in tomography. This
    is the original focus tracking method, and is no longer recommended.
 */
-static void wfsgrad_lgsfocus(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+static void wfsgrad_lgsfocus(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	extern int update_etf;
 
 	dcell* LGSfocus=simu->LGSfocus;//computed in wfsgrad_post from gradcl.
@@ -779,8 +779,8 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
    Every operation here should be in the Simulator not the Controller
 */
 void wfsgrad_post(thread_t* info){
-	SIM_T* simu=(SIM_T*)info->data;
-	const PARMS_T* parms=simu->parms;
+	sim_t* simu=(sim_t*)info->data;
+	const parms_t* parms=simu->parms;
 	//Postprocessing gradients
 	const int isim=simu->wfsisim;
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
@@ -847,9 +847,9 @@ void wfsgrad_post(thread_t* info){
 /**
    Dither update: zoom corrector, matched filter, gain ajustment, TWFS.
 */
-static void wfsgrad_dither_post(SIM_T* simu){
-	POWFS_T* powfs=simu->powfs;
-	const PARMS_T* parms=simu->parms;
+static void wfsgrad_dither_post(sim_t* simu){
+	powfs_t* powfs=simu->powfs;
+	const parms_t* parms=simu->parms;
 	const int isim=simu->wfsisim;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(!parms->powfs[ipowfs].dither) continue;
@@ -866,9 +866,9 @@ static void wfsgrad_dither_post(SIM_T* simu){
 				info2("Step %5d: Update matched filter for powfs %d\n", isim, ipowfs);
 				//For matched filter
 				if(!powfs[ipowfs].intstat){
-					powfs[ipowfs].intstat=mycalloc(1, INTSTAT_T);
+					powfs[ipowfs].intstat=mycalloc(1, intstat_t);
 				}
-				INTSTAT_T* intstat=powfs[ipowfs].intstat;
+				intstat_t* intstat=powfs[ipowfs].intstat;
 				parms->powfs[ipowfs].radgx=0;//ensure derivate is interpreted as along x/y.
 
 				if(!intstat->i0||intstat->i0->ny!=nwfs){
@@ -888,7 +888,7 @@ static void wfsgrad_dither_post(SIM_T* simu){
 				
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-					DITHER_T* pd=simu->dither[iwfs];
+					dither_t* pd=simu->dither[iwfs];
 					//Scale the output due to accumulation
 					for(int isa=0; isa<nsa; isa++){
 						dadd(intstat->i0->p+isa+jwfs*nsa, 1-g2, pd->i0->p[isa], scale1*g2);
@@ -972,7 +972,7 @@ static void wfsgrad_dither_post(SIM_T* simu){
 				//For CoG gain
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-					DITHER_T* pd=simu->dither[iwfs];
+					dither_t* pd=simu->dither[iwfs];
 					const int ng=powfs[ipowfs].saloc->nloc*2;
 					if(!simu->gradscale->p[iwfs]){
 						simu->gradscale->p[iwfs]=dnew(ng, 1);
@@ -1072,8 +1072,8 @@ static void wfsgrad_dither_post(SIM_T* simu){
    TWFS has output. Accumulate result to simu->gradoff. It is put in wfsgrad.c
    instead of recon.c to avoid race condition because it updates simu->gradoff.
 */
-void wfsgrad_twfs_recon(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void wfsgrad_twfs_recon(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	const int itpowfs=parms->itpowfs;
 	if(simu->wfsflags[itpowfs].gradout){
 		info2("Step %5d: TWFS[%d] has output with gain %g\n", simu->wfsisim, itpowfs, simu->eptwfs);
@@ -1127,9 +1127,9 @@ void wfsgrad_twfs_recon(SIM_T* simu){
    Calls wfsgrad_iwfs() to computes WFS gradient in parallel.
    It also includes operations on Gradients before tomography.
 */
-void wfsgrad(SIM_T* simu){
+void wfsgrad(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	if(parms->sim.idealfit||parms->sim.evlol||parms->sim.idealtomo) return;
 	// call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
 	if(1!=PARALLEL||parms->tomo.ahst_idealngs==1||!parms->gpu.wfs){

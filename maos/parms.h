@@ -30,7 +30,7 @@ extern real TOMOSCALE;
 /**
    contains input parameters for the atmospheric turbulence.
 */
-typedef struct ATM_CFG_T{
+typedef struct atm_cfg_t{
     real r0z;   /**<r0 at zenith*/
     real r0;    /**<derived from r0z for zenith angle za*/
     real dx;    /**<sampling of turbulence screens*/
@@ -58,10 +58,10 @@ typedef struct ATM_CFG_T{
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
     int share;    /**<0: disable sharing of atmosphere using file backend*/
     int r0evolve; /**<Evolve r0 according to r0logpsd*/
-}ATM_CFG_T;
+}atm_cfg_t;
 /**
    contains input parameters for the atmospheric reconstruction.  */
-typedef struct ATMR_CFG_T{
+typedef struct atmr_cfg_t{
     real r0z;   /**<r0 at zenith*/
     real r0;    /**<derived from r0z for zenith angle za*/
     real L0;    /**<outer scale*/
@@ -73,11 +73,11 @@ typedef struct ATMR_CFG_T{
     lmat *indps;   /**<Mapping atmr.ps to atm.ps*/
     lmat *os;      /**<over sampling factor of xloc over actuator spacing */
     int nps;      /**<number of phase screens*/
-}ATMR_CFG_T;
+}atmr_cfg_t;
 /**
    contains input parameters about the aperture, like the diameter,
    amplitude map, etc */
-typedef struct APER_CFG_T{
+typedef struct aper_cfg_t{
     real d;     /**<Telescope aperture diameter*/
     real din;   /**<Telescope inner blocking diameter*/
     real rotdeg;/**<pupil rotation in degree*/
@@ -85,11 +85,11 @@ typedef struct APER_CFG_T{
 		     [m/2,n/2] (count from 0)*/
     int fnampuser;/**<User provided amplitude map (not default)*/
     char *pupmask;/**<The pupil cold stop*/
-}APER_CFG_T;
+}aper_cfg_t;
 /**
    contains input parameters for laser launch telescope
 */
-typedef struct LLT_CFG_T{
+typedef struct llt_cfg_t{
     real d;      /**<LLT clear aperture diameter*/
     real widthp; /**<Gaussian beam width percentage of d*/
     real focus;  /**<RMS focus error in nm of LLT.*/
@@ -108,11 +108,11 @@ typedef struct LLT_CFG_T{
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
     int coldtrat;/**<change to next sodium profile during simulation every coldtrat time step*/
     real ttrat;  /**<Ratio of uplink jitter to downlink jitter due to M2 windshake.*/
-} LLT_CFG_T;
+} llt_cfg_t;
 /**
 * parameters for dithering
 * */
-typedef struct DITHER_CFG_T{
+typedef struct dither_cfg_t{
 	int mode;
 	real amp; /**<Dither amplitude.*/
 	real gpll;/**<Gain of phase locked loop*/
@@ -125,11 +125,11 @@ typedef struct DITHER_CFG_T{
 	int ogskip; /**<Number of WFS frames to skip before computing averaged images*/
 	int ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
 	int ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
-} DITHER_CFG_T;
+} dither_cfg_t;
 /**
    contains input parameters for each type of wfs (powfs).
 */
-typedef struct POWFS_CFG_T{
+typedef struct powfs_cfg_t{
     dmat *wvl;     /**<list of wavelength in ascending order.*/
     dmat *wvlwts;  /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
     char *saloc;   /**<saloc override file*/
@@ -173,7 +173,7 @@ typedef struct POWFS_CFG_T{
     real sigscale; /**<scale the signal level for simulation.*/
     real siglev;   /**<signal level. will be override by wfs.siglev is specified.*/
     real sigrecon; /**<signal level for NEA computation*/
-    struct LLT_CFG_T *llt;/**<configuration for LLT*/
+    struct llt_cfg_t *llt;/**<configuration for LLT*/
     char* fnllt;   /**<filename of LLT configuration. empty means no llt.*/
     int type;      /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
     int step;      /**<frame to start using WFS*/
@@ -265,11 +265,11 @@ typedef struct POWFS_CFG_T{
     real modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/
     int    modulring; /**<Number of rings within the maximum radius to modulate*/
-}POWFS_CFG_T;
+}powfs_cfg_t;
 /**
    contains input parmaeters for each wfs
 */
-typedef struct WFS_CFG_T{
+typedef struct wfs_cfg_t{
     dmat *wvlwts;   /**<Weights of signal value for each wavelength. if not
 		       specified in config, will use powfs.wvlwts*/
     char *sabad;    /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
@@ -285,11 +285,11 @@ typedef struct WFS_CFG_T{
     real hs;      /**height of star. Derived from powfs.hs or from input*/
     real fitwt;   /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
     int powfs;      /**<powfs type*/
-}WFS_CFG_T;
+}wfs_cfg_t;
 /**
    contains input parameters for each deformable mirror.
 */
-typedef struct DM_CFG_T{
+typedef struct dm_cfg_t{
     real guard;   /**<extra DM actuator rings outside of aper.d*/
     dmat *stroke;  /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke. array: per actuator$*/
     real iastroke;/**<Inter actuator stroke (surface)*/
@@ -318,10 +318,10 @@ typedef struct DM_CFG_T{
     real hyst;       /**<The hysteresis amount (ratio)*/
     real hyst_alpha; /**<The DM hysteresis model alpha parameter*/
     real hyst_stroke;/**<The surface stroke that the hysteresis is measured at*/
-}DM_CFG_T;
+}dm_cfg_t;
 /**
    contarins input parameters all evaluation directions.  */
-typedef struct EVL_CFG_T{
+typedef struct evl_cfg_t{
     dmat *thetax;   /**<x Coordinate of evaluation directions*/
     dmat *thetay;   /**<y Coordinate of evaluation directions*/
     dmat *wt;       /**<weight of each direction*/
@@ -359,12 +359,12 @@ typedef struct EVL_CFG_T{
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
-}EVL_CFG_T;
+}evl_cfg_t;
 
 /**
    contains input parameters for wavefront tomography.
 */
-typedef struct TOMO_CFG_T{
+typedef struct tomo_cfg_t{
     real tikcr;    /**<tikhonov regularization.*/
     real minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
     real iac;      /**<!=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
@@ -402,11 +402,11 @@ typedef struct TOMO_CFG_T{
     int predict;     /**<test predictive control.*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
     int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
-}TOMO_CFG_T;
+}tomo_cfg_t;
 /**
    contains input parameters for deformable mirror fitting.
 */
-typedef struct FIT_CFG_T{
+typedef struct fit_cfg_t{
     dmat *thetax;  /**<x Coordinate of DM fitting directions. */
     dmat *thetay;  /**<y Coordinate of DM fitting directions. */
     dmat *wt;      /**<weight of each direction*/
@@ -435,11 +435,11 @@ typedef struct FIT_CFG_T{
     int cachedm;     /**<Cache DM command in intermediate plane*/
     int cachex;      /**<Cache X (xloc) in intermediate plane*/
     int cgwarm;      /**<Warm restart in CG. inherits recon.warm_restart*/
-}FIT_CFG_T;
+}fit_cfg_t;
 /**
    contains input parameters for the least square reconstructor.
 */
-typedef struct LSR_CFG_T{
+typedef struct lsr_cfg_t{
     real tikcr;    /**<tikhonov regularization*/
     real svdthres; /**<Threshold in SVD inversion*/
     real actthres; /**<Threshold for slaving value of weakly coupled actuators*/
@@ -454,11 +454,11 @@ typedef struct LSR_CFG_T{
 			2: SVD or EVD: Eigen value decompsition
 		     */
     int maxit;       /**<max iterations. Usually 30 for CG*/
-}LSR_CFG_T;
+}lsr_cfg_t;
 /**
    contains input parameters for wavefront reconstruction.
 */
-typedef struct RECON_CFG_T{
+typedef struct recon_cfg_t{
     int alg;         /**<algorithm for reconstruction. 0: MVR. 1: LSR. moved from sim.recon*/
     int glao;        /**<whether we are in GLAO mode where all WFS in each powfs are averaged*/
     int split;       /**<split reconstruction/tomography type.
@@ -486,11 +486,11 @@ typedef struct RECON_CFG_T{
     int psdservo_gain; /**<Gain used to update servo parameter*/
     int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
     char *fnsphpsd;  /**<PSD of spherical aberration due to profile evolution.*/
-}RECON_CFG_T;
+}recon_cfg_t;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
 */
-typedef struct SIM_CFG_T{
+typedef struct sim_cfg_t{
     real dt;         /**<sampling period. 1/800*/
     real za;         /**<zenith angle in radian*/
     real zadeg;      /**<zenith angle in degree. For print out.*/
@@ -579,11 +579,11 @@ typedef struct SIM_CFG_T{
     int ncpa_ndir;   /**<Number of points for NCPA calibration*/
     char *dmadd;     /**<Containing dm vector to simulate turbulence (added to integrator output). 
 			 It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty*/
-}SIM_CFG_T;
+}sim_cfg_t;
 /**
    Parameters for Cn square estimation.
 */
-typedef struct CN2EST_CFG_T{
+typedef struct cn2est_cfg_t{
     dmat *pair;      /**<If non empty, paris of WFS to use for cn2
 			 estimation. Empty: disable cn2 estimation*/
     int step;        /**<do cn2 estimation every this time step*/
@@ -599,11 +599,11 @@ typedef struct CN2EST_CFG_T{
     int psol;        /**<Use pseudo open loop gradients. 0 to probe residual*/
     real hmax;     /**<maximum height to estimat*/
     real saat;     /**<subaperture area threashold to use in cn2 estimation*/
-}CN2EST_CFG_T;
+}cn2est_cfg_t;
 /**
    contains input parameters for plotting during simulation. For debug purpose
 */
-typedef struct PLOT_CFG_T{
+typedef struct plot_cfg_t{
     int setup;       /**<Plot various information in setup process*/
     int atm;         /**<Plot the generated atmosphere*/
     int run;         /**<Plot information during simulation*/
@@ -611,11 +611,11 @@ typedef struct PLOT_CFG_T{
     int psf;         /**<Plot PSF in linear (1) or log (2) mode*/
     int grad2opd;    /**<Plot gradients as reconstructed opd*/
     int all;         /**<Enables setup, atm, run*/
-}PLOT_CFG_T;
+}plot_cfg_t;
 /**
    contains input parameters for debugging.
 */
-typedef struct DBG_CFG_T{
+typedef struct dbg_cfg_t{
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
@@ -658,11 +658,11 @@ typedef struct DBG_CFG_T{
     real eploscale;/**<Scale of eplo*/
     int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
     int recon_stuck; /**<Whether to handle stuck actuator in reconstruction.*/
-}DBG_CFG_T;
+}dbg_cfg_t;
 /**
    Configure GPU usage for different parts.
 */
-typedef struct GPU_CFG_T{
+typedef struct gpu_cfg_t{
     int wfs;         /**<Use GPU for wavefront sensor*/
     int evl;         /**<Use GPU for performance evaluation*/
     int tomo;        /**<Use GPU for tomography*/
@@ -671,11 +671,11 @@ typedef struct GPU_CFG_T{
     int recon;       /**<Use GPU for reconstructor any of(tomo, fit, lsr)*/
     int psf;         /**<Use GPU for accumulating PSF. */
     int moao;        /**<Use GPU for moao.*/
-}GPU_CFG_T;
+}gpu_cfg_t;
 /**
    contains input parameters for each MOAO type.
 */
-typedef struct MOAO_CFG_T{
+typedef struct moao_cfg_t{
     real dx;       /**<Spacing of MOAO DM act*/
     int order;       /**<Nominal order of this MOAO*/
     int used;        /**<This moao is used*/
@@ -688,11 +688,11 @@ typedef struct MOAO_CFG_T{
     real guard;
     char *actfloat;  /**<file containing floating actuators. nx2 coordinate*/
     char *actstuck;  /**<file containing stuck actuators. nx2 coordinate.*/
-}MOAO_CFG_T;
+}moao_cfg_t;
 /**
    contains input parameters for reusing of saved variables.
 */
-typedef struct LOAD_CFG_T{
+typedef struct load_cfg_t{
     char *atm;       /**<load atmosphere from. Contains cell array of square matrix*/
     char *locs;      /**<load aper_locs from*/
     char *aloc;      /**<load DM aloc from*/
@@ -715,11 +715,11 @@ typedef struct LOAD_CFG_T{
     int fit;         /**<if 1, load fit matrix*/
     int W;           /**<if 1, load W0, W1*/
     char *ncpa;      /**<Load ncpa from this path. saved by save.ncpa*/
-}LOAD_CFG_T;
+}load_cfg_t;
 /**
    contains input parameters for saving variables.
 */
-typedef struct SAVE_CFG_T{
+typedef struct save_cfg_t{
     int extra;       /**<Save extra results, namely clep, olep, cleNGSmp, etc*/
     
     int all;         /**<save absolutely everything. mainly for debugging*/
@@ -764,42 +764,42 @@ typedef struct SAVE_CFG_T{
     int mvmi;        /**<save TomoL output of mvm control matrix assembly for warm restart.*/
     int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
     int mvm;         /**<save computed mvm control matrix*/
-}SAVE_CFG_T;
-typedef struct MISREG_CFG_T{
+}save_cfg_t;
+typedef struct misreg_cfg_t{
     char **tel2wfs;  /**<Distortion from telescope pupil to each WFS*/
     char **dm2wfs;   /**<Distortion from DM to each WFS. Displacement due to altitude should not be included here*/
     char **dm2sci;   /**<Distortion from DM to science. Not specified for individual science*/
     dmat   *pupil;   /**<Misregistration of the telescope pupil*/
-}MISREG_CFG_T;
+}misreg_cfg_t;
 /**
    is a wrapper of all _CFG_T data types.
 */
-typedef struct PARMS_T{
-    ATM_CFG_T    atm;   /**<atmospheric parameters*/
-    ATMR_CFG_T   atmr;  /**<information about reconstructed atm*/
-    APER_CFG_T   aper;  /**<aperture parameters*/
-    TOMO_CFG_T   tomo;  /**<tomography parameters*/
-    FIT_CFG_T    fit;   /**<DM fit parameters*/
-    LSR_CFG_T    lsr;   /**<LSR parameters*/
-    RECON_CFG_T  recon; /**<general reconstruction parameters*/
-    EVL_CFG_T    evl;   /**<Performance evaluation parameters*/
+typedef struct parms_t{
+    atm_cfg_t    atm;   /**<atmospheric parameters*/
+    atmr_cfg_t   atmr;  /**<information about reconstructed atm*/
+    aper_cfg_t   aper;  /**<aperture parameters*/
+    tomo_cfg_t   tomo;  /**<tomography parameters*/
+    fit_cfg_t    fit;   /**<DM fit parameters*/
+    lsr_cfg_t    lsr;   /**<LSR parameters*/
+    recon_cfg_t  recon; /**<general reconstruction parameters*/
+    evl_cfg_t    evl;   /**<Performance evaluation parameters*/
     
     /*the following are pointers because there may be several*/
-    POWFS_CFG_T *powfs; /**<Array of wfs type*/
-    WFS_CFG_T   *wfs;   /**<Array of wfs*/
-    WFS_CFG_T   *wfsr;  /**<Array of wfs used in reconstruction. Has only 1 wfs
+    powfs_cfg_t *powfs; /**<Array of wfs type*/
+    wfs_cfg_t   *wfs;   /**<Array of wfs*/
+    wfs_cfg_t   *wfsr;  /**<Array of wfs used in reconstruction. Has only 1 wfs
 			   per powfs in glao mode, otherwise same as wfs.*/
-    DM_CFG_T    *dm;    /**<Array of DM*/
-    MOAO_CFG_T  *moao;  /**<Array of MOAO*/
+    dm_cfg_t    *dm;    /**<Array of DM*/
+    moao_cfg_t  *moao;  /**<Array of MOAO*/
 
-    SIM_CFG_T    sim;   /**<Simulation information*/
-    CN2EST_CFG_T cn2;   /**<Parameters for Cn2 estimation*/
-    PLOT_CFG_T   plot;  /**<Specify what to plot during simulation.*/
-    DBG_CFG_T    dbg;   /**<Specify debugging parameters*/
-    GPU_CFG_T    gpu;   /**<Specify GPU options.*/
-    LOAD_CFG_T   load;  /**<Specify what matrices to load for debugging*/
-    SAVE_CFG_T   save;  /**<Specify what to save to file for debugging*/
-    MISREG_CFG_T misreg;
+    sim_cfg_t    sim;   /**<Simulation information*/
+    cn2est_cfg_t cn2;   /**<Parameters for Cn2 estimation*/
+    plot_cfg_t   plot;  /**<Specify what to plot during simulation.*/
+    dbg_cfg_t    dbg;   /**<Specify debugging parameters*/
+    gpu_cfg_t    gpu;   /**<Specify GPU options.*/
+    load_cfg_t   load;  /**<Specify what matrices to load for debugging*/
+    save_cfg_t   save;  /**<Specify what to save to file for debugging*/
+    misreg_cfg_t misreg;
     int npowfs;      /**<Number of wfs types*/
     int nwfs;        /**<Number of wfs*/
     int nwfsr;       /**<Number of wfs used in reconstruction. =npowfs in glao, =nwfs otherwise*/
@@ -828,11 +828,11 @@ typedef struct PARMS_T{
     int step_lo;     /**<Enabling step for low order wfs*/
     int step_hi;     /**<Enabling step for high order wfs*/
     real hipowfs_hs;  /**<high order wfs minimum height*/
-}PARMS_T;
+}parms_t;
 /**
-   ARG_T is used for command line parsing.
+   arg_t is used for command line parsing.
 */
-typedef struct ARG_T{
+typedef struct arg_t{
     int detach;      /**<Detach from the command line and run in background*/
     int over;        /**<Run simulation even if Res_${seed}.done exists*/
     int force;       /**<For start, bypassing scheduler*/
@@ -843,10 +843,10 @@ typedef struct ARG_T{
     char *dirout;    /**<Result output directory*/
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
-}ARG_T;
-PARMS_T* setup_parms(const char *main, const char *extra, int override);
-void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu);
-void free_parms(PARMS_T *parms);
+}arg_t;
+parms_t* setup_parms(const char *main, const char *extra, int override);
+void setup_parms_gpu(parms_t *parms, int *gpus, int ngpu);
+void free_parms(parms_t *parms);
 /*The following are here so that we don't have to include type.h or utils.h */
 /*convenient constants. used in utils.c */
 typedef enum T_TYPE{
@@ -855,5 +855,5 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void plotdir(const char *fig, const PARMS_T *parms, real totfov, const char *format,...);
+void plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...);
 #endif

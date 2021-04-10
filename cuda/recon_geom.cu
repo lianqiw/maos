@@ -21,7 +21,7 @@
 #include "accphi.h"
 namespace cuda_recon{
 
-W01_T::W01_T(const dsp* R_W0, const dmat* R_W1, int R_nxx){
+w01_t::w01_t(const dsp* R_W0, const dmat* R_W1, int R_nxx){
 	nxx=R_nxx;
 	if(!R_W0||!R_W1){
 		error("R0, R1 must not be empty\n");
@@ -117,7 +117,7 @@ apply_W0_do(Real* outs, const Real* ins, const int* W0f, Real W0v, int nx, int n
 			+0.0625*(in[i-nx-1]+in[i-nx+1]+in[i+nx-1]+in[i+nx+1]));
 	}
 }
-void W01_T::apply(Real* restrict xout, const Real* xin, int ndir, stream_t& stream) const{
+void w01_t::apply(Real* restrict xout, const Real* xin, int ndir, stream_t& stream) const{
 	if(pis.Nx()<ndir){
 		pis=curmat(ndir, 1);
 	} else{
@@ -138,7 +138,7 @@ void W01_T::apply(Real* restrict xout, const Real* xin, int ndir, stream_t& stre
 	}
 }
 
-curecon_geom::curecon_geom(const PARMS_T* parms, const RECON_T* recon)
+curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
 	:npsr(0), ndm(0), delay(0), reconisim(0),
 	xnx(0), xny(0), anx(0), any(0), anloc(0), ngrad(0), dt(0),
 	W01(recon->W0, recon->W1, recon->fmap->nx){

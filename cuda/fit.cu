@@ -21,7 +21,7 @@
 #include "fit.h"
 
 namespace cuda_recon{
-cufit_grid::cufit_grid(const PARMS_T* parms, const RECON_T* recon, const curecon_geom* _grid)
+cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
 	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0), grid(_grid),
 	nfit(0), dir(0){
 	if(!parms||!recon) return;

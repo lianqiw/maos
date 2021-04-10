@@ -21,15 +21,15 @@
 #include "common.h"
 #ifndef AOS_SIM_UTILS_H
 #define AOS_SIM_UTILS_H
-void atm2xloc(dcell **opdx, const SIM_T *simu);
-void sim_update_etf(SIM_T *simu);
-void sim_update_flags(SIM_T *simu, int isim);
-void seeding(SIM_T *simu);
-SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, APER_T *aper,RECON_T *recon,int iseed);
-void free_simu(SIM_T *simu);
-void print_progress(SIM_T *simu);
-void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms);
+void atm2xloc(dcell **opdx, const sim_t *simu);
+void sim_update_etf(sim_t *simu);
+void sim_update_flags(sim_t *simu, int isim);
+void seeding(sim_t *simu);
+sim_t* init_simu(const parms_t *parms,powfs_t *powfs, aper_t *aper,recon_t *recon,int iseed);
+void free_simu(sim_t *simu);
+void print_progress(sim_t *simu);
+void save_skyc(powfs_t *powfs, recon_t *recon, const parms_t *parms);
 void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy);
-void genatm(SIM_T *simu);
-void setup_recon_HXW_predict(SIM_T *simu);
+void genatm(sim_t *simu);
+void setup_recon_HXW_predict(sim_t *simu);
 #endif

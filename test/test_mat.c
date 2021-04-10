@@ -336,7 +336,7 @@ static void test_mm(){
 void test_sho(){
     dmat *x=dread("input");
     dmat *y=dnew(x->nx, x->ny);
-    SHO_T *sho=sho_new(200, 0.9);
+    sho_t *sho=sho_new(200, 0.9);
     real dt=1./64000.;
     for(int i=1; i<x->nx*x->ny; i++){
 	y->p[i]=sho_step(sho, x->p[i-1], dt);

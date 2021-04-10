@@ -51,9 +51,9 @@
    split tomography.
    In closedloop mode, the gradients are from time step isim-1.
 */
-void tomofit(dcell** dmout, SIM_T* simu, dcell* gradin){
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
+void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
 	int isim=simu->reconisim;
 
 	if(parms->sim.idealfit){
@@ -101,9 +101,9 @@ void tomofit(dcell** dmout, SIM_T* simu, dcell* gradin){
    cases, we copy over cl to ol in a end of multi-step integration, and add to
    the accumulated DM commands scaled by 1/dtrat. Tested works
 */
-static void calc_gradol(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+static void calc_gradol(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	dspcell* GA=recon->GA/*PDSPCELL*/;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].psol){
@@ -122,9 +122,9 @@ static void calc_gradol(SIM_T* simu){
 		}
 	}
 }
-static void recon_split(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+static void recon_split(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	const int isim=simu->reconisim;
 	if(parms->recon.split==2){
 		if(!parms->gpu.tomo){
@@ -155,7 +155,7 @@ static void recon_split(SIM_T* simu){
 		case 1:
 			if(!parms->tomo.ahst_idealngs){//Low order NGS recon.
 				dcell* tmp=0;
-				NGSMOD_T* ngsmod=recon->ngsmod;
+				ngsmod_t* ngsmod=recon->ngsmod;
 				for(int iRngs=0; iRngs<2; iRngs++){
 					//For multi-rate control, iRngs=0 is slower loop and iRngs=1 is the faster loop
 					if(!enRngs[iRngs]) continue;
@@ -239,9 +239,9 @@ static void recon_split(SIM_T* simu){
 	}
 }
 
-void recon_servo_update(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
+void recon_servo_update(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
 	if(!parms->recon.psd) return;
 	if(simu->dmerr&&parms->recon.psddtrat_hi>0){//compute PSD on dmerr.
 		const int dtrat=parms->recon.psddtrat_hi;
@@ -322,11 +322,11 @@ void recon_servo_update(SIM_T* simu){
 /**
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
-void reconstruct(SIM_T* simu){
+void reconstruct(sim_t* simu){
 	real tk_start=myclockd();
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	if(parms->sim.evlol) return;
-	RECON_T* recon=simu->recon;
+	recon_t* recon=simu->recon;
 	int isim=simu->reconisim;
 	if(isim<0) return;
 	if(PARALLEL==2){

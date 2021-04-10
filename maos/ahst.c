@@ -30,7 +30,7 @@
    science pupil, the assumed NGS mode on DM remain intact, but the influence on
    Science OPD needs to use ray tracing.
 */
-static void ngsmod2dm(dcell** dmc, const RECON_T* recon, const dcell* M, real gain);
+static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real gain);
 static TIC;
 
 /**
@@ -38,8 +38,8 @@ static TIC;
    MCC=(M'*Ha'*W*Ha*M) where M is ngsmod on DM, Ha is propagator from DM to
    science. W is weighting in science.
 */
-static dcell* ngsmod_mcc(const PARMS_T* parms, RECON_T* recon, const APER_T* aper, const real* wt){
-	NGSMOD_T* ngsmod=recon->ngsmod;
+static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* aper, const real* wt){
+	ngsmod_t* ngsmod=recon->ngsmod;
 	const loc_t* plocs=aper->locs;
 	real* x=plocs->locx;
 	real* y=plocs->locy;
@@ -126,8 +126,8 @@ static dcell* ngsmod_mcc(const PARMS_T* parms, RECON_T* recon, const APER_T* ape
    Ha is from ALOC to PLOCS and W is the amplitude weighting in PLOCS when
    use_ploc==0. Otherwise, Ha is from ALOC to PLOC and W is the amplitude
    weighting in PLOC.  */
-static dspcell* ngsmod_Wa(const PARMS_T* parms, RECON_T* recon,
-	const APER_T* aper, int use_ploc){
+static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
+	const aper_t* aper, int use_ploc){
 	const real* wt=parms->evl.wt->p;
 	const int ndm=parms->ndm;
 	loc_t* loc;
@@ -169,10 +169,10 @@ static dspcell* ngsmod_Wa(const PARMS_T* parms, RECON_T* recon,
 
    2012-05-25: The NGS mode removal should be based on old five modes even if now focus on PS1 is merged with defocus mode
 */
-static dcell* ngsmod_Pngs_Wa(const PARMS_T* parms, RECON_T* recon,
-	const APER_T* aper, int use_ploc){
+static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
+	const aper_t* aper, int use_ploc){
 
-	NGSMOD_T* ngsmod=recon->ngsmod;
+	ngsmod_t* ngsmod=recon->ngsmod;
 	const real ht=ngsmod->ht;
 	const real scale=ngsmod->scale;
 	const real scale1=1.-scale;
@@ -278,8 +278,8 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T* parms, RECON_T* recon,
    DM modes for all the low order modes, defined on DM grid. It uses ngsmod2dm
    to define the modes*/
 
-static dcell* ngsmod_dm(const PARMS_T* parms, RECON_T* recon){
-	NGSMOD_T* ngsmod=recon->ngsmod;
+static dcell* ngsmod_dm(const parms_t* parms, recon_t* recon){
+	ngsmod_t* ngsmod=recon->ngsmod;
 	int ndm=parms->ndm;
 	int nmod=ngsmod->nmod;
 	dcell* M=dcellnew(1, 1);
@@ -312,13 +312,13 @@ static dcell* ngsmod_dm(const PARMS_T* parms, RECON_T* recon){
    AHST parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
 */
-void setup_ngsmod_prep(const PARMS_T* parms, RECON_T* recon,
-	const APER_T* aper, const POWFS_T* powfs){
+void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
+	const aper_t* aper, const powfs_t* powfs){
 	if(recon->ngsmod){
 		warning("Should only be called once\n");
 		return;
 	}
-	NGSMOD_T* ngsmod=recon->ngsmod=mycalloc(1, NGSMOD_T);
+	ngsmod_t* ngsmod=recon->ngsmod=mycalloc(1, ngsmod_t);
 	ngsmod->ahstfocus=parms->tomo.ahst_focus;
 	const int ndm=parms->ndm;
 	ngsmod->aper_fcp=aper->fcp;
@@ -589,8 +589,8 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 /**
    setup NGS modes reconstructor in ahst mode.
  */
-void setup_ngsmod_recon(const PARMS_T* parms, RECON_T* recon){
-	NGSMOD_T* ngsmod=recon->ngsmod;
+void setup_ngsmod_recon(const parms_t* parms, recon_t* recon){
+	ngsmod_t* ngsmod=recon->ngsmod;
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
 		cellfree(ngsmod->Rngs);
 		ngsmod->Rngs=dccellnew(2, 1);
@@ -646,8 +646,8 @@ void setup_ngsmod_recon(const PARMS_T* parms, RECON_T* recon){
    used in performance evaluation on science opds. accumulate to out*/
 void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	real* ngsmod_out,
-	const PARMS_T* parms, const NGSMOD_T* ngsmod,
-	const APER_T* aper, const real* opd, int ievl){
+	const parms_t* parms, const ngsmod_t* ngsmod,
+	const aper_t* aper, const real* opd, int ievl){
 	const real* restrict amp=aper->amp->p;
 	const real* restrict locx=aper->locs->locx;
 	const real* restrict locy=aper->locs->locy;
@@ -686,8 +686,8 @@ void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
    Separate post processing part so that GPU code can call it.
 */
 void calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
-	real tot, const real* coeff, const NGSMOD_T* ngsmod,
-	const APER_T* aper, real thetax, real thetay){
+	real tot, const real* coeff, const ngsmod_t* ngsmod,
+	const aper_t* aper, real thetax, real thetay){
 	const real MCC_fcp=ngsmod->aper_fcp;
 	const real ht=ngsmod->ht;
 	const real scale=ngsmod->scale;
@@ -733,9 +733,9 @@ void calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
    Convert NGS modes to DM actuator commands using analytical expression. For >2
    DMs, we only put NGS modes on ground and top-most DM.
 */
-static void ngsmod2dm(dcell** dmc, const RECON_T* recon, const dcell* M, real gain){
+static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real gain){
 	if(!M||!M->p[0]) return;
-	const NGSMOD_T* ngsmod=recon->ngsmod;
+	const ngsmod_t* ngsmod=recon->ngsmod;
 	//const int nmod=ngsmod->nmod;
 	assert(M->nx==1&&M->ny==1&&M->p[0]->nx==ngsmod->nmod);
 	real scale=ngsmod->scale;
@@ -808,7 +808,7 @@ static void ngsmod2dm(dcell** dmc, const RECON_T* recon, const dcell* M, real ga
    2017-09-11: Deprecated. This routine does not take into account DM 2 science misregistration.
 */
 
-void ngsmod2science(dmat* iopd, const loc_t* loc, const NGSMOD_T* ngsmod,
+void ngsmod2science(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 	real thetax, real thetay,
 	const real* mod, real alpha){
 	const real* locx=loc->locx;
@@ -858,9 +858,9 @@ void ngsmod2science(dmat* iopd, const loc_t* loc, const NGSMOD_T* ngsmod,
 	}
 }
 /**
-   frees NGSMOD_T
+   frees ngsmod_t
 */
-void ngsmod_free(NGSMOD_T* ngsmod){
+void ngsmod_free(ngsmod_t* ngsmod){
 	if(!ngsmod) return;
 	cellfree(ngsmod->GM);
 	cellfree(ngsmod->Rngs);
@@ -880,11 +880,11 @@ void ngsmod_free(NGSMOD_T* ngsmod){
    remove NGS modes from LGS DM commands
    if nmod==6: make sure the global focus mode is not removed from LGS result.
 */
-void remove_dm_ngsmod(SIM_T* simu, dcell* dmerr){
+void remove_dm_ngsmod(sim_t* simu, dcell* dmerr){
 	if(!dmerr) return;
-	const RECON_T* recon=simu->recon;
-	const PARMS_T* parms=simu->parms;
-	const NGSMOD_T* ngsmod=recon->ngsmod;
+	const recon_t* recon=simu->recon;
+	const parms_t* parms=simu->parms;
+	const ngsmod_t* ngsmod=recon->ngsmod;
 	dcellzero(simu->Mngs);
 	dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
 	real* mngs=simu->Mngs->p[0]->p;

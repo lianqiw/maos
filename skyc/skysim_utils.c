@@ -138,7 +138,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 		gradsave=dnew(aster->tsa*2, nstep);
 	}
 
-	SERVO_T* st2t=0;
+	servo_t* st2t=0;
 	kalman_t* kalman=0;
 	dcell* mpsol=0;
 	int multirate=parms->skyc.multirate;

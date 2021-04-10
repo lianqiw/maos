@@ -25,26 +25,26 @@
 #define SETUP_RECON_H
 #include "common.h"
 //Called by maos.c
-RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs);
-void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs);
-void setup_recon_fit(RECON_T *recon, const PARMS_T *parms);
-void setup_powfs_fit(POWFS_T *powfs, const RECON_T *recon, const PARMS_T *parms);
-void free_powfs_fit(POWFS_T *powfs, const PARMS_T *parms);
-void free_fit(FIT_T *fit, int nfit);
+recon_t *setup_recon_prep(const parms_t *parms, const aper_t *aper, const powfs_t *powfs);
+void setup_recon_prep2(recon_t *recon, const parms_t *parms, const aper_t *aper, const powfs_t *powfs);
+void setup_recon_fit(recon_t *recon, const parms_t *parms);
+void setup_powfs_fit(powfs_t *powfs, const recon_t *recon, const parms_t *parms);
+void free_powfs_fit(powfs_t *powfs, const parms_t *parms);
+void free_fit(fit_t *fit, int nfit);
 //Called by setup_recon.c
-void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs);
-void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
-void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs);
-void setup_recon_update(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs);
-void setup_recon_post(RECON_T *recon, const PARMS_T *parms, const APER_T *aper);
-void free_recon(const PARMS_T *parms, RECON_T *recon);
-void free_recon_unused(const PARMS_T *parms, RECON_T *recon);
+void setup_recon_tomo_prep(recon_t *recon, const parms_t *parms);
+void setup_recon_tomo_matrix(recon_t *recon, const parms_t *parms);
+void setup_recon_tomo_update(recon_t *recon, const parms_t *parms);
+void setup_recon_tomo(recon_t *recon, const parms_t *parms, powfs_t *powfs);
+void setup_recon_lsr(recon_t *recon, const parms_t *parms);
+void setup_recon_mvm(const parms_t *parms, recon_t *recon, powfs_t *powfs);
+void setup_recon(recon_t *recon, const parms_t *parms, powfs_t *powfs);
+void setup_recon_update(recon_t *recon, const parms_t *parms, powfs_t *powfs);
+void setup_recon_post(recon_t *recon, const parms_t *parms, const aper_t *aper);
+void free_recon(const parms_t *parms, recon_t *recon);
+void free_recon_unused(const parms_t *parms, recon_t *recon);
 
-void setup_recon_mvst(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms);
+void setup_recon_mvst(recon_t *recon, const parms_t *parms);
+void setup_recon_dmttr(recon_t *recon, const parms_t *parms);
+void setup_recon_dither_dm(recon_t *recon, const powfs_t *powfs, const parms_t *parms);
 #endif

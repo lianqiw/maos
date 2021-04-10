@@ -26,7 +26,7 @@
 #include <sys/socket.h>
 #include "../sys/sys.h"
 #include "monitor.h"
-PROC_T** pproc;
+proc_t** pproc;
 int* nproc;
 extern int* hsock;
 static double* htime;//last time having signal from host.
@@ -38,10 +38,10 @@ static fd_set active_fd_set;
 extern double* usage_cpu, * usage_cpu2;
 //extern double *usage_mem, *usage_mem2;
 /*
-static PROC_T *proc_add(int id,int pid){
-	PROC_T *iproc;
+static proc_t *proc_add(int id,int pid){
+	proc_t *iproc;
 	if((iproc=proc_get(id,pid))) return iproc;
-	iproc=mycalloc(1,PROC_T);
+	iproc=mycalloc(1,proc_t);
 	iproc->iseed_old=-1;
 	iproc->pid=pid;
 	iproc->hid=id;
@@ -54,8 +54,8 @@ static PROC_T *proc_add(int id,int pid){
 	return iproc;
 }
 */
-PROC_T* proc_get(int id, int pid){
-	PROC_T* iproc;
+proc_t* proc_get(int id, int pid){
+	proc_t* iproc;
 	if(id<0||id>=nhost){
 		error("id=%d is invalid\n", id);
 	}
@@ -67,7 +67,7 @@ PROC_T* proc_get(int id, int pid){
 	}
 	if(!iproc){
 		//info("%s: %d is not found\n", hosts[id], pid);
-		iproc=mycalloc(1, PROC_T);
+		iproc=mycalloc(1, proc_t);
 		//iproc->iseed_old=-1;
 		iproc->pid=pid;
 		iproc->hid=id;
@@ -83,7 +83,7 @@ PROC_T* proc_get(int id, int pid){
 
 
 static void proc_remove_all(int id){
-	PROC_T* iproc, * jproc=NULL;
+	proc_t* iproc, * jproc=NULL;
 	LOCK(mhost);
 	for(iproc=pproc[id]; iproc; iproc=jproc){
 		jproc=iproc->next;
@@ -96,7 +96,7 @@ static void proc_remove_all(int id){
 }
 
 static void proc_remove(int id, int pid){
-	PROC_T* iproc, * jproc=NULL;
+	proc_t* iproc, * jproc=NULL;
 	for(iproc=pproc[id]; iproc; jproc=iproc, iproc=iproc->next){
 		if(iproc->pid==pid){
 			LOCK(mhost);
@@ -223,11 +223,11 @@ static int respond(int sock){
 			warning("Host not found\n");
 			return -1;
 		}
-		PROC_T* p=proc_get(ihost, pid);
+		proc_t* p=proc_get(ihost, pid);
 		/*if(!p){
 		p=proc_add(ihost,pid);
 		}*/
-		if(stread(sock, &p->status, sizeof(STATUS_T))){
+		if(stread(sock, &p->status, sizeof(status_t))){
 			return -1;
 		}
 		if(p->status.info==S_REMOVE){
@@ -247,7 +247,7 @@ static int respond(int sock){
 			warning("Host not found\n");
 			return -1;
 		}
-		PROC_T* p=proc_get(ihost, pid);
+		proc_t* p=proc_get(ihost, pid);
 		/*if(!p){
 		p=proc_add(ihost,pid);
 		}*/

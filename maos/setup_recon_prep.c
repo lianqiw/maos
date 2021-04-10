@@ -33,7 +33,7 @@
    Setting up PLOC grid, which is a coarse sampled (usually halves the
    subaperture spacing) grid that defines the circular aperture for tomography.*/
 static void
-setup_recon_ploc(RECON_T* recon, const PARMS_T* parms){
+setup_recon_ploc(recon_t* recon, const parms_t* parms){
 	real dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
 	if(parms->load.ploc){/*optionally load ploc from the file. see dbg.conf */
 		warning("Loading ploc from %s\n", parms->load.ploc);
@@ -95,7 +95,7 @@ setup_recon_ploc(RECON_T* recon, const PARMS_T* parms){
    Create loc/amp that can be used to build GP. It has points on edge of subapertures. The amplitude depends on the distortion.
 */
 static loc_t*
-make_gloc(dmat** gamp, const PARMS_T* parms, const APER_T* aper, int iwfsr){
+make_gloc(dmat** gamp, const parms_t* parms, const aper_t* aper, int iwfsr){
 	const int ipowfs=parms->wfsr[iwfsr].powfs;
 	real dx=parms->powfs[ipowfs].dx;
 	loc_t* gloc=mkannloc(parms->aper.d+1, 0, dx, 0);
@@ -121,7 +121,7 @@ make_gloc(dmat** gamp, const PARMS_T* parms, const APER_T* aper, int iwfsr){
    Like ploc, but for DM fitting
 */
 static void
-setup_recon_floc(RECON_T* recon, const PARMS_T* parms){
+setup_recon_floc(recon_t* recon, const parms_t* parms){
 	real dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
 	if(parms->load.floc){
 		warning("Loading floc from %s\n", parms->load.floc);
@@ -178,7 +178,7 @@ setup_recon_floc(RECON_T* recon, const PARMS_T* parms){
    Setup the tomography grids xloc which is used for Tomography.
 */
 static void
-setup_recon_xloc(RECON_T* recon, const PARMS_T* parms){
+setup_recon_xloc(recon_t* recon, const parms_t* parms){
 	const int npsr=recon->npsr;
 	long nin0=0;
 	if(parms->load.xloc){
@@ -291,7 +291,7 @@ long count_nonzero(const lmat* in){
    Setup the deformable mirrors grid aloc. This is used for DM fitting.
 */
 static void
-setup_recon_aloc(RECON_T* recon, const PARMS_T* parms){
+setup_recon_aloc(recon_t* recon, const parms_t* parms){
 	const int ndm=parms->ndm;
 	if(ndm==0) return;
 	if(parms->fit.cachedm){
@@ -429,7 +429,7 @@ setup_recon_aloc(RECON_T* recon, const PARMS_T* parms){
 */
 
 static void
-setup_recon_HXW(RECON_T* recon, const PARMS_T* parms){
+setup_recon_HXW(recon_t* recon, const parms_t* parms){
 	loc_t* ploc=recon->ploc;
 	const int nwfs=parms->nwfsr;
 	const int npsr=recon->npsr;
@@ -499,7 +499,7 @@ setup_recon_HXW(RECON_T* recon, const PARMS_T* parms){
    Setup gradient operator from ploc to wavefront sensors.
 */
 static void
-setup_recon_GP(RECON_T* recon, const PARMS_T* parms, const APER_T* aper){
+setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 	loc_t* ploc=recon->ploc;
 	const int nwfs=parms->nwfsr;
 	recon->GP=dspcellnew(nwfs, 1);
@@ -582,7 +582,7 @@ setup_recon_GP(RECON_T* recon, const PARMS_T* parms, const APER_T* aper){
    Setup gradient operator form aloc for wfs by using GP.
 */
 static void
-setup_recon_GA(RECON_T* recon, const PARMS_T* parms, const POWFS_T* powfs){
+setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	if(parms->nwfs==0) return;
 	loc_t* ploc=recon->ploc;
 	const int nwfs=parms->nwfsr;
@@ -801,7 +801,7 @@ setup_recon_GA(RECON_T* recon, const PARMS_T* parms, const POWFS_T* powfs){
    Crate the xloc to wfs gradient operator.
 */
 static void
-setup_recon_GX(RECON_T* recon, const PARMS_T* parms){
+setup_recon_GX(recon_t* recon, const parms_t* parms){
 	const int nwfs=parms->nwfsr;
 	const int npsr=recon->npsr;
 	recon->GX=dspcellnew(nwfs, npsr);
@@ -841,7 +841,7 @@ setup_recon_GX(RECON_T* recon, const PARMS_T* parms){
    From focus mode to gradients. This acts on WFS, not WFSR.
  */
 static void
-setup_recon_GF(RECON_T* recon, const PARMS_T* parms){
+setup_recon_GF(recon_t* recon, const parms_t* parms){
 	/*Create GFall: Focus mode -> WFS grad. This is model*/
 	recon->GFall=dcellnew(parms->nwfs, 1);
 	recon->GFngs=dcellnew(parms->nwfs, 1);
@@ -865,7 +865,7 @@ setup_recon_GF(RECON_T* recon, const PARMS_T* parms){
    From radial order modes to gradients.
  */
 static void
-setup_recon_GR(RECON_T* recon, const POWFS_T* powfs, const PARMS_T* parms){
+setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 	recon->GRall=dcellnew(parms->nwfs, 1);
 	dmat* opd=0;
 	real reduce=recon->ploc->dx*2;//to reduce the edge effect.
@@ -894,7 +894,7 @@ setup_recon_GR(RECON_T* recon, const POWFS_T* powfs, const PARMS_T* parms){
 /**
    Tilt removal from DM command. Used by filter.c
  */
-void setup_recon_dmttr(RECON_T* recon, const PARMS_T* parms){
+void setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 	recon->DMTT=dcellnew(parms->ndm, 1);
 	recon->DMPTT=dcellnew(parms->ndm, 1);
 	/*if(!recon->actcpl && parms->nwfs>0){
@@ -919,7 +919,7 @@ void setup_recon_dmttr(RECON_T* recon, const PARMS_T* parms){
 */
 
 static void
-setup_recon_TT(RECON_T* recon, const PARMS_T* parms, const POWFS_T* powfs){
+setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	int nwfs=parms->nwfsr;
 	recon->TT=dcellnew(nwfs, nwfs);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -967,7 +967,7 @@ setup_recon_TT(RECON_T* recon, const PARMS_T* parms, const POWFS_T* powfs){
 */
 
 static void
-setup_recon_DF(RECON_T* recon, const PARMS_T* parms){
+setup_recon_DF(recon_t* recon, const parms_t* parms){
 	if(!recon->has_dfr) return;
 
 	int nwfs=parms->nwfsr;
@@ -1005,7 +1005,7 @@ setup_recon_DF(RECON_T* recon, const PARMS_T* parms){
 /**
    Dither using command path (DM) aberration
  */
-void setup_recon_dither_dm(RECON_T* recon, const POWFS_T* powfs, const PARMS_T* parms){
+void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 	int any=0;
 	int dither_mode=0;
 	real dither_amp=0;
@@ -1094,9 +1094,9 @@ void setup_recon_dither_dm(RECON_T* recon, const POWFS_T* powfs, const PARMS_T* 
 
    This can be used to do NCPA calibration.
  */
-RECON_T* setup_recon_prep(const PARMS_T* parms, const APER_T* aper, const POWFS_T* powfs){
+recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_t* powfs){
 	info("\n%sSetting up reconstructor geometry.%s\n\n", GREEN, BLACK);
-	RECON_T* recon=mycalloc(1, RECON_T);
+	recon_t* recon=mycalloc(1, recon_t);
 	if(parms->recon.warm_restart){
 		info("Wavefront reconstruction uses warm restart.\n");
 	} else{
@@ -1205,7 +1205,7 @@ RECON_T* setup_recon_prep(const PARMS_T* parms, const APER_T* aper, const POWFS_
 /**
    That may depend on GPU data.
  */
-void setup_recon_prep2(RECON_T* recon, const PARMS_T* parms, const APER_T* aper, const POWFS_T* powfs){
+void setup_recon_prep2(recon_t* recon, const parms_t* parms, const aper_t* aper, const powfs_t* powfs){
 	info2("\n%sSetting up reconstructor%s\n\n", GREEN, BLACK);
 	setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
 	setup_recon_GF(recon, parms);//GF depends on GA.

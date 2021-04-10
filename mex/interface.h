@@ -410,7 +410,7 @@ static inline mxArray *cn2est2mx(cn2est_t *cn2est){
     return A;
 
 }
-static inline mxArray *dtf2mx(DTF_T *dtf){
+static inline mxArray *dtf2mx(dtf_t *dtf){
     const int nfield=2;
     const char *fieldnames[]={"nominal","si"};
     mxArray *A=mxCreateStructMatrix(dtf->nwvl,1,nfield,fieldnames);

@@ -26,7 +26,7 @@
 #define AOS_RECON_H
 #include "common.h"
 
-void tomofit(dcell **dmout, SIM_T *simu, dcell *gradin);
-//void lsr(SIM_T *simu);
-void reconstruct(SIM_T *simu);
+void tomofit(dcell **dmout, sim_t *simu, dcell *gradin);
+//void lsr(sim_t *simu);
+void reconstruct(sim_t *simu);
 #endif

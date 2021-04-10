@@ -36,7 +36,7 @@ public:
     int iwfs;
     int igpu;
     int nsa;
-    cuwfs_dbg(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, int _igpu);
+    cuwfs_dbg(const parms_t *parms, const powfs_t *powfs, int _iwfs, int _igpu);
 };
 /*For field stop implementation*/
 class cufieldstop_t{
@@ -203,7 +203,7 @@ class cuwfs_t{
     curmat *gradoff;
     stream_t stream;
 public:
-    cuwfs_t(const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int igpu);
+    cuwfs_t(const parms_t *parms, const powfs_t *powfs, int iwfs, int igpu);
     void initsim();
     void seeding(int seed);
 };

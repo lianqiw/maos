@@ -26,9 +26,9 @@
 
 
 /**
-   Free MOAO_T
+   Free moao_t
 */
-void free_recon_moao(RECON_T* recon, const PARMS_T* parms){
+void free_recon_moao(recon_t* recon, const parms_t* parms){
 	if(!recon||!recon->moao) return;
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
 		if(!parms->moao[imoao].used) continue;
@@ -47,7 +47,7 @@ void free_recon_moao(RECON_T* recon, const PARMS_T* parms){
 /**
    Prepare the propagation H matrix for MOAO and compute the reconstructor. We
    only need a reconstructor for every different MOAO type.  */
-void setup_recon_moao(RECON_T* recon, const PARMS_T* parms){
+void setup_recon_moao(recon_t* recon, const parms_t* parms){
 	const int nmoao=parms->nmoao;
 	if(nmoao==0) return;
 	if(parms->recon.alg!=0){
@@ -56,7 +56,7 @@ void setup_recon_moao(RECON_T* recon, const PARMS_T* parms){
 	if(recon->moao){
 		free_recon_moao(recon, parms);
 	}
-	recon->moao=mycalloc(nmoao, MOAO_T);
+	recon->moao=mycalloc(nmoao, moao_t);
 	for(int imoao=0; imoao<nmoao; imoao++){
 		if(!parms->moao[imoao].used) continue;
 		real dxr=parms->moao[imoao].dx;
@@ -136,7 +136,7 @@ void setup_recon_moao(RECON_T* recon, const PARMS_T* parms){
    output after this computation.  */
 
 static void
-moao_FitR(dcell** xout, const RECON_T* recon, const PARMS_T* parms, int imoao,
+moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	real thetax, real thetay, real hs,
 	const dcell* opdr, const dcell* dmcommon, dcell** rhsout, const real alpha){
 
@@ -188,7 +188,7 @@ moao_FitR(dcell** xout, const RECON_T* recon, const PARMS_T* parms, int imoao,
 static void
 moao_FitL(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
-	const MOAO_T* moao=(const MOAO_T*)A;
+	const moao_t* moao=(const moao_t*)A;
 	dcell* xp=NULL;
 	real wt=1;
 	dcellmm(&xp, moao->HA, xin, "nn", 1.);
@@ -207,9 +207,9 @@ moao_FitL(dcell** xout, const void* A,
    cycles.
 */
 
-void moao_recon(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+void moao_recon(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	const int nwfs=parms->nwfs;
 	const int nevl=parms->evl.nevl;
 	dcell* dmcommon=NULL;

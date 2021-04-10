@@ -43,7 +43,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 		printf("Exception happened\n");
 		return;
 	} else{
-		const PARMS_T* parms=0;
+		const parms_t* parms=0;
 		static int isim=0;
 		static int iseed=0;
 		int nstep=0;
@@ -90,7 +90,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 
 			if(!strcmp(cmd, "setup")&&nrhs>1){
 				conf=mxArrayToString(prhs[1]);
-				ARGOPT_T options[]={
+				argopt_t options[]={
 					{"override",'O',M_INT,0, 0, &over_ride, NULL},
 					{"output", 'o',M_STR, 1, 0, &dirout, NULL},
 					{"nthread",'n',M_INT, 1, 0, &nthread,NULL},
@@ -131,7 +131,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 			}
 			parms=setup_parms(mainconf, conf, over_ride);
 			printf("setup_parms done\n");
-			setup_parms_gpu((PARMS_T*)parms, gpus, ngpu);
+			setup_parms_gpu((parms_t*)parms, gpus, ngpu);
 			maos_setup(parms);//sets global
 		}
 		parms=global->parms;
@@ -149,7 +149,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 			}
 
 			if(nstep>0){
-				SIM_T* simu=global->simu;
+				sim_t* simu=global->simu;
 				if(iseed<parms->sim.nseed){
 					if(!simu){
 						while(!(simu=maos_iseed(iseed))){

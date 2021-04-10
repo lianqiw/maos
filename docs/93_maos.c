@@ -22,10 +22,10 @@
    \section sect-structure Simulation Flow
 
    - main() is the entrance into the program. It calls
-        - setup_parms(): to setup the parameters of types PARMS_T and check for errors.
+        - setup_parms(): to setup the parameters of types parms_t and check for errors.
         - setup_parms_gpu(): to setup the GPU usage for various tasks
         - maos_setup(): to setup the AO system geometry and data structs. It calls
-            - setup_aper():  to setup the aperture grid and amplitude map (of type APER_T)
+            - setup_aper():  to setup the aperture grid and amplitude map (of type aper_t)
             - setup_powfs_init(): to setup the WFS subapertures geoemtry
             - setup_recon_prep(): to setup reconstruction grid (ploc, aloc, floc, GP, GX, etc.)
             - setup_surf(): to setup NCPA

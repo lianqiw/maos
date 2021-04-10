@@ -67,23 +67,23 @@ enum{
 static GtkListStore* listall=NULL;
 static GtkTreeModel** lists=NULL;
 static GtkWidget** views=NULL;
-static void list_get_iter(PROC_T* p, GtkTreeIter* iter){
+static void list_get_iter(proc_t* p, GtkTreeIter* iter){
 	GtkTreePath* tpath=gtk_tree_row_reference_get_path(p->row);
 	gtk_tree_model_get_iter(GTK_TREE_MODEL(listall), iter, tpath);
 	gtk_tree_path_free(tpath);
 }
-static void list_modify_icon(PROC_T* p, GdkPixbuf* newicon){
+static void list_modify_icon(proc_t* p, GdkPixbuf* newicon){
 	GtkTreeIter iter;
 	list_get_iter(p, &iter);
 	gtk_list_store_set(listall, &iter, COL_ACTION, newicon, -1);
 }
-static void list_modify_color(PROC_T* p, const char* color){
+static void list_modify_color(proc_t* p, const char* color){
 	GtkTreeIter iter;
 	list_get_iter(p, &iter);
 	gtk_list_store_set(listall, &iter, COL_COLOR, color, -1);
 }
 
-static void list_update_progress(PROC_T* p){
+static void list_update_progress(proc_t* p){
 	if(p->status.nseed==0) return;
 	double total=(double)(p->status.rest+p->status.laps);
 	if(fabs(total)>1.e-10){
@@ -146,7 +146,7 @@ static void list_update_progress(PROC_T* p){
 	gtk_list_store_set(listall, &iter, COL_ERRHI, tmp, -1);
 
 }
-static void list_modify_reset(PROC_T* p){
+static void list_modify_reset(proc_t* p){
 	GtkTreeIter iter;
 	list_get_iter(p, &iter);
 	char spid[12];
@@ -168,7 +168,7 @@ static void list_modify_reset(PROC_T* p){
 		-1);
 	//p->iseed_old=-1;
 }
-gboolean remove_entry(PROC_T* p){
+gboolean remove_entry(proc_t* p){
 	if(p->row){
 		GtkTreePath* path=gtk_tree_row_reference_get_path(p->row);
 		GtkTreeIter iter;
@@ -182,7 +182,7 @@ gboolean remove_entry(PROC_T* p){
 	free(p);
 	return 0;
 }
-gboolean refresh(PROC_T* p){
+gboolean refresh(proc_t* p){
 	if(!p->row){
 		char sdate[80];
 		char spid[12];
@@ -562,7 +562,7 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 			const char* hostn=g_value_get_string(&value);
 			g_value_unset(&value);
 			int ihost=host2i(hostn);
-			PROC_T* p=proc_get(ihost, pid);
+			proc_t* p=proc_get(ihost, pid);
 			if(p){
 				if(p->status.info<10){
 					kill_job(p);

@@ -25,7 +25,7 @@
 /**
    Initialize perfevl
 */
-void gpu_perfevl_init(const PARMS_T* parms, APER_T* aper){
+void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 	if(!parms->gpu.evl){
 		return;
 	}
@@ -131,7 +131,7 @@ void gpu_perfevl_init(const PARMS_T* parms, APER_T* aper){
 /*
   Initialize simulation data. Seed dependent. Create for the first seed and zero for the next.
 */
-void gpu_perfevl_init_sim(const PARMS_T* parms, APER_T* aper){
+void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper){
 	const int nevl=parms->evl.nevl;
 	const int nwvl=parms->evl.nwvl;
 	int nloc=aper->locs->nloc;

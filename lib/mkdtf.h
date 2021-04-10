@@ -31,7 +31,7 @@
    computed as
    \f$I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]\f$
 */
-typedef struct DTF_T{
+typedef struct dtf_t{
     ccell *nominal;      /**<The FFT of the pixel functions*/
     dspcell *si;         /**<The pixel selection*/
     real wvl;          /**<Wavelength*/
@@ -43,17 +43,17 @@ typedef struct DTF_T{
     long notfy;         /**<FFT size along y*/
     int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
     int fused;           /**<Whether the DTF has been fused to ETF*/
-    int nwvl;            /**<Number of DTF_T*/
-}DTF_T;
+    int nwvl;            /**<Number of dtf_t*/
+}dtf_t;
 
-typedef struct ETF_T{
+typedef struct etf_t{
     ccell *etf;          /**<Store the 2D ETF when*/
 	double hs;           /**<Guide star height*/
     int icol;            /**<Store the column index*/
-    int nwvl;            /**<Number of DTF_T*/
-}ETF_T;
+    int nwvl;            /**<Number of dtf_t*/
+}etf_t;
 
-DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
+dtf_t *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     real dxsa,/**<Subaperture size*/
 	     real embfac,/**<Embedding factor (2)*/
 	     long notfx,/**<FFT size along x*/
@@ -68,7 +68,7 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     const dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     int radpix         /**<1: Pixels are along radial/azimuthal direction*/
     );
-ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
+etf_t *mketf(dtf_t *dtfs,  /**<The dtfs*/
 	     real hs,      /**<Guide star focus range*/
 	     const dcell *sodium, /**<The sodium profile. First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
@@ -76,11 +76,11 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     const dcell *srsa,  /**<Subaperture to LLT distance*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     );
-void dtf_free_do(DTF_T *dtfs);
-void etf_free_do(ETF_T *etfs);
-/**frees DTF_T */
+void dtf_free_do(dtf_t *dtfs);
+void etf_free_do(etf_t *etfs);
+/**frees dtf_t */
 #define dtf_free(dtfs) if(dtfs){dtf_free_do(dtfs); dtfs=NULL;}
-/**frees ETF_T */
+/**frees etf_t */
 #define etf_free(etfs) if(etfs){etf_free_do(etfs); etfs=NULL;}
 dmat* smooth(const dmat *profile, real dxnew);
 #endif

@@ -40,7 +40,7 @@
 /**
    Plot the loc, together with all beams
 */
-void plotloc(const char* fig, const PARMS_T* parms,
+void plotloc(const char* fig, const parms_t* parms,
 	loc_t* loc, real ht, const char* format, ...){
 	format2fn;
 	int ncir=parms->evl.nevl+parms->fit.nfit+parms->nwfs;
@@ -97,7 +97,7 @@ void plotloc(const char* fig, const PARMS_T* parms,
 }
 /**
    ploted all the different beam directions as points. */
-void plotdir(const char* fig, const PARMS_T* parms, real totfov, const char* format, ...){
+void plotdir(const char* fig, const parms_t* parms, real totfov, const char* format, ...){
 	format2fn;
 	int ncir=1;
 	dmat* cir=dnew(4, ncir);
@@ -209,7 +209,7 @@ void rename_file(int sig){
 	}
 	if(global&&global->parms&&global->parms->fdlock&&sig!=0){
 		char fn[80];
-		const PARMS_T* parms=global->parms;
+		const parms_t* parms=global->parms;
 		for(int iseed=global->iseed; iseed<parms->sim.nseed; iseed++){
 			if(parms->fdlock->p[iseed]>0){
 				close(parms->fdlock->p[iseed]);
@@ -280,11 +280,11 @@ static void print_usage(void){
 /**
    Parse command line arguments argc, argv
 */
-ARG_T* parse_args(int argc, const char* argv[]){
-	ARG_T* arg=mycalloc(1, ARG_T);
+arg_t* parse_args(int argc, const char* argv[]){
+	arg_t* arg=mycalloc(1, arg_t);
 	char* host=NULL;
 	int nthread=0;
-	ARGOPT_T options[]={
+	argopt_t options[]={
 	{"help",   'h',M_INT, 0, 1, (void*)print_usage, NULL},
 	{"detach", 'd',M_INT, 0, 0, &arg->detach, NULL},
 	{"force",  'f',M_INT, 0, 0, &arg->force, NULL},
@@ -387,7 +387,7 @@ ARG_T* parse_args(int argc, const char* argv[]){
 /**
    Creates header for saving PSFs.
  */
-char* evl_header(const PARMS_T* parms, const APER_T* aper, int ievl, int iwvl, int isim){
+char* evl_header(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, int isim){
 	char header[400];
 	int nembed=aper->embed->nembed->p[iwvl];
 	real wvl=parms->evl.wvl->p[iwvl];
@@ -435,8 +435,8 @@ void apply_fieldstop(dmat* opd, const dmat* amp, const lmat* embed, long nembed,
 /**
    Plot grid points, amplitude maps and NCPA.
  */
-void plot_setup(const PARMS_T* parms, const POWFS_T* powfs,
-	const APER_T* aper, const RECON_T* recon){
+void plot_setup(const parms_t* parms, const powfs_t* powfs,
+	const aper_t* aper, const recon_t* recon){
 	extern int draw_single;
 	int draw_single_save=draw_single;
 	draw_single=0;
@@ -491,12 +491,12 @@ dmat* mkamp(loc_t* loc, map_t* ampground, real misregx, real misregy, real D, re
 /**
    Test wfs linearity.
  */
-void wfslinearity(const PARMS_T* parms, POWFS_T* powfs, const int iwfs){
+void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	const int nsa=powfs[ipowfs].saloc->nloc;
-	INTSTAT_T* intstat=powfs[ipowfs].intstat;
+	intstat_t* intstat=powfs[ipowfs].intstat;
 	ccell* potf=intstat->potf->p[intstat->nsepsf>1?wfsind:0];
 	cmat* potf2=0;
 	ccell* otf=ccellnew(nwvl, 1);
@@ -661,7 +661,7 @@ void wfslinearity(const PARMS_T* parms, POWFS_T* powfs, const int iwfs){
 /**
    Compute spherical aberration
 */
-void lgs_wfs_sph_psd(const PARMS_T* parms, POWFS_T* powfs, RECON_T* recon, const int iwfs){
+void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const int iwfs){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	/*First save matched filter and i0*/
 	dcell* mtche=powfs[ipowfs].intstat->mtche;
@@ -741,8 +741,8 @@ void lgs_wfs_sph_psd(const PARMS_T* parms, POWFS_T* powfs, RECON_T* recon, const
 	dfree(i0sum);
 }
 typedef struct{
-	const PARMS_T* parms;
-	const POWFS_T* powfs;
+	const parms_t* parms;
+	const powfs_t* powfs;
 	const dmat* ints;
 	ccell* fotf;
 	ccell* otf;//temporary.
@@ -759,8 +759,8 @@ static real mapfun(real* x, mapdata_t* info){
 	const dmat* ints=info->ints;
 	ccell* fotf=info->fotf;
 	ccell* otf=info->otf;
-	const PARMS_T* parms=info->parms;
-	const POWFS_T* powfs=info->powfs;
+	const parms_t* parms=info->parms;
+	const powfs_t* powfs=info->powfs;
 	int iwfs=info->iwfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
@@ -809,14 +809,14 @@ static real mapfun(real* x, mapdata_t* info){
 /**
    Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun
 */
-void maxapriori(real* g, const dmat* ints, const PARMS_T* parms,
-	const POWFS_T* powfs, int iwfs, int isa, int noisy,
+void maxapriori(real* g, const dmat* ints, const parms_t* parms,
+	const powfs_t* powfs, int iwfs, int isa, int noisy,
 	real bkgrnd, real rne){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
-	INTSTAT_T* intstat=powfs[ipowfs].intstat;
+	intstat_t* intstat=powfs[ipowfs].intstat;
 	ccell* fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
 	mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
 	//info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
@@ -855,9 +855,9 @@ void maxapriori(real* g, const dmat* ints, const PARMS_T* parms,
 /**
    Compute the focus adjustment need to apply to OPD of wfs. Used in both CPU and GPU code.
 */
-real wfsfocusadj(SIM_T* simu, int iwfs){
-	const PARMS_T* parms=simu->parms;
-	const POWFS_T* powfs=simu->powfs;
+real wfsfocusadj(sim_t* simu, int iwfs){
+	const parms_t* parms=simu->parms;
+	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const int isim=simu->wfsisim;
@@ -979,7 +979,7 @@ void parabolic_peak_sum(real* grad, dmat* corr, int nbox){
 /**
    Calculate gradients using current specified algorithm
 */
-void shwfs_grad(dmat** pgrad, dmat* ints[], const PARMS_T* parms, const POWFS_T* powfs, const int iwfs, const int phytype){
+void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t* powfs, const int iwfs, const int phytype){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const real rne=parms->powfs[ipowfs].rne;
@@ -1115,7 +1115,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const PARMS_T* parms, const POWFS_T*
 /**
    Read cell array from file specified by whole name or prefix.
 */
-dcell* dcellread_prefix(const char* file, const PARMS_T* parms, int ipowfs){
+dcell* dcellread_prefix(const char* file, const parms_t* parms, int ipowfs){
 	dcell* nea=0;
 	int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	if(!file){
@@ -1141,7 +1141,7 @@ dcell* dcellread_prefix(const char* file, const PARMS_T* parms, int ipowfs){
 /**
    Wait for dmreal to be available in event driven simulation.
 */
-void wait_dmreal(SIM_T* simu, int isim){
+void wait_dmreal(sim_t* simu, int isim){
 	if(PARALLEL==2){
 	//if(simu->dmreal_isim!=-1){
 		while(simu->dmreal_isim!=isim){

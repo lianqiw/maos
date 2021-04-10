@@ -47,7 +47,7 @@ protected:
     void do_ha(const curcell &xin, stream_t &stream);
     void do_hat(curcell &xout,  Real alpha, stream_t &stream);
 public:
-    cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, const curecon_geom *_grid=0);
+    cufit_grid(const parms_t *parms=0, const recon_t *recon=0, const curecon_geom *_grid=0);
     virtual ~cufit_grid(){
 	delete [] dir;
     }

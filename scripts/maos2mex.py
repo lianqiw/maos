@@ -19,7 +19,7 @@ headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalma
 dictall=maos.parse_structs(srcdir, headlist)
 
 simu=dict()
-simu=dictall['SIM_T']
+simu=dictall['sim_t']
 
 def expand_struct(struct):
     for key in struct:
@@ -37,7 +37,7 @@ def expand_struct(struct):
             struct[key]=[val0, dictall[val]]
 
 expand_struct(simu)
-
+#Convert cname of type ctype in C to mexname in Matlab
 def var2mx(mexname, cname, ctype):
     out=""
     ans=1
@@ -57,13 +57,13 @@ def var2mx(mexname, cname, ctype):
             return mexname+"="+fun_c+'2mx('+ccast+cname+');'
         else:
             print("//unknown pointer "+cname+":"+ctype0)
-            return ''
+            return "//unknown pointer "+cname+":"+ctype0+';'
     else:
-        if ctype=='int' or ctype=='double' or ctype=='long':
+        if ctype=='char' or ctype=='int' or ctype=='long' or ctype=='double' or ctype=='float' or ctype=='real':
             return mexname+'=mxCreateDoubleScalar('+cname+');'
         else:
             print("//unknown type    "+cname+":"+ctype0)
-            return ''
+            return "//unknown type    "+cname+":"+ctype0+';'
 
 fundefs=dict()
 funheaders=dict()
@@ -100,7 +100,7 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
 #        funname=varname
 #    else:
 #        funname=funprefix+varname;
-    funname=vartype.replace('_T','').replace('*','').lower();
+    funname=vartype.replace('_t','').replace('*','').lower();
     if nvar!="1":
         funheader="static mxArray *get_"+funname+"(const "+vartype+" "+varname+", int nvar);";
     else:
@@ -131,8 +131,8 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
     funbody.sort()
     fundef+="\n".join(funbody)
     if nvar!="1":
-        fundef+="}\n"
-    fundef+="\treturn tmp;\n}\n"
+        fundef+="\n}\n"
+    fundef+="\n\treturn tmp;\n}\n"
     fundefs[funname]=fundef
     funheaders[funname]=funheader
     #print(funname, funprefix)
@@ -152,7 +152,7 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
     else:
         return "get_"+funname+"("+parentpointer+varname+");"
 
-struct2mx("SIM_T*", "1", "","","", "simu", simu)
+struct2mx("sim_t*", "1", "","","", "simu", simu)
 
 
 fc=open(fnout,'w')
@@ -168,7 +168,7 @@ print("static void get_data_help(){\n", end="", file=fc)
 for key in funcalls:
     print("\tinfo(\""+key+"=maos('get','"+key+"')\\n\");", file=fc)
 print("}", file=fc)
-print("static mxArray *get_data(SIM_T *simu, const char *key){\n\t", end="", file=fc)
+print("static mxArray *get_data(sim_t *simu, const char *key){\n\t", end="", file=fc)
 for key in funcalls:
     print(key)
     print("if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse ", end="", file=fc)

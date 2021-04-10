@@ -281,10 +281,10 @@ static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, in
 */
 void gpu_perfevl_queue(thread_t* info){
 	TIC;tic;
-	SIM_T* simu=(SIM_T*)info->data;
-	const PARMS_T* parms=simu->parms;
-	const APER_T* aper=simu->aper;
-	const RECON_T* recon=simu->recon;
+	sim_t* simu=(sim_t*)info->data;
+	const parms_t* parms=simu->parms;
+	const aper_t* aper=simu->aper;
+	const recon_t* recon=simu->recon;
 	const int isim=simu->perfisim;
 	const int imoao=parms->evl.moao;
 	const int nloc=aper->locs->nloc;
@@ -461,11 +461,11 @@ void gpu_perfevl_queue(thread_t* info){
 }
 void gpu_perfevl_sync(thread_t* info){
 	TIC;tic;
-	SIM_T* simu=(SIM_T*)info->data;
-	const PARMS_T* parms=simu->parms;
+	sim_t* simu=(sim_t*)info->data;
+	const parms_t* parms=simu->parms;
 	const int isim=simu->perfisim;
-	const APER_T* aper=simu->aper;
-	const RECON_T* recon=simu->recon;
+	const aper_t* aper=simu->aper;
+	const recon_t* recon=simu->recon;
 	const int nmod=parms->evl.nmod;
 	for(int ievl=info->start; ievl<info->end; ievl++){
 		gpu_set(cuglobal->evlgpu[ievl]);
@@ -493,9 +493,9 @@ void gpu_perfevl_sync(thread_t* info){
 /**
    Compute the PSF or OPDCOV for NGS mode removed opd.
 */
-void gpu_perfevl_ngsr(SIM_T* simu, real* cleNGSm){
-	const PARMS_T* parms=simu->parms;
-	const APER_T* aper=simu->aper;
+void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
+	const parms_t* parms=simu->parms;
+	const aper_t* aper=simu->aper;
 	const int nloc=aper->locs->nloc;
 	const int nwvl=parms->evl.nwvl;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++)
@@ -569,8 +569,8 @@ void gpu_perfevl_ngsr(SIM_T* simu, real* cleNGSm){
 		}
 #pragma omp taskwait
 }
-void gpu_perfevl_save(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void gpu_perfevl_save(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	if(!parms->evl.nevl) return;
 	const int isim=simu->perfisim;
 	if(parms->evl.psfmean&&CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){

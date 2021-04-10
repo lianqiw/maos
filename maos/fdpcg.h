@@ -24,8 +24,8 @@
 #ifndef AOS_RECON_FDPCG
 #define AOS_RECON_FDPCG
 #include "common.h"
-FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, 
-		       const POWFS_T *powfs, mapcell *atm);
+fdpcg_t *fdpcg_prepare(const parms_t *parms, const recon_t *recon, 
+		       const powfs_t *powfs, mapcell *atm);
 void fdpcg_precond(dcell **xout, const void *A, const dcell *xin);
-void fdpcg_free(FDPCG_T *fdpcg);
+void fdpcg_free(fdpcg_t *fdpcg);
 #endif

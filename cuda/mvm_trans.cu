@@ -28,9 +28,9 @@
    \file mvm_trans.cu
    Compute the transpose of MVM control matrix in GPU colume by colume.
 */
-typedef struct MVM_IGPU_T{
-	const PARMS_T* parms;
-	RECON_T* recon;
+typedef struct mvm_igpu_t{
+	const parms_t* parms;
+	recon_t* recon;
 	curcell& mvmig; /*intermediate TomoL result*/
 	curcell& mvmfg; /*intermediate FitR result*/
 	curmat& mvmt;   /*control matrix transposed.*/
@@ -41,14 +41,14 @@ typedef struct MVM_IGPU_T{
 	int ntotact;
 	int ntotgrad;
 	int load_mvmf; /*intermediate FitR result is for 1) loading, 0) saving.*/
-}MVM_IGPU_T;
+}mvm_igpu_t;
 #define MVM_DEBUG 0
 static void mvm_trans_igpu(thread_t* info){
 	TIC;tic;
 	real tk_prep=0, tk_fitL=0, tk_fitR=0, tk_TomoL=0, tk_TomoR=0, tk_cp=0;
-	MVM_IGPU_T* data=(MVM_IGPU_T*)info->data;
-	const PARMS_T* parms=data->parms;
-	RECON_T* recon=data->recon;
+	mvm_igpu_t* data=(mvm_igpu_t*)info->data;
+	const parms_t* parms=data->parms;
+	recon_t* recon=data->recon;
 	X(mat)* residual=data->residual;
 	X(mat)* residualfit=data->residualfit;
 	long(*curp)[2]=data->curp;
@@ -171,7 +171,7 @@ static void mvm_trans_igpu(thread_t* info){
 		igpu, tk_prep, tk_fitL, tk_fitR, tk_TomoL, tk_TomoR, tk_cp);
 }
 
-void gpu_setup_recon_mvm_trans(const PARMS_T* parms, RECON_T* recon){
+void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 	TIC;tic;
 	if(parms->recon.alg!=0){
 		error("Please adapt to LSR\n");
@@ -281,7 +281,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T* parms, RECON_T* recon){
 				dfree(FLId);
 			}
 		}
-		MVM_IGPU_T data={parms, recon, mvmig, mvmfg, mvmt, FLI(), residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
+		mvm_igpu_t data={parms, recon, mvmig, mvmfg, mvmt, FLI(), residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 		int nthread=NGPU;
 		thread_t info[nthread];
 		thread_prep(info, 0, ntotact, nthread, mvm_trans_igpu, &data);

@@ -53,7 +53,7 @@ void apply_L2(dcell** xout, const dspcell* L2, const dcell* xin,
 */
 void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int xb, int yb){
 	if(xb!=yb) return;
-	const INVPSD_T* extra=(const INVPSD_T*)A;
+	const invpsd_t* extra=(const invpsd_t*)A;
 	dcell* invpsd=extra->invpsd;
 	ccell* fftxopd=extra->fftxopd;
 	int ips1, ips2;
@@ -98,7 +98,7 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 */
 void apply_fractal(dcell** xout, const void* A, const dcell* xin, real alpha, int xb, int yb){
 	if(xb!=yb) return;
-	const FRACTAL_T* extra=(const FRACTAL_T*)A;
+	const fractal_t* extra=(const fractal_t*)A;
 	int ips1, ips2;
 	if(xb<0){/*do all cells */
 		ips1=0;
@@ -206,7 +206,7 @@ dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0,
 }
 
 typedef struct Tomo_T{
-	const RECON_T* recon;
+	const recon_t* recon;
 	const real alpha;
 	const dcell* xin;/*input */
 	dcell* gg;/*intermediate gradient */
@@ -222,9 +222,9 @@ typedef struct Tomo_T{
 */
 static void Tomo_prop_do(thread_t* info){
 	Tomo_T* data=(Tomo_T*)info->data;
-	const RECON_T* recon=data->recon;
-	const PARMS_T* parms=global->parms;
-	SIM_T* simu=global->simu;
+	const recon_t* recon=data->recon;
+	const parms_t* parms=global->parms;
+	sim_t* simu=global->simu;
 	const int nps=recon->npsr;
 	map_t xmap;/*make a temporary xmap for thread safety.*/
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
@@ -279,7 +279,7 @@ void Tomo_prop(Tomo_T* data, int nthread){
 */
 static void Tomo_nea_gpt_do(thread_t* info){
 	Tomo_T* data=(Tomo_T*)info->data;
-	const RECON_T* recon=data->recon;
+	const recon_t* recon=data->recon;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
 		dmat* gg2=NULL;
@@ -293,7 +293,7 @@ static void Tomo_nea_gpt_do(thread_t* info){
 
 static void Tomo_nea_do(thread_t* info){
 	Tomo_T* data=(Tomo_T*)info->data;
-	const RECON_T* recon=data->recon;
+	const recon_t* recon=data->recon;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
 		dmat* gg2=NULL;
@@ -318,9 +318,9 @@ void Tomo_nea(Tomo_T* data, int nthread, int gpt){
 */
 static void Tomo_iprop_do(thread_t* info){
 	Tomo_T* data=(Tomo_T*)info->data;
-	const RECON_T* recon=data->recon;
-	const PARMS_T* parms=global->parms;
-	SIM_T* simu=global->simu;
+	const recon_t* recon=data->recon;
+	const parms_t* parms=global->parms;
+	sim_t* simu=global->simu;
 	const int nps=recon->npsr;
 	map_t xmap;
 	for(int ips=info->start; ips<info->end; ips++){
@@ -398,7 +398,7 @@ void Tomo_iprop(Tomo_T* data, int nthread){
 void TomoR(dcell** xout, const void* A,
 	const dcell* gin, const real alpha){
 	TIC_tm;tic_tm;
-	const RECON_T* recon=(const RECON_T*)A;
+	const recon_t* recon=(const recon_t*)A;
 	dcell* gg=NULL;
 	dcellcp(&gg, gin);/*copy to gg so we don't touch the input. */
 	TTFR(gg, recon->TTF, recon->PTTF);
@@ -417,7 +417,7 @@ void TomoR(dcell** xout, const void* A,
  */
 void TomoRt(dcell** gout, const void* A,
 	const dcell* xin, const real alpha){
-	const RECON_T* recon=(const RECON_T*)A;
+	const recon_t* recon=(const recon_t*)A;
 	if(!*gout){
 		*gout=dcellnew(recon->saneai->nx, 1);
 	}
@@ -448,8 +448,8 @@ void TomoRt(dcell** gout, const void* A,
 void TomoL(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
 	TIC_tm;tic_tm;
-	const RECON_T* recon=(const RECON_T*)A;
-	const PARMS_T* parms=global->parms;
+	const recon_t* recon=(const recon_t*)A;
+	const parms_t* parms=global->parms;
 	assert(xin->ny==1);/*modify the code for ny>1 case. */
 	dcell* gg=dcellnew(parms->nwfsr, 1);
 	if(!*xout){
@@ -483,13 +483,13 @@ void TomoL(dcell** xout, const void* A,
 */
 void FitR(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
-	const FIT_T* fit=(const FIT_T*)A;
+	const fit_t* fit=(const fit_t*)A;
 	const int nfit=fit->thetax->nx;
 	dcell* xp=dcellnew(nfit, 1);
 
 	if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
-		const PARMS_T* parms=global->parms;
-		SIM_T* simu=global->simu;
+		const parms_t* parms=global->parms;
+		sim_t* simu=global->simu;
 		int isim=fit->notrecon?simu->wfsisim:simu->reconisim;
 		const real atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 		for(int ifit=0; ifit<nfit; ifit++){
@@ -538,7 +538,7 @@ void FitR(dcell** xout, const void* A,
    directions.  */
 void FitL(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
-	const FIT_T* fit=(const FIT_T*)A;
+	const fit_t* fit=(const fit_t*)A;
 	dcell* xp=NULL;
 	dcellmm(&xp, fit->HA, xin, "nn", 1.);
 	applyW(xp, fit->W0, fit->W1, fit->wt->p);
@@ -593,9 +593,9 @@ dsp* nea2sp(dmat** nea, long nsa){
    estimations, like high order loop, we add opdr to, and subtract dmpsol from
    the OPD.  For closed loop estimations, like ahst low order or lsr, we add
    dmerr_lo, and dmerr to the OPD.*/
-void psfr_calc(SIM_T* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dmerr_lo){
-	const PARMS_T* parms=simu->parms;
-	RECON_T* recon=simu->recon;
+void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dmerr_lo){
+	const parms_t* parms=simu->parms;
+	recon_t* recon=simu->recon;
 	/* The tomography estimates, opdr is pseudo open loop estimates. We need to
 	   subtract the constribution of the added DM command to form closed loop
 	   estimates.
@@ -682,8 +682,8 @@ void psfr_calc(SIM_T* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
    in sim in CL or wfsgrad in OL). Do not execute in parallel with other
    routines. In GLAO mode, also averaged gradients from the same type of powfs.
 */
-void shift_grad(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+void shift_grad(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	if(parms->sim.evlol||parms->sim.idealfit||parms->sim.idealtomo) return;
 	if(PARALLEL==2){
 		if(simu->wfsisim>0){
@@ -782,7 +782,7 @@ lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
 Estimation. The result will be an average of them.  */
 
 
-cn2est_t* cn2est_prepare(const PARMS_T* parms, const POWFS_T* powfs){
+cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 	dmat* pair=parms->cn2.pair;
 	int npair=pair->nx*pair->ny;
 	int ipowfs=-1;
@@ -868,7 +868,7 @@ cn2est_t* cn2est_prepare(const PARMS_T* parms, const POWFS_T* powfs){
 /**
    Implemented mechanism to move height of layers.
  */
-static void cn2est_moveht(RECON_T* recon){
+static void cn2est_moveht(recon_t* recon){
 	(void)recon;
 	/*cn2est_t *cn2est=recon->cn2est; */
 	/*
@@ -880,7 +880,7 @@ static void cn2est_moveht(RECON_T* recon){
 /**
    Wrapper of Cn2 Estimation operations in recon.c
 */
-void cn2est_isim(dcell* cn2res, RECON_T* recon, const PARMS_T* parms, const dcell* grad, int* tomo_update){
+void cn2est_isim(dcell* cn2res, recon_t* recon, const parms_t* parms, const dcell* grad, int* tomo_update){
 	cn2est_t* cn2est=recon->cn2est;
 	cn2est_push(cn2est, grad);
 	static int icn2=-1;

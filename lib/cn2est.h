@@ -23,7 +23,7 @@
 /**
    contains the data related to Cn2 Estimation for each WFS pair.
 */
-typedef struct CN2PAIR_T{
+typedef struct cn2est_pair_t{
    int xstep;      /**<separation step of subapertures along x*/
    int ystep;      /**<separation step of subapertures along y*.*/
    int iht0;       /**<starting iht, may be negative or 0, for minimum height*/
@@ -32,13 +32,13 @@ typedef struct CN2PAIR_T{
    int nsep;       /**<number of subaperture separations to use. equal to nhs usually*/
    int wfs0;       /**<first wfs in this pair*/
    int wfs1;       /**<second wfs in this pair*/
-} CN2PAIR_T;
+} cn2est_pair_t;
 /**
    contains the data related to Cn2 Estimation.
  */
 typedef struct cn2est_t{
    /*the following are constants*/
-   struct CN2PAIR_T* pair; /**<information about each pair*/
+   struct cn2est_pair_t* pair; /**<information about each pair*/
    int* wfscov;     /**<Whether this wfs participates in covariance computation.*/
    long nembed;      /**<size of array to embed the LGS gradients into*/
    lmat* embed;      /**<pointers to embed*/

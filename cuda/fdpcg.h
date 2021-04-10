@@ -19,11 +19,11 @@
 #define AOS_CUDA_FDPCG_H
 #include "solve.h"
 namespace cuda_recon{
-typedef struct GPU_FDPCG_T{
+typedef struct gpu_fdpcg_t{
     int nx;
     int ny;
     Real scale;
-}GPU_FDPCG_T;
+}gpu_fdpcg_t;
 class curecon_geom;
 class cufdpcg_t:public cusolve_cgpre,nonCopyable{
     const curecon_geom *grid;
@@ -36,12 +36,12 @@ class cufdpcg_t:public cusolve_cgpre,nonCopyable{
     cuccell xhat1, xhat2;
     int nb, bs, nby, nbz; 
     int scale;
-    Array<GPU_FDPCG_T,Gpu> fddata;
+    Array<gpu_fdpcg_t,Gpu> fddata;
 public:
     virtual ~cufdpcg_t(){
     }
-    cufdpcg_t(FDPCG_T *fdpcg=0, const curecon_geom *_grid=0);
-    void update(FDPCG_T *fdpcg);
+    cufdpcg_t(fdpcg_t *fdpcg=0, const curecon_geom *_grid=0);
+    void update(fdpcg_t *fdpcg);
     void Pre(curcell &xout, const curcell &xin, stream_t &stream);
 };
 }//namespace

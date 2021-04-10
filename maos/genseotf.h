@@ -29,9 +29,9 @@
 #ifndef AOS_GENSEOTF_H
 #define AOS_GENSEOTF_H
 #include "common.h"
-void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
-void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
-void genselotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
-void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
-void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs);
+void gensei(const parms_t *parms, powfs_t *powfs, int ipowfs);
+void genseotf(const parms_t *parms, powfs_t *powfs, int ipowfs);
+void genselotf(const parms_t *parms, powfs_t *powfs, int ipowfs);
+void gensepsf(const parms_t *parms, powfs_t *powfs, int ipowfs);
+void genmtch(const parms_t *parms, powfs_t *powfs, const int ipowfs);
 #endif

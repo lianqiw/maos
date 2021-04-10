@@ -103,7 +103,7 @@ int main(int argc, char **argv){
 	double starttime=myclocki();
 	waitpid(pid,&status,WUNTRACED | WCONTINUED);
 	dbg("status=%d\n",status);
-	STATUS_T *st=mycalloc(1,STATUS_T);
+	status_t *st=mycalloc(1,status_t);
 	st->laps=0;
 	st->rest=myclocki()-starttime;
 	st->iseed=0;

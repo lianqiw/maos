@@ -42,9 +42,9 @@
 #define TIM(A)
 #endif
 extern int KEEP_MEM;
-static void perfevl_ideal_atm(SIM_T* simu, dmat* iopdevl, int ievl, real alpha){
-	const PARMS_T* parms=simu->parms;
-	const APER_T* aper=simu->aper;
+static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
+	const parms_t* parms=simu->parms;
+	const aper_t* aper=simu->aper;
 	const real hs=parms->evl.hs->p[ievl];
 
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -91,7 +91,7 @@ static void plot_psf(ccell* psf2s, const char* psfname, int closeloop, int ievl,
 	dfree(psftemp);
 }
 
-static void perfevl_psfcl(const PARMS_T* parms, const APER_T* aper, const char* psfname,
+static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* psfname,
 	dcell* evlpsfmean, zfarr** evlpsfhist,
 	dmat* iopdevl, int ievl){
 /* the OPD after this time will be tilt removed. Don't use for performance
@@ -138,10 +138,10 @@ static void perfevl_psfcl(const PARMS_T* parms, const APER_T* aper, const char* 
 /**
    Performance evaluation for each direction in parallel mode.  */
 void perfevl_ievl(thread_t* info){
-	SIM_T* simu=(SIM_T*)info->data;
-	const PARMS_T* parms=simu->parms;
-	const APER_T* aper=simu->aper;
-	const RECON_T* recon=simu->recon;
+	sim_t* simu=(sim_t*)info->data;
+	const parms_t* parms=simu->parms;
+	const aper_t* aper=simu->aper;
+	const recon_t* recon=simu->recon;
 	const int isim=simu->perfisim;
 	const real atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	const int nmod=parms->evl.nmod;
@@ -352,9 +352,9 @@ void perfevl_ievl(thread_t* info){
 /**
    Evaluation field averaged performance.
 */
-static void perfevl_mean(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+static void perfevl_mean(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	const int isim=simu->perfisim;
 	const int nevlmod=parms->evl.nmod;
 	const int nevl=parms->evl.nevl;
@@ -474,7 +474,7 @@ static void perfevl_mean(SIM_T* simu){
 				gpu_perfevl_ngsr(simu, pcleNGSm);
 			} else{
 #endif
-				const APER_T* aper=simu->aper;
+				const aper_t* aper=simu->aper;
 				for(int ievl=0; ievl<parms->evl.nevl; ievl++)
 					if(parms->evl.psf->p[ievl]&&parms->evl.psfngsr->p[ievl])
 #pragma omp task
@@ -535,8 +535,8 @@ static void perfevl_mean(SIM_T* simu){
    Save telemetry.
    2015-08-19: Changed psfmean to non-cumulative average.
 */
-static void perfevl_save(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
+static void perfevl_save(sim_t* simu){
+	const parms_t* parms=simu->parms;
 	const int isim=simu->perfisim;
 	if(parms->evl.psfmean&&CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 		info2("Step %d: Output PSF (cumulative average).\n", isim);
@@ -628,9 +628,9 @@ static void perfevl_save(SIM_T* simu){
 
    \todo Write a standalone routine that can plot results, using techniques
    developped in drawdaemon.  */
-void perfevl(SIM_T* simu){
+void perfevl(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
-	const PARMS_T* parms=simu->parms;
+	const parms_t* parms=simu->parms;
 	if(!(parms->gpu.evl)&&parms->evl.nevl>1){ //Cache the ground layer. 
 		int ips=simu->perfevl_iground;
 		if(ips!=-1&&simu->atm&&!parms->sim.idealevl){

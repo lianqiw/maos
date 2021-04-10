@@ -80,7 +80,7 @@ typedef struct{
 	cudaEvent_t event0_mvm;
 	cudaEvent_t event_mvm;
 #endif
-}GPU_DATA_T;
+}gpu_data_t;
 /*Does matched filter*/
 static void __global__ mtch_do(const Real* mtch, const Real* pix, Real* grad, int pixpsa, int nsa){
 	extern __shared__ Real cum[];//for cumulation and reduction
@@ -204,11 +204,11 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 
 
 	int nc=10;//each time copy nc column of mvm.
-	GPU_DATA_T** data=new GPU_DATA_T*[ngpu];
+	gpu_data_t** data=new gpu_data_t*[ngpu];
 	const int sect_gpu=(nsa+sastep*ngpu-1)/(sastep*ngpu);
 	for(int igpu=0; igpu<ngpu; igpu++){
 		cudaSetDevice(gpus[igpu]);
-		data[igpu]=new GPU_DATA_T;
+		data[igpu]=new gpu_data_t;
 		data[igpu]->cumvm1=curmat(mvm1->nx, ng);
 		data[igpu]->cumvm2=curmat(mvm2->nx, ng);
 		data[igpu]->cumvm=data[igpu]->cumvm1;
@@ -317,7 +317,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		}
 		for(int isa=0, igpu=0; isa<nsa; isa+=sastep, igpu=((igpu+1)%ngpu)){
 			cudaSetDevice(gpus[igpu]);
-			GPU_DATA_T* datai=data[igpu];
+			gpu_data_t* datai=data[igpu];
 			int nleft=(nsa-isa)<sastep?(nsa-isa):sastep;
 			//One stream handling the memcpy
 #if TIMING
@@ -372,13 +372,13 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 			datai->count++;
 		}
 		for(int igpu=0; igpu<ngpu; igpu++){
-			GPU_DATA_T* datai=data[igpu];
+			gpu_data_t* datai=data[igpu];
 			//Record an event when pixel tranporting is over. So we can start transporting mvm matrix.
 			DO(cudaEventRecord(datai->event_pall, datai->stream_p));
 		}
 		//Queue copying MVM matrix to second slot.
 		for(int igpu=0; igpu<ngpu; igpu++){
-			GPU_DATA_T* datai=data[igpu];
+			gpu_data_t* datai=data[igpu];
 			if(datai->copy_mvm){
 				int done=0, nleft;
 				if(mvm->ny-datai->ic<nc){
@@ -411,7 +411,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		}
 		//Copy DM commands back to CPU
 		for(int igpu=0; igpu<ngpu; igpu++){
-			GPU_DATA_T* datai=data[igpu];
+			gpu_data_t* datai=data[igpu];
 			cudaSetDevice(gpus[igpu]);
 			for(int ism=1; ism<nsm; ism++){
 				DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
@@ -458,7 +458,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		*/
 		//Wait for MVM matrix copy to finish and time.
 		for(int igpu=0; igpu<ngpu; igpu++){
-			GPU_DATA_T* datai=data[igpu];
+			gpu_data_t* datai=data[igpu];
 			cudaSetDevice(datai->gpu);
 			cudaMemsetAsync(datai->act(), 0, nact*sizeof(Real), datai->stream_a[datai->ism]);
 			datai->stream_a[datai->ism].sync();
@@ -469,7 +469,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		if(istep<100){
 			for(int igpu=0; igpu<ngpu; igpu++){
 				cudaSetDevice(gpus[igpu]);
-				GPU_DATA_T* datai=data+igpu;
+				gpu_data_t* datai=data+igpu;
 				const int count=datai->count;
 				X(mat)* tim=X(new)(count*6+4, 2);
 				PX(MAT)(tim, ptim);

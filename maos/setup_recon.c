@@ -145,7 +145,7 @@ void nea_inv(dmat** pout, const dmat* in){
    matched filter output. For geometric optics, the NEA is from input.
 */
 static void
-setup_recon_saneai(RECON_T* recon, const PARMS_T* parms, const POWFS_T* powfs){
+setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	const int nwfs=parms->nwfsr;
 	dspcellfree(recon->sanea);
 	dspcellfree(recon->saneai);
@@ -318,7 +318,7 @@ setup_recon_saneai(RECON_T* recon, const PARMS_T* parms, const POWFS_T* powfs){
    differential focus.
 */
 static void
-setup_recon_TTFR(RECON_T* recon, const PARMS_T* parms){
+setup_recon_TTFR(recon_t* recon, const parms_t* parms){
 	cellfree(recon->PTT);
 	cellfree(recon->PDF);
 	cellfree(recon->PTTF);
@@ -337,7 +337,7 @@ setup_recon_TTFR(RECON_T* recon, const PARMS_T* parms){
 /**
    Frees recon->invpsd or recon->fractal
 */
-static void free_cxx(RECON_T* recon){
+static void free_cxx(recon_t* recon){
 	if(recon->invpsd){
 		dcellfree(recon->invpsd->invpsd);
 		ccellfree(recon->invpsd->fftxopd);
@@ -354,7 +354,7 @@ static void free_cxx(RECON_T* recon){
    Prepares for tomography. ALlow it to be called multiple times for Cn2 update.
 */
 void
-setup_recon_tomo_prep(RECON_T* recon, const PARMS_T* parms){
+setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 	info("setup_recon_tomo_prep.\n");
 	/*Free existing struct if already exist.  */
 	free_cxx(recon);
@@ -401,7 +401,7 @@ setup_recon_tomo_prep(RECON_T* recon, const PARMS_T* parms){
 		dspcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	}
 	if(parms->tomo.cxxalg==1||(parms->tomo.cxxalg==2&&parms->tomo.precond==1)){
-		recon->invpsd=mycalloc(1, INVPSD_T);
+		recon->invpsd=mycalloc(1, invpsd_t);
 		if(parms->load.cxx){
 			recon->invpsd->invpsd=dcellread("%s", parms->load.cxx);
 			if(recon->invpsd->invpsd->nx!=npsr||recon->invpsd->invpsd->ny!=1){
@@ -433,7 +433,7 @@ setup_recon_tomo_prep(RECON_T* recon, const PARMS_T* parms){
 		recon->invpsd->square=parms->tomo.square;
 	}
 	if(parms->tomo.cxxalg==2){
-		recon->fractal=mycalloc(1, FRACTAL_T);
+		recon->fractal=mycalloc(1, fractal_t);
 		recon->fractal->xloc=recon->xloc;
 		recon->fractal->r0=parms->atmr.r0;
 		recon->fractal->L0=parms->atmr.L0;
@@ -507,7 +507,7 @@ setup_recon_tomo_prep(RECON_T* recon, const PARMS_T* parms){
    For details see www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803
 
 */
-void setup_recon_tomo_matrix(RECON_T* recon, const PARMS_T* parms){
+void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 	/*if not cg or forced, build explicitly the tomography matrix. */
 	int npsr=recon->npsr;
 	int nwfs=parms->nwfsr;
@@ -716,7 +716,7 @@ void setup_recon_tomo_matrix(RECON_T* recon, const PARMS_T* parms){
 	print_mem("After assemble tomo matrix");
 }
 
-static dcell* setup_recon_ecnn(RECON_T* recon, const PARMS_T* parms, loc_t* locs, lmat* mask){
+static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs, lmat* mask){
 	/**
 	   We compute the wavefront estimation error covariance in science focal
 	   plane due to wavefront measurement noise. Basically we compute
@@ -810,7 +810,7 @@ static dcell* setup_recon_ecnn(RECON_T* recon, const PARMS_T* parms, loc_t* locs
    Update assembled tomography matrix with new L2. Called from cn2est when new
    profiles are available.
 */
-void setup_recon_tomo_update(RECON_T* recon, const PARMS_T* parms){
+void setup_recon_tomo_update(recon_t* recon, const parms_t* parms){
 	setup_recon_tomo_prep(recon, parms); /*redo L2, invpsd */
 #if USE_CUDA
 	if(parms->gpu.tomo){
@@ -861,7 +861,7 @@ void setup_recon_tomo_update(RECON_T* recon, const PARMS_T* parms){
    sodium tracking error. Need to average out the focus error caused by
    atmosphere when applying (a low pass filter is applied to the output).  */
 static void
-setup_recon_focus(RECON_T* recon, const PARMS_T* parms){
+setup_recon_focus(recon_t* recon, const parms_t* parms){
 	if(parms->nlgspowfs){
 		if(parms->recon.split==2&&parms->sim.mffocus){//For MVST.
 			dmat* GMGngs=NULL;
@@ -935,7 +935,7 @@ setup_recon_focus(RECON_T* recon, const PARMS_T* parms){
    Setup reconstructor for TWFS
 */
 static void
-setup_recon_twfs(RECON_T* recon, const PARMS_T* parms){
+setup_recon_twfs(recon_t* recon, const parms_t* parms){
 	cellfree(recon->RRtwfs);
 	dcell* GRtwfs=dcellnew(parms->nwfsr, 1);
 	dspcell* neai=dspcellnew(parms->nwfsr, parms->nwfsr);
@@ -1003,7 +1003,7 @@ setup_recon_twfs(RECON_T* recon, const PARMS_T* parms){
 */
 
 void
-setup_recon_mvst(RECON_T* recon, const PARMS_T* parms){
+setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	TIC;tic;
 	/*
 	  Notice that: Solve Fitting on Uw and using FUw to form Rngs gives
@@ -1274,7 +1274,7 @@ setup_recon_mvst(RECON_T* recon, const PARMS_T* parms){
    MOAO is handled in setup_recon_moao().
 
 */
-void setup_recon_tomo(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
+void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	TIC;tic;
 	/*setup inverse noise covariance matrix. */
 	/*prepare for tomography setup */
@@ -1322,7 +1322,7 @@ void setup_recon_tomo(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
-void setup_recon(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
+void setup_recon(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	TIC;tic;
 	/*assemble noise equiva angle inverse from powfs information */
 	setup_recon_saneai(recon, parms, powfs);
@@ -1364,7 +1364,7 @@ void setup_recon(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
 /**
    Update reconstructor
 */
-void setup_recon_update(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
+void setup_recon_update(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	TIC;tic;
 	/*assemble noise equiva angle inverse from powfs information */
 	setup_recon_saneai(recon, parms, powfs);
@@ -1405,7 +1405,7 @@ void setup_recon_update(RECON_T* recon, const PARMS_T* parms, POWFS_T* powfs){
 /**
    PSD computation for gain update
  */
-void setup_recon_psd(RECON_T* recon, const PARMS_T* parms){
+void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	if(!parms->recon.psd) return;
 	recon->Herr=dspcellnew(parms->evl.nevl, parms->ndm);
 	real d1=parms->aper.d-parms->dm[0].dx;
@@ -1451,7 +1451,7 @@ void setup_recon_psd(RECON_T* recon, const PARMS_T* parms){
 /**
    A few further operations that needs MVM.
  */
-void setup_recon_post(RECON_T* recon, const PARMS_T* parms, const APER_T* aper){
+void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper){
 	TIC;tic;
 	if(parms->sim.ecnn){
 		recon->ecnn=setup_recon_ecnn(recon, parms, aper->locs, parms->evl.psfr);
@@ -1476,7 +1476,7 @@ void setup_recon_post(RECON_T* recon, const PARMS_T* parms, const APER_T* aper){
 /**
    Free unused object in recon struct after preparation is done.
  */
-void free_recon_unused(const PARMS_T* parms, RECON_T* recon){
+void free_recon_unused(const parms_t* parms, recon_t* recon){
 	if(!recon) return;
 	/* Free arrays that will no longer be used after reconstruction setup is done. */
 	dspcellfree(recon->sanea);
@@ -1528,7 +1528,7 @@ void free_recon_unused(const PARMS_T* parms, RECON_T* recon){
 /**
    Free the recon struct.
 */
-void free_recon(const PARMS_T* parms, RECON_T* recon){
+void free_recon(const parms_t* parms, recon_t* recon){
 	if(!recon) return;
 	ngsmod_free(recon->ngsmod); recon->ngsmod=0;
 	free_recon_unused(parms, recon);

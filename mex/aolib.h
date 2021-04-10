@@ -68,7 +68,7 @@ cn2est_t* cn2est=cn2est_all(const dmat*wfspair, dmat*wfstheta, const loc_t*saloc
 	const dmat*saa, const double saat, const dmat*hs,
 	const dmat*htrecon, int keepht, double l0, dcell*grad);
 
-DTF_T* mkdtf(const dmat* wvls, double dxsa, double embfac, long notfx, long notfy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, const dmat* pixoffx, const dmat* pixoffy, double pixblur, const dcell* srot, int radpix);
+dtf_t* mkdtf(const dmat* wvls, double dxsa, double embfac, long notfx, long notfy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, const dmat* pixoffx, const dmat* pixoffy, double pixblur, const dcell* srot, int radpix);
 dmat* add_psd(const dmat* psd1, const dmat* psd2, double scale2);
 dmat* derive_by_fft(const dmat* i0, double theta);
 void cure(dmat** phi, const dmat* gx, const dmat* gy, double dx);

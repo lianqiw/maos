@@ -24,7 +24,7 @@
 #include "perf.h"
 
 namespace cuda_recon{
-cumoao_t::cumoao_t(const PARMS_T* parms, MOAO_T* moao, dir_t* dir, int _ndir, curecon_geom* _grid)
+cumoao_t::cumoao_t(const parms_t* parms, moao_t* moao, dir_t* dir, int _ndir, curecon_geom* _grid)
 	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0), grid(_grid), ndir(_ndir){
 	amap=cugridcell(1, 1);
 	amap[0]=(moao->amap->p[0]);
@@ -117,9 +117,9 @@ static void gpu_dm2gpu_embed(curmat& dmgpu, dmat* dmcpu, loc_t* loc, int nx, int
 
 /**
    Copy MOAO DM commands from CPU to GPU.*/
-void gpu_moao_2gpu(SIM_T* simu){
-	const PARMS_T* parms=simu->parms;
-	const RECON_T* recon=simu->recon;
+void gpu_moao_2gpu(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	if(parms->gpu.moao){
 		error("Invalid use\n");
 	}
@@ -130,7 +130,7 @@ void gpu_moao_2gpu(SIM_T* simu){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			int imoao=parms->powfs[ipowfs].moao;
 			if(imoao<0) continue;
-			MOAO_T* moao=recon->moao+imoao;
+			moao_t* moao=recon->moao+imoao;
 			gpu_set(cuglobal->wfsgpu[iwfs]);
 			if(!cudata->dm_wfs){
 				cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
@@ -149,7 +149,7 @@ void gpu_moao_2gpu(SIM_T* simu){
 	}
 	if(parms->gpu.evl&&simu->dm_evl){
 		int imoao=parms->evl.moao;
-		MOAO_T* moao=recon->moao+imoao;
+		moao_t* moao=recon->moao+imoao;
 		for(int ievl=0; ievl<nevl; ievl++){
 			gpu_set(cuglobal->evlgpu[ievl]);
 			if(!cudata->dm_evl){

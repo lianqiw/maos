@@ -28,7 +28,7 @@
    destination grid, especially cubic splines. The interpolation marix takes too
    much space.  
 
-   TODO: This routine and POWFS_T should only contain information about the
+   TODO: This routine and powfs_t should only contain information about the
    simulation, not about any model used during reconstruction (RTC) to avoid
    leaking information from the "real world (simulation)" to our knowledge (RTC).
 */
@@ -36,17 +36,17 @@
 #ifndef AOS_POWFS_H
 #define AOS_POWFS_H
 #include "common.h"
-POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper);
-void setup_powfs_misreg_tel(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);
-void setup_powfs_misreg_dm(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);
-void setup_powfs_phy(const PARMS_T *parms,  POWFS_T *powfs);
-void setup_powfs_neasim(const PARMS_T *parms,  POWFS_T *powfs);
-void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs);
-void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs);
-void free_powfs(const PARMS_T *parms, POWFS_T *powfs);
-//void test_powfs(const PARMS_T *parms, POWFS_T *powfs);
-void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, double deltah,
+powfs_t * setup_powfs_init(const parms_t *parms, aper_t *aper);
+void setup_powfs_misreg_tel(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+void setup_powfs_misreg_dm(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+void setup_powfs_phy(const parms_t *parms,  powfs_t *powfs);
+void setup_powfs_neasim(const parms_t *parms,  powfs_t *powfs);
+void setup_powfs_calib(const parms_t *parms, powfs_t *powfs);
+void free_powfs_unused(const parms_t *parms, powfs_t *powfs);
+void free_powfs(const parms_t *parms, powfs_t *powfs);
+//void test_powfs(const parms_t *parms, powfs_t *powfs);
+void setup_powfs_etf(powfs_t *powfs, const parms_t *parms, double deltah,
 		     int ipowfs, int mode, int icol);
-void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs);
+void wfspupmask(const parms_t *parms, loc_t *loc, dmat *amp, int iwfs);
 
 #endif

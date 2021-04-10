@@ -30,7 +30,7 @@
 /**
  * hash the data to get a unique file name
  */
-static char* create_fnatm(GENATM_T* data){
+static char* create_fnatm(genatm_t* data){
 	uint32_t key;
 	key=hashlittle(data->rstat, sizeof(rand_t), 0);/*contains seed */
 	key=hashlittle(data->wt, sizeof(real)*data->nlayer, key);
@@ -75,7 +75,7 @@ static char* create_fnatm(GENATM_T* data){
  * Geneate the screens two layer at a time and appends to file if fc is not
  * NULL. Handles large screens well without using the full storage.
  */
-static void spect_screen_do(zfarr* fc, GENATM_T* data){
+static void spect_screen_do(zfarr* fc, genatm_t* data){
 	real slope=data->slope;
 	if(!slope) slope=data->slope=-11./3.;
 	rand_t* rstat=data->rstat;
@@ -182,7 +182,7 @@ static void spect_screen_do(zfarr* fc, GENATM_T* data){
 /**
  * Generate one screen at a time and save to file
  */
-static void fractal_screen_do(zfarr* fc, GENATM_T* data){
+static void fractal_screen_do(zfarr* fc, genatm_t* data){
 	const long nx=data->nx;
 	const long ny=data->ny;
 	if(fc){
@@ -210,7 +210,7 @@ static void fractal_screen_do(zfarr* fc, GENATM_T* data){
 		OMPTASK_END;
 	}
 }
-static void genscreen_do(zfarr* fc, GENATM_T *data){
+static void genscreen_do(zfarr* fc, genatm_t *data){
 	if(fabs(data->slope+1)<EPS){
 		fractal_screen_do(fc, data);
 	}else{
@@ -222,7 +222,7 @@ static void genscreen_do(zfarr* fc, GENATM_T *data){
  * atmosphere will be different from data->share=0 due to different algorithms
  * used.
  */
-mapcell* genscreen(GENATM_T* data){
+mapcell* genscreen(genatm_t* data){
 	mapcell* screen;
 	long nlayer=data->nlayer;
 	char* fnatm=NULL;
@@ -295,7 +295,7 @@ map_t *genscreen_str(const char *header){
 	rand_t rstat;
 	seed_rand(&rstat, (int)seed);
 	real wt=1;
-	GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
+	genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
 	mapcell* screen=genscreen(&cfg);
 	map_t *out=mapref(screen->p[0]);
 	out->header=strdup(header);
@@ -309,7 +309,7 @@ map_t* genatm_simple(real r0, real L0, real dx, long nx){
 	rand_t rstat;
 	seed_rand(&rstat, 1);
 	real wt=1.;
-	GENATM_T cfg={&rstat, &wt, r0, &L0, dx, 0, 0, -11./3., nx, nx, 1, 0, 0, 0, 0};
+	genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, -11./3., nx, nx, 1, 0, 0, 0, 0};
 	mapcell* screens=genscreen(&cfg);
 	map_t* out=mapref(screens->p[0]);
 	cellfree(screens);

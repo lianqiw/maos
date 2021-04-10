@@ -21,5 +21,5 @@
 */
 #ifndef AOS_SETUP_TSURF
 #define AOS_SETUP_TSURF
-void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon);
+void setup_surf(const parms_t *parms, aper_t *aper, powfs_t *powfs, recon_t *recon);
 #endif

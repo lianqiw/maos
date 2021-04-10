@@ -18,7 +18,7 @@
 void TomoR(dcell **xout, const void *A, 
 	   const dcell *xin, const real alpha){
     
-    const RECON_T *recon=(const RECON_T *)A;
+    const recon_t *recon=(const recon_t *)A;
     dcell *x2=NULL;
     dcellcp(&x2, xin);
     TTFR(x2, recon->TTF, recon->PTTF);
@@ -31,7 +31,7 @@ void TomoR(dcell **xout, const void *A,
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const real alpha){
 
-    const RECON_T *recon=(const RECON_T *)A;
+    const recon_t *recon=(const recon_t *)A;
     dcell *gg=NULL;
     dspcellmulmat_thread(&gg, recon->G0tomo, xin, 1.,recon->nthread);
     TTFR(gg, recon->TTF, recon->PTTF);
@@ -62,7 +62,7 @@ void MUV(dcell **xout, const void *A,
        xout=(muv.M-muv.U*muv.V')*xin*alpha; U,V are low
        rank.
     */
-    const MUV_T *muv=(const MUV_T *)A;
+    const muv_t *muv=(const muv_t *)A;
 
     dspcellmulmat(xout, muv->M, xin, alpha);
     dcell *tmp=NULL;
@@ -78,7 +78,7 @@ TIC;
 static int test_tomo(){
     dbg("Tomo\n");
     dcell *grad=dcellread("grad.bin");
-    MUV_T RR;
+    muv_t RR;
     RR.M=dspcellread("RRM.bin"); 
     RR.U=dcellread("RRU.bin");
     RR.V=dcellread("RRV.bin");
@@ -87,7 +87,7 @@ static int test_tomo(){
     MUV(&rhs, &RR, grad, 1);
     toc("");
     writebin(rhs,"rhs.bin");
-    MUV_T RL;
+    muv_t RL;
     RL.M=dspcellread("RLM.bin");
     RL.U=dcellread("RLU.bin");
     RL.V=dcellread("RLV.bin");
@@ -98,7 +98,7 @@ static int test_tomo(){
     } 
     toc("");
     writebin(junk,"MUV1.bin");
-    RECON_T *recon=mycalloc(1,RECON_T);
+    recon_t *recon=mycalloc(1,recon_t);
     recon->G0=dspcellread("G0.bin");
     recon->TT=dcellread("TT.bin");
     recon->PTT=dcellread("PTT.bin");
@@ -123,11 +123,11 @@ static int test_tomo(){
 static int test_fit(){
     dbg("Fit\n");
     dcell *opdr=dcellread("opdr.bin");
-    MUV_T FR;
+    muv_t FR;
     FR.M=dspcellread("FRM.bin");
     FR.U=dcellread("FRU.bin");
     FR.V=dcellread("FRV.bin");
-    MUV_T FL;
+    muv_t FL;
     FL.M=dspcellread("FLM.bin");
     FL.U=dcellread("FLU.bin");
     FL.V=dcellread("FLV.bin");
@@ -143,7 +143,7 @@ static int test_fit(){
     toc("");
     writebin(rhs,"fit_rhs1.bin");
     writebin(MUV_f,"MUV_f.bin");
-    RECON_T *recon=mycalloc(1,RECON_T);
+    recon_t *recon=mycalloc(1,recon_t);
     recon->HX=dspcellread("HX.bin");
     recon->HA=dspcellread("HA.bin");
     recon->W1=dread("W1.bin");

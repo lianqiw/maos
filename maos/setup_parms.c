@@ -33,7 +33,7 @@ extern int use_cuda;
   This file contains necessary routines to read parametes for
   WFS, DM and wavefront reconstruction.  */
 
-void free_powfs_cfg(POWFS_CFG_T* powfscfg){
+void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	dfree(powfscfg->wvl);
 	if(powfscfg->wvlwts){
 		dfree(powfscfg->wvlwts);
@@ -73,7 +73,7 @@ void free_strarr(char** str, int n){
 /**
    Free the parms struct.
 */
-void free_parms(PARMS_T* parms){
+void free_parms(parms_t* parms){
 	dfree(parms->atm.ht);
 	dfree(parms->atm.wt);
 	dfree(parms->atm.ws);
@@ -233,10 +233,10 @@ static inline int sum_dblarr(int n, real *a){
    Read wfs geometry. powfs stands for physical optics wfs,
    it is used to represent the types of WFS.
 */
-static void readcfg_powfs(PARMS_T* parms){
+static void readcfg_powfs(parms_t* parms){
 	int     npowfs, i;
 	parms->npowfs=npowfs=readcfg_peek_n("powfs.dsa");
-	parms->powfs=mycalloc(parms->npowfs, POWFS_CFG_T);
+	parms->powfs=mycalloc(parms->npowfs, powfs_cfg_t);
 	int* inttmp=NULL;
 	real* dbltmp=NULL;
 	char** strtmp=NULL;
@@ -374,7 +374,7 @@ static void readcfg_powfs(PARMS_T* parms){
 	READ_POWFS_RELAX(int, modulring);
 	READ_POWFS_RELAX(int, nwfs);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-		POWFS_CFG_T* powfsi=&parms->powfs[ipowfs];
+		powfs_cfg_t* powfsi=&parms->powfs[ipowfs];
 		if(!isfinite(powfsi->hs)&&powfsi->fnllt){
 			warning("powfs %d is at infinity, disable LLT\n", ipowfs);
 			free(powfsi->fnllt);
@@ -386,7 +386,7 @@ static void readcfg_powfs(PARMS_T* parms){
 		if(powfsi->fnllt){
 #define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
 			open_config(powfsi->fnllt, prefix, -1);
-			powfsi->llt=mycalloc(1, LLT_CFG_T);
+			powfsi->llt=mycalloc(1, llt_cfg_t);
 			READ_LLT(dbl, d);
 			READ_LLT(dbl, widthp);
 			READ_LLT(dbl, ttrat);
@@ -418,7 +418,7 @@ static void readcfg_powfs(PARMS_T* parms){
 		/*
 		if(powfsi->fndither){
 			open_config(powfsi->fndither, prefix, 0);
-			powfsi->dither=mycalloc(1, DITHER_CFG_T);
+			powfsi->dither=mycalloc(1, dither_cfg_t);
 #define READ_DITHER(type,key) powfsi->dither->key=readcfg_##type("%sdither."#key, prefix)
 			READ_DITHER(int, mode);
 			READ_DITHER(dbl, amp);
@@ -451,10 +451,10 @@ static void readcfg_powfs(PARMS_T* parms){
 /**
    Read in parameters of wfs, including GS direction, signal level, wvlwts, etc.
 */
-static void readcfg_wfs(PARMS_T* parms){
+static void readcfg_wfs(parms_t* parms){
 	int i;
 	int nwfs=parms->nwfs=readcfg_peek_n("wfs.thetax");
-	parms->wfs=mycalloc(parms->nwfs, struct WFS_CFG_T);
+	parms->wfs=mycalloc(parms->nwfs, struct wfs_cfg_t);
 	real* dbltmp=NULL;
 	int* inttmp=NULL;
 	char** strtmp=NULL;
@@ -479,7 +479,7 @@ static void readcfg_wfs(PARMS_T* parms){
 			continue;
 		} else{
 			if(ipowfs<kpowfs){
-				memcpy(parms->powfs+ipowfs, parms->powfs+kpowfs, sizeof(POWFS_CFG_T));
+				memcpy(parms->powfs+ipowfs, parms->powfs+kpowfs, sizeof(powfs_cfg_t));
 			}
 		}
 		int mwfs=parms->powfs[ipowfs].nwfs;
@@ -571,10 +571,10 @@ static void readcfg_wfs(PARMS_T* parms){
 /**
    Read in deformable mirror parameters.
 */
-static void readcfg_dm(PARMS_T* parms){
+static void readcfg_dm(parms_t* parms){
 	int ndm, i;
 	ndm=parms->ndm=readcfg_peek_n("dm.ht");
-	parms->dm=mycalloc(parms->ndm, struct DM_CFG_T);
+	parms->dm=mycalloc(parms->ndm, struct dm_cfg_t);
 	int* inttmp=NULL;
 	real* dbltmp=NULL;
 	char** strtmp=NULL;
@@ -641,11 +641,11 @@ static void readcfg_dm(PARMS_T* parms){
 /**
    Read in MOAO parameters.
 */
-static void readcfg_moao(PARMS_T* parms){
+static void readcfg_moao(parms_t* parms){
 	int nmoao=readcfg_peek_n("moao.dx");
 	int i;
 	parms->nmoao=nmoao;
-	parms->moao=mycalloc(nmoao, MOAO_CFG_T);
+	parms->moao=mycalloc(nmoao, moao_cfg_t);
 	int* inttmp=NULL;
 	real* dbltmp=NULL;
 	char** strtmp=NULL;
@@ -669,7 +669,7 @@ static void readcfg_moao(PARMS_T* parms){
 /**
    Read in atmosphere parameters.
 */
-static void readcfg_atm(PARMS_T* parms){
+static void readcfg_atm(parms_t* parms){
 	READ_DBL(atm.r0z);
 	//READ_DBL(atm.L0);
 	READ_DBL(atm.dx);
@@ -702,7 +702,7 @@ static void readcfg_atm(PARMS_T* parms){
 /**
    Read in atmosphere reconstruction parameters.
 */
-static void readcfg_atmr(PARMS_T* parms){
+static void readcfg_atmr(parms_t* parms){
 	READ_DBL(atmr.r0z);
 	if(parms->atmr.r0z<=0){
 		parms->atmr.r0z=parms->atm.r0z;
@@ -731,7 +731,7 @@ static void readcfg_atmr(PARMS_T* parms){
 /**
    Read in aperture definitions.
 */
-static void readcfg_aper(PARMS_T* parms){
+static void readcfg_aper(parms_t* parms){
 	real* dtmp;
 	/*aper.d may contain one for [d] or two numbers for [d din] */
 	int nd=readcfg_dblarr(&dtmp, "aper.d");
@@ -759,7 +759,7 @@ static void readcfg_aper(PARMS_T* parms){
 /**
    Read in performance evaluation science point parameters.
 */
-static void readcfg_evl(PARMS_T* parms){
+static void readcfg_evl(parms_t* parms){
 	READ_DMAT(evl.thetax);
 	//parms->evl.thetax=readcfg_dmat("evl.thetax");
 	parms->evl.nevl=parms->evl.thetax->nx;
@@ -810,7 +810,7 @@ static void readcfg_evl(PARMS_T* parms){
 /**
    Read in turbulence tomography parameters.
 */
-static void readcfg_tomo(PARMS_T* parms){
+static void readcfg_tomo(parms_t* parms){
 	READ_INT(tomo.pos);
 	READ_INT(tomo.cone);
 	READ_INT(tomo.square);
@@ -839,7 +839,7 @@ static void readcfg_tomo(PARMS_T* parms){
 
 /**
    Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao() */
-static void readcfg_fit(PARMS_T* parms){
+static void readcfg_fit(parms_t* parms){
 	READ_DMAT(fit.thetax);
 	//parms->fit.thetax=readcfg_dmat("fit.thetax");
 	parms->fit.nfit=parms->fit.thetax->nx;
@@ -878,7 +878,7 @@ static void readcfg_fit(PARMS_T* parms){
 /**
    Read LSR parameters.
 */
-static void readcfg_lsr(PARMS_T* parms){
+static void readcfg_lsr(parms_t* parms){
 	READ_DBL(lsr.tikcr);
 	READ_DBL(lsr.svdthres);
 	READ_STR(lsr.fnreg);
@@ -893,7 +893,7 @@ static void readcfg_lsr(PARMS_T* parms){
 /**
    Read general reconstruction parameters
 */
-static void readcfg_recon(PARMS_T* parms){
+static void readcfg_recon(parms_t* parms){
 	READ_INT(recon.alg);
 	READ_INT(recon.glao);
 	READ_INT(recon.split);
@@ -917,7 +917,7 @@ static void readcfg_recon(PARMS_T* parms){
 /**
    Read in simulation parameters
 */
-static void readcfg_sim(PARMS_T* parms){
+static void readcfg_sim(parms_t* parms){
 	READ_DBL(sim.fcfocus);
 	READ_DBL(sim.fcttm);
 	READ_INT(sim.mffocus);
@@ -996,7 +996,7 @@ static void readcfg_sim(PARMS_T* parms){
 /**
    Read in parameters for Cn2 estimation.
 */
-static void readcfg_cn2(PARMS_T* parms){
+static void readcfg_cn2(parms_t* parms){
 /*for Cn2 Estimation. */
 	READ_DMAT(cn2.pair);
 	//parms->cn2.pair = readcfg_dmat("cn2.pair");
@@ -1020,7 +1020,7 @@ static void readcfg_cn2(PARMS_T* parms){
 /**
    Specify which variables to plot
 */
-static void readcfg_plot(PARMS_T* parms){
+static void readcfg_plot(parms_t* parms){
 
 	READ_INT(plot.setup);
 	READ_INT(plot.atm);
@@ -1052,7 +1052,7 @@ dmat* dbl2pair(real val){
 /**
    Read in debugging parameters
 */
-static void readcfg_dbg(PARMS_T* parms){
+static void readcfg_dbg(parms_t* parms){
 	READ_INT(dbg.wamethod);
 	READ_DMAT(dbg.atm); if(dsumabs(parms->dbg.atm)==0){ dfree(parms->dbg.atm); parms->dbg.atm=NULL; }
 	READ_INT(dbg.mvstlimit);
@@ -1099,7 +1099,7 @@ static void readcfg_dbg(PARMS_T* parms){
 /**
    Read in GPU options
 */
-static void readcfg_gpu(PARMS_T* parms){
+static void readcfg_gpu(parms_t* parms){
 	READ_INT(gpu.wfs);
 	READ_INT(gpu.evl);
 	READ_INT(gpu.tomo);
@@ -1111,7 +1111,7 @@ static void readcfg_gpu(PARMS_T* parms){
 /**
    Specify which variables to save
 */
-static void readcfg_save(PARMS_T* parms){
+static void readcfg_save(parms_t* parms){
 	READ_INT(save.extra);
 	READ_INT(save.all);
 	READ_INT(save.setup);
@@ -1178,7 +1178,7 @@ static void readcfg_save(PARMS_T* parms){
 	READ_INT(save.mvmf);
 	READ_INT(save.mvm);
 }
-static void readcfg_misreg(PARMS_T* parms){
+static void readcfg_misreg(parms_t* parms){
 	parms->misreg.pupil=readcfg_dmat_nmax(2, "misreg.pupil");
 	readcfg_strarr_nmax(&parms->misreg.tel2wfs, parms->nwfs, "misreg.tel2wfs");
 	readcfg_strarr_nmax(&parms->misreg.dm2wfs, parms->ndm*parms->nwfs, "misreg.dm2wfs");
@@ -1187,7 +1187,7 @@ static void readcfg_misreg(PARMS_T* parms){
 /**
    Specify which variables to load from saved files (Usually from LAOS
    simulations) */
-static void readcfg_load(PARMS_T* parms){
+static void readcfg_load(parms_t* parms){
 
 	READ_STR(load.atm);
 	READ_STR(load.locs);
@@ -1223,7 +1223,7 @@ static void readcfg_load(PARMS_T* parms){
    DM conjugation range is not changed!
    2012-04-07: Relocated to beginning
 */
-static void setup_parms_postproc_za(PARMS_T* parms){
+static void setup_parms_postproc_za(parms_t* parms){
 	real cosz=cos(parms->sim.za);
 	real secz=1./cosz;
 	if(parms->sim.htel){
@@ -1279,7 +1279,7 @@ static void setup_parms_postproc_za(PARMS_T* parms){
 /**
    Process simulation parameters to find incompatibility.
 */
-static void setup_parms_postproc_sim(PARMS_T* parms){
+static void setup_parms_postproc_sim(parms_t* parms){
 	if(parms->sim.skysim){
 		if(disable_save){
 			error("sim.skysim requires saving. Please specify output folder\n");
@@ -1394,7 +1394,7 @@ static void setup_parms_postproc_sim(PARMS_T* parms){
    -# which wfs belongs to which powfs.
    -# necessary adjustments if outputing WFS PSF.
 */
-static void setup_parms_postproc_wfs(PARMS_T* parms){
+static void setup_parms_postproc_wfs(parms_t* parms){
 	if(parms->sim.evlol||parms->sim.idealfit||parms->sim.idealtomo){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			free_powfs_cfg(&parms->powfs[ipowfs]);
@@ -1410,7 +1410,7 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 	}
 	//Check powfs.dsa
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		POWFS_CFG_T* powfsi=&parms->powfs[ipowfs];
+		powfs_cfg_t* powfsi=&parms->powfs[ipowfs];
 		if(powfsi->dsa<=-1){//Order
 			powfsi->dsa=parms->aper.d/(-powfsi->dsa);
 		} else if(powfsi->dsa<0){//In unit of d
@@ -1843,7 +1843,7 @@ static void setup_parms_postproc_wfs(PARMS_T* parms){
 /**
    The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
 */
-static void setup_parms_postproc_siglev(PARMS_T* parms){
+static void setup_parms_postproc_siglev(parms_t* parms){
 	real sigscale=parms->sim.dt>0?(parms->sim.dt*800):1;
 	if(fabs(sigscale-1.)>EPS){
 		info("sim.dt is 1/%g, need to scale siglev and bkgrnd by %g.\n", 1/parms->sim.dt, sigscale);
@@ -1871,7 +1871,7 @@ static void setup_parms_postproc_siglev(PARMS_T* parms){
    1) drop weak layers.
    2) find ground layer
 */
-static void setup_parms_postproc_atm(PARMS_T* parms){
+static void setup_parms_postproc_atm(parms_t* parms){
 	/*
 	  Drop weak turbulence layers in simulation.
 
@@ -2082,7 +2082,7 @@ static void setup_parms_postproc_atm(PARMS_T* parms){
 
 
 }
-static void setup_parms_postproc_dirs(PARMS_T* parms){
+static void setup_parms_postproc_dirs(parms_t* parms){
 	//Collect all beam directions 
 	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
 	parms->dirs=dnew(3, ndir);
@@ -2142,7 +2142,7 @@ static void setup_parms_postproc_dirs(PARMS_T* parms){
    all layers.  todo:may need to consider L0 Must be after
    setup_parms_postproc_za.
 */
-static void setup_parms_postproc_atm_size(PARMS_T* parms){
+static void setup_parms_postproc_atm_size(parms_t* parms){
 	const int nps=parms->atm.nps;
 	int Nmax=0;
 	long nxout[nps], nyout[nps];
@@ -2212,7 +2212,7 @@ static int arrind(real *arr, int *n, real val){
    star range..
 
 */
-static void setup_parms_postproc_dm(PARMS_T* parms){
+static void setup_parms_postproc_dm(parms_t* parms){
 	/*disable cache for low order systems. */
 	if(parms->sim.cachedm){
 		if(parms->evl.nevl<2&&parms->nwfs<2){
@@ -2255,7 +2255,7 @@ static void setup_parms_postproc_dm(PARMS_T* parms){
    simulation. First find out the guide star conjugate. Only 1
    altitude is allowed.
 */
-static void setup_parms_postproc_recon(PARMS_T* parms){
+static void setup_parms_postproc_recon(parms_t* parms){
 	if(parms->nmoao>0){//remove unused moao configurations
 		int count=0;
 		for(int imoao=0; imoao<parms->nmoao; imoao++){
@@ -2383,7 +2383,7 @@ static void setup_parms_postproc_recon(PARMS_T* parms){
 	}
 
 	if(parms->recon.glao){
-		parms->wfsr=mycalloc(parms->npowfs, WFS_CFG_T);
+		parms->wfsr=mycalloc(parms->npowfs, wfs_cfg_t);
 		parms->nwfsr=parms->npowfs;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->wfsr[ipowfs].thetax=0;
@@ -2629,7 +2629,7 @@ static void setup_parms_postproc_recon(PARMS_T* parms){
 /**
    postproc misc parameters.
 */
-static void setup_parms_postproc_misc(PARMS_T* parms, int over_ride){
+static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 	if(!disable_save&&parms->sim.end>parms->sim.start){
 	/*Remove seeds that are already done. */
 		char fn[80];
@@ -2737,7 +2737,7 @@ static void setup_parms_postproc_misc(PARMS_T* parms, int over_ride){
 /**
    Selectively print out parameters for easy diagnose of possible mistakes.
 */
-static void print_parms(const PARMS_T* parms){
+static void print_parms(const parms_t* parms){
 
 	int i;
 	const char* const phytype[]={
@@ -2983,7 +2983,7 @@ static void print_parms(const PARMS_T* parms){
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-PARMS_T* setup_parms(const char* mainconf, const char* extraconf, int over_ride){
+parms_t* setup_parms(const char* mainconf, const char* extraconf, int over_ride){
 	if(!mainconf){
 		mainconf="default.conf";
 	}
@@ -3002,7 +3002,7 @@ PARMS_T* setup_parms(const char* mainconf, const char* extraconf, int over_ride)
 	free(config_path);
 	open_config(mainconf, NULL, 0);/*main .conf file. */
 	open_config(extraconf, NULL, 1);
-	PARMS_T* parms=mycalloc(1, PARMS_T);
+	parms_t* parms=mycalloc(1, parms_t);
 	readcfg_sim(parms);
 	readcfg_aper(parms);
 	readcfg_atm(parms);
@@ -3080,7 +3080,7 @@ PARMS_T* setup_parms(const char* mainconf, const char* extraconf, int over_ride)
    Additional setup_parms code to run when maos is running. It only contains GPU
    initialization code for the moment.
 */
-void setup_parms_gpu(PARMS_T* parms, int* gpus, int ngpu){
+void setup_parms_gpu(parms_t* parms, int* gpus, int ngpu){
 #if USE_CUDA 
 	if(parms->sim.end==0){
 		use_cuda=0;
@@ -3196,6 +3196,6 @@ void setup_parms_gpu(PARMS_T* parms, int* gpus, int ngpu){
 			parms->fit.cachex=0;
 		}
 	} else{
-		memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
+		memset(&(parms->gpu), 0, sizeof(gpu_cfg_t));
 	}
 }

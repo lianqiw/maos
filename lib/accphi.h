@@ -29,7 +29,7 @@
 /**
    Unified data structure for automatic selection of propagation.
 */
-typedef struct PROPDATA_T{
+typedef struct propdata_t{
     /*Input.  */
     map_t *mapin;
     /*Or */
@@ -57,7 +57,7 @@ typedef struct PROPDATA_T{
     int wrap;
     int nooptim;/*disable optim. */
     int index;
-}PROPDATA_T;
+}propdata_t;
 void prop(thread_t *data);/*A unified wrapper */
 
 #define ARGIN_GRID						\

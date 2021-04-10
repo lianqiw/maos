@@ -23,7 +23,7 @@
 /**
    Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
 static dspcell*
-setup_fit_HXF(const FIT_T* fit){
+setup_fit_HXF(const fit_t* fit){
 	info("Generating HXF");TIC;tic;
 	if(!fit->xloc) return 0;
 	const int nfit=fit->thetax->nx;
@@ -48,7 +48,7 @@ setup_fit_HXF(const FIT_T* fit){
 /**
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
 static dspcell*
-setup_fit_HA(FIT_T* fit){
+setup_fit_HA(fit_t* fit){
 	const int nfit=fit->thetax->nx;
 	const int ndm=fit->aloc->nx;
 	dspcell* HA=dspcellnew(nfit, ndm);
@@ -109,7 +109,7 @@ setup_fit_HA(FIT_T* fit){
    operator. typically include piston on each DM and tip/tilt on certain
    DMs. Becareful with tip/tilt contraint when using CBS.  */
 static void
-setup_fit_lrt(FIT_T* fit){
+setup_fit_lrt(fit_t* fit){
 	const int ndm=fit->aloc->nx;
 	fit->NW=dcellnew(ndm, 1);
 	//real fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
@@ -198,7 +198,7 @@ setup_fit_lrt(FIT_T* fit){
    For details see www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803
 */
 static void
-setup_fit_matrix(FIT_T* fit){
+setup_fit_matrix(fit_t* fit){
 	const int nfit=fit->thetax->nx;
 	const int ndm=fit->aloc->nx;
 	if(ndm==0) return;
@@ -333,7 +333,7 @@ setup_fit_matrix(FIT_T* fit){
 /**
    A generic DM fitting routine.
  */
-void setup_fit(FIT_T* fit, int idealfit){
+void setup_fit(fit_t* fit, int idealfit){
 	TIC;tic;
 	if(!idealfit&&fit->xloc){
 		fit->HXF=setup_fit_HXF(fit);
@@ -357,7 +357,7 @@ void setup_fit(FIT_T* fit, int idealfit){
 	fit->FL.maxit=fit->flag.maxit;
 	toc("Setting up DM Fitting.");
 }
-void free_fit(FIT_T* fit, int nfit){
+void free_fit(fit_t* fit, int nfit){
 	if(!fit) return;
 	for(int ifit=0; ifit<nfit; ifit++){
 		if(!fit[ifit].isref){
@@ -376,8 +376,8 @@ void free_fit(FIT_T* fit, int nfit){
 /**
    Setup DM fitting parameters
 */
-void setup_recon_fit(RECON_T* recon, const PARMS_T* parms){
-	FIT_T* fit=mycalloc(1, FIT_T);
+void setup_recon_fit(recon_t* recon, const parms_t* parms){
+	fit_t* fit=mycalloc(1, fit_t);
 	recon->fit=fit;
 	fit->thetax=parms->fit.thetax;
 	fit->thetay=parms->fit.thetay;
@@ -393,7 +393,7 @@ void setup_recon_fit(RECON_T* recon, const PARMS_T* parms){
 	fit->actfloat=recon->actfloat;
 	fit->actstuck=recon->actstuck;
 	fit->misreg=parms->recon.misreg_dm2sci;
-	memcpy(&fit->flag, &parms->fit, sizeof(FIT_CFG_T));//use parms->fit.
+	memcpy(&fit->flag, &parms->fit, sizeof(fit_cfg_t));//use parms->fit.
 	if(parms->fit.assemble){
 		if(parms->load.fit){
 			if(!(zfexist("FRM")&&zfexist("FRU")&&zfexist("FRV"))){
@@ -459,19 +459,19 @@ void setup_recon_fit(RECON_T* recon, const PARMS_T* parms){
 /**
    Setting fitting parameter for turbulence to WFS lenslet grid.
  */
-void setup_powfs_fit(POWFS_T* powfs, const RECON_T* recon, const PARMS_T* parms){
+void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].lo) continue;
 		int nwfs=parms->powfs[ipowfs].nwfs;
-		FIT_T* fitall=powfs[ipowfs].fit=mycalloc(nwfs, FIT_T);
+		fit_t* fitall=powfs[ipowfs].fit=mycalloc(nwfs, fit_t);
 		loc_t* wfsloc=mkannloc(parms->aper.d+parms->powfs[ipowfs].dsa*2, 0, parms->powfs[ipowfs].dsa, 0);
 		wfsloc->ht=parms->powfs[ipowfs].hc;
 		wfsloc->iac=parms->dbg.wfs_iac;//cubic spline better fits the turbulence.
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
 			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-			FIT_T* fit=fitall+jwfs;
+			fit_t* fit=fitall+jwfs;
 			if(jwfs==0){
-				memcpy(&fit->flag, &parms->fit, sizeof(FIT_CFG_T));//use parms->fit.
+				memcpy(&fit->flag, &parms->fit, sizeof(fit_cfg_t));//use parms->fit.
 				fit->flag.alg=0;
 				fit->flag.assemble=0;
 				fit->notrecon=1; //not for reconstruction
@@ -492,7 +492,7 @@ void setup_powfs_fit(POWFS_T* powfs, const RECON_T* recon, const PARMS_T* parms)
 					dcellfree(fit->FL.V);
 				}
 			} else{
-				memcpy(fitall+jwfs, fitall, sizeof(FIT_T));
+				memcpy(fitall+jwfs, fitall, sizeof(fit_t));
 				fit->isref=1;
 				fit->FR.Mdata=fit;
 				fit->FL.Mdata=fit;
@@ -506,12 +506,12 @@ void setup_powfs_fit(POWFS_T* powfs, const RECON_T* recon, const PARMS_T* parms)
 /**
    Call this instead of free_fit directly to free powfs fit parameters.
 */
-void free_powfs_fit(POWFS_T* powfs, const PARMS_T* parms){
+void free_powfs_fit(powfs_t* powfs, const parms_t* parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		FIT_T* fitall=powfs[ipowfs].fit;
+		fit_t* fitall=powfs[ipowfs].fit;
 		if(!fitall) continue;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			FIT_T* fit=fitall+jwfs;
+			fit_t* fit=fitall+jwfs;
 			dfree(fit->thetax);
 			dfree(fit->thetay);
 			if(!fit->isref){

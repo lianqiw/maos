@@ -56,31 +56,31 @@ public:
     curcell dm_wfs;/**<moao results for wfs for warm restart*/
     curcell dm_evl;/**<moao results for evl for warm restart*/
     /*the following data reside in the gpu memory*/
-    friend void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
-    friend void gpu_update_recon_cn2(const PARMS_T *parms, RECON_T *recon);
+    friend void gpu_update_recon(const parms_t *parms, recon_t *recon);
+    friend void gpu_update_recon_cn2(const parms_t *parms, recon_t *recon);
 public:
-    curecon_t(const PARMS_T *parms=0, RECON_T *recon=0);
+    curecon_t(const parms_t *parms=0, recon_t *recon=0);
     void reset_config();
     ~curecon_t(){
 	reset_config();
 	delete grid;
     }
     void reset_runtime();
-    void update(const PARMS_T *parms, RECON_T *recon);
-    void update_cn2(const PARMS_T *parms, RECON_T *recon);
+    void update(const parms_t *parms, recon_t *recon);
+    void update_cn2(const parms_t *parms, recon_t *recon);
     Real tomo(dcell **_opdr, dcell **gngsmvst, const dcell *_gradin);
     Real fit(dcell **_dmfit, dcell *_opdr);
     Real moao_recon(dcell *_dmfit, dcell *_opdr);
     void moao_filter(dcell *_dm_wfs, dcell *_dm_evl);
     void mvm(dcell **_dmerr, dcell *_gradin);
-    void tomo_test(SIM_T *simu);
-    void fit_test(SIM_T *simu);
+    void tomo_test(sim_t *simu);
+    void fit_test(sim_t *simu);
 };
 
 }//namespace
 
-void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon);
-void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon);
+void gpu_setup_recon_mvm_trans(const parms_t *parms, recon_t *recon);
+void gpu_setup_recon_mvm_direct(const parms_t *parms, recon_t *recon);
 
 
 #endif

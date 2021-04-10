@@ -22,7 +22,7 @@
 #ifndef MAOS_MOAO_H
 #define MAOS_MOAO_H
 #include "types.h"
-void free_recon_moao(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_moao(RECON_T *recon, const PARMS_T *parms);
-void moao_recon(SIM_T *simu);
+void free_recon_moao(recon_t *recon, const parms_t *parms);
+void setup_recon_moao(recon_t *recon, const parms_t *parms);
+void moao_recon(sim_t *simu);
 #endif

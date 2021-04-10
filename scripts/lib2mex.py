@@ -92,7 +92,7 @@ def handle_type(argtype):
         mx2c='unknown'
         c2mx='cn2est2mx'
         free_c='cn2est_free'
-    elif argtype=='DTF_T*':
+    elif argtype=='dtf_t*':
         mx2c='unknown'
         c2mx='dtf2mx'
         free_c='dtf_free'

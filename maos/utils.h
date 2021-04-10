@@ -28,25 +28,25 @@ extern char _binary____config_tar_gz_start;
 extern char _binary____config_tar_gz_end;
 #endif
 
-void plotloc(const char *fig, const PARMS_T *parms, 
+void plotloc(const char *fig, const parms_t *parms, 
 	     loc_t *loc, real ht, const char *format,...);
 void rename_file(int sig);
 int maos_signal_handler(int sig);
-ARG_T* parse_args(int argc, const char *argv[]);
-char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, int isim);
+arg_t* parse_args(int argc, const char *argv[]);
+char *evl_header(const parms_t *parms, const aper_t *aper, int ievl, int iwvl, int isim);
 void apply_fieldstop(dmat *opd, const dmat *amp, const lmat *embed, long nembed, const dmat* fieldstop, real wvl);
 void display_server(int sock);
-void plot_setup(const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper, const RECON_T *recon);
+void plot_setup(const parms_t *parms, const powfs_t *powfs, const aper_t *aper, const recon_t *recon);
 dmat *mkamp(loc_t *loc, map_t *ampground, real misregx, real misregy, real D, real Din);
-void maxapriori(real *g, const dmat *ints, const PARMS_T *parms, 
-		const POWFS_T *powfs, int iwfs, int isa, int noisy,
+void maxapriori(real *g, const dmat *ints, const parms_t *parms, 
+		const powfs_t *powfs, int iwfs, int isa, int noisy,
 		real bkgrnd, real rne);
-void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs);
-void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const int iwfs);
-real wfsfocusadj(SIM_T *simu, int iwfs);
+void wfslinearity(const parms_t *parms, powfs_t *powfs, const int iwfs);
+void lgs_wfs_sph_psd(const parms_t *parms, powfs_t *powfs, recon_t *recon, const int iwfs);
+real wfsfocusadj(sim_t *simu, int iwfs);
 void dither_position(real *cs, real *ss, int alfsm, int dtrat, int npoint, int isim, real deltam);   
-void shwfs_grad(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype);
-dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs);
+void shwfs_grad(dmat **pgrad, dmat *ints[], const parms_t *parms, const powfs_t *powfs, int iwfs, int phytype);
+dcell *dcellread_prefix(const char *file, const parms_t *parms, int ipowfs);
 
 /**
    Create first order low pass filter coeffcient from cross over frequency and sampling rate.
