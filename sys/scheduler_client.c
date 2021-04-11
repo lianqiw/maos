@@ -55,7 +55,7 @@ int is_scheduler=0;
 
 
 #if MAOS_DISABLE_SCHEDULER
-void parse_host(char* line){
+void parse_host(const char* line){
 	(void)line;
 }
 const char* lookup_host(const char* hostname){
