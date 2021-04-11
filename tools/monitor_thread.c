@@ -141,7 +141,6 @@ static void host_added(int ihost, int sock){
 	FD_SET(sock, &active_fd_set);
 	UNLOCK(mhost);
 	add_host_wrap(-1);//wakes up listen_host().
-	info("connected to %s\n", hosts[ihost]);
 	gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
 }
 
@@ -207,7 +206,6 @@ static int respond(int sock){
 	int pid=cmd[2];
 	switch(cmd[0]){
 	case -1:{//server request shutdown
-		info("disconnect from %s\n", hosts[ihost]);
 		return -1;
 	}
 		   break;
