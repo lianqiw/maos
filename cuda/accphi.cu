@@ -242,7 +242,7 @@ void dm2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, int ndm,
 /**
    Convert NGS mode vector to aperture grid for science directions.  */
 void ngsmod2loc(curmat& opd, Real(*restrict loc)[2],
-	const NGSMOD_T* ngsmod, const real* mod,
+	const ngsmod_t* ngsmod, const real* mod,
 	real thetax, real thetay,
 	real alpha, cudaStream_t stream){
 	if(ngsmod->nmod==2){

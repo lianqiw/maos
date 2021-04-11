@@ -84,10 +84,9 @@ void rmpath(const char* path){
 			}
 			free(ia->path);
 			free(ia);
-			ia=ib;
-		} else{
-			ib=ia;
+			break;
 		}
+		ib=ia;
 	}
 	UNLOCK(mutex_path);
 	free(abspath);

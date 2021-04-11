@@ -92,7 +92,7 @@ void pywfs_grad(curmat& grad, /**<[out] gradients*/
 	const curmat& saa,  /**<[in] Subaperture normalized area*/
 	curmat& isum, /**<[out] Sum intensity*/
 	const curmat& goff, /**<[in] Gradient of flat wavefront*/
-	const PYWFS_T* pywfs,
+	const pywfs_t* pywfs,
 	cudaStream_t stream){
 	switch(pywfs->sigmatch){
 	case 0://No siglev correction
@@ -152,7 +152,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 	//Pyramid WFS
 	cupowfs_t* cupowfs=cuwfs.powfs;
 	stream_t& stream=cuwfs.stream;
-	PYWFS_T* pywfs=cupowfs->pywfs;
+	pywfs_t* pywfs=cupowfs->pywfs;
 	cuzero(cuwfs.pypsf, stream);
 	locfft_t* locfft=pywfs->locfft;
 	const int nwvl=locfft->wvl->nx;
@@ -260,7 +260,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 		//cuwrite(ints, "gpu_ints"); exit(0);
 	}
 }
-dmat* gpu_pywfs_mkg(const PYWFS_T* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod, real displacex, real displacey){
+dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod, real displacex, real displacey){
 	gpu_set(cuglobal->wfsgpu[pywfs->iwfs0]);
 	cuwfs_t& cuwfs=cuglobal->wfs[pywfs->iwfs0];
 	cupowfs_t* cupowfs=cuwfs.powfs;

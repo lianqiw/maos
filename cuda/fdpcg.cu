@@ -23,14 +23,14 @@
 #include "cucmat.h"
 
 namespace cuda_recon{
-void cufdpcg_t::update(FDPCG_T* fdpcg){
+void cufdpcg_t::update(fdpcg_t* fdpcg){
 	//copy or update Mb. 
 	int nxsave=fdpcg->Mbinv->nx;
 	fdpcg->Mbinv->nx=nb;
 	cp2gpu(Mb, fdpcg->Mbinv);
 	fdpcg->Mbinv->nx=nxsave;
 }
-cufdpcg_t::cufdpcg_t(FDPCG_T* fdpcg, const curecon_geom* _grid)
+cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 	:grid(_grid), fftnc(0), fftips(0), nb(0), bs(0), nby(0), nbz(0), scale(0){
 	if(!fdpcg) return;
 	scale=fdpcg->scale;
@@ -88,7 +88,7 @@ cufdpcg_t::cufdpcg_t(FDPCG_T* fdpcg, const curecon_geom* _grid)
 	/* notice: performance may be improved by using
 	   R2C FFTs instead of C2C. Need to update perm
 	   and Mbinv to use R2C.*/
-	GPU_FDPCG_T* FDDATA=new GPU_FDPCG_T[nps];
+	gpu_fdpcg_t* FDDATA=new gpu_fdpcg_t[nps];
 	for(int ips=0; ips<nps; ips++){
 		FDDATA[ips].nx=grid->xnx[ips];
 		FDDATA[ips].ny=grid->xny[ips];
@@ -98,8 +98,8 @@ cufdpcg_t::cufdpcg_t(FDPCG_T* fdpcg, const curecon_geom* _grid)
 			FDDATA[ips].scale=1.f;
 		}
 	}
-	fddata=Array<GPU_FDPCG_T, Gpu>(nps, 1);
-	cudaMemcpy(fddata(), FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
+	fddata=Array<gpu_fdpcg_t, Gpu>(nps, 1);
+	cudaMemcpy(fddata(), FDDATA, sizeof(gpu_fdpcg_t)*nps, cudaMemcpyHostToDevice);
 	CUDA_CHECK_ERROR;
 	delete[] FDDATA;
 }
@@ -146,7 +146,7 @@ __device__ static inline void do_scale(Comp& a, Real b){
 	a.y*=b;
 }
 template<typename T> __global__ static void
-fdpcg_scale(GPU_FDPCG_T* fddata, T* const* xall){
+fdpcg_scale(gpu_fdpcg_t* fddata, T* const* xall){
 	int ips=blockIdx.z;
 	int nx=fddata[ips].nx*fddata[ips].ny;
 	const int step=blockDim.x*gridDim.x;

@@ -280,14 +280,14 @@ dither_acc_do(Real* restrict* imb, Real* restrict* imx, Real* restrict* imy,
 		}
 	}
 }
-dither_t::dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
+Dither_t::Dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
 	imb=curcell(nsa, 1, pixpsax, pixpsay);
 	imx=curcell(nsa, 1, pixpsax, pixpsay);
 	imy=curcell(nsa, 1, pixpsax, pixpsay);
 }
 
 /**Accumulate for matched filter updating*/
-void dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, cudaStream_t stream){
+void Dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, cudaStream_t stream){
 	const int nsa=ints.N();
 	const int pixpsa=ints[0].N();
 	dither_acc_do<<<nsa, pixpsa, 0, stream>>>

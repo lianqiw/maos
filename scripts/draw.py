@@ -15,8 +15,8 @@ def coord2grid(x):
     if x2.max() > 0:
         dx = x2[x2 > 0].min()
         dx2 = 1/dx
-        nx = int(round((xmax-xmin)*dx2+1.))
-        ix = (x2*dx2).round().astype(int)
+        nx = np.round((xmax-xmin)*dx2+1.).astype(int)
+        ix = np.floor(x2*dx2+1e-5).astype(int)
     else:
         ix = np.zeros(x.shape)
         nx = 1
@@ -33,20 +33,25 @@ def isloc(arg):
     return arg.ndim == 2 and arg.shape[0] == 2
 
 
-def locembed(loc, opd):
+def locembed(loc, opd0):
     # draw(loc, opd): embed opd onto loc
+    opd=opd0.view()
     (ix, nx, dx, xi) = coord2grid(loc[0])
     (iy, ny, dy, yi) = coord2grid(loc[1])
 
     nloc = loc.shape[1]
-    nframe = opd.size/nloc
-    print(nx, ny)
-    if nframe != round(nframe):
-        print(loc.shape, opd.shape)
-        raise(Exception('Mismatch'))
-
-    nframe = int(nframe)
-    opd = opd.reshape((nframe, nloc))
+    if len(opd.shape)==1: #vector
+        nframe = opd.size/nloc
+        opd.shape=(int(nframe), nloc) #reshape() may do copy. assign .shape prevents copy
+    elif opd.shape[0]==nloc and opd.shape[1]!=nloc:
+        opd=opd.T
+    elif opd.shape[0]!=nloc and opd.shape[1]==nloc:
+        pass
+    else:
+        print("data has wrong shape", opd.shape)
+        return None,None
+    nframe=opd.shape[0]
+    
     # print('opd=',opd.shape)
     ims = np.zeros(nframe, dtype=object)
     for iframe in range(nframe):
@@ -62,9 +67,10 @@ def locembed(loc, opd):
 
 
 def draw(*args, **kargs):
-    if not 'keep' in kargs or kargs['keep'] == 0:
-        plt.clf()
-
+    #if not 'keep' in kargs or kargs['keep'] == 0:
+    #    plt.clf()
+    if type(args[0]) == None:
+        return
     if type(args[0]) == list or args[0].dtype == object:  # array of array
         kargs['keep'] = 1  # do not clear
         if type(args[0]) == list:

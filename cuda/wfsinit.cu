@@ -23,7 +23,7 @@
 #include "cudata.h"
 #include "../maos/pywfs.h"
 
-static void etf2gpu(cucmat& cuetf, ETF_T* etf, int icol){
+static void etf2gpu(cucmat& cuetf, etf_t* etf, int icol){
 	cmat* etfm=ccell_col(etf->etf, icol);
 	cp2gpu(cuetf, etfm);
 	cfree(etfm);
@@ -367,7 +367,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 					}
 				}
 				if(parms->powfs[ipowfs].dither){
-					cuwfs[iwfs].dither=dither_t(nsa, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
+					cuwfs[iwfs].dither=Dither_t(nsa, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 				}
 			}
 			const int msa=cuwfs[iwfs].msa;

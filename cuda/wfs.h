@@ -50,14 +50,14 @@ typedef struct cupowfs_t{
 	cupowfs_t():pywfs(0){};
 }cupowfs_t;
 /**For matched filter update*/
-class dither_t{
+class Dither_t{
 	int      imc;
 	curcell imb;
 	curcell imx;
 	curcell imy;
 public:
-	dither_t():imc(0){}
-	dither_t(int nsa, int pixpsax, int pixpsay);
+	Dither_t():imc(0){}
+	Dither_t(int nsa, int pixpsax, int pixpsay);
 	void acc(dither_t* dither, curcell& ints, Real cs, Real ss, int nstat, cudaStream_t stream);
 };
 class cuwfs_t{//one for each WFS.
@@ -110,7 +110,7 @@ public:
 	cucmat psfout;
 	cucmat psfstat;
 	/*For matched filter update*/
-	dither_t dither;
+	Dither_t dither;
 	/*For Pyramid WFS*/
 	cuccell pywvf;//Original PSF from OPD
 	cucmat pyotf; //Truncated OTF to be multiplied by pyramid and FFT.
