@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['exfun',['EXFUN',['../muv_8h.html#ac08a3e14e2da2bed5421d68dca791bc8',1,'muv.h']]]
+  ['exfun_5ft',['exfun_t',['../muv_8h.html#a967380fcfa3afee5999a7717d8d75ad6',1,'muv.h']]]
 ];

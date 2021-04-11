@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -127,8 +133,7 @@ Real *&#160;</td><td class="memItemRight" valign="bottom"><b>Px</b> ()</td></tr>
 <tr class="memitem:a0052a26d67ec0df33de0dd88cb7562fd"><td class="memItemLeft" align="right" valign="top"><a id="a0052a26d67ec0df33de0dd88cb7562fd"></a>
 const Real *&#160;</td><td class="memItemRight" valign="bottom"><b>Px</b> () const</td></tr>
 <tr class="separator:a0052a26d67ec0df33de0dd88cb7562fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3188077a0314e4e23234e29e84d8851"><td class="memItemLeft" align="right" valign="top"><a id="ab3188077a0314e4e23234e29e84d8851"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cusp</b> (const <a class="el" href="structdsp.html">dsp</a> *in, int tocsr=0, int transp=0)</td></tr>
+<tr class="memitem:ab3188077a0314e4e23234e29e84d8851"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcusp.html#ab3188077a0314e4e23234e29e84d8851">cusp</a> (const <a class="el" href="structdsp.html">dsp</a> *in, int tocsr=0, int transp=0)</td></tr>
 <tr class="separator:ab3188077a0314e4e23234e29e84d8851"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c3317731a12c1e4c25e03d04017cc2f"><td class="memItemLeft" align="right" valign="top"><a id="a8c3317731a12c1e4c25e03d04017cc2f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>cusp</b> (const <a class="el" href="classcusp.html">cusp</a> &amp;in)</td></tr>
@@ -146,8 +151,52 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>trans</b> ()</td></tr
 &#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
 <tr class="separator:a5a451593dcb626335bb4304c1ae9816f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="ab3188077a0314e4e23234e29e84d8851"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3188077a0314e4e23234e29e84d8851">&#9670;&nbsp;</a></span>cusp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cusp::cusp </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structdsp.html">dsp</a> *&#160;</td>
+          <td class="paramname"><em>src_csc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>tocsr</em> = <code>0</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>transp</em> = <code>0</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">src_csc</td><td>Source dsp in CSC </td></tr>
+    <tr><td class="paramname">tocsr</td><td>0: Keep in CSC. 1: Convert to CSR </td></tr>
+    <tr><td class="paramname">transp</td><td>1: transpose </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/types.h</li>
+<li>cuda/utils.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

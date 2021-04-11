@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -100,10 +106,10 @@ $(document).ready(function(){initNavTree('mkdtf_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDTF__T.html">DTF_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structETF__T.html">ETF_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structdtf__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a></td></tr>
+<tr class="separator:structdtf__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structetf__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a></td></tr>
+<tr class="separator:structetf__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -114,22 +120,170 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ae722de0003cbf2a4fa5d8b38af7c1161"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDTF__T.html">DTF_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#ae722de0003cbf2a4fa5d8b38af7c1161">mkdtf</a> (const <a class="el" href="structdmat.html">dmat</a> *wvls, real dxsa, real embfac, <a class="el" href="classlong.html">long</a> notfx, <a class="el" href="classlong.html">long</a> notfy, <a class="el" href="classlong.html">long</a> pixpsax, <a class="el" href="classlong.html">long</a> pixpsay, real pixthetax, real pixthetay, const <a class="el" href="structdmat.html">dmat</a> *pixoffx, const <a class="el" href="structdmat.html">dmat</a> *pixoffy, real pixblur, const <a class="el" href="structdcell.html">dcell</a> *srot, int radpix)</td></tr>
-<tr class="separator:ae722de0003cbf2a4fa5d8b38af7c1161"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa439d0eebf6550b6cb113c28249ed46a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structETF__T.html">ETF_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#aa439d0eebf6550b6cb113c28249ed46a">mketf</a> (<a class="el" href="structDTF__T.html">DTF_T</a> *dtfs, real hs, const <a class="el" href="structdcell.html">dcell</a> *sodium, int icol, const <a class="el" href="structdcell.html">dcell</a> *srot, const <a class="el" href="structdcell.html">dcell</a> *srsa, int no_interp)</td></tr>
-<tr class="separator:aa439d0eebf6550b6cb113c28249ed46a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19716a77285254ad96be1c657431356e"><td class="memItemLeft" align="right" valign="top"><a id="a19716a77285254ad96be1c657431356e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>dtf_free_do</b> (<a class="el" href="structDTF__T.html">DTF_T</a> *dtfs)</td></tr>
-<tr class="separator:a19716a77285254ad96be1c657431356e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f1821ad7b8d5eb6abffb6a2f37696ec"><td class="memItemLeft" align="right" valign="top"><a id="a0f1821ad7b8d5eb6abffb6a2f37696ec"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a class="el" href="structETF__T.html">ETF_T</a> *etfs)</td></tr>
-<tr class="separator:a0f1821ad7b8d5eb6abffb6a2f37696ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacf77f2c557f938e33483e9397220666"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#aacf77f2c557f938e33483e9397220666">mkdtf</a> (const <a class="el" href="structdmat.html">dmat</a> *wvls, real dxsa, real embfac, <a class="el" href="classlong.html">long</a> notfx, <a class="el" href="classlong.html">long</a> notfy, <a class="el" href="classlong.html">long</a> pixpsax, <a class="el" href="classlong.html">long</a> pixpsay, real pixthetax, real pixthetay, const <a class="el" href="structdmat.html">dmat</a> *pixoffx, const <a class="el" href="structdmat.html">dmat</a> *pixoffy, real pixblur, const <a class="el" href="structdcell.html">dcell</a> *srot, int radpix)</td></tr>
+<tr class="separator:aacf77f2c557f938e33483e9397220666"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9384dbb5f6c50141fa1f34528f53e618"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#a9384dbb5f6c50141fa1f34528f53e618">mketf</a> (<a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *dtfs, real hs, const <a class="el" href="structdcell.html">dcell</a> *sodium, int icol, const <a class="el" href="structdcell.html">dcell</a> *srot, const <a class="el" href="structdcell.html">dcell</a> *srsa, int no_interp)</td></tr>
+<tr class="separator:a9384dbb5f6c50141fa1f34528f53e618"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebceaa4b5aa6ca6e7aaa011d7dea2bc5"><td class="memItemLeft" align="right" valign="top"><a id="aebceaa4b5aa6ca6e7aaa011d7dea2bc5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>dtf_free_do</b> (<a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *dtfs)</td></tr>
+<tr class="separator:aebceaa4b5aa6ca6e7aaa011d7dea2bc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2d2722feb99b759b848cbab3f600eb3"><td class="memItemLeft" align="right" valign="top"><a id="ad2d2722feb99b759b848cbab3f600eb3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a> *etfs)</td></tr>
+<tr class="separator:ad2d2722feb99b759b848cbab3f600eb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42d0fe623bbbd35b36c395fd52904603"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#a42d0fe623bbbd35b36c395fd52904603">smooth</a> (const <a class="el" href="structdmat.html">dmat</a> *profile, real dxnew)</td></tr>
 <tr class="separator:a42d0fe623bbbd35b36c395fd52904603"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routine to generate detector transfer function and elongation transfer function due to sodium layer. </p>
-</div><h2 class="groupheader">Macro Definition Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structdtf__t" id="structdtf__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structdtf__t">&#9670;&nbsp;</a></span>dtf_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct dtf_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>contains the data associated with a detector transfer function for a subaperture. The PSF is computed as \(\textrm{PSF}=\frac{1}{N^2\sum(\textrm{amp}^2)}|\textrm{fftshift}\mathcal{F}[A \exp(-\frac{2\pi}{\lambda}\textrm{opd})]|^2\). The subaperture image is computed as \(I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]\) </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a9da2fd723c32ac42db3970244beb4f79"></a><a class="el" href="structccell.html">ccell</a> *</td>
+<td class="fieldname">
+nominal</td>
+<td class="fielddoc">
+<p>The FFT of the pixel functions </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a286ad92f245b487cf5683cbb40517b21"></a><a class="el" href="structdspcell.html">dspcell</a> *</td>
+<td class="fieldname">
+si</td>
+<td class="fielddoc">
+<p>The pixel selection </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a5710d2e6ee69fa1fb2f7b22f4580630d"></a>real</td>
+<td class="fieldname">
+wvl</td>
+<td class="fielddoc">
+<p>Wavelength </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a74cfb08bbacacfa58f7fb837470ad28e"></a>real</td>
+<td class="fieldname">
+dtheta</td>
+<td class="fielddoc">
+<p>Sampling of PSF </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a07e1f39a2b79613e1ae6c5af49afad59"></a><a class="el" href="structcmat.html">cmat</a> *</td>
+<td class="fieldname">
+Ux</td>
+<td class="fielddoc">
+<p>Special frequency vector along x </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af19273870883e70fe352903389d1a60e"></a><a class="el" href="structcmat.html">cmat</a> *</td>
+<td class="fieldname">
+Uy</td>
+<td class="fielddoc">
+<p>Special frequency vector along y </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab15a5c82c888875705395af6c0c4cec0"></a>real</td>
+<td class="fieldname">
+dxsa</td>
+<td class="fielddoc">
+<p>Subaperture size </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae1646c673549a19a82f01abcaa6d4421"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+notfx</td>
+<td class="fielddoc">
+<p>FFT size along x </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ade199dbf6e92bbdd73c2d077ddb7eb81"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+notfy</td>
+<td class="fielddoc">
+<p>FFT size along y </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae99947a455a836518b0efc123fc76d49"></a>int</td>
+<td class="fieldname">
+radpix</td>
+<td class="fielddoc">
+<p>1: Pixels are along radial/azimuthal direction </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a890fd793d738c02ea952e8d8b2cd8774"></a>int</td>
+<td class="fieldname">
+fused</td>
+<td class="fielddoc">
+<p>Whether the DTF has been fused to ETF </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab4a3fd5ff2f8df053bd35e191d096aa6"></a>int</td>
+<td class="fieldname">
+nwvl</td>
+<td class="fielddoc">
+<p>Number of <a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a name="structetf__t" id="structetf__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structetf__t">&#9670;&nbsp;</a></span>etf_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct etf_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a01fca37394bea435cdd481c6af060af1"></a><a class="el" href="structccell.html">ccell</a> *</td>
+<td class="fieldname">
+etf</td>
+<td class="fielddoc">
+<p>Store the 2D ETF when </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3705a423311b167c48b7e55b2770bc4f"></a>double</td>
+<td class="fieldname">
+hs</td>
+<td class="fielddoc">
+<p>Guide star height </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a951b28fa012fe5115c9edc6dedc05d4f"></a>int</td>
+<td class="fieldname">
+icol</td>
+<td class="fielddoc">
+<p>Store the column index </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3fcb5545d0b241bfd10256e1956fd79f"></a>int</td>
+<td class="fieldname">
+nwvl</td>
+<td class="fielddoc">
+<p>Number of <a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="a3a970db34227c79d8b55302019889911"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3a970db34227c79d8b55302019889911">&#9670;&nbsp;</a></span>dtf_free</h2>
 
@@ -145,7 +299,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>frees <a class="el" href="structDTF__T.html">DTF_T</a> </p>
+<p>frees <a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> </p>
 
 </div>
 </div>
@@ -164,19 +318,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>frees <a class="el" href="structETF__T.html">ETF_T</a> </p>
+<p>frees <a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a> </p>
 
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="ae722de0003cbf2a4fa5d8b38af7c1161"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae722de0003cbf2a4fa5d8b38af7c1161">&#9670;&nbsp;</a></span>mkdtf()</h2>
+<a id="aacf77f2c557f938e33483e9397220666"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aacf77f2c557f938e33483e9397220666">&#9670;&nbsp;</a></span>mkdtf()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structDTF__T.html">DTF_T</a>* mkdtf </td>
+          <td class="memname"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a>* mkdtf </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
           <td class="paramname"><em>wvls</em>, </td>
@@ -266,7 +420,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p><a class="el" href="mkdtf_8h.html#ae722de0003cbf2a4fa5d8b38af7c1161">mkdtf()</a> computes the parameters used to sample PSFs onto detectors in the Fourier domain. It incorporates size of the detector pixels, and charge diffusion. For polar coordinate detectors, it also rotates the pixels and pixel coordinates so that they are aranged along the radial and azimuthal direction. </p>
+<p><a class="el" href="mkdtf_8h.html#aacf77f2c557f938e33483e9397220666">mkdtf()</a> computes the parameters used to sample PSFs onto detectors in the Fourier domain. It incorporates size of the detector pixels, and charge diffusion. For polar coordinate detectors, it also rotates the pixels and pixel coordinates so that they are aranged along the radial and azimuthal direction. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">wvls</td><td>List of wavelength </td></tr>
@@ -289,16 +443,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
 
 </div>
 </div>
-<a id="aa439d0eebf6550b6cb113c28249ed46a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa439d0eebf6550b6cb113c28249ed46a">&#9670;&nbsp;</a></span>mketf()</h2>
+<a id="a9384dbb5f6c50141fa1f34528f53e618"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9384dbb5f6c50141fa1f34528f53e618">&#9670;&nbsp;</a></span>mketf()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structETF__T.html">ETF_T</a>* mketf </td>
+          <td class="memname"><a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a>* mketf </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structDTF__T.html">DTF_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *&#160;</td>
           <td class="paramname"><em>dtfs</em>, </td>
         </tr>
         <tr>

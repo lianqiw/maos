@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -101,11 +107,11 @@ Data Fields</h2></td></tr>
 <tr class="separator:a6b54a9a44f05e75f204d07d97e58d2f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0250e3bffa206b42e6c76b997bf2016f"><td class="memItemLeft" align="right" valign="top">curmat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#a0250e3bffa206b42e6c76b997bf2016f">reserve</a></td></tr>
 <tr class="separator:a0250e3bffa206b42e6c76b997bf2016f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e7443031c60279cb6532aaed98db7b3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classArray.html">cumapcell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#a0e7443031c60279cb6532aaed98db7b3">atm</a></td></tr>
+<tr class="memitem:a0e7443031c60279cb6532aaed98db7b3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_array.html">cumapcell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#a0e7443031c60279cb6532aaed98db7b3">atm</a></td></tr>
 <tr class="separator:a0e7443031c60279cb6532aaed98db7b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad9bad0392b15a8e1f189e0ee768f7952"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classArray.html">cumapcell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#ad9bad0392b15a8e1f189e0ee768f7952">dmreal</a></td></tr>
+<tr class="memitem:ad9bad0392b15a8e1f189e0ee768f7952"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_array.html">cumapcell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#ad9bad0392b15a8e1f189e0ee768f7952">dmreal</a></td></tr>
 <tr class="separator:ad9bad0392b15a8e1f189e0ee768f7952"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf9fb617b403a07cad8587d5a1552912"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classArray.html">cumapcell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#adf9fb617b403a07cad8587d5a1552912">dmproj</a></td></tr>
+<tr class="memitem:adf9fb617b403a07cad8587d5a1552912"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_array.html">cumapcell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#adf9fb617b403a07cad8587d5a1552912">dmproj</a></td></tr>
 <tr class="separator:adf9fb617b403a07cad8587d5a1552912"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f070b01164923b31a22193c048b3a7f"><td class="memItemLeft" align="right" valign="top"><a id="a2f070b01164923b31a22193c048b3a7f"></a>
 <a class="el" href="classcuperf__t.html">cuperf_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>perf</b></td></tr>
@@ -113,25 +119,25 @@ Data Fields</h2></td></tr>
 <tr class="memitem:aa3f6e5419e4751d3dec5d7999e574145"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classstream__t.html">stream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcudata__t.html#aa3f6e5419e4751d3dec5d7999e574145">perf_stream</a></td></tr>
 <tr class="separator:aa3f6e5419e4751d3dec5d7999e574145"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b2768cc55fcf19af967e53d4dc07283"><td class="memItemLeft" align="right" valign="top"><a id="a4b2768cc55fcf19af967e53d4dc07283"></a>
-<a class="el" href="classArray.html">Array</a>&lt; <a class="el" href="structcupowfs__t.html">cupowfs_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>powfs</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; <a class="el" href="structcupowfs__t.html">cupowfs_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>powfs</b></td></tr>
 <tr class="separator:a4b2768cc55fcf19af967e53d4dc07283"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0862d3766ca07b82dd31cd62be4ac120"><td class="memItemLeft" align="right" valign="top"><a id="a0862d3766ca07b82dd31cd62be4ac120"></a>
 <a class="el" href="classcuda__recon_1_1curecon__t.html">cuda_recon::curecon_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>recon</b></td></tr>
 <tr class="separator:a0862d3766ca07b82dd31cd62be4ac120"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a115fc3343cf5fe801d8464f4c686d971"><td class="memItemLeft" align="right" valign="top"><a id="a115fc3343cf5fe801d8464f4c686d971"></a>
-<a class="el" href="classArray.html">Array</a>&lt; <a class="el" href="classArray.html">cumapcell</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dm_wfs</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; <a class="el" href="class_array.html">cumapcell</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dm_wfs</b></td></tr>
 <tr class="separator:a115fc3343cf5fe801d8464f4c686d971"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7baa17f30db981adbaad7a75a6828fc5"><td class="memItemLeft" align="right" valign="top"><a id="a7baa17f30db981adbaad7a75a6828fc5"></a>
-<a class="el" href="classArray.html">Array</a>&lt; <a class="el" href="classArray.html">cumapcell</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dm_evl</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; <a class="el" href="class_array.html">cumapcell</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dm_evl</b></td></tr>
 <tr class="separator:a7baa17f30db981adbaad7a75a6828fc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f23cd6e1814e97636133fdb76fb0d1e"><td class="memItemLeft" align="right" valign="top"><a id="a9f23cd6e1814e97636133fdb76fb0d1e"></a>
 curmat&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_m</b></td></tr>
 <tr class="separator:a9f23cd6e1814e97636133fdb76fb0d1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ab268663d8f1c37966d5349ae9bf44a"><td class="memItemLeft" align="right" valign="top"><a id="a1ab268663d8f1c37966d5349ae9bf44a"></a>
-<a class="el" href="classArray.html">Array</a>&lt; ATYPE, <a class="el" href="classGpu.html">Gpu</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_a</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; ATYPE, <a class="el" href="class_gpu.html">Gpu</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_a</b></td></tr>
 <tr class="separator:a1ab268663d8f1c37966d5349ae9bf44a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3bfc667e10ef666f94563c5536d2e187"><td class="memItemLeft" align="right" valign="top"><a id="a3bfc667e10ef666f94563c5536d2e187"></a>
-<a class="el" href="classArray.html">Array</a>&lt; GTYPE, <a class="el" href="classGpu.html">Gpu</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_g</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; GTYPE, <a class="el" href="class_gpu.html">Gpu</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_g</b></td></tr>
 <tr class="separator:a3bfc667e10ef666f94563c5536d2e187"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1822a51a78b1dbfbae434b86b12cc007"><td class="memItemLeft" align="right" valign="top"><a id="a1822a51a78b1dbfbae434b86b12cc007"></a>
 <a class="el" href="classstream__t.html">stream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_stream</b></td></tr>
@@ -175,7 +181,7 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_m</b></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classArray.html">cumapcell</a> cudata_t::atm</td>
+          <td class="memname"><a class="el" href="class_array.html">cumapcell</a> cudata_t::atm</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -190,7 +196,7 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_m</b></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classArray.html">cumapcell</a> cudata_t::dmreal</td>
+          <td class="memname"><a class="el" href="class_array.html">cumapcell</a> cudata_t::dmreal</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -205,7 +211,7 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_m</b></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classArray.html">cumapcell</a> cudata_t::dmproj</td>
+          <td class="memname"><a class="el" href="class_array.html">cumapcell</a> cudata_t::dmproj</td>
         </tr>
       </table>
 </div><div class="memdoc">

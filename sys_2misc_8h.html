@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -100,8 +106,8 @@ $(document).ready(function(){initNavTree('sys_2misc_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structARGOPT__T.html">ARGOPT_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structargopt__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#structargopt__t">argopt_t</a></td></tr>
+<tr class="separator:structargopt__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -177,8 +183,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mysymlink</b> (const 
 <tr class="separator:aa8327247b00b74fe0f22822f797f5ec4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59d2286a5bcaa20324a9e9a8c319c7e9"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9">mystrdup</a> (const char *A)</td></tr>
 <tr class="separator:a59d2286a5bcaa20324a9e9a8c319c7e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2796cc328da90b87ea45de96b2c615c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a2796cc328da90b87ea45de96b2c615c3">parse_argopt</a> (char *cmds, <a class="el" href="structARGOPT__T.html">ARGOPT_T</a> *options)</td></tr>
-<tr class="separator:a2796cc328da90b87ea45de96b2c615c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3349f67347d1f665a17bdd3a7c5bf5a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6">parse_argopt</a> (char *cmds, <a class="el" href="sys_2misc_8h.html#structargopt__t">argopt_t</a> *options)</td></tr>
+<tr class="separator:a3349f67347d1f665a17bdd3a7c5bf5a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af601376ec0a30149805fbc5e2c8e14cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd">set_realtime</a> (int icpu, int niceness)</td></tr>
 <tr class="separator:af601376ec0a30149805fbc5e2c8e14cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af33cc91c7bdc60b97fe77a7213ff3b0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#af33cc91c7bdc60b97fe77a7213ff3b0e">register_signal_handler</a> (int(*)(int))</td></tr>
@@ -186,7 +192,74 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mysymlink</b> (const 
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>misc routines. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structargopt__t" id="structargopt__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structargopt__t">&#9670;&nbsp;</a></span>argopt_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct argopt_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="aac78672d97c9137113150a8b27d69af8"></a>const char *</td>
+<td class="fieldname">
+name</td>
+<td class="fielddoc">
+<p>The long name </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a455c79ca30e75a2553eba6225e19aa49"></a>char</td>
+<td class="fieldname">
+key</td>
+<td class="fielddoc">
+<p>The short name </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa606bb2fcaf8c97e7428bb541dc62a8e"></a>int</td>
+<td class="fieldname">
+type</td>
+<td class="fielddoc">
+<p>The type of result expected </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a83f5c2f8367c892852a68eef3241d247"></a>int</td>
+<td class="fieldname">
+valtype</td>
+<td class="fielddoc">
+<p>The type of input expected: 0: The key does not need value; 1: The key needs value; 2: The key accepts an array of values. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af3550be4dbd55c6265f135971171b9d8"></a>int</td>
+<td class="fieldname">
+isfun</td>
+<td class="fielddoc">
+<p>Whether val indicate a function pointer 0: The address to put the return results. 1: A function pointer to call. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a24ad5e1eedf791f851b48a567df76287"></a>void *</td>
+<td class="fieldname">
+val</td>
+<td class="fielddoc">
+<p>The address to put the return result. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a788ff2d4c1eb23bf8146aff728d08980"></a>int *</td>
+<td class="fieldname">
+nval</td>
+<td class="fielddoc">
+<p>If val is array, this is the counter. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="a5609e288961da8d6cfcc7494afbb3ded"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5609e288961da8d6cfcc7494afbb3ded">&#9670;&nbsp;</a></span>mybasename()</h2>
 
@@ -865,8 +938,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mysymlink</b> (const 
 
 </div>
 </div>
-<a id="a2796cc328da90b87ea45de96b2c615c3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2796cc328da90b87ea45de96b2c615c3">&#9670;&nbsp;</a></span>parse_argopt()</h2>
+<a id="a3349f67347d1f665a17bdd3a7c5bf5a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3349f67347d1f665a17bdd3a7c5bf5a6">&#9670;&nbsp;</a></span>parse_argopt()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -880,7 +953,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mysymlink</b> (const 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structARGOPT__T.html">ARGOPT_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="sys_2misc_8h.html#structargopt__t">argopt_t</a> *&#160;</td>
           <td class="paramname"><em>options</em>&#160;</td>
         </tr>
         <tr>

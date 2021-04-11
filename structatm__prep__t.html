@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -134,6 +140,175 @@ Real *&#160;</td><td class="memItemRight" valign="bottom"><b>next_atm</b></td></
 pthread_t&#160;</td><td class="memItemRight" valign="bottom"><b>threads</b></td></tr>
 <tr class="separator:a0c6f595033ef7f577e9458ee40985879"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a id="aa91bcb38614c73ac4e6c0193364f3667"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa91bcb38614c73ac4e6c0193364f3667">&#9670;&nbsp;</a></span>ips</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_prep_t::ips</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a174f88328d9c1561f0561e3382ff5f8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a174f88328d9c1561f0561e3382ff5f8e">&#9670;&nbsp;</a></span>nx0</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_prep_t::nx0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a40c994a9477f50081349d89ac4f50e79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40c994a9477f50081349d89ac4f50e79">&#9670;&nbsp;</a></span>ny0</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_prep_t::ny0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a6f436c3adcd611c8346ad811acea2fdf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f436c3adcd611c8346ad811acea2fdf">&#9670;&nbsp;</a></span>offx</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_prep_t::offx</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0a26d88d230eedbb1423b5b10820cab7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a26d88d230eedbb1423b5b10820cab7">&#9670;&nbsp;</a></span>offy</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_prep_t::offy</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a946a87b22d1f81cce8a5dc779a1e03f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a946a87b22d1f81cce8a5dc779a1e03f9">&#9670;&nbsp;</a></span>isim</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_prep_t::isim</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="add3d1f76154518fc4491c65c337460d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add3d1f76154518fc4491c65c337460d8">&#9670;&nbsp;</a></span>isim_next</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_prep_t::isim_next</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abcb2d843c0c08168e7d3f0d14c369e48"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abcb2d843c0c08168e7d3f0d14c369e48">&#9670;&nbsp;</a></span>atm</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmap__t.html">map_t</a>* atm_prep_t::atm</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a63e6e4982b9ac1ce740895acbcc12a96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a63e6e4982b9ac1ce740895acbcc12a96">&#9670;&nbsp;</a></span>ox</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Real atm_prep_t::ox</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a601c88534e15b9f21ea13422b0c7ec2d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a601c88534e15b9f21ea13422b0c7ec2d">&#9670;&nbsp;</a></span>oy</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Real atm_prep_t::oy</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a09c6fcb50da18f6abd3ec4d4acd62b58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09c6fcb50da18f6abd3ec4d4acd62b58">&#9670;&nbsp;</a></span>next_atm</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Real* atm_prep_t::next_atm</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0c6f595033ef7f577e9458ee40985879"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c6f595033ef7f577e9458ee40985879">&#9670;&nbsp;</a></span>threads</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pthread_t atm_prep_t::threads</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>cuda/cudata.h</li>
 </ul>

@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -94,15 +100,27 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1cufdpcg__t.html','
 <div class="title">cuda_recon::cufdpcg_t Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for cuda_recon::cufdpcg_t:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classcuda__recon_1_1cufdpcg__t.png" usemap="#cuda_5Frecon::cufdpcg_5Ft_map" alt=""/>
+  <map id="cuda_5Frecon::cufdpcg_5Ft_map" name="cuda_5Frecon::cufdpcg_5Ft_map">
+<area href="classcuda__recon_1_1cusolve__cgpre.html" alt="cuda_recon::cusolve_cgpre" shape="rect" coords="0,0,170,24"/>
+<area href="classnon_copyable.html" alt="nonCopyable" shape="rect" coords="180,0,350,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a54c2569c0e093bf82d370b460b06e818"><td class="memItemLeft" align="right" valign="top"><a id="a54c2569c0e093bf82d370b460b06e818"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cufdpcg_t</b> (<a class="el" href="structFDPCG__T.html">FDPCG_T</a> *fdpcg=0, const <a class="el" href="classcuda__recon_1_1curecon__geom.html">curecon_geom</a> *_grid=0)</td></tr>
-<tr class="separator:a54c2569c0e093bf82d370b460b06e818"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5cd734565770d68b3993c0b3ffcdbd12"><td class="memItemLeft" align="right" valign="top"><a id="a5cd734565770d68b3993c0b3ffcdbd12"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (<a class="el" href="structFDPCG__T.html">FDPCG_T</a> *fdpcg)</td></tr>
-<tr class="separator:a5cd734565770d68b3993c0b3ffcdbd12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a227e7fc353090390e9efb31abf5c8060"><td class="memItemLeft" align="right" valign="top"><a id="a227e7fc353090390e9efb31abf5c8060"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cufdpcg_t</b> (<a class="el" href="maos_2types_8h.html#structfdpcg__t">fdpcg_t</a> *fdpcg=0, const <a class="el" href="classcuda__recon_1_1curecon__geom.html">curecon_geom</a> *_grid=0)</td></tr>
+<tr class="separator:a227e7fc353090390e9efb31abf5c8060"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a220eda48cb6784017041b082b95b6f02"><td class="memItemLeft" align="right" valign="top"><a id="a220eda48cb6784017041b082b95b6f02"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (<a class="el" href="maos_2types_8h.html#structfdpcg__t">fdpcg_t</a> *fdpcg)</td></tr>
+<tr class="separator:a220eda48cb6784017041b082b95b6f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa75c50525aa4a03019820042b2b3d32a"><td class="memItemLeft" align="right" valign="top"><a id="aa75c50525aa4a03019820042b2b3d32a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Pre</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:aa75c50525aa4a03019820042b2b3d32a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -111,8 +129,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Pre</b> (curcell &amp
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:a4a36c56245827a91f833eb74829fb7aa inherit pub_methods_classcuda__recon_1_1cusolve__cgpre"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/fdpcg.h</li>
+<li>cuda/fdpcg.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

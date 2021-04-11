@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -635,7 +641,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zcogabs</b> (float *g
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zwritedata</b> (file_t *fp, const <a class="el" href="structzmat.html">zmat</a> *A)</td></tr>
 <tr class="separator:aeda4ecbcc71390bb81a267390a7a102f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ef11a90b38925908441e6253bfc527f"><td class="memItemLeft" align="right" valign="top"><a id="a1ef11a90b38925908441e6253bfc527f"></a>
-<a class="el" href="structzmat.html">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zreaddata</b> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<a class="el" href="structzmat.html">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zreaddata</b> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a1ef11a90b38925908441e6253bfc527f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebae8c415b889c4eb360370619cf6eec"><td class="memItemLeft" align="right" valign="top"><a id="aebae8c415b889c4eb360370619cf6eec"></a>
 <a class="el" href="structzmat.html">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>znew_mmap</b> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
@@ -824,7 +830,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellsym</b> (<a cl
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zspwritedata</b> (file_t *fp, const <a class="el" href="structzsp.html">zsp</a> *sp)</td></tr>
 <tr class="separator:a5c5104c95296a54d03ca09296320ff91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a275a617bb8bcb666c6a929f9506f7ac0"><td class="memItemLeft" align="right" valign="top"><a id="a275a617bb8bcb666c6a929f9506f7ac0"></a>
-<a class="el" href="structzsp.html">zsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zspreaddata</b> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<a class="el" href="structzsp.html">zsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zspreaddata</b> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a275a617bb8bcb666c6a929f9506f7ac0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65e1fdd2b27b7c247205b966957d0328"><td class="memItemLeft" align="right" valign="top"><a id="a65e1fdd2b27b7c247205b966957d0328"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zfft_free_plan</b> (struct fft_t *fft)</td></tr>

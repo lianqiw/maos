@@ -71,6 +71,7 @@ var NAVTREE =
       [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Data Fields", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
+        [ "Functions", "functions_func.html", null ],
         [ "Variables", "functions_vars.html", "functions_vars" ]
       ] ]
     ] ],
@@ -90,24 +91,23 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1curecon__geom.html#a974c5011e87c1f8ac41f4b2942a6f782",
-"classcuperf__t.html",
-"cmath_8h.html#a7fe3b375701efb354d19e28f7d8205d6",
-"dmath_8h.html#a6d616d187ac43db30de304b02ef77842",
-"globals_func_p.html",
-"maos_2moao_8h.html#af62a4685464fea7bdd37d04c821c3caf",
-"parms_8h.html",
-"slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7",
-"stfun_8h.html#acb665bf663de60baa366796d561fbeae",
-"structFDPCG__T.html#aad7247977bffff075d7481eada6969c0",
-"structMagic_3_01double2_01_4.html",
-"structPOWFS__T.html#af49935106ffcdcc195c2d6654d070722",
-"structSIM__CFG__T.html#a4813d011fa1383563d776ed0d3a75eb3",
-"structSTATUS__T.html#a093b6843684e59be66f2cf39611078d8",
-"structdmat.html#a88d7f7e053b7232e17f99ac09168de4b",
-"structrmap__t.html#ae57dd7d071af3a560a2914e7b52db00a",
-"thread_8h.html#aeb200d447f4bb01eaf557788b48337e2",
-"zmath_8h.html#ad47721cb8d14cb6e6baf75ca33297142"
+"classcuda__recon_1_1cumoao__t.html#ae84e25eae6372ebdd438b1a49f683277",
+"classcuperf__t.html#a611e8cc1f472ead09ad03b585660c07a",
+"cmath_8h.html#a86b21f82aff9a203bb25e251684c7d3b",
+"dmath_8h.html#a47413afaa146edf669e2ac6dd8629853",
+"functions_z.html",
+"loc_8h.html#a14ca3161124674983c579cd327b77a4a",
+"maos_2types_8h.html#a50531e1c03e7b99016cf0e769615a8a6",
+"maos_2types_8h.html#ad6b469d6e30a0f36803a48e97f315f4a",
+"mkdtf_8h.html#a42d0fe623bbbd35b36c395fd52904603",
+"mvmfull__real_8cu.html#a7cace5ce95ab40b4abfbeca7923fe03f",
+"parms_8h.html#a301b7c751e28f1ed691e99f7548b3469",
+"parms_8h.html#a9c94e2684735dd3855e9bea993ad9056",
+"parms_8h.html#structatmr__cfg__t",
+"setup__recon_8h.html#a734c26f3d555e9e8038c196ad0a242ef",
+"smath_8h.html#adc7a3019cc81a3fa1420bcb6d9c8eb26",
+"test_8cu.html#ae0e8fb90f87e1fa9ef149854c0a54de5",
+"zmath_8h.html#aa192ed2205edaf7143ab136127d4a64c"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

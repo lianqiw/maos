@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -248,8 +254,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a748c831084487edf646cbe09e605fc8c"><td class="memItemLeft" align="right" valign="top"><a id="a748c831084487edf646cbe09e605fc8c"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_ENV_DBL</b>(A,  min,  max)</td></tr>
 <tr class="separator:a748c831084487edf646cbe09e605fc8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09be4f80cada4e5b2082a65011fc90db"><td class="memItemLeft" align="right" valign="top"><a id="a09be4f80cada4e5b2082a65011fc90db"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DEF_ENV_FLAG</b>(A,  default_val)</td></tr>
+<tr class="memitem:a09be4f80cada4e5b2082a65011fc90db"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>DEF_ENV_FLAG</b>(A,  default_val)</td></tr>
 <tr class="separator:a09be4f80cada4e5b2082a65011fc90db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -266,7 +271,36 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>default_quitfun</b> (
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Every source file in this folder should include this file </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a09be4f80cada4e5b2082a65011fc90db"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09be4f80cada4e5b2082a65011fc90db">&#9670;&nbsp;</a></span>DEF_ENV_FLAG</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEF_ENV_FLAG</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">A, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">default_val&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> A=default_val;               \</div><div class="line">    static __attribute__((constructor)) <span class="keywordtype">void</span> init(){    \</div><div class="line">        READ_ENV_INT(A, 0, 1);              \</div><div class="line">    }</div></div><!-- fragment -->
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -97,14 +103,14 @@ $(document).ready(function(){initNavTree('setup__surf_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a96e789600919c635039b31a71f2dc720"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__surf_8h.html#a96e789600919c635039b31a71f2dc720">setup_surf</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
-<tr class="separator:a96e789600919c635039b31a71f2dc720"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9d628f58bc2c7aa07274f9f00462107"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107">setup_surf</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="separator:ab9d628f58bc2c7aa07274f9f00462107"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Setup additional NCPA surface. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a96e789600919c635039b31a71f2dc720"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a96e789600919c635039b31a71f2dc720">&#9670;&nbsp;</a></span>setup_surf()</h2>
+<a id="ab9d628f58bc2c7aa07274f9f00462107"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9d628f58bc2c7aa07274f9f00462107">&#9670;&nbsp;</a></span>setup_surf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -112,25 +118,25 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void setup_surf </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>&#160;</td>
         </tr>
         <tr>

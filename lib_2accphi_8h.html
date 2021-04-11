@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -100,8 +106,8 @@ $(document).ready(function(){initNavTree('lib_2accphi_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPROPDATA__T.html">PROPDATA_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structpropdata__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#structpropdata__t">propdata_t</a></td></tr>
+<tr class="separator:structpropdata__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -142,19 +148,16 @@ Macros</h2></td></tr>
 <tr class="separator:a2b0c4dcfd9bf11345b2578b1a2bf6108"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1afac67117f758c71bad2118d9fc31f4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#a1afac67117f758c71bad2118d9fc31f4">ARG_INDEX</a></td></tr>
 <tr class="separator:a1afac67117f758c71bad2118d9fc31f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7532f1fb81caa4841564d0dc662a0a43"><td class="memItemLeft" align="right" valign="top"><a id="a7532f1fb81caa4841564d0dc662a0a43"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ARG_PROP_WRAP</b></td></tr>
+<tr class="memitem:a7532f1fb81caa4841564d0dc662a0a43"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>ARG_PROP_WRAP</b></td></tr>
 <tr class="separator:a7532f1fb81caa4841564d0dc662a0a43"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad30baa063d6e54a559ff1d389dd3e4c3"><td class="memItemLeft" align="right" valign="top"><a id="ad30baa063d6e54a559ff1d389dd3e4c3"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ARG_PROP_NOWRAP</b></td></tr>
+<tr class="memitem:ad30baa063d6e54a559ff1d389dd3e4c3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>ARG_PROP_NOWRAP</b></td></tr>
 <tr class="separator:ad30baa063d6e54a559ff1d389dd3e4c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a956b6f6f4e721f06770be0f09012f78f"><td class="memItemLeft" align="right" valign="top"><a id="a956b6f6f4e721f06770be0f09012f78f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ARG_PROP_CUBIC</b></td></tr>
+<tr class="memitem:a956b6f6f4e721f06770be0f09012f78f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>ARG_PROP_CUBIC</b></td></tr>
 <tr class="separator:a956b6f6f4e721f06770be0f09012f78f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a56055820d17e7869e938c41ff78e087a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#a56055820d17e7869e938c41ff78e087a">prop</a> (<a class="el" href="structthread__t.html">thread_t</a> *data)</td></tr>
+<tr class="memitem:a56055820d17e7869e938c41ff78e087a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#a56055820d17e7869e938c41ff78e087a">prop</a> (<a class="el" href="thread_8h.html#structthread__t">thread_t</a> *data)</td></tr>
 <tr class="separator:a56055820d17e7869e938c41ff78e087a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a904e104dcec764baea15d99d269ad5a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#a904e104dcec764baea15d99d269ad5a8">prop_grid</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, real *phiout, const real alpha, real displacex, real displacey, const real scale, int wrap, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end)</td></tr>
 <tr class="separator:a904e104dcec764baea15d99d269ad5a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,7 +196,128 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains ray tracing routines optimized for different input/output formats. Notice that the OPDs are accumulated. </p>
-</div><h2 class="groupheader">Macro Definition Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structpropdata__t" id="structpropdata__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structpropdata__t">&#9670;&nbsp;</a></span>propdata_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct propdata_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Unified data structure for automatic selection of propagation. </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="adceed66225d811d2602d8b563b122de5"></a><a class="el" href="structmap__t.html">map_t</a> *</td>
+<td class="fieldname">
+mapin</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a5db66a900fd70d51357da45f90f96f00"></a><a class="el" href="structloc__t.html">loc_t</a> *</td>
+<td class="fieldname">
+locin</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a78b9ec7bb71462e818451ddd87b81afb"></a>const real *</td>
+<td class="fieldname">
+phiin</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a64540e8174332379b3eaa48b02f331fe"></a><a class="el" href="structmap__t.html">map_t</a> *</td>
+<td class="fieldname">
+mapout</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa0674d5bc02007b16c0da6f130cae5fa"></a>real *</td>
+<td class="fieldname">
+phiout</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3a7487e2c314d7a7a59b2a369f7b429c"></a>const <a class="el" href="structpts__t.html">pts_t</a> *</td>
+<td class="fieldname">
+ptsout</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af77048cd0f9b8ea6cd7b23ccf3755d6e"></a>const <a class="el" href="structloc__t.html">loc_t</a> *</td>
+<td class="fieldname">
+locout</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8ac1ea4dceae77303f590b35babee4fd"></a>const <a class="el" href="structlocstat__t.html">locstat_t</a> *</td>
+<td class="fieldname">
+ostat</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad970b0231a62eb5dd9e40351e10f4f1f"></a>real</td>
+<td class="fieldname">
+displacex0</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a06402409f978f7c158dc4a3036072c56"></a>real</td>
+<td class="fieldname">
+displacey0</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a4febc4db9f1bf6d6110b8ead7b39c212"></a>real</td>
+<td class="fieldname">
+displacex1</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a55a41a60bf2f3d6f2a419653d13eda9b"></a>real</td>
+<td class="fieldname">
+displacey1</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ac5ffbc4ca42b87496ae6f231c8b350f0"></a>real</td>
+<td class="fieldname">
+scale</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a694424c5b4f991a9ba110626bb03fc0a"></a>real</td>
+<td class="fieldname">
+alpha</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7c5339b0132430d06bf720a17e24f54b"></a>int</td>
+<td class="fieldname">
+wrap</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7957c99547a5a45a7fb7418c68e837e1"></a>int</td>
+<td class="fieldname">
+nooptim</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a66e0557e335e74071d735927ebd18270"></a>int</td>
+<td class="fieldname">
+index</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="a2a4e17f8e485c542f80fd7225595164a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2a4e17f8e485c542f80fd7225595164a">&#9670;&nbsp;</a></span>ARGIN_GRID</h2>
 
@@ -220,7 +344,8 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>[in] Input OPD defined in locin </p>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">const</span> <a class="code" href="structloc__t.html">loc_t</a> *locin,         \</div><div class="line">    const real *phiin</div><div class="ttc" id="structloc__t_html"><div class="ttname"><a href="structloc__t.html">loc_t</a></div><div class="ttdef"><b>Definition:</b> type.h:148</div></div>
+</div><!-- fragment --><p>[in] Input OPD defined in locin </p>
 
 </div>
 </div>
@@ -235,7 +360,8 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>[in,out] Output OPD defined in locout </p>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">const</span> <a class="code" href="structloc__t.html">loc_t</a> *locout,    \</div><div class="line">    real* phiout</div><div class="ttc" id="structloc__t_html"><div class="ttname"><a href="structloc__t.html">loc_t</a></div><div class="ttdef"><b>Definition:</b> type.h:148</div></div>
+</div><!-- fragment --><p>[in,out] Output OPD defined in locout </p>
 
 </div>
 </div>
@@ -250,7 +376,8 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>[in,out] OPD defined on locout </p>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">const</span> <a class="code" href="structpts__t.html">pts_t</a> *pts,       \</div><div class="line">    real *phiout</div><div class="ttc" id="structpts__t_html"><div class="ttname"><a href="structpts__t.html">pts_t</a></div><div class="ttdef"><b>Definition:</b> type.h:167</div></div>
+</div><!-- fragment --><p>[in,out] OPD defined on locout </p>
 
 </div>
 </div>
@@ -280,7 +407,8 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>[in, out] Output OPD defined on ostat </p>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">const</span> <a class="code" href="structlocstat__t.html">locstat_t</a> *ostat, \</div><div class="line">    real *phiout</div><div class="ttc" id="structlocstat__t_html"><div class="ttname"><a href="structlocstat__t.html">locstat_t</a></div><div class="ttdef"><b>Definition:</b> type.h:135</div></div>
+</div><!-- fragment --><p>[in, out] Output OPD defined on ostat </p>
 
 </div>
 </div>
@@ -295,7 +423,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>[in] scaling of the beam diameter (cone) </p>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">const</span> real alpha,               \</div><div class="line">    real displacex,         \</div><div class="line">    real displacey,         \</div><div class="line">    const real scale</div></div><!-- fragment --><p>[in] scaling of the beam diameter (cone) </p>
 
 </div>
 </div>
@@ -310,8 +438,53 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>[ind] end index </p>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keywordtype">long</span> start,            \</div><div class="line">    long end</div></div><!-- fragment --><p>[ind] end index </p>
 
+</div>
+</div>
+<a id="a7532f1fb81caa4841564d0dc662a0a43"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7532f1fb81caa4841564d0dc662a0a43">&#9670;&nbsp;</a></span>ARG_PROP_WRAP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ARG_PROP_WRAP</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><a class="code" href="lib_2accphi_8h.html#a59fd368fbf1c4d6a8264111ad7da5569">ARG_PROP</a>,                                   \</div><div class="line">    int wrap,            \</div><div class="line">    ARG_INDEX</div><div class="ttc" id="lib_2accphi_8h_html_a59fd368fbf1c4d6a8264111ad7da5569"><div class="ttname"><a href="lib_2accphi_8h.html#a59fd368fbf1c4d6a8264111ad7da5569">ARG_PROP</a></div><div class="ttdeci">#define ARG_PROP</div><div class="ttdef"><b>Definition:</b> accphi.h:85</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ad30baa063d6e54a559ff1d389dd3e4c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad30baa063d6e54a559ff1d389dd3e4c3">&#9670;&nbsp;</a></span>ARG_PROP_NOWRAP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ARG_PROP_NOWRAP</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><a class="code" href="lib_2accphi_8h.html#a59fd368fbf1c4d6a8264111ad7da5569">ARG_PROP</a>,                                   \</div><div class="line">    ARG_INDEX</div><div class="ttc" id="lib_2accphi_8h_html_a59fd368fbf1c4d6a8264111ad7da5569"><div class="ttname"><a href="lib_2accphi_8h.html#a59fd368fbf1c4d6a8264111ad7da5569">ARG_PROP</a></div><div class="ttdeci">#define ARG_PROP</div><div class="ttdef"><b>Definition:</b> accphi.h:85</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a956b6f6f4e721f06770be0f09012f78f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a956b6f6f4e721f06770be0f09012f78f">&#9670;&nbsp;</a></span>ARG_PROP_CUBIC</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ARG_PROP_CUBIC</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><a class="code" href="lib_2accphi_8h.html#a59fd368fbf1c4d6a8264111ad7da5569">ARG_PROP</a>,                                                           \</div><div class="line">    real cubic_iac,        \</div><div class="line">    ARG_INDEX</div><div class="ttc" id="lib_2accphi_8h_html_a59fd368fbf1c4d6a8264111ad7da5569"><div class="ttname"><a href="lib_2accphi_8h.html#a59fd368fbf1c4d6a8264111ad7da5569">ARG_PROP</a></div><div class="ttdeci">#define ARG_PROP</div><div class="ttdef"><b>Definition:</b> accphi.h:85</div></div>
+</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
@@ -324,7 +497,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void prop </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structthread__t.html">thread_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="thread_8h.html#structthread__t">thread_t</a> *&#160;</td>
           <td class="paramname"><em>data</em></td><td>)</td>
           <td></td>
         </tr>

@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -232,7 +238,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 <tr class="separator:ab9144022d33a0ef11a9701a336e75a2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd9de0b3686313b9f4235d351f9b82e5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#acd9de0b3686313b9f4235d351f9b82e5">loc_dxdy</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
 <tr class="separator:acd9de0b3686313b9f4235d351f9b82e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22b5b42fb69c0946972bc87f2f95b1e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a22b5b42fb69c0946972bc87f2f95b1e6">locreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="memitem:a22b5b42fb69c0946972bc87f2f95b1e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a22b5b42fb69c0946972bc87f2f95b1e6">locreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a22b5b42fb69c0946972bc87f2f95b1e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b18e8ba6f4e742d165285096127f677"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a6b18e8ba6f4e742d165285096127f677">locwritedata</a> (file_t *fp, const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
 <tr class="separator:a6b18e8ba6f4e742d165285096127f677"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1929,7 +1935,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
       </table>
 </div><div class="memdoc">
 <p>Transform coordinate. loc (input) contains x,y; locm (return) contains xm, ym. polyn contains the formula </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ xm{ip}=\sum_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic))) ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic))) \]" src="form_83.png"/>
+\[ xm{ip}=\sum_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic))) ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic))) \]
 </p>
 <p> was using string input. New scheme uses bin files to preserve precision. </p>
 
@@ -2097,7 +2103,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>

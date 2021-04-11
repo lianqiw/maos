@@ -1,6 +1,14 @@
 var sys_2misc_8h =
 [
-    [ "ARGOPT_T", "structARGOPT__T.html", "structARGOPT__T" ],
+    [ "argopt_t", "sys_2misc_8h.html#structargopt__t", [
+      [ "name", "sys_2misc_8h.html#aac78672d97c9137113150a8b27d69af8", null ],
+      [ "key", "sys_2misc_8h.html#a455c79ca30e75a2553eba6225e19aa49", null ],
+      [ "type", "sys_2misc_8h.html#aa606bb2fcaf8c97e7428bb541dc62a8e", null ],
+      [ "valtype", "sys_2misc_8h.html#a83f5c2f8367c892852a68eef3241d247", null ],
+      [ "isfun", "sys_2misc_8h.html#af3550be4dbd55c6265f135971171b9d8", null ],
+      [ "val", "sys_2misc_8h.html#a24ad5e1eedf791f851b48a567df76287", null ],
+      [ "nval", "sys_2misc_8h.html#a788ff2d4c1eb23bf8146aff728d08980", null ]
+    ] ],
     [ "strdup", "sys_2misc_8h.html#a9254b089d435892385cf14d0ab4a7a2d", null ],
     [ "mybasename", "sys_2misc_8h.html#a5609e288961da8d6cfcc7494afbb3ded", null ],
     [ "mydirname", "sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07", null ],
@@ -34,7 +42,7 @@ var sys_2misc_8h =
     [ "mysleep", "sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53", null ],
     [ "available_space", "sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4", null ],
     [ "mystrdup", "sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9", null ],
-    [ "parse_argopt", "sys_2misc_8h.html#a2796cc328da90b87ea45de96b2c615c3", null ],
+    [ "parse_argopt", "sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],
     [ "set_realtime", "sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ],
     [ "register_signal_handler", "sys_2misc_8h.html#af33cc91c7bdc60b97fe77a7213ff3b0e", null ]
 ];

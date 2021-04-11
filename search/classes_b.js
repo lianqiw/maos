@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['ngsmod_5ft',['NGSMOD_T',['../structNGSMOD__T.html',1,'']]],
-  ['noncopyable',['nonCopyable',['../classnonCopyable.html',1,'']]]
+  ['ngsmod_5ft',['ngsmod_t',['../maos_2types_8h.html#structngsmod__t',1,'']]],
+  ['noncopyable',['nonCopyable',['../classnon_copyable.html',1,'']]]
 ];

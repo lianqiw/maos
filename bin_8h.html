@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -105,8 +111,8 @@ $(document).ready(function(){initNavTree('bin_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structheader__t.html">header_t</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structheader__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#structheader__t">header_t</a></td></tr>
+<tr class="separator:structheader__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -273,9 +279,9 @@ file_t *&#160;</td><td class="memItemRight" valign="bottom"><b>zfdopen</b> (int 
 <tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top"><a id="a1825ca342f947862c152e0408e923189"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (file_t *fp)</td></tr>
 <tr class="separator:a1825ca342f947862c152e0408e923189"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeafd15c22e61f56f291b709b43ddb04e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e">write_header</a> (const <a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
+<tr class="memitem:aeafd15c22e61f56f291b709b43ddb04e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e">write_header</a> (const <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header, file_t *fp)</td></tr>
 <tr class="separator:aeafd15c22e61f56f291b709b43ddb04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adae7a5ada62a1a4bb2f5934e2ebc538f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#adae7a5ada62a1a4bb2f5934e2ebc538f">read_header</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
+<tr class="memitem:adae7a5ada62a1a4bb2f5934e2ebc538f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#adae7a5ada62a1a4bb2f5934e2ebc538f">read_header</a> (<a class="el" href="bin_8h.html#structheader__t">header_t</a> *header, file_t *fp)</td></tr>
 <tr class="separator:adae7a5ada62a1a4bb2f5934e2ebc538f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9471eeb77e74e8c66ec913534df2d72d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a9471eeb77e74e8c66ec913534df2d72d">writearr</a> (const void *fpn, const int <a class="el" href="sys_2misc_8h.html#a251424e05fad4be552824c5a51e94ce0">isfile</a>, const size_t size, const uint32_t magic, const char *header, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
 <tr class="separator:a9471eeb77e74e8c66ec913534df2d72d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -300,7 +306,49 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Defines our custom file format .bin that may be gzipped and the basic IO functions. All file read/write operators are through functions in this file. The routines can also operate on .fits files. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structheader__t" id="structheader__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structheader__t">&#9670;&nbsp;</a></span>header_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct header_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a7fafb06c258e0d65060c3471e1a05ff8"></a>uint32_t</td>
+<td class="fieldname">
+magic</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a72ab2223d410da93e0a586bf8d7a8840"></a>uint64_t</td>
+<td class="fieldname">
+nx</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa71a34dd56dcaac2b83d6d0b7de01474"></a>uint64_t</td>
+<td class="fieldname">
+ny</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a66647f2919e9e15330a797bfce09f4b0"></a>char *</td>
+<td class="fieldname">
+str</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="a55e5dc1b9fd29f858d152f3194dd1d22"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a55e5dc1b9fd29f858d152f3194dd1d22">&#9670;&nbsp;</a></span>zfexist()</h2>
 
@@ -699,7 +747,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
         <tr>
           <td class="memname">void write_header </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>, </td>
         </tr>
         <tr>
@@ -728,7 +776,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
         <tr>
           <td class="memname">int read_header </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>, </td>
         </tr>
         <tr>

@@ -1,5 +1,5 @@
 var setup__aper_8h =
 [
-    [ "setup_aper", "setup__aper_8h.html#a289d4964c7b13294b9138257f32416ed", null ],
-    [ "free_aper", "setup__aper_8h.html#aea65e60525339d2921549850d52e8464", null ]
+    [ "setup_aper", "setup__aper_8h.html#a88687a0c795a3eb31d78ae5613dc6e62", null ],
+    [ "free_aper", "setup__aper_8h.html#a34ec7c702cbe7f2e4f6a42f37e8de2ff", null ]
 ];

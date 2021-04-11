@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,24 +104,24 @@ $(document).ready(function(){initNavTree('setup__aper_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a289d4964c7b13294b9138257f32416ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aper_8h.html#a289d4964c7b13294b9138257f32416ed">setup_aper</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="separator:a289d4964c7b13294b9138257f32416ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea65e60525339d2921549850d52e8464"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aper_8h.html#aea65e60525339d2921549850d52e8464">free_aper</a> (<a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="separator:aea65e60525339d2921549850d52e8464"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88687a0c795a3eb31d78ae5613dc6e62"><td class="memItemLeft" align="right" valign="top"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aper_8h.html#a88687a0c795a3eb31d78ae5613dc6e62">setup_aper</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
+<tr class="separator:a88687a0c795a3eb31d78ae5613dc6e62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34ec7c702cbe7f2e4f6a42f37e8de2ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aper_8h.html#a34ec7c702cbe7f2e4f6a42f37e8de2ff">free_aper</a> (<a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper)</td></tr>
+<tr class="separator:a34ec7c702cbe7f2e4f6a42f37e8de2ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines that setup the telescope aperture. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a289d4964c7b13294b9138257f32416ed"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a289d4964c7b13294b9138257f32416ed">&#9670;&nbsp;</a></span>setup_aper()</h2>
+<a id="a88687a0c795a3eb31d78ae5613dc6e62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88687a0c795a3eb31d78ae5613dc6e62">&#9670;&nbsp;</a></span>setup_aper()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structAPER__T.html">APER_T</a>* setup_aper </td>
+          <td class="memname"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a>* setup_aper </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *const&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *const&#160;</td>
           <td class="paramname"><em>parms</em></td><td>)</td>
           <td></td>
         </tr>
@@ -125,8 +131,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aea65e60525339d2921549850d52e8464"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea65e60525339d2921549850d52e8464">&#9670;&nbsp;</a></span>free_aper()</h2>
+<a id="a34ec7c702cbe7f2e4f6a42f37e8de2ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34ec7c702cbe7f2e4f6a42f37e8de2ff">&#9670;&nbsp;</a></span>free_aper()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -134,7 +140,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void free_aper </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em></td><td>)</td>
           <td></td>
         </tr>

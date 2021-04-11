@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,51 +104,51 @@ $(document).ready(function(){initNavTree('setup__powfs_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ab5c6252f2e6a017bf057d45f5447c049"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#ab5c6252f2e6a017bf057d45f5447c049">setup_powfs_init</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="separator:ab5c6252f2e6a017bf057d45f5447c049"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4cc18eb0a745b7719e20eef143f7995"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#ae4cc18eb0a745b7719e20eef143f7995">setup_powfs_misreg_tel</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ipowfs)</td></tr>
-<tr class="separator:ae4cc18eb0a745b7719e20eef143f7995"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe252b0e32dfa0f68d89b54cd0d9b6ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#abe252b0e32dfa0f68d89b54cd0d9b6ac">setup_powfs_misreg_dm</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ipowfs)</td></tr>
-<tr class="separator:abe252b0e32dfa0f68d89b54cd0d9b6ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1fbeda2f6ec733c358e17742e5029f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#ac1fbeda2f6ec733c358e17742e5029f7">setup_powfs_phy</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="separator:ac1fbeda2f6ec733c358e17742e5029f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42012ebf6f520f76627902112ca3d09f"><td class="memItemLeft" align="right" valign="top"><a id="a42012ebf6f520f76627902112ca3d09f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_neasim</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="separator:a42012ebf6f520f76627902112ca3d09f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d9099fe7ab2aaf7235c8118901857dc"><td class="memItemLeft" align="right" valign="top"><a id="a0d9099fe7ab2aaf7235c8118901857dc"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="separator:a0d9099fe7ab2aaf7235c8118901857dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1efb9155f68b99bb156d654b57f93d6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#aa1efb9155f68b99bb156d654b57f93d6">free_powfs_unused</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="separator:aa1efb9155f68b99bb156d654b57f93d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fdd29141f0d60af1fd7c6b2385f0031"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a4fdd29141f0d60af1fd7c6b2385f0031">free_powfs</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="separator:a4fdd29141f0d60af1fd7c6b2385f0031"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51714ee5b7a5a44bc3b1b0639ac94b5e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a51714ee5b7a5a44bc3b1b0639ac94b5e">setup_powfs_etf</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double deltah, int ipowfs, int mode, int icol)</td></tr>
-<tr class="separator:a51714ee5b7a5a44bc3b1b0639ac94b5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a288841084a9b4fa93af59ad631299b60"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a288841084a9b4fa93af59ad631299b60">wfspupmask</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structdmat.html">dmat</a> *amp, int iwfs)</td></tr>
-<tr class="separator:a288841084a9b4fa93af59ad631299b60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a564d0691f30cf50918b8c371a38d8e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e">setup_powfs_init</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper)</td></tr>
+<tr class="separator:a1a564d0691f30cf50918b8c371a38d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af73db6cefef80ad4855578d44bec2f9d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#af73db6cefef80ad4855578d44bec2f9d">setup_powfs_misreg_tel</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, int ipowfs)</td></tr>
+<tr class="separator:af73db6cefef80ad4855578d44bec2f9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54fc7e790ae6161b15c2a69f6fbee260"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a54fc7e790ae6161b15c2a69f6fbee260">setup_powfs_misreg_dm</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, int ipowfs)</td></tr>
+<tr class="separator:a54fc7e790ae6161b15c2a69f6fbee260"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e46d89a923330dddfe6a0dd31811ada"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a6e46d89a923330dddfe6a0dd31811ada">setup_powfs_phy</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a6e46d89a923330dddfe6a0dd31811ada"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36b1526a9936b7bfd6256e5abbfe94a8"><td class="memItemLeft" align="right" valign="top"><a id="a36b1526a9936b7bfd6256e5abbfe94a8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_neasim</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a36b1526a9936b7bfd6256e5abbfe94a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33bf8889280bcb05fb321b5397ccb49e"><td class="memItemLeft" align="right" valign="top"><a id="a33bf8889280bcb05fb321b5397ccb49e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a33bf8889280bcb05fb321b5397ccb49e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26a75b0436e21b8fca94ac004676e984"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a26a75b0436e21b8fca94ac004676e984">free_powfs_unused</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a26a75b0436e21b8fca94ac004676e984"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a9c34e6fc651433c73473e0e039dc63"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a1a9c34e6fc651433c73473e0e039dc63">free_powfs</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a1a9c34e6fc651433c73473e0e039dc63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77c3dd827cf5f4422c1eb7ad0ef59b0c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a77c3dd827cf5f4422c1eb7ad0ef59b0c">setup_powfs_etf</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, double deltah, int ipowfs, int mode, int icol)</td></tr>
+<tr class="separator:a77c3dd827cf5f4422c1eb7ad0ef59b0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2d609d5e539eeb17e1a57f6365a1c4f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f">wfspupmask</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structdmat.html">dmat</a> *amp, int iwfs)</td></tr>
+<tr class="separator:ac2d609d5e539eeb17e1a57f6365a1c4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Setting up WFS geometry. like the subaperture location, subaperture grid points, physical optics detection transfer function, LGS elongation transfer function, etc.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000007">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
 <p>Do not use sparse interpolation to replace ray tracing for fine sampled destination grid, especially cubic splines. The interpolation marix takes too much space. <br />
- TODO: This routine and <a class="el" href="structPOWFS__T.html">POWFS_T</a> should only contain information about the simulation, not about any model used during reconstruction (RTC) to avoid leaking information from the "real world (simulation)" to our knowledge (RTC). </p>
+ TODO: This routine and <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> should only contain information about the simulation, not about any model used during reconstruction (RTC) to avoid leaking information from the "real world (simulation)" to our knowledge (RTC). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="ab5c6252f2e6a017bf057d45f5447c049"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab5c6252f2e6a017bf057d45f5447c049">&#9670;&nbsp;</a></span>setup_powfs_init()</h2>
+<a id="a1a564d0691f30cf50918b8c371a38d8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a564d0691f30cf50918b8c371a38d8e">&#9670;&nbsp;</a></span>setup_powfs_init()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structPOWFS__T.html">POWFS_T</a>* setup_powfs_init </td>
+          <td class="memname"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a>* setup_powfs_init </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em>&#160;</td>
         </tr>
         <tr>
@@ -156,8 +162,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="ae4cc18eb0a745b7719e20eef143f7995"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae4cc18eb0a745b7719e20eef143f7995">&#9670;&nbsp;</a></span>setup_powfs_misreg_tel()</h2>
+<a id="af73db6cefef80ad4855578d44bec2f9d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af73db6cefef80ad4855578d44bec2f9d">&#9670;&nbsp;</a></span>setup_powfs_misreg_tel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -165,19 +171,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="memname">void setup_powfs_misreg_tel </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em>, </td>
         </tr>
         <tr>
@@ -212,8 +218,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="abe252b0e32dfa0f68d89b54cd0d9b6ac"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abe252b0e32dfa0f68d89b54cd0d9b6ac">&#9670;&nbsp;</a></span>setup_powfs_misreg_dm()</h2>
+<a id="a54fc7e790ae6161b15c2a69f6fbee260"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a54fc7e790ae6161b15c2a69f6fbee260">&#9670;&nbsp;</a></span>setup_powfs_misreg_dm()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -221,19 +227,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="memname">void setup_powfs_misreg_dm </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em>, </td>
         </tr>
         <tr>
@@ -253,8 +259,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="ac1fbeda2f6ec733c358e17742e5029f7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1fbeda2f6ec733c358e17742e5029f7">&#9670;&nbsp;</a></span>setup_powfs_phy()</h2>
+<a id="a6e46d89a923330dddfe6a0dd31811ada"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e46d89a923330dddfe6a0dd31811ada">&#9670;&nbsp;</a></span>setup_powfs_phy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -262,13 +268,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="memname">void setup_powfs_phy </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>&#160;</td>
         </tr>
         <tr>
@@ -282,8 +288,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="aa1efb9155f68b99bb156d654b57f93d6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa1efb9155f68b99bb156d654b57f93d6">&#9670;&nbsp;</a></span>free_powfs_unused()</h2>
+<a id="a26a75b0436e21b8fca94ac004676e984"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26a75b0436e21b8fca94ac004676e984">&#9670;&nbsp;</a></span>free_powfs_unused()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -291,13 +297,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="memname">void free_powfs_unused </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>&#160;</td>
         </tr>
         <tr>
@@ -311,8 +317,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="a4fdd29141f0d60af1fd7c6b2385f0031"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4fdd29141f0d60af1fd7c6b2385f0031">&#9670;&nbsp;</a></span>free_powfs()</h2>
+<a id="a1a9c34e6fc651433c73473e0e039dc63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a9c34e6fc651433c73473e0e039dc63">&#9670;&nbsp;</a></span>free_powfs()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -320,13 +326,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="memname">void free_powfs </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>&#160;</td>
         </tr>
         <tr>
@@ -340,8 +346,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="a51714ee5b7a5a44bc3b1b0639ac94b5e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a51714ee5b7a5a44bc3b1b0639ac94b5e">&#9670;&nbsp;</a></span>setup_powfs_etf()</h2>
+<a id="a77c3dd827cf5f4422c1eb7ad0ef59b0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77c3dd827cf5f4422c1eb7ad0ef59b0c">&#9670;&nbsp;</a></span>setup_powfs_etf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -349,13 +355,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="memname">void setup_powfs_etf </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
@@ -397,8 +403,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="a288841084a9b4fa93af59ad631299b60"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a288841084a9b4fa93af59ad631299b60">&#9670;&nbsp;</a></span>wfspupmask()</h2>
+<a id="ac2d609d5e539eeb17e1a57f6365a1c4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2d609d5e539eeb17e1a57f6365a1c4f">&#9670;&nbsp;</a></span>wfspupmask()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -406,7 +412,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="memname">void wfspupmask </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>

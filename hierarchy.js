@@ -1,46 +1,52 @@
 var hierarchy =
 [
-    [ "APER_CFG_T", "structAPER__CFG__T.html", null ],
-    [ "APER_T", "structAPER__T.html", null ],
-    [ "ARG_T", "structARG__T.html", null ],
-    [ "ARGOPT_T", "structARGOPT__T.html", null ],
-    [ "ATM_CFG_T", "structATM__CFG__T.html", null ],
+    [ "aper_cfg_t", "parms_8h.html#structaper__cfg__t", null ],
+    [ "aper_t", "maos_2types_8h.html#structaper__t", null ],
+    [ "arg_t", "parms_8h.html#structarg__t", null ],
+    [ "argopt_t", "sys_2misc_8h.html#structargopt__t", null ],
+    [ "atm_cfg_t", "parms_8h.html#structatm__cfg__t", null ],
     [ "atm_prep_t", "structatm__prep__t.html", null ],
-    [ "ATMR_CFG_T", "structATMR__CFG__T.html", null ],
+    [ "atmr_cfg_t", "parms_8h.html#structatmr__cfg__t", null ],
     [ "ccccell", "structccccell.html", null ],
     [ "cccell", "structcccell.html", null ],
     [ "ccell", "structccell.html", null ],
     [ "cell", "structcell.html", null ],
-    [ "cuda_recon::CGTMP_T", "classcuda__recon_1_1CGTMP__T.html", null ],
+    [ "cuda_recon::cgtmp_t", "classcuda__recon_1_1cgtmp__t.html", null ],
     [ "cmat", "structcmat.html", null ],
-    [ "CN2EST_CFG_T", "structCN2EST__CFG__T.html", null ],
-    [ "cn2est_t", "structcn2est__t.html", null ],
-    [ "CN2PAIR_T", "structCN2PAIR__T.html", null ],
-    [ "Cpu< T >", "classCpu.html", [
-      [ "Pinned< T >", "classPinned.html", null ]
+    [ "cn2est_cfg_t", "parms_8h.html#structcn2est__cfg__t", null ],
+    [ "cn2est_pair_t", "cn2est_8h.html#structcn2est__pair__t", null ],
+    [ "cn2est_t", "cn2est_8h.html#structcn2est__t", null ],
+    [ "Cpu< T >", "class_cpu.html", [
+      [ "Pinned< T >", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< Array< Comp, Gpu > >", "classCpu.html", null ],
-    [ "Cpu< Array< int, Gpu > >", "classCpu.html", null ],
-    [ "Cpu< Array< Real, Gpu > >", "classCpu.html", null ],
-    [ "Cpu< Array< short2, Gpu > >", "classCpu.html", null ],
-    [ "Cpu< Array< T, Dev > >", "classCpu.html", null ],
-    [ "Cpu< Comp * >", "classCpu.html", [
-      [ "Pinned< Comp *>", "classPinned.html", null ]
+    [ "Cpu< Array< Comp, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< Array< int, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< Array< Real, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< Array< short2, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< Array< T, Dev > >", "class_cpu.html", null ],
+    [ "Cpu< ATYPE >", "class_cpu.html", [
+      [ "Pinned< ATYPE >", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< int * >", "classCpu.html", [
-      [ "Pinned< int *>", "classPinned.html", null ]
+    [ "Cpu< Comp * >", "class_cpu.html", [
+      [ "Pinned< Comp *>", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< Real * >", "classCpu.html", [
-      [ "Pinned< Real *>", "classPinned.html", null ]
+    [ "Cpu< GTYPE >", "class_cpu.html", [
+      [ "Pinned< GTYPE >", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< Real >", "classCpu.html", [
-      [ "Pinned< Real >", "classPinned.html", null ]
+    [ "Cpu< int * >", "class_cpu.html", [
+      [ "Pinned< int *>", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< short2 * >", "classCpu.html", [
-      [ "Pinned< short2 *>", "classPinned.html", null ]
+    [ "Cpu< Real * >", "class_cpu.html", [
+      [ "Pinned< Real *>", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< T * >", "classCpu.html", [
-      [ "Pinned< T *>", "classPinned.html", null ]
+    [ "Cpu< Real >", "class_cpu.html", [
+      [ "Pinned< Real >", "class_pinned.html", null ]
+    ] ],
+    [ "Cpu< short2 * >", "class_cpu.html", [
+      [ "Pinned< short2 *>", "class_pinned.html", null ]
+    ] ],
+    [ "Cpu< T * >", "class_cpu.html", [
+      [ "Pinned< T *>", "class_pinned.html", null ]
     ] ],
     [ "csp", "structcsp.html", null ],
     [ "cspcell", "structcspcell.html", null ],
@@ -92,86 +98,90 @@ var hierarchy =
     [ "cuda_wfs::cuwfs_info", "classcuda__wfs_1_1cuwfs__info.html", null ],
     [ "cuwfs_t", "classcuwfs__t.html", null ],
     [ "cuda_wfs::cuwfs_t", "classcuda__wfs_1_1cuwfs__t.html", null ],
-    [ "DBG_CFG_T", "structDBG__CFG__T.html", null ],
+    [ "dbg_cfg_t", "parms_8h.html#structdbg__cfg__t", null ],
     [ "dcccell", "structdcccell.html", null ],
     [ "dccell", "structdccell.html", null ],
     [ "dcell", "structdcell.html", null ],
     [ "dir_t", "structdir__t.html", null ],
-    [ "DITHER_CFG_T", "structDITHER__CFG__T.html", null ],
-    [ "dither_t", "classdither__t.html", null ],
-    [ "DITHER_T", "structDITHER__T.html", null ],
-    [ "DM_CFG_T", "structDM__CFG__T.html", null ],
+    [ "dither_cfg_t", "parms_8h.html#structdither__cfg__t", null ],
+    [ "dither_t", "maos_2types_8h.html#structdither__t", null ],
+    [ "Dither_t", "class_dither__t.html", null ],
+    [ "dm_cfg_t", "parms_8h.html#structdm__cfg__t", null ],
     [ "dmat", "structdmat.html", null ],
     [ "dsp", "structdsp.html", null ],
     [ "dspcell", "structdspcell.html", null ],
-    [ "DTF_T", "structDTF__T.html", null ],
-    [ "ETF_T", "structETF__T.html", null ],
+    [ "dtf_t", "mkdtf_8h.html#structdtf__t", null ],
+    [ "etf_t", "mkdtf_8h.html#structetf__t", null ],
     [ "event_t", "structevent__t.html", null ],
-    [ "EVL_CFG_T", "structEVL__CFG__T.html", null ],
-    [ "FDPCG_T", "structFDPCG__T.html", null ],
-    [ "FIT_CFG_T", "structFIT__CFG__T.html", null ],
-    [ "FIT_T", "structFIT__T.html", null ],
-    [ "FRACTAL_T", "structFRACTAL__T.html", null ],
-    [ "GENATM_T", "structGENATM__T.html", null ],
-    [ "GLOBAL_T", "structGLOBAL__T.html", null ],
-    [ "Gpu< T >", "classGpu.html", null ],
-    [ "Gpu< ATYPE >", "classGpu.html", null ],
-    [ "Gpu< Comp *>", "classGpu.html", null ],
-    [ "Gpu< Comp >", "classGpu.html", null ],
-    [ "Gpu< cuda_recon::LAP_T >", "classGpu.html", null ],
-    [ "Gpu< GPU_FDPCG_T >", "classGpu.html", null ],
-    [ "Gpu< GPU_GP_T >", "classGpu.html", null ],
-    [ "Gpu< GTYPE >", "classGpu.html", null ],
-    [ "Gpu< int *>", "classGpu.html", null ],
-    [ "Gpu< int >", "classGpu.html", null ],
-    [ "Gpu< Real *>", "classGpu.html", null ],
-    [ "Gpu< Real >", "classGpu.html", null ],
-    [ "Gpu< short2 *>", "classGpu.html", null ],
-    [ "Gpu< short2 >", "classGpu.html", null ],
-    [ "Gpu< T *>", "classGpu.html", null ],
-    [ "GPU_CFG_T", "structGPU__CFG__T.html", null ],
-    [ "GPU_FDPCG_T", "structGPU__FDPCG__T.html", null ],
-    [ "GPU_GP_T", "structGPU__GP__T.html", null ],
-    [ "header_t", "structheader__t.html", null ],
+    [ "evl_cfg_t", "parms_8h.html#structevl__cfg__t", null ],
+    [ "fdpcg_t", "maos_2types_8h.html#structfdpcg__t", null ],
+    [ "fit_cfg_t", "parms_8h.html#structfit__cfg__t", null ],
+    [ "fit_t", "maos_2types_8h.html#structfit__t", null ],
+    [ "fractal_t", "maos_2types_8h.html#structfractal__t", null ],
+    [ "genatm_t", "turbulence_8h.html#structgenatm__t", null ],
+    [ "global_t", "maos_2types_8h.html#structglobal__t", null ],
+    [ "Gpu< T >", "class_gpu.html", null ],
+    [ "Gpu< ATYPE >", "class_gpu.html", null ],
+    [ "Gpu< Comp *>", "class_gpu.html", null ],
+    [ "Gpu< Comp >", "class_gpu.html", null ],
+    [ "Gpu< cuda_recon::lap_t >", "class_gpu.html", null ],
+    [ "Gpu< gpu_fdpcg_t >", "class_gpu.html", null ],
+    [ "Gpu< gpu_gp_t >", "class_gpu.html", null ],
+    [ "Gpu< GTYPE >", "class_gpu.html", null ],
+    [ "Gpu< int *>", "class_gpu.html", null ],
+    [ "Gpu< int >", "class_gpu.html", null ],
+    [ "Gpu< Real *>", "class_gpu.html", null ],
+    [ "Gpu< Real >", "class_gpu.html", null ],
+    [ "Gpu< short >", "class_gpu.html", null ],
+    [ "Gpu< short2 *>", "class_gpu.html", null ],
+    [ "Gpu< short2 >", "class_gpu.html", null ],
+    [ "Gpu< T *>", "class_gpu.html", null ],
+    [ "gpu_cfg_t", "parms_8h.html#structgpu__cfg__t", null ],
+    [ "gpu_data_t", "mvmfull__real_8cu.html#structgpu__data__t", null ],
+    [ "gpu_fdpcg_t", "structgpu__fdpcg__t.html", null ],
+    [ "gpu_gp_t", "structgpu__gp__t.html", null ],
+    [ "header_t", "bin_8h.html#structheader__t", null ],
     [ "icccell", "structicccell.html", null ],
     [ "iccell", "structiccell.html", null ],
     [ "imat", "structimat.html", null ],
-    [ "INTSTAT_T", "structINTSTAT__T.html", null ],
-    [ "INVPSD_T", "structINVPSD__T.html", null ],
-    [ "kalman_t", "structkalman__t.html", null ],
-    [ "cuda_recon::LAP_T", "structcuda__recon_1_1LAP__T.html", null ],
+    [ "intstat_t", "maos_2types_8h.html#structintstat__t", null ],
+    [ "invpsd_t", "maos_2types_8h.html#structinvpsd__t", null ],
+    [ "kalman_t", "kalman_8h.html#structkalman__t", null ],
+    [ "cuda_recon::lap_t", "structcuda__recon_1_1lap__t.html", null ],
     [ "lcell", "structlcell.html", null ],
-    [ "LLT_CFG_T", "structLLT__CFG__T.html", null ],
-    [ "LLT_T", "structLLT__T.html", null ],
+    [ "llt_cfg_t", "parms_8h.html#structllt__cfg__t", null ],
+    [ "llt_t", "maos_2types_8h.html#structllt__t", null ],
     [ "lmat", "structlmat.html", null ],
-    [ "LOAD_CFG_T", "structLOAD__CFG__T.html", null ],
+    [ "load_cfg_t", "parms_8h.html#structload__cfg__t", null ],
     [ "loc_t", "structloc__t.html", null ],
     [ "locccell", "structlocccell.html", null ],
     [ "loccell", "structloccell.html", null ],
-    [ "locfft_t", "structlocfft__t.html", null ],
+    [ "locfft_t", "locfft_8h.html#structlocfft__t", null ],
     [ "lock_t", "classlock__t.html", null ],
     [ "locstat_t", "structlocstat__t.html", null ],
     [ "locstatcol_t", "structlocstatcol__t.html", null ],
-    [ "LSR_CFG_T", "structLSR__CFG__T.html", null ],
-    [ "Magic< T >", "structMagic.html", null ],
-    [ "Magic< double >", "structMagic_3_01double_01_4.html", null ],
-    [ "Magic< double2 >", "structMagic_3_01double2_01_4.html", null ],
-    [ "Magic< float >", "structMagic_3_01float_01_4.html", null ],
-    [ "Magic< float2 >", "structMagic_3_01float2_01_4.html", null ],
-    [ "Magic< int >", "structMagic_3_01int_01_4.html", null ],
-    [ "Magic< long int >", "structMagic_3_01long_01int_01_4.html", null ],
+    [ "lsr_cfg_t", "parms_8h.html#structlsr__cfg__t", null ],
+    [ "Magic< T >", "struct_magic.html", null ],
+    [ "Magic< double >", "struct_magic_3_01double_01_4.html", null ],
+    [ "Magic< double2 >", "struct_magic_3_01double2_01_4.html", null ],
+    [ "Magic< float >", "struct_magic_3_01float_01_4.html", null ],
+    [ "Magic< float2 >", "struct_magic_3_01float2_01_4.html", null ],
+    [ "Magic< int >", "struct_magic_3_01int_01_4.html", null ],
+    [ "Magic< long int >", "struct_magic_3_01long_01int_01_4.html", null ],
     [ "map2map_shared_t", "structmap2map__shared__t.html", null ],
     [ "map2map_t", "structmap2map__t.html", null ],
     [ "map_t", "structmap__t.html", null ],
     [ "mapccell", "structmapccell.html", null ],
     [ "mapcell", "structmapcell.html", null ],
-    [ "MISREG_CFG_T", "structMISREG__CFG__T.html", null ],
-    [ "MOAO_CFG_T", "structMOAO__CFG__T.html", null ],
-    [ "MOAO_T", "structMOAO__T.html", null ],
+    [ "misreg_cfg_t", "parms_8h.html#structmisreg__cfg__t", null ],
+    [ "moao_cfg_t", "parms_8h.html#structmoao__cfg__t", null ],
+    [ "moao_t", "maos_2types_8h.html#structmoao__t", null ],
     [ "mt_state", "structmt__state.html", null ],
-    [ "MUV_T", "structMUV__T.html", null ],
-    [ "NGSMOD_T", "structNGSMOD__T.html", null ],
-    [ "nonCopyable", "classnonCopyable.html", [
+    [ "muv_t", "muv_8h.html#structmuv__t", null ],
+    [ "mvm_igpu_t", "mvm__trans_8cu.html#structmvm__igpu__t", null ],
+    [ "mvm_t", "mvm__daemon_8cu.html#structmvm__t", null ],
+    [ "ngsmod_t", "maos_2types_8h.html#structngsmod__t", null ],
+    [ "nonCopyable", "classnon_copyable.html", [
       [ "cuda_recon::cufdpcg_t", "classcuda__recon_1_1cufdpcg__t.html", null ],
       [ "cuda_recon::curecon_geom", "classcuda__recon_1_1curecon__geom.html", null ],
       [ "cuda_recon::curecon_t", "classcuda__recon_1_1curecon__t.html", null ],
@@ -181,189 +191,204 @@ var hierarchy =
       [ "cuda_recon::cusolve_mvm", "classcuda__recon_1_1cusolve__mvm.html", null ],
       [ "map2map", "classmap2map.html", null ]
     ] ],
-    [ "PARMS_T", "structPARMS__T.html", null ],
-    [ "PLOT_CFG_T", "structPLOT__CFG__T.html", null ],
-    [ "POWFS_CFG_T", "structPOWFS__CFG__T.html", null ],
-    [ "POWFS_T", "structPOWFS__T.html", null ],
-    [ "PROPDATA_T", "structPROPDATA__T.html", null ],
+    [ "parms_t", "parms_8h.html#structparms__t", null ],
+    [ "plot_cfg_t", "parms_8h.html#structplot__cfg__t", null ],
+    [ "powfs_cfg_t", "parms_8h.html#structpowfs__cfg__t", null ],
+    [ "powfs_t", "maos_2types_8h.html#structpowfs__t", null ],
+    [ "propdata_t", "lib_2accphi_8h.html#structpropdata__t", null ],
     [ "pts_t", "structpts__t.html", null ],
-    [ "PYWFS_T", "structPYWFS__T.html", null ],
-    [ "RECON_CFG_T", "structRECON__CFG__T.html", null ],
-    [ "RECON_T", "structRECON__T.html", null ],
-    [ "RefP< T, Dev >", "classRefP.html", [
-      [ "Array< T, Dev >", "classArray.html", null ]
+    [ "pts_t.__unnamed__", "unionpts__t_8____unnamed____.html", null ],
+    [ "pywfs_t", "pywfs_8h.html#structpywfs__t", null ],
+    [ "recon_cfg_t", "parms_8h.html#structrecon__cfg__t", null ],
+    [ "recon_t", "maos_2types_8h.html#structrecon__t", null ],
+    [ "RefP< T, Dev >", "class_ref_p.html", [
+      [ "Array< T, Dev >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array, Dev >", "classRefP.html", [
-      [ "Array< Array >", "classArray.html", null ]
+    [ "RefP< Array, Dev >", "class_ref_p.html", [
+      [ "Array< Array >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array< Comp, Gpu >, Cpu >", "classRefP.html", [
-      [ "Array< Array< Comp, Gpu >, Cpu >", "classArray.html", [
-        [ "Cell< Comp, Gpu >", "classCell.html", null ]
+    [ "RefP< Array< ATYPE, Pinned >, Dev >", "class_ref_p.html", [
+      [ "Array< Array< ATYPE, Pinned > >", "class_array.html", null ]
+    ] ],
+    [ "RefP< Array< Comp, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< Array< Comp, Gpu >, Cpu >", "class_array.html", [
+        [ "Cell< Comp, Gpu >", "class_cell.html", null ]
       ] ]
     ] ],
-    [ "RefP< Array< culoc_t >, Dev >", "classRefP.html", [
-      [ "Array< Array< culoc_t > >", "classArray.html", null ]
+    [ "RefP< Array< culoc_t >, Dev >", "class_ref_p.html", [
+      [ "Array< Array< culoc_t > >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array< int, Gpu >, Cpu >", "classRefP.html", [
-      [ "Array< Array< int, Gpu >, Cpu >", "classArray.html", [
-        [ "Cell< int, Gpu >", "classCell.html", null ]
+    [ "RefP< Array< int, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< Array< int, Gpu >, Cpu >", "class_array.html", [
+        [ "Cell< int, Gpu >", "class_cell.html", null ]
       ] ]
     ] ],
-    [ "RefP< Array< Real, Gpu >, Cpu >", "classRefP.html", [
-      [ "Array< Array< Real, Gpu >, Cpu >", "classArray.html", [
-        [ "Cell< Real, Gpu >", "classCell.html", null ]
+    [ "RefP< Array< Real, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< Array< Real, Gpu >, Cpu >", "class_array.html", [
+        [ "Cell< Real, Gpu >", "class_cell.html", null ]
       ] ]
     ] ],
-    [ "RefP< Array< Real, Pinned >, Dev >", "classRefP.html", [
-      [ "Array< Array< Real, Pinned > >", "classArray.html", null ]
+    [ "RefP< Array< Real, Pinned >, Dev >", "class_ref_p.html", [
+      [ "Array< Array< Real, Pinned > >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array< short2, Gpu >, Cpu >", "classRefP.html", [
-      [ "Array< Array< short2, Gpu >, Cpu >", "classArray.html", [
-        [ "Cell< short2, Gpu >", "classCell.html", null ]
+    [ "RefP< Array< short2, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< Array< short2, Gpu >, Cpu >", "class_array.html", [
+        [ "Cell< short2, Gpu >", "class_cell.html", null ]
       ] ]
     ] ],
-    [ "RefP< Array< T, Dev >, Cpu >", "classRefP.html", [
-      [ "Array< Array< T, Dev >, Cpu >", "classArray.html", [
-        [ "Cell< T, Dev >", "classCell.html", null ]
+    [ "RefP< Array< T, Dev >, Cpu >", "class_ref_p.html", [
+      [ "Array< Array< T, Dev >, Cpu >", "class_array.html", [
+        [ "Cell< T, Dev >", "class_cell.html", null ]
       ] ]
     ] ],
-    [ "RefP< atm_prep_t, Dev >", "classRefP.html", [
-      [ "Array< atm_prep_t >", "classArray.html", null ]
+    [ "RefP< atm_prep_t, Dev >", "class_ref_p.html", [
+      [ "Array< atm_prep_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< ATYPE, Gpu >", "classRefP.html", [
-      [ "Array< ATYPE, Gpu >", "classArray.html", null ]
+    [ "RefP< ATYPE, Gpu >", "class_ref_p.html", [
+      [ "Array< ATYPE, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< Comp *, Gpu >", "classRefP.html", [
-      [ "Array< Comp *, Gpu >", "classArray.html", null ]
+    [ "RefP< ATYPE, Pinned >", "class_ref_p.html", [
+      [ "Array< ATYPE, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< Comp *, Pinned >", "classRefP.html", [
-      [ "Array< Comp *, Pinned >", "classArray.html", null ]
+    [ "RefP< Comp *, Gpu >", "class_ref_p.html", [
+      [ "Array< Comp *, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< Comp, Gpu >", "classRefP.html", [
-      [ "Array< Comp, Gpu >", "classArray.html", null ]
+    [ "RefP< Comp *, Pinned >", "class_ref_p.html", [
+      [ "Array< Comp *, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< cuda_recon::LAP_T, Gpu >", "classRefP.html", [
-      [ "Array< cuda_recon::LAP_T, Gpu >", "classArray.html", null ]
+    [ "RefP< Comp, Gpu >", "class_ref_p.html", [
+      [ "Array< Comp, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< cudtf_t, Dev >", "classRefP.html", [
-      [ "Array< cudtf_t >", "classArray.html", null ]
+    [ "RefP< cuda_recon::lap_t, Gpu >", "class_ref_p.html", [
+      [ "Array< cuda_recon::lap_t, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< cufftHandle, Dev >", "classRefP.html", [
-      [ "Array< cufftHandle >", "classArray.html", null ]
+    [ "RefP< cudtf_t, Dev >", "class_ref_p.html", [
+      [ "Array< cudtf_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< cugrid_t, Dev >", "classRefP.html", [
-      [ "Array< cugrid_t >", "classArray.html", null ]
+    [ "RefP< cufftHandle, Dev >", "class_ref_p.html", [
+      [ "Array< cufftHandle >", "class_array.html", null ]
     ] ],
-    [ "RefP< cuimat, Dev >", "classRefP.html", [
-      [ "Array< cuimat >", "classArray.html", null ]
+    [ "RefP< cugrid_t, Dev >", "class_ref_p.html", [
+      [ "Array< cugrid_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< culoc_t, Dev >", "classRefP.html", [
-      [ "Array< culoc_t >", "classArray.html", null ]
+    [ "RefP< cuimat, Dev >", "class_ref_p.html", [
+      [ "Array< cuimat >", "class_array.html", null ]
     ] ],
-    [ "RefP< cumap_t, Dev >", "classRefP.html", [
-      [ "Array< cumap_t >", "classArray.html", null ]
+    [ "RefP< culoc_t, Dev >", "class_ref_p.html", [
+      [ "Array< culoc_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< cupowfs_t, Dev >", "classRefP.html", [
-      [ "Array< cupowfs_t >", "classArray.html", null ]
+    [ "RefP< cumap_t, Dev >", "class_ref_p.html", [
+      [ "Array< cumap_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< curccell, Dev >", "classRefP.html", [
-      [ "Array< curccell >", "classArray.html", null ]
+    [ "RefP< cupowfs_t, Dev >", "class_ref_p.html", [
+      [ "Array< cupowfs_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< cusp, Dev >", "classRefP.html", [
-      [ "Array< cusp >", "classArray.html", null ]
+    [ "RefP< curccell, Dev >", "class_ref_p.html", [
+      [ "Array< curccell >", "class_array.html", null ]
     ] ],
-    [ "RefP< cuwfs_t, Dev >", "classRefP.html", [
-      [ "Array< cuwfs_t >", "classArray.html", null ]
+    [ "RefP< cusp, Dev >", "class_ref_p.html", [
+      [ "Array< cusp >", "class_array.html", null ]
     ] ],
-    [ "RefP< GPU_FDPCG_T, Gpu >", "classRefP.html", [
-      [ "Array< GPU_FDPCG_T, Gpu >", "classArray.html", null ]
+    [ "RefP< cuwfs_t, Dev >", "class_ref_p.html", [
+      [ "Array< cuwfs_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< GPU_GP_T, Gpu >", "classRefP.html", [
-      [ "Array< GPU_GP_T, Gpu >", "classArray.html", null ]
+    [ "RefP< gpu_fdpcg_t, Gpu >", "class_ref_p.html", [
+      [ "Array< gpu_fdpcg_t, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< GTYPE, Gpu >", "classRefP.html", [
-      [ "Array< GTYPE, Gpu >", "classArray.html", null ]
+    [ "RefP< gpu_gp_t, Gpu >", "class_ref_p.html", [
+      [ "Array< gpu_gp_t, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< int *, Gpu >", "classRefP.html", [
-      [ "Array< int *, Gpu >", "classArray.html", null ]
+    [ "RefP< GTYPE, Gpu >", "class_ref_p.html", [
+      [ "Array< GTYPE, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< int *, Pinned >", "classRefP.html", [
-      [ "Array< int *, Pinned >", "classArray.html", null ]
+    [ "RefP< GTYPE, Pinned >", "class_ref_p.html", [
+      [ "Array< GTYPE, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< int, Dev >", "classRefP.html", [
-      [ "Array< int >", "classArray.html", null ]
+    [ "RefP< int *, Gpu >", "class_ref_p.html", [
+      [ "Array< int *, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< int, Gpu >", "classRefP.html", [
-      [ "Array< int, Gpu >", "classArray.html", null ]
+    [ "RefP< int *, Pinned >", "class_ref_p.html", [
+      [ "Array< int *, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< map2map, Dev >", "classRefP.html", [
-      [ "Array< map2map >", "classArray.html", null ]
+    [ "RefP< int, Dev >", "class_ref_p.html", [
+      [ "Array< int >", "class_array.html", null ]
     ] ],
-    [ "RefP< Real *, Gpu >", "classRefP.html", [
-      [ "Array< Real *, Gpu >", "classArray.html", null ]
+    [ "RefP< int, Gpu >", "class_ref_p.html", [
+      [ "Array< int, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< Real *, Pinned >", "classRefP.html", [
-      [ "Array< Real *, Pinned >", "classArray.html", null ]
+    [ "RefP< map2map, Dev >", "class_ref_p.html", [
+      [ "Array< map2map >", "class_array.html", null ]
     ] ],
-    [ "RefP< Real, Dev >", "classRefP.html", [
-      [ "Array< Real >", "classArray.html", null ]
+    [ "RefP< Real *, Gpu >", "class_ref_p.html", [
+      [ "Array< Real *, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< Real, Gpu >", "classRefP.html", [
-      [ "Array< Real, Gpu >", "classArray.html", null ]
+    [ "RefP< Real *, Pinned >", "class_ref_p.html", [
+      [ "Array< Real *, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< Real, Pinned >", "classRefP.html", [
-      [ "Array< Real, Pinned >", "classArray.html", null ]
+    [ "RefP< Real, Dev >", "class_ref_p.html", [
+      [ "Array< Real >", "class_array.html", null ]
     ] ],
-    [ "RefP< short2 *, Gpu >", "classRefP.html", [
-      [ "Array< short2 *, Gpu >", "classArray.html", null ]
+    [ "RefP< Real, Gpu >", "class_ref_p.html", [
+      [ "Array< Real, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< short2 *, Pinned >", "classRefP.html", [
-      [ "Array< short2 *, Pinned >", "classArray.html", null ]
+    [ "RefP< Real, Pinned >", "class_ref_p.html", [
+      [ "Array< Real, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< short2, Gpu >", "classRefP.html", [
-      [ "Array< short2, Gpu >", "classArray.html", null ]
+    [ "RefP< short, Gpu >", "class_ref_p.html", [
+      [ "Array< short, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< stream_t, Dev >", "classRefP.html", [
-      [ "Array< stream_t >", "classArray.html", null ]
+    [ "RefP< short2 *, Gpu >", "class_ref_p.html", [
+      [ "Array< short2 *, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< T *, Gpu >", "classRefP.html", [
-      [ "Array< T *, Gpu >", "classArray.html", null ]
+    [ "RefP< short2 *, Pinned >", "class_ref_p.html", [
+      [ "Array< short2 *, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< T *, Pinned >", "classRefP.html", [
-      [ "Array< T *, Pinned >", "classArray.html", null ]
+    [ "RefP< short2, Gpu >", "class_ref_p.html", [
+      [ "Array< short2, Gpu >", "class_array.html", null ]
+    ] ],
+    [ "RefP< stream_t, Dev >", "class_ref_p.html", [
+      [ "Array< stream_t >", "class_array.html", null ]
+    ] ],
+    [ "RefP< T *, Gpu >", "class_ref_p.html", [
+      [ "Array< T *, Gpu >", "class_array.html", null ]
+    ] ],
+    [ "RefP< T *, Pinned >", "class_ref_p.html", [
+      [ "Array< T *, Pinned >", "class_array.html", null ]
     ] ],
     [ "rmap_t", "structrmap__t.html", null ],
     [ "rmapccell", "structrmapccell.html", null ],
     [ "rmapcell", "structrmapcell.html", null ],
-    [ "SAVE_CFG_T", "structSAVE__CFG__T.html", null ],
+    [ "save_cfg_t", "parms_8h.html#structsave__cfg__t", null ],
     [ "scccell", "structscccell.html", null ],
     [ "sccell", "structsccell.html", null ],
     [ "scell", "structscell.html", null ],
-    [ "SERVO_T", "structSERVO__T.html", null ],
-    [ "SHO_T", "structSHO__T.html", null ],
-    [ "SIM_CFG_T", "structSIM__CFG__T.html", null ],
-    [ "SIM_SAVE_T", "structSIM__SAVE__T.html", null ],
-    [ "SIM_T", "structSIM__T.html", null ],
+    [ "servo_t", "servo_8h.html#structservo__t", null ],
+    [ "sho_t", "servo_8h.html#structsho__t", null ],
+    [ "sim_cfg_t", "parms_8h.html#structsim__cfg__t", null ],
+    [ "sim_save_t", "maos_2types_8h.html#structsim__save__t", null ],
+    [ "sim_t", "maos_2types_8h.html#structsim__t", null ],
     [ "smat", "structsmat.html", null ],
-    [ "spchol", "structspchol.html", null ],
+    [ "spchol", "chol_8h.html#structspchol", null ],
     [ "ssp", "structssp.html", null ],
     [ "sspcell", "structsspcell.html", null ],
-    [ "STATUS_T", "structSTATUS__T.html", null ],
+    [ "status_t", "structstatus__t.html", null ],
     [ "stream_t", "classstream__t.html", null ],
-    [ "thread_t", "structthread__t.html", null ],
-    [ "TOMO_CFG_T", "structTOMO__CFG__T.html", null ],
-    [ "cuda_recon::W01_T", "classcuda__recon_1_1W01__T.html", null ],
-    [ "WFS_CFG_T", "structWFS__CFG__T.html", null ],
-    [ "WFSFLAGS_T", "structWFSFLAGS__T.html", null ],
-    [ "WFSINTS_T", "structWFSINTS__T.html", null ],
+    [ "task_t", "structtask__t.html", null ],
+    [ "thread_t", "thread_8h.html#structthread__t", null ],
+    [ "tomo_cfg_t", "parms_8h.html#structtomo__cfg__t", null ],
+    [ "cuda_recon::w01_t", "classcuda__recon_1_1w01__t.html", null ],
+    [ "wfs_cfg_t", "parms_8h.html#structwfs__cfg__t", null ],
+    [ "cuda_wfs::wfscfg_t", "structcuda__wfs_1_1wfscfg__t.html", null ],
+    [ "wfsflags_t", "maos_2types_8h.html#structwfsflags__t", null ],
+    [ "wfsints_t", "maos_2types_8h.html#structwfsints__t", null ],
     [ "zcccell", "structzcccell.html", null ],
     [ "zccell", "structzccell.html", null ],
     [ "zcell", "structzcell.html", null ],
     [ "zmat", "structzmat.html", null ],
     [ "zsp", "structzsp.html", null ],
     [ "zspcell", "structzspcell.html", null ],
-    [ "Array< T, Dev >", "classArray_3_01T_00_01Dev_01_4.html", null ],
-    [ "Array< T, Dev > *", "classArray_3_01T_00_01Dev_01_4_01_5.html", null ],
+    [ "Array< T, Dev >", "class_array_3_01_t_00_01_dev_01_4.html", null ],
+    [ "Array< T, Dev > *", "class_array_3_01_t_00_01_dev_01_4_01_5.html", null ],
     [ "int *", "classint_01_5.html", null ],
     [ "long", "classlong.html", null ]
 ];

@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -93,21 +99,21 @@ $(document).ready(function(){initNavTree('todo.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><dl class="reflist">
-<dt><a class="anchor" id="_todo000005"></a>Global <a class="el" href="recon__utils_8h.html#a6a6ad264e91cb4ab88c057011ca80fd9">apply_fractal</a>  (dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb)</dt>
+<dt><a class="anchor" id="_todo000007"></a>Global <a class="el" href="recon__utils_8h.html#a6a6ad264e91cb4ab88c057011ca80fd9">apply_fractal</a>  (dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb)</dt>
 <dd>: this is not thread safe.  </dd>
-<dt><a class="anchor" id="_todo000004"></a>Global <a class="el" href="recon__utils_8h.html#abfaa311b9be11571120dff4f870dca5e">apply_invpsd</a>  (dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb)</dt>
+<dt><a class="anchor" id="_todo000006"></a>Global <a class="el" href="recon__utils_8h.html#abfaa311b9be11571120dff4f870dca5e">apply_invpsd</a>  (dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb)</dt>
 <dd>: this is not thread safe.  </dd>
-<dt><a class="anchor" id="_todo000009"></a>Global <a class="el" href="cmath_8h.html#ae9103b8a83d73f56aac1fb8650afa6d9">cembed</a>  (cmat *__restrict A, const cmat *__restrict B, const real theta)</dt>
+<dt><a class="anchor" id="_todo000011"></a>Global <a class="el" href="cmath_8h.html#ae9103b8a83d73f56aac1fb8650afa6d9">cembed</a>  (cmat *__restrict A, const cmat *__restrict B, const real theta)</dt>
 <dd>{ merge this definition with cembed in cmat.c }  </dd>
-<dt><a class="anchor" id="_todo000010"></a>Global <a class="el" href="dmath_8h.html#a6d616d187ac43db30de304b02ef77842">dembed</a>  (dmat *__restrict A, const dmat *__restrict B, const real theta)</dt>
+<dt><a class="anchor" id="_todo000012"></a>Global <a class="el" href="dmath_8h.html#a6d616d187ac43db30de304b02ef77842">dembed</a>  (dmat *__restrict A, const dmat *__restrict B, const real theta)</dt>
 <dd>{ merge this definition with cembed in cmat.c }  </dd>
-<dt><a class="anchor" id="_todo000001"></a>File <a class="el" href="genseotf_8h.html">genseotf.h</a>  </dt>
+<dt><a class="anchor" id="_todo000003"></a>File <a class="el" href="genseotf_8h.html">genseotf.h</a>  </dt>
 <dd>find ways to factor in outerscale effect (use von karman spectrum instead of kolmogorov)  </dd>
-<dt><a class="anchor" id="_todo000003"></a>Global <a class="el" href="sim_8h.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl</a>  (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</dt>
+<dt><a class="anchor" id="_todo000005"></a>Global <a class="el" href="sim_8h.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl</a>  (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</dt>
 <dd>Write a standalone routine that can plot results, using techniques developped in drawdaemon.  </dd>
-<dt><a class="anchor" id="_todo000007"></a>File <a class="el" href="setup__powfs_8h.html">setup_powfs.h</a>  </dt>
+<dt><a class="anchor" id="_todo000009"></a>File <a class="el" href="setup__powfs_8h.html">setup_powfs.h</a>  </dt>
 <dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder. </dd>
-<dt><a class="anchor" id="_todo000002"></a>Global <a class="el" href="structTOMO__CFG__T.html#a78278efa786e9d15e8de3a3af9525101">TOMO_CFG_T::alg</a>  </dt>
+<dt><a class="anchor" id="_todo000004"></a>Global <a class="el" href="parms_8h.html#a5954774cf8fee73453d64f3b79947e47">tomo_cfg_t::alg</a>  </dt>
 <dd>implement BGS, MG 0: Cholesky direct solve for the large matrix. (CBS) 1: CG or PCG. 2: SVD or EVD: Eigen value decompsition </dd>
 </dl>
 </div></div><!-- contents -->

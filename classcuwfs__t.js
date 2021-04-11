@@ -49,7 +49,7 @@ var classcuwfs__t =
     [ "wvfout", "classcuwfs__t.html#a9fc1d0a82a4a316ee561287b62b17ed3", null ],
     [ "psfout", "classcuwfs__t.html#a90a473068dbebd02268cd105fc862e0d", null ],
     [ "psfstat", "classcuwfs__t.html#a360a1ab9f5f5276c2abe5870243e3042", null ],
-    [ "dither", "classcuwfs__t.html#a8f171135af669a888d32750ccc53e0f0", null ],
+    [ "dither", "classcuwfs__t.html#a4eadcc3840222c741ede909474c0b984", null ],
     [ "pywvf", "classcuwfs__t.html#ab90d90862ce1c6327ebe686fc96b6345", null ],
     [ "pyotf", "classcuwfs__t.html#af2619d2acc1a955b45e6caac76761108", null ],
     [ "pypsf", "classcuwfs__t.html#ae9e6895d15e4356ba6b07da41f77ead7", null ],

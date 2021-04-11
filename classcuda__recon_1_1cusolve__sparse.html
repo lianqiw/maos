@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -95,12 +101,26 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1cusolve__sparse.ht
 <div class="title">cuda_recon::cusolve_sparse Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for cuda_recon::cusolve_sparse:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classcuda__recon_1_1cusolve__sparse.png" usemap="#cuda_5Frecon::cusolve_5Fsparse_map" alt=""/>
+  <map id="cuda_5Frecon::cusolve_5Fsparse_map" name="cuda_5Frecon::cusolve_5Fsparse_map">
+<area href="classcuda__recon_1_1cusolve__r.html" alt="cuda_recon::cusolve_r" shape="rect" coords="0,56,175,80"/>
+<area href="classcuda__recon_1_1cusolve__cg.html" alt="cuda_recon::cusolve_cg" shape="rect" coords="185,56,360,80"/>
+<area href="classcuda__recon_1_1cusolve__l.html" alt="cuda_recon::cusolve_l" shape="rect" coords="92,0,267,24"/>
+<area href="classnon_copyable.html" alt="nonCopyable" shape="rect" coords="277,0,452,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0e8514a9d828c5f3e1a73273d2c5c3ac"><td class="memItemLeft" align="right" valign="top"><a id="a0e8514a9d828c5f3e1a73273d2c5c3ac"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cusolve_sparse</b> (int _maxit, int _warm_restart, <a class="el" href="structMUV__T.html">MUV_T</a> *_R, <a class="el" href="structMUV__T.html">MUV_T</a> *_L)</td></tr>
-<tr class="separator:a0e8514a9d828c5f3e1a73273d2c5c3ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cf97cc515b6e9c8a246743dccdee796"><td class="memItemLeft" align="right" valign="top"><a id="a6cf97cc515b6e9c8a246743dccdee796"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cusolve_sparse</b> (int _maxit, int _warm_restart, <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *_R, <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *_L)</td></tr>
+<tr class="separator:a6cf97cc515b6e9c8a246743dccdee796"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a86c4b030e053bd208a2eed8fd3b9c398"><td class="memItemLeft" align="right" valign="top"><a id="a86c4b030e053bd208a2eed8fd3b9c398"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>R</b> (curcell &amp;out, Real beta, curcell &amp;xin, Real alpha, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:a86c4b030e053bd208a2eed8fd3b9c398"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -117,9 +137,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>Rt</b> (curce
 <tr class="memitem:aed3ead3e11a37c6bcbb636929266130a inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memItemLeft" align="right" valign="top"><a id="aed3ead3e11a37c6bcbb636929266130a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (curcell &amp;xout, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:aed3ead3e11a37c6bcbb636929266130a inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4674bd2d047114544ebc323e3bef4fdf inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memItemLeft" align="right" valign="top"><a id="a4674bd2d047114544ebc323e3bef4fdf"></a>
+<tr class="memitem:aad9ee3853b315124da91ef36be20b945 inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memItemLeft" align="right" valign="top"><a id="aad9ee3853b315124da91ef36be20b945"></a>
 virtual Real&#160;</td><td class="memItemRight" valign="bottom"><b>solve</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="separator:a4674bd2d047114544ebc323e3bef4fdf inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aad9ee3853b315124da91ef36be20b945 inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b5de09d1db29e274248554467ee2273 inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memItemLeft" align="right" valign="top"><a id="a8b5de09d1db29e274248554467ee2273"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Pre</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:a8b5de09d1db29e274248554467ee2273 inherit pub_methods_classcuda__recon_1_1cusolve__cg"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -137,8 +157,9 @@ Protected Attributes</h2></td></tr>
 <a class="el" href="classcuda__recon_1_1cusolve__cgpre.html">cusolve_cgpre</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>precond</b></td></tr>
 <tr class="separator:a840871ad343b63c798317388377d11a6 inherit pro_attribs_classcuda__recon_1_1cusolve__cg"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/solve.h</li>
+<li>cuda/solve.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

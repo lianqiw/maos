@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -94,12 +100,23 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1cusolve__muv.html'
 <div class="title">cuda_recon::cusolve_muv Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for cuda_recon::cusolve_muv:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classcuda__recon_1_1cusolve__muv.png" usemap="#cuda_5Frecon::cusolve_5Fmuv_map" alt=""/>
+  <map id="cuda_5Frecon::cusolve_5Fmuv_map" name="cuda_5Frecon::cusolve_5Fmuv_map">
+<area href="classnon_copyable.html" alt="nonCopyable" shape="rect" coords="0,0,160,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:addddedd3de59a49d93cbfbd6f0ee2ec4"><td class="memItemLeft" align="right" valign="top"><a id="addddedd3de59a49d93cbfbd6f0ee2ec4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (const <a class="el" href="structMUV__T.html">MUV_T</a> *in)</td></tr>
-<tr class="separator:addddedd3de59a49d93cbfbd6f0ee2ec4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b348a4d5d89d57600350ef81db98cce"><td class="memItemLeft" align="right" valign="top"><a id="a9b348a4d5d89d57600350ef81db98cce"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *in)</td></tr>
+<tr class="separator:a9b348a4d5d89d57600350ef81db98cce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abdf04942e2ef917f84987e96641d0d2a"><td class="memItemLeft" align="right" valign="top"><a id="abdf04942e2ef917f84987e96641d0d2a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Forward</b> (curcell &amp;out, Real beta, const curcell &amp;in, Real alpha, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:abdf04942e2ef917f84987e96641d0d2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -110,8 +127,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (curce
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Trans</b> (curcell &amp;out, Real beta, const curcell &amp;in, Real alpha, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:aab43c0a198620cf4ebff96ae397409af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/solve.h</li>
+<li>cuda/solve.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

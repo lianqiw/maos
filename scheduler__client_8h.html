@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -100,8 +106,8 @@ $(document).ready(function(){initNavTree('scheduler__client_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a8ef70b356584cb3cc7d604f970940041"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a8ef70b356584cb3cc7d604f970940041">parse_host</a> (char *line)</td></tr>
-<tr class="separator:a8ef70b356584cb3cc7d604f970940041"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f53c3d23f04efdd0d3dbc2312e24c62"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a0f53c3d23f04efdd0d3dbc2312e24c62">parse_host</a> (const char *line)</td></tr>
+<tr class="separator:a0f53c3d23f04efdd0d3dbc2312e24c62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50dc7ae9fb4bbbc2a86f46e57561b9e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a50dc7ae9fb4bbbc2a86f46e57561b9e2">free_hosts</a> ()</td></tr>
 <tr class="separator:a50dc7ae9fb4bbbc2a86f46e57561b9e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff3729eaeaa11e6b58769cb1e930684f"><td class="memItemLeft" align="right" valign="top"><a id="aff3729eaeaa11e6b58769cb1e930684f"></a>
@@ -117,8 +123,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_hosts</b> ()</td
 <tr class="separator:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b93c8f28b99804e00ac8483359a97fa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a2b93c8f28b99804e00ac8483359a97fa">scheduler_finish</a> (int status)</td></tr>
 <tr class="separator:a2b93c8f28b99804e00ac8483359a97fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5452b52d993452f1ae90c5535aa90a5b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a5452b52d993452f1ae90c5535aa90a5b">scheduler_report</a> (<a class="el" href="structSTATUS__T.html">STATUS_T</a> *status)</td></tr>
-<tr class="separator:a5452b52d993452f1ae90c5535aa90a5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a291e438e222f941d3969e605277de68e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a291e438e222f941d3969e605277de68e">scheduler_report</a> (<a class="el" href="structstatus__t.html">status_t</a> *status)</td></tr>
+<tr class="separator:a291e438e222f941d3969e605277de68e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08ad5203ea6cdb558062b292138b73d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a08ad5203ea6cdb558062b292138b73d9">scheduler_launch_exe</a> (const char *host, int argc, const char *argv[])</td></tr>
 <tr class="separator:a08ad5203ea6cdb558062b292138b73d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb27c3904db5220767660e274b4bc0ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#adb27c3904db5220767660e274b4bc0ba">scheduler_send_socket</a> (int sfd, int id)</td></tr>
@@ -136,8 +142,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines that will be used to talk to the scheduler. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a8ef70b356584cb3cc7d604f970940041"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8ef70b356584cb3cc7d604f970940041">&#9670;&nbsp;</a></span>parse_host()</h2>
+<a id="a0f53c3d23f04efdd0d3dbc2312e24c62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f53c3d23f04efdd0d3dbc2312e24c62">&#9670;&nbsp;</a></span>parse_host()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -145,13 +151,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
         <tr>
           <td class="memname">void parse_host </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>line</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Parse and add host info to hosts[] and hostaddr[]. The format is hostname[=hostaddr:port] </p>
+<p>Parse and add host info to hosts[] and hostaddr[]. hosts contains the shortcut name, without dot and hostaddr contains the FQDN and optionally the port </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">line</td><td>contains hostname[=hostaddr:port] </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -290,8 +302,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
 
 </div>
 </div>
-<a id="a5452b52d993452f1ae90c5535aa90a5b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5452b52d993452f1ae90c5535aa90a5b">&#9670;&nbsp;</a></span>scheduler_report()</h2>
+<a id="a291e438e222f941d3969e605277de68e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a291e438e222f941d3969e605277de68e">&#9670;&nbsp;</a></span>scheduler_report()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -299,7 +311,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
         <tr>
           <td class="memname">void scheduler_report </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSTATUS__T.html">STATUS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="structstatus__t.html">status_t</a> *&#160;</td>
           <td class="paramname"><em>status</em></td><td>)</td>
           <td></td>
         </tr>

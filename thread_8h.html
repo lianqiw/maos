@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -103,8 +109,8 @@ $(document).ready(function(){initNavTree('thread_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structthread__t.html">thread_t</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structthread__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#structthread__t">thread_t</a></td></tr>
+<tr class="separator:structthread__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -155,8 +161,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a46cd5810acdabad3f9ac588daa499e41"><td class="memItemLeft" align="right" valign="top"><a id="a46cd5810acdabad3f9ac588daa499e41"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>UNLOCK_FFT</b>&#160;&#160;&#160;UNLOCK(<a class="el" href="thread_8h.html#a6cb5787469a53f1468e29580abc056ec">mutex_fftw</a>)</td></tr>
 <tr class="separator:a46cd5810acdabad3f9ac588daa499e41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75325cd833e386206969f01592ae467b"><td class="memItemLeft" align="right" valign="top"><a id="a75325cd833e386206969f01592ae467b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>LOCKADD</b>(dest,  src,  step)</td></tr>
+<tr class="memitem:a75325cd833e386206969f01592ae467b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>LOCKADD</b>(dest,  src,  step)</td></tr>
 <tr class="separator:a75325cd833e386206969f01592ae467b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b2b7b50e8a555ed7588bfbe98b96fb7"><td class="memItemLeft" align="right" valign="top"><a id="a5b2b7b50e8a555ed7588bfbe98b96fb7"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>SPIN_LOCK</b>(i)&#160;&#160;&#160;while(__sync_lock_test_and_set(&amp;i, 1)) while(i)</td></tr>
@@ -183,7 +188,7 @@ Typedefs</h2></td></tr>
 typedef void *(*&#160;</td><td class="memItemRight" valign="bottom"><b>thread_fun</b>) (void *)</td></tr>
 <tr class="separator:a41f23d172c89ca8271cf0a6ebab9119f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a735e98ad9d08fe72a5a2e20051ebf72a"><td class="memItemLeft" align="right" valign="top"><a id="a735e98ad9d08fe72a5a2e20051ebf72a"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>thread_wrapfun</b>) (<a class="el" href="structthread__t.html">thread_t</a> *)</td></tr>
+typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>thread_wrapfun</b>) (<a class="el" href="thread_8h.html#structthread__t">thread_t</a> *)</td></tr>
 <tr class="separator:a735e98ad9d08fe72a5a2e20051ebf72a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -191,7 +196,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a46d357a9305be4f48b8166cb27ec41ff"><td class="memItemLeft" align="right" valign="top"><a id="a46d357a9305be4f48b8166cb27ec41ff"></a>
 <a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id</b> (void)</td></tr>
 <tr class="separator:a46d357a9305be4f48b8166cb27ec41ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c1f2b6e57a822b6ae203dc855a89a96"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#a8c1f2b6e57a822b6ae203dc855a89a96">thread_prep</a> (<a class="el" href="structthread__t.html">thread_t</a> *thd, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end, <a class="el" href="classlong.html">long</a> nthread, thread_wrapfun fun, void *data)</td></tr>
+<tr class="memitem:a8c1f2b6e57a822b6ae203dc855a89a96"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#a8c1f2b6e57a822b6ae203dc855a89a96">thread_prep</a> (<a class="el" href="thread_8h.html#structthread__t">thread_t</a> *thd, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end, <a class="el" href="classlong.html">long</a> nthread, thread_wrapfun fun, void *data)</td></tr>
 <tr class="separator:a8c1f2b6e57a822b6ae203dc855a89a96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9930843fcf00924f1a4076af69232a5b"><td class="memItemLeft" align="right" valign="top"><a id="a9930843fcf00924f1a4076af69232a5b"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>lockadd</b> (int *src, int step)</td></tr>
@@ -204,7 +209,68 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>lockadd</b> (int *src,
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Functions regarding to threading.</p>
 <p>Openmp version: 3.0 (200805): Introduced task 4.0 (201307): Introduced taskgroup. 4.5 (201511): Introduced taskloop and priority. Taskloop has implicit taskgroup. </p>
-</div><h2 class="groupheader">Macro Definition Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structthread__t" id="structthread__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structthread__t">&#9670;&nbsp;</a></span>thread_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct thread_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Information about job to launch for each thread. start and end are the two indices. </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a33700c0c7d592f044f723cc1c285ae73"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+start</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a4588391dacab3ef6f4b10564c6f93bc2"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+end</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a137ae5da8bc8a7d52923915857b89ee0"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+ithread</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a701c408a4356a87431998b64abf3e64c"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+nthread</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a34e2056b80f1aa8bd2424f6e75614606"></a>thread_wrapfun</td>
+<td class="fieldname">
+fun</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a757f72629b527b6b5b824e88561c19fe"></a>void *</td>
+<td class="fieldname">
+data</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="afbfb86904241e75f24b54408a01da875"></a>void *</td>
+<td class="fieldname">
+thread_data</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="aafc57d44738df70f43ac87ed969eed47"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aafc57d44738df70f43ac87ed969eed47">&#9670;&nbsp;</a></span>QUEUE</h2>
 
@@ -220,6 +286,40 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>lockadd</b> (int *src,
 
 </div>
 </div>
+<a id="a75325cd833e386206969f01592ae467b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75325cd833e386206969f01592ae467b">&#9670;&nbsp;</a></span>LOCKADD</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOCKADD</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">dest, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">src, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">step&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">(({__asm__ __volatile__ (<span class="stringliteral">&quot;lock; xaddl %0,%1&quot;</span>    \</div><div class="line">        : <span class="stringliteral">&quot;=r&quot;</span> (dest), <span class="stringliteral">&quot;=m&quot;</span> (src)       \</div><div class="line">        : <span class="stringliteral">&quot;0&quot;</span> (step), <span class="stringliteral">&quot;m&quot;</span> (src));}),dest)</div></div><!-- fragment -->
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a8c1f2b6e57a822b6ae203dc855a89a96"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8c1f2b6e57a822b6ae203dc855a89a96">&#9670;&nbsp;</a></span>thread_prep()</h2>
@@ -230,7 +330,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>lockadd</b> (int *src,
         <tr>
           <td class="memname">void thread_prep </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structthread__t.html">thread_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="thread_8h.html#structthread__t">thread_t</a> *&#160;</td>
           <td class="paramname"><em>thd</em>, </td>
         </tr>
         <tr>

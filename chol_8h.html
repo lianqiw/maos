@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -100,8 +106,8 @@ $(document).ready(function(){initNavTree('chol_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspchol.html">spchol</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structspchol"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#structspchol">spchol</a></td></tr>
+<tr class="separator:structspchol"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -111,26 +117,74 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a7d6f48a409c439318634f2627356c4b3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structspchol.html">spchol</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a7d6f48a409c439318634f2627356c4b3">chol_factorize</a> (const <a class="el" href="structdsp.html">dsp</a> *A_in)</td></tr>
+<tr class="memitem:a7d6f48a409c439318634f2627356c4b3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="chol_8h.html#structspchol">spchol</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a7d6f48a409c439318634f2627356c4b3">chol_factorize</a> (const <a class="el" href="structdsp.html">dsp</a> *A_in)</td></tr>
 <tr class="separator:a7d6f48a409c439318634f2627356c4b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a253b971ff0e303583936cccfbc1c4d66"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a253b971ff0e303583936cccfbc1c4d66">chol_factorize2</a> (spint **Cp, const <a class="el" href="structdsp.html">dsp</a> *A_in)</td></tr>
 <tr class="separator:a253b971ff0e303583936cccfbc1c4d66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90a86be3964aac1e9130deda1ff26f4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a90a86be3964aac1e9130deda1ff26f4d">chol_solve</a> (<a class="el" href="structdmat.html">dmat</a> **x, <a class="el" href="structspchol.html">spchol</a> *A, <a class="el" href="structdmat.html">dmat</a> *y)</td></tr>
+<tr class="memitem:a90a86be3964aac1e9130deda1ff26f4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a90a86be3964aac1e9130deda1ff26f4d">chol_solve</a> (<a class="el" href="structdmat.html">dmat</a> **x, <a class="el" href="chol_8h.html#structspchol">spchol</a> *A, <a class="el" href="structdmat.html">dmat</a> *y)</td></tr>
 <tr class="separator:a90a86be3964aac1e9130deda1ff26f4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a416bdd4f3b6f78aa01162aa24636204d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a416bdd4f3b6f78aa01162aa24636204d">chol_spsolve</a> (<a class="el" href="structspchol.html">spchol</a> *A, const <a class="el" href="structdsp.html">dsp</a> *y)</td></tr>
+<tr class="memitem:a416bdd4f3b6f78aa01162aa24636204d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a416bdd4f3b6f78aa01162aa24636204d">chol_spsolve</a> (<a class="el" href="chol_8h.html#structspchol">spchol</a> *A, const <a class="el" href="structdsp.html">dsp</a> *y)</td></tr>
 <tr class="separator:a416bdd4f3b6f78aa01162aa24636204d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a999102f2b6b345ff1ed7aff6e7a841"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a7a999102f2b6b345ff1ed7aff6e7a841">chol_free_do</a> (<a class="el" href="structspchol.html">spchol</a> *A)</td></tr>
+<tr class="memitem:a7a999102f2b6b345ff1ed7aff6e7a841"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a7a999102f2b6b345ff1ed7aff6e7a841">chol_free_do</a> (<a class="el" href="chol_8h.html#structspchol">spchol</a> *A)</td></tr>
 <tr class="separator:a7a999102f2b6b345ff1ed7aff6e7a841"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ff611672c83dc9ccf8f53ca9e299e71"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a3ff611672c83dc9ccf8f53ca9e299e71">chol_save</a> (<a class="el" href="structspchol.html">spchol</a> *A, const char *format,...)</td></tr>
+<tr class="memitem:a3ff611672c83dc9ccf8f53ca9e299e71"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a3ff611672c83dc9ccf8f53ca9e299e71">chol_save</a> (<a class="el" href="chol_8h.html#structspchol">spchol</a> *A, const char *format,...)</td></tr>
 <tr class="separator:a3ff611672c83dc9ccf8f53ca9e299e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f1d989ab970c20e86fcea8843b0243d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structspchol.html">spchol</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a2f1d989ab970c20e86fcea8843b0243d">chol_read</a> (const char *format,...)</td></tr>
+<tr class="memitem:a2f1d989ab970c20e86fcea8843b0243d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="chol_8h.html#structspchol">spchol</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a2f1d989ab970c20e86fcea8843b0243d">chol_read</a> (const char *format,...)</td></tr>
 <tr class="separator:a2f1d989ab970c20e86fcea8843b0243d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad676f4d815948a8ca80f5a85e3a89c70"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#ad676f4d815948a8ca80f5a85e3a89c70">chol_convert</a> (<a class="el" href="structspchol.html">spchol</a> *A, int keep)</td></tr>
+<tr class="memitem:ad676f4d815948a8ca80f5a85e3a89c70"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#ad676f4d815948a8ca80f5a85e3a89c70">chol_convert</a> (<a class="el" href="chol_8h.html#structspchol">spchol</a> *A, int keep)</td></tr>
 <tr class="separator:ad676f4d815948a8ca80f5a85e3a89c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Wraps the CHOLESKY Library to provide a simple interface. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structspchol" id="structspchol"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structspchol">&#9670;&nbsp;</a></span>spchol</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct spchol</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a023c9cbc3204883f1365f200a29c5bcd"></a>struct cholmod_factor_struct *</td>
+<td class="fieldname">
+L</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a2d161a1e9d16cdd5fc3f157e4d4fc718"></a>struct cholmod_common_struct *</td>
+<td class="fieldname">
+c</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="afc90bd8b80c3759c9f9feaa95a4623fa"></a><a class="el" href="structdsp.html">dsp</a> *</td>
+<td class="fieldname">
+Cl</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a1ca46f48b2b1b3d753344f2a4f5006b0"></a><a class="el" href="structdsp.html">dsp</a> *</td>
+<td class="fieldname">
+Cu</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a562f77cce686fca21651b810bd282408"></a>spint *</td>
+<td class="fieldname">
+Cp</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="a7d6f48a409c439318634f2627356c4b3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7d6f48a409c439318634f2627356c4b3">&#9670;&nbsp;</a></span>chol_factorize()</h2>
 
@@ -138,7 +192,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structspchol.html">spchol</a>* chol_factorize </td>
+          <td class="memname"><a class="el" href="chol_8h.html#structspchol">spchol</a>* chol_factorize </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structdsp.html">dsp</a> *&#160;</td>
           <td class="paramname"><em>A_in</em></td><td>)</td>
@@ -194,7 +248,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structspchol.html">spchol</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="chol_8h.html#structspchol">spchol</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -223,7 +277,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="structdsp.html">dsp</a>* chol_spsolve </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structspchol.html">spchol</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="chol_8h.html#structspchol">spchol</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -252,7 +306,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void chol_free_do </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structspchol.html">spchol</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="chol_8h.html#structspchol">spchol</a> *&#160;</td>
           <td class="paramname"><em>A</em></td><td>)</td>
           <td></td>
         </tr>
@@ -271,7 +325,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void chol_save </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structspchol.html">spchol</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="chol_8h.html#structspchol">spchol</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -304,7 +358,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structspchol.html">spchol</a>* chol_read </td>
+          <td class="memname"><a class="el" href="chol_8h.html#structspchol">spchol</a>* chol_read </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>format</em>, </td>
@@ -335,7 +389,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void chol_convert </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structspchol.html">spchol</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="chol_8h.html#structspchol">spchol</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>

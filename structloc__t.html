@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -95,7 +101,7 @@ $(document).ready(function(){initNavTree('structloc__t.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p><code>#include &lt;type.h&gt;</code></p>
+<p><code>#include &quot;type.h&quot;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
@@ -129,6 +135,20 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>npad</b></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Struct for coordinates like plocs, xloc, aloc etc. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
+<a id="aff8ef15e73005671ac472534e581f575"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff8ef15e73005671ac472534e581f575">&#9670;&nbsp;</a></span>id</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t loc_t::id</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a056ba180142ca19558f74c3ac8d2e222"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a056ba180142ca19558f74c3ac8d2e222">&#9670;&nbsp;</a></span>locx</h2>
 
@@ -261,6 +281,20 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>npad</b></td></tr>
       </table>
 </div><div class="memdoc">
 <p>point to the map used for identifying neihboring points. </p>
+
+</div>
+</div>
+<a id="a81471f2ab7491c9545eb1a84406b06c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81471f2ab7491c9545eb1a84406b06c4">&#9670;&nbsp;</a></span>npad</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int loc_t::npad</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

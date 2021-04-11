@@ -6,6 +6,6 @@ var searchData=
   ['nea_5fmm',['nea_mm',['../recon__utils_8h.html#a182387c2aadfaac90464c33a249699ce',1,'setup_recon.c']]],
   ['nextfftsize',['nextfftsize',['../mathmisc_8h.html#ab2457f6b21851a0a5d62695be54331ca',1,'mathmisc.c']]],
   ['nextpow2',['nextpow2',['../mathmisc_8h.html#a17bd719e22e15aaff05bc4c8773dede2',1,'mathmisc.c']]],
-  ['ngsmod2science',['ngsmod2science',['../ahst_8h.html#a5ac89e1c22f32fe67b6af169ecfa57b0',1,'ahst.c']]],
-  ['ngsmod_5ffree',['ngsmod_free',['../ahst_8h.html#ac11262023c447185fc5f178daae87abc',1,'ahst.c']]]
+  ['ngsmod2science',['ngsmod2science',['../ahst_8h.html#a75fc0893da6e59f8dccc5c17e53aba54',1,'ahst.c']]],
+  ['ngsmod_5ffree',['ngsmod_free',['../ahst_8h.html#a94177f64acfe56654db4e671a4b5ad0b',1,'ahst.c']]]
 ];

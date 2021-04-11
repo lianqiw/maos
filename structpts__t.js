@@ -4,8 +4,6 @@ var structpts__t =
     [ "origx", "structpts__t.html#a78348698d847fde30c184e637da5639f", null ],
     [ "origy", "structpts__t.html#aea34e9b0cc9e1d4e9ad95eb416f004e8", null ],
     [ "nsa", "structpts__t.html#ac90584adaba0ea94227b71ff1c2b7581", null ],
-    [ "dsa", "structpts__t.html#ae658762534260260fd3626816b364097", null ],
-    [ "dsax", "structpts__t.html#a3d5414a1117ebc70fc74f37e09036449", null ],
     [ "dsay", "structpts__t.html#a4cec769be67417411fea9c38217b8078", null ],
     [ "dummy1", "structpts__t.html#a6b5980256384f8c7cee016a737bcfdbc", null ],
     [ "dummy2", "structpts__t.html#aa68698b7a0f7c845871afb83c592f01f", null ],

@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -94,6 +100,18 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1cusolve__mvm.html'
 <div class="title">cuda_recon::cusolve_mvm Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for cuda_recon::cusolve_mvm:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classcuda__recon_1_1cusolve__mvm.png" usemap="#cuda_5Frecon::cusolve_5Fmvm_map" alt=""/>
+  <map id="cuda_5Frecon::cusolve_5Fmvm_map" name="cuda_5Frecon::cusolve_5Fmvm_map">
+<area href="classcuda__recon_1_1cusolve__l.html" alt="cuda_recon::cusolve_l" shape="rect" coords="0,0,162,24"/>
+<area href="classnon_copyable.html" alt="nonCopyable" shape="rect" coords="172,0,334,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -107,8 +125,9 @@ Public Member Functions</h2></td></tr>
 virtual Real&#160;</td><td class="memItemRight" valign="bottom"><b>solve</b> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="separator:a1f9f8d75258f9a3909780860b2baa698"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/solve.h</li>
+<li>cuda/solve.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

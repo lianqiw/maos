@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -99,10 +105,10 @@ $(document).ready(function(){initNavTree('servo_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSERVO__T.html">SERVO_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSHO__T.html">SHO_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structservo__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#structservo__t">servo_t</a></td></tr>
+<tr class="separator:structservo__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structsho__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#structsho__t">sho_t</a></td></tr>
+<tr class="separator:structsho__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -112,34 +118,175 @@ Functions</h2></td></tr>
 <tr class="separator:a1aab2a4d37e5fb57e6ddb6a28bfc7e56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c1610b9a8a5bf2d2e260a4ce8ca5633"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a6c1610b9a8a5bf2d2e260a4ce8ca5633">servo_residual</a> (real *noise_amp, const <a class="el" href="structdmat.html">dmat</a> *psdin, real dt, <a class="el" href="classlong.html">long</a> dtrat, real al, const <a class="el" href="structdmat.html">dmat</a> *gain, int servo_type)</td></tr>
 <tr class="separator:a6c1610b9a8a5bf2d2e260a4ce8ca5633"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eeb7a612c94ca02fe5e8739dc42a7d9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a6eeb7a612c94ca02fe5e8739dc42a7d9">servo_update</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st, const <a class="el" href="structdmat.html">dmat</a> *ep)</td></tr>
-<tr class="separator:a6eeb7a612c94ca02fe5e8739dc42a7d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00781b84ff2c7f396069fde044fd459f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a00781b84ff2c7f396069fde044fd459f">servo_new</a> (<a class="el" href="structdcell.html">dcell</a> *merr, const <a class="el" href="structdmat.html">dmat</a> *ap, real al, real dt, const <a class="el" href="structdmat.html">dmat</a> *ep)</td></tr>
-<tr class="separator:a00781b84ff2c7f396069fde044fd459f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0837f1096ffa6a5da0574de1f7565815"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a0837f1096ffa6a5da0574de1f7565815">servo_filter</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st, const <a class="el" href="structdcell.html">dcell</a> *merr)</td></tr>
-<tr class="separator:a0837f1096ffa6a5da0574de1f7565815"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f2b4b8a661265384f4ed251e88321af"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a5f2b4b8a661265384f4ed251e88321af">servo_add</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st, const <a class="el" href="structdcell.html">dcell</a> *madj, real alpha)</td></tr>
-<tr class="separator:a5f2b4b8a661265384f4ed251e88321af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a86eb08017cc4469783a5d7cf39003c69"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a86eb08017cc4469783a5d7cf39003c69">servo_output</a> (const <a class="el" href="structSERVO__T.html">SERVO_T</a> *st, <a class="el" href="structdcell.html">dcell</a> **out)</td></tr>
-<tr class="separator:a86eb08017cc4469783a5d7cf39003c69"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad6d4d54f623cc4a8a134eec68f56ea5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#aad6d4d54f623cc4a8a134eec68f56ea5">servo_update</a> (<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st, const <a class="el" href="structdmat.html">dmat</a> *ep)</td></tr>
+<tr class="separator:aad6d4d54f623cc4a8a134eec68f56ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29d0be1c907299b934692f1ec98bd8e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a29d0be1c907299b934692f1ec98bd8e0">servo_new</a> (<a class="el" href="structdcell.html">dcell</a> *merr, const <a class="el" href="structdmat.html">dmat</a> *ap, real al, real dt, const <a class="el" href="structdmat.html">dmat</a> *ep)</td></tr>
+<tr class="separator:a29d0be1c907299b934692f1ec98bd8e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a898d8cda7cc48e166731990d79d8fc49"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a898d8cda7cc48e166731990d79d8fc49">servo_filter</a> (<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st, const <a class="el" href="structdcell.html">dcell</a> *merr)</td></tr>
+<tr class="separator:a898d8cda7cc48e166731990d79d8fc49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae796bbfe1ba648eec14a85bda77ea585"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#ae796bbfe1ba648eec14a85bda77ea585">servo_add</a> (<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st, const <a class="el" href="structdcell.html">dcell</a> *madj, real alpha)</td></tr>
+<tr class="separator:ae796bbfe1ba648eec14a85bda77ea585"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a737692c1a64db15a0b17ede592cdee58"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a737692c1a64db15a0b17ede592cdee58">servo_output</a> (const <a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st, <a class="el" href="structdcell.html">dcell</a> **out)</td></tr>
+<tr class="separator:a737692c1a64db15a0b17ede592cdee58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a8878a42952fc824350c76159d8e52f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a7a8878a42952fc824350c76159d8e52f">servo_test</a> (<a class="el" href="structdmat.html">dmat</a> *mideal, real dt, int dtrat, <a class="el" href="structdmat.html">dmat</a> *sigma2n, <a class="el" href="structdmat.html">dmat</a> *gain)</td></tr>
 <tr class="separator:a7a8878a42952fc824350c76159d8e52f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59977887c037dde762854fe5767071f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a59977887c037dde762854fe5767071f9">servo_reset</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st)</td></tr>
-<tr class="separator:a59977887c037dde762854fe5767071f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a214864ff73ecbb74bb2cff516169e973"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a214864ff73ecbb74bb2cff516169e973">servo_free</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st)</td></tr>
-<tr class="separator:a214864ff73ecbb74bb2cff516169e973"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a689b8780fa8256e676906a94045e3770"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSHO__T.html">SHO_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a689b8780fa8256e676906a94045e3770">sho_new</a> (real f0, real zeta)</td></tr>
-<tr class="separator:a689b8780fa8256e676906a94045e3770"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a114446d3cf13c9de532578aa3a51d411"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a114446d3cf13c9de532578aa3a51d411">sho_step</a> (<a class="el" href="structSHO__T.html">SHO_T</a> *sho, real xi, real dt)</td></tr>
-<tr class="separator:a114446d3cf13c9de532578aa3a51d411"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadb5d10418e6b79732b46b5af2cda408"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#aadb5d10418e6b79732b46b5af2cda408">sho_reset</a> (<a class="el" href="structSHO__T.html">SHO_T</a> *sho)</td></tr>
-<tr class="separator:aadb5d10418e6b79732b46b5af2cda408"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab73c6cf92b85a0420b775e885844deca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#ab73c6cf92b85a0420b775e885844deca">servo_reset</a> (<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st)</td></tr>
+<tr class="separator:ab73c6cf92b85a0420b775e885844deca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90db8b0851f40c4080286b84f5ac203c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a90db8b0851f40c4080286b84f5ac203c">servo_free</a> (<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st)</td></tr>
+<tr class="separator:a90db8b0851f40c4080286b84f5ac203c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8c19d3a61994201d9dd0457af46187d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="servo_8h.html#structsho__t">sho_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#af8c19d3a61994201d9dd0457af46187d">sho_new</a> (real f0, real zeta)</td></tr>
+<tr class="separator:af8c19d3a61994201d9dd0457af46187d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6713626409c5aa2d54b712d441486dbc"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a6713626409c5aa2d54b712d441486dbc">sho_step</a> (<a class="el" href="servo_8h.html#structsho__t">sho_t</a> *sho, real xi, real dt)</td></tr>
+<tr class="separator:a6713626409c5aa2d54b712d441486dbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa29234f8fe794556f32704e97553f64e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#aa29234f8fe794556f32704e97553f64e">sho_reset</a> (<a class="el" href="servo_8h.html#structsho__t">sho_t</a> *sho)</td></tr>
+<tr class="separator:aa29234f8fe794556f32704e97553f64e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af73da05983185a3e29a86a480fb06e17"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#af73da05983185a3e29a86a480fb06e17">sho_filter</a> (const <a class="el" href="structdmat.html">dmat</a> *xi, real dt, real f0, real zeta)</td></tr>
 <tr class="separator:af73da05983185a3e29a86a480fb06e17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines for servo optimization, filtering, etc. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structservo__t" id="structservo__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structservo__t">&#9670;&nbsp;</a></span>servo_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct servo_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Struct for servo filtering </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a7e24c5e6183a99b47a3eaa862073d980"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+mlead</td>
+<td class="fielddoc">
+<p>lead filter temporary storage </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a66fcf1c064b368b354fdd13bea1b1d57"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+merrlast</td>
+<td class="fielddoc">
+<p>recorded errro signal from last step </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a41fd25aa315bcc3648527ffd09c5d182"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+mpreint</td>
+<td class="fielddoc">
+<p>first integrator or other value. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a25ac4e49bfce258074fbd968332d34e2"></a><a class="el" href="structdccell.html">dccell</a> *</td>
+<td class="fieldname">
+merrhist</td>
+<td class="fielddoc">
+<p>Keep a short history of merr </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aac7dd8585ac3fb7118aa067886ef92b2"></a><a class="el" href="structdccell.html">dccell</a> *</td>
+<td class="fieldname">
+mint</td>
+<td class="fielddoc">
+<p>second integrator. It is array to accomodate multiple ap's </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a116a456fe82429ab3403b3f115cfa4f6"></a>int</td>
+<td class="fieldname">
+initialized</td>
+<td class="fielddoc">
+<p>is this data initialized </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a0620b1820afdc91b6b6f3e2adeec3615"></a>int</td>
+<td class="fieldname">
+alint</td>
+<td class="fielddoc">
+<p>Integral part of latency </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a61f95b9c42cb12c783f000b13a4838f8"></a>real</td>
+<td class="fieldname">
+alfrac</td>
+<td class="fielddoc">
+<p>Fractional latency </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ac79a5de282c090c1ef63538d06f67fe8"></a><a class="el" href="structdmat.html">dmat</a> *</td>
+<td class="fieldname">
+ap</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3451a92353b385174b86a60975328f8e"></a><a class="el" href="structdmat.html">dmat</a> *</td>
+<td class="fieldname">
+ep</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad258c848ab89eae4e3cd7d67cc08f17e"></a>real</td>
+<td class="fieldname">
+dt</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<a name="structsho__t" id="structsho__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structsho__t">&#9670;&nbsp;</a></span>sho_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct sho_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>struct for state space modeling of a second order harnomic oscillator with resonance frequency of f0 and damping ratio of zeta. </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a77bea4ed7dba97055700cdfe4e565aa3"></a>real</td>
+<td class="fieldname">
+dt</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a1327f9d0475411df218ecab698396013"></a>real</td>
+<td class="fieldname">
+c1</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a21c54615156db53eed8ef39b40e25016"></a>real</td>
+<td class="fieldname">
+c2</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8ec4ab633f785f80f58be9505c4da32b"></a>real</td>
+<td class="fieldname">
+x1</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af315bfe315ec157b3dcc9f70538a79bd"></a>real</td>
+<td class="fieldname">
+x2</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="a6abebf76fe8dd0fd6a34b22489a8deea"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6abebf76fe8dd0fd6a34b22489a8deea">&#9670;&nbsp;</a></span>servo_optim()</h2>
 
@@ -319,8 +466,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a6eeb7a612c94ca02fe5e8739dc42a7d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6eeb7a612c94ca02fe5e8739dc42a7d9">&#9670;&nbsp;</a></span>servo_update()</h2>
+<a id="aad6d4d54f623cc4a8a134eec68f56ea5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad6d4d54f623cc4a8a134eec68f56ea5">&#9670;&nbsp;</a></span>servo_update()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -328,7 +475,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void servo_update </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td>
           <td class="paramname"><em>st</em>, </td>
         </tr>
         <tr>
@@ -348,14 +495,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a00781b84ff2c7f396069fde044fd459f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00781b84ff2c7f396069fde044fd459f">&#9670;&nbsp;</a></span>servo_new()</h2>
+<a id="a29d0be1c907299b934692f1ec98bd8e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29d0be1c907299b934692f1ec98bd8e0">&#9670;&nbsp;</a></span>servo_new()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structSERVO__T.html">SERVO_T</a>* servo_new </td>
+          <td class="memname"><a class="el" href="servo_8h.html#structservo__t">servo_t</a>* servo_new </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> *&#160;</td>
           <td class="paramname"><em>merr</em>, </td>
@@ -395,8 +542,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a0837f1096ffa6a5da0574de1f7565815"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0837f1096ffa6a5da0574de1f7565815">&#9670;&nbsp;</a></span>servo_filter()</h2>
+<a id="a898d8cda7cc48e166731990d79d8fc49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a898d8cda7cc48e166731990d79d8fc49">&#9670;&nbsp;</a></span>servo_filter()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -404,7 +551,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">int servo_filter </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td>
           <td class="paramname"><em>st</em>, </td>
         </tr>
         <tr>
@@ -424,8 +571,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5f2b4b8a661265384f4ed251e88321af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f2b4b8a661265384f4ed251e88321af">&#9670;&nbsp;</a></span>servo_add()</h2>
+<a id="ae796bbfe1ba648eec14a85bda77ea585"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae796bbfe1ba648eec14a85bda77ea585">&#9670;&nbsp;</a></span>servo_add()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -433,7 +580,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void servo_add </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td>
           <td class="paramname"><em>st</em>, </td>
         </tr>
         <tr>
@@ -459,8 +606,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a86eb08017cc4469783a5d7cf39003c69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a86eb08017cc4469783a5d7cf39003c69">&#9670;&nbsp;</a></span>servo_output()</h2>
+<a id="a737692c1a64db15a0b17ede592cdee58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a737692c1a64db15a0b17ede592cdee58">&#9670;&nbsp;</a></span>servo_output()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -468,7 +615,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void servo_output </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td>
           <td class="paramname"><em>st</em>, </td>
         </tr>
         <tr>
@@ -535,8 +682,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a59977887c037dde762854fe5767071f9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a59977887c037dde762854fe5767071f9">&#9670;&nbsp;</a></span>servo_reset()</h2>
+<a id="ab73c6cf92b85a0420b775e885844deca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab73c6cf92b85a0420b775e885844deca">&#9670;&nbsp;</a></span>servo_reset()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -544,7 +691,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void servo_reset </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td>
           <td class="paramname"><em>st</em></td><td>)</td>
           <td></td>
         </tr>
@@ -554,8 +701,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a214864ff73ecbb74bb2cff516169e973"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a214864ff73ecbb74bb2cff516169e973">&#9670;&nbsp;</a></span>servo_free()</h2>
+<a id="a90db8b0851f40c4080286b84f5ac203c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90db8b0851f40c4080286b84f5ac203c">&#9670;&nbsp;</a></span>servo_free()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -563,24 +710,24 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void servo_free </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td>
           <td class="paramname"><em>st</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free <a class="el" href="structSERVO__T.html">SERVO_T</a> struct </p>
+<p>Free <a class="el" href="servo_8h.html#structservo__t">servo_t</a> struct </p>
 
 </div>
 </div>
-<a id="a689b8780fa8256e676906a94045e3770"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a689b8780fa8256e676906a94045e3770">&#9670;&nbsp;</a></span>sho_new()</h2>
+<a id="af8c19d3a61994201d9dd0457af46187d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8c19d3a61994201d9dd0457af46187d">&#9670;&nbsp;</a></span>sho_new()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structSHO__T.html">SHO_T</a>* sho_new </td>
+          <td class="memname"><a class="el" href="servo_8h.html#structsho__t">sho_t</a>* sho_new </td>
           <td>(</td>
           <td class="paramtype">real&#160;</td>
           <td class="paramname"><em>f0</em>, </td>
@@ -609,8 +756,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a114446d3cf13c9de532578aa3a51d411"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a114446d3cf13c9de532578aa3a51d411">&#9670;&nbsp;</a></span>sho_step()</h2>
+<a id="a6713626409c5aa2d54b712d441486dbc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6713626409c5aa2d54b712d441486dbc">&#9670;&nbsp;</a></span>sho_step()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -618,7 +765,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">real sho_step </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSHO__T.html">SHO_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structsho__t">sho_t</a> *&#160;</td>
           <td class="paramname"><em>sho</em>, </td>
         </tr>
         <tr>
@@ -644,8 +791,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aadb5d10418e6b79732b46b5af2cda408"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aadb5d10418e6b79732b46b5af2cda408">&#9670;&nbsp;</a></span>sho_reset()</h2>
+<a id="aa29234f8fe794556f32704e97553f64e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa29234f8fe794556f32704e97553f64e">&#9670;&nbsp;</a></span>sho_reset()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -653,7 +800,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void sho_reset </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSHO__T.html">SHO_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structsho__t">sho_t</a> *&#160;</td>
           <td class="paramname"><em>sho</em></td><td>)</td>
           <td></td>
         </tr>

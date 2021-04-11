@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -97,19 +103,19 @@ $(document).ready(function(){initNavTree('algorithm.html','');});
 DM Hysteresis</h1>
 <p>The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope" J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000</p>
 <p>Formula (2) is used with V replaced by command x, and x replaced by actual DM position y </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ \frac{dy}{dx}=\alpha sign(dx) (\beta x-y)+(\beta-u) \]" src="form_5.png"/>
+\[ \frac{dy}{dx}=\alpha sign(dx) (\beta x-y)+(\beta-u) \]
 </p>
-<p>For closed hyteresis loop within the stroke limit <img class="formulaInl" alt="$S$" src="form_6.png"/>, the linear ordinary differential equation can be solved analytically: </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} y_{t/r}(x)=\beta x \mp \frac{u}{\alpha}\left(1-\frac{2\exp(\mp\alpha x)}{\exp(-\alpha S)+\exp(\alpha S)}\right) \end{eqnarray*}" src="form_7.png"/>
+<p>For closed hyteresis loop within the stroke limit \(S\), the linear ordinary differential equation can be solved analytically: </p><p class="formulaDsp">
+\begin{eqnarray*} y_{t/r}(x)=\beta x \mp \frac{u}{\alpha}\left(1-\frac{2\exp(\mp\alpha x)}{\exp(-\alpha S)+\exp(\alpha S)}\right) \end{eqnarray*}
 </p>
 <p>where t and r represents trace and retrace directions. It is desirable to have y be within the same range as x to simulate calibrated command:</p>
-<p><img class="formulaInl" alt="$y_{t/r}(S)=S$" src="form_8.png"/>. Let the hysteresis ratio be <img class="formulaInl" alt="$h$" src="form_9.png"/>, we have</p>
+<p>\(y_{t/r}(S)=S\). Let the hysteresis ratio be \(h\), we have</p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} \frac{y_r(0)}{S}&amp;=&amp;\frac{u}{\alpha S}\left(1-\frac{2}{\exp(-\alpha S)+exp(\alpha S)}\right)=h \\ \frac{y_{t/r}(S)}{S}&amp;=&amp;\beta-\frac{u}{\alpha S}\left(1-\frac{2\exp(-\alpha S)}{\exp(-\alpha S)+\exp(\alpha S)}\right) = 1 \end{eqnarray*}" src="form_10.png"/>
+\begin{eqnarray*} \frac{y_r(0)}{S}&amp;=&amp;\frac{u}{\alpha S}\left(1-\frac{2}{\exp(-\alpha S)+exp(\alpha S)}\right)=h \\ \frac{y_{t/r}(S)}{S}&amp;=&amp;\beta-\frac{u}{\alpha S}\left(1-\frac{2\exp(-\alpha S)}{\exp(-\alpha S)+\exp(\alpha S)}\right) = 1 \end{eqnarray*}
 </p>
-<p>The equation can be solved uniquely when <img class="formulaInl" alt="$\alpha S$" src="form_11.png"/> is fixed. The hysteresis curve is a weak function of <img class="formulaInl" alt="$\alpha S$" src="form_11.png"/> and having <img class="formulaInl" alt="$\alpha S=2$" src="form_12.png"/> produces a good looking curve. Smaller <img class="formulaInl" alt="$\alpha S$" src="form_11.png"/> has slower convergence of the hysteresis curve.</p>
+<p>The equation can be solved uniquely when \(\alpha S\) is fixed. The hysteresis curve is a weak function of \(\alpha S\) and having \(\alpha S=2\) produces a good looking curve. Smaller \(\alpha S\) has slower convergence of the hysteresis curve.</p>
 <p>The hysteresis model is simulated using simple integration. For each step with a new x, the position y is updated as </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} dx &amp;=&amp; x-x_{last} \\ dy &amp;=&amp; \alpha*abs(dx)*(\beta*x_{last}-y_{last})+dx*(\beta-u) \\ y_{last}&amp;\mathrel{+}=&amp;dy \\ x_{last}&amp;=&amp;x \\ y&amp;=&amp;y_{last} \end{eqnarray*}" src="form_13.png"/>
+\begin{eqnarray*} dx &amp;=&amp; x-x_{last} \\ dy &amp;=&amp; \alpha*abs(dx)*(\beta*x_{last}-y_{last})+dx*(\beta-u) \\ y_{last}&amp;\mathrel{+}=&amp;dy \\ x_{last}&amp;=&amp;x \\ y&amp;=&amp;y_{last} \end{eqnarray*}
 </p>
  </div></div><!-- contents -->
 </div><!-- doc-content -->

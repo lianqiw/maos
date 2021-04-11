@@ -1,6 +1,11 @@
 var bin_8h =
 [
-    [ "header_t", "structheader__t.html", "structheader__t" ],
+    [ "header_t", "bin_8h.html#structheader__t", [
+      [ "magic", "bin_8h.html#a7fafb06c258e0d65060c3471e1a05ff8", null ],
+      [ "nx", "bin_8h.html#a72ab2223d410da93e0a586bf8d7a8840", null ],
+      [ "ny", "bin_8h.html#aa71a34dd56dcaac2b83d6d0b7de01474", null ],
+      [ "str", "bin_8h.html#a66647f2919e9e15330a797bfce09f4b0", null ]
+    ] ],
     [ "M_CSP64", "bin_8h.html#a31c5926f254d358ad47aa2f52133b0fa", null ],
     [ "M_DSP64", "bin_8h.html#ab018d0456c476a02b8d2a55644a499dc", null ],
     [ "M_DBL", "bin_8h.html#a6b91bbc9dfb979b424babea2cb165985", null ],

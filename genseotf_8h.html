@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,23 +104,23 @@ $(document).ready(function(){initNavTree('genseotf_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5b7605cad8168d3a00b8c10faefc9d69"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#a5b7605cad8168d3a00b8c10faefc9d69">gensei</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
-<tr class="separator:a5b7605cad8168d3a00b8c10faefc9d69"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8af32636d2faf44199899565c2f16a72"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#a8af32636d2faf44199899565c2f16a72">genseotf</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
-<tr class="separator:a8af32636d2faf44199899565c2f16a72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ffba9d4d90f4b65147fc4a3440c78d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#a4ffba9d4d90f4b65147fc4a3440c78d8">genselotf</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
-<tr class="separator:a4ffba9d4d90f4b65147fc4a3440c78d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acce63392ca96c45182348456539fa954"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#acce63392ca96c45182348456539fa954">gensepsf</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
-<tr class="separator:acce63392ca96c45182348456539fa954"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23fcbf812ba1ea247e03dab86cd69df0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#a23fcbf812ba1ea247e03dab86cd69df0">genmtch</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const int ipowfs)</td></tr>
-<tr class="separator:a23fcbf812ba1ea247e03dab86cd69df0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9dbd686d3aaec6b22c9f04b6943acb1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#ac9dbd686d3aaec6b22c9f04b6943acb1">gensei</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int ipowfs)</td></tr>
+<tr class="separator:ac9dbd686d3aaec6b22c9f04b6943acb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f66c595bd13df58591aeeed189edfe9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#a0f66c595bd13df58591aeeed189edfe9">genseotf</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int ipowfs)</td></tr>
+<tr class="separator:a0f66c595bd13df58591aeeed189edfe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78f3f004a0082218d53f6767cb0431be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#a78f3f004a0082218d53f6767cb0431be">genselotf</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int ipowfs)</td></tr>
+<tr class="separator:a78f3f004a0082218d53f6767cb0431be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa89d62fd0ed4a10442a9a9b7c1f9242"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#afa89d62fd0ed4a10442a9a9b7c1f9242">gensepsf</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int ipowfs)</td></tr>
+<tr class="separator:afa89d62fd0ed4a10442a9a9b7c1f9242"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab22c482617b646240e365ac3a02f2540"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8h.html#ab22c482617b646240e365ac3a02f2540">genmtch</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const int ipowfs)</td></tr>
+<tr class="separator:ab22c482617b646240e365ac3a02f2540"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines to generate mean short exposure (tip/tilt removed) pixel intensities. Mostly used for LGS pixel intensity for its matched filter. Structure functions from kolmogorov spectrum is used. Not able to take into account outerscale yet.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>find ways to factor in outerscale effect (use von karman spectrum instead of kolmogorov) </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>find ways to factor in outerscale effect (use von karman spectrum instead of kolmogorov) </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a5b7605cad8168d3a00b8c10faefc9d69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5b7605cad8168d3a00b8c10faefc9d69">&#9670;&nbsp;</a></span>gensei()</h2>
+<a id="ac9dbd686d3aaec6b22c9f04b6943acb1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9dbd686d3aaec6b22c9f04b6943acb1">&#9670;&nbsp;</a></span>gensei()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -122,13 +128,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void gensei </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
@@ -148,8 +154,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a8af32636d2faf44199899565c2f16a72"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8af32636d2faf44199899565c2f16a72">&#9670;&nbsp;</a></span>genseotf()</h2>
+<a id="a0f66c595bd13df58591aeeed189edfe9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f66c595bd13df58591aeeed189edfe9">&#9670;&nbsp;</a></span>genseotf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -157,13 +163,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void genseotf </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
@@ -183,8 +189,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a4ffba9d4d90f4b65147fc4a3440c78d8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ffba9d4d90f4b65147fc4a3440c78d8">&#9670;&nbsp;</a></span>genselotf()</h2>
+<a id="a78f3f004a0082218d53f6767cb0431be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78f3f004a0082218d53f6767cb0431be">&#9670;&nbsp;</a></span>genselotf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -192,13 +198,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void genselotf </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
@@ -218,8 +224,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="acce63392ca96c45182348456539fa954"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acce63392ca96c45182348456539fa954">&#9670;&nbsp;</a></span>gensepsf()</h2>
+<a id="afa89d62fd0ed4a10442a9a9b7c1f9242"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa89d62fd0ed4a10442a9a9b7c1f9242">&#9670;&nbsp;</a></span>gensepsf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -227,13 +233,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void gensepsf </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
@@ -253,8 +259,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a23fcbf812ba1ea247e03dab86cd69df0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a23fcbf812ba1ea247e03dab86cd69df0">&#9670;&nbsp;</a></span>genmtch()</h2>
+<a id="ab22c482617b646240e365ac3a02f2540"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab22c482617b646240e365ac3a02f2540">&#9670;&nbsp;</a></span>genmtch()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -262,13 +268,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void genmtch </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>

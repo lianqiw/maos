@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -247,7 +253,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
 <tr class="separator:abd063e483f71cca17ca38414f189f139"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3aa83d725eaa76510741e22468c1e122"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a3aa83d725eaa76510741e22468c1e122">lwritedata</a> (file_t *fp, const <a class="el" href="structlmat.html">lmat</a> *A)</td></tr>
 <tr class="separator:a3aa83d725eaa76510741e22468c1e122"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c7080abd9dba858e9b9abe3659eed4c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a9c7080abd9dba858e9b9abe3659eed4c">lreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="memitem:a9c7080abd9dba858e9b9abe3659eed4c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a9c7080abd9dba858e9b9abe3659eed4c">lreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a9c7080abd9dba858e9b9abe3659eed4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeedb6df7679a7e1c669bec253577deb5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#aeedb6df7679a7e1c669bec253577deb5">lnew_mmap</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
 <tr class="separator:aeedb6df7679a7e1c669bec253577deb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1393,7 +1399,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>

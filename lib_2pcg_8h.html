@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -99,23 +105,23 @@ $(document).ready(function(){initNavTree('lib_2pcg_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:ade400f0e2f1644c0ba3836be745f8474"><td class="memItemLeft" align="right" valign="top"><a id="ade400f0e2f1644c0ba3836be745f8474"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>CGFUN</b>) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const real alpha)</td></tr>
-<tr class="separator:ade400f0e2f1644c0ba3836be745f8474"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20bc364610f841dedb1488c98c3d5be2"><td class="memItemLeft" align="right" valign="top"><a id="a20bc364610f841dedb1488c98c3d5be2"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>PREFUN</b>) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin)</td></tr>
-<tr class="separator:a20bc364610f841dedb1488c98c3d5be2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a170e589f4c5f178941a9abc475c2b790"><td class="memItemLeft" align="right" valign="top"><a id="a170e589f4c5f178941a9abc475c2b790"></a>
+typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>cgfun_t</b>) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const real alpha)</td></tr>
+<tr class="separator:a170e589f4c5f178941a9abc475c2b790"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3320bd9b5482d28eb2c5ae089d471c1"><td class="memItemLeft" align="right" valign="top"><a id="ae3320bd9b5482d28eb2c5ae089d471c1"></a>
+typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>prefun_t</b>) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin)</td></tr>
+<tr class="separator:ae3320bd9b5482d28eb2c5ae089d471c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5e71a6449e14ad61420e222d630bc380"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2pcg_8h.html#a5e71a6449e14ad61420e222d630bc380">pcg</a> (<a class="el" href="structdcell.html">dcell</a> **px, CGFUN Amul, const void *A, PREFUN Mmul, const void *M, const <a class="el" href="structdcell.html">dcell</a> *b, int warm, int maxiter)</td></tr>
-<tr class="separator:a5e71a6449e14ad61420e222d630bc380"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ee00a62b7a0c8b9ecbd39ce221716d3"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3">pcg</a> (<a class="el" href="structdcell.html">dcell</a> **px, cgfun_t Amul, const void *A, prefun_t Mmul, const void *M, const <a class="el" href="structdcell.html">dcell</a> *b, int warm, int maxiter)</td></tr>
+<tr class="separator:a5ee00a62b7a0c8b9ecbd39ce221716d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements preconditioned conjugate gradient method. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a5e71a6449e14ad61420e222d630bc380"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5e71a6449e14ad61420e222d630bc380">&#9670;&nbsp;</a></span>pcg()</h2>
+<a id="a5ee00a62b7a0c8b9ecbd39ce221716d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5ee00a62b7a0c8b9ecbd39ce221716d3">&#9670;&nbsp;</a></span>pcg()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -129,7 +135,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">CGFUN&#160;</td>
+          <td class="paramtype">cgfun_t&#160;</td>
           <td class="paramname"><em>Amul</em>, </td>
         </tr>
         <tr>
@@ -141,7 +147,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PREFUN&#160;</td>
+          <td class="paramtype">prefun_t&#160;</td>
           <td class="paramname"><em>Mmul</em>, </td>
         </tr>
         <tr>

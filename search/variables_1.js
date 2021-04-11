@@ -1,11 +1,11 @@
 var searchData=
 [
-  ['bgs',['bgs',['../structMUV__T.html#a79117dc5588e825823343d82ad942059',1,'MUV_T::bgs()'],['../structTOMO__CFG__T.html#ab86fba2401ef6e70b161e05e4eb90b90',1,'TOMO_CFG_T::bgs()'],['../structFIT__CFG__T.html#a4ebdefef0d3e46922e879fd72af86b32',1,'FIT_CFG_T::bgs()'],['../structLSR__CFG__T.html#aa0e18ff2e89ca55058dcdb3653fc1132',1,'LSR_CFG_T::bgs()']]],
-  ['bkgrnd',['bkgrnd',['../structPOWFS__CFG__T.html#ab77a4e4ea9c20e820fe3524bd71914af',1,'POWFS_CFG_T::bkgrnd()'],['../structPOWFS__T.html#ace22bc0f58b30c9ef182186ef59d18e1',1,'POWFS_T::bkgrnd()']]],
+  ['bgs',['bgs',['../muv_8h.html#ae31c91e7bded161b089819de993bb5ee',1,'muv_t::bgs()'],['../parms_8h.html#aab059096759e6a895e2c52935a5cb695',1,'tomo_cfg_t::bgs()'],['../parms_8h.html#a6a352da6dab6ef9ad69ec5a100430f04',1,'fit_cfg_t::bgs()'],['../parms_8h.html#a15e318faa040a437f927fa7c142ec24a',1,'lsr_cfg_t::bgs()']]],
+  ['bkgrnd',['bkgrnd',['../parms_8h.html#abf927de595f5de271256c33761ee6685',1,'powfs_cfg_t::bkgrnd()'],['../maos_2types_8h.html#af1f72dd5af2b9727a8c6b3e4d3125956',1,'powfs_t::bkgrnd()']]],
   ['bkgrnd2',['bkgrnd2',['../classcuwfs__t.html#afefe432f2f46393338bd42e38599362b',1,'cuwfs_t']]],
   ['bkgrnd2c',['bkgrnd2c',['../classcuwfs__t.html#a5b5611f26b4a3dcc3a499697cd4e9752',1,'cuwfs_t']]],
-  ['bkgrndc',['bkgrndc',['../structPOWFS__CFG__T.html#a526906a85174e5179cd7d9f26e042f16',1,'POWFS_CFG_T::bkgrndc()'],['../structPOWFS__T.html#ae08b1afeac4ed4dc19ccbcd4fc7d1990',1,'POWFS_T::bkgrndc()']]],
-  ['bkgrndfn',['bkgrndfn',['../structPOWFS__CFG__T.html#a515dc9bdd5e364e97d32a0c58c30531d',1,'POWFS_CFG_T']]],
-  ['bkgrndfnc',['bkgrndfnc',['../structPOWFS__CFG__T.html#af6d641aca79a74a6cb2af693d3656e82',1,'POWFS_CFG_T']]],
-  ['bs',['bs',['../structFDPCG__T.html#a9fb7df12e08b7dbe61a764f351b323e7',1,'FDPCG_T']]]
+  ['bkgrndc',['bkgrndc',['../parms_8h.html#ad7c3d57edb63a934d807e5092a72924d',1,'powfs_cfg_t::bkgrndc()'],['../maos_2types_8h.html#a80ed321fccc435961197365971c22781',1,'powfs_t::bkgrndc()']]],
+  ['bkgrndfn',['bkgrndfn',['../parms_8h.html#a0629333af272f924e422e60dc1a257b6',1,'powfs_cfg_t']]],
+  ['bkgrndfnc',['bkgrndfnc',['../parms_8h.html#a0cac4ae7a580e731c9c5751e1db54137',1,'powfs_cfg_t']]],
+  ['bs',['bs',['../maos_2types_8h.html#a2cf5f2b6cccc798f5a1f3f144f0544b7',1,'fdpcg_t']]]
 ];

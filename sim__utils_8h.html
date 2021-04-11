@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,32 +104,32 @@ $(document).ready(function(){initNavTree('sim__utils_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a130fb2cf597c4752d9397777e9bcf1e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a130fb2cf597c4752d9397777e9bcf1e2">atm2xloc</a> (<a class="el" href="structdcell.html">dcell</a> **opdx, const <a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a130fb2cf597c4752d9397777e9bcf1e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade5601f0c0ffa73c27aa90ec087d54ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#ade5601f0c0ffa73c27aa90ec087d54ac">sim_update_etf</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:ade5601f0c0ffa73c27aa90ec087d54ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f212f681e274b3933081154c9ca9099"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a7f212f681e274b3933081154c9ca9099">sim_update_flags</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, int isim)</td></tr>
-<tr class="separator:a7f212f681e274b3933081154c9ca9099"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77fdd69488c4c7061a098e3d10b09abe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a77fdd69488c4c7061a098e3d10b09abe">seeding</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a77fdd69488c4c7061a098e3d10b09abe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27c195134fbcb70dbf90b5ff2ee82a84"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a27c195134fbcb70dbf90b5ff2ee82a84">init_simu</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structAPER__T.html">APER_T</a> *aper, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, int iseed)</td></tr>
-<tr class="separator:a27c195134fbcb70dbf90b5ff2ee82a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84b825eee317f2e6b919c95773cd847f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a84b825eee317f2e6b919c95773cd847f">free_simu</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a84b825eee317f2e6b919c95773cd847f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0970dccf08e67a9d470a1efeffb17891"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a0970dccf08e67a9d470a1efeffb17891">print_progress</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a0970dccf08e67a9d470a1efeffb17891"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af566f334aaf19cf9ad3ed5a847c2aee9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#af566f334aaf19cf9ad3ed5a847c2aee9">save_skyc</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="separator:af566f334aaf19cf9ad3ed5a847c2aee9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6140547e84ed40849518c002ff165382"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a6140547e84ed40849518c002ff165382">atm2xloc</a> (<a class="el" href="structdcell.html">dcell</a> **opdx, const <a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a6140547e84ed40849518c002ff165382"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8735860632183309e1afb0f4dd020cf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#ad8735860632183309e1afb0f4dd020cf">sim_update_etf</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:ad8735860632183309e1afb0f4dd020cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b6fece1353ecdf4dd6be61e2536fd5a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a1b6fece1353ecdf4dd6be61e2536fd5a">sim_update_flags</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu, int isim)</td></tr>
+<tr class="separator:a1b6fece1353ecdf4dd6be61e2536fd5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b1f1928d824e6686d78972835a22467"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a6b1f1928d824e6686d78972835a22467">seeding</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a6b1f1928d824e6686d78972835a22467"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2edf7b3ebac7406567908bd36ed602c3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a2edf7b3ebac7406567908bd36ed602c3">init_simu</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, int iseed)</td></tr>
+<tr class="separator:a2edf7b3ebac7406567908bd36ed602c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0236c03d94acd03a419f81d082897bea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a0236c03d94acd03a419f81d082897bea">free_simu</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a0236c03d94acd03a419f81d082897bea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90fbafc175cd1a29b174570eaa5bc03e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a90fbafc175cd1a29b174570eaa5bc03e">print_progress</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a90fbafc175cd1a29b174570eaa5bc03e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1cf70e1ccc621eb757ab8cc4ffbaee18"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a1cf70e1ccc621eb757ab8cc4ffbaee18">save_skyc</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
+<tr class="separator:a1cf70e1ccc621eb757ab8cc4ffbaee18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc7ef7c79f36d7cb5f5f89fb928de22e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#afc7ef7c79f36d7cb5f5f89fb928de22e">blend_screen_side</a> (<a class="el" href="structmap__t.html">map_t</a> *atm1, <a class="el" href="structmap__t.html">map_t</a> *atm2, <a class="el" href="classlong.html">long</a> overx, <a class="el" href="classlong.html">long</a> overy)</td></tr>
 <tr class="separator:afc7ef7c79f36d7cb5f5f89fb928de22e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afce4363970d1fde0eca6130b82b2d28e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#afce4363970d1fde0eca6130b82b2d28e">genatm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:afce4363970d1fde0eca6130b82b2d28e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a881ef641df236619f3983314ae971e74"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a881ef641df236619f3983314ae971e74">setup_recon_HXW_predict</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a881ef641df236619f3983314ae971e74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82672d602a95b40837f6226d00ec041c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#a82672d602a95b40837f6226d00ec041c">genatm</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a82672d602a95b40837f6226d00ec041c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa458ca9d12ca97b2e0cf3bee606ae8fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8h.html#aa458ca9d12ca97b2e0cf3bee606ae8fb">setup_recon_HXW_predict</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:aa458ca9d12ca97b2e0cf3bee606ae8fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a130fb2cf597c4752d9397777e9bcf1e2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a130fb2cf597c4752d9397777e9bcf1e2">&#9670;&nbsp;</a></span>atm2xloc()</h2>
+<a id="a6140547e84ed40849518c002ff165382"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6140547e84ed40849518c002ff165382">&#9670;&nbsp;</a></span>atm2xloc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -137,7 +143,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em>&#160;</td>
         </tr>
         <tr>
@@ -152,8 +158,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ade5601f0c0ffa73c27aa90ec087d54ac"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ade5601f0c0ffa73c27aa90ec087d54ac">&#9670;&nbsp;</a></span>sim_update_etf()</h2>
+<a id="ad8735860632183309e1afb0f4dd020cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad8735860632183309e1afb0f4dd020cf">&#9670;&nbsp;</a></span>sim_update_etf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,7 +167,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void sim_update_etf </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -171,8 +177,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a7f212f681e274b3933081154c9ca9099"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7f212f681e274b3933081154c9ca9099">&#9670;&nbsp;</a></span>sim_update_flags()</h2>
+<a id="a1b6fece1353ecdf4dd6be61e2536fd5a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b6fece1353ecdf4dd6be61e2536fd5a">&#9670;&nbsp;</a></span>sim_update_flags()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,7 +186,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void sim_update_flags </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em>, </td>
         </tr>
         <tr>
@@ -200,8 +206,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a77fdd69488c4c7061a098e3d10b09abe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a77fdd69488c4c7061a098e3d10b09abe">&#9670;&nbsp;</a></span>seeding()</h2>
+<a id="a6b1f1928d824e6686d78972835a22467"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b1f1928d824e6686d78972835a22467">&#9670;&nbsp;</a></span>seeding()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -209,7 +215,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void seeding </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -219,34 +225,34 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a27c195134fbcb70dbf90b5ff2ee82a84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a27c195134fbcb70dbf90b5ff2ee82a84">&#9670;&nbsp;</a></span>init_simu()</h2>
+<a id="a2edf7b3ebac7406567908bd36ed602c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2edf7b3ebac7406567908bd36ed602c3">&#9670;&nbsp;</a></span>init_simu()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structSIM__T.html">SIM_T</a>* init_simu </td>
+          <td class="memname"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a>* init_simu </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>, </td>
         </tr>
         <tr>
@@ -262,12 +268,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize simu (of type <a class="el" href="structSIM__T.html">SIM_T</a>) and various simulation data structs. Called for every seed. </p>
+<p>Initialize simu (of type <a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a>) and various simulation data structs. Called for every seed. </p>
 
 </div>
 </div>
-<a id="a84b825eee317f2e6b919c95773cd847f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84b825eee317f2e6b919c95773cd847f">&#9670;&nbsp;</a></span>free_simu()</h2>
+<a id="a0236c03d94acd03a419f81d082897bea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0236c03d94acd03a419f81d082897bea">&#9670;&nbsp;</a></span>free_simu()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -275,18 +281,18 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void free_simu </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Release memory of simu (of type <a class="el" href="structSIM__T.html">SIM_T</a>) and close files. </p>
+<p>Release memory of simu (of type <a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a>) and close files. </p>
 
 </div>
 </div>
-<a id="a0970dccf08e67a9d470a1efeffb17891"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0970dccf08e67a9d470a1efeffb17891">&#9670;&nbsp;</a></span>print_progress()</h2>
+<a id="a90fbafc175cd1a29b174570eaa5bc03e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90fbafc175cd1a29b174570eaa5bc03e">&#9670;&nbsp;</a></span>print_progress()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -294,7 +300,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void print_progress </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -304,8 +310,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af566f334aaf19cf9ad3ed5a847c2aee9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af566f334aaf19cf9ad3ed5a847c2aee9">&#9670;&nbsp;</a></span>save_skyc()</h2>
+<a id="a1cf70e1ccc621eb757ab8cc4ffbaee18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1cf70e1ccc621eb757ab8cc4ffbaee18">&#9670;&nbsp;</a></span>save_skyc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -313,19 +319,19 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void save_skyc </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>&#160;</td>
         </tr>
         <tr>
@@ -380,8 +386,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="afce4363970d1fde0eca6130b82b2d28e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afce4363970d1fde0eca6130b82b2d28e">&#9670;&nbsp;</a></span>genatm()</h2>
+<a id="a82672d602a95b40837f6226d00ec041c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a82672d602a95b40837f6226d00ec041c">&#9670;&nbsp;</a></span>genatm()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -389,7 +395,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void genatm </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -399,8 +405,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a881ef641df236619f3983314ae971e74"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a881ef641df236619f3983314ae971e74">&#9670;&nbsp;</a></span>setup_recon_HXW_predict()</h2>
+<a id="aa458ca9d12ca97b2e0cf3bee606ae8fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa458ca9d12ca97b2e0cf3bee606ae8fb">&#9670;&nbsp;</a></span>setup_recon_HXW_predict()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -408,7 +414,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void setup_recon_HXW_predict </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>

@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -101,13 +107,13 @@ $(document).ready(function(){initNavTree('muv_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMUV__T.html">MUV_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structmuv__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#structmuv__t">muv_t</a></td></tr>
+<tr class="separator:structmuv__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:ac08a3e14e2da2bed5421d68dca791bc8"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#ac08a3e14e2da2bed5421d68dca791bc8">EXFUN</a>) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const real alpha, int xb, int yb)</td></tr>
-<tr class="separator:ac08a3e14e2da2bed5421d68dca791bc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a967380fcfa3afee5999a7717d8d75ad6"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a967380fcfa3afee5999a7717d8d75ad6">exfun_t</a>) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const real alpha, int xb, int yb)</td></tr>
+<tr class="separator:a967380fcfa3afee5999a7717d8d75ad6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -117,40 +123,220 @@ Functions</h2></td></tr>
 <tr class="separator:ab88ff3e88a863e8d351c4606cabf233e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bd7fd2d6b21e340071900fe3f1d2641"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a4bd7fd2d6b21e340071900fe3f1d2641">muv_ib</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const real alpha)</td></tr>
 <tr class="separator:a4bd7fd2d6b21e340071900fe3f1d2641"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a594af82fef768a894136ed1e52b158f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a594af82fef768a894136ed1e52b158f1">muv_direct_solve</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const <a class="el" href="structMUV__T.html">MUV_T</a> *A, <a class="el" href="structdcell.html">dcell</a> *xin)</td></tr>
-<tr class="separator:a594af82fef768a894136ed1e52b158f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4615601ee95ab042093921811ab59be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#ae4615601ee95ab042093921811ab59be">muv_direct_solve_mat</a> (<a class="el" href="structdmat.html">dmat</a> **xout, const <a class="el" href="structMUV__T.html">MUV_T</a> *A, <a class="el" href="structdmat.html">dmat</a> *xin)</td></tr>
-<tr class="separator:ae4615601ee95ab042093921811ab59be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53092df26de90cd68acb352834c92286"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a53092df26de90cd68acb352834c92286">muv_direct_prep</a> (<a class="el" href="structMUV__T.html">MUV_T</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>, real svd)</td></tr>
-<tr class="separator:a53092df26de90cd68acb352834c92286"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeedb152fe9fcb4e74e63442abb4ab149"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#aeedb152fe9fcb4e74e63442abb4ab149">muv_direct_free</a> (<a class="el" href="structMUV__T.html">MUV_T</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>)</td></tr>
-<tr class="separator:aeedb152fe9fcb4e74e63442abb4ab149"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3866ebe34659155c968c65d5388f8752"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a3866ebe34659155c968c65d5388f8752">muv_direct_diag_solve</a> (<a class="el" href="structdmat.html">dmat</a> **xout, const <a class="el" href="structMUV__T.html">MUV_T</a> *A, <a class="el" href="structdmat.html">dmat</a> *xin, int ib)</td></tr>
-<tr class="separator:a3866ebe34659155c968c65d5388f8752"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a133ad085946cc17f97c776c98c026460"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a133ad085946cc17f97c776c98c026460">muv_bgs_solve</a> (<a class="el" href="structdcell.html">dcell</a> **px, const <a class="el" href="structMUV__T.html">MUV_T</a> *A, const <a class="el" href="structdcell.html">dcell</a> *b)</td></tr>
-<tr class="separator:a133ad085946cc17f97c776c98c026460"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a280153250fda7a0bfaeb8873f7c08ed9"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a280153250fda7a0bfaeb8873f7c08ed9">muv_solve</a> (<a class="el" href="structdcell.html">dcell</a> **px, const <a class="el" href="structMUV__T.html">MUV_T</a> *L, const <a class="el" href="structMUV__T.html">MUV_T</a> *R, <a class="el" href="structdcell.html">dcell</a> *b)</td></tr>
-<tr class="separator:a280153250fda7a0bfaeb8873f7c08ed9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a657229bcf6fcf610bd1add368b09128c"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a657229bcf6fcf610bd1add368b09128c">muv_direct_spsolve</a> (const <a class="el" href="structMUV__T.html">MUV_T</a> *A, const <a class="el" href="structdsp.html">dsp</a> *xin)</td></tr>
-<tr class="separator:a657229bcf6fcf610bd1add368b09128c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c64cde3f79e89f380725b6c26d347d5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a7c64cde3f79e89f380725b6c26d347d5">muv_direct_diag_prep</a> (<a class="el" href="structMUV__T.html">MUV_T</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>, real svd)</td></tr>
-<tr class="separator:a7c64cde3f79e89f380725b6c26d347d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afdd199aa2c6e9a7999bf2ecbde102dc0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#afdd199aa2c6e9a7999bf2ecbde102dc0">muv_direct_diag_free</a> (<a class="el" href="structMUV__T.html">MUV_T</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>)</td></tr>
-<tr class="separator:afdd199aa2c6e9a7999bf2ecbde102dc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a899d10d6a3cae809525fcf0ec44b81"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a8a899d10d6a3cae809525fcf0ec44b81">muv_free</a> (<a class="el" href="structMUV__T.html">MUV_T</a> *A)</td></tr>
-<tr class="separator:a8a899d10d6a3cae809525fcf0ec44b81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad37abdeb7954d429ae1581e945535fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#aad37abdeb7954d429ae1581e945535fd">muv_direct_solve</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *A, <a class="el" href="structdcell.html">dcell</a> *xin)</td></tr>
+<tr class="separator:aad37abdeb7954d429ae1581e945535fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9216d14e53cbe686038e2a2aecac3b4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#aa9216d14e53cbe686038e2a2aecac3b4">muv_direct_solve_mat</a> (<a class="el" href="structdmat.html">dmat</a> **xout, const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *A, <a class="el" href="structdmat.html">dmat</a> *xin)</td></tr>
+<tr class="separator:aa9216d14e53cbe686038e2a2aecac3b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af23adac49e5cda523bbdb332493e811c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#af23adac49e5cda523bbdb332493e811c">muv_direct_prep</a> (<a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>, real svd)</td></tr>
+<tr class="separator:af23adac49e5cda523bbdb332493e811c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2e1edae4450a7b5f018f1bb52310892"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#ab2e1edae4450a7b5f018f1bb52310892">muv_direct_free</a> (<a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>)</td></tr>
+<tr class="separator:ab2e1edae4450a7b5f018f1bb52310892"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5d7e36b158566de7f44d65b87c6d2bc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#ac5d7e36b158566de7f44d65b87c6d2bc">muv_direct_diag_solve</a> (<a class="el" href="structdmat.html">dmat</a> **xout, const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *A, <a class="el" href="structdmat.html">dmat</a> *xin, int ib)</td></tr>
+<tr class="separator:ac5d7e36b158566de7f44d65b87c6d2bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a41612c3cf445cef62ba674385914e8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a2a41612c3cf445cef62ba674385914e8">muv_bgs_solve</a> (<a class="el" href="structdcell.html">dcell</a> **px, const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *A, const <a class="el" href="structdcell.html">dcell</a> *b)</td></tr>
+<tr class="separator:a2a41612c3cf445cef62ba674385914e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e45aed53549d6e26fb3721df387972a"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a9e45aed53549d6e26fb3721df387972a">muv_solve</a> (<a class="el" href="structdcell.html">dcell</a> **px, const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *L, const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *R, <a class="el" href="structdcell.html">dcell</a> *b)</td></tr>
+<tr class="separator:a9e45aed53549d6e26fb3721df387972a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a440b52724f7c37218f95bd74b13b51ce"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a440b52724f7c37218f95bd74b13b51ce">muv_direct_spsolve</a> (const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *A, const <a class="el" href="structdsp.html">dsp</a> *xin)</td></tr>
+<tr class="separator:a440b52724f7c37218f95bd74b13b51ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a697e0baa707bf1b22d3fabe1d1cb4dc9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#a697e0baa707bf1b22d3fabe1d1cb4dc9">muv_direct_diag_prep</a> (<a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>, real svd)</td></tr>
+<tr class="separator:a697e0baa707bf1b22d3fabe1d1cb4dc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2e78b53ad529945315fc69298ac6ac1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#af2e78b53ad529945315fc69298ac6ac1">muv_direct_diag_free</a> (<a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *<a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv</a>)</td></tr>
+<tr class="separator:af2e78b53ad529945315fc69298ac6ac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7b8139c5b12536534d15e42e8c69393"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8h.html#ad7b8139c5b12536534d15e42e8c69393">muv_free</a> (<a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *A)</td></tr>
+<tr class="separator:ad7b8139c5b12536534d15e42e8c69393"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Decomposes a matrix into sparse and low rank terms and do math operations. </p>
-</div><h2 class="groupheader">Typedef Documentation</h2>
-<a id="ac08a3e14e2da2bed5421d68dca791bc8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac08a3e14e2da2bed5421d68dca791bc8">&#9670;&nbsp;</a></span>EXFUN</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structmuv__t" id="structmuv__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structmuv__t">&#9670;&nbsp;</a></span>muv_t</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void(* EXFUN) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const real alpha, int xb, int yb)</td>
+          <td class="memname">struct muv_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Decompose an operator into a sparse operator and optional low rank terms. M-U*V'; M is usually symmetrical. </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a788f22a3be5e5bc809459f3be177b98a"></a><a class="el" href="structcell.html">cell</a> *</td>
+<td class="fieldname">
+M</td>
+<td class="fielddoc">
+<p>block sparse matrix or dense matrix </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="adbb422e2111167472b69a8853a9ade9c"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+U</td>
+<td class="fielddoc">
+<p>low rank terms U </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad69fad8e7ca6f125c5697622dcb378bd"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+V</td>
+<td class="fielddoc">
+<p>low rank terms V </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7a87c7a3c356f701c671510b33bfcb40"></a><a class="el" href="muv_8h.html#a967380fcfa3afee5999a7717d8d75ad6">exfun_t</a></td>
+<td class="fieldname">
+exfun</td>
+<td class="fielddoc">
+<p>Optionally attach an extra function that applies extra data </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a680b2b553061f7be6f8925b41ed9260c"></a>void *</td>
+<td class="fieldname">
+extra</td>
+<td class="fielddoc">
+<p>Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a07ddf5ebe6f59cd97fd191cb5e322fbb"></a><a class="el" href="chol_8h.html#structspchol">spchol</a> *</td>
+<td class="fieldname">
+C</td>
+<td class="fielddoc">
+<p>Cholesky factor. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a5cdc5331bf4237d1ccbd7e2ff60c1778"></a><a class="el" href="structdmat.html">dmat</a> *</td>
+<td class="fieldname">
+Up</td>
+<td class="fielddoc">
+<p>\(M^{-1}U\) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3a235ce911565ce890b5e1bd780906c2"></a><a class="el" href="structdmat.html">dmat</a> *</td>
+<td class="fieldname">
+Vp</td>
+<td class="fielddoc">
+<p>\(M^{-1}[V*(I-Up&#39;*V)^{-1}]\) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a29fda5e6042aeff60168426b9ee63432"></a><a class="el" href="structdmat.html">dmat</a> *</td>
+<td class="fieldname">
+MI</td>
+<td class="fielddoc">
+<p>Inverse of M via svd </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8a200c66e544ed7d4573c03a5ac55b81"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+MIB</td>
+<td class="fielddoc">
+<p>Inverse of each diagonal element of M via svd </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae156a3d6374e6710d1e5ef6ef316bdb3"></a><a class="el" href="chol_8h.html#structspchol">spchol</a> **</td>
+<td class="fieldname">
+CB</td>
+<td class="fielddoc">
+<p>Cholesky factor of each diagonal element of M </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a87735c7751cda61faf074e8fea7d733a"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+UpB</td>
+<td class="fielddoc">
+<p>Up for each diagonal component </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af8ada30ee8a5271da7d4890150c4760e"></a><a class="el" href="structdcell.html">dcell</a> *</td>
+<td class="fieldname">
+VpB</td>
+<td class="fielddoc">
+<p>Vp for each diagonal component </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="addfe3c98d6c11af9579002058502998a"></a>int</td>
+<td class="fieldname">
+nb</td>
+<td class="fielddoc">
+<p>Number of blocks in CB; </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af935494d3088d94d6d08e4c39e796a05"></a>cgfun_t</td>
+<td class="fieldname">
+Mfun</td>
+<td class="fielddoc">
+<p>Do M*x with a function </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa4cdb5244defa3110cb1209fb9168d70"></a>cgfun_t</td>
+<td class="fieldname">
+Mtfun</td>
+<td class="fielddoc">
+<p>Do M'*x with a function </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa30689f9fb9ae039a0fc04175ba7134d"></a>void *</td>
+<td class="fieldname">
+Mdata</td>
+<td class="fielddoc">
+<p>Parameter to Mfun </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a2f9ec6b1b8f0b2f70cac3236c45f52be"></a>prefun_t</td>
+<td class="fieldname">
+pfun</td>
+<td class="fielddoc">
+<p>The preconditioner function </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a2d598b0a795894f80add449f78db3dbe"></a>void *</td>
+<td class="fieldname">
+pdata</td>
+<td class="fielddoc">
+<p>The precondtioner data </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aad42b86ad5f99c677bba47cb4f61c57b"></a>int</td>
+<td class="fieldname">
+alg</td>
+<td class="fielddoc">
+<p>The algorithm: 0: CBS, 1: CG, 2: SVD </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae31c91e7bded161b089819de993bb5ee"></a>int</td>
+<td class="fieldname">
+bgs</td>
+<td class="fielddoc">
+<p>Whether use BGS (Block Gauss Seidel) method, and how many iterations </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a38ec5f82d89907f1b9455b38f6465343"></a>int</td>
+<td class="fieldname">
+warm</td>
+<td class="fielddoc">
+<p>Whether use warm restart </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a01fa5335b5adf8b7689f3e09bdb97760"></a>int</td>
+<td class="fieldname">
+maxit</td>
+<td class="fielddoc">
+<p>How many iterations </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a id="a967380fcfa3afee5999a7717d8d75ad6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a967380fcfa3afee5999a7717d8d75ad6">&#9670;&nbsp;</a></span>exfun_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* exfun_t) (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const real alpha, int xb, int yb)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -198,7 +384,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Decomposes a matrix into sparse and low rank terms and do math operations.</p>
 <p>The forward operations can be represented by a matrix M and two low rank terms as y = ( M - u*v' ) *x , or by a function Mfun and corresponding argument Mdata.</p>
-<p>This can also be used to solve linear equations using <a class="el" href="muv_8h.html#a280153250fda7a0bfaeb8873f7c08ed9">muv_solve()</a> or <a class="el" href="muv_8h.html#a133ad085946cc17f97c776c98c026460">muv_bgs_solve()</a>. Apply the sparse plus low rank compuation to xin with scaling of alpha: <img class="formulaInl" alt="$xout=(A.M-A.U*A.V')*xin*alpha$" src="form_22.png"/>; U,V are low rank. </p>
+<p>This can also be used to solve linear equations using <a class="el" href="muv_8h.html#a9e45aed53549d6e26fb3721df387972a">muv_solve()</a> or <a class="el" href="muv_8h.html#a2a41612c3cf445cef62ba674385914e8">muv_bgs_solve()</a>. Apply the sparse plus low rank compuation to xin with scaling of alpha: \(xout=(A.M-A.U*A.V&#39;)*xin*alpha\); U,V are low rank. </p>
 
 </div>
 </div>
@@ -239,7 +425,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the transpose of operation <a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv()</a>; Apply the sparse plug low rand compuation to xin with scaling of alpha: <img class="formulaInl" alt="$xout=(A.M-A.V*A.U')*xin*alpha$" src="form_23.png"/>; U,V are low rank. </p>
+<p>Apply the transpose of operation <a class="el" href="muv_8h.html#abd5ac513e2b730de48608f9be127cb75">muv()</a>; Apply the sparse plug low rand compuation to xin with scaling of alpha: \(xout=(A.M-A.V*A.U&#39;)*xin*alpha\); U,V are low rank. </p>
 
 </div>
 </div>
@@ -280,12 +466,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb): <img class="formulaInl" alt="$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha$" src="form_24.png"/>; U,V are low rank. </p>
+<p>Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb): \(xout_x=(A.M_xy-A.U_xi*A.V_yi&#39;)*xin_y*alpha\); U,V are low rank. </p>
 
 </div>
 </div>
-<a id="a594af82fef768a894136ed1e52b158f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a594af82fef768a894136ed1e52b158f1">&#9670;&nbsp;</a></span>muv_direct_solve()</h2>
+<a id="aad37abdeb7954d429ae1581e945535fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad37abdeb7954d429ae1581e945535fd">&#9670;&nbsp;</a></span>muv_direct_solve()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -299,7 +485,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -315,12 +501,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>convert the data from dcell to dmat and apply <a class="el" href="muv_8h.html#a594af82fef768a894136ed1e52b158f1">muv_direct_solve()</a> . May be done in place. </p>
+<p>convert the data from dcell to dmat and apply <a class="el" href="muv_8h.html#aad37abdeb7954d429ae1581e945535fd">muv_direct_solve()</a> . May be done in place. </p>
 
 </div>
 </div>
-<a id="ae4615601ee95ab042093921811ab59be"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae4615601ee95ab042093921811ab59be">&#9670;&nbsp;</a></span>muv_direct_solve_mat()</h2>
+<a id="aa9216d14e53cbe686038e2a2aecac3b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9216d14e53cbe686038e2a2aecac3b4">&#9670;&nbsp;</a></span>muv_direct_solve_mat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -334,7 +520,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -354,8 +540,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a53092df26de90cd68acb352834c92286"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a53092df26de90cd68acb352834c92286">&#9670;&nbsp;</a></span>muv_direct_prep()</h2>
+<a id="af23adac49e5cda523bbdb332493e811c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af23adac49e5cda523bbdb332493e811c">&#9670;&nbsp;</a></span>muv_direct_prep()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -363,7 +549,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void muv_direct_prep </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -381,13 +567,13 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Cholesky factorization (svd=0) or svd (svd&gt;0) on the sparse matrix and its low rank terms. if svd is less than 1, it is also used as the threshold in SVD inversion.</p>
 <p>When there are low rank terms, </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ Up=M^{-1}*U, Vp=M^{-1}*[V*(I-Up'*V)^{-1}] \]" src="form_25.png"/>
+\[ Up=M^{-1}*U, Vp=M^{-1}*[V*(I-Up&#39;*V)^{-1}] \]
 </p>
  
 </div>
 </div>
-<a id="aeedb152fe9fcb4e74e63442abb4ab149"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeedb152fe9fcb4e74e63442abb4ab149">&#9670;&nbsp;</a></span>muv_direct_free()</h2>
+<a id="ab2e1edae4450a7b5f018f1bb52310892"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2e1edae4450a7b5f018f1bb52310892">&#9670;&nbsp;</a></span>muv_direct_free()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -395,7 +581,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void muv_direct_free </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em></td><td>)</td>
           <td></td>
         </tr>
@@ -405,8 +591,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3866ebe34659155c968c65d5388f8752"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3866ebe34659155c968c65d5388f8752">&#9670;&nbsp;</a></span>muv_direct_diag_solve()</h2>
+<a id="ac5d7e36b158566de7f44d65b87c6d2bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5d7e36b158566de7f44d65b87c6d2bc">&#9670;&nbsp;</a></span>muv_direct_diag_solve()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -420,7 +606,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -446,8 +632,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a133ad085946cc17f97c776c98c026460"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a133ad085946cc17f97c776c98c026460">&#9670;&nbsp;</a></span>muv_bgs_solve()</h2>
+<a id="a2a41612c3cf445cef62ba674385914e8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a41612c3cf445cef62ba674385914e8">&#9670;&nbsp;</a></span>muv_bgs_solve()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -461,7 +647,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -489,8 +675,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a280153250fda7a0bfaeb8873f7c08ed9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a280153250fda7a0bfaeb8873f7c08ed9">&#9670;&nbsp;</a></span>muv_solve()</h2>
+<a id="a9e45aed53549d6e26fb3721df387972a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e45aed53549d6e26fb3721df387972a">&#9670;&nbsp;</a></span>muv_solve()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -504,13 +690,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>L</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>R</em>, </td>
         </tr>
         <tr>
@@ -539,8 +725,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a657229bcf6fcf610bd1add368b09128c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a657229bcf6fcf610bd1add368b09128c">&#9670;&nbsp;</a></span>muv_direct_spsolve()</h2>
+<a id="a440b52724f7c37218f95bd74b13b51ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a440b52724f7c37218f95bd74b13b51ce">&#9670;&nbsp;</a></span>muv_direct_spsolve()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -548,7 +734,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void* muv_direct_spsolve </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -568,8 +754,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a7c64cde3f79e89f380725b6c26d347d5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7c64cde3f79e89f380725b6c26d347d5">&#9670;&nbsp;</a></span>muv_direct_diag_prep()</h2>
+<a id="a697e0baa707bf1b22d3fabe1d1cb4dc9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a697e0baa707bf1b22d3fabe1d1cb4dc9">&#9670;&nbsp;</a></span>muv_direct_diag_prep()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -577,7 +763,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void muv_direct_diag_prep </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -595,14 +781,14 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Cholesky factorization (svd=0) or svd (svd&gt;0) on each diagonal element of the block sparse matrix and its low rank terms. if svd is less than 1, it is also used as the threshold in SVD inversion.</p>
 <p>When there are low rank terms, </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ Up=M^{-1}U, Vp=M^{-1}[V*(I-Up'*V)^{-1}] \]" src="form_26.png"/>
+\[ Up=M^{-1}U, Vp=M^{-1}[V*(I-Up&#39;*V)^{-1}] \]
 </p>
 <p> For each diagonal block. </p>
 
 </div>
 </div>
-<a id="afdd199aa2c6e9a7999bf2ecbde102dc0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afdd199aa2c6e9a7999bf2ecbde102dc0">&#9670;&nbsp;</a></span>muv_direct_diag_free()</h2>
+<a id="af2e78b53ad529945315fc69298ac6ac1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2e78b53ad529945315fc69298ac6ac1">&#9670;&nbsp;</a></span>muv_direct_diag_free()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -610,7 +796,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void muv_direct_diag_free </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em></td><td>)</td>
           <td></td>
         </tr>
@@ -620,8 +806,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a8a899d10d6a3cae809525fcf0ec44b81"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8a899d10d6a3cae809525fcf0ec44b81">&#9670;&nbsp;</a></span>muv_free()</h2>
+<a id="ad7b8139c5b12536534d15e42e8c69393"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad7b8139c5b12536534d15e42e8c69393">&#9670;&nbsp;</a></span>muv_free()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -629,13 +815,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void muv_free </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structMUV__T.html">MUV_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="muv_8h.html#structmuv__t">muv_t</a> *&#160;</td>
           <td class="paramname"><em>A</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free <a class="el" href="structMUV__T.html">MUV_T</a> struct </p>
+<p>Free <a class="el" href="muv_8h.html#structmuv__t">muv_t</a> struct </p>
 
 </div>
 </div>

@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -257,7 +263,7 @@ fit.actslave=1 #or 2, for mvr
 </ul>
 <h2><a class="anchor" id="sect-sodium"></a>
 Sodium range variation</h2>
-<p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="llt_CL.html">llt_CL.conf</a> or <a class="el" href="llt_SL.html">llt_SL.conf</a>. When supplied by user, use <code>powfs0_llt.fnrange</code>. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS).</p>
+<p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="llt__c_l.html">llt_CL.conf</a> or <a class="el" href="llt__s_l.html">llt_SL.conf</a>. When supplied by user, use <code>powfs0_llt.fnrange</code>. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS).</p>
 <p>The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront. </p><hr/>
 <p>See <a class="el" href="page40_results.html">Simulation Results</a> for further explanation and results interpretation. </p>
 </div></div><!-- contents -->

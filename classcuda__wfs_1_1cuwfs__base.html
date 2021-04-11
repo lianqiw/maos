@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -95,11 +101,27 @@ $(document).ready(function(){initNavTree('classcuda__wfs_1_1cuwfs__base.html',''
 <div class="title">cuda_wfs::cuwfs_base Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for cuda_wfs::cuwfs_base:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classcuda__wfs_1_1cuwfs__base.png" usemap="#cuda_5Fwfs::cuwfs_5Fbase_map" alt=""/>
+  <map id="cuda_5Fwfs::cuwfs_5Fbase_map" name="cuda_5Fwfs::cuwfs_5Fbase_map">
+<area href="classcuda__wfs_1_1cupywfs__t.html" alt="cuda_wfs::cupywfs_t" shape="rect" coords="0,56,139,80"/>
+<area href="classcuda__wfs_1_1cushwfs__t.html" alt="cuda_wfs::cushwfs_t" shape="rect" coords="149,56,288,80"/>
+<area href="classcuda__wfs_1_1cushgeom__t.html" alt="cuda_wfs::cushgeom_t" shape="rect" coords="74,112,213,136"/>
+<area href="classcuda__wfs_1_1cushphy__t.html" alt="cuda_wfs::cushphy_t" shape="rect" coords="223,112,362,136"/>
+<area href="classcuda__wfs_1_1cushg__t.html" alt="cuda_wfs::cushg_t" shape="rect" coords="0,168,139,192"/>
+<area href="classcuda__wfs_1_1cushz__t.html" alt="cuda_wfs::cushz_t" shape="rect" coords="149,168,288,192"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:adc2bf7a233541dcc60001a9066e2d06d"><td class="memItemLeft" align="right" valign="top"><a id="adc2bf7a233541dcc60001a9066e2d06d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cuwfs_base</b> (wfscfg_t *wfscfg)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cuwfs_base</b> (<a class="el" href="structcuda__wfs_1_1wfscfg__t.html">wfscfg_t</a> *wfscfg)</td></tr>
 <tr class="separator:adc2bf7a233541dcc60001a9066e2d06d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adddef7541548060113e5f68f6caf2291"><td class="memItemLeft" align="right" valign="top"><a id="adddef7541548060113e5f68f6caf2291"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>seeding</b> (int seed)</td></tr>
@@ -129,8 +151,9 @@ Protected Attributes</h2></td></tr>
 const int&#160;</td><td class="memItemRight" valign="bottom"><b>dtrat</b></td></tr>
 <tr class="separator:a0984682dea0c1192f000f0b886f94155"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/cuwfs.h</li>
+<li>cuda/cuwfs.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

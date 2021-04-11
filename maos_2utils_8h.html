@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,45 +104,45 @@ $(document).ready(function(){initNavTree('maos_2utils_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:af943255a0077c58705a9fbd340077789"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#af943255a0077c58705a9fbd340077789">plotloc</a> (const char *fig, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structloc__t.html">loc_t</a> *loc, real ht, const char *format,...)</td></tr>
-<tr class="separator:af943255a0077c58705a9fbd340077789"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1343345dedf6ae0d845b15b982f4ac48"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a1343345dedf6ae0d845b15b982f4ac48">plotloc</a> (const char *fig, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="structloc__t.html">loc_t</a> *loc, real ht, const char *format,...)</td></tr>
+<tr class="separator:a1343345dedf6ae0d845b15b982f4ac48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af83a1d1fc29af913013c954d41d34490"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490">rename_file</a> (int sig)</td></tr>
 <tr class="separator:af83a1d1fc29af913013c954d41d34490"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aafb94bb8e11bc2169946336024d6b0fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#aafb94bb8e11bc2169946336024d6b0fc">maos_signal_handler</a> (int sig)</td></tr>
 <tr class="separator:aafb94bb8e11bc2169946336024d6b0fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad91533fa7ecab0db34f47b51c55edd6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structARG__T.html">ARG_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#aad91533fa7ecab0db34f47b51c55edd6">parse_args</a> (int argc, const char *argv[])</td></tr>
-<tr class="separator:aad91533fa7ecab0db34f47b51c55edd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6b2b601fbbd0db95e49ed54a0936139"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#ae6b2b601fbbd0db95e49ed54a0936139">evl_header</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ievl, int iwvl, int isim)</td></tr>
-<tr class="separator:ae6b2b601fbbd0db95e49ed54a0936139"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a669f9c0a37d07dde23e30d0fa4593e30"><td class="memItemLeft" align="right" valign="top"><a class="el" href="parms_8h.html#structarg__t">arg_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a669f9c0a37d07dde23e30d0fa4593e30">parse_args</a> (int argc, const char *argv[])</td></tr>
+<tr class="separator:a669f9c0a37d07dde23e30d0fa4593e30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7faaf8b78d248c0dd93d53cdcd248976"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a7faaf8b78d248c0dd93d53cdcd248976">evl_header</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, int ievl, int iwvl, int isim)</td></tr>
+<tr class="separator:a7faaf8b78d248c0dd93d53cdcd248976"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade5de6f5a62d132a95afb75a96a4e12c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#ade5de6f5a62d132a95afb75a96a4e12c">apply_fieldstop</a> (<a class="el" href="structdmat.html">dmat</a> *opd, const <a class="el" href="structdmat.html">dmat</a> *amp, const <a class="el" href="structlmat.html">lmat</a> *embed, <a class="el" href="classlong.html">long</a> nembed, const <a class="el" href="structdmat.html">dmat</a> *fieldstop, real wvl)</td></tr>
 <tr class="separator:ade5de6f5a62d132a95afb75a96a4e12c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae030a26a334f0d5202eb0369158eb68c"><td class="memItemLeft" align="right" valign="top"><a id="ae030a26a334f0d5202eb0369158eb68c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (int sock)</td></tr>
 <tr class="separator:ae030a26a334f0d5202eb0369158eb68c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02d7d174efd394be9afc432ca1835071"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a02d7d174efd394be9afc432ca1835071">plot_setup</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
-<tr class="separator:a02d7d174efd394be9afc432ca1835071"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa44e72b23d700b75cf33496fa5fd822"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822">plot_setup</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, const <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="separator:aaa44e72b23d700b75cf33496fa5fd822"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83cb0a7d0009262a81f1c1019a49f949"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a83cb0a7d0009262a81f1c1019a49f949">mkamp</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structmap__t.html">map_t</a> *ampground, real misregx, real misregy, real D, real Din)</td></tr>
 <tr class="separator:a83cb0a7d0009262a81f1c1019a49f949"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77de95a900f3929d6ea8752126ca042c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a77de95a900f3929d6ea8752126ca042c">maxapriori</a> (real *g, const <a class="el" href="structdmat.html">dmat</a> *ints, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, int isa, int noisy, real bkgrnd, real rne)</td></tr>
-<tr class="separator:a77de95a900f3929d6ea8752126ca042c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5afdf7a505966f64b56d7f21bd776c8b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a5afdf7a505966f64b56d7f21bd776c8b">wfslinearity</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const int iwfs)</td></tr>
-<tr class="separator:a5afdf7a505966f64b56d7f21bd776c8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3181f36e2da6183fb6cb76be582cd35c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a3181f36e2da6183fb6cb76be582cd35c">lgs_wfs_sph_psd</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const int iwfs)</td></tr>
-<tr class="separator:a3181f36e2da6183fb6cb76be582cd35c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae113c7c5359792c010f699e1e5e14c14"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#ae113c7c5359792c010f699e1e5e14c14">wfsfocusadj</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, int iwfs)</td></tr>
-<tr class="separator:ae113c7c5359792c010f699e1e5e14c14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8fc39933f19be380f8a80c7665d049e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e">maxapriori</a> (real *g, const <a class="el" href="structdmat.html">dmat</a> *ints, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int iwfs, int isa, int noisy, real bkgrnd, real rne)</td></tr>
+<tr class="separator:ac8fc39933f19be380f8a80c7665d049e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4307931050dd0259e2369bf4591d65a5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5">wfslinearity</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const int iwfs)</td></tr>
+<tr class="separator:a4307931050dd0259e2369bf4591d65a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0e3a33ac532506bd59ca25fd9051d10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10">lgs_wfs_sph_psd</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const int iwfs)</td></tr>
+<tr class="separator:ae0e3a33ac532506bd59ca25fd9051d10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ee5428a0082233dcc43a3900af1125b"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a5ee5428a0082233dcc43a3900af1125b">wfsfocusadj</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu, int iwfs)</td></tr>
+<tr class="separator:a5ee5428a0082233dcc43a3900af1125b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69cccbd79992ae4b41973a64fa9e5097"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a69cccbd79992ae4b41973a64fa9e5097">dither_position</a> (real *cs, real *ss, int alfsm, int dtrat, int npoint, int isim, real deltam)</td></tr>
 <tr class="separator:a69cccbd79992ae4b41973a64fa9e5097"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a042cc2fc9a27fae7528d0958fa0ff5f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a042cc2fc9a27fae7528d0958fa0ff5f2">shwfs_grad</a> (<a class="el" href="structdmat.html">dmat</a> **pgrad, <a class="el" href="structdmat.html">dmat</a> *ints[], const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, int phytype)</td></tr>
-<tr class="separator:a042cc2fc9a27fae7528d0958fa0ff5f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29ab479d13329c12e938cff513a2e2e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a29ab479d13329c12e938cff513a2e2e9">dcellread_prefix</a> (const char *file, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs)</td></tr>
-<tr class="separator:a29ab479d13329c12e938cff513a2e2e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6790b30ef72abe52665bcc6c6a850402"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a6790b30ef72abe52665bcc6c6a850402">shwfs_grad</a> (<a class="el" href="structdmat.html">dmat</a> **pgrad, <a class="el" href="structdmat.html">dmat</a> *ints[], const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int iwfs, int phytype)</td></tr>
+<tr class="separator:a6790b30ef72abe52665bcc6c6a850402"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d432fa7ac8ba2180db106a021e32488"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a1d432fa7ac8ba2180db106a021e32488">dcellread_prefix</a> (const char *file, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, int ipowfs)</td></tr>
+<tr class="separator:a1d432fa7ac8ba2180db106a021e32488"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3c976283684c703e5ed8b35bfeac3b8"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#aa3c976283684c703e5ed8b35bfeac3b8">average_powfs</a> (<a class="el" href="structdmat.html">dmat</a> *A, <a class="el" href="structlmat.html">lmat</a> *wfsindex, int replace)</td></tr>
 <tr class="separator:aa3c976283684c703e5ed8b35bfeac3b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="af943255a0077c58705a9fbd340077789"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af943255a0077c58705a9fbd340077789">&#9670;&nbsp;</a></span>plotloc()</h2>
+<a id="a1343345dedf6ae0d845b15b982f4ac48"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1343345dedf6ae0d845b15b982f4ac48">&#9670;&nbsp;</a></span>plotloc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -150,7 +156,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
@@ -226,14 +232,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="aad91533fa7ecab0db34f47b51c55edd6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aad91533fa7ecab0db34f47b51c55edd6">&#9670;&nbsp;</a></span>parse_args()</h2>
+<a id="a669f9c0a37d07dde23e30d0fa4593e30"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a669f9c0a37d07dde23e30d0fa4593e30">&#9670;&nbsp;</a></span>parse_args()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structARG__T.html">ARG_T</a>* parse_args </td>
+          <td class="memname"><a class="el" href="parms_8h.html#structarg__t">arg_t</a>* parse_args </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>argc</em>, </td>
@@ -255,8 +261,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="ae6b2b601fbbd0db95e49ed54a0936139"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae6b2b601fbbd0db95e49ed54a0936139">&#9670;&nbsp;</a></span>evl_header()</h2>
+<a id="a7faaf8b78d248c0dd93d53cdcd248976"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7faaf8b78d248c0dd93d53cdcd248976">&#9670;&nbsp;</a></span>evl_header()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -264,13 +270,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="memname">char* evl_header </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em>, </td>
         </tr>
         <tr>
@@ -355,8 +361,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a02d7d174efd394be9afc432ca1835071"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a02d7d174efd394be9afc432ca1835071">&#9670;&nbsp;</a></span>plot_setup()</h2>
+<a id="aaa44e72b23d700b75cf33496fa5fd822"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa44e72b23d700b75cf33496fa5fd822">&#9670;&nbsp;</a></span>plot_setup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -364,25 +370,25 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="memname">void plot_setup </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
           <td class="paramname"><em>aper</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>&#160;</td>
         </tr>
         <tr>
@@ -449,8 +455,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a77de95a900f3929d6ea8752126ca042c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a77de95a900f3929d6ea8752126ca042c">&#9670;&nbsp;</a></span>maxapriori()</h2>
+<a id="ac8fc39933f19be380f8a80c7665d049e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac8fc39933f19be380f8a80c7665d049e">&#9670;&nbsp;</a></span>maxapriori()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -470,13 +476,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
@@ -520,8 +526,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a5afdf7a505966f64b56d7f21bd776c8b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5afdf7a505966f64b56d7f21bd776c8b">&#9670;&nbsp;</a></span>wfslinearity()</h2>
+<a id="a4307931050dd0259e2369bf4591d65a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4307931050dd0259e2369bf4591d65a5">&#9670;&nbsp;</a></span>wfslinearity()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -529,13 +535,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="memname">void wfslinearity </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
@@ -555,8 +561,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a3181f36e2da6183fb6cb76be582cd35c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3181f36e2da6183fb6cb76be582cd35c">&#9670;&nbsp;</a></span>lgs_wfs_sph_psd()</h2>
+<a id="ae0e3a33ac532506bd59ca25fd9051d10"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0e3a33ac532506bd59ca25fd9051d10">&#9670;&nbsp;</a></span>lgs_wfs_sph_psd()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -564,19 +570,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="memname">void lgs_wfs_sph_psd </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>, </td>
         </tr>
         <tr>
@@ -596,8 +602,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="ae113c7c5359792c010f699e1e5e14c14"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae113c7c5359792c010f699e1e5e14c14">&#9670;&nbsp;</a></span>wfsfocusadj()</h2>
+<a id="a5ee5428a0082233dcc43a3900af1125b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5ee5428a0082233dcc43a3900af1125b">&#9670;&nbsp;</a></span>wfsfocusadj()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -605,7 +611,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="memname">real wfsfocusadj </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em>, </td>
         </tr>
         <tr>
@@ -684,8 +690,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a042cc2fc9a27fae7528d0958fa0ff5f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a042cc2fc9a27fae7528d0958fa0ff5f2">&#9670;&nbsp;</a></span>shwfs_grad()</h2>
+<a id="a6790b30ef72abe52665bcc6c6a850402"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6790b30ef72abe52665bcc6c6a850402">&#9670;&nbsp;</a></span>shwfs_grad()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -705,13 +711,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
         <tr>
@@ -737,8 +743,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a29ab479d13329c12e938cff513a2e2e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a29ab479d13329c12e938cff513a2e2e9">&#9670;&nbsp;</a></span>dcellread_prefix()</h2>
+<a id="a1d432fa7ac8ba2180db106a021e32488"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d432fa7ac8ba2180db106a021e32488">&#9670;&nbsp;</a></span>dcellread_prefix()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -752,7 +758,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>

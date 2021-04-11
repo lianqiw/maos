@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,18 +104,18 @@ $(document).ready(function(){initNavTree('maos_2moao_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aaaf77736de33764e12edc12f46b18c64"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2moao_8h.html#aaaf77736de33764e12edc12f46b18c64">free_recon_moao</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="separator:aaaf77736de33764e12edc12f46b18c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac70e508023f8816854d7d4eaf0452aa6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2moao_8h.html#ac70e508023f8816854d7d4eaf0452aa6">setup_recon_moao</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="separator:ac70e508023f8816854d7d4eaf0452aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af62a4685464fea7bdd37d04c821c3caf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2moao_8h.html#af62a4685464fea7bdd37d04c821c3caf">moao_recon</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:af62a4685464fea7bdd37d04c821c3caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac67cb937d05b108cd085a0854bfd9ca0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2moao_8h.html#ac67cb937d05b108cd085a0854bfd9ca0">free_recon_moao</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
+<tr class="separator:ac67cb937d05b108cd085a0854bfd9ca0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa581aa15f1584934c554970b31eeb2fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2moao_8h.html#aa581aa15f1584934c554970b31eeb2fb">setup_recon_moao</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
+<tr class="separator:aa581aa15f1584934c554970b31eeb2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72fe7dc3596297677ac029cbb2c39b89"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2moao_8h.html#a72fe7dc3596297677ac029cbb2c39b89">moao_recon</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a72fe7dc3596297677ac029cbb2c39b89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routings to setup moao and carry out moao DM fitting. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="aaaf77736de33764e12edc12f46b18c64"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaaf77736de33764e12edc12f46b18c64">&#9670;&nbsp;</a></span>free_recon_moao()</h2>
+<a id="ac67cb937d05b108cd085a0854bfd9ca0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac67cb937d05b108cd085a0854bfd9ca0">&#9670;&nbsp;</a></span>free_recon_moao()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -117,13 +123,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void free_recon_moao </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>&#160;</td>
         </tr>
         <tr>
@@ -133,12 +139,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free <a class="el" href="structMOAO__T.html">MOAO_T</a> </p>
+<p>Free <a class="el" href="maos_2types_8h.html#structmoao__t">moao_t</a> </p>
 
 </div>
 </div>
-<a id="ac70e508023f8816854d7d4eaf0452aa6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac70e508023f8816854d7d4eaf0452aa6">&#9670;&nbsp;</a></span>setup_recon_moao()</h2>
+<a id="aa581aa15f1584934c554970b31eeb2fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa581aa15f1584934c554970b31eeb2fb">&#9670;&nbsp;</a></span>setup_recon_moao()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -146,13 +152,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void setup_recon_moao </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>&#160;</td>
         </tr>
         <tr>
@@ -166,8 +172,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af62a4685464fea7bdd37d04c821c3caf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af62a4685464fea7bdd37d04c821c3caf">&#9670;&nbsp;</a></span>moao_recon()</h2>
+<a id="a72fe7dc3596297677ac029cbb2c39b89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72fe7dc3596297677ac029cbb2c39b89">&#9670;&nbsp;</a></span>moao_recon()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -175,7 +181,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void moao_recon </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>

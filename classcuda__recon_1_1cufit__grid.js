@@ -1,14 +1,14 @@
 var classcuda__recon_1_1cufit__grid =
 [
-    [ "cufit_grid", "classcuda__recon_1_1cufit__grid.html#a0a7e3f401cfa22abff8fd703dd5270cf", null ],
+    [ "cufit_grid", "classcuda__recon_1_1cufit__grid.html#aeaecd1cd2fe5fcb4c6ccae6342b2306c", null ],
     [ "~cufit_grid", "classcuda__recon_1_1cufit__grid.html#abc0003d22ab9f163ebb477ea726c0810", null ],
     [ "do_hxp", "classcuda__recon_1_1cufit__grid.html#a61837bc5cd3345f8d772773db36a1af0", null ],
     [ "do_hxpt", "classcuda__recon_1_1cufit__grid.html#a07602d47c9ca84d9ff284d47ef9919b3", null ],
     [ "do_ha", "classcuda__recon_1_1cufit__grid.html#a741dc46bc4d7a7a353f5aa22c45bc959", null ],
     [ "do_hat", "classcuda__recon_1_1cufit__grid.html#a37dac9717dcac4b2fa1ddb095a88d57b", null ],
-    [ "R", "classcuda__recon_1_1cufit__grid.html#a7f5c5322e05e1b336edf827546fa593d", null ],
-    [ "L", "classcuda__recon_1_1cufit__grid.html#abf170cf758dd5928a7dd21fe66fe897f", null ],
-    [ "Rt", "classcuda__recon_1_1cufit__grid.html#a1cff55dd1a3d88cddba53a48d4129686", null ],
+    [ "R", "classcuda__recon_1_1cufit__grid.html#ad7ab8c44fdaeac7a307d38200cf83960", null ],
+    [ "L", "classcuda__recon_1_1cufit__grid.html#a205ac6ec98767010f482077efcb3ca3f", null ],
+    [ "Rt", "classcuda__recon_1_1cufit__grid.html#ab544e9fc26563edc3da4eba649b48acc", null ],
     [ "grid", "classcuda__recon_1_1cufit__grid.html#aa2898dcc7210a5e3a1cd708b5c7d8acf", null ],
     [ "nfit", "classcuda__recon_1_1cufit__grid.html#a274d375999f7db866060c7660a725eeb", null ],
     [ "idealfit", "classcuda__recon_1_1cufit__grid.html#aa4f47344767f787fa79da04cbf34140e", null ],

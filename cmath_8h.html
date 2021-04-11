@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -518,7 +524,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
 <tr class="separator:a73f1e2c4bdc626931fc656f1c9fb8b2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28f2c1a91c80f5dc8c951f875d79f2de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a28f2c1a91c80f5dc8c951f875d79f2de">cwritedata</a> (file_t *fp, const <a class="el" href="structcmat.html">cmat</a> *A)</td></tr>
 <tr class="separator:a28f2c1a91c80f5dc8c951f875d79f2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa340e7c8bdf5727d239cddfe601f1dae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aa340e7c8bdf5727d239cddfe601f1dae">creaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="memitem:aa340e7c8bdf5727d239cddfe601f1dae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aa340e7c8bdf5727d239cddfe601f1dae">creaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:aa340e7c8bdf5727d239cddfe601f1dae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad572fd5bf83e1a861d7a323ee778bc30"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ad572fd5bf83e1a861d7a323ee778bc30">cnew_mmap</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
 <tr class="separator:ad572fd5bf83e1a861d7a323ee778bc30"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -660,7 +666,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cspmulsp2</b> (<a cla
 <tr class="separator:acecaf203a653ac718dd234bf7119e580"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac856ab97d0032304beb9cb4fe0465528"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ac856ab97d0032304beb9cb4fe0465528">cspwritedata</a> (file_t *fp, const <a class="el" href="structcsp.html">csp</a> *sp)</td></tr>
 <tr class="separator:ac856ab97d0032304beb9cb4fe0465528"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d6666dc73cc2da8e9e0a0e0ce9d0aad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a2d6666dc73cc2da8e9e0a0e0ce9d0aad">cspreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="memitem:a2d6666dc73cc2da8e9e0a0e0ce9d0aad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a2d6666dc73cc2da8e9e0a0e0ce9d0aad">cspreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a2d6666dc73cc2da8e9e0a0e0ce9d0aad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2da7bc6a39001e54d50b98026dda143"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ae2da7bc6a39001e54d50b98026dda143">cfft_free_plan</a> (struct fft_t *fft)</td></tr>
 <tr class="separator:ae2da7bc6a39001e54d50b98026dda143"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -3523,8 +3529,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
-<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
+<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
+<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000015">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
 
 </div>
 </div>
@@ -3793,7 +3799,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the pseudo inverse of block matrix A. A is n*p cell, wt n*n cell or sparse cell. <img class="formulaInl" alt="$B=inv(A'*W*A)*A'*W$" src="form_73.png"/> </p>
+<p>compute the pseudo inverse of block matrix A. A is n*p cell, wt n*n cell or sparse cell. \(B=inv(A&#39;*W*A)*A&#39;*W\) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
@@ -4072,18 +4078,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
 </div><div class="memdoc">
 <p>2D cubic spline interpolation preparation. x is the x coordinate vector of the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the 2-d grid. It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .</p>
 <p>The boundaries are handled in the same way is CX(spline). i.e. replace </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_74.png"/>
+\[f^\prime(0)=(f(1)-f(-1))/2\]
 </p>
 <p> by </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_75.png"/>
+\[f^\prime(0)=(f(1)-f(0))\]
 </p>
 <p> Otehr type of boundaries are handled in the same way.</p>
 <p>2D cubic spline interpolation preparation. x is the x coordinate vector of the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the 2-d grid. It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .</p>
 <p>The boundaries are handled in the same way is ZX(spline). i.e. replace </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_74.png"/>
+\[f^\prime(0)=(f(1)-f(-1))/2\]
 </p>
 <p> by </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_75.png"/>
+\[f^\prime(0)=(f(1)-f(0))\]
 </p>
 <p> Otehr type of boundaries are handled in the same way. </p>
 
@@ -4180,7 +4186,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>
@@ -5502,7 +5508,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>
@@ -5653,7 +5659,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply 2d FFT partially over ncomp <img class="formulaInl" alt="$\times$" src="form_76.png"/>ncomp region use two 1d plans that takes 1d fft through its column and selectly for its rows to produce smaller psf. </p>
+<p>Apply 2d FFT partially over ncomp \(\times\)ncomp region use two 1d plans that takes 1d fft through its column and selectly for its rows to produce smaller psf. </p>
 
 </div>
 </div>

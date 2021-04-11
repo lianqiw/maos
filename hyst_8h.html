@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,30 +104,30 @@ $(document).ready(function(){initNavTree('hyst_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:af7d8e92a898cae2b5e8b3e112c893fb5"><td class="memItemLeft" align="right" valign="top">HYST_T *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#af7d8e92a898cae2b5e8b3e112c893fb5">hyst_new</a> (real hysteresis, real alpha, real stroke, <a class="el" href="classlong.html">long</a> nact)</td></tr>
-<tr class="separator:af7d8e92a898cae2b5e8b3e112c893fb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a939be392da086d31ec738a839f6abba0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#a939be392da086d31ec738a839f6abba0">hyst_reset</a> (HYST_T *hyst)</td></tr>
-<tr class="separator:a939be392da086d31ec738a839f6abba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa83ca9bfb93e3dec17342aac19f9fdd1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#aa83ca9bfb93e3dec17342aac19f9fdd1">hyst_free</a> (HYST_T *in)</td></tr>
-<tr class="separator:aa83ca9bfb93e3dec17342aac19f9fdd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f78cf8f530eff39db494fb747ce6342"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#a5f78cf8f530eff39db494fb747ce6342">hyst_dmat</a> (HYST_T *hyst, <a class="el" href="structdmat.html">dmat</a> *dmreal, const <a class="el" href="structdmat.html">dmat</a> *dmcmd)</td></tr>
-<tr class="separator:a5f78cf8f530eff39db494fb747ce6342"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4a31ea205a497f29de3b69f6a929e11"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#ad4a31ea205a497f29de3b69f6a929e11">hyst_dcell</a> (HYST_T **hyst, <a class="el" href="structdcell.html">dcell</a> *dmreal, const <a class="el" href="structdcell.html">dcell</a> *dmcmd)</td></tr>
-<tr class="separator:ad4a31ea205a497f29de3b69f6a929e11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a629b3022fb8555df42f1d1743c156a55"><td class="memItemLeft" align="right" valign="top">hyst_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#a629b3022fb8555df42f1d1743c156a55">hyst_new</a> (real hysteresis, real alpha, real stroke, <a class="el" href="classlong.html">long</a> nact)</td></tr>
+<tr class="separator:a629b3022fb8555df42f1d1743c156a55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7bcd5522227a35815cc9d2d6b7add0ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#a7bcd5522227a35815cc9d2d6b7add0ad">hyst_reset</a> (hyst_t *hyst)</td></tr>
+<tr class="separator:a7bcd5522227a35815cc9d2d6b7add0ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39f2d4fdd6d3bb7e5d2c5bebccb5e192"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#a39f2d4fdd6d3bb7e5d2c5bebccb5e192">hyst_free</a> (hyst_t *in)</td></tr>
+<tr class="separator:a39f2d4fdd6d3bb7e5d2c5bebccb5e192"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fc8f07bc4142e8077b215493105c5bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#a7fc8f07bc4142e8077b215493105c5bd">hyst_dmat</a> (hyst_t *hyst, <a class="el" href="structdmat.html">dmat</a> *dmreal, const <a class="el" href="structdmat.html">dmat</a> *dmcmd)</td></tr>
+<tr class="separator:a7fc8f07bc4142e8077b215493105c5bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abafda6082b0a1d52c2b2285c290bd67f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#abafda6082b0a1d52c2b2285c290bd67f">hyst_dcell</a> (hyst_t **hyst, <a class="el" href="structdcell.html">dcell</a> *dmreal, const <a class="el" href="structdcell.html">dcell</a> *dmcmd)</td></tr>
+<tr class="separator:abafda6082b0a1d52c2b2285c290bd67f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11b28fab4187f6283183be5773ebe1b1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hyst_8h.html#a11b28fab4187f6283183be5773ebe1b1">hyst_test</a> (real hysteresis, real hyst_alpha, real hyst_stroke, const <a class="el" href="structdmat.html">dmat</a> *dmcmd)</td></tr>
 <tr class="separator:a11b28fab4187f6283183be5773ebe1b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines for hysteresis modeling </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="af7d8e92a898cae2b5e8b3e112c893fb5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af7d8e92a898cae2b5e8b3e112c893fb5">&#9670;&nbsp;</a></span>hyst_new()</h2>
+<a id="a629b3022fb8555df42f1d1743c156a55"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a629b3022fb8555df42f1d1743c156a55">&#9670;&nbsp;</a></span>hyst_new()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">HYST_T* hyst_new </td>
+          <td class="memname">hyst_t* hyst_new </td>
           <td>(</td>
           <td class="paramtype">real&#160;</td>
           <td class="paramname"><em>hysteresis</em>, </td>
@@ -164,8 +170,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a939be392da086d31ec738a839f6abba0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a939be392da086d31ec738a839f6abba0">&#9670;&nbsp;</a></span>hyst_reset()</h2>
+<a id="a7bcd5522227a35815cc9d2d6b7add0ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7bcd5522227a35815cc9d2d6b7add0ad">&#9670;&nbsp;</a></span>hyst_reset()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -173,7 +179,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void hyst_reset </td>
           <td>(</td>
-          <td class="paramtype">HYST_T *&#160;</td>
+          <td class="paramtype">hyst_t *&#160;</td>
           <td class="paramname"><em>hyst</em></td><td>)</td>
           <td></td>
         </tr>
@@ -183,8 +189,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa83ca9bfb93e3dec17342aac19f9fdd1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa83ca9bfb93e3dec17342aac19f9fdd1">&#9670;&nbsp;</a></span>hyst_free()</h2>
+<a id="a39f2d4fdd6d3bb7e5d2c5bebccb5e192"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39f2d4fdd6d3bb7e5d2c5bebccb5e192">&#9670;&nbsp;</a></span>hyst_free()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -192,7 +198,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void hyst_free </td>
           <td>(</td>
-          <td class="paramtype">HYST_T *&#160;</td>
+          <td class="paramtype">hyst_t *&#160;</td>
           <td class="paramname"><em>hyst</em></td><td>)</td>
           <td></td>
         </tr>
@@ -202,8 +208,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5f78cf8f530eff39db494fb747ce6342"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f78cf8f530eff39db494fb747ce6342">&#9670;&nbsp;</a></span>hyst_dmat()</h2>
+<a id="a7fc8f07bc4142e8077b215493105c5bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fc8f07bc4142e8077b215493105c5bd">&#9670;&nbsp;</a></span>hyst_dmat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -211,7 +217,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void hyst_dmat </td>
           <td>(</td>
-          <td class="paramtype">HYST_T *&#160;</td>
+          <td class="paramtype">hyst_t *&#160;</td>
           <td class="paramname"><em>hyst</em>, </td>
         </tr>
         <tr>
@@ -237,8 +243,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ad4a31ea205a497f29de3b69f6a929e11"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4a31ea205a497f29de3b69f6a929e11">&#9670;&nbsp;</a></span>hyst_dcell()</h2>
+<a id="abafda6082b0a1d52c2b2285c290bd67f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abafda6082b0a1d52c2b2285c290bd67f">&#9670;&nbsp;</a></span>hyst_dcell()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -246,7 +252,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void hyst_dcell </td>
           <td>(</td>
-          <td class="paramtype">HYST_T **&#160;</td>
+          <td class="paramtype">hyst_t **&#160;</td>
           <td class="paramname"><em>hyst</em>, </td>
         </tr>
         <tr>

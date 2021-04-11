@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -92,240 +98,236 @@ $(document).ready(function(){initNavTree('functions_vars_d.html','');});
 
 <h3><a id="index_d"></a>- d -</h3><ul>
 <li>d
-: <a class="el" href="structAPER__CFG__T.html#af512059f30ebd44d00ee491c2292d1fd">APER_CFG_T</a>
-, <a class="el" href="structLLT__CFG__T.html#a16a92e4bd613e2e412828e146b16fc83">LLT_CFG_T</a>
+: <a class="el" href="parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7">aper_cfg_t</a>
+, <a class="el" href="parms_8h.html#a0f4066f8181cc956c6bd50a40882f257">llt_cfg_t</a>
 </li>
 <li>dbg
-: <a class="el" href="structPARMS__T.html#a8fdfce1e68e018f54640c3d7214fcc33">PARMS_T</a>
+: <a class="el" href="parms_8h.html#ae28c68753df30b57914ede33c17c62e5">parms_t</a>
 </li>
 <li>delay
 : <a class="el" href="structdir__t.html#aa3017b821bec4b5ce1d3f606cd1d6526">dir_t</a>
-, <a class="el" href="structDITHER__T.html#aa427a02f29ec34b30bfb84f4056cbc00">DITHER_T</a>
+, <a class="el" href="maos_2types_8h.html#a4bf63456d6d5ba2b4fd471efeeb2ea22">dither_t</a>
 </li>
 <li>delta
-: <a class="el" href="structDITHER__T.html#aba56015b39719b0bb68c15a27ee116b5">DITHER_T</a>
+: <a class="el" href="maos_2types_8h.html#aca995bfcc301ef9a1ab9b0dd0965f63e">dither_t</a>
 </li>
 <li>deltam
-: <a class="el" href="structDITHER__T.html#acaa052baedf0c040c8318907a1f48330">DITHER_T</a>
+: <a class="el" href="maos_2types_8h.html#a85f154a82c7001dcd69f1f555061ef5e">dither_t</a>
 </li>
 <li>deltao
-: <a class="el" href="structDITHER__T.html#ae2426842af3c82eb783be1c5b76fe9ba">DITHER_T</a>
+: <a class="el" href="maos_2types_8h.html#a986eb94d5aec4aa5bf15f9a36bc4c089">dither_t</a>
 </li>
 <li>detach
-: <a class="el" href="structARG__T.html#a2c3209f38638cec0a050260bab246299">ARG_T</a>
+: <a class="el" href="parms_8h.html#a304070322d22658ae216c8be4832d820">arg_t</a>
 </li>
 <li>DF
-: <a class="el" href="structRECON__T.html#afd0320f8b10a68d37732981f2168ad81">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#a8cbe4ae6558aa827aa4efb5a5c9273db">recon_t</a>
 </li>
 <li>dfrs
-: <a class="el" href="structPOWFS__CFG__T.html#a4f79eb8e4c1f3ad39eebeeb845bdc7d5">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a794db13a01caba4270a97f0844bffb1d">powfs_cfg_t</a>
 </li>
 <li>din
-: <a class="el" href="structAPER__CFG__T.html#ac049de0833fbfff70ebd224d0c89deaa">APER_CFG_T</a>
+: <a class="el" href="parms_8h.html#a09ae154f837db49c7cb8ba98666c8c5a">aper_cfg_t</a>
 </li>
 <li>dirout
-: <a class="el" href="structARG__T.html#ae50d58a11ebd55e899f48ad1b073e3e7">ARG_T</a>
+: <a class="el" href="parms_8h.html#ae27eb782c897db66719a088a8470fda4">arg_t</a>
 </li>
 <li>dirs
-: <a class="el" href="structPARMS__T.html#a80536cfd8cbf8991bafec37082f5f964">PARMS_T</a>
+: <a class="el" href="parms_8h.html#a9a5f86b7cfd6cb08e50dfac4e17df26c">parms_t</a>
 </li>
 <li>dither
-: <a class="el" href="structPARMS__T.html#a4013388795a00797b88a3f32d101f496">PARMS_T</a>
-, <a class="el" href="structPOWFS__CFG__T.html#af50440d1df7721dda61fb6df62d2c826">POWFS_CFG_T</a>
-, <a class="el" href="structSAVE__CFG__T.html#ab54d0b3d07edf88e5afc3c1543a21e7a">SAVE_CFG_T</a>
+: <a class="el" href="parms_8h.html#ae8285c239fd9f63adf7f7d5ccb2aec1f">parms_t</a>
+, <a class="el" href="parms_8h.html#acc8598a3befb4e67c70d94d96def5359">powfs_cfg_t</a>
+, <a class="el" href="parms_8h.html#a1ccf26ea01251cbe1ce75be13779e4ee">save_cfg_t</a>
 </li>
 <li>dither_amp
-: <a class="el" href="structPOWFS__CFG__T.html#a29b9989ef9c8a7df945a524027f22305">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a5f138ce31d15881c9f9d9cc9e473e833">powfs_cfg_t</a>
 </li>
 <li>dither_dtrat
-: <a class="el" href="structRECON__T.html#af710a2a84228c871d9fab45fe8e2f884">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#ac9a604bd35d64c4d1aa2916372cf84ae">recon_t</a>
 </li>
 <li>dither_gdrift
-: <a class="el" href="structPOWFS__CFG__T.html#a3b89ecf89b0aa532473e3aff21ad1fa5">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a94edcd3884b645c338f623e83a872b4e">powfs_cfg_t</a>
 </li>
 <li>dither_glpf
-: <a class="el" href="structPOWFS__CFG__T.html#a0b42e9ab8d0fce5eb9fcebb9d028d3ca">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#abccd43ba2eb7a7a89a896016d6939ad3">powfs_cfg_t</a>
 </li>
 <li>dither_gog
-: <a class="el" href="structPOWFS__CFG__T.html#ab28c0719a099a04b93607dcfbf952c4f">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a40295038250a67f0473a7f684bb057cb">powfs_cfg_t</a>
 </li>
 <li>dither_gpll
-: <a class="el" href="structPOWFS__CFG__T.html#a080de697a097c3f79a92507224a455ec">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a0f6f0f952791d437ff12d843d32abb05">powfs_cfg_t</a>
 </li>
 <li>dither_m
-: <a class="el" href="structRECON__T.html#a1be07998af98128e270646645cf804aa">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#a0315c8beee67362d7ab03b9bdc8660ea">recon_t</a>
 </li>
 <li>dither_npoint
-: <a class="el" href="structPOWFS__CFG__T.html#a966510dcb7e7ee2b215d323fe687f7f5">POWFS_CFG_T</a>
-, <a class="el" href="structRECON__T.html#a0a9cd7966a35523ac1073cd8d6d054e1">RECON_T</a>
+: <a class="el" href="parms_8h.html#aef40569b1440e63af3c2730e44116484">powfs_cfg_t</a>
+, <a class="el" href="maos_2types_8h.html#a2cdaa275b0021387e777775b3761a719">recon_t</a>
 </li>
 <li>dither_ograt
-: <a class="el" href="structPOWFS__CFG__T.html#af03e2cb4b8e2a7b5839d0e57c8672cbb">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a23bfd9e98336e6e4ddcc5f9ee2098737">powfs_cfg_t</a>
 </li>
 <li>dither_ogsingle
-: <a class="el" href="structPOWFS__CFG__T.html#ad9ff5fb074acf3747690c5fc58fe0f5a">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a6ef7f7c718cf537a9642d2dd7ca40896">powfs_cfg_t</a>
 </li>
 <li>dither_ogskip
-: <a class="el" href="structPOWFS__CFG__T.html#a7d477a256819fe01ab25980a24cece5f">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a6e3260bc2057fda36fbc327131feef4f">powfs_cfg_t</a>
 </li>
 <li>dither_pllrat
-: <a class="el" href="structPOWFS__CFG__T.html#a1e243882dcae6f068d91af68152213c3">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#a7855af8316c15f4605da963fe9dfca44">powfs_cfg_t</a>
 </li>
 <li>dither_pllskip
-: <a class="el" href="structPOWFS__CFG__T.html#aa4e7070307745bf51916299e0d4c2711">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#ac02b1e1bb37b17841b5a2697605cf646">powfs_cfg_t</a>
 </li>
 <li>dither_ra
-: <a class="el" href="structRECON__T.html#a390b493f4da3aae1968d259ac928ad5c">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#aabf87ed8cfc835bd9244d4118d5de549">recon_t</a>
 </li>
 <li>dither_rg
-: <a class="el" href="structRECON__T.html#a06bcffa9727eec14796b49021a264bb5">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#ab95e805545c3fb08b7418f57a6fabee8">recon_t</a>
 </li>
 <li>dm
-: <a class="el" href="structPARMS__T.html#ac2f69a649e1ac2d2e55e790ac067d46c">PARMS_T</a>
-, <a class="el" href="structSAVE__CFG__T.html#a758d4e6367bf5ecb3574be68505cf7d0">SAVE_CFG_T</a>
+: <a class="el" href="parms_8h.html#ad2e84e6d59b0b98da36d9f7c25b63af9">parms_t</a>
+, <a class="el" href="parms_8h.html#af892254aa981c9f56ad6471c10ed2c7c">save_cfg_t</a>
 </li>
 <li>dm2sci
-: <a class="el" href="structMISREG__CFG__T.html#a796b75cc2fdfda14dc290ee8ad7cabca">MISREG_CFG_T</a>
+: <a class="el" href="parms_8h.html#a9a6aec2b82647033e97250d81665b7d4">misreg_cfg_t</a>
 </li>
 <li>dm2wfs
-: <a class="el" href="structMISREG__CFG__T.html#ab68fa7dbc35a960c1749f2e38b9cca66">MISREG_CFG_T</a>
+: <a class="el" href="parms_8h.html#ab58d36828b06ce39711555ebd34166de">misreg_cfg_t</a>
 </li>
 <li>dm_evl
 : <a class="el" href="classcuda__recon_1_1curecon__t.html#add56273a383405586a564600ea8a127c">cuda_recon::curecon_t</a>
-, <a class="el" href="structSIM__T.html#a31ac0b4120e0b943c283659c3a5a3b82">SIM_T</a>
+, <a class="el" href="maos_2types_8h.html#ac00d08c6f1b5d98f593c1b43d77892cc">sim_t</a>
 </li>
 <li>dm_moao
 : <a class="el" href="classcuda__recon_1_1curecon__t.html#a9866e6c8ad4c243c74905041f48e17dd">cuda_recon::curecon_t</a>
 </li>
 <li>dm_ncpa
-: <a class="el" href="structRECON__T.html#a9ddd483da0085079e6f8fc40e826b84d">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#a6e5f23174e76e5586c5b48fb026e20b7">recon_t</a>
 </li>
 <li>dm_wfs
 : <a class="el" href="classcuda__recon_1_1curecon__t.html#a1d14ddc407bc2ca4515b3ea26f7da6c7">cuda_recon::curecon_t</a>
-, <a class="el" href="structSIM__T.html#ae59d64b061ba23f2f59f5b58397d2d70">SIM_T</a>
+, <a class="el" href="maos_2types_8h.html#a68aeddab4ca47520c7c4d1e9749412ec">sim_t</a>
 </li>
 <li>dmadd
-: <a class="el" href="structSIM__CFG__T.html#af8e005436b2a65e19dc222b7a0bc8a01">SIM_CFG_T</a>
-, <a class="el" href="structSIM__T.html#ab0fea8e3a828c5eb14d3e0b96bf6ef2e">SIM_T</a>
+: <a class="el" href="parms_8h.html#af97c70bc6e1a2514b961cda471c68c31">sim_cfg_t</a>
+, <a class="el" href="maos_2types_8h.html#a2076fcc4ab27d77870fab9c24646b5ac">sim_t</a>
 </li>
 <li>dmclip
-: <a class="el" href="structSIM__CFG__T.html#afde5a66cee6760a28dc7c9654d33fe72">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#a5ebac1ca35e97df574fbbc3fb07ebb38">sim_cfg_t</a>
 </li>
 <li>dmclipia
-: <a class="el" href="structSIM__CFG__T.html#a8b4e88f03c10bc31213d5dcd8ed4a72a">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#ae9ffd82eebb21aa5bdb4c30c30319775">sim_cfg_t</a>
 </li>
 <li>dmcmd
-: <a class="el" href="structSIM__T.html#a0d5640c8e497e19ad2a792e570b20210">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a369952c063dea869678bf83ae0239789">sim_t</a>
 </li>
 <li>dmerr_store
-: <a class="el" href="structSIM__T.html#ae67fa0336f8e3fcc88ec80ba8375af05">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a8c000b41e022f46fcac3e43021d2c075">sim_t</a>
 </li>
 <li>dmerrts
-: <a class="el" href="structSIM__T.html#a4eb27fde143b86dc91330fab4c12dce6">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#aa6a3cb8f7f47354671dd0899b939f49f">sim_t</a>
 </li>
 <li>dmfit
-: <a class="el" href="structSIM__T.html#a3d9197a8e84ebbbf7eca24c4c64f0bae">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#ab14234b4671aef87c59da67fb59718df">sim_t</a>
 </li>
 <li>dmfullfov
-: <a class="el" href="structDBG__CFG__T.html#a6a3802ccf2f83ff9073c9d1ba50ab5b5">DBG_CFG_T</a>
+: <a class="el" href="parms_8h.html#a5820316ea71e7b41d9e0ca11a6d29769">dbg_cfg_t</a>
 </li>
 <li>dmhist
-: <a class="el" href="structSIM__T.html#a7a78096b3a9ce0681a6c0c0548b41942">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#aa2bd8295611448a02d56c732b8edff27">sim_t</a>
 </li>
 <li>dmht
-: <a class="el" href="structcn2est__t.html#a41a5764f2e746d7bceffc851890ab6b7">cn2est_t</a>
+: <a class="el" href="cn2est_8h.html#a41a5764f2e746d7bceffc851890ab6b7">cn2est_t</a>
 </li>
 <li>dmint
-: <a class="el" href="structSIM__T.html#a121d2ae0fc6984953b6ffb6dbe084802">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a4974fb654dbc919141dc96dce32440ce">sim_t</a>
 </li>
 <li>dmoff
-: <a class="el" href="structDBG__CFG__T.html#a14d07a4b9b2339e8b9249532a0ee8b6d">DBG_CFG_T</a>
+: <a class="el" href="parms_8h.html#a5fd3fe216f7e8580569b3b23b5fa90f7">dbg_cfg_t</a>
 </li>
 <li>dmproj
 : <a class="el" href="classcudata__t.html#adf9fb617b403a07cad8587d5a1552912">cudata_t</a>
-, <a class="el" href="structSIM__CFG__T.html#a237f5657e6f01dc3a5dfd98dc4ecc9d7">SIM_CFG_T</a>
-, <a class="el" href="structSIM__T.html#a47d58aa97cdc4e2e7a6839d3cfad0193">SIM_T</a>
+, <a class="el" href="parms_8h.html#a6a267def24d8283538f0d8e7bb897945">sim_cfg_t</a>
+, <a class="el" href="maos_2types_8h.html#ac08d0605876652ec9759e9f11f61babc">sim_t</a>
 </li>
 <li>dmprojsq
-: <a class="el" href="structSIM__T.html#aaae364537faa56da1b501d837e0b6833">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a773629a8651dadfb2b587b0e18ffdda7">sim_t</a>
 </li>
 <li>dmpsol
-: <a class="el" href="structSIM__T.html#acb069ff2d87d6642ddf4ceb8a1e66550">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#ac189e162b7ee3e5f8f35a870fd74a501">sim_t</a>
 </li>
 <li>DMPTT
-: <a class="el" href="structRECON__T.html#a075fbff51d0ca787de1fbe48e1568ab5">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#aad4dae006bdb736bf5ba9b6224b2ce6f">recon_t</a>
 </li>
 <li>dmreal
 : <a class="el" href="classcudata__t.html#ad9bad0392b15a8e1f189e0ee768f7952">cudata_t</a>
-, <a class="el" href="structSIM__T.html#ae4b9c297eaa0b2ceb57bb9885caef135">SIM_T</a>
+, <a class="el" href="maos_2types_8h.html#a135185304228805d95443e066f1d3a08">sim_t</a>
 </li>
 <li>dmrealsq
-: <a class="el" href="structSIM__T.html#aebbd3b2fb7d3ac8c14feadbe46414cee">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a89d9de13974b3201315e4907b13f4485">sim_t</a>
 </li>
 <li>dmtmp
-: <a class="el" href="structSIM__T.html#a76cba50217edf338d3a6eceb6d9aa184">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a9d7b0ba4afd9d1cf333f8ec2485192db">sim_t</a>
 </li>
 <li>DMTT
-: <a class="el" href="structRECON__T.html#a17bf0b9bf43600f738869fd8ac965819">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#a9db32cf2a1625f48a9b6df5feff92602">recon_t</a>
 </li>
 <li>do_phy
-: <a class="el" href="structWFSFLAGS__T.html#abcf9d231b4aa7607f7f554f7e2a5e57d">WFSFLAGS_T</a>
+: <a class="el" href="maos_2types_8h.html#a672810f440e4e76c053bf9ad1fbc9624">wfsflags_t</a>
 </li>
 <li>do_pistat
-: <a class="el" href="structWFSFLAGS__T.html#adbe3511e9b1f8ed9b42983b2d4e6ce52">WFSFLAGS_T</a>
+: <a class="el" href="maos_2types_8h.html#a6822d60f11dc7860d7b63095a988fbd9">wfsflags_t</a>
 </li>
 <li>draw_gmax
-: <a class="el" href="structDBG__CFG__T.html#aa9cb08b3668c5798dcfe6f80d1863582">DBG_CFG_T</a>
+: <a class="el" href="parms_8h.html#a8b4b55cdb080ff3de805ee8361b9ef20">dbg_cfg_t</a>
 </li>
 <li>draw_opdmax
-: <a class="el" href="structDBG__CFG__T.html#a87251425bd658d7ded32c8abe35aee77">DBG_CFG_T</a>
+: <a class="el" href="parms_8h.html#a86873420992b6b3394b728111a8998df">dbg_cfg_t</a>
 </li>
 <li>dsa
-: <a class="el" href="structPOWFS__CFG__T.html#a7c483337c6dd397696e17cbd06cfa619">POWFS_CFG_T</a>
-, <a class="el" href="structpts__t.html#ae658762534260260fd3626816b364097">pts_t</a>
-</li>
-<li>dsax
-: <a class="el" href="structpts__t.html#a3d5414a1117ebc70fc74f37e09036449">pts_t</a>
+: <a class="el" href="parms_8h.html#aaf6356aaf9258c76fe2428ac1823f1ee">powfs_cfg_t</a>
 </li>
 <li>dsay
 : <a class="el" href="structpts__t.html#a4cec769be67417411fea9c38217b8078">pts_t</a>
 </li>
 <li>dt
-: <a class="el" href="structSIM__CFG__T.html#aa1c751562f1f68d980b33b495b0610b4">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#ad84ee4962f5b74090774e7467508eeaa">sim_cfg_t</a>
 </li>
 <li>dtf
 : <a class="el" href="classcuwfs__t.html#a024a9f3cae16b5bf58cbbeeca6cee4fc">cuwfs_t</a>
-, <a class="el" href="structPOWFS__T.html#ae9fc7510d040ab4d3b80fdd1b4194f9e">POWFS_T</a>
+, <a class="el" href="maos_2types_8h.html#a52cb65d094051f9cd59428023a19b255">powfs_t</a>
 </li>
 <li>dtheta
-: <a class="el" href="structDTF__T.html#a0f20ddad07711a0e31ca1546ab3bc756">DTF_T</a>
-, <a class="el" href="structPOWFS__T.html#a48b216d44f49a49cd1e5f6e32534739d">POWFS_T</a>
+: <a class="el" href="mkdtf_8h.html#a74cfb08bbacacfa58f7fb837470ad28e">dtf_t</a>
+, <a class="el" href="maos_2types_8h.html#af71dd693feb078b31e587d30ad71e17c">powfs_t</a>
 </li>
 <li>dthi
-: <a class="el" href="structkalman__t.html#a95edccc2ef464f4bdbf78607356dd6a1">kalman_t</a>
-, <a class="el" href="structSIM__CFG__T.html#ad785e46d92de77389e0154b15f9a4c42">SIM_CFG_T</a>
+: <a class="el" href="kalman_8h.html#a95edccc2ef464f4bdbf78607356dd6a1">kalman_t</a>
+, <a class="el" href="parms_8h.html#a9d2b188e16d160591fa238af5fa877a2">sim_cfg_t</a>
 </li>
 <li>dtlo
-: <a class="el" href="structSIM__CFG__T.html#a15eef944b9fe41eab889268c9cee0f48">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#aa5c8b8837e50b5999ea6ab2a9ef9f675">sim_cfg_t</a>
 </li>
 <li>dtrat
-: <a class="el" href="structkalman__t.html#af736c12050cd2847e9ffc5770404876c">kalman_t</a>
-, <a class="el" href="structPOWFS__CFG__T.html#a998a10ce3a6ac1154b764e31bc2e9470">POWFS_CFG_T</a>
+: <a class="el" href="kalman_8h.html#af736c12050cd2847e9ffc5770404876c">kalman_t</a>
+, <a class="el" href="parms_8h.html#a8cb20aaa818ea17c5d294c6667d69e3a">powfs_cfg_t</a>
 </li>
 <li>dtrat_hi
-: <a class="el" href="structSIM__CFG__T.html#ac5a59a24115cf1c423e5add2290a38b7">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#aec72bf6aca0d55da0463eb00dc0bdcb4">sim_cfg_t</a>
 </li>
 <li>dtrat_lo
-: <a class="el" href="structSIM__CFG__T.html#a3e85ac12e13c1356f84e9caf72dee927">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#ac2480389ea8f9c4f78949dad55f1091e">sim_cfg_t</a>
 </li>
 <li>dtrat_lo2
-: <a class="el" href="structSIM__CFG__T.html#a68c4e5057ac0020a18f2ba57640b4a4b">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#a5039dab4f497cf757ca2b5be1c829893">sim_cfg_t</a>
 </li>
 <li>dtrat_lof
-: <a class="el" href="structSIM__CFG__T.html#a755238128035396b8c476fe2230ef217">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#a8644b21c8952aefa286974b1c93c3c15">sim_cfg_t</a>
 </li>
 <li>dtrat_skip
-: <a class="el" href="structSIM__CFG__T.html#aa1e1bca9afd7fc8dc1290c1b9bf70053">SIM_CFG_T</a>
+: <a class="el" href="parms_8h.html#a77217e88a710d1fcaed2b3d90044572f">sim_cfg_t</a>
 </li>
 <li>dummy1
 : <a class="el" href="structpts__t.html#a6b5980256384f8c7cee016a737bcfdbc">pts_t</a>
@@ -334,26 +336,26 @@ $(document).ready(function(){initNavTree('functions_vars_d.html','');});
 : <a class="el" href="structpts__t.html#aa68698b7a0f7c845871afb83c592f01f">pts_t</a>
 </li>
 <li>dx
-: <a class="el" href="structATM__CFG__T.html#a5b1cbc1ef6bb0dfb44704bcc5c8494d4">ATM_CFG_T</a>
-, <a class="el" href="structATMR__CFG__T.html#a5641b053589cd555929fa13faf5bd213">ATMR_CFG_T</a>
-, <a class="el" href="structcn2est__t.html#a8dcf47a0398de762b2e0222ac1141d17">cn2est_t</a>
-, <a class="el" href="structDM__CFG__T.html#a76ffc42df53a0eb72f0e0d82f5aada60">DM_CFG_T</a>
-, <a class="el" href="structEVL__CFG__T.html#ad188a6b71732c328c3d96a1221f74ed4">EVL_CFG_T</a>
-, <a class="el" href="structGENATM__T.html#a338df9ec518df3d44099adbb56d86f6f">GENATM_T</a>
+: <a class="el" href="parms_8h.html#abe2d099ad2745664ab7cc7a7cafdab2b">atm_cfg_t</a>
+, <a class="el" href="parms_8h.html#a288da32e910a24143fc4df12b4c76863">atmr_cfg_t</a>
+, <a class="el" href="cn2est_8h.html#a8dcf47a0398de762b2e0222ac1141d17">cn2est_t</a>
+, <a class="el" href="parms_8h.html#a68f83e1a2074710313580b7b171861f8">dm_cfg_t</a>
+, <a class="el" href="parms_8h.html#ac58baa280d10e5366923acc8b10e744d">evl_cfg_t</a>
+, <a class="el" href="turbulence_8h.html#a0de37cc1e32b22a7fa492baeea9491f6">genatm_t</a>
 , <a class="el" href="structloc__t.html#a34c782841e745bb5bd8f4f24f73f5f42">loc_t</a>
 , <a class="el" href="structlocstat__t.html#af44213652f1faf2eda1b19e47614c6d2">locstat_t</a>
 , <a class="el" href="structmap__t.html#ae181f26dba81f910257529c82596f699">map_t</a>
-, <a class="el" href="structMOAO__CFG__T.html#a4aa763f4f86b62189a804f40e03901bd">MOAO_CFG_T</a>
-, <a class="el" href="structPOWFS__CFG__T.html#aa56e5e769fd1f5777d81b7d524368ed0">POWFS_CFG_T</a>
+, <a class="el" href="parms_8h.html#af6920ca5ea90090740b18d5dad45607f">moao_cfg_t</a>
+, <a class="el" href="parms_8h.html#a5f6e111052e88e0c016ec35a1759cb11">powfs_cfg_t</a>
 , <a class="el" href="structpts__t.html#a0de974d017f51d0cb3d30e6406bb0cf4">pts_t</a>
-, <a class="el" href="structRECON__T.html#a7e092b0677f74882da4fa83b5bd0b16c">RECON_T</a>
+, <a class="el" href="maos_2types_8h.html#ab29ccb6bb4774fe6517eb79079f77664">recon_t</a>
 , <a class="el" href="structrmap__t.html#a990426f785bfea3367aa8bfe6ec861b4">rmap_t</a>
 </li>
 <li>dxsa
-: <a class="el" href="structDTF__T.html#a25177a666b0bfb312565054d2c420d1f">DTF_T</a>
+: <a class="el" href="mkdtf_8h.html#ab15a5c82c888875705395af6c0c4cec0">dtf_t</a>
 </li>
 <li>dy
-: <a class="el" href="structDM__CFG__T.html#a4ff4c741469c1fc6707e12bf5c0a65fc">DM_CFG_T</a>
+: <a class="el" href="parms_8h.html#a68430092cc9995ebdba0f7d1b6254d7b">dm_cfg_t</a>
 , <a class="el" href="structloc__t.html#af9af538ff99023b4c999993bdffc791c">loc_t</a>
 , <a class="el" href="structlocstat__t.html#aeb40fac426ae3bc474f3edb78bef3844">locstat_t</a>
 , <a class="el" href="structmap__t.html#a67eb3911c023e67c247677e03642927e">map_t</a>

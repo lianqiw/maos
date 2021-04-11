@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -92,116 +98,116 @@ $(document).ready(function(){initNavTree('functions_vars_r.html','');});
 
 <h3><a id="index_r"></a>- r -</h3><ul>
 <li>r0
-: <a class="el" href="structATM__CFG__T.html#a59b84849e4d1fcf8dcbbb3bd657bafca">ATM_CFG_T</a>
-, <a class="el" href="structATMR__CFG__T.html#a79d443c3927f9a0fe56436f8108d134e">ATMR_CFG_T</a>
-, <a class="el" href="structcn2est__t.html#aaff2ae6180b96170c04dfe43ad373002">cn2est_t</a>
-, <a class="el" href="structFRACTAL__T.html#a49d1b2b300ee0ed58f19fcb49749d37d">FRACTAL_T</a>
-, <a class="el" href="structGENATM__T.html#a2c793835c61e3402383551800b83a08c">GENATM_T</a>
-, <a class="el" href="structPOWFS__CFG__T.html#ae06e34905f1aa3e6f39c4a5728664e0e">POWFS_CFG_T</a>
-, <a class="el" href="structRECON__T.html#a23641df131d70cf3177ef729113f77a0">RECON_T</a>
+: <a class="el" href="parms_8h.html#a45bc0b262fccf8d0f999e883aaafcd2a">atm_cfg_t</a>
+, <a class="el" href="parms_8h.html#a6aed0844eb8c9289898578368061557f">atmr_cfg_t</a>
+, <a class="el" href="cn2est_8h.html#aaff2ae6180b96170c04dfe43ad373002">cn2est_t</a>
+, <a class="el" href="maos_2types_8h.html#af7a5f8e50f4563cc32d002b94f551906">fractal_t</a>
+, <a class="el" href="turbulence_8h.html#ab7b25fe17d4339073cad47008f1039f1">genatm_t</a>
+, <a class="el" href="parms_8h.html#aa85f8c47b938f774ac7f6cd9dcaf21d6">powfs_cfg_t</a>
+, <a class="el" href="maos_2types_8h.html#ad29c344193be03df8d9085997bb8f128">recon_t</a>
 </li>
 <li>r0evolve
-: <a class="el" href="structATM__CFG__T.html#ab45b015f6a3442a85f241dc294d12f9b">ATM_CFG_T</a>
+: <a class="el" href="parms_8h.html#a0fadb367b3a04583f926edfac5ec0c41">atm_cfg_t</a>
 </li>
 <li>r0logpsds
-: <a class="el" href="structATM__CFG__T.html#a0d7e5fb7a8345a96d027fc4cdc663ae9">ATM_CFG_T</a>
-, <a class="el" href="structGENATM__T.html#ab7f1f34507d8a4352e43fef12658dd6f">GENATM_T</a>
+: <a class="el" href="parms_8h.html#aebd909176106267f1a42b1ec9015dd1f">atm_cfg_t</a>
+, <a class="el" href="turbulence_8h.html#a2205340b3ee4c50696fb19e78dfbe16a">genatm_t</a>
 </li>
 <li>r0logpsdt
-: <a class="el" href="structATM__CFG__T.html#a5df0403442bf04864605b9a92868e03d">ATM_CFG_T</a>
+: <a class="el" href="parms_8h.html#a78e7d3ea691b0daf440428b1f60bede3">atm_cfg_t</a>
 </li>
 <li>r0m
-: <a class="el" href="structcn2est__t.html#a3de88650635ca13c389e4f4aeca267e3">cn2est_t</a>
+: <a class="el" href="cn2est_8h.html#a3de88650635ca13c389e4f4aeca267e3">cn2est_t</a>
 </li>
 <li>r0z
-: <a class="el" href="structATM__CFG__T.html#a42358db8d83a9f6a16683738b74d3fa3">ATM_CFG_T</a>
-, <a class="el" href="structATMR__CFG__T.html#a917fa6ce2cbaecc16af00950b2620b1c">ATMR_CFG_T</a>
+: <a class="el" href="parms_8h.html#a44990d22503f5b867933479af0bf71d5">atm_cfg_t</a>
+, <a class="el" href="parms_8h.html#aaaae1ac84c4c2a845200e043ba26dd11">atmr_cfg_t</a>
 </li>
 <li>radgx
-: <a class="el" href="structPOWFS__CFG__T.html#a8b2db09db3da6d6e2a01b68212221f4d">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#aa92dec25643fad0a7ca921dfb8561e0f">powfs_cfg_t</a>
 </li>
 <li>radpix
-: <a class="el" href="structDTF__T.html#a3f8665eeff959af9f8c25a2e1f83f8f4">DTF_T</a>
-, <a class="el" href="structPOWFS__CFG__T.html#abeacabf44ba95b84fa2ec6b4460f5364">POWFS_CFG_T</a>
+: <a class="el" href="mkdtf_8h.html#ae99947a455a836518b0efc123fc76d49">dtf_t</a>
+, <a class="el" href="parms_8h.html#ab65cc300544ae140930343e96b5422e4">powfs_cfg_t</a>
 </li>
 <li>radpixtheta
-: <a class="el" href="structPOWFS__CFG__T.html#ae04c2336bb795da5369857dda19b6c80">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#aa79332f6ce41159a7568cdcd2d877296">powfs_cfg_t</a>
 </li>
 <li>realamp
-: <a class="el" href="structPOWFS__T.html#ac5efc221b9c619f4d93d5e9188369c8f">POWFS_T</a>
+: <a class="el" href="maos_2types_8h.html#afdb18a9c057eaa8cf171acba721358a6">powfs_t</a>
 </li>
 <li>realsaa
-: <a class="el" href="structPOWFS__T.html#a4e417bafe34dc0bf4f81cf5e066a0c7e">POWFS_T</a>
+: <a class="el" href="maos_2types_8h.html#ad22014b1a4398c9b6ef2dbfa231d30f6">powfs_t</a>
 </li>
 <li>recon
-: <a class="el" href="structGPU__CFG__T.html#a7765cfdbb82ff1c2cc6dfb9b7e26d345">GPU_CFG_T</a>
-, <a class="el" href="structPARMS__T.html#a8019ba28796828e5032465d1476286f1">PARMS_T</a>
-, <a class="el" href="structSAVE__CFG__T.html#a487426d82238f2159c7d6e9ec0b58ad3">SAVE_CFG_T</a>
-, <a class="el" href="structSIM__T.html#a632412546828fc6e45a9538c42f9ed53">SIM_T</a>
+: <a class="el" href="parms_8h.html#a9632c84c249a4d6446ed122e0ff1e387">gpu_cfg_t</a>
+, <a class="el" href="parms_8h.html#ad32db228dd7c844c6354565444df5939">parms_t</a>
+, <a class="el" href="parms_8h.html#aa78e61309d9f953fe6193d032003716a">save_cfg_t</a>
+, <a class="el" href="maos_2types_8h.html#a46ef919899e6a48ec90893abef965368">sim_t</a>
 </li>
 <li>recon_stuck
-: <a class="el" href="structDBG__CFG__T.html#ac558d7f5a52b089929b32a44c8ece9fd">DBG_CFG_T</a>
+: <a class="el" href="parms_8h.html#a47c472c893f90a2dbb99db24ba146398">dbg_cfg_t</a>
 </li>
 <li>reconisim
-: <a class="el" href="structSIM__T.html#a327c6895c71b3ec9b2e6399ec916df5f">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a0aa9216ac153cc4cb6d3a566025766a5">sim_t</a>
 </li>
 <li>res
-: <a class="el" href="structSIM__T.html#ab7ed28903f3831b3433b7c8a7175cfd9">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#aa958a6c81bbbc1d65de9de3732728be1">sim_t</a>
 </li>
 <li>resdither
-: <a class="el" href="structSIM__T.html#ae0f7b703a0733827f17a702706341874">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#a15a0fb4bca39bccb08cae37081b6f48f">sim_t</a>
 </li>
 <li>reserve
 : <a class="el" href="classcudata__t.html#a0250e3bffa206b42e6c76b997bf2016f">cudata_t</a>
 </li>
 <li>reset
-: <a class="el" href="structCN2EST__CFG__T.html#abc0a4065a49a6301c2fc151ac919be88">CN2EST_CFG_T</a>
+: <a class="el" href="parms_8h.html#ad9eba89bd159e04339f004fd19d703fd">cn2est_cfg_t</a>
 </li>
 <li>restwfs
-: <a class="el" href="structSIM__T.html#a16f697a988e92c047ed6687d8b485614">SIM_T</a>
+: <a class="el" href="maos_2types_8h.html#aa17dcd6a8c5507da66bec24736824607">sim_t</a>
 </li>
 <li>RFdm
-: <a class="el" href="structRECON__T.html#a9236a58fff4f569c2e760c9b45422005">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#aa9ebccad6396888975e5a6db279d3d7c">recon_t</a>
 </li>
 <li>RFlgsg
-: <a class="el" href="structRECON__T.html#a117ecd404b40d3cfefa7d20dd15aee56">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#ab19ee67f78ce16e243f0fd229d862205">recon_t</a>
 </li>
 <li>RFngsg
-: <a class="el" href="structRECON__T.html#ab6ec6f1dacd66e94eaebf781e793c584">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#a9d6348cce108bb1fc513f07b08570b13">recon_t</a>
 </li>
 <li>RL
-: <a class="el" href="structRECON__T.html#a0bd16a8ead29c586c1027bbc194042de">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#adb83f467d429dc3d1c9ce3031a16f09f">recon_t</a>
 </li>
 <li>rmax
-: <a class="el" href="structEVL__CFG__T.html#adca4ace9f4c301647cefd28a489320ce">EVL_CFG_T</a>
+: <a class="el" href="parms_8h.html#af3d49b3b2d0a95edb2115d1411957950">evl_cfg_t</a>
 </li>
 <li>Rn
-: <a class="el" href="structkalman__t.html#acbc60693fffa69b32aec8517ac3bd6d1">kalman_t</a>
+: <a class="el" href="kalman_8h.html#acbc60693fffa69b32aec8517ac3bd6d1">kalman_t</a>
 </li>
 <li>rne
-: <a class="el" href="structPOWFS__CFG__T.html#a97a88f2f84e29a0aae79e8767ab47b99">POWFS_CFG_T</a>
+: <a class="el" href="parms_8h.html#ac55db6651c329564cd58eefda1af68cd">powfs_cfg_t</a>
 </li>
 <li>Rngs
-: <a class="el" href="structNGSMOD__T.html#a0b1e161b4d478f201f1d2b7e14e2a4e9">NGSMOD_T</a>
+: <a class="el" href="maos_2types_8h.html#a2ccb26fdd3335f819cca66138403dcd1">ngsmod_t</a>
 </li>
 <li>rotdeg
-: <a class="el" href="structAPER__CFG__T.html#ae784637aea631800d67dc35f9ea1dca1">APER_CFG_T</a>
+: <a class="el" href="parms_8h.html#a14f3320d745e66fa755da933adc4a0a4">aper_cfg_t</a>
 </li>
 <li>RR
-: <a class="el" href="structRECON__T.html#a153eef0b3f78088e72b50753006d5126">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#aa2c6710576891f095f5ce354a4f5ffa8">recon_t</a>
 </li>
 <li>RRtwfs
-: <a class="el" href="structRECON__T.html#ae90c761e6d2806982b2a50a3254d6bd4">RECON_T</a>
+: <a class="el" href="maos_2types_8h.html#a8fbe32ec1601595810f894d61d795330">recon_t</a>
 </li>
 <li>rstat
-: <a class="el" href="structGENATM__T.html#a4ec289f6543f12a67a7061eb554528e1">GENATM_T</a>
+: <a class="el" href="turbulence_8h.html#a06bae77b23497a10e8a04568bc702dc4">genatm_t</a>
 </li>
 <li>run
-: <a class="el" href="structPLOT__CFG__T.html#a08ef54666c6518cc32abea8ad20b02bb">PLOT_CFG_T</a>
-, <a class="el" href="structSAVE__CFG__T.html#a34a4c23843708f2e41eae5d31718112a">SAVE_CFG_T</a>
+: <a class="el" href="parms_8h.html#ab9b7cb477412c24a924ecf280dd846c8">plot_cfg_t</a>
+, <a class="el" href="parms_8h.html#a89d512a054496f3ed146f710a2aab730">save_cfg_t</a>
 </li>
 <li>Rwfs
-: <a class="el" href="structkalman__t.html#a8ec19fe7724bf9cc1c2c93ae585646e3">kalman_t</a>
+: <a class="el" href="kalman_8h.html#a8ec19fe7724bf9cc1c2c93ae585646e3">kalman_t</a>
 </li>
 </ul>
 </div><!-- contents -->

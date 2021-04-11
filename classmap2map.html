@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -94,14 +100,23 @@ $(document).ready(function(){initNavTree('classmap2map.html','');});
 <div class="title">map2map Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for map2map:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classmap2map.png" usemap="#map2map_map" alt=""/>
+  <map id="map2map_map" name="map2map_map">
+<area href="classnon_copyable.html" alt="nonCopyable" shape="rect" coords="0,0,87,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a871442f9e4d57be83c9fb8edee78687a"><td class="memItemLeft" align="right" valign="top"><a id="a871442f9e4d57be83c9fb8edee78687a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init_l2d</b> (const <a class="el" href="classcugrid__t.html">cugrid_t</a> &amp;out, const <a class="el" href="structdir__t.html">dir_t</a> *dir, int _ndir, const <a class="el" href="classArray.html">cugridcell</a> &amp;in, Real dt=0)</td></tr>
+<tr class="memitem:a871442f9e4d57be83c9fb8edee78687a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmap2map.html#a871442f9e4d57be83c9fb8edee78687a">init_l2d</a> (const <a class="el" href="classcugrid__t.html">cugrid_t</a> &amp;out, const <a class="el" href="structdir__t.html">dir_t</a> *dir, int _ndir, const <a class="el" href="class_array.html">cugridcell</a> &amp;in, Real dt=0)</td></tr>
 <tr class="separator:a871442f9e4d57be83c9fb8edee78687a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8853e7cd021990d3dcc6d89e281fe5c"><td class="memItemLeft" align="right" valign="top"><a id="ae8853e7cd021990d3dcc6d89e281fe5c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init_l2l</b> (const <a class="el" href="classArray.html">cugridcell</a> &amp;out, const <a class="el" href="classArray.html">cugridcell</a> &amp;in)</td></tr>
+<tr class="memitem:ae8853e7cd021990d3dcc6d89e281fe5c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmap2map.html#ae8853e7cd021990d3dcc6d89e281fe5c">init_l2l</a> (const <a class="el" href="class_array.html">cugridcell</a> &amp;out, const <a class="el" href="class_array.html">cugridcell</a> &amp;in)</td></tr>
 <tr class="separator:ae8853e7cd021990d3dcc6d89e281fe5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a918cd3802c6ffbef00fcbf4a866794ca"><td class="memItemLeft" align="right" valign="top"><a id="a918cd3802c6ffbef00fcbf4a866794ca"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>forward</b> (Real *const *out, const Real *const *in, Real alpha, Real *wt, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream)</td></tr>
@@ -113,8 +128,86 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>backward</b> (const R
 &#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
 <tr class="separator:ac38ca793dbef41d1869bb0e93b03cd8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a871442f9e4d57be83c9fb8edee78687a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a871442f9e4d57be83c9fb8edee78687a">&#9670;&nbsp;</a></span>init_l2d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void map2map::init_l2d </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classcugrid__t.html">cugrid_t</a> &amp;&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdir__t.html">dir_t</a> *&#160;</td>
+          <td class="paramname"><em>dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>_ndir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="class_array.html">cugridcell</a> &amp;&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Real&#160;</td>
+          <td class="paramname"><em>delay</em> = <code>0</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Initialize for ps to dir ray tracing, e.g., turbulence to WFS </p>
+
+</div>
+</div>
+<a id="ae8853e7cd021990d3dcc6d89e281fe5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae8853e7cd021990d3dcc6d89e281fe5c">&#9670;&nbsp;</a></span>init_l2l()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void map2map::init_l2l </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="class_array.html">cugridcell</a> &amp;&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="class_array.html">cugridcell</a> &amp;&#160;</td>
+          <td class="paramname"><em>in</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Initialize for ps to ps ray tracing, e.g., for caching </p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/prop_map.h</li>
+<li>cuda/prop_map.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

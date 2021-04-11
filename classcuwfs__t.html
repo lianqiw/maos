@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -101,12 +107,12 @@ Data Fields</h2></td></tr>
 <a class="el" href="classstream__t.html">stream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>stream</b></td></tr>
 <tr class="separator:a67567fb4f3cbce944a84a52180f6d6b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a691883ac0911edd3f570a1821d371adb"><td class="memItemLeft" align="right" valign="top"><a id="a691883ac0911edd3f570a1821d371adb"></a>
-<a class="el" href="classArray.html">Array</a>&lt; <a class="el" href="classstream__t.html">stream_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>streams</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; <a class="el" href="classstream__t.html">stream_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>streams</b></td></tr>
 <tr class="separator:a691883ac0911edd3f570a1821d371adb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa4a2caa377228e750711bdab2166e345"><td class="memItemLeft" align="right" valign="top"><a id="aa4a2caa377228e750711bdab2166e345"></a>
 <a class="el" href="structcupowfs__t.html">cupowfs_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>powfs</b></td></tr>
 <tr class="separator:aa4a2caa377228e750711bdab2166e345"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2df4143a51e5efea14ac3b2bdfede1de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classArray.html">Array</a>&lt; <a class="el" href="classculoc__t.html">culoc_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuwfs__t.html#a2df4143a51e5efea14ac3b2bdfede1de">loc_dm</a></td></tr>
+<tr class="memitem:a2df4143a51e5efea14ac3b2bdfede1de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_array.html">Array</a>&lt; <a class="el" href="classculoc__t.html">culoc_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuwfs__t.html#a2df4143a51e5efea14ac3b2bdfede1de">loc_dm</a></td></tr>
 <tr class="separator:a2df4143a51e5efea14ac3b2bdfede1de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d7c59e0b0b55d072bd4c8c98566e6ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classculoc__t.html">culoc_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuwfs__t.html#a0d7c59e0b0b55d072bd4c8c98566e6ba">loc_tel</a></td></tr>
 <tr class="separator:a0d7c59e0b0b55d072bd4c8c98566e6ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,7 +135,7 @@ cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><b>plan3</b></td>
 <tr class="separator:aec1efdfe787ae3fc842201d4ced55f12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75ad2ecf41255346377406f2bdff3c5a"><td class="memItemLeft" align="right" valign="top">cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuwfs__t.html#a75ad2ecf41255346377406f2bdff3c5a">plan_fs</a></td></tr>
 <tr class="separator:a75ad2ecf41255346377406f2bdff3c5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a024a9f3cae16b5bf58cbbeeca6cee4fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classArray.html">Array</a>&lt; <a class="el" href="structcudtf__t.html">cudtf_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuwfs__t.html#a024a9f3cae16b5bf58cbbeeca6cee4fc">dtf</a></td></tr>
+<tr class="memitem:a024a9f3cae16b5bf58cbbeeca6cee4fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_array.html">Array</a>&lt; <a class="el" href="structcudtf__t.html">cudtf_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuwfs__t.html#a024a9f3cae16b5bf58cbbeeca6cee4fc">dtf</a></td></tr>
 <tr class="separator:a024a9f3cae16b5bf58cbbeeca6cee4fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace61382985c60f440ba19aecb8b6a46e"><td class="memItemLeft" align="right" valign="top">curmat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuwfs__t.html#ace61382985c60f440ba19aecb8b6a46e">qe</a></td></tr>
 <tr class="separator:ace61382985c60f440ba19aecb8b6a46e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,7 +190,7 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>phiout</b></td></tr
 curmat&#160;</td><td class="memItemRight" valign="bottom"><b>lltopd</b></td></tr>
 <tr class="separator:a82af2650ba46b3eeaa3d657b87c28016"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fc3755771c1f3f0a341798679079a9a"><td class="memItemLeft" align="right" valign="top"><a id="a7fc3755771c1f3f0a341798679079a9a"></a>
-<a class="el" href="classArray.html">Array</a>&lt; Real, <a class="el" href="classPinned.html">Pinned</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>lltg</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; Real, <a class="el" href="class_pinned.html">Pinned</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>lltg</b></td></tr>
 <tr class="separator:a7fc3755771c1f3f0a341798679079a9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5b7f8483620021690d798b93c17dd93"><td class="memItemLeft" align="right" valign="top"><a id="ac5b7f8483620021690d798b93c17dd93"></a>
 cucmat&#160;</td><td class="memItemRight" valign="bottom"><b>lltwvf</b></td></tr>
@@ -216,9 +222,9 @@ cucmat&#160;</td><td class="memItemRight" valign="bottom"><b>psfout</b></td></tr
 <tr class="memitem:a360a1ab9f5f5276c2abe5870243e3042"><td class="memItemLeft" align="right" valign="top"><a id="a360a1ab9f5f5276c2abe5870243e3042"></a>
 cucmat&#160;</td><td class="memItemRight" valign="bottom"><b>psfstat</b></td></tr>
 <tr class="separator:a360a1ab9f5f5276c2abe5870243e3042"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f171135af669a888d32750ccc53e0f0"><td class="memItemLeft" align="right" valign="top"><a id="a8f171135af669a888d32750ccc53e0f0"></a>
-<a class="el" href="classdither__t.html">dither_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>dither</b></td></tr>
-<tr class="separator:a8f171135af669a888d32750ccc53e0f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4eadcc3840222c741ede909474c0b984"><td class="memItemLeft" align="right" valign="top"><a id="a4eadcc3840222c741ede909474c0b984"></a>
+<a class="el" href="class_dither__t.html">Dither_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>dither</b></td></tr>
+<tr class="separator:a4eadcc3840222c741ede909474c0b984"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab90d90862ce1c6327ebe686fc96b6345"><td class="memItemLeft" align="right" valign="top"><a id="ab90d90862ce1c6327ebe686fc96b6345"></a>
 cuccell&#160;</td><td class="memItemRight" valign="bottom"><b>pywvf</b></td></tr>
 <tr class="separator:ab90d90862ce1c6327ebe686fc96b6345"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -235,7 +241,7 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>isum</b></td></tr>
 cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><b>plan_py</b></td></tr>
 <tr class="separator:a441cbd740c40baffd834b88dfa328277"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4abd6f896e49faebe1ecf5d4091efa7d"><td class="memItemLeft" align="right" valign="top"><a id="a4abd6f896e49faebe1ecf5d4091efa7d"></a>
-<a class="el" href="classArray.html">Array</a>&lt; cufftHandle &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>plan_pys</b></td></tr>
+<a class="el" href="class_array.html">Array</a>&lt; cufftHandle &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>plan_pys</b></td></tr>
 <tr class="separator:a4abd6f896e49faebe1ecf5d4091efa7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b26893b95da9cf1165d231c9207bbd9"><td class="memItemLeft" align="right" valign="top"><a id="a6b26893b95da9cf1165d231c9207bbd9"></a>
 cuccell&#160;</td><td class="memItemRight" valign="bottom"><b>pyotfs</b></td></tr>
@@ -252,7 +258,7 @@ curcell&#160;</td><td class="memItemRight" valign="bottom"><b>pypsfs</b></td></t
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classArray.html">Array</a>&lt;<a class="el" href="classculoc__t.html">culoc_t</a>&gt; cuwfs_t::loc_dm</td>
+          <td class="memname"><a class="el" href="class_array.html">Array</a>&lt;<a class="el" href="classculoc__t.html">culoc_t</a>&gt; cuwfs_t::loc_dm</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -357,7 +363,7 @@ curcell&#160;</td><td class="memItemRight" valign="bottom"><b>pypsfs</b></td></t
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classArray.html">Array</a>&lt;<a class="el" href="structcudtf__t.html">cudtf_t</a>&gt; cuwfs_t::dtf</td>
+          <td class="memname"><a class="el" href="class_array.html">Array</a>&lt;<a class="el" href="structcudtf__t.html">cudtf_t</a>&gt; cuwfs_t::dtf</td>
         </tr>
       </table>
 </div><div class="memdoc">

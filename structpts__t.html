@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -95,7 +101,7 @@ $(document).ready(function(){initNavTree('structpts__t.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p><code>#include &lt;type.h&gt;</code></p>
+<p><code>#include &quot;type.h&quot;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
@@ -108,14 +114,14 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>id</b></td></tr>
 <tr class="separator:aea34e9b0cc9e1d4e9ad95eb416f004e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac90584adaba0ea94227b71ff1c2b7581"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpts__t.html#ac90584adaba0ea94227b71ff1c2b7581">nsa</a></td></tr>
 <tr class="separator:ac90584adaba0ea94227b71ff1c2b7581"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a4565714a0848c6a7ac6143930d21ca"><td class="memItemLeft" ><a id="a7a4565714a0848c6a7ac6143930d21ca"></a>
+<tr class="memitem:a88ca39473342969b15dfd3bdc14d0cd3"><td class="memItemLeft" ><a id="a88ca39473342969b15dfd3bdc14d0cd3"></a>
 union {</td></tr>
-<tr class="memitem:a8ce24a5bdf88a1518c903fca9575bee8"><td class="memItemLeft" >&#160;&#160;&#160;real&#160;&#160;&#160;<a class="el" href="structpts__t.html#ae658762534260260fd3626816b364097">dsa</a></td></tr>
-<tr class="separator:a8ce24a5bdf88a1518c903fca9575bee8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b22d93f55d8b6386edb0f2f2318dd32"><td class="memItemLeft" >&#160;&#160;&#160;real&#160;&#160;&#160;<a class="el" href="structpts__t.html#a3d5414a1117ebc70fc74f37e09036449">dsax</a></td></tr>
-<tr class="separator:a9b22d93f55d8b6386edb0f2f2318dd32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a4565714a0848c6a7ac6143930d21ca"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="separator:a7a4565714a0848c6a7ac6143930d21ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acff5169fcb27f0bcc49bb9962f0cc123"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><b>dsa</b></td></tr>
+<tr class="separator:acff5169fcb27f0bcc49bb9962f0cc123"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1708a8f12977f79b151ae108eff1ac3d"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><b>dsax</b></td></tr>
+<tr class="separator:a1708a8f12977f79b151ae108eff1ac3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88ca39473342969b15dfd3bdc14d0cd3"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a88ca39473342969b15dfd3bdc14d0cd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cec769be67417411fea9c38217b8078"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpts__t.html#a4cec769be67417411fea9c38217b8078">dsay</a></td></tr>
 <tr class="separator:a4cec769be67417411fea9c38217b8078"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b5980256384f8c7cee016a737bcfdbc"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpts__t.html#a6b5980256384f8c7cee016a737bcfdbc">dummy1</a></td></tr>
@@ -144,6 +150,20 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>npad</b></td></tr>
 <div class="textblock"><p>low left point of each subaperture.</p>
 <p>don't change the leading 5 elements. so that <a class="el" href="structpts__t.html">pts_t</a> can be used as <a class="el" href="structloc__t.html">loc_t</a>. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
+<a id="ae0a1aa722371337804f231f49d456c0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0a1aa722371337804f231f49d456c0c">&#9670;&nbsp;</a></span>id</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t pts_t::id</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a78348698d847fde30c184e637da5639f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a78348698d847fde30c184e637da5639f">&#9670;&nbsp;</a></span>origx</h2>
 
@@ -189,33 +209,17 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>npad</b></td></tr>
 
 </div>
 </div>
-<a id="ae658762534260260fd3626816b364097"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae658762534260260fd3626816b364097">&#9670;&nbsp;</a></span>dsa</h2>
+<a id="a88ca39473342969b15dfd3bdc14d0cd3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88ca39473342969b15dfd3bdc14d0cd3">&#9670;&nbsp;</a></span>@9</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">real pts_t::dsa</td>
+          <td class="memname">union { ... } </td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>side length of subaperture </p>
-
-</div>
-</div>
-<a id="a3d5414a1117ebc70fc74f37e09036449"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3d5414a1117ebc70fc74f37e09036449">&#9670;&nbsp;</a></span>dsax</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">real pts_t::dsax</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>side length of subaperture </p>
 
 </div>
 </div>
@@ -291,6 +295,20 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>npad</b></td></tr>
       </table>
 </div><div class="memdoc">
 <p>treat <a class="el" href="structpts__t.html">pts_t</a> as <a class="el" href="structloc__t.html">loc_t</a> and compute the MAP </p>
+
+</div>
+</div>
+<a id="a5655f773ce039335cee6caf71f892eb1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5655f773ce039335cee6caf71f892eb1">&#9670;&nbsp;</a></span>npad</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pts_t::npad</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

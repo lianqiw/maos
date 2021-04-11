@@ -9,7 +9,7 @@ var structcupowfs__t =
     [ "nembed", "structcupowfs__t.html#a4811843f646256d6056c44fd3c212f87", null ],
     [ "fieldstop", "structcupowfs__t.html#a1c1f4351e64ad1f2cef932eabc4e2b6e", null ],
     [ "llt", "structcupowfs__t.html#a115e3915d7266c73537f40fbd527cc00", null ],
-    [ "pywfs", "structcupowfs__t.html#aacd1c270f351b15e9f111fc0c2ffbd66", null ],
+    [ "pywfs", "structcupowfs__t.html#acd7ca9f6491e29452c5b87d86e89f5dd", null ],
     [ "pyramid", "structcupowfs__t.html#aa5ae9c4add81e19de08a3bd8a90ecd14", null ],
     [ "pynominal", "structcupowfs__t.html#abfa9004221f4081e47029ffcd638b4f0", null ],
     [ "saa", "structcupowfs__t.html#a3ad17a41fe0267419184b0ef189f2108", null ],

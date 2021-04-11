@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -103,22 +109,22 @@ $(document).ready(function(){initNavTree('maos_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a0d93ecccfeb2fc3505b762776178ff44"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_8h.html#a0d93ecccfeb2fc3505b762776178ff44">maos_setup</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="separator:a0d93ecccfeb2fc3505b762776178ff44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a5897e2d10829666c51e453ac960acf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_8h.html#a3a5897e2d10829666c51e453ac960acf">maos_setup</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
+<tr class="separator:a3a5897e2d10829666c51e453ac960acf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab51286f168c1230cda425a07100662ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_8h.html#ab51286f168c1230cda425a07100662ea">maos_reset</a> ()</td></tr>
 <tr class="separator:ab51286f168c1230cda425a07100662ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5935e0612a22d888703e8eee46a930bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_8h.html#a5935e0612a22d888703e8eee46a930bf">maos_sim</a> ()</td></tr>
 <tr class="separator:a5935e0612a22d888703e8eee46a930bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afda0654e4cb8f4e37feb53986e044e19"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim</a> (int isim)</td></tr>
 <tr class="separator:afda0654e4cb8f4e37feb53986e044e19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5332613c93902884c54be80cf6027a98"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_8h.html#a5332613c93902884c54be80cf6027a98">maos_iseed</a> (int iseed)</td></tr>
-<tr class="separator:a5332613c93902884c54be80cf6027a98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab642ac48296a45f061bd093ecee20604"><td class="memItemLeft" align="right" valign="top"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_8h.html#ab642ac48296a45f061bd093ecee20604">maos_iseed</a> (int iseed)</td></tr>
+<tr class="separator:ab642ac48296a45f061bd093ecee20604"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains main() and the entry into simulation maos(). The main() is separated into main.c so that maos.c can be a part of libaos.la which is callable by MATLAB. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a0d93ecccfeb2fc3505b762776178ff44"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0d93ecccfeb2fc3505b762776178ff44">&#9670;&nbsp;</a></span>maos_setup()</h2>
+<a id="a3a5897e2d10829666c51e453ac960acf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a5897e2d10829666c51e453ac960acf">&#9670;&nbsp;</a></span>maos_setup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -126,7 +132,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void maos_setup </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em></td><td>)</td>
           <td></td>
         </tr>
@@ -169,7 +175,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Closed loop simulation main loop.</p>
-<p>It calls <a class="el" href="sim__utils_8h.html#a27c195134fbcb70dbf90b5ff2ee82a84">init_simu()</a> to initialize the simulation struct, and then calls <a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> for each simulation time step. Arranged this way so that <a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> can be called from matlab. </p>
+<p>It calls <a class="el" href="sim__utils_8h.html#a2edf7b3ebac7406567908bd36ed602c3">init_simu()</a> to initialize the simulation struct, and then calls <a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> for each simulation time step. Arranged this way so that <a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> can be called from matlab. </p>
 
 </div>
 </div>
@@ -193,14 +199,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5332613c93902884c54be80cf6027a98"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5332613c93902884c54be80cf6027a98">&#9670;&nbsp;</a></span>maos_iseed()</h2>
+<a id="ab642ac48296a45f061bd093ecee20604"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab642ac48296a45f061bd093ecee20604">&#9670;&nbsp;</a></span>maos_iseed()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structSIM__T.html">SIM_T</a>* maos_iseed </td>
+          <td class="memname"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a>* maos_iseed </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>iseed</em></td><td>)</td>

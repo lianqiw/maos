@@ -21,7 +21,7 @@ var searchData=
   ['ldup',['ldup',['../lmath_8h.html#a0cfd009dd2fcbc0a5f9584b0fa7f3aeb',1,'ltmp.c']]],
   ['lfftshift',['lfftshift',['../lmath_8h.html#a4033bbb4fd4cd82bb09f3fea93e74cec',1,'ltmp.c']]],
   ['lfree_5fdo',['lfree_do',['../lmath_8h.html#a15ceffb00e7bb7e57793410cecd33cbd',1,'ltmp.c']]],
-  ['lgs_5fwfs_5fsph_5fpsd',['lgs_wfs_sph_psd',['../maos_2utils_8h.html#a3181f36e2da6183fb6cb76be582cd35c',1,'utils.c']]],
+  ['lgs_5fwfs_5fsph_5fpsd',['lgs_wfs_sph_psd',['../maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10',1,'utils.c']]],
   ['lhash',['lhash',['../lmath_8h.html#a7d4b41a7759f736e9271e22710a99d02',1,'ltmp.c']]],
   ['listen_5fport',['listen_port',['../sock_8h.html#a6d79915ff976b61b5e9f1cbefdb7be97',1,'sock.c']]],
   ['lmat_5fcast',['lmat_cast',['../lmath_8h.html#a7c96e62be5ebf02414c5a270ffd428f4',1,'ltmp.c']]],

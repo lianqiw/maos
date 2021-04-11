@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -99,8 +105,7 @@ $(document).ready(function(){initNavTree('readcfg_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a0258dd21e9b70280d7b8fd9de5614c76"><td class="memItemLeft" align="right" valign="top"><a id="a0258dd21e9b70280d7b8fd9de5614c76"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>format2key</b></td></tr>
+<tr class="memitem:a0258dd21e9b70280d7b8fd9de5614c76"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>format2key</b></td></tr>
 <tr class="separator:a0258dd21e9b70280d7b8fd9de5614c76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -158,7 +163,22 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines to read .conf type config files. Each entry is composed of a key and a value. The entries are maintained in a hash table. Each entry can be retrieved from the key. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a0258dd21e9b70280d7b8fd9de5614c76"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0258dd21e9b70280d7b8fd9de5614c76">&#9670;&nbsp;</a></span>format2key</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define format2key</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><span class="keywordtype">char</span> key[512];              \</div><div class="line">    va_list ap;                 \</div><div class="line">    va_start(ap,format);            \</div><div class="line">    vsnprintf(key,<span class="keyword">sizeof</span>(key), format, ap); \</div><div class="line">    va_end(ap)</div></div><!-- fragment -->
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="ac5df07be610c26bf72114091f95feb4b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac5df07be610c26bf72114091f95feb4b">&#9670;&nbsp;</a></span>open_config()</h2>
 

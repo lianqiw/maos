@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -97,18 +103,19 @@ $(document).ready(function(){initNavTree('classcuda__wfs_1_1cuwfs__t.html','');}
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a656390b2d59218da508d24a38e606ba0"><td class="memItemLeft" align="right" valign="top"><a id="a656390b2d59218da508d24a38e606ba0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cuwfs_t</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, int igpu)</td></tr>
-<tr class="separator:a656390b2d59218da508d24a38e606ba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa391cee7ac4df43d47a1e40c7b8e24a7"><td class="memItemLeft" align="right" valign="top"><a id="aa391cee7ac4df43d47a1e40c7b8e24a7"></a>
+<tr class="memitem:a99bc1d4a936d6e6384dcbe9397958f0d"><td class="memItemLeft" align="right" valign="top"><a id="a99bc1d4a936d6e6384dcbe9397958f0d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cuwfs_t</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int iwfs, int igpu)</td></tr>
+<tr class="separator:a99bc1d4a936d6e6384dcbe9397958f0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7daf65c462b4e3603bef64f6eeeb9636"><td class="memItemLeft" align="right" valign="top"><a id="a7daf65c462b4e3603bef64f6eeeb9636"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initsim</b> ()</td></tr>
-<tr class="separator:aa391cee7ac4df43d47a1e40c7b8e24a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a091cb847a37cb1c35f00d92a02b34b4d"><td class="memItemLeft" align="right" valign="top"><a id="a091cb847a37cb1c35f00d92a02b34b4d"></a>
+<tr class="separator:a7daf65c462b4e3603bef64f6eeeb9636"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac35085789ee8af275787857c1e920794"><td class="memItemLeft" align="right" valign="top"><a id="ac35085789ee8af275787857c1e920794"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>seeding</b> (int seed)</td></tr>
-<tr class="separator:a091cb847a37cb1c35f00d92a02b34b4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ac35085789ee8af275787857c1e920794"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/cuwfs.h</li>
+<li>cuda/cuwfs.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

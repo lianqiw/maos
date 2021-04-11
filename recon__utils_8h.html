@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -122,16 +128,16 @@ Functions</h2></td></tr>
 <tr class="separator:a29d19a65f0634a6fdf5a1e0ece0df03a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8275bff1050a3bf784cbf75b0ed42092"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a8275bff1050a3bf784cbf75b0ed42092">nea2sp</a> (<a class="el" href="structdmat.html">dmat</a> **nea, <a class="el" href="classlong.html">long</a> nsa)</td></tr>
 <tr class="separator:a8275bff1050a3bf784cbf75b0ed42092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a107d696093a361bb8d4d30b32b7ec6a7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a107d696093a361bb8d4d30b32b7ec6a7">psfr_calc</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *opdr, <a class="el" href="structdcell.html">dcell</a> *dmpsol, <a class="el" href="structdcell.html">dcell</a> *dmerr, <a class="el" href="structdcell.html">dcell</a> *dmerr_lo)</td></tr>
-<tr class="separator:a107d696093a361bb8d4d30b32b7ec6a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9cdd8da33de20c241e64bdf98cae94bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a9cdd8da33de20c241e64bdf98cae94bf">shift_grad</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a9cdd8da33de20c241e64bdf98cae94bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f4664a8c57cd234087fd70daf7ff7b0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a9f4664a8c57cd234087fd70daf7ff7b0">psfr_calc</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu, <a class="el" href="structdcell.html">dcell</a> *opdr, <a class="el" href="structdcell.html">dcell</a> *dmpsol, <a class="el" href="structdcell.html">dcell</a> *dmerr, <a class="el" href="structdcell.html">dcell</a> *dmerr_lo)</td></tr>
+<tr class="separator:a9f4664a8c57cd234087fd70daf7ff7b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7b6fd38efb1954ea36cc7b9082b126b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:af7b6fd38efb1954ea36cc7b9082b126b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a069780ed16a2fa71439c5dbc9a95126b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a069780ed16a2fa71439c5dbc9a95126b">loc_coord2ind</a> (<a class="el" href="structloc__t.html">loc_t</a> *aloc, const char *fndead)</td></tr>
 <tr class="separator:a069780ed16a2fa71439c5dbc9a95126b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b4b56fd598b4714dd2d4247adc4c7e3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcn2est__t.html">cn2est_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a4b4b56fd598b4714dd2d4247adc4c7e3">cn2est_prepare</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="separator:a4b4b56fd598b4714dd2d4247adc4c7e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8c45e746a307f96d7156cde74fe66dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#ae8c45e746a307f96d7156cde74fe66dc">cn2est_isim</a> (<a class="el" href="structdcell.html">dcell</a> *cn2res, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structdcell.html">dcell</a> *grad, int *tomo_update)</td></tr>
-<tr class="separator:ae8c45e746a307f96d7156cde74fe66dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a080bbb9fecf387ac6107766369a76aae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="cn2est_8h.html#structcn2est__t">cn2est_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a080bbb9fecf387ac6107766369a76aae">cn2est_prepare</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a080bbb9fecf387ac6107766369a76aae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74f945e450ef8677f831285a7fefce90"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a74f945e450ef8677f831285a7fefce90">cn2est_isim</a> (<a class="el" href="structdcell.html">dcell</a> *cn2res, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="structdcell.html">dcell</a> *grad, int *tomo_update)</td></tr>
+<tr class="separator:a74f945e450ef8677f831285a7fefce90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad707e69a8fa5604c71e5a2d0fadcfbb5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#ad707e69a8fa5604c71e5a2d0fadcfbb5">nea_chol</a> (<a class="el" href="structdmat.html">dmat</a> **pout, const <a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
 <tr class="separator:ad707e69a8fa5604c71e5a2d0fadcfbb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac585c2fa925a41f60b9bb757a9ef640b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#ac585c2fa925a41f60b9bb757a9ef640b">nea_inv</a> (<a class="el" href="structdmat.html">dmat</a> **pout, const <a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
@@ -232,7 +238,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>: this is not thread safe. </dd></dl>
+<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>: this is not thread safe. </dd></dl>
 
 </div>
 </div>
@@ -285,7 +291,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply fractal regularization to x, scaled by alpha. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>: this is not thread safe. </dd></dl>
+<p>Apply fractal regularization to x, scaled by alpha. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000007">Todo:</a></b></dt><dd>: this is not thread safe. </dd></dl>
 
 </div>
 </div>
@@ -408,7 +414,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute W0/W1 weighted dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_31.png"/> </p>
+<p>Compute W0/W1 weighted dot product: \(A^T(W0 B-W1 (W1^T B))\) </p>
 
 </div>
 </div>
@@ -648,8 +654,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a107d696093a361bb8d4d30b32b7ec6a7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a107d696093a361bb8d4d30b32b7ec6a7">&#9670;&nbsp;</a></span>psfr_calc()</h2>
+<a id="a9f4664a8c57cd234087fd70daf7ff7b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f4664a8c57cd234087fd70daf7ff7b0">&#9670;&nbsp;</a></span>psfr_calc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -657,7 +663,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void psfr_calc </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em>, </td>
         </tr>
         <tr>
@@ -695,8 +701,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a9cdd8da33de20c241e64bdf98cae94bf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9cdd8da33de20c241e64bdf98cae94bf">&#9670;&nbsp;</a></span>shift_grad()</h2>
+<a id="af7b6fd38efb1954ea36cc7b9082b126b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7b6fd38efb1954ea36cc7b9082b126b">&#9670;&nbsp;</a></span>shift_grad()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -704,7 +710,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void shift_grad </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -750,22 +756,22 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a4b4b56fd598b4714dd2d4247adc4c7e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b4b56fd598b4714dd2d4247adc4c7e3">&#9670;&nbsp;</a></span>cn2est_prepare()</h2>
+<a id="a080bbb9fecf387ac6107766369a76aae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a080bbb9fecf387ac6107766369a76aae">&#9670;&nbsp;</a></span>cn2est_prepare()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structcn2est__t.html">cn2est_t</a>* cn2est_prepare </td>
+          <td class="memname"><a class="el" href="cn2est_8h.html#structcn2est__t">cn2est_t</a>* cn2est_prepare </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>&#160;</td>
         </tr>
         <tr>
@@ -779,8 +785,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ae8c45e746a307f96d7156cde74fe66dc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae8c45e746a307f96d7156cde74fe66dc">&#9670;&nbsp;</a></span>cn2est_isim()</h2>
+<a id="a74f945e450ef8677f831285a7fefce90"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74f945e450ef8677f831285a7fefce90">&#9670;&nbsp;</a></span>cn2est_isim()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -794,13 +800,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
           <td class="paramname"><em>recon</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>

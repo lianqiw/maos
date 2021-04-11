@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -99,8 +105,8 @@ $(document).ready(function(){initNavTree('turbulence_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structGENATM__T.html">GENATM_T</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structgenatm__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#structgenatm__t">genatm_t</a></td></tr>
+<tr class="separator:structgenatm__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -108,8 +114,8 @@ Functions</h2></td></tr>
 <tr class="separator:addf46c2b6461f8cd3045493cb2422b90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d2df4e268244fbc0f8ea206aa7a5b51"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a6d2df4e268244fbc0f8ea206aa7a5b51">genatm_loc</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, real r0, real L0)</td></tr>
 <tr class="separator:a6d2df4e268244fbc0f8ea206aa7a5b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3dbbb50b2cfbf2c2df7dc442407c1f8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmapcell.html">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a3dbbb50b2cfbf2c2df7dc442407c1f8f">genscreen</a> (<a class="el" href="structGENATM__T.html">GENATM_T</a> *data)</td></tr>
-<tr class="separator:a3dbbb50b2cfbf2c2df7dc442407c1f8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a6a9578e6bd96e6a6ea0b7285cf3587"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmapcell.html">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a0a6a9578e6bd96e6a6ea0b7285cf3587">genscreen</a> (<a class="el" href="turbulence_8h.html#structgenatm__t">genatm_t</a> *data)</td></tr>
+<tr class="separator:a0a6a9578e6bd96e6a6ea0b7285cf3587"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abfcf4de914d7418af0b4d0ca4fc10885"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#abfcf4de914d7418af0b4d0ca4fc10885">genscreen_str</a> (const char *header)</td></tr>
 <tr class="separator:abfcf4de914d7418af0b4d0ca4fc10885"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a355ca2e7672a29cbefea042caba47c47"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a355ca2e7672a29cbefea042caba47c47">turbcov</a> (<a class="el" href="structdmat.html">dmat</a> *r, real rmax, real r0, real L0)</td></tr>
@@ -127,7 +133,130 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines to generate atmospheric turbulence screens </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structgenatm__t" id="structgenatm__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structgenatm__t">&#9670;&nbsp;</a></span>genatm_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct genatm_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a06bae77b23497a10e8a04568bc702dc4"></a><a class="el" href="structmt__state.html">rand_t</a> *</td>
+<td class="fieldname">
+rstat</td>
+<td class="fielddoc">
+<p>The random stream </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab8e92c7c3f984575ccb12a9bc53b3f8a"></a>real *</td>
+<td class="fieldname">
+wt</td>
+<td class="fielddoc">
+<p>The layer weights </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab7b25fe17d4339073cad47008f1039f1"></a>real</td>
+<td class="fieldname">
+r0</td>
+<td class="fielddoc">
+<p>The Fried Parameter </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa9b4ca24f0fd945b75641b08a2bc0ef6"></a>real *</td>
+<td class="fieldname">
+L0</td>
+<td class="fielddoc">
+<p>The outer scale </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a0de37cc1e32b22a7fa492baeea9491f6"></a>real</td>
+<td class="fieldname">
+dx</td>
+<td class="fielddoc">
+<p>The sampling </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a26e407bbe79a436d7dd748019379c55d"></a>real</td>
+<td class="fieldname">
+fmin</td>
+<td class="fielddoc">
+<p>Minimum spatial frequency </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a457b83dce016da4add3e62cfc7325944"></a>real</td>
+<td class="fieldname">
+fmax</td>
+<td class="fielddoc">
+<p>Maximum spatial frequency </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a02c9b62d37fd61caf13f528c73d88f54"></a>real</td>
+<td class="fieldname">
+slope</td>
+<td class="fielddoc">
+<p>Power slope of PSD. -11/3 for Von Karman, -4 for Biharmonic. -1 for fractal. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a40f307194dd03f4db18cf1ae1c9d6bf0"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+nx</td>
+<td class="fielddoc">
+<p>Number of pixels along x </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7d5004ae49945076681b6932f7a6a795"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+ny</td>
+<td class="fielddoc">
+<p>Number of pixels along y </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a79dcdeffe885de690d08fad6c5d18fda"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+nlayer</td>
+<td class="fielddoc">
+<p>The number of layers </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a940384dfed98d31fa25c54714226be96"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+ninit</td>
+<td class="fielddoc">
+<p>In Fractal method, the size of initial screen </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af80a72e15ce13450ea40e802e029cde7"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+share</td>
+<td class="fielddoc">
+<p>Use file backend for sharing of atmosphere </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a2205340b3ee4c50696fb19e78dfbe16a"></a><a class="el" href="structdmat.html">dmat</a> *</td>
+<td class="fieldname">
+r0logpsds</td>
+<td class="fielddoc">
+<p>Spatial PSD of log(r0) (m)=beta*f^alpha. [alpha, beta, minfreq, maxfreq] </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae6ab6609cc4b8fa90c08562e818f590d"></a><a class="el" href="structmapcell.html">mapcell</a> *</td>
+<td class="fieldname">
+screen</td>
+<td class="fielddoc">
+<p>The destination screen pointer </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="addf46c2b6461f8cd3045493cb2422b90"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#addf46c2b6461f8cd3045493cb2422b90">&#9670;&nbsp;</a></span>genatm_simple()</h2>
 
@@ -204,8 +333,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3dbbb50b2cfbf2c2df7dc442407c1f8f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3dbbb50b2cfbf2c2df7dc442407c1f8f">&#9670;&nbsp;</a></span>genscreen()</h2>
+<a id="a0a6a9578e6bd96e6a6ea0b7285cf3587"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a6a9578e6bd96e6a6ea0b7285cf3587">&#9670;&nbsp;</a></span>genscreen()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -213,7 +342,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="structmapcell.html">mapcell</a>* genscreen </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structGENATM__T.html">GENATM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="turbulence_8h.html#structgenatm__t">genatm_t</a> *&#160;</td>
           <td class="paramname"><em>data</em></td><td>)</td>
           <td></td>
         </tr>

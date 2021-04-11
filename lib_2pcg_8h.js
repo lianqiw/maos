@@ -1,6 +1,6 @@
 var lib_2pcg_8h =
 [
-    [ "CGFUN", "lib_2pcg_8h.html#ade400f0e2f1644c0ba3836be745f8474", null ],
-    [ "PREFUN", "lib_2pcg_8h.html#a20bc364610f841dedb1488c98c3d5be2", null ],
-    [ "pcg", "lib_2pcg_8h.html#a5e71a6449e14ad61420e222d630bc380", null ]
+    [ "cgfun_t", "lib_2pcg_8h.html#a170e589f4c5f178941a9abc475c2b790", null ],
+    [ "prefun_t", "lib_2pcg_8h.html#ae3320bd9b5482d28eb2c5ae089d471c1", null ],
+    [ "pcg", "lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3", null ]
 ];

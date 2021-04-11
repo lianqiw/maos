@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -138,7 +144,7 @@ Result Files</h1>
 <p>There will be several files created during simulation in the result folder. The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these files using provided mex function <code>read</code> in MATLAB. Notice that the suffix <code></code>.bin or <code></code>.bin.gz has been removed. You do not need to add the suffix when use <code>read</code>.</p>
 <ul>
 <li><code>Res_1:</code> A binary file containing a cell array that include the main results. i.e. res=read('Res_1');<ul>
-<li><code>res{1}</code> contains the open loop wavefront variance (WFV in units of <img class="formulaInl" alt="$m^2$" src="form_0.png"/>) in row vectors. The rows are<ul>
+<li><code>res{1}</code> contains the open loop wavefront variance (WFV in units of \(m^2\)) in row vectors. The rows are<ul>
 <li>Piston removed WFV</li>
 <li>WFV in tip/tilt modes</li>
 <li>Piston/tip/tilt removed WFV</li>
@@ -166,13 +172,13 @@ Result Files</h1>
 <li><code>Resclemp_1:</code> (Only in split tomography) LGS/TT/NGS mode wavefront error for each direction.</li>
 <li><code>RescleNGSm_1:</code> (Only in split tomography) contains a row vector array of either the residual NGS modes (in radian like unit) or the applied NGS mode correction if ideal NGS mode correction is made. Mainly used to save the ideal NGS modes applied in skycoverage pre-simulation.</li>
 <li><code>maos_</code>[PID].conf: The final effective arrays of the configurations for MAOS run with pid PID. Can be used to reproduce the simulation or check the configurations. Lines begin with # are defaults configurations while the rest have been overriden.</li>
-<li><code>sanea_sim_1:</code> When wavefront sensors are running in physical optics mode, the average gradinet measurement error for that wavefront sensor is saved (in order) in a cell in this file. Each cell is a column vector with elements twice the number of subaperture. The first half is for <img class="formulaInl" alt="$x$" src="form_1.png"/> (or radial) gradient, and the second half is for <img class="formulaInl" alt="$y$" src="form_2.png"/> (or azimuthal) gradient. They are in units of <img class="formulaInl" alt="$rad^2$" src="form_3.png"/>.</li>
-<li><p class="startli"><code>evlpsfcl_1:</code> When <code>evl.psfmean</code> is 1, contains the time averaged science closed loop psf. if is a cell array of <img class="formulaInl" alt="$n_{wvl}\times n_{evl}$" src="form_4.png"/>. Each cell contains a center cut of the science PSF.</p>
+<li><code>sanea_sim_1:</code> When wavefront sensors are running in physical optics mode, the average gradinet measurement error for that wavefront sensor is saved (in order) in a cell in this file. Each cell is a column vector with elements twice the number of subaperture. The first half is for \(x\) (or radial) gradient, and the second half is for \(y\) (or azimuthal) gradient. They are in units of \(rad^2\).</li>
+<li><p class="startli"><code>evlpsfcl_1:</code> When <code>evl.psfmean</code> is 1, contains the time averaged science closed loop psf. if is a cell array of \(n_{wvl}\times n_{evl}\). Each cell contains a center cut of the science PSF.</p>
 <p class="startli">The PSF total FOV is <code>evl.wvl/evl</code>.dx but may be trimmed by setting <code>evl.psfsize</code> to a smaller number (of pixels). The PSF sampling is usually <code>evl.wvl/</code>(2*aper.d) but may be <code>evl.wvl/</code>(evl.psfgridsize*evl.dx) if <code>evl.psfgridsize</code> is set. The exact number of those can be checked in the fits header.</p>
 </li>
 <li><code>evlpsfdl_1:</code> diffraction limited, PSF.</li>
 <li><code>evlpsfol_1:</code> frame and field averaged open loop science PSF.</li>
-<li><code>evlpsfhist_1_ievlx:</code> When <code>evl.psfhist</code> is 1, each of these files contains the time history of the complex PSF of evaluation direction <img class="formulaInl" alt="$x$" src="form_1.png"/>.</li>
+<li><code>evlpsfhist_1_ievlx:</code> When <code>evl.psfhist</code> is 1, each of these files contains the time history of the complex PSF of evaluation direction \(x\).</li>
 <li><code>Resuptcmd_1:</code> Each cell contains the uplink tip/tilt command (only none empty for LGS WFS) history in unit of radian.</li>
 <li><code>Resupterr_1:</code> Each cell contains the uplink tip/tilt error history in unit of radian.</li>
 </ul>

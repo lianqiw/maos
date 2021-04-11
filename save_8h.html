@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -98,23 +104,23 @@ $(document).ready(function(){initNavTree('save_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:afcde60e2d86389b2ce823c573509958d"><td class="memItemLeft" align="right" valign="top"><a id="afcde60e2d86389b2ce823c573509958d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>save_wfsgrad</b> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:afcde60e2d86389b2ce823c573509958d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08bca8132884ae963b2a0353ba1d92d0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#a08bca8132884ae963b2a0353ba1d92d0">save_pistat</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a08bca8132884ae963b2a0353ba1d92d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab21714cdfe5b41038c44f87a5326436e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#ab21714cdfe5b41038c44f87a5326436e">save_gradol</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:ab21714cdfe5b41038c44f87a5326436e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac64c84010291ffab153442a10d8c766c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#ac64c84010291ffab153442a10d8c766c">save_recon</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:ac64c84010291ffab153442a10d8c766c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a26b892fe4bbb4dbffbcdf25b602f977e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#a26b892fe4bbb4dbffbcdf25b602f977e">save_dmproj</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a26b892fe4bbb4dbffbcdf25b602f977e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25b9d55599a8fd82573cd39b9f3e7dc2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#a25b9d55599a8fd82573cd39b9f3e7dc2">save_dmreal</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a25b9d55599a8fd82573cd39b9f3e7dc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c607eef51b03a8df4647a6f3e229067"><td class="memItemLeft" align="right" valign="top"><a id="a3c607eef51b03a8df4647a6f3e229067"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>save_wfsgrad</b> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a3c607eef51b03a8df4647a6f3e229067"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c64069cc7533b726cf8234e40ff7d8e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#a6c64069cc7533b726cf8234e40ff7d8e">save_pistat</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a6c64069cc7533b726cf8234e40ff7d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa45e0d59e1a995d8b16ea9ac01607281"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#aa45e0d59e1a995d8b16ea9ac01607281">save_gradol</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:aa45e0d59e1a995d8b16ea9ac01607281"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f80d186c3605fa44c8a8acb2586dfa0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#a9f80d186c3605fa44c8a8acb2586dfa0">save_recon</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a9f80d186c3605fa44c8a8acb2586dfa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c196b9a67eb43d5e892096b838faae2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#a4c196b9a67eb43d5e892096b838faae2">save_dmproj</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a4c196b9a67eb43d5e892096b838faae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59bce75cf46503cd9846074a31ffe7fa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="save_8h.html#a59bce75cf46503cd9846074a31ffe7fa">save_dmreal</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a59bce75cf46503cd9846074a31ffe7fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a08bca8132884ae963b2a0353ba1d92d0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a08bca8132884ae963b2a0353ba1d92d0">&#9670;&nbsp;</a></span>save_pistat()</h2>
+<a id="a6c64069cc7533b726cf8234e40ff7d8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c64069cc7533b726cf8234e40ff7d8e">&#9670;&nbsp;</a></span>save_pistat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -122,7 +128,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>save_wfsgrad</b> (<a 
         <tr>
           <td class="memname">void save_pistat </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -133,8 +139,8 @@ Save pixel statistics for matched filter. </p>
 
 </div>
 </div>
-<a id="ab21714cdfe5b41038c44f87a5326436e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab21714cdfe5b41038c44f87a5326436e">&#9670;&nbsp;</a></span>save_gradol()</h2>
+<a id="aa45e0d59e1a995d8b16ea9ac01607281"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa45e0d59e1a995d8b16ea9ac01607281">&#9670;&nbsp;</a></span>save_gradol()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -142,7 +148,7 @@ Save pixel statistics for matched filter. </p>
         <tr>
           <td class="memname">void save_gradol </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -152,8 +158,8 @@ Save pixel statistics for matched filter. </p>
 
 </div>
 </div>
-<a id="ac64c84010291ffab153442a10d8c766c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac64c84010291ffab153442a10d8c766c">&#9670;&nbsp;</a></span>save_recon()</h2>
+<a id="a9f80d186c3605fa44c8a8acb2586dfa0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f80d186c3605fa44c8a8acb2586dfa0">&#9670;&nbsp;</a></span>save_recon()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,7 +167,7 @@ Save pixel statistics for matched filter. </p>
         <tr>
           <td class="memname">void save_recon </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -171,8 +177,8 @@ Save pixel statistics for matched filter. </p>
 
 </div>
 </div>
-<a id="a26b892fe4bbb4dbffbcdf25b602f977e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a26b892fe4bbb4dbffbcdf25b602f977e">&#9670;&nbsp;</a></span>save_dmproj()</h2>
+<a id="a4c196b9a67eb43d5e892096b838faae2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c196b9a67eb43d5e892096b838faae2">&#9670;&nbsp;</a></span>save_dmproj()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,7 +186,7 @@ Save pixel statistics for matched filter. </p>
         <tr>
           <td class="memname">void save_dmproj </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>
@@ -190,8 +196,8 @@ Save pixel statistics for matched filter. </p>
 
 </div>
 </div>
-<a id="a25b9d55599a8fd82573cd39b9f3e7dc2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a25b9d55599a8fd82573cd39b9f3e7dc2">&#9670;&nbsp;</a></span>save_dmreal()</h2>
+<a id="a59bce75cf46503cd9846074a31ffe7fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59bce75cf46503cd9846074a31ffe7fa">&#9670;&nbsp;</a></span>save_dmreal()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -199,7 +205,7 @@ Save pixel statistics for matched filter. </p>
         <tr>
           <td class="memname">void save_dmreal </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
           <td class="paramname"><em>simu</em></td><td>)</td>
           <td></td>
         </tr>

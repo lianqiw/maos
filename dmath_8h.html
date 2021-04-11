@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -429,7 +435,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dcellmulsp</b> (<a cl
 <tr class="separator:a88fcc3be27ce68860cc93c2540c363b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3452afc53eefe2391f8720999be80c19"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a3452afc53eefe2391f8720999be80c19">dwritedata</a> (file_t *fp, const <a class="el" href="structdmat.html">dmat</a> *A)</td></tr>
 <tr class="separator:a3452afc53eefe2391f8720999be80c19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6c9042ea1d71dbc9c2d51719a866c48"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ab6c9042ea1d71dbc9c2d51719a866c48">dreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="memitem:ab6c9042ea1d71dbc9c2d51719a866c48"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ab6c9042ea1d71dbc9c2d51719a866c48">dreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:ab6c9042ea1d71dbc9c2d51719a866c48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d4c2db8c8067633284451e62c93c3b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a4d4c2db8c8067633284451e62c93c3b4">dnew_mmap</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
 <tr class="separator:a4d4c2db8c8067633284451e62c93c3b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -555,7 +561,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dcellmulsp</b> (<a cl
 <tr class="separator:a4bc029bf273d20d389f4838dacd14c67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d997c0860c24949a42180f0540450a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a9d997c0860c24949a42180f0540450a6">dspwritedata</a> (file_t *fp, const <a class="el" href="structdsp.html">dsp</a> *sp)</td></tr>
 <tr class="separator:a9d997c0860c24949a42180f0540450a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ba9dc8e8213b56b1395c8a63313774f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a2ba9dc8e8213b56b1395c8a63313774f">dspreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr class="memitem:a2ba9dc8e8213b56b1395c8a63313774f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a2ba9dc8e8213b56b1395c8a63313774f">dspreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a2ba9dc8e8213b56b1395c8a63313774f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae8fee69c712490f1929a7a4f1d63d47"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#aae8fee69c712490f1929a7a4f1d63d47">dfft_free_plan</a> (struct fft_t *fft)</td></tr>
 <tr class="separator:aae8fee69c712490f1929a7a4f1d63d47"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -4450,27 +4456,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
 </div><div class="memdoc">
 <p>1D Cubic spline interpolation preparation. if x has only 1 column: x is the coordinate. y is the function value. if x has two columns: first column is the coordinate, y is null.</p>
 <p>It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .</p>
-<p>If the values of a function <img class="formulaInl" alt="$f(x)$" src="form_77.png"/> and its derivative are know at x=0, and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.</p>
+<p>If the values of a function \(f(x)\) and its derivative are know at x=0, and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.</p>
 <p>A third degree polynomial and its derivative: </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f(x)=ax^3+bx^2+cx+d \]" src="form_78.png"/>
+\[ f(x)=ax^3+bx^2+cx+d \]
 </p>
  <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f(x)=3ax^3+2bx+c \]" src="form_79.png"/>
+\[ f(x)=3ax^3+2bx+c \]
 </p>
 <p> The coefficients can be derived from the value and derivatives: </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&amp;=&amp;-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&amp;=&amp;f^\prime(0)\\ d&amp;=&amp;f(0)\\ \end{eqnarray*}" src="form_80.png"/>
+\begin{eqnarray*} a&amp;=&amp;2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&amp;=&amp;-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&amp;=&amp;f^\prime(0)\\ d&amp;=&amp;f(0)\\ \end{eqnarray*}
 </p>
 <p> the derivatives can be computed as </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} f^\prime(0)&amp;=&amp;\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&amp;=&amp;\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}" src="form_81.png"/>
+\begin{eqnarray*} f^\prime(0)&amp;=&amp;\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&amp;=&amp;\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}
 </p>
 <p> so we have the formula </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&amp;=&amp; f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&amp;=&amp;-0.5 f(-1) + 0.5 f(1) \\ d&amp;=&amp; f(0) \\ \end{eqnarray*}" src="form_82.png"/>
+\begin{eqnarray*} a&amp;=&amp;-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&amp;=&amp; f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&amp;=&amp;-0.5 f(-1) + 0.5 f(1) \\ d&amp;=&amp; f(0) \\ \end{eqnarray*}
 </p>
 <p>for the boundary pints, replace </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_74.png"/>
+\[f^\prime(0)=(f(1)-f(-1))/2\]
 </p>
 <p> by </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_75.png"/>
+\[f^\prime(0)=(f(1)-f(0))\]
 </p>
 <p> Otehr type of boundaries are handled in the same way.</p>
 <p>see www.paulinternet.nl/?page=bicubicx </p>
@@ -4616,8 +4622,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
-<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
+<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
+<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
 
 </div>
 </div>
@@ -5041,7 +5047,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the pseudo inverse of block matrix A. A is n*p cell, wt n*n cell or sparse cell. <img class="formulaInl" alt="$B=inv(A'*W*A)*A'*W$" src="form_73.png"/> </p>
+<p>compute the pseudo inverse of block matrix A. A is n*p cell, wt n*n cell or sparse cell. \(B=inv(A&#39;*W*A)*A&#39;*W\) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
@@ -5318,10 +5324,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
 </div><div class="memdoc">
 <p>2D cubic spline interpolation preparation. x is the x coordinate vector of the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the 2-d grid. It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .</p>
 <p>The boundaries are handled in the same way is X(spline). i.e. replace </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_74.png"/>
+\[f^\prime(0)=(f(1)-f(-1))/2\]
 </p>
 <p> by </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_75.png"/>
+\[f^\prime(0)=(f(1)-f(0))\]
 </p>
 <p> Otehr type of boundaries are handled in the same way. </p>
 
@@ -5418,7 +5424,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>
@@ -7364,7 +7370,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="bin_8h.html#structheader__t">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>

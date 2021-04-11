@@ -20,6 +20,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -33,7 +39,7 @@
   <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
-   <div id="projectbrief">Mulithreaded Adaptive Optics Simulator</div>
+   <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
   </td>
  </tr>
  </tbody>
@@ -96,24 +102,35 @@ $(document).ready(function(){initNavTree('classcuda__recon_1_1curecon__t.html','
 <div class="title">cuda_recon::curecon_t Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for cuda_recon::curecon_t:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classcuda__recon_1_1curecon__t.png" usemap="#cuda_5Frecon::curecon_5Ft_map" alt=""/>
+  <map id="cuda_5Frecon::curecon_5Ft_map" name="cuda_5Frecon::curecon_5Ft_map">
+<area href="classnon_copyable.html" alt="nonCopyable" shape="rect" coords="0,0,143,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac54fd3c3703eae5fa530acfa75dbf88e"><td class="memItemLeft" align="right" valign="top"><a id="ac54fd3c3703eae5fa530acfa75dbf88e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>curecon_t</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms=0, <a class="el" href="structRECON__T.html">RECON_T</a> *recon=0)</td></tr>
-<tr class="separator:ac54fd3c3703eae5fa530acfa75dbf88e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0df9d21332ea52fd4ae27ffb66f415fe"><td class="memItemLeft" align="right" valign="top"><a id="a0df9d21332ea52fd4ae27ffb66f415fe"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>curecon_t</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms=0, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon=0)</td></tr>
+<tr class="separator:a0df9d21332ea52fd4ae27ffb66f415fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa40be20ada2ec3c5b812b8ba97b880e"><td class="memItemLeft" align="right" valign="top"><a id="afa40be20ada2ec3c5b812b8ba97b880e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reset_config</b> ()</td></tr>
 <tr class="separator:afa40be20ada2ec3c5b812b8ba97b880e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a876281f965e5beb65812e2cf84e2b3bd"><td class="memItemLeft" align="right" valign="top"><a id="a876281f965e5beb65812e2cf84e2b3bd"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reset_runtime</b> ()</td></tr>
 <tr class="separator:a876281f965e5beb65812e2cf84e2b3bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e1c0634b4abe9e8a214bce69a36881d"><td class="memItemLeft" align="right" valign="top"><a id="a0e1c0634b4abe9e8a214bce69a36881d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
-<tr class="separator:a0e1c0634b4abe9e8a214bce69a36881d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54f2dfb612ceae6ce68204b42ef1c196"><td class="memItemLeft" align="right" valign="top"><a id="a54f2dfb612ceae6ce68204b42ef1c196"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>update_cn2</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
-<tr class="separator:a54f2dfb612ceae6ce68204b42ef1c196"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e0f5df69d85bc57ffa9e4e6f4b61e0a"><td class="memItemLeft" align="right" valign="top"><a id="a0e0f5df69d85bc57ffa9e4e6f4b61e0a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="separator:a0e0f5df69d85bc57ffa9e4e6f4b61e0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a095d24825a69b474e505ace3735dd4"><td class="memItemLeft" align="right" valign="top"><a id="a0a095d24825a69b474e505ace3735dd4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>update_cn2</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="separator:a0a095d24825a69b474e505ace3735dd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae78d3a4609101ea554dbb8103f9cbc22"><td class="memItemLeft" align="right" valign="top"><a id="ae78d3a4609101ea554dbb8103f9cbc22"></a>
 Real&#160;</td><td class="memItemRight" valign="bottom"><b>tomo</b> (<a class="el" href="structdcell.html">dcell</a> **_opdr, <a class="el" href="structdcell.html">dcell</a> **gngsmvst, const <a class="el" href="structdcell.html">dcell</a> *_gradin)</td></tr>
 <tr class="separator:ae78d3a4609101ea554dbb8103f9cbc22"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,12 +146,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>moao_filter</b> (<a c
 <tr class="memitem:aed39aeb52f808cfa171bda5ea2e546b0"><td class="memItemLeft" align="right" valign="top"><a id="aed39aeb52f808cfa171bda5ea2e546b0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>mvm</b> (<a class="el" href="structdcell.html">dcell</a> **_dmerr, <a class="el" href="structdcell.html">dcell</a> *_gradin)</td></tr>
 <tr class="separator:aed39aeb52f808cfa171bda5ea2e546b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afab8bfc9dfb51a7c1e167180926210d0"><td class="memItemLeft" align="right" valign="top"><a id="afab8bfc9dfb51a7c1e167180926210d0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>tomo_test</b> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:afab8bfc9dfb51a7c1e167180926210d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6be8c5af1c94e37e768a9619bec90f9d"><td class="memItemLeft" align="right" valign="top"><a id="a6be8c5af1c94e37e768a9619bec90f9d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>fit_test</b> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="separator:a6be8c5af1c94e37e768a9619bec90f9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26c3d6b1b1c0dcb24c2663bf57c6cc1d"><td class="memItemLeft" align="right" valign="top"><a id="a26c3d6b1b1c0dcb24c2663bf57c6cc1d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>tomo_test</b> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a26c3d6b1b1c0dcb24c2663bf57c6cc1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a201c6c81eeaaa8b9be94ff0960115ae0"><td class="memItemLeft" align="right" valign="top"><a id="a201c6c81eeaaa8b9be94ff0960115ae0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>fit_test</b> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="separator:a201c6c81eeaaa8b9be94ff0960115ae0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
@@ -167,7 +184,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>nmoao</b></td></tr>
 <tr class="memitem:a6eeff68c11e96758091bfb9781d54042"><td class="memItemLeft" align="right" valign="top"><a id="a6eeff68c11e96758091bfb9781d54042"></a>
 <a class="el" href="structsmat.html">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>moao_gevl</b></td></tr>
 <tr class="separator:a6eeff68c11e96758091bfb9781d54042"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9866e6c8ad4c243c74905041f48e17dd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classArray.html">curcccell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuda__recon_1_1curecon__t.html#a9866e6c8ad4c243c74905041f48e17dd">dm_moao</a></td></tr>
+<tr class="memitem:a9866e6c8ad4c243c74905041f48e17dd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_array.html">curcccell</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuda__recon_1_1curecon__t.html#a9866e6c8ad4c243c74905041f48e17dd">dm_moao</a></td></tr>
 <tr class="separator:a9866e6c8ad4c243c74905041f48e17dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d14ddc407bc2ca4515b3ea26f7da6c7"><td class="memItemLeft" align="right" valign="top">curcell&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuda__recon_1_1curecon__t.html#a1d14ddc407bc2ca4515b3ea26f7da6c7">dm_wfs</a></td></tr>
 <tr class="separator:a1d14ddc407bc2ca4515b3ea26f7da6c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -176,12 +193,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>nmoao</b></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a347c23f702f2bed50248adc9aae4337f"><td class="memItemLeft" align="right" valign="top"><a id="a347c23f702f2bed50248adc9aae4337f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_update_recon</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
-<tr class="separator:a347c23f702f2bed50248adc9aae4337f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab518943d16c70c8619c9e92a068c6fc3"><td class="memItemLeft" align="right" valign="top"><a id="ab518943d16c70c8619c9e92a068c6fc3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_update_recon_cn2</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
-<tr class="separator:ab518943d16c70c8619c9e92a068c6fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14f8ee18707225637c63e768c90c6ea9"><td class="memItemLeft" align="right" valign="top"><a id="a14f8ee18707225637c63e768c90c6ea9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_update_recon</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="separator:a14f8ee18707225637c63e768c90c6ea9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb9c5d773c8820e2b6c05c5ff1c58f4d"><td class="memItemLeft" align="right" valign="top"><a id="aeb9c5d773c8820e2b6c05c5ff1c58f4d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_update_recon_cn2</b> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="separator:aeb9c5d773c8820e2b6c05c5ff1c58f4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Field Documentation</h2>
 <a id="a6d667eb383635feaef7442ca5f0a6965"></a>
@@ -206,7 +223,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_update_recon_cn2<
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classArray.html">curcccell</a> cuda_recon::curecon_t::dm_moao</td>
+          <td class="memname"><a class="el" href="class_array.html">curcccell</a> cuda_recon::curecon_t::dm_moao</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -244,8 +261,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_update_recon_cn2<
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/recon.h</li>
+<li>cuda/recon.cu</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
