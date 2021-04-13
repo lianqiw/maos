@@ -186,7 +186,7 @@ cusparseSpMM(cusparseHandle_t     handle,
 		cusparseDnVecDescr_t xv, yv;
 		cusparseCreateDnVec(&xv, nx, (void*)x, CUDA_R);
 		cusparseCreateDnVec(&yv, ny, (void*)y, CUDA_R);
-#if __CUDACC_VER_MAJOR__ >= 11
+#if __CUDACC_VER_MAJOR__ > 11 ||  (__CUDACC_VER_MAJOR__ == 11 &&  __CUDACC_VER_MINOR__ > 1)
 		cusparseSpMVAlg_t alg=CUSPARSE_SPMV_ALG_DEFAULT;
 #else
 		cusparseSpMVAlg_t alg=CUSPARSE_MV_ALG_DEFAULT;

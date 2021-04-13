@@ -2296,10 +2296,6 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		warning("Modal control is not supported yet with MV reconstructor. Disabled.\n");
 		parms->recon.modal=0;
 	}
-	if(parms->ndm>1&&parms->recon.modal){
-		warning("Modal control is not supported for multiple DMs\n");
-		parms->recon.modal=0;
-	}
 	if(parms->recon.alg==1){
 		if(parms->recon.split==2){
 			error("MVST does not work with least square reconstructor.\n");
@@ -2309,7 +2305,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		}
 		if(parms->lsr.actinterp==-1){
 			if(parms->recon.modal){
-			//no need in modal lsr control
+				//no need in modal lsr control
 				parms->lsr.actinterp=0;
 			} else{
 				parms->lsr.actinterp=1;

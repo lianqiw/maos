@@ -43,7 +43,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 		printf("Exception happened\n");
 		return;
 	} else{
-		const parms_t* parms=0;
 		static int isim=0;
 		static int iseed=0;
 		int nstep=0;
@@ -58,11 +57,11 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 				nstep=(int)mxGetScalar(prhs[0]);
 			}
 		}
-		if(nrhs==0||(strcmp(cmd, "setup")&&strcmp(cmd, "sim")&&strcmp(cmd, "get"))){
+		if(nrhs==0||(strcmp(cmd, "setup")&&strcmp(cmd, "reset")&&strcmp(cmd, "sim")&&strcmp(cmd, "get"))){
 			printf("Usage: \n"
 				"       maos('setup', '-o dirout -n N -c scao_ngs.conf -g0')\n"
-				"  simu=maos('sim', nstep)\n"
 				"       maos('reset')\n"
+				"  simu=maos('sim', nstep)\n"
 				"  simu=maos('get','sim')\n"
 				" parms=maos('get','parms')\n"
 			);
@@ -129,13 +128,13 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 				warning("Disable saving when no -o is supplied.\n");
 				disable_save=1;
 			}
-			parms=setup_parms(mainconf, conf, over_ride);
+			const parms_t *parms=setup_parms(mainconf, conf, over_ride);
 			printf("setup_parms done\n");
 			setup_parms_gpu((parms_t*)parms, gpus, ngpu);
 			maos_setup(parms);//sets global
 		}
-		parms=global->parms;
 		if(!strcmp(cmd, "sim")){
+			const parms_t *parms=global->parms;
 			if(nrhs>1){
 				if(!mxIsDouble(prhs[1])){
 					error("The second parameter should be an integer\n");

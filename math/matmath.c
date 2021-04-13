@@ -28,6 +28,7 @@ Math routines that are not included in mat.c
    scale each element of A by w.
 */
 void X(scale)(X(mat)* A, R w){
+	if(!A) return;
 	if(!check_mat(A)){
 		warning("Input is not valid");
 		return;

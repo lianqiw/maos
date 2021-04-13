@@ -723,8 +723,8 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	if(parms->recon.modal&&parms->recon.nmod>0){
 		for(int idm=0; idm<ndm; idm++){
 			if(parms->recon.nmod<recon->amod->p[idm]->ny){
-				warning("Reduce number of controlled modes from %ld to %d\n",
-					recon->amod->p[idm]->ny, parms->recon.nmod);
+				info("DM %d:Reduce number of controlled modes from %ld to %d\n",
+					idm, recon->amod->p[idm]->ny, parms->recon.nmod);
 				dresize(recon->amod->p[idm], 0, parms->recon.nmod);
 				recon->anmod->p[idm]=recon->amod->p[idm]->ny;
 				for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -915,7 +915,7 @@ void setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 	}
 }
 /**
-   setting up global tip/tilt remove operator from LGS gradients.
+   setting up global tip/tilt remove operator from WFS gradients.
 */
 
 static void
@@ -942,7 +942,7 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					TTy[isa]=1;
 				}
 			} else if(parms->powfs[ipowfs].type==1){//PYWFS
-				TT=powfs[ipowfs].pywfs->GTT; //pywfs_tt(powfs[ipowfs].pywfs);
+				TT=dref(powfs[ipowfs].pywfs->GTT); //pywfs_tt(powfs[ipowfs].pywfs);
 			} else{
 				error("Invalid powfs.type\n");
 			}

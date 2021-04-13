@@ -327,11 +327,12 @@ static void filter_cl(sim_t* simu){
 	}
 
 	if(parms->recon.modal){
-		dcellzero(simu->dmcmd);
-		dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmtmp, "nn", 1);
-		//convert DM command from modal to zonal spae
+		//convert DM command from modal to zonal space
+		for(int idm=0; idm<simu->dmcmd->nx; idm++){
+			dmm(&simu->dmcmd->p[idm], 0, simu->recon->amod->p[idm], simu->dmtmp->p[idm], "nn", 1);
+		}
 	} else if(simu->recon->actinterp&&!parms->recon.psol){
-	//Extrapolate to edge actuators
+		//Extrapolate to edge actuators
 		dcellzero(simu->dmcmd);
 		dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
 	} else{
