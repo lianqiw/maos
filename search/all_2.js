@@ -56,6 +56,7 @@ var searchData=
   ['ccellref',['ccellref',['../cmath_8h.html#a1f870a53b480b1477c2bc30e0178a516',1,'ctmp.c']]],
   ['ccellscale',['ccellscale',['../cmath_8h.html#a73ca48c0b08cfad1f7acedaa319208ca',1,'ctmp.c']]],
   ['ccellsub',['ccellsub',['../cmath_8h.html#ad9385e92936037fa876eb4d406c39c55',1,'ctmp.c']]],
+  ['ccellsum',['ccellsum',['../cmath_8h.html#a297b5fe0d1b6c898e3f4a01ad2975534',1,'ctmp.c']]],
   ['ccellsvd_5fpow',['ccellsvd_pow',['../cmath_8h.html#abb8a51d9db0d5ec75e8d1b59e5efa79c',1,'ctmp.c']]],
   ['ccelltikcr',['ccelltikcr',['../cmath_8h.html#ae9d277a89c062aac2deb1dfa2a09063c',1,'ctmp.c']]],
   ['ccelltrans',['ccelltrans',['../cmath_8h.html#adb8e69bbe2c05a039f236fbb2eae12de',1,'ctmp.c']]],

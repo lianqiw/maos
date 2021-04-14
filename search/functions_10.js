@@ -39,6 +39,7 @@ var searchData=
   ['scellreduce',['scellreduce',['../smath_8h.html#a4e435d4e179f82e94b7fd990f9ce700e',1,'stmp.c']]],
   ['scellref',['scellref',['../smath_8h.html#a3044daefbaa37dd91cd42bcd304827ce',1,'stmp.c']]],
   ['scellsub',['scellsub',['../smath_8h.html#abebfabff10d974faeaa3c63feca991dc',1,'stmp.c']]],
+  ['scellsum',['scellsum',['../smath_8h.html#a5c29890ec99077336363cfae4e108c24',1,'stmp.c']]],
   ['scelltrans',['scelltrans',['../smath_8h.html#ada3edc0b08ed79e61d22f8e19b52df3f',1,'stmp.c']]],
   ['scellzero',['scellzero',['../smath_8h.html#add76447c4771eebdbbcff15bed631e29',1,'stmp.c']]],
   ['scheduler_5ffinish',['scheduler_finish',['../scheduler__client_8h.html#a2b93c8f28b99804e00ac8483359a97fa',1,'scheduler_client.c']]],

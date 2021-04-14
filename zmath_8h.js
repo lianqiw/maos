@@ -61,6 +61,7 @@ var zmath_8h =
     [ "z2cellref", "zmath_8h.html#a7154ad4f44010ef8d67e2b5086806f08", null ],
     [ "z2cell", "zmath_8h.html#ac819c6f885c87deb66afb5ac8c516b9b", null ],
     [ "zcell_col", "zmath_8h.html#a2e28f685427cbad2dd3d0e1567ca68f2", null ],
+    [ "zcellsum", "zmath_8h.html#ae8a8115b5a79e2095430fd6715d86e21", null ],
     [ "zisnan", "zmath_8h.html#a2a98a34256dd396f8b4302359ce22d1d", null ],
     [ "znorm", "zmath_8h.html#a4dc73e0868b522217b5bad5876c23e7d", null ],
     [ "zstd", "zmath_8h.html#a345ade7cc39967289fd30a27936f724b", null ],

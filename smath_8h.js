@@ -60,6 +60,7 @@ var smath_8h =
     [ "s2cellref", "smath_8h.html#abcce7609556d2239b13aa818b97a1a67", null ],
     [ "s2cell", "smath_8h.html#af36e3fb7c7c5ebdea962d289aa36505e", null ],
     [ "scell_col", "smath_8h.html#a51258faab5164afbf5c68a7794b77030", null ],
+    [ "scellsum", "smath_8h.html#a5c29890ec99077336363cfae4e108c24", null ],
     [ "sisnan", "smath_8h.html#aed56bbb147b38e475d8d6b94eb3a942e", null ],
     [ "snorm", "smath_8h.html#aa7637ef5474bf55a18742a68fbde8632", null ],
     [ "sstd", "smath_8h.html#acc62c121e002e60e216be5caa591ca83", null ],
