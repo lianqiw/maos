@@ -204,6 +204,7 @@ int main(int argc, char* argv[]){
 		P_OLLO,
 		N_ALL,
 	};
+	//name of the top tab. 
 	const char* toptab[]={
 	"CL",
 	"CL hi",
@@ -212,20 +213,22 @@ int main(int argc, char* argv[]){
 	"CL lo",
 	"CL lo",
 	"OL",//Openloop
-	"OL hi",
-	"OL lo"
+	"OL",
+	"OL"
 	};
+	//name of the side tab
 	const char* sidetab[]={
 	"Total",
 	"High",
 	"Low",
-	"Low_TT",
-	"Low_PS",
-	"Low_Focus",
+	"TT",
+	"PS",
+	"Focus",
 	"Total",//OpenLoop
 	"High",
 	"Low"
 	};
+	//title of each plot
 	const char* title[]={
 	"Total Wavefront Error",
 	"High Order Wavefront Error",
@@ -243,7 +246,7 @@ int main(int argc, char* argv[]){
 	dccell* resm=dccellnew(N_ALL, 1);
 	for(int i=0; i<res->nx; i++){
 		res->p[i]=dcellnew(npath, nseed);
-		resm->p[i]=dcellnew(npath, 1);
+		resm->p[i]=dcellnew(npath, 1);//seed averaged
 	}
 
 	const char* xlabel, * ylabel;
@@ -382,12 +385,19 @@ int main(int argc, char* argv[]){
 	}
 
 	for(int i=0; i<res->nx; i++){
-		dcellcwpow(res->p[i], 0.5);
-		dcellscale(res->p[i], 1e9);
-		dcellcwpow(resm->p[i], 0.5);
-		dcellscale(resm->p[i], 1e9);
+		if(dcellsum(res->p[i])==0){
+			dcellfree(res->p[i]);
+			dcellfree(resm->p[i]);
+		}else{
+			dcellcwpow(res->p[i], 0.5);
+			dcellscale(res->p[i], 1e9);
+			dcellcwpow(resm->p[i], 0.5);
+			dcellscale(resm->p[i], 1e9);
+		}
 	}
-
+	if(!res->p[P_PS] && !res->p[P_F]){
+		dcellfree(res->p[P_LO]);
+	}
 
 	if(npath==1){
 		char* legs0[nseed+1];

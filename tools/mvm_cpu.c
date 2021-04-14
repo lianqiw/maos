@@ -143,7 +143,7 @@ int main(int argc, char* argv[]){
 	if(MVM_CLIENT){
 		short port=(short)strtol(getenv("MVM_PORT"), NULL, 10);
 		sock=connect_port(MVM_CLIENT, port, 0, 1);
-		if(sock!=-1){
+		if(sock>-1){
 			info("Connected\n");
 			int cmd[7];
 			cmd[0]=nact;
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	int ready=0;
-	if(sock!=-1&&stwriteint(sock, ready)){
+	if(sock>-1&&stwriteint(sock, ready)){
 		warning("error send ready signal: %s\n", strerror(errno));
 		close(sock); sock=-1;
 	}
@@ -189,7 +189,7 @@ int main(int argc, char* argv[]){
 			}
 
 			short* pcur=pix+saind[isa];
-			if(sock!=-1){
+			if(sock>-1){
 				if(stread(sock, pcur, sizeof(short)*npixleft)){
 					warning("failed: %s\n", strerror(errno));
 					close(sock); sock=-1;
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]){
 				}
 			}
 		}//for isa
-		if(sock!=-1){
+		if(sock>-1){
 			if(stwrite(sock, dm->p, sizeof(float)*nact)){
 				warning("error write dmres: %s\n", strerror(errno));
 				close(sock); sock=-1;

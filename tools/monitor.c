@@ -500,7 +500,7 @@ static void clear_jobs(GtkButton* btn, gpointer flag){
 	for(int ihost=0; ihost<nhost; ihost++){
 		if(!pproc[ihost]) continue;
 		int sock=hsock[ihost];
-		if(sock==-1) continue;
+		if(sock<0) continue;
 		int cmd[2];
 		cmd[0]=CMD_REMOVE;
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){

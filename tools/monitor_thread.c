@@ -334,6 +334,7 @@ void* listen_host(void* dummy){
 						dbg_time("20 seconds no respond. disconnect server %s.\n", hosts[ihost]);
 					}
 				} else{
+					warning("add_host_wrap %d\n", ihost);
 					add_host_wrap(ihost);
 				}
 				htime[ihost]=ntime;
@@ -383,7 +384,7 @@ int scheduler_cmd(int ihost, int pid, int command){
 		return scheduler_display(ihost, pid);
 	} else{
 		int sock=hsock[ihost];
-		if(sock==-1){
+		if(sock<0){
 			add_host_wrap(ihost);
 			sleep(1);
 			sock=hsock[ihost];

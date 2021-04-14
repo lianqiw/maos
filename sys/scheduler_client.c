@@ -261,7 +261,7 @@ static int psock=-1;
 static void scheduler_report_path(char* path){
 	static char path_save[PATH_MAX];
 	path_save[0]=0;
-	if(psock==-1){
+	if(psock<0){
 		return;
 	}
 	if(path){
@@ -297,7 +297,7 @@ int scheduler_listen(thread_fun fun){
  */
 void scheduler_start(char* path, int nthread, int ngpu, int waiting){
 	psock=scheduler_connect_self(1);
-	if(psock==-1){
+	if(psock<0){
 		warning_time("Failed to connect to scheduler\n");
 	}
 	scheduler_report_path(path);
@@ -313,7 +313,7 @@ void scheduler_start(char* path, int nthread, int ngpu, int waiting){
    Called by maos to wait for go signal from scheduler.
 */
 int scheduler_wait(void){
-	if(psock==-1){
+	if(psock<0){
 		warning_time("Failed to connect to scheduler\n");
 		return -1;
 	}
@@ -345,7 +345,7 @@ void scheduler_finish(int status){
 /**
    called by sim.c to report job status */
 void scheduler_report(status_t* status){
-	if(psock==-1){
+	if(psock<0){
 		psock=scheduler_connect_self(0);
 		scheduler_report_path(NULL);
 	}
