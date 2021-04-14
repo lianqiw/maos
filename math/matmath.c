@@ -1745,6 +1745,7 @@ int X(cellclip)(X(cell)* Ac, R min, R max){
    raise each cell in the cell array to power of power.
 */
 void X(cellcwpow)(X(cell)* A, R power){
+	if(!A) return;
 	for(long ib=0; ib<A->nx*A->ny; ib++){
 		X(cwpow)(A->p[ib], power);
 	}

@@ -82,7 +82,7 @@ void mvm_client_init(const char* host, int port, dmat* mvm, int ngpu){
    Reconstruction
 */
 void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
-	if(sock_mvm==-1){
+	if(sock_mvm<0){
 		error("please call mvm_client_init first\n");
 	}
 	/* first move gradients to continuous buffer with correct numerical type.*/

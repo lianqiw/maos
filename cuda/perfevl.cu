@@ -322,7 +322,7 @@ void gpu_perfevl_queue(thread_t* info){
 			Real focus=-simu->telfocusreal->p[0]->p[0];
 			add_focus_do<<<DIM(nloc, 256), 0, stream>>>(iopdevl, cudata->perf.locs(), nloc, focus);
 		}
-		if(save_evlopd){
+		if(save_evlopd && simu->save->evlopdol){
 			zfarr_push(simu->save->evlopdol[ievl], isim, iopdevl, stream);
 		}
 		if(parms->plot.run){

@@ -79,6 +79,6 @@
     X(mat) *X(cell2m)(const void *A) CHECK_UNUSED_RESULT;		\
     X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim) CHECK_UNUSED_RESULT; \
     void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);	\
-    X(mat) *X(cell_col)(X(cell) *input, long icol);			
-
+    X(mat) *X(cell_col)(X(cell) *input, long icol);			\
+    T X(cellsum)(const X(cell) *A);
 #endif

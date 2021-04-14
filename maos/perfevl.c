@@ -208,7 +208,7 @@ void perfevl_ievl(thread_t* info){
 		}
 
 		TIM(1);
-		if(save_evlopd){
+		if(save_evlopd && simu->save->evlopdol){
 			zfarr_push(simu->save->evlopdol[ievl], simu->perfisim, iopdevl);
 		}
 		if(parms->plot.run){

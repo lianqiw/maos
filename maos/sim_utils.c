@@ -705,14 +705,12 @@ static void init_simu_evl(sim_t* simu){
 
 	if(parms->save.evlopd){
 		int nstep=parms->sim.end;
-		save->evlopdol=mycalloc(nevl, zfarr*);
+		//save->evlopdol=mycalloc(nevl, zfarr*);
 		save->evlopdcl=mycalloc(nevl, zfarr*);
 
 		for(int ievl=0; ievl<nevl; ievl++){
-			save->evlopdol[ievl]=zfarr_init(nstep, 1,
-				"evl%d_opdol_%d.bin", ievl, seed);
-			save->evlopdcl[ievl]=zfarr_init(nstep, 1,
-				"evl%d_opdcl_%d.bin", ievl, seed);
+			//save->evlopdol[ievl]=zfarr_init(nstep, 1, "evl%d_opdol_%d.fits", ievl, seed);
+			save->evlopdcl[ievl]=zfarr_init(nstep, 1,"evl%d_opdcl_%d.fits", ievl, seed);
 		}
 	}
 
