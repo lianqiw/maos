@@ -63,7 +63,7 @@ enum{
     CMD_REMOVE,/**<11 Remove a job*/
     CMD_DISPLAY,/**<12 Remote display for telemetry*/
     CMD_MAOS, /*13 */
-    CMD_UNUSED2,/*14 */
+    CMD_MAOSDAEMON, /*14 */
     CMD_RESTART,/*15*/
     CMD_UNUSED3,/*16*/
     CMD_UNUSED4,/*17*/
@@ -128,5 +128,5 @@ enum{
     DRAW_FLOAT,/*number of bytes for float*/
     DRAW_END=100
 };
-#define scheduler_version 0x29
+#define scheduler_version 0x30
 #endif

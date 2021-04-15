@@ -235,13 +235,15 @@ void writedata_by_id(file_t* fp, const void* A_, uint32_t id){
 			nx=A->nx;
 			ny=A->ny;
 		}
-		id=0;/*determine id first for empty cell*/
+		id=0;/*determine id first for non-empty cell*/
 		if(nx&&ny){
 			for(uint64_t ix=0; ix<(nx*ny); ix++){
 				if(A->p[ix]){
 					id=A->p[ix]->id;
 					if(!id){
-						error("id is not set\n");
+						warning("id is not set\n");
+					}else{
+						break;
 					}
 				}
 			}
@@ -316,7 +318,7 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 	}
 	//info("level=%d, magic=%x\n", level, header->magic);
 	void* out=0;
-	//scane file in automatic mode or when cell dimension is 0 or when request cell but data is not cell.
+	//scan file in automatic mode or when cell dimension is 0 or when request cell but data is not cell.
 	if((level==0||level<-1)&&!iscell(&header->magic)){
 		//info("level==0 && !iscell\n");
 		if(!id) id=header->magic;
@@ -469,4 +471,5 @@ void writesock(const void* A, int sock){
 	file_t* fp=zfdopen(sock, "wb");
 	writedata_by_id(fp, A, 0);
 	zfclose(fp);
+	info("writesock finished\n");
 }

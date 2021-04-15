@@ -256,6 +256,30 @@ static int scheduler_connect_self(int block){
 	return sock;
 }
 
+/**
+   Started by maos to listen to the sock which connects to the
+   scheduler for commands. 
+   It requires a new connection to the scheduler to avoid data racing.
+*/
+int scheduler_listen(thread_fun fun){
+	if(!fun) return 0;
+	static int sock=-1;
+	if(sock==-1){
+		sock=scheduler_connect_self(1);
+	}
+	if(sock!=-1){
+		int cmd[2];
+		cmd[0]=CMD_MAOSDAEMON;
+		cmd[1]=getpid();
+		stwriteintarr(sock, cmd, 2);
+		thread_new(fun, &sock);
+		return 0;
+	} else{
+		warning_time("Failed to connect to scheduler\n");
+		return -1;
+	}
+}
+
 static int psock=-1;
 
 static void scheduler_report_path(char* path){
@@ -278,19 +302,6 @@ static void scheduler_report_path(char* path){
 	stwritestr(psock, path_save);
 }
 #define CATCH_ERR(A) if(A){psock=-1;}
-
-/**
-   Started by maos to listen to the sock which connects to the
-   scheduler for commands
-*/
-int scheduler_listen(thread_fun fun){
-	if(psock!=-1&&fun){
-		thread_new(fun, &psock);
-		return 0;
-	} else{
-		return -1;
-	}
-}
 
 /**
    Called by maos to report a job start to scheduler.

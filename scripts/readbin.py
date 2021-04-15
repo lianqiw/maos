@@ -77,13 +77,15 @@ def readvec(fp, datatype, nxy):#enable read from socket and file
 
 def readbin(file, want_header=0):
     isfits=False
-    isfile=True
+    isfile=False
+    issock=False
     out=np.array(())
     header={}
     if isinstance(file, socket.socket):
         file=file.fileno()
         isfits=False
         isfile=False
+        issock=True
     elif not os.path.isfile(file): #file not found
         if os.path.isfile(file+'.bin'):
             file=file+'.bin'
@@ -97,9 +99,11 @@ def readbin(file, want_header=0):
             isfits=True
         else:
             print('File does not exist:', file)
-    if os.path.isfile(file) or not isfile:
+    if os.path.isfile(file):
+        isfile=True
         if (file[-5:]=='.fits' or file[-8:] == '.fits.gz'):
             isfits=True
+    if isfile or issock:
         try:
             fp=open(file, 'rb', closefd=isfile)
             if isfile:
@@ -110,8 +114,8 @@ def readbin(file, want_header=0):
                 else:
                     fp.seek(0, 0)
             (out, header, err)=readbin_auto(fp, isfits)
-        except Exception as error:
-            print("readbin failed:", file, error)
+        #except Exception as error:
+        #    print("readbin failed:", file, error)
         finally:
             fp.close()
     if want_header: 
@@ -163,8 +167,8 @@ def readbin_do(fp, isfits):
         if nx>0 and ny>0:
             header_cell=header
             header=np.zeros((ny, nx), dtype=object)
-        else:
-            return readbin_auto(fp, isfits, 1)
+        #else:
+        #    return readbin_auto(fp, isfits, 1)
         out=np.zeros((ny, nx), dtype=object)
 
         for iy in range(0, ny):
@@ -268,11 +272,15 @@ def readfits_header(fp):
     else:
         return (-1, 0, 0, header)
 def readbin_magic(fp):
-    magic=readuint32(fp)
-    M_SKIP=26112
-    if magic==M_SKIP: #padding
+    try:
         magic=readuint32(fp)
-    return magic
+        M_SKIP=26112
+        if magic==M_SKIP: #padding
+            magic=readuint32(fp)
+        return magic
+    except Exception as error:
+        print(error)
+        return 0 
 def readbin_header(fp):
     M_COMMENT=25856
     header={}
@@ -286,8 +294,9 @@ def readbin_header(fp):
         if nlen!=nlen2 or magic!=magic2:
             raise NameError('Header verification failed')
         magic=readbin_magic(fp)
-    nx=readuint64(fp)
-    ny=readuint64(fp)
+    if magic:
+        nx=readuint64(fp)
+        ny=readuint64(fp)
    
     return (magic, nx, ny, header)
 

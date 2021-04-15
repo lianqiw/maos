@@ -53,7 +53,8 @@ typedef struct RUN_T{
 	double last_time; //time of last report
 	int pid;
 	int pidnew;//the new pid
-	int sock;
+	int sock;//socket for primary maos connection
+	int sock2;//socket for secondary maos connection for maos_command()
 	int nthread;//number of threads
 	int ngpu;//number of gpus requested.
 	char* exe; /*Path to the executable.*/
@@ -528,8 +529,8 @@ static void new_job(const char* exename, const char* execmd){
 static int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get(pid);
 	int cmd2[2]={cmd, 0};
-	if(!irun||(stwriteintarr(irun->sock, cmd2, 2)||stwritefd(irun->sock, sock))){
-		warning_time("Unable to pass socket to maos\n");
+	if(!irun||!irun->sock2||(stwriteintarr(irun->sock2, cmd2, 2)||stwritefd(irun->sock2, sock))){
+		warning_time("Unable to pass socket to maos: irun=%p, sock2=%d\n", irun, irun?irun->sock2:0);
 		stwriteint(sock, -1);//respond failure message.
 	} else{
 		dbg_time("Successfully passed socket to maos\n");
@@ -685,7 +686,7 @@ static int respond(int sock){
 		free(buf);
 	}
 	break;
-	case CMD_PROBE://9: not used
+	case CMD_PROBE://9: called by monitor to probe the connection
 		break;
 	case CMD_SOCK://10:Called by draw() to cache a fd. Valid over UNIX socket only.
 	{
@@ -809,7 +810,16 @@ static int respond(int sock){
 	case CMD_MAOS://13: create a live link to maos.
 		ret=maos_command(pid, sock, MAOS_VAR);
 		break;
-	case CMD_UNUSED2://14;not used
+	case CMD_MAOSDAEMON://14; called by maos to save a port to run maos_command
+	{
+		RUN_T* irun=running_get(pid);
+		if(irun){
+			irun->sock2=sock;
+			dbg_time("CMAOS_MAOSDAEMON: socket %d is saved\n", sock);
+		}else{
+			warning_time("CMAOS_MAOSDAEMON: irun not found\n");
+		}
+	}
 		break;
 	case CMD_RESTART://15: Called by maos to restart a job
 		runned_restart(pid);

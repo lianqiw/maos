@@ -145,7 +145,7 @@ static void* find_var(const char* name){
 	};
 	if(global){
 		if(global->simu){
-			if(name){
+			if(name && strcmp(name, "list")){
 				for(int j=0; map_map[j].name; j++){
 					char* div=strchr(name, '.');
 					if(!div) continue;
@@ -168,7 +168,7 @@ static void* find_var(const char* name){
 			{
 				static cell* dummy=NULL;
 				if(!dummy){
-					dummy=cellnew(0, 0);
+					dummy=(cell*)dnew(1,1);
 					const char* msg0="Available variables are:\n";
 					long count=strlen(msg0);
 					for(int j=0; map_map[j].name; j++){
@@ -187,6 +187,8 @@ static void* find_var(const char* name){
 						}
 					}
 				}
+				info("return dummy cell with header %s\n", dummy->header);
+				writebin(dummy, "dummy");
 				return dummy;
 			}
 		} else{
