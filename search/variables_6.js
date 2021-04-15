@@ -3,7 +3,7 @@ var searchData=
   ['ga',['GA',['../parms_8h.html#a323e8eafa8b63cc1aff6af7b5a9c9f4c',1,'load_cfg_t::GA()'],['../maos_2types_8h.html#ac2dd54968219921060fb8535b2fdcc35',1,'recon_t::GA()']]],
   ['gahi',['GAhi',['../maos_2types_8h.html#a464af4ef2845735ef6a2429e4f706bfd',1,'recon_t']]],
   ['gain',['gain',['../pywfs_8h.html#a93a85e438a350f07999bb8cfd18705eb',1,'pywfs_t']]],
-  ['galo',['GAlo',['../maos_2types_8h.html#a2e737d3719ffc59845286719437b8c97',1,'recon_t']]],
+  ['galo',['GAlo',['../maos_2types_8h.html#ae09109304ea3466f12a92c26d59f7f39',1,'recon_t']]],
   ['gcov',['gcov',['../parms_8h.html#a4d27c9fb9266760b6507e0b3ded11561',1,'save_cfg_t::gcov()'],['../maos_2types_8h.html#a6c4283d5e0808547425fd1507cca9605',1,'sim_t::gcov()']]],
   ['gcovp',['gcovp',['../parms_8h.html#a1e73b5f3ec311bc8d43ad2f4de71ea39',1,'save_cfg_t']]],
   ['gdm',['gdm',['../parms_8h.html#acdf16fb27cb39ec470183569dfb2ccfd',1,'moao_cfg_t']]],

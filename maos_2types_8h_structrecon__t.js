@@ -51,7 +51,7 @@ var maos_2types_8h_structrecon__t =
     [ "MVGM", "maos_2types_8h.html#a7ff7b32ce8673b59b357331ac46108c9", null ],
     [ "MVFM", "maos_2types_8h.html#ae2fee7d4211a1cf9fd8131534944cbbe", null ],
     [ "GA", "maos_2types_8h.html#ac2dd54968219921060fb8535b2fdcc35", null ],
-    [ "GAlo", "maos_2types_8h.html#a2e737d3719ffc59845286719437b8c97", null ],
+    [ "GAlo", "maos_2types_8h.html#ae09109304ea3466f12a92c26d59f7f39", null ],
     [ "GAhi", "maos_2types_8h.html#a464af4ef2845735ef6a2429e4f706bfd", null ],
     [ "GM", "maos_2types_8h.html#ac08d2d9f1f847c4eac0946b83dae0a16", null ],
     [ "GMhi", "maos_2types_8h.html#aafc3dd415c75885f6035f7c97f95af1b", null ],
