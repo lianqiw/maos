@@ -322,7 +322,7 @@ typedef struct recon_t{
     dcell *MVGM;       /**<NGS WFS gradient operator from MVST Modes.*/
     dcell *MVFM;       /**<NGS Focus reconstructed from MVST Modes.*/
     dspcell *GA;        /**<actuator to wfs grad.*/
-    dspcell *GAlo;      /**<GA of low order WFS.*/
+    cell *GAlo;         /**<GA or GM of low order WFS.*/
     dspcell *GAhi;      /**<GA of high order WFS.*/
     dcell *GM;          /**<GM for all WFS.*/
     dcell *GMhi;        /**<GM for high order WFS.*/

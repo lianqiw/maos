@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -734,43 +734,45 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 		}
 	}
-	if(recon->actstuck&&parms->recon.alg==1&&parms->dbg.recon_stuck){
-	/*This is need for LSR reconstructor to skip stuck actuators.  GA is
-	  also used to form PSOL gradients, but that one doesn't need this
-	  modification because actuator extropolation was already applied.*/
-	/*
-	  For MVR we want to treat stuck actuators as input OPD. Therefore its
-	  effect on GA is also removed
-	 */
-		warning("Apply stuck actuators to GA\n");
-		act_stuck(recon->aloc, recon->GA, recon->actstuck);
+	if(!parms->recon.modal){
+		if(recon->actstuck&&parms->recon.alg==1&&parms->dbg.recon_stuck){
+		/*This is need for LSR reconstructor to skip stuck actuators.  GA is
+		  also used to form PSOL gradients, but that one doesn't need this
+		  modification because actuator extropolation was already applied.*/
+		/*
+		  For MVR we want to treat stuck actuators as input OPD. Therefore its
+		  effect on GA is also removed
+		 */
+			warning("Apply stuck actuators to GA\n");
+			act_stuck(recon->aloc, recon->GA, recon->actstuck);
 
-	}
-	if(!parms->recon.modal&&parms->recon.alg==1){//LSR.
-		recon->actcpl=genactcpl(recon->GA, 0);
-		act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
-		if(parms->lsr.actinterp){
-			recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
-		} else if(recon->actfloat){
-			warning("There are float actuators, but fit.actinterp is off\n");
 		}
-		if(recon->actinterp){
-			dspcell* GA2=0;
-			dcellmm(&GA2, recon->GA, recon->actinterp, "nn", 1);
-			dspcellfree(recon->GA);
-			recon->GA=GA2;
-		}
-		if(parms->save.setup){
-			if(recon->actinterp){
-				writebin(recon->actinterp, "lsr_actinterp");
+		if(parms->recon.alg==1){//LSR.
+			recon->actcpl=genactcpl(recon->GA, 0);
+			act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
+			if(parms->lsr.actinterp){
+				recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
+			} else if(recon->actfloat){
+				warning("There are float actuators, but fit.actinterp is off\n");
 			}
-			if(recon->actcpl){
-				writebin(recon->actcpl, "lsr_actcpl");
+			if(recon->actinterp){
+				dspcell* GA2=0;
+				dcellmm(&GA2, recon->GA, recon->actinterp, "nn", 1);
+				dspcellfree(recon->GA);
+				recon->GA=GA2;
+			}
+			if(parms->save.setup){
+				if(recon->actinterp){
+					writebin(recon->actinterp, "lsr_actinterp");
+				}
+				if(recon->actcpl){
+					writebin(recon->actcpl, "lsr_actcpl");
+				}
 			}
 		}
 	}
 	/*Create GAlo that only contains GA for low order wfs */
-	recon->GAlo=dspcellnew(recon->GA->nx, recon->GA->ny);
+	recon->GAlo=cellnew(recon->GA->nx, recon->GA->ny);
 	recon->GAhi=dspcellnew(recon->GA->nx, recon->GA->ny);
 	if(parms->recon.modal) recon->GMhi=dcellnew(nwfs, ndm);
 
@@ -779,7 +781,11 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			if(parms->powfs[ipowfs].lo
 				||(parms->recon.split&&parms->nlopowfs==0&&!parms->powfs[ipowfs].trs)){/*for low order wfs */
-				P(recon->GAlo, iwfs, idm)=dspref(P(recon->GA, iwfs, idm));
+				if(parms->recon.modal){
+					P(recon->GAlo, iwfs, idm)=(cell*)dref(P(recon->GM, iwfs, idm));
+				}else{
+					P(recon->GAlo, iwfs, idm)=(cell*)dspref(P(recon->GA, iwfs, idm));
+				}
 			}
 			if(!parms->powfs[ipowfs].skip){
 				P(recon->GAhi, iwfs, idm)=dspref(P(recon->GA, iwfs, idm));
@@ -874,7 +880,7 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 	int zradonly=parms->dbg.twfsflag==1||parms->dbg.twfsflag==3;
 	dbg("twfs mode is %s from order %d to %d.\n", zradonly?"radial":"all modes", zmin, zmax);
 	opd=zernike(recon->ploc, parms->aper.d-reduce, zmin, zmax, zradonly);
-	
+
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2||parms->powfs[ipowfs].llt){

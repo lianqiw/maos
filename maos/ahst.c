@@ -404,24 +404,32 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 	  act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
 	  }*/
 
+	if(parms->recon.modal){//convert Modes to space of amod
+		for(int idm=0; idm<parms->ndm; idm++){
+			dmat* proj=dpinv(recon->amod->p[idm], NULL);
+			dmat* tmp=0;
+			dmm(&tmp, 0, proj, ngsmod->Modes->p[idm], "nn", 1);
+			dfree(ngsmod->Modes->p[idm]);
+			ngsmod->Modes->p[idm]=tmp;
+			dfree(proj);
+		}
+	}
 	/*
-	  ngsmod to NGS gradient interaction matrix.
+	  ngsmod to NGS gradient interaction matrix. Defined in modal space for modal control
 	*/
-
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
 		ngsmod->GM=dcellnew(parms->nwfsr, 1);
 		info2("Low order control includes WFS");
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 			int ipowfs=parms->wfsr[iwfs].powfs;
-			if(parms->powfs[ipowfs].skip==3) continue;
-			if(parms->powfs[ipowfs].lo
-				||(parms->recon.split&&parms->nlopowfs==0&&!parms->powfs[ipowfs].trs)){
+			if(parms->powfs[ipowfs].skip!=3 &&
+				(parms->powfs[ipowfs].lo
+				||(parms->recon.split && !parms->powfs[ipowfs].trs))){
 				info2(" %d", iwfs);
-
 				for(int idm=0; idm<parms->ndm; idm++){
-					if(parms->powfs[ipowfs].type==0){//shwfs
-						dspmm(PP(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
-					} else{//pwfs.
+					if(parms->powfs[ipowfs].type==0 || parms->recon.modal){//shwfs or modal control
+						dcellmm(PP(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
+					} else{//pwfs in zonal control.
 						real  ht=parms->dm[idm].ht-parms->powfs[ipowfs].hc;
 						real  dispx=0, dispy=0;
 						dispx=parms->wfsr[iwfs].thetax*ht;
@@ -436,16 +444,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 		}
 		info2("\n");
 	}
-	if(parms->recon.modal){//convert Modes to space of amod
-		for(int idm=0; idm<parms->ndm; idm++){
-			dmat* proj=dpinv(recon->amod->p[idm], NULL);
-			dmat* tmp=0;
-			dmm(&tmp, 0, proj, ngsmod->Modes->p[idm], "nn", 1);
-			dfree(ngsmod->Modes->p[idm]);
-			ngsmod->Modes->p[idm]=tmp;
-			dfree(proj);
-		}
-	}
+	
 	/**
 
 	   Next, decouple LGS reconstruction from ngsmodes.

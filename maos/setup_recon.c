@@ -1547,7 +1547,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	dspcellfree(recon->GXtomo);
 	dspcellfree(recon->GP);
 	dspcellfree(recon->GA);
-	dspcellfree(recon->GAlo);
+	cellfree(recon->GAlo);
 	dspcellfree(recon->GAhi);
 	dcellfree(recon->GXL);
 	dspcellfree(recon->L2);
