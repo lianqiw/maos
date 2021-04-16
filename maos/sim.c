@@ -42,6 +42,7 @@ extern int draw_single;
 static real tk_0;
 static real tk_1;
 static real tk_atm=0;
+int sim_pipe[2]={0,0};
 /**
    Initialize the simulation runtime data struct.
  */
@@ -249,7 +250,12 @@ void maos_sim(){
 	recon_t* recon=global->recon;
 	int simend=parms->sim.end;
 	int simstart=parms->sim.start;
-
+	if(sim_pipe[0]==0){
+		if(pipe(sim_pipe)){
+			sim_pipe[0]=-1;//indicate error
+			sim_pipe[1]=-1;//indicate error
+		}
+	}
 	dbg("PARALLEL=%d\n", PARALLEL);
 	real restot=0; long rescount=0;
 	for(int iseed=0; iseed<parms->sim.nseed; iseed++){
@@ -292,13 +298,31 @@ void maos_sim(){
 				maos_isim(isim);
 				if(simu->pause>0&&isim%simu->pause==0){
 					info2("Press enter to step, c to resume:\n");
-					int key;
-					while((key=getchar())!=0x0a){
-						if(key=='c'){
-							simu->pause=0;
+					//We use select on a pipe and stdin to read continuation message
+					//pipe is used by maos_var() in main.c
+					
+					fd_set active_fd_set;
+					FD_ZERO(&active_fd_set);
+					FD_SET(0, &active_fd_set);
+					if(sim_pipe[0]>0){
+						FD_SET(sim_pipe[0], &active_fd_set);
+					}
+					int ans=select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0);
+					if(ans>0){
+						for(int i=0; i<FD_SETSIZE; i++){
+							if(FD_ISSET(i, &active_fd_set)){
+								char key=0;
+								if(read(i, &key, 1)==1){
+									if(key=='c'){
+										simu->pause=0;
+										info2("Resuming\n");
+									}else{
+										info2("Continuing...\n");
+									}
+								}
+							}
 						}
 					}
-					info2("continuing...\n");
 				}
 			}/*isim */
 		}

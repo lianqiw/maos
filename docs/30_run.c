@@ -200,7 +200,7 @@
    \verbatim
    maos sim.ephi=0.3 #Change gain of the main integrator to 0.3
    \endverbatim
-
+   
    \section advanced Advanced configuration
 
    \subsection sect-surface Specifying Surface OPDs

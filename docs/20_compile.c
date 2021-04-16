@@ -24,7 +24,7 @@
    This step can be skipped if the user choose to use the precompiled binary files,
    which are available for all the popular plateforms: Windows, Mac, and
    Linux. Please notice that the job scheduling and monitoring utilities are not
-   included in the released binaries (the binaries may not be up to data).
+   included in the released binaries (the binaries may not be up to date).
 
    \section sect-requirement Requirements
 
@@ -214,4 +214,40 @@
    An alternative way to launch drawdaemon is to include \c plot.setup=1 \c plot.run=1 or \c plot.all=1 in maos command line. 
    This method can only invoke the drawdaemon locally.
 
+
+   \section sect-python-scripts Python Scripts 
+
+   MAOS comes with a few useful python routines location in \c scripts/ folder:
+
+  - \c readbin.py contains \c readbin that can read \c bin or \c fits files.
+  
+  - \c aolib.py contains routines to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py
+
+  - \c libaos.py contains routines that wraps \c MAOS librarie routines via \c aolib.so and \c ctypes 
+  
+  - \c lib2py.py generates \c libaos.py
+
+  - \c draw.py used to draw opd defined on coordinate loc. \c draw(loc, opd) or \c draw(map) where \c map is a 2d array.
+
+  - \c maos_client provides an interface to a running maos session. See next subsection.
+
+  For \c libaos.py to work, an environment variable \c MAOS_AOLIB need to set to the path of \c aolib.so
+
+   \subsection sect-python-maos Interface to MAOS
+
+   It is possible to retrieve or override MAOS internal data when it is running. See the following steps:
+   
+   First, set up shell environment so that the libaos.py can find it.
+
+    - `export MAOS_AOLIB=\path\to\bin\aolib.so`
+      
+   Then open \c ipython (or \c python) and run the following
+
+    - \c import \c maos_client  #import the module
+    - \c maos_client.connect(host,port) #the host and port is the same as used by monitor
+    - \c maos_client.get_list() #get list of available variables
+    - \c maos_client.get(name)  #get variable with the name
+    - \c maos_client.get_all()  #get all variables
+    - \c maos_client.pause(0)   #unpause maos
+    - \c maos_client.pause(1)   #pause or step maos.
 */

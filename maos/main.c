@@ -157,18 +157,18 @@ static void* find_var(const char* name){
 						struct VAR_MAP* var_map=map_map[j].map;
 						for(int i=0; var_map[i].name; i++){
 							if(!strcmp(var_map[i].name, name)){//then find the correct variable
-								info2("%s is found at %p\n", name, var_map[i].var);
+								dbg("%s is found at %p\n", name, var_map[i].var);
 								return var_map[i].var;
 							}
 						}
-						info2("%s not found.\n", name);
+						warning("%s not found.\n", name);
 					}
 				}
 			}
 			{
 				static cell* dummy=NULL;
 				if(!dummy){
-					dummy=(cell*)dnew(1,1);
+					dummy=cellnew(0,0);
 					const char* msg0="Available variables are:\n";
 					long count=strlen(msg0);
 					for(int j=0; map_map[j].name; j++){
@@ -187,8 +187,7 @@ static void* find_var(const char* name){
 						}
 					}
 				}
-				info("return dummy cell with header %s\n", dummy->header);
-				writebin(dummy, "dummy");
+				dbg("return dummy cell with header %s\n", dummy->header);
 				return dummy;
 			}
 		} else{
@@ -203,9 +202,9 @@ static void* find_var(const char* name){
 static void* maos_var(void* psock){
 	thread_block_signal();
 	int cmd[2];
-	int sock=*(int*)psock;
+	int sock=(int)(long)psock;
 	while(!streadintarr(sock, cmd, 2)){
-		info2("maos_var: cmd=%d, %d\n", cmd[0], cmd[1]);
+		dbg("maos_var: cmd=%d, %d\n", cmd[0], cmd[1]);
 		switch(cmd[0]){
 		case MAOS_VAR:
 		{
@@ -213,7 +212,7 @@ static void* maos_var(void* psock){
 				char* name=NULL;
 				streadstr(sock, &name);
 				cell* var=(cell*)find_var(name);
-				info2("maos_var: request[%d] %s %p\n", cmd[1], name, var);
+				dbg("maos_var: request[%d] %s %p\n", cmd[1], name, var);
 				{
 					if(cmd[1]==1){//client to get
 						writesock(var, sock);
@@ -230,21 +229,29 @@ static void* maos_var(void* psock){
 		case MAOS_PAUSE:
 		{
 			if(global&&global->simu){
+				if(global->simu->pause){
+					extern int sim_pipe[2];
+					if(sim_pipe[1]>0){
+						char key=cmd[1]?'a':'c';
+						if(write(sim_pipe[1], &key, 1)!=1){
+							warning("write to sim_pipe[1]=%d failed\n", sim_pipe[1]);
+						}
+					}
+				}
 				global->simu->pause=cmd[1];
-				putchar('\a');
 			}
 		}
 		break;
 		}//switch
 	}//while
-	info2("maos_var: client closed\n");
+	dbg("maos_var: client closed\n");
 	close(sock);
 	return NULL;
 }
 
 //Listen to commands coming from scheduler
 static void* maos_listener(void* psock){
-	int sock=*(int*)psock;
+	int sock=(int)(long)psock;
 	thread_block_signal();
 	int cmd[2];
 	while(sock!=-1 && !streadintarr(sock, cmd, 2)){
@@ -264,7 +271,7 @@ static void* maos_listener(void* psock){
 				warning_time("unable to read fd from %d\n", sock);
 				continue;
 			} else{
-				info2("got fd=%d\n", fd);
+				dbg("got fd=%d\n", fd);
 			}
 			draw_add(fd);
 			if(global){
@@ -283,9 +290,9 @@ static void* maos_listener(void* psock){
 				warning_time("unable to read fd from %d\n", sock);
 				continue;
 			} else{
-				info2("got fd=%d\n", fd);
+				dbg("got fd=%d\n", fd);
 			}
-			thread_new(maos_var, &fd);
+			thread_new(maos_var, (void*)(long)fd);
 
 		}break;
 

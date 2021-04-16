@@ -471,5 +471,4 @@ void writesock(const void* A, int sock){
 	file_t* fp=zfdopen(sock, "wb");
 	writedata_by_id(fp, A, 0);
 	zfclose(fp);
-	info("writesock finished\n");
 }
