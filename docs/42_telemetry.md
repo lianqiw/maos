@@ -1,43 +1,25 @@
-/*
-  Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
-  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+\page page40_results
+\section telemetry Telemetry Data
 
-  MAOS is free software: you can redistribute it and/or modify it under the
-  terms of the GNU General Public License as published by the Free Software
-  Foundation, either version 3 of the License, or (at your option) any later
-  version.
+Depending on parameters enabled, the simulation telemetry data will be saved
+to files in the simulation folder. The following describes them in detail.
+Notice that save.grad, save.gradgeom, save.ints and save.wfsopd takes values
+of 1, 2 or 3, where 1 means saving for all wfs, 2 means saving for only high
+order wfs and 3 means saving for lower order wfs.
 
-  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
-  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+Name convention: the last number after underscore is the seed. The following
+shows results for seed1. When there are multiple wfs or science fields, we
+only show the results for the first. 
 
-  You should have received a copy of the GNU General Public License along with
-  MAOS.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/**
-   \page page40_results
-   \section telemetry Telemetry Data
+Many of the results contains a cell array of length \c nsim (number of
+simulation steps), whenever that makes sense.
 
-   Depending on parameters enabled, the simulation telemetry data will be saved
-   to files in the simulation folder. The following describes them in detail.
-   Notice that save.grad, save.gradgeom, save.ints and save.wfsopd takes values
-   of 1, 2 or 3, where 1 means saving for all wfs, 2 means saving for only high
-   order wfs and 3 means saving for lower order wfs.
+The data regarding the DM commands are all defined on the actuator grid \c aloc.
 
-   Name convention: the last number after underscore is the seed. The following
-   shows results for seed1. When there are multiple wfs or science fields, we
-   only show the results for the first. 
+The second column of the tables shows which option in \c dbg.conf enables the
+save of this data.
 
-   Many of the results contains a cell array of length \c nsim (number of
-   simulation steps), whenever that makes sense.
-
-   The data regarding the DM commands are all defined on the actuator grid \c aloc.
-
-   The second column of the tables shows which option in \c dbg.conf enables the
-   save of this data.
-
-   The suffix of the file names are removed.
+The suffix of the file names are removed.
 
 
 File name          |Option to enable | Description
@@ -65,4 +47,4 @@ File name          |Option to enable | Description
 \c wfs0_lltopd_1   |save.wfsopd   |The wfs laser launch telescope OPD.
 \c wfs0_opd_1      |save.wfsopd   |The wfs OPD.
 ------
-*/
+
