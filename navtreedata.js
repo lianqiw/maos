@@ -37,6 +37,9 @@ var NAVTREE =
       [ "Graphical User Interface", "page20_compile.html#sect-gui", [
         [ "Monitor", "page20_compile.html#subsect-monitor", null ],
         [ "Drawdaemon", "page20_compile.html#subsect-draw", null ]
+      ] ],
+      [ "Python Scripts", "page20_compile.html#sect-python-scripts", [
+        [ "Interface to MAOS", "page20_compile.html#sect-python-maos", null ]
       ] ]
     ] ],
     [ "Run simulations", "page30_run.html", [
@@ -101,13 +104,13 @@ var NAVTREEINDEX =
 "maos_2types_8h.html#ad470d0b78f5835dd7aca21137d9e3fdb",
 "mkdtf_8h.html#a3705a423311b167c48b7e55b2770bc4f",
 "mvmfull__real_8cu.html#a77880bd01f2a31d0b2a535bed708fffe",
-"parms_8h.html#a2f0b69d6ebdf4d1d38ee723ef8980b51",
-"parms_8h.html#a9bed5854430634409f26daba39567cf8",
-"parms_8h.html#structaper__cfg__t",
-"setup__recon_8h.html#a5737f2c65941e6531e6111fe81299796",
-"smath_8h.html#ad9b353cf0eb4d4e5597291569900961c",
-"test_8cu.html",
-"zmath_8h.html#a9ebcb15e1a1302d2c94e21f4fb23bc47"
+"parms_8h.html#a2e94d4010700c0e51d9cf285fa028081",
+"parms_8h.html#a9b1312a8deb1307eaf3dbffee42bc6ab",
+"parms_8h.html#aff87ff35c2ca0cfce37b01b0a014ffa6",
+"setup__recon_8h.html#a4bfc73b39b67ad8fd1ff3329552e80ee",
+"smath_8h.html#ad6807e830bc79737e520b3cbf8f0ea1d",
+"sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539",
+"zmath_8h.html#a9cc884f140e195eac92eeaceeb7755ff"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

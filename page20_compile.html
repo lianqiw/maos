@@ -110,9 +110,12 @@ $(document).ready(function(){initNavTree('page20_compile.html','');});
 <li class="level2"><a href="#subsect-draw">Drawdaemon</a></li>
 </ul>
 </li>
+<li class="level1"><a href="#sect-python-scripts">Python Scripts</a><ul><li class="level2"><a href="#sect-python-maos">Interface to MAOS</a></li>
+</ul>
+</li>
 </ul>
 </div>
-<div class="textblock"><p>This step can be skipped if the user choose to use the precompiled binary files, which are available for all the popular plateforms: Windows, Mac, and Linux. Please notice that the job scheduling and monitoring utilities are not included in the released binaries (the binaries may not be up to data).</p>
+<div class="textblock"><p>This step can be skipped if the user choose to use the precompiled binary files, which are available for all the popular plateforms: Windows, Mac, and Linux. Please notice that the job scheduling and monitoring utilities are not included in the released binaries (the binaries may not be up to date).</p>
 <h1><a class="anchor" id="sect-requirement"></a>
 Requirements</h1>
 <ul>
@@ -126,59 +129,50 @@ Requirements</h1>
 Preparing the folders and compiling</h1>
 <p>We recommend using three different folders to 1) store the source tree, 2) compile the code, and 3) run the simulation.</p>
 <p>The source tree is where the source is extracted. Obtain the software in the form of the compressed tar ball: maos_version.tar.gz. Extract it into some directory and name the directory src_dir. Example:</p>
-<pre class="fragment">cd ~/work/programming
-tar zxvf maos_version.tar.gz 
-cd maos_version
-export src_dir=$(pwd)
-</pre><p>If you choose to use always up to date git version instead, an extra step of running autogen.sh is needed </p><pre class="fragment">cd ~/work/programming
-git clone https://github.com/lianqiw/maos.git maos_git
-cd maos_git
-./autogen.sh
-export src_dir=$(pwd)
-</pre><p>Next we create another folder, where we are going to compile the code. example:</p>
-<pre class="fragment">cd ~/work/maos
-mkdir comp_optim &amp;&amp; cd comp_optim
-$src_dir/configure
-make -j4 #this will compile using 4 threads.
-</pre><p>For clusters that use job management tools, disable the built-in scheduler by using </p><pre class="fragment">$src_dir/configure --disable-scheduler
-</pre><p>The compiled executable is maos in the sub-folder “bin” of the compiling folder. You do not have to do "make install" to run the simulations.</p>
+<pre class="fragment"> cd ~/work/programming
+ tar zxvf maos_version.tar.gz 
+ cd maos_version
+ export src_dir=$(pwd)</pre><p>If you choose to use always up to date git version instead, an extra step of running autogen.sh is needed </p><pre class="fragment"> cd ~/work/programming
+ git clone https://github.com/lianqiw/maos.git maos_git
+ cd maos_git
+ ./autogen.sh
+ export src_dir=$(pwd)</pre><p>Next we create another folder, where we are going to compile the code. example:</p>
+<pre class="fragment"> cd ~/work/maos
+ mkdir comp_optim &amp;&amp; cd comp_optim
+ $src_dir/configure
+ make -j4 #this will compile using 4 threads.</pre><p>For clusters that use job management tools, disable the built-in scheduler by using </p><pre class="fragment"> $src_dir/configure --disable-scheduler</pre><p>The compiled executable is maos in the sub-folder “bin” of the compiling folder. You do not have to do "make install" to run the simulations.</p>
 <h2><a class="anchor" id="sect-compiler"></a>
 Compiler options</h2>
 <p>The default compiler for the system is used with optimization flags. There are a few optional switches or additional components that can be enabled when calling configure.</p>
-<p>To use a different compiler: </p><pre class="fragment">$src_dir/configure CC=icc    #ICC compiler
-$src_dir/configure CC=clang  #clang compiler
-$src_dir/configure CC=gcc4.5 #use gcc4.5
-$src_dir/configure --enable-debug #enable debugging
-</pre><h2><a class="anchor" id="sect-cuda"></a>
+<p>To use a different compiler: </p><pre class="fragment"> $src_dir/configure CC=icc    #ICC compiler
+ $src_dir/configure CC=clang  #clang compiler
+ $src_dir/configure CC=gcc4.5 #use gcc4.5
+ $src_dir/configure --enable-debug #enable debugging</pre><h2><a class="anchor" id="sect-cuda"></a>
 GPU acceleration</h2>
 <p>To enable GPU computing, first install nvidia graphics driver and cuda software development toolkit (SDK). Issue the following command to ensure graphics configuration is correct: <code>nvidia-smi</code>. You should see all your nvidia graphics gpus are listed.</p>
 <p>The configure can automatically detect cuda if nvcc is in the path, or if cuda is installed in /usr/local/cuda. For other locations, you need to pass the cuda directory to configure:</p>
 <pre class="fragment">$src_dir/configure --with-cuda=cuda_dir </pre><p>When GPU compute is compiled in maos and Nvidia GPUs are available, maos will make use of all the GPUs to run simulation. If that is not desired, the GPU compute can be disabled at run time by passing -g-1 to maos. Different set of GPU can also be selected by passing one or multiple -gn:</p>
-<pre class="fragment">$maos -g-1    #disable GPU compute 
-$maos -g0 -g2 #Only use gpu 0 and 2
-$maos -G2     #Automatically choose 2 gpus.
-</pre><h2><a class="anchor" id="sect-mex"></a>
+<pre class="fragment"> $maos -g-1    #disable GPU compute 
+ $maos -g0 -g2 #Only use gpu 0 and 2
+ $maos -G2     #Automatically choose 2 gpus.</pre><h2><a class="anchor" id="sect-mex"></a>
 Matlab Mex Routines</h2>
 <p>To compile mex routines for matlab, pass the matlab directory to configure if it is not in <code>$PATH:</code> </p>
-<pre class="fragment">$src_dir/configure --with-matlab=matlab_dir
-</pre><p>The compiled mex routines are in <code>mex</code> folder in the compilation directory. The <code>read</code> and <code>write</code> are for handling .bin and .fits files used by maos. The <code>aolib</code> exports many useful routines for use in matlab, including maos itself.</p>
+<pre class="fragment"> $src_dir/configure --with-matlab=matlab_dir</pre><p>The compiled mex routines are in <code>mex</code> folder in the compilation directory. The <code>read</code> and <code>write</code> are for handling .bin and .fits files used by maos. The <code>aolib</code> exports many useful routines for use in matlab, including maos itself.</p>
 <h2><a class="anchor" id="sect-mac-gtk"></a>
 Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon</h2>
 <p>It is simpliest to install gtk using macport or homebrew. For manual install, follow the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for osx. The environmental variables are set by jhbuild, here we take important ones and put them in our .bash_profile to avoid running jhbuild each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.</p>
 <p>First, if xcode is not installed in full, make sure the following packages are installed</p>
-<pre class="fragment">DeveloperToolsCLI.pkg
-gcc4.x.pkg
-MACOSX10.x.pkg
-DevSDK.pkg
-OpenGLSDK.pkg
-DeveloperToolsSystemSupport
-</pre><p> Then download and install pkg-config from pkgconfig.freedesktop.org/releases/ <br />
+<pre class="fragment"> DeveloperToolsCLI.pkg
+ gcc4.x.pkg
+ MACOSX10.x.pkg
+ DevSDK.pkg
+ OpenGLSDK.pkg
+ DeveloperToolsSystemSupport</pre><p> Then download and install pkg-config from pkgconfig.freedesktop.org/releases/ <br />
 </p>
-<pre class="fragment">export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib"
-export PATH="$PATH:$HOME/gtk/inst/bin"
-export C_INCLUDE_PATH="$HOME/gtk/inst/include"
-</pre><p> Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now.</p>
+<pre class="fragment"> export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig"
+ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib"
+ export PATH="$PATH:$HOME/gtk/inst/bin"
+ export C_INCLUDE_PATH="$HOME/gtk/inst/include"</pre><p> Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now.</p>
 <p>To make the app bundles. First, install quartz engine and ige-mac-buildler. sourceforge.net/apps/trac/gtk-osx/wiki/Bundle jhbuild build gtk-quartz-engine</p>
 <p>Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin And cd to scripts/bundle folder, run build.sh. .app files should appear in your desktop.</p>
 <h1><a class="anchor" id="sect-gui"></a>
@@ -201,7 +195,36 @@ Monitor</h2>
 <h2><a class="anchor" id="subsect-draw"></a>
 Drawdaemon</h2>
 <p>Once the monitor is running, it will display running jobs on each connected host. Right click on a running job and select <code>Plot sected jobs</code> will launch drawdaemon and start plotting the telemetry data in realtime. This works for local and remote host. Multiple drawedaemons can be started for the same or different jobs.</p>
-<p>An alternative way to launch drawdaemon is to include <code>plot.setup=1</code> <code>plot.run=1</code> or <code>plot.all=1</code> in maos command line. This method can only invoke the drawdaemon locally. </p>
+<p>An alternative way to launch drawdaemon is to include <code>plot.setup=1</code> <code>plot.run=1</code> or <code>plot.all=1</code> in maos command line. This method can only invoke the drawdaemon locally.</p>
+<h1><a class="anchor" id="sect-python-scripts"></a>
+Python Scripts</h1>
+<p>MAOS comes with a few useful python routines location in <code>scripts/</code> folder:</p>
+<ul>
+<li><code>readbin.py</code> contains <code>readbin</code> that can read <code>bin</code> or <code>fits</code> files.</li>
+<li><code>aolib.py</code> contains routines to read and process <code>MAOS</code> results. It also imports <code>libaos.py</code> and <code>draw.py</code> </li>
+<li><code>libaos.py</code> contains routines that wraps <code>MAOS</code> librarie routines via <code>aolib.so</code> and <code>ctypes</code> </li>
+<li><code>lib2py.py</code> generates <code>libaos.py</code> </li>
+<li><code>draw.py</code> used to draw opd defined on coordinate loc. <code>draw(loc, opd)</code> or <code>draw(map)</code> where <code>map</code> is a 2d array.</li>
+<li><code>maos_client</code> provides an interface to a running maos session. See next subsection.</li>
+</ul>
+<p>For <code>libaos.py</code> to work, an environment variable <code>MAOS_AOLIB</code> need to set to the path of <code>aolib.so</code> </p>
+<h2><a class="anchor" id="sect-python-maos"></a>
+Interface to MAOS</h2>
+<p>It is possible to retrieve or override MAOS internal data when it is running. See the following steps:</p>
+<p>First, set up shell environment so that the libaos.py can find it.</p>
+<ul>
+<li><code>export MAOS_AOLIB=\path\to\bin\aolib.so</code></li>
+</ul>
+<p>Then open <code>ipython</code> (or <code>python</code>) and run the following</p>
+<ul>
+<li><code>import</code> <code>maos_client</code> #import the module</li>
+<li><code>maos_client.connect(host,port)</code> #the host and port is the same as used by monitor</li>
+<li><code>maos_client.get_list()</code> #get list of available variables</li>
+<li><code>maos_client.get(name)</code> #get variable with the name</li>
+<li><code>maos_client.get_all()</code> #get all variables</li>
+<li><code>maos_client.pause(0)</code> #unpause maos</li>
+<li><code>maos_client.pause(1)</code> #pause or step maos. </li>
+</ul>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 
