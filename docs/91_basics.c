@@ -140,9 +140,51 @@
 
     Functions for those fundamental math types are defined using macros that works similarly to the C++ template.
 
-    \subsection Specific Types
+    \subsection sect-specific-type Specific Types
 
     Specific calculation related types are often encapsulated in corresponding data types. Those types are defined in the \c lib folder. 
+
+    \section sect-bin   Bin file format
+
+    The \c bin file format is a simple custom binary format developed specifically to save telemetry data for \c maos. 
+    It can be converted to \c fits file using the supplied binary \c bin/bin2fits. 
+    The data in \c bin file are stored with the native endianness to facilitate memory mapping. 
+
+    Data in \c bin file are stored as one or multiple consecutive \c blocks :
+    \verbatim
+    block1 :self described data
+    [block2] :(optional) self described data
+    ...
+    \endverbatim
+    
+    Each \c block is composed of a \c header and the \c data. 
+
+    The \c header contains an optional part followed by a mandatory part. The optional part describes the data:
+
+    \verbatim
+    0x6500: 4 byte uint
+    length: 8 byte uint equal to the length of the follwoing string
+    string: variable length, padded to multiple of 8.
+    length2: 8 byte uint equal to length
+    0x6500: 4 byte uint
+    \endverbatim
+
+    The mendatory part contains the type and size of \c data
+    \verbatim
+    0x6600: 4 byte uint. Dummy, to facilitate memory alignment for mmap.
+    magic:  4 byte uint. See sys/bin.h for all supported types
+    nx:     8 byte uint. Inner dimension (fast changing index)
+    ny:     8 byte uint. Outer dimension (slow changing index)
+    \endverbatim
+
+    The \c data can be either array of fundamental data type or array of other arrays. 
+    For array of the fundamental data type, it is simply a copy of the data in the native endianness. 
+    For arrays of other arrays, the \c magic is set to 0x6420 and the data is composed of `nx*ny` \c blocks. 
+    The \c data part is skipped if either \c nx or \c ny equals to zero.
+
+    The \c bin file is readable in Matlab or Python using the supplied \c read or \c readbin routines. In \c maos, it can be either read or mapped to memory. 
+    For example The atmospheric screens are mapped to memory which enables using extra large atmospheric screens that may not fit in the memory 
+    and also enables sharing between concurrent maos runs that uses the same seed. 
 
     \section sect-guide Guidelines
 

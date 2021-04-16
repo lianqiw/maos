@@ -19,7 +19,7 @@
 /*
   All routines in this thread runs in a separate threads from the main
   thread. In order to call any gdk/gtk routines, it calls to go through
-  gdk_threads_add_idle
+  gdk_threads_add_idle. The thread is waits for select() results.
 */
 
 
@@ -28,13 +28,13 @@
 #include "monitor.h"
 proc_t** pproc;
 int* nproc;
-extern int* hsock;
-static double* htime;//last time having signal from host.
+extern int* hsock;   //socket of each host
+static double* htime;//last time having signal from each host.
 int nhostup=0;
 PNEW(mhost);
 int sock_main[2]={0,0}; /*Use to talk to the thread that blocks in select()*/
 static fd_set active_fd_set;
-
+//int pipe_addhost[2]={0,0};
 extern double* usage_cpu, * usage_cpu2;
 //extern double *usage_mem, *usage_mem2;
 /*
@@ -140,7 +140,7 @@ static void host_added(int ihost, int sock){
 	hsock[ihost]=sock;
 	FD_SET(sock, &active_fd_set);
 	UNLOCK(mhost);
-	add_host_wrap(-1);//wakes up listen_host().
+	add_host_wrap(-1);//wake to use new active_fd_set
 	gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
 }
 
@@ -154,7 +154,7 @@ static void host_removed(int sock){
 	hsock[ihost]=-1;
 	FD_CLR(sock, &active_fd_set);
 	UNLOCK(mhost);
-	add_host_wrap(-1);
+	add_host_wrap(-1);//wake to use new active_fd_set
 	gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
 	info("disconnected from %s\n", hosts[ihost]);
 }
@@ -208,7 +208,7 @@ static int respond(int sock){
 	case -1:{//server request shutdown
 		return -1;
 	}
-		   break;
+	break;
 	case MON_DRAWDAEMON:
 	{
 		dbg_time("Received drawdaemon request\n");
@@ -278,6 +278,7 @@ static int respond(int sock){
 			if(hsock[cmd[1]]==-1){
 				pthread_t tmp;
 				pthread_create(&tmp, NULL, add_host, GINT_TO_POINTER(cmd[1]));
+				//add_host(GINT_TO_POINTER(cmd[1]));
 			}else{
 				dbg_time("MON_ADDHOST: hsock[%d]=%d\n", ihost, hsock[cmd[1]]);
 			}
@@ -325,19 +326,17 @@ void* listen_host(void* dummy){
 		}
 		double ntime=myclockd();
 		for(int ihost=0; ihost<nhost; ihost++){
-			if(ntime>htime[ihost]+10){//no activity for 10 seconds.
-				if(hsock[ihost]>-1){//check host connection 
-					dbg_time("10 seconds no respond. probing server %s.\n", hosts[ihost]);
-					scheduler_cmd(ihost, 0, CMD_PROBE);
-					if(htime[ihost]+20<ntime){
-						host_removed(hsock[ihost]);
-						dbg_time("20 seconds no respond. disconnect server %s.\n", hosts[ihost]);
-					}
-				} else{
-					warning("add_host_wrap %d\n", ihost);
+			if(htime[ihost]){//only handle hosts that are ever connected
+				if(hsock[ihost]<0){//disconnected, trying to reconnect
 					add_host_wrap(ihost);
+				}else if(htime[ihost]>0 && ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
+					dbg_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
+					scheduler_cmd(ihost, 0, CMD_PROBE);
+					htime[ihost]=-ntime;
+				}else if(htime[ihost]<0 && ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
+					dbg_time("no respond. disconnect server %s.\n", hosts[ihost]);
+					host_removed(hsock[ihost]);
 				}
-				htime[ihost]=ntime;
 			}
 		}
 	}
