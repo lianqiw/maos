@@ -113,7 +113,9 @@ $(document).ready(function(){initNavTree('page40_results.html','');});
 </div>
 <div class="textblock"><h1><a class="anchor" id="drawres"></a>
 Plotting Results</h1>
-<p>The wavefront error time history can be processed using the built in tool <code>drawres</code> and plotted using the Gtk based <code>drawdaemon</code>. </p><div class="fragment"><div class="line">drawres folder1 folder2 ...</div></div><!-- fragment --><p> If the specified folder contains subfolders with results, they will be plotted together. When using on a text terminal with <code>DISPLAY</code> not set, if there is <code>monitor</code> running in a connected computer, it will launch <code>drawdaemon</code>.</p>
+<p>The wavefront error time history can be processed using the built in tool <code>drawres</code> and plotted using the Gtk based <code>drawdaemon</code>.</p>
+<p>drawres folder1 folder2 ...</p>
+<p>If the specified folder contains subfolders with results, they will be plotted together. When using on a text terminal with <code>DISPLAY</code> not set, if there is <code>monitor</code> running in a connected computer, it will launch <code>drawdaemon</code>.</p>
 <h1><a class="anchor" id="bin"></a>
 Reading Results</h1>
 <p>MAOS generates output in binary format <code></code>.bin files (which maybe gzipped) as described below. PSFs are written into fits files with extensions.</p>
@@ -123,13 +125,7 @@ Reading Results</h1>
 <h2><a class="anchor" id="read-matlab"></a>
 MATLAB</h2>
 <p>There are two MATLAB <code>mex</code> routines <code>read</code> and <code>write</code> that can read and write <code></code>.bin or <code></code>.fits files in MATLAB. The source of these mex routines are located in source sub-folder <code>mex</code>. If <code>mex</code> is found in the system, this mex routines will be compiled automatically in the <code>mex</code> subfolder of the compiling folder. If it doesn't get compiled, please goto the <code>mex</code> subfolder in the source folder and type ./compile.sh to compile them. Copy <code>write.mexa64</code> and <code>read.mexa64</code> into a folder that is in your matlab path, such as <code>$HOME/matlab</code>. The usage in <code>MATLAB</code> is as follows:</p>
-<pre class="fragment">   cle=read('Res_1'); 
-or cle=read('Res_1.bin'); 
-or cle=read('Res_1.bin.gz');
-   each wil try to read Res_1.bin or Res_1.bin.gz 
-   
-   write(cle,'Res_1');     will write the data to \c Res_1.bin.gz;
-   write(cle,'Res_1.bin'); will write the data to \c Res_1.bin without compression.</pre><p>If there is any problem in compling <code>read.c</code> and <code>write.c</code>, there are also two matlab scripts in the <code>scripts</code> folder, <code>readbin.m</code> and <code>writebin.m</code>, that have most of functionality of <code>read.c</code>, <code>write.c</code> albeit a bit slower and cannot handle compressed files conveniently.</p>
+<div class="fragment"><div class="line">cle=read(&#39;Res_1&#39;);     #will try .bin or .fits</div><div class="line">cle=read(&#39;Res_1.bin&#39;); #only use .bin</div><div class="line"></div><div class="line">write(cle,&#39;Res_1&#39;);     will write the data to \c Res_1.bin</div><div class="line">write(cle,&#39;Res_1.bin&#39;); will write the data to \c Res_1.bin without compression.</div></div><!-- fragment --><p>If there is any problem in compling <code>read.c</code> and <code>write.c</code>, there are also two matlab scripts in the <code>scripts</code> folder, <code>readbin.m</code> and <code>writebin.m</code>, that have most of functionality of <code>read.c</code>, <code>write.c</code> albeit a bit slower and cannot handle compressed files conveniently.</p>
 <h2><a class="anchor" id="sect-python"></a>
 Python</h2>
 <p>There is <code>readbin.py</code> in <code>scripts</code> folder for reading <code></code>.bin or <code></code>.fits files in python. Alternatively, it is also possible to call <code>C</code> routines in python, including <code>readbin</code> and <code>writebin</code> as <code>read</code> and <code>write</code>. To do so, first set an environment variable <code>MAOS_AOLIB</code> poing to the <code>aolib.so</code> file in the <code></code>.bin folder in the compiling directory. Then import <code>scripts/aoslib.py</code> to your python.</p>
@@ -173,9 +169,10 @@ Result Files</h1>
 <li><code>RescleNGSm_1:</code> (Only in split tomography) contains a row vector array of either the residual NGS modes (in radian like unit) or the applied NGS mode correction if ideal NGS mode correction is made. Mainly used to save the ideal NGS modes applied in skycoverage pre-simulation.</li>
 <li><code>maos_</code>[PID].conf: The final effective arrays of the configurations for MAOS run with pid PID. Can be used to reproduce the simulation or check the configurations. Lines begin with # are defaults configurations while the rest have been overriden.</li>
 <li><code>sanea_sim_1:</code> When wavefront sensors are running in physical optics mode, the average gradinet measurement error for that wavefront sensor is saved (in order) in a cell in this file. Each cell is a column vector with elements twice the number of subaperture. The first half is for \(x\) (or radial) gradient, and the second half is for \(y\) (or azimuthal) gradient. They are in units of \(rad^2\).</li>
-<li><p class="startli"><code>evlpsfcl_1:</code> When <code>evl.psfmean</code> is 1, contains the time averaged science closed loop psf. if is a cell array of \(n_{wvl}\times n_{evl}\). Each cell contains a center cut of the science PSF.</p>
-<p class="startli">The PSF total FOV is <code>evl.wvl/evl</code>.dx but may be trimmed by setting <code>evl.psfsize</code> to a smaller number (of pixels). The PSF sampling is usually <code>evl.wvl/</code>(2*aper.d) but may be <code>evl.wvl/</code>(evl.psfgridsize*evl.dx) if <code>evl.psfgridsize</code> is set. The exact number of those can be checked in the fits header.</p>
-</li>
+<li><code>evlpsfcl_1:</code> When <code>evl.psfmean</code> is 1, contains the time averaged science closed loop psf. if is a cell array of \(n_{wvl}\times n_{evl}\). Each cell contains a center cut of the science PSF.</li>
+</ul>
+<p>The PSF total FOV is <code>evl.wvl/evl</code>.dx but may be trimmed by setting <code>evl.psfsize</code> to a smaller number (of pixels). The PSF sampling is usually <code>evl.wvl/</code>(2*aper.d) but may be <code>evl.wvl/</code>(evl.psfgridsize*evl.dx) if <code>evl.psfgridsize</code> is set. The exact number of those can be checked in the fits header.</p>
+<ul>
 <li><code>evlpsfdl_1:</code> diffraction limited, PSF.</li>
 <li><code>evlpsfol_1:</code> frame and field averaged open loop science PSF.</li>
 <li><code>evlpsfhist_1_ievlx:</code> When <code>evl.psfhist</code> is 1, each of these files contains the time history of the complex PSF of evaluation direction \(x\).</li>

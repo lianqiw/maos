@@ -1,5 +1,7 @@
 var classcuda__recon_1_1cgtmp__t =
 [
+    [ "Linear influence function", "algorithm.html#sect-dm-linear", null ],
+    [ "Cubic influence function", "algorithm.html#sect-dm-cubic", null ],
     [ "cgtmp_t", "classcuda__recon_1_1cgtmp__t.html#afdb138b9c2b6bd60ef55c20d13e1e1d1", null ],
     [ "~cgtmp_t", "classcuda__recon_1_1cgtmp__t.html#a535055a408d1376b94dd6bca70fb9ad3", null ],
     [ "r0", "classcuda__recon_1_1cgtmp__t.html#a190a6f7f30f6ea8967d795177d4700a3", null ],

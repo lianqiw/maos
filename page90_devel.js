@@ -9,14 +9,16 @@ var page90_devel =
       ] ],
       [ "MAOS Data Types", "page91_basics.html#sect-maos-data", [
         [ "Fundamental Math Types", "page91_basics.html#sect-maos-math", null ],
-        [ "Types", "page91_basics.html#Specific", null ]
+        [ "Specific Types", "page91_basics.html#sect-specific-type", null ]
       ] ],
+      [ "Bin file format", "page91_basics.html#sect-bin", null ],
       [ "Guidelines", "page91_basics.html#sect-guide", null ]
     ] ],
     [ "Architecture", "page93_maos.html", [
       [ "Simulation Flow", "page93_maos.html#sect-structure", null ]
     ] ],
     [ "Algorithm Details", "algorithm.html", [
+      [ "DM Actuator Influence Function", "algorithm.html#sect-dm-actuator", null ],
       [ "DM Hysteresis", "algorithm.html#hysteresis", null ]
     ] ],
     [ "Debugging", "page95_profiling.html", [

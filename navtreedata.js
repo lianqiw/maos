@@ -27,19 +27,19 @@ var NAVTREE =
     [ "Overview", "index.html", null ],
     [ "Introduction", "page10_intro.html", null ],
     [ "Compile the Code", "page20_compile.html", [
-      [ "Requirements", "page20_compile.html#sect-requirement", null ],
-      [ "Preparing the folders and compiling", "page20_compile.html#sect-prep", [
+      [ "Requirements", "page20_compile.html#autotoc_md0", null ],
+      [ "Preparing the folders and compiling", "page20_compile.html#autotoc_md1", null ],
+      [ "Graphical User Interface", "page20_compile.html#autotoc_md2", [
         [ "Compiler options", "page20_compile.html#sect-compiler", null ],
         [ "GPU acceleration", "page20_compile.html#sect-cuda", null ],
         [ "Matlab Mex Routines", "page20_compile.html#sect-mex", null ],
-        [ "Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon", "page20_compile.html#sect-mac-gtk", null ]
+        [ "Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon", "page20_compile.html#sect-mac-gtk", null ],
+        [ "Monitor", "page20_compile.html#autotoc_md3", null ],
+        [ "Drawdaemon", "page20_compile.html#autotoc_md4", null ],
+        [ "Plotting results", "page20_compile.html#autotoc_md5", null ]
       ] ],
-      [ "Graphical User Interface", "page20_compile.html#sect-gui", [
-        [ "Monitor", "page20_compile.html#subsect-monitor", null ],
-        [ "Drawdaemon", "page20_compile.html#subsect-draw", null ]
-      ] ],
-      [ "Python Scripts", "page20_compile.html#sect-python-scripts", [
-        [ "Interface to MAOS", "page20_compile.html#sect-python-maos", null ]
+      [ "Python Scripts", "page20_compile.html#autotoc_md6", [
+        [ "Interface to MAOS", "page20_compile.html#autotoc_md7", null ]
       ] ]
     ] ],
     [ "Run simulations", "page30_run.html", [
@@ -55,6 +55,7 @@ var NAVTREE =
       ] ]
     ] ],
     [ "Examples", "page33_example.html", "page33_example" ],
+    [ "wfs_lgs_ngs.conf", "wfs_lgs_ngs.html", null ],
     [ "Simulation Results", "page40_results.html", [
       [ "Plotting Results", "page40_results.html#drawres", null ],
       [ "Reading Results", "page40_results.html#bin", [
@@ -94,23 +95,23 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1cumoao__t.html#ae84e25eae6372ebdd438b1a49f683277",
-"classcuperf__t.html#a611e8cc1f472ead09ad03b585660c07a",
-"cmath_8h.html#a8687fd6aa73cddb1c0e79fab2dcf223f",
-"dmath_8h.html#a43a45d36b491a2723a52ff81d04215ec",
-"functions_x.html",
-"loc_8h.html#a09a53c4553b6b5edea84a81470d530df",
-"maos_2types_8h.html#a4f77833a5613289f1baa11c3594ee9f1",
-"maos_2types_8h.html#ad470d0b78f5835dd7aca21137d9e3fdb",
-"mkdtf_8h.html#a3705a423311b167c48b7e55b2770bc4f",
+"classcuda__recon_1_1cumoao__t.html#a7dd29fc623229fa19429d5fdb623d52e",
+"classcuperf__t.html#a124c8ae48206eaf2a398aeb269dcc552",
+"cmath_8h.html#a832bf53ce62a01eb4b32069866aa1a38",
+"dmath_8h.html#a3dfb05114103c641b7e35cdc8364bcef",
+"functions_vars_y.html",
+"loc_8h.html#a0228b9c5ec770e72ffc2f0febdbc5e09",
+"maos_2types_8h.html#a4edeb61820d6ef51499a737a6c907299",
+"maos_2types_8h.html#ad43f78a131f1bb63dab04c5fb2a06ebe",
+"mkdtf_8h.html#a01fca37394bea435cdd481c6af060af1",
 "mvmfull__real_8cu.html#a77880bd01f2a31d0b2a535bed708fffe",
-"parms_8h.html#a2e94d4010700c0e51d9cf285fa028081",
-"parms_8h.html#a9b1312a8deb1307eaf3dbffee42bc6ab",
-"parms_8h.html#aff87ff35c2ca0cfce37b01b0a014ffa6",
-"setup__recon_8h.html#a4bfc73b39b67ad8fd1ff3329552e80ee",
-"smath_8h.html#ad6807e830bc79737e520b3cbf8f0ea1d",
-"sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539",
-"zmath_8h.html#a9cc884f140e195eac92eeaceeb7755ff"
+"parms_8h.html#a2ce5c59ba8c934370bf255b1da05116f",
+"parms_8h.html#a98b9de051e2ddf0a19bf86b601ce917e",
+"parms_8h.html#afc6a5da1972b32b6abf232a4228b9cc9",
+"setup__recon_8h.html#a14b7a0beadfd04a65affccf99767892b",
+"smath_8h.html#ad1c23a17c97445bc4cae17b0df14a4d5",
+"sys_2misc_8h.html#af00e20eff025c19783d48eb289a342c1",
+"zmath_8h.html#a9898630e3b6efbe47be10eb3ca0b3b5d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

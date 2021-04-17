@@ -99,25 +99,9 @@ $(document).ready(function(){initNavTree('algorithm.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>The following shows how various algorithms are implemented.</p>
-<h1><a class="anchor" id="hysteresis"></a>
-DM Hysteresis</h1>
-<p>The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope" J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000</p>
-<p>Formula (2) is used with V replaced by command x, and x replaced by actual DM position y </p><p class="formulaDsp">
-\[ \frac{dy}{dx}=\alpha sign(dx) (\beta x-y)+(\beta-u) \]
-</p>
-<p>For closed hyteresis loop within the stroke limit \(S\), the linear ordinary differential equation can be solved analytically: </p><p class="formulaDsp">
-\begin{eqnarray*} y_{t/r}(x)=\beta x \mp \frac{u}{\alpha}\left(1-\frac{2\exp(\mp\alpha x)}{\exp(-\alpha S)+\exp(\alpha S)}\right) \end{eqnarray*}
-</p>
-<p>where t and r represents trace and retrace directions. It is desirable to have y be within the same range as x to simulate calibrated command:</p>
-<p>\(y_{t/r}(S)=S\). Let the hysteresis ratio be \(h\), we have</p>
-<p class="formulaDsp">
-\begin{eqnarray*} \frac{y_r(0)}{S}&amp;=&amp;\frac{u}{\alpha S}\left(1-\frac{2}{\exp(-\alpha S)+exp(\alpha S)}\right)=h \\ \frac{y_{t/r}(S)}{S}&amp;=&amp;\beta-\frac{u}{\alpha S}\left(1-\frac{2\exp(-\alpha S)}{\exp(-\alpha S)+\exp(\alpha S)}\right) = 1 \end{eqnarray*}
-</p>
-<p>The equation can be solved uniquely when \(\alpha S\) is fixed. The hysteresis curve is a weak function of \(\alpha S\) and having \(\alpha S=2\) produces a good looking curve. Smaller \(\alpha S\) has slower convergence of the hysteresis curve.</p>
-<p>The hysteresis model is simulated using simple integration. For each step with a new x, the position y is updated as </p><p class="formulaDsp">
-\begin{eqnarray*} dx &amp;=&amp; x-x_{last} \\ dy &amp;=&amp; \alpha*abs(dx)*(\beta*x_{last}-y_{last})+dx*(\beta-u) \\ y_{last}&amp;\mathrel{+}=&amp;dy \\ x_{last}&amp;=&amp;x \\ y&amp;=&amp;y_{last} \end{eqnarray*}
-</p>
- </div></div><!-- contents -->
+<h1><a class="anchor" id="sect-dm-actuator"></a>
+DM Actuator Influence Function</h1>
+</div></div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

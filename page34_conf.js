@@ -41,7 +41,6 @@ var page34_conf =
     [ "skyc_10.conf", "skyc_10.html", null ],
     [ "skyc_20.conf", "skyc_20.html", null ],
     [ "wfs_lgs_hitt.conf", "wfs_lgs_hitt.html", null ],
-    [ "wfs_lgs_ngs.conf", "wfs_lgs_ngs.html", null ],
     [ "wfs_lgs_only.conf", "wfs_lgs_only.html", null ],
     [ "wfs_lgs_tt_tt_tt.conf", "wfs_lgs_tt_tt_tt.html", null ],
     [ "wfs_lgs_ttf.conf", "wfs_lgs_ttf.html", null ],
