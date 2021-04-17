@@ -31,13 +31,13 @@ However, a normal pointer like <code>double *p;</code> also contains
 information about the memory it points to. More specifically, the compiler
 know the length of each element so that it can compute the address offset of
 the elements, just like arrays. For example: 
-
+```
     double *p; //assume p=0xFF00.
     p[0]=1;    //stores 1 into memory region at 0xFF00
     p[1]=1;    //stores 1 into memory region at 0xFF08 because a double requires 8 bytes.
     p=p+1;     //now p=0xFF08, i.e., points to the next element, instead of 0xFF01 
     p[i]=1;    //is strictly equivalent to <code>*(p+i)=1;</code> 
-
+```
 \subsection sect-1d-pointer Array Pointers
 
 A pointer can be used to create and index an 1-dimensional (1-d) array in the heap:
@@ -50,23 +50,23 @@ A pointer can be used to create and index an 1-dimensional (1-d) array in the he
 
 Beware about a const pointer and pointer that points to constant memory
 regions:
-
+```
     const double *p2;  //p2 is a pointer that points to a memory region that can not be changed. 
     p2=p;              //ok
     p2[0]=1;           //illegal.
     double *const p3=p;//p2 is a constant pointer that can not have its value changed. 
     p3=p;              //illegal
     p3[0]=1;           //ok
-
+```
 \subsection sect-2d-pointer Two Dimension Pointers 
 
 A two-dimensional (2-d) pointer is like an array pointer. It stores the
 address of a memory region. However, unlike the array pointer, the compiler
 knows the length of the first dimension so that is can compute the memory location
 given 2-d index like \c a[2][3]; 
-
+```
     double (*p)[3]=calloc(3*2,sizeof(double)); //can be used in the same way as double a[2][3];
-
+```
 Notice that in 2-d indexing \c a[2][3], the last index changes the fastest.   
 
 \section sect-maos-data MAOS Data Types
@@ -79,7 +79,7 @@ types. Those types are defined in the \c math folder.
 For example, #dmat is used for 1-d or 2-d double array, and #cmat is
 used for complex array. There is a predefined macro #P() to help indexing the
 arrays:
-
+```
     dmat *a=dnew(10,4); //allocates memory like double a[4][10]
     P(a,8,3)=1.;        //visits memory like a[3][8]
     P(a,39)=1.;         //visits memory as if it is 1d array.
@@ -87,11 +87,11 @@ arrays:
     cmat *a2=cnew(10,4);
     P(a2,7,3)=1.+1*I;
     cfree(a2);
-
+```
 Sparse arrays are managed using #dsp for double and #csp for complex.
-
+```
     dsp *a3=dspnew(10,8,50); //10x8 array with maximum of 50 elements.
-
+```
 In addition, #loc_t is used to describe x and y coordinate of uniformly
 spaced points. #map_t is derived from #dmat and used to describe 2-d array
 of opd or amplitude data with origin and resolution information.
@@ -103,7 +103,7 @@ cell arrays share the same struct layout and can be allocated using
 cellnew() and deallocated using cellfree(). However, access elements is
 better handled with specific cell types to avoid casting. The #cell array can
 contain arbitrary points.
-
+```
     dcell *c=cellnew(4,4);//allocates a cell array.
     P(c,2,1)=a;           //stores dmat pointer in a cell.
     cellfree(c);
@@ -118,7 +118,7 @@ contain arbitrary points.
     P(c4,0,0)=a;
     P(c4,1,0)=a2;
     P(c4,2,0)=a3;
-
+```
 
 Functions for those fundamental math types are defined using macros that works similarly to the C++ template.
 
@@ -133,31 +133,31 @@ It can be converted to \c fits file using the supplied binary \c bin/bin2fits.
 The data in \c bin file are stored with the native endianness to facilitate memory mapping. 
 
 Data in \c bin file are stored as one or multiple consecutive \c blocks :
-\verbatim
+```
 block1 :self described data
 [block2] :(optional) self described data
 ...
-\endverbatim
+```
 
 Each \c block is composed of a \c header and the \c data. 
 
 The \c header contains an optional part followed by a mandatory part. The optional part describes the data:
 
-\verbatim
+```
 0x6500: 4 byte uint
 length: 8 byte uint equal to the length of the follwoing string
 string: variable length, padded to multiple of 8.
 length2: 8 byte uint equal to length
 0x6500: 4 byte uint
-\endverbatim
+```
 
 The mendatory part contains the type and size of \c data
-\verbatim
+```
 0x6600: 4 byte uint. Dummy, to facilitate memory alignment for mmap.
 magic:  4 byte uint. See sys/bin.h for all supported types
 nx:     8 byte uint. Inner dimension (fast changing index)
 ny:     8 byte uint. Outer dimension (slow changing index)
-\endverbatim
+```
 
 The \c data can be either array of fundamental data type or array of other arrays. 
 For array of the fundamental data type, it is simply a copy of the data in the native endianness. 

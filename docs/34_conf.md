@@ -41,7 +41,6 @@
 - \subpage skyc_10
 - \subpage skyc_20
 - \subpage wfs_lgs_hitt
-- \subpage wfs_lgs_ngs
 - \subpage wfs_lgs_only
 - \subpage wfs_lgs_tt_tt_tt
 - \subpage wfs_lgs_ttf

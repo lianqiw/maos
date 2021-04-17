@@ -43,13 +43,13 @@ the \c mex subfolder in the source folder and type ./compile.sh to compile
 them. Copy \c write.mexa64 and \c read.mexa64 into a folder that is in your
 matlab path, such as \c $HOME/matlab. The usage in \c MATLAB is as follows:
 
-\verbatim 
+``` 
 cle=read('Res_1');     #will try .bin or .fits
 cle=read('Res_1.bin'); #only use .bin
 
 write(cle,'Res_1');     will write the data to \c Res_1.bin
 write(cle,'Res_1.bin'); will write the data to \c Res_1.bin without compression.
-\endverbatim
+```
 
 If there is any problem in compling \c read.c and \c write.c, there are also
 two matlab scripts in the \c scripts folder, \c readbin.m and \c writebin.m,

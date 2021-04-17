@@ -5,13 +5,13 @@
 We assume that maos is already in the PATH so we can type "maos" to launch it.
 
 Use the following command to get the help message:
-\verbatim
+```
 maos -h  #will print the help message and exit.
-\endverbatim
+```
 
 The valid command line arguments are listed as follows
 
-\verbatim
+```
 Usage: maos [OPTION...] [FILE]...
 maos is a simulation tool developed to adaptive optics systems
 
@@ -33,7 +33,7 @@ Options:
 -p, --path=dir    Add dir to the internal PATH
 -g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic
 -G, --ngpu=N      Use a total of N gpus.
--r, --run=host    Run the job in another host.
+-r, --run=host    Run the job in another host. Requires scheduler to be running.
 
 The following environment variables are supported
 MAOS_TOMOSCALE=1e12 Rebalance tomography terms for single precision calculation
@@ -41,14 +41,14 @@ MAOS_PARALLEL=1      Set to 0 to disable parallel launch
 MAOS_NO_WFS=0        Set to 1 to disable all WFS calls
 MAOS_NO_EVL=0        Set to 1 to disable evaluation calls
 MAOS_NO_RECON=0      Set to 1 to disable reconstruction calls
-MAOS_KEEP_MEM=0      Set to 1 to keep temporary memory between steps
-MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting
+MAOS_KEEP_MEM=0      Set to 1 to keep some temporary memory between steps.
+MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting. Useful to detect memory leak.
 MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info
 MAOS_LOG_LEVEL=0     Set logging level. -3: error and warning only,
                            -2:  essential info, -1  useful info, 0:  all info,
                            1:  debugging info, 2: more debugging info, 3: everything.
 
-\endverbatim
+```
 
 \section sect-config Configuration Files
 
@@ -131,57 +131,57 @@ See page31_example for more detailed explanations.
 
 To run predefined AO modes
 
-\verbatim
+```
 maos -o mcao # default is dual conjugate AO, save results to folder mcao
 maos -c mcao_ngs.conf  # NGS MCAO
 maos -c scao_ngs.conf  # NGS SCAO
 maos -c scao_pwfs.conf # NGS SCAO using PWFS
 maos -c scao_lgs.conf  # LGS SCAO
-\endverbatim
+```
 
 To customize
 
-\verbatim
+```
 maos dm_single.conf wfs_lgs_only.conf recon.glao=1 # LGS GLAO
 maos dm_triple.conf dm.dx=0.3  # triple DM with 0.3 actuator pitch
 maos wfs_lgs_ttf_tt_twfs.conf  # with LGS, TTF, TT, and TWFS
 maos evl_x.conf #evaluate performance along x axis.
-\endverbatim
+```
 
 Change aperture
 
-\verbatim
+```
 maos aper.d=[10]    # 10 meter circular
 maos aper.d=[10, 1] # 10 meter annular diameter with 1 meter inner obscuration
 maos aper.d=[10, 1] aper.fnamp=aper.bin # with supplied amplitude map. Diameters need to match.
-\endverbatim
+```
 
 Change turbulence
 
 Override keys listed in \c atm_mk13n50p.conf
 
-\verbatim
+```
 maos atm.r0z=0.1     # change r0 at zenith to 0.1m
 maos sim.zadeg=30    # change zenith angle to 30 degrees
 maos atm_single.conf # use single ground layer turbulence
-\endverbatim
+```
 
 Configuring WFS
 
-\verbatim
+```
 maos powfs.noisy=[0]     # use noise free WFS for all wfs types
 maos powfs.noisy=[1 0 0] # use noise free WFS for wfs type 1 and 2.
 maos powfs.phystep=[-1]  # use geometric wfs instead of physical optics wfs for all
-\endverbatim
+```
 
 Adjust the number of elements depending on how many powfs is in use. A powfs
 is a type of WFS. Each type can have multiple WFS.
 
 Adjust the controller
 
-\verbatim
+```
 maos sim.ephi=0.3 #Change gain of the main integrator to 0.3
-\endverbatim
+```
 
 \section advanced Advanced configuration
 
@@ -192,7 +192,7 @@ and/or wavefront sensors. Each surface file must contain a 2-d array of the
 OPD with a header specifying the following keys. If header is not available,
 the OPD is assumed to have 1/64 sampling and centered on the pupil.
 
-\verbatim
+```
 dx  the sampling in x direction (first dimension).
 dy  the sampling in y direction (second dimension).
 ox  the origin in x direction.
@@ -200,30 +200,30 @@ oy  the origin in y direction.
 h   the height conjugation of this surface
 vx  the frozen flow wind speed along x of this surface (0 for static)
 vy  the frozen flow wind speed along y of this surface (0 for static)
-\endverbatim
+```
 
 Optionally, the header can also include the following keys to indicate its coverage
 
-\verbatim
+```
 SURFNAME=name       #name of the surface. M1 or M2 for the primary or secondary mirror
 SURFEVL=[1 1 1 ...] #length: nevl. 1: enabled for this science evaluation direction (assume all 1 if omitted)
 SURFWFS=[1 1 1 ...] #length: nwfs. 1: enabled for this WFS (assume all 1 if ommitted)
-\endverbatim
+```
 
 Use the \c write mex routine, \c writebin.m, or \c aolib.writebin to write the bin file:
-\verbatim
+```
    write(OPD, header, 'opd1.bin')
-\endverbatim
+```
 Or simply use fits format. Put the list of surface file names in key \c surf.
-\verbatim
+```
    maos surf=['opd1.bin','opd2.bin', 'opd3.fits']
-\endverbatim
+```
 
 It is also possible to specify NCPA with inline configuration:
-\verbatim
+```
 maos surf=["'r0=0.1;slope=-4;SURFEVL=1;', 'r0=0.2; slope=-4;SURFWFS=1 1 1 1 1 1 0 0 0'"]
 maos surf=["'r0=0.1;slope=-4;L0=30;nx=2048;dx=1./64;SURFEVL=1;SURFWFS=0'"]
-\endverbatim
+```
 The double quote is necessary here to group the single quoted entries together.
 
 The amplitude map of the telescope can be specified with
@@ -235,7 +235,7 @@ fields and wavefront sensors. Put the list of surface files in key \c
 tsurf. Each surface file must contain a 2-d array with a header specifying
 the following keys:
 
-\verbatim
+```
 dx    the sampling in x direction (first dimension).
 dy    the sampling in y direction (second dimension).
 ox    the origin in x direction.
@@ -245,7 +245,7 @@ tydeg the y tilt angle in degrees wrt beam (90 is perp)
 ftel  the telescope effective focal length
 fexit the distance between the exit pupil and the focus
 fsurf the distance between the center of the M3 surface and the focus.
-\endverbatim
+```
 
 \subsection sect-wfs WFS Configuration
 
@@ -254,7 +254,7 @@ the wfs belonging to this type. For wfs specific parameters, use \c wfs. If
 there is a single number in \c powfs.[key], it applies to all powfs. The
 follow lists a few common options
 
-\verbatim
+```
 powfs.noisy=[0]         #set noise free for all powfs
 powfs.noisy=[1 0 0]     #set noise free only for powfs 1 and 2.
 powfs.phystep=[0 -1 -1] #use physical optics wfs for the first type (high order), and geomtric for the remaining (t/t/f)
@@ -264,13 +264,13 @@ powfs.bkgrnd=[10 0 0]   #specify background level at 800 Hz per pixel
 powfs.rne=[3 1 1]       #specify read out noise for physical optics wfs mode
 powfs.nearecon=[20 2 1] #specify noise equivalent angle in milli-arcsecond for geometric wfs mode
 powfs.neasim=[20 2 1]   #specify nea for simulation. -1 to match nearecon.
-\endverbatim
+```
 
 WFS specific parameters usually include WFS coordinate
-\verbatim
+```
 wfs.thteax=[]           #specify the x coordinate in arcsec
 wfs.thetay=[]           #specify the y coordinate in arcsec
-\endverbatim
+```
 
 \subsection sect-perfevl Point Spread Function
 
@@ -279,12 +279,12 @@ to \c Res_[seed].bin. When desired, PSFs computing can be enabled for some or al
 of the science evaluation directions. Modify \c evl.thetax , \c evl.thetay , and \c
 evl.wt to modify evaluation directions and relative weighting for field
 averaging. Use the following parameters to enable PSF computation.
-\verbatim
+```
 maos evl.psfisim=20 evl.psfmean=1 # start averaging from step 20, save averaged PSF once in the end.
 maos evl.psfmean=1 evl.psfol=1   # also include open loop PSF
 maos evl.psfmean=1 evl.psfsize=[1024,1024]     # only save center part 1024x1024 of the PSF
 maos evl.psfmean=1 evl.psfgridsize=[4096,4096] # specify PSF FFT grid size to control the sampling.
-\endverbatim
+```
 
 \subsection sect-act Actuator Slaving
 
