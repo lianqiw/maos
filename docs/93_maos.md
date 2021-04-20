@@ -7,7 +7,7 @@
     - setup_parms_gpu(): to setup the GPU usage for various tasks
     - maos_setup(): to setup the AO system geometry and data structs. It calls
         - setup_aper():  to setup the aperture grid and amplitude map (of type aper_t)
-        - setup_powfs_init(): to setup the WFS subapertures geoemtry
+        - setup_powfs_init(): to setup the WFS subapertures geometry
         - setup_recon_prep(): to setup reconstruction grid (ploc, aloc, floc, GP, GX, etc.)
         - setup_surf(): to setup NCPA
         - setup_powfs_phy(): to setup physical optics (dtf, etf, i0, mtch, cog)
@@ -33,14 +33,14 @@
             - reconstruct() & filter_dm: wfs reconstruction and servo filtering
         - In parallel simulation, calls maos_isim() for each step. It then calls
             - sim_update_etf(): update sodium profile if needed
-            - genatm(): update turbulence if not using frozenflow
+            - genatm(): update turbulence if not using frozen-flow
             - In parallel mode (PARALLEL=1)
                 - perfevl_pre: wfsgrad_prep, reconstruct() in parallel and then wait
                 - perfevl(): wfsgrad(), in parallel and then wait
                 - shift_grad(): copy from grad to gradlast for reconstruct()
                 - filter_dm(): servo filtering (dmreal)
             - In serial mode (PARALLEL=0), calls the following in sequence
-                - perfevl(): (in closed loop) to evaluate the performance ins cience field
+                - perfevl(): (in closed loop) to evaluate the performance in science field
                 - wfsgrad(): to compute WFS gradients
                 - reconstruct():
                 - shift_grad():

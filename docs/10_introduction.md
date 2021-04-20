@@ -1,19 +1,19 @@
 \page page10_intro Introduction
 
-The Multithreaded Adaptive Optics Simulator (MAOS) started as a reimplementation
+The Multithreaded Adaptive Optics Simulator (MAOS) started as a re-implementation
 in C of the algorithms in the original MATLAB based linear adaptive optics
 simulator (LAOS), which suffers performance and multi-threading limitations. The
 goal is to create an efficient time domain general purpose adaptive
 optics simulator to help the development of adaptive optics systems,
 particularly advanced, very high order systems for TMT and other ELTs. MAOS now
-is fairly feature complete in modeling astronomical adpative optics systems such
-as, multiconjugate AO (MCAO), laster tomography AO (LTAO), ground layer AO
+is fairly feature complete in modeling astronomical adaptive optics systems such
+as, multi-conjugate AO (MCAO), laser tomography AO (LTAO), ground layer AO
 (GLAO), multi-object AO (MOAO) and Pyramid based classic AO.
 
 Simulations are configured through configuration files and command line options,
 which are checked for any apparent errors or conflicts. The configuration files
 are very human readable and easy to maintain. Default parameters are maintained
-in the default configuration files and only parameters that need to be overriden
+in the default configuration files and only parameters that need to be overridden
 need to be specified by the end user.
 
 Atmospheric turbulence is represented as one or multiple discrete optical path
@@ -26,7 +26,7 @@ The telescope aperture is modeled with a gray pixel amplitude map that can
 simulate segmented primary mirrors and secondary mirror support vignetting.
 Aberration of the telescope or instrument optics are modeled as static OPD maps
 with various conjugation. Non-common path aberrations that originate from the WFS
-or science optics are handled by automaticaly biasing the WFS measurements.
+or science optics are handled by automatically biasing the WFS measurements.
 
 The wavefront sensors (WFS) can be simulated as idealized wavefront gradient
 sensors, best Zernike fit tilt sensors, or physical optic WFS using user
@@ -34,7 +34,7 @@ specified detector pixel characteristics and center of gravity or matched filter
 pixel processing algorithm. Pyramid WFS is also implemented for the NGS with
 modulation and optical gain optimization. The laser guide star wavefront sensing
 model includes the impact of guide star elongation for a specified sodium layer
-profile and an optional polar coordinate CCD. Automatic subaperture or optical
+profile and an optional polar coordinate CCD. Automatic sub-aperture or optical
 gain optimization can be done by dithering the spot in a circular motion and
 compare the input and measured motion.
 
@@ -55,7 +55,7 @@ plate scale, so called `split tomography` control algorithm is used that
 reconstructs the low order modes separately from the high order reconstruction
 with additional sanitization to decouple the two. For classic AO, least squares
 control is also implemented. A simple integrator with gain update is used to
-control the DM. For low order control, an LQG based kalman filter is also
+control the DM. For low order control, an LQG based Kalman filter is also
 implemented.
 
 Performance evaluation is done in terms of RMS wavefront error, Strehl ratio,
@@ -78,14 +78,14 @@ library for a few system calls.
 A C99 compliant compiler is required to compile the code. The cost has been
 tested with GNU GCC, Intel ICC, and CLANG. For machines with Intel CPUs, the
 code generally runs faster when compiled with ICC and linked with MKL. Nvidia
-CUDA SDK is needed to compile the optional cuda code which runs in Nvidia GPUs
+CUDA SDK is needed to compile the optional CUDA code which runs in Nvidia GPUs
 (>2.0 compute capability).
 
 This software also contains two optionally compiled graphical executables
 (drawdaemon, monitor) for plotting and job monitoring (jobs can be monitored
 on several different machines). These two executable require GTK+.
 
-The multi-threading is achieved using Posix Threads (no MPI is implemented) or
+The multi-threading is achieved using POSIX Threads (no MPI is implemented) or
 OpenMP. This parallelism works fairly well in multi-core, shared memory
 machines. For example, in a recently purchased desktop as of this writing with
 Intel Core i5 quad-core processor, the software (configured in a NFIRAOS split
@@ -98,13 +98,13 @@ case is about 2 GB.
 
 The code contains a few directories. The `sys` directory contains the lower
 levels libraries that often deals with the system for input/output, and process
-management. The `math` directory contains mathmatical data structures and
+management. The `math` directory contains mathematical data structures and
 associated functions. The `lib` directory contains adaptive optics related data
 structures and functions. The `maos` directory contains the end to end adaptive
 optics simulation implementation. The `skyc` is contains routines for sky
 coverage postprocessing that takes `maos` results as input. The `scripts` folder
 contains useful Python, Matlab, and IDL routines that can be used to read/write
-the simulation results or call maos internal routines. 
+the simulation results or call `maos` internal routines. 
 
 Please see \ref page20_compile on how to compile and use MAOS.
 

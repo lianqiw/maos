@@ -1,6 +1,6 @@
 \page page91_basics Fundementals
 
-The user is required to have a good understanding of the C fundementals, like
+The user is required to have a good understanding of the C fundamentals, like
 the pointer, to study and improve the code. Here we list a few to remind the
 user. 
 
@@ -9,7 +9,7 @@ user.
 If you declare an array: <code>double a[1024];</code> the symbol actually
 contains the address of a 1024x8 byte memory region that is automatically
 allocated in the stack (malloc, calloc allocations memory in the
-heap). Suppost the address of the memory region is 0xFF00. Assignment
+heap). Suppose the address of the memory region is 0xFF00. Assignment
 <code>a[0]=1;</code> puts 1 in memory started at 0xFF00. And <code>a[1]=1;</code>
 puts 1 in memory started at 0xFF08.
 
@@ -42,7 +42,7 @@ the elements, just like arrays. For example:
 
 A pointer can be used to create and index an 1-dimensional (1-d) array in the heap:
 
-    double *p; //decleares a double array pointer.
+    double *p; //declares a double array pointer.
     p=calloc(1024,sizeof(double)); //Allocate a memory block of 1024x8 byte and store its address in p.
     p[0]=1;    //will assign 1 to the first number in the array.
     
@@ -130,7 +130,7 @@ Specific calculation related types are often encapsulated in corresponding data 
 
 The \c bin file format is a simple custom binary format developed specifically to save telemetry data for \c maos. 
 It can be converted to \c fits file using the supplied binary \c bin/bin2fits. 
-The data in \c bin file are stored with the native endianness to facilitate memory mapping. 
+The data in \c bin file are stored with the native endian-ness to facilitate memory mapping. 
 
 Data in \c bin file are stored as one or multiple consecutive \c blocks :
 ```
@@ -145,13 +145,13 @@ The \c header contains an optional part followed by a mandatory part. The option
 
 ```
 0x6500: 4 byte uint
-length: 8 byte uint equal to the length of the follwoing string
+length: 8 byte uint equal to the length of the following string
 string: variable length, padded to multiple of 8.
 length2: 8 byte uint equal to length
 0x6500: 4 byte uint
 ```
 
-The mendatory part contains the type and size of \c data
+The mandatory part contains the type and size of \c data
 ```
 0x6600: 4 byte uint. Dummy, to facilitate memory alignment for mmap.
 magic:  4 byte uint. See sys/bin.h for all supported types
@@ -160,7 +160,7 @@ ny:     8 byte uint. Outer dimension (slow changing index)
 ```
 
 The \c data can be either array of fundamental data type or array of other arrays. 
-For array of the fundamental data type, it is simply a copy of the data in the native endianness. 
+For array of the fundamental data type, it is simply a copy of the data in the native endian-ness. 
 For arrays of other arrays, the \c magic is set to 0x6420 and the data is composed of `nx*ny` \c blocks. 
 The \c data part is skipped if either \c nx or \c ny equals to zero.
 
@@ -186,13 +186,13 @@ Functions:
 beginning, except when there is a main object for the algorithm.
 
 - In any function, there should usually be at most 1 return statement unless
-NULL or error code are returned before matural.
+NULL or error code are returned pre-mature.
 
 - One utility function should be handle only one major mask to maximize
 reusability.
 
 - Input arguments to utility functions (in lib folder) should be basic types
-to maximize resuability. Input arguments to simulation functions can be
+to maximize reusability. Input arguments to simulation functions can be
 wrapped (like simu) to maximum readability.
 
 Others:
@@ -210,7 +210,7 @@ it easily identifiable. not make a hidden bug.
 restrict if possible.
 
 - Do not include system headers in header files unless necessary. include
-thoese headers in .c file. 
+those headers in .c file. 
 
 - Avoid function casting. It will hide data type check and hide bugs.
 

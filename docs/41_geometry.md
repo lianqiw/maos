@@ -58,7 +58,7 @@ File name | Description
 \c powfs0_loc          |The grid for all subapertures (grouped by subapertures)
 \c powfs0_amp          |The amplitude defined on powfs0_loc
 \c powfs0_llt_loc      |The aperture grid of the uplink laser launch telescope (LLT)
-\c powfs0_llt_amp      |The aperture amptidue of LLT defined on powfs0_llt_loc
+\c powfs0_llt_amp      |The aperture amplitude of LLT defined on powfs0_llt_loc
 \c powfs0_llt_imcc     |The inverse of model cross-coupling matrix of p/t/t modes for LLT
 \c powfs0_srot         |The orientation of each subaperture wrt LLT
 \c powfs0_srsa         |The distance of each subaperture from the LLT

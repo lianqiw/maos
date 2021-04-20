@@ -2,8 +2,8 @@
 
 \tableofcontents
 
-This step can be skipped if the user choose to use the precompiled binary files,
-which are available for all the popular plateforms: Windows, Mac, and
+This step can be skipped if the user choose to use the pre-compiled binary files,
+which are available for all the popular platforms: Windows, Mac, and
 Linux. Please notice that the job scheduling and monitoring utilities are not
 included in the released binaries (the binaries may not be up to date).
 
@@ -129,7 +129,7 @@ directory.
 
 \subsection sect-mac-gtk Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon
 
-It is simpliest to install gtk using macport or homebrew. For manual install,
+It is simplest to install gtk using macport or homebrew. For manual install,
 follow the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for
 osx. The environmental variables are set by jhbuild, here we take important
 ones and put them in our .bash_profile to avoid running jhbuild each
@@ -190,7 +190,7 @@ these files in all the machines you want to monitor.
 full format \c prettyname=full_hostname:port
 
 - \c ~/.aos/port contains the port you want the \c scheduler to bind to so that the
-monitor can connect to it.  Any non-previledged port numbers are fine (like
+monitor can connect to it.  Any non-privileged port numbers are fine (like
 10000).  Different users should have different port number.  The port has to
 be the same on all the machines unless explicitly specified in \c hosts. 
 If not set, the number will be automatically computed based on username. Make sure the firewall allows them.
@@ -198,9 +198,9 @@ If not set, the number will be automatically computed based on username. Make su
 ## Drawdaemon
 
 Once the monitor is running, it will display running jobs on each connected host.
-Right click on a running job and select `Plot sected jobs` will launch drawdaemon
+Right click on a running job and select `Plot selected jobs` will launch drawdaemon
 and start plotting the telemetry data in realtime. This works for local and remote host.
-Multiple drawedaemons can be started for the same or different jobs.
+Multiple drawdaemon windows can be started for the same or different jobs.
 
 An alternative way to launch drawdaemon is to include \c plot.setup=1 \c plot.run=1 or \c plot.all=1 in maos command line.
 This method can only invoke the drawdaemon locally.
@@ -220,7 +220,7 @@ MAOS comes with a few useful python routines location in \c scripts/ folder:
 
 - \c aolib.py contains routines to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py
 
-- \c libaos.py contains routines that wraps \c MAOS librarie routines via \c aolib.so and \c ctypes 
+- \c libaos.py contains routines that wraps \c MAOS library routines via \c aolib.so and \c ctypes 
 
 - \c lib2py.py generates \c libaos.py
 

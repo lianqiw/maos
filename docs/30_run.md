@@ -2,7 +2,7 @@
 \tableofcontents
 \section sect-run Usage
 
-We assume that maos is already in the PATH so we can type "maos" to launch it.
+We assume that `maos` is already in the PATH so we can type `maos` to launch it.
 
 Use the following command to get the help message:
 ```
@@ -76,7 +76,7 @@ key+=value is used which causes it to append instead. The software will
 complain and exit if any `key=value` pair is not understood or required but
 not provided.
 
-The recommanded way to organize config files for a specific problem is to
+The recommended way to organize config files for a specific problem is to
 keep a baseline \c .conf file in sub-folder \c config/maos in the source
 folder that specify all the necessary \c key=value entries through
 optionally including other \c .conf files. The default entry is
@@ -207,7 +207,7 @@ Optionally, the header can also include the following keys to indicate its cover
 ```
 SURFNAME=name       #name of the surface. M1 or M2 for the primary or secondary mirror
 SURFEVL=[1 1 1 ...] #length: nevl. 1: enabled for this science evaluation direction (assume all 1 if omitted)
-SURFWFS=[1 1 1 ...] #length: nwfs. 1: enabled for this WFS (assume all 1 if ommitted)
+SURFWFS=[1 1 1 ...] #length: nwfs. 1: enabled for this WFS (assume all 1 if omitted)
 ```
 
 Use the \c write mex routine, \c writebin.m, or \c aolib.writebin to write the bin file:
@@ -257,7 +257,7 @@ follow lists a few common options
 ```
 powfs.noisy=[0]         #set noise free for all powfs
 powfs.noisy=[1 0 0]     #set noise free only for powfs 1 and 2.
-powfs.phystep=[0 -1 -1] #use physical optics wfs for the first type (high order), and geomtric for the remaining (t/t/f)
+powfs.phystep=[0 -1 -1] #use physical optics wfs for the first type (high order), and geometric for the remaining (t/t/f)
 powfs.phytype=[1 2 2]   #pixel processing 1: use matched filter, 2: cog
 powfs.siglev=[900 100 100] #specify signal level for physical optics wfs mode at 800 Hz per pixel.
 powfs.bkgrnd=[10 0 0]   #specify background level at 800 Hz per pixel

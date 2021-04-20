@@ -18,10 +18,10 @@ together. When using on a text terminal with `DISPLAY` not set, if there is
 MAOS generates output in binary format \c .bin files (which maybe gzipped)
 as described below. PSFs are written into fits files with extensions.
 
-The data are saved to the \c .bin files in a moduler way. For a simple matrix
+The data are saved to the \c .bin files in a modular way. For a simple matrix
 (like double matrix or cell matrix), we first write a magic number (4 byte
 unsigned int) representing the data type, and then x and y dimension (two 8
-byte unsigned ints), and finally the data itself (if it is cell, recursively
+byte unsigned int), and finally the data itself (if it is cell, recursively
 write the data contained in the cell with the same method).
 
 Each block of data may optionally be proceeded with a metadata header that
@@ -51,7 +51,7 @@ write(cle,'Res_1');     will write the data to \c Res_1.bin
 write(cle,'Res_1.bin'); will write the data to \c Res_1.bin without compression.
 ```
 
-If there is any problem in compling \c read.c and \c write.c, there are also
+If there is any problem in compiling \c read.c and \c write.c, there are also
 two matlab scripts in the \c scripts folder, \c readbin.m and \c writebin.m,
 that have most of functionality of \c read.c, \c write.c albeit a bit slower
 and cannot handle compressed files conveniently.
@@ -98,7 +98,7 @@ results. i.e. res=read('Res_1');
   - \c res{4} (Only in split tomography) contains the closed loop wavefront variance. The rows are
       - WFV in LGS contains modes
       - WFV in NGS Tip/Tilt modes
-      - WFV in NGS modes (includeing Tip/Tilt and additional modes controlled by NGS (On-Instrument WFS))
+      - WFV in NGS modes (including Tip/Tilt and additional modes controlled by NGS (On-Instrument WFS))
 
 - \c Resolep_1: Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.
 
@@ -122,10 +122,10 @@ ideal NGS modes applied in skycoverage pre-simulation.
 - \c maos_[PID].conf: The final effective arrays of the configurations for MAOS
 run with pid PID. Can be used to reproduce the simulation or check the
 configurations. Lines begin with # are defaults configurations while the rest
-have been overriden.
+have been overridden.
 
 - \c sanea_sim_1: When wavefront sensors are running in physical optics
-mode, the average gradinet measurement error for that wavefront sensor is
+mode, the average gradient measurement error for that wavefront sensor is
 saved (in order) in a cell in this file. Each cell is a column vector with
 elements twice the number of subaperture. The first half is for \f$x\f$ (or radial)
 gradient, and the second half is for \f$y\f$ (or azimuthal) gradient. They are in
