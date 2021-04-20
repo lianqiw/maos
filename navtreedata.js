@@ -55,7 +55,6 @@ var NAVTREE =
       ] ]
     ] ],
     [ "Examples", "page33_example.html", "page33_example" ],
-    [ "wfs_lgs_ngs.conf", "wfs_lgs_ngs.html", null ],
     [ "Simulation Results", "page40_results.html", [
       [ "Plotting Results", "page40_results.html#drawres", null ],
       [ "Reading Results", "page40_results.html#bin", [
@@ -111,7 +110,7 @@ var NAVTREEINDEX =
 "setup__recon_8h.html#a14b7a0beadfd04a65affccf99767892b",
 "smath_8h.html#ad1c23a17c97445bc4cae17b0df14a4d5",
 "sys_2misc_8h.html#af00e20eff025c19783d48eb289a342c1",
-"zmath_8h.html#a9898630e3b6efbe47be10eb3ca0b3b5d"
+"zmath_8h.html#a98f034fbebda3c685a72d04f296569dd"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
