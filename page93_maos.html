@@ -106,7 +106,7 @@ Simulation Flow</h1>
 <li><a class="el" href="parms_8h.html#aad108d3a5091968e86ec8adcc269d450">setup_parms_gpu()</a>: to setup the GPU usage for various tasks</li>
 <li><a class="el" href="maos_8h.html#a3a5897e2d10829666c51e453ac960acf">maos_setup()</a>: to setup the AO system geometry and data structs. It calls<ul>
 <li><a class="el" href="setup__aper_8h.html#a88687a0c795a3eb31d78ae5613dc6e62">setup_aper()</a>: to setup the aperture grid and amplitude map (of type <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a>)</li>
-<li><a class="el" href="setup__powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e">setup_powfs_init()</a>: to setup the WFS subapertures geoemtry</li>
+<li><a class="el" href="setup__powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e">setup_powfs_init()</a>: to setup the WFS subapertures geometry</li>
 <li><a class="el" href="setup__recon_8h.html#a5737f2c65941e6531e6111fe81299796">setup_recon_prep()</a>: to setup reconstruction grid (ploc, aloc, floc, GP, GX, etc.)</li>
 <li><a class="el" href="setup__surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107">setup_surf()</a>: to setup NCPA</li>
 <li><a class="el" href="setup__powfs_8h.html#a6e46d89a923330dddfe6a0dd31811ada">setup_powfs_phy()</a>: to setup physical optics (dtf, etf, i0, mtch, cog)</li>
@@ -136,7 +136,7 @@ Simulation Flow</h1>
 </li>
 <li>In parallel simulation, calls <a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> for each step. It then calls<ul>
 <li><a class="el" href="sim__utils_8h.html#ad8735860632183309e1afb0f4dd020cf">sim_update_etf()</a>: update sodium profile if needed</li>
-<li><a class="el" href="sim__utils_8h.html#a82672d602a95b40837f6226d00ec041c">genatm()</a>: update turbulence if not using frozenflow</li>
+<li><a class="el" href="sim__utils_8h.html#a82672d602a95b40837f6226d00ec041c">genatm()</a>: update turbulence if not using frozen-flow</li>
 <li>In parallel mode (PARALLEL=1)<ul>
 <li>perfevl_pre: wfsgrad_prep, <a class="el" href="maos_2recon_8h.html#a957f786000458997344bd02425f92c43">reconstruct()</a> in parallel and then wait</li>
 <li><a class="el" href="sim_8h.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl()</a>: <a class="el" href="sim_8h.html#a409184df49223b72bd8fb30584015925">wfsgrad()</a>, in parallel and then wait</li>
@@ -145,7 +145,7 @@ Simulation Flow</h1>
 </ul>
 </li>
 <li>In serial mode (PARALLEL=0), calls the following in sequence<ul>
-<li><a class="el" href="sim_8h.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl()</a>: (in closed loop) to evaluate the performance ins cience field</li>
+<li><a class="el" href="sim_8h.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl()</a>: (in closed loop) to evaluate the performance in science field</li>
 <li><a class="el" href="sim_8h.html#a409184df49223b72bd8fb30584015925">wfsgrad()</a>: to compute WFS gradients</li>
 <li><a class="el" href="maos_2recon_8h.html#a957f786000458997344bd02425f92c43">reconstruct()</a>:</li>
 <li><a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad()</a>:</li>

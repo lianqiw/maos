@@ -116,7 +116,7 @@ $(document).ready(function(){initNavTree('page20_compile.html','');});
 </li>
 </ul>
 </div>
-<div class="textblock"><p>This step can be skipped if the user choose to use the precompiled binary files, which are available for all the popular plateforms: Windows, Mac, and Linux. Please notice that the job scheduling and monitoring utilities are not included in the released binaries (the binaries may not be up to date).</p>
+<div class="textblock"><p>This step can be skipped if the user choose to use the pre-compiled binary files, which are available for all the popular platforms: Windows, Mac, and Linux. Please notice that the job scheduling and monitoring utilities are not included in the released binaries (the binaries may not be up to date).</p>
 <h1><a class="anchor" id="autotoc_md0"></a>
 Requirements</h1>
 <ul>
@@ -156,7 +156,7 @@ Matlab Mex Routines</h2>
 </ul>
 <h2><a class="anchor" id="sect-mac-gtk"></a>
 Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon</h2>
-<p>It is simpliest to install gtk using macport or homebrew. For manual install, follow the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for osx. The environmental variables are set by jhbuild, here we take important ones and put them in our .bash_profile to avoid running jhbuild each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.</p>
+<p>It is simplest to install gtk using macport or homebrew. For manual install, follow the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for osx. The environmental variables are set by jhbuild, here we take important ones and put them in our .bash_profile to avoid running jhbuild each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.</p>
 <p>First, if xcode is not installed in full, make sure the following packages are installed</p>
 <div class="fragment"><div class="line">DeveloperToolsCLI.pkg</div><div class="line">gcc4.x.pkg</div><div class="line">MACOSX10.x.pkg</div><div class="line">DevSDK.pkg</div><div class="line">OpenGLSDK.pkg</div><div class="line">DeveloperToolsSystemSupport</div></div><!-- fragment --><p> Then download and install pkg-config from pkgconfig.freedesktop.org/releases/</p>
 <div class="fragment"><div class="line">export PKG_CONFIG_PATH=&quot;/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig&quot;</div><div class="line">export LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH:$HOME/gtk/inst/lib&quot;</div><div class="line">export PATH=&quot;$PATH:$HOME/gtk/inst/bin&quot;</div><div class="line">export C_INCLUDE_PATH=&quot;$HOME/gtk/inst/include&quot;</div></div><!-- fragment --><p> Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now.</p>
@@ -177,11 +177,11 @@ Monitor</h2>
 <p>Create a folder .aos in your home folder, create two files in there. Put these files in all the machines you want to monitor.</p>
 <ul>
 <li><code>~/</code>.aos/hosts Each line contains a machine's hostname you want to monitor. It also supports the full format <code>prettyname=full_hostname:port</code> </li>
-<li><code>~/</code>.aos/port contains the port you want the <code>scheduler</code> to bind to so that the monitor can connect to it. Any non-previledged port numbers are fine (like 10000). Different users should have different port number. The port has to be the same on all the machines unless explicitly specified in <code>hosts</code>. If not set, the number will be automatically computed based on username. Make sure the firewall allows them.</li>
+<li><code>~/</code>.aos/port contains the port you want the <code>scheduler</code> to bind to so that the monitor can connect to it. Any non-privileged port numbers are fine (like 10000). Different users should have different port number. The port has to be the same on all the machines unless explicitly specified in <code>hosts</code>. If not set, the number will be automatically computed based on username. Make sure the firewall allows them.</li>
 </ul>
 <h2><a class="anchor" id="autotoc_md4"></a>
 Drawdaemon</h2>
-<p>Once the monitor is running, it will display running jobs on each connected host. Right click on a running job and select <code>Plot sected jobs</code> will launch drawdaemon and start plotting the telemetry data in realtime. This works for local and remote host. Multiple drawedaemons can be started for the same or different jobs.</p>
+<p>Once the monitor is running, it will display running jobs on each connected host. Right click on a running job and select <code>Plot selected jobs</code> will launch drawdaemon and start plotting the telemetry data in realtime. This works for local and remote host. Multiple drawdaemon windows can be started for the same or different jobs.</p>
 <p>An alternative way to launch drawdaemon is to include <code>plot.setup=1</code> <code>plot.run=1</code> or <code>plot.all=1</code> in maos command line. This method can only invoke the drawdaemon locally.</p>
 <h2><a class="anchor" id="autotoc_md5"></a>
 Plotting results</h2>
@@ -192,7 +192,7 @@ Python Scripts</h1>
 <ul>
 <li><code>readbin.py</code> contains <code>readbin</code> that can read <code>bin</code> or <code>fits</code> files.</li>
 <li><code>aolib.py</code> contains routines to read and process <code>MAOS</code> results. It also imports <code>libaos.py</code> and <code>draw.py</code> </li>
-<li><code>libaos.py</code> contains routines that wraps <code>MAOS</code> librarie routines via <code>aolib.so</code> and <code>ctypes</code> </li>
+<li><code>libaos.py</code> contains routines that wraps <code>MAOS</code> library routines via <code>aolib.so</code> and <code>ctypes</code> </li>
 <li><code>lib2py.py</code> generates <code>libaos.py</code> </li>
 <li><code>draw.py</code> used to draw opd defined on coordinate loc. <code>draw(loc, opd)</code> or <code>draw(map)</code> where <code>map</code> is a 2d array.</li>
 <li><code>maos_client</code> provides an interface to a running maos session. See next subsection.</li>

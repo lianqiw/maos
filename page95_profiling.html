@@ -101,14 +101,14 @@ $(document).ready(function(){initNavTree('page95_profiling.html','');});
 <div class="textblock"><h1><a class="anchor" id="Debugging"></a>
 Debugging</h1>
 <p>The GNU gdb can be used for basic bug troubleshooting. In case it is not able to detect the problem, <code>valgrind</code> can be used which is good at detecting memory out of bound access or use after free.</p>
-<p>Set macro MAOS_MEM_DEBUG=1 before launching maos will also enable it to track the memory allcation/free and print unrealeased memory in the end that can be used to detector any potential memory leakage.</p>
+<p>Set macro MAOS_MEM_DEBUG=1 before launching maos will also enable it to track the memory allocation/free and print unreleased memory in the end that can be used to detector any potential memory leakage.</p>
 <p>For CUDA related debugging, use cuda-gdb.</p>
 <h1><a class="anchor" id="Code"></a>
 Coverage</h1>
 <p>Compile maos with &ndash;enable-gcov to enable code coverage reporting.</p>
 <h1><a class="anchor" id="Profiling"></a>
 Profiling</h1>
-<p>MAOS is a pthread enabled software, and in the current stage, the gprof based profiling does not generate useful information. Instead, we can use system wide profilers, such as the Oprofile or Intel vtune Amplifier to detect hotspots and optimize the code. Set env MAOS_PARALLEL=0 disables internal parallelization that may help to obtain more accurate timing.</p>
+<p>MAOS is a pthread enabled software, and in the current stage, the gprof based profiling does not generate useful information. Instead, we can use system wide profilers, such as the oprofile or Intel vtune Amplifier to detect hotspots and optimize the code. Set env MAOS_PARALLEL=0 disables internal parallelization that may help to obtain more accurate timing.</p>
 <p>Prepare oprofile: </p><pre class="fragment">opcontrol --callgraph=16
 opcontrol --start
 </pre><p>Then Run MAOS. To view profile: </p><pre class="fragment">opcontrol --stop
