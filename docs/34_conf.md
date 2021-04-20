@@ -174,9 +174,6 @@
 \page wfs_lgs_hitt wfs_lgs_hitt.conf
 \include wfs_lgs_hitt.conf
 
-\page wfs_lgs_ngs wfs_lgs_ngs.conf
-\include wfs_lgs_ngs.conf
-
 \page wfs_lgs_only wfs_lgs_only.conf
 \include wfs_lgs_only.conf
 

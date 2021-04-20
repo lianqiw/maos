@@ -18,7 +18,7 @@ need to be specified by the end user.
 
 Atmospheric turbulence is represented as one or multiple discrete optical path
 difference (OPD) screen(s) at different altitudes that evolve according to
-frozen flow with given wind velocities. The turbulence strength $r_0$ can also
+frozen flow with given wind velocities. The turbulence strength \f$r_0\f$ can also
 vary with time. The turbulence is sensed by one or multiple natural guide star
 (NGS) or laser guide star (LGS) Shack-Hartmann wavefront sensor(s) (WFS).  
 
