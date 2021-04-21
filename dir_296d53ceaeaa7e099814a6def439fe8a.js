@@ -10,6 +10,7 @@ var dir_296d53ceaeaa7e099814a6def439fe8a =
     [ "mathdef.h", "mathdef_8h.html", "mathdef_8h" ],
     [ "mathmisc.h", "mathmisc_8h.html", "mathmisc_8h" ],
     [ "smath.h", "smath_8h.html", "smath_8h" ],
+    [ "type.h", "type_8h.html", "type_8h" ],
     [ "zfarr.h", "zfarr_8h.html", "zfarr_8h" ],
     [ "zmath.h", "zmath_8h.html", "zmath_8h" ]
 ];

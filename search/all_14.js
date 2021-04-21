@@ -7,5 +7,5 @@ var searchData=
   ['vmisreg',['vmisreg',['../parms_8h.html#af81a20c35a750e761d550ba5974ba8b6',1,'dm_cfg_t']]],
   ['vp',['Vp',['../muv_8h.html#a3a235ce911565ce890b5e1bd780906c2',1,'muv_t']]],
   ['vpb',['VpB',['../muv_8h.html#af8ada30ee8a5271da7d4890150c4760e',1,'muv_t']]],
-  ['vy',['vy',['../structmap__t.html#a1b941ccdd3db094fe026e49f9c4da998',1,'map_t']]]
+  ['vy',['vy',['../type_8h.html#a1b941ccdd3db094fe026e49f9c4da998',1,'map_t']]]
 ];

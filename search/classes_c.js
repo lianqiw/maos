@@ -14,7 +14,7 @@ var searchData=
   ['powfs_5fcfg_5ft',['powfs_cfg_t',['../parms_8h.html#structpowfs__cfg__t',1,'']]],
   ['powfs_5ft',['powfs_t',['../maos_2types_8h.html#structpowfs__t',1,'']]],
   ['propdata_5ft',['propdata_t',['../lib_2accphi_8h.html#structpropdata__t',1,'']]],
-  ['pts_5ft',['pts_t',['../structpts__t.html',1,'']]],
-  ['pts_5ft_2e_5f_5funnamed_5f_5f',['pts_t.__unnamed__',['../unionpts__t_8____unnamed____.html',1,'']]],
+  ['pts_5ft',['pts_t',['../type_8h.html#structpts__t',1,'']]],
+  ['pts_5ft_2e_5f_5funnamed_5f_5f',['pts_t.__unnamed__',['../type_8h.html#unionpts__t_8____unnamed____',1,'']]],
   ['pywfs_5ft',['pywfs_t',['../pywfs_8h.html#structpywfs__t',1,'']]]
 ];

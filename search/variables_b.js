@@ -1,7 +1,7 @@
 var searchData=
 [
   ['m',['M',['../kalman_8h.html#ae2aeabf3a7c79c16c9bd76c1a1caaaa7',1,'kalman_t::M()'],['../muv_8h.html#a788f22a3be5e5bc809459f3be177b98a',1,'muv_t::M()']]],
-  ['map',['map',['../structloc__t.html#ac56220a98267328ad973d6c842d07156',1,'loc_t::map()'],['../structpts__t.html#a4f0e14cab60eb534da9a796a50aeb7b9',1,'pts_t::map()']]],
+  ['map',['map',['../type_8h.html#ac56220a98267328ad973d6c842d07156',1,'loc_t::map()'],['../type_8h.html#a4f0e14cab60eb534da9a796a50aeb7b9',1,'pts_t::map()']]],
   ['mask',['mask',['../cn2est_8h.html#a3fb3eee55725a2837bdd280aff4fef62',1,'cn2est_t']]],
   ['maxit',['maxit',['../muv_8h.html#a01fa5335b5adf8b7689f3e09bdb97760',1,'muv_t::maxit()'],['../parms_8h.html#a5be7bf62274b812a85a2d88af53abbdd',1,'tomo_cfg_t::maxit()'],['../parms_8h.html#a7c7f2b7b6ffa94243467f9d33797b27a',1,'fit_cfg_t::maxit()'],['../parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd',1,'lsr_cfg_t::maxit()']]],
   ['maxthread',['MAXTHREAD',['../process_8h.html#aaf201d9c154f29dd2853b04a1ec9533f',1,'process.c']]],
@@ -10,7 +10,7 @@ var searchData=
   ['mccp',['MCCP',['../maos_2types_8h.html#a19b11645d2b5beb485409dc0d18a3416',1,'ngsmod_t']]],
   ['mccu',['MCCu',['../maos_2types_8h.html#ac538ab602aefc638055c95ae48c7795e',1,'ngsmod_t']]],
   ['mdata',['Mdata',['../muv_8h.html#aa30689f9fb9ae039a0fc04175ba7134d',1,'muv_t']]],
-  ['mem',['mem',['../structsmat.html#a91569c3c848079f8984c149518b104ab',1,'smat::mem()'],['../structzmat.html#a8b39136e686a57fd01f3d32cd5dd49e0',1,'zmat::mem()'],['../structdmat.html#a77edc290c9de7c66121724d00fa18324',1,'dmat::mem()'],['../structcmat.html#a284ca1e1607eb29f0a2af6bb6b774818',1,'cmat::mem()'],['../structlmat.html#a03be5dc2d4f45c56b32071bd2bf5928e',1,'lmat::mem()'],['../structimat.html#a1690cc8bfea7e76017f7bda1ca14dfe8',1,'imat::mem()'],['../structmap__t.html#adabeddca144e9c9b3b734a45ada9e0bd',1,'map_t::mem()'],['../structrmap__t.html#a36bc67fb09cd6f1bde5b40983beffba7',1,'rmap_t::mem()']]],
+  ['mem',['mem',['../type_8h.html#a91569c3c848079f8984c149518b104ab',1,'smat::mem()'],['../type_8h.html#a8b39136e686a57fd01f3d32cd5dd49e0',1,'zmat::mem()'],['../type_8h.html#a77edc290c9de7c66121724d00fa18324',1,'dmat::mem()'],['../type_8h.html#a284ca1e1607eb29f0a2af6bb6b774818',1,'cmat::mem()'],['../type_8h.html#a03be5dc2d4f45c56b32071bd2bf5928e',1,'lmat::mem()'],['../type_8h.html#a1690cc8bfea7e76017f7bda1ca14dfe8',1,'imat::mem()'],['../type_8h.html#adabeddca144e9c9b3b734a45ada9e0bd',1,'map_t::mem()'],['../type_8h.html#a36bc67fb09cd6f1bde5b40983beffba7',1,'rmap_t::mem()']]],
   ['merr_5flo2',['Merr_lo2',['../maos_2types_8h.html#a4edeb61820d6ef51499a737a6c907299',1,'sim_t']]],
   ['merr_5flo_5fstore',['Merr_lo_store',['../maos_2types_8h.html#ade788c0b0681a6cd1dec0a9620e0fc53',1,'sim_t']]],
   ['merrhist',['merrhist',['../servo_8h.html#a25ac4e49bfce258074fbd968332d34e2',1,'servo_t']]],

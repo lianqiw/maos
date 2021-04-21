@@ -110,7 +110,9 @@ var NAVTREEINDEX =
 "setup__recon_8h.html#a14b7a0beadfd04a65affccf99767892b",
 "smath_8h.html#ad1c23a17c97445bc4cae17b0df14a4d5",
 "sys_2misc_8h.html#af00e20eff025c19783d48eb289a342c1",
-"zmath_8h.html#a98f034fbebda3c685a72d04f296569dd"
+"type_8h.html#a7176a60ecf1b04b62413c8e5ec3d7a3e",
+"zernike_8h.html#a18115969f0ee8249823fb1fc14bcb24c",
+"zmath_8h.html#af539a1b867486096e890a4e9a00e42b2"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -25,7 +25,7 @@
     extensions: ["tex2jax.js"],
     jax: ["input/TeX","output/HTML-CSS"],
 });
-</script><script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+</script><script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen_extra.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -120,7 +120,7 @@ Plotting Results</h1>
 Reading Results</h1>
 <p>MAOS generates output in binary format <code></code>.bin files (which maybe gzipped) as described below. PSFs are written into fits files with extensions.</p>
 <p>The data are saved to the <code></code>.bin files in a modular way. For a simple matrix (like double matrix or cell matrix), we first write a magic number (4 byte unsigned int) representing the data type, and then x and y dimension (two 8 byte unsigned int), and finally the data itself (if it is cell, recursively write the data contained in the cell with the same method).</p>
-<p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <a class="el" href="structloc__t.html">loc_t</a> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
+<p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <a class="el" href="type_8h.html#structloc__t">loc_t</a> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
 <p>We use <code></code>.bin format instead of <code></code>.fits because it can be conveniently memory mapped for best efficiency in reading or saving.</p>
 <h2><a class="anchor" id="read-matlab"></a>
 MATLAB</h2>

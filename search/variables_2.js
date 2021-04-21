@@ -27,7 +27,7 @@ var searchData=
   ['cogthres',['cogthres',['../parms_8h.html#a309dc28c7e1c90cb414d20bb5fdf9f67',1,'powfs_cfg_t']]],
   ['coldtrat',['coldtrat',['../parms_8h.html#a708807d801ef0c550506f132f56d3377',1,'llt_cfg_t']]],
   ['colprep',['colprep',['../parms_8h.html#a79c6097d933b503551755bdd229f3fba',1,'llt_cfg_t']]],
-  ['cols',['cols',['../structlocstat__t.html#aa938bf320ac6d8dc99350665c2e5949a',1,'locstat_t']]],
+  ['cols',['cols',['../type_8h.html#aa938bf320ac6d8dc99350665c2e5949a',1,'locstat_t']]],
   ['colsim',['colsim',['../parms_8h.html#acfb6cf7900104ce8becafa3299b92d6f',1,'llt_cfg_t']]],
   ['commonfsm',['commonfsm',['../parms_8h.html#ac43528f14d1f304d9fb65d1aee658382',1,'sim_cfg_t']]],
   ['cone',['cone',['../parms_8h.html#a41c24c5a0d7256f1ff83af38c6a81d75',1,'tomo_cfg_t']]],

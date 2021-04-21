@@ -50,7 +50,7 @@ var searchData=
   ['refp_3c_20stream_5ft_2c_20dev_20_3e',['RefP&lt; stream_t, Dev &gt;',['../class_ref_p.html',1,'']]],
   ['refp_3c_20t_20_2a_2c_20gpu_20_3e',['RefP&lt; T *, Gpu &gt;',['../class_ref_p.html',1,'']]],
   ['refp_3c_20t_20_2a_2c_20pinned_20_3e',['RefP&lt; T *, Pinned &gt;',['../class_ref_p.html',1,'']]],
-  ['rmap_5ft',['rmap_t',['../structrmap__t.html',1,'']]],
-  ['rmapccell',['rmapccell',['../structrmapccell.html',1,'']]],
-  ['rmapcell',['rmapcell',['../structrmapcell.html',1,'']]]
+  ['rmap_5ft',['rmap_t',['../type_8h.html#structrmap__t',1,'']]],
+  ['rmapccell',['rmapccell',['../type_8h.html#structrmapccell',1,'']]],
+  ['rmapcell',['rmapcell',['../type_8h.html#structrmapcell',1,'']]]
 ];
