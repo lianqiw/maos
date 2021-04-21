@@ -19,9 +19,11 @@
 #ifndef AOS_MATARRH_TYPE_H
 #define AOS_MATARRH_TYPE_H
 #include "numtype.h"
-/*
-   Defines the math data types like dmat, cmat, dcell, ccell,
-   dsp, csp data types.
+/**
+   \file type.h
+
+   Defines the math data types like dmat, cmat, dcell, ccell, dsp, csp data
+   types.
 
    Don't use ulong for dimensions because subtracting a bigger ulong from a
    smaller ulong overflows.  */
@@ -245,7 +247,29 @@ static inline long index_2d(long ix, long iy, long nx, long ny){
 #define index_1d(i,    nx,ny) (i)
 #define index_2d(ix,iy,nx,ny) ((ix)+(iy)*(nx))
 #endif
-    
+/**
+    \def P(...)
+    Used to obtain elements of an array
+
+    \def PP(...)
+    Used to obtain pointers to elements of an array
+
+    \def PCOL(A,iy)
+    Used to obtain pointer to columns iy of array A
+
+    \def PR(A,ix,iy)
+    Calls P() with wrapping of index
+
+    \def PPR(A, ix, iy)
+    Calls PP() with wrapping of index
+
+    \def PCOLR(A, iy)
+    Calls PCOL(A, iy) with wrapping of index
+
+    \def PN(A)
+    Return number of elements
+ */
+
 #define P0(A)  ((A)->p)
 #define P1(A,i)     (A)->p[index_1d((i),        (A)->nx, (A)->ny)]
 #define P2(A,ix,iy) (A)->p[index_2d((ix), (iy), (A)->nx, (A)->ny)]
