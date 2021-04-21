@@ -1131,7 +1131,6 @@ static void init_simu_wfs(sim_t* simu){
 		}
 	}
 	if(recon->cn2est){
-		simu->cn2res=dcellnew(2, 1);
 		int ncn2=(parms->sim.end-1)/parms->cn2.step;
 		long nnx[2]={ncn2, recon->cn2est->htrecon->nx};
 		long nny[2]={1, ncn2};
@@ -1591,6 +1590,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->dmhist);
 	dcellfree(simu->Merr_lo_store);
 	dcellfree(simu->Merr_lo2);
+	dcellfree(simu->ngsmodlpf);
 	dcellfree(simu->fsmerr_store);
 	dcellfree(simu->fsmreal);
 	servo_free(simu->fsmint);

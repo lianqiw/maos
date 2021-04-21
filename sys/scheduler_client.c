@@ -470,7 +470,7 @@ void print_backtrace_symbol(void* const* buffer, int size){
 	char add[24]={0};
 	char progname[PATH_MAX+20]={0};
 	if(get_job_progname(progname, sizeof progname, 0)){
-		warning("Unable to get progname\n");
+		dbg("Unable to get progname\n");
 		return;
 	}
 	snprintf(cmdstr, sizeof cmdstr, "addr2line -f -e %s", progname);
@@ -488,9 +488,9 @@ void print_backtrace_symbol(void* const* buffer, int size){
 		dbg("backtrace directly\n");
 		char ans[10000];
 		if(!call_addr2line(ans, 10000, cmdstr)){
-			info("%s\n", ans);
+			info3("%s\n", ans);
 		} else{
-			info("Command failed\n");
+			dbg("Command failed\n");
 		}
 	} else{//Create a new socket and ask scheduler to do popen and return answer.
 #if MAOS_DISABLE_SCHEDULER == 0
@@ -502,21 +502,21 @@ void print_backtrace_symbol(void* const* buffer, int size){
 			cmd[1]=getpid();
 			char* ans=NULL;
 			if(stwrite(sock, cmd, sizeof(int)*2)){
-				warning("write cmd %d failed\n", cmd[0]);
+				dbg("write cmd %d failed\n", cmd[0]);
 			} else if(stwritestr(sock, cmdstr)){
-				warning("write cmd %s failed\n", cmdstr);
+				dbg("write cmd %s failed\n", cmdstr);
 			} else if(streadstr(sock, &ans)){
-				warning("read cmd failed\n");
+				dbg("read cmd failed\n");
 			} else{
-				info(" %s\n", ans); free(ans);
+				info3(" %s\n", ans); free(ans);
 			}
 			close(sock);
 		} else{
-			warning("Failed to connect to scheduler\n");
+			dbg("Failed to connect to scheduler\n");
 			connect_failed=1;
 		}
 #else
-		info("MAOS_DISABLE_SCHEDULER is set\n");
+		dbg("MAOS_DISABLE_SCHEDULER is set\n");
 #endif
 	}
 	UNLOCK(mutex);

@@ -33,6 +33,8 @@ void free_recon_moao(recon_t* recon, const parms_t* parms){
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
 		if(!parms->moao[imoao].used) continue;
 		cellfree(recon->moao[imoao].aloc);
+		cellfree(recon->moao[imoao].amap);
+		cellfree(recon->moao[imoao].aimcc);
 		dspcellfree(recon->moao[imoao].HA);
 		dcellfree(recon->moao[imoao].NW);
 		dspcellfree(recon->moao[imoao].actslave);
@@ -71,7 +73,7 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 		mapfree(map);
 		loc_create_map_npad(recon->moao[imoao].aloc->p[0], parms->fit.square?0:1, 0, 0);
 		recon->moao[imoao].amap=mapcellnew(1, 1);
-		recon->moao[imoao].amap->p[0]=recon->moao[imoao].aloc->p[0]->map;
+		recon->moao[imoao].amap->p[0]=mapref(recon->moao[imoao].aloc->p[0]->map);
 		recon->moao[imoao].amap->p[0]->iac=parms->moao[imoao].iac;
 		recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc->p[0], NULL);
 		dinvspd_inplace(recon->moao[imoao].aimcc);

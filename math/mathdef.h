@@ -63,16 +63,16 @@
 #define lcellfree(A) if(A){cellfree_do(A);A=NULL;}
 /*!free a dsp and zero the pointer*/
 #define dspfree(A)      if(A){dspfree_do(A); A=NULL;}
-#define dspcellfree(A)  if(A){dspcellfree_do(A); A=NULL;}
+#define dspcellfree(A)  if(A){cellfree_do(A); A=NULL;}
 /*!free a ssp and zero the pointer*/
 #define sspfree(A)      if(A){sspfree_do(A); A=NULL;}
-#define sspcellfree(A)  if(A){sspcellfree_do(A); A=NULL;}
+#define sspcellfree(A)  if(A){cellfree_do(A); A=NULL;}
 /*!free a ssp and zero the pointer*/
 #define cspfree(A)     if(A){cspfree_do(A); A=NULL;}
-#define cspcellfree(A) if(A){cspcellfree_do(A); A=NULL;}
+#define cspcellfree(A) if(A){cellfree_do(A); A=NULL;}
 /*!free a zsp and zero the pointer*/
 #define zspfree(A)     if(A){zspfree_do(A); A=NULL;}
-#define zspcellfree(A) if(A){zspcellfree_do(A); A=NULL;}
+#define zspcellfree(A) if(A){cellfree_do(A); A=NULL;}
 
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP, 0, A)

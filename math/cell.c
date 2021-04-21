@@ -100,26 +100,36 @@ void cellinit2(cell** A, const cell* B){
    Obtain the dimensions.
 */
 void celldim(const cell* A, long* nx, long* ny, long** nxs, long** nys){
-	if(!A) return;
-	*nxs=mycalloc(A->nx, long);
-	*nys=mycalloc(A->ny, long);
 	*nx=0;
 	*ny=0;
+	if(!A || !A->nx || !A->ny){
+		*nxs=*nys=NULL;
+		return;
+	} 
+	*nxs=mycalloc(A->nx, long);
+	*nys=mycalloc(A->ny, long);
+	
 	for(long ix=0; ix<A->nx; ix++){
 		for(long iy=0; iy<A->ny; iy++){
 			if(!isempty(P(A, ix, iy))){
-				*nx+=P(A, ix, iy)->nx;
-				(*nxs)[ix]=P(A, ix, iy)->nx;
-				break;
+				if(!(*nxs)[ix]){
+					*nx+=P(A, ix, iy)->nx;
+					(*nxs)[ix]=P(A, ix, iy)->nx;
+				} else if(P(A, ix, iy)->nx != (*nxs)[ix]){
+					error("Cells along a row has different number of rows\n");
+				}
 			}
 		}
 	}
 	for(long iy=0; iy<A->ny; iy++){
 		for(long ix=0; ix<A->nx; ix++){
 			if(!isempty(P(A, ix, iy))){
-				*ny+=P(A, ix, iy)->ny;
-				(*nys)[iy]=P(A, ix, iy)->ny;
-				break;
+				if(!(*nys)[iy]){
+					*ny+=P(A, ix, iy)->ny;
+					(*nys)[iy]=P(A, ix, iy)->ny;
+				} else if((*nys)[iy]!=P(A, ix, iy)->ny){
+					error("Cells along a column has different number of columns\n");
+				}
 			}
 		}
 	}
@@ -180,9 +190,16 @@ void cellfree_do(void* A){
 			}
 			free(dc->p);dc->p=0;
 		}
-		free(dc->header);
-		if(dc->m) cellfree_do(dc->m);
-		if(dc->fft) dfft_free_plan(dc->fft);
+		if(dc->header){
+			free(dc->header); dc->header=NULL;		
+		}
+		if(dc->m){
+			cellfree_do(dc->m);dc->m=NULL;		
+		}
+		if(dc->fft){
+			dfft_free_plan(dc->fft);
+			dc->fft=NULL;
+		}
 		free(dc);
 	}break;
 	case M_DBL:

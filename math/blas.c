@@ -302,7 +302,7 @@ DEF_ENV_FLAG(SVD_SDD_THRES, 0);
    diag(S) is returned.
 */
 void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
-	if(!A){
+	if(isempty(A)){
 		if(U) *U=0;
 		if(VT) *VT=0;
 		if(Sdiag) *Sdiag=0;
@@ -453,7 +453,7 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
 */
 void X(svd_pow)(X(mat)* A, R power, R thres){
-	if(!A) return;
+	if(isempty(A)) return;
 	XR(mat)* Sdiag=NULL;
 	X(mat)* U=NULL;
 	X(mat)* VT=NULL;

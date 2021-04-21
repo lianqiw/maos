@@ -131,8 +131,9 @@ static void print_usage(const void* key, VISIT which, int level){
 	const T_STATKEY* key2=*((const T_STATKEY**)key);
 	(void)level;
 	if(which==leaf||which==postorder){
-		info("size %4zu(%2zu) B@%p", key2->size, key2->nbyte, key2->p);
-		print_backtrace_symbol(key2->func, key2->nfunc);
+		info3("size %4zu(%2zu) B@%p", key2->size, key2->nbyte, key2->p);
+		int offset=key2->nfunc>3?2:0;
+		print_backtrace_symbol(key2->func, key2->nfunc-offset);
 	}
 }
 typedef struct T_DEINIT{/*contains either fun or data that need to be freed. */
@@ -180,7 +181,7 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 		dbg("%p malloced with %zu bytes\n", p, size);
 		print_backtrace();
 	} else if(MEM_VERBOSE==2&&size>1024){
-		info("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+		warning("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
 	}
 
 }
@@ -197,9 +198,9 @@ static int memkey_del(void* p){
 		memfree+=key1->size*key1->nbyte;
 		memcnt--;
 		if(MEM_VERBOSE==1){
-			info("Free: %p freed with %zu (%2zu) bytes\n", p, key1->size, key1->nbyte);
+			warning("Free: %p freed with %zu (%2zu) bytes\n", p, key1->size, key1->nbyte);
 		} else if(MEM_VERBOSE==2&&key1->size>1024){
-			info("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+			warning("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
 		}
 		if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
 			warning("Free: Error deleting old record\n");
@@ -271,18 +272,18 @@ unamespace std{
 #endif
 static void print_mem_debug(){
 	if(MROOT){
-		warning("%ld (%.3f MB) allocated memory not freed!!!\n",
+		info3("%ld (%.3f MB) allocated memory not freed!!!\n",
 			memcnt, (memalloc-memfree)/1024./1024.);
 		twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
 		twalk(MSTATROOT, print_usage);//print results.
 	} else{
-		info("All allocated memory are freed.\n");
+		info3("All allocated memory are freed.\n");
 		if(memcnt>0){
-			warning("But memory count is still none zero: %ld\n", memcnt);
+			info3("Memory counter is still none zero: %ld\n", memcnt);
 		}
 	}
-	info("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
-	info("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
+	info3("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
+	info3("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 }
 void read_sys_env(){
 	READ_ENV_INT(MEM_DEBUG, 0, 1);

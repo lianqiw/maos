@@ -65,7 +65,6 @@
     X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B, const char trans[2]) CHECK_UNUSED_RESULT;	\
     void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const char trans[2], const T scale); \
     X(spcell) *X(spcelltrans)(const X(spcell) *spc) CHECK_UNUSED_RESULT; \
-    void X(spcellfree_do)(X(spcell) *spc);				\
     X(sp) *X(spcat)(const X(sp) *A, const X(sp) *B, int type) CHECK_UNUSED_RESULT; \
     X(sp) *X(spcell2sp)(const X(spcell) *A) CHECK_UNUSED_RESULT;	\
     X(mat) *X(spsum)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;	\

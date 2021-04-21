@@ -525,9 +525,9 @@ void X(cellzero)(void* dc){
 X(mat)* X(cell2m)(const void* A_){
 	if(!A_) return 0;
 	cell* A=cell_cast(A_);
-	long nx, ny, * nxs, * nys;
+	long nx=0, ny=0, *nxs=NULL, *nys=NULL;
 	celldim(A, &nx, &ny, &nxs, &nys);
-	if(!nx||!ny) return 0;
+	
 	X(mat)* out=X(new)(nx, ny);
 	long jcol=0;
 	for(long iy=0; iy<A->ny; iy++){
@@ -535,9 +535,11 @@ X(mat)* X(cell2m)(const void* A_){
 			long kr=0;
 			for(long ix=0; ix<A->nx; ix++){
 				if(!isempty(P(A, ix, iy))){
-					T* pout=out->p+((icol+jcol)*nx+kr);
+					T* pout=PP(out, kr, icol+jcol);
+					//T* pout=out->p+((icol+jcol)*nx+kr);
 					if(ismat(P(A, ix, iy))){
-						memcpy(pout, ((X(mat*))P(A, ix, iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));
+						//memcpy(pout, ((X(mat*))P(A, ix, iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));
+						memcpy(pout, PCOL(((X(mat*))P(A, ix, iy)), icol), nxs[ix]*sizeof(T));
 					} else if(issp(P(A, ix, iy))){
 					//convert sparse col to full
 						X(sp*)Asp=(X(sp*))P(A, ix, iy);

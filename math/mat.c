@@ -942,7 +942,7 @@ X(mat)* X(cell_col)(X(cell)* input, long icol){
    create sum of all the elements in A.
 */
 T X(cellsum)(const X(cell)* A){
-	if(!A) return 0;
+	if(isempty(A)) return 0;
 	T v=0;
 	for(long i=0; i<A->nx*A->ny; i++){
 		v+=X(sum)(A->p[i]);

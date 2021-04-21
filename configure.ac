@@ -97,11 +97,11 @@ if test -n "`which nvcc 2>/dev/null`" ;then
 	NVCC="$(readlink "$NVCC")"
     fi
 else
-    for cuda in /usr/local/cuda /etc/alternatives/cuda /opt/cuda /usr/local/cuda-* /opt/cuda-*;do
-	if test -x "${cuda}/bin/nvcc" ;then
-	    NVCC="${cuda}/bin/nvcc"
-	    break;
-	fi
+    for cuda in /etc/alternatives/cuda /usr/local/cuda /usr/local/cuda-* /opt/cuda /opt/cuda-* /opt/cuda/default /opt/cuda/cuda-*;do
+		if test -x "${cuda}/bin/nvcc" ;then
+			NVCC="${cuda}/bin/nvcc"
+			break;
+		fi
     done
     unset nvcc
 fi

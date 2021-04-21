@@ -654,16 +654,7 @@ X(spcell)* X(spcelltrans)(const X(spcell)* spc){
 	}
 	return spct;
 }
-/**
- * Free a sparse cell data*/
-void X(spcellfree_do)(X(spcell)* spc){
-	if(!spc||!spc->p) return;
-	for(int ix=0; ix<spc->nx*spc->ny; ix++){
-		X(spfree)(spc->p[ix]);
-	}
-	free(spc->p);
-	free(spc);
-}
+
 /**
  * Concatenate two sparse array along dim dimension*/
 X(sp)* X(spcat)(const X(sp)* A, const X(sp)* B, int dim){

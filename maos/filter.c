@@ -397,7 +397,6 @@ static void filter_cl(sim_t* simu){
 	}
 
 	if(recon->moao&&!parms->gpu.moao){
-		warning_once("moao filter implemented with LPF\n");
 		if(simu->dm_wfs){
 			const int nwfs=parms->nwfs;
 			for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -405,7 +404,7 @@ static void filter_cl(sim_t* simu){
 				int imoao=parms->powfs[ipowfs].moao;
 				if(imoao<0) continue;
 				real g=parms->moao[imoao].gdm;
-				dadd(&simu->dm_wfs->p[iwfs], 1-g, simu->dm_wfs->p[iwfs+nwfs], g);
+				dadd(PP(simu->dm_wfs, iwfs, 0), 1-g, P(simu->dm_wfs, iwfs, 1) , g);
 			}
 		}
 		if(simu->dm_evl){
@@ -413,7 +412,7 @@ static void filter_cl(sim_t* simu){
 			int imoao=parms->evl.moao;
 			real g=parms->moao[imoao].gdm;
 			for(int ievl=0; ievl<nevl; ievl++){
-				dadd(&simu->dm_evl->p[ievl], 1-g, simu->dm_evl->p[ievl+nevl], g);
+				dadd(PP(simu->dm_evl, ievl, 0), 1-g, P(simu->dm_evl, ievl, 1), g);
 			}
 		}
 	}
