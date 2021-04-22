@@ -374,7 +374,7 @@ dspcell *slaving(loccell *aloc,        /**<[in]The actuator grid*/
 	    lfree(actct);
 	}
 	dspsetnzmax(slavet, count);
-	writebin(slavet, "slave_%d_%d", mode, idm);
+	//writebin(slavet, "slave_%d_%d", mode, idm);
 	P(actslave,idm,idm)=dspmulsp(slavet, slavet,"nt");
 	dspscale(P(actslave,idm,idm), sclsq);
 	dspfree(slavet);

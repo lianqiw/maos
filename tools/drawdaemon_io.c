@@ -99,7 +99,8 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 	    ((double*)p)[i]=(double)(((float*)p)[i]);			\
 	}								\
     }
-void listen_draw(){
+void* listen_draw(void*dummy){
+    (void)dummy;
     dbg("listen_draw is listening at %d\n", sock);
     //TIC;tic;
     static drawdata_t *drawdata=NULL;
@@ -301,4 +302,5 @@ void listen_draw(){
     sock=-1;
     sock_block=1;
     warning("Read failed, stop listening.\n");
+    return NULL;
 }

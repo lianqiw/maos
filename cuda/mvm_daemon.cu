@@ -96,7 +96,7 @@ __global__ static void mvm_g_mul_do(const Real *restrict mvm, ATYPE *restrict a,
     }
 }
 /*A couple of threads that does jobs upon available.*/
-static void mvm_thread(void* ithread0){
+static void* mvm_thread(void* ithread0){
     long ithread=(long) ithread0;
     int nact=mvm_data->nact;
     int nact1=(nact+NCPU-1)/NCPU;
@@ -172,6 +172,7 @@ static void mvm_thread(void* ithread0){
 	    
 	}
     }
+    return NULL;
 }
 static void mvm_data_free(void){
     free(mvm_data->icols);

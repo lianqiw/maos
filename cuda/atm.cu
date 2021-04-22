@@ -29,7 +29,7 @@
 
 
 
-static void atm_prep(atm_prep_t *data){
+static void* atm_prep(atm_prep_t *data){
     PNEW(lock);
     LOCK(lock);/*make sure we only read one layer at a time. */
     //TIC;tic;
@@ -74,6 +74,7 @@ static void atm_prep(atm_prep_t *data){
     }
     //toc("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
     UNLOCK(lock);
+    return NULL;
 }
 /**
    Transfer atmospheric data to GPU.
