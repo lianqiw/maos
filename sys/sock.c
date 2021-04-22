@@ -465,7 +465,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 				snprintf(portstr, sizeof(portstr), "%d", port);
 			}
 			if((res=getaddrinfo(hoststr, portstr, &hints, &result))){
-				warning("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
+				dbg("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
 				return -1;
 			}
 			res=connect(sock, result->ai_addr, sizeof(servername));

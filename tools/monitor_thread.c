@@ -177,13 +177,12 @@ static void* add_host(gpointer data){
 			if(stwriteintarr(sock, cmd, 2)){//write failed.
 				warning_time("Failed to write to scheduler at %s\n", hosts[ihost]);
 				close(sock);
-				LOCK(mhost);
-				hsock[ihost]=-1;
-				UNLOCK(mhost);
+				sock=-1;
 			} else{
 				host_added(ihost, sock);
 			}
-		} else{
+		}
+		if(sock<0){
 			dbg_time("Cannot reach %s", hosts[ihost]);
 			LOCK(mhost);
 			hsock[ihost]=-1;
@@ -191,6 +190,18 @@ static void* add_host(gpointer data){
 		}
 	}
 	return NULL;
+}
+//Calls add_host in a new thread. Used by the thread running listen_host().
+static void add_host_thread(int ihost){
+	if(ihost>-1&&ihost<nhost){
+		if(hsock[ihost]==-1){
+			pthread_t tmp;
+			pthread_create(&tmp, NULL, add_host, GINT_TO_POINTER(ihost));
+			//add_host(GINT_TO_POINTER(ihost));
+		} else{
+			dbg_time("MON_ADDHOST: hsock[%d]=%d\n", ihost, hsock[ihost]);
+		}
+	}
 }
 //called by listen_host to respond to scheduler
 static int respond(int sock){
@@ -274,14 +285,8 @@ static int respond(int sock){
 	}
 	break;
 	case MON_ADDHOST:
-		if(cmd[1]>-1&&cmd[1]<nhost){			
-			if(hsock[cmd[1]]==-1){
-				pthread_t tmp;
-				pthread_create(&tmp, NULL, add_host, GINT_TO_POINTER(cmd[1]));
-				//add_host(GINT_TO_POINTER(cmd[1]));
-			}else{
-				dbg_time("MON_ADDHOST: hsock[%d]=%d\n", ihost, hsock[cmd[1]]);
-			}
+		if(cmd[1]>-1&&cmd[1]<nhost){
+			add_host_thread(cmd[1]);
 		} else if(cmd[1]==-2){//quit
 			return -2;
 		}
@@ -328,7 +333,7 @@ void* listen_host(void* dummy){
 		for(int ihost=0; ihost<nhost; ihost++){
 			if(htime[ihost]){//only handle hosts that are ever connected
 				if(hsock[ihost]<0){//disconnected, trying to reconnect
-					add_host_wrap(ihost);
+					add_host_thread(ihost);//do not use _add_host_wrap. It will deadlock.
 				}else if(htime[ihost]>0 && ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
 					dbg_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
 					scheduler_cmd(ihost, 0, CMD_PROBE);
@@ -384,7 +389,7 @@ int scheduler_cmd(int ihost, int pid, int command){
 	} else{
 		int sock=hsock[ihost];
 		if(sock<0){
-			add_host_wrap(ihost);
+			add_host_thread(ihost);
 			sleep(1);
 			sock=hsock[ihost];
 		}
