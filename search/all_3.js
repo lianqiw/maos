@@ -257,7 +257,6 @@ var searchData=
   ['dspcell2sp',['dspcell2sp',['../dmath_8h.html#a4d550e01a568fd025fd5fce0f05bcb17',1,'dtmp.c']]],
   ['dspcell_5fcast',['dspcell_cast',['../dmath_8h.html#a064fdc06e1924cd97081832ad66300c2',1,'dtmp.c']]],
   ['dspcelldroptol',['dspcelldroptol',['../dmath_8h.html#a84320b92c4124b8492e2b8d6548b2ec9',1,'dtmp.c']]],
-  ['dspcellfree_5fdo',['dspcellfree_do',['../dmath_8h.html#ab1830a001db26e42cbec7b67fb100dee',1,'dtmp.c']]],
   ['dspcellfull',['dspcellfull',['../dmath_8h.html#ac61be3e3f6c2dfcae9612a0b176935c6',1,'dtmp.c']]],
   ['dspcellref',['dspcellref',['../dmath_8h.html#a69942dd4947159202a52e36f2b257c00',1,'dtmp.c']]],
   ['dspcellscale',['dspcellscale',['../dmath_8h.html#aeab6e60594c2c1b51d4d8c4cd5ac59cc',1,'dtmp.c']]],

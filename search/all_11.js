@@ -252,7 +252,6 @@ var searchData=
   ['sspcell',['sspcell',['../type_8h.html#structsspcell',1,'']]],
   ['sspcell2sp',['sspcell2sp',['../smath_8h.html#aad7c7bdafa96c19c288505e4c3cd5dc2',1,'stmp.c']]],
   ['sspcell_5fcast',['sspcell_cast',['../smath_8h.html#aa4b94c8579dfb9649855112153dd7b8e',1,'stmp.c']]],
-  ['sspcellfree_5fdo',['sspcellfree_do',['../smath_8h.html#a420104dcbba923559a7fb76f156cabf8',1,'stmp.c']]],
   ['sspcellref',['sspcellref',['../smath_8h.html#a7a434cdeb285f2d8d1ef39d512958d9d',1,'stmp.c']]],
   ['sspcellsort',['sspcellsort',['../smath_8h.html#a87b76731e332c04ac478f1937539d0be',1,'stmp.c']]],
   ['sspcellsym',['sspcellsym',['../smath_8h.html#ac7b85b911efb746ddb5917bc92236766',1,'stmp.c']]],

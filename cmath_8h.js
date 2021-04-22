@@ -221,7 +221,6 @@ var cmath_8h =
     [ "cspmulsp", "cmath_8h.html#a5ebbd93b3c151cfff87e620e82c237ba", null ],
     [ "cspmulsp2", "cmath_8h.html#a536f2733e0c8699aba79904d7a94a8f9", null ],
     [ "cspcelltrans", "cmath_8h.html#a505b38d31765196007662b0cc2aaa796", null ],
-    [ "cspcellfree_do", "cmath_8h.html#a81ac17cb4a76babb27068e2441fef625", null ],
     [ "cspcat", "cmath_8h.html#a8789fe1e884e000a6113f62f0e9d2e63", null ],
     [ "cspcell2sp", "cmath_8h.html#a3b682ec0e120632c083d6e9f5b40a2b3", null ],
     [ "cspsum", "cmath_8h.html#aa3836f4b5764c618db758467cdd24a62", null ],

@@ -203,7 +203,6 @@ var smath_8h =
     [ "sspmulsp", "smath_8h.html#aa2ea65a6cc0446436ad21cd11b6b33bb", null ],
     [ "sspmulsp2", "smath_8h.html#a4e3d289b1ff2553052de5b73ead89ff6", null ],
     [ "sspcelltrans", "smath_8h.html#af07dd28f45448cf3b2608002063cbe00", null ],
-    [ "sspcellfree_do", "smath_8h.html#a420104dcbba923559a7fb76f156cabf8", null ],
     [ "sspcat", "smath_8h.html#afefd1fe3b27160f0a485df0b9a8095fc", null ],
     [ "sspcell2sp", "smath_8h.html#aad7c7bdafa96c19c288505e4c3cd5dc2", null ],
     [ "sspsum", "smath_8h.html#abfa20242a0dc5a0313d7b0e3720af418", null ],

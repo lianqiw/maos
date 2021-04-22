@@ -164,7 +164,6 @@ var searchData=
   ['cspcell2sp',['cspcell2sp',['../cmath_8h.html#a3b682ec0e120632c083d6e9f5b40a2b3',1,'ctmp.c']]],
   ['cspcell_5fcast',['cspcell_cast',['../cmath_8h.html#a439e729c5b39a75b9b8ec7a5384f3915',1,'ctmp.c']]],
   ['cspcelldroptol',['cspcelldroptol',['../cmath_8h.html#a2281038438f8486887be78c4b3a95f60',1,'ctmp.c']]],
-  ['cspcellfree_5fdo',['cspcellfree_do',['../cmath_8h.html#a81ac17cb4a76babb27068e2441fef625',1,'ctmp.c']]],
   ['cspcellref',['cspcellref',['../cmath_8h.html#a2ffc30648086101e183272469361bfcd',1,'ctmp.c']]],
   ['cspcellsort',['cspcellsort',['../cmath_8h.html#a6b8d5e45b17827f0ae65b1ced936b49d',1,'ctmp.c']]],
   ['cspcellsym',['cspcellsym',['../cmath_8h.html#a842eca1141ba48b4103a76d715173be4',1,'ctmp.c']]],

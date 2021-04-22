@@ -221,7 +221,6 @@ var zmath_8h =
     [ "zspmulsp", "zmath_8h.html#a22d9fb2c73e0be2bd5afa3924beeaf96", null ],
     [ "zspmulsp2", "zmath_8h.html#a8e623d2feef38f8f598425a63529896d", null ],
     [ "zspcelltrans", "zmath_8h.html#afa8efa17c5f4bbf8e5f0cef27f453c16", null ],
-    [ "zspcellfree_do", "zmath_8h.html#a40f086b8f3224e376c1892270b6f6e0c", null ],
     [ "zspcat", "zmath_8h.html#abc9eba3509f5f923a1828208d3d438c0", null ],
     [ "zspcell2sp", "zmath_8h.html#acc3dcd7c4f4dae4527c8ac182874a61c", null ],
     [ "zspsum", "zmath_8h.html#a93af368d364cb2820e618f1f35931e26", null ],
