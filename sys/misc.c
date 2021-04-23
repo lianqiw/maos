@@ -514,6 +514,37 @@ void mysleep(double sec){
 }
 
 /**
+* 	Pause execution and listen input from fd1 and/or fd2 for continuation. Returns new pause flag.
+ */
+int mypause(int fd1,/**<first file no, usually 0 for stdin*/
+			int fd2 /**<second file no, usually created from a pipe t*/
+){
+	info2("Press enter to step, c to resume:\n");
+	fd_set active_fd_set;
+	FD_ZERO(&active_fd_set);
+	FD_SET(fd1, &active_fd_set);
+	if(fd2>0){
+		FD_SET(fd2, &active_fd_set);
+	}
+	int ans=select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0);
+	if(ans>0){
+		for(int i=0; i<FD_SETSIZE; i++){
+			if(FD_ISSET(i, &active_fd_set)){
+				char key=0;
+				if(read(i, &key, 1)==1){
+					if(key=='c'){
+						return 0;
+						info2("Resuming\n");
+					} else{
+						info2("Continuing...\n");
+					}
+				}
+			}
+		}
+	}
+	return 1;
+}
+/**
    Return available space of mounted file system in bytes.
 */
 long available_space(const char* path){
@@ -852,4 +883,3 @@ void register_signal_handler(int (*func)(int)){
 }
 #undef strdup
 char* (*strdup0)(const char*)=strdup;
-

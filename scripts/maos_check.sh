@@ -65,9 +65,9 @@ echo > $fnlog
 ii=0
 
 function run_maos(){
-    ./maos sim.end=1000 $args "$*" >> $fnlog
+    ./maos sim.end=100 $args "$*" >> $fnlog
     if [ $? == 0 ];then
-		RMS[ii]=$(grep 'Mean:' $fnlog |tail -n1 |cut -d ':' -f 2)
+		RMS[ii]=$(grep 'Mean:' $fnlog |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]%.*}
     else
 		RMS[ii]='error'

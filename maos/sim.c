@@ -257,7 +257,8 @@ void maos_sim(){
 		}
 	}
 	dbg("PARALLEL=%d\n", PARALLEL);
-	real restot=0; long rescount=0;
+	long rescount=0;
+	dmat* restot=dnew(parms->evl.nmod, 1);
 	for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 		sim_t* simu=NULL;
 		while(!(simu=maos_iseed(iseed))){
@@ -297,32 +298,7 @@ void maos_sim(){
 			for(int isim=simstart; isim<simend; isim++){
 				maos_isim(isim);
 				if(simu->pause>0&&isim%simu->pause==0){
-					info2("Press enter to step, c to resume:\n");
-					//We use select on a pipe and stdin to read continuation message
-					//pipe is used by maos_var() in main.c
-					
-					fd_set active_fd_set;
-					FD_ZERO(&active_fd_set);
-					FD_SET(0, &active_fd_set);
-					if(sim_pipe[0]>0){
-						FD_SET(sim_pipe[0], &active_fd_set);
-					}
-					int ans=select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0);
-					if(ans>0){
-						for(int i=0; i<FD_SETSIZE; i++){
-							if(FD_ISSET(i, &active_fd_set)){
-								char key=0;
-								if(read(i, &key, 1)==1){
-									if(key=='c'){
-										simu->pause=0;
-										info2("Resuming\n");
-									}else{
-										info2("Continuing...\n");
-									}
-								}
-							}
-						}
-					}
+					simu->pause=mypause(0, sim_pipe[0]);
 				}
 			}/*isim */
 		}
@@ -338,19 +314,22 @@ void maos_sim(){
 			} else{
 				isim0=0;
 			}
-			real sum=0;
-			for(int i=isim0; i<parms->sim.end; i++){
-				if(parms->sim.evlol){
-					sum+=simu->ole->p[i*parms->evl.nmod];
-				} else{
-					sum+=simu->cle->p[i*parms->evl.nmod];
+			const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
+			for(long i=isim0; i<parms->sim.end; i++){
+				for(long imod=0; imod<parms->evl.nmod; imod++){
+					P(restot, imod)+=P(cle, imod, i);
 				}
 			}
-			restot+=sum/(parms->sim.end-isim0);
+			dscale(restot, 1./(parms->sim.end-isim0));
 			rescount++;
 		}
 		free_simu(simu);
 		global->simu=NULL;
 	}/*seed */
-	info3("Mean: %.2f\n", sqrt(restot/rescount)*1e9);
+	
+	info3("Mean: ");
+	for(long imod=0; imod<parms->evl.nmod; imod++){
+		info3("%.2f ", sqrt(restot->p[imod]/rescount)*1e9);
+	}
+	info3("\n");
 }

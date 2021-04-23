@@ -54,7 +54,8 @@ int mystrcmp(const char *a, const char *b);
 char *mystrndup(const char *A, int len);
 void cloexec(int fd);
 void mysleep(double sec);
-long available_space(const char *path);
+int mypause(int fd1, int fd2);
+long available_space(const char* path);
 /*strdup for static pointers or in constructor should be using this strdup0 to
   avoid reporting of unfreed mem.*/
 extern char* (*strdup0)(const char *);
