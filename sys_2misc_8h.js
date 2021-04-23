@@ -40,6 +40,7 @@ var sys_2misc_8h =
     [ "mystrndup", "sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37", null ],
     [ "cloexec", "sys_2misc_8h.html#a7558928e15e86ed66d9139b472b0723b", null ],
     [ "mysleep", "sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53", null ],
+    [ "mypause", "sys_2misc_8h.html#a13def182b8c8d171bd529e29de5143c9", null ],
     [ "available_space", "sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4", null ],
     [ "mystrdup", "sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9", null ],
     [ "parse_argopt", "sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],

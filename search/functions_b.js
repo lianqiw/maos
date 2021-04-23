@@ -79,6 +79,7 @@ var searchData=
   ['mydirname',['mydirname',['../sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07',1,'misc.c']]],
   ['mygetcwd',['mygetcwd',['../sys_2misc_8h.html#aecd6443b6b571cb643489a42df57d79f',1,'misc.c']]],
   ['mymkdir',['mymkdir',['../sys_2misc_8h.html#a2bd73426371e8d2d46dbf3cb11c45f60',1,'misc.c']]],
+  ['mypause',['mypause',['../sys_2misc_8h.html#a13def182b8c8d171bd529e29de5143c9',1,'misc.c']]],
   ['mysleep',['mysleep',['../sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53',1,'misc.c']]],
   ['mystrcmp',['mystrcmp',['../sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f',1,'misc.c']]],
   ['mystrdup',['mystrdup',['../sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9',1,'misc.c']]],

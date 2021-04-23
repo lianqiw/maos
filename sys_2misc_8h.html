@@ -179,6 +179,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mysymlink</b> (const 
 <tr class="separator:a7558928e15e86ed66d9139b472b0723b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42b49c2e4e28a25a37bb3a3760cedf53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53">mysleep</a> (double sec)</td></tr>
 <tr class="separator:a42b49c2e4e28a25a37bb3a3760cedf53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13def182b8c8d171bd529e29de5143c9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a13def182b8c8d171bd529e29de5143c9">mypause</a> (int fd1, int fd2)</td></tr>
+<tr class="separator:a13def182b8c8d171bd529e29de5143c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8327247b00b74fe0f22822f797f5ec4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4">available_space</a> (const char *path)</td></tr>
 <tr class="separator:aa8327247b00b74fe0f22822f797f5ec4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59d2286a5bcaa20324a9e9a8c319c7e9"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9">mystrdup</a> (const char *A)</td></tr>
@@ -897,6 +899,42 @@ nval</td>
       </table>
 </div><div class="memdoc">
 <p>wrap of nanosleep </p>
+
+</div>
+</div>
+<a id="a13def182b8c8d171bd529e29de5143c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13def182b8c8d171bd529e29de5143c9">&#9670;&nbsp;</a></span>mypause()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int mypause </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>fd1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>fd2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Pause execution and listen input from fd1 and/or fd2 for continuation. Returns new pause flag. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fd1</td><td>first file no, usually 0 for stdin </td></tr>
+    <tr><td class="paramname">fd2</td><td>second file no, usually created from a pipe t </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
