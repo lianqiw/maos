@@ -1,4 +1,4 @@
-AC_INIT(maos, 2.4.0, lianqiw@gmail.com)
+AC_INIT(maos, 2.5.0, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
 AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
@@ -646,12 +646,12 @@ AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 thread
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 if test "$has_chol" = "no" ;then
-	download CHOLMOD "libcholmod${libsuffix}.tar.bz2" ${PRE_DIR}
+	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${PRE_DIR}
 	unset ac_cv_lib_cholmod_${chol_fun}
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 fi
 if test "$has_chol" = "no" ;then
-   	compile CHOLMOD cholmod.tar.bz2
+   	compile CHOLMOD "cholmod.tar.bz2"
    	unset ac_cv_lib_cholmod_${chol_fun}
    	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 fi

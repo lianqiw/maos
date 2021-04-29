@@ -47,6 +47,7 @@ FORCE:
 CLEANFILES=version.h
 
 MAKEOVERRIDES=--no-print-directory
+MAKEFLAGS=-j8 #enable parallel build
 
 clean-local:
 	-rm -rf external
