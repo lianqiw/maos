@@ -1467,6 +1467,16 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 				simu->cgres=dcellnew3(2, 1, nnx, nny);
 			}
 		}
+		if(parms->recon.psd){
+			if(parms->recon.psddtrat_hi){
+				save->psdcl=zfarr_init(0, 0, "psdcl_%d.bin", seed);
+				save->psdol=zfarr_init(0, 0, "psdol_%d.bin", seed);
+			}
+			if(parms->recon.psddtrat_lo){
+				save->psdcl_lo=zfarr_init(0, 0, "psdcl_lo_%d.bin", seed);
+				save->psdol_lo=zfarr_init(0, 0, "psdol_lo_%d.bin", seed);
+			}
+		}
 	}
 	init_simu_evl(simu);
 #if USE_CUDA
@@ -1647,6 +1657,10 @@ void free_simu(sim_t* simu){
 	zfarr_close_n(save->evlopdcov_ngsr, nevl);
 	zfarr_close_n(save->evlopdmean_ngsr, nevl);
 	zfarr_close(save->evlpsfolmean);
+	zfarr_close(save->psdcl);
+	zfarr_close(save->psdol);
+	zfarr_close(save->psdcl_lo);
+	zfarr_close(save->psdol_lo);
 	dcellfree(simu->evlopd);
 	dfree(simu->lgsfocuslpf);
 	cellfree(simu->ints);

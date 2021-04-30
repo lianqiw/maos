@@ -66,13 +66,13 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 int drawloc(const char* fig, loc_t* loc, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(7);
-int drawopd(const char* fig, loc_t* loc, const real* opd, real* zlim,
+int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(8);
 int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(9);
-int drawopdamp(const char* fig, loc_t* loc, const real* opd, const real* amp, real* zlim,
+int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(9);
 int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,

@@ -1251,7 +1251,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		}
 		real nm2rad=1e-9*2*sqrt(3)*pow(lltcfg->d, -2);
 		dmat* focus=dnew(nx, nx);
-		loc_add_focus(focus->p, llt->loc, lltcfg->focus*nm2rad);
+		loc_add_focus(focus, llt->loc, lltcfg->focus*nm2rad);
 		real var=0, piston=0;
 		long count=0;
 		for(long i=0; i<llt->loc->nloc; i++){

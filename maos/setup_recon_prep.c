@@ -853,7 +853,7 @@ setup_recon_GF(recon_t* recon, const parms_t* parms){
 	recon->GFngs=dcellnew(parms->nwfs, 1);
 	{
 		dmat* opd=dnew(recon->ploc->nloc, 1);
-		loc_add_focus(opd->p, recon->ploc, 1);
+		loc_add_focus(opd, recon->ploc, 1);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			dspmm(&recon->GFall->p[iwfs], recon->GP->p[parms->recon.glao?ipowfs:iwfs], opd, "nn", 1);

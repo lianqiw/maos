@@ -98,7 +98,7 @@ hyst_t* hyst_new(
 	hyst->beta=u/alpha*(1.-2.*enas/(eas+enas))+1.;
 	hyst->beta_m_u=hyst->beta-u;
 	hyst->alpha=alpha/stroke;
-	info("hyst_new: stroke=%g, alpha=%g, beta=%g, u=%g, nact=%ld\n", stroke, alpha, hyst->beta, u, nact);
+	dbg("hyst_new: stroke=%g, alpha=%g, beta=%g, u=%g, nact=%ld\n", stroke, alpha, hyst->beta, u, nact);
 	return hyst;
 }
 

@@ -38,7 +38,7 @@ static inline long loc_map_get(map_t* map, long ix, long iy){
 }
 uint32_t lochash(const loc_t* loc, uint32_t key);
 void loc_embed(map_t* dest, const loc_t* loc, const real* in);
-cell* loc_embed2(loc_t* loc, dmat* arr);
+dcell* loc_embed2(const loc_t* loc, const dmat* arr);
 void loc_embed_add(map_t* dest, const loc_t* loc, const real* in);
 void loc_embed_cell(dcell** dest, const loc_t* loc, const dcell* in);
 void loc_extract(dmat* dest, const loc_t* loc, map_t* in);
@@ -63,8 +63,8 @@ void loc_calc_mod(real* out, real* coeffout,
 	const dmat* mod, const real* amp, real* opd);
 dmat* loc_mcc_ptt(const loc_t* loc, const real* amp);
 dcell* pts_mcc_ptt(const pts_t* pts, const real* amp);
-void loc_remove_ptt(real* opd, const real* ptt, const loc_t* loc);
-void loc_add_ptt(real* opd, const real* ptt, const loc_t* loc);
+void loc_remove_ptt(dmat* opd, const real* ptt, const loc_t* loc);
+void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc);
 void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 	const real* amp, const real* opd);
 loc_t* mk1dloc_vec(real* x, long nx);
@@ -86,7 +86,7 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout);
 void loc_reduce_spcell(loc_t* loc, dspcell* sp, int dim, int cont);
 void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont);
 
-void loc_add_focus(real* opd, loc_t* loc, real val);
+void loc_add_focus(const dmat* opd, const loc_t* loc, real val);
 dmat* loc2mat(loc_t* loc, int piston);
 loc_t* pts2loc(pts_t* pts);
 void locrot(loc_t* loc, const real theta);

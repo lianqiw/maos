@@ -855,12 +855,16 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 /**
    Plot the opd using coordinate loc. see imagesc()
 */
-int drawopd(const char* fig, loc_t* loc, const real* opd, real* zlim,
+int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 
 	format2fn;
 	if(!draw_current(fig, fn)) return 0;
+	if(loc->nloc!=opd->nx*opd->ny){
+		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
+		return 0;
+	}
 	loc_create_map(loc);
 	//This is different from loc_embed. It removes the padding.
 	int npad=loc->npad;
@@ -871,7 +875,7 @@ int drawopd(const char* fig, loc_t* loc, const real* opd, real* zlim,
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
-			P(opd0,ix,iy)=ii>0?opd[ii-1]:NAN;
+			P(opd0,ix,iy)=ii>0?opd->p[ii-1]:NAN;
 		}
 	}
 	real limit[4];
@@ -892,7 +896,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real
 	format2fn;
 	if(!draw_current(fig, fn)) return 0;
 	if(grad2opd&&grad->nx>8){
-	//This is different from loc_embed. It removes the padding.
+		//This is different from loc_embed. It removes the padding.
 		dmat* phi=0;
 		cure_loc(&phi, grad, saloc);
 		real limit[4];
@@ -904,22 +908,31 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real
 		//writebin(phi, "phi");
 		imagesc(fig, phi->nx, phi->ny, limit, zlim, phi->p, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
-
 	} else{
-		drawopd(fig, saloc, grad->p, zlim, title, xlabel, ylabel, "%s x", fn);
-		drawopd(fig, saloc, grad->p+grad->nx/2, zlim, title, xlabel, ylabel, "%s y", fn);
+		long nsa=saloc->nloc;
+		dmat *gx=dnew_do(nsa, 1, grad->p, 0);
+		dmat *gy=dnew_do(nsa, 1, grad->p+nsa, 0);
+		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s x", fn);
+		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s y", fn);
+		dfree(gx);
+		dfree(gy);
 	}
 	return 1;
 }
 /**
    Plot opd*amp with coordinate loc. see imagesc()
 */
-int drawopdamp(const char* fig, loc_t* loc, const real* opd, const real* amp, real* zlim,
+int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
 	if(!draw_current(fig, fn)) return 0;
 	(void)fig;
+	if(loc->nloc != amp->nx || loc->nloc!=opd->nx*opd->ny){
+		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld, amp has %ldx%ld.\n",
+		 loc->nloc, opd->nx, opd->ny, amp->nx, amp->ny);
+		return 0;
+	}
 	loc_create_map(loc);
 
 	int npad=loc->npad;
@@ -927,14 +940,14 @@ int drawopdamp(const char* fig, loc_t* loc, const real* opd, const real* amp, re
 	int nx=loc->map->nx-npad*2;
 	int ny=loc->map->ny-npad*2;
 	real ampthres;
-	dmaxmin(amp, loc->nloc, &ampthres, 0);
+	dmaxmin(amp->p, loc->nloc, &ampthres, 0);
 	ampthres*=0.5;
 	real* opd0=mycalloc(nx*ny, real);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm]-1;
-			if(ii>-1&&amp[ii]>ampthres){
-				opd0[ix+iy*nx]=opd[ii];
+			if(ii>-1&&amp->p[ii]>ampthres){
+				opd0[ix+iy*nx]=opd->p[ii];
 			} else{
 				opd0[ix+iy*nx]=NAN;
 			}
@@ -958,8 +971,18 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 	format2fn;
 	if(!draw_current(fig, fn)) return 0;
 	dmat* ints2=0;
-	if(ints->nx==1){//T
-		ints2=dref(ints->p[0]);
+	if(ints->nx==1){//TT or PWFS
+		if(ints->p[0]->nx==ints->p[0]->ny){//TT
+			ints2=dref(ints->p[0]);
+		} else{//PWFS
+			dcell* ints3=loc_embed2(saloc, ints->p[0]);
+			if(ints3->nx==4 && ints3->ny==1){
+				ints3->nx=2;
+				ints3->ny=2;
+			}
+			ints2=dcell2m(ints3);
+			dcellfree(ints3);
+		}
 	} else if(ints->nx==4){//TTF
 		dcell* ints3=dcellref(ints);
 		cellreshape(ints3, 2, 2);

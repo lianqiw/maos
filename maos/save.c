@@ -94,6 +94,16 @@ void save_gradol(sim_t* simu){
 		}
 	}
 }
+//Convert the DM command from modal space if needed. The returned dmat should be freed.
+dmat* convert_dm(const recon_t* recon, dmat* in, int idm){
+	dmat* out=NULL;
+	if(recon->amod && recon->amod->p[idm]){
+		dmm(&out, 0, recon->amod->p[idm], in, "nn", 1);
+	} else{
+		out=dref(in);
+	}
+	return out;
+}
 /**
    Plot and save reconstruction data.
  */
@@ -107,30 +117,34 @@ void save_recon(sim_t* simu){
 				int ipowfs=parms->wfs[iwfs].powfs;
 				int imoao=parms->powfs[ipowfs].moao;
 				if(imoao<0) continue;
-				drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_wfs->p[iwfs]->p, NULL,
+				drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_wfs->p[iwfs], NULL,
 					"MOAO", "x(m)", "y(m)", "WFS %d", iwfs);
 			}
 		}
 		if(simu->dm_evl){
 			int imoao=parms->evl.moao;
 			for(int ievl=0; ievl<parms->evl.nevl&&imoao>=0; ievl++){
-				drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_evl->p[ievl]->p, parms->dbg.draw_opdmax->p,
+				drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_evl->p[ievl], parms->dbg.draw_opdmax->p,
 					"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
 			}
 		}
-		for(int i=0; parms->recon.alg==0&&simu->dmfit&&i<parms->ndm; i++){
-			if(simu->dmfit->p[i]){
-				drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p, parms->dbg.draw_opdmax->p,
-					"DM Fitting Output", "x (m)", "y (m)", "Fit %d", i);
+		for(int idm=0; parms->recon.alg==0&&simu->dmfit&&idm<parms->ndm; idm++){
+			if(simu->dmfit->p[idm]){
+				dmat* tmp=convert_dm(recon, simu->dmfit->p[idm], idm);
+				drawopd("DM", recon->aloc->p[idm], tmp, parms->dbg.draw_opdmax->p,
+				"DM Fitting Output", "x (m)", "y (m)", "Fit %d", idm);
+				dfree(tmp);
 			}
 		}
 
 		if(!parms->recon.modal){
 			for(int idm=0; simu->dmerr&&idm<parms->ndm; idm++){
 				if(simu->dmerr->p[idm]){
-					drawopd("DM", recon->aloc->p[idm], simu->dmerr->p[idm]->p, parms->dbg.draw_opdmax->p,
+					dmat* tmp=convert_dm(recon, simu->dmerr->p[idm], idm);
+					drawopd("DM", recon->aloc->p[idm], tmp, parms->dbg.draw_opdmax->p,
 						"DM Error Signal (Hi)", "x (m)", "y (m)",
 						"Err Hi %d", idm);
+					dfree(tmp);
 				}
 			}
 		}
@@ -138,7 +152,7 @@ void save_recon(sim_t* simu){
 		if(parms->recon.alg==0&&simu->opdr){
 			for(int i=0; i<simu->opdr->nx; i++){
 				if(simu->opdr->p[i]){
-					drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, parms->dbg.draw_opdmax->p,
+					drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i], parms->dbg.draw_opdmax->p,
 						"Reconstructed Atmosphere", "x (m)", "y (m)", "opdr %d", i);
 				}
 			}
@@ -147,18 +161,14 @@ void save_recon(sim_t* simu){
 		if(simu->Merr_lo&&draw_current("DM", "Err lo")){
 			dcell* dmlo=simu->dmtmp;
 			dcellzero(dmlo);
-			switch(simu->parms->recon.split){
-			case 1:
-				dcellmm(&dmlo, recon->ngsmod->Modes, simu->Merr_lo, "nn", 1);
-				break;
-			case 2:
-				dcellmm(&dmlo, recon->MVModes, simu->Merr_lo, "nn", 1);
-				break;
-			}
+			addlow2dm(&dmlo, simu, simu->Merr_lo, 1);
+
 			for(int idm=0; dmlo&&idm<parms->ndm; idm++){
-				drawopd("DM", recon->aloc->p[idm], dmlo->p[idm]->p, parms->dbg.draw_opdmax->p,
+				dmat* tmp=convert_dm(recon, dmlo->p[idm], idm);
+				drawopd("DM", recon->aloc->p[idm], tmp, parms->dbg.draw_opdmax->p,
 					"DM Error Signal (Lo)", "x (m)", "y (m)",
 					"Err Lo %d", idm);
+				dfree(tmp);
 			}
 			//plot_points("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 		}
@@ -179,7 +189,7 @@ void save_recon(sim_t* simu){
 			if(parms->plot.opdx){ /*draw opdx */
 				for(int i=0; i<opdx->nx; i++){
 					if(opdx->p[i]){
-						drawopd("opdx", recon->xloc->p[i], opdx->p[i]->p, parms->dbg.draw_opdmax->p,
+						drawopd("opdx", recon->xloc->p[i], opdx->p[i], parms->dbg.draw_opdmax->p,
 							"Atmosphere Projected to XLOC", "x (m)", "y (m)", "opdx %d", i);
 					}
 				}
@@ -247,7 +257,7 @@ void save_dmproj(sim_t* simu){
 	if(parms->plot.run&&simu->dmproj){
 		for(int idm=0; idm<parms->ndm; idm++){
 			if(simu->dmproj->p[idm]){
-				drawopd("DM", recon->aloc->p[idm], simu->dmproj->p[idm]->p, parms->dbg.draw_opdmax->p,
+				drawopd("DM", recon->aloc->p[idm], simu->dmproj->p[idm], parms->dbg.draw_opdmax->p,
 					"ATM to DM Projection (Hi)", "x (m)", "y (m)",
 					"Proj Hi %d", idm);
 			}
@@ -264,9 +274,11 @@ void save_dmreal(sim_t* simu){
 		if(parms->sim.closeloop){
 			for(int idm=0; idm<parms->ndm; idm++){
 				if(simu->dmint->mint->p[0]->p[idm]){
-					drawopd("DM", recon->aloc->p[idm], simu->dmint->mint->p[0]->p[idm]->p, NULL,
+					dmat* tmp=convert_dm(recon, simu->dmint->mint->p[0]->p[idm], idm);
+					drawopd("DM", recon->aloc->p[idm], tmp, NULL,
 						"DM Integrator (Hi)", "x (m)", "y (m)",
 						"Int Hi %d", idm);
+					dfree(tmp);
 				}
 			}
 			/*if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
@@ -289,7 +301,7 @@ void save_dmreal(sim_t* simu){
 			if(simu->dmreal){
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(simu->dmreal->p[idm]){
-						drawopd("DM", recon->aloc->p[idm], simu->dmreal->p[idm]->p, parms->dbg.draw_opdmax->p,
+						drawopd("DM", recon->aloc->p[idm], simu->dmreal->p[idm], parms->dbg.draw_opdmax->p,
 							"DM Actuator Stroke", "x (m)", "y (m)", "Real %d", idm);
 					}
 				}
@@ -298,10 +310,11 @@ void save_dmreal(sim_t* simu){
 					real ptt[3]={0,0,0};
 					ptt[1]=simu->ttmreal->p[0];
 					ptt[2]=simu->ttmreal->p[1];
-					dzero(simu->dmtmp->p[idm]);
-					loc_add_ptt(simu->dmtmp->p[idm]->p, ptt, recon->aloc->p[idm]);
-					drawopd("DM", recon->aloc->p[idm], simu->dmtmp->p[idm]->p, parms->dbg.draw_opdmax->p,
+					dmat* tmp=dnew(recon->aloc->p[idm]->nloc, 1);
+					loc_add_ptt(tmp, ptt, recon->aloc->p[idm]);
+					drawopd("DM", recon->aloc->p[idm], tmp, parms->dbg.draw_opdmax->p,
 						"DM Actuator Stroke", "x (m)", "y (m)", "Real TTM");
+					dfree(tmp);
 				}
 
 				if(simu->cachedm){//use cachedm
@@ -311,7 +324,6 @@ void save_dmreal(sim_t* simu){
 					}
 				}
 				if(draw_current("Evldm", "OA")){
-
 					dmat* opd=dnew(simu->aper->locs->nloc, 1);
 					for(int idm=0; idm<parms->ndm; idm++){
 						int ind=parms->evl.nevl*idm;
@@ -323,10 +335,10 @@ void save_dmreal(sim_t* simu){
 						real ptt[]={0,0,0};
 						ptt[1]=simu->ttmreal->p[0];
 						ptt[2]=simu->ttmreal->p[1];
-						loc_add_ptt(opd->p, ptt, simu->aper->locs);
+						loc_add_ptt(opd, ptt, simu->aper->locs);
 					}
 
-					drawopd("Evldm", simu->aper->locs, opd->p, parms->dbg.draw_opdmax->p,
+					drawopd("Evldm", simu->aper->locs, opd, parms->dbg.draw_opdmax->p,
 						"DM OPD", "x (m)", "y (m)", "OA");
 					dfree(opd);
 				}
@@ -335,7 +347,7 @@ void save_dmreal(sim_t* simu){
 
 			for(int idm=0; idm<parms->ndm; idm++){
 				if(simu->dmpsol&&simu->dmpsol->p[idm]){
-					drawopd("DM", simu->recon->aloc->p[idm], simu->dmpsol->p[idm]->p, parms->dbg.draw_opdmax->p,
+					drawopd("DM", simu->recon->aloc->p[idm], simu->dmpsol->p[idm], parms->dbg.draw_opdmax->p,
 						"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
 				}
 			}

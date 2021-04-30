@@ -484,7 +484,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 			zfarr_push(simu->save->wfsopd[iwfs], simu->wfsisim, phiout, stream);
 		}
 		if(parms->plot.run){
-			const real* realamp=powfs[ipowfs].realamp->p[wfsind]->p;
+			const dmat* realamp=powfs[ipowfs].realamp->p[wfsind];
 			drawopdamp_gpu("wfsopd", powfs[ipowfs].loc, phiout, stream, realamp, NULL,
 				"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 		}

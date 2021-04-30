@@ -420,7 +420,6 @@ typedef struct sim_save_t{
     /*science */
     zfarr **evlopdcl;
     zfarr **evlopdol;
-
     zfarr **wfsopd;
     zfarr **wfsopdol;
     zfarr **wfslltopd;
@@ -432,7 +431,12 @@ typedef struct sim_save_t{
     zfarr **intsny;
     zfarr **intsnf;
     zfarr **dm_evl;
-    zfarr **dm_wfs;
+    zfarr** dm_wfs;
+    /*psds*/
+    zfarr* psdcl;
+    zfarr* psdol;
+    zfarr* psdcl_lo;
+    zfarr* psdol_lo;
 }sim_save_t;
 /*
   data wrap for wfsints.

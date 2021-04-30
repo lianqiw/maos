@@ -182,11 +182,11 @@ if test "$use_release" = "yes" ;then
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
-#OPTScommon=
-#if test "${USER}" = "lianqiw" ;then
-#    OPTScommon+=" -Wshadow -Wall -Wextra "
-#    #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
-#fi
+OPTScommon=
+if test "${USER}" = "lianqiw" ;then
+    OPTScommon+=" -Werror "
+    #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
+fi
 LDEXE=
 OPTS=
 COMMON_ALL="-Wall -Wshadow -Wextra " 

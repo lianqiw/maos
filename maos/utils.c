@@ -451,15 +451,15 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 		const real ht=recon->ht->p[ips];
 		plotloc("Aperture", parms, recon->xloc->p[ips], ht, "xloc%d", ips);
 	}
-	drawopd("Aperture", aper->locs, aper->amp1->p, NULL, "Aperture Amplitude Map",
+	drawopd("Aperture", aper->locs, aper->amp1, NULL, "Aperture Amplitude Map",
 		"x (m)", "y (m)", "aper");
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp->p, NULL,
+		drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp, NULL,
 			"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d", ipowfs);
 		if(powfs[ipowfs].amp_tel){
 			for(int wfsind=0; wfsind<parms->powfs[ipowfs].nwfs; wfsind++){
-				drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp_tel->p[wfsind]->p, NULL,
+				drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp_tel->p[wfsind], NULL,
 					"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d tel2wfs", ipowfs);
 			}
 		}

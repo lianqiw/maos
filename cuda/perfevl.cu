@@ -326,7 +326,7 @@ void gpu_perfevl_queue(thread_t* info){
 			zfarr_push(simu->save->evlopdol[ievl], isim, iopdevl, stream);
 		}
 		if(parms->plot.run){
-			drawopdamp_gpu("Evlol", aper->locs, iopdevl, stream, aper->amp1->p, NULL,
+			drawopdamp_gpu("Evlol", aper->locs, iopdevl, stream, aper->amp1, NULL,
 				"Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 		}
 		PERFEVL_WFE_GPU(cuglobal->perf.cc_ol[ievl](), cuglobal->perf.ccb_ol[ievl]);
@@ -400,7 +400,7 @@ void gpu_perfevl_queue(thread_t* info){
 		}
 
 		if(parms->plot.run){
-			drawopdamp_gpu("Evlcl", aper->locs, iopdevl, stream, aper->amp1->p, NULL,
+			drawopdamp_gpu("Evlcl", aper->locs, iopdevl, stream, aper->amp1, NULL,
 				"Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 		}
 		PERFEVL_WFE_GPU(cuglobal->perf.cc_cl[ievl](), cuglobal->perf.ccb_cl[ievl]);
@@ -511,7 +511,7 @@ void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 				parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
 				-1, stream);
 			if(parms->plot.run){
-				drawopdamp_gpu("Evlcl", aper->locs, iopdevl, stream, aper->amp1->p, NULL,
+				drawopdamp_gpu("Evlcl", aper->locs, iopdevl, stream, aper->amp1, NULL,
 					"Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d", ievl);
 			}
 			if(parms->evl.pttr->p[ievl]){

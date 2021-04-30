@@ -270,16 +270,18 @@ void recon_servo_update(sim_t* simu){
 			//writebin(psd, "psdcli_%d", simu->reconisim);
 			//average all the PSDs
 			psd_sum(psd, 1./(psd->ny-1));
-			//writebin(psd, "psdcl_%d", simu->reconisim);
+			zfarr_push(simu->save->psdcl, -1, psd);
+			//writebin(psd, "psdcl_%d_%d", simu->iseed, simu->reconisim);
 			if(simu->dmint->ep->nx==1&&simu->dmint->ep->ny==1){
 				dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, simu->dmint->ep->p[0], 0);
 				dcell* coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, M_PI*0.25, 0, 1);
 				real g=0.5;
 				simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
 				info2("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
-				if(parms->save.run){
-					writebin(psdol, "psdol_%d", simu->reconisim);
-				}
+				//if(parms->save.run){
+				//writebin(psdol, "psdol_%d_%d", simu->iseed, simu->reconisim);
+				zfarr_push(simu->save->psdol, -1, psdol);
+				//}
 				dcellfree(coeff);
 				dfree(psdol);
 			} else{
@@ -301,9 +303,12 @@ void recon_servo_update(sim_t* simu){
 			for(int icol=0; icol<ts->ny; icol++){
 				dmat* tsi=dsub(ts, icol, 1, 0, 0);
 				dmat* psd=psd1dt(tsi, parms->recon.psdnseg, dt);
-
+				zfarr_push(simu->save->psdcl_lo, -1, psd);
+				//writebin(psd, "psdlo%d_cl_%d", icol, simu->reconisim);
 				if(simu->Mint_lo->ep->nx==1){//integrator
 					dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, simu->Mint_lo->ep->p[0], 0);
+					//writebin(psdol, "psdlo%d_ol_%d", icol, simu->reconisim);
+					zfarr_push(simu->save->psdol_lo, -1, psdol);
 					dcell* coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, M_PI*0.25, 0, 1);
 					const real g=parms->recon.psdservo_gain;
 					simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;

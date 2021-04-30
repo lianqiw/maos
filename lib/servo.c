@@ -363,7 +363,7 @@ dcell* servo_optim(const dmat* psdin, real dt, long dtrat, real al, real pmargin
 }
 /**
    Convert Closed loop residual PSD back to OL psd using rejection transfer function:
-   PSD_OL=(PSD_CL-sigma2n/F_nyquist)/Hrej;
+   PSD_OL=PSD_CL/Hrej-sigma2n/F_nyquist;
  */
 dmat* servo_rej2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, real sigma2n){
 	SERVO_CALC_T st; memset(&st, 0, sizeof(st));

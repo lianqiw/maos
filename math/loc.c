@@ -349,32 +349,28 @@ void loc_embed(map_t* dest, const loc_t* loc, const real* in){
 /**
   A convenient wrapper for loc_embed to be called by matlab or python
 */
-cell* loc_embed2(loc_t* loc, dmat* arr){
+dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 	if(!loc||!arr) return NULL;
 	if(!loc->map){
-		loc_create_map(loc);
+		loc_create_map((loc_t*)loc);
 	}
+	long arrnx=arr->nx;
+	long arrny=arr->ny;
 	if(arr->nx==1&&arr->ny!=1){
-		arr->nx=arr->ny;
-		arr->ny=1;
+		arrnx=arr->ny;
+		arrny=1;
 	}
-	int nx=arr->nx/loc->nloc;
-	int ny=arr->ny;
-	if(nx*loc->nloc!=arr->nx){
-		error("arr has wrong dimension: %ldx%ld. loc length is %ld \n", arr->nx, arr->ny, loc->nloc);
+	int nx=arrnx/loc->nloc;
+	int ny=arrny;
+	if(nx*loc->nloc!=arrnx){
+		error("arr has wrong dimension: %ldx%ld. loc length is %ld \n", arrnx, arrny, loc->nloc);
 	}
 	dcell* dest=dcellnew(nx, ny);
 	for(int ix=0; ix<nx*ny; ix++){
 		P(dest, ix)=dnew(loc->map->nx, loc->map->ny);
 		loc_embed((map_t*)P(dest, ix), loc, arr->p+ix*loc->nloc);
 	}
-	if(nx==1&&ny==1){
-		dmat* dest0=dref(P(dest, 0));
-		cellfree(dest);
-		return (cell*)dest0;
-	} else{
-		return (cell*)dest;
-	}
+	return dest;
 }
 
 /**
@@ -733,7 +729,7 @@ void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod,
 /**
    Remove Piston/Tip/Tilt (in radian) from OPD
 */
-void loc_remove_ptt(real* opd, const real* ptt, const loc_t* loc){
+void loc_remove_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	if(!opd||!ptt||!loc) return;
 	real ptt1[3];
 	ptt1[0]=-ptt[0];
@@ -745,13 +741,17 @@ void loc_remove_ptt(real* opd, const real* ptt, const loc_t* loc){
 /**
    Add Piston/Tip/Tilt from OPD
 */
-void loc_add_ptt(real* opd, const real* ptt, const loc_t* loc){
+void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	if(!opd||!ptt||!loc) return;
+	if(loc->nloc!=opd->nx){
+		error("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
+		return;
+	}
 	const long nloc=loc->nloc;
 	const real* restrict locx=loc->locx;
 	const real* restrict locy=loc->locy;
 	for(long iloc=0; iloc<nloc; iloc++){
-		opd[iloc]+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
+		opd->p[iloc]+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
 	}
 }
 /**
@@ -1125,19 +1125,23 @@ void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
    Add val amount of focus to opd. The unit is in radian like.
    Piston is removed.
 */
-void loc_add_focus(real* opd, loc_t* loc, real val){
+void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
 	if(!opd||!loc||!val) return;
+	if(loc->nloc!=opd->nx){
+		error("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
+		return;
+	}
 	const real* restrict locx=loc->locx;
 	const real* restrict locy=loc->locy;
 	real piston=0;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
 		real tmp=(locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc])*val;
-		opd[iloc]+=tmp;
+		opd->p[iloc]+=tmp;
 		piston+=tmp;
 	}
 	piston=-piston/loc->nloc;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
-		opd[iloc]+=piston;
+		opd->p[iloc]+=piston;
 	}
 }
 /**

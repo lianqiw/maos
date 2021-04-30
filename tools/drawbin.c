@@ -70,7 +70,7 @@ static void draw_opd(file_t* fp1, file_t* fp2, int id){
 		if(loc->nloc!=opd->nx){
 			error("we expect matching loc_t and a double vector.\n");
 		}
-		drawopd("opd", loc, opd->p, NULL, name, "x", "y", "%s:%d", name, id);
+		drawopd("opd", loc, opd, NULL, name, "x", "y", "%s:%d", name, id);
 		dfree(opd);
 		locfree(loc);
 	}

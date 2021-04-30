@@ -2668,7 +2668,7 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 		}
 		info2("\n");
 		if(parms->sim.nseed>1&&parms->dither){
-			warning("Some of the dither mode updates parameters still persist for different seeds.\n");
+			info("Some of the dither mode updates parameters will persist for different seeds.\n");
 		}
 	}
 	if(parms->save.ngcov>0&&parms->save.gcovp<10){

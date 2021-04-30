@@ -197,10 +197,10 @@ void perfevl_ievl(thread_t* info){
 			real tmp=simu->telws->p[isim];
 			real angle=simu->winddir?simu->winddir->p[0]:0;
 			real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-			loc_add_ptt(iopdevl->p, ptt, aper->locs);
+			loc_add_ptt(iopdevl, ptt, aper->locs);
 		}
 		if(simu->telfocusreal){
-			loc_add_focus(iopdevl->p, aper->locs, -simu->telfocusreal->p[0]->p[0]);
+			loc_add_focus(iopdevl, aper->locs, -simu->telfocusreal->p[0]->p[0]);
 		}
 		/*Add surfaces along science path. prepared in setup_surf.c */
 		if(aper->opdadd&&aper->opdadd->p[ievl]){
@@ -212,7 +212,7 @@ void perfevl_ievl(thread_t* info){
 			zfarr_push(simu->save->evlopdol[ievl], simu->perfisim, iopdevl);
 		}
 		if(parms->plot.run){
-			drawopdamp("Evlol", aper->locs, iopdevl->p, aper->amp1->p, parms->dbg.draw_opdmax->p,
+			drawopdamp("Evlol", aper->locs, iopdevl, aper->amp1, parms->dbg.draw_opdmax->p,
 				"Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 		}
 		PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
@@ -225,7 +225,7 @@ void perfevl_ievl(thread_t* info){
 			dmat* opdevlcopy=NULL;
 			if(parms->evl.pttr->p[ievl]){
 				dcp(&opdevlcopy, iopdevl);
-				loc_remove_ptt(opdevlcopy->p, PCOL(polmp, isim), aper->locs);
+				loc_remove_ptt(opdevlcopy, PCOL(polmp, isim), aper->locs);
 			} else if(parms->evl.cov){
 				dcp(&opdevlcopy, iopdevl);
 				dadds(opdevlcopy, -P(polmp, 0, isim));
@@ -291,7 +291,7 @@ void perfevl_ievl(thread_t* info){
 		}
 		if(simu->ttmreal){
 			real ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
-			loc_add_ptt(iopdevl->p, ptt, aper->locs);
+			loc_add_ptt(iopdevl, ptt, aper->locs);
 		}
 		TIM(4);
 		if(imoao>-1){
@@ -306,7 +306,7 @@ void perfevl_ievl(thread_t* info){
 		}
 
 		if(parms->plot.run){
-			drawopdamp("Evlcl", aper->locs, iopdevl->p, aper->amp1->p, parms->dbg.draw_opdmax->p,
+			drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->dbg.draw_opdmax->p,
 				"Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 		}
 		if(save_evlopd){
@@ -326,7 +326,7 @@ void perfevl_ievl(thread_t* info){
 			/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
 				if(parms->evl.pttr->p[ievl]){
 					warning_once("Removing piston/tip/tilt from OPD.\n");
-					loc_remove_ptt(iopdevl->p, PCOL(pclmp, isim), aper->locs);
+					loc_remove_ptt(iopdevl, PCOL(pclmp, isim), aper->locs);
 				} else if(parms->evl.cov){/*remove piston */
 					dadds(iopdevl, -P(pclmp, 0, isim));
 				}
@@ -485,7 +485,7 @@ static void perfevl_mean(sim_t* simu){
 							parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
 							pcleNGSm, -1);
 						if(parms->plot.run){
-							drawopdamp("Evlcl", aper->locs, iopdevl->p, aper->amp1->p, parms->dbg.draw_opdmax->p,
+							drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->dbg.draw_opdmax->p,
 								"Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d", ievl);
 						}
 						if(parms->evl.pttr->p[ievl]){
@@ -493,7 +493,7 @@ static void perfevl_mean(sim_t* simu){
 							  has tip/tilt component*/
 							real ptt[3];
 							loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
-							loc_remove_ptt(iopdevl->p, ptt, aper->locs);
+							loc_remove_ptt(iopdevl, ptt, aper->locs);
 						}
 						if(parms->evl.cov&&parms->evl.psfr->p[ievl]){
 							dmm(&simu->evlopdcov_ngsr->p[ievl], 1, iopdevl, iopdevl, "nt", 1);

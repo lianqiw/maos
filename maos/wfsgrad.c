@@ -113,7 +113,7 @@ void wfsgrad_iwfs(thread_t* info){
 	const int do_phy=simu->wfsflags[ipowfs].do_phy;
 	const int do_pistat=simu->wfsflags[ipowfs].do_pistat;
 	const int do_geom=(!do_phy||save_gradgeom||do_pistat)&&parms->powfs[ipowfs].type==0;
-	const real* realamp=powfs[ipowfs].realamp?powfs[ipowfs].realamp->p[wfsind]->p:0;
+	const dmat* realamp=powfs[ipowfs].realamp?powfs[ipowfs].realamp->p[wfsind]:0;
 	dmat* gradcalc=NULL;
 	dmat** gradacc=&simu->gradacc->p[iwfs];
 	dmat** gradout=&simu->gradcl->p[iwfs];
@@ -154,12 +154,12 @@ void wfsgrad_iwfs(thread_t* info){
 		real tmp=simu->telws->p[isim];
 		real angle=simu->winddir?simu->winddir->p[0]:0;
 		real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-		loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
+		loc_add_ptt(opd, ptt, powfs[ipowfs].loc);
 	}
 
 	real focus=wfsfocusadj(simu, iwfs);
 	if(fabs(focus)>1e-20){
-		loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
+		loc_add_focus(opd, powfs[ipowfs].loc, focus);
 	}
 
 	/* Add surface error*/
@@ -190,7 +190,7 @@ void wfsgrad_iwfs(thread_t* info){
 			ptt[2]-=simu->fsmreal->p[iwfs]->p[1];
 		}
 		if(ptt[1]||ptt[2]){
-			loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
+			loc_add_ptt(opd, ptt, powfs[ipowfs].loc);
 		}
 	}
 	if(parms->powfs[ipowfs].skip&&parms->tomo.ahst_idealngs==1){
@@ -217,7 +217,7 @@ void wfsgrad_iwfs(thread_t* info){
 		zfarr_push(simu->save->wfsopd[iwfs], isim, opd);
 	}
 	if(parms->plot.run){
-		drawopdamp("wfsopd", powfs[ipowfs].loc, opd->p, realamp, parms->dbg.draw_opdmax->p,
+		drawopdamp("wfsopd", powfs[ipowfs].loc, opd, realamp, parms->dbg.draw_opdmax->p,
 			"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 	}
 	if(do_geom){
@@ -235,7 +235,7 @@ void wfsgrad_iwfs(thread_t* info){
 		if(parms->powfs[ipowfs].gtype_sim==1){ /*compute ztilt. */
 			pts_ztilt(&gradcalc, powfs[ipowfs].pts,
 				powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?wfsind:0],
-				realamp, opd->p);
+				realamp->p, opd->p);
 		} else{/*G tilt */
 			dspmm(&gradcalc, PR(powfs[ipowfs].GS0, wfsind, 0), opd, "nn", 1);
 		}
@@ -306,7 +306,7 @@ void wfsgrad_iwfs(thread_t* info){
 			}
 			if(ttx!=0||tty!=0){ /* add tip/tilt to llt opd */
 				real ptt[3]={0, ttx, tty};
-				loc_add_ptt(lltopd->p, ptt, powfs[ipowfs].llt->loc);
+				loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
 			}
 			if(save_opd){
 				zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd);

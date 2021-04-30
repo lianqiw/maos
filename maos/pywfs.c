@@ -357,7 +357,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		dadd(&pywfs->gradoff, 1, goff, 1);
 		if(0){//test TT response
 			real ptt[3]={0,0.001/206265,0};
-			loc_add_ptt(opd->p, ptt, pywfs->locfft->loc);
+			loc_add_ptt(opd, ptt, pywfs->locfft->loc);
 			dzero(ints); dzero(goff);
 			pywfs_fft(&ints, pywfs, opd);
 			writebin(ints, "powfs%d_ttx_ints", ipowfs);
@@ -707,7 +707,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 
 	//+x
 	ptt[1]=alpha;  ptt[2]=0;
-	loc_add_ptt(opd->p, ptt, loc);
+	loc_add_ptt(opd, ptt, loc);
 	dzero(ints);
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&gradx, pywfs, ints);
@@ -716,7 +716,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 #endif
 	//+y
 	ptt[1]=-alpha; ptt[2]=alpha;
-	loc_add_ptt(opd->p, ptt, loc);
+	loc_add_ptt(opd, ptt, loc);
 	dzero(ints);
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&grady, pywfs, ints);
@@ -733,7 +733,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 	dmat* grady2=dnew(nsa*2, 1);
 	//-x
 	ptt[1]=-alpha; ptt[2]=-alpha;
-	loc_add_ptt(opd->p, ptt, loc);
+	loc_add_ptt(opd, ptt, loc);
 	dzero(ints);
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&gradx2, pywfs, ints);
@@ -742,7 +742,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 #endif
 	//-y
 	ptt[1]=+alpha; ptt[2]=-alpha;
-	loc_add_ptt(opd->p, ptt, loc);
+	loc_add_ptt(opd, ptt, loc);
 	dzero(ints);
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&grady2, pywfs, ints);

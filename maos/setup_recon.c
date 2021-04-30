@@ -921,7 +921,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 		for(int idm=0; idm<parms->ndm; idm++){
 			if(idm!=parms->idmground) continue;
 			Fdm->p[idm]=dnew(recon->anloc->p[idm], 1);
-			loc_add_focus(Fdm->p[idm]->p, recon->aloc->p[idm], 1);
+			loc_add_focus(Fdm->p[idm], recon->aloc->p[idm], 1);
 			recon->RFdm->p[idm]=dpinv(Fdm->p[idm], 0);
 		}
 		dcellfree(Fdm);

@@ -223,7 +223,7 @@ void zfarr_push(struct zfarr* ca, int i, const cucmat& A, cudaStream_t stream);
 void zfarr_push(struct zfarr* ca, int i, const curcell& A, cudaStream_t stream);
 void zfarr_push(struct zfarr* ca, int i, const cuccell& A, cudaStream_t stream);
 void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t stream,
-	const real* amp, real* zlim,
+	const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(10);
 void drawpsf_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int plotpsf,

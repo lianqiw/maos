@@ -508,14 +508,14 @@ void zfarr_push(struct zfarr* ca, int i, const cuccell& A, cudaStream_t stream){
 }
 
 void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t stream,
-	const real* amp, real* zlim,
+	const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
 	if(draw_current(fig, fn)){
 		dmat* tmp=NULL;
 		cp2cpu(&tmp, opd, stream);
-		drawopdamp(fig, loc, tmp->p, amp, zlim, title, xlabel, ylabel, "%s", fn);
+		drawopdamp(fig, loc, tmp, amp, zlim, title, xlabel, ylabel, "%s", fn);
 		dfree(tmp);
 	}
 }
