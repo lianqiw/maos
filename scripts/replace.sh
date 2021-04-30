@@ -18,4 +18,6 @@ if false ;then #use mycalloc, mymalloc, myrealloc to avoid memory cask errors.
 	sed -i -E "s/(\($type\))(mymalloc|myrealloc|mycalloc)/\2/g" $@
 fi
 
-var="[0-9a-zA-Z->.]+"
+var="[0-9a-zA-Z_.]+"
+arg="[0-9a-zA-Z_.+-*]+"
+sed -E "s|($var)(->p[)($arg)(])|P(\1,\3)|g" "$@"

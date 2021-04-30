@@ -678,7 +678,6 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 							dfree(tmp);
 						} else{
 							info("\nPyWFS from amod to saloc directly\n");
-
 							//We compute the GM for full set of modes so that it is cached only once.
 							P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
 								recon->amod->p[idm], opdadd, dispx, dispy);

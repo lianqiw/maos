@@ -218,7 +218,7 @@ void single_instance_daemonize(const char* lockfolder_in,
 int detached=0;
 typedef struct{
 	int pfd;//in
-	FILE** fps;
+	FILE* fps[2];
 	int nfp;
 }dup_stdout_t;
 /**
@@ -249,6 +249,7 @@ static void* dup_stdout(dup_stdout_t* data){
 			}
 		}
 	}
+	free(data);
 	return 0;
 }
 
@@ -276,16 +277,15 @@ void redirect(void){
 			warning("pipe failed, failed to redirect stdout.\n");
 		} else{
 			fpconsole=fdopen(dup(fileno(stdout)), "w");
-			dup_stdout_t* data=mycalloc(1, dup_stdout_t);
-			data->nfp=2;
-			data->fps=mycalloc(data->nfp, FILE*);
-			data->fps[0]=fpconsole;
-			data->fps[1]=fopen(fn, "w");
-			data->pfd=pfd[0];//read
+			static dup_stdout_t dup_data;
+			dup_data.nfp=2;
+			dup_data.fps[0]=fpconsole;
+			dup_data.fps[1]=fopen(fn, "w");
+			dup_data.pfd=pfd[0];//read
 			//spawn a thread to duplicate output to both console and file.
 			pthread_t thread;
 			//child thread read from pfd[0] and write to stdout.
-			pthread_create(&thread, NULL, (void* (*)(void*))dup_stdout, data);
+			pthread_create(&thread, NULL, (void* (*)(void*))dup_stdout, &dup_data);
 			//master threads redirects stderr and stdout to pfd[1]
 			if(dup2(pfd[1], 1)==-1||dup2(pfd[1], 2)==-1){
 				warning("Error redirecting stdout or stderr");

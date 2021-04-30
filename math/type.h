@@ -233,19 +233,26 @@ static inline int iscell(const void *id){
 #if DEBUG
 static inline long index_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
-		error("%ld is out of range for (%ld,%ld) array\n", i, nx, ny);
+		error("Index %ld is out of range for (%ld,%ld) array\n", i, nx, ny);
     }
     return i;
 }
 static inline long index_2d(long ix, long iy, long nx, long ny){
     if(ix<0 || ix>=nx || iy<0 || iy>=ny){
-		error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
+		error("Index (%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }
     return ix+iy*nx;
 }
+static inline long index_col(long iy, long nx, long ny){
+    if(iy<0 || iy>=ny){
+        error("Column %ld is out of range for (%ld,%ld) array\n", iy, nx, ny);
+    }
+    return iy*nx;
+}
 #else
-#define index_1d(i,    nx,ny) (i)
+#define index_1d(i,nx,ny) (i)
 #define index_2d(ix,iy,nx,ny) ((ix)+(iy)*(nx))
+#define index_col(iy,nx,ny) ((iy)*(nx))
 #endif
 /**
     \def P(...)
@@ -280,8 +287,8 @@ static inline long index_2d(long ix, long iy, long nx, long ny){
 
 #define P_GET(_0,_1,_2,_3,NAME,...) NAME
 #define P(...) P_GET(_0,__VA_ARGS__,P2,P1,P0)(__VA_ARGS__)
-#define PP(...) P_GET(_0,__VA_ARGS__,PP2,PP1,P0)(__VA_ARGS__)
-#define PCOL(A,iy) ((A)->p+(iy)*(A)->nx)
+#define PP(...) P_GET(_0,__VA_ARGS__,PP2,PP1,PP0)(__VA_ARGS__)
+#define PCOL(A,iy) ((A)->p+index_col((iy), (A)->nx, (A)->ny))
 
 //Define indexing using wrapping. 
 #define PR(A,ix,iy)   P2((A), ((ix)%(A)->nx), ((iy)%(A)->ny))

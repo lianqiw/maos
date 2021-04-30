@@ -1467,7 +1467,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 				simu->cgres=dcellnew3(2, 1, nnx, nny);
 			}
 		}
-		if(parms->recon.psd){
+		if(parms->recon.psd && parms->save.extra){
 			if(parms->recon.psddtrat_hi){
 				save->psdcl=zfarr_init(0, 0, "psdcl_%d.bin", seed);
 				save->psdol=zfarr_init(0, 0, "psdol_%d.bin", seed);

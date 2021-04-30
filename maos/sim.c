@@ -332,4 +332,5 @@ void maos_sim(){
 		info3("%.2f ", sqrt(restot->p[imod]/rescount)*1e9);
 	}
 	info3("\n");
+	dfree(restot);
 }

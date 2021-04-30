@@ -1546,9 +1546,11 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	dspcellfree(recon->GXlo);
 	dspcellfree(recon->GXtomo);
 	dspcellfree(recon->GP);
-	dspcellfree(recon->GA);
+	cellfree(recon->GA);
 	cellfree(recon->GAlo);
-	dspcellfree(recon->GAhi);
+	cellfree(recon->GAhi);
+	cellfree(recon->GM);
+	cellfree(recon->GMhi);
 	dcellfree(recon->GXL);
 	dspcellfree(recon->L2);
 	dspcellfree(recon->L2save);
@@ -1589,6 +1591,8 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	locfree(recon->ploc);
 	cellfree(recon->ploc_tel);
 	free(recon->amap->p);free(recon->amap);//data is referenced
+	cellfree(recon->amod);
+	cellfree(recon->anmod);
 	cellfree(recon->acmap);
 	cellfree(recon->aloc);
 	cellfree(recon->actstuck);

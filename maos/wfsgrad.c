@@ -1110,8 +1110,8 @@ void wfsgrad_twfs_recon(sim_t* simu){
 				//Sum all the PSDs
 				psd_sum(psd, 1);
 				dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->powfs[itpowfs].dtrat, 0, simu->eptwfs, 0);
-				writebin(psd, "psdcl_twfs_%d", ntacc);
-				writebin(psdol, "psdol_twfs_%d", ntacc);
+				//writebin(psd, "psdcl_twfs_%d", ntacc);
+				//writebin(psdol, "psdol_twfs_%d", ntacc);
 				dcell* coeff=servo_optim(psdol, parms->sim.dt, parms->powfs[itpowfs].dtrat, 0, M_PI*0.25, 0, 1);
 				const real g=0.5;
 				simu->eptwfs=simu->eptwfs*(1-g)+coeff->p[0]->p[0]*g;

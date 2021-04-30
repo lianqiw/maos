@@ -1017,7 +1017,7 @@ X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xne
 	X(mat)* ynew=X(new)(xnew->nx, xnew->ny);
 	for(long iy=0; iy<ynew->ny; iy++){
 		for(long ix=0; ix<ynew->nx; ix++){
-			R xx=((xnew->p[ix])-xminl)*xsep1;
+			R xx=((P(xnew,ix))-xminl)*xsep1;
 			long xxm=ifloor(xx);
 			if(xxm<0){
 				P(ynew, ix, iy)=isnan(ydefault)?P(yin, 0, iy):ydefault;
@@ -1052,7 +1052,7 @@ X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, 
 	X(mat)* ynew=X(new)(xnew->nx, xnew->ny);
 	for(long iy=0; iy<ynew->ny; iy++){
 		for(long ix=0; ix<ynew->nx; ix++){
-			R xx=(log10(xnew->p[ix])-xminl)*xsep1;
+			R xx=(log10(P(xnew,ix))-xminl)*xsep1;
 			long xxm=ifloor(xx);
 			if(xxm<0){
 				P(ynew, ix, iy)=isnan(ydefault)?P(yin, 0, iy):ydefault;
@@ -1069,14 +1069,11 @@ X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, 
 /**
    Interpolation of 1d array
  */
-X(mat)* X(interp1)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, T ydefault){
-	int free_xy=0;
+X(mat)* X(interp1)(const X(mat)* xin_, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
 	X(mat)* ynew=NULL;
-	if(!yin){
-		xin=X(refcols)(xin, 0, 1);
-		yin=X(refcols)(xin, 1, 1);
-		free_xy=1;
-	}
+	X(mat)* xin=X(refcols)(xin_, 0, 1);
+	X(mat)* yin=yin_?X(ref)(yin_):X(refcols)(xin_, 1, 1);
+
 	if(X(islinear)(xin)){
 		ynew=X(interp1linear)(xin, yin, xnew, ydefault);
 	} else if(X(islog)(xin)){
@@ -1085,18 +1082,18 @@ X(mat)* X(interp1)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, T y
 		if(xin->ny!=1||xnew->ny!=1){
 			error("Either xin or xnew is in wrong format\n");
 		}
-		ynew=X(new)(xnew->nx, xnew->ny);
+		ynew=X(new)(xnew->nx, yin->ny);
 		int curpos=0;
 		for(long ix=0; ix<ynew->nx; ix++){
 			int found=0;
 			for(curpos=0; curpos<xin->nx-2; curpos++){
-				if(xnew->p[ix]>xin->p[curpos]&&xnew->p[ix]<xin->p[curpos+1]){
+				if(P(xnew,ix)>xin->p[curpos]&&P(xnew,ix)<xin->p[curpos+1]){
 					found=1;
 					break;
 				}
 			}
 			if(found||isnan(ydefault)){
-				R xx=((xnew->p[ix])-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
+				R xx=((P(xnew,ix))-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
 				for(long iy=0; iy<ynew->ny; iy++){
 					P(ynew, ix, iy)=xx*P(yin, curpos+1, iy)+(1.-xx)*P(yin, curpos, iy);
 				}
@@ -1107,10 +1104,8 @@ X(mat)* X(interp1)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, T y
 			}
 		}
 	}
-	if(free_xy){
-		X(mat)* tmp=(X(mat)*)xin; X(free)(tmp);
-		tmp=(X(mat)*)yin; X(free)(tmp);
-	}
+	X(free)(xin);
+	X(free)(yin);
 	return ynew;
 }
 
@@ -1287,7 +1282,7 @@ X(mat)* X(spline_eval)(X(mat)* coeff, X(mat)* x, X(mat)* xnew){
 	T xsep1=(T)(nx-1)/(x->p[nx-1]-xmin);
 	X(mat)* out=X(new)(xnew->nx, xnew->ny);
 	for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-		R xn=creal((xnew->p[ix]-xmin)*xsep1);
+		R xn=creal((P(xnew,ix)-xmin)*xsep1);
 		long xnf=floor(xn);
 		if(xnf<0) xnf=0;
 		if(xnf>nx-2) xnf=nx-2;
@@ -1890,7 +1885,7 @@ X(mat)* X(bspline_eval)(X(cell)* coeff, X(mat)* x, X(mat)* y, X(mat)* xnew, X(ma
 	X(mat)* zz=X(new)(xnew->nx, xnew->ny);
 	X(cell)* pc=coeff;
 	for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-		R xm=creal((xnew->p[ix]-xmin)*xsep1);
+		R xm=creal((P(xnew,ix)-xmin)*xsep1);
 		long xmf=floor(xm);
 		if(xmf<0) xmf=0;
 		if(xmf>nx-2) xmf=nx-2;

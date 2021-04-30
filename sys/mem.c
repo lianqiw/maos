@@ -132,7 +132,7 @@ static void print_usage(const void* key, VISIT which, int level){
 	(void)level;
 	if(which==leaf||which==postorder){
 		info3("size %4zu(%2zu) B@%p", key2->size, key2->nbyte, key2->p);
-		int offset=key2->nfunc>3?2:0;
+		int offset=key2->nfunc>3?1:0;
 		print_backtrace_symbol(key2->func, key2->nfunc-offset);
 	}
 }
@@ -323,7 +323,7 @@ static __attribute__((destructor)) void deinit(){
 		//if(p1->fun) p1->fun();
 		//if(p1->data) myfree(p1->data);
 		free_default(p1);
-	}
+	}	
 	if(MEM_DEBUG){
 		if(!exit_fail){
 			if(!MEM_DEBUG) return;
