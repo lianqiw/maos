@@ -48,14 +48,14 @@ static void test_speed(){
     seed_rand(&rstat, seed);
     ck=clock();
     for(i=0; i<N; i++){
-	p->p[i]=randu(&rstat);
+	P(p,i)=randu(&rstat);
     }
     printf("randu elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
     writebin(p,"randu.bin");
     srand(1);
     ck=clock();
     for(i=0; i<N; i++){
-	p->p[i]=rand();
+	P(p,i)=rand();
     }
     printf("Rand elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
     /*ck=clock();
@@ -67,7 +67,7 @@ static void test_speed(){
     */
     ck=clock();
     for(i=0; i<N; i++){
-	p->p[i]=randn(&rstat)*10;
+	P(p,i)=randn(&rstat)*10;
     }
     printf("Fast Randn elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
     writebin(p, "randn.bin");
@@ -75,7 +75,7 @@ static void test_speed(){
     seed_rand(&rstat2,seed);
     ck=clock();
     for(i=0; i<N; i++){
-	p->p[i]=(real)randp(&rstat2,30);
+	P(p,i)=(real)randp(&rstat2,30);
     }
     printf("Randp elapsed %f seconds\n", (real)(clock()-ck)/CLOCKS_PER_SEC);
     writebin(p,"randp.bin");

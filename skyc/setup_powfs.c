@@ -73,9 +73,9 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 				dcell* psf1c=dcellread("%s", parms->skyc.fnpsf1[ipowfs]);
 				dmat* psf1=NULL;
 				if(psf1c->nx==1){
-					psf1=dref(psf1c->p[0]);
+					psf1=dref(P(psf1c,0));
 				} else if(psf1c->nx==parms->maos.nwvl){
-					psf1=dref(psf1c->p[iwvl]);
+					psf1=dref(P(psf1c,iwvl));
 				} else{
 					error("skyc.fnpsf1 has wrong dimension\n");
 				}
@@ -90,7 +90,7 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 					int jy=iy-ncomp2;
 					for(int ix=0; ix<ncomp; ix++){
 						int jx=ix-ncomp2;
-						psf2x->p[ix+iy*ncomp]=sqrt(jx*jx+jy*jy)*dtheta;
+						P(psf2x,ix,iy)=sqrt(jx*jx+jy*jy)*dtheta;
 					}
 				}
 				dbg("powfs %d, iwvl=%d, dtheta=%g\n", ipowfs, iwvl, dtheta*206265000);
@@ -108,7 +108,7 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 				writebin(otf2, "powfs%d_otf2_%d", ipowfs, iwvl);
 				writebin(nominal, "powfs%d_dtf%d_nominal_0", ipowfs, iwvl);
 				for(int i=0; i<ncomp*ncomp; i++){
-					nominal->p[i]*=otf2->p[i];
+					P(nominal,i)*=P(otf2,i);
 				}
 				writebin(nominal, "powfs%d_dtf%d_nominal_1", ipowfs, iwvl);
 				dfree(psf1x);

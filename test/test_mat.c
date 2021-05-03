@@ -86,7 +86,7 @@ static void test_d2cell(){
     A=dcellread("ccell.bin");
     long *dims=mycalloc(A->nx,long);
     for(int ix=0; ix<A->nx; ix++){
-	dims[ix]=A->p[ix]->nx;
+	dims[ix]=P(A,ix)->nx;
     }
     A2=dcell2m(A);
     dcell *B2=d2cellref(A2,dims,A->nx);
@@ -98,9 +98,9 @@ static void test_dshift2center(){
     dcell *pis=dcellread("pistat_seed1_wfs6.bin");
     cmat *B=NULL;
     for(int ip=0; ip<pis->nx; ip++){
-	ccpd(&B,pis->p[ip]);
+	ccpd(&B,P(pis,ip));
 	cshift2center(B,0.5,0.5);
-	dshift2center(pis->p[ip],0.5,0.5);
+	dshift2center(P(pis,ip),0.5,0.5);
     }
 }
 static void test_clip(){
@@ -134,7 +134,7 @@ static void test_dcellpinv(){
     writebin(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
     for(int i=0; i<PTT->ny; i++){
-	PTT2->p[i+i*PTT->nx]=dpinv(TT->p[i+i*TT->nx],saneai->p[i+i*TT->nx]);
+	    P(PTT2,i,i)=dpinv(P(TT,i,i),P(saneai,i,i));
     }
     writebin(PTT2,"TT2_pinv.bin");
     /*exit(0); */
@@ -161,7 +161,7 @@ static void test_save(void){/*passed */
     long nny[6]={3,4,2,5,6,3};
     dcell *b=dcellnew_mmap(2,3, nnx, nny, NULL,NULL,"ac.bin");
     for(int ix=0; ix<b->nx*b->ny; ix++){
-	drandn(b->p[ix], 1, &rstat);
+	drandn(P(b,ix), 1, &rstat);
     }
     writebin(b, "ac2.bin");
     dcellfree(b);
@@ -174,11 +174,11 @@ static void test_spline(void){
     dmat *y=dnew(nx,1);
     dmat *x2=dnew(nx*100,1);
     for(int i=0; i<nx; i++){
-	x->p[i]=i;
-	y->p[i]=sin(i*M_PI/2.);
+	P(x,i)=i;
+	P(y,i)=sin(i*M_PI/2.);
     }
     for(int i=0; i<nx*100; i++){
-	x2->p[i]=0.01*i;
+	P(x2,i)=0.01*i;
     }
     dmat *coeff=dspline_prep(x,y);
     dmat *y2=dspline_eval(coeff,x,x2);
@@ -198,10 +198,10 @@ static void test_spline_2d(void){
     dmat *y=dnew(ny,1);
     dmat *z=dnew(nx,ny);
     for(int i=0; i<ny; i++){
-	y->p[i]=i*1.2+10;
+	P(y,i)=i*1.2+10;
     }
     for(int i=0; i<nx; i++){
-	x->p[i]=i*2+10;
+	P(x,i)=i*2+10;
     }
     dmat* pz=z;
     for(int iy=0; iy<ny; iy++){
@@ -237,7 +237,7 @@ static void test_spline_2d(void){
 static void test_svd(void){
     dspcell *a=dspcellread("SVD");
     dmat *A=NULL;
-    dspfull(&A, a->p[0], 'n',1);
+    dspfull(&A, P(a,0), 'n',1);
     if(0){
 	dmat *U, *S, *VT;
 	tic;
@@ -263,7 +263,7 @@ static void test_svd(void){
 static void test_psd1d(){
     dmat *tmp=dnew(100,1);
     for(int i=0; i<100; i++){
-	tmp->p[i]=sin(i/10.);
+	P(tmp,i)=sin(i/10.);
     }
     dmat *psd=psd1d(tmp, 1);
     writebin(tmp, "tmp");
@@ -282,7 +282,7 @@ static void test_kalman(){
     //dmat *coeff=sde_fit(psd, coeff0, 0.1, 0, 1e5, 0);
     dmat *coeff=dread("coeff");
     //dmat *Gwfs=dnew(1,1);daddI(Gwfs,1);
-    //dmat *Rwfs=dnew(1,1);Rwfs->p[0]=1;
+    //dmat *Rwfs=dnew(1,1);P(Rwfs,0)=1;
     dcell *Gwfs=dcellread("Gwfs");
     dcell *Rwfs=dcellread("Rwfs");
     lmat *dtrat_wfs=lread("dtrat_wfs");
@@ -323,10 +323,10 @@ static void test_expm(){
 static void test_mm(){
     dcell *A=dcellnew(1,1);
     dcell *B=dcellnew(1,1);
-    A->p[0]=dnew(3,4);
-    dset(A->p[0],1);
-    B->p[0]=dnew(4,5);
-    dset(B->p[0],1);
+    P(A,0)=dnew(3,4);
+    dset(P(A,0),1);
+    P(B,0)=dnew(4,5);
+    dset(P(B,0),1);
     dcell *C=(dcell*)dcellmm2(A,B,"nn");
     writebin(A, "A");
     writebin(B, "B");
@@ -339,7 +339,7 @@ void test_sho(){
     sho_t *sho=sho_new(200, 0.9);
     real dt=1./64000.;
     for(int i=1; i<x->nx*x->ny; i++){
-	y->p[i]=sho_step(sho, x->p[i-1], dt);
+	P(y,i)=sho_step(sho, P(x,i-1), dt);
     }
     sho_reset(sho);
     writebin(y, "output");
@@ -347,7 +347,7 @@ void test_sho(){
     dmat *y2=dnew(x2->nx, x2->ny);
     real dt2=1./800.;
     for(int i=1; i<x2->nx*x2->ny; i++){
-	y2->p[i]=sho_step(sho, x2->p[i-1], dt2);
+	P(y2,i)=sho_step(sho, P(x2,i-1), dt2);
     }
     writebin(y2, "output2");
     free(sho);

@@ -69,7 +69,7 @@ aper_t* setup_aper(const parms_t* const parms){
 	if(!aper->amp){
 	/*Use negative misreg.pupil because it is the misreg of telescope entrace, not our pupil.*/
 		aper->amp=mkamp(aper->locs, aper->ampground,
-			-parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1],
+			-P(parms->misreg.pupil,0), -P(parms->misreg.pupil,1),
 			parms->aper.d, parms->aper.din);
 	}
 	if(parms->aper.pupmask){
@@ -120,10 +120,10 @@ aper_t* setup_aper(const parms_t* const parms){
 	dnormalize_sumabs(aper->amp->p, aper->locs->nloc, 1);
 	aper->sumamp2=dsumsq(aper->amp);
 	aper->mcc=loc_mcc_ptt(aper->locs, aper->amp->p);
-	aper->ipcc=1./aper->mcc->p[0];/*piston inverse. should be 1 since amp is normlaized. */
+	aper->ipcc=1./P(aper->mcc,0);/*piston inverse. should be 1 since amp is normlaized. */
 	aper->imcc=dinvspd(aper->mcc);/*pttr inverse */
 	/*piston term correction in focus mode */
-	aper->fcp=(aper->mcc->p[aper->mcc->nx+1]+aper->mcc->p[2*(aper->mcc->nx+1)])*aper->ipcc;
+	aper->fcp=(P(aper->mcc,1,1)+P(aper->mcc,2,2))*aper->ipcc;
 	if(parms->evl.rmax!=1){
 		aper->mod=zernike(aper->locs, parms->aper.d, 0, parms->evl.rmax, 0);
 		if(parms->save.setup){
@@ -144,9 +144,9 @@ aper_t* setup_aper(const parms_t* const parms){
 		aper->embed=locfft_init(aper->locs, aper->amp, parms->evl.wvl,
 			parms->evl.psfgridsize, 2, 0);
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-			long nembed=aper->embed->nembed->p[iwvl];
-			if(parms->evl.psfsize->p[iwvl]<1||parms->evl.psfsize->p[iwvl] > nembed){
-				parms->evl.psfsize->p[iwvl]=nembed;
+			long nembed=P(aper->embed->nembed,iwvl);
+			if(P(parms->evl.psfsize,iwvl)<1||P(parms->evl.psfsize,iwvl) > nembed){
+				P(parms->evl.psfsize,iwvl)=nembed;
 			}
 			info2("iwvl %d: Science PSF is using grid size of %ld. The PSF will sum to %.15g\n",
 				iwvl, nembed, aper->sumamp2*nembed*nembed);

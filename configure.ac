@@ -202,7 +202,7 @@ OPTIM_ALL="-O3 "
 OPTIM_GCC=" -ftree-vectorize -ffast-math -fno-finite-math-only "
 
 DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
-DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls -fsanitize=address"
+DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls " #-fsanitize=address"
 
 #inline definition:
 

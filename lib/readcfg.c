@@ -652,7 +652,7 @@ lmat* readcfg_lmat_nmax(int n, const char* format, ...){
 		lresize(out, n, 1);
 		if(nread==1){
 			for(int i=1; i<n; i++){
-				out->p[i]=out->p[0];
+				P(out,i)=P(out,0);
 			}
 		}
 	} else if(nread!=n){
@@ -729,7 +729,7 @@ dmat* readcfg_dmat_nmax(int n, const char* format, ...){
 	if(nread<=1){
 		dresize(out, n, 1);
 		if(nread==1){
-			dset(out, out->p[0]);
+			dset(out, P(out,0));
 		}
 	} else if(nread!=0&&nread!=n){
 		error("Need %d elements, got %ld\n", n, nread);

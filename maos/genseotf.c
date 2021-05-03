@@ -49,7 +49,7 @@ static void genseotf_do(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	//check whether opdbias is different between wfs[0] and following.
 		int different=0;
 		for(int iwfs=1; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-			real diff=ddiff(powfs[ipowfs].opdbias->p[0], powfs[ipowfs].opdbias->p[iwfs]);
+			real diff=ddiff(P(powfs[ipowfs].opdbias,0), P(powfs[ipowfs].opdbias,iwfs));
 			if(diff>1e-4){
 				dbg("powfs[%d].opdbias[%d] is different from powfs[%d].opdbias[0] by %g.\n",
 					ipowfs, iwfs, ipowfs, diff);
@@ -68,19 +68,19 @@ static void genseotf_do(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	cellfree(powfs[ipowfs].intstat->otf);
 	powfs[ipowfs].intstat->otf=cccellnew(notf, 1);
 	for(int iotf=0; iotf<notf; iotf++){
-		powfs[ipowfs].intstat->otf->p[iotf]=ccellnew(nsa, nwvl);
+		P(powfs[ipowfs].intstat->otf,iotf)=ccellnew(nsa, nwvl);
 	}
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+		real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
 		for(int iotf=0; iotf<notf; iotf++){
-			dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
+			dmat* opdbias=has_ncpa?P(powfs[ipowfs].opdbias,iotf):NULL;
 			real thres=opdbias?1:(1-1e-10);
 			info("There is %s bias\n", opdbias?"NCPA":"no");
 			//OTFs are always generated with native sampling. It is upsampled at gensepsf if necessary.
 			OMPTASK_SINGLE
-				genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
-					loc, powfs[ipowfs].realamp->p[iotf], opdbias,
-					powfs[ipowfs].realsaa->p[iotf],
+				genotf(P(powfs[ipowfs].intstat->otf,iotf)->p+iwvl*nsa,
+					loc, P(powfs[ipowfs].realamp,iotf), opdbias,
+					P(powfs[ipowfs].realsaa,iotf),
 					thres, wvl, NULL, parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 					npsfx, npsfy, nsa, 1);
 		}
@@ -96,7 +96,7 @@ void genseotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	strcat(fnprefix, "SEOTF");
 	if(powfs[ipowfs].amp_tel){
 		for(int iamp=0; iamp<parms->powfs[ipowfs].nwfs; iamp++){
-			key=dhash(powfs[ipowfs].amp_tel->p[iamp], key);
+			key=dhash(P(powfs[ipowfs].amp_tel,iamp), key);
 		}
 	} else{
 		key=dhash(powfs[ipowfs].amp, key);
@@ -106,7 +106,7 @@ void genseotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
 	if(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==2){
 		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-			key=dhash(powfs[ipowfs].opdbias->p[iwfs], key);
+			key=dhash(P(powfs[ipowfs].opdbias,iwfs), key);
 		}
 	}
 	if(key!=0){
@@ -174,10 +174,10 @@ void genselotf_do(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	//const int notfx=powfs[ipowfs].notfx;//keep LOTF and OTF same sampling
 	//const int notfy=powfs[ipowfs].notfy;//keep LOTF and OTF same sampling
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+		real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
 		real thres=1;
 		for(int ilotf=0; ilotf<nlotf; ilotf++){
-			genotf(PP(lotf, iwvl, ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL,
+			genotf(PP(lotf, iwvl, ilotf), loc, powfs[ipowfs].llt->amp, ncpa?P(ncpa,ilotf):NULL,
 				0, thres, wvl, NULL, parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 				npsfx, npsfy, 1, 1);
 			if(ampsum2<1){//LLT amp is normalized so that sum(amp.^2) is the total throughput.
@@ -202,7 +202,7 @@ void genselotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		dcell* ncpa=powfs[ipowfs].llt->ncpa;
 		long nlotf=ncpa->nx*ncpa->ny;
 		for(long ilotf=0; ilotf<nlotf; ilotf++){
-			key=dhash(ncpa->p[ilotf], key);
+			key=dhash(P(ncpa,ilotf), key);
 		}
 	}
 	key=dhash(parms->powfs[ipowfs].wvl, key);
@@ -253,7 +253,7 @@ void genselotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	}
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		const real dx=powfs[ipowfs].llt->pts->dx;
-		const real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+		const real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
 		const real dpsf=wvl/(nlpsf*dx)*206265.;
 		snprintf(header, 64, "dtheta=%g; #arcsecond\n", dpsf);
 		for(int illt=0; illt<intstat->lotf->ny; illt++){
@@ -311,10 +311,10 @@ void gensepsf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	const int notfx=powfs[ipowfs].notfx;
 	const int notfy=powfs[ipowfs].notfy;
 	for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
-		ccell* otf=PR(powfs[ipowfs].intstat->otf, isepsf, 0);//->p[iotf];
-		powfs[ipowfs].intstat->sepsf->p[isepsf]=dcellnew(nsa, nwvl);
-		dcell* psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf];
-		const real* area=powfs[ipowfs].realsaa->p[isepsf]->p;
+		ccell* otf=PR(powfs[ipowfs].intstat->otf, isepsf, 0);
+		P(powfs[ipowfs].intstat->sepsf,isepsf)=dcellnew(nsa, nwvl);
+		dcell* psepsf=P(powfs[ipowfs].intstat->sepsf,isepsf);
+		const real* area=P(powfs[ipowfs].realsaa,isepsf)->p;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			cmat* sepsf=cnew(notfx, notfy);
 			cmat* lotf=0;
@@ -368,11 +368,11 @@ void gensei(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	const int nsepsf=intstat->nsepsf;
 	int ni0=nllt<=1?nsepsf:nllt;
 	if(ni0==1&&parms->powfs[ipowfs].nwfs>1){/*check wvlwts. */
-		const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+		const int iwfs0=P(parms->powfs[ipowfs].wfs,0);
 		const real siglev0=parms->wfs[iwfs0].siglev;
 		const real* wvlwts0=parms->wfs[iwfs0].wvlwts->p;
 		for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs;jwfs++){
-			const int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			const int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			const real siglev=parms->wfs[iwfs].siglev;
 			const real* wvlwts=parms->wfs[iwfs].wvlwts->p;
 			if(fabs(siglev-siglev0)>EPS){
@@ -424,13 +424,13 @@ done:
 	if(parms->powfs[ipowfs].phytype_sim==3){
 		intstat->fotf=cccellnew(nsepsf, 1);
 		for(int i=0; i<nsepsf; i++){
-			intstat->fotf->p[i]=ccellnew(nsa, nwvl);
+			P(intstat->fotf,i)=ccellnew(nsa, nwvl);
 		}
 	}
 	if(parms->dbg.wfslinearity!=-1&&parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs){
 		intstat->potf=cccellnew(nsepsf, 1);
 		for(int i=0; i<nsepsf; i++){
-			intstat->potf->p[i]=ccellnew(nsa, nwvl);
+			P(intstat->potf,i)=ccellnew(nsa, nwvl);
 		}
 	}
 	dcell* i0=intstat->i0;
@@ -468,18 +468,18 @@ done:
 		const ccell* petf=nllt?powfs[ipowfs].etfprep[iwvl].etf:0;
 		const int ietf_multiplier=(petf&&petf->ny>1)?1:0;
 		for(int ii0=0; ii0<ni0; ii0++){
-			real* area=powfs[ipowfs].realsaa->p[ii0]->p;
+			real* area=P(powfs[ipowfs].realsaa,ii0)->p;
 			int isepsf=ii0*isepsf_multiplier;
 			int idtf=ii0*idtf_multiplier;
 			int irot=ii0*irot_multiplier;
 			int ietf=ii0*ietf_multiplier;
-			int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
-			real wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
+			int iwfs=P(parms->powfs[ipowfs].wfs,ii0);
+			real wvlsig=P(parms->wfs[iwfs].wvlwts,iwvl)
 				*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
-			dcell* psepsf=intstat->sepsf->p[isepsf];
+			dcell* psepsf=P(intstat->sepsf,isepsf);
 			cmat** nominals=powfs[ipowfs].dtf[iwvl].fused?0:PCOL(powfs[ipowfs].dtf[iwvl].nominal, idtf);
 			dsp** sis=PCOL(powfs[ipowfs].dtf[iwvl].si, idtf);
-			real* angles=(radgx)?(powfs[ipowfs].srot->p[irot]->p):0;
+			real* angles=(radgx)?(P(powfs[ipowfs].srot,irot)->p):0;
 			ccell* se_save=ccellnew(3, NTHREAD);
 #ifdef _OPENMP
 			if(omp_in_parallel()){
@@ -494,9 +494,8 @@ done:
 #ifdef _OPENMP
 				ith=omp_get_thread_num();
 #endif
-#define seotfj se_save->p[3*ith]
-#define seotfk se_save->p[3*ith+1]
-//#define sepsf se_save->p[3*ith+2]
+#define seotfj P(se_save,0,ith)
+#define seotfk P(se_save,1,ith)
 				if(!seotfk){
 					seotfk=cnew(notfx, notfy);
 				}
@@ -526,14 +525,14 @@ done:
 				if(nominal) ccwm(seotfk, nominal);
 				cscale(seotfk, norm);/*normalized so that after fft, psf sum to 1*/
 				if(intstat->potf){
-					ccp(&intstat->potf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
+					ccp(PP(P(intstat->potf,isepsf), isa, iwvl), seotfk);
 				}
 				if(nllt){/*elongation. */
 					ccwm(seotfk, P(petf, isa, ietf));
 				}
 				ccp(&seotfj, seotfk);/*backup */
 				if(intstat->fotf){
-					ccp(&intstat->fotf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
+					ccp(PP(P(intstat->fotf,isepsf), isa, iwvl), seotfk);
 				}
 				cfft2(seotfk, 1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
 				/*no need fftshift because nominal is pre-treated */
@@ -627,17 +626,17 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	}
 
 	for(int ii0=0; ii0<ni0; ii0++){
-		int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
+		int iwfs=P(parms->powfs[ipowfs].wfs,ii0);
 		const real siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
 		real i0thres=MAX(0.1*siglev, rne*10);
 		real nea2thres=pixthetax*pixthetay*100;
 		real* srot=NULL;
 		if(powfs[ipowfs].srot){
 			int irot=ii0*irot_multiplier;
-			srot=powfs[ipowfs].srot->p[irot]->p;
+			srot=P(powfs[ipowfs].srot,irot)->p;
 		}
-		//sanea->p[ii0]=dnew(nsa, 3);
-		dmat* psanea=sanea->p[ii0]/*PDMAT*/;
+		//P(sanea,ii0)=dnew(nsa, 3);
+		dmat* psanea=P(sanea,ii0)/*PDMAT*/;
 		real i0sumsum=0;
 		int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 		int ncrdisable=0;
@@ -659,10 +658,10 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 			dmat* bkgrnd2=NULL;
 			dmat* bkgrnd2c=NULL;
 			if(powfs[ipowfs].bkgrnd){
-				bkgrnd2=powfs[ipowfs].bkgrnd->p[ii0*nsa+isa];
+				bkgrnd2=P(powfs[ipowfs].bkgrnd, isa, ii0);
 			}
 			if(powfs[ipowfs].bkgrndc){
-				bkgrnd2c=powfs[ipowfs].bkgrndc->p[ii0*nsa+isa];
+				bkgrnd2c=P(powfs[ipowfs].bkgrndc, isa, ii0);
 			}
 			mtch(PP(mtche, isa, ii0), &nea2, P(i0s, isa, ii0),
 				gxs?P(gxs, isa, ii0):0, gys?P(gys, isa, ii0):0,
@@ -685,20 +684,20 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 			P(i0sum, isa, ii0)=dsum(P(i0s, isa, ii0));
 			i0sumsum+=P(i0sum, isa, ii0);
 
-			if(P(i0sum, isa, ii0)<i0thres||nea2->p[0]>nea2thres||nea2->p[3]>nea2thres){
+			if(P(i0sum, isa, ii0)<i0thres||P(nea2,0)>nea2thres||P(nea2,3)>nea2thres){
 			//Signal level too low or error to high.
-				nea2->p[0]=nea2->p[3]=nea2thres;
-				nea2->p[1]=nea2->p[2]=0;
+				P(nea2,0)=P(nea2,3)=nea2thres;
+				P(nea2,1)=P(nea2,2)=0;
 				dset(P(mtche, isa, ii0), 0);
 			}
 			if(parms->powfs[ipowfs].mtchcpl==0
 				&&(!parms->powfs[ipowfs].radpix||radgx)){
 			 /*remove coupling between r/a (x/y) measurements. */
-				nea2->p[1]=nea2->p[2]=0;
+				P(nea2,1)=P(nea2,2)=0;
 			}
-			P(psanea, isa, 0)=nea2->p[0];
-			P(psanea, isa, 1)=nea2->p[3];
-			P(psanea, isa, 2)=nea2->p[1];
+			P(psanea, isa, 0)=P(nea2,0);
+			P(psanea, isa, 1)=P(nea2,3);
+			P(psanea, isa, 2)=P(nea2,1);
 		}/*isa  */
 		dfree(nea2);
 
@@ -706,7 +705,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 			info("Mtched filter contraint are disabled for %d subaps out of %d.\n",
 				ncrdisable, nsa);
 		}
-		intstat->i0sumsum->p[ii0]=i0sumsum;
+		P(intstat->i0sumsum,ii0)=i0sumsum;
 	}/*ii0 */
 	if(1 /*print_nea*/){
 		info2("Matched filter sanea:\n");
@@ -722,12 +721,12 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 				}
 				info2("ii0 %d, llt %d.\n", ii0, illt);
 				info2("sa index   dist   noise equivalent angle\n");
-				dmat* psanea=sanea->p[ii0]/*PDMAT*/;
-				for(int ksa=0; ksa<powfs[ipowfs].sprint->p[illt]->nx; ksa++){
-					int isa=(int)powfs[ipowfs].sprint->p[illt]->p[ksa];
+				dmat* psanea=P(sanea,ii0)/*PDMAT*/;
+				for(int ksa=0; ksa<P(powfs[ipowfs].sprint,illt)->nx; ksa++){
+					int isa=(int)P(P(powfs[ipowfs].sprint,illt),ksa);
 					if(isa>0){
 						info2("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n",
-							isa, powfs[ipowfs].srsa->p[illt]->p[isa],
+							isa, P(P(powfs[ipowfs].srsa,illt),isa),
 							sqrt(P(psanea, isa, 0))*206265000,
 							sqrt(P(psanea, isa, 1))*206265000);
 					}
@@ -747,8 +746,8 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 					info2("sa%4d:%6.1fm", isa, locx);
 					for(int ii0=0; ii0<ni0; ii0++){
 						info2(" (%4.1f,%4.1f)",
-							sqrt(P(sanea->p[ii0], isa, 0))*206265000,
-							sqrt(P(sanea->p[ii0], isa, 1))*206265000);
+							sqrt(P(P(sanea,ii0), isa, 0))*206265000,
+							sqrt(P(P(sanea,ii0), isa, 1))*206265000);
 					}//for ii0
 					info2(" mas\n");
 				}
@@ -763,10 +762,10 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 		dmat* sanea2=0;
 		real scale=1./ni0;
 		for(int ii0=0; ii0<ni0; ii0++){
-			dadd(&sanea2, 1, sanea->p[ii0], scale);
+			dadd(&sanea2, 1, P(sanea,ii0), scale);
 		}
 		dcellfree(powfs[ipowfs].sanea);
 		powfs[ipowfs].sanea=dcellnew(1, 1);
-		powfs[ipowfs].sanea->p[0]=sanea2;
+		P(powfs[ipowfs].sanea,0)=sanea2;
 	}
 }

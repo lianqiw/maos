@@ -78,8 +78,8 @@ void stfun_push(stfun_t* A, dmat* opd){
 	cfft2(A->hat2, -1);
 	for(long i=0; i<A->hat1->nx*A->hat1->ny; i++){
 	/*real(t2*t0*)-t1*t1* */
-		A->hattot->p[i]+=creal(A->hat2->p[i]*conj(A->hat0->p[i]))
-			-A->hat1->p[i]*conj(A->hat1->p[i]);
+		P(A->hattot,i)+=creal(P(A->hat2,i)*conj(P(A->hat0,i)))
+			-P(A->hat1,i)*conj(P(A->hat1,i));
 	}
 }
 /**

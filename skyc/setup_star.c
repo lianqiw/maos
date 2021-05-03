@@ -70,7 +70,7 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 			if(pow(star[jstar].thetax-star[kstar].thetax, 2)
 				+pow(star[jstar].thetay-star[kstar].thetay, 2)<keepout){
 			 /*warning("start %d is too close to %d. use J brightest.\n", jstar, kstar); */
-				if(P(pc, 0, istar)<star[kstar].mags->p[0]){
+				if(P(pc, 0, istar)<P(star[kstar].mags,0)){
 					memcpy(star[kstar].mags->p, PCOL(pc, istar)+2, sizeof(real)*nwvl);
 					star[kstar].thetax=star[jstar].thetax;
 					star[kstar].thetay=star[jstar].thetay;
@@ -157,8 +157,8 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 			dmat* scale=NULL;
 			if(parms->skyc.bspstrehl){
 				scale=dnew(nsa, nwvl);
-				dmat* gx=dnew(1, 1); gx->p[0]=thxnorm;
-				dmat* gy=dnew(1, 1); gy->p[0]=thynorm;
+				dmat* gx=dnew(1, 1); P(gx,0)=thxnorm;
+				dmat* gy=dnew(1, 1); P(gy,0)=thynorm;
 				if(nsa!=avgpsf->nx||nwvl!=avgpsf->ny){
 					error("Mismatch: nsa=%d, nwvl=%d, avgpsf->nx=%ld, avgpsf->ny=%ld\n",
 						nsa, nwvl, avgpsf->nx, avgpsf->ny);
@@ -167,14 +167,14 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 					dmat* val=dbspline_eval(simu->bspstrehl[ipowfs][ic],
 						simu->bspstrehlxy, simu->bspstrehlxy,
 						gx, gy);
-					real ratio=val->p[0]/avgpsf->p[ic]->p[0];
-					/*dbg("strehl: bilinear: %g, cubic: %g\n", avgpsf->p[ic]->p[0],val->p[0]); */
+					real ratio=P(val,0)/P(P(avgpsf,ic),0);
+					/*dbg("strehl: bilinear: %g, cubic: %g\n", P(P(avgpsf,ic),0),P(val,0)); */
 					if(ratio<0){
 						warning("Ratio=%g is less than zero.\n", ratio);
-						scale->p[ic]=1;
+						P(scale,ic)=1;
 					} else{
-						dscale(avgpsf->p[ic], ratio);
-						scale->p[ic]=ratio;
+						dscale(P(avgpsf,ic), ratio);
+						P(scale,ic)=ratio;
 					}
 					dfree(val);
 				}
@@ -187,9 +187,9 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 			for(int ig=0; ig<nsa*2; ig++){
 				dmat* tmp=0;
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					dadd(&tmp, 0, neaspec->p[ig+nsa*2*iwvl], parms->skyc.wvlwt->p[iwvl]);
+					dadd(&tmp, 0, P(neaspec,ig,iwvl), P(parms->skyc.wvlwt,iwvl));
 				}
-				stari->pistat[ipowfs].neaspec->p[ig]=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtrats, 0);
+				P(stari->pistat[ipowfs].neaspec,ig)=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtrats, 0);
 				dfree(tmp);
 			}
 			dcellfree(neaspec);
@@ -197,7 +197,7 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 			{/* skip stars with large PSF.*/
 				int size=INT_MAX;
 				for(int ic=0; ic<avgpsf->nx*avgpsf->ny; ic++){
-					int size0=dfwhm(avgpsf->p[ic]);
+					int size0=dfwhm(P(avgpsf,ic));
 					if(size0<size) size=size0;
 				}
 				if(size>6){
@@ -229,11 +229,11 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 		/*Field dependent error: nm^2=nma^2+nmb^2*theta_norm^2; */
 		real imperrnm=sqrt(pow(parms->skyc.imperrnm, 2)+th2*pow(parms->skyc.imperrnmb, 2));
 		for(long ipowfs=0; ipowfs<npowfs; ipowfs++){
-			star[istar].siglev->p[ipowfs]=dnew(nwvl, 1);
+			P(star[istar].siglev,ipowfs)=dnew(nwvl, 1);
 			int iscircle=parms->maos.nsa[ipowfs]<=4?1:0;
-			photon_flux(&parms->skyc.zb, star[istar].siglev->p[ipowfs]->p,
-				&star[istar].siglevtot->p[ipowfs],
-				&star[istar].bkgrnd->p[ipowfs],
+			photon_flux(&parms->skyc.zb, P(star[istar].siglev,ipowfs)->p,
+				PP(star[istar].siglevtot,ipowfs),
+				PP(star[istar].bkgrnd,ipowfs),
 				NULL, NULL,
 				parms->maos.nwvl,
 				parms->maos.wvl,
@@ -250,13 +250,13 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 				info("star %d at (%5.1f %5.1f)", istar,
 					star[istar].thetax*206265, star[istar].thetay*206265);
 				info(" bkgrnd=%5.2f, pixtheta=%4.1fmas mag=[",
-					star[istar].bkgrnd->p[ipowfs], parms->skyc.pixtheta[ipowfs]*206265000);
+					P(star[istar].bkgrnd,ipowfs), parms->skyc.pixtheta[ipowfs]*206265000);
 				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-					info("%5.2f ", star[istar].mags->p[iwvl]);
+					info("%5.2f ", P(star[istar].mags,iwvl));
 				}
 				info("] siglev=[");
 				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-					info("%6.1f ", star[istar].siglev->p[ipowfs]->p[iwvl]);
+					info("%6.1f ", P(P(star[istar].siglev,ipowfs),iwvl));
 				}
 				info("]\n");
 			}
@@ -301,7 +301,7 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 			dcell* gy=pistat->gy;
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 				for(long isa=0; isa<nsa; isa++){
-					real siglev=star[istar].siglev->p[ipowfs]->p[iwvl];
+					real siglev=P(P(star[istar].siglev,ipowfs),iwvl);
 					P(i0, isa, iwvl)=dnew(pixpsa, pixpsa);
 					if(!parms->skyc.mtchfft){
 						P(gx, isa, iwvl)=dnew(pixpsa, pixpsa);
@@ -316,9 +316,9 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 						dscale(P(gx, isa, iwvl), 1./pixtheta);
 						dscale(P(gy, isa, iwvl), 1./pixtheta);
 					}
-					dadd(&pistat->i0s->p[isa], 1, P(i0, isa, iwvl), siglev);
-					dadd(&pistat->gxs->p[isa], 1, P(gx, isa, iwvl), siglev);
-					dadd(&pistat->gys->p[isa], 1, P(gy, isa, iwvl), siglev);
+					dadd(PP(pistat->i0s,isa), 1, P(i0, isa, iwvl), siglev);
+					dadd(PP(pistat->gxs,isa), 1, P(gx, isa, iwvl), siglev);
+					dadd(PP(pistat->gys,isa), 1, P(gy, isa, iwvl), siglev);
 				}
 
 			}
@@ -334,53 +334,53 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 			dcell* i0s=NULL; dcell* gxs=NULL; dcell* gys=NULL;
 
 			for(int idtrat=0; idtrat<ndtrat; idtrat++){
-				int dtrat=parms->skyc.dtrats->p[idtrat];
+				int dtrat=P(parms->skyc.dtrats,idtrat);
 				dcelladd(&i0s, 0, pistat->i0s, dtrat);
 				dcelladd(&gxs, 0, pistat->gxs, dtrat);
 				dcelladd(&gys, 0, pistat->gys, dtrat);
-				genmtch(&pistat->mtche[idtrat], &pistat->sanea->p[idtrat],
+				genmtch(&pistat->mtche[idtrat], PP(pistat->sanea,idtrat),
 					i0s, gxs, gys, pixtheta, P(rnefs, idtrat, ipowfs),
-					star[istar].bkgrnd->p[ipowfs]*dtrat, parms->skyc.mtchcr);
+					P(star[istar].bkgrnd,ipowfs)*dtrat, parms->skyc.mtchcr);
 				/*Add nolinearity*/
 				if(nonlin){
 					//add linearly not quadratically since the errors are related.
-					dmat* nea_nonlin=dinterp1(nonlin[ipowfs]->p[igg], NULL, pistat->sanea->p[idtrat], 0);
+					dmat* nea_nonlin=dinterp1(P(nonlin[ipowfs],igg), NULL, P(pistat->sanea,idtrat), 0);
 					for(int i=0; i<nsa*2; i++){
-					//info("%g mas", pistat->sanea->p[idtrat]->p[i]*206265000);
-						pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i], 2)
-							+pow(nea_nonlin->p[i], 2));
-		//info("-->%g mas\n", pistat->sanea->p[idtrat]->p[i]*206265000);
+					//info("%g mas", P(P(pistat->sanea,idtrat),i)*206265000);
+						P(P(pistat->sanea,idtrat),i)=sqrt(pow(P(P(pistat->sanea,idtrat),i), 2)
+							+pow(P(nea_nonlin,i), 2));
+		//info("-->%g mas\n", P(P(pistat->sanea,idtrat),i)*206265000);
 					}
 					dfree(nea_nonlin);
 				}
-				dcp(&pistat->sanea0->p[idtrat], pistat->sanea->p[idtrat]);
+				dcp(PP(pistat->sanea0,idtrat), P(pistat->sanea,idtrat));
 				if(parms->skyc.neaaniso){
 					for(int i=0; i<nsa*2; i++){
-						pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i], 2)
-							+pow(star[istar].pistat[ipowfs].neaspec->p[i]->p[idtrat], 2));
+						P(P(pistat->sanea,idtrat),i)=sqrt(pow(P(P(pistat->sanea,idtrat),i), 2)
+							+pow(P(P(star[istar].pistat[ipowfs].neaspec,i),idtrat), 2));
 					}
 				}
 				if(parms->skyc.dbg){
 					writebin(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 						dirsetup, istar, ipowfs, dtrat);
 				}
-				real nea=sqrt(dsumsq(pistat->sanea->p[idtrat])/(nsa*2));
+				real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/(nsa*2));
 				real snr=sigma_theta/nea;
-				pistat->snr->p[idtrat]=snr;
+				P(pistat->snr,idtrat)=snr;
 				if(snr>=parms->skyc.snrmin){
-					star[istar].minidtrat->p[ipowfs]=idtrat;
+					P(star[istar].minidtrat,ipowfs)=idtrat;
 				}
 			}//for idtrat
-			if(star[istar].minidtrat->p[ipowfs]==-1){
+			if(P(star[istar].minidtrat,ipowfs)==-1){
 				star[istar].use[ipowfs]=-1;
 				if(parms->skyc.dbg){
 					info("star %2d, powfs %1d: skipped\n", istar, ipowfs);
 				}
 			} else{
 				if(parms->skyc.dbg){
-					int idtrat=(int)star[istar].minidtrat->p[ipowfs];
+					int idtrat=(int)P(star[istar].minidtrat,ipowfs);
 					info("star %2d, powfs %1d: min dtrat=%3d, snr=%4.1f\n", istar, ipowfs,
-						(int)parms->skyc.dtrats->p[idtrat], pistat->snr->p[idtrat]);
+						(int)P(parms->skyc.dtrats,idtrat), P(pistat->snr,idtrat));
 					  //writebin(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
 					  //dirsetup,istar,ipowfs);
 				}
@@ -408,8 +408,8 @@ static void setup_star_gm(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, in
 			const long nsa=parms->maos.nsa[ipowfs];
 			const real thetax=star[istar].thetax;
 			const real thetay=star[istar].thetay;
-			star[istar].g->p[ipowfs]=dnew(nsa*2, nmod);
-			dmat* pg=star[istar].g->p[ipowfs];
+			P(star[istar].g,ipowfs)=dnew(nsa*2, nmod);
+			dmat* pg=P(star[istar].g,ipowfs);
 			for(long isa=0; isa<nsa; isa++){
 				const real xm=powfs[ipowfs].locxamp[isa];/*dot of x with amp. */
 				const real ym=powfs[ipowfs].locyamp[isa];
@@ -525,20 +525,20 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 									error("Different type has different steps\n");
 								}
 							}
-							if(!stari->ztiltout->p[ipowfs]){
-								stari->ztiltout->p[ipowfs]=dnew(ng, nstep);
+							if(!P(stari->ztiltout,ipowfs)){
+								P(stari->ztiltout,ipowfs)=dnew(ng, nstep);
 							}
-							dmat* ztiltout=stari->ztiltout->p[ipowfs];
+							dmat* ztiltout=P(stari->ztiltout,ipowfs);
 							for(long istep=0; istep<nstep; istep++){
 								dmat* ztilti=dreaddata(fp_ztilt, 0);
 								for(int ig=0; ig<ng; ig++){
-									ztiltout->p[ig+istep*ng]+=ztilti->p[ig]*wtxi;
+									P(ztiltout,ig, istep)+=P(ztilti,ig)*wtxi;
 								}
 								dfree(ztilti);
 							}
 						} else{
 							dmat* tmp=dreaddata(fp_ztilt, &header);
-							dadd(&stari->ztiltout->p[ipowfs], 1, tmp, wtxi);
+							dadd(PP(stari->ztiltout,ipowfs), 1, tmp, wtxi);
 							dfree(tmp);
 						}
 						zfclose(fp_ztilt);
@@ -548,7 +548,7 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 							stari->goff=dcellnew(npowfs, 1);
 						}
 						dmat* tmp=dread("%s", fngoff[iy][ix]);
-						dadd(&stari->goff->p[ipowfs], 1, tmp, wtxi);
+						dadd(PP(stari->goff,ipowfs), 1, tmp, wtxi);
 						dfree(tmp);
 					}
 				}/*iy */
@@ -667,7 +667,7 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 					/*dbg("Scaling WVF isa %d iwvl %d with %g\n", isa, iwvl, P(scale,isa,iwvl)); */
 						for(long istep=0; istep<stari->nstep; istep++){
 							if(pwvfout[istep]->p){
-								cscale(pwvfout[istep]->p[isa+nsa*iwvl], P(scale, isa, iwvl));
+								cscale(P(pwvfout[istep],isa,iwvl), P(scale, isa, iwvl));
 							}
 						}/*istep */
 					}/*isa */

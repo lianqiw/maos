@@ -70,7 +70,7 @@ static void test_spmul(){
 /*
 static void test_spsum(){//passed 
     dspcell *FLMc=dspcellread("FLM.bin");
-    dsp *FLM=FLMc->p[0];
+    dsp *FLM=P(FLMc,0);
     dmat *sum1=dspsum(FLM,1);
     writebin(sum1,"sum_1");   dfree(sum1);
     sum1=dspsum(FLM,2);
@@ -92,7 +92,7 @@ static void test_spmul(){
 	return;
     }
     dspcell *Ac=dspcellread("RLM.bin");
-    dsp *A=Ac->p[0];
+    dsp *A=P(Ac,0);
     rand_t rstat;
     seed_rand(&rstat,1);
     dmat *x=dnew(A->ny,1);

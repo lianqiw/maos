@@ -206,7 +206,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 				dcircle_symbolic(dmap, sx, sy, dx, dy, RR);
 			}
 			for(int i=0; i<nx*ny; i++){
-				dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
+				P(dmap,i)=(P(dmap,i))>1.e-15?1:0;
 			}
 		}
 	}
@@ -252,10 +252,10 @@ mapcell* dcell2map(const dcell* in){
 	if(!check_map(in)) return NULL;
 	mapcell* map=(mapcell*)cellnew(in->nx, in->ny);
 	for(long i=0; i<in->nx*in->ny; i++){
-		if(!in->p[i]->header&&in->header){
-			in->p[i]->header=strdup(in->header);
+		if(!P(in,i)->header&&in->header){
+			P(in,i)->header=strdup(in->header);
 		}
-		map->p[i]=d2map(in->p[i]);
+		P(map,i)=d2map(P(in,i));
 	}
 	return map;
 }
@@ -295,7 +295,7 @@ rmap_t** dcell2rmap(int* nlayer, const dcell* in){
 	*nlayer=in->nx*in->ny;
 	rmap_t** map=mycalloc(in->nx*in->ny, rmap_t*);
 	for(long i=0; i<in->nx*in->ny; i++){
-		map[i]=d2rmap(in->p[i]);
+		map[i]=d2rmap(P(in,i));
 	}
 	return map;
 }

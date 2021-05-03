@@ -317,15 +317,15 @@ static void X(cell_fft2plan)(X(cell)* dc, int dir){
 	if(dc->nx*dc->ny!=2){
 		error("X(cell) of two elements is required\n");
 	}
-	int nx=dc->p[0]->nx;
-	int ny=dc->p[0]->ny;
-	if(dc->p[1]->nx!=nx||dc->p[1]->ny!=ny){
+	int nx=P(dc,0)->nx;
+	int ny=P(dc,0)->ny;
+	if(P(dc,1)->nx!=nx||P(dc,1)->ny!=ny){
 		error("The two elements in X(cell) must be of the same size\n");
 	}
 	fftw_iodim dims[2]={{nx,1,1},{ny,nx,nx}};
 	fftw_iodim howmany_dims={1,1,1};
-	T* restrict p1=dc->p[0]->p;
-	T* restrict p2=dc->p[1]->p;
+	T* restrict p1=P(dc,0)->p;
+	T* restrict p2=P(dc,1)->p;
 	/*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
 	fft_t* fft=mycalloc(1, fft_t);
 	if(!fft->plan[dir+1]){

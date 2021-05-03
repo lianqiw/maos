@@ -67,19 +67,19 @@ static int test_fft_speed_small(){
     rand_t stat;
     seed_rand(&stat,1);
     for(int ii=0; ii<nis; ii++){
-	ac->p[ii]=cnew(is[ii],is[ii]);
-	//cfft2plan(ac->p[ii],-1);
-	crandn(ac->p[ii],20,&stat);
+	P(ac,ii)=cnew(is[ii],is[ii]);
+	//cfft2plan(P(ac,ii),-1);
+	crandn(P(ac,ii),20,&stat);
     }
     TIC;
     for(int ii=0; ii<nis; ii++){
 	info("size %4d: ",is[ii]);
 	tic;
 	for(int i=0; i<1000; i++){
-	    cfft2(ac->p[ii],-1);
+	    cfft2(P(ac,ii),-1);
 	}
 	toc("fft");
-	tim->p[ii]=toc3;
+	P(tim,ii)=toc3;
     }
     writebin(tim,"fft_timing");
 }
@@ -98,9 +98,9 @@ static void test_fft_speed(){
     for(int ii=0; ii<nis; ii++){
 	info("size %4d: ",is[ii]);
 	tic;
-	ac->p[ii]=cnew(is[ii],is[ii]);
-	//cfft2plan(ac->p[ii],-1);
-	crandn(ac->p[ii],20,&stat);
+	P(ac,ii)=cnew(is[ii],is[ii]);
+	//cfft2plan(P(ac,ii),-1);
+	crandn(P(ac,ii),20,&stat);
 	toc("plan");
     }
     toc("plan");
@@ -116,10 +116,10 @@ static void test_fft_speed(){
 	    nrepeat=1;
 
 	for(int i=0; i<nrepeat; i++){
-	    cfft2(ac->p[ii],-1);
+	    cfft2(P(ac,ii),-1);
 	}
 	toc("fft");
-	tim->p[ii]=toc3/nrepeat;
+	P(tim,ii)=toc3/nrepeat;
     }
     writebin(tim,"fft_timing");
     }*/
@@ -136,10 +136,10 @@ static void test_fft_special(){
     for(int ii=0; ii<nis; ii++){
 	info("size %4d: ",is[ii]);
 	tic;
-	ac->p[ii]=cnew(is[ii],is[ii]);
-	//cfft2plan(ac->p[ii],-1);
-	//cfft2partialplan(ac->p[ii],512,-1);
-	crandn(ac->p[ii],20,&rstat);
+	P(ac,ii)=cnew(is[ii],is[ii]);
+	//cfft2plan(P(ac,ii),-1);
+	//cfft2partialplan(P(ac,ii),512,-1);
+	crandn(P(ac,ii),20,&rstat);
 	toc("plan");
     }
 
@@ -155,14 +155,14 @@ static void test_fft_special(){
 	    nrepeat=4;
 
 	for(int i=0; i<nrepeat; i++){
-	    cfft2(ac->p[ii],-1);
+	    cfft2(P(ac,ii),-1);
 	}
 	toc("fft");
 	for(int i=0; i<nrepeat; i++){
-	    cfft2partial(ac->p[ii],512,-1);
+	    cfft2partial(P(ac,ii),512,-1);
 	}
 	toc("fft2partial");
-	tim->p[ii]=toc3/nrepeat;
+	P(tim,ii)=toc3/nrepeat;
     }
     writebin(tim,"fft_timing");
 

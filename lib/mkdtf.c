@@ -59,7 +59,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		int nwfs=1; int nsa=1;
 		if(srot){
 			nwfs=srot->nx;
-			nsa=srot->p[0]->nx;
+			nsa=P(srot,0)->nx;
 		}
 		if(!pixoffx||!pixoffy){
 			error("pixoffx and pixoffy must simultaneously be supplied\n");
@@ -74,7 +74,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 
 	/*both nominal and si depends on wavelength.*/
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		const real wvl=wvls->p[iwvl];
+		const real wvl=P(wvls,iwvl);
 		const real dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
 		const real dux=1./(dtheta*notfx);
 		const real duy=1./(dtheta*notfy);
@@ -88,11 +88,10 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		  nominal/si for each subaperture. The PSF/OTF and hence DTF are on x/y
 		  coordinate, so pixels and pixel coordinates need to rotated to r/a
 		  direction. */
-		const int multi_dtf=(srot&&radpix);//DTF is along x/y coord, pixel is r/a coord.
-		const int ndtf=(multi_dtf||(pixoffx&&pixoffx->nx>1))?srot->p[0]->nx:1;
-		const int multi_wfs=((srot&&srot->nx>1&&radpix)||(pixoffx&&pixoffx->ny>1));
-		const int nwfs=multi_wfs?MAX(srot->nx, pixoffx->ny):1;
-
+		//When DTF is along x/y coord, pixel is r/a coord, or when there is pixoffx, we need multiple DTFs.
+		const int ndtf=((srot&&radpix)||(pixoffx&&pixoffx->nx>1))?P(srot, 0)->nx:1;
+		const int nwfs=MAX((radpix&&srot)?srot->nx:1, pixoffx?pixoffx->ny:1);
+		
 		dtfs[iwvl].dtheta=dtheta;
 		dtfs[iwvl].dxsa=dxsa;
 		dtfs[iwvl].radpix=radpix;
@@ -111,8 +110,8 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		real st=sin(theta);
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			for(int isa=0; isa<ndtf; isa++){
-				if(multi_dtf){
-					theta=PR(srot, iwfs, 1)->p[isa];
+				if(ndtf>1){
+					theta=P(PR(srot,iwfs,1),isa);
 					ct=cos(theta);
 					st=sin(theta);
 				}
@@ -203,8 +202,8 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	/*setup elongation along radial direction. don't care azimuthal. */
 	if(!srot) error("srot is required");
 	const int nllt=MAX(srot->nx, sodium->nx);
-	const int nsa=srot->p[0]->nx;
-	dmat* sodium0=sodium->p[0];
+	const int nsa=P(srot,0)->nx;
+	dmat* sodium0=P(sodium,0);
 	const int ncol=sodium0->ny-1;
 	const int nhp=sodium0->nx;
 	const real* px=sodium0->p;
@@ -230,7 +229,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	real* pna[nllt];
 	real i0scale[nllt];
 	for(int illt=0; illt<nllt; illt++){
-		psrot[illt]=srot->p[srot->nx>1?illt:0]->p;
+		psrot[illt]=P(srot,srot->nx>1?illt:0)->p;
 		pna[illt]=PR(sodium, illt, 0)->p+nhp*(1+icol);
 		i0scale[illt]=dvecsum(pna[illt], nhp);
 		if(fabs(i0scale[illt]-1)>0.01){
@@ -257,7 +256,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 		if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
 			for(int illt=0; illt<nllt; illt++){
 				for(int isa=0; isa<nsa; isa++){
-					real rsa=srsa->p[illt]->p[isa];
+					real rsa=P(P(srsa,illt),isa);
 
 					const real theta=psrot[illt][isa];
 					const real ct=cos(theta);
@@ -308,7 +307,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 				for(long isa=0; isa<nsa; isa++)
 				{
 					/*1d ETF along radius. */
-					real rsa=srsa->p[illt]->p[isa];
+					real rsa=P(P(srsa,illt),isa);
 					real etf2sum=0;
 					czero(etf);
 					for(int icomp=etf0; icomp<etf1; icomp++){
@@ -322,11 +321,11 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 						const int iihf=ifloor(iih);
 						const real iihw=iih-iihf;
 						if(iihf<0||iihf>nhp-2){
-							etf->p[icomp]=0.;
+							P(etf,icomp)=0.;
 						} else{
 							real tmp=pna[illt][iihf]*(1.-iihw)+pna[illt][iihf+1]*iihw;
 							/*neglected rsa1 due to renormalization. */
-							etf->p[icomp]=tmp;
+							P(etf,icomp)=tmp;
 							etf2sum+=tmp;
 						}
 					}
@@ -344,7 +343,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 						cscale(etf, i0scale[illt]/etf2sum);
 
 						//check for truncation
-						double ratio_edge=0.5*creal(etf->p[etf0]+etf->p[etf1-1])/creal(etf->p[netf2]);
+						double ratio_edge=0.5*creal(P(etf,etf0)+P(etf,etf1-1))/creal(P(etf,netf2));
 						if(ratio_edge>0.1){
 							writebin(etf, "etf_%ld", isa);
 							error("sa %ld: sodium profile is cropped when computing etf. Increase powfs.pixpsa or powfs.notf.\n", isa);
@@ -369,8 +368,8 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 								ir=ir-iir;
 								if(iir>=0&&iir<netf-1){
 									/*bilinear interpolation. */
-									P(etf2d, icompx, icompy)=etf->p[iir]*(1.-ir)
-										+etf->p[iir+1]*ir;
+									P(etf2d, icompx, icompy)=P(etf,iir)*(1.-ir)
+										+P(etf,iir+1)*ir;
 								}/*else{P(etf2d,icompx,icompy)=0;}*/
 							}
 						}
@@ -431,11 +430,11 @@ void etf_free_do(etf_t* etfs){
  */
 dmat* smooth(const dmat* prof, real dxnew){
 	const long nxin=prof->nx;
-	const real x0in=prof->p[0];
-	const real dxin=(prof->p[nxin-1]-x0in)/(nxin-1);
+	const real x0in=P(prof,0);
+	const real dxin=(P(prof,nxin-1)-x0in)/(nxin-1);
 	dmat* out;
 	if(dxnew>dxin*2){
-		const long nxnew=ceil((prof->p[nxin-1]-x0in)/dxnew);
+		const long nxnew=ceil((P(prof,nxin-1)-x0in)/dxnew);
 		loc_t* loc_in=mk1dloc_vec(prof->p, nxin);
 		loc_t* loc_out=mk1dloc(x0in, dxnew, nxnew);
 		dsp* ht=mkhb(loc_out, loc_in, 0, 0, 1);

@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
 		dcell* temp=dcellread("%s", fn);
 		if(header){
 			for(int i=0; i<temp->nx*temp->ny; i++){
-				temp->p[i]->header=strdup(header[i]);
+				P(temp,i)->header=strdup(header[i]);
 			}
 		}
 		writebin(temp, "%s", fn2);

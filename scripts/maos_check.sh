@@ -155,6 +155,14 @@ run_maos -cscao_ngs.conf recon.split=0 recon.alg=1
 echo -n "NGS SCAO (lsq,split)"
 run_maos -cscao_ngs.conf recon.split=1 recon.alg=1
 
+echo -n "LGS MCAO (CG) PCCD:   " #also test other
+run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[16,0,0] powfs.pixpsa=[6,0,0]
+
+echo -n "LGS MCAO (CG) Side Launch:   " #also test other
+run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0]
+echo -n "LGS MCAO (CG) PCCD Side Launch:   " #also test other
+run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[18,0,0] powfs.pixpsa=[6,0,0] powfs.fnllt=['llt_SL.conf',,]
+
 echo ${RMS[*]}
 
 exit $ans

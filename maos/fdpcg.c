@@ -175,7 +175,8 @@ fdpcg_perm(const long* nx, const long* ny, const long* os, int bs, int nps, int 
 								jx=(jx+nx2[ips]);
 								if(jx>=nx[ips]) jx-=nx[ips];
 							}
-							perm->p[count++]=ratio*(noff[ips]+jx+(ratio<0?(jy==0?0:ny[ips]-jy):jy)*nx[ips]);
+							P(perm, count)=ratio*(noff[ips]+jx+(ratio<0?(jy==0?0:ny[ips]-jy):jy)*nx[ips]);
+							count++;
 						}
 					}
 				}
@@ -376,17 +377,17 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 			//cfft2plan(psd,-1);
 			dsp* L2;
 			if(parms->tomo.square){
-				L2=dspref(recon->L2->p[ips+nps*ips]);
+				L2=dspref(P(recon->L2,ips,ips));
 			} else{/*L2 is for non square xloc. need to build L2 for square xloc. */
 				L2=mklaplacian_map(nx[ips], ny[ips],
-					recon->xloc->p[ips]->dx, recon->r0,
-					recon->wt->p[ips]);
+					P(recon->xloc,ips)->dx, recon->r0,
+					P(recon->wt,ips));
 				dspscale(L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 			}
 			dsp* tmp=dspmulsp(L2, L2, "tn");
 			dspfree(L2);
-			for(long irow=tmp->p[0]; irow<tmp->p[1]; irow++){/*first column of tmp to psf. */
-				psd->p[tmp->i[irow]]=tmp->x[irow];
+			for(long irow=P(tmp,0); irow<P(tmp,1); irow++){/*first column of tmp to psf. */
+				P(psd,tmp->i[irow])=tmp->x[irow];
 			}
 			dspfree(tmp);
 			cfft2(psd, -1);
@@ -397,7 +398,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 			cmaxmin(psd->p, psd->nx*psd->ny, &max, 0);
 			max=max*sqrt(eps);
 			for(long i=0; i<nx[ips]*ny[ips]; i++){
-				invpsd[offset+i]=creal(psd->p[i])+max;
+				invpsd[offset+i]=creal(P(psd,i))+max;
 			}
 			offset+=nx[ips]*ny[ips];
 			cfree(psd);
@@ -407,12 +408,12 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	case 2:
 	/*forward matrix uses inverse PSD or fractal. we use PSD here. */
 		for(long ips=0; ips<nps; ips++){
-			dmat* tmp=ddup(recon->invpsd->invpsd->p[ips]);
+			dmat* tmp=ddup(P(recon->invpsd->invpsd,ips));
 			dfftshift(tmp);
 			/*cancel the scaling applied in invpsd routine. */
 			dscale(tmp, (real)(nx[ips]*ny[ips]));
 			for(long i=0; i<nx[ips]*ny[ips]; i++){
-				invpsd[offset+i]=tmp->p[i];
+				invpsd[offset+i]=P(tmp,i);
 			}
 			offset+=nx[ips]*ny[ips];
 			dfree(tmp);
@@ -458,8 +459,8 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
 		real dispx[nps];
 		real dispy[nps];
-		int iwfs=parms->powfs[hipowfs].wfsr->p[jwfs];
-		real neai=recon->neam->p[iwfs];
+		int iwfs=P(parms->powfs[hipowfs].wfsr,jwfs);
+		real neai=P(recon->neam,iwfs);
 		for(long ips=0; ips<nps; ips++){
 			/*
 			  2010-05-28: The cone effect cancels with the cone
@@ -469,9 +470,9 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 			dispx[ips]=ht[ips]*parms->wfsr[iwfs].thetax;
 			dispy[ips]=ht[ips]*parms->wfsr[iwfs].thetay;
 			if(atm){
-				int ips0=parms->atmr.indps->p[ips];
-				dispx[ips]+=atm->p[ips0]->vx*delay;
-				dispy[ips]+=atm->p[ips0]->vy*delay;
+				int ips0=P(parms->atmr.indps,ips);
+				dispx[ips]+=P(atm,ips0)->vx*delay;
+				dispy[ips]+=P(atm,ips0)->vy*delay;
 			}
 		}
 		csp* propx=fdpcg_prop(nps, nxp, nyp, nx, ny, dxp, dispx, dispy);
@@ -561,7 +562,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	  problem in GPU code causing a lot of pistion to accumulate and
 	  diverges the pcg. Use svd to truncate smaller eigen values.
 	*/
-		csvd_pow(fdpcg->Mbinv->p[ib], -1, svd_thres);
+		csvd_pow(P(fdpcg->Mbinv,ib), -1, svd_thres);
 	}
 	if(parms->save.fdpcg){
 		writebin(fdpcg->Mbinv, "fdpcg_Minvb");
@@ -593,21 +594,21 @@ static void fdpcg_fft(thread_t* info){
 	const dcell* xin=data->xin;
 	for(int ips=info->start; ips<info->end; ips++){
 		if(fdpcg->square){
-			for(long i=0; i<xhati->p[ips]->nx*xhati->p[ips]->ny; i++){
-				xhati->p[ips]->p[i]=xin->p[ips]->p[i];
+			for(long i=0; i<P(xhati,ips)->nx*P(xhati,ips)->ny; i++){
+				P(P(xhati,ips),i)=P(P(xin,ips),i);
 			}
 		} else{
 			/*
 			  czero takes 0.000074
 			  cembed_locstat takes 0.000037
 			*/
-			czero(xhati->p[ips]);
-			cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc->p[ips], xin->p[ips]->p, 1, 0);
+			czero(P(xhati,ips));
+			cembed_locstat(PP(xhati,ips), 0, P(fdpcg->xloc,ips), P(xin,ips)->p, 1, 0);
 		}
 		if(fdpcg->scale){
-			cfft2s(xhati->p[ips], -1);
+			cfft2s(P(xhati,ips), -1);
 		} else{
-			cfft2(xhati->p[ips], -1);
+			cfft2(P(xhati,ips), -1);
 		}
 	}
 }
@@ -618,9 +619,9 @@ static void fdpcg_fft(thread_t* info){
 static void fdpcg_mulblock(thread_t* info){
 	fdpcg_info_t* data=(fdpcg_info_t*)info->data;
 	fdpcg_t* fdpcg=data->fdpcg;
-	long bs=fdpcg->Mbinv->p[0]->nx;
+	long bs=P(fdpcg->Mbinv,0)->nx;
 	for(int ib=info->start; ib<info->end; ib++){
-		cmulvec(data->xhat->p+ib*bs, fdpcg->Mbinv->p[ib], data->xhat2->p+ib*bs, 1);
+		cmulvec(data->xhat->p+ib*bs, P(fdpcg->Mbinv,ib), data->xhat2->p+ib*bs, 1);
 	}
 }
 
@@ -634,17 +635,17 @@ static void fdpcg_ifft(thread_t* info){
 	dcell* xout=data->xout;
 	for(int ips=info->start; ips<info->end; ips++){
 		if(fdpcg->scale){
-			cfft2s(xhat2i->p[ips], 1);
+			cfft2s(P(xhat2i,ips), 1);
 		} else{
-			cfft2(xhat2i->p[ips], 1);
+			cfft2(P(xhat2i,ips), 1);
 		}
 		if(fdpcg->square){
-			for(long i=0; i<xhat2i->p[ips]->nx*xhat2i->p[ips]->ny; i++){
-				xout->p[ips]->p[i]=creal(xhat2i->p[ips]->p[i]);
+			for(long i=0; i<P(xhat2i,ips)->nx*P(xhat2i,ips)->ny; i++){
+				P(P(xout,ips),i)=creal(P(P(xhat2i,ips),i));
 			}
 		} else{
-			dzero(xout->p[ips]);
-			cembed_locstat(&xhat2i->p[ips], 1, fdpcg->xloc->p[ips], xout->p[ips]->p, 0, 1);
+			dzero(P(xout,ips));
+			cembed_locstat(PP(xhat2i,ips), 1, P(fdpcg->xloc,ips), P(xout,ips)->p, 0, 1);
 		}
 	}
 }
@@ -671,8 +672,8 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	long* ny=recon->xny->p;
 	long offset=0;
 	for(int ips=0; ips<nps; ips++){
-	//cfft2plan(xhati->p[ips],-1);
-	//cfft2plan(xhat2i->p[ips],1);
+	//cfft2plan(P(xhati,ips),-1);
+	//cfft2plan(P(xhat2i,ips),1);
 		offset+=nx[ips]*ny[ips];
 	}
 	if(!*xout){

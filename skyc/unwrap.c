@@ -138,7 +138,7 @@ static void do_unwrap(cmat* phi, cmat* wvf, dmat* unwrap, dmat* diff, dmat* phir
 	/*toc("mul");tic; */
 	/*assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx); */
 	for(int ix=0; ix<npsf*npsf; ix++){
-		phi->p[ix]=COMPLEX(log(cabs(wvf->p[ix])), phirecon->p[ix]);/*real part saves amplitude. */
+		P(phi,ix)=COMPLEX(log(cabs(P(wvf,ix))), P(phirecon,ix));/*real part saves amplitude. */
 	}
 	/*toc("assign"); */
 }
@@ -151,11 +151,11 @@ static void convert_wvf(GENPISTAT_S* data){
 	return;
 	while((LOCKADD(icase, data->icase, 1))<data->ncase){
 		TIC;tic;
-		real thetax=data->ngsgrid*data->P(cases, 0, icase);
-		real thetay=data->ngsgrid*data->P(cases, 1, icase);
-		long ipowfs=data->P(cases, 2, icase);
+		real thetax=data->ngsgrid*P(data->cases, 0, icase);
+		real thetay=data->ngsgrid*P(data->cases, 1, icase);
+		long ipowfs=P(data->cases, 2, icase);
 		long ncomp=parms->maos.ncomp[ipowfs];
-		long seed=data->P(cases, 3, icase);
+		long seed=P(data->cases, 3, icase);
 		long msa=parms->maos.msa[ipowfs];/*in 1-d */
 		char fnwvf[PATH_MAX], fnphase[PATH_MAX];
 		mymkdir("%s/phase", dirstart);
@@ -185,7 +185,7 @@ static void convert_wvf(GENPISTAT_S* data){
 		dmat* phirecon=dnew(npsf, npsf);
 		dmat* diff=dnew(npsf*2, npsf);
 		for(long ic=0; ic<nsa*nwvl; ic++){
-			phi->p[ic]=cnew(npsf, npsf);
+			P(phi,ic)=cnew(npsf, npsf);
 		}
 		for(long istep=0; istep<nstep; istep++){
 			LOCK(data->mutex_read);
@@ -193,7 +193,7 @@ static void convert_wvf(GENPISTAT_S* data){
 			UNLOCK(data->mutex_read);
 			if(wvfi){
 				for(long ic=0; ic<nsa*nwvl; ic++){
-					do_unwrap(phi->p[ic], wvfi->p[ic], data->unwrap->p[ipowfs], diff, phirecon);
+					do_unwrap(P(phi,ic), P(wvfi,ic), P(data->unwrap,ipowfs), diff, phirecon);
 				}
 			}
 			zfarr_push(phase, phi);
@@ -210,7 +210,7 @@ static void convert_wvf(GENPISTAT_S* data){
 	data->unwrap=cellnew(parms->maos.npowfs,1);
 	for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	long ncomp=parms->maos.ncomp[ipowfs];
-	data->unwrap->p[ipowfs]=gen_unwrap(ncomp/2,ncomp/2);
+	P(data->unwrap,ipowfs)=gen_unwrap(ncomp/2,ncomp/2);
 	}*/
 	/*
 	/*test phase unwrap. */
@@ -224,13 +224,13 @@ static void convert_wvf(GENPISTAT_S* data){
 	cmat* wvf=cnew(16, 16);
 	dmat* opd=dnew(16, 16);
 	for(int ix=0; ix<16*16; ix++){
-		opd->p[ix]=screen[0]->p[ix]*pi2l*2.;
-		wvf->p[ix]=cexp(COMPLEX(0, opd->p[ix]));
+		P(opd,ix)=P(screen[0],ix)*pi2l*2.;
+		P(wvf,ix)=cexp(COMPLEX(0, P(opd,ix)));
 	}
 	cmat* phi=cnew(16, 16);
 	dmat* diff=dnew(npsf*2, npsf);
 	dmat* phirecon=dnew(npsf, npsf);
-	do_unwrap(phi, wvf, data->unwrap->p[0], diff, phirecon);
+	do_unwrap(phi, wvf, P(data->unwrap,0), diff, phirecon);
 	writebin(wvf, "wvf");
 	writebin(phi, "phi");
 	writebin(opd, "opd");

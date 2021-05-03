@@ -49,7 +49,7 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 	dcell* mcc=dcellnew(parms->evl.nevl, 1);
 	dmat* aMCC=aper->mcc;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		dmat* MCC=mcc->p[ievl]=dnew(nmod, nmod);
+		dmat* MCC=P(mcc,ievl)=dnew(nmod, nmod);
 		P(MCC, 0, 0)=P(aMCC, 1, 1);
 		P(MCC, 1, 1)=P(aMCC, 2, 2);
 		P(MCC, 0, 1)=P(MCC, 1, 0)=P(aMCC, 2, 1);
@@ -72,10 +72,10 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 		const real scale1=1.-scale;
 		//dmat *modvec=dnew(nmod, 1);
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-			dmat* MCC=mcc->p[ievl];
+			dmat* MCC=P(mcc,ievl);
 			if(fabs(wt[ievl])<1.e-12) continue;
-			real thetax=parms->evl.thetax->p[ievl];
-			real thetay=parms->evl.thetay->p[ievl];
+			real thetax=P(parms->evl.thetax,ievl);
+			real thetay=P(parms->evl.thetay,ievl);
 
 			for(int iloc=0; iloc<nloc; iloc++){
 				real xx=x[iloc]*x[iloc];
@@ -144,16 +144,16 @@ static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 	dspcell* Wa=NULL;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(fabs(wt[ievl])<1.e-12) continue;
-		real thetax=parms->evl.thetax->p[ievl];
-		real thetay=parms->evl.thetay->p[ievl];
+		real thetax=P(parms->evl.thetax,ievl);
+		real thetay=P(parms->evl.thetay,ievl);
 		dspcell* Hat=dspcellnew(ndm, 1);
 		for(int idm=0; idm<ndm; idm++){
 			real hc=parms->dm[idm].ht;
 			real displacex=thetax*hc;
 			real displacey=thetay*hc;
 			/*from DM to ploc (plocs) science beam */
-			Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex, displacey, 1.);
-			dspmuldiag(Hat->p[idm], amp, wt[ievl]);
+			P(Hat,idm)=mkhb(P(recon->aloc,idm), loc, displacex, displacey, 1.);
+			dspmuldiag(P(Hat,idm), amp, wt[ievl]);
 		}
 		dcellmm(&Wa, Hat, Hat, "nt", 1);
 		dspcellfree(Hat);
@@ -197,8 +197,8 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	nloc=loc->nloc;
 
 	dcell* WHm=dcellnew(1, 1);/* W_amp*Hm */
-	WHm->p[0]=dnew(nloc, nmod);
-	dmat* mod=WHm->p[0];
+	P(WHm,0)=dnew(nloc, nmod);
+	dmat* mod=P(WHm,0);
 	for(int iloc=0; iloc<nloc; iloc++){
 		P(mod, iloc, 0)=x[iloc]*amp[iloc];
 		P(mod, iloc, 1)=y[iloc]*amp[iloc];
@@ -210,8 +210,8 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	dsp* HatGround=NULL;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(fabs(wt[ievl])<1.e-12) continue;
-		real thetax=parms->evl.thetax->p[ievl];
-		real thetay=parms->evl.thetay->p[ievl];
+		real thetax=P(parms->evl.thetax,ievl);
+		real thetay=P(parms->evl.thetay,ievl);
 		if(nmod>2){
 			for(int iloc=0; iloc<nloc; iloc++){
 				real xx=x[iloc]*x[iloc];
@@ -248,12 +248,12 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 			real displacex=thetax*hc;
 			real displacey=thetay*hc;
 			if(parms->dm[idm].isground&&HatGround){
-				Hat->p[idm]=dspref(HatGround);
+				P(Hat,idm)=dspref(HatGround);
 			} else{
 			/*from DM to ploc (plocs) science beam */
-				Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex, displacey, 1.);
+				P(Hat,idm)=mkhb(P(recon->aloc,idm), loc, displacex, displacey, 1.);
 				if(parms->dm[idm].isground){
-					HatGround=dspref(Hat->p[idm]);
+					HatGround=dspref(P(Hat,idm));
 				}
 			}
 		}
@@ -262,7 +262,7 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	}
 	dspfree(HatGround);
 	dcell* IMCC=dcellnew(1, 1);
-	IMCC->p[0]=dref(ngsmod->IMCC);
+	P(IMCC,0)=dref(ngsmod->IMCC);
 	dcell* Pngs=NULL;
 	dcellmm(&Pngs, IMCC, HatWHm, "nt", 1);
 	dcellfree(IMCC);
@@ -283,23 +283,23 @@ static dcell* ngsmod_dm(const parms_t* parms, recon_t* recon){
 	int ndm=parms->ndm;
 	int nmod=ngsmod->nmod;
 	dcell* M=dcellnew(1, 1);
-	M->p[0]=dnew(nmod, 1);
+	P(M,0)=dnew(nmod, 1);
 	dcell* mod=dcellnew(ndm, 1);
 	dcell* dmt=dcellnew(ndm, 1);
 	loc_t** aloc=recon->aloc->p;
 	for(int idm=0; idm<ndm; idm++){
-		dmt->p[idm]=dnew(aloc[idm]->nloc, 1);
-		mod->p[idm]=dnew(aloc[idm]->nloc, nmod);
+		P(dmt,idm)=dnew(aloc[idm]->nloc, 1);
+		P(mod,idm)=dnew(aloc[idm]->nloc, nmod);
 	}
 	for(int imod=0; imod<nmod; imod++){
 		dcellzero(dmt);
-		M->p[0]->p[imod]=1;
+		P(P(M,0),imod)=1;
 		ngsmod2dm(&dmt, recon, M, 1.);
-		M->p[0]->p[imod]=0;
+		P(P(M,0),imod)=0;
 		for(int idm=0; idm<ndm; idm++){
-			real piston=dsum(dmt->p[idm])/aloc[idm]->nloc;
+			real piston=dsum(P(dmt,idm))/aloc[idm]->nloc;
 			for(long iact=0; iact<aloc[idm]->nloc; iact++){
-				P(mod->p[idm], iact, imod)=P(dmt->p[idm], iact)-piston;
+				P(P(mod,idm), iact, imod)=P(P(dmt,idm), iact)-piston;
 			}
 		}
 	}
@@ -367,11 +367,11 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 	/*modal cross coupling matrix along science for performance evaluation. */
 	ngsmod->MCCP=ngsmod_mcc(parms, recon, aper, parms->evl.wt->p);
 	if(ngsmod->MCCP->nx==1){
-		ngsmod->MCC=dref(ngsmod->MCCP->p[0]);
+		ngsmod->MCC=dref(P(ngsmod->MCCP,0));
 	} else{
 		ngsmod->MCC=NULL;
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-			dadd(&ngsmod->MCC, 1, ngsmod->MCCP->p[ievl], parms->evl.wt->p[ievl]);
+			dadd(&ngsmod->MCC, 1, P(ngsmod->MCCP,ievl), P(parms->evl.wt,ievl));
 		}
 	}
 	dmat* MCCl=dchol(ngsmod->MCC);
@@ -382,10 +382,10 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 	ngsmod->IMCC=dinvspd(ngsmod->MCC);
 	dmat* MCC=ngsmod->MCC;
 	ngsmod->IMCC_TT=dnew(2, 2);
-	ngsmod->IMCC_TT->p[0]=P(MCC, 0, 0);
-	ngsmod->IMCC_TT->p[1]=P(MCC, 1, 0);
-	ngsmod->IMCC_TT->p[2]=P(MCC, 0, 1);
-	ngsmod->IMCC_TT->p[3]=P(MCC, 1, 1);
+	P(ngsmod->IMCC_TT,0)=P(MCC, 0, 0);
+	P(ngsmod->IMCC_TT,1)=P(MCC, 1, 0);
+	P(ngsmod->IMCC_TT,2)=P(MCC, 0, 1);
+	P(ngsmod->IMCC_TT,3)=P(MCC, 1, 1);
 	dinvspd_inplace(ngsmod->IMCC_TT);
 	if(ngsmod->indfocus){
 		ngsmod->IMCC_F=dnew(ngsmod->nmod, ngsmod->nmod);
@@ -406,11 +406,11 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 
 	if(parms->recon.modal){//convert Modes to space of amod
 		for(int idm=0; idm<parms->ndm; idm++){
-			dmat* proj=dpinv(recon->amod->p[idm], NULL);
+			dmat* proj=dpinv(P(recon->amod,idm), NULL);
 			dmat* tmp=0;
-			dmm(&tmp, 0, proj, ngsmod->Modes->p[idm], "nn", 1);
-			dfree(ngsmod->Modes->p[idm]);
-			ngsmod->Modes->p[idm]=tmp;
+			dmm(&tmp, 0, proj, P(ngsmod->Modes,idm), "nn", 1);
+			dfree(P(ngsmod->Modes,idm));
+			P(ngsmod->Modes,idm)=tmp;
 			dfree(proj);
 		}
 	}
@@ -434,7 +434,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 						real  dispx=0, dispy=0;
 						dispx=parms->wfsr[iwfs].thetax*ht;
 						dispy=parms->wfsr[iwfs].thetay*ht;
-						dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm],
+						dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, P(recon->aloc,idm),
 							parms->misreg.dm2wfs[iwfs+idm*parms->nwfs],
 							P(ngsmod->Modes, idm), 0, dispx, dispy);
 						dadd(PP(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
@@ -473,7 +473,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 			*/
 			int nact=0;
 			for(int idm=0; idm<parms->ndm; idm++){
-				nact+=recon->aloc->p[idm]->nloc;
+				nact+=P(recon->aloc,idm)->nloc;
 			}
 			real maxeig=4./nact;
 			dcelladdI(ngsmod->Wa, 1e-9*maxeig);
@@ -547,23 +547,23 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 	}
 	if(nttf>0){
 		if(nttf==1&&ntt==0&&nmod==6){
-			modvalid->p[2]=0;//disable magnofication mode
+			P(modvalid,2)=0;//disable magnofication mode
 		}//else: all mode is valid
 	} else{//nttf==0;
 		if(nmod>=6){
-			modvalid->p[5]=0;//no focus control.
+			P(modvalid,5)=0;//no focus control.
 		}
 		if(nmod>=5){
 			if(ntt<3){//1 or 2 TT OIWFS can not control all 3 PS modes
-				modvalid->p[2]=0;
+				P(modvalid,2)=0;
 			}
 			if(ntt<2){//1 TT OIWFS can not control any PS mode.
-				modvalid->p[3]=0;
-				modvalid->p[4]=0;
+				P(modvalid,3)=0;
+				P(modvalid,4)=0;
 			}
 			if(ntt==0){
-				modvalid->p[0]=0;
-				modvalid->p[1]=0;
+				P(modvalid,0)=0;
+				P(modvalid,1)=0;
 			}
 		}
 	}
@@ -593,7 +593,7 @@ void setup_ngsmod_recon(const parms_t* parms, recon_t* recon){
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
 		cellfree(ngsmod->Rngs);
 		ngsmod->Rngs=dccellnew(2, 1);
-		ngsmod->Rngs->p[0]=inv_gm(ngsmod->GM, recon->saneai, 0, 0);
+		P(ngsmod->Rngs,0)=inv_gm(ngsmod->GM, recon->saneai, 0, 0);
 		/*
 		  W is recon->saneai;
 		  Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
@@ -609,7 +609,7 @@ void setup_ngsmod_recon(const parms_t* parms, recon_t* recon){
 					P(mask, iwfsr)=1;
 				}
 			}
-			ngsmod->Rngs->p[1]=inv_gm(ngsmod->GM, recon->saneai, mask, &ngsmod->modvalid);
+			P(ngsmod->Rngs,1)=inv_gm(ngsmod->GM, recon->saneai, mask, &ngsmod->modvalid);
 			lfree(mask);
 			switch(parms->dbg.lo_blend){
 			case 0://Just use the two together
@@ -631,7 +631,7 @@ void setup_ngsmod_recon(const parms_t* parms, recon_t* recon){
 	if(parms->tomo.ahst_wt==1){
 	/*Use gradient weighting. */
 		dcellzero(ngsmod->Pngs);
-		dcellmm(&ngsmod->Pngs, ngsmod->Rngs->p[0], recon->GAlo, "nn", 1);
+		dcellmm(&ngsmod->Pngs, P(ngsmod->Rngs,0), recon->GAlo, "nn", 1);
 		if(parms->save.setup){
 			writebin(ngsmod->Pngs, "ahst_Pngs");
 		}
@@ -677,8 +677,8 @@ void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 			coeff[5]+=locx[iloc]*junky;//xy
 		}
 	}
-	const real thetax=parms->evl.thetax->p[ievl];
-	const real thetay=parms->evl.thetay->p[ievl];
+	const real thetax=P(parms->evl.thetax,ievl);
+	const real thetay=P(parms->evl.thetay,ievl);
 	calc_ngsmod_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff, ngsmod, aper, thetax, thetay);
 }
 /**
@@ -733,10 +733,10 @@ void calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
    DMs, we only put NGS modes on ground and top-most DM.
 */
 static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real gain){
-	if(!M||!M->p[0]) return;
+	if(!M||!P(M,0)) return;
 	const ngsmod_t* ngsmod=recon->ngsmod;
 	//const int nmod=ngsmod->nmod;
-	assert(M->nx==1&&M->ny==1&&M->p[0]->nx==ngsmod->nmod);
+	assert(M->nx==1&&M->ny==1&&P(M,0)->nx==ngsmod->nmod);
 	real scale=ngsmod->scale;
 	/*The MCC_fcp depends weakly on the aperture sampling. */
 	real MCC_fcp=ngsmod->aper_fcp;
@@ -747,16 +747,16 @@ static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 		*dmc=dcellnew(ndm, 1);
 	}
 	for(int idm=0; idm<ndm; idm++){
-		if(!(*dmc)->p[idm]){
-			(*dmc)->p[idm]=dnew(recon->aloc->p[idm]->nloc, 1);
+		if(!P(*dmc,idm)){
+			P(*dmc,idm)=dnew(P(recon->aloc,idm)->nloc, 1);
 		}
 	}
 
 	/*first dm */
-	real* pm=M->p[0]->p;
+	real* pm=P(M,0)->p;
 
 	for(int idm=0; idm<ndm; idm++){
-		real* p=(*dmc)->p[idm]->p;
+		real* p=P(*dmc,idm)->p;
 		unsigned long nloc=aloc[idm]->nloc;
 		real* xloc=aloc[idm]->locx;
 		real* yloc=aloc[idm]->locy;
@@ -816,7 +816,7 @@ void ngsmod2science(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 	if(nmod==2){//tip/tilt only
 		for(int iloc=0; iloc<loc->nloc; iloc++){
 			real tmp=locx[iloc]*mod[0]+locy[iloc]*mod[1];
-			iopd->p[iloc]+=tmp*alpha;
+			P(iopd,iloc)+=tmp*alpha;
 		}
 	} else{
 		const real ht=ngsmod->ht;
@@ -852,7 +852,7 @@ void ngsmod2science(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 				+ps3*(xy*scale1-scale*ht*(thetay*x+thetax*y))
 				+astigx*(x2-y2)
 				+astigy*(xy);
-			iopd->p[iloc]+=tmp*alpha;
+			P(iopd,iloc)+=tmp*alpha;
 		}
 	}
 }
@@ -886,7 +886,7 @@ void remove_dm_ngsmod(sim_t* simu, dcell* dmerr){
 	const ngsmod_t* ngsmod=recon->ngsmod;
 	dcellzero(simu->Mngs);
 	dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
-	real* mngs=simu->Mngs->p[0]->p;
+	real* mngs=P(simu->Mngs,0)->p;
 	if(ngsmod->indastig){//LTAO
 	//LTAO is unable to tell where focus/astigmatism occures. NGS WFS needs to control this.
 	//Testing: remove LPF'ed focus/astigmatism from LGS DM command. 
@@ -895,12 +895,12 @@ void remove_dm_ngsmod(sim_t* simu, dcell* dmerr){
 		}
 		const real lpfocus=parms->sim.lpfocushi;
 		info_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
-		simu->ngsmodlpf->p[0]=simu->ngsmodlpf->p[0]*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
-		simu->ngsmodlpf->p[1]=simu->ngsmodlpf->p[1]*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
-		simu->ngsmodlpf->p[2]=simu->ngsmodlpf->p[2]*(1-lpfocus)+mngs[ngsmod->indastig+1]*lpfocus;
-		mngs[ngsmod->indfocus]=simu->ngsmodlpf->p[0];
-		mngs[ngsmod->indastig]=simu->ngsmodlpf->p[1];
-		mngs[ngsmod->indastig+1]=simu->ngsmodlpf->p[2];
+		P(simu->ngsmodlpf,0)=P(simu->ngsmodlpf,0)*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
+		P(simu->ngsmodlpf,1)=P(simu->ngsmodlpf,1)*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
+		P(simu->ngsmodlpf,2)=P(simu->ngsmodlpf,2)*(1-lpfocus)+mngs[ngsmod->indastig+1]*lpfocus;
+		mngs[ngsmod->indfocus]=P(simu->ngsmodlpf,0);
+		mngs[ngsmod->indastig]=P(simu->ngsmodlpf,1);
+		mngs[ngsmod->indastig+1]=P(simu->ngsmodlpf,2);
 	}
 	if(ngsmod->indfocus&&parms->sim.mffocus&&parms->dbg.ahst_keepfocus){
 	/*preserve LGS focus.

@@ -275,18 +275,18 @@ dsp* mkhbin1d(const dmat* xin, const dmat* xout){
 	dsp* hbin=dspnew(xout->nx, xin->nx, xin->nx*2);
 	int count=0;
 	for(int iin=0; iin<xin->nx; iin++){
-		hbin->p[iin]=count;
-		real ixin=xin->p[iin];
-		while(iout+1<xout->nx&&xout->p[iout+1]<ixin){
+		P(hbin,iin)=count;
+		real ixin=P(xin,iin);
+		while(iout+1<xout->nx&&P(xout,iout+1)<ixin){
 			iout++;//find location in xout to the left of ixin
 		}
 		//Changes made on Nov 9, 2018 was incorrect. Correct the test
-		if((iout==0&&xout->p[iout]>=ixin)||(iout+1==xout->nx)){//outside
+		if((iout==0&&P(xout,iout)>=ixin)||(iout+1==xout->nx)){//outside
 			hbin->i[count]=iout;
 			hbin->x[count]=1;
 			count++;
 		} else{/*within the area */
-			real wt=(ixin-xout->p[iout])/(xout->p[iout+1]-xout->p[iout]);
+			real wt=(ixin-P(xout,iout))/(P(xout,iout+1)-P(xout,iout));
 			hbin->i[count]=iout;
 			hbin->x[count]=1.-wt;
 			count++;

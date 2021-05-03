@@ -33,17 +33,17 @@ void X(cwmc)(X(mat)* restrict A, const X(mat)* restrict B, const R alpha){
 	if(B){
 		if(fabs(alpha-1)>1.e-15){
 			for(long i=0; i<ntot; i++){
-				A->p[i]*=conj(B->p[i])*alpha;
+				P(A,i)*=conj(P(B,i))*alpha;
 			}
 		} else{
 			for(long i=0; i<ntot; i++){
-				A->p[i]*=conj(B->p[i]);
+				P(A,i)*=conj(P(B,i));
 			}
 		}
 	} else{
 		if(fabs(alpha-1)>1.e-15){
 			for(long i=0; i<ntot; i++){
-				A->p[i]*=alpha;
+				P(A,i)*=alpha;
 			}
 		}
 	}
@@ -57,17 +57,17 @@ void X(cwmd)(X(mat)* restrict A, const XR(mat)* restrict B, const R alpha){
 	if(B){
 		if(fabs(alpha-1)>1.e-15){
 			for(long i=0; i<ntot; i++){
-				A->p[i]*=B->p[i]*alpha;
+				P(A,i)*=P(B,i)*alpha;
 			}
 		} else{
 			for(long i=0; i<ntot; i++){
-				A->p[i]*=B->p[i];
+				P(A,i)*=P(B,i);
 			}
 		}
 	} else{
 		if(fabs(alpha-1)>1.e-15){
 			for(long i=0; i<ntot; i++){
-				A->p[i]*=alpha;
+				P(A,i)*=alpha;
 			}
 		}
 	}
@@ -506,7 +506,7 @@ void X(cpcorner)(X(mat)* A, const X(mat)* restrict B, CEMBED flag){
 void X(abs2toreal)(X(mat)* A){
 	if(!check_mat(A)) return;
 	for(int i=0; i<A->nx*A->ny; i++){
-		A->p[i]=ABS2(A->p[i]);
+		P(A,i)=ABS2(P(A,i));
 	}
 }
 /**
@@ -516,7 +516,7 @@ void X(abstoreal)(X(mat)* A){
 	if(!check_mat(A)) return;
 	/*put abs to real */
 	for(int i=0; i<A->nx*A->ny; i++){
-		A->p[i]=fabs(A->p[i]);
+		P(A,i)=fabs(P(A,i));
 	}
 }
 /**
@@ -532,7 +532,7 @@ void X(cpd)(X(mat)** restrict A0, const XR(mat)* restrict B){
 		assert((A->nx==B->nx&&A->ny==B->ny));
 	}
 	for(long i=0; i<B->nx*B->ny; i++){
-		A->p[i]=B->p[i];
+		P(A,i)=P(B,i);
 	}
 }
 /**
@@ -550,11 +550,11 @@ void X(real2d)(XR(mat)** restrict A0, R alpha, const X(mat)* restrict B, R beta)
 	}
 	if(fabs(alpha)<EPS){
 		for(long i=0; i<B->nx*B->ny; i++){
-			A->p[i]=REAL(B->p[i])*beta;
+			P(A,i)=REAL(P(B,i))*beta;
 		}
 	} else{
 		for(long i=0; i<B->nx*B->ny; i++){
-			A->p[i]=A->p[i]*alpha+REAL(B->p[i])*beta;
+			P(A,i)=P(A,i)*alpha+REAL(P(B,i))*beta;
 		}
 	}
 }
@@ -573,11 +573,11 @@ void X(imag2d)(XR(mat)** restrict A0, R alpha, const X(mat)* restrict B, R beta)
 	}
 	if(fabs(alpha)<EPS){
 		for(long i=0; i<B->nx*B->ny; i++){
-			A->p[i]=IMAG(B->p[i])*beta;
+			P(A,i)=IMAG(P(B,i))*beta;
 		}
 	} else{
 		for(long i=0; i<B->nx*B->ny; i++){
-			A->p[i]=A->p[i]*alpha+IMAG(B->p[i])*beta;
+			P(A,i)=P(A,i)*alpha+IMAG(P(B,i))*beta;
 		}
 	}
 }
@@ -595,11 +595,11 @@ void X(abs22d)(XR(mat)** restrict A0, R alpha,	const X(mat)* restrict B, R beta)
 	}
 	if(fabs(alpha)<1.e-60){
 		for(int i=0; i<B->nx*B->ny; i++){
-			A->p[i]=ABS2(B->p[i])*beta;
+			P(A,i)=ABS2(P(B,i))*beta;
 		}
 	} else{
 		for(int i=0; i<B->nx*B->ny; i++){
-			A->p[i]=A->p[i]*alpha+ABS2(B->p[i])*beta;
+			P(A,i)=P(A,i)*alpha+ABS2(P(B,i))*beta;
 		}
 	}
 }

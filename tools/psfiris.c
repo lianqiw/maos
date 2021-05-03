@@ -59,8 +59,8 @@ static void psfiris_do(thread_t* info){
 	double dx1=data->dx1;
 	double dx2=data->dx2;
 	double pixsize=data->pixsize;
-	dmat* pixoffx=dnew(1, 1); pixoffx->p[0]=data->pixoffx;
-	dmat* pixoffy=dnew(1, 1); pixoffy->p[0]=data->pixoffy;
+	dmat* pixoffx=dnew(1, 1); P(pixoffx,0)=data->pixoffx;
+	dmat* pixoffy=dnew(1, 1); P(pixoffy,0)=data->pixoffy;
 	double blur=data->blur;
 	loc_t* ploc=data->ploc;
 	dmat* pamp=data->pamp;
@@ -94,36 +94,36 @@ static void psfiris_do(thread_t* info){
 	cfree(otf2);
 
 	dfftshift((dmat*)otf_fine);/*peak in corner*/
-	ccpd(&otf, psf_lgs->p[iwvl]);
-	dfree(psf_lgs->p[iwvl]);
+	ccpd(&otf, P(psf_lgs,iwvl));
+	dfree(P(psf_lgs,iwvl));
 	cfftshift(otf);
 	cfft2(otf, 1);
 	ccwmd(otf, (dmat*)otf_fine, 1);
 	mapfree(otf_fine);
-	double sumpsf=creal(otf->p[0]);
+	double sumpsf=creal(P(otf,0));
 	double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9, 2))/(notf2*notf2);
 	if(npix>0){
 		dmat* wvlmat=dnew(1, 1);
-		wvlmat->p[0]=wvl;
+		P(wvlmat,0)=wvl;
 		double dxsa=30;//30 meter
 		double embfac=wvl/dtheta2/dxsa;
 		dtf_t* dtf=mkdtf(wvlmat, dxsa, embfac, notf2, notf2, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL, 0);
-		ccwm(otf, dtf->nominal->p[0]);
+		ccwm(otf, P(dtf->nominal,0));
 		cfft2(otf, -1);
-		output->p[iwvl]=dnew(npix, npix);
-		dspmulcreal(output->p[iwvl]->p, dtf->si->p[0], otf->p, impst/sumpsf);
+		P(output,iwvl)=dnew(npix, npix);
+		dspmulcreal(P(output,iwvl)->p, P(dtf->si,0), otf->p, impst/sumpsf);
 		dtf_free(dtf);
 	} else{
 		cfft2(otf, -1);
 		cfftshift(otf);
-		creal2d(&output->p[iwvl], 0, otf, impst);
+		creal2d(PP(output,iwvl), 0, otf, impst);
 	}
 	char header[500];
 	snprintf(header, 500, "%s"
 		"Wavelength: %g\n"
 		"PSF Sampling: %g\"\n"
 		, msg, wvl, dtheta2*206265);
-	output->p[iwvl]->header=strdup(header);
+	P(output,iwvl)->header=strdup(header);
 
 	cfree(otf);
 	dfree(pixoffx);
@@ -237,9 +237,9 @@ int main(int argc, char* argv[]){
 	loccell* aloc=loccellread("setup/setup/aloc");
 	int naloc=aloc->nx;
 	dcell* mode_aloc=dcellread("setup/setup/ahst_Modes");
-	int nmod=mode_aloc->p[0]->ny;
+	int nmod=P(mode_aloc,0)->ny;
 	for(int ialoc=0; ialoc<naloc; ialoc++){
-		aloc->p[ialoc]->iac=0.3;
+		P(aloc,ialoc)->iac=0.3;
 	}
 	const double D=32;
 	const double dx1=1.;
@@ -255,7 +255,7 @@ int main(int argc, char* argv[]){
 	dmat* mode_ploc=dnew(ploc->nloc, nmod);
 	for(int imod=0; imod<nmod; imod++){
 		for(int ialoc=0; ialoc<naloc; ialoc++){
-			prop_nongrid(aloc->p[ialoc], mode_aloc->p[ialoc]->p+imod*mode_aloc->p[ialoc]->nx,
+			prop_nongrid(P(aloc,ialoc), P(mode_aloc,ialoc)->p+imod*P(mode_aloc,ialoc)->nx,
 				ploc, mode_ploc->p+ploc->nloc*imod,
 				1, thetax[idir]/206265., thetay[idir]/206265., 1, 0, 0);
 		}

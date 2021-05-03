@@ -256,7 +256,7 @@ X(mat)* X(imcc)(const X(mat)* A, const X(mat)* wt){
 void X(tikcr)(X(mat)* A, T thres){
 	XR(mat)* S=NULL;
 	X(svd)(NULL, &S, NULL, A);
-	T val=S->p[0]*thres;
+	T val=P(S,0)*thres;
 	XR(free)(S);
 	X(addI)(A, val);
 }
@@ -269,7 +269,7 @@ X(mat)* X(chol)(const X(mat)* A){
 	if(A->nx!=A->ny) error("dchol requires square matrix\n");
 	X(mat)* B=X(dup)(A);
 	if(A->nx==1){
-		B->p[0]=sqrt(B->p[0]);
+		P(B,0)=sqrt(P(B,0));
 		return B;
 	}
 	ptrdiff_t n=B->nx;
@@ -426,9 +426,9 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 					snprintf(fntmp, sizeof fntmp, "%s.partial.bin", fnsvd);
 					X(svd)(U, Sdiag, VT, A);
 					in=cellnew(3, 1);
-					in->p[0]=(cell*)*U;
-					in->p[1]=(cell*)*Sdiag;
-					in->p[2]=(cell*)*VT;
+					P(in,0)=(cell*)*U;
+					P(in,1)=(cell*)*Sdiag;
+					P(in,2)=(cell*)*VT;
 					writebin(in, "%s", fntmp);
 					if(rename(fntmp, fnsvd)){
 						error("Unable to rename %s to %s\n", fntmp, fnsvd);
@@ -440,9 +440,9 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 				close(fd); remove(fnlock);
 			}
 		}
-		*U=X(mat_cast)(in->p[0]); in->p[0]=0;
-		*Sdiag=XR(mat_cast)(in->p[1]); in->p[1]=0;
-		*VT=X(mat_cast)(in->p[2]); in->p[2]=0;
+		*U=X(mat_cast)(P(in,0)); P(in,0)=0;
+		*Sdiag=XR(mat_cast)(P(in,1)); P(in,1)=0;
+		*VT=X(mat_cast)(P(in,2)); P(in,2)=0;
 		cellfree(in);
 	}
 }
@@ -459,17 +459,17 @@ void X(svd_pow)(X(mat)* A, R power, R thres){
 	X(mat)* VT=NULL;
 	X(svd)(&U, &Sdiag, &VT, A);
 	/*eigen values below the threshold will not be used. the first is the biggest. */
-	R maxeig=fabs(Sdiag->p[0]);
+	R maxeig=fabs(P(Sdiag,0));
 	R thres0=fabs(thres)*maxeig;
 	for(long i=0; i<Sdiag->nx; i++){
-		if(fabs(Sdiag->p[i])>thres0){/*only do with  */
+		if(fabs(P(Sdiag,i))>thres0){/*only do with  */
 			if(thres<0){/*compare adjacent eigenvalues*/
-				thres0=Sdiag->p[i]*(-thres);
+				thres0=P(Sdiag,i)*(-thres);
 			}
-			Sdiag->p[i]=pow(Sdiag->p[i], power);
+			P(Sdiag,i)=pow(P(Sdiag,i), power);
 		} else{
 			for(int j=i; j<Sdiag->nx; j++){
-				Sdiag->p[j]=0;
+				P(Sdiag,j)=0;
 			}
 			//long skipped=Sdiag->nx-i;
 			break;
@@ -478,7 +478,7 @@ void X(svd_pow)(X(mat)* A, R power, R thres){
 	for(long iy=0; iy<VT->ny; iy++){
 		T* p=VT->p+iy*VT->nx;
 		for(long ix=0; ix<VT->nx; ix++){
-			p[ix]*=Sdiag->p[ix];
+			p[ix]*=P(Sdiag,ix);
 		}
 	}
 #ifdef COMP_COMPLEX
@@ -525,7 +525,7 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
 	X(cell)* out=NULL;
 	X(cellcp)(&out, A);
 	for(int i=0; i<out->nx*out->ny; i++){
-		X(invspd_inplace)(out->p[i]);
+		X(invspd_inplace)(P(out,i));
 	}
 	return out;
 }

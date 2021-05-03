@@ -62,21 +62,21 @@ static real phase_at_gain(real* fcross, /**<[out] Cross over frequency*/
 	const cmat* Hol, /**<[in] open loop transfer function defined on nu*/
 	real gain/**<[in] compute phase at this gain*/
 ){
-/*if(cabs(Hol->p[0])<gain){
+/*if(cabs(P(Hol,0))<gain){
 error("Hol is less than 1 from the beginning\n");
 }*/
 
 	int found=0;
 	real phi=0;
 	for(long i=1; i<nu->nx; i++){
-		real val=cabs(Hol->p[i]);
+		real val=cabs(P(Hol,i));
 		if(val<gain){
-			real valpre=cabs(Hol->p[i-1]);
+			real valpre=cabs(P(Hol,i-1));
 			real logvalpre=log10(valpre);/*positive. log10(val) is negative. */
 			real rat=(logvalpre-log10(gain))/(logvalpre-log10(val));
-			*fcross=pow(10, log10(nu->p[i-1])*(1-rat)+log10(nu->p[i])*rat);
-			real phi0=phase(Hol->p[i-1]);
-			real phi1=phase(Hol->p[i]);
+			*fcross=pow(10, log10(P(nu,i-1))*(1-rat)+log10(P(nu,i))*rat);
+			real phi0=phase(P(Hol,i-1));
+			real phi1=phase(P(Hol,i));
 			//Unwrap the differeance
 			real diff=(phi1-phi0)/(2*M_PI);/*positive. */
 			diff=diff-round(diff);
@@ -88,8 +88,8 @@ error("Hol is less than 1 from the beginning\n");
 		}
 	}
 	if(!found){/*warning("Hol does not decrease to 1.\n");*/
-		phi=phase(Hol->p[nu->nx-1]);
-		*fcross=nu->p[nu->nx-1];
+		phi=phase(P(Hol,nu->nx-1));
+		*fcross=P(nu,nu->nx-1);
 	}
 	real nphi=phi/(2*M_PI);
 	nphi=nphi-floor(nphi)-1;
@@ -109,20 +109,20 @@ static real gain_at_phase(real* fcross, /**<[out] Cross over frequency*/
 	long i;
 	//Skip leading terms if they are belowangle
 	for(i=0; i<nu->nx; i++){
-		if(phase(Hol->p[i])>angle){
+		if(phase(P(Hol,i))>angle){
 			break;
 		}
 	}
 	int found=0;
 	real gain=0;
 	for(; i<nu->nx; i++){
-		real phi1=phase(Hol->p[i]);
+		real phi1=phase(P(Hol,i));
 		if(phi1<angle){
-			real phi0=phase(Hol->p[i-1]);/*how much above -pi*/
+			real phi0=phase(P(Hol,i-1));/*how much above -pi*/
 			real rat=(phi0+M_PI)/(phi0-phi1);
-			real val=cabs(Hol->p[i]);
-			real valpre=cabs(Hol->p[i-1]);
-			*fcross=nu->p[i-1]+(nu->p[i]-nu->p[i-1])*rat;
+			real val=cabs(P(Hol,i));
+			real valpre=cabs(P(Hol,i-1));
+			*fcross=P(nu,i-1)+(P(nu,i)-P(nu,i-1))*rat;
 			gain=-20*log10(valpre+(val-valpre)*rat);
 			found=1;
 			break;
@@ -166,20 +166,20 @@ static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long d
 	st->Hint=cnew(nu->nx, 1);
 	st->s=cnew(nu->nx, 1);
 	for(long i=0; i<nu->nx; i++){
-		comp s=st->s->p[i]=pi2i*nu->p[i];
+		comp s=P(st->s,i)=pi2i*P(nu,i);
 		comp zInv=cexp(-s*Ts);
-		comp Hint=st->Hint->p[i]=1./(1-zInv);
+		comp Hint=P(st->Hint,i)=1./(1-zInv);
 		comp Hwfs, Hdac;
 		if(dtrat==1){//we have a pure delay
-			Hwfs=st->Hwfs->p[i]=zInv;
+			Hwfs=P(st->Hwfs,i)=zInv;
 			Hdac=1;
 		} else{
-			Hwfs=st->Hwfs->p[i]=(1-zInv)/(Ts*s);
+			Hwfs=P(st->Hwfs,i)=(1-zInv)/(Ts*s);
 			Hdac=Hwfs;
 		}
 		comp Hlag=cexp(-s*dt*(1+al));/*lag due to readout/computation*/
 		comp Hmir=1;/*DM */
-		st->Hsys->p[i]=Hwfs*Hlag*Hdac*Hmir*Hint;
+		P(st->Hsys,i)=Hwfs*Hlag*Hdac*Hmir*Hint;
 	}
 }
 static void servo_calc_free(SERVO_CALC_T* st){
@@ -257,28 +257,28 @@ static real servo_calc_do(SERVO_CALC_T* st, real g0){
 		real a=st->a;
 		real T=st->T;
 		for(int i=0; i<nu->nx; i++){
-			comp Hlead=(1+T*st->s->p[i])/(1+a*T*st->s->p[i])*g2;
-			st->Hol->p[i]*=Hlead;
+			comp Hlead=(1+T*P(st->s,i))/(1+a*T*P(st->s,i))*g2;
+			P(st->Hol,i)*=Hlead;
 		}
 	}
 	real res_sig=0;
 	real sum_n=0, sum_1=0;
 	const dmat* psd=st->psd;
 	for(int i=0; i<nu->nx; i++){
-		comp Hol=st->Hol->p[i];
+		comp Hol=P(st->Hol,i);
 		comp Hrej=1./(1.+Hol);
 		//The gain never reach below -50dB
-		res_sig+=psd->p[i]*creal(Hrej*conj(Hrej)+1e-5)*nu->p[i];
-		if(st->nu->p[i]<st->fny){
+		res_sig+=P(psd,i)*creal(Hrej*conj(Hrej)+1e-5)*P(nu,i);
+		if(P(st->nu,i)<st->fny){
 			//compute noise prop only within nyqust frequency
 			comp Hcl=Hol*Hrej;
-			comp Hwfs=st->Hwfs->p[i];
+			comp Hwfs=P(st->Hwfs,i);
 			comp Hn=Hcl/Hwfs;
-			sum_n+=creal(Hn*conj(Hn))*nu->p[i];
-			sum_1+=nu->p[i];
+			sum_n+=creal(Hn*conj(Hn))*P(nu,i);
+			sum_1+=P(nu,i);
 		}
 	}
-	real dlognu=(log(nu->p[nu->nx-1])-log(nu->p[0]))/(nu->nx-1);
+	real dlognu=(log(P(nu,nu->nx-1))-log(P(nu,0)))/(nu->nx-1);
 	res_sig*=dlognu;
 	st->res_sig=res_sig;
 	st->gain_n=sum_n/sum_1;
@@ -344,17 +344,17 @@ dcell* servo_optim(const dmat* psdin, real dt, long dtrat, real al, real pmargin
 	real g0_min=1e-6;/*the minimum gain allowed.*/
 	real g0_max=2.0;
 	for(long ins=0; ins<gm->nx*gm->ny; ins++){
-		st.sigma2n=sigma2n?sigma2n->p[ins]:0;
+		st.sigma2n=sigma2n?P(sigma2n,ins):0;
 		real g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, g0_step);
 		servo_calc_do(&st, g0);
-		gm->p[ins]=dnew(ng+2, 1);
-		gm->p[ins]->p[0]=st.g;
+		P(gm,ins)=dnew(ng+2, 1);
+		P(P(gm,ins),0)=st.g;
 		if(servo_type==2){
-			gm->p[ins]->p[1]=st.a;
-			gm->p[ins]->p[2]=st.T;
+			P(P(gm,ins),1)=st.a;
+			P(P(gm,ins),2)=st.T;
 		}
-		gm->p[ins]->p[ng]=st.res_sig;
-		gm->p[ins]->p[ng+1]=st.res_n;
+		P(P(gm,ins),ng)=st.res_sig;
+		P(P(gm,ins),ng+1)=st.res_n;
 		/*info("g0=%.1g, g2=%.1g, res_sig=%.1g, res_n=%.1g, tot=%.1g, gain_n=%.1g sigma2n=%.1g\n",
 		  g0, st.g, st.res_sig, st.res_n, st.res_n+st.res_sig, st.gain_n, st.sigma2n);*/
 	}/*for ins. */
@@ -374,14 +374,14 @@ dmat* servo_rej2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, r
 	real psdn=sigma2n*(dt*dtrat*2);
 	cadd(&st.Hol, 0, st.Hsys, gain);
 	for(int i=0; i<nu->nx; i++){
-		comp Hol=st.Hol->p[i];
+		comp Hol=P(st.Hol,i);
 		comp Hrej=1./(1.+Hol);
 		real normHrej=creal(Hrej*conj(Hrej));
 		//comp Hcl=Hol*Hrej;
-		//comp Hwfs=st.Hwfs->p[i];
+		//comp Hwfs=P(st.Hwfs,i);
 		//comp Hn=Hcl/Hwfs;
 		//real normHn=Hn*conj(Hn);
-		P(psdol, i, 0)=nu->p[i];//frequency.
+		P(psdol, i, 0)=P(nu,i);//frequency.
 		for(int icol=0; icol<psd->ny; icol++){
 			P(psdol, i, icol+1)=P(psd, i, icol)/(normHrej)-psdn;
 			if(P(psdol, i, icol+1)<0){
@@ -405,12 +405,12 @@ real servo_residual(real* noise_amp, const dmat* psdin, real dt, long dtrat, rea
 	st.type=servo_type;
 	switch(servo_type){
 	case 1:
-		st.g=gain->p[0];
+		st.g=P(gain,0);
 		break;
 	case 2:
-		st.g=gain->p[0];
-		st.a=gain->p[1];
-		st.T=gain->p[2];
+		st.g=P(gain,0);
+		st.a=P(gain,1);
+		st.T=P(gain,2);
 		break;
 	default:
 		error("Invalid type\n");
@@ -434,10 +434,10 @@ servo_typeII_filter(servo_t* st, const dcell* merrc){
 	}
 	real gg, e1a, e1;
 	for(int ic=0; ic<merrc->nx*merrc->ny; ic++){
-		dmat* merr=merrc->p[ic];
+		dmat* merr=P(merrc,ic);
 		if(!merr) continue;
-		dmat* mlead=st->mlead->p[ic];
-		dmat* merrlast=st->merrlast->p[ic];
+		dmat* mlead=P(st->mlead,ic);
+		dmat* merrlast=P(st->merrlast,ic);
 		int nmod=0;/*error. */
 		if(merr->ny==1){
 			nmod=merr->nx;
@@ -462,7 +462,7 @@ servo_typeII_filter(servo_t* st, const dcell* merrc){
 			gg=P(gain, 0, indm);
 			e1a=P(gain, 1, indm);
 			e1=P(gain, 2, indm);
-			mlead->p[imod]=e1a*mlead->p[imod]+gg*(1-e1a)/(1-e1)*(merr->p[imod]-e1*merrlast->p[imod]);
+			P(mlead,imod)=e1a*P(mlead,imod)+gg*(1-e1a)/(1-e1)*(P(merr,imod)-e1*P(merrlast,imod));
 		}
 	}
 	dcellcp(&st->merrlast, merrc);
@@ -480,7 +480,7 @@ static void servo_init(servo_t* st, const dcell* merr){
 		st->merrlast=dcellnew2(merr);
 	}
 	for(int i=0; i<st->mint->nx; i++){
-		st->mint->p[i]=dcellnew2(merr);
+		P(st->mint,i)=dcellnew2(merr);
 	}
 	st->initialized=1;
 }
@@ -494,11 +494,11 @@ void servo_update(servo_t* st, const dmat* ep){
 	} else{//type II. convert data format
 		st->ep=dnew(ep->nx, ep->ny);
 		for(int i=0; i<ep->ny; i++){
-			st->ep->p[i*3]=ep->p[i*3];
-			real a=ep->p[1+i*3];
-			real T=ep->p[2+i*3];
-			st->ep->p[1+i*3]=exp(-st->dt/(a*T));
-			st->ep->p[2+i*3]=exp(-st->dt/T);
+			P(st->ep,0,i)=P(ep,0,i);
+			real a=P(ep, 1, i);
+			real T=P(ep, 2, i);
+			P(st->ep,1,i)=exp(-st->dt/(a*T));
+			P(st->ep,2,i)=exp(-st->dt/T);
 		}
 	}
 }
@@ -511,7 +511,7 @@ servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
 		st->ap=ddup(ap);
 	} else{
 		st->ap=dnew(2, 1);
-		st->ap->p[0]=1;
+		P(st->ap,0)=1;
 	}
 	if(st->ap->nx<2){
 		dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
@@ -522,14 +522,14 @@ servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
 	st->alfrac=al-floor(al);
 	st->merrhist=(dccell*)cellnew(st->alint+1, 1);
 	servo_update(st, ep);
-	if(merr&&merr->nx!=0&&merr->ny!=0&&merr->p[0]){
+	if(merr&&merr->nx!=0&&merr->ny!=0&&P(merr,0)){
 		servo_init(st, merr);
 	}
 	return st;
 }
 /**
    prepare the modified integrator by shifting commands. similar to laos.
-   inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
+   P(inte,0)=P(inte,0)*ap[0]+P(inte,1)*ap[1]+...
 */
 static void servo_shift_ap(servo_t* st){
 	const dmat* ap=st->ap;
@@ -540,9 +540,9 @@ static void servo_shift_ap(servo_t* st){
 	if(!st->initialized) return;
 	dcell** inte=st->mint->p;
 	dcell* recycle=inte[ap->nx-1];
-	dcellscale(recycle, ap->p[ap->nx-1]);
+	dcellscale(recycle, P(ap, ap->nx-1));
 	for(int iap=ap->nx-2; iap>=0; iap--){
-		dcelladd(&recycle, 1, inte[iap], ap->p[iap]);
+		dcelladd(&recycle, 1, inte[iap], P(ap,iap));
 	}
 	for(int iap=ap->nx-1; iap>0; iap--){
 		inte[iap]=inte[iap-1];/*shifting */
@@ -555,17 +555,17 @@ static const dcell* servo_shift_al(servo_t* st, const dcell* merr){
 		return merr;
 	} else{
 		long nhist=st->merrhist->nx;
-		dcell* recycle=st->merrhist->p[0];
+		dcell* recycle=P(st->merrhist,0);
 		for(int i=0; i<nhist-1; i++){
-			st->merrhist->p[i]=st->merrhist->p[i+1];
+			P(st->merrhist,i)=P(st->merrhist,i+1);
 		}
-		st->merrhist->p[nhist-1]=recycle;
+		P(st->merrhist,nhist-1)=recycle;
 		if(!merr){
-			dcellfree(st->merrhist->p[nhist-1]);
+			dcellfree(P(st->merrhist,nhist-1));
 		} else{
-			dcelladd(&st->merrhist->p[nhist-1], 0, merr, 1);
+			dcelladd(PP(st->merrhist,nhist-1), 0, merr, 1);
 		}
-		return st->merrhist->p[0];
+		return P(st->merrhist,0);
 	}
 }
 /**
@@ -588,24 +588,24 @@ int servo_filter(servo_t* st, const dcell* _merr){
 	switch(st->ep->nx){
 	case 1://type I
 		if(st->ep->ny==1){
-			dcelladd(&st->mpreint, 0, merr, st->ep->p[0]);//just record what is added.
+			dcelladd(&st->mpreint, 0, merr, P(st->ep,0));//just record what is added.
 		} else{
 			if(!st->mpreint){
 				st->mpreint=dcellnew2(merr);
 			}
 			for(int ic=0; ic<merr->nx; ic++){
-				if(!merr->p[ic]) continue;
-				assert(merr->p[ic]->nx==st->ep->ny);
-				for(long i=0; i<merr->p[ic]->nx; i++){
-					st->mpreint->p[ic]->p[i]=st->ep->p[i]*merr->p[ic]->p[i];
+				if(!P(merr,ic)) continue;
+				assert(P(merr,ic)->nx==st->ep->ny);
+				for(long i=0; i<P(merr,ic)->nx; i++){
+					P(P(st->mpreint,ic),i)=P(st->ep,i)*P(P(merr,ic),i);
 				}
 			}
 		}
 		break;
 	case 2:{//PID controller
 		if(st->ep->ny!=1) error("not supported\n");
-		real g1=st->ep->p[0]+st->ep->p[1];
-		real g2=-st->ep->p[1];
+		real g1=P(st->ep,0)+P(st->ep,1);
+		real g2=-P(st->ep,1);
 		dcelladd(&st->mpreint, 0, merr, g1);
 		dcelladd(&st->mpreint, 1, st->merrlast, g2);
 		dcellcp(&st->merrlast, merr);
@@ -624,16 +624,16 @@ int servo_filter(servo_t* st, const dcell* _merr){
    Adjust integrator content without shift.
 */
 void servo_add(servo_t* st, const dcell* madj, real alpha){
-	dcelladd(&st->mint->p[0], 1, madj, alpha);
+	dcelladd(PP(st->mint,0), 1, madj, alpha);
 }
 /**
    Create servo output. It handles st->alfrac.
  */
 void servo_output(const servo_t* st, dcell** out){
 	assert(st);
-	dcellcp(out, st->mint->p[0]);
+	dcellcp(out, P(st->mint,0));
 	if(st->alfrac){
-		dcelladd(out, 1.-st->alfrac, st->mint->p[1], st->alfrac);
+		dcelladd(out, 1.-st->alfrac, P(st->mint,1), st->alfrac);
 	}
 }
 
@@ -663,21 +663,21 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 	/*two step delay is ensured with the order of using, copy, acc*/
 	for(int istep=0; istep<input->ny; istep++){
 		memcpy(merr->p, PCOL(pinput, istep), nmod*sizeof(real));
-		dadd(&merr, 1, mreal->p[0], -1);
+		dadd(&merr, 1, P(mreal,0), -1);
 		memcpy(PCOL(pmres, istep), merr->p, sizeof(real)*nmod);
 		if(istep%dtrat==0){
-			dzero(meas->p[0]);
+			dzero(P(meas,0));
 		}
-		dadd(&meas->p[0], 1, merr, 1);/*average the error. */
-		dcellcp(&mreal, st2t->mint->p[0]);
+		dadd(PP(meas,0), 1, merr, 1);/*average the error. */
+		dcellcp(&mreal, P(st2t->mint,0));
 		if((istep+1)%dtrat==0){
-			if(dtrat!=1) dscale(meas->p[0], 1./dtrat);
+			if(dtrat!=1) dscale(P(meas,0), 1./dtrat);
 			if(sigman){
 				drandn(noise, 1, &rstat);
 				if(sigman->nx>0){
-					dmm(&meas->p[0], 1, sigman, noise, "nn", 1);
+					dmm(PP(meas,0), 1, sigman, noise, "nn", 1);
 				} else{
-					dadd(&meas->p[0], 1, noise, sigman->p[0]);
+					dadd(PP(meas,0), 1, noise, P(sigman,0));
 				}
 			}
 			servo_filter(st2t, meas);
@@ -699,12 +699,12 @@ void servo_reset(servo_t* st){
 	dcellzero(st->mpreint);
 	if(st->merrhist){
 		for(int i=0; i<st->merrhist->nx; i++){
-			dcellzero(st->merrhist->p[i]);
+			dcellzero(P(st->merrhist,i));
 		}
 	}
 	if(st->mint){
 		for(int i=0; i<st->mint->nx; i++){
-			dcellzero(st->mint->p[i]);
+			dcellzero(P(st->mint,i));
 		}
 	}
 }

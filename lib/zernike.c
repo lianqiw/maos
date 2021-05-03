@@ -36,11 +36,11 @@ dmat* zernike_Rnm(const dmat* locr, int ir, int im){
 	}
 	for(long iloc=0; iloc<nloc; iloc++){
 		real tmp=0;
-		real r=locr->p[iloc];
+		real r=P(locr,iloc);
 		for(int s=0; s<ns; s++){
 			tmp+=coeff[s]*pow(r, power[s]);
 		}
-		Rnm->p[iloc]=tmp;
+		P(Rnm,iloc)=tmp;
 	}
 	return Rnm;
 }
@@ -90,15 +90,15 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	const real R1=2./D;
 	long nover=0; real rover=1;
 	for(long iloc=0; iloc<nloc; iloc++){
-		locr->p[iloc]=sqrt(pow(locx[iloc], 2)+pow(locy[iloc], 2))*R1;
-		if(locr->p[iloc]>1){
+		P(locr,iloc)=sqrt(pow(locx[iloc], 2)+pow(locy[iloc], 2))*R1;
+		if(P(locr,iloc)>1){
 			nover++;
-			if(locr->p[iloc]>rover){
-				rover=locr->p[iloc];
+			if(P(locr,iloc)>rover){
+				rover=P(locr,iloc);
 			}
-			locr->p[iloc]=1;//2020-03-06: prevent r from above 1.
+			P(locr,iloc)=1;//2020-03-06: prevent r from above 1.
 		}
-		locs->p[iloc]=atan2(locy[iloc], locx[iloc]);
+		P(locs,iloc)=atan2(locy[iloc], locx[iloc]);
 	}
 	if(rover>1.5){
 	//if(nover > (M_PI*D/loc->dx)*1.5 ){
@@ -124,7 +124,7 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 				real* restrict pmod=PCOL(opd, cmod); //opd->p+nloc*cmod;
 #pragma omp parallel for
 				for(long iloc=0; iloc<nloc; iloc++){
-					pmod[iloc]=Rnm->p[iloc]*coeff;
+					pmod[iloc]=P(Rnm,iloc)*coeff;
 				}
 				cmod++;
 				imod++;
@@ -135,14 +135,14 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 					real* restrict pmods=PCOL(opd, flag?0:(cmod+off1));//odd imod for sin
 #pragma omp parallel for
 					for(long iloc=0; iloc<nloc; iloc++){
-						pmods[iloc]=Rnm->p[iloc]*coeff*sin(im*locs->p[iloc]);
+						pmods[iloc]=P(Rnm,iloc)*coeff*sin(im*P(locs,iloc));
 					}
 				}
 				if(!flag||(imod+1-off1+flag)==0){
 					real* restrict pmodc=PCOL(opd, flag?0:(cmod+1-off1));//even imod for cos
 #pragma omp parallel for
 					for(long iloc=0; iloc<nloc; iloc++){
-						pmodc[iloc]=Rnm->p[iloc]*coeff*cos(im*locs->p[iloc]);
+						pmodc[iloc]=P(Rnm,iloc)*coeff*cos(im*P(locs,iloc));
 					}
 					cmod+=2;
 				}
@@ -163,13 +163,13 @@ static lmat* zernike_index(int nr){
 	if(nr<0) return 0;
 	lmat* out=lnew(nr+1, nr+1);
 	for(long ix=0; ix<(nr+1)*(nr+1); ix++){
-		out->p[ix]=-1;
+		P(out,ix)=-1;
 	}
 	int count=0;
 	for(int ir=0; ir<=nr; ir++){
 		for(int im=0; im<=ir; im++){
 			if((ir-im)%2!=0) continue;
-			out->p[im+ir*(nr+1)]=count;
+			P(out,im,ir)=count;
 			if(im==0){//single, pure radial mode
 				count++;
 			} else{//real mode as a pair
@@ -199,7 +199,7 @@ dmat* zernike_cov_kolmogorov(int nr){
 	for(int ir=0; ir<=nr; ir++){
 		for(int im=0; im<=ir; im++){
 			if((ir-im)%2!=0) continue;
-			long ict0=zind->p[im+ir*(nr+1)];
+			long ict0=P(zind,im,ir);
 			long icts=0, ictc=0;
 			if(ict0%2==1){
 				ictc=ict0;//cos term
@@ -210,7 +210,7 @@ dmat* zernike_cov_kolmogorov(int nr){
 			}
 			for(int jr=0; jr<=ir; jr++){
 				if(ir==0||jr==0) continue;//ignore piston
-				long jct0=zind->p[im+jr*(nr+1)];
+				long jct0=P(zind,im,jr);
 				long jcts=0, jctc=0;
 				if((jct0)%2==1){
 					jctc=jct0;
@@ -254,22 +254,22 @@ dmat* cov_vonkarman(const loc_t* loc, /**<The location grid*/
 	ccell* spect=ccellnew(nmod, 1);
 #pragma omp parallel for
 	for(long ic=0; ic<nmod; ic++){
-		spect->p[ic]=cnew(nembed, nembed);
+		P(spect,ic)=cnew(nembed, nembed);
 		for(long ix=0; ix<loc->nloc; ix++){
-			spect->p[ic]->p[embed->p[ix]]=P(modz, ix, ic);
+			P(P(spect,ic),P(embed,ix))=P(modz, ix, ic);
 		}
-		cfftshift(spect->p[ic]);
-		cfft2(spect->p[ic], -1);
+		cfftshift(P(spect,ic));
+		cfft2(P(spect,ic), -1);
 	}
 	dmat* turbspec=turbpsd(nembed, nembed, loc->dx, 0.2, L0, -11./3., 1);
-	turbspec->p[0]=0;//remove piston.
+	P(turbspec,0)=0;//remove piston.
 	dmat* DD=dnew(nmod, nmod);
 #pragma omp parallel for
 	for(long ic=0; ic<nmod; ic++){
 		for(long id=0; id<=ic; id++){
 			real tmp=0;
 			for(long ip=0; ip<nembed*nembed; ip++){
-				tmp+=creal(spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip]))*turbspec->p[ip];
+				tmp+=creal(P(P(spect,ic),ip)*conj(P(P(spect,id),ip)))*P(turbspec,ip);
 			}
 			P(DD, ic, id)=P(DD, id, ic)=tmp;//*scale;
 		}
@@ -298,11 +298,11 @@ dmat* cov_diagnolize(const dmat* mod, /**<Input mode*/
 	dmm(&kl, 0, mod, U, "nn", 1);
 	if(1){
 	//Drop modes with infinitesimal strength
-		real ssmax=S->p[0];
+		real ssmax=P(S,0);
 		real thres=ssmax*1e-10;
 		long count=0;
 		for(long i=S->nx-1; i>0; i--){
-			if(S->p[i]<thres){
+			if(P(S,i)<thres){
 				count++;
 			} else{
 				break;

@@ -41,8 +41,8 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 		GAlsr=GAM;
 	}
 	int free_GAlsr=0;
-	if(GAlsr->p[0]->id!=M_REAL){//Convert low sparsity matrices to full
-		dsp* tmp=dsp_cast(GAlsr->p[0]);
+	if(P(GAlsr,0)->id!=M_REAL){//Convert low sparsity matrices to full
+		dsp* tmp=dsp_cast(P(GAlsr,0));
 		if(tmp->nzmax>tmp->nx*tmp->ny*0.2){//not very sparse
 			dcell* tmp2=0;
 			free_GAlsr=1;
@@ -70,11 +70,11 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 		recon->LL.V=dcelldup(GPTTDF);
 		dcellfree(GPTTDF);
 	}
-	real maxeig=pow(recon->neamhi*recon->aloc->p[0]->dx, -2);
+	real maxeig=pow(recon->neamhi*P(recon->aloc,0)->dx, -2);
 	if(parms->recon.modal){
 		real strength=1;
 		for(int idm=0; idm<ndm; idm++){
-			strength*=dnorm(recon->amod->p[idm]);
+			strength*=dnorm(P(recon->amod,idm));
 		}
 		strength=pow(strength, 2./ndm);
 		maxeig*=strength;
@@ -92,12 +92,12 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 			NW=dcellnew(ndm, 1);
 			int nmod=2;/*two modes. */
 			for(int idm=0; idm<ndm; idm++){
-				const long nloc=recon->aloc->p[idm]->nloc;
-				NW->p[idm]=dnew(nloc, ndm*nmod);
-				real* p=PCOL(NW->p[idm], idm*nmod);
+				const long nloc=P(recon->aloc,idm)->nloc;
+				P(NW,idm)=dnew(nloc, ndm*nmod);
+				real* p=PCOL(P(NW,idm), idm*nmod);
 
 				//First mode: piston mode.
-				const real* cpl=recon->actcpl->p[idm]->p;
+				const real* cpl=P(recon->actcpl,idm)->p;
 				for(long iloc=0; iloc<nloc; iloc++){
 					if(cpl[iloc]>0.1){
 						p[iloc]=1;
@@ -105,9 +105,9 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 				}
 
 				//Second mode: waffle mode
-				p=PCOL(NW->p[idm], idm*nmod+1);
-				loc_create_map(recon->aloc->p[idm]);
-				map_t* map=recon->aloc->p[idm]->map;
+				p=PCOL(P(NW,idm), idm*nmod+1);
+				loc_create_map(P(recon->aloc,idm));
+				map_t* map=P(recon->aloc,idm)->map;
 				for(long iy=0; iy<map->ny; iy++){
 					for(long ix=0; ix<map->nx; ix++){
 						if(P(map, ix, iy)>0){//Some may be negative due to extend.

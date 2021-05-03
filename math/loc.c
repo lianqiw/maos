@@ -171,7 +171,7 @@ lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad
 	for(int iloc=0; iloc<loc->nloc; iloc++){
 		long ix=(long)round((loc->locx[iloc]-xmin)*dx_in1);
 		long iy=(long)round((loc->locy[iloc]-ymin)*dy_in1);
-		embed->p[iloc]=ix+iy*nxy;
+		P(embed,iloc)=ix+iy*nxy;
 	}
 	return embed;
 }
@@ -338,11 +338,11 @@ void loc_embed(map_t* dest, const loc_t* loc, const real* in){
 	}
 	const real* pin=in-1;//iphi count from 1
 	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=fabs(map->p[i]);
+		long iphi=fabs(P(map,i));
 		if(iphi){
-			dest->p[i]=pin[iphi];
+			P(dest,i)=pin[iphi];
 		} else{
-			dest->p[i]=NAN;
+			P(dest,i)=NAN;
 		}
 	}
 }
@@ -389,9 +389,9 @@ void loc_embed_add(map_t* dest, const loc_t* loc, const real* in){
 	}
 	const real* pin=in-1;//iphi count from 1
 	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=fabs(map->p[i]);
+		long iphi=fabs(P(map,i));
 		if(iphi){
-			dest->p[i]+=pin[iphi];
+			P(dest,i)+=pin[iphi];
 		}
 	}
 }
@@ -414,11 +414,11 @@ void loc_embed_cell(dcell** pdest, const loc_t* loc, const dcell* in){
 		error("dest and map doesn't agree\n");
 	}
 	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=fabs(map->p[i]);
+		long iphi=fabs(P(map,i));
 		if(iphi){
-			dest->p[i]=dref(P(in, iphi-1));
+			P(dest,i)=dref(P(in, iphi-1));
 		} else{
-			dest->p[i]=0;
+			P(dest,i)=0;
 		}
 	}
 }
@@ -438,9 +438,9 @@ void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 	}
 	real* restrict pdest=dest->p-1;//iphi count from 1
 	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=map->p[i];
+		long iphi=P(map,i);
 		if(iphi>0){
-			pdest[iphi]=in->p[i];
+			pdest[iphi]=P(in,i);
 		}
 	}
 }
@@ -619,7 +619,7 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
 		const real dx=pts->dx;
 		const real dy=pts->dy;
 		const real* ampi=amp+pts->nx*pts->nx*isa;
-		dmat* ATA=mcc->p[isa];
+		dmat* ATA=P(mcc,isa);
 		real a00=0, a01=0, a02=0, a11=0, a12=0, a22=0;
 		for(int iy=0; iy<pts->nx; iy++){
 			real y=iy*dy+origy;
@@ -743,7 +743,7 @@ void loc_remove_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 */
 void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	if(!opd||!ptt||!loc) return;
-	if(loc->nloc!=opd->nx){
+	if(loc->nloc!=opd->nx*opd->ny){
 		error("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
 		return;
 	}
@@ -751,7 +751,7 @@ void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	const real* restrict locx=loc->locx;
 	const real* restrict locy=loc->locy;
 	for(long iloc=0; iloc<nloc; iloc++){
-		opd->p[iloc]+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
+		P(opd,iloc)+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
 	}
 }
 /**
@@ -771,7 +771,7 @@ void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 		const real dy=pts->dy;
 		const real* ampi=amp+pts->nx*pts->nx*isa;
 		const real* opdi=opd+pts->nx*pts->nx*isa;
-		assert(imcc->p[isa]->nx==3&&imcc->p[isa]->ny==3);
+		assert(P(imcc,isa)->nx==3&&P(imcc,isa)->ny==3);
 		real coeff[3]={0,0,0};
 		real a0=0, a1=0, a2=0;
 		for(int iy=0; iy<pts->nx; iy++){
@@ -790,7 +790,7 @@ void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 		coeff[1]=a1;
 		coeff[2]=a2;
 		real outp[3];
-		dmulvec3(outp, imcc->p[isa], coeff);
+		dmulvec3(outp, P(imcc,isa), coeff);
 		/*
 		  2010-07-19: Was =, modified to += to conform to the convention.
 		*/
@@ -988,14 +988,14 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 			int pstart=locstat->cols[icol].pos;
 			int pend=locstat->cols[icol+1].pos;
 			for(int pos=pstart; pos<pend; pos++){
-				if(amp->p[pos]<thres){
+				if(P(amp,pos)<thres){
 					skip[pos]=1;
 				} else{
 					break;
 				}
 			}
 			for(int pos=pend-1; pos>pstart-1; pos--){
-				if(amp->p[pos]<thres){
+				if(P(amp,pos)<thres){
 					skip[pos]=1;
 				} else{
 					break;
@@ -1004,7 +1004,7 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 		}
 	} else{
 		for(int iloc=0; iloc<nloc; iloc++){
-			if(amp->p[iloc]<thres){
+			if(P(amp,iloc)<thres){
 				skip[iloc]=1;
 			}
 		}
@@ -1013,7 +1013,7 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 	for(int iloc=0; iloc<nloc; iloc++){
 		loc->locx[count]=loc->locx[iloc];
 		loc->locy[count]=loc->locy[iloc];
-		amp->p[count]=amp->p[iloc];
+		P(amp,count)=P(amp,iloc);
 		if(!skip[iloc]) count++;
 	}
 	locresize(loc, count);
@@ -1035,8 +1035,8 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 	int nloc=loc->nloc;
 	dmat* sum=NULL;
 	for(int isp=0; isp<spc->nx*spc->ny; isp++){
-		if(spc->p[isp]){
-			dmat* sum0=dspsumabs(spc->p[isp], 3-dim);
+		if(P(spc,isp)){
+			dmat* sum0=dspsumabs(P(spc,isp), 3-dim);
 			dadd(&sum, 1, sum0, 1);
 			dfree(sum0);
 		}
@@ -1056,7 +1056,7 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 			if(!skip[iloc]) count++;
 		}
 		for(int isp=0; isp<spc->nx*spc->ny;isp++){
-			dsp* sp=spc->p[isp];
+			dsp* sp=P(spc,isp);
 			if(!sp) continue;
 			sp->nx=count;
 			for(int iz=0; iz<sp->nzmax; iz++){
@@ -1066,16 +1066,16 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 		free(map);
 	} else if(dim==2){
 		for(int isp=0; isp<spc->nx*spc->ny;isp++){
-			dsp* sp=spc->p[isp];
+			dsp* sp=P(spc,isp);
 			if(!sp) continue;
 			count=0;
 			for(int iloc=0; iloc<nloc; iloc++){
 				if(!skip[iloc]){
-					sp->p[count]=sp->p[iloc];
+					P(sp,count)=P(sp,iloc);
 					count++;
 				}
 			}
-			sp->p[count]=sp->p[nloc];
+			P(sp,count)=P(sp,nloc);
 			sp->ny=count;
 			sp->p=myrealloc(sp->p, (count+1), spint);
 		}
@@ -1110,11 +1110,11 @@ void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 	} else if(dim==2){
 		for(int iloc=0; iloc<nloc; iloc++){
 			if(!skip[iloc]){
-				sp->p[count]=sp->p[iloc];
+				P(sp,count)=P(sp,iloc);
 				count++;
 			}
 		}
-		sp->p[count]=sp->p[nloc];
+		P(sp,count)=P(sp,nloc);
 		sp->ny=count;
 		sp->p=myrealloc(sp->p, (count+1), spint);
 	}
@@ -1136,12 +1136,12 @@ void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
 	real piston=0;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
 		real tmp=(locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc])*val;
-		opd->p[iloc]+=tmp;
+		P(opd,iloc)+=tmp;
 		piston+=tmp;
 	}
 	piston=-piston/loc->nloc;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
-		opd->p[iloc]+=piston;
+		P(opd,iloc)+=piston;
 	}
 }
 /**
@@ -1154,7 +1154,7 @@ dmat* loc2mat(loc_t* loc, int piston){
 	if(piston){
 		out=dnew(loc->nloc, 3);
 		for(long i=0; i<loc->nloc; i++){
-			out->p[i]=1;
+			P(out,i)=1;
 		}
 		ptt=out->p+loc->nloc;
 	} else{

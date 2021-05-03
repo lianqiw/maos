@@ -129,8 +129,8 @@ int client(const char* hostname, int port, int nmin, int nmax, int nstep, int nr
 			tim2=myclockd();
 			stread(sock, buf1, 64);
 			tim3=myclockd();
-			timing->p[irep+ilen*nrep]=tim3-tim1;
-			timing2->p[irep+ilen*nrep]=tim2-tim1;
+			P(timing,irep,ilen)=tim3-tim1;
+			P(timing2,irep,ilen)=tim2-tim1;
 		}
 	}
 	close(sock);

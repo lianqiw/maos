@@ -116,14 +116,14 @@ void test_loc_reduce_sp(void){
     int nloc;
     loc_t **xloc=locarrread(&nloc,"xloc.bin");
     dspcell *G0=dspcellread("G0.bin");
-    loc_reduce_sp(xloc[0],G0->p[0],2,1);
+    loc_reduce_sp(xloc[0],P(G0,0),2,1);
     locarrwrite(xloc,nloc,"xloc2");
     writebin(G0,"G02.bin");
     locarrfree(xloc,nloc);
     dspcellfree(G0);
     G0=dspcellread("G0.bin");
     xloc=locarrread(&nloc,"xloc.bin");
-    dsp *G0t=dsptrans(G0->p[0]);
+    dsp *G0t=dsptrans(P(G0,0));
     loc_reduce_sp(xloc[0],G0t,1,1);
     dsp *G03=dsptrans(G0t);
     writebin(G03,"G03.bin");

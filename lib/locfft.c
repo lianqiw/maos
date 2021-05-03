@@ -41,12 +41,12 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 	locfft->embed=lcellnew(nwvl, 1);
 	locfft->nembed=lnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		if(iwvl==0||(fftsize&&fftsize->p[iwvl]>0&&fftsize->p[iwvl]!=locfft->nembed->p[0])){
-			locfft->nembed->p[iwvl]=fftsize?fftsize->p[iwvl]:0;
-			locfft->embed->p[iwvl]=loc_create_embed(&locfft->nembed->p[iwvl], loc, oversize, 1);
+		if(iwvl==0||(fftsize&&P(fftsize,iwvl)>0&&P(fftsize,iwvl)!=P(locfft->nembed,0))){
+			P(locfft->nembed,iwvl)=fftsize?P(fftsize,iwvl):0;
+			P(locfft->embed,iwvl)=loc_create_embed(PP(locfft->nembed,iwvl), loc, oversize, 1);
 		} else{
-			locfft->embed->p[iwvl]=lref(locfft->embed->p[0]);
-			locfft->nembed->p[iwvl]=locfft->nembed->p[0];
+			P(locfft->embed,iwvl)=lref(P(locfft->embed,0));
+			P(locfft->nembed,iwvl)=P(locfft->nembed,0);
 		}
 	}
 	locfft->wvl=dref_reshape(wvl, nwvl, 1);
@@ -58,12 +58,12 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 		locfft->fieldstop=fieldstop;
 		locfft->fieldmask=dcellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			int nembed=locfft->nembed->p[iwvl];
-			locfft->fieldmask->p[iwvl]=dnew(nembed, nembed);
-			real dtheta=wvl->p[iwvl]/(loc->dx*nembed);//sampling of psf
+			int nembed=P(locfft->nembed,iwvl);
+			P(locfft->fieldmask,iwvl)=dnew(nembed, nembed);
+			real dtheta=P(wvl,iwvl)/(loc->dx*nembed);//sampling of psf
 			real radius=fieldstop/(dtheta*2);
-			dcircle(locfft->fieldmask->p[iwvl], nembed/2+1, nembed/2+1, 1, 1, radius, 1);
-			dfftshift(locfft->fieldmask->p[iwvl]);
+			dcircle(P(locfft->fieldmask,iwvl), nembed/2+1, nembed/2+1, 1, 1, radius, 1);
+			dfftshift(P(locfft->fieldmask,iwvl));
 		}
 	}
 	return locfft;
@@ -90,7 +90,7 @@ static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
 	comp i2pi=COMPLEX(0, 2*M_PI/wvl);
 	comp strehl=0;
 	for(int iloc=0; iloc<iopdevl->nx; iloc++){
-		strehl+=amp->p[iloc]*cexp(i2pi*iopdevl->p[iloc]);
+		strehl+=P(amp,iloc)*cexp(i2pi*P(iopdevl,iloc));
 	}
 	return strehl;
 }
@@ -106,11 +106,12 @@ static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
 
    Extract center part of psfsize.
 */
-void locfft_psf(ccell** psf2s, const locfft_t* locfft, const dmat* opd, const lmat* psfsize, int sum2one){
+void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const lmat* psfsize, int sum2one){
 	long nwvl=locfft->wvl->nx;
-	if(!*psf2s){
-		*psf2s=ccellnew(nwvl, 1);
+	if(!*psf2sp){
+		*psf2sp=ccellnew(nwvl, 1);
 	}
+	ccell* psf2s=*psf2sp;
 	if(opd->nx!=locfft->amp->nx){
 		error("The length of opd should be %ld, but is %ld\n", locfft->amp->nx, opd->nx);
 	}
@@ -119,23 +120,23 @@ void locfft_psf(ccell** psf2s, const locfft_t* locfft, const dmat* opd, const lm
 #pragma omp task
 #endif
 	{
-		if(psfsize&&psfsize->p[iwvl]==1){
-			if(!(*psf2s)->p[iwvl]){
-				(*psf2s)->p[iwvl]=cnew(1, 1);
+		if(psfsize&&P(psfsize,iwvl)==1){
+			if(!P(psf2s,iwvl)){
+				P(psf2s,iwvl)=cnew(1, 1);
 			}
-			(*psf2s)->p[iwvl]->p[0]=strehlcomp(opd, locfft->amp, locfft->wvl->p[iwvl]);
+			P(P(psf2s,iwvl),0)=strehlcomp(opd, locfft->amp, P(locfft->wvl,iwvl));
 		} else{
 			TIM(0);
-			long nembed=locfft->nembed->p[iwvl];
-			long* embed=locfft->embed->p[iwvl]->p;
+			long nembed=P(locfft->nembed,iwvl);
+			long* embed=P(locfft->embed,iwvl)->p;
 			const real* amp=locfft->amp->p;
-			const int ref=!psfsize||psfsize->p[iwvl]==nembed;
+			const int ref=!psfsize||P(psfsize,iwvl)==nembed;
 			cmat* psf2=0;
 			if(ref){//Full PSF is returned
-				if(!(*psf2s)->p[iwvl]){
-					(*psf2s)->p[iwvl]=cnew(nembed, nembed);
+				if(!P(psf2s,iwvl)){
+					P(psf2s,iwvl)=cnew(nembed, nembed);
 				}
-				psf2=(*psf2s)->p[iwvl];
+				psf2=P(psf2s,iwvl);
 			} else{//Crop of PSF is returned.
 				psf2=cnew(nembed, nembed);
 			}
@@ -143,18 +144,18 @@ void locfft_psf(ccell** psf2s, const locfft_t* locfft, const dmat* opd, const lm
 			int use1d=0;
 #define USE1D_ENABLED 1
 #if     USE1D_ENABLED
-			if(psfsize&&psfsize->p[iwvl]+200<nembed){/*Want smaller PSF. */
+			if(psfsize&&P(psfsize,iwvl)+200<nembed){/*Want smaller PSF. */
 				use1d=1;
 			}
 #endif
 
-			comp i2pi=COMPLEX(0, 2*M_PI/locfft->wvl->p[iwvl]);
+			comp i2pi=COMPLEX(0, 2*M_PI/P(locfft->wvl,iwvl));
 			for(int iloc=0; iloc<opd->nx; iloc++){
-				psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*opd->p[iloc]);
+				P(psf2,embed[iloc])=amp[iloc]*cexp(i2pi*P(opd,iloc));
 			}
 			TIM(1);
 			if(use1d==1){
-				cfft2partial(psf2, psfsize->p[iwvl], -1);
+				cfft2partial(psf2, P(psfsize,iwvl), -1);
 			} else{
 				cfft2(psf2, -1);
 			}
@@ -162,26 +163,26 @@ void locfft_psf(ccell** psf2s, const locfft_t* locfft, const dmat* opd, const lm
 			if(ref){/*just reference */
 				cfftshift(psf2);
 			} else{/*create a new array, smaller. */
-				if(!(*psf2s)->p[iwvl]){
-					(*psf2s)->p[iwvl]=cnew(psfsize->p[iwvl], psfsize->p[iwvl]);
+				if(!P(psf2s,iwvl)){
+					P(psf2s,iwvl)=cnew(P(psfsize,iwvl), P(psfsize,iwvl));
 				}
-				ccpcorner2center((*psf2s)->p[iwvl], psf2);
+				ccpcorner2center(P(psf2s,iwvl), psf2);
 				cfree(psf2);
 			}
 			TIM(3);
 #if TIMING
 			info2("locfft_psf(%d:%ldx%ld): exp %.4f, fft %.4f (%.2f GFLOPS), abs2 %.2f.\n", iwvl, nembed, nembed,
-				tk1-tk0, tk2-tk1, 8L*(use1d?psfsize->p[iwvl]:nembed)*nembed*log2(nembed)/(tk2-tk1)*1e-9, tk3-tk2);
+				tk1-tk0, tk2-tk1, 8L*(use1d?P(psfsize,iwvl):nembed)*nembed*log2(nembed)/(tk2-tk1)*1e-9, tk3-tk2);
 #endif		
 		}
 		real psfnorm;
 		if(sum2one){/**PSF sum to 1*/
-			psfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
+			psfnorm=1./(sqrt(locfft->ampnorm)*P(locfft->nembed,iwvl));
 		} else{/**PSF max is strehl*/
 			psfnorm=1./locfft->ampsum;
 		}
 		if(fabs(psfnorm-1)>1.e-15){
-			cscale((*psf2s)->p[iwvl], psfnorm);
+			cscale(P(psf2s,iwvl), psfnorm);
 		}
 	}
 #if _OPENMP>=200805
@@ -198,19 +199,19 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 	}
 	ccell* wvfs=ccellnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		int nembed=locfft->nembed->p[iwvl];
-		lmat* embed=locfft->embed->p[iwvl];
+		int nembed=P(locfft->nembed,iwvl);
+		lmat* embed=P(locfft->embed,iwvl);
 		cmat* wvf=cnew(nembed, nembed);
-		wvfs->p[iwvl]=wvf;
+		P(wvfs,iwvl)=wvf;
 		//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
-		real wvl=locfft->wvl->p[iwvl];
+		real wvl=P(locfft->wvl,iwvl);
 		comp i2pi=COMPLEX(0, 2*M_PI/wvl);
 		const real* amp=locfft->amp->p;
 		for(int iloc=0; iloc<opd->nx; iloc++){
-			wvf->p[embed->p[iloc]]=amp[iloc]*cexp(i2pi*opd->p[iloc]);
+			P(wvf, P(embed,iloc))=amp[iloc]*cexp(i2pi*P(opd,iloc));
 		}
 		cfft2(wvf, -1);
-		ccwmd(wvf, locfft->fieldmask->p[iwvl], 1);
+		ccwmd(wvf, P(locfft->fieldmask,iwvl), 1);
 		cfft2(wvf, 1);
 	}
 	if(nwvl>1){
@@ -220,20 +221,20 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 	}
 	dmat* opdold=ddup(opd); dzero(opd);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		real wvl=locfft->wvl->p[iwvl];
+		real wvl=P(locfft->wvl,iwvl);
 		real wvlh=wvl*0.5;
 		real kki=wvl/(2*M_PI);
-		cmat* wvf=wvfs->p[iwvl];
-		lmat* embed=locfft->embed->p[iwvl];
+		cmat* wvf=P(wvfs,iwvl);
+		lmat* embed=P(locfft->embed,iwvl);
 		for(int iloc=0; iloc<opd->nx; iloc++){
-			real val=carg(wvf->p[embed->p[iloc]])*kki;
-			if(fabs(val-opdold->p[iloc])>wvlh){//need phase unwrapping
+			real val=carg(P(wvf,P(embed,iloc)))*kki;
+			if(fabs(val-P(opdold,iloc))>wvlh){//need phase unwrapping
 				warning_once("phase unwrapping is needed\n");
-				real diff=fmod(val-opdold->p[iloc]+wvlh, wvl);
+				real diff=fmod(val-P(opdold,iloc)+wvlh, wvl);
 				if(diff<0) diff+=wvl;
-				val=(diff-wvlh)+opdold->p[iloc];
+				val=(diff-wvlh)+P(opdold,iloc);
 			}
-			opd->p[iloc]+=wvlwts->p[iwvl]*val;
+			P(opd,iloc)+=P(wvlwts,iwvl)*val;
 		}
 	}
 	ccellfree(wvfs);

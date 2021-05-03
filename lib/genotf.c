@@ -229,9 +229,9 @@ static void genotf_wrap(thread_t* info){
 		} else{
 			opdbiasi=NULL;
 		}
-		if(otffull&&(!area||area->p[isa]>thres)){
+		if(otffull&&(!area||P(area,isa)>thres)){
 			ccp(&otf[isa], otffull);/*just copy the full array */
-		} else if(!area||area->p[isa]>0.01){
+		} else if(!area||P(area,isa)>0.01){
 			genotf_do(&otf[isa], pttr, data->npsfx, data->npsfy, loc, amp?amp->p+isa*nxsa:NULL, opdbiasi, wvl, B, pval);
 		}
 	}
@@ -358,8 +358,8 @@ void genotf(cmat** otf,    /**<The otf array for output*/
 	if(!opdbias&&nsa>1){
 		real maxarea=0;
 		for(long isa=0; isa<nsa; isa++){
-			if(area->p[isa]>maxarea){
-				maxarea=area->p[isa];
+			if(P(area,isa)>maxarea){
+				maxarea=P(area,isa);
 				isafull=isa;
 			}
 		}
@@ -430,11 +430,11 @@ dmat* mk2dcov(loc_t* loc, const dmat* amp, real ampthres, const dmat* cov, int n
 			long count=0;
 			real acc=0;
 			for(long iloc=0; iloc<loc->nloc; iloc++){
-				if(amp&&amp->p[iloc]<ampthres) continue;
+				if(amp&&P(amp,iloc)<ampthres) continue;
 				long ix=map_x[iloc]+im2;
 				long iy=map_y[iloc]+jm2;
 				long iloc2=(long)loc_map_get(map, ix, iy);
-				if(iloc2>0&&(!amp||amp->p[iloc2]>=ampthres)){
+				if(iloc2>0&&(!amp||P(amp,iloc2)>=ampthres)){
 					acc+=P(cov, iloc2-1, iloc);
 					count++;
 				}

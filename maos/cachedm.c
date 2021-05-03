@@ -48,7 +48,7 @@ void prep_cachedm(sim_t* simu){
 		for(int idm=0; idm<parms->ndm; idm++){
 			real dx=parms->dm[idm].dx/(parms->sim.cachedm>3?parms->sim.cachedm:4);
 			info(" dm[%d]@1/%gm", idm, 1./dx);
-			create_metapupil(&simu->cachedm->p[idm], 0, 0, parms->dirs, parms->aper.d,
+			create_metapupil(PP(simu->cachedm,idm), 0, 0, parms->dirs, parms->aper.d,
 				parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
 				0, 2, 0, 0, 0, 0);
 		}
@@ -63,12 +63,12 @@ void prep_cachedm(sim_t* simu){
 	for(int idm=0; idm<parms->ndm; idm++){
 		simu->cachedm_prop[idm]=mycalloc(NTHREAD, thread_t);
 		if(simu->dmrealsq){
-			cpropdata[idm].mapin=simu->dmrealsq->p[idm];
+			cpropdata[idm].mapin=P(simu->dmrealsq,idm);
 		} else{
-			cpropdata[idm].locin=simu->recon->aloc->p[idm];
-			cpropdata[idm].phiin=simu->dmreal->p[idm]->p;
+			cpropdata[idm].locin=P(simu->recon->aloc,idm);
+			cpropdata[idm].phiin=P(simu->dmreal,idm)->p;
 		}
-		cpropdata[idm].mapout=simu->cachedm->p[idm];
+		cpropdata[idm].mapout=P(simu->cachedm,idm);
 		cpropdata[idm].alpha=1;
 		cpropdata[idm].displacex0=0;
 		cpropdata[idm].displacey0=0;
@@ -90,7 +90,7 @@ void calc_cachedm(sim_t* simu){
 		long group=0;
 		/*zero out the data. */
 		for(int idm=0; idm<simu->parms->ndm; idm++){
-			dzero((dmat*)simu->cachedm->p[idm]);
+			dzero((dmat*)P(simu->cachedm,idm));
 			/*do the multi-threaded ray tracing */
 			QUEUE_THREAD(&group, (simu->cachedm_prop[idm]), 1);
 		}

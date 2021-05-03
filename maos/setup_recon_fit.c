@@ -32,13 +32,13 @@ setup_fit_HXF(const fit_t* fit){
 #pragma omp parallel for collapse(2)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int ips=0; ips<npsr; ips++){
-			const real hsi=fit->hs->p[ifit];
-			const real ht=fit->xloc->p[ips]->ht-fit->floc->ht;
+			const real hsi=P(fit->hs,ifit);
+			const real ht=P(fit->xloc,ips)->ht-fit->floc->ht;
 			const real scale=1.-ht/hsi;
 			real displace[2];
-			displace[0]=fit->thetax->p[ifit]*ht;
-			displace[1]=fit->thetay->p[ifit]*ht;
-			P(HXF, ifit, ips)=mkh(fit->xloc->p[ips], fit->floc, displace[0], displace[1], scale);
+			displace[0]=P(fit->thetax,ifit)*ht;
+			displace[1]=P(fit->thetay,ifit)*ht;
+			P(HXF, ifit, ips)=mkh(P(fit->xloc,ips), fit->floc, displace[0], displace[1], scale);
 		}
 	}
 	toc(" ");
@@ -56,17 +56,17 @@ setup_fit_HA(fit_t* fit){
 #pragma omp parallel for collapse(2)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int idm=0; idm<ndm; idm++){
-			const real hs=fit->hs->p[ifit];
-			const real ht=fit->aloc->p[idm]->ht-fit->floc->ht;
+			const real hs=P(fit->hs,ifit);
+			const real ht=P(fit->aloc,idm)->ht-fit->floc->ht;
 			const real scale=1.-ht/hs;
 			real displace[2];
-			displace[0]=fit->thetax->p[ifit]*ht;
-			displace[1]=fit->thetay->p[ifit]*ht;
+			displace[0]=P(fit->thetax,ifit)*ht;
+			displace[1]=P(fit->thetay,ifit)*ht;
 			loc_t* loc=fit->floc;
 			if(fit->misreg&&fit->misreg[ifit+idm*nfit]){
 				loc=loctransform(loc, fit->misreg[ifit+idm*nfit]);
 			}
-			P(HA, ifit, idm)=mkh(fit->aloc->p[idm], loc,
+			P(HA, ifit, idm)=mkh(P(fit->aloc,idm), loc,
 				displace[0], displace[1], scale);
 			if(loc!=fit->floc){
 				locfree(loc);
@@ -131,16 +131,16 @@ setup_fit_lrt(fit_t* fit){
 		act_stuck(fit->aloc, actcpl, fit->actstuck);
 	}
 	for(int idm=0; idm<ndm; idm++){
-		int nloc=fit->aloc->p[idm]->nloc;
-		fit->NW->p[idm]=dnew(nloc, nnw);
+		int nloc=P(fit->aloc,idm)->nloc;
+		P(fit->NW,idm)=dnew(nloc, nnw);
 	}
 	int inw=0;/*current column */
 	if(fit->flag.lrt_piston){
 		info("Adding piston cr to fit matrix\n");
 		for(int idm=0; idm<ndm; idm++){
-			int nloc=fit->aloc->p[idm]->nloc;
-			real* p=fit->NW->p[idm]->p+(inw+idm)*nloc;
-			const real* cpl=actcpl->p[idm]->p;
+			int nloc=P(fit->aloc,idm)->nloc;
+			real* p=P(fit->NW,idm)->p+(inw+idm)*nloc;
+			const real* cpl=P(actcpl,idm)->p;
 			for(int iloc=0; iloc<nloc; iloc++){
 				if(cpl[iloc]>0.1){ //don't count floating or stuck actuators
 					p[iloc]=fitscl;
@@ -152,17 +152,17 @@ setup_fit_lrt(fit_t* fit){
 	if(fit->flag.lrt_tt){
 		real factor=0;
 		info("Adding TT cr on upper DMs to fit matrix.\n");
-		factor=fitscl*2./loc_diam(fit->aloc->p[0]);
+		factor=fitscl*2./loc_diam(P(fit->aloc,0));
 		for(int idm=1; idm<ndm; idm++){
-			int nloc=fit->aloc->p[idm]->nloc;
-			real* p=fit->NW->p[idm]->p+(inw+(idm-1)*2)*nloc;
+			int nloc=P(fit->aloc,idm)->nloc;
+			real* p=P(fit->NW,idm)->p+(inw+(idm-1)*2)*nloc;
 			real* p2x=p;
 			real* p2y=p+nloc;
-			const real* cpl=actcpl->p[idm]->p;
+			const real* cpl=P(actcpl,idm)->p;
 			for(int iloc=0; iloc<nloc; iloc++){
 				if(cpl[iloc]>0.1){
-					p2x[iloc]=fit->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-					p2y[iloc]=fit->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
+					p2x[iloc]=P(fit->aloc,idm)->locx[iloc]*factor;/*x tilt */
+					p2y[iloc]=P(fit->aloc,idm)->locy[iloc]*factor;/*y tilt */
 				}
 			}
 		}
@@ -218,11 +218,11 @@ setup_fit_matrix(fit_t* fit){
 			//FRM
 			for(int ips=0; ips<npsr; ips++){
 				for(int ifit=0; ifit<nfit; ifit++){
-					if(fabs(fit->wt->p[ifit])<1.e-12) continue;
+					if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 					dsp* tmp=dspmulsp(fit->W0, P(HXF, ifit, ips), "nn");
 					for(int idm=0; idm<ndm; idm++){
 						dspmulsp2(PP(FRM, idm, ips), P(HAT, idm, ifit), tmp, "nn",
-							fit->wt->p[ifit]);
+							P(fit->wt,ifit));
 					}
 					dspfree(tmp);
 				}
@@ -231,14 +231,14 @@ setup_fit_matrix(fit_t* fit){
 			dmat** FRV=fit->FR.V->p;
 			//FRV
 			for(int ips=0; ips<npsr; ips++){
-				int nloc=fit->xloc->p[ips]->nloc;
+				int nloc=P(fit->xloc,ips)->nloc;
 				FRV[ips]=dnew(nloc, nfit);
 				for(int ifit=0; ifit<nfit; ifit++){
 					/*notice the sqrt. */
-					if(fabs(fit->wt->p[ifit])<1.e-12) continue;
+					if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 					dspmulvec(FRV[ips]->p+ifit*nloc,
 						P(HXF, ifit, ips), fit->W1->p, 't',
-						sqrt(fit->wt->p[ifit]));
+						sqrt(P(fit->wt,ifit)));
 				}
 			}
 			cellfree(fit->HXF);
@@ -252,14 +252,14 @@ setup_fit_matrix(fit_t* fit){
 		dmat** FRU=fit->FR.U->p;
 
 		for(int idm=0; idm<ndm; idm++){
-			int nloc=fit->aloc->p[idm]->nloc;
+			int nloc=P(fit->aloc,idm)->nloc;
 			FRU[idm]=dnew(nloc, nfit);
 			for(int ifit=0; ifit<nfit; ifit++){
 			/*notice the sqrt. */
-				if(fabs(fit->wt->p[ifit])<1.e-12) continue;
+				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 				dspmulvec(FRU[idm]->p+ifit*nloc,
 					P(HA, ifit, idm), fit->W1->p, 't',
-					sqrt(fit->wt->p[ifit]));
+					sqrt(P(fit->wt,ifit)));
 			}
 		}
 	}
@@ -270,11 +270,11 @@ setup_fit_matrix(fit_t* fit){
 		dspcell* FLM=(dspcell*)fit->FL.M;
 		for(int idm=0; idm<ndm; idm++){
 			for(int ifit=0; ifit<nfit; ifit++){
-				if(fabs(fit->wt->p[ifit])<1.e-12) continue;
+				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 				dsp* tmp=dspmulsp(fit->W0, P(HA, ifit, idm), "nn");
 				for(int jdm=0; jdm<ndm; jdm++){
 					dspmulsp2(PP(FLM, jdm, idm), P(HAT, jdm, ifit), tmp, "nn",
-						fit->wt->p[ifit]);
+						P(fit->wt,ifit));
 				}
 				dspfree(tmp);
 			}
@@ -286,7 +286,7 @@ setup_fit_matrix(fit_t* fit){
 			  scaling is due to ray tracing between different sampling freq.*/
 			int nact=0;
 			for(int idm=0; idm<ndm; idm++){
-				nact+=fit->aloc->p[idm]->nloc;
+				nact+=P(fit->aloc,idm)->nloc;
 			}
 			real maxeig=4./nact;
 			info("Adding tikhonov constraint of %.1e to FLM\n", tikcr);
@@ -305,7 +305,7 @@ setup_fit_matrix(fit_t* fit){
 			dcelladd(&fit->FL.M, 1, fit->actslave, 1);
 		}
 		/*dspcellsym(fit->FL.M); */
-		info("DM Fit number of Low rank terms: %ld in LHS\n", fit->FL.U->p[0]->ny);
+		info("DM Fit number of Low rank terms: %ld in LHS\n", P(fit->FL.U,0)->ny);
 	}
 	dspcellfree(HAT);
 	if(fit->flag.alg==0||fit->flag.alg==2){
@@ -468,23 +468,23 @@ void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms)
 		wfsloc->ht=parms->powfs[ipowfs].hc;
 		wfsloc->iac=parms->dbg.wfs_iac;//cubic spline better fits the turbulence.
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
-			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			fit_t* fit=fitall+jwfs;
 			if(jwfs==0){
 				memcpy(&fit->flag, &parms->fit, sizeof(fit_cfg_t));//use parms->fit.
 				fit->flag.alg=0;
 				fit->flag.assemble=0;
 				fit->notrecon=1; //not for reconstruction
-				fit->wt=dnew(1, 1); fit->wt->p[0]=1;
-				fit->hs=dnew(1, 1); fit->hs->p[0]=parms->powfs[ipowfs].hs;
+				fit->wt=dnew(1, 1); P(fit->wt,0)=1;
+				fit->hs=dnew(1, 1); P(fit->hs,0)=parms->powfs[ipowfs].hs;
 
-				fit->aloc=loccellnew(1, 1); fit->aloc->p[0]=locref(wfsloc);
+				fit->aloc=loccellnew(1, 1); P(fit->aloc,0)=locref(wfsloc);
 				fit->floc=locref(recon->floc);
 				fit->W0=recon->W0;
 				fit->W1=recon->W1;
 
-				fit->thetax=dnew(1, 1);fit->thetax->p[0]=parms->wfs[iwfs].thetax;
-				fit->thetay=dnew(1, 1);fit->thetay->p[0]=parms->wfs[iwfs].thetay;
+				fit->thetax=dnew(1, 1);P(fit->thetax,0)=parms->wfs[iwfs].thetax;
+				fit->thetay=dnew(1, 1);P(fit->thetay,0)=parms->wfs[iwfs].thetay;
 				setup_fit(fit, 1);
 				if(fit->flag.alg!=1){
 					cellfree(fit->FL.M);
@@ -496,8 +496,8 @@ void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms)
 				fit->isref=1;
 				fit->FR.Mdata=fit;
 				fit->FL.Mdata=fit;
-				fit->thetax=dnew(1, 1);fit->thetax->p[0]=parms->wfs[iwfs].thetax;
-				fit->thetay=dnew(1, 1);fit->thetay->p[0]=parms->wfs[iwfs].thetay;
+				fit->thetax=dnew(1, 1);P(fit->thetax,0)=parms->wfs[iwfs].thetax;
+				fit->thetay=dnew(1, 1);P(fit->thetay,0)=parms->wfs[iwfs].thetay;
 			}
 		}
 		locfree(wfsloc);

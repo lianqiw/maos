@@ -71,12 +71,12 @@ static void test_accuracy(int argc, char **argv){
     dset((dmat*)screen, 1);
     dmat *tmp=dnew(screen->nx, 1);
     for(long ix=0; ix<screen->nx; ix++){
-	tmp->p[ix]=sin((real)ix/screen->nx*2*M_PI);
+	P(tmp,ix)=sin((real)ix/screen->nx*2*M_PI);
     }
     for(long iy=0; iy<screen->ny; iy++){
-	for(long ix=0; ix<screen->nx; ix++){
-	    screen->p[ix+iy*screen->nx]=tmp->p[ix]*tmp->p[iy];
-	}
+	    for(long ix=0; ix<screen->nx; ix++){
+	        P(screen,ix,iy)=P(tmp,ix)*P(tmp,iy);
+	    }
     }
     //pts_t *pts=realloc(mkannloc(D, 0, 1./2.,0), sizeof(pts_t));
     pts_t *pts=(pts_t*)realloc(mksqloc_auto(D/dsa, D/dsa, dsa, dsa), sizeof(pts_t));

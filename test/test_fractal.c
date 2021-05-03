@@ -29,11 +29,11 @@ static void test_accuracy(){
     seed_rand(&rstat, seed);
     map_t *atm=mapnew(nx, ny, dx, dx);
     for(long i=0; i<nx*ny; i++){
-	atm->p[i]=randn(&rstat);
+	P(atm,i)=randn(&rstat);
     }
     map_t *atm2=mapnew(nx, ny, dx, dx);
     for(long i=0; i<nx*ny; i++){
-	atm2->p[i]=randn(&rstat);
+	P(atm2,i)=randn(&rstat);
     }
     mapwrite(atm, "atm_rand.bin");
     mapwrite(atm2, "atm2_rand.bin");
@@ -99,7 +99,7 @@ static void test_cov(){/*not good */
 	dbg("%ld of %ld\n", i, nframe);
 	
 	for(long j=0; j<nx*ny; j++){
-	    atm->p[j]=randn(&rstat);
+	    P(atm,j)=randn(&rstat);
 	}
 	fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	/*mapwrite(atm, "atm_%ld.bin", i); */
@@ -115,7 +115,7 @@ static void test_cov(){/*not good */
 	    cfftshift(atmhat);
 	    creal2d(&cov, 0, atmhat, 1);
 	    for(long k=0; k<cov->nx*cov->ny; k++){
-		cov->p[k]/=denom->p[k];
+		P(cov,k)/=P(denom,k);
 	    }
 	    writebin(cov, "atm_cov_%ld.bin",i+1);
 	}
@@ -137,7 +137,7 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
     for(long i=0; i<nframe; i++){
 	dbg("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
-	    atm->p[j]=randn(&rstat);
+	    P(atm,j)=randn(&rstat);
 	}
 	fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	dmm(&cov, 1, vec, vec, "nt", 1);
@@ -164,13 +164,13 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
     for(long i=0; i<nframe; i++){
 	dbg("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
-	    atm->p[j]=randn(&rstat);
+	    P(atm,j)=randn(&rstat);
 	}
 	fractal_do((dmat*)atm, dx, r0,L0,ninit);
-	vec->p[0]=P(pp,ofx+0,ofy+0);
-	vec->p[1]=P(pp,ofx+1,ofy+0);
-	vec->p[2]=P(pp,ofx+0,ofy+1);
-	vec->p[3]=P(pp,ofx+1,ofy+1);
+	P(vec,0)=P(pp,ofx+0,ofy+0);
+	P(vec,1)=P(pp,ofx+1,ofy+0);
+	P(vec,2)=P(pp,ofx+0,ofy+1);
+	P(vec,3)=P(pp,ofx+1,ofy+1);
 	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
@@ -201,7 +201,7 @@ static void test_stfun(){
 	zfarr *save=zfarr_init(nframe, 1, "fractal_atm.bin");
 	for(long i=0; i<nframe; i++){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
-		atm->p[j]=randn(&rstat);
+		P(atm,j)=randn(&rstat);
 	    }
 	    fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	    stfun_push(data, (dmat*)atm);
@@ -222,15 +222,15 @@ static void test_stfun(){
 	//cfft2plan(atm, -1);
 	dmat *atmr=dnew(atm->nx, atm->ny);
 	dmat *atmi=dnew(atm->nx, atm->ny);
-	spect->p[0]=0;
+	P(spect,0)=0;
 	for(long ii=0; ii<nframe; ii+=2){
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
+		P(atm,i)=COMPLEX(randn(&rstat), randn(&rstat))*P(spect,i);
 	    }
 	    cfft2(atm, -1);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atmr->p[i]=creal(atm->p[i]);
-		atmi->p[i]=cimag(atm->p[i]);
+		P(atmr,i)=creal(P(atm,i));
+		P(atmi,i)=cimag(P(atm,i));
 	    }
 	    stfun_push(data, atmr);
 	    stfun_push(data, atmi);
@@ -266,7 +266,7 @@ static void test_psd(){
 	for(long i=0; i<nframe; i++){
 	    info("%ld of %ld\n", i, nframe);
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
-		atm->p[j]=randn(&rstat);
+		P(atm,j)=randn(&rstat);
 	    }
 	    fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	    czero(hat);
@@ -299,12 +299,12 @@ static void test_psd(){
 	for(long ii=0; ii<nframe; ii+=2){
 	    info("%ld of %ld\n", ii, nframe);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
+		P(atm,i)=COMPLEX(randn(&rstat), randn(&rstat))*P(spect,i);
 	    }
 	    cfft2(atm, -1);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atmr->p[i]=creal(atm->p[i]);
-		atmi->p[i]=cimag(atm->p[i]);
+		P(atmr,i)=creal(P(atm,i));
+		P(atmi,i)=cimag(P(atm,i));
 	    }
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
@@ -349,7 +349,7 @@ static void test_cxx(){
 	for(long i=0; i<nframe; i++){
 	    dbg("%ld of %ld\n", i, nframe);
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
-		atm->p[j]=randn(&rstat);
+		P(atm,j)=randn(&rstat);
 	    }
 	    fractal_do((dmat*)atm, dx, r0, L0, ninit);
 	    dmat *sec=dsub((dmat*)atm, 0, nx, 0, ny);
@@ -366,7 +366,7 @@ static void test_cxx(){
     {
 	dmat *cxx=dnew(N*N,N*N);
 	dmat *spect=turbpsd(nx, ny, dx, r0, 100, 0, 0.5);
-	spect->p[0]=spect->p[1];
+	P(spect,0)=P(spect,1);
 	cmat *atm=cnew(nx, ny);
 	//cfft2plan(atm, -1);
 	dmat *atmr=dnew(nx*ny,1);
@@ -374,12 +374,12 @@ static void test_cxx(){
 	for(long ii=0; ii<nframe; ii+=2){
 	    dbg("%ld of %ld\n", ii, nframe);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
+		P(atm,i)=COMPLEX(randn(&rstat), randn(&rstat))*P(spect,i);
 	    }
 	    cfft2(atm, -1);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atmr->p[i]=creal(atm->p[i]);
-		atmi->p[i]=cimag(atm->p[i]);
+		P(atmr,i)=creal(P(atm,i));
+		P(atmi,i)=cimag(P(atm,i));
 	    }
 	    dmm(&cxx,1, atmr,atmr,"nt",1);
 	    dmm(&cxx,1, atmi,atmi,"nt",1);

@@ -63,7 +63,7 @@ void mvm_client_send_m(dmat* mvmd, int ngpu){
 	WRITE_CMD(cmd);
 	float* fmvm=mymalloc((mvmd->nx*mvmd->ny), float);
 	for(int i=0; i<mvmd->nx*mvmd->ny; i++){
-		fmvm[i]=(float)(mvmd->p[i]*GSCALE1*ASCALE);
+		fmvm[i]=(float)(P(mvmd,i)*GSCALE1*ASCALE);
 	}
 	WRITE_ARR(fmvm, mvmd->nx*mvmd->ny, float);
 	free(fmvm);
@@ -89,24 +89,24 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	int nwfs=grad->nx;
 	int ngtot=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(grad->p[iwfs]){
-			int n=grad->p[iwfs]->nx;
+		if(P(grad,iwfs)){
+			int n=P(grad,iwfs)->nx;
 			ngtot+=n;
 		}
 	}
 	GTYPE* gall=mymalloc(ngtot, GTYPE);
 	GTYPE* pgall=gall;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(!grad->p[iwfs]) continue;
-		int ng=grad->p[iwfs]->nx;
+		if(!P(grad,iwfs)) continue;
+		int ng=P(grad,iwfs)->nx;
 		for(int ig=0; ig<ng; ig++){
-			*(pgall++)=(GTYPE)(grad->p[iwfs]->p[ig]*GSCALE);
+			*(pgall++)=(GTYPE)(P(P(grad,iwfs),ig)*GSCALE);
 		}
 	}
 	int natot=0;
 	for(int idm=0; idm<dm->nx; idm++){
-		if(dm->p[idm]){
-			natot+=dm->p[idm]->nx;
+		if(P(dm,idm)){
+			natot+=P(dm,idm)->nx;
 		}
 	}
 	ATYPE* dmall=mymalloc(natot, ATYPE);
@@ -135,9 +135,9 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	real tim_aread=toc3;
 	//Copy DM command to the right place.
 	for(int idm=0; idm<dm->nx; idm++){
-		if(dm->p[idm]){
-			int nact=dm->p[idm]->nx;
-			real* restrict pdm=dm->p[idm]->p;
+		if(P(dm,idm)){
+			int nact=P(dm,idm)->nx;
+			real* restrict pdm=P(dm,idm)->p;
 			for(int i=0; i<nact; i++){
 				pdm[i]=(real)(*(pdmall++)*ASCALE1);
 			}

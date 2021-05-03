@@ -19,7 +19,7 @@
 /*
 int main(){
     dspcell *FLM=dspcellread("FLM.bin");
-    dsp *F=FLM->p[0];
+    dsp *F=P(FLM,0);
     spchol *Fchol=chol_factorize(F);
  
     rand_t rrand;

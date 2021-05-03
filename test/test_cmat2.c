@@ -24,7 +24,7 @@ static static void cmat_benchmark(){
     dmat *D=dnew(32,32);
     ccircle(B,36,36,16,1);
     for(int i=0; i<D->nx*D->ny; i++){
-	D->p[i]=rand()*0.5e-6*2*M_PI;
+	P(D,i)=rand()*0.5e-6*2*M_PI;
     }
     tic;
     for(int i=0; i<10000;i++){
@@ -78,16 +78,16 @@ static static void cmat_correctness(static void){
 
     cmat *A=cnew(64,64);
     dmat *D=dnew(64,64);
-    dmat *P=dnew(64,64);
-    for(int iy=0;iy<P->ny; iy++){
-	for(int ix=0; ix<P->nx; ix++){
-	    P->p[ix+iy*P->nx]=ix*0.25;
+    dmat *Q=dnew(64,64);
+    for(int iy=0;iy<Q->ny; iy++){
+	for(int ix=0; ix<Q->nx; ix++){
+	    P(Q,ix,iy)=ix*0.25;
 	}
     }
     //cfft2plan(A,-1);
     dcircle(D, 40,32, 10, 1);
     ddraw("test_cmat",D,"Pupil");
-    cembed_wvf(A,P->p,D->p,D->nx,D->ny,2,M_PI*0.25);
+    cembed_wvf(A,Q->p,D->p,D->nx,D->ny,2,M_PI*0.25);
     cdraw("test_cmat",A,"Pupil");
     cfft2(A,-1);
     cdraw("test_cmat",A,"PSF");
@@ -110,35 +110,35 @@ static static void test_sq2(){
     cfft2(C,-1);
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	D->p[i]=C->p[i]*conj(C->p[i]);
+	P(D,i)=P(C,i)*conj(P(C,i));
     }
     toc("*conj");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	D->p[i]=C->p[i]*conj(C->p[i]);/*0.26 */
+	P(D,i)=P(C,i)*conj(P(C,i));/*0.26 */
     }
     toc("*conj");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	const comp tmp=C->p[i];
-	D->p[i]=creal(tmp*conj(tmp));/*0.26 */
+	const comp tmp=P(C,i);
+	P(D,i)=creal(tmp*conj(tmp));/*0.26 */
     }
     toc("*conj2");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	const comp tmp=C->p[i];
-	D->p[i]=creal(tmp)*creal(tmp)+cimag(tmp)*cimag(tmp);/*0.23 */
+	const comp tmp=P(C,i);
+	P(D,i)=creal(tmp)*creal(tmp)+cimag(tmp)*cimag(tmp);/*0.23 */
     }
     toc("real*real+imag*imag");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	const comp tmp=C->p[i];
-	D->p[i]=pow(creal(tmp),2)+pow(cimag(tmp),2);/*0.23 */
+	const comp tmp=P(C,i);
+	P(D,i)=pow(creal(tmp),2)+pow(cimag(tmp),2);/*0.23 */
     }
     toc("pow real+pow imag");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	D->p[i]=cabs2(C->p[i]);
+	P(D,i)=cabs2(P(C,i));
     }
     toc("cabs2");
 }
@@ -152,12 +152,12 @@ static static void test_cwm(){
     ccp(&D,C);
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	D->p[i]*=conj(C->p[i]);
+	P(D,i)*=conj(P(C,i));
     }
     toc("*conj");
      tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	D->p[i]*=conj(C->p[i]);/*0.28 */
+	P(D,i)*=conj(P(C,i));/*0.28 */
     }
     toc("*conj");
 }

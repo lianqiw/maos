@@ -228,7 +228,6 @@ void cure_loc(dmat** phix, const dmat* grad, const loc_t* saloc){
 		return;
 	}
 	loc_create_map(saloc);
-	int nxm=saloc->map->nx;
 	int npad=saloc->npad;
 	int nx=saloc->map->nx-npad*2;
 	int ny=saloc->map->ny-npad*2;
@@ -237,7 +236,7 @@ void cure_loc(dmat** phix, const dmat* grad, const loc_t* saloc){
 	long nsa=grad->nx/2;
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
-			long ii=saloc->map->p[(ix+npad)+(iy+npad)*nxm];
+			long ii=P(saloc->map,(ix+npad),(iy+npad));
 			if(ii>0){
 				P(gx,ix,iy)=P(grad, ii-1, 0);
 				P(gy,ix,iy)=P(grad, ii-1+nsa, 0);
@@ -265,10 +264,9 @@ void cure_loc2(dmat** phix, const dmat* grad, const loc_t* saloc){
 	}
 	dmat* phi=*phix;
 	int npad=saloc->npad;
-	int nxm=saloc->map->nx;
 	for(int iy=0; iy<phi2d->ny-1; iy++){
 		for(int ix=0; ix<phi2d->nx-1; ix++){
-			long ii=saloc->map->p[(ix+npad)+(iy+npad)*nxm];
+			long ii=P(saloc->map,(ix+npad),(iy+npad));
 			if(ii>0){
 				P(phi, ii-1)=P(phi2d, ix, iy);
 			}

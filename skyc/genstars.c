@@ -87,8 +87,8 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 		for(long isky=0; isky<nsky; isky++){
 			long nstar=randp(rstat, navg);
 			if(nstar==0) continue;
-			res->p[isky]=dnew(nwvl+2, nstar);
-			dmat* pres=res->p[isky];
+			P(res,isky)=dnew(nwvl+2, nstar);
+			dmat* pres=P(res,isky);
 			for(long istar=0; istar<nstar; istar++){
 				long ind=round(ntot*randu(rstat));/*randomly draw a star index in the catlog */
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -126,7 +126,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 			//J19c=0 is ok. Do not skip.
 			if(J19c<nmax&&counti[J19c]<nsky0){
 				int isky=counti[J19c]+(J19c)*nsky0;
-				res->p[isky]=dref(tmp);
+				P(res,isky)=dref(tmp);
 				count++;
 				counti[J19c]++;
 			}
@@ -135,9 +135,9 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	}
 	/*Fill in the coordinate*/
 	for(long isky=0; isky<nsky; isky++){
-		if(!res->p[isky]) continue;
-		long nstar=res->p[isky]->ny;
-		dmat* pres=res->p[isky];
+		if(!P(res,isky)) continue;
+		long nstar=P(res,isky)->ny;
+		dmat* pres=P(res,isky);
 		for(long istar=0; istar<nstar; istar++){
 			/*randomly draw the star location. */
 			real r=sqrt(fov22*randu(rstat));
@@ -154,8 +154,8 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 */
 void sortstars(dcell* stars){
 	for(long isky=0; isky<stars->nx*stars->ny; isky++){
-		if(!stars->p[isky]) continue;
-		qsort(stars->p[isky]->p, stars->p[isky]->ny, stars->p[isky]->nx*sizeof(real),
+		if(!P(stars,isky)) continue;
+		qsort(P(stars,isky)->p, P(stars,isky)->ny, P(stars,isky)->nx*sizeof(real),
 			(int(*)(const void*, const void*))sortfun);
 	}
 }

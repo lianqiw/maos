@@ -23,14 +23,14 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-    void *calloc_maos(size_t, size_t);
-    void *malloc_maos(size_t);
-    void *realloc_maos(void *, size_t);
-    void  free_maos(void *);
-
+  void* calloc_maos(size_t, size_t);
+  void *malloc_maos(size_t);
+  void *realloc_maos(void *, size_t);
+  void  free_maos(void *);
 #ifdef __cplusplus
 }
 #endif
+//Do not convert alloca to function call. It is auto freed after function returns.
 #define myalloca(nelem, type) (type*)alloca(nelem*sizeof(type))
 #define mycalloc(nelem, type) (type*)calloc_maos(nelem,sizeof(type))
 #define mymalloc(nelem, type) (type*)malloc_maos(nelem*sizeof(type))

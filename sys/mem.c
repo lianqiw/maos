@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -23,7 +23,7 @@
 #include <execinfo.h>
 #endif
 #include <sys/stat.h>
-
+#include <errno.h>
 #include <dlfcn.h>
 int exit_fail=0;
 #define IN_MEM_C 1
@@ -49,10 +49,10 @@ int exit_fail=0;
   */
 
 
-void* (*calloc_default)(size_t, size_t);
-void* (*malloc_default)(size_t);
-void* (*realloc_default)(void*, size_t);
-void  (*free_default)(void*);
+void* (*calloc_default)(size_t, size_t)=NULL;
+void* (*malloc_default)(size_t)=NULL;
+void* (*realloc_default)(void*, size_t)=NULL;
+void  (*free_default)(void*)=NULL;
 
 /*void* (*calloc_custom)(size_t, size_t);
 void* (*malloc_custom)(size_t);
@@ -60,7 +60,7 @@ void* (*realloc_custom)(void*, size_t);
 void  (*free_custom)(void*);
 */
 static int MEM_VERBOSE=0;
-static int MEM_DEBUG=0;
+static int MEM_DEBUG=DEBUG;
 int LOG_LEVEL=0;
 PNEW(mutex_mem);
 static void* MROOT=NULL;
@@ -238,35 +238,30 @@ static void free_dbg(void* p){
 	free_default(p);
 }
 
-/**
-   Register a function or data to call or free upon exit
-*/
-void register_deinit(void (*fun)(void), void* data){
-	if(MEM_DEBUG){
-		T_DEINIT* node=(T_DEINIT*)calloc_default(1, sizeof(T_DEINIT));
-		node->fun=fun;
-		node->data=data;
-		LOCK(mutex_mem);
-		node->next=DEINIT;
-		DEINIT=node;
-		UNLOCK(mutex_mem);
-	}
-}
 #ifdef __cpluspluc
 unamespace std{
 #endif
-	void* malloc_maos(size_t size){
-		return MEM_DEBUG?malloc_dbg(size):malloc_default(size);
-	}
-	void* calloc_maos(size_t nmemb, size_t size){
-		return MEM_DEBUG?calloc_dbg(nmemb, size):calloc_default(nmemb, size);
-	}
-	void* realloc_maos(void* p, size_t size){
-		return MEM_DEBUG?realloc_dbg(p, size):realloc_default(p,size);
-	}
-	void free_maos(void* p){
-		if(MEM_DEBUG) free_dbg(p); else free_default(p);
-	}
+#define check_alloc(A) \
+void* _p=(A); 	\
+if(_p){			\
+	return _p;	\
+} else{			\
+	error("Memory allocation failed: %s\n", strerror(errno)); \
+	return NULL;\
+}
+
+void* malloc_maos(size_t size){
+	check_alloc(MEM_DEBUG?malloc_dbg(size):malloc_default(size));
+}
+void* calloc_maos(size_t nmemb, size_t size){
+	check_alloc(MEM_DEBUG?calloc_dbg(nmemb, size):calloc_default(nmemb, size));
+}
+void* realloc_maos(void* p, size_t size){
+	check_alloc(MEM_DEBUG?realloc_dbg(p, size):realloc_default(p, size));
+}
+void free_maos(void* p){
+	if(MEM_DEBUG) free_dbg(p); else free_default(p);
+}
 #ifdef __cpluspluc
 }
 #endif
@@ -296,16 +291,20 @@ void read_sys_env(){
 		free_custom=free_dbg;
 	}*/
 }
+static void init_mem(){
+	if(!calloc_default){
+		calloc_default=(void* (*)(size_t, size_t))dlsym(RTLD_DEFAULT, "calloc");
+		malloc_default=(void* (*)(size_t))dlsym(RTLD_DEFAULT, "malloc");
+		realloc_default=(void* (*)(void*, size_t))dlsym(RTLD_DEFAULT, "realloc");
+		free_default=(void(*)(void*))dlsym(RTLD_DEFAULT, "free");
+		read_sys_env();
+		void init_process(void);
+		init_process();
+		init_hosts();
+	}
+}
 static __attribute__((constructor)) void init(){
-#define RTLD_MINE RTLD_DEFAULT
-	calloc_default=(void* (*)(size_t, size_t))dlsym(RTLD_MINE, "calloc");
-	malloc_default=(void* (*)(size_t))dlsym(RTLD_MINE, "malloc");
-	realloc_default=(void* (*)(void*, size_t))dlsym(RTLD_MINE, "realloc");
-	free_default=(void(*)(void*))dlsym(RTLD_MINE, "free");
-	read_sys_env();
-	void init_process(void);
-	init_process();
-	init_hosts();
+	init_mem();
 }
 /**
    Register routines to be called with mem.c is unloading (deinit).
@@ -323,7 +322,7 @@ static __attribute__((destructor)) void deinit(){
 		//if(p1->fun) p1->fun();
 		//if(p1->data) myfree(p1->data);
 		free_default(p1);
-	}	
+	}
 	if(MEM_DEBUG){
 		if(!exit_fail){
 			if(!MEM_DEBUG) return;
@@ -331,5 +330,21 @@ static __attribute__((destructor)) void deinit(){
 		} else{
 			dbg("exit_fail=%d\n", exit_fail);
 		}
+	}
+}
+
+/**
+   Register a function or data to call or free upon exit
+*/
+void register_deinit(void (*fun)(void), void* data){
+	if(MEM_DEBUG){
+		init_mem();
+		T_DEINIT* node=(T_DEINIT*)calloc_default(1, sizeof(T_DEINIT));
+		node->fun=fun;
+		node->data=data;
+		LOCK(mutex_mem);
+		node->next=DEINIT;
+		DEINIT=node;
+		UNLOCK(mutex_mem);
 	}
 }

@@ -106,7 +106,7 @@ static void skysim_isky(SIM_S* simu){
 	while(LOCKADD(isky, simu->isky, 1)<simu->isky_end){
 		real tk_1=myclockd();
 		/*Setup star parameters. */
-		STAR_S* star=setup_star(&nstar, simu, stars->p[isky], seed_maos);
+		STAR_S* star=setup_star(&nstar, simu, P(stars,isky), seed_maos);
 		if(!star||nstar==0){
 			info("Field %d, No stars available\n", isky);
 			continue;
@@ -205,7 +205,7 @@ static void skysim_isky(SIM_S* simu){
 #endif
 				{
 
-					asteri->phyRes->p[idtrat]=skysim_sim(&asteri->phyMRes->p[idtrat],
+					P(asteri->phyRes,idtrat)=skysim_sim(PP(asteri->phyMRes,idtrat),
 						simu->mideal, simu->mideal_oa, simu->varol,
 						asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart);
 				}
@@ -216,17 +216,17 @@ static void skysim_isky(SIM_S* simu){
 					/*focus and windshake residual; */
 					real resadd=0;
 					if(!parms->skyc.addws){
-						resadd+=asteri->res_ws->p[idtrat];
+						resadd+=P(asteri->res_ws,idtrat);
 					}
 					dmat* ires;
-					if((ires=asteri->phyRes->p[idtrat])){
+					if((ires=P(asteri->phyRes,idtrat))){
 						if(parms->skyc.verbose){
 							info("%5.1f Hz %7.2f +%7.2f =%7.2f", parms->skyc.fss[idtrat],
-								sqrt(ires->p[0])*1e9, sqrt(resadd)*1e9,
-								sqrt(ires->p[0]+resadd)*1e9);
+								sqrt(P(ires,0))*1e9, sqrt(resadd)*1e9,
+								sqrt(P(ires,0)+resadd)*1e9);
 						}
 						/*Add windshake contribution. */
-						real thisVar=ires->p[0]+resadd;
+						real thisVar=P(ires,0)+resadd;
 						if(thisVar<asterMinPhy){
 							asterMinPhy=thisVar;
 							asterMinRat=idtrat;
@@ -246,16 +246,16 @@ static void skysim_isky(SIM_S* simu){
 					selaster=iaster;
 					seldtrat=asterMinRat;
 					skymini=asterMinPhy;
-					dmat* pmini=asteri->phyRes->p[asterMinRat];
+					dmat* pmini=P(asteri->phyRes,asterMinRat);
 					/*Field Averaged Performance. */
-					P(pres, 1, isky)=pmini->p[0];/*ATM NGS Mode error */
-					P(pres, 2, isky)=pmini->p[1];/*ATM Tip/tilt Error. */
-					P(pres, 3, isky)=parms->skyc.addws?0:asteri->res_ws->p[asterMinRat];/*Residual wind shake TT*/
+					P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error */
+					P(pres, 2, isky)=P(pmini,1);/*ATM Tip/tilt Error. */
+					P(pres, 3, isky)=parms->skyc.addws?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
 					P(pres, 4, isky)=0;/*always zero*/
 					P(pres, 0, isky)=P(pres, 1, isky)+P(pres, 3, isky)+P(pres, 4, isky);/*Total */
 					/*On axis performance. */
-					P(pres_oa, 1, isky)=pmini->p[2];
-					P(pres_oa, 2, isky)=pmini->p[3];
+					P(pres_oa, 1, isky)=P(pmini,2);
+					P(pres_oa, 2, isky)=P(pmini,3);
 					P(pres_oa, 3, isky)=P(pres, 3, isky);
 					P(pres_oa, 4, isky)=P(pres, 4, isky);
 					P(pres_oa, 0, isky)=P(pres_oa, 1, isky)+P(pres_oa, 3, isky)+P(pres_oa, 4, isky);
@@ -265,7 +265,7 @@ static void skysim_isky(SIM_S* simu){
 							parms->skyc.fss[seldtrat],
 							sqrt(P(pres, 0, isky))*1e9, sqrt(P(pres, 1, isky))*1e9, sqrt(P(pres, 2, isky))*1e9);
 					}
-					dcp(&simu->mres->p[isky], asteri->phyMRes->p[asterMinRat]);
+					dcp(PP(simu->mres,isky), P(asteri->phyMRes,asterMinRat));
 				}
 skip1:;
 			}/*iaster */
@@ -279,20 +279,20 @@ skip1:;
 			P(pres, 0, isky)=skymini;
 			P(pres_oa, 0, isky)=skymini;
 		}//If(skyc.estimate)
-		simu->sel->p[isky]->ny=aster[selaster].nwfs;
+		P(simu->sel,isky)->ny=aster[selaster].nwfs;
 
-		dmat* psel=simu->sel->p[isky];
+		dmat* psel=P(simu->sel,isky);
 		for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 			P(psel, 0, iwfs)=aster[selaster].wfs[iwfs].thetax;
 			P(psel, 1, iwfs)=aster[selaster].wfs[iwfs].thetay;
 			for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-				P(psel, iwvl+2, iwfs)=aster[selaster].wfs[iwfs].mags->p[iwvl];
+				P(psel, iwvl+2, iwfs)=P(aster[selaster].wfs[iwfs].mags,iwvl);
 			}
 		}
 		if(seldtrat!=-1){
-			simu->fss->p[isky]=parms->skyc.fss[seldtrat];
+			P(simu->fss,isky)=parms->skyc.fss[seldtrat];
 			if(parms->skyc.servo>0&&!parms->skyc.multirate){
-				dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
+				dcp(PP(simu->gain,isky), P(aster[selaster].gain,seldtrat));
 			}
 		}
 		if(parms->skyc.save){
@@ -321,7 +321,7 @@ skip1:;
 		long rest_m=simu->status->rest/60-rest_h*60;
 		info("Field%4d,%2d stars %3d/%-3d(%1d),%3.0f Hz:%7.2f nm "
 			"Sel%3.0fs Load%3.0fs Phy%3.0fs Tot%2ld:%02ld Used%2ld:%02ld Left%2ld:%02ld\n",
-			isky, nstar, selaster, naster, nsel, simu->fss->p[isky], sqrt(skymini)*1e9,
+			isky, nstar, selaster, naster, nsel, P(simu->fss,isky), sqrt(skymini)*1e9,
 			tk_2-tk_1, tk_3-tk_2, tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
 	}/*while isky*/
 }
@@ -343,7 +343,7 @@ static void skysim_read_mideal(SIM_S* simu){
 		}
 	}
 	dcell* midealp=dcellread("%s_%d.bin", parms->maos.fnmidealp, simu->seed_maos);
-	simu->mideal_oa=dref(midealp->p[parms->maos.evlindoa]);
+	simu->mideal_oa=dref(P(midealp,parms->maos.evlindoa));
 	dcellfree(midealp);
 	if(0){
 		real scale=0;
@@ -365,8 +365,8 @@ static void skysim_update_mideal(SIM_S* simu){
 		dmat* pm1=simu->mideal;
 		dmat* pm2=simu->mideal_oa;
 		for(long i=0; i<simu->mideal->ny; i++){
-			P(pm1, 0, i)+=telws->p[i];
-			P(pm2, 0, i)+=telws->p[i];
+			P(pm1, 0, i)+=P(telws,i);
+			P(pm2, 0, i)+=P(telws,i);
 		}
 		dfree(telws);
 	}
@@ -394,7 +394,7 @@ static void skysim_calc_psd(SIM_S* simu){
 			dmat* xi=dsub(x, 20, 0, im, 1);
 			dscale(xi, sqrt(P(MCC, im, im)));/*convert to unit of m.*/
 			dmat* psdi=psd1dt(xi, 1, parms->maos.dt);
-			add_psd2(&simu->psds->p[im*iratio], psdi, 1);
+			add_psd2(PP(simu->psds,im*iratio), psdi, 1);
 			var_all+=psd_inte2(psdi);
 			dfree(xi);
 			dfree(psdi);
@@ -439,7 +439,7 @@ static void skysim_calc_psd(SIM_S* simu){
 		simu->varol+=var_ws;//testing
 
 		//add windshake PSD to ngs/tt
-		add_psd2(&simu->psds->p[0], parms->skyc.psd_ws, 1);
+		add_psd2(PP(simu->psds,0), parms->skyc.psd_ws, 1);
 	}
 	if(parms->skyc.dbg||1){
 		writebin(simu->psds, "psds_m2.bin");
@@ -455,10 +455,10 @@ static void skysim_prep_gain(SIM_S* simu){
 	int servotype=parms->skyc.servo;
 	TIC;tic;
 	for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		long dtrat=parms->skyc.dtrats->p[idtrat];
-		simu->gain_pre->p[idtrat]=(dccell*)cellnew(simu->psds->nx, 1);
+		long dtrat=P(parms->skyc.dtrats,idtrat);
+		P(simu->gain_pre,idtrat)=(dccell*)cellnew(simu->psds->nx, 1);
 		for(int ip=0; ip<simu->psds->nx; ip++){
-			simu->gain_pre->p[idtrat]->p[ip]=servo_optim(simu->psds->p[ip], parms->maos.dt,
+			P(P(simu->gain_pre,idtrat),ip)=servo_optim(P(simu->psds,ip), parms->maos.dt,
 				dtrat, 0, parms->skyc.pmargin, sigma2, servotype);
 		}
 	}
@@ -484,17 +484,17 @@ static void skysim_prep_sde(SIM_S* simu){
 	dmat* pcoeff=simu->sdecoeff;
 	for(int im=0; im<x->ny; im++){
 		dmat* xi=dsub(x, 20, 0, im, 1);
-		simu->psdi->p[im]=psd1dt(xi, 1, parms->maos.dt);
+		P(simu->psdi,im)=psd1dt(xi, 1, parms->maos.dt);
 		dfree(xi);
 		if(im==0&&parms->skyc.psd_ws){
 			//add windshake on first mode only
 			//2018-09-05: need to scale psd_ws by 1/sqrt(mcc) to convert to radian.
-			add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws, 1./sqrt(P(parms->maos.mcc, 0, 0)));
+			add_psd2(PP(simu->psdi,im), parms->skyc.psd_ws, 1./sqrt(P(parms->maos.mcc, 0, 0)));
 		}
-		dmat* coeff=sde_fit(simu->psdi->p[im], NULL, parms->skyc.sdetmax, 0);
+		dmat* coeff=sde_fit(P(simu->psdi,im), NULL, parms->skyc.sdetmax, 0);
 		if(P(coeff, 0, 0)>100&&parms->skyc.sdetmax){
 			dfree(coeff);
-			coeff=sde_fit(simu->psdi->p[im], NULL, 0, 0);
+			coeff=sde_fit(P(simu->psdi,im), NULL, 0, 0);
 			if(P(coeff, 0, 0)>100){
 				warning("sde_fit returns unsuitable values\n");
 			}
@@ -565,7 +565,7 @@ void skysim(const PARMS_S* parms){
 				simu->stars=dcellread("%s", parms->skyc.stars);
 			} else{
 				simu->stars=dcellnew(1, 1);
-				simu->stars->p[0]=readstr_dmat(parms->skyc.stars);
+				P(simu->stars,0)=readstr_dmat(parms->skyc.stars);
 			}
 		} else{
 			simu->stars=genstars(parms->skyc.nsky,

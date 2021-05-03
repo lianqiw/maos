@@ -145,7 +145,7 @@ void cellresize(void* A_, long nx, long ny){
 		int nnew=nx*ny;
 		if(nnew<nold&&iscell(A)){
 			for(int i=nnew; i<nold; i++){
-				cellfree_do(A->p[i]);
+				cellfree_do(P(A,i));
 			}
 		}
 		A->p=myrealloc(A->p, nnew, cell*);
@@ -158,13 +158,13 @@ void cellresize(void* A_, long nx, long ny){
 		long miny=A->ny<ny?A->ny:ny;
 		for(long iy=0; iy<miny; iy++){
 			for(long ix=0; ix<minx; ix++){
-				p[ix+iy*nx]=A->p[ix+iy*A->nx];
-				A->p[ix+iy*A->nx]=0;
+				p[ix+iy*nx]=P(A,ix,iy);
+				P(A,ix,iy)=0;
 			}
 		}
 		if(iscell(A)){
 			for(long i=0; i<A->nx*A->ny; i++){
-				cellfree_do(A->p[i]);
+				cellfree_do(P(A,i));
 			}
 		}
 		free(A->p);
@@ -186,7 +186,7 @@ void cellfree_do(void* A){
 		cell* dc=(cell*)A;
 		if(dc->p){
 			for(int ix=0; ix<dc->nx*dc->ny; ix++){
-				cellfree_do(dc->p[ix]);
+				cellfree_do(P(dc,ix));
 			}
 			free(dc->p);dc->p=0;
 		}
@@ -255,8 +255,8 @@ void writedata_by_id(file_t* fp, const void* A_, uint32_t id){
 		id=0;/*determine id first for non-empty cell*/
 		if(nx&&ny){
 			for(uint64_t ix=0; ix<(nx*ny); ix++){
-				if(A->p[ix]){
-					id=A->p[ix]->id;
+				if(P(A,ix)){
+					id=P(A,ix)->id;
 					if(!id){
 						warning("id is not set\n");
 					}else{
@@ -272,7 +272,7 @@ void writedata_by_id(file_t* fp, const void* A_, uint32_t id){
 		write_header(&header, fp);
 		if(id){
 			for(long ix=0; ix<(A->nx*A->ny); ix++){
-				writedata_by_id(fp, A->p[ix], 0);
+				writedata_by_id(fp, P(A,ix), 0);
 			}
 		}
 	}
@@ -392,7 +392,7 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 			if(!headerc.str&&dcout->header){//copy str from cell to mat.
 				headerc.str=strdup(dcout->header);
 			}
-			dcout->p[i]=readdata_by_id(fp, id, level-1, &headerc);
+			P(dcout,i)=readdata_by_id(fp, id, level-1, &headerc);
 		}
 		out=dcout;
 	}else if(level>-2){//scan file only when auto.
@@ -422,15 +422,15 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 	free(header->str);header->str=0;
 	if(level==0){//take first none-cell element.
 		while(out && iscell(out)){
-			cell* out2=((cell*)out)->p[0];
-			((cell*)out)->p[0]=0;
+			cell* out2=P((cell*)out,0);
+			P((cell*)out,0)=0;
 			cellfree(out);
 			out=out2;
 		}
 	} else if(level<0&&!iscell(&header->magic)&&out&&iscell(out)&&((cell*)out)->nx==1&&((cell*)out)->ny==1){
 		//automatic mode with only one element
-		cell* out2=((cell*)out)->p[0];
-		((cell*)out)->p[0]=0;
+		cell* out2=P((cell*)out, 0);
+		P((cell*)out, 0)=0;
 		cellfree(out);
 		out=out2;
 	}

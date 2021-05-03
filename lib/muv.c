@@ -102,17 +102,17 @@ void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
 		*xout=dcellnew(A->M->nx, xin->ny);
 	}
 	if(P(A->M, xb, yb)->id==M_REAL){
-		dmm(&(*xout)->p[xb], 1, dmat_cast(P(A->M, xb, yb)), xin->p[yb], "nn", alpha);
+		dmm(PP(*xout,xb), 1, dmat_cast(P(A->M, xb, yb)), P(xin,yb), "nn", alpha);
 	} else{
-		dspmm(&(*xout)->p[xb], dsp_cast(P(A->M, xb, yb)), xin->p[yb], "nn", alpha);
+		dspmm(PP(*xout,xb), dsp_cast(P(A->M, xb, yb)), P(xin,yb), "nn", alpha);
 	}
 	if(A->V&&A->U){
 		dcell* AV=A->V;
 		dcell* AU=A->U;
 		for(int jb=0; jb<A->U->ny; jb++){
 			dmat* tmp=NULL;
-			dmm(&tmp, 0, P(AV, yb, jb), xin->p[yb], "tn", -1);
-			dmm(&(*xout)->p[xb], 1, P(AU, xb, jb), tmp, "nn", alpha);
+			dmm(&tmp, 0, P(AV, yb, jb), P(xin,yb), "tn", -1);
+			dmm(PP(*xout,xb), 1, P(AU, xb, jb), tmp, "nn", alpha);
 			dfree(tmp);
 		}
 	}
@@ -142,7 +142,7 @@ static void muv_direct_prep_lowrank(dmat** Up, dmat** Vp, spchol* C, dmat* MI, d
 	/*UpV=(I-Up'*V)^{-1} */
 	dmm(&UpV, 0, *Up, V, "tn", -1);
 	for(long ii=0; ii<UpV->ny; ii++){
-		UpV->p[ii+ii*UpV->nx]+=1;
+		P(UpV, ii, ii)+=1;
 	}
 	dinv_inplace(UpV);
 	dmat* VI=NULL;
@@ -236,18 +236,18 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 	}
 	for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
 		if(use_svd){
-			if(A->M->p[ib+ib*nb]->id==M_REAL){
-				dcp(&A->MIB->p[ib], dmat_cast(A->M->p[ib+ib*nb]));
+			if(P(A->M,ib,ib)->id==M_REAL){
+				dcp(PP(A->MIB,ib), dmat_cast(P(A->M,ib,ib)));
 			} else{
-				dspfull(&A->MIB->p[ib], dsp_cast(A->M->p[ib+ib*nb]), 'n', 1);
+				dspfull(PP(A->MIB,ib), dsp_cast(P(A->M,ib,ib)), 'n', 1);
 			}
 			if(svd<1){
-				dsvd_pow(A->MIB->p[ib], -1, svd);
+				dsvd_pow(P(A->MIB,ib), -1, svd);
 			} else{
-				dsvd_pow(A->MIB->p[ib], -1, 2e-4);
+				dsvd_pow(P(A->MIB,ib), -1, 2e-4);
 			}
 		} else{
-			A->CB[ib]=chol_factorize(dsp_cast(A->M->p[ib+ib*nb]));
+			A->CB[ib]=chol_factorize(dsp_cast(P(A->M,ib,ib)));
 		}
 	}
 	if(A->U&&A->V){/*deal with low rank terms */
@@ -260,12 +260,12 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 		A->UpB=dcellnew(A->U->nx, A->U->ny);
 		A->VpB=dcellnew(A->V->nx, A->V->ny);
 		for(int ib=0; ib<nb; ib++){
-			muv_direct_prep_lowrank(&A->UpB->p[ib],
-				&A->VpB->p[ib],
+			muv_direct_prep_lowrank(PP(A->UpB,ib),
+				PP(A->VpB,ib),
 				A->CB?A->CB[ib]:NULL,
-				A->MIB?A->MIB->p[ib]:NULL,
-				A->U->p[ib],
-				A->V->p[ib]);
+				A->MIB?P(A->MIB,ib):NULL,
+				P(A->U,ib),
+				P(A->V,ib));
 		}
 	}
 	toc("done.");
@@ -331,22 +331,22 @@ void muv_direct_diag_solve(dmat** xout, const muv_t* A, dmat* xin, int ib){
 	if(!xin) return;
 	dmat* dotpt=NULL;
 	if(A->UpB&&A->VpB){
-		dmm(&dotpt, 0, A->VpB->p[ib], xin, "tn", -1);
+		dmm(&dotpt, 0, P(A->VpB,ib), xin, "tn", -1);
 	}
 	if(A->MIB){
 		if(*xout==xin){
 			dmat* tmp=NULL;
-			dmm(&tmp, 0, A->MIB->p[ib], xin, "nn", 1);
+			dmm(&tmp, 0, P(A->MIB,ib), xin, "nn", 1);
 			dcp(xout, tmp);
 			dfree(tmp);
 		} else{
-			dmm(xout, 0, A->MIB->p[ib], xin, "nn", 1);
+			dmm(xout, 0, P(A->MIB,ib), xin, "nn", 1);
 		}
 	} else{
 		chol_solve(xout, A->CB[ib], xin);
 	}
 	if(dotpt){
-		dmm(xout, 1, A->UpB->p[ib], dotpt, "nn", 1);
+		dmm(xout, 1, P(A->UpB,ib), dotpt, "nn", 1);
 		dfree(dotpt);
 	}
 }
@@ -356,7 +356,7 @@ void muv_direct_solve(dcell** xout, const muv_t* A, dcell* xin){
 	if(!xin) return;
 	if(xin->nx*xin->ny==1){/*there is only one cell. */
 		if(!*xout) *xout=dcellnew(1, 1);
-		muv_direct_solve_mat(&((*xout)->p[0]), A, xin->p[0]);
+		muv_direct_solve_mat(PP(*xout,0), A, P(xin,0));
 	} else{
 		dmat* xin2=dcell2m(xin);
 		muv_direct_solve_mat(&xin2, A, xin2);/*in place solve. */
@@ -389,7 +389,7 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
 	}
 	for(int iter=0; iter<A->bgs; iter++){
 		for(int ib=0; ib<nb; ib++){
-			dcp(&c0->p[ib], b->p[ib]);
+			dcp(PP(c0,ib), P(b,ib));
 			for(int jb=0; jb<nb; jb++){
 				if(jb==ib) continue;
 				B.xb=ib;
@@ -399,16 +399,16 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
 			switch(A->alg){
 			case 0:
 			case 2:
-				muv_direct_diag_solve(&x0->p[ib], A, c0->p[ib], ib);
+				muv_direct_diag_solve(PP(x0,ib), A, P(c0,ib), ib);
 				break;
 			case 1:/*Have to call CG, for this block. Embed this block into an empty block matrix. */
-				x0b->p[ib]=x0->p[ib];
-				c0b->p[ib]=c0->p[ib];
+				P(x0b,ib)=P(x0,ib);
+				P(c0b,ib)=P(c0,ib);
 				B.xb=ib;
 				B.yb=ib;
 				pcg(&x0b, muv_ib, &B, NULL, NULL, c0b, A->warm, A->maxit);
-				x0b->p[ib]=0;
-				c0b->p[ib]=0;
+				P(x0b,ib)=0;
+				P(c0b,ib)=0;
 				break;
 			default:
 				error("Invalid alg=%d\n", A->alg);

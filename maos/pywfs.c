@@ -48,7 +48,7 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 				real angle=atan2(iy-0.5, ix-0.5);
 				//squeeze the detector pixel coordinate radially to simulate pupil elongation
 				real frac=1.-pupelong;
-				saloc=pywfs->msaloc->p[ind]=locdup(saloc0);
+				saloc=P(pywfs->msaloc,ind)=locdup(saloc0);
 				locstretch(saloc, angle, frac);
 			}
 		} else{
@@ -85,7 +85,7 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 		}
 		P(pywfs->sioff, ind, 0)=offx;
 		P(pywfs->sioff, ind, 1)=offy;
-		pywfs->si->p[ind]=mkh(loc_fft, saloc,
+		P(pywfs->si,ind)=mkh(loc_fft, saloc,
 			(offx*ncomp2)*dx2+shx,
 			(offy*ncomp2)*dx2+shy,
 			1.);
@@ -107,13 +107,13 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	if(pywfs->poke>1e-5||pywfs->poke<1e-10){
 		warning("poke=%g m is out of range\n", pywfs->poke);
 	}
-	pywfs->iwfs0=parms->powfs[ipowfs].wfs->p[0];
+	pywfs->iwfs0=P(parms->powfs[ipowfs].wfs,0);
 	real dx=parms->powfs[ipowfs].dx;
 	create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
 	powfs[ipowfs].loc=map2loc(map, 0);
 	mapfree(map);
 	powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground,
-		parms->misreg.pupil->p[0], parms->misreg.pupil->p[1],
+		P(parms->misreg.pupil,0), P(parms->misreg.pupil,1),
 		parms->aper.d, parms->aper.din);
 	loc_reduce(powfs[ipowfs].loc, powfs[ipowfs].amp, EPS, 0, NULL);
 	//For convenience.
@@ -127,11 +127,11 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	}
 	powfs[ipowfs].realamp=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 		if(parms->misreg.tel2wfs&&parms->misreg.tel2wfs[iwfs]){
-			powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp_tel->p[jwfs]);
+			P(powfs[ipowfs].realamp,jwfs)=dref(P(powfs[ipowfs].amp_tel,jwfs));
 		} else{
-			powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp);
+			P(powfs[ipowfs].realamp,jwfs)=dref(powfs[ipowfs].amp);
 		}
 	}
 
@@ -142,7 +142,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	pywfs->modulate=parms->powfs[ipowfs].modulate;
 	pywfs->modulpos=pywfs->modulate>0?(parms->powfs[ipowfs].modulpos/pyside*pyside):1;
 	pywfs->modulring=pywfs->modulate>0?MAX(1, parms->powfs[ipowfs].modulring):1;
-	long nembed=pywfs->locfft->nembed->p[0];
+	long nembed=P(pywfs->locfft->nembed,0);
 	real wvlmin, wvlmax;
 	dmaxmin(parms->powfs[ipowfs].wvl->p, nwvl, &wvlmax, &wvlmin);
 	real dtheta_min=wvlmin/(dx*nembed);
@@ -162,11 +162,11 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	pywfs->pyramid=ccellnew(nwvl, 1);
 	dmat* pyramid=dnew(ncomp, ncomp);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		pywfs->pyramid->p[iwvl]=cnew(ncomp, ncomp);
-		cmat* pp=pywfs->pyramid->p[iwvl]/*PCMAT*/;
+		P(pywfs->pyramid,iwvl)=cnew(ncomp, ncomp);
+		cmat* pp=P(pywfs->pyramid,iwvl)/*PCMAT*/;
 		comp coeff=COMPLEX(0, M_PI*0.5);
 		long skip=0;
-		real dtheta=parms->powfs[ipowfs].wvl->p[iwvl]/(dx*nembed);//PSF sampling
+		real dtheta=P(parms->powfs[ipowfs].wvl,iwvl)/(dx*nembed);//PSF sampling
 		int nstop=ncomp;
 		if(parms->powfs[ipowfs].fieldstop){//Limit fov per wvl
 			nstop=ceil(parms->powfs[ipowfs].fieldstop/dtheta*0.5)*2;
@@ -301,9 +301,6 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	{
 	//Determine subapertures area
 		dmat* opd=dnew(pywfs->locfft->loc->nloc, 1);
-		/*{
-			opd->p[opd->nx/2+250]=1;
-			}*/
 		dmat* ints=0;
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 		if(parms->save.setup){
@@ -313,7 +310,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		pywfs->saa=dnew(nints, 1);
 		for(int i=0; i<ints->nx; i++){
 			for(int j=0; j<ints->ny; j++){
-				pywfs->saa->p[i]+=P(ints, i, j);
+				P(pywfs->saa,i)+=P(ints, i, j);
 			}
 		}
 		cellfree(ints);
@@ -372,8 +369,8 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		dmat* TT=pywfs_tt(pywfs);
 		real gxm=0, gym=0;
 		for(int isa=0; isa<nsa; isa++){
-			gxm+=TT->p[isa];
-			gym+=TT->p[isa+nsa*3];
+			gxm+=P(TT, isa, 0);
+			gym+=P(TT, isa+nsa, 1);
 		}
 		//info2("gxm=%g, gym=%g.\n", gxm/nsa, gym/nsa);
 		real gainscl=2.*nsa/(gxm+gym);
@@ -389,11 +386,11 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	//Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
 	{
 		powfs[ipowfs].sanea=dcellnew(1, 1);
-		dmat* sanea=powfs[ipowfs].sanea->p[0]=dnew(nsa, 3);
+		dmat* sanea=P(powfs[ipowfs].sanea,0)=dnew(nsa, 3);
 		real rne=parms->powfs[ipowfs].rne;
 		for(int isa=0; isa<nsa; isa++){
 			real ogi=pywfs->gain*parms->powfs[ipowfs].gradscale;
-			real sig=pywfs->saa->p[isa]*parms->powfs[ipowfs].siglev;//siglev of subaperture
+			real sig=P(pywfs->saa,isa)*parms->powfs[ipowfs].siglev;//siglev of subaperture
 			P(sanea, isa, 0)=P(sanea, isa, 1)=pow(ogi/sig, 2)*(sig+4*rne*rne);
 		}
 	}
@@ -458,8 +455,8 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 				addnoise(ints2, &rstat, 0, 0, 0, 0, 0, in, 1);
 				pywfs_grad(&grad, powfs[ipowfs].pywfs, ints2);
 				dmm(&tmp, 0, reg, grad, "nn", 1);
-				P(res, j, in)=tmp->p[0];
-				info2("%d of %d, %d of %d: %g\n", j, nj, in, nn, tmp->p[0]);
+				P(res, j, in)=P(tmp,0);
+				info2("%d of %d, %d of %d: %g\n", j, nj, in, nn, P(tmp,0));
 			}
 		}
 		writebin(opds, "dither_opd");
@@ -561,7 +558,7 @@ void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
 	locfft_psf(&psfs, locfft, opd, NULL, 1);//psfs.^2 sum to 1. peak in center
 	int nwvl=locfft->wvl->nx;
 	real dx=locfft->loc->dx;
-	long nembed=locfft->nembed->p[0];
+	long nembed=P(locfft->nembed,0);
 	long nembed2=nembed/2;
 	dmat* wvlwts=pywfs->wvlwts;
 	//position of pyramid for modulation
@@ -587,7 +584,7 @@ void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
 			real posx=cos(theta)*pos_ri;
 			real posy=sin(theta)*pos_ri;
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
-				real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
+				real dtheta=P(locfft->wvl,iwvl)/(dx*nembed);
 				long offy=(long)round(posy/dtheta);
 				long offy2=nembed2+offy-ncomp2;
 				long iy0=MAX(-offy2, 0);
@@ -599,16 +596,16 @@ void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
 				long nx2=MIN(ncomp, nembed-offx2)-ix0;
 
 				czero(otf);
-				comp* pyramid=pywfs->pyramid->p[iwvl]->p;
+				comp* pyramid=P(pywfs->pyramid,iwvl)->p;
 				for(long iy=iy0; iy<ny2; iy++){
 					for(long ix=ix0; ix<nx2; ix++){
 						long indin=ix+offx2+(iy+offy2)*nembed;
 						long indout=ix+iy*ncomp;
-						otf->p[indout]=psfs->p[iwvl]->p[indin]*pyramid[indout];
+						P(otf,indout)=P(P(psfs,iwvl),indin)*pyramid[indout];
 					}
 				}
 				cfft2(otf, 1);
-				cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr));
+				cabs22d(&pupraw, 1., otf, P(wvlwts,iwvl)/(ncomp*ncomp*pos_ni*pos_nr));
 			}//for iwvl
 		}//for ipos
 	}//for ir
@@ -623,13 +620,13 @@ void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
 	//writebin(otf, "cpu_wvf5");
 	ccwm(otf, pywfs->nominal);
 	cfft2(otf, 1);
-	const int nsa=pywfs->si->p[0]->nx;
+	const int nsa=P(pywfs->si,0)->nx;
 	if(!(*ints)){
 		(*ints)=dnew(nsa, pywfs->si->nx);
 	}
 	for(int i=0; i<pywfs->si->nx; i++){
 	//normalized so that each "subaperture" sum to 1.
-		dspmulcreal((*ints)->p+nsa*i, pywfs->si->p[i], otf->p, (real)nsa/(ncomp*ncomp));
+		dspmulcreal((*ints)->p+nsa*i, P(pywfs->si,i), otf->p, (real)nsa/(ncomp*ncomp));
 	}
 	//writebin(*ints, "cpu_ints"); exit(0);
 	ccellfree(psfs);
@@ -657,7 +654,7 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 		switch(pywfs->sigmatch){
 		case 0:
 			info_once("PWFS: No siglev correction.\n");
-			isum=pywfs->siglev*pywfs->saa->p[isa];
+			isum=pywfs->siglev*P(pywfs->saa,isa);
 			break;
 		case 1:
 			info_once("PWFS: Individual siglev correction.\n");
@@ -667,7 +664,7 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 			break;
 		case 2:
 			info_once("PWFS: Global siglev correction.\n");//preferred.
-			isum=imean*pywfs->saa->p[isa];
+			isum=imean*P(pywfs->saa,isa);
 			break;
 		}
 		real alpha2=gain/isum;
@@ -697,7 +694,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 	const loc_t* loc=pywfs->locfft->loc;
 	dmat* opd=dnew(loc->nloc, 1);
 	dmat* ints=0;
-	long nsa=pywfs->si->p[0]->nx;
+	long nsa=P(pywfs->si,0)->nx;
 	dmat* out=dnew(nsa*2, 2);
 	dmat* gradx=drefcols(out, 0, 1);
 	dmat* grady=drefcols(out, 1, 1);
@@ -769,7 +766,7 @@ static uint32_t pywfs_hash(const pywfs_t* pywfs, uint32_t key){
 	key=dhash(pywfs->amp, key);
 	key=dhash(pywfs->saa, key);
 	key=dhash(pywfs->wvlwts, key);
-	key=chash(pywfs->pyramid->p[0], key);
+	key=chash(P(pywfs->pyramid,0), key);
 	if(pywfs->pupilshift){
 		key=dhash(pywfs->pupilshift, key);
 	}
@@ -788,7 +785,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 		return gpu_pywfs_mkg(pywfs, locin, locfft, mod, displacex, displacey);
 	}
 #endif
-	const int nsa=pywfs->si->p[0]->nx;
+	const int nsa=P(pywfs->si,0)->nx;
 	dmat* grad0=dnew(nsa*2, 1);
 	dmat* opd0;
 	if(pywfs->opdadd){
@@ -831,7 +828,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 			dadd(&opdin, 0, tmp, poke);
 			dfree(tmp);
 		} else{
-			opdin->p[imod]=poke;
+			P(opdin,imod)=poke;
 		}
 		prop_nongrid((loc_t*)locin, opdin->p, locfft, opdfft->p, 1, displacex, displacey, scale, 0, 0);
 		//writebin(opdfft, "phiout_cpu_%d", imod);
@@ -881,7 +878,7 @@ dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, cons
 	char fnlock[PATH_MAX];
 	mymkdir("%s/G/", CACHE);
 	snprintf(fn, sizeof(fn), "%s/G/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_v2.bin", CACHE,
-		key, pywfs->locfft->nembed->p[0], locin->nloc, pywfs->modulate, pywfs->modulpos,
+		key, P(pywfs->locfft->nembed,0), locin->nloc, pywfs->modulate, pywfs->modulpos,
 		locin->iac, displacex, displacey, 1., pywfs->poke);
 	snprintf(fnlock, sizeof(fnlock), "%s.lock", fn);
 	info2("Using G in %s\n", fn);
@@ -904,7 +901,7 @@ dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, cons
 	real step=pow(10,0.25);
 	for(int ig=0; ig<gg1->nx; ig++){
 		((pywfs_t*)pywfs)->poke=poke;
-		gg1->p[ig]=pywfs_mkg_do(pywfs, locin, locfft, mod1, displacex, displacey);
+		P(gg1,ig)=pywfs_mkg_do(pywfs, locin, locfft, mod1, displacex, displacey);
 		poke=poke*step;
 	}
 	writebin(gg1, "gg1");

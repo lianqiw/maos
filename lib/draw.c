@@ -470,17 +470,17 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 					for(int ig=0; ig<ngroup; ig++){
 						int nx=0, ny=0;
 						real* p=NULL;
-						if(dc->p[ig]){
-							nx=dc->p[ig]->nx;
-							ny=dc->p[ig]->ny;
-							p=dc->p[ig]->p;
+						if(P(dc,ig)){
+							nx=P(dc,ig)->nx;
+							ny=P(dc,ig)->ny;
+							p=P(dc,ig)->p;
 						}
 						STWRITEINT(DRAW_POINTS);
 						STWRITEINT(nx);
 						STWRITEINT(ny);
 						STWRITEINT(0);
 						if(p){
-							STWRITE(p, sizeof(real)*dc->p[ig]->nx*dc->p[ig]->ny);
+							STWRITE(p, sizeof(real)*P(dc,ig)->nx*P(dc,ig)->ny);
 						}
 					}
 				} else{
@@ -833,13 +833,12 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	if(!draw_current(fig, fn)) return 0;
 	loc_create_map(loc);
 	int npad=loc->npad;
-	int nxm=loc->map->nx;
 	int nx=loc->map->nx-npad*2;
 	int ny=loc->map->ny-npad*2;
 	real* opd0=mycalloc(nx*ny, real);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
-			opd0[ix+iy*nx]=(loc->map->p[(ix+npad)+(iy+npad)*nxm]>0);
+			opd0[ix+iy*nx]=(P(loc->map,(ix+npad),(iy+npad))>0);
 		}
 	}
 	real limit[4];
@@ -868,14 +867,13 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	loc_create_map(loc);
 	//This is different from loc_embed. It removes the padding.
 	int npad=loc->npad;
-	int nxm=loc->map->nx;
 	int nx=loc->map->nx-npad*2;
 	int ny=loc->map->ny-npad*2;
 	dmat* opd0=dnew(nx, ny);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
-			long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
-			P(opd0,ix,iy)=ii>0?opd->p[ii-1]:NAN;
+			long ii=P(loc->map, (ix+npad), (iy+npad));
+			P(opd0,ix,iy)=ii>0?P(opd,ii-1):NAN;
 		}
 	}
 	real limit[4];
@@ -936,7 +934,6 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	loc_create_map(loc);
 
 	int npad=loc->npad;
-	int nxm=loc->map->nx;
 	int nx=loc->map->nx-npad*2;
 	int ny=loc->map->ny-npad*2;
 	real ampthres;
@@ -945,9 +942,9 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	real* opd0=mycalloc(nx*ny, real);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
-			long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm]-1;
-			if(ii>-1&&amp->p[ii]>ampthres){
-				opd0[ix+iy*nx]=opd->p[ii];
+			long ii=P(loc->map, (ix+npad), (iy+npad))-1;
+			if(ii>-1&&P(amp,ii)>ampthres){
+				opd0[ix+iy*nx]=P(opd,ii);
 			} else{
 				opd0[ix+iy*nx]=NAN;
 			}
@@ -972,10 +969,10 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 	if(!draw_current(fig, fn)) return 0;
 	dmat* ints2=0;
 	if(ints->nx==1){//TT or PWFS
-		if(ints->p[0]->nx==ints->p[0]->ny){//TT
-			ints2=dref(ints->p[0]);
+		if(P(ints,0)->nx==P(ints,0)->ny){//TT
+			ints2=dref(P(ints,0));
 		} else{//PWFS
-			dcell* ints3=loc_embed2(saloc, ints->p[0]);
+			dcell* ints3=loc_embed2(saloc, P(ints,0));
 			if(ints3->nx==4 && ints3->ny==1){
 				ints3->nx=2;
 				ints3->ny=2;

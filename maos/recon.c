@@ -65,7 +65,7 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 		int maxit=parms->tomo.maxit;
 		if(parms->dbg.tomo_maxit->nx){
 			if(isim<parms->dbg.tomo_maxit->nx){
-				maxit=parms->dbg.tomo_maxit->p[isim];
+				maxit=P(parms->dbg.tomo_maxit,isim);
 				recon->RL.maxit=maxit;/*update maxit information */
 				info2("Running tomo.maxit=%d\n", maxit);
 			} else{
@@ -78,7 +78,7 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 			gpu_tomo(simu, gradin);
 		} else
 #endif
-			simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, gradin);
+			P(P(simu->cgres,0),isim)=muv_solve(&simu->opdr, &recon->RL, &recon->RR, gradin);
 		toc_tm("Tomography");
 	}
 	if(parms->ndm>0){
@@ -89,7 +89,7 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 		} else
 #endif
 		{
-			simu->cgres->p[1]->p[isim]=muv_solve(dmout, &recon->fit->FL, &recon->fit->FR, simu->opdr);
+			P(P(simu->cgres,1),isim)=muv_solve(dmout, &recon->fit->FL, &recon->fit->FR, simu->opdr);
 		}
 		toc_tm("Fitting");
 	}
@@ -110,11 +110,11 @@ static void calc_gradol(sim_t* simu){
 			if((simu->reconisim+1)%parms->powfs[ipowfs].dtrat==0){/*Has output. */
 				int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
 				OMPTASK_FOR(indwfs, 0, nindwfs){
-					int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
-					dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
-					for(int idm=0; idm<parms->ndm&&simu->wfspsol->p[ipowfs]; idm++){
-						dspmm(&simu->gradlastol->p[iwfs], P(GA, iwfs, idm),
-							simu->wfspsol->p[ipowfs]->p[idm], "nn", 1);
+					int iwfs=parms->recon.glao?ipowfs:P(parms->powfs[ipowfs].wfs,indwfs);
+					dcp(PP(simu->gradlastol,iwfs), P(simu->gradlastcl,iwfs));
+					for(int idm=0; idm<parms->ndm&&P(simu->wfspsol,ipowfs); idm++){
+						dspmm(PP(simu->gradlastol,iwfs), P(GA, iwfs, idm),
+							P(P(simu->wfspsol,ipowfs),idm), "nn", 1);
 					}
 				}
 				OMPTASK_END;
@@ -166,14 +166,14 @@ static void recon_split(sim_t* simu){
 					} else{
 						merr=&simu->Merr_lo;
 					}
-					dcellmm(merr, ngsmod->Rngs->p[iRngs], simu->gradlastcl, "nn", 1);
+					dcellmm(merr, P(ngsmod->Rngs,iRngs), simu->gradlastcl, "nn", 1);
 					if(iRngs==0){
 						dcellscale(*merr, parms->dbg.eploscale);
 					}
 					if(iRngs==1&&ngsmod->lp2>=0){ //Do LHF on measurements
 						if(ngsmod->lp2>0){//HPF
-							real* valpf=simu->Merr_lo2->p[0]->p;
-							real* val=tmp->p[0]->p;
+							real* valpf=P(simu->Merr_lo2,0)->p;
+							real* val=P(tmp,0)->p;
 							for(int imod=0; imod<ngsmod->nmod; imod++){
 								if(imod==ngsmod->indfocus){//there is no need to blend focus.
 									continue;
@@ -189,12 +189,12 @@ static void recon_split(sim_t* simu){
 						for(int imod=0; imod<ngsmod->nmod; imod++){
 							if(P(ngsmod->modvalid, imod)){//Modes that has multi-rates
 								if(iRngs==0){//Accumulate Truth mode offset
-									simu->Merr_lo2->p[0]->p[imod]+=tmp->p[0]->p[imod]*(0.5/parms->dbg.eploscale);
+									P(P(simu->Merr_lo2,0),imod)+=P(P(tmp,0),imod)*(0.5/parms->dbg.eploscale);
 								} else{//Apply truth mode offset.
-									simu->Merr_lo->p[0]->p[imod]+=simu->Merr_lo2->p[0]->p[imod];
+									P(P(simu->Merr_lo,0),imod)+=P(P(simu->Merr_lo2,0),imod);
 								}
 							} else if(iRngs==0){//direct output. Avoid real integrator as above.
-								simu->Merr_lo->p[0]->p[imod]=tmp->p[0]->p[imod];
+								P(P(simu->Merr_lo,0),imod)=P(P(tmp,0),imod);
 							}
 						}
 					}
@@ -203,10 +203,10 @@ static void recon_split(sim_t* simu){
 
 				if(parms->sim.mffocus&&ngsmod->indfocus&&parms->sim.lpfocushi<1){ //Do LPF on focus.
 					const real lpfocus=parms->sim.lpfocuslo;
-					real ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->indfocus];
+					real ngsfocus=P(P(simu->Merr_lo,0),ngsmod->indfocus);
 					if(ngsfocus){//there is output
 						simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
-						simu->Merr_lo->p[0]->p[ngsmod->indfocus]=simu->ngsfocuslpf;
+						P(P(simu->Merr_lo,0),ngsmod->indfocus)=simu->ngsfocuslpf;
 					}
 				}
 			}//else: there is ideal NGS correction done in perfevl. 
@@ -218,7 +218,7 @@ static void recon_split(sim_t* simu){
 			dcellzero(simu->gngsmvst);/*reset accumulation. */
 			dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn", 1);
 			if(parms->recon.psol){
-				dcell* Mpsol_lo=simu->Mint_lo->mint->p[0];
+				dcell* Mpsol_lo=P(simu->Mint_lo->mint,0);
 				dcelladd(&simu->Merr_lo, 1., Mpsol_lo, -1);
 			}
 			if(parms->sim.mffocus){
@@ -226,7 +226,7 @@ static void recon_split(sim_t* simu){
 				dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
 				dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
 				const real lpfocus=parms->sim.lpfocuslo;
-				real ngsfocus=tmp->p[0]->p[0];
+				real ngsfocus=P(P(tmp,0),0);
 				simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
 				error("Please Implement: add ngsfocus to Merr_lo");
 				dcellfree(tmp);
@@ -251,7 +251,7 @@ void recon_servo_update(sim_t* simu){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			for(int idm=0; idm<parms->ndm; idm++){
 				dspmulvec(PCOL(P(simu->dmerrts, ievl), iframe), P(recon->Herr, ievl, idm),
-					simu->dmerr->p[idm]->p, 'n', 1);
+					P(simu->dmerr,idm)->p, 'n', 1);
 			}
 		}
 
@@ -262,7 +262,7 @@ void recon_servo_update(sim_t* simu){
 				dmat* tmp=dtrans(P(simu->dmerrts, ievl));
 				dmat* psdi=psd1dt(tmp, parms->recon.psdnseg, dthi);
 				dfree(tmp);
-				dadd(&psd, 1, psdi, parms->evl.wt->p[ievl]);
+				dadd(&psd, 1, psdi, P(parms->evl.wt,ievl));
 				dfree(psdi);
 			}
 			dcellzero(simu->dmerrts);
@@ -270,17 +270,17 @@ void recon_servo_update(sim_t* simu){
 			//writebin(psd, "psdcli_%d", simu->reconisim);
 			//average all the PSDs
 			psd_sum(psd, 1./(psd->ny-1));
-			zfarr_push(simu->save->psdcl, -1, psd);
+			if(simu->save->psdcl) zfarr_push(simu->save->psdcl, -1, psd);
 			//writebin(psd, "psdcl_%d_%d", simu->iseed, simu->reconisim);
 			if(simu->dmint->ep->nx==1&&simu->dmint->ep->ny==1){
-				dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, simu->dmint->ep->p[0], 0);
+				dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, P(simu->dmint->ep,0), 0);
 				dcell* coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, M_PI*0.25, 0, 1);
 				real g=0.5;
-				simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-				info2("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
+				P(simu->dmint->ep,0)=P(simu->dmint->ep,0)*(1-g)+P(P(coeff,0),0)*g;
+				info2("Step %d New gain (high): %.3f\n", simu->reconisim, P(simu->dmint->ep,0));
 				//if(parms->save.run){
 				//writebin(psdol, "psdol_%d_%d", simu->iseed, simu->reconisim);
-				zfarr_push(simu->save->psdol, -1, psdol);
+				if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
 				//}
 				dcellfree(coeff);
 				dfree(psdol);
@@ -294,7 +294,7 @@ void recon_servo_update(sim_t* simu){
 		const int iacc=(simu->reconisim/parms->sim.dtrat_lo);//reconstruction steps
 		const int dtrat=parms->recon.psddtrat_lo;
 		const int iframe=iacc%dtrat;
-		dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, simu->Merr_lo->p[0]->p, 1);
+		dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(simu->Merr_lo,0)->p, 1);
 		if(iframe+1==dtrat){
 			//writebin(simu->Merrts, "Merrts_%d", simu->reconisim);
 			dmat* ts=dtrans(simu->Merrts);
@@ -303,16 +303,16 @@ void recon_servo_update(sim_t* simu){
 			for(int icol=0; icol<ts->ny; icol++){
 				dmat* tsi=dsub(ts, icol, 1, 0, 0);
 				dmat* psd=psd1dt(tsi, parms->recon.psdnseg, dt);
-				zfarr_push(simu->save->psdcl_lo, -1, psd);
+				if(simu->save->psdcl_lo) zfarr_push(simu->save->psdcl_lo, -1, psd);
 				//writebin(psd, "psdlo%d_cl_%d", icol, simu->reconisim);
 				if(simu->Mint_lo->ep->nx==1){//integrator
-					dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, simu->Mint_lo->ep->p[0], 0);
+					dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, P(simu->Mint_lo->ep,0), 0);
 					//writebin(psdol, "psdlo%d_ol_%d", icol, simu->reconisim);
-					zfarr_push(simu->save->psdol_lo, -1, psdol);
+					if(simu->save->psdol_lo) zfarr_push(simu->save->psdol_lo, -1, psdol);
 					dcell* coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, M_PI*0.25, 0, 1);
 					const real g=parms->recon.psdservo_gain;
-					simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-					if(icol==0) info2("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
+					P(simu->Mint_lo->ep,0)=P(simu->Mint_lo->ep,0)*(1-g)+P(P(coeff,0),0)*g;
+					if(icol==0) info2("Step %d New gain (low) : %.3f\n", simu->reconisim, P(simu->Mint_lo->ep,0));
 					dfree(psdol);
 					dcellfree(coeff);
 				} else{
@@ -414,10 +414,10 @@ void reconstruct(sim_t* simu){
 			if(parms->sim.idealfit||parms->sim.idealtomo){
 				dmpsol=simu->dmpsol;
 			} else if(parms->sim.fuseint||parms->recon.split==1){
-				dmpsol=simu->wfspsol->p[parms->hipowfs->p[0]];
+				dmpsol=P(simu->wfspsol,P(parms->hipowfs,0));
 			} else{
 				warning_once("Temporary solution for MVST.\n");
-				dmpsol=simu->dmint->mint->p[0];
+				dmpsol=P(simu->dmint->mint,0);
 			}
 			dcelladd(&simu->dmerr, 1, dmpsol, -1);
 		}
@@ -435,7 +435,7 @@ void reconstruct(sim_t* simu){
 	}
 	if(hi_output&&parms->save.ecov&&isim>=parms->evl.psfisim){
 	//For PSF reconstruction.
-		psfr_calc(simu, simu->opdr, simu->wfspsol->p[parms->hipowfs->p[0]],
+		psfr_calc(simu, simu->opdr, P(simu->wfspsol,P(parms->hipowfs,0)),
 			simu->dmerr, simu->Merr_lo);
 	}
 

@@ -30,15 +30,15 @@ static void test_grid_proj(){
     dmat *X=dread("M3_x.bin");
     dmat *Y=dread("M3_y.bin");
     dmat *tmp=dread("M3_theta.bin");
-    real bx=tmp->p[0];
-    real by=tmp->p[1];
+    real bx=P(tmp,0);
+    real by=P(tmp,1);
     dfree(tmp);
     rmap_t *mapin=mycalloc(1,rmap_t);
     mapin->p=junk->p;
-    mapin->ox=X->p[0];
-    mapin->oy=Y->p[0];
-    mapin->dx=X->p[1]-X->p[0];
-    mapin->dy=Y->p[1]-Y->p[0];
+    mapin->ox=P(X,0);
+    mapin->oy=P(Y,0);
+    mapin->dx=P(X,1)-P(X,0);
+    mapin->dy=P(Y,1)-P(Y,0);
     mapin->nx=X->nx*X->ny;
     mapin->ny=Y->nx*Y->ny;
     real d_m3_f=20.;/*from m3 to focus */
@@ -49,11 +49,11 @@ static void test_grid_proj(){
     real r_exitpupil=1.546220350;
     real r_pupil=15;
 
-    if(X->p[X->nx*X->ny-1]-X->p[0]-mapin->dx*X->nx*X->ny>1.e-10){
-	error("X has non even spacing\n");
+    if(P(X,X->nx*X->ny-1)-P(X,0)-mapin->dx*X->nx*X->ny>1.e-10){
+	    error("X has non even spacing\n");
     }
-    if(Y->p[Y->nx*Y->ny-1]-Y->p[0]-mapin->dy*Y->nx*Y->ny>1.e-10){
-	error("Y has non even spacing\n");
+    if(P(Y,Y->nx*Y->ny-1)-P(Y,0)-mapin->dy*Y->nx*Y->ny>1.e-10){
+	    error("Y has non even spacing\n");
     }
     free(junk);/*don't dfree */
     dfree(X); dfree(Y);

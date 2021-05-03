@@ -53,9 +53,9 @@ sim_t* maos_iseed(int iseed){
 	powfs_t* powfs=global->powfs;
 	aper_t* aper=global->aper;
 	recon_t* recon=global->recon;
-	if(parms->fdlock&&parms->fdlock->p[iseed]<0){
+	if(parms->fdlock&&P(parms->fdlock,iseed)<0){
 		warning("Another MAOS is already running. Skip seed %ld\n",
-			parms->sim.seeds->p[iseed]);
+			P(parms->sim.seeds,iseed));
 		return 0;
 	}
 	sim_t* simu=init_simu(parms, powfs, aper, recon, iseed);
@@ -136,7 +136,7 @@ void maos_isim(int isim){
 		if(!parms->fit.square){
 		/* Embed DM commands to a square array for fast ray tracing */
 		for(int idm=0; idm<parms->ndm; idm++){
-			loc_embed(simu->dmprojsq->p[idm], recon->aloc->p[idm], simu->dmproj->p[idm]->p);
+			loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(simu->dmproj,idm)->p);
 		}
 		}
 #if USE_CUDA
@@ -329,7 +329,7 @@ void maos_sim(){
 	
 	info3("Mean: ");
 	for(long imod=0; imod<parms->evl.nmod; imod++){
-		info3("%.2f ", sqrt(restot->p[imod]/rescount)*1e9);
+		info3("%.2f ", sqrt(P(restot,imod)/rescount)*1e9);
 	}
 	info3("\n");
 	dfree(restot);

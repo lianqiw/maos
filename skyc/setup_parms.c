@@ -211,7 +211,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 		parms->skyc.wvlwt=dnew(parms->maos.nwvl, 1);
 		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 			real wt=parms->skyc.qe[iwvl]*parms->skyc.telthruput[iwvl];
-			parms->skyc.wvlwt->p[iwvl]=wt;
+			P(parms->skyc.wvlwt,iwvl)=wt;
 			sum+=parms->maos.wvl[iwvl]*wt;
 			wtsum+=wt;
 		}
@@ -323,13 +323,13 @@ PARMS_S* setup_parms(const ARG_S* arg){
 		info("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
 	}
 	for(int idtrat=1; idtrat<parms->skyc.ndtrat; idtrat++){
-		if(parms->skyc.dtrats->p[idtrat]>=parms->skyc.dtrats->p[idtrat-1]){
+		if(P(parms->skyc.dtrats,idtrat)>=P(parms->skyc.dtrats,idtrat-1)){
 			error("skyc.dtrats must be specified in descending order\n");
 		}
 	}
 	parms->skyc.fss=mycalloc(parms->skyc.ndtrat, real);
 	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats->p[idtrat];
+		int dtrat=P(parms->skyc.dtrats,idtrat);
 		parms->skyc.fss[idtrat]=1./(parms->maos.dt*dtrat);
 	}
 	parms->skyc.rnefs=dnew(parms->skyc.ndtrat, parms->maos.npowfs);
@@ -350,7 +350,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 				real t1=nsa*(pixeltime*N*N+linetime*N+frametime);
 				real t2=(pixeltime*Nb*Nb+linetime*Nb+frametime);
 				for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-					int dtrat=parms->skyc.dtrats->p[idtrat];
+					int dtrat=P(parms->skyc.dtrats,idtrat);
 					real dt=parms->maos.dt*dtrat*1e6;
 					int coadd=floor((dt-t2*nsa)/t1);//number of coadds possible.
 					if(coadd<=32&&dtrat<=10){//at high frame rate, read out only 1 subaperture's guard window each time.
@@ -371,7 +371,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 			}
 		} else if(fabs(parms->skyc.rne+2)<EPS){//older model.
 			for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-				int dtrat=parms->skyc.dtrats->p[idtrat];
+				int dtrat=P(parms->skyc.dtrats,idtrat);
 				real fs=1./(parms->maos.dt*dtrat);
 				info("%5.1f Hz: ", fs);
 				for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
@@ -393,10 +393,10 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	/*parms->skyc.resfocus=dnew(parms->skyc.ndtrat, 1);
 	if(parms->maos.nmod<6){//Do not model focus in time series.
 	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats->p[idtrat];
+		int dtrat=P(parms->skyc.dtrats,idtrat);
 		real fs=1./(parms->maos.dt*dtrat);
 
-		parms->skyc.resfocus->p[idtrat]=
+		P(parms->skyc.resfocus,idtrat)=
 		pow(nafocus_residual(fs, parms->maos.dt, parms->skyc.zc_f,
 					 parms->skyc.zc_zeta,
 					 parms->maos.D, parms->maos.hs,

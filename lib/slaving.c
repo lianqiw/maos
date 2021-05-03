@@ -27,23 +27,23 @@ dcell* genactcpl(const dspcell* HA, const dmat* W1){
 	dcell* actcplc=dcellnew(ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 		for(int ifit=0; ifit<HA->nx; ifit++){
-			dsp* ha=HA->p[ifit+idm*HA->nx];
+			dsp* ha=P(HA, ifit, idm);
 			if(!ha) continue;
 			if(W1){
-				dspmm(&actcplc->p[idm], ha, W1, "tn", 1);
+				dspmm(PP(actcplc,idm), ha, W1, "tn", 1);
 			} else{
 				dmat* tmp=dspsumabs(ha, 1);
 				tmp->nx=tmp->ny; tmp->ny=1;
-				dadd(&actcplc->p[idm], 1, tmp, 1);
+				dadd(PP(actcplc,idm), 1, tmp, 1);
 				dfree(tmp);
 			}
 		}
 		/* If a point is fully coupled to any direction, it is treated as fully
 		   coupled. */
-		real thres=dmax(actcplc->p[idm])/HA->nx;
+		real thres=dmax(P(actcplc,idm))/HA->nx;
 		real scale=1./thres;
-		real* p=actcplc->p[idm]->p;
-		for(long i=0; i<actcplc->p[idm]->nx; i++){
+		real* p=P(actcplc,idm)->p;
+		for(long i=0; i<P(actcplc,idm)->nx; i++){
 			if(p[i]>thres||thres==0){
 				p[i]=1;
 			} else{
@@ -82,12 +82,12 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 	int nslavetot=0;
 	/*Next process stuck and floating actuators. Adjust actcplc and compute slaving matrix.*/
 	for(int idm=0; idm<ndm; idm++){
-		int nact=aloc->p[idm]->nloc;
+		int nact=P(aloc,idm)->nloc;
 		int nslave=0;
-		real* actcpl=actcplc->p[idm]->p;
+		real* actcpl=P(actcplc,idm)->p;
 		real* actcpl0=actcpl-1;
-		const long* isstuck=(actstuck&&actstuck->p[idm])?actstuck->p[idm]->p:0;
-		const long* isfloat=(actfloat&&actfloat->p[idm])?actfloat->p[idm]->p:0;
+		const long* isstuck=(actstuck&&P(actstuck,idm))?P(actstuck,idm)->p:0;
+		const long* isfloat=(actfloat&&P(actfloat,idm))?P(actfloat,idm)->p:0;
 		for(int iact=0; iact<nact; iact++){
 			if(isstuck&&isstuck[iact]){
 				actcpl[iact]=1;/*always Skip the stuck actuators. */
@@ -105,15 +105,15 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 		nslavetot+=nslave;
 		info("dm %d, mode %d: there are %d slave actuators\n", idm, mode, nslave);
 
-		loc_create_map(aloc->p[idm]);
-		map_t* map=aloc->p[idm]->map;
+		loc_create_map(P(aloc,idm));
+		map_t* map=P(aloc,idm)->map;
 		const real ox=map->ox;
 		const real oy=map->oy;
-		const real dx1=1./aloc->p[idm]->dx;
-		const real dy1=1./aloc->p[idm]->dy;
+		const real dx1=1./P(aloc,idm)->dx;
+		const real dy1=1./P(aloc,idm)->dy;
 
-		const real* locx=aloc->p[idm]->locx;
-		const real* locy=aloc->p[idm]->locy;
+		const real* locx=P(aloc,idm)->locx;
+		const real* locy=P(aloc,idm)->locy;
 		dsp* slavet=0;
 		long count=0;
 		if(mode==2){//falls back to tikhonov when ngroup==0
@@ -309,7 +309,7 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 						}
 					} else if(mode==4){
 					//this one does no work
-						int sign=aloc->p[idm]->locy[iact]>0?1:-1;
+						int sign=P(aloc,idm)->locy[iact]>0?1:-1;
 						int count2=0;
 						int offx=0, offy=0;
 						for(int id=0; id<4; id++){
@@ -398,38 +398,38 @@ void act_stuck(loccell* aloc, void* HA_, const lcell* stuck){
 		error("HA: Invalid format %ldx%ld\n", HA->nx, HA->ny);
 	}
 	for(int idm=0; idm<ndm; idm++){
-		if(!stuck->p[idm]){
+		if(!P(stuck,idm)){
 			continue;
 		}
-		const int nact=aloc->p[idm]->nloc;
+		const int nact=P(aloc,idm)->nloc;
 		for(int ifit=0; ifit<nfit; ifit++){
-			cell* HAi=HA->p[idm*nfit+ifit];
+			cell* HAi=P(HA,ifit,idm);
 			if(HAi->id==M_REAL){//dense
 				dmat* hb=(dmat*)HAi;
-				if(hb->nx>1&&hb->ny==aloc->p[idm]->nloc){
+				if(hb->nx>1&&hb->ny==P(aloc,idm)->nloc){
 					//modifying interaction matrix
 					for(int iact=0; iact<nact; iact++){
-						if(stuck->p[idm]->p[iact]){
+						if(P(P(stuck,idm),iact)){
 							memset(hb->p+hb->nx*iact, 0, sizeof(real)*hb->nx);
 						}
 					}
-				} else if(hb->ny==1&&hb->nx==aloc->p[idm]->nloc){
+				} else if(hb->ny==1&&hb->nx==P(aloc,idm)->nloc){
 					//modifying coupling vector
 					for(int iact=0; iact<nact; iact++){
-						if(stuck->p[idm]->p[iact]){
-							hb->p[iact]=0;
+						if(P(P(stuck,idm),iact)){
+							P(hb,iact)=0;
 						}
 					}
 				} else{
-					error("Invalid input: hb is %ldx%ld, nloc=%ld\n", hb->nx, hb->ny, aloc->p[idm]->nloc);
+					error("Invalid input: hb is %ldx%ld, nloc=%ld\n", hb->nx, hb->ny, P(aloc,idm)->nloc);
 				}
 			} else if(HAi->id==M_DSP){//sparse
 				dsp* ha=(dsp*)HAi;
 				spint* pp=ha->p;
 				real* px=ha->x;
-				assert(ha->ny==aloc->p[idm]->nloc);
+				assert(ha->ny==P(aloc,idm)->nloc);
 				for(int iact=0; iact<nact; iact++){
-					if(stuck->p[idm]->p[iact]){
+					if(P(P(stuck,idm),iact)){
 						for(int ic=pp[iact]; ic<pp[iact+1]; ic++){
 							px[ic]=0;
 						}
@@ -447,21 +447,21 @@ void act_stuck(loccell* aloc, void* HA_, const lcell* stuck){
 void act_zero(loccell* aloc, const dcell* HB, const lcell* dead){
 	if(!dead||!HB) return;
 	for(int idm=0; idm<dead->nx; idm++){
-		if(!dead->p[idm]){
+		if(!P(dead,idm)){
 			continue;
 		}
-		const int nact=aloc->p[idm]->nloc;
+		const int nact=P(aloc,idm)->nloc;
 		if(HB->nx!=aloc->nx){
 			error("HB: Invalid format\n");
 		}
 		for(int imod=0; imod<HB->ny; imod++){
-			dmat* hb=HB->p[idm+imod*HB->nx];
-			if(hb->nx!=aloc->p[idm]->nloc){
+			dmat* hb=P(HB, idm, imod);
+			if(hb->nx!=P(aloc,idm)->nloc){
 				error("hb: Invalid format\n");
 			}
 			dmat* phb=hb;
 			for(int iact=0; iact<nact; iact++){
-				if(dead->p[idm]->p[iact]){
+				if(P(P(dead,idm),iact)){
 					for(int iy=0; iy<hb->ny; iy++){
 						P(phb, iact, iy)=0;
 					}
@@ -484,16 +484,16 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 		dHA=dspcellnew(nfit, ndm);
 	}
 	for(int idm=0; idm<ndm; idm++){
-		if(!actfloat->p[idm]) continue;
-		loc_create_map(aloc->p[idm]);
-		map_t* map=aloc->p[idm]->map;
+		if(!P(actfloat,idm)) continue;
+		loc_create_map(P(aloc,idm));
+		map_t* map=P(aloc,idm)->map;
 		real ox=map->ox;
 		real oy=map->oy;
-		real dx1=1./aloc->p[idm]->dx;
-		real dy1=1./aloc->p[idm]->dy;
-		const real* locx=aloc->p[idm]->locx;
-		const real* locy=aloc->p[idm]->locy;
-		long nact=aloc->p[idm]->nloc;
+		real dx1=1./P(aloc,idm)->dx;
+		real dy1=1./P(aloc,idm)->dy;
+		const real* locx=P(aloc,idm)->locx;
+		const real* locy=P(aloc,idm)->locy;
+		long nact=P(aloc,idm)->nloc;
 		/*which floating actuator to assign for this one. */
 		lmat* indfloat=lnew(4, nact);
 		/*number of floating actuators that is assigned for this one. */
@@ -501,10 +501,10 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 		/*active neighbors of each dead act. */
 		long* neighbor=mycalloc(nact, long);
 		long nzmax=0;
-		long* isfloat=actfloat->p[idm]->p;
+		long* isfloat=P(actfloat,idm)->p;
 		/*loop through the floating actuators */
 		for(int iact=0; iact<nact; iact++){
-			if(!actfloat->p[idm]->p[iact]) continue;
+			if(!P(P(actfloat,idm),iact)) continue;
 			long mapx=(long)round((locx[iact]-ox)*dx1);
 			long mapy=(long)round((locy[iact]-oy)*dy1);
 			/*find all its neighbors. */
@@ -563,8 +563,8 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 				pp2[nact]=count;
 				dspsetnzmax(P(pdHA, ifit, idm), count);
 				/*Remove weights of floating actuatorsf from HA. */
-				for(int jact=0; jact<actfloat->p[idm]->nx; jact++){
-					int iact=actfloat->p[idm]->p[jact];
+				for(int jact=0; jact<P(actfloat,idm)->nx; jact++){
+					int iact=P(P(actfloat,idm),jact);
 					for(int ic=pp[iact]; ic<pp[iact+1]; ic++){
 						px[ic]=0;
 					}
@@ -586,8 +586,8 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 					}
 				}
 			}
-			for(int jact=0; jact<actfloat->p[idm]->nx; jact++){
-				int iact=actfloat->p[idm]->p[jact];
+			for(int jact=0; jact<P(actfloat,idm)->nx; jact++){
+				int iact=P(P(actfloat,idm),jact);
 				for(int ifit=0; ifit<HB->nx; ifit++){
 					dmat* hbi=P(HB, ifit, idm);
 					memset(PCOL(hbi, iact), 0, hbi->nx*sizeof(real));
@@ -613,15 +613,15 @@ void act_stuck_cmd(loccell* aloc, /**<[in] Actuator grid array*/
 	if(!adm||!stuck) return;
 	const int ndm=aloc->nx;
 	for(int idm=0; idm<ndm; idm++){
-		if(!stuck->p[idm]) continue;
-		const int nact=aloc->p[idm]->nloc;
+		if(!P(stuck,idm)) continue;
+		const int nact=P(aloc,idm)->nloc;
 		for(int iy=0; iy<adm->ny; iy++){
 			dmat* pai=P(adm, idm, iy);
 			dmat* px=pai;
-			assert(pai->nx==aloc->p[idm]->nloc);
+			assert(pai->nx==P(aloc,idm)->nloc);
 			for(int icol=0; icol<pai->ny; icol++){
 				for(int iact=0; iact<nact; iact++){
-					if(stuck->p[idm]->p[iact]){
+					if(P(P(stuck,idm),iact)){
 						P(px, iact, icol)=0;
 					}
 				}
@@ -638,17 +638,17 @@ dspcell* act_float_interp(loccell* aloc,  /**<[in] Actuator grid array*/
 	int ndm=aloc->nx;
 	dspcell* out=dspcellnew(ndm, ndm);
 	for(int idm=0; idm<ndm; idm++){
-		loc_create_map(aloc->p[idm]);
-		map_t* map=aloc->p[idm]->map;
+		loc_create_map(P(aloc,idm));
+		map_t* map=P(aloc,idm)->map;
 		real ox=map->ox;
 		real oy=map->oy;
-		real dx1=1./aloc->p[idm]->dx;
-		real dy1=1./aloc->p[idm]->dy;
-		const real* locx=aloc->p[idm]->locx;
-		const real* locy=aloc->p[idm]->locy;
-		long nact=aloc->p[idm]->nloc;
+		real dx1=1./P(aloc,idm)->dx;
+		real dy1=1./P(aloc,idm)->dy;
+		const real* locx=P(aloc,idm)->locx;
+		const real* locy=P(aloc,idm)->locy;
+		long nact=P(aloc,idm)->nloc;
 		/*actuator that is floating */
-		long* isfloat=(actfloat&&actfloat->p[idm])?actfloat->p[idm]->p:0;
+		long* isfloat=(actfloat&&P(actfloat,idm))?P(actfloat,idm)->p:0;
 		dsp* outit=dspnew(nact, nact, nact*4);
 		real* px=outit->x;
 		spint* pp=outit->p;
@@ -686,7 +686,7 @@ dspcell* act_float_interp(loccell* aloc,  /**<[in] Actuator grid array*/
 			}
 		}
 		pp[nact]=count;
-		out->p[idm+ndm*idm]=dsptrans(outit);
+		P(out,idm,idm)=dsptrans(outit);
 		dspfree(outit);
 	}
 	return out;
@@ -817,7 +817,7 @@ dspcell* act_extrap(loccell* aloc,     /**<[in] Actuator grid array*/
 	int ndm=actcplc->nx;
 	dspcell* out=dspcellnew(ndm, ndm);
 	for(int idm=0; idm<ndm; idm++){
-		out->p[idm+ndm*idm]=act_extrap_do(aloc->p[idm], actcplc->p[idm], thres);
+		P(out,idm,idm)=act_extrap_do(P(aloc,idm), P(actcplc,idm), thres);
 	}
 	return out;
 }

@@ -262,7 +262,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	    xnorm *= tmp1;
 	    bnd[i] = xnorm;
 	    d[i] = tmp0;
-	    (*Sdiag)->p[i]=tmp0;
+	    P(*Sdiag,i)=tmp0;
 	    /* write left s-vector to output file */
 	    /*write(fp_out2, (char *)&xv1[ida], size1); */
 	    memcpy(&pV[i], &xv1[ida], size1);
@@ -306,7 +306,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	    dbg(" ...... %3ld   %22.14E  (%11.2E)\n", 
 		    i, sqrt(ritz[k]), bnd[k]);
 	    k++;
-	    (*Sdiag)->p[i]=sqrt(ritz[k]);
+	    P(*Sdiag,i)=sqrt(ritz[k]);
 	}
     }
     if (vectors) {

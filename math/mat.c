@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <errno.h>
 #include "random.h"
 #include "mathdef.h"
 #include "defs.h"/*Defines T, X, etc */
@@ -28,10 +28,11 @@
 X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 	assert(nx>=0&&ny>=0);
 	if(!p){//no pointer is supplied
-		if(nx&&ny){
+		if(nx>0&&ny>0){
 			p=mycalloc((nx*ny), T);
 			if(mem){
-				warning("mem can only be NULL when p is NULL.\n");
+				warning("mem must be NULL when p is NULL.\n");
+				print_backtrace();
 			}
 			mem=mem_new(p);
 		}
@@ -52,7 +53,7 @@ X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 X(mat)* X(ref)(const X(mat)* in){
 	if(!in) return NULL;
 	X(mat)* out=X(new_do)(in->nx, in->ny, in->p, in->mem);
-	if(in->header) out->header=strdup(in->header);
+	if(out && in->header) out->header=strdup(in->header);
 	return out;
 }
 
@@ -315,7 +316,7 @@ X(mat)* X(trans)(const X(mat)* A){
 void X(set)(X(mat)* A, const T val){
 	if(!check_mat(A)) return;
 	for(long i=0; i<A->nx*A->ny; i++){
-		A->p[i]=val;
+		P(A,i)=val;
 	}
 }
 
@@ -388,7 +389,7 @@ T X(trace)(const X(mat)* A){
 	if(check_mat(A)){
 		long n=MIN(A->nx, A->ny);
 		for(long i=0; i<n; i++){
-			trace+=A->p[i*(1+A->nx)];
+			trace+=P(A,i,i);
 		}
 	}
 	return (T)trace;
@@ -449,7 +450,7 @@ R X(sumabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R out=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		out+=fabs(A->p[i]);
+		out+=fabs(P(A,i));
 	}
 	return out;
 }
@@ -460,7 +461,7 @@ R X(sumsq)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R out=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		out+=ABS2(A->p[i]);
+		out+=ABS2(P(A,i));
 	}
 	return out;
 }
@@ -471,7 +472,7 @@ R X(sumdiffsq)(const X(mat)* A, const X(mat)* B){
 	if(!check_mat(A)||!check_mat(B) || !check_match(A,B)) return -1;
 	RD out=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		out+=ABS2(A->p[i]-B->p[i]);
+		out+=ABS2(P(A,i)-P(B,i));
 	}
 	return (R)out;
 }
@@ -594,7 +595,7 @@ X(cell)* X(cell_cast)(const void* A_){
 	cell* A=(cell*)A_;
 	if(!iscell(A)) return NULL;
 	for(int i=0; i<A->nx*A->ny; i++){
-		if(A->p[i]&&!ismat(A->p[i])){
+		if(P(A,i)&&!ismat(P(A,i))){
 			return NULL;
 		}
 	}
@@ -609,18 +610,18 @@ X(cell)* X(cellnew2)(const X(cell)* A){
 	X(cell)* out=X(cellnew)(A->nx, A->ny);
 	long tot=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		if(!isempty(A->p[i])){
-			tot+=A->p[i]->nx*A->p[i]->ny;
+		if(!isempty(P(A,i))){
+			tot+=P(A,i)->nx*P(A,i)->ny;
 		}
 	}
 	out->m=X(new)(tot, 1);
 	tot=0;
 	for(int i=0; i<A->nx*A->ny; i++){
-		if(!isempty(A->p[i])){
-			out->p[i]=X(new_do)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot, out->m->mem);
-			tot+=A->p[i]->nx*A->p[i]->ny;
+		if(!isempty(P(A,i))){
+			P(out,i)=X(new_do)(P(A,i)->nx, P(A,i)->ny, out->m->p+tot, out->m->mem);
+			tot+=P(A,i)->nx*P(A,i)->ny;
 		} else{
-			out->p[i]=X(new)(0, 0);//place holder to avoid been overriden.
+			P(out,i)=X(new)(0, 0);//place holder to avoid been overriden.
 		}
 	}
 	return out;
@@ -643,7 +644,7 @@ X(cell)* X(cellnew3)(long nx, long ny, long* nnx, long* nny){
 	for(long i=0; i<nx*ny; i++){
 		long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
 		long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
-		out->p[i]=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
+		P(out,i)=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
 		tot+=mx*my;
 	}
 	return out;
@@ -665,7 +666,7 @@ X(cell)* X(cellref)(const X(cell)* in){
 		out->m=X(ref)(in->m);
 	}
 	for(int i=0; i<in->nx*in->ny; i++){
-		out->p[i]=X(ref)(in->p[i]);
+		P(out,i)=X(ref)(P(in,i));
 	}
 	if(in->header) out->header=strdup(in->header);
 	return out;
@@ -677,7 +678,7 @@ X(cell)* X(cellref)(const X(cell)* in){
 void X(cellset)(X(cell)* dc, T val){
 	if(dc){
 		for(int ix=0; ix<dc->nx*dc->ny; ix++){
-			if(dc->p[ix]) X(set)(dc->p[ix], val);
+			if(P(dc,ix)) X(set)(P(dc,ix), val);
 		}
 	}
 }
@@ -709,12 +710,12 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 		out=X(cellnew)(1, A->ny);
 		for(long iy=0; iy<A->ny; iy++){
 			if(nys[iy]==0) continue;
-			out->p[iy]=X(new)(nx, nys[iy]);
+			P(out,iy)=X(new)(nx, nys[iy]);
 			for(long icol=0; icol<nys[iy]; icol++){
 				long kr=0;
 				for(long ix=0; ix<A->nx; ix++){
 					if(!isempty(P(A, ix, iy))){
-						memcpy(PP(out->p[iy], kr, icol), PCOL(P(A, ix, iy), icol),
+						memcpy(PP(P(out,iy), kr, icol), PCOL(P(A, ix, iy), icol),
 							nxs[ix]*sizeof(T));
 					}
 					kr+=nxs[ix];
@@ -725,11 +726,11 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 		out=X(cellnew)(A->nx, 1);
 		for(long ix=0; ix<A->nx; ix++){
 			if(nxs[ix]==0) continue;
-			out->p[ix]=X(new)(nxs[ix], ny);
+			P(out,ix)=X(new)(nxs[ix], ny);
 			long kr=0;
 			for(long iy=0; iy<A->ny; iy++){
 				if(!isempty(P(A, ix, iy))){
-					memcpy(PCOL(out->p[ix], kr), P(A, ix, iy)->p, nxs[ix]*nys[iy]*sizeof(T));
+					memcpy(PCOL(P(out,ix), kr), P(A, ix, iy)->p, nxs[ix]*nys[iy]*sizeof(T));
 				}
 				kr+=nys[iy];
 			}
@@ -840,7 +841,7 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 	X(cell)* B=X(cellnew)(ndim, 1);
 	B->m=X(ref)(A);
 	for(long ix=0; ix<ndim; ix++){
-		B->p[ix]=X(new_do)(dims[ix], 1, A->p+kr, A->mem);
+		P(B,ix)=X(new_do)(dims[ix], 1, A->p+kr, A->mem);
 		kr+=dims[ix];
 	}
 	return B;
@@ -945,7 +946,7 @@ T X(cellsum)(const X(cell)* A){
 	if(isempty(A)) return 0;
 	T v=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		v+=X(sum)(A->p[i]);
+		v+=X(sum)(P(A,i));
 	}
 	return v;
 }

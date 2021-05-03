@@ -193,7 +193,7 @@ void setup_aster_gm(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
 		const int istar=aster->wfs[iwfs].istar;
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
 		const long nsa=parms->maos.nsa[ipowfs];
-		aster->g->p[iwfs]=ddup(star[istar].g->p[ipowfs]);
+		P(aster->g,iwfs)=ddup(P(star[istar].g,ipowfs));
 		aster->tsa+=nsa;
 		aster->ngs[iwfs]=nsa*2;
 	}
@@ -217,9 +217,9 @@ void setup_aster_copystar(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
 		/*Magnitude */
 		aster->wfs[iwfs].mags=star[istar].mags;//do not free
 		/*Signal Level */
-		aster->wfs[iwfs].siglev=star[istar].siglev->p[ipowfs];//do not free
-		aster->wfs[iwfs].siglevtot=star[istar].siglevtot->p[ipowfs];
-		aster->wfs[iwfs].bkgrnd=star[istar].bkgrnd->p[ipowfs];
+		aster->wfs[iwfs].siglev=P(star[istar].siglev,ipowfs);//do not free
+		aster->wfs[iwfs].siglevtot=P(star[istar].siglevtot,ipowfs);
+		aster->wfs[iwfs].bkgrnd=P(star[istar].bkgrnd,ipowfs);
 
 		/*Pixel intensity statistics. */
 		aster->wfs[iwfs].pistat=&star[istar].pistat[ipowfs];
@@ -244,9 +244,9 @@ void setup_aster_ztilt(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
 		const int istar=aster->wfs[iwfs].istar;
-		aster->wfs[iwfs].ztiltout=star[istar].ztiltout->p[ipowfs];
+		aster->wfs[iwfs].ztiltout=P(star[istar].ztiltout,ipowfs);
 		if(star[istar].goff){
-			aster->wfs[iwfs].goff=star[istar].goff->p[ipowfs];
+			aster->wfs[iwfs].goff=P(star[istar].goff,ipowfs);
 		}
 	}
 }
@@ -271,11 +271,11 @@ static dmat* calc_recon_error(const dmat* pgm,   /**<[in] the reconstructor*/
 	dmat* res=dnew(mcc->nx+1, 1);
 	/*It is right for both ix, iy to stop at ib.*/
 	for(int ib=0; ib<mcc->ny; ib++){
-		res->p[ib]=P(var, ib, ib);
-		res->p[mcc->ny]+=res->p[ib];//trace
-		if(res->p[ib]<0){
+		P(res,ib)=P(var, ib, ib);
+		P(res,mcc->ny)+=P(res,ib);//trace
+		if(P(res,ib)<0){
 			warning_once("Negative noise\n");
-			res->p[ib]=fabs(res->p[ib]);
+			P(res,ib)=fabs(P(res,ib));
 		}
 	}
 	dfree(var);
@@ -288,8 +288,8 @@ static dmat* calc_recon_error(const dmat* pgm,   /**<[in] the reconstructor*/
 static void interp_gain(real* out, const dcell* gain, const dmat* gainx,
 	real sigma2){
 	const long nx=gainx->nx;
-	const real xsep=(log(gainx->p[nx-1])-log(gainx->p[0]))/(nx-1);
-	const real xx=(log(sigma2)-log(gainx->p[0]))/xsep;
+	const real xsep=(log(P(gainx,nx-1))-log(P(gainx,0)))/(nx-1);
+	const real xx=(log(sigma2)-log(P(gainx,0)))/xsep;
 	int ig;
 	if(xx<0){/*too small. */
 		ig=0;
@@ -299,16 +299,16 @@ static void interp_gain(real* out, const dcell* gain, const dmat* gainx,
 		ig=ifloor(xx);
 		/*2013-12-06: use one of the set, not interpolate*/
 	}
-	memcpy(out, gain->p[ig]->p, sizeof(real)*gain->p[ig]->nx);
+	memcpy(out, P(gain,ig)->p, sizeof(real)*P(gain,ig)->nx);
 }
 dmat* setup_aster_mask_gm(const dcell* gm_in, const lmat* mask){
 	if(!gm_in||gm_in->nx==0) return NULL;
 	dcell* gm=dcelldup(gm_in);
 	int nwfs=gm->nx; assert(gm->ny==1);
-	int nmod=gm->p[0]->ny;
+	int nmod=P(gm,0)->ny;
 	int ntt=0, nttf=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(mask&&!mask->p[iwfs]){
+		if(mask&&!P(mask,iwfs)){
 			dzero(P(gm, iwfs));
 		} else{
 			int ng=P(gm, iwfs)->nx;
@@ -364,9 +364,9 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		int idtrat;
 		for(idtrat=ndtrat-1; idtrat>=0; idtrat--){
-			if(aster->wfs[iwfs].pistat->snr->p[idtrat]>parms->skyc.snrmin){
-				aster->idtrats->p[iwfs]=idtrat;
-				aster->dtrats->p[iwfs]=parms->skyc.dtrats->p[idtrat];
+			if(P(aster->wfs[iwfs].pistat->snr,idtrat)>parms->skyc.snrmin){
+				P(aster->idtrats,iwfs)=idtrat;
+				P(aster->dtrats,iwfs)=P(parms->skyc.dtrats,idtrat);
 				if(idtrat>idtrat_fast){
 					idtrat_fast=idtrat;
 					iwfs_fast=iwfs;
@@ -378,11 +378,11 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 	if(1){//temporary. Only use two rates.
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 			if(iwfs!=iwfs_fast){
-				if(aster->idtrats->p[iwfs]<3){
+				if(P(aster->idtrats,iwfs)<3){
 					aster->use=-1;//mark as invalid asterism.
 				}
-				aster->idtrats->p[iwfs]=3;//aster->idtrats->p[iwfs_fast]-3;
-				aster->dtrats->p[iwfs]=parms->skyc.dtrats->p[aster->idtrats->p[iwfs]];
+				P(aster->idtrats,iwfs)=3;//P(aster->idtrats,iwfs_fast)-3;
+				P(aster->dtrats,iwfs)=P(parms->skyc.dtrats,P(aster->idtrats,iwfs));
 			}
 		}
 	}
@@ -421,7 +421,7 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 		int min_idtrat=parms->skyc.ndtrat;
 		//Find the dtrat of the slowest WFS
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			int idtrat=aster->idtrats->p[iwfs];
+			int idtrat=P(aster->idtrats,iwfs);
 			if(min_idtrat>idtrat){
 				min_idtrat=idtrat;
 			}
@@ -431,16 +431,16 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 		}
 		case_valid=lnew(ncase, 1);
 		//Loop over to find
-		for(int isim=0; isim<parms->skyc.dtrats->p[min_idtrat]; isim++){
+		for(int isim=0; isim<P(parms->skyc.dtrats,min_idtrat); isim++){
 			int indk=0; int count=0;
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				if((isim%aster->dtrats->p[iwfs])==0){
+				if((isim%P(aster->dtrats,iwfs))==0){
 					indk|=(1<<iwfs);
 					count++;
 				}
 			}
 			if(count){
-				case_valid->p[indk-1]=indk;
+				P(case_valid,indk-1)=indk;
 			}
 		}
 	} else{
@@ -456,22 +456,22 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 	real minres=INFINITY;
 	for(int icase=0; icase<ncase; icase++){
 	//Assemble the measurement error covariance matrix
-		if(multirate&&!case_valid->p[icase]) continue;
+		if(multirate&&!P(case_valid,icase)) continue;
 		dcell* nea=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
 		lmat* mask=lnew(aster->nwfs, 1);
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 			int idtrat=-1;
 			if(multirate){
 				if((icase+1)&(1<<iwfs)){
-					idtrat=aster->idtrats->p[iwfs];
+					idtrat=P(aster->idtrats,iwfs);
 				}
 			} else{
 				idtrat=icase;
 			}
 			if(idtrat!=-1){
-				dcp(&nea->p[iwfs], aster->wfs[iwfs].pistat->sanea->p[idtrat]);
-				dcwpow(nea->p[iwfs], -2);
-				mask->p[iwfs]=1;
+				dcp(PP(nea,iwfs), P(aster->wfs[iwfs].pistat->sanea,idtrat));
+				dcwpow(P(nea,iwfs), -2);
+				P(mask,iwfs)=1;
 			}
 		}
 		if(multirate){
@@ -479,15 +479,15 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 			dfree(gm);
 			gm=setup_aster_mask_gm(aster->g, mask);
 		}
-		aster->pgm->p[icase]=dpinv(gm, nea->m);
+		P(aster->pgm,icase)=dpinv(gm, nea->m);
 
 		//Noise propagation
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			if(mask->p[iwfs]){
-				dcwpow(nea->p[iwfs], -1);//inverse again
+			if(P(mask,iwfs)){
+				dcwpow(P(nea,iwfs), -1);//inverse again
 			}
 		}
-		aster->sigman->p[icase]=calc_recon_error(aster->pgm->p[icase], nea->m, parms->maos.mcc);
+		P(aster->sigman,icase)=calc_recon_error(P(aster->pgm,icase), nea->m, parms->maos.mcc);
 		if(parms->skyc.dbg){
 			writebin(nea->m, "%s/aster%d_nea%d", dirsetup, aster->iaster, icase);
 		}
@@ -498,24 +498,24 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 		/*gsplit:
 		  0: All modes use the same gain.
 		  1: Different mode use different gain (2017-0-24) was only tt/ps separate.
-		  note that simu->psds->p[0] contains windshake PSD.
+		  note that P(simu->psds,0) contains windshake PSD.
 		*/
 		real res_ngs=0;/*residual error due to signal after servo rejection. */
 		real res_ngsn=0;/*residual error due to noise. */
 		const int servotype=parms->skyc.servo;
 		const int ng=parms->skyc.ngain;//number of gain parameters
-		dmat* pgain=aster->gain->p[icase]=dnew(ng, nmod);
+		dmat* pgain=P(aster->gain,icase)=dnew(ng, nmod);
 		int idtrat=multirate?max_idtrat:icase;
 		for(int ipsd=0; ipsd<simu->psds->nx; ipsd++){
-			real sigma=aster->sigman->p[icase]->p[parms->skyc.gsplit?ipsd:nmod];
+			real sigma=P(P(aster->sigman,icase),parms->skyc.gsplit?ipsd:nmod);
 			real pg[ng+2];
 			if(parms->skyc.interpg){
-				interp_gain(pg, simu->gain_pre->p[idtrat]->p[ipsd], simu->gain_x, sigma);
+				interp_gain(pg, P(P(simu->gain_pre,idtrat),ipsd), simu->gain_x, sigma);
 			} else{
 				dmat* sigma2=dnew(1, 1);
-				sigma2->p[0]=sigma;
-				dcell* tmp=servo_optim(simu->psds->p[ipsd], parms->maos.dt, parms->skyc.dtrats->p[idtrat], 0, parms->skyc.pmargin, sigma2, servotype);
-				memcpy(pg, tmp->p[0]->p, (ng+2)*sizeof(real));
+				P(sigma2,0)=sigma;
+				dcell* tmp=servo_optim(P(simu->psds,ipsd), parms->maos.dt, P(parms->skyc.dtrats,idtrat), 0, parms->skyc.pmargin, sigma2, servotype);
+				memcpy(pg, P(tmp,0)->p, (ng+2)*sizeof(real));
 				dcellfree(tmp);
 				dfree(sigma2);
 			}
@@ -534,8 +534,8 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 		dmat* g_tt=drefcols(pgain, 0, 1);
 		real gain_n;
 		if(parms->skyc.psd_ws){
-			aster->res_ws->p[icase]=servo_residual(&gain_n, parms->skyc.psd_ws,
-				parms->maos.dt, parms->skyc.dtrats->p[idtrat], 0, g_tt, servotype);
+			P(aster->res_ws,icase)=servo_residual(&gain_n, parms->skyc.psd_ws,
+				parms->maos.dt, P(parms->skyc.dtrats,idtrat), 0, g_tt, servotype);
 		}
 		dfree(g_tt);
 	}//for dtrat
@@ -559,30 +559,30 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 static void setup_aster_kalman_multirate(ASTER_S* aster, const PARMS_S* parms, int idtrat_wfs0){
 	if(parms->skyc.verbose){
 		info("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster,
-			(int)parms->skyc.dtrats->p[idtrat_wfs0]);
+			(int)P(parms->skyc.dtrats,idtrat_wfs0));
 	}
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		int idtrat=idtrat_wfs0;
 		if(iwfs>0){
 			/*don't allow snr to fall below 3.*/
-			while(idtrat>0&&(aster->wfs[iwfs].pistat->snr->p[idtrat]<3
-				||(int)parms->skyc.dtrats->p[idtrat]%(int)aster->dtrats->p[0]!=0)){
+			while(idtrat>0&&(P(aster->wfs[iwfs].pistat->snr,idtrat)<3
+				||(int)P(parms->skyc.dtrats,idtrat)%(int)P(aster->dtrats,0)!=0)){
 				idtrat--;
 			}
 		}
-		aster->idtrats->p[iwfs]=idtrat;
-		aster->dtrats->p[iwfs]=parms->skyc.dtrats->p[idtrat];
-		int ng=aster->g->p[iwfs]->nx;
+		P(aster->idtrats,iwfs)=idtrat;
+		P(aster->dtrats,iwfs)=P(parms->skyc.dtrats,idtrat);
+		int ng=P(aster->g,iwfs)->nx;
 		if(idtrat>-1){
 			for(int ig=0; ig<ng; ig++){
-				P(aster->neam->p[0], iwfs, iwfs)->p[ig*(ng+1)]=
-					pow(aster->wfs[iwfs].pistat->sanea->p[idtrat]->p[ig], 2);
+				P(P(P(aster->neam,0), iwfs, iwfs),ig,ig)=
+					pow(P(P(aster->wfs[iwfs].pistat->sanea,idtrat),ig), 2);
 			}
 		} else{//no star available
-			dset(P(aster->neam->p[0], iwfs, iwfs), 0);
+			dset(P(P(aster->neam,0), iwfs, iwfs), 0);
 		}
 		if(parms->skyc.verbose){
-			info("%3d ", (int)parms->skyc.dtrats->p[idtrat]);
+			info("%3d ", (int)P(parms->skyc.dtrats,idtrat));
 		}
 	}//for iwfs
 }
@@ -594,17 +594,17 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 		//assemble neam
 		if(aster->neam) error("neam is already set?\n");
 		aster->neam=dccellnew(1, 1);
-		aster->neam->p[0]=dcellnew(aster->nwfs, aster->nwfs);
+		P(aster->neam,0)=dcellnew(aster->nwfs, aster->nwfs);
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			int ng=aster->g->p[iwfs]->nx;
-			P(aster->neam->p[0], iwfs, iwfs)=dnew(ng, ng);
+			int ng=P(aster->g,iwfs)->nx;
+			P(P(aster->neam,0), iwfs, iwfs)=dnew(ng, ng);
 		}
 		aster->dtrats=lnew(aster->nwfs, 1);
 		aster->idtrats=lnew(aster->nwfs, 1);
 		int wfs0_min=0, wfs0_max=0;
 		PISTAT_S* pistat0=aster->wfs[0].pistat;//&star[aster->wfs[0].istar].pistat[aster->wfs[0].ipowfs];
 		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-			if(pistat0->snr->p[idtrat]>=parms->skyc.snrmin){
+			if(P(pistat0->snr,idtrat)>=parms->skyc.snrmin){
 				if(wfs0_min==0){
 					wfs0_min=idtrat;
 				}
@@ -618,13 +618,13 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 		//Try progressively lower sampling frequencies until performance starts to degrades
 		for(int idtrat_limit=wfs0_max; idtrat_limit>wfs0_min; idtrat_limit--){
 			setup_aster_kalman_multirate(aster, parms, idtrat_limit);//setup aster->dtrats and aster->neam
-			aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, aster->neam->p[0], 0);
+			aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, P(aster->neam,0), 0);
 			dmat* rests=0;
 #define USE_SIM 0 //ztiltout is not available here.
 #if USE_SIM   //more accurate
 			dmat* res=skysim_sim(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->varol,
 				aster, 0, parms, -1, 1, -1);
-			real res0=res?res->p[0]:simu->varol;
+			real res0=res?P(res,0):simu->varol;
 			dfree(res);
 #else
 			rests=kalman_test(aster->kalman[0], simu->mideal);
@@ -650,10 +650,10 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 		}
 		setup_aster_kalman_multirate(aster, parms, idtrat_min);
 		if(parms->skyc.verbose) info("selected\n");
-		aster->res_ngs->p[0]=resmin;
+		P(aster->res_ngs,0)=resmin;
 		aster->kalman[0]=kalman_min;
 		if(parms->skyc.dbg){
-			kalman_write(aster->kalman[0], "%s/aster%d_kalman_%g", dirsetup, aster->iaster, parms->skyc.dtrats->p[idtrat_min]);
+			kalman_write(aster->kalman[0], "%s/aster%d_kalman_%g", dirsetup, aster->iaster, P(parms->skyc.dtrats,idtrat_min));
 		}
 	} else{
 		if(aster->neam) cellfree(aster->neam);
@@ -665,24 +665,24 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 		for(int idtrat=0; idtrat<ndtrat; idtrat++){
 			//assemble neam
 			//TIC;tic;
-			aster->neam->p[idtrat]=dcellnew(aster->nwfs, aster->nwfs);
+			P(aster->neam,idtrat)=dcellnew(aster->nwfs, aster->nwfs);
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				dmat* tmp=ddup(aster->wfs[iwfs].pistat->sanea->p[idtrat]);/*in rad */
+				dmat* tmp=ddup(P(aster->wfs[iwfs].pistat->sanea,idtrat));/*in rad */
 				dcwpow(tmp, 2);
 				dsp* tmp2=dspnewdiag(tmp->nx, tmp->p, 1);
-				dspfull(PP(aster->neam->p[idtrat], iwfs, iwfs), tmp2, 'n', 1);
+				dspfull(PP(P(aster->neam,idtrat), iwfs, iwfs), tmp2, 'n', 1);
 				dfree(tmp); dspfree(tmp2);
 			}
 
-			int dtrat=parms->skyc.dtrats->p[idtrat];
+			int dtrat=P(parms->skyc.dtrats,idtrat);
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				dtrats->p[iwfs]=dtrat;
+				P(dtrats,iwfs)=dtrat;
 			}
-			aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, aster->neam->p[idtrat], 0);
+			aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, P(aster->neam,idtrat), 0);
 			//toc("kalman");
 #if USE_SIM 
 			dmat* res=skysim_sim(0, simu->mideal, simu->mideal_oa, simu->varol, aster, 0, parms, idtrat, 1, -1);
-			real rms=res?res->p[0]:simu->varol;
+			real rms=res?P(res,0):simu->varol;
 			dfree(res);
 #else
 			dmat* res=kalman_test(aster->kalman[idtrat], simu->mideal);
@@ -785,9 +785,9 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 					info(" %d", aster[iaster].wfs[iwfs].istar);
 				}
 				info("), dtrats=(%2d,%2d,%2d), res= %.2f nm\n",
-					(int)parms->skyc.dtrats->p[aster[iaster].idtratmin],
-					(int)parms->skyc.dtrats->p[aster[iaster].mdtrat],
-					(int)parms->skyc.dtrats->p[aster[iaster].idtratmax-1],
+					(int)P(parms->skyc.dtrats,aster[iaster].idtratmin),
+					(int)P(parms->skyc.dtrats,aster[iaster].mdtrat),
+					(int)P(parms->skyc.dtrats,aster[iaster].idtratmax-1),
 					sqrt(P(res, aster[iaster].mdtrat, iaster))*1e9);
 			}
 		} else{//multirate
@@ -797,7 +797,7 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 			if(parms->skyc.verbose){
 				info("aster%2d, dtrats=(", iaster);
 				for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
-					info(" %ld", aster[iaster].dtrats->p[iwfs]);
+					info(" %ld", P(aster[iaster].dtrats,iwfs));
 				}
 				info("), stars=(");
 				for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
@@ -839,7 +839,7 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 				star[istar].use[ipowfs]=1;
 				if(parms->skyc.estimate&&parms->skyc.nsky==1){
 					char temp2[1023];
-					snprintf(temp2, 1023, "(x=%.1f, y=%.1f, J=%.1f) ", star[istar].thetax*206265, star[istar].thetay*206265, star[istar].mags->p[0]);
+					snprintf(temp2, 1023, "(x=%.1f, y=%.1f, J=%.1f) ", star[istar].thetax*206265, star[istar].thetay*206265, P(star[istar].mags,0));
 					strncat(temp1, temp2, 1023);
 				}
 			}

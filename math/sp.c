@@ -199,7 +199,7 @@ void X(spdisp)(const X(sp)* sp){
 		dbg("X(spdisp):\n");
 		for(ic=0; ic<sp->ny; ic++){
 			imax=-1;
-			for(ir=sp->p[ic];ir<sp->p[ic+1];ir++){
+			for(ir=P(sp,ic);ir<P(sp,ic+1);ir++){
 #ifdef COMP_COMPLEX
 				printf("(%ld,%ld)=(%g,%g)\n",
 					(long)sp->i[ir], (long)ic, creal(sp->x[ir]), cimag(sp->x[ir]));
@@ -227,10 +227,10 @@ int X(spcheck)(const X(sp)* sp){
 		long imax;
 		for(ic=0; ic<sp->ny; ic++){
 			imax=-1;
-			if(sp->p[ic+1]<sp->p[ic]){
+			if(P(sp,ic+1)<P(sp,ic)){
 				error("p in column %ld is smaller than %ld\n", ic+1, ic);
 			}
-			for(ir=sp->p[ic];ir<sp->p[ic+1];ir++){
+			for(ir=P(sp,ic);ir<P(sp,ic+1);ir++){
 				if(sp->i[ir]>imax){
 					imax=sp->i[ir];
 				} else{
@@ -272,9 +272,9 @@ void X(spscalex)(X(sp)* A, const X(mat)* xs){
 				A->nx, A->ny, xs->nx, xs->ny);
 		}
 		for(long iy=0; iy<A->ny; iy++){
-			for(long i=A->p[iy]; i<A->p[iy+1]; i++){
+			for(long i=P(A,iy); i<P(A,iy+1); i++){
 				long ix=A->i[i];
-				A->x[i]*=xs->p[ix];
+				A->x[i]*=P(xs,ix);
 			}
 		}
 	}
@@ -289,8 +289,8 @@ void X(spscaley)(X(sp)* A, const X(mat)* ys){
 				A->nx, A->ny, ys->nx, ys->ny);
 		}
 		for(long iy=0; iy<A->ny; iy++){
-			for(long i=A->p[iy]; i<A->p[iy+1]; i++){
-				A->x[i]*=ys->p[iy];
+			for(long i=P(A,iy); i<P(A,iy+1); i++){
+				A->x[i]*=P(ys,iy);
 			}
 		}
 	}
@@ -302,7 +302,7 @@ X(spcell)* X(spcellref)(const X(spcell)* A){
 	if(!A) return NULL;
 	X(spcell)* out=(X(spcell*))cellnew(A->nx, A->ny);
 	for(long i=0; i<A->nx*A->ny; i++){
-		out->p[i]=X(spref)(A->p[i]);
+		P(out,i)=X(spref)(P(A,i));
 	}
 	return out;
 }
@@ -313,7 +313,7 @@ X(spcell)* X(spcell_cast)(const void* A_){
 	if(!A_) return 0;
 	cell* A=cell_cast(A_);
 	for(int i=0; i<A->nx*A->ny; i++){
-		assert(!A->p[i]||issp(A->p[i]));
+		assert(!P(A,i)||issp(P(A,i)));
 	}
 	return (X(spcell)*)A;
 }
@@ -321,7 +321,7 @@ X(spcell)* X(spcell_cast)(const void* A_){
  * inplace scale a X(dspcell) object*/
 void X(spcellscale)(X(spcell)* A, const T beta){
 	for(int i=0; i<A->nx*A->ny; i++){
-		X(spscale)(A->p[i], beta);
+		X(spscale)(P(A,i), beta);
 	}
 }
 /**
@@ -360,10 +360,10 @@ X(mat)* X(spdiag)(const X(sp)* A){
 	assert_sp(A);
 	X(mat)* out=X(new)(A->nx, 1);
 	for(long icol=0; icol<A->ny; icol++){
-		for(long irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+		for(long irow=P(A,icol); irow<P(A,icol+1); irow++){
 			long row=A->i[irow];
 			if(row==icol){
-				out->p[icol]=A->x[irow];
+				P(out,icol)=A->x[irow];
 			}
 		}
 	}
@@ -382,7 +382,7 @@ void X(spmuldiag)(X(sp)* restrict A, const T* w, T alpha){
 		assert_sp(A);
 		for(long icol=0; icol<A->ny; icol++){
 			const T wi=w[icol]*alpha;
-			for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+			for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
 				A->x[ix]*=wi;
 			}
 		}
@@ -400,8 +400,8 @@ T X(spwdinn)(const X(mat)* y, const X(sp)* A, const X(mat)* x){
 			assert_sp(A);
 			assert(x->ny==1&&y->ny==1&&A->nx==y->nx&&A->ny==x->nx);
 			for(int icol=0; icol<A->ny; icol++){
-				for(int ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-					res+=y->p[A->i[ix]]*A->x[ix]*x->p[icol];
+				for(int ix=P(A,icol); ix<P(A,icol+1); ix++){
+					res+=y->p[A->i[ix]]*A->x[ix]*P(x,icol);
 				}
 			}
 		} else{
@@ -422,7 +422,7 @@ T X(spcellwdinn)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
 			/*PSX(cell)* Ap=A; */
 			for(int iy=0; iy<A->ny; iy++){
 				for(int ix=0; ix<A->nx; ix++){
-					res+=X(spwdinn)(y->p[ix], P(A, ix, iy), x->p[iy]);
+					res+=X(spwdinn)(P(y,ix), P(A, ix, iy), P(x,iy));
 				}
 			}
 		} else{
@@ -451,7 +451,7 @@ void X(spfull)(X(mat)** out0, const X(sp)* A, const char trans, const T alpha){
 			X(mat)* out=*out0;
 			assert(out->nx==A->nx&&out->ny==A->ny);
 			for(icol=0; icol<A->ny; icol++){
-				for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+				for(ix=P(A,icol); ix<P(A,icol+1); ix++){
 					irow=A->i[ix];
 					if(irow>=nx)
 						error("invalid row:%ld, %ld", irow, nx);
@@ -471,7 +471,7 @@ void X(spfull)(X(mat)** out0, const X(sp)* A, const char trans, const T alpha){
 			X(mat)* out=*out0;
 			assert(out->nx==A->ny&&out->ny==A->nx);
 			for(icol=0; icol<A->ny; icol++){
-				for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+				for(ix=P(A,icol); ix<P(A,icol+1); ix++){
 					irow=A->i[ix];
 					if(irow>=nx)
 						error("invalid row:%ld, %ld", irow, nx);
@@ -496,7 +496,7 @@ X(sp)* X(2sp)(X(mat)* A, R thres){
 	X(sp)* out=X(spnew)(A->nx, A->ny, A->nx*A->ny);
 	long count=0;
 	for(long icol=0; icol<A->ny; icol++){
-		out->p[icol]=count;
+		P(out,icol)=count;
 		for(long irow=0; irow<A->nx; irow++){
 			T val=P(A, irow, icol);
 			if(fabs(val)>thres){
@@ -554,7 +554,7 @@ void X(spaddI)(X(sp)* A, T alpha){
 	long missing=0;
 	for(long icol=0; icol<A->ny; icol++){
 		int found=0;
-		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
 			if(A->i[ix]==icol){
 				found=1;
 				break;
@@ -569,10 +569,10 @@ void X(spaddI)(X(sp)* A, T alpha){
 	}
 	missing=0;
 	for(long icol=0; icol<A->ny; icol++){
-		A->p[icol]+=missing;
+		P(A,icol)+=missing;
 		int found=0;
 		long ix;
-		for(ix=A->p[icol]; ix<A->p[icol+1]+missing; ix++){
+		for(ix=P(A,icol); ix<P(A,icol+1)+missing; ix++){
 			if(A->i[ix]==icol){
 				found=1;
 				A->x[ix]+=alpha;
@@ -687,7 +687,7 @@ X(sp)* X(spcat)(const X(sp)* A, const X(sp)* B, int dim){
 		memcpy(C->x+A->p[A->ny], B->x, B->p[B->ny]*sizeof(T));
 		const long Anzmax=A->p[A->ny];
 		for(long i=0; i<B->ny+1; i++){
-			C->p[i+A->ny]=Anzmax+B->p[i];
+			C->p[i+A->ny]=Anzmax+P(B,i);
 		}
 	} else{
 		error("Wrong dimension\n");
@@ -699,7 +699,7 @@ X(sp)* X(spcat)(const X(sp)* A, const X(sp)* B, int dim){
 X(sp)* X(spcell2sp)(const X(spcell)* A){
 	/*convert X(spcell) to sparse. */
 	if(A->nx*A->ny==1){/*There is a single cell */
-		return X(spref)(A->p[0]);
+		return X(spref)(P(A,0));
 	}
 	long nx=0, ny=0, nzmax=0;
 	long nnx[A->nx];
@@ -726,8 +726,8 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 		}
 	}
 	for(long i=0; i<A->nx*A->ny; i++){
-		if(A->p[i]&&A->p[i]->nzmax>0){
-			nzmax+=A->p[i]->p[A->p[i]->ny];
+		if(P(A,i)&&P(A,i)->nzmax>0){
+			nzmax+=P(A,i)->p[P(A,i)->ny];
 		}
 	}
 	X(sp)* out=X(spnew)(nx, ny, nzmax);
@@ -735,7 +735,7 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 	long jcol=0;
 	for(long iy=0; iy<A->ny; iy++){
 		for(long icol=0; icol<nny[iy]; icol++){
-			out->p[jcol+icol]=count;
+			P(out,jcol+icol)=count;
 			long kr=0;
 			for(long ix=0; ix<A->nx; ix++){
 				if(P(A, ix, iy)){
@@ -751,7 +751,7 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 		}
 		jcol+=nny[iy];
 	}
-	out->p[ny]=count;
+	P(out,ny)=count;
 	if(count>nzmax){
 		error("X(spcell2sp) gets Wrong results. count=%ld, nzmax=%ld\n", count, nzmax);
 	}
@@ -773,7 +773,7 @@ X(mat)* X(spsum)(const X(sp)* A, int dim){
 		v=X(new)(1, A->ny);
 		p=v->p;
 		for(int icol=0; icol<A->ny; icol++){
-			for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+			for(int irow=P(A,icol); irow<P(A,icol+1); irow++){
 				p[icol]+=A->x[irow];
 			}
 		}
@@ -782,7 +782,7 @@ X(mat)* X(spsum)(const X(sp)* A, int dim){
 		v=X(new)(A->nx, 1);
 		p=v->p;
 		for(int icol=0; icol<A->ny; icol++){
-			for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+			for(int irow=P(A,icol); irow<P(A,icol+1); irow++){
 				p[A->i[irow]]+=A->x[irow];
 			}
 		}
@@ -804,7 +804,7 @@ X(mat)* X(spsumabs)(const X(sp)* A, int col){
 		v=X(new)(1, A->ny);
 		p=v->p;
 		for(int icol=0; icol<A->ny; icol++){
-			for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+			for(int irow=P(A,icol); irow<P(A,icol+1); irow++){
 				p[icol]+=fabs(A->x[irow]);
 			}
 		}
@@ -813,7 +813,7 @@ X(mat)* X(spsumabs)(const X(sp)* A, int col){
 		v=X(new)(A->nx, 1);
 		p=v->p;
 		for(int icol=0; icol<A->ny; icol++){
-			for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+			for(int irow=P(A,icol); irow<P(A,icol+1); irow++){
 				p[A->i[irow]]+=fabs(A->x[irow]);
 			}
 		}
@@ -847,7 +847,7 @@ void X(spdroptol)(X(sp)* A, R thres){
 */
 void X(spcelldroptol)(X(spcell)* A, R thres){
 	for(int i=0; i<A->nx*A->ny; i++){
-		X(spdroptol)(A->p[i], thres);
+		X(spdroptol)(P(A,i), thres);
 	}
 }
 
@@ -867,20 +867,20 @@ void X(spsort)(X(sp)* A){
 	long nelem_max=A->nzmax/A->ny*2;
 	spelem* col=mymalloc(nelem_max, spelem);
 	for(long i=0; i<A->ny; i++){
-		long nelem=(A->p[i+1]-A->p[i]);
+		long nelem=(P(A,i+1)-P(A,i));
 		if(nelem==0) continue;
 		if(nelem>nelem_max){
 			nelem_max=nelem;
 			col=myrealloc(col, nelem_max, spelem);
 		}
 		for(long j=0; j<nelem; j++){
-			col[j].i=A->i[A->p[i]+j];
-			col[j].x=A->x[A->p[i]+j];
+			col[j].i=A->i[P(A,i)+j];
+			col[j].x=A->x[P(A,i)+j];
 		}
 		qsort(col, nelem, sizeof(spelem), (int(*)(const void*, const void*))spelemcmp);
 		for(long j=0; j<nelem; j++){
-			A->i[A->p[i]+j]=col[j].i;
-			A->x[A->p[i]+j]=col[j].x;
+			A->i[P(A,i)+j]=col[j].i;
+			A->x[P(A,i)+j]=col[j].x;
 		}
 	}
 	free(col);
@@ -891,7 +891,7 @@ void X(spsort)(X(sp)* A){
 */
 void X(spcellsort)(X(spcell)* A){
 	for(int i=0; i<A->nx*A->ny; i++){
-		X(spsort)(A->p[i]);
+		X(spsort)(P(A,i));
 	}
 }
 /**
@@ -1000,8 +1000,8 @@ static X(sp)* X(sppermcol)(const X(sp)* A, int reverse, long* p){
 	}
 
 	for(long icol=0; icol<A->ny; icol++){
-		B->p[icol]=A->p[icol];
-		for(long irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+		P(B,icol)=P(A,icol);
+		for(long irow=P(A,icol); irow<P(A,icol+1); irow++){
 			long row=A->i[irow];
 			B->i[irow]=perm[row];
 			B->x[irow]=A->x[irow];
@@ -1055,7 +1055,7 @@ X(sp)* X(spinvbdiag)(const X(sp)* A, long bs){
 		X(zero)(bk);
 
 		for(long icol=is; icol<is+bs; icol++){
-			for(long irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+			for(long irow=P(A,icol); irow<P(A,icol+1); irow++){
 				long row=A->i[irow];
 				long ind=row-is;
 				if(ind<0||ind>=bs){
@@ -1067,10 +1067,10 @@ X(sp)* X(spinvbdiag)(const X(sp)* A, long bs){
 		}
 		X(inv_inplace)(bk);
 		for(long icol=is; icol<is+bs; icol++){
-			B->p[icol]=icol*bs;
+			P(B,icol)=icol*bs;
 			for(long irow=0; irow<bs; irow++){
-				B->i[B->p[icol]+irow]=irow+is;
-				B->x[B->p[icol]+irow]=P(pbk, irow, icol-is);
+				B->i[P(B,icol)+irow]=irow+is;
+				B->x[P(B,icol)+irow]=P(pbk, irow, icol-is);
 			}
 		}
 	}
@@ -1091,10 +1091,10 @@ X(cell)* X(spblockextract)(const X(sp)* A, long bs){
 	X(cell)* out=X(cellnew)(nb, 1);
 	for(long ib=0;ib<nb; ib++){
 		long is=ib*bs;/*starting col */
-		out->p[ib]=X(new)(bs, bs);
-		X(mat)* pbk=out->p[ib];
+		P(out,ib)=X(new)(bs, bs);
+		X(mat)* pbk=P(out,ib);
 		for(long icol=is; icol<is+bs; icol++){
-			for(long irow=A->p[icol]; irow<A->p[icol+1]; irow++){
+			for(long irow=P(A,icol); irow<P(A,icol+1); irow++){
 				long row=A->i[irow];
 				long ind=row-is;
 				if(ind<0||ind>=bs){

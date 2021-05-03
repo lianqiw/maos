@@ -144,7 +144,7 @@ void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
 void hyst_dcell(hyst_t** hyst, dcell* dmreal, const dcell* dmcmd){
 	if(!hyst) return;
 	for(int idm=0; idm<dmcmd->nx*dmcmd->ny; idm++){
-		hyst_dmat(hyst[idm], dmreal->p[idm], dmcmd->p[idm]);
+		hyst_dmat(hyst[idm], P(dmreal,idm), P(dmcmd,idm));
 	}
 }
 

@@ -293,7 +293,7 @@ int main(){
 	dfftshift(tmp);
 	dscale(tmp,256*256);
 	for(int i=0; i<256*256; i++){
-	    invpsd[offset+i]=tmp->p[i];
+	    invpsd[offset+i]=P(tmp,i);
 	}
 	offset+=256*256;
 	writebin(tmp,"invpsd_%ld",ips);

@@ -110,13 +110,13 @@ real nafocus_residual(real fs,   /**<[in] sampling frequency of NGS*/
 	dmat* nus=dlogspace(-3, 5, 2000);/*agrees good with skycoverage matlab code. */
 	real rms=0;
 	for(long i=0; i<nus->nx; i++){
-		nu=nus->p[i];
+		nu=P(nus,i);
 		Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
 		const comp Hrej=1./(1.+gain*Hol);
 		const real NaPSD=nafocus_NaPSD(nu, alpha, beta);
 		rms+=NaPSD*pow(cabs(Hrej), 2)*nu;/*we integratr f(nu)nu d(log(nu)) */
 	}
-	rms*=(log(nus->p[nus->nx-1])-log(nus->p[0]))/(nus->nx-1);
+	rms*=(log(P(nus,nus->nx-1))-log(P(nus,0)))/(nus->nx-1);
 	real focus=sqrt(rms)*1./(16*sqrt(3))*pow((D/hs), 2);/*convert to focus error in meter. */
 	dfree(nus);
 	return focus;
@@ -130,7 +130,7 @@ dmat* nafocus_time(real alpha,/**<[in] parameter of sodium layer height PSD.*/
 	cmat* psd=cnew(nstep, 1);
 	//cfft2plan(psd, -1);
 	for(int i=1; i<nstep; i++){
-		psd->p[i]=sqrt(nafocus_NaPSD(df*i, alpha, beta)*df)*COMPLEX(randn(rstat), randn(rstat));
+		P(psd,i)=sqrt(nafocus_NaPSD(df*i, alpha, beta)*df)*COMPLEX(randn(rstat), randn(rstat));
 	}
 	cfft2(psd, -1);
 	dmat* out=NULL;

@@ -43,8 +43,8 @@ void psf2i0gxgy(dmat* i0, dmat* gx, dmat* gy, dmat* psf, DTF_S* dtf, int deriv){
 		//apply derivative.
 		for(int iy=0; iy<otf->ny; iy++){
 			for(int ix=0; ix<otf->nx; ix++){
-				P(otf, ix, iy)*=dtf->U->p[ix];
-				P(otfsave, ix, iy)*=dtf->U->p[iy];
+				P(otf, ix, iy)*=P(dtf->U,ix);
+				P(otfsave, ix, iy)*=P(dtf->U,iy);
 			}
 		}
 		cfft2(otf, 1);
@@ -74,8 +74,8 @@ void genmtch(dcell** mtche, dmat** sanea,
 		mtch(PP(*mtche, isa), &nea2, P(i0, isa), P(gx, isa), P(gy, isa), 0, 0, 0,
 			bkgrnd, bkgrnd, rne, pixtheta, pixtheta, 0, 0, cr);
 	   /*Drop coupling in x/y gradients. */
-		(*sanea)->p[isa]=sqrt(nea2->p[0]);
-		(*sanea)->p[isa+nsa]=sqrt(nea2->p[3]);
+		P(*sanea,isa)=sqrt(P(nea2,0));
+		P(*sanea,isa+nsa)=sqrt(P(nea2,3));
 		dfree(nea2);
 	}
 }

@@ -174,12 +174,12 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 	/*adding rayleigh backscatter poisson noise. */
 	real rne2=rne*rne;
 	for(int i=0; i<i0n; i++){/*noise weighting. */
-		if(i0->p[i]<0){//ignore negative pixels.
-			wt->p[i]=1./rne2;
+		if(P(i0,i)<0){//ignore negative pixels.
+			P(wt,i)=1./rne2;
 		} else if(qe){
-			wt->p[i]=qe->p[i]/(rne2/(qe->p[i])+bkgrnd+i0->p[i]+(bkgrnd2?bkgrnd2[i]:0));
+			P(wt,i)=P(qe,i)/(rne2/(P(qe,i))+bkgrnd+P(i0,i)+(bkgrnd2?bkgrnd2[i]:0));
 		} else{
-			wt->p[i]=1./(rne2+bkgrnd+i0->p[i]+(bkgrnd2?bkgrnd2[i]:0));
+			P(wt,i)=1./(rne2+bkgrnd+P(i0,i)+(bkgrnd2?bkgrnd2[i]:0));
 		}
 	}
 
@@ -190,7 +190,7 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 	dfree(tmp);
 
 	for(int i=0; i<i0n; i++){/*noise weighting. */
-		wt->p[i]=1./wt->p[i];
+		P(wt,i)=1./P(wt,i);
 	}
 	dmat* nea2=dtmcc(*mtche, wt);
 

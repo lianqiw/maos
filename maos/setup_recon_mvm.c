@@ -47,7 +47,7 @@ setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			if(!parms->powfs[ipowfs].skip){
 				for(int idm=0; idm<ndm; idm++){
-					MVM->p[idm+ndm*iwfs]=dnew(recon->anloc->p[idm], powfs[ipowfs].saloc->nloc*2);
+					P(MVM,idm,iwfs)=dnew(P(recon->anloc,idm), powfs[ipowfs].saloc->nloc*2);
 				}
 			}
 		}
@@ -62,17 +62,17 @@ setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			} else if(ig%100==0){
 				info("%6d of %6d\n", ig, ntotgrad);
 			}
-			if(ig) eye->p[ig-1]=0;
-			eye->p[ig]=1;
+			if(ig) P(eye,ig-1)=0;
+			P(eye,ig)=1;
 			if(!parms->powfs[parms->wfsr[curwfs].powfs].skip){
 				dcellzero(res);
 				muv_solve(&res, &recon->LL, &recon->LR, eyec);
 			}
 			for(int idm=0; idm<ndm; idm++){
-				dmat* to=MVM->p[idm+curwfs*ndm];
+				dmat* to=P(MVM,idm,curwfs);
 				if(to){
 					int nact=to->nx;
-					memcpy(to->p+curg*nact, res->p[idm]->p, nact*sizeof(real));
+					memcpy(to->p+curg*nact, P(res,idm)->p, nact*sizeof(real));
 				}
 			}
 			curg++;
@@ -86,7 +86,7 @@ setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 		dfree(eye);
 	} else{
 		dcell* LR=NULL;
-		if(recon->LR.M->p[0]->id==M_REAL){
+		if(P(recon->LR.M,0)->id==M_REAL){
 			LR=(dcell*)recon->LR.M;
 		} else{
 			dcelladd(&LR, 1, (dspcell*)recon->LR.M, 1);
@@ -132,7 +132,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 	//TIC;tic;
 		int curdm=curp[iact][0];
 		int curact=curp[iact][1];
-		if(recon->actcpl&&recon->actcpl->p[curdm]->p[curact]<EPS){
+		if(recon->actcpl&&P(P(recon->actcpl,curdm),curact)<EPS){
 			continue;
 		}
 		if(info->ithread==0){
@@ -146,9 +146,9 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 		dcellzero(FRT);
 		dcellzero(RRT);
 		/*Apply F_L*/
-		eye->p[iact]=1;
+		P(eye,iact)=1;
 		muv_solve(&FLI, &recon->fit->FL, NULL, eyec);
-		eye->p[iact]=0;
+		P(eye,iact)=0;
 		/*Apply F_R'*/
 		muv_trans(&FRT, &recon->fit->FR, FLI, 1);
 		//toc("fit");
@@ -159,10 +159,10 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 		muv_trans(&RRT, &recon->RR, RLT, 1);
 		//toc("tomo");
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			dmat* to=MVMt->p[iwfs+curdm*nwfs];
+			dmat* to=P(MVMt,iwfs,curdm);
 			if(to){
 				int ng=to->nx;
-				memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(real));
+				memcpy(to->p+curact*ng, P(RRT,iwfs)->p, ng*sizeof(real));
 			}
 		}
 		//toc(" %ld", iact);
@@ -193,24 +193,24 @@ setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	const int nwfs=parms->nwfsr;
 	long ntotact=0;
 	for(int idm=0; idm<ndm; idm++){
-		ntotact+=recon->anloc->p[idm];
+		ntotact+=P(recon->anloc,idm);
 	}
 	typedef long long2[2];
 	long2* curp=mymalloc(ntotact, long2);
 	int nact=0;
 	for(int idm=0; idm<ndm; idm++){
-		for(int iact=0; iact<recon->anloc->p[idm]; iact++){
+		for(int iact=0; iact<P(recon->anloc,idm); iact++){
 			curp[nact+iact][0]=idm;
 			curp[nact+iact][1]=iact;
 		}
-		nact+=recon->anloc->p[idm];
+		nact+=P(recon->anloc,idm);
 	}
 	dcell* MVMt=dcellnew(nwfs, ndm);
 	for(int idm=0; idm<ndm; idm++){
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			if(!parms->powfs[ipowfs].skip){
-				MVMt->p[iwfs+idm*nwfs]=dnew(powfs[ipowfs].saloc->nloc*2, recon->anloc->p[idm]);
+				P(MVMt,iwfs,idm)=dnew(powfs[ipowfs].saloc->nloc*2, P(recon->anloc,idm));
 			}
 		}
 	}

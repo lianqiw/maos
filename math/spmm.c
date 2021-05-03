@@ -76,7 +76,7 @@ typedef struct sp_thread_t{
 void X(spmulcreal)(T* restrict y, const X(sp)* A, const RI* restrict x, R alpha){
 	if(A&&x&&y){
 		for(long icol=0; icol<A->ny; icol++){
-			for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+			for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
 				y[A->i[ix]]+=alpha*(A->x[ix]*creal(x[icol]));
 			}
 		}
@@ -95,14 +95,14 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 		assert(y);
 		if(trans=='n'){
 			for(long icol=0; icol<A->ny; icol++){
-				for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+				for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
 					y[A->i[ix]]+=alpha*A->x[ix]*x[icol];
 				}
 			}
 		} else if(trans=='t'){
 			OMPTASK_FOR(icol, 0, A->ny){
 				T tmp=0;
-				for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+				for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
 					tmp+=alpha*(A->x[ix])*x[A->i[ix]];
 				}
 				y[icol]+=tmp;
@@ -111,7 +111,7 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 		} else if(trans=='c'){
 			OMPTASK_FOR(icol, 0, A->ny){
 				T tmp=0;
-				for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+				for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
 					tmp+=alpha*conj(A->x[ix])*x[A->i[ix]];
 				}
 				y[icol]+=tmp;
@@ -146,7 +146,7 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 #define do_trans(A,i,j) P(A,j,i)
 #define LOOP_NORMA(py, yny,  conjA, px, conjx)				\
 	for(long icol=0; icol<A->ny; icol++){				\
-	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
+	    for(long ix=P(A,icol); ix<P(A,icol+1); ix++){		\
 		for(long jcol=0; jcol<yny; jcol++){			\
 		    py(y, A->i[ix], jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, icol, jcol)); \
 		}							\
@@ -156,7 +156,7 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 #define LOOP_TRANSA(py, yny, conjA, px, conjx)				\
 	{								\
 	    OMPTASK_FOR(icol, 0, A->ny){					\
-		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
+		for(long ix=P(A,icol); ix<P(A,icol+1); ix++){		\
 		    for(long jcol=0; jcol<yny; jcol++){			\
 			py(y, icol, jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, A->i[ix], jcol)); \
 		    }							\
@@ -452,7 +452,7 @@ void X(celladd)(void* A_, R ac, const void* B_, R bc){
 		cellinit2(pA, B);
 		cell* A=*pA;
 		for(int i=0; i<B->nx*B->ny; i++){
-			X(celladd)(A->p+i, ac, B->p[i], bc);
+			X(celladd)(A->p+i, ac, P(B,i), bc);
 		}
 	} else{//non cell
 		if(!*pA||ismat(*pA)){//A is dense
@@ -498,7 +498,7 @@ void X(cellscale)(void* A_, R w){
 	cell* A=(cell*)A_;
 	if(iscell(A_)){
 		for(int i=0; i<A->nx*A->ny; i++){
-			X(cellscale)(A->p[i], w);
+			X(cellscale)(P(A,i), w);
 		}
 	} else{
 		if(ismat(A)){
@@ -543,7 +543,7 @@ X(mat)* X(cell2m)(const void* A_){
 					} else if(issp(P(A, ix, iy))){
 					//convert sparse col to full
 						X(sp*)Asp=(X(sp*))P(A, ix, iy);
-						for(long j=Asp->p[icol]; j<Asp->p[icol+1]; j++){
+						for(long j=P(Asp,icol); j<P(Asp,icol+1); j++){
 							pout[Asp->i[j]]=Asp->x[j];
 						}
 					}

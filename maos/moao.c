@@ -68,39 +68,39 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 		real guard=parms->moao[imoao].guard*MAX(dxr, dyr);
 		create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dyr, offset, guard, 0, 0, 0, parms->fit.square);
 		recon->moao[imoao].aloc=loccellnew(1, 1);
-		recon->moao[imoao].aloc->p[0]=map2loc(map, 0);
-		recon->moao[imoao].aloc->p[0]->iac=parms->moao[imoao].iac;
+		P(recon->moao[imoao].aloc,0)=map2loc(map, 0);
+		P(recon->moao[imoao].aloc,0)->iac=parms->moao[imoao].iac;
 		mapfree(map);
-		loc_create_map_npad(recon->moao[imoao].aloc->p[0], parms->fit.square?0:1, 0, 0);
+		loc_create_map_npad(P(recon->moao[imoao].aloc,0), parms->fit.square?0:1, 0, 0);
 		recon->moao[imoao].amap=mapcellnew(1, 1);
-		recon->moao[imoao].amap->p[0]=mapref(recon->moao[imoao].aloc->p[0]->map);
-		recon->moao[imoao].amap->p[0]->iac=parms->moao[imoao].iac;
-		recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc->p[0], NULL);
+		P(recon->moao[imoao].amap,0)=mapref(P(recon->moao[imoao].aloc,0)->map);
+		P(recon->moao[imoao].amap,0)->iac=parms->moao[imoao].iac;
+		recon->moao[imoao].aimcc=loc_mcc_ptt(P(recon->moao[imoao].aloc,0), NULL);
 		dinvspd_inplace(recon->moao[imoao].aimcc);
 		recon->moao[imoao].HA=dspcellnew(1, 1);
-		recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc->p[0], recon->floc, 0, 0, 1);
+		P(recon->moao[imoao].HA,0)=mkh(P(recon->moao[imoao].aloc,0), recon->floc, 0, 0, 1);
 		if(parms->moao[imoao].actstuck){
 			recon->moao[imoao].actstuck=lcellnew(1, 1);
-			recon->moao[imoao].actstuck->p[0]=loc_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actstuck);
+			P(recon->moao[imoao].actstuck,0)=loc_coord2ind(P(recon->moao[imoao].aloc,0), parms->moao[imoao].actstuck);
 			if(parms->dbg.recon_stuck){
 				act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
 			}
 		}
 		if(parms->moao[imoao].actfloat){
 			recon->moao[imoao].actfloat=lcellnew(1, 1);
-			recon->moao[imoao].actfloat->p[0]=loc_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actfloat);
+			P(recon->moao[imoao].actfloat,0)=loc_coord2ind(P(recon->moao[imoao].aloc,0), parms->moao[imoao].actfloat);
 			act_float(recon->moao[imoao].aloc, &recon->moao[imoao].HA, NULL, recon->moao[imoao].actfloat);
 		}
 
 		if(parms->moao[imoao].lrt_ptt){
 			recon->moao[imoao].NW=dcellnew(1, 1);
-			long nloc=recon->moao[imoao].aloc->p[0]->nloc;
-			recon->moao[imoao].NW->p[0]=dnew(nloc, 3);
-			dmat* pNW=recon->moao[imoao].NW->p[0]/*PDMAT*/;
+			long nloc=P(recon->moao[imoao].aloc,0)->nloc;
+			P(recon->moao[imoao].NW,0)=dnew(nloc, 3);
+			dmat* pNW=P(recon->moao[imoao].NW,0)/*PDMAT*/;
 			real scl=1./nloc;
 			real scl2=scl*2./parms->aper.d;
-			const real* locx=recon->moao[imoao].aloc->p[0]->locx;
-			const real* locy=recon->moao[imoao].aloc->p[0]->locy;
+			const real* locx=P(recon->moao[imoao].aloc,0)->locx;
+			const real* locy=P(recon->moao[imoao].aloc,0)->locy;
 			for(long iloc=0; iloc<nloc; iloc++){
 			/*We don't want piston/tip/tilt on the mems. */
 				P(pNW, iloc, 0)=scl;/*piston; */
@@ -125,7 +125,7 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 			writebin(recon->moao[imoao].actslave, "moao%d_actslave", imoao);
 		}
 		if(parms->plot.setup){
-			plotloc("FoV", parms, recon->moao[imoao].aloc->p[0], 0, "moao_aloc");
+			plotloc("FoV", parms, P(recon->moao[imoao].aloc,0), 0, "moao_aloc");
 		}
 	}/*imoao */
 }
@@ -143,35 +143,35 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	const dcell* opdr, const dcell* dmcommon, dcell** rhsout, const real alpha){
 
 	dcell* xp=dcellnew(1, 1);
-	xp->p[0]=dnew(recon->floc->nloc, 1);
+	P(xp,0)=dnew(recon->floc->nloc, 1);
 
 	for(int ipsr=0; ipsr<recon->npsr; ipsr++){
-		const real ht=parms->atmr.ht->p[ipsr];
+		const real ht=P(parms->atmr.ht,ipsr);
 		real scale=1.-ht/hs;
 		if(parms->tomo.square){
 			map_t map;
-			memcpy(&map, recon->xmap->p[ipsr], sizeof(map_t));
-			map.p=opdr->p[ipsr]->p;
+			memcpy(&map, P(recon->xmap,ipsr), sizeof(map_t));
+			map.p=P(opdr,ipsr)->p;
 			prop_grid_stat(&map, recon->floc->stat,
-				xp->p[0]->p, 1,
+				P(xp,0)->p, 1,
 				thetax*ht, thetay*ht, scale, 0, 0, 0);
 		} else{
-			prop_nongrid(recon->xloc->p[ipsr], opdr->p[ipsr]->p,
-				recon->floc, xp->p[0]->p, 1,
+			prop_nongrid(P(recon->xloc,ipsr), P(opdr,ipsr)->p,
+				recon->floc, P(xp,0)->p, 1,
 				thetax*ht, thetay*ht, scale, 0, 0);
 		}
 	}
 	//static int count=-1; count++;
-	//writebin(xp->p[0], "opdfit0_%d", count);
+	//writebin(P(xp,0), "opdfit0_%d", count);
 	for(int idm=0; idm<parms->ndm; idm++){
 		const real ht=parms->dm[idm].ht;
 		real scale=1.-ht/hs;
-		prop_nongrid(recon->aloc->p[idm], dmcommon->p[idm]->p,
-			recon->floc, xp->p[0]->p, -1,
+		prop_nongrid(P(recon->aloc,idm), P(dmcommon,idm)->p,
+			recon->floc, P(xp,0)->p, -1,
 			thetax*ht, thetay*ht, scale,
 			0, 0);
 	}
-	//writebin(xp->p[0], "opdfit1_%d", count);
+	//writebin(P(xp,0), "opdfit1_%d", count);
 	if(rhsout){
 		*rhsout=dcelldup(xp);
 	}
@@ -220,12 +220,12 @@ void moao_recon(sim_t* simu){
 	} else{/*Take integrator output, remove NGS modes if any. */
 		if(parms->sim.closeloop){
 			if(parms->sim.fuseint){
-				dcellcp(&dmcommon, simu->dmint->mint->p[0]);
+				dcellcp(&dmcommon, P(simu->dmint->mint,0));
 				if(parms->recon.split==1){
 					remove_dm_ngsmod(simu, dmcommon);
 				}
 			} else{
-				dcellcp(&dmcommon, simu->dmint->mint->p[0]);
+				dcellcp(&dmcommon, P(simu->dmint->mint,0));
 			}
 		} else{
 			dcellcp(&dmcommon, simu->dmerr);
@@ -241,7 +241,7 @@ void moao_recon(sim_t* simu){
 			dcell* rhsout=NULL;
 			if(imoao<0) continue;
 			real hs=parms->wfs[iwfs].hs;
-			dmmoao->p[0]=(simu->dm_wfs->p[iwfs+iy*nwfs]);
+			P(dmmoao,0)=P(simu->dm_wfs,iwfs,iy);
 			dcellzero(rhs);
 			moao_FitR(&rhs, recon, parms, imoao,
 				parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
@@ -252,11 +252,11 @@ void moao_recon(sim_t* simu){
 				  real ptt[3]={0,0,0};
 				  loc_t *aloc=recon->moao[imoao].aloc;
 				  dmat *aimcc=recon->moao[imoao].aimcc;
-				  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
-				  loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
+				  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(dmmoao,0)->p);
+				  loc_remove_ptt(P(dmmoao,0)->p, ptt, aloc);
 				  }*/
 			if(isfinite(parms->moao[imoao].stroke)){
-				int nclip=dclip(dmmoao->p[0],
+				int nclip=dclip(P(dmmoao,0),
 					-parms->moao[imoao].stroke,
 					parms->moao[imoao].stroke);
 				if(nclip>0){
@@ -264,16 +264,16 @@ void moao_recon(sim_t* simu){
 				}
 			}
 			if(parms->plot.run){
-				drawopd("MOAO WFS RHS", recon->floc, rhsout->p[0], parms->dbg.draw_opdmax->p,
+				drawopd("MOAO WFS RHS", recon->floc, P(rhsout,0), parms->dbg.draw_opdmax->p,
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs rhs %d", iwfs);
-				drawopd("MOAO WFS", recon->moao[imoao].aloc->p[0], dmmoao->p[0], parms->dbg.draw_opdmax->p,
+				drawopd("MOAO WFS", P(recon->moao[imoao].aloc,0), P(dmmoao,0), parms->dbg.draw_opdmax->p,
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs %d", iwfs);
 			}
 			if(parms->save.dm){
-				zfarr_push(simu->save->dm_wfs[iwfs], simu->wfsisim, dmmoao->p[0]);
+				zfarr_push(simu->save->dm_wfs[iwfs], simu->wfsisim, P(dmmoao,0));
 			}
 			dcellfree(rhsout);
-			dmmoao->p[0]=NULL;
+			P(dmmoao,0)=NULL;
 		}/*if wfs */
 		dcellfree(dmmoao);
 	}
@@ -281,28 +281,28 @@ void moao_recon(sim_t* simu){
 		int imoao=parms->evl.moao;
 		dcell* dmmoao=dcellnew(1, 1);
 		for(int ievl=0; ievl<nevl; ievl++){
-			dmmoao->p[0]=(simu->dm_evl->p[ievl+iy*nevl]);
+			P(dmmoao,0)=P(simu->dm_evl,ievl,iy);
 			dcell* rhsout=NULL;
 			dcellzero(rhs);
 			moao_FitR(&rhs, recon, parms, imoao,
-				parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
+				P(parms->evl.thetax,ievl), P(parms->evl.thetay,ievl),
 				INFINITY, simu->opdr, dmcommon, (parms->plot.run||1)?&rhsout:NULL, 1);
 
 			pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 				parms->recon.warm_restart, parms->fit.maxit);
 			if(0){
-				writebin(rhsout->p[0], "evl_rhs_%d_%d", ievl, simu->perfisim);
-				writebin(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->perfisim);
+				writebin(P(rhsout,0), "evl_rhs_%d_%d", ievl, simu->perfisim);
+				writebin(P(dmmoao,0), "evl_dmfit_%d_%d", ievl, simu->perfisim);
 			}
 			/*if(parms->recon.split){//remove the tip/tilt form MEMS DM
 			  real ptt[3]={0,0,0};
 			  loc_t *aloc=recon->moao[imoao].aloc;
 			  dmat *aimcc=recon->moao[imoao].aimcc;
-			  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
-			  loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
+			  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(dmmoao,0)->p);
+			  loc_remove_ptt(P(dmmoao,0)->p, ptt, aloc);
 			  }*/
 			if(isfinite(parms->moao[imoao].stroke)){
-				int nclip=dclip(dmmoao->p[0],
+				int nclip=dclip(P(dmmoao,0),
 					-parms->moao[imoao].stroke,
 					parms->moao[imoao].stroke);
 				if(nclip>0){
@@ -310,16 +310,16 @@ void moao_recon(sim_t* simu){
 				}
 			}
 			if(parms->plot.run){
-				drawopd("MOAO EVL RHS", recon->floc, rhsout->p[0], parms->dbg.draw_opdmax->p,
+				drawopd("MOAO EVL RHS", recon->floc, P(rhsout,0), parms->dbg.draw_opdmax->p,
 					"MOAO for WFS", "x (m)", "y(m)", "Evl %d", ievl);
-				drawopd("MOAO EVL", recon->moao[imoao].aloc->p[0], dmmoao->p[0], parms->dbg.draw_opdmax->p,
+				drawopd("MOAO EVL", P(recon->moao[imoao].aloc,0), P(dmmoao,0), parms->dbg.draw_opdmax->p,
 					"MOAO for EVL", "x (m)", "y(m)", "Evl %d", ievl);
 			}
 			if(parms->save.dm){
-				zfarr_push(simu->save->dm_evl[ievl], simu->perfisim, dmmoao->p[0]);
+				zfarr_push(simu->save->dm_evl[ievl], simu->perfisim, P(dmmoao,0));
 			}
 			dcellfree(rhsout);
-			dmmoao->p[0]=NULL;
+			P(dmmoao,0)=NULL;
 		}/*ievl */
 		dcellfree(dmmoao);
 	}

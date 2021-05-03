@@ -254,7 +254,7 @@ static void readcfg_powfs(parms_t* parms){
 		parms->powfs[ipowfs].wvl=dnew(nwvl, 1);
 		real wvlm=0;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			real wvl=wvllist->p[count+iwvl];
+			real wvl=P(wvllist,count+iwvl);
 			if(wvl>1e-3){
 				wvl=wvl*1e-6;
 			}
@@ -262,7 +262,7 @@ static void readcfg_powfs(parms_t* parms){
 				error("Wavelength must be in ascend order\n");
 			}
 			wvlm=wvl;
-			parms->powfs[ipowfs].wvl->p[iwvl]=wvl;
+			P(parms->powfs[ipowfs].wvl,iwvl)=wvl;
 		}
 		if(wvlwts->nx){
 			parms->powfs[ipowfs].wvlwts=dnew(nwvl, 1);
@@ -489,11 +489,11 @@ static void readcfg_wfs(parms_t* parms){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			if(iwfs>=wfscount&&iwfs<wfscount+mwfs){
 				parms->wfs[iwfs].powfs=ipowfs;
-				parms->powfs[ipowfs].wfs->p[count]=iwfs;
-				parms->powfs[ipowfs].wfsind->p[iwfs]=count;
+				P(parms->powfs[ipowfs].wfs,count)=iwfs;
+				P(parms->powfs[ipowfs].wfsind,iwfs)=count;
 				count++;
 			} else{
-				parms->powfs[ipowfs].wfsind->p[iwfs]=-1;/*not belong */
+				P(parms->powfs[ipowfs].wfsind,iwfs)=-1;/*not belong */
 			}
 		}
 		wfscount+=mwfs;
@@ -534,7 +534,7 @@ static void readcfg_wfs(parms_t* parms){
 		if(siglev->nx==0){
 			parms->wfs[iwfs].siglev=parms->powfs[ipowfs].siglev;
 		} else{
-			parms->wfs[iwfs].siglev=siglev->p[iwfs];
+			parms->wfs[iwfs].siglev=P(siglev,iwfs);
 			if(parms->powfs[ipowfs].siglev>0&&powfs_siglev_override){
 				error("when both powfs.siglev and wfs.siglev are overriden "
 					"must set powfs.siglev=[]\n");
@@ -692,7 +692,7 @@ static void readcfg_atm(parms_t* parms){
 	parms->atm.wddeg=readcfg_dmat_nmax(parms->atm.nps, "atm.wddeg");
 	parms->atm.L0=readcfg_dmat_nmax(parms->atm.nps, "atm.L0");
 	for(int ih=0; ih<parms->atm.nps; ih++){
-		if(fabs(parms->atm.wddeg->p[ih])>1){
+		if(fabs(P(parms->atm.wddeg,ih))>1){
 			warning("wddeg is not zero. Disable wdrand\n");
 			parms->atm.wdrand=0;
 			break;
@@ -773,10 +773,10 @@ static void readcfg_evl(parms_t* parms){
 	//parms->evl.wvl=readcfg_dmat("evl.wvl");
 	parms->evl.nwvl=parms->evl.wvl->nx;
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		if(parms->evl.wvl->p[iwvl]>0.1){
+		if(P(parms->evl.wvl,iwvl)>0.1){
 			warning("wvl should be supplied in unit of meter. scale %g by 1e-6\n",
-				parms->evl.wvl->p[iwvl]);
-			parms->evl.wvl->p[iwvl]*=1e-6;
+				P(parms->evl.wvl,iwvl));
+			P(parms->evl.wvl,iwvl)*=1e-6;
 		}
 	}
 	parms->evl.psfgridsize=readcfg_lmat_nmax(parms->evl.nwvl, "evl.psfgridsize");
@@ -785,9 +785,9 @@ static void readcfg_evl(parms_t* parms){
 	real ramin=INFINITY;
 	for(ievl=0; ievl<parms->evl.nevl; ievl++){
 	/*First Convert theta to radian from arcsec. */
-		parms->evl.thetax->p[ievl]/=206265.;
-		parms->evl.thetay->p[ievl]/=206265.;
-		real ra2=pow(parms->evl.thetax->p[ievl], 2)+pow(parms->evl.thetay->p[ievl], 2);
+		P(parms->evl.thetax,ievl)/=206265.;
+		P(parms->evl.thetay,ievl)/=206265.;
+		real ra2=pow(P(parms->evl.thetax,ievl), 2)+pow(P(parms->evl.thetay,ievl), 2);
 		if(ra2<ramin){
 			parms->evl.indoa=ievl;
 			ramin=ra2;
@@ -848,9 +848,9 @@ static void readcfg_fit(parms_t* parms){
 	parms->fit.hs=readcfg_dmat_nmax(parms->fit.nfit, "fit.hs");
 	real ramin=INFINITY;
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-		parms->fit.thetax->p[ifit]/=206265.;
-		parms->fit.thetay->p[ifit]/=206265.;
-		real ra2=pow(parms->fit.thetax->p[ifit], 2)+pow(parms->fit.thetay->p[ifit], 2);
+		P(parms->fit.thetax,ifit)/=206265.;
+		P(parms->fit.thetay,ifit)/=206265.;
+		real ra2=pow(P(parms->fit.thetax,ifit), 2)+pow(P(parms->fit.thetay,ifit), 2);
 		if(ra2<ramin){
 			parms->fit.indoa=ifit;
 			ramin=ra2;
@@ -1045,8 +1045,8 @@ static void readcfg_plot(parms_t* parms){
 */
 dmat* dbl2pair(real val){
 	dmat* out=dnew(2, 1);
-	out->p[0]=-fabs(val);
-	out->p[1]=-out->p[0];
+	P(out,0)=-fabs(val);
+	P(out,1)=-P(out,0);
 	return out;
 }
 /**
@@ -1161,12 +1161,12 @@ static void readcfg_save(parms_t* parms){
 		parms->save.dm=1;
 		if(!parms->sim.idealfit){
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				parms->save.ints->p[iwfs]=1;
-				parms->save.wfsopd->p[iwfs]=1;
-				parms->save.grad->p[iwfs]=1;
-				parms->save.gradnf->p[iwfs]=1;
-				parms->save.gradpsol->p[iwfs]=1;
-				parms->save.gradgeom->p[iwfs]=1;
+				P(parms->save.ints,iwfs)=1;
+				P(parms->save.wfsopd,iwfs)=1;
+				P(parms->save.grad,iwfs)=1;
+				P(parms->save.gradnf,iwfs)=1;
+				P(parms->save.gradpsol,iwfs)=1;
+				P(parms->save.gradgeom,iwfs)=1;
 			}
 		}
 	}
@@ -1247,12 +1247,12 @@ static void setup_parms_postproc_za(parms_t* parms){
 
 	//Adjust turbulence only by zenith angle.
 	for(int ips=0; ips<parms->atm.nps; ips++){
-		parms->atm.ht->p[ips]*=secz;/*scale atmospheric height */
-		parms->atm.ws->p[ips]*=cosz;/*Wind velocity reduced due to line of sight*/
+		P(parms->atm.ht,ips)*=secz;/*scale atmospheric height */
+		P(parms->atm.ws,ips)*=cosz;/*Wind velocity reduced due to line of sight*/
 	}
 
 	for(int ips=0; ips<parms->atmr.nps; ips++){
-		parms->atmr.ht->p[ips]*=secz;/*scale reconstructed atmospheric height. */
+		P(parms->atmr.ht,ips)*=secz;/*scale reconstructed atmospheric height. */
 	}
 	parms->cn2.hmax*=secz;
 
@@ -1264,7 +1264,7 @@ static void setup_parms_postproc_za(parms_t* parms){
 			parms->powfs[ipowfs].siglev*=cosz;
 
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-				int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
+				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
 				parms->wfs[iwfs].hs=(parms->wfs[iwfs].hs-parms->sim.htel)*secz;
 				real siglev=parms->wfs[iwfs].siglev;
 				parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
@@ -1318,7 +1318,7 @@ static void setup_parms_postproc_sim(parms_t* parms){
 		parms->sim.closeloop=0;
 		parms->atm.frozenflow=1;
 		for(int ips=0; ips<parms->atm.nps; ips++){
-			parms->atm.ws->p[ips]=0;/*set windspeed to zero. */
+			P(parms->atm.ws,ips)=0;/*set windspeed to zero. */
 		}
 		parms->sim.end=parms->dbg.tomo_maxit->nx;
 	}
@@ -1614,7 +1614,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				if(parms->powfs[ipowfs].llt->n!=mwfs)
 					error("# of llts should either be 1 or match nwfs for this powfs");
 				for(int iwfs=0; iwfs<parms->powfs[ipowfs].llt->n; iwfs++){
-					parms->powfs[ipowfs].llt->i->p[iwfs]=iwfs;
+					P(parms->powfs[ipowfs].llt->i,iwfs)=iwfs;
 				}
 			}
 		}
@@ -1622,7 +1622,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 		real wfs_hs=0;
 		real wfs_hc=0;
 		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-			int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
+			int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
 			wfs_hs+=parms->wfs[iwfs].hs;
 			wfs_hc+=parms->wfs[iwfs].hc;
 		}
@@ -1686,7 +1686,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].nwfs>0){
 			if(parms->powfs[ipowfs].lo){
-				parms->lopowfs->p[parms->nlopowfs]=ipowfs;
+				P(parms->lopowfs,parms->nlopowfs)=ipowfs;
 				parms->nlopowfs++;
 				parms->nlowfs+=parms->powfs[ipowfs].nwfs;
 				if(parms->powfs[ipowfs].trs==1){
@@ -1697,7 +1697,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 						"This is not recommended\n", ipowfs);
 				}
 			} else{
-				parms->hipowfs->p[parms->nhipowfs]=ipowfs;
+				P(parms->hipowfs,parms->nhipowfs)=ipowfs;
 				parms->nhipowfs++;
 				parms->nhiwfs+=parms->powfs[ipowfs].nwfs;
 				if(parms->powfs[ipowfs].hs<parms->hipowfs_hs){
@@ -1877,17 +1877,17 @@ static void setup_parms_postproc_atm(parms_t* parms){
 
 	  int jps=0;
 	  for(int ips=0; ips<parms->atm.nps; ips++){
-	  if(parms->atm.wt->p[ips]>1.e-4){
+	  if(P(parms->atm.wt,ips)>1.e-4){
 	  if(ips!=jps){
-	  parms->atm.ht->p[jps]=parms->atm.ht->p[ips];
-	  parms->atm.wt->p[jps]=parms->atm.wt->p[ips];
-	  parms->atm.ws->p[jps]=parms->atm.ws->p[ips];
-	  parms->atm.wddeg->p[jps]=parms->atm.wddeg->p[ips];
+	  P(parms->atm.ht,jps)=P(parms->atm.ht,ips);
+	  P(parms->atm.wt,jps)=P(parms->atm.wt,ips);
+	  P(parms->atm.ws,jps)=P(parms->atm.ws,ips);
+	  P(parms->atm.wddeg,jps)=P(parms->atm.wddeg,ips);
 	  }
 	  jps++;
 	  }else{
 	  warning("Layer %d has very small weight of %g, will drop it.\n",
-	  ips, parms->atm.wt->p[ips]);
+	  ips, P(parms->atm.wt,ips));
 	  }
 	  }
 	  if(jps==0){
@@ -1910,7 +1910,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		dcp(&parms->atmr.wt, parms->atm.wt);
 		lresize(parms->atmr.os, nps, 1);
 		for(int ips=parms->atmr.nps; ips<nps; ips++){
-			parms->atmr.os->p[ips]=parms->atmr.os->p[parms->atmr.nps-1];
+			P(parms->atmr.os,ips)=P(parms->atmr.os,parms->atmr.nps-1);
 		}
 		parms->atmr.nps=nps;
 	} else if((parms->recon.glao||parms->nhiwfs==1)
@@ -1920,17 +1920,17 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		dresize(parms->atmr.ht, 1, 1);
 		dresize(parms->atmr.wt, 1, 1);
 		lresize(parms->atmr.os, 1, 1);
-		parms->atmr.ht->p[0]=parms->dm[0].ht;
-		parms->atmr.wt->p[0]=1;
+		P(parms->atmr.ht,0)=parms->dm[0].ht;
+		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
 	} else{
 		int ipsr2=0;
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-			if(parms->atmr.ht->p[ipsr]>parms->hipowfs_hs){
+			if(P(parms->atmr.ht,ipsr)>parms->hipowfs_hs){
 				dbg("Tomography Layer %d is above high order guide star and therefore dropped.\n", ipsr);
 			} else{
-				parms->atmr.ht->p[ipsr2]=parms->atmr.ht->p[ipsr];
-				parms->atmr.wt->p[ipsr2]=parms->atmr.wt->p[ipsr];
+				P(parms->atmr.ht,ipsr2)=P(parms->atmr.ht,ipsr);
+				P(parms->atmr.wt,ipsr2)=P(parms->atmr.wt,ipsr);
 				ipsr2++;
 			}
 		}
@@ -1954,29 +1954,29 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			real dist=INFINITY;
 			int kpsr=-1;
-			real ht=parms->atm.ht->p[ips];
+			real ht=P(parms->atm.ht,ips);
 			for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-				real htr=parms->atmr.ht->p[ipsr];
+				real htr=P(parms->atmr.ht,ipsr);
 				real dist2=fabs(ht-htr);
 				if(dist2<dist){
 					dist=dist2;
 					kpsr=ipsr;
 				}
 			}
-			parms->atm.ipsr->p[ips]=kpsr;
+			P(parms->atm.ipsr,ips)=kpsr;
 			dbg("atm layer %d is maped to atmr %d\n", ips, kpsr);
 		}
 
 		/* Map reconstructed layers to input layers. for testing tomo.predict*/
 		parms->atmr.indps=lnew(parms->atmr.nps, 1);
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-			parms->atmr.indps->p[ipsr]=-1;
+			P(parms->atmr.indps,ipsr)=-1;
 			for(int ips=0; ips<parms->atm.nps; ips++){
-				if(fabs(parms->atmr.ht->p[ipsr]-parms->atm.ht->p[ips])<1e-3){
-					if(parms->atmr.indps->p[ipsr]>-1){
+				if(fabs(P(parms->atmr.ht,ipsr)-P(parms->atm.ht,ips))<1e-3){
+					if(P(parms->atmr.indps,ipsr)>-1){
 						warning("One ipsr is mapped to multiple ips\n");
 					}
-					parms->atmr.indps->p[ipsr]=ips;
+					P(parms->atmr.indps,ipsr)=ips;
 				}
 			}
 		}
@@ -1987,28 +1987,28 @@ static void setup_parms_postproc_atm(parms_t* parms){
 	parms->atm.iground=-1;
 	parms->atm.hmax=-INFINITY;
 	for(int ips=0; ips<parms->atm.nps; ips++){
-		if(fabs(parms->atm.ht->p[ips])<1.e-10){
+		if(fabs(P(parms->atm.ht,ips))<1.e-10){
 			if(parms->atm.iground==-1){
 				parms->atm.iground=ips;
 			} else{
 				warning("Multiple grounds atm. Please combine them together.\n");
 			}
 		}
-		if(parms->atm.ht->p[ips]<0){
-			warning("Layer %d height %g is below ground\n", ips, parms->atm.ht->p[ips]);
+		if(P(parms->atm.ht,ips)<0){
+			warning("Layer %d height %g is below ground\n", ips, P(parms->atm.ht,ips));
 		}
-		if(ips>0&&fabs(parms->atm.ht->p[ips]-parms->atm.ht->p[ips-1])<20){
+		if(ips>0&&fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<20){
 			warning("Layer %d at %gm is too close to layer %d at %gm\n",
-				ips, parms->atm.ht->p[ips], ips-1, parms->atm.ht->p[ips-1]);
+				ips, P(parms->atm.ht,ips), ips-1, P(parms->atm.ht,ips-1));
 		}
-		if(parms->atm.hmax<parms->atm.ht->p[ips]){
-			parms->atm.hmax=parms->atm.ht->p[ips];
+		if(parms->atm.hmax<P(parms->atm.ht,ips)){
+			parms->atm.hmax=P(parms->atm.ht,ips);
 		}
 	}
 	parms->atmr.hmax=-INFINITY;
 	for(int ips=0; ips<parms->atmr.nps; ips++){
-		if(parms->atmr.hmax<parms->atmr.ht->p[ips]){
-			parms->atmr.hmax=parms->atmr.ht->p[ips];
+		if(parms->atmr.hmax<P(parms->atmr.ht,ips)){
+			parms->atmr.hmax=P(parms->atmr.ht,ips);
 		}
 	}
 	if(parms->sim.closeloop){
@@ -2097,22 +2097,22 @@ static void setup_parms_postproc_dirs(parms_t* parms){
 	}
 
 	for(int i=0; i<parms->evl.nevl; i++){
-		P(pdir, 0, count)=parms->evl.thetax->p[i];
-		P(pdir, 1, count)=parms->evl.thetay->p[i];
-		P(pdir, 2, count)=parms->evl.hs->p[i];
+		P(pdir, 0, count)=P(parms->evl.thetax,i);
+		P(pdir, 1, count)=P(parms->evl.thetay,i);
+		P(pdir, 2, count)=P(parms->evl.hs,i);
 		count++;
 	}
 	for(int i=0; i<parms->fit.nfit; i++){
-		P(pdir, 0, count)=parms->fit.thetax->p[i];
-		P(pdir, 1, count)=parms->fit.thetay->p[i];
-		P(pdir, 2, count)=parms->fit.hs->p[i];
+		P(pdir, 0, count)=P(parms->fit.thetax,i);
+		P(pdir, 1, count)=P(parms->fit.thetay,i);
+		P(pdir, 2, count)=P(parms->fit.hs,i);
 		count++;
 	}
 	if(parms->sim.ncpa_calib){
 		for(int i=0; i<parms->sim.ncpa_ndir; i++){
-			P(pdir, 0, count)=parms->sim.ncpa_thetax->p[i];
-			P(pdir, 1, count)=parms->sim.ncpa_thetay->p[i];
-			P(pdir, 2, count)=parms->sim.ncpa_hs->p[i];
+			P(pdir, 0, count)=P(parms->sim.ncpa_thetax,i);
+			P(pdir, 1, count)=P(parms->sim.ncpa_thetay,i);
+			P(pdir, 2, count)=P(parms->sim.ncpa_hs,i);
 			count++;
 		}
 	}
@@ -2149,20 +2149,20 @@ static void setup_parms_postproc_atm_size(parms_t* parms){
 	parms->atm.nxn=lnew(nps, 1);
 	for(int ips=0; ips<nps; ips++){
 		double guard=MAX(parms->atm.dx*3, parms->tomo.guard*parms->atmr.dx);
-		create_metapupil(0, &nxout[ips], &nyout[ips], parms->dirs, parms->aper.d, parms->atm.ht->p[ips],
+		create_metapupil(0, &nxout[ips], &nyout[ips], parms->dirs, parms->aper.d, P(parms->atm.ht,ips),
 			parms->atm.dx, parms->atm.dx, 0.5, guard, 0, 0, 0, 1);
-		parms->atm.nxn->p[ips]=MAX(nxout[ips], nyout[ips]);
-		Nmax=MAX(Nmax, parms->atm.nxn->p[ips]);
+		P(parms->atm.nxn,ips)=MAX(nxout[ips], nyout[ips]);
+		Nmax=MAX(Nmax, P(parms->atm.nxn,ips));
 	}
 	/*Minimum screen size required. Used to transport atm to GPU. */
 	parms->atm.nxnmax=Nmax;
 	Nmax=nextpow2(Nmax);
-	if(fabs(parms->atm.size->p[0])<EPS||fabs(parms->atm.size->p[1])<EPS){
+	if(fabs(P(parms->atm.size,0))<EPS||fabs(P(parms->atm.size,1))<EPS){
 		parms->atm.nx=Nmax;
 		parms->atm.ny=Nmax;
 	} else{/*user specified.*/
-		parms->atm.nx=2*(int)round(0.5*parms->atm.size->p[0]/parms->atm.dx);
-		parms->atm.ny=2*(int)round(0.5*parms->atm.size->p[1]/parms->atm.dx);
+		parms->atm.nx=2*(int)round(0.5*P(parms->atm.size,0)/parms->atm.dx);
+		parms->atm.ny=2*(int)round(0.5*P(parms->atm.size,1)/parms->atm.dx);
 		if(parms->atm.nx<Nmax) parms->atm.nx=Nmax;
 		if(parms->atm.ny<Nmax) parms->atm.ny=Nmax;
 	}
@@ -2172,17 +2172,17 @@ static void setup_parms_postproc_atm_size(parms_t* parms){
 		parms->atm.ny=parms->atm.nx;
 	}
 	/*record the size of the atmosphere. */
-	parms->atm.size->p[0]=parms->atm.nx*parms->atm.dx;
-	parms->atm.size->p[1]=parms->atm.ny*parms->atm.dx;
-	if(parms->atm.L0->p[0]>parms->atm.size->p[0]){
+	P(parms->atm.size,0)=parms->atm.nx*parms->atm.dx;
+	P(parms->atm.size,1)=parms->atm.ny*parms->atm.dx;
+	if(P(parms->atm.L0,0)>P(parms->atm.size,0)){
 		warning("Atmospheric size is smaller than outer scale!\n");
 	}
 	/*for screen evolving. */
 	parms->atm.overx=lnew(parms->atm.nps, 1);
 	parms->atm.overy=lnew(parms->atm.nps, 1);
 	for(int ips=0; ips<parms->atm.nps; ips++){
-		parms->atm.overx->p[ips]=nxout[ips];
-		parms->atm.overy->p[ips]=nyout[ips];
+		P(parms->atm.overx,ips)=nxout[ips];
+		P(parms->atm.overy,ips)=nyout[ips];
 	}
 }
 /*
@@ -2230,8 +2230,8 @@ static void setup_parms_postproc_dm(parms_t* parms){
 			parms->dm[i].isground=1;
 			parms->idmground=i;
 		}
-		if(isfinite(parms->dm[i].stroke->p[0])){
-			real strokemicron=fabs(parms->dm[i].stroke->p[0])*1e6;
+		if(isfinite(P(parms->dm[i].stroke,0))){
+			real strokemicron=fabs(P(parms->dm[i].stroke,0))*1e6;
 			if(strokemicron<1||strokemicron>50){
 				warning("dm %d: stroke %g um is probably wrong\n",
 					i, strokemicron);
@@ -2389,7 +2389,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			parms->wfsr[ipowfs].powfs=ipowfs;
 			parms->powfs[ipowfs].nwfsr=1;
 			parms->powfs[ipowfs].wfsr=lnew(1, 1);
-			parms->powfs[ipowfs].wfsr->p[0]=ipowfs;
+			P(parms->powfs[ipowfs].wfsr,0)=ipowfs;
 		}
 		/*
 		  parms->fit.nfit=1;
@@ -2397,9 +2397,9 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		  dresize(parms->fit.thetay, 1, 1);
 		  dresize(parms->fit.wt, 1, 1);
 		  dresize(parms->fit.hs, 1, 1);
-		  parms->fit.thetax->p[0]=0;
-		  parms->fit.thetay->p[0]=0;
-		  parms->fit.wt->p[0]=1;
+		  P(parms->fit.thetax,0)=0;
+		  P(parms->fit.thetay,0)=0;
+		  P(parms->fit.wt,0)=1;
 		*/
 	} else{/*Use same information as wfs. */
 		parms->wfsr=parms->wfs;
@@ -2425,10 +2425,10 @@ static void setup_parms_postproc_recon(parms_t* parms){
 					continue;
 				}
 				warning("Including wfs %d with wt %g in fitting\n", iwfs, parms->wfs[iwfs].fitwt);
-				parms->fit.thetax->p[parms->fit.nfit]=parms->wfs[iwfs].thetax;
-				parms->fit.thetay->p[parms->fit.nfit]=parms->wfs[iwfs].thetay;
-				parms->fit.hs->p[parms->fit.nfit]=parms->wfs[iwfs].hs;
-				parms->fit.wt->p[parms->fit.nfit]=parms->wfs[iwfs].fitwt;
+				P(parms->fit.thetax,parms->fit.nfit)=parms->wfs[iwfs].thetax;
+				P(parms->fit.thetay,parms->fit.nfit)=parms->wfs[iwfs].thetay;
+				P(parms->fit.hs,parms->fit.nfit)=parms->wfs[iwfs].hs;
+				P(parms->fit.wt,parms->fit.nfit)=parms->wfs[iwfs].fitwt;
 				parms->fit.nfit++;
 			}
 			if(nfit2!=parms->fit.nfit){
@@ -2569,7 +2569,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	}
 
 	for(int idm=0; idm<parms->ndm; idm++){
-		if(isfinite(parms->dm[idm].stroke->p[0])){
+		if(isfinite(P(parms->dm[idm].stroke,0))){
 			parms->sim.dmclip=1;
 		}
 		if(isfinite(parms->dm[idm].iastroke)&&parms->dm[idm].iastroke>0){
@@ -2633,22 +2633,22 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 		int jseed=0;
 		parms->fdlock=lnew(parms->sim.nseed, 1);
 		for(iseed=0; iseed<parms->sim.nseed; iseed++){
-			snprintf(fn, 80, "Res_%ld.done", parms->sim.seeds->p[iseed]);
+			snprintf(fn, 80, "Res_%ld.done", P(parms->sim.seeds,iseed));
 			if(exist(fn)&&!over_ride){
-				parms->fdlock->p[iseed]=-1;
-				warning("Skip seed %ld because %s exists.\n", parms->sim.seeds->p[iseed], fn);
+				P(parms->fdlock,iseed)=-1;
+				warning("Skip seed %ld because %s exists.\n", P(parms->sim.seeds,iseed), fn);
 			} else{
 				remove(fn);
-				snprintf(fn, 80, "Res_%ld.lock", parms->sim.seeds->p[iseed]);
-				parms->fdlock->p[iseed]=lock_file(fn, 0, 0);
-				if(parms->fdlock->p[iseed]<0){
+				snprintf(fn, 80, "Res_%ld.lock", P(parms->sim.seeds,iseed));
+				P(parms->fdlock,iseed)=lock_file(fn, 0, 0);
+				if(P(parms->fdlock,iseed)<0){
 					warning("Skip seed %ld because it is already running.\n",
-						parms->sim.seeds->p[iseed]);
+						P(parms->sim.seeds,iseed));
 				} else{
-					cloexec(parms->fdlock->p[iseed]);
+					cloexec(P(parms->fdlock,iseed));
 					if(jseed!=iseed){
-						parms->sim.seeds->p[jseed]=parms->sim.seeds->p[iseed];
-						parms->fdlock->p[jseed]=parms->fdlock->p[iseed];
+						P(parms->sim.seeds,jseed)=P(parms->sim.seeds,iseed);
+						P(parms->fdlock,jseed)=P(parms->fdlock,iseed);
 					}
 					jseed++;
 				}
@@ -2664,7 +2664,7 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 	} else if(parms->sim.end>parms->sim.start){
 		info2("There are %d valid simulation seeds: ", parms->sim.nseed);
 		for(int i=0; i<parms->sim.nseed; i++){
-			info2(" %ld", parms->sim.seeds->p[i]);
+			info2(" %ld", P(parms->sim.seeds,i));
 		}
 		info2("\n");
 		if(parms->sim.nseed>1&&parms->dither){
@@ -2701,20 +2701,20 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 		}
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		parms->evl.npsf+=(parms->evl.psf->p[ievl]>0);
+		parms->evl.npsf+=(P(parms->evl.psf,ievl)>0);
 		if(!parms->recon.split){
-			parms->evl.psfngsr->p[ievl]=0;
+			P(parms->evl.psfngsr,ievl)=0;
 		}
-		if(isfinite(parms->evl.hs->p[ievl])&&parms->evl.psfngsr->p[ievl]){
-			parms->evl.psfngsr->p[ievl]=0;
+		if(isfinite(P(parms->evl.hs,ievl))&&P(parms->evl.psfngsr,ievl)){
+			P(parms->evl.psfngsr,ievl)=0;
 			if(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov){
 				warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
 			}
 		}
 		if(parms->tomo.ahst_idealngs==1){
 			//Output NGS mode removed PSF as there is no CL control of NGS mode
-			if(!parms->evl.psfngsr->p[ievl]){
-				parms->evl.psfngsr->p[ievl]=2;
+			if(!P(parms->evl.psfngsr,ievl)){
+				P(parms->evl.psfngsr,ievl)=2;
 			}
 		}
 	}
@@ -2761,7 +2761,7 @@ static void print_parms(const parms_t* parms){
 	real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
 
 	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
-		GREEN, parms->sim.zadeg, BLACK, parms->atm.r0, parms->atm.L0->p[0], parms->atm.nps);
+		GREEN, parms->sim.zadeg, BLACK, parms->atm.r0, P(parms->atm.L0,0), parms->atm.nps);
 	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f.\"",
 		fgreen, theta0z*206265);
 	if(parms->ndm==2){
@@ -2780,7 +2780,7 @@ static void print_parms(const parms_t* parms){
 	}
 	for(int ips=0; ips<parms->atm.nps; ips++){
 		info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
-			ips, parms->atm.ht->p[ips], parms->atm.wt->p[ips], parms->atm.ws->p[ips]);
+			ips, P(parms->atm.ht,ips), P(parms->atm.wt,ips), P(parms->atm.ws,ips));
 	}
 	if(parms->recon.alg==0){
 		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n", GREEN, BLACK,
@@ -2789,7 +2789,7 @@ static void print_parms(const parms_t* parms){
 
 		for(int ips=0; ips<parms->atmr.nps; ips++){
 			info("    layer %d: ht= %6.0f m, wt= %5.3f\n",
-				ips, parms->atmr.ht->p[ips], parms->atmr.wt->p[ips]);
+				ips, P(parms->atmr.ht,ips), P(parms->atmr.wt,ips));
 		}
 	}
 	info2("%sThere are %d powfs%s\n", GREEN, parms->npowfs, BLACK);
@@ -2816,7 +2816,7 @@ static void print_parms(const parms_t* parms){
 		}
 		info("wvl: [");
 		for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-			info(" %g", parms->powfs[ipowfs].wvl->p[iwvl]);
+			info(" %g", P(parms->powfs[ipowfs].wvl,iwvl));
 		}
 		info("]\n");
 		info("    %s in reconstruction. ",
@@ -2863,7 +2863,7 @@ static void print_parms(const parms_t* parms){
 			i, parms->dm[i].order,
 			parms->dm[i].ht/1000, parms->dm[i].dx,
 			parms->dm[i].offset,
-			fabs(parms->dm[i].stroke->p[0])*1e6);
+			fabs(P(parms->dm[i].stroke,0))*1e6);
 		if(parms->dm[i].iac){
 			info("     Normalized cubic influence function with inter-actuator coupling of %g\n",
 				parms->dm[i].iac);
@@ -2929,9 +2929,9 @@ static void print_parms(const parms_t* parms){
 		info2("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
 		for(i=0; i<parms->fit.nfit; i++){
 			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-				i, parms->fit.wt->p[i], parms->fit.thetax->p[i]*206265,
-				parms->fit.thetay->p[i]*206265);
-			if(fabs(parms->fit.thetax->p[i])>1||fabs(parms->fit.thetay->p[i])>1){
+				i, P(parms->fit.wt,i), P(parms->fit.thetax,i)*206265,
+				P(parms->fit.thetay,i)*206265);
+			if(fabs(P(parms->fit.thetax,i))>1||fabs(P(parms->fit.thetay,i))>1){
 				warning("fit thetax or thetay appears too large\n");
 			}
 		}
@@ -2962,9 +2962,9 @@ static void print_parms(const parms_t* parms){
 		GREEN, parms->evl.nevl, BLACK, 1./parms->evl.dx);
 	for(i=0; i<parms->evl.nevl; i++){
 		info("    Evl %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-			i, parms->evl.wt->p[i], parms->evl.thetax->p[i]*206265,
-			parms->evl.thetay->p[i]*206265);
-		if(fabs(parms->evl.thetax->p[i])>1||fabs(parms->evl.thetay->p[i])>1){
+			i, P(parms->evl.wt,i), P(parms->evl.thetax,i)*206265,
+			P(parms->evl.thetay,i)*206265);
+		if(fabs(P(parms->evl.thetax,i))>1||fabs(P(parms->evl.thetay,i))>1){
 			warning("evl thetax or thetay appears too large\n");
 		}
 	}

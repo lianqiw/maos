@@ -38,14 +38,14 @@ void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
 	assert(!bkgrnd2c||bkgrnd2c->nx*bkgrnd2c->ny==np);
 	if(excess<1) excess=1;
 	for(int ix=0; ix<np; ix++){
-		real tot=A->p[ix]+bkgrnd+(bkgrnd2?bkgrnd2->p[ix]:0);
-		real corr=bkgrndc+(bkgrnd2c?bkgrnd2c->p[ix]:0);
+		real tot=P(A,ix)+bkgrnd+(bkgrnd2?P(bkgrnd2,ix):0);
+		real corr=bkgrndc+(bkgrnd2c?P(bkgrnd2c,ix):0);
 		real scale=1;
 		if(qe){//the second qe factor is flat-field correction.
-			tot*=qe->p[ix];
-			scale=1./qe->p[ix];
+			tot*=P(qe,ix);
+			scale=1./P(qe,ix);
 		}
-		A->p[ix]=(randp(rstat, tot*excess)+tot*(1.-excess)+rne*randn(rstat))/scale-corr;
+		P(A,ix)=(randp(rstat, tot*excess)+tot*(1.-excess)+rne*randn(rstat))/scale-corr;
 	}
 }
 /**

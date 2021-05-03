@@ -98,7 +98,7 @@ int main(int argc, char* argv[]){
 	const int nsa=(d_saind->nx-1)/fraction;
 	int* saind=mymalloc((1+nsa), int);
 	for(int i=0; i<nsa+1; i++){
-		saind[i]=(int)d_saind->p[i];
+		saind[i]=(int)P(d_saind,i);
 	}
 	dfree(d_saind);
 	const int totpix=saind[nsa];
@@ -221,17 +221,17 @@ int main(int argc, char* argv[]){
 				close(sock), sock=-1;
 				_Exit(1);
 			}
-			timing->p[istep]=ready*1.e-6;
+			P(timing,istep)=ready*1.e-6;
 		} else{
-			timing->p[istep]=toc3;//do not tic.
+			P(timing,istep)=toc3;//do not tic.
 		}
 		if(jstep==istep){
-			timtot+=timing->p[istep];
-			if(timmax<timing->p[istep]){
-				timmax=timing->p[istep];
+			timtot+=P(timing,istep);
+			if(timmax<P(timing,istep)){
+				timmax=P(timing,istep);
 			}
-			if(timmin>timing->p[istep]){
-				timmin=timing->p[istep];
+			if(timmin>P(timing,istep)){
+				timmin=P(timing,istep);
 			}
 		}
 	}//for istep
