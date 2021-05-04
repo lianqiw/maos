@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['x',['x',['../type_8h.html#a1ec0a734aa8e7d9819930e9f39d1c335',1,'ssp::x()'],['../type_8h.html#ab716dbefda7a47c09c55101f230cf1dd',1,'zsp::x()'],['../type_8h.html#a323a84602b7244c3de35b8c6edf8522f',1,'dsp::x()'],['../type_8h.html#a17e7bc72181192a2c581925b68eb1605',1,'csp::x()']]],
   ['xcmap',['xcmap',['../maos_2types_8h.html#aade787f55b2a50462d46a49b472f7872',1,'recon_t']]],
   ['xhat',['xhat',['../kalman_8h.html#a8483ee8fb02cb6ac347d276512cdbcab',1,'kalman_t']]],
   ['xhat2',['xhat2',['../kalman_8h.html#a7ec9f763bbdbfcf0cdde187dd9dbaa97',1,'kalman_t']]],

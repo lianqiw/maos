@@ -183,7 +183,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info3</b>(A...)&#160;&#160;&#160;logstd(-3, A)</td></tr>
 <tr class="separator:aa30612d0b25f8f68181596f70d352efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acbbb641e671fa06a7061e1845ccda317"><td class="memItemLeft" align="right" valign="top"><a id="acbbb641e671fa06a7061e1845ccda317"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_console</b>(A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;-2 &amp;&amp; <a class="el" href="sys_2common_8h.html#a7fd37fe51b259765f4ab9ca9000ee60b">fpconsole</a>) fprintf(<a class="el" href="sys_2common_8h.html#a7fd37fe51b259765f4ab9ca9000ee60b">fpconsole</a>, A);})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_console</b>(A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;-2 &amp;&amp; fpconsole) fprintf(fpconsole, A);})</td></tr>
 <tr class="separator:acbbb641e671fa06a7061e1845ccda317"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecfbb1e9291f15553ecf346710b28398"><td class="memItemLeft" align="right" valign="top"><a id="aecfbb1e9291f15553ecf346710b28398"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; info(A);}})</td></tr>

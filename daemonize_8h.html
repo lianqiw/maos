@@ -109,8 +109,7 @@ Functions</h2></td></tr>
 <tr class="separator:ad10839cacf3acb84d43eae3ff6d04ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29b0af1da2432bcc90721c0b62f4e660"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a29b0af1da2432bcc90721c0b62f4e660">daemonize</a> (void)</td></tr>
 <tr class="separator:a29b0af1da2432bcc90721c0b62f4e660"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39160bd731e78e9de1768b2bed9a06d3"><td class="memItemLeft" align="right" valign="top"><a id="a39160bd731e78e9de1768b2bed9a06d3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>redirect</b> (void)</td></tr>
+<tr class="memitem:a39160bd731e78e9de1768b2bed9a06d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a39160bd731e78e9de1768b2bed9a06d3">redirect</a> (void)</td></tr>
 <tr class="separator:a39160bd731e78e9de1768b2bed9a06d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7efd3a64d0b0853540f2403f926644a"><td class="memItemLeft" align="right" valign="top">pid_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#aa7efd3a64d0b0853540f2403f926644a">launch_exe</a> (const char *exepath, const char *cmd)</td></tr>
 <tr class="separator:aa7efd3a64d0b0853540f2403f926644a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,6 +230,25 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>redirect</b> (void)</
       </table>
 </div><div class="memdoc">
 <p>Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits. </p>
+
+</div>
+</div>
+<a id="a39160bd731e78e9de1768b2bed9a06d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39160bd731e78e9de1768b2bed9a06d3">&#9670;&nbsp;</a></span>redirect()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void redirect </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Redirect output. If we are in detached mode, will output to file, otherwise will output to both file and screen. </p>
 
 </div>
 </div>

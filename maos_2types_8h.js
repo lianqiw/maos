@@ -325,7 +325,11 @@ var maos_2types_8h =
       [ "intsny", "maos_2types_8h.html#af1748841678c4e9dc0ca034ff5dfbd12", null ],
       [ "intsnf", "maos_2types_8h.html#a388995be90a48169a8d71ea6a03cadae", null ],
       [ "dm_evl", "maos_2types_8h.html#af1e432a5df318610dde78c528062f354", null ],
-      [ "dm_wfs", "maos_2types_8h.html#af461226d469e0fd52949cf3c34f75202", null ]
+      [ "dm_wfs", "maos_2types_8h.html#af461226d469e0fd52949cf3c34f75202", null ],
+      [ "psdcl", "maos_2types_8h.html#a98da894d5a6f7795b5ae5b5326d4b623", null ],
+      [ "psdol", "maos_2types_8h.html#a044e8f08326c3f13ed1a52e252de0e79", null ],
+      [ "psdcl_lo", "maos_2types_8h.html#a0b749dad24ede50c2d63bffddc02aed0", null ],
+      [ "psdol_lo", "maos_2types_8h.html#a43ac99628737ff760d405599f7c8bb1f", null ]
     ] ],
     [ "wfsints_t", "maos_2types_8h.html#structwfsints__t", [
       [ "ints", "maos_2types_8h.html#acd20b2ed925bd5d1d81fb1a94ff43bfe", null ],
