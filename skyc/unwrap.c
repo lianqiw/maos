@@ -30,9 +30,9 @@ static dmat* gen_unwrap(long nx, long ny){
 	/*} */
 	dsp* Ht=dspnew(nx*ny, nx*ny*2, nx*ny*2*2);/*forward */
 	long count=0;
-	spint* pp=Ht->p;
-	spint* pi=Ht->i;
-	real* px=Ht->x;
+	spint* pp=Ht->pp;
+	spint* pi=Ht->pi;
+	real* px=Ht->px;
 	long col=0;
 	for(long iy=0; iy<ny; iy++){
 		long offx=iy*nx;

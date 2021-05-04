@@ -80,10 +80,10 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 	cholmod_sparse* B=mycalloc(1, cholmod_sparse);
 	B->nrow=A->nx;
 	B->ncol=A->ny;
-	B->nzmax=A->p[A->ny];
-	B->p=A->p;/*do not duplicate. */
-	B->i=A->i;
-	DO_CONVERT(B->x, A->x, chol_real, real, B->nzmax);
+	B->nzmax=A->pp[A->ny];
+	B->p=A->pp;/*do not duplicate. */
+	B->i=A->pi;
+	DO_CONVERT(B->x, A->px, chol_real, real, B->nzmax);
 	B->dtype=CHOL_DATA;
 	B->itype=CHOL_ITYPE;
 	B->xtype=CHOLMOD_REAL;
@@ -100,10 +100,10 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 static dsp* chol2sp(const cholmod_sparse* B){
 	dsp* A;
 	A=dspnew(B->nrow, B->ncol, 0);
-	A->p=(spint*)B->p;
-	A->nzmax=A->p[A->ny];
-	A->i=(spint*)B->i;
-	DO_CONVERT(A->x, B->x, real, chol_real, A->nzmax);
+	A->pp=(spint*)B->p;
+	A->nzmax=A->pp[A->ny];
+	A->pi=(spint*)B->i;
+	DO_CONVERT(A->px, B->x, real, chol_real, A->nzmax);
 	return A;
 }
 /**
@@ -186,7 +186,7 @@ spchol* chol_factorize(const dsp* A_in){
 	//out->Cu=dsptrans(out->Cl); dspfree(out->Cl);
 	}
 #endif
-	if(A->x!=A_in->x){
+	if(A->x!=A_in->px){
 		free(A->x);
 	}
 	free(A);/*just free our reference.*/
@@ -220,7 +220,7 @@ void chol_convert(spchol* A, int keep){
 	}
 	cholmod_sparse* B=MOD(factor_to_sparse)(L, A->c);
 	A->Cl=chol2sp(B);//moves content of B.
-	if(A->Cl->x!=B->x){
+	if(A->Cl->px!=B->x){
 		free(B->x);
 	}
 	free(B);
@@ -435,8 +435,8 @@ dsp* chol_spsolve(spchol* A, const dsp* y){
 	cholmod_sparse* x2=MOD(spsolve)(CHOLMOD_A, A->L, y2, A->c);
 	if(!x2||x2->z) error("chol_solve failed or returns unexpected answer.\n");
 	dsp* x=chol2sp(x2);
-	if(y2->x!=y->x) free(y2->x);
-	if(x->x!=x2->x) free(x2->x);
+	if(y2->x!=y->px) free(y2->x);
+	if(x->px!=x2->x) free(x2->x);
 	free(y2);/*don't do spfree */
 	free(x2);/*don't do spfree */
 	return x;
@@ -472,9 +472,9 @@ static inline void chol_perm(dmat** out, spint* perm, const dmat* in,
   The performance of this is poorer than chol_solve_each. done in place
 */
 static void chol_solve_lower(const dsp* A, dmat* y2, long start, long end){
-	real* Ax=A->x;
-	spint* Ap=A->p;
-	spint* Ai=A->i;
+	real* Ax=A->px;
+	spint* Ap=A->pp;
+	spint* Ai=A->pi;
 	/*Solve L\y */
 	for(long icol=0; icol<A->ny; icol++){
 		real AxI=1./Ax[Ap[icol]];
@@ -504,9 +504,9 @@ static void chol_solve_lower(const dsp* A, dmat* y2, long start, long end){
   The performance of this is poorer than chol_solve_each. done in place
 */
 static void chol_solve_upper(const dsp* A, dmat* y2, long start, long end){
-	real* Ax=A->x;
-	spint* Ap=A->p;
-	spint* Ai=A->i;
+	real* Ax=A->px;
+	spint* Ap=A->pp;
+	spint* Ai=A->pi;
 	/*Solve R'\y */
 	for(long icol=0; icol<A->nx; icol++){
 		real AxI=1./Ax[Ap[icol+1]-1];

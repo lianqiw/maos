@@ -40,9 +40,9 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 	real pos=saloc->dx/ploc->dx;
 	if((fabs(pos-1)<1e-12||fabs(pos-2)<1e-12)){//This case is accelerated.
 		dsp* GPt=dsptrans(GP);
-		const spint* pp=GPt->p;
-		const spint* pi=GPt->i;
-		const real* px=GPt->x;
+		const spint* pp=GPt->pp;
+		const spint* pi=GPt->pi;
+		const real* px=GPt->px;
 		//convert the max Real to max 2 byte integer
 		const real pxscale=floor(32767./dvecmaxabs(px, GPt->nzmax));
 		const int zmax=(int)round(pos);
@@ -110,9 +110,9 @@ prep_saptr(cuimat& saptr_gpu, loc_t* saloc, map_t* pmap){
 	delete[] saptr;
 }
 static curmat convert_neai(dsp* nea){
-	spint* pp=nea->p;
-	spint* pi=nea->i;
-	real* px=nea->x;
+	spint* pp=nea->pp;
+	spint* pi=nea->pi;
+	real* px=nea->px;
 	int nsa=nea->ny/2;
 	Real(*neai)[3]=(Real(*)[3])calloc(3*nsa, sizeof(Real));
 	for(int ic=0; ic<nea->ny; ic++){
@@ -215,7 +215,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			const int ipowfs=parms->wfsr[iwfs].powfs;
 			const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
 			if(parms->powfs[ipowfs].skip) continue;
-			if(iwfs==iwfs0||recon->GP->p[iwfs]->p!=recon->GP->p[iwfs0]->p){
+			if(iwfs==iwfs0||recon->GP->p[iwfs]->pp!=recon->GP->p[iwfs0]->pp){
 				prep_GP(GPp[iwfs], &GPscale[iwfs], GP[iwfs], recon->GP->p[iwfs], recon->saloc->p[ipowfs], recon->ploc);
 			} else{
 				GPp[iwfs]=GPp[iwfs0];
@@ -238,8 +238,8 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			if(parms->powfs[ipowfs].skip) continue;
 			int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];/*first wfs in this group. */
-			if(iwfs!=iwfs0&&recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
-				==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
+			if(iwfs!=iwfs0&&recon->saneai->p[iwfs+iwfs*parms->nwfsr]->pp
+				==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->pp){
 				neai[iwfs]=neai[iwfs0];
 			} else{
 				dsp* nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];

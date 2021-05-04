@@ -973,7 +973,7 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 			ints2=dref(P(ints,0));
 		} else{//PWFS
 			dcell* ints3=loc_embed2(saloc, P(ints,0));
-			if(ints3->nx==4 && ints3->ny==1){
+			if(ints3->nx * ints3->ny==4){
 				ints3->nx=2;
 				ints3->ny=2;
 			}

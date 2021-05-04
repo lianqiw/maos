@@ -1060,7 +1060,7 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 			if(!sp) continue;
 			sp->nx=count;
 			for(int iz=0; iz<sp->nzmax; iz++){
-				sp->i[iz]=map[sp->i[iz]];
+				sp->pi[iz]=map[sp->pi[iz]];
 			}
 		}
 		free(map);
@@ -1071,13 +1071,13 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 			count=0;
 			for(int iloc=0; iloc<nloc; iloc++){
 				if(!skip[iloc]){
-					P(sp,count)=P(sp,iloc);
+					sp->pp[count]=sp->pp[iloc];
 					count++;
 				}
 			}
-			P(sp,count)=P(sp,nloc);
+			sp->pp[count]=sp->pp[nloc];
 			sp->ny=count;
-			sp->p=myrealloc(sp->p, (count+1), spint);
+			sp->pp=myrealloc(sp->pp, (count+1), spint);
 		}
 	}
 	free(skip);
@@ -1104,19 +1104,19 @@ void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 		}
 		sp->nx=count;
 		for(int iz=0; iz<sp->nzmax; iz++){
-			sp->i[iz]=map[sp->i[iz]];
+			sp->pi[iz]=map[sp->pi[iz]];
 		}
 		free(map);
 	} else if(dim==2){
 		for(int iloc=0; iloc<nloc; iloc++){
 			if(!skip[iloc]){
-				P(sp,count)=P(sp,iloc);
+				sp->pp[count]=sp->pp[iloc];
 				count++;
 			}
 		}
-		P(sp,count)=P(sp,nloc);
+		sp->pp[count]=sp->pp[nloc];
 		sp->ny=count;
-		sp->p=myrealloc(sp->p, (count+1), spint);
+		sp->pp=myrealloc(sp->pp, (count+1), spint);
 	}
 	free(skip);
 }
@@ -1127,7 +1127,7 @@ void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 */
 void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
 	if(!opd||!loc||!val) return;
-	if(loc->nloc!=opd->nx){
+	if(loc->nloc!=opd->nx*opd->ny){
 		error("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
 		return;
 	}

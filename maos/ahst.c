@@ -516,7 +516,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 	dcell* GM2=dcellnew(GM->nx, GM->ny);
 	int nmod=0, ntt=0, nttf=0;
 	for(int iwfs=0; iwfs<GM->nx; iwfs++){
-		if((!mask||P(mask, iwfs))&&P(GM, iwfs)&&P(saneai, iwfs, iwfs)->x[0]>0){
+		if((!mask||P(mask, iwfs))&&P(GM, iwfs)&&P(saneai, iwfs, iwfs)->px[0]>0){
 			dbg(" %d", iwfs);
 			P(GM2, iwfs)=ddup(P(GM, iwfs));
 			nmod=P(GM2, iwfs)->ny;

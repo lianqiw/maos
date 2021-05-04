@@ -557,9 +557,9 @@ void FitL(dcell** xout, const void* A,
  */
 dsp* nea2sp(dmat** nea, long nsa){
 	dsp* sanea=dspnew(nsa*2, nsa*2, 4*nsa);
-	spint* pp=sanea->p;
-	spint* pi=sanea->i;
-	real* px=sanea->x;
+	spint* pp=sanea->pp;
+	spint* pi=sanea->pi;
+	real* px=sanea->px;
 	long count=0;
 	for(long isa=0; isa<nsa; isa++){
 	/*Cxx */

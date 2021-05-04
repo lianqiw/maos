@@ -34,11 +34,11 @@ void X(spwritedata)(file_t* fp, const X(sp)* sp){
 	if(sp&&sp->nzmax){
 		X(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
 		uint64_t nzmax;
-		nzmax=sp->p[sp->ny];/*don't use sp->nzmax, which maybe larger than actual */
+		nzmax=sp->pp[sp->ny];/*don't use sp->nzmax, which maybe larger than actual */
 		zfwrite(&nzmax, sizeof(uint64_t), 1, fp);
-		zfwrite(sp->p, sizeof(spint), sp->ny+1, fp);
-		zfwrite(sp->i, sizeof(spint), nzmax, fp);
-		zfwrite(sp->x, sizeof(T), nzmax, fp);
+		zfwrite(sp->pp, sizeof(spint), sp->ny+1, fp);
+		zfwrite(sp->pi, sizeof(spint), nzmax, fp);
+		zfwrite(sp->px, sizeof(T), nzmax, fp);
 	}
 }
 
@@ -86,9 +86,9 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 		if(nzmax!=0){
 			out=X(spnew)(m, n, nzmax);
 			out->header=header->str; header->str=NULL;
-			readvec(out->p, M_SPINT, magic2, sizeof(spint), n+1, fp);
-			readvec(out->i, M_SPINT, magic2, sizeof(spint), nzmax, fp);
-			readvec(out->x, M_T, magic1, sizeof(T), nzmax, fp);
+			readvec(out->pp, M_SPINT, magic2, sizeof(spint), n+1, fp);
+			readvec(out->pi, M_SPINT, magic2, sizeof(spint), nzmax, fp);
+			readvec(out->px, M_T, magic1, sizeof(T), nzmax, fp);
 		}
 	}
 	free(header->str); header->str=NULL;

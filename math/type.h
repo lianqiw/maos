@@ -56,13 +56,13 @@ typedef enum CEMBED{
 
 #define SPMATDEF(T,S) typedef struct S{					\
 	uint32_t id;         /**<to identify the array type*/		\
-	T *restrict x;       /**< numerical values, size nzmax */	\
+	T *restrict px;       /**< numerical values, size nzmax */	\
 	long nx;             /**< number of rows */			\
 	long ny;             /**< number of columns */			\
 	char *header;        /**<header*/				\
 	long nzmax ;         /**< maximum number of entries */		\
-        spint *restrict p ;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
-	spint *restrict i ;  /**< row indices, size nzmax */		\
+        spint *restrict pp ;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
+	spint *restrict pi ;  /**< row indices, size nzmax */		\
 	int *nref;           /**< reference counting like dmat */	\
     }S;
 

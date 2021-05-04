@@ -51,7 +51,9 @@ case $D in
 	#9/6/2019
 	#REF=(112.92 113.22 133.02 138.40 136.19 140.06 138.99 120.21 368.22 373.90 110.13 110.04 127.65 134.11 346.38 367.34 113.30 142.55)
 	#10/15/2019
-	REF=(1328.69 112.92 113.22 134.30 140.45 136.19 139.79 138.09 120.07 368.10 373.87 107.94 108.27 125.10 131.75 346.19 367.39 113.53 141.83 113.71 113.60)
+	#REF=(1328.69 112.92 113.22 134.30 140.45 136.19 139.79 138.09 120.07 368.10 373.87 107.94 108.27 125.10 131.75 346.19 367.39 113.53 141.83 113.71 113.60)
+	#5/2/2021
+	REF=(1712.96 113.49 113.67 137.01 144.87 142.15 144.22 143.81 127.51 330.44 336.73 112.75 113.89 128.72 133.71 346.58 363.98 123.28 151.49 117.95 118.23 144.86 214.87 221.57)
 	;;
     *)
 	REF=()
@@ -155,13 +157,20 @@ run_maos -cscao_ngs.conf recon.split=0 recon.alg=1
 echo -n "NGS SCAO (lsq,split)"
 run_maos -cscao_ngs.conf recon.split=1 recon.alg=1
 
-echo -n "LGS MCAO (CG) PCCD:   " #also test other
+echo -n "LGS MCAO PCCD:  " 
 run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[16,0,0] powfs.pixpsa=[6,0,0]
 
-echo -n "LGS MCAO (CG) Side Launch:   " #also test other
+echo -n "LGS MCAO SL:    " 
 run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0]
-echo -n "LGS MCAO (CG) PCCD Side Launch:   " #also test other
+
+echo -n "LGS MCAO PCCD SL:"
 run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[18,0,0] powfs.pixpsa=[6,0,0] powfs.fnllt=['llt_SL.conf',,]
+if [ $D -eq 30 ];then
+echo -n "NFIRAOS LGS"
+run maos nfiraos_lgs.conf
+echo -n "NFIRAOS PWFS"
+run maos nfiraos_ngs.conf
+fi
 
 echo ${RMS[*]}
 

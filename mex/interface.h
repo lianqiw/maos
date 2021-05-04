@@ -41,25 +41,25 @@ mxArray *dsp2mx(const dsp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxREAL);
     mxArray *out=0;
     out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxREAL);
-    memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
-    memcpy(mxGetJc(out),A->p,(A->ny+1)*sizeof(long));
-    memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
+    memcpy(mxGetIr(out),A->pi,A->nzmax*sizeof(long));
+    memcpy(mxGetJc(out),A->pp,(A->ny+1)*sizeof(long));
+    memcpy(mxGetPr(out),A->px,A->nzmax*sizeof(double));
     return out;
 }
 mxArray *csp2mx(const csp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxCOMPLEX);
     mxArray *out=0;
     out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxCOMPLEX);
-    memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
-    memcpy(mxGetJc(out),A->p,(A->ny+1)*sizeof(long));
+    memcpy(mxGetIr(out),A->pi,A->nzmax*sizeof(long));
+    memcpy(mxGetJc(out),A->pp,(A->ny+1)*sizeof(long));
 #if MX_HAS_INTERLEAVED_COMPLEX
-    memcpy(mxGetData(out),A->x,A->nzmax*sizeof(dcomplex));
+    memcpy(mxGetData(out),A->px,A->nzmax*sizeof(dcomplex));
 #else
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
     for(long i=0; i<A->nzmax; i++){
-	pr[i]=creal(A->x[i]);
-	pi[i]=cimag(A->x[i]);
+	pr[i]=creal(A->xp[i]);
+	pi[i]=cimag(A->xp[i]);
     }
 #endif
     return out;
@@ -178,9 +178,9 @@ dsp *mx2dsp(const mxArray *A){
 	out->id=M_DSP64;
 	out->nx=mxGetM(A);
 	out->ny=mxGetN(A);
-	out->p=(spint*)mxGetJc(A);
-	out->i=(spint*)mxGetIr(A);
-	out->x=mxGetPr(A);
+	out->pp=(spint*)mxGetJc(A);
+	out->pi=(spint*)mxGetIr(A);
+	out->px=mxGetPr(A);
 	out->nzmax=mxGetNzmax(A);
     }
     return out;
@@ -194,9 +194,9 @@ csp *mx2csp(const mxArray *A){
 	out->id=M_CSP64;
 	out->nx=mxGetM(A);
 	out->ny=mxGetN(A);
-	out->p=(spint*)mxGetJc(A);
-	out->i=(spint*)mxGetIr(A);
-	out->x=mxGetData(A);
+	out->pp=(spint*)mxGetJc(A);
+	out->pi=(spint*)mxGetIr(A);
+	out->px=mxGetData(A);
 	out->nzmax=mxGetNzmax(A);
     }
     return out;

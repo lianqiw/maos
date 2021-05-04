@@ -70,9 +70,9 @@ void apply_laplacian_map(dmat* opdout, const dmat* opd, real dx, real r0, real w
 dsp* mklaplacian_map(int nx, int ny, real dx, real r0, real weight){
 	dsp* L2=dspnew(nx*ny, nx*ny, nx*ny*5);
 	int iy, ix;
-	spint* pp=L2->p;
-	spint* pi=L2->i;
-	real* px=L2->x;
+	spint* pp=L2->pp;
+	spint* pi=L2->pi;
+	real* px=L2->px;
 	real* px0=px;
 	real cf=laplacian_coef(r0, weight, dx);
 	for(iy=0; iy<ny; iy++){
@@ -119,10 +119,10 @@ dsp* mklaplacian_loc(loc_t* loc, real r0, real weight){
 	dsp* L2;
 	L2=dspnew(loc->nloc, loc->nloc, loc->nloc*5);
 	int ix, iy;
-	spint* pp=L2->p;
-	spint* pi=L2->i;
-	real* px=L2->x;
-	real* px0=L2->x;
+	spint* pp=L2->pp;
+	spint* pi=L2->pi;
+	real* px=L2->px;
+	real* px0=L2->px;
 	real cf=laplacian_coef(r0, weight, loc->dx);
 #if USE_PARTIAL == 1
 	real cfs[5];

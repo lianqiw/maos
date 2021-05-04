@@ -76,8 +76,8 @@ typedef struct sp_thread_t{
 void X(spmulcreal)(T* restrict y, const X(sp)* A, const RI* restrict x, R alpha){
 	if(A&&x&&y){
 		for(long icol=0; icol<A->ny; icol++){
-			for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
-				y[A->i[ix]]+=alpha*(A->x[ix]*creal(x[icol]));
+			for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
+				y[A->pi[ix]]+=alpha*(A->px[ix]*creal(x[icol]));
 			}
 		}
 
@@ -95,15 +95,15 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 		assert(y);
 		if(trans=='n'){
 			for(long icol=0; icol<A->ny; icol++){
-				for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
-					y[A->i[ix]]+=alpha*A->x[ix]*x[icol];
+				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
+					y[A->pi[ix]]+=alpha*A->px[ix]*x[icol];
 				}
 			}
 		} else if(trans=='t'){
 			OMPTASK_FOR(icol, 0, A->ny){
 				T tmp=0;
-				for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
-					tmp+=alpha*(A->x[ix])*x[A->i[ix]];
+				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
+					tmp+=alpha*(A->px[ix])*x[A->pi[ix]];
 				}
 				y[icol]+=tmp;
 			}
@@ -111,8 +111,8 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 		} else if(trans=='c'){
 			OMPTASK_FOR(icol, 0, A->ny){
 				T tmp=0;
-				for(long ix=P(A,icol); ix<P(A,icol+1); ix++){
-					tmp+=alpha*conj(A->x[ix])*x[A->i[ix]];
+				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
+					tmp+=alpha*conj(A->px[ix])*x[A->pi[ix]];
 				}
 				y[icol]+=tmp;
 			}
@@ -144,21 +144,21 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 #define do_conj(A) conj(A)
 #define no_trans(A,i,j) P(A,i,j)
 #define do_trans(A,i,j) P(A,j,i)
-#define LOOP_NORMA(py, yny,  conjA, px, conjx)				\
+#define LOOP_NORMA(ppy, yny,  conjA, ppx, conjx)				\
 	for(long icol=0; icol<A->ny; icol++){				\
-	    for(long ix=P(A,icol); ix<P(A,icol+1); ix++){		\
+	    for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){		\
 		for(long jcol=0; jcol<yny; jcol++){			\
-		    py(y, A->i[ix], jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, icol, jcol)); \
+		    ppy(y, A->pi[ix], jcol)+=alpha*conjA(A->px[ix])*conjx(ppx(x, icol, jcol)); \
 		}							\
 	    }								\
 	}
 
-#define LOOP_TRANSA(py, yny, conjA, px, conjx)				\
+#define LOOP_TRANSA(ppy, yny, conjA, ppx, conjx)				\
 	{								\
 	    OMPTASK_FOR(icol, 0, A->ny){					\
-		for(long ix=P(A,icol); ix<P(A,icol+1); ix++){		\
+		for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){		\
 		    for(long jcol=0; jcol<yny; jcol++){			\
-			py(y, icol, jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, A->i[ix], jcol)); \
+			ppy(y, icol, jcol)+=alpha*conjA(A->px[ix])*conjx(ppx(x, A->pi[ix], jcol)); \
 		    }							\
 		}							\
 	    }								\
@@ -543,8 +543,8 @@ X(mat)* X(cell2m)(const void* A_){
 					} else if(issp(P(A, ix, iy))){
 					//convert sparse col to full
 						X(sp*)Asp=(X(sp*))P(A, ix, iy);
-						for(long j=P(Asp,icol); j<P(Asp,icol+1); j++){
-							pout[Asp->i[j]]=Asp->x[j];
+						for(long j=Asp->pp[icol]; j<Asp->pp[icol+1]; j++){
+							pout[Asp->pi[j]]=Asp->px[j];
 						}
 					}
 				}

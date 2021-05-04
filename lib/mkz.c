@@ -50,13 +50,13 @@ dsp* mkzt(loc_t* xloc, real* amp, loc_t* saloc,
 	dsp* zax=dspnew(xloc->nloc, nsa, xloc->nloc);
 	dsp* zay=dspnew(xloc->nloc, nsa, xloc->nloc);
 	long xcount=0, ycount=0;
-	spint* xpp=zax->p;
-	spint* xpi=zax->i;
-	real* xpx=zax->x;
+	spint* xpp=zax->pp;
+	spint* xpi=zax->pi;
+	real* xpx=zax->px;
 
-	spint* ypp=zay->p;
-	spint* ypi=zay->i;
-	real* ypx=zay->x;
+	spint* ypp=zay->pp;
+	spint* ypi=zay->pi;
+	real* ypx=zay->px;
 	const real* locx=xloc->locx;
 	const real* locy=xloc->locy;
 	real* slocx=sloc->locx;

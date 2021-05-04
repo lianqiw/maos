@@ -464,14 +464,14 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 			int icol;
 			int count=0;
 			for(icol=0; icol<nloc; icol++){
-				P(ZZT,icol)=count;
+				ZZT->pp[icol]=count;
 				if(icol==icenter){
-					ZZT->i[count]=icenter;
-					ZZT->x[count]=val;
+					ZZT->pi[count]=icenter;
+					ZZT->px[count]=val;
 					count++;
 				}
 			}
-			P(ZZT,nloc)=count;
+			ZZT->pp[nloc]=count;
 		}
 		if(parms->save.setup){
 			writebin(recon->ZZT, "ZZT");

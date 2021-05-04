@@ -256,9 +256,9 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	for(iw=0; iw<2; iw++){
 		nzmax[iw]=nsa*(dsa/dx)*16;/*four row in each side. */
 		GS0t[iw]=dspnew(xloc->nloc, nsa, nzmax[iw]);
-		pp[iw]=GS0t[iw]->p;
-		pi[iw]=GS0t[iw]->i;
-		px[iw]=GS0t[iw]->x;
+		pp[iw]=GS0t[iw]->pp;
+		pi[iw]=GS0t[iw]->pi;
+		px[iw]=GS0t[iw]->px;
 		count[iw]=0;
 	}
 	for(isa=0; isa<nsa; isa++){
@@ -359,9 +359,9 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 						if(count[iw]+4>nzmax[iw]){
 							nzmax[iw]=nzmax[iw]*2;
 							dspsetnzmax(GS0t[iw], nzmax[iw]);
-							pp[iw]=GS0t[iw]->p;
-							pi[iw]=GS0t[iw]->i;
-							px[iw]=GS0t[iw]->x;
+							pp[iw]=GS0t[iw]->pp;
+							pi[iw]=GS0t[iw]->pi;
+							px[iw]=GS0t[iw]->px;
 						}
 						if(fabs(weight[iw])>TOL){
 							if(same){

@@ -56,9 +56,9 @@ void mkw_amp(loc_t* loc, real* amp, dsp** W0, dmat** W1){
 	const real ox=map->ox;
 	const real oy=map->oy;
 	real idx=1./loc->dx;
-	spint* W0p=(*W0)->p;
-	spint* W0i=(*W0)->i;
-	real* W0x=(*W0)->x;
+	spint* W0p=(*W0)->pp;
+	spint* W0i=(*W0)->pi;
+	real* W0x=(*W0)->px;
 	long count=0;
 	real* amp0=NULL;
 	if(amp){
@@ -159,7 +159,7 @@ void mkw_amp(loc_t* loc, real* amp, dsp** W0, dmat** W1){
 		for(int i=0; i<(*W1)->nx; i++){
 			p[i]*=sc;
 		}
-		p=(*W0)->x;
+		p=(*W0)->px;
 		for(int i=0; i<(*W0)->nzmax; i++){
 			p[i]*=sc;
 		}
@@ -372,9 +372,9 @@ void mkw_circular(loc_t* loc, /**<[in] grid coordinate*/
 	map_t* map=loc->map;
 	const real ox=map->ox;
 	const real oy=map->oy;
-	spint* W0p=(*W0)->p;
-	spint* W0i=(*W0)->i;
-	real* W0x=(*W0)->x;
+	spint* W0p=(*W0)->pp;
+	spint* W0i=(*W0)->pi;
+	real* W0x=(*W0)->px;
 	long count=0;
 	*W1=dnew(nloc, 1);
 	real* W1p=(*W1)->p;
@@ -433,7 +433,7 @@ void mkw_circular(loc_t* loc, /**<[in] grid coordinate*/
 		for(int i=0; i<(*W1)->nx; i++){
 			p[i]*=sc;
 		}
-		p=(*W0)->x;
+		p=(*W0)->px;
 		for(int i=0; i<(*W0)->nzmax; i++){
 			p[i]*=sc;
 		}

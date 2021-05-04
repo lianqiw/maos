@@ -81,9 +81,9 @@ dsp* mkhb(const loc_t* locin, const loc_t* locout,
 	/*transpose of hfor */
 	long nzmax=locout->nloc*4;
 	hback=dspnew(locin->nloc, locout->nloc, nzmax);
-	spint* bp=hback->p;
-	spint* bi=hback->i;
-	real* bx=hback->x;
+	spint* bp=hback->pp;
+	spint* bi=hback->pi;
+	real* bx=hback->px;
 	long count=0;
 	real fx[2], fy[2];
 	/*real *phiin0=phiin-1; */
@@ -92,9 +92,9 @@ dsp* mkhb(const loc_t* locin, const loc_t* locout,
 		if(count+5>nzmax){
 			nzmax*=2;
 			dspsetnzmax(hback, nzmax);
-			bp=hback->p;
-			bi=hback->i;
-			bx=hback->x;
+			bp=hback->pp;
+			bi=hback->pi;
+			bx=hback->px;
 		}
 		fx[1]=myfma(px[iloc], dx_in2, displacex);
 		fy[1]=myfma(py[iloc], dy_in2, displacey);
@@ -187,9 +187,9 @@ dsp* mkhb_cubic(const loc_t* locin, const loc_t* locout,
 	long nzmax=locout->nloc*16;
 	hback=dspnew(locin->nloc, locout->nloc, nzmax);
 
-	spint* bp=hback->p;
-	spint* bi=hback->i;
-	real* bx=hback->x;
+	spint* bp=hback->pp;
+	spint* bi=hback->pi;
+	real* bx=hback->px;
 	long count=0;
 	const int nxmin=locin->npad;/*allow guarding points*/
 	const int nymin=locin->npad;
@@ -200,9 +200,9 @@ dsp* mkhb_cubic(const loc_t* locin, const loc_t* locout,
 		if(count+17>nzmax){
 			nzmax*=2;
 			dspsetnzmax(hback, nzmax);
-			bp=hback->p;
-			bi=hback->i;
-			bx=hback->x;
+			bp=hback->pp;
+			bi=hback->pi;
+			bx=hback->px;
 		}
 
 		dplocx=myfma(px[iloc], dx_in2, displacex);
@@ -275,27 +275,27 @@ dsp* mkhbin1d(const dmat* xin, const dmat* xout){
 	dsp* hbin=dspnew(xout->nx, xin->nx, xin->nx*2);
 	int count=0;
 	for(int iin=0; iin<xin->nx; iin++){
-		P(hbin,iin)=count;
+		hbin->pp[iin]=count;
 		real ixin=P(xin,iin);
 		while(iout+1<xout->nx&&P(xout,iout+1)<ixin){
 			iout++;//find location in xout to the left of ixin
 		}
 		//Changes made on Nov 9, 2018 was incorrect. Correct the test
 		if((iout==0&&P(xout,iout)>=ixin)||(iout+1==xout->nx)){//outside
-			hbin->i[count]=iout;
-			hbin->x[count]=1;
+			hbin->pi[count]=iout;
+			hbin->px[count]=1;
 			count++;
 		} else{/*within the area */
 			real wt=(ixin-P(xout,iout))/(P(xout,iout+1)-P(xout,iout));
-			hbin->i[count]=iout;
-			hbin->x[count]=1.-wt;
+			hbin->pi[count]=iout;
+			hbin->px[count]=1.-wt;
 			count++;
-			hbin->i[count]=iout+1;
-			hbin->x[count]=wt;
+			hbin->pi[count]=iout+1;
+			hbin->px[count]=wt;
 			count++;
 		}
 	}
-	hbin->p[xin->nx]=count;
+	hbin->pp[xin->nx]=count;
 	return hbin;
 }
 

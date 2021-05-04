@@ -64,9 +64,9 @@
  free a sparse matrix */
 static cs* ss_spfree(cs* A){
 	if(A){
-		free(A->p);
-		free(A->i);
-		free(A->x);
+		free(A->pp);
+		free(A->pi);
+		free(A->px);
 	}
 	return NULL;
 }
@@ -101,13 +101,13 @@ static cs* ss_spalloc(SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT tr
 	A->ny=n;
 	A->nzmax=nzmax=SS_MAX(nzmax, 1);
 
-	A->p=(SS_INT*)ss_malloc(triplet?nzmax:n+1, sizeof(SS_INT));
-	A->i=(SS_INT*)ss_malloc(nzmax, sizeof(SS_INT));
-	A->x=values?(SS_ENTRY*)ss_malloc(nzmax, sizeof(SS_ENTRY)):NULL;
+	A->pp=(SS_INT*)ss_malloc(triplet?nzmax:n+1, sizeof(SS_INT));
+	A->pi=(SS_INT*)ss_malloc(nzmax, sizeof(SS_INT));
+	A->px=values?(SS_ENTRY*)ss_malloc(nzmax, sizeof(SS_ENTRY)):NULL;
 	A->nref=mycalloc(1, int);
 	A->nref[0]=1;
-	if((!A->p||!A->i||(values&&!A->x))){
-		error("Out of memory: p=%p, i=%p, x=%p\n", A->p, A->i, A->x);
+	if((!A->pp||!A->pi||(values&&!A->px))){
+		error("Out of memory: p=%p, i=%p, x=%p\n", A->pp, A->pi, A->px);
 		ss_spfree(A);
 		A=NULL;
 	}
@@ -119,9 +119,9 @@ static cs* ss_spalloc(SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT tr
 static SS_INT ss_sprealloc(cs* A, SS_INT nzmax){
 	SS_INT ok, oki, okj=1, okx=1;
 	if(!A) return (0);
-	if(nzmax<=0) nzmax=(A->p[A->ny]);
-	A->i=(SS_INT*)ss_realloc(A->i, nzmax, sizeof(SS_INT), &oki);
-	if(A->x) A->x=(SS_ENTRY*)ss_realloc(A->x, nzmax, sizeof(SS_ENTRY), &okx);
+	if(nzmax<=0) nzmax=(A->pp[A->ny]);
+	A->pi=(SS_INT*)ss_realloc(A->pi, nzmax, sizeof(SS_INT), &oki);
+	if(A->px) A->px=(SS_ENTRY*)ss_realloc(A->px, nzmax, sizeof(SS_ENTRY), &okx);
 	ok=(oki&&okj&&okx);
 	if(ok) A->nzmax=nzmax;
 	return (ok);
@@ -142,7 +142,7 @@ static SS_INT ss_scatter(const cs* A, SS_INT j, SS_ENTRY beta, SS_INT* w, SS_ENT
 	SS_INT i, p, * Ap, * Ai, * Ci;
 	SS_ENTRY* Ax;
 	if(!(A)||!w||!(C)) return (-1);     /* check inputs */
-	Ap=A->p; Ai=A->i; Ax=A->x; Ci=C->i;
+	Ap=A->pp; Ai=A->pi; Ax=A->px; Ci=C->pi;
 	for(p=Ap[j]; p<Ap[j+1]; p++){
 		i=Ai[p];                            /* A(i,j) is nonzero */
 		if(w[i]<mark){
@@ -168,23 +168,23 @@ cs* X(ss_multiply) (const cs* A, const cs* B){
 		error("Matrix mismatch\n");
 		return (NULL);
 	}
-	m=A->nx; anz=A->p[A->ny];
-	n=B->ny; Bp=B->p; Bi=B->i; Bx=B->x; bnz=Bp[n];
+	m=A->nx; anz=A->pp[A->ny];
+	n=B->ny; Bp=B->pp; Bi=B->pi; Bx=B->px; bnz=Bp[n];
 	w=(SS_INT*)ss_calloc(m, sizeof(SS_INT));                    /* get workspace */
-	values=(A->x!=NULL)&&(Bx!=NULL);
+	values=(A->px!=NULL)&&(Bx!=NULL);
 	x=values?(SS_ENTRY*)ss_malloc(m, sizeof(SS_ENTRY)):NULL; /* get workspace */
 	C=ss_spalloc(m, n, anz+bnz, values, 0);        /* allocate result */
 	if(!C||!w||(values&&!x)){
 		error("Out of memory\n");
 		return (ss_done(C, w, x, 0));
 	}
-	Cp=C->p;
+	Cp=C->pp;
 	for(j=0; j<n; j++){
 		if(nz+m>C->nzmax&&!ss_sprealloc(C, 2*(C->nzmax)+m)){
 			error("Out of memory. \n");
 			return (ss_done(C, w, x, 0));             /* out of memory */
 		}
-		Ci=C->i; Cx=C->x;         /* C->i and C->x may be reallocated */
+		Ci=C->pi; Cx=C->px;         /* C->pi and C->px may be reallocated */
 		Cp[j]=nz;                   /* column j of C starts here */
 		for(p=Bp[j]; p<Bp[j+1]; p++){
 			nz=ss_scatter(A, Bi[p], Bx?Bx[p]:1, w, x, j+1, C, nz);
@@ -210,10 +210,10 @@ cs* X(ss_add) (const cs* A, const cs* B, SS_ENTRY alpha, SS_ENTRY beta){
 		error("Matrix mismatch\n");
 		return (NULL);
 	}
-	m=A->nx; anz=A->p[A->ny];
-	n=B->ny; Bp=B->p; Bx=B->x; bnz=Bp[n];
+	m=A->nx; anz=A->pp[A->ny];
+	n=B->ny; Bp=B->pp; Bx=B->px; bnz=Bp[n];
 	w=(SS_INT*)ss_calloc(m, sizeof(SS_INT));                       /* get workspace */
-	values=(A->x!=NULL)&&(Bx!=NULL);
+	values=(A->px!=NULL)&&(Bx!=NULL);
 	x=values?(SS_ENTRY*)ss_malloc(m, sizeof(SS_ENTRY)):NULL;    /* get workspace */
 	SS_INT cnz=anz+bnz;
 	if(cnz>m*n){
@@ -224,7 +224,7 @@ cs* X(ss_add) (const cs* A, const cs* B, SS_ENTRY alpha, SS_ENTRY beta){
 		error("Out of memory\n");
 		return (ss_done(C, w, x, 0));
 	}
-	Cp=C->p; Ci=C->i; Cx=C->x;
+	Cp=C->pp; Ci=C->pi; Cx=C->px;
 	for(j=0; j<n; j++){
 		Cp[j]=nz;                   /* column j of C starts here */
 		nz=ss_scatter(A, j, alpha, w, x, j+1, C, nz);   /* alpha*A(:,j)*/
@@ -242,7 +242,7 @@ static SS_INT ss_fkeep(cs* A, SS_INT(*fkeep) (SS_INT, SS_INT, SS_ENTRY, void*), 
 	SS_INT j, p, nz=0, n, * Ap, * Ai;
 	SS_ENTRY* Ax;
 	if(!(A)||!fkeep) return (-1);    /* check inputs */
-	n=A->ny; Ap=A->p; Ai=A->i; Ax=A->x;
+	n=A->ny; Ap=A->pp; Ai=A->pi; Ax=A->px;
 	for(j=0; j<n; j++){
 		p=Ap[j];                        /* get current location of col j */
 		Ap[j]=nz;                       /* record new location of col j */
@@ -305,11 +305,11 @@ cs* X(ss_transpose) (const cs* A, SS_INT values){
 	SS_ENTRY* Cx, * Ax;
 	cs* C;
 	if(!(A)) return (NULL);    /* check inputs */
-	m=A->nx; n=A->ny; Ap=A->p; Ai=A->i; Ax=A->x;
+	m=A->nx; n=A->ny; Ap=A->pp; Ai=A->pi; Ax=A->px;
 	C=ss_spalloc(n, m, Ap[n], values&&Ax, 0);       /* allocate result */
 	w=(SS_INT*)ss_calloc(m, sizeof(SS_INT));                      /* get workspace */
 	if(!C||!w) return (ss_done(C, w, NULL, 0));       /* out of memory */
-	Cp=C->p; Ci=C->i; Cx=C->x;
+	Cp=C->pp; Ci=C->pi; Cx=C->px;
 	for(p=0; p<Ap[n]; p++) w[Ai[p]]++;          /* row counts */
 	ss_cumsum(Cp, w, m);                                 /* row pointers */
 	for(j=0; j<n; j++){

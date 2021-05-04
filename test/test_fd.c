@@ -168,8 +168,8 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, real dx, real dsa){
     real dfx=1/(nx*dx);
     *gx=cnew(nx*ny,1);
     *gy=cnew(nx*ny,1);
-    comp *pgx=(*gx)->p;
-    comp *pgy=(*gy)->p;
+    comp *pgx=PP(*gx);
+    comp *pgy=PP(*gy);
     real dsa2=dsa*0.5;
     for(long iy=0; iy<ny; iy++){
 	real fy=(real)(iy-ny2)*dfy;
@@ -208,9 +208,9 @@ static csp *fdpcg_prop(long nps, const long *os, long nxg, real dx,
     }
     long nxg2=nxg/2;
     csp *propt=cspnew(nxtot,nxg*nxg,nxg*nxg*nps);
-    spint *pp=propt->p;
-    spint *pi=propt->i;
-    comp *px=propt->x;
+    spint *pp=propt->pp;
+    spint *pi=propt->pi;
+    comp *px=propt->px;
     long count=0;
     comp cf=COMPLEX(0, 2*M_PI);
     for(long iy=0; iy<nxg; iy++){
