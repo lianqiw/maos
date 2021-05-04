@@ -817,6 +817,9 @@ int readcfg_int(const char* format, ...){
 	char* val=getrecord(key, 1)->data;
 	char* endstr;
 	real ans=readstr_num(val, &endstr);
+	if(isnan(ans)){
+		warning("Failed to read int from {%s}", val);
+	}
 	if(fabs(ans-(int)ans)>EPS){
 		warning("Floating point number supplied while integer is needed: %s=%s\n", key, val);
 	}
@@ -833,6 +836,9 @@ real readcfg_dbl(const char* format, ...){
 	char* val=getrecord(key, 1)->data;
 	char* endstr;
 	real ans=readstr_num(val, &endstr);
+	if(isnan(ans)){
+		warning("Failed to read number from {%s}", val);
+	}
 	if(endstr[0]!='\0'){
 		error("Garbage found in %s=%s.\n", key, val);
 	}

@@ -261,6 +261,12 @@ FILE* fpconsole=0;
 void redirect(void){
 	extern int disable_save;
 	if(disable_save) return;
+	static int count=0;
+	count++;
+	if(count>1){
+		dbg("redirect can only be called once\n");
+		return;
+	}
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	if(detached){//only output to file

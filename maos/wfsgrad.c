@@ -587,7 +587,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 		if(1 || iwfs==P(parms->powfs[ipowfs].wfs,0)){
 			const real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
 			const real scale=parms->powfs[ipowfs].dither==1?(1./parms->powfs[ipowfs].dither_amp):1;
-			info2("Step %5d: wfs%d PLL: delay=%.2f frame, dither amplitude=%.2fx, estimate=%.2fx\n",
+			info2("Step %5d wfs %d PLL: delay=%.2f frame, dither amplitude=%.2fx, estimate=%.2fx\n",
 				isim, iwfs, pd->deltam/anglei, pd->a2m*scale, pd->a2me*scale);
 		}
 		if(simu->resdither){

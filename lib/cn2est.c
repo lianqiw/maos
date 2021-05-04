@@ -37,7 +37,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 			  * from native slodar heights*/
 	real L0            /**<The Outer scale*/
 ){
-	info2("Cn2 estimation:");
+	info("Cn2 estimation: ");
 	/*We need at least a pair */
 	if(!wfspair) return 0;
 	int npair=wfspair->nx*wfspair->ny;
@@ -143,11 +143,11 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	cn2est->wtrecon=dcellnew(1, 1);
 	P(cn2est->wtrecon,0)=dnew(cn2est->htrecon->nx, 1);
 	{
-		info2("htrecon=[");
+		info("htrecon=[");
 		for(int iht=0; iht<cn2est->htrecon->nx; iht++){
-			info2("%.2f ", P(cn2est->htrecon,iht)*0.001);
+			info("%.2f ", P(cn2est->htrecon,iht)*0.001);
 		}
-		info2("]km\n");
+		info("]km\n");
 	}
 	/*stores cross-covariance data during simulation */
 	cn2est->covc=ccellnew(nwfspair, 1);
@@ -277,7 +277,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 		cmat* pmc=mc;
 		/*the forward operator from layer weights to cross-covariance */
 		dmat* Pnk=dnew(nsep, pair->nht);
-		info2("Pair %d: hk=[", iwfspair);
+		info("Pair %d: hk=[", iwfspair);
 		for(int iht=pair->iht0; iht<pair->iht1; iht++){
 			/*the height of each layer */
 			real hk;
@@ -288,7 +288,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 			} else{
 				hk=dsa*iht/(dtheta*slang+dsa*iht/hsm);
 			}
-			info2("%.2f ", hk*0.001);
+			info("%.2f ", hk*0.001);
 			P(P(cn2est->ht,iwfspair),iht-pair->iht0)=hk;
 			/*the cone effect */
 			const real zeta=1.-hk/hsm;
@@ -353,7 +353,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 				}
 			}
 		}
-		info2("]km\n");
+		info("] km\n");
 		/*
 		  iPnk is a block diagonal matrix for Cn2 Estimation.
 		*/
@@ -459,7 +459,7 @@ DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
    Do the Cn2 Estimation.
 */
 void cn2est_est(cn2est_t* cn2est, int verbose){
-	info2("cn2est from %d measurements\n", cn2est->count);
+	info("cn2est from %d measurements\n", cn2est->count);
 	cmat* covi=cnew(cn2est->nembed, cn2est->nembed);
 #if COV_ROTATE
 	dmat* covr=dnew(cn2est->nembed, cn2est->nembed);
@@ -582,7 +582,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
  */
 void cn2est_reset(cn2est_t* cn2est){
 	if(cn2est->count){
-		info2("cn2est: reset the accumulation\n");
+		info("cn2est: reset the accumulation\n");
 		cn2est->count=0;/*reset the counter; */
 		ccellzero(cn2est->covc);/*reset the numbers. */
 	}

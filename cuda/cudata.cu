@@ -70,7 +70,7 @@ void gpu_print_mem(const char* msg){
 	size_t fr, tot;
 	cudaDeviceSynchronize();
 	DO(cudaMemGetInfo(&fr, &tot));
-	info2("GPU (%d) mem used %ld MB (%s)\n", current_gpu(), (long)(tot-fr)/1024/1024, msg);
+	info("GPU (%d) mem used %ld MB (%s)\n", current_gpu(), (long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -89,7 +89,7 @@ static long gpu_get_free_mem_ratio(int igpu, long minimum){
 	if((ans=cudaMemGetInfo(&fr, &tot))){
 		warning("cudaMemGetInfo failed with error %d\n", ans);
 	}
-	info2("GPU%2d has %.1fGB free, %.1fGB total device memory.\n",
+	info("GPU%2d has %.1fGB free, %.1fGB total device memory.\n",
 		igpu, fr*9.3e-10, tot*9.3e-10);
 	if((long)fr>minimum){
 		return (long)(fr*100./tot);
@@ -147,13 +147,13 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		return 0;
 	}
 	if(ngpu<0){
-		info2("CUDA is disabled by user.\n");
+		info("CUDA is disabled by user.\n");
 		return 0;
 	}
 	if(gpus&&ngpu>0){
 		for(int ig=0; ig<ngpu; ig++){
 			if(gpus[ig]<0){
-				info2("CUDA is disabled by user.\n");
+				info("CUDA is disabled by user.\n");
 				return 0;
 			}
 		}
@@ -180,7 +180,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		if(mem_minimum==0){//gpu is disabled
 			return 0;
 		} else{
-			info2("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
+			info("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
 		}
 	} else{
 		mem_minimum=1000000000;//1GB.
@@ -214,7 +214,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		GPUS=Array<int>(ngpu, 1);
 		for(int ig=0; ig<ngpu; ig++){
 			if(gpus[ig]<0){
-				info2("CUDA is disabled by user.\n");
+				info("CUDA is disabled by user.\n");
 				GPUS=Array<int>();
 				NGPU=0;
 				goto end;

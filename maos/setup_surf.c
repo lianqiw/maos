@@ -179,7 +179,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	int* evlcover=mymalloc(nevl, int);
 	int* wfscover=mymalloc(nwfs, int);
 	int* ncpacover=mymalloc(nncpa, int);
-	int opdxcover;
+	int opdxcover=1;
 	SURF_DATA sdata={parms, aper, powfs, recon, NULL, 0, nevl, nwfs, nncpa, evlcover, wfscover, ncpacover, 0};
 	const int nthread=NTHREAD;
 	thread_t  tdata_wfs[nthread], tdata_evl[nthread], tdata_ncpa[nthread];
@@ -274,13 +274,13 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					//warning("SURFWFS has length of %d, expect %d. Will replicate ", ncover, nwfs);
 					if(parms->sim.skysim){
 						val=wfscover2[ncover-1];
-						info2("last wfs: %d\n", val);
+						dbg("last wfs: %d\n", val);
 					} else{
 						val=wfscover2[0];
 						for(int i=1; i<ncover; i++){
 							if(val>wfscover2[i]) val=wfscover2[i];
 						}
-						info2("lowest value: %d\n", val);
+						dbg("lowest value: %d\n", val);
 					}
 				}
 				for(int i=ncover; i<nwfs; i++){
@@ -302,10 +302,13 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				info2("\n");
 			}
 		}
-		if(!stropdx){
-			opdxcover=1;
-		} else{
-			opdxcover=(int)readstr_num(stropdx, NULL);
+		if(stropdx){
+			real val=readstr_num(stropdx, NULL);
+			if(isnan(val)){
+				warning("Failed to read int from {%s}\n", stropdx);
+			} else{
+				opdxcover=(int)val;
+			}
 		}
 		sdata.evlcover=evlcover;
 		sdata.surf=surf;

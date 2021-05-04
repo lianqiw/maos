@@ -304,26 +304,26 @@ static void* maos_listener(void* psock){
 	return NULL;
 }
 void maos_version(void){
-	info("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
-	info("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
+	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
+	info2("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
 #if CPU_SINGLE 
-	info(" CPU(single)");
+	info2(" CPU(single)");
 #else
-	info(" CPU(double)");
+	info2(" CPU(double)");
 #endif
 #if USE_CUDA
 #if CUDA_DOUBLE
-	info(" +CUDA(double)");
+	info2(" +CUDA(double)");
 #else
-	info(" +CUDA(single)");
+	info2(" +CUDA(single)");
 #endif
 #else
-	info(" -CUDA");
+	info2(" -CUDA");
 #endif
 #ifdef __OPTIMIZE__
-	info(" +optimization.\n");
+	info2(" +optimization.\n");
 #else
-	info(" -optimization\n");
+	info2(" -optimization\n");
 #endif
 	info("Launched at %s in %s with PID %ld.\n", myasctime(), HOST, (long)getpid());
 #if HAS_LWS

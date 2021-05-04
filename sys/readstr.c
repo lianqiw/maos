@@ -137,13 +137,13 @@ double readstr_num(const char* data, /**<[in] Input string*/
 	char** endptr0    /**<[out] Location in Input string after readed number.*/
 ){
 	if(!data||strlen(data)==0){
-		warning("{%s}: Unable to parse for a number\n", data);
+		dbg("{%s}: Unable to parse for a number\n", data);
 		return NAN;
 	}
 	char* endptr;
 	double res=strtod(data, &endptr);
 	if(data==endptr){
-		warning("{%s}: Unable to parse for a number\n", data);
+		dbg("{%s}: Unable to parse for a number\n", data);
 		return NAN;
 	}
 	while(isspace(endptr[0])) endptr++;
