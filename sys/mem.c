@@ -291,6 +291,7 @@ void read_sys_env(){
 		free_custom=free_dbg;
 	}*/
 }
+FILE* fpconsole=NULL;
 static void init_mem(){
 	if(!calloc_default){
 		calloc_default=(void* (*)(size_t, size_t))dlsym(RTLD_DEFAULT, "calloc");
@@ -301,6 +302,7 @@ static void init_mem(){
 		void init_process(void);
 		init_process();
 		init_hosts();
+		fpconsole=fdopen(dup(fileno(stdout)),"a");
 	}
 }
 static __attribute__((constructor)) void init(){

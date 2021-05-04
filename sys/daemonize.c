@@ -217,16 +217,15 @@ void single_instance_daemonize(const char* lockfolder_in,
 }
 int detached=0;
 typedef struct{
-	int pfd;//in
-	FILE* fps[2];
-	int nfp;
+	int pfd;//input fd
+	int fps[2];//output fds
+	int nfp;//2
 }dup_stdout_t;
 /**
   Replicate stream written to stdout to both stdout and file.
 * */
 static void* dup_stdout(dup_stdout_t* data){
 	int fd=data->pfd;//read.
-	FILE** fpout=data->fps;
 	int nfp=data->nfp;
 	char buf[400];
 	int nactive=nfp;
@@ -240,9 +239,9 @@ static void* dup_stdout(dup_stdout_t* data){
 		}
 		nactive=0;
 		for(int i=0; i<2; i++){
-			if(fpout[i]){
-				if(fwrite(buf, len, 1, fpout[i])!=1){
-					fpout[i]=NULL;
+			if(data->fps[i]!=-1){
+				if(write(data->fps[i], buf, len)!=len){
+					data->fps[i]=-1;
 				} else{
 					nactive++;
 				}
@@ -257,7 +256,6 @@ static void* dup_stdout(dup_stdout_t* data){
   Redirect output.
   If we are in detached mode, will output to file, otherwise will output to both file and screen.
 */
-FILE* fpconsole=0;
 void redirect(void){
 	extern int disable_save;
 	if(disable_save) return;
@@ -270,7 +268,7 @@ void redirect(void){
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	if(detached){//only output to file
-		if(!freopen(fn, "w", stdout)||dup2(1, 2)==-1) warning("Error redirecting stdout or stderr.\n");
+		if(!freopen(fn, "w", stderr)||dup2(2, 1)==-1) warning("Error redirecting stdout or stderr.\n");
 		//don't close stdin to prevent fd=0 from being used by file.
 		if(!freopen("/dev/null", "r", stdin)) warning("Error redirecting stdin\n");
 	} else{
@@ -282,11 +280,10 @@ void redirect(void){
 		if(pipe(pfd)){//fail to create pipe.
 			warning("pipe failed, failed to redirect stdout.\n");
 		} else{
-			fpconsole=fdopen(dup(fileno(stdout)), "w");
 			static dup_stdout_t dup_data;
 			dup_data.nfp=2;
-			dup_data.fps[0]=fpconsole;
-			dup_data.fps[1]=fopen(fn, "w");
+			dup_data.fps[0]=fileno(fpconsole);//console
+			dup_data.fps[1]=open(fn, O_WRONLY|O_CREAT, 0666);//log
 			dup_data.pfd=pfd[0];//read
 			//spawn a thread to duplicate output to both console and file.
 			pthread_t thread;
