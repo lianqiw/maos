@@ -886,7 +886,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		for(int i=0; i<4; i++){/*update spin button's value. */
 			gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->limit0[i]);
 		}
-		if(drawdata->zlim){
+		if(drawdata->zlim[0] || drawdata->zlim[1]){
 			for(int i=5; i<6; i++){/*update spin button's value. */
 				gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->zlim[i-4]);
 			}
@@ -1004,7 +1004,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	}
 	pango_text_powindex(cr, layout, xoff-font_size*2.8, yoff+font_size*1.8, order, 1);
 
-	if(drawdata->zlim){/*draw colorbar */
+	if(drawdata->zlim[0]||drawdata->zlim[1]){/*draw colorbar */
 		cairo_save(cr);
 		cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
 		cairo_rectangle(cr, 0, 0, LEN_LEG, heightim);

@@ -210,7 +210,6 @@ void* listen_draw(void* dummy){
 			STREADSTR(drawdata->ylabel);
 			break;
 		case DRAW_ZLIM:
-			drawdata->zlim=malloc(2*byte_float);
 			STREADFLT(drawdata->zlim, 2);
 			break;
 		case DRAW_LEGEND:
@@ -257,9 +256,6 @@ void* listen_draw(void* dummy){
 					drawdata->limit_data[3]=drawdata->ny-0.5;
 				}
 				/*convert data from float to int/char. */
-				if(!drawdata->zlim){
-					drawdata->zlim=mycalloc(2, float);
-				}
 				drawdata->p=(unsigned char*)calloc(nx*ny, size);
 				flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
 				drawdata->image=cairo_image_surface_create_for_data

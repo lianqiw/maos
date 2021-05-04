@@ -865,7 +865,18 @@ gboolean addpage(gpointer indata){
 		free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 		drawdata_old->nx=drawdata->nx;
 		drawdata_old->ny=drawdata->ny;
-		drawdata_old->zlim=drawdata->zlim;
+		if(drawdata->zlim[0] || drawdata->zlim[1]){
+			if(drawdata->zlim[0]<drawdata_old->zlim[0]
+				||(drawdata->zlim[0]-drawdata_old->zlim[0])>0.5*fabs(drawdata_old->zlim[0])){
+				//info("update zlim[0] from %g to %g\n", drawdata_old->zlim[0], drawdata->zlim[0]);
+				drawdata_old->zlim[0]=drawdata->zlim[0];
+			}
+			if(drawdata->zlim[1]>drawdata_old->zlim[1]
+			|| (drawdata_old->zlim[1]-drawdata->zlim[1]) > 0.5*fabs(drawdata_old->zlim[1])){
+				//info("update zlim[1] from %g to %g\n", drawdata_old->zlim[1], drawdata->zlim[1]);
+				drawdata_old->zlim[1]=drawdata->zlim[1];
+			}
+		}
 		drawdata_old->format=drawdata->format;
 		drawdata_old->gray=drawdata->gray;
 		drawdata_old->drawn=0;/*need redraw. */
@@ -1159,7 +1170,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	float diff[3];
 	diff[0]=(drawdata->limit0[1]-drawdata->limit0[0]);
 	diff[1]=(drawdata->limit0[3]-drawdata->limit0[2]);
-	if(drawdata->zlim){
+	if(drawdata->zlim[0] || drawdata->zlim[1]){
 		diff[2]=(drawdata->zlim[1]-drawdata->zlim[0]);
 		n=6;
 	} else{

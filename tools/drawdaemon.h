@@ -61,7 +61,7 @@ struct drawdata_t{
 	float* limit_data;/*x,y,limit of data. might be supplied by user. */
 	float* limit_cumu;/*x,y,limit of cumulatively averaged data. */
 	float* limit;/*points to either limit_data or limit_cumu */
-	float* zlim;
+	float zlim[2];
 	int limit_manual; /*limit_data is supplied by user*/
 	char xylog[2];
 	/*The following are for surfaces */
