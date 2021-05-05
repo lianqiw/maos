@@ -591,7 +591,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 				isim, iwfs, pd->deltam/anglei, pd->a2m*scale, pd->a2me*scale);
 		}
 		if(simu->resdither){
-			int ic=(simu->wfsflags[ipowfs].pllcount-1)/(pllrat);
+			int ic=simu->wfsflags[ipowfs].pllind;
 			P(P(simu->resdither,iwfs), 0, ic)=pd->deltam;
 			P(P(simu->resdither,iwfs), 1, ic)=pd->a2m;
 			P(P(simu->resdither,iwfs), 2, ic)=pd->a2me;
@@ -855,9 +855,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 		if(!parms->powfs[ipowfs].dither) continue;
 		if(isim<parms->powfs[ipowfs].step) continue;
 		if((isim+1)%parms->powfs[ipowfs].dtrat!=0) continue;
-		const int pllcount=simu->wfsflags[ipowfs].pllcount;
 		const int nwfs=parms->powfs[ipowfs].nwfs;
-		const int pllrat=parms->powfs[ipowfs].dither_pllrat;
 
 		if(simu->wfsflags[ipowfs].ogout){//This is matched filter or cog update
 			const int nsa=powfs[ipowfs].saloc->nloc;
@@ -1023,7 +1021,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					info2("Step %5d wfs %d CoG gain adjusted from %g to %g %s.\n",
 						isim, iwfs, mgold, mgnew, ogtype);
 					if(simu->resdither){
-						int ic=(pllcount-1)/(pllrat);
+						int ic=simu->wfsflags[ipowfs].pllind;
 						P(P(simu->resdither,iwfs), 3, ic)=mgnew;
 					}
 					//adjust WFS measurement dither dithersig by gain adjustment. used for dither t/t removal from gradients.
@@ -1146,7 +1144,7 @@ void wfsgrad(sim_t* simu){
 	if(parms->plot.run){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
-			drawgrad("Gcal", simu->powfs[ipowfs].saloc, P(simu->gradcl,iwfs),
+			drawgrad("Gcl", simu->powfs[ipowfs].saloc, P(simu->gradcl,iwfs),
 				parms->plot.grad2opd, parms->dbg.draw_gmax->p,
 				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcal %d", iwfs);
 		}

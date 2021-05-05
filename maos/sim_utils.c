@@ -426,8 +426,9 @@ void sim_update_flags(sim_t* simu, int isim){
 		wfsflags->do_pistat=parms->powfs[ipowfs].pistatout&&simu->wfsisim>=parms->powfs[ipowfs].pistatstart;
 		if(parms->powfs[ipowfs].dither){
 			const int pllrat=parms->powfs[ipowfs].dither_pllrat;
-			wfsflags->pllcount=(simu->wfsisim-parms->powfs[ipowfs].dither_pllskip+1)/dtrat;
-			wfsflags->pllout=((wfsflags->pllcount>0)&&(wfsflags->pllcount%pllrat)==0)?(wfsflags->pllcount/pllrat):0;
+			const int pllcount=(simu->wfsisim-parms->powfs[ipowfs].dither_pllskip+1)/dtrat;
+			wfsflags->pllout=((pllcount>0)&&(pllcount%pllrat)==0)?1:0;//should this be pllcount+1?
+			wfsflags->pllind=(pllcount-1)/pllrat;
 			const int ograt=parms->powfs[ipowfs].dither_ograt;//multiple of pllrat
 			const int ogcount=(simu->wfsisim-parms->powfs[ipowfs].dither_ogskip+1)/dtrat;
 			wfsflags->ogacc=(ogcount>0&&(ogcount%pllrat)==0)?(ogcount/pllrat):0;

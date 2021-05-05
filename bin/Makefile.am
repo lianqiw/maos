@@ -6,3 +6,5 @@ maos.test:
 
 CLEANFILES=maos.test
 	
+MAKEOVERRIDES=--no-print-directory
+MAKEFLAGS=-j8 #enable parallel build

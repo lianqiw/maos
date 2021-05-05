@@ -103,10 +103,10 @@ echo -n "LGS MCAO (inte): "
 run_maos recon.split=0 tomo.precond=0
 
 echo -n "LGS MCAO (CG):   " #also test other
-run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1
+run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 tomo.assemble=0 fit.assemble=1
 
 echo -n "LGS MCAO (FDPCG):"
-run_maos tomo.precond=1
+run_maos tomo.precond=1 tomo.assemble=1 fit.assemble=0
 
 echo -n "LGS MCAO (CBS):  "
 run_maos tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]

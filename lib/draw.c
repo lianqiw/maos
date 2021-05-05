@@ -859,12 +859,14 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	const char* format, ...){
 
 	format2fn;
-	if(!draw_current(fig, fn)) return 0;
+	if(!draw_current(fig, fn)|| !loc || !opd) return 0;
 	if(loc->nloc!=opd->nx*opd->ny){
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
 		return 0;
 	}
-	loc_create_map(loc);
+	if(!loc->map){
+		loc_create_map(loc);
+	}
 	//This is different from loc_embed. It removes the padding.
 	int npad=loc->npad;
 	int nx=loc->map->nx-npad*2;

@@ -94,9 +94,9 @@ void X(free_do)(X(mat)* A){
 	if(check_mat(A)){
 		mem_unref(&A->mem);//takes care of freeing memory.
 #ifndef COMP_LONG
-		X(fft_free_plan)(A->fft);
+		if(A->fft) X(fft_free_plan)(A->fft);
 #endif
-		free(A->header);
+		if(A->header) free(A->header);
 	}
 	free(A);
 }
