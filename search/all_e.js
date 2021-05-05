@@ -54,7 +54,7 @@ var searchData=
   ['pixpsay',['pixpsay',['../maos_2types_8h.html#a6a6e7f7da267df615fcb229647a87723',1,'powfs_t']]],
   ['pixtheta',['pixtheta',['../parms_8h.html#ad402ac74c2dad687c092205bcd0a2670',1,'powfs_cfg_t']]],
   ['plan_5ffs',['plan_fs',['../classcuwfs__t.html#a75ad2ecf41255346377406f2bdff3c5a',1,'cuwfs_t']]],
-  ['pllcount',['pllcount',['../maos_2types_8h.html#ae07b985afa1379d7558d85fed93ee079',1,'wfsflags_t']]],
+  ['pllind',['pllind',['../maos_2types_8h.html#a942f756674db632e1c53b6f1b31f76e3',1,'wfsflags_t']]],
   ['pllout',['pllout',['../maos_2types_8h.html#acf262c84d0f25430470446a8ee476de8',1,'wfsflags_t']]],
   ['pllrat',['pllrat',['../parms_8h.html#ac68625ea2ae25023932e430e55309f2d',1,'dither_cfg_t']]],
   ['pllskip',['pllskip',['../parms_8h.html#ad0a429ba1f33645cbbd3f4d15b9cce59',1,'dither_cfg_t']]],
