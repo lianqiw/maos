@@ -535,7 +535,7 @@ X(mat)* X(cell2m)(const void* A_){
 			long kr=0;
 			for(long ix=0; ix<A->nx; ix++){
 				if(!isempty(P(A, ix, iy))){
-					T* pout=PP(out, kr, icol+jcol);
+					T* pout=&P(out, kr, icol+jcol);
 					//T* pout=out->p+((icol+jcol)*nx+kr);
 					if(ismat(P(A, ix, iy))){
 						//memcpy(pout, ((X(mat*))P(A, ix, iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));

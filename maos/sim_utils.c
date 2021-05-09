@@ -105,7 +105,7 @@ static mapcell* genatm_do(sim_t* simu){
 				info2("Generating Testing Atmosphere Screen with zernike %g, RMS~=%g nm\n", -dbgatm, strength*1e9);
 				dmat* opd=zernike(psloc, nx*atm->dx, 0, 0, -dbgatm);
 				dmat* opd2=dref_reshape(opd, nx, ny);
-				dadd((dmat**)PP(screens,ips), 0, opd2, P(atm->wt,ips)*strength);
+				dadd((dmat**)&P(screens,ips), 0, opd2, P(atm->wt,ips)*strength);
 				dfree(opd);
 				dfree(opd2);
 			} else if(dbgatm<0){//Fourier mode;
@@ -823,7 +823,7 @@ static void init_simu_wfs(sim_t* simu){
 		if(powfs[ipowfs].gradncpa&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==2)){
 			//CMF has gradncpa with in matched filter
 			int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
-			dadd(PP(simu->gradoff,iwfs), 1, PR(powfs[ipowfs].gradncpa, wfsind, 1), 1);
+			dadd(&P(simu->gradoff,iwfs), 1, PR(powfs[ipowfs].gradncpa, wfsind, 1), 1);
 		}
 
 	}
@@ -1235,7 +1235,7 @@ static void init_simu_dm(sim_t* simu){
 	}
 	if(parms->dbg.ncpa_preload&&recon->dm_ncpa){//set the integrator
 		warning_once("Preload integrator with NCPA\n");
-		dcelladd(PP(simu->dmint->mint,0), 1, recon->dm_ncpa, 1);
+		dcelladd(&P(simu->dmint->mint,0), 1, recon->dm_ncpa, 1);
 	}
 	if(parms->recon.split){
 		simu->Merr_lo_store=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);

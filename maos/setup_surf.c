@@ -589,7 +589,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 						dmat* zer=zernike(powfs[ipowfs].loc, parms->aper.d, 0, 0, -mod);
 						for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 							real rms2=rms<0?-rms:rms*(2*randu(&rstat)-1);
-							dadd(PP(powfs[ipowfs].opdadd, jwfs,0), 1, zer, rms2);
+							dadd(&P(powfs[ipowfs].opdadd, jwfs,0), 1, zer, rms2);
 						}
 						dfree(zer);
 					}else{

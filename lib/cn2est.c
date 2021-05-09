@@ -469,7 +469,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 		cadd(&covi, 0, P(cn2est->covc,iwfspair), 1./(cn2est->count*cn2est->nembed*cn2est->nembed));
 		cfft2(covi, 1);
 		cfftshift(covi);
-		creal2d(PP(cn2est->cov2,iwfspair), 0, covi, 1);
+		creal2d(&P(cn2est->cov2,iwfspair), 0, covi, 1);
 #if COV_ROTATE
 	//roate and embed;
 		dembed(covr, P(cn2est->cov2,iwfspair), -cn2est->pair[iwfspair].beta);

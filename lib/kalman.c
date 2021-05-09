@@ -335,7 +335,7 @@ dmat* sde_fit(const dmat* psdin, const dmat* coeff0, real tmax_fit, int vibid){
 					writebin(coeffi, "coeffi_%d", ivib);
 					writebin(P(coeffs,ivib), "coeffo_%d", ivib);
 					if(fabs(sqrt(P(coeffi,1))-sqrt(P(P(coeffs,ivib),1)))>2*M_PI*5){
-						dcp(PP(coeffs,ivib), coeffi);
+						dcp(&P(coeffs,ivib), coeffi);
 						warning("Use input\n");
 					}
 				}
@@ -440,7 +440,7 @@ dcell* reccati_cell(dmat** Pout, const dmat* A, const dmat* Qn, const dcell* Cs,
 		dmat* Rn=P(Rns,ik);
 		if(!C) continue;
 		RECCATI_CALC;
-		dmm(PP(Mout,ik), 0, CP, CPCt, "tn", 1);
+		dmm(&P(Mout,ik), 0, CP, CPCt, "tn", 1);
 	}
 	if(Pout) dcp(Pout, P);
 	dfree(AP);dfree(CP); dfree(P); dfree(P2);
@@ -552,7 +552,7 @@ kalman_t* sde_kalman(const dmat* coeff, /**<SDE coefficients*/
 			dscale(expAjn, -1); daddI(expAjn, 1); //1-exp(-A*tj)
 			dmm(&tmp1, 0, expAjn, AcI, "nn", 1);
 			dmm(&tmp2, 0, tmp1, Sigma_ep, "nn", 1);
-			dmm(PP(Sigma_zeta,idtrat), 1, tmp2, tmp1, "nt", 1);
+			dmm(&P(Sigma_zeta,idtrat), 1, tmp2, tmp1, "nt", 1);
 		}
 		if(idtrat==0){
 			dscale(Sigma_varep, dT2);
@@ -561,7 +561,7 @@ kalman_t* sde_kalman(const dmat* coeff, /**<SDE coefficients*/
 		{
 			dmat* tmp=0;
 			dmm(&tmp, 0, P(Sigma_zeta,idtrat), Pd, "nt", 1);
-			dmm(PP(Radd,idtrat), 0, Pd, tmp, "nn", 1);
+			dmm(&P(Radd,idtrat), 0, Pd, tmp, "nn", 1);
 			P(Raddchol,idtrat)=dchol(P(Radd,idtrat));
 		}
 		{
@@ -569,7 +569,7 @@ kalman_t* sde_kalman(const dmat* coeff, /**<SDE coefficients*/
 			dexpm(&tmp, 0, Ac, -dT);
 			dscale(tmp, -1);
 			daddI(tmp, 1);
-			dmm(PP(Xi,idtrat), 0, tmp, AcI, "nn", 1./dT);
+			dmm(&P(Xi,idtrat), 0, tmp, AcI, "nn", 1./dT);
 			dfree(tmp);
 		}
 		dfree(tmp1); dfree(tmp2);
@@ -636,12 +636,12 @@ kalman_t* sde_kalman(const dmat* coeff, /**<SDE coefficients*/
 					if(jdtrat<ndtrat){
 						dmat* Fd=0;
 						dmm(&Fd, 0, Pd, P(Xi,jdtrat), "nn", 1);
-						dmm(PP(Cd,iwfs), 1, Gwfsi, Fd, "nn", 1);
+						dmm(&P(Cd,iwfs), 1, Gwfsi, Fd, "nn", 1);
 						dfree(Fd);
 						//Here Radd is chol of covariance
 						dmat* tmp=0;
 						dmm(&tmp, 0, Gwfsi, P(Radd,jdtrat), "nn", 1);
-						dmm(PP(Rnadd, iwfs, iwfs), 1, tmp, Gwfsi, "nt", 1);
+						dmm(&P(Rnadd, iwfs, iwfs), 1, tmp, Gwfsi, "nt", 1);
 					} else{
 						error("not found\n");
 					}
@@ -779,14 +779,14 @@ dmat* kalman_test(kalman_t* kalman, dmat* input){
 			if(istep&&(istep)%dtrat==0){/*There is measurement from last step*/
 				indk|=1<<iwfs;
 				//Average the measurement.
-				dadd(PP(meas,iwfs), 0, P(acc,iwfs), 1./dtrat); dzero(P(acc,iwfs));
+				dadd(&P(meas,iwfs), 0, P(acc,iwfs), 1./dtrat); dzero(P(acc,iwfs));
 				//Add noise
 				if(P(rmsn,iwfs)){
 					drandn(P(noise,iwfs), 1, &rstat);
 					if(P(rmsn,iwfs)->nx>1){
-						dmm(PP(meas,iwfs), 1, P(rmsn,iwfs), P(noise,iwfs), "nn", 1);
+						dmm(&P(meas,iwfs), 1, P(rmsn,iwfs), P(noise,iwfs), "nn", 1);
 					} else{
-						dadd(PP(meas,iwfs), 1, P(noise,iwfs), P(P(rmsn,iwfs),0));
+						dadd(&P(meas,iwfs), 1, P(noise,iwfs), P(P(rmsn,iwfs),0));
 					}
 				}
 			}

@@ -177,7 +177,7 @@ void genselotf_do(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
 		real thres=1;
 		for(int ilotf=0; ilotf<nlotf; ilotf++){
-			genotf(PP(lotf, iwvl, ilotf), loc, powfs[ipowfs].llt->amp, ncpa?P(ncpa,ilotf):NULL,
+			genotf(&P(lotf, iwvl, ilotf), loc, powfs[ipowfs].llt->amp, ncpa?P(ncpa,ilotf):NULL,
 				0, thres, wvl, NULL, parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 				npsfx, npsfy, 1, 1);
 			if(ampsum2<1){//LLT amp is normalized so that sum(amp.^2) is the total throughput.
@@ -340,7 +340,7 @@ void gensepsf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 				cfftshift(sepsf); /*peak now in corner. */
 				cfft2(sepsf, 1);   /*turn to psf. FFT 1th */
 				cfftshift(sepsf); /*psf with peak in center */
-				creal2d(PP(psepsf, isa, iwvl), 0, sepsf, norm);/*copy to output. */
+				creal2d(&P(psepsf, isa, iwvl), 0, sepsf, norm);/*copy to output. */
 			}
 			cfree(sepsf);
 			cfree(lotf);
@@ -525,14 +525,14 @@ done:
 				if(nominal) ccwm(seotfk, nominal);
 				cscale(seotfk, norm);/*normalized so that after fft, psf sum to 1*/
 				if(intstat->potf){
-					ccp(PP(P(intstat->potf,isepsf), isa, iwvl), seotfk);
+					ccp(&P(P(intstat->potf,isepsf), isa, iwvl), seotfk);
 				}
 				if(nllt){/*elongation. */
 					ccwm(seotfk, P(petf, isa, ietf));
 				}
 				ccp(&seotfj, seotfk);/*backup */
 				if(intstat->fotf){
-					ccp(PP(P(intstat->fotf,isepsf), isa, iwvl), seotfk);
+					ccp(&P(P(intstat->fotf,isepsf), isa, iwvl), seotfk);
 				}
 				cfft2(seotfk, 1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
 				/*no need fftshift because nominal is pre-treated */
@@ -663,7 +663,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 			if(powfs[ipowfs].bkgrndc){
 				bkgrnd2c=P(powfs[ipowfs].bkgrndc, isa, ii0);
 			}
-			mtch(PP(mtche, isa, ii0), &nea2, P(i0s, isa, ii0),
+			mtch(&P(mtche, isa, ii0), &nea2, P(i0s, isa, ii0),
 				gxs?P(gxs, isa, ii0):0, gys?P(gys, isa, ii0):0,
 				parms->powfs[ipowfs].qe,
 				bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,

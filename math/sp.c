@@ -633,9 +633,9 @@ void X(spcellfull)(X(cell)** out0, const X(spcell)* A, const char trans, const T
 	for(int iy=0; iy<A->ny; iy++){
 		for(int ix=0; ix<A->nx; ix++){
 			if(trans=='n'){
-				X(spfull)(PP((*out0), ix, iy), P(A, ix, iy), trans, alpha);
+				X(spfull)(&P((*out0), ix, iy), P(A, ix, iy), trans, alpha);
 			} else{
-				X(spfull)(PP((*out0), iy, ix), P(A, ix, iy), trans, alpha);
+				X(spfull)(&P((*out0), iy, ix), P(A, ix, iy), trans, alpha);
 			}
 		}
 	}
@@ -773,7 +773,7 @@ X(mat)* X(spsum)(const X(sp)* A, int dim){
 	switch(dim){
 	case 1:/*sum along col */
 		v=X(new)(1, A->ny);
-		p=PP(v);
+		p=P(v);
 		for(int icol=0; icol<A->ny; icol++){
 			for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
 				p[icol]+=A->px[irow];
@@ -782,7 +782,7 @@ X(mat)* X(spsum)(const X(sp)* A, int dim){
 		break;
 	case 2:/*sum along row */
 		v=X(new)(A->nx, 1);
-		p=PP(v);
+		p=P(v);
 		for(int icol=0; icol<A->ny; icol++){
 			for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
 				p[A->pi[irow]]+=A->px[irow];
@@ -804,7 +804,7 @@ X(mat)* X(spsumabs)(const X(sp)* A, int col){
 	switch(col){
 	case 1:/*sum along col */
 		v=X(new)(1, A->ny);
-		p=PP(v);
+		p=P(v);
 		for(int icol=0; icol<A->ny; icol++){
 			for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
 				p[icol]+=fabs(A->px[irow]);
@@ -813,7 +813,7 @@ X(mat)* X(spsumabs)(const X(sp)* A, int col){
 		break;
 	case 2:/*sum along row */
 		v=X(new)(A->nx, 1);
-		p=PP(v);
+		p=P(v);
 		for(int icol=0; icol<A->ny; icol++){
 			for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
 				p[A->pi[irow]]+=fabs(A->px[irow]);

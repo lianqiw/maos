@@ -161,8 +161,8 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 				continue;
 			}
 			for(int idm=0; idm<ndm; idm++){
-				dspfull(PP(ULo, idm, iwfs), (dsp*)P(recon->LR.M, idm, iwfs), 'n', -1);
-				dspfull(PP(VLo, idm, iwfs), (dsp*)P(GAM, iwfs, idm), 't', 1);
+				dspfull(&P(ULo, idm, iwfs), (dsp*)P(recon->LR.M, idm, iwfs), 'n', -1);
+				dspfull(&P(VLo, idm, iwfs), (dsp*)P(GAM, iwfs, idm), 't', 1);
 			}
 		}
 

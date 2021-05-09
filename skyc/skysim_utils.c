@@ -226,7 +226,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 			memcpy(PCOL(mres, istep), merr->p, sizeof(real)*nmod);
 			if(mpsol){//collect averaged modes for PSOL.
 				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-					dadd(PP(mpsol,iwfs), 1, mreal, 1);
+					dadd(&P(mpsol,iwfs), 1, mreal, 1);
 				}
 			}
 			pmerrm=0;
@@ -275,7 +275,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 					int dtrati=(multirate?P(dtrats,iwfs):dtratc);
 					if((istep+1)%dtrati==0){
-						dadd(PP(gradout,iwfs), 0, P(zgradc,iwfs), 1./dtrati);
+						dadd(&P(gradout,iwfs), 0, P(zgradc,iwfs), 1./dtrati);
 						dzero(P(zgradc,iwfs));
 						if(noisy){
 							int idtrati=(multirate?P(aster->idtrats,iwfs):idtratc);
@@ -298,14 +298,14 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 					for(long iwvl=0; iwvl<nwvl; iwvl++){
 						real wvl=parms->maos.wvl[iwvl];
 						for(long isa=0; isa<nsa; isa++){
-							ccp(PP(wvfc,iwfs), P(wvfout, isa, iwvl));
+							ccp(&P(wvfc,iwfs), P(wvfout, isa, iwvl));
 							/*Apply NGS mode error to PSF. */
 							ngsmod2wvf(P(wvfc,iwfs), wvl, merr, powfs+ipowfs, isa,
 								thetax, thetay, parms);
 							cembedc(P(wvf,iwfs), P(wvfc,iwfs), 0, C_FULL);
 							cfft2(P(wvf,iwfs), -1);
 							/*peak in corner. */
-							cabs22d(PP(psf[iwfs],isa,iwvl), 1., P(wvf,iwfs), 1.);
+							cabs22d(&P(psf[iwfs],isa,iwvl), 1., P(wvf,iwfs), 1.);
 						}/*isa */
 					}/*iwvl */
 				}/*iwfs */
@@ -325,7 +325,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 						for(long isa=0; isa<nsa; isa++){
 							for(long iwvl=0; iwvl<nwvl; iwvl++){
 								real siglev=P(aster->wfs[iwfs].siglev,iwvl);
-								ccpd(PP(otf,iwfs), P(psf[iwfs],isa,iwvl));
+								ccpd(&P(otf,iwfs), P(psf[iwfs],isa,iwvl));
 								cfft2i(P(otf,iwfs), 1); /*turn to OTF, peak in corner */
 								ccwm(P(otf,iwfs), powfs[ipowfs].dtf[iwvl].nominal);
 								cfft2(P(otf,iwfs), -1);
@@ -398,7 +398,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 					int dtrati=(multirate?P(dtrats,iwfs):dtratc);
 					if((istep+1)%dtrati==0){
 						indk|=1<<iwfs;
-						dmm(PP(gradout,iwfs), 1, P(aster->g,iwfs), P(mpsol,iwfs), "nn", 1./dtrati);
+						dmm(&P(gradout,iwfs), 1, P(aster->g,iwfs), P(mpsol,iwfs), "nn", 1./dtrati);
 						dzero(P(mpsol,iwfs));
 					}
 				}
@@ -408,7 +408,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 			} else{
 				if(pmerrm){
 					if(!multirate){//single rate
-						dmm(PP(merrm,0), 0, P(aster->pgm,idtratc), gradout->m, "nn", 1);
+						dmm(&P(merrm,0), 0, P(aster->pgm,idtratc), gradout->m, "nn", 1);
 					} else{
 						int indk=0;
 						for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -433,8 +433,8 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 							}
 							plotted=1;
 						} else{
-							dmm(PP(merrm,0), 1, P(aster->pgm,indk-1), gradout->m, "nn", 0.5);
-							dadd(PP(merrm,0), 1, moffset, 1);
+							dmm(&P(merrm,0), 1, P(aster->pgm,indk-1), gradout->m, "nn", 0.5);
+							dadd(&P(merrm,0), 1, moffset, 1);
 						}
 						if(zfmerr){
 							zfarr_push(zfmerr, istep, P(merrm,0));

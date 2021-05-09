@@ -342,16 +342,16 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	loc_t* saloc=powfs[hipowfs].saloc;
 	const long nps=recon->npsr;
 	long pos=parms->tomo.pos;
-	const long* os=PP(parms->atmr.os);
+	const long* os=P(parms->atmr.os);
 	if(pos!=os[0]){
 		warning("pupil does not equal to ground layer over sampling. Debug required.\n");
 	}
-	long* nx=PP(recon->xnx);
-	long* ny=PP(recon->xny);
+	long* nx=P(recon->xnx);
+	long* ny=P(recon->xny);
 	const long nxp=nx[0]/os[0]*parms->tomo.pos;
 	const long nyp=ny[0]/os[0]*parms->tomo.pos;
 	const real dxp=recon->ploc->dx;
-	const real* ht=PP(parms->atmr.ht);
+	const real* ht=P(parms->atmr.ht);
 	long nxtot=0;
 	int os0=os[0];
 	int needscale=0;
@@ -365,7 +365,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 		}
 	}
 	/*Subaperture selection operator */
-	csp* sel=fdpcg_saselect(nxp, nyp, dxp, saloc, PP(powfs[hipowfs].saa));
+	csp* sel=fdpcg_saselect(nxp, nyp, dxp, saloc, P(powfs[hipowfs].saa));
 	/*Gradient operator. */
 	cmat* gx=0, * gy=0;
 	fdpcg_g(&gx, &gy, nxp, nyp, dxp, saloc->dx);/*tested ok. */
@@ -397,7 +397,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 			/*look for a way to obtain this automatically. */
 			const real eps=2.220446049250313e-16;
 			real max;
-			cmaxmin(PP(psd), psd->nx*psd->ny, &max, 0);
+			cmaxmin(P(psd), psd->nx*psd->ny, &max, 0);
 			max=max*sqrt(eps);
 			for(long i=0; i<nx[ips]*ny[ips]; i++){
 				invpsd[offset+i]=creal(P(psd,i))+max;
@@ -437,7 +437,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 			g=gy;
 		}
 		csp* tmp=cspdup(sel);
-		cspmuldiag(tmp, PP(g), 1);
+		cspmuldiag(tmp, P(g), 1);
 		csp* tmp2=cspmulsp(tmp, tmp, "tn");
 		cspadd(&Mmid, 1, tmp2, 1);
 		cspfree(tmp);
@@ -498,14 +498,14 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 
 	if(!needscale){  /*scale Mhat to avoid scaling FFT. */
 		cmat* sc=cnew(nxtot, 1);
-		comp* psc=PP(sc);
+		comp* psc=P(sc);
 		for(int ips=0; ips<nps; ips++){
 			real scale=(real)(nx[ips]*ny[ips]);
 			for(long ix=0; ix<nx[ips]*ny[ips]; ix++){
 				*(psc++)=scale;
 			}
 		}
-		cspmuldiag(Mhat, PP(sc), 1);
+		cspmuldiag(Mhat, P(sc), 1);
 		cfree(sc);
 	}
 
@@ -525,7 +525,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	/*Permutation vector */
 	fdpcg->scale=needscale;
 	lmat* perm=fdpcg_perm(nx, ny, os, bs, nps, 0, 0);
-	csp* Mhatp=cspperm(Mhat, 0, PP(perm), PP(perm));/*forward permutation. */
+	csp* Mhatp=cspperm(Mhat, 0, P(perm), P(perm));/*forward permutation. */
 	cspfree(Mhat);
 	lfree(perm);
 
@@ -535,7 +535,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	}
 #if PRE_PERMUT == 1//Permutat the sparse matrix.
 	csp* Minvp=cspinvbdiag(Mhatp, bs);
-	csp* Minv=cspperm(Minvp, 1, PP(perm), PP(perm));/*revert permutation */
+	csp* Minv=cspperm(Minvp, 1, P(perm), P(perm));/*revert permutation */
 	lfree(perm); perm=NULL;
 	cspfree(Minvp);
 	fdpcg->Minv=Minv;
@@ -605,7 +605,7 @@ static void fdpcg_fft(thread_t* info){
 			  cembed_locstat takes 0.000037
 			*/
 			czero(P(xhati,ips));
-			cembed_locstat(PP(xhati,ips), 0, P(fdpcg->xloc,ips), P(xin,ips)->p, 1, 0);
+			cembed_locstat(&P(xhati,ips), 0, P(fdpcg->xloc,ips), P(xin,ips)->p, 1, 0);
 		}
 		if(fdpcg->scale){
 			cfft2s(P(xhati,ips), -1);
@@ -623,7 +623,7 @@ static void fdpcg_mulblock(thread_t* info){
 	fdpcg_t* fdpcg=data->fdpcg;
 	long bs=P(fdpcg->Mbinv,0)->nx;
 	for(int ib=info->start; ib<info->end; ib++){
-		cmulvec(PP(data->xhat,ib*bs), P(fdpcg->Mbinv,ib), PP(data->xhat2,ib*bs), 1);
+		cmulvec(&P(data->xhat,ib*bs), P(fdpcg->Mbinv,ib), &P(data->xhat2,ib*bs), 1);
 	}
 }
 
@@ -647,7 +647,7 @@ static void fdpcg_ifft(thread_t* info){
 			}
 		} else{
 			dzero(P(xout,ips));
-			cembed_locstat(PP(xhat2i,ips), 1, P(fdpcg->xloc,ips), PP(P(xout,ips)), 0, 1);
+			cembed_locstat(&P(xhat2i,ips), 1, P(fdpcg->xloc,ips), P(P(xout,ips)), 0, 1);
 		}
 	}
 }
@@ -666,12 +666,12 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	const long nps=recon->npsr;
 	fdpcg_t* fdpcg=recon->fdpcg;
 	//long nxtot=fdpcg->nxtot;
-	ccell* xhati=ccellnew3(nps, 1, PP(recon->xnx), PP(recon->xny));
-	ccell* xhat2i=ccellnew3(nps, 1, PP(recon->xnx), PP(recon->xny));
+	ccell* xhati=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
+	ccell* xhat2i=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
 	cmat* xhat=cref(xhati->m);
 	cmat* xhat2=cref(xhat2i->m);
-	long* nx=PP(recon->xnx);
-	long* ny=PP(recon->xny);
+	long* nx=P(recon->xnx);
+	long* ny=P(recon->xny);
 	long offset=0;
 	for(int ips=0; ips<nps; ips++){
 	//cfft2plan(P(xhati,ips),-1);
@@ -701,13 +701,13 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 #endif
 #if PRE_PERMUT
 	czero(xhat2);
-	cspmulvec(PP(xhat2), recon->fdpcg->Minv, PP(xhat), 1);
+	cspmulvec(P(xhat2), recon->fdpcg->Minv, &(xhat), 1);
 #else/*permute vectors and apply block diagonal matrix */
 	/*permute xhat and put into xhat2 */
-	cvecperm(xhat2, xhat, PP(recon->fdpcg->perm));
+	cvecperm(xhat2, xhat, P(recon->fdpcg->perm));
 	czero(xhat);
 	CALL_THREAD(info_mulblock, 1);
-	cvecpermi(xhat2, xhat, PP(fdpcg->perm));
+	cvecpermi(xhat2, xhat, P(fdpcg->perm));
 #if DBG_FD
 	writebin(xhat2i, "fdc_mul");
 #endif

@@ -205,7 +205,7 @@ static void skysim_isky(SIM_S* simu){
 #endif
 				{
 
-					P(asteri->phyRes,idtrat)=skysim_sim(PP(asteri->phyMRes,idtrat),
+					P(asteri->phyRes,idtrat)=skysim_sim(&P(asteri->phyMRes,idtrat),
 						simu->mideal, simu->mideal_oa, simu->varol,
 						asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart);
 				}
@@ -265,7 +265,7 @@ static void skysim_isky(SIM_S* simu){
 							parms->skyc.fss[seldtrat],
 							sqrt(P(pres, 0, isky))*1e9, sqrt(P(pres, 1, isky))*1e9, sqrt(P(pres, 2, isky))*1e9);
 					}
-					dcp(PP(simu->mres,isky), P(asteri->phyMRes,asterMinRat));
+					dcp(&P(simu->mres,isky), P(asteri->phyMRes,asterMinRat));
 				}
 skip1:;
 			}/*iaster */
@@ -292,7 +292,7 @@ skip1:;
 		if(seldtrat!=-1){
 			P(simu->fss,isky)=parms->skyc.fss[seldtrat];
 			if(parms->skyc.servo>0&&!parms->skyc.multirate){
-				dcp(PP(simu->gain,isky), P(aster[selaster].gain,seldtrat));
+				dcp(&P(simu->gain,isky), P(aster[selaster].gain,seldtrat));
 			}
 		}
 		if(parms->skyc.save){
@@ -394,7 +394,7 @@ static void skysim_calc_psd(SIM_S* simu){
 			dmat* xi=dsub(x, 20, 0, im, 1);
 			dscale(xi, sqrt(P(MCC, im, im)));/*convert to unit of m.*/
 			dmat* psdi=psd1dt(xi, 1, parms->maos.dt);
-			add_psd2(PP(simu->psds,im*iratio), psdi, 1);
+			add_psd2(&P(simu->psds,im*iratio), psdi, 1);
 			var_all+=psd_inte2(psdi);
 			dfree(xi);
 			dfree(psdi);
@@ -439,7 +439,7 @@ static void skysim_calc_psd(SIM_S* simu){
 		simu->varol+=var_ws;//testing
 
 		//add windshake PSD to ngs/tt
-		add_psd2(PP(simu->psds,0), parms->skyc.psd_ws, 1);
+		add_psd2(&P(simu->psds,0), parms->skyc.psd_ws, 1);
 	}
 	if(parms->skyc.dbg||1){
 		writebin(simu->psds, "psds_m2.bin");
@@ -489,7 +489,7 @@ static void skysim_prep_sde(SIM_S* simu){
 		if(im==0&&parms->skyc.psd_ws){
 			//add windshake on first mode only
 			//2018-09-05: need to scale psd_ws by 1/sqrt(mcc) to convert to radian.
-			add_psd2(PP(simu->psdi,im), parms->skyc.psd_ws, 1./sqrt(P(parms->maos.mcc, 0, 0)));
+			add_psd2(&P(simu->psdi,im), parms->skyc.psd_ws, 1./sqrt(P(parms->maos.mcc, 0, 0)));
 		}
 		dmat* coeff=sde_fit(P(simu->psdi,im), NULL, parms->skyc.sdetmax, 0);
 		if(P(coeff, 0, 0)>100&&parms->skyc.sdetmax){

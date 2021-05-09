@@ -193,19 +193,19 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 					int iact1=P(map, ix, iy);
 					if(iact1>0){
 						int iact2=P(map, ix, iy+1);
-						real* dmri=PP(dmr, ix, iy);
+						real* dmri=&P(dmr, ix, iy);
 						if(iact2>0){
-							count+=limit_diff(dmri, PP(dmr, ix, iy+1), iastroke,
+							count+=limit_diff(dmri, &P(dmr, ix, iy+1), iastroke,
 								stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
 						}
 						iact2=P(map, ix+1, iy);
 						if(iact2>0){
-							count+=limit_diff(dmri, PP(dmr, ix+1, iy), iastroke,
+							count+=limit_diff(dmri, &P(dmr, ix+1, iy), iastroke,
 								stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
 						}
 						iact2=P(map, ix+1, iy+1);
 						if(iact2>0){
-							count+=limit_diff(dmri, PP(dmr, ix+1, iy+1), iastroked,
+							count+=limit_diff(dmri, &P(dmr, ix+1, iy+1), iastroked,
 								stuck?stuck[iact1]:0, stuck?stuck[iact2]:0);
 						}
 					}
@@ -224,7 +224,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		}
 		if(parms->dm[idm].iastrokescale){//convert back to opd
 			dmat* dm2=dinterp1(P(parms->dm[idm].iastrokescale,1), 0, dm, NAN);
-			dcp(PP(dmcmd,idm), dm2);
+			dcp(&P(dmcmd,idm), dm2);
 			dfree(dm); dfree(dm2);
 		}
 	}
@@ -281,7 +281,7 @@ static void filter_cl(sim_t* simu){
 	//Do not reference the data, even for dtrat==1
 		if(!parms->powfs[ipowfs].psol||!parms->powfs[ipowfs].dtrat) continue;
 		real alpha=(isim%parms->powfs[ipowfs].dtrat==0)?0:1;
-		dcelladd(PP(simu->wfspsol,ipowfs), alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
+		dcelladd(&P(simu->wfspsol,ipowfs), alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
 	}
 	/*Do the servo filtering. First simulate a drop frame*/
 	int drop=0;
@@ -329,7 +329,7 @@ static void filter_cl(sim_t* simu){
 	if(parms->recon.modal){
 		//convert DM command from modal to zonal space
 		for(int idm=0; idm<simu->dmcmd->nx; idm++){
-			dmm(PP(simu->dmcmd,idm), 0, P(simu->recon->amod,idm), P(simu->dmtmp,idm), "nn", 1);
+			dmm(&P(simu->dmcmd,idm), 0, P(simu->recon->amod,idm), P(simu->dmtmp,idm), "nn", 1);
 		}
 	} else if(simu->recon->actinterp&&!parms->recon.psol){
 		//Extrapolate to edge actuators
@@ -370,7 +370,7 @@ static void filter_cl(sim_t* simu){
 		info_once("Add injected DM offset vector\n");
 		int icol=(isim+1)%parms->dbg.dmoff->ny;
 		for(int idm=0; idm<parms->ndm; idm++){
-			dadd(PP(simu->dmcmd,idm), 1, P(parms->dbg.dmoff, idm, icol), 1);
+			dadd(&P(simu->dmcmd,idm), 1, P(parms->dbg.dmoff, idm, icol), 1);
 		}
 	}
 	//Need to clip
@@ -390,7 +390,7 @@ static void filter_cl(sim_t* simu){
 	if(simu->dmhist){
 		for(int idm=0; idm<parms->ndm; idm++){
 			if(P(simu->dmhist,idm)){
-				dhistfill(PP(simu->dmhist,idm), P(simu->dmcmd,idm), 0,
+				dhistfill(&P(simu->dmhist,idm), P(simu->dmcmd,idm), 0,
 					parms->dm[idm].histbin, parms->dm[idm].histn);
 			}
 		}
@@ -404,7 +404,7 @@ static void filter_cl(sim_t* simu){
 				int imoao=parms->powfs[ipowfs].moao;
 				if(imoao<0) continue;
 				real g=parms->moao[imoao].gdm;
-				dadd(PP(simu->dm_wfs, iwfs, 0), 1-g, P(simu->dm_wfs, iwfs, 1) , g);
+				dadd(&P(simu->dm_wfs, iwfs, 0), 1-g, P(simu->dm_wfs, iwfs, 1) , g);
 			}
 		}
 		if(simu->dm_evl){
@@ -412,7 +412,7 @@ static void filter_cl(sim_t* simu){
 			int imoao=parms->evl.moao;
 			real g=parms->moao[imoao].gdm;
 			for(int ievl=0; ievl<nevl; ievl++){
-				dadd(PP(simu->dm_evl, ievl, 0), 1-g, P(simu->dm_evl, ievl, 1), g);
+				dadd(&P(simu->dm_evl, ievl, 0), 1-g, P(simu->dm_evl, ievl, 1), g);
 			}
 		}
 	}
@@ -476,7 +476,7 @@ void filter_fsm(sim_t* simu){
 					}
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-						dcp(PP(simu->fsmerr,iwfs), fsmerr);
+						dcp(&P(simu->fsmerr,iwfs), fsmerr);
 					}
 					dfree(fsmerr);
 				}
@@ -522,7 +522,7 @@ static void filter_ol(sim_t* simu){
 		info_once("Add injected DM offset vector\n");
 		int icol=(simu->reconisim+1)%parms->dbg.dmoff->ny;
 		for(int idm=0; idm<parms->ndm; idm++){
-			dadd(PP(simu->dmcmd,idm), 1, P(parms->dbg.dmoff, idm, icol), -1);
+			dadd(&P(simu->dmcmd,idm), 1, P(parms->dbg.dmoff, idm, icol), -1);
 		}
 	}
 	//Extrapolate to edge actuators

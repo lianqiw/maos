@@ -172,7 +172,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				saneac=dcellread_prefix(parms->powfs[ipowfs].neareconfile, parms, ipowfs);
 				for(int i=0; i<saneac->nx*saneac->ny; i++){
 					check_nea(P(saneac,i), nsa);
-					nea_mm(PP(saneac,i), P(saneac,i));
+					nea_mm(&P(saneac,i), P(saneac,i));
 				}
 			} else{
 				saneac=dcellnew(1, 1);
@@ -560,7 +560,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 			/*single point piston constraint. no need tikholnov.*/
 			info("Adding ZZT to RLM\n");
 			for(int ips=0; ips<npsr; ips++){
-				dspadd(PP(RLM, ips, ips), 1, P(recon->ZZT,ips,ips), 1);
+				dspadd(&P(RLM, ips, ips), 1, P(recon->ZZT,ips,ips), 1);
 			}
 			dspcellfree(recon->ZZT);
 		}
@@ -581,7 +581,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 				if(!tmp){
 					error("L2 is empty!!\n");
 				}
-				dspadd(PP(RLM, ips, ips), 1, tmp, 1);
+				dspadd(&P(RLM, ips, ips), 1, tmp, 1);
 				dspfree(tmp);
 			}
 			break;
@@ -609,8 +609,8 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 			}
 			if(parms->powfs[ipowfs].lo){
 				for(int ips=0; ips<npsr; ips++){
-					dspfull(PP(pULo, ips, iwfs), P(RRM, ips, iwfs), 'n', -1);
-					dspfull(PP(pVLo, ips, iwfs), P(GX, iwfs, ips), 't', 1);
+					dspfull(&P(pULo, ips, iwfs), P(RRM, ips, iwfs), 'n', -1);
+					dspfull(&P(pVLo, ips, iwfs), P(GX, iwfs, ips), 't', 1);
 				}
 			}
 		}
@@ -795,7 +795,7 @@ static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs
 			offset+=P(recon->aloc,idm)->nloc;
 		}
 		toc("Prop ");tic;
-		dmm(PP(ecnn,ievl), 0, x1, x1, "nt", 1);
+		dmm(&P(ecnn,ievl), 0, x1, x1, "nt", 1);
 		dfree(x1);
 		toc("MM ");
 	}
@@ -829,7 +829,7 @@ void setup_recon_tomo_update(recon_t* recon, const parms_t* parms){
 				error("L2 is empty!!\n");
 			}
 			dsp* LLdiff=dspadd2(LL, 1, LLold, -1);/*adjustment to RLM */
-			dspadd(PP(RLM, ips, ips), 1, LLdiff, 1);
+			dspadd(&P(RLM, ips, ips), 1, LLdiff, 1);
 			dspfree(LLdiff);
 			dspfree(LL);
 			dspfree(LLold);
@@ -871,7 +871,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 				} else{
 					continue;
 				}
-				dspmm(PP(GMngs,iwfs), P(recon->saneai,iwfs,iwfs),
+				dspmm(&P(GMngs,iwfs), P(recon->saneai,iwfs,iwfs),
 					P(recon->GFall,iwfs), "nn", 1);
 				dmm(&GMGngs, 1, P(recon->GFall,iwfs), P(GMngs,iwfs), "tn", 1);
 			}
@@ -882,7 +882,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 				if(!P(recon->GFall,iwfs)) continue;
 				//NGS gradient to Focus mode reconstructor.
-				dmm(PP(RFngsg,iwfs), 0, GMGngs, P(GMngs,iwfs), "nt", 1);
+				dmm(&P(RFngsg,iwfs), 0, GMGngs, P(GMngs,iwfs), "nt", 1);
 			}
 			dfree(GMGngs);
 			dcellfree(GMngs);
@@ -1028,8 +1028,8 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].lo){
-			dspfull(PP(neailo,iwfs,iwfs),P(recon->saneai,iwfs,iwfs), 'n', 1);
-			dspfull(PP(nealo,iwfs,iwfs), P(recon->sanea,iwfs,iwfs), 'n', 1);
+			dspfull(&P(neailo,iwfs,iwfs),P(recon->saneai,iwfs,iwfs), 'n', 1);
+			dspfull(&P(nealo,iwfs,iwfs), P(recon->sanea,iwfs,iwfs), 'n', 1);
 		}
 	}
 	/* 2012-03-21: Remove focus mode from GL and NEA so no focus is
@@ -1209,7 +1209,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 		dfree(TTploc);
 		for(int ix=0; ix<Qn->nx*Qn->ny; ix++){
 			if(!P(Qn,ix)) continue;
-			dmm(PP(Qntt,ix), 0, PTTploc, P(Qn,ix), "nn", 1);
+			dmm(&P(Qntt,ix), 0, PTTploc, P(Qn,ix), "nn", 1);
 		}
 		writebin(Qntt, "mvst_modptt");
 		dcellfree(Qn);

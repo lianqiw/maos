@@ -168,8 +168,8 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, real dx, real dsa){
     real dfx=1/(nx*dx);
     *gx=cnew(nx*ny,1);
     *gy=cnew(nx*ny,1);
-    comp *pgx=PP(*gx);
-    comp *pgy=PP(*gy);
+    comp *pgx=P(*gx);
+    comp *pgy=P(*gy);
     real dsa2=dsa*0.5;
     for(long iy=0; iy<ny; iy++){
 	real fy=(real)(iy-ny2)*dfy;

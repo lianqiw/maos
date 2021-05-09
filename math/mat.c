@@ -142,7 +142,7 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 	} else{
 		X(mat)* out=X(new)(nx, ny);
 		for(int iy=0; iy<ny; iy++){
-			memcpy(PCOL(out, iy), PP(in, sx, iy+sy), sizeof(T)*nx);
+			memcpy(PCOL(out, iy), &P(in, sx, iy+sy), sizeof(T)*nx);
 		}
 		return out;
 	}
@@ -576,12 +576,12 @@ void X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 		int dy=ny-sy;
 		int dx=nx-sx;
 		for(int iy=0; iy<sy; iy++){
-			memcpy(PP(B, 0, iy), PP(A, dx, iy+dy), sx*sizeof(T));/*3 */
-			memcpy(PP(B, sx, iy), PP(A, 0, iy+dy), dx*sizeof(T));/*4 */
+			memcpy(&P(B, 0, iy), &P(A, dx, iy+dy), sx*sizeof(T));/*3 */
+			memcpy(&P(B, sx, iy), &P(A, 0, iy+dy), dx*sizeof(T));/*4 */
 		}
 		for(int iy=sy; iy<ny; iy++){
-			memcpy(PP(B, 0, iy), PP(A, dx, iy-sy), sx*sizeof(T));/*1 */
-			memcpy(PP(B, sx, iy), PP(A, 0, iy-sy), dx*sizeof(T));/*2 */
+			memcpy(&P(B, 0, iy), &P(A, dx, iy-sy), sx*sizeof(T));/*1 */
+			memcpy(&P(B, sx, iy), &P(A, 0, iy-sy), dx*sizeof(T));/*2 */
 		}
 	} else{
 		X(cp)(B0, A);
@@ -715,7 +715,7 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 				long kr=0;
 				for(long ix=0; ix<A->nx; ix++){
 					if(!isempty(P(A, ix, iy))){
-						memcpy(PP(P(out,iy), kr, icol), PCOL(P(A, ix, iy), icol),
+						memcpy(&P(P(out,iy), kr, icol), PCOL(P(A, ix, iy), icol),
 							nxs[ix]*sizeof(T));
 					}
 					kr+=nxs[ix];
@@ -879,7 +879,7 @@ void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 			long kr=0;
 			for(long ix=0; ix<ref->nx; ix++){
 				if(nxs[ix]>0){
-					memcpy(PCOL(P(Bp, ix, iy), icol), PP(A, kr, icol+jcol), nxs[ix]*sizeof(T));
+					memcpy(PCOL(P(Bp, ix, iy), icol), &P(A, kr, icol+jcol), nxs[ix]*sizeof(T));
 					kr+=nxs[ix];
 				}
 			}

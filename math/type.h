@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -52,19 +52,19 @@ typedef enum CEMBED{
 #define MATARR(T)				\
     ARR(T);					\
     struct mem_t *mem /**< Memory management*/	\
-    
+
 
 #define SPMATDEF(T,S) typedef struct S{					\
 	uint32_t id;         /**<to identify the array type*/		\
-	T *restrict px;       /**< numerical values, size nzmax */	\
+	T *restrict px;      /**< numerical values, size nzmax */	\
 	long nx;             /**< number of rows */			\
 	long ny;             /**< number of columns */			\
 	char *header;        /**<header*/				\
-	long nzmax ;         /**< maximum number of entries */		\
-        spint *restrict pp ;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
-	spint *restrict pi ;  /**< row indices, size nzmax */		\
-	int *nref;           /**< reference counting like dmat */	\
-    }S;
+	long nzmax;          /**< maximum number of entries */		\
+    spint *restrict pp;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
+	spint *restrict pi;  /**< row indices, size nzmax */		\
+	int *nref;           /**< reference counting */	\
+}S;
 
 #define MATDEF(T,S) typedef struct S{MATARR(T);} S;
 MATDEF(float, smat);
@@ -131,13 +131,13 @@ typedef struct locstatcol_t{
 
 */
 typedef struct locstat_t{
-    locstatcol_t *cols; /**<Information about each column*/
+    locstatcol_t* cols; /**<Information about each column*/
     real dx;          /**<Sampling of the grid along x*/
     real dy;          /**<Sampling of the grid along y*/
     real xmin;        /**<Minimum x*/
     real ymin;        /**<Minimum y*/
     long ncol;        /**<Number of consecutive columns found*/
-    long nx,ny;       /**<Size for embedding*/
+    long nx, ny;       /**<Size for embedding*/
 }locstat_t;
 
 /**
@@ -145,39 +145,39 @@ typedef struct locstat_t{
 */
 typedef struct loc_t{
     uint32_t id;
-    real *locx;  /**< x coordinates of each point*/
-    real *locy;  /**< y coordinates of each point*/
+    real* locx;  /**< x coordinates of each point*/
+    real* locy;  /**< y coordinates of each point*/
     long nloc;   /**< number of points*/
     real dx;     /**< Sampling along x*/
     real dy;     /**< Sampling along y*/
     real ht;     /**< Conjugation height of the loc grid.*/
     real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
-    locstat_t *stat;/**<points to column statistics*/
-    map_t *map;    /**< point to the map used for identifying neihboring points.*/
+    locstat_t* stat;/**<points to column statistics*/
+    map_t* map;    /**< point to the map used for identifying neihboring points.*/
     int npad;      /*padding when create map*/
-    int *nref;       /**<Reference counting*/
+    int* nref;       /**<Reference counting*/
 }loc_t;
 /**
    low left point of each subaperture.
-   
+
    don't change the leading 5 elements. so that pts_t can be used as loc_t.
 */
 typedef struct pts_t{
     uint32_t id;
-    real *origx; /**<The x origin of each subaperture*/
-    real *origy; /**<The y origin of each subaperture*/
+    real* origx; /**<The x origin of each subaperture*/
+    real* origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
     union{
-	real dsa;    /**<side length of subaperture*/
-	real dsax;   /**<side length of subaperture*/
+        real dsa;    /**<side length of subaperture*/
+        real dsax;   /**<side length of subaperture*/
     };
     real dsay;   /**<side length of subaperture*/
     real dummy1; /**<Place holder*/
     real dummy2;  /**<Place holder*/
-    locstat_t *stat;/**<padding so that we can be casted to loc_t*/
-    map_t *map;    /**<treat pts_t as loc_t and compute the MAP*/
+    locstat_t* stat;/**<padding so that we can be casted to loc_t*/
+    map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
     int npad;      /*padding when create map*/
-    int *nref;     /**<Reference counting*/
+    int* nref;     /**<Reference counting*/
     int nx;        /**<number of cols per subaperture*/
     int ny;        /**<number of rows per subaperture*/
     real dx;     /**<sampling of points in each subaperture*/
@@ -189,43 +189,43 @@ typedef struct pts_t{
 	struct T* m; /*continuous data*/	\
     }S;
 
-CELLDEF(cmat,ccell);
-CELLDEF(zmat,zcell);
-CELLDEF(dmat,dcell);
-CELLDEF(smat,scell);
-CELLDEF(lmat,lcell);
+CELLDEF(cmat, ccell);
+CELLDEF(zmat, zcell);
+CELLDEF(dmat, dcell);
+CELLDEF(smat, scell);
+CELLDEF(lmat, lcell);
 
-CELLDEF(dsp,dspcell);
-CELLDEF(ssp,sspcell);
-CELLDEF(csp,cspcell);
-CELLDEF(zsp,zspcell);
+CELLDEF(dsp, dspcell);
+CELLDEF(ssp, sspcell);
+CELLDEF(csp, cspcell);
+CELLDEF(zsp, zspcell);
 
-CELLDEF(ccell,cccell);
-CELLDEF(zcell,zccell);
-CELLDEF(dcell,dccell);
-CELLDEF(scell,sccell);
-CELLDEF(lcell,iccell);
+CELLDEF(ccell, cccell);
+CELLDEF(zcell, zccell);
+CELLDEF(dcell, dccell);
+CELLDEF(scell, sccell);
+CELLDEF(lcell, iccell);
 
-CELLDEF(cccell,ccccell);
-CELLDEF(zccell,zcccell);
-CELLDEF(dccell,dcccell);
-CELLDEF(sccell,scccell);
-CELLDEF(iccell,icccell);
+CELLDEF(cccell, ccccell);
+CELLDEF(zccell, zcccell);
+CELLDEF(dccell, dcccell);
+CELLDEF(sccell, scccell);
+CELLDEF(iccell, icccell);
 
-CELLDEF(map_t,mapcell);
-CELLDEF(rmap_t,rmapcell);
-CELLDEF(loc_t,loccell);
+CELLDEF(map_t, mapcell);
+CELLDEF(rmap_t, rmapcell);
+CELLDEF(loc_t, loccell);
 
-CELLDEF(mapcell,mapccell);
-CELLDEF(rmapcell,rmapccell);
-CELLDEF(loccell,locccell);
+CELLDEF(mapcell, mapccell);
+CELLDEF(rmapcell, rmapccell);
+CELLDEF(loccell, locccell);
 
-CELLDEF(cell,cell);
+CELLDEF(cell, cell);
 
 #undef ARR
 #undef CELLARR
 #undef MATARR
-static inline int iscell(const void *id){
+static inline int iscell(const void* id){
     return id?(*(const uint32_t*)id==MCC_ANY):0;
     //return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
 }
@@ -233,13 +233,13 @@ static inline int iscell(const void *id){
 #if DEBUG
 static inline long index_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
-		error("Index %ld is out of range for (%ld,%ld) array\n", i, nx, ny);
+        error("Index %ld is out of range for (%ld,%ld) array\n", i, nx, ny);
     }
     return i;
 }
 static inline long index_2d(long ix, long iy, long nx, long ny){
     if(ix<0 || ix>=nx || iy<0 || iy>=ny){
-		error("Index (%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
+        error("Index (%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }
     return ix+iy*nx;
 }
@@ -277,23 +277,17 @@ static inline long index_col(long iy, long nx, long ny){
     Return number of elements
  */
 
-#define P0(A)  ((A)->p)
+#define P0(A)       (A)->p
 #define P1(A,i)     (A)->p[index_1d((i),        (A)->nx, (A)->ny)]
 #define P2(A,ix,iy) (A)->p[index_2d((ix), (iy), (A)->nx, (A)->ny)]
 
-#define PP0(A)  ((A)->p)
-#define PP1(A,i)     ((A)->p+index_1d((i),        (A)->nx, (A)->ny))
-#define PP2(A,ix,iy) ((A)->p+index_2d((ix), (iy), (A)->nx, (A)->ny))
-
 #define P_GET(_0,_1,_2,_3,NAME,...) NAME
 #define P(...) P_GET(_0,__VA_ARGS__,P2,P1,P0)(__VA_ARGS__)
-#define PP(...) P_GET(_0,__VA_ARGS__,PP2,PP1,PP0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+index_col((iy), (A)->nx, (A)->ny))
 
 //Define indexing using wrapping. 
-#define PR(A,ix,iy)   P2((A), ((ix)%(A)->nx), ((iy)%(A)->ny))
-#define PPR(A,ix,iy) PP2((A), ((ix)%(A)->nx), ((iy)%(A)->ny))
-#define PCOLR(A,iy) ((A)->p+((iy)%(A)->ny)*(A)->nx)
+#define PR(A,ix,iy) P2((A), ((ix)%(A)->nx), ((iy)%(A)->ny))
+#define PCOLR(A,iy) PCOL((A),(iy)%(A)->ny)
 
 //Return Number of elements
 #define PN(A) ((A)->nx*(A)->ny)

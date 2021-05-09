@@ -310,8 +310,8 @@ int main(int argc, char* argv[]){
 				fixnan(tmp);
 				P(P(res,P_LO),ii)=dtrans(tmp);
 				dfree(tmp);
-				dadd(PP(P(res,P_TOT),ii), 1, P(P(res,P_LO),ii), 1);
-				dadd(PP(P(res,P_TOT),ii), 1, P(P(res,P_HI),ii), 1);
+				dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_LO),ii), 1);
+				dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_HI),ii), 1);
 
 				if(indfocus>-1){
 					tmp=dsub(P(ires,ind), indfocus, 1, 0, 0);
@@ -324,9 +324,9 @@ int main(int argc, char* argv[]){
 					fixnan(tmp);
 					P(P(res,P_TT),ii)=dtrans(tmp);
 					dfree(tmp);
-					dadd(PP(P(res,P_PS),ii), 1, P(P(res,P_LO),ii), 1);
-					dadd(PP(P(res,P_PS),ii), 1, P(P(res,P_TT),ii), -1);
-					dadd(PP(P(res,P_PS),ii), 1, P(P(res,P_F),ii), -1);
+					dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_LO),ii), 1);
+					dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_TT),ii), -1);
+					dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_F),ii), -1);
 				}
 
 				tmp=dsub(P(ires,0), 2, 1, 0, 0);
@@ -336,8 +336,8 @@ int main(int argc, char* argv[]){
 				P(P(res,P_OLLO),ii)=dtrans(tmp);
 				dfree(tmp);
 				dcellfree(ires);
-				dadd(PP(P(res,P_OLTOT),ii), 1, P(P(res,P_OLLO),ii), 1);
-				dadd(PP(P(res,P_OLTOT),ii), 1, P(P(res,P_OLHI),ii), 1);
+				dadd(&P(P(res,P_OLTOT),ii), 1, P(P(res,P_OLLO),ii), 1);
+				dadd(&P(P(res,P_OLTOT),ii), 1, P(P(res,P_OLHI),ii), 1);
 			} else if(restype==2){//Skycoverage results
 				snprintf(fn, PATH_MAX, "%s/Res%ld_%ld.bin", path[ipath], seed[iseed], seed2[iseed]);
 				dmat* res0=dread("%s", fn);
@@ -371,7 +371,7 @@ int main(int argc, char* argv[]){
 				error("Invalid restype=%d\n", restype);
 			}
 			for(int i=0; i<res->nx; i++){
-				dadd_relax(PP(P(resm,i),ipath), 1, P(P(res,i),ii), 1);
+				dadd_relax(&P(P(resm,i),ipath), 1, P(P(res,i),ii), 1);
 			}
 
 			seedcount++;

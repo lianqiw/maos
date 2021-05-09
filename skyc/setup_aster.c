@@ -469,7 +469,7 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 				idtrat=icase;
 			}
 			if(idtrat!=-1){
-				dcp(PP(nea,iwfs), P(aster->wfs[iwfs].pistat->sanea,idtrat));
+				dcp(&P(nea,iwfs), P(aster->wfs[iwfs].pistat->sanea,idtrat));
 				dcwpow(P(nea,iwfs), -2);
 				P(mask,iwfs)=1;
 			}
@@ -670,7 +670,7 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 				dmat* tmp=ddup(P(aster->wfs[iwfs].pistat->sanea,idtrat));/*in rad */
 				dcwpow(tmp, 2);
 				dsp* tmp2=dspnewdiag(tmp->nx, tmp->p, 1);
-				dspfull(PP(P(aster->neam,idtrat), iwfs, iwfs), tmp2, 'n', 1);
+				dspfull(&P(P(aster->neam,idtrat), iwfs, iwfs), tmp2, 'n', 1);
 				dfree(tmp); dspfree(tmp2);
 			}
 

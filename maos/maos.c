@@ -174,7 +174,7 @@ void maos_setup(const parms_t* parms){
 		const int nwvl=parms->evl.nwvl;
 		dcell* evlpsfdl=dcellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			cabs22d(PP(evlpsfdl,iwvl), 1, P(psf2s,iwvl), 1);
+			cabs22d(&P(evlpsfdl,iwvl), 1, P(psf2s,iwvl), 1);
 			P(evlpsfdl,iwvl)->header=evl_header(parms, aper, -1, iwvl, parms->evl.psfisim-1);
 		}
 		ccellfree(psf2s);

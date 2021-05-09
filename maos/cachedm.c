@@ -48,7 +48,7 @@ void prep_cachedm(sim_t* simu){
 		for(int idm=0; idm<parms->ndm; idm++){
 			real dx=parms->dm[idm].dx/(parms->sim.cachedm>3?parms->sim.cachedm:4);
 			info(" dm[%d]@1/%gm", idm, 1./dx);
-			create_metapupil(PP(simu->cachedm,idm), 0, 0, parms->dirs, parms->aper.d,
+			create_metapupil(&P(simu->cachedm,idm), 0, 0, parms->dirs, parms->aper.d,
 				parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
 				0, 2, 0, 0, 0, 0);
 		}

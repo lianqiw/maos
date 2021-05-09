@@ -70,11 +70,11 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 		long ny=P(fftxopd,ips)->ny;
 		if(extra->square){
 			dmat* xini=dref_reshape(P(xin,ips), nx, ny);
-			ccpd(PP(fftxopd,ips), xini);
+			ccpd(&P(fftxopd,ips), xini);
 			dfree(xini);
 		} else{
 			czero(P(fftxopd,ips));
-			cembed_locstat(PP(fftxopd,ips), 0, P(extra->xloc,ips), P(xin,ips)->p, alpha, 0);
+			cembed_locstat(&P(fftxopd,ips), 0, P(extra->xloc,ips), P(xin,ips)->p, alpha, 0);
 		}
 		cfft2(P(fftxopd,ips), -1);
 		ccwmd(P(fftxopd,ips), P(invpsd,ips), 1);
@@ -85,7 +85,7 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 			creal2d(&xouti, 1, P(fftxopd,ips), alpha);
 			dfree(xouti);
 		} else{
-			cembed_locstat(PP(fftxopd,ips), 1, P(extra->xloc,ips), P(*xout,ips)->p, 1, 1);
+			cembed_locstat(&P(fftxopd,ips), 1, P(extra->xloc,ips), P(*xout,ips)->p, 1, 1);
 		}
 	}
 }
@@ -111,13 +111,13 @@ void apply_fractal(dcell** xout, const void* A, const dcell* xin, real alpha, in
 	/*for(int ips=0; ips<xin->nx*xin->ny; ips++){ */
 		dzero(P(extra->xopd,ips));
 		real r0i=extra->r0*pow(extra->wt[ips], -3./5.);
-		dembed_locstat(PP(extra->xopd,ips), 0, P(extra->xloc,ips), P(xin,ips)->p,
+		dembed_locstat(&P(extra->xopd,ips), 0, P(extra->xloc,ips), P(xin,ips)->p,
 			alpha*extra->scale, 0);
 		fractal_inv(P(extra->xopd,ips),
 			P(extra->xloc,ips)->dx, r0i, extra->L0, extra->ninit);
 		fractal_inv_trans(P(extra->xopd,ips),
 			P(extra->xloc,ips)->dx, r0i, extra->L0, extra->ninit);
-		dembed_locstat(PP(extra->xopd,ips), 1, P(extra->xloc,ips), P(*xout,ips)->p, 1, 1);
+		dembed_locstat(&P(extra->xopd,ips), 1, P(extra->xloc,ips), P(*xout,ips)->p, 1, 1);
 	}
 }
 
@@ -196,7 +196,7 @@ dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0,
 			dmm(&tmp, 0, W1, P(B,ind), "tn", -1);
 			dmm(&xout, 1, W1, tmp, "nn", P(wt,ievl));
 			for(int ix=0; ix<A->ny; ix++){
-				dmm(PP(res,ix,iy), 1, P(A,ievl,ix), xout, "tn", 1);
+				dmm(&P(res,ix,iy), 1, P(A,ievl,ix), xout, "tn", 1);
 			}
 			dfree(xout);
 			dfree(tmp);
@@ -258,7 +258,7 @@ static void Tomo_prop_do(thread_t* info){
 			}
 		}
 		/*Apply the gradient operation */
-		dspmm(PP(data->gg,iwfs), P(recon->GP,iwfs), xx, "nn", 1);
+		dspmm(&P(data->gg,iwfs), P(recon->GP,iwfs), xx, "nn", 1);
 		dfree(xx);
 		/* For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms. */
 	}
@@ -286,7 +286,7 @@ static void Tomo_nea_gpt_do(thread_t* info){
 		/*Apply the gradient operation */
 		dspmm(&gg2, P(NEAI, iwfs, iwfs), P(data->gg,iwfs), "nn", 1);
 		dfree(P(data->gg,iwfs)); /*We reuse gg. */
-		dspmm(PP(data->gg,iwfs), P(recon->GP,iwfs), gg2, "tn", data->alpha);
+		dspmm(&P(data->gg,iwfs), P(recon->GP,iwfs), gg2, "tn", data->alpha);
 		dfree(gg2);
 	}
 }
@@ -299,7 +299,7 @@ static void Tomo_nea_do(thread_t* info){
 		dmat* gg2=NULL;
 		/*Apply the gradient operation */
 		dspmm(&gg2, P(NEAI, iwfs, iwfs), P(data->gg,iwfs), "nn", 1);
-		dcp(PP(data->gg,iwfs), gg2);
+		dcp(&P(data->gg,iwfs), gg2);
 		dfree(gg2);
 	}
 }
@@ -353,7 +353,7 @@ static void Tomo_iprop_do(thread_t* info){
 		} else{
 			dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
 			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-				dspmm(PP(data->xout,ips), P(HXW, iwfs, ips), P(data->gg,iwfs), "tn", 1);
+				dspmm(&P(data->xout,ips), P(HXW, iwfs, ips), P(data->gg,iwfs), "tn", 1);
 			}
 		}
 		if(data->xin){/*data->xin is empty when called from TomoR */
@@ -361,7 +361,7 @@ static void Tomo_iprop_do(thread_t* info){
 			case 0:{/*L2 */
 				dmat* xx=NULL;
 				dspmm(&xx, P(recon->L2,ips,ips), P(data->xin,ips), "nn", 1);
-				dspmm(PP(data->xout,ips), P(recon->L2,ips,ips), xx, "tn", data->alpha);
+				dspmm(&P(data->xout,ips), P(recon->L2,ips,ips), xx, "tn", data->alpha);
 				dfree(xx);
 			}
 				  break;
@@ -373,7 +373,7 @@ static void Tomo_iprop_do(thread_t* info){
 				break;
 			}
 			if(recon->ZZT){
-				dspmm(PP(data->xout,ips), P(recon->ZZT,ips,ips), P(data->xin,ips), "tn", data->alpha);
+				dspmm(&P(data->xout,ips), P(recon->ZZT,ips,ips), P(data->xin,ips), "tn", data->alpha);
 			}
 		}
 	}
@@ -657,7 +657,7 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 							xx->p, 1, dispx, dispy, scale, 0, 0);
 					}
 				}
-				dmm(PP(simu->ecov,ievl), 1, xx, xx, "nt", 1);
+				dmm(&P(simu->ecov,ievl), 1, xx, xx, "nt", 1);
 				if(parms->dbg.ecovxx){
 					zfarr_push(simu->save->ecovxx[ievl], simu->reconisim, xx);
 				}
@@ -710,15 +710,15 @@ void shift_grad(sim_t* simu){
 			const real scale=1./parms->powfs[ipowfs].nwfs;
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
-				dadd(PP(simu->gradlastcl,ipowfs), 1., P(simu->gradcl,iwfs), scale);
+				dadd(&P(simu->gradlastcl,ipowfs), 1., P(simu->gradcl,iwfs), scale);
 				/*if(P(simu->gradoff,iwfs)){
 					//Gradient offset due to mainly NCPA calibration. Must be after gain adjustment.
-					dadd(PP(simu->gradlastcl,ipowfs), 1, P(simu->gradoff,iwfs), -parms->dbg.gradoff_scale*scale);
+					dadd(&P(simu->gradlastcl,ipowfs), 1, P(simu->gradoff,iwfs), -parms->dbg.gradoff_scale*scale);
 				}
 				if(parms->dbg.gradoff){
 					info_once("Add injected gradient offset vector\n");
 					int icol=(simu->wfsisim+1)%parms->dbg.gradoff->ny;
-					dadd(PP(simu->gradlastcl,ipowfs), 1, P(parms->dbg.gradoff, iwfs, icol), -1*scale);
+					dadd(&P(simu->gradlastcl,ipowfs), 1, P(parms->dbg.gradoff, iwfs, icol), -1*scale);
 				}*/
 			}
 		}
@@ -728,12 +728,12 @@ void shift_grad(sim_t* simu){
 		//Add gradient offset to gradlastcl, so that lpfocus on gradcl does not affect it.
 		/*for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			if(P(simu->gradoff,iwfs)){
-				dadd(PP(simu->gradlastcl,iwfs), 1, P(simu->gradoff,iwfs), -parms->dbg.gradoff_scale);
+				dadd(&P(simu->gradlastcl,iwfs), 1, P(simu->gradoff,iwfs), -parms->dbg.gradoff_scale);
 			}
 			if(parms->dbg.gradoff){
 				info_once("Add dbg.gradoff to gradient vector\n");
 				int icol=(simu->wfsisim+1)%parms->dbg.gradoff->ny;
-				dadd(PP(simu->gradlastcl,iwfs), 1, P(parms->dbg.gradoff, iwfs, icol), -1);
+				dadd(&P(simu->gradlastcl,iwfs), 1, P(parms->dbg.gradoff, iwfs, icol), -1);
 			}
 		}*/ //moved to wfsgrad
 	}

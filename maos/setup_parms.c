@@ -1435,7 +1435,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			if(nx<2) nx=2;
 			real dx=dsa/nx;/*adjust dx. */
 			if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
-				warning("powfs %d: Adjusting dx from %g to %g. \n",
+				info("powfs %d: Adjusting dx from %g to %g. \n",
 					ipowfs, parms->powfs[ipowfs].dx, dx);
 			}
 			parms->powfs[ipowfs].dx=dx;

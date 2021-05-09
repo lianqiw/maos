@@ -30,11 +30,11 @@ dcell* genactcpl(const dspcell* HA, const dmat* W1){
 			dsp* ha=P(HA, ifit, idm);
 			if(!ha) continue;
 			if(W1){
-				dspmm(PP(actcplc,idm), ha, W1, "tn", 1);
+				dspmm(&P(actcplc,idm), ha, W1, "tn", 1);
 			} else{
 				dmat* tmp=dspsumabs(ha, 1);
 				tmp->nx=tmp->ny; tmp->ny=1;
-				dadd(PP(actcplc,idm), 1, tmp, 1);
+				dadd(&P(actcplc,idm), 1, tmp, 1);
 				dfree(tmp);
 			}
 		}

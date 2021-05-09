@@ -137,7 +137,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 				cfft2(nominal, 1);
 				//cancel FFT scaling effect.
 				cscale(nominal, 1./(real)(nominal->nx*nominal->ny));
-				ccp(PP(nominals, isa, iwfs), nominal);
+				ccp(&P(nominals, isa, iwfs), nominal);
 				//Coordinate of pixels
 				if(pixoffx){
 					real dx=PR(pixoffx, isa, iwfs)*pixthetax;

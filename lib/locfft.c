@@ -43,7 +43,7 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		if(iwvl==0||(fftsize&&P(fftsize,iwvl)>0&&P(fftsize,iwvl)!=P(locfft->nembed,0))){
 			P(locfft->nembed,iwvl)=fftsize?P(fftsize,iwvl):0;
-			P(locfft->embed,iwvl)=loc_create_embed(PP(locfft->nembed,iwvl), loc, oversize, 1);
+			P(locfft->embed,iwvl)=loc_create_embed(&P(locfft->nembed,iwvl), loc, oversize, 1);
 		} else{
 			P(locfft->embed,iwvl)=lref(P(locfft->embed,0));
 			P(locfft->nembed,iwvl)=P(locfft->nembed,0);

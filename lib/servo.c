@@ -563,7 +563,7 @@ static const dcell* servo_shift_al(servo_t* st, const dcell* merr){
 		if(!merr){
 			dcellfree(P(st->merrhist,nhist-1));
 		} else{
-			dcelladd(PP(st->merrhist,nhist-1), 0, merr, 1);
+			dcelladd(&P(st->merrhist,nhist-1), 0, merr, 1);
 		}
 		return P(st->merrhist,0);
 	}
@@ -624,7 +624,7 @@ int servo_filter(servo_t* st, const dcell* _merr){
    Adjust integrator content without shift.
 */
 void servo_add(servo_t* st, const dcell* madj, real alpha){
-	dcelladd(PP(st->mint,0), 1, madj, alpha);
+	dcelladd(&P(st->mint,0), 1, madj, alpha);
 }
 /**
    Create servo output. It handles st->alfrac.
@@ -668,16 +668,16 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 		if(istep%dtrat==0){
 			dzero(P(meas,0));
 		}
-		dadd(PP(meas,0), 1, merr, 1);/*average the error. */
+		dadd(&P(meas,0), 1, merr, 1);/*average the error. */
 		dcellcp(&mreal, P(st2t->mint,0));
 		if((istep+1)%dtrat==0){
 			if(dtrat!=1) dscale(P(meas,0), 1./dtrat);
 			if(sigman){
 				drandn(noise, 1, &rstat);
 				if(sigman->nx>0){
-					dmm(PP(meas,0), 1, sigman, noise, "nn", 1);
+					dmm(&P(meas,0), 1, sigman, noise, "nn", 1);
 				} else{
-					dadd(PP(meas,0), 1, noise, P(sigman,0));
+					dadd(&P(meas,0), 1, noise, P(sigman,0));
 				}
 			}
 			servo_filter(st2t, meas);

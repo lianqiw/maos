@@ -622,7 +622,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 			info("Use sanea to derive neasim\n");
 			nea=dcelldup(powfs[ipowfs].sanea);
 			for(int ii=0; ii<nea->nx; ii++){
-				nea_chol(PP(nea,ii), P(nea,ii));
+				nea_chol(&P(nea,ii), P(nea,ii));
 			}
 		} else{
 			//neasimfile/neareconfile is saved by skyc in rad, not in rad^2.
@@ -1266,7 +1266,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		dadds(focus, -piston);
 		var=sqrt(var-piston*piston);
 		for(int ic=0; ic<llt->ncpa->nx; ic++){
-			dadd(PP(llt->ncpa,ic), 1, focus, lltcfg->focus*1e-9/var);
+			dadd(&P(llt->ncpa,ic), 1, focus, lltcfg->focus*1e-9/var);
 		}
 		cellfree(focus);
 		info("Adding focus %g nm (unweighted) to LLT ncpa\n", lltcfg->focus);
@@ -1585,22 +1585,22 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 						dmat* ints=0;
 						pywfs_fft(&ints, powfs[ipowfs].pywfs, P(powfs[ipowfs].opdbias,jwfs));
 						//writebin(P(powfs[ipowfs].opdbias,jwfs), "opdbias\n");exit(0);
-						pywfs_grad(PP(powfs[ipowfs].gradncpa,jwfs), powfs[ipowfs].pywfs, ints);
+						pywfs_grad(&P(powfs[ipowfs].gradncpa,jwfs), powfs[ipowfs].pywfs, ints);
 						dfree(ints);
 					} else if(parms->powfs[ipowfs].gtype_sim==1){//Ztilt
-						pts_ztilt(PP(powfs[ipowfs].gradncpa,jwfs), powfs[ipowfs].pts,
+						pts_ztilt(&P(powfs[ipowfs].gradncpa,jwfs), powfs[ipowfs].pts,
 							PR(powfs[ipowfs].saimcc,jwfs,0),
 							realamp, P(powfs[ipowfs].opdbias,jwfs)->p);
 					} else{//Gtilt
 						if(parms->powfs[ipowfs].ncpa_method==1){//GS0*opd
-							dspmm(PP(powfs[ipowfs].gradncpa,jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
+							dspmm(&P(powfs[ipowfs].gradncpa,jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
 								P(powfs[ipowfs].opdbias,jwfs), "nn", 1);
 						} else if(parms->powfs[ipowfs].ncpa_method==2){//CoG(i0)
 							if(!powfs[ipowfs].gradncpa){
 								powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 							}
 							int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-							shwfs_grad(PP(powfs[ipowfs].gradncpa,jwfs),
+							shwfs_grad(&P(powfs[ipowfs].gradncpa,jwfs),
 								PCOLR(powfs[ipowfs].intstat->i0, jwfs),
 								parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 

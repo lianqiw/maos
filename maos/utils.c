@@ -520,7 +520,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 		srot=PR(powfs[ipowfs].srot,wfsind,0)->p;
 		petf=mycalloc(nwvl, cmat**);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			petf[iwvl]=PPR(powfs[ipowfs].etfsim[iwvl].etf, 0, wfsind);
+			petf[iwvl]=&PR(powfs[ipowfs].etfsim[iwvl].etf, 0, wfsind);
 		}
 	}
 
@@ -692,7 +692,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
 	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
 	real* srot=(parms->powfs[ipowfs].radpix)?
-		PP(PR(powfs[ipowfs].srot,wfsind,0)):NULL;
+		P(PR(powfs[ipowfs].srot,wfsind,0)):NULL;
 	for(int icol=0; icol<1000; icol+=dtrat){
 		setup_powfs_etf(powfs, parms, 0, ipowfs, 0, icol);
 		gensei(parms, powfs, ipowfs);
@@ -988,10 +988,10 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	real* i0sum=NULL;
 	real i0sumg=0;
 	if(phytype==1){
-		mtche=PPR(powfs[ipowfs].intstat->mtche, 0, wfsind);
+		mtche=&PR(powfs[ipowfs].intstat->mtche, 0, wfsind);
 	}
 	if(powfs[ipowfs].intstat&&powfs[ipowfs].intstat->i0sum){
-		i0sum=PPR(powfs[ipowfs].intstat->i0sum, 0, wfsind);
+		i0sum=&PR(powfs[ipowfs].intstat->i0sum, 0, wfsind);
 		i0sumg=PR(powfs[ipowfs].intstat->i0sumsum, wfsind, 0);
 	}
 

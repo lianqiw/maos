@@ -221,7 +221,7 @@ setup_fit_matrix(fit_t* fit){
 					if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 					dsp* tmp=dspmulsp(fit->W0, P(HXF, ifit, ips), "nn");
 					for(int idm=0; idm<ndm; idm++){
-						dspmulsp2(PP(FRM, idm, ips), P(HAT, idm, ifit), tmp, "nn",
+						dspmulsp2(&P(FRM, idm, ips), P(HAT, idm, ifit), tmp, "nn",
 							P(fit->wt,ifit));
 					}
 					dspfree(tmp);
@@ -273,7 +273,7 @@ setup_fit_matrix(fit_t* fit){
 				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 				dsp* tmp=dspmulsp(fit->W0, P(HA, ifit, idm), "nn");
 				for(int jdm=0; jdm<ndm; jdm++){
-					dspmulsp2(PP(FLM, jdm, idm), P(HAT, jdm, ifit), tmp, "nn",
+					dspmulsp2(&P(FLM, jdm, idm), P(HAT, jdm, ifit), tmp, "nn",
 						P(fit->wt,ifit));
 				}
 				dspfree(tmp);

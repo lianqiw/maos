@@ -116,7 +116,7 @@ static void psfiris_do(thread_t* info){
 	} else{
 		cfft2(otf, -1);
 		cfftshift(otf);
-		creal2d(PP(output,iwvl), 0, otf, impst);
+		creal2d(&P(output,iwvl), 0, otf, impst);
 	}
 	char header[500];
 	snprintf(header, 500, "%s"

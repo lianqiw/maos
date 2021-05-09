@@ -230,7 +230,7 @@ void wfsints(thread_t* thread_data){
 						cshift2center(psftmp, 0.5, 0.5);
 					}
 									   /*accumulate the real part of psf*/
-					creal2d(PP(pistatout, isa, iwvl), 1, psftmp, norm_pistat);
+					creal2d(&P(pistatout, isa, iwvl), 1, psftmp, norm_pistat);
 				}
 				if(lltopd){            /*add uplink otf */
 					ccwm(psf, lotfc);   /*normalization done in gen of lotfc. */

@@ -232,8 +232,8 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 			P(star[istar].siglev,ipowfs)=dnew(nwvl, 1);
 			int iscircle=parms->maos.nsa[ipowfs]<=4?1:0;
 			photon_flux(&parms->skyc.zb, P(star[istar].siglev,ipowfs)->p,
-				PP(star[istar].siglevtot,ipowfs),
-				PP(star[istar].bkgrnd,ipowfs),
+				&P(star[istar].siglevtot,ipowfs),
+				&P(star[istar].bkgrnd,ipowfs),
 				NULL, NULL,
 				parms->maos.nwvl,
 				parms->maos.wvl,
@@ -316,9 +316,9 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 						dscale(P(gx, isa, iwvl), 1./pixtheta);
 						dscale(P(gy, isa, iwvl), 1./pixtheta);
 					}
-					dadd(PP(pistat->i0s,isa), 1, P(i0, isa, iwvl), siglev);
-					dadd(PP(pistat->gxs,isa), 1, P(gx, isa, iwvl), siglev);
-					dadd(PP(pistat->gys,isa), 1, P(gy, isa, iwvl), siglev);
+					dadd(&P(pistat->i0s,isa), 1, P(i0, isa, iwvl), siglev);
+					dadd(&P(pistat->gxs,isa), 1, P(gx, isa, iwvl), siglev);
+					dadd(&P(pistat->gys,isa), 1, P(gy, isa, iwvl), siglev);
 				}
 
 			}
@@ -338,7 +338,7 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 				dcelladd(&i0s, 0, pistat->i0s, dtrat);
 				dcelladd(&gxs, 0, pistat->gxs, dtrat);
 				dcelladd(&gys, 0, pistat->gys, dtrat);
-				genmtch(&pistat->mtche[idtrat], PP(pistat->sanea,idtrat),
+				genmtch(&pistat->mtche[idtrat], &P(pistat->sanea,idtrat),
 					i0s, gxs, gys, pixtheta, P(rnefs, idtrat, ipowfs),
 					P(star[istar].bkgrnd,ipowfs)*dtrat, parms->skyc.mtchcr);
 				/*Add nolinearity*/
@@ -353,7 +353,7 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 					}
 					dfree(nea_nonlin);
 				}
-				dcp(PP(pistat->sanea0,idtrat), P(pistat->sanea,idtrat));
+				dcp(&P(pistat->sanea0,idtrat), P(pistat->sanea,idtrat));
 				if(parms->skyc.neaaniso){
 					for(int i=0; i<nsa*2; i++){
 						P(P(pistat->sanea,idtrat),i)=sqrt(pow(P(P(pistat->sanea,idtrat),i), 2)
@@ -538,7 +538,7 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 							}
 						} else{
 							dmat* tmp=dreaddata(fp_ztilt, &header);
-							dadd(PP(stari->ztiltout,ipowfs), 1, tmp, wtxi);
+							dadd(&P(stari->ztiltout,ipowfs), 1, tmp, wtxi);
 							dfree(tmp);
 						}
 						zfclose(fp_ztilt);
@@ -548,7 +548,7 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 							stari->goff=dcellnew(npowfs, 1);
 						}
 						dmat* tmp=dread("%s", fngoff[iy][ix]);
-						dadd(PP(stari->goff,ipowfs), 1, tmp, wtxi);
+						dadd(&P(stari->goff,ipowfs), 1, tmp, wtxi);
 						dfree(tmp);
 					}
 				}/*iy */

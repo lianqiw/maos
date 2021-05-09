@@ -111,9 +111,9 @@ static void calc_gradol(sim_t* simu){
 				int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
 				OMPTASK_FOR(indwfs, 0, nindwfs){
 					int iwfs=parms->recon.glao?ipowfs:P(parms->powfs[ipowfs].wfs,indwfs);
-					dcp(PP(simu->gradlastol,iwfs), P(simu->gradlastcl,iwfs));
+					dcp(&P(simu->gradlastol,iwfs), P(simu->gradlastcl,iwfs));
 					for(int idm=0; idm<parms->ndm&&P(simu->wfspsol,ipowfs); idm++){
-						dspmm(PP(simu->gradlastol,iwfs), P(GA, iwfs, idm),
+						dspmm(&P(simu->gradlastol,iwfs), P(GA, iwfs, idm),
 							P(P(simu->wfspsol,ipowfs),idm), "nn", 1);
 					}
 				}

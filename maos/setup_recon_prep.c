@@ -246,7 +246,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 			const real ht=P(recon->ht,ips);
 			real dxr=parms->atmr.dx/parms->fit.pos;
 			const real guard=parms->tomo.guard*dxr;
-			create_metapupil(PP(recon->xcmap,ips), 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
+			create_metapupil(&P(recon->xcmap,ips), 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
 			mem_unref(&P(recon->xcmap,ips)->mem);
 			P(recon->xcmap,ips)->mem=0;
 			P(recon->xcmap,ips)->p=NULL;
@@ -355,7 +355,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 		if(parms->fit.cachedm){
 			const real dx2=parms->atmr.dx/parms->fit.pos;
 			const real dy2=dx2;
-			create_metapupil(PP(recon->acmap,idm), 0, 0, parms->dirs, parms->aper.d,
+			create_metapupil(&P(recon->acmap,idm), 0, 0, parms->dirs, parms->aper.d,
 				ht, dx2, dy2, offset*dx/dx2, dx2, 0, 0, 0, parms->fit.square);
 		}
 	}
@@ -712,7 +712,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 						locfree(loc);
 					}
 					if(parms->recon.modal){
-						dspmm(PP(recon->GM, iwfs, idm), P(recon->GA, iwfs, idm), P(recon->amod,idm), "nn", 1);
+						dspmm(&P(recon->GM, iwfs, idm), P(recon->GA, iwfs, idm), P(recon->amod,idm), "nn", 1);
 					}
 				}
 			}/*idm */
@@ -855,7 +855,7 @@ setup_recon_GF(recon_t* recon, const parms_t* parms){
 		loc_add_focus(opd, recon->ploc, 1);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
-			dspmm(PP(recon->GFall,iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
+			dspmm(&P(recon->GFall,iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
 			if(parms->powfs[ipowfs].lo&&!parms->powfs[ipowfs].llt){
 				P(recon->GFngs,iwfs)=dref(P(recon->GFall,iwfs));
 			}
@@ -886,7 +886,7 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 			if(parms->powfs[ipowfs].type==1){//PWFS
 				P(recon->GRall,iwfs)=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0);
 			} else{//SHWFS
-				dspmm(PP(recon->GRall,iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
+				dspmm(&P(recon->GRall,iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
 			}
 		}
 	}
@@ -997,8 +997,8 @@ setup_recon_DF(recon_t* recon, const parms_t* parms){
 				if(parms->powfs[ipowfs].skip){
 					error("This WFS %d should be included in Tomo.\n", iwfs);
 				}
-				dcp(PP(recon->DF,0,iwfs), DF);
-				dadd(PP(recon->DF,iwfs,iwfs), 0, DF, -1);
+				dcp(&P(recon->DF,0,iwfs), DF);
+				dadd(&P(recon->DF,iwfs,iwfs), 0, DF, -1);
 			}
 			dfree(DF);
 		}

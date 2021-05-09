@@ -56,7 +56,7 @@ static void mat_basic(void** state){
         dmat* d=drefcols(b, 1, 2);
         assert_int_equal(b->nx, d->nx);
         assert_int_equal(d->ny, 2);
-        assert_ptr_equal(PP(b, 0, 1), PP(d, 0, 0));
+        assert_ptr_equal(&P(b, 0, 1), &P(d, 0, 0));
         dresize(d, 2, 3);
         dfree(d);
     }

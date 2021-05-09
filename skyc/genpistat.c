@@ -148,7 +148,7 @@ static void calc_pistat(GENPISTAT_S* data){
 							P(mapply,1)=-grad[1];
 							int nframe=istep-avgstart+1;
 							for(int idtrat=0; idtrat<ndtrat; idtrat++){
-								dmat** pavgpsf=PP(avgpsf[iwvl],idtrat,isa);
+								dmat** pavgpsf=&P(avgpsf[iwvl],idtrat,isa);
 								dadd(pavgpsf, 1, psf, 1);
 								if(nframe%(int)P(dtrats,idtrat)==0){
 									grad[0]=grad[1]=0;
@@ -163,7 +163,7 @@ static void calc_pistat(GENPISTAT_S* data){
 							ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
 							cembedc(wvf, wvfc, 0, C_FULL);
 							cfft2(wvf, -1);
-							cabs22d(PP(ppistat, isa, iwvl), 1, wvf, 1);
+							cabs22d(&P(ppistat, isa, iwvl), 1, wvf, 1);
 						}
 					}
 
@@ -413,7 +413,7 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 						for(long iwvl=0; iwvl<nwvl; iwvl++){
 							writebin(avgpi, "avgpi");
 							psf2i0gxgy(P(i0,isa), P(gx,isa), P(gy,isa), P(pavgpi, isa, iwvl), powfs[ipowfs].dtf+iwvl, 1);
-							ccpd(PP(otf1,isa,iwvl), P(pavgpi, isa, iwvl));
+							ccpd(&P(otf1,isa,iwvl), P(pavgpi, isa, iwvl));
 							cfft2(P(otf1,isa,iwvl), -1);//turn to otf, peak in corner
 						}
 					}
@@ -447,7 +447,7 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 #endif
 								real sout[2]={0,0};
 								for(long iwvl=0; iwvl<nwvl; iwvl++){
-									ccp(PP(otf2,isa,iwvl), P(otf1,isa,iwvl));
+									ccp(&P(otf2,isa,iwvl), P(otf1,isa,iwvl));
 									ctilt(P(otf2,isa,iwvl), sx/dtheta[iwvl], sy/dtheta[iwvl], 0);
 									ccwm(P(otf2,isa,iwvl), powfs[ipowfs].dtf[iwvl].nominal);
 									cfft2i(P(otf2,isa,iwvl), 1);//turn to psd space

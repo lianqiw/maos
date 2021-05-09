@@ -102,9 +102,9 @@ void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
 		*xout=dcellnew(A->M->nx, xin->ny);
 	}
 	if(P(A->M, xb, yb)->id==M_REAL){
-		dmm(PP(*xout,xb), 1, dmat_cast(P(A->M, xb, yb)), P(xin,yb), "nn", alpha);
+		dmm(&P(*xout,xb), 1, dmat_cast(P(A->M, xb, yb)), P(xin,yb), "nn", alpha);
 	} else{
-		dspmm(PP(*xout,xb), dsp_cast(P(A->M, xb, yb)), P(xin,yb), "nn", alpha);
+		dspmm(&P(*xout,xb), dsp_cast(P(A->M, xb, yb)), P(xin,yb), "nn", alpha);
 	}
 	if(A->V&&A->U){
 		dcell* AV=A->V;
@@ -112,7 +112,7 @@ void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
 		for(int jb=0; jb<A->U->ny; jb++){
 			dmat* tmp=NULL;
 			dmm(&tmp, 0, P(AV, yb, jb), P(xin,yb), "tn", -1);
-			dmm(PP(*xout,xb), 1, P(AU, xb, jb), tmp, "nn", alpha);
+			dmm(&P(*xout,xb), 1, P(AU, xb, jb), tmp, "nn", alpha);
 			dfree(tmp);
 		}
 	}
@@ -237,9 +237,9 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 	for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
 		if(use_svd){
 			if(P(A->M,ib,ib)->id==M_REAL){
-				dcp(PP(A->MIB,ib), dmat_cast(P(A->M,ib,ib)));
+				dcp(&P(A->MIB,ib), dmat_cast(P(A->M,ib,ib)));
 			} else{
-				dspfull(PP(A->MIB,ib), dsp_cast(P(A->M,ib,ib)), 'n', 1);
+				dspfull(&P(A->MIB,ib), dsp_cast(P(A->M,ib,ib)), 'n', 1);
 			}
 			if(svd<1){
 				dsvd_pow(P(A->MIB,ib), -1, svd);
@@ -260,8 +260,8 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 		A->UpB=dcellnew(A->U->nx, A->U->ny);
 		A->VpB=dcellnew(A->V->nx, A->V->ny);
 		for(int ib=0; ib<nb; ib++){
-			muv_direct_prep_lowrank(PP(A->UpB,ib),
-				PP(A->VpB,ib),
+			muv_direct_prep_lowrank(&P(A->UpB,ib),
+				&P(A->VpB,ib),
 				A->CB?A->CB[ib]:NULL,
 				A->MIB?P(A->MIB,ib):NULL,
 				P(A->U,ib),
@@ -356,7 +356,7 @@ void muv_direct_solve(dcell** xout, const muv_t* A, dcell* xin){
 	if(!xin) return;
 	if(xin->nx*xin->ny==1){/*there is only one cell. */
 		if(!*xout) *xout=dcellnew(1, 1);
-		muv_direct_solve_mat(PP(*xout,0), A, P(xin,0));
+		muv_direct_solve_mat(&P(*xout,0), A, P(xin,0));
 	} else{
 		dmat* xin2=dcell2m(xin);
 		muv_direct_solve_mat(&xin2, A, xin2);/*in place solve. */
@@ -389,7 +389,7 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
 	}
 	for(int iter=0; iter<A->bgs; iter++){
 		for(int ib=0; ib<nb; ib++){
-			dcp(PP(c0,ib), P(b,ib));
+			dcp(&P(c0,ib), P(b,ib));
 			for(int jb=0; jb<nb; jb++){
 				if(jb==ib) continue;
 				B.xb=ib;
@@ -399,7 +399,7 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
 			switch(A->alg){
 			case 0:
 			case 2:
-				muv_direct_diag_solve(PP(x0,ib), A, P(c0,ib), ib);
+				muv_direct_diag_solve(&P(x0,ib), A, P(c0,ib), ib);
 				break;
 			case 1:/*Have to call CG, for this block. Embed this block into an empty block matrix. */
 				P(x0b,ib)=P(x0,ib);

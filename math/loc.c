@@ -1547,7 +1547,7 @@ void locresize(loc_t* loc, long nloc){
 	    long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1); \
 	    long pos1=locstat->cols[icol].pos;				\
 	    long pos2=locstat->cols[icol+1].pos;			\
-	    T *restrict dest=PP(p,xoff+xoff0,yoff+yoff0);		\
+	    T *restrict dest=&P(p,xoff+xoff0,yoff+yoff0);		\
 	    if(!reverse){						\
 		if(oin){						\
 		    const R *restrict oin2=oin+pos1;			\

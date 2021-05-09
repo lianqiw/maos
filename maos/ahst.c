@@ -428,7 +428,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 				info2(" %d", iwfs);
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(parms->powfs[ipowfs].type==0 || parms->recon.modal){//shwfs or modal control
-						dcellmm(PP(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
+						dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
 					} else{//pwfs in zonal control.
 						real  ht=parms->dm[idm].ht-parms->powfs[ipowfs].hc;
 						real  dispx=0, dispy=0;
@@ -437,7 +437,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 						dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, P(recon->aloc,idm),
 							parms->misreg.dm2wfs[iwfs+idm*parms->nwfs],
 							P(ngsmod->Modes, idm), 0, dispx, dispy);
-						dadd(PP(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
+						dadd(&P(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
 					}
 				}
 			}

@@ -102,7 +102,7 @@ static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* 
 	if(parms->evl.psfmean){
 		dcell* pevlpsfmean=evlpsfmean/*PDELL*/;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			cabs22d(PP(pevlpsfmean, iwvl, ievl), 1, P(psf2s,iwvl), 1);
+			cabs22d(&P(pevlpsfmean, iwvl, ievl), 1, P(psf2s,iwvl), 1);
 		}
 	}
 	if(parms->evl.psfhist){
@@ -241,7 +241,7 @@ void perfevl_ievl(thread_t* info){
 				locfft_psf(&psf2s, aper->embed, opdevlcopy, parms->evl.psfsize, 0);
 				int nwvl=parms->evl.nwvl;
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					cabs22d(PP(simu->evlpsfolmean,iwvl), 1, P(psf2s,iwvl), 1);
+					cabs22d(&P(simu->evlpsfolmean,iwvl), 1, P(psf2s,iwvl), 1);
 				}
 				if(parms->plot.run){
 					plot_psf(psf2s, "PSFol", 0, ievl, parms->evl.wvl, parms->plot.psf==2);
@@ -331,8 +331,8 @@ void perfevl_ievl(thread_t* info){
 					dadds(iopdevl, -P(pclmp, 0, isim));
 				}
 				if(parms->evl.cov&&P(parms->evl.psfr,ievl)){
-					dmm(PP(simu->evlopdcov,ievl), 1, iopdevl, iopdevl, "nt", 1);
-					dadd(PP(simu->evlopdmean,ievl), 1, iopdevl, 1);
+					dmm(&P(simu->evlopdcov,ievl), 1, iopdevl, iopdevl, "nt", 1);
+					dadd(&P(simu->evlopdmean,ievl), 1, iopdevl, 1);
 				}/*opdcov */
 				if(parms->evl.psfmean||parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
 					perfevl_psfcl(parms, aper, "PSFcl", simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
@@ -496,8 +496,8 @@ static void perfevl_mean(sim_t* simu){
 							loc_remove_ptt(iopdevl, ptt, aper->locs);
 						}
 						if(parms->evl.cov&&P(parms->evl.psfr,ievl)){
-							dmm(PP(simu->evlopdcov_ngsr,ievl), 1, iopdevl, iopdevl, "nt", 1);
-							dadd(PP(simu->evlopdmean_ngsr,ievl), 1, iopdevl, 1);
+							dmm(&P(simu->evlopdcov_ngsr,ievl), 1, iopdevl, iopdevl, "nt", 1);
+							dadd(&P(simu->evlopdmean_ngsr,ievl), 1, iopdevl, 1);
 						}
 						if(do_psf){
 							perfevl_psfcl(parms, aper, "PSFngsr", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);

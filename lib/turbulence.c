@@ -167,7 +167,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 		if(fc){/*save to file. */
 			zfarr_push(fc, ilayer, this_screen);
 		} else{
-			dcp((dmat**)PP(data->screen,ilayer), this_screen);
+			dcp((dmat**)&P(data->screen,ilayer), this_screen);
 		}
 		real tk4=myclockd();
 		info("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n",

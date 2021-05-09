@@ -215,7 +215,7 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 			iystart=-skipy;
 			iyend=niny+skipy;
 		}
-		T* restrict out2=PP(A, skipx, skipy);
+		T* restrict out2=&P(A, skipx, skipy);
 		for(int iy=iystart; iy<iyend; iy++){
 			T* outi=out2+iy*noutx;
 			const T* ini=in+iy*ninx;
@@ -332,7 +332,7 @@ void X(embedd)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
 			iystart=-skipy;
 			iyend=niny+skipy;
 		}
-		T* out2=PP(A, skipx, skipy);
+		T* out2=&P(A, skipx, skipy);
 		for(long iy=iystart; iy<iyend; iy++){
 			T* outi=out2+iy*noutx;
 			const R* ini=PCOL(B, iy);
