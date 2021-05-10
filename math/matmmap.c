@@ -43,37 +43,34 @@ X(mat)* X(new_mmap)(long nx, long ny, const char* header, const char* format, ..
    truncated if already exists.
 */
 X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
-	const char* header1, const char* header2[],
-	const char* format, ...){
+	const char* header, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(disable_save&&!IS_SHM(fn)){
 		return X(cellnew3)(nx, ny, nnx, nny);
 	}
 	long metasize=3*8;
-	long msize=metasize+bytes_header(header1);
+	long msize=metasize+bytes_header(header);
 	for(long ix=0; ix<nx*ny; ix++){
 		long mx=(long)nnx>0?nnx[ix]:(-(long)nnx);
 		long my=nny?((long)nny>0?nny[ix]:(-(long)nny)):1;
-		msize+=metasize+mx*my*sizeof(T)+bytes_header(header2?header2[ix]:NULL);
+		msize+=metasize+mx*my*sizeof(T);
 	}
 	mem_t* mem=mmap_open(fn, msize, 1);
 	char* map=mem_p(mem);
-	mmap_write_header(&map, MCC_ANY, nx, ny, header1);
+	mmap_write_header(&map, MCC_ANY, nx, ny, header);
 	X(cell)* out=X(cellnew)(nx, ny);
-	if(header1) out->header=strdup(header1);
+	if(header) out->header=strdup(header);
 
 	for(long ix=0; ix<nx*ny; ix++){
 		long mx=(long)nnx>0?nnx[ix]:(-(long)nnx);
 		long my=nny?((long)nny>0?nny[ix]:(-(long)nny)):1;
-		const char* header2i=header2?header2[ix]:NULL;
-		mmap_write_header(&map, M_T, mx, my, header2i);
+		mmap_write_header(&map, M_T, mx, my, NULL);
 		if(mx&&my){
 			P(out,ix)=X(new_do)(mx, my, (T*)map, mem);
 		}
 		memset(map, 0, mx*my*sizeof(T));//Is this necessary?
 		map+=mx*my*sizeof(T);
-		if(header2i) P(out,ix)->header=strdup(header2i);
 	}
 
 	return out;
@@ -85,7 +82,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* header,
 	const char* format, ...){
 	format2fn;
-	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, NULL, "%s", fn);
+	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, "%s", fn);
 }
 
 static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){

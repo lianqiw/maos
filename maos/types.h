@@ -622,11 +622,13 @@ typedef struct sim_t{
     dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
 
     /*save performance results to file using mmap*/
-    dcell *clep;       /**<CL error per direction.*/
-    dcell *clmp;       /**<CL mode coefficient per direction.*/
-    dcell *olep;       /**<OL error per direction.*/
-    dcell *olmp;       /**<OL mode coefficient per direction.*/
-    dmat *ole;         /**<field averaged OL error*/
+    dcell* resp;       /**<Stores olmp, clmp, olep, clep*/
+    dcell* olmp;       /**<OL mode coefficient per direction.*/
+    dcell* clmp;       /**<CL mode coefficient per direction.*/
+    dcell* olep;       /**<OL error per direction.*/
+    dcell* clep;       /**<CL error per direction.*/
+    
+    dmat* ole;         /**<field averaged OL error*/
     dmat *cle;         /**<field averaged CL error*/
 
     //Temporary

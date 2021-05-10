@@ -492,7 +492,7 @@ static void init_simu_evl(sim_t* simu){
 		long nnx[4]={nmod,0,nmod,ahst_nmod};
 		long nny[4]={nsim,0,nsim,nsim};
 
-		simu->res=dcellnew_mmap(4, 1, nnx, nny, NULL, NULL, "Res_%d.bin", seed);
+		simu->res=dcellnew_mmap(4, 1, nnx, nny, NULL, "Res_%d.bin", seed);
 		//Do not reference. Just assign. Don't free.
 		simu->ole=P(simu->res, 0);
 		simu->cle=P(simu->res, 2);
@@ -501,48 +501,36 @@ static void init_simu_evl(sim_t* simu){
 	}
 
 	{/*USE MMAP for data that need to save at every time step */
-		long nnx[nevl];
-		long nny[nevl];
-		for(int ievl=0; ievl<nevl; ievl++){
-			nnx[ievl]=nmod;
-			nny[ievl]=nsim;
-		}
 		if(parms->save.extra){
-			simu->olep=dcellnew_mmap(nevl, 1, nnx, nny, NULL, NULL, "Resolep_%d.bin", seed);
-			simu->olmp=dcellnew_mmap(nevl, 1, nnx, nny, NULL, NULL, "Resolmp_%d.bin", seed);
-			simu->clep=dcellnew_mmap(nevl, 1, nnx, nny, NULL, NULL, "Resclep_%d.bin", seed);
-			simu->clmp=dcellnew_mmap(nevl, 1, nnx, nny, NULL, NULL, "Resclmp_%d.bin", seed);
+			const char* header="Results per direction: olmp; clmp; olep; clep";
+			simu->resp=dcellnewsame_mmap(nevl, 4, nmod, nsim, header, "extra/Resp_%d.bin", seed);
 		} else{
-			simu->olep=dcellnew3(nevl, 1, nnx, nny);
-			simu->olmp=dcellnew3(nevl, 1, nnx, nny);
-			simu->clep=dcellnew3(nevl, 1, nnx, nny);
-			simu->clmp=dcellnew3(nevl, 1, nnx, nny);
+			simu->resp=dcellnew_same(nevl, 4, nmod, nsim);
 		}
+		simu->olmp=dcellsub(simu->resp, 0, nevl, 0, 1);
+		simu->clmp=dcellsub(simu->resp, 0, nevl, 1, 1);
+		simu->olep=dcellsub(simu->resp, 0, nevl, 2, 1);
+		simu->clep=dcellsub(simu->resp, 0, nevl, 3, 1);
+		
 		if(parms->recon.split){
-			long nnx_split[nevl];
-			long nnx_3[nevl];
-			for(int ievl=0; ievl<nevl; ievl++){
-				nnx_3[ievl]=3;
-				nnx_split[ievl]=recon->ngsmod->nmod;
-			}
 			if(parms->save.extra){
 				simu->oleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "extra/ResoleNGSm_%d.bin", seed);
-				simu->oleNGSmp=dcellnew_mmap(nevl, 1, nnx_split, nny, NULL, NULL, "extra/ResoleNGSmp_%d.bin", seed);
+				simu->oleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "extra/ResoleNGSmp_%d.bin", seed);
 				if(!parms->sim.evlol){
-					simu->clemp=dcellnew_mmap(nevl, 1, nnx_3, nny, NULL, NULL, "extra/Resclemp_%d.bin", seed);
+					simu->clemp=dcellnewsame_mmap(nevl, 1, 3, nsim, NULL, "extra/Resclemp_%d.bin", seed);
 					simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "extra/RescleNGSm_%d.bin", seed);
-					simu->cleNGSmp=dcellnew_mmap(nevl, 1, nnx_split, nny, NULL, NULL, "extra/RescleNGSmp_%d.bin", seed);
+					simu->cleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "extra/RescleNGSmp_%d.bin", seed);
 					if(parms->recon.split==1&&!parms->sim.fuseint){
 						simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "extra/RescorrNGSm_%d.bin", seed);
 					}
 				}
 			} else{
 				simu->oleNGSm=dnew(recon->ngsmod->nmod, nsim);
-				simu->oleNGSmp=dcellnew3(nevl, 1, nnx_split, nny);
+				simu->oleNGSmp=dcellnew_same(nevl, 1, recon->ngsmod->nmod, nsim);
 				if(!parms->sim.evlol){
-					simu->clemp=dcellnew3(nevl, 1, nnx_3, nny);
+					simu->clemp=dcellnew_same(nevl, 1, 3, nsim);
 					simu->cleNGSm=dnew(recon->ngsmod->nmod, nsim);
-					simu->cleNGSmp=dcellnew3(nevl, 1, nnx_split, nny);
+					simu->cleNGSmp=dcellnew_same(nevl, 1, recon->ngsmod->nmod, nsim);
 					if(parms->recon.split==1&&!parms->sim.fuseint){
 						simu->corrNGSm=dnew(recon->ngsmod->nmod, nsim);
 					}
@@ -874,8 +862,8 @@ static void init_simu_wfs(sim_t* simu){
 			}
 		}
 		if(parms->save.extra){
-			simu->fsmerrs=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, NULL, "extra/Resfsmerr_%d.bin", seed);
-			simu->fsmcmds=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, NULL, "extra/Resfsmcmd_%d.bin", seed);
+			simu->fsmerrs=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "extra/Resfsmerr_%d.bin", seed);
+			simu->fsmcmds=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "extra/Resfsmcmd_%d.bin", seed);
 		} else{
 			simu->fsmerrs=dcellnew3(nwfs, 1, nnx, nny);
 			simu->fsmcmds=dcellnew3(nwfs, 1, nnx, nny);
@@ -1096,7 +1084,7 @@ static void init_simu_wfs(sim_t* simu){
 				}
 			}
 			if(parms->save.extra){
-				simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "extra/Reszoompos_%d.bin", seed);
+				simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, "extra/Reszoompos_%d.bin", seed);
 			} else{
 				simu->zoompos=dcellnew3(parms->nwfs, 1, nnx, nny);
 			}
@@ -1131,7 +1119,7 @@ static void init_simu_wfs(sim_t* simu){
 					nny[iwfs]=0;
 				}
 			}
-			simu->resdither=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, NULL, "extra/Resdither_%d.bin", seed);
+			simu->resdither=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "extra/Resdither_%d.bin", seed);
 		}
 	}
 	if(recon->cn2est){
@@ -1139,7 +1127,7 @@ static void init_simu_wfs(sim_t* simu){
 		long nnx[2]={ncn2, recon->cn2est->htrecon->nx};
 		long nny[2]={1, ncn2};
 		if(parms->save.extra){
-			simu->cn2res=dcellnew_mmap(2, 1, nnx, nny, NULL, NULL, "extra/Rescn2_%d.bin", seed);
+			simu->cn2res=dcellnew_mmap(2, 1, nnx, nny, NULL, "extra/Rescn2_%d.bin", seed);
 		} else{
 			simu->cn2res=dcellnew3(2, 1, nnx, nny);
 		}
@@ -1178,7 +1166,7 @@ static void init_simu_dm(sim_t* simu){
 	if(1){
 		simu->dmerr_store=dcellnew3(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
 	} else{
-		simu->dmerr_store=dcellnew_mmap(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL, NULL, NULL, "/dmerr");
+		simu->dmerr_store=dcellnew_mmap(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL, NULL, "/dmerr");
 	}
 	simu->dmcmd=dcellnew(parms->ndm, 1);
 	simu->dmreal=dcellnew(parms->ndm, 1);
@@ -1278,8 +1266,7 @@ static void init_simu_dm(sim_t* simu){
 					nny[idm]=0;
 				}
 			}
-			simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny,
-				NULL, NULL, "dmhist_%d.bin", simu->seed);
+			simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, NULL, "dmhist_%d.bin", simu->seed);
 		}
 	}
 	if(parms->recon.psd){
@@ -1473,10 +1460,9 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 			long nnx[2], nny[2];
 			nnx[1]=nnx[0]=parms->sim.end;
 			nny[1]=nny[0]=1;
-			const char* header[2]={"Tomography", "DM Fit"};
+			const char* header="CG residual for Tomography; DM Fit";
 			if(parms->save.extra){
-				simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
-					"extra/ResCG_%d.bin", seed);
+				simu->cgres=dcellnew_mmap(2, 1, nnx, nny, header, "extra/ResCG_%d.bin", seed);
 			} else{
 				simu->cgres=dcellnew3(2, 1, nnx, nny);
 			}

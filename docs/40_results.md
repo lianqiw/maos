@@ -100,16 +100,20 @@ results. i.e. res=read('Res_1');
       - WFV in NGS Tip/Tilt modes
       - WFV in NGS modes (including Tip/Tilt and additional modes controlled by NGS (On-Instrument WFS))
 
-- \c Resolep_1: Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.
+- \c Resp_1: \c resp: Results for direction. Combines the following four files. 
 
-- \c Resolmp_1: Open loop wavefront Zernike (not normalized wrt radius)
-modes defined on not-normalized coordinate on the aperture. The format is
-similar as \c Resolep_1
+- \c Resolmp_1 or \c resp[0]: Open loop wavefront Zernike (not normalized wrt
+  radius) modes defined on not-normalized coordinate on the aperture. The format
+  is similar as \c Resolep_1
 
-- \c Resclep_1: Closed loop wavefront variance for each science field
-point, in the same format as \c Resolep_1
+- \c Resclmp_1 or \c resp[1]: Close loop wavefront Zernike modes, in the same format as \c Resolmp_1
 
-- \c Resclmp_1: Close loop wavefront Zernike modes, in the same format as \c Resolmp_1
+- \c Resolep_1 or \c resp[2]: Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.
+
+- \c Resclep_1 or \c resp[3]: Closed loop wavefront variance for each science field point, in
+  the same format as \c Resolep_1
+
+
 
 - \c Resclemp_1: (Only in split tomography) LGS/TT/NGS mode wavefront error
 for each direction.
