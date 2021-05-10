@@ -218,7 +218,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>index_col</b>(iy,  nx,  ny)&#160;&#160;&#160;((iy)*(nx))</td></tr>
 <tr class="separator:af2e3779b987c5f08a4ffdfd58da90823"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38ba78c2263699976c461d62c8c0cd27"><td class="memItemLeft" align="right" valign="top"><a id="a38ba78c2263699976c461d62c8c0cd27"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>P0</b>(A)&#160;&#160;&#160;((A)-&gt;p)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>P0</b>(A)&#160;&#160;&#160;(A)-&gt;p</td></tr>
 <tr class="separator:a38ba78c2263699976c461d62c8c0cd27"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bf89c4d3278bf55adbf96d2fb727680"><td class="memItemLeft" align="right" valign="top"><a id="a5bf89c4d3278bf55adbf96d2fb727680"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>P1</b>(A,  i)&#160;&#160;&#160;(A)-&gt;p[index_1d((i),        (A)-&gt;nx, (A)-&gt;ny)]</td></tr>
@@ -226,29 +226,16 @@ Macros</h2></td></tr>
 <tr class="memitem:a1c187952e0a16e6704c4549be18118aa"><td class="memItemLeft" align="right" valign="top"><a id="a1c187952e0a16e6704c4549be18118aa"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>P2</b>(A,  ix,  iy)&#160;&#160;&#160;(A)-&gt;p[index_2d((ix), (iy), (A)-&gt;nx, (A)-&gt;ny)]</td></tr>
 <tr class="separator:a1c187952e0a16e6704c4549be18118aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0437e103d06910032381b554e4c6e922"><td class="memItemLeft" align="right" valign="top"><a id="a0437e103d06910032381b554e4c6e922"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>PP0</b>(A)&#160;&#160;&#160;((A)-&gt;p)</td></tr>
-<tr class="separator:a0437e103d06910032381b554e4c6e922"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03e0bd76aace3fd9312bdadb5cdf1750"><td class="memItemLeft" align="right" valign="top"><a id="a03e0bd76aace3fd9312bdadb5cdf1750"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>PP1</b>(A,  i)&#160;&#160;&#160;((A)-&gt;p+index_1d((i),        (A)-&gt;nx, (A)-&gt;ny))</td></tr>
-<tr class="separator:a03e0bd76aace3fd9312bdadb5cdf1750"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad996ab471c869f4cc23111f321dac9a8"><td class="memItemLeft" align="right" valign="top"><a id="ad996ab471c869f4cc23111f321dac9a8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>PP2</b>(A,  ix,  iy)&#160;&#160;&#160;((A)-&gt;p+index_2d((ix), (iy), (A)-&gt;nx, (A)-&gt;ny))</td></tr>
-<tr class="separator:ad996ab471c869f4cc23111f321dac9a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6fedfbcc95311f7df837bd5ed1503c44"><td class="memItemLeft" align="right" valign="top"><a id="a6fedfbcc95311f7df837bd5ed1503c44"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>P_GET</b>(_0,  _1,  _2,  _3,  NAME, ...)&#160;&#160;&#160;NAME</td></tr>
 <tr class="separator:a6fedfbcc95311f7df837bd5ed1503c44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afba9f40fe63e258302b2c472f9e9f386"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P</a>(...)&#160;&#160;&#160;P_GET(_0,__VA_ARGS__,P2,P1,P0)(__VA_ARGS__)</td></tr>
 <tr class="separator:afba9f40fe63e258302b2c472f9e9f386"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adbbefb93188c2cbca0551d44f95db166"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#adbbefb93188c2cbca0551d44f95db166">PP</a>(...)&#160;&#160;&#160;P_GET(_0,__VA_ARGS__,PP2,PP1,PP0)(__VA_ARGS__)</td></tr>
-<tr class="separator:adbbefb93188c2cbca0551d44f95db166"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aedbdd989a69ced62e7db462fc0a02972"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#aedbdd989a69ced62e7db462fc0a02972">PCOL</a>(A,  iy)&#160;&#160;&#160;((A)-&gt;p+index_col((iy), (A)-&gt;nx, (A)-&gt;ny))</td></tr>
 <tr class="separator:aedbdd989a69ced62e7db462fc0a02972"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc6c8a37faad9f0f715e9ecf731a1e66"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#abc6c8a37faad9f0f715e9ecf731a1e66">PR</a>(A,  ix,  iy)&#160;&#160;&#160;P2((A), ((ix)%(A)-&gt;nx), ((iy)%(A)-&gt;ny))</td></tr>
 <tr class="separator:abc6c8a37faad9f0f715e9ecf731a1e66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee2ecfa776775f07c7962b4f605ed48a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#aee2ecfa776775f07c7962b4f605ed48a">PPR</a>(A,  ix,  iy)&#160;&#160;&#160;PP2((A), ((ix)%(A)-&gt;nx), ((iy)%(A)-&gt;ny))</td></tr>
-<tr class="separator:aee2ecfa776775f07c7962b4f605ed48a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16d2ae3e5519371c1d566bc9f8aa717c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a16d2ae3e5519371c1d566bc9f8aa717c">PCOLR</a>(A,  iy)&#160;&#160;&#160;((A)-&gt;p+((iy)%(A)-&gt;ny)*(A)-&gt;nx)</td></tr>
+<tr class="memitem:a16d2ae3e5519371c1d566bc9f8aa717c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a16d2ae3e5519371c1d566bc9f8aa717c">PCOLR</a>(A,  iy)&#160;&#160;&#160;<a class="el" href="type_8h.html#aedbdd989a69ced62e7db462fc0a02972">PCOL</a>((A),(iy)%(A)-&gt;ny)</td></tr>
 <tr class="separator:a16d2ae3e5519371c1d566bc9f8aa717c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54f1d629485d54c67ae8adc8d86b5458"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a54f1d629485d54c67ae8adc8d86b5458">PN</a>(A)&#160;&#160;&#160;((A)-&gt;nx*(A)-&gt;ny)</td></tr>
 <tr class="separator:a54f1d629485d54c67ae8adc8d86b5458"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -734,7 +721,7 @@ pi</td>
 <td class="fieldname">
 nref</td>
 <td class="fielddoc">
-<p>reference counting like dmat </p>
+<p>reference counting </p>
 </td></tr>
 </table>
 
@@ -814,7 +801,7 @@ pi</td>
 <td class="fieldname">
 nref</td>
 <td class="fielddoc">
-<p>reference counting like dmat </p>
+<p>reference counting </p>
 </td></tr>
 </table>
 
@@ -894,7 +881,7 @@ pi</td>
 <td class="fieldname">
 nref</td>
 <td class="fielddoc">
-<p>reference counting like dmat </p>
+<p>reference counting </p>
 </td></tr>
 </table>
 
@@ -974,7 +961,7 @@ pi</td>
 <td class="fieldname">
 nref</td>
 <td class="fielddoc">
-<p>reference counting like dmat </p>
+<p>reference counting </p>
 </td></tr>
 </table>
 
@@ -3332,25 +3319,6 @@ dsax</td>
 
 </div>
 </div>
-<a id="adbbefb93188c2cbca0551d44f95db166"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adbbefb93188c2cbca0551d44f95db166">&#9670;&nbsp;</a></span>PP</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define PP</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em></td><td>)</td>
-          <td>&#160;&#160;&#160;P_GET(_0,__VA_ARGS__,PP2,PP1,PP0)(__VA_ARGS__)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Used to obtain pointers to elements of an array </p>
-
-</div>
-</div>
 <a id="aedbdd989a69ced62e7db462fc0a02972"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aedbdd989a69ced62e7db462fc0a02972">&#9670;&nbsp;</a></span>PCOL</h2>
 
@@ -3415,41 +3383,6 @@ dsax</td>
 
 </div>
 </div>
-<a id="aee2ecfa776775f07c7962b4f605ed48a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee2ecfa776775f07c7962b4f605ed48a">&#9670;&nbsp;</a></span>PPR</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define PPR</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">A, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">ix, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">iy&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td>&#160;&#160;&#160;PP2((A), ((ix)%(A)-&gt;nx), ((iy)%(A)-&gt;ny))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Calls <a class="el" href="type_8h.html#adbbefb93188c2cbca0551d44f95db166">PP()</a> with wrapping of index </p>
-
-</div>
-</div>
 <a id="a16d2ae3e5519371c1d566bc9f8aa717c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a16d2ae3e5519371c1d566bc9f8aa717c">&#9670;&nbsp;</a></span>PCOLR</h2>
 
@@ -3471,7 +3404,7 @@ dsax</td>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;((A)-&gt;p+((iy)%(A)-&gt;ny)*(A)-&gt;nx)</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="type_8h.html#aedbdd989a69ced62e7db462fc0a02972">PCOL</a>((A),(iy)%(A)-&gt;ny)</td>
         </tr>
       </table>
 </div><div class="memdoc">
