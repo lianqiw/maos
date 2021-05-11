@@ -99,30 +99,55 @@ $(document).ready(function(){initNavTree('page40_results.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
-<ul><li class="level1"><a href="#drawres">Plotting Results</a></li>
-<li class="level1"><a href="#bin">Reading Results</a><ul><li class="level2"><a href="#read-matlab">MATLAB</a></li>
-<li class="level2"><a href="#sect-python">Python</a></li>
+<ul><li class="level1"><a href="#maosres">RMS WFE</a><ul><li class="level2"><a href="#sect-python">Python</a></li>
 <li class="level2"><a href="#sect-idl">IDL</a></li>
 <li class="level2"><a href="#sect-fits">FITS</a></li>
+<li class="level2"><a href="#autotoc_md9">Python</a></li>
+<li class="level2"><a href="#autotoc_md10">Matlab</a></li>
 </ul>
 </li>
-<li class="level1"><a href="#sect-interpret">Result Files</a></li>
+<li class="level1"><a href="#autotoc_md11">Plotting Results</a></li>
+<li class="level1"><a href="#autotoc_md12">Reading Results</a><ul><li class="level2"><a href="#autotoc_md13">.bin file format</a></li>
+<li class="level2"><a href="#autotoc_md14">MATLAB</a></li>
+</ul>
+</li>
+<li class="level1"><a href="#autotoc_md15">Result Files</a><ul><li class="level2"><a href="#autotoc_md16">Wavefront error</a></li>
+<li class="level2"><a href="#autotoc_md17">Split tomography</a></li>
+<li class="level2"><a href="#autotoc_md18">Log files</a></li>
+<li class="level2"><a href="#autotoc_md19">PSF</a></li>
+<li class="level2"><a href="#autotoc_md20">Other</a></li>
+</ul>
+</li>
 <li class="level1"><a href="#geometry">Geometry Data</a></li>
 <li class="level1"><a href="#telemetry">Telemetry Data</a></li>
 </ul>
 </div>
-<div class="textblock"><h1><a class="anchor" id="drawres"></a>
+<div class="textblock"><h1><a class="anchor" id="maosres"></a>
+RMS WFE</h1>
+<p>MAOS provides a few convenient routines to quickly process the simulation results and obtain time averaged wavefront error.</p>
+<h2><a class="anchor" id="autotoc_md9"></a>
+Python</h2>
+<p>Use the following (see <code>aolib.py</code>): </p><pre class="fragment">res,fds=maos_res(dir[,seeds] [,iframe] [,iframe2]) #gather field averaged WFE. [] indicate optional
+res,fds=maos_res(dir*) #gather field averaged WFE from multiple folders recursively
+res,fds=maos_res_each(dir*) #gather results for each field
+</pre><h2><a class="anchor" id="autotoc_md10"></a>
+Matlab</h2>
+<p>Use the following: </p><pre class="fragment">res=maos_res(dir[,seeds] [,range]) %gather field averaged WFE. [] indicate optional
+res,fds=maos_reseach(dir[, seeds] [,range]) #gather results for each field
+</pre><h1><a class="anchor" id="autotoc_md11"></a>
 Plotting Results</h1>
-<p>The wavefront error time history can be processed using the built in tool <code>drawres</code> and plotted using the Gtk based <code>drawdaemon</code>.</p>
-<p>drawres folder1 folder2 ...</p>
-<p>If the specified folder contains subfolders with results, they will be plotted together. When using on a text terminal with <code>DISPLAY</code> not set, if there is <code>monitor</code> running in a connected computer, it will launch <code>drawdaemon</code>.</p>
-<h1><a class="anchor" id="bin"></a>
+<p>The wavefront error time history can be processed using the built in tool <code>drawres</code> and plotted using the Gtk based <code>drawdaemon</code>. </p><pre class="fragment">drawres folder1 folder2 ...
+</pre><p>If the specified folder contains subfolders with results, they will be plotted together. When using on a text terminal with <code>DISPLAY</code> not set, if there is <code>monitor</code> running in a connected computer, it will launch <code>drawdaemon</code>.</p>
+<h1><a class="anchor" id="autotoc_md12"></a>
 Reading Results</h1>
-<p>MAOS generates output in binary format <code></code>.bin files (which maybe gzipped) as described below. PSFs are written into fits files with extensions.</p>
-<p>The data are saved to the <code></code>.bin files in a modular way. For a simple matrix (like double matrix or cell matrix), we first write a magic number (4 byte unsigned int) representing the data type, and then x and y dimension (two 8 byte unsigned int), and finally the data itself (if it is cell, recursively write the data contained in the cell with the same method).</p>
-<p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <a class="el" href="type_8h.html#structloc__t">loc_t</a> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
-<p>We use <code></code>.bin format instead of <code></code>.fits because it can be conveniently memory mapped for best efficiency in reading or saving.</p>
-<h2><a class="anchor" id="read-matlab"></a>
+<p>MAOS generates output in binary format <code>.bin</code> files (which maybe gzipped) as described below. PSFs are written into <code>.fits</code> files with extensions.</p>
+<h2><a class="anchor" id="autotoc_md13"></a>
+.bin file format</h2>
+<p>The data are saved to the <code></code>.bin files in a simple modular way. For a simple matrix (like double matrix or cell matrix), we first write a magic number (4 byte unsigned int) representing the data type, and then x and y dimension (two 8 byte unsigned int), and finally the data itself (if it is cell, recursively write the data contained in the cell with the same method).</p>
+<p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <code><a class="el" href="type_8h.html#structloc__t">loc_t</a></code> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
+<p>We use <code>.bin</code> format instead of <code>.fits</code> because it can be conveniently memory mapped for best efficiency in reading or saving.</p>
+<p>For implementation details, please refer to <a class="el" href="page91_basics.html#sect-bin">Bin file format</a>.</p>
+<h2><a class="anchor" id="autotoc_md14"></a>
 MATLAB</h2>
 <p>There are two MATLAB <code>mex</code> routines <code>read</code> and <code>write</code> that can read and write <code></code>.bin or <code></code>.fits files in MATLAB. The source of these mex routines are located in source sub-folder <code>mex</code>. If <code>mex</code> is found in the system, this mex routines will be compiled automatically in the <code>mex</code> subfolder of the compiling folder. If it doesn't get compiled, please goto the <code>mex</code> subfolder in the source folder and type ./compile.sh to compile them. Copy <code>write.mexa64</code> and <code>read.mexa64</code> into a folder that is in your matlab path, such as <code>$HOME/matlab</code>. The usage in <code>MATLAB</code> is as follows:</p>
 <div class="fragment"><div class="line">cle=read(&#39;Res_1&#39;);     #will try .bin or .fits</div><div class="line">cle=read(&#39;Res_1.bin&#39;); #only use .bin</div><div class="line"></div><div class="line">write(cle,&#39;Res_1&#39;);     will write the data to \c Res_1.bin</div><div class="line">write(cle,&#39;Res_1.bin&#39;); will write the data to \c Res_1.bin without compression.</div></div><!-- fragment --><p>If there is any problem in compiling <code>read.c</code> and <code>write.c</code>, there are also two matlab scripts in the <code>scripts</code> folder, <code>readbin.m</code> and <code>writebin.m</code>, that have most of functionality of <code>read.c</code>, <code>write.c</code> albeit a bit slower and cannot handle compressed files conveniently.</p>
@@ -135,11 +160,14 @@ IDL</h2>
 <h2><a class="anchor" id="sect-fits"></a>
 FITS</h2>
 <p>Certain results (e.g., PSF) are saved in <code></code>.fits format. Any standard fits reader (e.g., <code>fv</code>, <code>ds9</code>) should be able to read them. There is also an executable <code>bin2fits</code> that can convert <code></code>.bin to <code></code>. fits files.</p>
-<h1><a class="anchor" id="sect-interpret"></a>
+<h1><a class="anchor" id="autotoc_md15"></a>
 Result Files</h1>
-<p>There will be several files created during simulation in the result folder. The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these files using provided mex function <code>read</code> in MATLAB. Notice that the suffix <code></code>.bin or <code></code>.bin.gz has been removed. You do not need to add the suffix when use <code>read</code>.</p>
+<p>There will be several files created during simulation in the result folder and subfolder <code>extra</code> (those results are not saved when <code>save.extra=0</code>). The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these files using provided mex function <code>read</code> in MATLAB. Notice that the suffix <code></code>.bin or <code></code>.fits has been omitted. You do not need to add the suffix when use <code>read</code>. </p>
+<h2><a class="anchor" id="autotoc_md16"></a>
+Wavefront error</h2>
 <ul>
-<li><code>Res_1:</code> A binary file containing a cell array that include the main results. i.e. res=read('Res_1');<ul>
+<li><code>Res_1:</code> A binary file containing a cell array that include the main results.<ul>
+<li>Use res=read('Res_1');</li>
 <li><code>res{1}</code> contains the open loop wavefront variance (WFV in units of \(m^2\)) in row vectors. The rows are<ul>
 <li>Piston removed WFV</li>
 <li>WFV in tip/tilt modes</li>
@@ -161,24 +189,47 @@ Result Files</h1>
 </li>
 </ul>
 </li>
-<li><code>Resp_1:</code> <code>resp:</code> Results for direction. Combines the following four files.</li>
-<li><code>Resolmp_1</code> or <code>resp</code>[0]: Open loop wavefront Zernike (not normalized wrt radius) modes defined on not-normalized coordinate on the aperture. The format is similar as <code>Resolep_1</code> </li>
-<li><code>Resclmp_1</code> or <code>resp</code>[1]: Close loop wavefront Zernike modes, in the same format as <code>Resolmp_1</code> </li>
-<li><code>Resolep_1</code> or <code>resp</code>[2]: Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.</li>
-<li><code>Resclep_1</code> or <code>resp</code>[3]: Closed loop wavefront variance for each science field point, in the same format as <code>Resolep_1</code> </li>
-<li><code>Resclemp_1:</code> (Only in split tomography) LGS/TT/NGS mode wavefront error for each direction.</li>
-<li><code>RescleNGSm_1:</code> (Only in split tomography) contains a row vector array of either the residual NGS modes (in radian like unit) or the applied NGS mode correction if ideal NGS mode correction is made. Mainly used to save the ideal NGS modes applied in skycoverage pre-simulation.</li>
-<li><code>maos_</code>[PID].conf: The final effective arrays of the configurations for MAOS run with pid PID. Can be used to reproduce the simulation or check the configurations. Lines begin with # are defaults configurations while the rest have been overridden.</li>
-<li><code>sanea_sim_1:</code> When wavefront sensors are running in physical optics mode, the average gradient measurement error for that wavefront sensor is saved (in order) in a cell in this file. Each cell is a column vector with elements twice the number of subaperture. The first half is for \(x\) (or radial) gradient, and the second half is for \(y\) (or azimuthal) gradient. They are in units of \(rad^2\).</li>
-<li><code>evlpsfcl_1:</code> When <code>evl.psfmean</code> is 1, contains the time averaged science closed loop psf. if is a cell array of \(n_{wvl}\times n_{evl}\). Each cell contains a center cut of the science PSF.</li>
+<li><code>Resp_1:</code> <code>resp:</code> Results for each direction. Combines the following four files previous saved individually: Resolmp_1, Resclmp_1, Resolep_1, Resclep_1.<ul>
+<li>Use <code>resp=read</code>('Resp_1)</li>
+<li><code>resp</code>[0]: Open loop wavefront Zernike (not normalized wrt radius) modes defined on not-normalized coordinate on the aperture. The format is similar to res{1} above.</li>
+<li><code>resp</code>[1]: Close loop wavefront Zernike modes, in the same format as <code>Resolmp_1</code> </li>
+<li><code>resp</code>[2]: Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.</li>
+<li><code>resp</code>[3]: Closed loop wavefront variance for each science field point, in the same format as <code>Resolep_1</code> </li>
 </ul>
-<p>The PSF total FOV is <code>evl.wvl/evl</code>.dx but may be trimmed by setting <code>evl.psfsize</code> to a smaller number (of pixels). The PSF sampling is usually <code>evl.wvl/</code>(2*aper.d) but may be <code>evl.wvl/</code>(evl.psfgridsize*evl.dx) if <code>evl.psfgridsize</code> is set. The exact number of those can be checked in the fits header.</p>
+</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md17"></a>
+Split tomography</h2>
 <ul>
+<li><code>Resclemp_1:</code> LGS/TT/NGS mode wavefront error for each direction.</li>
+<li><code>RescleNGSm_1:</code> contains a row vector array of either the residual NGS modes (in radian like unit) or the applied NGS mode correction if ideal NGS mode correction is made. Mainly used to save the ideal NGS modes applied in skycoverage pre-simulation.</li>
+<li><code>RescleNGSmp_1:</code> This is NGS mode before averaging over directions.</li>
+<li><code>ResoleNGSm_1</code> and <code>ResoleNGSmp_1:</code> Like above, but for open loop.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md18"></a>
+Log files</h2>
+<ul>
+<li><code>maos_</code>[HOST]_[PID].conf: The final effective configuration for MAOS run with pid PID. Can be used to reproduce the simulation or check the configurations. Lines begin with # are defaults configurations while the rest have been overridden. File for most recent run is linked to <code>maos_recent.conf</code> </li>
+<li><code>run_</code>[HOST]_[PID].log: Log file. File for most recent run is linked to <code>run_recent.log</code> </li>
+<li><code>sanea_sim_1:</code> When wavefront sensors are running in physical optics mode, the average gradient measurement error for that wavefront sensor is saved (in order) in a cell in this file. Each cell is a column vector with elements twice the number of subaperture. The first half is for \(x\) (or radial) gradient, and the second half is for \(y\) (or azimuthal) gradient. They are in units of \(rad^2\).</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md19"></a>
+PSF</h2>
+<p>The PSF total FOV is <code>evl.wvl/evl</code>.dx but may be trimmed by setting <code>evl.psfsize</code> to a smaller number (of pixels). The PSF sampling is usually <code>evl.wvl/(2*aper.d)</code> but may be <code>evl.wvl/(evl.psfgridsize*evl.dx)</code> if <code>evl.psfgridsize</code> is set. The exact number of those can be checked in the fits header.</p>
+<ul>
+<li><code>evlpsfcl_1:</code> When <code>evl.psfmean</code> is 1, contains the time averaged science closed loop psf. if is a cell array of \(n_{wvl}\times n_{evl}\). Each cell contains a center cut of the science PSF.</li>
 <li><code>evlpsfdl_1:</code> diffraction limited, PSF.</li>
 <li><code>evlpsfol_1:</code> frame and field averaged open loop science PSF.</li>
 <li><code>evlpsfhist_1_ievlx:</code> When <code>evl.psfhist</code> is 1, each of these files contains the time history of the complex PSF of evaluation direction \(x\).</li>
-<li><code>Resuptcmd_1:</code> Each cell contains the uplink tip/tilt command (only none empty for LGS WFS) history in unit of radian.</li>
-<li><code>Resupterr_1:</code> Each cell contains the uplink tip/tilt error history in unit of radian.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md20"></a>
+Other</h2>
+<ul>
+<li><code>Resfsmcmd_1:</code> Each cell contains the FSM tip/tilt command (only none empty for LGS WFS) history in unit of radian.</li>
+<li><code>Resfsmerr_1:</code> Each cell contains the FSM tip/tilt error history in unit of radian.</li>
+<li><code>psdcl_1</code> and <code>psdol_1:</code> Closed loop and pseudo open loop PSD for high order control obtained from telemetry.</li>
+<li><code>ResCG_1</code>: Tomography and DM Fitting conjugate gradient residual time history.</li>
+<li><code>Reszoompos_1</code>: For LGS only, the trombine position. One cell per WFS.</li>
 </ul>
 <h1><a class="anchor" id="geometry"></a>
 Geometry Data</h1>

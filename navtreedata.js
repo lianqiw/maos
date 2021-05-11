@@ -56,14 +56,25 @@ var NAVTREE =
     ] ],
     [ "Examples", "page33_example.html", "page33_example" ],
     [ "Simulation Results", "page40_results.html", [
-      [ "Plotting Results", "page40_results.html#drawres", null ],
-      [ "Reading Results", "page40_results.html#bin", [
-        [ "MATLAB", "page40_results.html#read-matlab", null ],
+      [ "RMS WFE", "page40_results.html#maosres", [
         [ "Python", "page40_results.html#sect-python", null ],
         [ "IDL", "page40_results.html#sect-idl", null ],
-        [ "FITS", "page40_results.html#sect-fits", null ]
+        [ "FITS", "page40_results.html#sect-fits", null ],
+        [ "Python", "page40_results.html#autotoc_md9", null ],
+        [ "Matlab", "page40_results.html#autotoc_md10", null ]
       ] ],
-      [ "Result Files", "page40_results.html#sect-interpret", null ],
+      [ "Plotting Results", "page40_results.html#autotoc_md11", null ],
+      [ "Reading Results", "page40_results.html#autotoc_md12", [
+        [ ".bin file format", "page40_results.html#autotoc_md13", null ],
+        [ "MATLAB", "page40_results.html#autotoc_md14", null ]
+      ] ],
+      [ "Result Files", "page40_results.html#autotoc_md15", [
+        [ "Wavefront error", "page40_results.html#autotoc_md16", null ],
+        [ "Split tomography", "page40_results.html#autotoc_md17", null ],
+        [ "Log files", "page40_results.html#autotoc_md18", null ],
+        [ "PSF", "page40_results.html#autotoc_md19", null ],
+        [ "Other", "page40_results.html#autotoc_md20", null ]
+      ] ],
       [ "Geometry Data", "page40_results.html#geometry", null ],
       [ "Telemetry Data", "page40_results.html#telemetry", null ]
     ] ],
@@ -104,15 +115,15 @@ var NAVTREEINDEX =
 "maos_2types_8h.html#ad276ecf3dabe3a6184cb5678297cab89",
 "mcao_lgs.html",
 "mvmfull__real_8cu.html#a7453a50bcfa87a014a164fc9f539e664",
-"parms_8h.html#a2bdb4ad90002240b3fde97901f61a6e5",
-"parms_8h.html#a96f91d5fc23b2bd23f801a16cc799669",
-"parms_8h.html#afaf96515766337b824d309f817ececaf",
-"setup__powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f",
-"smath_8h.html#ad07d9fc6f81d532706ee386fe4e65a8e",
-"sys_2misc_8h.html#adee8a6e5e5a808ccc094327e0eed1ae4",
-"type_8h.html#a7270f8f7b38582564051aadabd01cf65",
-"zernike_8h.html#a30976931ca973717cf8c48ba8689cb81",
-"zmath_8h.html#af77e2b64f347ea69900f34df9b9e2d9e"
+"parms_8h.html#a28a43c12b79d409c563e2591e4d538b6",
+"parms_8h.html#a94488103f598bcc7e3b57efe77433b1d",
+"parms_8h.html#af81a20c35a750e761d550ba5974ba8b6",
+"setup__powfs_8h.html",
+"smath_8h.html#ac63b9c511c600125e5a47197c9a9c717",
+"sys_2misc_8h.html#aa606bb2fcaf8c97e7428bb541dc62a8e",
+"type_8h.html#a6cad40a167d11b74b8c6632bbdecb602",
+"wfs_lgs_tt_tt_tt.html",
+"zmath_8h.html#af1c66a7b92c453fec32ad46a68ac5656"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
