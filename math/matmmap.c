@@ -25,12 +25,19 @@
 X(mat)* X(new_mmap)(long nx, long ny, const char* header, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
-	if(disable_save&&!IS_SHM(fn)){
-		return X(new)(nx, ny);
+	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
+	if(fn&&disable_save&&!IS_SHM(fn)){
+		dbg("File saving is disabled\n");
+		fn=NULL;
+		//return X(new)(nx, ny);
 	}
 	size_t metasize=3*8+bytes_header(header);//size of meta data. 
 	size_t msize=nx*ny*sizeof(T)+metasize;//total size of file/memory
 	mem_t* mem=mmap_open(fn, msize, 1);
+	if(!mem){
+		dbg("mmap_open failed\n");
+		return NULL;
+	}
 	char* map=(char*)mem_p(mem);//save value of map
 	mmap_write_header(&map, M_T, nx, ny, header);
 	X(mat)* out=X(new_do)(nx, ny, (T*)map, mem);
@@ -46,9 +53,13 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 	const char* header, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
+	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
 	if(disable_save&&!IS_SHM(fn)){
-		return X(cellnew3)(nx, ny, nnx, nny);
+		dbg("File saving is disabled\n");
+		fn=NULL;
+		//return X(cellnew3)(nx, ny, nnx, nny);
 	}
+	
 	long metasize=3*8;
 	long msize=metasize+bytes_header(header);
 	for(long ix=0; ix<nx*ny; ix++){
@@ -57,6 +68,10 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 		msize+=metasize+mx*my*sizeof(T);
 	}
 	mem_t* mem=mmap_open(fn, msize, 1);
+	if(!mem){
+		dbg("mmap_open failed\n");
+		return NULL;
+	}
 	char* map=mem_p(mem);
 	mmap_write_header(&map, MCC_ANY, nx, ny, header);
 	X(cell)* out=X(cellnew)(nx, ny);
@@ -82,7 +97,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* header,
 	const char* format, ...){
 	format2fn;
-	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, "%s", fn);
+	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, (const char*)fn);
 }
 
 static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){
@@ -106,6 +121,10 @@ static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){
 X(mat*) X(read_mmap)(const char* format, ...){
 	format2fn;
 	mem_t* mem=mmap_open(fn, 0, 0);
+	if(!mem){
+		dbg("mmap_open failed\n");
+		return NULL;
+	}
 	char* map=(char*)mem_p(mem);
 	X(mat)* out=X(readdata_mmap)(&map, mem);
 	return out;
@@ -117,6 +136,10 @@ X(mat*) X(read_mmap)(const char* format, ...){
 X(cell*) X(cellread_mmap)(const char* format, ...){
 	format2fn;
 	mem_t* mem=mmap_open(fn, 0, 0);
+	if(!mem){
+		dbg("mmap_open failed\n");
+		return NULL;
+	}
 	char* map=mem_p(mem);
 	long nx, ny;
 	uint32_t magic;

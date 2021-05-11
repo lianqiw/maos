@@ -1077,46 +1077,62 @@ void mem_replace(mem_t* in, void* p){
    Return internal pointer
 */
 void* mem_p(const mem_t* in){
-	return in->p;
+	return in?in->p:NULL;
 }
 /**
    Open a file for write with mmmap. We don't provide a access control here for
    generic usage of the function. Lock on a special dummy file for access
    control.
 */
-mem_t* mmap_open(char* fn, size_t msize, int rw){
-	if(rw&&disable_save&&!IS_SHM(fn)&&mystrcmp(fn, CACHE)){
-		warning("Saving is disabled for %s\n", fn);
-	}
-	char* fn2=procfn(fn, rw?"w":"r");
-	if(!fn2) return NULL;
-	if(!check_suffix(fn2, ".bin")){
-		error("mmap only support .bin file\n");
-	}
-	int fd;
-	if(rw){
-		fd=myopen(fn2, O_RDWR|O_CREAT, 0600);
-		/*First truncate the file to 0 to delete old data. */
-		if(fd==-1||ftruncate(fd, msize)==-1){
-			error("Unable to open or ftruncate file %s to %zu size\n", fn2, msize);
+mem_t* mmap_open(const char* fn, size_t msize, int rw){
+	int fd=-1;
+	char* fn2=NULL;
+	if(!fn){
+		if(!rw){
+			error("fn cannot be null for reading.\n");return NULL;
 		}
-	} else{
-		fd=myopen(fn2, O_RDONLY, 0600);
+		if(!msize){
+			error("size cannot be zero when fn is NULL.\n"); return NULL;
+		}
+	}else{
+		if(rw&&disable_save&&!IS_SHM(fn)&&mystrcmp(fn, CACHE)){
+			warning("Saving is disabled for %s\n", fn);
+			fn=NULL;
+		}
 	}
-	/*in read only mode, allow -1 to indicate failed. In write mode, fail.*/
-	if(fd==-1){
-		perror("open");
+	if(!rw||fn){
+		fn2=procfn(fn, rw?"w":"r");
+		if(!fn2) return NULL;
+		if(!check_suffix(fn2, ".bin")){
+			error("mmap only support .bin file\n");
+			return NULL;
+		}
+		
 		if(rw){
-			error("Unable to create file %s\n", fn2);
+			fd=myopen(fn2, O_RDWR|O_CREAT, 0600);
+			/*First truncate the file to 0 to delete old data. */
+			if(fd==-1||ftruncate(fd, msize)==-1){
+				error("Unable to open or ftruncate file %s to %zu size\n", fn2, msize);
+			}
+		} else{
+			fd=myopen(fn2, O_RDONLY, 0600);
 		}
-		return NULL;
-	}
+		/*in read only mode, allow -1 to indicate failed. In write mode, fail.*/
+		if(fd==-1){
+			perror("open");
+			if(rw){
+				error("Unable to create file %s\n", fn2);
+			}
+			return NULL;
+		}
 
-	if(!rw&&!msize){
-		msize=flen(fn2);
+		if(!rw&&!msize){
+			msize=flen(fn2);
+		}
+		
 	}
-	void* p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ, MAP_SHARED, fd, 0);
-	close(fd);//it is ok to close fd after mmap.
+	void* p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ, (fd==-1?MAP_ANONYMOUS:0)|MAP_SHARED, fd, 0);
+	if(fd!=-1) close(fd);//it is ok to close fd after mmap.
 	mem_t* mem=0;
 	if(p==MAP_FAILED){
 		perror("mmap");

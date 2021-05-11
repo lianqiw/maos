@@ -150,8 +150,8 @@ mem_t*mem_ref(mem_t *in)__attribute__((warn_unused_result));
 void mem_replace(mem_t *in, void *p);
 int mem_isref(const mem_t *in);
 void* mem_p(const mem_t *in);
-mem_t* mmap_open(char *fn, size_t msize, int rw);
+mem_t* mmap_open(const char *fn, size_t msize, int rw);
 void mmap_write_header(char **p0, uint32_t magic, long nx, long ny, const char *header);
 void mmap_read_header(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0);
-#define IS_SHM(name) ((name[0]=='/' && !strchr(name+1, '/')) || !mystrcmp(name, "/shm"))
+#define IS_SHM(name) (name && ((name[0]=='/' && !strchr(name+1, '/')) || !mystrcmp(name, "/shm")))
 #endif

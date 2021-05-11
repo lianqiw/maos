@@ -32,6 +32,7 @@ struct zfarr{
  */
 zfarr* zfarr_init(long nx, long ny, const char* format, ...){
 	format2fn;
+	if(!fn) return NULL;
 	if(nx<0) nx=0;
 	if(ny<0) ny=0;
 	zfarr* out=mycalloc(1, zfarr);

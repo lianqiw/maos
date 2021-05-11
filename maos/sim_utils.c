@@ -478,10 +478,11 @@ static void init_simu_evl(sim_t* simu){
 	const int nmod=parms->evl.nmod;
 	const int seed=simu->seed;
 	sim_save_t* save=simu->save;
+	const char* fnextra=parms->save.extra?"extra":"-";
 	simu->evlopd=dcellnew(nevl, 1);
 	simu->perfevl_iground=parms->atm.iground;
 	if(!disable_save&&parms->save.extra){
-		simu->timing=dnew_mmap(5, nsim, NULL, "extra/Timing_%d.bin", seed);
+		simu->timing=dnew_mmap(5, nsim, NULL, "%s/Timing_%d.bin", fnextra, seed);
 	}
 	{/*MMAP the main result file */
 		int ahst_nmod=0;
@@ -501,39 +502,24 @@ static void init_simu_evl(sim_t* simu){
 	}
 
 	{/*USE MMAP for data that need to save at every time step */
-		if(parms->save.extra){
-			const char* header="Results per direction: olmp; clmp; olep; clep";
-			simu->resp=dcellnewsame_mmap(nevl, 4, nmod, nsim, header, "extra/Resp_%d.bin", seed);
-		} else{
-			simu->resp=dcellnew_same(nevl, 4, nmod, nsim);
-		}
+		
+		const char* header="Results per direction: olmp; clmp; olep; clep";
+		simu->resp=dcellnewsame_mmap(nevl, 4, nmod, nsim, header, "%s/Resp_%d.bin", fnextra, seed);
+		
 		simu->olmp=dcellsub(simu->resp, 0, nevl, 0, 1);
 		simu->clmp=dcellsub(simu->resp, 0, nevl, 1, 1);
 		simu->olep=dcellsub(simu->resp, 0, nevl, 2, 1);
 		simu->clep=dcellsub(simu->resp, 0, nevl, 3, 1);
-		
+
 		if(parms->recon.split){
-			if(parms->save.extra){
-				simu->oleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "extra/ResoleNGSm_%d.bin", seed);
-				simu->oleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "extra/ResoleNGSmp_%d.bin", seed);
-				if(!parms->sim.evlol){
-					simu->clemp=dcellnewsame_mmap(nevl, 1, 3, nsim, NULL, "extra/Resclemp_%d.bin", seed);
-					simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "extra/RescleNGSm_%d.bin", seed);
-					simu->cleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "extra/RescleNGSmp_%d.bin", seed);
-					if(parms->recon.split==1&&!parms->sim.fuseint){
-						simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "extra/RescorrNGSm_%d.bin", seed);
-					}
-				}
-			} else{
-				simu->oleNGSm=dnew(recon->ngsmod->nmod, nsim);
-				simu->oleNGSmp=dcellnew_same(nevl, 1, recon->ngsmod->nmod, nsim);
-				if(!parms->sim.evlol){
-					simu->clemp=dcellnew_same(nevl, 1, 3, nsim);
-					simu->cleNGSm=dnew(recon->ngsmod->nmod, nsim);
-					simu->cleNGSmp=dcellnew_same(nevl, 1, recon->ngsmod->nmod, nsim);
-					if(parms->recon.split==1&&!parms->sim.fuseint){
-						simu->corrNGSm=dnew(recon->ngsmod->nmod, nsim);
-					}
+			simu->oleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSm_%d.bin", fnextra, seed);
+			simu->oleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSmp_%d.bin", fnextra, seed);
+			if(!parms->sim.evlol){
+				simu->clemp=dcellnewsame_mmap(nevl, 1, 3, nsim, NULL, "%s/Resclemp_%d.bin", fnextra, seed);
+				simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSm_%d.bin", fnextra, seed);
+				simu->cleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSmp_%d.bin", fnextra, seed);
+				if(parms->recon.split==1&&!parms->sim.fuseint){
+					simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "%s/RescorrNGSm_%d.bin", fnextra, seed);
 				}
 			}
 		}
@@ -542,13 +528,13 @@ static void init_simu_evl(sim_t* simu){
 		char fnold[PATH_MAX];
 		char fnnew[PATH_MAX];
 		snprintf(fnnew, PATH_MAX, "%s/RescleNGSm_%d.bin", dirskysim, seed);
-		snprintf(fnold, PATH_MAX, "RescleNGSm_%d.bin", seed);
+		snprintf(fnold, PATH_MAX, "%s/RescleNGSm_%d.bin", fnextra, seed);
 		if(exist(fnnew)) remove(fnnew);
 		if(link(fnold, fnnew)){
 			warning("Error link\n");
 		}
 		snprintf(fnnew, PATH_MAX, "%s/RescleNGSmp_%d.bin", dirskysim, seed);
-		snprintf(fnold, PATH_MAX, "RescleNGSmp_%d.bin", seed);
+		snprintf(fnold, PATH_MAX, "%s/RescleNGSmp_%d.bin", fnextra, seed);
 		if(exist(fnnew)) remove(fnnew);
 		if(link(fnold, fnnew)){
 			warning("Error link\n");
@@ -603,54 +589,32 @@ static void init_simu_evl(sim_t* simu){
 			} else{
 				strht[0]='\0';
 			}
+#define DIR_SUFFIX "_%d_x%g_y%g%s.fits", seed,P(parms->evl.thetax, ievl)*206265, P(parms->evl.thetay, ievl)*206265, strht
 			if(P(parms->evl.psfngsr, ievl)!=2&&!parms->sim.evlol){
 				if(parms->evl.psfmean){
-					save->evlpsfmean[ievl]=zfarr_init(parms->evl.nwvl, nframepsf,
-						"evlpsfcl_%d_x%g_y%g%s.fits", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
+					save->evlpsfmean[ievl]=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfcl" DIR_SUFFIX);
 				}
 				if(parms->evl.psfhist){
-					save->evlpsfhist[ievl]=zfarr_init(parms->sim.end, 1,
-						"evlpsfhist_%d_x%g_y%g%s.bin", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
+					save->evlpsfhist[ievl]=zfarr_init(parms->sim.end, 1, "evlpsfhist" DIR_SUFFIX);
 				}
 				if(parms->evl.cov){
-					save->evlopdcov[ievl]=zfarr_init(nframecov, 1,
-						"evlopdcov_%d_x%g_y%g%s.bin", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
-					save->evlopdmean[ievl]=zfarr_init(nframecov, 1,
-						"evlopdmean_%d_x%g_y%g%s.bin", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
+					save->evlopdcov[ievl]=zfarr_init(nframecov, 1, "evlopdcov" DIR_SUFFIX);
+					save->evlopdmean[ievl]=zfarr_init(nframecov, 1, "evlopdmean" DIR_SUFFIX);
 				}
 			}
 			if(P(parms->evl.psfngsr, ievl)!=0&&!parms->sim.evlol){
 				if(parms->evl.psfmean){
-					save->evlpsfmean_ngsr[ievl]=zfarr_init(parms->evl.nwvl, nframepsf,
-						"evlpsfcl_ngsr_%d_x%g_y%g%s.fits", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
+					save->evlpsfmean_ngsr[ievl]=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfcl_ngsr" DIR_SUFFIX);
 				}
 				if(parms->evl.psfhist){
-					save->evlpsfhist_ngsr[ievl]=zfarr_init(parms->sim.end, 1,
-						"evlpsfhist_ngsr_%d_x%g_y%g%s.bin", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
+					save->evlpsfhist_ngsr[ievl]=zfarr_init(parms->sim.end, 1, "evlpsfhist_ngsr" DIR_SUFFIX);
 				}
 				if(parms->evl.cov){
-					save->evlopdcov_ngsr[ievl]=zfarr_init(nframecov, 1,
-						"evlopdcov_ngsr_%d_x%g_y%g%s.bin", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
-					save->evlopdmean_ngsr[ievl]=zfarr_init(nframecov, 1,
-						"evlopdmean_ngsr_%d_x%g_y%g%s.bin", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
+					save->evlopdcov_ngsr[ievl]=zfarr_init(nframecov, 1, "evlopdcov_ngsr" DIR_SUFFIX);
+					save->evlopdmean_ngsr[ievl]=zfarr_init(nframecov, 1, "evlopdmean_ngsr" DIR_SUFFIX);
 				}
 			}
+#undef DIR_SUFFIX			
 		}/*for ievl */
 
 		if(parms->evl.psfol){
@@ -777,6 +741,7 @@ static void init_simu_wfs(sim_t* simu){
 	save->ztiltout=mycalloc(nwfs, zfarr*);
 	simu->gradcl=dcellnew(nwfs, 1);
 	simu->wfsopd=dcellnew(nwfs, 1);
+	const char* fnextra=parms->save.extra?"extra":"-";
 	/*Do not initialize gradlastcl. Do not initialize gradlastol in open
 	  loop. They are used for testing*/
 	if(parms->sim.closeloop){
@@ -861,13 +826,9 @@ static void init_simu_wfs(sim_t* simu){
 				nny[iwfs]=0;
 			}
 		}
-		if(parms->save.extra){
-			simu->fsmerrs=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "extra/Resfsmerr_%d.bin", seed);
-			simu->fsmcmds=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "extra/Resfsmcmd_%d.bin", seed);
-		} else{
-			simu->fsmerrs=dcellnew3(nwfs, 1, nnx, nny);
-			simu->fsmcmds=dcellnew3(nwfs, 1, nnx, nny);
-		}
+		
+		simu->fsmerrs=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "%s/Resfsmerr_%d.bin", fnextra, seed);
+		simu->fsmcmds=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_%d.bin", fnextra, seed);
 	}
 
 	/* For sky coverage telemetry output */
@@ -1083,11 +1044,8 @@ static void init_simu_wfs(sim_t* simu){
 					nny[iwfs]=0;
 				}
 			}
-			if(parms->save.extra){
-				simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, "extra/Reszoompos_%d.bin", seed);
-			} else{
-				simu->zoompos=dcellnew3(parms->nwfs, 1, nnx, nny);
-			}
+			
+		simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
 		}
 
 	}
@@ -1098,11 +1056,7 @@ static void init_simu_wfs(sim_t* simu){
 			if(parms->powfs[ipowfs].dither){
 				simu->dither[iwfs]=mycalloc(1, dither_t);
 				if(parms->powfs[ipowfs].dither!=1){
-					if(parms->save.extra){
-						simu->dither[iwfs]->mr=dcellnewsame_mmap(2, 1, 1, nsim, NULL, "extra/Resdithermr_%d", seed);
-					} else{
-						simu->dither[iwfs]->mr=dcellnew_same(2, 1, 1, nsim);
-					}
+					simu->dither[iwfs]->mr=dcellnewsame_mmap(2, 1, 1, nsim, NULL, "%s/Resdithermr_%d", fnextra, seed);
 				}
 			}
 		}
@@ -1119,31 +1073,23 @@ static void init_simu_wfs(sim_t* simu){
 					nny[iwfs]=0;
 				}
 			}
-			simu->resdither=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "extra/Resdither_%d.bin", seed);
+			simu->resdither=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "%s/Resdither_%d.bin", fnextra, seed);
 		}
 	}
 	if(recon->cn2est){
 		int ncn2=(parms->sim.end-1)/parms->cn2.step;
 		long nnx[2]={ncn2, recon->cn2est->htrecon->nx};
 		long nny[2]={1, ncn2};
-		if(parms->save.extra){
-			simu->cn2res=dcellnew_mmap(2, 1, nnx, nny, NULL, "extra/Rescn2_%d.bin", seed);
-		} else{
-			simu->cn2res=dcellnew3(2, 1, nnx, nny);
-		}
+		simu->cn2res=dcellnew_mmap(2, 1, nnx, nny, NULL, "%s/Rescn2_%d.bin", fnextra, seed);
 	}
 	if(parms->itpowfs!=-1){
 		const int ipowfs=parms->itpowfs;
-		const int iwfs=P(parms->powfs[ipowfs].wfs, 0);
-		const int nmod=P(recon->RRtwfs, iwfs)->nx;
-		const int dtrat=parms->powfs[ipowfs].dtrat;
 		const int nacc=parms->sim.end-parms->powfs[ipowfs].step;
 		if(nacc>0){
-			if(parms->save.extra){
-				simu->restwfs=dnew_mmap(nmod, nacc/dtrat, NULL, "extra/Restwfs_%d.bin", seed);
-			} else{
-				simu->restwfs=dnew(nmod, nacc/dtrat);
-			}
+			const int iwfs=P(parms->powfs[ipowfs].wfs, 0);
+			const int nmod=P(recon->RRtwfs, iwfs)->nx;
+			const int dtrat=parms->powfs[ipowfs].dtrat;
+			simu->restwfs=dnew_mmap(nmod, nacc/dtrat, NULL, "%s/Restwfs_%d.bin", fnextra, seed);
 		}
 	}
 }
@@ -1408,13 +1354,14 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	if(parms->save.extra){
 		mymkdir("extra");
 	}
+	const char* fnextra=parms->save.extra?"extra":"-";
 	if(parms->sim.wspsd){
 	/* Telescope wind shake added to TT input. */
 		dmat* psdin=dread("%s", parms->sim.wspsd);
 		info("Loading windshake PSD from file %s\n", parms->sim.wspsd);
 		simu->telws=psd2time(psdin, simu->telws_rand, parms->sim.dt, parms->sim.end);
 		dfree(psdin);
-		if(parms->save.extra) writebin(simu->telws, "extra/telws_%d", seed);
+		if(parms->save.extra) writebin(simu->telws, "%s/telws_%d", fnextra, seed);
 	}
 
 	/* Select GPU or CPU for the tasks.*/
@@ -1457,24 +1404,17 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 			}
 		}
 		{
-			long nnx[2], nny[2];
-			nnx[1]=nnx[0]=parms->sim.end;
-			nny[1]=nny[0]=1;
 			const char* header="CG residual for Tomography; DM Fit";
-			if(parms->save.extra){
-				simu->cgres=dcellnew_mmap(2, 1, nnx, nny, header, "extra/ResCG_%d.bin", seed);
-			} else{
-				simu->cgres=dcellnew3(2, 1, nnx, nny);
-			}
+			simu->cgres=dcellnewsame_mmap(2, 1, parms->sim.end, 1, header, "%s/ResCG_%d.bin", fnextra, seed);
 		}
 		if(parms->recon.psd&&parms->save.extra){
 			if(parms->recon.psddtrat_hi){
-				save->psdcl=zfarr_init(0, 0, "extra/psdcl_%d.bin", seed);
-				save->psdol=zfarr_init(0, 0, "extra/psdol_%d.bin", seed);
+				save->psdcl=zfarr_init(0, 0, "%s/psdcl_%d.bin", fnextra, seed);
+				save->psdol=zfarr_init(0, 0, "%s/psdol_%d.bin", fnextra, seed);
 			}
 			if(parms->recon.psddtrat_lo){
-				save->psdcl_lo=zfarr_init(0, 0, "extra/psdcl_lo_%d.bin", seed);
-				save->psdol_lo=zfarr_init(0, 0, "extra/psdol_lo_%d.bin", seed);
+				save->psdcl_lo=zfarr_init(0, 0, "%s/psdcl_lo_%d.bin", fnextra, seed);
+				save->psdol_lo=zfarr_init(0, 0, "%s/psdol_lo_%d.bin", fnextra, seed);
 			}
 		}
 	}
@@ -1615,6 +1555,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->dm_evl);
 	dcellfree(simu->res);
 	dfree(simu->timing);
+	dcellfree(simu->resp);
 	dcellfree(simu->olep);
 	dcellfree(simu->olmp);
 	dcellfree(simu->clep);
