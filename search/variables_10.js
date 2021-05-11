@@ -18,6 +18,7 @@ var searchData=
   ['resdither',['resdither',['../maos_2types_8h.html#a15a0fb4bca39bccb08cae37081b6f48f',1,'sim_t']]],
   ['reserve',['reserve',['../classcudata__t.html#a0250e3bffa206b42e6c76b997bf2016f',1,'cudata_t']]],
   ['reset',['reset',['../parms_8h.html#ad9eba89bd159e04339f004fd19d703fd',1,'cn2est_cfg_t']]],
+  ['resp',['resp',['../maos_2types_8h.html#af7aaae3594ba9123280f22c7ea7fd88b',1,'sim_t']]],
   ['restwfs',['restwfs',['../maos_2types_8h.html#aa17dcd6a8c5507da66bec24736824607',1,'sim_t']]],
   ['rfdm',['RFdm',['../maos_2types_8h.html#aa9ebccad6396888975e5a6db279d3d7c',1,'recon_t']]],
   ['rflgsg',['RFlgsg',['../maos_2types_8h.html#ab19ee67f78ce16e243f0fd229d862205',1,'recon_t']]],

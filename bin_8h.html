@@ -198,7 +198,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>USE_ZLIB_H</b>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:ad393b9883cc6f044e01dc5b3b3b20d7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0468ad1ff5a57350eee38cf271a14d9e"><td class="memItemLeft" align="right" valign="top"><a id="a0468ad1ff5a57350eee38cf271a14d9e"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>IS_SHM</b>(name)&#160;&#160;&#160;((name[0]=='/' &amp;&amp; !strchr(name+1, '/')) || !<a class="el" href="sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f">mystrcmp</a>(name, &quot;/shm&quot;))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>IS_SHM</b>(name)&#160;&#160;&#160;(name &amp;&amp; ((name[0]=='/' &amp;&amp; !strchr(name+1, '/')) || !<a class="el" href="sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f">mystrcmp</a>(name, &quot;/shm&quot;)))</td></tr>
 <tr class="separator:a0468ad1ff5a57350eee38cf271a14d9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -297,8 +297,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 <tr class="separator:a42789b8dc80cbfc3e3aab499623872a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab90b10101a8a04135e48d6fd545a42fb"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ab90b10101a8a04135e48d6fd545a42fb">mem_p</a> (const mem_t *in)</td></tr>
 <tr class="separator:ab90b10101a8a04135e48d6fd545a42fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a347c451508b6bf6e304775853c6aa662"><td class="memItemLeft" align="right" valign="top">mem_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a347c451508b6bf6e304775853c6aa662">mmap_open</a> (char *fn, size_t msize, int rw)</td></tr>
-<tr class="separator:a347c451508b6bf6e304775853c6aa662"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8a17b269aed5fb1ef2d79fe70ac4077"><td class="memItemLeft" align="right" valign="top">mem_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aa8a17b269aed5fb1ef2d79fe70ac4077">mmap_open</a> (const char *fn, size_t msize, int rw)</td></tr>
+<tr class="separator:aa8a17b269aed5fb1ef2d79fe70ac4077"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30c2423f18febf174e2c8a3397fcfdc6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a30c2423f18febf174e2c8a3397fcfdc6">mmap_write_header</a> (char **p0, uint32_t magic, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header)</td></tr>
 <tr class="separator:a30c2423f18febf174e2c8a3397fcfdc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fe6b1220b1d2418a8198fcf62c8892e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a8fe6b1220b1d2418a8198fcf62c8892e">mmap_read_header</a> (char **p0, uint32_t *magic, <a class="el" href="classlong.html">long</a> *nx, <a class="el" href="classlong.html">long</a> *ny, const char **header0)</td></tr>
@@ -1000,8 +1000,8 @@ str</td>
 
 </div>
 </div>
-<a id="a347c451508b6bf6e304775853c6aa662"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a347c451508b6bf6e304775853c6aa662">&#9670;&nbsp;</a></span>mmap_open()</h2>
+<a id="aa8a17b269aed5fb1ef2d79fe70ac4077"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa8a17b269aed5fb1ef2d79fe70ac4077">&#9670;&nbsp;</a></span>mmap_open()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1009,7 +1009,7 @@ str</td>
         <tr>
           <td class="memname">mem_t* mmap_open </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>fn</em>, </td>
         </tr>
         <tr>

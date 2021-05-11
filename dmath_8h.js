@@ -159,7 +159,7 @@ var dmath_8h =
     [ "dwritedata", "dmath_8h.html#a3452afc53eefe2391f8720999be80c19", null ],
     [ "dreaddata", "dmath_8h.html#ab6c9042ea1d71dbc9c2d51719a866c48", null ],
     [ "dnew_mmap", "dmath_8h.html#a4d4c2db8c8067633284451e62c93c3b4", null ],
-    [ "dcellnew_mmap", "dmath_8h.html#afbb4ab784d97c93034dfd403819b4a79", null ],
+    [ "dcellnew_mmap", "dmath_8h.html#a1316ccf466cc310d562aae0acf6b8674", null ],
     [ "dcellnewsame_mmap", "dmath_8h.html#a8bc9c392d2c12b507249069770161147", null ],
     [ "dread_mmap", "dmath_8h.html#ad39779cf7385f55fc2688354291ddaa0", null ],
     [ "dcellread_mmap", "dmath_8h.html#ae82db9dbc7ec6cbe8c439a864f8c8e80", null ],

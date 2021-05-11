@@ -72,7 +72,7 @@ var bin_8h =
     [ "mem_replace", "bin_8h.html#af7da0f869b3a0eb2e8bc15e3f9b38a67", null ],
     [ "mem_isref", "bin_8h.html#a42789b8dc80cbfc3e3aab499623872a5", null ],
     [ "mem_p", "bin_8h.html#ab90b10101a8a04135e48d6fd545a42fb", null ],
-    [ "mmap_open", "bin_8h.html#a347c451508b6bf6e304775853c6aa662", null ],
+    [ "mmap_open", "bin_8h.html#aa8a17b269aed5fb1ef2d79fe70ac4077", null ],
     [ "mmap_write_header", "bin_8h.html#a30c2423f18febf174e2c8a3397fcfdc6", null ],
     [ "mmap_read_header", "bin_8h.html#a8fe6b1220b1d2418a8198fcf62c8892e", null ]
 ];

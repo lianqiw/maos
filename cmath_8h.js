@@ -177,7 +177,7 @@ var cmath_8h =
     [ "cwritedata", "cmath_8h.html#a28f2c1a91c80f5dc8c951f875d79f2de", null ],
     [ "creaddata", "cmath_8h.html#aa340e7c8bdf5727d239cddfe601f1dae", null ],
     [ "cnew_mmap", "cmath_8h.html#ad572fd5bf83e1a861d7a323ee778bc30", null ],
-    [ "ccellnew_mmap", "cmath_8h.html#a3013c34e874bd41b220ff8f54db47a7c", null ],
+    [ "ccellnew_mmap", "cmath_8h.html#a4188cf1d664bd82d4289d3a43fe5d121", null ],
     [ "ccellnewsame_mmap", "cmath_8h.html#a6734b757bfdeeefaacd5105ed6c4f10b", null ],
     [ "cread_mmap", "cmath_8h.html#ac5bdc7994de9eb84234727d99bd676b1", null ],
     [ "ccellread_mmap", "cmath_8h.html#ad1341e9c4d7751f5cca18b23e63ea16f", null ],

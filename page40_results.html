@@ -161,10 +161,11 @@ Result Files</h1>
 </li>
 </ul>
 </li>
-<li><code>Resolep_1:</code> Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.</li>
-<li><code>Resolmp_1:</code> Open loop wavefront Zernike (not normalized wrt radius) modes defined on not-normalized coordinate on the aperture. The format is similar as <code>Resolep_1</code> </li>
-<li><code>Resclep_1:</code> Closed loop wavefront variance for each science field point, in the same format as <code>Resolep_1</code> </li>
-<li><code>Resclmp_1:</code> Close loop wavefront Zernike modes, in the same format as <code>Resolmp_1</code> </li>
+<li><code>Resp_1:</code> <code>resp:</code> Results for direction. Combines the following four files.</li>
+<li><code>Resolmp_1</code> or <code>resp</code>[0]: Open loop wavefront Zernike (not normalized wrt radius) modes defined on not-normalized coordinate on the aperture. The format is similar as <code>Resolep_1</code> </li>
+<li><code>Resclmp_1</code> or <code>resp</code>[1]: Close loop wavefront Zernike modes, in the same format as <code>Resolmp_1</code> </li>
+<li><code>Resolep_1</code> or <code>resp</code>[2]: Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.</li>
+<li><code>Resclep_1</code> or <code>resp</code>[3]: Closed loop wavefront variance for each science field point, in the same format as <code>Resolep_1</code> </li>
 <li><code>Resclemp_1:</code> (Only in split tomography) LGS/TT/NGS mode wavefront error for each direction.</li>
 <li><code>RescleNGSm_1:</code> (Only in split tomography) contains a row vector array of either the residual NGS modes (in radian like unit) or the applied NGS mode correction if ideal NGS mode correction is made. Mainly used to save the ideal NGS modes applied in skycoverage pre-simulation.</li>
 <li><code>maos_</code>[PID].conf: The final effective arrays of the configurations for MAOS run with pid PID. Can be used to reproduce the simulation or check the configurations. Lines begin with # are defaults configurations while the rest have been overridden.</li>

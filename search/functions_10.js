@@ -30,7 +30,7 @@ var searchData=
   ['scellmm2',['scellmm2',['../smath_8h.html#a91bfa3bc37ee28713b5cfa3f9d51ae8c',1,'stmp.c']]],
   ['scellnew2',['scellnew2',['../smath_8h.html#ae567c6c6eed0316a1a41c645169d9ea5',1,'stmp.c']]],
   ['scellnew3',['scellnew3',['../smath_8h.html#aae5029293f1ac9b8b04b043ec21f7a00',1,'stmp.c']]],
-  ['scellnew_5fmmap',['scellnew_mmap',['../smath_8h.html#ad9b353cf0eb4d4e5597291569900961c',1,'stmp.c']]],
+  ['scellnew_5fmmap',['scellnew_mmap',['../smath_8h.html#a722802a7a34d6c14174ac32f693084b5',1,'stmp.c']]],
   ['scellnew_5fsame',['scellnew_same',['../smath_8h.html#adcb987c541512b7a33c3e136b92990f2',1,'stmp.c']]],
   ['scellnewsame_5fmmap',['scellnewsame_mmap',['../smath_8h.html#a2e8a73f160c8d02cba79a96a0a62da84',1,'stmp.c']]],
   ['scellnorm',['scellnorm',['../smath_8h.html#a9cb28a81bde54d63d472bf305200b0cb',1,'stmp.c']]],
