@@ -91,8 +91,10 @@ def test_mkdtf():
 
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
-def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
+def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Resclep", seeds, iframe1, iframe2)
+def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
+    return maos_res_do(fds, "extra/Resp", seeds, iframe1, iframe2)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
     fds2=sorted(glob.glob(fdin+"/",recursive=1))
     fds=[]
@@ -115,16 +117,19 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             res=readbin(fn)
             if res is None:
                 continue
-            if len(res)>4: #per direction, take on axis
-                res=res[0]
-                split=0
-            elif len(res)==4:
+            if name=="Res":
                 if res[3].size>0: #split tomography
                     res=res[3]
                     split=1
                 else: #integrated
                     res=res[2]
                     split=0
+            elif name=="Resclep":
+                res=np.stack(res, axis=1)
+                split=0
+            elif name=="extra/Resp":
+                res=np.stack(res[-1],axis=1)
+                split=0            
             else:
                 print('Invalid result')
                 continue
@@ -138,12 +143,12 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
                 n2=iframe2
             if n1 > n2 or n2 > res.shape[0]:
                 print(fn, 'Invalid range',n1,n2,'>',res.shape[0])
-                res = np.nan * res[0:1,:]
+                res = np.nan * res[0:1]
             else:
-                res=res[n1:n2,:]
-            if max(res[-1,:])==0:
-                print(fn, 'Incomplete result')
-                continue #unfinished result
+                res=res[n1:n2]
+            #if max(res[-1]).all()==0:
+            #    print(fn, 'Incomplete result')
+            #    continue #unfinished result
             res=res.mean(0,keepdims=1)*1e18
             mres+=res
             nseed+=1
