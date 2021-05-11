@@ -255,20 +255,14 @@ static inline long index_col(long iy, long nx, long ny){
 #define index_col(iy,nx,ny) ((iy)*(nx))
 #endif
 /**
-    \def P(...)
-    Used to obtain elements of an array
-
-    \def PP(...)
-    Used to obtain pointers to elements of an array
+    \def P()
+    Used to obtain elements of an array \c P(A,i) or \c P(A,i,j). Returns pointer if no index is given \c P(A).
 
     \def PCOL(A,iy)
     Used to obtain pointer to columns iy of array A
 
     \def PR(A,ix,iy)
     Calls P() with wrapping of index
-
-    \def PPR(A, ix, iy)
-    Calls PP() with wrapping of index
 
     \def PCOLR(A, iy)
     Calls PCOL(A, iy) with wrapping of index

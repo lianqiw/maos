@@ -216,7 +216,7 @@ This can be used to view results remotely.
 
 MAOS comes with a few useful python routines location in \c scripts/ folder:
 
-- \c readbin.py contains \c readbin that can read \c bin or \c fits files.
+- \c readbin.py contains `readbin` that can read `bin` or `fits` files.
 
 - \c aolib.py contains routines to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py
 
