@@ -53,7 +53,6 @@ typedef struct proc_t{
 /*void proc_remove(int id,int pid, int flag); */
 gboolean refresh(proc_t* p);
 void kill_job_event(GtkWidget* btn, GdkEventButton* event, proc_t* p);
-void kill_selected_jobs(GtkAction* btn);
 void notify_user(proc_t* p);
 int scheduler_cmd(int host, int pid, int command);
 int scheduler_display(int ihost, int pid);

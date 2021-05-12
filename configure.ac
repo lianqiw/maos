@@ -751,6 +751,7 @@ if test "$with_gtk" != "no" ;then
 			GTK_LIBS+=" $GTHREAD_LIBS"
 			fi
 		fi
+		GTK_CFLAGS+=" -Wno-deprecated-declarations"
     fi
     AC_DEFINE_UNQUOTED(MAC_INTEGRATION, [$has_mac], ["Mac integration"])
     #The following will substitute the variables name 

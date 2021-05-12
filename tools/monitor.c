@@ -81,7 +81,6 @@ GdkColor white;
 GdkColor color_even;
 GdkColor color_odd;
 #endif
-GtkActionGroup* topgroup;
 GtkWidget* toptoolbar;
 #if GTK_MAJOR_VERSION>=3 
 //GtkCssProvider *provider_prog;

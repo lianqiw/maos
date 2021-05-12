@@ -97,7 +97,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* header,
 	const char* format, ...){
 	format2fn;
-	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, (const char*)fn);
+	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, "%s", fn);
 }
 
 static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){

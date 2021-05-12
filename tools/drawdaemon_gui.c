@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -43,7 +43,7 @@ static GtkWidget* curwindow=NULL;
 static GtkWidget* curtopnb=NULL;
 static GtkWidget* contexmenu=NULL;
 static drawdata_t* drawdata_dialog=NULL;
-static GtkToolItem* toggle_cumu=NULL;
+//static GtkToolItem* toggle_cumu=NULL;
 #if GTK_MAJOR_VERSION<3
 static GtkRcStyle* btn_rcstyle=NULL;
 #endif
@@ -86,10 +86,16 @@ static const char* rc_string_notebook={
 
 static void set_cur_window(GtkWidget* window){
 	curwindow=window;
+#if GTK_MAJOR_VERSION>=4 		
+	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
+
+	curtopnb=gtk_widget_get_next_sibling(gtk_widget_get_first_child(vbox));
+#else
 	GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(curwindow));
 	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
 	curtopnb=(GtkWidget*)list->next->data;
 	g_list_free(list);
+#endif
 }
 /*Get the current page for notebook*/
 static GtkWidget* get_current_page(GtkWidget* notebook){
@@ -111,26 +117,41 @@ static drawdata_t* get_current_drawdata(void){
 	}
 }
 static GtkWidget* get_topnb(GtkWidget* window){
+#if GTK_MAJOR_VERSION>=4 
+	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
+	GtkWidget* toolbar=gtk_widget_get_first_child(vbox);
+	GtkWidget* topnb=gtk_widget_get_next_sibling(toolbar);
+#else
 	GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(window));
 	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
 	GtkWidget* topnb=(GtkWidget*)list->next->data;
 	g_list_free(list);
+#endif
 	return topnb;
 }
 static GtkWidget* get_toolbar(GtkWidget* window){
+#if GTK_MAJOR_VERSION>=4 
+	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
+	GtkWidget* toolbar=gtk_widget_get_first_child(vbox);
+#else
 	GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(window));
 	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
 	GtkWidget* toolbar=(GtkWidget*)list->data;
 	g_list_free(list);
+#endif
 	return toolbar;
 }
 
 static const char* topnb_label_get(GtkWidget* topnb, GtkWidget* subnb){
 	GtkWidget* label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(topnb), subnb);
+#if GTK_MAJOR_VERSION>=4
+	GtkWidget* label2=gtk_widget_get_first_child(label);
+#else
 	GtkWidget* label2=gtk_bin_get_child(GTK_BIN(label));
+#endif
 	return gtk_label_get_text(GTK_LABEL(label2));
 }
-
+#if GTK_MAJOR_VERSION<4
 static void topnb_detach(GtkMenuItem* menu){
 	(void)menu;
 	GtkWidget* topnb=curtopnb;
@@ -148,7 +169,6 @@ static void topnb_detach(GtkMenuItem* menu){
 	g_object_unref(page);
 	g_object_unref(label);
 }
-
 static gboolean tab_button_cb(GtkWidget* widget, GdkEventButton* event, GtkWidget* page){
 	/*
 	  widget is the event box that is the page label. page is the page in the notebook.
@@ -169,6 +189,7 @@ static gboolean tab_button_cb(GtkWidget* widget, GdkEventButton* event, GtkWidge
 	}
 	return FALSE;
 }
+#endif
 typedef struct updatetimer_t{
 	int pending;
 	drawdata_t* drawdata;
@@ -191,8 +212,11 @@ static void update_pixmap(drawdata_t* drawdata){
 	/*Create a new server size pixmap and then draw on it. */
 		drawdata->pwidth=width;
 		drawdata->pheight=height;
-#if GTK_MAJOR_VERSION>=3 
-		drawdata->pixmap=gdk_window_create_similar_surface(gtk_widget_get_window(curwindow), CAIRO_CONTENT_COLOR_ALPHA, width, height);
+#if GTK_MAJOR_VERSION>=4
+		cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+#elif GTK_MAJOR_VERSION>=3 
+		drawdata->pixmap=gdk_window_create_similar_surface
+		(gtk_widget_get_window(curwindow), CAIRO_CONTENT_COLOR_ALPHA, width, height);
 #else
 		drawdata->pixmap=gdk_pixmap_new(curwindow->window, width, height, -1);
 #endif
@@ -231,7 +255,19 @@ static void delayed_update_pixmap(drawdata_t* drawdata){
 	}
 }
 
-
+#if  GTK_MAJOR_VERSION>=4
+static gboolean
+on_resize_event(GtkDrawingArea* widget, int width, int height, gpointer pdata){
+	(void)widget;
+	drawdata_t* drawdata=*((drawdata_t**)pdata);
+	if(width>1&&height>1){
+		drawdata->width=width;
+		drawdata->height=height;
+		delayed_update_pixmap(drawdata);
+	}
+	return FALSE;
+}
+#else
 /*
    Expose event happens when the widget is first configured and whenever it is
    resized.  Create a new backup pixmap of the appropriate size and draw there.*/
@@ -247,6 +283,7 @@ on_configure_event(GtkWidget* widget, GdkEventConfigure* event, gpointer pdata){
 	}
 	return FALSE;
 }
+#endif
 /* Redraw the screen from the backing pixmap */
 #if GTK_MAJOR_VERSION>=3
 static gboolean
@@ -379,6 +416,12 @@ static void delete_page(GtkButton* btn, drawdata_t** drawdatawrap){
 /**
    Delete a figure page using button-press-event. button works not good in mac.
 */
+#if GTK_MAJOR_VERSION>=4
+static void delete_page_event(GtkWidget* widget, drawdata_t** drawdatawrap){
+	(void)widget;
+	delete_page(NULL, drawdatawrap);
+}
+#else
 static void delete_page_event(GtkWidget* widget, GdkEventButton* event, drawdata_t** drawdatawrap){
 	(void)widget;
 	(void)event;
@@ -387,11 +430,16 @@ static void delete_page_event(GtkWidget* widget, GdkEventButton* event, drawdata
 	}
 }
 #endif
+#endif
 static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	GtkWidget* out;
+#if GTK_MAJOR_VERSION>=4
+	out=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	//GtkWidget* image=gtk_image_new_from_icon_name("window-close");
+#else
 	out=gtk_hbox_new(FALSE, 0);
-
 	GtkWidget* image=gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
+#endif
 
 #if defined(__linux__)
 	GtkWidget* close_btn;
@@ -401,7 +449,11 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 #else
 	gtk_button_set_focus_on_click(GTK_BUTTON(close_btn), FALSE);
 #endif
+#if GTK_MAJOR_VERSION>=4
+	gtk_button_set_icon_name(GTK_BUTTON(close_btn), "window-close");
+#else
 	gtk_container_add(GTK_CONTAINER(close_btn), image);
+#endif
 	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
 	/* make button as small as possible */
 #if GTK_MAJOR_VERSION<3
@@ -412,12 +464,21 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 #endif
 
 	gtk_box_pack_end(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
+#else//macos
+
+
+#if GTK_MAJOR_VERSION>=4
+	GtkWidget* ebox=gtk_button_new();
+	gtk_button_set_icon_name(GTK_BUTTON(ebox), "window-close");
+	g_signal_connect(ebox, "clicked", G_CALLBACK(delete_page_event), drawdatawrap);
+	gtk_box_append(GTK_BOX(out), ebox);
 #else
 	GtkWidget* ebox=gtk_event_box_new();
-	
 	gtk_container_add(GTK_CONTAINER(ebox), image);
 	g_signal_connect(ebox, "button_press_event", G_CALLBACK(delete_page_event), drawdatawrap);
 	gtk_box_pack_end(GTK_BOX(out), ebox, FALSE, FALSE, 0);
+#endif
+
 #endif
 
 	/* create label for tab */
@@ -436,15 +497,25 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 #endif
 	gtk_label_set_width_chars(GTK_LABEL(label), 12);
+#if GTK_MAJOR_VERSION>=4
+	gtk_box_append(GTK_BOX(out), label);
+	gtk_widget_show(out);
+#else
 	gtk_box_pack_start(GTK_BOX(out), label, TRUE, TRUE, 0);
 	gtk_widget_show_all(out);
+#endif
+
 	return out;
 }
 /*Get the label of itab'th child of notebook subnb*/
 static const char* subnb_label_get(GtkWidget* subnb, GtkWidget* page){
 	GtkWidget* label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(subnb), page);
+#if GTK_MAJOR_VERSION>=4
+	return gtk_label_get_text(GTK_LABEL(gtk_widget_get_first_child(label)));
+#else
 	GList* list=gtk_container_get_children(GTK_CONTAINER(label));
 	return gtk_label_get_text(GTK_LABEL(g_list_first(list)->data));
+#endif
 }
 static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
 	drawdata->offx+=xdiff/drawdata->zoomx;
@@ -595,39 +666,39 @@ static gboolean button_release(GtkWidget* widget, GdkEventButton* event, drawdat
 	float dx=x-drawdata->mxdown;
 	float dy=y-drawdata->mydown;
 	//float dt=myclockd()-drawdata->mtdown;
-	if((fabs(dx)<5 && fabs(dy)<5)){
+	if((fabs(dx)<5&&fabs(dy)<5)){
 		dbg_time("Ignore accidental click\n");
-	}else 
-	if((cursor_type==0&&event->button==1)
-		||(cursor_type==1&&event->button==2)){/*move only on left button */
-		do_move(drawdata, dx, -dy);
-	}else if(event->button==3){/*right button select and zoom. */
-		float xx=drawdata->mxdown;
-		float yy=drawdata->mydown;
-		if(drawdata->square&&!drawdata->image){
-			float ratio=1;
-			if(drawdata->image){
-				ratio=(float)drawdata->nx/(float)drawdata->ny;
+	} else
+		if((cursor_type==0&&event->button==1)
+			||(cursor_type==1&&event->button==2)){/*move only on left button */
+			do_move(drawdata, dx, -dy);
+		} else if(event->button==3){/*right button select and zoom. */
+			float xx=drawdata->mxdown;
+			float yy=drawdata->mydown;
+			if(drawdata->square&&!drawdata->image){
+				float ratio=1;
+				if(drawdata->image){
+					ratio=(float)drawdata->nx/(float)drawdata->ny;
+				}
+				if(fabs(dx)<fabs(dy)*ratio){
+					dy*=fabs(dx/(dy*ratio));
+				} else{
+					dx*=fabs(dy*ratio/dx);
+				}
 			}
-			if(fabs(dx)<fabs(dy)*ratio){
-				dy*=fabs(dx/(dy*ratio));
-			} else{
-				dx*=fabs(dy*ratio/dx);
-			}
+			if(dx<0) xx+=dx;
+			if(dy>0) yy+=dy;
+			float diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
+			float diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
+			drawdata->limit0[0]+=diffx*(xx-drawdata->xoff);
+			drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(dx);
+			drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
+			drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
+			drawdata->limit_changed=1;
+			apply_limit(drawdata);
+			update_pixmap(drawdata);
 		}
-		if(dx<0) xx+=dx;
-		if(dy>0) yy+=dy;
-		float diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
-		float diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
-		drawdata->limit0[0]+=diffx*(xx-drawdata->xoff);
-		drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(dx);
-		drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
-		drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
-		drawdata->limit_changed=1;
-		apply_limit(drawdata);
-		update_pixmap(drawdata);
-	}
-	return FALSE;
+		return FALSE;
 }
 
 
@@ -865,15 +936,15 @@ gboolean addpage(gpointer indata){
 		free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 		drawdata_old->nx=drawdata->nx;
 		drawdata_old->ny=drawdata->ny;
-		if(drawdata->zlim[0] || drawdata->zlim[1]){
+		if(drawdata->zlim[0]||drawdata->zlim[1]){
 			if(drawdata->zlim[0]<drawdata_old->zlim[0]
 				||(drawdata->zlim[0]-drawdata_old->zlim[0])>0.5*fabs(drawdata_old->zlim[0])){
 				//info("update zlim[0] from %g to %g\n", drawdata_old->zlim[0], drawdata->zlim[0]);
 				drawdata_old->zlim[0]=drawdata->zlim[0];
 			}
 			if(drawdata->zlim[1]>drawdata_old->zlim[1]
-			|| (drawdata_old->zlim[1]-drawdata->zlim[1]) > 0.5*fabs(drawdata_old->zlim[1])){
-				//info("update zlim[1] from %g to %g\n", drawdata_old->zlim[1], drawdata->zlim[1]);
+				||(drawdata_old->zlim[1]-drawdata->zlim[1])>0.5*fabs(drawdata_old->zlim[1])){
+					//info("update zlim[1] from %g to %g\n", drawdata_old->zlim[1], drawdata->zlim[1]);
 				drawdata_old->zlim[1]=drawdata->zlim[1];
 			}
 		}
@@ -950,8 +1021,13 @@ gboolean addpage(gpointer indata){
 			G_CALLBACK(on_expose_event), drawdatawrap);
 #endif
 	/*handles zooming. */
+#if GTK_MAJOR_VERSION>=4
+		g_signal_connect(drawarea, "resize",
+			G_CALLBACK(on_resize_event), drawdatawrap);
+#else
 		g_signal_connect(drawarea, "configure-event",
 			G_CALLBACK(on_configure_event), drawdatawrap);
+#endif
 		gtk_widget_set_size_request(drawarea, DRAWAREA_MIN_WIDTH,
 			DRAWAREA_MIN_HEIGHT);
 		gtk_widget_show_all(subnb);
@@ -1105,9 +1181,9 @@ static void limit_change2(GtkSpinButton* spin, gfloat* val){
 static void checkbtn_toggle(GtkToggleButton* btn, gint* key){
 	*key=gtk_toggle_button_get_active(btn);
 	delayed_update_pixmap(drawdata_dialog);
-	if(key==&cumu){
+	/*if(key==&cumu){
 		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
-	}
+	}*/
 }
 static void range_changed(GtkRange* range, gfloat* val){
 	*val=gtk_range_get_value(range);
@@ -1170,7 +1246,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	float diff[3];
 	diff[0]=(drawdata->limit0[1]-drawdata->limit0[0]);
 	diff[1]=(drawdata->limit0[3]-drawdata->limit0[2]);
-	if(drawdata->zlim[0] || drawdata->zlim[1]){
+	if(drawdata->zlim[0]||drawdata->zlim[1]){
 		diff[2]=(drawdata->zlim[1]-drawdata->zlim[0]);
 		n=6;
 	} else{
@@ -1183,7 +1259,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 		}
 		float step=pow(10, floor(log10(fabs(diff[i/2])))-2);
 		spins[i]=gtk_spin_button_new_with_range(drawdata->limit0[i]-100*step, drawdata->limit0[i]+100*step, step);
-		
+
 		float* val;
 		if(i<4){
 			val=&drawdata->limit0[i];
@@ -1406,7 +1482,56 @@ static gboolean window_state(GtkWidget* window, GdkEvent* event){
 	}
 	return FALSE;
 }
-GtkWidget* create_window(GtkWidget *window){
+//Create a new toolbar item.
+#if GTK_MAJOR_VERSION < 4
+void new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name,
+	GCallback callback, gpointer user_data){
+	GtkToolItem* item=NULL;
+
+	if(name){
+		if(toggle){
+			item=gtk_toggle_tool_button_new();
+		} else{
+			item=gtk_tool_button_new(NULL, name);
+		}
+		if(child){
+			gtk_container_add(GTK_CONTAINER(item), child);
+		}else{
+			gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), name);
+		}
+	} else{
+		item=gtk_separator_tool_item_new();
+	}
+
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+	if(callback){
+		g_signal_connect(item, toggle?"toggled":"clicked", G_CALLBACK(callback), user_data);
+	}
+}
+#else
+void new_tool(GtkWidget* toolbar, GtkWidget* item, int toggle, const char* name,
+	GCallback callback, gpointer user_data){
+	if(!item){
+		if(name){
+			if(toggle){
+				item=gtk_button_new_from_icon_name(name);
+			} else{
+				item=gtk_toggle_button_new();
+				gtk_button_set_icon_name(GTK_BUTTON(item), name);
+			}
+		} else{
+			item=gtk_button_new();
+		}
+	}
+	gtk_button_set_has_frame(GTK_BUTTON(item), false);
+	gtk_box_append(GTK_BOX(toolbar), item);
+
+	if(callback){
+		g_signal_connect(item, toggle?"toggled":"clicked", G_CALLBACK(callback), user_data);
+	}
+}
+#endif
+GtkWidget* create_window(GtkWidget* window){
 	if(!cursors[1]){
 		GdkDisplay* display=gdk_display_get_default();
 		cursors[0]=gdk_cursor_new_from_name(display, "default");
@@ -1415,6 +1540,7 @@ GtkWidget* create_window(GtkWidget *window){
 		gtk_rc_parse_string(rc_string_notebook);
 #endif
 	}
+#if GTK_MAJOR_VERSION < 4
 	if(!contexmenu){
 		contexmenu=gtk_menu_new();
 		GtkWidget* item=gtk_menu_item_new_with_label("Detach");
@@ -1423,7 +1549,7 @@ GtkWidget* create_window(GtkWidget *window){
 		gtk_widget_show_all(contexmenu);
 		g_object_ref(contexmenu);
 	}
-
+#endif
 	if(!window){
 		window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	}
@@ -1456,81 +1582,31 @@ GtkWidget* create_window(GtkWidget *window){
 		btn_rcstyle->xthickness=btn_rcstyle->ythickness=0;
 	}
 #endif
+#if GTK_MAJOR_VERSION<4
 	GtkWidget* toolbar=gtk_toolbar_new();
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar), GTK_ICON_SIZE_MENU);
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-
-	GtkToolItem* item=gtk_tool_button_new(NULL, "Save_As");
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "document-save-as");
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-	g_signal_connect(item, "clicked", G_CALLBACK(tool_save), NULL);
-	item=gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-	/*item=gtk_radio_tool_button_new(NULL);
-	gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), gtk_image_new_from_pixbuf(pix_hand));
-	g_signal_connect(item,"toggled",G_CALLBACK(tool_toggled),GINT_TO_POINTER(0));
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-
-	item=gtk_radio_tool_button_new_from_widget(GTK_RADIO_TOOL_BUTTON(item));
-	gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), gtk_image_new_from_pixbuf(pix_arrow));
-	g_signal_connect(item,"toggled",G_CALLBACK(tool_toggled),GINT_TO_POINTER(1));
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-
-
-	item=gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-	*/
-	item=gtk_tool_button_new(NULL, "Zoom_In");
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "zoom-in");
-	g_signal_connect(item, "clicked", G_CALLBACK(tool_zoom), GINT_TO_POINTER(1));
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-	item=gtk_tool_button_new(NULL, "Best_Fit");
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "zoom-fit-best");
-	g_signal_connect(item, "clicked", G_CALLBACK(tool_zoom), GINT_TO_POINTER(0));
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-	item=gtk_tool_button_new(NULL, "Zoom_Out");
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "zoom-out");
-	g_signal_connect(item, "clicked", G_CALLBACK(tool_zoom), GINT_TO_POINTER(-1));
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-	item=gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-	item=gtk_tool_button_new(NULL, "_Properties");
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "document-properties");
-	g_signal_connect(item, "clicked", G_CALLBACK(tool_property), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-	item=gtk_toggle_tool_button_new(); toggle_cumu=item;
-	gtk_tool_button_set_label(GTK_TOOL_BUTTON(item), "_Copy");
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "edit-copy");
-	g_signal_connect(item, "toggled", G_CALLBACK(toolbutton_cumu_click), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-	item=gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+#else
+	//Toolbar is deprecated in GTK4. Use box instead
+	GtkWidget* toolbar=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#endif
 	gtk_widget_set_sensitive(toolbar, FALSE);
-	item=gtk_tool_item_new();
+	new_tool(toolbar, NULL, 0, "document-save-as", G_CALLBACK(tool_save), NULL);
+	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
+	new_tool(toolbar, NULL, 0, "zoom-in", G_CALLBACK(tool_zoom), GINT_TO_POINTER(1));
+	new_tool(toolbar, NULL, 0, "zoom-fit-best", G_CALLBACK(tool_zoom), GINT_TO_POINTER(0));
+	new_tool(toolbar, NULL, 0, "zoom-out", G_CALLBACK(tool_zoom), GINT_TO_POINTER(-1));
+	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
+	new_tool(toolbar, NULL, 0, "document-properties", G_CALLBACK(tool_property), NULL);
+	new_tool(toolbar, NULL, 1, "edit-copy", G_CALLBACK(toolbutton_cumu_click), NULL);
+	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
+
 	GtkWidget* fontsel=gtk_font_button_new_with_font("Sans 12");
-	//GtkWidget *fontsel=gtk_font_button_new();
-	gtk_container_add(GTK_CONTAINER(item), fontsel);
-	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set",
-		G_CALLBACK(tool_font_set), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
+	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL);
 
-	item=gtk_toggle_tool_button_new();
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "media-playback-pause");
-	g_signal_connect(item, "toggled", G_CALLBACK(togglebutton_pause), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-
-
-	item=gtk_tool_button_new(NULL, "_Stop");
-	gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "media-playback-stop");
-	g_signal_connect(item, "clicked", G_CALLBACK(toolbutton_stop), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+	new_tool(toolbar, NULL, 1, "media-playback-pause", G_CALLBACK(togglebutton_pause), NULL);
+	new_tool(toolbar, NULL, 0, "media-playback-stop", G_CALLBACK(toolbutton_stop), NULL);
 
 	GtkWidget* topnb=gtk_notebook_new();
 	//gtk_container_set_border_width(GTK_CONTAINER(topnb),2);
