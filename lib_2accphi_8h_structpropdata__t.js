@@ -2,9 +2,9 @@ var lib_2accphi_8h_structpropdata__t =
 [
     [ "mapin", "lib_2accphi_8h.html#adceed66225d811d2602d8b563b122de5", null ],
     [ "locin", "lib_2accphi_8h.html#a5db66a900fd70d51357da45f90f96f00", null ],
-    [ "phiin", "lib_2accphi_8h.html#a78b9ec7bb71462e818451ddd87b81afb", null ],
+    [ "phiin", "lib_2accphi_8h.html#af91d31822d582eaba8bf007fcf0e61f0", null ],
     [ "mapout", "lib_2accphi_8h.html#a64540e8174332379b3eaa48b02f331fe", null ],
-    [ "phiout", "lib_2accphi_8h.html#aa0674d5bc02007b16c0da6f130cae5fa", null ],
+    [ "phiout", "lib_2accphi_8h.html#ad4c4b5944667dd1162cdb41e1803d9cf", null ],
     [ "ptsout", "lib_2accphi_8h.html#a3a7487e2c314d7a7a59b2a369f7b429c", null ],
     [ "locout", "lib_2accphi_8h.html#af77048cd0f9b8ea6cd7b23ccf3755d6e", null ],
     [ "ostat", "lib_2accphi_8h.html#a8ac1ea4dceae77303f590b35babee4fd", null ],
