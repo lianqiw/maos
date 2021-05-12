@@ -327,7 +327,7 @@ void save_dmreal(sim_t* simu){
 					dmat* opd=dnew(simu->aper->locs->nloc, 1);
 					for(int idm=0; idm<parms->ndm; idm++){
 						int ind=parms->evl.nevl*idm;
-						simu->evl_propdata_dm[ind].phiout=opd->p;
+						simu->evl_propdata_dm[ind].phiout=opd;
 						CALL_THREAD(simu->evl_prop_dm[ind], 0);
 					}
 					dscale(opd, -1);

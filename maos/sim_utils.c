@@ -705,7 +705,7 @@ static void init_simu_evl(sim_t* simu){
 					data->mapin=P(simu->dmrealsq, idm);
 				} else{
 					data->locin=P(recon->aloc, idm);
-					data->phiin=P(simu->dmreal, idm)->p;
+					data->phiin=P(simu->dmreal, idm);
 				}
 			}
 			if(aper->locs_dm){
@@ -716,7 +716,7 @@ static void init_simu_evl(sim_t* simu){
 				tot=aper->locs->stat->ncol;
 			}
 
-			data->phiout=(real*)1;/*replace later in simulation. */
+			data->phiout=(dmat*)1;/*replace later in simulation. */
 			simu->evl_prop_dm[ind]=mycalloc(nthread, thread_t);
 			thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
 		}
@@ -951,7 +951,7 @@ static void init_simu_wfs(sim_t* simu){
 			data->alpha=1;
 			data->wrap=1;
 			data->mapin=(map_t*)1;/*need to update this in genatm. */
-			data->phiout=(real*)1;/*replace later in simulation. */
+			data->phiout=(dmat*)1;/*replace later in simulation. */
 			int tot=0;
 			if(powfs[ipowfs].loc_tel){/*misregistration. */
 				data->locout=P(powfs[ipowfs].loc_tel, wfsind);
@@ -983,10 +983,10 @@ static void init_simu_wfs(sim_t* simu){
 					data->mapin=P(simu->dmrealsq, idm);
 				} else{
 					data->locin=P(recon->aloc, idm);
-					data->phiin=P(simu->dmreal, idm)->p;
+					data->phiin=P(simu->dmreal, idm);
 				}
 			}
-			data->phiout=(real*)1;/*replace later in simulation */
+			data->phiout=(dmat*)1;/*replace later in simulation */
 			if(powfs[ipowfs].loc_dm){/*misregistration. */
 				data->locout=P(powfs[ipowfs].loc_dm, wfsind, idm);
 				tot=data->locout->nloc;

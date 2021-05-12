@@ -66,7 +66,7 @@ void prep_cachedm(sim_t* simu){
 			cpropdata[idm].mapin=P(simu->dmrealsq,idm);
 		} else{
 			cpropdata[idm].locin=P(simu->recon->aloc,idm);
-			cpropdata[idm].phiin=P(simu->dmreal,idm)->p;
+			cpropdata[idm].phiin=P(simu->dmreal,idm);
 		}
 		cpropdata[idm].mapout=P(simu->cachedm,idm);
 		cpropdata[idm].alpha=1;

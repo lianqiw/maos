@@ -33,12 +33,13 @@ typedef struct propdata_t{
     /*Input.  */
     map_t *mapin;
     /*Or */
-    loc_t *locin; const real *phiin;
+    loc_t *locin;
+    const dmat *phiin;
     
     /*Output */
     map_t *mapout;
     /*Or */
-    real *phiout;
+    dmat *phiout;
     /*Combined with */
     const pts_t *ptsout;
     /*Or */

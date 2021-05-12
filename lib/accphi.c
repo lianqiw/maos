@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -182,61 +182,61 @@ void prop(thread_t* data){
 	const real displacey=propdata->displacey0+propdata->displacey1;
 	switch(propdata->index){
 	case 1:
-		prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout,
+		prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
 			data->start, data->end);
 		break;
 	case 2:
-		prop_grid(propdata->mapin, propdata->locout, propdata->phiout,
+		prop_grid(propdata->mapin, propdata->locout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
 			data->start, data->end);
 		break;
 	case 3:
-		prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout,
+		prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
 			data->start, data->end);
 		break;
 	case 4:
-		prop_nongrid_cubic(propdata->locin, propdata->phiin,
-			propdata->locout, propdata->phiout,
+		prop_nongrid_cubic(propdata->locin, propdata->phiin->p,
+			propdata->locout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
 			data->start, data->end);
 		break;
 	case 5:
-		prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
+		prop_nongrid_map_cubic(propdata->locin, propdata->phiin->p,
 			propdata->mapout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
 			data->start, data->end);
 		break;
 	case 6:
-		prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
-			propdata->ptsout, propdata->phiout,
+		prop_nongrid_pts_cubic(propdata->locin, propdata->phiin->p,
+			propdata->ptsout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
 			data->start, data->end);
 		break;
 	case 7:
-		prop_nongrid(propdata->locin, propdata->phiin,
-			propdata->locout, propdata->phiout,
+		prop_nongrid(propdata->locin, propdata->phiin->p,
+			propdata->locout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
 			data->start, data->end);
 		break;
 	case 8:
-		prop_nongrid_map(propdata->locin, propdata->phiin,
+		prop_nongrid_map(propdata->locin, propdata->phiin->p,
 			propdata->mapout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
 			data->start, data->end);
 		break;
 	case 9:
-		prop_nongrid_pts(propdata->locin, propdata->phiin,
-			propdata->ptsout, propdata->phiout,
+		prop_nongrid_pts(propdata->locin, propdata->phiin->p,
+			propdata->ptsout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
 			data->start, data->end);
@@ -248,13 +248,13 @@ void prop(thread_t* data){
 			data->start, data->end);
 		break;
 	case 11:
-		prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, propdata->phiout,
+		prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
 			data->start, data->end);
 		break;
 	case 12:
-		prop_grid_cubic(propdata->mapin, propdata->locout, propdata->phiout,
+		prop_grid_cubic(propdata->mapin, propdata->locout, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
 			data->start, data->end);
@@ -265,7 +265,7 @@ void prop(thread_t* data){
 			propdata->scale, propdata->wrap, data->start, data->end);
 		break;
 	case 14:
-		prop_grid_stat_cubic(propdata->mapin, propdata->ostat, propdata->phiout,
+		prop_grid_stat_cubic(propdata->mapin, propdata->ostat, propdata->phiout->p,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
 			data->start, data->end);
@@ -276,21 +276,21 @@ void prop(thread_t* data){
 }
 
 
-#define PREPIN_NONGRID(nskip)					\
-    /*padding to avoid test boundary*/				\
+#define PREPIN_NONGRID(nskip)				\
+    /*padding to avoid test boundary*/		 \
     if(!locin->map) loc_create_map_npad(locin, nskip,0,0);	\
     const real dx_in1 = 1./locin->dx;				\
     const real dx_in2 = scale*dx_in1;				\
     const real dy_in1 = 1./locin->dy;				\
     const real dy_in2 = scale*dy_in1;				\
-    displacex = (displacex-locin->map->ox)*dx_in1;		\
-    displacey = (displacey-locin->map->oy)*dy_in1;		\
+    displacex = (displacex-locin->map->ox)*dx_in1;	\
+    displacey = (displacey-locin->map->oy)*dy_in1;	\
     map_t*  map=locin->map;					\
-    const int nxmin=MAX(nskip,locin->npad);			\
+    const int nxmin=MAX(nskip,locin->npad);	\
     const int nymin=nxmin;					\
-    const int nxmax=locin->map->nx-nxmin-1;			\
-    const int nymax=locin->map->ny-nymin-1;			\
-    /*-1 because we count from 1 in the map.*/			\
+    const int nxmax=locin->map->nx-nxmin-1;	\
+    const int nymax=locin->map->ny-nymin-1;	\
+    /*-1 because we count from 1 in the map*/\
     const real *phiin0=phiin-1;				\
     int missing=0;				
 #define PREPIN_GRID(nskip)			\
@@ -300,109 +300,109 @@ void prop(thread_t* data){
     const real dy_in2 = scale*dy_in1;		\
     displacex = (displacex-mapin->ox)*dx_in1;	\
     displacey = (displacey-mapin->oy)*dy_in1;	\
-    const int nxmin=nskip;			\
-    const int nymin=nskip;			\
+    const int nxmin=nskip;					\
+    const int nymin=nskip;					\
     const int nxmax  = mapin->nx-nskip-1;	\
     const int nymax  = mapin->ny-nskip-1;	\
     int missing=0; 
-#define PREPOUT_LOC				\
+#define PREPOUT_LOC							\
     if(!locout) error("locout is NULL!");	\
-    const real *px=locout->locx;		\
-    const real *py=locout->locy;		\
-    if(!end) end=locout->nloc;			\
+    const real *px=locout->locx;			\
+    const real *py=locout->locy;			\
+    if(!end) end=locout->nloc;				\
 
-#define PREPOUT_PTS				\
-    const real dxout=pts->dx;			\
-    const real dyout=pts->dy;			\
+#define PREPOUT_PTS							\
+    const real dxout=pts->dx;				\
+    const real dyout=pts->dy;				\
     if(!end) end=pts->nsa;
 
-#define PREPOUT_MAP				\
-    const real dxout=mapout->dx;		\
-    const real dyout=mapout->dy;		\
-    const real ox=mapout->ox;			\
-    const real oy=mapout->oy;			\
-    real *phiout=mapout->p;			\
-    const int nxout=mapout->nx;			\
+#define PREPOUT_MAP							\
+    const real dxout=mapout->dx;			\
+    const real dyout=mapout->dy;			\
+    const real ox=mapout->ox;				\
+    const real oy=mapout->oy;				\
+    real *phiout=mapout->p;					\
+    const int nxout=mapout->nx;				\
     if(!end) end=mapout->ny;
 
-#define PREPOUT_STAT				\
-    const real dxout  = ostat->dx;		\
+#define PREPOUT_STAT						\
+    const real dxout  = ostat->dx;			\
     if(end==0) end = ostat->ncol;
 
-#define RUNTIME_LINEAR				\
-    real dplocx, dplocy;			\
+#define RUNTIME_LINEAR						\
+    real dplocx, dplocy;					\
     int nplocx, nplocy, nplocx1, nplocy1;	
 
 
-#define PREP_CUBIC_PARAM			\
+#define PREP_CUBIC_PARAM					\
     const real cubicn=1./(1.+2.*cubic_iac);	\
-    const real c0=1.*cubicn;			\
-    const real c1=(4.*cubic_iac-2.5)*cubicn;	\
-    const real c2=(1.5-3.*cubic_iac)*cubicn;	\
-    const real c3=(2.*cubic_iac-0.5)*cubicn;	\
+    const real c0=1.*cubicn;				\
+    const real c1=(4.*cubic_iac-2.5)*cubicn;\
+    const real c2=(1.5-3.*cubic_iac)*cubicn;\
+    const real c3=(2.*cubic_iac-0.5)*cubicn;\
     const real c4=(0.5-cubic_iac)*cubicn; 
 
 #define WARN_MISSING						\
-    {								\
-	static int printed=0;					\
-	if(missing>0 && !printed) {				\
-	    printed=1;						\
-	    warning("%d points not covered by input screen\n",	\
-		    missing);					\
-	    print_backtrace();					\
-	}							\
+    {										\
+		static int printed=0;				\
+		if(missing>0 && !printed) {			\
+			printed=1;						\
+			warning("%d points not covered by input screen\n",	\
+				missing);					\
+			print_backtrace();				\
+		}									\
     }
 
 #define LINEAR_ADD_NONGRID					\
     long iphi; real tmp=0; real wt=0; real wtsum=0;	\
-    wt=(1.-dplocx)*(1.-dplocy);					\
+    wt=(1.-dplocx)*(1.-dplocy);				\
     if(wt>EPS){/*this test fixed to top/right boundary defect*/	\
-	if((iphi=fabs(P(map,nplocx,nplocy)))){		\
-	    tmp+=(phiin0[iphi]*wt);				\
-	    wtsum+=wt;						\
-	}							\
-    }								\
-    wt=(dplocx)*(1.-dplocy);					\
-    if(wt>EPS){							\
-	if((iphi=fabs(P(map,nplocx1,nplocy)))){		\
-	    tmp+=(phiin0[iphi]*wt);				\
-	    wtsum+=wt;						\
-	}							\
-    }								\
-    wt=(1.-dplocx)*(dplocy);					\
-    if(wt>EPS){							\
-	if((iphi=fabs(P(map,nplocx,nplocy1)))){		\
-	    tmp+=(phiin0[iphi]*wt);				\
-	    wtsum+=wt;						\
-	}							\
-    }								\
+		if((iphi=fabs(P(map,nplocx,nplocy)))){\
+			tmp+=(phiin0[iphi]*wt);			\
+			wtsum+=wt;						\
+		}									\
+    }										\
+    wt=(dplocx)*(1.-dplocy);				\
+    if(wt>EPS){								\
+		if((iphi=fabs(P(map,nplocx1,nplocy)))){	\
+			tmp+=(phiin0[iphi]*wt);			\
+			wtsum+=wt;						\
+		}									\
+    }										\
+    wt=(1.-dplocx)*(dplocy);				\
+    if(wt>EPS){								\
+		if((iphi=fabs(P(map,nplocx,nplocy1)))){		\
+			tmp+=(phiin0[iphi]*wt);				\
+			wtsum+=wt;						\
+		}									\
+    }										\
     wt=(dplocx)*(dplocy);					\
-    if(wt>EPS){							\
-	if((iphi=fabs(P(map,nplocx1,nplocy1)))){		\
-	    tmp+=(phiin0[iphi]*wt);				\
-	    wtsum+=wt;						\
-	}							\
-    }								\
+    if(wt>EPS){								\
+		if((iphi=fabs(P(map,nplocx1,nplocy1)))){\
+			tmp+=(phiin0[iphi]*wt);			\
+			wtsum+=wt;						\
+		}									\
+    }										\
     /*Wt use sum(opd*wt)/sum(wt) to avoid edge roll off*/	\
-    if(wtsum>EPS) {						\
-	phiout[iloc]+=alpha*tmp/wtsum;				\
-    }else{							\
-	missing++;						\
+    if(wtsum>EPS) {							\
+		phiout[iloc]+=alpha*tmp/wtsum;		\
+    }else{									\
+		missing++;							\
     }
 
-#define RUNTIME_CUBIC					\
+#define RUNTIME_CUBIC						\
     register real dplocx, dplocy, dplocx0, dplocy0;	\
     int nplocx, nplocy;
 
-#define MAKE_CUBIC_COEFF_X			\
-    real fx[4];				\
+#define MAKE_CUBIC_COEFF_X					\
+    real fx[4];								\
     fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);	\
     fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);	\
     fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);	\
     fx[3]=dplocx*dplocx*(c3+c4*dplocx);		
 
-#define MAKE_CUBIC_COEFF_Y			\
-    real fy[4];				\
+#define MAKE_CUBIC_COEFF_Y					\
+    real fy[4];								\
     fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);	\
     fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);	\
     fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);	\
@@ -411,36 +411,36 @@ void prop(thread_t* data){
 #define CUBIC_ADD_GRID						\
     register real sum=0, sumwt=0;				\
     for(int ky=-1; ky<3; ky++){					\
-	for(int kx=-1; kx<3; kx++){				\
-	    real wt=fx[kx+1]*fy[ky+1];			\
-	    if(wt>EPS){						\
-		real tmp=P(mapin,kx+nplocx,ky+nplocy);	\
-		sum+=wt*tmp;sumwt+=wt;				\
-	    }							\
-	}							\
+		for(int kx=-1; kx<3; kx++){				\
+			real wt=fx[kx+1]*fy[ky+1];			\
+			if(wt>EPS){						\
+				real tmp=P(mapin,kx+nplocx,ky+nplocy);	\
+				sum+=wt*tmp;sumwt+=wt;				\
+			}							\
+		}							\
     }								\
     if(sumwt>EPS && sum==sum){					\
-	if(sumwt+EPS<1) sum/=sumwt;				\
-	phiout[iloc]+=alpha*sum;				\
+		if(sumwt+EPS<1) sum/=sumwt;				\
+		phiout[iloc]+=alpha*sum;				\
     }
 
 #define CUBIC_ADD_NONGRID					\
     register real sum=0,sumwt=0;				\
     for(int jy=-1; jy<3; jy++){					\
-	for(int jx=-1; jx<3; jx++){				\
-	    long iphi;						\
-	    real wt=fx[jx+1]*fy[jy+1];			\
-	    if(wt>EPS){						\
-		if((iphi=fabs(P(map,jx+nplocx,jy+nplocy)))){	\
-		    sum+=wt*phiin0[iphi];			\
-		    sumwt+=wt;					\
-		}						\
-	    }							\
-	}							\
+		for(int jx=-1; jx<3; jx++){				\
+			long iphi;						\
+			real wt=fx[jx+1]*fy[jy+1];			\
+			if(wt>EPS){						\
+				if((iphi=fabs(P(map,jx+nplocx,jy+nplocy)))){	\
+					sum+=wt*phiin0[iphi];			\
+					sumwt+=wt;					\
+				}						\
+			}							\
+		}							\
     }								\
     if(sumwt>EPS){						\
-	if(sumwt+EPS<1) sum/=sumwt;				\
-	phiout[iloc]+=alpha*sum;				\
+		if(sumwt+EPS<1) sum/=sumwt;				\
+		phiout[iloc]+=alpha*sum;				\
     }
 
 /**

@@ -130,7 +130,7 @@ void wfsgrad_iwfs(thread_t* info){
 		for(int ips=0; ips<nps; ips++){
 			thread_t* wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
 			propdata_t* wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
-			wfs_propdata->phiout=opd->p;
+			wfs_propdata->phiout=opd;
 			wfs_propdata->displacex1=-P(atm,ips)->vx*dt*isim;
 			wfs_propdata->displacey1=-P(atm,ips)->vy*dt*isim;
 			wfs_propdata->alpha=atmscale;
@@ -176,7 +176,7 @@ void wfsgrad_iwfs(thread_t* info){
 		for(int idm=0; idm<parms->ndm; idm++){
 			thread_t* wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
 			propdata_t* wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
-			wfs_propdata->phiout=opd->p;
+			wfs_propdata->phiout=opd;
 			CALL_THREAD(wfs_prop, 0);
 		}/*idm */
 		real ptt[3]={0,0,0};
