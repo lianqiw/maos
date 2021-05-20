@@ -668,37 +668,38 @@ static gboolean button_release(GtkWidget* widget, GdkEventButton* event, drawdat
 	//float dt=myclockd()-drawdata->mtdown;
 	if((fabs(dx)<5&&fabs(dy)<5)){
 		dbg_time("Ignore accidental click\n");
-	} else
-		if((cursor_type==0&&event->button==1)
-			||(cursor_type==1&&event->button==2)){/*move only on left button */
-			do_move(drawdata, dx, -dy);
-		} else if(event->button==3){/*right button select and zoom. */
-			float xx=drawdata->mxdown;
-			float yy=drawdata->mydown;
-			if(drawdata->square&&!drawdata->image){
-				float ratio=1;
-				if(drawdata->image){
-					ratio=(float)drawdata->nx/(float)drawdata->ny;
-				}
-				if(fabs(dx)<fabs(dy)*ratio){
-					dy*=fabs(dx/(dy*ratio));
-				} else{
-					dx*=fabs(dy*ratio/dx);
-				}
+	} else if((cursor_type==0&&event->button==1)
+		||(cursor_type==1&&event->button==2)){/*move only on left button */
+		do_move(drawdata, dx, -dy);
+	} else if(event->button==3){/*right button select and zoom. */
+		float xx=drawdata->mxdown;
+		float yy=drawdata->mydown;
+		if(drawdata->square&&!drawdata->image){
+			float ratio=1;
+			if(drawdata->image){
+				ratio=(float)drawdata->nx/(float)drawdata->ny;
 			}
-			if(dx<0) xx+=dx;
-			if(dy>0) yy+=dy;
-			float diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
-			float diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
-			drawdata->limit0[0]+=diffx*(xx-drawdata->xoff);
-			drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(dx);
-			drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
-			drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
-			drawdata->limit_changed=1;
-			apply_limit(drawdata);
-			update_pixmap(drawdata);
+			if(fabs(dx)<fabs(dy)*ratio){
+				dy*=fabs(dx/(dy*ratio));
+			} else{
+				dx*=fabs(dy*ratio/dx);
+			}
 		}
-		return FALSE;
+		if(dx<0) xx+=dx;
+		if(dy>0) yy+=dy;
+		float diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
+		float diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
+		drawdata->limit0[0]+=diffx*(xx-drawdata->xoff);
+		drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(dx);
+		drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
+		drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
+		drawdata->limit_changed=1;
+		apply_limit(drawdata);
+		update_pixmap(drawdata);
+	}
+
+	return FALSE;
+
 }
 
 
@@ -1496,7 +1497,7 @@ void new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name
 		}
 		if(child){
 			gtk_container_add(GTK_CONTAINER(item), child);
-		}else{
+		} else{
 			gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), name);
 		}
 	} else{

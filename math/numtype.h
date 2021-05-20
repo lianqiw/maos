@@ -185,11 +185,13 @@ typedef float real;
 typedef fcomplex comp;
 #define M_REAL M_FLT
 #define M_COMP M_ZMP
+#define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #else //run CPU code with double
 typedef double real;
 typedef dcomplex comp;
 #define M_REAL M_DBL
 #define M_COMP M_CMP
+#define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
 
 #define M_MAP     0x010000 | M_REAL /*map_t, compatible with M_REAL*/

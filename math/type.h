@@ -269,6 +269,12 @@ static inline long index_col(long iy, long nx, long ny){
 
     \def PN(A)
     Return number of elements
+
+    \def NX(A)
+    Return number of rows (inner dimension)
+
+    \def NY(A)
+    Return number of cols (outer dimension)
  */
 
 #define P0(A)       (A)->p
@@ -285,5 +291,6 @@ static inline long index_col(long iy, long nx, long ny){
 
 //Return Number of elements
 #define PN(A) ((A)->nx*(A)->ny)
-
+#define NX(A) (A)->nx
+#define NY(A) (A)->ny
 #endif

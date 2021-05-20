@@ -55,7 +55,7 @@ dmat* psd1d(dmat* data, long nseg);
 dmat* psd1dt(dmat* data, long nseg, double dt);
 dmat* mk2dcov(loc_t* loc, const dmat* amp, double ampthres, const dmat* cov, int norm);
 void mkw=mkw_circular(loc_t*loc, double cx, double cy, double r, dsp**W0, dmat**W1);
-dmat* servo_rej2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, real sigma2n);
+dmat* servo_rej2ol(const dmat* psdcl, double dt, long dtrat, double al, double gain, double sigma2n);
 dcell* servo_optim(const dmat* psdin, double dt, long dtrat, long al, double pmargin, const dmat* sigma2n, int servo_type);
 dmat* servo_test(dmat* input, double dt, int dtrat, dmat* sigma2n, dmat* gain);
 double servo_residual(double* noise_amp, const dmat* psdin, double dt, long dtrat, long al, const dmat* gain, int servo_type);
@@ -84,6 +84,7 @@ dmat* loc_calib(const dsp* GA, const loc_t* aloc, const loc_t* saloc,
 dmat* poly2fit(const dmat* in, const dmat* out, int maxorder);
 loc_t* loctransform2(const loc_t* loc, const dmat* coeff);
 dsp* chol_factorize2(long** Cp, const dsp* A_in);
-dmat* hyst_test(real hysteresis, real hyst_alpha, real hyst_stroke, const dmat* dmcmd);
+dmat* hyst_test(double hysteresis, double hyst_alpha, double hyst_stroke, const dmat* dmcmd);
 void addpath(const char* path);
 void rmpath(const char* path);
+void fresnel_prop(cmat** out, double* dxout, const cmat* in, double dxin, double wvl, double z, int method);

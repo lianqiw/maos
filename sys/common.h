@@ -202,7 +202,7 @@ extern FILE* fpconsole;
     }
 #define READ_ENV_DBL(A,min,max)					\
     if(getenv("MAOS_"#A)){						\
-		real B=strtod(getenv("MAOS_"#A),NULL);	\
+		double B=strtod(getenv("MAOS_"#A),NULL);	\
 		if(A!=B){								\
 			A=MIN(MAX(B, min), max);			\
 			dbg(#A" changed to %g\n", A);		\

@@ -118,6 +118,7 @@ class cell(Structure):
     def __init__(self, arr=None):#convert from numpy to C. Memory is borrowed
         dtype2id={#Conversion from numpy type to maos id
             np.double:25602,
+            np.complex128:25604,
             np.int64: 25603,
             np.object_:25633,
         }

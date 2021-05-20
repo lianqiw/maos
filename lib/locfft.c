@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -41,12 +41,12 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 	locfft->embed=lcellnew(nwvl, 1);
 	locfft->nembed=lnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		if(iwvl==0||(fftsize&&P(fftsize,iwvl)>0&&P(fftsize,iwvl)!=P(locfft->nembed,0))){
-			P(locfft->nembed,iwvl)=fftsize?P(fftsize,iwvl):0;
-			P(locfft->embed,iwvl)=loc_create_embed(&P(locfft->nembed,iwvl), loc, oversize, 1);
+		if(iwvl==0||(fftsize&&P(fftsize, iwvl)>0&&P(fftsize, iwvl)!=P(locfft->nembed, 0))){
+			P(locfft->nembed, iwvl)=fftsize?P(fftsize, iwvl):0;
+			P(locfft->embed, iwvl)=loc_create_embed(&P(locfft->nembed, iwvl), loc, oversize, 1);
 		} else{
-			P(locfft->embed,iwvl)=lref(P(locfft->embed,0));
-			P(locfft->nembed,iwvl)=P(locfft->nembed,0);
+			P(locfft->embed, iwvl)=lref(P(locfft->embed, 0));
+			P(locfft->nembed, iwvl)=P(locfft->nembed, 0);
 		}
 	}
 	locfft->wvl=dref_reshape(wvl, nwvl, 1);
@@ -58,12 +58,12 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 		locfft->fieldstop=fieldstop;
 		locfft->fieldmask=dcellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			int nembed=P(locfft->nembed,iwvl);
-			P(locfft->fieldmask,iwvl)=dnew(nembed, nembed);
-			real dtheta=P(wvl,iwvl)/(loc->dx*nembed);//sampling of psf
+			int nembed=P(locfft->nembed, iwvl);
+			P(locfft->fieldmask, iwvl)=dnew(nembed, nembed);
+			real dtheta=P(wvl, iwvl)/(loc->dx*nembed);//sampling of psf
 			real radius=fieldstop/(dtheta*2);
-			dcircle(P(locfft->fieldmask,iwvl), nembed/2+1, nembed/2+1, 1, 1, radius, 1);
-			dfftshift(P(locfft->fieldmask,iwvl));
+			dcircle(P(locfft->fieldmask, iwvl), nembed/2+1, nembed/2+1, 1, 1, radius, 1);
+			dfftshift(P(locfft->fieldmask, iwvl));
 		}
 	}
 	return locfft;
@@ -90,7 +90,7 @@ static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
 	comp i2pi=COMPLEX(0, 2*M_PI/wvl);
 	comp strehl=0;
 	for(int iloc=0; iloc<iopdevl->nx; iloc++){
-		strehl+=P(amp,iloc)*cexp(i2pi*P(iopdevl,iloc));
+		strehl+=P(amp, iloc)*cexp(i2pi*P(iopdevl, iloc));
 	}
 	return strehl;
 }
@@ -120,23 +120,23 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
 #pragma omp task
 #endif
 	{
-		if(psfsize&&P(psfsize,iwvl)==1){
-			if(!P(psf2s,iwvl)){
-				P(psf2s,iwvl)=cnew(1, 1);
+		if(psfsize&&P(psfsize, iwvl)==1){
+			if(!P(psf2s, iwvl)){
+				P(psf2s, iwvl)=cnew(1, 1);
 			}
-			P(P(psf2s,iwvl),0)=strehlcomp(opd, locfft->amp, P(locfft->wvl,iwvl));
+			P(P(psf2s, iwvl), 0)=strehlcomp(opd, locfft->amp, P(locfft->wvl, iwvl));
 		} else{
 			TIM(0);
-			long nembed=P(locfft->nembed,iwvl);
-			long* embed=P(locfft->embed,iwvl)->p;
+			long nembed=P(locfft->nembed, iwvl);
+			long* embed=P(locfft->embed, iwvl)->p;
 			const real* amp=locfft->amp->p;
-			const int ref=!psfsize||P(psfsize,iwvl)==nembed;
+			const int ref=!psfsize||P(psfsize, iwvl)==nembed;
 			cmat* psf2=0;
 			if(ref){//Full PSF is returned
-				if(!P(psf2s,iwvl)){
-					P(psf2s,iwvl)=cnew(nembed, nembed);
+				if(!P(psf2s, iwvl)){
+					P(psf2s, iwvl)=cnew(nembed, nembed);
 				}
-				psf2=P(psf2s,iwvl);
+				psf2=P(psf2s, iwvl);
 			} else{//Crop of PSF is returned.
 				psf2=cnew(nembed, nembed);
 			}
@@ -144,18 +144,18 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
 			int use1d=0;
 #define USE1D_ENABLED 1
 #if     USE1D_ENABLED
-			if(psfsize&&P(psfsize,iwvl)+200<nembed){/*Want smaller PSF. */
+			if(psfsize&&P(psfsize, iwvl)+200<nembed){/*Want smaller PSF. */
 				use1d=1;
 			}
 #endif
 
-			comp i2pi=COMPLEX(0, 2*M_PI/P(locfft->wvl,iwvl));
+			comp i2pi=COMPLEX(0, 2*M_PI/P(locfft->wvl, iwvl));
 			for(int iloc=0; iloc<opd->nx; iloc++){
-				P(psf2,embed[iloc])=amp[iloc]*cexp(i2pi*P(opd,iloc));
+				P(psf2, embed[iloc])=amp[iloc]*cexp(i2pi*P(opd, iloc));
 			}
 			TIM(1);
 			if(use1d==1){
-				cfft2partial(psf2, P(psfsize,iwvl), -1);
+				cfft2partial(psf2, P(psfsize, iwvl), -1);
 			} else{
 				cfft2(psf2, -1);
 			}
@@ -163,26 +163,26 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
 			if(ref){/*just reference */
 				cfftshift(psf2);
 			} else{/*create a new array, smaller. */
-				if(!P(psf2s,iwvl)){
-					P(psf2s,iwvl)=cnew(P(psfsize,iwvl), P(psfsize,iwvl));
+				if(!P(psf2s, iwvl)){
+					P(psf2s, iwvl)=cnew(P(psfsize, iwvl), P(psfsize, iwvl));
 				}
-				ccpcorner2center(P(psf2s,iwvl), psf2);
+				ccpcorner2center(P(psf2s, iwvl), psf2);
 				cfree(psf2);
 			}
 			TIM(3);
 #if TIMING
 			info2("locfft_psf(%d:%ldx%ld): exp %.4f, fft %.4f (%.2f GFLOPS), abs2 %.2f.\n", iwvl, nembed, nembed,
-				tk1-tk0, tk2-tk1, 8L*(use1d?P(psfsize,iwvl):nembed)*nembed*log2(nembed)/(tk2-tk1)*1e-9, tk3-tk2);
+				tk1-tk0, tk2-tk1, 8L*(use1d?P(psfsize, iwvl):nembed)*nembed*log2(nembed)/(tk2-tk1)*1e-9, tk3-tk2);
 #endif		
 		}
 		real psfnorm;
 		if(sum2one){/**PSF sum to 1*/
-			psfnorm=1./(sqrt(locfft->ampnorm)*P(locfft->nembed,iwvl));
+			psfnorm=1./(sqrt(locfft->ampnorm)*P(locfft->nembed, iwvl));
 		} else{/**PSF max is strehl*/
 			psfnorm=1./locfft->ampsum;
 		}
 		if(fabs(psfnorm-1)>1.e-15){
-			cscale(P(psf2s,iwvl), psfnorm);
+			cscale(P(psf2s, iwvl), psfnorm);
 		}
 	}
 #if _OPENMP>=200805
@@ -199,19 +199,19 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 	}
 	ccell* wvfs=ccellnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		int nembed=P(locfft->nembed,iwvl);
-		lmat* embed=P(locfft->embed,iwvl);
+		int nembed=P(locfft->nembed, iwvl);
+		lmat* embed=P(locfft->embed, iwvl);
 		cmat* wvf=cnew(nembed, nembed);
-		P(wvfs,iwvl)=wvf;
+		P(wvfs, iwvl)=wvf;
 		//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
-		real wvl=P(locfft->wvl,iwvl);
+		real wvl=P(locfft->wvl, iwvl);
 		comp i2pi=COMPLEX(0, 2*M_PI/wvl);
 		const real* amp=locfft->amp->p;
 		for(int iloc=0; iloc<opd->nx; iloc++){
-			P(wvf, P(embed,iloc))=amp[iloc]*cexp(i2pi*P(opd,iloc));
+			P(wvf, P(embed, iloc))=amp[iloc]*cexp(i2pi*P(opd, iloc));
 		}
 		cfft2(wvf, -1);
-		ccwmd(wvf, P(locfft->fieldmask,iwvl), 1);
+		ccwmd(wvf, P(locfft->fieldmask, iwvl), 1);
 		cfft2(wvf, 1);
 	}
 	if(nwvl>1){
@@ -221,21 +221,139 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 	}
 	dmat* opdold=ddup(opd); dzero(opd);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		real wvl=P(locfft->wvl,iwvl);
+		real wvl=P(locfft->wvl, iwvl);
 		real wvlh=wvl*0.5;
 		real kki=wvl/(2*M_PI);
-		cmat* wvf=P(wvfs,iwvl);
-		lmat* embed=P(locfft->embed,iwvl);
+		cmat* wvf=P(wvfs, iwvl);
+		lmat* embed=P(locfft->embed, iwvl);
 		for(int iloc=0; iloc<opd->nx; iloc++){
-			real val=carg(P(wvf,P(embed,iloc)))*kki;
-			if(fabs(val-P(opdold,iloc))>wvlh){//need phase unwrapping
+			real val=carg(P(wvf, P(embed, iloc)))*kki;
+			if(fabs(val-P(opdold, iloc))>wvlh){//need phase unwrapping
 				warning_once("phase unwrapping is needed\n");
-				real diff=fmod(val-P(opdold,iloc)+wvlh, wvl);
+				real diff=fmod(val-P(opdold, iloc)+wvlh, wvl);
 				if(diff<0) diff+=wvl;
-				val=(diff-wvlh)+P(opdold,iloc);
+				val=(diff-wvlh)+P(opdold, iloc);
 			}
-			P(opd,iloc)+=P(wvlwts,iwvl)*val;
+			P(opd, iloc)+=P(wvlwts, iwvl)*val;
 		}
 	}
 	ccellfree(wvfs);
+}
+/**
+ * Apply the phase function out=in*exp(I*pi*(x^2+y^2)/(z*wvl)
+ * */
+static void apply_h(cmat* out, const cmat* in, real dx, real wvl, real z){
+	real coeff=(M_PI/(z*wvl))*dx*dx;
+	long nx2=NX(out)/2;
+	long ny2=NY(out)/2;
+	if(in){
+		for(long iy=0; iy<NY(out); iy++){
+			real ysq=(iy-ny2)*(iy-ny2);
+			for(long ix=0; ix<NX(out); ix++){
+				real ph=coeff*((ix-nx2)*(ix-nx2)+ysq);
+				P(out, ix, iy)=P(in, ix, iy)*EXPI(ph);
+			}
+		}
+	} else{
+		for(long iy=0; iy<NY(out); iy++){
+			real ysq=(iy-ny2)*(iy-ny2);
+			for(long ix=0; ix<NX(out); ix++){
+				real ph=coeff*((ix-nx2)*(ix-nx2)+ysq);
+				P(out, ix, iy)=EXPI(ph);
+			}
+		}
+	}
+}
+/**
+ * Fresnel propagation using either FFT or angular spectrum method, which
+ * results in different dxout. For FFT method, the output sampling is
+ * dxin/(z*wvl). For angular spectrum method, the output sampling equals to the
+ * input sampling. When the output sampling equals, the two methods agree.
+ *
+ * The output is normalized so that its squared sum equals to nx*ny*sum(amp^2).
+ *
+ * Notice that at near field when dp is smaller than dx, the output of angular
+ * spectrum method is periodic.
+ *
+ * The brutal force method has the exact solution without using fresnel
+ * approximation. It is however very slow. The results agrees with method=1 or 2
+ * when the sampling agrees and the approximation holds.
+ */
+void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on method. Should not be empty if method is 0.*/
+	real* pdxout,  /**<Sampling of output, should be supplied if method=0*/
+	const cmat* in, /**<Input complex field, , Amp*exp(-i*k*opd)*/
+	real dxin,   /**<Spatial sampling of in*/
+	real wvl,    /**<Wavelength*/
+	real z,      /**<Propagation distance*/
+	int method   /**<Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum*/
+){
+	if(method){
+		if(!*pout){
+			*pout=cnew(NX(in), NY(in));
+		} else if(method){
+			if(NX(*pout)!=NX(in)){
+				error("Output array should have the same dimension as input array.\n");
+				return;
+			}
+		}
+		real ratio=pow(z, 3)*8*wvl/pow(dxin*NX(in), 4);
+		if(ratio<10){
+			warning("ratio is only %g, Fresnel approximate is not valid.\n", ratio);
+		} else{
+			dbg("ratio is %g\n", ratio);
+		}
+	}
+	cmat* out=*pout;
+	if(method==0){//brutal force method
+		//Do not multiply dx*dy to the integrand or apply 1/(wvl*z) to the output 
+		//Due to normalization in discrete domain.
+		//Confirmed to agree with method=1 or 2 when sampling agrees.
+		real k=2.*M_PI/wvl;
+		real zz=z*z;
+		real dxout=*pdxout;
+		if(!dxout){
+			*pdxout=dxout=z*wvl/(dxin*NX(in));
+		}
+		if(!out){
+			out=*pout=cnew(32,32);
+		}
+#pragma omp parallel for
+		for(long iyo=0; iyo<NY(out); iyo++){
+			real y=(iyo-NY(out)/2)*dxout;
+			for(long ixo=0; ixo<NX(out); ixo++){
+				real x=(ixo-NX(out)/2)*dxout;
+				comp res=0;
+				for(long iyi=0; iyi<NY(in); iyi++){
+					real yp=(iyi-NY(in)/2)*dxin;
+					for(long ixi=0; ixi<NX(in); ixi++){
+						real xp=(ixi-NX(in)/2)*dxin;
+						real r2=pow(x-xp, 2)+pow(y-yp, 2)+zz;
+						real ph=k*sqrt(r2);
+						res+=P(in, ixi, iyi)*EXPI(ph)*(zz/r2);
+					}
+				}
+				P(out, ixo, iyo)=res;
+			}
+		}
+	} else if(method==1){//FFT method.
+		apply_h(out, in, dxin, wvl, z);
+		cfftshift(out);//FFT zero frequency is at corner.
+		cfft2(out, -1);
+		cfftshift(out);
+		*pdxout=z*wvl/(dxin*NX(in));
+		apply_h(out, out, *pdxout, wvl, z);
+	} else if(method==2){//angular spectrum
+		apply_h(out, NULL, dxin, wvl, z);//cfftshift(out);//no need
+		cfft2(out, -1);
+		cmat* in2=cdup(in);	//cfftshift(in2);//no need
+		cfft2(in2, -1);
+		ccwm(out, in2);
+		cfree(in2);
+		cfft2(out, 1);
+		cfftshift(out);
+		cscale(out, 1./(PN(out)));
+		*pdxout=dxin;
+	} else{
+		error("Invalid method\n");
+	}
 }

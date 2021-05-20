@@ -64,12 +64,16 @@ def handle_type(argtype, argname):
     if (len(argtype)>3 and argtype[-3:]=='***') or argname.count('[')>0: #known
         return ('Unknown','Unknown','Unknown')
     elif argtype[-2:]=='**': #output
-        isout=1;
+        isout=1
         isref=1
         argtype=argtype[:-2]
+    elif argtype=='real*' or  argtype=='double*':
+        isout=2
+        isref=1
+        argtype=argtype[:-1]
     elif argtype[-1:]=='*': #pointer
         isout=0
-        isref=1;
+        isref=1
         argtype=argtype[:-1]
     else:
         isout=0
@@ -98,15 +102,20 @@ def handle_type(argtype, argname):
         if isref: #pointer input
             if pytype=='loc':
                 py2c='byref('+py2c+')'
+            elif pytype=='c_double' or pytype=='c_float':
+                py2c='byref('+argname+')'
             elif pytype=='c_char':
                 py2c='c_char_p('+argname+'.encode(\'ascii\'))'
             else:
                 py2c=argname+'.ctypes.data_as(c_void_p)'
 
 
-    if isout:
+    if isout==1: #output pointer
         prep1=argname+'=POINTER('+pytype+')()'
         prep2='pt2py('+argname+')'
+    elif isout==2:
+        prep1=argname+'='+pytype+'()'
+        prep2=argname+'.value'
     else:
         prep1=''
         prep2=''

@@ -45,7 +45,7 @@
 #undef PCELL
 #undef PSPCELL
 #undef M_SPT
-
+#undef EXPI
 #ifdef COMP_LONG
 #define X(A) l##A
 #else
