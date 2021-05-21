@@ -434,6 +434,8 @@ var type_8h =
     [ "PR", "type_8h.html#abc6c8a37faad9f0f715e9ecf731a1e66", null ],
     [ "PCOLR", "type_8h.html#a16d2ae3e5519371c1d566bc9f8aa717c", null ],
     [ "PN", "type_8h.html#a54f1d629485d54c67ae8adc8d86b5458", null ],
+    [ "NX", "type_8h.html#a18db24f2863a17fc7ca41464076dff31", null ],
+    [ "NY", "type_8h.html#a45f88cef3d1e4ff91ee5cbd9228d3328", null ],
     [ "CEMBED", "type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037", [
       [ "C_FULL", "type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a7db5d7a5dd1a49314a09ef3040282b1d", null ],
       [ "C_ABS2", "type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a60c9351ca47f889fbc8b79ccc86e2237", null ],

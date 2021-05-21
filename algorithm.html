@@ -99,6 +99,35 @@ $(document).ready(function(){initNavTree('algorithm.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>The following shows how various algorithms are implemented.</p>
+<h1><a class="anchor" id="autotoc_md21"></a>
+Physical Optics Beam Propagation</h1>
+<h2><a class="anchor" id="autotoc_md22"></a>
+Maxwell Equation</h2>
+<p>The Maxwell equation predicts that</p>
+<p>$$^2 {E} =   {^2 {E}}{ t^2} $$ where $  = 1/c_0^2$</p>
+<p>It has a general solution of the form</p>
+<p>$${E}={E_0}f({{k}}{{x}} - c_0 t)$$ where ${{k}}$ is the wave propagation direction. We have ${E}{{k}}=0$ and $c_0{B}={{k}} {E}$.</p>
+<h2><a class="anchor" id="autotoc_md23"></a>
+Fresnel diffraction integral</h2>
+<p>The electric field at a point $(x,y,z)$ following an aperture at $z=0$ is given by</p>
+<p>$$ E(x,y,z)={1}{i} E(x^, y^, 0){e^{ikr}}{r} {z}{r} dx^ dy^ $$</p>
+<p>where $k=2/$ is the wave number and $r={(x-x^)^2+(y-y^)^2+z^2}$. This is the exact solution, but lacks analytical or convenient numerical solution.</p>
+<h2><a class="anchor" id="autotoc_md24"></a>
+Fresnel approximation</h2>
+<p>Introduce $^2=(x-x^)^2+(y-y^)^2$, and substitute $r$ with its Taylor expansion: $$r={^2+z^2}=z{1+{^2}{z^2}}=z+{^2}{2z}-{^4}{8z^3}+...$$ The equation can be simplified if we can ignore the third term, which requires that the phase $k{^4}{8z^3}$ or $$z^3{^4}{8}.$$ For the $r$ outside of the phase, we make another approximate by keeping only the first term, which is valid if the aperture is significantly smaller than the propagation distance: $ z$. The electric field can then be simplified as</p>
+<p>$$E(x,y,z)={e^{ikz}}{i z} E(x^, y^,0){e^{{i}{z}[(x-x^)^2+(y-y^)^2]}} dx^ dy^$$</p>
+<p>This is the Fresnel diffraction integral. It means that, if the Fresnel approximation is valid, the propagating field is a spherical wave, originating at the aperture and moving along z. The term before the integral represents constant phase evolution and energy normalization.</p>
+<h3><a class="anchor" id="autotoc_md25"></a>
+Angular Spectrum</h3>
+<p>The integral can be viewed as a convolution between $E(x,y,0)$ and $$h(x,y)=e^{{i}{z}(x^2+y^2)}.$$</p>
+<p>The convolution can be done with Fourier transform (there is no need for embedding): $$E={F}^{-1}[{F}[E(x,y,0)]{F}[h(x,y)]].$$</p>
+<p>The fourier transform of $h(x,y)$ can be computed analytically. Recall the Fourier transform $${F}[[ia(x^2+y^2)]]={i}{a}[{-i^2}{a}(f_x^2+f_y^2)]$$ for $k&gt;0$. We have $${F}[h(x,y)]=iz[-iz(f_x^2+f_y^2)].$$ Using this requires upsampling since FFT convolution assumes the function is periodic. We do not use this method.</p>
+<p>This convolution view is commonly referred to as the angular spectrum method. The original field $E(x,y,0)$ is only FFT'ed once. For each propagation distance, the FFT of $h()$ is multiplied to ${E}$ and then inverse FFT'ed to obtain the field. This approach is mostly useful in very near field propagations when $x$ and $x^$ has the same sampling.</p>
+<h3><a class="anchor" id="autotoc_md26"></a>
+Single FFT</h3>
+<p>The integral can also be rewritten as a single Fourier transform:</p>
+<p>$$E(x,y,z)={e^{ikz}}{i z} h(x,y) E(x^, y^, 0){e^{{i}{z}[{x^}^2+{y^}^2]}}{e^{-i2({x}{z}x^+{y}{z}y^)}} dx^ dy^$$</p>
+<p>Define a new function $G(x^, y^)$ as $$G(x^, y^)=E(x^, y^, 0){e^{{i}{z}({x^}^2+{y^}^2)}}$$ Its fourier transform is $${G}(p,q)={F}G(x^,y^)</p>
 <h1><a class="anchor" id="sect-dm-actuator"></a>
 DM Actuator Influence Function</h1>
 </div></div><!-- contents -->
