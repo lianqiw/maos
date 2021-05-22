@@ -39,4 +39,4 @@ locfft_t *locfft_init(loc_t *loc, const dmat *amp, const dmat *wvl,
 void locfft_free(locfft_t *locfft);
 void locfft_psf(ccell **psfs, const locfft_t *locfft, const dmat *opd, const lmat *psfsize, int sum2one);
 void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts);
-void fresnel_prop(cmat **out, real *dxout, const cmat *in, real dxin, real wvl, real z, int method);
+void fresnel_prop(cmat **out, real *dxout, const cmat *in, real dxin, real wvl, real z, real scale, int method);

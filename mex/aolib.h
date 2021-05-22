@@ -87,4 +87,4 @@ dsp* chol_factorize2(long** Cp, const dsp* A_in);
 dmat* hyst_test(double hysteresis, double hyst_alpha, double hyst_stroke, const dmat* dmcmd);
 void addpath(const char* path);
 void rmpath(const char* path);
-void fresnel_prop(cmat** out, double* dxout, const cmat* in, double dxin, double wvl, double z, int method);
+void fresnel_prop(cmat** out, double* dxout, const cmat* in, double dxin, double wvl, double z, double scale, int method);

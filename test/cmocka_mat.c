@@ -122,18 +122,33 @@ static void mat_basic(void** state){
         assert_float_equal(dtrace(c), 6, 0);
     }
     {
+        dmat *c=ddup(b);
+        dflip(c,0);
+        assert_float_equal(P(c,2,2),P(b,0,0), 0);
+        dfree(c);
+    }
+    {
         uint32_t d=dhash(b, 1);
         assert_int_equal(d, 2756278489);
     }
     dfree(b);
     assert_null(b);
 }
-
+static void mat_fresnel_prop(void** state){
+    (void)state;
+    if(zfexist("wvf0")){
+        cmat *wvf0=cread("wvf0");
+        cmat *wvf1=0;
+        real dxout=0;
+        fresnel_prop(&wvf1, &dxout, wvf0, 1./64, 0.589e-6, 100, 1, 1);
+    }
+}
 int main(void){
     quitfun=dummy_quitfun;
     LOG_LEVEL=-4;
     const struct CMUnitTest tests[]={
         cmocka_unit_test(mat_basic),
+        cmocka_unit_test(mat_fresnel_prop),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

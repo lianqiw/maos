@@ -265,19 +265,20 @@ static void apply_h(cmat* out, const cmat* in, real dx, real wvl, real z){
 	}
 }
 /**
- * Fresnel propagation using either FFT or angular spectrum method, which
- * results in different dxout. For FFT method, the output sampling is
- * dxin/(z*wvl). For angular spectrum method, the output sampling equals to the
- * input sampling. When the output sampling equals, the two methods agree.
+ * Fresnel propagation using either FFT or angular spectrum method.
  *
- * The output is normalized so that its squared sum equals to nx*ny*sum(amp^2).
+ * For FFT method, the output sampling is z*wvl/(dxin*nxin). For angular
+ * spectrum method, the output sampling equals to the input sampling. When the
+ * output sampling equals, the two methods agree. Notice that at near field when
+ * dp is smaller than dx, the output of angular spectrum method is periodic.
  *
- * Notice that at near field when dp is smaller than dx, the output of angular
- * spectrum method is periodic.
+ * The output is normalized so that its squared sum equals to
+ * nx*ny*sum(abs(in)^2). Input argument scale should be supplied to cancel this
+ * scaling. 
  *
- * The brutal force method has the exact solution without using fresnel
- * approximation. It is however very slow. The results agrees with method=1 or 2
- * when the sampling agrees and the approximation holds.
+ * The brutal force method (method=0) has the exact solution without using
+ * fresnel approximation. It is however very slow. The results agrees with
+ * method=1 or 2 when the sampling agrees and the approximation holds.
  */
 void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on method. Should not be empty if method is 0.*/
 	real* pdxout,  /**<Sampling of output, should be supplied if method=0*/
@@ -285,23 +286,41 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 	real dxin,   /**<Spatial sampling of in*/
 	real wvl,    /**<Wavelength*/
 	real z,      /**<Propagation distance*/
-	int method   /**<Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum*/
+	real scale,  /**<Scaling to be applied to out to preserve energy. 0: determine from input*/
+	int method   /**<Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum, -1: auto between 1 and 2.*/
 ){
 	if(method){
 		if(!*pout){
 			*pout=cnew(NX(in), NY(in));
-		} else if(method){
+		} else{
 			if(NX(*pout)!=NX(in)){
 				error("Output array should have the same dimension as input array.\n");
 				return;
 			}
 		}
-		real ratio=pow(z, 3)*8*wvl/pow(dxin*NX(in), 4);
-		if(ratio<10){
-			warning("ratio is only %g, Fresnel approximate is not valid.\n", ratio);
-		} else{
-			dbg("ratio is %g\n", ratio);
+
+		real ratio=pow(fabs(z), 3)*8*wvl/pow(dxin*NX(in), 4);
+		if(ratio<1e6){
+			real zmin=pow(1e6/ratio,1./3)*z*1.1;
+			warning_once("ratio is only %g, will use a two step propagation for %g and %g.\n", ratio, z+zmin, -zmin);
+			real dxout1=0;
+			fresnel_prop(pout, &dxout1, in, dxin, wvl, z+zmin, scale, method);
+			fresnel_prop(pout, pdxout, *pout, dxout1, wvl, -zmin, scale, method);
+			return;
 		}
+		
+		if(method==-1){
+			//when dp is smaller than dx, use angular spectrum method.
+			real dp=z* wvl/(dxin*NX(in));
+			if(dp<dxin){
+				method=2;
+			}else{
+				method=1;
+			}
+		}
+	}
+	if(scale<=0){
+		scale=1./sqrt(csumsq(in)*PN(in));
 	}
 	cmat* out=*pout;
 	if(method==0){//brutal force method
@@ -319,9 +338,9 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 		}
 #pragma omp parallel for
 		for(long iyo=0; iyo<NY(out); iyo++){
-			real y=(iyo-NY(out)/2)*dxout;
+			const real y=(iyo-NY(out)/2)*dxout;
 			for(long ixo=0; ixo<NX(out); ixo++){
-				real x=(ixo-NX(out)/2)*dxout;
+				const real x=(ixo-NX(out)/2)*dxout;
 				comp res=0;
 				for(long iyi=0; iyi<NY(in); iyi++){
 					real yp=(iyi-NY(in)/2)*dxin;
@@ -332,7 +351,7 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 						res+=P(in, ixi, iyi)*EXPI(ph)*(zz/r2);
 					}
 				}
-				P(out, ixo, iyo)=res;
+				P(out, ixo, iyo)=res*scale;
 			}
 		}
 	} else if(method==1){//FFT method.
@@ -340,18 +359,19 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 		cfftshift(out);//FFT zero frequency is at corner.
 		cfft2(out, -1);
 		cfftshift(out);
-		*pdxout=z*wvl/(dxin*NX(in));
+		*pdxout=fabs(z)*wvl/(dxin*NX(in));
 		apply_h(out, out, *pdxout, wvl, z);
+		cscale(out, scale);
 	} else if(method==2){//angular spectrum
-		apply_h(out, NULL, dxin, wvl, z);//cfftshift(out);//no need
-		cfft2(out, -1);
 		cmat* in2=cdup(in);	//cfftshift(in2);//no need
 		cfft2(in2, -1);
+		apply_h(out, NULL, dxin, wvl, z);//cfftshift(out);//no need
+		cfft2(out, -1);
 		ccwm(out, in2);
 		cfree(in2);
 		cfft2(out, 1);
 		cfftshift(out);
-		cscale(out, 1./(PN(out)));
+		cscale(out, scale/(PN(out)));
 		*pdxout=dxin;
 	} else{
 		error("Invalid method\n");

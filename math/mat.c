@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -53,7 +53,7 @@ X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 X(mat)* X(ref)(const X(mat)* in){
 	if(!in) return NULL;
 	X(mat)* out=X(new_do)(in->nx, in->ny, in->p, in->mem);
-	if(out && in->header) out->header=strdup(in->header);
+	if(out&&in->header) out->header=strdup(in->header);
 	return out;
 }
 
@@ -64,16 +64,16 @@ X(mat)* X(new)(long nx, long ny){
 	return X(new_do)(nx, ny, NULL, 0);
 }
 /**
-   check the size of matrix if exist. Otherwise create it. content is not zeroed. 
+   check the size of matrix if exist. Otherwise create it. content is not zeroed.
 */
 void X(new2)(X(mat)** A, long nx, long ny){
 	if(!*A){
 		*A=X(new)(nx, ny);
-	}else if((*A)->nx==0 || (*A)->ny==0){
+	} else if((*A)->nx==0||(*A)->ny==0){
 		X(resize)(*A, nx, ny);
-	}else if((*A)->nx!=nx||(*A)->ny!=ny){
+	} else if((*A)->nx!=nx||(*A)->ny!=ny){
 		error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
-		(*A)->nx, (*A)->ny, nx, ny);
+			(*A)->nx, (*A)->ny, nx, ny);
 	}
 }
 /**
@@ -88,7 +88,7 @@ X(mat)* X(mat_cast)(const void* A){
 		return B;
 }
 /**
-   free a matrix object. 
+   free a matrix object.
 */
 void X(free_do)(X(mat)* A){
 	if(check_mat(A)){
@@ -154,11 +154,11 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 void X(resize)(X(mat)* A, long nx, long ny){
 	if(!A) return;
 	else if(!ismat(A)){
-		if(iscell(A) && !A->p && (A->nx==0 || A->ny==0 )){
+		if(iscell(A)&&!A->p&&(A->nx==0||A->ny==0)){
 			A->id=M_T;//convert empty cell to mat.
-		}else{
+		} else{
 			warning("Incorrect type: id=%d\n", A->id);
-			return ;
+			return;
 		}
 	}
 	if(!nx) nx=A->nx;
@@ -250,7 +250,7 @@ void X(zerocol)(X(mat)* A, int icol){
 	if(check_mat(A)){
 		if(icol>=0&&icol<A->ny){
 			memset(PCOL(A, icol), 0, sizeof(T)*A->nx);
-		}else{
+		} else{
 			warning("Invalid range.\n");
 		}
 	}
@@ -316,7 +316,7 @@ X(mat)* X(trans)(const X(mat)* A){
 void X(set)(X(mat)* A, const T val){
 	if(!check_mat(A)) return;
 	for(long i=0; i<A->nx*A->ny; i++){
-		P(A,i)=val;
+		P(A, i)=val;
 	}
 }
 
@@ -347,7 +347,7 @@ void X(show)(const X(mat)* A, const char* format, ...){
    out(:)=in(p);
 */
 void X(vecperm)(X(mat)* out, const X(mat)* in, const long* perm){
-	if(!check_mat(in)||!check_mat(out) || !check_match(in, out)) return;
+	if(!check_mat(in)||!check_mat(out)||!check_match(in, out)) return;
 	for(long i=0; i<in->nx*in->ny; i++){
 		if(perm[i]>0){
 			P(out, i)=P(in, perm[i]);
@@ -361,7 +361,7 @@ void X(vecperm)(X(mat)* out, const X(mat)* in, const long* perm){
    out(p)=in(:);
 */
 void X(vecpermi)(X(mat)* out, const X(mat)* in, const long* perm){
-	if(!check_mat(in)||!check_mat(out) || !check_match(in, out)) return;
+	if(!check_mat(in)||!check_mat(out)||!check_match(in, out)) return;
 	assert(in->nx*in->ny==out->nx*out->ny);
 	for(long i=0; i<in->nx*in->ny; i++){
 		if(perm[i]>0){
@@ -370,6 +370,30 @@ void X(vecpermi)(X(mat)* out, const X(mat)* in, const long* perm){
 			P(out, -perm[i])=conj(P(in, i));
 		}
 	}
+}
+/**
+ * Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y.
+ * */
+void X(flip)(X(mat)* A, int axis){
+	if(!A || axis<0 || axis>2) {
+		dbg("flip: A is null or axis is invalid: %p %d\n", A, axis);
+		return;
+	}
+	const long xoff=(axis==0||axis==1)?(A->nx-1):0;
+	const long xscale=xoff?-1:0;
+	const long yoff=(axis==0||axis==2)?(A->ny-1):0;
+	const long yscale=yoff?-1:0;
+	const long ny=A->ny;
+	const long nx2=A->nx/2;
+	for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx2; ix++){
+			T* ptmp=&P(A, xoff+xscale*ix, yoff+yscale*iy);
+			T tmp=*ptmp;
+			*ptmp=P(A, ix, iy);
+			P(A, ix, iy)=tmp;
+		}
+	}
+
 }
 /**
    create sum of all the elements in A.
@@ -389,7 +413,7 @@ T X(trace)(const X(mat)* A){
 	if(check_mat(A)){
 		long n=MIN(A->nx, A->ny);
 		for(long i=0; i<n; i++){
-			trace+=P(A,i,i);
+			trace+=P(A, i, i);
 		}
 	}
 	return (T)trace;
@@ -450,7 +474,7 @@ R X(sumabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R out=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		out+=fabs(P(A,i));
+		out+=fabs(P(A, i));
 	}
 	return out;
 }
@@ -461,7 +485,7 @@ R X(sumsq)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R out=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		out+=ABS2(P(A,i));
+		out+=ABS2(P(A, i));
 	}
 	return out;
 }
@@ -469,10 +493,10 @@ R X(sumsq)(const X(mat)* A){
    compute the sum of (A-B)^2
 */
 R X(sumdiffsq)(const X(mat)* A, const X(mat)* B){
-	if(!check_mat(A)||!check_mat(B) || !check_match(A,B)) return -1;
+	if(!check_mat(A)||!check_mat(B)||!check_match(A, B)) return -1;
 	RD out=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		out+=ABS2(P(A,i)-P(B,i));
+		out+=ABS2(P(A, i)-P(B, i));
 	}
 	return (R)out;
 }
@@ -595,7 +619,7 @@ X(cell)* X(cell_cast)(const void* A_){
 	cell* A=(cell*)A_;
 	if(!iscell(A)) return NULL;
 	for(int i=0; i<A->nx*A->ny; i++){
-		if(P(A,i)&&!ismat(P(A,i))){
+		if(P(A, i)&&!ismat(P(A, i))){
 			return NULL;
 		}
 	}
@@ -610,18 +634,18 @@ X(cell)* X(cellnew2)(const X(cell)* A){
 	X(cell)* out=X(cellnew)(A->nx, A->ny);
 	long tot=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		if(!isempty(P(A,i))){
-			tot+=P(A,i)->nx*P(A,i)->ny;
+		if(!isempty(P(A, i))){
+			tot+=P(A, i)->nx*P(A, i)->ny;
 		}
 	}
 	out->m=X(new)(tot, 1);
 	tot=0;
 	for(int i=0; i<A->nx*A->ny; i++){
-		if(!isempty(P(A,i))){
-			P(out,i)=X(new_do)(P(A,i)->nx, P(A,i)->ny, out->m->p+tot, out->m->mem);
-			tot+=P(A,i)->nx*P(A,i)->ny;
+		if(!isempty(P(A, i))){
+			P(out, i)=X(new_do)(P(A, i)->nx, P(A, i)->ny, out->m->p+tot, out->m->mem);
+			tot+=P(A, i)->nx*P(A, i)->ny;
 		} else{
-			P(out,i)=X(new)(0, 0);//place holder to avoid been overriden.
+			P(out, i)=X(new)(0, 0);//place holder to avoid been overriden.
 		}
 	}
 	return out;
@@ -644,7 +668,7 @@ X(cell)* X(cellnew3)(long nx, long ny, long* nnx, long* nny){
 	for(long i=0; i<nx*ny; i++){
 		long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
 		long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
-		P(out,i)=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
+		P(out, i)=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
 		tot+=mx*my;
 	}
 	return out;
@@ -666,7 +690,7 @@ X(cell)* X(cellref)(const X(cell)* in){
 		out->m=X(ref)(in->m);
 	}
 	for(int i=0; i<in->nx*in->ny; i++){
-		P(out,i)=X(ref)(P(in,i));
+		P(out, i)=X(ref)(P(in, i));
 	}
 	if(in->header) out->header=strdup(in->header);
 	return out;
@@ -678,7 +702,7 @@ X(cell)* X(cellref)(const X(cell)* in){
 void X(cellset)(X(cell)* dc, T val){
 	if(dc){
 		for(int ix=0; ix<dc->nx*dc->ny; ix++){
-			if(P(dc,ix)) X(set)(P(dc,ix), val);
+			if(P(dc, ix)) X(set)(P(dc, ix), val);
 		}
 	}
 }
@@ -710,12 +734,12 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 		out=X(cellnew)(1, A->ny);
 		for(long iy=0; iy<A->ny; iy++){
 			if(nys[iy]==0) continue;
-			P(out,iy)=X(new)(nx, nys[iy]);
+			P(out, iy)=X(new)(nx, nys[iy]);
 			for(long icol=0; icol<nys[iy]; icol++){
 				long kr=0;
 				for(long ix=0; ix<A->nx; ix++){
 					if(!isempty(P(A, ix, iy))){
-						memcpy(&P(P(out,iy), kr, icol), PCOL(P(A, ix, iy), icol),
+						memcpy(&P(P(out, iy), kr, icol), PCOL(P(A, ix, iy), icol),
 							nxs[ix]*sizeof(T));
 					}
 					kr+=nxs[ix];
@@ -726,11 +750,11 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 		out=X(cellnew)(A->nx, 1);
 		for(long ix=0; ix<A->nx; ix++){
 			if(nxs[ix]==0) continue;
-			P(out,ix)=X(new)(nxs[ix], ny);
+			P(out, ix)=X(new)(nxs[ix], ny);
 			long kr=0;
 			for(long iy=0; iy<A->ny; iy++){
 				if(!isempty(P(A, ix, iy))){
-					memcpy(PCOL(P(out,ix), kr), P(A, ix, iy)->p, nxs[ix]*nys[iy]*sizeof(T));
+					memcpy(PCOL(P(out, ix), kr), P(A, ix, iy)->p, nxs[ix]*nys[iy]*sizeof(T));
 				}
 				kr+=nys[iy];
 			}
@@ -841,7 +865,7 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 	X(cell)* B=X(cellnew)(ndim, 1);
 	B->m=X(ref)(A);
 	for(long ix=0; ix<ndim; ix++){
-		P(B,ix)=X(new_do)(dims[ix], 1, A->p+kr, A->mem);
+		P(B, ix)=X(new_do)(dims[ix], 1, A->p+kr, A->mem);
 		kr+=dims[ix];
 	}
 	return B;
@@ -946,7 +970,7 @@ T X(cellsum)(const X(cell)* A){
 	if(isempty(A)) return 0;
 	T v=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		v+=X(sum)(P(A,i));
+		v+=X(sum)(P(A, i));
 	}
 	return v;
 }

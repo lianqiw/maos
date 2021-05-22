@@ -44,6 +44,7 @@
     void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);	\
     void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm);	\
     void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm);	\
+    void X(flip)(X(mat)*A, int axis);\
     T X(vecsum)(const T*restrict p, long np) CHECK_UNUSED_RESULT;	\
     T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
