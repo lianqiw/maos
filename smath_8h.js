@@ -24,6 +24,7 @@ var smath_8h =
     [ "sshow", "smath_8h.html#ab04bc9482a1e68109024c9b6f8eb13f4", null ],
     [ "svecperm", "smath_8h.html#a1cecf05e2bbf08c2ded9d41c27204cfe", null ],
     [ "svecpermi", "smath_8h.html#aa6bfba27ac7d85f08dac240face920d3", null ],
+    [ "sflip", "smath_8h.html#a8d2c27fbbf527a64bc10656384c376b4", null ],
     [ "svecsum", "smath_8h.html#a5f0c47efbeb405816e9a91eae4330fbc", null ],
     [ "ssum", "smath_8h.html#a22cb72721e5cfb3880538381a26ec0c2", null ],
     [ "strace", "smath_8h.html#a6cd9a93ca8dbe11cf8ca4f5969457311", null ],

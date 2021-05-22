@@ -114,6 +114,7 @@ var searchData=
   ['setup_5frecon_5fupdate',['setup_recon_update',['../setup__recon_8h.html#a759c070dc482628ea1df418d7a9420a4',1,'setup_recon.c']]],
   ['setup_5fsurf',['setup_surf',['../setup__surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107',1,'setup_surf.c']]],
   ['sfftshift',['sfftshift',['../smath_8h.html#a9110aaf766519ffc07645d8a088a0dd3',1,'stmp.c']]],
+  ['sflip',['sflip',['../smath_8h.html#a8d2c27fbbf527a64bc10656384c376b4',1,'stmp.c']]],
   ['sfree_5fdo',['sfree_do',['../smath_8h.html#a061ae93168e5bc1bd962a0763953c1eb',1,'stmp.c']]],
   ['sfwhm',['sfwhm',['../smath_8h.html#a89b79edf16c8f3794a1f844304f8918b',1,'stmp.c']]],
   ['shash',['shash',['../smath_8h.html#a00259ef4be59b306d5359e1135c77c54',1,'stmp.c']]],

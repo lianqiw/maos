@@ -23,6 +23,7 @@ var lmath_8h =
     [ "lshow", "lmath_8h.html#a739513a75271a2c7e236861093889e49", null ],
     [ "lvecperm", "lmath_8h.html#a6013ef218925a2ac4fbb78d07f204cf2", null ],
     [ "lvecpermi", "lmath_8h.html#a5b9920077ade8f512d7c91820a5c1872", null ],
+    [ "lflip", "lmath_8h.html#a32c84906403bad9b6b497c5ea6cc847e", null ],
     [ "lvecsum", "lmath_8h.html#a023af73843ac46394ca89147584b1e93", null ],
     [ "lsum", "lmath_8h.html#a129e4033d5c3a02a35397f8452835ae2", null ],
     [ "ltrace", "lmath_8h.html#ab4cf2eda7e088d902f37089883038e7a", null ],

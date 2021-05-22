@@ -24,6 +24,7 @@ var dmath_8h =
     [ "dshow", "dmath_8h.html#a657f20445f371c8deaff82a5a052c02f", null ],
     [ "dvecperm", "dmath_8h.html#a971761d7459f6772c359eb04ce1408f0", null ],
     [ "dvecpermi", "dmath_8h.html#a7040fd5588d1a5699ad5bdc9fdbce8da", null ],
+    [ "dflip", "dmath_8h.html#adcbab36b2c3112b5012a82bb9bbc183c", null ],
     [ "dvecsum", "dmath_8h.html#a1ec8d910f977601178ac538dfe7274d5", null ],
     [ "dsum", "dmath_8h.html#ac8e1cf93132dcf5b008b64d66901c82d", null ],
     [ "dtrace", "dmath_8h.html#a5d07ffd1ed9c5f4c58952123a259cfd3", null ],

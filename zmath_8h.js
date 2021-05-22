@@ -25,6 +25,7 @@ var zmath_8h =
     [ "zshow", "zmath_8h.html#afa6a18acd2dbde0ab6c059807cc208cd", null ],
     [ "zvecperm", "zmath_8h.html#ac40fbabbfbb7524b9c5d9b45377bef9e", null ],
     [ "zvecpermi", "zmath_8h.html#abc98ef886652caa92b6334a01112390d", null ],
+    [ "zflip", "zmath_8h.html#ab3f1f61f51204d0532ab54ee85443c9e", null ],
     [ "zvecsum", "zmath_8h.html#a07fae36f0643c5069d42214431a0569d", null ],
     [ "zsum", "zmath_8h.html#a69da5715fb9d3562919b48a30458e1e9", null ],
     [ "ztrace", "zmath_8h.html#a15807bf2afec1689050ad0026d8f097e", null ],

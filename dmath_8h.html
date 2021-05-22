@@ -169,6 +169,8 @@ Functions</h2></td></tr>
 <tr class="separator:a971761d7459f6772c359eb04ce1408f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7040fd5588d1a5699ad5bdc9fdbce8da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a7040fd5588d1a5699ad5bdc9fdbce8da">dvecpermi</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *out, const <a class="el" href="type_8h.html#structdmat">dmat</a> *in, const <a class="el" href="classlong.html">long</a> *perm)</td></tr>
 <tr class="separator:a7040fd5588d1a5699ad5bdc9fdbce8da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcbab36b2c3112b5012a82bb9bbc183c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#adcbab36b2c3112b5012a82bb9bbc183c">dflip</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, int axis)</td></tr>
+<tr class="separator:adcbab36b2c3112b5012a82bb9bbc183c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ec8d910f977601178ac538dfe7274d5"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a1ec8d910f977601178ac538dfe7274d5">dvecsum</a> (const real *__restrict p, <a class="el" href="classlong.html">long</a> np)</td></tr>
 <tr class="separator:a1ec8d910f977601178ac538dfe7274d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8e1cf93132dcf5b008b64d66901c82d"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ac8e1cf93132dcf5b008b64d66901c82d">dsum</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *A)</td></tr>
@@ -1212,6 +1214,35 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
       </table>
 </div><div class="memdoc">
 <p>Reverse permute the vector so that out(p)=in(:); </p>
+
+</div>
+</div>
+<a id="adcbab36b2c3112b5012a82bb9bbc183c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcbab36b2c3112b5012a82bb9bbc183c">&#9670;&nbsp;</a></span>dflip()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dflip </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>axis</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y. </p>
 
 </div>
 </div>

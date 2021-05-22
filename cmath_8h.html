@@ -174,6 +174,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cset</b> (<a class="e
 <tr class="separator:a379334c2ea8abebb8df335a241c57f8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19a85280f9c37ee345f5eec0f8ca0274"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a19a85280f9c37ee345f5eec0f8ca0274">cvecpermi</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *out, const <a class="el" href="type_8h.html#structcmat">cmat</a> *in, const <a class="el" href="classlong.html">long</a> *perm)</td></tr>
 <tr class="separator:a19a85280f9c37ee345f5eec0f8ca0274"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacd12c4cb573be4773f22970e43e8198"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aacd12c4cb573be4773f22970e43e8198">cflip</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, int axis)</td></tr>
+<tr class="separator:aacd12c4cb573be4773f22970e43e8198"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace6561d760353d0f9cc318f06a43dc30"><td class="memItemLeft" align="right" valign="top"><a id="ace6561d760353d0f9cc318f06a43dc30"></a>
 comp&#160;</td><td class="memItemRight" valign="bottom"><b>cvecsum</b> (const comp *__restrict p, <a class="el" href="classlong.html">long</a> np)</td></tr>
 <tr class="separator:ace6561d760353d0f9cc318f06a43dc30"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1245,6 +1247,35 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
       </table>
 </div><div class="memdoc">
 <p>Reverse permute the vector so that out(p)=in(:); </p>
+
+</div>
+</div>
+<a id="aacd12c4cb573be4773f22970e43e8198"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aacd12c4cb573be4773f22970e43e8198">&#9670;&nbsp;</a></span>cflip()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cflip </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>axis</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y. </p>
 
 </div>
 </div>

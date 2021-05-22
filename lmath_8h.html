@@ -164,6 +164,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lset</b> (<a class="e
 <tr class="separator:a6013ef218925a2ac4fbb78d07f204cf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b9920077ade8f512d7c91820a5c1872"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a5b9920077ade8f512d7c91820a5c1872">lvecpermi</a> (<a class="el" href="type_8h.html#structlmat">lmat</a> *out, const <a class="el" href="type_8h.html#structlmat">lmat</a> *in, const <a class="el" href="classlong.html">long</a> *perm)</td></tr>
 <tr class="separator:a5b9920077ade8f512d7c91820a5c1872"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32c84906403bad9b6b497c5ea6cc847e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a32c84906403bad9b6b497c5ea6cc847e">lflip</a> (<a class="el" href="type_8h.html#structlmat">lmat</a> *A, int axis)</td></tr>
+<tr class="separator:a32c84906403bad9b6b497c5ea6cc847e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a023af73843ac46394ca89147584b1e93"><td class="memItemLeft" align="right" valign="top"><a id="a023af73843ac46394ca89147584b1e93"></a>
 <a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lvecsum</b> (const <a class="el" href="classlong.html">long</a> *__restrict p, <a class="el" href="classlong.html">long</a> np)</td></tr>
 <tr class="separator:a023af73843ac46394ca89147584b1e93"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -823,6 +825,35 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
       </table>
 </div><div class="memdoc">
 <p>Reverse permute the vector so that out(p)=in(:); </p>
+
+</div>
+</div>
+<a id="a32c84906403bad9b6b497c5ea6cc847e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32c84906403bad9b6b497c5ea6cc847e">&#9670;&nbsp;</a></span>lflip()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void lflip </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structlmat">lmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>axis</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y. </p>
 
 </div>
 </div>

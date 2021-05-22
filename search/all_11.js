@@ -155,6 +155,7 @@ var searchData=
   ['setup_5fsurf',['setup_surf',['../setup__surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107',1,'setup_surf.c']]],
   ['setup_5fsurf_2eh',['setup_surf.h',['../setup__surf_8h.html',1,'']]],
   ['sfftshift',['sfftshift',['../smath_8h.html#a9110aaf766519ffc07645d8a088a0dd3',1,'stmp.c']]],
+  ['sflip',['sflip',['../smath_8h.html#a8d2c27fbbf527a64bc10656384c376b4',1,'stmp.c']]],
   ['sfree',['sfree',['../mathdef_8h.html#a90dc2c3e889dfdc858955fedc5d3a816',1,'mathdef.h']]],
   ['sfree_5fdo',['sfree_do',['../smath_8h.html#a061ae93168e5bc1bd962a0763953c1eb',1,'stmp.c']]],
   ['sfwhm',['sfwhm',['../smath_8h.html#a89b79edf16c8f3794a1f844304f8918b',1,'stmp.c']]],

@@ -21,6 +21,7 @@ var searchData=
   ['lcpcorner2center',['lcpcorner2center',['../lmath_8h.html#ac6087cce787a23d41f27f6ec91d809d5',1,'ltmp.c']]],
   ['ldup',['ldup',['../lmath_8h.html#a0cfd009dd2fcbc0a5f9584b0fa7f3aeb',1,'ltmp.c']]],
   ['lfftshift',['lfftshift',['../lmath_8h.html#a4033bbb4fd4cd82bb09f3fea93e74cec',1,'ltmp.c']]],
+  ['lflip',['lflip',['../lmath_8h.html#a32c84906403bad9b6b497c5ea6cc847e',1,'ltmp.c']]],
   ['lfree_5fdo',['lfree_do',['../lmath_8h.html#a15ceffb00e7bb7e57793410cecd33cbd',1,'ltmp.c']]],
   ['lgs_5fwfs_5fsph_5fpsd',['lgs_wfs_sph_psd',['../maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10',1,'utils.c']]],
   ['lhash',['lhash',['../lmath_8h.html#a7d4b41a7759f736e9271e22710a99d02',1,'ltmp.c']]],

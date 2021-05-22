@@ -92,6 +92,7 @@ var searchData=
   ['dfft1plan_5fr2hc',['dfft1plan_r2hc',['../dmath_8h.html#a5baf540c57c23d758fd1b123539866f7',1,'dtmp.c']]],
   ['dfft_5ffree_5fplan',['dfft_free_plan',['../dmath_8h.html#aae8fee69c712490f1929a7a4f1d63d47',1,'dtmp.c']]],
   ['dfftshift',['dfftshift',['../dmath_8h.html#a9d9ed91255390f1e4649fc623dfa17ce',1,'dtmp.c']]],
+  ['dflip',['dflip',['../dmath_8h.html#adcbab36b2c3112b5012a82bb9bbc183c',1,'dtmp.c']]],
   ['dfree_5fdo',['dfree_do',['../dmath_8h.html#a0626a73b51a8917f0944c8f5f946478f',1,'dtmp.c']]],
   ['dfwhm',['dfwhm',['../dmath_8h.html#a155f2c8d42865f16a7660b13be51e49d',1,'dtmp.c']]],
   ['dgramschmidt',['dgramschmidt',['../dmath_8h.html#a22fbcf9f244a5acde6f97a70d83e98a6',1,'dtmp.c']]],

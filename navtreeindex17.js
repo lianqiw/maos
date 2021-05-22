@@ -1,5 +1,9 @@
 var NAVTREEINDEX17 =
 {
+"type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a7b61c740d932ffa6dd6bd26ed81c739c":[9,0,3,10,62,4],
+"type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a7db5d7a5dd1a49314a09ef3040282b1d":[9,0,3,10,62,0],
+"type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037ac9aa42fd0901d91de8b0fa4f53bd55c8":[9,0,3,10,62,3],
+"type_8h.html#a64f034633d63c45d7ffff528d5e101e4":[9,0,3,10,37,6],
 "type_8h.html#a66b8c833b1f4ddb3dbea96e52d017de5":[9,0,3,10,37,3],
 "type_8h.html#a67eb3911c023e67c247677e03642927e":[9,0,3,10,10,10],
 "type_8h.html#a6806b466b6fb799f01df4ca8025f688d":[9,0,3,10,26,3],
@@ -245,9 +249,5 @@ var NAVTREEINDEX17 =
 "type_8h.html#structrmapccell":[9,0,3,10,39],
 "type_8h.html#structrmapcell":[9,0,3,10,36],
 "type_8h.html#structscccell":[9,0,3,10,33],
-"type_8h.html#structsccell":[9,0,3,10,28],
-"type_8h.html#structscell":[9,0,3,10,19],
-"type_8h.html#structsmat":[9,0,3,10,0],
-"type_8h.html#structssp":[9,0,3,10,6],
-"type_8h.html#structsspcell":[9,0,3,10,22]
+"type_8h.html#structsccell":[9,0,3,10,28]
 };

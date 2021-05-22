@@ -15,5 +15,5 @@ var locfft_8h =
     [ "locfft_free", "locfft_8h.html#a98ad6dd510558a695621390d6d5f2a0f", null ],
     [ "locfft_psf", "locfft_8h.html#ae0b08b7e9e173d8c717d8edcffda2bd7", null ],
     [ "locfft_fieldstop", "locfft_8h.html#ad6a8b056a1313211eb30662fe342937c", null ],
-    [ "fresnel_prop", "locfft_8h.html#a39bbb73f265f48bf2ace6e226e23bf2b", null ]
+    [ "fresnel_prop", "locfft_8h.html#ac2e0f90fbeca9d5351cfb28aa169f7f0", null ]
 ];

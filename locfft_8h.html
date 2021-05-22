@@ -117,8 +117,8 @@ Functions</h2></td></tr>
 <tr class="separator:ae0b08b7e9e173d8c717d8edcffda2bd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6a8b056a1313211eb30662fe342937c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locfft_8h.html#ad6a8b056a1313211eb30662fe342937c">locfft_fieldstop</a> (const <a class="el" href="locfft_8h.html#structlocfft__t">locfft_t</a> *locfft, <a class="el" href="type_8h.html#structdmat">dmat</a> *opd, const <a class="el" href="type_8h.html#structdmat">dmat</a> *wvlwts)</td></tr>
 <tr class="separator:ad6a8b056a1313211eb30662fe342937c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39bbb73f265f48bf2ace6e226e23bf2b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locfft_8h.html#a39bbb73f265f48bf2ace6e226e23bf2b">fresnel_prop</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> **out, real *dxout, const <a class="el" href="type_8h.html#structcmat">cmat</a> *in, real dxin, real wvl, real z, int method)</td></tr>
-<tr class="separator:a39bbb73f265f48bf2ace6e226e23bf2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2e0f90fbeca9d5351cfb28aa169f7f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locfft_8h.html#ac2e0f90fbeca9d5351cfb28aa169f7f0">fresnel_prop</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> **out, real *dxout, const <a class="el" href="type_8h.html#structcmat">cmat</a> *in, real dxin, real wvl, real z, real scale, int method)</td></tr>
+<tr class="separator:ac2e0f90fbeca9d5351cfb28aa169f7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines used to embed OPDs defined on <a class="el" href="type_8h.html#structloc__t">loc_t</a> to square array with embeding factor and compute PSF using FFT. </p>
@@ -368,8 +368,8 @@ fieldstop</td>
 
 </div>
 </div>
-<a id="a39bbb73f265f48bf2ace6e226e23bf2b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a39bbb73f265f48bf2ace6e226e23bf2b">&#9670;&nbsp;</a></span>fresnel_prop()</h2>
+<a id="ac2e0f90fbeca9d5351cfb28aa169f7f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2e0f90fbeca9d5351cfb28aa169f7f0">&#9670;&nbsp;</a></span>fresnel_prop()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -413,6 +413,12 @@ fieldstop</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>scale</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>method</em>&#160;</td>
         </tr>
@@ -423,10 +429,10 @@ fieldstop</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Fresnel propagation using either FFT or angular spectrum method, which results in different dxout. For FFT method, the output sampling is dxin/(z*wvl). For angular spectrum method, the output sampling equals to the input sampling. When the output sampling equals, the two methods agree.</p>
-<p>The output is normalized so that its squared sum equals to nx*ny*sum(amp^2).</p>
-<p>Notice that at near field when dp is smaller than dx, the output of angular spectrum method is periodic.</p>
-<p>The brutal force method has the exact solution without using fresnel approximation. It is however very slow. The results agrees with method=1 or 2 when the sampling agrees and the approximation holds. </p>
+<p>Fresnel propagation using either FFT or angular spectrum method.</p>
+<p>For FFT method, the output sampling is z*wvl/(dxin*nxin). For angular spectrum method, the output sampling equals to the input sampling. When the output sampling equals, the two methods agree. Notice that at near field when dp is smaller than dx, the output of angular spectrum method is periodic.</p>
+<p>The output is normalized so that its squared sum equals to nx*ny*sum(abs(in)^2). Input argument scale should be supplied to cancel this scaling.</p>
+<p>The brutal force method (method=0) has the exact solution without using fresnel approximation. It is however very slow. The results agrees with method=1 or 2 when the sampling agrees and the approximation holds. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">pout</td><td>Output complex field. Sampling depends on method. Should not be empty if method is 0. </td></tr>
@@ -435,7 +441,8 @@ fieldstop</td>
     <tr><td class="paramname">dxin</td><td>Spatial sampling of in </td></tr>
     <tr><td class="paramname">wvl</td><td>Wavelength </td></tr>
     <tr><td class="paramname">z</td><td>Propagation distance </td></tr>
-    <tr><td class="paramname">method</td><td>Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum </td></tr>
+    <tr><td class="paramname">scale</td><td>Scaling to be applied to out to preserve energy. 0: determine from input </td></tr>
+    <tr><td class="paramname">method</td><td>Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum, -1: auto between 1 and 2. </td></tr>
   </table>
   </dd>
 </dl>

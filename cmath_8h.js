@@ -25,6 +25,7 @@ var cmath_8h =
     [ "cshow", "cmath_8h.html#ac0f00cb8f71b144c21627d1da2dcfb3f", null ],
     [ "cvecperm", "cmath_8h.html#a379334c2ea8abebb8df335a241c57f8f", null ],
     [ "cvecpermi", "cmath_8h.html#a19a85280f9c37ee345f5eec0f8ca0274", null ],
+    [ "cflip", "cmath_8h.html#aacd12c4cb573be4773f22970e43e8198", null ],
     [ "cvecsum", "cmath_8h.html#ace6561d760353d0f9cc318f06a43dc30", null ],
     [ "csum", "cmath_8h.html#a327f8f60e2150cfc3ff6fdf9e3f7fdd2", null ],
     [ "ctrace", "cmath_8h.html#a59964040fa3388adecaeefeb973c61f2", null ],

@@ -93,6 +93,7 @@ var searchData=
   ['cfft_5ffree_5fplan',['cfft_free_plan',['../cmath_8h.html#ae2da7bc6a39001e54d50b98026dda143',1,'ctmp.c']]],
   ['cfftshift',['cfftshift',['../cmath_8h.html#a2e68e24dcc5d7ffd8d9b2c575e0830b9',1,'ctmp.c']]],
   ['cffttreat',['cffttreat',['../cmath_8h.html#a7b04bda35e161da1cb91a619fcf46829',1,'ctmp.c']]],
+  ['cflip',['cflip',['../cmath_8h.html#aacd12c4cb573be4773f22970e43e8198',1,'ctmp.c']]],
   ['cfree_5fdo',['cfree_do',['../cmath_8h.html#a8bae6b315a59ab56fc667b6c769e1804',1,'ctmp.c']]],
   ['cfwhm',['cfwhm',['../cmath_8h.html#a087023ff454d2d50994788f8962c1f06',1,'ctmp.c']]],
   ['cgramschmidt',['cgramschmidt',['../cmath_8h.html#a698a0cbe564b990b2d230e40ec500320',1,'ctmp.c']]],

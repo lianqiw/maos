@@ -171,6 +171,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sset</b> (<a class="e
 <tr class="separator:a1cecf05e2bbf08c2ded9d41c27204cfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6bfba27ac7d85f08dac240face920d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#aa6bfba27ac7d85f08dac240face920d3">svecpermi</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *out, const <a class="el" href="type_8h.html#structsmat">smat</a> *in, const <a class="el" href="classlong.html">long</a> *perm)</td></tr>
 <tr class="separator:aa6bfba27ac7d85f08dac240face920d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d2c27fbbf527a64bc10656384c376b4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a8d2c27fbbf527a64bc10656384c376b4">sflip</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, int axis)</td></tr>
+<tr class="separator:a8d2c27fbbf527a64bc10656384c376b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f0c47efbeb405816e9a91eae4330fbc"><td class="memItemLeft" align="right" valign="top"><a id="a5f0c47efbeb405816e9a91eae4330fbc"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>svecsum</b> (const float *__restrict p, <a class="el" href="classlong.html">long</a> np)</td></tr>
 <tr class="separator:a5f0c47efbeb405816e9a91eae4330fbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1229,6 +1231,35 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
       </table>
 </div><div class="memdoc">
 <p>Reverse permute the vector so that out(p)=in(:); </p>
+
+</div>
+</div>
+<a id="a8d2c27fbbf527a64bc10656384c376b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d2c27fbbf527a64bc10656384c376b4">&#9670;&nbsp;</a></span>sflip()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sflip </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>axis</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y. </p>
 
 </div>
 </div>
