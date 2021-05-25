@@ -596,7 +596,6 @@ else
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
 		unset ac_cv_search_fftw_execute
 		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
-		AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#compile from source
@@ -609,7 +608,6 @@ else
 		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
 		unset ac_cv_search_fftw_execute
 		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
-		AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 	fi
 	AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
 	AC_SEARCH_LIBS(fftwf_execute, [:libfftw3f.a :libfftw3f.so], [has_fftwf="yes"],[has_fftwf='no'])
