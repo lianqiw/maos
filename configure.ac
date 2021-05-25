@@ -417,9 +417,11 @@ if test "x$use_static" = "xyes" ;then
     LDEXE_MAOS="-all-static" #only all static linking for maos
     AM_CONDITIONAL(USE_STATIC, true)
     AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
+	mkl="mkl-static mkl" #prefer static
 else
     AM_CONDITIONAL(USE_STATIC, false)
     AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
+	mkl="mkl mkl-static" #prefer dynamic
 fi
 
 #call convention of fortran libraries
@@ -512,8 +514,7 @@ function set_lapack(){
 				LAPACK+=" -lmkl_intel_thread -liomp5"
 			fi
 	    fi
-	 
-	    if test "$use_static" = "yes" ;then
+	    if test "$type" = "mkl-static" ;then 
 			LAPACK="-Wl,--start-group,${LAPACK},--end-group"
 			LAPACK=${LAPACK// /,}
 			LAPACK=${LAPACK//,,/,}
@@ -532,7 +533,7 @@ function set_lapack(){
 	    LAPACK="-lopenblas"
 	    ;;
 	default)
-	    LAPACK="-llapack -lblas "
+	    LAPACK="-llapack -lblas -lgfortran"
 		;;
 	default-3)
 		LAPACK="-l:liblapack.so.3 -l:libblas.so.3 "
@@ -547,13 +548,13 @@ has_lapack=no
 base_lapack="pkg-config default openblas-openmp openblas-threads openblas default-3"
 case $use_mkl in
     yes) #prefer MKL
-		trys="mkl mkl-download $base_lapack"
+		trys="$mkl mkl mkl-download $base_lapack"
 		;;
     no) #disable MKL
 		trys="$base_lapack"
 		;;
     default) #default order
-		trys="mkl $base_lapack mkl-download"
+		trys="$mkl $base_lapack mkl-download"
 		;;
 esac
 
@@ -583,7 +584,7 @@ if test "$has_z" = "no" ;then
 fi
 
 #Check for FFTW interface in Lapack (MKL). Note: MKL does not support fftw_plan_r2r_1d as of 2020.
-AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
+AC_CHECK_LIB([m], [fftw_plan_r2r_1d], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
 if test "$builtin_fftw" = "yes";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
     fftw_threads=1
@@ -591,8 +592,7 @@ else
     #Check for FFTW3 header and library. Do not check for .so.3 which is without .h
 	if test "$use_static" = "yes"; then fftw_libs=":libfftw3.a :libfftw3.so"; else fftw_libs=":libfftw3.so :libfftw3.a"; fi
 	fftwf_libs="${fftw_libs//fftw3/fftw3f}"
-	AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
-	AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
+	AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [AC_CHECK_HEADERS([fftw3.h],[has_fftw='yes'], [has_fftw='no'])],[has_fftw='no'])
 	echo $ac_cv_search_fftw_execute
 	unset ac_cv_header_fftw3_h
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
