@@ -148,6 +148,7 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
+AC_ARG_ENABLE(download,AS_HELP_STRING([--disable-download], [Disable downlong precompiled library]), [use_download="$enableval"], [use_download="yes"])
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -179,6 +180,7 @@ fi
 if test "$use_release" = "yes" ;then
     use_scheduler="no"
     use_websocket="no"
+	use_static="yes"
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
@@ -380,7 +382,7 @@ else
     mflag="-m32"
 fi
 if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
-    CFLAGS=" $mflag $CFLAGS"
+    CFLAGS+=" $mflag"
 fi
 unset mflag
 
@@ -445,9 +447,14 @@ extract(){
 download(){
     fn="$2"
     OUTDIR="$3"
+	if test "$use_download" = "no" -a -z "$4" ;then
+		echo "Download pre-built binary is disabled"
+		return
+	fi
     mkdir -p ${DOWNLOAD_DIR} || die "failed to mkdir"
     if test -f ${DOWNLOAD_DIR}/${fn} ;then
-	extract "${fn}" "$OUTDIR"
+		echo "Reusing downloaded ${DOWNLOAD_DIR}/${fn}"
+		extract "${fn}" "$OUTDIR"
     fi
     if ! test -f ${DOWNLOAD_DIR}/${fn} ;then
 		echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
@@ -466,7 +473,7 @@ compile(){
     shift
     shift
     rm -rf ${TMP_DIR}/$name
-    download $name $file ${TMP_DIR}/$name
+    download $name $file ${TMP_DIR}/$name 1
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name with CFLAGS=$CFLAGS $@. Check $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
@@ -568,11 +575,11 @@ if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
 fi
 
 #Check for zlib
-AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
+AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'])
 if test "$has_z" = "no" ;then
     compile ZLIB zlib.tar.bz2 --static
     unset ac_cv_lib_z_gzopen
-    AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
+    AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
 #Check for FFTW interface in Lapack (MKL). Note: MKL does not support fftw_plan_r2r_1d as of 2020.
@@ -582,7 +589,9 @@ if test "$builtin_fftw" = "yes";then
     fftw_threads=1
 else
     #Check for FFTW3 header and library. Do not check for .so.3 which is without .h
-	AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
+	if test "$use_static" = "yes"; then fftw_libs=":libfftw3.a :libfftw3.so"; else fftw_libs=":libfftw3.so :libfftw3.a"; fi
+	fftwf_libs="${fftw_libs//fftw3/fftw3f}"
+	AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
 	AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 	echo $ac_cv_search_fftw_execute
 	unset ac_cv_header_fftw3_h
@@ -590,11 +599,11 @@ else
 		#download pre-compiled
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
 		unset ac_cv_search_fftw_execute
-		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
+		AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#compile from source
-		FLAGS="--enable-threads --enable-static" #--enable-shared
+		FLAGS="--enable-threads --enable-static --enable-shared"
 		if test -n "$OPENMP_CFLAGS" ;then
 			FLAGS+=" --enable-openmp"
 		fi
@@ -602,10 +611,10 @@ else
 		compile FFTW fftw.tar.bz2 $FLAGS  
 		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
 		unset ac_cv_search_fftw_execute
-		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
+		AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
 	fi
 	AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
-	AC_SEARCH_LIBS(fftwf_execute, [:libfftw3f.a :libfftw3f.so], [has_fftwf="yes"],[has_fftwf='no'])
+	AC_SEARCH_LIBS(fftwf_execute, [$fftwf_libs], [has_fftwf="yes"],[has_fftwf='no'])
 	LDFFT="$ac_cv_search_fftw_execute"
 	if test "$has_fftwf" = "yes" ;then
 		LDFFT+=" $ac_cv_search_fftwf_execute"
@@ -633,21 +642,18 @@ fi
 AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
 
 #Check for cholmod
-AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
+AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
+AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [has_chol="no"])])
 if test "$has_chol" = "no" ;then
 	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${PRE_DIR}
 	unset ac_cv_lib_cholmod_${chol_fun}
-	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
+	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 fi
 if test "$has_chol" = "no" ;then
    	compile CHOLMOD "cholmod.tar.bz2"
    	unset ac_cv_lib_cholmod_${chol_fun}
-   	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
+   	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 fi
-AC_CHECK_HEADERS([cholmod.h], [], 
-    [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], 
-	    [AC_MSG_ERROR([Suitesparse header is not found, -devel package missing?])])])
-
 
 LDCHOL="-lcholmod"
 
@@ -676,6 +682,11 @@ if test "$use_websockets" = "yes" ;then
 fi
 if test "$enable_cmocka" != "no" ;then
 	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
+		#include <stdarg.h>
+		#include <stddef.h>
+		#include <stdint.h>
+		#include <setjmp.h>])
 	if test "$enable_cmocka" = "no" ;then
 		download CMOCKA cmocka${libsuffix}.tar.bz2 ${PRE_DIR}
 		unset ac_cv_lib_cmocka_mock_assert
@@ -686,11 +697,6 @@ if test "$enable_cmocka" != "no" ;then
 		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	fi
-	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
-		#include <stdarg.h>
-		#include <stddef.h>
-		#include <stdint.h>
-		#include <setjmp.h>])
 	if test "$enable_cmocka" != "no" ;then
 		AC_DEFINE(USE_CMOCKA, [1], "Enable unit testing with cmocka")
 	fi
