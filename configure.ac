@@ -627,10 +627,10 @@ else
 		LDFFT_THREADS="${LDFFT//.so/${THREADS_SUFFIX}.so}"
 		;;
 	esac
-	AC_CHECK_LIB([$LDFFT_THREADS], [fftw_plan_with_nthreads], [fftw_threads=1], [fftw_threads=0], [$LDFFT])
+	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1], [fftw_threads=0], [$LDFFT $LDFFT_THREADS $OPENMP_CFLAGS])
 	AS_IF([test "$fftw_threads"="1"], [LDFFT+=" $LDFFT_THREADS"])
 fi
-AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
+AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
 
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
@@ -776,13 +776,13 @@ if test "$with_matlab" != "no" ;then
    	mexglx)
 	    MEXLIB=glnx86
 	    MEXOPT="$OPTS -fPIC -m32 -fexceptions -D_FILE_OFFSET_BITS=64"
-	    MEXOPT="${MEXOPT} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+	    #MEXOPT="${MEXOPT} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200809L"
 	    mex_cpu=x86
 	    ;;
    	mexa64)
 	    MEXLIB=glnxa64
 	    MEXOPT="$OPTS -fPIC -m64 -fexceptions -fno-omit-frame-pointer"
-	    MEXOPT="${MEXOPT} -DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+	    #MEXOPT="${MEXOPT} -DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200809L"
 	    mex_cpu=x86_64
 	    ;;
 	mexmaci)

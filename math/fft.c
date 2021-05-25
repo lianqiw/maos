@@ -92,71 +92,26 @@ static __attribute__((destructor))void deinit(){
 //#if defined(COMP_COMPLEX) 
 #include <dlfcn.h>
 static void (*init_threads())(int){
-#if BUILTIN_FFTW_THREADS != -1 //-1: disable
-	const char* fn=0;
-#endif
-	//quitfun is not null when run in matlab.
-#if BUILTIN_FFTW_THREADS == 0 //0: dynamic loading
-#if _OPENMP>200805
-#if defined(COMP_SINGLE)
-	fn="libfftw3f_omp." LDSUFFIX;
-#else
-	fn="libfftw3_omp." LDSUFFIX;
-#endif
-#else //else 
-#if defined(COMP_SINGLE)
-	fn="libfftw3f_threads." LDSUFFIX;
-#else
-	fn="libfftw3_threads." LDSUFFIX;
-#endif
-#endif //if OPENMP
-#endif //if BUILT_FFTW_THREADS
 	void (*p_fftw_plan_with_nthreads)(int)=NULL;
-#if BUILTIN_FFTW_THREADS != -1 //-1: disable
-	void* libfftw_threads=NULL;
-	if(!fn||(libfftw_threads=dlopen(fn, RTLD_LAZY))){
-		if(!fn){
-			dbg("FFTW thread library is built in\n");
-		} else{
-			dbg("Open FFTW thread library %s: success\n", fn);
-		}
-		int (*p_fftw_init_threads)(void)=NULL;
-
+#if HAS_FFTW_THREADS
+	const char *suffix="_threads";
 #ifdef COMP_SINGLE
-		sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread", HOME);
-#if BUILTIN_FFTW_THREADS
-		p_fftw_init_threads=(int(*)())fftwf_init_threads;
-		p_fftw_plan_with_nthreads=(void(*)(int))fftwf_plan_with_nthreads;
+	fftwf_init_threads();
+	p_fftw_plan_with_nthreads=(void(*)(int))fftwf_plan_with_nthreads;
 #else
-		p_fftw_init_threads=(int(*)())dlsym(libfftw_threads, "fftwf_init_threads");
-		p_fftw_plan_with_nthreads=(void(*)(int))dlsym(libfftw_threads, "fftwf_plan_with_nthreads");
+	fftw_init_threads();
+	p_fftw_plan_with_nthreads=(void(*)(int))fftw_plan_with_nthreads;
 #endif
 #else
-		sprintf(fnwisdom, "%s/.aos/fftw_wisdom_thread", HOME);
-#if BUILTIN_FFTW_THREADS
-		p_fftw_init_threads=(int(*)())fftw_init_threads;
-		p_fftw_plan_with_nthreads=(void(*)(int))fftw_plan_with_nthreads;
-#else
-		p_fftw_init_threads=(int(*)())dlsym(libfftw_threads, "fftw_init_threads");
-		p_fftw_plan_with_nthreads=(void(*)(int))dlsym(libfftw_threads, "fftw_plan_with_nthreads");
-#endif
-#endif
-		p_fftw_init_threads();
-	} else{
-		if(!quitfun){
-			warning("Open FFTW thread library %s: failed\n", fn);
-		}
-	}
-#else
-	dbg("FFTW thread library is disabled\n");
-#endif //BUILTIN_FFTW_THREADS != -1
-	if(!p_fftw_plan_with_nthreads){
+	dbg("FFTW thread library is not evailable\n");
+	const char *suffix="_serial";
+#endif	
 #ifdef COMP_SINGLE
-		sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial", HOME);
+	const char *libname="fftwf";
 #else
-		sprintf(fnwisdom, "%s/.aos/fftw_wisdom_serial", HOME);
+	const char *libname="fftw";
 #endif
-	}
+	sprintf(fnwisdom, "%s/.aos/%s_wisdom%s", HOME, libname, suffix);
 	load_wisdom();
 	return p_fftw_plan_with_nthreads;
 }
@@ -164,27 +119,21 @@ static void (*init_threads())(int){
 static void fft_execute(FFTW(plan) plan){
 	FFTW(execute)(plan);
 }
-#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
-int fft_has_threads=-1;//-1: not initialized. 0: disabled. 1: initialized and available. 
-#else
-extern int fft_has_threads;
-#endif
+
 static void fft_threads(long nx, long ny){
-	static void (*p_fftw_plan_with_nthreads)(int n)=NULL;
+	static int fft_has_threads=-1;
+	void (*p_fftw_plan_with_nthreads)(int)=NULL;
 	if(fft_has_threads==-1){
 		if((p_fftw_plan_with_nthreads=init_threads())){
 			fft_has_threads=1;
 		} else{
 			fft_has_threads=0;
 		}
-		dbg3("FFTW: fft_has_threads=%d\n", fft_has_threads);
 	}
-	if(fft_has_threads==1){
+	if(p_fftw_plan_with_nthreads){
 		int nth=(nx*ny>256*256)?NTHREAD:1;
 		dbg3("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
 		p_fftw_plan_with_nthreads(nth);
-	} else if(p_fftw_plan_with_nthreads){
-		p_fftw_plan_with_nthreads(1);
 	}
 }
 #ifdef __cplusplus
