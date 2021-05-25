@@ -19,12 +19,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
 #endif
-#if HAVE_CHOLMOD_H
-#include <cholmod.h>
-#elif HAVE_SUITESPARSE_CHOLMOD_H
+#if HAVE_SUITESPARSE_CHOLMOD_H
 #include <suitesparse/cholmod.h>
 #else
-#error cholmod.h is not vailable
+#include <cholmod.h>
 #endif
 
 #include "mathdef.h"

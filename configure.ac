@@ -461,8 +461,8 @@ download(){
 		$wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
 		if ! extract "$fn" "$OUTDIR" ;then
 			AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
+			rm -rf ${DOWNLOAD_DIR}/${fn}
 		fi
-		rm -rf ${DOWNLOAD_DIR}/${fn}
     fi
 }
 #compile LIBNAME srcfile.tar.gz [compile options]
@@ -600,20 +600,21 @@ else
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
 		unset ac_cv_search_fftw_execute
 		AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
-    fi
-    if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-		#compile from source
-		FLAGS="--enable-threads --enable-static --enable-shared"
-		if test -n "$OPENMP_CFLAGS" ;then
-			FLAGS+=" --enable-openmp"
+    
+		if test "$has_fftw" = "no" ;then #fftw does not exist in system.
+			#compile from source
+			FLAGS="--enable-threads --enable-static --enable-shared"
+			if test -n "$OPENMP_CFLAGS" ;then
+				FLAGS+=" --enable-openmp"
+			fi
+			FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
+			compile FFTW fftw.tar.bz2 $FLAGS  
+			compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
+			unset ac_cv_search_fftw_execute
+			AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
+			AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
 		fi
-		FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
-		compile FFTW fftw.tar.bz2 $FLAGS  
-		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
-		unset ac_cv_search_fftw_execute
-		AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
 	fi
-	AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
 	AC_SEARCH_LIBS(fftwf_execute, [$fftwf_libs], [has_fftwf="yes"],[has_fftwf='no'])
 	LDFFT="$ac_cv_search_fftw_execute"
 	if test "$has_fftwf" = "yes" ;then
@@ -628,15 +629,19 @@ else
 	else
 		THREADS_SUFFIX="_omp"
 	fi
-	case "$ac_cv_search_fftw_execute" in
+	case "$LDFFT" in
 	*.a)
 		LDFFT_THREADS="${LDFFT//.a/${THREADS_SUFFIX}.a}"
 		;;
 	*.so*)
 		LDFFT_THREADS="${LDFFT//.so/${THREADS_SUFFIX}.so}"
 		;;
+	*)
+		for lib in "$LDFFT" ;do
+			LDFFT_THREADS+=" $lib${THREADS_SUFFIX}"
+		done
 	esac
-	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1], [fftw_threads=0], [$LDFFT $LDFFT_THREADS $OPENMP_CFLAGS])
+	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1], [fftw_threads=0], [$LDFFT_THREADS $LDFFT $OPENMP_CFLAGS])
 	AS_IF([test "$fftw_threads"="1"], [LDFFT+=" $LDFFT_THREADS"])
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
@@ -648,13 +653,15 @@ if test "$has_chol" = "no" ;then
 	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${PRE_DIR}
 	unset ac_cv_lib_cholmod_${chol_fun}
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
-fi
-if test "$has_chol" = "no" ;then
-   	compile CHOLMOD "cholmod.tar.bz2"
-   	unset ac_cv_lib_cholmod_${chol_fun}
-   	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
-fi
 
+	if test "$has_chol" = "no" ;then
+		compile CHOLMOD "cholmod.tar.bz2"
+		unset ac_cv_lib_cholmod_${chol_fun}
+		AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
+	fi
+	unset ac_cv_header_cholmod_h ac_cv_header_suitesparse_cholmod_h
+	AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [AC_MSG_ERROR([Suitesparse header is not available])])])
+fi
 LDCHOL="-lcholmod"
 
 #Check for libwebsocket
@@ -666,19 +673,23 @@ if test "$use_websockets" = "yes" ;then
 		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
 		unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
-    fi
-    if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
-		compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
-		unset ac_cv_lib_websockets_lws_service
-		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
+    
+		if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
+			compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
+			unset ac_cv_lib_websockets_lws_service
+			AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
+		fi
+		
+		unset ac_cv_header_libwebsockets_h
+		AC_CHECK_HEADERS([libwebsockets.h], [], [AC_MSG_ERROR([libwebsocket header is not available])])
 	fi
-    if test "$has_lws" != "no" ;then
+	if test "$has_lws" != "no" ;then
 		AM_CONDITIONAL(HAS_LWS, true)
 		AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
-    else
+	else
 		AC_MSG_NOTICE(["libwebsocket library or header is not available"])
 		use_websockets="no"
-    fi
+	fi
 fi
 if test "$enable_cmocka" != "no" ;then
 	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
@@ -691,11 +702,12 @@ if test "$enable_cmocka" != "no" ;then
 		download CMOCKA cmocka${libsuffix}.tar.bz2 ${PRE_DIR}
 		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
-	fi
-	if test "$enable_cmocka" = "no" ;then
-		compile CMOCKA cmocka.tar.xz
-		unset ac_cv_lib_cmocka_mock_assert
-		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+	
+		if test "$enable_cmocka" = "no" ;then
+			compile CMOCKA cmocka.tar.xz
+			unset ac_cv_lib_cmocka_mock_assert
+			AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+		fi
 	fi
 	if test "$enable_cmocka" != "no" ;then
 		AC_DEFINE(USE_CMOCKA, [1], "Enable unit testing with cmocka")
