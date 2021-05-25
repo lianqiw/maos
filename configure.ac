@@ -533,7 +533,7 @@ function set_lapack(){
 	    LAPACK="-lopenblas"
 	    ;;
 	default)
-	    LAPACK="-llapack -lblas -lgfortran"
+	    LAPACK="-llapack -lblas"
 		;;
 	default-3)
 		LAPACK="-l:liblapack.so.3 -l:libblas.so.3 "

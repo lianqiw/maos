@@ -12,13 +12,13 @@ build:
     # The default is to run as root, which crashes immediately.  
     # The image already has user lianqiw
     #- su lianqiw -c "whoami && ./autogen.sh && mkdir -p build && cd build && ../configure --enable-release && make && bin/maos aper.d=5 sim.end=10"
-    - ./autogen.sh && mkdir build && cd build && ../configure --enable-release && make #--enable-doxygen
+    - ./autogen.sh && mkdir build && cd build && ../configure --enable-release && make && make check #--enable-doxygen
   artifacts:
     when: always
     paths:
       - build/config.log
       - build/external/compile.log
-      #- build/bin/
+      - build/bin/
   #cache:
   #  paths:
   #    - ~lianqiw/.aos
@@ -26,15 +26,3 @@ build:
   # cache:
   #   paths:
   #     - "*.o"
-
-# run tests using the binary built before
-test:
-  stage: test
-  script:
-    - cd build && make check
-#    - ../../scripts/maos_check.sh 5 > maos_check.txt
-#  artifacts:
-#    paths:
-#      - build/bin/maos_check*
-#      
-    
