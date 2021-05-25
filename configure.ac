@@ -103,11 +103,11 @@ else
 			break;
 		fi
     done
-    $as_unset nvcc
+    unset nvcc
 fi
 if test -n "$NVCC" ;then
     CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
-    $as_unset NVCC
+    unset NVCC
 fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled
@@ -119,7 +119,7 @@ if test -n "`which matlab 2>/dev/null`" ;then
     fi
     MEXDIR_AUTO="$(dirname "$MEX")"
     echo MEXDIR_AUTO=$MEXDIR_AUTO
-    $as_unset MEX
+    unset MEX
 else
     for i in /Applications/MATLAB*.app $HOME/Applications/MATLAB*.app /opt/MATLAB/* /usr/local/share/MATLAB/* ;do
 	if test -x "$i/bin/mex" ;then
@@ -190,13 +190,10 @@ fi
 LDEXE=
 OPTS=
 COMMON_ALL="-Wall -Wshadow -Wextra " 
-#COMMON_ALL+=" -Wno-missing-braces -Wno-unknown-pragmas"
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-#COMMON_GCC="-fms-extensions -static-libgcc -Wno-missing-field-initializers -Wno-format-truncation"
-#COMMON_GCC+=" -Wno-deprecated-declarations "
-#COMMON_CLANG="-Wno-deprecated-declarations " #"-Qunused-arguments "
+COMMON_GCC+=" -Wno-missing-braces -Wno-missing-field-initializers" #gcc-4.8 error
 
 OPTIM_ALL="-O3 "
 OPTIM_GCC=" -ftree-vectorize -ffast-math -fno-finite-math-only "
@@ -224,7 +221,7 @@ case "$CN" in
 	    minor=${minor%%.*}
 	    if test $major -lt 11 ;then
 			AC_MSG_ERROR([OpenMP is not supported by ICC $CC_VERSION])
-			$as_unset OPENMP_CFLAGS
+			unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
@@ -247,7 +244,7 @@ case "$CN" in
 	    #GCC introduced openmp task in 4.4
 	    if test $major -le 4 -a $minor -le 4 ;then
 			AC_MSG_WARN([OpenMP is not supported by GCC $CC_VERSION])
-			$as_unset OPENMP_CFLAGS
+			unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
@@ -286,7 +283,7 @@ optname4=${ccprefix}_${CN}
 echo OPTScc from "${optname1} ${optname2} ${optname3} ${optname4}"
 OPTScc="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
 echo OPTScc=$OPTScc
-$as_unset optname1 optname2 optname3 optname4
+unset optname1 optname2 optname3 optname4
 
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
@@ -305,7 +302,7 @@ case "$host_os" in
 		LDEXE+=" -lrt" #need real time library.
 		LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 		CFLAGS+=" -fPIC"
-		CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
+		CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
 		if test "$use_release" = "yes" ;then
 			CFLAGS+=" -D_GLIBC_2_5_SOURCE"
 		fi
@@ -368,7 +365,7 @@ PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
-CFLAGS+=" -I${PRE_DIR}/include "
+CPPFLAGS+=" -I${PRE_DIR}/include " #use CPPFLAGS so that the preprocessor can also use it.
 PATH+=":${PRE_DIR}/bin"
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 OPTS+=" $CFLAGS_EXTRA "
@@ -385,9 +382,7 @@ fi
 if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
     CFLAGS=" $mflag $CFLAGS"
 fi
-$as_unset mflag
-
-
+unset mflag
 
 #Discover default download method
 if test -x "`which curl 2>/dev/null`" ;then
@@ -557,8 +552,8 @@ esac
 
 for try in ${trys}; do
     if test "$has_lapack" = "no" -o "$has_blas" = "no";then
-		$as_unset nset ac_cv_lib_m_dgemm_
-		$as_unset nset ac_cv_lib_m_dposv_
+		unset ac_cv_lib_m_dgemm_
+		unset ac_cv_lib_m_dposv_
 		set_lapack ${try}
 		if test -n "$LAPACK" ;then
 			#the trailing -lm is necessary for ubuntu-16.04 with mkl
@@ -576,7 +571,7 @@ fi
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then
     compile ZLIB zlib.tar.bz2 --static
-    $as_unset ac_cv_lib_z_gzopen
+    unset ac_cv_lib_z_gzopen
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
@@ -590,11 +585,11 @@ else
 	AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
 	AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 	echo $ac_cv_search_fftw_execute
-	$as_unset ac_cv_header_fftw3_h
+	unset ac_cv_header_fftw3_h
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
-		$as_unset ac_cv_search_fftw_execute
+		unset ac_cv_search_fftw_execute
 		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
@@ -606,7 +601,7 @@ else
 		FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
 		compile FFTW fftw.tar.bz2 $FLAGS  
 		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
-		$as_unset ac_cv_search_fftw_execute
+		unset ac_cv_search_fftw_execute
 		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
 	fi
 	AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
@@ -632,7 +627,7 @@ else
 		LDFFT_THREADS="${LDFFT//.so/${THREADS_SUFFIX}.so}"
 		;;
 	esac
-	AC_CHECK_LIB([fftw_plan_with_nthreads], [$LDFFT_THREADS], [fftw_threads=1], [fftw_threads=0], [$LDFFT])
+	AC_CHECK_LIB([$LDFFT_THREADS], [fftw_plan_with_nthreads], [fftw_threads=1], [fftw_threads=0], [$LDFFT])
 	AS_IF([test "$fftw_threads"="1"], [LDFFT+=" $LDFFT_THREADS"])
 fi
 AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
@@ -641,12 +636,12 @@ AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 thread
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 if test "$has_chol" = "no" ;then
 	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${PRE_DIR}
-	$as_unset ac_cv_lib_cholmod_${chol_fun}
+	unset ac_cv_lib_cholmod_${chol_fun}
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 fi
 if test "$has_chol" = "no" ;then
    	compile CHOLMOD "cholmod.tar.bz2"
-   	$as_unset ac_cv_lib_cholmod_${chol_fun}
+   	unset ac_cv_lib_cholmod_${chol_fun}
    	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 fi
 AC_CHECK_HEADERS([cholmod.h], [], 
@@ -663,12 +658,12 @@ if test "$use_websockets" = "yes" ;then
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
 		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
-		$as_unset ac_cv_lib_websockets_lws_service
+		unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
     if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
 		compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
-		$as_unset ac_cv_lib_websockets_lws_service
+		unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
 	fi
     if test "$has_lws" != "no" ;then
@@ -683,12 +678,12 @@ if test "$enable_cmocka" != "no" ;then
 	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	if test "$enable_cmocka" = "no" ;then
 		download CMOCKA cmocka${libsuffix}.tar.bz2 ${PRE_DIR}
-		$as_unset ac_cv_lib_cmocka_mock_assert
+		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	fi
 	if test "$enable_cmocka" = "no" ;then
 		compile CMOCKA cmocka.tar.xz
-		$as_unset ac_cv_lib_cmocka_mock_assert
+		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	fi
 	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
@@ -938,7 +933,7 @@ if test "$with_cuda" != "no" ;then
     fi
     #CUDAOPT+=" -std=c++11"
     CUDAOPT+=" -Wno-deprecated-gpu-targets"
-    CCBINOPT="$OPTScommon $OPTSprof -fPIC $CFLAGS -Wno-unused-parameter"
+    CCBINOPT="$OPTScommon $OPTSprof -fPIC $CPPFLAGS $CFLAGS -Wno-unused-parameter"
     CCBINOPT="${CCBINOPT/-fpermissive/}"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     if $CCBIN -v 2>&1 |grep clang ;then
@@ -1044,6 +1039,7 @@ echo use_static=$use_static
 echo CC=$CC
 echo CN=$CN
 echo CFLAGS=$CFLAGS
+echo CPPFLAGS=$CPPFLAGS
 echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
@@ -1081,6 +1077,6 @@ echo "CMOCKA:          $enable_cmocka"
 echo
 
 echo "*************************************************************************"
-echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos ***"
+echo "*** MAOS Documentation can be found at http://lianqiw.github.io/maos ***"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos     ***"
 echo "*************************************************************************"
