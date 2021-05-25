@@ -103,11 +103,11 @@ else
 			break;
 		fi
     done
-    unset nvcc
+    $as_unset nvcc
 fi
 if test -n "$NVCC" ;then
     CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
-    unset NVCC
+    $as_unset NVCC
 fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled
@@ -119,7 +119,7 @@ if test -n "`which matlab 2>/dev/null`" ;then
     fi
     MEXDIR_AUTO="$(dirname "$MEX")"
     echo MEXDIR_AUTO=$MEXDIR_AUTO
-    unset MEX
+    $as_unset MEX
 else
     for i in /Applications/MATLAB*.app $HOME/Applications/MATLAB*.app /opt/MATLAB/* /usr/local/share/MATLAB/* ;do
 	if test -x "$i/bin/mex" ;then
@@ -224,7 +224,7 @@ case "$CN" in
 	    minor=${minor%%.*}
 	    if test $major -lt 11 ;then
 			AC_MSG_ERROR([OpenMP is not supported by ICC $CC_VERSION])
-			unset OPENMP_CFLAGS
+			$as_unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
@@ -247,7 +247,7 @@ case "$CN" in
 	    #GCC introduced openmp task in 4.4
 	    if test $major -le 4 -a $minor -le 4 ;then
 			AC_MSG_WARN([OpenMP is not supported by GCC $CC_VERSION])
-			unset OPENMP_CFLAGS
+			$as_unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
@@ -286,7 +286,7 @@ optname4=${ccprefix}_${CN}
 echo OPTScc from "${optname1} ${optname2} ${optname3} ${optname4}"
 OPTScc="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
 echo OPTScc=$OPTScc
-unset optname1 optname2 optname3 optname4
+$as_unset optname1 optname2 optname3 optname4
 
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
@@ -385,7 +385,7 @@ fi
 if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
     CFLAGS=" $mflag $CFLAGS"
 fi
-unset mflag
+$as_unset mflag
 
 
 
@@ -557,8 +557,8 @@ esac
 
 for try in ${trys}; do
     if test "$has_lapack" = "no" -o "$has_blas" = "no";then
-		unset nset ac_cv_lib_m_dgemm_
-		unset nset ac_cv_lib_m_dposv_
+		$as_unset nset ac_cv_lib_m_dgemm_
+		$as_unset nset ac_cv_lib_m_dposv_
 		set_lapack ${try}
 		if test -n "$LAPACK" ;then
 			#the trailing -lm is necessary for ubuntu-16.04 with mkl
@@ -576,7 +576,7 @@ fi
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then
     compile ZLIB zlib.tar.bz2 --static
-    unset ac_cv_lib_z_gzopen
+    $as_unset ac_cv_lib_z_gzopen
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
@@ -590,11 +590,11 @@ else
 	AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
 	AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 	echo $ac_cv_search_fftw_execute
-
+	$as_unset ac_cv_header_fftw3_h
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
-		unset ac_cv_search_fftw_execute
+		$as_unset ac_cv_search_fftw_execute
 		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
@@ -606,7 +606,7 @@ else
 		FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
 		compile FFTW fftw.tar.bz2 $FLAGS  
 		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
-		unset ac_cv_search_fftw_execute
+		$as_unset ac_cv_search_fftw_execute
 		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
 	fi
 	AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
@@ -641,12 +641,12 @@ AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 thread
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 if test "$has_chol" = "no" ;then
 	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${PRE_DIR}
-	unset ac_cv_lib_cholmod_${chol_fun}
+	$as_unset ac_cv_lib_cholmod_${chol_fun}
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 fi
 if test "$has_chol" = "no" ;then
    	compile CHOLMOD "cholmod.tar.bz2"
-   	unset ac_cv_lib_cholmod_${chol_fun}
+   	$as_unset ac_cv_lib_cholmod_${chol_fun}
    	AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 fi
 AC_CHECK_HEADERS([cholmod.h], [], 
@@ -663,12 +663,12 @@ if test "$use_websockets" = "yes" ;then
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
 		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
-		unset ac_cv_lib_websockets_lws_service
+		$as_unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
     if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
 		compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
-		unset ac_cv_lib_websockets_lws_service
+		$as_unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
 	fi
     if test "$has_lws" != "no" ;then
@@ -683,12 +683,12 @@ if test "$enable_cmocka" != "no" ;then
 	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	if test "$enable_cmocka" = "no" ;then
 		download CMOCKA cmocka${libsuffix}.tar.bz2 ${PRE_DIR}
-		unset ac_cv_lib_cmocka_mock_assert
+		$as_unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	fi
 	if test "$enable_cmocka" = "no" ;then
 		compile CMOCKA cmocka.tar.xz
-		unset ac_cv_lib_cmocka_mock_assert
+		$as_unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	fi
 	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
