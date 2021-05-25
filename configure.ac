@@ -180,7 +180,7 @@ fi
 if test "$use_release" = "yes" ;then
     use_scheduler="no"
     use_websocket="no"
-	use_static="yes"
+	#use_static="yes"
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
