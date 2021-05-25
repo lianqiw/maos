@@ -586,15 +586,17 @@ if test "$builtin_fftw" = "yes";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
     fftw_threads=1
 else
-    #Check for FFTW3 header and library.
-	AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so :libfftw3.so.3], [has_fftw="yes"],[has_fftw='no'])
+    #Check for FFTW3 header and library. Do not check for .so.3 which is without .h
+	AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
+	AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 	echo $ac_cv_search_fftw_execute
 
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
 		unset ac_cv_search_fftw_execute
-		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so :libfftw3.so.3], [has_fftw="yes"],[has_fftw='no'])
+		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
+		AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#compile from source
@@ -606,14 +608,15 @@ else
 		compile FFTW fftw.tar.bz2 $FLAGS  
 		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
 		unset ac_cv_search_fftw_execute
-		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so :libfftw3.so.3], [has_fftw="yes"],[has_fftw='no'])
+		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so], [has_fftw="yes"],[has_fftw='no'])
+		AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 	fi
-	AC_CHECK_HEADERS([fftw3.h],[], [AC_MSG_ERROR([FFTW header is not found])])
-	AC_SEARCH_LIBS(fftwf_execute, [:libfftw3f.a :libfftw3f.so :libfftw3f.so.3], [has_fftwf="yes"],[has_fftwf='no'])
-	AS_IF([test "$has_fftwf" = "yes"], [AC_DEFINE_UNQUOTED(HAS_FFTWF, [1], "FFTW single precision exists")])
+	AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
+	AC_SEARCH_LIBS(fftwf_execute, [:libfftw3f.a :libfftw3f.so], [has_fftwf="yes"],[has_fftwf='no'])
 	LDFFT="$ac_cv_search_fftw_execute"
 	if test "$has_fftwf" = "yes" ;then
 		LDFFT+=" $ac_cv_search_fftwf_execute"
+		AC_DEFINE_UNQUOTED(HAS_FFTWF, [1], "FFTW single precision exists")
 	elif test "$use_double" = "no" ;then
 		AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])
     fi
