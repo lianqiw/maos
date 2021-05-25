@@ -100,7 +100,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 					{NULL,     0,  0,     0, 0, NULL, NULL}
 				};
 				parse_argopt(conf, options);
-				if(nthread<NTHREAD&&nthread>0){
+				if(nthread<MAXTHREAD && nthread>0){
 					NTHREAD=nthread;
 				}
 				if(ngpu2>0){

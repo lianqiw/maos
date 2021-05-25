@@ -184,7 +184,7 @@ fi
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-    OPTScommon+=" -Werror "
+    OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wno-unknown-pragmas"
     #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
 fi
 LDEXE=
@@ -529,46 +529,30 @@ function set_lapack(){
 	openblas)
 	    LAPACK="-lopenblas"
 	    ;;
-	default*)
+	default)
 	    LAPACK="-llapack -lblas "
-	    if test "$type" = "default-link" ;then
-	       if test -d $/usr/lib${libsuffix} ;then
-		   USRLIB=/usr/lib${libsuffix}
-	       else
-		   USRLIB=/usr/lib
-	       fi
-	       echo Try to link from $USRLIB
-	       fn_blas=`ls ${USRLIB}/libblas.so.* 2>/dev/null`
-	       echo fn_blas=${fn_blas}
-	       if test -n "${fn_blas}" ;then
-		   rm -rf "${LIB_DIR}/libblas.so"
-		   ln -sf "${fn_blas%% *}" "${LIB_DIR}/libblas.so"
-	       fi
-	       fn_lapack=`ls ${USRLIB}/liblapack.so.* 2>/dev/null`
-	       if test -n "${fn_lapack}" ;then
-		   rm -rf "${LIB_DIR}/liblapack.so"
-		   ln -sf "${fn_lapack%% *}" "${LIB_DIR}/liblapack.so"
-	       fi
-	    fi
-	       ;;
-		*)
-		    LAPACK=
-		    ;;
+		;;
+	default-3)
+		LAPACK="-l:liblapack.so.3 -l:libblas.so.3 "
+		;;
+	*)
+	    LAPACK=
+	    ;;
     esac
     echo trying LAPACK=$LAPACK
 }
 has_lapack=no
-base_lapack="pkg-config default openblas-openmp openblas-threads openblas default-link"
+base_lapack="pkg-config default openblas-openmp openblas-threads openblas default-3"
 case $use_mkl in
     yes) #prefer MKL
-	trys="mkl mkl-download $base_lapack"
-	;;
+		trys="mkl mkl-download $base_lapack"
+		;;
     no) #disable MKL
-	trys="$base_lapack"
-	;;
+		trys="$base_lapack"
+		;;
     default) #default order
-	trys="mkl $base_lapack mkl-download"
-	;;
+		trys="mkl $base_lapack mkl-download"
+		;;
 esac
 
 for try in ${trys}; do
@@ -603,12 +587,14 @@ if test "$builtin_fftw" = "yes";then
     fftw_threads=1
 else
     #Check for FFTW3 header and library.
-    AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
+	AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so :libfftw3.so.3], [has_fftw="yes"],[has_fftw='no'])
+	echo $ac_cv_search_fftw_execute
+
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
-		unset ac_cv_lib_fftw3_fftw_execute
-        AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
+		unset ac_cv_search_fftw_execute
+		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so :libfftw3.so.3], [has_fftw="yes"],[has_fftw='no'])
     fi
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#compile from source
@@ -619,27 +605,34 @@ else
 		FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
 		compile FFTW fftw.tar.bz2 $FLAGS  
 		compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
-		unset ac_cv_lib_fftw3_fftw_execute
-		AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
+		unset ac_cv_search_fftw_execute
+		AC_SEARCH_LIBS(fftw_execute, [:libfftw3.a :libfftw3.so :libfftw3.so.3], [has_fftw="yes"],[has_fftw='no'])
 	fi
 	AC_CHECK_HEADERS([fftw3.h],[], [AC_MSG_ERROR([FFTW header is not found])])
-
-	if test "$with_matlab" != "no" ;then
-		#cannot compile with single precision floating fft when compiling mex routines
-		has_fftwf=0
-	else
-		AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
-	fi
-	AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
-	if test x$has_fftwf = x1 ;then
-		LDFFT="-lfftw3 -lfftw3f"
-	else
-		LDFFT="-lfftw3"
-		if test "$use_double" = "no" ;then
-			AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])
-		fi
+	AC_SEARCH_LIBS(fftwf_execute, [:libfftw3f.a :libfftw3f.so :libfftw3f.so.3], [has_fftwf="yes"],[has_fftwf='no'])
+	AS_IF([test "$has_fftwf" = "yes"], [AC_DEFINE_UNQUOTED(HAS_FFTWF, [1], "FFTW single precision exists")])
+	LDFFT="$ac_cv_search_fftw_execute"
+	if test "$has_fftwf" = "yes" ;then
+		LDFFT+=" $ac_cv_search_fftwf_execute"
+	elif test "$use_double" = "no" ;then
+		AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])
     fi
-    fftw_threads=0 #To avoid crush in matlab, we use optional dynamic loading from sys/fft.c instead.
+	LDFFT_MEX=$LDFFT #before adding threads.
+	if test -z "$OPENMP_CFLAGS" ;then
+		THREADS_SUFFIX="_threads"
+	else
+		THREADS_SUFFIX="_omp"
+	fi
+	case "$ac_cv_search_fftw_execute" in
+	*.a)
+		LDFFT_THREADS="${LDFFT//.a/${THREADS_SUFFIX}.a}"
+		;;
+	*.so*)
+		LDFFT_THREADS="${LDFFT//.so/${THREADS_SUFFIX}.so}"
+		;;
+	esac
+	AC_CHECK_LIB([fftw_plan_with_nthreads], [$LDFFT_THREADS], [fftw_threads=1], [fftw_threads=0], [$LDFFT])
+	AS_IF([test "$fftw_threads"="1"], [LDFFT+=" $LDFFT_THREADS"])
 fi
 AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
 
@@ -688,7 +681,7 @@ fi
 if test "$enable_cmocka" != "no" ;then
 	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	if test "$enable_cmocka" = "no" ;then
-		download CMOCKA libcmocka${libsuffix}.tar.bz2 ${PRE_DIR}
+		download CMOCKA cmocka${libsuffix}.tar.bz2 ${PRE_DIR}
 		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	fi
@@ -832,15 +825,14 @@ if test "$with_matlab" != "no" ;then
     fi
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
-	LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl -lfftw3"
-	#some MATLAB distribution has libmwfftw3.so, some only has libmwfftw3.so.3
-	#AC_CHECK_LIB([mwfftw3], [fftw_execute], [LIBMEX+=" -lmwfftw3"], [LIBMEX+=" -l:libmwfftw3.so.3"], [$LDMEX])
-	LDMEX+="-no-fast-install -static -Xcompiler -shared"
-	AM_CONDITIONAL(USE_MEX, true)
+		#2021-05-24: Linking with mwfftw3 crashes matlab. (mwfftw3 contains thread support)
+		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDFFT"
+		LDMEX+="-no-fast-install -static -Xcompiler -shared"
+		AM_CONDITIONAL(USE_MEX, true)
     else
-	with_matlab="no"
-	AC_MSG_NOTICE([mex library test failed. Disable mex])
-	AM_CONDITIONAL(USE_MEX, false)
+		with_matlab="no"
+		AC_MSG_NOTICE([mex library test failed. Disable mex])
+		AM_CONDITIONAL(USE_MEX, false)
     fi
     AC_SUBST(MEXEXT)
     AC_SUBST(LIBMEX)

@@ -475,9 +475,12 @@ static inline void free_mex(void*p){
 }
 static __attribute__((constructor)) void init(){
     if(!default_handler){
-	default_handler=signal(SIGTERM, mex_signal_handler);
+	    default_handler=signal(SIGTERM, mex_signal_handler);
     }
     quitfun=mex_quitfun;
+#ifdef HAS_OPENMP    
+    NTHREAD=1;//MAOS with openmp does not play well with matlab. 
+#endif
 }
 static __attribute__((destructor)) void deinit(){
     fprintf(stderr, "mex unloaded\n");

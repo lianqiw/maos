@@ -129,7 +129,7 @@ void init_process(void){
 		}
 	}
 #endif
-	NTHREAD=MAXTHREAD;
+	if(!NTHREAD) NTHREAD=MAXTHREAD;
 	TCK=sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
 	FILE* fp=fopen("/proc/meminfo", "r");

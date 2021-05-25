@@ -31,7 +31,7 @@ maos_LDADD=../maos/libmaos.la
 if USE_CUDA
 maos_LDADD+=$(LIBCUDA) #must be before LIBMEX, otherwise linking error in debug mode
 endif
-maos_LDADD+=-lcholmod $(LIBMEX) 
+maos_LDADD+=-lmwcholmod $(LIBMEX) 
 
 
 BUILT_SOURCES=maos2mex.h aolib.c

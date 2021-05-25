@@ -297,7 +297,8 @@ static void* maos_listener(void* psock){
 		}break;
 
 		default:
-			warning_time("unknown cmd %d\n", cmd[0]);
+			warning_time("Unknown cmd %d. Closed connection.\n", cmd[0]);
+			return NULL;
 			break;
 		}
 	}
@@ -451,5 +452,7 @@ int main(int argc, const char* argv[]){
 	free(arg->gpus);
 	free(arg);
 	scheduler_finish(0);
+	extern int exit_success;
+	exit_success=1;
 	return 0;
 }

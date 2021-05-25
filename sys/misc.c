@@ -836,8 +836,6 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	if(fatal_error_in_progress){
 		return;
 	}
-	extern int exit_fail;
-	exit_fail=1;
 	fatal_error_in_progress++;
 	if(sig==SIGSEGV||sig==SIGILL||sig==SIGFPE){
 		if(siginfo&&siginfo->si_addr){

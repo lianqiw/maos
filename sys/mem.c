@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dlfcn.h>
-int exit_fail=0;
+int exit_success=0;//set to 1 to enable print memory not freed.
 #define IN_MEM_C 1
 #include "mem.h"
 #include "thread.h"
@@ -269,8 +269,12 @@ static void print_mem_debug(){
 	if(MROOT){
 		info3("%ld (%.3f MB) allocated memory not freed!!!\n",
 			memcnt, (memalloc-memfree)/1024./1024.);
-		twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
-		twalk(MSTATROOT, print_usage);//print results.
+		if(exit_success){
+			twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
+			twalk(MSTATROOT, print_usage);//print results.
+		}else{
+			info3("Set exit_success=1 to enable printing of not freed memory\n");
+		}
 	} else{
 		info3("All allocated memory are freed.\n");
 		if(memcnt>0){
@@ -326,12 +330,7 @@ static __attribute__((destructor)) void deinit(){
 		free_default(p1);
 	}
 	if(MEM_DEBUG){
-		if(!exit_fail){
-			if(!MEM_DEBUG) return;
-			print_mem_debug();
-		} else{
-			dbg("exit_fail=%d\n", exit_fail);
-		}
+		print_mem_debug();
 	}
 }
 

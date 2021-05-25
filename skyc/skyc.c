@@ -107,5 +107,7 @@ int main(int argc, const char* argv[]){
 	scheduler_finish(0);
 	print_mem("End");
 	info("Simulation finished at %s in %s.\n", myasctime(), HOST);
+	extern int exit_success;
+	exit_success=1;
 	return 0;
 }
