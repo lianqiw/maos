@@ -4,7 +4,5 @@
 
 \subpage page93_maos
 
-\subpage algorithm
-
 \subpage page95_profiling
 

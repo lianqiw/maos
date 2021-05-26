@@ -1,4 +1,5 @@
-\mainpage Overview
+Overview {#mainpage}
+===
 
 Multi-Thread Adaptive Optics Simulator (MAOS) is an end-to-end adaptive
 optics system simulator that is capable to simulate many kinds of
@@ -14,6 +15,7 @@ following links for relevant information.
 - \ref page30_run
 - \ref page33_example
 - \ref page40_results 
+- \ref algorithm
 - \ref page90_devel
 
 <a href="https://github.com/downloads/lianqiw/files/maos_gpu.pdf">AO4ELT2 Paper on MAOS</a>
