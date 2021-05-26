@@ -78,6 +78,23 @@ var NAVTREE =
       [ "Geometry Data", "page40_results.html#geometry", null ],
       [ "Telemetry Data", "page40_results.html#telemetry", null ]
     ] ],
+    [ "Algorithms", "algorithm.html", [
+      [ "DM Actuator Influence Function", "algorithm.html#sect-dm-actuator", [
+        [ "Linear influence function", "algorithm.html#autotoc_md21", null ],
+        [ "Cubic influence function", "algorithm.html#autotoc_md22", null ]
+      ] ],
+      [ "DM Hysteresis", "algorithm.html#hysteresis", null ],
+      [ "Physical Optics Beam Propagation", "algorithm.html#pop", [
+        [ "Maxwell Equation", "algorithm.html#autotoc_md23", null ],
+        [ "Fresnel diffraction integral", "algorithm.html#autotoc_md24", null ],
+        [ "Fresnel approximation", "algorithm.html#autotoc_md25", [
+          [ "Angular Spectrum", "algorithm.html#autotoc_md26", null ],
+          [ "Single FFT", "algorithm.html#autotoc_md27", null ]
+        ] ],
+        [ "Fraunhofer approximation", "algorithm.html#autotoc_md28", null ],
+        [ "Sphere to sphere propagation", "algorithm.html#autotoc_md29", null ]
+      ] ]
+    ] ],
     [ "Development", "page90_devel.html", "page90_devel" ],
     [ "Todo List", "todo.html", null ],
     [ "Data Structures", "annotated.html", [
@@ -105,25 +122,25 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1cufit__grid.html#ad807a3183e13465e2c59c30a19575d02",
-"classcumap__t.html#a41d264ffc5675aa6b7b460df5b2137e4",
-"cmath_8h.html#a7fa16d606a01067840638f3bc1694330",
-"dmath_8h.html#a314b38cef78ec87d445012d09c8e4c06",
-"functions_vars_s.html",
-"lmath_8h.html#aeedb6df7679a7e1c669bec253577deb5",
-"maos_2types_8h.html#a4a2f0bb49e4f62a3af66e230bf351ad4",
-"maos_2types_8h.html#acd20b2ed925bd5d1d81fb1a94ff43bfe",
-"mathmisc_8h.html#a35d1cc335d45d63efe5d6692256b9438",
+"classcuda__recon_1_1cufit__grid.html#abc0003d22ab9f163ebb477ea726c0810",
+"classcumap__t.html#a2a7d4eedea2660f6ab267be16b4d35d6",
+"cmath_8h.html#a7c380d6d6ef6d0965e5a35fd4b7ce680",
+"dmath_8h.html#a30ba84a58a9c9dd2e0a0afb5e389ffad",
+"functions_vars_q.html",
+"lmath_8h.html#ae63d4e958fdc9642b205a9d0ec5fcd41",
+"maos_2types_8h.html#a49ee715275da632e060e370615844551",
+"maos_2types_8h.html#acb3585b187d349dd454477dee37961ed",
+"mathmisc_8h.html#a17bd719e22e15aaff05bc4c8773dede2",
 "mvmfull__real_8cu.html#a607d8159ba421b60a38be284a737a72f",
-"parms_8h.html#a240beb105cedfae3e9913151a4d3bb8a",
-"parms_8h.html#a90b23b744ceb825576bc4288e43f0455",
-"parms_8h.html#af401a8f35ce73cc7824ff34a34ae562d",
-"servo_8h.html#ad258c848ab89eae4e3cd7d67cc08f17e",
-"smath_8h.html#abe68a76519271b757e4767930a879d9a",
-"sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9",
-"type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a7b61c740d932ffa6dd6bd26ed81c739c",
-"type_8h.html#structscell",
-"zmath_8h.html#adff4980d9a563e2948486d7160c08e46"
+"parms_8h.html#a23bfd9e98336e6e4ddcc5f9ee2098737",
+"parms_8h.html#a904db1f514d5a051ae472e3c3a06faee",
+"parms_8h.html#af351e09d239a171f9d2e8b876f4daccc",
+"servo_8h.html#ab73c6cf92b85a0420b775e885844deca",
+"smath_8h.html#abda176c3da3c1ef735d4d14957aadf1e",
+"sys_2misc_8h.html#a54a5a8c76fec08aab30c4d2be884f34e",
+"type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a299271446cb38cc17e02f2c73e140a57",
+"type_8h.html#structscccell",
+"zmath_8h.html#adae59bc123032598245c1639ca1a50b9"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

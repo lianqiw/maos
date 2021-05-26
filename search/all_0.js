@@ -35,7 +35,7 @@ var searchData=
   ['alfrac',['alfrac',['../servo_8h.html#a61f95b9c42cb12c783f000b13a4838f8',1,'servo_t']]],
   ['alfsm',['alfsm',['../parms_8h.html#a7c631ba85bfe2f3908968480ca6b32b1',1,'sim_cfg_t']]],
   ['alg',['alg',['../muv_8h.html#aad42b86ad5f99c677bba47cb4f61c57b',1,'muv_t::alg()'],['../parms_8h.html#a5954774cf8fee73453d64f3b79947e47',1,'tomo_cfg_t::alg()'],['../parms_8h.html#abca2d1fdbd1f774de850639c62f3df5c',1,'fit_cfg_t::alg()'],['../parms_8h.html#a426abfb7663cb37771603c9c89b4acb7',1,'lsr_cfg_t::alg()'],['../parms_8h.html#ac87660610cae7d45661ec52354ca507e',1,'recon_cfg_t::alg()']]],
-  ['algorithm_20details',['Algorithm Details',['../algorithm.html',1,'page90_devel']]],
+  ['algorithms',['Algorithms',['../algorithm.html',1,'']]],
   ['alhi',['alhi',['../parms_8h.html#adc5d4faa3dda41b4a7ea2490726bae3f',1,'sim_cfg_t']]],
   ['alint',['alint',['../servo_8h.html#a0620b1820afdc91b6b6f3e2adeec3615',1,'servo_t']]],
   ['all',['all',['../parms_8h.html#a53b007d408e097054a842ad7e648922b',1,'plot_cfg_t::all()'],['../parms_8h.html#a86ab0400f2c94d9056273e5bc55ab0e1',1,'save_cfg_t::all()']]],
