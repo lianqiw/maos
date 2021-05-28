@@ -88,3 +88,5 @@ dmat* hyst_test(double hysteresis, double hyst_alpha, double hyst_stroke, const 
 void addpath(const char* path);
 void rmpath(const char* path);
 void fresnel_prop(cmat** out, double* dxout, const cmat* in, double dxin, double wvl, double z, double scale, int method);
+double dgauss_width(dmat* A, double thres);
+void dgauss_fit(double* mr, double* ma, double* mb, double* theta, dmat* A, double thres);

@@ -102,6 +102,9 @@
 #define M_T M_DBL
 #define M_SPT64 M_DSP64
 #define M_SPT32 M_DSP32
+#define REAL
+#define IMAG(A) 0
+#define CONJ
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
 #define PRINT(A) info(" %10.3e",A);
@@ -118,6 +121,7 @@
 #define COMPLEX DCOMPLEX
 #define REAL creal
 #define IMAG cimag
+#define CONJ conj
 #define RANDU(A) COMPLEX(randu(A),randu(A))
 #define RANDN(A) COMPLEX(randn(A),randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
@@ -139,6 +143,9 @@
 #define M_T M_FLT
 #define M_SPT64 M_SSP64
 #define M_SPT32 M_SSP32
+#define REAL
+#define IMAG(A) 0
+#define CONJ
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
 #define PRINT(A) info("%10.3e",A);
@@ -152,8 +159,9 @@
 #define M_SPT64 M_ZSP64
 #define M_SPT32 M_ZSP32
 #define COMPLEX FCOMPLEX
-#define REAL creal
-#define IMAG cimag
+#define REAL crealf
+#define IMAG cimagf
+#define CONJ conjf
 #define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));

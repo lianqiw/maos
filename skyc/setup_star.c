@@ -195,12 +195,12 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 			dcellfree(neaspec);
 			stari->pistat[ipowfs].scale=scale;
 			{/* skip stars with large PSF.*/
-				int size=INT_MAX;
+				real size=100;
 				for(int ic=0; ic<avgpsf->nx*avgpsf->ny; ic++){
-					int size0=dfwhm(P(avgpsf,ic));
+					real size0=dfwhm(P(avgpsf,ic));
 					if(size0<size) size=size0;
 				}
-				if(size>6){
+				if(size>3){
 					stari->use[ipowfs]=-1;
 				}
 			}

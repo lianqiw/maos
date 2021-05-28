@@ -97,7 +97,10 @@
     void X(cwlog10)(X(mat) *A);						\
     void X(cwlog)(X(mat) *A);						\
     void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta); \
-    long X(fwhm)(X(mat) *A);						\
+    R X(fwhm)(X(mat) *A);						\
+    void X(gauss_fit)(R*mr, R*ma, R*mb, R*theta, X(mat)*A, R thres);\
+    R X(gauss_width)(X(mat)*A, R thres);\
+    R X(fwhm_gauss)(X(mat) *A);\
     X(mat) *X(enc)(X(mat) *A, X(mat) *dvec, int type, int nthread);	\
     typedef T (*X(minsearch_fun))(const T *x, void *info);		\
     int X(minsearch)(T *x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void *info); \

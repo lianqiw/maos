@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -25,7 +25,7 @@
 #include "turbulence.h"
 #include "fractal.h"
 #include "accphi.h"
-
+#include "zernike.h"
 
 /**
  * hash the data to get a unique file name
@@ -49,14 +49,14 @@ static char* create_fnatm(genatm_t* data){
 	char diratm[PATH_MAX];
 	snprintf(diratm, PATH_MAX, "%s/atm", CACHE);
 	if(!exist(diratm)) mymkdir("%s", diratm);
-	const char *prefix=NULL;
+	const char* prefix=NULL;
 	if(fabs(data->slope+11./3.)<EPS){
 		prefix="vonkarman";
-	}else if(fabs(data->slope+4.)<EPS){
+	} else if(fabs(data->slope+4.)<EPS){
 		prefix="biharmonic";
-	}else if(data->slope==0){
+	} else if(data->slope==0){
 		prefix="fractal";
-	}else{
+	} else{
 		prefix="spect";
 	}
 	char fnatm[PATH_MAX+100];
@@ -85,35 +85,35 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 	long nx=data->nx;
 	long ny=data->ny;
 	real dx=data->dx;
-	P(dc,0)=dnew(nx, ny);
-	P(dc,1)=dnew(nx, ny);
-	real* restrict p1=P(dc,0)->p;
-	real* restrict p2=P(dc,1)->p;
+	P(dc, 0)=dnew(nx, ny);
+	P(dc, 1)=dnew(nx, ny);
+	real* restrict p1=P(dc, 0)->p;
+	real* restrict p2=P(dc, 1)->p;
 	char header[1024];
 	real ox=-nx/2*dx;
 	real oy=-ny/2*dx;
 	snprintf(header, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
 		ox, oy, dx, 0., 0., 0.);
-	P(dc,0)->header=strdup(header);
-	P(dc,1)->header=strdup(header);
+	P(dc, 0)->header=strdup(header);
+	P(dc, 1)->header=strdup(header);
 	//For create spatially varying r0
 	dmat* spect2=0;
 	dcell* dc2=0;
 	rand_t rstat2;//don't consume rstat
 	if(data->r0logpsds){//Scale r0 across the screen.
-		real slope2=P(data->r0logpsds,0);
-		real strength=P(data->r0logpsds,1)*(5./3.);//strength of log(wt)
+		real slope2=P(data->r0logpsds, 0);
+		real strength=P(data->r0logpsds, 1)*(5./3.);//strength of log(wt)
 		real minfreq=0, maxfreq=0;
 		if(data->r0logpsds->nx>2){//low frequency end is converted to outscale
-			minfreq=P(data->r0logpsds,2);
+			minfreq=P(data->r0logpsds, 2);
 		}
 		if(data->r0logpsds->nx>3){
-			maxfreq=P(data->r0logpsds,3);
+			maxfreq=P(data->r0logpsds, 3);
 		}
 		spatial_psd(&spect2, nx, ny, dx, strength, INFINITY, minfreq, maxfreq, slope2, 0.5);
 		dc2=dcellnew(2, 1);
-		P(dc2,0)=dnew(nx, ny);
-		P(dc2,1)=dnew(nx, ny);
+		P(dc2, 0)=dnew(nx, ny);
+		P(dc2, 1)=dnew(nx, ny);
 		seed_rand(&rstat2, rstat->statevec[0]);
 		//writebin(spect2, "spect_r0log");
 	}
@@ -133,14 +133,14 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 				spatial_psd(&spect, data->nx, data->ny, data->dx, strength, L0, data->fmin, data->fmax, slope, 0.5);
 			}
 			for(long i=0; i<nx*ny; i++){//don't parallelize this one
-				p1[i]=randn(rstat)*P(spect,i);/*real */
-				p2[i]=randn(rstat)*P(spect,i);/*imag */
+				p1[i]=randn(rstat)*P(spect, i);/*real */
+				p2[i]=randn(rstat)*P(spect, i);/*imag */
 			}
 			tk2=myclockd();
 			dcell_fft2(dc, -1);
-			this_screen=P(dc,0);
+			this_screen=P(dc, 0);
 			if(ilayer+1<nlayer&&fabs(data->L0[ilayer+1]-L0)<EPS){//matched L0.
-				prev_screen=P(dc,1);
+				prev_screen=P(dc, 1);
 			}
 		} else{
 			this_screen=prev_screen; prev_screen=0;
@@ -150,14 +150,14 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 		if(dc2){
 			if(!prev_scale){
 				for(long i=0; i<nx*ny; i++){
-					P(P(dc2,0),i)=randn(&rstat2)*P(spect2,i);/*real */
-					P(P(dc2,1),i)=randn(&rstat2)*P(spect2,i);/*imag */
+					P(P(dc2, 0), i)=randn(&rstat2)*P(spect2, i);/*real */
+					P(P(dc2, 1), i)=randn(&rstat2)*P(spect2, i);/*imag */
 				}
 				dcell_fft2(dc2, -1);
-				dcwexp(P(dc2,0), 1);
-				dcwexp(P(dc2,1), 1);
-				this_scale=dref(P(dc2,0));
-				prev_scale=dref(P(dc2,1));
+				dcwexp(P(dc2, 0), 1);
+				dcwexp(P(dc2, 1), 1);
+				this_scale=dref(P(dc2, 0));
+				prev_scale=dref(P(dc2, 1));
 			} else{
 				this_scale=prev_scale; prev_scale=0;
 			}
@@ -167,7 +167,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 		if(fc){/*save to file. */
 			zfarr_push(fc, ilayer, this_screen);
 		} else{
-			dcp((dmat**)&P(data->screen,ilayer), this_screen);
+			dcp((dmat**)&P(data->screen, ilayer), this_screen);
 		}
 		real tk4=myclockd();
 		info("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n",
@@ -210,10 +210,10 @@ static void fractal_screen_do(zfarr* fc, genatm_t* data){
 		OMPTASK_END;
 	}
 }
-static void genscreen_do(zfarr* fc, genatm_t *data){
+static void genscreen_do(zfarr* fc, genatm_t* data){
 	if(fabs(data->slope+1)<EPS){
 		fractal_screen_do(fc, data);
-	}else{
+	} else{
 		spect_screen_do(fc, data);
 	}
 }
@@ -265,7 +265,7 @@ mapcell* genscreen(genatm_t* data){
 		long ny=data->ny;
 		real dx=data->dx;
 		for(int ilayer=0; ilayer<nlayer; ilayer++){
-			P(screen,ilayer)=mapnew(nx, ny, dx, dx);
+			P(screen, ilayer)=mapnew(nx, ny, dx, dx);
 		}
 		data->screen=screen;
 		genscreen_do(0, data);
@@ -274,33 +274,60 @@ mapcell* genscreen(genatm_t* data){
 	return screen;
 }
 /**
- * Generate screen according to a header with the following keys
+ * Generate screen according to a header. It has three possible options.
+ * 1) load from file
+ * 2) generate screen from PSD
+ *  with the following keys
  * r0
  * L0
  * dx
  * slope
  * nx
  * seed
+ * 3) generate from a zernike mode with given RMS (in nm) and mode.
  */
-map_t *genscreen_str(const char *header){
-	static real seed=0;//avoid using the same seed
-	real r0=search_header_num_valid(header, "r0");
-	real L0=search_header_num_default(header, "L0", 30);
-	real dx=search_header_num_default(header, "dx", 1./64.);
-	real slope=search_header_num_default(header, "slope", -11./3.);
-	real nx=search_header_num_default(header, "nx", 2048);
-	seed=search_header_num_default(header, "seed", seed+1);
-	info("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n", 
-		r0, L0, dx, slope, nx, seed);
-	rand_t rstat;
-	seed_rand(&rstat, (int)seed);
-	real wt=1;
-	genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
-	mapcell* screen=genscreen(&cfg);
-	map_t *out=mapref(P(screen,0));
-	out->header=strdup(header);
-	cellfree(screen);
-	return out;
+mapcell* genscreen_str(const char* header){
+	mapcell* surfs=NULL;
+	if(zfexist("%s", header)){
+		info2("Loading surface OPD from %s\n", header);
+		surfs=mapcellread("%s", header);
+	} else{
+		info2("Generating surface OPD from %s\n", header);
+		real r0=search_header_num(header, "r0");
+		real mode=search_header_num(header, "mode");
+		real dx=search_header_num_default(header, "dx", 1./64.);
+		real nx=search_header_num_default(header, "nx", 2048);
+		if(!isnan(r0)){
+			static real seed=0;//avoid using the same seed
+			real L0=search_header_num_default(header, "L0", 30);
+			real slope=search_header_num_default(header, "slope", -11./3.);
+			seed=search_header_num_default(header, "seed", seed+1);
+			info("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n",
+				r0, L0, dx, slope, nx, seed);
+			rand_t rstat;
+			seed_rand(&rstat, (int)seed);
+			real wt=1;
+			genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
+			surfs=genscreen(&cfg);
+			P(surfs, 0)->header=strdup(header);
+		}else if (!isnan(mode)){
+			real rms=search_header_num_valid(header, "rms");//in nm.
+			loc_t *loc=mksqloc_auto(nx, nx, dx, dx);
+			dmat *opd=zernike(loc, nx*dx, 0, 0, -(int)mode);
+			dscale(opd, rms*1e-9);
+			surfs=mapcellnew(1,1);
+			surfs->p[0]=mapnew(nx, nx, dx, dx);
+			opd->nx=nx;
+			opd->ny=nx;
+			dcp((dmat**)&P(surfs,0), opd);
+			dfree(opd);
+			locfree(loc);
+			writebin(surfs, "surfs");
+		}else{
+			error("input is invalid: %s\n", header);
+		}
+	}
+	return surfs;
 }
 /**
    A simpler interface to gerate a single screen.
@@ -311,7 +338,7 @@ map_t* genatm_simple(real r0, real L0, real dx, long nx){
 	real wt=1.;
 	genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, -11./3., nx, nx, 1, 0, 0, 0, 0};
 	mapcell* screens=genscreen(&cfg);
-	map_t* out=mapref(P(screens,0));
+	map_t* out=mapref(P(screens, 0));
 	cellfree(screens);
 	return out;
 }
@@ -345,7 +372,7 @@ dmat* turbcov(dmat* r, real rmax, real r0, real L0){
 		real coeff=0.5*6.88*pow(2*M_PI/0.5e-6, -2)*pow(r0, -power);
 		real sigma2=coeff*pow(rmax, power);
 		for(long i=0; i<n; i++){
-			P(cov,i)=sigma2-coeff*pow(P(r,i), power);
+			P(cov, i)=sigma2-coeff*pow(P(r, i), power);
 		}
 	} else{/*von karman. */
 		const real f0=1./L0;
@@ -353,12 +380,12 @@ dmat* turbcov(dmat* r, real rmax, real r0, real L0){
 		real ri, rk, rip, rkp;
 		real r2pif0;
 		for(long i=0; i<n; i++){
-			if(fabs(P(r,i))<EPS){
-				P(cov,i)=vkcoeff0*r0f0p;
+			if(fabs(P(r, i))<EPS){
+				P(cov, i)=vkcoeff0*r0f0p;
 			} else{
-				r2pif0=P(r,i)*2*M_PI*f0;
+				r2pif0=P(r, i)*2*M_PI*f0;
 				dbessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
-				P(cov,i)=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
+				P(cov, i)=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
 			}
 		}
 	}
@@ -406,11 +433,11 @@ void spatial_psd(dmat** pout,  /**<Output*/
 		for(int ix=0;ix<nx;ix++){
 			real r2=pow((ix<nx2?ix:ix-nx)*dfx, 2)+r2y;
 			if(r2<=maxfreq2&&r2>=minfreq2){
-				P(psd,ix,iy)=pow(r2+zerofreq2, slope)*scrnstr;
+				P(psd, ix, iy)=pow(r2+zerofreq2, slope)*scrnstr;
 			}
 		}
 	}
-	if(minfreq==0) P(psd,0)=0;  //remove infinite piston mode if minfreq is zero (L0 is inf).
+	if(minfreq==0) P(psd, 0)=0;  //remove infinite piston mode if minfreq is zero (L0 is inf).
 }
 /**
    Compute spatial PSD of turbulence spectrum.

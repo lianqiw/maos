@@ -204,7 +204,7 @@ void X(spdisp)(const X(sp)* sp){
 			for(ir=sp->pp[ic];ir<sp->pp[ic+1];ir++){
 #ifdef COMP_COMPLEX
 				printf("(%ld,%ld)=(%g,%g)\n",
-					(long)sp->pi[ir], (long)ic, creal(sp->px[ir]), cimag(sp->px[ir]));
+					(long)sp->pi[ir], (long)ic, REAL(sp->px[ir]), IMAG(sp->px[ir]));
 #else		
 				printf("(%ld,%ld)=%g\n", (long)sp->pi[ir], (long)ic, sp->px[ir]);
 #endif

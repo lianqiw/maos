@@ -131,7 +131,7 @@ void wfsints(thread_t* thread_data){
 	TIM0;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		const real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
-		const real dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;
+		const real dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;//: 1/dtheta
 		/* uplink llt opd*/
 		if(lltopd){
 			const int nlx=powfs[ipowfs].llt->pts->nx;
@@ -142,6 +142,12 @@ void wfsints(thread_t* thread_data){
 			cfft2(lwvf, -1);
 			/*turn to psf*/
 			cabs2toreal(lwvf);
+			/*if(isa_start==0){//print uplink spot size.
+				cfftshift(lwvf);
+				real fwhm=1.1774*cgauss_width(lwvf, 0.01)/dtheta1*206265;
+				info("LGS %d on sky fwhm is %g\n", iwfs, fwhm);
+				cfftshift(lwvf);
+			}*/
 			/*turn to otf. */
 			cfft2(lwvf, 1);
 			if(lwvf!=lotfc){

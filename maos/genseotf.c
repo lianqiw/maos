@@ -262,7 +262,7 @@ void genselotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 			cfft2i(psfhat, 1);
 			cfftshift(psfhat);
 			creal2d(&psf, 0, psfhat, 1);
-			real fwhm=sqrt(4.*(real)dfwhm(psf)/M_PI)*dpsf;
+			real fwhm=dfwhm_gauss(psf)*dpsf;
 			info("illt %d, iwvl %d has FWHM of %g\"\n",
 				illt, iwvl, fwhm);
 			free(psf->header); psf->header=strdup(header);
@@ -647,7 +647,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 				pixrot=srot[isa];
 			}
 			if(mtchadp){
-				long fwhm=dfwhm(P(i0s, isa, ii0));
+				long fwhm=dfwhm_gauss(P(i0s, isa, ii0));
 				if(fwhm>4){
 					crdisable=0;
 				} else{

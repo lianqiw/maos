@@ -1216,7 +1216,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	sumamp2=1./(sqrt(sumamp2));
 	dscale(llt->amp, sumamp2);
 	if(lltcfg->fnsurf){
-		mapcell* ncpa=mapcellread("%s", lltcfg->fnsurf);
+		mapcell* ncpa=genscreen_str(lltcfg->fnsurf);
 		int nlotf=ncpa->nx*ncpa->ny;
 		assert(nlotf==1||nlotf==parms->powfs[ipowfs].nwfs);
 		llt->ncpa=dcellnew(nlotf, 1);

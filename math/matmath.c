@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -32,12 +32,12 @@ void X(scale)(X(mat)* A, R w){
 	if(!check_mat(A)){
 		warning("Input is not valid");
 		return;
-	} 
+	}
 	if(w==(T)0){
 		memset(A->p, 0, sizeof(T)*A->nx*A->ny);
 	} else{
 		for(int i=0; i<A->nx*A->ny; i++){
-			P(A,i)*=w;
+			P(A, i)*=w;
 		}
 	}
 }
@@ -48,7 +48,7 @@ void X(scale)(X(mat)* A, R w){
 int X(isnan)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		if(isnan(creal(P(A,i)))){
+		if(isnan(REAL(P(A, i)))){
 			return 1;
 		}
 	}
@@ -80,7 +80,7 @@ void X(randu)(X(mat)* A, const T max, rand_t* rstat){
 		return;
 	}
 	for(int i=0; i<A->nx*A->ny; i++){
-		P(A,i)=RANDU(rstat)*max;
+		P(A, i)=RANDU(rstat)*max;
 	}
 }
 /**
@@ -93,7 +93,7 @@ void X(randn)(X(mat)* A, const T sigma, rand_t* rstat){
 		return;
 	}
 	for(int i=0; i<A->nx*A->ny; i++){
-		P(A,i)=RANDN(rstat)*sigma;
+		P(A, i)=RANDN(rstat)*sigma;
 	}
 }
 
@@ -105,9 +105,9 @@ T X(inn)(const X(mat)* A, const X(mat)* B){
 	if(!check_match(A, B)) return -1;
 	TD out=0;
 	for(int i=0; i<A->nx*A->ny; i++){
-		out+=P(A,i)*P(B,i);
+		out+=P(A, i)*P(B, i);
 	}
-	if(isnan(creal(out))){
+	if(isnan(REAL(out))){
 		writebin(A, "inn_A");
 		writebin(B, "inn_B");
 		warning("NaN found\n");
@@ -126,7 +126,7 @@ T X(wdot)(const T* a, const X(mat)* w, const T* b){
 			res+=P(w, i, j)*a[i]*b[j];
 		}
 	}
-	if(isnan(creal(res))){
+	if(isnan(REAL(res))){
 		writebin(w, "wdot_w");
 		writearr("wdot_a", 1, sizeof(real), M_T, NULL, a, w->nx, w->ny);
 		writearr("wdot_b", 1, sizeof(real), M_T, NULL, b, w->nx, w->ny);
@@ -145,7 +145,7 @@ void X(cwm)(X(mat)* A, const X(mat)* B){
 		return;
 	}
 	for(long i=0; i<B->nx*B->ny; i++){
-		P(A,i)*=P(B,i);
+		P(A, i)*=P(B, i);
 	}
 }
 /**
@@ -160,15 +160,15 @@ void X(cwm2)(X(mat)* A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt2){
 	int has_b2=B2&&wt2&&check_match(A, B2);
 	if(has_b1&&has_b2){
 		for(long i=0; i<B1->nx*B1->ny; i++){
-			P(A,i)*=(P(B1,i)*wt1+P(B2,i)*wt2);
+			P(A, i)*=(P(B1, i)*wt1+P(B2, i)*wt2);
 		}
 	} else if(has_b1){
 		for(long i=0; i<B1->nx*B1->ny; i++){
-			P(A,i)*=P(B1,i)*wt1;
+			P(A, i)*=P(B1, i)*wt1;
 		}
 	} else if(has_b2){
 		for(long i=0; i<B2->nx*B2->ny; i++){
-			P(A,i)*=P(B2,i)*wt2;
+			P(A, i)*=P(B2, i)*wt2;
 		}
 	}
 }
@@ -191,15 +191,15 @@ void X(cwm3)(X(mat)* restrict A, const X(mat)* restrict W,
 		int has_b2=B2&&wt2&&check_match(A, B2);
 		if(has_b1&&has_b2){
 			for(long i=0; i<B1->nx*B1->ny; i++){
-				P(A,i)*=P(W,i)*(P(B1,i)*wt1+P(B2,i)*wt2);
+				P(A, i)*=P(W, i)*(P(B1, i)*wt1+P(B2, i)*wt2);
 			}
 		} else if(has_b1){
 			for(long i=0; i<B1->nx*B1->ny; i++){
-				P(A,i)*=P(W,i)*P(B1,i)*wt1;
+				P(A, i)*=P(W, i)*P(B1, i)*wt1;
 			}
 		} else if(has_b2){
 			for(long i=0; i<B2->nx*B2->ny; i++){
-				P(A,i)*=P(W,i)*P(B2,i)*wt2;
+				P(A, i)*=P(W, i)*P(B2, i)*wt2;
 			}
 		}
 	}
@@ -235,14 +235,14 @@ void X(cwmcol2)(X(mat)* restrict A,
 	int has_b2=check_mat(B2)&&wt2&&(A->nx==B2->nx)&&(B2->ny==1);
 	if(has_b1&&has_b2){
 		for(long ix=0; ix<A->nx; ix++){
-			T junk=P(B1,ix)*wt1+P(B2,ix)*wt2;
+			T junk=P(B1, ix)*wt1+P(B2, ix)*wt2;
 			for(long iy=0; iy<A->ny; iy++){
 				P(A, ix, iy)*=junk;
 			}
 		}
 	} else if(has_b1){
 		for(long ix=0; ix<A->nx; ix++){
-			T junk=P(B1,ix)*wt1;
+			T junk=P(B1, ix)*wt1;
 			for(long iy=0; iy<A->ny; iy++){
 				P(A, ix, iy)*=junk;
 			}
@@ -320,14 +320,14 @@ void X(cwmrow2)(X(mat)* restrict A,
 
 	if(has_b1&&has_b2){
 		for(long iy=0; iy<A->ny; iy++){
-			T junk=P(B1,iy)*wt1+P(B2,iy)*wt2;
+			T junk=P(B1, iy)*wt1+P(B2, iy)*wt2;
 			for(long ix=0; ix<A->nx; ix++){
 				P(A, ix, iy)*=junk;
 			}
 		}
 	} else if(has_b1){
 		for(long iy=0; iy<A->ny; iy++){
-			T junk=P(B1,iy)*wt1;
+			T junk=P(B1, iy)*wt1;
 			for(long ix=0; ix<A->nx; ix++){
 				P(A, ix, iy)*=junk;
 			}
@@ -346,8 +346,8 @@ void X(cwdiv)(X(mat)* B, const X(mat)* A, T value){
 		return;
 	}
 	for(int i=0; i<A->nx*A->ny; i++){
-		P(B,i)/=P(A,i);
-		if(isnan(creal(P(B,i)))) P(B,i)=value;
+		P(B, i)/=P(A, i);
+		if(isnan(REAL(P(B, i)))) P(B, i)=value;
 	}
 }
 /**
@@ -403,7 +403,7 @@ X(mat)* X(mcc)(const X(mat)* A, const X(mat)* wt){
 		for(int jmod=imod; jmod<nmod; jmod++){
 			T tmp=0;
 			for(long ik=0; ik<nsa2; ik++){
-				tmp+=P(A, ik, imod)*P(A, ik, jmod)*P(wt,ik);
+				tmp+=P(A, ik, imod)*P(A, ik, jmod)*P(wt, ik);
 			}
 			P(ata, jmod, imod)=tmp;
 			if(imod!=jmod)
@@ -425,7 +425,7 @@ X(mat)* X(tmcc)(const X(mat)* A, const X(mat)* wt){
 		for(int jmod=imod; jmod<nmod; jmod++){
 			T tmp=0;
 			for(int k=0; k<nsa2; k++){
-				tmp+=P(A, imod, k)*P(A, jmod, k)*P(wt,k);
+				tmp+=P(A, imod, k)*P(A, jmod, k)*P(wt, k);
 			}
 			P(ata, jmod, imod)=tmp;
 			if(imod!=jmod)
@@ -442,7 +442,7 @@ X(mat)* X(tmcc)(const X(mat)* A, const X(mat)* wt){
 T X(diff)(const X(mat)* A, const X(mat)* B){
 	if(!check_match(A, B)) return -1;
 	T d=sqrt(X(sumdiffsq)(A, B)*2/(X(norm)(A)+X(norm)(B)));
-	return isnan(creal(d))?-1:d;
+	return isnan(REAL(d))?-1:d;
 }
 /**
    Generate a new gray pixel map based on bilinear influence functions used in
@@ -534,7 +534,7 @@ void X(circle_symbolic)(X(mat)* A, R cx, R cy, R dx, R dy, R r){
    A is nx2 while A(:,1) is x, A(:,2) is y.
 */
 void X(rotvec)(X(mat)* A, const R theta){
-	if(!check_mat(A) || A->ny!=2){
+	if(!check_mat(A)||A->ny!=2){
 		warning("A is not valid");
 		return;
 	}
@@ -639,9 +639,9 @@ void X(para3)(R* grad, const X(mat)* corr){
 	//Find Peak location (jx, jy)
 	for(int iy=1; iy<corr->ny-1; iy++){
 		for(int ix=1; ix<corr->nx-1; ix++){
-			if(creal(P(corr, ix, iy))>valmax){
+			if(REAL(P(corr, ix, iy))>valmax){
 				jy=iy; jx=ix;
-				valmax=creal(P(corr, ix, iy));
+				valmax=REAL(P(corr, ix, iy));
 			}
 		}
 	}
@@ -650,8 +650,8 @@ void X(para3)(R* grad, const X(mat)* corr){
 	for(long iy=0; iy<3; iy++){
 		vy[iy]=0; vx[iy]=0;
 		for(long ix=0; ix<3; ix++){
-			vy[iy]+=creal(P(corr, ix+jx-1, iy+jy-1));
-			vx[iy]+=creal(P(corr, iy+jx-1, ix+jy-1));
+			vy[iy]+=REAL(P(corr, ix+jx-1, iy+jy-1));
+			vx[iy]+=REAL(P(corr, iy+jx-1, ix+jy-1));
 		}
 	}
 	//Parabolic fit.
@@ -678,7 +678,7 @@ void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
 	R iI;
 	for(int iy=0; iy<im->ny; iy++){
 		for(int ix=0; ix<im->nx; ix++){
-			iI=creal(P(im, ix, iy))-bkgrnd;
+			iI=REAL(P(im, ix, iy))-bkgrnd;
 			if(iI>thres){
 				sum+=iI;
 				sumx+=iI*ix;
@@ -767,7 +767,7 @@ void X(gramschmidt)(X(mat)* Mod, R* amp){
 			}
 		}
 		/*normalize*/
-		R norm=sqrt(creal(X(vecdot)(PCOL(Mod, imod), PCOL(Mod, imod), amp, nx)/wtsum));
+		R norm=sqrt(REAL(X(vecdot)(PCOL(Mod, imod), PCOL(Mod, imod), amp, nx)/wtsum));
 		if(fabs(norm)>1.e-15){
 			norm=1./norm;
 			for(long ix=0; ix<nx; ix++){
@@ -793,7 +793,7 @@ int X(clip)(X(mat)* A, R min, R max){
 	T* restrict Ap=A->p;
 	int nclip=0;
 	for(long i=0; i<A->nx*A->ny; i++){
-		R Ar=creal(Ap[i]);
+		R Ar=REAL(Ap[i]);
 		if(Ar>max){
 			Ap[i]=max;
 			nclip++;
@@ -825,7 +825,7 @@ void X(muldiag)(X(mat)* A, const X(mat)* s){
 void X(cwpow)(X(mat)* A, R power){
 	if(!A) return;
 	for(long i=0; i<A->nx*A->ny; i++){
-		P(A,i)=pow(P(A,i), power);
+		P(A, i)=pow(P(A, i), power);
 	}
 }
 
@@ -835,7 +835,7 @@ void X(cwpow)(X(mat)* A, R power){
 void X(cwexp)(X(mat)* A, R alpha){
 	if(!A) return;
 	for(long i=0; i<A->nx*A->ny; i++){
-		P(A,i)=exp(P(A,i)*alpha);
+		P(A, i)=exp(P(A, i)*alpha);
 	}
 }
 
@@ -845,10 +845,10 @@ void X(cwexp)(X(mat)* A, R alpha){
 void X(cwpow_thres)(X(mat)* A, R power, R thres){
 	thres*=X(maxabs)(A);
 	for(long i=0; i<A->nx*A->ny; i++){
-		if(fabs(P(A,i))>thres){
-			P(A,i)=pow(P(A,i), power);
+		if(fabs(P(A, i))>thres){
+			P(A, i)=pow(P(A, i), power);
 		} else{
-			P(A,i)=0;
+			P(A, i)=0;
 		}
 	}
 }
@@ -864,9 +864,9 @@ void X(polyval)(X(mat)* A, XR(mat)* p){
 	for(long i=0; i<A->nx*A->ny; i++){
 		T tmp=0;
 		for(long ip=0; ip<np; ip++){
-			tmp+=P(p,ip)*(T)pow(P(A,i), np-ip-1);
+			tmp+=P(p, ip)*(T)pow(P(A, i), np-ip-1);
 		}
-		P(A,i)=tmp;
+		P(A, i)=tmp;
 	}
 }
 /**
@@ -878,7 +878,7 @@ void X(addI)(X(mat)* A, T val){
 		warning("daddI: A is not square\n");
 	long M=A->nx<A->ny?A->nx:A->ny;
 	for(long i=0; i<M; i++){
-		P(A,i,i)+=val;
+		P(A, i, i)+=val;
 	}
 }
 /**
@@ -898,14 +898,14 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 		}
 		if(bc){
 			for(int i=0; i<A->nx*A->ny; i++){
-				P(B,i)=P(B,i)*bc+P(A,i)*ac;
+				P(B, i)=P(B, i)*bc+P(A, i)*ac;
 			}
 		} else{
 			if(ac==(T)1){
 				X(cp)(B0, A);
 			} else{/*just assign */
 				for(int i=0; i<A->nx*A->ny; i++){
-					P(B,i)=P(A,i)*ac;
+					P(B, i)=P(A, i)*ac;
 				}
 			}
 		}
@@ -938,7 +938,7 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 void X(adds)(X(mat*)A, const T ac){
 	if(!A||!A->nx||ac==(T)0) return;
 	for(int i=0; i<A->nx*A->ny; i++){
-		P(A,i)+=ac;
+		P(A, i)+=ac;
 	}
 }
 
@@ -950,7 +950,7 @@ X(mat)* X(logspace)(R emin, R emax, long n){
 	R esep=(emax-emin)/(n-1);
 	for(long i=0; i<n; i++){
 		R ex=emin+esep*i;
-		P(out,i)=pow(10, ex);
+		P(out, i)=pow(10, ex);
 	}
 	return out;
 }
@@ -961,7 +961,7 @@ X(mat)* X(logspace)(R emin, R emax, long n){
 X(mat)* X(linspace)(R min, R dx, long n){
 	X(mat)* out=X(new)(n, 1);
 	for(long i=0; i<n; i++){
-		P(out,i)=min+dx*i;
+		P(out, i)=min+dx*i;
 	}
 	return out;
 }
@@ -972,10 +972,10 @@ X(mat)* X(linspace)(R min, R dx, long n){
 static int X(islinear)(const X(mat)* xin){
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
-	R xminl=(P(xin,0));
-	R xmaxl=(P(xin,nmax-1));
+	R xminl=(P(xin, 0));
+	R xmaxl=(P(xin, nmax-1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
-	if(fabs(xsep+xminl-P(xin,1))>xsep*1.e-3){
+	if(fabs(xsep+xminl-P(xin, 1))>xsep*1.e-3){
 		return 0;
 	} else{
 		return 1;
@@ -987,9 +987,9 @@ static int X(islinear)(const X(mat)* xin){
 static int X(islog)(const X(mat)* xin){
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
-	R xminl=log10(P(xin,0));
-	R x1=log10(P(xin,1));
-	R xmaxl=log10(P(xin,nmax1));
+	R xminl=log10(P(xin, 0));
+	R x1=log10(P(xin, 1));
+	R xmaxl=log10(P(xin, nmax1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
 	if(!isfinite(xsep)||fabs(xsep+xminl-x1)>xsep*1.e-3){
 		return 0;
@@ -1010,14 +1010,14 @@ X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xne
 	}
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
-	R xminl=(P(xin,0));
-	R xmaxl=(P(xin,nmax-1));
+	R xminl=(P(xin, 0));
+	R xmaxl=(P(xin, nmax-1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
 	R xsep1=1./xsep;
 	X(mat)* ynew=X(new)(xnew->nx, xnew->ny);
 	for(long iy=0; iy<ynew->ny; iy++){
 		for(long ix=0; ix<ynew->nx; ix++){
-			R xx=((P(xnew,ix))-xminl)*xsep1;
+			R xx=((P(xnew, ix))-xminl)*xsep1;
 			long xxm=ifloor(xx);
 			if(xxm<0){
 				P(ynew, ix, iy)=isnan(ydefault)?P(yin, 0, iy):ydefault;
@@ -1045,14 +1045,14 @@ X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, 
 	}
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
-	R xminl=log10(P(xin,0));
-	R xmaxl=log10(P(xin,nmax-1));
+	R xminl=log10(P(xin, 0));
+	R xmaxl=log10(P(xin, nmax-1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
 	R xsep1=1./xsep;
 	X(mat)* ynew=X(new)(xnew->nx, xnew->ny);
 	for(long iy=0; iy<ynew->ny; iy++){
 		for(long ix=0; ix<ynew->nx; ix++){
-			R xx=(log10(P(xnew,ix))-xminl)*xsep1;
+			R xx=(log10(P(xnew, ix))-xminl)*xsep1;
 			long xxm=ifloor(xx);
 			if(xxm<0){
 				P(ynew, ix, iy)=isnan(ydefault)?P(yin, 0, iy):ydefault;
@@ -1087,13 +1087,13 @@ X(mat)* X(interp1)(const X(mat)* xin_, const X(mat)* yin_, const X(mat)* xnew, T
 		for(long ix=0; ix<ynew->nx; ix++){
 			int found=0;
 			for(curpos=0; curpos<xin->nx-2; curpos++){
-				if(P(xnew,ix)>P(xin,curpos)&&P(xnew,ix)<P(xin,curpos+1)){
+				if(P(xnew, ix)>P(xin, curpos)&&P(xnew, ix)<P(xin, curpos+1)){
 					found=1;
 					break;
 				}
 			}
 			if(found||isnan(ydefault)){
-				R xx=((P(xnew,ix))-P(xin,curpos))/(P(xin,curpos+1)-P(xin,curpos));
+				R xx=((P(xnew, ix))-P(xin, curpos))/(P(xin, curpos+1)-P(xin, curpos));
 				for(long iy=0; iy<ynew->ny; iy++){
 					P(ynew, ix, iy)=xx*P(yin, curpos+1, iy)+(1.-xx)*P(yin, curpos, iy);
 				}
@@ -1171,7 +1171,7 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
 	const int noff=n/2;
 	const int n1=n-1;
 	for(long i=0; i<A->nx*A->ny; i++){
-		int ind=(int)round(creal(Ap[i]-center)*spacingi)+noff;
+		int ind=(int)round(REAL(Ap[i]-center)*spacingi)+noff;
 		if(ind<0) ind=0;
 		if(ind>n1) ind=n1;
 		P(Op, ind, i)++;
@@ -1278,18 +1278,18 @@ X(mat)* X(spline_eval)(X(mat)* coeff, X(mat)* x, X(mat)* xnew){
 	assert(coeff->nx==4);
 	const long nx=coeff->ny;
 	X(mat)* pc=coeff;
-	T xmin=P(x,0);
-	T xsep1=(T)(nx-1)/(P(x,nx-1)-xmin);
+	T xmin=P(x, 0);
+	T xsep1=(T)(nx-1)/(P(x, nx-1)-xmin);
 	X(mat)* out=X(new)(xnew->nx, xnew->ny);
 	for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-		R xn=creal((P(xnew,ix)-xmin)*xsep1);
+		R xn=REAL((P(xnew, ix)-xmin)*xsep1);
 		long xnf=floor(xn);
 		if(xnf<0) xnf=0;
 		if(xnf>nx-2) xnf=nx-2;
 		xn=xn-xnf;
 		T xn2=xn*xn;
 		T xn3=xn2*xn;
-		P(out,ix)=P(pc, 0, xnf)*xn3+P(pc, 1, xnf)*xn2+P(pc, 2, xnf)*xn+P(pc, 3, xnf);
+		P(out, ix)=P(pc, 0, xnf)*xn3+P(pc, 1, xnf)*xn2+P(pc, 2, xnf)*xn+P(pc, 3, xnf);
 	}
 	return out;
 }
@@ -1309,7 +1309,7 @@ X(mat)* X(spline)(X(mat)* x, X(mat)* y, X(mat)* xnew){
 void X(cwlog10)(X(mat)* A){
 	R ratio=1./log(10);
 	for(long i=0; i<A->nx*A->ny; i++){
-		P(A,i)=log(P(A,i))*ratio;
+		P(A, i)=log(P(A, i))*ratio;
 	}
 }
 /**
@@ -1317,7 +1317,7 @@ void X(cwlog10)(X(mat)* A){
 */
 void X(cwlog)(X(mat)* A){
 	for(long i=0; i<A->nx*A->ny; i++){
-		P(A,i)=log(P(A,i));
+		P(A, i)=log(P(A, i));
 	}
 }
 /**
@@ -1388,17 +1388,95 @@ void X(embed)(X(mat)* restrict A, const X(mat)* restrict B, const R theta){
 
 /**
    Calculate number of pixels having values larger than or equal to half of
-   maximum. Useful to compute fwhm. */
-long X(fwhm)(X(mat)* A){
+   maximum and convert to diameter.
+
+   For more accurate calculation of Gaussian beams, use the sqrt(2*log(2))*X(gauss_width).*/
+R X(fwhm)(X(mat)* A){
 	if(!A) return 0;
 	R hm=0.5*X(max)(A);
-	long fwhm=0;
+	long n=0;
 	for(long ix=0; ix<A->nx*A->ny; ix++){
-		if(fabs(P(A,ix))>=hm){
-			fwhm++;
+		if(fabs(P(A, ix))>=hm){
+			n++;
 		}
 	}
-	return fwhm;
+	return sqrt(n*4/M_PI);
+}
+
+/**
+ * Calculate D4s width of Gaussian 2D function
+ * */
+void X(gauss_fit)(
+	R* mr, /**<Equivalent radius of the same area*/
+	R* ma, /**<major axis*/
+	R* mb, /**<minor axi*/
+	R* angle, /**<angle*/
+	X(mat)* A, /**<The irradiance (intensity)*/
+	R thres  ///The threshold relative to peak.
+	){
+	long ny=NY(A);
+	long nx=NX(A);
+
+	R sum=0, sumx=0, sumy=0, Amax=0;
+	for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
+			R Ai=REAL(P(A, ix, iy));
+			sum+=Ai;
+			sumx+=Ai*ix;
+			sumy+=Ai*iy;
+			if(Amax<Ai) Amax=Ai;
+		}
+	}
+	if(!sum){
+		if(mr) *mr=0;
+		if(ma) *ma=0;
+		if(mb) *mb=0;
+		if(angle) *angle=0;
+		return;
+	}
+	thres*=Amax;
+	sum=1./sum;
+	sumx*=sum;
+	sumy*=sum;
+	R sumx2=0, sumy2=0, sumxy=0;
+	sum=0;
+	for(long iy=0; iy<ny; iy++){
+		R y=(R)iy-sumy;
+		for(long ix=0; ix<nx; ix++){
+			R x=(R)ix-sumx;
+			R Ai=REAL(P(A, ix, iy));
+			if (Ai>thres){
+				sumx2+=Ai*x*x;
+				sumy2+=Ai*y*y;
+				sumxy+=Ai*x*y;
+				sum+=Ai;
+			}
+		}
+	}
+	sum=1./sum;
+	sumx2*=sum;
+	sumy2*=sum;
+	sumxy*=sum;
+	R tmp=sqrt((sumx2-sumy2)*(sumx2-sumy2)+4*(sumxy*sumxy));
+	//equivalent radius with same area is sqrt(ma*mb)
+	if(mr) *mr=2*pow(sumx2*sumy2-sumxy*sumxy,1./4.);
+	if(ma) *ma=sqrt(2*(sumx2+sumy2+tmp));
+	if(mb) *mb=sqrt(2*(sumx2+sumy2-tmp));
+	if(angle) *angle=0.5*atan2(2*sumxy,(sumx2-sumy2));
+}
+/**
+ * A convenient wrapper
+ * */
+R X(gauss_width)(X(mat)*A, R thres){
+	R mr;
+	X(gauss_fit)(&mr, 0, 0, 0, A, thres);
+	return mr;
+}
+/**
+ * Use gauss fit to compute fwhm
+ * */
+R X(fwhm_gauss)(X(mat)* A){
+	return X(gauss_width)(A, 0.01)*1.17741;
 }
 #ifndef COMP_COMPLEX
 typedef struct{
@@ -1433,7 +1511,7 @@ static void X(enc_thread)(thread_t* pdata){
 			for(long ix=0; ix<ncomp2; ix++){
 				for(long ir=pdata->start; ir<pdata->end; ir++){
 					R s=P(pks, ir, iy)*P(pks, ir, ix);
-					P(enc,ir)+=s*P(ppsf, ix, iy);
+					P(enc, ir)+=s*P(ppsf, ix, iy);
 				}
 			}
 		}
@@ -1447,7 +1525,7 @@ static void X(enc_thread)(thread_t* pdata){
 					R k=sqrt(kx*kx+ky*ky);
 					for(long ir=pdata->start; ir<pdata->end; ir++){
 						R s=j0(k*pi2*dr[ir]);
-						P(enc,ir)+=s*P(ppsf, ix, iy);
+						P(enc, ir)+=s*P(ppsf, ix, iy);
 					}
 				} break;
 				case 0:
@@ -1459,7 +1537,7 @@ static void X(enc_thread)(thread_t* pdata){
 						const R tmp=k*pi2*r;
 						R s=j1(tmp)*r/k;
 						if(!ix&&!iy) s=pi2*r*r;/*special case. */
-						P(enc,ir)+=s*P(ppsf, ix, iy);
+						P(enc, ir)+=s*P(ppsf, ix, iy);
 					}
 				} break;
 				case 2:/*Enstripped energe in a slit. */
@@ -1644,7 +1722,7 @@ X(cell)* X(cellcat_each)(const X(cell)* A, const X(cell)* B, int dim){
 	}
 	X(cell)* out=(X(cell*))cellnew(A->nx, A->ny);
 	for(long ix=0; ix<A->nx*A->ny; ix++){
-		P(out,ix)=X(cat)(P(A,ix), P(B,ix), dim);
+		P(out, ix)=X(cat)(P(A, ix), P(B, ix), dim);
 	}
 	return out;
 }
@@ -1655,7 +1733,7 @@ X(cell)* X(cellcat_each)(const X(cell)* A, const X(cell)* B, int dim){
 R X(cellnorm)(const X(cell)* A){
 	R out=0;
 	for(int i=0; i<A->nx*A->ny; i++){
-		out+=X(norm)(P(A,i));
+		out+=X(norm)(P(A, i));
 	}
 	return out;
 }
@@ -1670,7 +1748,7 @@ T X(cellinn)(const X(cell)* A, const X(cell)* B){
 	if(A->nx!=B->nx||A->ny!=1||B->ny!=1) error("mismatch\n");
 	T out=0;
 	for(int i=0; i<A->nx; i++){
-		out+=X(inn)(P(A,i), P(B,i));
+		out+=X(inn)(P(A, i), P(B, i));
 	}
 	return out;
 }
@@ -1682,7 +1760,7 @@ T X(cellinn)(const X(cell)* A, const X(cell)* B){
 void X(cellcwm)(X(cell)* B, const X(cell)* A){
 	if(A->nx!=B->nx||A->ny!=B->ny) error("mismatch\n");
 	for(int i=0; i<A->nx*A->ny; i++){
-		X(cwm)(P(B,i), P(A,i));
+		X(cwm)(P(B, i), P(A, i));
 	}
 }
 
@@ -1697,7 +1775,7 @@ void X(celldropzero)(X(cell)* B, R thres){
 			if(!tmp) continue;
 			int hasnonzero=0;
 			for(int ixy=0; ixy<tmp->nx*tmp->ny; ixy++){
-				if(fabs(P(tmp,ixy))>thres){
+				if(fabs(P(tmp, ixy))>thres){
 					hasnonzero=1;
 					break;
 				}
@@ -1731,7 +1809,7 @@ int X(cellclip)(X(cell)* Ac, R min, R max){
 	if(!isfinite(min)&&!isfinite(max)) return 0;
 	int nclip=0;
 	for(long i=0; i<Ac->nx*Ac->ny; i++){
-		nclip+=X(clip)(P(Ac,i), min, max);
+		nclip+=X(clip)(P(Ac, i), min, max);
 	}
 	return nclip;
 }
@@ -1742,7 +1820,7 @@ int X(cellclip)(X(cell)* Ac, R min, R max){
 void X(cellcwpow)(X(cell)* A, R power){
 	if(!A) return;
 	for(long ib=0; ib<A->nx*A->ny; ib++){
-		X(cwpow)(P(A,ib), power);
+		X(cwpow)(P(A, ib), power);
 	}
 }
 
@@ -1877,21 +1955,21 @@ X(cell)* X(bspline_prep)(X(mat)* x, X(mat)* y, X(mat)* z){
 X(mat)* X(bspline_eval)(X(cell)* coeff, X(mat)* x, X(mat)* y, X(mat)* xnew, X(mat)* ynew){
 	const long nx=x->nx;
 	const long ny=y->nx;
-	T xmin=P(x,0);
-	T ymin=P(y,0);
-	T xsep1=(R)(nx-1)/(P(x,nx-1)-xmin);
-	T ysep1=(R)(ny-1)/(P(y,ny-1)-ymin);
+	T xmin=P(x, 0);
+	T ymin=P(y, 0);
+	T xsep1=(R)(nx-1)/(P(x, nx-1)-xmin);
+	T ysep1=(R)(ny-1)/(P(y, ny-1)-ymin);
 	assert(xnew->nx==ynew->nx&&xnew->ny==ynew->ny);
 	X(mat)* zz=X(new)(xnew->nx, xnew->ny);
 	X(cell)* pc=coeff;
 	for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-		R xm=creal((P(xnew,ix)-xmin)*xsep1);
+		R xm=REAL((P(xnew, ix)-xmin)*xsep1);
 		long xmf=floor(xm);
 		if(xmf<0) xmf=0;
 		if(xmf>nx-2) xmf=nx-2;
 		xm=xm-xmf;
 
-		R ym=creal((P(ynew,ix)-ymin)*ysep1);
+		R ym=REAL((P(ynew, ix)-ymin)*ysep1);
 		long ymf=floor(ym);
 		if(ymf<0) ymf=0;
 		if(ymf>ny-2) ymf=ny-2;
@@ -1902,7 +1980,7 @@ X(mat)* X(bspline_eval)(X(cell)* coeff, X(mat)* x, X(mat)* y, X(mat)* xnew, X(ma
 		T ym2=ym*ym;
 		T ym3=ym2*ym;
 		X(mat*)ppc=P(pc, xmf, ymf);
-		P(zz,ix)=P(ppc, 0, 0)+P(ppc, 1, 0)*xm+P(ppc, 2, 0)*xm2+P(ppc, 3, 0)*xm3+
+		P(zz, ix)=P(ppc, 0, 0)+P(ppc, 1, 0)*xm+P(ppc, 2, 0)*xm2+P(ppc, 3, 0)*xm3+
 			P(ppc, 0, 1)*ym+P(ppc, 1, 1)*ym*xm+P(ppc, 2, 1)*ym*xm2+P(ppc, 3, 1)*ym*xm3+
 			P(ppc, 0, 2)*ym2+P(ppc, 1, 2)*ym2*xm+P(ppc, 2, 2)*ym2*xm2+P(ppc, 3, 2)*ym2*xm3+
 			P(ppc, 0, 3)*ym3+P(ppc, 1, 3)*ym3*xm+P(ppc, 2, 3)*ym3*xm2+P(ppc, 3, 3)*ym3*xm3;
