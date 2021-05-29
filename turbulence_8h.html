@@ -116,8 +116,8 @@ Functions</h2></td></tr>
 <tr class="separator:a6d2df4e268244fbc0f8ea206aa7a5b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a6a9578e6bd96e6a6ea0b7285cf3587"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmapcell">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a0a6a9578e6bd96e6a6ea0b7285cf3587">genscreen</a> (<a class="el" href="turbulence_8h.html#structgenatm__t">genatm_t</a> *data)</td></tr>
 <tr class="separator:a0a6a9578e6bd96e6a6ea0b7285cf3587"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfcf4de914d7418af0b4d0ca4fc10885"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#abfcf4de914d7418af0b4d0ca4fc10885">genscreen_str</a> (const char *header)</td></tr>
-<tr class="separator:abfcf4de914d7418af0b4d0ca4fc10885"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e3606e0e0ac7eedc0ed98b865c4b9c4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmapcell">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a5e3606e0e0ac7eedc0ed98b865c4b9c4">genscreen_str</a> (const char *header)</td></tr>
+<tr class="separator:a5e3606e0e0ac7eedc0ed98b865c4b9c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a355ca2e7672a29cbefea042caba47c47"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a355ca2e7672a29cbefea042caba47c47">turbcov</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *r, real rmax, real r0, real L0)</td></tr>
 <tr class="separator:a355ca2e7672a29cbefea042caba47c47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a003ba466f6608495ae22890661663e8e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a003ba466f6608495ae22890661663e8e">spatial_psd</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **out, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, real dx, real strength, real L0, real fmin, real fmax, real slope, real power)</td></tr>
@@ -352,14 +352,14 @@ screen</td>
 
 </div>
 </div>
-<a id="abfcf4de914d7418af0b4d0ca4fc10885"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abfcf4de914d7418af0b4d0ca4fc10885">&#9670;&nbsp;</a></span>genscreen_str()</h2>
+<a id="a5e3606e0e0ac7eedc0ed98b865c4b9c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e3606e0e0ac7eedc0ed98b865c4b9c4">&#9670;&nbsp;</a></span>genscreen_str()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="type_8h.html#structmap__t">map_t</a>* genscreen_str </td>
+          <td class="memname"><a class="el" href="type_8h.html#structmapcell">mapcell</a>* genscreen_str </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>header</em></td><td>)</td>
@@ -367,7 +367,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate screen according to a header with the following keys r0 L0 dx slope nx seed </p>
+<p>Generate screen according to a header. It has three possible options. 1) load from file 2) generate screen from PSD with the following keys r0 L0 dx slope nx seed 3) generate from a zernike mode with given RMS (in nm) and mode. </p>
 
 </div>
 </div>

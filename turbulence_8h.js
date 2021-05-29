@@ -20,7 +20,7 @@ var turbulence_8h =
     [ "genatm_simple", "turbulence_8h.html#addf46c2b6461f8cd3045493cb2422b90", null ],
     [ "genatm_loc", "turbulence_8h.html#a6d2df4e268244fbc0f8ea206aa7a5b51", null ],
     [ "genscreen", "turbulence_8h.html#a0a6a9578e6bd96e6a6ea0b7285cf3587", null ],
-    [ "genscreen_str", "turbulence_8h.html#abfcf4de914d7418af0b4d0ca4fc10885", null ],
+    [ "genscreen_str", "turbulence_8h.html#a5e3606e0e0ac7eedc0ed98b865c4b9c4", null ],
     [ "turbcov", "turbulence_8h.html#a355ca2e7672a29cbefea042caba47c47", null ],
     [ "spatial_psd", "turbulence_8h.html#a003ba466f6608495ae22890661663e8e", null ],
     [ "turbpsd", "turbulence_8h.html#a5ac871dc0baf2241c719fa67f892f292", null ],

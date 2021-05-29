@@ -423,8 +423,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>chistfill</b> (<a cla
 <tr class="separator:a5e181b09bf95d9c048d48faf94c88753"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9103b8a83d73f56aac1fb8650afa6d9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ae9103b8a83d73f56aac1fb8650afa6d9">cembed</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *__restrict A, const <a class="el" href="type_8h.html#structcmat">cmat</a> *__restrict B, const real theta)</td></tr>
 <tr class="separator:ae9103b8a83d73f56aac1fb8650afa6d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a087023ff454d2d50994788f8962c1f06"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a087023ff454d2d50994788f8962c1f06">cfwhm</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
-<tr class="separator:a087023ff454d2d50994788f8962c1f06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f54f4a239c77745288e040294f72322"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a0f54f4a239c77745288e040294f72322">cfwhm</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
+<tr class="separator:a0f54f4a239c77745288e040294f72322"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a027a0fda383088c50bcebac7b6bf2a89"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a027a0fda383088c50bcebac7b6bf2a89">cgauss_fit</a> (real *mr, real *ma, real *mb, real *theta, <a class="el" href="type_8h.html#structcmat">cmat</a> *A, real thres)</td></tr>
+<tr class="separator:a027a0fda383088c50bcebac7b6bf2a89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ab4f2a4155bba498f4a5c54a0c5fc1d"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a2ab4f2a4155bba498f4a5c54a0c5fc1d">cgauss_width</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, real thres)</td></tr>
+<tr class="separator:a2ab4f2a4155bba498f4a5c54a0c5fc1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf79f8d7196bd24f3f403257e6274341"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#acf79f8d7196bd24f3f403257e6274341">cfwhm_gauss</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
+<tr class="separator:acf79f8d7196bd24f3f403257e6274341"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28502e83b600584c22180a68131853fb"><td class="memItemLeft" align="right" valign="top"><a id="a28502e83b600584c22180a68131853fb"></a>
 <a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>cenc</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, <a class="el" href="type_8h.html#structcmat">cmat</a> *dvec, int type, int nthread)</td></tr>
 <tr class="separator:a28502e83b600584c22180a68131853fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -3584,14 +3590,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
 
 </div>
 </div>
-<a id="a087023ff454d2d50994788f8962c1f06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a087023ff454d2d50994788f8962c1f06">&#9670;&nbsp;</a></span>cfwhm()</h2>
+<a id="a0f54f4a239c77745288e040294f72322"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f54f4a239c77745288e040294f72322">&#9670;&nbsp;</a></span>cfwhm()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classlong.html">long</a> cfwhm </td>
+          <td class="memname">real cfwhm </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
           <td class="paramname"><em>A</em></td><td>)</td>
@@ -3599,7 +3605,122 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate number of pixels having values larger than or equal to half of maximum. Useful to compute fwhm. </p>
+<p>Calculate number of pixels having values larger than or equal to half of maximum and convert to diameter.</p>
+<p>For more accurate calculation of Gaussian beams, use the sqrt(2*log(2))*CX(gauss_width).</p>
+<p>Calculate number of pixels having values larger than or equal to half of maximum and convert to diameter.</p>
+<p>For more accurate calculation of Gaussian beams, use the sqrt(2*log(2))*ZX(gauss_width). </p>
+
+</div>
+</div>
+<a id="a027a0fda383088c50bcebac7b6bf2a89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a027a0fda383088c50bcebac7b6bf2a89">&#9670;&nbsp;</a></span>cgauss_fit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cgauss_fit </td>
+          <td>(</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>mr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>ma</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>mb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>angle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thres</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calculate D4s width of Gaussian 2D function </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">mr</td><td>Equivalent radius of the same area </td></tr>
+    <tr><td class="paramname">ma</td><td>major axis </td></tr>
+    <tr><td class="paramname">mb</td><td>minor axi </td></tr>
+    <tr><td class="paramname">angle</td><td>angle </td></tr>
+    <tr><td class="paramname">A</td><td>The irradiance (intensity) </td></tr>
+    <tr><td class="paramname">thres</td><td>The threshold relative to peak. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2ab4f2a4155bba498f4a5c54a0c5fc1d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ab4f2a4155bba498f4a5c54a0c5fc1d">&#9670;&nbsp;</a></span>cgauss_width()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real cgauss_width </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>thres</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A convenient wrapper </p>
+
+</div>
+</div>
+<a id="acf79f8d7196bd24f3f403257e6274341"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf79f8d7196bd24f3f403257e6274341">&#9670;&nbsp;</a></span>cfwhm_gauss()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real cfwhm_gauss </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Use gauss fit to compute fwhm </p>
 
 </div>
 </div>

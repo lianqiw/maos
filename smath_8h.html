@@ -442,8 +442,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>shistfill</b> (<a cla
 <tr class="memitem:a074a1090b3ce0f608da55b99e2f264b5"><td class="memItemLeft" align="right" valign="top"><a id="a074a1090b3ce0f608da55b99e2f264b5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>sembed</b> (<a class="el" href="type_8h.html#structsmat">smat</a> *__restrict A, const <a class="el" href="type_8h.html#structsmat">smat</a> *__restrict B, const float theta)</td></tr>
 <tr class="separator:a074a1090b3ce0f608da55b99e2f264b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89b79edf16c8f3794a1f844304f8918b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a89b79edf16c8f3794a1f844304f8918b">sfwhm</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *A)</td></tr>
-<tr class="separator:a89b79edf16c8f3794a1f844304f8918b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6c3ea15f8a733de5ff02783c3438121"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#ae6c3ea15f8a733de5ff02783c3438121">sfwhm</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *A)</td></tr>
+<tr class="separator:ae6c3ea15f8a733de5ff02783c3438121"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefc30a482f4be8ef04339743c7852747"><td class="memItemLeft" align="right" valign="top"><a id="aefc30a482f4be8ef04339743c7852747"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>sgauss_fit</b> (float *mr, float *ma, float *mb, float *theta, <a class="el" href="type_8h.html#structsmat">smat</a> *A, float thres)</td></tr>
+<tr class="separator:aefc30a482f4be8ef04339743c7852747"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07c7b9e09830613fe2858ef104f4f4cd"><td class="memItemLeft" align="right" valign="top"><a id="a07c7b9e09830613fe2858ef104f4f4cd"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>sgauss_width</b> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, float thres)</td></tr>
+<tr class="separator:a07c7b9e09830613fe2858ef104f4f4cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ff79613b1def7b41cd01c7a630e864e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a4ff79613b1def7b41cd01c7a630e864e">sfwhm_gauss</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *A)</td></tr>
+<tr class="separator:a4ff79613b1def7b41cd01c7a630e864e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca3c5fdfa929c201c8f4f40be26a3118"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#aca3c5fdfa929c201c8f4f40be26a3118">senc</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, <a class="el" href="type_8h.html#structsmat">smat</a> *dvec, int type, int nthread)</td></tr>
 <tr class="separator:aca3c5fdfa929c201c8f4f40be26a3118"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50dbbcbf4a0457f70f98e81f58eaf6e5"><td class="memItemLeft" align="right" valign="top"><a id="a50dbbcbf4a0457f70f98e81f58eaf6e5"></a>
@@ -2722,14 +2730,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
 
 </div>
 </div>
-<a id="a89b79edf16c8f3794a1f844304f8918b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a89b79edf16c8f3794a1f844304f8918b">&#9670;&nbsp;</a></span>sfwhm()</h2>
+<a id="ae6c3ea15f8a733de5ff02783c3438121"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6c3ea15f8a733de5ff02783c3438121">&#9670;&nbsp;</a></span>sfwhm()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classlong.html">long</a> sfwhm </td>
+          <td class="memname">float sfwhm </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td>
           <td class="paramname"><em>A</em></td><td>)</td>
@@ -2737,7 +2745,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate number of pixels having values larger than or equal to half of maximum. Useful to compute fwhm. </p>
+<p>Calculate number of pixels having values larger than or equal to half of maximum and convert to diameter.</p>
+<p>For more accurate calculation of Gaussian beams, use the sqrt(2*log(2))*SX(gauss_width). </p>
+
+</div>
+</div>
+<a id="a4ff79613b1def7b41cd01c7a630e864e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ff79613b1def7b41cd01c7a630e864e">&#9670;&nbsp;</a></span>sfwhm_gauss()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float sfwhm_gauss </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td>
+          <td class="paramname"><em>A</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Use gauss fit to compute fwhm </p>
 
 </div>
 </div>
