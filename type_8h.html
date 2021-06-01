@@ -237,11 +237,11 @@ Macros</h2></td></tr>
 <tr class="separator:abc6c8a37faad9f0f715e9ecf731a1e66"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16d2ae3e5519371c1d566bc9f8aa717c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a16d2ae3e5519371c1d566bc9f8aa717c">PCOLR</a>(A,  iy)&#160;&#160;&#160;<a class="el" href="type_8h.html#aedbdd989a69ced62e7db462fc0a02972">PCOL</a>((A),(iy)%(A)-&gt;ny)</td></tr>
 <tr class="separator:a16d2ae3e5519371c1d566bc9f8aa717c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54f1d629485d54c67ae8adc8d86b5458"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a54f1d629485d54c67ae8adc8d86b5458">PN</a>(A)&#160;&#160;&#160;((A)-&gt;nx*(A)-&gt;ny)</td></tr>
+<tr class="memitem:a54f1d629485d54c67ae8adc8d86b5458"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a54f1d629485d54c67ae8adc8d86b5458">PN</a>(A)&#160;&#160;&#160;((A)?(A)-&gt;nx*(A)-&gt;ny:0)</td></tr>
 <tr class="separator:a54f1d629485d54c67ae8adc8d86b5458"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18db24f2863a17fc7ca41464076dff31"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a18db24f2863a17fc7ca41464076dff31">NX</a>(A)&#160;&#160;&#160;(A)-&gt;nx</td></tr>
+<tr class="memitem:a18db24f2863a17fc7ca41464076dff31"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a18db24f2863a17fc7ca41464076dff31">NX</a>(A)&#160;&#160;&#160;((A)?(A)-&gt;nx:0)</td></tr>
 <tr class="separator:a18db24f2863a17fc7ca41464076dff31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45f88cef3d1e4ff91ee5cbd9228d3328"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a45f88cef3d1e4ff91ee5cbd9228d3328">NY</a>(A)&#160;&#160;&#160;(A)-&gt;ny</td></tr>
+<tr class="memitem:a45f88cef3d1e4ff91ee5cbd9228d3328"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a45f88cef3d1e4ff91ee5cbd9228d3328">NY</a>(A)&#160;&#160;&#160;((A)?(A)-&gt;ny:0)</td></tr>
 <tr class="separator:a45f88cef3d1e4ff91ee5cbd9228d3328"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
@@ -3427,7 +3427,7 @@ dsax</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A</td><td>)</td>
-          <td>&#160;&#160;&#160;((A)-&gt;nx*(A)-&gt;ny)</td>
+          <td>&#160;&#160;&#160;((A)?(A)-&gt;nx*(A)-&gt;ny:0)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -3446,7 +3446,7 @@ dsax</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A</td><td>)</td>
-          <td>&#160;&#160;&#160;(A)-&gt;nx</td>
+          <td>&#160;&#160;&#160;((A)?(A)-&gt;nx:0)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -3465,7 +3465,7 @@ dsax</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A</td><td>)</td>
-          <td>&#160;&#160;&#160;(A)-&gt;ny</td>
+          <td>&#160;&#160;&#160;((A)?(A)-&gt;ny:0)</td>
         </tr>
       </table>
 </div><div class="memdoc">
