@@ -992,8 +992,13 @@ gboolean addpage(gpointer indata){
 		GTK_WIDGET_SET_FLAGS(drawarea, GTK_CAN_FOCUS);
 		GTK_WIDGET_SET_FLAGS(drawarea, GTK_SENSITIVE);
 #endif
+#if GTK_MAJOR_VERSION>=4
+		GtkEventController *controller=gtk_event_controller_new(drawarea);
+		g_signal_connect(controller, "motion", motion_notify, drawdatawrap);
+#else
 		g_signal_connect(drawarea, "motion-notify-event",
 			G_CALLBACK(motion_notify), drawdatawrap);
+#endif
 		g_signal_connect(drawarea, "button-press-event",
 			G_CALLBACK(button_press), drawdatawrap);
 		g_signal_connect(drawarea, "button-release-event",
@@ -1490,7 +1495,9 @@ void new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name
 	GtkToolItem* item=NULL;
 
 	if(name){
-		if(toggle){
+		if(child){
+			item=gtk_tool_item_new();
+		}else if(toggle){
 			item=gtk_toggle_tool_button_new();
 		} else{
 			item=gtk_tool_button_new(NULL, name);
@@ -1625,10 +1632,10 @@ GtkWidget* create_window(GtkWidget* window){
 	gtk_box_pack_start(GTK_BOX(vbox), topnb, TRUE, TRUE, 0);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
 	g_signal_connect(window, "destroy", G_CALLBACK(close_window), NULL);
-	gtk_window_set_position(GTK_WINDOW(window),
-		GTK_WIN_POS_CENTER);
+	gtk_window_set_position(GTK_WINDOW(window),	GTK_WIN_POS_CENTER);
 	gtk_window_set_default_size(GTK_WINDOW(window), 1050, 900);
 	gtk_widget_add_events(GTK_WIDGET(window), GDK_FOCUS_CHANGE_MASK);/*in case this is not on. */
+	set_cur_window(window);
 	g_signal_connect(GTK_WIDGET(window), "event", G_CALLBACK(window_state), NULL);
 	gtk_widget_show_all(window);
 	gtk_window_present(GTK_WINDOW(window));

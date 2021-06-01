@@ -290,7 +290,7 @@ static inline long index_col(long iy, long nx, long ny){
 #define PCOLR(A,iy) PCOL((A),(iy)%(A)->ny)
 
 //Return Number of elements
-#define PN(A) ((A)->nx*(A)->ny)
-#define NX(A) (A)->nx
-#define NY(A) (A)->ny
+#define PN(A)  ((A)?(A)->nx*(A)->ny:0)
+#define NX(A) ((A)?(A)->nx:0)
+#define NY(A) ((A)?(A)->ny:0)
 #endif

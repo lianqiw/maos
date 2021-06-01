@@ -107,26 +107,28 @@ enum{
 //For tools/drawdaemon and lib/draw.c
 enum{
     DRAW_START=0, /*Mark the starting of data stream. */
-    DRAW_DATA,
-    DRAW_SHM,
-    DRAW_POINTS,
-    DRAW_STYLE,
-    DRAW_CIRCLE,
-    DRAW_LIMIT,
-    DRAW_FIG,
-    DRAW_NAME,
-    DRAW_TITLE,
-    DRAW_XLABEL,
-    DRAW_YLABEL,
-    DRAW_ZLIM,
-    DRAW_LEGEND,/*legend */
-    DRAW_XYLOG,/*logscale long x, y*/
-    DRAW_FIGFN,
-    DRAW_PAUSE,
-    DRAW_RESUME,
-    DRAW_FINAL,/*this client is done.*/
-    DRAW_FLOAT,/*number of bytes for float*/
-    DRAW_END=100
+    DRAW_DATA,//1
+    DRAW_SHM,//2
+    DRAW_POINTS,//3
+    DRAW_STYLE,//4
+    DRAW_CIRCLE,//5
+    DRAW_LIMIT,//6
+    DRAW_FIG,//7
+    DRAW_NAME,//8
+    DRAW_TITLE,//9
+    DRAW_XLABEL,//10
+    DRAW_YLABEL,//11
+    DRAW_ZLIM,//12
+    DRAW_LEGEND,//13
+    DRAW_XYLOG,//14
+    DRAW_FIGFN,//15
+    DRAW_PAUSE,//16
+    DRAW_RESUME,//17
+    DRAW_FINAL,//18 this client is done.
+    DRAW_FLOAT,//19 number of bytes for float
+    DRAW_FRAME,//20 information about UDP frame, following this is frame index, total bytes, sub-frame index, sub-frame bytes/
+    DRAW_END=100,
+    DRAW_ENTRY=9999 /*A new entry*/
 };
 #define scheduler_version 0x30
 #endif

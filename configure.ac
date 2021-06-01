@@ -536,7 +536,7 @@ function set_lapack(){
 	    LAPACK="-llapack -lblas"
 		;;
 	default-3)
-		LAPACK="-l:liblapack.so.3 -l:libblas.so.3 "
+		LAPACK="-l:liblapack.so.3 -l:libblas.so.3 " #notice that this method is not supported in macos (clang).
 		;;
 	*)
 	    LAPACK=
@@ -590,10 +590,9 @@ if test "$builtin_fftw" = "yes";then
     fftw_threads=1
 else
     #Check for FFTW3 header and library. Do not check for .so.3 which is without .h
-	if test "$use_static" = "yes"; then fftw_libs=":libfftw3.a :libfftw3.so"; else fftw_libs=":libfftw3.so :libfftw3.a"; fi
-	fftwf_libs="${fftw_libs//fftw3/fftw3f}"
+	fftw_libs="fftw3"
+	fftwf_libs="fftw3f"
 	AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [AC_CHECK_HEADERS([fftw3.h],[has_fftw='yes'], [has_fftw='no'])],[has_fftw='no'])
-	echo $ac_cv_search_fftw_execute
 	unset ac_cv_header_fftw3_h
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
@@ -629,18 +628,20 @@ else
 	else
 		THREADS_SUFFIX="_omp"
 	fi
-	case "$LDFFT" in
-	*.a)
-		LDFFT_THREADS="${LDFFT//.a/${THREADS_SUFFIX}.a}"
-		;;
-	*.so*)
-		LDFFT_THREADS="${LDFFT//.so/${THREADS_SUFFIX}.so}"
-		;;
-	*)
-		for lib in "$LDFFT" ;do
-			LDFFT_THREADS+=" $lib${THREADS_SUFFIX}"
-		done
-	esac
+	LDFFT_THREADS=
+	for name in $LDFFT ;do
+		case "$name" in
+		*.a)
+			LDFFT_THREADS+=" ${name/.a/}${THREADS_SUFFIX}.a"
+			;;
+		*.so)
+			LDFFT_THREADS+=" ${name/.so/}${THREADS_SUFFIX}.so"
+			;;
+		*)
+			LDFFT_THREADS+=" $name${THREADS_SUFFIX}"
+		esac
+	done
+	
 	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1], [fftw_threads=0], [$LDFFT_THREADS $LDFFT $OPENMP_CFLAGS])
 	AS_IF([test "$fftw_threads"="1"], [LDFFT+=" $LDFFT_THREADS"])
 fi

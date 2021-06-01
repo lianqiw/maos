@@ -105,10 +105,20 @@ void* listen_draw(void* dummy){
 	//TIC;tic;
 	static drawdata_t* drawdata=NULL;
 	int cmd=0;
+	int nlen=0;
 	while(!streadint(sock, &cmd)){
-	//dbg("cmd=%d\n", cmd);
+		//dbg("cmd=%d\n", cmd);
 		sock_idle=0;//Indicate connection is active
+		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
+			STREADINT(nlen);
+			STREADINT(cmd);
+			//dbg("cmd=%d\n", cmd);
+		}
 		switch(cmd){
+		case DRAW_FRAME:{//in new format, every frame start with this. Place holder to handle UDP.
+			int sizes[4];
+			STREAD(sizes, sizeof(int)*4);
+		};break;
 		case DRAW_START:
 			//tic;
 			if(drawdata){
@@ -144,8 +154,8 @@ void* listen_draw(void* dummy){
 			drawdata->ny=header[1];
 			int nx=drawdata->nx;
 			int ny=drawdata->ny;
-			drawdata->p0=malloc(nx*ny*byte_float);//use double to avoid overflow
-			if(nx*ny>0){
+			if(nx*ny>0){				
+				drawdata->p0=malloc(nx*ny*byte_float);//use double to avoid overflow
 				STREADFLT(drawdata->p0, nx*ny);
 			}
 			drawdata->square=1;//default to square for images.
@@ -227,6 +237,7 @@ void* listen_draw(void* dummy){
 			break;
 		case DRAW_FLOAT:
 			STREADINT(byte_float);
+			//dbg("byte_float=%d\n", byte_float);
 			if(byte_float>8){
 				error("invalid byte_float=%d\n", byte_float);
 			}
@@ -237,7 +248,7 @@ void* listen_draw(void* dummy){
 				int nx=drawdata->nx;
 				int ny=drawdata->ny;
 				size_t size=0;
-				if(nx<=0||ny<=0) error("Please call _DATA\n");
+				if(nx<=0||ny<=0) error("Please call DRAW_DATA\n");
 				if(drawdata->gray){
 					drawdata->format=(cairo_format_t)CAIRO_FORMAT_A8;
 					size=1;
@@ -287,13 +298,12 @@ void* listen_draw(void* dummy){
 			goto end;/*read failed. */
 			break;
 		default:
-			warning("Unknown cmd: %x\n", cmd);
-			/*{
-			  static int errcount=0;
-			  if(errcount++>10){
-			  goto end;
-			  }}*/
-			break;
+			warning("Unknown cmd: %d with size %d\n", cmd, nlen);
+			if(nlen){
+				void* p=malloc(nlen);
+				STREAD(p, nlen);
+				free(p);
+			}
 		}/*switch */
 		cmd=-1;
 	}/*while */

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -72,15 +72,6 @@ typedef struct{
 }sockinfo_t;
 sockinfo_t sock_draws[MAXDRAW];
 
-#define CATCH(A) if(A){\
-	warning("stwrite to %d failed with %s\n", sock_draw, strerror(errno)); \
-	draw_remove(sock_draw,0);					\
-	goto end;							\
-    }
-#define STWRITESTR(A) CATCH(stwritestr(sock_draw,A))
-#define STWRITEINT(A) CATCH(stwriteint(sock_draw,A))
-#define STWRITECMDSTR(cmd,str) CATCH(stwriteint(sock_draw,cmd) || stwritestr(sock_draw,str))
-#define STWRITE(p,len) CATCH(stwrite(sock_draw,p,len));
 
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
@@ -92,7 +83,7 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 	//info("draw is listening to drawdaemon at %d\n", sock_draw);
 	int cmd;
 	while(sock_data->fd!=-1&&!streadint(sock_draw, &cmd)){
-		switch(cmd){	
+		switch(cmd){
 		case DRAW_FIGFN:
 		{
 			char* fig=0, * fn=0;
@@ -294,7 +285,7 @@ static int get_drawdaemon(){
 	}
 	int sock=-1;
 	//First try reusing existing idle drawdaemon
-	if(!scheduler_recv_socket(&sock,draw_id)){
+	if(!scheduler_recv_socket(&sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_FINAL)){
 			dbg("received socket=%d is already closed.\n", sock);
@@ -318,7 +309,7 @@ static int get_drawdaemon(){
 				}
 				dbg("launch using sock helper: sock=%d\n", sock);
 			}
-		}else{//no display is available. use scheduler to launch drawdaemon
+		} else{//no display is available. use scheduler to launch drawdaemon
 			dbg("launch using scheduler\n");
 			scheduler_recv_socket(&sock, 0);
 		}
@@ -344,8 +335,7 @@ void draw_final(int reuse){
 		for(int ifd=0; ifd<sock_ndraw; ifd++){
 			int sock_draw=sock_draws[ifd].fd;
 			if(sock_draw==-1) continue;
-			STWRITEINT(DRAW_FINAL);
-end:
+			stwriteint(sock_draw, DRAW_FINAL);
 			draw_remove(sock_draw, reuse);
 		}
 		UNLOCK(lock);
@@ -373,7 +363,7 @@ static int check_figfn(int ifd, const char* fig, const char* fn, int add){
 	if(child){
 		if(fn){
 			found=list_search(&child->child, NULL, fn, add);
-		}else{//don't check fn
+		} else{//don't check fn
 			found=1;
 		}
 	}
@@ -418,6 +408,25 @@ int draw_current(const char* fig, const char* fn){
 	}
 	return current;
 }
+static inline int fwriteint(FILE* fbuf, int A){
+	if(fwrite(&A, sizeof(int), 1, fbuf)<1) return -1;
+	return 0;
+}
+//write str length and str itself (with tailing NULL)
+static inline int fwritestr(FILE* fbuf, const char* str){
+	if(!str) return 0;
+	uint32_t nlen=strlen(str)+1;
+	if(fwriteint(fbuf, nlen)||fwrite(str, 1, nlen, fbuf)<nlen) return -1;
+	return 0;
+}
+static int count=0; 
+#define CATCH(A) if(A) {ans=1; warning("fwrite failed\n"); goto end2;}
+#define FWRITEARR(p,len) CATCH(fwrite(p,1,len,fbuf)<len)
+#define FWRITESTR(str) CATCH(fwritestr(fbuf, str))
+#define FWRITEINT(A) CATCH(fwriteint(fbuf,A))
+#define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, (nlen)+sizeof(int)) || fwriteint(fbuf, cmd))
+#define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, strlen(str)+1); FWRITESTR(str);}
+#define FWRITECMDARR(cmd,p,len) if((p)&&(len)>0){FWRITECMD(cmd, len); FWRITEARR(p,len);}
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
@@ -438,27 +447,44 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 	if(draw_disabled) return 0;
 	format2fn;
 	LOCK(lock);
+	count++;
 	int ans=0;
+	int use_udp=0;
 	if(!get_drawdaemon()){
+		int needed=0;
 		for(int ifd=0; ifd<sock_ndraw; ifd++){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-			int sock_draw=sock_draws[ifd].fd;
-			int needed=check_figfn(ifd, fig, fn, 1);
-			if(!needed){
-				continue;
+			int needed_i=check_figfn(ifd, fig, fn, 0);
+			//dbg("%s %s: %d\n", fig, fn, needed_i);
+			if(needed_i){
+				if(!needed||needed==3){
+					needed=needed_i;
+				}
 			}
-			STWRITEINT(DRAW_FLOAT); STWRITEINT(sizeof(real));
-			STWRITEINT(DRAW_START);
-			STWRITECMDSTR(DRAW_FIG, fig);
-			if(fn) STWRITECMDSTR(DRAW_NAME, fn);
+		}
+		char* buf=0;
+		size_t bufsize=0;
+		if(needed){
+			//When using UDP, we need to serialize the data instead of writing like a FILE
+			//Use open_memstream to serialize and f_openmem for de-serialize
+			//To be able to handle the data in forward/backward compatible way, 
+			//each segment is composed of 1) the length of bytes (int), 2) command name (int), 3) payload
+			FILE* fbuf=open_memstream(&buf, &bufsize);
+			int zeros[4]={0,0,0,0};	
+			FWRITECMDARR(DRAW_FRAME, zeros, 4*sizeof(int));
+			FWRITECMD(DRAW_START, 0);
+			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(real));
+			FWRITECMDSTR(DRAW_FIG, fig);
+			FWRITECMDSTR(DRAW_NAME, fn);
 			if(needed!=3){//current page
 				if(loc){/*there are points to plot. */
 					for(int ig=0; ig<ngroup; ig++){
-						STWRITEINT(DRAW_POINTS); STWRITEINT(loc[ig]->nloc);
-						STWRITEINT(2);
-						STWRITEINT(1);
-						STWRITE(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
-						STWRITE(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
+						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*loc[ig]->nloc*2);
+						FWRITEINT(loc[ig]->nloc);
+						FWRITEINT(2);
+						FWRITEINT(1);
+						FWRITEARR(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
+						FWRITEARR(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
 					}
 					if(dc){
 						warning("both loc and dc are specified, ignore dc.\n");
@@ -468,63 +494,92 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 						ngroup=dc->nx*dc->ny;
 					}
 					for(int ig=0; ig<ngroup; ig++){
-						int nx=0, ny=0;
-						real* p=NULL;
-						if(P(dc,ig)){
-							nx=P(dc,ig)->nx;
-							ny=P(dc,ig)->ny;
-							p=P(dc,ig)->p;
-						}
-						STWRITEINT(DRAW_POINTS);
-						STWRITEINT(nx);
-						STWRITEINT(ny);
-						STWRITEINT(0);
+						dmat* p=P(dc, ig);
+						uint32_t nlen=sizeof(real)*PN(p);
+						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen);
+						FWRITEINT(NX(p));
+						FWRITEINT(NY(p));
+						FWRITEINT(0);
 						if(p){
-							STWRITE(p, sizeof(real)*P(dc,ig)->nx*P(dc,ig)->ny);
+							FWRITEARR(P(p), nlen);
 						}
 					}
 				} else{
 					error("Invalid Usage\n");
 				}
 				if(style){
-					STWRITEINT(DRAW_STYLE);
-					STWRITEINT(ngroup);
-					STWRITE(style, sizeof(uint32_t)*ngroup);
+					FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*ngroup);
+					FWRITEINT(ngroup);
+					FWRITEARR(style, sizeof(uint32_t)*ngroup);
 				}
 				if(cir){
 					if(cir->nx!=4){
 						error("Cir should have 4 rows\n");
 					}
-					STWRITEINT(DRAW_CIRCLE);
-					STWRITEINT(cir->ny);
-					STWRITE(cir->p, sizeof(real)*cir->nx*cir->ny);
+					FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*cir->nx*cir->ny);
+					FWRITEINT(cir->ny);
+					FWRITEARR(cir->p, sizeof(real)*cir->nx*cir->ny);
 				}
 				if(limit){/*xmin,xmax,ymin,ymax */
-					STWRITEINT(DRAW_LIMIT);
-					STWRITE(limit, sizeof(real)*4);
+					FWRITECMDARR(DRAW_LIMIT, limit, sizeof(real)*4);
 				}
 				if(xylog){
-					STWRITEINT(DRAW_XYLOG);
-					STWRITE(xylog, sizeof(const char)*2);
+					FWRITECMDARR(DRAW_XYLOG, xylog, sizeof(char)*2);
 				}
 				/*if(format){
-					STWRITEINT(DRAW_NAME);
-					STWRITESTR(fn);
+					FWRITECMDSTR(DRAW_NAME, fn);
 				}*/
 				if(legend){
-					STWRITEINT(DRAW_LEGEND);
+					int nlen=0;
 					for(int ig=0; ig<ngroup; ig++){
-						STWRITESTR(legend[ig]);
+						if(legend[ig]){
+							nlen+=strlen(legend[ig])+1;
+						}
+					}
+					FWRITECMD(DRAW_LEGEND, nlen);
+					for(int ig=0; ig<ngroup; ig++){
+						FWRITESTR(legend[ig]);
 					}
 				}
-			
-				STWRITECMDSTR(DRAW_TITLE, title);
-				STWRITECMDSTR(DRAW_XLABEL, xlabel);
-				STWRITECMDSTR(DRAW_YLABEL, ylabel);
+
+				FWRITECMDSTR(DRAW_TITLE, title);
+				FWRITECMDSTR(DRAW_XLABEL, xlabel);
+				FWRITECMDSTR(DRAW_YLABEL, ylabel);
 			}
-			STWRITEINT(DRAW_END);
-end:
-			ans=1;
+			FWRITECMD(DRAW_END, 0);
+end2:
+			fclose(fbuf);
+			if(ans){
+				warning("write failed:%d\n", ans);
+				free(buf); bufsize=0; buf=0;
+			} else{
+				int* bufp=(int*)(buf+3*sizeof(int));
+				bufp[0]=(int)bufsize;//frame number
+				bufp[1]=count;//frame number
+				bufp[2]=(int)bufsize;//sub-frame number
+				bufp[3]=0;//sub-frame number
+				//dbg("plot_points: buf has size %ld. %d %d %d %d\n", bufsize,
+				//	bufp[0], bufp[1], bufp[2], bufp[3]);
+			}
+		}
+		if(bufsize&&!ans){
+			for(int ifd=0; ifd<sock_ndraw; ifd++){
+				/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+				int sock_draw=sock_draws[ifd].fd;
+				int needed_i=check_figfn(ifd, fig, fn, 1);
+				if(!needed_i){
+					continue;
+				}
+				if(use_udp){
+					error("To be implemented\n");
+				} else{
+					if(stwrite(sock_draw, buf, bufsize)){
+						ans=-1;
+						draw_remove(sock_draw, 0);
+					}
+				}
+			}
+			free(buf);
 		}
 	}
 	UNLOCK(lock);
@@ -551,8 +606,11 @@ typedef struct imagesc_t{
 	char* fn;
 }imagesc_t;
 static void* imagesc_do(imagesc_t* data){
+	int use_udp=0;
 	if(draw_disabled) return NULL;
 	LOCK(lock);
+	count++;
+	
 	if(!get_drawdaemon()){
 		char* fig=data->fig;
 		long nx=data->nx;
@@ -564,39 +622,80 @@ static void* imagesc_do(imagesc_t* data){
 		char* xlabel=data->xlabel;
 		char* ylabel=data->ylabel;
 		char* fn=data->fn;
+		int needed=0;
 		for(int ifd=0; ifd<sock_ndraw; ifd++){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-			int sock_draw=sock_draws[ifd].fd;
-			int needed=check_figfn(ifd, fig, fn, 1);
-			if(!needed) continue;
-			
-			STWRITEINT(DRAW_FLOAT);
-			STWRITEINT(sizeof(dtype));
-			STWRITEINT(DRAW_START);
-			if(fn) STWRITECMDSTR(DRAW_NAME, fn);
-			STWRITECMDSTR(DRAW_FIG, fig);
+			int needed_i=check_figfn(ifd, fig, fn, 0);
+			//dbg("%s %s: %d\n", fig, fn, needed_i);
+			if(needed_i){
+				if(!needed||needed==3){
+					needed=needed_i;
+				}
+			}
+		}
+		int ans=0;
+		char* buf=0;
+		size_t bufsize=0;
+		if(needed){
+			FILE* fbuf=open_memstream(&buf, &bufsize);
+			int zeros[4]={0,0,0,0};
+			FWRITECMDARR(DRAW_FRAME, zeros, 4*sizeof(int));
+			FWRITECMD(DRAW_START, 0);
+			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(dtype));
+			FWRITECMDSTR(DRAW_FIG, fig);
+			FWRITECMDSTR(DRAW_NAME, fn);
 			if(needed!=3){
-				STWRITEINT(DRAW_DATA);
+				size_t nlen=2*sizeof(int32_t)+sizeof(dtype)*nx*ny;
+				FWRITECMD(DRAW_DATA, nlen);
 				int32_t header[2];
 				header[0]=nx;
 				header[1]=ny;
-				STWRITE(header, sizeof(int32_t)*2);
-				STWRITE(p, sizeof(dtype)*nx*ny);
+				FWRITEARR(header, sizeof(int32_t)*2);
+				FWRITEARR(p, sizeof(dtype)*nx*ny);
 				if(zlim){
-					STWRITEINT(DRAW_ZLIM);
-					STWRITE(zlim, sizeof(dtype)*2);
+					FWRITECMDARR(DRAW_ZLIM, zlim, sizeof(dtype)*2);
 				}
 				if(limit){/*xmin,xmax,ymin,ymax */
-					STWRITEINT(DRAW_LIMIT);
-					STWRITE(limit, sizeof(dtype)*4);
+					FWRITECMDARR(DRAW_LIMIT, limit, sizeof(dtype)*4);
 				}
-				
-				STWRITECMDSTR(DRAW_TITLE, title);
-				STWRITECMDSTR(DRAW_XLABEL, xlabel);
-				STWRITECMDSTR(DRAW_YLABEL, ylabel);
+
+				FWRITECMDSTR(DRAW_TITLE, title);
+				FWRITECMDSTR(DRAW_XLABEL, xlabel);
+				FWRITECMDSTR(DRAW_YLABEL, ylabel);
 			}
-			STWRITEINT(DRAW_END);
-end:;
+			FWRITECMD(DRAW_END, 0);
+end2:
+			fclose(fbuf);
+			if(ans){
+				warning("write failed:%d\n", ans);
+				free(buf); bufsize=0; buf=0;
+			} else{
+				int* bufp=(int*)(buf+3*sizeof(int));
+				bufp[0]=(int)bufsize;//frame number
+				bufp[1]=count;//frame number
+				bufp[2]=(int)bufsize;//sub-frame number
+				bufp[3]=0;//sub-frame number
+				//dbg("draw_image: buf has size %ld. %d %d %d %d\n", bufsize,
+				//	bufp[0], bufp[1], bufp[2], bufp[3]);
+			}
+		}
+
+		if(bufsize&&!ans){
+			for(int ifd=0; ifd<sock_ndraw; ifd++){
+				/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+				int sock_draw=sock_draws[ifd].fd;
+				int needed_i=check_figfn(ifd, fig, fn, 1);
+				if(!needed_i) continue;
+				if(use_udp){
+					error("To be implemented\n");
+				} else{
+					if(stwrite(sock_draw, buf, bufsize)) {
+						ans=-1;
+						draw_remove(sock_draw, 0);
+					}
+				}
+			}
+			free(buf);
 		}
 	}
 	UNLOCK(lock);
@@ -675,7 +774,7 @@ int imagesc(const char* fig, /**<Category of the figure*/
 #undef datamemdup
 	if(draw_single){
 		thread_new((thread_fun)imagesc_do, data);
-	}else{
+	} else{
 		imagesc_do(data);
 	}
 	return 1;
@@ -838,7 +937,7 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	real* opd0=mycalloc(nx*ny, real);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
-			opd0[ix+iy*nx]=(P(loc->map,(ix+npad),(iy+npad))>0);
+			opd0[ix+iy*nx]=(P(loc->map, (ix+npad), (iy+npad))>0);
 		}
 	}
 	real limit[4];
@@ -859,7 +958,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	const char* format, ...){
 
 	format2fn;
-	if(!draw_current(fig, fn)|| !loc || !opd) return 0;
+	if(!draw_current(fig, fn)||!loc||!opd) return 0;
 	if(loc->nloc!=opd->nx*opd->ny){
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
 		return 0;
@@ -875,7 +974,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			long ii=P(loc->map, (ix+npad), (iy+npad));
-			P(opd0,ix,iy)=ii>0?P(opd,ii-1):NAN;
+			P(opd0, ix, iy)=ii>0?P(opd, ii-1):NAN;
 		}
 	}
 	real limit[4];
@@ -910,8 +1009,8 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real
 		dfree(phi);
 	} else{
 		long nsa=saloc->nloc;
-		dmat *gx=dnew_do(nsa, 1, grad->p, 0);
-		dmat *gy=dnew_do(nsa, 1, grad->p+nsa, 0);
+		dmat* gx=dnew_do(nsa, 1, grad->p, 0);
+		dmat* gy=dnew_do(nsa, 1, grad->p+nsa, 0);
 		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s x", fn);
 		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s y", fn);
 		dfree(gx);
@@ -928,9 +1027,9 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	format2fn;
 	if(!draw_current(fig, fn)) return 0;
 	(void)fig;
-	if(loc->nloc != amp->nx || loc->nloc!=opd->nx*opd->ny){
+	if(loc->nloc!=amp->nx||loc->nloc!=opd->nx*opd->ny){
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld, amp has %ldx%ld.\n",
-		 loc->nloc, opd->nx, opd->ny, amp->nx, amp->ny);
+			loc->nloc, opd->nx, opd->ny, amp->nx, amp->ny);
 		return 0;
 	}
 	loc_create_map(loc);
@@ -945,8 +1044,8 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			long ii=P(loc->map, (ix+npad), (iy+npad))-1;
-			if(ii>-1&&P(amp,ii)>ampthres){
-				opd0[ix+iy*nx]=P(opd,ii);
+			if(ii>-1&&P(amp, ii)>ampthres){
+				opd0[ix+iy*nx]=P(opd, ii);
 			} else{
 				opd0[ix+iy*nx]=NAN;
 			}
@@ -971,11 +1070,11 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 	if(!draw_current(fig, fn)) return 0;
 	dmat* ints2=0;
 	if(ints->nx==1){//TT or PWFS
-		if(P(ints,0)->nx==P(ints,0)->ny){//TT
-			ints2=dref(P(ints,0));
+		if(P(ints, 0)->nx==P(ints, 0)->ny){//TT
+			ints2=dref(P(ints, 0));
 		} else{//PWFS
-			dcell* ints3=loc_embed2(saloc, P(ints,0));
-			if(ints3->nx * ints3->ny==4){
+			dcell* ints3=loc_embed2(saloc, P(ints, 0));
+			if(ints3->nx*ints3->ny==4){
 				ints3->nx=2;
 				ints3->ny=2;
 			}

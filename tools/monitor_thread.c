@@ -334,11 +334,11 @@ void* listen_host(void* dummy){
 			if(htime[ihost]){//only handle hosts that are ever connected
 				if(hsock[ihost]<0){//disconnected, trying to reconnect
 					add_host_thread(ihost);//do not use _add_host_wrap. It will deadlock.
-				}else if(htime[ihost]>0 && ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
-					dbg_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
+				}else if(htime[ihost]>0 && ntime>htime[ihost]+600){//no activity for 60 seconds. check host connection 
+					//dbg_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
 					scheduler_cmd(ihost, 0, CMD_PROBE);
 					htime[ihost]=-ntime;
-				}else if(htime[ihost]<0 && ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
+				}else if(htime[ihost]<0 && ntime>-htime[ihost]+600){//probed, but not response within 60 seconds
 					dbg_time("no respond. disconnect server %s.\n", hosts[ihost]);
 					host_removed(hsock[ihost]);
 				}

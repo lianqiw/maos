@@ -31,7 +31,7 @@ const gchar* all_style=
 "background-color:@theme_bg_color;"
 "}\n"
 "notebook tab{\n" //OK
-"border-width: 1px 0px 0px 0px;" //OK
+"border-width: 1px 1px 1px 1px;" //OK
 "border-color: #FF0000;"
 "border-style: none;"
 "border-radius:4px 4px 0px 0px;"  //OK
