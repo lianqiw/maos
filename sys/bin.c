@@ -29,7 +29,7 @@
 #include "path.h"
 #include "thread.h"
 #include "bin.h"
-
+#include "scheduler_client.h"
 /*
   2009-10-01: switch from popen of gz to zlib to read/write compressed files.
   with default compression retio, the write time for compressed file is from 3
@@ -131,6 +131,7 @@ static char* procfn(const char* fn, const char* mod){
 		if(disable_save&&mystrcmp(fn2, CACHE)){
 			//When saving is disabled, allow writing to cache folder.
 			warning("Saving is disabled for %s.\n", fn2);
+			print_backtrace();
 			free(fn2);
 			fn2=NULL;
 		}
@@ -1097,6 +1098,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 	}else{
 		if(rw&&disable_save&&!IS_SHM(fn)&&mystrcmp(fn, CACHE)){
 			warning("Saving is disabled for %s\n", fn);
+			print_backtrace();
 			fn=NULL;
 		}
 	}

@@ -426,7 +426,7 @@ static int count=0;
 #define FWRITEINT(A) CATCH(fwriteint(fbuf,A))
 #define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, (nlen)+sizeof(int)) || fwriteint(fbuf, cmd))
 #define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, strlen(str)+1); FWRITESTR(str);}
-#define FWRITECMDARR(cmd,p,len) if((p)&&(len)>0){FWRITECMD(cmd, len); FWRITEARR(p,len);}
+#define FWRITECMDARR(cmd,p,len) if((len)>0){FWRITECMD(cmd, len); FWRITEARR(p,len);}
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */

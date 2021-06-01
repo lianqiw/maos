@@ -363,8 +363,8 @@ fi
 AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
 
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
-PRE_DIR="${HOME}/.aos/"          #prefix for installation
-TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
+PRE_DIR="${HOME}/.aos"          #prefix for installation
+TMP_DIR="${BUILD_DIR}/external" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 CPPFLAGS+=" -I${PRE_DIR}/include " #use CPPFLAGS so that the preprocessor can also use it.
@@ -388,7 +388,7 @@ unset mflag
 
 #Discover default download method
 if test -x "`which curl 2>/dev/null`" ;then
-    wget="curl --retry 1 -L --progress-bar"
+    wget="curl --retry 1 -L -s "
     wgetoutput="--output"
 elif test -x "`which wget 2>/dev/null`" ;then
     wget="wget -t1 --no-check-certificate"

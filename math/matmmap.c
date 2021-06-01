@@ -27,7 +27,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char* header, const char* format, ..
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
 	if(fn&&disable_save&&!IS_SHM(fn)){
-		dbg("File saving is disabled\n");
+		//dbg("File saving is disabled\n");
 		fn=NULL;
 		//return X(new)(nx, ny);
 	}
@@ -55,7 +55,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
 	if(disable_save&&!IS_SHM(fn)){
-		dbg("File saving is disabled\n");
+		//dbg("File saving is disabled\n");
 		fn=NULL;
 		//return X(cellnew3)(nx, ny, nnx, nny);
 	}
