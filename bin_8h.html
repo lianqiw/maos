@@ -194,9 +194,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a016657695b7846af8c7ff251d529f946"><td class="memItemLeft" align="right" valign="top"><a id="a016657695b7846af8c7ff251d529f946"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>M_ZSP</b>&#160;&#160;&#160;M_ZSP32</td></tr>
 <tr class="separator:a016657695b7846af8c7ff251d529f946"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad393b9883cc6f044e01dc5b3b3b20d7e"><td class="memItemLeft" align="right" valign="top"><a id="ad393b9883cc6f044e01dc5b3b3b20d7e"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>USE_ZLIB_H</b>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:ad393b9883cc6f044e01dc5b3b3b20d7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0468ad1ff5a57350eee38cf271a14d9e"><td class="memItemLeft" align="right" valign="top"><a id="a0468ad1ff5a57350eee38cf271a14d9e"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>IS_SHM</b>(name)&#160;&#160;&#160;(name &amp;&amp; ((name[0]=='/' &amp;&amp; !strchr(name+1, '/')) || !<a class="el" href="sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f">mystrcmp</a>(name, &quot;/shm&quot;)))</td></tr>
 <tr class="separator:a0468ad1ff5a57350eee38cf271a14d9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -206,42 +203,9 @@ Typedefs</h2></td></tr>
 <tr class="memitem:a835e277ed6ef73f6203b189273627747"><td class="memItemLeft" align="right" valign="top"><a id="a835e277ed6ef73f6203b189273627747"></a>
 typedef int&#160;</td><td class="memItemRight" valign="bottom"><b>spint</b></td></tr>
 <tr class="separator:a835e277ed6ef73f6203b189273627747"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef6ee0fd51b4998d5eae9ffe4e44306c"><td class="memItemLeft" align="right" valign="top"><a id="aef6ee0fd51b4998d5eae9ffe4e44306c"></a>
-typedef void *&#160;</td><td class="memItemRight" valign="bottom"><b>voidp</b></td></tr>
-<tr class="separator:aef6ee0fd51b4998d5eae9ffe4e44306c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:abf6abe5d391462db7c9237353c28fbe3"><td class="memItemLeft" align="right" valign="top"><a id="abf6abe5d391462db7c9237353c28fbe3"></a>
-voidp&#160;</td><td class="memItemRight" valign="bottom"><b>gzopen</b> (const char *path, const char *mod)</td></tr>
-<tr class="separator:abf6abe5d391462db7c9237353c28fbe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7606118df1246eee5d6027a5f9ed56e7"><td class="memItemLeft" align="right" valign="top"><a id="a7606118df1246eee5d6027a5f9ed56e7"></a>
-voidp&#160;</td><td class="memItemRight" valign="bottom"><b>gzdopen</b> (int fd, const char *mod)</td></tr>
-<tr class="separator:a7606118df1246eee5d6027a5f9ed56e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac581039e0c83afbf08238ddf9541d74"><td class="memItemLeft" align="right" valign="top"><a id="aac581039e0c83afbf08238ddf9541d74"></a>
-<a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><b>gztell</b> (voidp gzfile)</td></tr>
-<tr class="separator:aac581039e0c83afbf08238ddf9541d74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d50be7fe0d98f181c946499cc84fe0e"><td class="memItemLeft" align="right" valign="top"><a id="a9d50be7fe0d98f181c946499cc84fe0e"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>gzclose</b> (voidp gzfile)</td></tr>
-<tr class="separator:a9d50be7fe0d98f181c946499cc84fe0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90bf4ff96ca0b5fda82696dec9bea332"><td class="memItemLeft" align="right" valign="top"><a id="a90bf4ff96ca0b5fda82696dec9bea332"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>gzwrite</b> (voidp gzfile, const void *buf, unsigned len)</td></tr>
-<tr class="separator:a90bf4ff96ca0b5fda82696dec9bea332"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81446be96e1398b773c4b375796c6850"><td class="memItemLeft" align="right" valign="top"><a id="a81446be96e1398b773c4b375796c6850"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>gzread</b> (voidp gzfile, voidp buf, unsigned len)</td></tr>
-<tr class="separator:a81446be96e1398b773c4b375796c6850"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a4072dcf02ca3062bbe5f27a38bea28"><td class="memItemLeft" align="right" valign="top"><a id="a3a4072dcf02ca3062bbe5f27a38bea28"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>gzseek</b> (voidp file, <a class="el" href="classlong.html">long</a> offset, int whence)</td></tr>
-<tr class="separator:a3a4072dcf02ca3062bbe5f27a38bea28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17cbde22fb5212cd771b7a70258e5fc6"><td class="memItemLeft" align="right" valign="top"><a id="a17cbde22fb5212cd771b7a70258e5fc6"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>gzrewind</b> (voidp file)</td></tr>
-<tr class="separator:a17cbde22fb5212cd771b7a70258e5fc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af23416d9afedfcd272bbb702f63b6d57"><td class="memItemLeft" align="right" valign="top"><a id="af23416d9afedfcd272bbb702f63b6d57"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzfile, int flush)</td></tr>
-<tr class="separator:af23416d9afedfcd272bbb702f63b6d57"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e8083147eda38e7a27dcb9fbaebfbd3"><td class="memItemLeft" align="right" valign="top"><a id="a0e8083147eda38e7a27dcb9fbaebfbd3"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><b>gzerror</b> (voidp gzfile, int *error)</td></tr>
-<tr class="separator:a0e8083147eda38e7a27dcb9fbaebfbd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55e5dc1b9fd29f858d152f3194dd1d22"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a55e5dc1b9fd29f858d152f3194dd1d22">zfexist</a> (const char *format,...)</td></tr>
 <tr class="memdesc:a55e5dc1b9fd29f858d152f3194dd1d22"><td class="mdescLeft">&#160;</td><td class="mdescRight">saving to disk will be disabled when set to nonzero.  <a href="#a55e5dc1b9fd29f858d152f3194dd1d22">More...</a><br /></td></tr>
 <tr class="separator:a55e5dc1b9fd29f858d152f3194dd1d22"><td class="memSeparator" colspan="2">&#160;</td></tr>

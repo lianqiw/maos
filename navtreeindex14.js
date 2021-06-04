@@ -1,17 +1,5 @@
 var NAVTREEINDEX14 =
 {
-"servo_8h.html#a898d8cda7cc48e166731990d79d8fc49":[10,0,1,22,7],
-"servo_8h.html#a8ec4ab633f785f80f58be9505c4da32b":[10,0,1,22,1,3],
-"servo_8h.html#a90db8b0851f40c4080286b84f5ac203c":[10,0,1,22,12],
-"servo_8h.html#aa29234f8fe794556f32704e97553f64e":[10,0,1,22,15],
-"servo_8h.html#aac7dd8585ac3fb7118aa067886ef92b2":[10,0,1,22,0,4],
-"servo_8h.html#aad6d4d54f623cc4a8a134eec68f56ea5":[10,0,1,22,5],
-"servo_8h.html#ab73c6cf92b85a0420b775e885844deca":[10,0,1,22,11],
-"servo_8h.html#ac79a5de282c090c1ef63538d06f67fe8":[10,0,1,22,0,8],
-"servo_8h.html#ad258c848ab89eae4e3cd7d67cc08f17e":[10,0,1,22,0,10],
-"servo_8h.html#ae796bbfe1ba648eec14a85bda77ea585":[10,0,1,22,8],
-"servo_8h.html#af315bfe315ec157b3dcc9f70538a79bd":[10,0,1,22,1,4],
-"servo_8h.html#af73da05983185a3e29a86a480fb06e17":[10,0,1,22,16],
 "servo_8h.html#af8c19d3a61994201d9dd0457af46187d":[10,0,1,22,13],
 "servo_8h.html#structservo__t":[10,0,1,22,0],
 "servo_8h.html#structsho__t":[10,0,1,22,1],
@@ -249,5 +237,17 @@ var NAVTREEINDEX14 =
 "smath_8h.html#ab267c92f1c781a4369ea2701d0f2012e":[10,0,3,9,32],
 "smath_8h.html#ab482e2894ec1fa75eff33b00e4798b7c":[10,0,3,9,9],
 "smath_8h.html#ab92a41d80a629f6a0638faa4aad09bdc":[10,0,3,9,106],
-"smath_8h.html#aba1711838dbf2225146b628d72f20107":[10,0,3,9,194]
+"smath_8h.html#aba1711838dbf2225146b628d72f20107":[10,0,3,9,194],
+"smath_8h.html#abaa7467591e1161cc56d75188230e31a":[10,0,3,9,225],
+"smath_8h.html#abafc33486d3c08c3550727a9a4736c1f":[10,0,3,9,69],
+"smath_8h.html#abc7da0db4020302d50697d1937211470":[10,0,3,9,201],
+"smath_8h.html#abcc0c3300810cad45068098b74425321":[10,0,3,9,166],
+"smath_8h.html#abcce7609556d2239b13aa818b97a1a67":[10,0,3,9,58],
+"smath_8h.html#abce5c93104debd6d90ee2b58ef23b9c8":[10,0,3,9,173],
+"smath_8h.html#abd1bfec3c5d391eb895dc6386cc79dbc":[10,0,3,9,18],
+"smath_8h.html#abda176c3da3c1ef735d4d14957aadf1e":[10,0,3,9,154],
+"smath_8h.html#abe5974c21a719b81963e8116282c87c8":[10,0,3,9,68],
+"smath_8h.html#abe68a76519271b757e4767930a879d9a":[10,0,3,9,118],
+"smath_8h.html#abebfabff10d974faeaa3c63feca991dc":[10,0,3,9,157],
+"smath_8h.html#abeff1c4003b9cec074e8c095c14f33f2":[10,0,3,9,126]
 };

@@ -1,17 +1,5 @@
 var NAVTREEINDEX3 =
 {
-"cmath_8h.html#a7b024370283dd8b111e1b7d4ac14ce88":[10,0,3,2,6],
-"cmath_8h.html#a7b04bda35e161da1cb91a619fcf46829":[10,0,3,2,247],
-"cmath_8h.html#a7c380d6d6ef6d0965e5a35fd4b7ce680":[10,0,3,2,220],
-"cmath_8h.html#a7d4b5babf76c56a6b95acca5e12af0d6":[10,0,3,2,157],
-"cmath_8h.html#a7fa16d606a01067840638f3bc1694330":[10,0,3,2,39],
-"cmath_8h.html#a7fd8927e7ba4416f6f4fc8df9d3b1a59":[10,0,3,2,67],
-"cmath_8h.html#a7fe3b375701efb354d19e28f7d8205d6":[10,0,3,2,71],
-"cmath_8h.html#a80f3f0a59125204877db212a85e8c6c7":[10,0,3,2,186],
-"cmath_8h.html#a81f336f47640702e34e42f53cc185ccd":[10,0,3,2,213],
-"cmath_8h.html#a832bf53ce62a01eb4b32069866aa1a38":[10,0,3,2,99],
-"cmath_8h.html#a834e5e2f254160faa414569a60282089":[10,0,3,2,95],
-"cmath_8h.html#a842eca1141ba48b4103a76d715173be4":[10,0,3,2,235],
 "cmath_8h.html#a8687fd6aa73cddb1c0e79fab2dcf223f":[10,0,3,2,69],
 "cmath_8h.html#a86b21f82aff9a203bb25e251684c7d3b":[10,0,3,2,21],
 "cmath_8h.html#a8789fe1e884e000a6113f62f0e9d2e63":[10,0,3,2,225],
@@ -249,5 +237,17 @@ var NAVTREEINDEX3 =
 "dmath_8h.html#a2ce308cca861c7b07e46fcbe1bedc919":[10,0,3,3,19],
 "dmath_8h.html#a2d1d98785f0dd0198de66b15afc3d874":[10,0,3,3,99],
 "dmath_8h.html#a2d27e6e271f4dccbce086db9070999d0":[10,0,3,3,197],
-"dmath_8h.html#a2e1ff58653a461432804d20406207982":[10,0,3,3,8]
+"dmath_8h.html#a2e1ff58653a461432804d20406207982":[10,0,3,3,8],
+"dmath_8h.html#a2f3489465a7d7ce53c4ba2234867cda8":[10,0,3,3,101],
+"dmath_8h.html#a301b5a86cec0090378b142a09fb2066a":[10,0,3,3,11],
+"dmath_8h.html#a30ba84a58a9c9dd2e0a0afb5e389ffad":[10,0,3,3,82],
+"dmath_8h.html#a31480c8af50a8adc9182fae5285aaa6e":[10,0,3,3,50],
+"dmath_8h.html#a314b38cef78ec87d445012d09c8e4c06":[10,0,3,3,214],
+"dmath_8h.html#a329eb26031f9567dcb26c67d62170161":[10,0,3,3,68],
+"dmath_8h.html#a3452afc53eefe2391f8720999be80c19":[10,0,3,3,160],
+"dmath_8h.html#a38afeb57037455a29a0095d76c58b9bb":[10,0,3,3,226],
+"dmath_8h.html#a3b6a8c7b668648836b26571978b2faaf":[10,0,3,3,91],
+"dmath_8h.html#a3bb7d01db3df6b3abe760484c40464f2":[10,0,3,3,204],
+"dmath_8h.html#a3c37dea539c8931bc3b8bf58663e8e6b":[10,0,3,3,205],
+"dmath_8h.html#a3dfb05114103c641b7e35cdc8364bcef":[10,0,3,3,37]
 };
