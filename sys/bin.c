@@ -55,14 +55,38 @@
   always to be backward compatible.
 
 */
+
+#define USE_ZLIB_H 0
+#if USE_ZLIB_H
+#include <zlib.h> /*zlib.h in ubuntu sucks */
+#else
+#ifdef __cplusplus
+extern "C"{
+#endif
+	typedef void* voidp;
+	voidp gzopen(const char* path, const char* mod);
+	voidp gzdopen(int fd, const char* mod);
+	long  gztell(voidp gzfile);
+	int   gzclose(voidp gzfile);
+	int   gzwrite(voidp gzfile, const void* buf, unsigned len);
+	long  gztell(voidp gzfile);
+	int   gzread(voidp gzfile, voidp buf, unsigned len);
+	int   gzseek(voidp file, long offset, int whence);
+	int   gzrewind(voidp file);
+	int   gzflush(voidp gzfile, int flush);
+	const char* gzerror(voidp gzfile, int* error);
+#ifdef __cplusplus
+}
+#endif
+#endif
 /*
   contains information about opened files.
 */
 struct file_t{
-	void* p;   /**<FILE* or voidp when gzipped*/
+	char* fn;  /**<The disk file name*/
+	voidp gp;   /**<only used when gzipped*/
 	int isgzip;/**<Is the file zipped.*/
 	int isfits;/**<Is the file fits.*/
-	char* fn;  /**<The disk file name*/
 	int fd;    /**<The underlying file descriptor, used for locking. */
 	int eof;   /**<end of file*/
 };
@@ -73,10 +97,10 @@ struct file_t{
 */
 struct mem_t{
 	void* p;  /**<points to the beginning of mmaped memory for this type of data.*/
+	char* shm;/**<unlink when delete if set*/
 	long n;   /**<length of mmaped memory.*/
 	int kind; /**<Kind of memory. 0: heap, 1: mmap*/
 	int nref; /**<Number of reference.*/
-	char* shm;/**<unlink when delete if set*/
 };
 /**
    Disables file saving when set to 1.
@@ -171,7 +195,7 @@ void zftouch(const char* format, ...){
 }
 //PNEW(lock);
 /*
-  convert a socket or fd into FILE.
+  convert a socket or fd into file_t.
 */
 
 file_t* zfdopen(int fd, const char* mode){
@@ -179,10 +203,6 @@ file_t* zfdopen(int fd, const char* mode){
 	fp->isgzip=0;
 	fp->fd=fd;
 	(void)mode;
-	/*if(!(fp->p=fdopen(fp->fd, mode))){
-	error("Error fdopen for %d\n",fd);
-	free(fp); fp=0;
-	}*/
 	return fp;
 }
 /**
@@ -289,13 +309,8 @@ file_t* zfopen_try(const char* fni, const char* mod){
 		lseek(fp->fd, 0, SEEK_SET);
 	}
 	if(fp->isgzip){
-		if(!(fp->p=gzdopen(fp->fd, mod))){
+		if(!(fp->gp=gzdopen(fp->fd, mod))){
 			error("Error gzdopen for %s\n", fn2);
-			goto fail;
-		}
-	} else{
-		if(!(fp->p=fdopen(fp->fd, mod))){
-			error("Error fdopen for %s\n", fn2);
 			goto fail;
 		}
 	}
@@ -356,12 +371,10 @@ int zfisfits(file_t* fp){
 void zfclose(file_t* fp){
 	if(!fp) return;
 	//LOCK(lock);//causes race condition with zfopen_try
-	if(fp->p){
-		if(fp->isgzip){
-			gzclose((voidp)fp->p);
-		} else{
-			fclose((FILE*)fp->p);
-		}
+	if(fp->isgzip){
+		gzclose(fp->gp);
+	} else{
+		close(fp->fd);
 	}
 	//close(fp->fd);//keep fd open
 	free(fp->fn);
@@ -375,12 +388,10 @@ void zfclose(file_t* fp){
 void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int ans=0;
 	long ret=0;
-	if(fp->fd&&!fp->p){//use raw io
-		ans=((ret=write(fp->fd, ptr, size*nmemb))!=(long)(size*nmemb));
-	} else if(fp->isgzip){
-		ans=((ret=gzwrite((voidp)fp->p, ptr, size*nmemb))!=(long)(size*nmemb));
+	if(fp->isgzip){
+		ans=((ret=gzwrite(fp->gp, ptr, size*nmemb))!=(long)(size*nmemb));
 	} else{
-		ans=((ret=fwrite(ptr, size, nmemb, (FILE*)fp->p))!=(long)nmemb);
+		ans=((ret=write(fp->fd, ptr, size*nmemb))!=(long)(size*nmemb));
 	}
 	if(ans){
 		if(errno) perror("zfwrite_do");
@@ -455,7 +466,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp)
 int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int err=0;
 	ssize_t tot=size*nmemb;
-	if(fp->fd&&!fp->p){//raw io. read until all needed data is done.
+	if(fp->fd&&!fp->isgzip){//raw io. read until all needed data is done (necessary for socket).
 		while(!err){
 			int count=read(fp->fd, ptr, tot);
 			if(count>0){
@@ -470,11 +481,9 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 			}
 		}
 	} else if(fp->isgzip){
-		err=(gzread((voidp)fp->p, ptr, tot)!=tot);
+		err=(gzread(fp->gp, ptr, tot)!=tot);
 		//do not use gzerror. It modifies the error value and does not give correct string error.
-	} else{
-		err=(fread(ptr, size, nmemb, (FILE*)fp->p)!=nmemb);
-	}
+	} 
 	if(err){
 		fp->eof=1;
 	}
@@ -555,9 +564,9 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 */
 int zfseek(file_t* fp, long offset, int whence){
 	if(fp->isgzip){
-		return gzseek((voidp)fp->p, offset, whence)<0?-1:0;
+		return gzseek(fp->gp, offset, whence)<0?-1:0;
 	} else{
-		return fseek((FILE*)fp->p, offset, whence);
+		return lseek(fp->fd, offset, whence);
 	}
 }
 /**
@@ -565,11 +574,11 @@ int zfseek(file_t* fp, long offset, int whence){
 */
 void zfrewind(file_t* fp){
 	if(fp->isgzip){
-		if(gzrewind((voidp)fp->p)){
+		if(gzrewind(fp->gp)){
 			warning("Failed to rewind\n");
 		}
 	} else{
-		rewind((FILE*)fp->p);
+		lseek(fp->fd, 0, SEEK_SET);
 	}
 }
 /**
@@ -577,25 +586,31 @@ void zfrewind(file_t* fp){
 */
 int zfpos(file_t* fp){
 	if(fp->isgzip){
-		return gztell((voidp)fp->p);
+		return gztell(fp->gp);
 	} else{
-		return ftell((FILE*)fp->p);
+		return lseek(fp->fd, 0, SEEK_CUR);
 	}
 }
 /**
    Return 1 if end of file is reached.
 */
 int zfeof(file_t* fp){
-	return fp->eof || zfseek(fp, 1, SEEK_CUR)<0?1:0;
+	if(!fp->eof){
+		if(zfseek(fp, 1, SEEK_CUR)<0){
+			fp->eof=1;
+		}else{
+			zfseek(fp, -1, SEEK_CUR);//restore
+		}
+	}
+	return fp->eof;
 }
 /**
    Flush the buffer.
 */
+
 void zflush(file_t* fp){
 	if(fp->isgzip){
-		gzflush(fp->p, 4);
-	} else{
-		fflush((FILE*)fp->p);
+		gzflush(fp->gp, 4);
 	}
 }
 #define zfread_check(A...) if(zfread(A)) goto read_error

@@ -81,29 +81,7 @@ typedef int spint;
 #define M_ZSP M_ZSP32
 #endif
 
-#define USE_ZLIB_H 0
-#if USE_ZLIB_H
-#include <zlib.h> /*zlib.h in ubuntu sucks */
-#else
-#ifdef __cplusplus
-extern "C"{
-#endif
-typedef void* voidp;
-voidp gzopen(const char *path, const char *mod);
-voidp gzdopen(int fd, const char *mod);
-long  gztell(voidp gzfile);
-int   gzclose(voidp gzfile);
-int   gzwrite(voidp gzfile, const void* buf, unsigned len);
-long  gztell(voidp gzfile);
-int   gzread(voidp gzfile, voidp buf, unsigned len);
-int   gzseek(voidp file, long offset, int whence);
-int   gzrewind(voidp file);
-int   gzflush(voidp gzfile, int flush);
-const char*gzerror(voidp gzfile, int *error);
-#ifdef __cplusplus
-}
-#endif
-#endif
+
 typedef struct file_t file_t;
 typedef struct {
     uint32_t magic;//this must be the first element because we cast header_t to uint32_t.
