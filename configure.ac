@@ -505,7 +505,7 @@ function set_lapack(){
 
 	    LAPACK+=" -lmkl_core"
 
-	    if false; then
+	    if test -z "$OPENMP_CFLAGS"; then
 			LAPACK+=" -lmkl_sequential -lpthread"
 	    else
 			if test "$CN" = "GCC" ;then

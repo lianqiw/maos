@@ -61,7 +61,13 @@ void gpu_dbg(){
 		prop.warpSize);
 }
 int current_gpu(){
-	return cudata?cudata->igpu:-1;
+	int igpu;
+	if(cudata){
+		igpu=cudata->igpu;
+	}else{
+		cudaGetDevice(&igpu);
+	}
+	return igpu;
 }
 /**
    Print memory consumption.
@@ -87,7 +93,7 @@ static long gpu_get_free_mem_ratio(int igpu, long minimum){
 	size_t fr=0, tot=0;
 	int ans;
 	if((ans=cudaMemGetInfo(&fr, &tot))){
-		warning("cudaMemGetInfo failed with error %d\n", ans);
+		warning("cudaMemGetInfo for %d failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
 	}
 	info("GPU%2d has %.1fGB free, %.1fGB total device memory.\n",
 		igpu, fr*9.3e-10, tot*9.3e-10);

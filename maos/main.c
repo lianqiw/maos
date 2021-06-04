@@ -426,6 +426,7 @@ int main(int argc, const char* argv[]){
 				wait_cpu(NTHREAD);
 			}
 		}
+		//Launches a thread to wait for scheduler commands.
 		if(scheduler_listen(maos_listener)){
 			info2("Failed to start maos_listener\n");
 		}
