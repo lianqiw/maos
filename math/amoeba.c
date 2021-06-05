@@ -38,9 +38,9 @@ static T amotry(T** p, T y[], T psum[], int ndim,
 	T(*funk)(const T[], void* data), void* data, int ihi, T fac){
 	int j;
 	T fac1, fac2, ytry;
-	T ptry[ndim];
 	fac1=(1.0-fac)/ndim;
 	fac2=fac1-fac;
+	T ptry[ndim];
 	for(j=0;j<ndim;j++){
 		ptry[j]=psum[j]*fac1-p[ihi][j]*fac2;
 	}
@@ -57,8 +57,8 @@ static T amotry(T** p, T y[], T psum[], int ndim,
 
 #define GET_PSUM					\
     for (j=0;j<ndim;j++) {				\
-	for (sum=0.0,i=0;i<mpts;i++) sum += p[i][j];	\
-	psum[j]=sum;					\
+		for (sum=0.0,i=0;i<mpts;i++) sum += p[i][j];	\
+		psum[j]=sum;					\
     }
 #define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
 
@@ -82,9 +82,9 @@ static void amoeba(T** p, T y[], int ndim, T ftol,
 	T(*funk)(const T[], void* data), void* data, int* nfunk){
 	int i, ihi, ilo, inhi, j, mpts=ndim+1;
 	T rtol, sum, swap, ysave, ytry;
-	T psum[ndim];
 	int nmax=*nfunk; if(nmax<=0) nmax=5000;
 	*nfunk=0;
+	T psum[ndim];
 	GET_PSUM;
 	for(;;){
 		ilo=0;

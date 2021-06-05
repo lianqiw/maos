@@ -20,7 +20,7 @@ libaos_la_LIBADD=../math/libaomath.la
 bin_PROGRAMS=../bin/aolib.so
 ___bin_aolib_so_SOURCES=aolib.c
 ___bin_aolib_so_LDADD=libaos.la $(LDFFT) $(LDCHOL) $(LAPACK) -lm -ldl -lz
-___bin_aolib_so_LDFLAGS=$(LDOPTS) -static -Xcompiler -shared -Wl,--no-undefined
+___bin_aolib_so_LDFLAGS=$(LDOPTS) -static -Xcompiler -shared $(LDSO)
 #Linker flags depends on system type (native linker is used)
 if LINUX
 ___bin_aolib_so_LDFLAGS+=-lrt -Wl,--whole-archive,.libs/libaos.a,../math/.libs/libaomath.a,../sys/.libs/libaosys.a,--no-whole-archive

@@ -47,6 +47,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 	real ak, bk;
 	real r0z0=dcellinn(b, b);/*|b| */
 	real res[maxiter+1];
+	res[maxiter]=0;
 	dbg2("CPU %sCG %d:", M?"P":"", maxiter);
 
 	for(int k=0; k<maxiter; k++){

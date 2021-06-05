@@ -189,6 +189,7 @@ if test "${USER}" = "lianqiw" ;then
     #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
 fi
 LDEXE=
+LDRT=
 OPTS=
 COMMON_ALL="-Wall -Wshadow -Wextra " 
 #Set optimize flags for different compilers
@@ -293,7 +294,7 @@ echo host_os=$host_os
 case "$host_os" in
     *linux*)
 		AM_CONDITIONAL(LINUX, true)
-		LDEXE+=" -lrt" #need real time library.
+		LDRT=" -lrt" #need real time library.
 		LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 		CFLAGS+=" -fPIC"
 		CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
@@ -308,6 +309,7 @@ case "$host_os" in
 		mkl_avail="yes"
 		system="linux"
 		ldsuffix="so"
+		LDSO="-Wl,--no-undefined" #force an error if symbols are not resolved.
 	;;
     *darwin*)
 		AM_CONDITIONAL(DARWIN, true)
@@ -324,6 +326,7 @@ case "$host_os" in
 		if test "$CN" = "CLANG" ;then
 			CFLAGS+=" -stdlib=libc++"
 		fi
+		LDSO="-Wl,-undefined,error" #force an error if symbols are not resolved.
 		#MACOS supports openmp with separate omp library
 		#AC_CHECK_LIB([omp],[omp_set_num_threads],[OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+="-lomp" libtool_fix_openmp=1],[])
 	;;
@@ -404,7 +407,7 @@ else
     AM_CONDITIONAL(USE_LONG, false)
 fi
 
-LDEXE+=" -static" #show that we prefer static linking.
+LDEXE+="$LDRT -static" #show that we prefer static linking.
 if test "x$use_static" = "xyes" ;then
     LDEXE_MAOS="-all-static" #only all static linking for maos
     AM_CONDITIONAL(USE_STATIC, true)
@@ -829,7 +832,7 @@ if test "$with_matlab" != "no" ;then
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
 		#2021-05-24: Linking with mwfftw3 crashes matlab. (mwfftw3 contains thread support)
-		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl -lrt $LDFFT_MEX"
+		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDRT $LDFFT_MEX"
 		LDMEX+="-no-fast-install -static -Xcompiler -shared"
 		AM_CONDITIONAL(USE_MEX, true)
     else
@@ -1036,6 +1039,7 @@ AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 AC_SUBST(LIBS)
 AC_SUBST(LDOPTS)
+AC_SUBST(LDSO)
 AC_OUTPUT
 echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR
