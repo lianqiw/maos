@@ -407,7 +407,7 @@ else
     AM_CONDITIONAL(USE_LONG, false)
 fi
 
-LDEXE+="$LDRT -static" #show that we prefer static linking.
+LDEXE+="$LDRT " #-static" #show that we prefer static linking.
 if test "x$use_static" = "xyes" ;then
     LDEXE_MAOS="-all-static" #only all static linking for maos
     AM_CONDITIONAL(USE_STATIC, true)

@@ -18,10 +18,11 @@ build:
     paths:
       - build/config.log
       - build/external/compile.log
-      - build/bin/
-      - build/test/
+      - build/bin/*
+      - build/test/*_*
     exclude: 
       - build/test/*.o
+      - build/*/.libs
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
