@@ -757,7 +757,7 @@ static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 
 	for(int idm=0; idm<ndm; idm++){
 		real* p=P(*dmc,idm)->p;
-		unsigned long nloc=aloc[idm]->nloc;
+		long nloc=aloc[idm]->nloc;
 		real* xloc=aloc[idm]->locx;
 		real* yloc=aloc[idm]->locy;
 		if(idm==0){
@@ -778,7 +778,7 @@ static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 				astigx+=pm[ngsmod->indastig];
 				astigy+=pm[ngsmod->indastig+1];
 			}
-			for(unsigned long iloc=0; iloc<nloc; iloc++){
+			for(long iloc=0; iloc<nloc; iloc++){
 				real xx=xloc[iloc]*xloc[iloc];
 				real xy=xloc[iloc]*yloc[iloc];
 				real yy=yloc[iloc]*yloc[iloc];
@@ -790,7 +790,7 @@ static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 			}
 		} else if(idm+1==ndm&&ngsmod->indps){
 			real scale2=-scale*gain;
-			for(unsigned long iloc=0; iloc<nloc; iloc++){
+			for(long iloc=0; iloc<nloc; iloc++){
 				real xx=xloc[iloc]*xloc[iloc];
 				real xy=xloc[iloc]*yloc[iloc];
 				real yy=yloc[iloc]*yloc[iloc];

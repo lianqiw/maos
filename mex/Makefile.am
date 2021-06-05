@@ -1,5 +1,5 @@
 AM_CFLAGS=$(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math 
-AM_LDFLAGS=$(LDMEX)
+AM_LDFLAGS=$(LDMEX)  -Wl,--no-undefined
 #LDFLAGS goes before LDADD. Must put maos libraries before matlab libraries.
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
 LDADD=../lib/libaos.la $(LIBMEX) 

@@ -50,8 +50,7 @@ AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 
 die(){
     shift
-    echo "Error:$@"
-    exit
+    AC_MSG_ERROR(["Error:$@"])
 }
 
 USE_CPP=0
@@ -148,7 +147,7 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
-AC_ARG_ENABLE(download,AS_HELP_STRING([--disable-download], [Disable downlong precompiled library]), [use_download="$enableval"], [use_download="yes"])
+AC_ARG_ENABLE(binary,AS_HELP_STRING([--disable-binary], [Disable downlong precompiled library]))
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -196,8 +195,9 @@ COMMON_ALL="-Wall -Wshadow -Wextra "
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
 COMMON_GCC+=" -Wno-missing-braces -Wno-missing-field-initializers" #gcc-4.8 error
+COMMON_CLANG+=" -Wno-sign-compare" #CLANG has false positive in detecting sign comparison.
 
-OPTIM_ALL="-O3 "
+OPTIM_ALL="-O3 -mtune=native "
 OPTIM_GCC=" -ftree-vectorize -ffast-math -fno-finite-math-only "
 
 DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
@@ -259,15 +259,7 @@ case "$CN" in
     *)
 	;;	
 esac
-if test "$use_release" != "yes" ;then
-    case $CFLAGS in
-        *march*)
-            ;;
-        *)
-            OPTIM_ALL+=" -march=native"
-            ;;
-    esac
-fi
+
 AC_DEFINE_UNQUOTED(COMPILER, ["$CN ($CC_VERSION)"], ["Compiler"])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
@@ -341,12 +333,12 @@ case "$host_os" in
 		ldsuffix="so"
 	;;
     *cygwin*|*mingw*)
-	AM_CONDITIONAL(WIN, true)
-	system="win"
-	ldsuffix="dll"
+		AM_CONDITIONAL(WIN, true)
+		system="win"
+		ldsuffix="dll"
 	;;
     none)
-	AC_MSG_NOTICE([OS is none])
+		AC_MSG_NOTICE([OS is none])
 	;;
     *)
 	echo host_os=$host_os
@@ -354,10 +346,10 @@ case "$host_os" in
 esac
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1"])
 if test -z "$OPENMP_CFLAGS" ;then
-    OPTScc+=" -pthread" #enables pthreads feature and links in the library
+    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
     has_openmp=0
 else
-    OPTScc+=" $OPENMP_CFLAGS"
+    CFLAGS+=" $OPENMP_CFLAGS"
     has_openmp=1
 fi
 AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
@@ -449,7 +441,7 @@ extract(){
 download(){
     fn="$2"
     OUTDIR="$3"
-	if test "$use_download" = "no" -a -z "$4" ;then
+	if test "$enable_binary" = "no" -a -z "$4" ;then
 		echo "Download pre-built binary is disabled"
 		return
 	fi
@@ -507,11 +499,11 @@ function set_lapack(){
 
 	    if test -z "$OPENMP_CFLAGS"; then
 			LAPACK+=" -lmkl_sequential -lpthread"
-	    else
-			if test "$CN" = "GCC" ;then
-				LAPACK+=" -lmkl_gnu_thread -lgomp"
-			else #ICC or others
-				LAPACK+=" -lmkl_intel_thread -liomp5"
+	    else 
+			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
+				LAPACK+=" -lmkl_intel_thread" #OPENMP_CFLAGS was already in CFLAGS
+			else #GCC or others. Notice that clang can work with either thread model.
+				LAPACK+=" -lmkl_gnu_thread"
 			fi
 	    fi
 	    if test "$type" = "mkl-static" ;then 
@@ -583,23 +575,26 @@ if test "$has_z" = "no" ;then
     AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
-#Check for FFTW interface in Lapack (MKL). Note: MKL does not support fftw_plan_r2r_1d as of 2020.
-AC_CHECK_LIB([m], [fftw_plan_r2r_1d], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
-if test "$builtin_fftw" = "yes";then
+#Check FFTW header and library. FFTW3 interface in MKL performs as good as FFTW3
+AC_CHECK_HEADERS([fftw3.h],[
+	AC_CHECK_LIB([fftw3], [fftw_execute], [has_fftw="yes" LDFFT="-lfftw3"],[
+		AC_CHECK_LIB([m], [fftw_execute], [has_fftw="builtin"], [has_fftw="no"], [$LAPACK -lm])
+	])
+], [has_fftw='no'])
+if test "$has_fftw" = "builtin" -a "$with_matlab" != "no" ;then
+	has_fftw=no #requires FFT for matlab
+fi
+if test "$has_fftw" = "builtin";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
+	AC_CHECK_LIB([m], [fftwf_execute],[has_fftwf=1] ,[has_fftwf=0])
     fftw_threads=1
 else
-    #Check for FFTW3 header and library. Do not check for .so.3 which is without .h
-	fftw_libs="fftw3"
-	fftwf_libs="fftw3f"
-	AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [AC_CHECK_HEADERS([fftw3.h],[has_fftw='yes'], [has_fftw='no'])],[has_fftw='no'])
-	unset ac_cv_header_fftw3_h
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
 		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
-		unset ac_cv_search_fftw_execute
-		AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
-    
+		unset ac_cv_lib_fftw3_fftw_execute
+		AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
+
 		if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 			#compile from source
 			FLAGS="--enable-threads --enable-static --enable-shared"
@@ -609,20 +604,13 @@ else
 			FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
 			compile FFTW fftw.tar.bz2 $FLAGS  
 			compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
-			unset ac_cv_search_fftw_execute
-			AC_SEARCH_LIBS(fftw_execute, [$fftw_libs], [has_fftw="yes"],[has_fftw='no'])
+			unset ac_cv_lib_fftw3_fftw_execute
+			AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
 			AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
 		fi
 	fi
-	AC_SEARCH_LIBS(fftwf_execute, [$fftwf_libs], [has_fftwf="yes"],[has_fftwf='no'])
-	LDFFT="$ac_cv_search_fftw_execute"
-	if test "$has_fftwf" = "yes" ;then
-		LDFFT+=" $ac_cv_search_fftwf_execute"
-		AC_DEFINE_UNQUOTED(HAS_FFTWF, [1], "FFTW single precision exists")
-	elif test "$use_double" = "no" ;then
-		AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])
-    fi
-	LDFFT_MEX=$LDFFT #before adding threads.
+	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1 LDFFT+=" -lfftw3f"] ,[has_fftwf=0])
+	
 	if test -z "$OPENMP_CFLAGS" ;then
 		THREADS_SUFFIX="_threads"
 	else
@@ -641,12 +629,12 @@ else
 			LDFFT_THREADS+=" $name${THREADS_SUFFIX}"
 		esac
 	done
-	
-	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1], [fftw_threads=0], [$LDFFT_THREADS $LDFFT $OPENMP_CFLAGS])
-	AS_IF([test "$fftw_threads"="1"], [LDFFT+=" $LDFFT_THREADS"])
+	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 LDFFT+=" $LDFFT_THREADS"], [fftw_threads=0], [$LDFFT_THREADS $LDFFT $OPENMP_CFLAGS])
+	LDFFT_MEX=$LDFFT 
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
-
+AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
+AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])])
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [has_chol="no"])])
@@ -841,7 +829,7 @@ if test "$with_matlab" != "no" ;then
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
 		#2021-05-24: Linking with mwfftw3 crashes matlab. (mwfftw3 contains thread support)
-		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDFFT"
+		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl -lrt $LDFFT_MEX"
 		LDMEX+="-no-fast-install -static -Xcompiler -shared"
 		AM_CONDITIONAL(USE_MEX, true)
     else
