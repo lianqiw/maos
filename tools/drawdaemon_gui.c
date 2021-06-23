@@ -1227,6 +1227,11 @@ static void togglebutton_pause(GtkToggleToolButton* btn){
 		if(stwriteint(sock, DRAW_RESUME)) sock_idle=1;
 	}
 }
+static void togglebutton_play(GtkToggleToolButton* btn){
+	(void)btn;
+	if(stwriteint(sock, DRAW_SINGLE)) sock_idle=1;
+}
+
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)
 */
@@ -1612,7 +1617,7 @@ GtkWidget* create_window(GtkWidget* window){
 	GtkWidget* fontsel=gtk_font_button_new_with_font("Sans 12");
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
 	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL);
-
+	new_tool(toolbar, NULL, 1, "media-playback-play", G_CALLBACK(togglebutton_play), NULL);
 	new_tool(toolbar, NULL, 1, "media-playback-pause", G_CALLBACK(togglebutton_pause), NULL);
 	new_tool(toolbar, NULL, 0, "media-playback-stop", G_CALLBACK(toolbutton_stop), NULL);
 

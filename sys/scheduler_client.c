@@ -239,6 +239,7 @@ static int scheduler_connect_self(int block){
 	int sock=-1;
 	int retry=0;
 	do{
+		launch_scheduler();//check scheduler version.
 		if(TEMP[0]=='/'){//try local connection first.
 			snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
 			sock=connect_port(fn, PORT, 0, 0);

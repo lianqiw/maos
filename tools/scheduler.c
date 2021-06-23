@@ -1193,7 +1193,8 @@ int main(){
 	//Must acquire mutex_sch before handling run_t
 	thread_new(ws_service, (void*)(long)(PORT+100));
 #endif
-	listen_port(PORT, slocal, respond, 0, NULL, 0);
+	//still need time out to handle process queue.
+	listen_port(PORT, slocal, respond, 1, scheduler_timeout, 0);
 	remove(slocal);
 
 	exit(0);

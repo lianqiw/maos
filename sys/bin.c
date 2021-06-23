@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -381,24 +381,45 @@ void zfclose(file_t* fp){
 	free(fp);
 	//UNLOCK(lock);
 }
+/**
+ * Wrap normal and gzip file write operation.
+ * */
+int zfwrite_wrap(const void* ptr, const size_t tot, file_t* fp){
+	if(!fp||fp->fd<0||fp->eof||!ptr){
+		return -1;
+	} else if(fp->isgzip){
+		return gzwrite(fp->gp, ptr, tot);
+	} else{
+		return write(fp->fd, ptr, tot);
+	}
+}
 /*
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
   fwrite. Follows the interface of fwrite.
 */
 void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-	int ans=0;
-	long ret=0;
-	if(fp->isgzip){
-		ans=((ret=gzwrite(fp->gp, ptr, size*nmemb))!=(long)(size*nmemb));
-	} else{
-		ans=((ret=write(fp->fd, ptr, size*nmemb))!=(long)(size*nmemb));
+	size_t tot=size*nmemb;
+	int err=0;
+	while(!err){
+		int count=zfwrite_wrap(ptr, tot, fp);
+		if(count>0){
+			if((size_t)count<tot){
+				ptr+=count;
+				tot-=count;
+			} else{
+				break;
+			}
+		} else{
+			err=1;
+		}
 	}
-	if(ans){
+	if(err){
+		fp->eof=1;
 		if(errno) perror("zfwrite_do");
-		info("zfwrite_do failed: ret=%ld, size=%lu, nmemb=%lu\n", ret, size, nmemb);
-		warning("write to %s failed\n", fp->fn);
+		warning("write %lu bytes to %s failed\n", tot, fp->fn);
 	}
 }
+
 /**
    Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
 */
@@ -460,30 +481,36 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp)
 	}
 }
 /**
-   Read from the file. If in gzip mode, calls gzread, otherwise, calls
-   fread. Follows the interface of fread.
+ * Wrap normal and gzip file operation.
+ * */
+int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
+	if(!fp||fp->fd<0||fp->eof||!ptr){
+		return -1;
+	} else if(fp->isgzip){
+		return gzread(fp->gp, ptr, tot);
+	} else{
+		return read(fp->fd, ptr, tot);
+	}
+}
+/**
+   Read from the file. Handle partial read.
 */
 int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int err=0;
 	ssize_t tot=size*nmemb;
-	if(fp->fd&&!fp->isgzip){//raw io. read until all needed data is done (necessary for socket).
-		while(!err){
-			int count=read(fp->fd, ptr, tot);
-			if(count>0){
-				if(count<tot){
-					ptr+=count;
-					tot-=count;
-				} else{
-					break;
-				}
+	while(!err){
+		int count=zfread_wrap(ptr, tot, fp);
+		if(count>0){
+			if(count<tot){
+				ptr+=count;
+				tot-=count;
 			} else{
-				err=1;
+				break;
 			}
+		} else{
+			err=1;
 		}
-	} else if(fp->isgzip){
-		err=(gzread(fp->gp, ptr, tot)!=tot);
-		//do not use gzerror. It modifies the error value and does not give correct string error.
-	} 
+	}
 	if(err){
 		fp->eof=1;
 	}
@@ -497,7 +524,7 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int ans=0;
 	if(fp->eof){
 		ans=-1;
-	}else if(fp->isfits&&size>1){/*need to do byte swapping.*/
+	} else if(fp->isfits&&size>1){/*need to do byte swapping.*/
 		const long bs=2880;
 		char junk[bs];
 		long length=size*nmemb;
@@ -598,7 +625,7 @@ int zfeof(file_t* fp){
 	if(!fp->eof){
 		if(zfseek(fp, 1, SEEK_CUR)<0){
 			fp->eof=1;
-		}else{
+		} else{
 			zfseek(fp, -1, SEEK_CUR);//restore
 		}
 	}
@@ -623,7 +650,7 @@ read_bin_header(header_t* header, file_t* fp){
 	uint32_t magic, magic2;
 	uint64_t nlen, nlen2;
 	memset(header, 0, sizeof(header_t));
-	
+
 	if(fp->isfits){
 		warning("fits file is not supported\n");
 		return -1;
@@ -661,7 +688,7 @@ read_bin_header(header_t* header, file_t* fp){
 			header->magic=magic;
 			zfread_check(&header->nx, sizeof(uint64_t), 1, fp);
 			zfread_check(&header->ny, sizeof(uint64_t), 1, fp);
-			if((magic & 0x6400) != 0x6400){
+			if((magic&0x6400)!=0x6400){
 				warning("wrong magic number=%x. cancelled.\n", magic);
 				goto read_error;
 			} else{
@@ -780,19 +807,19 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 	}
 	if(str){
 		const char* str_end=str+strlen(str);
-		while(isspace(str[0]) && str<str_end) str++;
-		while(str && str<str_end){
+		while(isspace(str[0])&&str<str_end) str++;
+		while(str&&str<str_end){
 			FLUSH_OUT;
 			const char* nl=strchr(str, '\n');//separation of keys
 			const char* nc=strchr(str, ';');//separation of keys
 			const char* eq=strchr(str, '=');
 			if(!nl) nl=str+strlen(str);
-			if(nc && nc<nl) nl=nc;
+			if(nc&&nc<nl) nl=nc;
 			if(eq>nl) eq=0;
 			int length;
 			if(eq){
 				length=nl-eq;
-			}else{
+			} else{
 				length=nl-str+1;
 			}
 			if(length>70) length=70;//each line can contain maximum 70 values
@@ -816,7 +843,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 			} else{
 				str+=length;
 			}
-			while(isspace(str[0]) && str<str_end) str++;
+			while(isspace(str[0])&&str<str_end) str++;
 		}
 	}
 	FLUSH_OUT;
@@ -885,14 +912,14 @@ read_fits_header(header_t* header, file_t* fp){
 					is_comment=1;
 				}
 				//Remove trailing space.
-				while(length>0 && isspace((int)hh[length-1])){
+				while(length>0&&isspace((int)hh[length-1])){
 					hh[length-1]='\0';
 					length--;
 				}
-				
+
 				if(length>0){
 					if(header->str){
-						if(!(is_comment && was_comment)){
+						if(!(is_comment&&was_comment)){
 							strcat(header->str, ";\0");
 						}
 						header->str=myrealloc(header->str, strlen(header->str)+length+3, char);
@@ -1110,7 +1137,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 		if(!msize){
 			error("size cannot be zero when fn is NULL.\n"); return NULL;
 		}
-	}else{
+	} else{
 		if(rw&&disable_save&&!IS_SHM(fn)&&mystrcmp(fn, CACHE)){
 			warning("Saving is disabled for %s\n", fn);
 			print_backtrace();
@@ -1124,7 +1151,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 			error("mmap only support .bin file\n");
 			return NULL;
 		}
-		
+
 		if(rw){
 			fd=myopen(fn2, O_RDWR|O_CREAT, 0600);
 			/*First truncate the file to 0 to delete old data. */
@@ -1146,7 +1173,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 		if(!rw&&!msize){
 			msize=flen(fn2);
 		}
-		
+
 	}
 	void* p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ, (fd==-1?MAP_ANONYMOUS:0)|MAP_SHARED, fd, 0);
 	if(fd!=-1) close(fd);//it is ok to close fd after mmap.

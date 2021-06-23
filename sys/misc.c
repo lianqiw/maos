@@ -826,8 +826,7 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	int cancel_action=0;
 	struct sigaction act={0};
 	act.sa_handler=SIG_DFL;
-	sigaction(sig, &act, 0);
-	/*prevent recursive call of handler*/
+	sigaction(sig, &act, 0);/*prevent recursive call of handler*/
 	sync();
 	if(sig==0){
 		dbg_time("Signal 0 caught. do nothing\n");

@@ -62,11 +62,13 @@ retry:
 		//fcntl(fd, F_SETFD, FD_CLOEXEC);//do not set CLOEXEC to hold the lock after fork/exec.
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
-		if(flock(fd, op)){/*lock faild. */
-			perror("flock");
+		if(flock(fd, op)){/*lock faild. another process already locked file.*/
+			int errno_save=errno;
 			if(block){/*In block mode, we should never fail. */
+				perror("flock");
 				error("Lock failed\n");
 			}
+			//check running process version.
 			long pid=0;
 			FILE* fp=fdopen(fd, "r");
 			if(!fp||fscanf(fp, "%ld", &pid)==EOF){
@@ -77,6 +79,7 @@ retry:
 				goto retry;
 			} else{
 				if(kill(pid, 0)){
+					warning_time("flock: %s\n", strerror(errno_save));
 					warning_time("Unknown process %ld already locks file %s. (NFS mounted system?)\n", pid, fnlock);
 					return -1;
 				} else{/*already running. check version */
@@ -117,7 +120,7 @@ retry:
 			fsync(fd);/*don't close file. maintain lock. */
 		}
 	} else{
-		warning_time("Open file failed. This should never happen\n");
+		warning_time("Open file failed. This should rarely happen\n");
 		sleep(1);
 		goto retry;
 	}

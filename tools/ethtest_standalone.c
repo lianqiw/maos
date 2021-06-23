@@ -198,7 +198,7 @@ int connect_port(const char* hostname, int port, int block, int mode){
 			perror("socket (scheduler)");
 			return sock;
 		}
-		{
+		if(1){
 			/*Applications that require lower latency on every packet sent should be
 			  run on sockets with TCP_NODELAY enabled. It can be enabled through the
 			  setsockopt command with the sockets API.
@@ -210,6 +210,13 @@ int connect_port(const char* hostname, int port, int block, int mode){
 			int one=1;
 			//setsockopt(sock_mvm, SOL_TCP, TCP_NODELAY|TCP_QUICKACK|TCP_CORK, &one, sizeof(one));
 			setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
+		}
+		if(1){
+			//Timeout for receive. Avoid hang.
+			struct timeval tv;
+			tv.tv_sec = 10;
+			tv.tv_usec= 0;
+			setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv));
 		}
 		/* Give the socket a name. */
 		init_sockaddr(&servername, hostname, port);

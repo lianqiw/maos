@@ -127,8 +127,9 @@ enum{
     DRAW_FINAL,//18 this client is done.
     DRAW_FLOAT,//19 number of bytes for float
     DRAW_FRAME,//20 information about UDP frame, following this is frame index, total bytes, sub-frame index, sub-frame bytes/
+    DRAW_SINGLE,//21 toggle single/continuous drawing
     DRAW_END=100,
     DRAW_ENTRY=9999 /*A new entry*/
 };
-#define scheduler_version 0x30
+#define scheduler_version 51
 #endif

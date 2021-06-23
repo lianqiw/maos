@@ -45,7 +45,7 @@ long NMEM=0;/*Total memory in byte. */
 const char* HOME=NULL;
 const char* USER=NULL;
 char HOST[256];
-char TEMP[PATH_MAX];//Do not put temp in user home as it may be shared by hosts
+char TEMP[PATH_MAX];//Do not put temp in user home as it may be shared by hosts and flock over nfs does not work well
 char CACHE[PATH_MAX];//Directory for caching files that are expensive to compute.
 char EXEP[PATH_MAX];/*absolute path of the exe.*/
 char DIRSTART[PATH_MAX];//Start up directory.
@@ -77,32 +77,26 @@ void init_process(void){
 #else
 	HOME=getenv("HOME");
 #endif
-	
-
 	//Get Temp directory
 #if defined(__CYGWIN__)
-	char temp2[PATH_MAX];
-	snprintf(temp2, PATH_MAX, "%s/.aos/tmp-%s", HOME, HOST);
-	const char* temp=temp2;
-#else
-	const char* temp="/tmp";
+	if(HOME){
+		snprintf(TEMP, sizeof(TEMP), "%s/.aos/tmp/%s", HOME, HOST);
+	}else
 #endif
+	snprintf(TEMP, sizeof(TEMP), "/tmp/maos-%s", USER);
 
-	strcpy(TEMP, temp);
-	strcat(TEMP, "/maos-");
-	strcat(TEMP, USER);
-	if(!HOME){
-		HOME=TEMP;
-	}
+
+	//Create temporary folders
+	mymkdir("%s", TEMP);
+	if(!HOME) HOME=TEMP;
+	mymkdir("%s/.aos/", HOME);
 	snprintf(CACHE, PATH_MAX, "%s/.aos/cache", HOME);
+	mymkdir("%s", CACHE);
+	
 	if(!getcwd(DIRSTART, PATH_MAX)){
 		snprintf(DIRSTART, PATH_MAX, "./");
 	}
-	//Create temporary folders
-	mymkdir("%s", TEMP);
-	mymkdir("%s/.aos/", HOME);
-	mymkdir("%s", CACHE);
-
+	
 	{/*PATH to executable*/
 		char exepath[PATH_MAX];
 		if(!get_job_progname(exepath, PATH_MAX, 0)){

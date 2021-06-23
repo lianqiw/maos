@@ -427,14 +427,14 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 		addr.sun_family=AF_UNIX;
 		strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
 		if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
-			warning("connect locally (%s) failed: %s\n", hostname, strerror(errno));
+			warning("connect locally (%s) failed: %s. \n", hostname, strerror(errno));
 			close(sock);
 			sock=-1;
 		}
 		return sock;
 		//hostname="localhost";
 	} else{
-	//if(sock!=-1) return sock;
+		//if(sock!=-1) return sock;
 		struct sockaddr_in servername;
 		for(int count=0; count<25; count++){
 			sock=socket(PF_INET, SOCK_STREAM, 0);

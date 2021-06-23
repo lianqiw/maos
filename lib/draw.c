@@ -67,6 +67,7 @@ int sock_ndraw2=0;//number of valid displays
 typedef struct{
 	int fd;
 	int pause;
+	int draw_single;
 	list_t* list;
 	char* figfn[2];
 }sockinfo_t;
@@ -107,8 +108,11 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 			sock_data->pause=0;
 			info("draw %d resumed\n", sock_draw);
 			break;
+		case DRAW_SINGLE:
+			sock_data->draw_single=sock_data->draw_single?0:1;
+			break;
 		default:
-			warning("cmd=%d is not understood\n", cmd);
+			dbg("cmd=%d is not understood\n", cmd);
 			break;
 		}
 	}
@@ -148,26 +152,30 @@ static void list_destroy(list_t** head){
 /**Add fd to list of drawing socks*/
 int draw_add(int fd){
 	if(fd==-1) return -1;
-	for(int ifd=0; ifd<sock_ndraw; ifd++){
+	int ifd;
+	for(ifd=0; ifd<sock_ndraw; ifd++){
 		if(sock_draws[ifd].fd<0){//fill a empty slot
-			sock_draws[ifd].fd=fd;
 			sock_ndraw2++;
-			thread_new((thread_fun)listen_drawdaemon, &sock_draws[ifd]);
-			draw_disabled=0;
-			return 0;
+			break;
 		}
 	}
-	if(sock_ndraw<MAXDRAW){
-		memset(&sock_draws[sock_ndraw], 0, sizeof(sockinfo_t));
-		sock_draws[sock_ndraw].fd=fd;
-		thread_new((thread_fun)listen_drawdaemon, &sock_draws[sock_ndraw]);
-		sock_ndraw++;
-		sock_ndraw2++;
-		draw_disabled=0;
-		return 0;
-	} else{
-		return -1;
+	if(ifd==sock_ndraw){//no slot found
+		if(sock_ndraw<MAXDRAW){
+			ifd=sock_ndraw;
+			sock_ndraw++;
+			sock_ndraw2++;
+		}else{
+			ifd=-1;
+			return -1;
+		}
 	}
+	
+	memset(&sock_draws[ifd], 0, sizeof(sockinfo_t));
+	sock_draws[ifd].fd=fd;
+	sock_draws[ifd].draw_single=draw_single;
+	thread_new((thread_fun)listen_drawdaemon, &sock_draws[ifd]);
+	draw_disabled=0;
+	return 0;
 }
 static void draw_remove(int fd, int reuse){
 	if(fd<0) return;
@@ -356,7 +364,7 @@ void draw_final(int reuse){
 */
 static int check_figfn(int ifd, const char* fig, const char* fn, int add){
 	if(draw_disabled||sock_draws[ifd].fd==-1||sock_draws[ifd].pause) return 0;
-	if(!draw_single) return 1;
+	if(!(draw_single && sock_draws[ifd].draw_single)) return 1;
 	list_t* child=0;
 	list_search(&sock_draws[ifd].list, &child, fig, add);
 	int found=0;
