@@ -221,10 +221,16 @@ void cure(dmat** phi, const dmat* gx, const dmat* gy, real dx){
 /**
    An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid.
 */
-void cure_loc(dmat** phix, const dmat* grad, const loc_t* saloc){
-	if(grad->nx*grad->ny!=saloc->nloc*2){
-		warning("Incorrect dimensions: grad %ldx%ld, saloc %ldx2",
-			grad->nx, grad->ny, saloc->nloc);
+void cure_loc(dmat** phix, const dmat* grad0, const loc_t* saloc){
+	dmat *grad=0;
+	long nsa=saloc->nloc;
+	if(grad0->nx==2){
+		grad=dtrans(grad0);
+	}else{
+		grad=dref(grad0);
+	}
+	if(grad->nx*grad->ny!=nsa*2){
+		error("Invalid dimension of grad: %ldx%ld. nsa=%ld\n", NX(grad0), NY(grad0), nsa);
 		return;
 	}
 	loc_create_map(saloc);
@@ -233,7 +239,6 @@ void cure_loc(dmat** phix, const dmat* grad, const loc_t* saloc){
 	int ny=saloc->map->ny-npad*2;
 	dmat* gx=dnew(nx, ny);
 	dmat* gy=dnew(nx, ny);
-	long nsa=grad->nx/2;
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			long ii=P(saloc->map,(ix+npad),(iy+npad));
@@ -249,6 +254,7 @@ void cure_loc(dmat** phix, const dmat* grad, const loc_t* saloc){
 	cure(phix, gx, gy, saloc->dx);
 	dfree(gx);
 	dfree(gy);
+	dfree(grad);
 }
 /**
    An alternative interface. grad is nsa*2 defined on saloc, instead of on

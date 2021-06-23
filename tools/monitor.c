@@ -55,7 +55,7 @@ GdkPixbuf* icon_running=NULL;
 GdkPixbuf* icon_waiting=NULL;
 GdkPixbuf* icon_cancel=NULL;
 GdkPixbuf* icon_save=NULL;
-//GdkPixbuf* icon_skip=NULL;
+GdkPixbuf* icon_skip=NULL;
 GdkPixbuf* icon_clear=NULL;
 GdkPixbuf* icon_connect=NULL;
 
@@ -684,6 +684,7 @@ int main(int argc, char* argv[]){
 	icon_finished=gdk_pixbuf_new_from_resource("/maos/icon-finished.png", NULL);
 	icon_failed=gdk_pixbuf_new_from_resource("/maos/icon-error.png", NULL);
 	icon_running=gdk_pixbuf_new_from_resource("/maos/icon-play.png", NULL);
+	icon_skip=gdk_pixbuf_new_from_resource("/maos/icon-skip.png", NULL);
 	icon_waiting=gdk_pixbuf_new_from_resource("/maos/icon-waiting.png", NULL);
 	icon_cancel=gdk_pixbuf_new_from_resource("/maos/icon-cancel.png", NULL);
 	icon_save=gdk_pixbuf_new_from_resource("/maos/icon-save.png", NULL);

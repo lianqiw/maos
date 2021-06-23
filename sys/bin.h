@@ -105,7 +105,6 @@ int zfeof(file_t *fp);
 int zfpos(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
-file_t *zfopen_try(const char *fn, const char *mod);
 file_t *zfopen(const char *fn, const char *mod);
 file_t *zfdopen(int fd, const char *mod);
 const char *zfname(file_t *fp);

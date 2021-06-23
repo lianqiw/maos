@@ -234,14 +234,14 @@ static inline int myopen(const char* name, int oflag, mode_t mode){
    will not be gzipped. If the file has no suffix, the file will be gzipped and
    .bin is appened to file name.
 */
-file_t* zfopen_try(const char* fni, const char* mod){
+static file_t* zfopen_try(const char* fni, const char* mod){
 	//LOCK(lock);//nothing to protect
 	file_t* fp=mycalloc(1, file_t);
 	const char* fn2=fp->fn=procfn(fni, mod);
 	if(!fn2){
 		if(mod[0]=='r'){
 			printpath();
-			error("%s does not exist for read\n", fni);
+			dbg("%s does not exist for read\n", fni);
 		}
 		goto fail;
 	}
@@ -287,10 +287,10 @@ file_t* zfopen_try(const char* fni, const char* mod){
 		}
 		break;
 	default:
-		error("Unknown mod=%s\n", mod);
+		dbg("Unknown mod=%s\n", mod);
 	}
 	if(fp->fd==-1){
-		error("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));
+		dbg("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));
 		goto fail;
 	}
 	fcntl(fp->fd, F_SETFD, FD_CLOEXEC);
@@ -298,7 +298,7 @@ file_t* zfopen_try(const char* fni, const char* mod){
 	if(mod[0]=='r'){
 		uint16_t magic;
 		if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
-			error("Unable to read %s.\n", fn2);
+			dbg("Unable to read %s.\n", fn2);
 		} else{
 			if(magic==0x8b1f){
 				fp->isgzip=1;
@@ -310,7 +310,7 @@ file_t* zfopen_try(const char* fni, const char* mod){
 	}
 	if(fp->isgzip){
 		if(!(fp->gp=gzdopen(fp->fd, mod))){
-			error("Error gzdopen for %s\n", fn2);
+			dbg("Error gzdopen for %s\n", fn2);
 			goto fail;
 		}
 	}
@@ -337,17 +337,7 @@ fail:
 */
 file_t* zfopen(const char* fn, const char* mode){
 	file_t* fp;
-#if 0
-	char* endptr;
-	long int sock=strtol(fn, &endptr, 10);
-	if(endptr){//fn is not just number
-		fp=zfopen_try(fn, mode);
-	} else{
-		fp=zfdopen((int)sock, mode);
-	}
-#else
 	fp=zfopen_try(fn, mode);
-#endif
 	if(!fp&&!disable_save){
 		error("Open file %s for %s failed\n", fn, mode[0]=='r'?"read":"write");
 	}

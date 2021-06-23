@@ -302,8 +302,8 @@ X(mat)* X(trans)(const X(mat)* A){
 	if(A->nx==1||A->ny==1){
 		memcpy(B->p, A->p, A->nx*A->ny*sizeof(T));
 	} else{
-		for(int ix=0; ix<A->nx; ix++){
-			for(int iy=0; iy<A->ny; iy++){
+		for(int iy=0; iy<A->ny; iy++){
+			for(int ix=0; ix<A->nx; ix++){
 				P(B, iy, ix)=P(A, ix, iy);
 			}
 		}

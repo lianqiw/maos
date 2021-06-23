@@ -269,7 +269,7 @@ gboolean refresh(proc_t* p){
 		break;
 	case S_FINISH:/*Finished */
 		list_update_progress(p);
-		list_modify_icon(p, p->frac==0?NULL:icon_finished);
+		list_modify_icon(p, p->frac==0?icon_skip:icon_finished);
 		//list_modify_icon(p, icon_finished);
 		//list_modify_color(p,"#00DD00");
 		notify_user(p);

@@ -130,13 +130,13 @@ else
 fi
 
 #Common configure options.
-AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
-AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]),[use_gcov="$enableval"],[use_gcov="no"])
-AC_ARG_ENABLE(single, AS_HELP_STRING([--enable-single],[Use single precision for CPU and cuda.]), [use_single="$enableval"],[use_single="no"])
+AC_ARG_ENABLE(allstatic, AS_HELP_STRING([--enable-allstatic], [Compile statically]))
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]))
+AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]))
+AC_ARG_ENABLE(single, AS_HELP_STRING([--enable-single],[Use single precision for CPU and cuda.]))
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
-AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
-AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets]), [use_websockets="$enableval"], [use_websockets="yes"])
+AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]))
+AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets]))
 AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_mkl="$enableval"], [use_mkl="default"])
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
@@ -144,7 +144,7 @@ AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKD
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="yes"])
 AC_ARG_ENABLE(gtk-4, AS_HELP_STRING([--enable-gtk-4],[Using GTK4]), [use_gtk_4="$enableval"], [use_gtk_4="no"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
-AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
+AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
 AC_ARG_ENABLE(binary,AS_HELP_STRING([--disable-binary], [Disable downlong precompiled library]))
@@ -158,28 +158,28 @@ if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
 else
     with_cuda=yes
 fi
-if test "$use_single" = "yes" ;then
+if test "$enable_single" = "yes" ;then
     if test "$cuda_double" = "yes" ;then
         AC_MSG_ERROR(["cuda_double is only possible without --enable-single"])
     fi
     if test "$with_matlab" != "no" ;then
-	AC_MSG_WARN(["MATLAB linking is only possible without --enable-single. Disabled mex."])
-	with_matlab=no
+		AC_MSG_WARN(["MATLAB linking is only possible without --enable-single. Disabled mex."])
+		with_matlab=no
     fi
-    use_single=1
+    enable_single=1
 else
-    use_single=0
+    enable_single=0
 fi
-AC_DEFINE_UNQUOTED(CPU_SINGLE, $use_single, "Use single precision mode")
+AC_DEFINE_UNQUOTED(CPU_SINGLE, $enable_single, "Use single precision mode")
 
-if test x$use_gcov = "xyes" ;then
+if test x$enable_gcov = "xyes" ;then
     OPTSprof+="  -fprofile-arcs -ftest-coverage --coverage"
     debug="yes"
 fi
-if test "$use_release" = "yes" ;then
-    use_scheduler="no"
-    use_websocket="no"
-	#use_static="yes"
+if test "$enable_release" = "yes" ;then
+    enable_scheduler="no"
+    enable_websocket="no"
+	#enable_allstatic="yes"
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
@@ -262,7 +262,7 @@ case "$CN" in
 esac
 
 AC_DEFINE_UNQUOTED(COMPILER, ["$CN ($CC_VERSION)"], ["Compiler"])
-if test "x$debug" = "xyes" ;then
+if test "x$enable_debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
     ccprefix=DEBUG
@@ -297,9 +297,9 @@ case "$host_os" in
 		LDRT=" -lrt" #need real time library.
 		LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 		CFLAGS+=" -fPIC"
-		CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
-		if test "$use_release" = "yes" ;then
-			CFLAGS+=" -D_GLIBC_2_5_SOURCE"
+		#CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
+		if test "$enable_release" = "yes" ;then
+			CFLAGS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective
 		fi
 		if test "${host_cpu}" = "x86_64" ;then
 			libsuffix="64"
@@ -320,7 +320,7 @@ case "$host_os" in
 		system="apple"
 		ldsuffix="dylib"
 		#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-		if test "$use_release" = "yes" ;then
+		if test "$enable_release" = "yes" ;then
 			CFLAGS+=" -mmacosx-version-min=10.7"
 		fi
 		if test "$CN" = "CLANG" ;then
@@ -394,10 +394,10 @@ fi
 
 
 AM_CONDITIONAL(USE_SCHEDULER, true)
-if test "$use_scheduler" = "no" ;then
+if test "$enable_scheduler" = "no" ;then
     AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
     AM_CONDITIONAL(USE_SCHEDULER, false)
-    use_websockets="no"
+    enable_websockets="no"
 fi
 if test "$host_cpu" = "x86_64" ;then 
     chol_fun=cholmod_l_factorize
@@ -408,7 +408,7 @@ else
 fi
 
 LDEXE+="$LDRT " #-static" #show that we prefer static linking.
-if test "x$use_static" = "xyes" ;then
+if test "x$enable_allstatic" = "xyes" ;then
     LDEXE_MAOS="-all-static" #only all static linking for maos
     AM_CONDITIONAL(USE_STATIC, true)
     AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
@@ -658,7 +658,7 @@ LDCHOL="-lcholmod"
 
 #Check for libwebsocket
 AM_CONDITIONAL(HAS_LWS, false)
-if test "$use_websockets" = "yes" ;then
+if test "$enable_websockets" != "no" ;then
     AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
@@ -680,7 +680,7 @@ if test "$use_websockets" = "yes" ;then
 		AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
 	else
 		AC_MSG_NOTICE(["libwebsocket library or header is not available"])
-		use_websockets="no"
+		enable_websockets="no"
 	fi
 fi
 if test "$enable_cmocka" != "no" ;then
@@ -707,17 +707,12 @@ if test "$enable_cmocka" != "no" ;then
 fi
 AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
 PKG_PROG_PKG_CONFIG
-if test -z "$PKG_CONFIG" ;then
-	with_gtk="no"
-	AC_MSG_ERROR(["Please install pkgconfig"])
-fi
-
-if test "$with_gtk" != "no" ;then
+gtk_ver="0"
+AS_IF([ test -n "$PKG_CONFIG"],[#use AS_IF instead of if to avoid error regarding pkgconfig not available.
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
     #make sure there are spaces before and after >=
-	gtk_ver="0"
-    if test -n "$GTKDIR" ;then #User specified GTK directory
+	if test -n "$GTKDIR" ;then #User specified GTK directory
 		if test -d "$GTKDIR/pkgconfig" ;then
 			GTKDIR="$GTKDIR/../"
 		fi
@@ -757,7 +752,7 @@ if test "$with_gtk" != "no" ;then
     #Reexport after updating
     AC_SUBST(GTK_CFLAGS)
     AC_SUBST(GTK_LIBS)
-fi
+])
 
 AM_CONDITIONAL(GUI,  test x$gtk_ver  != x0)
 AM_CONDITIONAL(CAIRO, test x$has_cairo = x1)
@@ -852,7 +847,7 @@ if test "$with_cuda" != "no" ;then
     if test -n "$with_cuda" ;then
 		user_enable_cuda=yes
     fi
-    #if test "$use_static" = "yes"; then
+    #if test "$enable_allstatic" = "yes"; then
 	#AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
     #fi
     AC_MSG_NOTICE([Enabling CUDA])
@@ -931,7 +926,7 @@ if test "$with_cuda" != "no" ;then
 	CUDAOPT+=" -arch=compute_$cuarch" 
     #To specify multiple architectures, use
     #CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
-    if test "$debug" = "yes" ;then
+    if test "$enable_debug" = "yes" ;then
         CUDAOPT+=" -O0"
     else
 	CUDAOPT+=" -O3"
@@ -1045,7 +1040,7 @@ echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR
 echo host_os=$host_os
 echo BIGENDIAN=$BIGENDIAN
-echo use_static=$use_static
+echo enable_allstatic=$enable_allstatic
 
 echo CC=$CC
 echo CN=$CN
@@ -1074,13 +1069,13 @@ echo Compiling options:
 echo 
 
 echo "OpenMP:          $has_openmp"
-echo "Single:          $use_single"
+echo "Single:          $enable_single"
 echo "CUDA:            $cudaver (double: $cuda_double, arch: $cuarch)"
 echo "Drawdaemon:      $has_cairo"
 echo "Monitor:         $((gtk_ver>0)) (libnotify: $has_notify)"
 echo "GTK version:     ${gtk_ver}"
 
-echo "Websocket:       $use_websockets"
+echo "Websocket:       $enable_websockets"
 echo "MATLAB MEX:      $with_matlab"
 
 echo "Doxygen:         $DX_DOXYGEN (make doc)"

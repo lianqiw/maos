@@ -36,18 +36,18 @@
 */
 static T amotry(T** p, T y[], T psum[], int ndim,
 	T(*funk)(const T[], void* data), void* data, int ihi, T fac){
-	int j;
 	T fac1, fac2, ytry;
 	fac1=(1.0-fac)/ndim;
 	fac2=fac1-fac;
 	T ptry[ndim];
-	for(j=0;j<ndim;j++){
+	ptry[0]=0;//avoids gcc11 maybe unitialized error
+	for(int j=0;j<ndim;j++){
 		ptry[j]=psum[j]*fac1-p[ihi][j]*fac2;
 	}
-	ytry=(*funk)(ptry, data);
+	ytry=funk(ptry, data);
 	if(ytry<y[ihi]){
 		y[ihi]=ytry;
-		for(j=0;j<ndim;j++){
+		for(int j=0;j<ndim;j++){
 			psum[j]+=ptry[j]-p[ihi][j];
 			p[ihi][j]=ptry[j];
 		}

@@ -124,8 +124,10 @@ class cell(Structure):
         }
         if type(arr) is list:
             arr=np.asarray(arr)
-
+        
         if arr is not None:
+            if arr.strides[-1]!=arr.itemsize:
+                raise(Exception('Non standard indexing is not supported. Please make a copy.'))
             self.id=dtype2id.get(arr.dtype.type)
             if self.id is None:
                 print("init: Unknown data" +str( arr.dtype.type))
