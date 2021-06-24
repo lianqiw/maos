@@ -128,51 +128,72 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 	}
 	return count;
 }
+/**
+ * Parse the extra expression to the form _*mul+add. It supports +,-,*,/ operators with no space in between.
+ * */
+static void parse_expr(double* vmul, double* vadd, char** pendptr){
+	char *endptr=*pendptr;
+	double valpriv;
+	int optpriv=0;
+	*vmul=1;
+	*vadd=0;
+	while(endptr[0]=='/'||endptr[0]=='*'||endptr[0]=='+'||endptr[0]=='-'){
+		char op=endptr[0];
+		endptr++;
+		while(isspace(endptr[0])) endptr++;
+		char *data=endptr;
+		double tmp=strtod(data, (char**)&endptr);
+		if(data==endptr){
+			break;
+		}
+		//convert - to + and / to * for easy handling
+		if(op=='-'){
+			tmp=-tmp; 
+			op='+';
+		}else if(op=='/'){
+			tmp=1./tmp; 
+			op='*';
+		}
+		//For + operator, commit previous stage if any, stage it and check the next operator
+		//For * operator, apply to the stage or the result.
+		if(op=='+'){
+			if(optpriv){
+				*vadd+=valpriv;//add previous val to result
+			}
+			valpriv=tmp;//record addition for later use
+			optpriv=1;
+		}else if(op=='*'){
+			if(optpriv){//multiply val to previous value and keep it
+				valpriv*=tmp;
+			}else{//multiply to result
+				*vmul*=tmp;
+			}
+		}
+	}
+	if(optpriv){
+		*vadd+=valpriv;
+	}
+	*pendptr=endptr;
+}
 
 /**
-   Read in a number from the value string. Will interpret * and / operators. *endptr0 will
-   be updated to point to the next valid entry, or at separator like coma
-   (spaced are skipped).  */
+   Read in a number from the value string. Will interpret +,0,*,/ operators if
+   there is nospace in between. *endptr0 will be updated to point to the next
+   valid entry, or at separator like coma (spaced are skipped).  */
 double readstr_num(const char* data, /**<[in] Input string*/
 	char** endptr0    /**<[out] Location in Input string after readed number.*/
 ){
-	if(!data||strlen(data)==0){
-		dbg("{%s}: Unable to parse for a number\n", data);
-		return NAN;
-	}
 	char* endptr;
 	double res=strtod(data, &endptr);
 	if(data==endptr){
 		dbg("{%s}: Unable to parse for a number\n", data);
 		return NAN;
 	}
-	while(isspace(endptr[0])) endptr++;
-	while(endptr[0]=='/'||endptr[0]=='*'){
-		int power=1;
-		if(endptr[0]=='/'){
-			power=-1;
-		}
-		endptr++;
-		while(isspace(endptr[0])) endptr++;
-		data=endptr;
-		double tmp=strtod(data, &endptr);
-		if(data==endptr){
-			//no number is followed by / or *
-			break;
-		}
-		if(power==1){
-			res*=tmp;
-		} else{
-			res/=tmp;
-		}
-		while(isspace(endptr[0])) endptr++;
-	}
-	if(endptr0){
-		*endptr0=endptr;
-	}
-	return res;
+	double vmul, vadd;
+	parse_expr(&vmul, &vadd, &endptr);
+	if(endptr0) *endptr0=endptr;
+	return res*vmul+vadd;
 }
-
 
 /**
    Read numerical array from a string. if len is nonzero, *ret should be already allocated.
@@ -233,14 +254,16 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 		}
 	}
 	const char* startptr=data;
-	const char* endptr, * startptr2;
+	const char* endptr;
 	double fact=1;
 	int power=1;
-	int addition=0; double addval=0;
+	double addval=0;
 	int trans=0;
+	const char* bopen=0, *bclose=0;
 	/*process possible numbers before the array. */
-	if(strchr(startptr, '[')){/*there is indeed '[' */
-		while(startptr[0]!='['){/*parse number before [*/
+	bopen=strchr(startptr, '[');
+	if(bopen){/*there is indeed '[' */
+		while(startptr[0]!='['){/*parse expression before [. only * and / are allowed*/
 			double fact1=strtod(startptr, (char**)&endptr);/*get the number */
 			if(startptr==endptr){
 				error("{%s}: Invalid entry to parse for numerical array\n", data);
@@ -269,54 +292,20 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 	} else{
 	/*warning("Expecting array: {%s} should start with [\n", data); */
 	}
-	if(strchr(startptr, ']')){/*there is indeed ']'. Handle operations after ] */
-		endptr=strchr(startptr, ']')+1;
+	bclose=strchr(startptr, ']');
+	if(bclose){/*there is indeed ']'. Handle operations after ] */
+		endptr=bclose+1;
 		while(isspace(endptr[0])||endptr[0]=='\''){
 			if(endptr[0]=='\'') trans=1-trans;
 			endptr++;
 		}
-		while(endptr[0]=='/'||endptr[0]=='*'||endptr[0]=='+'||endptr[0]=='-'){
-			int power2=1;
-			if(endptr[0]=='/'){
-				power2=-1;
-			} else if(endptr[0]=='*'){
-				power2=1;
-			} else if(endptr[0]=='+'||endptr[0]=='-'){
-				power2=0;
-				if(endptr[0]=='+'){
-					addition=1;
-				} else{
-					addition=-1;
-				}
-			}
-			if(addition&&power2){
-				error("{%s}: We do not yet support * or / after + or - \n", data);
-			}
-			endptr++;
-			while(isspace(endptr[0])) endptr++;
-			startptr2=endptr;
-			double fact2=strtod(startptr2, (char**)&endptr);
-			if(startptr2==endptr){
-				error("{%s}: Invalid entry to parse for numerical array\n", data);
-			}
-			while(isspace(endptr[0])) endptr++;
-			if(addition){/*addition*/
-				if(addition==1){
-					addval+=fact2;
-				} else{
-					addval-=fact2;
-				}
-			} else{
-				if(power2==1){
-					fact*=fact2;
-				} else{
-					fact/=fact2;
-				}
-			}
-		}
+		double vmul, vadd;
+		parse_expr(&vmul, &vadd, (char**)&endptr);
+		addval+=vadd;
+		fact*=vmul;
+		while(isspace(endptr[0])) endptr++;
 		if(!is_end(endptr[0])&&endptr[0]!=';'&&endptr[0]!=','){
-			error("{%s}: There is garbage in the end of the string.\n", data);
-			_Exit(1);
+			error("{%s}: There is garbage in the end of the string.\n", data);return 0;
 		}
 	}
 	size_t count=0;
@@ -344,9 +333,8 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 		} else{
 			res=fact/res;
 		}
-		if(addition){
-			res+=addval;
-		}
+		res+=addval;
+		
 		/*assign the value to appropriate array. convert to int if necessary. */
 		switch(type){
 		case M_INT:

@@ -240,8 +240,8 @@ static void readcfg_powfs(parms_t* parms){
 	int* inttmp=NULL;
 	real* dbltmp=NULL;
 	char** strtmp=NULL;
-	READ_POWFS_RELAX(dbl, dsa);
-	READ_POWFS_RELAX(int, nwvl);
+	READ_POWFS(dbl, dsa);
+	READ_POWFS(int, nwvl);
 	dmat* wvllist=readcfg_dmat("powfs.wvl");
 	dmat* wvlwts=readcfg_dmat("powfs.wvlwts");
 
@@ -349,30 +349,30 @@ static void readcfg_powfs(parms_t* parms){
 	READ_POWFS_RELAX(int, zoomshare);
 	READ_POWFS_RELAX(dbl, zoomgain);
 	READ_POWFS_RELAX(int, zoomset);
-	READ_POWFS_RELAX(dbl, hs);
+	READ_POWFS(dbl, hs);
 	READ_POWFS_RELAX(dbl, hc);
 	READ_POWFS_RELAX(dbl, nearecon);
 	READ_POWFS_RELAX(dbl, rne);
 	READ_POWFS_MAT(d, qe);
 	READ_POWFS_RELAX(dbl, dx);
-	READ_POWFS_RELAX(dbl, pixtheta);
+	READ_POWFS(dbl, pixtheta);
 	READ_POWFS_RELAX(str, fnllt);
 	READ_POWFS_RELAX(int, trs);
 	READ_POWFS_RELAX(int, dfrs);
-	READ_POWFS_RELAX(int, lo);
-	READ_POWFS_RELAX(int, pixpsa);
+	READ_POWFS(int, lo);
+	READ_POWFS(int, pixpsa);
 	READ_POWFS_RELAX(int, mtchcr);
 	READ_POWFS_RELAX(int, mtchstc);
 	READ_POWFS_RELAX(int, phystep);
 	READ_POWFS_RELAX(int, noisy);
 	READ_POWFS_RELAX(int, dtrat);
 	READ_POWFS_RELAX(int, skip);
-	READ_POWFS_RELAX(int, type);
+	READ_POWFS(int, type);
 	READ_POWFS_RELAX(int, step);
 	READ_POWFS_RELAX(dbl, modulate);
 	READ_POWFS_RELAX(int, modulpos);
 	READ_POWFS_RELAX(int, modulring);
-	READ_POWFS_RELAX(int, nwfs);
+	READ_POWFS(int, nwfs);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		powfs_cfg_t* powfsi=&parms->powfs[ipowfs];
 		if(!isfinite(powfsi->hs)&&powfsi->fnllt){
@@ -407,7 +407,7 @@ static void readcfg_powfs(parms_t* parms){
 		} else{/*there is no LLT. */
 			powfsi->llt=NULL;
 			if(isfinite(powfsi->hs)){
-				warning("powfs%d has finite hs at %g but no llt specified\n",
+				error("powfs%d has finite hs at %g but no llt specified\n",
 					ipowfs, powfsi->hs);
 			}
 			if(powfsi->radpix){

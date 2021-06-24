@@ -731,7 +731,8 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			if(zoomset){
 				P(simu->zoomint,iwfs)=zoomerr;
 				if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
-					info2("wfs %d: Move trombone focus by %g nm.\n", iwfs, 1e9*P(simu->zoomint,iwfs));
+					info2("wfs %d: Move trombone by %g nm (%g m in sodium range).\n", iwfs, P(simu->zoomint, iwfs)*1e9,
+					P(simu->zoomint, iwfs)*2*pow(parms->powfs[ipowfs].hs, 2));
 				}
 				update_etf=1;//this is important in bootstraping.
 			} else{
