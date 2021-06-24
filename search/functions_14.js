@@ -14,7 +14,6 @@ var searchData=
   ['zflush',['zflush',['../bin_8h.html#a956297097c436bc2e8eaf8789fa522ee',1,'bin.c']]],
   ['zfname',['zfname',['../bin_8h.html#a4b81bfaf82d10ec42e8d296544a0b3dc',1,'bin.c']]],
   ['zfopen',['zfopen',['../bin_8h.html#a43fd0b9636dd5ca782e8c718eeb8b7f1',1,'bin.c']]],
-  ['zfopen_5ftry',['zfopen_try',['../bin_8h.html#a2cfcc67ae6d2bd846287f97ae03f181b',1,'bin.c']]],
   ['zfpos',['zfpos',['../bin_8h.html#a1d046d102635bba171fb6eaf42ff54fc',1,'bin.c']]],
   ['zfread',['zfread',['../bin_8h.html#ac266a2663e090233d93f35fc2453a753',1,'bin.c']]],
   ['zfrewind',['zfrewind',['../bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289',1,'bin.c']]],

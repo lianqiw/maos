@@ -40,7 +40,6 @@ var bin_8h =
     [ "zfpos", "bin_8h.html#a1d046d102635bba171fb6eaf42ff54fc", null ],
     [ "zfseek", "bin_8h.html#a3d718e30cd4faabe0c6b902e3ede141c", null ],
     [ "zfrewind", "bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289", null ],
-    [ "zfopen_try", "bin_8h.html#a2cfcc67ae6d2bd846287f97ae03f181b", null ],
     [ "zfopen", "bin_8h.html#a43fd0b9636dd5ca782e8c718eeb8b7f1", null ],
     [ "zfdopen", "bin_8h.html#af4cd6af6ada2d05acfa25434af1ba956", null ],
     [ "zfname", "bin_8h.html#a4b81bfaf82d10ec42e8d296544a0b3dc", null ],

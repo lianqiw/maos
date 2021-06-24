@@ -1,6 +1,5 @@
 var NAVTREEINDEX17 =
 {
-"type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a7db5d7a5dd1a49314a09ef3040282b1d":[10,0,3,10,62,0],
 "type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037ac9aa42fd0901d91de8b0fa4f53bd55c8":[10,0,3,10,62,3],
 "type_8h.html#a64f034633d63c45d7ffff528d5e101e4":[10,0,3,10,37,6],
 "type_8h.html#a66b8c833b1f4ddb3dbea96e52d017de5":[10,0,3,10,37,3],
@@ -249,5 +248,6 @@ var NAVTREEINDEX17 =
 "type_8h.html#structrmapcell":[10,0,3,10,36],
 "type_8h.html#structscccell":[10,0,3,10,33],
 "type_8h.html#structsccell":[10,0,3,10,28],
-"type_8h.html#structscell":[10,0,3,10,19]
+"type_8h.html#structscell":[10,0,3,10,19],
+"type_8h.html#structsmat":[10,0,3,10,0]
 };

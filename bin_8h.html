@@ -219,8 +219,6 @@ Functions</h2></td></tr>
 <tr class="separator:a3d718e30cd4faabe0c6b902e3ede141c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fb14ee86ee80eac407abb5fe9b5e289"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289">zfrewind</a> (file_t *fp)</td></tr>
 <tr class="separator:a0fb14ee86ee80eac407abb5fe9b5e289"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2cfcc67ae6d2bd846287f97ae03f181b"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a2cfcc67ae6d2bd846287f97ae03f181b">zfopen_try</a> (const char *fn, const char *mod)</td></tr>
-<tr class="separator:a2cfcc67ae6d2bd846287f97ae03f181b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a43fd0b9636dd5ca782e8c718eeb8b7f1">zfopen</a> (const char *fn, const char *mod)</td></tr>
 <tr class="separator:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4cd6af6ada2d05acfa25434af1ba956"><td class="memItemLeft" align="right" valign="top"><a id="af4cd6af6ada2d05acfa25434af1ba956"></a>
@@ -462,36 +460,6 @@ str</td>
       </table>
 </div><div class="memdoc">
 <p>Move the file position pointer to the beginning </p>
-
-</div>
-</div>
-<a id="a2cfcc67ae6d2bd846287f97ae03f181b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2cfcc67ae6d2bd846287f97ae03f181b">&#9670;&nbsp;</a></span>zfopen_try()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">file_t* zfopen_try </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fni</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>mod</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Open a bin file for read/write access.</p>
-<p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, if the file name ends with .bin or .fits, will not be gzipped. If the file has no suffix, the file will be gzipped and .bin is appened to file name. </p>
 
 </div>
 </div>

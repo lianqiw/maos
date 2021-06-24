@@ -1,6 +1,5 @@
 var NAVTREEINDEX1 =
 {
-"classcuda__recon_1_1curecon__geom.html":[9,0,0,4],
 "classcuda__recon_1_1curecon__geom.html#a00df1ff2603b6954ff7829d7f4633bfb":[9,0,0,4,1],
 "classcuda__recon_1_1curecon__geom.html#a0b9435d443d5eb611348927602bfb7e0":[9,0,0,4,14],
 "classcuda__recon_1_1curecon__geom.html#a2b73c1d2cba2812cdf61929bbb024331":[9,0,0,4,2],
@@ -249,5 +248,6 @@ var NAVTREEINDEX1 =
 "classcuperf__t.html#a124c8ae48206eaf2a398aeb269dcc552":[9,0,30,9],
 "classcuperf__t.html#a45a76ff5afc913b9ba5e2086c6f3d754":[9,0,30,3],
 "classcuperf__t.html#a4eeb2dd37d95a665ac7f165c92c09a99":[9,0,30,1],
-"classcuperf__t.html#a611e8cc1f472ead09ad03b585660c07a":[9,0,30,8]
+"classcuperf__t.html#a611e8cc1f472ead09ad03b585660c07a":[9,0,30,8],
+"classcuperf__t.html#a720babc22713ac0b4bb21602a95f0ec8":[9,0,30,4]
 };
