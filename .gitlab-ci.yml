@@ -8,29 +8,34 @@ build:
     #- apt update && apt -y install make autoconf 
     #- apt -y install gfortran || update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-6 1
     #- apt -y install libfftw3-dev libblas-dev liblapack-dev #libcholmod3 libwebsockets-dev
+    - free -m | grep -v "Swap" # RAM
+    - df -h| grep -E "Filesystem|overlay" # storage
+    - lscpu | grep -E "^CPU\(s\)" # CPUs
   script: 
     # The default is to run as root, which crashes immediately.  
     # The image already has user lianqiw
     #- su lianqiw -c "whoami && ./autogen.sh && mkdir -p build && cd build && ../configure --enable-release && make && bin/maos aper.d=5 sim.end=10"
-    - ./autogen.sh && mkdir build && cd build && ../configure --enable-release && make && make check && rm test/*.o #--enable-doxygen
+    - ./autogen.sh && mkdir -p build && cd build && ../configure --enable-release && make 
   artifacts:
     when: on_failure
     paths:
-      - build/config.log
+      - build/config.*
       - build/external/compile.log
       - build/bin/*
-      - build/test/*_*
     exclude: 
-      - build/test/*.o
       - build/*/.libs
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
       - ~/.aos  
-  #cache:
-  #  paths:
-  #    - ~lianqiw/.aos
-  # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
-  # cache:
-  #   paths:
-  #     - "*.o"
+test:
+  stage: test
+  script:
+    make check
+  artifacts:
+    when: on_failure
+    paths:
+      - build/test/*_*
+    exclude: 
+      - build/test/*.o
+      - build/*/.libs

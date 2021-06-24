@@ -40,8 +40,8 @@ static void test_accuracy(int argc, char** argv){
     real scale=0.7;/*.414065; */
     int wrap=1;
 
-    real D=30;
-    real D2=32;
+    real D=10;
+    real D2=12;
     int save=0;
     if(argc>1){
         scale=strtod(argv[1], 0);
