@@ -1742,30 +1742,24 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				"background won't be effective.\n", ipowfs);
 		}
 		if(parms->sim.ncpa_calib){
+			int enable_2=(parms->powfs[ipowfs].type==0&&parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].usephy)
+						&&!(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].skip);
 			if(parms->powfs[ipowfs].ncpa_method==-1){//auto
-				if(parms->powfs[ipowfs].type==1&&parms->powfs[ipowfs].phytype_sim==1){//mtch
+				if(enable_2){//mtch
 					parms->powfs[ipowfs].ncpa_method=2;//default to 2
 				} else{
 					parms->powfs[ipowfs].ncpa_method=1;
 				}
 			}
 			if(parms->powfs[ipowfs].ncpa_method==2){
-				if(!(parms->powfs[ipowfs].type==1&&parms->powfs[ipowfs].phytype_sim==1
-					&&parms->powfs[ipowfs].usephy)){
+				if(!enable_2){
 					dbg("powfs %d: ncpa_method changed from 2 to 1 for non-matched filter mode.\n", ipowfs);
 					parms->powfs[ipowfs].ncpa_method=1;
-				} else if(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].skip){
-					warning("powfs %d: ncpa_method changed from 2 to 1 in idealngs mode\n", ipowfs);
-					parms->powfs[ipowfs].ncpa_method=1;
-				} else{
-					if(parms->powfs[ipowfs].mtchstc){
-						parms->powfs[ipowfs].mtchstc=0;
-					}
+				}else{
+					parms->powfs[ipowfs].mtchstc=0;
 				}
 			}
 		}
-
-
 	}
 	parms->hipowfs->nx=parms->nhipowfs;
 	parms->lopowfs->nx=parms->nlopowfs;

@@ -198,10 +198,10 @@ COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd147
 COMMON_GCC+=" -Wno-missing-braces -Wno-missing-field-initializers" #gcc-4.8 error
 COMMON_CLANG+=" -Wno-sign-compare" #CLANG has false positive in detecting sign comparison.
 
-OPTIM_ALL="-O3 -mtune=native "
-OPTIM_GCC=" -ftree-vectorize -ffast-math -fno-finite-math-only "
+OPTIM_ALL="-g -O3 -mtune=native "
+OPTIM_GCC="-ftree-vectorize -ffast-math -fno-finite-math-only "
 
-DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
+DEBUG_ALL="-g -Og -DDEBUG_TRACE"
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls " #-fsanitize=address"
 
 #inline definition:

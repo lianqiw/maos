@@ -452,7 +452,7 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 			}
 		}
 	} else{
-		info("Generating HXW");TIC;tic;
+		info("Generating HXW ");TIC;tic;
 		recon->HXW=dspcellnew(nwfs, npsr);
 		dspcell* HXW=recon->HXW/*PDSPCELL*/;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){

@@ -972,6 +972,9 @@ static void wfsgrad_dither_post(sim_t* simu){
 							writebin(P(simu->gradoff, iwfs), "wfs%d_gradoff_%d_mf", iwfs, isim);
 						}
 						dfree(goff);
+						if(parms->powfs[ipowfs].dither_glpf!=1){
+							warning("when dbg.gradoff_reset is enabled, dither_glpf should be 1.\n");
+						}
 					} else{
 						info("Step %d: Resetting gradoff when dbg.gradoff_reset is on.\n", isim);
 						dzero(P(simu->gradoff, iwfs));
