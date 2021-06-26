@@ -749,30 +749,30 @@ static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs
 		dmat* tmp=dcell2m(sanealhi); dspcellfree(sanealhi);
 		dcellmm(&t1, recon->MVM, tmp, "nn", 1);
 		cellfree(tmp);
-		toc("MVM ");tic;
+		toc2("MVM ");tic;
 	} else if(parms->recon.alg==0){//MV
 		dcell* tmp2=NULL;
 		dcell* tmp=NULL;
 		dspcellfull(&tmp2, recon->saneal, 'n', 1);
 		muv(&tmp, &recon->RR, tmp2, 1);
-		toc("RR ");tic;
+		toc2("RR ");tic;
 		cellfree(tmp2);
 		muv_direct_solve(&tmp2, &recon->RL, tmp); dcellfree(tmp);
-		toc("RL ");tic;
+		toc2("RL ");tic;
 		//2015-06-29: Put in ommited DM fitting operation
 		muv(&tmp, &recon->fit->FR, tmp2, 1); dcellfree(tmp2);
-		toc("FR ");tic;
+		toc2("FR ");tic;
 		muv_direct_solve(&tmp2, &recon->fit->FL, tmp); dcellfree(tmp);
-		toc("FL ");tic;
+		toc2("FL ");tic;
 		t1=dcell2m(tmp2); dcellfree(tmp2);
 	} else{//LSR
 		dcell* tmp2=NULL;
 		dcell* tmp=NULL;
 		dspcellfull(&tmp2, recon->saneal, 'n', 1);
 		muv(&tmp, &recon->LR, tmp2, 1); cellfree(tmp2);
-		toc("LR ");tic;
+		toc2("LR ");tic;
 		muv_direct_solve(&tmp2, &recon->LL, tmp); dcellfree(tmp);
-		toc("LL ");tic;
+		toc2("LL ");tic;
 		t1=dcell2m(tmp2); dcellfree(tmp2);
 	}
 	dcell* ecnn=dcellnew(parms->evl.nevl, 1);
@@ -794,10 +794,10 @@ static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs
 			}
 			offset+=P(recon->aloc,idm)->nloc;
 		}
-		toc("Prop ");tic;
+		toc2("Prop ");tic;
 		dmm(&P(ecnn,ievl), 0, x1, x1, "nt", 1);
 		dfree(x1);
-		toc("MM ");
+		toc2("MM ");
 	}
 	dcellfree(t1);
 	return ecnn;
@@ -1059,7 +1059,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 		if(!recon->fit->FL.C&&!recon->fit->FL.MI){
 			muv_direct_prep(&(recon->fit->FL), 0);
 		}
-		toc("MVST: svd prep");
+		toc2("MVST: svd prep");
 		dcell* GXLT=dcelltrans(recon->GXL);
 		muv_direct_solve(&U, &recon->RL, GXLT);
 		dcellfree(GXLT);
@@ -1067,7 +1067,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 		muv(&rhs, &recon->fit->FR, U, 1);
 		muv_direct_solve(&FU, &recon->fit->FL, rhs);
 		dcellfree(rhs);
-		toc("MVST: U, FU");
+		toc2("MVST: U, FU");
 
 		if(parms->save.mvst||parms->save.setup){
 			writebin(U, "mvst_U");
@@ -1250,7 +1250,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	dcellfree(MCC);
 	dcellfree(QQ);
 	}*/
-	toc("MVST");
+	toc2("MVST");
 }
 
 /**
@@ -1309,7 +1309,7 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	recon->RL.warm=parms->recon.warm_restart;
 	recon->RL.maxit=parms->tomo.maxit;
 
-	toc("setup_recon_tomo");
+	toc2("setup_recon_tomo");
 }
 
 
@@ -1352,7 +1352,7 @@ void setup_recon(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	}
 	setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
 
-	toc("setup_recon");
+	toc2("setup_recon");
 }
 
 /**
@@ -1392,7 +1392,7 @@ void setup_recon_update(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			setup_recon_mvst(recon, parms);
 		}
 	}
-	toc("setup_recon");
+	toc2("setup_recon");
 }
 
 
@@ -1464,7 +1464,7 @@ void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper){
 	if(parms->recon.psd){
 		setup_recon_psd(recon, parms);
 	}
-	toc("setup_recon_post");
+	toc2("setup_recon_post");
 }
 
 /**

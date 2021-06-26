@@ -523,7 +523,7 @@ setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int i
 			dcellfree(powfs[ipowfs].saa_tel);
 			dcellfree(powfs[ipowfs].amp_tel);
 		} else{
-			toc("misreg.tel2wfs");
+			toc2("misreg.tel2wfs");
 		}
 	}/*if misreg */
 }
@@ -557,7 +557,7 @@ setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ip
 		if(!isset){
 			cellfree(powfs[ipowfs].loc_dm);
 		} else{
-			toc("misreg.dm2wfs");
+			toc2("misreg.dm2wfs");
 		}
 	}
 }
@@ -1452,7 +1452,7 @@ setup_powfs_cog(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	if(parms->save.setup){
 		writebin(powfs[ipowfs].cogcoeff, "powfs%d_cogcoeff", ipowfs);
 	}
-	toc("setup_powfs_cog");
+	toc2("setup_powfs_cog");
 }
 
 
@@ -1662,7 +1662,7 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 			error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
 		}
 	}
-	toc("setup_powfs_init");
+	toc2("setup_powfs_init");
 	return powfs;
 }
 /**
@@ -1703,7 +1703,7 @@ void setup_powfs_phy(const parms_t* parms, powfs_t* powfs){
 			}
 		}
 	}/*ipowfs */
-	toc("setup_powfs_phy");
+	toc2("setup_powfs_phy");
 }
 /**
    free unused parameters before simulation starts

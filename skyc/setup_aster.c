@@ -679,7 +679,7 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 				P(dtrats,iwfs)=dtrat;
 			}
 			aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, P(aster->neam,idtrat), 0);
-			//toc("kalman");
+			//toc2("kalman");
 #if USE_SIM 
 			dmat* res=skysim_sim(0, simu->mideal, simu->mideal_oa, simu->varol, aster, 0, parms, idtrat, 1, -1);
 			real rms=res?P(res,0):simu->varol;
@@ -689,7 +689,7 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 			real rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
 			dfree(res);
 #endif
-		//toc("estimate");
+		//toc2("estimate");
 			P(pres_ngs, idtrat, 0)=rms;
 			if(parms->skyc.dbg){
 				kalman_write(aster->kalman[idtrat], "%s/aster%d_kalman_%d", dirsetup, aster->iaster, dtrat);

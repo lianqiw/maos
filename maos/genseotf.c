@@ -135,7 +135,7 @@ void genseotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 			int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 			if(fd>=0){/*succeed */
 				info("Generating WFS OTF for %s...", fnotf);
-				TIC;tic; genseotf_do(parms, powfs, ipowfs); toc("done");
+				TIC;tic; genseotf_do(parms, powfs, ipowfs); toc2("done");
 				writebin(intstat->otf, "%s", fnotf);
 			} else{
 				warning("Waiting for previous lock to release ...");

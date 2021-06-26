@@ -72,7 +72,7 @@ static mapcell* genatm_do(sim_t* simu){
 		info("Generating Atmospheric Screen...\n");
 		tic;
 		screens=genscreen(gs);
-		toc("Atmosphere ");
+		toc2("Atmosphere ");
 	} else{
 	/*
 	  create screens on two layers that produce pure
@@ -391,7 +391,7 @@ void sim_update_etf(sim_t* simu){
 			if(icol2!=icol){
 				setup_powfs_etf(powfs, parms, deltah, ipowfs, 2, icol2);
 			}
-			toc("ETF");
+			toc2("ETF");
 #if USE_CUDA
 			if(parms->gpu.wfs){
 				gpu_wfsgrad_update_etf(parms, powfs);

@@ -55,7 +55,7 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs){
 			}
 		}
 	}
-	toc("gpu_wfsgrad_update_etf");
+	toc2("gpu_wfsgrad_update_etf");
 }
 void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();

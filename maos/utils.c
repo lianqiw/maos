@@ -301,7 +301,6 @@ arg_t* parse_args(int argc, const char* argv[]){
 	};
 	char* cmds=strnadd(argc-1, argv+1, " ");
 	parse_argopt(cmds, options);
-
 	if((!host||!strcmp(host, "localhost"))&&!arg->detach){//forground running.
 		arg->force=1;
 	} else{

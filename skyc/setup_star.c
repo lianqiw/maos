@@ -556,7 +556,7 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 		}/*ipowfs */
 	}/*istar */
 	if(parms->skyc.verbose){
-		toc("Reading PSF");
+		toc2("Reading PSF");
 	}
 	//close(fd);
 	return nstep;
@@ -676,7 +676,7 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 		}/*ipowfs */
 	}/*istar */
 	if(parms->skyc.verbose){
-		toc("Reading PSF");
+		toc2("Reading PSF");
 	}
 	//close(fd);
 	return nstep;

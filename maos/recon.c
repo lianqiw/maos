@@ -38,7 +38,7 @@
 #else
 #define TIC_tm TIC
 #define tic_tm tic
-#define toc_tm(A) toc(A);tic
+#define toc_tm(A) toc2(A);tic
 #endif
 
 /*

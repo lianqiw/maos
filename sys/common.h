@@ -154,7 +154,8 @@ extern FILE* fpconsole;
 #endif
 #define TIC double tk
 #define tic tk=myclockd()
-#define toc(format,...) dbg(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
+#define toc(format,...) info(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
+#define toc2(format,...) dbg(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

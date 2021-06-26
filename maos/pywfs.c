@@ -758,7 +758,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 	dfree(grady);
 	dfree(opd);
 	dfree(ints);
-	toc("done");
+	toc2("done");
 	return out;
 }
 static uint32_t pywfs_hash(const pywfs_t* pywfs, uint32_t key){

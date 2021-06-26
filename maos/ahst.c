@@ -116,7 +116,7 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 		for(int imod=2; imod<nmod; imod++){
 			free(mod[imod]);
 		}
-		toc("mcc");
+		toc2("mcc");
 	}
 
 	return mcc;
@@ -478,18 +478,18 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 			real maxeig=4./nact;
 			dcelladdI(ngsmod->Wa, 1e-9*maxeig);
 
-			toc("Wa");
+			toc2("Wa");
 			ngsmod->Pngs=dcellpinv(ngsmod->Modes, ngsmod->Wa);
 			if(parms->save.setup){
 				writebin(ngsmod->Wa, "ahst_Wa");
 			}
 			cellfree(ngsmod->Wa);
-			toc("Pngs");
+			toc2("Pngs");
 		} else{
 			dbg("Wa using science mode\n");
 			tic;
 			ngsmod->Pngs=ngsmod_Pngs_Wa(parms, recon, aper, 0);
-			toc("Pngs_Wa");
+			toc2("Pngs_Wa");
 		}
 	} else if(parms->tomo.ahst_wt==3){/*Identity weighting. */
 		ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL);

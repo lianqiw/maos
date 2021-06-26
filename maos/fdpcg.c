@@ -49,7 +49,7 @@
 #else
 #define TIC_tm TIC
 #define tic_tm tic
-#define toc_tm(A) toc(A);tic
+#define toc_tm(A) toc2(A);tic
 #endif
 /**
    Create aperture selection function that selects the gradients for valid
@@ -574,7 +574,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	fdpcg->xloc=recon->xloc;
 	fdpcg->square=parms->tomo.square;
 	fdpcg->nxtot=nxtot;
-	toc("fdpcg_prepare");
+	toc2("fdpcg_prepare");
 	return fdpcg;
 }
 typedef struct{

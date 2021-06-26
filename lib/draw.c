@@ -306,7 +306,7 @@ static int get_drawdaemon(){
 			if(draw_direct||sock_helper<=-1){//directly fork and launch
 				TIC;tic;
 				sock=launch_drawdaemon();
-				toc("Directly launch drawdaemon");
+				toc2("Directly launch drawdaemon");
 			} else{//use helper to launch
 				if(stwriteint(sock_helper, draw_id)||streadfd(sock_helper, &sock)){
 					sock=-1;

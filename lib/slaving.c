@@ -802,7 +802,7 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 	dfree(y1);
 	dfree(y2);
 	dspdroptol(out, 1e-3);
-	toc("act_extrap: %ld iterations", count);
+	toc2("act_extrap: %ld iterations", count);
 
 	return out;
 }

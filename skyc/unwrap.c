@@ -131,16 +131,16 @@ static void do_unwrap(cmat* phi, cmat* wvf, dmat* unwrap, dmat* diff, dmat* phir
 			P(pdiff, ix+npsf, iy)=carg(P(pwvf, ix, iy)*conj(P(pwvf, ix, iy-1)));
 		}
 	}
-	/*toc("assemble");tic; */
+	/*toc2("assemble");tic; */
 	dzero(phirecon);
 	/*writebin(diff,"diff"); */
 	dmulvec(phirecon->p, unwrap, diff->p, 1);
-	/*toc("mul");tic; */
+	/*toc2("mul");tic; */
 	/*assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx); */
 	for(int ix=0; ix<npsf*npsf; ix++){
 		P(phi,ix)=COMPLEX(log(cabs(P(wvf,ix))), P(phirecon,ix));/*real part saves amplitude. */
 	}
-	/*toc("assign"); */
+	/*toc2("assign"); */
 }
 
 static void convert_wvf(GENPISTAT_S* data){
@@ -202,7 +202,7 @@ static void convert_wvf(GENPISTAT_S* data){
 		ccellfree(phi);
 		dfree(diff);
 		dfree(phirecon);
-		toc("Processing %s:", fnphase);
+		toc2("Processing %s:", fnphase);
 	}
 }
   /*convert wvf of a+bi to log(a+bi) for interpolation. */

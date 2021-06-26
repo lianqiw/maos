@@ -188,7 +188,7 @@ void maos_setup(const parms_t* parms){
 #if USE_CUDA
 	cuda_dedup=0;
 #endif
-	toc("Presimulation");
+	toc2("Presimulation");
 }
 
 /**

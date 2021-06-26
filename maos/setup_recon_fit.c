@@ -41,7 +41,7 @@ setup_fit_HXF(const fit_t* fit){
 			P(HXF, ifit, ips)=mkh(P(fit->xloc,ips), fit->floc, displace[0], displace[1], scale);
 		}
 	}
-	toc(" ");
+	toc2(" ");
 	return HXF;
 }
 
@@ -73,7 +73,7 @@ setup_fit_HA(fit_t* fit){
 			}
 		}
 	}
-	toc(" ");
+	toc2(" ");
 	fit->actcpl=genactcpl(HA, fit->W1);
 	//cpl accounts for floating actuators, but not stuck actuators.
 	act_stuck(fit->aloc, fit->actcpl, fit->actfloat);
@@ -181,7 +181,7 @@ setup_fit_lrt(fit_t* fit){
 			dcelladd(&fit->actslave, 1, actslave2, 1);
 			cellfree(actslave2);
 		}
-		toc("slaving");
+		toc2("slaving");
 	}
 	cellfree(actcpl);
 }
@@ -355,7 +355,7 @@ void setup_fit(fit_t* fit, int idealfit){
 	fit->FL.bgs=fit->flag.bgs;
 	fit->FL.warm=fit->flag.cgwarm;
 	fit->FL.maxit=fit->flag.maxit;
-	toc("Setting up DM Fitting.");
+	toc2("Setting up DM Fitting.");
 }
 void free_fit(fit_t* fit, int nfit){
 	if(!fit) return;

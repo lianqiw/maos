@@ -40,7 +40,7 @@ extern "C"{
 #else
 #define TIC_test TIC
 #define tic_test tic
-#define toc_test(A) toc(A);tic
+#define toc_test(A) toc2(A);tic
 #endif
 #define CATCH_ERR 0
 /*

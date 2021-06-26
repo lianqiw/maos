@@ -208,7 +208,7 @@ static void calc_pistat(GENPISTAT_S* data){
 			dcellfree(neaspec);
 			dcellfreearr(avgpsf, nwvl);
 			dfree(phygrad);
-			toc("Processing %s:", fnwvf);
+			toc2("Processing %s:", fnwvf);
 		}/*if exist */
 	}
 #if _OPENMP >= 200805

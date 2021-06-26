@@ -262,7 +262,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 				FLId=dnew(ntotact, ntotact);
 				muv_direct_solve_mat(&FLId, &recon->fit->FL, eye);
 				dfree(eye);
-				toc("Fit CBS");tic;
+				toc2("Fit CBS");tic;
 			}
 				  break;
 			case 1://Use GPU.
@@ -299,7 +299,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 				}
 			}
 			if(parms->load.mvmi){
-				toc("copy mvmi to gpu");
+				toc2("copy mvmi to gpu");
 			}
 		}
 		/*Initialyze intermediate FitL/FitR result array in GPU. Send
@@ -315,13 +315,13 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 				}
 			}
 			if(parms->load.mvmf){
-				toc("copy mvmf to gpu");
+				toc2("copy mvmf to gpu");
 			}
 		}
 		/*Do real MVM control matrix assemble in multiply CPU/GPU*/
 		tic;
 		CALL_THREAD(info, 1);
-		toc("MVM Assembly in GPU");
+		toc2("MVM Assembly in GPU");
 
 
 		if(parms->save.setup){
@@ -368,10 +368,10 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		stream_t stream;
 		cuglobal->mvm=mvmt.trans(stream);
 		stream.sync();
-		toc("MVM Reshape in GPU");tic;
+		toc2("MVM Reshape in GPU");tic;
 		cp2cpu(&recon->MVM, cuglobal->mvm, stream);
 		stream.sync();
-		toc("MVM copy to CPU");
+		toc2("MVM copy to CPU");
 	}
 }
 

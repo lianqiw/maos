@@ -269,7 +269,7 @@ void mvm_test(int igpu){
 	for(int is=0; is<nstream; is++){
 		stream[is].sync();
 	}
-	//toc("sync");
+	//toc2("sync");
 	cudaProfilerStop();
 	for(int is=0; is<nstream; is++){
 		Real tm1, tm2;

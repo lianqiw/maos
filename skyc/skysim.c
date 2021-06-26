@@ -464,7 +464,7 @@ static void skysim_prep_gain(SIM_S* simu){
 	}
 	writebin(simu->gain_pre, "gain_pre.bin");
 	writebin(simu->gain_x, "gain_x.bin");
-	toc("servo_optim");
+	toc2("servo_optim");
 	simu->gain_x=dref(sigma2);
 	dfree(sigma2);
 }
