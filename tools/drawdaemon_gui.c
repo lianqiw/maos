@@ -54,6 +54,7 @@ float font_size;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
 static int cursor_type=0;/*cursor type of the drawing area. */
+float lpf=1;//low pass filter the update. Set using dialog.
 /*
   Routines in this file are about the GUI.
 */
@@ -338,36 +339,37 @@ on_expose_event(GtkWidget* widget, GdkEventExpose* event, gpointer pdata){
 	return FALSE;
 }
 #endif
-
+#define FREE(A) free(A); A=NULL;
 static void drawdata_free_input(drawdata_t* drawdata){
 	/*Only free the input received via fifo from draw.c */
-	if(drawdata->image) cairo_surface_destroy(drawdata->image);
-
-	free(drawdata->p0);
-	free(drawdata->p);
+	if(drawdata->image){
+		cairo_surface_destroy(drawdata->image);
+		drawdata->image=NULL;
+	}
+	FREE(drawdata->p);
 	if(drawdata->npts>0){
 		for(int ipts=0; ipts<drawdata->npts; ipts++){
-			free(drawdata->pts[ipts]);
+			FREE(drawdata->pts[ipts]);
 		}
-		free(drawdata->pts);
-		free(drawdata->ptsdim);
+		FREE(drawdata->pts);
+		FREE(drawdata->ptsdim);
 	}
 	if(drawdata->nstyle>0){
-		free(drawdata->style);
+		FREE(drawdata->style);
 	}
 	if(drawdata->ncir>0){
-		free(drawdata->cir);
+		FREE(drawdata->cir);
 	}
-	free(drawdata->fig);
-	free(drawdata->name);
-	free(drawdata->title);
-	free(drawdata->xlabel);
-	free(drawdata->ylabel);
+	FREE(drawdata->fig);
+	FREE(drawdata->name);
+	FREE(drawdata->title);
+	FREE(drawdata->xlabel);
+	FREE(drawdata->ylabel);
 	if(drawdata->legend){
 		for(int i=0; i<drawdata->npts; i++){
-			free(drawdata->legend[i]);
+			FREE(drawdata->legend[i]);
 		}
-		free(drawdata->legend);
+		FREE(drawdata->legend);
 	}
 }
 static void drawdata_free(drawdata_t* drawdata){
@@ -384,7 +386,8 @@ static void drawdata_free(drawdata_t* drawdata){
 		drawdata->cacheplot=NULL;
 	}
 	drawdata_free_input(drawdata);
-	free(drawdata);
+	FREE(drawdata->p0);
+	FREE(drawdata);
 	LOCK(drawdata_mutex);
 	ndrawdata--;
 	UNLOCK(drawdata_mutex);
@@ -816,6 +819,9 @@ static void topnb_page_changed(GtkNotebook* topnb, GtkWidget* child, guint n, Gt
 	}
 	/*gtk_notebook_set_show_tabs(topnb, npage!=1); */
 }
+#define DO_LPF(T,pold,pnew,n) \
+T*p0old=pold; T*p0new=pnew;\
+for(long i=0; i<n; i++) p0new[i]=p0new[i]*(lpf)+p0old[i]*(1.-lpf);
 
 /**
    2012-10-27: GTK 3.6 deprecated gdk_threads_enter(). So it is hard to call
@@ -892,15 +898,53 @@ gboolean addpage(gpointer indata){
 			}
 		}
 	}
+	drawdata_t* drawdata_old=NULL;
 	if(page){
-	/*
-	  we use drawdatawrap so that we don't have to modify the data on the g_object.
-	*/
-		drawdata_t** drawdata_wrapold=(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap");
-		drawdata_t* drawdata_old=(*drawdata_wrapold);
+		/*
+			we use drawdatawrap so that we don't have to modify the data on the g_object.
+		*/
+		drawdata_old=*(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap");
+		drawdata_free_input(drawdata_old);
+	}
+	if(drawdata->p0){/*draw image */
+		int nx=drawdata->nx;
+		int ny=drawdata->ny;
+		if(drawdata_old&&drawdata_old->p0&&lpf<1){
+			extern int byte_float;
+			if(byte_float==4){
+				DO_LPF(float, drawdata_old->p0, drawdata->p0, nx*ny);
+			} else if(byte_float==8){
+				DO_LPF(double, drawdata_old->p0, drawdata->p0, nx*ny);
+			}
+		}
+		size_t size=0;
+		if(nx<=0||ny<=0) error("Please call DRAW_DATA\n");
+		if(drawdata->gray){
+			drawdata->format=(cairo_format_t)CAIRO_FORMAT_A8;
+			size=1;
+		} else{
+			drawdata->format=(cairo_format_t)CAIRO_FORMAT_ARGB32;
+			size=4;
+		}
+		int stride=cairo_format_stride_for_width(drawdata->format, nx);
+		if(!drawdata->limit_manual){
+			if(!drawdata->limit_data){
+				drawdata->limit_data=mycalloc(4, float);
+			}
+			drawdata->limit_data[0]=-0.5;
+			drawdata->limit_data[1]=drawdata->nx-0.5;
+			drawdata->limit_data[2]=-0.5;
+			drawdata->limit_data[3]=drawdata->ny-0.5;
+		}
+		/*convert data from float to int/char. */
+		drawdata->p=(unsigned char*)calloc(nx*ny, size);
+		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
+		drawdata->image=cairo_image_surface_create_for_data
+		(drawdata->p, drawdata->format, nx, ny, stride);
+	}
+	if(page){
 		/*Instead of freeing drawdata, we replace its content with newdata. this
 		  makes dialog continue to work. Do not replace generated data.*/
-		drawdata_free_input(drawdata_old);
 		drawdata_old->dtime=drawdata->time-drawdata_old->time;//compute frame rate.
 		drawdata_old->time=drawdata->time;//record the time
 		drawdata_old->image=drawdata->image;
@@ -919,13 +963,16 @@ gboolean addpage(gpointer indata){
 		drawdata_old->xlabel=drawdata->xlabel;
 		drawdata_old->ylabel=drawdata->ylabel;
 		drawdata_old->legend=drawdata->legend;
+		drawdata_old->grid=drawdata->grid;
 		if(drawdata->limit_data){
 			if(!drawdata_old->limit_data){
 				drawdata_old->limit_data=mycalloc(4, float);
 			}
-			for(int i=0; i<4; i++){//data has different size. Reset the zoom/off.
-				if(fabs(drawdata_old->limit_data[i]-drawdata->limit_data[i])>0.1){
-					do_zoom(drawdata_old, 0, 0, 0);//resets zoom, offset.
+			if(!drawdata_old->cumu){
+				for(int i=0; i<4; i++){//data has different size. Reset the zoom/off.
+					if(fabs(drawdata_old->limit_data[i]-drawdata->limit_data[i])>0.1){
+						do_zoom(drawdata_old, 0, 0, 0);//resets zoom, offset.
+					}
 				}
 			}
 			memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(float)*4);
@@ -934,7 +981,7 @@ gboolean addpage(gpointer indata){
 			  drawdata_old->limit_data=NULL;*/
 		}
 		drawdata_old->limit_changed=-1;
-		free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
+		//free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 		drawdata_old->nx=drawdata->nx;
 		drawdata_old->ny=drawdata->ny;
 		if(drawdata->zlim[0]||drawdata->zlim[1]){
@@ -993,7 +1040,7 @@ gboolean addpage(gpointer indata){
 		GTK_WIDGET_SET_FLAGS(drawarea, GTK_SENSITIVE);
 #endif
 #if GTK_MAJOR_VERSION>=4
-		GtkEventController *controller=gtk_event_controller_new(drawarea);
+		GtkEventController* controller=gtk_event_controller_new(drawarea);
 		g_signal_connect(controller, "motion", motion_notify, drawdatawrap);
 #else
 		g_signal_connect(drawarea, "motion-notify-event",
@@ -1342,6 +1389,14 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	gtk_box_pack_start(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
+	//Set update low pass filter 
+	hbox=gtk_hbox_new(FALSE, 0);
+	spin=gtk_spin_button_new_with_range(0, 1, 0.01);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), lpf);
+	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &lpf);
+	gtk_box_pack_start(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
 	label=gtk_label_new("Title"); gtk_label_set_width_chars(GTK_LABEL(label), 6);
@@ -1455,15 +1510,15 @@ static void tool_font_set(GtkFontButton* btn){
 	pango_font_description_free(pfd);
 }
 #if GTK_MAJOR_VERSION>=3
-static void close_window(GtkWidget* object)
+static gboolean close_window(GtkWidget* object, GdkEvent* event)
 #else
-static void close_window(GtkObject* object)
+static gboolean close_window(GtkObject* object, GdkEvent* event)
 #endif
 {
+	(void)event;
 	windows=g_slist_remove(windows, object);
-	if(!windows){
-		close(sock);
-	}
+	info("close_window called\n");
+
 	GtkWidget* topnb=get_topnb(GTK_WIDGET(object));
 	GtkWidget* toolbar=get_toolbar(GTK_WIDGET(object));
 	g_signal_handlers_disconnect_by_func(topnb, (gpointer)topnb_page_changed, toolbar);
@@ -1478,10 +1533,15 @@ static void close_window(GtkObject* object)
 			drawdata_free(*drawdatawrap);
 		}
 	}
+	gtk_widget_destroy(object);
 	if(!windows){
+		info("sock %d closed\n", sock);
+		if(sock!=-1) close(sock);
+
 		gtk_main_quit();
 	}
 	/*don't call exit here. */
+	return FALSE;
 }
 
 static gboolean window_state(GtkWidget* window, GdkEvent* event){
@@ -1502,7 +1562,7 @@ void new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name
 	if(name){
 		if(child){
 			item=gtk_tool_item_new();
-		}else if(toggle){
+		} else if(toggle){
 			item=gtk_toggle_tool_button_new();
 		} else{
 			item=gtk_tool_button_new(NULL, name);
@@ -1636,8 +1696,8 @@ GtkWidget* create_window(GtkWidget* window){
 	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), topnb, TRUE, TRUE, 0);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
-	g_signal_connect(window, "destroy", G_CALLBACK(close_window), NULL);
-	gtk_window_set_position(GTK_WINDOW(window),	GTK_WIN_POS_CENTER);
+	g_signal_connect(window, "delete-event", G_CALLBACK(close_window), NULL);
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	gtk_window_set_default_size(GTK_WINDOW(window), 1050, 900);
 	gtk_widget_add_events(GTK_WIDGET(window), GDK_FOCUS_CHANGE_MASK);/*in case this is not on. */
 	set_cur_window(window);

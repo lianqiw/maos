@@ -16,14 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*
-  A monitor that monitors the progress of all running processes in all machines.
-
-  The widgets duplicates and manages the string.
-  Set NOTIFY_IS_SUPPORTED to 0 is libnotify is not installed.
-
-  Todo:
-  1) Log the activities into a human readable file
-  2) Store the activity list into file when quit and reload later
+	This file is a supplement to monitor.c It defines and operations an treeview to organize jobs.
 */
 #define NOTIFY_IS_SUPPORTED 1
 #include <tgmath.h>
@@ -67,19 +60,19 @@ enum{
 static GtkListStore* listall=NULL;
 static GtkTreeModel** lists=NULL;
 static GtkWidget** views=NULL;
-static void list_get_iter(proc_t* p, GtkTreeIter* iter){
-	GtkTreePath* tpath=gtk_tree_row_reference_get_path(p->row);
+static void list_get_iter(GtkTreeRowReference* row, GtkTreeIter* iter){
+	GtkTreePath* tpath=gtk_tree_row_reference_get_path(row);
 	gtk_tree_model_get_iter(GTK_TREE_MODEL(listall), iter, tpath);
 	gtk_tree_path_free(tpath);
 }
-static void list_modify_icon(proc_t* p, GdkPixbuf* newicon){
+static void list_modify_icon(GtkTreeRowReference* row, GdkPixbuf* newicon){
 	GtkTreeIter iter;
-	list_get_iter(p, &iter);
+	list_get_iter(row, &iter);
 	gtk_list_store_set(listall, &iter, COL_ACTION, newicon, -1);
 }
-static void list_modify_color(proc_t* p, const char* color){
+static void list_modify_color(GtkTreeRowReference* row, const char* color){
 	GtkTreeIter iter;
-	list_get_iter(p, &iter);
+	list_get_iter(row, &iter);
 	gtk_list_store_set(listall, &iter, COL_COLOR, color, -1);
 }
 
@@ -97,7 +90,7 @@ static void list_update_progress(proc_t* p){
 		p->frac=0;
 	}
 	GtkTreeIter iter;
-	list_get_iter(p, &iter);
+	list_get_iter(p->row, &iter);
 
 	const double tkmean=p->status.scale;
 	const long tot=p->status.rest+p->status.laps;/*show total time. */
@@ -148,7 +141,7 @@ static void list_update_progress(proc_t* p){
 }
 static void list_modify_reset(proc_t* p){
 	GtkTreeIter iter;
-	list_get_iter(p, &iter);
+	list_get_iter(p->row, &iter);
 	char spid[12];
 	snprintf(spid, 12, " %d ", p->pid);
 
@@ -168,9 +161,9 @@ static void list_modify_reset(proc_t* p){
 		-1);
 	//p->iseed_old=-1;
 }
-gboolean remove_entry(proc_t* p){
-	if(p->row){
-		GtkTreePath* path=gtk_tree_row_reference_get_path(p->row);
+gboolean remove_entry(GtkTreeRowReference* row){
+	if(row){
+		GtkTreePath* path=gtk_tree_row_reference_get_path(row);
 		GtkTreeIter iter;
 		if(!gtk_tree_model_get_iter(GTK_TREE_MODEL(listall), &iter, path)){
 			warning("Unable to find entry");
@@ -178,8 +171,6 @@ gboolean remove_entry(proc_t* p){
 			gtk_list_store_remove(listall, &iter);
 		}
 	}
-	free(p->path);
-	free(p);
 	return 0;
 }
 gboolean refresh(proc_t* p){
@@ -249,46 +240,46 @@ gboolean refresh(proc_t* p){
 		break;
 	case S_RUNNING:
 		list_update_progress(p);
-		list_modify_icon(p, icon_running);
+		list_modify_icon(p->row, icon_running);
 		break;
 	case S_WAIT: /*waiting to start */
 	//list_modify_status(p, "Waiting");
 		list_modify_reset(p);
-		list_modify_icon(p, icon_waiting);
+		list_modify_icon(p->row, icon_waiting);
 		break;
 	case S_START: /*just started. */
 	//list_modify_status(p, "Started");
 		list_modify_reset(p);
-		list_modify_icon(p, icon_running);
+		list_modify_icon(p->row, icon_running);
 		notify_user(p);
 		break;
 	case S_QUEUED:
 	//list_modify_status(p, "Queued");
 		list_modify_reset(p);
-		list_modify_icon(p, icon_waiting);
+		list_modify_icon(p->row, icon_waiting);
 		break;
 	case S_FINISH:/*Finished */
 		list_update_progress(p);
-		list_modify_icon(p, p->frac==0?icon_skip:icon_finished);
-		//list_modify_icon(p, icon_finished);
-		//list_modify_color(p,"#00DD00");
+		list_modify_icon(p->row, p->frac==0?icon_skip:icon_finished);
+		//list_modify_icon(p->row, icon_finished);
+		//list_modify_color(p->row,"#00DD00");
 		notify_user(p);
 		break;
 	case S_CRASH:/*Error */
 	//list_modify_status(p, "Error");
-		list_modify_icon(p, icon_failed);
-		//list_modify_color(p,"#CC0000");
+		list_modify_icon(p->row, icon_failed);
+		//list_modify_color(p->row,"#CC0000");
 		notify_user(p);
 		break;
 	case S_TOKILL:/*kill command sent */
 	//list_modify_status(p, "Kill command sent");
-		list_modify_icon(p, icon_failed);
-		//list_modify_color(p,"#CCCC00");
+		list_modify_icon(p->row, icon_failed);
+		//list_modify_color(p->row,"#CCCC00");
 		break;
 	case S_KILLED:
 	//list_modify_status(p, "Killed");
-		list_modify_icon(p, icon_failed);
-		//list_modify_color(p,"#CC0000");
+		list_modify_icon(p->row, icon_failed);
+		//list_modify_color(p->row,"#CC0000");
 		notify_user(p);
 		break;
 	case S_REMOVE:
@@ -297,7 +288,7 @@ gboolean refresh(proc_t* p){
 		warning("Unknown info: %d\n", p->status.info);
 	}
 	if(p->status.warning){
-		list_modify_color(p, "#FF0000");
+		list_modify_color(p->row, "#FF0000");
 	}
 	return 0;
 }
@@ -445,19 +436,20 @@ static void handle_menu_event(GtkMenuItem* menuitem, gpointer user_data){
 		warning("nsel=%d\n", nsel);
 		return;
 	}
-	int result=GTK_RESPONSE_YES;
+	gboolean ans=1;
 	const char* action=data->action;
 	/*Alert user in Kill or Restart event*/
 	if(!strcmp(action, "Kill")||!strcmp(action, "Restart")){
-		GtkWidget* dia=gtk_message_dialog_new
+		ans=dialog_confirm("%s %d jobs?", action, nsel);
+		/*GtkWidget* dia=gtk_message_dialog_new
 		(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 			GTK_MESSAGE_QUESTION,
 			GTK_BUTTONS_YES_NO,
 			"%s %d jobs?", action, nsel);
 		result=gtk_dialog_run(GTK_DIALOG(dia));
-		gtk_widget_destroy(dia);
+		gtk_widget_destroy(dia);*/
 	}
-	if(result==GTK_RESPONSE_YES){
+	if(ans){
 		gtk_tree_selection_selected_foreach(selection, handle_selection, user_data);
 	}
 }
@@ -561,14 +553,15 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 			gtk_tree_model_get_value(model, &iter, COL_HOST, &value);
 			const char* hostn=g_value_get_string(&value);
 			g_value_unset(&value);
+			GdkPixbuf*status2=0;
+			gtk_tree_model_get(model, &iter, COL_ACTION, &status2, -1);
 			int ihost=host2i(hostn);
-			proc_t* p=proc_get(ihost, pid);
-			if(p){
-				if(p->status.info<10){
-					kill_job(p);
-				} else{
-					scheduler_cmd(ihost, pid, CMD_REMOVE);
+			if(status2==icon_running){
+				if(dialog_confirm("Kill %d?", pid)){
+					scheduler_cmd(ihost, pid, CMD_KILL);
 				}
+			}else{
+				scheduler_cmd(ihost, pid, CMD_REMOVE);
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -26,16 +26,15 @@
 #include <sys/socket.h>
 #include "../sys/sys.h"
 #include "monitor.h"
-proc_t** pproc;
-int* nproc;
-extern int* hsock;   //socket of each host
+//the following are only by the thread running listen_host() to avoid race condition
+static proc_t** pproc;
+static int* nproc;
+static int* hsock;   //socket of each host
 static double* htime;//last time having signal from each host.
-int nhostup=0;
-PNEW(mhost);
-int sock_main[2]={0,0}; /*Use to talk to the thread that blocks in select()*/
+extern int sock_main[2]; /*listens command from main*/
 static fd_set active_fd_set;
 //int pipe_addhost[2]={0,0};
-extern double* usage_cpu, * usage_cpu2;
+extern double* usage_cpu;
 //extern double *usage_mem, *usage_mem2;
 /*
 static proc_t *proc_add(int id,int pid){
@@ -45,21 +44,18 @@ static proc_t *proc_add(int id,int pid){
 	iproc->iseed_old=-1;
 	iproc->pid=pid;
 	iproc->hid=id;
-	LOCK(mhost);
 	iproc->next=pproc[id];
 	pproc[id]=iproc;
 	nproc[id]++;
-	gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id));
-	UNLOCK(mhost);
+	gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id|nproc[id]<<8));
 	return iproc;
 }
 */
-proc_t* proc_get(int id, int pid){
+static proc_t* proc_get(int id, int pid){
 	proc_t* iproc;
 	if(id<0||id>=nhost){
 		error("id=%d is invalid\n", id);
 	}
-	LOCK(mhost);
 	for(iproc=pproc[id]; iproc; iproc=iproc->next){
 		if(iproc->pid==pid){
 			break;
@@ -75,45 +71,44 @@ proc_t* proc_get(int id, int pid){
 		iproc->next=pproc[id];
 		pproc[id]=iproc;
 		nproc[id]++;
-		gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id));
+		gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
 	}
-	UNLOCK(mhost);
 	return iproc;
 }
 
 
 static void proc_remove_all(int id){
 	proc_t* iproc, * jproc=NULL;
-	LOCK(mhost);
 	for(iproc=pproc[id]; iproc; iproc=jproc){
 		jproc=iproc->next;
-		gdk_threads_add_idle((GSourceFunc)remove_entry, iproc);//frees iproc
+		gdk_threads_add_idle((GSourceFunc)remove_entry, iproc->row);//frees iproc
+		free(iproc->path);
+		free(iproc);
 	}
 	nproc[id]=0;
-	UNLOCK(mhost);
 	pproc[id]=NULL;
-	gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id));
+	gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
 }
 
 static void proc_remove(int id, int pid){
 	proc_t* iproc, * jproc=NULL;
 	for(iproc=pproc[id]; iproc; jproc=iproc, iproc=iproc->next){
 		if(iproc->pid==pid){
-			LOCK(mhost);
 			if(jproc){
 				jproc->next=iproc->next;
 			} else{
 				pproc[id]=iproc->next;
 			}
 			nproc[id]--;
-			UNLOCK(mhost);
-			gdk_threads_add_idle((GSourceFunc)remove_entry, iproc);
-			gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id));
+
+			gdk_threads_add_idle((GSourceFunc)remove_entry, iproc->row);
+			gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+			free(iproc->path);
+			free(iproc);
 			break;
 		}
 	}
 }
-
 
 static int host_from_sock(int sock){
 	if(sock<0) return -1;
@@ -125,21 +120,12 @@ static int host_from_sock(int sock){
 	return -1;
 }
 
-
-void add_host_wrap(int ihost){
-	int cmd[3]={MON_ADDHOST, ihost, 0};
-	stwriteintarr(sock_main[1], cmd, 3);
-}
-
 /* Record the host after connection is established*/
 static void host_added(int ihost, int sock){
 	htime[ihost]=myclockd();
 	proc_remove_all(ihost);/*remove all entries. */
-	LOCK(mhost);
-	nhostup++;
 	hsock[ihost]=sock;
 	FD_SET(sock, &active_fd_set);
-	UNLOCK(mhost);
 	add_host_wrap(-1);//wake to use new active_fd_set
 	gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
 }
@@ -149,25 +135,20 @@ static void host_removed(int sock){
 	int ihost=host_from_sock(sock);
 	if(ihost==-1) return;
 	close(sock);
-	LOCK(mhost);
-	nhostup--;
 	hsock[ihost]=-1;
 	FD_CLR(sock, &active_fd_set);
-	UNLOCK(mhost);
 	add_host_wrap(-1);//wake to use new active_fd_set
 	gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
-	info("disconnected from %s\n", hosts[ihost]);
+	//info("disconnected from %s\n", hosts[ihost]);
 }
 //connect to scheduler(host)
 static void* add_host(gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
 	int todo=0;
-	LOCK(mhost);
 	if(hsock[ihost]==-1){
 		hsock[ihost]--;//make it -2 so no concurrent access.
 		todo=1;
 	}
-	UNLOCK(mhost);
 	if(todo){
 		int sock=connect_port(hosts[ihost], PORT, 0, 0);
 		if(sock>-1){
@@ -184,10 +165,8 @@ static void* add_host(gpointer data){
 		}
 		if(sock<0){
 			dbg_time("Cannot reach %s", hosts[ihost]);
-			LOCK(mhost);
-			hsock[ihost]=-1;
-			UNLOCK(mhost);
-		}
+					hsock[ihost]=-1;
+				}
 	}
 	return NULL;
 }
@@ -202,6 +181,77 @@ static void add_host_thread(int ihost){
 			dbg_time("MON_ADDHOST: hsock[%d]=%d\n", ihost, hsock[ihost]);
 		}
 	}
+}
+static int test_jobs(int status, int flag){
+	switch(flag){
+	case -1://finished
+		return status==S_FINISH;
+		break;
+	/*case -2://skipped
+		return status==S_FINISH&&frac<1;
+		break;*/
+	case -3://crashed
+		return status==S_CRASH||status==S_KILLED||status==S_TOKILL;
+		break;
+	case -4://all that is not running or pending
+		return status==S_FINISH||status==S_CRASH||status==S_KILLED||status==S_TOKILL;
+		break;
+	default:
+		return 0;
+	}
+}
+static void save_all_jobs(){
+	char* fnall=NULL;
+	char* tm=strtime();
+	for(int ihost=0; ihost<nhost; ihost++){
+		if(!pproc[ihost]) continue;
+		char fn[PATH_MAX];
+		const char* host=hosts[ihost];
+		FILE* fp[2];
+		snprintf(fn, PATH_MAX, "%s/maos_%s_%s.done", HOME, host, tm);
+		fp[0]=fopen(fn, "w");
+		snprintf(fn, PATH_MAX, "%s/maos_%s_%s.wait", HOME, host, tm);
+		fp[1]=fopen(fn, "w");
+
+		if(fnall){
+			fnall=stradd(fnall, "\n", fn, NULL);
+		} else{
+			fnall=strdup(fn);
+		}
+		char* lastpath[2]={NULL,NULL};
+		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+			char* spath=iproc->path;
+			char* pos=NULL;
+			int id;
+			pos=strstr(spath, "/maos ");
+			if(!pos){
+				pos=strstr(spath, "/skyc ");
+			}
+			if(iproc->status.info>10){
+				id=0;
+			} else{
+				id=1;
+			}
+			if(pos){
+				pos[0]='\0';
+				if(!lastpath[id]||strcmp(lastpath[id], spath)){//a different folder.
+					free(lastpath[id]); lastpath[id]=strdup(spath);
+					fprintf(fp[id], "cd %s\n", spath);
+				}
+				pos[0]='/';
+				fprintf(fp[id], "%s\n", pos+1);
+			} else{
+				fprintf(fp[id], "%s\n", spath);
+			}
+		}
+		fclose(fp[0]);
+		fclose(fp[1]);
+		free(lastpath[0]);
+		free(lastpath[1]);
+	}
+	info("Jobs saved to \n%s", fnall);
+	free(fnall);
+	free(tm);
 }
 //called by listen_host to respond to scheduler
 static int respond(int sock){
@@ -219,7 +269,7 @@ static int respond(int sock){
 	case -1:{//server request shutdown
 		return -1;
 	}
-	break;
+		   break;
 	case MON_DRAWDAEMON:
 	{
 		dbg_time("Received drawdaemon request\n");
@@ -269,6 +319,36 @@ static int respond(int sock){
 		}
 	}
 	break;
+	case MON_CLEARJOB:
+	{
+		ihost=cmd[1];
+		int flag=cmd[2];
+		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+			if((flag < 0 && test_jobs(iproc->status.info, flag)) || iproc->pid==flag){
+				if(scheduler_cmd(ihost, iproc->pid, CMD_REMOVE)){
+					warning("Failed to clear the job %d on host %d\n", iproc->pid, ihost);
+				}
+			}
+		}
+	}
+	break;
+	case MON_KILLJOB:
+	{
+		ihost=cmd[1];
+		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+			if(iproc->status.info<11&&(!pid||pid==iproc->pid)){
+				if(scheduler_cmd(ihost, iproc->pid, CMD_KILL)){
+					warning("Failed to kill the job %d on host %d\n", iproc->pid, ihost);
+				}
+			}
+		}
+	}
+	break;
+	case MON_SAVEJOB:
+	{
+		save_all_jobs();
+	}
+	break;
 	case MON_VERSION:
 		break;
 	case MON_LOAD:
@@ -298,7 +378,7 @@ static int respond(int sock){
 	return 0;
 }
 /**
-   listen_host() live in a separate thread, it has the following resposibilities:
+   listen_host() live in a dedicated thread, it has the following resposibilities:
    1) listening commands from the main thread to initiate connection to servers
    2) listening to connected servers for maos status event and update the display
    3) monitor connected servers for activity. Disable pages when server is disconnected.
@@ -306,6 +386,12 @@ static int respond(int sock){
    write to sock_main[1] will be caught by select in listen_host(). This wakes it up.*/
 void* listen_host(void* dummy){
 	(void)dummy;
+	pproc=mycalloc(nhost+1, proc_t*);
+	nproc=mycalloc(nhost+1, int);
+	hsock=mycalloc(nhost+1, int);
+	for(int i=0; i<=nhost; i++){
+		hsock[i]=-1;
+	}
 	htime=mycalloc(nhost, double);
 	FD_ZERO(&active_fd_set);
 	FD_SET(sock_main[0], &active_fd_set);//listen to monitor itself
@@ -337,11 +423,11 @@ void* listen_host(void* dummy){
 						htime[ihost]=ntime;
 						add_host_thread(ihost);//do not use _add_host_wrap. It will deadlock.
 					}
-				}else if(htime[ihost]>0 && ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
+				} else if(htime[ihost]>0&&ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
 					dbg_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
 					scheduler_cmd(ihost, 0, CMD_PROBE);
 					htime[ihost]=-ntime;
-				}else if(htime[ihost]<0 && ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
+				} else if(htime[ihost]<0&&ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
 					dbg_time("no respond. disconnect server %s.\n", hosts[ihost]);
 					host_removed(hsock[ihost]);
 				}

@@ -87,6 +87,11 @@ enum{
     MON_DRAWDAEMON=2,/*start drawdaemon*/
     MON_STATUS=3,
     MON_PATH=6,
+    
+    MON_CLEARJOB=7,
+    MON_KILLJOB=8,
+    MON_SAVEJOB=9,
+
     MON_VERSION=13,
     MON_LOAD=14,
     MON_ADDHOST=17,

@@ -75,6 +75,16 @@ static float myceil(float a){
 	return b;
 }
 /**
+ * determine text size
+ * */
+static void pango_size(PangoLayout* layout, const char* text, float* legwidth, float* legheight){
+	pango_layout_set_markup(layout, text, -1);
+	int width, height;
+	pango_layout_get_size(layout, &width, &height);
+	*legwidth=(float)width/PANGO_SCALE;
+	*legheight=(float)height/PANGO_SCALE;
+}
+/**
    Drawing text. frac=0: left align. frac=0.5: center. frac=1: right align
 */
 static void pango_text(cairo_t* cr, PangoLayout* layout, float x, float y,
@@ -425,7 +435,7 @@ static void update_limit(drawdata_t* drawdata){
 	drawdata->limit[0]=xmin0;
 	drawdata->limit[1]=xmax0;
 	float gain=1;
-	if(drawdata->dtime<2){//continuous update, do not update the y range too quickly.
+	if(drawdata->dtime<2&&drawdata->cumulast==drawdata->cumu){//continuous update, do not update the y range too quickly.
 		gain=0.1;
 	}
 	drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
@@ -1069,28 +1079,28 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		/*draw legend */
 		char** legend=drawdata->legend;
 		const int ng=drawdata->npts;
-		cairo_text_extents_t extents;
 		const float linelen=30;/*length of line in legend if exist. */
-		float maxlen=0;/*maximum legend length. */
+		float textlen=0;/*maximum legend length. */
 		float tall=0;
-		float leglen=0;/*length of legend symbol */
+		float symlen=0;/*length of legend symbol */
 		/*first figure out the size required of longest legend entry. */
 		for(int ig=0; ig<ng; ig++){
-			cairo_text_extents(cr, legend[ig], &extents);
-			maxlen=MAX(maxlen, extents.width*1.5);/*length of text. */
-			tall=MAX(tall, extents.height*1.5);/*tall of text. */
+			float legwidth, legheight;
+			pango_size(layout, legend[ig], &legwidth, &legheight);
+			textlen=MAX(textlen, legwidth);/*length of text. */
+			tall=MAX(tall, legheight*1.2);/*tall of text. */
 			PARSE_STYLE(drawdata->style_pts[ig]);
 			if(connectpts){
-				leglen=MAX(leglen, linelen);
+				symlen=MAX(symlen, linelen);
 			} else{
-				leglen=MAX(leglen, sym_size*2);
+				symlen=MAX(symlen, sym_size*2);
 				tall=MAX(tall, sym_size*2);
 			}
 		}
 		const float legmarin=3;/*margin inside of box */
 		const float legmarout=5;/*margin outside of box */
-		const float linehead=3;/*space before and after symbol */
-		float legwidth=maxlen+leglen+2*legmarin+linehead*2;
+		const float symmargin=3;/*space before and after symbol */
+		float legwidth=textlen+symlen+2*legmarin+symmargin*2;
 		float legheight=tall*ng+legmarin*2;
 		cairo_translate(cr, xoff+legmarout+drawdata->legendoffx*(widthim-legwidth-2*legmarout),
 			yoff+legmarout+drawdata->legendoffy*(heightim-legheight-2*legmarout));
@@ -1103,23 +1113,24 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			cairo_stroke(cr);
 			cairo_restore(cr);
 		}
-		cairo_translate(cr, legmarin+linehead, legmarin);
+		cairo_translate(cr, legmarin+symmargin, legmarin);
 		for(int ig=0; ig<ng; ig++){
 			PARSE_STYLE(drawdata->style_pts[ig]);
 			set_color(cr, color);
-			float ix=leglen*0.5;
+			float ix=symlen*0.5;
 			float iy=tall*0.5;
 			draw_point(cr, ix, iy, style, sym_size);
 			cairo_stroke(cr);
 			if(connectpts){
 				cairo_move_to(cr, 0, tall*0.5);
-				cairo_line_to(cr, leglen, tall*0.5);
+				cairo_line_to(cr, symlen, tall*0.5);
 				cairo_stroke(cr);
 			}
 			cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-			cairo_move_to(cr, leglen+linehead, tall*0.8);
+			float toff=tall*1.1;
+			cairo_move_to(cr, symlen+symmargin, tall*0.8);
 			/*cairo_show_text(cr, legend[ig]); */
-			pango_text(cr, layout, leglen+linehead, -tall*0.2, legend[ig], 0, 0, 0);
+			pango_text(cr, layout, symlen+symmargin, toff-tall, legend[ig], 0, 0, 0);
 			cairo_translate(cr, 0, tall);
 		}
 		cairo_restore(cr);

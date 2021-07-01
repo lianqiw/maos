@@ -34,6 +34,16 @@ activate (GtkApplication *app,
 	create_window(window);
 }
 #endif
+#if MAC_INTEGRATION
+void mac_terminate(GtkosxApplication *app, gpointer psock){
+	(void)app;
+	int sock0=GPOINTER_TO_INT(psock);
+	info("close %d socket in mac_terminate\n", sock0);
+	if(sock0!=-1) close(sock0);
+	sleep(1);
+	gtk_main_quit();
+}
+#endif
 int main(int argc, char* argv[]){
 	{
 		char fnlog[PATH_MAX];
@@ -77,6 +87,7 @@ int main(int argc, char* argv[]){
 	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	gtkosx_application_ready(theApp);
+	g_signal_connect(theApp, "NSApplicationWillTerminate", G_CALLBACK(mac_terminate), GINT_TO_POINTER(sock));
 #endif
 	thread_new(listen_draw, NULL);
 	//g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);

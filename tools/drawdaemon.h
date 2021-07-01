@@ -45,7 +45,7 @@ struct drawdata_t{
 	/*First, input data from draw.c */
 	/*Draw images. */
 	cairo_surface_t* image;
-	float* p0;      /*original pointer of float */
+	void* p0;      /*2d array of data. float or double depends on byte_float*/
 	unsigned char* p;/*converted pointer of char or int. */
 	/*Draw points */
 	float** pts;      /*pts; */

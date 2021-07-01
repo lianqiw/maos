@@ -106,7 +106,7 @@ void* listen_draw(void* dummy){
 	static drawdata_t* drawdata=NULL;
 	int cmd=0;
 	int nlen=0;
-	while(!streadint(sock, &cmd)){
+	while(sock!=-1 && !streadint(sock, &cmd)){
 		//dbg("cmd=%d\n", cmd);
 		sock_idle=0;//Indicate connection is active
 		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
@@ -244,34 +244,7 @@ void* listen_draw(void* dummy){
 			break;
 		case DRAW_END:
 		{
-			if(drawdata->p0){/*draw image */
-				int nx=drawdata->nx;
-				int ny=drawdata->ny;
-				size_t size=0;
-				if(nx<=0||ny<=0) error("Please call DRAW_DATA\n");
-				if(drawdata->gray){
-					drawdata->format=(cairo_format_t)CAIRO_FORMAT_A8;
-					size=1;
-				} else{
-					drawdata->format=(cairo_format_t)CAIRO_FORMAT_ARGB32;
-					size=4;
-				}
-				int stride=cairo_format_stride_for_width(drawdata->format, nx);
-				if(!drawdata->limit_manual){
-					if(!drawdata->limit_data){
-						drawdata->limit_data=mycalloc(4, float);
-					}
-					drawdata->limit_data[0]=-0.5;
-					drawdata->limit_data[1]=drawdata->nx-0.5;
-					drawdata->limit_data[2]=-0.5;
-					drawdata->limit_data[3]=drawdata->ny-0.5;
-				}
-				/*convert data from float to int/char. */
-				drawdata->p=(unsigned char*)calloc(nx*ny, size);
-				flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
-				drawdata->image=cairo_image_surface_create_for_data
-				(drawdata->p, drawdata->format, nx, ny, stride);
-			}
+			
 			if(drawdata->npts>0){
 				drawdata->cumuquad=1;
 				if(drawdata->nstyle>1){
@@ -308,6 +281,7 @@ void* listen_draw(void* dummy){
 		cmd=-1;
 	}/*while */
 end:
+	if(sock!=-1) close(sock);
 	sock=-1;
 	sock_idle=1;
 	warning("Read failed, stop listening.\n");

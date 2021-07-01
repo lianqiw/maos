@@ -47,7 +47,7 @@
 #include <libnotify/notify.h>
 static int notify_daemon=1;
 #endif
-
+int sock_main[2]={0,0}; /*Used to talk to the thread that runs listen_host*/
 GdkPixbuf* icon_main=NULL;
 GdkPixbuf* icon_finished=NULL;
 GdkPixbuf* icon_failed=NULL;
@@ -88,10 +88,9 @@ GtkCssProvider* provider_red;
 GtkCssProvider* provider_blue;
 #include "gtk3-css.h"
 #endif
-int* hsock;
 #define MAX_HOST 20
-
-#define dialog_msg(A...) {				\
+/*
+#define DIALOG_MSG(A...) {				\
 	GtkWidget *dialog0=gtk_message_dialog_new	\
 	    (GTK_WINDOW(window),		\
 	     GTK_DIALOG_DESTROY_WITH_PARENT,		\
@@ -101,7 +100,35 @@ int* hsock;
 	gtk_dialog_run(GTK_DIALOG(dialog0));		\
 	gtk_widget_destroy(dialog0);			\
     }
+	*/
+gboolean dialog_confirm(const char* format, ...){
+	format2fn;
+	GtkWidget* dia=gtk_message_dialog_new
+	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
+		GTK_MESSAGE_QUESTION,
+		GTK_BUTTONS_YES_NO,
+		"%s", fn);
+	int result=gtk_dialog_run(GTK_DIALOG(dia));
+	gtk_widget_destroy(dia);
+	return result==GTK_RESPONSE_YES;
+}
 
+void add_host_wrap(int ihost){
+	int cmd[3]={MON_ADDHOST, ihost, 0};
+	stwriteintarr(sock_main[1], cmd, 3);
+}
+void clear_job_wrap(int ihost, int flag){
+	int cmd[3]={MON_CLEARJOB, ihost, flag};
+	stwriteintarr(sock_main[1], cmd, 3);
+}
+void kill_job_wrap(int ihost, int pid){
+	int cmd[3]={MON_KILLJOB, ihost, pid};
+	stwriteintarr(sock_main[1], cmd, 3);
+}
+void save_job_wrap(){
+	int cmd[3]={MON_SAVEJOB, 0, 0};
+	stwriteintarr(sock_main[1], cmd, 3);
+}
 /**
    The number line pattern determines how dash is drawn for gtktreeview. the
    first number is the length of the line, and second number of the length
@@ -317,27 +344,30 @@ static void quitmonitor(GtkWidget* widget, gpointer data){
    update the job count
 */
 gboolean update_title(gpointer data){
-	int id=GPOINTER_TO_INT(data);
+	unsigned int tmp=GPOINTER_TO_INT(data);
+	unsigned int hid=tmp&0xFF;
+	unsigned int nproc=tmp>>8;
 	char tit[40];
-	if(id<nhost){
-		snprintf(tit, 40, "%s (%d)", hosts[id], nproc[id]);
+	if(hid<nhost){
+		snprintf(tit, 40, "%s (%u)", hosts[hid], nproc);
 	} else{
 		snprintf(tit, 40, "%s", "All");
-		gtk_label_set_attributes(GTK_LABEL(titles[id]), pango_active);
+		gtk_label_set_attributes(GTK_LABEL(titles[hid]), pango_active);
 	}
-	gtk_label_set_text(GTK_LABEL(titles[id]), tit);
+	gtk_label_set_text(GTK_LABEL(titles[hid]), tit);
 	return 0;
 }
 /**
    respond to the kill job event
 */
-void kill_job(proc_t* p){
+/*
+void kill_job(int hid, int pid){
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
 		"Kill job %d on server %s?",
-		p->pid, hosts[p->hid]);
+		pid, hosts[hid]);
 	if(p->status.info==S_WAIT){
 		gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill Job", 0, "Cancel", 2, NULL);
 	} else{
@@ -350,22 +380,17 @@ void kill_job(proc_t* p){
 		if(scheduler_cmd(p->hid, p->pid, CMD_KILL)){
 			warning("Failed to kill the job\n");
 		}
-		p->status.info=S_TOKILL;
+		
 		refresh(p);
 		break;
 	case 1:
 	{
-		scheduler_display(p->hid, p->pid);
+		scheduler_display(hid, pid);
 	}
 	break;
 	}
-}
-void kill_job_event(GtkWidget* btn, GdkEventButton* event, proc_t* p){
-	(void)btn;
-	if(event->button==1){
-		kill_job(p);
-	}
-}
+}*/
+
 static void kill_all_jobs(GtkButton* btn, gpointer data){
 	(void)btn;
 	(void)data;
@@ -384,15 +409,7 @@ static void kill_all_jobs(GtkButton* btn, gpointer data){
 			if(result==1&&ihost!=this_host){
 				continue;
 			}
-			for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
-				if(iproc->hid==ihost&&(iproc->status.info<11)){
-					if(scheduler_cmd(iproc->hid, iproc->pid, CMD_KILL)){
-						warning("Failed to kill the job\n");
-					}
-					iproc->status.info=S_TOKILL;
-					refresh(iproc);
-				}
-			}
+			kill_job_wrap(ihost, 0);
 		}
 	}
 }
@@ -475,99 +492,19 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	}
 	return TRUE;
 	}*/
-static int test_jobs(int status, int flag){
-	switch(flag){
-	case 1://finished
-		return status==S_FINISH;
-		break;
-	/*case 2://skipped
-		return status==S_FINISH&&frac<1;
-		break;*/
-	case 3://crashed
-		return status==S_CRASH||status==S_KILLED||status==S_TOKILL;
-		break;
-	case 4://all that is not running or pending
-		return status==S_FINISH||status==S_CRASH||status==S_KILLED||status==S_TOKILL;
-		break;
-	default:
-		return 0;
-	}
-}
+
 static void clear_jobs(GtkButton* btn, gpointer flag){
 	(void)btn;
 	//int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
 	for(int ihost=0; ihost<nhost; ihost++){
-		if(!pproc[ihost]) continue;
-		int sock=hsock[ihost];
-		if(sock<0) continue;
-		int cmd[2];
-		cmd[0]=CMD_REMOVE;
-		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
-			if(test_jobs(iproc->status.info, GPOINTER_TO_INT(flag))){
-				cmd[1]=iproc->pid;
-				if(stwriteintarr(sock, cmd, 2)){
-					warning("write to socket %d failed\n", sock);
-					break;
-				}
-			}
-		}
+		clear_job_wrap(ihost, GPOINTER_TO_INT(flag));
 	}
 }
 
 static void save_all_jobs(GtkButton* btn, gpointer data){
-	(void)btn;
-	(void)data;
-	char* fnall=NULL;
-	char* tm=strtime();
-	for(int ihost=0; ihost<nhost; ihost++){
-		if(!pproc[ihost]) continue;
-		char fn[PATH_MAX];
-		const char* host=hosts[ihost];
-		FILE* fp[2];
-		snprintf(fn, PATH_MAX, "%s/maos_%s_%s.done", HOME, host, tm);
-		fp[0]=fopen(fn, "w");
-		snprintf(fn, PATH_MAX, "%s/maos_%s_%s.wait", HOME, host, tm);
-		fp[1]=fopen(fn, "w");
-
-		if(fnall){
-			fnall=stradd(fnall, "\n", fn, NULL);
-		} else{
-			fnall=strdup(fn);
-		}
-		char* lastpath[2]={NULL,NULL};
-		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
-			char* spath=iproc->path;
-			char* pos=NULL;
-			int id;
-			pos=strstr(spath, "/maos ");
-			if(!pos){
-				pos=strstr(spath, "/skyc ");
-			}
-			if(iproc->status.info>10){
-				id=0;
-			} else{
-				id=1;
-			}
-			if(pos){
-				pos[0]='\0';
-				if(!lastpath[id]||strcmp(lastpath[id], spath)){//a different folder.
-					free(lastpath[id]); lastpath[id]=strdup(spath);
-					fprintf(fp[id], "cd %s\n", spath);
-				}
-				pos[0]='/';
-				fprintf(fp[id], "%s\n", pos+1);
-			} else{
-				fprintf(fp[id], "%s\n", spath);
-			}
-		}
-		fclose(fp[0]);
-		fclose(fp[1]);
-		free(lastpath[0]);
-		free(lastpath[1]);
-	}
-	dialog_msg("Jobs saved to \n%s", fnall);
-	free(fnall);
-	free(tm);
+	(void) btn;
+	(void) data;
+	save_job_wrap();
 }
 GtkWidget* monitor_new_entry_progress(void){
 	GtkWidget* prog=gtk_entry_new();
@@ -731,10 +668,10 @@ int main(int argc, char* argv[]){
 		toptoolbar=gtk_toolbar_new();
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("computer", icon_connect, "Connect", add_host_event, -1), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-		//gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", icon_skip, "Clear skipped jobs", clear_jobs, 2), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select", icon_finished, "Clear finished jobs", clear_jobs, 1), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, 3), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, 4), -1);
+		//gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", icon_skip, "Clear skipped jobs", clear_jobs, -2), -1);
+		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select", icon_finished, "Clear finished jobs", clear_jobs, -1), -1);
+		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, -3), -1);
+		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, -4), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("process-stop", icon_cancel, "Kill all jobs", kill_all_jobs, -1), -1);
 		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy", icon_save, "Save jobs to file", save_all_jobs, -1), -1);
@@ -761,14 +698,10 @@ int main(int argc, char* argv[]){
 	//tabs=mycalloc(nhost+1, GtkWidget*);
 	pages=mycalloc(nhost+1, GtkWidget*);
 	titles=mycalloc(nhost+1, GtkWidget*);
-	pproc=mycalloc(nhost+1, proc_t*);
-	nproc=mycalloc(nhost+1, int);
+	
 	cmdconnect=mycalloc(nhost+1, GtkWidget*);
 	buffers=mycalloc(nhost+1, GtkTextBuffer*);
-	hsock=mycalloc(nhost+1, int);
-	for(int i=0; i<=nhost; i++){
-		hsock[i]=-1;
-	}
+	
 	usage_cpu=mycalloc(nhost, double);
 	//usage_mem=mycalloc(nhost,double);
 	usage_cpu2=mycalloc(nhost, double);
@@ -848,7 +781,6 @@ int main(int argc, char* argv[]){
 		gtk_widget_show_all(pages[ihost]);
 	}
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 0);
-	extern int sock_main[2];
 	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
 		error("failed to create socketpair\n");
 	}
