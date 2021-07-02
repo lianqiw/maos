@@ -530,6 +530,10 @@ typedef struct sim_t{
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
     dcell *cn2res;     /**<Cn2 Estimation Result*/
     dcell *gradoff;    /**<Offset to grads to subtract from measurement. */
+    dcell *gradoffacc; /**<Accumulates gradoff to determine its average*/
+    int gradoffnacc; /**<gradoffacc counter*/
+    int gradoffisim; /**<last isim the new gradoff is activated*/
+    int gradoffisim0; /**<last isim the gradoffacc is reset*/
     real eptwfs;     /**<Twfs reference vector servo gain.*/
     /*CoG gain adjustment*/
     dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/

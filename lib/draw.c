@@ -562,9 +562,9 @@ end2:
 				free(buf); bufsize=0; buf=0;
 			} else{
 				int* bufp=(int*)(buf+3*sizeof(int));
-				bufp[0]=(int)bufsize;//frame number
+				bufp[0]=(int)bufsize;//frame size
 				bufp[1]=count;//frame number
-				bufp[2]=(int)bufsize;//sub-frame number
+				bufp[2]=(int)bufsize;//sub-frame size
 				bufp[3]=0;//sub-frame number
 				//dbg("plot_points: buf has size %ld. %d %d %d %d\n", bufsize,
 				//	bufp[0], bufp[1], bufp[2], bufp[3]);
@@ -582,6 +582,7 @@ end2:
 					error("To be implemented\n");
 				} else{
 					if(stwrite(sock_draw, buf, bufsize)){
+						info("write to %d failed\n", sock_draw);
 						ans=-1;
 						draw_remove(sock_draw, 0);
 					}

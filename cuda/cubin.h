@@ -79,14 +79,14 @@ static inline void cuwritedata(const Array<T, Dev>& A, file_t* fp){
 	}
 }
 template <typename T, template<typename> class Dev>
-static inline void cuwrite(const Array<T, Dev>& A, const char* format, ...)CHECK_ARG(2){
+static inline void cuwrite(const Array<T, Dev>& A, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");
 	cuwritedata<T, Dev>(A, fp);
 	zfclose(fp);
 }
 template <typename T, template<typename> class Dev>
-static inline void cuwrite(const Cell<T, Dev>& A, const char* format, ...)CHECK_ARG(2){
+static inline void cuwrite(const Cell<T, Dev>& A, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");
 	header_t header={MCC_ANY, A?(uint64_t)A.Nx():0, A?(uint64_t)A.Ny():0, NULL};
