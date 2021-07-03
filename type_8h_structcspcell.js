@@ -5,6 +5,7 @@ var type_8h_structcspcell =
     [ "nx", "type_8h.html#a53908c34870ae6094f472897f2be9a7e", null ],
     [ "ny", "type_8h.html#a2000cf8ce69a38a69473e4b681adb21a", null ],
     [ "header", "type_8h.html#ad286619e1d783dd46c1c5539c1506583", null ],
+    [ "fn", "type_8h.html#ab69d6ea6b4efde2cce92c8bd38d29168", null ],
     [ "fft", "type_8h.html#a9d77cd69ddc057865d53e149823a5bd6", null ],
     [ "m", "type_8h.html#a6c00f479db12c16502cb4185ba2a2d73", null ]
 ];

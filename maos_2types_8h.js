@@ -329,7 +329,9 @@ var maos_2types_8h =
       [ "psdcl", "maos_2types_8h.html#a98da894d5a6f7795b5ae5b5326d4b623", null ],
       [ "psdol", "maos_2types_8h.html#a044e8f08326c3f13ed1a52e252de0e79", null ],
       [ "psdcl_lo", "maos_2types_8h.html#a0b749dad24ede50c2d63bffddc02aed0", null ],
-      [ "psdol_lo", "maos_2types_8h.html#a43ac99628737ff760d405599f7c8bb1f", null ]
+      [ "psdol_lo", "maos_2types_8h.html#a43ac99628737ff760d405599f7c8bb1f", null ],
+      [ "cle", "maos_2types_8h.html#a7624d6fc93c22882a6a1804ddb385c8c", null ],
+      [ "clem", "maos_2types_8h.html#afa07aef1d6df1fb0e575515d97dc7c68", null ]
     ] ],
     [ "wfsints_t", "maos_2types_8h.html#structwfsints__t", [
       [ "ints", "maos_2types_8h.html#acd20b2ed925bd5d1d81fb1a94ff43bfe", null ],
@@ -394,6 +396,10 @@ var maos_2types_8h =
       [ "gradlastol", "maos_2types_8h.html#a1d18ca3ebc5ec8578d8fd1913eac2bbf", null ],
       [ "cn2res", "maos_2types_8h.html#a61049f79df793b870a109c44c97114b3", null ],
       [ "gradoff", "maos_2types_8h.html#abdc1e756826fc54bf6578e87604426f4", null ],
+      [ "gradoffacc", "maos_2types_8h.html#a02f5f681f8f8e23efdba2beb9f7190df", null ],
+      [ "gradoffnacc", "maos_2types_8h.html#ac25c6ecb52368216b3164e9f97693fa9", null ],
+      [ "gradoffisim", "maos_2types_8h.html#ad0294a6f562f51914f3800a85f5167cc", null ],
+      [ "gradoffisim0", "maos_2types_8h.html#a1f4468806d08462b55934c5ba6c816ee", null ],
       [ "eptwfs", "maos_2types_8h.html#af3f979ac8449ef954bc754ddbc3b6f40", null ],
       [ "gradscale", "maos_2types_8h.html#afbbeea9628533032448d257c526e5225", null ],
       [ "llt_tt", "maos_2types_8h.html#af7f5504268fb3897cc6d3cb8594c08c7", null ],

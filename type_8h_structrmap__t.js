@@ -5,6 +5,7 @@ var type_8h_structrmap__t =
     [ "nx", "type_8h.html#ae7d2a5dcbd82bda42d42ee23c3117981", null ],
     [ "ny", "type_8h.html#aa8430be54aad671567a6da1b160afd65", null ],
     [ "header", "type_8h.html#af9573a5090466a36dda01d7cb02ce606", null ],
+    [ "fn", "type_8h.html#ac1e85f7bfda5ea606a6ea56f19d6deff", null ],
     [ "fft", "type_8h.html#a39504450bc463507d533234f0c6b212f", null ],
     [ "mem", "type_8h.html#a36bc67fb09cd6f1bde5b40983beffba7", null ],
     [ "ox", "type_8h.html#a96aa2b948f73d25358dfdfbeaa2faa31", null ],

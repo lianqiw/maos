@@ -41,5 +41,7 @@ var maos_2types_8h_structsim__save__t =
     [ "psdcl", "maos_2types_8h.html#a98da894d5a6f7795b5ae5b5326d4b623", null ],
     [ "psdol", "maos_2types_8h.html#a044e8f08326c3f13ed1a52e252de0e79", null ],
     [ "psdcl_lo", "maos_2types_8h.html#a0b749dad24ede50c2d63bffddc02aed0", null ],
-    [ "psdol_lo", "maos_2types_8h.html#a43ac99628737ff760d405599f7c8bb1f", null ]
+    [ "psdol_lo", "maos_2types_8h.html#a43ac99628737ff760d405599f7c8bb1f", null ],
+    [ "cle", "maos_2types_8h.html#a7624d6fc93c22882a6a1804ddb385c8c", null ],
+    [ "clem", "maos_2types_8h.html#afa07aef1d6df1fb0e575515d97dc7c68", null ]
 ];

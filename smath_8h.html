@@ -129,6 +129,8 @@ typedef float(*&#160;</td><td class="memItemRight" valign="bottom"><b>sminsearch
 Functions</h2></td></tr>
 <tr class="memitem:aafbf7ec13e8ccf10c1f492d83b56635c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#aafbf7ec13e8ccf10c1f492d83b56635c">snew</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
 <tr class="separator:aafbf7ec13e8ccf10c1f492d83b56635c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6edc093a4915a2b7b23e4db9effa45e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a6edc093a4915a2b7b23e4db9effa45e9">snew_file</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
+<tr class="separator:a6edc093a4915a2b7b23e4db9effa45e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc3af8ba3285a3de3398fd807e5b6298"><td class="memItemLeft" align="right" valign="top"><a id="acc3af8ba3285a3de3398fd807e5b6298"></a>
 <a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>snew_do</b> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, float *p, mem_t *mem)</td></tr>
 <tr class="separator:acc3af8ba3285a3de3398fd807e5b6298"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -224,6 +226,10 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>svecmaxabs</b> (cons
 <tr class="separator:aae5029293f1ac9b8b04b043ec21f7a00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adcb987c541512b7a33c3e136b92990f2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structscell">scell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#adcb987c541512b7a33c3e136b92990f2">scellnew_same</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, <a class="el" href="classlong.html">long</a> mx, <a class="el" href="classlong.html">long</a> my)</td></tr>
 <tr class="separator:adcb987c541512b7a33c3e136b92990f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affe8e83863ca60062c67a8d053c8e5df"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structscell">scell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#affe8e83863ca60062c67a8d053c8e5df">scellnew_file</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, <a class="el" href="classlong.html">long</a> *nnx, <a class="el" href="classlong.html">long</a> *nny, const char *header, const char *format,...)</td></tr>
+<tr class="separator:affe8e83863ca60062c67a8d053c8e5df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac92d4cd1901b068a4705101f54b29041"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structscell">scell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#ac92d4cd1901b068a4705101f54b29041">scellnewsame_file</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, <a class="el" href="classlong.html">long</a> mx, <a class="el" href="classlong.html">long</a> my, const char *header, const char *format,...)</td></tr>
+<tr class="separator:ac92d4cd1901b068a4705101f54b29041"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add76447c4771eebdbbcff15bed631e29"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#add76447c4771eebdbbcff15bed631e29">scellzero</a> (void *dc)</td></tr>
 <tr class="separator:add76447c4771eebdbbcff15bed631e29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ed2be23893608086820de589284353f"><td class="memItemLeft" align="right" valign="top"><a id="a9ed2be23893608086820de589284353f"></a>
@@ -711,6 +717,53 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
       </table>
 </div><div class="memdoc">
 <p>Create a new T matrix object. initialized all to zero. </p>
+
+</div>
+</div>
+<a id="a6edc093a4915a2b7b23e4db9effa45e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6edc093a4915a2b7b23e4db9effa45e9">&#9670;&nbsp;</a></span>snew_file()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structsmat">smat</a>* snew_file </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>ny</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calls SX(new) with a filename to be saved to </p>
 
 </div>
 </div>
@@ -1633,6 +1686,124 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
       </table>
 </div><div class="memdoc">
 <p>Create an new cell with matrix specified. Each block is stored continuously in memory. </p>
+
+</div>
+</div>
+<a id="affe8e83863ca60062c67a8d053c8e5df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affe8e83863ca60062c67a8d053c8e5df">&#9670;&nbsp;</a></span>scellnew_file()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structscell">scell</a>* scellnew_file </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>ny</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a> *&#160;</td>
+          <td class="paramname"><em>nnx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a> *&#160;</td>
+          <td class="paramname"><em>nny</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calls cellnew3 with a filename to be saved to. </p>
+
+</div>
+</div>
+<a id="ac92d4cd1901b068a4705101f54b29041"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac92d4cd1901b068a4705101f54b29041">&#9670;&nbsp;</a></span>scellnewsame_file()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structscell">scell</a>* scellnewsame_file </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>ny</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>mx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>my</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calls cellnew_same with a filename to be saved to. </p>
 
 </div>
 </div>
