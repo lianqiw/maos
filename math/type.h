@@ -47,6 +47,7 @@ typedef enum CEMBED{
     long nx;       /**< number of rows */				\
     long ny;       /**< number of columns */				\
     char *header;  /**<The header*/					\
+    char *fn;      /**<The file, to be saved to when*/\
     struct fft_t *fft					
 
 #define MATARR(T)				\
@@ -60,6 +61,7 @@ typedef enum CEMBED{
 	long nx;             /**< number of rows */			\
 	long ny;             /**< number of columns */			\
 	char *header;        /**<header*/				\
+    char *fn;      /**<The file, to be saved to when*/\
 	long nzmax;          /**< maximum number of entries */		\
     spint *restrict pp;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
 	spint *restrict pi;  /**< row indices, size nzmax */		\

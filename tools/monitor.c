@@ -344,9 +344,9 @@ static void quitmonitor(GtkWidget* widget, gpointer data){
    update the job count
 */
 gboolean update_title(gpointer data){
-	unsigned int tmp=GPOINTER_TO_INT(data);
-	unsigned int hid=tmp&0xFF;
-	unsigned int nproc=tmp>>8;
+	int tmp=GPOINTER_TO_INT(data);
+	int hid=tmp&0xFF;
+	int nproc=tmp>>8;
 	char tit[40];
 	if(hid<nhost){
 		snprintf(tit, 40, "%s (%u)", hosts[hid], nproc);

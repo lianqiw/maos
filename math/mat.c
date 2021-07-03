@@ -64,6 +64,19 @@ X(mat)* X(new)(long nx, long ny){
 	return X(new_do)(nx, ny, NULL, 0);
 }
 /**
+ * Calls X(new) with a filename to be saved to
+ * */
+X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ...){
+	if(!nx||!ny) return NULL;
+	format2fn;
+	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
+	if(disable_save&&!IS_SHM(fn))fn=NULL;
+	X(mat)* out=X(new)(nx, ny);
+	if(out && fn) out->fn=strdup(fn);
+	if(out && header) out->header=strdup(header);
+	return out;
+}
+/**
    check the size of matrix if exist. Otherwise create it. content is not zeroed.
 */
 void X(new2)(X(mat)** A, long nx, long ny){
@@ -92,6 +105,9 @@ X(mat)* X(mat_cast)(const void* A){
 */
 void X(free_do)(X(mat)* A){
 	if(check_mat(A)){
+		if(A->fn){
+			writebin(A, "%s", A->fn);
+		}
 		mem_unref(&A->mem);//takes care of freeing memory.
 #ifndef COMP_LONG
 		if(A->fft) X(fft_free_plan)(A->fft);
@@ -678,6 +694,34 @@ X(cell)* X(cellnew3)(long nx, long ny, long* nnx, long* nny){
 */
 X(cell)* X(cellnew_same)(long nx, long ny, long mx, long my){
 	return X(cellnew3)(nx, ny, (long*)-mx, (long*)-my);
+}
+/**
+   Calls cellnew3 with a filename to be saved to.
+*/
+X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
+	const char* header, const char* format, ...){
+	if(!nx||!ny) return NULL;
+	format2fn;
+	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
+	if(disable_save&&!IS_SHM(fn))fn=NULL;
+	X(cell)* out=X(cellnew3)(nx, ny, nnx, nny);
+	if(out && fn) out->fn=strdup(fn);
+	if(out && header) out->header=strdup(header);
+	return out;
+}
+/**
+   Calls cellnew_same with a filename to be saved to.
+*/
+X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
+	const char* header, const char* format, ...){
+	if(!nx||!ny) return NULL;
+	format2fn;
+	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
+	if(disable_save&&!IS_SHM(fn))fn=NULL;
+	X(cell*) out=X(cellnew_same)(nx, ny, mx, my);
+	if(out && fn) out->fn=strdup(fn);
+	if(out&&header) out->header=strdup(header);
+	return out;
 }
 /**
    creat a cell reference an existing cell by referencing the

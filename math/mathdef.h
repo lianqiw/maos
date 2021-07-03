@@ -33,6 +33,7 @@
 #include "cell.h"
 #include "chol.h"
 #include "zfarr.h"
+#include "zfmat.h"
 #include "mathmisc.h"
 #include "loc.h"
 #include "map.h"
@@ -147,4 +148,15 @@
 #define dspccellnew (dspccell*)cellnew
 #define cspcellnew (cspcell*)cellnew
 #define cspccellnew (cspccell*)cellnew
+
+#define writebin_delayed(A,format...) \
+{\
+  char fnstore[PATH_MAX];\
+  snprintf(fnstore, PATH_MAX, format);\
+  const char *fn=fnstore;\
+  if((fnstore[0]=='-')||disable_save) fn=NULL;\
+  if(A && fn){\
+    A->fn=strdup(fn);\
+  }\
+}
 #endif

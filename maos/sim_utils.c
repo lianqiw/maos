@@ -482,9 +482,11 @@ static void init_simu_evl(sim_t* simu){
 	simu->evlopd=dcellnew(nevl, 1);
 	simu->perfevl_iground=parms->atm.iground;
 	if(!disable_save&&parms->save.extra){
-		simu->timing=dnew_mmap(5, nsim, NULL, "%s/Timing_%d.bin", fnextra, seed);
+		simu->timing=dnew_file(5, nsim, NULL, "%s/Timing_%d.bin", fnextra, seed);
 	}
-	{/*MMAP the main result file */
+	//2021-07-2: do not use mmap to write file. It causes a lot of disk activity.
+	/*MMAP the main result file */
+	{
 		int ahst_nmod=0;
 		if(parms->recon.split){
 			ahst_nmod=3;
@@ -493,18 +495,19 @@ static void init_simu_evl(sim_t* simu){
 		long nnx[4]={nmod,0,nmod,ahst_nmod};
 		long nny[4]={nsim,0,nsim,nsim};
 
-		simu->res=dcellnew_mmap(4, 1, nnx, nny, NULL, "Res_%d.bin", seed);
+		simu->res=dcellnew_file(4, 1, nnx, nny, NULL, "Res_%d.bin", seed);
 		//Do not reference. Just assign. Don't free.
 		simu->ole=P(simu->res, 0);
 		simu->cle=P(simu->res, 2);
 		simu->clem=P(simu->res, 3);
 		dcellset(simu->res, NAN);
 	}
+	
 
 	{/*USE MMAP for data that need to save at every time step */
 		
 		const char* header="Results per direction: olmp; clmp; olep; clep";
-		simu->resp=dcellnewsame_mmap(nevl, 4, nmod, nsim, header, "%s/Resp_%d.bin", fnextra, seed);
+		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, header, "%s/Resp_%d.bin", fnextra, seed);
 		
 		simu->olmp=dcellsub(simu->resp, 0, nevl, 0, 1);
 		simu->clmp=dcellsub(simu->resp, 0, nevl, 1, 1);
@@ -512,14 +515,14 @@ static void init_simu_evl(sim_t* simu){
 		simu->clep=dcellsub(simu->resp, 0, nevl, 3, 1);
 
 		if(parms->recon.split){
-			simu->oleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSm_%d.bin", fnextra, seed);
-			simu->oleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSmp_%d.bin", fnextra, seed);
+			simu->oleNGSm=dnew_file(recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSm_%d.bin", fnextra, seed);
+			simu->oleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSmp_%d.bin", fnextra, seed);
 			if(!parms->sim.evlol){
-				simu->clemp=dcellnewsame_mmap(nevl, 1, 3, nsim, NULL, "%s/Resclemp_%d.bin", fnextra, seed);
-				simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSm_%d.bin", fnextra, seed);
-				simu->cleNGSmp=dcellnewsame_mmap(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSmp_%d.bin", fnextra, seed);
+				simu->clemp=dcellnewsame_file(nevl, 1, 3, nsim, NULL, "%s/Resclemp_%d.bin", fnextra, seed);
+				simu->cleNGSm=dnew_file(recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSm_%d.bin", fnextra, seed);
+				simu->cleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSmp_%d.bin", fnextra, seed);
 				if(parms->recon.split==1&&!parms->sim.fuseint){
-					simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod, nsim, NULL, "%s/RescorrNGSm_%d.bin", fnextra, seed);
+					simu->corrNGSm=dnew_file(recon->ngsmod->nmod, nsim, NULL, "%s/RescorrNGSm_%d.bin", fnextra, seed);
 				}
 			}
 		}
@@ -827,8 +830,8 @@ static void init_simu_wfs(sim_t* simu){
 			}
 		}
 		
-		simu->fsmerrs=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "%s/Resfsmerr_%d.bin", fnextra, seed);
-		simu->fsmcmds=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_%d.bin", fnextra, seed);
+		simu->fsmerrs=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmerr_%d.bin", fnextra, seed);
+		simu->fsmcmds=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_%d.bin", fnextra, seed);
 	}
 
 	/* For sky coverage telemetry output */
@@ -1045,7 +1048,7 @@ static void init_simu_wfs(sim_t* simu){
 				}
 			}
 			
-		simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
+		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
 		}
 
 	}
@@ -1056,7 +1059,7 @@ static void init_simu_wfs(sim_t* simu){
 			if(parms->powfs[ipowfs].dither){
 				simu->dither[iwfs]=mycalloc(1, dither_t);
 				if(parms->powfs[ipowfs].dither!=1){
-					simu->dither[iwfs]->mr=dcellnewsame_mmap(2, 1, 1, nsim, NULL, "%s/Resdithermr_%d", fnextra, seed);
+					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, 1, nsim, NULL, "%s/Resdithermr_%d", fnextra, seed);
 				}
 			}
 		}
@@ -1073,14 +1076,14 @@ static void init_simu_wfs(sim_t* simu){
 					nny[iwfs]=0;
 				}
 			}
-			simu->resdither=dcellnew_mmap(nwfs, 1, nnx, nny, NULL, "%s/Resdither_%d.bin", fnextra, seed);
+			simu->resdither=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resdither_%d.bin", fnextra, seed);
 		}
 	}
 	if(recon->cn2est){
 		int ncn2=(parms->sim.end-1)/parms->cn2.step;
 		long nnx[2]={ncn2, recon->cn2est->htrecon->nx};
 		long nny[2]={1, ncn2};
-		simu->cn2res=dcellnew_mmap(2, 1, nnx, nny, NULL, "%s/Rescn2_%d.bin", fnextra, seed);
+		simu->cn2res=dcellnew_file(2, 1, nnx, nny, NULL, "%s/Rescn2_%d.bin", fnextra, seed);
 	}
 	if(parms->itpowfs!=-1){
 		const int ipowfs=parms->itpowfs;
@@ -1089,7 +1092,7 @@ static void init_simu_wfs(sim_t* simu){
 			const int iwfs=P(parms->powfs[ipowfs].wfs, 0);
 			const int nmod=P(recon->RRtwfs, iwfs)->nx;
 			const int dtrat=parms->powfs[ipowfs].dtrat;
-			simu->restwfs=dnew_mmap(nmod, nacc/dtrat, NULL, "%s/Restwfs_%d.bin", fnextra, seed);
+			simu->restwfs=dnew_file(nmod, nacc/dtrat, NULL, "%s/Restwfs_%d.bin", fnextra, seed);
 		}
 	}
 }
@@ -1112,7 +1115,7 @@ static void init_simu_dm(sim_t* simu){
 	if(1){
 		simu->dmerr_store=dcellnew3(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
 	} else{
-		simu->dmerr_store=dcellnew_mmap(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL, NULL, "/dmerr");
+		simu->dmerr_store=dcellnew_file(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL, NULL, "/dmerr");
 	}
 	simu->dmcmd=dcellnew(parms->ndm, 1);
 	simu->dmreal=dcellnew(parms->ndm, 1);
@@ -1212,7 +1215,7 @@ static void init_simu_dm(sim_t* simu){
 					nny[idm]=0;
 				}
 			}
-			simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, NULL, "dmhist_%d.bin", simu->seed);
+			simu->dmhist=dcellnew_file(parms->ndm, 1, nnx, nny, NULL, "dmhist_%d.bin", simu->seed);
 		}
 	}
 	if(parms->recon.psd){
@@ -1234,7 +1237,7 @@ static void init_simu_dm(sim_t* simu){
 			}
 		}
 		if(parms->sim.lpttm>EPS){
-			save->ttmreal=dnew_mmap(2, nstep, NULL, "ttmreal_%d.bin", seed);
+			save->ttmreal=dnew_file(2, nstep, NULL, "ttmreal_%d.bin", seed);
 		}
 		save->dmint=zfarr_init(nstep, 1, "dmint_%d.bin", seed);
 		save->dmreal=zfarr_init(nstep, 1, "dmreal_%d.bin", seed);
@@ -1405,7 +1408,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 		}
 		{
 			const char* header="CG residual for Tomography; DM Fit";
-			simu->cgres=dcellnewsame_mmap(2, 1, parms->sim.end, 1, header, "%s/ResCG_%d.bin", fnextra, seed);
+			simu->cgres=dcellnewsame_file(2, 1, parms->sim.end, 1, header, "%s/ResCG_%d.bin", fnextra, seed);
 		}
 		if(parms->recon.psd&&parms->save.extra){
 			if(parms->recon.psddtrat_hi){
@@ -1693,6 +1696,13 @@ void print_progress(sim_t* simu){
 	}
 
 	real this_time=myclockd();
+	if(simu->res && simu->res->fn){//save res every 10 seconds.
+		static real last_save_time=0;
+		if(this_time>last_save_time+10){
+			writebin(simu->res, simu->res->fn);
+			last_save_time=this_time;
+		}
+	}
 	if(this_time>simu->last_report_time+1||isim+1==parms->sim.end){
 	/*we don't print out or report too frequently. */
 		simu->last_report_time=this_time;

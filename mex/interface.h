@@ -58,8 +58,8 @@ mxArray *csp2mx(const csp*A){
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
     for(long i=0; i<A->nzmax; i++){
-	pr[i]=creal(A->xp[i]);
-	pi[i]=cimag(A->xp[i]);
+	pr[i]=creal(A->px[i]);
+	pi[i]=cimag(A->px[i]);
     }
 #endif
     return out;

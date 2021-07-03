@@ -184,6 +184,9 @@ void cellfree_do(void* A){
 	switch(id){
 	case MCC_ANY:{
 		cell* dc=(cell*)A;
+		if(dc->fn){
+			writebin(dc, "%s", dc->fn);
+		}
 		if(dc->p){
 			for(int ix=0; ix<dc->nx*dc->ny; ix++){
 				cellfree_do(P(dc,ix));

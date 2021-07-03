@@ -16,20 +16,17 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_LIB_ZFARR_H
-#define AOS_LIB_ZFARR_H
+#ifndef AOS_LIB_ZFMAT_H
+#define AOS_LIB_ZFMAT_H
 #include "type.h"
 /**
-   \file zfarr.h
-   zfarr is an object used to write arrays of dcell or ccell into file.
-   Mainly used to output PSF into files.
+   \file zfmat.h
+   zfmatr is an object used to write dmat into file incrementally.
 */
-/*
-   used to save array of dmat, cmat, ccell or dcell. mainly used to save
-psfout. No user modifiable entries.  */
-typedef struct zfarr zfarr;
-zfarr* zfarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
-void zfarr_push(zfarr *ca, int i, const void *A);
-void zfarr_close(zfarr *ca);
-void zfarr_close_n(zfarr **ca, int nc);
+
+typedef struct zfmat zfmat;
+zfmat* zfmat_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
+void zfmat_push(zfmat *ca, long count, real *p);
+void zfmat_close(zfmat *ca);
+void zfmat_close_n(zfmat **ca, int nc);
 #endif

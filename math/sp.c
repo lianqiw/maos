@@ -64,6 +64,9 @@ static void X(spfree_content)(X(sp)* sp){
  * free a sparse matrix*/
 void X(spfree_do)(X(sp)* sp){
 	if(sp){
+		if(sp->fn){
+			writebin(sp, sp->fn);
+		}
 		assert(issp(sp));
 		X(spfree_content)(sp);
 		free(sp);

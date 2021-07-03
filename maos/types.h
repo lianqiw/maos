@@ -437,6 +437,9 @@ typedef struct sim_save_t{
     zfarr* psdol;
     zfarr* psdcl_lo;
     zfarr* psdol_lo;
+    //
+    zfmat* cle;
+    zfmat* clem;
 }sim_save_t;
 /*
   data wrap for wfsints.

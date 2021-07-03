@@ -1167,6 +1167,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 
 	}
 	//Notice that changed made in MAP_PRIVATE mode are not saved to file. So cannot be used
+	//mmap should not be used for writing as it causes a lot of disk activity during small updates.
 	void* p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ, (fd==-1?MAP_ANONYMOUS:0)|MAP_SHARED, fd, 0);
 	if(fd!=-1) close(fd);//it is ok to close fd after mmap.
 	mem_t* mem=0;
