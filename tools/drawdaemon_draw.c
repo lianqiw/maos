@@ -749,9 +749,10 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 						ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
 					}
 					if(!isfinite(ptsy[ips])){
-						continue;
+						iy=0;
+					}else{
+						iy=(((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy);
 					}
-					iy=(((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy);
 					if(drawdata->cumuquad){
 						y_cumu=ptsy[ips]*ptsy[ips];
 					} else{
@@ -765,22 +766,21 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 						} else{
 							ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
 						}
-						if(!isfinite(ptsy[ips])){
-							break;
-						}
+						y=ptsy[ips];
+
 						if(drawdata->cumu){
-							if(ptsy[ips]!=0){
+							if(isfinite(y)){
 								if(drawdata->cumuquad){
-									y_cumu+=ptsy[ips]*ptsy[ips];
+									y_cumu+=y*y;
 									y=sqrt(y_cumu/(ips-ips0+1));
 								} else{
-									y_cumu+=ptsy[ips];
+									y_cumu+=y;
 									y=y_cumu/(ips-ips0+1);
 								}
 							}
-						} else{
-							y=ptsy[ips];
-						}
+						} 
+						if(!isfinite(y)) y=0;
+					
 						iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
 
 						cairo_line_to(cr, round(ix), round(iy));
@@ -794,7 +794,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				if(!(connectpts&&style==5)){/*plot points. */
 					y_cumu=0;
 					for(int ips=ips0; ips<ptsnx; ips+=ptstep){
-						if(!isfinite(ptsy[ips])) break;
+						if(!isfinite(ptsy[ips])) continue;
 						/*Map the coordinate to the image */
 						if(ptsx){/*don't do round here. */
 							ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);

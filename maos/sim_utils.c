@@ -1699,7 +1699,7 @@ void print_progress(sim_t* simu){
 	if(simu->res && simu->res->fn){//save res every 10 seconds.
 		static real last_save_time=0;
 		if(this_time>last_save_time+10){
-			writebin(simu->res, simu->res->fn);
+			writebin(simu->res, "%s", simu->res->fn);
 			last_save_time=this_time;
 		}
 	}

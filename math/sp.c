@@ -65,7 +65,7 @@ static void X(spfree_content)(X(sp)* sp){
 void X(spfree_do)(X(sp)* sp){
 	if(sp){
 		if(sp->fn){
-			writebin(sp, sp->fn);
+			writebin(sp, "%s", sp->fn);
 		}
 		assert(issp(sp));
 		X(spfree_content)(sp);
