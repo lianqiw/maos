@@ -703,6 +703,11 @@ void calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 		pttr_out[0]=tot-pis;/*PR */
 		pttr_out[1]=ptt-pis;/*TT */
 		pttr_out[2]=tot-ptt;/*PTTR */
+		if(tot+1e-18<pis||tot+1e-18<ptt){//sanity check. allow round off error
+			warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
+			warning("coeff=%g,%g,%g,%g,%g,%g\n",
+			coeff[0], coeff[1], coeff[2], coeff[3], coeff[4], coeff[5]);
+		}
 	}
 	/*don't use +=. need locking */
 	ngsmod_out[0]=coeff[1];

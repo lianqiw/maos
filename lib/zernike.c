@@ -309,7 +309,7 @@ dmat* cov_diagnolize(const dmat* mod, /**<Input mode*/
 			}
 		}
 		if(count>0){
-			warning("Drop %ld last columns.\n", count);
+			dbg("Drop %ld last columns.\n", count);
 			dmat* kl2=dsub(kl, 0, 0, 0, kl->ny-count);
 			dfree(kl);
 			kl=kl2;

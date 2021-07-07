@@ -314,7 +314,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		CUDA_SYNC_STREAM;
 		cp2gpu(cumapin, mapinsq);
 		//cuzero(phiout, stream);
-		curcp(phiout, phiout0, stream);
+		cucp(phiout, phiout0, stream);
 		dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, pywfs->hc, displacex, displacey, 0, 0, 1, stream);
 		//cuwrite(cumapin[0].p, "gpu_cumapin_%d", imod);
 		//cuwrite(phiout, "gpu_phiout_%d", imod);

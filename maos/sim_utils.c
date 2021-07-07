@@ -394,7 +394,7 @@ void sim_update_etf(sim_t* simu){
 			toc2("ETF");
 #if USE_CUDA
 			if(parms->gpu.wfs){
-				gpu_wfsgrad_update_etf(parms, powfs);
+				gpu_wfsgrad_update_etf(parms, powfs, ipowfs);
 			}
 #endif
 		}
@@ -1699,7 +1699,9 @@ void print_progress(sim_t* simu){
 	if(simu->res && simu->res->fn){//save res every 10 seconds.
 		static real last_save_time=0;
 		if(this_time>last_save_time+10){
-			writebin(simu->res, "%s", simu->res->fn);
+			writebin_auto(simu->res);//, "%s", simu->res->fn);
+			writebin_auto(simu->fsmerrs);//, "%s", simu->fsmerrs->fn);
+			writebin_auto(simu->fsmcmds);//, "%s", simu->fsmcmds->fn);
 			last_save_time=this_time;
 		}
 	}

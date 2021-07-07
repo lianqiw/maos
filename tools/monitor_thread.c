@@ -488,7 +488,7 @@ int scheduler_cmd(int ihost, int pid, int command){
 		cmd[1]=pid;/*pid */
 		int ans=stwriteintarr(sock, cmd, 2);
 		if(ans){/*communicated failed.*/
-			host_removed(ihost);
+			host_removed(sock);
 		}
 		return ans;
 	}

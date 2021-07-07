@@ -317,7 +317,7 @@ void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 			if(wfsgpu) gpu_set(wfsgpu[iwfs]);
 			stream_t stream;
 			if(wfsgpu&&wfsgpu[iwfs]!=cuglobal->recongpu){
-				curcp(temp, dm_wfs[iwfs], stream);
+				cucp(temp, dm_wfs[iwfs], stream);
 			} else{
 				temp=dm_wfs[iwfs];
 			}
@@ -336,7 +336,7 @@ void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 			stream_t stream;
 			curmat temp;
 			if(cuglobal->evlgpu&&cuglobal->evlgpu[ievl]!=cuglobal->recongpu){
-				curcp(temp, dm_evl[ievl], stream);
+				cucp(temp, dm_evl[ievl], stream);
 			} else{
 				temp=dm_evl[ievl];
 			}

@@ -894,7 +894,7 @@ static void wfsgrad_drift(sim_t* simu, int ipowfs){
 		}
 		dadd(&P(simu->gradoff, iwfs), 1, goff, -parms->powfs[ipowfs].dither_gdrift);
 		
-		if(1){
+		if(parms->powfs[ipowfs].dither_gdrift>0){
 			//outer loop to prevent gx/gy direction from drifting.
 			//It computes CoG of shifted images (i0+gx/gy) and make sure the angle stays the same.
 			//may not be necessary.
@@ -955,10 +955,11 @@ static void wfsgrad_dither_post(sim_t* simu){
 
 				if(!intstat->i0||intstat->i0->ny!=nwfs){
 					dcellfree(intstat->i0);
+					intstat->i0=dcellnew(nsa, nwfs);
+				}
+				if(!intstat->gx||intstat->gx->ny!=nwfs){
 					dcellfree(intstat->gx);
 					dcellfree(intstat->gy);
-
-					intstat->i0=dcellnew(nsa, nwfs);
 					intstat->gx=dcellnew(nsa, nwfs);
 					intstat->gy=dcellnew(nsa, nwfs);
 				}
@@ -968,7 +969,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 				}
 				gradoff_acc(simu, ipowfs);
 				
-				info("Applying LPF with gain %.2f to i0/gx/gy update\n", g2);
+				info("Applying LPF with gain %.2f to i0/gx/gy update at update cycle %d\n", g2, simu->wfsflags[ipowfs].ogout);
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
@@ -1038,7 +1039,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 #if USE_CUDA
 				if(parms->gpu.wfs){
 					dbg("Update matched filter in GPU\n");
-					gpu_wfsgrad_update_mtche(parms, powfs);
+					gpu_wfsgrad_update_mtche(parms, powfs, ipowfs);
 				}
 #endif
 				if(!parms->powfs[ipowfs].lo&&parms->recon.alg==0){//no need to update LSR.

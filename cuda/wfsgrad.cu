@@ -409,7 +409,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 			cuzero(cuwfs[iwfs].gradacc, stream);
 		}
 		if(cuwfs[iwfs].opdadd){ /*copy to phiout. */
-			curcp(phiout, cuwfs[iwfs].opdadd, stream);
+			cucp(phiout, cuwfs[iwfs].opdadd, stream);
 		} else{
 			cuzero(phiout, stream);
 		}

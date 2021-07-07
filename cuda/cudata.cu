@@ -93,14 +93,15 @@ static long gpu_get_free_mem_ratio(int igpu, long minimum){
 	size_t fr=0, tot=0;
 	int ans;
 	if((ans=cudaMemGetInfo(&fr, &tot))){
-		warning("cudaMemGetInfo for %d failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
-	}
-	info("GPU%2d has %.1fGB free, %.1fGB total device memory.\n",
-		igpu, fr*9.3e-10, tot*9.3e-10);
-	if((long)fr>minimum){
-		return (long)(fr*100./tot);
-	} else{
+		info("GPU%2d cudaMemGetInfo failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
 		return 0;
+	}else{
+		info("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", igpu, fr*9.3e-10, tot*9.3e-10);
+		if((long)fr>minimum){
+			return (long)(fr*100./tot);
+		} else{
+			return 0;
+		}
 	}
 }
 static int cmp_long2_descend(const long* a, const long* b){
@@ -361,7 +362,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 				}
 				*(tasks[it].dest)=min_gpu;
 				timtot[min_gpu]+=tasks[it].timing;
-				//info("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
+				dbg("%s --> GPU %d\n", tasks[it].name, GPUS[*tasks[it].dest]);
 			}
 			free(tasks);
 			//if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){

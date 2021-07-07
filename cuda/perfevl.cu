@@ -45,16 +45,19 @@ extern "C"{
 	save aper_locs, aper_amp to GPU.
 */
 const int TT_NBX=128;//Number of thread in a block. (for reduction).
-__global__ static void calc_ptt_do(Real* cc,
-	const Real(*restrict loc)[2],
-	const int nloc,
-	const Real* restrict phi,
-	const Real* restrict amp){
+__global__ static void calc_ptt_do(
+	Real* cc,						/**<[out] coefficient*/
+	const Real(*restrict loc)[2],	/**<[in] location of points*/
+	const int nloc,					/**<[in] number of points*/
+	const Real* restrict phi,		/**<[in] phase at every point*/
+	const Real* restrict amp		/**<[in] amplitude at every point*/
+	){
 	__shared__ Real ccb[4][TT_NBX];
 	for(int i=0; i<4; i++){
 		ccb[i][threadIdx.x]=0.f;
 	}
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<nloc; i+=blockDim.x*gridDim.x){
+	int istep=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<nloc; i+=istep){
 		const Real tmp=phi[i]*amp[i];
 		ccb[0][threadIdx.x]+=tmp*phi[i];
 		ccb[1][threadIdx.x]+=tmp;
@@ -302,7 +305,7 @@ void gpu_perfevl_queue(thread_t* info){
 		curmat& iopdevl=cuglobal->perf.opd[ievl];
 		// iopdevl must be in device memory. 6 times slower if in host memory.
 		if(cuglobal->perf.surf&&cuglobal->perf.surf[ievl]){
-			curcp(iopdevl, cuglobal->perf.surf[ievl], stream);
+			cucp(iopdevl, cuglobal->perf.surf[ievl], stream);
 		} else{
 			curset(iopdevl, 0, stream);
 		}
@@ -338,7 +341,7 @@ void gpu_perfevl_queue(thread_t* info){
 			curmat opdcopy;
 			curmv(cuglobal->perf.coeff[ievl](), 0, cudata->perf.imcc,
 				cuglobal->perf.cc_ol[ievl](), 'n', 1, stream);
-			curcp(opdcopy, iopdevl, stream);
+			cucp(opdcopy, iopdevl, stream);
 			if(parms->evl.pttr->p[ievl]){//remove piston/tip/tilt
 				curaddptt(opdcopy, cudata->perf.locs(), cuglobal->perf.coeff[ievl](), -1, -1, -1, stream);
 				warning_once("Removing piston/tip/tilt from OPD.\n");

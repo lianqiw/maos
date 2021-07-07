@@ -27,38 +27,13 @@ void curset(curmat& A, Real alpha, cudaStream_t stream){
 	}
 }
 
-void curcp(curmat& out, const curmat& in, cudaStream_t stream){
-	if(!in){
-		cuzero(out, stream);
-	} else{
-		if(!out){
-			out=curmat(in.Nx(), in.Ny());
-		} else{
-			assert(out.N()==in.N());
-		}
-		cudaMemcpyAsync(out(), in(), in.N()*sizeof(Real), MEMCPY_D2D, stream);
-	}
-}
-void curcp(curmat& out, const curmat& in){
-	if(!in){
-		cuzero(out);
-	} else{
-		if(!out){
-			out=curmat(in.Nx(), in.Ny());
-		} else{
-			assert(out.N()==in.N());
-		}
-		cudaMemcpy(out(), in(), in.N()*sizeof(Real), MEMCPY_D2D);
-	}
-}
-
 /**
    out=out*beta+in*alpha;
 */
 void curadd(curmat& out, Real alpha, const curmat& in, Real beta, cudaStream_t stream){
 	if(!in) return;
 	if(!out||alpha==0){
-		curcp(out, in, stream);
+		cucp(out, in, stream);
 		if(Z(fabs)(beta-(Real)1)>EPS){
 			scale_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
 				(out(), in.Nx()*in.Ny(), beta);

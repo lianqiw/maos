@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -31,47 +31,90 @@ static void etf2gpu(cucmat& cuetf, etf_t* etf, int icol){
 /**
    Initialize or update etf.
 */
-void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs){
+void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipowfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
 	TIC;tic;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
+	if(parms->powfs[ipowfs].usephy&&parms->powfs[ipowfs].llt){
 		Array<cuwfs_t>& cuwfs=cuglobal->wfs;
-		const int ipowfs=parms->wfs[iwfs].powfs;
 		const int nwvl=parms->powfs[ipowfs].nwvl;
-		const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 		const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-		if(parms->powfs[ipowfs].usephy&&parms->powfs[ipowfs].llt){
-			if(parms->powfs[ipowfs].llt->n>1||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					int icol=parms->powfs[ipowfs].llt->n>1?wfsind:0;
-					if(powfs[ipowfs].etfsim){
-						etf2gpu(cuwfs[iwfs].dtf[iwvl].etf, &powfs[ipowfs].etfsim[iwvl], icol);
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
+			for(int iwvl=0; iwvl<nwvl; iwvl++){
+				int skip_1=0;
+				if(powfs[ipowfs].etfsim2){
+					if(fabs(cuwfs[iwfs].dtf[iwvl].etf[1].hs-powfs[ipowfs].etfsim[iwvl].hs)<1
+					&&cuwfs[iwfs].dtf[iwvl].etf[1].icol==powfs[ipowfs].etfsim[iwvl].icol){
+						dbg("Reuse etf2 as etf for next step for wfs %d\n", iwfs);
+						skip_1=1;
+						cucmat tmp=cuwfs[iwfs].dtf[iwvl].etf[0].etf;
+						cuwfs[iwfs].dtf[iwvl].etf[0].etf=cuwfs[iwfs].dtf[iwvl].etf[1].etf;
+						cuwfs[iwfs].dtf[iwvl].etf[1].etf=tmp;
+					}
+				}
+				if(jwfs==0||parms->powfs[ipowfs].llt->n>1){
+					dbg("Copy from wfs %d from CPU to GPU\n", iwfs);
+					int kwfs=parms->powfs[ipowfs].llt->n>1?jwfs:0;
+					if(powfs[ipowfs].etfsim && !skip_1){
+						etf2gpu(cuwfs[iwfs].dtf[iwvl].etf[0].etf, &powfs[ipowfs].etfsim[iwvl], kwfs);
 					}
 					if(powfs[ipowfs].etfsim2){
-						etf2gpu(cuwfs[iwfs].dtf[iwvl].etf2, &powfs[ipowfs].etfsim2[iwvl], icol);
+						etf2gpu(cuwfs[iwfs].dtf[iwvl].etf[1].etf, &powfs[ipowfs].etfsim2[iwvl], kwfs);
 					}
+				} else {//copy across GPU
+					int iwfs2;
+					for(iwfs2=iwfs0; iwfs2<iwfs; iwfs2++){
+						if(wfsgpu[iwfs2]==wfsgpu[iwfs]){
+							break;
+						}
+					}
+					if(iwfs2==iwfs){
+						dbg("Copy from wfs %d to %d within GPU\n", iwfs0, iwfs);
+						if(powfs[ipowfs].etfsim&&!skip_1){
+							cuwfs[iwfs].dtf[iwvl].etf[0].etf.Copy(cuwfs[iwfs0].dtf[iwvl].etf[0].etf);
+						}
+						if(powfs[ipowfs].etfsim2){
+							cuwfs[iwfs].dtf[iwvl].etf[1].etf.Copy(cuwfs[iwfs0].dtf[iwvl].etf[1].etf);
+						}
+					}else{//reference
+						dbg("Reference from wfs %d to %d within GPU\n", iwfs2, iwfs);
+						if(powfs[ipowfs].etfsim&&!skip_1){
+							cuwfs[iwfs].dtf[iwvl].etf[0].etf=cuwfs[iwfs2].dtf[iwvl].etf[0].etf;
+						}
+						if(powfs[ipowfs].etfsim2){
+							cuwfs[iwfs].dtf[iwvl].etf[1].etf=cuwfs[iwfs2].dtf[iwvl].etf[1].etf;
+						}
+					}
+				}
+				if(powfs[ipowfs].etfsim){
+					cuwfs[iwfs].dtf[iwvl].etf[0].icol=powfs[ipowfs].etfsim[iwvl].icol;
+					cuwfs[iwfs].dtf[iwvl].etf[0].hs=powfs[ipowfs].etfsim[iwvl].hs;
+				}
+				if(powfs[ipowfs].etfsim2){
+					cuwfs[iwfs].dtf[iwvl].etf[1].icol=powfs[ipowfs].etfsim2[iwvl].icol;
+					cuwfs[iwfs].dtf[iwvl].etf[1].hs=powfs[ipowfs].etfsim2[iwvl].hs;
 				}
 			}
 		}
 	}
 	toc2("gpu_wfsgrad_update_etf");
 }
-void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs){
-	const int* wfsgpu=cuglobal->wfsgpu();
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
-		Array<cuwfs_t>& cuwfs=cuglobal->wfs;
-		const int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].usephy&&powfs[ipowfs].intstat){
-			const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-			const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-			const int nsa=powfs[ipowfs].saloc->nloc;
-			const int multi_mf=parms->powfs[ipowfs].phytype_sim==1&&powfs[ipowfs].intstat->mtche->ny>1;
 
-			if(multi_mf||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ipowfs){
+	const int* wfsgpu=cuglobal->wfsgpu();
+	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
+	if(parms->powfs[ipowfs].usephy&&powfs[ipowfs].intstat){
+		const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+		const int nsa=powfs[ipowfs].saloc->nloc;
+		const int multi_mf=parms->powfs[ipowfs].phytype_sim==1&&powfs[ipowfs].intstat->mtche->ny>1;
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
+
+			if(multi_mf||jwfs==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 				if(parms->powfs[ipowfs].phytype_sim==1){//matched filter
-					int icol=multi_mf?wfsind:0;
+					int icol=multi_mf?jwfs:0;
 					dmat* mtche=dcell_col(powfs[ipowfs].intstat->mtche, icol);
 					if(iwfs!=iwfs0&&cuwfs[iwfs].mtche()==cuwfs[iwfs0].mtche()){
 					//Delete old values.
@@ -82,8 +125,8 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs){
 					dfree(mtche);
 				}
 				if(powfs[ipowfs].intstat->i0sum){
-					cp2gpu(cuwfs[iwfs].i0sum, &PR(powfs[ipowfs].intstat->i0sum, 0, wfsind), nsa, 1);
-					cuwfs[iwfs].i0sumsum=PR(powfs[ipowfs].intstat->i0sumsum, wfsind, 0);
+					cp2gpu(cuwfs[iwfs].i0sum, &PR(powfs[ipowfs].intstat->i0sum, 0, jwfs), nsa, 1);
+					cuwfs[iwfs].i0sumsum=PR(powfs[ipowfs].intstat->i0sumsum, jwfs, 0);
 				}
 			} else{
 				cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
@@ -265,7 +308,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 			  to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
 			cuwfs[iwfs].msa=(nsa>1024)?((int)ceil((Real)nsa/(Real)(nsa/800))):nsa;
 			if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, nwvf2, NULL, 1, 0, NULL, 1, 0,
-				FFT_T_C2C, cuwfs[iwfs].msa)){
+							 FFT_T_C2C, cuwfs[iwfs].msa)){
 				error("CUFFT plan failed\n");
 			}
 			cufftSetStream(cuwfs[iwfs].plan1, cuwfs[iwfs].stream);
@@ -274,7 +317,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				cuwfs[iwfs].plan2=cuwfs[iwfs].plan1;
 			} else{
 				if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, notf2, NULL, 1, 0, NULL, 1, 0,
-					FFT_T_C2C, cuwfs[iwfs].msa)){
+								 FFT_T_C2C, cuwfs[iwfs].msa)){
 					error("CUFFT plan failed\n");
 				}
 				cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
@@ -283,7 +326,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				cuwfs[iwfs].plan3=cuwfs[iwfs].plan2;
 			} else{
 				if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, notf1, NULL, 1, 0, NULL, 1, 0,
-					FFT_T_C2C, cuwfs[iwfs].msa)){
+								 FFT_T_C2C, cuwfs[iwfs].msa)){
 					error("CUFFT plan failed\n");
 				}
 				cufftSetStream(cuwfs[iwfs].plan3, cuwfs[iwfs].stream);
@@ -292,7 +335,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				int nlwvf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 				int nlwvf2[2]={nlwvf, nlwvf};
 				if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlwvf2, NULL, 1, 0, NULL, 1, 0,
-					FFT_T_C2C, 1)){
+								 FFT_T_C2C, 1)){
 					error("CUFFT plan failed\n");
 				}
 				cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
@@ -300,7 +343,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 					cuwfs[iwfs].lltplan_otf=cuwfs[iwfs].lltplan_wvf;
 				} else{
 					if(cufftPlanMany(&cuwfs[iwfs].lltplan_otf, 2, notf2, NULL, 1, 0, NULL, 1, 0,
-						FFT_T_C2C, 1)){
+									 FFT_T_C2C, 1)){
 						error("CUFFT plan failed\n");
 					}
 					cufftSetStream(cuwfs[iwfs].lltplan_otf, cuwfs[iwfs].stream);
@@ -401,8 +444,10 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 		}/*if phy */
 		CUDA_SYNC_DEVICE;
 	}/*for iwfs */
-	gpu_wfsgrad_update_etf(parms, powfs);
-	gpu_wfsgrad_update_mtche(parms, powfs);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		gpu_wfsgrad_update_etf(parms, powfs, ipowfs);
+		gpu_wfsgrad_update_mtche(parms, powfs, ipowfs);
+	}
 	gpu_print_mem("wfs init");
 }
 void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){

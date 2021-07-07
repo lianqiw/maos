@@ -313,6 +313,7 @@ void writedata_by_id(file_t* fp, const void* A_, uint32_t id){
 
 void write_by_id(const void* A, uint32_t id, const char* format, ...){
 	format2fn;
+	if(!fn) return;
 	file_t* fp=zfopen(fn, "wb");
 	if(!fp) return;
 	writedata_by_id(fp, A, id);
@@ -392,9 +393,9 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 			if(read_header(&headerc, fp)){
 				break;
 			}
-			if(!headerc.str&&dcout->header){//copy str from cell to mat.
+			/*if(!headerc.str&&dcout->header){//copy str from cell to mat.
 				headerc.str=strdup(dcout->header);
-			}
+			}*/
 			P(dcout,i)=readdata_by_id(fp, id, level-1, &headerc);
 		}
 		out=dcout;
@@ -461,7 +462,16 @@ cell* readbin(const char* format, ...){
  */
 void writebin(const void* A, const char* format, ...){
 	format2fn;
+	if(!fn && A) fn=((cell*)A)->fn;
 	write_by_id(A, 0, "%s", fn);
+}
+/**
+ * Calls writebin with build in fn
+ * */
+void writebin_auto(const void *A){
+	const char *fn=A?((cell*)A)->fn:NULL;
+	if(fn) write_by_id(A, 0, "%s", fn);
+	else dbg("writebin_auto: A->fn is empty\n");
 }
 /**
    A generic routine for write data to file with separate header

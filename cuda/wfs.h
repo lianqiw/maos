@@ -21,10 +21,18 @@
 
 #define RAND_BLOCK 8
 #define RAND_THREAD 256
+struct cuetf_t{
+	cucmat etf;
+	int icol;
+	double hs;
+	cuetf_t(){
+		icol=0;
+		hs=0;
+	}
+};
 struct cudtf_t{
 	cucmat nominal;/*array for each sa. */
-	cucmat etf;
-	cucmat etf2;
+	cuetf_t etf[2];
 };
 struct cullt_t{
 	cupts_t pts;

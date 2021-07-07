@@ -33,8 +33,8 @@ extern "C"{
 
 	void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs);
 	void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs);
-	void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs);
-	void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs);
+	void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipowfs);
+	void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ipowfs);
 	void gpu_wfsgrad_seeding(const parms_t* parms, const powfs_t* powfs, rand_t* rstat);
 	void gpu_wfsgrad_queue(thread_t* info);
 	void gpu_wfsgrad_sync(sim_t* simu, int iwfs);

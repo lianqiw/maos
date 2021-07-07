@@ -183,42 +183,6 @@ __global__ static void sa_ccwm2_do(Comp* otfs, const int notfx, const int notfy,
 	}
 }
 /**
-   Multiple an otf with another 1-d otf along each column
-*/
-/*__global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notfy,
-					 const Comp *etfs, int repeat){
-	const int isa=blockIdx.x;
-	Comp *restrict otf=otfs+notfy*notfx*isa;
-	const Comp *restrict etf=repeat?etfs:(etfs+isa*notfx);
-	for(int iy=threadIdx.y; iy<notfy; iy+=blockDim.y){
-	Comp *restrict otf2=otf+iy*notfx;
-	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
-		otf2[ix]*=etf[ix];
-	}
-	}
-	}*/
-
-/**
-   Multiple an otf with another 1-d otf along each column
-*/
-/*
-__global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notfy,
-					 const Comp *etfs1, Real wt1, const Comp *etfs2, Real wt2, int repeat){
-	const int isa=blockIdx.x;
-	Comp *restrict otf=otfs+notfy*notfx*isa;
-	const Comp *restrict etf1=repeat?etfs1:(etfs1+isa*notfx);
-	const Comp *restrict etf2=repeat?etfs2:(etfs2+isa*notfx);
-	Comp temp;
-	for(int iy=threadIdx.y; iy<notfy; iy+=blockDim.y){
-	Comp *restrict otf2=otf+iy*notfx;
-	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
-		temp.x=Z(cuCreal)(etf1[ix])*wt1+Z(cuCreal)(etf2[ix])*wt2;
-		temp.y=Z(cuCimag)(etf1[ix])*wt1+Z(cuCimag)(etf2[ix])*wt2;
-		otf2[ix]*=temp;
-	}
-	}
-	}*/
-/**
    Take the real part and accumulate to output
 */
 __global__ static void sa_acc_real_do(Real* out, const Comp* restrict in, int ninx, int niny, Real alpha){
@@ -352,7 +316,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		int nlx=powfs[ipowfs].llt->pts->nx;
 		lltopd=cuwfs[iwfs].lltopd;
 		if(cuwfs[iwfs].lltncpa){
-			curcp(lltopd, cuwfs[iwfs].lltncpa, stream);
+			cucp(lltopd, cuwfs[iwfs].lltncpa, stream);
 		} else{
 			cuzero(lltopd, stream);
 		}
@@ -532,16 +496,16 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 					ctoc("fft to otf");
 				}
 				/*now we have otf. multiply with etf, dtf. */
-				if(cuwfs[iwfs].dtf[iwvl].etf2){
+				if(cuwfs[iwfs].dtf[iwvl].etf[1].etf){
 					const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 					Real wt2=(Real)(isim%dtrat)/(real)dtrat;
 					Real wt1=1.-wt2;
 					sa_ccwm2_do<<<ksa, dim3(16, 16), 0, stream>>>
-						(otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
+						(otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf[1].etf.Col(isa), wt2, 0);
 					ctoc("ccwm2");
-				} else if(cuwfs[iwfs].dtf[iwvl].etf){
+				} else if(cuwfs[iwfs].dtf[iwvl].etf[0].etf){
 					sa_ccwm_do<<<ksa, 256, 0, stream>>>
-						(otf, notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
+						(otf, notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), 0);
 					ctoc("ccwm");//0.97 ms
 				}
 				/*multiply with nominal */

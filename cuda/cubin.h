@@ -105,13 +105,13 @@ static inline void cucellcp(Cell<T, Gpu>& out, const Cell<T, Gpu>& in, cudaStrea
 	}
 	if(!in.M()){
 		for(int i=0; i<in.Nx()*in.Ny(); i++){
-			curcp(out[i], in[i], stream);
+			cucp(out[i], in[i], stream);
 		}
 	} else{
 		if(!out.M()){
 			error("in is continuous, out is not\n");
 		}
-		curcp(out.M(), in.M(), stream);
+		cucp(out.M(), in.M(), stream);
 	}
 }
 

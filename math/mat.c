@@ -988,6 +988,9 @@ X(cell)* X(cellsub)(const X(cell)* in, long sx, long nx, long sy, long ny){
 */
 X(mat)* X(cell_col)(X(cell)* input, long icol){
 	if(!input) return NULL;
+	if(icol>NY(input)){
+		error("Column %ld exceeds number of columns %ld\n", icol, NY(input));
+	}
 	long npix=PN(P(input, 0, 0));
 	long nsa=input->nx;
 	if(input->m){

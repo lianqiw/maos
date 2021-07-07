@@ -262,7 +262,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 					const real ct=cos(theta);
 					const real st=sin(theta);
 					cmat* etf2d=P(petf, isa, illt);
-#pragma omp parallel for default(shared)
+//#pragma omp parallel for default(shared)  //mketf is called from a separate thread and does not reuse the group
 					for(int icompy=0; icompy<notfy; icompy++){
 						const real ky=duy*(icompy>=notfy2?(icompy-notfy):icompy);
 						for(int icompx=0; icompx<notfx; icompx++){
@@ -358,7 +358,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 						real ct=cos(theta);
 						real st=sin(theta);
 						cmat* etf2d=P(petf, isa, illt);
-#pragma omp parallel for default(shared)
+//#pragma omp parallel for default(shared) //mketf is called from a separate thread and does not reuse the group
 						for(int icompy=0; icompy<notfy; icompy++){
 							real iy=(icompy-notfy2);
 							for(int icompx=0; icompx<notfx; icompx++){
