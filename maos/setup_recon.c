@@ -1314,9 +1314,13 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 
 
 /**
-   Setup either the minimum variance reconstructor by calling setup_recon_mvr()
-   or least square reconstructor by calling setup_recon_lsr() */
-void setup_recon(recon_t* recon, const parms_t* parms, powfs_t* powfs){
+   Setup either the control matrix using either minimum variance reconstructor by calling setup_recon_mvr()
+   or least square reconstructor by calling setup_recon_lsr() 
+   It can be called repeatedly to update the reconstructor when NEA updates.
+
+   The results are measurement noise dependent and may be updated during simulation.
+   */
+void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	TIC;tic;
 	/*assemble noise equiva angle inverse from powfs information */
 	setup_recon_saneai(recon, parms, powfs);
@@ -1343,58 +1347,8 @@ void setup_recon(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			}
 		}
 	}
-	if(parms->recon.split){
-	/*split tomography */
-		setup_ngsmod_recon(parms, recon);
-		if(!parms->sim.idealfit&&parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
-			setup_recon_mvst(recon, parms);
-		}
-	}
-	setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
-
 	toc2("setup_recon");
 }
-
-/**
-   Update reconstructor
-*/
-void setup_recon_update(recon_t* recon, const parms_t* parms, powfs_t* powfs){
-	TIC;tic;
-	/*assemble noise equiva angle inverse from powfs information */
-	setup_recon_saneai(recon, parms, powfs);
-	/*setup LGS tip/tilt/diff focus removal */
-	setup_recon_TTFR(recon, parms);
-	/*mvst uses information here*/
-	setup_recon_focus(recon, parms);
-	if(parms->itpowfs!=-1){ /*setup Truth wfs*/
-		setup_recon_twfs(recon, parms);
-	}
-	if(!parms->sim.idealfit){
-		if(parms->recon.mvm&&parms->load.mvm){
-			recon->MVM=dread("%s", parms->load.mvm);
-		} else{
-			switch(parms->recon.alg){
-			case 0:
-				setup_recon_tomo(recon, parms, powfs);
-				break;
-			case 1:
-				setup_recon_lsr(recon, parms);
-				break;
-			default:
-				error("recon.alg=%d is not recognized\n", parms->recon.alg);
-			}
-		}
-	}
-	if(parms->recon.split){
-	//split tomography 
-		setup_ngsmod_recon(parms, recon);
-		if(!parms->sim.idealfit&&parms->recon.split==2&&parms->recon.alg==0){//Need to be after fit
-			setup_recon_mvst(recon, parms);
-		}
-	}
-	toc2("setup_recon");
-}
-
 
 /**
    PSD computation for gain update

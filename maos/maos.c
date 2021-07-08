@@ -17,6 +17,7 @@
 */
 #include "maos.h"
 #include "moao.h"
+#include "ahst.h"
 
 global_t* global=NULL;//record for convenient access. It enables calling maos from matlab
 int use_cuda=0;
@@ -97,7 +98,15 @@ void maos_setup(const parms_t* parms){
 #endif
 		setup_recon_prep2(recon, parms, aper, powfs);
 		//Don't put this inside parallel, otherwise svd will run single threaded.
-		setup_recon(recon, parms, powfs);
+		setup_recon_control(recon, parms, powfs);
+		if(parms->recon.split){
+			/*split tomography */
+			setup_ngsmod_recon(parms, recon);
+			if(!parms->sim.idealfit&&parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
+				setup_recon_mvst(recon, parms);
+			}
+		}
+		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
 		if(parms->recon.alg==0||parms->sim.dmproj||parms->sim.ncpa_calib){
 			setup_recon_fit(recon, parms);
 		}

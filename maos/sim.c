@@ -209,9 +209,9 @@ void maos_isim(int isim){
 	}
 	if(simu->tomo_update){//This part causes random CUDA error in Geforce.
 		if(simu->tomo_update==1){//Only update cn2
-		setup_recon_tomo_update(simu->recon, simu->parms);
-		} else{//Also update noise.
-		setup_recon_update(simu->recon, simu->parms, simu->powfs);
+			setup_recon_tomo_update(simu->recon, simu->parms);
+		} else{//Also update noise in reconstructor.
+			setup_recon_control(simu->recon, simu->parms, simu->powfs);
 #if USE_CUDA
 		if(!parms->sim.evlol&&(parms->gpu.tomo||parms->gpu.fit)){
 			gpu_update_recon(parms, simu->recon);

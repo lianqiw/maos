@@ -1354,7 +1354,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	simu->status->nthread=NTHREAD;
 	simu->status->timstart=myclocki();
 	simu->status->info=S_RUNNING;
-	if(parms->save.extra){
+	if(parms->save.extra||parms->save.dither){
 		mymkdir("extra");
 	}
 	const char* fnextra=parms->save.extra?"extra":"-";

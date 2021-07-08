@@ -924,7 +924,7 @@ static void wfsgrad_drift(sim_t* simu, int ipowfs){
 	}
 	dfree(goff);
 	if(parms->save.dither){
-		writebin(simu->gradoff, "gradoff_%d_drift", isim);
+		writebin(simu->gradoff, "extra/gradoff_%d_drift", isim);
 	}
 
 }
@@ -990,7 +990,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						shwfs_grad(&goff, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 						dadd(&P(simu->gradoff, iwfs), 1, goff, -1);
 						if(parms->save.dither){
-							writebin(P(simu->gradoff, iwfs), "wfs%d_gradoff_%d_mf", iwfs, isim);
+							writebin(P(simu->gradoff, iwfs), "extra/gradoff_wfs%d_%d_mf", iwfs, isim);
 						}
 						dfree(goff);
 						if(parms->powfs[ipowfs].dither_glpf!=1){
@@ -1008,8 +1008,8 @@ static void wfsgrad_dither_post(sim_t* simu){
 					}
 				}
 				if(parms->save.dither){
-					writebin(simu->gradoffacc, "gradoffacc_%d", isim);
-					writebin(simu->gradoff, "gradoff_%d_mtch", isim);
+					writebin(simu->gradoffacc, "extra/gradoff_%d_acc", isim);
+					writebin(simu->gradoff, "extra/gradoff_%d_mtch", isim);
 				}
 				dcellzero(simu->gradoffacc);
 				simu->gradoffisim0=isim;
@@ -1029,12 +1029,12 @@ static void wfsgrad_dither_post(sim_t* simu){
 				parms->powfs[ipowfs].phytype_recon=1;//Make sure MF is used for reconstruction.
 				genmtch(parms, powfs, ipowfs);
 				if(parms->save.dither==1){
-					writebin(intstat->i0, "powfs%d_i0_%d", ipowfs, isim);
-					writebin(intstat->gx, "powfs%d_gx_%d", ipowfs, isim);
-					writebin(intstat->gy, "powfs%d_gy_%d", ipowfs, isim);
-					writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche_%d", ipowfs, isim);
-					writebin(powfs[ipowfs].intstat->i0sum, "powfs%d_i0sum_%d", ipowfs, isim);
-					writebin(powfs[ipowfs].sanea, "powfs%d_sanea_%d", ipowfs, isim);
+					writebin(intstat->i0, "extra/powfs%d_i0_%d", ipowfs, isim);
+					writebin(intstat->gx, "extra/powfs%d_gx_%d", ipowfs, isim);
+					writebin(intstat->gy, "extra/powfs%d_gy_%d", ipowfs, isim);
+					writebin(powfs[ipowfs].intstat->mtche, "extra/powfs%d_mtche_%d", ipowfs, isim);
+					writebin(powfs[ipowfs].intstat->i0sum, "extra/powfs%d_i0sum_%d", ipowfs, isim);
+					writebin(powfs[ipowfs].sanea, "extra/powfs%d_sanea_%d", ipowfs, isim);
 				}
 #if USE_CUDA
 				if(parms->gpu.wfs){
@@ -1113,7 +1113,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					pd->a2me*=(mgnew/mgold);//Adjust for updated gain
 					dcellscale(powfs[ipowfs].sanea, pow(mgnew/mgold, 2));
 					if(parms->save.dither){
-						writebin(P(simu->gradscale, iwfs), "wfs%d_gradscale_%d", iwfs, isim);
+						writebin(P(simu->gradscale, iwfs), "extra/gradscale_wfs%d_%d", iwfs, isim);
 					}
 				}
 			}
@@ -1148,7 +1148,7 @@ void wfsgrad_twfs_recon(sim_t* simu){
 			}
 		}
 		if(parms->save.dither){
-			writebin(simu->gradoff, "gradoff_%d_twfs", simu->wfsisim);
+			writebin(simu->gradoff, "extra/gradoff_%d_twfs", simu->wfsisim);
 		}
 		dcellfree(Rmod);
 
