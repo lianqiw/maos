@@ -31,6 +31,7 @@ var searchData=
   ['cspcell',['cspcell',['../type_8h.html#structcspcell',1,'']]],
   ['cudata_5ft',['cudata_t',['../classcudata__t.html',1,'']]],
   ['cudtf_5ft',['cudtf_t',['../structcudtf__t.html',1,'']]],
+  ['cuetf_5ft',['cuetf_t',['../structcuetf__t.html',1,'']]],
   ['cufdpcg_5ft',['cufdpcg_t',['../classcuda__recon_1_1cufdpcg__t.html',1,'cuda_recon']]],
   ['cufieldstop_5ft',['cufieldstop_t',['../classcuda__wfs_1_1cufieldstop__t.html',1,'cuda_wfs']]],
   ['cufit_5fgrid',['cufit_grid',['../classcuda__recon_1_1cufit__grid.html',1,'cuda_recon']]],

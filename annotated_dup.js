@@ -42,6 +42,7 @@ var annotated_dup =
     [ "cspcell", "type_8h.html#structcspcell", "type_8h_structcspcell" ],
     [ "cudata_t", "classcudata__t.html", "classcudata__t" ],
     [ "cudtf_t", "structcudtf__t.html", "structcudtf__t" ],
+    [ "cuetf_t", "structcuetf__t.html", "structcuetf__t" ],
     [ "cuglobal_t", "classcuglobal__t.html", "classcuglobal__t" ],
     [ "cugrid_t", "classcugrid__t.html", "classcugrid__t" ],
     [ "cullt_t", "structcullt__t.html", "structcullt__t" ],

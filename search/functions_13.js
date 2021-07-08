@@ -14,5 +14,6 @@ var searchData=
   ['writearr',['writearr',['../bin_8h.html#a9471eeb77e74e8c66ec913534df2d72d',1,'bin.c']]],
   ['writebin',['writebin',['../cell_8h.html#a357e82aa5571115bb78a92215d477a8a',1,'cell.c']]],
   ['writebin2',['writebin2',['../cell_8h.html#a938c640db5c9cdcc7e5243b64e0c96e9',1,'cell.c']]],
+  ['writebin_5fauto',['writebin_auto',['../cell_8h.html#ab0878dffae696ce3cb3cd9ec01cdd301',1,'cell.c']]],
   ['writesock',['writesock',['../cell_8h.html#a5de2e5a0f72fdccde9cf296ffd328d61',1,'cell.c']]]
 ];

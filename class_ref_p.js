@@ -4,6 +4,7 @@ var class_ref_p =
     [ "RefP", "class_ref_p.html#a460774d314b3de33a43f158ee5350aa4", null ],
     [ "RefP", "class_ref_p.html#a6ac6060f5219e62b3b0d1b4e958fe417", null ],
     [ "~RefP", "class_ref_p.html#a8641991465322f2629b83b31e1995df7", null ],
+    [ "NRef", "class_ref_p.html#aadcad54fb14e9a4e3b9b23580938f24c", null ],
     [ "deinit", "class_ref_p.html#a2a001770d64ba42293aa48b379eca155", null ],
     [ "operator=", "class_ref_p.html#a4ea7332099b18d9d74b95c11c1cdf5b4", null ],
     [ "init", "class_ref_p.html#a8bdb4181475d452f1157d0c0fd08f879", null ],

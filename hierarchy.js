@@ -52,6 +52,7 @@ var hierarchy =
     [ "cspcell", "type_8h.html#structcspcell", null ],
     [ "cudata_t", "classcudata__t.html", null ],
     [ "cudtf_t", "structcudtf__t.html", null ],
+    [ "cuetf_t", "structcuetf__t.html", null ],
     [ "cuda_wfs::cufieldstop_t", "classcuda__wfs_1_1cufieldstop__t.html", null ],
     [ "cuglobal_t", "classcuglobal__t.html", null ],
     [ "cugrid_t", "classcugrid__t.html", [
