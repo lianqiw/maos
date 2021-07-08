@@ -729,7 +729,7 @@ static int respond(int sock){
 			for(SOCKID_T *p_next, *p=head; p&&sock_save==-1; p=p_next){
 				p_next=p->next;
 				int badsock=0;
-				if((badsock=stwriteint(p->sock, DRAW_FINAL))||(p->id==-pid)){
+				if((badsock=stcheck(p->sock))||(p->id==-pid)){
 					if(badsock){
 						close(p->sock); //closed socket
 					} else{

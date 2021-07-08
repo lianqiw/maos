@@ -192,12 +192,22 @@ int streadfd(int sfd, int* fd){
 	return ans;
 }
 /*
-  Check whether a socket has been disconnected. Implementation is not correct.
+  Check whether the client has shutdown a connection (TCP)
+  Returns 1 if closed;
 */
-/*
-int stcheck(int sfd, int use_write){
-	int ans=0;
 
+int stcheck(int sfd){
+	int ans=0;
+	char buf[4];
+	ssize_t len=recv(sfd, buf, sizeof buf, MSG_DONTWAIT|MSG_PEEK);
+	if(len==0){
+		dbg_time("Client has orderly shutdown\n");
+		ans=1;
+	}else if(len==-1){
+		dbg_time("recv failed with errno %d: %s\n", errno, strerror(errno));
+	}
+	/*
+	//the following Implementation is not correct.
 	  //poll does not detect closed socket used for writing.
 	struct pollfd data={sfd, POLLIN|POLLPRI|POLLOUT, 0 };
 	if(poll(&data, 1, 1)){
@@ -206,6 +216,6 @@ int stcheck(int sfd, int use_write){
 		warning("socket %d is no longer valid\n", sfd);
 		ans=1;
 	}
-	}
-return ans
-}*/
+	}*/
+	return ans;
+}

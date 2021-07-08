@@ -439,6 +439,7 @@ int main(int argc, const char* argv[]){
 
 		info2("\n*** Preparation started at %s in %s. ***\n\n", myasctime(), HOST);
 		maos_setup(parms);
+		parms->save.setup=0; //setup is finished. do not save if calling again.
 		if(parms->sim.end>parms->sim.start){
 			info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(), HOST);
 			maos_sim();

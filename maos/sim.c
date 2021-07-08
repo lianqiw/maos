@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -53,9 +53,9 @@ sim_t* maos_iseed(int iseed){
 	powfs_t* powfs=global->powfs;
 	aper_t* aper=global->aper;
 	recon_t* recon=global->recon;
-	if(parms->fdlock&&P(parms->fdlock,iseed)<0){
+	if(parms->fdlock&&P(parms->fdlock, iseed)<0){
 		warning("Another MAOS is already running. Skip seed %ld\n",
-			P(parms->sim.seeds,iseed));
+			P(parms->sim.seeds, iseed));
 		return 0;
 	}
 	sim_t* simu=init_simu(parms, powfs, aper, recon, iseed);
@@ -81,7 +81,7 @@ sim_t* maos_iseed(int iseed){
 	}
 #if USE_CUDA
 	if(parms->gpu.evl||parms->gpu.wfs){
-	/*Put here for the initial transfer to avoid messing up timing due to transfering. */
+		/*Put here for the initial transfer to avoid messing up timing due to transfering. */
 		gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, parms->sim.start);/*takes 0.4s for NFIRAOS. */
 		if(parms->tomo.predict){
 			gpu_update_recon_cn2(parms, recon);
@@ -126,7 +126,7 @@ void maos_isim(int isim){
 		gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, isim);
 	}
 #endif
-	OMPTASK_SINGLE{
+OMPTASK_SINGLE{
 	if(parms->sim.dmproj){
 		/* temporarily disable FR.M so that Mfun is used.*/
 		cell* FRM=recon->fit->FR.M; recon->fit->FR.M=NULL;
@@ -134,14 +134,14 @@ void maos_isim(int isim){
 		recon->fit->FR.M=FRM;/*set FR.M back*/
 		save_dmproj(simu);
 		if(!parms->fit.square){
-		/* Embed DM commands to a square array for fast ray tracing */
-		for(int idm=0; idm<parms->ndm; idm++){
-			loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(simu->dmproj,idm)->p);
-		}
+			/* Embed DM commands to a square array for fast ray tracing */
+			for(int idm=0; idm<parms->ndm; idm++){
+				loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(simu->dmproj,idm)->p);
+			}
 		}
 #if USE_CUDA
 		if(parms->gpu.evl||parms->gpu.wfs){
-		gpu_dmproj2gpu(simu->dmprojsq);
+			gpu_dmproj2gpu(simu->dmprojsq);
 		}
 #endif
 	}
@@ -156,71 +156,75 @@ void maos_isim(int isim){
 		*/
 
 		if(parms->gpu.evl&&!NO_EVL){
-		//Queue tasks on GPU, no stream sync is done
-		QUEUE_THREAD(&group, simu->perfevl_pre, 0);
+			//Queue tasks on GPU, no stream sync is done
+			QUEUE_THREAD(&group, simu->perfevl_pre, 0);
 		}
 		if(parms->tomo.ahst_idealngs!=1&&parms->gpu.wfs&&!NO_WFS){
-		//task for each wfs
-		QUEUE_THREAD(&group, simu->wfsgrad_pre, 0);
+			//task for each wfs
+			QUEUE_THREAD(&group, simu->wfsgrad_pre, 0);
 		}
 		if(!NO_RECON){
-		//don't put this first. It has cpu overhead in computing gradol
-		QUEUE(&group, (thread_wrapfun)reconstruct, simu, 1, 0);
+			//don't put this first. It has cpu overhead in computing gradol
+			QUEUE(&group, (thread_wrapfun)reconstruct, simu, 1, 0);
 		}
 		if(!NO_EVL){
-		if(parms->gpu.evl){
-			//wait for GPU tasks to be queued before calling sync
-			WAIT(group);
-		}
-		QUEUE(&group, (thread_wrapfun)perfevl, simu, 1, 0);
+			if(parms->gpu.evl){
+				//wait for GPU tasks to be queued before calling sync
+				WAIT(group);
+			}
+			QUEUE(&group, (thread_wrapfun)perfevl, simu, 1, 0);
 		}
 		if(!NO_WFS){
-		if(parms->tomo.ahst_idealngs==1||(parms->gpu.wfs&&!parms->gpu.evl)){
-			/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
-			WAIT(group);
-		}
-		QUEUE(&group, (thread_wrapfun)wfsgrad, simu, 1, 0);
+			if(parms->tomo.ahst_idealngs==1||(parms->gpu.wfs&&!parms->gpu.evl)){
+				/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
+				WAIT(group);
+			}
+			QUEUE(&group, (thread_wrapfun)wfsgrad, simu, 1, 0);
 		}
 		if(!NO_RECON){
-		//wait for all tasks to finish before modifying dmreal
-		WAIT(group);
-		shift_grad(simu);/*before filter() */
-		filter_dm(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
+			//wait for all tasks to finish before modifying dmreal
+			WAIT(group);
+			shift_grad(simu);/*before filter() */
+			filter_dm(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
 		}
 		WAIT(group);
 	} else{/*do the big loop in serial mode. */
 		if(parms->sim.closeloop){
-		if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
-		if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
-		if(!NO_RECON){
-			reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
-			shift_grad(simu);
-			filter_dm(simu);
-		}
+			if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
+			if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
+			if(!NO_RECON){
+				reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
+				shift_grad(simu);
+				filter_dm(simu);
+			}
 		} else{/*in OL mode,  */
-		if(!NO_WFS) wfsgrad(simu);
-		if(!NO_RECON){
-			shift_grad(simu);
-			reconstruct(simu);
-			filter_dm(simu);
-		}
-		if(!NO_EVL) perfevl(simu);
+			if(!NO_WFS) wfsgrad(simu);
+			if(!NO_RECON){
+				shift_grad(simu);
+				reconstruct(simu);
+				filter_dm(simu);
+			}
+			if(!NO_EVL) perfevl(simu);
 		}
 	}
 	if(simu->tomo_update){//This part causes random CUDA error in Geforce.
-		if(simu->tomo_update==1){//Only update cn2
+		if(simu->tomo_update==1){//Only update cn2 regularization term
 			setup_recon_tomo_update(simu->recon, simu->parms);
 		} else{//Also update noise in reconstructor.
 			setup_recon_control(simu->recon, simu->parms, simu->powfs);
+		}
 #if USE_CUDA
 		if(!parms->sim.evlol&&(parms->gpu.tomo||parms->gpu.fit)){
-			gpu_update_recon(parms, simu->recon);
+			if(simu->tomo_update==1){//Only update cn2 regularization term
+				gpu_update_recon_cn2(parms, recon);
+			}else{
+				gpu_update_recon(parms, simu->recon);
+			}
 		}
 #endif
-		}
 		simu->tomo_update=0;
 	}
-	}
+}//OMPTASK_SINGLE
 	real ck_end=myclockd();
 	long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
 	long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
@@ -326,10 +330,10 @@ void maos_sim(){
 		free_simu(simu);
 		global->simu=NULL;
 	}/*seed */
-	
+
 	info3("Mean: ");
 	for(long imod=0; imod<parms->evl.nmod; imod++){
-		info3("%.2f ", sqrt(P(restot,imod)/rescount)*1e9);
+		info3("%.2f ", sqrt(P(restot, imod)/rescount)*1e9);
 	}
 	info3("\n");
 	dfree(restot);

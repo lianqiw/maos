@@ -99,6 +99,7 @@ void curecon_t::reset_config(){
 	}
 }
 void curecon_t::update(const parms_t* parms, recon_t* recon){
+	info("GPU %d: Updating recon", current_gpu());
 	reset_config();
 	int skip_tomofit=0;
 	if(parms->recon.mvm){

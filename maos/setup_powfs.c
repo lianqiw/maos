@@ -1525,7 +1525,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			} else if(parms->powfs[ipowfs].lo&&parms->powfs[ipowfs].order<=2){
 				error("Please specify piinfile for lo order phy wfs\n");
 			} else{
-			/*Gen short exposure OTFs due to atmosphere*/
+				/*Gen short exposure OTFs due to atmosphere*/
 				genseotf(parms, powfs, ipowfs);
 				if(parms->powfs[ipowfs].llt){
 					genselotf(parms, powfs, ipowfs);

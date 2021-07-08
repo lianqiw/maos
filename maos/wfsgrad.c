@@ -385,7 +385,7 @@ void wfsgrad_iwfs(thread_t* info){
 				real cs, ss;
 				dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
 					parms->powfs[ipowfs].dither_npoint, isim, pd->deltam);
-	//accumulate for matched filter
+				//accumulate for matched filter
 				dcelladd(&pd->imb, 1, ints, 1.);
 				dcelladd(&pd->imx, 1, ints, cs);
 				dcelladd(&pd->imy, 1, ints, ss);
@@ -983,6 +983,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dcellzero(pd->gx);
 					dcellzero(pd->gy);
 					if(!parms->dbg.gradoff_reset){
+						info("Step %d: Reducing gradoff by grad of i0.\n", isim);
 						dmat* goff=0;
 						/*Compute the gradient of i0 using old gradient
 						algorithm and subtract from the gradient offset to
@@ -1008,11 +1009,15 @@ static void wfsgrad_dither_post(sim_t* simu){
 					}
 				}
 				if(parms->save.dither){
-					writebin(simu->gradoffacc, "extra/gradoff_%d_acc", isim);
 					writebin(simu->gradoff, "extra/gradoff_%d_mtch", isim);
 				}
-				dcellzero(simu->gradoffacc);
-				simu->gradoffisim0=isim;
+				if(parms->dbg.gradoff_reset==2){
+					if(parms->save.dither){
+						writebin(simu->gradoffacc, "extra/gradoff_%d_acc", isim);
+					}
+					dcellzero(simu->gradoffacc);
+					simu->gradoffisim0=isim;
+				}
 			
 				if(parms->powfs[ipowfs].phytype_sim!=parms->powfs[ipowfs].phytype_sim2){
 					parms->powfs[ipowfs].phytype_sim=parms->powfs[ipowfs].phytype_sim2;
@@ -1032,8 +1037,8 @@ static void wfsgrad_dither_post(sim_t* simu){
 					writebin(intstat->i0, "extra/powfs%d_i0_%d", ipowfs, isim);
 					writebin(intstat->gx, "extra/powfs%d_gx_%d", ipowfs, isim);
 					writebin(intstat->gy, "extra/powfs%d_gy_%d", ipowfs, isim);
-					writebin(powfs[ipowfs].intstat->mtche, "extra/powfs%d_mtche_%d", ipowfs, isim);
-					writebin(powfs[ipowfs].intstat->i0sum, "extra/powfs%d_i0sum_%d", ipowfs, isim);
+					writebin(intstat->mtche, "extra/powfs%d_mtche_%d", ipowfs, isim);
+					writebin(intstat->i0sum, "extra/powfs%d_i0sum_%d", ipowfs, isim);
 					writebin(powfs[ipowfs].sanea, "extra/powfs%d_sanea_%d", ipowfs, isim);
 				}
 #if USE_CUDA

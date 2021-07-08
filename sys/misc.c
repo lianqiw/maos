@@ -873,7 +873,8 @@ void register_signal_handler(int (*func)(int)){
 	sigaction(SIGINT, &act, 0);
 	sigaction(SIGTERM, &act, 0);
 	sigaction(SIGABRT, &act, 0);
-	sigaction(SIGHUP, &act, 0);
+	//sigaction(SIGHUP, &act, 0);
+	signal(SIGHUP, SIG_IGN);//ignore the signal.
 	sigaction(SIGUSR1, &act, 0);
 	sigaction(SIGQUIT, &act, 0);
 	signal_handler=func;

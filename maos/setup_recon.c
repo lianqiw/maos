@@ -280,11 +280,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	}/*ipowfs */
 
 	recon->neamhi=sqrt(neam_hi/count_hi);
-	if(parms->save.setup){
-		writebin(recon->sanea, "sanea");
-		writebin(recon->saneal, "saneal");
-		writebin(recon->saneai, "saneai");
-	}
+	
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].skip==3) continue;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){

@@ -708,7 +708,6 @@ typedef struct load_cfg_t{
     char *mvm;       /**<load mvm from.*/
     char *mvmi;      /**<load mvmi from.*/
     char *mvmf;      /**<load mvmf from.*/
-    char *i0;        /**<load i0 for powfs from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
     int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin*/
     int tomo;        /**<if 1, load tomo matrix*/

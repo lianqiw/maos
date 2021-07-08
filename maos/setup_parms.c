@@ -1204,7 +1204,6 @@ static void readcfg_load(parms_t* parms){
 	READ_STR(load.mvm);
 	READ_STR(load.mvmi);
 	READ_STR(load.mvmf);
-	READ_STR(load.i0);
 	READ_INT(load.mvst);
 	READ_INT(load.GS0);
 	READ_INT(load.tomo);
