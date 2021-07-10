@@ -186,6 +186,7 @@ void cellfree_do(void* A){
 		cell* dc=(cell*)A;
 		if(dc->fn){
 			writebin(dc, "%s", dc->fn);
+			free(dc->fn);
 		}
 		if(dc->p){
 			for(int ix=0; ix<dc->nx*dc->ny; ix++){

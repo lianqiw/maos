@@ -34,7 +34,7 @@ void free_fit(fit_t *fit, int nfit);
 //Called by setup_recon.c
 void setup_recon_tomo_prep(recon_t *recon, const parms_t *parms);
 void setup_recon_tomo_matrix(recon_t *recon, const parms_t *parms);
-void setup_recon_tomo_update(recon_t *recon, const parms_t *parms);
+void setup_recon_update_cn2(recon_t *recon, const parms_t *parms);
 void setup_recon_tomo(recon_t *recon, const parms_t *parms, powfs_t *powfs);
 void setup_recon_lsr(recon_t *recon, const parms_t *parms);
 void setup_recon_mvm(const parms_t *parms, recon_t *recon, powfs_t *powfs);

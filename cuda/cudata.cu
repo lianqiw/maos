@@ -76,7 +76,7 @@ void gpu_print_mem(const char* msg){
 	size_t fr, tot;
 	cudaDeviceSynchronize();
 	DO(cudaMemGetInfo(&fr, &tot));
-	info("GPU (%d) mem used %ld MB (%s)\n", current_gpu(), (long)(tot-fr)/1024/1024, msg);
+	info("GPU %d: mem used %ld MB (%s)\n", current_gpu(), (long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.

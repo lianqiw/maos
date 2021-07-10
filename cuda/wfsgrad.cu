@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -95,8 +95,8 @@ cuztilt_do(Real* restrict g, Real* restrict opd,
 		Real(*restrict A)[3]=(Real(*)[3])(imcc+isa*9);
 		atomicAdd(&g[isa+threadIdx.x*nsa],
 			alpha*(+a[0][0]*A[0][threadIdx.x+1]
-				+a[1][0]*A[1][threadIdx.x+1]
-				+a[2][0]*A[2][threadIdx.x+1]));
+				   +a[1][0]*A[1][threadIdx.x+1]
+				   +a[2][0]*A[2][threadIdx.x+1]));
 
 	}
 }
@@ -294,6 +294,7 @@ void Dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, 
 		(imb.pm, imx.pm, imy.pm, ints.pm, cs, ss, pixpsa, nsa);
 	imc++;
 	if(imc%npll==0){
+		//dbg("Dither::acc: output imb, imx, imy\n");
 		cp2cpu(&dither->imb, imb, stream);
 		cp2cpu(&dither->imx, imx, stream);
 		cp2cpu(&dither->imy, imy, stream);
@@ -311,18 +312,26 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 	CUDA_CHECK_ERROR;
 	cuzero(gradcalc, stream);
 	const int totpix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
+	static int last_phytype=-1;
 	switch(parms->powfs[ipowfs].phytype_sim){
 	case 0:
 		break; //no-op
 	case 1://Matched filter
 	{
+		if(last_phytype!=1){ 
+			dbg("powfs %d: Computing matched filter. sigmatch=%d\n", ipowfs, parms->powfs[ipowfs].sigmatch);
+		}
 		Real sigratio=parms->powfs[ipowfs].sigmatch==2?(cuwfs[iwfs].i0sumsum/cursum(ints.M(), stream)):0;
 		mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche()), ints.M(),
 			parms->powfs[ipowfs].sigmatch, cuwfs[iwfs].i0sum(), sigratio,
 			totpix, nsa, cuwfs[iwfs].msa, stream);
 	}
 	break;
-	case 2:{//CoG
+	case 2:
+	{//CoG
+		if(last_phytype!=2) {
+			dbg("powfs %d: Computing Cog. sigmatch=%d\n", ipowfs, parms->powfs[ipowfs].sigmatch);
+		}
 		Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
 		Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
 		int pixpsax=powfs[ipowfs].pixpsax;
@@ -349,7 +358,7 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 				pixpsax, pixpsay, pixthetax, pixthetay, nsa,
 				(Real(*)[2])cuwfs[iwfs].cogcoeff(), srot);
 	}
-		  break;
+	break;
 	default://Use CPU version.
 		cp2cpu(&simu->ints->p[iwfs], ints, stream);
 		CUDA_SYNC_STREAM;
@@ -357,7 +366,7 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 			parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 	}
 	CUDA_CHECK_ERROR;
-
+	last_phytype=parms->powfs[ipowfs].phytype_sim;
 }
 /**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
@@ -414,7 +423,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 			cuzero(phiout, stream);
 		}
 		if(simu->atm&&((!parms->sim.idealwfs&&!parms->powfs[ipowfs].lo)
-			||(!parms->sim.wfsalias&&parms->powfs[ipowfs].lo))){
+					   ||(!parms->sim.wfsalias&&parms->powfs[ipowfs].lo))){
 			atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 		}
 		if(!parms->powfs[ipowfs].lo&&(parms->sim.idealwfs||parms->sim.wfsalias)){

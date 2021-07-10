@@ -452,7 +452,7 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 			}
 		}
 	} else{
-		info("Generating HXW ");TIC;tic;
+		dbg("Generating HXW ");TIC;tic;
 		recon->HXW=dspcellnew(nwfs, npsr);
 		dspcell* HXW=recon->HXW/*PDSPCELL*/;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -608,7 +608,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 		}
 	} else{
-		info("Generating GA ");TIC;tic;
+		dbg("Generating GA ");TIC;tic;
 		recon->GA=dspcellnew(nwfs, ndm);
 		if(parms->recon.modal){
 			recon->GM=dcellnew(nwfs, ndm);
@@ -812,7 +812,7 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
 	recon->GX=dspcellnew(nwfs, npsr);
 	dspcell* GX=recon->GX/*PDSPCELL*/;
 	dspcell* HXW=recon->HXW/*PDSPCELL*/;
-	info("Generating GX ");TIC;tic;
+	dbg("Generating GX ");TIC;tic;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	/*gradient from xloc. Also useful for lo WFS in MVST mode. */
 		for(int ips=0; ips<npsr; ips++){

@@ -592,9 +592,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	//Prevent printing of NEA during recomputing of matched filter
 	//const int print_nea=intstat->mtche?0:1;
-	
-	
-
+		
 	dcellfree(powfs[ipowfs].sanea);
 	dcell* sanea=powfs[ipowfs].sanea=dcellnew_same(ni0, 1, nsa, 3);
 	dfree(intstat->i0sum);

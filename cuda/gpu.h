@@ -49,7 +49,7 @@ extern "C"{
 	void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper);
 	void gpu_setup_recon(const parms_t* parms, recon_t* recon);
 	void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon);
-	void gpu_update_recon(const parms_t* parms, recon_t* recon);
+	void gpu_update_recon_control(const parms_t* parms, recon_t* recon);
 	void gpu_update_recon_cn2(const parms_t* parms, recon_t* recon);
 	void gpu_recon_reset(const parms_t* parms);
 	void gpu_recon_free(void);

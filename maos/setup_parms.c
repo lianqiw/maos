@@ -38,6 +38,7 @@ void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	if(powfscfg->wvlwts){
 		dfree(powfscfg->wvlwts);
 	}
+	dfree(powfscfg->ncpa);
 	if(powfscfg->llt){
 		free(powfscfg->llt->fnrange);
 		free(powfscfg->llt->fnprof);
@@ -1480,7 +1481,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				if(powfsi->phytype_sim==2){//CoG
 					powfsi->sigmatch=1;
 				} else{//Others
-					powfsi->sigmatch=2;//global match
+					powfsi->sigmatch=1;//global match is not good for matched filter
 				}
 			} else if(powfsi->type==1){
 				powfsi->sigmatch=2;//global match
@@ -2755,13 +2756,13 @@ static void print_parms(const parms_t* parms){
 
 	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
 		GREEN, parms->sim.zadeg, BLACK, parms->atm.r0, P(parms->atm.L0,0), parms->atm.nps);
-	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f.\"",
+	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
 		fgreen, theta0z*206265);
 	if(parms->ndm==2){
 		real H1=parms->dm[0].ht;
 		real H2=parms->dm[1].ht;
 		real theta2z=calc_aniso2(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p, H1, H2);
-		info(", generalized is %.2f\"\n", theta2z*206265);
+		info(", generalized is %.2f as\n", theta2z*206265);
 	} else{
 		info("\n");
 	}

@@ -126,7 +126,7 @@ long gpu_get_mem(void);
 static inline void gpu_set(int igpu){
     extern Array<int> GPUS;
     if(igpu>=NGPU){
-	error("Invalid igpu=%d", igpu);
+	    error("Invalid igpu=%d", igpu);
     }
     cudaSetDevice(GPUS[igpu]);
 #ifdef __APPLE__
@@ -146,8 +146,8 @@ static inline int gpu_next(float add=1){
     cur+=add;
     int ans=(int)ceil(cur);
     if(ans>=NGPU){
-	ans-=NGPU;
-	cur-=NGPU;
+	    ans-=NGPU;
+	    cur-=NGPU;
     }
     return ans;
 }

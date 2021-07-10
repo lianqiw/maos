@@ -46,7 +46,7 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipow
 				if(powfs[ipowfs].etfsim2){
 					if(fabs(cuwfs[iwfs].dtf[iwvl].etf[1].hs-powfs[ipowfs].etfsim[iwvl].hs)<1
 					&&cuwfs[iwfs].dtf[iwvl].etf[1].icol==powfs[ipowfs].etfsim[iwvl].icol){
-						dbg("Reuse etf2 as etf for next step for wfs %d\n", iwfs);
+						//dbg("Reuse etf2 as etf for next step for wfs %d\n", iwfs);
 						skip_1=1;
 						cucmat tmp=cuwfs[iwfs].dtf[iwvl].etf[0].etf;
 						cuwfs[iwfs].dtf[iwvl].etf[0].etf=cuwfs[iwfs].dtf[iwvl].etf[1].etf;
@@ -54,12 +54,13 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipow
 					}
 				}
 				if(jwfs==0||parms->powfs[ipowfs].llt->n>1){
-					dbg("Copy from wfs %d from CPU to GPU\n", iwfs);
 					int kwfs=parms->powfs[ipowfs].llt->n>1?jwfs:0;
 					if(powfs[ipowfs].etfsim && !skip_1){
+						//dbg("Copy etf from wfs %d from CPU to GPU\n", iwfs);
 						etf2gpu(cuwfs[iwfs].dtf[iwvl].etf[0].etf, &powfs[ipowfs].etfsim[iwvl], kwfs);
 					}
 					if(powfs[ipowfs].etfsim2){
+						//dbg("Copy etf2 from wfs %d from CPU to GPU\n", iwfs);
 						etf2gpu(cuwfs[iwfs].dtf[iwvl].etf[1].etf, &powfs[ipowfs].etfsim2[iwvl], kwfs);
 					}
 				} else {//copy across GPU
@@ -70,19 +71,21 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipow
 						}
 					}
 					if(iwfs2==iwfs){
-						dbg("Copy from wfs %d to %d within GPU\n", iwfs0, iwfs);
 						if(powfs[ipowfs].etfsim&&!skip_1){
+							//dbg("Copy etf from wfs %d to %d within GPU\n", iwfs0, iwfs);
 							cuwfs[iwfs].dtf[iwvl].etf[0].etf.Copy(cuwfs[iwfs0].dtf[iwvl].etf[0].etf);
 						}
 						if(powfs[ipowfs].etfsim2){
+							//dbg("Copy etf2 from wfs %d to %d within GPU\n", iwfs0, iwfs);
 							cuwfs[iwfs].dtf[iwvl].etf[1].etf.Copy(cuwfs[iwfs0].dtf[iwvl].etf[1].etf);
 						}
 					}else{//reference
-						dbg("Reference from wfs %d to %d within GPU\n", iwfs2, iwfs);
 						if(powfs[ipowfs].etfsim&&!skip_1){
+							//dbg("Reference etf from wfs %d to %d within GPU\n", iwfs2, iwfs);
 							cuwfs[iwfs].dtf[iwvl].etf[0].etf=cuwfs[iwfs2].dtf[iwvl].etf[0].etf;
 						}
 						if(powfs[ipowfs].etfsim2){
+							//dbg("Reference etf2 from wfs %d to %d within GPU\n", iwfs2, iwfs);
 							cuwfs[iwfs].dtf[iwvl].etf[1].etf=cuwfs[iwfs2].dtf[iwvl].etf[1].etf;
 						}
 					}
@@ -105,6 +108,7 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 	const int* wfsgpu=cuglobal->wfsgpu();
 	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
 	if(parms->powfs[ipowfs].usephy&&powfs[ipowfs].intstat){
+		dbg("powfs%d: updating matched filter in GPU\n", ipowfs);
 		const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 		const int nsa=powfs[ipowfs].saloc->nloc;
 		const int multi_mf=parms->powfs[ipowfs].phytype_sim==1&&powfs[ipowfs].intstat->mtche->ny>1;
@@ -117,7 +121,7 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 					int icol=multi_mf?jwfs:0;
 					dmat* mtche=dcell_col(powfs[ipowfs].intstat->mtche, icol);
 					if(iwfs!=iwfs0&&cuwfs[iwfs].mtche()==cuwfs[iwfs0].mtche()){
-					//Delete old values.
+						//Delete old referenced values.
 						cuwfs[iwfs].mtche=0;
 						cuwfs[iwfs].i0sum=0;
 					}

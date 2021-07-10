@@ -711,31 +711,10 @@ void shift_grad(sim_t* simu){
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
 				dadd(&P(simu->gradlastcl,ipowfs), 1., P(simu->gradcl,iwfs), scale);
-				/*if(P(simu->gradoff,iwfs)){
-					//Gradient offset due to mainly NCPA calibration. Must be after gain adjustment.
-					dadd(&P(simu->gradlastcl,ipowfs), 1, P(simu->gradoff,iwfs), -parms->dbg.gradoff_scale*scale);
-				}
-				if(parms->dbg.gradoff){
-					info_once("Add injected gradient offset vector\n");
-					int icol=(simu->wfsisim+1)%parms->dbg.gradoff->ny;
-					dadd(&P(simu->gradlastcl,ipowfs), 1, P(parms->dbg.gradoff, iwfs, icol), -1*scale);
-				}*/
 			}
 		}
 	} else{
 		dcellcp(&simu->gradlastcl, simu->gradcl);
-		//Gradient offset due to mainly NCPA calibration. Must be after gain adjustment.
-		//Add gradient offset to gradlastcl, so that lpfocus on gradcl does not affect it.
-		/*for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			if(P(simu->gradoff,iwfs)){
-				dadd(&P(simu->gradlastcl,iwfs), 1, P(simu->gradoff,iwfs), -parms->dbg.gradoff_scale);
-			}
-			if(parms->dbg.gradoff){
-				info_once("Add dbg.gradoff to gradient vector\n");
-				int icol=(simu->wfsisim+1)%parms->dbg.gradoff->ny;
-				dadd(&P(simu->gradlastcl,iwfs), 1, P(parms->dbg.gradoff, iwfs, icol), -1);
-			}
-		}*/ //moved to wfsgrad
 	}
 	if(PARALLEL==2){
 		//Signal recon wfsgrad is ready/

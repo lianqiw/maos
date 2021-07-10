@@ -107,6 +107,7 @@ void X(free_do)(X(mat)* A){
 	if(check_mat(A)){
 		if(A->fn){
 			writebin(A, "%s", A->fn);
+			free(A->fn);
 		}
 		mem_unref(&A->mem);//takes care of freeing memory.
 #ifndef COMP_LONG

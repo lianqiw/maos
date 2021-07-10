@@ -584,7 +584,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 			dfree(tmp);
 		}
 		//Print PLL phase
-		if(1||iwfs==P(parms->powfs[ipowfs].wfs, 0)){
+		if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
 			const real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
 			const real scale=parms->powfs[ipowfs].dither==1?(1./parms->powfs[ipowfs].dither_amp):1;
 			info2("Step %5d wfs %d PLL: delay=%.2f frame, dither amplitude=%.2fx, estimate=%.2fx\n",
@@ -609,25 +609,30 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 			if(pd->imb){//computer i0, gx, gy for matched filter
 				dmat* ibgrad=0;
 				dcellscale(pd->imb, scale1);
-				shwfs_grad(&ibgrad, pd->imb->p, parms, powfs, iwfs, 2);
-				if(parms->powfs[ipowfs].trs){
-					/* Update T/T drift signal to prevent matched filter from drifting*/
-					dmat* tt=dnew(2, 1);
-					dmat* PTT=P(recon->PTT, iwfsr, iwfsr);
-					dmm(&tt, 0, PTT, ibgrad, "nn", 1);
-					P(P(simu->fsmerr, iwfs), 0)+=P(tt, 0);
-					P(P(simu->fsmerr, iwfs), 1)+=P(tt, 1);
-					dfree(tt);
+				if(parms->powfs[ipowfs].dither_gdrift>0){//drift control
+					shwfs_grad(&ibgrad, pd->imb->p, parms, powfs, iwfs, 2);
+					if(parms->powfs[ipowfs].trs){
+						dbg("Step %5d: powfs %d uplink drift control\n", simu->wfsisim, ipowfs);
+						/* Update T/T drift signal to prevent matched filter from drifting*/
+						dmat* tt=dnew(2, 1);
+						dmat* PTT=P(recon->PTT, iwfsr, iwfsr);
+						dmm(&tt, 0, PTT, ibgrad, "nn", 1);
+						P(P(simu->fsmerr, iwfs), 0)+=P(tt, 0);
+						P(P(simu->fsmerr, iwfs), 1)+=P(tt, 1);
+						dfree(tt);
+					}
+					//Output focus error in ib to trombone error signal.
+					if(parms->powfs[ipowfs].llt){
+						dbg("Step %5d: powfs %d trombone error signal\n", simu->wfsisim, ipowfs);
+						dmat* focus=dnew(1, 1);
+						dmat* RFlgsg=P(recon->RFlgsg, iwfs, iwfs);
+						dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
+						P(simu->zoomerr, iwfs)+=P(focus, 0);
+						dfree(focus);
+					}
+					dfree(ibgrad);
 				}
-				//Output focus error in ib to trombone error signal.
-				if(parms->powfs[ipowfs].llt){
-					dmat* focus=dnew(1, 1);
-					dmat* RFlgsg=P(recon->RFlgsg, iwfs, iwfs);
-					dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
-					P(simu->zoomerr, iwfs)+=P(focus, 0);
-					dfree(focus);
-				}
-				dfree(ibgrad);
+				
 				//Accumulate data for matched filter
 				dcelladd(&pd->i0, 1, pd->imb, 1);//imb was already scaled
 				dcelladd(&pd->gx, 1, pd->imx, scale2);
@@ -739,7 +744,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 						P(simu->zoomint, iwfs)*2*pow(parms->powfs[ipowfs].hs, 2));
 				}
 				update_etf=1;//this is important in bootstraping.
-			} else{
+			} else if(parms->powfs[ipowfs].zoomgain>0){
 				//Trombone from gradients. always enable
 				P(simu->zoomavg, iwfs)+=zoomerr;//zoom averager.
 				if(simu->wfsflags[ipowfs].zoomout){
@@ -761,7 +766,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 	/*The zoomerr is prescaled, and ZoH. moved from filter.c as it only relates to WFS.*/
 	//Do not trigger update_etf here as it will interfere with i0 accumulation.
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(simu->wfsflags[ipowfs].zoomout){
+		if(simu->wfsflags[ipowfs].zoomout&&parms->powfs[ipowfs].zoomgain>0){
 			real zoomgain=parms->powfs[ipowfs].zoomgain;
 			if(parms->powfs[ipowfs].zoomshare){//average zoomerr
 				average_powfs(simu->zoomerr, parms->powfs[ipowfs].wfs, 1);
@@ -968,8 +973,9 @@ static void wfsgrad_dither_post(sim_t* simu){
 					g2=1./(simu->wfsflags[ipowfs].ogout);
 				}
 				gradoff_acc(simu, ipowfs);
-				
-				info("Applying LPF with gain %.2f to i0/gx/gy update at update cycle %d\n", g2, simu->wfsflags[ipowfs].ogout);
+				if(g2<1){
+					info("Applying LPF with gain %.2f to i0/gx/gy update at update cycle %d\n", g2, simu->wfsflags[ipowfs].ogout);
+				}
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
@@ -983,7 +989,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dcellzero(pd->gx);
 					dcellzero(pd->gy);
 					if(!parms->dbg.gradoff_reset){
-						info("Step %d: Reducing gradoff by grad of i0.\n", isim);
+						if(jwfs==0) info("Step %5d: powfs%d reducing gradoff by grad of i0.\n", isim, ipowfs);
 						dmat* goff=0;
 						/*Compute the gradient of i0 using old gradient
 						algorithm and subtract from the gradient offset to
@@ -998,12 +1004,12 @@ static void wfsgrad_dither_post(sim_t* simu){
 							warning("when dbg.gradoff_reset is enabled, dither_glpf should be 1.\n");
 						}
 					} else if(parms->dbg.gradoff_reset == 1){
-						info("Step %d: Resetting gradoff to 0.\n", isim);
+						if(jwfs==0) info("Step %5d: powfs%d resetting gradoff to 0.\n", isim, ipowfs);
 						dzero(P(simu->gradoff, iwfs));
 					} else if(parms->dbg.gradoff_reset==2){
-						info("Step %d: Reducing gradoff by its average.\n", isim);
+						if(jwfs==0) info("Step %5d: powfs%d reducing gradoff by its average.\n", isim, ipowfs);
 						int nacc=simu->gradoffisim-simu->gradoffisim0;
-						info("Step %d: gradoffacc is scaled by 1/%d\n", isim, nacc);
+						if(jwfs==0) info("Step %5d: powfs%d gradoffacc is scaled by 1/%d\n", isim, ipowfs, nacc);
 						dscale(P(simu->gradoffacc,iwfs), 1./nacc);
 						dadd(&P(simu->gradoff, iwfs), 1, P(simu->gradoffacc,iwfs), -1);
 					}
@@ -1027,7 +1033,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 				}
 				//Generating matched filter
 				if(parms->powfs[ipowfs].neareconfile||parms->powfs[ipowfs].phyusenea){
-					warning("Disable neareconfile and phyusenea\n");
+					dbg("Step %5d: powfs %d disable neareconfile and phyusenea\n", isim, ipowfs);
 					parms->powfs[ipowfs].neareconfile=NULL;
 					parms->powfs[ipowfs].phyusenea=0;
 				}
@@ -1043,7 +1049,6 @@ static void wfsgrad_dither_post(sim_t* simu){
 				}
 #if USE_CUDA
 				if(parms->gpu.wfs){
-					dbg("Update matched filter in GPU\n");
 					gpu_wfsgrad_update_mtche(parms, powfs, ipowfs);
 				}
 #endif

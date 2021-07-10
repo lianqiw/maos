@@ -56,17 +56,26 @@ public:
     curcell dm_wfs;/**<moao results for wfs for warm restart*/
     curcell dm_evl;/**<moao results for evl for warm restart*/
     /*the following data reside in the gpu memory*/
-    friend void gpu_update_recon(const parms_t *parms, recon_t *recon);
+    friend void gpu_update_recon_control(const parms_t *parms, recon_t *recon);
     friend void gpu_update_recon_cn2(const parms_t *parms, recon_t *recon);
 public:
     curecon_t(const parms_t *parms=0, recon_t *recon=0);
-    void reset_config();
+    void reset_fit();
+    void reset_tomo();
+    void reset_moao();
+    void reset_mvm();
     ~curecon_t(){
-	reset_config();
-	delete grid;
+	    reset_fit();
+        reset_tomo();
+        reset_moao();
+        reset_mvm();
+	    delete grid;
     }
     void reset_runtime();
-    void update(const parms_t *parms, recon_t *recon);
+    void init_mvm(const parms_t* parms, recon_t* recon);
+    void init_fit(const parms_t* parms, recon_t* recon);
+    void init_tomo(const parms_t* parms, recon_t* recon);
+    void init_moao(const parms_t* parms, recon_t* recon);
     void update_cn2(const parms_t *parms, recon_t *recon);
     Real tomo(dcell **_opdr, dcell **gngsmvst, const dcell *_gradin);
     Real fit(dcell **_dmfit, dcell *_opdr);

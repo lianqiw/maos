@@ -581,11 +581,13 @@ end2:
 				if(use_udp){
 					error("To be implemented\n");
 				} else{
+					TIC;tic;
 					if(stwrite(sock_draw, buf, bufsize)){
 						info("write to %d failed\n", sock_draw);
 						ans=-1;
 						draw_remove(sock_draw, 0);
 					}
+					toc2("write %lu MiB", bufsize>>20);
 				}
 			}
 			free(buf);

@@ -209,19 +209,19 @@ OMPTASK_SINGLE{
 	}
 	if(simu->tomo_update){//This part causes random CUDA error in Geforce.
 		if(simu->tomo_update==1){//Only update cn2 regularization term
-			setup_recon_tomo_update(simu->recon, simu->parms);
+			setup_recon_update_cn2(simu->recon, simu->parms);
+			//Already updates GPU in this routine
 		} else{//Also update noise in reconstructor.
 			setup_recon_control(simu->recon, simu->parms, simu->powfs);
-		}
+			dcellzero(simu->opdr);//zero out warm restart data. [optional in CPU, essential in GPU.]
 #if USE_CUDA
-		if(!parms->sim.evlol&&(parms->gpu.tomo||parms->gpu.fit)){
-			if(simu->tomo_update==1){//Only update cn2 regularization term
-				gpu_update_recon_cn2(parms, recon);
-			}else{
-				gpu_update_recon(parms, simu->recon);
+			if(parms->gpu.tomo){
+				gpu_update_recon_control(parms, recon);
+				//warning("Update entire recon in gpu\n");
+				//gpu_setup_recon(parms, recon);
 			}
-		}
 #endif
+		}
 		simu->tomo_update=0;
 	}
 }//OMPTASK_SINGLE

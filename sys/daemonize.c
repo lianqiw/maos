@@ -271,7 +271,9 @@ void redirect(void){
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	if(detached){//only output to file
-		if(!freopen(fn, "w", stderr)||dup2(2, 1)==-1) warning("Error redirecting stdout or stderr.\n");
+		//2021-07-09: All print goes to stdout (error() goes also to stderr). 
+		//It is problematic to redirect both stdout and stderr to the same file (ordering is messed up)
+		if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout.\n");
 		//don't close stdin to prevent fd=0 from being used by file.
 		if(!freopen("/dev/null", "r", stdin)) warning("Error redirecting stdin\n");
 	} else{
@@ -293,8 +295,8 @@ void redirect(void){
 			//child thread read from pfd[0] and write to stdout.
 			pthread_create(&thread, NULL, (void* (*)(void*))dup_stdout, &dup_data);
 			//master threads redirects stderr and stdout to pfd[1]
-			if(dup2(pfd[1], 1)==-1||dup2(pfd[1], 2)==-1){
-				warning("Error redirecting stdout or stderr");
+			if(dup2(pfd[1], 1)==-1){
+				warning("Error redirecting stdout ");
 			}
 		}
 	}

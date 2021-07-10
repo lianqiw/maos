@@ -305,7 +305,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			info2("%s(%.2f) ", neatype, P(recon->neam,iwfs)*206265000*(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE)));
 		}
 	}
-	info2("\n");
+	info2(" mas\n");
 
 }
 
@@ -351,7 +351,7 @@ static void free_cxx(recon_t* recon){
 */
 void
 setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
-	info("setup_recon_tomo_prep.\n");
+	//info("setup_recon_tomo_prep\n");
 	/*Free existing struct if already exist.  */
 	free_cxx(recon);
 	if(parms->tomo.assemble){
@@ -421,8 +421,6 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 		ccell* fftxopd=recon->invpsd->fftxopd=ccellnew(recon->npsr, 1);
 		for(int ips=0; ips<recon->npsr; ips++){
 			P(fftxopd,ips)=cnew(P(recon->xmap,ips)->nx, P(recon->xmap,ips)->ny);
-			//cfft2plan(P(fftxopd,ips),-1);
-			//cfft2plan(P(fftxopd,ips),1);
 		}
 		recon->invpsd->xloc=recon->xloc;
 		recon->invpsd->square=parms->tomo.square;
@@ -802,7 +800,8 @@ static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs
    Update assembled tomography matrix with new L2. Called from cn2est when new
    profiles are available.
 */
-void setup_recon_tomo_update(recon_t* recon, const parms_t* parms){
+void setup_recon_update_cn2(recon_t* recon, const parms_t* parms){
+	if(parms->sim.evlol) return;
 	setup_recon_tomo_prep(recon, parms); /*redo L2, invpsd */
 #if USE_CUDA
 	if(parms->gpu.tomo){
@@ -845,6 +844,11 @@ void setup_recon_tomo_update(recon_t* recon, const parms_t* parms){
 	if(parms->recon.split==2){
 		setup_recon_mvst(recon, parms);
 	}
+#if USE_CUDA
+	if(parms->gpu.tomo){
+		gpu_update_recon_control(parms, recon);
+	}
+#endif
 }
 
 
@@ -1317,6 +1321,7 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
    The results are measurement noise dependent and may be updated during simulation.
    */
 void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
+	info("Setup or update control matrix parameters.\n");
 	TIC;tic;
 	/*assemble noise equiva angle inverse from powfs information */
 	setup_recon_saneai(recon, parms, powfs);
@@ -1343,7 +1348,7 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			}
 		}
 	}
-	toc2("setup_recon");
+	toc2("setup_recon_control");
 }
 
 /**

@@ -50,6 +50,7 @@ namespace cuda_recon{
 curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	:grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0), moao(0){
 	if(!parms) return;
+	dbg("curecon_t::curecon_t\n");
 	if((parms->recon.alg==0&&parms->gpu.fit||parms->recon.mvm||parms->gpu.moao)
 		||(parms->recon.alg==1&&parms->gpu.lsr)
 		){
@@ -81,16 +82,37 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	if(parms->recon.alg==0&&!(parms->recon.mvm&&parms->load.mvm)){
 		grid=new curecon_geom(parms, recon);//does not change
 	}
-	update(parms, recon);
+	if(parms->recon.split==2){//mvst
+		cp2gpu(GXL, recon->GXL);
+	}
+	init_mvm(parms, recon);
+	init_fit(parms, recon);
+	init_tomo(parms, recon);
+	init_moao(parms, recon);
 	gpu_print_mem("recon init");
 }
-void curecon_t::reset_config(){
+
+void curecon_t::reset_fit(){
+	dbg("curecon_t::reset_fit.\n");
 	if(FL&&FL!=dynamic_cast<cusolve_l*>(FR)) delete FL; FL=0;
 	delete FR; FR=0;
+	dmfit.zero();
+}
+void curecon_t::reset_tomo(){
+	dbg("curecon_t::reset_tomo.\n");
 	if(RL&&RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
 	delete RR; RR=0;
-	delete MVM; MVM=0;
+	opdr.zero();
+}
+void curecon_t::reset_mvm(){
+	if(MVM){
+		dbg("curecon_t::reset_mvm.\n");
+		delete MVM; MVM=0;
+	}
+}
+void curecon_t::reset_moao(){
 	if(moao){
+		dbg("curecon_t::reset_moao.\n");
 		for(int im=0; im<nmoao; im++){
 			delete moao[im];
 		}
@@ -98,144 +120,150 @@ void curecon_t::reset_config(){
 		moao=0; nmoao=0;
 	}
 }
-void curecon_t::update(const parms_t* parms, recon_t* recon){
-	info("GPU %d: Updating recon", current_gpu());
-	reset_config();
-	int skip_tomofit=0;
+//this is only for initialization. updating mvm requires calling gpu_setup_recon_mvm and perhaps more changes
+void curecon_t::init_mvm(const parms_t* parms, recon_t* recon){
 	if(parms->recon.mvm){
-		skip_tomofit=1;
+		reset_mvm();
+		dbg("curecon_t::init_mvm in GPU %d.\n", current_gpu());
 		if(cuglobal->mvm){
 			MVM=new cusolve_mvm(cuglobal->mvm);
 		} else if(recon->MVM){//MVM already exists
 			MVM=new cusolve_mvm(recon->MVM);
-		} else if(parms->gpu.tomo){
-			skip_tomofit=0;//use GPU to assemble MVM
-		}
+		}//else: waiting for future call
 	}
-	if(!skip_tomofit){
-		if(parms->gpu.fit){
-			switch(parms->gpu.fit){
-			case 1:
-				FR=new cusolve_sparse(parms->fit.maxit, parms->recon.warm_restart,
-					&recon->fit->FR, &recon->fit->FL);
-				break;
-			case 2:
-				FR=new cufit_grid(parms, recon, grid);
-				break;
-			default:
-				error("Invalid");
-			}
-			switch(parms->fit.alg){
-			case 0:
-				FL=new cusolve_cbs(recon->fit->FL.C, recon->fit->FL.Up, recon->fit->FL.Vp);
-				break;
-			case 1:
-				FL=dynamic_cast<cusolve_l*>(FR);
-				break;
-			case 2:
-				FL=new cusolve_mvm(recon->fit->FL.MI);
-				break;
-			default:
-				error("Invalid");
-			}
+}
+//There is usually no need to update DM fitting
+void curecon_t::init_fit(const parms_t* parms, recon_t* recon){
+	int skip_tomofit=parms->recon.mvm&&(cuglobal->mvm||recon->MVM);
+	if(parms->gpu.fit&&!skip_tomofit){
+		reset_fit();
+		dbg("curecon_t::init_fit in GPU %d.\n", current_gpu());
+		switch(parms->gpu.fit){
+		case 1:
+			FR=new cusolve_sparse(parms->fit.maxit, parms->recon.warm_restart,
+				&recon->fit->FR, &recon->fit->FL);
+			break;
+		case 2:
+			FR=new cufit_grid(parms, recon, grid);
+			break;
+		default:
+			error("Invalid");
 		}
-		if(parms->gpu.tomo){
-			RR=new cutomo_grid(parms, recon, grid);
-			switch(parms->tomo.alg){
-			case 0:
-				RL=new cusolve_cbs(recon->RL.C, recon->RL.Up, recon->RL.Vp);
-				break;
-			case 1:
-				RL=dynamic_cast<cusolve_l*>(RR);
-				break;
-			case 2:
-				RL=new cusolve_mvm(recon->RL.MI);
-				break;
-			default:
-				error("Invalid");
-			}
-		}
-
-		if(parms->recon.split==2){
-			cp2gpu(GXL, recon->GXL);
-		}
-	}
-	if(parms->nmoao){
-		nmoao=parms->nmoao;
-		const int nwfs=parms->nwfs;
-		const int nevl=parms->evl.nevl;
-		moao=new cumoao_t*[nmoao];
-		dm_moao=curcccell(nmoao, 1);
-		moao_gwfs=X(new)(nwfs, 1);
-		moao_gevl=X(new)(nevl, 1);
-		//Pre-allocate moao output and assign to wfs or evl
-		for(int imoao=0; imoao<parms->nmoao; imoao++){
-			if(!parms->moao[imoao].used) continue;
-			int ntot=nwfs+nevl;
-			int count=0;
-			dir_t* dir=new dir_t[ntot];
-			dm_moao[imoao]=curccell(ntot, 1);
-			int anx=recon->moao[imoao].amap->p[0]->nx;
-			int any=recon->moao[imoao].amap->p[0]->ny;
-			for(int iwfs=0; iwfs<nwfs; iwfs++){
-				int ipowfs=parms->wfs[iwfs].powfs;
-				if(parms->powfs[ipowfs].moao==imoao){
-					if(!dm_wfs){
-						dm_wfs=curcell(nwfs, 1);
-					}
-					dm_wfs[iwfs]=dm_moao[imoao][count][0];
-					dm_moao[imoao][count]=curcell(1, 1, anx, any);
-					moao_gwfs->p[iwfs]=parms->moao[imoao].gdm;
-					dir[count].thetax=parms->wfs[iwfs].thetax;
-					dir[count].thetay=parms->wfs[iwfs].thetay;
-					dir[count].hs=parms->wfs[iwfs].hs;
-					dir[count].skip=0;
-					count++;
-				}
-			}
-			if(parms->evl.moao==imoao){
-				if(!dm_evl){
-					dm_evl=curcell(nevl, 1);
-				}
-				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-					dm_moao[imoao][count]=curcell(1, 1, anx, any);
-					dm_evl[ievl]=dm_moao[imoao][count][0];
-					moao_gevl->p[ievl]=parms->moao[imoao].gdm;
-					dir[count].thetax=parms->evl.thetax->p[ievl];
-					dir[count].thetay=parms->evl.thetay->p[ievl];
-					dir[count].hs=parms->evl.hs->p[ievl];
-					dir[count].skip=0;
-					count++;
-				}
-			}
-			moao[imoao]=new cumoao_t(parms, recon->moao+imoao, dir, count, grid);
-			delete[] dir;
-			for(int iwfs=0; iwfs<nwfs; iwfs++){
-				int ipowfs=parms->wfs[iwfs].powfs;
-				if(parms->powfs[ipowfs].moao==imoao){
-					gpu_set(cuglobal->wfsgpu[iwfs]);
-					if(!cudata->dm_wfs){
-						cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
-					}
-					cudata->dm_wfs[iwfs]=cumapcell(1, 1);
-					cudata->dm_wfs[iwfs][0]=(recon->moao[imoao].amap->p[0]);
-				}
-			}
-			if(parms->evl.moao==imoao){
-				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-					gpu_set(cuglobal->evlgpu[ievl]);
-					if(!cudata->dm_evl){
-						cudata->dm_evl=Array<cumapcell>(parms->evl.nevl, 1);
-					}
-					cudata->dm_evl[ievl]=cumapcell(1, 1);
-					cudata->dm_evl[ievl][0]=(recon->moao[imoao].amap->p[0]);
-				}
-			}
-			gpu_set(cuglobal->recongpu);
+		switch(parms->fit.alg){
+		case 0:
+			FL=new cusolve_cbs(recon->fit->FL.C, recon->fit->FL.Up, recon->fit->FL.Vp);
+			break;
+		case 1:
+			FL=dynamic_cast<cusolve_l*>(FR);
+			break;
+		case 2:
+			FL=new cusolve_mvm(recon->fit->FL.MI);
+			break;
+		default:
+			error("Invalid");
 		}
 	}
 }
+
+void curecon_t::init_tomo(const parms_t*parms, recon_t*recon){
+	int skip_tomofit=parms->recon.mvm&&(cuglobal->mvm||recon->MVM);
+	if(parms->gpu.tomo&&!skip_tomofit){
+		reset_tomo();
+		dbg("curecon_t::init_tomo in GPU %d.\n", current_gpu());
+		RR=new cutomo_grid(parms, recon, grid);
+		switch(parms->tomo.alg){
+		case 0:
+			RL=new cusolve_cbs(recon->RL.C, recon->RL.Up, recon->RL.Vp);
+			break;
+		case 1:
+			RL=dynamic_cast<cusolve_l*>(RR);
+			break;
+		case 2:
+			RL=new cusolve_mvm(recon->RL.MI);
+			break;
+		default:
+			error("Invalid");
+		}
+	}
+}
+void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
+	if(!parms->nmoao) return;
+	dbg("curecon_t::init_moao in GPU %d.\n", current_gpu());
+	nmoao=parms->nmoao;
+	const int nwfs=parms->nwfs;
+	const int nevl=parms->evl.nevl;
+	moao=new cumoao_t*[nmoao];
+	dm_moao=curcccell(nmoao, 1);
+	moao_gwfs=X(new)(nwfs, 1);
+	moao_gevl=X(new)(nevl, 1);
+	//Pre-allocate moao output and assign to wfs or evl
+	for(int imoao=0; imoao<parms->nmoao; imoao++){
+		if(!parms->moao[imoao].used) continue;
+		int ntot=nwfs+nevl;
+		int count=0;
+		dir_t* dir=new dir_t[ntot];
+		dm_moao[imoao]=curccell(ntot, 1);
+		int anx=recon->moao[imoao].amap->p[0]->nx;
+		int any=recon->moao[imoao].amap->p[0]->ny;
+		for(int iwfs=0; iwfs<nwfs; iwfs++){
+			int ipowfs=parms->wfs[iwfs].powfs;
+			if(parms->powfs[ipowfs].moao==imoao){
+				if(!dm_wfs){
+					dm_wfs=curcell(nwfs, 1);
+				}
+				dm_wfs[iwfs]=dm_moao[imoao][count][0];
+				dm_moao[imoao][count]=curcell(1, 1, anx, any);
+				moao_gwfs->p[iwfs]=parms->moao[imoao].gdm;
+				dir[count].thetax=parms->wfs[iwfs].thetax;
+				dir[count].thetay=parms->wfs[iwfs].thetay;
+				dir[count].hs=parms->wfs[iwfs].hs;
+				dir[count].skip=0;
+				count++;
+			}
+		}
+		if(parms->evl.moao==imoao){
+			if(!dm_evl){
+				dm_evl=curcell(nevl, 1);
+			}
+			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+				dm_moao[imoao][count]=curcell(1, 1, anx, any);
+				dm_evl[ievl]=dm_moao[imoao][count][0];
+				moao_gevl->p[ievl]=parms->moao[imoao].gdm;
+				dir[count].thetax=parms->evl.thetax->p[ievl];
+				dir[count].thetay=parms->evl.thetay->p[ievl];
+				dir[count].hs=parms->evl.hs->p[ievl];
+				dir[count].skip=0;
+				count++;
+			}
+		}
+		moao[imoao]=new cumoao_t(parms, recon->moao+imoao, dir, count, grid);
+		delete[] dir;
+		for(int iwfs=0; iwfs<nwfs; iwfs++){
+			int ipowfs=parms->wfs[iwfs].powfs;
+			if(parms->powfs[ipowfs].moao==imoao){
+				gpu_set(cuglobal->wfsgpu[iwfs]);
+				if(!cudata->dm_wfs){
+					cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
+				}
+				cudata->dm_wfs[iwfs]=cumapcell(1, 1);
+				cudata->dm_wfs[iwfs][0]=(recon->moao[imoao].amap->p[0]);
+			}
+		}
+		if(parms->evl.moao==imoao){
+			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+				gpu_set(cuglobal->evlgpu[ievl]);
+				if(!cudata->dm_evl){
+					cudata->dm_evl=Array<cumapcell>(parms->evl.nevl, 1);
+				}
+				cudata->dm_evl[ievl]=cumapcell(1, 1);
+				cudata->dm_evl[ievl][0]=(recon->moao[imoao].amap->p[0]);
+			}
+		}
+		gpu_set(cuglobal->recongpu);
+	}
+}
 void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
+	dbg("curecon_t::update_cn2.\n");
 	if(parms->tomo.predict){
 		for(int ips=0; ips<recon->npsr; ips++){
 			int ips0=parms->atmr.indps->p[ips];
@@ -256,13 +284,13 @@ void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
 	}
 }
 void curecon_t::reset_runtime(){
+	dbg("curecon_t::reset_runtime.\n");
 	opdr.zero(0);
 	dmfit.zero(0);
 	dm_wfs.zero(0);
 	dm_evl.zero(0);
 }
 
-#define DBG_RECON 0
 Real curecon_t::tomo(dcell** _opdr, dcell** _gngsmvst,
 	const dcell* _gradin){
 	cp2gpu(gradin, _gradin);
@@ -522,27 +550,32 @@ void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 	}
 	gpu_print_mem("MVM");
 }
-void gpu_update_recon(const parms_t* parms, recon_t* recon){
-	if(!parms->gpu.tomo) return;
+void gpu_update_recon_control(const parms_t* parms, recon_t* recon){
+	gpu_set(cuglobal->recongpu);
 	for(int igpu=0; igpu<NGPU; igpu++){
-		if((parms->recon.mvm&&parms->gpu.tomo&&parms->gpu.fit&&!parms->load.mvm)
-			||igpu==cuglobal->recongpu){
+		if((parms->recon.mvm&&parms->gpu.tomo&&parms->gpu.fit)||igpu==cuglobal->recongpu){
 			gpu_set(igpu);
-
 			curecon_t* curecon=cudata->recon;
-			curecon->update(parms, recon);
+			if(parms->recon.mvm){
+				error("Please implement\n");
+			}else{
+				//curecon->init_fit(parms, recon);//temp
+				curecon->init_tomo(parms, recon);
+			}
 		}
 	}
 }
 void gpu_update_recon_cn2(const parms_t* parms, recon_t* recon){
 	if(!parms->gpu.tomo) return;
 	for(int igpu=0; igpu<NGPU; igpu++){
-		if((parms->recon.mvm&&parms->gpu.tomo&&parms->gpu.fit&&!parms->load.mvm)
-			||igpu==cuglobal->recongpu){
+		if((parms->recon.mvm&&parms->gpu.tomo&&parms->gpu.fit)||igpu==cuglobal->recongpu){
 			gpu_set(igpu);
-
 			curecon_t* curecon=cudata->recon;
-			curecon->update_cn2(parms, recon);
+			if(parms->recon.mvm){
+				error("Please implement\n");
+			} else{
+				curecon->update_cn2(parms, recon);
+			}
 		}
 	}
 }

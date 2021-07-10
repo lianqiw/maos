@@ -66,6 +66,7 @@ void X(spfree_do)(X(sp)* sp){
 	if(sp){
 		if(sp->fn){
 			writebin(sp, "%s", sp->fn);
+			free(sp->fn);
 		}
 		assert(issp(sp));
 		X(spfree_content)(sp);
@@ -707,31 +708,41 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 		return X(spref)(P(A, 0));
 	}
 	long nx=0, ny=0, nzmax=0;
-	long nnx[A->nx];
-	long nny[A->ny];
+	long nnx[A->nx];//number of rows of each row block
+	long nny[A->ny];//number of cols for each column block
 	for(long ix=0; ix<A->nx; ix++){
+		nnx[ix]=0;
 		for(long iy=0; iy<A->ny; iy++){
 			if(P(A, ix, iy)){
 				if(!issp(P(A, ix, iy))){
 					error("Not every cell is sparse\n");
 				}
-				nnx[ix]=P(A, ix, iy)->nx;
-				nx+=P(A, ix, iy)->nx;
-				break;
+				if(!nnx[ix]){
+					nnx[ix]=P(A, ix, iy)->nx;
+					nx+=P(A, ix, iy)->nx;
+				} else if(nnx[ix]!=P(A, ix, iy)->nx){
+					error("block (%ld, %ld) has wrong number of rows. expect %ld got %ld\n",
+					ix, iy, nnx[ix], P(A, ix, iy)->nx);
+				}
 			}
 		}
 	}
 	for(long iy=0; iy<A->ny; iy++){
+		nny[iy]=0;
 		for(long ix=0; ix<A->nx; ix++){
 			if(P(A, ix, iy)){
-				nny[iy]=P(A, ix, iy)->ny;
-				ny+=P(A, ix, iy)->ny;
-				break;
+				if(!nny[iy]){
+					nny[iy]=P(A, ix, iy)->ny;
+					ny+=P(A, ix, iy)->ny;
+				} else if(nny[iy]!=P(A, ix, iy)->ny){
+					error("block (%ld, %ld) has wrong number of cols. expect %ld got %ld\n",
+					ix, iy, nny[iy], P(A, ix, iy)->ny);
+				}
 			}
 		}
 	}
 	for(long i=0; i<A->nx*A->ny; i++){
-		if(P(A,i)&&P(A,i)->nzmax>0){
+		if(P(A,i)){
 			nzmax+=P(A,i)->pp[P(A,i)->ny];
 		}
 	}
@@ -757,7 +768,7 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 		jcol+=nny[iy];
 	}
 	out->pp[ny]=count;
-	if(count>nzmax){
+	if(count!=nzmax){
 		error("X(spcell2sp) gets Wrong results. count=%ld, nzmax=%ld\n", count, nzmax);
 	}
 	/*nzmax maybe smaller than A->pp[A->n]  */
