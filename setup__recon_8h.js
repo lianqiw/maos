@@ -8,7 +8,7 @@ var setup__recon_8h =
     [ "free_fit", "setup__recon_8h.html#a4bfc73b39b67ad8fd1ff3329552e80ee", null ],
     [ "setup_recon_tomo_prep", "setup__recon_8h.html#ab4ca5a984cc27dacd89abeaf25e927cb", null ],
     [ "setup_recon_tomo_matrix", "setup__recon_8h.html#a734c26f3d555e9e8038c196ad0a242ef", null ],
-    [ "setup_recon_tomo_update", "setup__recon_8h.html#a57dc4aae245ea19d8bc5b91ef7be7074", null ],
+    [ "setup_recon_update_cn2", "setup__recon_8h.html#affdf4abbd6002b77777fe7c1852cfcc7", null ],
     [ "setup_recon_tomo", "setup__recon_8h.html#a3fab4680ee0bb140feff9a953b0ddf54", null ],
     [ "setup_recon_lsr", "setup__recon_8h.html#a2abb7b002334af528061452e9d4050bb", null ],
     [ "setup_recon_mvm", "setup__recon_8h.html#adf3a2226f6dd77e250e122600b393c57", null ],

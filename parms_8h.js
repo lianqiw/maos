@@ -524,7 +524,6 @@ var parms_8h =
       [ "mvm", "parms_8h.html#a3a42d00f6d686f813ec7edbcee448c5d", null ],
       [ "mvmi", "parms_8h.html#a701644eb57a6a3f72e8d0f89ce3c4f93", null ],
       [ "mvmf", "parms_8h.html#a3f479c281d1377566c69e36aaea9fc68", null ],
-      [ "i0", "parms_8h.html#a64027bd904d422a6f8a19ebfce3873a8", null ],
       [ "mvst", "parms_8h.html#a709fe92ace8faf30d1e82217c3ff6ba8", null ],
       [ "GS0", "parms_8h.html#a112f6ac97f6fc015048c57a468ad0400", null ],
       [ "tomo", "parms_8h.html#a4085beb7bff57690e17639a9ba2e8ca7", null ],

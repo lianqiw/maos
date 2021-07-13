@@ -112,7 +112,7 @@ var searchData=
   ['setup_5frecon_5ftomo',['setup_recon_tomo',['../setup__recon_8h.html#a3fab4680ee0bb140feff9a953b0ddf54',1,'setup_recon.c']]],
   ['setup_5frecon_5ftomo_5fmatrix',['setup_recon_tomo_matrix',['../setup__recon_8h.html#a734c26f3d555e9e8038c196ad0a242ef',1,'setup_recon.c']]],
   ['setup_5frecon_5ftomo_5fprep',['setup_recon_tomo_prep',['../setup__recon_8h.html#ab4ca5a984cc27dacd89abeaf25e927cb',1,'setup_recon.c']]],
-  ['setup_5frecon_5ftomo_5fupdate',['setup_recon_tomo_update',['../setup__recon_8h.html#a57dc4aae245ea19d8bc5b91ef7be7074',1,'setup_recon.c']]],
+  ['setup_5frecon_5fupdate_5fcn2',['setup_recon_update_cn2',['../setup__recon_8h.html#affdf4abbd6002b77777fe7c1852cfcc7',1,'setup_recon.c']]],
   ['setup_5fsurf',['setup_surf',['../setup__surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107',1,'setup_surf.c']]],
   ['sfftshift',['sfftshift',['../smath_8h.html#a9110aaf766519ffc07645d8a088a0dd3',1,'stmp.c']]],
   ['sflip',['sflip',['../smath_8h.html#a8d2c27fbbf527a64bc10656384c376b4',1,'stmp.c']]],

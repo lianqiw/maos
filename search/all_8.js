@@ -1,7 +1,7 @@
 var searchData=
 [
   ['i',['i',['../parms_8h.html#a29160c3005a8bdd695a4844876d7fe73',1,'llt_cfg_t']]],
-  ['i0',['i0',['../parms_8h.html#a64027bd904d422a6f8a19ebfce3873a8',1,'load_cfg_t::i0()'],['../maos_2types_8h.html#aecc7b6a6b8fdc5d501910af0fc5bb2ac',1,'intstat_t::i0()'],['../maos_2types_8h.html#a49dcc140ee1a572cc5cb32c0eef6fa24',1,'dither_t::i0()']]],
+  ['i0',['i0',['../maos_2types_8h.html#aecc7b6a6b8fdc5d501910af0fc5bb2ac',1,'intstat_t::i0()'],['../maos_2types_8h.html#a49dcc140ee1a572cc5cb32c0eef6fa24',1,'dither_t::i0()']]],
   ['i0load',['i0load',['../parms_8h.html#a4571bd67bba3d098dcc54b828a13fb55',1,'powfs_cfg_t']]],
   ['i0save',['i0save',['../parms_8h.html#a7ef45dc538cbeb24b14e389a72588ac9',1,'powfs_cfg_t']]],
   ['i0scale',['i0scale',['../parms_8h.html#a22fde82f37dc0801828494a3473acb9c',1,'powfs_cfg_t']]],

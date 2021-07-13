@@ -9,5 +9,6 @@ var sockio_8h =
     [ "stwritestrarr", "sockio_8h.html#a9c90e8add61a1ff1783e57c01b14c339", null ],
     [ "streadstrarr", "sockio_8h.html#a7fcad7b6c004d6e16dddff1dbbd8a20d", null ],
     [ "stwritefd", "sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f", null ],
-    [ "streadfd", "sockio_8h.html#afb4493d945a1d2b3f2c26a04e2a7bf8b", null ]
+    [ "streadfd", "sockio_8h.html#afb4493d945a1d2b3f2c26a04e2a7bf8b", null ],
+    [ "stcheck", "sockio_8h.html#ad2364ca481e12db6b45009478899970f", null ]
 ];
