@@ -115,8 +115,13 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
-
-			if(multi_mf||jwfs==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+			int iwfs2;
+			for(iwfs2=iwfs0; iwfs2<iwfs; iwfs2++){
+				if(wfsgpu[iwfs2]==wfsgpu[iwfs]){
+					break;
+				}
+			}
+			if(multi_mf||iwfs2==iwfs){
 				if(parms->powfs[ipowfs].phytype_sim==1){//matched filter
 					int icol=multi_mf?jwfs:0;
 					dmat* mtche=dcell_col(powfs[ipowfs].intstat->mtche, icol);
@@ -133,9 +138,9 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 					cuwfs[iwfs].i0sumsum=PR(powfs[ipowfs].intstat->i0sumsum, jwfs, 0);
 				}
 			} else{
-				cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
-				cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
-				cuwfs[iwfs].i0sumsum=cuwfs[iwfs0].i0sumsum;
+				cuwfs[iwfs].mtche=cuwfs[iwfs2].mtche;
+				cuwfs[iwfs].i0sum=cuwfs[iwfs2].i0sum;
+				cuwfs[iwfs].i0sumsum=cuwfs[iwfs2].i0sumsum;
 			}
 		}
 	}

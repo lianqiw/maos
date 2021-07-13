@@ -25,10 +25,21 @@
 namespace cuda_recon{
 void cufdpcg_t::update(fdpcg_t* fdpcg){
 	//copy or update Mb. 
+	//temporary cut size to half to avoid copying duplicate data.
+	//The second half of data is a replicate of the first half.
 	int nxsave=fdpcg->Mbinv->nx;
 	fdpcg->Mbinv->nx=nb;
+	int m_nxsave=0;
+	if(fdpcg->Mbinv->m){
+		m_nxsave=fdpcg->Mbinv->m->nx;
+		int bs=fdpcg->bs;
+		fdpcg->Mbinv->m->nx=nb*bs*bs;
+	}
 	cp2gpu(Mb, fdpcg->Mbinv);
 	fdpcg->Mbinv->nx=nxsave;
+	if(fdpcg->Mbinv->m){
+		fdpcg->Mbinv->m->nx=m_nxsave;
+	}
 }
 cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 	:grid(_grid), fftnc(0), fftips(0), nb(0), bs(0), nby(0), nbz(0), scale(0){

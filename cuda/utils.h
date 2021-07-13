@@ -62,10 +62,23 @@ inline void type_convert<double2, float2>(double2* out, const float2* in, int nx
 
 template<typename M, typename N>
 void cp2gpu(M* dest, const N* src, int nx, int ny, cudaStream_t stream=0){
+	/*{
+		static int same_size=0, size_last=0;
+		if(size_last==nx*ny*sizeof(N)){
+			same_size++;
+			if(same_size==10){
+				error("cp2gpu: %d copies to GPU of size %ld KiB\n", same_size, size_last>>10);
+			}
+		}else{
+			same_size=0;
+		}
+		dbg("cp2gpu: %d copies to GPU of size %ld KiB\n", same_size, size_last>>10);
+		size_last=nx*ny*sizeof(N);
+	}*/
 	M* from=0;
 	int free_from=0;
-	if(cuglobal->memcount.count(dest)&&cuglobal->memcount[dest]>0){
-		error("Should not copy to referenced pointer %p. Count=%d\n", dest, 
+	if(cuglobal->memcount.count(dest)&&cuglobal->memcount[dest]>1){
+		error("Should not copy to deduped pointer %p. Count=%d\n", dest, 
 		cuglobal->memcount[dest]);
 	}
 	if(sizeof(M)!=sizeof(N)){
@@ -108,6 +121,7 @@ void cp2gpu_dedup(M** dest, const N* src, int nx, int ny, cudaStream_t stream=0)
 	if(!src){
 		error("src=null\n");
 	}
+	//dbg("cp2gpu_dedup: copy %p to GPU.\n", src);
 	uint64_t key=0;
 	int skip_copy=0;
 	int record_mem=0;
@@ -120,12 +134,12 @@ void cp2gpu_dedup(M** dest, const N* src, int nx, int ny, cudaStream_t stream=0)
 			if(cuglobal->memcount[*dest]){//valid memory
 				cuglobal->memcount[*dest]++;
 				skip_copy=1;//no need to copy again
-				dbg("cp2gpu_dedup: increase reference to data: %p\n", *dest);
+				//dbg("cp2gpu_dedup: increase reference to data: %p\n", *dest);
 			} else{
 				cuglobal->memhash.erase(key);
 				cuglobal->memcount.erase(*dest);
 				*dest=0;
-				dbg("cp2gpu_dedup: remove reference data: %p\n", *dest);
+				warning("cp2gpu_dedup: remove invalid reference data: %p\n", *dest);
 			}
 		}
 	} else if(!cuda_dedup&&*dest){
@@ -135,18 +149,18 @@ void cp2gpu_dedup(M** dest, const N* src, int nx, int ny, cudaStream_t stream=0)
 			warning("cp2gpu_dedup: deferencing data: %p\n", *dest);
 			cuglobal->memcount[*dest]--;
 			*dest=0;
-			record_mem=1;
 		}
 	}
 
 	if(!*dest){
+		if(cuda_dedup) record_mem=1;
 		*dest=(M*)new Gpu<M>[nx*ny];
 	}
 	if(!skip_copy){
 		cp2gpu(*dest, src, nx, ny, stream);
 	}
-	if(record_mem && cuda_dedup){
-		dbg("cp2gpu_dedup: record reference to data: %p\n", *dest);
+	if(record_mem){
+		//dbg("cp2gpu_dedup: record reference to data: %p\n", *dest);
 		lock_t tmp(cuglobal->memmutex);
 		cuglobal->memhash[key]=*dest;
 		cuglobal->memcount[*dest]=1;

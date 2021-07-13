@@ -22,9 +22,9 @@
 #include "perf.h"
 #include "wfs.h"
 #include "recon.h"
-extern int NGPU;
+extern int NGPU;//Actual number of GPUs being used. 
 extern int MAXGPU;
-extern Array<int> GPUS;
+extern Array<int> GPUS;//Used GPUS in cuda (col 0) and nvidia-smi index (col 1). nrow may be more than NGPU
 typedef Real ATYPE;
 typedef Real GTYPE;
 /*namespace cuda_recon{

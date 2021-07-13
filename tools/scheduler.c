@@ -414,8 +414,8 @@ static void check_jobs(void){
 					dbg2_time("check_jobs: Job %d no longer exists\n", irun->pid);
 					running_remove(irun->pid, S_NONEXIST);
 				} else if((irun->last_time+600<myclockd()) && irun->status.info==S_RUNNING){
-					dbg_time("check_jobs: Job %d does not update after 10 minutes, kill it.\n", irun->pid);
-					kill(irun->pid, SIGTERM);
+					warning_time("check_jobs: Job %d does not update after %g seconds.\n", irun->pid, myclockd()-irun->last_time);
+					//kill(irun->pid, SIGTERM);
 				}
 			}
 		}
@@ -610,7 +610,7 @@ static int respond(int sock){
 	{
 		RUN_T* irun=running_get(pid);
 		if(!irun){/*started before scheduler is relaunched. */
-			warning_time("pid=%d is already running\n", pid);
+			dbg_time("pid=%d is running but not recorded.\n", pid);
 			irun=running_add(pid, sock);
 			if(!irun){
 				warning_time("scheduler: running_add %d failed. Exe already exited.\n", pid);
@@ -621,7 +621,7 @@ static int respond(int sock){
 			nrun_add(pid, irun->nthread, irun->ngpu);
 		}
 		if(sizeof(status_t)!=read(sock, &(irun->status), sizeof(status_t))){
-			warning_time("Error reading\n");
+			warning_time("Error reading status.\n");
 		}
 		irun->last_time=myclockd();
 		monitor_send(irun, NULL);
@@ -661,6 +661,7 @@ static int respond(int sock){
 	case CMD_KILL://7: Called by Monitor to kill a task.
 	{
 		RUN_T* irun=running_get(pid);
+		warning_time("Received monitor command to kill %d\n", pid);
 		if(irun){
 			if(irun->status.info!=S_QUEUED){
 				kill(pid, SIGTERM);
@@ -772,9 +773,9 @@ static int respond(int sock){
 				//wait until monitor opend drawdaemon.
 				//continue in CMD_DISPLAY
 			} else{
-				warning_time("there is no minotor available to start drawdaemon\n");
+				warning_time("there is no monitor available to start drawdaemon\n");
 				if(stwriteint(sock, -1)){
-					warning_time("Unable to talk to draw\n");
+					warning_time("Failed to respond to draw.\n");
 				}
 			}
 		}
@@ -786,7 +787,7 @@ static int respond(int sock){
 		if(irun){
 			runned_remove(pid);
 		} else{
-			warning_time("CMD_REMOVE: %s:%d not found\n", HOST, pid);
+			dbg_time("CMD_REMOVE: %s:%d not found\n", HOST, pid);
 		}
 	}
 	break;
@@ -796,7 +797,7 @@ static int respond(int sock){
 			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
 				||stwritefd(scheduler_recv_wait, sock)){
 				stwriteint(sock, -1);
-				warning_time("failed to pass sock to draw\n");
+				warning_time("Failed to pass sock to draw\n");
 			} else{
 				stwriteint(sock, 0);//success.
 				dbg_time("passed socket to draw\n");
@@ -935,7 +936,7 @@ void scheduler_handle_ws(char* in, size_t len){
 			} else{
 				running_remove(pid, S_KILLED);
 			}
-			dbg_time("%5d term signal sent\n", pid);
+			warning_time("HTML client send term signal to %5d term signal.\n", pid);
 		}
 	} else{
 		warning_time("Unknown action: %s\n", sep);

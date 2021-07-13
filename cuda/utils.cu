@@ -275,12 +275,17 @@ void cp2gpu(curcell& dest, const dcell* src){
 		error("Mismatch: %ldx%ld vs %ldx%ld\n",
 			dest.Nx(), dest.Ny(), src->nx, src->ny);
 	}
-	for(int i=0; i<src->nx*src->ny; i++){
-		cp2gpu(dest[i], src->p[i]);
+	if(src->m){
+		//warning("cp2gpu: use m to M\n");
+		cp2gpu(dest.M(), src->m);
+	} else{
+		for(int i=0; i<src->nx*src->ny; i++){
+			cp2gpu(dest[i], src->p[i]);
+		}
 	}
 }
 /**
-   Convert dcell to curcell
+   Convert dcell to curcell. /todo: merge implementation with curcell by wraping CPU cell to GPU cell.
 */
 void cp2gpu(cuccell& dest, const ccell* src){
 	if(!src){
@@ -305,8 +310,13 @@ void cp2gpu(cuccell& dest, const ccell* src){
 		error("Mismatch: %ldx%ld vs %ldx%ld\n",
 			dest.Nx(), dest.Ny(), src->nx, src->ny);
 	}
-	for(int i=0; i<src->nx*src->ny; i++){
-		cp2gpu(dest[i], src->p[i]);
+	if(src->m){
+		//warning("cp2gpu: use m to M\n");
+		cp2gpu(dest.M(), src->m);
+	}else{
+		for(int i=0; i<src->nx*src->ny; i++){
+			cp2gpu(dest[i], src->p[i]);
+		}
 	}
 }
 

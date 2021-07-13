@@ -1104,10 +1104,10 @@ X(cell)* X(spblockextract)(const X(sp)* A, long bs){
 		error("Must be a square matrix\n");
 	}
 	long nb=A->nx/bs;
-	X(cell)* out=X(cellnew)(nb, 1);
+	X(cell)* out=X(cellnew_same)(nb, 1, bs, bs);
 	for(long ib=0;ib<nb; ib++){
 		long is=ib*bs;/*starting col */
-		P(out,ib)=X(new)(bs, bs);
+		//P(out,ib)=X(new)(bs, bs);
 		X(mat)* pbk=P(out,ib);
 		for(long icol=is; icol<is+bs; icol++){
 			for(long irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
