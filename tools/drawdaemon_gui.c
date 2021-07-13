@@ -53,7 +53,6 @@ char* font_name=NULL;
 float font_size;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
-static int cursor_type=0;/*cursor type of the drawing area. */
 float lpf=1;//low pass filter the update. Set using dialog.
 /*
   Routines in this file are about the GUI.
@@ -521,6 +520,7 @@ static const char* subnb_label_get(GtkWidget* subnb, GtkWidget* page){
 #endif
 }
 static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
+	//dbg_time("do_move: %g %g\n", xdiff, ydiff);
 	drawdata->offx+=xdiff/drawdata->zoomx;
 	drawdata->offy+=ydiff/drawdata->zoomy;
 	delayed_update_pixmap(drawdata);/*no need delay since motion notify already did it. */
@@ -538,28 +538,31 @@ static gboolean motion_notify(GtkWidget* widget, GdkEventMotion* event,
 		float dx, dy;
 		dx=x-drawdata->mxdown;
 		dy=y-drawdata->mydown;
+		float dt=myclockd()-drawdata->mtdown;
 		/*move with left cursor */
-		if((event->state&GDK_BUTTON1_MASK)){
-			do_move(drawdata, dx, -dy);/*notice the reverse sign. */
-			drawdata->mxdown=x;
-			drawdata->mydown=y;
-		} else if(event->state&GDK_BUTTON3_MASK){/*select and zoom. */
-			if(drawdata->square&&!drawdata->image){/*for a square */
-				float ratio=1;
-				if(drawdata->image){
-					ratio=(float)drawdata->nx/(float)drawdata->ny;
+		if((fabs(dx)>3 || fabs(dy)>3)&&dt>.16){
+			if((event->state&GDK_BUTTON1_MASK)){
+				do_move(drawdata, dx, -dy);/*notice the reverse sign. */
+				drawdata->mxdown=x;
+				drawdata->mydown=y;
+			} else if(event->state&GDK_BUTTON3_MASK){/*select and zoom. */
+				if(drawdata->square&&!drawdata->image){/*for a square */
+					float ratio=1;
+					if(drawdata->image){
+						ratio=(float)drawdata->nx/(float)drawdata->ny;
+					}
+					if(fabs(dx)<fabs(dy)*ratio){
+						dy*=fabs(dx/(dy*ratio));
+					} else{
+						dx*=fabs(dy*ratio/dx);
+					}
 				}
-				if(fabs(dx)<fabs(dy)*ratio){
-					dy*=fabs(dx/(dy*ratio));
-				} else{
-					dx*=fabs(dy*ratio/dx);
+				drawdata->dxdown=dx;
+				drawdata->dydown=dy;
+				drawdata->draw_rect=1;
+				if(drawdata->pixmap){/*force a refresh to remove previous rectangule */
+					gtk_widget_queue_draw(widget);
 				}
-			}
-			drawdata->dxdown=dx;
-			drawdata->dydown=dy;
-			drawdata->draw_rect=1;
-			if(drawdata->pixmap){/*force a refresh to remove previous rectangule */
-				gtk_widget_queue_draw(widget);
 			}
 		}
 	}
@@ -639,6 +642,14 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event,
 	}
 	return FALSE;
 }
+static gboolean focus_in_handler(GtkWidget* widget, GdkEvent* event, drawdata_t** drawdatawrap){
+	(void)event;
+	(void)widget;
+	drawdata_t* drawdata=*drawdatawrap;
+	drawdata->valid=0;
+	//dbg_time("focus_in_handler.\n");
+	return FALSE;
+}
 static gboolean button_press(GtkWidget* widget, GdkEventButton* event, drawdata_t** drawdatawrap){
 	drawdata_t* drawdata=*drawdatawrap;
 	/*Grab focus so the keys work */
@@ -654,7 +665,7 @@ static gboolean button_press(GtkWidget* widget, GdkEventButton* event, drawdata_
 	} else{
 		drawdata->valid=0;
 	}
-	/*} */
+	//dbg_time("button_press %g %g.\n", event->x, event->y);
 	return FALSE;
 }
 
@@ -668,11 +679,11 @@ static gboolean button_release(GtkWidget* widget, GdkEventButton* event, drawdat
 	y=event->y;
 	float dx=x-drawdata->mxdown;
 	float dy=y-drawdata->mydown;
-	//float dt=myclockd()-drawdata->mtdown;
-	if((fabs(dx)<5&&fabs(dy)<5)){
-		dbg_time("Ignore accidental click\n");
-	} else if((cursor_type==0&&event->button==1)
-		||(cursor_type==1&&event->button==2)){/*move only on left button */
+	float dt=myclockd()-drawdata->mtdown;
+	//dbg_time("button_release %g %g. dx=%g %g. button is %d.dt is %g\n", event->x, event->y, dx, dy, event->button, dt);
+	if((fabs(dx)<3&&fabs(dy)<3)||dt<0.16){
+		//dbg_time("Ignore accidental click\n");
+	} else if(event->button==1){/*move only on left button */
 		do_move(drawdata, dx, -dy);
 	} else if(event->button==3){/*right button select and zoom. */
 		float xx=drawdata->mxdown;
@@ -1046,8 +1057,12 @@ gboolean addpage(gpointer indata){
 		g_signal_connect(drawarea, "motion-notify-event",
 			G_CALLBACK(motion_notify), drawdatawrap);
 #endif
+		//notice that there is no button_press event when click through to activate a window.
+		//so we also connect focus-in-event
 		g_signal_connect(drawarea, "button-press-event",
 			G_CALLBACK(button_press), drawdatawrap);
+		g_signal_connect(drawarea, "focus-in-event",
+		G_CALLBACK(focus_in_handler), drawdatawrap);
 		g_signal_connect(drawarea, "button-release-event",
 			G_CALLBACK(button_release), drawdatawrap);
 		g_signal_connect(drawarea, "scroll-event",
@@ -1211,14 +1226,6 @@ static void tool_zoom(GtkToolButton* button, gpointer data){
 	int mode=GPOINTER_TO_INT(data);
 	do_zoom(drawdata, 0, 0, mode);
 }
-/*static void tool_toggled(GtkToggleToolButton *button, gpointer data){
-	int active=gtk_toggle_tool_button_get_active(button);
-	if(active){
-	cursor_type=(GPOINTER_TO_INT(data));
-	}
-	drawdata_dialog->drawn=0;
-	delayed_update_pixmap(drawdata_dialog);
-	}*/
 
 static void limit_change(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);

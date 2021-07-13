@@ -293,7 +293,17 @@ static int respond(int sock){
 			proc_remove(ihost, pid);
 		} else{
 			if(cmd[1]!=ihost&&cmd[1]!=cmd[2]){
-				/*A new mean to replace the ID of a job.*/
+				/*pidnew is different from pid to indicate transition from
+				queued to run or vice versa. There may be a race condition if
+				new status from pid is sent before the transition.*/
+				proc_t *p2=proc_get(ihost, cmd[1]);
+				if(p2){//race condition happens, remove the newly created entry.
+					if(p2->path&&!p->path){
+						p->path=p2->path;
+						p2->path=NULL;
+					}
+					proc_remove(ihost, cmd[1]);
+				}
 				p->pid=cmd[1];
 			}
 			gdk_threads_add_idle((GSourceFunc)refresh, p);
@@ -319,7 +329,7 @@ static int respond(int sock){
 		}
 	}
 	break;
-	case MON_CLEARJOB:
+	case MON_CLEARJOB://clear all jobs unless pid is specified
 	{
 		ihost=cmd[1];
 		int flag=cmd[2];
@@ -332,7 +342,7 @@ static int respond(int sock){
 		}
 	}
 	break;
-	case MON_KILLJOB:
+	case MON_KILLJOB://kill all jobs unless pid is specified
 	{
 		ihost=cmd[1];
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
