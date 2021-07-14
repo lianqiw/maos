@@ -154,10 +154,10 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 */
 void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
-	cuglobal->wfs=Array<cuwfs_t>(parms->nwfs, 1);
+	cuglobal->wfs.init(parms->nwfs, 1);
 	for(int im=0; im<NGPU; im++){
 		gpu_set(im);
-		cudata->powfs=Array<cupowfs_t>(parms->npowfs, 1);
+		cudata->powfs.init(parms->npowfs, 1);
 		Array<cupowfs_t>& cupowfs=cudata->powfs;
 
 		/* Setup information that are same for wfs in each powfs*/
@@ -209,7 +209,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				cp2gpu(cupowfs[ipowfs].pynominal, powfs[ipowfs].pywfs->nominal);
 				cp2gpu(cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs->gradoff);
 				if(powfs[ipowfs].pywfs->msaloc){
-					cupowfs[ipowfs].msaloc=Array<culoc_t>(powfs[ipowfs].pywfs->msaloc->nx, 1);
+					cupowfs[ipowfs].msaloc.init(powfs[ipowfs].pywfs->msaloc->nx, 1);
 					for(int i=0; i<powfs[ipowfs].pywfs->msaloc->nx;i++){
 						cupowfs[ipowfs].msaloc[i]=culoc_t(powfs[ipowfs].pywfs->msaloc->p[i]);
 					}
@@ -234,7 +234,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 		const int nwfsp=parms->powfs[ipowfs].nwfs;
 		const int ndm=parms->ndm;
 		/*imcc for ztilt. */
-		cuwfs[iwfs].loc_dm=Array<culoc_t>(ndm, 1);
+		cuwfs[iwfs].loc_dm.init(ndm, 1);
 		for(int idm=0; idm<ndm; idm++){
 			if(powfs[ipowfs].loc_dm){
 				cuwfs[iwfs].loc_dm[idm]=culoc_t(powfs[ipowfs].loc_dm->p[wfsind+idm*nwfsp]);
@@ -363,7 +363,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->n>1
 					||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 					 /*Need one per wfs in this powfs, or the first wfs. */
-					cuwfs[iwfs].dtf=Array<cudtf_t>(nwvl, 1);
+					cuwfs[iwfs].dtf.init(nwvl, 1);
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
 						int notfused=!powfs[ipowfs].dtf[iwvl].fused;
 						if(notfused){

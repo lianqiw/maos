@@ -386,9 +386,9 @@ public:
 				pm_cpu[i]=p[i]();
 			}
 			if(stream==(cudaStream_t)-1){
-				cudaMemcpy(pm(), pm_cpu(), sizeof(T*)*nx*ny, cudaMemcpyHostToDevice);
+				DO(cudaMemcpy(pm(), pm_cpu(), sizeof(T*)*nx*ny, cudaMemcpyHostToDevice));
 			} else{
-				cudaMemcpyAsync(pm(), pm_cpu(), sizeof(T*)*nx*ny, cudaMemcpyHostToDevice, stream);
+				DO(cudaMemcpyAsync(pm(), pm_cpu(), sizeof(T*)*nx*ny, cudaMemcpyHostToDevice, stream));
 			}
 		}
 	}
@@ -647,7 +647,7 @@ public:
 			cc[3]=(2.f*iac-0.5f)*cubicn;
 			cc[4]=(0.5f-iac)*cubicn;
 			curmat res(5, 1);
-			cudaMemcpy(res, cc, 5*sizeof(Real), cudaMemcpyHostToDevice);
+			DO(cudaMemcpy(res, cc, 5*sizeof(Real), cudaMemcpyHostToDevice));
 			return res;
 		} else{
 			return curmat();
@@ -722,7 +722,7 @@ void initzero(Array<T, Dev>& A, long nx, long ny){
 	if(A){
 		A.zero();
 	} else{
-		A=Array<T, Dev>(nx, ny);
+		A.init(nx, ny);
 	}
 }
 

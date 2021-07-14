@@ -326,7 +326,7 @@ void cp2gpu(cuccell& dest, const ccell* src){
 void gpu_write(const Real* p, int nx, int ny, const char* format, ...){
 	format2fn;
 	Real* tmp=(Real*)malloc(nx*ny*sizeof(Real));
-	cudaMemcpy(tmp, p, nx*ny*sizeof(Real), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(Real), cudaMemcpyDeviceToHost));
 	writearr(fn, 1, sizeof(Real), MCU_REAL, NULL, p, nx, ny);
 	free(tmp);
 }
@@ -337,7 +337,7 @@ void gpu_write(const Real* p, int nx, int ny, const char* format, ...){
 void gpu_write(const Comp* p, int nx, int ny, const char* format, ...){
 	format2fn;
 	Comp* tmp=(Comp*)malloc(nx*ny*sizeof(Comp));
-	cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), cudaMemcpyDeviceToHost));
 	writearr(fn, 1, sizeof(Comp), MCU_COMP, NULL, p, nx, ny);
 	free(tmp);
 }
@@ -347,7 +347,7 @@ void gpu_write(const Comp* p, int nx, int ny, const char* format, ...){
 void gpu_write(const int* p, int nx, int ny, const char* format, ...){
 	format2fn;
 	int* tmp=(int*)malloc(nx*ny*sizeof(int));
-	cudaMemcpy(tmp, p, nx*ny*sizeof(int), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(int), cudaMemcpyDeviceToHost));
 	writearr(fn, 1, sizeof(int), M_INT32, NULL, tmp, nx, ny);
 	free(tmp);
 }
@@ -441,8 +441,7 @@ add2cpu_mat(c, real, Comp)
 	if(!*out) *out=dnew(in.Nx(), in.Ny());				\
 	dmat *pout=*out;						\
 	CUDA_SYNC_STREAM;						\
-	DO(cudaMemcpy(pout->p, in(), in.N()*sizeof(T),			\
-		      cudaMemcpyDeviceToHost));				\
+	DO(cudaMemcpy(pout->p, in(), in.N()*sizeof(T),cudaMemcpyDeviceToHost));	\
 	if(pout->header) free(pout->header);				\
 	if(in.header.length()) pout->header=strdup(in.header.c_str());	\
     }

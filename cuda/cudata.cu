@@ -224,7 +224,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	  		skip the GPU and print warning. If duplicates are found, use only
 	  		once.              
 	 	*/
-		GPUS=Array<int>(ngpu, 2);
+		GPUS.init(ngpu, 2);
 		for(int ig=0; ig<ngpu; ig++){
 			if(gpus[ig]>=MAXGPU){
 				warning("GPU %d: not exist\n", gpus[ig]);
@@ -239,7 +239,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			repeat=0;
 			ngpu=MAXGPU;
 		}
-		GPUS=Array<int>(ngpu, 2);//stores CUDA index
+		GPUS.init(ngpu, 2);//stores CUDA index
 		/*For each GPU, query the available memory.*/
 		long(*gpu_info)[2]=(long(*)[2])calloc(2*MAXGPU, sizeof(long));//index and memory
 		int gpu_valid_count;
@@ -299,8 +299,8 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			 * usage. We first gather together all the tasks and assign a timing
 			 * in ms to each. Sort all the tasks in descend order and then
 			 * iteratively assign each task to the minimally used GPU*/
-			cuglobal->evlgpu=Array<int>(parms->evl.nevl, 1);
-			cuglobal->wfsgpu=Array<int>(parms->nwfs, 1);
+			cuglobal->evlgpu.init(parms->evl.nevl, 1);
+			cuglobal->wfsgpu.init(parms->nwfs, 1);
 			int ntask=0;
 			if(parms->gpu.tomo||parms->gpu.fit||parms->gpu.lsr) ntask++;
 			if(parms->gpu.evl) ntask+=parms->evl.nevl;

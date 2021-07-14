@@ -61,10 +61,10 @@ cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 			count++;
 		}
 	}
-	fft=Array<cufftHandle>(count, 1);
-	ffti=Array<cufftHandle>(count, 1);
+	fft.init(count, 1);
+	ffti.init(count, 1);
 	fftnc=count;
-	fftips=Array<int>(count+1, 1);
+	fftips.init(count+1, 1);
 	for(int ic=0; ic<count; ic++){
 		fftips[ic]=start[ic];
 	}
@@ -109,8 +109,8 @@ cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 			FDDATA[ips].scale=1.f;
 		}
 	}
-	fddata=Array<gpu_fdpcg_t, Gpu>(nps, 1);
-	cudaMemcpy(fddata(), FDDATA, sizeof(gpu_fdpcg_t)*nps, cudaMemcpyHostToDevice);
+	fddata.init(nps, 1);
+	DO(cudaMemcpy(fddata(), FDDATA, sizeof(gpu_fdpcg_t)*nps, cudaMemcpyHostToDevice));
 	CUDA_CHECK_ERROR;
 	delete[] FDDATA;
 }

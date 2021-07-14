@@ -402,9 +402,9 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		if(lltopd){ /*First calculate LOTF */
 			int nlx=powfs[ipowfs].llt->pts->nx;
 			int nlwvf=nlx*parms->powfs[ipowfs].embfac;
-			cudaMemsetAsync(lwvf, 0, sizeof(Comp)*nlwvf*nlwvf, stream);
+			DO(cudaMemsetAsync(lwvf, 0, sizeof(Comp)*nlwvf*nlwvf, stream));
 			if(lotfc!=lwvf){
-				cudaMemsetAsync(lotfc, 0, sizeof(Comp)*notf*notf, stream);
+				DO(cudaMemsetAsync(lotfc, 0, sizeof(Comp)*notf*notf, stream));
 			}
 			sa_embed_wvf_do<<<1, dim3(16, 16), 0, stream>>>
 				(lwvf, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
@@ -423,9 +423,9 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			ctoc_init(30);
 			int ksa=MIN(msa, nsa-isa);/*total number of subapertures left to do. */
 			/*embed amp/opd to wvf */
-			cudaMemsetAsync(wvf, 0, sizeof(Comp)*ksa*nwvf*nwvf, stream);
+			DO(cudaMemsetAsync(wvf, 0, sizeof(Comp)*ksa*nwvf*nwvf, stream));
 			if(psf!=wvf){
-				cudaMemsetAsync(psf, 0, sizeof(Comp)*ksa*notf*notf, stream);
+				DO(cudaMemsetAsync(psf, 0, sizeof(Comp)*ksa*notf*notf, stream));
 			}
 			sa_embed_wvf_do<<<ksa, dim3(16, 16), 0, stream>>>
 				(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp()+isa*nx*nx, wvl, nx, nwvf);
@@ -455,8 +455,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 				CUFFT(cuwfs[iwfs].plan2, psf, CUFFT_FORWARD);
 				ctoc("fft to otf");//3.7 ms for notf=84. 2.6 ms for 70. 0.7ms for 64.
 				if(pistatout){
-					cudaMemcpyAsync(psfstat, psf, sizeof(Comp)*notf*notf*ksa,
-						MEMCPY_D2D, stream);
+					DO(cudaMemcpyAsync(psfstat, psf, sizeof(Comp)*notf*notf*ksa,MEMCPY_D2D, stream));
 					if(parms->powfs[ipowfs].pistatout){
 						sa_add_otf_tilt_corner_do<<<ksa, dim3(16, 16), 0, stream>>>
 							(psfstat, notf, notf, gradref()+isa, gradref()+nsa+isa, -1.f/dtheta);
@@ -484,7 +483,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 						ctoc("fft to psf");
 					}
 					if(otf!=psf){
-						cudaMemsetAsync(otf, 0, sizeof(Comp)*ksa*notfx*notfy, stream);
+						DO(cudaMemsetAsync(otf, 0, sizeof(Comp)*ksa*notfx*notfy, stream));
 					}
 					if(otf!=psf){/*copy the psf corner*/
 						sa_cpcorner_do<<<ksa, dim3(16, 16), 0, stream>>>

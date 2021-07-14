@@ -82,7 +82,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 			}
 		}
 		dspfree(GPt);
-		GPp=Array<short2, Gpu>(np, nsa);
+		GPp.init(np, nsa);
 		cudaMemcpy(GPp(), partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
 		*GPscale=1./pxscale;
 		free(partxy);
@@ -170,7 +170,7 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 			lapc[ips].zzi=-1;
 		}
 	}
-	lap=Array<lap_t, Gpu>(recon->npsr, 1);
+	lap.init(recon->npsr, 1);
 	cudaMemcpy(lap(), lapc, sizeof(lap_t)*recon->npsr, cudaMemcpyHostToDevice);
 }
 
@@ -287,7 +287,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			GPDATA[iwfs].oxp=recon->pmap->ox;
 			GPDATA[iwfs].oyp=recon->pmap->oy;
 		}
-		gpdata=Array<gpu_gp_t, Gpu>(nwfs, 1);
+		gpdata.init(nwfs, 1);
 		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, cudaMemcpyHostToDevice));
 		//delete [] GPDATA;
 	}

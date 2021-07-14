@@ -33,9 +33,9 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 	const int nwvl=parms->evl.nwvl;
 	/*The following lives in CPU. */
 	if(parms->evl.psfmean||parms->evl.psfhist){
-		cuglobal->perf.nembed=Array<int>(nwvl, 1);
-		cuglobal->perf.psfsize=Array<int>(nwvl, 1);
-		cuglobal->perf.wvls=Array<Real>(nwvl, 1);
+		cuglobal->perf.nembed.init(nwvl, 1);
+		cuglobal->perf.psfsize.init(nwvl, 1);
+		cuglobal->perf.wvls.init(nwvl, 1);
 
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			cuglobal->perf.nembed[iwvl]=(int)aper->embed->nembed->p[iwvl];
@@ -50,7 +50,7 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 		cp2gpu(cudata->perf.amp, aper->amp);
 		cp2gpu(cudata->perf.imcc, aper->imcc);
 		if(parms->evl.psfmean||parms->evl.psfhist){
-			cudata->perf.embed=Array<cuimat>(nwvl, 1);//(int**) calloc(nwvl, sizeof(int*));
+			cudata->perf.embed.init(nwvl, 1);//(int**) calloc(nwvl, sizeof(int*));
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
 				cp2gpu(cudata->perf.embed[iwvl], aper->embed->embed->p[iwvl]->p, aper->locs->nloc, 1);
 			}
@@ -59,9 +59,9 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 	for(int ievl=0; ievl<nevl; ievl++){
 		gpu_set(cuglobal->evlgpu[ievl]);
 		if(!cudata->perf.locs_dm){
-			cudata->perf.locs_dm=Array<Array<culoc_t> >(nevl, 1);
+			cudata->perf.locs_dm.init(nevl, 1);
 		}
-		cudata->perf.locs_dm[ievl]=Array<culoc_t>(parms->ndm, 1);
+		cudata->perf.locs_dm[ievl].init(parms->ndm, 1);
 		for(int idm=0; idm<parms->ndm; idm++){
 			loc_t* loc_dm;
 			if(aper->locs_dm&&aper->locs_dm->p[ievl+idm*nevl]){
@@ -72,9 +72,8 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 			cudata->perf.locs_dm[ievl][idm]=culoc_t(loc_dm);
 		}
 	}
-	//cuglobal->perf.stream=Array<stream_t>(nevl, 1);
 	if(parms->evl.psfmean||parms->evl.psfhist){
-		cuglobal->perf.plan=Array<cufftHandle>(nwvl*nevl, 1);
+		cuglobal->perf.plan.init(nwvl*nevl, 1);
 	}
 	for(int ievl=0; ievl<nevl; ievl++){
 		gpu_set(cuglobal->evlgpu[ievl]);
@@ -90,18 +89,16 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 		}
 	}
 	cuglobal->perf.nevl=nevl;
-	cuglobal->perf.opd=curcell(nevl, 1);
-	cuglobal->perf.cc_cl=curcell(nevl, 1);
-	cuglobal->perf.cc_ol=curcell(nevl, 1);
-	cuglobal->perf.coeff=curcell(nevl, 1);
+	cuglobal->perf.opd.init(nevl, 1);
+	cuglobal->perf.cc_cl.init(nevl, 1);
+	cuglobal->perf.cc_ol.init(nevl, 1);
+	cuglobal->perf.coeff.init(nevl, 1);
 	cuglobal->perf.ccb_ol.init(nevl, 1);
 	cuglobal->perf.ccb_cl.init(nevl, 1);
-	//cuglobal->perf.ccb_ol=(Real**)malloc(sizeof(Real*)*nevl);
-	//cuglobal->perf.ccb_cl=(Real**)malloc(sizeof(Real*)*nevl);
 	for(int ievl=0; ievl<nevl; ievl++){
 		gpu_set(cuglobal->evlgpu[ievl]);
-		cuglobal->perf.ccb_ol[ievl].init(7, 1);//=(Real*)malloc4async(sizeof(Real)*7);
-		cuglobal->perf.ccb_cl[ievl].init(7, 1);//=(Real*)malloc4async(sizeof(Real)*7);
+		cuglobal->perf.ccb_ol[ievl].init(7, 1);
+		cuglobal->perf.ccb_cl[ievl].init(7, 1);
 		cuglobal->perf.cc_cl[ievl].init(7, 1);
 		cuglobal->perf.cc_ol[ievl].init(7, 1);
 		cuglobal->perf.coeff[ievl].init(7, 1);
@@ -109,18 +106,18 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 	}
 	if(!parms->sim.evlol){
 		if(parms->evl.cov&&parms->gpu.psf){
-			cuglobal->perf.opdcov=curcell(nevl, 1);
-			cuglobal->perf.opdmean=curcell(nevl, 1);
-			cuglobal->perf.opdcov_ngsr=curcell(nevl, 1);
-			cuglobal->perf.opdmean_ngsr=curcell(nevl, 1);
+			cuglobal->perf.opdcov.init(nevl, 1);
+			cuglobal->perf.opdmean.init(nevl, 1);
+			cuglobal->perf.opdcov_ngsr.init(nevl, 1);
+			cuglobal->perf.opdmean_ngsr.init(nevl, 1);
 		}
 		if(parms->evl.psfmean||parms->evl.psfhist){
-			cuglobal->perf.psfcl=curcell(nwvl, parms->evl.nevl);
-			cuglobal->perf.psfcl_ngsr=curcell(nwvl, parms->evl.nevl);
+			cuglobal->perf.psfcl.init(nwvl, parms->evl.nevl);
+			cuglobal->perf.psfcl_ngsr.init(nwvl, parms->evl.nevl);
 		}
 	}
 	if(aper->opdadd){
-		cuglobal->perf.surf=curcell(nevl, 1);
+		cuglobal->perf.surf.init(nevl, 1);
 		for(int ievl=0; ievl<nevl; ievl++){
 			gpu_set(cuglobal->evlgpu[ievl]);
 			cp2gpu(cuglobal->perf.surf[ievl], aper->opdadd->p[ievl]);
@@ -150,7 +147,7 @@ void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper){
 				if(cudata->perf.psfol){
 					cuzero(cudata->perf.psfol);
 				} else{
-					cudata->perf.psfol=curcell(nwvl, 1);
+					cudata->perf.psfol.init(nwvl, 1);
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
 						cudata->perf.psfol[iwvl].init(cuglobal->perf.psfsize[iwvl],
 							cuglobal->perf.psfsize[iwvl]);

@@ -243,9 +243,9 @@ void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 			if(parms->powfs[ipowfs].moao==imoao){
 				gpu_set(cuglobal->wfsgpu[iwfs]);
 				if(!cudata->dm_wfs){
-					cudata->dm_wfs=Array<cumapcell>(nwfs, 1);
+					cudata->dm_wfs.init(nwfs, 1);
 				}
-				cudata->dm_wfs[iwfs]=cumapcell(1, 1);
+				cudata->dm_wfs[iwfs].init(1, 1);
 				cudata->dm_wfs[iwfs][0]=(recon->moao[imoao].amap->p[0]);
 			}
 		}
@@ -253,9 +253,9 @@ void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 				gpu_set(cuglobal->evlgpu[ievl]);
 				if(!cudata->dm_evl){
-					cudata->dm_evl=Array<cumapcell>(parms->evl.nevl, 1);
+					cudata->dm_evl.init(parms->evl.nevl, 1);
 				}
-				cudata->dm_evl[ievl]=cumapcell(1, 1);
+				cudata->dm_evl[ievl].init(1, 1);
 				cudata->dm_evl[ievl][0]=(recon->moao[imoao].amap->p[0]);
 			}
 		}
