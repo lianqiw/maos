@@ -610,7 +610,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 				dmat* ibgrad=0;
 				dcellscale(pd->imb, scale1);
 				if(parms->powfs[ipowfs].dither_gdrift>0){//drift control
-					shwfs_grad(&ibgrad, pd->imb->p, parms, powfs, iwfs, 2);
+					shwfs_grad(&ibgrad, pd->imb->p, parms, powfs, iwfs, PTYPE_COG);
 					if(parms->powfs[ipowfs].trs){
 						if(iwfs==P(parms->powfs[ipowfs].wfs,0)){
 							dbg("Step %5d: powfs %d uplink drift control\n", simu->wfsisim, ipowfs);
@@ -781,7 +781,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				P(simu->zoomint, iwfs)+=P(simu->zoomerr, iwfs)*zoomgain;
 				P(simu->zoomerr, iwfs)=0;
 				if(simu->zoompos&&P(simu->zoompos, iwfs)){
-					P(P(simu->zoompos, iwfs), simu->wfsisim)=P(simu->zoomint, iwfs);
+					P(P(simu->zoompos, iwfs), simu->wfsflags[ipowfs].zoomout-1)=P(simu->zoomint, iwfs);
 				}
 			}
 			update_etf=1;
@@ -886,7 +886,7 @@ static void wfsgrad_drift(sim_t* simu, int ipowfs){
 		//Compute CoG of i0 + goff and drive it toward gradncpa with low gain (0.1)
 		if(1){
 			dzero(goff);
-			shwfs_grad(&goff, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, 2);//force cog
+			shwfs_grad(&goff, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);//force cog
 			dadd(&goff, 1, P(simu->gradoff, iwfs), 1);
 			if(simu->powfs[ipowfs].gradncpa){
 				dadd(&goff, 1, P(simu->powfs[ipowfs].gradncpa, jwfs), -1);

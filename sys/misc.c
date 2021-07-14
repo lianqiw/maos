@@ -822,7 +822,11 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	(void)unused;
-	info("\nSignal caught: %s (%d).\n", strsignal(sig), sig);sync();
+	char sender[PATH_MAX]={0};
+	get_job_progname(sender, PATH_MAX, siginfo->si_pid);
+	info("\nSignal caught: %s (%d), code is %d, send by %d (uid=%d, %s).\n", 
+		strsignal(sig), sig, siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
+	sync();
 	int cancel_action=0;
 	struct sigaction act={0};
 	act.sa_handler=SIG_DFL;

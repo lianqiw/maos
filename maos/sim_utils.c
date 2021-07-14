@@ -435,7 +435,7 @@ void sim_update_flags(sim_t* simu, int isim){
 			wfsflags->ogout=(ogcount>0&&(ogcount%ograt)==0)?(ogcount/ograt):0;
 		}
 		if(parms->powfs[ipowfs].llt){
-			wfsflags->zoomout=(simu->wfsisim+1)%parms->powfs[ipowfs].zoomdtrat==0;
+			wfsflags->zoomout=(simu->wfsisim+1)%parms->powfs[ipowfs].zoomdtrat==0?((simu->wfsisim+1)/parms->powfs[ipowfs].zoomdtrat):0;
 		}
 	}
 
@@ -1040,7 +1040,7 @@ static void init_simu_wfs(sim_t* simu){
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 				int ipowfs=parms->wfs[iwfs].powfs;
 				if(parms->powfs[ipowfs].llt){
-					nnx[iwfs]=parms->sim.end;
+					nnx[iwfs]=(parms->sim.end+1)/parms->powfs[ipowfs].zoomdtrat;
 					nny[iwfs]=1;
 				} else{
 					nnx[iwfs]=0;
