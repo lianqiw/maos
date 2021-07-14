@@ -71,6 +71,15 @@ void fixnan(dmat* res){
    The main.
 */
 int main(int argc, char* argv[]){
+	int drawres_tot=1;
+	int drawres_lo=1;
+	int drawres_hi=1;
+	int drawres_ol=1;
+	if(check_suffix(argv[0], "drawreshi")){
+		drawres_lo=0;
+		drawres_tot=0;
+		drawres_ol=0;
+	}
 	arg_t* arg=parse_args(argc, argv);
 	/*use the parent pid so same bash session has the same drawdaemon. */
 	draw_id=getsid(0)+2e6;/*variables in draw.c */
@@ -302,42 +311,64 @@ int main(int argc, char* argv[]){
 					indlo=1;/*tt */
 					indhi=2;/*pttr */
 				}
+				long nstep=NY(P(ires, 0));//valid step;
+				for(long i=0; i<nstep; i++){
+					if(isnan(P(P(ires,0),0,i))){
+						//warning("Number of steps reduced from %ld to %ld\n", nstep, i);
+						nstep=i;
+						break;
+					}
+				}
 				dmat* tmp;
-				tmp=dsub(P(ires,ind), indhi, 1, 0, 0);
-				P(P(res,P_HI),ii)=dtrans(tmp);
-				dfree(tmp);
-				tmp=dsub(P(ires,ind), indlo, 1, 0, 0);
-				fixnan(tmp);
-				P(P(res,P_LO),ii)=dtrans(tmp);
-				dfree(tmp);
-				dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_LO),ii), 1);
-				dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_HI),ii), 1);
-
-				if(indfocus>-1){
-					tmp=dsub(P(ires,ind), indfocus, 1, 0, 0);
-					fixnan(tmp);
-					P(P(res,P_F),ii)=dtrans(tmp);
+				if(drawres_hi||drawres_tot){
+					tmp=dsub(P(ires,ind), indhi, 1, 0, nstep);
+					P(P(res,P_HI),ii)=dtrans(tmp);
 					dfree(tmp);
 				}
-				if(indtt>-1){
-					tmp=dsub(P(ires,ind), indtt, 1, 0, 0);
+				if(drawres_lo||drawres_tot){
+					tmp=dsub(P(ires,ind), indlo, 1, 0, nstep);
 					fixnan(tmp);
-					P(P(res,P_TT),ii)=dtrans(tmp);
+					P(P(res,P_LO),ii)=dtrans(tmp);
 					dfree(tmp);
-					dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_LO),ii), 1);
-					dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_TT),ii), -1);
-					dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_F),ii), -1);
 				}
-
-				tmp=dsub(P(ires,0), 2, 1, 0, 0);
-				P(P(res,P_OLHI),ii)=dtrans(tmp);
-				dfree(tmp);
-				tmp=dsub(P(ires,0), 1, 1, 0, 0);
-				P(P(res,P_OLLO),ii)=dtrans(tmp);
-				dfree(tmp);
+				if(drawres_tot){
+					dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_LO),ii), 1);
+					dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_HI),ii), 1);
+					if(!drawres_hi){
+						dfree(P(P(res,P_HI),ii));
+					}
+					if(!drawres_lo){
+						dfree(P(P(res, P_LO), ii));
+					}
+				}
+				if(drawres_lo){
+					if(indfocus>-1){
+						tmp=dsub(P(ires,ind), indfocus, 1, 0, nstep);
+						fixnan(tmp);
+						P(P(res,P_F),ii)=dtrans(tmp);
+						dfree(tmp);
+					}
+					if(indtt>-1){
+						tmp=dsub(P(ires,ind), indtt, 1, 0, nstep);
+						fixnan(tmp);
+						P(P(res,P_TT),ii)=dtrans(tmp);
+						dfree(tmp);
+						dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_LO),ii), 1);
+						dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_TT),ii), -1);
+						dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_F),ii), -1);
+					}
+				}
+				if(drawres_ol){
+					tmp=dsub(P(ires,0), 2, 1, 0, nstep);
+					P(P(res,P_OLHI),ii)=dtrans(tmp);
+					dfree(tmp);
+					tmp=dsub(P(ires,0), 1, 1, 0, nstep);
+					P(P(res,P_OLLO),ii)=dtrans(tmp);
+					dfree(tmp);
+					dadd(&P(P(res, P_OLTOT), ii), 1, P(P(res, P_OLLO), ii), 1);
+					dadd(&P(P(res, P_OLTOT), ii), 1, P(P(res, P_OLHI), ii), 1);
+				}
 				dcellfree(ires);
-				dadd(&P(P(res,P_OLTOT),ii), 1, P(P(res,P_OLLO),ii), 1);
-				dadd(&P(P(res,P_OLTOT),ii), 1, P(P(res,P_OLHI),ii), 1);
 			} else if(restype==2){//Skycoverage results
 				snprintf(fn, PATH_MAX, "%s/Res%ld_%ld.bin", path[ipath], seed[iseed], seed2[iseed]);
 				dmat* res0=dread("%s", fn);

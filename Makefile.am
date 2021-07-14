@@ -32,13 +32,13 @@ clear-doc:
 	@rm -rf doxygen-doc
 
 EXTRA_DIST = doxygen.cfg docs scripts config 
-BUILT_SOURCES=version.h #non existent file will always run
+BUILT_SOURCES=version.h 
 if LIBTOOL_FIX_OPENMP
 BUILT_SOURCES+=fixlibtool
 endif
 fixlibtool:libtool
 	@sed -i '' 's/|-fopenmp|/|/g' libtool
-version.h:FORCE #always runs
+version.h:FORCE #non existent target will always run
 	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || echo unknown`\";" && \
 	if test ! -f version.h -o -n "`echo $$str | diff version.h -`" ;then echo $$str >version.h;fi
 FORCE:

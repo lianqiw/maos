@@ -8,3 +8,7 @@ CLEANFILES=maos.test
 	
 MAKEOVERRIDES=--no-print-directory
 MAKEFLAGS=-j8 #enable parallel build
+
+bin_PROGRAMS=drawreshi
+drawreshi:drawres
+	@ln -s drawres drawreshi
