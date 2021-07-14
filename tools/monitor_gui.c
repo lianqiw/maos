@@ -505,7 +505,7 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 }
 /* Handle click on treeview */
 static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointer user_data){
-	if(event->button!=3) return FALSE;//let system handle left click
+	
 	GtkTreePath* path=NULL;
 	GtkTreeViewColumn* column=NULL;
 	GtkTreeSelection* selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
@@ -525,8 +525,13 @@ static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointe
 		path=NULL; column=NULL;
 	}
 	//right click popup menu
-	view_popup_menu(view, user_data);
+	if(event->button==3){
+		view_popup_menu(view, user_data);
+	}
 	return TRUE;
+	//}else{
+	//return FALSE;//let system handle left click
+	//}
 }
 /* Handle click on icon column to handle individual jobs*/
 static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpointer user_data){
@@ -555,7 +560,7 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 			GdkPixbuf*status2=0;
 			gtk_tree_model_get(model, &iter, COL_ACTION, &status2, -1);
 			int ihost=host2i(hostn);
-			if(status2==icon_running){
+			if(status2==icon_running||status2==icon_waiting){
 				if(dialog_confirm("Kill %d?", pid)){
 					scheduler_cmd(ihost, pid, CMD_KILL);
 				}
