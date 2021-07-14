@@ -279,7 +279,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			}
 
 			GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs]();
-			dbg("GPU: nea[%d]=%p\n", iwfs, GPDATA[iwfs].neai);
+			//dbg("GPU: nea[%d]=%p\n", iwfs, GPDATA[iwfs].neai);
 			GPDATA[iwfs].nsa=recon->saloc->p[ipowfs]->nloc;
 			GPDATA[iwfs].nxp=recon->pmap->nx;
 			GPDATA[iwfs].dxp=recon->pmap->dx;

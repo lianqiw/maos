@@ -45,7 +45,7 @@ static void genseotf_do(const parms_t* parms, powfs_t* powfs, int ipowfs){
 
 	int notf=1;
 	int has_ncpa=0;
-	if(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==2){
+	if(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0){
 	//check whether opdbias is different between wfs[0] and following.
 		int different=0;
 		for(int iwfs=1; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
@@ -104,7 +104,7 @@ void genseotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	key=dhash(parms->powfs[ipowfs].wvl, key);
 	info("powfs %d: ncpa_method=%d, opdbias=%p\n",
 		ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
-	if(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==2){
+	if(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0){
 		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
 			key=dhash(P(powfs[ipowfs].opdbias,iwfs), key);
 		}

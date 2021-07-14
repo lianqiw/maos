@@ -536,17 +536,17 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 			const int ipowfs=parms->wfsr[iwfs].powfs;
 			const int iwfs0=P(parms->powfs[ipowfs].wfsr,0);
-			if(parms->powfs[ipowfs].type==1){
+			if(parms->powfs[ipowfs].type==WFS_PY){
 				info(" PWFS (skip)");
 			} else{
 				dmat* gamp=0;
 				loc_t* gloc=make_gloc(&gamp, parms, aper, iwfs);
 				if(!share_gp||iwfs==iwfs0){
 					dsp* gp=0;
-					if(parms->powfs[ipowfs].gtype_recon==0){//Average tilt
+					if(parms->powfs[ipowfs].gtype_recon==GTYPE_G){//Average tilt
 						info(" Gploc");
 						gp=mkg(ploc, gloc, gamp, P(recon->saloc,ipowfs), 1, 0, 0, 1);
-					} else if(parms->powfs[ipowfs].gtype_recon==1){//Zernike fit
+					} else if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z){//Zernike fit
 						info(" Zploc");
 						dsp* ZS0=mkz(gloc, gamp->p, P(recon->saloc,ipowfs), 1, 1, 0, 0);
 						dsp* H=mkh(ploc, gloc, 0, 0, 1);
@@ -663,7 +663,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				const real dispx=parms->wfsr[iwfs].thetax*ht;
 				const real dispy=parms->wfsr[iwfs].thetay*ht;
 
-				if(parms->powfs[ipowfs].type==1){//PWFS
+				if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
 					if(!parms->powfs[ipowfs].lo){
 						dmat* opdadd=0;
 						if(!parms->recon.glao&&powfs[ipowfs].opdadd&&0){
@@ -883,7 +883,7 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2||parms->powfs[ipowfs].llt){
-			if(parms->powfs[ipowfs].type==1){//PWFS
+			if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
 				P(recon->GRall,iwfs)=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0);
 			} else{//SHWFS
 				dspmm(&P(recon->GRall,iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
@@ -934,7 +934,7 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			||parms->powfs[ipowfs].dither==1){
 			int nsa=P(recon->saloc,ipowfs)->nloc;
 			dmat* TT=0;
-			if(parms->powfs[ipowfs].type==0){//SHWFS
+			if(parms->powfs[ipowfs].type==WFS_SH){//SHWFS
 				TT=dnew(nsa*2, 2);
 				real* TTx=TT->p;
 				real* TTy=TT->p+nsa*2;
@@ -946,7 +946,7 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					TTx[isa]=0;
 					TTy[isa]=1;
 				}
-			} else if(parms->powfs[ipowfs].type==1){//PYWFS
+			} else if(parms->powfs[ipowfs].type==WFS_PY){//PYWFS
 				TT=dref(powfs[ipowfs].pywfs->GTT); //pywfs_tt(powfs[ipowfs].pywfs);
 			} else{
 				error("Invalid powfs.type\n");

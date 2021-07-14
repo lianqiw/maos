@@ -208,7 +208,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	const int nhp=sodium0->nx;
 	const real* px=sodium0->p;
 
-	icol=wrap_seq(icol, ncol);
+	const int icolwrap=wrap_seq(icol, ncol);
 	//info("Na using column %d.\n",icol);
 
 	//adjusting sodium height for the zenith angle;
@@ -230,7 +230,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	real i0scale[nllt];
 	for(int illt=0; illt<nllt; illt++){
 		psrot[illt]=P(srot,srot->nx>1?illt:0)->p;
-		pna[illt]=PR(sodium, illt, 0)->p+nhp*(1+icol);
+		pna[illt]=PR(sodium, illt, 0)->p+nhp*(1+icolwrap);
 		i0scale[illt]=dvecsum(pna[illt], nhp);
 		if(fabs(i0scale[illt]-1)>0.01){
 			warning("Siglev is scaled by %g by sodium profile\n", i0scale[illt]);

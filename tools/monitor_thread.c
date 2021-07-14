@@ -282,14 +282,15 @@ static int respond(int sock){
 			warning("Host not found\n");
 			return -1;
 		}
-		proc_t* p=proc_get(ihost, pid);
-		/*if(!p){
-		p=proc_add(ihost,pid);
+		proc_t* iproc=proc_get(ihost, pid);
+		iproc->tlast=myclockd();
+		/*if(!iproc){
+		iproc=proc_add(ihost,pid);
 		}*/
-		if(stread(sock, &p->status, sizeof(status_t))){
+		if(stread(sock, &iproc->status, sizeof(status_t))){
 			return -1;
 		}
-		if(p->status.info==S_REMOVE){
+		if(iproc->status.info==S_REMOVE){
 			proc_remove(ihost, pid);
 		} else{
 			if(cmd[1]!=ihost&&cmd[1]!=cmd[2]){
@@ -298,15 +299,15 @@ static int respond(int sock){
 				new status from pid is sent before the transition.*/
 				proc_t *p2=proc_get(ihost, cmd[1]);
 				if(p2){//race condition happens, remove the newly created entry.
-					if(p2->path&&!p->path){
-						p->path=p2->path;
+					if(p2->path&&!iproc->path){
+						iproc->path=p2->path;
 						p2->path=NULL;
 					}
 					proc_remove(ihost, cmd[1]);
 				}
-				p->pid=cmd[1];
+				iproc->pid=cmd[1];
 			}
-			gdk_threads_add_idle((GSourceFunc)refresh, p);
+			gdk_threads_add_idle((GSourceFunc)refresh, iproc);
 		}
 	}
 	break;
@@ -316,15 +317,15 @@ static int respond(int sock){
 			warning("Host not found\n");
 			return -1;
 		}
-		proc_t* p=proc_get(ihost, pid);
-		/*if(!p){
-		p=proc_add(ihost,pid);
+		proc_t* iproc=proc_get(ihost, pid);
+		/*if(!iproc){
+		iproc=proc_add(ihost,pid);
 		}*/
-		if(streadstr(sock, &p->path)){
+		if(streadstr(sock, &iproc->path)){
 			return -1;
 		}
 		char* tmp=NULL;
-		while((tmp=strchr(p->path, '\n'))){
+		while((tmp=strchr(iproc->path, '\n'))){
 			tmp[0]=' ';
 		}
 	}
@@ -440,6 +441,15 @@ void* listen_host(void* dummy){
 				} else if(htime[ihost]<0&&ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
 					dbg_time("no respond. disconnect server %s.\n", hosts[ihost]);
 					host_removed(hsock[ihost]);
+				}
+			}
+			//check for jobs that may have hung
+			for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+				if(iproc->status.info==S_RUNNING&&iproc->tlast+600<ntime){
+					iproc->status.info=S_CRASH;
+					iproc->status.tot=(ntime-iproc->tlast)/iproc->status.scale;
+					dbg_time("proc %d in %s is not updating in %g seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
+					gdk_threads_add_idle((GSourceFunc)refresh, iproc);
 				}
 			}
 		}

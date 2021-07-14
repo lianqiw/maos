@@ -1478,7 +1478,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 
 		if(powfsi->usephy&&powfsi->sigmatch==-1){
 			if(powfsi->type==0){//SHWFS
-				if(powfsi->phytype_sim==2){//CoG
+				if(powfsi->phytype_sim==PTYPE_COG){//CoG
 					powfsi->sigmatch=1;
 				} else{//Others
 					powfsi->sigmatch=1;//global match is not good for matched filter
@@ -1498,7 +1498,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				powfsi->phytype_sim2=powfsi->phytype_sim;
 			}
 			if(powfsi->phyusenea==-1){
-				if(powfsi->phytype_recon==2){
+				if(powfsi->phytype_recon==PTYPE_COG){
 					powfsi->phyusenea=1;//COG use NEA by default
 				} else{
 					powfsi->phyusenea=0;
@@ -1692,7 +1692,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				if(parms->powfs[ipowfs].trs==1){
 					error("Low order wfs should not be tilt removed\n");
 				}
-				if(parms->powfs[ipowfs].gtype_sim==0&&parms->powfs[ipowfs].type==0){
+				if(parms->powfs[ipowfs].gtype_sim==GTYPE_G&&parms->powfs[ipowfs].type==WFS_SH){
 					warning("Low order powfs %d is using gtilt in simulation. "
 						"This is not recommended\n", ipowfs);
 				}
@@ -1742,19 +1742,19 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				"background won't be effective.\n", ipowfs);
 		}
 		if(parms->sim.ncpa_calib){
-			int enable_2=(parms->powfs[ipowfs].type==0&&parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].usephy)
+			int enable_2=(parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].usephy)
 						&&!(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].skip);
 			if(parms->powfs[ipowfs].ncpa_method==-1){//auto
 				if(enable_2){//mtch
-					parms->powfs[ipowfs].ncpa_method=2;//default to 2
+					parms->powfs[ipowfs].ncpa_method=NCPA_I0;//default to 2
 				} else{
-					parms->powfs[ipowfs].ncpa_method=1;
+					parms->powfs[ipowfs].ncpa_method=NCPA_G;
 				}
 			}
-			if(parms->powfs[ipowfs].ncpa_method==2){
+			if(parms->powfs[ipowfs].ncpa_method==NCPA_I0){
 				if(!enable_2){
 					dbg("powfs %d: ncpa_method changed from 2 to 1 for non-matched filter mode.\n", ipowfs);
-					parms->powfs[ipowfs].ncpa_method=1;
+					parms->powfs[ipowfs].ncpa_method=NCPA_G;
 				}else{
 					parms->powfs[ipowfs].mtchstc=0;
 				}
@@ -1774,7 +1774,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 	parms->step_hi=-1;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].skip==2) continue;
-		if(parms->powfs[ipowfs].type==1&&parms->powfs[ipowfs].llt){
+		if(parms->powfs[ipowfs].type==WFS_PY&&parms->powfs[ipowfs].llt){
 			error("Pyramid WFS is not available for LGS WFS\n");
 		}
 		if(parms->powfs[ipowfs].lo||(parms->nlopowfs==0&&!parms->powfs[ipowfs].trs)){//has t/t measurement.
@@ -2798,7 +2798,7 @@ static void print_parms(const parms_t* parms){
 				lrt?"both":"right hand", BLACK);
 		}
 		info("\n");
-		if(parms->powfs[ipowfs].type==0&&parms->powfs[ipowfs].usephy){
+		if(parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].usephy){
 			info("    CCD image is %dx%d @ %gx%gmas, blur %g%% (sigma), %gHz, ",
 				(parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa),
 				parms->powfs[ipowfs].pixpsa,
@@ -2814,14 +2814,15 @@ static void print_parms(const parms_t* parms){
 		}
 		info("]\n");
 		info("    %s in reconstruction. ",
-			parms->powfs[ipowfs].gtype_recon==0?"Gtilt":"Ztilt");
+			parms->powfs[ipowfs].gtype_recon==GTYPE_G?"Gtilt":"Ztilt");
 		if(parms->powfs[ipowfs].phystep>-1){
 			info("Physical optics start at %d with %s'%s'%s ",
 				MAX(parms->powfs[ipowfs].phystep, parms->powfs[ipowfs].step),
-				parms->powfs[ipowfs].phytype_sim==1?GREEN:RED, phytype[parms->powfs[ipowfs].phytype_sim], BLACK);
+				parms->powfs[ipowfs].phytype_sim==PTYPE_MF?GREEN:RED, 
+				phytype[parms->powfs[ipowfs].phytype_sim], BLACK);
 		} else{
 			info("Geomtric optics uses %s ",
-				parms->powfs[ipowfs].gtype_sim==0?"gtilt":"ztilt");
+				parms->powfs[ipowfs].gtype_sim==GTYPE_G?"gtilt":"ztilt");
 		}
 
 		if(parms->powfs[ipowfs].noisy){

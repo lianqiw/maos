@@ -36,6 +36,7 @@ typedef struct proc_t{
 	status_t status;
 	char time3[80];
 	GtkTreeRowReference* row;
+  double tlast;//time of last update
 	struct proc_t* next;
 }proc_t;
 /*void proc_remove(int id,int pid, int flag); */

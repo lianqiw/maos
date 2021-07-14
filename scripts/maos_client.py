@@ -6,6 +6,8 @@ import sys
 """Get variables from running MAOS"""
 
 s=None #saves the socket
+host=None
+port=None
 def _pack_int(var):
     return var.to_bytes(4, byteorder='little')
 def _pack_str(var):
@@ -63,14 +65,17 @@ def get_all():
 
     return res
 
-def connect(host, port, pid=0):
+def connect(host_, port_, pid=0):
     """Connect to server that is running maos"""
-    global s
+    global s, host, port
+    host=host_
+    port=port_
+    
     s=socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     s.connect((host, port))
     
     msg=_pack_int(13)+_pack_int(pid)
     s.send(msg)
     ans=_recv_int(s)
-    pause(1)
+    #pause(1)
     

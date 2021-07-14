@@ -277,7 +277,7 @@ cushphy_t::cushphy_t(wfscfg_t* wfscfg)
 
 	//Gradient operator
 	switch(parms->powfs[ipowfs].phytypesim){
-	case 1:{//mtche
+	case PTYPE_MF:{//mtche
 		int icol=powfs[ipowfs].intstat->mtche->ny>1?wfsind:0;
 		X(mat)* mtche0=concat_dmat(powfs[ipowfs].intstat->mtche->p+nsa*icol, nsa);
 		cp2gpu(&mtche, mtche0);
@@ -285,7 +285,7 @@ cushphy_t::cushphy_t(wfscfg_t* wfscfg)
 		icol=(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0);
 		cp2gpu(&i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*icol, nsa, 1);
 	}
-	case 2:{
+	case PTYPE_COG:{
 		int icol=powfs[ipowfs].intstat->cogcoeff->nx>1?wfsind:0;
 		cp2gpu(&cogcoeff, powfs[ipowfs].intstat->cogcoeff->p[icol]->p, nsa*2, 1);
 	}
@@ -330,10 +330,10 @@ cuwfs_t::cuwfs_t(const parms_t* parms, const powfs_t* powfs, int iwfs, int igpu)
 	int has_geom=(!parms->powfs[ipowfs].usephy||parms->save.gradgeom->p[iwfs]||parms->powfs[ipowfs].pistatout);
 	if(has_geom){
 		switch(parms->powfs[ipowfs].gtype_sim){
-		case 0://gtilt
+		case GTYPE_G://gtilt
 			geom=new cushg_t(&wfscfg);
 			break;
-		case 1://ztilt
+		case GTYPE_Z://ztilt
 			geom=new cushz_t(&wfscfg);
 			break;
 		default:

@@ -416,6 +416,8 @@ static void check_jobs(void){
 				} else if((irun->last_time+600<myclockd()) && irun->status.info==S_RUNNING){
 					warning_time("check_jobs: Job %d does not update after %g seconds.\n", irun->pid, myclockd()-irun->last_time);
 					//kill(irun->pid, SIGTERM);
+					irun->status.info=S_CRASH;
+					monitor_send(irun, NULL);
 				}
 			}
 		}

@@ -26,7 +26,7 @@ namespace cuda_recon{
 void cufdpcg_t::update(fdpcg_t* fdpcg){
 	//copy or update Mb. 
 	//temporary cut size to half to avoid copying duplicate data.
-	//The second half of data is a replicate of the first half.
+	//The second half of data is a replicate/conjugate of the first half.
 	int nxsave=fdpcg->Mbinv->nx;
 	fdpcg->Mbinv->nx=nb;
 	int m_nxsave=0;

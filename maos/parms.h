@@ -855,4 +855,22 @@ typedef enum T_TYPE{
     T_ATM,
 }T_TYPE;
 void plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...);
+
+enum{ //WFS type
+    WFS_SH=0,//shack-hartmann WFS
+    WFS_PY=1, //pyramid WFS
+};
+enum{//geometric WFS gradient algoirthm
+    GTYPE_G=0,//G tilt: average gradient over aperture (high order WFS)
+    GTYPE_Z=1,//Z tilt: zernike best fit tilt (low order WFS)
+};
+enum{//physical optics pixel processing algorithm
+    PTYPE_MF=1, //matched filter
+    PTYPE_COG=2,//COG
+};
+
+enum{//method to handle NCPA
+    NCPA_G=1,  //with gradient offset
+    NCPA_I0=2, //with i0 offset (opd)
+};
 #endif

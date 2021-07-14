@@ -316,9 +316,9 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 	switch(parms->powfs[ipowfs].phytype_sim){
 	case 0:
 		break; //no-op
-	case 1://Matched filter
+	case PTYPE_MF://Matched filter
 	{
-		if(last_phytype!=1){ 
+		if(last_phytype!=PTYPE_MF){ 
 			dbg("powfs %d: Computing matched filter. sigmatch=%d\n", ipowfs, parms->powfs[ipowfs].sigmatch);
 		}
 		Real sigratio=parms->powfs[ipowfs].sigmatch==2?(cuwfs[iwfs].i0sumsum/cursum(ints.M(), stream)):0;
@@ -327,9 +327,9 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 			totpix, nsa, cuwfs[iwfs].msa, stream);
 	}
 	break;
-	case 2:
+	case PTYPE_COG:
 	{//CoG
-		if(last_phytype!=2) {
+		if(last_phytype!=PTYPE_COG) {
 			dbg("powfs %d: Computing Cog. sigmatch=%d\n", ipowfs, parms->powfs[ipowfs].sigmatch);
 		}
 		Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
@@ -498,7 +498,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 				"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 		}
 		ctoc("opd");
-		if(parms->powfs[ipowfs].type==1){
+		if(parms->powfs[ipowfs].type==WFS_PY){
 			CUDA_CHECK_ERROR;
 			pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs], parms->wfs[iwfs].sigsim);
 			ctoc("pywfs");
@@ -515,7 +515,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 					ratio=1.f/(Real)dtrat;
 				}
 
-				if(parms->powfs[ipowfs].gtype_sim==1){
+				if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){
 					cuztilt(gradref, phiout,
 						cupowfs[ipowfs].pts.Nloc(),
 						cupowfs[ipowfs].pts.Dxsa(),
@@ -549,7 +549,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 				}
 				if(noisy){
 					if(parms->save.gradnf->p[iwfs]){
-						if(parms->powfs[ipowfs].type==1){//PWFS
+						if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
 							pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
 								cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
 						} else{
@@ -576,7 +576,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 					curcelladd(cuwfs[iwfs].intsout, 1, ints, 1, stream);
 				}
 				if(parms->powfs[ipowfs].dither&&isim>=parms->powfs[ipowfs].dither_ogskip
-					&&parms->powfs[ipowfs].type==0&&parms->powfs[ipowfs].phytype_sim2==1){
+					&&parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
 					real cs, ss;
 					dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
 						parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
@@ -586,7 +586,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 				}
 			}
 			if(do_phy){
-				if(parms->powfs[ipowfs].type==1){
+				if(parms->powfs[ipowfs].type==WFS_PY){
 					pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
 						cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
 				 //cuwrite(gradcalc, "gradcalc"); exit(0);

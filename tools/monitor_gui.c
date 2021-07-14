@@ -92,7 +92,6 @@ static void list_update_progress(proc_t* p){
 	GtkTreeIter iter;
 	list_get_iter(p->row, &iter);
 
-	const double tkmean=p->status.scale;
 	const long tot=p->status.rest+p->status.laps;/*show total time. */
 	const long toth=tot/3600;
 	const long totm=(tot-toth*3600)/60;
@@ -101,7 +100,7 @@ static void list_update_progress(proc_t* p){
 	const long resth=rest/3600;
 	const long restm=(rest-resth*3600)/60;
 	const long rests=rest-resth*3600-restm*60;
-	const double step=p->status.tot*tkmean;
+	const double step=p->status.tot*p->status.scale;//scale is normally 1
 	/*if(p->status.iseed!=p->iseed_old){
 		char tmp[64];
 		snprintf(tmp, 64, "%d/%d", p->status.iseed+1, p->status.nseed);

@@ -498,7 +498,7 @@ setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int i
 		int isset=0;
 		powfs[ipowfs].loc_tel=(loccell*)cellnew(nwfsp, 1);
 		powfs[ipowfs].amp_tel=dcellnew(nwfsp, 1);
-		if(parms->powfs[ipowfs].type==0){
+		if(parms->powfs[ipowfs].type==WFS_SH){
 			powfs[ipowfs].saa_tel=dcellnew(nwfsp, 1);
 		}
 #pragma omp parallel for shared(isset)
@@ -512,7 +512,7 @@ setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int i
 					=mkamp(P(powfs[ipowfs].loc_tel,jwfs), aper->ampground,
 						-P(parms->misreg.pupil,0), -P(parms->misreg.pupil,1),
 						parms->aper.d, parms->aper.din);
-				if(parms->powfs[ipowfs].type==0){
+				if(parms->powfs[ipowfs].type==WFS_SH){
 					const int nxsa=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->nx;
 					P(powfs[ipowfs].saa_tel,jwfs)=wfsamp2saa(P(powfs[ipowfs].amp_tel,jwfs), nxsa);
 				}
@@ -568,7 +568,7 @@ setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ip
    misregistration, etc. */
 static void
 setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
-	if(parms->powfs[ipowfs].gtype_recon==0||parms->powfs[ipowfs].gtype_sim==0){
+	if(parms->powfs[ipowfs].gtype_recon==GTYPE_G||parms->powfs[ipowfs].gtype_sim==GTYPE_G){
 		dspcellfree(powfs[ipowfs].GS0);
 		/*Setting up every gradient tilt (g-ztilt) */
 		if(parms->load.GS0){
@@ -597,7 +597,7 @@ setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			}
 		}
 	}
-	if(parms->powfs[ipowfs].gtype_recon==1||parms->powfs[ipowfs].gtype_sim==1){
+	if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z||parms->powfs[ipowfs].gtype_sim==GTYPE_Z){
 	/*setting up zernike best fit (ztilt) inv(M'*W*M). good for NGS. */
 		if(parms->powfs[ipowfs].order>4){
 			warning("Ztilt for high order powfs %d is not good\n", ipowfs);
@@ -1466,7 +1466,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		error("Should only be called once\n");
 	}
 	if(parms->powfs[ipowfs].phytype_recon==1||parms->powfs[ipowfs].phytype_sim==1||!parms->powfs[ipowfs].phyusenea
-		||(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==2)
+		||(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)
 		||parms->powfs[ipowfs].phytype_sim==4
 		){
 		intstat_t* intstat=powfs[ipowfs].intstat=mycalloc(1, intstat_t);
@@ -1581,28 +1581,28 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				if(P(powfs[ipowfs].opdbias,jwfs)){
 					real* realamp=P(powfs[ipowfs].realamp,jwfs)->p;
-					if(parms->powfs[ipowfs].type==1){//pywfs
+					if(parms->powfs[ipowfs].type==WFS_PY){//pywfs
 						dmat* ints=0;
 						pywfs_fft(&ints, powfs[ipowfs].pywfs, P(powfs[ipowfs].opdbias,jwfs));
 						//writebin(P(powfs[ipowfs].opdbias,jwfs), "opdbias\n");exit(0);
 						pywfs_grad(&P(powfs[ipowfs].gradncpa,jwfs), powfs[ipowfs].pywfs, ints);
 						dfree(ints);
-					} else if(parms->powfs[ipowfs].gtype_sim==1){//Ztilt
+					} else if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){//Ztilt
 						pts_ztilt(&P(powfs[ipowfs].gradncpa,jwfs), powfs[ipowfs].pts,
 							PR(powfs[ipowfs].saimcc,jwfs,0),
 							realamp, P(powfs[ipowfs].opdbias,jwfs)->p);
 					} else{//Gtilt
-						if(parms->powfs[ipowfs].ncpa_method==1){//GS0*opd
+						if(parms->powfs[ipowfs].ncpa_method==NCPA_G){//GS0*opd
 							dspmm(&P(powfs[ipowfs].gradncpa,jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
 								P(powfs[ipowfs].opdbias,jwfs), "nn", 1);
-						} else if(parms->powfs[ipowfs].ncpa_method==2){//CoG(i0)
+						} else if(parms->powfs[ipowfs].ncpa_method==NCPA_I0){//CoG(i0)
 							if(!powfs[ipowfs].gradncpa){
 								powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 							}
 							int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 							shwfs_grad(&P(powfs[ipowfs].gradncpa,jwfs),
 								PCOLR(powfs[ipowfs].intstat->i0, jwfs),
-								parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
+								parms, powfs, iwfs, PTYPE_COG);//this is not added to gradoff. for drift control
 
 						}
 					}
@@ -1651,11 +1651,11 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 	powfs_t* powfs=mycalloc(parms->npowfs, powfs_t);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].nwfs==0) continue;
-		if(parms->powfs[ipowfs].type==0){
+		if(parms->powfs[ipowfs].type==WFS_SH){
 			info2("\n%sSetting up powfs %d geom%s\n\n", GREEN, ipowfs, BLACK);
 			setup_shwfs_geom(powfs, parms, aper, ipowfs);
 			setup_shwfs_grad(powfs, parms, ipowfs);
-		} else if(parms->powfs[ipowfs].type==1){
+		} else if(parms->powfs[ipowfs].type==WFS_PY){
 			info2("\n%sSetting up powfs %d in Pyramid mode%s\n\n", GREEN, ipowfs, BLACK);
 			pywfs_setup(powfs, parms, aper, ipowfs);
 		} else{
@@ -1671,7 +1671,7 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 void setup_powfs_phy(const parms_t* parms, powfs_t* powfs){
 	TIC;tic;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs&&parms->powfs[ipowfs].type==0
+		if(parms->powfs[ipowfs].nwfs&&parms->powfs[ipowfs].type==WFS_SH
 			&&(parms->powfs[ipowfs].usephy
 				||parms->powfs[ipowfs].psfout
 				||parms->powfs[ipowfs].pistatout

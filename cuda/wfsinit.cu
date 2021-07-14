@@ -111,7 +111,7 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 		dbg("powfs%d: updating matched filter in GPU\n", ipowfs);
 		const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 		const int nsa=powfs[ipowfs].saloc->nloc;
-		const int multi_mf=parms->powfs[ipowfs].phytype_sim==1&&powfs[ipowfs].intstat->mtche->ny>1;
+		const int multi_mf=parms->powfs[ipowfs].phytype_sim==PTYPE_MF&&powfs[ipowfs].intstat->mtche->ny>1;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
@@ -122,7 +122,7 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 				}
 			}
 			if(multi_mf||iwfs2==iwfs){
-				if(parms->powfs[ipowfs].phytype_sim==1){//matched filter
+				if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){//matched filter
 					int icol=multi_mf?jwfs:0;
 					dmat* mtche=dcell_col(powfs[ipowfs].intstat->mtche, icol);
 					if(iwfs!=iwfs0&&cuwfs[iwfs].mtche()==cuwfs[iwfs0].mtche()){
@@ -165,7 +165,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 			if(parms->powfs[ipowfs].nwfs==0) continue;
 			loc_t* loc=powfs[ipowfs].loc;
 			cupowfs[ipowfs].loc=culoc_t(loc);
-			if(parms->powfs[ipowfs].type==1){//only for pywfs
+			if(parms->powfs[ipowfs].type==WFS_PY){//only for pywfs
 				cupowfs[ipowfs].saloc=culoc_t(powfs[ipowfs].saloc);
 			}
 			pts_t* pts=powfs[ipowfs].pts;
@@ -274,7 +274,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 			if(neasim) cp2gpu(cuwfs[iwfs].neasim, neasim);
 		}
 		/* * Now start physical optics setup * */
-		if(parms->powfs[ipowfs].type==1){//Pyramid WFS
+		if(parms->powfs[ipowfs].type==WFS_PY){//Pyramid WFS
 			cuwfs[iwfs].pywvf=cuccell(nwvl, 1);
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
 				cuwfs[iwfs].pywvf[iwvl]=cucmat(cupowfs[ipowfs].nembed[iwvl], cupowfs[ipowfs].nembed[iwvl]);
@@ -387,9 +387,9 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 					cuwfs[iwfs].qe=cuwfs[iwfs0].qe;
 				}
 				/*Matched filter */
-				if(parms->powfs[ipowfs].phytype_sim==1){
+				if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
 					//Separated with gpu_wfsgrad_upate_mtche();
-				} else if(parms->powfs[ipowfs].phytype_sim==2){/*cog*/
+				} else if(parms->powfs[ipowfs].phytype_sim==PTYPE_COG){/*cog*/
 					if(powfs[ipowfs].cogcoeff->nx>1||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 						cp2gpu(cuwfs[iwfs].cogcoeff,
 							powfs[ipowfs].cogcoeff->p[powfs[ipowfs].cogcoeff->nx>1?wfsind:0]->p, nsa*2, 1);
@@ -471,7 +471,7 @@ void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){
 		initzero(cuwfs[iwfs].gradcalc, nsa*2, 1);
 		if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].dither){
 			if(!cuwfs[iwfs].ints){
-				if(parms->powfs[ipowfs].type==1){//PYWFS
+				if(parms->powfs[ipowfs].type==WFS_PY){//PYWFS
 					cuwfs[iwfs].ints=curcell(1, 1, nsa, powfs[ipowfs].pywfs->nside);
 				} else{
 					cuwfs[iwfs].ints=curcell(nsa, 1, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);

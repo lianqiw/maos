@@ -764,7 +764,7 @@ static void init_simu_wfs(sim_t* simu){
 		P(simu->gradcl, iwfs)=dnew(nsa*2, 1);
 		P(simu->wfsopd, iwfs)=dnew(powfs[ipowfs].loc->nloc, 1);
 		if(parms->powfs[ipowfs].usephy){
-			if(parms->powfs[ipowfs].type==0){
+			if(parms->powfs[ipowfs].type==WFS_SH){
 				P(simu->ints, iwfs)=dcellnew_same(nsa, 1, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 			} else{
 				P(simu->ints, iwfs)=dcellnew_same(1, 1, powfs[ipowfs].saloc->nloc, powfs[ipowfs].pywfs->nside);
@@ -776,7 +776,7 @@ static void init_simu_wfs(sim_t* simu){
 		if(parms->powfs[ipowfs].pistatout){
 			P(simu->pistatout, iwfs)=dcellnew(nsa, parms->powfs[ipowfs].nwvl);
 		}
-		if(powfs[ipowfs].gradncpa&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==2)){
+		if(powfs[ipowfs].gradncpa&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)){
 			//CMF has gradncpa with in matched filter
 			int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 			dadd(&P(simu->gradoff, iwfs), 1, PR(powfs[ipowfs].gradncpa, wfsind, 1), 1);
@@ -959,7 +959,7 @@ static void init_simu_wfs(sim_t* simu){
 			if(powfs[ipowfs].loc_tel){/*misregistration. */
 				data->locout=P(powfs[ipowfs].loc_tel, wfsind);
 				tot=data->locout->nloc;
-			} else if(parms->powfs[ipowfs].type==1||powfs[ipowfs].saloc->nloc<NTHREAD){
+			} else if(parms->powfs[ipowfs].type==WFS_PY||powfs[ipowfs].saloc->nloc<NTHREAD){
 				data->locout=powfs[ipowfs].loc;
 				tot=data->locout->nloc;
 			} else{
@@ -993,7 +993,7 @@ static void init_simu_wfs(sim_t* simu){
 			if(powfs[ipowfs].loc_dm){/*misregistration. */
 				data->locout=P(powfs[ipowfs].loc_dm, wfsind, idm);
 				tot=data->locout->nloc;
-			} else if(parms->powfs[ipowfs].type==1||powfs[ipowfs].saloc->nloc<NTHREAD){
+			} else if(parms->powfs[ipowfs].type==WFS_PY||powfs[ipowfs].saloc->nloc<NTHREAD){
 				data->locout=powfs[ipowfs].loc;
 				tot=data->locout->nloc;
 			} else{

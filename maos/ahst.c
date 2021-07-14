@@ -427,7 +427,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 				||(parms->recon.split && !parms->powfs[ipowfs].trs))){
 				info2(" %d", iwfs);
 				for(int idm=0; idm<parms->ndm; idm++){
-					if(parms->powfs[ipowfs].type==0 || parms->recon.modal){//shwfs or modal control
+					if(parms->powfs[ipowfs].type==WFS_SH || parms->recon.modal){//shwfs or modal control
 						dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
 					} else{//pwfs in zonal control.
 						real  ht=parms->dm[idm].ht-parms->powfs[ipowfs].hc;

@@ -155,7 +155,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 			if(parms->powfs[ipowfs].trs){
 				ilegwfs=0;
 			} else{
-				if(parms->powfs[ipowfs].type==1){
+				if(parms->powfs[ipowfs].type==WFS_PY){
 					ilegwfs=2;
 				} else{
 					ilegwfs=1;
@@ -467,7 +467,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			if(powfs[ipowfs].gradncpa){
 				drawgrad("Goff", powfs[ipowfs].saloc, P(powfs[ipowfs].gradncpa,jwfs),
 					parms->plot.grad2opd, NULL,
-					"WFS Offset", "x (m)", "y (m)", "Goff %d", iwfs);
+					"WFS Offset", "x (m)", "y (m)", "Gncpa %d", iwfs);
 			}
 		}
 	}

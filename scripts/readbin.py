@@ -117,7 +117,8 @@ def readbin(file, want_header=0):
         #except Exception as error:
         #    print("readbin failed:", file, error)
         finally:
-            fp.close()
+            if isfile:
+                fp.close()
     if want_header: 
         return (out, header)
     else:
@@ -297,7 +298,9 @@ def readbin_header(fp):
     if magic:
         nx=readuint64(fp)
         ny=readuint64(fp)
-   
+    else:
+        nx=0
+        ny=0
     return (magic, nx, ny, header)
 
 if __name__ == '__main__':

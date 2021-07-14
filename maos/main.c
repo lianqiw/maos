@@ -58,10 +58,16 @@ static void* find_var(const char* name){
 	VAR_GET(simu,Mngs),
 	VAR_GET(simu,fsmerr),
 	VAR_GET(simu,fsmreal),
+	VAR_GET(simu,fsmerrs),
+	VAR_GET(simu,fsmcmds),
 	VAR_GET(simu,LGSfocus),
 	VAR_GET(simu,zoomerr),
 	VAR_GET(simu,zoomint),
+	VAR_GET(simu,zoompos),
 	VAR_GET(simu,evlopd),
+	VAR_GET(simu,resdither),
+	VAR_GET(simu,restwfs),
+	
 	{NULL, NULL}//mark the end
 	};
 
@@ -229,7 +235,7 @@ static void* maos_var(void* psock){
 		case MAOS_PAUSE:
 		{
 			if(global&&global->simu){
-				if(global->simu->pause){
+				if(global->simu->pause){//already paused
 					extern int sim_pipe[2];
 					if(sim_pipe[1]>0){
 						char key=cmd[1]?'a':'c';
@@ -239,6 +245,7 @@ static void* maos_var(void* psock){
 					}
 				}
 				global->simu->pause=cmd[1];
+				dbg("maos_var: set simu->pause=%d\n", cmd[1]);
 			}
 		}
 		break;
