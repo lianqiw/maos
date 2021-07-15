@@ -339,7 +339,7 @@ static int get_drawdaemon(){
 void draw_final(int reuse){
 	if(sock_ndraw){
 		LOCK(lock);
-		dbg("draw_final()");
+		dbg("draw_final()\n");
 		for(int ifd=0; ifd<sock_ndraw; ifd++){
 			int sock_draw=sock_draws[ifd].fd;
 			if(sock_draw==-1) continue;
