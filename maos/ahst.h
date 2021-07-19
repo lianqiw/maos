@@ -39,7 +39,7 @@ void calc_ngsmod_dot(real *pttr_out, real *pttrcoeff_out,
 		     real *ngsmod_out,
 		     const parms_t *parms, const ngsmod_t *ngsmod, const aper_t *aper, 
 		     const real *opd, int ievl);
-void calc_ngsmod_post(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out,
+int calc_ngsmod_post(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out,
 		      real tot, const real *coeff,  const ngsmod_t *ngsmod, 
 		      const aper_t *aper,real thetax, real thetay);
 void ngsmod_free(ngsmod_t *ngsmod);

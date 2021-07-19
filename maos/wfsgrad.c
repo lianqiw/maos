@@ -500,7 +500,7 @@ static void wfsgrad_fsm(sim_t* simu, int iwfs){
 }
 
 /**
-   Postprocessing for dithering dithersig extraction:
+   Accumulate dithering parameters
    - Every step: accumulate signal for phase detection.
    - At PLL output: determine input/output amplitude of dithering signal.
    - At Gain output:determine matched filter i0, gx, gy, or CoG gain.
@@ -598,7 +598,8 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 		}
 	}
 	if(simu->wfsflags[ipowfs].ogacc){//Gain update statistics
-		if(parms->dbg.gradoff_reset==2 && simu->gradoffisim0<=0){//trigger accumulation of gradoff
+		if(parms->dbg.gradoff_reset==2 && simu->gradoffisim0<=0 
+			&& parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){//trigger accumulation of gradoff
 			simu->gradoffisim0=simu->wfsisim;
 			simu->gradoffisim=simu->wfsisim;
 		}
@@ -612,26 +613,29 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 				if(parms->powfs[ipowfs].dither_gdrift>0){//drift control
 					shwfs_grad(&ibgrad, pd->imb->p, parms, powfs, iwfs, PTYPE_COG);
 					if(parms->powfs[ipowfs].trs){
-						if(iwfs==P(parms->powfs[ipowfs].wfs,0)){
-							dbg("Step %5d: powfs %d uplink drift control\n", simu->wfsisim, ipowfs);
-						}
 						/* Update T/T drift signal to prevent matched filter from drifting*/
 						dmat* tt=dnew(2, 1);
 						dmat* PTT=P(recon->PTT, iwfsr, iwfsr);
 						dmm(&tt, 0, PTT, ibgrad, "nn", 1);
 						P(P(simu->fsmerr, iwfs), 0)+=P(tt, 0);
 						P(P(simu->fsmerr, iwfs), 1)+=P(tt, 1);
+						if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
+							dbg("Step %5d: wfs %d uplink drift control error is (%g, %g)as\n", 
+							simu->wfsisim, iwfs, P(tt,0)*206265, P(tt,1)*206265);
+						}
 						dfree(tt);
 					}
 					//Output focus error in ib to trombone error signal.
 					if(parms->powfs[ipowfs].llt){
-						if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
-							dbg("Step %5d: powfs %d trombone drift control\n", simu->wfsisim, ipowfs);
-						}
 						dmat* focus=dnew(1, 1);
 						dmat* RFlgsg=P(recon->RFlgsg, iwfs, iwfs);
 						dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
 						P(simu->zoomerr, iwfs)+=P(focus, 0);
+						if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
+							double deltah=focus->p[0]*2*pow(parms->powfs[ipowfs].hs, 2);
+							dbg("Step %5d: powfs %d trombone drift control error is %gm\n", 
+							simu->wfsisim, ipowfs, deltah);
+						}
 						dfree(focus);
 					}
 					dfree(ibgrad);
@@ -784,7 +788,9 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 					P(P(simu->zoompos, iwfs), simu->wfsflags[ipowfs].zoomout-1)=P(simu->zoomint, iwfs);
 				}
 			}
-			update_etf=1;
+			if(parms->powfs[ipowfs].llt->coldtrat==0){//otherwise, wait until next sodium profile column
+				update_etf=1;
+			}
 		}
 	}
 }
@@ -1012,6 +1018,12 @@ static void wfsgrad_dither_post(sim_t* simu){
 						dscale(P(simu->gradoffacc,iwfs), 1./nacc);
 						dadd(&P(simu->gradoff, iwfs), 1, P(simu->gradoffacc,iwfs), -1);
 					}
+				}
+				if(1){//reset trombone integrator
+					info("Step %5d: powfs%d reset zoom integrator and error\n", isim, ipowfs);
+					dzero(simu->zoomint);
+					dzero(simu->zoomerr);
+					dzero(simu->zoomavg);
 				}
 				if(parms->save.dither){
 					writebin(simu->gradoff, "extra/gradoff_%d_mtch", isim);

@@ -1595,7 +1595,7 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 						if(parms->powfs[ipowfs].ncpa_method==NCPA_G){//GS0*opd
 							dspmm(&P(powfs[ipowfs].gradncpa,jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
 								P(powfs[ipowfs].opdbias,jwfs), "nn", 1);
-						} else if(parms->powfs[ipowfs].ncpa_method==NCPA_I0){//CoG(i0)
+						} else if(parms->powfs[ipowfs].ncpa_method==NCPA_I0 && parms->powfs[ipowfs].dither){//CoG(i0)
 							if(!powfs[ipowfs].gradncpa){
 								powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 							}

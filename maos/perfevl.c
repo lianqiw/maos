@@ -631,7 +631,7 @@ static void perfevl_save(sim_t* simu){
 void perfevl(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
 	const parms_t* parms=simu->parms;
-	if(!(parms->gpu.evl)&&parms->evl.nevl>1){ //Cache the ground layer. 
+	if(!parms->gpu.evl&&parms->evl.nevl>1){ //Cache the ground layer. 
 		int ips=simu->perfevl_iground;
 		if(ips!=-1&&simu->atm&&!parms->sim.idealevl){
 			if(!simu->evlopdground){

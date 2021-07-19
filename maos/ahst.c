@@ -682,16 +682,16 @@ void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	calc_ngsmod_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff, ngsmod, aper, thetax, thetay);
 }
 /**
-   Separate post processing part so that GPU code can call it.
+   Separate post processing part so that GPU code can call it. Return non zero if error happens.
 */
-void calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
+int calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 	real tot, const real* coeff, const ngsmod_t* ngsmod,
 	const aper_t* aper, real thetax, real thetay){
 	const real MCC_fcp=ngsmod->aper_fcp;
 	const real ht=ngsmod->ht;
 	const real scale=ngsmod->scale;
 	const real scale1=1.-scale;
-
+	int ans=0;
 	if(pttrcoeff_out){
 		memset(pttrcoeff_out, 0, sizeof(real)*3);
 		dmulvec(pttrcoeff_out, aper->imcc, coeff, 1);
@@ -707,6 +707,7 @@ void calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 			warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
 			warning("coeff=%g,%g,%g,%g,%g,%g\n",
 			coeff[0], coeff[1], coeff[2], coeff[3], coeff[4], coeff[5]);
+			ans=1;
 		}
 	}
 	/*don't use +=. need locking */
@@ -732,6 +733,7 @@ void calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 	if(ngsmod->indfocus){
 		ngsmod_out[ngsmod->indfocus]=(coeff[3]+coeff[4]-coeff[0]*MCC_fcp);
 	}
+	return ans;
 }
 /**
    Convert NGS modes to DM actuator commands using analytical expression. For >2

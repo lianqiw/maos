@@ -71,14 +71,19 @@ void fixnan(dmat* res){
    The main.
 */
 int main(int argc, char* argv[]){
+	int DRAWRES_HI=0;
+	READ_ENV_INT(DRAWRES_HI, 0, 1);
 	int drawres_tot=1;
 	int drawres_lo=1;
 	int drawres_hi=1;
 	int drawres_ol=1;
-	if(check_suffix(argv[0], "drawreshi")){
+	if(check_suffix(argv[0], "drawreshi") || DRAWRES_HI==1){
 		drawres_lo=0;
 		drawres_tot=0;
 		drawres_ol=0;
+		dbg("Only plotting high order closed loop results\n");
+	}else{
+		dbg("Use drawreshi or set MAOS_DRAWRES_HI=1 to only plot high order closed loop results\n");
 	}
 	arg_t* arg=parse_args(argc, argv);
 	/*use the parent pid so same bash session has the same drawdaemon. */

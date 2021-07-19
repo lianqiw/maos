@@ -636,7 +636,7 @@ static int respond(int sock){
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
 		MONITOR_T* tmp=monitor_add(sock);
-		if(pid>=0x8){/*check monitor version. */
+		if(tmp && pid>=0x8){/*check monitor version. */
 			tmp->load=1;
 		}
 		//dbg_time("Monitor is connected at sock %d.\n", sock);

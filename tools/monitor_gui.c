@@ -393,13 +393,7 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 	int cmd=data->command;
 	const char* action=data->action;
 	GValue value=G_VALUE_INIT;
-	gtk_tree_model_get_value(model, iter, COL_PID, &value);
-	int pid=strtol(g_value_get_string(&value), NULL, 10);
-	g_value_unset(&value);
-	gtk_tree_model_get_value(model, iter, COL_HOST, &value);
-	const char* hostn=g_value_get_string(&value);
-	g_value_unset(&value);
-	int ihost=host2i(hostn);
+	//g_value_init(&value, G_TYPE_STRING);
 	if(cmd<0){
 		switch(cmd){
 		case -1:{
@@ -410,17 +404,26 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 			} else if(!strcmp(action, "Copy")){
 				gtk_tree_model_get_value(model, iter, COL_FULL, &value);
 			}
-			gchar* jobinfo=g_strdup(g_value_get_string(&value));
-			g_value_unset(&value);
+			const gchar* jobinfo=g_value_get_string(&value);
 			clipboard_append(jobinfo);
-			g_free(jobinfo);
+			g_value_unset(&value);
 		}
 			   break;
 		}
 	} else{
+		gtk_tree_model_get_value(model, iter, COL_PID, &value);
+		int pid=strtol(g_value_get_string(&value), NULL, 10);
+		g_value_unset(&value);
+		gtk_tree_model_get_value(model, iter, COL_HOST, &value);
+		const char* hostn=g_value_get_string(&value);
+		int ihost=host2i(hostn);
+		if(ihost==-1){
+			warning("Unable to find host %s or pid %d\n", hostn, pid);
+		}
 		if(scheduler_cmd(ihost, pid, cmd)){
 			warning("Failed to %s the job\n", action);
 		}
+		g_value_unset(&value);//unset should be after hostn is used.
 	}
 }
 

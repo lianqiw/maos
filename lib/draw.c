@@ -112,7 +112,7 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 			sock_data->draw_single=sock_data->draw_single?0:1;
 			break;
 		default:
-			dbg("cmd=%d is not understood\n", cmd);
+			dbg("cmd=%d from socket %d is not understood\n", cmd, sock_draw);
 			break;
 		}
 	}
@@ -580,6 +580,7 @@ end2:
 				}
 				if(use_udp){
 					error("To be implemented\n");
+					//use sendmmsg with GSO is fastest.
 				} else{
 					TIC;tic;
 					if(stwrite(sock_draw, buf, bufsize)){

@@ -21,9 +21,10 @@ namespace cuda_recon{
 Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	Real ans;
 	cgtmp.count++;
-	if((ans=pcg(xout, this, precond, xin, cgtmp,
-		warm_restart, maxit, stream))>1){
+	int restart=0;
+	if((ans=pcg(xout, this, precond, xin, cgtmp, warm_restart, maxit, stream))>1){
 		cgtmp.count_fail++;
+		
 		info("CG %5d(%5d) does not converge: residual=%.5f, maxit=%d.",
 			cgtmp.count, cgtmp.count_fail, ans, maxit);
 		if(!disable_save&&cgtmp.count_fail<10){
@@ -38,6 +39,17 @@ Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 			cuwrite(cgtmp.diff, "cucg_solve_diff_%d", cgtmp.count_fail);
 		} else{
 			info("\n");
+		}
+		if(!restart){
+			restart=1;ans=0;
+			//Retry with cold restart followed by warm restart
+			for(int i=0; i<5&&ans<1; i++){
+				ans=pcg(xout, this, precond, xin, cgtmp, i==0?0:warm_restart, maxit, stream);
+			}
+			if(ans>0){
+				info("CG %5d(%5d) does not after repart: residual=%.5f, maxit=%d.",
+					cgtmp.count, cgtmp.count_fail, ans, maxit);
+			}
 		}
 	}
 	return ans;

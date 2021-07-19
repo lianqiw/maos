@@ -274,7 +274,7 @@ static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, in
 	coeff[0]=ccb[1]; coeff[1]=ccb[2];				\
 	coeff[2]=ccb[3]; coeff[3]=ccb[4];				\
 	coeff[4]=ccb[5]; coeff[5]=ccb[6];				\
-	calc_ngsmod_post(nmod==3?pclep:0, nmod==3?pclmp:0,		\
+	ans=calc_ngsmod_post(nmod==3?pclep:0, nmod==3?pclmp:0,		\
 			 pcleNGSmp,ccb[0],coeff,recon->ngsmod, aper,thetax,thetay); \
     }else{								\
 	ans=calc_ptt_post(pclep, pclmp, aper->ipcc, aper->imcc, ccb);	\

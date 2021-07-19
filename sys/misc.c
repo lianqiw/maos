@@ -824,8 +824,11 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	(void)unused;
 	char sender[PATH_MAX]={0};
 	get_job_progname(sender, PATH_MAX, siginfo->si_pid);
-	info("\nSignal caught: %s (%d), code is %d, send by %d (uid=%d, %s).\n", 
-		strsignal(sig), sig, siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
+	info("\nSignal caught: %s (%d)\n", strsignal(sig), sig);
+	if(sig==SIGTERM){
+		info("Code is %d, send by %d (uid=%d, %s).\n", 
+			siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
+	}
 	sync();
 	int cancel_action=0;
 	struct sigaction act={0};

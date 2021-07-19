@@ -141,16 +141,17 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
                 n2=round(iframe2*res.shape[0])
             else:
                 n2=iframe2
-            if n1 > n2 or n2 > res.shape[0]:
-                print(fn, 'Invalid range',n1,n2,'>',res.shape[0])
-                res = np.nan * res[0:1]
-            else:
+            if n1 < n2 and n2 <= res.shape[0]:
                 res=res[n1:n2]
+                res=res.mean(0,keepdims=1)
+            else:
+                res=res.T
+                res.shape=(1,res.shape[0],res.shape[1])
             #if max(res[-1]).all()==0:
             #    print(fn, 'Incomplete result')
             #    continue #unfinished result
-            res=res.mean(0,keepdims=1)*1e18
-            mres+=res
+    
+            mres+=res*1e18
             nseed+=1
         if nseed>0:
             fds.append(fd[0:-1])
