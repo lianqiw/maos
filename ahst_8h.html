@@ -111,8 +111,8 @@ Functions</h2></td></tr>
 <tr class="separator:a0233b7fe22a8218d6a5241f7baa880eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2b7f6e90199437bd13caa57d34a64bb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8h.html#ab2b7f6e90199437bd13caa57d34a64bb">calc_ngsmod_dot</a> (real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structngsmod__t">ngsmod_t</a> *ngsmod, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, const real *opd, int ievl)</td></tr>
 <tr class="separator:ab2b7f6e90199437bd13caa57d34a64bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee1de88dcae272de31585d895e22342e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8h.html#aee1de88dcae272de31585d895e22342e">calc_ngsmod_post</a> (real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, real tot, const real *coeff, const <a class="el" href="maos_2types_8h.html#structngsmod__t">ngsmod_t</a> *ngsmod, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, real thetax, real thetay)</td></tr>
-<tr class="separator:aee1de88dcae272de31585d895e22342e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cccf594ad9363b4c8137f69da2b704e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8h.html#a7cccf594ad9363b4c8137f69da2b704e">calc_ngsmod_post</a> (real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, real tot, const real *coeff, const <a class="el" href="maos_2types_8h.html#structngsmod__t">ngsmod_t</a> *ngsmod, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, real thetax, real thetay)</td></tr>
+<tr class="separator:a7cccf594ad9363b4c8137f69da2b704e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a94177f64acfe56654db4e671a4b5ad0b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8h.html#a94177f64acfe56654db4e671a4b5ad0b">ngsmod_free</a> (<a class="el" href="maos_2types_8h.html#structngsmod__t">ngsmod_t</a> *ngsmod)</td></tr>
 <tr class="separator:a94177f64acfe56654db4e671a4b5ad0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad98ae81273bdd1ddbc5f17313f35a0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8h.html#aad98ae81273bdd1ddbc5f17313f35a0e">remove_dm_ngsmod</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu, <a class="el" href="type_8h.html#structdcell">dcell</a> *dmerr)</td></tr>
@@ -317,14 +317,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aee1de88dcae272de31585d895e22342e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee1de88dcae272de31585d895e22342e">&#9670;&nbsp;</a></span>calc_ngsmod_post()</h2>
+<a id="a7cccf594ad9363b4c8137f69da2b704e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cccf594ad9363b4c8137f69da2b704e">&#9670;&nbsp;</a></span>calc_ngsmod_post()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void calc_ngsmod_post </td>
+          <td class="memname">int calc_ngsmod_post </td>
           <td>(</td>
           <td class="paramtype">real *&#160;</td>
           <td class="paramname"><em>pttr_out</em>, </td>
@@ -384,7 +384,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Separate post processing part so that GPU code can call it. </p>
+<p>Separate post processing part so that GPU code can call it. Return non zero if error happens. </p>
 
 </div>
 </div>
