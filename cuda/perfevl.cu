@@ -53,6 +53,9 @@ __global__ static void calc_ptt_do(
 	const Real* restrict amp		/**<[in] amplitude at every point*/
 	){
 	__shared__ Real ccb[4][TT_NBX];
+#if CUDA_VERSION<900 //supports GTX580 that often errors out in this routine
+	repeat:
+#endif
 	for(int i=0; i<4; i++){
 		ccb[i][threadIdx.x]=0.f;
 	}
@@ -72,6 +75,18 @@ __global__ static void calc_ptt_do(
 			}
 		}
 	}
+#if CUDA_VERSION<900 //supports GTX580 that often errors out in this routine
+//result sanity check
+	__shared__ err;
+	if(threadIdx.x==0) err=0;
+	__syncthreads();
+	if(threadIdx.x<4&&fabs(ccb[threadIdx.x][0])>1){
+		err=1;
+		printf("ccb[%d]=%g has wrong value, repeat\n", threadIdx.x, ccb[threadIdx.x][0]);
+	}
+	__syncthreads();
+	if(err) goto repeat;
+#endif
 	if(threadIdx.x<4){
 		atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
 	}
@@ -119,6 +134,9 @@ __global__ static void calc_ngsmod_do(Real* cc,
 	const Real* restrict phi,
 	const Real* restrict amp){
 	__shared__ Real ccb[7][TT_NBX];
+#if CUDA_VERSION<900 //supports GTX580 that often errors out in this routine
+repeat:
+#endif
 #pragma unroll
 	for(int i=0; i<7; i++){
 		ccb[i][threadIdx.x]=0.f;
@@ -145,6 +163,18 @@ __global__ static void calc_ngsmod_do(Real* cc,
 		}
 	}
 	__syncthreads();
+#if CUDA_VERSION<900 //supports GTX580 that often errors out in this routine
+	//result sanity check
+	__shared__ err;
+	if(threadIdx.x==0) err=0;
+	__syncthreads();
+	if(threadIdx.x<7 && fabs(ccb[threadIdx.x][0])>1){
+		err=1;
+		printf("ccb[%d]=%g has wrong value, repeat\n", threadIdx.x, ccb[threadIdx.x][0]);
+	}
+	__syncthreads();
+	if(err) goto repeat;
+#endif
 	if(threadIdx.x<7){
 		atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
 	}
