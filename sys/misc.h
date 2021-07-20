@@ -31,7 +31,7 @@ char *argv2str(int argc, const char *argv[], const char *delim);
 void print_file(const char *fnin);
 int myclocki(void);
 double myclockd(void);
-const char *myasctime(void);
+const char *myasctime(time_t at);
 char *strtime(void);
 const char *myhostname(void);
 char *mygetcwd(void);

@@ -190,12 +190,11 @@ int myclocki(){
    Get current time in ascii string for easy print. The string
    contains spaces and is not suitable to use in filename. The
    returned string should not be modified.  */
-const char* myasctime(void){
+const char* myasctime(time_t at){
 	static char st[20];
-	time_t a;
+	if(!at) at=time(NULL);
 	struct tm am;
-	time(&a);
-	localtime_r(&a, &am);
+	localtime_r(&at, &am);
 	if(snprintf(st, sizeof(st), "%04d/%02d/%02d %02d:%02d:%02d",
 		am.tm_year+1900, am.tm_mon, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec)>=(int)sizeof(st)){
 		warning_once("snprintf truncated\n");
@@ -822,10 +821,11 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	(void)unused;
-	char sender[PATH_MAX]={0};
-	get_job_progname(sender, PATH_MAX, siginfo->si_pid);
+
 	info("\nSignal caught: %s (%d)\n", strsignal(sig), sig);
 	if(sig==SIGTERM){
+		char sender[PATH_MAX]={0};
+		get_job_progname(sender, PATH_MAX, siginfo->si_pid);
 		info("Code is %d, send by %d (uid=%d, %s).\n", 
 			siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
 	}

@@ -105,7 +105,7 @@ extern FILE* fpconsole;
 #define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);fprintf(stderr, A);}})
 #define error(format,...) ({logerr(-4, "%sError(%s:%d): " format "%s", RED,BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
 #define warning(format,...) logstd(-4, "%sWarning(%s:%d): " format "%s", YELLOW, BASEFILE, __LINE__,##__VA_ARGS__, BLACK)
-#define warning_time(format,...) logstd(-4,"%s[%s] (%s:%d): " format "%s", YELLOW,myasctime(),BASEFILE, __LINE__,  ##__VA_ARGS__, BLACK)
+#define warning_time(format,...) logstd(-4,"%s[%s] (%s:%d): " format "%s", YELLOW,myasctime(0),BASEFILE, __LINE__,  ##__VA_ARGS__, BLACK)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
 //all info are shown at default log level
 #define info(A...)  logstd(-1, A) //least important info
@@ -120,7 +120,7 @@ extern FILE* fpconsole;
 #define dbg( A...) logdbg(0, A)
 #define dbg2(A...) logdbg(1, A)
 #define dbg3(A...) logdbg(2, A)
-#define logdbg_time(level, format, ...) logstd(level, "%s[%s]: " format "%s", CYAN, myasctime(), ##__VA_ARGS__, BLACK)
+#define logdbg_time(level, format, ...) logstd(level, "%s[%s]: " format "%s", CYAN, myasctime(0), ##__VA_ARGS__, BLACK)
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)

@@ -313,7 +313,12 @@ static void* maos_listener(void* psock){
 }
 void maos_version(void){
 	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
-	info2("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
+	char exe[PATH_MAX];
+	if(get_job_progname(exe, PATH_MAX, 0)){
+		info2("BUILT: %s by %s on %s", BUILDDIR, COMPILER, myasctime(fmtime(exe)));
+	}else{
+		info2("BUILT: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);//__DATE__ and __TIME__ is only applicable to this specific file
+	}
 #if CPU_SINGLE 
 	info2(" CPU(single)");
 #else
@@ -333,7 +338,7 @@ void maos_version(void){
 #else
 	info2(" -optimization\n");
 #endif
-	info("Launched at %s in %s with PID %ld.\n", myasctime(), HOST, (long)getpid());
+	info("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
 #if HAS_LWS
 	extern uint16_t PORT;
 	info("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
@@ -444,11 +449,11 @@ int main(int argc, const char* argv[]){
 		 * during preparation. Selective enable parallel for certain setup functions
 		 * that doesn't use blas*/
 
-		info2("\n*** Preparation started at %s in %s. ***\n\n", myasctime(), HOST);
+		info2("\n*** Preparation started at %s in %s. ***\n\n", myasctime(0), HOST);
 		maos_setup(parms);
 		parms->save.setup=0; //setup is finished. do not save if calling again.
 		if(parms->sim.end>parms->sim.start){
-			info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(), HOST);
+			info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(0), HOST);
 			maos_sim();
 		}
 		rename_file(0);
@@ -456,7 +461,7 @@ int main(int argc, const char* argv[]){
 
 	maos_reset();
 	free_parms(parms);
-	info2("\n*** Simulation finished at %s in %s. ***\n\n", myasctime(), HOST);
+	info2("\n*** Simulation finished at %s in %s. ***\n\n", myasctime(0), HOST);
 	free(scmd);
 	free(arg->gpus);
 	free(arg);
