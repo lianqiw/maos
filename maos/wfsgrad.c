@@ -608,9 +608,9 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 			real amp=pd->a2m;
 			real scale2=scale1*2./(amp);
 			if(pd->imb){//computer i0, gx, gy for matched filter
-				dmat* ibgrad=0;
 				dcellscale(pd->imb, scale1);
-				if(parms->powfs[ipowfs].dither_gdrift>0){//drift control
+				if(parms->powfs[ipowfs].dither_gdrift>0){//drift control in ib
+					dmat* ibgrad=0;
 					shwfs_grad(&ibgrad, pd->imb->p, parms, powfs, iwfs, PTYPE_COG);
 					if(parms->powfs[ipowfs].trs){
 						/* Update T/T drift signal to prevent matched filter from drifting*/
@@ -631,10 +631,10 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 						dmat* RFlgsg=P(recon->RFlgsg, iwfs, iwfs);
 						dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
 						P(simu->zoomerr, iwfs)+=P(focus, 0);
-						if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
+						if(iwfs==P(parms->powfs[ipowfs].wfs, 0)||!parms->powfs[ipowfs].zoomshare){
 							double deltah=focus->p[0]*2*pow(parms->powfs[ipowfs].hs, 2);
-							dbg("Step %5d: powfs %d trombone drift control error is %gm\n", 
-							simu->wfsisim, ipowfs, deltah);
+							dbg("Step %5d: wfs %d trombone drift control error is %g m\n", 
+							simu->wfsisim, iwfs, deltah);
 						}
 						dfree(focus);
 					}
@@ -748,7 +748,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			if(zoomset){
 				P(simu->zoomint, iwfs)=zoomerr;
 				if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
-					info2("wfs %d: Move trombone by %g nm (%g m in sodium range).\n", iwfs, P(simu->zoomint, iwfs)*1e9,
+					info2("wfs %d: Move trombone by %g m.\n", iwfs, 
 						P(simu->zoomint, iwfs)*2*pow(parms->powfs[ipowfs].hs, 2));
 				}
 				update_etf=1;//this is important in bootstraping.
@@ -757,8 +757,12 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				P(simu->zoomavg, iwfs)+=zoomerr;//zoom averager.
 				if(simu->wfsflags[ipowfs].zoomout){
 					/*zoom error is zero order hold even if no output from averager*/
-					P(simu->zoomerr, iwfs)+=P(simu->zoomavg, iwfs)/parms->powfs[ipowfs].zoomdtrat;
+					real zoomout=P(simu->zoomavg, iwfs)/parms->powfs[ipowfs].zoomdtrat;
+					P(simu->zoomerr, iwfs)+=zoomout;
 					P(simu->zoomavg, iwfs)=0;
+					if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
+						dbg("wfs %d: trombone averager output %g m\n", iwfs, zoomout*2*pow(parms->powfs[ipowfs].hs, 2));
+					}
 				}
 			}
 			if(parms->sim.mffocus){//Focus HPF
@@ -1022,12 +1026,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						dadd(&P(simu->gradoff, iwfs), 1, P(simu->gradoffacc,iwfs), -1);
 					}
 				}
-				if(1){//reset trombone integrator
-					info("Step %5d: powfs%d reset zoom integrator and error\n", isim, ipowfs);
-					dzero(simu->zoomint);
-					dzero(simu->zoomerr);
-					dzero(simu->zoomavg);
-				}
+				//there is no need to reset trombone error signal
 				if(parms->save.dither){
 					writebin(simu->gradoff, "extra/gradoff_%d_mtch", isim);
 				}

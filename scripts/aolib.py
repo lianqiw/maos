@@ -92,7 +92,7 @@ def maos_cumu(files, seeds=None): ##return cumulative average
     res,fds=maos_res(files,seeds,0,0)
     print(fds)
     nsim=res.shape[-1]
-    nsim0=5000
+    nsim0=min(5000,nsim*0.1)
     yy=np.arange(1, nsim+1-nsim0)
     xx=nsim0+yy
     yy.shape=(1,1,nsim-nsim0)
