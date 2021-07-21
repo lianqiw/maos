@@ -33,7 +33,6 @@ var maos_2types_8h_structpowfs__t =
     [ "dtheta", "maos_2types_8h.html#af71dd693feb078b31e587d30ad71e17c", null ],
     [ "bkgrnd", "maos_2types_8h.html#af1f72dd5af2b9727a8c6b3e4d3125956", null ],
     [ "bkgrndc", "maos_2types_8h.html#a80ed321fccc435961197365971c22781", null ],
-    [ "cogcoeff", "maos_2types_8h.html#ab9e55b0e877d01d838565267221361ba", null ],
     [ "sanea", "maos_2types_8h.html#a312f77c9a6198165363093a6264be6cb", null ],
     [ "pixpsax", "maos_2types_8h.html#a62769e15237385ba6792d2a0cd644bda", null ],
     [ "pixpsay", "maos_2types_8h.html#a6a6e7f7da267df615fcb229647a87723", null ],

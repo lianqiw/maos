@@ -18,7 +18,7 @@ var sys_2misc_8h =
     [ "print_file", "sys_2misc_8h.html#af00e20eff025c19783d48eb289a342c1", null ],
     [ "myclocki", "sys_2misc_8h.html#ab2e611787448364a94673c537488bf92", null ],
     [ "myclockd", "sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539", null ],
-    [ "myasctime", "sys_2misc_8h.html#ac14e730f72f719556018731d840694fe", null ],
+    [ "myasctime", "sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8", null ],
     [ "strtime", "sys_2misc_8h.html#af866472e389674a57669bf6714f462fc", null ],
     [ "myhostname", "sys_2misc_8h.html#a54a5a8c76fec08aab30c4d2be884f34e", null ],
     [ "mygetcwd", "sys_2misc_8h.html#aecd6443b6b571cb643489a42df57d79f", null ],

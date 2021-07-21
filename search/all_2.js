@@ -184,7 +184,6 @@ var searchData=
   ['cnew_5ffile',['cnew_file',['../cmath_8h.html#a82063c303f99b6d52ecb408c9b9b77e1',1,'ctmp.c']]],
   ['cnew_5fmmap',['cnew_mmap',['../cmath_8h.html#ad572fd5bf83e1a861d7a323ee778bc30',1,'ctmp.c']]],
   ['cnorm',['cnorm',['../cmath_8h.html#aef8ed03215c7d2d139b4e27601225e41',1,'ctmp.c']]],
-  ['cogcoeff',['cogcoeff',['../maos_2types_8h.html#ab9e55b0e877d01d838565267221361ba',1,'powfs_t']]],
   ['cogoff',['cogoff',['../parms_8h.html#a6baba8c243f71803bcb842733673269d',1,'powfs_cfg_t']]],
   ['cogthres',['cogthres',['../parms_8h.html#a309dc28c7e1c90cb414d20bb5fdf9f67',1,'powfs_cfg_t']]],
   ['coldtrat',['coldtrat',['../parms_8h.html#a708807d801ef0c550506f132f56d3377',1,'llt_cfg_t']]],

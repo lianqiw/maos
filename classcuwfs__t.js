@@ -22,7 +22,6 @@ var classcuwfs__t =
     [ "i0sumsum", "classcuwfs__t.html#a4300695719c53b84704f7198999596fc", null ],
     [ "bkgrnd2", "classcuwfs__t.html#afefe432f2f46393338bd42e38599362b", null ],
     [ "bkgrnd2c", "classcuwfs__t.html#a5b5611f26b4a3dcc3a499697cd4e9752", null ],
-    [ "cogcoeff", "classcuwfs__t.html#a87d4ebd8550248307f3ee08f314aadd6", null ],
     [ "lltncpa", "classcuwfs__t.html#abddedc77034bea1554d93f6b04af0d13", null ],
     [ "lltimcc", "classcuwfs__t.html#a28b47e2cdf7b0a5fc4b657ff13998fee", null ],
     [ "lltamp", "classcuwfs__t.html#af69262ef079f74f30874647dc32b6f49", null ],
