@@ -155,7 +155,6 @@ class cushphy_t:public cushwfs_t{
     //gradient operator
     curmat *mtche;
     curmat *i0sum;
-    curmat *cogcoeff;
     //runtime data
     curcell *ints;
     curcell *pistatout;
@@ -169,7 +168,6 @@ public:
 	delete bkgrnd2c;
 	delete mtche;
 	delete i0sum;
-	delete cogcoeff;
 	delete ints;
 	delete pistatout;
     }

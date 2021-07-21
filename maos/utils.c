@@ -545,6 +545,8 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	if(parms->powfs[ipowfs].mtchcr){
 		types[1]="MFC";
 	}
+	const real cogthres=parms->powfs[ipowfs].cogthres;
+	const real cogoff=parms->powfs[ipowfs].cogoff;
 	int type=parms->powfs[ipowfs].phytype_sim;
 	for(int dir=0; dir<ndir; dir++){
 		dzero(gnfra);
@@ -610,9 +612,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 				}
 					  break;
 				case 2:{/*tCoG gives gradients along r/a*/
-					dcog(g, ints, 0., 0.,
-						P(P(powfs[ipowfs].cogcoeff,wfsind),0,isa),
-						P(P(powfs[ipowfs].cogcoeff,wfsind),1,isa), 0);
+					dcog(g, ints, 0., 0.,cogthres, cogoff, 0);
 					g[0]*=pixthetax;
 					g[1]*=pixthetay;
 				}
@@ -692,6 +692,8 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
 	real* srot=(parms->powfs[ipowfs].radpix)?
 		P(PR(powfs[ipowfs].srot,wfsind,0)):NULL;
+	const real cogthres=parms->powfs[ipowfs].cogthres;
+	const real cogoff=parms->powfs[ipowfs].cogoff;
 	for(int icol=0; icol<1000; icol+=dtrat){
 		setup_powfs_etf(powfs, parms, 0, ipowfs, 0, icol);
 		gensei(parms, powfs, ipowfs);
@@ -706,9 +708,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 			P(gradmf,isa)=geach[0]*scale;
 			P(gradmf,isa+nsa)=geach[1]*scale;
 			{
-				dcog(geach, P(i0_new,isa), 0, 0,
-					P(P(powfs[ipowfs].cogcoeff,wfsind),0,isa),
-					P(P(powfs[ipowfs].cogcoeff,wfsind),1,isa), 0);
+				dcog(geach, P(i0_new, isa), 0, 0, cogthres, cogoff, 0);
 				geach[0]*=pixthetax;
 				geach[1]*=pixthetay;
 				if(srot){
@@ -995,8 +995,8 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	}
 
 	const real* srot=(parms->powfs[ipowfs].radpix)?PR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
-	real pixthetax=parms->powfs[ipowfs].radpixtheta;
-	real pixthetay=parms->powfs[ipowfs].pixtheta;
+	const real pixthetax=parms->powfs[ipowfs].radpixtheta;
+	const real pixthetay=parms->powfs[ipowfs].pixtheta;
 	/*output directly to simu->gradcl. replace */
 	if(!*pgrad){
 		*pgrad=dnew(nsa*2, 1);
@@ -1026,7 +1026,8 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 		sigtot=(i1sum/powfs[ipowfs].saasum);
 		break;
 	}
-
+	const real cogthres=parms->powfs[ipowfs].cogthres;
+	const real cogoff=parms->powfs[ipowfs].cogoff;
 	for(int isa=0; isa<nsa; isa++){
 		real geach[3]={0,0,1};
 		switch(phytype){
@@ -1061,9 +1062,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 				sumi=sigtot*P(powfs[ipowfs].saa,isa);
 				break;
 			}
-			dcog(geach, ints[isa], 0., 0.,
-				P(P(powfs[ipowfs].cogcoeff,wfsind), 0, isa),
-				P(P(powfs[ipowfs].cogcoeff,wfsind), 1, isa), sumi);
+			dcog(geach, ints[isa], 0., 0., cogthres, cogoff, sumi);
 			geach[0]*=pixthetax;
 			geach[1]*=pixthetay;
 

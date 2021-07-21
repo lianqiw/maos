@@ -120,7 +120,6 @@ typedef struct powfs_t{
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/
     dcell *bkgrndc;     /**<wfs background image calibration. from parms->powfs[ipowfs].bkgrndfnc.*/
-    dcell *cogcoeff;    /**<per subaperture CoG offset/threshold*/
     //subaperture noise equivalent angles.
     dcell *sanea;       /**<computed sanea (nsa*3) for each WFS. (rad^2)*/
     //int namp;         /**<number of amplitude maps*/

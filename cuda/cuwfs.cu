@@ -202,7 +202,7 @@ def_concat(z, c);
 def_concat(s, d);
 
 cushphy_t::cushphy_t(wfscfg_t* wfscfg)
-	:dtf(0), srot(0), bkgrnd2(0), bkgrnd2c(0), mtche(0), i0sum(0), cogcoeff(0), ints(0), pistatout(0),
+	:dtf(0), srot(0), bkgrnd2(0), bkgrnd2c(0), mtche(0), i0sum(0), ints(0), pistatout(0),
 	cushwfs_t(wfscfg){
 	const parms_t* parms=wfscfg->parms;
 	const powfs_t* powfs=wfscfg->powfs;
@@ -284,10 +284,6 @@ cushphy_t::cushphy_t(wfscfg_t* wfscfg)
 		X(free)(mtche0);
 		icol=(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0);
 		cp2gpu(&i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*icol, nsa, 1);
-	}
-	case PTYPE_COG:{
-		int icol=powfs[ipowfs].intstat->cogcoeff->nx>1?wfsind:0;
-		cp2gpu(&cogcoeff, powfs[ipowfs].intstat->cogcoeff->p[icol]->p, nsa*2, 1);
 	}
 		  break;
 	default:error("Invalid phytypesim\n");

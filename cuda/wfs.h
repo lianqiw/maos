@@ -88,7 +88,6 @@ public:
 	float i0sumsum;   /**<sum of i0sum for all subaps*/
 	curmat bkgrnd2;   /**<background as an image*/
 	curmat bkgrnd2c;  /**<calibration of background to subtract.*/
-	curmat cogcoeff;
 	/*For LLT */
 	curmat lltncpa;    /**<NCPA for llt*/
 	curmat lltimcc;      /**<size of 9x1*/

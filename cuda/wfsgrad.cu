@@ -162,14 +162,12 @@ mtche(Real* restrict grad, Real(*mtches)[2],
 */
 __global__ static void
 tcog_do(Real* grad, const Real* restrict ints, Real siglev, Real* saa,
-	int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real(*cogcoeff)[2], Real* srot){
+	int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real thres, Real bkgrnd, Real* srot){
 	__shared__ Real sum[3];
 	if(threadIdx.x<3&&threadIdx.y==0) sum[threadIdx.x]=0.f;
 	__syncthreads();//is this necessary?
 	int isa=blockIdx.x;
 	ints+=isa*nx*ny;
-	Real thres=cogcoeff[isa][0];
-	Real bkgrnd=cogcoeff[isa][1];
 	for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 		for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
 			Real im=ints[ix+iy*nx]-bkgrnd;
@@ -313,6 +311,8 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 	cuzero(gradcalc, stream);
 	const int totpix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
 	static int last_phytype=-1;
+	const Real cogthres=parms->powfs[ipowfs].cogthres;
+	const Real cogoff=parms->powfs[ipowfs].cogoff;
 	switch(parms->powfs[ipowfs].phytype_sim){
 	case 0:
 		break; //no-op
@@ -356,7 +356,7 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 		tcog_do<<<nsa, dim3(pixpsax, pixpsay), 0, stream>>>
 			(gradcalc, ints[0], scale1, scale2,
 				pixpsax, pixpsay, pixthetax, pixthetay, nsa,
-				(Real(*)[2])cuwfs[iwfs].cogcoeff(), srot);
+				cogthres, cogoff, srot);
 	}
 	break;
 	default://Use CPU version.

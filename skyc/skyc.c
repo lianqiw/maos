@@ -27,7 +27,7 @@ char* dirstart;
 void skyc_version(void){
 	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
 	char exe[PATH_MAX];
-	if(get_job_progname(exe, PATH_MAX, 0)){
+	if(!get_job_progname(exe, PATH_MAX, 0)){
 		info2("BUILT: %s by %s on %s", BUILDDIR, COMPILER, myasctime(fmtime(exe)));
 	} else{
 		info2("BUILT: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);//__DATE__ and __TIME__ is only applicable to this specific file

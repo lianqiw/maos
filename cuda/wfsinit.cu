@@ -386,17 +386,8 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				} else{
 					cuwfs[iwfs].qe=cuwfs[iwfs0].qe;
 				}
-				/*Matched filter */
-				if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
-					//Separated with gpu_wfsgrad_upate_mtche();
-				} else if(parms->powfs[ipowfs].phytype_sim==PTYPE_COG){/*cog*/
-					if(powfs[ipowfs].cogcoeff->nx>1||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-						cp2gpu(cuwfs[iwfs].cogcoeff,
-							powfs[ipowfs].cogcoeff->p[powfs[ipowfs].cogcoeff->nx>1?wfsind:0]->p, nsa*2, 1);
-					} else{
-						cuwfs[iwfs].cogcoeff=cuwfs[iwfs0].cogcoeff;
-					}
-				}
+				//Matched filter is separated with gpu_wfsgrad_upate_mtche();
+			
 				if(powfs[ipowfs].bkgrnd){
 					if(powfs[ipowfs].bkgrnd->ny==1||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 						int icol=(powfs[ipowfs].bkgrnd->ny==1?wfsind:0);

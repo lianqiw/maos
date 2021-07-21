@@ -1356,10 +1356,10 @@ typedef struct{
 }cogdata_t;
 
 /**
-   Setup CoG gradient offset for simulation and NEA for reconstruction.
+   Setup CoG NEA for reconstruction.
 */
 static void
-setup_powfs_cog(const parms_t* parms, powfs_t* powfs, int ipowfs){
+setup_powfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	TIC;tic;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int nsa=powfs[ipowfs].saloc->nloc;
@@ -1370,24 +1370,23 @@ setup_powfs_cog(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	const real rne=parms->powfs[ipowfs].rne;
 	const real bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 	const real bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
+	const real cogthres=parms->powfs[ipowfs].cogthres;
+	const real cogoff=parms->powfs[ipowfs].cogoff;
 	intstat_t* intstat=powfs[ipowfs].intstat;
-	int do_nea=0;
-	rand_t rstat;
+	rand_t rstat; seed_rand(&rstat, 1);
 	if(!intstat||!intstat->i0){
 		if(!parms->powfs[ipowfs].phyusenea){
 			error("powfs[%d].i0 is not available, please enable phyusenea.\n", ipowfs);
 		}
 	}
-	if(parms->powfs[ipowfs].phytype_recon==2&&parms->powfs[ipowfs].skip!=3&&!parms->powfs[ipowfs].phyusenea){
-	/*need nea in reconstruction*/
-		do_nea=1;
-		powfs[ipowfs].sanea=dcellnew(intstat->i0->ny, 1);
-		seed_rand(&rstat, 1);
-	}
-	powfs[ipowfs].cogcoeff=dcellnew(nwfs, 1);
+	info("Compute NEA in CoG using Monte Carlo simulation\n");
+	
+	powfs[ipowfs].sanea=dcellnew(intstat->i0->ny, 1);
+	
+	
 
 	for(int jwfs=0; jwfs<nwfs; jwfs++){
-	//int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+		//int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 		if(jwfs==0||(intstat&&intstat->i0->ny>1)){
 			real* srot=NULL;
 			if(parms->powfs[ipowfs].radpix){
@@ -1395,11 +1394,8 @@ setup_powfs_cog(const parms_t* parms, powfs_t* powfs, int ipowfs){
 			}
 			dmat** bkgrnd2=NULL;
 			dmat** bkgrnd2c=NULL;
-			dmat* psanea=0;
-			if(do_nea){
-				psanea=P(powfs[ipowfs].sanea,jwfs)=dnew(nsa, 3);
-				warning("Compute NEA in CoG using Monte Carlo simulation\n");
-			}
+			dmat* psanea=P(powfs[ipowfs].sanea,jwfs)=dnew(nsa, 3);
+		
 			if(powfs[ipowfs].bkgrnd){
 				if(powfs[ipowfs].bkgrnd->ny==1){
 					bkgrnd2=powfs[ipowfs].bkgrnd->p;
@@ -1414,45 +1410,32 @@ setup_powfs_cog(const parms_t* parms, powfs_t* powfs, int ipowfs){
 					bkgrnd2c=powfs[ipowfs].bkgrndc->p+nsa*jwfs;
 				}
 			}
-
-			P(powfs[ipowfs].cogcoeff,jwfs)=dnew(2, nsa);
-			dmat* cogcoeff=P(powfs[ipowfs].cogcoeff,jwfs)/*PDMAT*/;
-
+			dmat* nea=dnew(2, 2);
 			for(int isa=0; isa<nsa; isa++){
 				dmat* bkgrnd2i=bkgrnd2?bkgrnd2[isa]:NULL;
 				dmat* bkgrnd2ic=bkgrnd2c?bkgrnd2c[isa]:NULL;
+				dzero(nea);				
+				dmat* ints=P(intstat->i0,isa,jwfs);/*equivalent noise*/
+				cog_nea(nea->p, ints, cogthres, cogoff, ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
+				P(nea,0)=P(nea,0)*pixthetax*pixthetax;
+				P(nea,3)=P(nea,3)*pixthetay*pixthetay;
+				P(nea,1)=P(nea,1)*pixthetax*pixthetay;
+				P(nea,2)=P(nea,1);
 
-				P(cogcoeff, 0, isa)=parms->powfs[ipowfs].cogthres;
-				P(cogcoeff, 1, isa)=parms->powfs[ipowfs].cogoff;
-
-				if(do_nea){
-					dmat* nea=dnew(2, 2);
-					dmat* ints=P(intstat->i0,isa,jwfs);/*equivalent noise*/
-					cog_nea(nea->p, ints, P(cogcoeff, 0, isa), P(cogcoeff, 1, isa), ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
-					P(nea,0)=P(nea,0)*pixthetax*pixthetax;
-					P(nea,3)=P(nea,3)*pixthetay*pixthetay;
-					P(nea,1)=P(nea,1)*pixthetax*pixthetay;
-					P(nea,2)=P(nea,1);
-
-					if(srot){
-						dmat* nea2=0;
-						drotvecnn(&nea2, nea, srot[isa]);
-						dfree(nea); nea=nea2; nea2=0;
-					}
-					P(psanea, isa, 0)=P(nea,0);
-					P(psanea, isa, 1)=P(nea,3);
-					P(psanea, isa, 2)=P(nea,1);
-					dfree(nea);
+				if(srot){
+					dmat* nea2=0;
+					drotvecnn(&nea2, nea, srot[isa]);
+					dfree(nea); nea=nea2; nea2=0;
 				}
+				P(psanea, isa, 0)=P(nea,0);
+				P(psanea, isa, 1)=P(nea,3);
+				P(psanea, isa, 2)=P(nea,1);
 			}
-		} else{
-			P(powfs[ipowfs].cogcoeff,jwfs)=dref(P(powfs[ipowfs].cogcoeff,0));
+			dfree(nea);
 		}
 	}//for jwfs
-	if(parms->save.setup){
-		writebin(powfs[ipowfs].cogcoeff, "powfs%d_cogcoeff", ipowfs);
-	}
-	toc2("setup_powfs_cog");
+	
+	toc2("setup_powfs_cog_nea");
 }
 
 
@@ -1555,8 +1538,8 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche", ipowfs);
 		}
 	}
-	if(parms->powfs[ipowfs].phytype_recon==2||parms->powfs[ipowfs].phytype_sim==2||parms->powfs[ipowfs].dither){
-		setup_powfs_cog(parms, powfs, ipowfs);
+	if(parms->powfs[ipowfs].phytype_recon==2&&parms->powfs[ipowfs].skip!=3&&!parms->powfs[ipowfs].phyusenea){
+		setup_powfs_cog_nea(parms, powfs, ipowfs);
 	}
 	if(parms->save.setup){
 		writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
@@ -1727,7 +1710,6 @@ static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 	dspcellfree(powfs[ipowfs].GS0);
 	dcellfree(powfs[ipowfs].neasim);
 	dcellfree(powfs[ipowfs].sanea);
-	cellfree(powfs[ipowfs].cogcoeff);
 	if(powfs[ipowfs].intstat){
 		intstat_t* intstat=powfs[ipowfs].intstat;
 		cellfree(intstat->fotf);

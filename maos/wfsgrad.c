@@ -908,17 +908,20 @@ static void wfsgrad_drift(sim_t* simu, int ipowfs){
 			//may not be necessary.
 			dmat* i0sx=0, * i0sy=0;
 			real theta=0;
-			real gyoff=M_PI*0.5;
+			const real gyoff=M_PI*0.5;
 			const real gshift=parms->powfs[ipowfs].pixtheta*0.1;
+			const real cogthres=parms->powfs[ipowfs].cogthres;
+			const real cogoff=parms->powfs[ipowfs].cogoff;
+			
 			for(int isa=0; isa<nsa; isa++){
 				real g0[2], gx[2], gy[2];
 				dcp(&i0sx, PR(intstat->i0, isa, jwfs));
-				dcog(g0, i0sx, 0., 0., P(P(powfs[ipowfs].cogcoeff, jwfs), 0, isa), P(P(powfs[ipowfs].cogcoeff, jwfs), 1, isa), 0);
+				dcog(g0, i0sx, 0., 0., cogthres, cogoff, 0);
 				dcp(&i0sy, PR(intstat->i0, isa, jwfs));
 				dadd(&i0sx, 1, PR(intstat->gx, isa, jwfs), gshift);
 				dadd(&i0sy, 1, PR(intstat->gy, isa, jwfs), gshift);
-				dcog(gx, i0sx, 0., 0., P(P(powfs[ipowfs].cogcoeff, jwfs), 0, isa), P(P(powfs[ipowfs].cogcoeff, jwfs), 1, isa), 0);
-				dcog(gy, i0sy, 0., 0., P(P(powfs[ipowfs].cogcoeff, jwfs), 0, isa), P(P(powfs[ipowfs].cogcoeff, jwfs), 1, isa), 0);
+				dcog(gx, i0sx, 0., 0., cogthres, cogoff, 0);
+				dcog(gy, i0sy, 0., 0., cogthres, cogoff, 0);
 
 				//Works in both x/y and r/a coordinate.
 				theta+=(atan2(gx[1]-g0[1], gx[0]-g0[0])+atan2(gy[1]-g0[1], gy[0]-g0[0])-gyoff);
