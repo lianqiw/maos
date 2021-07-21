@@ -53,9 +53,9 @@ def locembed(loc, opd0):
     nframe=opd.shape[0]
     
     # print('opd=',opd.shape)
-    ims = np.zeros(nframe, dtype=object)
+    ims = np.empty(nframe, dtype=object)
     for iframe in range(nframe):
-        im = np.zeros((nx*ny))
+        im = np.full((nx*ny),np.NaN)
         im[ix+iy*nx] = opd[iframe, :]
         im.shape = (ny, nx)  # fixed 2020-10-09
         ims[iframe] = im
@@ -104,6 +104,7 @@ def draw(*args, **kargs):
             ims, ext2 = locembed(args[0], args[1])
             # print('ext2=',ext2)
             draw(ims, ext=ext2)
+            return ims
         else:
             print('Too many arguments')
     elif args[0].ndim > 2:

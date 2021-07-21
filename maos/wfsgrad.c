@@ -1044,12 +1044,15 @@ static void wfsgrad_dither_post(sim_t* simu){
 					parms->powfs[ipowfs].phytype_recon=parms->powfs[ipowfs].phytype_sim;
 					info2("Step %5d: powfs %d changed to %s\n", isim, ipowfs,
 						parms->powfs[ipowfs].phytype_sim==PTYPE_MF?"matched filter":"CoG");
-					info2("Step %5d: powfs%d reset gradncpa to cog of i0\n", isim, ipowfs);
-					for(int jwfs=0; jwfs<nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						shwfs_grad(&P(powfs[ipowfs].gradncpa, jwfs),
-								PCOLR(powfs[ipowfs].intstat->i0, jwfs),
-								parms, powfs, iwfs, PTYPE_COG);
+					
+					if(powfs[ipowfs].gradncpa){
+						info2("Step %5d: powfs%d reset gradncpa to cog of i0\n", isim, ipowfs);
+						for(int jwfs=0; jwfs<nwfs; jwfs++){
+							int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+							shwfs_grad(&P(powfs[ipowfs].gradncpa, jwfs),
+									PCOLR(powfs[ipowfs].intstat->i0, jwfs),
+									parms, powfs, iwfs, PTYPE_COG);
+						}
 					}
 				}
 				//Generating matched filter

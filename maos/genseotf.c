@@ -102,12 +102,13 @@ void genseotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		key=dhash(powfs[ipowfs].amp, key);
 	}
 	key=dhash(parms->powfs[ipowfs].wvl, key);
-	info("powfs %d: ncpa_method=%d, opdbias=%p\n",
-		ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
+	
 	if(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0){
 		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
 			key=dhash(P(powfs[ipowfs].opdbias,iwfs), key);
 		}
+		info("powfs %d i0 includes NCPA (ncpa_method=%d, opdbias=%p).\n",
+			ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
 	}
 	if(key!=0){
 		char tmp2[80];
@@ -586,6 +587,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	const real bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
 	const int radgx=parms->powfs[ipowfs].radgx;
 	int ni0=intstat->i0->ny;
+	info("Generating matched filter for %d\n", ipowfs);
 	if(ni0!=1&&ni0!=parms->powfs[ipowfs].nwfs){
 		error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
 	}

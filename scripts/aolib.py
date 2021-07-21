@@ -88,7 +88,16 @@ def test_read():
 def test_mkdtf():
     out=mkdtf([0.5e-6], 1./64., 2., 64, 64, 8,8,10e-6,10e-6,[],[],0,[],0,0)
     return out
-
+def maos_cumu(files, seeds=None): ##return cumulative average
+    res,fds=maos_res(files,seeds,0,0)
+    print(fds)
+    nsim=res.shape[-1]
+    nsim0=5000
+    yy=np.arange(1, nsim+1-nsim0)
+    xx=nsim0+yy
+    yy.shape=(1,1,nsim-nsim0)
+    resc=np.cumsum(res[:,:,5000:], axis=2)/yy
+    return resc,xx
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
 def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):

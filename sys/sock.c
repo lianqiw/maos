@@ -105,13 +105,13 @@ static void socket_tcp_keepalive(int sock){
 		warning("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
 	}
 }
-/*static void socket_reuse_addr(int sock){
+static void socket_reuse_addr(int sock){
    const int one=1;
    if(!setsockopt(sock,SOL_SOCKET,SO_REUSEADDR, &one,sizeof(int))){
 	   perror("setsockopt");
 	   warning("set REUSEADDR failed\n");
    }
-   }*/
+}
 static void socket_nopipe(int sock){
 #ifdef SO_NOSIGPIPE
 	const int one=1;
@@ -192,7 +192,7 @@ static int bind_socket(char* ip, uint16_t port){
 		exit(EXIT_FAILURE);
 	}
 	socket_tcp_keepalive(sock);
-	//socket_reuse_addr(sock);
+	socket_reuse_addr(sock);
 	socket_nopipe(sock);
 	cloexec(sock);
 

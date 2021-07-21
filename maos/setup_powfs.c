@@ -1318,8 +1318,8 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	}
 }
 /*compute cog NEA using Monte Carlo realizations of noise*/
-static void cog_nea(real* nea, dmat* ints, real cogthres, real cogoff, int ntry,
-	rand_t* rstat, real bkgrnd, real bkgrndc, dmat* bkgrnd2i, dmat* bkgrnd2ic, real rne
+static void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
+	rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
 ){
 	dmat* ints2=dnew(ints->nx, ints->ny);
 	real gnf[2]={0,0};
@@ -1379,7 +1379,7 @@ setup_powfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 			error("powfs[%d].i0 is not available, please enable phyusenea.\n", ipowfs);
 		}
 	}
-	info("Compute NEA in CoG using Monte Carlo simulation\n");
+	info("Compute NEA in CoG using Monte Carlo simulation with %d trials\n", ntry);
 	
 	powfs[ipowfs].sanea=dcellnew(intstat->i0->ny, 1);
 	
@@ -1427,9 +1427,9 @@ setup_powfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 					drotvecnn(&nea2, nea, srot[isa]);
 					dfree(nea); nea=nea2; nea2=0;
 				}
-				P(psanea, isa, 0)=P(nea,0);
-				P(psanea, isa, 1)=P(nea,3);
-				P(psanea, isa, 2)=P(nea,1);
+				P(psanea, isa, 0)=P(nea,0);//xx
+				P(psanea, isa, 1)=P(nea,3);//yy
+				P(psanea, isa, 2)=P(nea,1);//xy
 			}
 			dfree(nea);
 		}
