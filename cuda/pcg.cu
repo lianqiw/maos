@@ -91,8 +91,8 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	curcell& p0=cg_data.p0;
 	curcell& Ap=cg_data.Ap;
 	int ntot=maxiter*2+3;
-	if(!cg_data.store){
-		cg_data.store=curmat(ntot, 1);
+	if(!cg_data.store || cg_data.store.N()<ntot){//pcg may be temporarily called with more iterations
+		cg_data.store.init(ntot, 1);
 	}
 	Real* store=cg_data.store;
 	DO(cudaMemsetAsync(store, 0, ntot*sizeof(Real), stream));
@@ -101,7 +101,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	Real* rkzk=store; store+=maxiter+1;
 	Real* ak=store; store+=maxiter;
 	curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
-	if(!cg_data.diff){ //Only this enables async transfer
+	if(!cg_data.diff || cg_data.diff.N()<maxiter+1){ //Only this enables async transfer
 		cg_data.diff.init(maxiter+1, 1);
 	}
 	cg_data.diff.zero();

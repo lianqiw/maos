@@ -102,7 +102,7 @@ void curecon_t::reset_tomo(){
 	dbg("curecon_t::reset_tomo.\n");
 	if(RL&&RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
 	delete RR; RR=0;
-	opdr.zero();
+	//opdr.zero();//no need here. first_run is automatically set in tomo pcg.
 }
 void curecon_t::reset_mvm(){
 	if(MVM){

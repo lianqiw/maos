@@ -244,10 +244,10 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			if(parms->powfs[ipowfs].skip) continue;
 			int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];/*first wfs in this group. */
 			if(iwfs!=iwfs0&&P(recon->saneai,iwfs,iwfs)->pp==P(recon->saneai,iwfs0,iwfs0)->pp){
-				dbg("cutomo_grid:: reference neai from %d to %d\n", iwfs0, iwfs);
+				dbg("cutomo_grid: reference neai from %d to %d\n", iwfs0, iwfs);
 				neai[iwfs]=neai[iwfs0];
 			} else{
-				dbg("cutomo_grid:: Copy neai from cpu for %d\n", iwfs);
+				dbg("cutomo_grid: Copy neai from cpu for %d\n", iwfs);
 				dsp* nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
 				neai[iwfs]=convert_neai(nea);
 			}

@@ -19,38 +19,44 @@
 #include "utils.h"
 namespace cuda_recon{
 Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
-	Real ans;
+	Real ans=0;
 	cgtmp.count++;
-	int restart=0;
-	if((ans=pcg(xout, this, precond, xin, cgtmp, warm_restart, maxit, stream))>1){
+	Real thres=cgtmp.residual*2;
+	int restarted=0;
+repeat:
+	if(first_run){
+		info("CG %5d(%d) with first_run=%d. maxit is scaled by 3.\n", cgtmp.count, maxit, first_run);
+	}
+	ans=pcg(xout, this, precond, xin, cgtmp, first_run?0:warm_restart, 
+			(first_run&&warm_restart)?(maxit*3):maxit, stream);
+	first_run=0;
+	if(ans>thres){
 		cgtmp.count_fail++;
+		//failure is usually caused by a rare temporary memory corruption.
+		info("CG %5d(%d) does not converge: residual=%.5f, threshold is %.5f.\n", 
+			cgtmp.count, maxit, ans, thres);
+		if(restarted<1){
+			info("CG %5d(%d) is restarted\n", cgtmp.count, maxit);
+			restarted++;
+			first_run=1;
+			goto repeat;
+		}
+	}
 		
-		info("CG %5d(%5d) does not converge: residual=%.5f, maxit=%d.",
-			cgtmp.count, cgtmp.count_fail, ans, maxit);
-		if(!disable_save&&cgtmp.count_fail<10){
-			info("Result saved.\n");
-			cuwrite(xin, "cucg_solve_xin_%d", cgtmp.count_fail);
-			cuwrite(xout, "cucg_solve_xout_%d", cgtmp.count_fail);
-			cuwrite(cgtmp.r0, "cucg_solve_r0_%d", cgtmp.count_fail);
-			cuwrite(cgtmp.z0, "cucg_solve_z0_%d", cgtmp.count_fail);
-			cuwrite(cgtmp.p0, "cucg_solve_p0_%d", cgtmp.count_fail);
-			cuwrite(cgtmp.Ap, "cucg_solve_Ap_%d", cgtmp.count_fail);
-			cuwrite(cgtmp.store, "cucg_solve_store_%d", cgtmp.count_fail);
-			cuwrite(cgtmp.diff, "cucg_solve_diff_%d", cgtmp.count_fail);
-		} else{
-			info("\n");
-		}
-		if(!restart){
-			restart=1;ans=0;
-			//Retry with cold restart followed by warm restart
-			for(int i=0; i<5&&ans<1; i++){
-				ans=pcg(xout, this, precond, xin, cgtmp, i==0?0:warm_restart, maxit, stream);
-			}
-			if(ans>0){
-				info("CG %5d(%5d) does not after repart: residual=%.5f, maxit=%d.",
-					cgtmp.count, cgtmp.count_fail, ans, maxit);
-			}
-		}
+	if(!disable_save&&cgtmp.count_fail<10&&ans>thres*5){
+		info("CG result saved.\n");
+		cuwrite(xin, "cucg_solve_xin_%d", cgtmp.count_fail);
+		cuwrite(xout, "cucg_solve_xout_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.r0, "cucg_solve_r0_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.z0, "cucg_solve_z0_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.p0, "cucg_solve_p0_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.Ap, "cucg_solve_Ap_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.store, "cucg_solve_store_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.diff, "cucg_solve_diff_%d", cgtmp.count_fail);
+	}
+	
+	if(ans<thres){
+		cgtmp.residual=cgtmp.residual*0.9+ans*0.1;
 	}
 	return ans;
 }

@@ -31,8 +31,8 @@ public:
 	curmat store;
 	Array<Real, Pinned> diff;
 	int count_fail, count;
-
-	cgtmp_t():count_fail(0), count(0){}
+  Real residual;//average residual
+	cgtmp_t():count_fail(0), count(0), residual(1){}
 	~cgtmp_t(){}
 };
 //typedef void (*G_cgfun_t)(curcell**, Real, const curcell*, Real, stream_t &stream);
