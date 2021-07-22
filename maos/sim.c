@@ -42,6 +42,7 @@ extern int draw_single;
 static real tk_0;
 static real tk_1;
 static real tk_atm=0;
+int sim_exit=0;//set by signal handler to exit simulation
 int sim_pipe[2]={0,0};
 /**
    Initialize the simulation runtime data struct.
@@ -263,7 +264,7 @@ void maos_sim(){
 	dbg("PARALLEL=%d\n", PARALLEL);
 	long rescount=0;
 	dmat* restot=dnew(parms->evl.nmod, 1);
-	for(int iseed=0; iseed<parms->sim.nseed; iseed++){
+	for(int iseed=0; iseed<parms->sim.nseed&&!sim_exit; iseed++){
 		sim_t* simu=NULL;
 		while(!(simu=maos_iseed(iseed))){
 			iseed++;
@@ -280,26 +281,26 @@ void maos_sim(){
 #pragma omp sections
 			{
 #pragma omp section
-				for(int isim=simstart; isim<simend; isim++){
+				for(int isim=simstart; isim<simend&&!sim_exit; isim++){
 					simu->perfisim=isim;
 					perfevl(simu);
 					print_progress(simu);
 				}
 #pragma omp section
-				for(int isim=simstart; isim<simend; isim++){
+				for(int isim=simstart; isim<simend&&!sim_exit; isim++){
 					simu->wfsisim=isim;
 					wfsgrad(simu);
 					shift_grad(simu);
 				}
 #pragma omp section
-				for(int isim=simstart; isim<simend; isim++){
+				for(int isim=simstart; isim<simend&&!sim_exit; isim++){
 					simu->reconisim=isim-1;
 					reconstruct(simu);
 					filter_dm(simu);
 				}
 			}
 		} else{
-			for(int isim=simstart; isim<simend; isim++){
+			for(int isim=simstart; isim<simend&&!sim_exit; isim++){
 				maos_isim(isim);
 				if(simu->pause>0&&isim%simu->pause==0){
 					simu->pause=mypause(0, sim_pipe[0]);

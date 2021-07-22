@@ -822,7 +822,7 @@ static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	(void)unused;
 
-	info("\nSignal caught: %s (%d)\n", strsignal(sig), sig);
+	info("\ndefault_signal_handler: %s (%d)\n", strsignal(sig), sig);
 	if(sig==SIGTERM){
 		char sender[PATH_MAX]={0};
 		get_job_progname(sender, PATH_MAX, siginfo->si_pid);
@@ -831,15 +831,20 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	}
 	sync();
 	int cancel_action=0;
+	/*
+	{
 	struct sigaction act={0};
 	act.sa_handler=SIG_DFL;
-	sigaction(sig, &act, 0);/*prevent recursive call of handler*/
+	sigaction(sig, &act, 0);//prevent recursive call of handler
 	sync();
+	}
+	*/
 	if(sig==0){
 		dbg_time("Signal 0 caught. do nothing\n");
 		return;
 	}
 	if(fatal_error_in_progress){
+		info("Signal handler is already in progress. new signal is ignored\n");
 		return;
 	}
 	fatal_error_in_progress++;
@@ -856,15 +861,17 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	}
 	sync();
 	if(!cancel_action){//Propagate signal to default handler.
+		struct sigaction act={0};
 		act.sa_handler=SIG_DFL;
 		sigaction(sig, &act, 0);
 		raise(sig);
-	}else{//cancel signal, keep going
+	}/*else{//cancel signal, keep going
+		struct sigaction act={0};
 		act.sa_handler=NULL;
 		act.sa_sigaction=default_signal_handler;
 		act.sa_flags=SA_SIGINFO;
 		sigaction(sig, &act, 0);
-	}
+	}*/
 }
 
 /**

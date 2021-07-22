@@ -226,12 +226,19 @@ void rename_file(int sig){
    Handles signals.
 */
 int maos_signal_handler(int sig){
-	info2("maos: %s", strsignal(sig));
-	rename_file(sig);/*handles signal */
-	if(global&&global->parms&&global->parms->sim.mvmport){
-		mvm_client_close();
+	info2("maos_signal_handler: %s (%d)\n", strsignal(sig), sig);
+	if(sig==SIGTERM&&global&&global->setupdone==1){
+		info2("Will exit after finishing current time step\n");
+		extern int sim_exit;
+		sim_exit=1;
+		return 1;
+	}else{
+		rename_file(sig);/*handles signal */
+		if(global&&global->parms&&global->parms->sim.mvmport){
+			mvm_client_close();
+		}
+		scheduler_finish(sig);
 	}
-	scheduler_finish(sig);
 	return 0;
 }
 /**
