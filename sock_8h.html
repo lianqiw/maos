@@ -104,16 +104,86 @@ $(document).ready(function(){initNavTree('sock_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a77309de66bc983d3c121744f87ad38c0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a77309de66bc983d3c121744f87ad38c0">socket_rcv_timeout</a> (int sock, double sec)</td></tr>
+<tr class="separator:a77309de66bc983d3c121744f87ad38c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a058e8a35b7dc6cb2a081c509205ef21a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a058e8a35b7dc6cb2a081c509205ef21a">socket_snd_timeout</a> (int sock, double sec)</td></tr>
+<tr class="separator:a058e8a35b7dc6cb2a081c509205ef21a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56">connect_port</a> (const char *hostname, int port, int block, int nodelay)</td></tr>
 <tr class="separator:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a6d79915ff976b61b5e9f1cbefdb7be97">listen_port</a> (uint16_t port, char *localpath, int(*respond)(int), double timeout_sec, void(*timeout_fun)(), int nodelay)</td></tr>
 <tr class="separator:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6af4fd5ed53424b07d2aead4d1168f45"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a6af4fd5ed53424b07d2aead4d1168f45">socket_block</a> (int sock, int block)</td></tr>
 <tr class="separator:a6af4fd5ed53424b07d2aead4d1168f45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3f15127c9f7805205fb0e3df341b3e4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#af3f15127c9f7805205fb0e3df341b3e4">bind_socket</a> (int protocol, char *ip, uint16_t port)</td></tr>
+<tr class="separator:af3f15127c9f7805205fb0e3df341b3e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d15d50fe2dfb27d8260084823fdc970"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a2d15d50fe2dfb27d8260084823fdc970">socket_port</a> (int sock)</td></tr>
+<tr class="separator:a2d15d50fe2dfb27d8260084823fdc970"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7910cf3a3c23b9f778df3515cd2fe8c1"><td class="memItemLeft" align="right" valign="top">in_addr_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a7910cf3a3c23b9f778df3515cd2fe8c1">socket_peer</a> (int sock)</td></tr>
+<tr class="separator:a7910cf3a3c23b9f778df3515cd2fe8c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea2693b4a873c21f2c2d4835a56b2e3b"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#aea2693b4a873c21f2c2d4835a56b2e3b">addr2name</a> (in_addr_t s_addr)</td></tr>
+<tr class="separator:aea2693b4a873c21f2c2d4835a56b2e3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines to establish socket connection </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a77309de66bc983d3c121744f87ad38c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77309de66bc983d3c121744f87ad38c0">&#9670;&nbsp;</a></span>socket_rcv_timeout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int socket_rcv_timeout </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sock</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>sec</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set recv timeout in seconds </p>
+
+</div>
+</div>
+<a id="a058e8a35b7dc6cb2a081c509205ef21a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a058e8a35b7dc6cb2a081c509205ef21a">&#9670;&nbsp;</a></span>socket_snd_timeout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int socket_snd_timeout </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sock</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>sec</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set recv timeout in seconds </p>
+
+</div>
+</div>
 <a id="a24b9ffbaf688d73e66832ddffc86cb56"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a24b9ffbaf688d73e66832ddffc86cb56">&#9670;&nbsp;</a></span>connect_port()</h2>
 
@@ -242,6 +312,98 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Set socket to unblocking mode </p>
+
+</div>
+</div>
+<a id="af3f15127c9f7805205fb0e3df341b3e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3f15127c9f7805205fb0e3df341b3e4">&#9670;&nbsp;</a></span>bind_socket()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int bind_socket </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>protocol</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>ip</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>port</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>make a server port and bind to localhost on all addresses. protocl is usually SOCK_DGRAM or SOCK_STREAM. ip is usually zero. if port is 0, will bind an assigned port </p>
+
+</div>
+</div>
+<a id="a2d15d50fe2dfb27d8260084823fdc970"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d15d50fe2dfb27d8260084823fdc970">&#9670;&nbsp;</a></span>socket_port()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int socket_port </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sock</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>determine the socket port </p>
+
+</div>
+</div>
+<a id="a7910cf3a3c23b9f778df3515cd2fe8c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7910cf3a3c23b9f778df3515cd2fe8c1">&#9670;&nbsp;</a></span>socket_peer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">in_addr_t socket_peer </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sock</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>determine the socket peer IP address </p>
+
+</div>
+</div>
+<a id="aea2693b4a873c21f2c2d4835a56b2e3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aea2693b4a873c21f2c2d4835a56b2e3b">&#9670;&nbsp;</a></span>addr2name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* addr2name </td>
+          <td>(</td>
+          <td class="paramtype">in_addr_t&#160;</td>
+          <td class="paramname"><em>s_addr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>convert in_addr_t to host name for print out </p>
 
 </div>
 </div>

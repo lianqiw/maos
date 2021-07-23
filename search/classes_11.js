@@ -1,9 +1,8 @@
 var searchData=
 [
-  ['zcccell',['zcccell',['../type_8h.html#structzcccell',1,'']]],
-  ['zccell',['zccell',['../type_8h.html#structzccell',1,'']]],
-  ['zcell',['zcell',['../type_8h.html#structzcell',1,'']]],
-  ['zmat',['zmat',['../type_8h.html#structzmat',1,'']]],
-  ['zsp',['zsp',['../type_8h.html#structzsp',1,'']]],
-  ['zspcell',['zspcell',['../type_8h.html#structzspcell',1,'']]]
+  ['w01_5ft',['w01_t',['../classcuda__recon_1_1w01__t.html',1,'cuda_recon']]],
+  ['wfs_5fcfg_5ft',['wfs_cfg_t',['../parms_8h.html#structwfs__cfg__t',1,'']]],
+  ['wfscfg_5ft',['wfscfg_t',['../structcuda__wfs_1_1wfscfg__t.html',1,'cuda_wfs']]],
+  ['wfsflags_5ft',['wfsflags_t',['../maos_2types_8h.html#structwfsflags__t',1,'']]],
+  ['wfsints_5ft',['wfsints_t',['../maos_2types_8h.html#structwfsints__t',1,'']]]
 ];

@@ -95,13 +95,20 @@ $(document).ready(function(){initNavTree('sockio_8h.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">sockio.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="sys_2common_8h.html">common.h</a>&quot;</code><br />
+<code>#include &lt;netinet/in.h&gt;</code><br />
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:structudp__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#structudp__t">udp_t</a></td></tr>
+<tr class="separator:structudp__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ac7fb31521bed5d14292784874f15be50"><td class="memItemLeft" align="right" valign="top"><a id="ac7fb31521bed5d14292784874f15be50"></a>
@@ -131,10 +138,62 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>stread2</b> (int sfd, 
 <tr class="memitem:ad2364ca481e12db6b45009478899970f"><td class="memItemLeft" align="right" valign="top"><a id="ad2364ca481e12db6b45009478899970f"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>stcheck</b> (int sfd)</td></tr>
 <tr class="separator:ad2364ca481e12db6b45009478899970f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53031e6a454db8ec6d2b1c390310ef44"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#a53031e6a454db8ec6d2b1c390310ef44">udp_send</a> (<a class="el" href="sockio_8h.html#structudp__t">udp_t</a> *info, void *buf, size_t len, int counter)</td></tr>
+<tr class="separator:a53031e6a454db8ec6d2b1c390310ef44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4ce77a5c9b05e430798658fe328d4ec"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#aa4ce77a5c9b05e430798658fe328d4ec">udp_recv</a> (<a class="el" href="sockio_8h.html#structudp__t">udp_t</a> *info, void **pbuf, size_t *len)</td></tr>
+<tr class="separator:aa4ce77a5c9b05e430798658fe328d4ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines handle socket i/o. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structudp__t" id="structudp__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structudp__t">&#9670;&nbsp;</a></span>udp_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct udp_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a0e0d793768d2d790c7ac5bd27db924b7"></a>struct sockaddr_in</td>
+<td class="fieldname">
+peer_addr</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a70c5e49d5651e03eaf83f87fabc76c6f"></a>int</td>
+<td class="fieldname">
+sock</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="afae054fd21ae9e2078fa42c364635b8b"></a>int</td>
+<td class="fieldname">
+version</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a44942cf847afc7f9fb353f01dc26afc3"></a>int</td>
+<td class="fieldname">
+payload</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af5b5729c3f83c162285183f0e169522c"></a>int</td>
+<td class="fieldname">
+header</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="ac252e98eb123fd187c8d6b0ec247867d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac252e98eb123fd187c8d6b0ec247867d">&#9670;&nbsp;</a></span>stwritestr()</h2>
 
@@ -318,6 +377,82 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>stcheck</b> (int sfd)<
       </table>
 </div><div class="memdoc">
 <p>Read a file descriptor from socket. Use with <a class="el" href="sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f">stwritefd()</a>; </p>
+
+</div>
+</div>
+<a id="a53031e6a454db8ec6d2b1c390310ef44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a53031e6a454db8ec6d2b1c390310ef44">&#9670;&nbsp;</a></span>udp_send()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int udp_send </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="sockio_8h.html#structudp__t">udp_t</a> *&#160;</td>
+          <td class="paramname"><em>info</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>counter</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Use UDP socket to send data reliably. Status is checked. </p>
+
+</div>
+</div>
+<a id="aa4ce77a5c9b05e430798658fe328d4ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4ce77a5c9b05e430798658fe328d4ec">&#9670;&nbsp;</a></span>udp_recv()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int udp_recv </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="sockio_8h.html#structudp__t">udp_t</a> *&#160;</td>
+          <td class="paramname"><em>info</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>pbuf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Use UDP socket to receive data reliably. if counter </p>
 
 </div>
 </div>
