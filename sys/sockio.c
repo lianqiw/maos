@@ -23,6 +23,7 @@
 #include "misc.h"
 #include "common.h"
 #include "sockio.h"
+#include "sock.h"
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -218,4 +219,224 @@ int stcheck(int sfd){
 	}
 	}*/
 	return ans;
+}
+#define UDP_RESEND 0xEEEE
+#define UDP_DONE   0xEEED
+/**
+ * Use UDP socket to send data reliably. Status is checked.
+ * */
+int udp_send(udp_t* info, void* buf, size_t len, int counter){
+	if(!info || info->sock<=0){
+		warning("udp_send: info or info->sock is invalid\n");
+		return -1;
+	}
+	TIC;tic;
+	dbg("udp_send: %lu bytes with counter %d\n", len, counter);
+	int header_size=info->header;
+	int packet_size=info->payload-header_size;
+	int npacket=(len+packet_size-1)/packet_size;
+	struct msghdr *msg=mycalloc(npacket, struct msghdr);
+	struct iovec *iovec=mycalloc(npacket*2, struct iovec);
+	void* header=malloc(npacket*header_size);
+	char* buf2=buf;
+	char* header2=header;
+	int nsend;
+	for(int ip=0; ip<npacket; ip++){
+		//first iovec contains header for each segment
+		iovec[ip*2].iov_base=header2;
+		if(info->version==1 && info->header==12){
+			((int*)header2)[0]=counter;//frame counter
+			((int*)header2)[1]=ip;//subframe counter
+			((int*)header2)[2]=npacket;//number of subframes
+		}else{
+			error("Please implement header information for new version %d\n", info->version);
+		}
+		header2+=header_size;
+		iovec[ip*2].iov_len=header_size;
+		iovec[ip*2+1].iov_base=buf2;buf2+=packet_size;
+		iovec[ip*2+1].iov_len=packet_size;
+		if(ip+1==npacket){
+			iovec[ip*2+1].iov_len=len-packet_size*(npacket-1);//last packet may be partial.
+		}
+
+		msg[ip].msg_iov=iovec+ip*2;
+		msg[ip].msg_iovlen=2;
+		int msize=iovec[ip*2+1].iov_len+header_size;
+		if((nsend=sendmsg(info->sock, msg+ip, 0))<msize){
+			warning("sendmsg failed: %d bytes sent, expect %d\n", nsend, msize);
+		}
+		//usleep(2);
+	}
+	socket_rcv_timeout(info->sock, 10);
+	int cmd[5];
+	int nresent=0, nresent2=0;
+	//listen for resend request
+	while((nsend=recv(info->sock, cmd, sizeof(cmd), 0))>=5){
+		if(cmd[0]==UDP_RESEND&&cmd[1]==counter&& cmd[2]==npacket){
+			nresent++;
+			nresent2+=(cmd[4]-cmd[3]);
+			for(int ip=cmd[3]; ip<cmd[4]; ip++){
+				int msize=iovec[ip*2+1].iov_len+header_size;
+				if((nsend=sendmsg(info->sock, msg+ip, 0))<msize){
+					warning("sendmsg resend failed: %d bytes sent, expect %d\n", nsend, msize);
+				}
+			}
+		} else if(cmd[0]==UDP_DONE&&cmd[1]==counter&&cmd[2]==npacket){
+			dbg("udp_send: %d packets of %d successfully received, %d total sent, %d received.\n", cmd[3], npacket, npacket+nresent, cmd[3]+cmd[4]);
+			break;
+		}else{
+			dbg("udp_send: garbage received: %d %d %d %d %d\n", cmd[0], cmd[1], cmd[2], cmd[3], cmd[4]);
+		}
+	}
+	dbg("udp_send: %d resent request received for %d packets\n", nresent, nresent2);
+	//todo: check delivery status.
+	free(msg);
+	free(iovec);
+	free(header);
+	toc("udp_send");
+	return 0;
+}
+
+/**
+ * Use UDP socket to receive data reliably. if counter
+ * */
+int udp_recv(udp_t* info, void** pbuf, size_t *len){
+	if(!info||info->sock<=0){
+		warning("udp_recv info or info->sock is invalid\n");
+		goto onerror;
+	}
+	int header_size=info->header;
+	int packet_size=info->payload-header_size;
+	//int npacket=(len+packet_size-1)/packet_size;
+	int npacket;//number of packages
+	int counter;//frame counter
+	socket_rcv_timeout(info->sock, 10);
+	int ans;
+	if(info->version==1){
+		int meta[3];
+		if((ans=recv(info->sock, meta, sizeof(meta), MSG_PEEK))!=-1){//peek at available data.
+			info("recv peek got %d bytes\n", ans);
+			counter=meta[0];
+			npacket=meta[2];
+			dbg("%d packets to be received with counter %d\n", npacket, counter);
+		}else{
+			warning("Unable to peek data.\n");
+			goto onerror;
+		}
+	}else{
+		warning("Please implement header information for new version %d\n", info->version);
+		goto onerror;
+	}
+	TIC;tic;
+	if(!*pbuf || *len<(size_t)(npacket*info->payload)){
+		*len=npacket*info->payload;
+		warning("Buffer is too small, reallocate to %lu bytes\n", *len);
+		if(!(*pbuf=realloc(*pbuf, *len))){
+			warning("realloc buf failed\n");
+			goto onerror;
+		}
+	}
+	
+	struct msghdr* msg=mycalloc(npacket, struct msghdr);
+	struct iovec* iovec=mycalloc(npacket*2, struct iovec);
+	void* header=calloc(npacket, header_size);
+	char* buf2=*pbuf;
+	char* header2=header;
+	for(int ip=0; ip<npacket; ip++){
+		//first iovec contains header for each segment
+		iovec[ip*2].iov_base=header2;
+		header2+=header_size;
+		iovec[ip*2].iov_len=header_size;
+		iovec[ip*2+1].iov_base=buf2;buf2+=packet_size;
+		iovec[ip*2+1].iov_len=packet_size;
+		if(ip+1==npacket){
+			iovec[ip*2+1].iov_len=*len-packet_size*(npacket-1);//last packet may be partial.
+		}
+
+		msg[ip].msg_iov=iovec+ip*2;
+		msg[ip].msg_iovlen=2;
+	}
+	socket_rcv_timeout(info->sock, 1);
+	int meta[3];
+	int nvalid=0;
+	int nduplicate=0;//duplicate
+	int nresent=0;//resent packet count
+	int nresent2=0;//resent request count
+	int nreorder=0; //out of order
+	int lastind=-1;
+	int nretry=0;
+retry:	
+	nretry++;
+	while((ans=recv(info->sock, meta, sizeof(meta), MSG_PEEK))!=-1){//peek at available data.
+		int counter2=meta[0];
+		int ipacket2=meta[1];
+		int npacket2=meta[2];
+		if(counter2!=counter || npacket2!=npacket){
+			//drop the packet
+			dbg("Drop invalid package %d of %d with counter %d.\n", ipacket2, npacket2, counter2);
+			recv(info->sock, meta, sizeof(meta), 0);
+		}else{
+			int counter3=((int*)msg[ipacket2].msg_iov[0].iov_base)[0];//whether already written
+			if(recvmsg(info->sock, msg+ipacket2, 0)!=-1){
+				if(counter3){
+					nduplicate++;
+				}else{//new packet
+					nvalid++;
+					if(ipacket2<lastind){
+						nreorder++;
+					}else{
+						if(ipacket2>lastind+1){//skipped index
+							//dbg("got segment %d after %d. total %d\n", ipacket2, lastind, npacket2);
+							int cmd[5]={UDP_RESEND, counter2, npacket2, lastind+1, ipacket2};
+							send(info->sock, cmd, sizeof(cmd), 0);
+							nresent+=(ipacket2-lastind-1);
+						}
+						lastind=ipacket2;
+					}
+				}
+			}else{
+				dbg("recvmsg failed with %d\n", errno);
+			}
+		}
+	}
+	if(nvalid<npacket && nretry<5){
+		dbg("%d packets still missing\n", npacket-nvalid);
+		
+		int i1=-1;
+		for(int ip=0; ip<npacket; ip++){
+			int counter3=((int*)msg[ip].msg_iov[0].iov_base)[0];
+			if(!counter3){
+				nresent++;
+				if(i1==-1){//mark start of missing date
+					i1=ip;
+				}
+			}else{
+				if(i1!=-1){
+					int cmd[5]={UDP_RESEND, counter, npacket, i1, ip-1};
+					send(info->sock, cmd, sizeof(cmd), 0);
+					nresent2++;
+					i1=-1;
+				}
+			}
+		}
+		if(i1!=-1){
+			int cmd[5]={UDP_RESEND, counter, npacket, i1, npacket-1};
+			send(info->sock, cmd, sizeof(cmd), 0);
+			nresent2++;
+		}
+		
+		goto retry;
+	}
+	int cmd[]={UDP_DONE, counter, npacket, nvalid, nduplicate};
+	send(info->sock, cmd, sizeof(cmd), 0);
+	dbg("%d of %d packets received with counter %d. %d duplicated, %d resent, %d reordered.\n", nvalid, npacket, counter, nduplicate, nresent, nreorder);
+	dbg("%d resent requestes sent\n", nresent2);
+	free(msg);
+	free(header);
+	free(iovec);
+	toc("udp_recv");
+	return counter;
+onerror:
+	*len=0;
+	return -1;
 }

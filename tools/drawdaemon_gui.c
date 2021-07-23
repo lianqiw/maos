@@ -1230,12 +1230,14 @@ static void tool_zoom(GtkToolButton* button, gpointer data){
 static void limit_change(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->limit_changed=1;
+	apply_limit(drawdata_dialog);
 	delayed_update_pixmap(drawdata_dialog);
 }
 
 static void limit_change2(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->limit_changed=2;
+	apply_limit(drawdata_dialog);
 	delayed_update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle(GtkToggleButton* btn, gint* key){
@@ -1322,9 +1324,9 @@ static void tool_property(GtkToolButton* button, gpointer data){
 		if(diff[i/2]<EPS){
 			diff[i/2]=1;
 		}
-		float step=pow(10, floor(log10(fabs(diff[i/2])))-2);
-		spins[i]=gtk_spin_button_new_with_range(drawdata->limit0[i]-100*step, drawdata->limit0[i]+100*step, step);
-
+		float step=pow(10, round(log10(fabs(diff[i/2])))-2);
+		spins[i]=gtk_spin_button_new_with_range(drawdata->limit0[i]-1000*step, drawdata->limit0[i]+1000*step, step);
+		//info("diff is %g, step is %g, limit is %g\n", diff[i/2], step, drawdata->limit0[i]);
 		float* val;
 		if(i<4){
 			val=&drawdata->limit0[i];

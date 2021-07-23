@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <tgmath.h>
+#include <errno.h>
 #include "drawdaemon.h"
 /*
   Routines in this file handles I/O.
@@ -23,9 +24,16 @@
   Todo: fread does not block when there are no more data available, and simply
   return EOF. Consider changing to read, which blocks when no data available.
  */
+ //minimum internet maximum MTU is 576. IP header is 20-60. UDP header os 8. 508 is safest. We round up to 512.
+#define UDP_PAYLOAD 512 //maximum size of UDP payload in bytes
+#define UDP_HEADER 12 //size of UDP sub frame header in bytes
 int ndrawdata=0;
 int count=0;
 int byte_float=sizeof(float);
+udp_t udp_client={0};
+int client_port=-1;//client udp port
+in_addr_t client_addr;
+int udp_sock=-1;//server udp socket
 
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
@@ -89,6 +97,18 @@ void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, f
 		}
 	}
 }
+void* listen_udp(void *dummy){
+	(void)dummy;
+	dbg("listen_dup listening at socket %d\n", udp_sock);
+	void *buf=0; 
+	size_t bufsize=0;
+	int counter=0;
+	do{
+		counter=udp_recv(&udp_client, &buf, &bufsize);
+		info("listen_udp: %lu bytes received with counter %d.\n", bufsize, counter);
+	}while(counter>0);
+	return NULL;
+}
 #define STREADINT(p) if(streadint(sock, &p)) goto end;
 #define STREAD(p,len) if(stread(sock,p,len)) goto end;
 #define STREADSTR(p) if(streadstr(sock, &p)) goto end;
@@ -112,7 +132,7 @@ void* listen_draw(void* dummy){
 		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 			STREADINT(nlen);
 			STREADINT(cmd);
-			//dbg("cmd=%d\n", cmd);
+			dbg("cmd=%d\n", cmd);
 		}
 		switch(cmd){
 		case DRAW_FRAME:{//in new format, every frame start with this. Place holder to handle UDP.
@@ -242,6 +262,44 @@ void* listen_draw(void* dummy){
 				error("invalid byte_float=%d\n", byte_float);
 			}
 			break;
+		case DRAW_UDPPORT://received UDP port from client
+		{
+			STREADINT(client_port);
+			client_addr=socket_peer(sock);
+			info("received udp port %d fron client %s\n", client_port, addr2name(client_addr));
+			
+			if(udp_sock<=0){
+				udp_sock=bind_socket(SOCK_DGRAM, 0, 0);
+			}
+			int server_port=socket_port(udp_sock);
+			struct sockaddr_in name;
+			name.sin_family=AF_INET;
+			name.sin_addr.s_addr=client_addr;
+			name.sin_port=htons(client_port);
+			if(connect(udp_sock, (const struct sockaddr*)&name, sizeof(name))){
+				warning("connect udp socket to client failed with error %d\n", errno);
+			}else{
+				//initial handshake with fixed buffer size of 64 ints. The length can not be increased.
+				int cmd2[64]={0};
+				cmd2[0]=DRAW_ENTRY;
+				cmd2[1]=sizeof(int)*4;
+				cmd2[2]=1;//protocol version
+				cmd2[3]=server_port;
+				cmd2[4]=UDP_PAYLOAD;
+				cmd2[5]=UDP_HEADER;
+				udp_client.header=UDP_HEADER;
+				udp_client.payload=UDP_PAYLOAD;
+				udp_client.peer_addr=name;
+				udp_client.version=1;
+				udp_client.sock=udp_sock;
+				if(send(udp_sock, cmd2, sizeof(cmd2),0)<(ssize_t)sizeof(cmd2)){
+					warning("write to client failed with error %d\n", errno);
+				}else{
+					thread_new(listen_udp, NULL);
+				}
+			}
+		}
+		break;
 		case DRAW_END:
 		{
 			

@@ -85,6 +85,7 @@ int main(int argc, char* argv[]){
 	}else{
 		dbg("Use drawreshi or set MAOS_DRAWRES_HI=1 to only plot high order closed loop results\n");
 	}
+	TIC;tic;
 	arg_t* arg=parse_args(argc, argv);
 	/*use the parent pid so same bash session has the same drawdaemon. */
 	draw_id=getsid(0)+2e6;/*variables in draw.c */
@@ -497,4 +498,5 @@ int main(int argc, char* argv[]){
 	  "Uplink error", xlabel, "Error (rad)", "%d", iseed);
 	  }
 	  }*/
+	toc("drawres");
 }

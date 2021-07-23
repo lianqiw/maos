@@ -25,10 +25,10 @@ Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	int restarted=0;
 repeat:
 	if(first_run){
-		info("CG %5d(%d) with first_run=%d. maxit is scaled by 3.\n", cgtmp.count, maxit, first_run);
+		info("CG %5d(%d) with first_run=%d. maxit is scaled by %d.\n", cgtmp.count, maxit, first_run+1);
 	}
 	ans=pcg(xout, this, precond, xin, cgtmp, first_run?0:warm_restart, 
-			(first_run&&warm_restart)?(maxit*3):maxit, stream);
+			(first_run&&warm_restart)?(maxit*(1+first_run)):maxit, stream);
 	first_run=0;
 	if(ans>thres){
 		cgtmp.count_fail++;
@@ -38,7 +38,7 @@ repeat:
 		if(restarted<1){
 			info("CG %5d(%d) is restarted\n", cgtmp.count, maxit);
 			restarted++;
-			first_run=1;
+			first_run=2;
 			goto repeat;
 		}
 	}

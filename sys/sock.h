@@ -22,7 +22,13 @@
    Routines to establish socket connection
 */
 #include <netinet/in.h>
+int socket_rcv_timeout(int sock, double sec);
+int socket_snd_timeout(int sock, double sec);
 int connect_port(const char *hostname, int port, int block, int nodelay);
 void listen_port(uint16_t port, char *localpath, int (*respond)(int), double timeout_sec, void (*timeout_fun)(), int nodelay);
 void socket_block(int sock, int block);
+int bind_socket(int protocol, char* ip, uint16_t port);
+int socket_port(int sock);
+in_addr_t socket_peer(int sock);
+const char *addr2name(in_addr_t s_addr);
 #endif

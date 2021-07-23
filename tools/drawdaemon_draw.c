@@ -894,11 +894,11 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->limit0[3]=ymax0;
 	if(drawdata->spins){/*dialog is running, update its values */
 		for(int i=0; i<4; i++){/*update spin button's value. */
-			gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->limit0[i]);
+			//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->limit0[i]);
 		}
 		if(drawdata->zlim[0] || drawdata->zlim[1]){
 			for(int i=5; i<6; i++){/*update spin button's value. */
-				gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->zlim[i-4]);
+				//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->zlim[i-4]);
 			}
 		}
 	}

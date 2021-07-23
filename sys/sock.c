@@ -73,6 +73,7 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <string.h>
+#include <sys/time.h>
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
@@ -161,9 +162,31 @@ static void socket_tcp_nodelay(int sock){
 	setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
 }
 /**
+ * Set recv timeout in seconds
+ * */
+int socket_rcv_timeout(int sock, double sec){
+	struct timeval val={sec,0};
+	int ans;
+	if((ans=setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &val, sizeof(val)))<0){
+		warning("socket_rcv_timeout: setsockopt failed\n");
+	}
+	return ans;
+}
+/**
+ * Set recv timeout in seconds
+ * */
+int socket_snd_timeout(int sock, double sec){
+	struct timeval val={sec,0};
+	int ans;
+	if((ans=setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &val, sizeof(val)))<0){
+		warning("socket_snd_timeout: setsockopt failed\n");
+	}
+	return ans;
+}
+/**
    make a server port and bind to sockpath. AF_UNIX.
  */
-static int bind_socket_local(char* sockpath){
+static int bind_socket_unix(char* sockpath){
 	int sock=socket(AF_UNIX, SOCK_STREAM, 0);
 	socket_nopipe(sock);
 	struct sockaddr_un addr={0};
@@ -181,18 +204,23 @@ static int bind_socket_local(char* sockpath){
 	return sock;
 }
 /**
-   make a server port and bind to localhost on all addresses. AF_INET
+   make a server port and bind to localhost on all addresses. 
+   protocl is usually SOCK_DGRAM or SOCK_STREAM. 
+   ip is usually zero.
+   if port is 0, will bind an assigned port
 */
-static int bind_socket(char* ip, uint16_t port){
+int bind_socket(int protocol, char* ip, uint16_t port){
 	struct sockaddr_in name;
 	/* Create the socket. */
-	int sock=socket(PF_INET, SOCK_STREAM, 0);//tcp
+	int sock=socket(PF_INET, protocol, 0);//tcp
 	if(sock<0){
 		perror("socket");
 		exit(EXIT_FAILURE);
 	}
-	socket_tcp_keepalive(sock);
-	socket_reuse_addr(sock);
+	if(protocol==SOCK_STREAM && port){
+		socket_tcp_keepalive(sock);
+		socket_reuse_addr(sock);
+	}
 	socket_nopipe(sock);
 	cloexec(sock);
 
@@ -221,6 +249,39 @@ static int bind_socket(char* ip, uint16_t port){
 	}
 	return sock;
 }
+/**
+ * determine the socket port
+ * */
+int socket_port(int sock){
+	struct sockaddr_in name;
+	socklen_t addrlen=sizeof(name);
+	if(!getsockname(sock, (struct sockaddr*)&name, &addrlen)){
+		return ntohs(name.sin_port);
+	}else{
+		return -1;
+	}
+}
+
+/**
+ * determine the socket peer IP address
+ * */
+in_addr_t socket_peer(int sock){
+	struct sockaddr_in name;
+	socklen_t addrlen=sizeof(name);
+	if(!getpeername(sock, (struct sockaddr*)&name, &addrlen)){
+		return name.sin_addr.s_addr;
+	} else{
+		return 0;
+	}
+}
+/**
+ * convert in_addr_t to host name for print out
+ * */
+const char* addr2name(in_addr_t s_addr){
+	struct in_addr addr;
+	addr.s_addr=s_addr;
+	return (const char*)inet_ntoa(addr);
+}
 
 static volatile int quit_listen=0;
 static int listen_signal_handler(int sig){
@@ -248,7 +309,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	if(localpath){
 		if(localpath[0]=='/'){
 			//also bind to AF_UNIX
-			sock_local=bind_socket_local(localpath);
+			sock_local=bind_socket_unix(localpath);
 			if(sock_local==-1){
 				dbg_time("bind to %s failed\n", localpath);
 			} else{
@@ -264,7 +325,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			ip=localpath;
 		}
 	}
-	int sock=bind_socket(ip, port);
+	int sock=bind_socket(SOCK_STREAM, ip, port);
 	if(nodelay){//turn off tcp caching.
 		socket_tcp_nodelay(sock);
 	}
@@ -423,6 +484,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 	int sock=-1;
 	if(hostname[0]=='/'){//connect locally so we can pass fd.
 		sock=socket(PF_UNIX, SOCK_STREAM, 0);
+		socket_snd_timeout(sock, 5);
 		struct sockaddr_un addr={0};
 		addr.sun_family=AF_UNIX;
 		strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
@@ -438,6 +500,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 		struct sockaddr_in servername;
 		for(int count=0; count<25; count++){
 			sock=socket(PF_INET, SOCK_STREAM, 0);
+			socket_snd_timeout(sock, 5);
 			socket_tcp_keepalive(sock);
 			if(nodelay){
 				socket_tcp_nodelay(sock);

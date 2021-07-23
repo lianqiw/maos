@@ -133,6 +133,7 @@ enum{
     DRAW_FLOAT,//19 number of bytes for float
     DRAW_FRAME,//20 information about UDP frame, following this is frame index, total bytes, sub-frame index, sub-frame bytes/
     DRAW_SINGLE,//21 toggle single/continuous drawing
+    DRAW_UDPPORT,//22 send udp port of the client
     DRAW_END=100,
     DRAW_ENTRY=9999 /*A new entry*/
 };

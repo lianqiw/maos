@@ -393,7 +393,13 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 	int cmd=data->command;
 	const char* action=data->action;
 	GValue value=G_VALUE_INIT;
-	//g_value_init(&value, G_TYPE_STRING);
+	gtk_tree_model_get_value(model, iter, COL_PID, &value);
+	int pid=strtol(g_value_get_string(&value), NULL, 10);
+	g_value_unset(&value);
+	gtk_tree_model_get_value(model, iter, COL_HOST, &value);
+	const char* hostn=g_value_get_string(&value);
+	g_value_unset(&value);
+	int ihost=host2i(hostn);
 	if(cmd<0){
 		switch(cmd){
 		case -1:{
@@ -404,26 +410,17 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 			} else if(!strcmp(action, "Copy")){
 				gtk_tree_model_get_value(model, iter, COL_FULL, &value);
 			}
-			const gchar* jobinfo=g_value_get_string(&value);
-			clipboard_append(jobinfo);
+			gchar* jobinfo=g_strdup(g_value_get_string(&value));
 			g_value_unset(&value);
+			clipboard_append(jobinfo);
+			g_free(jobinfo);
 		}
 			   break;
 		}
 	} else{
-		gtk_tree_model_get_value(model, iter, COL_PID, &value);
-		int pid=strtol(g_value_get_string(&value), NULL, 10);
-		g_value_unset(&value);
-		gtk_tree_model_get_value(model, iter, COL_HOST, &value);
-		const char* hostn=g_value_get_string(&value);
-		int ihost=host2i(hostn);
-		if(ihost==-1){
-			warning("Unable to find host %s or pid %d\n", hostn, pid);
-		}
 		if(scheduler_cmd(ihost, pid, cmd)){
 			warning("Failed to %s the job\n", action);
 		}
-		g_value_unset(&value);//unset should be after hostn is used.
 	}
 }
 
@@ -512,29 +509,31 @@ static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointe
 	GtkTreePath* path=NULL;
 	GtkTreeViewColumn* column=NULL;
 	GtkTreeSelection* selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+	
 	if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
-		(gint)event->x,
-		(gint)event->y,
-		&path, &column, NULL, NULL)){
-/*clicks within treeview.*/
-		if(!gtk_tree_selection_path_is_selected(selection, path)){
-			/*the path clicked is not selected. move selection to this path*/
-			gtk_tree_selection_unselect_all(selection);
-			gtk_tree_selection_select_path(selection, path);
+		(gint)event->x,	(gint)event->y,	&path, &column, NULL, NULL)){
+		if(event->button==3){//right click, select if nothing is selected. 
+			if(gtk_tree_selection_count_selected_rows(selection)==0){
+				//the path clicked is not selected. move selection to this path
+				gtk_tree_selection_unselect_all(selection);
+				gtk_tree_selection_select_path(selection, path);
+			}
 		}
-		gtk_tree_path_free(path);
 	} else{//clicks outsize of treeview. unselect all.
-		gtk_tree_selection_unselect_all(selection);
-		path=NULL; column=NULL;
+		if(event->button==1){
+			gtk_tree_selection_unselect_all(selection);
+			column=NULL;
+		}
+	}
+	if(path) {
+		gtk_tree_path_free(path); path=NULL;
 	}
 	//right click popup menu
 	if(event->button==3){
 		view_popup_menu(view, user_data);
+		return TRUE;//return TRUE to avoid modifying selection
 	}
-	return TRUE;
-	//}else{
-	//return FALSE;//let system handle left click
-	//}
+	return FALSE;//default handler handles multi selection
 }
 /* Handle click on icon column to handle individual jobs*/
 static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpointer user_data){

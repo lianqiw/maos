@@ -18,6 +18,7 @@
 #ifndef AOS_SOCKIO_H
 #define AOS_SOCKIO_H
 #include "common.h"
+#include <netinet/in.h>
 /**
    \file sockio.h
    Routines handle socket i/o.
@@ -45,4 +46,13 @@ int streadstrarr(int sfd, char ***str, int *nstr);
 int stwritefd(int sfd, int fd);
 int streadfd(int sfd, int *fd);
 int stcheck(int sfd);
+typedef struct{
+    struct sockaddr_in peer_addr;
+    int sock;//client udp socket valid if >0
+    int version;//version for udp communication
+    int payload;//maximum payload size in bytes
+    int header;//header size in bytes
+}udp_t;
+int udp_send(udp_t* info, void* buf, size_t len, int counter);
+int udp_recv(udp_t* info, void** pbuf, size_t* len);
 #endif

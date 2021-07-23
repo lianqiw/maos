@@ -56,6 +56,7 @@ long group=0;
    3 If draw_direct=1, get_drawdaemon() will launch drawdaemon directly.
 
 */
+#define TEST_UDP 0 //test UDP implementation.
 /* List of list*/
 typedef struct list_t{
 	char* key;
@@ -64,16 +65,18 @@ typedef struct list_t{
 }list_t;
 int sock_ndraw=0;//number of displays
 int sock_ndraw2=0;//number of valid displays
+
 typedef struct{
 	int fd;
+#if TEST_UDP
+	udp_t udp;
+#endif
 	int pause;
 	int draw_single;
 	list_t* list;
 	char* figfn[2];
 }sockinfo_t;
 sockinfo_t sock_draws[MAXDRAW];
-
-
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
 */
@@ -82,8 +85,57 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 	int sock_draw=sock_data->fd;
 	char** figfn=sock_data->figfn;
 	//info("draw is listening to drawdaemon at %d\n", sock_draw);
+#if TEST_UDP	
+	if(sock_data->udp.sock<=0){
+		sock_data->udp.sock=bind_socket(SOCK_DGRAM, 0, 0);
+		int client_port=socket_port(sock_data->udp.sock);
+		int cmd[4]={DRAW_ENTRY, sizeof(int)*2, DRAW_UDPPORT, client_port};
+		static int count=0;
+		dbg("client_port=%d\n", client_port);
+retry:
+		if(stwrite(sock_draw, cmd, sizeof(cmd))){
+			warning("write to drawdaemon failed\n");
+			return NULL;
+		}
+		//server replies in UDP packet.
+		socklen_t slen=sizeof(sock_data->udp.peer_addr);	
+		int cmd2[64];
+		socket_rcv_timeout(sock_data->udp.sock, 2);
+		int ncmd=recvfrom(sock_data->udp.sock, cmd2, sizeof(cmd2), 0, 
+						 (struct sockaddr*)&sock_data->udp.peer_addr, &slen);
+		if(ncmd>0){
+			dbg("received udp reply from %s:%d (%d) bytes. UDP payload is %d. Header size is %d\n", 
+				addr2name(sock_data->udp.peer_addr.sin_addr.s_addr), 
+						  sock_data->udp.peer_addr.sin_port, cmd2[3], cmd2[4], cmd2[5]);
+			sock_data->udp.version=cmd2[2];
+			sock_data->udp.payload=cmd2[4];
+			sock_data->udp.header=cmd2[5];
+			//set default destination for UDP.
+			if(connect(sock_data->udp.sock, (struct sockaddr*)&sock_data->udp.peer_addr, slen)){
+				dbg("connection fails to establish, errno=%d, close socket.\n", errno);
+				close(sock_data->udp.sock);
+				sock_data->udp.sock=-1;
+			}else{
+				dbg("connection is established.\n");
+			}
+		}else{
+			count++;
+			if(count<5){
+				warning("no data is received, retry\n");
+				goto retry;
+			}else{
+				warning("no data is received, give up\n");
+			}
+		}
+	}
+#endif	
 	int cmd;
+	int nlen=0;
 	while(sock_data->fd!=-1&&!streadint(sock_draw, &cmd)){
+		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
+			streadint(sock_draw, &nlen);
+			streadint(sock_draw, &cmd);
+		}
 		switch(cmd){
 		case DRAW_FIGFN:
 		{
@@ -112,7 +164,12 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 			sock_data->draw_single=sock_data->draw_single?0:1;
 			break;
 		default:
-			dbg("cmd=%d from socket %d is not understood\n", cmd, sock_draw);
+			dbg("Unknown cmd: %d with size %d from socket %d\n", cmd, nlen, sock_draw);
+			if(nlen){
+				void* p=malloc(nlen);
+				stread(sock_draw, p, nlen);
+				free(p);
+			}
 			break;
 		}
 	}
@@ -188,6 +245,12 @@ static void draw_remove(int fd, int reuse){
 		if(sock_draws[ifd].fd==fd){
 			found=1;
 			sock_draws[ifd].fd=-1;
+#if TEST_UDP			
+			if(sock_draws[ifd].udp.sock>0) {
+				close(sock_draws[ifd].udp.sock);
+				sock_draws[ifd].udp.sock=-1;
+			}
+#endif
 			list_destroy(&sock_draws[ifd].list);
 			free(sock_draws[ifd].figfn[0]);sock_draws[ifd].figfn[0]=NULL;
 			free(sock_draws[ifd].figfn[1]);sock_draws[ifd].figfn[1]=NULL;
@@ -561,6 +624,7 @@ end2:
 				warning("write failed:%d\n", ans);
 				free(buf); bufsize=0; buf=0;
 			} else{
+				//The following is not used. Sub-frame index needs to be used with msghdr
 				int* bufp=(int*)(buf+3*sizeof(int));
 				bufp[0]=(int)bufsize;//frame size
 				bufp[1]=count;//frame number
@@ -590,6 +654,15 @@ end2:
 					}
 					toc2("write %lu MiB", bufsize>>20);
 				}
+#if TEST_UDP				
+				if(sock_draws[ifd].udp.sock>0){
+					//test UDP data
+					int counter=myclocki();
+					udp_send(&sock_draws[ifd].udp, buf, bufsize, counter);
+					udp_send(&sock_draws[ifd].udp, buf, bufsize, counter);
+					udp_send(&sock_draws[ifd].udp, buf, bufsize, counter);
+				}
+#endif			
 			}
 			free(buf);
 		}
