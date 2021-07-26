@@ -103,10 +103,10 @@ $(document).ready(function(){initNavTree('daemonize_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a11994e1abb814e3885025b3fa9088602"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a11994e1abb814e3885025b3fa9088602">single_instance_daemonize</a> (const char *lockfolder_in, const char *progname, <a class="el" href="classlong.html">long</a> version, void(*daemon_func)(void *), void *daemon_arg)</td></tr>
-<tr class="separator:a11994e1abb814e3885025b3fa9088602"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad10839cacf3acb84d43eae3ff6d04ade"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#ad10839cacf3acb84d43eae3ff6d04ade">lock_file</a> (const char *fn, <a class="el" href="classlong.html">long</a> block, <a class="el" href="classlong.html">long</a> version)</td></tr>
-<tr class="separator:ad10839cacf3acb84d43eae3ff6d04ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bf6a4482ca30b96da77335ea0a23320"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a8bf6a4482ca30b96da77335ea0a23320">single_instance_daemonize</a> (const char *lockfolder_in, const char *progname, int version, void(*daemon_func)(void *), void *daemon_arg)</td></tr>
+<tr class="separator:a8bf6a4482ca30b96da77335ea0a23320"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cd6126eec1c5ef467a1bdf6a591b3b4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a4cd6126eec1c5ef467a1bdf6a591b3b4">lock_file</a> (const char *fn, int block, int version)</td></tr>
+<tr class="separator:a4cd6126eec1c5ef467a1bdf6a591b3b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29b0af1da2432bcc90721c0b62f4e660"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a29b0af1da2432bcc90721c0b62f4e660">daemonize</a> (void)</td></tr>
 <tr class="separator:a29b0af1da2432bcc90721c0b62f4e660"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39160bd731e78e9de1768b2bed9a06d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a39160bd731e78e9de1768b2bed9a06d3">redirect</a> (void)</td></tr>
@@ -121,8 +121,8 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Handling process creation. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a11994e1abb814e3885025b3fa9088602"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11994e1abb814e3885025b3fa9088602">&#9670;&nbsp;</a></span>single_instance_daemonize()</h2>
+<a id="a8bf6a4482ca30b96da77335ea0a23320"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8bf6a4482ca30b96da77335ea0a23320">&#9670;&nbsp;</a></span>single_instance_daemonize()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -142,7 +142,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>version</em>, </td>
         </tr>
         <tr>
@@ -170,8 +170,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ad10839cacf3acb84d43eae3ff6d04ade"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad10839cacf3acb84d43eae3ff6d04ade">&#9670;&nbsp;</a></span>lock_file()</h2>
+<a id="a4cd6126eec1c5ef467a1bdf6a591b3b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cd6126eec1c5ef467a1bdf6a591b3b4">&#9670;&nbsp;</a></span>lock_file()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -185,13 +185,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>block</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>version</em>&#160;</td>
         </tr>
         <tr>

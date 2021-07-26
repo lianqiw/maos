@@ -104,14 +104,19 @@ $(document).ready(function(){initNavTree('sock_8h.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a77309de66bc983d3c121744f87ad38c0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a77309de66bc983d3c121744f87ad38c0">socket_rcv_timeout</a> (int sock, double sec)</td></tr>
-<tr class="separator:a77309de66bc983d3c121744f87ad38c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a058e8a35b7dc6cb2a081c509205ef21a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a058e8a35b7dc6cb2a081c509205ef21a">socket_snd_timeout</a> (int sock, double sec)</td></tr>
-<tr class="separator:a058e8a35b7dc6cb2a081c509205ef21a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d4b5881c92423db1f340d56a4dd32d7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a4d4b5881c92423db1f340d56a4dd32d7">socket_recv_timeout</a> (int sock, double sec)</td></tr>
+<tr class="separator:a4d4b5881c92423db1f340d56a4dd32d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b9b32440b64707b50fbaae8d08f33e5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a9b9b32440b64707b50fbaae8d08f33e5">socket_send_timeout</a> (int sock, double sec)</td></tr>
+<tr class="separator:a9b9b32440b64707b50fbaae8d08f33e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8dae7b7ade5b288d06b9fd863bc20e72"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a8dae7b7ade5b288d06b9fd863bc20e72">socket_timeout</a> (int sock, double sec)</td></tr>
+<tr class="separator:a8dae7b7ade5b288d06b9fd863bc20e72"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56">connect_port</a> (const char *hostname, int port, int block, int nodelay)</td></tr>
 <tr class="separator:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a6d79915ff976b61b5e9f1cbefdb7be97">listen_port</a> (uint16_t port, char *localpath, int(*respond)(int), double timeout_sec, void(*timeout_fun)(), int nodelay)</td></tr>
 <tr class="separator:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f07f6666f1b9097107b1cbc18b87eee"><td class="memItemLeft" align="right" valign="top"><a id="a6f07f6666f1b9097107b1cbc18b87eee"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>socket_nopipe</b> (int sock)</td></tr>
+<tr class="separator:a6f07f6666f1b9097107b1cbc18b87eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6af4fd5ed53424b07d2aead4d1168f45"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a6af4fd5ed53424b07d2aead4d1168f45">socket_block</a> (int sock, int block)</td></tr>
 <tr class="separator:a6af4fd5ed53424b07d2aead4d1168f45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3f15127c9f7805205fb0e3df341b3e4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#af3f15127c9f7805205fb0e3df341b3e4">bind_socket</a> (int protocol, char *ip, uint16_t port)</td></tr>
@@ -126,14 +131,14 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines to establish socket connection </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a77309de66bc983d3c121744f87ad38c0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a77309de66bc983d3c121744f87ad38c0">&#9670;&nbsp;</a></span>socket_rcv_timeout()</h2>
+<a id="a4d4b5881c92423db1f340d56a4dd32d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d4b5881c92423db1f340d56a4dd32d7">&#9670;&nbsp;</a></span>socket_recv_timeout()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int socket_rcv_timeout </td>
+          <td class="memname">int socket_recv_timeout </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>sock</em>, </td>
@@ -155,14 +160,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a058e8a35b7dc6cb2a081c509205ef21a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a058e8a35b7dc6cb2a081c509205ef21a">&#9670;&nbsp;</a></span>socket_snd_timeout()</h2>
+<a id="a9b9b32440b64707b50fbaae8d08f33e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b9b32440b64707b50fbaae8d08f33e5">&#9670;&nbsp;</a></span>socket_send_timeout()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int socket_snd_timeout </td>
+          <td class="memname">int socket_send_timeout </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>sock</em>, </td>
@@ -181,6 +186,35 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Set recv timeout in seconds </p>
+
+</div>
+</div>
+<a id="a8dae7b7ade5b288d06b9fd863bc20e72"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8dae7b7ade5b288d06b9fd863bc20e72">&#9670;&nbsp;</a></span>socket_timeout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int socket_timeout </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sock</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>sec</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>set both snd and rcv time out </p>
 
 </div>
 </div>
