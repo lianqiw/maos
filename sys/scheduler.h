@@ -84,6 +84,7 @@ enum{
 };
 /*command from scheduler etc and monitor*/
 enum{
+    MON_CMD=1, /*called by monitor main thread to relay cmd to scheduler*/
     MON_DRAWDAEMON=2,/*start drawdaemon*/
     MON_STATUS=3,
     MON_PATH=6,
@@ -102,6 +103,7 @@ enum{
     S_WAIT,  /*2*/
     S_START,/*3*/
     S_QUEUED,/*4*/
+    S_UNKNOWN,//5
     S_FINISH=11,/*11*/
     S_CRASH,/*12*/
     S_TOKILL,/*13*/

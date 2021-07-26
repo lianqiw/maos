@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -261,7 +261,6 @@ static RUN_T* running_add(int pid, int sock){
 				return NULL;
 			}
 		}
-
 		dbg2_time("adding %d to running\n", pid); /*create the node */
 		irun=mycalloc(1, RUN_T);
 		irun->pidnew=irun->pid=pid;
@@ -313,60 +312,31 @@ static void running_remove(int pid, int status){
 	for(irun=running; irun; irun2=irun, irun=irun->next){
 		if(irun->pid==pid){
 			if(irun->pid>0&&(irun->status.info==S_START
-				||irun->status.info==S_RUNNING)){
+							 ||irun->status.info==S_RUNNING)){
 				nrun_sub(irun->pid, irun->nthread, irun->ngpu);
 			}
 			if(irun->status.info<10){//mark termination time.
 				irun->status.timend=myclocki();
 			}
-			if(status==S_NONEXIST){
-				irun->status.info=S_CRASH;
-				if(irun->status.timend+3>myclocki()){
-					//give 3 seconds grace period for the process to remove itself.
-					break;
-				}
-			} else{
-				irun->status.info=status;
-			}
-			//dbg("Job %d done with status %d\n", pid, irun->status.info);
+			irun->status.info=status;
+			dbg_time("running_remove: remove job %d with status %d\n", pid, irun->status.info);
 			//remove from the running list
 			if(irun2){
-				irun2->next=irun->next;
-				if(irun->next==NULL)
+				if(!(irun2->next=irun->next)){
 					running_end=irun2;
-			} else{
-				running=irun->next;
-				if(irun->next==NULL)
+				}
+			} else{//beginning of list
+				if(!(running=irun->next)){
 					running_end=running;
+				}
 			}
 			monitor_send(irun, NULL);
-			/*move irun to runned */
 			runned_add(irun);
-			//log the run.
-			/*{
-				const char* statusstr=NULL;
-				switch(irun->status.info){
-				case S_CRASH:
-					statusstr="Crashed"; break;
-				case S_FINISH:
-					statusstr="Finished";break;
-				case S_KILLED:
-					statusstr="Killed";break;
-				default:
-					statusstr="Unknown";break;
-				}
-				FILE* fp=fopen(scheduler_fnlog, "a");
-				if(fp){
-					fprintf(fp, "[%s] %s %5d %8s '%s'\n",
-						myasctime(), HOST, pid, statusstr, irun->path);
-					fclose(fp);
-				}
-			}*/
 			break;
 		}
 	}
 	if(!irun){
-		warning_time("running_remove%s:%d not found\n", HOST, pid);
+		dbg_time("running_remove%s:%d not found\n", HOST, pid);
 	}
 }
 
@@ -401,22 +371,24 @@ static RUN_T* running_get_by_sock(int sock){
 	}
 	return irun;
 }
+/**
+	check all the jobs. remove if any job quited.
+ */
 static void check_jobs(void){
-	/**
-	   check all the jobs. remove if any job quited.
-	 */
 	RUN_T* irun, * irun2;
 	if(running){
 		for(irun=running; irun; irun=irun2){
 			irun2=irun->next;
 			if(irun->pid>0){
 				if(kill(irun->pid, 0)){
-					dbg2_time("check_jobs: Job %d no longer exists\n", irun->pid);
-					running_remove(irun->pid, S_NONEXIST);
-				} else if((irun->last_time+600<myclockd()) && irun->status.info==S_RUNNING){
-					warning_time("check_jobs: Job %d does not update after %g seconds.\n", irun->pid, myclockd()-irun->last_time);
-					//kill(irun->pid, SIGTERM);
-					irun->status.info=S_CRASH;
+					if(irun->last_time+10<myclockd()){//allow grace period.
+						dbg_time("check_jobs: Job %d no longer exists\n", irun->pid);
+						running_remove(irun->pid, S_CRASH);
+					}
+				} else if((irun->last_time+600<myclockd())&&irun->status.info==S_RUNNING){
+					dbg_time("check_jobs: Job %d does not update after %g seconds.\n",
+							irun->pid, myclockd()-irun->last_time);
+					irun->status.info=S_UNKNOWN;
 					monitor_send(irun, NULL);
 				}
 			}
@@ -427,67 +399,62 @@ static void check_jobs(void){
  examine the process queue to start routines once CPU is available.
 */
 static void process_queue(void){
-	static double timestamp=0;
-	if(nrun_get(0)>0&&myclockd()-timestamp<1){
+	static double lasttime=0;
+	if(nrun_get(0)>0&&myclockd()-lasttime<1){
+		//dbg_time("process_queue: too son\n");
 		return;
 	}
-	timestamp=myclockd();
-	if(nrun_get(0)>=NCPU) return;
+	lasttime=myclockd();
+	if(nrun_get(0)>=NCPU){
+		//dbg_time("process_queue: enough jobs are running\n");
+		return;
+	}
 	int avail=get_cpu_avail();
 	//dbg_time("process_queue: nrun=%d avail=%d\n", nrun_get(0), avail);
-	if(avail<1) return;
+	if(avail<1){
+		//dbg_time("process_queue: no CPUs are available\n");
+		return;
+	}
 	RUN_T* irun=running_get_wait(S_WAIT);
 	while(irun&&irun->pid>0&&kill(irun->pid, 0)){//job exited
-		running_remove(irun->pid, S_NONEXIST);
+		running_remove(irun->pid, S_CRASH);
 		irun=running_get_wait(S_WAIT);
 	}
 	if(irun){//There are jobs waiting.
-		if(irun->sock>0){
+		if(irun->sock>0){//already connected.
 			int nthread=irun->nthread;
-			if(nrun_get(0)+nthread<=NCPU&&(nthread<=avail||avail>=3)&&(!NGPU||!irun->ngpu||nrun_get(1)+irun->ngpu<=NGPU)){
-			/*don't close the socket. will close it in select loop. */
-			/*warning_time("process %d launched. write to sock %d cmd %d\n", */
-			/*irun->pid, irun->sock, S_START); */
-			//dbg_time("process_queue: Start %d at %d\n", irun->pid, irun->sock);
+			if(nrun_get(0)+nthread<=NCPU&&(nthread<=avail||avail>=3)
+				&&(!NGPU||!irun->ngpu||nrun_get(1)+irun->ngpu<=NGPU)){//resource available to star the job
+				dbg_time("process_queue: Start %d at %d\n", irun->pid, irun->sock);
 				if(stwriteint(irun->sock, S_START)){
-					perror("stwriteint");
-					warning_time("stwriteint to maos failed: %s\n", strerror(errno));
+					warning_time("stwriteint to %d failed: %s\n", irun->sock, strerror(errno));
 				}
 				nrun_add(irun->pid, nthread, irun->ngpu);
 				irun->status.timstart=myclocki();
 				irun->status.info=S_START;
 				monitor_send(irun, NULL);
-				/*FILE* fp=fopen(scheduler_fnlog, "a");
-				if(fp){
-					fprintf(fp, "[%s] %s %5d  started '%s'\n", myasctime(), HOST, irun->pid, irun->path);
-					fclose(fp);
-				} else{
-					warning_time("fopen %s failed: %s\n", scheduler_fnlog, strerror(errno));
-				}*/
 			}
 		} else{
 			dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
 		}
 	} else{
-		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){
-			static double lasttime=0;
+		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
+			static double lasttime2=0;
 			double thistime=myclockd();
-			if(thistime>lasttime+0.001){
-				lasttime=thistime;
+			if(thistime>lasttime2+0.001){
+				lasttime2=thistime;
 				irun=running_get_wait(S_QUEUED);
-				//dbg_time("process_queue: process waiting list ... ");
 				if(!irun){
-					//dbg_time("all done\n");
+					dbg_time("process_queue: all done\n");
 					all_done=1;
 					counter=-1; //reset the counter
 				} else{
-					dbg_time("start new job: ");
 					int pid;
 					if((pid=launch_exe(irun->exe, irun->path0))<0){
-						warning_time("launch_exe %s failed\n", irun->path);
+						warning_time("start new job failed: %s\n", irun->path);
 						running_remove(irun->pid, S_CRASH);
 					} else{
-						dbg_time("as %d\n", pid);
+						dbg_time("new job is started: %d\n", pid);
 						//inplace update the information in monitor
 						irun->status.info=S_WAIT;
 						irun->status.timstart=myclocki();
@@ -556,7 +523,7 @@ static int respond(int sock){
 	int ret=0, pid, cmd[2];
 	//dbg_time("\rrespond %2d start ... ", sock);errno=0;
 	if((ret=streadintarr(sock, cmd, 2))){
-	//dbg_time("read failed: %s,ret=%d\n", strerror(errno),ret);
+		dbg_time("read failed: %s,ret=%d\n", strerror(errno), ret);
 		goto end;
 	}
 	pid=cmd[1];
@@ -607,7 +574,7 @@ static int respond(int sock){
 	case CMD_FINISH://2: Called by MAOS when job finishes.
 		running_remove(pid, S_FINISH);
 		ret=-1;
-		break;
+	break;
 	case CMD_STATUS://3: Called by MAOS to report status at every time step
 	{
 		RUN_T* irun=running_get(pid);
@@ -636,7 +603,7 @@ static int respond(int sock){
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
 		MONITOR_T* tmp=monitor_add(sock);
-		if(tmp && pid>=0x8){/*check monitor version. */
+		if(tmp&&pid>=0x8){/*check monitor version. */
 			tmp->load=1;
 		}
 		//dbg_time("Monitor is connected at sock %d.\n", sock);
@@ -729,7 +696,7 @@ static int respond(int sock){
 			}
 		} else if(pid<0){//send existing sock to draw()
 			int sock_save=-1;
-			for(SOCKID_T *p_next, *p=head; p&&sock_save==-1; p=p_next){
+			for(SOCKID_T* p_next, *p=head; p&&sock_save==-1; p=p_next){
 				p_next=p->next;
 				int badsock=0;
 				if((badsock=stcheck(p->sock))||(p->id==-pid)){
@@ -751,7 +718,7 @@ static int respond(int sock){
 				}
 			}
 			dbg_time("received socket quest %d, sock_save=%d\n", sock, sock_save);
-		
+
 			//cannot pass -1 as sock, so return a flag first. sock can be zero.
 			if(stwriteint(sock, sock_save>-1?0:-1)){
 				warning_time("Unable to talk to draw\n");
@@ -760,12 +727,12 @@ static int respond(int sock){
 				if(stwritefd(sock, sock_save)){
 					warning_time("send socket %d to %d failed\n", sock_save, sock);
 				} else{//socket is transferred to draw. we close it.
-					dbg_time("send socket %d to %d success\n",sock_save, sock);
+					dbg_time("send socket %d to %d success\n", sock_save, sock);
 				}
 				close(sock_save);
 			}
-			
-		}else{//pid==0; request a drawdaemon using monitor. 
+
+		} else{//pid==0; request a drawdaemon using monitor. 
 			if(pmonitor){
 				//there is no available drawdameon. Need to create one by sending request to monitor.
 				dbg_time("request monitor to start drawdaemon\n");
@@ -819,11 +786,11 @@ static int respond(int sock){
 		if(irun){
 			irun->sock2=sock;
 			dbg_time("CMAOS_MAOSDAEMON: socket %d is saved\n", sock);
-		}else{
+		} else{
 			warning_time("CMAOS_MAOSDAEMON: irun not found\n");
 		}
 	}
-		break;
+	break;
 	case CMD_RESTART://15: Called by maos to restart a job
 		runned_restart(pid);
 		break;
@@ -893,7 +860,6 @@ end:
 		}
 		ret=-1;
 	}
-	scheduler_timeout();
 	sync();
 	UNLOCK(mutex_sch);
 	return ret;/*don't close the port yet. may be reused by the client. */
@@ -946,24 +912,22 @@ void scheduler_handle_ws(char* in, size_t len){
 	UNLOCK(mutex_sch);
 }
 static void scheduler_timeout(void){
-	static double lasttime1=0;//every 1 second
 	static double lasttime3=0;//every 3 seconds
 	static double lasttime10=0;//every 10 seconds
 
 	double thistime=myclockd();
-	/*Process job every 1 second*/
-	if(thistime>=(lasttime1+1)){
-		if(!all_done){
-			process_queue();
-		}
-		lasttime1=thistime;
+	//Process job queue
+	if(!all_done){
+		process_queue();
 	}
-	/*Report CPU usage every 3 seconds. */
+
 	if(thistime>=(lasttime3+3)){
 		if(running){
 			check_jobs();
 		}
+		lasttime3=thistime;
 	}
+	//Report CPU usage every 3 seconds. 
 	if(thistime>=(lasttime10+10)){
 		usage_cpu=get_usage_cpu();
 		monitor_send_load();
@@ -1168,13 +1132,9 @@ int main(){
 	remove(slocal);
 	extern int is_scheduler;
 	is_scheduler=1;
-	/*{
-		char slocal2[PATH_MAX];
-		snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, HOST);
-		scheduler_fnlog=strdup(slocal2);
-	}*/
+
 	{
-	//Find out number of gpus.
+		//Find out number of gpus.
 		FILE* fpcmd=popen("nvidia-smi -L 2>/dev/null", "r");
 		if(!fpcmd){
 			NGPU=0;

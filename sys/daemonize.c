@@ -47,8 +47,8 @@
    existing fnlock, will kill the old process that created fnlock.
 */
 int lock_file(const char* fnlock, /**<The filename to lock on*/
-	long block,         /**<block on weighting. set to 0 for no waiting.*/
-	long version        /**<The version of the software that locks the file, primarily for managing scheduler. May be zero.*/
+	int block,         /**<block on weighting. set to 0 for no waiting.*/
+	int version        /**<The version of the software that locks the file, primarily for managing scheduler. May be zero.*/
 ){
 	int fd;
 	int count=0;
@@ -63,54 +63,58 @@ retry:
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
 		if(flock(fd, op)){/*lock faild. another process already locked file.*/
-			int errno_save=errno;
 			if(block){/*In block mode, we should never fail. */
 				perror("flock");
 				error("Lock failed\n");
 			}
 			//check running process version.
-			long pid=0;
+			int pid=0, version_old=0;
+			int ans1=0, ans2=-1;
 			FILE* fp=fdopen(fd, "r");
-			if(!fp||fscanf(fp, "%ld", &pid)==EOF){
-				warning("Error reading pid\n");
-				fclose(fp);
-				fd=-1;
-				sleep(1);
+			if(fp){
+				ans1=fscanf(fp, "%d %d", &pid, &version_old);
+				if(ans1==2){
+					ans2=kill(pid, 0);
+				}
+				fclose(fp); fp=NULL; 
+			}else{
+				close(fd);
+			}
+			if(ans1!=2 || ans2){//fnlock contains wrong content.
+				if(ans1!=2){
+					warning("Error reading pid or version. \n");
+				}
+				if(ans2){//shared cached file locked by process from a different machine.
+					warning_time("Unknown process %d already locked file %s.\n", pid, fnlock);
+				}
+				if(version!=0){//only single_instance_daemonize calls with version!=0
+					warning_time("Remove file %s and retry.\n", fnlock);
+					remove(fnlock);
+				}
 				goto retry;
-			} else{
-				if(kill(pid, 0)){
-					warning_time("flock: %s\n", strerror(errno_save));
-					warning_time("Unknown process %ld already locks file %s. (NFS mounted system?)\n", pid, fnlock);
-					return -1;
-				} else{/*already running. check version */
-					/*warning("Process %ld already locks file %s\n",pid,fnlock); */
-					long version_old=0;
-					if(version>0&&(fscanf(fp, "%ld", &version_old)==EOF||version_old<version)){
-						info("%d is sending TERM signal to old executive\n", getpid());
-						if(!kill(pid, SIGTERM)){//signal sent
+			} else if(version>0&&version_old<version){
+				/*already running. but version is old */
+				info("%d is sending TERM signal to old executive\n", getpid());
+				if(!kill(pid, SIGTERM)){//signal sent
+					sleep(5);
+					if(!kill(pid, 0)){//still running
+						warning_time("%d is sending KILL signal to the old executive.\n", getpid());
+						if(!kill(pid, SIGKILL)){//signal sent
 							sleep(5);
-							if(!kill(pid, 0)){//still running
-								warning_time("%d is sending KILL signal to the old executive.\n", getpid());
-								if(!kill(pid, SIGKILL)){//signal sent
-									sleep(5);
-									if(!kill(pid, 0)){
-										warning_time("Failed to kill the old executive\n");
-										return -pid;
-									}
-								}
+							if(!kill(pid, 0)){
+								warning_time("Failed to kill the old executive\n");
+								return -pid;
 							}
 						}
-						fclose(fp);/*closed fd also. */
-						goto retry;
-					} else{
-						fclose(fp);
-						return -pid;
 					}
 				}
+				goto retry;
+			} else{//scheduler is already running
+				return -pid;
 			}
 		} else{/*lock succeed. write pid. */
 			char strpid[60];
-			snprintf(strpid, 60, "%d %ld\n", getpid(), version);
+			snprintf(strpid, 60, "%d %d\n", getpid(), version);
 			lseek(fd, 0, SEEK_SET);
 			if(ftruncate(fd, 0)<0)
 				warning_time("Unable to truncate the file\n");
@@ -139,14 +143,14 @@ retry:
    daemon_arg. otherwise the routine returns.
 */
 void single_instance_daemonize(const char* lockfolder_in,
-	const char* progname, long version,
-	void(*daemon_func)(void*),
-	void* daemon_arg){
+	const char* progname, int version, void(*daemon_func)(void*), void* daemon_arg){
 	int fd=-1;
 	char* lockfolder=expand_filename(lockfolder_in);
 	char fnlock[PATH_MAX];
+	char fnerr[PATH_MAX];
 	char fnlog[PATH_MAX];
 	snprintf(fnlock, PATH_MAX, "%s/%s.pid", lockfolder, progname);
+	snprintf(fnerr, PATH_MAX, "%s/%s.err", lockfolder, progname);
 	snprintf(fnlog, PATH_MAX, "%s/%s.log", lockfolder, progname);
 	free(lockfolder);
 	
@@ -200,11 +204,13 @@ void single_instance_daemonize(const char* lockfolder_in,
 	PID=getpid();
 	/*redirect stdin/stdout. */
 	if(!freopen("/dev/null", "r", stdin)) warning("Error closing stdin\n");
-	if(!freopen(fnlog, "w", stdout)||dup2(1, 2)==-1) warning("Error redirect stdout or stderr\n");
+	//not good to redirect both stdout and stderr to the same file. out of order.
+	if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
+	if(!freopen(fnerr, "w", stderr)) warning("Error redirect stderr\n");
 	setbuf(stdout, NULL);/*disable buffering. */
 
 	char strpid[60];
-	snprintf(strpid, 60, "%d %ld\n", getpid(), version);
+	snprintf(strpid, 60, "%d %d\n", getpid(), version);
 	lseek(fd, 0, SEEK_SET);
 	if(ftruncate(fd, 0)<0)
 		warning("Unable to truncate file\n");

@@ -220,8 +220,6 @@ gboolean refresh(proc_t* p){
 			COL_OUT, sout?sout:" ",
 			COL_ERRHI, " ",
 			COL_ERRLO, " ",
-			//COL_SEED, " ",
-			//COL_SEEDP, 0,
 			COL_STEPT," ",
 			COL_STEP, " ",
 			COL_STEPP, 0,
@@ -232,7 +230,6 @@ gboolean refresh(proc_t* p){
 		p->row=gtk_tree_row_reference_new(GTK_TREE_MODEL(listall), tpath);
 		list_update_progress(p);
 		gtk_tree_path_free(tpath);
-		//gtk_tree_view_columns_autosize(GTK_TREE_VIEW(views[p->hid]));
 	}
 	switch(p->status.info){
 	case 0:
@@ -393,13 +390,6 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 	int cmd=data->command;
 	const char* action=data->action;
 	GValue value=G_VALUE_INIT;
-	gtk_tree_model_get_value(model, iter, COL_PID, &value);
-	int pid=strtol(g_value_get_string(&value), NULL, 10);
-	g_value_unset(&value);
-	gtk_tree_model_get_value(model, iter, COL_HOST, &value);
-	const char* hostn=g_value_get_string(&value);
-	g_value_unset(&value);
-	int ihost=host2i(hostn);
 	if(cmd<0){
 		switch(cmd){
 		case -1:{
@@ -410,15 +400,21 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 			} else if(!strcmp(action, "Copy")){
 				gtk_tree_model_get_value(model, iter, COL_FULL, &value);
 			}
-			gchar* jobinfo=g_strdup(g_value_get_string(&value));
-			g_value_unset(&value);
+			const gchar* jobinfo=g_value_get_string(&value);
 			clipboard_append(jobinfo);
-			g_free(jobinfo);
+			g_value_unset(&value);
 		}
 			   break;
 		}
 	} else{
-		if(scheduler_cmd(ihost, pid, cmd)){
+		gtk_tree_model_get_value(model, iter, COL_PID, &value);
+		int pid=strtol(g_value_get_string(&value), NULL, 10);
+		g_value_unset(&value);
+		gtk_tree_model_get_value(model, iter, COL_HOST, &value);
+		const char* hostn=g_value_get_string(&value);
+		int ihost=host2i(hostn);
+		g_value_unset(&value);
+		if(scheduler_cmd_wrap(ihost, pid, cmd)){
 			warning("Failed to %s the job\n", action);
 		}
 	}
@@ -558,16 +554,17 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 			g_value_unset(&value);
 			gtk_tree_model_get_value(model, &iter, COL_HOST, &value);
 			const char* hostn=g_value_get_string(&value);
+			int ihost=host2i(hostn);
 			g_value_unset(&value);
 			GdkPixbuf*status2=0;
 			gtk_tree_model_get(model, &iter, COL_ACTION, &status2, -1);
-			int ihost=host2i(hostn);
+			
 			if(status2==icon_running||status2==icon_waiting){
 				if(dialog_confirm("Kill %d?", pid)){
-					scheduler_cmd(ihost, pid, CMD_KILL);
+					scheduler_cmd_wrap(ihost, pid, CMD_KILL);
 				}
 			}else{
-				scheduler_cmd(ihost, pid, CMD_REMOVE);
+				scheduler_cmd_wrap(ihost, pid, CMD_REMOVE);
 			}
 		}
 	}

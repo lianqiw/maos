@@ -267,7 +267,7 @@ int udp_send(udp_t* info, void* buf, size_t len, int counter){
 		}
 		//usleep(2);
 	}
-	socket_rcv_timeout(info->sock, 10);
+	socket_recv_timeout(info->sock, 10);
 	int cmd[5];
 	int nresent=0, nresent2=0;
 	//listen for resend request
@@ -310,7 +310,7 @@ int udp_recv(udp_t* info, void** pbuf, size_t *len){
 	//int npacket=(len+packet_size-1)/packet_size;
 	int npacket;//number of packages
 	int counter;//frame counter
-	socket_rcv_timeout(info->sock, 10);
+	socket_recv_timeout(info->sock, 10);
 	int ans;
 	if(info->version==1){
 		int meta[3];
@@ -356,7 +356,7 @@ int udp_recv(udp_t* info, void** pbuf, size_t *len){
 		msg[ip].msg_iov=iovec+ip*2;
 		msg[ip].msg_iovlen=2;
 	}
-	socket_rcv_timeout(info->sock, 1);
+	socket_recv_timeout(info->sock, 1);
 	int meta[3];
 	int nvalid=0;
 	int nduplicate=0;//duplicate

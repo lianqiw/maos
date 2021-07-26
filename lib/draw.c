@@ -100,7 +100,7 @@ retry:
 		//server replies in UDP packet.
 		socklen_t slen=sizeof(sock_data->udp.peer_addr);	
 		int cmd2[64];
-		socket_rcv_timeout(sock_data->udp.sock, 2);
+		socket_recv_timeout(sock_data->udp.sock, 2);
 		int ncmd=recvfrom(sock_data->udp.sock, cmd2, sizeof(cmd2), 0, 
 						 (struct sockaddr*)&sock_data->udp.peer_addr, &slen);
 		if(ncmd>0){

@@ -237,7 +237,7 @@ static void launch_scheduler(void){
 static int scheduler_connect_self(int block){
 	char fn[PATH_MAX];
 	int sock=-1;
-	int retry=0;
+	static int retry=0;
 	do{
 		//launch_scheduler();//check scheduler version.
 		if(TEMP[0]=='/'){//try local connection first.
@@ -253,7 +253,7 @@ static int scheduler_connect_self(int block){
 			launch_scheduler();
 		}
 		retry++;
-	} while(sock<0&&block&&retry<3);
+	} while(sock<0&&block&&retry<2);
 	return sock;
 }
 
@@ -264,7 +264,7 @@ static int scheduler_connect_self(int block){
 */
 int scheduler_listen(thread_fun fun){
 	if(!fun) return 0;
-	int	sock=scheduler_connect_self(1);
+	int	sock=scheduler_connect_self(0);
 	if(sock!=-1){
 		int cmd[2];
 		cmd[0]=CMD_MAOSDAEMON;
@@ -287,11 +287,9 @@ static void scheduler_report_path(char* path){
 		return;
 	}
 	if(path){
-		strcpy(path_save, path);
-	} else{
-		if(!path_save[0]){
-			strcpy(path_save, "unknown");
-		}
+		strncpy(path_save, path, PATH_MAX-1);
+	} else if(!path_save[0]){
+		return;//do nothing
 	}
 	int cmd[2];
 	cmd[0]=CMD_PATH;
@@ -308,6 +306,7 @@ void scheduler_start(char* path, int nthread, int ngpu, int waiting){
 	psock=scheduler_connect_self(1);
 	if(psock<0){
 		warning_time("Failed to connect to scheduler\n");
+		return;
 	}
 	scheduler_report_path(path);
 	int cmd[4];
@@ -323,7 +322,7 @@ void scheduler_start(char* path, int nthread, int ngpu, int waiting){
 */
 int scheduler_wait(void){
 	if(psock<0){
-		warning_time("Failed to connect to scheduler\n");
+		warning_time("No connection to scheduler\n");
 		return -1;
 	}
 	/*read will block until clearance is received. */
@@ -350,20 +349,29 @@ void scheduler_finish(int status){
 		close(psock);psock=-1;
 	}
 }
-
-/**
-   called by sim.c to report job status */
-void scheduler_report(status_t* status){
-	if(psock<0){
-		psock=scheduler_connect_self(0);
+pthread_t cthread=0;
+static void* scheduler_connect_thread(void *data){
+	(void) data;
+	dbg_time("scheduler_connect_thread started.\n");
+	psock=scheduler_connect_self(1);
+	if(psock!=-1){
 		scheduler_report_path(NULL);
+		cthread=0;
 	}
+	dbg_time("scheduler_connect_thread finished.\n");
+	return NULL;
+}
+/**
+   called by sim.c to report job status. Do not try to reconnect. */
+void scheduler_report(status_t* status){
 	if(psock!=-1){
 		int cmd[2];
 		cmd[0]=CMD_STATUS;
 		cmd[1]=getpid();
 		CATCH_ERR(stwriteintarr(psock, cmd, 2));
 		CATCH_ERR(stwrite(psock, status, sizeof(status_t)));
+	}else if(!cthread){//launch a thread to connect
+		pthread_create(&cthread, NULL, scheduler_connect_thread, NULL);
 	}
 }
 

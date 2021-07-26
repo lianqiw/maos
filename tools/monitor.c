@@ -112,7 +112,13 @@ gboolean dialog_confirm(const char* format, ...){
 	gtk_widget_destroy(dia);
 	return result==GTK_RESPONSE_YES;
 }
-
+int scheduler_cmd_wrap(int ihost, int pid, int command){
+	int cmd[4]={MON_CMD, ihost, pid, command};
+	stwriteintarr(sock_main[1], cmd, 4);
+	int ans;
+	streadint(sock_main[1], &ans);
+	return ans;
+}
 void add_host_wrap(int ihost){
 	int cmd[3]={MON_ADDHOST, ihost, 0};
 	stwriteintarr(sock_main[1], cmd, 3);
@@ -784,6 +790,8 @@ int main(int argc, char* argv[]){
 	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
 		error("failed to create socketpair\n");
 	}
+	socket_nopipe(sock_main[0]);
+	socket_nopipe(sock_main[1]);
 	thread_new(listen_host, NULL);
 	for(int ihost=0; ihost<nhost; ihost++){
 		add_host_wrap(ihost);

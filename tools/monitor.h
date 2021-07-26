@@ -43,8 +43,6 @@ typedef struct proc_t{
 gboolean refresh(proc_t* p);
 //void kill_job_event(GtkWidget* btn, GdkEventButton* event, proc_t* p);
 void notify_user(proc_t* p);
-int scheduler_cmd(int host, int pid, int command);
-int scheduler_display(int ihost, int pid);
 
 extern GtkWidget* window;
 extern GtkWidget* notebook;
@@ -71,5 +69,6 @@ int host2i(const char* hostn);
 void clear_job_wrap(int ihost, int flag);
 void kill_job_wrap(int ihost, int pid);
 void save_job_wrap();
+int scheduler_cmd_wrap(int ihost, int pid, int command);
 gboolean dialog_confirm(const char* format, ...);
 #endif

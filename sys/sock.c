@@ -67,13 +67,15 @@
 
 #include <fcntl.h> 
 #include <errno.h>
+#include <string.h>
 #include <netdb.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/un.h>
-#include <string.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
@@ -102,18 +104,18 @@ static void socket_tcp_keepalive(int sock){
 		&&!setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int))
 #endif
 		){
+		//success
 	} else{
 		warning("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
 	}
 }
 static void socket_reuse_addr(int sock){
    const int one=1;
-   if(!setsockopt(sock,SOL_SOCKET,SO_REUSEADDR, &one,sizeof(int))){
-	   perror("setsockopt");
-	   warning("set REUSEADDR failed\n");
+   if(setsockopt(sock,SOL_SOCKET,SO_REUSEADDR, &one,sizeof(int))){
+	   perror("socket_reuse_addr");
    }
 }
-static void socket_nopipe(int sock){
+void socket_nopipe(int sock){
 #ifdef SO_NOSIGPIPE
 	const int one=1;
 	setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
@@ -164,24 +166,30 @@ static void socket_tcp_nodelay(int sock){
 /**
  * Set recv timeout in seconds
  * */
-int socket_rcv_timeout(int sock, double sec){
+int socket_recv_timeout(int sock, double sec){
 	struct timeval val={sec,0};
 	int ans;
 	if((ans=setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &val, sizeof(val)))<0){
-		warning("socket_rcv_timeout: setsockopt failed\n");
+		warning("socket_recv_timeout: setsockopt failed\n");
 	}
 	return ans;
 }
 /**
  * Set recv timeout in seconds
  * */
-int socket_snd_timeout(int sock, double sec){
+int socket_send_timeout(int sock, double sec){
 	struct timeval val={sec,0};
 	int ans;
 	if((ans=setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &val, sizeof(val)))<0){
-		warning("socket_snd_timeout: setsockopt failed\n");
+		warning("socket_send_timeout: setsockopt failed\n");
 	}
 	return ans;
+}
+/**
+ * set both snd and rcv time out
+ * */
+int socket_timeout(int sock, double sec){
+	return socket_recv_timeout(sock, sec) + socket_send_timeout(sock, sec);
 }
 /**
    make a server port and bind to sockpath. AF_UNIX.
@@ -193,12 +201,11 @@ static int bind_socket_unix(char* sockpath){
 	addr.sun_family=AF_UNIX;
 	strncpy(addr.sun_path, sockpath, sizeof(addr.sun_path)-1);
 	if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))==-1){
-		perror("bind");
+		perror("bind_socket_unix");
 		warning_time("bind to %s failed\n", sockpath);
 		close(sock);
 		sock=-1;
-	}
-	if(sock!=-1){
+	}else{
 		dbg_time("binded to %s at sock %d\n", sockpath, sock);
 	}
 	return sock;
@@ -214,7 +221,7 @@ int bind_socket(int protocol, char* ip, uint16_t port){
 	/* Create the socket. */
 	int sock=socket(PF_INET, protocol, 0);//tcp
 	if(sock<0){
-		perror("socket");
+		perror("bind_socket");
 		exit(EXIT_FAILURE);
 	}
 	if(protocol==SOCK_STREAM && port){
@@ -234,8 +241,7 @@ int bind_socket(int protocol, char* ip, uint16_t port){
 	}
 	int count=0;
 	while(bind(sock, (struct sockaddr*)&name, sizeof(name))<0){
-		dbg_time("errno=%d. port=%d,sock=%d: ", errno, port, sock);
-		perror("bind");
+		dbg_time("errno=%d. port=%d,sock=%d: %s. Sleep 10 seconds and then retry.", errno, port, sock, strerror(errno));
 		sleep(10);
 		count++;
 		if(count>100){
@@ -313,10 +319,11 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			if(sock_local==-1){
 				dbg_time("bind to %s failed\n", localpath);
 			} else{
-				if(!listen(sock_local, 1)){
+				if(!listen(sock_local, 10)){
 					FD_SET(sock_local, &active_fd_set);
+					socket_timeout(sock_local, 5);
 				} else{
-					perror("listen");
+					perror("listen (sock_local)");
 					close(sock_local);
 					sock_local=-1;
 				}
@@ -327,13 +334,15 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	}
 	int sock=bind_socket(SOCK_STREAM, ip, port);
 	if(nodelay){//turn off tcp caching.
+		dbg("Turn on tcp nodelay\n");
 		socket_tcp_nodelay(sock);
 	}
-	if(listen(sock, 1)<0){
-		perror("listen");
+	if(listen(sock, 10)<0){
+		perror("listen (sock)");
 		exit(EXIT_FAILURE);
 	}
 	FD_SET(sock, &active_fd_set);
+	socket_timeout(sock, 5);
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
 	while(quit_listen!=2 && nlisten){
@@ -370,16 +379,15 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 				}
 			}
 			
-			if(myclockd()>quit_time+5){//wait for 2 seconds before force terminate.
+			if(myclockd()>quit_time+5){//wait for a few seconds before force terminate.
 				dbg_time("force terminate while %d clients remaining.\n", nlisten);
 				quit_listen=2;//force quit.
 			}
 			//don't break. Listen for connection close events.
 		}
-		
 
 		struct timeval timeout;
-		timeout.tv_sec=timeout_sec;
+		timeout.tv_sec=(time_t)timeout_sec;
 		timeout.tv_usec=(timeout_sec-timeout.tv_sec)*1e6;
 		read_fd_set=active_fd_set;
 		int navail=select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0);
@@ -394,37 +402,22 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 				warning_time("unknown error: %s\n", strerror(errno));
 				break;
 			}
-		}else if(navail==0){//timeout
-			if(timeout_fun){
-				timeout_fun();
-			}
-		} else{//fd available
+		}else if(navail>0){
 			for(int i=0; i<FD_SETSIZE; i++){
 				if(FD_ISSET(i, &read_fd_set)){
-					if(i==sock){
-						/* Connection request on original socket. */
-						socklen_t size=sizeof(struct sockaddr_in);
-						struct sockaddr_in clientname;
-						int port2=accept(i, (struct sockaddr*)&clientname, &size);
-						if(port2<0){
-							warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
-							FD_CLR(i, &active_fd_set);
-							close(i);
+					if(i==sock || i==sock_local){// Connection request on original socket. 
+						union {
+							struct sockaddr_un un;
+							struct sockaddr_in in;
+						} client;
+						socklen_t size=sizeof(client);
+						int sock2=accept(i, (struct sockaddr*)&client, &size);
+						if(sock2<0){
+							warning_time("accept failed: %s. \n", strerror(errno));
 						} else{
-							dbg_time("port %d is connected\n", port2);
-							FD_SET(port2, &active_fd_set);
-						}
-					} else if(i==sock_local){
-						socklen_t size=sizeof(struct sockaddr_un);
-						struct sockaddr_un clientname;
-						int port2=accept(i, (struct sockaddr*)&clientname, &size);
-						if(port2<0){
-							warning_time("accept failed: %s. close port %d\n", strerror(errno), i);
-							FD_CLR(i, &active_fd_set);
-							close(i);
-						} else{
-							dbg_time("port %d is connected locally\n", port2);
-							FD_SET(port2, &active_fd_set);
+							dbg_time("port %d is connected\n", sock2);
+							FD_SET(sock2, &active_fd_set);
+							socket_timeout(sock2, 5);
 						}
 					} else{
 						/* Data arriving on an already-connected socket. Call responder to handle.
@@ -435,16 +428,15 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 						int ans=responder(i);
 						if(ans<0){
 							FD_CLR(i, &active_fd_set);
-							if(ans==-1){
-								//warning("close port %d\n", i);
-								close(i);
-							} else{
-								warning_time("ans=%d is not understood.\n", ans);
-							}
+							close(i);
+							dbg_time("close port %d, ans=%d\n", i, ans);
 						}
 					}
 				}
 			}
+		}
+		if(timeout_fun){
+			timeout_fun();
 		}
 		nlisten=0;
 		for(int i=0; i<FD_SETSIZE; i++){
@@ -457,14 +449,18 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 		}
 	}
 	/* Error happened. We close all connections and this server socket.*/
-	close(sock);
-	close(sock_local);
-	FD_CLR(sock, &active_fd_set);
-	FD_CLR(sock_local, &active_fd_set);
-	warning_time("listen_port exited\n");
+	if(sock_local!=-1){
+		close(sock_local);
+		FD_CLR(sock_local, &active_fd_set);
+	}
+	if(sock!=-1){
+		close(sock);
+		FD_CLR(sock, &active_fd_set);
+	}
+	dbg_time("listen_port exited\n");
 	for(int i=0; i<FD_SETSIZE; i++){
 		if(FD_ISSET(i, &active_fd_set)){
-			warning_time("sock %d is still connected\n", i);
+			dbg_time("sock %d is still connected\n", i);
 			close(i);
 			FD_CLR(i, &active_fd_set);
 		}
@@ -484,7 +480,8 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 	int sock=-1;
 	if(hostname[0]=='/'){//connect locally so we can pass fd.
 		sock=socket(PF_UNIX, SOCK_STREAM, 0);
-		socket_snd_timeout(sock, 5);
+		socket_nopipe(sock);
+		socket_timeout(sock, 5);
 		struct sockaddr_un addr={0};
 		addr.sun_family=AF_UNIX;
 		strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
@@ -500,7 +497,8 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 		struct sockaddr_in servername;
 		for(int count=0; count<25; count++){
 			sock=socket(PF_INET, SOCK_STREAM, 0);
-			socket_snd_timeout(sock, 5);
+			socket_nopipe(sock);
+			socket_timeout(sock, 5);
 			socket_tcp_keepalive(sock);
 			if(nodelay){
 				socket_tcp_nodelay(sock);
