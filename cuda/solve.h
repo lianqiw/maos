@@ -43,27 +43,27 @@ public:
 };
 
 class cusolve_cg:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorithm*/
-    int maxit, warm_restart;
+    int maxit;       //number of iterations
+    int warm_restart;//warm restart when first_run is 0.
+    int first_run;   //indicate first run to temporarily use cold start rather than warm-restart
     cgtmp_t cgtmp;
 protected:
     cusolve_cgpre *precond;
 public:
-    int first_run;//indicate first run so that warm-restart is not warm
     cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(0),first_run(1){}
-    //void init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart; precond=0;}
     ~cusolve_cg(){
-	delete precond;
+    	delete precond;
     }
     /*Left hand side forward operaton*/
     virtual void L(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream)=0;
     void operator()(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream){
-	L(xout, beta, xin, alpha, stream);
+	    L(xout, beta, xin, alpha, stream);
     }
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream);
     void Pre(curcell &xout, const curcell &xin, stream_t &stream){
-	if(precond){
-	    (*precond)(xout, xin, stream);
-	}
+	    if(precond){
+	        (*precond)(xout, xin, stream);
+	    }
     }
 };
 
