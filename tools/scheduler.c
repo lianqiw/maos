@@ -319,7 +319,7 @@ static void running_remove(int pid, int status){
 				irun->status.timend=myclocki();
 			}
 			irun->status.info=status;
-			dbg_time("running_remove: remove job %d with status %d\n", pid, irun->status.info);
+			dbg_time("remove job %d with status %d\n", pid, irun->status.info);
 			//remove from the running list
 			if(irun2){
 				if(!(irun2->next=irun->next)){
@@ -336,7 +336,7 @@ static void running_remove(int pid, int status){
 		}
 	}
 	if(!irun){
-		dbg_time("running_remove%s:%d not found\n", HOST, pid);
+		dbg_time("%s:%d not found\n", HOST, pid);
 	}
 }
 
@@ -425,7 +425,7 @@ static void process_queue(void){
 			int nthread=irun->nthread;
 			if(nrun_get(0)+nthread<=NCPU&&(nthread<=avail||avail>=3)
 				&&(!NGPU||!irun->ngpu||nrun_get(1)+irun->ngpu<=NGPU)){//resource available to star the job
-				dbg_time("process_queue: Start %d at %d\n", irun->pid, irun->sock);
+				dbg_time("Start %d at %d\n", irun->pid, irun->sock);
 				if(stwriteint(irun->sock, S_START)){
 					warning_time("stwriteint to %d failed: %s\n", irun->sock, strerror(errno));
 				}
@@ -445,7 +445,7 @@ static void process_queue(void){
 				lasttime2=thistime;
 				irun=running_get_wait(S_QUEUED);
 				if(!irun){
-					dbg_time("process_queue: all done\n");
+					dbg_time("all jobs are done\n");
 					all_done=1;
 					counter=-1; //reset the counter
 				} else{
@@ -487,7 +487,7 @@ static void new_job(const char* exename, const char* execmd){
 	irun->exe=strdup(exename);
 	irun->path0=strdup(execmd);
 	irun->path=remove_endl(irun->path0);
-	dbg_time("new_job: (%s) (%s)\n", exename, execmd);
+	dbg_time("(%s) (%s)\n", exename, execmd);
 	monitor_send(irun, irun->path);
 	monitor_send(irun, NULL);
 	all_done=0;
@@ -523,7 +523,9 @@ static int respond(int sock){
 	int ret=0, pid, cmd[2];
 	//dbg_time("\rrespond %2d start ... ", sock);errno=0;
 	if((ret=streadintarr(sock, cmd, 2))){
-		dbg_time("read failed: %s,ret=%d\n", strerror(errno), ret);
+		//if(errno!=EAGAIN && errno!=ENOENT){//timeout or closed
+		dbg_time("read %d failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
+		//}
 		goto end;
 	}
 	pid=cmd[1];
@@ -658,7 +660,7 @@ static int respond(int sock){
 	break;
 	case CMD_PROBE://9: called by monitor to probe the connection
 		break;
-	case CMD_SOCK://10:Called by draw() to cache a fd. Valid over UNIX socket only.
+	case CMD_SOCK://10:Called by draw() to cache or request a fd. Valid over UNIX socket only.
 	{
 		typedef struct SOCKID_M{
 			int id;
@@ -717,7 +719,7 @@ static int respond(int sock){
 					free(p);
 				}
 			}
-			dbg_time("received socket quest %d, sock_save=%d\n", sock, sock_save);
+			dbg_time("received socket request from %d, sock_saved=%d\n", sock, sock_save);
 
 			//cannot pass -1 as sock, so return a flag first. sock can be zero.
 			if(stwriteint(sock, sock_save>-1?0:-1)){
@@ -744,7 +746,7 @@ static int respond(int sock){
 			} else{
 				warning_time("there is no monitor available to start drawdaemon\n");
 				if(stwriteint(sock, -1)){
-					warning_time("Failed to respond to draw.\n");
+					warning_time("Failed to respond to draw at %d.\n", sock);
 				}
 			}
 		}
@@ -760,16 +762,16 @@ static int respond(int sock){
 		}
 	}
 	break;
-	case CMD_DISPLAY://12: called by monitor to enable maos to draw.*/
-		dbg_time("CMD_DISPLAY received with pid=%d\n", pid);
+	case CMD_DISPLAY://12: called by monitor enable connection of drawdaemon to draw().*/
+		dbg_time("CMD_DISPLAY received from %d with pid=%d\n", sock, pid);
 		if(pid==0){//this is for pending scheduler_recv_socket
 			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
 				||stwritefd(scheduler_recv_wait, sock)){
 				stwriteint(sock, -1);
-				warning_time("Failed to pass sock to draw\n");
+				warning_time("Failed to pass sock %d to draw at %d\n", sock, scheduler_recv_wait);
 			} else{
 				stwriteint(sock, 0);//success.
-				dbg_time("passed socket to draw\n");
+				dbg_time("passed sock %d to draw at %d\n", sock, scheduler_recv_wait);
 			}
 			scheduler_recv_wait=-1;
 			ret=-1;
@@ -785,9 +787,10 @@ static int respond(int sock){
 		RUN_T* irun=running_get(pid);
 		if(irun){
 			irun->sock2=sock;
-			dbg_time("CMAOS_MAOSDAEMON: socket %d is saved\n", sock);
+			dbg_time("CMD_MAOSDAEMON: socket %d is saved\n", sock);
 		} else{
-			warning_time("CMAOS_MAOSDAEMON: irun not found\n");
+			warning_time("CMD_MAOSDAEMON: irun not found\n");
+			ret=-1;
 		}
 	}
 	break;
@@ -1132,7 +1135,7 @@ int main(){
 	remove(slocal);
 	extern int is_scheduler;
 	is_scheduler=1;
-
+	setbuf(stdout, NULL);
 	{
 		//Find out number of gpus.
 		FILE* fpcmd=popen("nvidia-smi -L 2>/dev/null", "r");

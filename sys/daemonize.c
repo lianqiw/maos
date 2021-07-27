@@ -45,6 +45,11 @@
    fd is returned. If other process already locked, will return negative
    number. If version is specified and is bigger than the value contained in
    existing fnlock, will kill the old process that created fnlock.
+
+   returns:
+   -PID (<-1): if a running process already locked file
+   -1: failed to lock
+   fd (>-1): successfully locked
 */
 int lock_file(const char* fnlock, /**<The filename to lock on*/
 	int block,         /**<block on weighting. set to 0 for no waiting.*/
@@ -54,8 +59,7 @@ int lock_file(const char* fnlock, /**<The filename to lock on*/
 	int count=0;
 retry:
 	if((count++)>10){
-		fd=-1;
-		return fd;
+		return -1;
 	}
 	fd=open(fnlock, O_RDWR|O_CREAT, 0644);
 	if(fd>=0){
@@ -124,9 +128,7 @@ retry:
 			fsync(fd);/*don't close file. maintain lock. */
 		}
 	} else{
-		warning_time("Open file failed. This should rarely happen\n");
-		sleep(1);
-		goto retry;
+		warning_time("Open file %s failed. This should rarely happen\n", fnlock);
 	}
 	return fd;
 }
@@ -142,7 +144,7 @@ retry:
    if daemon_func is true, will fork and run it with argument
    daemon_arg. otherwise the routine returns.
 */
-void single_instance_daemonize(const char* lockfolder_in,
+int single_instance_daemonize(const char* lockfolder_in,
 	const char* progname, int version, void(*daemon_func)(void*), void* daemon_arg){
 	int fd=-1;
 	char* lockfolder=expand_filename(lockfolder_in);
@@ -156,10 +158,14 @@ void single_instance_daemonize(const char* lockfolder_in,
 	
 	fd=lock_file(fnlock, 0, version);//non-blocking lock
 	if(fd<0){
-	/*lock failed. daemon already running. no need to start the daemon. */
+		/*lock failed. daemon already running. no need to start the daemon. */
+		dbg_time("failed to lock_file. return\n");
 		if(daemon_func){
-			dbg_time("failed to lock_file. return\n");
-			return;
+			if(fd==-1){
+				return -1;//failed to lock for some reason.
+			}else{
+				return 0;//already running
+			}
 		} else{
 			_exit(EXIT_SUCCESS);
 		}
@@ -168,14 +174,19 @@ void single_instance_daemonize(const char* lockfolder_in,
 	/*fork to detach from terminal. Do the fist fork*/
 	long pid=fork();
 	if(pid<0){
-		exit(EXIT_FAILURE);
+		dbg_time("failed to fork. return\n");
+		if(daemon_func){
+			return -1;
+		}else{
+			exit(EXIT_FAILURE);
+		}
 	} else if(pid>0){
-		close(fd);/*release lock in this process that is not daemon. */
+		close(fd);/*release lock in parent process. */
 		usleep(1e5);
-		waitpid(pid, NULL, 0);/*prevent child from defunct*/
+		waitpid(pid, NULL, 0);/*prevent child (parent of another fork) from defunct*/
 		if(daemon_func){/*The process that launched this routine will return. */
 			sleep(3);
-			return;
+			return 0;
 		} else{
 			_exit(EXIT_SUCCESS);
 		}
@@ -221,7 +232,7 @@ void single_instance_daemonize(const char* lockfolder_in,
 		daemon_func(daemon_arg);
 		exit(EXIT_SUCCESS);/*make sure we don't return. */
 	} else{
-		return;
+		return 0;
 	}
 }
 int detached=0;
@@ -274,19 +285,22 @@ void redirect(void){
 		dbg("redirect can only be called once\n");
 		return;
 	}
-	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+	char fnlog[PATH_MAX];
+	snprintf(fnlog, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+	//don't close stdin to prevent fd=0 from being used by file.
+	if(!freopen("/dev/null", "r", stdin)) warning("Error redirecting stdin\n");
 	if(detached){//only output to file
 		//2021-07-09: All print goes to stdout (error() goes also to stderr). 
 		//It is problematic to redirect both stdout and stderr to the same file (ordering is messed up)
-		if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout.\n");
-		//don't close stdin to prevent fd=0 from being used by file.
-		if(!freopen("/dev/null", "r", stdin)) warning("Error redirecting stdin\n");
+		if(!freopen(fnlog, "w", stdout)) warning("Error redirecting stdout.\n");
+		char fnerr[PATH_MAX];
+		snprintf(fnerr, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+		if(!freopen(fnerr, "w", stderr)) warning("Error redirecting stderr.\n");
 	} else{
-	/* output to both file and screen. we first keep a reference to our
-	   console output fd. The stdout and stderr is redirected to one of of
-	   the pipe and the other end of the pipe is output to the screen and file.
-	 */
+		/* output to both file and screen. we first keep a reference to our
+		console output fd. The stdout and stderr is redirected to one of of the
+		pipe and the other end of the pipe is output to the screen and file.
+		*/
 		int pfd[2];
 		if(pipe(pfd)){//fail to create pipe.
 			warning("pipe failed, failed to redirect stdout.\n");
@@ -294,7 +308,7 @@ void redirect(void){
 			static dup_stdout_t dup_data;
 			dup_data.nfp=2;
 			dup_data.fps[0]=fileno(fpconsole);//console
-			dup_data.fps[1]=open(fn, O_WRONLY|O_CREAT, 0666);//log
+			dup_data.fps[1]=open(fnlog, O_WRONLY|O_CREAT, 0666);//log
 			dup_data.pfd=pfd[0];//read
 			//spawn a thread to duplicate output to both console and file.
 			pthread_t thread;
@@ -408,7 +422,7 @@ char* find_exe(const char* name){
    fork twice and launch exename, with arguments args. Returns PID of the grandchild process.
 */
 int spawn_process(const char* exename, const char* args, const char* path){
-	int pipfd[2];
+	int pipfd[2];//pipe to obtain pid of grand child.
 	if(pipe(pipfd)){
 		warning("unable to create pipe\n");
 		return -1;
@@ -425,6 +439,11 @@ int spawn_process(const char* exename, const char* args, const char* path){
 		waitpid(pid, NULL, 0);/*wait child*/
 		close(pipfd[0]);
 	} else{//child
+		//redirect stdout, stderr to /dev/null to avoid polluting parent output log.
+		//child will redirect it to their own file.
+		if(!freopen("/dev/null", "w", stdout) || !freopen("/dev/null", "w", stderr)){
+			warning("redirect stdout or stderr to /dev/null failed\n");
+		}
 		close(pipfd[0]);
 		detached=1;
 		setenv("MAOS_DIRECT_LAUNCH", "1", 1);

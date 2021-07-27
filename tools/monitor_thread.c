@@ -22,7 +22,9 @@
   gdk_threads_add_idle. The thread is waits for select() results.
 
   All functions here except listen_host() are declared static to avoid calling
-  from other threads to avoid corruptiong the data structures.
+  from other threads to avoid corruptiong the data structures. Interaction to
+  this thread is via sock_main. 
+
 */
 
 
@@ -132,27 +134,29 @@ static void host_added(int ihost, int sock){
 		FD_SET(sock, &active_fd_set);
 		gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
 	}
-	dbg("connected to %s\n", hosts[ihost]);
+	dbg_time("connected to %s\n", hosts[ihost]);
 }
 
 /*remove the host upon disconnection*/
 static void host_removed(int sock){
-	int ihost=host_from_sock(sock);
-	if(ihost==-1) return;
 	if(sock>-1){
+		shutdown(sock, SHUT_WR);
 		close(sock);
+		FD_CLR(sock, &active_fd_set);
 	}
-	hsock[ihost]=-1;
-	FD_CLR(sock, &active_fd_set);
-	gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
-	dbg("disconnected from %s\n", hosts[ihost]);
+	int ihost=host_from_sock(sock);
+	if(ihost!=-1){
+		hsock[ihost]=-1;
+		gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
+		warning_time("disconnected from %s\n", hosts[ihost]);
+	}
 }
 //connect to scheduler(host)
 static int add_host(int ihost){
 	if(ihost<0 || ihost>=nhost){
-		dbg("Invalid ihost=%d\n", ihost);
+		dbg_time("Invalid ihost=%d\n", ihost);
 	}else if(hsock[ihost]>-1){
-		dbg("host %d is already connected\n", ihost);
+		dbg_time("host %d is already connected\n", ihost);
 	}else if(hsock[ihost]==-1){
 		hsock[ihost]--;//make it -2 so no concurrent access.
 		int sock=connect_port(hosts[ihost], PORT, 0, 0);
@@ -169,11 +173,11 @@ static int add_host(int ihost){
 			}
 		}
 		if(sock<0){
-			dbg_time("Cannot reach %s", hosts[ihost]);
+			dbg_time("Cannot reach %s\n", hosts[ihost]);
 			hsock[ihost]=-1;
 		}
 	}else{
-		dbg("add_host is already in progress\n");
+		dbg_time("add_host is already in progress\n");
 	}
 	return hsock[ihost];
 }
@@ -264,6 +268,7 @@ static int respond(int sock){
 	int pid=cmd[2];
 	switch(cmd[0]){
 	case -1:{//server request shutdown
+		dbg_time("Received shutdown request\n");
 		return -1;
 	}
 		break;
@@ -271,7 +276,7 @@ static int respond(int sock){
 	{
 		int command;
 		streadint(sock, &command);
-		dbg_time("received command %d for relaying to scheduler\n", command);
+		//dbg_time("received command %d for relaying to scheduler\n", command);
 		int ans=scheduler_cmd(cmd[1], cmd[2], command);
 		stwriteint(sock, ans);
 	}
@@ -285,7 +290,7 @@ static int respond(int sock){
 	case MON_STATUS:
 	{
 		if(ihost<0){
-			warning("Host not found\n");
+			dbg_time("Host not found\n");
 			return -1;
 		}
 		proc_t* iproc=proc_get(ihost, pid);
@@ -320,7 +325,7 @@ static int respond(int sock){
 	case MON_PATH:
 	{
 		if(ihost<0){
-			warning("Host not found\n");
+			dbg_time("Host not found\n");
 			return -1;
 		}
 		proc_t* iproc=proc_get(ihost, pid);
@@ -343,7 +348,7 @@ static int respond(int sock){
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 			if((flag < 0 && test_jobs(iproc->status.info, flag)) || iproc->pid==flag){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_REMOVE)){
-					warning("Failed to clear the job %d on host %d\n", iproc->pid, ihost);
+					warning_time("Failed to clear the job %d on host %d\n", iproc->pid, ihost);
 				}
 			}
 		}
@@ -355,7 +360,7 @@ static int respond(int sock){
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 			if(iproc->status.info<11&&(!pid||pid==iproc->pid)){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_KILL)){
-					warning("Failed to kill the job %d on host %d\n", iproc->pid, ihost);
+					warning_time("Failed to kill the job %d on host %d\n", iproc->pid, ihost);
 				}
 			}
 		}
@@ -371,7 +376,7 @@ static int respond(int sock){
 	case MON_LOAD:
 	{
 		if(ihost<0){
-			warning("Host not found\n");
+			dbg_time("Host not found\n");
 			return -1;
 		}
 		usage_cpu[ihost]=(double)((pid>>16)&0xFFFF)/100.;
@@ -401,8 +406,8 @@ static int respond(int sock){
    3) monitor connected servers for activity. Disable pages when server is disconnected.
 
    write to sock_main[1] will be caught by select in listen_host(). This wakes it up.*/
-void* listen_host(void* dummy){
-	(void)dummy;
+void* listen_host(void* pmsock){
+	int msock=GPOINTER_TO_INT(pmsock);
 	pproc=mycalloc(nhost+1, proc_t*);
 	nproc=mycalloc(nhost+1, int);
 	hsock=mycalloc(nhost+1, int);
@@ -411,7 +416,7 @@ void* listen_host(void* dummy){
 	}
 	htime=mycalloc(nhost, double);
 	FD_ZERO(&active_fd_set);
-	FD_SET(sock_main[0], &active_fd_set);//listen to monitor itself
+	FD_SET(msock, &active_fd_set);//listen to monitor itself
 	int keep_listen=1;
 	while(keep_listen){
 		fd_set read_fd_set=active_fd_set;
@@ -423,12 +428,12 @@ void* listen_host(void* dummy){
 		for(int i=0; i<FD_SETSIZE; i++){
 			if(FD_ISSET(i, &read_fd_set)){
 				int res;
-				res=respond(i);
+				if((res=respond(i))<0){
+					host_removed(i);
+				}
 				if(res==-2){//quit
 					keep_listen=0;
 					break;
-				} else if(res==-1){//remove host
-					host_removed(i);
 				}
 			}
 		}
@@ -472,16 +477,17 @@ void* listen_host(void* dummy){
    called by monitor to let a MAOS job remotely draw on this computer
 */
 static int scheduler_display(int ihost, int pid){
-	if(ihost<0) return 0;
-	dbg_time("schedueler_display: %s, pid=%d", hosts[ihost], pid);
+	int ans=1;
+	if(ihost<0||ihost>=nhost) return ans;
+	dbg_time("scheduler_display: %s, pid=%d\n", hosts[ihost], pid);
 	/*connect to scheduler with a new port. The schedule pass the other
 	  end of the port to drawdaemon so we can communicate with it.*/
 	int sock=connect_port(hosts[ihost], PORT, 0, 0);
-	int ans=1;
+	if(sock==-1) return ans;
 	int cmd[2]={CMD_DISPLAY, pid};
+	
 	if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
 		warning("Failed to pass sock to draw via scheduler.\n");
-		close(sock);
 	} else{
 		char arg1[20];
 		snprintf(arg1, 20, "%d", sock);
@@ -490,8 +496,8 @@ static int scheduler_display(int ihost, int pid){
 		} else{
 			ans=0;
 		}
-		close(sock);
 	}
+	close(sock);
 	return ans;
 }
 /**

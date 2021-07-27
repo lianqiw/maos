@@ -224,12 +224,14 @@ static void launch_scheduler_do(void* junk){
 	}
 }
 
-static void launch_scheduler(void){
-	dbg_time("launch_scheduler");
+static void launch_scheduler(int retry){
+	dbg_time("launch_scheduler\n");
 	/*launch scheduler if it is not already running. */
-	single_instance_daemonize(TEMP, "scheduler", scheduler_version,
-		(void(*)(void*))launch_scheduler_do, NULL);
-	sleep(1);
+	while(single_instance_daemonize(TEMP, "scheduler", scheduler_version,
+		(void(*)(void*))launch_scheduler_do, NULL)&&retry>-1){
+		retry--;
+		sleep(1);
+	}
 }
 
 /**
@@ -239,7 +241,6 @@ static int scheduler_connect_self(int block){
 	int sock=-1;
 	static int retry=0;
 	do{
-		//launch_scheduler();//check scheduler version.
 		if(TEMP[0]=='/'){//try local connection first.
 			snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
 			sock=connect_port(fn, PORT, 0, 0);
@@ -249,11 +250,11 @@ static int scheduler_connect_self(int block){
 			sock=connect_port(fn, PORT, 0, 0);
 		}
 		if(sock<0){
-	        /*start the scheduler if it is not running*/
-			launch_scheduler();
+			launch_scheduler(block?10:0);
+			sleep(5);
+			retry++;
 		}
-		retry++;
-	} while(sock<0&&block&&retry<2);
+	}while(sock<0 && retry<2);
 	return sock;
 }
 
@@ -352,13 +353,13 @@ void scheduler_finish(int status){
 pthread_t cthread=0;
 static void* scheduler_connect_thread(void *data){
 	(void) data;
-	dbg_time("scheduler_connect_thread started.\n");
+	dbg_time("started.\n");
 	psock=scheduler_connect_self(1);
 	if(psock!=-1){
 		scheduler_report_path(NULL);
 		cthread=0;
 	}
-	dbg_time("scheduler_connect_thread finished.\n");
+	dbg_time("finished with psock=%d.\n", psock);
 	return NULL;
 }
 /**
@@ -398,45 +399,33 @@ int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
 	close(sock);
 	return ret;
 }
-
 /**
-   send a sock to the scheduler for caching
+   send a drawing sock to the scheduler for caching or request a sock for drawing
 */
-int scheduler_send_socket(int sfd, int id){
+int scheduler_socket(int dir, int *sfd, int id){
 	int ans=-1;
-	int ssock=scheduler_connect_self(0);
-	if(ssock!=-1&&sfd!=-1){
-		int cmd[2]={CMD_SOCK, id?abs(id):1};
-		if(stwriteintarr(ssock, cmd, 2)||stwritefd(ssock, sfd)){
-			ans=-1;
-			warning("Talk to scheduler failed\n");
-		} else{
-			ans=0;
-		}
-		close(ssock);
+	static int ssock=-1;
+	if(ssock==-1){
+		ssock=scheduler_connect_self(1);
 	}
-	return ans;
-}
-/**
-   get a socket from the scheduler for reuse. return 0 when success.
-*/
-int scheduler_recv_socket(int* sfd, int id){
-	int ans=-1;
-	int ssock=scheduler_connect_self(0);
-	if(ssock!=-1){
-		int cmd[2]={CMD_SOCK, (id==0?0:-abs(id))};
-		int ans2=-1;
-		if(stwriteintarr(ssock, cmd, 2)||streadint(ssock, &ans2)){
-			warning("Talk to scheduler failed\n");
-		} else if(!ans2&&!streadfd(ssock, sfd)){
-			ans=0;
-			info("received %d from scheduler\n", *sfd);
-		} else{
-			//dbg("scheduler had no valid fd\n");
+	if(ssock==-1 || !sfd){
+		return -1;
+	}
+	if(dir==1&&*sfd!=-1){//send
+		int cmd[2]={CMD_SOCK, id==0?1:abs(id)};
+		ans=(stwriteintarr(ssock, cmd, 2)||stwritefd(ssock, *sfd));
+	}else if(dir==-1){//recv
+		int ans2;
+		int cmd[2]={CMD_SOCK, id==0?0:-abs(id)};
+		ans=(stwriteintarr(ssock, cmd, 2)||streadint(ssock, &ans2))||ans2;
+		if(!ans){
+			ans=streadfd(ssock, sfd);
 		}
+	}
+	if(ans){
+		dbg_time("scheduler_socket operation %d failed with error\n", dir);
 		close(ssock);
-	} else{
-		warning_time("Failed to connect to scheduler\n");
+		ssock=-1;
 	}
 	return ans;
 }

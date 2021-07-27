@@ -24,7 +24,7 @@
    \file daemonize.h
    Handling process creation.
 */
-void single_instance_daemonize(const char *lockfolder_in, 
+int single_instance_daemonize(const char *lockfolder_in, 
 			       const char *progname, int version,
 			       void(*daemon_func)(void*), 
 			       void* daemon_arg);

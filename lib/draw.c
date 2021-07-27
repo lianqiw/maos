@@ -237,7 +237,8 @@ int draw_add(int fd){
 static void draw_remove(int fd, int reuse){
 	if(fd<0) return;
 	if(reuse){
-		scheduler_send_socket(fd, draw_id?draw_id:1);
+		dbg("send %d back to scheduler for reuse\n", fd);
+		scheduler_socket(1, &fd, draw_id?draw_id:1);
 	}
 	close(fd);
 	int found=0;
@@ -343,7 +344,6 @@ static int get_drawdaemon(){
 	if(draw_disabled){
 		return -1;
 	}
-	dbg("get_drawdaemon()");
 	char* display=getenv("DISPLAY");
 	if(display&&!strlen(display)){//display is not set, we ask scheduler to open a drawdaemon.
 		display=0;
@@ -356,7 +356,7 @@ static int get_drawdaemon(){
 	}
 	int sock=-1;
 	//First try reusing existing idle drawdaemon
-	if(!scheduler_recv_socket(&sock, draw_id)){
+	if(!scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_FINAL)){
 			dbg("received socket=%d is already closed.\n", sock);
@@ -382,7 +382,7 @@ static int get_drawdaemon(){
 			}
 		} else{//no display is available. use scheduler to launch drawdaemon
 			dbg("launch using scheduler\n");
-			scheduler_recv_socket(&sock, 0);
+			scheduler_socket(-1, &sock, 0);
 		}
 	}
 

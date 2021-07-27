@@ -266,7 +266,6 @@ static void* maos_listener(void* psock){
 		case -1://requested to close connection.
 		{
 			dbg_time("Received scheduler close request\n");
-			*(int*)psock=-1;
 			close(sock);
 			sock=-1;
 		}

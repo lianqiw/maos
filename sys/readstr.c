@@ -28,13 +28,12 @@
 
 /**
    Obtain a string array value from the key. String entries must be separated by
-   space, coma [,] or semi-column [;]. Enclosing with quote is optional, but
-   necessary to protect spaces.
+   coma [,]. Enclosing with quote is optional, but necessary to protect spaces.
    Examples:
    []: one empty string
    [,]: two empty strings
-   [a b]: two strings: "a" and "b";
-   [a,b]: same as [a b]
+   [a,b]: two strings: "a" and "b";
+   [a,b,]: three strings, "a", "b", and ""
    ['a b']: one string "a b".
  */
 int readstr_strarr(char*** res, /**<[out] Result*/
@@ -81,21 +80,21 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			while(sdata3<sdataend&&sdata3[0]==' '){
 				sdata3++;
 			}
-			//Ignore separator following the quote.
-			if(sdata3[0]==','||sdata3[0]==';'){
+			//separator following the quote.
+			if(sdata3[0]==','/*||sdata3[0]==';'*/){
 				sdata3++;
 				end_coma=1;
 			}
 		} else{
-			//Find the next space, coma or semi-colon.
-			char sep[]=" ,;";
+			//Find the next separator
+			char sep[]=",";//entries are separated by ,
 			for(size_t is=0; is<sizeof(sep); is++){
 				const char* tmp=strchr(sdata2, sep[is]);
 				if(tmp&&tmp<sdata4&&tmp<sdataend){
 					sdata4=tmp;
 				}
 			}
-			if(sdata4[0]==','||sdata4[0]==';'){
+			if(sdata4[0]==','/*||sdata4[0]==';'*/){
 				end_coma=1;
 			}
 			//skip the separator

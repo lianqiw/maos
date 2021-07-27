@@ -59,7 +59,7 @@ GtkWidget* new_page(int ihost);
 gboolean remove_entry(GtkTreeRowReference* row);
 GtkWidget* monitor_new_entry_progress(void);
 GtkWidget* monitor_new_progress(int vertical, int length);
-void* listen_host(void*);
+void* listen_host(void*pmsock);
 void add_host_wrap(int ihost);
 gboolean host_down(gpointer data);
 gboolean host_up(gpointer data);

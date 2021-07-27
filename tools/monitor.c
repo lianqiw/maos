@@ -602,7 +602,7 @@ int main(int argc, char* argv[]){
 		notify_daemon=0;
 	}
 #endif
-
+	register_signal_handler(NULL);
 	if(argc>1){
 		for(int i=1; i<argc; i++){
 			if(isdigit((int)argv[i][0])){
@@ -792,7 +792,7 @@ int main(int argc, char* argv[]){
 	}
 	socket_nopipe(sock_main[0]);
 	socket_nopipe(sock_main[1]);
-	thread_new(listen_host, NULL);
+	thread_new(listen_host, GINT_TO_POINTER(sock_main[0]));
 	for(int ihost=0; ihost<nhost; ihost++){
 		add_host_wrap(ihost);
 	}

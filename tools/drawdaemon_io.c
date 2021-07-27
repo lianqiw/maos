@@ -126,13 +126,13 @@ void* listen_draw(void* dummy){
 	static drawdata_t* drawdata=NULL;
 	int cmd=0;
 	int nlen=0;
+	socket_recv_timeout(sock, 0);
 	while(sock!=-1 && !streadint(sock, &cmd)){
 		//dbg("cmd=%d\n", cmd);
 		sock_idle=0;//Indicate connection is active
 		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 			STREADINT(nlen);
 			STREADINT(cmd);
-			dbg("cmd=%d\n", cmd);
 		}
 		switch(cmd){
 		case DRAW_FRAME:{//in new format, every frame start with this. Place holder to handle UDP.
@@ -339,9 +339,9 @@ void* listen_draw(void* dummy){
 		cmd=-1;
 	}/*while */
 end:
+	warning("Read %d failed, stop listening.\n", sock);
 	if(sock!=-1) close(sock);
 	sock=-1;
 	sock_idle=1;
-	warning("Read failed, stop listening.\n");
 	return NULL;
 }

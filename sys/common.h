@@ -101,26 +101,27 @@ extern int detached;
 
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
 extern FILE* fpconsole;
-#define logstd(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);}})
-#define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);fprintf(stderr, A);}})
-#define error(format,...) ({logerr(-4, "%sError(%s:%d): " format "%s", RED,BASEFILE, __LINE__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
-#define warning(format,...) logstd(-4, "%sWarning(%s:%d): " format "%s", YELLOW, BASEFILE, __LINE__,##__VA_ARGS__, BLACK)
-#define warning_time(format,...) logstd(-4,"%s[%s] (%s:%d): " format "%s", YELLOW,myasctime(0),BASEFILE, __LINE__,  ##__VA_ARGS__, BLACK)
+//We only output to stdout. Its buffer is disabled for immediate output.
+#define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);}})
+#define error(format,...) ({logerr(-4, "%sError(%s:%d,%s): " format "%s", RED,BASEFILE,__LINE__,__func__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
+#define warning(format,...) logerr(-4, "%sWarning(%s:%d,%s): " format "%s", YELLOW,BASEFILE,__LINE__,__func__,##__VA_ARGS__,BLACK)
+#define warning_time(format,...) logerr(-4,"%s[%s] (%s:%d,%s): " format "%s", YELLOW,myasctime(0),BASEFILE,__LINE__,__func__,##__VA_ARGS__,BLACK)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
 //all info are shown at default log level
+#define logstd(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);}})
 #define info(A...)  logstd(-1, A) //least important info
 #define info2(A...) logstd(-2, A)
 #define info3(A...) logstd(-3, A) //most important info
-#define info_console(A...) ({if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A);}) //stderr is not directed to file.
+#define info_console(A...) ({if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A);}) //only output to console.
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
 //dbg are not shown at default log level
 //dbg do not shown when detached
 //use __func__ to indicate function name
-#define logdbg(level, format, ...) logstd(level, "%s" format "%s", CYAN, ##__VA_ARGS__, BLACK)
+#define logdbg(level, format, ...) logstd(level, "%s%s: " format "%s", CYAN, __func__, ##__VA_ARGS__, BLACK)
 #define dbg( A...) logdbg(0, A)
 #define dbg2(A...) logdbg(1, A)
 #define dbg3(A...) logdbg(2, A)
-#define logdbg_time(level, format, ...) logstd(level, "%s[%s]: " format "%s", CYAN, myasctime(0), ##__VA_ARGS__, BLACK)
+#define logdbg_time(level, format, ...) logstd(level, "%s[%s]%s: " format "%s", CYAN, myasctime(0), __func__, ##__VA_ARGS__, BLACK)
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)
@@ -190,23 +191,61 @@ extern FILE* fpconsole;
 #else
 #define CHECK_NULL_TERMINATED
 #endif
+//check whether endptr only contains space. endstr marks the end of str (\0)
+static inline int check_space(const char *endptr, const char *endstr){
+   while(endptr<endstr && endptr[0]==' ') endptr++;
+   return endptr!=endstr;
+}
+#define STR_TO_INT(A,B) strtol(A,B,10)
+#define STR_TO_DBL(A,B) strtod(A,B)
+#define READ_ENV_NUM(A,min,max,T,FUN)	  \
+    if(getenv("MAOS_"#A)){					  	\
+      char *endptr=0;  \
+      const char *str=getenv("MAOS_"#A);\
+      const char *endstr=str+strlen(str);\
+		  T B=FUN(str,&endptr);           \
+      if(endptr==str || check_space(endptr, endstr)){  \
+        error("MAOS_"#A"={%s} has invalid value.\n", str);\
+      }                                 \
+		  if(A!=B){ 								        \
+			  A=MIN(MAX(B, min), max);			  \
+			  dbg(#A" changed to %g\n", (double)A);		\
+		  }										              \
+    }
 
-#define READ_ENV_INT(A,min,max)					\
-    if(getenv("MAOS_"#A)){						\
-		int B=strtol(getenv("MAOS_"#A),NULL,10);\
-		if(A!=B){ 								\
-			A=MIN(MAX(B, min), max);			\
-			dbg(#A" changed to %d\n", A);		\
-		}										\
+#define READ_ENV_INT(A,min,max)	READ_ENV_NUM(A,min,max,int,   STR_TO_INT)
+#define READ_ENV_DBL(A,min,max)	READ_ENV_NUM(A,min,max,double,STR_TO_DBL)
+/*#undef READ_INT
+#undef READ_DBL
+#undef READ_ENV_NUM*/
+/*
+    if(getenv("MAOS_"#A)){					  	\
+      char *endptr=0;  \
+      const char *str=getenv("MAOS_"#A);\
+      const char *endstr=str+strlen(str);\
+		  int B=strtol(str,&endptr,10);     \
+      if(check_space(endptr, endstr)){\
+        error("MAOS_"#A"=%s has garbage.\n", str);\
+      }                                 \
+		  if(A!=B){ 								        \
+			  A=MIN(MAX(B, min), max);			  \
+			  dbg(#A" changed to %d\n", A);		\
+		  }										              \
     }
 #define READ_ENV_DBL(A,min,max)					\
     if(getenv("MAOS_"#A)){						\
-		double B=strtod(getenv("MAOS_"#A),NULL);	\
-		if(A!=B){								\
-			A=MIN(MAX(B, min), max);			\
-			dbg(#A" changed to %g\n", A);		\
-		}								        \
-    }
+      char *endptr=0;                 \
+      const char *str=getenv("MAOS_"#A);\
+      const char *endstr=str+strlen(str);\
+		  double B=strtod(str,&endptr);	\
+      if(check_space(endptr, endstr)){\
+        error("MAOS_"#A"=%s has garbage.\n", str);\
+      }                                 \
+		  if(A!=B){								\
+			  A=MIN(MAX(B, min), max);			\
+			  dbg(#A" changed to %g\n", A);		\
+		  }								        \
+    }*/
 #define DEF_ENV_FLAG(A,default_val)			\
     static int A=default_val;				\
     static __attribute__((constructor)) void init(){	\

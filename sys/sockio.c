@@ -202,22 +202,11 @@ int stcheck(int sfd){
 	char buf[4];
 	ssize_t len=recv(sfd, buf, sizeof buf, MSG_DONTWAIT|MSG_PEEK);
 	if(len==0){
-		dbg_time("Client has orderly shutdown\n");
+		dbg_time("Client %d has orderly shutdown\n", sfd);
 		ans=1;
-	}else if(len==-1){
-		dbg_time("recv failed with errno %d: %s\n", errno, strerror(errno));
+	}else if(len==-1 && errno!=EAGAIN){
+		dbg_time("recv from %d failed with errno %d: %s\n", sfd, errno, strerror(errno));
 	}
-	/*
-	//the following Implementation is not correct.
-	  //poll does not detect closed socket used for writing.
-	struct pollfd data={sfd, POLLIN|POLLPRI|POLLOUT, 0 };
-	if(poll(&data, 1, 1)){
-	dbg("data.revents=%d\n", data.revents);
-	if(data.revents&POLLERR || data.revents & POLLHUP || data.revents & POLLNVAL){
-		warning("socket %d is no longer valid\n", sfd);
-		ans=1;
-	}
-	}*/
 	return ans;
 }
 #define UDP_RESEND 0xEEEE

@@ -57,6 +57,7 @@ int main(int argc, char* argv[]){
 			warning("Error redirect stderr\n");
 		}
 		setbuf(stdout, NULL);
+		register_signal_handler(NULL);
 	}
 	info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
@@ -70,7 +71,6 @@ int main(int argc, char* argv[]){
 #else
 	gtk_init();
 #endif
-
 
 	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-draw.png", NULL);
 	if(argc<2){
