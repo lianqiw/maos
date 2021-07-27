@@ -88,12 +88,8 @@ int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
 	(void)argv;
 	return -1;
 }
-int scheduler_send_socket(int sfd, int id){
-	(void)sfd;
-	(void)id;
-	return -1;
-}
-int scheduler_recv_socket(int* sfd, int id){
+int scheduler_socket(int dir, int* sfd, int id){
+	(void)dir;
 	(void)sfd;
 	(void)id;
 	return -1;
