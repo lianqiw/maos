@@ -127,10 +127,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_hosts</b> ()</td
 <tr class="separator:a291e438e222f941d3969e605277de68e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08ad5203ea6cdb558062b292138b73d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a08ad5203ea6cdb558062b292138b73d9">scheduler_launch_exe</a> (const char *host, int argc, const char *argv[])</td></tr>
 <tr class="separator:a08ad5203ea6cdb558062b292138b73d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb27c3904db5220767660e274b4bc0ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#adb27c3904db5220767660e274b4bc0ba">scheduler_send_socket</a> (int sfd, int id)</td></tr>
-<tr class="separator:adb27c3904db5220767660e274b4bc0ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ed452224a349c9e53a0260ae054315e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a4ed452224a349c9e53a0260ae054315e">scheduler_recv_socket</a> (int *sfd, int id)</td></tr>
-<tr class="separator:a4ed452224a349c9e53a0260ae054315e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a334a554ca5c7ac7d9a5828c82e7bfc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a4a334a554ca5c7ac7d9a5828c82e7bfc">scheduler_socket</a> (int dir, int *sfd, int id)</td></tr>
+<tr class="separator:a4a334a554ca5c7ac7d9a5828c82e7bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a928e4a2456fb419b4361122459bf63fb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a928e4a2456fb419b4361122459bf63fb">call_addr2line</a> (char *ans, int nans, const char *cmd)</td></tr>
 <tr class="separator:a928e4a2456fb419b4361122459bf63fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a7861b01cc62c04cfeacec8b8ed27aab2">print_backtrace_symbol</a> (void *const *buffer, int size)</td></tr>
@@ -356,44 +354,21 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
 
 </div>
 </div>
-<a id="adb27c3904db5220767660e274b4bc0ba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adb27c3904db5220767660e274b4bc0ba">&#9670;&nbsp;</a></span>scheduler_send_socket()</h2>
+<a id="a4a334a554ca5c7ac7d9a5828c82e7bfc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a334a554ca5c7ac7d9a5828c82e7bfc">&#9670;&nbsp;</a></span>scheduler_socket()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int scheduler_send_socket </td>
+          <td class="memname">int scheduler_socket </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>sfd</em>, </td>
+          <td class="paramname"><em>dir</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>id</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>send a sock to the scheduler for caching </p>
-
-</div>
-</div>
-<a id="a4ed452224a349c9e53a0260ae054315e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ed452224a349c9e53a0260ae054315e">&#9670;&nbsp;</a></span>scheduler_recv_socket()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int scheduler_recv_socket </td>
-          <td>(</td>
           <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>sfd</em>, </td>
         </tr>
@@ -410,7 +385,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<p>get a socket from the scheduler for reuse. return 0 when success. </p>
+<p>send a drawing sock to the scheduler for caching or request a sock for drawing </p>
 
 </div>
 </div>

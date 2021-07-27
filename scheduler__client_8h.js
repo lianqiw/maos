@@ -10,8 +10,7 @@ var scheduler__client_8h =
     [ "scheduler_finish", "scheduler__client_8h.html#a2b93c8f28b99804e00ac8483359a97fa", null ],
     [ "scheduler_report", "scheduler__client_8h.html#a291e438e222f941d3969e605277de68e", null ],
     [ "scheduler_launch_exe", "scheduler__client_8h.html#a08ad5203ea6cdb558062b292138b73d9", null ],
-    [ "scheduler_send_socket", "scheduler__client_8h.html#adb27c3904db5220767660e274b4bc0ba", null ],
-    [ "scheduler_recv_socket", "scheduler__client_8h.html#a4ed452224a349c9e53a0260ae054315e", null ],
+    [ "scheduler_socket", "scheduler__client_8h.html#a4a334a554ca5c7ac7d9a5828c82e7bfc", null ],
     [ "call_addr2line", "scheduler__client_8h.html#a928e4a2456fb419b4361122459bf63fb", null ],
     [ "print_backtrace_symbol", "scheduler__client_8h.html#a7861b01cc62c04cfeacec8b8ed27aab2", null ],
     [ "print_backtrace", "scheduler__client_8h.html#ae3019ac0eb0800bb9d3c5df9818216b6", null ]

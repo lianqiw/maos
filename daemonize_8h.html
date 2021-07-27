@@ -103,8 +103,8 @@ $(document).ready(function(){initNavTree('daemonize_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a8bf6a4482ca30b96da77335ea0a23320"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a8bf6a4482ca30b96da77335ea0a23320">single_instance_daemonize</a> (const char *lockfolder_in, const char *progname, int version, void(*daemon_func)(void *), void *daemon_arg)</td></tr>
-<tr class="separator:a8bf6a4482ca30b96da77335ea0a23320"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11717d53b875bab717d53dc7c280b1af"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a11717d53b875bab717d53dc7c280b1af">single_instance_daemonize</a> (const char *lockfolder_in, const char *progname, int version, void(*daemon_func)(void *), void *daemon_arg)</td></tr>
+<tr class="separator:a11717d53b875bab717d53dc7c280b1af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cd6126eec1c5ef467a1bdf6a591b3b4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a4cd6126eec1c5ef467a1bdf6a591b3b4">lock_file</a> (const char *fn, int block, int version)</td></tr>
 <tr class="separator:a4cd6126eec1c5ef467a1bdf6a591b3b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29b0af1da2432bcc90721c0b62f4e660"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a29b0af1da2432bcc90721c0b62f4e660">daemonize</a> (void)</td></tr>
@@ -121,14 +121,14 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Handling process creation. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a8bf6a4482ca30b96da77335ea0a23320"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8bf6a4482ca30b96da77335ea0a23320">&#9670;&nbsp;</a></span>single_instance_daemonize()</h2>
+<a id="a11717d53b875bab717d53dc7c280b1af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11717d53b875bab717d53dc7c280b1af">&#9670;&nbsp;</a></span>single_instance_daemonize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void single_instance_daemonize </td>
+          <td class="memname">int single_instance_daemonize </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>lockfolder_in</em>, </td>
@@ -202,7 +202,8 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Ensure exclusive access by opening and maintaining lock of file fn.</p>
-<p>Will proceed if the lock if succeed, in which case non-negative number of the fd is returned. If other process already locked, will return negative number. If version is specified and is bigger than the value contained in existing fnlock, will kill the old process that created fnlock. </p>
+<p>Will proceed if the lock if succeed, in which case non-negative number of the fd is returned. If other process already locked, will return negative number. If version is specified and is bigger than the value contained in existing fnlock, will kill the old process that created fnlock.</p>
+<p>returns: -PID (&lt;-1): if a running process already locked file -1: failed to lock fd (&gt;-1): successfully locked </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fnlock</td><td>The filename to lock on </td></tr>
