@@ -351,8 +351,12 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			free(val2);
 		} else if(!strncmp(var, "MAOS_", 5)){
 			//This is environment variable.
-			setenv(var, value, 1);
-			read_sys_env();
+			if(!value){
+				unsetenv(var);//not effective for read_sys_env()
+			}else{
+				setenv(var, value, 1);
+				read_sys_env();
+			}
 		} else if(!strcmp(var, "include")){
 			/*dbg("Opening embeded config file %s\n",value); */
 			char* embeded=strextract(value);

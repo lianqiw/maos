@@ -566,8 +566,12 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	} else{
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(parms->powfs[ipowfs].ncpa){
-				const dmat* ncpa=parms->powfs[ipowfs].ncpa;
-				info("ncpa shape is %ldx%ld\n", ncpa->nx, ncpa->ny);
+				dmat* ncpa=parms->powfs[ipowfs].ncpa;
+				dbg("ncpa shape is %ldx%ld\n", ncpa->nx, ncpa->ny);
+				if(ncpa->nx%2==0 && ncpa->nx>2 && ncpa->ny==1){//reform nx1 factor to 2x(n/2)
+					ncpa->ny=ncpa->nx/2;
+					ncpa->nx=2;
+				}
 				if(ncpa->nx!=2){
 					error("NCPA is in wrong format: %ldx%ld\n", ncpa->nx, ncpa->ny);
 				}

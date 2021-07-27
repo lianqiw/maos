@@ -276,15 +276,18 @@ mapcell* genscreen(genatm_t* data){
 /**
  * Generate screen according to a header. It has three possible options.
  * 1) load from file
- * 2) generate screen from PSD
- *  with the following keys
- * r0
- * L0
+ * 2) generate screen from PSD with the following keys
+ * r0 (Fried parameter)
+ * L0 (Outer scale)
+ * dx (sampling)
+ * nx (number of points)
+ * slope (optional, default is -11/3)
+ * seed (optional)
+ * 3) generate from a zernike mode with the following keys
+ * rms (in nm) 
+ * mode (zernike mode)
  * dx
- * slope
  * nx
- * seed
- * 3) generate from a zernike mode with given RMS (in nm) and mode.
  */
 mapcell* genscreen_str(const char* header){
 	mapcell* surfs=NULL;
