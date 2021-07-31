@@ -56,6 +56,20 @@ static proc_t *proc_add(int id,int pid){
 	return iproc;
 }
 */
+static void sendmail(const char*format,...){
+	format2fn;
+	if(mailto && fn){
+		warning_time("Sending mail to %s\n", mailto);
+		char cmd[1024];
+		snprintf(cmd, sizeof(cmd), "sendmail -t %s", mailto);
+		FILE* p=popen(cmd, "w");
+		if(p){
+			fprintf(p, "To:%s\n%s\n", mailto, fn);
+			fclose(p);
+		}
+	}
+
+}
 static proc_t* proc_get(int id, int pid){
 	proc_t* iproc;
 	if(id<0||id>=nhost){
@@ -145,10 +159,12 @@ static void host_removed(int sock){
 		FD_CLR(sock, &active_fd_set);
 	}
 	int ihost=host_from_sock(sock);
-	if(ihost!=-1){
+	if(ihost!=-1 && hsock[ihost]!=-1){
 		hsock[ihost]=-1;
 		gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
-		warning_time("disconnected from %s\n", hosts[ihost]);
+		warning_time("Disconnected from %s\n", hosts[ihost]);
+		sendmail("Subject:monitor on disconnected from%s\n\nAt%s\n",
+				 hosts[ihost], myasctime(0));
 	}
 }
 //connect to scheduler(host)
@@ -298,6 +314,7 @@ static int respond(int sock){
 		/*if(!iproc){
 		iproc=proc_add(ihost,pid);
 		}*/
+		int old_info=iproc->status.info;
 		if(stread(sock, &iproc->status, sizeof(status_t))){
 			return -1;
 		}
@@ -317,6 +334,13 @@ static int respond(int sock){
 					proc_remove(ihost, cmd[1]);
 				}
 				iproc->pid=cmd[1];
+			}
+			//Alert when job crashed during running.
+			if(old_info && old_info!=iproc->status.info 
+				&& iproc->status.info==S_CRASH 
+				&& (iproc->status.isim>0 || iproc->status.iseed>0)){
+				sendmail("Subject: Job %d crashed on %s\n\nOn %s\n\nPath is %s\n", 
+					iproc->pid, hosts[iproc->hid], myasctime(0), iproc->path);
 			}
 			gdk_threads_add_idle((GSourceFunc)refresh, iproc);
 		}

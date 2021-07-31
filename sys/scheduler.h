@@ -65,7 +65,7 @@ enum{
     CMD_MAOS, /*13 */
     CMD_MAOSDAEMON, /*14 */
     CMD_RESTART,/*15*/
-    CMD_UNUSED3,/*16*/
+    CMD_KILLED,/*16*/
     CMD_UNUSED4,/*17*/
     CMD_LAUNCH,/*18*/
     CMD_PAUSE,

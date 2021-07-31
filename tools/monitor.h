@@ -71,4 +71,5 @@ void kill_job_wrap(int ihost, int pid);
 void save_job_wrap();
 int scheduler_cmd_wrap(int ihost, int pid, int command);
 gboolean dialog_confirm(const char* format, ...);
+extern const char *mailto;
 #endif

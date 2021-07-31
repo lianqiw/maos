@@ -89,6 +89,7 @@ GtkCssProvider* provider_blue;
 #include "gtk3-css.h"
 #endif
 #define MAX_HOST 20
+const char *mailto=NULL;
 /*
 #define DIALOG_MSG(A...) {				\
 	GtkWidget *dialog0=gtk_message_dialog_new	\
@@ -192,7 +193,9 @@ gboolean host_up(gpointer data){
    Disables the notebook page for a host*/
 gboolean host_down(gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
-	gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]), "Click to connect");
+	char status[100];
+	snprintf(status, sizeof(status), "Disconnected at %s", myasctime(0));
+	gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]), status);
 	gtk_widget_show_all(cmdconnect[ihost]);
 	gtk_widget_set_sensitive(cmdconnect[ihost], 1);
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
@@ -578,8 +581,54 @@ static GtkToolItem* new_toolbar_item(const char* iconname, GdkPixbuf* iconbuf, c
 	g_signal_connect(item, "clicked", G_CALLBACK(func), GINT_TO_POINTER(data));
 	return item;
 }
-
+void print_help(const char *cmd){
+	fprintf(stderr, "%s [options] [port] [host1] [host2]\n"
+	"\nOptions:\n\t\t--mailto someone@somehost.com\n"
+	"\t\t--help (-h) print this help\n"
+	"\ndefault hosts can be specified in ~/.aos/hosts, one per line\n"
+	"default port can be specified in ~/.aos/port\n", cmd
+	);
+}
 int main(int argc, char* argv[]){
+	if(argc>1){
+		for(int i=1; i<argc; i++){
+			if(argv[i][0]=='-'){//start with -
+				const char* s=argv[i]+1;
+				if(s[0]=='-') s++;
+				const char* key="mailto";
+				if(!mystrcmp(s, key)){
+					s+=strlen(key);
+					while(s[0]==' ') s++;
+					if(s[0]=='=') s++;
+					while(s[0]==' ') s++;
+					if(s[0]){
+						mailto=mystrdup(s);
+					} else if(i+1<argc){
+						mailto=mystrdup(argv[i+1]);
+						i++;
+					} else{
+						warning("Invalid option: %s\n", argv[i]);
+					}
+					if(mailto){
+						info("Will send mail to %s for host disconnection or job crashing.\n", mailto);
+					}
+				} else if((s[0]=='h'&&(!s[1]||isspace(s[1])))
+						||(!mystrcmp(s, "help")&&(!s[4]||isspace(s[4])))
+						){
+					print_help(argv[0]);
+					return 0;
+				} else{
+					warning("Unknown options: %s\n", argv[i]);
+				}
+			} else if(isdigit((int)argv[i][0])){//port
+				PORT=strtol(argv[i], NULL, 10);
+			} else if(isalnum((int)argv[i][0])){//hostname
+				parse_host(argv[i]);
+			}
+		}
+	} else if(nhost==1){
+		print_help(argv[0]);
+	}
 	if(0){
 		char* fnlog=stradd(TEMP, "/monitor.log", NULL);
 		//info("Check %s for log.\n", fnlog);
@@ -603,17 +652,7 @@ int main(int argc, char* argv[]){
 	}
 #endif
 	register_signal_handler(NULL);
-	if(argc>1){
-		for(int i=1; i<argc; i++){
-			if(isdigit((int)argv[i][0])){
-				PORT=strtol(argv[i], NULL, 10);
-			} else if(isalnum((int)argv[i][0])){
-				parse_host(argv[i]);
-			}
-		}
-	} else if(nhost==1){
-		info("Using '%s host1 host2' to monitor other machines, or put their hostnames in ~/.aos/hosts\n", argv[0]);
-	}
+	
 #if GDK_MAJOR_VERSION < 3
 	gdk_color_parse("#EE0000", &red);
 	gdk_color_parse("#00CC00", &green);

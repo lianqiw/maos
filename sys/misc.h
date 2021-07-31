@@ -82,5 +82,7 @@ void parse_argopt(char *cmds, argopt_t *options);
 //int sig_block(int block);
 //int sem_lock(const char *key, int lock);
 void set_realtime(int icpu, int niceness);
+///Check whether signal is crash
+#define iscrash(sig) (sig==SIGABRT||sig==SIGSEGV||sig==SIGILL||sig==SIGFPE)
 void register_signal_handler(int(*)(int));
 #endif

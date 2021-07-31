@@ -797,7 +797,9 @@ static int respond(int sock){
 	case CMD_RESTART://15: Called by maos to restart a job
 		runned_restart(pid);
 		break;
-	case CMD_UNUSED3://16;not used
+	case CMD_KILLED://16: called by maos to indicate that job is cancelled or killed
+		running_remove(pid, S_KILLED);
+		ret=-1;
 		break;
 	case CMD_UNUSED4://17;not used
 		break;

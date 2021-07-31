@@ -806,6 +806,7 @@ void set_realtime(int icpu, int niceness){
 		warning("Please run program as setsid or as root to lift priority\n");
 	}
 }
+
 quitfun_t quitfun=NULL;
 void default_quitfun(const char* msg){
 	info("%s", msg);
@@ -848,7 +849,7 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 		return;
 	}
 	fatal_error_in_progress++;
-	if(sig==SIGSEGV||sig==SIGILL||sig==SIGFPE){
+	if(iscrash(sig)){
 		if(siginfo&&siginfo->si_addr){
 			info("Memory location: %p\n", siginfo->si_addr);
 		}

@@ -338,8 +338,10 @@ void scheduler_finish(int status){
 		int cmd[2];
 		if(status==0){
 			cmd[0]=CMD_FINISH;
-		} else{
+		}else if(iscrash(status)){
 			cmd[0]=CMD_CRASH;
+		}else{
+			cmd[0]=CMD_KILLED;
 		}
 		cmd[1]=getpid();
 		CATCH_ERR(stwriteintarr(psock, cmd, 2));
