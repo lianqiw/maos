@@ -1,8 +1,5 @@
 var searchData=
 [
-  ['p',['P',['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'type.h']]],
-  ['pcol',['PCOL',['../type_8h.html#aedbdd989a69ced62e7db462fc0a02972',1,'type.h']]],
-  ['pcolr',['PCOLR',['../type_8h.html#a16d2ae3e5519371c1d566bc9f8aa717c',1,'type.h']]],
-  ['pn',['PN',['../type_8h.html#a54f1d629485d54c67ae8adc8d86b5458',1,'type.h']]],
-  ['pr',['PR',['../type_8h.html#abc6c8a37faad9f0f715e9ecf731a1e66',1,'type.h']]]
+  ['nx',['NX',['../type_8h.html#a18db24f2863a17fc7ca41464076dff31',1,'type.h']]],
+  ['ny',['NY',['../type_8h.html#a45f88cef3d1e4ff91ee5cbd9228d3328',1,'type.h']]]
 ];

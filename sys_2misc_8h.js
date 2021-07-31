@@ -10,6 +10,7 @@ var sys_2misc_8h =
       [ "nval", "sys_2misc_8h.html#a788ff2d4c1eb23bf8146aff728d08980", null ]
     ] ],
     [ "strdup", "sys_2misc_8h.html#a9254b089d435892385cf14d0ab4a7a2d", null ],
+    [ "iscrash", "sys_2misc_8h.html#a71a3325cb440cb30b438bcde0f75e3df", null ],
     [ "mybasename", "sys_2misc_8h.html#a5609e288961da8d6cfcc7494afbb3ded", null ],
     [ "mydirname", "sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07", null ],
     [ "check_suffix", "sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de", null ],
