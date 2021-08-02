@@ -329,7 +329,7 @@ void* listen_draw(void* dummy){
 			goto end;/*read failed. */
 			break;
 		default:
-			warning("Unknown cmd: %d with size %d\n", cmd, nlen);
+			warning_time("Unknown cmd: %d with size %d\n", cmd, nlen);
 			if(nlen){
 				void* p=malloc(nlen);
 				STREAD(p, nlen);
@@ -339,7 +339,7 @@ void* listen_draw(void* dummy){
 		cmd=-1;
 	}/*while */
 end:
-	warning("Read %d failed, stop listening.\n", sock);
+	warning_time("Read %d failed: %d (%s). Stop listening.\n", sock, errno, strerror(errno));
 	if(sock!=-1) close(sock);
 	sock=-1;
 	sock_idle=1;

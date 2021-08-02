@@ -59,13 +59,15 @@ static proc_t *proc_add(int id,int pid){
 static void sendmail(const char*format,...){
 	format2fn;
 	if(mailto && fn){
-		warning_time("Sending mail to %s\n", mailto);
+		dbg_time("Sending mail to %s\n", mailto);
 		char cmd[1024];
 		snprintf(cmd, sizeof(cmd), "sendmail -t %s", mailto);
 		FILE* p=popen(cmd, "w");
 		if(p){
 			fprintf(p, "To:%s\n%s\n", mailto, fn);
 			fclose(p);
+		}else{
+			warning_time("sendmail failed for message (%s)\n", fn);
 		}
 	}
 
@@ -163,7 +165,7 @@ static void host_removed(int sock){
 		hsock[ihost]=-1;
 		gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
 		warning_time("Disconnected from %s\n", hosts[ihost]);
-		sendmail("Subject:monitor on disconnected from%s\n\nAt%s\n",
+		sendmail("Subject:monitor on disconnected from %s\n\nAt%s\n",
 				 hosts[ihost], myasctime(0));
 	}
 }
@@ -218,7 +220,7 @@ static int test_jobs(int status, int flag){
 }
 static void save_all_jobs(){
 	char* fnall=NULL;
-	char* tm=strtime();
+	char* tm=strtime_pid();
 	for(int ihost=0; ihost<nhost; ihost++){
 		if(!pproc[ihost]) continue;
 		char fn[PATH_MAX];

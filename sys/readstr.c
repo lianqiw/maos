@@ -132,7 +132,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
  * */
 static void parse_expr(double* vmul, double* vadd, char** pendptr){
 	char *endptr=*pendptr;
-	double valpriv;
+	double valpriv=1;
 	int optpriv=0;
 	*vmul=1;
 	*vadd=0;

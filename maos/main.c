@@ -209,6 +209,7 @@ static void* maos_var(void* psock){
 	thread_block_signal();
 	int cmd[2];
 	int sock=(int)(long)psock;
+	socket_recv_timeout(sock, 0);//make sure it blocks when no data is readable
 	while(!streadintarr(sock, cmd, 2)){
 		dbg("maos_var: cmd=%d, %d\n", cmd[0], cmd[1]);
 		switch(cmd[0]){
@@ -260,6 +261,7 @@ static void* maos_var(void* psock){
 static void* maos_listener(void* psock){
 	int sock=(int)(long)psock;
 	thread_block_signal();
+	socket_recv_timeout(sock, 0);//make sure it blocks when no data is readable
 	int cmd[2];
 	while(sock!=-1 && !streadintarr(sock, cmd, 2)){
 		switch(cmd[0]){
@@ -464,8 +466,9 @@ int main(int argc, const char* argv[]){
 	free(scmd);
 	free(arg->gpus);
 	free(arg);
-	scheduler_finish(0);
+	extern int sim_exit;
 	extern int exit_success;
-	exit_success=1;
+	exit_success=sim_exit?0:1;
+	scheduler_finish(sim_exit?SIGTERM:0);
 	return 0;
 }

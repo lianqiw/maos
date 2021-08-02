@@ -196,7 +196,7 @@ const char* myasctime(time_t at){
 	struct tm am;
 	localtime_r(&at, &am);
 	if(snprintf(st, sizeof(st), "%04d/%02d/%02d %02d:%02d:%02d",
-		am.tm_year+1900, am.tm_mon, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec)>=(int)sizeof(st)){
+		am.tm_year+1900, am.tm_mon+1, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec)>=(int)sizeof(st)){
 		warning_once("snprintf truncated\n");
 	}
 	return st;
@@ -205,7 +205,7 @@ const char* myasctime(time_t at){
    Get furrent time in ascii string that doesn't contain
    spaces. Suitable for use in filenames. The returnned string
    must be freed. */
-char* strtime(void){
+char* strtime_pid(void){
 	char str[64];
 	time_t t=myclocki();
 	struct tm tmp;
@@ -331,7 +331,7 @@ size_t flen(const char* fn){
 time_t fmtime(const char* fn){
 	struct stat buf;
 	if(!fn||stat(fn, &buf)) return 0;
-	return buf.st_ctime;
+	return buf.st_mtime;
 }
 /**
    Concatenate many strings. Argument list must end with NULL.

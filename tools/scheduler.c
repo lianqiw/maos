@@ -377,17 +377,18 @@ static RUN_T* running_get_by_sock(int sock){
 static void check_jobs(void){
 	RUN_T* irun, * irun2;
 	if(running){
+		double now=myclockd();
 		for(irun=running; irun; irun=irun2){
 			irun2=irun->next;
 			if(irun->pid>0){
 				if(kill(irun->pid, 0)){
-					if(irun->last_time+10<myclockd()){//allow grace period.
+					if(irun->last_time+60<now){//allow grace period.
 						dbg_time("check_jobs: Job %d no longer exists\n", irun->pid);
 						running_remove(irun->pid, S_CRASH);
 					}
-				} else if((irun->last_time+600<myclockd())&&irun->status.info==S_RUNNING){
+				} else if((irun->last_time+600<now)&&irun->status.info==S_RUNNING){
 					dbg_time("check_jobs: Job %d does not update after %g seconds.\n",
-							irun->pid, myclockd()-irun->last_time);
+							irun->pid, now-irun->last_time);
 					irun->status.info=S_UNKNOWN;
 					monitor_send(irun, NULL);
 				}
@@ -499,10 +500,10 @@ static int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get(pid);
 	int cmd2[2]={cmd, 0};
 	if(!irun||!irun->sock2||(stwriteintarr(irun->sock2, cmd2, 2)||stwritefd(irun->sock2, sock))){
-		warning_time("Unable to pass socket to maos: irun=%p, sock2=%d\n", irun, irun?irun->sock2:0);
+		warning_time("Unable to pass socket (%d) to maos (%d, %d)\n", sock, irun?irun->pid:-1, irun?irun->sock2:-1);
 		stwriteint(sock, -1);//respond failure message.
 	} else{
-		dbg_time("Successfully passed socket to maos\n");
+		dbg_time("Successfully passed socket (%d) to maos (%d, %d)\n", sock, irun->pid, irun->sock2);
 		stwriteint(sock, 0);//respond succeed
 	}
 	return -1;//do not keep this connection.

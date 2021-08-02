@@ -131,6 +131,7 @@ retry:
 #endif	
 	int cmd;
 	int nlen=0;
+	socket_recv_timeout(sock_draw, 0);//make sure it blocks when no data is readable
 	while(sock_data->fd!=-1&&!streadint(sock_draw, &cmd)){
 		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 			streadint(sock_draw, &nlen);
@@ -142,26 +143,31 @@ retry:
 			char* fig=0, * fn=0;
 			streadstr(sock_draw, &fig);
 			streadstr(sock_draw, &fn);
-			if(figfn[0]&&figfn[1]&&(strcmp(figfn[0], fig)||strcmp(figfn[1], fn))){
-				draw_changed=1;
-				//info("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+			if(fig&&fn){
+				if(figfn[0]&&figfn[1]&&(strcmp(figfn[0], fig)||strcmp(figfn[1], fn))){
+					draw_changed=1;
+					if(sock_data->draw_single){
+						dbg("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+					}
+				}
+				free(figfn[0]);
+				free(figfn[1]);
+				figfn[0]=fig;
+				figfn[1]=fn;
 			}
-			free(figfn[0]);
-			free(figfn[1]);
-			figfn[0]=fig;
-			figfn[1]=fn;
 		}
 		break;
 		case DRAW_PAUSE:
 			sock_data->pause=1;
-			info("draw %d paused\n", sock_draw);
+			dbg("draw %d paused\n", sock_draw);
 			break;
 		case DRAW_RESUME:
 			sock_data->pause=0;
-			info("draw %d resumed\n", sock_draw);
+			dbg("draw %d resumed\n", sock_draw);
 			break;
 		case DRAW_SINGLE:
 			sock_data->draw_single=sock_data->draw_single?0:1;
+			dbg("draw %d draw_single=%d\n", sock_draw, sock_data->draw_single);
 			break;
 		default:
 			dbg("Unknown cmd: %d with size %d from socket %d\n", cmd, nlen, sock_draw);
@@ -173,7 +179,7 @@ retry:
 			break;
 		}
 	}
-	//info("draw stop lisening to drawdaemon at %d\n", sock_draw);
+	dbg_time("stopped lisening to drawdaemon at %d, errno=%d, %s\n", sock_draw, errno, strerror(errno));
 	listening=0;
 	return NULL;
 }

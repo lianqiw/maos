@@ -583,7 +583,7 @@ static GtkToolItem* new_toolbar_item(const char* iconname, GdkPixbuf* iconbuf, c
 }
 void print_help(const char *cmd){
 	fprintf(stderr, "%s [options] [port] [host1] [host2]\n"
-	"\nOptions:\n\t\t--mailto someone@somehost.com\n"
+	"\nOptions:\n\t\t--mailto someone@somehost.com (requires sendmail)\n"
 	"\t\t--help (-h) print this help\n"
 	"\ndefault hosts can be specified in ~/.aos/hosts, one per line\n"
 	"default port can be specified in ~/.aos/port\n", cmd

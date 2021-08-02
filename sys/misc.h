@@ -32,7 +32,7 @@ void print_file(const char *fnin);
 int myclocki(void);
 double myclockd(void);
 const char *myasctime(time_t at);
-char *strtime(void);
+char *strtime_pid(void);
 const char *myhostname(void);
 char *mygetcwd(void);
 char *myabspath(const char *path);

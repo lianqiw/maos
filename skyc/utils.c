@@ -98,7 +98,7 @@ ARG_S* parse_args(int argc, const char* argv[]){
 	}
 	arg->confcmd=strdup(fntmp);
 	if(!arg->dirout){
-		arg->dirout=strtime();
+		arg->dirout=strtime_pid();
 	}
 	if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
 		arg->conf=strdup("maos.conf");

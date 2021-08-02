@@ -186,12 +186,6 @@ int socket_send_timeout(int sock, double sec){
 	return ans;
 }
 /**
- * set both snd and rcv time out
- * */
-int socket_timeout(int sock, double sec){
-	return socket_recv_timeout(sock, sec) + socket_send_timeout(sock, sec);
-}
-/**
    make a server port and bind to sockpath. AF_UNIX.
  */
 static int bind_socket_unix(char* sockpath){
@@ -321,7 +315,8 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			} else{
 				if(!listen(sock_local, 10)){
 					FD_SET(sock_local, &active_fd_set);
-					socket_timeout(sock_local, 5);
+					socket_send_timeout(sock_local, 60);
+					socket_recv_timeout(sock_local, 60);
 				} else{
 					perror("listen (sock_local)");
 					close(sock_local);
@@ -342,7 +337,8 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 		exit(EXIT_FAILURE);
 	}
 	FD_SET(sock, &active_fd_set);
-	socket_timeout(sock, 5);
+	socket_recv_timeout(sock, 60);
+	socket_send_timeout(sock, 60);
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
 	while(quit_listen!=2 && nlisten){
@@ -417,7 +413,8 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 						} else{
 							dbg_time("port %d is connected\n", sock2);
 							FD_SET(sock2, &active_fd_set);
-							socket_timeout(sock2, 5);
+							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
+							socket_send_timeout(sock2, 60);
 						}
 					} else{
 						/* Data arriving on an already-connected socket. Call responder to handle.
@@ -481,7 +478,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 	if(hostname[0]=='/'){//connect locally so we can pass fd.
 		sock=socket(PF_UNIX, SOCK_STREAM, 0);
 		socket_nopipe(sock);
-		socket_timeout(sock, 5);
+		socket_send_timeout(sock, 60);
 		struct sockaddr_un addr={0};
 		addr.sun_family=AF_UNIX;
 		strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
@@ -498,7 +495,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 		for(int count=0; count<25; count++){
 			sock=socket(PF_INET, SOCK_STREAM, 0);
 			socket_nopipe(sock);
-			socket_timeout(sock, 5);
+			socket_send_timeout(sock, 60);//do not set recv timeout as client may not be using select()
 			socket_tcp_keepalive(sock);
 			if(nodelay){
 				socket_tcp_nodelay(sock);

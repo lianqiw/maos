@@ -24,7 +24,6 @@
 #include <netinet/in.h>
 int socket_recv_timeout(int sock, double sec);
 int socket_send_timeout(int sock, double sec);
-int socket_timeout(int sock, double sec);
 int connect_port(const char *hostname, int port, int block, int nodelay);
 void listen_port(uint16_t port, char *localpath, int (*respond)(int), double timeout_sec, void (*timeout_fun)(), int nodelay);
 void socket_nopipe(int sock);
