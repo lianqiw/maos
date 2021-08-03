@@ -110,7 +110,7 @@ cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 		}
 	}
 	fddata.init(nps, 1);
-	DO(cudaMemcpy(fddata(), FDDATA, sizeof(gpu_fdpcg_t)*nps, cudaMemcpyHostToDevice));
+	DO(cudaMemcpy(fddata(), FDDATA, sizeof(gpu_fdpcg_t)*nps, H2D));
 	CUDA_CHECK_ERROR;
 	delete[] FDDATA;
 }
@@ -191,7 +191,7 @@ void cufdpcg_t::Pre(curcell& xout, const curcell& xin, stream_t& stream){
 	}
 	CUDA_CHECK_ERROR;
 #if DBG_FD
-	cuwrite(xin, "fdg_xin");
+	cuwrite(xin, stream, "fdg_xin");
 #endif
 	/*2012-07-11: Use real to complex fft*/
 	for(int ic=0; ic<fftnc; ic++){
@@ -207,7 +207,7 @@ void cufdpcg_t::Pre(curcell& xout, const curcell& xin, stream_t& stream){
 	}
 	CUDA_CHECK_ERROR;
 #if DBG_FD
-	cuwrite(xhat1, "fdg_fft");
+	cuwrite(xhat1, stream, "fdg_fft");
 #endif
 
 	fdpcg_mul_block_sync_half<<<nbz, dim3(bs, nby), sizeof(Comp)* bs*2*nby, stream>>>
@@ -215,7 +215,7 @@ void cufdpcg_t::Pre(curcell& xout, const curcell& xin, stream_t& stream){
 	CUDA_CHECK_ERROR;
 	ctoc("MUL");
 #if DBG_FD
-	cuwrite(xhat2, "fdg_mul");
+	cuwrite(xhat2, stream, "fdg_mul");
 #endif
 	for(int ic=0; ic<fftnc; ic++){
 		int ips=fftips[ic];
@@ -229,7 +229,7 @@ void cufdpcg_t::Pre(curcell& xout, const curcell& xin, stream_t& stream){
 		CUDA_CHECK_ERROR;
 	}
 #if DBG_FD
-	cuwrite(xout, "fdg_xout");
+	cuwrite(xout, stream, "fdg_xout");
 #endif
 	ctoc("FFTI");
 	ctoc_final("FDPCG");

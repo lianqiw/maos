@@ -171,11 +171,11 @@ void cufit_grid::R(curcell& xout, Real beta, curcell& xin, Real alpha, stream_t&
 		curscale(xout.M(), beta, stream);
 	}
 	do_hxp(xin, stream);//xin->opdfit. 153 us
-	//cuwrite(opdfit.M(), "GPU_FitR_x1");
+	//cuwrite(opdfit.M(), stream, "GPU_FitR_x1");
 	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);//opdfit->opdfit2. 123 us
-	//cuwrite(opdfit2.M(), "GPU_FitR_x2");
+	//cuwrite(opdfit2.M(), stream, "GPU_FitR_x2");
 	do_hat(xout, alpha, stream);//opdfit2->xout. 390 us
-	//cuwrite(xout, "GPU_FitR_x3");
+	//cuwrite(xout, stream, "GPU_FitR_x3");
 }
 void cufit_grid::Rt(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
 	if(!xout){

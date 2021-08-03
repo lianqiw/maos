@@ -251,9 +251,9 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		X(pagelock)(dmres->p[igpu], NULL);
 		/*
 		DO(cudaMemcpyAsync(data[igpu]->pix->p, pix->p, 2*nsa*pixpsa,
-				   cudaMemcpyHostToDevice, *data[igpu]->stream_p));
+				   H2D, *data[igpu]->stream_p));
 		cudaMemcpyAsync(dmres->p[igpu]->p, data[igpu]->act->p, nact*sizeof(Real),
-				cudaMemcpyDeviceToHost, data[igpu]->stream_a[0]);
+				D2H, data[igpu]->stream_a[0]);
 		CUDA_SYNC_DEVICE;
 		*/
 	}
@@ -335,7 +335,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 				timing_sock->p[istep]+=myclockd()-tmp0;
 			}
 			DO(cudaMemcpyAsync(datai->pix()+isa*pixpsa, pcur, 2*nleft*pixpsa,
-				cudaMemcpyHostToDevice, datai->stream_p));
+				H2D, datai->stream_p));
 	 //Recored the event when the memcpy is finished
 			DO(cudaEventRecord(datai->event_p[datai->count], datai->stream_p));
 			//Start matched filter when pixel transfer is done.
@@ -394,7 +394,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 #endif
 				DO(cudaMemcpyAsync(datai->cumvm_next()+datai->ic*mvm->nx,
 					mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nleft,
-					cudaMemcpyHostToDevice, datai->stream_mvm));
+					H2D, datai->stream_mvm));
 #if TIMING
 				DO(cudaEventRecord(datai->event_mvm, datai->stream_mvm));
 #endif
@@ -419,7 +419,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 #if TIMING
 			DO(cudaEventRecord(datai->event0_a, datai->stream_a[0]));
 #endif
-			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act(), nact*sizeof(Real), cudaMemcpyDeviceToHost, datai->stream_a[0]);
+			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act(), nact*sizeof(Real), D2H, datai->stream_a[0]);
 #if TIMING
 			DO(cudaEventRecord(datai->event_a, datai->stream_a[0]));//record event when all act are copied so mvm can start.
 #endif

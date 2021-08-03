@@ -267,8 +267,8 @@ Real curinn(const curmat& a, const curmat& b, cudaStream_t stream){
 	curmat res(1, 1);
 	Real out;
 	inn_wrap(res(), a(), b(), a.Nx()*a.Ny(), stream);
+	DO(cudaMemcpyAsync(&out, res(), sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
-	DO(cudaMemcpy(&out, res(), sizeof(Real), cudaMemcpyDeviceToHost));
 	return out;
 }
 
@@ -288,8 +288,8 @@ Real cursum(const curmat& a, cudaStream_t stream){
 	Real out;//result in CPU.
 	curmat res(1, 1);
 	sum_wrap(res, a(), a.Nx()*a.Ny(), stream);
+	DO(cudaMemcpyAsync(&out, res(), sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
-	DO(cudaMemcpy(&out, res(), sizeof(Real), cudaMemcpyDeviceToHost));
 	return out;
 }
 
@@ -300,9 +300,8 @@ Real curmax(const curmat& a, cudaStream_t stream){
 	Real out;
 	curmat res(1, 1);
 	max_wrap(res, a(), a.N(), stream);
+	DO(cudaMemcpyAsync(&out, res(), sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
-	DO(cudaMemcpy(&out, res(), sizeof(Real), cudaMemcpyDeviceToHost));
-	cudaFree(res);
 	return out;
 }
 
@@ -313,9 +312,8 @@ Real curmaxabs(const curmat& a, cudaStream_t stream){
 	Real out;
 	curmat res(1, 1);
 	maxabs_wrap(res, a(), a.N(), stream);
+	DO(cudaMemcpyAsync(&out, res(), sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
-	DO(cudaMemcpy(&out, res(), sizeof(Real), cudaMemcpyDeviceToHost));
-	cudaFree(res);
 	return out;
 }
 /**
@@ -332,8 +330,8 @@ Real curcellmax(const curcell& a, cudaStream_t stream){
 	if(n>1){
 		max_wrap(&res[n], res, n, stream);
 	}
+	DO(cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
-	DO(cudaMemcpy(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost));
 	return out;
 }
 /**
@@ -350,8 +348,8 @@ Real curcellmaxabs(const curcell& a, cudaStream_t stream){
 	if(n>1){
 		maxabs_wrap(&res[n], res, n, stream);
 	}
+	DO(cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
-	DO(cudaMemcpy(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost));
 	return out;
 }
 /**

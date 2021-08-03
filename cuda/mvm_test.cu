@@ -170,7 +170,7 @@ void mvm_test(int igpu){
 	int nevent=nstream*2;
 	event_t event[nevent];
 	Real one=1.;
-	//cuwrite(cuy, "y0");
+	//cuwrite(cuy, stream, "y0");
 	Real tm;
 	cudaProfilerStart();
 
@@ -185,7 +185,7 @@ void mvm_test(int igpu){
 		stream[0].sync();
 		DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 		dbg("cublas?gemv takes %.6f ms\n", tm);
-		cuwrite(cuy, "y_cugemv");
+		cuwrite(cuy, stream, "y_cugemv");
 	}
 	{
 		for(int nover=2; nover<256; nover+=2){
@@ -213,7 +213,7 @@ void mvm_test(int igpu){
 			}
 			dbg("nover=%d,  %.6f ms\n", nover, toc3*1000);
 		}
-		cuwrite(cuy, "y_multimv");
+		cuwrite(cuy, stream, "y_multimv");
 	}
 	{
 	//custom method
@@ -232,7 +232,7 @@ void mvm_test(int igpu){
 		stream[0].sync();
 		DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 		dbg("mvm_g_mul takes %.6f ms\n", tm);
-		cuwrite(cuy, "y_gmul");
+		cuwrite(cuy, stream, "y_gmul");
 	}
 	/*  {
 
@@ -253,7 +253,7 @@ void mvm_test(int igpu){
 	cudaProfilerStop();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 	dbg("blockmv takes %.6f ms\n", tm);
-	cuwrite(cuy, "y_blockmv");
+	cuwrite(cuy, stream, "y_blockmv");
 	}*/
 	/*{
 	cudaProfilerStart();

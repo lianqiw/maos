@@ -287,10 +287,10 @@ static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, in
     if((parms->recon.split && recon->ngsmod->nmod==2)			\
        || (!parms->recon.split && parms->evl.nmod==3)){			\
 	calc_ptt(cc, cudata->perf.locs(), nloc, iopdevl(), cudata->perf.amp, stream); \
-	DO(cudaMemcpyAsync(ccb, cc, 4*sizeof(Real), cudaMemcpyDeviceToHost, stream)); \
+	DO(cudaMemcpyAsync(ccb, cc, 4*sizeof(Real), D2H, stream)); \
     }else if(parms->recon.split){					\
 	calc_ngsmod(cc, cudata->perf.locs(), nloc, iopdevl(), cudata->perf.amp, stream); \
-	DO(cudaMemcpyAsync(ccb, cc, 7*sizeof(Real), cudaMemcpyDeviceToHost, stream)); \
+	DO(cudaMemcpyAsync(ccb, cc, 7*sizeof(Real), D2H, stream)); \
     }
 
 #define PERFEVL_WFE_CPU(ans, pclep, pclmp, cleNGSmp, ccb)		\
@@ -551,7 +551,7 @@ void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 			if(parms->evl.pttr->p[ievl]){
 				calc_ptt(cuglobal->perf.cc_cl[ievl](), cudata->perf.locs(), nloc, iopdevl(), cudata->perf.amp, stream);
 				DO(cudaMemcpyAsync(cuglobal->perf.ccb_cl[ievl], cuglobal->perf.cc_cl[ievl](),
-					4*sizeof(Real), cudaMemcpyDeviceToHost, stream));
+					4*sizeof(Real), D2H, stream));
 				CUDA_SYNC_STREAM;
 				real ptt[3]={0,0,0};
 				calc_ptt_post(NULL, ptt, aper->ipcc, aper->imcc, cuglobal->perf.ccb_cl[ievl]);

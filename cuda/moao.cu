@@ -52,28 +52,28 @@ cumoao_t::cumoao_t(const parms_t* parms, moao_t* moao, dir_t* dir, int _ndir, cu
 Real cumoao_t::moao_solve(curccell& xout, const curcell& xin, const curcell& ain, stream_t& stream){
 	for(int idir=0; idir<ndir; idir++){
 		cuzero(opdfit.M(), stream);
-		//cuwrite(xin, "xin_%d", idir);
+		//cuwrite(xin, stream, "xin_%d", idir);
 		//dbg("hxp[%d]\n", idir);
 		hxp[idir].forward(opdfit.pm, xin.pm, 1.f, NULL, stream);//tomography
-		//cuwrite(opdfit, "opdfit0_%d", idir);
-		//cuwrite(ain, "ain_%d", idir);
+		//cuwrite(opdfit, stream, "opdfit0_%d", idir);
+		//cuwrite(ain, stream, "ain_%d", idir);
 		//dbg("hap[%d]\n", idir);
 		hap[idir].forward(opdfit.pm, ain.pm, -1.f, NULL, stream);//minus common DM.
-		//cuwrite(opdfit, "opdfit1_%d", idir);
+		//cuwrite(opdfit, stream, "opdfit1_%d", idir);
 		grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
-		//cuwrite(opdfit2, "opdfit2_%d", idir);
+		//cuwrite(opdfit2, stream, "opdfit2_%d", idir);
 		cuzero(rhs.M(), stream);
 		ha.backward(opdfit2.pm, rhs.pm, 1, NULL, stream);
-		//cuwrite(rhs, "rhs_%d", idir);
+		//cuwrite(rhs, stream, "rhs_%d", idir);
 		solve(xout[idir], rhs, stream);
-		//cuwrite(xout[idir], "xout_%d", idir);
+		//cuwrite(xout[idir], stream, "xout_%d", idir);
 		/*{
 			static int ic=-1; ic++;
-			cuwrite(xout[idir], "xout_%d", ic);
-			cuwrite(rhs, "rhs_%d", ic);
-			cuwrite(xin, "xin_%d", ic);
-			cuwrite(ain, "ain_%d", ic);
-			cuwrite(opdfit, "opd_%d", ic);
+			cuwrite(xout[idir], stream, "xout_%d", ic);
+			cuwrite(rhs, stream, "rhs_%d", ic);
+			cuwrite(xin, stream, "xin_%d", ic);
+			cuwrite(ain, stream, "ain_%d", ic);
+			cuwrite(opdfit, stream, "opd_%d", ic);
 			}*/
 	}
 	return 0;
@@ -111,7 +111,7 @@ static void gpu_dm2gpu_embed(curmat& dmgpu, dmat* dmcpu, loc_t* loc, int nx, int
 			pout[i]=pin[iphi];
 		}
 	}
-	DO(cudaMemcpy(dmgpu(), pout, nx*ny*sizeof(Real), cudaMemcpyHostToDevice));
+	DO(cudaMemcpy(dmgpu(), pout, nx*ny*sizeof(Real), H2D));
 	free(pout);
 }
 

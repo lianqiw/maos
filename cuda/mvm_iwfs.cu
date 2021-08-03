@@ -170,7 +170,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 			gpu_data_t* datai=data[igpu];
 			//One stream handling the memcpy
 			DO(cudaMemcpyAsync(datai->grad()+ig, grad->p+ig, sizeof(Real)*nleft,
-				cudaMemcpyHostToDevice, datai->stream_g));
+				H2D, datai->stream_g));
 	 //Recored the event when the memcpy is finished
 			DO(cudaEventRecord(datai->event_g[datai->count_g], datai->stream_g));
 			//Wait for gradient transport to complete before compute.
@@ -193,7 +193,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 			//record event when all grads are copied so mvm copy can start.
 			DO(cudaEventRecord(datai->event_gall, datai->stream_g));
 			//Copy DM commands back to CPU
-			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real), cudaMemcpyDeviceToHost, datai->stream_a);
+			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real), D2H, datai->stream_a);
 			if(datai->copy_mvm){
 				int done=0, nleft;
 				if(mvm->ny-datai->ic<nc){
@@ -205,7 +205,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 				//wait for gradient transport to finish before copying mvm.
 				DO(cudaStreamWaitEvent(datai->stream_mvm, datai->event_gall, 0));
 				DO(cudaMemcpyAsync(datai->cumvm_next()+datai->ic*mvm->nx, mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nleft,
-					cudaMemcpyHostToDevice, datai->stream_mvm));
+					H2D, datai->stream_mvm));
 				DO(cudaEventRecord(datai->event_mvm, datai->stream_mvm));
 				datai->ic+=nleft;
 				if(done){

@@ -50,7 +50,7 @@ namespace cuda_recon{
 curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	:grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0), moao(0){
 	if(!parms) return;
-	dbg("curecon_t::curecon_t\n");
+	dbg("initialize reconstructor in GPU\n");
 	if((parms->recon.alg==0&&parms->gpu.fit||parms->recon.mvm||parms->gpu.moao)
 		||(parms->recon.alg==1&&parms->gpu.lsr)
 		){
@@ -93,26 +93,26 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 }
 
 void curecon_t::reset_fit(){
-	dbg("curecon_t::reset_fit.\n");
+	dbg("reset DM fitting.\n");
 	if(FL&&FL!=dynamic_cast<cusolve_l*>(FR)) delete FL; FL=0;
 	delete FR; FR=0;
-	dmfit.zero();
+	dmfit.Zero();
 }
 void curecon_t::reset_tomo(){
-	dbg("curecon_t::reset_tomo.\n");
+	dbg("reset tomography.\n");
 	if(RL&&RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
 	delete RR; RR=0;
-	//opdr.zero();//no need here. first_run is automatically set in tomo pcg.
+	//opdr.Zero();//no need here. first_run is automatically set in tomo pcg.
 }
 void curecon_t::reset_mvm(){
 	if(MVM){
-		dbg("curecon_t::reset_mvm.\n");
+		dbg("reset MVM.\n");
 		delete MVM; MVM=0;
 	}
 }
 void curecon_t::reset_moao(){
 	if(moao){
-		dbg("curecon_t::reset_moao.\n");
+		dbg("reset MOAO.\n");
 		for(int im=0; im<nmoao; im++){
 			delete moao[im];
 		}
@@ -124,7 +124,7 @@ void curecon_t::reset_moao(){
 void curecon_t::init_mvm(const parms_t* parms, recon_t* recon){
 	if(parms->recon.mvm){
 		reset_mvm();
-		dbg("curecon_t::init_mvm in GPU %d.\n", current_gpu());
+		dbg("initialize MVM in GPU %d.\n", current_gpu());
 		if(cuglobal->mvm){
 			MVM=new cusolve_mvm(cuglobal->mvm);
 		} else if(recon->MVM){//MVM already exists
@@ -137,7 +137,7 @@ void curecon_t::init_fit(const parms_t* parms, recon_t* recon){
 	int skip_tomofit=parms->recon.mvm&&(cuglobal->mvm||recon->MVM);
 	if(parms->gpu.fit&&!skip_tomofit){
 		reset_fit();
-		dbg("curecon_t::init_fit in GPU %d.\n", current_gpu());
+		dbg("Initialize DM fit in GPU %d.\n", current_gpu());
 		switch(parms->gpu.fit){
 		case 1:
 			FR=new cusolve_sparse(parms->fit.maxit, parms->recon.warm_restart,
@@ -169,7 +169,7 @@ void curecon_t::init_tomo(const parms_t*parms, recon_t*recon){
 	int skip_tomofit=parms->recon.mvm&&(cuglobal->mvm||recon->MVM);
 	if(parms->gpu.tomo&&!skip_tomofit){
 		reset_tomo();
-		dbg("curecon_t::init_tomo in GPU %d.\n", current_gpu());
+		dbg("initialize tomography in GPU %d.\n", current_gpu());
 		RR=new cutomo_grid(parms, recon, grid);
 		switch(parms->tomo.alg){
 		case 0:
@@ -188,7 +188,7 @@ void curecon_t::init_tomo(const parms_t*parms, recon_t*recon){
 }
 void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 	if(!parms->nmoao) return;
-	dbg("curecon_t::init_moao in GPU %d.\n", current_gpu());
+	dbg("initialize MOAO in GPU %d.\n", current_gpu());
 	nmoao=parms->nmoao;
 	const int nwfs=parms->nwfs;
 	const int nevl=parms->evl.nevl;
@@ -263,7 +263,7 @@ void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 	}
 }
 void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
-	dbg("curecon_t::update_cn2.\n");
+	dbg("update turbulence profile.\n");
 	if(parms->tomo.predict){
 		for(int ips=0; ips<recon->npsr; ips++){
 			int ips0=parms->atmr.indps->p[ips];
@@ -284,11 +284,11 @@ void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
 	}
 }
 void curecon_t::reset_runtime(){
-	dbg("curecon_t::reset_runtime.\n");
-	opdr.zero(0);
-	dmfit.zero(0);
-	dm_wfs.zero(0);
-	dm_evl.zero(0);
+	dbg("zero out runtime data.\n");
+	opdr.Zero();
+	dmfit.Zero();
+	dm_wfs.Zero();
+	dm_evl.Zero();
 }
 
 Real curecon_t::tomo(dcell** _opdr, dcell** _gngsmvst,
@@ -422,28 +422,28 @@ void curecon_t::tomo_test(sim_t* simu){
 
 	cp2gpu(gradin, simu->gradlastol);
 	RR->R(rhsg, 0, gradin, 1, stream);
-	cuwrite(rhsg, "GPU_TomoR");
+	cuwrite(rhsg, stream, "GPU_TomoR");
 	RR->Rt(rtg, 0, rhsg, 1, stream);
-	cuwrite(rtg, "GPU_TomoRt");
+	cuwrite(rtg, stream, "GPU_TomoRt");
 	if(parms->tomo.alg==1){
 		cusolve_cg* RL2=dynamic_cast<cusolve_cg*>(RL);
 		RL2->L(lg, 0, rhsg, 1, stream);
-		cuwrite(lg, "GPU_TomoL");
+		cuwrite(lg, stream, "GPU_TomoL");
 		RL2->L(lg, 1, rhsg, -1, stream);
-		cuwrite(lg, "GPU_TomoL2");
+		cuwrite(lg, stream, "GPU_TomoL2");
 		if(parms->tomo.precond==1){
 			RL2=dynamic_cast<cusolve_cg*>(RL);
 			curcell lp;
 			RL2->Pre(lp, rhsg, stream);
-			cuwrite(lp, "GPU_TomoP");
+			cuwrite(lp, stream, "GPU_TomoP");
 			RL2->Pre(lp, rhsg, stream);
-			cuwrite(lp, "GPU_TomoP2");
+			cuwrite(lp, stream, "GPU_TomoP2");
 		}
 	}
 	cuzero(lg, stream);
 	for(int i=0; i<5; i++){
 		RL->solve(lg, rhsg, stream);
-		cuwrite(lg, "GPU_TomoCG%d", i);
+		cuwrite(lg, stream, "GPU_TomoCG%d", i);
 	}
 	CUDA_SYNC_DEVICE;
 	exit(0);
@@ -480,29 +480,29 @@ void curecon_t::fit_test(sim_t* simu){	//Debugging.
 	curcell rhsg;
 	curcell lg;
 	FR->R(rhsg, 0.f, opdr, 1.f, stream);
-	cuwrite(rhsg, "GPU_FitR");
+	cuwrite(rhsg, stream, "GPU_FitR");
 	cusolve_cg* FL2=dynamic_cast<cusolve_cg*>(FL);
 	if(FL2){
 		FL2->L(lg, 0, rhsg, 1, stream);
-		cuwrite(lg, "GPU_FitL");
+		cuwrite(lg, stream, "GPU_FitL");
 		FL2->L(lg, 1, rhsg, -1, stream);
-		cuwrite(lg, "GPU_FitL2");
+		cuwrite(lg, stream, "GPU_FitL2");
 	}
 	cuzero(lg, stream);
 	for(int i=0; i<5; i++){
 		FL->solve(lg, rhsg, stream);
-		cuwrite(lg, "GPU_FitSolve%d", i);
+		cuwrite(lg, stream, "GPU_FitSolve%d", i);
 	}
 	//Start from the same RHS.
 	cp2gpu(rhsg, rhsc);
 	cuzero(lg, stream);
 	for(int i=0; i<5; i++){
 		FL->solve(lg, rhsg, stream);
-		cuwrite(lg, "GPU_FitSolveCPU%d", i);
+		cuwrite(lg, stream, "GPU_FitSolveCPU%d", i);
 	}
 	curcell lhsg;
 	FR->Rt(lhsg, 0, rhsg, 1, stream);
-	cuwrite(lhsg, "GPU_FitRt");
+	cuwrite(lhsg, stream, "GPU_FitRt");
 	CUDA_SYNC_DEVICE;
 	exit(0);
 }

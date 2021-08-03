@@ -17,7 +17,13 @@
 */
 #ifndef AOS_CUDA_COMMON_H
 #define AOS_CUDA_COMMON_H
-#define CUDA_API_PER_THREAD_DEFAULT_STREAM 1
+/**
+ * Notice that multiple routines uses stream=0 as default parameter to be used during preparation. When stream==0, all other stream operation should be blocked to ensure data integrity. So
+ * 		1. CUDA_API_PER_THREAD_DEFAULT_STREAM should not be defined
+ * 		2. stream should be created with default behavior, not unblocking.
+ * */
+
+//#define CUDA_API_PER_THREAD_DEFAULT_STREAM 1 #DO NOT Enable
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -93,8 +99,6 @@ int mycudaMalloc(void** p, size_t size);
 #endif
 
 int current_gpu();
-#define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){print_backtrace(); error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
-#define DORELAX(A...) ({int _ans=(int)(A); static int counter=0; if(_ans!=0&& _ans!=cudaErrorNotReady){counter++; if(counter>5) error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));else warning("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define TO_IMPLEMENT error("Please implement")
 static inline __host__ __device__ float2 operator*(const float2& a, const float2& b){
 	return cuCmulf(a, b);
@@ -145,9 +149,12 @@ extern int NULL_STREAM;
 #else
 #define CUDA_CHECK_ERROR
 #endif
-#define CUDA_SYNC_STREAM ({CUDA_CHECK_ERROR;DORELAX(cudaStreamSynchronize(stream));})
+#define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){print_backtrace(); error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
+#define DORELAX(A...) ({int _ans=(int)(A); static int counter=0; if(_ans!=0&& _ans!=cudaErrorNotReady){counter++; if(counter>5) error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));else warning("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
+#define CUDA_SYNC_STREAM if(stream!=0){CUDA_CHECK_ERROR;DORELAX(cudaStreamSynchronize(stream));}
 #define CUDA_SYNC_DEVICE ({CUDA_CHECK_ERROR;DORELAX(cudaDeviceSynchronize());})
-#define STREAM_NEW(stream) if(NULL_STREAM) {stream=0; info("Warning NULL stream\n");} else DO(cudaStreamCreate(&stream))
+//STREAM_NEW creates stream that does not synchronize with the legacy stream 0.
+#define STREAM_NEW(stream) if(NULL_STREAM) {stream=0; info("Warning NULL stream\n");} else DO(cudaStreamCreateWithFlags(&stream,cudaStreamDefault))
 #define STREAM_DONE(stream) if(!NULL_STREAM) DO(cudaStreamSynchronize(stream),cudaStreamDestroy(stream))
 #define HANDLE_NEW(handle,stream) ({DO(cublasCreate(&handle)); DO(cublasSetStream(handle, stream));})
 #define SPHANDLE_NEW(handle,stream) ({DO(cusparseCreate(&handle)); DO(cusparseSetStream(handle, stream));})
@@ -160,9 +167,9 @@ extern int NULL_STREAM;
 //Launch kernel configured to handled nz nx*ny array indexing, 
 #define DIM3(nx,ny,nb,nz) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D),nz),dim3(MIN(nx,nb),MIN(ny,nb))
 #define DIM2(nx,ny,nb) DIM3(nx,ny,nb,1)
-#define MEMCPY_D2D cudaMemcpyDefault
-#define MEMCPY_D2H cudaMemcpyDeviceToHost
-#define MEMCPY_H2D cudaMemcpyHostToDevice
+#define D2D cudaMemcpyDefault
+#define D2H cudaMemcpyDeviceToHost
+#define H2D cudaMemcpyHostToDevice
 /*
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a work around of
   the problem by using mutex locking to makesure only 1 thread is calling FFT. */

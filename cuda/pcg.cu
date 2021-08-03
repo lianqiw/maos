@@ -94,8 +94,8 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	if(!cg_data.store || cg_data.store.N()<ntot){//pcg may be temporarily called with more iterations
 		cg_data.store.init(ntot, 1);
 	}
+	cg_data.store.Zero(stream);
 	Real* store=cg_data.store;
-	DO(cudaMemsetAsync(store, 0, ntot*sizeof(Real), stream));
 	Real* rr0=store; store++;
 	Real* bk=store; store++;
 	Real* rkzk=store; store+=maxiter+1;
@@ -104,7 +104,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	if(!cg_data.diff || cg_data.diff.N()<maxiter+1){ //Only this enables async transfer
 		cg_data.diff.init(maxiter+1, 1);
 	}
-	cg_data.diff.zero();
+	cg_data.diff.Zero();
 	Real* diff=cg_data.diff;
 #if PRINT_RES == 2
 	info("GPU %sCG %d:", Mmul?"P":"", maxiter);
@@ -113,7 +113,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	if(!x0){
 		x0=b.New();
 	} else if(!warm){
-		x0.zero(stream);
+		x0.Zero(stream);
 	}
 
 	int kover=0; //k overflows maxit
@@ -122,7 +122,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 		if(k==maxiter){
 			k=0;//reset 
 			kover++;
-			cg_data.diff.zero();
+			cg_data.diff.Zero();
 			DO(cudaMemsetAsync(rr0+1, 0, (ntot-1)*sizeof(Real), stream));
 		}
 		if(k%500==0){/*initial or re-start every 500 steps*/

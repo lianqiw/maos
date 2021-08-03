@@ -101,13 +101,9 @@ void cp2gpu(M* dest, const N* src, int nx, int ny, cudaStream_t stream=0){
 	} else{
 		from=(M*)(src);
 	}
-	if(stream==(cudaStream_t)0){
-		DO(cudaMemcpy(dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
-	} else{
-		DO(cudaMemcpyAsync(dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
-	}
+	DO(cudaMemcpyAsync(dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
 	if(free_from){
-		if(stream!=(cudaStream_t)0){
+		if(stream!=0){
 			CUDA_SYNC_STREAM;
 		}
 		free(from);
@@ -229,22 +225,22 @@ void add2cpu(dcell** out, real alpha, const curcell& in, real beta, cudaStream_t
 void add2cpu(double* restrict* dest, double alpha, Real* src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(dmat** out, double alpha, const curmat& in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(cmat** out, double alpha, const cucmat& in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
-void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream);
-void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream);
+void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream=0);
+void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream=0);
 #endif
 
-void cp2cpu(smat** out, const curmat& in, cudaStream_t stream);
-void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream);
+void cp2cpu(smat** out, const curmat& in, cudaStream_t stream=0);
+void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream=0);
 
-void cp2cpu(scell** out, const curcell& in, cudaStream_t stream);
-void cp2cpu(zcell** out, const cuccell& in, cudaStream_t stream);
-void cp2cpu(dcell** out, const curcell& in, cudaStream_t stream);
-void cp2cpu(ccell** out, const cuccell& in, cudaStream_t stream);
+void cp2cpu(scell** out, const curcell& in, cudaStream_t stream=0);
+void cp2cpu(zcell** out, const cuccell& in, cudaStream_t stream=0);
+void cp2cpu(dcell** out, const curcell& in, cudaStream_t stream=0);
+void cp2cpu(ccell** out, const cuccell& in, cudaStream_t stream=0);
 
-void zfarr_push(struct zfarr* ca, int i, const curmat& A, cudaStream_t stream);
-void zfarr_push(struct zfarr* ca, int i, const cucmat& A, cudaStream_t stream);
-void zfarr_push(struct zfarr* ca, int i, const curcell& A, cudaStream_t stream);
-void zfarr_push(struct zfarr* ca, int i, const cuccell& A, cudaStream_t stream);
+void zfarr_push(struct zfarr* ca, int i, const curmat& A, cudaStream_t stream=0);
+void zfarr_push(struct zfarr* ca, int i, const cucmat& A, cudaStream_t stream=0);
+void zfarr_push(struct zfarr* ca, int i, const curcell& A, cudaStream_t stream=0);
+void zfarr_push(struct zfarr* ca, int i, const cuccell& A, cudaStream_t stream=0);
 void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t stream,
 	const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,

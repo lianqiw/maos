@@ -45,14 +45,14 @@ repeat:
 		
 	if(!disable_save&&cgtmp.count_fail<10&&ans>thres*5){
 		info("CG result saved.\n");
-		cuwrite(xin, "cucg_solve_xin_%d", cgtmp.count_fail);
-		cuwrite(xout, "cucg_solve_xout_%d", cgtmp.count_fail);
-		cuwrite(cgtmp.r0, "cucg_solve_r0_%d", cgtmp.count_fail);
-		cuwrite(cgtmp.z0, "cucg_solve_z0_%d", cgtmp.count_fail);
-		cuwrite(cgtmp.p0, "cucg_solve_p0_%d", cgtmp.count_fail);
-		cuwrite(cgtmp.Ap, "cucg_solve_Ap_%d", cgtmp.count_fail);
-		cuwrite(cgtmp.store, "cucg_solve_store_%d", cgtmp.count_fail);
-		cuwrite(cgtmp.diff, "cucg_solve_diff_%d", cgtmp.count_fail);
+		cuwrite(xin, stream, "cucg_solve_xin_%d", cgtmp.count_fail);
+		cuwrite(xout, stream, "cucg_solve_xout_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.r0, stream, "cucg_solve_r0_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.z0, stream, "cucg_solve_z0_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.p0, stream, "cucg_solve_p0_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.Ap, stream, "cucg_solve_Ap_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.store, stream, "cucg_solve_store_%d", cgtmp.count_fail);
+		cuwrite(cgtmp.diff, stream, "cucg_solve_diff_%d", cgtmp.count_fail);
 	}
 	
 	if(ans<thres){

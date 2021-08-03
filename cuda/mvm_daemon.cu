@@ -130,7 +130,7 @@ static void* mvm_thread(void* ithread0){
 			int icol=mvm_data->icols[ithread];
 			int k=mvm_data->kcols[ithread];
 			cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GTYPE),
-				cudaMemcpyHostToDevice, cudata->mvm_stream);
+				H2D, cudata->mvm_stream);
 
 			mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)* naeach, cudata->mvm_stream>>>
 				(cudata->mvm_m.Col(icol), cudata->mvm_a(), cudata->mvm_g()+icol, nact, k);
@@ -144,7 +144,7 @@ static void* mvm_thread(void* ithread0){
 			int ki2=mvm_data->k+mvm_data->icol-icol;
 			int k=MIN(ki, ki2);
 			cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GTYPE),
-				cudaMemcpyHostToDevice, cudata->mvm_stream);
+				H2D, cudata->mvm_stream);
 			mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)* naeach, cudata->mvm_stream>>>
 				(cudata->mvm_m.Col(icol), cudata->mvm_a(), cudata->mvm_g()+icol, nact, k);
 
@@ -153,9 +153,9 @@ static void* mvm_thread(void* ithread0){
 					  break;
 		case CMD_DMCP:{
 			cudaMemcpyAsync(mvm_data->ac[ithread], cudata->mvm_a, nact*sizeof(ATYPE),
-				cudaMemcpyDeviceToHost, cudata->mvm_stream);
+				D2H, cudata->mvm_stream);
 			cudaStreamSynchronize(cudata->mvm_stream);
-			cudata->mvm_a.zero(cudata->mvm_stream);
+			cudata->mvm_a.Zero(cudata->mvm_stream);
 			cmds[ithread]=0;
 		}
 					 break;

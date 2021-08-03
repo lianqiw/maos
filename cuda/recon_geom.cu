@@ -121,7 +121,7 @@ void w01_t::apply(Real* restrict xout, const Real* xin, int ndir, stream_t& stre
 	if(pis.Nx()<ndir){
 		pis=curmat(ndir, 1);
 	} else{
-		pis.zero(stream);
+		pis.Zero(stream);
 	}
 	//Apply W1: Piston removal
 	inn_multi_do<<<dim3(32, ndir), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(Real), stream>>>
@@ -142,7 +142,7 @@ curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
 	:npsr(0), ndm(0), delay(0), reconisim(0),
 	xnx(0), xny(0), anx(0), any(0), anloc(0), ngrad(0), dt(0),
 	W01(recon->W0, recon->W1, recon->fmap->nx){
-	dbg("curecon_geom::curecon_geom()\n");
+	dbg("update reconstructor geometry.\n");
 	ndm=parms->ndm;
 	npsr=parms->sim.idealfit?parms->atm.nps:recon->npsr;
 	pmap=recon->pmap;

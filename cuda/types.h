@@ -38,7 +38,7 @@ template<typename T>
 class Cpu{
 	T val;
 public:
-	static void zero(T* p, size_t size, cudaStream_t stream=(cudaStream_t)-1){
+	static void Zero(T* p, size_t size, cudaStream_t stream=0){
 		(void)stream;
 		if(p) memset(p, 0, size*sizeof(T));
 	}
@@ -48,14 +48,14 @@ public:
 	void operator delete[](void* p){
 		::free(p);
 	}
-	static void Copy(T* pout, const T* pin, size_t size, cudaStream_t stream=(cudaStream_t)-1){
+	static void Copy(T* pout, const T* pin, size_t size, cudaStream_t stream=0){
 		(void) stream;
 		memcpy(pout, pin, size*sizeof(T));
 		//dbg("Cpu::Copy %p to %p for %lux%lu bytes\n", pin, pout, size, sizeof(T));
 	}
-	T* cpuPointer(T* p, size_t size){
+	/*T* cpuPointer(T* p, size_t size){
 		return p;
-	}
+	}*/
 };
 
 //Pinned (page locked) CPU memory
@@ -87,31 +87,22 @@ public:
 	void operator delete[](void* p){
 		DO(cudaFree(p));
 	}
-	static void zero(T* p, size_t size, cudaStream_t stream=(cudaStream_t)-1){
+	static void Zero(T* p, size_t size, cudaStream_t stream=0){
 		if(p){
-			if(stream==(cudaStream_t)-1){
-				DO(cudaMemset(p, 0, size*sizeof(T)));
-			} else{
-				DO(cudaMemsetAsync(p, 0, size*sizeof(T), stream));
-			}
+			DO(cudaMemsetAsync(p, 0, size*sizeof(T), stream));
 		}
 	}
-	static void Copy(T* pout, const T* pin, size_t size, cudaStream_t stream=(cudaStream_t)-1){
-		if(stream==(cudaStream_t)-1){
-			DO(cudaMemcpy(pout, pin, size*sizeof(T), MEMCPY_D2D));
-		}else{
-			DO(cudaMemcpyAsync(pout, pin, size*sizeof(T), MEMCPY_D2D, stream));
-		}
-		//dbg("Gpu::Copy %p to %p for %lux%lu bytes\n", pin, pout, size, sizeof(T));
+	static void Copy(T* pout, const T* pin, size_t size, cudaStream_t stream=0){
+		DO(cudaMemcpyAsync(pout, pin, size*sizeof(T), D2D, stream));
 	}
-	T* cpuPointer(T* p, size_t size){
+	/*T* cpuPointer(T* p, size_t size){
 		T* p2=mymalloc(size, T);
 		DO(cudaMemcpy(p2, p, size*sizeof(T), cudaMemcpyDeviceToHost));
 		return p2;
 	}
 	void cpuPointerFree(T* p){
 		free(p);
-	}
+	}*/
 };
 
 template <typename T, template<typename> class Dev=Cpu >
@@ -121,8 +112,8 @@ class Array;
    differently from array of Arrays.
 */
 template <typename T, template<typename> class Dev >
-void zero(Dev<T>* p, long n, cudaStream_t stream=(cudaStream_t)-1){
-	Dev<T>::zero((T*)p, n, stream);
+void Zero(Dev<T>* p, long n, cudaStream_t stream=0){
+	Dev<T>::Zero((T*)p, n, stream);
 	if(sizeof(T)>8){
 		warning("call dev zero for %s. This will lead to code error.\n", typeid(T).name());
 	}
@@ -130,10 +121,10 @@ void zero(Dev<T>* p, long n, cudaStream_t stream=(cudaStream_t)-1){
 
 //partially specialize for array of array
 template <typename T, template<typename> class Dev >
-void zero(Cpu<Array<T, Dev> >* p_, long n, cudaStream_t stream=(cudaStream_t)-1){
+void Zero(Cpu<Array<T, Dev> >* p_, long n, cudaStream_t stream=0){
 	Array<T, Dev>* p=(Array<T, Dev>*)p_;
 	for(long i=0; i<n; i++){
-		zero((Dev<T>*)p[i](), p[i].N(), stream);
+		Zero((Dev<T>*)p[i](), p[i].N(), stream);
 	}
 }
 /**
@@ -309,8 +300,8 @@ public:
 
 	//Need to handle both basic types and classes. Use template function.
 	//Cannot partially specialize single member function.
-	void zero(cudaStream_t stream=(cudaStream_t)-1){
-		::zero((Dev<T>*)p, nx*ny, stream);
+	void Zero(cudaStream_t stream=0){
+		::Zero((Dev<T>*)p, nx*ny, stream);
 	}
 
 	Array(const Array& in):Parent(in), nx(in.nx), ny(in.ny), header(in.header){}
@@ -333,10 +324,10 @@ public:
 	Array trans(stream_t& stream);
 
 	//Copy the data. Zero data if input data is empty. Reallocate if mismatch.
-	void Copy(const Array& in, cudaStream_t stream=(cudaStream_t)-1){
+	void Copy(const Array& in, cudaStream_t stream=0){
 		if(this!=&in){
 			if(!in){
-				this->zero(stream);
+				this->Zero(stream);
 			} else {
 				if(this->N()!=in.N()){
 					if(NRef()>1){
@@ -378,18 +369,14 @@ public:
 		return m;
 	}
 
-	void p2pm(cudaStream_t stream=(cudaStream_t)-1){
+	void p2pm(cudaStream_t stream=0){
 		if(nx&&ny){
 			pm_cpu.init(nx, ny);
 			pm.init(nx, ny);
 			for(long i=0; i<nx*ny; i++){
 				pm_cpu[i]=p[i]();
 			}
-			if(stream==(cudaStream_t)-1){
-				DO(cudaMemcpy(pm(), pm_cpu(), sizeof(T*)*nx*ny, cudaMemcpyHostToDevice));
-			} else{
-				DO(cudaMemcpyAsync(pm(), pm_cpu(), sizeof(T*)*nx*ny, cudaMemcpyHostToDevice, stream));
-			}
+			DO(cudaMemcpyAsync(pm(), pm_cpu(), sizeof(T*)*nx*ny, cudaMemcpyHostToDevice, stream));
 		}
 	}
 
@@ -720,13 +707,13 @@ template <typename T, template<typename> class Dev >
 void initzero(Array<T, Dev>& A, long nx, long ny){
 	/*zero array if exist, otherwise allocate and zero*/
 	if(A){
-		A.zero();
+		A.Zero();
 	} else{
 		A.init(nx, ny);
 	}
 }
 
-#define cuzero(A,B...) (A).zero(B)
+#define cuzero(A,B...) (A).Zero(B)
 #define cucp(A,B...) (A).Copy(B)
 #endif
 

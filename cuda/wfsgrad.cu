@@ -165,7 +165,7 @@ tcog_do(Real* grad, const Real* restrict ints, Real siglev, Real* saa,
 	int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real thres, Real bkgrnd, Real* srot){
 	__shared__ Real sum[3];
 	if(threadIdx.x<3&&threadIdx.y==0) sum[threadIdx.x]=0.f;
-	__syncthreads();//is this necessary?
+	__syncthreads();//is this necessary? 
 	int isa=blockIdx.x;
 	ints+=isa*nx*ny;
 	for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
@@ -301,6 +301,55 @@ void Dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, 
 		cuzero(imy);
 	}
 }
+/*
+//The following does not work as memcpy is not allowed in callback.
+struct wfsgrad_callback_t{
+	sim_t *simu;
+	int iwfs;
+	int op;//operation
+};
+static void wfsgrad_callback(cudaStream_t stream, cudaError_t status, void *data_){
+	struct wfsgrad_callback_t* data=(struct wfsgrad_callback_t*)data_;
+	sim_t *simu=data->simu;
+	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
+	const parms_t *parms=simu->parms;
+	const int iwfs=data->iwfs;
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	const int isim=simu->wfsisim;
+	const int do_phy=(parms->powfs[ipowfs].usephy&&isim>=parms->powfs[ipowfs].phystep);
+	const int dtrat=parms->powfs[ipowfs].dtrat;
+	const int dtrat_output=((isim+1)%dtrat==0);
+	const int phytype=parms->powfs[ipowfs].phytype_sim;
+	info("wfsgrad_callback runs with op=%d, iwfs=%d\n", data->op, data->iwfs);
+	CUDA_CHECK_ERROR;
+	switch(data->op){
+		case 1:{	
+			cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints);
+			shwfs_grad(&simu->gradcl->p[iwfs], simu->ints->p[iwfs]->p, 
+				parms, simu->powfs, iwfs, phytype);
+		}break;
+		case 2:{
+			if(dtrat_output){
+				if(do_phy){
+					if(phytype<3||parms->powfs[ipowfs].type==WFS_PY){
+						cp2cpu(&simu->gradcl->p[iwfs], cuwfs[iwfs].gradcalc);
+					}
+					if(parms->save.gradgeom->p[iwfs]){//also do geom grad during phy grad sims
+						zfarr_push(simu->save->gradgeom[iwfs], simu->wfsisim, cuwfs[iwfs].gradacc);
+					}
+					if(parms->plot.run&&draw_current("Ints", NULL)){// && parms->powfs[ipowfs].lo){
+						cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints);
+					}
+				} else{
+					cp2cpu(&simu->gradcl->p[iwfs], cuwfs[iwfs].gradacc);
+				}
+			}
+		}break;
+		default:
+			error("Invalid op=%d\n", data->op);
+	}
+	free(data);
+}*/
 /**
    Calculate SHWFS gradients
 */
@@ -308,7 +357,7 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 	const parms_t* parms, const powfs_t* powfs, sim_t* simu, int iwfs, int ipowfs, stream_t& stream){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	CUDA_CHECK_ERROR;
-	cuzero(gradcalc, stream);
+	//cuzero(gradcalc, stream);//no need, mtche, tcog_do does not accumulate.
 	const int totpix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
 	static int last_phytype=-1;
 	const Real cogthres=parms->powfs[ipowfs].cogthres;
@@ -359,9 +408,9 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 				cogthres, cogoff, srot);
 	}
 	break;
-	default://Use CPU version.
-		cp2cpu(&simu->ints->p[iwfs], ints, stream);
-		CUDA_SYNC_STREAM;
+	default://Use CPU version 
+		cp2cpu(&simu->ints->p[iwfs], ints, stream);//this already syncs stream.
+		info_once("Calling shwfs_grad CPU version for phytype %d\n", parms->powfs[ipowfs].phytype_sim);
 		shwfs_grad(&simu->gradcl->p[iwfs], simu->ints->p[iwfs]->p,
 			parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 	}
@@ -589,11 +638,12 @@ void gpu_wfsgrad_queue(thread_t* info){
 				if(parms->powfs[ipowfs].type==WFS_PY){
 					pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
 						cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
-				 //cuwrite(gradcalc, "gradcalc"); exit(0);
+				 //cuwrite(gradcalc, stream, "gradcalc"); exit(0);
 				} else{
 					shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
 				}
 				ctoc("grad");
+				
 			} else{
 				if(noisy){
 					if(parms->save.gradnf->p[iwfs]){
@@ -606,10 +656,18 @@ void gpu_wfsgrad_queue(thread_t* info){
 					}
 				}
 			}
-
 		}/*dtrat_output */
 		//info("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
 		ctoc_final("wfs %d", iwfs);
+		
+		/*{//this replaces gpu_wfsgrad_sync
+			//This does not work. memcpy is not allowed in callback
+			struct wfsgrad_callback_t* tmp=mycalloc(1, struct wfsgrad_callback_t);
+			tmp->simu=simu;
+			tmp->iwfs=iwfs;
+			tmp->op=2;
+			cudaStreamAddCallback(stream, wfsgrad_callback, (void*)tmp, 0);
+		}*/
 		CUDA_CHECK_ERROR;
 	}//for iwfs
 }
@@ -619,29 +677,26 @@ void gpu_wfsgrad_sync(sim_t* simu, int iwfs){
 	gpu_set(cuglobal->wfsgpu[iwfs]);
 	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
 	stream_t& stream=cuwfs[iwfs].stream;
+	CUDA_SYNC_STREAM;
 	const int isim=simu->wfsisim;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	const int dtrat_output=((isim+1)%dtrat==0);
-	CUDA_SYNC_STREAM;
 	if(dtrat_output){
 		const int save_gradgeom=parms->save.gradgeom->p[iwfs];
 		const int do_phy=(parms->powfs[ipowfs].usephy&&isim>=parms->powfs[ipowfs].phystep);
-		curmat& gradacc=cuwfs[iwfs].gradacc;
-		curmat& gradcalc=cuwfs[iwfs].gradcalc;
-		dmat* gradcl=simu->gradcl->p[iwfs];
 		if(do_phy){
 			if(parms->powfs[ipowfs].phytype_sim<3){//3 is handled in cpu.
-				cp2cpu(&gradcl, gradcalc, stream);
+				cp2cpu(&simu->gradcl->p[iwfs], cuwfs[iwfs].gradcalc, stream);
 			}
 			if(save_gradgeom){//also do geom grad during phy grad sims
-				zfarr_push(simu->save->gradgeom[iwfs], simu->wfsisim, gradacc, stream);
+				zfarr_push(simu->save->gradgeom[iwfs], simu->wfsisim, cuwfs[iwfs].gradacc, stream);
 			}
 			if(parms->plot.run&&draw_current("Ints", NULL)){// && parms->powfs[ipowfs].lo){
 				cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints, stream);
 			}
 		} else{
-			cp2cpu(&gradcl, gradacc, stream);
+			cp2cpu(&simu->gradcl->p[iwfs], cuwfs[iwfs].gradacc, stream);
 		}
 	}
 }
@@ -659,13 +714,13 @@ void gpu_save_pistat(sim_t* simu){
 				curcell tmp=cuwfs[iwfs].pistatout;
 				curcellscale(tmp, 1.f/(Real)nstep, stream);
 				if(parms->sim.skysim){
-					cuwrite(tmp, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+					cuwrite(tmp, stream, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
 						dirskysim, simu->seed,
 						parms->powfs[ipowfs].order,
 						parms->wfs[iwfs].thetax*206265,
 						parms->wfs[iwfs].thetay*206265);
 				} else{
-					cuwrite(tmp, "pistat_seed%d_wfs%d.bin", simu->seed, iwfs);
+					cuwrite(tmp, stream, "pistat_seed%d_wfs%d.bin", simu->seed, iwfs);
 				}
 				curcellscale(tmp, nstep, stream);
 			}
@@ -677,7 +732,7 @@ void gpu_save_pistat(sim_t* simu){
 			if(nstep>0){
 				curcell tmp=cuwfs[iwfs].intsout;
 				curcellscale(tmp, 1.f/(Real)nstep, stream);
-				cuwrite(tmp, "ints_%d_wfs%d.bin", simu->seed, iwfs);
+				cuwrite(tmp, stream, "ints_%d_wfs%d.bin", simu->seed, iwfs);
 				curcellscale(tmp, nstep, stream);
 			}
 		}

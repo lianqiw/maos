@@ -179,7 +179,7 @@ void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, co
 				int nleft=(nsa-isa)<sastep?(nsa-isa):sastep;
 
 				DO(cudaMemcpyAsync(datai->pix()+isa*pixpsa, pix->p+isa*pixpsa, sizeof(Real)*nleft*pixpsa,
-					cudaMemcpyHostToDevice, datai->stream[ism]));
+					H2D, datai->stream[ism]));
 		 //Start matched filter in the same stream
 				mtch_do<<<mtch_ngrid, dim3(mtch_dimx, mtch_dimy),
 					mtch_dimx* mtch_dimy*sizeof(Real), datai->stream[ism]>>>
@@ -217,7 +217,7 @@ void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, co
 					datai->stream[ism].sync();
 				}
 				cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real),
-					cudaMemcpyDeviceToHost, datai->stream[0]);
+					D2H, datai->stream[0]);
 
 			}
 			//CPU sums them together

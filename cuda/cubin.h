@@ -18,8 +18,8 @@
 /**
    Createa curmat object.
 */
-#ifndef AOS_CUDA_CUMAT_H
-#define AOS_CUDA_CUMAT_H
+#ifndef AOS_CUDA_CUBIN_H
+#define AOS_CUDA_CUBIN_H
 #include <typeinfo>
 #include "types.h"
 template <typename T>
@@ -52,48 +52,49 @@ struct Magic<long int>{//always 64 bit int. long is not.
 //C++ does not support partial specialization of functions, we use overloading.
 
 template <typename T>
-static inline void cuwritedata_do(const Array<T, Gpu>& A, file_t* fp, uint32_t magic, const char* header){
+static inline void cuwritedata_do(const Array<T, Gpu>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* header){
 	T* tmp=(T*)malloc(A.N()*sizeof(T));
-	cudaMemcpy(tmp, A(), A.N()*sizeof(T), cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	DO(cudaMemcpyAsync(tmp, A(), A.N()*sizeof(T), D2H, stream));
+	CUDA_SYNC_STREAM;
 	writearr(fp, 0, sizeof(T), magic, header, tmp, A.Nx(), A.Ny());
 	free(tmp);
 }
 template <typename T>
-static inline void cuwritedata_do(const Array<T, Cpu>& A, file_t* fp, uint32_t magic, const char* header){
+static inline void cuwritedata_do(const Array<T, Cpu>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* header){
+	(void)stream;
 	writearr(fp, 0, sizeof(T), magic, header, A(), A.Nx(), A.Ny());
 }
 template <typename T>
-static inline void cuwritedata_do(const Array<T, Pinned>& A, file_t* fp, uint32_t magic, const char* header){
+static inline void cuwritedata_do(const Array<T, Pinned>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* header){
 	writearr(fp, 0, sizeof(T), magic, header, A(), A.Nx(), A.Ny());
 }
 
 template <typename T, template<typename> class Dev>
-static inline void cuwritedata(const Array<T, Dev>& A, file_t* fp){
+static inline void cuwritedata(const Array<T, Dev>& A, cudaStream_t stream, file_t* fp){
 	uint32_t magic=Magic<T>::magic;
 	const char* header=A.header.length()?A.header.c_str():NULL;
 	if(A.N()>0){
-		cuwritedata_do(A, fp, magic, header);
+		cuwritedata_do(A, stream, fp, magic, header);
 	} else{
 		writearr(fp, 0, sizeof(T), magic, header, NULL, 0, 0);
 	}
 }
 template <typename T, template<typename> class Dev>
-static inline void cuwrite(const Array<T, Dev>& A, const char* format, ...){
+static inline void cuwrite(const Array<T, Dev>& A, cudaStream_t stream, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");
-	cuwritedata<T, Dev>(A, fp);
+	cuwritedata<T, Dev>(A, stream, fp);
 	zfclose(fp);
 }
 template <typename T, template<typename> class Dev>
-static inline void cuwrite(const Cell<T, Dev>& A, const char* format, ...){
+static inline void cuwrite(const Cell<T, Dev>& A, cudaStream_t stream, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");
 	header_t header={MCC_ANY, A?(uint64_t)A.Nx():0, A?(uint64_t)A.Ny():0, NULL};
 	write_header(&header, fp);
 	if(A){
 		for(int i=0; i<A.Nx()*A.Ny(); i++){
-			cuwritedata<T, Dev>(A[i], fp);
+			cuwritedata<T, Dev>(A[i], stream, fp);
 		}
 	}
 	zfclose(fp);

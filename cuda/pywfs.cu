@@ -181,7 +181,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 		const Real otfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
 		cucscale(wvf, otfnorm, stream);
 		ctoc("scale");
-		//cuwrite(wvf, "gpu_wvf0");
+		//cuwrite(wvf, stream, "gpu_wvf0");
 		const Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
 		for(int ir=0; ir<pos_nr; ir++){
 			real pos_ri=pos_r*(ir+1)/pos_nr;
@@ -208,27 +208,27 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 						cupowfs->pyramid[iwvl]()+ix0+iy0*ncomp,
 						wvf()+ix0+offx2+(iy0+offy2)*nembed,
 						ncomp, nembed, nx2, ny2);
-				   //cuwrite(otf, "gpu_wvf1_%d", ipos);
+				   //cuwrite(otf, stream, "gpu_wvf1_%d", ipos);
 				CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
-				//cuwrite(otf, "gpu_wvf2_%d", ipos);
+				//cuwrite(otf, stream, "gpu_wvf2_%d", ipos);
 				curaddcabs2(cuwfs.pypsf, 1, otf, alpha, stream);
-				//cuwrite(cuwfs.pypsf, "gpu_wvf3_%d", ipos);
+				//cuwrite(cuwfs.pypsf, stream, "gpu_wvf3_%d", ipos);
 			}//iposr: points along a ring.
 		}//ir: ring of dithering
 		ctoc("modul");
 		embed_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
 			(otf, cuwfs.pypsf, ncomp*ncomp);
 		ctoc("embed");
-		//cuwrite(otf, "gpu_wvf4");
+		//cuwrite(otf, stream, "gpu_wvf4");
 		CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);
 		ctoc("fft");
-		//cuwrite(otf, "gpu_wvf5");
+		//cuwrite(otf, stream, "gpu_wvf5");
 		cwm_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
 			(otf(), cupowfs->pynominal(), ncomp*ncomp);
 		ctoc("cwm");
 		CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
 		ctoc("ifft");
-		//cuwrite(otf, "gpu_wvf6");
+		//cuwrite(otf, stream, "gpu_wvf6");
 		//Use ray tracing for si
 		const Real dx2=dx*nembed/ncomp;
 		const int nsa=cupowfs->saloc.Nloc();
@@ -257,7 +257,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 		}
 		ctoc("sample");
 		ctoc_final("pywfs");
-		//cuwrite(ints, "gpu_ints"); exit(0);
+		//cuwrite(ints, stream, "gpu_ints"); exit(0);
 	}
 }
 dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod, real displacex, real displacey){
@@ -289,8 +289,8 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	pywfs_ints(ints, phiout, cuwfs, siglev);
 	pywfs_grad(grad0, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
 	TIC;tic;
-	//cuwrite(grad0, "grad0_gpu");
-	//cuwrite(ints, "ints0_gpu");
+	//cuwrite(grad0, stream, "grad0_gpu");
+	//cuwrite(ints, stream, "ints0_gpu");
 	const int nmod=mod?mod->ny:locin->nloc;
 	dmat* ggd=dnew(nsa*2, nmod);
 
@@ -316,11 +316,11 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		//cuzero(phiout, stream);
 		cucp(phiout, phiout0, stream);
 		dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, pywfs->hc, displacex, displacey, 0, 0, 1, stream);
-		//cuwrite(cumapin[0].p, "gpu_cumapin_%d", imod);
-		//cuwrite(phiout, "gpu_phiout_%d", imod);
+		//cuwrite(cumapin[0].p, stream, "gpu_cumapin_%d", imod);
+		//cuwrite(phiout, stream, "gpu_phiout_%d", imod);
 		cuzero(ints, stream);
 		pywfs_ints(ints, phiout, cuwfs, siglev);
-		//cuwrite(ints, "gpu_ints_%d", imod);
+		//cuwrite(ints, stream, "gpu_ints_%d", imod);
 		pywfs_grad(grad, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
 		curadd(grad, 1, grad0, -1, stream);
 		curscale(grad, 1./poke, stream);

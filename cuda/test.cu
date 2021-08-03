@@ -44,21 +44,21 @@ void test_sum(){
 	STREAM_NEW(stream);
 	toc2("malloc");tic;
 	sum_wrap(res_gpu, Ap, N, stream);
-	cudaMemcpyAsync(res, res_gpu, sizeof(Real), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpyAsync(res, res_gpu, sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
 	toc2("sum_wrap");tic;
 	sum_do<<<DIM_REDUCE, BS, DIM_REDUCE*sizeof(Real), stream>>>(res_gpu, Ap, N);
-	cudaMemcpyAsync(res+1, res_gpu, sizeof(Real), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpyAsync(res+1, res_gpu, sizeof(Real), D2H,stream));
 	CUDA_SYNC_STREAM;
 	real tim=toc3*1024*1024*1024;
 	toc2("sum_wrap");tic;
 	sum2_wrap(res_gpu, Ap, N, stream);
-	cudaMemcpyAsync(res+2, res_gpu, sizeof(Real), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpyAsync(res+2, res_gpu, sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
 	toc2("sum2_wrap");tic;
 	sum2_do<<<DIM_REDUCE, BS, 0, stream>>>(res_gpu, Ap, N);
 	//sum2_wrap(res_gpu, Ap, N, stream);
-	cudaMemcpyAsync(res+3, res_gpu, sizeof(Real), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpyAsync(res+3, res_gpu, sizeof(Real), D2H, stream));
 	CUDA_SYNC_STREAM;
 	real tim2=toc3*1024*1024*1024;
 	toc2("sum2_wrap");
@@ -76,10 +76,10 @@ void gpu_map2map(cumap_t& out, const cumap_t& in, Real dispx, Real dispy, Real a
 	Real** p;
 	cudaMalloc(&p, sizeof(Real*)*2);
 	const Real* tmp[2]={out(), in()};
-	cudaMemcpy(p, tmp, sizeof(Real*)*2, cudaMemcpyHostToDevice);
+	DO(cudaMemcpy(p, tmp, sizeof(Real*)*2, H2D));
 	gpu_map2map_do<<<dim3(4, 4, 1), dim3(PROP_WRAP_TX, 4), 0, 0>>>
 		(wrap_gpu, p, p+1, 1, 1, alpha, 0, trans);
-	cudaMemcpy(&wrap, wrap_gpu(), sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
+	DO(cudaMemcpy(&wrap, wrap_gpu(), sizeof(PROP_WRAP_T), D2H));
 	if(wrap.reverse){
 		cudaFree(wrap.reverse);
 	}
@@ -99,13 +99,13 @@ void test_prop(){
 	cumap_t cumapin; cumapin=mapin;
 	cumap_t cumapout; cumapout=mapout;
 	cp2gpu(cumapin.p, (dmat*)mapin);
-	cuwrite(cumapin.p, "prop_mapin");
+	cuwrite(cumapin.p, stream, "prop_mapin");
 	Real alpha=1;
 	Real dispx=0;
 	Real dispy=0;
 	curmat cc=gpu_dmcubic_cc(mapin->iac);
 	gpu_map2map(cumapout, cumapin, dispx, dispy, alpha, cc, 'n');
-	cuwrite(cumapout.p, "prop_mapout");
+	cuwrite(cumapout.p, stream, "prop_mapout");
 	prop_grid_map(mapin, mapout, alpha, dispx, dispy, 1, 0, 0, 0);
 	writebin(mapout, "prop_mapout_cpu");
 }

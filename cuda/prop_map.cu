@@ -542,17 +542,17 @@ void map_rot(curcell& out, const curcell& in, const curmat& wfsrot, int dir, str
 	Real cx=nx/2-1;
 	Real cy=ny/2-1;
 	if(out.M()){
-		out.M().zero(stream);
+		out.M().Zero(stream);
 	} else{
-		out.zero(stream);
+		out.Zero(stream);
 	}
 	map_rot_do<<<DIM3(nx, ny, 16, nb), 0, stream>>>
 		(out.pm, in.pm, cx, cy, nx, ny, wfsrot, dir);
 
 		/*static int count=-1; count++;
 		if(count<10){
-		cuwrite(in, "in_%d_%d", count, dir);
-		cuwrite(out, "out_%d_%d", count, dir);
+		cuwrite(in, stream, "in_%d_%d", count, dir);
+		cuwrite(out, stream, "out_%d_%d", count, dir);
 		}*/
 }
 

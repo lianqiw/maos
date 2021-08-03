@@ -93,7 +93,7 @@ class map2map:public nonCopyable{
 		if(hdata){
 			int np=(ndir==0?1:ndir)*nlayer;
 			map2map_t* pcpu=new map2map_t[np];
-			cudaMemcpy(pcpu, hdata, sizeof(map2map_t), cudaMemcpyDeviceToHost);
+			DO(cudaMemcpy(pcpu, hdata, sizeof(map2map_t), cudaMemcpyDeviceToHost));
 			for(int i=0; i<np; i++){
 				if(pcpu[i].reverse){
 					cudaFree(pcpu[i].reverse);

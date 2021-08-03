@@ -77,14 +77,14 @@ static void mvm_direct_igpu(thread_t* info){
 	dmat* residualfit=data->residualfit;
 	{
 		Real eye2c[2]={0,1.};
-		cudaMemcpy(eye2(), eye2c, sizeof(Real)*2, cudaMemcpyHostToDevice);
+		cudaMemcpy(eye2(), eye2c, sizeof(Real)*2, H2D);
 	}
 	cuda_recon::curecon_t* curecon=cudata->recon;
 	stream_t stream;
 	if(parms->load.mvmf){
 		cudaMemcpyAsync(mvm(), data->mvmc->p+info->start*ntotact,
 			ntotact*(info->end-info->start)*sizeof(Real),
-			cudaMemcpyHostToDevice, stream);
+			H2D, stream);
 	}
 	curmat mvmi;
 	if(parms->load.mvmi||parms->save.mvmi){
@@ -93,7 +93,7 @@ static void mvm_direct_igpu(thread_t* info){
 		if(parms->load.mvmi){
 			cudaMemcpyAsync(mvmi(), data->mvmi->p+info->start*ntotxloc,
 				ntotxloc*(info->end-info->start)*sizeof(Real),
-				cudaMemcpyHostToDevice, stream);
+				H2D, stream);
 		}
 		opdr=curcell(recon->npsr, 1, recon->xnx->p, recon->xny->p, (Real*)1);
 	} else{
@@ -111,9 +111,9 @@ static void mvm_direct_igpu(thread_t* info){
 			}
 		}
 		if(ig){
-			cudaMemcpyAsync(grad.M()()+ig-1, eye2(), 2*sizeof(Real), cudaMemcpyDeviceToDevice, stream);
+			cudaMemcpyAsync(grad.M()()+ig-1, eye2(), 2*sizeof(Real), D2D, stream);
 		} else{
-			cudaMemcpyAsync(grad.M()()+ig, eye2()+1, sizeof(Real), cudaMemcpyDeviceToDevice, stream);
+			cudaMemcpyAsync(grad.M()()+ig, eye2()+1, sizeof(Real), D2D, stream);
 		}
 		ctoc("copy");
 		if(mvmi){
@@ -130,11 +130,11 @@ static void mvm_direct_igpu(thread_t* info){
 	}
 	DO(cudaMemcpyAsync(data->mvmc->p+info->start*ntotact,
 		mvm(), ntotact*(info->end-info->start)*sizeof(Real),
-		cudaMemcpyDeviceToHost, stream));
+		D2H, stream));
 	if(parms->save.mvmi){
 		DO(cudaMemcpyAsync(data->mvmi->p+info->start*ntotxloc,
 			mvmi(), ntotxloc*(info->end-info->start)*sizeof(Real),
-			cudaMemcpyDeviceToHost, stream));
+			D2H, stream));
 	}
 	stream.sync();
 	toc2("Thread %ld mvm", info->ithread);

@@ -271,7 +271,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 				cuatm[ips].ox=prep_data[ips].ox;
 				cuatm[ips].oy=prep_data[ips].oy;
 				DO(cudaMemcpy(cuatm[ips](), prep_data[ips].next_atm,
-					nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
+					nx0*ny0*sizeof(Real), H2D));
 			}/*for im */
 			free(prep_data[ips].next_atm);prep_data[ips].next_atm=0;
 			/*Update next_isim. */

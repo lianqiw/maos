@@ -266,7 +266,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 		cp2gpu(data[igpu]->cumvm1, mvm);
 		data[igpu]->pix=Array<short, Gpu>(totpix, 1);
 		data[igpu]->pixbias=Array<short, Gpu>(totpix, 1);
-		cp2gpu(data[igpu]->pixbias(), (short*)pixbias->p, totpix*sizeof(short), cudaMemcpyHostToDevice);
+		cp2gpu(data[igpu]->pixbias(), (short*)pixbias->p, totpix*sizeof(short), H2D);
 		data[igpu]->mtch=curcell(nbuf, 1, totpix*2, 1);
 		cp2gpu(data[igpu]->mtch[0], mtch);
 		data[igpu]->grad=curmat(ng, 1);
@@ -371,7 +371,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 			}
 
 			DO(cudaMemcpyAsync(datai->pix()+saind[isa], pcur, sizeof(short)*npixleft,
-				cudaMemcpyHostToDevice, datai->stream_p));
+				H2D, datai->stream_p));
 	 //Recored the event when the memcpy is finished
 			DO(cudaEventRecord(datai->event_p[datai->count], datai->stream_p));
 			//Start matched filter when pixel transfer is done.
@@ -459,7 +459,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 					DO(cudaMemcpyAsync(im0->p+saind[isa]+icol*totpix,
 						data[igpu]->im0[ibuf_stat]()+saind[isa]+icol*totpix,
 						sizeof(Real)*npixleft,
-						cudaMemcpyDeviceToHost, stream));
+						D2H, stream));
 					copied_mtch[iset]=1;
 					if(nstep!=1) goto endhere;
 				}
@@ -483,7 +483,7 @@ endhere:;
 				}
 				DO(cudaMemcpyAsync(datai->cumvm_next()+datai->ic*mvm->nx,
 					mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nsaleft,
-					cudaMemcpyHostToDevice, datai->stream_p));
+					H2D, datai->stream_p));
 
 				datai->ic+=nsaleft;
 				if(done){
@@ -505,7 +505,7 @@ endhere:;
 				DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 			}
 			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real),
-				cudaMemcpyDeviceToHost, datai->stream_a[0]);
+				D2H, datai->stream_a[0]);
 			cuzero(datai->act, datai->stream_a[0]);
 		}
 		//CPU sums them together. sync first gpu
@@ -527,7 +527,7 @@ endhere:;
 				DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 			}
 			cudaMemcpyAsync(data[0].actelse->p[igpu-1]->p, datai->act->p, nact*sizeof(Real),
-				cudaMemcpyDeviceToDevice, datai->stream_a[0]);
+				D2D, datai->stream_a[0]);
 		}
 		if(ngpu>1){
 			if(ngpu==2){
@@ -540,7 +540,7 @@ endhere:;
 				add_do<<<DIM(nact, 256), 0, datai->stream_a[0]>>>
 					(datai->act->p, datai->actelse->p[0]->p, (Real*)0, 1, nact);
 				cudaMemcpyAsync(dmres->p[0]->p, datai->act->p, nact*sizeof(Real),
-					cudaMemcpyDeviceToHost, datai->stream_a[0]);
+					D2H, datai->stream_a[0]);
 				datai->stream_a[0].sync();
 			} else{
 				error("Please implement\n");
@@ -555,11 +555,11 @@ endhere:;
 			writebin(dmres->p[0], "dmres");
 			for(int igpu=0; igpu<ngpu; igpu++){
 				cudaSetDevice(gpus[igpu]);
-				cudaMemcpy(pix->p, data[igpu]->pix, sizeof(short)*totpix, cudaMemcpyDefault);
+				DO(cudaMemcpyAsync(pix->p, data[igpu]->pix, sizeof(short)* totpix, D2H, data[igpu]->stream_p));
 				char fn[PATH_MAX];
 				snprintf(fn, PATH_MAX, "pix_gpu%d", igpu);
 				writearr(fn, 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
-				cuwrite(data[igpu]->grad, "grad_gpu%d", igpu);
+				cuwrite(data[igpu]->grad, data[igpu]->stream_p, "grad_gpu%d", igpu);
 			}
 		}
 		/*

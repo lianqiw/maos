@@ -17,13 +17,5 @@
 */
 #ifndef AOS_CUDA_CUCMAT_H
 #define AOS_CUDA_CUCMAT_H
-/*
-#include "utils.h"
-#include "types.h"
 
-#define cucnew  new cucmat
-#define cuccellnew  new cuccell
-#define cucwrite cuwrite
-#define cuccellwrite cuwrite
-*/
 #endif

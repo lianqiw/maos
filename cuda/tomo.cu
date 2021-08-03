@@ -83,7 +83,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		}
 		dspfree(GPt);
 		GPp.init(np, nsa);
-		cudaMemcpy(GPp(), partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
+		DO(cudaMemcpy(GPp(), partxy, sizeof(short2)*np*nsa, H2D));
 		*GPscale=1./pxscale;
 		free(partxy);
 	} else{/*use sparse */
@@ -106,7 +106,7 @@ prep_saptr(cuimat& saptr_gpu, loc_t* saloc, map_t* pmap){
 		saptr[isa][1]=(int)roundf((salocy[isa]-oy)*dy1);
 	}
 	saptr_gpu.init(2, nsa);
-	DO(cudaMemcpy(saptr_gpu, saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
+	DO(cudaMemcpy(saptr_gpu, saptr, nsa*2*sizeof(int), H2D));
 	delete[] saptr;
 }
 static curmat convert_neai(dsp* nea){
@@ -134,13 +134,13 @@ static curmat convert_neai(dsp* nea){
 		}
 	}
 	curmat neai_gpu=curmat(3, nsa);
-	DO(cudaMemcpy(neai_gpu(), neai, 3*nsa*sizeof(Real), cudaMemcpyHostToDevice));
+	DO(cudaMemcpy(neai_gpu(), neai, 3*nsa*sizeof(Real), H2D));
 	free(neai);
 	return neai_gpu;
 }
 
 void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
-	dbg("cutomo_grid: init_hx\n");
+	dbg("create raytracing operator.\n");
 	dir_t* dir=new dir_t[nwfs];
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -171,7 +171,7 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 		}
 	}
 	lap.init(recon->npsr, 1);
-	cudaMemcpy(lap(), lapc, sizeof(lap_t)*recon->npsr, cudaMemcpyHostToDevice);
+	DO(cudaMemcpy(lap(), lapc, sizeof(lap_t)*recon->npsr, H2D));
 }
 
 cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
@@ -180,12 +180,12 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 	nwfs=parms->nwfsr;
 
 	if(recon->PTT&&!PTT){//for t/t proj in 1)uplink t/t 2) recon
-		dbg("cutomo_grid: Copying PTT\n");
+		dbg("Copying PTT\n");
 		cp2gpu(PTT, recon->PTT);
 	}
 	ptt=!parms->recon.split||(parms->tomo.splitlrt&&parms->recon.mvm!=2);
 	{
-		dbg("cutomo_grid: Copying PDF, PDFTT\n");
+		dbg("Copying PDF, PDFTT\n");
 		PDF=curcell(parms->npowfs, 1);
 		PDFTT=curcell(parms->npowfs, 1);
 		dcell* pdftt=NULL;
@@ -210,7 +210,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 		dcellfree(pdftt);
 	}
 	{
-		dbg("cutomo_grid: Copying GP\n");
+		dbg("Copying GP\n");
 		GPp=Cell<short2, Gpu>(nwfs, 1);
 		GP=cuspcell(nwfs, 1);
 		GPscale.init(nwfs, 1);
@@ -236,7 +236,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 	}
 
 	{
-		dbg("cutomo_grid: Copying neai\n");
+		dbg("Copying neai\n");
 		neai=curcell(parms->nwfsr, 1);
 		/*convert recon->saneai to gpu. */
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
@@ -244,10 +244,10 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			if(parms->powfs[ipowfs].skip) continue;
 			int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];/*first wfs in this group. */
 			if(iwfs!=iwfs0&&P(recon->saneai,iwfs,iwfs)->pp==P(recon->saneai,iwfs0,iwfs0)->pp){
-				dbg("cutomo_grid: reference neai from %d to %d\n", iwfs0, iwfs);
+				dbg("reference neai from %d to %d\n", iwfs0, iwfs);
 				neai[iwfs]=neai[iwfs0];
 			} else{
-				dbg("cutomo_grid: Copy neai from cpu for %d\n", iwfs);
+				dbg("Copy neai from cpu for %d\n", iwfs);
 				dsp* nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
 				neai[iwfs]=convert_neai(nea);
 			}
@@ -288,17 +288,17 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			GPDATA[iwfs].oyp=recon->pmap->oy;
 		}
 		gpdata.init(nwfs, 1);
-		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, cudaMemcpyHostToDevice));
+		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, H2D));
 		//delete [] GPDATA;
 	}
 
 	if(parms->tomo.precond==1){
-		dbg("cutomo_grid: new cufdpcg_t\n");
+		dbg("setup FDPCG\n");
 		precond=new cufdpcg_t(recon->fdpcg, grid);
 	}
 
 	{/**Initialize run time data*/
-		dbg("cutomo_grid: init runtime temporary data\n");
+		dbg("init runtime temporary data\n");
 		int nxp=recon->pmap->nx;
 		int nyp=recon->pmap->ny;
 		int nxpw[nwfs], nypw[nwfs], ngw[nwfs];
@@ -627,11 +627,11 @@ void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& s
 */
 void cutomo_grid::HX(const curcell& xin, Real alpha, stream_t& stream){
 	if(wfsrot){
-		opdwfs2.M().zero(stream);
+		opdwfs2.M().Zero(stream);
 		hx.forward(opdwfs2.pm, xin.pm, alpha, NULL, stream);
 		map_rot(opdwfs, opdwfs2, wfsrot, -1, stream);
 	} else{
-		opdwfs.M().zero(stream);
+		opdwfs.M().Zero(stream);
 		hx.forward(opdwfs.pm, xin.pm, alpha, NULL, stream);
 	}
 }
