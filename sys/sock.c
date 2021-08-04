@@ -245,7 +245,7 @@ int bind_socket(int protocol, char* ip, uint16_t port){
 		}
 	}
 	if(sock!=-1){
-		dbg_time("binded to port %hd at sock %d\n", port, sock);
+		dbg_time("binded to port %hd at socket %d\n", port, sock);
 	}
 	return sock;
 }
@@ -411,7 +411,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 						if(sock2<0){
 							warning_time("accept failed: %s. \n", strerror(errno));
 						} else{
-							dbg_time("port %d is connected\n", sock2);
+							dbg_time("socket %d is connected\n", sock2);
 							FD_SET(sock2, &active_fd_set);
 							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
 							socket_send_timeout(sock2, 60);
@@ -426,7 +426,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 						if(ans<0){
 							FD_CLR(i, &active_fd_set);
 							close(i);
-							dbg_time("close port %d, ans=%d\n", i, ans);
+							dbg_time("close socket %d, ans=%d\n", i, ans);
 						}
 					}
 				}

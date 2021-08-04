@@ -383,11 +383,11 @@ static void check_jobs(void){
 			if(irun->pid>0){
 				if(kill(irun->pid, 0)){
 					if(irun->last_time+60<now){//allow grace period.
-						dbg_time("check_jobs: Job %d no longer exists\n", irun->pid);
+						dbg_time("check_jobs: Job %d no longer exists. Change status to S_CRASH\n", irun->pid);
 						running_remove(irun->pid, S_CRASH);
 					}
 				} else if((irun->last_time+600<now)&&irun->status.info==S_RUNNING){
-					dbg_time("check_jobs: Job %d does not update after %g seconds.\n",
+					dbg_time("check_jobs: Job %d does not update after %g seconds. Change status to S_UNKNOWN\n",
 							irun->pid, now-irun->last_time);
 					irun->status.info=S_UNKNOWN;
 					monitor_send(irun, NULL);
@@ -418,7 +418,12 @@ static void process_queue(void){
 	}
 	RUN_T* irun=running_get_wait(S_WAIT);
 	while(irun&&irun->pid>0&&kill(irun->pid, 0)){//job exited
-		running_remove(irun->pid, S_CRASH);
+		if(irun->last_time+60<lasttime){//allow grace peirod for job to clean it up.
+			dbg_time("Job %d in S_WAIT no longer exists. Change status to S_CRASH\n", irun->pid);
+			running_remove(irun->pid, S_CRASH);
+		}else{
+			irun->status.info=S_UNKNOWN;//prevent running_get_wait from getting stuck
+		}
 		irun=running_get_wait(S_WAIT);
 	}
 	if(irun){//There are jobs waiting.
@@ -427,13 +432,15 @@ static void process_queue(void){
 			if(nrun_get(0)+nthread<=NCPU&&(nthread<=avail||avail>=3)
 				&&(!NGPU||!irun->ngpu||nrun_get(1)+irun->ngpu<=NGPU)){//resource available to star the job
 				dbg_time("Start %d at %d\n", irun->pid, irun->sock);
+				irun->last_time=myclockd();
 				if(stwriteint(irun->sock, S_START)){
-					warning_time("stwriteint to %d failed: %s\n", irun->sock, strerror(errno));
+					warning_time("Notify MAOS (%d, %d) failed: %s\n", irun->pid, irun->sock, strerror(errno));
+				}else{
+					nrun_add(irun->pid, nthread, irun->ngpu);
+					irun->status.timstart=myclocki();
+					irun->status.info=S_START;
+					monitor_send(irun, NULL);
 				}
-				nrun_add(irun->pid, nthread, irun->ngpu);
-				irun->status.timstart=myclocki();
-				irun->status.info=S_START;
-				monitor_send(irun, NULL);
 			}
 		} else{
 			dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
@@ -451,11 +458,13 @@ static void process_queue(void){
 					counter=-1; //reset the counter
 				} else{
 					int pid;
+					dbg_time("Starting new job (%s) (%s)\n", irun->exe, irun->path0);
+					irun->last_time=thistime;
 					if((pid=launch_exe(irun->exe, irun->path0))<0){
-						warning_time("start new job failed: %s\n", irun->path);
+						warning_time("New job failed: %d\n", pid);
 						running_remove(irun->pid, S_CRASH);
 					} else{
-						dbg_time("new job is started: %d\n", pid);
+						dbg_time("New job is started: %d\n", pid);
 						//inplace update the information in monitor
 						irun->status.info=S_WAIT;
 						irun->status.timstart=myclocki();
@@ -478,7 +487,7 @@ static char* remove_endl(const char* path0){
 	}
 	return path;
 }
-static void new_job(const char* exename, const char* execmd){
+static void queue_new_job(const char* exename, const char* execmd){
 	RUN_T* irun=running_add(--counter, -1);
 	if(!irun){
 		warning_time("scheduler: running_add failed.\n");
@@ -575,6 +584,7 @@ static int respond(int sock){
 	}
 	break;
 	case CMD_FINISH://2: Called by MAOS when job finishes.
+		dbg_time("Job %d reports finished\n", pid);
 		running_remove(pid, S_FINISH);
 		ret=-1;
 	break;
@@ -600,6 +610,7 @@ static int respond(int sock){
 	}
 	break;
 	case CMD_CRASH://4: called by MAOS when job crashes
+		dbg_time("Job %d reports crashed\n", pid);
 		running_remove(pid, S_CRASH);
 		ret=-1;
 		break;
@@ -804,7 +815,7 @@ static int respond(int sock){
 		break;
 	case CMD_UNUSED4://17;not used
 		break;
-	case CMD_LAUNCH://18: called from maos another machine to start a job in this machine
+	case CMD_LAUNCH://18: called from maos from another machine to start a job in this machine
 	{
 		char* exename=NULL;
 		char* execwd=NULL;
@@ -832,7 +843,7 @@ static int respond(int sock){
 					ret=-1;
 				}
 			} else{//Queue in jobs.
-				new_job(exename, execmd);
+				queue_new_job(exename, execmd);
 				ret=0;
 			}
 		} else{
@@ -858,10 +869,9 @@ end:
 		RUN_T* irun=running_get_by_sock(sock);//is maos
 		if(irun&&irun->status.info<10){
 			//connection failed to a running maos job.
-			sleep(1);
-			int pid2=irun->pid;
-			if(kill(pid2, 0)){
-				running_remove(pid2, S_CRASH);
+			if(kill(irun->pid, 0)){
+				running_remove(irun->pid, S_CRASH);
+				dbg_time("Job %d (sock %d) no longer exists, crashed?\n", irun->pid, sock);
 			}
 		}
 		ret=-1;

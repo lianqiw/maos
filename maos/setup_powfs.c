@@ -1344,17 +1344,6 @@ static void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int
 	nea[1]=nea[1]*stry;
 	nea[2]=nea[1];
 }
-typedef struct{
-	dmat* ints;
-	real bkgrnd;
-	real bkgrndc;
-	dmat* bkgrnd2i;
-	dmat* bkgrnd2ic;
-	real rne;
-	rand_t* rstat;
-	int ntry;
-}cogdata_t;
-
 /**
    Setup CoG NEA for reconstruction.
 */
@@ -1380,11 +1369,9 @@ setup_powfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		}
 	}
 	info("Compute NEA in CoG using Monte Carlo simulation with %d trials\n", ntry);
-	
+	dcellfree(powfs[ipowfs].sanea);
 	powfs[ipowfs].sanea=dcellnew(intstat->i0->ny, 1);
 	
-	
-
 	for(int jwfs=0; jwfs<nwfs; jwfs++){
 		//int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 		if(jwfs==0||(intstat&&intstat->i0->ny>1)){

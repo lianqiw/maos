@@ -415,30 +415,6 @@ char* evl_header(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, i
 	return strdup(header);
 }
 /**
-   Apply field stop to OPD using FFT.
- */
-void apply_fieldstop(dmat* opd, const dmat* amp, const lmat* embed, long nembed, const dmat* fieldstop, real wvl){
-	cmat* wvf=cnew(nembed, nembed);
-	//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
-	real kk=2*M_PI/wvl;
-	real kki=1./kk;
-	real wvlh=wvl*0.5;
-	comp i2pi=COMPLEX(0, kk);
-	for(int iloc=0; iloc<opd->nx; iloc++){
-		P(wvf,P(embed,iloc))=P(amp,iloc)*cexp(i2pi*P(opd,iloc));
-	}
-	cfft2(wvf, -1);
-	ccwmd(wvf, fieldstop, 1);
-	cfft2(wvf, 1);
-	for(int iloc=0; iloc<opd->nx; iloc++){
-		real val=carg(P(wvf,P(embed,iloc)))*kki;
-		real diff=fmod(val-P(opd,iloc)+wvlh, wvl);
-		if(diff<0) diff+=wvl;
-		P(opd,iloc)+=diff-wvlh;
-	}
-	cfree(wvf);
-}
-/**
    Plot grid points, amplitude maps and NCPA.
  */
 void plot_setup(const parms_t* parms, const powfs_t* powfs,
@@ -1038,7 +1014,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	for(int isa=0; isa<nsa; isa++){
 		real geach[3]={0,0,1};
 		switch(phytype){
-		case 1:{//matched filter
+		case PTYPE_MF:{//matched filter
 			real scale=1.;
 			switch(parms->powfs[ipowfs].sigmatch){
 			case 0://no normalization
@@ -1053,7 +1029,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 			dmulvec(geach, mtche[isa], ints[isa]->p, scale);
 		}
 			  break;
-		case 2:{//CoG
+		case PTYPE_COG:{//CoG
 			real sumi=0;
 			switch(parms->powfs[ipowfs].sigmatch){
 			case 0://normalization use model intensity (linear model)
@@ -1075,13 +1051,13 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 
 		}
 			  break;
-		case 3:{//MAP: (to be removed. This algorithm is not very useful.)
+		case PTYPE_MAP:{//MAP: (to be removed. This algorithm is not very useful.)
 			geach[0]=pgradx[isa];//warm restart
 			geach[1]=pgrady[isa];
 			maxapriori(geach, ints[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
 		}
 			  break;
-		case 4:{//Correlation. Peak first.
+		case PTYPE_CORR:{//Correlation. Peak first.
 			dcorr(&corr, ints[isa], P(powfs[ipowfs].intstat->i0,isa));
 			dpara3(geach, corr);
 			if((fabs(geach[0])+fabs(geach[1]))>powfs[ipowfs].pixpsax){
@@ -1093,7 +1069,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 			geach[1]*=pixthetay;
 		}
 			  break;
-		case 5:{//Correlation. Sum first (to be removed. Not working well)
+		case PTYPE_CORRS:{//Correlation. Sum first (to be removed. Not working well)
 			dcorr(&corr, ints[isa], P(powfs[ipowfs].intstat->i0,isa));
 			parabolic_peak_sum(geach, corr, 5);
 			geach[0]*=pixthetax;
@@ -1103,7 +1079,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 		default:
 			error("Invalid");
 		}
-		if(phytype>1&&srot){
+		if(phytype!=PTYPE_MF&&srot){//Matched filter already contains the rotation.
 			real theta=srot[isa];
 			real cx=cos(theta);
 			real sx=sin(theta);

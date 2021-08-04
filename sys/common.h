@@ -209,7 +209,7 @@ static inline int check_space(const char *endptr, const char *endstr){
       }                                 \
 		  if(A!=B){ 								        \
 			  A=MIN(MAX(B, min), max);			  \
-			  dbg(#A" changed to %g\n", (double)A);		\
+			  dbg3(#A" changed to %g\n", (double)A);		\
 		  }										              \
     }
 

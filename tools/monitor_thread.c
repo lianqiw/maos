@@ -165,7 +165,7 @@ static void host_removed(int sock){
 		hsock[ihost]=-1;
 		gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
 		warning_time("Disconnected from %s\n", hosts[ihost]);
-		sendmail("Subject:monitor on disconnected from %s\n\nAt%s\n",
+		sendmail("Subject:monitor on disconnected from %s\n\nAt %s\n",
 				 hosts[ihost], myasctime(0));
 	}
 }

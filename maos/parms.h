@@ -867,6 +867,9 @@ enum{//geometric WFS gradient algoirthm
 enum{//physical optics pixel processing algorithm
     PTYPE_MF=1, //matched filter
     PTYPE_COG=2,//COG
+    PTYPE_MAP=3,//maximum apriori (deprecated)
+    PTYPE_CORR=4,//Correlation peak first
+    PTYPE_CORRS=5, //Correlation sum first (deprecated)
 };
 
 enum{//method to handle NCPA

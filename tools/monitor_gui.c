@@ -60,24 +60,33 @@ enum{
 static GtkListStore* listall=NULL;
 static GtkTreeModel** lists=NULL;
 static GtkWidget** views=NULL;
-static void list_get_iter(GtkTreeRowReference* row, GtkTreeIter* iter){
-	GtkTreePath* tpath=gtk_tree_row_reference_get_path(row);
-	gtk_tree_model_get_iter(GTK_TREE_MODEL(listall), iter, tpath);
-	gtk_tree_path_free(tpath);
+static int list_get_iter(GtkTreeRowReference* row, GtkTreeIter* iter){
+	GtkTreePath* tpath=NULL;
+	if(row && (tpath=gtk_tree_row_reference_get_path(row))){
+		gtk_tree_model_get_iter(GTK_TREE_MODEL(listall), iter, tpath);
+		gtk_tree_path_free(tpath);
+		return 0;
+	}
+	return 1;
 }
 static void list_modify_icon(GtkTreeRowReference* row, GdkPixbuf* newicon){
 	GtkTreeIter iter;
-	list_get_iter(row, &iter);
-	gtk_list_store_set(listall, &iter, COL_ACTION, newicon, -1);
+	if(!list_get_iter(row, &iter)){
+		gtk_list_store_set(listall, &iter, COL_ACTION, newicon, -1);
+	}
 }
 static void list_modify_color(GtkTreeRowReference* row, const char* color){
 	GtkTreeIter iter;
-	list_get_iter(row, &iter);
-	gtk_list_store_set(listall, &iter, COL_COLOR, color, -1);
+	if(!list_get_iter(row, &iter)){
+		gtk_list_store_set(listall, &iter, COL_COLOR, color, -1);
+	}
 }
 
 static void list_update_progress(proc_t* p){
-	if(p->status.nseed==0) return;
+	if(!p || p->status.nseed==0) return;
+	GtkTreeIter iter;
+	if(list_get_iter(p->row, &iter)) return;//failure
+
 	double total=(double)(p->status.rest+p->status.laps);
 	if(fabs(total)>1.e-10){
 		p->frac=(double)p->status.laps/total;
@@ -89,8 +98,6 @@ static void list_update_progress(proc_t* p){
 	} else if(p->frac<0){
 		p->frac=0;
 	}
-	GtkTreeIter iter;
-	list_get_iter(p->row, &iter);
 
 	const long tot=p->status.rest+p->status.laps;/*show total time. */
 	const long toth=tot/3600;
@@ -140,7 +147,7 @@ static void list_update_progress(proc_t* p){
 }
 static void list_modify_reset(proc_t* p){
 	GtkTreeIter iter;
-	list_get_iter(p->row, &iter);
+	if(!p || list_get_iter(p->row, &iter)) return;
 	char spid[12];
 	snprintf(spid, 12, " %d ", p->pid);
 
@@ -160,19 +167,16 @@ static void list_modify_reset(proc_t* p){
 		-1);
 	//p->iseed_old=-1;
 }
+//calls by monitor_thread
 gboolean remove_entry(GtkTreeRowReference* row){
-	if(row){
-		GtkTreePath* path=gtk_tree_row_reference_get_path(row);
-		GtkTreeIter iter;
-		if(!gtk_tree_model_get_iter(GTK_TREE_MODEL(listall), &iter, path)){
-			warning("Unable to find entry");
-		} else{
-			gtk_list_store_remove(listall, &iter);
-		}
+	GtkTreeIter iter;
+	if(!list_get_iter(row, &iter)){
+		gtk_list_store_remove(listall, &iter);
 	}
-	return 0;
+	return 0;//must return false
 }
 gboolean refresh(proc_t* p){
+	if(!p) return 0;
 	if(!p->row){
 		char sdate[80];
 		char spid[12];
@@ -214,7 +218,7 @@ gboolean refresh(proc_t* p){
 		gtk_list_store_set(listall, &iter,
 			COL_DATE, sdate,
 			COL_PID, spid,
-			COL_FULL, spath?spath:"Unknown",
+			COL_FULL, spath?spath:" ",
 			COL_START, sstart?sstart:" ",
 			COL_ARGS, sargs?sargs:" ",
 			COL_OUT, sout?sout:" ",
@@ -286,7 +290,7 @@ gboolean refresh(proc_t* p){
 	if(p->status.warning){
 		list_modify_color(p->row, "#FF0000");
 	}
-	return 0;
+	return 0;//must return false
 }
 
 static GtkTreeViewColumn* new_column(int type, int width, const char* title, ...){
@@ -391,8 +395,7 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 	const char* action=data->action;
 	GValue value=G_VALUE_INIT;
 	if(cmd<0){
-		switch(cmd){
-		case -1:{
+		if(cmd==-1){
 			if(!strcmp(action, "CopyPath")){
 				gtk_tree_model_get_value(model, iter, COL_START, &value);
 			} else if(!strcmp(action, "CopyOutPath")){
@@ -403,8 +406,6 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 			const gchar* jobinfo=g_value_get_string(&value);
 			clipboard_append(jobinfo);
 			g_value_unset(&value);
-		}
-			   break;
 		}
 	} else{
 		gtk_tree_model_get_value(model, iter, COL_PID, &value);
