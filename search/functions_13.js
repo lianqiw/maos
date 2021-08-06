@@ -11,9 +11,10 @@ var searchData=
   ['wfslinearity',['wfslinearity',['../maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5',1,'utils.c']]],
   ['wfspupmask',['wfspupmask',['../setup__powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f',1,'setup_powfs.c']]],
   ['write_5fheader',['write_header',['../bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e',1,'bin.c']]],
-  ['writearr',['writearr',['../bin_8h.html#a9471eeb77e74e8c66ec913534df2d72d',1,'bin.c']]],
+  ['writearr',['writearr',['../bin_8h.html#a546b25cd4878494b18d9af3f929042ba',1,'bin.c']]],
   ['writebin',['writebin',['../cell_8h.html#a357e82aa5571115bb78a92215d477a8a',1,'cell.c']]],
-  ['writebin2',['writebin2',['../cell_8h.html#a938c640db5c9cdcc7e5243b64e0c96e9',1,'cell.c']]],
-  ['writebin_5fauto',['writebin_auto',['../cell_8h.html#ab0878dffae696ce3cb3cd9ec01cdd301',1,'cell.c']]],
+  ['writebin_5fasync',['writebin_async',['../cell_8h.html#ac40a24c470c685cd4a3086d26658cfed',1,'cell.c']]],
+  ['writebin_5fheader',['writebin_header',['../cell_8h.html#a69b4db10bfe9cbac06e6580a0b35c4f1',1,'cell.c']]],
+  ['writedata_5fby_5fid',['writedata_by_id',['../cell_8h.html#a6b9da5e69cafd2015cc390a1a4024a7d',1,'cell.c']]],
   ['writesock',['writesock',['../cell_8h.html#a5de2e5a0f72fdccde9cf296ffd328d61',1,'cell.c']]]
 ];

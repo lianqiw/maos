@@ -339,7 +339,7 @@ var searchData=
   ['cuwfs_5ft',['cuwfs_t',['../classcuwfs__t.html',1,'cuwfs_t'],['../classcuda__wfs_1_1cuwfs__t.html',1,'cuda_wfs::cuwfs_t']]],
   ['cvecperm',['cvecperm',['../cmath_8h.html#a379334c2ea8abebb8df335a241c57f8f',1,'ctmp.c']]],
   ['cvecpermi',['cvecpermi',['../cmath_8h.html#a19a85280f9c37ee345f5eec0f8ca0274',1,'ctmp.c']]],
-  ['cwritedata',['cwritedata',['../cmath_8h.html#a28f2c1a91c80f5dc8c951f875d79f2de',1,'ctmp.c']]],
+  ['cwritedata',['cwritedata',['../cmath_8h.html#aafc1ef87005c3b532eb7f6f9c7cdeb10',1,'ctmp.c']]],
   ['cxx',['cxx',['../parms_8h.html#af181a30f152d1b663339437d2bd93bd9',1,'load_cfg_t']]],
   ['cxxalg',['cxxalg',['../parms_8h.html#ab32d49156b91ec3afa9796571145bbcd',1,'tomo_cfg_t::cxxalg()'],['../maos_2types_8h.html#a256eebe74763739433e397eb9a2e2ba0',1,'recon_t::cxxalg()']]],
   ['cxxscale',['cxxscale',['../parms_8h.html#a78289e44a0232fecca165aec1e07af68',1,'tomo_cfg_t']]],

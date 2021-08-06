@@ -10,7 +10,6 @@ var sys_2misc_8h =
       [ "nval", "sys_2misc_8h.html#a788ff2d4c1eb23bf8146aff728d08980", null ]
     ] ],
     [ "strdup", "sys_2misc_8h.html#a9254b089d435892385cf14d0ab4a7a2d", null ],
-    [ "iscrash", "sys_2misc_8h.html#a71a3325cb440cb30b438bcde0f75e3df", null ],
     [ "mybasename", "sys_2misc_8h.html#a5609e288961da8d6cfcc7494afbb3ded", null ],
     [ "mydirname", "sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07", null ],
     [ "check_suffix", "sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de", null ],
@@ -45,6 +44,5 @@ var sys_2misc_8h =
     [ "available_space", "sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4", null ],
     [ "mystrdup", "sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9", null ],
     [ "parse_argopt", "sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],
-    [ "set_realtime", "sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ],
-    [ "register_signal_handler", "sys_2misc_8h.html#af33cc91c7bdc60b97fe77a7213ff3b0e", null ]
+    [ "set_realtime", "sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ]
 ];

@@ -5,7 +5,7 @@ var type_8h_structzccell =
     [ "nx", "type_8h.html#a6c5b7c6b159ec0456e2e23e2d4970f6f", null ],
     [ "ny", "type_8h.html#a6806b466b6fb799f01df4ca8025f688d", null ],
     [ "header", "type_8h.html#a46ca464bb2c235b8bfd21431326b64f2", null ],
-    [ "fn", "type_8h.html#a37abf4c07b9db14b87393f39de32887f", null ],
+    [ "fp", "type_8h.html#a3b05d815ad38871870986b407db2f993", null ],
     [ "fft", "type_8h.html#a9184b11e8c4f7152ea14265acae82535", null ],
     [ "m", "type_8h.html#a886a14b1f12df5277dfb31e4f87c5e2c", null ]
 ];

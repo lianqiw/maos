@@ -8,14 +8,14 @@ var cell_8h =
     [ "celldim", "cell_8h.html#aa3f1c50daa45e9192b2e97fd21c004a4", null ],
     [ "cellresize", "cell_8h.html#a682107a5841cf5a77468485121f94bea", null ],
     [ "cellfree_do", "cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c", null ],
-    [ "writedata_by_id", "cell_8h.html#a65e085cccfa91dc1d242073138e3b433", null ],
+    [ "writedata_by_id", "cell_8h.html#a6b9da5e69cafd2015cc390a1a4024a7d", null ],
     [ "write_by_id", "cell_8h.html#ab505ad351f3d76f8122e416b0dbee23c", null ],
     [ "readdata_by_id", "cell_8h.html#a223dc5824d7dd17786ca2ecf5b385fd2", null ],
     [ "read_by_id", "cell_8h.html#a40abd6f20840af65f7f3ca17c8159a22", null ],
     [ "readbin", "cell_8h.html#aefcc505a75a4fb24415fe88172ac0d9d", null ],
     [ "writebin", "cell_8h.html#a357e82aa5571115bb78a92215d477a8a", null ],
-    [ "writebin_auto", "cell_8h.html#ab0878dffae696ce3cb3cd9ec01cdd301", null ],
-    [ "writebin2", "cell_8h.html#a938c640db5c9cdcc7e5243b64e0c96e9", null ],
+    [ "writebin_async", "cell_8h.html#ac40a24c470c685cd4a3086d26658cfed", null ],
+    [ "writebin_header", "cell_8h.html#a69b4db10bfe9cbac06e6580a0b35c4f1", null ],
     [ "readsock", "cell_8h.html#a34da2630d81d5e01052e5636091c831d", null ],
     [ "writesock", "cell_8h.html#a5de2e5a0f72fdccde9cf296ffd328d61", null ]
 ];

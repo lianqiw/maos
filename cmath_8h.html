@@ -538,8 +538,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogreal</b> (real *g
 <tr class="memitem:a73f1e2c4bdc626931fc656f1c9fb8b2d"><td class="memItemLeft" align="right" valign="top"><a id="a73f1e2c4bdc626931fc656f1c9fb8b2d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *grad, const <a class="el" href="type_8h.html#structcmat">cmat</a> *i0, real offsetx, real offsety, real thres, real bkgrnd)</td></tr>
 <tr class="separator:a73f1e2c4bdc626931fc656f1c9fb8b2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28f2c1a91c80f5dc8c951f875d79f2de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a28f2c1a91c80f5dc8c951f875d79f2de">cwritedata</a> (file_t *fp, const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
-<tr class="separator:a28f2c1a91c80f5dc8c951f875d79f2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafc1ef87005c3b532eb7f6f9c7cdeb10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aafc1ef87005c3b532eb7f6f9c7cdeb10">cwritedata</a> (file_t *fp, const <a class="el" href="type_8h.html#structcmat">cmat</a> *A, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
+<tr class="separator:aafc1ef87005c3b532eb7f6f9c7cdeb10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa340e7c8bdf5727d239cddfe601f1dae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aa340e7c8bdf5727d239cddfe601f1dae">creaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:aa340e7c8bdf5727d239cddfe601f1dae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad572fd5bf83e1a861d7a323ee778bc30"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ad572fd5bf83e1a861d7a323ee778bc30">cnew_mmap</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
@@ -4485,8 +4485,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
 
 </div>
 </div>
-<a id="a28f2c1a91c80f5dc8c951f875d79f2de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a28f2c1a91c80f5dc8c951f875d79f2de">&#9670;&nbsp;</a></span>cwritedata()</h2>
+<a id="aafc1ef87005c3b532eb7f6f9c7cdeb10"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafc1ef87005c3b532eb7f6f9c7cdeb10">&#9670;&nbsp;</a></span>cwritedata()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -4501,7 +4501,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
-          <td class="paramname"><em>A</em>&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>ncol</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

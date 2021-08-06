@@ -165,7 +165,7 @@ var searchData=
   ['ltrans',['ltrans',['../lmath_8h.html#afcefc4c3f98eb5b0f463525a4cc47d10',1,'ltmp.c']]],
   ['lvecperm',['lvecperm',['../lmath_8h.html#a6013ef218925a2ac4fbb78d07f204cf2',1,'ltmp.c']]],
   ['lvecpermi',['lvecpermi',['../lmath_8h.html#a5b9920077ade8f512d7c91820a5c1872',1,'ltmp.c']]],
-  ['lwritedata',['lwritedata',['../lmath_8h.html#a3aa83d725eaa76510741e22468c1e122',1,'ltmp.c']]],
+  ['lwritedata',['lwritedata',['../lmath_8h.html#ab425b286af8a2a3aaad1df0af055d5c3',1,'ltmp.c']]],
   ['lzero',['lzero',['../lmath_8h.html#a4fd4f6c6d428b69ecf58a797ba9a6bf6',1,'ltmp.c']]],
   ['lzerocol',['lzerocol',['../lmath_8h.html#ae7575fbf393df43603a6ae43dd8feaee',1,'ltmp.c']]]
 ];

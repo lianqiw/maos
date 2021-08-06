@@ -181,7 +181,7 @@ var zmath_8h =
     [ "ztilt", "zmath_8h.html#a27a901aa94502aae3b6234253f59a6ca", null ],
     [ "zcogreal", "zmath_8h.html#adff4980d9a563e2948486d7160c08e46", null ],
     [ "zcogabs", "zmath_8h.html#a97319522b5d4a899fc5de4eb6bbf2fb4", null ],
-    [ "zwritedata", "zmath_8h.html#aeda4ecbcc71390bb81a267390a7a102f", null ],
+    [ "zwritedata", "zmath_8h.html#ad05413b1942d94efb5b433ba1a9870fd", null ],
     [ "zreaddata", "zmath_8h.html#a1ef11a90b38925908441e6253bfc527f", null ],
     [ "znew_mmap", "zmath_8h.html#aebae8c415b889c4eb360370619cf6eec", null ],
     [ "zcellnew_mmap", "zmath_8h.html#a549e95c98b000591e22690cfb0e2e4ce", null ],

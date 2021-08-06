@@ -246,7 +246,7 @@ var searchData=
   ['dvecpermi',['dvecpermi',['../dmath_8h.html#a7040fd5588d1a5699ad5bdc9fdbce8da',1,'dtmp.c']]],
   ['dvecsum',['dvecsum',['../dmath_8h.html#a1ec8d910f977601178ac538dfe7274d5',1,'vec.c']]],
   ['dwdot',['dwdot',['../dmath_8h.html#ab5f1f7191d68f2629d767d4c04b19936',1,'dtmp.c']]],
-  ['dwritedata',['dwritedata',['../dmath_8h.html#a3452afc53eefe2391f8720999be80c19',1,'dtmp.c']]],
+  ['dwritedata',['dwritedata',['../dmath_8h.html#a9355b8d12e57889650934246907457a0',1,'dtmp.c']]],
   ['dzero',['dzero',['../dmath_8h.html#acd4853c2bc5855ba4b332adfb6c315e2',1,'dtmp.c']]],
   ['dzerocol',['dzerocol',['../dmath_8h.html#a8ac40b8ab5aa0904afbbb621dba4a217',1,'dtmp.c']]]
 ];

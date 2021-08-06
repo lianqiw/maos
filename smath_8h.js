@@ -163,7 +163,7 @@ var smath_8h =
     [ "scellsub", "smath_8h.html#abebfabff10d974faeaa3c63feca991dc", null ],
     [ "sbspline_prep", "smath_8h.html#a50161dfd4e2b3c5ff4e93f89eef86b2e", null ],
     [ "sbspline_eval", "smath_8h.html#a89c241df68b764caab07789f4ec3cf80", null ],
-    [ "swritedata", "smath_8h.html#ae1006bb67f4a25edf3f1dc3ca9cc48b7", null ],
+    [ "swritedata", "smath_8h.html#ac4771215ac68d5952371c8d57fded2f7", null ],
     [ "sreaddata", "smath_8h.html#a34f24ce33f4c2f938d90756d90e51bf3", null ],
     [ "snew_mmap", "smath_8h.html#ac5be753e0aa8988d7f960103c9ab9c0e", null ],
     [ "scellnew_mmap", "smath_8h.html#a722802a7a34d6c14174ac32f693084b5", null ],

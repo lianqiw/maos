@@ -114,10 +114,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a9254b089d435892385cf14d0ab4a7a2d"><td class="memItemLeft" align="right" valign="top"><a id="a9254b089d435892385cf14d0ab4a7a2d"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>strdup</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9">mystrdup</a> /*our strdup handles NULL correctly, and talk to mem.c */</td></tr>
 <tr class="separator:a9254b089d435892385cf14d0ab4a7a2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71a3325cb440cb30b438bcde0f75e3df"><td class="memItemLeft" align="right" valign="top"><a id="a71a3325cb440cb30b438bcde0f75e3df"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a71a3325cb440cb30b438bcde0f75e3df">iscrash</a>(sig)&#160;&#160;&#160;(sig==SIGABRT||sig==SIGSEGV||sig==SIGILL||sig==SIGFPE)</td></tr>
-<tr class="memdesc:a71a3325cb440cb30b438bcde0f75e3df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether signal is crash. <br /></td></tr>
-<tr class="separator:a71a3325cb440cb30b438bcde0f75e3df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -193,8 +189,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mysymlink</b> (const 
 <tr class="separator:a3349f67347d1f665a17bdd3a7c5bf5a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af601376ec0a30149805fbc5e2c8e14cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd">set_realtime</a> (int icpu, int niceness)</td></tr>
 <tr class="separator:af601376ec0a30149805fbc5e2c8e14cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af33cc91c7bdc60b97fe77a7213ff3b0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#af33cc91c7bdc60b97fe77a7213ff3b0e">register_signal_handler</a> (int(*)(int))</td></tr>
-<tr class="separator:af33cc91c7bdc60b97fe77a7213ff3b0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>misc routines. </p>
@@ -1035,25 +1029,6 @@ nval</td>
       </table>
 </div><div class="memdoc">
 <p>Set scheduling priorities for the process to enable real time behavior. </p>
-
-</div>
-</div>
-<a id="af33cc91c7bdc60b97fe77a7213ff3b0e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af33cc91c7bdc60b97fe77a7213ff3b0e">&#9670;&nbsp;</a></span>register_signal_handler()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void register_signal_handler </td>
-          <td>(</td>
-          <td class="paramtype">int(*)(int)&#160;</td>
-          <td class="paramname"><em>func</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Register signal handler </p>
 
 </div>
 </div>

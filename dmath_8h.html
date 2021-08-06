@@ -449,8 +449,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dcellmulsp</b> (<a cl
 <tr class="separator:a801f95bc127f94b526980791d71e2bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88fcc3be27ce68860cc93c2540c363b2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a88fcc3be27ce68860cc93c2540c363b2">dbspline_eval</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> *coeff, <a class="el" href="type_8h.html#structdmat">dmat</a> *x, <a class="el" href="type_8h.html#structdmat">dmat</a> *y, <a class="el" href="type_8h.html#structdmat">dmat</a> *xnew, <a class="el" href="type_8h.html#structdmat">dmat</a> *ynew)</td></tr>
 <tr class="separator:a88fcc3be27ce68860cc93c2540c363b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3452afc53eefe2391f8720999be80c19"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a3452afc53eefe2391f8720999be80c19">dwritedata</a> (file_t *fp, const <a class="el" href="type_8h.html#structdmat">dmat</a> *A)</td></tr>
-<tr class="separator:a3452afc53eefe2391f8720999be80c19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9355b8d12e57889650934246907457a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a9355b8d12e57889650934246907457a0">dwritedata</a> (file_t *fp, const <a class="el" href="type_8h.html#structdmat">dmat</a> *A, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
+<tr class="separator:a9355b8d12e57889650934246907457a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6c9042ea1d71dbc9c2d51719a866c48"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ab6c9042ea1d71dbc9c2d51719a866c48">dreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:ab6c9042ea1d71dbc9c2d51719a866c48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d4c2db8c8067633284451e62c93c3b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a4d4c2db8c8067633284451e62c93c3b4">dnew_mmap</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
@@ -5720,8 +5720,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
 
 </div>
 </div>
-<a id="a3452afc53eefe2391f8720999be80c19"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3452afc53eefe2391f8720999be80c19">&#9670;&nbsp;</a></span>dwritedata()</h2>
+<a id="a9355b8d12e57889650934246907457a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9355b8d12e57889650934246907457a0">&#9670;&nbsp;</a></span>dwritedata()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -5736,7 +5736,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>A</em>&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>ncol</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

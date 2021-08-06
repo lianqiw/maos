@@ -228,7 +228,7 @@ var searchData=
   ['stwritestrarr',['stwritestrarr',['../sockio_8h.html#a9c90e8add61a1ff1783e57c01b14c339',1,'sockio.c']]],
   ['svecperm',['svecperm',['../smath_8h.html#a1cecf05e2bbf08c2ded9d41c27204cfe',1,'stmp.c']]],
   ['svecpermi',['svecpermi',['../smath_8h.html#aa6bfba27ac7d85f08dac240face920d3',1,'stmp.c']]],
-  ['swritedata',['swritedata',['../smath_8h.html#ae1006bb67f4a25edf3f1dc3ca9cc48b7',1,'stmp.c']]],
+  ['swritedata',['swritedata',['../smath_8h.html#ac4771215ac68d5952371c8d57fded2f7',1,'stmp.c']]],
   ['szero',['szero',['../smath_8h.html#a0d63bad5fa8dd1fcee405d33fd55ab3a',1,'stmp.c']]],
   ['szerocol',['szerocol',['../smath_8h.html#a035f0fc47d4330c15907bbff69ba7f2d',1,'stmp.c']]]
 ];

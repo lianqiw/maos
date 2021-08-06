@@ -222,7 +222,7 @@ var searchData=
   ['cusp',['cusp',['../classcusp.html#ab3188077a0314e4e23234e29e84d8851',1,'cusp']]],
   ['cvecperm',['cvecperm',['../cmath_8h.html#a379334c2ea8abebb8df335a241c57f8f',1,'ctmp.c']]],
   ['cvecpermi',['cvecpermi',['../cmath_8h.html#a19a85280f9c37ee345f5eec0f8ca0274',1,'ctmp.c']]],
-  ['cwritedata',['cwritedata',['../cmath_8h.html#a28f2c1a91c80f5dc8c951f875d79f2de',1,'ctmp.c']]],
+  ['cwritedata',['cwritedata',['../cmath_8h.html#aafc1ef87005c3b532eb7f6f9c7cdeb10',1,'ctmp.c']]],
   ['czero',['czero',['../cmath_8h.html#a6542a10974bdf1f47df6653aefbb7200',1,'ctmp.c']]],
   ['czerocol',['czerocol',['../cmath_8h.html#ae09135de6a5f8091a474c76e02440943',1,'ctmp.c']]]
 ];

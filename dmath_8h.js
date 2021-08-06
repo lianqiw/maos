@@ -163,7 +163,7 @@ var dmath_8h =
     [ "dcellsub", "dmath_8h.html#abd09358c883f451c4f72745ce846b252", null ],
     [ "dbspline_prep", "dmath_8h.html#a801f95bc127f94b526980791d71e2bb1", null ],
     [ "dbspline_eval", "dmath_8h.html#a88fcc3be27ce68860cc93c2540c363b2", null ],
-    [ "dwritedata", "dmath_8h.html#a3452afc53eefe2391f8720999be80c19", null ],
+    [ "dwritedata", "dmath_8h.html#a9355b8d12e57889650934246907457a0", null ],
     [ "dreaddata", "dmath_8h.html#ab6c9042ea1d71dbc9c2d51719a866c48", null ],
     [ "dnew_mmap", "dmath_8h.html#a4d4c2db8c8067633284451e62c93c3b4", null ],
     [ "dcellnew_mmap", "dmath_8h.html#a1316ccf466cc310d562aae0acf6b8674", null ],

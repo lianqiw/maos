@@ -6,7 +6,7 @@ var class_cell =
     [ "Cell", "class_cell.html#a959d917d5f9ba30bc9c7b2de2dfbba2b", null ],
     [ "M", "class_cell.html#a9167531d4f1ca1bee662f95d15489476", null ],
     [ "M", "class_cell.html#ad97896c36ce3a00b8902622a4cbde7d5", null ],
-    [ "p2pm", "class_cell.html#a338db15ee89501a916d749287d31002f", null ],
+    [ "p2pm", "class_cell.html#a49db69414885ecbfa2c0a385bead15a2", null ],
     [ "operator=", "class_cell.html#a3ab732613bbbbb314d0c4910b9321cb0", null ],
     [ "init", "class_cell.html#a8375b8f93fad1e994c72a72ec4387dd2", null ],
     [ "New", "class_cell.html#ab338d6db56a4b1bc0ad5ae92821fe59a", null ],

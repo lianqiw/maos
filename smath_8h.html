@@ -513,8 +513,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>scellmulsp</b> (<a cl
 <tr class="separator:a50161dfd4e2b3c5ff4e93f89eef86b2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89c241df68b764caab07789f4ec3cf80"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a89c241df68b764caab07789f4ec3cf80">sbspline_eval</a> (<a class="el" href="type_8h.html#structscell">scell</a> *coeff, <a class="el" href="type_8h.html#structsmat">smat</a> *x, <a class="el" href="type_8h.html#structsmat">smat</a> *y, <a class="el" href="type_8h.html#structsmat">smat</a> *xnew, <a class="el" href="type_8h.html#structsmat">smat</a> *ynew)</td></tr>
 <tr class="separator:a89c241df68b764caab07789f4ec3cf80"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1006bb67f4a25edf3f1dc3ca9cc48b7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#ae1006bb67f4a25edf3f1dc3ca9cc48b7">swritedata</a> (file_t *fp, const <a class="el" href="type_8h.html#structsmat">smat</a> *A)</td></tr>
-<tr class="separator:ae1006bb67f4a25edf3f1dc3ca9cc48b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4771215ac68d5952371c8d57fded2f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#ac4771215ac68d5952371c8d57fded2f7">swritedata</a> (file_t *fp, const <a class="el" href="type_8h.html#structsmat">smat</a> *A, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
+<tr class="separator:ac4771215ac68d5952371c8d57fded2f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34f24ce33f4c2f938d90756d90e51bf3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a34f24ce33f4c2f938d90756d90e51bf3">sreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a34f24ce33f4c2f938d90756d90e51bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5be753e0aa8988d7f960103c9ab9c0e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#ac5be753e0aa8988d7f960103c9ab9c0e">snew_mmap</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header, const char *format,...)</td></tr>
@@ -3382,8 +3382,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
 
 </div>
 </div>
-<a id="ae1006bb67f4a25edf3f1dc3ca9cc48b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae1006bb67f4a25edf3f1dc3ca9cc48b7">&#9670;&nbsp;</a></span>swritedata()</h2>
+<a id="ac4771215ac68d5952371c8d57fded2f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4771215ac68d5952371c8d57fded2f7">&#9670;&nbsp;</a></span>swritedata()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3398,7 +3398,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td>
-          <td class="paramname"><em>A</em>&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>ncol</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
