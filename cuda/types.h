@@ -333,9 +333,11 @@ public:
 					if(NRef()>1){
 						dbg("Copying into referenced data that has different size.\n");
 					}
+					if(this->N()!=0){
+						dbg("Reinitiate data during copying, old size is %ldx%ld, new size is %ldx%ld\n", Nx(), Ny(), in.Nx(), in.Ny());
+					}
 					deinit();
 					init(in.Nx(), in.Ny());
-					dbg("Reinitiate data during copying\n");
 				}
 				Dev<T>::Copy((*this)(), in(), in.N(), stream);
 			}

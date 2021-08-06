@@ -365,7 +365,39 @@ void test_sde(){
     }
     exit(0);
 }
+void test_async(){
+    dmat*xx=dnew_file(10,10,"test_mat","test_mat.bin");
+    
+    long sizes[3]={10,0,10};
+    dcell* xc=dcellnew_file(3, 1, sizes, sizes, "test0", "test_cell.bin");
+    for(int i=0; i<PN(xc); i++){
+        dmat *x=P(xc,i);
+        //x->offset=-1;//turn on async
+        //writebin_auto(x);
+    
+        for(long iy=0; iy<NY(x); iy++){
+            for(long ix=0; ix<NX(x); ix++){
+                P(x, ix, iy)=ix+iy*10;
+            }
+        }
+    }
+    dcp(&xx, P(xc,0));
+    
+    writebin_async(xx, 2);
+    dfree(xx);
+    writebin(xc, "test_cell0.bin");
+
+    writebin_async(xc, 1);
+    writebin_async(xc, 3);
+
+    //writebin_async(xc, 800);
+    
+   
+    dcellfree(xc);
+    exit(0);
+}
 int main(int argc, char **argv){
+    test_async();
     test_sde();
     test_sho();
     test_mm();

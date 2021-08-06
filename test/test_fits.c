@@ -35,14 +35,24 @@ int main(){
     A->header=strdup("dx=1/64\ndy=1/64\nLong=kaflasdjfl ksflksjlfjasdflkj asldfj als fals fl asfjalsdf jalsf djasldf jal fsalfkjasdflkj asldfkj asldf \nadf\nwvf=1.e-4");
     writebin(A, "A.bin");
     writebin(A, "A.fits");
-    writebin(A, "A.fits.gz");
+    writebin(A, "Azip.fits.gz");
     writebin(B, "B.bin");
     writebin(B, "B.fits");
+    dfree(A);
+    dcellfree(B);
     dmat *C=dread("A.fits");
-    writebin(C, "C.fits");
+    dfree(C);
+    C=dread("Azip");
+    dfree(C);
+    C=dread("A.bin");
+    dfree(C);
+
     dcell *D=dcellread("B.fits");
-    writebin(D, "D.fits");
-    dcell *E=dcellread("A.fits");
-    writebin(E, "E.fits");
-    writebin(E, "E.fits.gz");
+    dcellfree(D);
+    D=dcellread("B.bin");
+    dcellfree(D);
+    
+    //read dmat as dcell
+    D=dcellread("A.fits");
+    dcellfree(D);
 }

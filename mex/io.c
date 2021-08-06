@@ -261,6 +261,7 @@ file_t* zfopen(const char* fn, const char* mod){
 	return fp;
 }
 void zfclose(file_t* fp){
+	if(!fp) return;
 	if(fp->isgzip){
 		gzclose((gzFile)fp->p);
 	} else{

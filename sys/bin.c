@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <ctype.h> /*isspace */
 #include <errno.h>
+#include <aio.h>
 #include "process.h"
 #include "misc.h"
 #include "path.h"
@@ -88,7 +89,7 @@ struct file_t{
 	int isgzip;/**<Is the file zipped.*/
 	int isfits;/**<Is the file fits.*/
 	int fd;    /**<The underlying file descriptor, used for locking. */
-	int eof;   /**<end of file*/
+	int err;   /**<error happened. 1: eof, 2: other error*/
 };
 /*
   Describes the information about mmaped data. Don't unmap a segment of mmaped
@@ -102,6 +103,59 @@ struct mem_t{
 	int kind; /**<Kind of memory. 0: heap, 1: mmap*/
 	int nref; /**<Number of reference.*/
 };
+
+#define swap2bytes(data) \
+( (((data) >> 8) & 0x00FF) | (((data) << 8) & 0xFF00) ) 
+
+#define swap4bytes(data)   \
+( (((data) >> 24) & 0x000000FF) | (((data) >>  8) & 0x0000FF00) | \
+  (((data) <<  8) & 0x00FF0000) | (((data) << 24) & 0xFF000000) ) 
+
+#define swap8bytes(data)   \
+( (((data) >> 56) & 0x00000000000000FF) | (((data) >> 40) & 0x000000000000FF00) | \
+  (((data) >> 24) & 0x0000000000FF0000) | (((data) >>  8) & 0x00000000FF000000) | \
+  (((data) <<  8) & 0x000000FF00000000) | (((data) << 24) & 0x0000FF0000000000) | \
+  (((data) << 40) & 0x00FF000000000000) | (((data) << 56) & 0xFF00000000000000) ) 
+
+void swap_array(void* out, void* in, long bytes, int size){
+	switch(size){
+	case 1:
+		if(out!=in){
+			memcpy(out, in, bytes);
+		}
+		break;
+	case 2:
+	{
+		uint16_t* pout=out;
+		uint16_t* pin=in;
+		long len=bytes>>1;
+		for(long i=0; i<len; i++){
+			pout[i]=swap2bytes(pin[i]);
+		}
+	}
+	break;
+	case 4:
+	{
+		uint32_t* pout=out;
+		uint32_t* pin=in;
+		long len=bytes>>2;
+		for(long i=0; i<len; i++){
+			pout[i]=swap4bytes(pin[i]);
+		}
+	}
+	break;
+	default://this is the longest data unit we handle.
+	{
+		uint64_t* pout=out;
+		uint64_t* pin=in;
+		long len=bytes>>3;
+		for(long i=0; i<len; i++){
+			pout[i]=swap8bytes(pin[i]);
+		}
+	}
+	break;
+	}
+}
 /**
    Disables file saving when set to 1.
 */
@@ -349,6 +403,7 @@ file_t* zfopen(const char* fn, const char* mode){
 const char* zfname(file_t* fp){
 	return fp?fp->fn:NULL;
 }
+
 /**
    Return 1 when it is a fits file.
 */
@@ -375,7 +430,7 @@ void zfclose(file_t* fp){
  * Wrap normal and gzip file write operation.
  * */
 int zfwrite_wrap(const void* ptr, const size_t tot, file_t* fp){
-	if(!fp||fp->fd<0||fp->eof||!ptr){
+	if(!fp||fp->fd<0||fp->err||!ptr){
 		return -1;
 	} else if(fp->isgzip){
 		return gzwrite(fp->gp, ptr, tot);
@@ -387,12 +442,11 @@ int zfwrite_wrap(const void* ptr, const size_t tot, file_t* fp){
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
   fwrite. Follows the interface of fwrite.
 */
-void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+int zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	size_t tot=size*nmemb;
-	int err=0;
-	while(!err){
+	while(!fp->err){
 		int count=zfwrite_wrap(ptr, tot, fp);
-		if(count>0){
+		if(count>=0){//=0 is not an error
 			if((size_t)count<tot){
 				ptr+=count;
 				tot-=count;
@@ -400,81 +454,50 @@ void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* 
 				break;
 			}
 		} else{
-			err=1;
+			fp->err=2;
 		}
 	}
-	if(err){
-		fp->eof=1;
+	if(fp->err){
 		if(errno) perror("zfwrite_do");
 		warning("write %lu bytes to %s failed\n", tot, fp->fn);
 	}
+	return fp->err;
 }
 
 /**
    Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
 */
-void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
+	if(!ptr || !size || !nmemb || !fp) return 0;
+	int ans=0;
 	if(fp->isfits&&BIGENDIAN==0){
 		int length=size*nmemb;
-		if(!length) return;
 		/* write a block of 2880 bytes each time, with big-endianness.*/
 		const int bs=2880;
 		char junk[bs];
 		int nb=(length+bs-1)/bs;
 		char* in=(char*)ptr;
-		for(int ib=0; ib<nb; ib++){
+		for(int ib=0; ib<nb&&!ans; ib++){
 			int nd=length<bs?length:bs;
-			switch(size){
-			case 1:
-				memcpy(junk, in, nd);
-				break;
-			case 2:
-				for(int i=0; i<nd; i+=2){
-					junk[i]=in[i+1];
-					junk[i+1]=in[i];
-				}
-				break;
-			case 4:
-				for(int i=0; i<nd; i+=4){
-					junk[i]=in[i+3];
-					junk[i+1]=in[i+2];
-					junk[i+2]=in[i+1];
-					junk[i+3]=in[i];
-				}
-				break;
-			case 8:
-			case 16:
-				for(int i=0; i<nd; i+=8){
-					junk[i]=in[i+7];
-					junk[i+1]=in[i+6];
-					junk[i+2]=in[i+5];
-					junk[i+3]=in[i+4];
-					junk[i+4]=in[i+3];
-					junk[i+5]=in[i+2];
-					junk[i+6]=in[i+1];
-					junk[i+7]=in[i];
-				}
-				break;
-			default:
-				error("Invalid\n");
-			}
+			swap_array(junk, in, nd, size);
 			/* use bs instead of nd to test tailing blanks*/
 			in+=bs; length-=bs;
 			if(length<0){
 				memset(junk+nd, 0, (bs-nd)*sizeof(char));
 			}
-			zfwrite_do(junk, sizeof(char), bs, fp);
+			ans=zfwrite_do(junk, sizeof(char), bs, fp);
 		}
 	} else{
-		zfwrite_do(ptr, size, nmemb, fp);
+		ans=zfwrite_do(ptr, size, nmemb, fp);
 	}
+	return ans;
 }
 /**
  * Wrap normal and gzip file operation.
  * */
 int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
-	if(!fp||fp->fd<0||fp->eof||!ptr){
+	if(!fp||fp->fd<0||fp->err||!ptr){
 		return -1;
 	} else if(fp->isgzip){
 		return gzread(fp->gp, ptr, tot);
@@ -486,9 +509,8 @@ int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
    Read from the file. Handle partial read.
 */
 int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-	int err=0;
 	ssize_t tot=size*nmemb;
-	while(!err){
+	while(!fp->err){
 		int count=zfread_wrap(ptr, tot, fp);
 		if(count>0){
 			if(count<tot){
@@ -497,66 +519,36 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 			} else{
 				break;
 			}
-		} else{
-			err=1;
+		} else if(count==0){//eof
+			fp->err=1;
+		} else{//-1 indicates error
+			fp->err=2;
 		}
 	}
-	if(err){
-		fp->eof=1;
-	}
-	return err;
+	return fp->err?-1:0;
 }
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
+   return 0 when succeed and -1 when error.
 */
 int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
 	int ans=0;
-	if(fp->eof){
+	if(fp->err){
 		ans=-1;
 	} else if(fp->isfits&&size>1){/*need to do byte swapping.*/
 		const long bs=2880;
-		char junk[bs];
 		long length=size*nmemb;
 		long nb=(length+bs-1)/bs;
 		char* out=(char*)ptr;
 		for(int ib=0; ib<nb; ib++){
-			ans=zfread_do(junk, sizeof(char), bs, fp);
-			if(ans) break;
 			int nd=length<bs?length:bs;
-			switch(size){
-			case 2:
-				for(int i=0; i<nd; i+=2){
-					out[i]=junk[i+1];
-					out[i+1]=junk[i];
-				}
-				break;
-			case 4:
-				for(int i=0; i<nd; i+=4){
-					out[i]=junk[i+3];
-					out[i+1]=junk[i+2];
-					out[i+2]=junk[i+1];
-					out[i+3]=junk[i];
-				}
-				break;
-			case 8:
-			case 16:
-				for(int i=0; i<nd; i+=8){
-					out[i]=junk[i+7];
-					out[i+1]=junk[i+6];
-					out[i+2]=junk[i+5];
-					out[i+3]=junk[i+4];
-					out[i+4]=junk[i+3];
-					out[i+5]=junk[i+2];
-					out[i+6]=junk[i+1];
-					out[i+7]=junk[i];
-				}
-				break;
-			default:
-				fp->eof=1;
-				warning("Invalid size=%ld\n", size);
-				ans=-1;
+			ans=zfread_do(out, sizeof(char), nd, fp);
+			if(nd<bs){//read the padding
+				zfseek(fp, bs-nd, SEEK_CUR);
 			}
+			if(ans) break;
+			swap_array(out, out, nd, size);
 			out+=bs;
 			length-=bs;
 		}
@@ -566,20 +558,9 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	return ans;
 }
 /**
-   Wraps zfread_try and do error checking.
-*/
-/*
-void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-	int ans=zfread_try(ptr, size, nmemb, fp);
-	if(ans){
-		warning("Error (%d) happened while reading %s\n", ans, fp->fn);
-		fp->eof=1;
-	}
-}*/
-/**
    Move the current position pointer, like fseek
 */
-int zfseek(file_t* fp, long offset, int whence){
+long zfseek(file_t* fp, long offset, int whence){
 	if(fp->isgzip){
 		return gzseek(fp->gp, offset, whence)<0?-1:0;
 	} else{
@@ -591,17 +572,19 @@ int zfseek(file_t* fp, long offset, int whence){
 */
 void zfrewind(file_t* fp){
 	if(fp->isgzip){
-		if(gzrewind(fp->gp)){
-			warning("Failed to rewind\n");
+		if(!gzrewind(fp->gp)){
+			fp->err=0;
 		}
 	} else{
-		lseek(fp->fd, 0, SEEK_SET);
+		if(lseek(fp->fd, 0, SEEK_SET)!=-1){
+			fp->err=0;
+		}
 	}
 }
 /**
    Tell position pointer in file.
 */
-int zfpos(file_t* fp){
+long zfpos(file_t* fp){
 	if(fp->isgzip){
 		return gztell(fp->gp);
 	} else{
@@ -612,25 +595,26 @@ int zfpos(file_t* fp){
    Return 1 if end of file is reached.
 */
 int zfeof(file_t* fp){
-	if(!fp->eof){
+	if(!fp->err){
 		if(zfseek(fp, 1, SEEK_CUR)<0){
-			fp->eof=1;
+			fp->err=1;
 		} else{
 			zfseek(fp, -1, SEEK_CUR);//restore
 		}
 	}
-	return fp->eof;
+	return fp->err==1;
 }
 /**
    Flush the buffer.
 */
-
+/*
 void zflush(file_t* fp){
 	if(fp->isgzip){
 		gzflush(fp->gp, 4);
 	}
-}
-#define zfread_check(A...) if(zfread(A)) goto read_error
+}*/
+#define zfread_check_eof(A...) if(zfread(A)){ if(fp->err==1) goto read_error_eof; else goto read_error;}//eof is not error
+#define zfread_check(A...) if(zfread(A)) goto read_error //eof is error
 /*
   Obtain the current magic number, string header, and array size from a bin
   format file. In file, the string header is located before the data magic.
@@ -645,9 +629,9 @@ read_bin_header(header_t* header, file_t* fp){
 		warning("fits file is not supported\n");
 		return -1;
 	}
-	while(!fp->eof){
+	while(!fp->err){
 		/*read the magic number.*/
-		zfread_check(&magic, sizeof(uint32_t), 1, fp);
+		zfread_check_eof(&magic, sizeof(uint32_t), 1, fp);
 		/*If it is hstr, read or skip it.*/
 		if((magic&M_SKIP)==M_SKIP){//dummy
 			continue;
@@ -670,16 +654,17 @@ read_bin_header(header_t* header, file_t* fp){
 			if(magic!=magic2||nlen!=nlen2){
 				dbg("magic=%u, magic2=%u, nlen=%lu, nlen2=%lu\n",
 					magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
-				fp->eof=1;
-				goto read_error;
+				fp->err=2;
 				warning("Header string verification failed\n");
+				goto read_error;
 			}
 		} else{ //Finish
 			header->magic=magic;
 			zfread_check(&header->nx, sizeof(uint64_t), 1, fp);
 			zfread_check(&header->ny, sizeof(uint64_t), 1, fp);
 			if((magic&0x6400)!=0x6400){
-				warning("wrong magic number=%x. cancelled.\n", magic);
+				warning("wrong magic number=%x at %ld. cancelled.\n", magic, zfpos(fp));
+				fp->err=2;
 				goto read_error;
 			} else{
 				return 0;
@@ -687,11 +672,14 @@ read_bin_header(header_t* header, file_t* fp){
 		}
 	}/*while*/
 read_error:
-	dbg("read_bin_header: eof or error happened\n");
+	if(fp->err){
+		warning("read_bin_header: error=%d.\n", fp->err);
+	}
+read_error_eof:
 	header->magic=0;
 	header->nx=0;
 	header->ny=0;
-	fp->eof=1;
+	free(header->str); header->str=NULL;
 	return -1;
 }
 
@@ -803,7 +791,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 			const char* nl=strchr(str, '\n');//separation of keys
 			const char* nc=strchr(str, ';');//separation of keys
 			const char* eq=strchr(str, '=');
-			if(!nl) nl=str+strlen(str);
+			if(!nl) nl=str_end;
 			if(nc&&nc<nl) nl=nc;
 			if(eq>nl) eq=0;
 			int length;
@@ -833,7 +821,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 			} else{
 				str+=length;
 			}
-			while(isspace(str[0])&&str<str_end) str++;
+			while(str<str_end && isspace(str[0])) str++;
 		}
 	}
 	FLUSH_OUT;
@@ -855,7 +843,7 @@ read_fits_header(header_t* header, file_t* fp){
 	while(!end){
 		int start=0;
 		if(page==0){
-			zfread_check(line, 1, 80, fp);
+			zfread_check_eof(line, 1, 80, fp);
 			line[80]='\0';
 			if(strncmp(line, "SIMPLE", 6)&&strncmp(line, "XTENSION= 'IMAGE", 16)){
 				warning("Garbage in fits file %s\n", fp->fn);
@@ -943,16 +931,18 @@ read_fits_header(header_t* header, file_t* fp){
 		header->magic=M_INT8;
 		break;
 	default:
-		fp->eof=1;
-		error("Invalid\n");
+		fp->err=2;
+		warning("Unsupported bitpix=%d.\n", bitpix);
 	}
 	return 0;
 read_error:
-	dbg("read_fits_header: error happened\n");
+	if(fp->err){
+		warning("read_fits_header: error=%d\n", fp->err);
+	}
+read_error_eof:
 	header->magic=0;
 	header->nx=0;
 	header->ny=0;
-	fp->eof=1;
 	return -1;
 }
 /**
@@ -981,7 +971,7 @@ void write_header(const header_t* header, file_t* fp){
 int read_header(header_t* header, file_t* fp){
 	int ans;
 	header->str=NULL;
-	if(fp->eof){
+	if(fp->err){
 		ans=-1;
 	} else if(fp->isfits){
 		ans=read_fits_header(header, fp);
@@ -1019,8 +1009,10 @@ uint64_t bytes_header(const char* header){
    Write an 1-d or 2-d array into the file. First write a magic number that
    represents the data type. Then write two numbers representing the
    dimension. Finally write the data itself.
+
+   returns the file offset of the array start
 */
-void writearr(const void* fpn,     /**<[in] The file pointer*/
+long writearr(const void* fpn,     /**<[in] The file pointer*/
 	const int isfn,      /**<[in] Is this a filename or already opened file*/
 	const size_t size,   /**<[in] Size of each element*/
 	const uint32_t magic,/**<[in] The magic number. see bin.h*/
@@ -1040,11 +1032,13 @@ void writearr(const void* fpn,     /**<[in] The file pointer*/
 		if(!disable_save){
 			warning_once("fp is empty\n");
 		}
-		return;
+		return -1;
 	}
 	write_header(&header, fp);
+	long pos=zfpos(fp);
 	if(nx*ny>0) zfwrite(p, size, nx*ny, fp);
 	if(isfn) zfclose(fp);
+	return pos;
 }
 
 
@@ -1243,4 +1237,97 @@ void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char
 	*p0=p;
 	if(header0) *header0=header;
 }
+struct async_t{
+	file_t* fp;
+	const char* p;  //original memory
+	long pos; //start position of array in file
+	long prev;//previous saved index 
+	struct aiocb aio;
+};
+//same interface as writearr except only fp is allowed
+async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
+			  const char* str, const void* p, const uint64_t nx, const uint64_t ny){
+	//dbg("%s: initializing async info\n", fp->fn);
+	if(!fp) return NULL;
+#if 1 //use hole
+	header_t header={magic, nx, ny, (char*)str};
+	write_header(&header, fp);
+	long pos=zfpos(fp);
+	if(nx&&ny){//need to write after seek to create a hole.
+		char zero=0;
+		zfseek(fp, size*nx*ny-sizeof(char), SEEK_CUR);
+		zfwrite(&zero, 1, sizeof(char), fp);
+	}
+#else
+	long pos=writearr(fp, 0, size, magic, str, p, nx, ny);
+#endif
+	if(pos<0){
+		dbg("pos shall not be negative\n");
+		return NULL;
+	}
+	async_t* async=mycalloc(1, struct async_t);
+	async->fp=fp;
+	async->p=p;
+	async->pos=pos;
+	async->prev=0;
+	async->aio.aio_fildes=fp->fd;
+	return async;
+}
+static void async_sync(async_t* async, int wait){
+	long ans;
+	if(async->aio.aio_nbytes){//check previous result
+		//Notice, if aio_fsync is called after aio_write, aio_return returns status of aio_fsync, not aio_write.
+		//Calling aio_fsync breaks the code (why?)
+		//aio_fsync is not available in macos.
+		int retry=0;
+		while((ans=aio_error(&async->aio))==EINPROGRESS&&wait){
+			const struct aiocb* paio=&async->aio;
+			//aio_suspend waits for async io to finish. it may also timeout or be intterupted
+			if((ans=aio_suspend(&paio, 1, NULL))){
+				dbg("%s: aio_suspend returns %ld\n", zfname(async->fp), ans);
+			}
+			retry++;
+		}
+		if(ans!=EINPROGRESS){
+			if(retry>1) dbg("%s: aio synced after %d retries\n", zfname(async->fp), retry);
+			if((ans=aio_return(&async->aio))!=(long)async->aio.aio_nbytes){
+				dbg("%s: wrote %ld bytes out of %ld, mark eof.\n",
+					zfname(async->fp), ans, async->aio.aio_nbytes);
+				async->fp->err=2;
+			}
+			async->aio.aio_nbytes=0;
+		}
+	}
+}
+void async_write(async_t* async, long offset, int wait){
+	if(!async||async->fp->err){
+		dbg("async is empty or error, aborted.\n");
+		return;
+	}
+	long ans;
+	//synchronize previous operation
 
+	if(async->aio.aio_nbytes){
+		async_sync(async, wait);
+	}
+	if(!wait&&async->aio.aio_nbytes){
+		//dbg("%s: skip this write\n", zfname(async->fp));
+		return;
+	}
+	if(offset>async->prev){//queue next.
+		async->aio.aio_offset=async->pos+async->prev;
+		async->aio.aio_buf=(void*)(async->p+async->prev);
+		async->aio.aio_nbytes=offset-async->prev;
+		//dbg("%s: Async writing from %ld to %ld at offset %ld\n", zfname(async->fp), async->prev, offset, async->aio.aio_offset);
+		if((ans=aio_write(&async->aio))){
+			async->fp->err=2;
+			dbg("%s: aio_write returns %ld, mark eof.\n", zfname(async->fp), ans);
+		}
+		async->prev=offset;
+	}
+}
+void async_free(async_t* async){
+	if(!async) return;
+	async_sync(async, 1);
+	free(async);
+}

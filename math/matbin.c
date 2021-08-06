@@ -25,13 +25,21 @@
 /**
    Function to write dense matrix data into a file pointer. Generally used by
    library developer */
-void X(writedata)(file_t* fp, const X(mat)* A){
-	uint64_t nx=0, ny=0;
-	if(A){
-		nx=(uint64_t)A->nx;
-		ny=(uint64_t)A->ny;
+void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
+	if(ncol==-1){//initialize async data
+		if(A && !A->async){
+			((X(mat)*)A)->async=async_init(fp, sizeof(T), M_T, A->header, A->p, A->nx, A->ny);
+		}else{
+			dbg("%s: async is already initialized or A=%p is empty\n", zfname(fp), A);
+		}
+	}else if(A && ncol>0 && A->async){//write async data
+		if(ncol>A->ny) ncol=A->ny;
+		async_write(A->async, A->nx*ncol*sizeof(T), 0);
+	}else if(fp){//normal writing
+		writearr(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?A->p:NULL, A?A->nx:0, A?A->ny:0);
+	}else{
+		dbg("writedata called with no fp or async information.\n");
 	}
-	writearr(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?A->p:NULL, nx, ny);
 }
 
 /**

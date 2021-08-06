@@ -3052,9 +3052,10 @@ parms_t* setup_parms(const char* mainconf, const char* extraconf, int over_ride)
 			//Make symlink after simulation runs.
 			char fn[PATH_MAX];
 			snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
+			//remove("maos_done.conf");
 			remove("maos_recent.conf");
 			mysymlink(fn, "maos_recent.conf");
-
+			//remove("run_done.log");
 			remove("run_recent.log");
 			snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 			mysymlink(fn, "run_recent.log");

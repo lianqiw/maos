@@ -20,8 +20,15 @@
 #include "maos.h"
 #include "version.h"
 
-//Return maos data pointer by name. Currently the numbers are filled manually. The next step is to automatically generate them from maos/types.h
-
+/**
+ * main() is created separately in this main.c instead of maos.c so that we can
+ * compile libmaos to be used with mex without main().
+ * 
+*/
+/**
+    Return maos data pointer by name. Currently the numbers are filled manually. The
+	next step is to automatically generate them from maos/types.h
+*/
 static void* find_var(const char* name){
 	struct VAR_MAP{
 		char* name;
@@ -457,7 +464,7 @@ int main(int argc, const char* argv[]){
 			info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(0), HOST);
 			maos_sim();
 		}
-		rename_file(0);
+		rename_file(signal_caught);
 	}
 
 	maos_reset();
@@ -466,9 +473,6 @@ int main(int argc, const char* argv[]){
 	free(scmd);
 	free(arg->gpus);
 	free(arg);
-	extern int sim_exit;
-	extern int exit_success;
-	exit_success=sim_exit?0:1;
-	scheduler_finish(sim_exit?SIGTERM:0);
+	scheduler_finish(signal_caught);
 	return 0;
 }

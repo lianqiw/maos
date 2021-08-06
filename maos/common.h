@@ -25,9 +25,7 @@
 #include "parms.h"
 #include "types.h"
 #include "utils.h"
-extern int exit_fail;
 extern const char *dirskysim;
-#define EXIT raise(SIGTERM)
 extern global_t *global;
 extern int PARALLEL;
 #endif

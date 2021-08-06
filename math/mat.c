@@ -70,10 +70,13 @@ X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ..
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
-	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	X(mat)* out=X(new)(nx, ny);
-	if(out && fn) out->fn=strdup(fn);
-	if(out && header) out->header=strdup(header);
+	if(out&&header) out->header=strdup(header);
+	if(disable_save&&!IS_SHM(fn))fn=NULL;
+	if(out&&fn) {
+		out->fp=zfopen(fn, "w");
+		out->async=async_init(out->fp, sizeof(T), M_T, out->header, out->p, out->nx, out->ny);
+	}
 	return out;
 }
 /**
@@ -105,11 +108,15 @@ X(mat)* X(mat_cast)(const void* A){
 */
 void X(free_do)(X(mat)* A){
 	if(check_mat(A)){
-		if(A->fn){
-			writebin(A, "%s", A->fn);
-			free(A->fn);
+		//only need to initiate write when fp is set.
+		//if(A->fp) X(writedata)(A->fp, A, A->ny);//don't do this. 
+		if(A->async){//make sure entire data is written.
+			async_write(A->async, A->nx*A->ny*sizeof(T), 1);
+			async_free(A->async);
 		}
+		if(A->fp) zfclose(A->fp);
 		mem_unref(&A->mem);//takes care of freeing memory.
+		
 #ifndef COMP_LONG
 		if(A->fft) X(fft_free_plan)(A->fft);
 #endif
@@ -704,10 +711,13 @@ X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
-	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	X(cell)* out=X(cellnew3)(nx, ny, nnx, nny);
-	if(out && fn) out->fn=strdup(fn);
-	if(out && header) out->header=strdup(header);
+	if(out&&header) out->header=strdup(header);
+	if(disable_save&&!IS_SHM(fn))fn=NULL;
+	if(out && fn) {
+		out->fp=zfopen(fn, "w");
+		writedata_by_id(out->fp, out, 0, -1);
+	}
 	return out;
 }
 /**
@@ -718,10 +728,13 @@ X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
-	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	X(cell*) out=X(cellnew_same)(nx, ny, mx, my);
-	if(out && fn) out->fn=strdup(fn);
 	if(out&&header) out->header=strdup(header);
+	if(disable_save&&!IS_SHM(fn))fn=NULL;
+	if(out && fn) {
+		out->fp=zfopen(fn, "w");
+		writedata_by_id(out->fp, out, 0, -1);
+	}
 	return out;
 }
 /**

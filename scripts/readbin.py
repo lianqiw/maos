@@ -162,7 +162,7 @@ def readbin_do(fp, isfits):
         try:
             dname=magic2dname[magic & 0xFFFF]
         except:
-            raise ValueError("Invalid magic number {}".format(magic))
+            raise ValueError("Invalid magic number {} at {}".format(magic, fp.tell()))
         
     if dname[0:2]=='MC': #cell array
         if nx>0 and ny>0:

@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dlfcn.h>
-int exit_success=0;//set to 1 to enable print memory not freed.
+int signal_caught=0;//indicate that signal is caught.
 #define IN_MEM_C 1
 #include "mem.h"
 #include "thread.h"
@@ -269,11 +269,11 @@ static void print_mem_debug(){
 	if(MROOT){
 		info3("%ld (%.3f MB) allocated memory not freed!!!\n",
 			memcnt, (memalloc-memfree)/1024./1024.);
-		if(exit_success){
+		if(!signal_caught){
 			twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
 			twalk(MSTATROOT, print_usage);//print results.
 		}else{
-			info3("Set exit_success=1 to enable printing of not freed memory\n");
+			info3("Printing of not freed memory is enabled only when signal_caught=0.\n");
 		}
 	} else{
 		info3("All allocated memory are freed.\n");
@@ -348,4 +348,92 @@ void register_deinit(void (*fun)(void), void* data){
 		DEINIT=node;
 		UNLOCK(mutex_mem);
 	}
+}
+
+quitfun_t quitfun=NULL;
+void default_quitfun(const char* msg){
+	info("%s", msg);
+	sync();
+	if(strncmp(msg, "FATAL", 5)){
+		print_backtrace();
+		sync();
+		raise(1);
+	}
+	exit(0);
+}
+static int (*signal_handler)(int)=0;
+static volatile sig_atomic_t fatal_error_in_progress=0;
+void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
+	(void)unused;
+	signal_caught=sig;
+	info("\ndefault_signal_handler: %s (%d)\n", strsignal(sig), sig);
+	if(sig==SIGTERM){
+		char sender[PATH_MAX]={0};
+		get_job_progname(sender, PATH_MAX, siginfo->si_pid);
+		info("Code is %d, send by %d (uid=%d, %s).\n",
+			siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
+	}
+	sync();
+	int cancel_action=0;
+	/*
+	{
+	struct sigaction act={0};
+	act.sa_handler=SIG_DFL;
+	sigaction(sig, &act, 0);//prevent recursive call of handler
+	sync();
+	}
+	*/
+	if(sig==0){
+		dbg_time("Signal 0 caught. do nothing\n");
+		return;
+	}
+	if(fatal_error_in_progress){
+		info("Signal handler is already in progress. new signal is ignored\n");
+		return;
+	}
+	fatal_error_in_progress++;
+	if(iscrash(sig)){
+		if(siginfo&&siginfo->si_addr){
+			info("Memory location: %p\n", siginfo->si_addr);
+		}
+		//It is not safe to call backtrace in SIGSEGV, so may hang.
+		print_backtrace();
+	}
+	dbg_time("Call signal_handler %p\n", signal_handler);
+	if(signal_handler&&signal_handler(sig)){
+		cancel_action=1;
+	}
+	sync();
+	if(!cancel_action){//Propagate signal to default handler.
+		struct sigaction act={0};
+		act.sa_handler=SIG_DFL;
+		sigaction(sig, &act, 0);
+		raise(sig);
+	}/*else{//cancel signal, keep going
+		struct sigaction act={0};
+		act.sa_handler=NULL;
+		act.sa_sigaction=default_signal_handler;
+		act.sa_flags=SA_SIGINFO;
+		sigaction(sig, &act, 0);
+	}*/
+}
+
+/**
+   Register signal handler
+*/
+void register_signal_handler(int (*func)(int)){
+	struct sigaction act={0};
+	act.sa_sigaction=default_signal_handler;
+	act.sa_flags=SA_SIGINFO;
+	sigaction(SIGBUS, &act, 0);
+	sigaction(SIGILL, &act, 0);
+	sigaction(SIGSEGV, &act, 0);
+	sigaction(SIGINT, &act, 0);
+	sigaction(SIGTERM, &act, 0);
+	sigaction(SIGABRT, &act, 0);
+	//sigaction(SIGHUP, &act, 0);
+	signal(SIGHUP, SIG_IGN);//ignore the signal.
+	sigaction(SIGUSR1, &act, 0);
+	sigaction(SIGQUIT, &act, 0);
+	signal_handler=func;
 }

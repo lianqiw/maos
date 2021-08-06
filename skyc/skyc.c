@@ -114,10 +114,8 @@ int main(int argc, const char* argv[]){
 	free(dirsetup);
 	free(dirstart);
 	rename_file(0);
-	scheduler_finish(0);
+	scheduler_finish(signal_caught);
 	print_mem("End");
 	info("Simulation finished at %s in %s.\n", myasctime(0), HOST);
-	extern int exit_success;
-	exit_success=1;
 	return 0;
 }

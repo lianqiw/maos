@@ -1669,8 +1669,12 @@ void free_simu(sim_t* simu){
 		char fn[80];
 		char fnnew[80];
 		snprintf(fn, 80, "Res_%d.lock", simu->seed);
-		snprintf(fnnew, 80, "Res_%d.done", simu->seed);
-		(void)rename(fn, fnnew);
+		if(signal_caught){
+			(void)remove(fn);
+		}else{
+			snprintf(fnnew, 80, "Res_%d.done", simu->seed);
+			(void)rename(fn, fnnew);
+		}
 		close(P(parms->fdlock, simu->iseed));
 	}
 	free(simu->save);
@@ -1696,12 +1700,13 @@ void print_progress(sim_t* simu){
 	}
 
 	real this_time=myclockd();
-	if(simu->res && simu->res->fn){//save res every 10 seconds.
+	if(simu->res && simu->res->fp){//save res periodically for plotting.
 		static real last_save_time=0;
-		if(this_time>last_save_time+10){
-			writebin_auto(simu->res);//, "%s", simu->res->fn);
-			writebin_auto(simu->fsmerrs);//, "%s", simu->fsmerrs->fn);
-			writebin_auto(simu->fsmcmds);//, "%s", simu->fsmcmds->fn);
+		const real gap=isim<10000?10:60;
+		if(this_time>last_save_time+gap){
+			writebin_async(simu->res, simu->perfisim+1);
+			writebin_async(simu->fsmerrs, simu->wfsisim+1);//, "%s", simu->fsmerrs->fn);
+			writebin_async(simu->fsmcmds, simu->wfsisim+1);//, "%s", simu->fsmcmds->fn);
 			last_save_time=this_time;
 		}
 	}

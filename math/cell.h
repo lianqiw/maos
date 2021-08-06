@@ -47,7 +47,7 @@ static inline void cellreshape(void* in_, long nx, long ny){
 #define cellfree(A) ({cellfree_do(A); A=NULL;})
 
 void cellfree_do(void* dc);
-void writedata_by_id(file_t* fd, const void* pix, uint32_t id);
+void writedata_by_id(file_t* fd, const void* pix, uint32_t id, long ncol);
 void write_by_id(const void* dc, uint32_t id, const char* format, ...) CHECK_ARG(3);
 
 cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header);
@@ -55,8 +55,8 @@ cell* read_by_id(uint32_t id, int level, const char* format, ...) CHECK_ARG(3);
 
 cell* readbin(const char* format, ...) CHECK_ARG(1);
 void writebin(const void* dc, const char* format, ...) CHECK_ARG(2);
-void writebin_auto(const void* A);
-void writebin2(void* dc, const char* header, const char* format, ...) CHECK_ARG(3);
+void writebin_async(const void* A, long ncol);
+void writebin_header(void* dc, const char* header, const char* format, ...) CHECK_ARG(3);
 cell* readsock(int sock);
 void writesock(const void* dc, int sock);
 #endif

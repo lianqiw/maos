@@ -759,7 +759,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				if(simu->wfsflags[ipowfs].zoomout){
 					/*zoom error is zero order hold even if no output from averager*/
 					real zoomout=P(simu->zoomavg, iwfs)/parms->powfs[ipowfs].zoomdtrat;
-					P(simu->zoomerr, iwfs)+=zoomout;
+					P(simu->zoomerr, iwfs)+=zoomout;//use += as drift control may also have output.
 					P(simu->zoomavg, iwfs)=0;
 					if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
 						dbg("wfs %d: trombone averager output %.1f m\n", iwfs, zoomout*2*pow(parms->powfs[ipowfs].hs, 2));

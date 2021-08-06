@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -91,6 +91,7 @@
 
   \todo Find keepalive options in mac.  */
 static void socket_tcp_keepalive(int sock){
+	if(sock==-1) return;
 	int keeplive=1;
 #ifdef __linux__
 	int keepidle=1;/*second before try to probe */
@@ -110,12 +111,14 @@ static void socket_tcp_keepalive(int sock){
 	}
 }
 static void socket_reuse_addr(int sock){
-   const int one=1;
-   if(setsockopt(sock,SOL_SOCKET,SO_REUSEADDR, &one,sizeof(int))){
-	   perror("socket_reuse_addr");
-   }
+	if(sock==-1) return;
+	const int one=1;
+	if(setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int))){
+		perror("socket_reuse_addr");
+	}
 }
 void socket_nopipe(int sock){
+	if(sock==-1) return;
 #ifdef SO_NOSIGPIPE
 	const int one=1;
 	setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
@@ -130,6 +133,7 @@ void socket_nopipe(int sock){
    Set socket to unblocking mode
 */
 void socket_block(int sock, int block){
+	if(sock==-1) return;
 	int arg=fcntl(sock, F_GETFD);
 	if(block){
 		arg&=~O_NONBLOCK;
@@ -160,6 +164,7 @@ static inline uint16_t myhtons(uint16_t port){
    Tune socket for more real time.
 */
 static void socket_tcp_nodelay(int sock){
+	if(sock==-1) return;
 	int one=1;
 	setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
 }
@@ -167,6 +172,7 @@ static void socket_tcp_nodelay(int sock){
  * Set recv timeout in seconds
  * */
 int socket_recv_timeout(int sock, double sec){
+	if(sock==-1) return -1;
 	struct timeval val={sec,0};
 	int ans;
 	if((ans=setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &val, sizeof(val)))<0){
@@ -178,6 +184,7 @@ int socket_recv_timeout(int sock, double sec){
  * Set recv timeout in seconds
  * */
 int socket_send_timeout(int sock, double sec){
+	if(sock==-1) return -1;
 	struct timeval val={sec,0};
 	int ans;
 	if((ans=setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &val, sizeof(val)))<0){
@@ -199,14 +206,14 @@ static int bind_socket_unix(char* sockpath){
 		warning_time("bind to %s failed\n", sockpath);
 		close(sock);
 		sock=-1;
-	}else{
+	} else{
 		dbg_time("binded to %s at sock %d\n", sockpath, sock);
 	}
 	return sock;
 }
 /**
-   make a server port and bind to localhost on all addresses. 
-   protocl is usually SOCK_DGRAM or SOCK_STREAM. 
+   make a server port and bind to localhost on all addresses.
+   protocl is usually SOCK_DGRAM or SOCK_STREAM.
    ip is usually zero.
    if port is 0, will bind an assigned port
 */
@@ -218,7 +225,7 @@ int bind_socket(int protocol, char* ip, uint16_t port){
 		perror("bind_socket");
 		exit(EXIT_FAILURE);
 	}
-	if(protocol==SOCK_STREAM && port){
+	if(protocol==SOCK_STREAM&&port){
 		socket_tcp_keepalive(sock);
 		socket_reuse_addr(sock);
 	}
@@ -257,7 +264,7 @@ int socket_port(int sock){
 	socklen_t addrlen=sizeof(name);
 	if(!getsockname(sock, (struct sockaddr*)&name, &addrlen)){
 		return ntohs(name.sin_port);
-	}else{
+	} else{
 		return -1;
 	}
 }
@@ -341,7 +348,8 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	socket_send_timeout(sock, 60);
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
-	while(quit_listen!=2 && nlisten){
+	while(quit_listen!=2&&nlisten){
+		int new_connection=0;
 		if(quit_listen==1){
 			/*
 			  shutdown(sock, SHUT_WR) sends a FIN to the peer, therefore
@@ -358,7 +366,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			/*Notice existing client to shutdown*/
 			dbg_time("terminate pending: ask all clients (count=%d) to close.\n", nlisten);
 			static double quit_time=0;
-			if(!quit_time) quit_time=myclockd(); 
+			if(!quit_time) quit_time=myclockd();
 			//stop listening.
 			FD_CLR(sock, &active_fd_set);
 			close(sock);
@@ -366,15 +374,15 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 				FD_CLR(sock_local, &active_fd_set);
 				close(sock_local);
 			}
-			
+
 			//We ask the client to actively close the connection
 			for(int i=0; i<FD_SETSIZE; i++){
 				if(FD_ISSET(i, &active_fd_set)){
 					int cmd[3]={-1, 0, 0};
-					stwrite(i, cmd, 3*sizeof(int)); 
+					stwrite(i, cmd, 3*sizeof(int));
 				}
 			}
-			
+
 			if(myclockd()>quit_time+5){//wait for a few seconds before force terminate.
 				dbg_time("force terminate while %d clients remaining.\n", nlisten);
 				quit_listen=2;//force quit.
@@ -398,11 +406,11 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 				warning_time("unknown error: %s\n", strerror(errno));
 				break;
 			}
-		}else if(navail>0){
+		} else if(navail>0){
 			for(int i=0; i<FD_SETSIZE; i++){
 				if(FD_ISSET(i, &read_fd_set)){
-					if(i==sock || i==sock_local){// Connection request on original socket. 
-						union {
+					if(i==sock||i==sock_local){// Connection request on original socket. 
+						union{
 							struct sockaddr_un un;
 							struct sockaddr_in in;
 						} client;
@@ -415,6 +423,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 							FD_SET(sock2, &active_fd_set);
 							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
 							socket_send_timeout(sock2, 60);
+							new_connection=1;
 						}
 					} else{
 						/* Data arriving on an already-connected socket. Call responder to handle.
@@ -427,12 +436,14 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 							FD_CLR(i, &active_fd_set);
 							close(i);
 							dbg_time("close socket %d, ans=%d\n", i, ans);
+							new_connection=-1;
 						}
 					}
 				}
 			}
 		}
-		if(timeout_fun){
+		//only run timeout_fun when timeout actually happens.
+		if((timeout_sec==0||navail==0)&&!new_connection&&timeout_fun){
 			timeout_fun();
 		}
 		nlisten=0;

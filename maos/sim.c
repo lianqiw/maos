@@ -42,7 +42,6 @@ extern int draw_single;
 static real tk_0;
 static real tk_1;
 static real tk_atm=0;
-int sim_exit=0;//set by signal handler to exit simulation
 int sim_pipe[2]={0,0};
 /**
    Initialize the simulation runtime data struct.
@@ -264,7 +263,7 @@ void maos_sim(){
 	dbg("PARALLEL=%d\n", PARALLEL);
 	long rescount=0;
 	dmat* restot=dnew(parms->evl.nmod, 1);
-	for(int iseed=0; iseed<parms->sim.nseed&&!sim_exit; iseed++){
+	for(int iseed=0; iseed<parms->sim.nseed&&!signal_caught; iseed++){
 		sim_t* simu=NULL;
 		while(!(simu=maos_iseed(iseed))){
 			iseed++;
@@ -281,26 +280,26 @@ void maos_sim(){
 #pragma omp sections
 			{
 #pragma omp section
-				for(int isim=simstart; isim<simend&&!sim_exit; isim++){
+				for(int isim=simstart; isim<simend&&!signal_caught; isim++){
 					simu->perfisim=isim;
 					perfevl(simu);
 					print_progress(simu);
 				}
 #pragma omp section
-				for(int isim=simstart; isim<simend&&!sim_exit; isim++){
+				for(int isim=simstart; isim<simend&&!signal_caught; isim++){
 					simu->wfsisim=isim;
 					wfsgrad(simu);
 					shift_grad(simu);
 				}
 #pragma omp section
-				for(int isim=simstart; isim<simend&&!sim_exit; isim++){
+				for(int isim=simstart; isim<simend&&!signal_caught; isim++){
 					simu->reconisim=isim-1;
 					reconstruct(simu);
 					filter_dm(simu);
 				}
 			}
 		} else{
-			for(int isim=simstart; isim<simend&&!sim_exit; isim++){
+			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
 				maos_isim(isim);
 				if(simu->pause>0&&isim%simu->pause==0){
 					simu->pause=mypause(0, sim_pipe[0]);
@@ -309,23 +308,24 @@ void maos_sim(){
 		}
 		{
 			/*Compute average performance*/
+			const int nsim=simu->perfisim+1;
 			int isim0;
 			if(parms->sim.closeloop){
 				if(parms->sim.end>100){
-					isim0=MAX(50, parms->sim.end*0.2);
+					isim0=MAX(50, nsim*0.2);
 				} else{
-					isim0=MIN(20, parms->sim.end*0.5);
+					isim0=MIN(20, nsim*0.5);
 				}
 			} else{
 				isim0=0;
 			}
 			const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
-			for(long i=isim0; i<parms->sim.end; i++){
+			for(long i=isim0; i<nsim; i++){
 				for(long imod=0; imod<parms->evl.nmod; imod++){
 					P(restot, imod)+=P(cle, imod, i);
 				}
 			}
-			dscale(restot, 1./(parms->sim.end-isim0));
+			dscale(restot, 1./(nsim-isim0));
 			rescount++;
 		}
 		free_simu(simu);

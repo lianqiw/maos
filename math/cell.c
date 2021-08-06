@@ -184,10 +184,8 @@ void cellfree_do(void* A){
 	switch(id){
 	case MCC_ANY:{
 		cell* dc=(cell*)A;
-		if(dc->fn){
-			writebin(dc, "%s", dc->fn);
-			free(dc->fn);
-		}
+		//if(dc->fp) writebin_async(dc, 0);//don't do this. only cells need to finish sync
+		//do not close for yet for individual cells may need to do synchronization.
 		if(dc->p){
 			for(int ix=0; ix<dc->nx*dc->ny; ix++){
 				cellfree_do(P(dc,ix));
@@ -204,6 +202,7 @@ void cellfree_do(void* A){
 			dfft_free_plan(dc->fft);
 			dc->fft=NULL;
 		}
+		if(dc->fp) zfclose(dc->fp);
 		free(dc);
 	}break;
 	case M_DBL:
@@ -231,9 +230,15 @@ void cellfree_do(void* A){
 		warning("Unknown id=%x, A=%p\n", id, A);
 	}
 }
-
-void writedata_by_id(file_t* fp, const void* A_, uint32_t id){
-	if(!fp) return;
+/**
+ * ncol: 0: normal writing. -1: initialize async data. >0: async writing.
+ * 	
+ * */
+void writedata_by_id(file_t* fp, const void* A_, uint32_t id, long ncol){
+	if(fp&&ncol>0){
+		error("writedata_by_id should be called with either fp or ncol, but not both, aborted.\n");
+		return;
+	}
 	const cell* A=(const cell*)A_;
 	if(A){
 		if(!id){
@@ -272,33 +277,35 @@ void writedata_by_id(file_t* fp, const void* A_, uint32_t id){
 				nx=0; ny=0;
 			}
 		}
-		header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
-		write_header(&header, fp);
+		if(ncol<=0){
+			header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
+			write_header(&header, fp);
+		}
 		if(id){
 			for(long ix=0; ix<(A->nx*A->ny); ix++){
-				writedata_by_id(fp, P(A,ix), 0);
+				writedata_by_id(fp, P(A,ix), 0, ncol);
 			}
 		}
 	}
 				break;
 	case M_DBL:
-		dwritedata(fp, (dmat*)A);break;
+		dwritedata(fp, (dmat*)A, ncol);break;
 	case M_CMP:
-		cwritedata(fp, (cmat*)A);break;
+		cwritedata(fp, (cmat*)A, ncol);break;
 	case M_FLT:
-		swritedata(fp, (smat*)A);break;
+		swritedata(fp, (smat*)A, ncol);break;
 	case M_ZMP:
-		zwritedata(fp, (zmat*)A);break;
+		zwritedata(fp, (zmat*)A, ncol);break;
 	case M_LONG:
-		lwritedata(fp, (lmat*)A);break;
+		lwritedata(fp, (lmat*)A, ncol);break;
 	case M_LOC:
 		locwritedata(fp, (loc_t*)A);break;
 	case M_MAP:
 		map_header((map_t*)A);
-		dwritedata(fp, (dmat*)A);break;
+		dwritedata(fp, (dmat*)A, ncol);break;
 	case M_RECTMAP:
 		rmap_header((rmap_t*)A);
-		dwritedata(fp, (dmat*)A);break;
+		dwritedata(fp, (dmat*)A, ncol);break;
 	case M_DSP:
 		dspwritedata(fp, (dsp*)A);break;
 	case M_SSP:
@@ -317,8 +324,37 @@ void write_by_id(const void* A, uint32_t id, const char* format, ...){
 	if(!fn) return;
 	file_t* fp=zfopen(fn, "wb");
 	if(!fp) return;
-	writedata_by_id(fp, A, id);
+	writedata_by_id(fp, A, id, 0);
 	zfclose(fp);
+}
+/**
+   A generic routine for write data to file. Do not allow call with null filename.
+ */
+void writebin(const void* A, const char* format, ...){
+	format2fn;
+	write_by_id(A, 0, "%s", fn);
+}
+/**
+ * Calls writebin with build in fp
+ * */
+void writebin_async(const void* A, long ncol){
+	if(ncol==0){
+		warning("writebin_async shall not be called with ncol=0, aborted.\n");
+	}else{
+		writedata_by_id(NULL, A, 0, ncol);
+	}
+}
+/**
+   A generic routine for write data to file with separate header
+ */
+void writebin_header(void* A, const char* header, const char* format, ...){
+	format2fn;
+	cell* Ac=cell_cast(A);
+	if(Ac){
+		free(Ac->header);
+		Ac->header=strdup(header);
+	}
+	writebin(Ac, "%s", fn);
 }
 /**
  * Read data from file. 
@@ -445,6 +481,7 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 
 cell* read_by_id(uint32_t id, int level, const char* format, ...){
 	format2fn;
+	if(!fn) return 0;
 	file_t* fp=zfopen(fn, "rb");
 	if(!fp) return 0;
 	cell* out=readdata_by_id(fp, id, level, 0);
@@ -456,42 +493,15 @@ cell* read_by_id(uint32_t id, int level, const char* format, ...){
  */
 cell* readbin(const char* format, ...){
 	format2fn;
-	return read_by_id(0, -1, "%s", fn);
+	return fn?read_by_id(0, -1, "%s", fn):NULL;
 }
-/**
-   A generic routine for write data to file.
- */
-void writebin(const void* A, const char* format, ...){
-	format2fn;
-	if(!fn && A) fn=((cell*)A)->fn;
-	write_by_id(A, 0, "%s", fn);
-}
-/**
- * Calls writebin with build in fn
- * */
-void writebin_auto(const void *A){
-	const char *fn=A?((cell*)A)->fn:NULL;
-	if(fn) write_by_id(A, 0, "%s", fn);
-	else dbg("writebin_auto: A->fn is empty\n");
-}
-/**
-   A generic routine for write data to file with separate header
- */
-void writebin2(void* A, const char* header, const char* format, ...){
-	format2fn;
-	cell* Ac=cell_cast(A);
-	if(Ac){
-		free(Ac->header);
-		Ac->header=strdup(header);
-	}
-	write_by_id(Ac, 0, "%s", fn);
-}
+
 /**
    A generic routine for reading data from socket. User need to cast the result.
  */
 cell* readsock(int sock){
 	file_t* fp=zfdopen(sock, "rb");
-	cell* out=readdata_by_id(fp, 0, -1, 0);
+	cell* out=fp?readdata_by_id(fp, 0, -1, 0):NULL;
 	zfclose(fp);
 	return out;
 }
@@ -500,6 +510,6 @@ cell* readsock(int sock){
  */
 void writesock(const void* A, int sock){
 	file_t* fp=zfdopen(sock, "wb");
-	writedata_by_id(fp, A, 0);
+	if(fp) writedata_by_id(fp, A, 0, 0);
 	zfclose(fp);
 }

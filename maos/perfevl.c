@@ -360,11 +360,10 @@ static void perfevl_mean(sim_t* simu){
 	const int nevl=parms->evl.nevl;
 	/*Field average the OL error */
 	for(int imod=0; imod<nevlmod; imod++){
-		int ind=imod+nevlmod*isim;
-		P(simu->ole,ind)=0;
+		P(simu->ole,imod,isim)=0;
 		for(int ievl=0; ievl<nevl; ievl++){
 			real wt=P(parms->evl.wt,ievl);
-			P(simu->ole,ind)+=wt*P(P(simu->olep,ievl),ind);
+			P(simu->ole,imod,isim)+=wt*P(P(simu->olep,ievl),imod,isim);
 		}
 	}
 	if(parms->sim.evlol)
@@ -372,11 +371,10 @@ static void perfevl_mean(sim_t* simu){
 
 		/*Field average the CL error */
 	for(int imod=0; imod<nevlmod; imod++){
-		int ind=imod+nevlmod*isim;
-		P(simu->cle,ind)=0;
+		P(simu->cle,imod,isim)=0;
 		for(int ievl=0; ievl<nevl; ievl++){
 			real wt=P(parms->evl.wt,ievl);
-			P(simu->cle,ind)+=wt*P(P(simu->clep,ievl),ind);
+			P(simu->cle,imod,isim)+=wt*P(P(simu->clep,ievl),imod,isim);
 		}
 	}
 

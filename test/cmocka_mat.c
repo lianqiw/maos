@@ -143,6 +143,7 @@ static void mat_fresnel_prop(void** state){
         fresnel_prop(&wvf1, &dxout, wvf0, 1./64, 0.589e-6, 100, 1, 1);
     }
 }
+
 int main(void){
     quitfun=dummy_quitfun;
     LOG_LEVEL=-4;

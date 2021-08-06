@@ -229,8 +229,6 @@ int maos_signal_handler(int sig){
 	info2("maos_signal_handler: %s (%d)\n", strsignal(sig), sig);
 	if(sig==SIGTERM&&global&&global->setupdone==1){
 		info2("Will exit after finishing current time step\n");
-		extern int sim_exit;
-		sim_exit=1;
 		return 1;
 	}else{
 		rename_file(sig);/*handles signal */

@@ -71,11 +71,11 @@ void zfarr_push(zfarr* ca, int i, const void* p){
 		}
 	}
 	while(ca->cur<i&&!zfisfits(ca->fp)){
-		writedata_by_id(ca->fp, 0, ca->id);
+		writedata_by_id(ca->fp, 0, ca->id, 0);
 		ca->cur++;
 	}
 	if(p||!zfisfits(ca->fp)){
-		writedata_by_id(ca->fp, p, ca->id);
+		writedata_by_id(ca->fp, p, ca->id, 0);
 		ca->cur++;
 	}
 }

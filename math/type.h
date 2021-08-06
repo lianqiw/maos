@@ -47,13 +47,13 @@ typedef enum CEMBED{
     long nx;       /**< number of rows */				\
     long ny;       /**< number of columns */				\
     char *header;  /**<The header*/					\
-    char *fn;      /**<The file, to be saved to when*/\
+    file_t *fp;      /**<Opened file, to be saved to when called or freed*/\
     struct fft_t *fft					
 
 #define MATARR(T)				\
     ARR(T);					\
-    struct mem_t *mem /**< Memory management*/	\
-
+    mem_t *mem; /**< Memory management*/	\
+    async_t *async /**<async io*/
 
 #define SPMATDEF(T,S) typedef struct S{					\
 	uint32_t id;         /**<to identify the array type*/		\
