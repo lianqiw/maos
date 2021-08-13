@@ -803,6 +803,10 @@ static void readcfg_evl(parms_t* parms){
 	READ_INT(evl.psfmean);
 	READ_INT(evl.psfhist);
 	READ_INT(evl.cov);/*Science OPD covariance. */
+	READ_INT(evl.opdmean);/*Science OPD time average.*/
+	if(parms->evl.cov){
+		parms->evl.opdmean=parms->evl.cov;
+	}
 	READ_INT(evl.tomo);
 	READ_INT(evl.moao);
 	/*it is never good to parallelize the evl ray tracing because it is already so fast */
@@ -834,7 +838,6 @@ static void readcfg_tomo(parms_t* parms){
 	READ_DBL(tomo.iac);
 	READ_INT(tomo.ninit);
 	READ_INT(tomo.nxbase);
-	READ_DBL(tomo.cgthres);
 	READ_INT(tomo.splitlrt);
 }
 
@@ -913,7 +916,6 @@ static void readcfg_recon(parms_t* parms){
 	READ_INT(recon.psddtrat_twfs);
 	READ_DBL(recon.psdservo_gain);
 	READ_INT(recon.psdnseg);
-	READ_STR(recon.fnsphpsd);
 }
 /**
    Read in simulation parameters
@@ -1073,6 +1075,7 @@ static void readcfg_dbg(parms_t* parms){
 	READ_INT(dbg.fit);
 	READ_INT(dbg.na_smooth);
 	READ_INT(dbg.na_interp);
+	READ_DBL(dbg.na_thres);
 	READ_INT(dbg.ncpa_preload);
 	READ_INT(dbg.ncpa_rmsci);
 	READ_INT(dbg.gp_noamp);
@@ -1127,6 +1130,7 @@ static void readcfg_save(parms_t* parms){
 	READ_INT(save.evlopd);/*Science OPD */
 	READ_INT(save.dm);/*save DM commands */
 	READ_INT(save.dither);
+	READ_INT(save.gradoff);//save gradient reference vector
 	parms->save.ints=readcfg_lmat_nmax(parms->nwfs, "save.ints");
 	parms->save.wfsopd=readcfg_lmat_nmax(parms->nwfs, "save.wfsopd");
 	parms->save.grad=readcfg_lmat_nmax(parms->nwfs, "save.grad");
@@ -1149,10 +1153,11 @@ static void readcfg_save(parms_t* parms){
 		  save.run because they take a lot of space*/
 		parms->save.opdr=parms->save.all;
 		//parms->save.opdx=parms->save.all;
-		parms->save.evlopd=parms->save.all;
+		parms->save.evlopd=parms->save.all?10:0;
 		parms->save.run=parms->save.all;/*see following */
 		parms->save.ncpa=parms->save.all;
 		parms->save.dither=parms->save.all;
+		parms->save.gradoff=parms->save.all;
 		parms->save.extra=1;
 	}
 	if(parms->recon.glao){
@@ -1666,18 +1671,23 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			int lgspowfs=parms->ilgspowfs;
 			if(lgspowfs!=-1){
 				info("powfs %d is TWFS for powfs %d\n", ipowfs, lgspowfs);
+				/*
 				//Set TWFS integration start time to pll start time to synchronize with matched filter update.
 				if(parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
 					parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_pllskip;
-				}
+				}*/
 			}
 		}
-		//floor to multiple of dtrat.
-		const int dtrat=parms->powfs[ipowfs].dtrat;
+
 		if(parms->powfs[ipowfs].step<0) parms->powfs[ipowfs].step=0;
-		if(dtrat>0){
-			parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
+		if(parms->powfs[ipowfs].phystep>0 && parms->powfs[ipowfs].phystep<parms->powfs[ipowfs].step){
+			parms->powfs[ipowfs].phystep=parms->powfs[ipowfs].step;
 		}
+		/*
+			const int dtrat=parms->powfs[ipowfs].dtrat;
+			if(dtrat>0){//this should be necessary. Not good for TWFS with high dtrat.
+			parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
+		}*/
 		//warning("powfs %d step is set to %d, dtrat=%d\n", ipowfs, parms->powfs[ipowfs].step, dtrat);
 	}
 	parms->hipowfs_hs=INFINITY;
@@ -2430,11 +2440,20 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			}
 		}
 	}
-
-	parms->recon.warm_restart=!parms->dbg.nocgwarm&&parms->atm.frozenflow&&!(parms->dbg.tomo_maxit&&parms->dbg.tomo_maxit->nx>0);
-	parms->fit.cgwarm=parms->recon.warm_restart&&parms->fit.alg==1;
-
-
+	if(parms->tomo.alg==-1){//default to FDPCG
+		parms->tomo.alg=1;
+		parms->tomo.precond=1;
+	}
+	if(parms->fit.alg==-1){
+		parms->fit.alg=parms->recon.mvm?0:1;//MVM is only good with CBS.
+	}
+	if(parms->recon.mvm){
+		parms->recon.warm_restart=0;
+		parms->fit.cgwarm=0;
+	}else{
+		parms->recon.warm_restart=!parms->dbg.nocgwarm&&parms->atm.frozenflow&&!(parms->dbg.tomo_maxit&&parms->dbg.tomo_maxit->nx>0);
+		parms->fit.cgwarm=parms->recon.warm_restart&&parms->fit.alg==1;
+	}
 
 	if(parms->recon.split==1&&!parms->sim.closeloop&&parms->ndm>1){
 		warning("ahst split tomography does not have good NGS correction in open loop\n");
@@ -2492,6 +2511,10 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		if(parms->tomo.bgs&&parms->tomo.precond){
 			error("Please implement the preconditioner for each block for BGS.\n");
 		}
+	}
+	//fit is also used for idealfit, idealwfs.
+	if(parms->recon.mvm&&parms->fit.alg==1){
+		warning("CG based fit does not to build MVM\n");
 	}
 	/*DM Fitting related*/
 	if(parms->fit.alg==1&&parms->fit.maxit==0){
@@ -2799,7 +2822,7 @@ static void print_parms(const parms_t* parms){
 		}
 		info("\n");
 		if(parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].usephy){
-			info("    CCD image is %dx%d @ %gx%gmas, blur %g%% (sigma), %gHz, ",
+			info("    CCD image is %dx%d @ %gx%g mas, blur %g%% (sigma), %gHz, ",
 				(parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa),
 				parms->powfs[ipowfs].pixpsa,
 				parms->powfs[ipowfs].radpixtheta*206265000, parms->powfs[ipowfs].pixtheta*206265000,
@@ -2815,14 +2838,17 @@ static void print_parms(const parms_t* parms){
 		info("]\n");
 		info("    %s in reconstruction. ",
 			parms->powfs[ipowfs].gtype_recon==GTYPE_G?"Gtilt":"Ztilt");
-		if(parms->powfs[ipowfs].phystep>-1){
+
+		if(parms->powfs[ipowfs].step!=parms->powfs[ipowfs].phystep){
+			info("Geomtric optics start at %d with %s ",
+				parms->powfs[ipowfs].step,
+				parms->powfs[ipowfs].gtype_sim==GTYPE_G?"gtilt":"ztilt");
+		}
+		if(parms->powfs[ipowfs].phystep>-1&&parms->powfs[ipowfs].phystep<parms->sim.end){
 			info("Physical optics start at %d with %s'%s'%s ",
-				MAX(parms->powfs[ipowfs].phystep, parms->powfs[ipowfs].step),
+				parms->powfs[ipowfs].phystep,
 				parms->powfs[ipowfs].phytype_sim==PTYPE_MF?GREEN:RED, 
 				phytype[parms->powfs[ipowfs].phytype_sim], BLACK);
-		} else{
-			info("Geomtric optics uses %s ",
-				parms->powfs[ipowfs].gtype_sim==GTYPE_G?"gtilt":"ztilt");
 		}
 
 		if(parms->powfs[ipowfs].noisy){

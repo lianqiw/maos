@@ -92,11 +92,12 @@ def maos_cumu(files, seeds=None): ##return cumulative average
     res,fds=maos_res(files,seeds,0,0)
     print(fds)
     nsim=res.shape[-1]
-    nsim0=min(5000,nsim*0.1)
+    nsim0=min(5000, np.int(nsim*0.1))
     yy=np.arange(1, nsim+1-nsim0)
     xx=nsim0+yy
     yy.shape=(1,1,nsim-nsim0)
-    resc=np.cumsum(res[:,:,5000:], axis=2)/yy
+    resc=np.cumsum(res[:,:,nsim0:], axis=2)/yy
+    resc[res[:,:,nsim0:]==0]=nan
     return resc,xx
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
@@ -235,3 +236,70 @@ def cellsum(x):
         xsum[jj]=x[jj].sum()
 
     return xsum
+
+#remove piston/tip/tilt from gradients
+def grad_pttr(saloc,g):
+    if saloc.shape[0]==2: #2*nsa
+        nsa=saloc.shape[1]
+        tt=saloc.flatten() 
+    elif saloc.shape[1]==2: #nsa*2
+        nsa=saloc.shape[0]
+        tt=saloc.T.flatten()
+    else:
+        raise(ValueError('saloc should be 2xnsa or nsax2'))
+    
+    if g.shape[0]==2: #2*nsa
+        gv=g.flatten('C')
+    elif g.shape[1]==2:
+        gv=g.flatten('F')
+    elif g.shape[0]==2*nsa:
+        gv=g
+    else:
+        raise(ValueError('g should bd 2*nsa, nsa*2 or nsa*2*m'))
+    
+    mod=np.c_[np.ones((nsa*2,1)), tt] #nsa*3
+    
+    rmod=np.linalg.pinv(mod)
+    
+    ptt=rmod@gv
+    g2v=gv-mod@ptt
+    g2v.shape=[2,nsa]
+    return g2v
+#remove zernike modes from rmin to rmax from 1-D OPD and loc
+def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
+    D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
+    mod=zernike(loc, D, rmin, rmax, radonly).T
+    rmod=np.linalg.pinv(mod)
+    opd2=opd-mod@(rmod@opd)
+    return opd2
+#remove zernike modes from rmin to rmax from 2-D OPD
+def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
+    '''OPD is 2d array, mask indicates valid points, rmin and rmax are minimum and maximum zernike order (inclusive)'''
+
+    if mask is None:
+        mask=opd!=0
+    dx=0.4 #doesn't matter
+    oloc=mksqloc(opd.shape[1], opd.shape[0], dx, dx, -opd.shape[1]/2*dx, -opd.shape[0]/2*dx)
+    oloc.shape=[2,opd.shape[0],opd.shape[1]]
+    oloc2=oloc[:,mask].copy() #copy is necessary for C to access the data
+    opd2=np.zeros(opd.shape)
+    opd2[mask]=opd_loc_remove_zernike(opd[mask], oloc2, rmin, rmax, radonly);
+    #D=np.max(np.max(oloc2,axis=1)-np.min(oloc2, axis=1))
+    #mod=zernike(oloc2, D, rmin, rmax, radonly).T
+    #rmod=np.linalg.pinv(mod)
+    #opd2[mask]=opd[mask]-mod@(rmod@opd[mask])
+    return opd2
+
+def read_many(fdin):
+    fds2=sorted(glob.glob(fdin,recursive=1))
+    fds=[]
+    res=[]
+    for fd in fds2: 
+        try:
+            tmp=read(fd)
+            fds.append(fd)
+            res.append(tmp)
+        except:
+            pass
+    return np.array(res),fds
+        

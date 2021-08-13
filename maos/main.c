@@ -410,7 +410,7 @@ int main(int argc, const char* argv[]){
 #else
 	ngpu=0;
 #endif
-	scheduler_start(scmd, NTHREAD, ngpu, !arg->force);
+	scheduler_report_path(scmd);
 	info2("%s\n", scmd);
 	info2("Output folder is '%s'. %d threads\n", arg->dirout, NTHREAD);
 	free(arg->dirout); arg->dirout=NULL;
@@ -423,35 +423,13 @@ int main(int argc, const char* argv[]){
 		remove(arg->confcmd); free(arg->confcmd); arg->confcmd=NULL;
 	}
 	if(parms->sim.nseed>0){
-	/*register signal handler */
 		register_signal_handler(maos_signal_handler);
-
-		if(!arg->force){
-			/*
-			  Ask job scheduler for permission to proceed. If no CPUs are
-			  available, will block until ones are available.
-			  if arg->force==1, will run immediately.
-			*/
-			info2("Waiting start signal from the scheduler ...\n");
-			int count=0;
-			while(scheduler_wait()&&count<60){
-			/*Failed to wait. fall back to own checking.*/
-				warning_time("failed to get reply from scheduler. retry\n");
-				sleep(10);
-				count++;
-				scheduler_start(scmd, NTHREAD, ngpu, !arg->force);
-			}
-			if(count>=60){
-				warning_time("fall back to own checker\n");
-				wait_cpu(NTHREAD);
-			}
-		}
+		scheduler_start(NTHREAD, ngpu, !arg->force);
 		//Launches a thread to wait for scheduler commands.
 		if(scheduler_listen(maos_listener)){
 			info2("Failed to start maos_listener\n");
 		}
 		setup_parms_gpu(parms, arg->gpus, arg->ngpu);
-
 
 		/* do not use prallel single in maos(). It causes blas to run single threaded
 		 * during preparation. Selective enable parallel for certain setup functions

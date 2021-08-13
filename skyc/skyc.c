@@ -81,35 +81,23 @@ int main(int argc, const char* argv[]){
 	  will block until ones are available.  if arg->force==1, will run
 	  immediately.
 	*/
-	scheduler_start(scmd, arg->nthread, 0, !arg->force);
+	scheduler_report_path(scmd);
 	/*setting up parameters before asking scheduler to check for any errors. */
 	dirsetup=stradd("setup", NULL);
 	PARMS_S* parms=setup_parms(arg);
-	if(parms->skyc.dbg){
-		mymkdir("%s", dirsetup);
-	}
-	if(!arg->force){
-		info("Waiting start signal from the scheduler ...\n");
-		/*Failed to wait. fall back to own checking.*/
-		int count=0;
-		while(scheduler_wait()&&count<60){
-			warning_time("failed to get reply from scheduler. retry\n");
-			sleep(10);
-			count++;
-			scheduler_start(scmd, arg->nthread, 0, !arg->force);
+	if(parms->maos.nseed){
+		if(parms->skyc.dbg){
+			mymkdir("%s", dirsetup);
 		}
-		if(count>=60){
-			warning_time("fall back to own checker\n");
-			wait_cpu(arg->nthread);
-		}
+		scheduler_start(arg->nthread, 0, !arg->force);
+		info("Simulation started at %s in %s.\n", myasctime(0), HOST);
+		THREAD_POOL_INIT(parms->skyc.nthread);
+		/*Loads the main software*/
+		OMPTASK_SINGLE skysim(parms);
 	}
-	info("Simulation started at %s in %s.\n", myasctime(0), HOST);
 	free(scmd);
 	free(arg->dirout);
 	free(arg);
-	THREAD_POOL_INIT(parms->skyc.nthread);
-	/*Loads the main software*/
-	OMPTASK_SINGLE skysim(parms);
 	free_parms(parms);
 	free(dirsetup);
 	free(dirstart);

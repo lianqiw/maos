@@ -327,23 +327,23 @@ typedef struct evl_cfg_t{
     dmat *wt;       /**<weight of each direction*/
     dmat *wvl;      /**<wavelength for PSF and strehl computation*/
     dmat *hs;       /**<height of each science object*/
-    real dx;      /**<sampling of aperture for evaluation*/
+    real dx;        /**<sampling of aperture for evaluation*/
     int nwvl;       /**<Number of wavelength*/
     lmat *psf;      /**<1: participate in psf evaluation.*/
     lmat *psfr;     /**<1: participate in psf reconstruction telemetry*/
     int npsf;       /**<how many directions we compute psf for*/
     int rmax;       /**<max radial mode for performance evaluation. 
-		       - 0: piston only
-		       - 1: piston/tip/tilt.*/
+                    - 0: piston only
+                    - 1: piston/tip/tilt.*/
     int nmod;       /**<Number of modes. derived from rmax. (nmax+1)*(nmax+2)/2*/
 
     int psfol;      /**<compute Open loop PSF.
-		       - 1: on axis only.
-		       - 2: all directions and average them.*/
+                    - 1: on axis only.
+                    - 2: all directions and average them.*/
     int psfhist;    /**<output history of the psf (a lot of storage)*/
     int psfmean;    /**<output time averaged psf*/
-    int cov;        /**<save covairance of science OPD ,every this time step,
-		       for directions where evl.psf is 1*/
+    int cov;        /**<save covairance of science OPD ,every this time step, for directions where evl.psf is 1*/
+    int opdmean;    /**<save science OPD time average every `evlopdmean` time steps*/
     lmat *pttr;     /**<remove p/t/t from psf. 1 number for each evl.*/
     lmat *psfngsr;  /**<remove ngs modes from psf.*/
 
@@ -370,7 +370,6 @@ typedef struct tomo_cfg_t{
     real iac;      /**<!=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
     real cxxscale; /**<scale the Cxx^-1 term.*/
     real svdthres; /**<Threshold in SVD inversion*/
-    real cgthres;  /**<Repeat cg if residual is not reached*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int cxxalg;      /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
@@ -485,7 +484,6 @@ typedef struct recon_cfg_t{
     int psddtrat_twfs; /**<how many time step to sample for TWFS PSD computation.*/
     int psdservo_gain; /**<Gain used to update servo parameter*/
     int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
-    char *fnsphpsd;  /**<PSD of spherical aberration due to profile evolution.*/
 }recon_cfg_t;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -634,6 +632,7 @@ typedef struct dbg_cfg_t{
     int fit;         /**<Comparing DM fitting in GPU and CPU*/
     int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
     int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
+    real na_thres;   /**<altitude error threshold to move trombone, in unit of meter.*/
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
@@ -733,8 +732,9 @@ typedef struct save_cfg_t{
     int opdr;        /**<save reconstructed OPD on XLOC for each time step*/
     int opdx;        /**<save ATM propagated to XLOC for each time step*/
     int dm;          /**<save computed DM actuator commands for each time step*/
-    int evlopd;      /**<save science OPD for each time step*/
+    int evlopd;      /**<save science OPD every `evlopd` time steps*/
     int dither;      /**<save estimated matched filter from dithering*/
+    int gradoff;     /**<save gradient reference vector*/
     /*for WFS. Converted from scalar or vector input.
       Scalar input: 1: both, 2: high order only, 3: lo only
       Vector input: Equal to the number of WFS.

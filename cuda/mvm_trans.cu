@@ -365,13 +365,24 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		gpu_set(cuglobal->recongpu);
 		tic;
 		gpu_print_mem("before trans");
-		stream_t stream;
-		cuglobal->mvm=mvmt.trans(stream);
-		stream.sync();
-		toc2("MVM Reshape in GPU");tic;
-		cp2cpu(&recon->MVM, cuglobal->mvm, stream);
-		stream.sync();
-		toc2("MVM copy to CPU");
+		long mem=gpu_get_mem();
+		if(mvmt.N()*sizeof(Real)+100000>mem){
+			warning("Not enough memory to do the transpose in GPU.\n");
+			dmat *MVMt=0;
+			cp2cpu(&MVMt, mvmt);
+			toc2("Copy to CPU"); tic;
+			recon->MVM=dtrans(MVMt);
+			toc2("Transpose in CPU"); tic;
+			dfree(MVMt);
+		}else{
+			stream_t stream;
+			cuglobal->mvm=mvmt.trans(stream);
+			stream.sync();
+			toc2("MVM Transpose in GPU");tic;
+			cp2cpu(&recon->MVM, cuglobal->mvm, stream);
+			stream.sync();
+			toc2("MVM copy to CPU");
+		}
 	}
 }
 

@@ -79,6 +79,14 @@ void maos_setup(const parms_t* parms){
 	THREAD_POOL_INIT(NTHREAD);
 	global->aper=aper=setup_aper(parms);
 	print_mem("After setup_aper");
+#if USE_CUDA
+	int has_pywfs=0;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].nwfs && parms->powfs[ipowfs].type==WFS_PY){
+			has_pywfs=1;
+		}
+	}
+#endif
 	if(!parms->sim.evlol){
 		global->powfs=powfs=setup_powfs_init(parms, aper);
 		print_mem("After setup_powfs");
@@ -93,7 +101,7 @@ void maos_setup(const parms_t* parms){
 		/*calibrate gradient offset*/
 		setup_powfs_calib(parms, powfs);
 #if USE_CUDA
-		if(!parms->sim.evlol&&parms->gpu.wfs&&powfs){
+		if(parms->gpu.wfs&&powfs&&has_pywfs){
 			gpu_wfsgrad_init(parms, powfs);//needed by pywfs_mkg
 		}
 #endif
@@ -134,22 +142,20 @@ void maos_setup(const parms_t* parms){
 			}
 		}
 	}
+	//Avoid initializing WFS/Perfevl data in GPU before this to preserve GPU memory
 	if(!parms->sim.evlol&&parms->recon.mvm){
-#if USE_CUDA
-		if(!(parms->gpu.tomo&&parms->recon.alg==0))
-#endif
-		{
-			setup_recon_mvm(parms, recon, powfs);//use cpu to compute mvm
-		}
 #if USE_CUDA
 		if((parms->gpu.tomo&&parms->gpu.fit)||parms->gpu.lsr){
 			gpu_setup_recon_mvm(parms, recon);
 		}
 #endif
-
+		setup_recon_mvm(parms, recon, powfs);//use cpu to compute mvm or do the saving
 	}
 #if USE_CUDA
 	//setup_recon first because MVM assembly and transpose uses a lot of memory.
+	if(parms->gpu.wfs&&powfs&&!has_pywfs){
+		gpu_wfsgrad_init(parms, powfs);
+	}
 	if(parms->gpu.recon&&!parms->recon.mvm){
 		gpu_setup_recon(parms, recon);
 	}

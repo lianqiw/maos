@@ -50,7 +50,7 @@ class cusolve_cg:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorith
 protected:
     cusolve_cgpre *precond;
 public:
-    cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(0),first_run(1){}
+    cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit), warm_restart(_warm_restart), precond(0), first_run(_warm_restart?1:0){}
     ~cusolve_cg(){
     	delete precond;
     }

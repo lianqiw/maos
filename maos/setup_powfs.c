@@ -1465,15 +1465,11 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				real dt=search_header_num(intstat->i0->header, "dt");
 				if(isfinite(dt)){
 					real ratio=parms->sim.dt*parms->powfs[ipowfs].dtrat/dt;
-					warning("Scale loaded i0 by %g\n", ratio);
+					info("Scale loaded i0/gx/gy by %g\n", ratio);
 					dcellscale(intstat->i0, ratio);
 					dcellscale(intstat->gx, ratio);
 					dcellscale(intstat->gy, ratio);
-				} else{
-					warning("Loaded i0 header does not have dt\n");
 				}
-			} else{
-				warning("Loaded i0 does not have header\n");
 			}
 		} else{
 			if(parms->powfs[ipowfs].piinfile){

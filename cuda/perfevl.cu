@@ -309,7 +309,29 @@ static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, in
     }else{								\
 	ans=calc_ptt_post(pclep, pclmp, aper->ipcc, aper->imcc, ccb);	\
     }
+static void save_cov_opdmean(curmat& opdcov, curmat& opdmean, curmat& iopdevl,
+							dmat **opdcov_cpu, dmat **opdmean_cpu,
+							int ingpu, int do_cov, int do_opdmean, stream_t& stream){
+	if(ingpu){
+		if(do_cov){
+			curmm(opdcov, 1, iopdevl, iopdevl, "nt", 1, stream);
+		}
+		if(do_opdmean){
+			curadd(opdmean, 1, iopdevl, 1, stream);
+		}
+	} else{//accumulate in CPU to save GPU memory.
+		dmat* tmp=NULL;
+		cp2cpu(&tmp, iopdevl, stream);
+		if(do_cov){
+			dmm(opdcov_cpu, 1, tmp, tmp, "nt", 1);
+		}
+		if(do_opdmean){
+			dadd(opdmean_cpu, 1, tmp, 1);
+		}
+		dfree(tmp);
+	}
 
+}
 /**
    Performance evaluation. Designed to replace perfevl_ievl in maos/perfevl.c
 */
@@ -326,7 +348,7 @@ void gpu_perfevl_queue(thread_t* info){
 	for(int ievl=info->start; ievl<info->end; ievl++){
 		gpu_set(cuglobal->evlgpu[ievl]);
 		//info("thread %ld gpu %d ievl %d start\n", thread_id(), cudata->igpu, ievl);
-		const int do_psf_cov=(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov)
+		const int do_psf_cov=(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov||parms->evl.opdmean)
 			&&isim>=parms->evl.psfisim&&parms->evl.psf->p[ievl]!=0;
 		const int save_evlopd=parms->save.evlopd>0&&((isim+1)%parms->save.evlopd)==0;
 		const real thetax=parms->evl.thetax->p[ievl];
@@ -364,7 +386,7 @@ void gpu_perfevl_queue(thread_t* info){
 				"Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 		}
 		PERFEVL_WFE_GPU(cuglobal->perf.cc_ol[ievl](), cuglobal->perf.ccb_ol[ievl]);
-		if((parms->evl.psfmean||parms->evl.cov)
+		if((parms->evl.psfmean||parms->evl.cov||parms->evl.opdmean)
 			&&isim>=parms->evl.psfisim
 			&&((parms->evl.psfol==1&&ievl==parms->evl.indoa)
 				||(parms->evl.psfol==2&&parms->evl.psf->p[ievl]))){
@@ -379,17 +401,10 @@ void gpu_perfevl_queue(thread_t* info){
 			} else{//remove piston only
 				curaddptt(opdcopy, cudata->perf.locs(), cuglobal->perf.coeff[ievl](), -1, 0, 0, stream);
 			}
-			if(parms->evl.cov){
-				if(parms->gpu.psf){
-					curmm(cudata->perf.opdcovol, 1, opdcopy, opdcopy, "nt", 1, stream);
-					curadd(cudata->perf.opdmeanol, 1, opdcopy, 1, stream);
-				} else{
-					dmat* tmp=NULL;
-					cp2cpu(&tmp, opdcopy, stream);
-					dmm(&simu->evlopdcovol, 1, tmp, tmp, "nt", 1);
-					dadd(&simu->evlopdmeanol, 1, tmp, 1);
-					dfree(tmp);
-				}
+			if(parms->evl.cov||parms->evl.opdmean){
+				save_cov_opdmean(cudata->perf.opdcovol, cudata->perf.opdmeanol, opdcopy, 
+								&simu->evlopdcovol, &simu->evlopdmeanol,
+								parms->gpu.psf, parms->evl.cov, parms->evl.opdmean, stream);
 			}
 			if(parms->evl.psfmean){
 				psfcomp_r(cudata->perf.psfol(), opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
@@ -446,17 +461,10 @@ void gpu_perfevl_queue(thread_t* info){
 			} else{
 				curaddptt(iopdevl, cudata->perf.locs(), cuglobal->perf.coeff[ievl], -1, 0, 0, stream);
 			}
-			if(parms->evl.cov){
-				if(parms->gpu.psf){
-					curmm(cuglobal->perf.opdcov[ievl], 1, iopdevl, iopdevl, "nt", 1, stream);
-					curadd(cuglobal->perf.opdmean[ievl], 1, iopdevl, 1, stream);
-				} else{
-					dmat* tmp=NULL;
-					cp2cpu(&tmp, iopdevl, stream);
-					dmm(&simu->evlopdcov->p[ievl], 1, tmp, tmp, "nt", 1);
-					dadd(&simu->evlopdmean->p[ievl], 1, tmp, 1);
-					dfree(tmp);
-				}
+			if(parms->evl.cov || parms->evl.opdmean){
+				save_cov_opdmean(cuglobal->perf.opdcov[ievl], cuglobal->perf.opdmean[ievl], iopdevl,
+								&simu->evlopdcov->p[ievl], &simu->evlopdmean->p[ievl],
+								parms->gpu.psf, parms->evl.cov, parms->evl.opdmean, stream);
 			}//opdcov 
 			if(parms->evl.psfhist||parms->evl.psfmean){
 				if(parms->evl.psfhist){
@@ -557,17 +565,10 @@ void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 				calc_ptt_post(NULL, ptt, aper->ipcc, aper->imcc, cuglobal->perf.ccb_cl[ievl]);
 				curaddptt(iopdevl, cudata->perf.locs(), -ptt[0], -ptt[1], -ptt[2], stream);
 			}
-			if(parms->evl.cov){
-				if(parms->gpu.psf){
-					curmm(cuglobal->perf.opdcov_ngsr[ievl], 1, iopdevl, iopdevl, "nt", 1, stream);
-					curadd(cuglobal->perf.opdmean_ngsr[ievl], 1, iopdevl, 1, stream);
-				} else{
-					dmat* tmp=NULL;
-					cp2cpu(&tmp, iopdevl, stream);
-					dmm(&simu->evlopdcov_ngsr->p[ievl], 1, tmp, tmp, "nt", 1);
-					dadd(&simu->evlopdmean_ngsr->p[ievl], 1, tmp, 1);
-					dfree(tmp);
-				}
+			if(parms->evl.cov || parms->evl.opdmean){
+				save_cov_opdmean(cuglobal->perf.opdcov_ngsr[ievl], cuglobal->perf.opdmean_ngsr[ievl], iopdevl,
+								&simu->evlopdcov_ngsr->p[ievl], &simu->evlopdmean_ngsr->p[ievl],
+								parms->gpu.psf, parms->evl.cov, parms->evl.opdmean, stream);
 			}/*opdcov */
 			if(parms->evl.psfhist||parms->evl.psfmean){
 				if(parms->evl.psfhist){
@@ -661,7 +662,8 @@ void gpu_perfevl_save(sim_t* simu){
 			}
 		}
 	}
-	if(parms->evl.cov&&CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
+	//notice that evl.cov always enables evl.opdmean
+	if(parms->evl.opdmean&&CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdmean)){
 		info("Step %d: Output opdcov\n", isim);
 		int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 		const real scale=1./(real)nacc;
@@ -670,7 +672,7 @@ void gpu_perfevl_save(sim_t* simu){
 			gpu_set(cuglobal->evlgpu[ievl]);
 			cudaStream_t stream=cudata->perf_stream;
 			if(parms->evl.psfngsr->p[ievl]!=2){
-				{
+				if(parms->evl.cov){
 					curmat& pp=cuglobal->perf.opdcov[ievl];
 					curscale(pp, scale, stream);
 					zfarr_push(simu->save->evlopdcov[ievl], isim, pp, stream);
@@ -684,7 +686,7 @@ void gpu_perfevl_save(sim_t* simu){
 				}
 			}
 			if(parms->evl.psfngsr->p[ievl]){
-				{
+				if(parms->evl.cov){
 					curmat& pp=cuglobal->perf.opdcov_ngsr[ievl];
 					curscale(pp, scale, stream);
 					zfarr_push(simu->save->evlopdcov_ngsr[ievl], isim, pp, stream);
@@ -700,7 +702,7 @@ void gpu_perfevl_save(sim_t* simu){
 		}
 		if(parms->evl.psfol){
 			const real scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
-			{
+			if(parms->evl.cov){
 				X(mat)* temp=NULL;
 				X(mat)* temp2=NULL;
 				for(int im=0; im<NGPU; im++){

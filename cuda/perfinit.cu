@@ -105,12 +105,13 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 		cuglobal->perf.opd[ievl].init(aper->locs->nloc, 1);
 	}
 	if(!parms->sim.evlol){
-		if(parms->evl.cov&&parms->gpu.psf){
+		if(parms->evl.cov||parms->evl.opdmean){//need cell array of both
 			cuglobal->perf.opdcov.init(nevl, 1);
-			cuglobal->perf.opdmean.init(nevl, 1);
 			cuglobal->perf.opdcov_ngsr.init(nevl, 1);
+			cuglobal->perf.opdmean.init(nevl, 1);
 			cuglobal->perf.opdmean_ngsr.init(nevl, 1);
 		}
+
 		if(parms->evl.psfmean||parms->evl.psfhist){
 			cuglobal->perf.psfcl.init(nwvl, parms->evl.nevl);
 			cuglobal->perf.psfcl_ngsr.init(nwvl, parms->evl.nevl);
@@ -139,9 +140,9 @@ void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper){
 	if(parms->evl.psfol){
 		for(int im=0; im<NGPU; im++){
 			gpu_set(im);
-			if(parms->evl.cov&&parms->gpu.psf){ /*do OL opd cov*/
-				initzero(cudata->perf.opdcovol, nloc, nloc);
-				initzero(cudata->perf.opdmeanol, nloc, 1);
+			if(parms->gpu.psf){ /*do OL opd cov*/
+				if(parms->evl.cov) initzero(cudata->perf.opdcovol, nloc, nloc);
+				if(parms->evl.opdmean) initzero(cudata->perf.opdmeanol, nloc, 1);
 			}
 			if(parms->evl.psfmean||parms->evl.psfhist){
 				if(cudata->perf.psfol){
@@ -157,19 +158,19 @@ void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper){
 		}
 	}
 
-	if(parms->evl.cov&&parms->gpu.psf&&!parms->sim.evlol){
+	if(parms->gpu.psf&&!parms->sim.evlol){
 		for(int ievl=0; ievl<nevl; ievl++){
 			if(parms->evl.psf->p[ievl]==0){
 				continue;
 			}
 			gpu_set(cuglobal->evlgpu[ievl]);
 			if(parms->evl.psfngsr->p[ievl]){
-				initzero(cuglobal->perf.opdcov_ngsr[ievl], nloc, nloc);
-				initzero(cuglobal->perf.opdmean_ngsr[ievl], nloc, 1);
+				if(parms->evl.cov) initzero(cuglobal->perf.opdcov_ngsr[ievl], nloc, nloc);
+				if(parms->evl.opdmean) initzero(cuglobal->perf.opdmean_ngsr[ievl], nloc, 1);
 			}
 			if(parms->evl.psfngsr->p[ievl]!=2){
-				initzero(cuglobal->perf.opdcov[ievl], nloc, nloc);
-				initzero(cuglobal->perf.opdmean[ievl], nloc, 1);
+				if(parms->evl.cov) initzero(cuglobal->perf.opdcov[ievl], nloc, nloc);
+				if(parms->evl.opdmean) initzero(cuglobal->perf.opdmean[ievl], nloc, 1);
 			}
 		}
 	}

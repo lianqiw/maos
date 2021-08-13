@@ -433,6 +433,13 @@ void sim_update_flags(sim_t* simu, int isim){
 			const int ogcount=(simu->wfsisim-parms->powfs[ipowfs].dither_ogskip+1)/dtrat;
 			wfsflags->ogacc=(ogcount>0&&(ogcount%pllrat)==0)?(ogcount/pllrat):0;
 			wfsflags->ogout=(ogcount>0&&(ogcount%ograt)==0)?(ogcount/ograt):0;
+			if(simu->gradoffisim0<=0
+				&&simu->wfsisim>=parms->powfs[ipowfs].dither_ogskip
+				&&parms->dbg.gradoff_reset==2
+				&&parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
+				simu->gradoffisim0=simu->wfsisim;
+				simu->gradoffisim=simu->wfsisim;
+			}
 		}
 		if(parms->powfs[ipowfs].llt){
 			wfsflags->zoomout=(simu->wfsisim+1)%parms->powfs[ipowfs].zoomdtrat==0?((simu->wfsisim+1)/parms->powfs[ipowfs].zoomdtrat):0;
@@ -544,7 +551,7 @@ static void init_simu_evl(sim_t* simu){
 		}
 	}
 
-	if(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov){
+	if(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov||parms->evl.opdmean){
 		char header[800];
 		header[0]='\0';
 		if(parms->evl.psfmean||parms->evl.psfhist){
@@ -575,7 +582,7 @@ static void init_simu_evl(sim_t* simu){
 			save->evlpsfhist=mycalloc(nevl, zfarr*);
 			save->evlpsfhist_ngsr=mycalloc(nevl, zfarr*);
 		}
-		if(parms->evl.cov){
+		if(parms->evl.cov||parms->evl.opdmean){//need cell array of both
 			simu->evlopdcov=dcellnew(nevl, 1);
 			simu->evlopdcov_ngsr=dcellnew(nevl, 1);
 			save->evlopdcov=mycalloc(nevl, zfarr*);
@@ -602,6 +609,8 @@ static void init_simu_evl(sim_t* simu){
 				}
 				if(parms->evl.cov){
 					save->evlopdcov[ievl]=zfarr_init(nframecov, 1, "evlopdcov" DIR_SUFFIX);
+				}
+				if(parms->evl.cov||parms->evl.opdmean){
 					save->evlopdmean[ievl]=zfarr_init(nframecov, 1, "evlopdmean" DIR_SUFFIX);
 				}
 			}
@@ -614,6 +623,8 @@ static void init_simu_evl(sim_t* simu){
 				}
 				if(parms->evl.cov){
 					save->evlopdcov_ngsr[ievl]=zfarr_init(nframecov, 1, "evlopdcov_ngsr" DIR_SUFFIX);
+				}
+				if(parms->evl.cov||parms->evl.opdmean){
 					save->evlopdmean_ngsr[ievl]=zfarr_init(nframecov, 1, "evlopdmean_ngsr" DIR_SUFFIX);
 				}
 			}
@@ -628,7 +639,9 @@ static void init_simu_evl(sim_t* simu){
 			}
 			if(parms->evl.cov){
 				save->evlopdcovol=zfarr_init(nframecov, 1, "evlopdcovol_%d", seed);
-				save->evlopdmeanol=zfarr_init(nframecov, 1, "evlopdmean_%d", seed);
+			}
+			if(parms->evl.cov||parms->evl.opdmean){
+				save->evlopdmeanol=zfarr_init(nframecov, 1, "evlopdmeanol_%d", seed);
 			}
 		}
 	}

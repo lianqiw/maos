@@ -277,17 +277,22 @@ int scheduler_listen(thread_fun fun){
 
 static int psock=-1;
 
-static void scheduler_report_path(char* path){
+void scheduler_report_path(const char* path){
 	static char path_save[PATH_MAX];
 	path_save[0]=0;
-	if(psock<0){
-		return;
-	}
 	if(path){
 		strncpy(path_save, path, PATH_MAX-1);
 	} else if(!path_save[0]){
 		return;//do nothing
 	}
+
+	if(psock<0){
+		psock=scheduler_connect_self(0);//non-blocking connection
+	}
+	if(psock<0){
+		return;
+	}
+
 	int cmd[2];
 	cmd[0]=CMD_PATH;
 	cmd[1]=getpid();
@@ -297,40 +302,37 @@ static void scheduler_report_path(char* path){
 #define CATCH_ERR(A) if(A){psock=-1;}
 
 /**
-   Called by maos to report a job start to scheduler.
+   Called by maos to report a job start to scheduler and wait for signal before proceeding if waiting is set.
  */
-void scheduler_start(char* path, int nthread, int ngpu, int waiting){
-	psock=scheduler_connect_self(1);
+void scheduler_start(int nthread, int ngpu, int waiting){
 	if(psock<0){
-		warning_time("Failed to connect to scheduler\n");
-		return;
+		psock=scheduler_connect_self(waiting?1:0);
 	}
-	scheduler_report_path(path);
-	int cmd[4];
-	cmd[0]=CMD_START;
-	cmd[1]=getpid();
-	cmd[2]=nthread;
-	cmd[3]=(waiting?1:0)|(ngpu<<1);;
-	CATCH_ERR(stwriteintarr(psock, cmd, 4));
+	if(psock>=0){
+		int cmd[4];
+		cmd[0]=CMD_START;
+		cmd[1]=getpid();
+		cmd[2]=nthread;
+		cmd[3]=(waiting?1:0)|(ngpu<<1);;
+		CATCH_ERR(stwriteintarr(psock, cmd, 4));
+	}else{
+		warning_time("Failed to connect to scheduler\n");
+	}
+	if(waiting){
+		if(psock>=0){
+			int cmd;
+			if(streadint(psock, &cmd)){
+				warning_time("Failed to get answer from scheduler.\n");
+			}else{
+				waiting=0;//signal received
+			}
+		}
+		if(waiting){
+			wait_cpu(nthread);
+		}
+	}
 }
 
-/**
-   Called by maos to wait for go signal from scheduler.
-*/
-int scheduler_wait(void){
-	if(psock<0){
-		warning_time("No connection to scheduler\n");
-		return -1;
-	}
-	/*read will block until clearance is received. */
-	int cmd;
-	if(streadint(psock, &cmd)){
-		warning("Failed to get answer from scheduler.\n");
-		return -1;
-	} else{
-		return 0;
-	}
-}
 /**
    Called by maos to notify scheduler the completion of a job */
 void scheduler_finish(int status){

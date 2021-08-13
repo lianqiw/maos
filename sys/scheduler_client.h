@@ -34,8 +34,8 @@ void init_hosts();
 const char *lookup_host(const char *hostname);
 /*called by maos */
 int scheduler_listen(thread_fun fun);
-void scheduler_start(char *path, int nthread, int ngpu, int waiting);
-int scheduler_wait(void);
+void scheduler_report_path(const char* path);
+void scheduler_start(int nthread, int ngpu, int waiting);
 void scheduler_finish(int status);
 void scheduler_report(status_t *status);
 /*called by monitor */

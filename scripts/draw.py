@@ -69,7 +69,7 @@ def locembed(loc, opd0):
 def draw(*args, **kargs):
     #if not 'keep' in kargs or kargs['keep'] == 0:
     #    plt.clf()
-    if type(args[0]) == None:
+    if args[0] is None:
         return
     if type(args[0]) == list or args[0].dtype == object:  # array of array
         kargs['keep'] = 1  # do not clear

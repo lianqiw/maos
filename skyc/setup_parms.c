@@ -308,14 +308,11 @@ PARMS_S* setup_parms(const ARG_S* arg){
 			parms->maos.nseed=nseed;
 		}
 		if(!parms->maos.nseed){
-			warning("There are no seed to run. Use -O to override. Exit\n");
-			{//remove log and conf files
-				char fnpid[PATH_MAX];
-				snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
-				remove(fnpid);
-			}
-			scheduler_finish(0);
-			sync();exit(0);
+			warning("There are no seed to run. Use -O to override.\n");
+			//remove log and conf files
+			char fnpid[PATH_MAX];
+			snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
+			remove(fnpid);
 		}
 	}
 	for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){

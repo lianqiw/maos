@@ -597,12 +597,13 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 			P(P(simu->resdither, iwfs), 2, ic)=pd->a2me;
 		}
 	}
+	
 	if(simu->wfsflags[ipowfs].ogacc){//Gain update statistics
-		if(parms->dbg.gradoff_reset==2 && simu->gradoffisim0<=0 
+		/*if(parms->dbg.gradoff_reset==2 && simu->gradoffisim0<=0 
 			&& parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){//trigger accumulation of gradoff
 			simu->gradoffisim0=simu->wfsisim;
 			simu->gradoffisim=simu->wfsisim;
-		}
+		}*/
 		if(parms->powfs[ipowfs].dither==1){//TT Dither
 			real scale1=1./pllrat;
 			real amp=pd->a2m;
@@ -784,16 +785,19 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			if(parms->powfs[ipowfs].zoomshare){//average zoomerr
 				average_powfs(simu->zoomerr, parms->powfs[ipowfs].wfs, 1);
 			}
-
+			real dhc=0;
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 				P(simu->zoomint, iwfs)+=P(simu->zoomerr, iwfs)*zoomgain;
 				P(simu->zoomerr, iwfs)=0;
+				dhc+=P(simu->zoomerr, iwfs)*zoomgain;
 				if(simu->zoompos&&P(simu->zoompos, iwfs)){
 					P(P(simu->zoompos, iwfs), simu->wfsflags[ipowfs].zoomout-1)=P(simu->zoomint, iwfs);
 				}
 			}
-			if(parms->powfs[ipowfs].llt->coldtrat==0){//otherwise, wait until next sodium profile column
+			dhc=(dhc/parms->powfs[ipowfs].nwfs)*2*pow(parms->powfs[ipowfs].hs, 2);
+			//only force update ETF if dh changes by more than 100 (1% of the sodium profile depth).
+			if(parms->powfs[ipowfs].llt->coldtrat==0&& fabs(dhc)>parms->dbg.na_thres){//otherwise, wait until next sodium profile column
 				update_etf=1;
 			}
 		}
@@ -869,7 +873,8 @@ void wfsgrad_post(thread_t* info){
 	}//for iwfs
 }
 static void gradoff_acc(sim_t *simu, int ipowfs){
-	if(simu->parms->dbg.gradoff_reset==2 && simu->wfsflags[ipowfs].ogacc && simu->gradoffisim0 > 0){//accumulate gradoff before updating it.
+	(void)ipowfs;
+	if(simu->parms->dbg.gradoff_reset==2 && simu->gradoffisim0 > 0){//accumulate gradoff before updating it.
 		int nsim=(simu->wfsisim-simu->gradoffisim);
 		if(nsim){
 			dcelladd(&simu->gradoffacc, 1, simu->gradoff, nsim);
@@ -941,7 +946,7 @@ static void wfsgrad_drift(sim_t* simu, int ipowfs){
 		}
 	}
 	dfree(goff);
-	if(parms->save.dither){
+	if(parms->save.gradoff||parms->save.dither){
 		writebin(simu->gradoff, "extra/gradoff_%d_drift", isim);
 	}
 
@@ -989,6 +994,16 @@ static void wfsgrad_dither_post(sim_t* simu){
 				if(g2<1){
 					info("Applying LPF with gain %.2f to i0/gx/gy update at update cycle %d\n", g2, simu->wfsflags[ipowfs].ogout);
 				}
+				if(parms->powfs[ipowfs].phytype_sim!=parms->powfs[ipowfs].phytype_sim2){
+					if(!powfs[ipowfs].gradncpa){
+						powfs[ipowfs].gradncpa=dcellnew(nwfs, 1);
+					}
+					info2("Step %5d: powfs%d reset gradncpa to gradoff\n", isim, ipowfs);
+					for(int jwfs=0; jwfs<nwfs; jwfs++){
+						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+						dcp(&P(powfs[ipowfs].gradncpa, jwfs), P(simu->gradoff, iwfs));
+					}
+				}
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
@@ -1009,9 +1024,6 @@ static void wfsgrad_dither_post(sim_t* simu){
 						prevent sudden jump of gradient measurement.*/
 						shwfs_grad(&goff, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 						dadd(&P(simu->gradoff, iwfs), 1, goff, -1);
-						if(parms->save.dither){
-							writebin(P(simu->gradoff, iwfs), "extra/gradoff_wfs%d_%d_mf", iwfs, isim);
-						}
 						dfree(goff);
 						if(parms->powfs[ipowfs].dither_glpf!=1){
 							warning("when dbg.gradoff_reset is enabled, dither_glpf should be 1.\n");
@@ -1028,13 +1040,10 @@ static void wfsgrad_dither_post(sim_t* simu){
 					}
 				}
 				//there is no need to reset trombone error signal
-				if(parms->save.dither){
+				if((parms->save.gradoff||parms->save.dither)&&parms->dbg.gradoff_reset!=1){
 					writebin(simu->gradoff, "extra/gradoff_%d_mtch", isim);
 				}
 				if(parms->dbg.gradoff_reset==2){
-					if(parms->save.dither){
-						writebin(simu->gradoffacc, "extra/gradoff_%d_acc", isim);
-					}
 					dcellzero(simu->gradoffacc);
 					simu->gradoffisim0=isim;
 				}
@@ -1044,16 +1053,17 @@ static void wfsgrad_dither_post(sim_t* simu){
 					parms->powfs[ipowfs].phytype_recon=parms->powfs[ipowfs].phytype_sim;
 					info2("Step %5d: powfs %d changed to %s\n", isim, ipowfs,
 						parms->powfs[ipowfs].phytype_sim==PTYPE_MF?"matched filter":"CoG");
-					
+					/*
 					if(powfs[ipowfs].gradncpa){
-						info2("Step %5d: powfs%d reset gradncpa to cog of i0\n", isim, ipowfs);
+						info2("Step %5d: powfs%d reset gradncpa to cog of i0 + gradoff\n", isim, ipowfs);
 						for(int jwfs=0; jwfs<nwfs; jwfs++){
 							int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 							shwfs_grad(&P(powfs[ipowfs].gradncpa, jwfs),
 									PCOLR(powfs[ipowfs].intstat->i0, jwfs),
 									parms, powfs, iwfs, PTYPE_COG);
+							dadd(&P(powfs[ipowfs].gradncpa, jwfs), 1, P(simu->gradoff, iwfs), 1);//added on 2021-08-11
 						}
-					}
+					}*/
 				}
 				//Generating matched filter
 				if(parms->powfs[ipowfs].neareconfile||parms->powfs[ipowfs].phyusenea){
@@ -1185,7 +1195,7 @@ void wfsgrad_twfs_recon(sim_t* simu){
 				}
 			}
 		}
-		if(parms->save.dither){
+		if(parms->save.gradoff){
 			writebin(simu->gradoff, "extra/gradoff_%d_twfs", simu->wfsisim);
 		}
 		dcellfree(Rmod);

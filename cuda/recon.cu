@@ -51,6 +51,17 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	:grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0), moao(0){
 	if(!parms) return;
 	dbg("initialize reconstructor in GPU\n");
+	if(parms->recon.alg==0&&!(parms->recon.mvm&&parms->load.mvm)){
+		grid=new curecon_geom(parms, recon);//does not change
+	}
+	if(parms->recon.split==2){//mvst
+		cp2gpu(GXL, recon->GXL);
+	}
+	init_mvm(parms, recon);
+	init_fit(parms, recon);
+	init_tomo(parms, recon);
+	init_moao(parms, recon);
+
 	if((parms->recon.alg==0&&parms->gpu.fit||parms->recon.mvm||parms->gpu.moao)
 		||(parms->recon.alg==1&&parms->gpu.lsr)
 		){
@@ -79,40 +90,36 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 			opdr_vec[ips]=opdr[ips].Vector();
 		}
 	}
-	if(parms->recon.alg==0&&!(parms->recon.mvm&&parms->load.mvm)){
-		grid=new curecon_geom(parms, recon);//does not change
-	}
-	if(parms->recon.split==2){//mvst
-		cp2gpu(GXL, recon->GXL);
-	}
-	init_mvm(parms, recon);
-	init_fit(parms, recon);
-	init_tomo(parms, recon);
-	init_moao(parms, recon);
 	gpu_print_mem("recon init");
 }
 
 void curecon_t::reset_fit(){
-	dbg("reset DM fitting.\n");
-	if(FL&&FL!=dynamic_cast<cusolve_l*>(FR)) delete FL; FL=0;
-	delete FR; FR=0;
+	if(FL || FR){
+		dbg("reset DM fitting in GPU %d.\n", current_gpu());
+		if(FL!=dynamic_cast<cusolve_l*>(FR)) delete FL; 
+		FL=0;
+		delete FR; FR=0;
+	}
 	dmfit.Zero();
 }
 void curecon_t::reset_tomo(){
-	dbg("reset tomography.\n");
-	if(RL&&RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
-	delete RR; RR=0;
+	if(RL || RR){
+		dbg("reset tomography in GPU %d.\n", current_gpu());
+		if(RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; 
+		RL=0;
+		delete RR; RR=0;
+	}
 	//opdr.Zero();//no need here. first_run is automatically set in tomo pcg.
 }
 void curecon_t::reset_mvm(){
 	if(MVM){
-		dbg("reset MVM.\n");
+		dbg("reset MVM in GPU %d.\n", current_gpu());
 		delete MVM; MVM=0;
 	}
 }
 void curecon_t::reset_moao(){
 	if(moao){
-		dbg("reset MOAO.\n");
+		dbg("reset MOAO in GPU %d.\n", current_gpu());
 		for(int im=0; im<nmoao; im++){
 			delete moao[im];
 		}
@@ -520,6 +527,9 @@ void gpu_setup_recon(const parms_t* parms, recon_t* recon){
 void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 	//The following routine assemble MVM and put in recon->MVM
 	if(!recon->MVM){
+		const int warm_restart=parms->recon.warm_restart;
+		//disable warm_restart to disable solve.cu checking
+		((parms_t*)parms)->recon.warm_restart=0;
 		for(int igpu=0; igpu<NGPU; igpu++){
 			gpu_set(igpu);
 			if(cudata->recon){
@@ -542,6 +552,7 @@ void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 				cudata->recon=NULL;
 			}
 		}
+		((parms_t*)parms)->recon.warm_restart=warm_restart;
 	}
 	if(!parms->sim.mvmport){
 		gpu_set(cuglobal->recongpu);
