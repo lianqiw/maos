@@ -16,96 +16,12 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../lib/aos.h"
-/**
-   draw square map.
- */
-static void draw_map(file_t* fp, int id){
-	header_t header={0,0,0,0};
-	read_header(&header, fp);
-	char* name=mybasename(zfname(fp));
-	char* suf=strstr(name, ".bin");
-	if(!suf) suf=strstr(name, ".fits");
-	if(suf) suf[0]='\0';
 
-	if(iscell(&header.magic)){
-		for(size_t ii=0; ii<header.nx*header.ny; ii++){
-			draw_map(fp, ii);
-		}
-		free(header.str);
-	} else{
-		do{
-			dmat* in=dreaddata(fp, &header);
-			if(!in || in->nx==0 ) break;
-			map_t* data=d2map(in);
-			drawmap("map", data, NULL, name, "x", "y", "%s[%d]", name, id++);
-			mapfree(data);
-			dfree(in);
-		} while(zfisfits(fp));
-	}
-	free(name);
-}
-/**
-   A recursive opd drawing routine. The two files must contains matched information of loc grid and opd.
-*/
-static void draw_opd(file_t* fp1, file_t* fp2, int id){
-	char* name=mybasename(zfname(fp2));
-	char* suf=strstr(name, ".bin");
-	if(!suf) suf=strstr(name, ".fits");
-	if(suf) suf[0]='\0';
-	header_t header1={0,0,0,0}, header2={0,0,0,0};
-	read_header(&header1, fp1);
-	read_header(&header2, fp2);
-	if(iscell(&header1.magic)&&iscell(&header2.magic)){ /*cells */
-		if(header1.nx*header1.ny!=header2.nx*header2.ny){
-			error("cell arrays does have the same length.\n");
-		}
-		for(size_t ii=0; ii<header1.nx*header1.ny; ii++){
-			draw_opd(fp1, fp2, ii);
-		}
-		free(header1.str);
-		free(header2.str);
-	} else{
-		loc_t* loc=locreaddata(fp1, &header1);
-		dmat* opd=dreaddata(fp2, &header2);
-		if(loc->nloc!=opd->nx){
-			error("we expect matching loc_t and a double vector.\n");
-		}
-		drawopd("opd", loc, opd, NULL, name, "x", "y", "%s:%d", name, id);
-		dfree(opd);
-		locfree(loc);
-	}
-	free(name);
-}
-/**
-   A recursive loc drawing routine
-*/
-static void draw_loc(file_t* fp, int id){
-	header_t header={0,0,0,0};
-	read_header(&header, fp);
-	char* name=mybasename(zfname(fp));
-	char* suf=strstr(name, ".bin");
-	if(!suf) suf=strstr(name, ".fits");
-	if(suf) suf[0]='\0';
-	if(iscell(&header.magic)){
-		for(size_t ii=0; ii<header.nx*header.ny; ii++){
-			draw_loc(fp, ii);
-		}
-		free(header.str);
-	} else{
-		loc_t* loc=locreaddata(fp, &header);
-		if(loc->nloc>100000){/*if too many points, we draw it. */
-			drawloc("loc", loc, NULL, zfname(fp), "x", "y", "%s", zfname(fp));
-		} else{/*we plot individual points. */
-			plot_points("loc", 1, &loc, NULL, NULL, NULL, NULL, NULL, NULL, name, "x", "y", "%s:%d", name, id);
-		}
-		locfree(loc);
-	}
-	free(name);
-}
 static void usage(){
 	info("Usage:\n"
-		"drawbin loc ploc.bin\n"
-		"drawbin opd powfs0_loc.bin powfs0_amp.bin\n"
+		"drawbin loc.bin\n"
+		"drawbin loc.bin opd.bin\n"
+		"drawbin map.bin\n"
 	);
 }
 /**
@@ -120,30 +36,71 @@ int main(int argc, char* argv[]){
 	draw_id=getsid(0)+1e6;
 	draw_direct=1;
 	/*launch scheduler if it is not already running. */
-	if(!strcmp(argv[1], "loc")){/*draw coordinate grid */
-		if(argc!=3){
-			error("Invalid number of input\n");
-		}
-		file_t* fp=zfopen(argv[2], "r");
-		draw_loc(fp, 0);
-		zfclose(fp);
-	} else if(!strcmp(argv[1], "opd")){/*draw OPD with coordinate */
-		if(argc==3){
-			file_t* fp1=zfopen(argv[2], "r");
-			draw_map(fp1, 0);
-			zfclose(fp1);
-		} else if(argc==4){
-			file_t* fp1=zfopen(argv[2], "r");
-			file_t* fp2=zfopen(argv[3], "r");
-			draw_opd(fp1, fp2, 0);
-			zfclose(fp1);
-			zfclose(fp2);
-		} else{
-			error("Invalid number of input\n");
-		}
-	} else{
-		error("Invalid arguments\n");
+	dcell *arg1=0, *arg2=0;
+	if(argc>1){
+		arg1=dcellread(argv[1]);
 	}
+	if(argc>2){
+		arg2=dcellread(argv[2]);
+	}else{
+		arg2=arg1;
+	}
+
+	info("arg1 is %ldx%ld\n", arg1->nx, arg1->ny);
+	info("arg2 is %ldx%ld\n", arg2->nx, arg2->ny);
+
+	long nx=MAX(NX(arg1), NX(arg2));
+	long ny=MAX(NY(arg1), NY(arg2));
+	int id=0;
+	loc_t *loc_save=0;
+	dmat* p1_save=0;
+	for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
+			dmat *p1=(dmat*)PR(arg1, ix, iy);
+			dmat *p2=(dmat*)PR(arg2, ix, iy);
+			if(!p1) continue;
+			loc_t* loc=0;
+			if(NY(p1)==2&&NX(p1)>2){//first parameter is loc
+				if(p1==p1_save){
+					loc=loc_save;
+				}
+				if(!loc){
+					loc=d2loc(p1);
+					if(!loc_save){
+						loc_save=loc;
+						p1_save=p1;
+					}
+				}
+			}
+			if(p1==p2){//single parameter
+				if(loc){
+					if(loc->nloc>100000){/*if too many points, we draw it. */
+						drawloc("loc", loc, NULL, argv[1], "x", "y", "%s", argv[1]);
+					} else{/*we plot individual points. */
+						plot_points("loc", 1, &loc, NULL, NULL, NULL, NULL, NULL, NULL, argv[1], "x", "y", "%s:%d", argv[1], id++);
+					}
+					if(loc!=loc_save){
+						locfree(loc);
+					}
+				}else{
+					map_t* data=d2map(p1);
+					drawmap("map", data, NULL, argv[1], "x", "y", "%s[%d]", argv[1], id++);
+					mapfree(data);
+				}
+			}else{//two parameter
+				if(loc&&p2&&p2->nx&&p2->ny){
+					drawopd("opd", loc, p2, NULL, argv[2], "x", "y", "%s:%d", argv[2], id++);
+				}
+			}
+		}
+	}
+	if(loc_save){
+		locfree(loc_save);
+	}
+	if(arg1!=arg2){
+		cellfree(arg2);
+	}
+	cellfree(arg1);
 	draw_final(1);
 }
 

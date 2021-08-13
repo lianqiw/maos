@@ -104,6 +104,7 @@ void locresize(loc_t* loc, long nloc);
 void dembed_locstat(dmat** out, real alpha, loc_t* loc, real* oin, real beta, int reverse);
 void cembed_locstat(cmat** out, real alpha, loc_t* loc, real* oin, real beta, int reverse);
 void loc_dxdy(loc_t* loc);
+loc_t* d2loc(const dmat* A);
 loc_t* locreaddata(file_t* fp, header_t* header);
 void locwritedata(file_t* fp, const loc_t* loc);
 #endif

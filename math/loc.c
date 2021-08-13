@@ -1638,6 +1638,22 @@ void loc_dxdy(loc_t* out){
 	}
 }
 /**
+ * Convert a 2 column vector to loc
+ * */
+loc_t* d2loc(const dmat *A){
+	if(A->ny!=2){
+		warning("d2loc: wrong dimension %ldx%ld\n", NX(A), NY(A));
+		return NULL;
+	}
+	real dx=fabs(search_header_num(A->header, "dx"));
+	real dy=fabs(search_header_num(A->header, "dy"));
+	loc_t *loc=locnew(NX(A), dx, dy);
+	memcpy(loc->locx, PCOL(A, 0), sizeof(real)*NX(A));
+	memcpy(loc->locy, PCOL(A, 1), sizeof(real)*NX(A));
+	loc_dxdy(loc);
+	return loc;
+}
+/**
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().
  */
 loc_t* locreaddata(file_t* fp, header_t* header){

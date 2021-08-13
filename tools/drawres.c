@@ -319,7 +319,8 @@ int main(int argc, char* argv[]){
 				}
 				long nstep=NY(P(ires, 0));//valid step;
 				for(long i=0; i<nstep; i++){
-					if(isnan(P(P(ires,0),0,i))){
+					real val=P(P(ires, 0), 0, i);
+					if(isnan(val) || val==0){
 						//warning("Number of steps reduced from %ld to %ld\n", nstep, i);
 						nstep=i;
 						break;

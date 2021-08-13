@@ -454,7 +454,12 @@ static void process_queue(void){
 				}
 			}
 		} else{
-			dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
+			if(kill(irun->pid, 0)){
+				dbg_time("Job %d already exited. irun->sock=%d\n", irun->pid, irun->sock);
+				irun->status.info=S_UNKNOWN;
+			}else{
+				dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
+			}
 		}
 	} else{
 		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
