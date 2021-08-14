@@ -1718,6 +1718,8 @@ void print_progress(sim_t* simu){
 		const real gap=isim<10000?10:60;
 		if(this_time>last_save_time+gap){
 			writebin_async(simu->res, simu->perfisim+1);
+			writebin_async(simu->restwfs, simu->perfisim+1;
+			writebin_async(simu->resdither, simu->perfisim+1;
 			writebin_async(simu->fsmerrs, simu->wfsisim+1);//, "%s", simu->fsmerrs->fn);
 			writebin_async(simu->fsmcmds, simu->wfsisim+1);//, "%s", simu->fsmcmds->fn);
 			last_save_time=this_time;

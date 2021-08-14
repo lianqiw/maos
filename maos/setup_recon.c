@@ -935,14 +935,37 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 	cellfree(recon->RRtwfs);
 	dcell* GRtwfs=dcellnew(parms->nwfsr, 1);
 	dspcell* neai=dspcellnew(parms->nwfsr, parms->nwfsr);
+	int itwfs=-1;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2){//twfs
+			itwfs=iwfs;
 			P(GRtwfs,iwfs)=dref(P(recon->GRall,iwfs));
 			P(neai,iwfs,iwfs)=dspref(P(recon->saneai,iwfs,iwfs));
 		}
 	}
 	recon->RRtwfs=dcellpinv(GRtwfs, neai);
+	
+	int imod=-1;//index of spherical mode. it is slow to converge, raise its gain.
+	switch(parms->dbg.twfsflag){
+	case 0:
+		imod=4; break;
+	case 1: 
+		imod=0; break;
+	case 2:
+		imod=7; break;
+	case 3:
+		imod=1; break;
+	}
+	if(imod>-1 && itwfs>-1){
+		real scale=0.5/parms->sim.eptwfs;
+		warning("Scale RRtwfs row %d by %g to increase the gain of aspherical mode to 0.5\n", imod, scale);
+		dmat *R=P(recon->RRtwfs,0,itwfs);
+		for(int iy=0; iy<NY(R); iy++){
+			P(R, imod, iy)*=scale;
+		}
+	}
+	
 	if(parms->save.setup){
 		writebin(recon->RRtwfs, "twfs_recon");
 	}

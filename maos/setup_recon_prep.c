@@ -874,11 +874,11 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 	recon->GRall=dcellnew(parms->nwfs, 1);
 	dmat* opd=0;
 	real reduce=recon->ploc->dx*2;//to reduce the edge effect.
-	int zmax=parms->dbg.twfsrmax?parms->dbg.twfsrmax:(parms->powfs[parms->itpowfs].order/2);
-	int zmin=parms->dbg.twfsflag>2?2:3;
+	int rmax=parms->dbg.twfsrmax?parms->dbg.twfsrmax:(parms->powfs[parms->itpowfs].order/2);
+	int rmin=parms->dbg.twfsflag>1?2:3;
 	int zradonly=parms->dbg.twfsflag==1||parms->dbg.twfsflag==3;
-	dbg("twfs mode is %s from order %d to %d.\n", zradonly?"radial":"all modes", zmin, zmax);
-	opd=zernike(recon->ploc, parms->aper.d-reduce, zmin, zmax, zradonly);
+	dbg("twfs mode is %s from order %d to %d.\n", zradonly?"radial":"all modes", rmin, rmax);
+	opd=zernike(recon->ploc, parms->aper.d-reduce, rmin, rmax, zradonly);
 
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
