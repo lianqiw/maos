@@ -639,8 +639,8 @@ static int respond(int sock){
 			if(pid>=0x8){//old scheme where scheduler_version at compiling is passed
 				tmp->load=1;
 			}else if(pid<0){//new scheme with bit indicating different options
-				tmp->load=pid&&1;
-				tmp->plot=pid&&(1<<1);
+				tmp->load=pid&1;
+				tmp->plot=pid&(1<<1);
 			}
 		}
 		dbg_time("(%d) Monitor is connected.\n", sock);
