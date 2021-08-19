@@ -38,10 +38,10 @@ int main(int argc, char* argv[]){
 	/*launch scheduler if it is not already running. */
 	dcell *arg1=0, *arg2=0;
 	if(argc>1){
-		arg1=dcellread(argv[1]);
+		arg1=dcellread("%s",argv[1]);
 	}
 	if(argc>2){
-		arg2=dcellread(argv[2]);
+		arg2=dcellread("%s",argv[2]);
 	}else{
 		arg2=arg1;
 	}
