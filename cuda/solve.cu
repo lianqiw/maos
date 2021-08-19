@@ -32,7 +32,7 @@ repeat:
 	first_run=0;
 	if(warm_restart){
 		if(restarted){
-			info("CG %5d(%d)  residual=%.5f after restart %d times, threshold is %.5f.\n", cgtmp.count, maxit, restarted, ans, thres);
+			info("CG %5d(%d) after restart %d times, residual=%.5f threshold is %.5f.\n", cgtmp.count, maxit, restarted, ans, thres);
 		}
 	
 		if(ans>thres){//only check during warm_restart

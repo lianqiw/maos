@@ -63,6 +63,10 @@ const char* lookup_host(const char* hostname){
 }
 void init_hosts(){}
 void free_hosts(){}
+int scheduler_connect(const char* hostname){
+	(void)hostname;
+	return -1;
+}
 void scheduler_report_path(const char* path){
 	(void)path;
 }
@@ -228,7 +232,9 @@ static void launch_scheduler(int retry){
 		sleep(1);
 	}
 }
-
+int scheduler_connect(const char *hostname){
+	return connect_port(hostname, PORT, 0, 0);
+}
 /**
    To open a port and connect to scheduler in the local host*/
 static int scheduler_connect_self(int block){

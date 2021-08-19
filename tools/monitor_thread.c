@@ -177,7 +177,7 @@ static int add_host(int ihost){
 		dbg_time("host %d is already connected\n", ihost);
 	}else if(hsock[ihost]==-1){
 		hsock[ihost]--;//make it -2 so no concurrent access.
-		int sock=connect_port(hosts[ihost], PORT, 0, 0);
+		int sock=scheduler_connect(hosts[ihost]);
 		if(sock>-1){
 			int cmd[2];
 			cmd[0]=CMD_MONITOR;
@@ -305,7 +305,7 @@ static int respond(int sock){
 		scheduler_cmd(ihost, 0, CMD_DISPLAY);
 	}
 	break;
-	case MON_STATUS:
+	case MON_STATUS://called by scheduler to pass maos status
 	{
 		if(ihost<0){
 			dbg_time("Host not found\n");
@@ -348,7 +348,7 @@ static int respond(int sock){
 		}
 	}
 	break;
-	case MON_PATH:
+	case MON_PATH://called by scheduler to pass maos path
 	{
 		if(ihost<0){
 			dbg_time("Host not found\n");
@@ -367,7 +367,7 @@ static int respond(int sock){
 		}
 	}
 	break;
-	case MON_CLEARJOB://clear all jobs unless pid is specified
+	case MON_CLEARJOB://called by monitor to clear all jobs unless pid is specified
 	{
 		ihost=cmd[1];
 		int flag=cmd[2];
@@ -380,7 +380,7 @@ static int respond(int sock){
 		}
 	}
 	break;
-	case MON_KILLJOB://kill all jobs unless pid is specified
+	case MON_KILLJOB://called by monitor to kill all jobs unless pid is specified
 	{
 		ihost=cmd[1];
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
@@ -392,12 +392,12 @@ static int respond(int sock){
 		}
 	}
 	break;
-	case MON_SAVEJOB:
+	case MON_SAVEJOB: //called by monitor to save all jobs
 	{
 		save_all_jobs();
 	}
 	break;
-	case MON_VERSION:
+	case MON_VERSION://send by scheduler as a dummy message
 		break;
 	case MON_LOAD:
 	{
@@ -508,7 +508,7 @@ static int scheduler_display(int ihost, int pid){
 	dbg_time("scheduler_display: %s, pid=%d\n", hosts[ihost], pid);
 	/*connect to scheduler with a new port. The schedule pass the other
 	  end of the port to drawdaemon so we can communicate with it.*/
-	int sock=connect_port(hosts[ihost], PORT, 0, 0);
+	int sock=scheduler_connect(hosts[ihost]);
 	if(sock==-1) return ans;
 	int cmd[2]={CMD_DISPLAY, pid};
 	

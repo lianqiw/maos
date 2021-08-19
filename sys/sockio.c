@@ -206,6 +206,7 @@ int stcheck(int sfd){
 		ans=1;
 	}else if(len==-1 && errno!=EAGAIN){
 		dbg_time("recv from %d failed with errno %d: %s\n", sfd, errno, strerror(errno));
+		ans=1;
 	}
 	return ans;
 }

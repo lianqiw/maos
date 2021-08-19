@@ -1273,7 +1273,7 @@ static void toolbutton_cumu_click(GtkToggleToolButton* btn){
 }
 static void toolbutton_stop(GtkToolButton* btn){
 	(void)btn;
-	close(sock); sock=-1; sock_idle=1;
+	close(sock); sock=-1; sock_idle=-1;
 }
 static void togglebutton_pause(GtkToggleToolButton* btn){
 	if(sock_idle) return;
@@ -1686,7 +1686,7 @@ GtkWidget* create_window(GtkWidget* window){
 	GtkWidget* fontsel=gtk_font_button_new_with_font("Sans 12");
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
 	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL);
-	new_tool(toolbar, NULL, 1, "media-playback-play", G_CALLBACK(togglebutton_play), NULL);
+	new_tool(toolbar, NULL, 1, "media-playback-start", G_CALLBACK(togglebutton_play), NULL);
 	new_tool(toolbar, NULL, 1, "media-playback-pause", G_CALLBACK(togglebutton_pause), NULL);
 	new_tool(toolbar, NULL, 0, "media-playback-stop", G_CALLBACK(toolbutton_stop), NULL);
 

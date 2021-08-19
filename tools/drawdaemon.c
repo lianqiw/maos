@@ -17,9 +17,9 @@
 */
 
 #include "drawdaemon.h"
-int sock;
-int sock_idle=0;
+//int sock;
 int cumu=0;
+const char *host=0;
 #if MAC_INTEGRATION
 #include <gtkosxapplication.h>
 #endif
@@ -34,18 +34,22 @@ activate (GtkApplication *app,
 	create_window(window);
 }
 #endif
+
 #if MAC_INTEGRATION
 void mac_terminate(GtkosxApplication *app, gpointer psock){
 	(void)app;
-	int sock0=GPOINTER_TO_INT(psock);
-	info("close %d socket in mac_terminate\n", sock0);
-	if(sock0!=-1) close(sock0);
+	if(psock){
+		int sock0=*psock;
+		info("close %d socket in mac_terminate\n", sock0);
+		if(sock0!=-1) close(sock0);
+	}
 	sleep(1);
 	gtk_main_quit();
 }
 #endif
 int main(int argc, char* argv[]){
-	{
+	info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
+	if(getenv("MAOS_DIRECT_LAUNCH")){
 		char fnlog[PATH_MAX];
 		snprintf(fnlog, PATH_MAX, "%s/drawdaemon.log", TEMP);
 		if(!freopen(fnlog, "w", stdout)){
@@ -59,7 +63,7 @@ int main(int argc, char* argv[]){
 		setbuf(stdout, NULL);
 		register_signal_handler(NULL);
 	}
-	info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
+	
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
 	if(!g_thread_supported()){
 		g_thread_init(NULL);
@@ -74,22 +78,16 @@ int main(int argc, char* argv[]){
 
 	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-draw.png", NULL);
 	if(argc<2){
-		error("Must call drawdaemon with the socket fd.\n");
+		error("Usage: %s socket or hostname.\n", argv[0]);
 	}
-	sock=strtol(argv[1], NULL, 10);
-	if(sock<0){
-		error("sock=%d\n", sock);
-	}
-	//dbg("sock=%d\n", sock);
-	socket_block(sock, 0);
 
 #if MAC_INTEGRATION
 	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	gtkosx_application_ready(theApp);
-	g_signal_connect(theApp, "NSApplicationWillTerminate", G_CALLBACK(mac_terminate), GINT_TO_POINTER(sock));
+	g_signal_connect(theApp, "NSApplicationWillTerminate", G_CALLBACK(mac_terminate), &sock);
 #endif
-	thread_new(listen_draw, NULL);
+	thread_new(listen_draw, argv[1]);
 	//g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
 #if GTK_MAJOR_VERSION<4
 	create_window(NULL);

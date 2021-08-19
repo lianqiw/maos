@@ -109,26 +109,58 @@ void* listen_udp(void *dummy){
 	}while(counter>0);
 	return NULL;
 }
-#define STREADINT(p) if(streadint(sock, &p)) goto end;
-#define STREAD(p,len) if(stread(sock,p,len)) goto end;
-#define STREADSTR(p) if(streadstr(sock, &p)) goto end;
-#define STREADFLT(p,len) if(stread(sock, p, len*byte_float)) goto end;	\
+#define STREADINT(p) if(streadint(sock, &p)) {close(sock); sock=-1; goto retry;}
+#define STREAD(p,len) if(stread(sock,p,len)) {close(sock); sock=-1; goto retry;}
+#define STREADSTR(p) if(streadstr(sock, &p)) {close(sock); sock=-1; goto retry;}
+#define STREADFLT(p,len) if(stread(sock, p, len*byte_float)) {close(sock); sock=-1; goto retry;}	\
     if(byte_float!=4){							\
 	for(int i=0; i<len; i++){					\
 	    ((float*)p)[i]=(float)(((double*)p)[i]);			\
 	}								\
     }									
-
-void* listen_draw(void* dummy){
-	(void)dummy;
-	dbg("listen_draw is listening at %d\n", sock);
-	//TIC;tic;
+int sock;//socket 
+int sock_idle=0;//1: no active drawing. 0: active drawing connection. -1: do not retry connection
+void* listen_draw(void* user_data){
+	char* str2=0;
+	char *host=0;
+	sock=strtol((char*)user_data, &str2, 10);
+	if(str2!=user_data){//argument is a number
+		if(sock<0){
+			error("sock=%d is invalid\n", sock);
+		}
+		host=strdup(addr2name(socket_peer(sock)));
+	} else{//not a number, hostname
+		host=strdup((char*)user_data);
+		sock=-1;
+	}
+retry:
+	if(sock<0 && host && sock_idle!=-1){
+		dbg_time("Connecting to %s\n", host);
+		sock=scheduler_connect(host);
+		if(sock==-1){
+			warning("connect to %s failed\n", host);
+			return NULL;
+		}
+		int cmd[2]={CMD_DISPLAY, 0};
+		if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
+			warning("Failed to pass sock to scheduler.\n");
+			close(sock);
+			sock=-1;
+			return NULL;
+		}
+	}
+	
+	if(sock>=0){
+		if(socket_block(sock, 0) || socket_recv_timeout(sock, 0)){
+			sock=-1;
+		}
+	}
 	static drawdata_t* drawdata=NULL;
 	int cmd=0;
 	int nlen=0;
-	socket_recv_timeout(sock, 0);
-	while(sock!=-1 && !streadint(sock, &cmd)){
-		//dbg("cmd=%d\n", cmd);
+	if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
+	while(sock!=-1){
+		STREADINT(cmd);//will block if no data is available.
 		sock_idle=0;//Indicate connection is active
 		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 			STREADINT(nlen);
@@ -326,7 +358,7 @@ void* listen_draw(void* dummy){
 		}
 		break;
 		case -1:
-			goto end;/*read failed. */
+			goto retry;/*read failed. */
 			break;
 		default:
 			warning_time("Unknown cmd: %d with size %d\n", cmd, nlen);
@@ -338,8 +370,8 @@ void* listen_draw(void* dummy){
 		}/*switch */
 		cmd=-1;
 	}/*while */
-end:
-	warning_time("Read %d failed: %d (%s). Stop listening.\n", sock, errno, strerror(errno));
+
+	warning_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;
 	sock_idle=1;

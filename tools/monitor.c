@@ -857,7 +857,7 @@ void create_window(
 void print_help(const char *cmd){
 	fprintf(stderr, "%s [options] [port] [host1] [host2]\n"
 	"\nOptions:\n\t\t--mailto someone@somehost.com (requires sendmail)\n"
-	"\t\t--disable-plot Disable plotting capability (drawdaemon)\n"
+	"\t\t--disable-plot or --disable-draw Disable plotting capability (drawdaemon)\n"
 	"\t\t--help (-h) print this help\n"
 	"\ndefault hosts can be specified in ~/.aos/hosts, one per line\n"
 	"default port can be specified in ~/.aos/port\n", cmd
@@ -871,7 +871,8 @@ int main(int argc, char* argv[]){
 				const char* s=argv[i]+1;
 				if(s[0]=='-') s++;
 				const char* key="mailto";
-				const char* key2="--disable-plot";
+				const char* key2a="disable-plot";
+				const char* key2b="disable-draw";
 				if(!mystrcmp(s, key)){
 					s+=strlen(key);
 					while(s[0]==' ') s++;
@@ -888,7 +889,7 @@ int main(int argc, char* argv[]){
 					if(mailto){
 						info("Will send mail to %s for host disconnection or job crashing.\n", mailto);
 					}
-				} else if(!mystrcmp(s, key2)){
+				} else if(!mystrcmp(s, key2a)|| !mystrcmp(s, key2b)){
 					plot_enabled=0;
 					dbg("plot disabled\n");
 				} else if((s[0]=='h'&&(!s[1]||isspace(s[1])))
@@ -900,6 +901,7 @@ int main(int argc, char* argv[]){
 					warning("Unknown options: %s\n", argv[i]);
 				}
 			} else if(isdigit((int)argv[i][0])){//port
+				extern int PORT;
 				PORT=strtol(argv[i], NULL, 10);
 			} else if(isalnum((int)argv[i][0])){//hostname
 				parse_host(argv[i]);

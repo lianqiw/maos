@@ -117,30 +117,39 @@ static void socket_reuse_addr(int sock){
 		perror("socket_reuse_addr");
 	}
 }
-void socket_nopipe(int sock){
-	if(sock==-1) return;
+int socket_nopipe(int sock){
+	if(sock==-1) return -1;
 #ifdef SO_NOSIGPIPE
 	const int one=1;
-	setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
+	if(setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int))==-1) return -1;
 #else
 #if ! defined(__linux__)
-	signal(SIGPIPE, SIG_IGN);
+	if(signal(SIGPIPE, SIG_IGN)==SIG_ERR) return -1;
 #endif
 	(void)sock;
 #endif
+	return 0;
 }
 /**
    Set socket to unblocking mode
 */
-void socket_block(int sock, int block){
-	if(sock==-1) return;
+int socket_block(int sock, int block){
+	if(sock==-1) return -1;
 	int arg=fcntl(sock, F_GETFD);
+	if(arg==-1){
+		perror("fcntl");
+		return -1;
+	}
 	if(block){
 		arg&=~O_NONBLOCK;
 	} else{
 		arg|=O_NONBLOCK;
 	}
-	fcntl(sock, F_SETFD, arg);
+	if(fcntl(sock, F_SETFD, arg)==-1){
+		perror("fcntl");
+		return -1;
+	}
+	return 0;
 }
 
 #if defined(__INTEL_COMPILER)

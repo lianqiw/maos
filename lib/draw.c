@@ -382,7 +382,7 @@ static int get_drawdaemon(){
 					draw_disabled=1;
 					close(sock_helper);
 					sock_helper=-1;
-					warning("Unable to talk to the helper to launch drawdaemon\n");
+					warning("Unable to talk to the helper to launch drawdaemon.\n");
 				}
 				dbg("launch using sock helper: sock=%d\n", sock);
 			}
@@ -394,11 +394,10 @@ static int get_drawdaemon(){
 
 	if(sock!=-1){
 		draw_add(sock);
-	}
-	if(sock_ndraw2>0){
 		return 0;
-	} else{
-		warning("Failed to open drawdaemon\n");
+	}else{
+		draw_disabled=1;
+		warning("Disable drawing.\n");
 		return 1;
 	}
 }

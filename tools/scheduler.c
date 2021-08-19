@@ -534,6 +534,61 @@ static int maos_command(int pid, int sock, int cmd){
 	}
 	return -1;//do not keep this connection.
 }
+typedef struct SOCKID_M{
+	int id;
+	int sock;
+	struct SOCKID_M* prev;
+	struct SOCKID_M* next;
+} SOCKID_T;
+static SOCKID_T* shead=0;
+//save_socket to linked list. socket is uniq, but id may not be.
+static void socket_save(int sock_save, int id){
+	int found=0;
+	for(SOCKID_T* p=shead; p; p=p->next){
+		if(p->sock==sock_save){
+			found=1;
+			p->id=id;
+		}
+	}
+	if(!found){
+		SOCKID_T* tmp=(SOCKID_T*)malloc(sizeof(SOCKID_T));
+		tmp->id=id;
+		tmp->sock=sock_save;
+		tmp->next=shead;
+		tmp->prev=0;
+		if(shead){
+			shead->prev=tmp;
+		}
+		shead=tmp;
+	}
+}
+//retrieve socket from linked list based in id. 
+static int socket_get(int id){
+	int sock_save=-1;
+	for(SOCKID_T* p_next, *p=shead; p&&sock_save==-1; p=p_next){
+		p_next=p->next;
+		int badsock=0;
+		if((badsock=stcheck(p->sock))||p->id==id){
+			if(badsock){
+				close(p->sock); //closed socket
+			} else{
+				sock_save=p->sock; //valid match
+			}
+			//remove from list 
+			if(p->prev){//middle item
+				p->prev->next=p->next;
+			} else{//first item
+				shead=p->next;
+			}
+			if(p->next){//not last item
+				p->next->prev=p->prev;
+			}
+			free(p);
+		}
+	}
+	return sock_save;
+}
+
 static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
 PNEW(mutex_sch);//respond() and scheduler_handle_ws() much lock this before preceed.
 /**
@@ -695,81 +750,44 @@ static int respond(int sock){
 	}
 	break;
 	case CMD_PROBE://9: called by monitor to probe the connection
+	{	//send back a dummy response
+		int cmd2[3]={MON_VERSION, 0, 0};
+		stwrite(sock, &cmd2, sizeof(cmd2));
+	}
 		break;
 	case CMD_SOCK://10:Called by draw() to cache or request a fd. Valid over UNIX socket only.
 	{
-		typedef struct SOCKID_M{
-			int id;
-			int sock;
-			struct SOCKID_M* prev;
-			struct SOCKID_M* next;
-		} SOCKID_T;
-		static SOCKID_T* head=0;
 		if(pid>0){//receive sock from draw()
-			int found=0;
 			int sock_save;
 			if(streadfd(sock, &sock_save)){
 				warning_time("(%d) receive socket failed\n", sock);
 				sock_save=-1;
+				ret=-1;
 			} else{
 				dbg_time("(%d) received socket %d\n", sock, sock_save);
-				for(SOCKID_T* p=head; p; p=p->next){
-					if(p->id==pid){
-						close(p->sock);
-						p->sock=sock_save;
-						found=1;
-					}
-				}
-				if(!found){
-					SOCKID_T* tmp=(SOCKID_T*)malloc(sizeof(SOCKID_T));
-					tmp->id=pid;
-					tmp->sock=sock_save;
-					tmp->next=head;
-					tmp->prev=0;
-					if(head){
-						head->prev=tmp;
-					}
-					head=tmp;
-				}
+				socket_save(sock_save, pid);
 			}
 		} else if(pid<0){//send existing sock to draw()
-			int sock_save=-1;
-			for(SOCKID_T* p_next, *p=head; p&&sock_save==-1; p=p_next){
-				p_next=p->next;
-				int badsock=0;
-				if((badsock=stcheck(p->sock))||(p->id==-pid)){
-					if(badsock){
-						close(p->sock); //closed socket
-					} else{
-						sock_save=p->sock; //valid match
-					}
-					//remove from list 
-					if(p->prev){//middle item
-						p->prev->next=p->next;
-					} else{//first item
-						head=p->next;
-					}
-					if(p->next){//not last item
-						p->next->prev=p->prev;
-					}
-					free(p);
-				}
+			int sock_save=socket_get(-pid);
+			if(sock_save==-1){
+				sock_save=socket_get(0);
 			}
 			dbg_time("(%d) received socket request, sock_saved=%d\n", sock, sock_save);
 
 			//cannot pass -1 as sock, so return a flag first. sock can be zero.
 			if(stwriteint(sock, sock_save>-1?0:-1)){
 				warning_time("(%d) Unable to talk to draw\n", sock);
+				ret=-1;
 			}
 			if(sock_save>-1){
 				if(stwritefd(sock, sock_save)){
 					warning_time("(%d) send socket %d failed\n", sock, sock_save);
+					ret=-1;//close connection to draw()
 				} else{//socket is transferred to draw. we close it.
 					dbg_time("(%d) send socket %d success\n", sock, sock_save);
 				}
 				close(sock_save);
 			}
-
 		} else{//pid==0; request a drawdaemon using monitor. 
 			MONITOR_T *pm=0;
 			for(pm=pmonitor; pm; pm=pm->next){
@@ -806,14 +824,15 @@ static int respond(int sock){
 		if(pid==0){//this is for pending scheduler_recv_socket
 			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
 				||stwritefd(scheduler_recv_wait, sock)){
-				stwriteint(sock, -1);
-				warning_time("(%d) Failed to pass sock to draw at %d\n", sock, scheduler_recv_wait);
+				dbg_time("(%d) Failed to pass sock to draw at %d, save socket for future\n", sock, scheduler_recv_wait);
+				socket_save(dup(sock), 0);//duplicate socket and keep it 
+				ret=-1;//prevent scheduler from listening to this socket.
 			} else{
-				stwriteint(sock, 0);//success.
 				dbg_time("(%d) passed sock to draw at %d\n", sock, scheduler_recv_wait);
+				ret=-1;//close socket on scheduler.
 			}
+			stwriteint(sock, 0);
 			scheduler_recv_wait=-1;
-			ret=-1;
 		} else{
 			ret=maos_command(pid, sock, MAOS_DRAW);
 		}
@@ -1196,6 +1215,7 @@ int main(){
 		pclose(fpcmd);
 		dbg("NGPU=%d\n", NGPU);
 	}
+	extern int PORT;
 #if HAS_LWS
 	//launch in a separate thread to avoid excessive idle wakeup.
 	//Must acquire mutex_sch before handling run_t
