@@ -19,7 +19,7 @@
 /*
   All routines in this thread runs in a separate threads from the main thread.
   In order to call any gdk/gtk routines, it calls to go through
-  gdk_threads_add_idle. The thread is waits for select() results.
+  g_idle_add. The thread is waits for select() results.
 
   All functions here except listen_host() are declared static to avoid calling
   from other threads to avoid corruptiong the data structures. Interaction to
@@ -52,7 +52,7 @@ static proc_t *proc_add(int id,int pid){
 	iproc->next=pproc[id];
 	pproc[id]=iproc;
 	nproc[id]++;
-	gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id|nproc[id]<<8));
+	g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER(id|nproc[id]<<8));
 	return iproc;
 }
 */
@@ -92,7 +92,7 @@ static proc_t* proc_get(int id, int pid){
 		iproc->next=pproc[id];
 		pproc[id]=iproc;
 		nproc[id]++;
-		gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+		g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
 	}
 	return iproc;
 }
@@ -102,13 +102,13 @@ static void proc_remove_all(int id){
 	proc_t* iproc, * jproc=NULL;
 	for(iproc=pproc[id]; iproc; iproc=jproc){
 		jproc=iproc->next;
-		gdk_threads_add_idle((GSourceFunc)remove_entry, iproc->row);//frees iproc
+		g_idle_add((GSourceFunc)remove_entry, iproc->row);//frees iproc
 		free(iproc->path);
 		free(iproc);
 	}
 	nproc[id]=0;
 	pproc[id]=NULL;
-	gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+	g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
 }
 
 static void proc_remove(int id, int pid){
@@ -122,8 +122,8 @@ static void proc_remove(int id, int pid){
 			}
 			nproc[id]--;
 
-			gdk_threads_add_idle((GSourceFunc)remove_entry, iproc->row);
-			gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+			g_idle_add((GSourceFunc)remove_entry, iproc->row);
+			g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
 			free(iproc->path);
 			free(iproc);
 			break;
@@ -148,7 +148,7 @@ static void host_added(int ihost, int sock){
 	if(sock>-1){
 		hsock[ihost]=sock;
 		FD_SET(sock, &active_fd_set);
-		gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
+		g_idle_add(host_up, GINT_TO_POINTER(ihost));
 	}
 	dbg_time("connected to %s\n", hosts[ihost]);
 }
@@ -163,7 +163,7 @@ static void host_removed(int sock){
 	int ihost=host_from_sock(sock);
 	if(ihost!=-1 && hsock[ihost]!=-1){
 		hsock[ihost]=-1;
-		gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
+		g_idle_add(host_down, GINT_TO_POINTER(ihost));
 		warning_time("Disconnected from %s\n", hosts[ihost]);
 		sendmail("Subject:monitor on disconnected from %s\n\nAt %s\n",
 				 hosts[ihost], myasctime(0));
@@ -344,7 +344,7 @@ static int respond(int sock){
 				sendmail("Subject: Job %d crashed on %s\n\nOn %s\n\nPath is %s\n", 
 					iproc->pid, hosts[iproc->hid], myasctime(0), iproc->path);
 			}
-			gdk_threads_add_idle((GSourceFunc)refresh, iproc);
+			g_idle_add((GSourceFunc)refresh, iproc);
 		}
 	}
 	break;
@@ -409,7 +409,7 @@ static int respond(int sock){
 		//usage_mem[ihost]=(double)(pid & 0xFFFF)/100.;
 		usage_cpu[ihost]=MAX(MIN(1, usage_cpu[ihost]), 0);
 		//usage_mem[ihost]=MAX(MIN(1,usage_mem[ihost]),0);
-		gdk_threads_add_idle((GSourceFunc)update_progress, GINT_TO_POINTER(ihost));
+		g_idle_add((GSourceFunc)update_progress, GINT_TO_POINTER(ihost));
 	}
 	break;
 	case MON_ADDHOST:
@@ -486,7 +486,7 @@ void* listen_host(void* pmsock){
 					iproc->status.info=S_CRASH;
 					iproc->status.tot=(ntime-iproc->tlast)/iproc->status.scale;
 					dbg_time("proc %d in %s is not updating in %g seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
-					gdk_threads_add_idle((GSourceFunc)refresh, iproc);
+					g_idle_add((GSourceFunc)refresh, iproc);
 				}
 			}
 		}

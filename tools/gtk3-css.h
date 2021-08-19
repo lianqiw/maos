@@ -46,9 +46,9 @@ const gchar* all_style=
 "border-width:3px;"
 "}\n"
 ".entry.progressbar{\n"
-"-GtkEntry-has-frame:1;"
+/*"-GtkEntry-has-frame:1;"
 "-GtkEntry-progress-border:0px,0px,0px,0px;"
-"-GtkEntry-inner-border:0px,0px,0px,0px;"
+"-GtkEntry-inner-border:0px,0px,0px,0px;"*/
 "background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));"
 "border-width:1px;"
 "border-style:none; \n"

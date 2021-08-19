@@ -36,10 +36,11 @@
 #include "monitor.h"
 /*DO not modify enum without modify list store*/
 enum{
-	COL_DATE=0,
+	COL_DATE=0,//date in string
+	COL_TIME,//time in time_t. //only set once, to keep task order stable.
 	COL_PID,
 	COL_FULL,/*full path+arguments+output*/
-	COL_START,/*starting path*/
+	COL_PATH,/*starting path*/
 	COL_ARGS,/*arguments*/
 	COL_OUT, /*output folder*/
 	//COL_SEED,
@@ -217,9 +218,10 @@ gboolean refresh(proc_t* p){
 		gtk_list_store_append(listall, &iter);
 		gtk_list_store_set(listall, &iter,
 			COL_DATE, sdate,
+			COL_TIME, p->status.timstart,
 			COL_PID, spid,
 			COL_FULL, spath?spath:" ",
-			COL_START, sstart?sstart:" ",
+			COL_PATH, sstart?sstart:" ",
 			COL_ARGS, sargs?sargs:" ",
 			COL_OUT, sout?sout:" ",
 			COL_ERRHI, " ",
@@ -339,20 +341,62 @@ static GtkTreeViewColumn* new_column(int type, int width, const char* title, ...
 	va_end(ap);
 	return col;
 }
-/**
-   Clear the clipboard so we can append to it multiple times.
- */
-/*static void clipboard_clear(){
-	GdkAtom atoms[2]={GDK_SELECTION_CLIPBOARD, GDK_SELECTION_PRIMARY};
-	for(int iatom=0; iatom<2; iatom++){
-	GtkClipboard *clip=gtk_clipboard_get(atoms[iatom]);
-	gtk_clipboard_set_text(clip,"",-1);
+#if GTK_MAJOR_VERSION>3	
+//to be used with callback
+void scheduler_cmd_wrap2(GtkDialog *dialog, int response_id, int* cmds){
+	gtk_window_destroy(GTK_WINDOW(dialog));
+	int ans;
+	extern int *sock_main;
+	if(response_id==GTK_RESPONSE_YES){
+		stwriteintarr(sock_main[1], cmds, 4);
+		streadint(sock_main[1], &ans);
 	}
-	}*/
+	free(cmds);
+}
+void dialog_confirm(int *cmds, const char* format, ...){
+#else
+gboolean dialog_confirm(const char* format, ...){
+#endif
+	format2fn;
+	GtkWidget* dia=gtk_message_dialog_new
+	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT|GTK_DIALOG_MODAL,
+		GTK_MESSAGE_QUESTION,
+		GTK_BUTTONS_YES_NO,
+		"%s", fn);
+	
+#if GTK_MAJOR_VERSION>3
+	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(scheduler_cmd_wrap2), cmds);
+	gtk_widget_show(dia);
+#else
+	int result=gtk_dialog_run(GTK_DIALOG(dia));
+	gtk_widget_destroy(dia);
+	return result==GTK_RESPONSE_YES;
+#endif	
+}
+#if GTK_MAJOR_VERSION<4
 /**
    Append text to clipboard (primary and default).
 */
 static void clipboard_append(const char* jobinfo){
+#if GTK_MAJOR_VERSION > 3 
+//GTK4 replaces gtkclipboard by gdkclipboard
+	GdkClipboard *clipboard = gtk_widget_get_clipboard(window);
+	GdkContentProvider *provider=gdk_clipboard_get_content(clipboard);
+	GValue value=G_VALUE_INIT;
+	g_value_init(&value, G_TYPE_STRING);
+	if(!gdk_content_provider_get_value(provider, &value, NULL)) return;
+	const char *old=g_value_get_string(&value);
+	char *newer=NULL;
+	if(old){
+		newer=stradd(old, jobinfo, "\n", NULL);
+		g_value_reset(&value);
+	}else{
+		newer=stradd(jobinfo, "\n", NULL);
+	}
+	g_value_take_string(&value, newer);
+	gdk_clipboard_set_value(clipboard, &value);
+	g_value_unset(&value);
+#else
 	GdkAtom atoms[2]={GDK_SELECTION_CLIPBOARD, GDK_SELECTION_PRIMARY};
 	for(int iatom=0; iatom<2; iatom++){
 		GtkClipboard* clip=gtk_clipboard_get(atoms[iatom]);
@@ -368,7 +412,9 @@ static void clipboard_append(const char* jobinfo){
 		gtk_clipboard_set_text(clip, newer, -1);
 		free(newer);
 	}
+#endif
 }
+
 typedef struct{
 	const char* menu;
 	const char* action;
@@ -397,7 +443,7 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 	if(cmd<0){
 		if(cmd==-1){
 			if(!strcmp(action, "CopyPath")){
-				gtk_tree_model_get_value(model, iter, COL_START, &value);
+				gtk_tree_model_get_value(model, iter, COL_PATH, &value);
 			} else if(!strcmp(action, "CopyOutPath")){
 				gtk_tree_model_get_value(model, iter, COL_OUT, &value);
 			} else if(!strcmp(action, "Copy")){
@@ -500,16 +546,27 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 #endif
 	return TRUE;
 }
+#endif
 /* Handle click on treeview */
+#if GTK_MAJOR_VERSION<4
 static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointer user_data){
-	
+	gdouble x=event->x;
+	gdouble y=event->y;
+	int button=event->button;
+#else
+static gboolean view_click_event(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data){
+	int button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(self));
+	GtkWidget *view=user_data;
+	(void)n_press;
+#endif
+
 	GtkTreePath* path=NULL;
 	GtkTreeViewColumn* column=NULL;
 	GtkTreeSelection* selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 	
 	if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
-		(gint)event->x,	(gint)event->y,	&path, &column, NULL, NULL)){
-		if(event->button==3){//right click, select if nothing is selected. 
+		(gint)x,(gint)y,&path, &column, NULL, NULL)){
+		if(button==3){//right click, select if nothing is selected. 
 			if(gtk_tree_selection_count_selected_rows(selection)==0){
 				//the path clicked is not selected. move selection to this path
 				gtk_tree_selection_unselect_all(selection);
@@ -517,7 +574,7 @@ static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointe
 			}
 		}
 	} else{//clicks outsize of treeview. unselect all.
-		if(event->button==1){
+		if(button==1){
 			gtk_tree_selection_unselect_all(selection);
 			column=NULL;
 		}
@@ -526,22 +583,33 @@ static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointe
 		gtk_tree_path_free(path); path=NULL;
 	}
 	//right click popup menu
-	if(event->button==3){
+	if(button==3){
+#if GTK_MAJOR_VERSION<4	
 		view_popup_menu(view, user_data);
+#endif
 		return TRUE;//return TRUE to avoid modifying selection
 	}
 	return FALSE;//default handler handles multi selection
 }
 /* Handle click on icon column to handle individual jobs*/
+#if GTK_MAJOR_VERSION<4
 static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpointer user_data){
-	(void)user_data;
-	if(event->button!=1) return FALSE;//only handle left click
+	int button=event->button;
+	gdouble x=event->x;
+	gdouble y=event->y;
+	(void) user_data;
+#else
+static gboolean view_release_event(GtkGestureClick*self, gint n_press, gdouble x, gdouble y, gpointer user_data){
+	int button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(self));
+	GtkWidget* view=user_data;
+	(void)n_press;
+#endif
+	;
+	if(button!=1) return FALSE;//only handle left click
 	GtkTreePath* path=NULL;
 	GtkTreeViewColumn* column=NULL;
 	if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
-		(gint)event->x,
-		(gint)event->y,
-		&path, &column, NULL, NULL)){
+		(gint)x, (gint)y, &path, &column, NULL, NULL)){
 		const gchar* title=gtk_tree_view_column_get_title(column);
 		if(!strcmp(title, " ")){
 			GtkTreeIter iter;
@@ -561,9 +629,16 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 			gtk_tree_model_get(model, &iter, COL_ACTION, &status2, -1);
 			
 			if(status2==icon_running||status2==icon_waiting){
+#if GTK_MAJOR_VERSION>3				
+				int* cmds=malloc(sizeof(int)*4);
+				cmds[0]=MON_CMD; cmds[1]=ihost; cmds[2]=pid; cmds[3]=CMD_KILL;
+				dialog_confirm(cmds, "Kill %d?", pid);
+#else				
 				if(dialog_confirm("Kill %d?", pid)){
+					
 					scheduler_cmd_wrap(ihost, pid, CMD_KILL);
 				}
+#endif
 			}else{
 				scheduler_cmd_wrap(ihost, pid, CMD_REMOVE);
 			}
@@ -614,6 +689,7 @@ GtkWidget* new_page(int ihost){
 	if(!listall){
 		listall=gtk_list_store_new(COL_TOT,
 			G_TYPE_STRING,/*DATE */
+			G_TYPE_LONG, /*TIME*/
 			G_TYPE_STRING,/*PID */
 			G_TYPE_STRING,/*FULL */
 			G_TYPE_STRING,/*PATH */
@@ -635,7 +711,7 @@ GtkWidget* new_page(int ihost){
 		);
 		lists=mycalloc(nhost+1, GtkTreeModel*);
 		views=mycalloc(nhost+1, GtkWidget*);
-		//gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(listall), COL_DATE, GTK_SORT_ASCENDING);
+		gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(listall), COL_TIME, GTK_SORT_ASCENDING);
 	}
 	if(views[ihost]){
 		return views[ihost];
@@ -651,12 +727,22 @@ GtkWidget* new_page(int ihost){
 	views[ihost]=view=gtk_tree_view_new_with_model(GTK_TREE_MODEL(lists[ihost]));
 	//g_object_unref(lists[ihost]);
 	{
+#if GTK_MAJOR_VERSION < 4			
 		g_signal_connect(view, "button-press-event",
 			G_CALLBACK(view_click_event), GINT_TO_POINTER(ihost));
 		g_signal_connect(view, "button-release-event",
 			G_CALLBACK(view_release_event), GINT_TO_POINTER(ihost));
+
 		g_signal_connect(view, "popup-menu",
 			G_CALLBACK(view_popup_menu), GINT_TO_POINTER(ihost));
+#else
+		GtkGesture* gesture=gtk_gesture_click_new();
+		g_signal_connect(gesture, "pressed", 
+			G_CALLBACK(view_click_event), view);
+		g_signal_connect(gesture, "released",
+		G_CALLBACK(view_release_event), view);
+		gtk_widget_add_controller(view, GTK_EVENT_CONTROLLER(gesture));
+#endif
 	}
 	GtkTreeSelection* viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 	/*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
@@ -681,7 +767,7 @@ GtkWidget* new_page(int ihost){
 	} else{
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
 	}
-	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Path", "text", COL_START, NULL));
+	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Path", "text", COL_PATH, NULL));
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Args", "text", COL_ARGS, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Out", "text", COL_OUT, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low", "text", COL_ERRLO, "foreground", COL_COLOR, NULL));

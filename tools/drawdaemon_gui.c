@@ -1542,7 +1542,7 @@ static gboolean close_window(GtkObject* object, GdkEvent* event)
 			drawdata_free(*drawdatawrap);
 		}
 	}
-	gtk_widget_destroy(object);
+	gtk_widget_destroy(GTK_WIDGET(object));
 	if(!windows){
 		info("sock %d closed\n", sock);
 		if(sock!=-1) close(sock);
