@@ -1392,7 +1392,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumuquad);
 	gtk_box_pack_start(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(") from"), FALSE, FALSE, 0);
-	spin=gtk_spin_button_new_with_range(drawdata->limit[0], drawdata->limit[1], 1);
+	spin=gtk_spin_button_new_with_range(0, drawdata->limit[1], 1);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), drawdata->icumu);
 	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &drawdata->icumu);
 	gtk_box_pack_start(GTK_BOX(hbox), spin, TRUE, TRUE, 0);

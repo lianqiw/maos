@@ -401,7 +401,7 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		if(!exist(dirsvd)){
 			mymkdir("%s", dirsvd);
 		} else{
-			if(zfexist(fnsvd)) zftouch(fnsvd);
+			if(zfexist("%s",fnsvd)) zftouch("%s", fnsvd);
 		}
 		long avail=available_space(dirsvd);
 		long need=A->nx*A->ny*sizeof(T)*3;

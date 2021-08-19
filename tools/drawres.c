@@ -291,7 +291,7 @@ int main(int argc, char* argv[]){
 			default:
 				error("Invalid restype=%d\n", restype);
 			}
-			if(!zfexist(fn)) continue;
+			if(!zfexist("%s",fn)) continue;
 			int ii=ipath+npath*iseed;
 			if(restype==1){//MAOS results.
 				dcell* ires;

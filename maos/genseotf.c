@@ -132,7 +132,7 @@ void genseotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	snprintf(fnlock, sizeof(fnlock), "%s.lock", fnotf);
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	while(!intstat->otf){
-		if(exist(fnlock)||!zfexist(fnotf)){/*need to create data */
+		if(exist(fnlock)||!zfexist("%s",fnotf)){/*need to create data */
 			int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 			if(fd>=0){/*succeed */
 				info("Generating WFS OTF for %s...", fnotf);
@@ -225,7 +225,7 @@ void genselotf(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	snprintf(fnlock, sizeof(fnlock), "%s.lock", fnlotf);
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	while(!intstat->lotf){
-		if(exist(fnlock)||!zfexist(fnlotf)){/*need to create data */
+		if(exist(fnlock)||!zfexist("%s",fnlotf)){/*need to create data */
 			int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 			if(fd>=0){/*succeed */
 				info("Generating WFS LLT OTF for %s\n", fnlotf);

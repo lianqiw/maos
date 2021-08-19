@@ -291,7 +291,7 @@ mapcell* genscreen(genatm_t* data){
  */
 mapcell* genscreen_str(const char* header){
 	mapcell* surfs=NULL;
-	if(zfexist("%s", header)){
+	if(zfexist("%s",header)){
 		info2("Loading surface OPD from %s\n", header);
 		surfs=mapcellread("%s", header);
 	} else{

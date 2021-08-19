@@ -28,7 +28,7 @@
    used to save array of dmat, cmat, ccell or dcell. mainly used to save
 psfout. No user modifiable entries.  */
 typedef struct zfarr zfarr;
-zfarr* zfarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
+zfarr* zfarr_init(long nx, long ny, const char* format,...) CHECK_ARG(3);
 void zfarr_push(zfarr *ca, int i, const void *A);
 void zfarr_close(zfarr *ca);
 void zfarr_close_n(zfarr **ca, int nc);

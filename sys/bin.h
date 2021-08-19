@@ -99,8 +99,8 @@ extern int disable_save; ///saving to disk will be disabled when set to nonzero.
 /*
   The following functions takes long type integers.
 */
-int zfexist(const char *format, ...); 
-void zftouch(const char *format, ...);
+int zfexist(const char* format,...) CHECK_ARG(1);
+void zftouch(const char *format,...) CHECK_ARG(1);
 int zfeof(file_t *fp);
 long zfpos(file_t *fp);
 long zfseek(file_t *fp, long offset, int whence);

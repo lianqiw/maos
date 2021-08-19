@@ -56,6 +56,7 @@ static proc_t *proc_add(int id,int pid){
 	return iproc;
 }
 */
+CHECK_ARG(1)
 static void sendmail(const char*format,...){
 	format2fn;
 	if(mailto && fn){

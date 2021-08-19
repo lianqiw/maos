@@ -1108,7 +1108,7 @@ dcell* dcellread_prefix(const char* file, const parms_t* parms, int ipowfs){
 			//info2("using %s_wfs%d.bin\n", file, iwfs);
 			P(nea,jwfs)=dread("%s_wfs%d.bin", file, iwfs);
 		}
-	} else if(zfexist(file)){
+	} else if(zfexist("%s",file)){
 	//info2("using %s\n", file);
 		nea=dcellread("%s", file);
 	} else{

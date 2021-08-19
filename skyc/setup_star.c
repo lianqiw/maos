@@ -133,7 +133,7 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 					char fn[PATH_MAX];
 					snprintf(fn, PATH_MAX, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g",
 						dirstart, seed, msa, thx, thy);
-					if(!zfexist(fn)){
+					if(!zfexist("%s",fn)){
 					/*warning("%s doesn't exist\n",fn); */
 					} else{
 						dcell* avgpsfi=dcellread("%s", fn);
@@ -494,7 +494,7 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 					fngoff[iy][ix]=myalloca(PATH_MAX, char);
 					snprintf(fngoff[iy][ix], PATH_MAX, "%s/gradoff/gradoff_sa%d_x%g_y%g",
 						dirstart, msa, thx, thy);
-					if(!zfexist(fnztilt[iy][ix])){
+					if(!zfexist("%s",fnztilt[iy][ix])){
 					//warning("%s doesnot exist\n",fnwvf[iy][ix]);
 						fnztilt[iy][ix]=fngoff[iy][ix]=NULL;
 					} else{
@@ -543,7 +543,7 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 						}
 						zfclose(fp_ztilt);
 					}/* if(fnwvf) */
-					if(fngoff[iy][ix]&&zfexist(fngoff[iy][ix])){
+					if(fngoff[iy][ix]&&zfexist("%s",fngoff[iy][ix])){
 						if(!stari->goff){
 							stari->goff=dcellnew(npowfs, 1);
 						}
@@ -607,7 +607,7 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 					snprintf(fnwvf[iy][ix], PATH_MAX, "%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g",
 						dirstart, seed, msa, thx, thy);
 
-					if(!zfexist(fnwvf[iy][ix])){
+					if(!zfexist("%s",fnwvf[iy][ix])){
 					//warning("%s doesnot exist\n",fnwvf[iy][ix]);
 						fnwvf[iy][ix]=0;
 					} else{

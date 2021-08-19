@@ -75,7 +75,7 @@ static void calc_pistat(GENPISTAT_S* data){
 		snprintf(fnneaspec, PATH_MAX, "%s/neaspec/neaspec_seed%ld_sa%ld_x%g_y%g",
 			dirstart, seed, msa, thetax, thetay);
 
-		if(zfexist(fnwvf)&&(!zfexist(fnpistat)||!zfexist(fnphygrad)||!zfexist(fnneaspec))){
+		if(zfexist("%s",fnwvf)&&(!zfexist("%s",fnpistat)||!zfexist("%s",fnphygrad)||!zfexist("%s",fnneaspec))){
 			dmat* mapply=dnew(2, 1);
 			TIC;tic;
 			file_t* fp_wvf=zfopen(fnwvf, "rb");
@@ -304,7 +304,7 @@ void prep_bspstrehl(SIM_S* simu){
 					"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
 					dirstart, seed, msa, thetax, thetay);
 
-				if(zfexist(fnpistat)){
+				if(zfexist("%s",fnpistat)){
 					dcell* tmp=dcellread("%s", fnpistat);
 					for(long ic=0; ic<nsa*nwvl; ic++){
 					/*peak is in the corner */
@@ -345,7 +345,7 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		char fnnonlin[PATH_MAX];
 		snprintf(fnnonlin, PATH_MAX, "%s/powfs%d_nonlin", dirstart, ipowfs);
-		if(zfexist(fnnonlin)){
+		if(zfexist("%s",fnnonlin)){
 			nonlin[ipowfs]=dcellread("%s", fnnonlin);
 		} else{
 			dcell* avgpi=0;
@@ -393,7 +393,7 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 						if((ig==0&&(abs(rx)+abs(ry))!=0)||(abs(rx)+abs(ry))!=1) continue;
 						snprintf(fnpistat, PATH_MAX, "%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
 							dirstart, seed, msa, ig*ngsgrid*rx, ig*ngsgrid*ry);
-						if(!zfexist(fnpistat)){
+						if(!zfexist("%s",fnpistat)){
 							error("%s doesn't exist\n", fnpistat);
 						} else{
 							info("reading %s\n", fnpistat);

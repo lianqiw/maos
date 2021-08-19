@@ -77,5 +77,5 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	const char* format, ...) CHECK_ARG(9);
 int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...);
+	const char* format, ...) CHECK_ARG(8);
 #endif

@@ -909,7 +909,7 @@ dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, cons
 	exit(0);
 	}*/
 retry:
-	if(exist(fnlock)||!zfexist(fn)){
+	if(exist(fnlock)||!zfexist("%s",fn)){
 		int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
 		if(fd>0){//succeed
 			info2("Generating PYWFS poke matrix\n");

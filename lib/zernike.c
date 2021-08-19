@@ -368,7 +368,7 @@ dmat* KL_vonkarman(const loc_t* loc, int nmod, real L0){
 redo:
 	if(loc->nloc<500){//fast. no need cache.
 		kl=KL_vonkarman_do(loc, L0);
-	} else if(!exist(fnlock)&&zfexist(fn)){
+	} else if(!exist(fnlock)&&zfexist("%s",fn)){
 		kl=dread("%s", fn);
 	} else{
 		dbg("trying to lock %s\n", fnlock);

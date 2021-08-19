@@ -163,7 +163,7 @@ static void convert_wvf(GENPISTAT_S* data){
 			dirstart, seed, msa, thetax, thetay);
 		snprintf(fnphase, PATH_MAX, "%s/phase/phase_seed%ld_sa%ld_x%g_y%g",
 			dirstart, seed, msa, thetax, thetay);
-		if(!zfexist(fnwvf)||zfexist(fnphase)){
+		if(!zfexist("%s",fnwvf)||zfexist("%s",fnphase)){
 			continue;
 		}
 		dbg("processing %s\n", fnwvf);

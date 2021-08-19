@@ -82,6 +82,7 @@ void zfarr_push(zfarr* ca, int i, const void* p){
 /**
    Initializing an zfarray object that contains a dmat
  */
+/*
 zfarr* zfarr_dmat(long nx, long ny, const char* format, ...){
 	format2fn;
 	if(!fn) return NULL;
@@ -94,7 +95,7 @@ zfarr* zfarr_dmat(long nx, long ny, const char* format, ...){
 	header_t header={M_DBL, (uint64_t)nx, (uint64_t)ny, NULL};
 	write_header(&header, out->fp);
 	return out;
-}
+}*/
 
 /**
    Close the zfarr.

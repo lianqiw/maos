@@ -53,7 +53,7 @@ aper_t* setup_aper(const parms_t* const parms){
 	}
 	if(parms->load.locs){
 		char* fn=parms->load.locs;
-		if(!zfexist(fn)) error("%s doesn't exist\n", fn);
+		if(!zfexist("%s",fn)) error("%s doesn't exist\n", fn);
 		warning("Loading plocs from %s\n", fn);
 		aper->locs=locread("%s", fn);
 		if(fabs(aper->locs->dx-parms->evl.dx)>1e-7*parms->evl.dx){
