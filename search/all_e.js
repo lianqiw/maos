@@ -64,7 +64,7 @@ var searchData=
   ['plot_5fcfg_5ft',['plot_cfg_t',['../parms_8h.html#structplot__cfg__t',1,'']]],
   ['plot_5fpoints',['plot_points',['../draw_8h.html#aaae655dec3b82f938ef1090f371fe3ef',1,'draw.c']]],
   ['plot_5fsetup',['plot_setup',['../maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822',1,'utils.c']]],
-  ['plotdir',['plotdir',['../parms_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'utils.c']]],
+  ['plotdir',['plotdir',['../parms_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...):&#160;utils.c'],['../maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...):&#160;utils.c']]],
   ['plotloc',['plotloc',['../maos_2utils_8h.html#a1343345dedf6ae0d845b15b982f4ac48',1,'utils.c']]],
   ['pmap',['pmap',['../maos_2types_8h.html#a8a4f8413be5b9f89b91d522c40cf71ef',1,'recon_t']]],
   ['pn',['PN',['../type_8h.html#a54f1d629485d54c67ae8adc8d86b5458',1,'type.h']]],
