@@ -520,6 +520,7 @@ typedef struct sim_cfg_t{
     real f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
     real aptwfs;   /**<Twfs reference vector servo coefficient.*/
     real eptwfs;   /**<Twfs reference vector servo gain.*/
+    real eptsph;   /**<Twfs reference vector servo gain for spherical mode*/
     real fcttm;    /**<cross over frequency of tip/tilt split*/
     real fcfocus;  /**<cross-over frequency of the focus LPF.*/
     real fov;      /**<The diameter of total fov in arcsec*/
@@ -826,7 +827,8 @@ typedef struct parms_t{
     int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/
     int step_hi;     /**<Enabling step for high order wfs*/
-    real hipowfs_hs;  /**<high order wfs minimum height*/
+    real hipowfs_hs; /**<high order wfs minimum height*/
+    int itwfssph;    /**<index of TWFS spherical mode*/
 }parms_t;
 /**
    arg_t is used for command line parsing.

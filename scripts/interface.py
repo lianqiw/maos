@@ -63,7 +63,7 @@ def pt2py(pointer):
         pointer.contents.free()
         return out
     else:
-        return None
+        return np.empty(())
 #convert C vector to numpy array. Memory is copied.
 def as_array(arr, id, shape):
     ''' convert C array arr to numpy based in id'''
@@ -126,8 +126,7 @@ class cell(Structure):
             arr=np.asarray(arr)
         
         if arr is not None:
-            if arr.strides[-1]!=arr.itemsize:
-                raise(Exception('Non standard indexing is not supported. Please make a copy.'))
+            
             self.id=dtype2id.get(arr.dtype.type)
             if self.id is None:
                 print("init: Unknown data" +str( arr.dtype.type))
@@ -146,10 +145,12 @@ class cell(Structure):
             if self.nx==0:
                 self.p=0
             elif arr.dtype.kind != 'O':
+                if arr.flags['C']==False:
+                    arr=self.arr=arr.copy()
                 self.p=arr.ctypes.data_as(c_void_p)
             else:
-                self.qarr=np.zeros(self.shape(1), dtype=object)
-                self.parr=np.zeros(self.shape(1), dtype=c_void_p) #store pointers 
+                self.qarr=np.zeros(self.shape(1), dtype=object) #stores objects
+                self.parr=np.zeros(self.shape(1), dtype=c_void_p) #store pointer of objects
                 for iy in range(self.ny):
                     for ix in range(self.nx):
                         if arr.ndim==1:
@@ -157,8 +158,8 @@ class cell(Structure):
                         else:
                             arri=arr[iy,ix]
                         if arri is not None:
-                            self.qarr[iy,ix]=py2cell(arri) #keep reference
-                            self.parr[iy,ix]=addressof(self.qarr[iy,ix]) #pointer
+                            self.qarr[iy,ix]=py2cell(arri) #object array
+                            self.parr[iy,ix]=addressof(self.qarr[iy,ix]) #object pointer array
                         else:
                             self.parr[iy,ix]=0
                 self.p=self.parr.ctypes.data_as(c_void_p)
@@ -233,6 +234,8 @@ class loc(Structure):
             if len(arr.shape)!=2 or arr.shape[0] !=2 :
                 raise(Exception('Array has to of shape 2xn'))
             else:
+                if arr.flags['C']==False:
+                    arr=self.arr=arr.copy()
                 self.nloc=arr.shape[1]
                 self.locx=arr[0,].ctypes.data_as(c_void_p)
                 self.locy=arr[1,].ctypes.data_as(c_void_p)

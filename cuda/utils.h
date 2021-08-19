@@ -79,7 +79,7 @@ void cp2gpu(M* dest, const N* src, int nx, int ny, cudaStream_t stream=0){
 	int free_from=0;
 	if(cuglobal->memcount.count(dest)&&cuglobal->memcount[dest]>1){
 		error("Should not copy to deduped pointer %p. Count=%d\n", dest, 
-		cuglobal->memcount[dest]);
+			cuglobal->memcount[dest]);
 	}
 	if(sizeof(M)!=sizeof(N)){
 		long memsize=nx*ny*sizeof(M);

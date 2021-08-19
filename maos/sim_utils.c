@@ -748,7 +748,7 @@ static void init_simu_wfs(sim_t* simu){
 	const int nwfs=parms->nwfs;
 	const int nsim=parms->sim.end;
 	const int seed=simu->seed;
-	simu->eptwfs=recon->eptwfs;
+	simu->eptwfs=parms->sim.eptwfs;
 	simu->ints=dccellnew(nwfs, 1);
 	simu->intsout=dccellnew(nwfs, 1);
 	simu->wfspsfout=cccellnew(nwfs, 1);
@@ -1718,10 +1718,11 @@ void print_progress(sim_t* simu){
 		const real gap=isim<10000?10:60;
 		if(this_time>last_save_time+gap){
 			writebin_async(simu->res, simu->perfisim+1);
-			writebin_async(simu->restwfs, simu->perfisim+1;
-			writebin_async(simu->resdither, simu->perfisim+1;
-			writebin_async(simu->fsmerrs, simu->wfsisim+1);//, "%s", simu->fsmerrs->fn);
-			writebin_async(simu->fsmcmds, simu->wfsisim+1);//, "%s", simu->fsmcmds->fn);
+			writebin_async(simu->resp, simu->perfisim+1);
+			//writebin_async(simu->restwfs, simu->perfisim+1);//column is different
+			//writebin_async(simu->resdither, simu->perfisim+1);//column is different
+			writebin_async(simu->fsmerrs, simu->wfsisim+1);
+			writebin_async(simu->fsmcmds, simu->wfsisim+1);
 			last_save_time=this_time;
 		}
 	}

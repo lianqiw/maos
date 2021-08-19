@@ -938,6 +938,7 @@ static void readcfg_sim(parms_t* parms){
 	READ_DBL(sim.f0fsm);
 	READ_DBL(sim.aptwfs);
 	READ_DBL(sim.eptwfs);
+	READ_DBL(sim.eptsph);
 	READ_DBL(sim.alhi);
 	READ_DBL(sim.allo);
 	READ_DBL(sim.alfsm);
@@ -1842,6 +1843,19 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dt*parms->sim.dtrat_lof);
 
 	parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
+	
+	switch(parms->dbg.twfsflag){//index of twfs spherical mode
+		case 0:
+			parms->itwfssph=4; break;//all modes, z7 and above
+		case 1:
+			parms->itwfssph=0; break;//radial only, z11 and above
+		case 2:
+			parms->itwfssph=7; break;// all modes, z4 and above
+		case 3:
+			parms->itwfssph=1; break;//radial only, z4 and above
+		default:
+			parms->itwfssph=-1;
+	}
 }
 
 /**

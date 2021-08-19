@@ -1177,8 +1177,14 @@ void wfsgrad_twfs_recon(sim_t* simu){
 		dcell* Rmod=0;
 		//Build radial mode error using closed loop TWFS measurements from this time step.
 		dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
+		if(simu->wfsflags[itpowfs].gradout<5&&parms->itwfssph>-1){
+			dbg("Step %5d: TWFS output %d spherical mode (%d) gain is boosted from %g to %g\n",
+				simu->wfsisim, simu->wfsflags[itpowfs].gradout, parms->itwfssph, parms->sim.eptwfs, parms->sim.eptsph);
+			P(P(Rmod, 0), parms->itwfssph)*=(parms->sim.eptsph/simu->eptwfs);
+		}
 		memcpy(PCOL(simu->restwfs, simu->wfsflags[itpowfs].gradout-1),
 			P(Rmod, 0)->p, sizeof(real)*simu->restwfs->nx);
+		
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].llt){

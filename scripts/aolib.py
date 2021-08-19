@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import glob
 import os
-import sys
 import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
@@ -58,36 +57,17 @@ def isequal(a, b):
     else:
         return a==b
 
-
-def test_read():
-    path=b'/home/lianqiw/work/aos/comp/optim/bin/test/setup/'
-    
-    loc=readbin(path+b'aloc.bin')[0,0]
-    opd=np.arange(0,loc.shape[1])
-    opdmap=loc_embed(loc, opd);
-    plt.imshow(opdmap)
-
-    #path=b'/home/lianqiw/.aos/cache/SELOTF/'
-    
-    
-    for file in os.listdir(path):
-        if file.endswith(b"_py.bin") or not file.endswith(b".bin"):
-            continue
-
-
-        tmp=readbin(path+file)
-        file2=file[0:-4]+b'_py.bin'
-        if not os.path.isfile(path+file2):
-            writebin(tmp, path+file2)
-        tmp2=readbin(path+file2)
-        if isequal(tmp, tmp2):
-            print(file, 'equal')
+def cummean(y,axis=0):
+    ys=y.shape
+    x=1/np.arange(1,1+ys[axis])
+    if len(ys)==2:
+        if axis==0:
+            x.shape=(x.shape[0],1)
         else:
-            raise(Exception(file, 'not equal'))
+            x.shape=(1,x.shape[0])
     
-def test_mkdtf():
-    out=mkdtf([0.5e-6], 1./64., 2., 64, 64, 8,8,10e-6,10e-6,[],[],0,[],0,0)
-    return out
+    yc=np.cumsum(y,axis=axis)
+    return yc*x
 def maos_cumu(files, seeds=None): ##return cumulative average
     res,fds=maos_res(files,seeds,0,0)
     print(fds)
@@ -266,6 +246,12 @@ def grad_pttr(saloc,g):
     g2v.shape=[2,nsa]
     return g2v
 #remove zernike modes from rmin to rmax from 1-D OPD and loc
+def opd_loc_project_zernike(opd, loc, rmin, rmax, radonly=0):
+    D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
+    mod=zernike(loc, D, rmin, rmax, radonly).T
+    rmod=np.linalg.pinv(mod)
+    return mod@(rmod@opd)
+    
 def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
     D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
     mod=zernike(loc, D, rmin, rmax, radonly).T

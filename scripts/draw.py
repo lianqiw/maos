@@ -40,7 +40,14 @@ def locembed(loc, opd0):
     (iy, ny, dy, yi) = coord2grid(loc[1])
 
     nloc = loc.shape[1]
-    if len(opd.shape)==1: #vector
+    if opd.dtype==object: #cell
+        ims = []
+        for opdi in opd:
+            ims_i,ext=locembed(loc, opdi)
+            ims.append(ims_i)
+
+        return np.asarray(ims), ext
+    elif len(opd.shape)==1: #vector
         nframe = opd.size/nloc
         opd.shape=(int(nframe), nloc) #reshape() may do copy. assign .shape prevents copy
     elif opd.shape[0]==nloc and opd.shape[1]!=nloc:
@@ -71,20 +78,24 @@ def draw(*args, **kargs):
     #    plt.clf()
     if args[0] is None:
         return
-    if type(args[0]) == list or args[0].dtype == object:  # array of array
+    if type(args[0]) == list or args[0].dtype == object or args[0].ndim==3:  # list, array of array or 3d array
         kargs['keep'] = 1  # do not clear
         if type(args[0]) == list:
             nframe = len(args[0])
+        elif args[0].ndim==3:
+            nframe=args[0].shape[0]
         else:
             nframe = args[0].size
-        if nframe > 3:
+        if 'nx' in kargs:
+            nx=kargs['nx']
+        elif nframe > 3:
             nx = np.ceil(np.sqrt(nframe))
         else:
             nx = nframe
         ny = int(np.ceil(nframe/nx))
         # print(nx,ny)
         for iframe in range(nframe):
-            if nx*ny > 1:
+            if nx>1 or ny > 1:
                 plt.subplot(ny, nx, iframe+1)
             if len(args) == 1:
                 draw(args[0][iframe], **kargs)
@@ -103,24 +114,13 @@ def draw(*args, **kargs):
             # draw(loc, opd): embed opd onto loc
             ims, ext2 = locembed(args[0], args[1])
             # print('ext2=',ext2)
-            draw(ims, ext=ext2)
+            kargs['ext']=ext2
+            draw(ims, **kargs)
             return ims
         else:
             print('Too many arguments')
-    elif args[0].ndim > 2:
-        kargs['keep'] = 1  # do not clear
-        nframe = args[0].shape[0]
-        if nframe > 3:
-            nx = np.ceil(np.sqrt(nframe))
-        else:
-            nx = nframe
-        ny = int(np.ceil(nframe/nx))
-        # print(nx,ny)
-        for iframe in range(nframe):
-            if nx*ny > 1:
-                plt.subplot(ny, nx, iframe+1)
-            draw(args[0][iframe, ], **kargs)
-    else:
+    
+    else: #2-d numeric array
         img = np.squeeze(args[0])
         if len(img.shape) == 1:
             nx = int(np.sqrt(img.shape[0]))
@@ -130,10 +130,10 @@ def draw(*args, **kargs):
             else:
                 raise(Exception('Unable to reshape 1d array'))
         if 'ext' in kargs:
-            plt.imshow(img, extent=kargs['ext'], origin='lower', cmap='jet')
+            im=plt.imshow(img, extent=kargs['ext'], origin='lower', cmap='jet')
         else:
-            plt.imshow(img, origin='lower', cmap='jet')
-        plt.colorbar()
+            im=plt.imshow(img, origin='lower', cmap='jet')
+        plt.colorbar(im, fraction=0.046, pad=0.04)
         plt.grid(False)
 
 # Use as standalone script

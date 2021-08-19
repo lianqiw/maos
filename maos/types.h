@@ -364,7 +364,6 @@ typedef struct recon_t{
     
     dcell *GRall;      /**<Radial order zernike to gradient*/
     dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
-    real eptwfs;     /**<Twfs reference vector servo gain.*/
     //For common path dithering
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/

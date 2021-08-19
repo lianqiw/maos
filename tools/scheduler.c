@@ -68,6 +68,7 @@ typedef struct RUN_T{
 typedef struct MONITOR_T{
 	int sock;
 	int load;/*handle machine load information. */
+	int plot;/*whether plot is enabled*/
 	struct MONITOR_T* next;
 }MONITOR_T;
 
@@ -455,7 +456,7 @@ static void process_queue(void){
 			}
 		} else{
 			if(kill(irun->pid, 0)){
-				dbg_time("Job %d already exited. irun->sock=%d\n", irun->pid, irun->sock);
+				dbg_time("Job %d already exited. irun->sock=%d, change to UNKNOWN.\n", irun->pid, irun->sock);
 				irun->status.info=S_UNKNOWN;
 			}else{
 				dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
@@ -477,10 +478,10 @@ static void process_queue(void){
 					int pid;
 					irun->last_time=thistime;
 					if((pid=launch_exe(irun->exe, irun->path0))<0){
-						dbg_time("Starting new job failed: %d (%s) (%s)\n", pid, irun->exe, irun->path0);
+						dbg_time("Launch job %d failed: %d (%s) (%s)\n", irun->pid, pid, irun->exe, irun->path0);
 						running_remove(irun->pid, S_CRASH);
 					} else{
-						dbg_time("Starting new job as %d (%s) (%s)\n", pid, irun->exe, irun->path0);
+						dbg_time("Launch job %d as %d (%s) (%s)\n", irun->pid, pid, irun->exe, irun->path0);
 						//inplace update the information in monitor
 						irun->status.info=S_WAIT;//will be checked again by process_queue
 						irun->status.timstart=myclocki();
@@ -513,7 +514,7 @@ static void queue_new_job(const char* exename, const char* execmd){
 	irun->exe=strdup(exename);
 	irun->path0=strdup(execmd);
 	irun->path=remove_endl(irun->path0);
-	dbg_time("(%s) (%s)\n", exename, execmd);
+	dbg_time("%d (%s) (%s)\n", irun->pid, exename, execmd);
 	monitor_send(irun, irun->path);
 	monitor_send(irun, NULL);
 	all_done=0;
@@ -634,8 +635,13 @@ static int respond(int sock){
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
 		MONITOR_T* tmp=monitor_add(sock);
-		if(tmp&&pid>=0x8){/*check monitor version. */
-			tmp->load=1;
+		if(tmp){
+			if(pid>=0x8){//old scheme where scheduler_version at compiling is passed
+				tmp->load=1;
+			}else if(pid<0){//new scheme with bit indicating different options
+				tmp->load=pid&&1;
+				tmp->plot=pid&&(1<<1);
+			}
 		}
 		dbg_time("(%d) Monitor is connected.\n", sock);
 	}
@@ -765,15 +771,18 @@ static int respond(int sock){
 			}
 
 		} else{//pid==0; request a drawdaemon using monitor. 
-			if(pmonitor){
+			MONITOR_T *pm=0;
+			for(pm=pmonitor; pm; pm=pm->next){
+				if(pm->plot){
+					int moncmd[3]={MON_DRAWDAEMON,0,0};
+					stwrite(pm->sock, moncmd, sizeof(moncmd));
+					scheduler_recv_wait=sock;
+					dbg_time("(%d) request monitor (%d) to start drawdaemon\n", sock, pm->sock);
+					break;
+				}
+			}
+			if(!pm){
 				//there is no available drawdameon. Need to create one by sending request to monitor.
-				dbg_time("(%d) request monitor to start drawdaemon\n", sock);
-				int moncmd[3]={MON_DRAWDAEMON,0,0};
-				stwrite(pmonitor->sock, moncmd, sizeof(moncmd));
-				scheduler_recv_wait=sock;
-				//wait until monitor opend drawdaemon.
-				//continue in CMD_DISPLAY
-			} else{
 				warning_time("(%d) there is no monitor available to start drawdaemon\n", sock);
 				if(stwriteint(sock, -1)){
 					warning_time("(%d) Failed to respond to draw.\n", sock);

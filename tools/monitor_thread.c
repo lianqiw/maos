@@ -181,7 +181,7 @@ static int add_host(int ihost){
 		if(sock>-1){
 			int cmd[2];
 			cmd[0]=CMD_MONITOR;
-			cmd[1]=scheduler_version;
+			cmd[1]=1 | plot_enabled<<1 | 0x1<<31;
 			if(stwriteintarr(sock, cmd, 2)){//write failed.
 				warning_time("Failed to write to scheduler at %s\n", hosts[ihost]);
 				close(sock);
