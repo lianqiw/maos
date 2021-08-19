@@ -147,7 +147,7 @@ var searchData=
   ['snew_5ffile',['snew_file',['../smath_8h.html#a6edc093a4915a2b7b23e4db9effa45e9',1,'stmp.c']]],
   ['snew_5fmmap',['snew_mmap',['../smath_8h.html#ac5be753e0aa8988d7f960103c9ab9c0e',1,'stmp.c']]],
   ['snorm',['snorm',['../smath_8h.html#aa7637ef5474bf55a18742a68fbde8632',1,'stmp.c']]],
-  ['socket_5fblock',['socket_block',['../sock_8h.html#a6af4fd5ed53424b07d2aead4d1168f45',1,'sock.c']]],
+  ['socket_5fblock',['socket_block',['../sock_8h.html#a7e9e0dd0702c7f7fbd7217a964a5047e',1,'sock.c']]],
   ['socket_5fpeer',['socket_peer',['../sock_8h.html#a7910cf3a3c23b9f778df3515cd2fe8c1',1,'sock.c']]],
   ['socket_5fport',['socket_port',['../sock_8h.html#a2d15d50fe2dfb27d8260084823fdc970',1,'sock.c']]],
   ['socket_5frecv_5ftimeout',['socket_recv_timeout',['../sock_8h.html#a4d4b5881c92423db1f340d56a4dd32d7',1,'sock.c']]],

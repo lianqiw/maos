@@ -223,7 +223,7 @@ var searchData=
   ['sninfile',['sninfile',['../parms_8h.html#aa36290db2d198cc23e5518ca8c035cac',1,'powfs_cfg_t']]],
   ['snorm',['snorm',['../smath_8h.html#aa7637ef5474bf55a18742a68fbde8632',1,'stmp.c']]],
   ['sock_2eh',['sock.h',['../sock_8h.html',1,'']]],
-  ['socket_5fblock',['socket_block',['../sock_8h.html#a6af4fd5ed53424b07d2aead4d1168f45',1,'sock.c']]],
+  ['socket_5fblock',['socket_block',['../sock_8h.html#a7e9e0dd0702c7f7fbd7217a964a5047e',1,'sock.c']]],
   ['socket_5fpeer',['socket_peer',['../sock_8h.html#a7910cf3a3c23b9f778df3515cd2fe8c1',1,'sock.c']]],
   ['socket_5fport',['socket_port',['../sock_8h.html#a2d15d50fe2dfb27d8260084823fdc970',1,'sock.c']]],
   ['socket_5frecv_5ftimeout',['socket_recv_timeout',['../sock_8h.html#a4d4b5881c92423db1f340d56a4dd32d7',1,'sock.c']]],

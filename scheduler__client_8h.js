@@ -4,6 +4,7 @@ var scheduler__client_8h =
     [ "free_hosts", "scheduler__client_8h.html#a50dc7ae9fb4bbbc2a86f46e57561b9e2", null ],
     [ "init_hosts", "scheduler__client_8h.html#aff3729eaeaa11e6b58769cb1e930684f", null ],
     [ "lookup_host", "scheduler__client_8h.html#ada4498265f5e79cf1d2362dded5b83b3", null ],
+    [ "scheduler_connect", "scheduler__client_8h.html#a937c9f864f3c274f2ad154e29e73461f", null ],
     [ "scheduler_listen", "scheduler__client_8h.html#a56a78af093777a80291f28d5a7c2ed3a", null ],
     [ "scheduler_report_path", "scheduler__client_8h.html#a25cea5f5488b400b89f7cac75f93b815", null ],
     [ "scheduler_start", "scheduler__client_8h.html#a143c4df02307a2d39088a677ca9fcd51", null ],
