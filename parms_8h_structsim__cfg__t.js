@@ -26,6 +26,7 @@ var parms_8h_structsim__cfg__t =
     [ "f0fsm", "parms_8h.html#a2d9081ac11c381092e5594c7eed9fbff", null ],
     [ "aptwfs", "parms_8h.html#a3240c885a49403e54b845710a85313f0", null ],
     [ "eptwfs", "parms_8h.html#aff1e2c4c48bd4103597530f42a5825a0", null ],
+    [ "eptsph", "parms_8h.html#ab2770cfbad95ac1254310cca285a3326", null ],
     [ "fcttm", "parms_8h.html#ad75630a3c77468fc369336696c7eb466", null ],
     [ "fcfocus", "parms_8h.html#af89b05e322912b2be93a7e2cb870dd04", null ],
     [ "fov", "parms_8h.html#a02fd9af1c45be163127f3d5083780798", null ],

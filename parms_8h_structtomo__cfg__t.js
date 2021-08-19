@@ -5,7 +5,6 @@ var parms_8h_structtomo__cfg__t =
     [ "iac", "parms_8h.html#acfff41365c504a270316bfbf61158c16", null ],
     [ "cxxscale", "parms_8h.html#a78289e44a0232fecca165aec1e07af68", null ],
     [ "svdthres", "parms_8h.html#aed26032ff7e1dc04458663822ca878fe", null ],
-    [ "cgthres", "parms_8h.html#a001290bd8fb48d87a81fb1c20549bd27", null ],
     [ "square", "parms_8h.html#a6830b5fcefee69abc31ee4b4472fdbd8", null ],
     [ "cone", "parms_8h.html#a41c24c5a0d7256f1ff83af38c6a81d75", null ],
     [ "cxxalg", "parms_8h.html#ab32d49156b91ec3afa9796571145bbcd", null ],

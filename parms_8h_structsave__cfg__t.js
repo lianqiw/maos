@@ -14,6 +14,7 @@ var parms_8h_structsave__cfg__t =
     [ "dm", "parms_8h.html#af892254aa981c9f56ad6471c10ed2c7c", null ],
     [ "evlopd", "parms_8h.html#a95d7a78271761c1ef0aea4f3106601fe", null ],
     [ "dither", "parms_8h.html#a1ccf26ea01251cbe1ce75be13779e4ee", null ],
+    [ "gradoff", "parms_8h.html#a449687644306729843fd172103b22bdf", null ],
     [ "wfsopd", "parms_8h.html#a9c495dcb1a58f0d792835924e19b14d4", null ],
     [ "ints", "parms_8h.html#a9a5dddeb8e33aa8009b2c11f660805e2", null ],
     [ "grad", "parms_8h.html#a25188de13cd950f5dda6813b2541088e", null ],

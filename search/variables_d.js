@@ -18,6 +18,7 @@ var searchData=
   ['opdfit2v',['opdfit2v',['../classcuda__recon_1_1cufit__grid.html#a3b133e7806196e038f2c242a73e8b65c',1,'cuda_recon::cufit_grid']]],
   ['opdfitv',['opdfitv',['../classcuda__recon_1_1cufit__grid.html#ab2bf172d17e19a506abf5fb076e804a0',1,'cuda_recon::cufit_grid']]],
   ['opdfloc',['opdfloc',['../maos_2types_8h.html#a69fcc006dcfc79f4653922417d81c194',1,'aper_t']]],
+  ['opdmean',['opdmean',['../parms_8h.html#a30701030c881d50cd44d239be2fcd1c7',1,'evl_cfg_t']]],
   ['opdr',['opdr',['../parms_8h.html#a3bc867f2d11e3ac2c19233c54aeb753d',1,'save_cfg_t::opdr()'],['../maos_2types_8h.html#a54b13cbf92ab6e6ac20933c362fa9f61',1,'sim_t::opdr()']]],
   ['opdrhat',['opdrhat',['../maos_2types_8h.html#a4391530204b4d68608bf32f2a91b730d',1,'sim_t']]],
   ['opdrhatlast',['opdrhatlast',['../maos_2types_8h.html#a8c9f676f80ff757732b7bf41b899cb2a',1,'sim_t']]],

@@ -8,7 +8,6 @@ var searchData=
   ['cb',['CB',['../muv_8h.html#ae156a3d6374e6710d1e5ef6ef316bdb3',1,'muv_t']]],
   ['cd',['Cd',['../kalman_8h.html#af46e2a92d29de6efda5353657f3da3a3',1,'kalman_t']]],
   ['cgres',['cgres',['../maos_2types_8h.html#a4a79e5b6ccbbe4cc95de5c10c70accca',1,'sim_t']]],
-  ['cgthres',['cgthres',['../parms_8h.html#a001290bd8fb48d87a81fb1c20549bd27',1,'tomo_cfg_t']]],
   ['cgwarm',['cgwarm',['../parms_8h.html#a0738094a8c492bb5a64a34b07e581acd',1,'fit_cfg_t']]],
   ['cle',['cle',['../maos_2types_8h.html#ae33cd712aff2556c8ee82489ad0626f3',1,'sim_t']]],
   ['clem',['clem',['../maos_2types_8h.html#a2ca1ad979e2da512d05612f3c2ceb2eb',1,'sim_t']]],

@@ -25,7 +25,6 @@ var searchData=
   ['fnprof',['fnprof',['../parms_8h.html#a1f52ae29c036ef5e1555530e3e5a513f',1,'llt_cfg_t']]],
   ['fnrange',['fnrange',['../parms_8h.html#a2ce5c59ba8c934370bf255b1da05116f',1,'llt_cfg_t']]],
   ['fnreg',['fnreg',['../parms_8h.html#a7a3f62a40fb9268d9fa4bf10f5969918',1,'lsr_cfg_t']]],
-  ['fnsphpsd',['fnsphpsd',['../parms_8h.html#af3334311619099c891d715c6177d0ace',1,'recon_cfg_t']]],
   ['fnsurf',['fnsurf',['../parms_8h.html#ade35fbab0a31f1f4c114a89153d77999',1,'llt_cfg_t']]],
   ['focus',['focus',['../parms_8h.html#ae6da7f16a611cdd4cfc7d6170af4bbb7',1,'llt_cfg_t::focus()'],['../maos_2types_8h.html#aeb6b3013b915d6f3a775b47e8c12cf79',1,'powfs_t::focus()']]],
   ['focus2tel',['focus2tel',['../parms_8h.html#a82b1ca24cd75b2ee5ee60086a597ae08',1,'sim_cfg_t']]],

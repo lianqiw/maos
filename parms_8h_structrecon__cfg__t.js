@@ -17,6 +17,5 @@ var parms_8h_structrecon__cfg__t =
     [ "psddtrat_lo", "parms_8h.html#a609e7c8272861608ee46370578fbc723", null ],
     [ "psddtrat_twfs", "parms_8h.html#abb578e9c9852be700cf934f050dfff28", null ],
     [ "psdservo_gain", "parms_8h.html#ae369a7c654aac70a708cbe167a11724f", null ],
-    [ "psdnseg", "parms_8h.html#a512a720e55ae17bb9195cd29c516ed42", null ],
-    [ "fnsphpsd", "parms_8h.html#af3334311619099c891d715c6177d0ace", null ]
+    [ "psdnseg", "parms_8h.html#a512a720e55ae17bb9195cd29c516ed42", null ]
 ];

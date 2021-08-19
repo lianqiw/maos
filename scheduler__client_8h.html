@@ -117,10 +117,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_hosts</b> ()</td
 <tr class="separator:ada4498265f5e79cf1d2362dded5b83b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56a78af093777a80291f28d5a7c2ed3a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a56a78af093777a80291f28d5a7c2ed3a">scheduler_listen</a> (thread_fun fun)</td></tr>
 <tr class="separator:a56a78af093777a80291f28d5a7c2ed3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a638d903dc7583095345dae446c52226e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a638d903dc7583095345dae446c52226e">scheduler_start</a> (char *path, int nthread, int ngpu, int waiting)</td></tr>
-<tr class="separator:a638d903dc7583095345dae446c52226e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a421e27a8cfef2c8bb7439f0f4ab949c2">scheduler_wait</a> (void)</td></tr>
-<tr class="separator:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25cea5f5488b400b89f7cac75f93b815"><td class="memItemLeft" align="right" valign="top"><a id="a25cea5f5488b400b89f7cac75f93b815"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_report_path</b> (const char *path)</td></tr>
+<tr class="separator:a25cea5f5488b400b89f7cac75f93b815"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a143c4df02307a2d39088a677ca9fcd51"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a143c4df02307a2d39088a677ca9fcd51">scheduler_start</a> (int nthread, int ngpu, int waiting)</td></tr>
+<tr class="separator:a143c4df02307a2d39088a677ca9fcd51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b93c8f28b99804e00ac8483359a97fa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a2b93c8f28b99804e00ac8483359a97fa">scheduler_finish</a> (int status)</td></tr>
 <tr class="separator:a2b93c8f28b99804e00ac8483359a97fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a291e438e222f941d3969e605277de68e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a291e438e222f941d3969e605277de68e">scheduler_report</a> (<a class="el" href="structstatus__t.html">status_t</a> *status)</td></tr>
@@ -221,8 +222,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
 
 </div>
 </div>
-<a id="a638d903dc7583095345dae446c52226e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a638d903dc7583095345dae446c52226e">&#9670;&nbsp;</a></span>scheduler_start()</h2>
+<a id="a143c4df02307a2d39088a677ca9fcd51"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a143c4df02307a2d39088a677ca9fcd51">&#9670;&nbsp;</a></span>scheduler_start()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -230,12 +231,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
         <tr>
           <td class="memname">void scheduler_start </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>path</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>nthread</em>, </td>
         </tr>
@@ -258,26 +253,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Called by maos to report a job start to scheduler. </p>
-
-</div>
-</div>
-<a id="a421e27a8cfef2c8bb7439f0f4ab949c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a421e27a8cfef2c8bb7439f0f4ab949c2">&#9670;&nbsp;</a></span>scheduler_wait()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int scheduler_wait </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Called by maos to wait for go signal from scheduler. </p>
+<p>Called by maos to report a job start to scheduler and wait for signal before proceeding if waiting is set. </p>
 
 </div>
 </div>

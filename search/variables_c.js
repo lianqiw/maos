@@ -3,6 +3,7 @@ var searchData=
   ['n',['n',['../parms_8h.html#a6b394a95b47f77d90c339203675842b5',1,'llt_cfg_t']]],
   ['na_5finterp',['na_interp',['../parms_8h.html#a74e87eb91309b735bf6c098061de9be7',1,'dbg_cfg_t']]],
   ['na_5fsmooth',['na_smooth',['../parms_8h.html#af8ab185ff63193e57117c1ad53c51510',1,'dbg_cfg_t']]],
+  ['na_5fthres',['na_thres',['../parms_8h.html#ac3af414f13966874a37499f92dc598bb',1,'dbg_cfg_t']]],
   ['name',['name',['../sys_2misc_8h.html#aac78672d97c9137113150a8b27d69af8',1,'argopt_t']]],
   ['nb',['nb',['../muv_8h.html#addfe3c98d6c11af9579002058502998a',1,'muv_t']]],
   ['nbx',['nbx',['../maos_2types_8h.html#a2a555a85293e08d3c1eecfc57b73c3f7',1,'fdpcg_t']]],

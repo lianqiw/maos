@@ -61,6 +61,7 @@ var loc_8h =
     [ "dembed_locstat", "loc_8h.html#a2cd8682ccb2cd2e6507807d948069d67", null ],
     [ "cembed_locstat", "loc_8h.html#ab9144022d33a0ef11a9701a336e75a2a", null ],
     [ "loc_dxdy", "loc_8h.html#acd9de0b3686313b9f4235d351f9b82e5", null ],
+    [ "d2loc", "loc_8h.html#ab161c9249a9ce8ebf47501ad34f1188d", null ],
     [ "locreaddata", "loc_8h.html#a22b5b42fb69c0946972bc87f2f95b1e6", null ],
     [ "locwritedata", "loc_8h.html#a6b18e8ba6f4e742d165285096127f677", null ]
 ];

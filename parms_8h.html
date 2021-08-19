@@ -2022,6 +2022,13 @@ cov</td>
 <p>save covairance of science OPD ,every this time step, for directions where evl.psf is 1 </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="a30701030c881d50cd44d239be2fcd1c7"></a>int</td>
+<td class="fieldname">
+opdmean</td>
+<td class="fielddoc">
+<p>save science OPD time average every <code>evlopdmean</code> time steps </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a3c53ba47910f252699b7ef0182ea7fcf"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
 <td class="fieldname">
 pttr</td>
@@ -2136,13 +2143,6 @@ cxxscale</td>
 svdthres</td>
 <td class="fielddoc">
 <p>Threshold in SVD inversion </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a001290bd8fb48d87a81fb1c20549bd27"></a>real</td>
-<td class="fieldname">
-cgthres</td>
-<td class="fielddoc">
-<p>Repeat cg if residual is not reached </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a6830b5fcefee69abc31ee4b4472fdbd8"></a>int</td>
@@ -2691,13 +2691,6 @@ psdnseg</td>
 <td class="fielddoc">
 <p>how many overlapping partitions of the time history to compute PSD. </p>
 </td></tr>
-<tr><td class="fieldtype">
-<a id="af3334311619099c891d715c6177d0ace"></a>char *</td>
-<td class="fieldname">
-fnsphpsd</td>
-<td class="fielddoc">
-<p>PSD of spherical aberration due to profile evolution. </p>
-</td></tr>
 </table>
 
 </div>
@@ -2897,6 +2890,13 @@ aptwfs</td>
 eptwfs</td>
 <td class="fielddoc">
 <p>Twfs reference vector servo gain. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab2770cfbad95ac1254310cca285a3326"></a>real</td>
+<td class="fieldname">
+eptsph</td>
+<td class="fielddoc">
+<p>Twfs reference vector servo gain for spherical mode </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ad75630a3c77468fc369336696c7eb466"></a>real</td>
@@ -3530,6 +3530,13 @@ na_interp</td>
 <p>1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="ac3af414f13966874a37499f92dc598bb"></a>real</td>
+<td class="fieldname">
+na_thres</td>
+<td class="fielddoc">
+<p>altitude error threshold to move trombone, in unit of meter. </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a76602ea9e795f7028ecc562d4d98e09c"></a>int</td>
 <td class="fieldname">
 ncpa_preload</td>
@@ -4130,7 +4137,7 @@ dm</td>
 <td class="fieldname">
 evlopd</td>
 <td class="fielddoc">
-<p>save science OPD for each time step </p>
+<p>save science OPD every <code>evlopd</code> time steps </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a1ccf26ea01251cbe1ce75be13779e4ee"></a>int</td>
@@ -4138,6 +4145,13 @@ evlopd</td>
 dither</td>
 <td class="fielddoc">
 <p>save estimated matched filter from dithering </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a449687644306729843fd172103b22bdf"></a>int</td>
+<td class="fieldname">
+gradoff</td>
+<td class="fielddoc">
+<p>save gradient reference vector </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a9c495dcb1a58f0d792835924e19b14d4"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
@@ -4690,6 +4704,13 @@ step_hi</td>
 hipowfs_hs</td>
 <td class="fielddoc">
 <p>high order wfs minimum height </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a56a693cc1ff576f23f7ff60ca7adfd18"></a>int</td>
+<td class="fieldname">
+itwfssph</td>
+<td class="fielddoc">
+<p>index of TWFS spherical mode </p>
 </td></tr>
 </table>
 

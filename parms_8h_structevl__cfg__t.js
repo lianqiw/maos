@@ -16,6 +16,7 @@ var parms_8h_structevl__cfg__t =
     [ "psfhist", "parms_8h.html#ac33ac28eb5ac113cd42e973694319916", null ],
     [ "psfmean", "parms_8h.html#a3b9b4afc3b8f1ba0d9a39844aebb5aab", null ],
     [ "cov", "parms_8h.html#a2c192a6398bef9881926905ee4e9db2a", null ],
+    [ "opdmean", "parms_8h.html#a30701030c881d50cd44d239be2fcd1c7", null ],
     [ "pttr", "parms_8h.html#a3c53ba47910f252699b7ef0182ea7fcf", null ],
     [ "psfngsr", "parms_8h.html#a2f0b69d6ebdf4d1d38ee723ef8980b51", null ],
     [ "psfisim", "parms_8h.html#ad4f591afdc6f61dc9c00d7506231a791", null ],

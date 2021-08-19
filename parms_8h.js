@@ -251,6 +251,7 @@ var parms_8h =
       [ "psfhist", "parms_8h.html#ac33ac28eb5ac113cd42e973694319916", null ],
       [ "psfmean", "parms_8h.html#a3b9b4afc3b8f1ba0d9a39844aebb5aab", null ],
       [ "cov", "parms_8h.html#a2c192a6398bef9881926905ee4e9db2a", null ],
+      [ "opdmean", "parms_8h.html#a30701030c881d50cd44d239be2fcd1c7", null ],
       [ "pttr", "parms_8h.html#a3c53ba47910f252699b7ef0182ea7fcf", null ],
       [ "psfngsr", "parms_8h.html#a2f0b69d6ebdf4d1d38ee723ef8980b51", null ],
       [ "psfisim", "parms_8h.html#ad4f591afdc6f61dc9c00d7506231a791", null ],
@@ -267,7 +268,6 @@ var parms_8h =
       [ "iac", "parms_8h.html#acfff41365c504a270316bfbf61158c16", null ],
       [ "cxxscale", "parms_8h.html#a78289e44a0232fecca165aec1e07af68", null ],
       [ "svdthres", "parms_8h.html#aed26032ff7e1dc04458663822ca878fe", null ],
-      [ "cgthres", "parms_8h.html#a001290bd8fb48d87a81fb1c20549bd27", null ],
       [ "square", "parms_8h.html#a6830b5fcefee69abc31ee4b4472fdbd8", null ],
       [ "cone", "parms_8h.html#a41c24c5a0d7256f1ff83af38c6a81d75", null ],
       [ "cxxalg", "parms_8h.html#ab32d49156b91ec3afa9796571145bbcd", null ],
@@ -343,8 +343,7 @@ var parms_8h =
       [ "psddtrat_lo", "parms_8h.html#a609e7c8272861608ee46370578fbc723", null ],
       [ "psddtrat_twfs", "parms_8h.html#abb578e9c9852be700cf934f050dfff28", null ],
       [ "psdservo_gain", "parms_8h.html#ae369a7c654aac70a708cbe167a11724f", null ],
-      [ "psdnseg", "parms_8h.html#a512a720e55ae17bb9195cd29c516ed42", null ],
-      [ "fnsphpsd", "parms_8h.html#af3334311619099c891d715c6177d0ace", null ]
+      [ "psdnseg", "parms_8h.html#a512a720e55ae17bb9195cd29c516ed42", null ]
     ] ],
     [ "sim_cfg_t", "parms_8h.html#structsim__cfg__t", [
       [ "dt", "parms_8h.html#ad84ee4962f5b74090774e7467508eeaa", null ],
@@ -373,6 +372,7 @@ var parms_8h =
       [ "f0fsm", "parms_8h.html#a2d9081ac11c381092e5594c7eed9fbff", null ],
       [ "aptwfs", "parms_8h.html#a3240c885a49403e54b845710a85313f0", null ],
       [ "eptwfs", "parms_8h.html#aff1e2c4c48bd4103597530f42a5825a0", null ],
+      [ "eptsph", "parms_8h.html#ab2770cfbad95ac1254310cca285a3326", null ],
       [ "fcttm", "parms_8h.html#ad75630a3c77468fc369336696c7eb466", null ],
       [ "fcfocus", "parms_8h.html#af89b05e322912b2be93a7e2cb870dd04", null ],
       [ "fov", "parms_8h.html#a02fd9af1c45be163127f3d5083780798", null ],
@@ -461,6 +461,7 @@ var parms_8h =
       [ "fit", "parms_8h.html#aea5b3ea6b0ee5b19ab6d4cba59da4977", null ],
       [ "na_smooth", "parms_8h.html#af8ab185ff63193e57117c1ad53c51510", null ],
       [ "na_interp", "parms_8h.html#a74e87eb91309b735bf6c098061de9be7", null ],
+      [ "na_thres", "parms_8h.html#ac3af414f13966874a37499f92dc598bb", null ],
       [ "ncpa_preload", "parms_8h.html#a76602ea9e795f7028ecc562d4d98e09c", null ],
       [ "ncpa_rmsci", "parms_8h.html#a978014e63729f484b3843aac58c78cc0", null ],
       [ "gp_noamp", "parms_8h.html#a9c48e15856c949aa188c2bc002fc990b", null ],
@@ -546,6 +547,7 @@ var parms_8h =
       [ "dm", "parms_8h.html#af892254aa981c9f56ad6471c10ed2c7c", null ],
       [ "evlopd", "parms_8h.html#a95d7a78271761c1ef0aea4f3106601fe", null ],
       [ "dither", "parms_8h.html#a1ccf26ea01251cbe1ce75be13779e4ee", null ],
+      [ "gradoff", "parms_8h.html#a449687644306729843fd172103b22bdf", null ],
       [ "wfsopd", "parms_8h.html#a9c495dcb1a58f0d792835924e19b14d4", null ],
       [ "ints", "parms_8h.html#a9a5dddeb8e33aa8009b2c11f660805e2", null ],
       [ "grad", "parms_8h.html#a25188de13cd950f5dda6813b2541088e", null ],
@@ -623,7 +625,8 @@ var parms_8h =
       [ "idmground", "parms_8h.html#a16a927b7359643ecd2a85cc8e42b6167", null ],
       [ "step_lo", "parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf", null ],
       [ "step_hi", "parms_8h.html#a321f3d5b71b7f3cf59af6fe8c97d0c8e", null ],
-      [ "hipowfs_hs", "parms_8h.html#a44a9404b6c66d6229c11786be03f21c4", null ]
+      [ "hipowfs_hs", "parms_8h.html#a44a9404b6c66d6229c11786be03f21c4", null ],
+      [ "itwfssph", "parms_8h.html#a56a693cc1ff576f23f7ff60ca7adfd18", null ]
     ] ],
     [ "arg_t", "parms_8h.html#structarg__t", [
       [ "detach", "parms_8h.html#a304070322d22658ae216c8be4832d820", null ],

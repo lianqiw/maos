@@ -269,7 +269,6 @@ var maos_2types_8h =
       [ "RFdm", "maos_2types_8h.html#aa9ebccad6396888975e5a6db279d3d7c", null ],
       [ "GRall", "maos_2types_8h.html#a52f7ada5cebe7a83b05bd89bc303db25", null ],
       [ "RRtwfs", "maos_2types_8h.html#a8fbe32ec1601595810f894d61d795330", null ],
-      [ "eptwfs", "maos_2types_8h.html#abb413b4b6e10027fcb756a52ae19b2c1", null ],
       [ "dither_m", "maos_2types_8h.html#a0315c8beee67362d7ab03b9bdc8660ea", null ],
       [ "dither_npoint", "maos_2types_8h.html#a2cdaa275b0021387e777775b3761a719", null ],
       [ "dither_dtrat", "maos_2types_8h.html#ac9a604bd35d64c4d1aa2916372cf84ae", null ],

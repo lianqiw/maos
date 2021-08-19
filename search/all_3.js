@@ -3,6 +3,7 @@ var searchData=
   ['d',['d',['../parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7',1,'aper_cfg_t::d()'],['../parms_8h.html#a0f4066f8181cc956c6bd50a40882f257',1,'llt_cfg_t::d()']]],
   ['d2cell',['d2cell',['../dmath_8h.html#abed4b3e507a4bb20689c0fce64de6c0a',1,'dtmp.c']]],
   ['d2cellref',['d2cellref',['../dmath_8h.html#aaee48102c9571604da9be5cbf369760c',1,'dtmp.c']]],
+  ['d2loc',['d2loc',['../loc_8h.html#ab161c9249a9ce8ebf47501ad34f1188d',1,'loc.c']]],
   ['d2map',['d2map',['../map_8h.html#a57e2c14a9a54502236a94debfbb3e762',1,'map.c']]],
   ['d2rmap',['d2rmap',['../map_8h.html#a1644a6c8b061768555f7312cd6703ab0',1,'map.c']]],
   ['d2sp',['d2sp',['../dmath_8h.html#a2836217ec30215e4efa3de20483414cf',1,'dtmp.c']]],

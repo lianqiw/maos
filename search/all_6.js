@@ -78,7 +78,7 @@ var searchData=
   ['gradlo',['gradlo',['../parms_8h.html#a4d29872e2b4a7a018df472bd40992e83',1,'save_cfg_t']]],
   ['gradncpa',['gradncpa',['../maos_2types_8h.html#a162613b54fda54c711284c1b298806d0',1,'powfs_t']]],
   ['gradnf',['gradnf',['../parms_8h.html#a905f59e11a474294cb53d2a3bb44ef2e',1,'save_cfg_t']]],
-  ['gradoff',['gradoff',['../parms_8h.html#a3ea6a96df4168e2e1a6fdf823080040f',1,'dbg_cfg_t::gradoff()'],['../pywfs_8h.html#a37e430af2e770cc757f9c04fee4f69ef',1,'pywfs_t::gradoff()'],['../maos_2types_8h.html#abdc1e756826fc54bf6578e87604426f4',1,'sim_t::gradoff()']]],
+  ['gradoff',['gradoff',['../parms_8h.html#a3ea6a96df4168e2e1a6fdf823080040f',1,'dbg_cfg_t::gradoff()'],['../parms_8h.html#a449687644306729843fd172103b22bdf',1,'save_cfg_t::gradoff()'],['../pywfs_8h.html#a37e430af2e770cc757f9c04fee4f69ef',1,'pywfs_t::gradoff()'],['../maos_2types_8h.html#abdc1e756826fc54bf6578e87604426f4',1,'sim_t::gradoff()']]],
   ['gradoff_5freset',['gradoff_reset',['../parms_8h.html#abdbd866ca2a25a3456baaeb5d6ccfdb4',1,'dbg_cfg_t']]],
   ['gradoff_5fscale',['gradoff_scale',['../parms_8h.html#a04719da7a06181dbc63ec7b269a99a6b',1,'dbg_cfg_t']]],
   ['gradoffacc',['gradoffacc',['../maos_2types_8h.html#a02f5f681f8f8e23efdba2beb9f7190df',1,'sim_t']]],

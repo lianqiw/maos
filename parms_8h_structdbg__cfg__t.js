@@ -18,6 +18,7 @@ var parms_8h_structdbg__cfg__t =
     [ "fit", "parms_8h.html#aea5b3ea6b0ee5b19ab6d4cba59da4977", null ],
     [ "na_smooth", "parms_8h.html#af8ab185ff63193e57117c1ad53c51510", null ],
     [ "na_interp", "parms_8h.html#a74e87eb91309b735bf6c098061de9be7", null ],
+    [ "na_thres", "parms_8h.html#ac3af414f13966874a37499f92dc598bb", null ],
     [ "ncpa_preload", "parms_8h.html#a76602ea9e795f7028ecc562d4d98e09c", null ],
     [ "ncpa_rmsci", "parms_8h.html#a978014e63729f484b3843aac58c78cc0", null ],
     [ "gp_noamp", "parms_8h.html#a9c48e15856c949aa188c2bc002fc990b", null ],
