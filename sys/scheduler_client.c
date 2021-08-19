@@ -63,14 +63,13 @@ const char* lookup_host(const char* hostname){
 }
 void init_hosts(){}
 void free_hosts(){}
-void scheduler_start(char* path, int nthread, int ngpu, int waiting){
+void scheduler_report_path(const char* path){
 	(void)path;
-	(void)nthread;
+}
+void scheduler_start(int nthread, int ngpu, int waiting){
 	(void)waiting;
 	(void)ngpu;
-}
-int scheduler_wait(void){
-	return 0;
+	wait_cpu(nthread);
 }
 void scheduler_finish(int status){
 	(void)status;
