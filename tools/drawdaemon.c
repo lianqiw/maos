@@ -39,7 +39,7 @@ activate (GtkApplication *app,
 void mac_terminate(GtkosxApplication *app, gpointer psock){
 	(void)app;
 	if(psock){
-		int sock0=*psock;
+		int sock0=*(int*)psock;
 		info("close %d socket in mac_terminate\n", sock0);
 		if(sock0!=-1) close(sock0);
 	}
