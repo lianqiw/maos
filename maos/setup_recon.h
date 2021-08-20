@@ -15,12 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file setup_recon.h
 
-   Contains routines that setup the wavefront reconstructor and DM fitting.  
-
-*/
 #ifndef SETUP_RECON_H
 #define SETUP_RECON_H
 #include "common.h"

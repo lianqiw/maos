@@ -15,12 +15,14 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file sim.h
-*/
+
 #ifndef AOS_SIM_H
 #define AOS_SIM_H
+/**
+   \file sim.h
 
+   Contains main simulation blocks.
+*/
 void perfevl_ievl(thread_t *info);
 void perfevl(sim_t *simu);
 void prep_cachedm(sim_t *simu);

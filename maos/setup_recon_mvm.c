@@ -23,6 +23,12 @@
 #include "../cuda/gpu.h"
 #endif
 /**
+   \file setup_recon_mvm.c
+
+   Contains routines that setup the matrix for matrix vector multiply
+
+*/
+/**
    Use the various algorithms recon.alg to assemble a final matrix to multiply
    to gradients to get DM commands.
  */

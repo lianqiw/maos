@@ -15,13 +15,15 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include "common.h"
+
 /*
   \file mvm_client.h
 
   For testing MVM across two machines.
 */
 
-#include "common.h"
 #ifndef MVM_CLIENT_H
 #define MVM_CLIENT_H
 #define USE_SHORT 0

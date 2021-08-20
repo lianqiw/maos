@@ -15,13 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file maos/recon.h
 
-   Wavefront reconstruction and DM fitting routines. 
-
-
-*/
 #ifndef AOS_RECON_H
 #define AOS_RECON_H
 #include "common.h"

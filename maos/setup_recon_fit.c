@@ -19,7 +19,12 @@
 #include "common.h"
 #include "setup_recon.h"
 #include "recon_utils.h"
+/**
+   \file setup_recon_fit.c
 
+   Contains routines that setup the DM fitting.
+
+*/
 /**
    Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
 static dspcell*

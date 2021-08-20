@@ -36,18 +36,10 @@
 #define COMPATIBILITY 1
 DEF_ENV_FLAG(PERMISSIVE, 0)
 #if COMPATIBILITY == 1
-#define RENAME(old,new)							\
-    if(!strcmp(var,#old)){						\
-	warning("Deprecated: please change %s to %s.\n",#old,#new);	\
-	var=#new;/*strcpy may overflow. just reference the char*/	\
-    }
-#define IGNORE(old)				\
-    if(!strcmp(var,#old)){			\
-	ssline[0]='\0';				\
-	continue;				\
-    }
+#define RENAME(old,new)	if(!strcmp(var,#old)){warning("Deprecated: change %s to %s.\n",#old,#new);var=#new; }
+#define IGNORE(old) if(!strcmp(var,#old)){ssline[0]='\0';continue; }
 #else
-#define RENAME(old,new) /*do nothing. */
+#define RENAME(old,new)
 #define IGNORE(old)
 #endif
 static void* MROOT=NULL;

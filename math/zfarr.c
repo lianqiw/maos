@@ -35,13 +35,15 @@ zfarr* zfarr_init(long nx, long ny, const char* format, ...){
 	if(!fn) return NULL;
 	if(nx<0) nx=0;
 	if(ny<0) ny=0;
-	zfarr* out=mycalloc(1, zfarr);
-	out->fp=zfopen(fn, "wb");
-	out->cur=0;
-	out->tot=nx*ny;
+	zfarr* ca=mycalloc(1, zfarr);
+	ca->fp=zfopen(fn, "wb");
+	ca->cur=0;
+	if(!zfisfits(ca->fp)){
+		ca->tot=nx*ny;
+	}
 	header_t header={MCC_ANY, (uint64_t)nx, (uint64_t)ny, NULL};
-	write_header(&header, out->fp);
-	return out;
+	write_header(&header, ca->fp);
+	return ca;
 }
 /**
    Append a A of type type into the zfarr ca, at location i.
@@ -70,11 +72,11 @@ void zfarr_push(zfarr* ca, int i, const void* p){
 			warning("Data mismatch: existing data is %u, new data is %u", ca->id, id);
 		}
 	}
-	while(ca->cur<i&&!zfisfits(ca->fp)){
+	while(ca->cur<i && ca->tot){//fill blank
 		writedata_by_id(ca->fp, 0, ca->id, 0);
 		ca->cur++;
 	}
-	if(p||!zfisfits(ca->fp)){
+	if(p || ca->tot){
 		writedata_by_id(ca->fp, p, ca->id, 0);
 		ca->cur++;
 	}
@@ -102,12 +104,18 @@ zfarr* zfarr_dmat(long nx, long ny, const char* format, ...){
 */
 void zfarr_close(zfarr* ca){
 	if(!ca) return;
-	if(ca->tot && ca->cur>ca->tot){
-		warning("zfarr %s is initialized with %ld elements, "
-			"but %ld elements were written\n",
-			zfname(ca->fp), ca->tot, ca->cur);
-	} else if(ca->cur<ca->tot){
-		zfarr_push(ca, ca->tot-1, NULL);
+	if(ca->tot){//total is specified
+		if(ca->cur>ca->tot){//overflow
+			warning("zfarr %s is initialized with %ld elements, "
+				"but %ld elements were written\n",
+				zfname(ca->fp), ca->tot, ca->cur);
+		} else if(ca->cur<ca->tot){//under fill
+			zfarr_push(ca, ca->tot-1, NULL);
+		}
+	}else if(!zfisfits(ca->fp)){//total is not specified for bin file
+		zfrewind(ca->fp);
+		header_t header={MCC_ANY, (uint64_t)ca->cur, (uint64_t)0, NULL};
+		write_header(&header, ca->fp);
 	}
 	zfclose(ca->fp);
 	free(ca);

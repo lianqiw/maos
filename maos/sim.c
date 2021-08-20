@@ -16,9 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
-   Call various functions to do the simulation and evaluate performance.
-*/
+
 #include <search.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -44,7 +42,13 @@ static real tk_1;
 static real tk_atm=0;
 int sim_pipe[2]={0,0};
 /**
+   \file sim.h
+
+   Contains main simulation blocks.
+*/
+/**
    Initialize the simulation runtime data struct.
+   \callgraph
  */
 sim_t* maos_iseed(int iseed){
 	if(iseed==0) tk_0=myclockd();
@@ -94,6 +98,7 @@ sim_t* maos_iseed(int iseed){
    Simulation for each time step.
 
    Callable from matlab.
+   \callgraph
 */
 void maos_isim(int isim){
 	sim_t* simu=global->simu;
@@ -248,6 +253,7 @@ OMPTASK_SINGLE{
    It calls init_simu() to initialize the simulation struct, and then calls
    maos_isim() for each simulation time step. Arranged this way so that
    maos_isim() can be called from matlab.
+   \callgraph
 */
 void maos_sim(){
 	const parms_t* parms=global->parms;

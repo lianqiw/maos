@@ -25,6 +25,9 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
+/**
+   Read in configuration parameters and check for consistence.
+*/
 extern int use_cuda;
 /*
   Don't include common.h or types.h, so that we don't have to recompile

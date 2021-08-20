@@ -28,7 +28,12 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
+/**
+   \file setup_recon.h
 
+   Contains routines that setup the wavefront reconstructor and DM fitting.
+
+*/
 /*
    TOMOSCALE is used for RLM, RRM, in MVST for M, and in CUDA due to
    limited dynamic range of single precision floating point numbers.

@@ -1003,7 +1003,7 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!draw_current(fig, fn)) return 0;
+	if(!map || !draw_current(fig, fn)) return 0;
 	real limit[4];
 	limit[0]=map->ox-map->dx/2;
 	limit[1]=map->ox+(map->nx-0.5)*map->dx;
@@ -1019,7 +1019,7 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!draw_current(fig, fn)) return 0;
+	if(!loc || !draw_current(fig, fn)) return 0;
 	loc_create_map(loc);
 	int npad=loc->npad;
 	int nx=loc->map->nx-npad*2;
@@ -1048,7 +1048,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	const char* format, ...){
 
 	format2fn;
-	if(!draw_current(fig, fn)||!loc||!opd) return 0;
+	if(!loc || !opd || !draw_current(fig, fn)||!loc||!opd) return 0;
 	if(loc->nloc!=opd->nx*opd->ny){
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
 		return 0;
@@ -1083,7 +1083,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!draw_current(fig, fn)) return 0;
+	if(!saloc || !grad || !draw_current(fig, fn)) return 0;
 	if(grad2opd&&grad->nx>8){
 		//This is different from loc_embed. It removes the padding.
 		dmat* phi=0;
@@ -1115,7 +1115,7 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!draw_current(fig, fn)) return 0;
+	if(!loc || !opd || !amp || !draw_current(fig, fn)) return 0;
 	(void)fig;
 	if(loc->nloc!=amp->nx||loc->nloc!=opd->nx*opd->ny){
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld, amp has %ldx%ld.\n",
@@ -1157,7 +1157,7 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!draw_current(fig, fn)) return 0;
+	if(!saloc || !ints || !draw_current(fig, fn)) return 0;
 	dmat* ints2=0;
 	if(ints->nx==1){//TT or PWFS
 		if(P(ints, 0)->nx==P(ints, 0)->ny){//TT

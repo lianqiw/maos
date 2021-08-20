@@ -25,7 +25,10 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-/*
+
+/**
+   \file sim_utils.h
+   
    Contains a few support functions for simulation.
 */
 /*static real opdzlim[2]={-3e-5,3e-5}; */
@@ -568,7 +571,6 @@ static void init_simu_evl(sim_t* simu){
 		header[sizeof(header)-1]='\0';
 		//The saved PSF and COVs are padded by empty cells.
 		long nframepsf=parms->sim.end;
-		long nframecov=parms->sim.end;
 		char strht[24];
 		if(parms->evl.psfmean&&!parms->sim.evlol){
 			simu->evlpsfmean=dcellnew(parms->evl.nwvl, nevl);
@@ -608,10 +610,10 @@ static void init_simu_evl(sim_t* simu){
 					save->evlpsfhist[ievl]=zfarr_init(parms->sim.end, 1, "evlpsfhist" DIR_SUFFIX);
 				}
 				if(parms->evl.cov){
-					save->evlopdcov[ievl]=zfarr_init(nframecov, 1, "evlopdcov" DIR_SUFFIX);
+					save->evlopdcov[ievl]=zfarr_init(0,0, "evlopdcov" DIR_SUFFIX);
 				}
 				if(parms->evl.cov||parms->evl.opdmean){
-					save->evlopdmean[ievl]=zfarr_init(nframecov, 1, "evlopdmean" DIR_SUFFIX);
+					save->evlopdmean[ievl]=zfarr_init(0,0, "evlopdmean" DIR_SUFFIX);
 				}
 			}
 			if(P(parms->evl.psfngsr, ievl)!=0&&!parms->sim.evlol){
@@ -622,28 +624,29 @@ static void init_simu_evl(sim_t* simu){
 					save->evlpsfhist_ngsr[ievl]=zfarr_init(parms->sim.end, 1, "evlpsfhist_ngsr" DIR_SUFFIX);
 				}
 				if(parms->evl.cov){
-					save->evlopdcov_ngsr[ievl]=zfarr_init(nframecov, 1, "evlopdcov_ngsr" DIR_SUFFIX);
+					save->evlopdcov_ngsr[ievl]=zfarr_init(0,0, "evlopdcov_ngsr" DIR_SUFFIX);
 				}
 				if(parms->evl.cov||parms->evl.opdmean){
-					save->evlopdmean_ngsr[ievl]=zfarr_init(nframecov, 1, "evlopdmean_ngsr" DIR_SUFFIX);
+					save->evlopdmean_ngsr[ievl]=zfarr_init(0,0, "evlopdmean_ngsr" DIR_SUFFIX);
 				}
 			}
 #undef DIR_SUFFIX			
 		}/*for ievl */
-
+#define DIR_SUFFIX_OL "_%d.fits", seed
 		if(parms->evl.psfol){
 			if(parms->evl.psfmean){
 				simu->evlpsfolmean=dcellnew(parms->evl.nwvl, 1);
 				simu->evlpsfolmean->header=strdup(header);
-				save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
+				save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov){
-				save->evlopdcovol=zfarr_init(nframecov, 1, "evlopdcovol_%d", seed);
+				save->evlopdcovol=zfarr_init(0,0, "evlopdcovol_" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov||parms->evl.opdmean){
-				save->evlopdmeanol=zfarr_init(nframecov, 1, "evlopdmeanol_%d", seed);
+				save->evlopdmeanol=zfarr_init(0,0, "evlopdmeanol" DIR_SUFFIX_OL);
 			}
 		}
+#undef DIR_SUFFIX_OL
 	}
 
 	if(parms->save.ecov){
@@ -859,16 +862,14 @@ static void init_simu_wfs(sim_t* simu){
 			P(simu->wfspsfout, iwfs)=ccellnew_same(nsa, parms->powfs[ipowfs].nwvl, notf/2+2, notf/2+2);
 			mymkdir("%s/wvfout/", dirskysim);
 			mymkdir("%s/ztiltout/", dirskysim);
-			save->wfspsfout[iwfs]=zfarr_init
-			(parms->sim.end-parms->sim.start, 1,
+			save->wfspsfout[iwfs]=zfarr_init(parms->sim.end-parms->sim.start, 1,
 				"%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g.bin",
 				dirskysim, seed,
 				parms->powfs[ipowfs].order,
 				parms->wfs[iwfs].thetax*206265,
 				parms->wfs[iwfs].thetay*206265);
 
-			save->ztiltout[iwfs]=zfarr_init
-			(parms->sim.end-parms->sim.start, 1,
+			save->ztiltout[iwfs]=zfarr_init(parms->sim.end-parms->sim.start, 1,
 				"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g.bin",
 				dirskysim, seed,
 				parms->powfs[ipowfs].order,
@@ -926,8 +927,7 @@ static void init_simu_wfs(sim_t* simu){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].psol&&P(parms->save.gradpsol, iwfs)){
-			save->gradol[iwfs]=zfarr_init(nstep, 1,
-				"wfs%d_gradpsol_%d.bin", iwfs, seed);
+			save->gradol[iwfs]=zfarr_init(nstep, 1, "wfs%d_gradpsol_%d.bin", iwfs, seed);
 		}
 	}
 
@@ -946,8 +946,6 @@ static void init_simu_wfs(sim_t* simu){
 			save->gradgeom[iwfs]=zfarr_init(nstep, 1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 		}
 	}
-
-
 	/* threading */
 	simu->wfs_prop_atm=mycalloc(nwfs*parms->atm.nps, thread_t*);
 	simu->wfs_propdata_atm=mycalloc(nwfs*parms->atm.nps, propdata_t);

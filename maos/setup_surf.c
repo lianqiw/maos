@@ -23,6 +23,11 @@
 #include "genseotf.h"
 
 /**
+   \file setup_surf.c
+   Setup NCPA surfaces for WFS and Performance evaluation.
+*/
+
+/**
    Setup tilted surface (M3) by ray tracing from the tilted surface to WFS and
    Science grid.
 

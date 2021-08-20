@@ -22,6 +22,25 @@
 #include "pywfs.h"
 #include "setup_recon.h"
 #include "recon_utils.h"
+
+/**
+   \file setup_powfs.h
+
+   Setting up WFS geometry. like the subaperture location, subaperture grid
+   points, physical optics detection transfer function, LGS elongation transfer
+   function, etc.
+
+   \todo isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.
+
+   Do not use sparse interpolation to replace ray tracing for fine sampled
+   destination grid, especially cubic splines. The interpolation marix takes too
+   much space.
+
+   TODO: This routine and powfs_t should only contain information about the
+   simulation, not about any model used during reconstruction (RTC) to avoid
+   leaking information from the "real world (simulation)" to our knowledge (RTC).
+*/
+
 #define MOVES(p,i,j) p[i]=p[j]
 #define MOVED(p,n,i,j) memcpy(p+n*i, p+n*j, sizeof(real)*n)
 #define MOVEPTS(pts,count,isa)			\

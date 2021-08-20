@@ -18,15 +18,17 @@
 
 #ifndef __AOS_PARMS_H__
 #define __AOS_PARMS_H__
+
+/**
+   \file maos/parms.h
+   
+   Configuration parameters that remain constant during simulation.
+*/
 #define MAX_AMPS 5
 extern real TOMOSCALE;
 /*********************************************/
 /*             Structs for parms             */
 /*********************************************/
-/**
-   \file maos/parms.h
-   Store the input parameters.
-*/
 /**
    contains input parameters for the atmospheric turbulence.
 */

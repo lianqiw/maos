@@ -20,7 +20,12 @@
 #include "setup_recon.h"
 #include "ahst.h"
 
+/**
+   \file setup_recon_lsr.c
 
+   Contains routines that setup the least squares reconstructor
+
+*/
 /**
    Setup the least square reconstruct by directly inverting GA matrix.
    The reconstructor is simply the pseudo inverse of GA matrix:

@@ -16,7 +16,11 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+   \file setup_aper.h
 
+   Contains routines that setup the telescope aperture for performance evaluation.
+*/
 
 
 #include "common.h"

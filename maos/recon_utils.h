@@ -15,9 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file recon_utils.h
-*/
+
 #ifndef AOS_RECON_UTILS_H
 #define AOS_RECON_UTILS_H
 #include "common.h"

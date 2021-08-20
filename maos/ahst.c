@@ -15,6 +15,14 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+ * \file ahst.h
+   Contains functions to setup NGS modes and reconstructor
+   using AHST for one or more DMs.  Use parms->wfsr instead of parms->wfs for wfs
+   information, which hands GLAO mode correctly.
+
+   Notice that update of this file may require GPU code update accordingly
+*/
 
 /*
   The 5 NGS mode for split tomography with 2DM

@@ -22,6 +22,11 @@
 #include "../cuda/gpu.h"
 #define PYWFS_GUARD 1.5 //separate the pupil by this amount in relative
 #define PWFS_DEBUG 0 //For testing
+/**
+   \file pywfs.h
+
+   Setup pyramid WFS and do simulation.
+*/
 
 static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, real pupelong){
 	dspcellfree(pywfs->si);

@@ -15,24 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file setup_powfs.h
-   
-   Setting up WFS geometry. like the subaperture location, subaperture grid
-   points, physical optics detection transfer function, LGS elongation transfer
-   function, etc.
-
-   \todo isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.
-
-   Do not use sparse interpolation to replace ray tracing for fine sampled
-   destination grid, especially cubic splines. The interpolation marix takes too
-   much space.  
-
-   TODO: This routine and powfs_t should only contain information about the
-   simulation, not about any model used during reconstruction (RTC) to avoid
-   leaking information from the "real world (simulation)" to our knowledge (RTC).
-*/
-
 #ifndef AOS_POWFS_H
 #define AOS_POWFS_H
 #include "common.h"

@@ -21,6 +21,7 @@
 #include "version.h"
 
 /**
+ * \file main.c
  * main() is created separately in this main.c instead of maos.c so that we can
  * compile libmaos to be used with mex without main().
  * 

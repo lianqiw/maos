@@ -32,7 +32,8 @@
 #define toc_tm(A) toc2(A);tic
 #endif
 /**
-   Reusable utilities for wavefront reconstruction and DM fitting.
+ * \file recon_utils.h
+   Reusable utilities for wavefront reconstruction and DM fitting, supporting recon.c
 */
 
 /**

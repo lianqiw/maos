@@ -23,7 +23,10 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-
+/**
+ * \file perfevl.c
+ * Performance evaluation
+ * */
 /*
   2009-11-02
   improve threading effiency by devoting 1 thread to do accphi

@@ -15,13 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file maos.h
-   
-   Contains main() and the entry into simulation maos(). The main() is separated
-   into main.c so that maos.c can be a part of libaos.la which is callable by
-   MATLAB.
-*/
+
 #ifndef __MAOS_H
 #define __MAOS_H
 #include "common.h"

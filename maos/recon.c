@@ -41,6 +41,11 @@
 #define toc_tm(A) toc2(A);tic
 #endif
 
+/**
+   \file maos/recon.h
+   Carry out wavefront reconstruction and DM fitting.
+*/
+
 /*
    Since these are related to reconstruction, we don't have access to dmreal,
    which is the *actual* location of DM actuators, and only available in

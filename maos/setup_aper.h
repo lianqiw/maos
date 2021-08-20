@@ -15,11 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file setup_aper.h
-   
-   Contains routines that setup the telescope aperture.
-*/
+
 #ifndef AOS_SETUP_APER
 #define AOS_SETUP_APER
 #include "common.h"

@@ -18,6 +18,13 @@
 #include "maos.h"
 #include "moao.h"
 #include "ahst.h"
+/**
+  \file maos.h
+  Sets up maos simulation.
+
+  The main() is separated  into main.c so that maos.c can be a part of libaos.la which is callable by
+	MATLAB.
+*/
 
 global_t* global=NULL;//record for convenient access. It enables calling maos from matlab
 int use_cuda=0;
@@ -44,6 +51,8 @@ static void read_sim_env(){
 
 /**
    Setup system before entering simulation.
+   
+   \callgraph
  */
 void maos_setup(const parms_t* parms){
 	TIC;tic;

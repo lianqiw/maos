@@ -15,13 +15,15 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   Collects routines that does save and plotting to clean
-   up recon.c, wfsgrad.c and perfevl.c etc.  */
+
 #include "save.h"
 #include "ahst.h"
 #include "sim_utils.h"
 #include "sim.h"
+/**
+ * \file save.h
+   Collects routines that does save and plotting to clean
+   up recon.c, wfsgrad.c and perfevl.c etc.  */
 /**
    Save pixel statistics for matched filter.
 */
