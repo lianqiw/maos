@@ -10,6 +10,8 @@ var searchData=
   ['magic_3c_20float2_20_3e',['Magic&lt; float2 &gt;',['../struct_magic_3_01float2_01_4.html',1,'']]],
   ['magic_3c_20int_20_3e',['Magic&lt; int &gt;',['../struct_magic_3_01int_01_4.html',1,'']]],
   ['magic_3c_20long_20int_20_3e',['Magic&lt; long int &gt;',['../struct_magic_3_01long_01int_01_4.html',1,'']]],
+  ['main',['main',['../main_8c.html#ac0f2228420376f4db7e1274f2b41667c',1,'main.c']]],
+  ['main_2ec',['main.c',['../main_8c.html',1,'']]],
   ['maos_2eh',['maos.h',['../maos_8h.html',1,'']]],
   ['maos_5fiseed',['maos_iseed',['../maos_8h.html#ab642ac48296a45f061bd093ecee20604',1,'sim.c']]],
   ['maos_5fisim',['maos_isim',['../maos_8h.html#afda0654e4cb8f4e37feb53986e044e19',1,'sim.c']]],

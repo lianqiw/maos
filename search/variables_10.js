@@ -19,7 +19,7 @@ var searchData=
   ['reserve',['reserve',['../classcudata__t.html#a0250e3bffa206b42e6c76b997bf2016f',1,'cudata_t']]],
   ['reset',['reset',['../parms_8h.html#ad9eba89bd159e04339f004fd19d703fd',1,'cn2est_cfg_t']]],
   ['resp',['resp',['../maos_2types_8h.html#af7aaae3594ba9123280f22c7ea7fd88b',1,'sim_t']]],
-  ['restwfs',['restwfs',['../maos_2types_8h.html#aa17dcd6a8c5507da66bec24736824607',1,'sim_t']]],
+  ['restwfs',['restwfs',['../maos_2types_8h.html#a52bae7f8a761a5049eed0a6f26a72cbf',1,'sim_save_t']]],
   ['rfdm',['RFdm',['../maos_2types_8h.html#aa9ebccad6396888975e5a6db279d3d7c',1,'recon_t']]],
   ['rflgsg',['RFlgsg',['../maos_2types_8h.html#ab19ee67f78ce16e243f0fd229d862205',1,'recon_t']]],
   ['rfngsg',['RFngsg',['../maos_2types_8h.html#a9d6348cce108bb1fc513f07b08570b13',1,'recon_t']]],

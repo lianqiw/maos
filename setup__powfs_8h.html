@@ -100,8 +100,7 @@ $(document).ready(function(){initNavTree('setup__powfs_8h.html','');});
 <div class="title">setup_powfs.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;common.h&quot;</code><br />
-</div><table class="memberdecls">
+<table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a1a564d0691f30cf50918b8c371a38d8e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e">setup_powfs_init</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper)</td></tr>
@@ -129,9 +128,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Setting up WFS geometry. like the subaperture location, subaperture grid points, physical optics detection transfer function, LGS elongation transfer function, etc.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
-<p>Do not use sparse interpolation to replace ray tracing for fine sampled destination grid, especially cubic splines. The interpolation marix takes too much space. <br />
- TODO: This routine and <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> should only contain information about the simulation, not about any model used during reconstruction (RTC) to avoid leaking information from the "real world (simulation)" to our knowledge (RTC). </p>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
+<p>Do not use sparse interpolation to replace ray tracing for fine sampled destination grid, especially cubic splines. The interpolation marix takes too much space.</p>
+<p>TODO: This routine and <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> should only contain information about the simulation, not about any model used during reconstruction (RTC) to avoid leaking information from the "real world (simulation)" to our knowledge (RTC). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="a1a564d0691f30cf50918b8c371a38d8e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1a564d0691f30cf50918b8c371a38d8e">&#9670;&nbsp;</a></span>setup_powfs_init()</h2>

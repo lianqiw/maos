@@ -194,7 +194,7 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ad6dd439c2115b1f50b1a177073cbd23c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#ad6dd439c2115b1f50b1a177073cbd23c">setup_parms</a> (const char *main, const char *extra, int override)</td></tr>
+<tr class="memitem:ad6dd439c2115b1f50b1a177073cbd23c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#ad6dd439c2115b1f50b1a177073cbd23c">setup_parms</a> (const char *<a class="el" href="main_8c.html#ac0f2228420376f4db7e1274f2b41667c">main</a>, const char *extra, int override)</td></tr>
 <tr class="separator:ad6dd439c2115b1f50b1a177073cbd23c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad108d3a5091968e86ec8adcc269d450"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#aad108d3a5091968e86ec8adcc269d450">setup_parms_gpu</a> (<a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, int *gpus, int ngpu)</td></tr>
 <tr class="separator:aad108d3a5091968e86ec8adcc269d450"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -204,7 +204,7 @@ Functions</h2></td></tr>
 <tr class="separator:abb5045761ac37707beaf143c30f68b3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Store the input parameters. </p>
+<div class="textblock"><p>Configuration parameters that remain constant during simulation. </p>
 </div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
 <a name="structatm__cfg__t" id="structatm__cfg__t"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structatm__cfg__t">&#9670;&nbsp;</a></span>atm_cfg_t</h2>
@@ -2671,13 +2671,6 @@ psddtrat_lo</td>
 <p>how many time step to sample for low order PSD computation. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="abb578e9c9852be700cf934f050dfff28"></a>int</td>
-<td class="fieldname">
-psddtrat_twfs</td>
-<td class="fielddoc">
-<p>how many time step to sample for TWFS PSD computation. </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="ae369a7c654aac70a708cbe167a11724f"></a>int</td>
 <td class="fieldname">
 psdservo_gain</td>
@@ -2690,6 +2683,34 @@ psdservo_gain</td>
 psdnseg</td>
 <td class="fielddoc">
 <p>how many overlapping partitions of the time history to compute PSD. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a06d31d388725bd5541e8cd6cc6741e3e"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
+<td class="fieldname">
+twfs_ipsr</td>
+<td class="fielddoc">
+<p>index into atmr.ht for reconstruction </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9645ffacd610145c3eb2cfb7e53988da"></a>int</td>
+<td class="fieldname">
+twfs_rmin</td>
+<td class="fielddoc">
+<p>minimum zernike order (inclusive) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa79cbf6c67f60e56addcd44f945257b5"></a>int</td>
+<td class="fieldname">
+twfs_rmax</td>
+<td class="fielddoc">
+<p>maximum zernike order (inclusive) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a6742907419017f9e85e4dde099f4f524"></a>int</td>
+<td class="fieldname">
+twfs_radonly</td>
+<td class="fielddoc">
+<p>1: radial only, 0: all modes </p>
 </td></tr>
 </table>
 

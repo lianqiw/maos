@@ -341,9 +341,12 @@ var parms_8h =
       [ "psd", "parms_8h.html#ab4d4972861877b925caec10fd38f528b", null ],
       [ "psddtrat_hi", "parms_8h.html#af4e5cc1e1b7d722759040ce14803cc02", null ],
       [ "psddtrat_lo", "parms_8h.html#a609e7c8272861608ee46370578fbc723", null ],
-      [ "psddtrat_twfs", "parms_8h.html#abb578e9c9852be700cf934f050dfff28", null ],
       [ "psdservo_gain", "parms_8h.html#ae369a7c654aac70a708cbe167a11724f", null ],
-      [ "psdnseg", "parms_8h.html#a512a720e55ae17bb9195cd29c516ed42", null ]
+      [ "psdnseg", "parms_8h.html#a512a720e55ae17bb9195cd29c516ed42", null ],
+      [ "twfs_ipsr", "parms_8h.html#a06d31d388725bd5541e8cd6cc6741e3e", null ],
+      [ "twfs_rmin", "parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da", null ],
+      [ "twfs_rmax", "parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5", null ],
+      [ "twfs_radonly", "parms_8h.html#a6742907419017f9e85e4dde099f4f524", null ]
     ] ],
     [ "sim_cfg_t", "parms_8h.html#structsim__cfg__t", [
       [ "dt", "parms_8h.html#ad84ee4962f5b74090774e7467508eeaa", null ],

@@ -328,8 +328,7 @@ var maos_2types_8h =
       [ "psdol", "maos_2types_8h.html#a044e8f08326c3f13ed1a52e252de0e79", null ],
       [ "psdcl_lo", "maos_2types_8h.html#a0b749dad24ede50c2d63bffddc02aed0", null ],
       [ "psdol_lo", "maos_2types_8h.html#a43ac99628737ff760d405599f7c8bb1f", null ],
-      [ "cle", "maos_2types_8h.html#a7624d6fc93c22882a6a1804ddb385c8c", null ],
-      [ "clem", "maos_2types_8h.html#afa07aef1d6df1fb0e575515d97dc7c68", null ]
+      [ "restwfs", "maos_2types_8h.html#a52bae7f8a761a5049eed0a6f26a72cbf", null ]
     ] ],
     [ "wfsints_t", "maos_2types_8h.html#structwfsints__t", [
       [ "ints", "maos_2types_8h.html#acd20b2ed925bd5d1d81fb1a94ff43bfe", null ],
@@ -415,7 +414,6 @@ var maos_2types_8h =
       [ "res", "maos_2types_8h.html#aa958a6c81bbbc1d65de9de3732728be1", null ],
       [ "timing", "maos_2types_8h.html#a374d88efacf68d09530a5bcb55980652", null ],
       [ "resdither", "maos_2types_8h.html#a15a0fb4bca39bccb08cae37081b6f48f", null ],
-      [ "restwfs", "maos_2types_8h.html#aa17dcd6a8c5507da66bec24736824607", null ],
       [ "dmpsol", "maos_2types_8h.html#ac189e162b7ee3e5f8f35a870fd74a501", null ],
       [ "dmtmp", "maos_2types_8h.html#a9d7b0ba4afd9d1cf333f8ec2485192db", null ],
       [ "dmcmd", "maos_2types_8h.html#a369952c063dea869678bf83ae0239789", null ],
