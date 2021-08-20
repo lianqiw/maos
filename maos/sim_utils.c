@@ -1100,10 +1100,7 @@ static void init_simu_wfs(sim_t* simu){
 		const int ipowfs=parms->itpowfs;
 		const int nacc=parms->sim.end-parms->powfs[ipowfs].step;
 		if(nacc>0){
-			const int iwfs=P(parms->powfs[ipowfs].wfs, 0);
-			const int nmod=P(recon->RRtwfs, iwfs)->nx;
-			const int dtrat=parms->powfs[ipowfs].dtrat;
-			simu->restwfs=dnew_file(nmod, nacc/dtrat, NULL, "%s/Restwfs_%d.bin", fnextra, seed);
+			save->restwfs=zfarr_init(0,0,"%s/Restwfs_%d.bin", fnextra, seed);
 		}
 	}
 }
@@ -1641,11 +1638,11 @@ void free_simu(sim_t* simu){
 		free(simu->dither);
 	}
 	cellfree(simu->resdither);
-	cellfree(simu->restwfs);
+	
 	cellfree(simu->zoompos);
 	cellfree(simu->llt_tt);
 	/*Close all files */
-
+	zfarr_close(save->restwfs);
 	zfarr_close_n(save->wfspsfout, nwfs);
 	zfarr_close_n(save->ztiltout, nwfs);
 	zfarr_close(save->dmerr);

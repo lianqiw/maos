@@ -483,9 +483,12 @@ typedef struct recon_cfg_t{
     int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
     int psddtrat_hi;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
-    int psddtrat_twfs; /**<how many time step to sample for TWFS PSD computation.*/
     int psdservo_gain; /**<Gain used to update servo parameter*/
     int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
+    lmat* twfs_ipsr;   /**<index into atmr.ht for reconstruction*/
+    int twfs_rmin; /**<minimum zernike order (inclusive)*/
+    int twfs_rmax; /**<maximum zernike order (inclusive)*/
+    int twfs_radonly;/**<1: radial only, 0: all modes*/
 }recon_cfg_t;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.

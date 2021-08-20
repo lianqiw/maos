@@ -184,6 +184,7 @@ void free_parms(parms_t* parms){
 	free_strarr(parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfsr);
 	free_strarr(parms->recon.misreg_dm2sci, parms->ndm*parms->fit.nfit);
 	free_strarr(parms->recon.misreg_tel2wfs, parms->nwfsr);
+	lfree(parms->recon.twfs_ipsr);
 	dfree(parms->dirs);
 	lfree(parms->dbg.tomo_maxit);
 	dfree(parms->dbg.pwfs_psx);
@@ -916,9 +917,12 @@ static void readcfg_recon(parms_t* parms){
 	READ_INT(recon.psd);
 	READ_INT(recon.psddtrat_hi);
 	READ_INT(recon.psddtrat_lo);
-	READ_INT(recon.psddtrat_twfs);
 	READ_DBL(recon.psdservo_gain);
 	READ_INT(recon.psdnseg);
+	READ_LMAT(recon.twfs_ipsr);
+	READ_INT(recon.twfs_rmin);
+	READ_INT(recon.twfs_rmax);
+	READ_INT(recon.twfs_radonly);
 }
 /**
    Read in simulation parameters
@@ -1093,8 +1097,8 @@ static void readcfg_dbg(parms_t* parms){
 	READ_DBL(dbg.pwfs_pupelong);
 	READ_DCELL(dbg.dmoff);
 	READ_DCELL(dbg.gradoff);
-	READ_INT(dbg.twfsflag);
-	READ_INT(dbg.twfsrmax);
+	//READ_INT(dbg.twfsflag);
+	//READ_INT(dbg.twfsrmax);
 	parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
 	parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
 	READ_INT(dbg.wfs_iac);
@@ -1847,18 +1851,6 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 
 	parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
 	
-	switch(parms->dbg.twfsflag){//index of twfs spherical mode
-		case 0:
-			parms->itwfssph=4; break;//all modes, z7 and above
-		case 1:
-			parms->itwfssph=0; break;//radial only, z11 and above
-		case 2:
-			parms->itwfssph=7; break;// all modes, z4 and above
-		case 3:
-			parms->itwfssph=1; break;//radial only, z4 and above
-		default:
-			parms->itwfssph=-1;
-	}
 }
 
 /**
@@ -2652,6 +2644,15 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		if(!parms->recon.psddtrat_hi&&!parms->recon.psddtrat_lo){
 			parms->recon.psd=0;
 		}
+	}
+	switch(parms->recon.twfs_rmin){
+		case 2:
+			parms->itwfssph=parms->recon.twfs_radonly?1:7; break;
+		case 3:
+			parms->itwfssph=parms->recon.twfs_radonly?0:4; break;
+		default:
+			parms->itwfssph=-1;
+			error("Please implement\n");
 	}
 }
 

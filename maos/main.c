@@ -74,7 +74,6 @@ static void* find_var(const char* name){
 	VAR_GET(simu,zoompos),
 	VAR_GET(simu,evlopd),
 	VAR_GET(simu,resdither),
-	VAR_GET(simu,restwfs),
 	
 	{NULL, NULL}//mark the end
 	};

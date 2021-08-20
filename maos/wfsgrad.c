@@ -1174,21 +1174,25 @@ void wfsgrad_twfs_recon(sim_t* simu){
 	if(simu->wfsflags[itpowfs].gradout){
 		info2("Step %5d: TWFS[%d] has output with gain %g\n", simu->wfsisim, itpowfs, simu->eptwfs);
 		gradoff_acc(simu, parms->ilgspowfs);//todo: improve ipowfs index.
+		const int nlayer=PN(parms->recon.twfs_ipsr);
 		dcell* Rmod=0;
 		//Build radial mode error using closed loop TWFS measurements from this time step.
 		dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
 		if(simu->wfsflags[itpowfs].gradout<5&&parms->itwfssph>-1){
 			dbg("Step %5d: TWFS output %d spherical mode (%d) gain is boosted from %g to %g\n",
 				simu->wfsisim, simu->wfsflags[itpowfs].gradout, parms->itwfssph, parms->sim.eptwfs, parms->sim.eptsph);
-			P(P(Rmod, 0), parms->itwfssph)*=(parms->sim.eptsph/simu->eptwfs);
+			for(int ilayer=0; ilayer<nlayer; ilayer++){
+				P(P(Rmod, ilayer), parms->itwfssph)*=(parms->sim.eptsph/simu->eptwfs);
+			}
 		}
-		memcpy(PCOL(simu->restwfs, simu->wfsflags[itpowfs].gradout-1),
-			P(Rmod, 0)->p, sizeof(real)*simu->restwfs->nx);
+		zfarr_push(simu->save->restwfs, simu->wfsflags[itpowfs].gradout-1, Rmod);
 		
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].llt){
-				dmm(&P(simu->gradoff, iwfs), 1, P(simu->recon->GRall, iwfs), P(Rmod, 0), "nn", -simu->eptwfs);
+				for(int ilayer=0; ilayer<nlayer; ilayer++){
+					dmm(&P(simu->gradoff, iwfs), 1, P(simu->recon->GRall, iwfs, ilayer), P(Rmod, ilayer), "nn", -simu->eptwfs);
+				}
 
 				if(parms->plot.run){
 					extern int draw_single;
@@ -1205,31 +1209,6 @@ void wfsgrad_twfs_recon(sim_t* simu){
 			writebin(simu->gradoff, "extra/gradoff_%d_twfs", simu->wfsisim);
 		}
 		dcellfree(Rmod);
-
-		if(parms->recon.psd&&parms->recon.psddtrat_twfs){//Do not enable. not working.
-			const int ntacc=simu->wfsflags[itpowfs].gradout;
-			const int dtrat=parms->recon.psddtrat_twfs;
-			if(ntacc%dtrat==0){//output
-				dbg("Step %5d: TWFS output psd\n", simu->wfsisim);
-				dmat* ts=dsub(simu->restwfs, 0, 0, ntacc-dtrat, dtrat);
-				dmat* tts=dtrans(ts);dfree(ts);
-				const real dt=parms->sim.dt*parms->powfs[itpowfs].dtrat;
-				dmat* psd=psd1dt(tts, parms->recon.psdnseg, dt);
-				dfree(tts);
-				//Sum all the PSDs
-				psd_sum(psd, 1);
-				dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->powfs[itpowfs].dtrat, 0, simu->eptwfs, 0);
-				//writebin(psd, "psdcl_twfs_%d", ntacc);
-				//writebin(psdol, "psdol_twfs_%d", ntacc);
-				dcell* coeff=servo_optim(psdol, parms->sim.dt, parms->powfs[itpowfs].dtrat, 0, M_PI*0.25, 0, 1);
-				const real g=0.5;
-				simu->eptwfs=simu->eptwfs*(1-g)+P(P(coeff, 0), 0)*g;
-				info2("Step %5d New gain (twfs): %.3f\n", simu->wfsisim, simu->eptwfs);
-				dfree(psdol);
-				cellfree(coeff);
-				dfree(psd);
-			}
-		}
 	}
 }
 /**

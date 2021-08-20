@@ -873,30 +873,53 @@ setup_recon_GF(recon_t* recon, const parms_t* parms){
  */
 static void
 setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
-	recon->GRall=dcellnew(parms->nwfs, 1);
-	dmat* opd=0;
-	real reduce=recon->ploc->dx*2;//to reduce the edge effect.
-	int rmax=parms->dbg.twfsrmax?parms->dbg.twfsrmax:(parms->powfs[parms->itpowfs].order/2);
-	int rmin=parms->dbg.twfsflag>1?2:3;
-	int zradonly=parms->dbg.twfsflag==1||parms->dbg.twfsflag==3;
+	const int nlayer=PN(parms->recon.twfs_ipsr);
+	recon->GRall=dcellnew(parms->nwfs, nlayer);
+	
+	const int rmax=parms->recon.twfs_rmax?parms->recon.twfs_rmax:(parms->powfs[parms->itpowfs].order/2);
+	const int rmin=parms->recon.twfs_rmin?parms->recon.twfs_rmin:3;
+	const int zradonly=parms->recon.twfs_radonly;
 	dbg("twfs mode is %s from order %d to %d.\n", zradonly?"radial":"all modes", rmin, rmax);
-	opd=zernike(recon->ploc, parms->aper.d-reduce, rmin, rmax, zradonly);
-
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		const int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].skip==2||parms->powfs[ipowfs].llt){
-			if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
-				P(recon->GRall,iwfs)=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0);
-			} else{//SHWFS
-				dspmm(&P(recon->GRall,iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
+	for(int ilayer=0; ilayer<nlayer; ilayer++){
+		int ipsr=P(parms->recon.twfs_ipsr, ilayer);
+		if(ipsr<0 || ipsr>PN(recon->xloc)){
+			error("Invalid twfs_indatmr.\n");
+		}
+		const loc_t *loc=ipsr==0?recon->ploc:P(recon->xloc, ipsr);
+		real reduce=loc->dx*2;//to reduce the edge effect.
+		dmat *opd=zernike(loc, parms->aper.d-reduce, rmin, rmax, zradonly);
+		
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			const int ipowfs=parms->wfs[iwfs].powfs;
+			if(parms->powfs[ipowfs].skip==2||parms->powfs[ipowfs].llt){
+				const real hs=parms->wfs[iwfs].hs;
+				const real hc=parms->wfs[iwfs].hc;
+				const real ht=P(parms->atmr.ht, ipsr);
+				const real scale=1.-(ht-hc)/hs;
+				const real dispx=parms->wfsr[iwfs].thetax*ht;
+				const real dispy=parms->wfsr[iwfs].thetay*ht;
+				if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
+					P(recon->GRall,iwfs,ilayer)=pywfs_mkg(powfs[ipowfs].pywfs, loc, NULL, opd, 0, dispx, dispy);
+				} else{//SHWFS
+					dmat *opd2=0;
+					if(ipsr==0){
+						opd2=dref(opd);
+					}else{
+						dsp* hxw=mkh(P(recon->xloc, ipsr), recon->ploc, dispx, dispy, scale);
+						dspmm(&opd2, hxw, opd, "nn", 1);
+						dspfree(hxw);					
+					}
+					dspmm(&P(recon->GRall, iwfs,ilayer), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd2, "nn", 1);
+					dfree(opd2);
+				}
 			}
 		}
+
+		dfree(opd);
 	}
 	if(parms->save.setup){
 		writebin(recon->GRall, "twfs_GR");
-		writebin(opd, "twfs_opd");
 	}
-	dfree(opd);
 }
 /**
    Tilt removal from DM command. Used by filter.c

@@ -436,8 +436,7 @@ typedef struct sim_save_t{
     zfarr* psdcl_lo;
     zfarr* psdol_lo;
     //
-    zfmat* cle;
-    zfmat* clem;
+    zfarr* restwfs;    /**<Truth wfs output*/
 }sim_save_t;
 /*
   data wrap for wfsints.
@@ -557,7 +556,7 @@ typedef struct sim_t{
     dmat *timing;      /**<Timing and memory using for each step*/
     
     dcell *resdither;   /**<Phase and amplitude estimation of dithering*/
-    dmat *restwfs;    /**<Truth wfs output*/
+    
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
     dcell *dmtmp;      /**<Holds a temporary dm vector.*/

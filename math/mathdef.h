@@ -33,7 +33,6 @@
 #include "cell.h"
 #include "chol.h"
 #include "zfarr.h"
-#include "zfmat.h"
 #include "mathmisc.h"
 #include "loc.h"
 #include "map.h"

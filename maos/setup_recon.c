@@ -938,14 +938,17 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 static void
 setup_recon_twfs(recon_t* recon, const parms_t* parms){
 	cellfree(recon->RRtwfs);
-	dcell* GRtwfs=dcellnew(parms->nwfsr, 1);
+	int nlayer=PN(parms->recon.twfs_ipsr);
+	dcell* GRtwfs=dcellnew(parms->nwfsr, nlayer);
 	dspcell* neai=dspcellnew(parms->nwfsr, parms->nwfsr);
 	//int itwfs=-1;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2){//twfs
 			//itwfs=iwfs;
-			P(GRtwfs,iwfs)=dref(P(recon->GRall,iwfs));
+			for(int ilayer=0; ilayer<nlayer; ilayer++){
+				P(GRtwfs,iwfs, ilayer)=dref(P(recon->GRall,iwfs, ilayer));
+			}
 			P(neai,iwfs,iwfs)=dspref(P(recon->saneai,iwfs,iwfs));
 		}
 	}
