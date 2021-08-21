@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -62,8 +62,8 @@ static arg_t* parse_args(int argc, char** argv){
 }
 void fixnan(dmat* res){
 	for(long i=0; i<res->nx*res->ny; i++){
-		if(isnan(P(res,i))){
-			P(res,i)=0;
+		if(isnan(P(res, i))){
+			P(res, i)=0;
 		}
 	}
 }
@@ -77,12 +77,12 @@ int main(int argc, char* argv[]){
 	int drawres_lo=1;
 	int drawres_hi=1;
 	int drawres_ol=1;
-	if(check_suffix(argv[0], "drawreshi") || DRAWRES_HI==1){
+	if(check_suffix(argv[0], "drawreshi")||DRAWRES_HI==1){
 		drawres_lo=0;
 		drawres_tot=0;
 		drawres_ol=0;
 		dbg("Only plotting high order closed loop results\n");
-	}else{
+	} else{
 		dbg("Use drawreshi or set MAOS_DRAWRES_HI=1 to only plot high order closed loop results\n");
 	}
 	TIC;tic;
@@ -260,8 +260,8 @@ int main(int argc, char* argv[]){
 	dccell* res=dccellnew(N_ALL, 1);
 	dccell* resm=dccellnew(N_ALL, 1);
 	for(int i=0; i<res->nx; i++){
-		P(res,i)=dcellnew(npath, nseed);
-		P(resm,i)=dcellnew(npath, 1);//seed averaged
+		P(res, i)=dcellnew(npath, nseed);
+		P(resm, i)=dcellnew(npath, 1);//seed averaged
 	}
 
 	const char* xlabel, * ylabel;
@@ -291,7 +291,7 @@ int main(int argc, char* argv[]){
 			default:
 				error("Invalid restype=%d\n", restype);
 			}
-			if(!zfexist("%s",fn)) continue;
+			if(!zfexist("%s", fn)) continue;
 			int ii=ipath+npath*iseed;
 			if(restype==1){//MAOS results.
 				dcell* ires;
@@ -304,12 +304,12 @@ int main(int argc, char* argv[]){
 				int indhi=0;
 				int indtt=-1;
 				int indfocus=-1;
-				if(P(ires,3)&&P(ires,3)->nx>0){/*split tomography. */
+				if(P(ires, 3)&&P(ires, 3)->nx>0){/*split tomography. */
 					ind=3;
 					indlo=2;//total ngs
 					indhi=0;//high
 					indtt=1;//tt
-					if(P(ires,3)->nx>3){
+					if(P(ires, 3)->nx>3){
 						indfocus=3;
 					}
 				} else{
@@ -320,7 +320,7 @@ int main(int argc, char* argv[]){
 				long nstep=NY(P(ires, 0));//valid step;
 				for(long i=0; i<nstep; i++){
 					real val=P(P(ires, 0), 0, i);
-					if(isnan(val) || val==0){
+					if(isnan(val)||val==0){
 						//warning("Number of steps reduced from %ld to %ld\n", nstep, i);
 						nstep=i;
 						break;
@@ -328,21 +328,21 @@ int main(int argc, char* argv[]){
 				}
 				dmat* tmp;
 				if(drawres_hi||drawres_tot){
-					tmp=dsub(P(ires,ind), indhi, 1, 0, nstep);
-					P(P(res,P_HI),ii)=dtrans(tmp);
+					tmp=dsub(P(ires, ind), indhi, 1, 0, nstep);
+					P(P(res, P_HI), ii)=dtrans(tmp);
 					dfree(tmp);
 				}
 				if(drawres_lo||drawres_tot){
-					tmp=dsub(P(ires,ind), indlo, 1, 0, nstep);
+					tmp=dsub(P(ires, ind), indlo, 1, 0, nstep);
 					fixnan(tmp);
-					P(P(res,P_LO),ii)=dtrans(tmp);
+					P(P(res, P_LO), ii)=dtrans(tmp);
 					dfree(tmp);
 				}
 				if(drawres_tot){
-					dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_LO),ii), 1);
-					dadd(&P(P(res,P_TOT),ii), 1, P(P(res,P_HI),ii), 1);
+					dadd(&P(P(res, P_TOT), ii), 1, P(P(res, P_LO), ii), 1);
+					dadd(&P(P(res, P_TOT), ii), 1, P(P(res, P_HI), ii), 1);
 					if(!drawres_hi){
-						dfree(P(P(res,P_HI),ii));
+						dfree(P(P(res, P_HI), ii));
 					}
 					if(!drawres_lo){
 						dfree(P(P(res, P_LO), ii));
@@ -350,27 +350,27 @@ int main(int argc, char* argv[]){
 				}
 				if(drawres_lo){
 					if(indfocus>-1){
-						tmp=dsub(P(ires,ind), indfocus, 1, 0, nstep);
+						tmp=dsub(P(ires, ind), indfocus, 1, 0, nstep);
 						fixnan(tmp);
-						P(P(res,P_F),ii)=dtrans(tmp);
+						P(P(res, P_F), ii)=dtrans(tmp);
 						dfree(tmp);
 					}
 					if(indtt>-1){
-						tmp=dsub(P(ires,ind), indtt, 1, 0, nstep);
+						tmp=dsub(P(ires, ind), indtt, 1, 0, nstep);
 						fixnan(tmp);
-						P(P(res,P_TT),ii)=dtrans(tmp);
+						P(P(res, P_TT), ii)=dtrans(tmp);
 						dfree(tmp);
-						dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_LO),ii), 1);
-						dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_TT),ii), -1);
-						dadd(&P(P(res,P_PS),ii), 1, P(P(res,P_F),ii), -1);
+						dadd(&P(P(res, P_PS), ii), 1, P(P(res, P_LO), ii), 1);
+						dadd(&P(P(res, P_PS), ii), 1, P(P(res, P_TT), ii), -1);
+						dadd(&P(P(res, P_PS), ii), 1, P(P(res, P_F), ii), -1);
 					}
 				}
 				if(drawres_ol){
-					tmp=dsub(P(ires,0), 2, 1, 0, nstep);
-					P(P(res,P_OLHI),ii)=dtrans(tmp);
+					tmp=dsub(P(ires, 0), 2, 1, 0, nstep);
+					P(P(res, P_OLHI), ii)=dtrans(tmp);
 					dfree(tmp);
-					tmp=dsub(P(ires,0), 1, 1, 0, nstep);
-					P(P(res,P_OLLO),ii)=dtrans(tmp);
+					tmp=dsub(P(ires, 0), 1, 1, 0, nstep);
+					P(P(res, P_OLLO), ii)=dtrans(tmp);
 					dfree(tmp);
 					dadd(&P(P(res, P_OLTOT), ii), 1, P(P(res, P_OLLO), ii), 1);
 					dadd(&P(P(res, P_OLTOT), ii), 1, P(P(res, P_OLHI), ii), 1);
@@ -385,7 +385,7 @@ int main(int argc, char* argv[]){
 					int nsky=ires->nx;
 					ysky=dnew(nsky, 1);
 					for(int i=0; i<nsky; i++){
-						P(ysky,i)=pow((double)i/(double)(nsky-1)*1e-9, 2);
+						P(ysky, i)=pow((double)i/(double)(nsky-1)*1e-9, 2);
 					}
 				}
 
@@ -396,7 +396,7 @@ int main(int argc, char* argv[]){
 				}
 				tmp=dsub(ires, 0, 0, 0, 1);
 				dsort(tmp, 1);
-				P(P(res,P_TOT),ii)=dcat(tmp, ysky, 2);
+				P(P(res, P_TOT), ii)=dcat(tmp, ysky, 2);
 				dfree(tmp);
 
 				/*tmp=dsub(ires, 0, 0, 2, 1);
@@ -409,32 +409,32 @@ int main(int argc, char* argv[]){
 				error("Invalid restype=%d\n", restype);
 			}
 			for(int i=0; i<res->nx; i++){
-				dadd_relax(&P(P(resm,i),ipath), 1, P(P(res,i),ii), 1);
+				dadd_relax(&P(P(resm, i), ipath), 1, P(P(res, i), ii), 1);
 			}
 
 			seedcount++;
 		}
 		if(seedcount>0){
 			for(int i=0; i<res->nx; i++){
-				dscale(P(P(resm,i),ipath), 1./seedcount);
+				dscale(P(P(resm, i), ipath), 1./seedcount);
 			}
 
 		}
 	}
 
 	for(int i=0; i<res->nx; i++){
-		if(dcellsum(P(res,i))==0){
-			dcellfree(P(res,i));
-			dcellfree(P(resm,i));
-		}else{
-			dcellcwpow(P(res,i), 0.5);
-			dcellscale(P(res,i), 1e9);
-			dcellcwpow(P(resm,i), 0.5);
-			dcellscale(P(resm,i), 1e9);
+		if(dcellsum(P(res, i))==0){
+			dcellfree(P(res, i));
+			dcellfree(P(resm, i));
+		} else{
+			dcellcwpow(P(res, i), 0.5);
+			dcellscale(P(res, i), 1e9);
+			dcellcwpow(P(resm, i), 0.5);
+			dcellscale(P(resm, i), 1e9);
 		}
 	}
-	if(!P(res,P_PS) && !P(res,P_F)){
-		dcellfree(P(res,P_LO));
+	if(!P(res, P_PS)&&!P(res, P_F)){
+		dcellfree(P(res, P_LO));
 	}
 
 	if(npath==1){
@@ -443,20 +443,20 @@ int main(int argc, char* argv[]){
 			legs0[iseed]=mymalloc(50, char);
 			snprintf(legs0[iseed], 50, "Seed %ld", seed[iseed]);
 		}
-		
+
 		legs0[nseed]=mystrdup("Seed RMS");
-	
+
 		for(int ic=0; ic<res->nx; ic++){
-			if(P(res,ic)){
+			if(P(res, ic)){
 				if(nseed>1){//seed average
-					cellresize(P(res,ic), 1, nseed+1);
-					P(P(res,ic),nseed)=dref(P(P(resm,ic),0));
+					cellresize(P(res, ic), 1, nseed+1);
+					P(P(res, ic), nseed)=dref(P(P(resm, ic), 0));
 				}
-				plot_points(toptab[ic], 0, NULL, P(res,ic), NULL, NULL, xylog, NULL, (const char* const*)legs0,
+				plot_points(toptab[ic], 0, NULL, P(res, ic), NULL, NULL, xylog, NULL, (const char* const*)legs0,
 					title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 			}
 		}
-	
+
 		for(int iseed=0; iseed<=nseed; iseed++){
 			free(legs0[iseed]);
 		}
@@ -467,21 +467,21 @@ int main(int argc, char* argv[]){
 			prefix[0]='A'+ipath;
 			pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
 		}
-		for(int ic=0; ic<res->nx; ic++){
-			if(P(res,ic)){
-				plot_points(toptab[ic], npath, NULL, P(resm,ic), NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
-					title[ic], xlabel, ylabel, "%s", sidetab[ic]);
+		if(nseed>1){//seed averaged
+			for(int ic=0; ic<res->nx; ic++){
+				if(P(res, ic)){
+					plot_points(toptab[ic], npath, NULL, P(resm, ic), NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
+						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
+				}
 			}
 		}
-		if(nseed>1){
-			for(int iseed=0; iseed<nseed; iseed++){
-				for(int ic=0; ic<res->nx; ic++){
-					if(P(res,ic)){
-						dcell* tmp=dcellsub(P(res,ic), 0, 0, iseed, 1);
-						plot_points(toptab[ic], npath, NULL, tmp, NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
-							title[ic], xlabel, ylabel, "%s_%ld", sidetab[ic], seed[iseed]);
-						dcellfree(tmp);
-					}
+		for(int iseed=0; iseed<nseed; iseed++){//each seed
+			for(int ic=0; ic<res->nx; ic++){
+				if(P(res, ic)){
+					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
+					plot_points(toptab[ic], npath, NULL, tmp, NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
+						title[ic], xlabel, ylabel, "%s:%ld", sidetab[ic], seed[iseed]);
+					dcellfree(tmp);
 				}
 			}
 		}

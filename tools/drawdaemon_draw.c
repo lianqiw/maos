@@ -130,40 +130,37 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
 	if(isnan(order1)||order1<-1000||fabs(order1)<=1){
 		order1=0;
 	}
+	*order=order1;
 	const float scale1=pow(10, -order1);
 	xmax*=scale1;
 	xmin*=scale1;
 	diff*=scale1;
-
 	float spacing;
-	if(logscale||diff<1e-3){
-		spacing=1;
-	} else{
-		spacing=diff*0.1;
-		float scale=pow(10., round(log10(spacing)));
-		int ratio=(int)round(spacing/scale);
-		const float ratio2[11]={1, 1, 1, 5, 5, 5, 5, 5, 10, 10, 10};
-		if(ratio<0||ratio>10){
-			warning("ratio=%d, spacing=%g\n", ratio, spacing);
-			ratio=1;
+	if(diff<rmax*1e-10){//handle special case
+		*tic1=xmin;
+		*dtic=xmax-xmin;
+		*ntic=2;
+	}else{
+		if(logscale){
+			spacing=1;
+		} else{
+			spacing=diff*0.1;
+			float scale=pow(10., floor(log10(spacing)));
+			int ratio=(int)ceil(spacing/scale);//value of the first significant digit rounded up
+			//scale ratio up to keep maximum 10 tics
+			if(ratio>5){
+				ratio=10;
+			}else if(ratio>2){
+				ratio=5;
+			}
+			spacing=ratio*scale;//keep a single significant digit
 		}
-		spacing=ratio2[ratio]*scale;
-	}
 
-	*tic1=myfloor(xmin/spacing)*spacing;
-	*dtic=spacing;
-	*ntic=(int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1);
-	/*if(*ntic<2 || (*tic1<xmin && *tic1+spacing>xmax)) {
-	dbg("*ntic=%d\n", *ntic);
-	*ntic=2;
-	*dtic=xmax-xmin;
-	*tic1=xmin;
-	}*/
-	*order=(int)order1;
-	if(*ntic<2){
-		dbg("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
-			xmin, xmax, diff, *tic1, *dtic, *ntic, order1);
+		*tic1=myfloor(xmin/spacing)*spacing;
+		*dtic=spacing;
+		*ntic=MAX(2, (int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1));
 	}
+	
 }
 /**
    adjust xmin, xmax properly.
@@ -1099,7 +1096,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}
 		const float legmarin=3;/*margin inside of box */
 		const float legmarout=5;/*margin outside of box */
-		const float symmargin=3;/*space before and after symbol */
+		const float symmargin=5;/*space before and after symbol */
 		float legwidth=textlen+symlen+2*legmarin+symmargin*2;
 		float legheight=tall*ng+legmarin*2;
 		cairo_translate(cr, xoff+legmarout+drawdata->legendoffx*(widthim-legwidth-2*legmarout),
