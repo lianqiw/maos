@@ -771,6 +771,9 @@ static void init_simu_wfs(sim_t* simu){
 		}
 		simu->gradlastol=dcellnew3(parms->nwfsr, 1, nnx, NULL);
 	}
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		parms->powfs[ipowfs].phytype_sim=parms->powfs[ipowfs].phytype_sim1;//restore the value
+	}
 	simu->gradacc=dcellnew(nwfs, 1);/*wfsgrad internal */
 	simu->gradoff=dcellnew(nwfs, 1);
 	simu->gradscale=dcellnew(nwfs, 1);//leave empty first
@@ -1524,6 +1527,8 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->gradlastcl);
 	dcellfree(simu->gradlastol);
 	dcellfree(simu->gradoff);
+	dcellfree(simu->gradoffacc);
+	dcellfree(simu->gradoffdrift);
 	dcellfree(simu->gradscale);
 	dcellfree(simu->opdr);
 	dcellfree(simu->gngsmvst);

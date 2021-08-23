@@ -45,5 +45,14 @@
 #define G_VALUE_INIT {0,{{0}}}
 #endif
 
+#if GTK_MAJOR_VERSION<4	
+#define box_append(box, child, expand, fill, padding) gtk_box_pack_start(GTK_BOX(box), child, expand, fill, padding)
+#define box_prepend(box, child, expand, fill, padding) gtk_box_pack_end(GTK_BOX(box), child, expand, fill, padding)
+#else
+#define box_append(box, child, ...) gtk_box_append(GTK_BOX(box), child)
+#define box_prepend(box, child, ...) gtk_box_prepend(GTK_BOX(box), child)
+#endif	
+
+
 #endif
 

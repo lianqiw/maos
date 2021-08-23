@@ -207,6 +207,7 @@ typedef struct powfs_cfg_t{
 		       - 1: ztilt.*/
     int phytype_recon;/**<physical optics type for reconstruction. 1: mtch, 2: tcog, 3: MAP*/
     int phytype_sim;  /**<physical optics type for simulation. -1 to follow phytype_recon*/
+    int phytype_sim1; /**<Save phytype_sim initial value*/
     int phytype_sim2; /**<physical optics type after dithering update. -1 to follow phytype_sim*/
     int phystep;    /**<frame to start using physical optics. 
 		       -  0: means from frame 0.

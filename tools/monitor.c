@@ -598,26 +598,7 @@ static GtkToolItem* new_toolbar_item(const char* iconname, GdkPixbuf* iconbuf, c
 	return item;
 }
 #endif
-void box_append(GtkBox *box, GtkWidget *child, int expand, int fill, int padding){
-#if GTK_MAJOR_VERSION<4	
-	gtk_box_pack_start(box, child, expand, fill, padding);
-#else
-	gtk_box_append(box, child);
-	(void)expand;
-	(void)fill;
-	(void)padding;
-#endif	
-}
-void box_prepend(GtkBox* box, GtkWidget* child, int expand, int fill, int padding){
-#if GTK_MAJOR_VERSION<4	
-	gtk_box_pack_end(box, child, expand, fill, padding);
-#else
-	gtk_box_prepend(box, child);
-	(void)expand;
-	(void)fill;
-	(void)padding;
-#endif	
-}
+
 void parse_icons(){
 #if GDK_MAJOR_VERSION < 3
 	gdk_color_parse("#EE0000", &red);
@@ -810,7 +791,7 @@ void create_window(
 					);
 				gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
 					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-#if GTK_MAJOR_VERSION<4					
+#if GTK_MAJOR_VERSION<4	
 				gtk_container_add(GTK_CONTAINER(scroll), page);//page is scrollable.
 #else
 				gtk_widget_set_hexpand(scroll, TRUE);//important

@@ -280,7 +280,6 @@ int main(int argc, char* argv[]){
 	/*dcell *upterr=dcellnew(npath, nseed);
 	  dcell *uptcmd=dcellnew(npath, nseed);*/
 	for(int ipath=0; ipath<npath; ipath++){
-		int seedcount=0;
 		for(int iseed=0; iseed<nseed; iseed++){
 			char fn[PATH_MAX];
 			switch(restype){
@@ -292,7 +291,6 @@ int main(int argc, char* argv[]){
 				error("Invalid restype=%d\n", restype);
 			}
 			if(!zfexist("%s", fn)) continue;
-			int ii=ipath+npath*iseed;
 			if(restype==1){//MAOS results.
 				dcell* ires;
 				ires=dcellread("%s", fn);
@@ -329,51 +327,51 @@ int main(int argc, char* argv[]){
 				dmat* tmp;
 				if(drawres_hi||drawres_tot){
 					tmp=dsub(P(ires, ind), indhi, 1, 0, nstep);
-					P(P(res, P_HI), ii)=dtrans(tmp);
+					P(P(res, P_HI), ipath, iseed)=dtrans(tmp);
 					dfree(tmp);
 				}
 				if(drawres_lo||drawres_tot){
 					tmp=dsub(P(ires, ind), indlo, 1, 0, nstep);
 					fixnan(tmp);
-					P(P(res, P_LO), ii)=dtrans(tmp);
+					P(P(res, P_LO), ipath, iseed)=dtrans(tmp);
 					dfree(tmp);
 				}
 				if(drawres_tot){
-					dadd(&P(P(res, P_TOT), ii), 1, P(P(res, P_LO), ii), 1);
-					dadd(&P(P(res, P_TOT), ii), 1, P(P(res, P_HI), ii), 1);
+					dadd(&P(P(res, P_TOT), ipath, iseed), 1, P(P(res, P_LO), ipath, iseed), 1);
+					dadd(&P(P(res, P_TOT), ipath, iseed), 1, P(P(res, P_HI), ipath, iseed), 1);
 					if(!drawres_hi){
-						dfree(P(P(res, P_HI), ii));
+						dfree(P(P(res, P_HI), ipath, iseed));
 					}
 					if(!drawres_lo){
-						dfree(P(P(res, P_LO), ii));
+						dfree(P(P(res, P_LO), ipath, iseed));
 					}
 				}
 				if(drawres_lo){
 					if(indfocus>-1){
 						tmp=dsub(P(ires, ind), indfocus, 1, 0, nstep);
 						fixnan(tmp);
-						P(P(res, P_F), ii)=dtrans(tmp);
+						P(P(res, P_F), ipath, iseed)=dtrans(tmp);
 						dfree(tmp);
 					}
 					if(indtt>-1){
 						tmp=dsub(P(ires, ind), indtt, 1, 0, nstep);
 						fixnan(tmp);
-						P(P(res, P_TT), ii)=dtrans(tmp);
+						P(P(res, P_TT), ipath, iseed)=dtrans(tmp);
 						dfree(tmp);
-						dadd(&P(P(res, P_PS), ii), 1, P(P(res, P_LO), ii), 1);
-						dadd(&P(P(res, P_PS), ii), 1, P(P(res, P_TT), ii), -1);
-						dadd(&P(P(res, P_PS), ii), 1, P(P(res, P_F), ii), -1);
+						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_LO), ipath, iseed), 1);
+						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_TT), ipath, iseed), -1);
+						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_F), ipath, iseed), -1);
 					}
 				}
 				if(drawres_ol){
 					tmp=dsub(P(ires, 0), 2, 1, 0, nstep);
-					P(P(res, P_OLHI), ii)=dtrans(tmp);
+					P(P(res, P_OLHI), ipath, iseed)=dtrans(tmp);
 					dfree(tmp);
 					tmp=dsub(P(ires, 0), 1, 1, 0, nstep);
-					P(P(res, P_OLLO), ii)=dtrans(tmp);
+					P(P(res, P_OLLO), ipath, iseed)=dtrans(tmp);
 					dfree(tmp);
-					dadd(&P(P(res, P_OLTOT), ii), 1, P(P(res, P_OLLO), ii), 1);
-					dadd(&P(P(res, P_OLTOT), ii), 1, P(P(res, P_OLHI), ii), 1);
+					dadd(&P(P(res, P_OLTOT), ipath, iseed), 1, P(P(res, P_OLLO), ipath, iseed), 1);
+					dadd(&P(P(res, P_OLTOT), ipath, iseed), 1, P(P(res, P_OLHI), ipath, iseed), 1);
 				}
 				dcellfree(ires);
 			} else if(restype==2){//Skycoverage results
@@ -396,32 +394,38 @@ int main(int argc, char* argv[]){
 				}
 				tmp=dsub(ires, 0, 0, 0, 1);
 				dsort(tmp, 1);
-				P(P(res, P_TOT), ii)=dcat(tmp, ysky, 2);
+				P(P(res, P_TOT), ipath, iseed)=dcat(tmp, ysky, 2);
 				dfree(tmp);
 
 				/*tmp=dsub(ires, 0, 0, 2, 1);
 				dsort(tmp, 1);
-				P(P(res,P_LO),ii)=dcat(tmp, ysky, 2);
+				P(P(res,P_LO),ipath, iseed)=dcat(tmp, ysky, 2);
 				dfree(tmp);*/
 
 				dfree(ires);
 			} else{
 				error("Invalid restype=%d\n", restype);
 			}
-			for(int i=0; i<res->nx; i++){
-				dadd_relax(&P(P(resm, i), ipath), 1, P(P(res, i), ii), 1);
-			}
-
-			seedcount++;
-		}
-		if(seedcount>0){
-			for(int i=0; i<res->nx; i++){
-				dscale(P(P(resm, i), ipath), 1./seedcount);
-			}
-
 		}
 	}
-
+	for(int im=0; im<NX(res); im++){
+		for(int ipath=0; ipath<npath; ipath++){
+			int seedcount=0;
+			int nsim=0;
+			for(int iseed=0; iseed<nseed; iseed++){
+				dmat* resi=P(P(res, im), ipath, iseed);
+				if(resi && NX(resi)>100){
+					dadd_relax(&P(P(resm, im), ipath), 1, resi, 1);
+					nsim=MIN(NX(P(P(resm, im), ipath)), NX(resi));
+					seedcount++;
+				}
+			}
+			if(seedcount>0){
+				dscale(P(P(resm, im), ipath), 1./seedcount);
+				dresize(P(P(resm, im), ipath), nsim, 1);
+			}
+		}
+	}
 	for(int i=0; i<res->nx; i++){
 		if(dcellsum(P(res, i))==0){
 			dcellfree(P(res, i));
@@ -436,56 +440,59 @@ int main(int argc, char* argv[]){
 	if(!P(res, P_PS)&&!P(res, P_F)){
 		dcellfree(P(res, P_LO));
 	}
-
-	if(npath==1){
-		char* legs0[nseed+1];
-		for(int iseed=0; iseed<nseed; iseed++){
-			legs0[iseed]=mymalloc(50, char);
-			snprintf(legs0[iseed], 50, "Seed %ld", seed[iseed]);
-		}
-
-		legs0[nseed]=mystrdup("Seed RMS");
-
-		for(int ic=0; ic<res->nx; ic++){
-			if(P(res, ic)){
-				if(nseed>1){//seed average
-					cellresize(P(res, ic), 1, nseed+1);
-					P(P(res, ic), nseed)=dref(P(P(resm, ic), 0));
-				}
-				plot_points(toptab[ic], 0, NULL, P(res, ic), NULL, NULL, xylog, NULL, (const char* const*)legs0,
-					title[ic], xlabel, ylabel, "%s", sidetab[ic]);
+	char* pathtag0[npath];
+	char prefix[4]="A: ";
+	for(int ipath=0; ipath<npath; ipath++){
+		prefix[0]='A'+ipath;
+		pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
+	}
+	if(nseed>1){//seed averaged
+		if(npath==1){//plot seeds together when only 1 path is found.
+			char* legs0[nseed+1];
+			for(int iseed=0; iseed<nseed; iseed++){
+				legs0[iseed]=mymalloc(50, char);
+				snprintf(legs0[iseed], 50, "Seed %ld", seed[iseed]);
 			}
-		}
+			legs0[nseed]=mystrdup("Seed RMS");
 
-		for(int iseed=0; iseed<=nseed; iseed++){
-			free(legs0[iseed]);
-		}
-	} else{
-		char* pathtag0[npath];
-		char prefix[4]="A: ";
-		for(int ipath=0; ipath<npath; ipath++){
-			prefix[0]='A'+ipath;
-			pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
-		}
-		if(nseed>1){//seed averaged
+			for(int ic=0; ic<res->nx; ic++){
+				if(P(res, ic)){
+					if(nseed>1){//seed average
+						cellresize(P(res, ic), 1, nseed+1);
+						P(P(res, ic), nseed)=dref(P(P(resm, ic), 0));
+					}
+					plot_points(toptab[ic], 0, NULL, P(res, ic), NULL, NULL, xylog, NULL, (const char* const*)legs0,
+						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
+					if(nseed>1){//seed average
+						dfree(P(P(res, ic), nseed));
+						cellresize(P(res, ic), 1, nseed);
+					}
+				}
+			}
+
+			for(int iseed=0; iseed<=nseed; iseed++){
+				free(legs0[iseed]);
+			}
+		} else{//only plot mean
 			for(int ic=0; ic<res->nx; ic++){
 				if(P(res, ic)){
 					plot_points(toptab[ic], npath, NULL, P(resm, ic), NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 				}
 			}
-		}
-		for(int iseed=0; iseed<nseed; iseed++){//each seed
-			for(int ic=0; ic<res->nx; ic++){
-				if(P(res, ic)){
-					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
-					plot_points(toptab[ic], npath, NULL, tmp, NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
-						title[ic], xlabel, ylabel, "%s:%ld", sidetab[ic], seed[iseed]);
-					dcellfree(tmp);
-				}
+		}	
+	}
+	for(int iseed=0; iseed<nseed; iseed++){//each seed
+		for(int ic=0; ic<res->nx; ic++){
+			if(P(res, ic)){
+				dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
+				plot_points(toptab[ic], npath, NULL, tmp, NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
+					title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
+				dcellfree(tmp);
 			}
 		}
 	}
+	
 	draw_final(1);
 	cellfree(res);
 	cellfree(resm);

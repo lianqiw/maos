@@ -45,8 +45,8 @@ typedef struct status_t{
     double clerrlo;
     double clerrhi;
     int info;
-    time_t timstart;
-    time_t timend;
+    time_t timstart;//Job launch time
+    time_t timlast; //last status change
 }status_t;
 /*For scheduler()*/
 enum{

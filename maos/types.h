@@ -531,6 +531,7 @@ typedef struct sim_t{
     dcell *cn2res;     /**<Cn2 Estimation Result*/
     dcell *gradoff;    /**<Offset to grads to subtract from measurement. */
     dcell *gradoffacc; /**<Accumulates gradoff to determine its average*/
+    dcell *gradoffdrift;/**<for drift control*/
     int gradoffnacc; /**<gradoffacc counter*/
     int gradoffisim; /**<last isim the new gradoff is activated*/
     int gradoffisim0; /**<last isim the gradoffacc is reset*/

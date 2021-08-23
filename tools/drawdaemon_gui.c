@@ -443,6 +443,33 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	GtkWidget* image=gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
 #endif
 
+	/* create label for tab */
+	drawdata_t* drawdata=*drawdatawrap;
+	const gchar* str=drawdata->name;
+	GtkWidget* label=gtk_label_new(str);
+	//
+#if GTK_MAJOR_VERSION >= 3
+	gtk_widget_set_halign(label, GTK_ALIGN_START);
+	gtk_widget_set_margin_start(label, 0);
+	gtk_widget_set_margin_end(label, 0);
+	gtk_widget_set_margin_top(label, 0);
+	gtk_widget_set_margin_bottom(label, 0);
+
+	gtk_widget_set_hexpand(label, 1);
+#else	
+	gtk_misc_set_padding(GTK_MISC(label), 0, 0);
+	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+#endif
+	gtk_label_set_width_chars(GTK_LABEL(label), 12);
+#if GTK_MAJOR_VERSION>=4
+	gtk_box_append(GTK_BOX(out), label);
+	//gtk_widget_show(out);
+#else
+	box_append(GTK_BOX(out), label, TRUE, TRUE, 0);
+	gtk_widget_show_all(out);
+#endif
+
+	//create close button
 #if defined(__linux__)
 	GtkWidget* close_btn;
 	close_btn=gtk_button_new();
@@ -464,49 +491,22 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	gtk_widget_set_size_request(close_btn, 20, 20);
 	gtk_container_set_border_width(GTK_CONTAINER(close_btn), 0);
 #endif
+	box_prepend(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
 
-	gtk_box_pack_end(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
 #else//macos
-
 
 #if GTK_MAJOR_VERSION>=4
 	GtkWidget* ebox=gtk_button_new();
 	gtk_button_set_icon_name(GTK_BUTTON(ebox), "window-close");
 	g_signal_connect(ebox, "clicked", G_CALLBACK(delete_page_event), drawdatawrap);
-	gtk_box_append(GTK_BOX(out), ebox);
 #else
 	GtkWidget* ebox=gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER(ebox), image);
 	g_signal_connect(ebox, "button_press_event", G_CALLBACK(delete_page_event), drawdatawrap);
-	gtk_box_pack_end(GTK_BOX(out), ebox, FALSE, FALSE, 0);
 #endif
+	box_append(GTK_BOX(out), ebox, FALSE, FALSE, 0);
 
 #endif
-
-	/* create label for tab */
-	drawdata_t* drawdata=*drawdatawrap;
-	const gchar* str=drawdata->name;
-	GtkWidget* label=gtk_label_new(str);
-	//
-#if GTK_MAJOR_VERSION >= 3
-	gtk_widget_set_halign(label, GTK_ALIGN_START);
-	gtk_widget_set_margin_start(label, 0);
-	gtk_widget_set_margin_end(label, 0);
-	gtk_widget_set_margin_top(label, 0);
-	gtk_widget_set_margin_bottom(label, 0);
-#else	
-	gtk_misc_set_padding(GTK_MISC(label), 0, 0);
-	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-#endif
-	gtk_label_set_width_chars(GTK_LABEL(label), 12);
-#if GTK_MAJOR_VERSION>=4
-	gtk_box_append(GTK_BOX(out), label);
-	gtk_widget_show(out);
-#else
-	gtk_box_pack_start(GTK_BOX(out), label, TRUE, TRUE, 0);
-	gtk_widget_show_all(out);
-#endif
-
 	return out;
 }
 /*Get the label of itab'th child of notebook subnb*/
@@ -1341,28 +1341,28 @@ static void tool_property(GtkToolButton* button, gpointer data){
 
 	checkbtn=gtk_check_button_new_with_label("Make image square");
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->square);
-	gtk_box_pack_start(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->square);
 
 	checkbtn=gtk_check_button_new_with_label("Enable grids");
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->grid);
-	gtk_box_pack_start(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->grid);
 
 	checkbtn=gtk_check_button_new_with_label("Put tic inside");
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->ticinside);
-	gtk_box_pack_start(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
 
 	checkbtn=gtk_check_button_new_with_label("Legend on curve");
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendcurve);
-	gtk_box_pack_start(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendcurve);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	checkbtn=gtk_check_button_new_with_label("Legend.");
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
-	gtk_box_pack_start(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendbox);
 	checkbtn=gtk_hscale_new_with_range(0, 1, 0.01);
@@ -1370,97 +1370,97 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
 	gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffx);
 	g_signal_connect(checkbtn, "value-changed", G_CALLBACK(range_changed), &drawdata->legendoffx);
-	gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new("Position: H"), FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), gtk_label_new("Position: H"), FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
 	checkbtn=gtk_hscale_new_with_range(0, 1, 0.01);
 	gtk_widget_set_size_request(checkbtn, 80, 20);
 	gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
 	gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffy);
 	g_signal_connect(checkbtn, "value-changed", G_CALLBACK(range_changed), &drawdata->legendoffy);
-	gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new("V"), FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), gtk_label_new("V"), FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	checkbtn=gtk_check_button_new_with_label("Plot cumulative average (");
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &cumu);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), cumu);
 	gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
-	gtk_box_pack_start(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	checkbtn=gtk_check_button_new_with_label("quadrature ");
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumuquad);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumuquad);
-	gtk_box_pack_start(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(") from"), FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), gtk_label_new(") from"), FALSE, FALSE, 0);
 	spin=gtk_spin_button_new_with_range(0, drawdata->limit[1], 1);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), drawdata->icumu);
 	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &drawdata->icumu);
-	gtk_box_pack_start(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	//Set update low pass filter 
 	hbox=gtk_hbox_new(FALSE, 0);
 	spin=gtk_spin_button_new_with_range(0, 1, 0.01);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), lpf);
 	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &lpf);
-	gtk_box_pack_start(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
 	label=gtk_label_new("Title"); gtk_label_set_width_chars(GTK_LABEL(label), 6);
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->title);
 	g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->title);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
 	label=gtk_label_new("X label");gtk_label_set_width_chars(GTK_LABEL(label), 6);
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
 	g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->xlabel);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
 	label=gtk_label_new("Y label");gtk_label_set_width_chars(GTK_LABEL(label), 6);
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);
 	g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->ylabel);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	label=gtk_label_new("xmin");gtk_label_set_width_chars(GTK_LABEL(label), 5);
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), spins[0], TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), spins[0], TRUE, TRUE, 0);
 	label=gtk_label_new("xmax");gtk_label_set_width_chars(GTK_LABEL(label), 5);
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), spins[1], TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), spins[1], TRUE, TRUE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	label=gtk_label_new("ymin");gtk_label_set_width_chars(GTK_LABEL(label), 5);
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), spins[2], TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), spins[2], TRUE, TRUE, 0);
 	label=gtk_label_new("ymax");gtk_label_set_width_chars(GTK_LABEL(label), 5);
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), spins[3], TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), spins[3], TRUE, TRUE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	if(n>4){
 		hbox=gtk_hbox_new(FALSE, 0);
 		label=gtk_label_new("zmin");gtk_label_set_width_chars(GTK_LABEL(label), 5);
-		gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(hbox), spins[4], TRUE, TRUE, 0);
+		box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+		box_append(GTK_BOX(hbox), spins[4], TRUE, TRUE, 0);
 		label=gtk_label_new("zmax");gtk_label_set_width_chars(GTK_LABEL(label), 5);
-		gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(hbox), spins[5], TRUE, TRUE, 0);
-		gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+		box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+		box_append(GTK_BOX(hbox), spins[5], TRUE, TRUE, 0);
+		box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 	}
 
 	gtk_container_add(GTK_CONTAINER(content_area), vbox);
@@ -1702,8 +1702,8 @@ GtkWidget* create_window(GtkWidget* window){
 	g_signal_connect(GTK_NOTEBOOK(topnb), "page-removed", G_CALLBACK(topnb_page_changed), toolbar);
 	g_signal_connect(GTK_NOTEBOOK(topnb), "switch-page", G_CALLBACK(topnb_page_switch), toolbar);
 	GtkWidget* vbox=gtk_vbox_new(FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), topnb, TRUE, TRUE, 0);
+	box_append(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
+	box_append(GTK_BOX(vbox), topnb, TRUE, TRUE, 0);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
 	g_signal_connect(window, "delete-event", G_CALLBACK(close_window), NULL);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);

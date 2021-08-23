@@ -186,6 +186,7 @@
 
 	<script>
 		var hostname;//current active hostname
+		var port=0;
 		document.getElementById("hostname_input").addEventListener("keyup", function (event) {
 			if (event.key === "Enter") {
 				add_host()
@@ -276,8 +277,10 @@
 			progbar.childNodes[1].innerHTML = i1 + '/' + i2;
 		}
 		function new_button(name) {
-			var button = document.createElement("input");
-			button.type = "image";
+			//img is faster than input when switching tabs. 
+			//var button = document.createElement("input");
+			//button.type = "image";
+			var button= document.createElement("img");
 			button.src = name;
 			button.setAttribute("url", name);
 			return button;
@@ -327,9 +330,9 @@
 		function websocket_start(node) {
 			hostname = node.id;
 			console.log("Connecting to " + hostname);
+			hostname2=hostname.split(':')[0].split('.')[0]
 			var socket_lm;
-			var hostname2 = hostname.split(':')[0];
-			var joblist = document.getElementById("joblist_" + hostname2);
+			var joblist = document.getElementById("joblist_" + hostname.split(':')[0]);
 			if (!joblist) return 0;
 			if (typeof MozWebSocket != "undefined") {
 				socket_lm = new MozWebSocket(pcol + hostname + "/xxx", "maos-monitor-protocol");
@@ -352,6 +355,7 @@
 				//setTimeout(websocket_start(node), 5000);
 			}
 			socket_lm.onmessage = function got_packet(msg) {
+				console.log('message received from '+hostname);
 				j = msg.data.split(';');
 				//console.log(msg.data);
 				//pid, STATUS/PATH, pidnew, status, start time, errhi, errlo, iseed, nseed, isim, nsim, rest, tot, step timing
@@ -524,7 +528,17 @@
 				hostname = document.getElementById("hostname_input").value;
 			}
 			if (hostname.length == 0) return;
-			hostname2 = hostname.split(':')[0]
+			if (hostname.split(':').length==1){
+				if (port!=0){
+					hostname=hostname+':'+port
+				}else{
+					document.getElementById("hostname_input").value="please specify host:port"
+					return
+				}
+			}else{
+				port=hostname.split(':')[1]
+			}
+			hostname2 = hostname.split(':')[0].split('.')[0]
 			if (hostname2.length == 0) {
 				console.log("Host " + hostname + " is invalid");
 				remove_hostname(hostname)

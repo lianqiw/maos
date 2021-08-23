@@ -755,7 +755,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 		}
 	}
 
-	if(parms->powfs[ipowfs].phytype_recon==1&&parms->recon.glao&&ni0>0){
+	if(parms->recon.glao&&ni0>0){
 		info("Averaging saneaxy of different WFS for GLAO mode\n");
 		dmat* sanea2=0;
 		real scale=1./ni0;

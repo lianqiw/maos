@@ -64,6 +64,7 @@ void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	free(powfscfg->neasimfile);
 	free(powfscfg->bkgrndfn);
 	free(powfscfg->qe);
+	dfree(powfscfg->ncpa);
 }
 void free_strarr(char** str, int n){
 	if(str){
@@ -754,6 +755,8 @@ static void readcfg_aper(parms_t* parms){
 
 	if(parms->aper.d<=parms->aper.din){
 		error("Inner dimeter(%g) should be less than Outer Diameter(%g).\n", parms->aper.din, parms->aper.d);
+	}else if(parms->aper.d<0 || parms->aper.din<0){
+		error("Inner (%g) and outer (%g) diameters should be positive.\n", parms->aper.din, parms->aper.d);
 	}
 	READ_DBL(aper.rotdeg);
 	parms->aper.fnampuser=readcfg_peek_override("aper.fnamp");
@@ -1778,6 +1781,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				}
 			}
 		}
+		parms->powfs[ipowfs].phytype_sim1=parms->powfs[ipowfs].phytype_sim;//save value
 	}
 	parms->hipowfs->nx=parms->nhipowfs;
 	parms->lopowfs->nx=parms->nlopowfs;

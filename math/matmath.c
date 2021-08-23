@@ -919,8 +919,8 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 	if(A&&A->nx&&ac){
 		if(!*B0){
 			bc=0;/*no bother to accumulate. */
+			X(new2)(B0, A->nx, A->ny);
 		}
-		X(new2)(B0, A->nx, A->ny);
 		X(mat)* B=*B0;
 		long nx=MIN(A->nx, B->nx);
 		long ny=MIN(A->ny, B->ny);

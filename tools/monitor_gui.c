@@ -83,7 +83,7 @@ static void list_modify_color(GtkTreeRowReference* row, const char* color){
 	}
 }
 
-static void list_update_progress(proc_t* p){
+static void list_proc_update(proc_t* p){
 	if(!p || p->status.nseed==0) return;
 	GtkTreeIter iter;
 	if(list_get_iter(p->row, &iter)) return;//failure
@@ -146,14 +146,14 @@ static void list_update_progress(proc_t* p){
 	gtk_list_store_set(listall, &iter, COL_ERRHI, tmp, -1);
 
 }
-static void list_modify_reset(proc_t* p){
+static void list_proc_reset(proc_t* p){
 	GtkTreeIter iter;
-	if(!p || list_get_iter(p->row, &iter)) return;
+	if(!p || !p->row || list_get_iter(p->row, &iter)) return;
 	char spid[12];
 	snprintf(spid, 12, " %d ", p->pid);
 
 	char sdate[80];
-	struct tm* tim=localtime(&p->status.timstart);
+	struct tm* tim=localtime(&p->status.timlast);
 	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
 	gtk_list_store_set(listall, &iter,
 		COL_DATE, sdate,
@@ -168,6 +168,68 @@ static void list_modify_reset(proc_t* p){
 		-1);
 	//p->iseed_old=-1;
 }
+/**
+ * Append proc to the list.
+*/
+static void list_proc_append(proc_t *p){
+	if(p->row) return;
+	char sdate[80];
+	char spid[12];
+	snprintf(spid, 12, " %d ", p->pid);
+	struct tm* tim=localtime(&p->status.timlast);
+	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
+	char* spath=p->path;
+	char* sstart=NULL, * sout=NULL, * sargs=NULL;
+	if(spath){
+		const char* pos=NULL;
+		pos=strstr(spath, "/maos ");
+		if(!pos){
+			pos=strstr(spath, "/skyc ");
+		}
+		if(pos){
+			sstart=(char*)malloc(pos-spath+1);
+			memcpy(sstart, spath, pos-spath);
+			sstart[pos-spath]='\0';
+			sargs=strdup(pos+1);
+			char* pos2=NULL;
+			for(char* tmp=sargs; (tmp=strstr(tmp, " -o ")); tmp+=4){
+				pos2=tmp;
+			}
+			if(pos2){
+				pos2+=4;
+				char* pos3=strchr(pos2, ' ');
+				if(!pos3) pos3=strchr(pos2, '\0');
+				if(pos3){
+					sout=(char*)malloc(pos3-pos2+1);
+					memcpy(sout, pos2, pos3-pos2);
+					sout[pos3-pos2]='\0';
+					memmove(pos2-4, pos3, strlen(pos3)+1);
+				}
+			}
+		}
+	}
+	GtkTreeIter iter;
+	gtk_list_store_append(listall, &iter);
+	gtk_list_store_set(listall, &iter,
+		COL_DATE, sdate,
+		COL_TIME, p->status.timstart,
+		COL_PID, spid,
+		COL_FULL, spath?spath:" ",
+		COL_PATH, sstart?sstart:" ",
+		COL_ARGS, sargs?sargs:" ",
+		COL_OUT, sout?sout:" ",
+		COL_ERRHI, " ",
+		COL_ERRLO, " ",
+		COL_STEPT, " ",
+		COL_STEP, " ",
+		COL_STEPP, 0,
+		COL_HOST, hosts[p->hid],
+		-1);
+	free(sstart); free(sout); free(sargs);
+	GtkTreePath* tpath=gtk_tree_model_get_path(GTK_TREE_MODEL(listall), &iter);
+	p->row=gtk_tree_row_reference_new(GTK_TREE_MODEL(listall), tpath);
+	gtk_tree_path_free(tpath);
+}
 //calls by monitor_thread
 gboolean remove_entry(GtkTreeRowReference* row){
 	GtkTreeIter iter;
@@ -179,89 +241,34 @@ gboolean remove_entry(GtkTreeRowReference* row){
 gboolean refresh(proc_t* p){
 	if(!p) return 0;
 	if(!p->row){
-		char sdate[80];
-		char spid[12];
-		snprintf(spid, 12, " %d ", p->pid);
-		struct tm* tim=localtime(&p->status.timstart);
-		strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
-		char* spath=p->path;
-		char* sstart=NULL, * sout=NULL, * sargs=NULL;
-		if(spath){
-			const char* pos=NULL;
-			pos=strstr(spath, "/maos ");
-			if(!pos){
-				pos=strstr(spath, "/skyc ");
-			}
-			if(pos){
-				sstart=(char*)malloc(pos-spath+1);
-				memcpy(sstart, spath, pos-spath);
-				sstart[pos-spath]='\0';
-				sargs=strdup(pos+1);
-				char* pos2=NULL;
-				for(char* tmp=sargs; (tmp=strstr(tmp, " -o ")); tmp+=4){
-					pos2=tmp;
-				}
-				if(pos2){
-					pos2+=4;
-					char* pos3=strchr(pos2, ' ');
-					if(!pos3) pos3=strchr(pos2, '\0');
-					if(pos3){
-						sout=(char*)malloc(pos3-pos2+1);
-						memcpy(sout, pos2, pos3-pos2);
-						sout[pos3-pos2]='\0';
-						memmove(pos2-4, pos3, strlen(pos3)+1);
-					}
-				}
-			}
-		}
-		GtkTreeIter iter;
-		gtk_list_store_append(listall, &iter);
-		gtk_list_store_set(listall, &iter,
-			COL_DATE, sdate,
-			COL_TIME, p->status.timstart,
-			COL_PID, spid,
-			COL_FULL, spath?spath:" ",
-			COL_PATH, sstart?sstart:" ",
-			COL_ARGS, sargs?sargs:" ",
-			COL_OUT, sout?sout:" ",
-			COL_ERRHI, " ",
-			COL_ERRLO, " ",
-			COL_STEPT," ",
-			COL_STEP, " ",
-			COL_STEPP, 0,
-			COL_HOST, hosts[p->hid],
-			-1);
-		free(sstart); free(sout); free(sargs);
-		GtkTreePath* tpath=gtk_tree_model_get_path(GTK_TREE_MODEL(listall), &iter);
-		p->row=gtk_tree_row_reference_new(GTK_TREE_MODEL(listall), tpath);
-		list_update_progress(p);
-		gtk_tree_path_free(tpath);
+		list_proc_append(p);
+		list_proc_update(p);
 	}
 	switch(p->status.info){
 	case 0:
 		break;
 	case S_RUNNING:
-		list_update_progress(p);
+		list_proc_update(p);
 		list_modify_icon(p->row, icon_running);
 		break;
 	case S_WAIT: /*waiting to start */
 	//list_modify_status(p, "Waiting");
-		list_modify_reset(p);
+		list_proc_reset(p);
 		list_modify_icon(p->row, icon_waiting);
 		break;
 	case S_START: /*just started. */
 	//list_modify_status(p, "Started");
-		list_modify_reset(p);
+		list_proc_reset(p);
 		list_modify_icon(p->row, icon_running);
 		notify_user(p);
 		break;
 	case S_QUEUED:
 	//list_modify_status(p, "Queued");
-		list_modify_reset(p);
+		list_proc_reset(p);
 		list_modify_icon(p->row, icon_waiting);
 		break;
 	case S_FINISH:/*Finished */
-		list_update_progress(p);
+		list_proc_update(p);
 		list_modify_icon(p->row, p->frac==0?icon_skip:icon_finished);
 		//list_modify_icon(p->row, icon_finished);
 		//list_modify_color(p->row,"#00DD00");

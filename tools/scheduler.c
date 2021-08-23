@@ -324,7 +324,7 @@ static void running_remove(int pid, int status){
 				nrun_sub(irun->pid, irun->nthread, irun->ngpu);
 			}
 			if(irun->status.info<10){//mark termination time.
-				irun->status.timend=myclocki();
+				irun->status.timlast=myclocki();
 			}
 			irun->status.info=status;
 			dbg_time("remove job %d with status %d\n", pid, irun->status.info);
@@ -449,7 +449,7 @@ static void process_queue(void){
 				}else{
 					dbg_time("Starting Job %d at %d ok.\n", irun->pid, irun->sock);
 					nrun_add(irun->pid, nthread, irun->ngpu);
-					irun->status.timstart=myclocki();
+					irun->status.timlast=myclocki();
 					irun->status.info=S_START;
 					monitor_send(irun, NULL);
 				}
@@ -478,13 +478,13 @@ static void process_queue(void){
 					int pid;
 					irun->last_time=thistime;
 					if((pid=launch_exe(irun->exe, irun->path0))<0){
-						dbg_time("Launch job %d failed: %d (%s) (%s)\n", irun->pid, pid, irun->exe, irun->path0);
+						dbg_time("Launch job %d failed: %d (%s)\n", irun->pid, pid, irun->exe);
 						running_remove(irun->pid, S_CRASH);
 					} else{
-						dbg_time("Launch job %d as %d (%s) (%s)\n", irun->pid, pid, irun->exe, irun->path0);
+						dbg_time("Launch job %d as pid %d (%s)\n", irun->pid, pid, irun->exe);
 						//inplace update the information in monitor
 						irun->status.info=S_WAIT;//will be checked again by process_queue
-						irun->status.timstart=myclocki();
+						irun->status.timlast=myclocki();
 						irun->pidnew=pid;
 						monitor_send(irun, NULL);
 						irun->pid=pid;
@@ -514,7 +514,7 @@ static void queue_new_job(const char* exename, const char* execmd){
 	irun->exe=strdup(exename);
 	irun->path0=strdup(execmd);
 	irun->path=remove_endl(irun->path0);
-	dbg_time("%d (%s) (%s)\n", irun->pid, exename, execmd);
+	dbg_time("%d (%s)\n", irun->pid, exename);
 	monitor_send(irun, irun->path);
 	monitor_send(irun, NULL);
 	all_done=0;
@@ -590,7 +590,7 @@ static int socket_get(int id){
 }
 
 static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
-PNEW(mutex_sch);//respond() and scheduler_handle_ws() much lock this before preceed.
+//PNEW(mutex_sch);//respond() and scheduler_handle_ws() much lock this before preceed.
 /**
    respond to client requests. The fixed header is int[2] for opcode and
    pid. Optional data follows based on opcode. The disadvanced of this is that
@@ -612,7 +612,7 @@ static int respond(int sock){
 	}
 	pid=cmd[1];
 	dbg3_time("respond %d got %d %d. \n", sock, cmd[0], cmd[1]);
-	LOCK(mutex_sch);
+	//LOCK(mutex_sch);
 	switch(cmd[0]){
 	case CMD_START://1: Called by maos when job starts.
 	{
@@ -650,7 +650,7 @@ static int respond(int sock){
 			dbg_time("(%d) Job %d started with ncpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
 			nrun_add(pid, nthread, ngpu);
 			irun->status.info=S_START;
-			irun->status.timstart=myclocki();
+			irun->status.timlast=myclocki();
 		}
 		if(irun->path) monitor_send(irun, irun->path);
 		monitor_send(irun, NULL);
@@ -659,7 +659,7 @@ static int respond(int sock){
 	case CMD_FINISH://2: Called by MAOS when job finishes.
 		dbg_time("(%d) Job %d reports finished\n", sock, pid);
 		running_remove(pid, S_FINISH);
-		ret=-1;
+		ret=0;//-1. Do not yet close. wait for client to close.
 	break;
 	case CMD_STATUS://3: Called by MAOS to report status at every time step
 	{
@@ -685,7 +685,7 @@ static int respond(int sock){
 	case CMD_CRASH://4: called by MAOS when job crashes
 		dbg_time("(%d) Job %d reports crashed\n", sock, pid);
 		running_remove(pid, S_CRASH);
-		ret=-1;
+		ret=0;//-1; wait for client to close.
 		break;
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
@@ -716,7 +716,7 @@ static int respond(int sock){
 			break;
 		}
 		irun->path=remove_endl(irun->path0);
-		dbg_time("(%d) Job %d received path: %s\n", sock, pid, irun->path);
+		dbg_time("(%d) Job %d received path. \n", sock, pid);
 		monitor_send(irun, irun->path);
 	}
 	break;
@@ -859,7 +859,7 @@ static int respond(int sock){
 		break;
 	case CMD_KILLED://16: called by maos to indicate that job is cancelled or killed
 		running_remove(pid, S_KILLED);
-		ret=-1;
+		ret=0;//-1; //wait for client to close.
 		break;
 	case CMD_UNUSED4://17;not used
 		break;
@@ -871,14 +871,16 @@ static int respond(int sock){
 		if(pid>=2){
 			if(streadstr(sock, &exename)){
 				warning_time("(%d) Unable to read exename.\n", sock);
+				ret=-1;
 			}
 		}
-		if(pid>=3){//old method. should not be used.
+		if(ret!=-1 && pid>=3){//old method. should not be used.
 			if(streadstr(sock, &execwd)){
 				warning_time("(%d) Unable to read execwd.\n", sock);
+				ret=-1;
 			}
 		}
-		if(!streadstr(sock, &execmd)){
+		if(ret!=-1 && !streadstr(sock, &execmd)){
 			if(execwd){//merge cwd to new
 				char* tmp=execmd;
 				execmd=stradd(execwd, "/", execmd, NULL);
@@ -892,7 +894,6 @@ static int respond(int sock){
 				}
 			} else{//Queue in jobs.
 				queue_new_job(exename, execmd);
-				ret=0;
 			}
 		} else{
 			warning_time("(%d) Unable to read execmd\n", sock);
@@ -925,8 +926,8 @@ end:
 		ret=-1;
 	}
 	sync();
-	UNLOCK(mutex_sch);
-	return ret;/*don't close the port yet. may be reused by the client. */
+	//UNLOCK(mutex_sch);
+	return ret;//ret=-1 will close the socket.
 }
 /*
   handle requests from web browser via websockets. Browser sends request over
@@ -949,7 +950,7 @@ void scheduler_handle_ws(char* in, size_t len){
 	if((tmp=strchr(sep, ';'))){
 		*tmp='\0';
 	}
-	LOCK(mutex_sch);
+	//LOCK(mutex_sch);
 	if(!strcmp(sep, "REMOVE")){
 		RUN_T* irun=runned_get(pid);
 		if(irun){
@@ -973,12 +974,19 @@ void scheduler_handle_ws(char* in, size_t len){
 	} else{
 		warning_time("Unknown action: %s\n", sep);
 	}
-	UNLOCK(mutex_sch);
+	//UNLOCK(mutex_sch);
 }
 static void scheduler_timeout(void){
 	static double lasttime3=0;//every 3 seconds
 	static double lasttime10=0;//every 10 seconds
-
+	
+#if HAS_LWS
+	extern int PORT;
+	static int ans=0;
+	if(!ans){
+		ans=ws_service(PORT+100);//service http.
+	}
+#endif	
 	double thistime=myclockd();
 	//Process job queue
 	if(!all_done){
@@ -997,6 +1005,7 @@ static void scheduler_timeout(void){
 		monitor_send_load();
 		lasttime10=thistime;
 	}
+
 }
 
 /*The following routines maintains the MONITOR_T linked list. */
@@ -1032,14 +1041,14 @@ static void monitor_remove(int sock){
    Convert RUN_T to string for websocket.
 */
 #if HAS_LWS
-void html_convert(RUN_T* irun, char* path, char** dest, size_t* plen, long prepad, long postpad){
+static void html_push(RUN_T* irun, char* path, char** dest, size_t* plen, long prepad, long postpad){
 	char temp[4096]={0};
 	size_t len;
 	if(path){
 		len=snprintf(temp, 4096, "%d&PATH&%s;", irun->pid, path);
 	} else{
 		status_t* st=&irun->status;
-		struct tm* tim=localtime(&(st->timstart));
+		struct tm* tim=localtime(&(st->timlast));
 		char stime[80];
 		strftime(stime, 80, "[%a %H:%M:%S]", tim);
 		len=snprintf(temp, 4096, "%d&STATUS&%d&%d" /*pid, key, pidnew, status*/
@@ -1059,31 +1068,31 @@ void html_convert(RUN_T* irun, char* path, char** dest, size_t* plen, long prepa
 		memcpy(*dest+prepad, temp, len);
 	}
 }
-static void html_convert_all_do(RUN_T* irun, l_message** head, l_message** tail, long prepad, long postpad){
+static void html_push_all_do(RUN_T* irun, l_message** head, l_message** tail, long prepad, long postpad){
 	l_message* node=(l_message*)malloc(sizeof(l_message));
 	l_message* node2=(l_message*)malloc(sizeof(l_message));
 	node->next=node2;
 	node2->next=0;
-	html_convert(irun, irun->path, &node->payload, &node->len, prepad, postpad);
-	html_convert(irun, 0, &node2->payload, &node2->len, prepad, postpad);
 	if(*tail){
 		(*tail)->next=node;
 	} else{
 		*head=node;
 	}
 	*tail=node2;
+	html_push(irun, irun->path, &node->payload, &node->len, prepad, postpad);
+	html_push(irun, 0, &node2->payload, &node2->len, prepad, postpad);
 }
-
-void html_convert_all(l_message** head, l_message** tail, long prepad, long postpad){
-	LOCK(mutex_sch);
+//called by scheduelr_ws upon client connection. 
+void html_push_all(l_message** head, l_message** tail, long prepad, long postpad){
+	//LOCK(mutex_sch);
 	*head=*tail=0;
 	for(RUN_T* irun=runned; irun; irun=irun->next){
-		html_convert_all_do(irun, head, tail, prepad, postpad);
+		html_push_all_do(irun, head, tail, prepad, postpad);
 	}
 	for(RUN_T* irun=running; irun; irun=irun->next){
-		html_convert_all_do(irun, head, tail, prepad, postpad);
+		html_push_all_do(irun, head, tail, prepad, postpad);
 	}
-	UNLOCK(mutex_sch);
+	//UNLOCK(mutex_sch);
 }
 #endif
 static int monitor_send_do(RUN_T* irun, char* path, int sock){
@@ -1101,7 +1110,7 @@ static int monitor_send_do(RUN_T* irun, char* path, int sock){
 /* Notify alreadyed connected monitors job update. */
 static void monitor_send(RUN_T* irun, char* path){
 #if HAS_LWS
-	html_convert(irun, path, 0, 0, 0, 0);
+	html_push(irun, path, 0, 0, 0, 0);
 #endif
 	MONITOR_T* ic;
 redo:
@@ -1215,13 +1224,13 @@ int main(){
 		pclose(fpcmd);
 		dbg("NGPU=%d\n", NGPU);
 	}
-	extern int PORT;
-#if HAS_LWS
-	//launch in a separate thread to avoid excessive idle wakeup.
+	
+	//Use ws_service in a separate thread does not update job status.
+	//We call it in scheduler_timeout using poll. no need for LOCK in this case
+
 	//Must acquire mutex_sch before handling run_t
-	thread_new(ws_service, (void*)(long)(PORT+100));
-#endif
 	//still need time out to handle process queue.
+	extern int PORT;
 	listen_port(PORT, slocal, respond, 1, scheduler_timeout, 0);
 	remove(slocal);
 

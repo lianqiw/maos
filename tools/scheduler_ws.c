@@ -300,7 +300,7 @@ callback_maos_monitor(struct lws* wsi,
 		pss->ringbuffer_tail=ringbuffer_head;
 		pss->wsi=wsi;
 		pss->head=pss->tail=0;
-		html_convert_all(&pss->head, &pss->tail,
+		html_push_all(&pss->head, &pss->tail,
 			LWS_SEND_BUFFER_PRE_PADDING, LWS_SEND_BUFFER_POST_PADDING);
 		lws_callback_on_writable(wsi);
 		lwsl_notice("head=%p, tail=%p\n", pss->head, pss->tail);
@@ -421,6 +421,7 @@ static struct lws_protocols protocols[]={
 
 static struct lws_context* context=0;
 int ws_start(short port){
+	if(context) return 0;
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof info);
 	info.port=port;
@@ -446,19 +447,25 @@ void ws_end(){
 	}
 }
 //Run in a separate thread.
-void* ws_service(void* data){
-	ws_start((short)(long)data);
-	/*returns immediately if no task is pending when timeout is 0 ms.*/
-	while(context){
-		int ans=lws_service(context, 100000000);
-		if(ans<0){
-			ws_end();
-			context=0;
-		}
+int ws_service(short port){
+	int ans=0;
+	if(!context){
+		ans=ws_start(port);
 	}
-	ws_end();
-	return NULL;
+	/*returns immediately if no task is pending when timeout is 0 ms.*/
+	if(!ans){
+#if LWS_LIBRARY_VERSION_NUMBER > 3002000
+		ans=lws_service(context, -1);//>=3.2 stable, need to use -1 for polling
+#else		
+		ans=lws_service(context, 0);//<3.2 stable, use 0 for polling, but may not work for version close to 3.2
+#endif		
+	}
+	if(ans<0){
+		ws_end();
+	}
+	return ans;
 }
+//Initiate server to client message
 void ws_push(const char* in, int len){
 	if(!context) return;
 	free(ringbuffer[ringbuffer_head].payload);
@@ -468,7 +475,7 @@ void ws_push(const char* in, int len){
 	ringbuffer[ringbuffer_head].len=len;
 	memcpy((char*)ringbuffer[ringbuffer_head].payload+
 		LWS_SEND_BUFFER_PRE_PADDING, in, len);
-	if(ringbuffer_head==(MAX_MESSAGE_QUEUE-1)){
+	if(ringbuffer_head+1==MAX_MESSAGE_QUEUE){
 		ringbuffer_head=0;/*wrap over*/
 	} else{
 		ringbuffer_head++;

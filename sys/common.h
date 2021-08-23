@@ -101,9 +101,10 @@ extern int detached;
 
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
 extern FILE* fpconsole;
+extern int signal_caught;
 //We only output to stdout. Its buffer is disabled for immediate output.
 #define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A);}})
-#define error(format,...) ({logerr(-4, "%sError(%s:%d,%s): " format "%s", RED,BASEFILE,__LINE__,__func__, ##__VA_ARGS__, BLACK); QUIT_FUN("Error happened");})
+#define error(format,...) ({logerr(-4, "%sError(%s:%d,%s): " format "%s", RED,BASEFILE,__LINE__,__func__, ##__VA_ARGS__, BLACK); signal_caught=11; QUIT_FUN("Error happened");})
 #define warning(format,...) logerr(-4, "%sWarning(%s:%d,%s): " format "%s", YELLOW,BASEFILE,__LINE__,__func__,##__VA_ARGS__,BLACK)
 #define warning_time(format,...) logerr(-4,"%s[%s] (%s:%d,%s): " format "%s", YELLOW,myasctime(0),BASEFILE,__LINE__,__func__,##__VA_ARGS__,BLACK)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
