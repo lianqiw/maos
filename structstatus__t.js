@@ -23,5 +23,5 @@ var structstatus__t =
     [ "clerrhi", "structstatus__t.html#a2c44512f0f6ec858f9e2148f82fafb43", null ],
     [ "info", "structstatus__t.html#a3ad077e15bc1e44c1a8114f74eba3340", null ],
     [ "timstart", "structstatus__t.html#ade663146c6ce2bab9cd70167eea87286", null ],
-    [ "timend", "structstatus__t.html#a8368af1e5407ebc99bf95cdf94f9e759", null ]
+    [ "timlast", "structstatus__t.html#a28a3ed45a322efd5658ea18abd8ac55f", null ]
 ];

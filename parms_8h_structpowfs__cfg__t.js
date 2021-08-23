@@ -62,6 +62,7 @@ var parms_8h_structpowfs__cfg__t =
     [ "gtype_recon", "parms_8h.html#a18f0af83ee3302aabaf885e260caeaad", null ],
     [ "phytype_recon", "parms_8h.html#a81eb87867405cf4cab2cccda695f680b", null ],
     [ "phytype_sim", "parms_8h.html#acbd60fe62fcc76e8784788d68b97c13a", null ],
+    [ "phytype_sim1", "parms_8h.html#a9113a1ff5e86df803825b6a74bd89dc5", null ],
     [ "phytype_sim2", "parms_8h.html#a5385c7f5ffc8fc92b21e42a89213f394", null ],
     [ "phystep", "parms_8h.html#a686258f49144784d628a9a4e51b87853", null ],
     [ "usephy", "parms_8h.html#a76b632ebb21546c4b2198ae2a3c91f1f", null ],

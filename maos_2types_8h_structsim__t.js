@@ -26,6 +26,7 @@ var maos_2types_8h_structsim__t =
     [ "cn2res", "maos_2types_8h.html#a61049f79df793b870a109c44c97114b3", null ],
     [ "gradoff", "maos_2types_8h.html#abdc1e756826fc54bf6578e87604426f4", null ],
     [ "gradoffacc", "maos_2types_8h.html#a02f5f681f8f8e23efdba2beb9f7190df", null ],
+    [ "gradoffdrift", "maos_2types_8h.html#ac6787591928e8228107dea6dc8ab954c", null ],
     [ "gradoffnacc", "maos_2types_8h.html#ac25c6ecb52368216b3164e9f97693fa9", null ],
     [ "gradoffisim", "maos_2types_8h.html#ad0294a6f562f51914f3800a85f5167cc", null ],
     [ "gradoffisim0", "maos_2types_8h.html#a1f4468806d08462b55934c5ba6c816ee", null ],

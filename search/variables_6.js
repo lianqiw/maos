@@ -42,6 +42,7 @@ var searchData=
   ['gradoff_5freset',['gradoff_reset',['../parms_8h.html#abdbd866ca2a25a3456baaeb5d6ccfdb4',1,'dbg_cfg_t']]],
   ['gradoff_5fscale',['gradoff_scale',['../parms_8h.html#a04719da7a06181dbc63ec7b269a99a6b',1,'dbg_cfg_t']]],
   ['gradoffacc',['gradoffacc',['../maos_2types_8h.html#a02f5f681f8f8e23efdba2beb9f7190df',1,'sim_t']]],
+  ['gradoffdrift',['gradoffdrift',['../maos_2types_8h.html#ac6787591928e8228107dea6dc8ab954c',1,'sim_t']]],
   ['gradoffisim',['gradoffisim',['../maos_2types_8h.html#ad0294a6f562f51914f3800a85f5167cc',1,'sim_t']]],
   ['gradoffisim0',['gradoffisim0',['../maos_2types_8h.html#a1f4468806d08462b55934c5ba6c816ee',1,'sim_t']]],
   ['gradoffnacc',['gradoffnacc',['../maos_2types_8h.html#ac25c6ecb52368216b3164e9f97693fa9',1,'sim_t']]],
