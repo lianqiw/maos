@@ -281,13 +281,27 @@ static void print_usage(void){
 
 	exit(0);
 }
-
+void free_arg(arg_t **parg){
+	if(!parg) return;
+	arg_t *arg=*parg;
+	if(!arg) return;
+	free(arg->dirout);
+	free(arg->conf);
+	if(arg->confcmd){
+		remove(arg->confcmd);
+	}
+	free(arg->confcmd);
+	free(arg->gpus);
+	free(arg->host);
+	free(arg->execmd);
+	free(arg);
+	parg=0;
+}
 /**
    Parse command line arguments argc, argv
 */
 arg_t* parse_args(int argc, const char* argv[]){
 	arg_t* arg=mycalloc(1, arg_t);
-	char* host=NULL;
 	int nthread=0;
 	argopt_t options[]={
 	{"help",   'h',M_INT, 0, 1, (void*)print_usage, NULL},
@@ -300,13 +314,13 @@ arg_t* parse_args(int argc, const char* argv[]){
 	{"ngpu",   'G',M_INT, 1, 0, &arg->ngpu2, NULL},
 	{"conf",   'c',M_STR, 1, 0, &arg->conf, NULL},
 	{"path",   'p',M_STR, 1, 1, (void*)addpath, NULL},
-	{"run",    'r',M_STR, 1, 0, &host, NULL},
+	{"run",    'r',M_STR, 1, 0, &arg->host, NULL},
 	{"server", 'S',M_INT, 0, 0, &arg->server,NULL},
 	{NULL,     0,  0,     0, 0, NULL, NULL}
 	};
-	char* cmds=strnadd(argc-1, argv+1, " ");
-	parse_argopt(cmds, options);
-	if((!host||!strcmp(host, "localhost"))&&!arg->detach){//forground running.
+	arg->confcmd=strnadd(argc-1, argv+1, " ");
+	parse_argopt(arg->confcmd, options);
+	if((!arg->host||!strcmp(arg->host, "localhost"))&&!arg->detach){//forground running.
 		arg->force=1;
 	} else{
 		if(!arg->dirout){
@@ -317,21 +331,23 @@ arg_t* parse_args(int argc, const char* argv[]){
 			arg->detach=0;
 			arg->force=0;
 			detached=1;
+			//no need to report PATH since we are started by scheduler
 		} else{
 #ifndef MAOS_DISABLE_SCHEDULER
 		/*Detached version. Always launch through scheduler if available.*/
-			if(!host){//launch locally
+			if(!arg->host){//launch locally
 				if(scheduler_launch_exe("localhost", argc, argv)){
 					warning("Launch locally without scheduler.\n");
 				}else{
+					free_arg(&arg);
 					exit(EXIT_SUCCESS);
 				}
 			} else{
-				const char* hostend=host+strlen(host);
+				const char* hostend=arg->host+strlen(arg->host);
 				//Host maybe coma separated hostnames
 				//Host2 is hostname found. Host3 is after coma.
 				char* host3=NULL;
-				for(char* host2=host; host2&&host2<hostend; host2=host3){
+				for(char* host2=arg->host; host2&&host2<hostend; host2=host3){
 					char* coma=strchr(host2, ',');
 					if(coma){
 						*coma='\0';
@@ -343,6 +359,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 						warning("Unable to launch maos at server %s.\n", host2);
 					}
 				}
+				free_arg(&arg);
 				exit(EXIT_SUCCESS);
 			}
 #else
@@ -350,7 +367,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 #endif
 		}
 	}
-	free(host);
+	arg->execmd=argv2str(argc, argv, " ");
 	if(nthread<MAXTHREAD&&nthread>0){
 		NTHREAD=nthread;
 	}
@@ -375,7 +392,6 @@ arg_t* parse_args(int argc, const char* argv[]){
 			}
 		}
 	}
-	arg->confcmd=cmds;
 	addpath2(".", 2);
 	if(arg->dirout){
 		mymkdir("%s", arg->dirout);

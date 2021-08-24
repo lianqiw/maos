@@ -29,7 +29,7 @@ int check_suffix(const char *fn, const char *suffix);
 void copyfile(const char *dest, const char *src);
 char *argv2str(int argc, const char *argv[], const char *delim);
 void print_file(const char *fnin);
-int myclocki(void);
+time_t myclocki(void);
 double myclockd(void);
 const char *myasctime(time_t at);
 char *strtime_pid(void);

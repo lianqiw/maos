@@ -38,6 +38,25 @@ try:
 except:
     raise Exception('aolib.so is not found at '+aolib_so)
 
+
+def simplify(arr, do_stack=1):
+    '''simplify object array by removing singleton dimensions and stack into numeric array'''
+    arr=np.squeeze(arr)
+    if arr.dtype.name=='object':
+        if arr.size==1:
+            return arr.item(0) #this works for 0d array
+        flags=np.zeros(arr.shape,dtype=bool)
+        for ind,iarr in np.ndenumerate(arr):
+            arr[ind]=simplify(iarr)
+            if arr[ind].size>0:
+                flags[ind]=True
+        if do_stack:
+            try:
+                arr=np.stack(arr[flags])
+            except:
+                pass
+    return arr
+
 id2ctype={
     #obtain type information from MAOS id.
     #The value is (type, is complex, kind(0:dense, 1: sparse, 2: loc, 10: cell))
@@ -63,13 +82,13 @@ def pt2py(pointer):
         pointer.contents.free()
         return out
     else:
-        return np.empty(())
+        return np.array([])
 #convert C vector to numpy array. Memory is copied.
 def as_array(arr, id, shape):
     ''' convert C array arr to numpy based in id'''
     (tt, iscomplex, issparse)=id2ctype.get(id)
     if tt is None or not bool(arr) or shape[0]==0:
-        return np.empty((0,))
+        return np.array([])
     else:
         parr=cast(arr, POINTER(tt))
         if iscomplex:
@@ -126,7 +145,6 @@ class cell(Structure):
             arr=np.asarray(arr)
         
         if arr is not None:
-            
             self.id=dtype2id.get(arr.dtype.type)
             if self.id is None:
                 print("init: Unknown data" +str( arr.dtype.type))
@@ -203,13 +221,13 @@ class cell(Structure):
                         pp=cast(int(address), POINTER(cell))
                         res[iy, ix]=pp.contents.as_array() #recursive
                     else:
-                        res[iy, ix]=np.empty(())
+                        res[iy, ix]=np.array([])
             if self.ny==1:
                 res=res[0,]
-            return res
+            return simplify(res, 0)
         else:
             print('as_array: Unknown data, id='+ str(self.id))
-            return np.empty((),dtype=object)
+            return np.array([],dtype=object)
     def free(self):
         lib.cellfree_do(byref(self)) #will fail if memory is not allocated by C
         

@@ -850,6 +850,8 @@ typedef struct arg_t{
     char *dirout;    /**<Result output directory*/
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
+    char *host;      /**<Run in another host*/
+    char *execmd;    /**<concatenation of argv*/
 }arg_t;
 parms_t* setup_parms(const char *main, const char *extra, int override);
 void setup_parms_gpu(parms_t *parms, int *gpus, int ngpu);

@@ -155,7 +155,7 @@ static void host_added(int ihost, int sock){
 }
 
 /*remove the host upon disconnection*/
-static void host_removed(int sock){
+static void host_removed(int sock, int notify){
 	if(sock>-1){
 		shutdown(sock, SHUT_WR);
 		close(sock);
@@ -166,8 +166,10 @@ static void host_removed(int sock){
 		hsock[ihost]=-1;
 		g_idle_add(host_down, GINT_TO_POINTER(ihost));
 		warning_time("Disconnected from %s\n", hosts[ihost]);
-		sendmail("Subject:monitor on disconnected from %s\n\nAt %s\n",
+		if(notify){
+			sendmail("Subject:monitor on disconnected from %s\n\nAt %s\n",
 				 hosts[ihost], myasctime(0));
+		}
 	}
 }
 //connect to scheduler(host)
@@ -288,7 +290,7 @@ static int respond(int sock){
 	switch(cmd[0]){
 	case -1:{//server request shutdown
 		dbg_time("Received shutdown request\n");
-		return -1;
+		return -3;
 	}
 		break;
 	case MON_CMD://called by monitor main thread
@@ -456,7 +458,7 @@ void* listen_host(void* pmsock){
 			if(FD_ISSET(i, &read_fd_set)){
 				int res;
 				if((res=respond(i))<0){
-					host_removed(i);
+					host_removed(i, res==-1?1:0);
 				}
 				if(res==-2){//quit
 					keep_listen=0;
@@ -478,7 +480,7 @@ void* listen_host(void* pmsock){
 					htime[ihost]=-ntime;
 				} else if(htime[ihost]<0&&ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
 					dbg_time("no respond. disconnect server %s.\n", hosts[ihost]);
-					host_removed(hsock[ihost]);
+					host_removed(hsock[ihost], 1);
 				}
 			}
 			//check for jobs that may have hung
@@ -543,7 +545,7 @@ static int scheduler_cmd(int ihost, int pid, int command){
 			cmd[1]=pid;/*pid */
 			ans=stwriteintarr(sock, cmd, 2);
 			if(ans){/*communicated failed.*/
-				host_removed(sock);
+				host_removed(sock, 0);
 			}
 		}
 		return ans;

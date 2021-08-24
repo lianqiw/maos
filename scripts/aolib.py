@@ -4,7 +4,7 @@ import os
 import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
-from numpy import sqrt, exp, log, floor, ceil, nan, pi
+from numpy import sqrt, exp, log, floor, ceil, nan, pi, sort
 from numpy.random import rand, randn
 import matplotlib.pyplot as plt
 

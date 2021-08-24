@@ -273,6 +273,7 @@ static RUN_T* running_add(int pid, int sock){
 		irun=mycalloc(1, RUN_T);
 		irun->pidnew=irun->pid=pid;
 		irun->sock=sock;
+		irun->status.timlast=irun->status.timstart=myclocki();
 		if(pid>0){
 			irun->exe=strdup(progname);
 		}
@@ -309,7 +310,6 @@ static RUN_T* running_add(int pid, int sock){
 		} else{
 			running_end=running=irun;
 		}
-		irun->status.timstart=myclocki();
 		return irun;
 	}
 }
@@ -602,7 +602,7 @@ static int respond(int sock){
 	   Don't modify sock in this routine. otherwise select
 	   will complain Bad file descriptor
 	*/
-	int ret=0, pid, cmd[2];
+	int ret=0, pid, cmd[2]={0,0};
 	//dbg_time("\rrespond %2d start ... ", sock);errno=0;
 	if((ret=streadintarr(sock, cmd, 2))){
 		/*if(errno!=ESRCH && errno!=ENOENT){//timeout or closed
@@ -686,7 +686,7 @@ static int respond(int sock){
 		dbg_time("(%d) Job %d reports crashed\n", sock, pid);
 		running_remove(pid, S_CRASH);
 		ret=0;//-1; wait for client to close.
-		break;
+	break;
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
 		MONITOR_T* tmp=monitor_add(sock);
@@ -911,8 +911,10 @@ static int respond(int sock){
 		warning_time("(%d) Invalid cmd: %x\n", sock, cmd[0]);
 		ret=-1;
 	}
-	cmd[0]=-1;
-	cmd[1]=-1;
+	//job is finished. process the next job. don't wait for timeout
+	if((cmd[0]==CMD_KILLED||cmd[0]==CMD_FINISH||cmd[0]==CMD_CRASH)&&!all_done){
+		process_queue();
+	}
 end:
 	if(ret){
 		RUN_T* irun=running_get_by_sock(sock);//is maos
@@ -925,8 +927,9 @@ end:
 		}
 		ret=-1;
 	}
-	sync();
-	//UNLOCK(mutex_sch);
+#if HAS_LWS
+	ws_service(0);
+#endif
 	return ret;//ret=-1 will close the socket.
 }
 /*
@@ -980,19 +983,14 @@ static void scheduler_timeout(void){
 	static double lasttime3=0;//every 3 seconds
 	static double lasttime10=0;//every 10 seconds
 	
-#if HAS_LWS
-	extern int PORT;
-	static int ans=0;
-	if(!ans){
-		ans=ws_service(PORT+100);//service http.
-	}
-#endif	
 	double thistime=myclockd();
 	//Process job queue
 	if(!all_done){
 		process_queue();
 	}
-
+#if HAS_LWS
+	ws_service(1000);//service http.
+#endif	
 	if(thistime>=(lasttime3+3)){
 		if(running){
 			check_jobs();
@@ -1045,7 +1043,7 @@ static void html_push(RUN_T* irun, char* path, char** dest, size_t* plen, long p
 	char temp[4096]={0};
 	size_t len;
 	if(path){
-		len=snprintf(temp, 4096, "%d&PATH&%s;", irun->pid, path);
+		len=snprintf(temp, 4096, "%d&PATH&%s$", irun->pid, path);
 	} else{
 		status_t* st=&irun->status;
 		struct tm* tim=localtime(&(st->timlast));
@@ -1054,7 +1052,7 @@ static void html_push(RUN_T* irun, char* path, char** dest, size_t* plen, long p
 		len=snprintf(temp, 4096, "%d&STATUS&%d&%d" /*pid, key, pidnew, status*/
 			"&%s&%.2f&%.2f" /*start time, errhi, errlo*/
 			"&%d&%d&%d&%d" /*iseed, nseed, isim, nsim*/
-			"&%ld&%ld&%.3f;" /*rest, tot, step timing*/
+			"&%ld&%ld&%.3f$" /*rest, tot, step timing*/
 			, irun->pid, irun->pidnew, st->info,
 			stime, st->clerrhi, st->clerrlo,
 			st->nseed==0?0:st->iseed+1, st->nseed, st->simend==0?0:st->isim+1, st->simend,
@@ -1069,8 +1067,8 @@ static void html_push(RUN_T* irun, char* path, char** dest, size_t* plen, long p
 	}
 }
 static void html_push_all_do(RUN_T* irun, l_message** head, l_message** tail, long prepad, long postpad){
-	l_message* node=(l_message*)malloc(sizeof(l_message));
-	l_message* node2=(l_message*)malloc(sizeof(l_message));
+	l_message* node=(l_message*)calloc(1,sizeof(l_message));
+	l_message* node2=(l_message*)calloc(1,sizeof(l_message));
 	node->next=node2;
 	node2->next=0;
 	if(*tail){
@@ -1227,7 +1225,10 @@ int main(){
 	
 	//Use ws_service in a separate thread does not update job status.
 	//We call it in scheduler_timeout using poll. no need for LOCK in this case
-
+#if HAS_LWS
+	extern int PORT;
+	ws_start(PORT+100);
+#endif	
 	//Must acquire mutex_sch before handling run_t
 	//still need time out to handle process queue.
 	extern int PORT;

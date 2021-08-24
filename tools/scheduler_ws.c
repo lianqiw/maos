@@ -30,6 +30,7 @@
 #include "config.h" 
 #endif
 #include "scheduler_ws.h"
+#include "../sys/mem.h" //make sure memory debugging is used 
 /**
    Contains code for handling websocket connection using libwebsockets. Part of
    the code is copied from test-server.c in libwebsockets
@@ -271,21 +272,22 @@ static int callback_http(struct lws* wsi,
 
 struct a_message{
 	char* payload;
-	size_t len;
+	size_t len;//valid payload
+	size_t size;//total memory allocated
 };
 
-#define MAX_MESSAGE_QUEUE 64
+#define MAX_MESSAGE_QUEUE 1024
 /*The receiver modifies the head of the ring buffer. Each client maintains its
   own tail of the ring buffer so they can proceed that their own speed. */
-static struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
-static int ringbuffer_head;
-struct per_session_data__maos_monitor{
+static struct a_message ringbuffer[MAX_MESSAGE_QUEUE]={0};
+static int ringbuffer_head=0;//ring buffer head 
+struct per_session_data__maos_monitor{//per client
 	struct lws* wsi;
-	l_message* head;/*for initialization*/
-	l_message* tail;
-	int ringbuffer_tail;
+	l_message* head;//head of list for initialization
+	l_message* tail;//tail of list for initialization
+	int ringbuffer_tail;//ring buffer tail per client
 };
-
+int pending=0;//pending message for sending
 static int
 callback_maos_monitor(struct lws* wsi,
 	enum lws_callback_reasons reason,
@@ -297,13 +299,12 @@ callback_maos_monitor(struct lws* wsi,
 
 	case LWS_CALLBACK_ESTABLISHED:
 		lwsl_info("callback_maos_monitor: LWS_CALLBACK_ESTABLISHED\n");
-		pss->ringbuffer_tail=ringbuffer_head;
+		pss->ringbuffer_tail=ringbuffer_head;//initialize to zero length
 		pss->wsi=wsi;
 		pss->head=pss->tail=0;
 		html_push_all(&pss->head, &pss->tail,
 			LWS_SEND_BUFFER_PRE_PADDING, LWS_SEND_BUFFER_POST_PADDING);
 		lws_callback_on_writable(wsi);
-		lwsl_notice("head=%p, tail=%p\n", pss->head, pss->tail);
 		break;
 
 	case LWS_CALLBACK_PROTOCOL_DESTROY:
@@ -314,71 +315,57 @@ callback_maos_monitor(struct lws* wsi,
 		break;
 
 	case LWS_CALLBACK_SERVER_WRITEABLE:
-		while(pss->head){/*initialization*/
-			n=lws_write(wsi, (unsigned char*)
-				pss->head->payload+
-				LWS_SEND_BUFFER_PRE_PADDING,
-				pss->head->len,
-				LWS_WRITE_TEXT);
-			if(n<0){
-				lwsl_err("ERROR %d writing to mirror socket\n", n);
-				return -1;
-			} else if(n<(int)pss->head->len){
-				lwsl_err("mirror partial write %d vs %ld\n", n, (long)pss->head->len);
+		do{
+			pending=0;
+			if(pss->head){/*initialization with list*/
+				n=lws_write(wsi, (unsigned char*)
+					pss->head->payload+
+					LWS_SEND_BUFFER_PRE_PADDING,
+					pss->head->len,
+					LWS_WRITE_TEXT);
+				if(n<0){
+					lwsl_err("ERROR %d writing to mirror socket\n", n);
+					return -1;
+				} else if(n<(int)pss->head->len){
+					lwsl_err("mirror partial write %d vs %ld\n", n, (long)pss->head->len);
+				}
+				l_message* tmp=pss->head;
+				if((pss->head=pss->head->next)){
+					pending=1;//more data to write
+				}
+				free(tmp->payload);
+				free(tmp);
+			}else if(pss->ringbuffer_tail!=ringbuffer_head){//send using ring buffer tail
+				n=lws_write(wsi, (unsigned char*)
+					ringbuffer[pss->ringbuffer_tail].payload+
+					LWS_SEND_BUFFER_PRE_PADDING,
+					ringbuffer[pss->ringbuffer_tail].len,
+					LWS_WRITE_TEXT);
+				if(n<0){
+					lwsl_err("ERROR %d writing to mirror socket\n", n);
+					return -1;
+				}
+				if(n<(int)ringbuffer[pss->ringbuffer_tail].len)
+					lwsl_err("mirror partial write %d vs %ld\n",
+						n, (long)ringbuffer[pss->ringbuffer_tail].len);
+
+				if(pss->ringbuffer_tail==(MAX_MESSAGE_QUEUE-1))
+					pss->ringbuffer_tail=0;
+				else
+					pss->ringbuffer_tail++;
+				if(pss->ringbuffer_tail!=ringbuffer_head){
+					pending=2;//more data to write
+				}
 			}
-			l_message* tmp=pss->head;
-			pss->head=pss->head->next;
-			free(tmp->payload);
-			free(tmp);
-			if(lws_send_pipe_choked(wsi)){
-				lws_callback_on_writable(wsi);
-				break;
-			}
-#ifdef _WIN32
-			Sleep(1);
-#else
-			usleep(1);
-#endif
+		}while(!lws_send_pipe_choked(wsi) && pending);//lws_send_pipe_choked() check whether you can continue write data
+		if(pending){//request further writing
+			lws_callback_on_writable(wsi);
 		}
-		while(pss->ringbuffer_tail!=ringbuffer_head){
-			n=lws_write(wsi, (unsigned char*)
-				ringbuffer[pss->ringbuffer_tail].payload+
-				LWS_SEND_BUFFER_PRE_PADDING,
-				ringbuffer[pss->ringbuffer_tail].len,
-				LWS_WRITE_TEXT);
-			if(n<0){
-				lwsl_err("ERROR %d writing to mirror socket\n", n);
-				return -1;
-			}
-			if(n<(int)ringbuffer[pss->ringbuffer_tail].len)
-				lwsl_err("mirror partial write %d vs %ld\n",
-					n, (long)ringbuffer[pss->ringbuffer_tail].len);
-
-			if(pss->ringbuffer_tail==(MAX_MESSAGE_QUEUE-1))
-				pss->ringbuffer_tail=0;
-			else
-				pss->ringbuffer_tail++;
-
-
-			if(lws_send_pipe_choked(wsi)){
-				lws_callback_on_writable(wsi);
-				break;
-			}
-			/*
-			 * for tests with chrome on same machine as client and
-			 * server, this is needed to stop chrome choking
-			 */
-#ifdef _WIN32
-			Sleep(1);
-#else
-			usleep(1);
-#endif
-		}
+	
 		break;
 
 	case LWS_CALLBACK_RECEIVE:
 		scheduler_handle_ws((char*)in, len);
-		//ws_push(in, len);
 		break;
 
 		/*
@@ -447,31 +434,49 @@ void ws_end(){
 	}
 }
 //Run in a separate thread.
-int ws_service(short port){
-	int ans=0;
+int ws_service(int waiting){
+	static int ans=0;
 	if(!context){
-		ans=ws_start(port);
+		return -1;
 	}
+	if(waiting){
+		lws_callback_on_writable_all_protocol(context, protocols+1);
+	}
+	int repeat=0;
+	pending=0;
 	/*returns immediately if no task is pending when timeout is 0 ms.*/
 	if(!ans){
+		do{
 #if LWS_LIBRARY_VERSION_NUMBER > 3002000
-		ans=lws_service(context, -1);//>=3.2 stable, need to use -1 for polling
+			ans=lws_service(context, -1);//>=3.2 stable, need to use -1 for polling
 #else		
-		ans=lws_service(context, 0);//<3.2 stable, use 0 for polling, but may not work for version close to 3.2
+			ans=lws_service(context, 0);//<3.2 stable, use 0 for polling, but may not work for version close to 3.2
 #endif		
+			if(pending && waiting){
+				usleep(1000);//this sleep is necessary 
+				repeat++;
+			}
+		}while(pending && (waiting--)>0);//service all available requests
+		if(repeat>1){
+			lwsl_notice("repeat %d times.\n", repeat);
+		}
 	}
 	if(ans<0){
 		ws_end();
 	}
-	return ans;
+	return ans?-1:pending;
 }
-//Initiate server to client message
-void ws_push(const char* in, int len){
+//Initiate server to client message with ring buffer.
+void ws_push(const char* in, size_t len){
 	if(!context) return;
-	free(ringbuffer[ringbuffer_head].payload);
-	ringbuffer[ringbuffer_head].payload=(char*)
-		malloc(LWS_SEND_BUFFER_PRE_PADDING+len+
-			LWS_SEND_BUFFER_POST_PADDING);
+	size_t new_size=LWS_SEND_BUFFER_PRE_PADDING+len+
+		LWS_SEND_BUFFER_POST_PADDING;
+	//make sure buffer is big enough.
+	if(ringbuffer[ringbuffer_head].size<new_size){
+		ringbuffer[ringbuffer_head].payload=realloc(
+			ringbuffer[ringbuffer_head].payload, new_size);
+		ringbuffer[ringbuffer_head].size=new_size;
+	}
 	ringbuffer[ringbuffer_head].len=len;
 	memcpy((char*)ringbuffer[ringbuffer_head].payload+
 		LWS_SEND_BUFFER_PRE_PADDING, in, len);

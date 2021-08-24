@@ -65,7 +65,7 @@ int LOG_LEVEL=0;
 PNEW(mutex_mem);
 static void* MROOT=NULL;
 static long  memcnt=0;
-static double memalloc=0, memfree=0;
+static size_t memalloc=0, memfree=0;
 static void* MSTATROOT=NULL;
 /*max depth in backtrace */
 #define DT 16
@@ -169,19 +169,23 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 #endif
 	LOCK(mutex_mem);
 	if(tfind(key, &MROOT, key_cmp)){
+		print_backtrace();
 		warning("%p already exists\n", p);
+		free(key);
+	}else{
+		if(!tsearch(key, &MROOT, key_cmp)){
+			warning("Error inserting to tree\n");
+		}else{
+			memcnt++;
+			memalloc+=size*nbyte;
+		}
 	}
-	if(!tsearch(key, &MROOT, key_cmp)){
-		warning("Error inserting to tree\n");
-	}
-	memcnt++;
-	memalloc+=size*nbyte;
 	UNLOCK(mutex_mem);
 	if(MEM_VERBOSE==1){
 		dbg("%p malloced with %zu bytes\n", p, size);
 		print_backtrace();
 	} else if(MEM_VERBOSE==2&&size>1024){
-		warning("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+		warning("Alloc:%lu MB mem used\n", (memalloc-memfree)>>20);
 	}
 
 }
@@ -200,7 +204,7 @@ static int memkey_del(void* p){
 		if(MEM_VERBOSE==1){
 			warning("Free: %p freed with %zu (%2zu) bytes\n", p, key1->size, key1->nbyte);
 		} else if(MEM_VERBOSE==2&&key1->size>1024){
-			warning("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+			warning("Free: %lu MB mem used\n", (memalloc-memfree)>>20);
 		}
 		if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
 			warning("Free: Error deleting old record\n");
@@ -267,8 +271,7 @@ void free_maos(void* p){
 #endif
 static void print_mem_debug(){
 	if(MROOT){
-		info3("%ld (%.3f MB) allocated memory not freed!!!\n",
-			memcnt, (memalloc-memfree)/1024./1024.);
+		info3("%ld (%lu MB) allocated memory not freed!!!\n", memcnt, (memalloc-memfree)>>20);
 		if(!signal_caught){
 			twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
 			twalk(MSTATROOT, print_usage);//print results.
@@ -276,13 +279,11 @@ static void print_mem_debug(){
 			info3("Printing of not freed memory is enabled only when signal_caught=0.\n");
 		}
 	} else{
-		info3("All allocated memory are freed.\n");
 		if(memcnt>0){
-			info3("Memory counter is still none zero: %ld\n", memcnt);
+			info3("All allocated memory are freed but memory counter is still not zero: %ld\n", memcnt);
 		}
 	}
-	info3("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
-	info3("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
+	info3("Memory used is %lu MB, freed is %lu MB.\n", memalloc>>20, memfree>>20);
 }
 void read_sys_env(){
 	READ_ENV_INT(MEM_DEBUG, 0, 1);

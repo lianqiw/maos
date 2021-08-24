@@ -81,9 +81,9 @@ int main(int argc, char* argv[]){
 		drawres_lo=0;
 		drawres_tot=0;
 		drawres_ol=0;
-		dbg("Only plotting high order closed loop results\n");
+		dbg("MAOS_DRAWRES_HI=1: Only plotting high order closed loop results.\n");
 	} else{
-		dbg("Use drawreshi or set MAOS_DRAWRES_HI=1 to only plot high order closed loop results\n");
+		dbg("set MAOS_DRAWRES_HI=1 to only plot high order closed loop results.\n");
 	}
 	TIC;tic;
 	arg_t* arg=parse_args(argc, argv);

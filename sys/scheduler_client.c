@@ -240,7 +240,7 @@ int scheduler_connect(const char *hostname){
 static int scheduler_connect_self(int block){
 	char fn[PATH_MAX];
 	int sock=-1;
-	static int retry=0;
+	int retry=block?100:2;
 	do{
 		if(TEMP[0]=='/'){//try local connection first.
 			snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
@@ -252,10 +252,10 @@ static int scheduler_connect_self(int block){
 		}
 		if(sock<0){
 			launch_scheduler(block?10:0);
-			sleep(5);
-			retry++;
+			usleep(100000);
+			retry--;
 		}
-	}while(sock<0 && retry<2);
+	}while(sock<0 && retry>0);
 	return sock;
 }
 
@@ -341,19 +341,23 @@ void scheduler_start(int nthread, int ngpu, int waiting){
 /**
    Called by maos to notify scheduler the completion of a job */
 void scheduler_finish(int status){
-	if(psock!=-1){
-		int cmd[2];
-		if(status==0){
-			cmd[0]=CMD_FINISH;
-		}else if(iscrash(status)){
-			cmd[0]=CMD_CRASH;
-		}else{
-			cmd[0]=CMD_KILLED;
-		}
-		cmd[1]=getpid();
-		CATCH_ERR(stwriteintarr(psock, cmd, 2));
-		close(psock);psock=-1;
+	if(psock<0){
+		psock=scheduler_connect_self(0);//non-blocking connection
 	}
+	if(psock<0){
+		return;
+	}
+	int cmd[2];
+	if(status==0){
+		cmd[0]=CMD_FINISH;
+	}else if(iscrash(status)){
+		cmd[0]=CMD_CRASH;
+	}else{
+		cmd[0]=CMD_KILLED;
+	}
+	cmd[1]=getpid();
+	CATCH_ERR(stwriteintarr(psock, cmd, 2));
+	close(psock);psock=-1;
 }
 pthread_t cthread=0;
 static void* scheduler_connect_thread(void *data){

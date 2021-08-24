@@ -7,12 +7,22 @@
 	<title>MAOS Monitor</title>
 	<style type="text/css">
 		html {
-			font: Arial;
+			font-family: Arial;
+			font-size: 14px;
 		}
-
+		/*
+			A,B: match either A or B
+			A B: matches B inside A
+			table: type selector
+			.title: class selector
+			
+			tr: table row
+			td: table data
+			th: table header, replaced td
+		*/
 		.title {
-			font-size: 24pt;
-			font: Arial;
+			font-size: 28px;
+			font-family: Arial;
 			font-weight: normal;
 			text-align: center;
 			color: #000;
@@ -26,18 +36,20 @@
 			table-layout: fixed;
 			max-width: 100%;
 		}
-
-		table.monitor tr td,
-		th {
+		table.monitor tr{
+			width: 100%;
+			max-width:200em;
+		}
+		table.monitor tr td,th {
 			border-width: 0px 1px 1px 0;
 			border-style: solid;
 			border-color: #AAA;
-			vertical-align: top;
 			white-space: nowrap;
 		}
-
-		table.monitor tr th {
-			border-width: 0px 1px 1px 0;
+		table.monitor td {
+			text-align: right;
+		}
+		table.monitor th {
 			text-align: center;
 		}
 
@@ -45,12 +57,29 @@
 			background-color: #EEE
 		}
 
-		table.monitor tr .expandable {
+		table.monitor .tdpath {
+			/*width: max-content;
+			white-space: nowrap;
+			text-align: left;*/
+			display: none;
+		}
+		table.monitor .tdout {
 			width: 100%;
-			white-space: normal;
+			overflow: hidden;
+		}
+		table.monitor td.tdout{ /*use td.tdout, not td .tdout or .tdout td*/
 			text-align: left;
 		}
-
+		table.monitor td.tdout details summary{/*not effective*/
+			overflow: hidden; 
+			text-overflow: ellipsis; 
+		}
+		table.monitor td.tdout details p{
+			font-family: roboto mono, monospace;
+			font-size: 12px;
+			white-space: normal;
+		}
+		
 		div.progress {
 			background: white;
 			position: relative;
@@ -185,7 +214,7 @@
 	</article>
 
 	<script>
-		var hostname;//current active hostname
+		var cur_hostname;//current active hostname
 		var port=0;
 		document.getElementById("hostname_input").addEventListener("keyup", function (event) {
 			if (event.key === "Enter") {
@@ -207,7 +236,12 @@
 		}
 		var socket_lms = {};
 		function clear_all(kind) {
-			var joblist = document.getElementById("joblist_" + hostname.split(":")[0]);
+			let hostname = cur_hostname
+			if (socket_lms[hostname]===undefined || socket_lms[hostname].readyState > 1){
+				console.log("server is not ready:", hostname);
+				return
+			}
+			var joblist = get_joblist(hostname)
 			cmd = [];
 			for (irow = 1; irow < joblist.rows.length; irow++) {
 				var status = joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
@@ -222,11 +256,14 @@
 			}
 		}
 		function kill_all() {
-			if (!window.confirm("Kill all jobs?")) {
-				return;
+			if (socket_lms[hostname] === undefined || socket_lms[hostname].readyState > 1) {
+				console.log("server is not ready:", hostname);
+				return
 			}
+			
+			let hostname = cur_hostname
 			cmd = [];
-			var joblist = document.getElementById("joblist_" + hostname.split(":")[0]);
+			var joblist = get_joblist(hostname)
 			for (irow = 1; irow < joblist.rows.length; irow++) {
 				var status = joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
 				var pid = joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
@@ -234,8 +271,10 @@
 					cmd[cmd.length] = pid + "&KILL;";
 				}
 			}
-			for (icmd = 0; icmd < cmd.length; icmd++) {
-				socket_lms[hostname].send(cmd[icmd]);
+			if (window.confirm("Kill all "+cmd.length+" jobs on " + hostname + "?")) {
+				for (icmd = 0; icmd < cmd.length; icmd++) {
+					socket_lms[hostname].send(cmd[icmd]);
+				}
 			}
 		}
 
@@ -263,7 +302,7 @@
 			div2.style.width = "0%";
 			var span1 = document.createElement("span");
 			span1.className = "bar";
-			span1.innerHTML = "test";
+			span1.innerHTML = "";
 			div1.appendChild(div2);
 			div1.appendChild(span1);
 			return div1;
@@ -285,7 +324,26 @@
 			button.setAttribute("url", name);
 			return button;
 		}
-
+		function get_joblist(hostname){
+			var joblist_id= "joblist_" + hostname.split(":")[0]
+			var s_tab_content = "tab_content_" + hostname;;
+			var joblist = document.getElementById(joblist_id);
+			if(!joblist){
+				//Create a div for containing host data
+				newdiv = document.createElement('div');
+				newdiv.name = "tab_content"
+				newdiv.id = s_tab_content
+				newdiv.className = "tab_content"
+				//Create a table for containing jobs
+				joblist = document.createElement('table');
+				joblist.id = joblist_id
+				joblist.className = "monitor"
+				joblist.innerHTML = ' <tr> <th>Time</th> <th>PID</th><th class="tdpath">Path</th> <th class="tdout">Out</th> <th>Low</th> <th>High</th> <th>Seed</th> <th>Step</th> <th>Timing</th> <th> </th> </tr>'
+				newdiv.appendChild(joblist);
+				document.body.appendChild(newdiv);
+			}
+			return joblist
+		}
 		var button_wait = new_button("icon-waiting.png")
 		var button_ok = new_button("icon-finished.png")
 		var button_play = new_button("icon-play.png");
@@ -328,18 +386,25 @@
 			}
 		}
 		function websocket_start(node) {
-			hostname = node.id;
+			//var hostname;//current active hostname
+			let hostname = node.id;
+			if (typeof hostname == 'undefined' || (typeof socket_lms[hostname] != 'undefined' && socket_lms[hostname].readyState <=1 )) {
+				console.log("Connection in progress to " + hostname);
+				return;
+			}
 			console.log("Connecting to " + hostname);
 			hostname2=hostname.split(':')[0].split('.')[0]
 			var socket_lm;
-			var joblist = document.getElementById("joblist_" + hostname.split(':')[0]);
-			if (!joblist) return 0;
+			var joblist = get_joblist(hostname)
+			
 			if (typeof MozWebSocket != "undefined") {
 				socket_lm = new MozWebSocket(pcol + hostname + "/xxx", "maos-monitor-protocol");
 			} else {
 				socket_lm = new WebSocket(pcol + hostname + "/xxx", "maos-monitor-protocol");
 			}
+			socket_lms[hostname] = socket_lm
 			socket_lm.onopen = function () {//change tab color upon connecton
+				console.log('Websocket open from ' + hostname);
 				node.style.color = "#4885DD";
 				var nrow = joblist.rows.length;
 				for (irow = 1; irow < nrow; irow++) {
@@ -348,20 +413,29 @@
 			}
 			socket_lm.onerror = function (error) {
 				console.log('Websocket error: ' + error);
-				socket_lm.onclose();
+				//socket_lm.onclose();//onclose is auto called on error
 			}
 			socket_lm.onclose = function () {//try to auto-reconnect
+				console.log('Websocket closed from ' + hostname);
 				node.style.color = "#9d4040";
-				//setTimeout(websocket_start(node), 5000);
+				socket_lms[hostname] == undefined
+				setTimeout(function(){websocket_start(node)}, 10000);//10 seconds
 			}
 			socket_lm.onmessage = function got_packet(msg) {
-				console.log('message received from '+hostname);
-				j = msg.data.split(';');
+				//console.log('message received from '+hostname +msg.data);
+				if (msg.data.indexOf('$')!=-1){
+					j = msg.data.split('$'); //newer format to avoid conflict with actual data.
+				}else{
+					j = msg.data.split(';');
+				}
 				//console.log(msg.data);
 				//pid, STATUS/PATH, pidnew, status, start time, errhi, errlo, iseed, nseed, isim, nsim, rest, tot, step timing
 				for (var f = 0; f < j.length - 1; f++) {
-
 					i = j[f].split('&');
+					if(i.length!=3 && i.length!=14){
+						console.log("Data from ", hostname2, msg.data, "has ", i.length, " fields:",  i)
+						continue;
+					}
 					var row = null;
 					var irow;
 					for (irow = 1; irow < joblist.rows.length; irow++) {
@@ -370,7 +444,7 @@
 							break;
 						}
 					}
-					if (i[3] == 14) {/*remove*/
+					if (i.length==14 && i[3] == 14) {/*remove*/
 						if (row) {
 							joblist.deleteRow(irow);
 						}
@@ -380,36 +454,34 @@
 						row = joblist.insertRow(-1);
 						for (var j = 0; j < cols.TOT; j++) {
 							row.insertCell(-1);
-							row.cells[j].align = "right";
-							if (j == cols.PATH) {
-								row.cells[cols.PATH].className = "expandable";
-							}
+							//row.cells[j].align = "right";
 						}
+						row.cells[cols.PATH].className = "tdpath";
+						row.cells[cols.OUT].className = "tdout";
 						row.cells[cols.PID].innerHTML = i[0];
 						row.cells[cols.SEED].appendChild(new_progbar("50px"));
 						row.cells[cols.STEP].appendChild(new_progbar("120px"));
 					}
-					if (i[1] == 'PATH') {//Only path is sent
+					if (i.length==3 && i[1] == 'PATH') {//Only path is sent
 						var io = i[2].lastIndexOf("-o");
+						var path=""
 						if (io > -1) {
-							row.cells[cols.OUT].innerHTML = i[2].substr(io + 2).trim().split(' ')[0];
+							path = i[2].substr(io + 2).trim().split(' ')[0];
+							//row.cells[cols.OUT].innerHTML = i[2].substr(io + 2).trim().split(' ')[0];
 							i[2] = i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g, " ");
 						}
-						var slash;
 						if (i[2].length > 100) {
-							slash = i[2].indexOf(" ");
-						} else {
-							slash = -1;
+							row.cells[cols.OUT].innerHTML = '<details><summary>' + path + '</summary><p>' + i[2] + '</p></details>'
+						}else{
+							row.cells[cols.OUT].innerHTML = i[2]
 						}
-						if (slash > -1) {
-							row.cells[cols.PATH].innerHTML = '<details><summary>' + i[2].substr(0, slash + 1) + '</summary>' + i[2].substr(slash + 1) + '</details>'
-						} else {
-							row.cells[cols.PATH].innerHTML = i[2];
-						}
-					} else {//status update
+					} else if(i.length==14) {//status update
 						if (i[0] != i[2]) {
 							row.cells[cols.PID].innerHTML = i[2];
 							i[0] = i[2];
+						}
+						if(i[4] === undefined){
+							console.log("errr found:", i)
 						}
 						row.cells[cols.TIME].innerHTML = i[4];
 						row.cells[cols.LOW].innerHTML = i[6];
@@ -459,7 +531,11 @@
 								row.cells[cols.SEED].firstChild.style.background = "red";
 								row.cells[cols.STEP].firstChild.style.background = "red";
 							}
-							cell_btn.firstChild.setAttribute("pid", i[0]);
+							try{
+								cell_btn.firstChild.setAttribute("pid", i[0]);
+							}catch(error){
+								console.log(error, i)
+							}
 							cell_btn.firstChild.setAttribute("status", i[3]);
 							cell_btn.firstChild.onclick = function () {
 								pid = this.getAttribute("pid");
@@ -474,27 +550,38 @@
 							}
 
 						}
+					}else{
+						console.log("Error data from ", hostname2, msg.data)
 					}
 				}
 			}
-
-			return socket_lm;
 		}
 
 
 		function switch_tabs(li) {
-			node = li.firstChild;
-			console.log("switch_tabs:" + node.id);
-
+			var hideonly=0
+			var node
+			var hostname
+			var s_tab_content
+			if(li.classList.contains("tabhost")){
+				node = li.firstChild;
+				console.log("switch_tabs:" + node.id);
+			}else{
+				console.log("switch_tabs: not a host"+li.className);
+				hideonly=1
+			}
 			var nodes = document.getElementsByClassName("tabhost");
 			for (var x = 0; x < nodes.length; x++) {
 				nodes[x].className = nodes[x].className.replace(" active", "");
 			}
-			li.className += " active";
-			hostname = node.id;
-
-			// contents for each host.
-			var s_tab_content = "tab_content_" + hostname;
+			if(!hideonly){
+				li.className += " active";
+				hostname = node.id;
+				cur_hostname = hostname
+				// contents for each host.
+				s_tab_content = "tab_content_" + hostname;
+			}
+			
 			var contents = document.getElementsByClassName("tab_content");
 			var found = 0;
 			for (var x = 0; x < contents.length; x++) {
@@ -505,22 +592,10 @@
 					contents[x].style.display = "none";
 				}
 			}
-			if (found == 0) {
-				//Create a div for containing host data
-				newdiv = document.createElement('div');
-				newdiv.name = "tab_content";
-				newdiv.id = s_tab_content;
-				newdiv.className = "tab_content"
-				//Create a table for containing jobs
-				newtable = document.createElement('table');
-				newtable.id = "joblist_" + hostname.split(':')[0];
-				newtable.className = "monitor"
-				newtable.innerHTML = ' <tr> <th>Time</th> <th>PID</th> <th class="expandable">Path</th> <th>Out</th> <th>Low</th> <th>High</th> <th>Seed</th> <th>Step</th> <th>Timing</th> <th> </th> </tr>'
-				newdiv.appendChild(newtable);
-				document.body.appendChild(newdiv);
-			}
-			if (typeof hostname != 'undefined' && typeof socket_lms[hostname] == 'undefined') {
-				socket_lms[hostname] = websocket_start(node);
+			if(!hideonly){
+				if (typeof hostname != 'undefined' && typeof socket_lms[hostname] == 'undefined' || socket_lms[hostname].readyState>1) {
+					websocket_start(node);
+				}
 			}
 		}
 		function add_host(hostname) {
@@ -553,9 +628,10 @@
 					return;
 				}
 			}
+			//li is contains the name and close button for each host
 			var li = document.createElement("li");
 			li.className = "tabhost";
-
+			//node contains the name of each host
 			var node = document.createElement("span");
 			node.appendChild(document.createTextNode(hostname2));
 			node.id = hostname;
@@ -566,8 +642,12 @@
 			closebtn.appendChild(document.createTextNode(" \u00D7 "));
 			closebtn.className = "close";
 			closebtn.onclick = function () {
-				li.parentNode.removeChild(li)
+				let parent=li.parentNode
+				parent.removeChild(li)
+				switch_tabs(parent.lastChild)
+				socket_lms[hostname].onclose()
 				remove_hostname(hostname)
+				get_joblist(hostname).remove()
 			}
 			li.appendChild(node);
 			li.appendChild(closebtn);

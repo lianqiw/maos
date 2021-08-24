@@ -18,14 +18,15 @@
 #ifndef AOS_SCHEDULER_WS_H
 #define AOS_SCHEDULER_WS_H
 
-int ws_service(short port);
+int ws_service(int waiting);
+int ws_start(short port);
 struct l_message{
 	char* payload;
 	size_t len;
 	struct l_message* next;
 };
 typedef struct l_message l_message;
-void ws_push(const char* in, int len);
+void ws_push(const char* in, size_t len);
 void html_push_all(l_message** head, l_message** tail, long prepad, long postpad);
 void scheduler_handle_ws(char* in, size_t len);
 #endif

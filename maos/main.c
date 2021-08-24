@@ -394,7 +394,6 @@ void maos_version(void){
    \callgraph
 */
 int main(int argc, const char* argv[]){
-	char* scmd=argv2str(argc, argv, " ");
 	arg_t* arg=parse_args(argc, argv);/*does chdir */
 	if(arg->detach){
 		daemonize();
@@ -410,18 +409,15 @@ int main(int argc, const char* argv[]){
 #else
 	ngpu=0;
 #endif
-	scheduler_report_path(scmd);
-	info2("%s\n", scmd);
+	if(!getenv("MAOS_DIRECT_LAUNCH")){
+		scheduler_report_path(arg->execmd);
+	}
+	info2("%s\n", arg->execmd);
 	info2("Output folder is '%s'. %d threads\n", arg->dirout, NTHREAD);
-	free(arg->dirout); arg->dirout=NULL;
-
 	maos_version();
 	/*setting up parameters before asking scheduler to check for any errors. */
 	parms_t* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
-	free(arg->conf); arg->conf=NULL;
-	if(arg->confcmd){
-		remove(arg->confcmd); free(arg->confcmd); arg->confcmd=NULL;
-	}
+	
 	if(parms->sim.nseed>0){
 		register_signal_handler(maos_signal_handler);
 		scheduler_start(NTHREAD, ngpu, !arg->force);
@@ -448,9 +444,7 @@ int main(int argc, const char* argv[]){
 	maos_reset();
 	free_parms(parms);
 	info2("\n*** Simulation finished at %s in %s. ***\n\n", myasctime(0), HOST);
-	free(scmd);
-	free(arg->gpus);
-	free(arg);
+	free_arg(&arg);
 	scheduler_finish(signal_caught);
 	return 0;
 }

@@ -182,7 +182,7 @@ void print_file(const char* fnin){
 /**
    Get current time in seconds as an integer.
 */
-int myclocki(){
+time_t myclocki(){
 	time_t a;
 	return time(&a);
 }

@@ -909,7 +909,7 @@ static void wfsgrad_drift(sim_t* simu, int ipowfs){
 			}*/
 			if(simu->gradoffdrift){//cog boot strapped
 				dadd(&goff, 1, P(simu->gradoffdrift, iwfs), -1);
-			} else if(simu->powfs[ipowfs].gradncpa){//cmf boot strapped
+			} else if(simu->powfs[ipowfs].gradncpa){//cmf boot strapped, gradncpa is cog of i0
 				dadd(&goff, 1, P(simu->powfs[ipowfs].gradncpa, jwfs), -1);
 			}
 			dadd(&P(simu->gradoff, iwfs), 1, goff, -parms->powfs[ipowfs].dither_gdrift);
@@ -999,17 +999,6 @@ static void wfsgrad_dither_post(sim_t* simu){
 				if(g2<1){
 					info("Applying LPF with gain %.2f to i0/gx/gy update at update cycle %d\n", g2, simu->wfsflags[ipowfs].ogout);
 				}
-				if(parms->powfs[ipowfs].phytype_sim!=parms->powfs[ipowfs].phytype_sim2){
-					if(!simu->gradoffdrift){
-						simu->gradoffdrift=dcellnew(nwfs, 1);
-					}
-					info2("Step %5d: powfs%d set gradoffdrift to gradoff\n", isim, ipowfs);
-					for(int jwfs=0; jwfs<nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						dcp(&P(simu->gradoffdrift, iwfs), P(simu->gradoff, iwfs));
-						//dcp(&P(powfs[ipowfs].gradncpa, jwfs), P(simu->gradoff, iwfs));
-					}
-				}
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
@@ -1059,17 +1048,16 @@ static void wfsgrad_dither_post(sim_t* simu){
 					parms->powfs[ipowfs].phytype_recon=parms->powfs[ipowfs].phytype_sim;
 					info2("Step %5d: powfs %d changed to %s\n", isim, ipowfs,
 						parms->powfs[ipowfs].phytype_sim==PTYPE_MF?"matched filter":"CoG");
-					/*
-					if(powfs[ipowfs].gradncpa){
-						info2("Step %5d: powfs%d reset gradncpa to cog of i0 + gradoff\n", isim, ipowfs);
-						for(int jwfs=0; jwfs<nwfs; jwfs++){
-							int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-							shwfs_grad(&P(powfs[ipowfs].gradncpa, jwfs),
-									PCOLR(powfs[ipowfs].intstat->i0, jwfs),
-									parms, powfs, iwfs, PTYPE_COG);
-							dadd(&P(powfs[ipowfs].gradncpa, jwfs), 1, P(simu->gradoff, iwfs), 1);//added on 2021-08-11
-						}
-					}*/
+					//Use gradoff before adjustment is not good. There are difference between i and i0.
+					info2("Step %5d: powfs%d set gradoffdrift to cog of i0 + gradoff\n", isim, ipowfs);
+					if(!simu->gradoffdrift){
+						simu->gradoffdrift=dcellnew(nwfs, 1);
+					}
+					for(int jwfs=0; jwfs<nwfs; jwfs++){
+						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+						shwfs_grad(&P(simu->gradoffdrift, iwfs), PCOLR(powfs[ipowfs].intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
+						dadd(&P(simu->gradoffdrift, iwfs), 1, P(simu->gradoff, iwfs), 1);//added on 2021-08-11
+					}
 				}
 				//Generating matched filter
 				if(parms->powfs[ipowfs].neareconfile||parms->powfs[ipowfs].phyusenea){
