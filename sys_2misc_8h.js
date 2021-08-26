@@ -16,7 +16,7 @@ var sys_2misc_8h =
     [ "copyfile", "sys_2misc_8h.html#aa9b6c79d014b6a3f197b5af40140c877", null ],
     [ "argv2str", "sys_2misc_8h.html#a8a2802063b35fa082c7e9ca93153e44d", null ],
     [ "print_file", "sys_2misc_8h.html#af00e20eff025c19783d48eb289a342c1", null ],
-    [ "myclocki", "sys_2misc_8h.html#ab2e611787448364a94673c537488bf92", null ],
+    [ "myclocki", "sys_2misc_8h.html#a00b62c707841e5d02e553c435497b2a9", null ],
     [ "myclockd", "sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539", null ],
     [ "myasctime", "sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8", null ],
     [ "strtime_pid", "sys_2misc_8h.html#a013143354b1e7e65954ffb2b94e49b1b", null ],

@@ -642,7 +642,9 @@ var parms_8h =
       [ "server", "parms_8h.html#a9dd2fbd3368036a4ea001ada021feb80", null ],
       [ "dirout", "parms_8h.html#ae27eb782c897db66719a088a8470fda4", null ],
       [ "conf", "parms_8h.html#aa9df00cdf16a696ecaa5f669e5faf991", null ],
-      [ "confcmd", "parms_8h.html#a1039b6ee39d8075132f4cfa90dfcded6", null ]
+      [ "confcmd", "parms_8h.html#a1039b6ee39d8075132f4cfa90dfcded6", null ],
+      [ "host", "parms_8h.html#a7980d7913b42c73339ae91d80d1fad49", null ],
+      [ "execmd", "parms_8h.html#afd31178667f89763217596f9bfa1585a", null ]
     ] ],
     [ "MAX_AMPS", "parms_8h.html#ab93557f4dd9852c6a613566e371d3547", null ],
     [ "T_TYPE", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49", [
