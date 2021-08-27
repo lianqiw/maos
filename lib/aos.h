@@ -33,6 +33,7 @@
 #include "pcg.h"
 #include "muv.h"
 #include "genotf.h"
+#include "gensei.h"
 #include "mtch.h"
 #include "fractal.h"
 #include "stfun.h"

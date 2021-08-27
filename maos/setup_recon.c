@@ -171,7 +171,17 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 
 		if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy)&&!parms->powfs[ipowfs].phyusenea){
 			/*Physical optics use nea from intstat*/
-			saneac=dcelldup(powfs[ipowfs].sanea);
+			if(parms->recon.glao && PN(powfs[ipowfs].sanea)>1){//average sanea 
+				info("Averaging saneaxy of different WFS for GLAO mode\n");
+				saneac=dcellnew(1,1);
+				int ni0=PN(powfs[ipowfs].sanea);
+				real scale=1./ni0;
+				for(int ii0=0; ii0<ni0; ii0++){
+					dadd(&P(saneac,0), 1, P(powfs[ipowfs].sanea, ii0), scale);
+				}
+			}else{
+				saneac=dcelldup(powfs[ipowfs].sanea);
+			}
 		} else{
 			if(parms->powfs[ipowfs].neareconfile){
 				saneac=dcellread_prefix(parms->powfs[ipowfs].neareconfile, parms, ipowfs);
