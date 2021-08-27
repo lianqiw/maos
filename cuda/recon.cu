@@ -523,9 +523,8 @@ void gpu_setup_recon(const parms_t* parms, recon_t* recon){
 	}
 	cudata->recon=new curecon_t(parms, recon);
 }
-
+/**Assembles MVM in gpu and put in recon->MVM. */
 void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
-	//The following routine assemble MVM and put in recon->MVM
 	if(!recon->MVM){
 		const int warm_restart=parms->recon.warm_restart;
 		//disable warm_restart to disable solve.cu checking
@@ -553,13 +552,8 @@ void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 			}
 		}
 		((parms_t*)parms)->recon.warm_restart=warm_restart;
+		gpu_print_mem("MVM");
 	}
-	if(!parms->sim.mvmport){
-		gpu_set(cuglobal->recongpu);
-		//recreate curecon_t that uses MVM.
-		cudata->recon=new curecon_t(parms, recon);
-	}
-	gpu_print_mem("MVM");
 }
 void gpu_update_recon_control(const parms_t* parms, recon_t* recon){
 	gpu_set(cuglobal->recongpu);

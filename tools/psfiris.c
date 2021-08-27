@@ -76,22 +76,22 @@ static void psfiris_do(thread_t* info){
 	//cfft2plan(otf,-1);
 	info("%d ", iwvl);
 	/*first create OTF of tt/ps modes on coarse sampling.*/
-	cmat* otf0=NULL;
-	cmat* otf2=NULL;
+	ccell* otf0=NULL;
+	ccell* otf2=NULL;
 	double wvl=wvls[iwvl]*1e-6;
 	//double dtheta=wvl/(notf1*dx1);/*nyquist sampling*/
 	double dtheta2=wvl/(notf2*dx2);
 	genotf(&otf2, ploc, pamp, NULL, 0, 0, wvl, cc_opd, 0, 0, notf1, notf1, 1, 0);
 	genotf(&otf0, ploc, pamp, NULL, 0, 0, wvl, cc_zero, 0, 0, notf1, notf1, 1, 0);
-	ccwdiv(otf2, otf0, 0);
+	ccwdiv(P(otf2,0), P(otf0,0), 0);
 	/*used to up-sample OTF.*/
 	map_t* otf_coarse=mapnew(notf1, notf1, dx1/wvl, dx1/wvl);
-	creal2d((dmat**)&otf_coarse, 0, otf2, 1);/*otf2 should be real. confirmed.*/
+	creal2d((dmat**)&otf_coarse, 0, P(otf2,0), 1);/*otf2 should be real. confirmed.*/
 	map_t* otf_fine=mapnew(notf2, notf2, dx2/wvl, dx2/wvl);
 	prop_grid_map(otf_coarse, otf_fine, 1, 0, 0, 1, 0, 0, 0);
 	mapfree(otf_coarse);
-	cfree(otf0);
-	cfree(otf2);
+	cfree(P(otf0,0));
+	cfree(P(otf2,0));
 
 	dfftshift((dmat*)otf_fine);/*peak in corner*/
 	ccpd(&otf, P(psf_lgs,iwvl));

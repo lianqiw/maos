@@ -476,7 +476,7 @@ void X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
 					R iiy=iy+(jy-resm)*res;
 					R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
 					R wty=1.-fabs(iy-iiy);
-#pragma omp simd
+//#pragma omp simd
 					for(int jx=0; jx<nres; jx++){
 						R iix=ix+(jx-resm)*res;
 						R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;

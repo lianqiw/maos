@@ -46,7 +46,7 @@ void svdpow=dsvd_pow(dmat*A, double power, double thres);
 cell* cellmm=dcellmm2(const cell*A, const cell*B, const char* trans);
 dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, double scale, double dispx, double dispy, int do_partial);
 dmat* sho_filter(const dmat* xi, double dt, double f0, double zeta);
-cell* genotf=genotf2(loc_t*loc, const dmat*amp, const dmat*opdbias, const dmat*area, double thres, double wvl, const dmat*cov, double r0, double l0, long npsfx, long npsfy, long nsa, long pttr);
+void genotf(ccell**potf,loc_t*loc, const dmat*amp, const dmat*opdbias, const dmat*area, double thres, double wvl, const dmat*cov, double r0, double l0, long npsfx, long npsfy, long nsa, long pttr);
 dmat* calcenc=denc(dmat*psf, dmat*dvec, int type, int nthread);
 dmat* m3proj=m3proj2(dmat*mapin_0, char* header, loc_t*locout, double thetax, double thetay, double hs);
 dspcell* act_extrap(loccell* aloc, const dcell* actcplc, double thres);

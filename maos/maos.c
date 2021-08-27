@@ -154,7 +154,7 @@ void maos_setup(const parms_t* parms){
 	//Avoid initializing WFS/Perfevl data in GPU before this to preserve GPU memory
 	if(!parms->sim.evlol&&parms->recon.mvm){
 #if USE_CUDA
-		if((parms->gpu.tomo&&parms->gpu.fit)||parms->gpu.lsr){
+		if((parms->gpu.tomo&&parms->gpu.fit)){
 			gpu_setup_recon_mvm(parms, recon);
 		}
 #endif
@@ -165,7 +165,7 @@ void maos_setup(const parms_t* parms){
 	if(parms->gpu.wfs&&powfs&&!has_pywfs){
 		gpu_wfsgrad_init(parms, powfs);
 	}
-	if(parms->gpu.recon&&!parms->recon.mvm){
+	if(parms->gpu.recon && !(parms->recon.mvm && parms->sim.mvmport)){
 		gpu_setup_recon(parms, recon);
 	}
 	if(parms->gpu.evl){

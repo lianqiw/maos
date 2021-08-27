@@ -134,8 +134,8 @@ void cp2gpu_dedup(M** dest, const N* src, int nx, int ny, cudaStream_t stream=0)
 			} else{
 				cuglobal->memhash.erase(key);
 				cuglobal->memcount.erase(*dest);
-				*dest=0;
 				warning("cp2gpu_dedup: remove invalid reference data: %p\n", *dest);
+				*dest=0;
 			}
 		}
 	} else if(!cuda_dedup&&*dest){

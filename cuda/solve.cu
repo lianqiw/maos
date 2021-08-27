@@ -18,21 +18,22 @@
 #include "solve.h"
 #include "utils.h"
 namespace cuda_recon{
+int cusolve_cg::counter=0;
 Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	Real ans=0;
 	cgtmp.count++;
-	Real thres=cgtmp.residual*2;
+	Real thres=cgtmp.residual*3;
 	int restarted=0;
 repeat:
 	if(first_run){
-		info("CG %5d(%d) %s with maxit scaled by %d.\n", cgtmp.count, maxit, first_run==2?"restart":"cold start", first_run+1);
+		info("CG %5d(%d) %s with maxit scaled by %d.\n", cgtmp.count, id, first_run==2?"restart":"cold start", first_run+1);
 	}
 	ans=pcg(xout, this, precond, xin, cgtmp, first_run?0:warm_restart, 
 			(first_run&&warm_restart)?(maxit*(1+first_run)):maxit, stream);
 	first_run=0;
 	if(warm_restart){
 		if(restarted){
-			info("CG %5d(%d) after restart %d times, residual=%.5f threshold is %.5f.\n", cgtmp.count, maxit, restarted, ans, thres);
+			info("CG %5d(%d) after restart %d times, residual=%.5f threshold is %.5f.\n", cgtmp.count, id, restarted, ans, thres);
 		}
 	
 		if(ans>thres){//only check during warm_restart
@@ -41,7 +42,7 @@ repeat:
 			info("CG %5d(%d) does not converge: residual=%.5f, threshold is %.5f.\n", 
 				cgtmp.count, maxit, ans, thres);
 			if(!restarted){
-				info("CG %5d(%d) is restarted\n", cgtmp.count, maxit);
+				info("CG %5d(%d) is restarted\n", cgtmp.count, id);
 				restarted++;
 				first_run=2;
 				goto repeat;

@@ -526,7 +526,6 @@ void skysim(const PARMS_S* parms){
 	simu->status->scale=1;
 	simu->status->nseed=parms->maos.nseed;
 	simu->status->nthread=parms->skyc.nthread;
-	simu->status->timstart=myclocki();
 	simu->powfs=mycalloc(npowfs, POWFS_S);
 	simu->parms=parms;
 	setup_powfs(simu->powfs, parms);

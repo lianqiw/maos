@@ -492,6 +492,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	const int nsa=powfs[ipowfs].saloc->nloc;
+	const dmat* wvlwts=parms->wfs[iwfs].wvlwts;
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	ccell* potf=PR(intstat->potf,wfsind,0);
 	cmat* potf2=0;
@@ -579,9 +580,10 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 				gx=dgx*(isep+isep0);
 				gy=dgy*(isep+isep0);
 				dzero(ints);
+
+
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					real wvlsig=P(parms->wfs[iwfs].wvlwts,iwvl)
-						*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+					real wvlsig=P(wvlwts,iwvl)*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 					int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 					int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
 					dspcell* psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
@@ -655,7 +657,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	}
 }
 /**
-   Compute spherical aberration
+   Compute spherical aberration in LGS WFS gradients for all sodium profile columns.
 */
 void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const int iwfs){
 	int ipowfs=parms->wfs[iwfs].powfs;
@@ -693,8 +695,13 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	const real cogoff=parms->powfs[ipowfs].cogoff;
 	for(int icol=0; icol<1000; icol+=dtrat){
 		setup_powfs_etf(powfs, parms, 0, ipowfs, 0, icol);
-		gensei(parms, powfs, ipowfs);
-		dcell* i0_new=powfs[ipowfs].intstat->i0;
+		dcell *i0_new=0;
+		
+		gensei(&i0_new, NULL, NULL, NULL, NULL, 
+			powfs[ipowfs].intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, powfs[ipowfs].realsaa, powfs[ipowfs].srot,
+			parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, parms->powfs[ipowfs].dtrat,
+			parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].radgx, parms->powfs[ipowfs].mtchstc);
+			
 		//writebin(i0_new, "i0_%d", icol);
 		for(int isa=0; isa<nsa; isa++){
 			real geach[3]={0,0,1};
@@ -721,6 +728,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 			}
 
 		}
+		dcellfree(i0_new);
 		dmulvec(rmodmf->p+icol/dtrat*rmodmf->nx, RR, gradmf->p, 1);
 		dmulvec(rmodcg->p+icol/dtrat*rmodcg->nx, RR, gradcg->p, 1);
 	}
@@ -812,7 +820,7 @@ void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
 	intstat_t* intstat=powfs[ipowfs].intstat;
-	ccell* fotf=P(intstat->fotf,intstat->nsepsf>1?wfsind:0);
+	ccell* fotf=P(intstat->fotf,NX(intstat->sepsf)>1?wfsind:0);
 	mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
 	//info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
 	int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, 5000, (dminsearch_fun)mapfun, &data);

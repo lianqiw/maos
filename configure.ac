@@ -135,8 +135,8 @@ AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]))
 AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]))
 AC_ARG_ENABLE(single, AS_HELP_STRING([--enable-single],[Use single precision for CPU and cuda.]))
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
-AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]))
-AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets]))
+AC_ARG_ENABLE(scheduler, AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]))
+AC_ARG_ENABLE(websockets, AS_HELP_STRING([--disable-websockets],[Disable websockets]))
 AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_mkl="$enableval"], [use_mkl="default"])
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
@@ -147,7 +147,7 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
-AC_ARG_ENABLE(binary,AS_HELP_STRING([--disable-binary], [Disable downlong precompiled library]))
+AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downlong precompiled library]))
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -178,7 +178,7 @@ if test x$enable_gcov = "xyes" ;then
 fi
 if test "$enable_release" = "yes" ;then
     enable_scheduler="no"
-    enable_websocket="no"
+    enable_websockets="no"
 	#enable_allstatic="yes"
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
@@ -201,7 +201,7 @@ COMMON_CLANG+=" -Wno-sign-compare" #CLANG has false positive in detecting sign c
 OPTIM_ALL="-g -O3 -mtune=native "
 OPTIM_GCC="-ftree-vectorize -ffast-math -fno-finite-math-only "
 
-DEBUG_ALL="-g -Og -DDEBUG_TRACE"
+DEBUG_ALL="-g3 -Og -DDEBUG_TRACE"
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls " #-fsanitize=address"
 
 #inline definition:
@@ -1042,7 +1042,6 @@ echo host_os=$host_os
 echo BIGENDIAN=$BIGENDIAN
 echo enable_allstatic=$enable_allstatic
 
-echo CC=$CC
 echo CN=$CN
 echo CFLAGS=$CFLAGS
 echo CPPFLAGS=$CPPFLAGS
@@ -1067,7 +1066,7 @@ fi
 echo
 echo Compiling options:
 echo 
-
+echo "CC:              $CC"
 echo "OpenMP:          $has_openmp"
 echo "Single:          $enable_single"
 echo "CUDA:            $cudaver (double: $cuda_double, arch: $cuarch)"
@@ -1075,10 +1074,10 @@ echo "Drawdaemon:      $has_cairo"
 echo "Monitor:         $((gtk_ver>0)) (libnotify: $has_notify)"
 echo "GTK version:     ${gtk_ver}"
 
-echo "Websocket:       $enable_websockets"
+echo "Websocket:       ${enable_websockets:-yes}"
 echo "MATLAB MEX:      $with_matlab"
 
-echo "Doxygen:         $DX_DOXYGEN (make doc)"
+echo "Doxygen:         ${DX_DOXYGEN:+yes (make doc)}"
 echo "CMOCKA:          $enable_cmocka"
 echo
 

@@ -39,8 +39,10 @@ typedef struct dtf_t{
     cmat *Ux;            /**<Special frequency vector along x*/
     cmat *Uy;            /**<Special frequency vector along y*/
     real dxsa;         /**<Subaperture size*/
-    long notfx;         /**<FFT size along x*/
-    long notfy;         /**<FFT size along y*/
+    int notfx;         /**<FFT size along x*/
+    int notfy;         /**<FFT size along y*/
+    int pixpsax;       /**<Number of pixels along x*/
+    int pixpsay;       /**<Number of pixels along y*/
     int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
     int fused;           /**<Whether the DTF has been fused to ETF*/
     int nwvl;            /**<Number of dtf_t*/

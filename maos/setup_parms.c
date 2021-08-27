@@ -65,6 +65,7 @@ void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	free(powfscfg->bkgrndfn);
 	free(powfscfg->qe);
 	dfree(powfscfg->ncpa);
+	dfree(powfscfg->siglevs);
 }
 void free_strarr(char** str, int n){
 	if(str){
@@ -556,6 +557,27 @@ static void readcfg_wfs(parms_t* parms){
 	if(count!=wvlwts->nx){
 		error("Supplied %ld wvlwts but need %d for all wfs.\n", wvlwts->nx, count);
 	}
+	for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		int nwvl=parms->powfs[ipowfs].nwvl;
+		nwfs=parms->powfs[ipowfs].nwfs;
+		if(wvlwts->nx>0){//resize powfs.wvlwts for all wfs
+			dresize(parms->powfs[ipowfs].wvlwts, nwvl, nwfs);
+		}
+		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].wvlwts); jwfs++){
+			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			for(int iwvl=0; iwvl<nwvl; iwvl++){
+				P(parms->powfs[ipowfs].wvlwts, iwvl, jwfs)=P(parms->wfs[iwfs].wvlwts, iwvl, 0);
+			}
+		}
+		dbg("powfs[%d].wvlwts is %ldx%ld\n", ipowfs, NX(parms->powfs[ipowfs].wvlwts), NY(parms->powfs[ipowfs].wvlwts));
+		parms->powfs[ipowfs].siglevs=dnew(siglev->nx>0?nwfs:1, 1);
+		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].siglevs); jwfs++){
+			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			P(parms->powfs[ipowfs].siglevs, jwfs)=parms->wfs[iwfs].siglev;
+		}
+		dbg("powfs[%d].siglevs is %ldx1\n", ipowfs, NX(parms->powfs[ipowfs].siglevs));
+	}
+	
 	dfree(siglev);
 	dfree(wvlwts);
 	free(dbltmp);

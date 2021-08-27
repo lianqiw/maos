@@ -451,13 +451,15 @@ int call_addr2line(char* ans, int nans, const char* buf){
 		return 1;
 	} else{
 		char line[4096];
+		nans--;
 		while(fgets(line, sizeof(line), fpcmd)){
 			char* tmp=strrchr(line, '/');
 			if(tmp){
 				tmp++;
 				char* tmp2=strchr(tmp, '\n'); if(tmp2) tmp2[0]='\0';
-				strncat(ans, "->", nans-3);
-				strncat(ans, tmp, nans-strlen(tmp)-1);
+				tmp2=strchr(tmp,'('); if(tmp2) tmp2[-1]='\0';
+				strncat(ans, "->", nans); nans-=3;
+				strncat(ans, tmp, nans);nans-=strlen(tmp);
 			}
 		}
 		pclose(fpcmd);

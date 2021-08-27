@@ -98,6 +98,8 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		dtfs[iwvl].wvl=wvl;
 		dtfs[iwvl].notfx=notfx;
 		dtfs[iwvl].notfy=notfy;
+		dtfs[iwvl].pixpsax=pixpsax;
+		dtfs[iwvl].pixpsay=pixpsay;
 		dtfs[iwvl].nominal=ccellnew_same(ndtf, nwfs, notfx, notfy);
 		dtfs[iwvl].si=dspcellnew(ndtf, nwfs);
 		ccell* nominals=dtfs[iwvl].nominal;

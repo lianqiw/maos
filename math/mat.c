@@ -1035,3 +1035,14 @@ T X(cellsum)(const X(cell)* A){
 	}
 	return v;
 }
+/**
+   Compute the hashlittle
+ */
+uint32_t X(cellhash)(const X(cell)* A, uint32_t key){
+	if(iscell(A)){
+		for(long i=0; i<PN(A); i++){
+			key=X(hash)(P(A,i), key);
+		}
+	}
+	return key;
+}

@@ -47,10 +47,16 @@ class cusolve_cg:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorith
     int warm_restart;//warm restart when first_run is 0.
     int first_run;   //indicate first run to temporarily use cold start rather than warm-restart
     cgtmp_t cgtmp;
+    int id;
+    static int counter;
 protected:
     cusolve_cgpre *precond;
+private:
+    
 public:
-    cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit), warm_restart(_warm_restart), precond(0), first_run(_warm_restart?1:0){}
+    cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit), warm_restart(_warm_restart), precond(0), first_run(_warm_restart?1:0){
+        id=counter; counter++;
+    }
     ~cusolve_cg(){
     	delete precond;
     }

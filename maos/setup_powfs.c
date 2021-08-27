@@ -1494,7 +1494,6 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			if(parms->powfs[ipowfs].piinfile){
 			/*load psf. 1 for each wavefront sensor. */
 				info("Using 1 sepsf for each wfs when loading sepsf\n");
-				intstat->nsepsf=parms->powfs[ipowfs].nwfs;
 				intstat->sepsf=dccellnew(parms->powfs[ipowfs].nwfs, 1);
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
@@ -1511,12 +1510,64 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				error("Please specify piinfile for lo order phy wfs\n");
 			} else{
 				/*Gen short exposure OTFs due to atmosphere*/
-				genseotf(parms, powfs, ipowfs);
+				{
+					cellfree(intstat->otf);
+					dcell* opdbias=parms->powfs[ipowfs].ncpa_method==NCPA_I0?powfs[ipowfs].opdbias:0;
+					intstat->otf=genseotf(powfs[ipowfs].pts, powfs[ipowfs].realamp, 
+						opdbias, powfs[ipowfs].realsaa, parms->powfs[ipowfs].wvl,
+						parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
+						parms->powfs[ipowfs].embfac);
+				}
+				//genseotf(parms, powfs, ipowfs);
 				if(parms->powfs[ipowfs].llt){
-					genselotf(parms, powfs, ipowfs);
+					//genselotf(parms, powfs, ipowfs);
+					cellfree(intstat->lotf);
+					intstat->lotf=genseotf(powfs[ipowfs].llt->pts, powfs[ipowfs].llt->amp, 
+						powfs[ipowfs].llt->ncpa, NULL, parms->powfs[ipowfs].wvl,
+						parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
+						parms->powfs[ipowfs].embfac);
+
+					//print uplink PSF width
+					
+					int nwvl=intstat->lotf->ny;
+					int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
+					cmat* psfhat=0;//cnew(nlpsf, nlpsf);
+					dmat* psf=0;//dnew(nlpsf, nlpsf);
+					char header[64];
+					zfarr* lltpsfsave=NULL;
+					if(parms->save.setup){//Save uplink PSF.
+						lltpsfsave=zfarr_init(intstat->lotf->nx, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
+					}
+					for(int iwvl=0; iwvl<nwvl; iwvl++){
+						const real dx=powfs[ipowfs].llt->pts->dx;
+						const real wvl=P(parms->powfs[ipowfs].wvl, iwvl);
+						const real dpsf=wvl/(nlpsf*dx)*206265.;
+						snprintf(header, 64, "dtheta=%g; #arcsecond\n", dpsf);
+						for(int illt=0; illt<intstat->lotf->nx; illt++){
+							ccp(&psfhat, P(P(intstat->lotf, illt, iwvl),0));
+							cfftshift(psfhat);
+							cfft2i(psfhat, 1);
+							cfftshift(psfhat);
+							creal2d(&psf, 0, psfhat, 1);
+							real fwhm=dfwhm_gauss(psf)*dpsf;
+							info("illt %d, iwvl %d has FWHM of %g\"\n",
+								illt, iwvl, fwhm);
+							free(psf->header); psf->header=strdup(header);
+							if(lltpsfsave){
+								zfarr_push(lltpsfsave, illt*nwvl+iwvl, psf);
+							}
+						}
+					}
+					zfarr_close(lltpsfsave);
+					cfree(psfhat);
+					dfree(psf);
 				}
 				/*Generating short exposure psfs for both uplink and downlink turbulence effect. */
-				gensepsf(parms, powfs, ipowfs);
+				{
+					gensepsf(&intstat->sepsf, intstat->otf, intstat->lotf, powfs[ipowfs].realsaa,
+						parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
+					//gensepsf(parms, powfs, ipowfs);
+				}
 				if(parms->save.setup>1&&intstat){
 					writebin(P(intstat->sepsf,0), "powfs%d_sepsf", ipowfs);
 				}
@@ -1525,7 +1576,15 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				cellfree(intstat->otf);
 			}
 			/*generate short exposure i0,gx,gy from psf. */
-			gensei(parms, powfs, ipowfs);
+			{
+				cccell** pfotf=(parms->powfs[ipowfs].phytype_sim==3)?&intstat->fotf:0;
+				cccell** ppotf=(parms->dbg.wfslinearity!=-1&&parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs)?&intstat->potf:0;
+				gensei(&intstat->i0, &intstat->gx, &intstat->gy, pfotf, ppotf,
+					intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, powfs[ipowfs].realsaa, powfs[ipowfs].srot,
+					parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts,parms->powfs[ipowfs].dtrat,
+				parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].radgx, parms->powfs[ipowfs].mtchstc);
+				//gensei(parms, powfs, ipowfs);
+			}
 		}
 		if(parms->save.setup){
 			writebin(intstat->i0, "powfs%d_i0", ipowfs);

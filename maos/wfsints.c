@@ -49,11 +49,12 @@ void wfsints(thread_t* thread_data){
 	const parms_t* parms=global->parms;
 	const powfs_t* powfs=global->powfs;
 	const int iwfs=data->iwfs;
+	const int ipowfs=parms->wfs[iwfs].powfs;
 	const dmat* opd=data->opd;
 	const dmat* lltopd=data->lltopd;
+	const dmat* wvlwts=parms->wfs[iwfs].wvlwts;
 	const int isa_start=thread_data->start;
 	const int isa_end=thread_data->end;
-	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
 	const int hasllt=(parms->powfs[ipowfs].llt!=NULL);
 	const int illt=hasllt?P(parms->powfs[ipowfs].llt->i,wfsind):0;
@@ -263,7 +264,7 @@ void wfsints(thread_t* thread_data){
 				/*max(otf) is 1 after multiply with norm. peak in corner  */
 				cfft2(otf, 1);
 				/*Now peak in center because nominal is pre-treated.  */
-				dspmulcreal(P(ints,isa)->p, si, otf->p, P(parms->wfs[iwfs].wvlwts,iwvl)*norm_ints);
+				dspmulcreal(P(ints,isa)->p, si, otf->p, P(wvlwts,iwvl)*norm_ints);
 			}
 			TIM(6);
 		}/*isa */

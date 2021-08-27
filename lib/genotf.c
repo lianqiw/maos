@@ -26,7 +26,7 @@ typedef struct T_VALID{
 /**
  Wrap the data to genotf to have multi-thread capability.*/
 typedef struct GENOTF_T{
-	cmat** otf;
+	ccell* otf;
 	loc_t* loc;     /**<the common aperture grid*/
 	const dmat* amp;    /**<The amplitude map of all the (sub)apertures*/
 	const dmat* opdbias;/**<The static OPD bias. */
@@ -202,7 +202,7 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 static void genotf_wrap(thread_t* info){
 	GENOTF_T* data=(GENOTF_T*)info->data;
 	const int nsa=data->nsa;
-	cmat** otf=(cmat**)data->otf;
+	ccell* otf=data->otf;
 	loc_t* loc=data->loc;
 	const long nxsa=loc->nloc;
 	const real wvl=data->wvl;
@@ -230,9 +230,9 @@ static void genotf_wrap(thread_t* info){
 			opdbiasi=NULL;
 		}
 		if(otffull&&(!area||P(area,isa)>thres)){
-			ccp(&otf[isa], otffull);/*just copy the full array */
+			ccp(&P(otf,isa), otffull);/*just copy the full array */
 		} else if(!area||P(area,isa)>0.01){
-			genotf_do(&otf[isa], pttr, data->npsfx, data->npsfy, loc, amp?amp->p+isa*nxsa:NULL, opdbiasi, wvl, B, pval);
+			genotf_do(&P(otf,isa), pttr, data->npsfx, data->npsfy, loc, amp?amp->p+isa*nxsa:NULL, opdbiasi, wvl, B, pval);
 		}
 	}
 	//if(!detached && nsa>10) info2("Thread %ld done\n", info->ithread);
@@ -316,7 +316,7 @@ static dmat* loc_sep(const loc_t* loc){
    2020-01-21: Compute OTF using nyquist sampling and then upsample with FFT.
 */
 
-void genotf(cmat** otf,    /**<The otf array for output*/
+void genotf(ccell** potf,    /**<The otf array for output*/
 	loc_t* loc,    /**<the aperture grid (same for all apertures)*/
 	const dmat* amp,    /**<The amplitude map of all the (sub)apertures*/
 	const dmat* opdbias,/**<The static OPD bias (complex part of amp). */
@@ -367,8 +367,10 @@ void genotf(cmat** otf,    /**<The otf array for output*/
 			genotf_do(&otffull, pttr, npsfx, npsfy, loc, amp?amp->p+isafull*nloc:NULL, NULL, wvl, B, pval);
 		}
 	}
-
-	GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, B, pval, isafull, otffull};
+	if(!*potf){
+		*potf=ccellnew_same(nsa,1,npsfx,npsfy);
+	}
+	GENOTF_T data={*potf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, B, pval, isafull, otffull};
 
 	thread_t info[NCPU];
 	thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
@@ -378,14 +380,7 @@ void genotf(cmat** otf,    /**<The otf array for output*/
 	free(pval[0].loc);
 	free(pval);
 }
-/**
-   A convenient wrapper for genotf() to be called from matlab or python.
-*/
-cell* genotf2(loc_t* loc, const dmat* amp, const dmat* opdbias, const dmat* area, real thres, real wvl, const dmat* cov, real r0, real l0, long npsfx, long npsfy, long nsa, long pttr){
-	ccell* out=ccellnew(nsa, 1);
-	genotf(out->p, loc, amp, opdbias, area, thres, wvl, cov, r0, l0, npsfx, npsfy, nsa, pttr);
-	return (cell*)out;
-}
+
 /**
    Average spatially the 4-d covariance function to create a 2-d covariance
    function. For OPD f defined on points x (2-d coordinate), the 4-d covariance

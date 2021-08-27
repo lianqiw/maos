@@ -58,18 +58,22 @@ case $D in
     *)
 	REF=()
 esac
-fnlog=maos_check_${D}.log
+fnlog=maos_check_${D}.log #log of all
+fntmp=maos_check_${D}.tmp #log of current simulation
+fnres=maos_check_${D}.res #result summary
 if [ -f $fnlog ];then
     mv $fnlog ${fnlog/.log/.bak}
 fi
-echo > $fnlog
-
 ii=0
-
+printf "%-20s   Res   Ref     %%\n" "D=${D}m DM is $((D*2))x$((D*2))" | tee $fnres
 function run_maos(){
-    ./maos sim.end=100 $args "$*" >> $fnlog
+	aotype=$1
+	shift
+    ./maos sim.end=100 $args "$*" > $fntmp
+	echo $aotype $* >> $fnlog
+	cat $fntmp >> $fnlog
     if [ $? == 0 ];then
-		RMS[ii]=$(grep 'Mean:' $fnlog |tail -n1 |cut -d ' ' -f 2)
+		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]%.*}
     else
 		RMS[ii]='error'
@@ -78,98 +82,68 @@ function run_maos(){
     fi
 
     b=${REF[$ii]%.*}
-    echo -n "${RMS[$ii]} nm, Ref: ${REF[$ii]} nm, "
+	diff=100
     if [ "$a" != "0" -a "$b" != "error" ];then
-		echo $(((a-b)*100/a))%
-    else
-		echo
+		diff=$(((a-b)*100/a))
     fi
-    ii=$((ii+1)) 
+	printf "%-20s %5.0f %5.0f %4d%%\n" "$aotype" ${RMS[$ii]} ${REF[$ii]} "$diff" | tee -a $fnres
+	ii=$((ii+1)) 
 }
 export MAOS_LOG_LEVEL=-1
 
-echo "D is ${D}m. DM order is $((D*2))."
+run_maos "Openloop:        " sim.evlol=1
 
-echo -n "Openloop:        "
-run_maos sim.evlol=1
+run_maos "Ideal fit:       " sim.idealfit=1 
 
-echo -n "Ideal fit:       "
-run_maos sim.idealfit=1 
+run_maos "Ideal tomo:      " sim.idealtomo=1 
 
-echo -n "Ideal tomo:      "
-run_maos sim.idealtomo=1 
+run_maos "LGS MCAO (inte): " recon.split=0 tomo.precond=0
 
-echo -n "LGS MCAO (inte): "
-run_maos recon.split=0 tomo.precond=0
+run_maos "LGS MCAO (CG):   " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 tomo.assemble=0 fit.assemble=1
 
-echo -n "LGS MCAO (CG):   " #also test other
-run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 tomo.assemble=0 fit.assemble=1
+run_maos "LGS MCAO (FDPCG):" tomo.precond=1 tomo.assemble=1 fit.assemble=0
 
-echo -n "LGS MCAO (FDPCG):"
-run_maos tomo.precond=1 tomo.assemble=1 fit.assemble=0
-
-echo -n "LGS MCAO (CBS):  "
-run_maos tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
+run_maos "LGS MCAO (CBS):  " tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
 
 if [ $D -le 10 ];then
-echo -n "LGS MCAO (SVD):  "
-run_maos tomo.alg=2 fit.alg=2 atmr.os=[2 2 1 1 1 1 1] gpu.tomo=0
+run_maos "LGS MCAO (SVD):  " tomo.alg=2 fit.alg=2 atmr.os=[2 2 1 1 1 1 1] gpu.tomo=0
 fi
-echo -n "LGS MCAO (MVM):  "
-run_maos atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
+run_maos "LGS MCAO (MVM):  " atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
 
-echo -n "LGS MOAO:        "
-run_maos evl.moao=0 moao.dx=[1/2]
+run_maos "LGS MOAO:        " evl.moao=0 moao.dx=[1/2]
 
-echo -n "LGS GLAO (inte): "
-run_maos dm_single.conf  recon.glao=1 recon.split=0 wfs_lgs_ttf.conf
+run_maos "LGS GLAO (inte): " dm_single.conf  recon.glao=1 recon.split=0 wfs_lgs_ttf.conf
 
-echo -n "LGS GLAO (split):"
-run_maos dm_single.conf  recon.glao=1 recon.split=1 wfs_lgs_ttf.conf
+run_maos "LGS GLAO (split):" dm_single.conf  recon.glao=1 recon.split=1 wfs_lgs_ttf.conf
 
-echo -n "NGS SCAO (inte): "
-run_maos -cscao_ngs.conf recon.split=0
+run_maos "NGS SCAO (inte): " -cscao_ngs.conf recon.split=0
 
-echo -n "NGS SCAO (split):"
-run_maos -cscao_ngs.conf recon.split=1
+run_maos "NGS SCAO (split):" -cscao_ngs.conf recon.split=1
 
-echo -n "NGS MCAO (inte): "
-run_maos -cmcao_ngs.conf recon.split=0
+run_maos "NGS MCAO (inte): " -cmcao_ngs.conf recon.split=0
 
-echo -n "NGS MCAO (split):"
-run_maos -cmcao_ngs.conf recon.split=1
+run_maos "NGS MCAO (split):" -cmcao_ngs.conf recon.split=1
 
-echo -n "SCAO LGS (inte): "
-run_maos -cscao_lgs.conf recon.split=0
+run_maos "SCAO LGS (inte): " -cscao_lgs.conf recon.split=0
 
-echo -n "SCAO LGS (split):"
-run_maos -cscao_lgs.conf recon.split=1
+run_maos "SCAO LGS (split):" -cscao_lgs.conf recon.split=1
 
-echo -n "LGS LTAO (inte): "
-run_maos dm_single.conf fov_oa.conf recon.split=0
+run_maos "LGS LTAO (inte): " dm_single.conf fov_oa.conf recon.split=0
 
-echo -n "LGS LTAO (split):"
-run_maos dm_single.conf fov_oa.conf recon.split=1 
+run_maos "LGS LTAO (split):" dm_single.conf fov_oa.conf recon.split=1 
 
-echo -n "NGS SCAO (lsq,inte)"
-run_maos -cscao_ngs.conf recon.split=0 recon.alg=1
+run_maos "NGS SCAO (lsq,inte)" -cscao_ngs.conf recon.split=0 recon.alg=1
 
-echo -n "NGS SCAO (lsq,split)"
-run_maos -cscao_ngs.conf recon.split=1 recon.alg=1
+run_maos "NGS SCAO (lsq,split)" -cscao_ngs.conf recon.split=1 recon.alg=1
 
-echo -n "LGS MCAO PCCD:  " 
-run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[16,0,0] powfs.pixpsa=[6,0,0]
+run_maos "LGS MCAO PCCD:  " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[16,0,0] powfs.pixpsa=[6,0,0]
 
-echo -n "LGS MCAO SL:    " 
-run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0]
+run_maos "LGS MCAO SL:    " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0]
 
-echo -n "LGS MCAO PCCD SL:"
-run_maos tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[18,0,0] powfs.pixpsa=[6,0,0] powfs.fnllt=['llt_SL.conf',,]
+run_maos "LGS MCAO PCCD SL:" tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[18,0,0] powfs.pixpsa=[6,0,0] powfs.fnllt=['llt_SL.conf',,]
 if [ $D -eq 30 ];then
-echo -n "NFIRAOS LGS: "
-run_maos nfiraos_lgs.conf
-echo -n "NFIRAOS PWFS:"
-run_maos nfiraos_ngs.conf
+run_maos "NFIRAOS LGS: " nfiraos_lgs.conf
+run_maos "NFIRAOS PWFS:" nfiraos_ngs.conf
 fi
 
 echo ${RMS[*]}

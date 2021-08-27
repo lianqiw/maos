@@ -49,8 +49,7 @@ static int NGPU=0;
 typedef struct RUN_T{
 	struct RUN_T* next;
 	status_t status;
-	double launch_time;
-	double last_time; //time of last report
+	time_t last_time; //time of last report
 	int pid;
 	int pidnew;//the new pid
 	int sock;//socket for primary maos connection
@@ -239,6 +238,7 @@ static void runned_restart(int pid){
 			//update status
 			memset(&irun->status, 0, sizeof(status_t));
 			irun->status.info=S_QUEUED;
+			irun->status.timlast=myclocki();
 			//pidnew changed to be different from pid to indicate restarted job.
 			irun->pidnew=--counter;
 			monitor_send(irun, NULL);
@@ -278,35 +278,10 @@ static RUN_T* running_add(int pid, int sock){
 			irun->exe=strdup(progname);
 		}
 		/*record the launch time */
-		if(pid>0){
-			irun->launch_time=get_job_launchtime(pid);
-		} else{
-			irun->launch_time=INFINITY;
-		}
 		irun->next=NULL;
 		if(running_end){/*list is not empty*/
-			if(pid<=0||running_end->launch_time<=irun->launch_time){
-			/*append the node to the end. */
-				running_end->next=irun;
-				running_end=irun;
-			} else{
-			/*insert the node in the middle. */
-				RUN_T* jrun, * jrun2=NULL;
-				for(jrun=running; jrun; jrun2=jrun, jrun=jrun->next){
-					if(jrun->launch_time>=irun->launch_time){
-						irun->next=jrun;
-						if(jrun2){
-							jrun2->next=irun;
-						} else{
-							running=irun;
-						}
-						break;
-					}
-				}
-				if(!jrun){
-					warning_time("failed to insert pid %d\n", pid);
-				}
-			}
+			running_end->next=irun;
+			running_end=irun;
 		} else{
 			running_end=running=irun;
 		}
@@ -323,9 +298,7 @@ static void running_remove(int pid, int status){
 							 ||irun->status.info==S_RUNNING)){
 				nrun_sub(irun->pid, irun->nthread, irun->ngpu);
 			}
-			if(irun->status.info<10){//mark termination time.
-				irun->status.timlast=myclocki();
-			}
+			irun->status.timlast=myclocki();
 			irun->status.info=status;
 			dbg_time("remove job %d with status %d\n", pid, irun->status.info);
 			//remove from the running list
@@ -385,7 +358,7 @@ static RUN_T* running_get_by_sock(int sock){
 static void check_jobs(void){
 	RUN_T* irun, * irun2;
 	if(running){
-		double now=myclockd();
+		time_t now=myclocki();
 		for(irun=running; irun; irun=irun2){
 			irun2=irun->next;
 			if(irun->pid>0){
@@ -395,7 +368,7 @@ static void check_jobs(void){
 						running_remove(irun->pid, S_CRASH);
 					}
 				} else if((irun->last_time+600<now)&&irun->status.info==S_RUNNING){
-					dbg_time("check_jobs: Job %d does not update after %g seconds. Change status to S_UNKNOWN\n",
+					dbg_time("check_jobs: Job %d does not update after %lu seconds. Change status to S_UNKNOWN\n",
 							irun->pid, now-irun->last_time);
 					irun->status.info=S_UNKNOWN;
 					monitor_send(irun, NULL);
@@ -408,12 +381,12 @@ static void check_jobs(void){
  examine the process queue to start routines once CPU is available.
 */
 static void process_queue(void){
-	static double lasttime=0;
-	if(nrun_get(0)>0&&myclockd()-lasttime<1){
+	static time_t lasttime=0;
+	if(nrun_get(0)>0&&myclocki()-lasttime<1){
 		//dbg_time("process_queue: too son\n");
 		return;
 	}
-	lasttime=myclockd();
+	lasttime=myclocki();
 	if(nrun_get(0)>=NCPU || (NGPU && nrun_get(1)>=NGPU)){
 		//dbg_time("process_queue: enough jobs are running\n");
 		return;
@@ -442,14 +415,14 @@ static void process_queue(void){
 			int nthread=irun->nthread;
 			if(nrun_get(0)+nthread<=NCPU&&(nthread<=avail||avail>=3)
 				&&(!NGPU||!irun->ngpu||nrun_get(1)+irun->ngpu<=NGPU)){//resource available to star the job
-				irun->last_time=myclockd();
+				irun->last_time=myclocki();
+				irun->status.timlast=myclocki();
 				if(stwriteint(irun->sock, S_START)){
 					dbg_time("Starting Job %d at %d failed: %s\n", irun->pid, irun->sock, strerror(errno));
 					irun->status.info=S_UNKNOWN;
 				}else{
 					dbg_time("Starting Job %d at %d ok.\n", irun->pid, irun->sock);
 					nrun_add(irun->pid, nthread, irun->ngpu);
-					irun->status.timlast=myclocki();
 					irun->status.info=S_START;
 					monitor_send(irun, NULL);
 				}
@@ -465,7 +438,7 @@ static void process_queue(void){
 	} else{
 		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
 			static double lasttime2=0;
-			double thistime=myclockd();
+			time_t thistime=myclocki();
 			if(thistime>lasttime2+0.001){
 				lasttime2=thistime;
 				irun=running_get_wait(S_QUEUED);
@@ -477,6 +450,7 @@ static void process_queue(void){
 				} else{
 					int pid;
 					irun->last_time=thistime;
+					irun->status.timlast=myclocki();
 					if((pid=launch_exe(irun->exe, irun->path0))<0){
 						dbg_time("Launch job %d failed: %d (%s)\n", irun->pid, pid, irun->exe);
 						running_remove(irun->pid, S_CRASH);
@@ -484,7 +458,6 @@ static void process_queue(void){
 						dbg_time("Launch job %d as pid %d (%s)\n", irun->pid, pid, irun->exe);
 						//inplace update the information in monitor
 						irun->status.info=S_WAIT;//will be checked again by process_queue
-						irun->status.timlast=myclocki();
 						irun->pidnew=pid;
 						monitor_send(irun, NULL);
 						irun->pid=pid;
@@ -650,7 +623,6 @@ static int respond(int sock){
 			dbg_time("(%d) Job %d started with ncpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
 			nrun_add(pid, nthread, ngpu);
 			irun->status.info=S_START;
-			irun->status.timlast=myclocki();
 		}
 		if(irun->path) monitor_send(irun, irun->path);
 		monitor_send(irun, NULL);
@@ -675,10 +647,15 @@ static int respond(int sock){
 			irun->nthread=irun->status.nthread;
 			nrun_add(pid, irun->nthread, irun->ngpu);
 		}
+		//save and restore time information
+		time_t timlast=irun->status.timlast;
+		time_t timstart=irun->status.timstart;
 		if(sizeof(status_t)!=read(sock, &(irun->status), sizeof(status_t))){
 			warning_time("Error reading status.\n");
 		}
-		irun->last_time=myclockd();
+		irun->status.timlast=timlast;
+		irun->status.timstart=timstart;
+		irun->last_time=myclocki();
 		monitor_send(irun, NULL);
 	}
 	break;
@@ -980,10 +957,10 @@ void scheduler_handle_ws(char* in, size_t len){
 	//UNLOCK(mutex_sch);
 }
 static void scheduler_timeout(void){
-	static double lasttime3=0;//every 3 seconds
-	static double lasttime10=0;//every 10 seconds
+	static time_t lasttime3=0;//every 3 seconds
+	static time_t lasttime10=0;//every 10 seconds
 	
-	double thistime=myclockd();
+	time_t thistime=myclocki();
 	//Process job queue
 	if(!all_done){
 		process_queue();

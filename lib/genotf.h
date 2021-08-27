@@ -23,7 +23,7 @@
    Routines to generate short/long exposure OTFs of an aperture in present of
    atmosphere turbulence.
 */
-void genotf(cmat **otf,    /**<The otf array for output*/
+void genotf(ccell **potf,    /**<The otf array for output*/
 	    loc_t *loc,    /**<the common aperture grid*/
 	    const dmat *amp,     /**<The amplitude map of all the (sub)apertures*/
 	    const dmat *opdbias, /**<The static OPD bias. */
@@ -38,8 +38,6 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	    );
-
-cell *genotf2(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, real thres, real wvl, const dmat *cov, real r0, real l0, long npsfx, long npsfy, long nsa, long pttr);
 
 dmat* mk2dcov(loc_t *loc, const dmat *amp, real ampthres, const dmat *cov, int norm);
 
