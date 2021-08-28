@@ -25,7 +25,7 @@ var maos_2types_8h =
       [ "ncpa", "maos_2types_8h.html#a474cf8dc438fcb8cf50a69c8f886a512", null ]
     ] ],
     [ "intstat_t", "maos_2types_8h.html#structintstat__t", [
-      [ "lotf", "maos_2types_8h.html#aa914c5eb679855ba4136f317ab8a8371", null ],
+      [ "lotf", "maos_2types_8h.html#af2d5e4fdc5e03f8998dd3d31a23eb2c8", null ],
       [ "otf", "maos_2types_8h.html#adc4dff83c22e1b7a5070fd39792a7c89", null ],
       [ "fotf", "maos_2types_8h.html#a2ab2f4cccbbf23b5b0e67bb4dafdf1e9", null ],
       [ "potf", "maos_2types_8h.html#abe48117e42d4c16bbe5c939b779573b2", null ],
@@ -35,8 +35,7 @@ var maos_2types_8h =
       [ "gy", "maos_2types_8h.html#a1d35c517b854e0ce54c4b0ab3cd61bbd", null ],
       [ "i0sum", "maos_2types_8h.html#a12a657b68c0bc0caedaa622b1db00070", null ],
       [ "i0sumsum", "maos_2types_8h.html#aed12a3eca32089c23f0b4b83e2dfd54e", null ],
-      [ "mtche", "maos_2types_8h.html#a50ed0361d297b2d2329ab5eceda203ef", null ],
-      [ "nsepsf", "maos_2types_8h.html#a13da281f843c530c468a8ee072958bf7", null ]
+      [ "mtche", "maos_2types_8h.html#a50ed0361d297b2d2329ab5eceda203ef", null ]
     ] ],
     [ "powfs_t", "maos_2types_8h.html#structpowfs__t", [
       [ "saloc", "maos_2types_8h.html#a5fd004708034f40be93d7bcf6f69ec60", null ],

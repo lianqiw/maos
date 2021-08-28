@@ -24,6 +24,7 @@ var searchData=
   ['share',['share',['../turbulence_8h.html#af80a72e15ce13450ea40e802e029cde7',1,'genatm_t::share()'],['../parms_8h.html#afc6a5da1972b32b6abf232a4228b9cc9',1,'atm_cfg_t::share()']]],
   ['si',['si',['../mkdtf_8h.html#a286ad92f245b487cf5683cbb40517b21',1,'dtf_t::si()'],['../pywfs_8h.html#aa4cf8125494b3467d896c790b2204750',1,'pywfs_t::si()']]],
   ['siglev',['siglev',['../parms_8h.html#a2379f815a6f9631791fb611f5d3849a1',1,'powfs_cfg_t::siglev()'],['../parms_8h.html#abeb043fd7d329947de33b16aab8c763b',1,'wfs_cfg_t::siglev()'],['../pywfs_8h.html#ac5489f11858dc001a6f24d6f06bd87fe',1,'pywfs_t::siglev()']]],
+  ['siglevs',['siglevs',['../parms_8h.html#a7bf4ca9968bca8ce8b4bbb3aa41d7565',1,'powfs_cfg_t']]],
   ['sigmanhi',['sigmanhi',['../maos_2types_8h.html#a1720b9ee2feb5f39d11b3351660b3a4b',1,'recon_t']]],
   ['sigmanlo',['sigmanlo',['../maos_2types_8h.html#a0dc4c5a857d1c76e5e1d21dca3d66de7',1,'recon_t']]],
   ['sigmatch',['sigmatch',['../parms_8h.html#a69588f63ff48ddd8e9b0bba6c9c86ab0',1,'powfs_cfg_t::sigmatch()'],['../pywfs_8h.html#a12618c63865ba4a0458a07a716e2bee4',1,'pywfs_t::sigmatch()']]],

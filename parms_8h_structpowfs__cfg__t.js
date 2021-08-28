@@ -34,6 +34,7 @@ var parms_8h_structpowfs__cfg__t =
     [ "pixoffy", "parms_8h.html#a1e19eb4ec667e9294eb0735087e74336", null ],
     [ "sigscale", "parms_8h.html#ac86b1b514e55915bf6761790c9903816", null ],
     [ "siglev", "parms_8h.html#a2379f815a6f9631791fb611f5d3849a1", null ],
+    [ "siglevs", "parms_8h.html#a7bf4ca9968bca8ce8b4bbb3aa41d7565", null ],
     [ "sigrecon", "parms_8h.html#aec77715022986f5ec8002e3e457bb72d", null ],
     [ "llt", "parms_8h.html#a176fda60e684602e4da9bd5382c42b0f", null ],
     [ "fnllt", "parms_8h.html#a7889e96c10932f0fd1227091f1a70ecd", null ],

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['nea2sp',['nea2sp',['../recon__utils_8h.html#a8275bff1050a3bf784cbf75b0ed42092',1,'recon_utils.c']]],
+  ['nea2sp',['nea2sp',['../recon__utils_8h.html#a99d30f4ef11d433665a7bab304633435',1,'recon_utils.c']]],
   ['nea_5fchol',['nea_chol',['../recon__utils_8h.html#ad707e69a8fa5604c71e5a2d0fadcfbb5',1,'setup_recon.c']]],
   ['nea_5finv',['nea_inv',['../recon__utils_8h.html#ac585c2fa925a41f60b9bb757a9ef640b',1,'setup_recon.c']]],
   ['nea_5fmm',['nea_mm',['../recon__utils_8h.html#a182387c2aadfaac90464c33a249699ce',1,'setup_recon.c']]],

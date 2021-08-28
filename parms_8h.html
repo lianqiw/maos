@@ -1061,7 +1061,14 @@ sigscale</td>
 <td class="fieldname">
 siglev</td>
 <td class="fielddoc">
-<p>signal level. will be override by wfs.siglev is specified. </p>
+<p>signal level at dtrat=1. will be override by wfs.siglev is specified. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7bf4ca9968bca8ce8b4bbb3aa41d7565"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+siglevs</td>
+<td class="fielddoc">
+<p>in array format. 1x1 or nwfsx1, scaled by dtrat </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aec77715022986f5ec8002e3e457bb72d"></a>real</td>
@@ -2226,7 +2233,7 @@ ahst_focus</td>
 <td class="fieldname">
 alg</td>
 <td class="fielddoc">
-<p>Tomography algorithm to solve the linear equation.</p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>implement BGS, MG 0: Cholesky direct solve for the large matrix. (CBS) 1: CG or PCG. 2: SVD or EVD: Eigen value decompsition </dd></dl>
+<p>Tomography algorithm to solve the linear equation.</p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>implement BGS, MG 0: Cholesky direct solve for the large matrix. (CBS) 1: CG or PCG. 2: SVD or EVD: Eigen value decompsition </dd></dl>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aab059096759e6a895e2c52935a5cb695"></a>int</td>

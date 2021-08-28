@@ -64,6 +64,8 @@ var lmath_8h =
     [ "l2cell", "lmath_8h.html#a58564392e6d0b5caab436f3e64947f57", null ],
     [ "lcell_col", "lmath_8h.html#abd063e483f71cca17ca38414f189f139", null ],
     [ "lcellsum", "lmath_8h.html#a99bc5f476fd6768b8843cb3d8268579d", null ],
+    [ "lcellsum_each", "lmath_8h.html#a29afa34a86fd0dda18cd6caf79fd3a4a", null ],
+    [ "lcellhash", "lmath_8h.html#a55ef4d0bfb100bf006dbd499fd5d0c38", null ],
     [ "lwritedata", "lmath_8h.html#ab425b286af8a2a3aaad1df0af055d5c3", null ],
     [ "lreaddata", "lmath_8h.html#a9c7080abd9dba858e9b9abe3659eed4c", null ],
     [ "lnew_mmap", "lmath_8h.html#aeedb6df7679a7e1c669bec253577deb5", null ],

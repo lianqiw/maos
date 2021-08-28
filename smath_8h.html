@@ -254,6 +254,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>scellset</b> (<a clas
 <tr class="separator:a51258faab5164afbf5c68a7794b77030"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c29890ec99077336363cfae4e108c24"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a5c29890ec99077336363cfae4e108c24">scellsum</a> (const <a class="el" href="type_8h.html#structscell">scell</a> *A)</td></tr>
 <tr class="separator:a5c29890ec99077336363cfae4e108c24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64f2f1d862363d95e3847be2b7761eb9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a64f2f1d862363d95e3847be2b7761eb9">scellsum_each</a> (const <a class="el" href="type_8h.html#structscell">scell</a> *A)</td></tr>
+<tr class="separator:a64f2f1d862363d95e3847be2b7761eb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85928ac2400570b67481cd55c71f54f0"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a85928ac2400570b67481cd55c71f54f0">scellhash</a> (const <a class="el" href="type_8h.html#structscell">scell</a> *A, uint32_t key)</td></tr>
+<tr class="separator:a85928ac2400570b67481cd55c71f54f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed56bbb147b38e475d8d6b94eb3a942e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#aed56bbb147b38e475d8d6b94eb3a942e">sisnan</a> (const <a class="el" href="type_8h.html#structsmat">smat</a> *A)</td></tr>
 <tr class="separator:aed56bbb147b38e475d8d6b94eb3a942e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7637ef5474bf55a18742a68fbde8632"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#aa7637ef5474bf55a18742a68fbde8632">snorm</a> (const <a class="el" href="type_8h.html#structsmat">smat</a> *in)</td></tr>
@@ -2174,6 +2178,54 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sfft1</b> (<a class="
       </table>
 </div><div class="memdoc">
 <p>create sum of all the elements in A. </p>
+
+</div>
+</div>
+<a id="a64f2f1d862363d95e3847be2b7761eb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64f2f1d862363d95e3847be2b7761eb9">&#9670;&nbsp;</a></span>scellsum_each()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structsmat">smat</a>* scellsum_each </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structscell">scell</a> *&#160;</td>
+          <td class="paramname"><em>A</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>return sum of each cell in a SX(mat) </p>
+
+</div>
+</div>
+<a id="a85928ac2400570b67481cd55c71f54f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85928ac2400570b67481cd55c71f54f0">&#9670;&nbsp;</a></span>scellhash()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t scellhash </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structscell">scell</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Compute the hashlittle </p>
 
 </div>
 </div>

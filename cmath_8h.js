@@ -66,6 +66,8 @@ var cmath_8h =
     [ "c2cell", "cmath_8h.html#aa5983177f2055cae1bb16f5a53e3f4aa", null ],
     [ "ccell_col", "cmath_8h.html#ae330ba909d7182ac255d9eec6f0ee64e", null ],
     [ "ccellsum", "cmath_8h.html#a297b5fe0d1b6c898e3f4a01ad2975534", null ],
+    [ "ccellsum_each", "cmath_8h.html#a74f0e16914bcb571d0586373b5270669", null ],
+    [ "ccellhash", "cmath_8h.html#a4079013ba35b7bace4722de9fb7ed18e", null ],
     [ "cisnan", "cmath_8h.html#ab58f2662121c9aee82f839f3fc0d8ea6", null ],
     [ "cnorm", "cmath_8h.html#aef8ed03215c7d2d139b4e27601225e41", null ],
     [ "cstd", "cmath_8h.html#a5da11a37e9ec84408550ff871a0d91a8", null ],

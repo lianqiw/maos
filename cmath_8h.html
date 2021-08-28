@@ -258,6 +258,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccellset</b> (<a clas
 <tr class="separator:ae330ba909d7182ac255d9eec6f0ee64e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a297b5fe0d1b6c898e3f4a01ad2975534"><td class="memItemLeft" align="right" valign="top">comp&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a297b5fe0d1b6c898e3f4a01ad2975534">ccellsum</a> (const <a class="el" href="type_8h.html#structccell">ccell</a> *A)</td></tr>
 <tr class="separator:a297b5fe0d1b6c898e3f4a01ad2975534"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74f0e16914bcb571d0586373b5270669"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a74f0e16914bcb571d0586373b5270669">ccellsum_each</a> (const <a class="el" href="type_8h.html#structccell">ccell</a> *A)</td></tr>
+<tr class="separator:a74f0e16914bcb571d0586373b5270669"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4079013ba35b7bace4722de9fb7ed18e"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a4079013ba35b7bace4722de9fb7ed18e">ccellhash</a> (const <a class="el" href="type_8h.html#structccell">ccell</a> *A, uint32_t key)</td></tr>
+<tr class="separator:a4079013ba35b7bace4722de9fb7ed18e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab58f2662121c9aee82f839f3fc0d8ea6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ab58f2662121c9aee82f839f3fc0d8ea6">cisnan</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
 <tr class="separator:ab58f2662121c9aee82f839f3fc0d8ea6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef8ed03215c7d2d139b4e27601225e41"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aef8ed03215c7d2d139b4e27601225e41">cnorm</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *in)</td></tr>
@@ -2165,6 +2169,55 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
 
 </div>
 </div>
+<a id="a74f0e16914bcb571d0586373b5270669"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74f0e16914bcb571d0586373b5270669">&#9670;&nbsp;</a></span>ccellsum_each()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structcmat">cmat</a>* ccellsum_each </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td>
+          <td class="paramname"><em>A</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>return sum of each cell in a CX(mat)</p>
+<p>return sum of each cell in a ZX(mat) </p>
+
+</div>
+</div>
+<a id="a4079013ba35b7bace4722de9fb7ed18e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4079013ba35b7bace4722de9fb7ed18e">&#9670;&nbsp;</a></span>ccellhash()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t ccellhash </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Compute the hashlittle </p>
+
+</div>
+</div>
 <a id="ab58f2662121c9aee82f839f3fc0d8ea6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab58f2662121c9aee82f839f3fc0d8ea6">&#9670;&nbsp;</a></span>cisnan()</h2>
 
@@ -3750,8 +3803,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
-<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000015">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
+<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
+<p>embed a ninx*niny matrix in into A with optional rotation by -theta CCW (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo:</a></b></dt><dd>{ merge this definition with cembed in cmat.c } </dd></dl>
 
 </div>
 </div>

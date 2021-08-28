@@ -254,6 +254,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
 <tr class="separator:abd063e483f71cca17ca38414f189f139"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99bc5f476fd6768b8843cb3d8268579d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a99bc5f476fd6768b8843cb3d8268579d">lcellsum</a> (const <a class="el" href="type_8h.html#structlcell">lcell</a> *A)</td></tr>
 <tr class="separator:a99bc5f476fd6768b8843cb3d8268579d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29afa34a86fd0dda18cd6caf79fd3a4a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a29afa34a86fd0dda18cd6caf79fd3a4a">lcellsum_each</a> (const <a class="el" href="type_8h.html#structlcell">lcell</a> *A)</td></tr>
+<tr class="separator:a29afa34a86fd0dda18cd6caf79fd3a4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55ef4d0bfb100bf006dbd499fd5d0c38"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a55ef4d0bfb100bf006dbd499fd5d0c38">lcellhash</a> (const <a class="el" href="type_8h.html#structlcell">lcell</a> *A, uint32_t key)</td></tr>
+<tr class="separator:a55ef4d0bfb100bf006dbd499fd5d0c38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab425b286af8a2a3aaad1df0af055d5c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#ab425b286af8a2a3aaad1df0af055d5c3">lwritedata</a> (file_t *fp, const <a class="el" href="type_8h.html#structlmat">lmat</a> *A, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
 <tr class="separator:ab425b286af8a2a3aaad1df0af055d5c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c7080abd9dba858e9b9abe3659eed4c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lmath_8h.html#a9c7080abd9dba858e9b9abe3659eed4c">lreaddata</a> (file_t *fp, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
@@ -1568,6 +1572,54 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lcellcat2</b> (<a cla
       </table>
 </div><div class="memdoc">
 <p>create sum of all the elements in A. </p>
+
+</div>
+</div>
+<a id="a29afa34a86fd0dda18cd6caf79fd3a4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29afa34a86fd0dda18cd6caf79fd3a4a">&#9670;&nbsp;</a></span>lcellsum_each()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structlmat">lmat</a>* lcellsum_each </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structlcell">lcell</a> *&#160;</td>
+          <td class="paramname"><em>A</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>return sum of each cell in a LX(mat) </p>
+
+</div>
+</div>
+<a id="a55ef4d0bfb100bf006dbd499fd5d0c38"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55ef4d0bfb100bf006dbd499fd5d0c38">&#9670;&nbsp;</a></span>lcellhash()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t lcellhash </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structlcell">lcell</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Compute the hashlittle </p>
 
 </div>
 </div>

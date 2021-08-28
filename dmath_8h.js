@@ -65,6 +65,8 @@ var dmath_8h =
     [ "d2cell", "dmath_8h.html#abed4b3e507a4bb20689c0fce64de6c0a", null ],
     [ "dcell_col", "dmath_8h.html#afee213fb73ef21babca6184329c7ec54", null ],
     [ "dcellsum", "dmath_8h.html#a92225d60788e229494b9c13081c5aa5f", null ],
+    [ "dcellsum_each", "dmath_8h.html#acd4ab66b1bccae828bccc3236fe0a361", null ],
+    [ "dcellhash", "dmath_8h.html#abd81c95bdcdae5e3c75706ba0fdfdabc", null ],
     [ "disnan", "dmath_8h.html#aa02f4c6350369a59f00e1917343a2b3b", null ],
     [ "dnorm", "dmath_8h.html#abf101079dc47a043bf1be4e6ac187136", null ],
     [ "dstd", "dmath_8h.html#abf95f69d34879322190d3ea63c73ca7d", null ],

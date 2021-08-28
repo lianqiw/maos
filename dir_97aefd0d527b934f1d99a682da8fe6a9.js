@@ -6,6 +6,7 @@ var dir_97aefd0d527b934f1d99a682da8fe6a9 =
     [ "draw.h", "draw_8h.html", "draw_8h" ],
     [ "fractal.h", "fractal_8h.html", "fractal_8h" ],
     [ "genotf.h", "genotf_8h.html", "genotf_8h" ],
+    [ "gensei.h", "gensei_8h.html", "gensei_8h" ],
     [ "hyst.h", "hyst_8h.html", "hyst_8h" ],
     [ "kalman.h", "kalman_8h.html", "kalman_8h" ],
     [ "laplacian.h", "laplacian_8h.html", "laplacian_8h" ],
