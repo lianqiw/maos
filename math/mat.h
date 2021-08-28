@@ -85,5 +85,6 @@
     void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);	\
     X(mat) *X(cell_col)(X(cell) *input, long icol);			\
     T X(cellsum)(const X(cell) *A);\
+    X(mat)* X(cellsum_each)(const X(cell) *A);\
     uint32_t X(cellhash)(const X(cell)* A, uint32_t key) CHECK_UNUSED_RESULT;	
 #endif

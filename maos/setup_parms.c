@@ -573,7 +573,7 @@ static void readcfg_wfs(parms_t* parms){
 		parms->powfs[ipowfs].siglevs=dnew(siglev->nx>0?nwfs:1, 1);
 		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].siglevs); jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			P(parms->powfs[ipowfs].siglevs, jwfs)=parms->wfs[iwfs].siglev;
+			P(parms->powfs[ipowfs].siglevs, jwfs)=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		}
 		dbg("powfs[%d].siglevs is %ldx1\n", ipowfs, NX(parms->powfs[ipowfs].siglevs));
 	}
@@ -1300,7 +1300,7 @@ static void setup_parms_postproc_za(parms_t* parms){
 		if(isfinite(parms->powfs[ipowfs].hs)){//LGS
 			parms->powfs[ipowfs].hs=(parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
 			parms->powfs[ipowfs].siglev*=cosz;
-
+			dscale(parms->powfs[ipowfs].siglevs, cosz);
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
 				parms->wfs[iwfs].hs=(parms->wfs[iwfs].hs-parms->sim.htel)*secz;
@@ -1891,6 +1891,7 @@ static void setup_parms_postproc_siglev(parms_t* parms){
 		}
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->powfs[ipowfs].siglev*=sigscale;
+			dscale(parms->powfs[ipowfs].siglevs, sigscale);
 			parms->powfs[ipowfs].bkgrnd*=sigscale;
 		}
 	}

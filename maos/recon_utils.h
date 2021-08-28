@@ -39,7 +39,7 @@ void FitL(dcell **xout, const void *A,
 void FitR(dcell **xout, const void *A, 
 	  const dcell *xin, const real alpha);
 
-dsp *nea2sp(dmat **nea, long nsa);
+dsp *nea2sp(dmat *nea, int ll, int ur);
 void psfr_calc(sim_t *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
 void shift_grad(sim_t *simu);
 lmat* loc_coord2ind(loc_t *aloc, const char *fndead);

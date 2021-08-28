@@ -173,8 +173,8 @@ typedef struct powfs_cfg_t{
     real pixoffx;  /**<offset of image center from center of detector*/
     real pixoffy;  /**<see pixoffx*/
     real sigscale; /**<scale the signal level for simulation.*/
-    real siglev;   /**<signal level. will be override by wfs.siglev is specified.*/
-    dmat* siglevs;  /**<in array format. 1x1 or nwfsx1*/
+    real siglev;   /**<signal level at dtrat=1. will be override by wfs.siglev is specified.*/
+    dmat* siglevs;  /**<in array format. 1x1 or nwfsx1, scaled by dtrat*/
     real sigrecon; /**<signal level for NEA computation*/
     struct llt_cfg_t *llt;/**<configuration for LLT*/
     char* fnllt;   /**<filename of LLT configuration. empty means no llt.*/

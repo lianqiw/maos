@@ -96,7 +96,7 @@ int main(int argc, char* argv[]){
 		npath=argc-arg->iarg;
 		path=mycalloc(npath, char*);
 		for(int ipath=0; ipath<npath; ipath++){
-			path[ipath]=argv[ipath+arg->iarg];
+			path[ipath]=strdup(argv[ipath+arg->iarg]);
 		}
 	} else{
 		npath=1;
@@ -496,7 +496,14 @@ int main(int argc, char* argv[]){
 	draw_final(1);
 	cellfree(res);
 	cellfree(resm);
-
+	for(int ipath=0; ipath<npath; ipath++){
+		free(path[ipath]);
+		free(pathtag0[ipath]);
+	}
+	free(path);
+	free(seed);
+	free(arg->seeds);
+	free(arg);
 	/*
 	  writebin(upterr, "upterr");
 	  if(upterr && P(upterr,0)){

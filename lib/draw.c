@@ -651,13 +651,13 @@ end2:
 					error("To be implemented\n");
 					//use sendmmsg with GSO is fastest.
 				} else{
-					TIC;tic;
+					//TIC;tic;
 					if(stwrite(sock_draw, buf, bufsize)){
 						info("write to %d failed\n", sock_draw);
 						ans=-1;
 						draw_remove(sock_draw, 0);
 					}
-					toc2("write %lu MiB", bufsize>>20);
+					//toc2("write %lu MiB", bufsize>>20);
 				}
 #if TEST_UDP				
 				if(sock_draws[ifd].udp.sock>0){

@@ -743,13 +743,14 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				real ddy=(0-P(parms->powfs[ipowfs].llt->oy,illt));
 				desrot=atan2(ddy, ddx);
 			}
+			dmat *saa=PR(powfs[ipowfs].realsaa, illt, 0);
 			for(int isa=0; isa<nsa; isa++){
 				int ind=(int)round(P(P(powfs[ipowfs].srsa,illt),isa)/dprint);
 				real irot=fabs(P(P(powfs[ipowfs].srot,illt),isa)-desrot);
 				if(ind>=pnsa){
 					error("ind=%d>=pnsa=%d\n", ind, pnsa);
 				}
-				if(irot<prot[ind]){
+				if(irot<prot[ind] && P(saa, isa)>0.9){
 					prot[ind]=irot;
 					pp[ind]=(real)isa;
 				}
@@ -1581,8 +1582,8 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				cccell** ppotf=(parms->dbg.wfslinearity!=-1&&parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs)?&intstat->potf:0;
 				gensei(&intstat->i0, &intstat->gx, &intstat->gy, pfotf, ppotf,
 					intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, powfs[ipowfs].realsaa, powfs[ipowfs].srot,
-					parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts,parms->powfs[ipowfs].dtrat,
-				parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].radgx, parms->powfs[ipowfs].mtchstc);
+					parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts,
+					parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].radgx, parms->powfs[ipowfs].mtchstc);
 				//gensei(parms, powfs, ipowfs);
 			}
 		}

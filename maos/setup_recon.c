@@ -119,7 +119,7 @@ void nea_mm(dmat** pout, const dmat* in){
 	}
 }
 /**
-   Apply matrix inversion in a 2x2 symmetrisa matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
+   Apply matrix inversion in a 2x2 symmetrisa matrix packed in row vector [a[0,0],a[1,1],a[0,1]] 
    Input and output may be the same.
 */
 
@@ -133,13 +133,14 @@ void nea_inv(dmat** pout, const dmat* in){
 	int isxy=in->ny==3?1:0;
 	dmat* out=*pout;
 	for(int isa=0; isa<in->nx; isa++){
+		real xx=P(in, isa, 0);
+		real yy=P(in, isa, 1);
 		real xy=isxy?P(in, isa, 2):0;
-		real invdet=1./(P(in, isa, 0)*P(in, isa, 1)-xy*xy);
-		//Use temporary variable to handle the case that out and in is the same.
-		real a=invdet*P(in, isa, 1);
-		P(out, isa, 1)=invdet*P(in, isa, 0);
-		P(out, isa, 0)=a;
-		P(out, isa, 2)=invdet*xy;
+		real invdet=1./(xx*yy-xy*xy);
+
+		P(out, isa, 0)=invdet*yy;
+		P(out, isa, 1)=invdet*xx;
+		P(out, isa, 2)=-invdet*xy;
 	}
 }
 
@@ -224,39 +225,35 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 			if(!do_ref||iwfs==iwfs0||parms->wfs[iwfs].sabad||parms->wfs[iwfs0].sabad){
 				dmat* sanea0=PR(saneac, jwfs, 0);
-				int isxy=sanea0->ny==3?1:0;
+				dmat* sanea0l=0;
+				dmat* sanea0i=0;
 
-				dcell* sanea2=dcellnew(nsa, 1);
-				dcell* sanea2l=dcellnew(nsa, 1);
-				dcell* sanea2i=dcellnew(nsa, 1);
+				if(!parms->powfs[ipowfs].mtchcpl && sanea0->ny==2){
+					sanea0->ny=2;
+				}
 				real nea2_sum=0;
-				int nea2_count=0;
-
+				long nea2_count=0;
 				for(int isa=0; isa<nsa; isa++){
-					dmat* nea=P(sanea2,isa)=dnew(2, 2);
-					if(samask&&P(samask,isa)){
+					if(samask && P(samask, isa)){
 						warning("wfs %d sa %d is masked\n", iwfs, isa);
-						dset(P(sanea2,isa), INFINITY);
-						dset(P(sanea2l,isa), INFINITY);
-						dset(P(sanea2i,isa), 0);
-					} else{
-						P(nea,0)=P(sanea0, isa, 0);
-						P(nea,1)=P(nea,2)=isxy?P(sanea0, isa, 2):0;
-						P(nea,3)=P(sanea0, isa, 1);
-						{//When signal level is too high, nea is too small, the MVR can be problematic
-							P(nea,0)+=neaextra2;
-							P(nea,3)+=neaextra2;
-							if(P(nea,0)<neamin2) P(nea,0)=neamin2;
-							if(P(nea,3)<neamin2) P(nea,3)=neamin2;
+						for(int iy=0; iy<NY(sanea0); iy++){
+							P(sanea0, isa, iy)=INFINITY;
 						}
-						P(sanea2l,isa)=dchol(nea);
-						P(sanea2i,isa)=dinvspd(nea);
 					}
-					if(P(powfs[ipowfs].saa,isa)>area_thres){
-						nea2_sum+=P(nea,0)+P(nea,3);
+					for(int iy=0; iy<2; iy++){
+						if((P(sanea0, isa, iy)+=neaextra2)<neamin2){
+							P(sanea0, isa, iy)=neamin2;
+						}
+					}
+					if(P(powfs[ipowfs].saa, isa)>area_thres){
+						nea2_sum+=P(sanea0, isa, 0)+P(sanea0, isa, 1);
 						nea2_count++;
 					}
 				}
+				
+				nea_chol(&sanea0l, sanea0);
+				nea_inv(&sanea0i, sanea0);
+				
 				real nea_mean=sqrt(nea2_sum/nea2_count*0.5);
 				P(recon->neam,iwfs)=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
 				if(nea_mean>pixtheta*0.33
@@ -270,13 +267,12 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					P(saneal,iwfs,iwfs)=dspnewdiag(nsa*2, NULL, 0);
 					P(saneai,iwfs,iwfs)=dspnewdiag(nsa*2, NULL, 0);
 				} else{
-					P(sanea,iwfs,iwfs)=nea2sp(sanea2->p, nsa);
-					P(saneal,iwfs,iwfs)=nea2sp(sanea2l->p, nsa);
-					P(saneai,iwfs,iwfs)=nea2sp(sanea2i->p, nsa);
+					P(sanea,iwfs,iwfs)=nea2sp(sanea0, 1, 1);
+					P(saneal,iwfs,iwfs)=nea2sp(sanea0l, 1, 0);
+					P(saneai,iwfs,iwfs)=nea2sp(sanea0i, 1, 1);
 				}
-				dcellfree(sanea2);
-				dcellfree(sanea2l);
-				dcellfree(sanea2i);
+				dfree(sanea0l);
+				dfree(sanea0i);
 				dspscale(P(recon->saneai,iwfs,iwfs), TOMOSCALE);
 			} else if(do_ref){
 				P(sanea, iwfs, iwfs)=dspref(P(sanea, iwfs0, iwfs0));
@@ -321,7 +317,11 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		}
 	}
 	info2(" mas\n");
-
+	if(parms->save.setup){
+		writebin(recon->sanea, "sanea");
+		writebin(recon->saneai, "saneai");
+		writebin(recon->saneal, "saneal");
+	}
 }
 
 /**

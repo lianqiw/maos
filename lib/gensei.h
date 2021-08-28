@@ -35,7 +35,7 @@ cccell* genseotf(const pts_t* pts, const void* amp, const dcell* opdbias,
 //void genseotf(const parms_t *parms, powfs_t *powfs, int ipowfs);
 void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, const void* saa, dmat* wvl, int notfx, int notfy);
 void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppotf,
-  dccell* sepsfs, dtf_t* dtf, etf_t* etf, dcell* saa, dcell* srot, dmat* siglev, dmat* wvlwts, int dtrat,
+  dccell* sepsfs, dtf_t* dtf, etf_t* etf, dcell* saa, dcell* srot, dmat* siglev, dmat* wvlwts,
   int i0scale, int radgx, int shift2center
 );
 #endif

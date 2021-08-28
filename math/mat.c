@@ -1036,6 +1036,17 @@ T X(cellsum)(const X(cell)* A){
 	return v;
 }
 /**
+   return sum of each cell in a X(mat)
+*/
+X(mat)* X(cellsum_each)(const X(cell)* A){
+	if(isempty(A)) return 0;
+	X(mat) *B=X(new)(NX(A), NY(A));
+	for(long i=0; i<PN(A); i++){
+		P(B,i)+=X(sum)(P(A, i));
+	}
+	return B;
+}
+/**
    Compute the hashlittle
  */
 uint32_t X(cellhash)(const X(cell)* A, uint32_t key){

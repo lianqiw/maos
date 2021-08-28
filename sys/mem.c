@@ -389,7 +389,8 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 		return;
 	}
 	if(fatal_error_in_progress){
-		info("Signal handler is already in progress. new signal is ignored\n");
+		info("Signal handler is already in progress. force abort.\n");
+		_Exit(1);
 		return;
 	}
 	fatal_error_in_progress++;

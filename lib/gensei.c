@@ -224,7 +224,7 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, const vo
    detector from short expsoure PSF, the elongation transfer function of the
    sodium layer, and the detector transfer function. */
 void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppotf,
-	dccell* sepsfs, dtf_t* dtf, etf_t* etf, dcell* saa, dcell* srot, dmat* siglev, dmat* wvlwts, int dtrat,
+	dccell* sepsfs, dtf_t* dtf, etf_t* etf, dcell* saa, dcell* srot, dmat* siglev, dmat* wvlwts,
 	int i0scale, int radgx, int shift2center
 ){
 	if(!sepsfs){
@@ -329,7 +329,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppot
 		const ccell* petf=etf?etf[iwvl].etf:0;
 		for(int ii0=0; ii0<ni0; ii0++){
 			real* area=PR(saa, ii0, 0)->p;
-			real wvlsig=PR(wvlwts, iwvl, ii0)*PR(siglev, ii0, 0)*dtrat;
+			real wvlsig=PR(wvlwts, iwvl, ii0)*PR(siglev, ii0, 0);
 
 			dcell* psepsf=PR(sepsfs, ii0, iwvl);
 			real* angles=(radgx)?(PR(srot, ii0, 0)->p):0;
