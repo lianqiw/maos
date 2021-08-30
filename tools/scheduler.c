@@ -130,7 +130,7 @@ static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
 		}
 		break;
 	case 3: //reset
-		if(ncpu || ngpu){
+		if(ncpu||ngpu){
 			ncpu=0;
 			ngpu=0;
 			dbg_time("reset: ncpu=%d, ngpu=%d\n", ncpu, ngpu);
@@ -387,12 +387,12 @@ static void process_queue(void){
 		return;
 	}
 	lasttime=myclocki();
-	if(nrun_get(0)>=NCPU || (NGPU && nrun_get(1)>=NGPU)){
+	if(nrun_get(0)>=NCPU||(NGPU&&nrun_get(1)>=NGPU)){
 		//dbg_time("process_queue: enough jobs are running\n");
 		return;
 	}
 	int avail=get_cpu_avail();
-	
+
 	if(avail<1){
 		//dbg_time("process_queue: no CPUs are available\n");
 		return;
@@ -420,7 +420,7 @@ static void process_queue(void){
 				if(stwriteint(irun->sock, S_START)){
 					dbg_time("Starting Job %d at %d failed: %s\n", irun->pid, irun->sock, strerror(errno));
 					irun->status.info=S_UNKNOWN;
-				}else{
+				} else{
 					dbg_time("Starting Job %d at %d ok.\n", irun->pid, irun->sock);
 					nrun_add(irun->pid, nthread, irun->ngpu);
 					irun->status.info=S_START;
@@ -431,7 +431,7 @@ static void process_queue(void){
 			if(kill(irun->pid, 0)){
 				dbg_time("Job %d already exited. irun->sock=%d, change to UNKNOWN.\n", irun->pid, irun->sock);
 				irun->status.info=S_UNKNOWN;
-			}else{
+			} else{
 				dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
 			}
 		}
@@ -445,7 +445,7 @@ static void process_queue(void){
 				if(!irun){
 					dbg_time("all jobs are done\n");
 					all_done=1;
-					nrun_handle(3,0,0,0);
+					nrun_handle(3, 0, 0, 0);
 					counter=-1; //reset the counter
 				} else{
 					int pid;
@@ -607,7 +607,7 @@ static int respond(int sock){
 			nthread=1;
 		else if(nthread>NCPU)
 			nthread=NCPU;
-		
+
 		RUN_T* irun=running_add(pid, sock);
 		if(!irun){
 			warning_time("scheduler: running_add %d failed. Exe already exited.\n", pid);
@@ -632,7 +632,7 @@ static int respond(int sock){
 		dbg_time("(%d) Job %d reports finished\n", sock, pid);
 		running_remove(pid, S_FINISH);
 		ret=0;//-1. Do not yet close. wait for client to close.
-	break;
+		break;
 	case CMD_STATUS://3: Called by MAOS to report status at every time step
 	{
 		RUN_T* irun=running_get(pid);
@@ -663,14 +663,14 @@ static int respond(int sock){
 		dbg_time("(%d) Job %d reports crashed\n", sock, pid);
 		running_remove(pid, S_CRASH);
 		ret=0;//-1; wait for client to close.
-	break;
+		break;
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
 		MONITOR_T* tmp=monitor_add(sock);
 		if(tmp){
 			if(pid>=0x8){//old scheme where scheduler_version at compiling is passed
 				tmp->load=1;
-			}else if(pid<0){//new scheme with bit indicating different options
+			} else if(pid<0){//new scheme with bit indicating different options
 				tmp->load=pid&1;
 				tmp->plot=pid&(1<<1);
 			}
@@ -731,7 +731,7 @@ static int respond(int sock){
 		int cmd2[3]={MON_VERSION, 0, 0};
 		stwrite(sock, &cmd2, sizeof(cmd2));
 	}
-		break;
+	break;
 	case CMD_SOCK://10:Called by draw() to cache or request a fd. Valid over UNIX socket only.
 	{
 		if(pid>0){//receive sock from draw()
@@ -766,7 +766,7 @@ static int respond(int sock){
 				close(sock_save);
 			}
 		} else{//pid==0; request a drawdaemon using monitor. 
-			MONITOR_T *pm=0;
+			MONITOR_T* pm=0;
 			for(pm=pmonitor; pm; pm=pm->next){
 				if(pm->plot){
 					int moncmd[3]={MON_DRAWDAEMON,0,0};
@@ -851,13 +851,13 @@ static int respond(int sock){
 				ret=-1;
 			}
 		}
-		if(ret!=-1 && pid>=3){//old method. should not be used.
+		if(ret!=-1&&pid>=3){//old method. should not be used.
 			if(streadstr(sock, &execwd)){
 				warning_time("(%d) Unable to read execwd.\n", sock);
 				ret=-1;
 			}
 		}
-		if(ret!=-1 && !streadstr(sock, &execmd)){
+		if(ret!=-1&&!streadstr(sock, &execmd)){
 			if(execwd){//merge cwd to new
 				char* tmp=execmd;
 				execmd=stradd(execwd, "/", execmd, NULL);
@@ -959,7 +959,7 @@ void scheduler_handle_ws(char* in, size_t len){
 static void scheduler_timeout(void){
 	static time_t lasttime3=0;//every 3 seconds
 	static time_t lasttime10=0;//every 10 seconds
-	
+
 	time_t thistime=myclocki();
 	//Process job queue
 	if(!all_done){
@@ -1044,8 +1044,8 @@ static void html_push(RUN_T* irun, char* path, char** dest, size_t* plen, long p
 	}
 }
 static void html_push_all_do(RUN_T* irun, l_message** head, l_message** tail, long prepad, long postpad){
-	l_message* node=(l_message*)calloc(1,sizeof(l_message));
-	l_message* node2=(l_message*)calloc(1,sizeof(l_message));
+	l_message* node=(l_message*)calloc(1, sizeof(l_message));
+	l_message* node2=(l_message*)calloc(1, sizeof(l_message));
 	node->next=node2;
 	node2->next=0;
 	if(*tail){
@@ -1174,10 +1174,54 @@ static void monitor_send_initial(MONITOR_T* ic){
 	}
 }
 
-int main(){
+int main(int argc, const char* argv[]){
+	int flag=0;
+	if(argc>1 && argv[1]){
+		if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")){
+			info("%s [options]\n"
+			"Options:\n"
+			"\t-h --help: \tprint this help\n"
+			"\t-d: \t\tfork twice and launch as daemon\n"
+			"\t--direct: \tskip all checking\n", argv[0]);
+			return 0;
+		}
+		if(!strcmp(argv[1], "-d")){//daemonize
+			flag=1;
+		} else if(!strcmp(argv[1], "--direct")){//launched by launch_scheduler_do, already locked.
+			flag=2;
+		}
+	}
+	switch(flag){
+	case 0:{
+		char fnlock[PATH_MAX];
+		snprintf(fnlock, PATH_MAX, "%s/scheduler.pid", TEMP);
+		int fd=0;
+		if((fd=lock_file(fnlock, 0, scheduler_version))<0){
+			dbg_time("Failed to lock_file. exit\n");
+			return 1;
+		}else{
+			char strpid[60];
+			snprintf(strpid, 60, "%d %d\n", getpid(), scheduler_version);
+			lseek(fd, 0, SEEK_SET);
+			if(ftruncate(fd, 0)<0)
+				warning("Unable to truncate file\n");
+			if(write(fd, strpid, strlen(strpid)+1)!=(long)strlen(strpid)+1){
+				warning("Write pid %d to %s failed\n", getpid(), fnlock);
+			}
+		}
+		//do not close fd.
+	}
+		break;
+	case 1:{//
+		single_instance_daemonize(TEMP, "scheduler", scheduler_version, NULL, NULL);
+	}
+		break;
+	case 2://do nothing
+		break;
+	}
 	char slocal[PATH_MAX];//local port
 	snprintf(slocal, PATH_MAX, "%s/scheduler", TEMP);
-	remove(slocal);
+	//remove(slocal);
 	extern int is_scheduler;
 	is_scheduler=1;
 	setbuf(stdout, NULL);
@@ -1199,7 +1243,7 @@ int main(){
 		pclose(fpcmd);
 		dbg("NGPU=%d\n", NGPU);
 	}
-	
+
 	//Use ws_service in a separate thread does not update job status.
 	//We call it in scheduler_timeout using poll. no need for LOCK in this case
 #if HAS_LWS

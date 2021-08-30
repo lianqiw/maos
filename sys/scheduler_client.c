@@ -214,10 +214,10 @@ static void launch_scheduler_do(void* junk){
 #endif
 	if(exist(fn_scheduler)){
 		dbg_time("Run %s as %d\n", fn_scheduler, getpid());
-		execl(fn_scheduler, "scheduler", NULL);
+		execl(fn_scheduler, "scheduler", "--direct", NULL);
 	} else{/*fall back. this won't have the right argv set. */
 		info("Launch scheduler using shell\n");
-		if(execlp("scheduler", "scheduler", NULL)){
+		if(execlp("scheduler", "scheduler", "--direct", NULL)){
 			warning("scheduler not found\n");
 		}
 	}

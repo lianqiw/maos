@@ -57,66 +57,51 @@ int lock_file(const char* fnlock, /**<The filename to lock on*/
 ){
 	int fd;
 	int count=0;
-retry:
 	if((count++)>10){
 		return -1;
 	}
 	fd=open(fnlock, O_RDWR|O_CREAT, 0644);
-	if(fd>=0){
+	if(fd<0){
+		warning_time("Open file %s failed: %s\n", fnlock, strerror(errno));
+	}else{//check file content first
+		int pid=0, version_old=0;
+		int ans1=0, ans2=-1;
+		FILE* fp=fdopen(dup(fd), "r");
+		if(fp){//check existing instance
+			ans1=fscanf(fp, "%d %d", &pid, &version_old);
+			if(ans1>0){
+				if((ans2=kill(pid, 0))){//already exited
+					pid=0;
+				}
+			}
+			if(pid){//already running
+				if(ans1>1 && version && version_old && version>version_old){
+					ans2=kill(pid, SIGTERM);
+					if(ans2){//signal send failed
+						dbg_time("%d failed to send TERM signal to old executive %d, return -1.\n", getpid(), pid);
+						return -pid;
+					}else{
+						dbg_time("%d successfully sends TERM signal to old executive %d\n", getpid(), pid);
+						sleep(1);
+					}
+				}else{
+					dbg_time("Already running as PID %d.\n", pid);
+					return -pid;//keep existing drawdaemon
+				}
+			}
+			fclose(fp); fp=NULL;
+		}
+		//obtain lock before writing to file.
+
 		//fcntl(fd, F_SETFD, FD_CLOEXEC);//do not set CLOEXEC to hold the lock after fork/exec.
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
 		if(flock(fd, op)){/*lock faild. another process already locked file.*/
 			if(block){/*In block mode, we should never fail. */
-				perror("flock");
-				error("Lock failed\n");
+				dbg_time("Blocked Lock failed: %s\n", strerror(errno));
 			}
-			//check running process version.
-			int pid=0, version_old=0;
-			int ans1=0, ans2=-1;
-			FILE* fp=fdopen(fd, "r");
-			if(fp){
-				ans1=fscanf(fp, "%d %d", &pid, &version_old);
-				if(ans1==2){
-					ans2=kill(pid, 0);
-				}
-				fclose(fp); fp=NULL; 
-			}else{
-				close(fd);
-			}
-			if(ans1!=2 || ans2){//fnlock contains wrong content.
-				if(ans1!=2){
-					warning("Error reading pid or version. \n");
-				}
-				if(ans2){//shared cached file locked by process from a different machine.
-					warning_time("Unknown process %d already locked file %s.\n", pid, fnlock);
-				}
-				if(version!=0){//only single_instance_daemonize calls with version!=0
-					warning_time("Remove file %s and retry.\n", fnlock);
-					remove(fnlock);
-				}
-				goto retry;
-			} else if(version>0&&version_old<version){
-				/*already running. but version is old */
-				info("%d is sending TERM signal to old executive\n", getpid());
-				if(!kill(pid, SIGTERM)){//signal sent
-					sleep(5);
-					if(!kill(pid, 0)){//still running
-						warning_time("%d is sending KILL signal to the old executive.\n", getpid());
-						if(!kill(pid, SIGKILL)){//signal sent
-							sleep(5);
-							if(!kill(pid, 0)){
-								warning_time("Failed to kill the old executive\n");
-								return -pid;
-							}
-						}
-					}
-				}
-				goto retry;
-			} else{//scheduler is already running
-				return -pid;
-			}
-		} else{/*lock succeed. write pid. */
+			return -1;
+		} else{/*lock succeed. write pid. the pid will be updated with correct pid later. */
 			char strpid[60];
 			snprintf(strpid, 60, "%d %d\n", getpid(), version);
 			lseek(fd, 0, SEEK_SET);
@@ -127,8 +112,6 @@ retry:
 			}
 			fsync(fd);/*don't close file. maintain lock. */
 		}
-	} else{
-		warning_time("Open file %s failed. This should rarely happen\n", fnlock);
 	}
 	return fd;
 }
