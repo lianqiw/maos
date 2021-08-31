@@ -327,14 +327,14 @@ callback_maos_monitor(struct lws* wsi,
 					lwsl_err("ERROR %d writing to mirror socket\n", n);
 					return -1;
 				} else if(n<(int)pss->head->len){
-					lwsl_err("mirror partial write %d vs %ld\n", n, (long)pss->head->len);
+					lwsl_err("mirror partial write %d out of %ld, retry.\n", n, (long)pss->head->len);
+				}else{
+					l_message* tmp=pss->head;
+					pss->head=pss->head->next;
+					free(tmp->payload);
+					free(tmp);
 				}
-				l_message* tmp=pss->head;
-				if((pss->head=pss->head->next)){
-					pending=1;//more data to write
-				}
-				free(tmp->payload);
-				free(tmp);
+				if(pss->head) pending=1;
 			}else if(pss->ringbuffer_tail!=ringbuffer_head){//send using ring buffer tail
 				n=lws_write(wsi, (unsigned char*)
 					ringbuffer[pss->ringbuffer_tail].payload+
@@ -345,14 +345,15 @@ callback_maos_monitor(struct lws* wsi,
 					lwsl_err("ERROR %d writing to mirror socket\n", n);
 					return -1;
 				}
-				if(n<(int)ringbuffer[pss->ringbuffer_tail].len)
-					lwsl_err("mirror partial write %d vs %ld\n",
+				if(n<(int)ringbuffer[pss->ringbuffer_tail].len){
+					lwsl_err("mirror partial write %d of %ld, retry.\n",
 						n, (long)ringbuffer[pss->ringbuffer_tail].len);
-
-				if(pss->ringbuffer_tail==(MAX_MESSAGE_QUEUE-1))
-					pss->ringbuffer_tail=0;
-				else
-					pss->ringbuffer_tail++;
+				}else{
+					if(pss->ringbuffer_tail==(MAX_MESSAGE_QUEUE-1))
+						pss->ringbuffer_tail=0;
+					else
+						pss->ringbuffer_tail++;
+				}
 				if(pss->ringbuffer_tail!=ringbuffer_head){
 					pending=2;//more data to write
 				}
@@ -457,9 +458,9 @@ int ws_service(int waiting){
 				repeat++;
 			}
 		}while(pending && (waiting--)>0);//service all available requests
-		if(repeat>1){
+		/*if(repeat>1){
 			lwsl_notice("repeat %d times.\n", repeat);
-		}
+		}*/
 	}
 	if(ans<0){
 		ws_end();

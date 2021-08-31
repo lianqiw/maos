@@ -47,7 +47,7 @@ typedef enum CEMBED{
     long nx;       /**< number of rows */				\
     long ny;       /**< number of columns */				\
     char *header;  /**<The header*/					\
-    file_t *fp;      /**<Opened file, to be saved to when called or freed*/\
+    file_t *fp;    /**<Opened file, to be saved to when called or freed*/\
     struct fft_t *fft					
 
 #define MATARR(T)				\
@@ -55,17 +55,17 @@ typedef enum CEMBED{
     mem_t *mem; /**< Memory management*/	\
     async_t *async /**<async io*/
 
-#define SPMATDEF(T,S) typedef struct S{					\
+#define SPMATDEF(T,S) typedef struct S{					        \
 	uint32_t id;         /**<to identify the array type*/		\
-	T *restrict px;      /**< numerical values, size nzmax */	\
-	long nx;             /**< number of rows */			\
-	long ny;             /**< number of columns */			\
-	char *header;        /**<header*/				\
-    char *fn;      /**<The file, to be saved to when*/\
-	long nzmax;          /**< maximum number of entries */		\
-    spint *restrict pp;  /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
-	spint *restrict pi;  /**< row indices, size nzmax */		\
-	int *nref;           /**< reference counting */	\
+	T *restrict px;      /**<numerical values, size nzmax */	\
+	long nx;             /**<number of rows */			        \
+    long ny;             /**<number of columns */			    \
+	char *header;        /**<header*/				            \
+    char *fn;            /**<The file, to be saved upon free*/  \
+    long nzmax;          /**<maximum number of entries */		\
+    spint *restrict pp;  /**<col indices (size nzmax)  */       \
+	spint *restrict pi;  /**<row indices, size nzmax */		    \
+	int *nref;           /**<reference counting for px, pp, pi*/\
 }S;
 
 #define MATDEF(T,S) typedef struct S{MATARR(T);} S;
@@ -282,9 +282,11 @@ static inline long index_col(long iy, long nx, long ny){
 #define P0(A)       (A)->p
 #define P1(A,i)     (A)->p[index_1d((i),        (A)->nx, (A)->ny)]
 #define P2(A,ix,iy) (A)->p[index_2d((ix), (iy), (A)->nx, (A)->ny)]
+#define P3(Ac,ix,iy,icx) P2(P1(Ac,icx),ix,iy)
+#define P4(Ac,ix,iy,icx,icy) P2(P2(Ac,icx,icy),ix,iy)
 
-#define P_GET(_0,_1,_2,_3,NAME,...) NAME
-#define P(...) P_GET(_0,__VA_ARGS__,P2,P1,P0)(__VA_ARGS__)
+#define P_GET5(_0,_1,_2,_3,_4,_5,NAME,...) NAME
+#define P(...) P_GET5(_0,__VA_ARGS__,P4,P3,P2,P1,P0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+index_col((iy), (A)->nx, (A)->ny))
 
 //Define indexing using wrapping. 

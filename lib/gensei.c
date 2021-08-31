@@ -126,7 +126,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 		if(exist(fnlock)||!zfexist("%s", fnotf)){/*need to create data */
 			int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 			if(fd>=0){/*succeed */
-				info("Generating WFS OTF for %s...", fnotf);
+				info("Generating OTF for %s...", fnotf);
 				TIC;tic;
 				otf=genseotf_do(pts, amp, opdbias, saa, wvl, r0, L0, embfac);
 				toc2("done");
@@ -137,7 +137,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 			}
 			close(fd); remove(fnlock);
 		} else{
-			info("Reading WFS OTF from %s\n", fnotf);
+			info("Reading OTF from %s\n", fnotf);
 			otf=cccellread("%s", fnotf);
 		}
 	}
@@ -146,7 +146,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 /**
    Upsample the otf in to out while preserving the PSF.
  */
-static void upsample_otf(cmat* out, const cmat* in){
+void upsample_otf(cmat* out, const cmat* in){
 	if(in->nx==out->nx&&in->ny==out->ny){
 		ccp(&out, in);
 	} else{
@@ -163,7 +163,8 @@ static void upsample_otf(cmat* out, const cmat* in){
 /**
    Createing subaperture short exposure PSF from the tip/tilt removed turbulence
    OTF and uplink OTF. Not including detector or elongation characteristics.  */
-void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, const void* saa, dmat* wvl, int notfx, int notfy
+void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf,
+	const void* saa, const dmat* wvl, int notfx, int notfy
 ){
 	const int nwvl=PN(wvl);
 	const int nsa=NX(P(otfs, 0, 0));
@@ -183,8 +184,10 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, const vo
 		*psepsfs=dccellnew(nsepsf, nwvl);
 	}
 	sepsfs=*psepsfs;
+	if(!notfx) notfx=NX(P(P(otfs, 0), 0));
+	if(!notfy) notfy=NX(P(P(otfs, 0), 0));
 	for(int isepsf=0; isepsf<nsepsf; isepsf++){
-		const dmat* saai=iscell(saa)?PR((dcell*)saa, isepsf, 1):(dmat*)saa;
+		const dmat* saai=saa?(iscell(saa)?PR((dcell*)saa, isepsf, 1):(dmat*)saa):NULL;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			P(sepsfs, isepsf, iwvl)=dcellnew_same(nsa, 1, notfx, notfy);
 			const ccell* otf=PR(otfs, isepsf, iwvl);
@@ -200,7 +203,7 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, const vo
 				}
 			}
 			for(int isa=0; isa<nsa; isa++){
-				real norm=P(saai, isa)/((real)(notfx*notfy));
+				real norm=(saai?P(saai, isa):1)/((real)(notfx*notfy));
 				if(P(otf, isa, 0)){
 					upsample_otf(sepsf, P(otf, isa, 0));/*peak in center */
 				} else{
@@ -223,12 +226,16 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, const vo
    generate subaperture short exposure average pixel intensities sampled on
    detector from short expsoure PSF, the elongation transfer function of the
    sodium layer, and the detector transfer function. */
-void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppotf,
-	dccell* sepsfs, dtf_t* dtf, etf_t* etf, dcell* saa, dcell* srot, dmat* siglev, dmat* wvlwts,
-	int i0scale, int radgx, int shift2center
+void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
+	const dccell* sepsfs, const dtf_t* dtf, const etf_t* etf, const dcell* saa,
+	const dcell* gxyrot, const dmat* siglev, const dmat* wvlwts, const dcell* goff,
+	int i0scale, int shift2center
 ){
-	if(!sepsfs){
-		error("sepsfs must be set\n");
+	if(!sepsfs||!dtf){
+		error("sepsfs and dtf must be set\n");
+	}
+	if(shift2center&&goff){
+		error("cannot specify both goff and shift2center");
 	}
 	const int notfx=NX(P(P(sepsfs, 0, 0), 0, 0));
 	const int notfy=NY(P(P(sepsfs, 0, 0), 0, 0));
@@ -245,8 +252,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppot
 	   2) different signal level or wvlwts
 	   3) powfs[ipowfs].bkgrnd contains rayleigh scatter bkgrnd for each wfs in this powfs.
 	*/
-	const int nsepsf=NX(sepsfs);
-	int ni0=MAX(nsepsf, nllt);
+	int ni0=MAX(NX(sepsfs), nllt);
 	if(NY(wvlwts)>1){
 		if(ni0==1){
 			ni0=NY(wvlwts);
@@ -258,49 +264,53 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppot
 		if(ni0==1){
 			ni0=PN(siglev);
 		} else if(ni0!=PN(siglev)){
-			error("Mismatch: ni0=%d, siglev is %ldx1\n", ni0, NX(siglev));
+			error("Mismatch: ni0=%d, siglev is %ldx1\n", ni0, PN(siglev));
 		}
 	}
-
-	if(ni0>1){
-		info("number of i0 for matched filter is %d\n", ni0);
+	if(goff&&PN(goff)>1){
+		if(ni0==1){
+			ni0=PN(goff);
+		} else if(ni0!=PN(goff)){
+			error("Mismatch: ni0=%d, goff is %ldx1\n", ni0, NX(goff));
+		}
 	}
+	//dbg("number of i0 is %d\n", ni0);
+
 	const int pixpsax=dtf[0].pixpsax;
 	const int pixpsay=dtf[0].pixpsay;
-
+	const real dtheta=dtf[0].dtheta;
 	if(pi0){
 		if(NX(*pi0)!=nsa||NY(*pi0)!=ni0){
 			dcellfree(*pi0);
 			*pi0=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
+		} else{
+			dcellzero(*pi0);
 		}
 	}
 	if(pgx){
 		if(NX(*pgx)!=nsa||NY(*pgx)!=ni0){
 			dcellfree(*pgx);
 			*pgx=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
+		} else{
+			dcellzero(*pgx);
 		}
 	}
 	if(pgy){
 		if(NX(*pgy)!=nsa||NY(*pgy)!=ni0){
 			dcellfree(*pgy);
 			*pgy=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
+		} else{
+			dcellzero(*pgy);
 		}
 	}
 	if(pfotf){
 		cellfree(*pfotf);
-		*pfotf=cccellnew(nsepsf, 1);
-		for(int i=0; i<nsepsf; i++){
+		*pfotf=cccellnew(ni0, 1);
+		for(int i=0; i<ni0; i++){
 			P(*pfotf, i)=ccellnew(nsa, nwvl);
 		}
 	}
-	if(ppotf){
-		cellfree(*ppotf);
-		*ppotf=cccellnew(nsepsf, 1);
-		for(int i=0; i<nsepsf; i++){
-			P(*ppotf, i)=ccellnew(nsa, nwvl);
-		}
-	}
-	dcell* i0=*pi0;
+	dcell* i0=pi0?*pi0:0;
 	dcell* gx=pgx?*pgx:0;
 	dcell* gy=pgy?*pgy:0;
 
@@ -309,15 +319,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppot
 	  because the PSF is not enough to cover the size.
 	  Disable the computation.
 	*/
-	/*
-	for(int ii0=0; ii0<ni0; ii0++){
-		for(int isa=0; isa<nsa; isa++){
-			P(i0, isa, ii0)=dnew(pixpsax, pixpsay);
-			P(gx, isa, ii0)=dnew(pixpsax, pixpsay);
-			P(gy, isa, ii0)=dnew(pixpsax, pixpsay);
-		}
-	}
-	*/
+
 	if(i0scale){
 		warning("i0 is scaled to match sa area\n");
 	}
@@ -332,67 +334,70 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppot
 			real wvlsig=PR(wvlwts, iwvl, ii0)*PR(siglev, ii0, 0);
 
 			dcell* psepsf=PR(sepsfs, ii0, iwvl);
-			real* angles=(radgx)?(PR(srot, ii0, 0)->p):0;
-			ccell* se_save=ccellnew(3, NTHREAD);
+			real* angles=(gxyrot)?(PR(gxyrot, ii0, 0)->p):0;
+			ccell* se_cache=ccellnew_same(2, NTHREAD, notfx, notfy);
 #ifdef _OPENMP
 			if(omp_in_parallel()){
 				warning("Already in parallel\n");
 			}
 #endif
-#pragma omp parallel default(shared)
-#pragma omp for 
+#pragma omp parallel for default(shared)
 			for(int isa=0; isa<nsa; isa++){
 				int ith=0;
+				/*loaded psepsf. sum to 1 for full sa. peak in center */
 				dmat* sepsfi=P(psepsf, isa, 0);
+#if DEBUG				
+				if(dsum(sepsfi)>1.1){
+					error("Short exposure PSF has wrong scaling. It should total to <=1\n");
+				}
+#endif				
 #ifdef _OPENMP
 				ith=omp_get_thread_num();
 #endif
-#define seotfj P(se_save,0,ith)
-#define seotfk P(se_save,1,ith)
-				if(!seotfk){
+#define seotfj P(se_cache,0,ith)
+#define seotfk P(se_cache,1,ith)
+				/*if(!seotfk){
 					seotfk=cnew(notfx, notfy);
-				}
+				}*/
 				cmat* nominal=NULL;
 				dsp* si=NULL;
-				if(!dtf[iwvl].fused){
+				if(!etf||!etf[iwvl].fused){
 					nominal=PR(dtf[iwvl].nominal, isa, ii0);
 				}
 				si=PR(dtf[iwvl].si, isa, ii0);
-				real pgrad[2];
-				/*loaded psepsf. sum to 1 for full sa. peak in center */
-				if(shift2center){
+				real pgrad[2]={0,0};
+
+				if(goff){//convert goff in radian to sepsf pixel unit.
+					pgrad[0]=-P(PR(goff, ii0, 0), isa)/dtheta;
+					pgrad[1]=-P(PR(goff, ii0, 0), isa+nsa)/dtheta;
+				} else if(shift2center){
 					/*Forst psf to be centered. */
 					real pmax=dmax(sepsfi);
 					dcog(pgrad, sepsfi, 0.5, 0.5, 0.1*pmax, 0.2*pmax, 0);
 				}
-				if(dsum(sepsfi)>1.1){
-					error("Short exposure PSF has wrong scaling. It should total to <=1\n");
-				}
+
 				/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
 				cembedd(seotfk, sepsfi, 0);
 				cfftshift(seotfk);/*PSF, peak in corner; */
 				cfft2(seotfk, -1);/*turn to OTF, peak in corner, max is 1 */
-				if(shift2center&&fabs(pgrad[0])>EPS&&fabs(pgrad[1])>EPS){
+				if(pgrad[0]||pgrad[1]){
 					ctilt(seotfk, -pgrad[0], -pgrad[1], 0);
 				}
 				if(nominal) ccwm(seotfk, nominal);
 				cscale(seotfk, norm);/*normalized so that after fft, psf sum to 1*/
-				if(ppotf){
-					ccp(&P(P(*ppotf, ii0), isa, iwvl), seotfk);
-				}
-				if(nllt){/*elongation. */
+				if(petf){/*elongation. */
 					ccwm(seotfk, PR(petf, isa, ii0));
 				}
-				ccp(&seotfj, seotfk);/*backup */
+				ccp(&seotfj, seotfk);/*save for later use*/
 				if(pfotf){
 					ccp(&P(P(*pfotf, ii0), isa, iwvl), seotfk);
 				}
 				cfft2(seotfk, 1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
 				/*no need fftshift because nominal is pre-treated */
-				dspmulcreal(P(i0, isa, ii0)->p, si, seotfk->p, wvlsig);
+				if(i0) dspmulcreal(P(i0, isa, ii0)->p, si, seotfk->p, wvlsig);
 				if(gx||gy){
 					ccp(&seotfk, seotfj);
-					if(radgx){//Apply derivative in rotated coordinate
+					if(angles){//Apply derivative in rotated coordinate
 						//derivative of i0 along radial/azimuthal direction
 						const real ct=cos(angles[isa]);
 						const real st=sin(angles[isa]);
@@ -420,14 +425,14 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, cccell** ppot
 						dspmulcreal(P(gy, isa, ii0)->p, si, seotfj->p, wvlsig);
 					}
 				}
-				if(i0scale){
+				if(i0&&i0scale){
 					real scale=area[isa]/dsum(P(i0, isa, ii0));
 					if(i0) dscale(P(i0, isa, ii0), scale);
 					if(gx) dscale(P(gx, isa, ii0), scale);
 					if(gy) dscale(P(gy, isa, ii0), scale);
 				}
 			}/*for isa */
-			cellfree(se_save);
+			cellfree(se_cache);
 		}/*for ii0*/
 	}/*iwvl */
 }

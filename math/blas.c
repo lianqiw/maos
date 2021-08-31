@@ -125,10 +125,10 @@ X(mat)* X(inv)(const X(mat)* A){
 /**
    compute the pseudo inverse of matrix A with weigthing of full matrix W or
    sparse matrix weighting Wsp.  For full matrix, wt can be either W or diag (W)
-   for diagonal weighting.  B=inv(A'*W*A)*A'*W;
+   for diagonal weighting.  B=inv(A'*W*A+tikcr)*A'*W;
    thres is the threshold to truncate eigenvalues.
 */
-X(mat)* X(pinv2)(const X(mat)* A, const void* W, R thres){
+X(mat)* X(pinv2)(const X(mat)* A, const void* W, R thres, R tikcr){
 	if(!A) return NULL;
 	X(mat)* AtW=NULL;
 	/*Compute AtW=A'*W */
@@ -169,7 +169,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const void* W, R thres){
 		writebin(AtW, "AtW_isnan");
 		writebin(W, "W_isnan");
 	}
-	X(svd_pow)(cc, -1, thres);/*invert the matrix using SVD. safe with small eigen values. */
+	X(svd_pow)(cc, -1, thres, tikcr);/*invert the matrix using SVD. safe with small eigen values. */
 	X(mat)* out=NULL;
 	/*Compute (A'*W*A)*A'*W */
 	X(mm) (&out, 0, cc, AtW, "nn", 1);
@@ -182,7 +182,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const void* W, R thres){
    A convenient wrapper.
  */
 X(mat)* X(pinv)(const X(mat)* A, const void* W){
-	return X(pinv2)(A, W, 1e-14);
+	return X(pinv2)(A, W, 1e-14, 0);
 }
 /**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
@@ -251,16 +251,19 @@ X(mat)* X(imcc)(const X(mat)* A, const X(mat)* wt){
 
 
 /**
-   Apply tikhonov regularization to A
+   Apply tikhonov regularization to A. tikcr is specified as relative to the maximu eigen value.
+   merged into svd_pow
 */
-void X(tikcr)(X(mat)* A, T thres){
+/*
+void X(tikcr)(X(mat)* A, T tikcr){
+	if(!tikcr) return;
 	XR(mat)* S=NULL;
 	X(svd)(NULL, &S, NULL, A);
-	T val=P(S,0)*thres;
+	T val=P(S,0)*tikcr;
 	XR(free)(S);
 	X(addI)(A, val);
 }
-
+*/
 /**
    Compute the cholesky decomposition of a symmetric semi-definit dense matrix.
 */
@@ -451,13 +454,21 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
    computes pow(A,power) in place using svd.
    positive thres: Drop eigenvalues that are smaller than thres * max eigen value
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
+   if not zero, tikcr*max(eig) is added to the diagonal.
 */
-void X(svd_pow)(X(mat)* A, R power, R thres){
+void X(svd_pow)(X(mat)* A, R power, R thres, R tikcr){
 	if(isempty(A)) return;
 	XR(mat)* Sdiag=NULL;
 	X(mat)* U=NULL;
 	X(mat)* VT=NULL;
 	X(svd)(&U, &Sdiag, &VT, A);
+	if(tikcr>0){
+		X(addI)(A, P(Sdiag,0)*tikcr);
+		X(free)(U);
+		XR(free)(Sdiag);
+		X(free)(VT);
+		X(svd)(&U, &Sdiag, &VT, A);
+	}
 	/*eigen values below the threshold will not be used. the first is the biggest. */
 	R maxeig=fabs(P(Sdiag,0));
 	R thres0=fabs(thres)*maxeig;
@@ -533,52 +544,65 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
 /**
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
-X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
-	const void* W    /**<[in] The weighting matrix. dense or sparse*/
+X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
+	const void* W,    /**<[in] The weighting matrix. dense or sparse*/
+	R thres,
+	R tikcr
 	){
 	if(!A) return NULL;
 	X(cell)* wA=NULL;
 	if(W){
-		X(cellmm)(&wA, W, A, "nn", 1);
+		if(NY((cell*)W)==NX(A)){
+			X(cellmm)(&wA, W, A, "nn", 1);
+		}else if(NX(A)==NX((cell*)W) && NY(A)==NY((cell*)W)){
+			wA=X(celldup)(A);
+			X(cellcwm)(wA, (X(cell)*)W);
+		}else{
+			warning("W is invalid, ignore it\n");
+			wA=X(cellref)(A);
+		}
 	} else{
 		wA=X(cellref)(A);
 	}
 
 	X(cell)* ata=NULL;
 	X(cellmm)(&ata, wA, A, "tn", 1);
-	X(cell)* iata=X(cellsvd_pow)(ata, -1, 1e-14);
-	X(cellfree)(ata);
+	X(cellsvd_pow)(ata, -1, thres, tikcr);
 	X(cell)* out=NULL;
-	X(cellmm)(&out, iata, wA, "nt", 1);
+	X(cellmm)(&out, ata, wA, "nt", 1);
 	X(cellfree)(wA);
-	X(cellfree)(iata);
+	X(cellfree)(ata);
 	return out;
 }
-
+X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
+	const void* W){
+	return X(cellpinv2)(A, W, 1e-14, 0);
+}
 
 /**
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
 */
-X(cell)* X(cellsvd_pow)(X(cell)* A, R power, R thres){
+void X(cellsvd_pow)(X(cell)* A, R power, R thres, R tikcr){
 	X(mat)* Ac=X(cell2m)(A);
-	X(svd_pow)(Ac, power, thres);
-	X(cell)* B=NULL;
-	X(2cell)(&B, Ac, A);
-	X(celldropzero)(B, 0);
+	X(svd_pow)(Ac, power, thres, tikcr);
+	X(2cell)(&A, Ac, NULL);
+	X(celldropzero)(A, 0);
 	X(free)(Ac);
-	return B;
 }
 
 
 /**
    Apply tickholov regularization of relative thres to cell array by
    converting it to mat
+   merged into svd_pow
 */
-void X(celltikcr)(X(cell)* A, R thres){
+/*
+void X(celltikcr)(X(cell)* A, R tikcr){
+	if(!tikcr) return;
 	X(mat)* Ab=X(cell2m)(A);
-	X(tikcr)(Ab, thres);
+	X(tikcr)(Ab, tikcr);
 	X(2cell)(&A, Ab, NULL);
 	X(free)(Ab);
 }
-
+*/

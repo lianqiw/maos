@@ -164,7 +164,7 @@ void wfsints(thread_t* thread_data){
 		dsp* si=NULL;
 		if(!multi_nominal){
 			/*true only if 1) no elongation, 2) no radpix */
-			if(!powfs[ipowfs].dtf[iwvl].fused){
+			if(!powfs[ipowfs].etfsim[iwvl].fused){
 				nominal=P(powfs[ipowfs].dtf[iwvl].nominal,0);
 			}
 			si=P(powfs[ipowfs].dtf[iwvl].si,0);
@@ -185,7 +185,7 @@ void wfsints(thread_t* thread_data){
 		/* now big loop over subapertures */
 		for(int isa=isa_start; isa<isa_end; isa++){
 			if(multi_nominal){
-				if(!powfs[ipowfs].dtf[iwvl].fused){
+				if(!powfs[ipowfs].etfsim[iwvl].fused){
 					nominal=P(powfs[ipowfs].dtf[iwvl].nominal,isa,illt);
 				}
 				si=P(powfs[ipowfs].dtf[iwvl].si,isa,illt);

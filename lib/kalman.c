@@ -367,7 +367,7 @@ dmat* sde_fit(const dmat* psdin, const dmat* coeff0, real tmax_fit, int vibid){
     dmm(&APCt, 0, AP, C, "nt", 1);		\
     dmm(&CPCt, 0, CP, C, "nt", 1);		\
     dadd(&CPCt, 1, Rn, 1);			\
-    dsvd_pow(CPCt, -1, 1e-12);			\
+    dsvd_pow(CPCt, -1, 1e-12, 0);		\
     dmm(&P2, 0, AP, A, "nt", 1);		\
     dmm(&tmp, 0, CPCt, CPAt, "nn", 1);		\
     dmm(&P2, 1, APCt, tmp, "nn", -1);		\
@@ -501,7 +501,7 @@ kalman_t* sde_kalman(const dmat* coeff, /**<SDE coefficients*/
 	}
 	dfree(Pd0);
 	dmat* AcI=ddup(Ac);
-	dsvd_pow(AcI, -1, 0);
+	dsvd_pow(AcI, -1, 0, 0);
 	const int nwfs=Gwfs->nx;
 	if(dtrat_wfs->nx!=nwfs||dtrat_wfs->ny!=1){
 		error("dtrat_wfs should have size %ldx1\n", dtrat_wfs->nx);

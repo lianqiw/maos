@@ -1176,6 +1176,9 @@ static void monitor_send_initial(MONITOR_T* ic){
 
 int main(int argc, const char* argv[]){
 	int flag=0;
+	//err2out=0;//send error() and dbg() to stderr
+	//std2out=0;//send info() to stderr
+	LOG_LEVEL=1;
 	if(argc>1 && argv[1]){
 		if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")){
 			info("%s [options]\n"
@@ -1212,7 +1215,7 @@ int main(int argc, const char* argv[]){
 		//do not close fd.
 	}
 		break;
-	case 1:{//
+	case 1:{//daemonize
 		single_instance_daemonize(TEMP, "scheduler", scheduler_version, NULL, NULL);
 	}
 		break;

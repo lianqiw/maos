@@ -86,6 +86,9 @@ def draw(*args, **kargs):
             nframe=args[0].shape[0]
         else:
             nframe = args[0].size
+        if nframe>60:
+            nframe=60
+            print('Limit to first {} frames'.format(nframe))
         if 'nx' in kargs:
             nx=kargs['nx']
         elif nframe > 3:
@@ -129,10 +132,15 @@ def draw(*args, **kargs):
                 img.shape=(nx, ny)
             else:
                 raise(Exception('Unable to reshape 1d array'))
+        try:
+            plt.gca().images[-1].colorbar.remove()
+        except:
+            pass
         if 'ext' in kargs:
             im=plt.imshow(img, extent=kargs['ext'], origin='lower', cmap='jet')
         else:
             im=plt.imshow(img, origin='lower', cmap='jet')
+        
         plt.colorbar(im, fraction=0.046, pad=0.04)
         plt.grid(False)
 

@@ -107,12 +107,7 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	}
 	int cmod=0;//index into opd
 	int imod=0;//Noll's count of modes
-	TIC;tic;
 	for(int ir=rmin; ir<=rmax; ir++){
-		if(toc3>1){
-			info("Zernike radial order %d of %d\n", ir, rmax);
-			tic;
-		}
 		imod=(ir)*(ir+1)/2+1;
 		for(int im=0; im<=ir; im++){
 			if((ir-im)%2!=0) continue;//invalid combo

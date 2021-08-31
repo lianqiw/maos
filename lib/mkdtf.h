@@ -39,12 +39,13 @@ typedef struct dtf_t{
     cmat *Ux;            /**<Special frequency vector along x*/
     cmat *Uy;            /**<Special frequency vector along y*/
     real dxsa;         /**<Subaperture size*/
+    real pixthetax;    /**<Pixel size along x (radial)*/
+    real pixthetay;    /**<Pixel size along y (radial*/
     int notfx;         /**<FFT size along x*/
     int notfy;         /**<FFT size along y*/
     int pixpsax;       /**<Number of pixels along x*/
     int pixpsay;       /**<Number of pixels along y*/
     int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
-    int fused;           /**<Whether the DTF has been fused to ETF*/
     int nwvl;            /**<Number of dtf_t*/
 }dtf_t;
 
@@ -52,31 +53,33 @@ typedef struct etf_t{
     ccell *etf;          /**<Store the 2D ETF when*/
 	double hs;           /**<Guide star height*/
     int icol;            /**<Store the column index*/
+    int fused;           /**<Whether the DTF has been fused to ETF*/
     int nwvl;            /**<Number of dtf_t*/
 }etf_t;
 
-dtf_t *mkdtf(const dmat *wvls, /**<List of wavelength*/
-	     real dxsa,/**<Subaperture size*/
-	     real embfac,/**<Embedding factor (2)*/
-	     long notfx,/**<FFT size along x*/
-	     long notfy,/**<FFT size along y*/
-	     long pixpsax,/**<Number of pixels along x(r)*/
-	     long pixpsay,/**<Number of pixels along y(a)*/
-	     real pixthetax,/**<Pixel size along x (r)*/
-	     real pixthetay,/**<Pixel size along y (a)*/
-	     const dmat* pixoffx,  /**<offset of image center from center of detector*/
-	     const dmat* pixoffy,  /**<offset of image center from center of detector*/
-	     real pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
-	     const dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	     int radpix         /**<1: Pixels are along radial/azimuthal direction*/
-    );
-etf_t *mketf(dtf_t *dtfs,  /**<The dtfs*/
-	     real hs,      /**<Guide star focus range*/
-	     const dcell *sodium, /**<The sodium profile. First column is coordinate.*/
+dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
+    real dxsa,        /**<Subaperture size*/
+    real embfac,      /**<Embedding factor (2)*/
+    long notfx,       /**<FFT size along x*/
+    long notfy,       /**<FFT size along y*/
+    long pixpsax,     /**<Number of pixels along x(r)*/
+    long pixpsay,     /**<Number of pixels along y(a)*/
+    real pixthetax,   /**<Pixel size along x (r)*/
+    real pixthetay,   /**<Pixel size along y (a)*/
+    const dmat* pixoffx,  /**<offset of image center from center of pixel array, along x or radial*/
+    const dmat* pixoffy,  /**<offset of image center from center of pixel array, along y or azimuthal*/
+    real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
+    const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
+);
+etf_t *mketf(const dtf_t *dtfs,  /**<The dtfs*/
+         const dcell* sodium, /**<The sodium profile. First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
 	     const dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     const dcell *srsa,  /**<Subaperture to LLT distance*/
-	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
+         real hs,      /**<Guide star focus range*/
+         real htel,    /**<Telescope altitude*/
+         real za_rad, /**<Telescope zenith angle in radian*/
+   	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     );
 void dtf_free_do(dtf_t *dtfs);
 void etf_free_do(etf_t *etfs);

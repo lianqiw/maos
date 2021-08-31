@@ -64,11 +64,13 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 	loc_create_stat(recon->ploc);
 	if(parms->recon.misreg_tel2wfs){
 		real ploc_xm=0, ploc_ym=0;
+		int any_ploc=0;
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 			if(parms->recon.misreg_tel2wfs[iwfs]){
 				if(!recon->ploc_tel){
 					recon->ploc_tel=loccellnew(parms->nwfsr, 1);
 					locmean(&ploc_xm, &ploc_ym, recon->ploc);
+					any_ploc=1;
 				}
 				P(recon->ploc_tel,iwfs)=loctransform(recon->ploc, parms->recon.misreg_tel2wfs[iwfs]);
 				loc_t* ploc2=P(recon->ploc_tel,iwfs);
@@ -82,7 +84,7 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 					parms->wfsr[iwfs].misreg_r);
 			}
 		}
-		if(parms->save.setup){
+		if(parms->save.setup && any_ploc){
 			writebin(recon->ploc_tel, "ploc_tel");
 		}
 	}
@@ -275,7 +277,6 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 	}
 	if(parms->save.setup){
 		writebin(recon->xloc, "xloc");
-		writebin(recon->xmap, "xmap");
 	}
 }
 long count_nonzero(const lmat* in){
@@ -887,7 +888,7 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 		}
 		const loc_t *loc=ipsr==0?recon->ploc:P(recon->xloc, ipsr);
 		real reduce=loc->dx*2;//to reduce the edge effect.
-		dmat *opd=zernike(loc, parms->aper.d-reduce, rmin, rmax, zradonly);
+		dmat *opd=zernike(loc, loc_diam(loc)-reduce, rmin, rmax, zradonly);
 		
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;

@@ -19,7 +19,7 @@
 #include "sim.h"
 #include "sim_utils.h"
 #include "ahst.h"
-#include "genseotf.h"
+#include "powfs_utils.h"
 #include "save.h"
 #include "setup_recon.h"
 #include "recon_utils.h"
@@ -904,9 +904,6 @@ static void wfsgrad_drift(sim_t* simu, int ipowfs){
 			dzero(goff);
 			shwfs_grad(&goff, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);//force cog
 			dadd(&goff, 1, P(simu->gradoff, iwfs), 1);
-			/*if(simu->powfs[ipowfs].gradncpa){
-				dadd(&goff, 1, P(simu->powfs[ipowfs].gradncpa, jwfs), -1);
-			}*/
 			if(simu->gradoffdrift){//cog boot strapped
 				dadd(&goff, 1, P(simu->gradoffdrift, iwfs), -1);
 			} else if(simu->powfs[ipowfs].gradncpa){//cmf boot strapped, gradncpa is cog of i0

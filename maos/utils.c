@@ -32,7 +32,6 @@
 #include "../cuda/gpu.h"
 #endif
 #include "setup_powfs.h"
-#include "genseotf.h"
 /*
    A few utility routines
 */
@@ -494,31 +493,22 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const dmat* wvlwts=parms->wfs[iwfs].wvlwts;
 	intstat_t* intstat=powfs[ipowfs].intstat;
-	ccell* potf=PR(intstat->potf,wfsind,0);
-	cmat* potf2=0;
+	ccell* fotf=PR(intstat->fotf,wfsind,0);
+	cmat* fotf2=0;
 	ccell* otf=ccellnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		P(otf,iwvl)=cnew(P(potf,0)->nx, P(potf,0)->ny);
+		P(otf,iwvl)=cnew(P(fotf,0)->nx, P(fotf,0)->ny);
 	}
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
 	dmat** mtche=NULL;
 	if(parms->powfs[ipowfs].phytype_sim==1){
-		if(powfs[ipowfs].intstat->mtche->ny==1){
-			mtche=powfs[ipowfs].intstat->mtche->p;
-		} else{
-			mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
-		}
+		mtche=PCOLR(powfs[ipowfs].intstat->mtche, wfsind);
 	}
 	int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
 	real* srot=NULL;
-	cmat*** petf=NULL;
-	if(nllt){
+		if(nllt){
 		srot=PR(powfs[ipowfs].srot,wfsind,0)->p;
-		petf=mycalloc(nwvl, cmat**);
-		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			petf[iwvl]=&PR(powfs[ipowfs].etfsim[iwvl].etf, 0, wfsind);
-		}
 	}
 
 	const int nsep=41;
@@ -584,19 +574,12 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					real wvlsig=P(wvlwts,iwvl)*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
-					int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
-					int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
 					dspcell* psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
-					dsp* sis=P(psi, idtfsa, idtf);
+					dsp* sis=PR(psi, isa, wfsind);
 					real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
 					real dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
-					if(petf){
-						ccp(&potf2, P(potf,isa,iwvl));
-						ccwm(potf2, petf[iwvl][isa]);
-					} else{
-						potf2=P(potf,isa,iwvl);
-					}
-					ctilt2(P(otf,iwvl), potf2, gx*dtheta1, gy*dtheta1, 0);
+					fotf2=P(fotf,isa,iwvl);
+					ctilt2(P(otf,iwvl), fotf2, gx*dtheta1, gy*dtheta1, 0);
 					cfft2(P(otf,iwvl), 1);
 					dspmulcreal(ints->p, sis, P(otf,iwvl)->p, wvlsig);
 				}
@@ -651,10 +634,6 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	dfree(gnfra);
 	dfree(ints);
 	ccellfree(otf);
-	if(petf){
-		free(petf);
-		cfree(potf2);
-	}
 }
 /**
    Compute spherical aberration in LGS WFS gradients for all sodium profile columns.
@@ -697,10 +676,11 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 		setup_powfs_etf(powfs, parms, 0, ipowfs, 0, icol);
 		dcell *i0_new=0;
 		
-		gensei(&i0_new, NULL, NULL, NULL, NULL, 
-			powfs[ipowfs].intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, powfs[ipowfs].realsaa, powfs[ipowfs].srot,
-			parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, 
-			parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].radgx, parms->powfs[ipowfs].mtchstc);
+		gensei(&i0_new, NULL, NULL, NULL, 
+			powfs[ipowfs].intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, 
+			powfs[ipowfs].realsaa, parms->powfs[ipowfs].radgx?powfs[ipowfs].srot:NULL,
+			parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, NULL,
+			parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].mtchstc);
 			
 		//writebin(i0_new, "i0_%d", icol);
 		for(int isa=0; isa<nsa; isa++){
@@ -820,7 +800,7 @@ void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
 	intstat_t* intstat=powfs[ipowfs].intstat;
-	ccell* fotf=P(intstat->fotf,NX(intstat->sepsf)>1?wfsind:0);
+	ccell* fotf=PR(intstat->fotf,wfsind,0);
 	mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
 	//info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
 	int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, 5000, (dminsearch_fun)mapfun, &data);

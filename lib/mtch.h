@@ -41,5 +41,26 @@ void mtch(dmat **mtche,   /**<[out] the matched filter*/
 	  int cr          /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
     );
 void mtch2(dmat **mtche, dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
+void mtch_cell(
+	dcell** pmtche,  /**<[out] matched filter. */
+	dcell** psanea,  /**<[out] subaperture noise equivalent angle*/
+	dmat** pi0sum,   /**<[out] sum of subaperture intensity*/
+	dmat** pi0sumsum,/**<[out] sum of all subaperture intensity*/
+	const dcell* i0s, /**<Subaperture intensities*/
+	const dcell* gxs, /**<Subaperture intensity gradients along x (radial)*/
+	const dcell* gys, /**<Subaperture intensity gradients along y (azimuthal)*/
+	const dmat* qe, /**<Quantum efficiency of each pixel*/
+	const dcell* bkgrnd2, /**<bkgrnd image*/
+	const dcell* bkgrnd2c,/**<bkgrnd correction image*/
+	real bkgrnd,  /**<bkgrnd per pixel*/
+	real bkgrndc, /**<bkgrnd correction per pixel*/
+	real rne,     /**<Read out noise per pixel*/
+	real pixthetax, /**<Pixel size along x (radial)*/
+	real pixthetay, /**<Pixel size along y (azimuthal)*/
+	dcell* pixrots,   /**<subaperture rotation*/
+	int radgx,     /**<Leave gradients at radial direction */
+	int mtchcr,     /**<constraint. -1: auto*/
+	real sigratio  /**<scale signal level to increase NEA (testing)*/
+);
 dmat *derive_by_fft(const dmat *i0, real theta);
 #endif

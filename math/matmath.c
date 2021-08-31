@@ -141,7 +141,7 @@ T X(wdot)(const T* a, const X(mat)* w, const T* b){
 */
 void X(cwm)(X(mat)* A, const X(mat)* B){
 	if(!check_mat(A, B)||!check_match(A, B)){
-		warning("Input is not valid\n");
+		error("Input is not valid\n");
 		return;
 	}
 	for(long i=0; i<B->nx*B->ny; i++){

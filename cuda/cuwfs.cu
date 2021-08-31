@@ -248,7 +248,7 @@ cushphy_t::cushphy_t(wfscfg_t* wfscfg)
 		dtf=new cuccell(nwvl, 1);
 		etf=new cuccell(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			if(!powfs[ipowfs].dtf[iwvl].fused){//not fused to ETF
+			if(!powfs[ipowfs].etfsim[iwvl].fused){//not fused to ETF
 				int ndtf=powfs[ipowfs].dtf[iwvl].nominal->nx;
 				int icol=powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0;
 				zmat* dtf0=concat_cmat(powfs[ipowfs].dtf[iwvl].nominal->p+ndtf*icol, ndtf);

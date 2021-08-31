@@ -179,11 +179,7 @@ void muv_direct_prep(muv_t* A, real svd){
 		dfree(A->MI);
 		A->MI=dcell2m(A->M);
 		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", A->MI->nx, A->MI->ny);
-		if(svd<1){/*use svd as threashold */
-			dsvd_pow(A->MI, -1, svd);
-		} else{/*use a threshold good for lsr. */
-			dsvd_pow(A->MI, -1, 2e-4);
-		}
+		dsvd_pow(A->MI, -1, svd<1?svd:2e-4, 0);
 	} else{/*Do Cholesky decomposition. */
 		dsp* muvM=dspcell2sp((const dspcell*)A->M);
 		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->nx, muvM->ny);
@@ -241,11 +237,7 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 			} else{
 				dspfull(&P(A->MIB,ib), dsp_cast(P(A->M,ib,ib)), 'n', 1);
 			}
-			if(svd<1){
-				dsvd_pow(P(A->MIB,ib), -1, svd);
-			} else{
-				dsvd_pow(P(A->MIB,ib), -1, 2e-4);
-			}
+			dsvd_pow(P(A->MIB,ib), -1, svd<1?svd:2e-4, 0);
 		} else{
 			A->CB[ib]=chol_factorize(dsp_cast(P(A->M,ib,ib)));
 		}

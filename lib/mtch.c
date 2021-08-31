@@ -104,8 +104,8 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 	real rne,       /**<[in] Detector read noise*/
 	real pixthetax, /**<[in] Size of pixel along x*/
 	real pixthetay, /**<[in] Size of pixel along y*/
-	real pixrot,    /**<[in] Rotation (CCW, radian) of pixel island 0 for cartesian*/
-	int radgx,      /**<[in] 1: gx/gy is along r/a coord.*/
+	real pixrot,    /**<[in] Rotation (CCW, radian) of pixel island. 0 for cartesian*/
+	int radgx,      /**<[in] 1: gx/gy is along r/a coord. 0 for cartesian.*/
 	int cr          /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
 ){
 	const real* bkgrnd2=dbkgrnd2?dbkgrnd2->p:0;
@@ -215,4 +215,118 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 */
 void mtch2(dmat** mtche, dmat** nea, const dmat* i0, const dmat* gx, const dmat* gy, int cr){
 	mtch(mtche, nea, i0, gx, gy, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
+}
+
+/**
+   The routine used to generate matched filter from WFS mean short exposure
+   pixel intensities.
+ */
+void mtch_cell(
+	dcell** pmtche,  /**<[out] matched filter. */
+	dcell** psanea,  /**<[out] subaperture noise equivalent angle*/
+	dmat** pi0sum,   /**<[out] sum of subaperture intensity*/
+	dmat** pi0sumsum,/**<[out] sum of all subaperture intensity*/
+	const dcell* i0s, /**<Subaperture intensities*/
+	const dcell* gxs, /**<Subaperture intensity gradients along x (radial)*/
+	const dcell* gys, /**<Subaperture intensity gradients along y (azimuthal)*/
+	const dmat* qe, /**<Quantum efficiency of each pixel*/
+	const dcell* bkgrnd2, /**<bkgrnd image*/
+	const dcell* bkgrnd2c,/**<bkgrnd correction image*/
+	real bkgrnd,  /**<bkgrnd per pixel*/
+	real bkgrndc, /**<bkgrnd correction per pixel*/
+	real rne,     /**<Read out noise per pixel*/
+	real pixthetax, /**<Pixel size along x (radial)*/
+	real pixthetay, /**<Pixel size along y (azimuthal)*/
+	dcell* pixrots,   /**<subaperture pixel rotation.*/
+	int radgx,     /**<Leave gradients at radial direction */
+	int mtchcr,    /**<constraint. -1: auto*/
+	real sigratio /**<scale signal level to increase NEA. default: 1*/
+){
+	int ni0=NY(i0s);
+	const int nsa=NX(i0s);
+	if(psanea){
+		dcellfree(*psanea);
+		*psanea=dcellnew_same(ni0, 1, nsa, 3);
+	}
+	if(!sigratio) sigratio=1;
+	dmat *i0sum=dcellsum_each(i0s);
+	real i0max=dmax(i0sum);
+	real i0thres=MAX(i0max*0.1, 10*rne);
+	if(pi0sum){
+		dfree(*pi0sum);
+		*pi0sum=dref(i0sum);
+	}
+
+	if(pi0sumsum){
+		dfree(*pi0sumsum);
+		*pi0sumsum=dnew(ni0, 1);
+	}
+
+	const int npix=PN(P(i0s, 0, 0));
+	if(pmtche){
+		dcellfree(*pmtche);
+		*pmtche=dcellnew_same(nsa, ni0, 2, npix);
+	}
+	real sigratior=1./sigratio;
+	for(int ii0=0; ii0<ni0; ii0++){
+		real nea2thres=pixthetax*pixthetay*100;
+		//P(sanea,ii0)=dnew(nsa, 3);
+		real i0sumsum=0;
+		int ncrdisable=0;
+		dmat* nea2=0;
+		for(int isa=0; isa<nsa; isa++){
+			real pixrot=pixrots?P(PR(pixrots, ii0, 0), isa):0;//pixel rotation
+			int cr=mtchcr;
+			if(cr==-1){
+				long fwhm=dfwhm_gauss(P(i0s, isa, ii0));
+				if(fwhm>4){
+					cr=1;
+				} else{
+					cr=0;
+					ncrdisable++;
+				}
+			}
+			dmat* bkgrnd2i=bkgrnd2?PR(bkgrnd2, isa, ii0):NULL;
+			dmat* bkgrnd2ci=bkgrnd2c?PR(bkgrnd2c, isa, ii0):NULL;
+
+			mtch(&P(*pmtche, isa, ii0), &nea2, P(i0s, isa, ii0),
+				gxs?P(gxs, isa, ii0):0, gys?P(gys, isa, ii0):0, qe,
+				bkgrnd2i, bkgrnd2ci, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
+				pixrot, radgx, cr);
+			if(fabs(sigratio-1)>1e-5){
+				dscale(P(i0s, isa, ii0), sigratio);
+				if(gxs) dscale(P(gxs, isa, ii0), sigratio);
+				if(gys) dscale(P(gys, isa, ii0), sigratio);
+				mtch(NULL, &nea2, P(i0s, isa, ii0),
+					gxs?P(gxs, isa, ii0):0, gys?P(gys, isa, ii0):0,
+					qe, bkgrnd2i, bkgrnd2ci, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
+					pixrot, radgx, cr);
+				dscale(P(i0s, isa, ii0), sigratior);
+				if(gxs) dscale(P(gxs, isa, ii0), sigratior);
+				if(gys) dscale(P(gys, isa, ii0), sigratior);
+			}
+
+			i0sumsum+=P(i0sum, isa, ii0);
+			if(P(i0sum, isa, ii0)<i0thres||P(nea2, 0)>nea2thres||P(nea2, 3)>nea2thres){
+			//Signal level too low or error to high.
+				P(nea2, 0)=P(nea2, 3)=nea2thres;
+				P(nea2, 1)=P(nea2, 2)=0;
+				dset(P(*pmtche, isa, ii0), 0);
+			}
+			if(psanea){
+				P(P(*psanea, ii0), isa, 0)=P(nea2, 0);
+				P(P(*psanea, ii0), isa, 1)=P(nea2, 3);
+				P(P(*psanea, ii0), isa, 2)=P(nea2, 1);
+			}
+		}/*isa  */
+		dfree(nea2);
+
+		if(mtchcr==-1){
+			info("Mtched filter contraint are disabled for %d subaps out of %d.\n", ncrdisable, nsa);
+		}
+		if(pi0sumsum){
+			P(*pi0sumsum, ii0)=i0sumsum;
+		}
+	}/*ii0 */
+	dfree(i0sum);
 }

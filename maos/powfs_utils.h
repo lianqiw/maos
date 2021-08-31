@@ -30,4 +30,28 @@
 #define AOS_GENSEOTF_H
 #include "common.h"
 void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs);
+void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
+  rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
+);
+void fit_sodium_profile(
+  dmat** sodium, /**<The sodium profile determined by fit*/
+  dcell** pgrad, /**<The gradients determined by fit.*/
+  dcell** pi0,   /**<The output i0*/
+  dcell** pgx,   /**<The output gx*/
+  dcell** pgy,   /**<The output gy*/
+  const dcell* i0i, /**<The input i0*/
+  const dccell* sepsf,   /**<Short exposure PSF*/
+  const dtf_t* dtf,     /**<Detector transfer function*/
+  const void* saa,      /**<Subaperture area. dmat or dcell*/
+  const dcell* srsa,    /**<Subaperture to LLT distance*/
+  const dcell* srot,    /**<Subaperture to LLT clocking*/
+  const dmat* siglev,  /**<Subaperture signal level*/
+  const dmat* wvlwts,    /**<Wavelength weights*/
+  real dh,      /**<The sodium profile sampling in meters*/
+  real hs,      /**<LGS focusing height*/
+  real htel,    /**<Telescope hegith*/
+  real za,      /**<Telescope zenith angle*/
+  real tikcr,    /**<Tikhonov regularization*/
+  real svdthres /**<SVD threshold*/
+);
 #endif

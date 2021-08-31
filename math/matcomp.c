@@ -651,17 +651,9 @@ void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 			uy[i]=uy[i-1]*cy;
 		}
 	}
-	if(otf->p==otfin->p){
-		for(int iy=0; iy<ny; iy++){
-			for(int ix=0; ix<nx; ix++){
-				P(otf, ix, iy)*=ux[ix]*uy[iy];
-			}
-		}
-	} else{
-		for(int iy=0; iy<ny; iy++){
-			for(int ix=0; ix<nx; ix++){
-				P(otf, ix, iy)=P(otfin, ix, iy)*ux[ix]*uy[iy];
-			}
+	for(int iy=0; iy<ny; iy++){
+		for(int ix=0; ix<nx; ix++){
+			P(otf, ix, iy)=P(otfin, ix, iy)*ux[ix]*uy[iy];
 		}
 	}
 }

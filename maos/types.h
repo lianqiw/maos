@@ -61,10 +61,7 @@ typedef struct llt_t{
    contains the intensity statistics assiciated with a certain powfs for
 physical optics wfs. */
 typedef struct intstat_t{
-    cccell *lotf;       /**<llt otf*/   
-    cccell *otf;        /**<short exposure OTF. time consuming to calculate. */
-    cccell *fotf;       /**<The final optf before fft and multiply with si to get i0. Used for MAP tracking.*/
-    cccell *potf;       /**<Point source otf. potf.*etf=fotf. Used for wfslinearity.*/
+    cccell *fotf;       /**<The final optf before fft and multiply with si to get i0. Used for MAP tracking and wfslinearity.*/
     dccell *sepsf;      /**<short expsoure PSF.*/
     dcell *i0;          /**<short exposure image. nsa x nllt*/
     dcell *gx;          /**<gradient of i0 along x*/

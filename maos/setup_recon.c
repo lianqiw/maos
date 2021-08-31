@@ -318,9 +318,9 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	}
 	info2(" mas\n");
 	if(parms->save.setup){
-		writebin(recon->sanea, "sanea");
-		writebin(recon->saneai, "saneai");
-		writebin(recon->saneal, "saneal");
+		writebin(recon->sanea, "recon_sanea");
+		writebin(recon->saneai, "recon_saneai");
+		writebin(recon->saneal, "recon_saneal");
 	}
 }
 
@@ -338,9 +338,9 @@ setup_recon_TTFR(recon_t* recon, const parms_t* parms){
 	recon->PDF=dcellpinv(recon->DF, recon->saneai);
 	recon->PTTF=dcellpinv(recon->TTF, recon->saneai);
 	if(parms->save.setup){
-		writebin(recon->TTF, "TTF");
-		writebin(recon->PTT, "PTT");
-		writebin(recon->PTTF, "PTTF");
+		writebin(recon->TTF, "recon_TTF");
+		writebin(recon->PTT, "recon_PTT");
+		writebin(recon->PTTF, "recon_PTTF");
 	}
 	/*dcellfree(recon->DF);//don't free DF to use in PDF. */
 	/*Keep TT, PTT, used in fsm pointing or dithering. */
@@ -406,7 +406,7 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 			}
 		}
 		if(parms->save.setup){
-			writebin(recon->L2, "L2");
+			writebin(recon->L2, "recon_L2");
 		}
 		dspcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	}
@@ -429,7 +429,7 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 			}
 		}
 		if(parms->save.setup){
-			writebin(recon->invpsd->invpsd, "invpsd");
+			writebin(recon->invpsd->invpsd, "recon_invpsd");
 		}
 		dcellscale(recon->invpsd->invpsd, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 
@@ -483,7 +483,7 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 			ZZT->pp[nloc]=count;
 		}
 		if(parms->save.setup){
-			writebin(recon->ZZT, "ZZT");
+			writebin(recon->ZZT, "recon_ZZT");
 		}
 		dspcellscale(recon->ZZT, parms->tomo.cxxscale*TOMOSCALE);
 	}
@@ -667,13 +667,13 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		}
 		info("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr, nll);
 		if(parms->save.recon){
-			writebin(recon->RR.M, "RRM");
-			writebin(recon->RR.U, "RRU");
-			writebin(recon->RR.V, "RRV");
+			writebin(recon->RR.M, "tomo_RRM");
+			writebin(recon->RR.U, "tomo_RRU");
+			writebin(recon->RR.V, "tomo_RRV");
 
-			writebin(recon->RL.M, "RLM.bin");/*disable compression */
-			writebin(recon->RL.U, "RLU");
-			writebin(recon->RL.V, "RLV");
+			writebin(recon->RL.M, "tomo_RLM.bin");/*disable compression */
+			writebin(recon->RL.U, "tomo_RLU");
+			writebin(recon->RL.V, "tomo_RLV");
 		}
 		dspcellfree(GXtomoT);
 	}
@@ -699,22 +699,22 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 	if(parms->save.recon){
 		if(recon->RL.C){
 		//chol_convert(recon->RL.C, 1);
-			chol_save(recon->RL.C, "RLC.bin");
+			chol_save(recon->RL.C, "tomo_RLC.bin");
 		}
 		if(recon->RL.MI){
-			writebin(recon->RL.MI, "RLMI");
+			writebin(recon->RL.MI, "tomo_RLMI");
 		}
 		if(recon->RL.Up){
-			writebin(recon->RL.Up, "RLUp");
-			writebin(recon->RL.Vp, "RLVp");
+			writebin(recon->RL.Up, "tomo_RLUp");
+			writebin(recon->RL.Vp, "tomo_RLVp");
 		}
 		if(recon->RL.CB){
 			for(int ib=0; ib<recon->RL.nb; ib++){
-				chol_save(recon->RL.CB[ib], "RLCB_%d.bin", ib);
+				chol_save(recon->RL.CB[ib], "recon_RLCB_%d.bin", ib);
 			}
 		}
 		if(recon->RL.MIB){
-			writebin(recon->RL.MIB, "RLMIB");
+			writebin(recon->RL.MIB, "tomo_RLMIB");
 		}
 	}
 	/*Don't free PTT. Used in forming LGS uplink err */
@@ -922,8 +922,8 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 		}
 
 		if(parms->save.setup){
-			writebin(recon->RFngsg, "RFngsg");
-			writebin(recon->RFlgsg, "RFlgsg");
+			writebin(recon->RFngsg, "focus_RFngsg");
+			writebin(recon->RFlgsg, "focus_RFlgsg");
 		}
 	}
 	if(parms->sim.focus2tel){
@@ -937,7 +937,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 		}
 		dcellfree(Fdm);
 		if(parms->save.setup){
-			writebin(recon->RFdm, "RFdm");
+			writebin(recon->RFdm, "focus_RFdm");
 		}
 	}
 }
@@ -1424,8 +1424,8 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 		dcellfree(ecnn);
 	}
 	if(parms->save.setup){
-		writebin(recon->Herr, "Herr");
-		writebin(eloc, "eloc.bin");
+		writebin(recon->Herr, "psd_Herr");
+		writebin(eloc, "psd_eloc.bin");
 	}
 	locfree(eloc);
 }

@@ -930,7 +930,9 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 }
 
 /**
-   make A a cell array using shape information from ref if *B is NULL
+   make A a cell array using shape information from ref if *B is NULL.
+
+   Notice that empty cells may be replaced by zeros if it is within valid column or row.
 */
 void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 	long nx, ny, * nxs, * nys;
@@ -947,20 +949,22 @@ void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 	}
 	if(!*B){
 		*B=X(cellnew)(ref->nx, ref->ny);
-		X(cell)* Bp=(*B);
-		for(long iy=0; iy<ref->ny; iy++){
-			for(long ix=0; ix<ref->nx; ix++){
+	}
+	X(cell)* Bp=(*B);
+	for(long iy=0; iy<ref->ny; iy++){
+		for(long ix=0; ix<ref->nx; ix++){
+			if(nxs[ix]&&nys[iy]&&!P(Bp, ix, iy)){
 				P(Bp, ix, iy)=X(new)(nxs[ix], nys[iy]);
 			}
 		}
 	}
-	X(cell)* Bp=(*B);
+	
 	long jcol=0;
 	for(long iy=0; iy<ref->ny; iy++){
 		for(long icol=0; icol<nys[iy]; icol++){
 			long kr=0;
 			for(long ix=0; ix<ref->nx; ix++){
-				if(nxs[ix]>0){
+				if(nxs[ix]){
 					memcpy(PCOL(P(Bp, ix, iy), icol), &P(A, kr, icol+jcol), nxs[ix]*sizeof(T));
 					kr+=nxs[ix];
 				}

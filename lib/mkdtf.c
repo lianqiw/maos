@@ -38,8 +38,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	const dmat* pixoffx,  /**<offset of image center from center of pixel array, along x or radial*/
 	const dmat* pixoffy,  /**<offset of image center from center of pixel array, along y or azimuthal*/
 	real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
-	const dcell* srot,/**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	int radpix        /**<1: Pixels are along radial/azimuthal direction*/
+	const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
 ){
 	int nwvl=wvls->nx*wvls->ny;
 	dtf_t* dtfs=mycalloc(nwvl, dtf_t);
@@ -53,24 +52,9 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	const long notfy2=notfy>>1;
 	const real pxo=-(pixpsax*0.5-0.5)*pixthetax;
 	const real pyo=-(pixpsay*0.5-0.5)*pixthetay;
-	real pxo2=pxo;
-	real pyo2=pyo;
-	if(pixoffx||pixoffy){
-		int nwfs=1; int nsa=1;
-		if(srot){
-			nwfs=srot->nx;
-			nsa=P(srot,0)->nx;
-		}
-		if(!pixoffx||!pixoffy){
-			error("pixoffx and pixoffy must simultaneously be supplied\n");
-		}
-		if(pixoffx->nx!=1&&pixoffx->nx!=nsa&&pixoffx->ny!=1&&pixoffx->ny!=nwfs){
-			error("pixoffx has wrong format\n");
-		}
-		if(pixoffy->nx!=pixoffx->nx||pixoffy->ny!=pixoffx->ny){
-			error("pixoffy must have the same format as pixoffx\n");
-		}
-	}
+	
+	const int nwfs=MAX(pixoffx?NY(pixoffx):1, pixrot?NX(pixrot):1);
+	const int nsa=MAX(pixoffx?NX(pixoffx):1, pixrot?NX(P(pixrot, 0)):1);
 
 	/*both nominal and si depends on wavelength.*/
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -89,19 +73,19 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		  coordinate, so pixels and pixel coordinates need to rotated to r/a
 		  direction. */
 		//When DTF is along x/y coord, pixel is r/a coord, or when there is pixoffx, we need multiple DTFs.
-		const int ndtf=((srot&&radpix)||(pixoffx&&pixoffx->nx>1))?P(srot, 0)->nx:1;
-		const int nwfs=MAX((radpix&&srot)?srot->nx:1, pixoffx?pixoffx->ny:1);
 		
 		dtfs[iwvl].dtheta=dtheta;
 		dtfs[iwvl].dxsa=dxsa;
-		dtfs[iwvl].radpix=radpix;
+		dtfs[iwvl].radpix=pixrot?1:0;
 		dtfs[iwvl].wvl=wvl;
 		dtfs[iwvl].notfx=notfx;
 		dtfs[iwvl].notfy=notfy;
 		dtfs[iwvl].pixpsax=pixpsax;
 		dtfs[iwvl].pixpsay=pixpsay;
-		dtfs[iwvl].nominal=ccellnew_same(ndtf, nwfs, notfx, notfy);
-		dtfs[iwvl].si=dspcellnew(ndtf, nwfs);
+		dtfs[iwvl].pixthetax=pixthetax;
+		dtfs[iwvl].pixthetay=pixthetay;
+		dtfs[iwvl].nominal=ccellnew_same(nsa, nwfs, notfx, notfy);
+		dtfs[iwvl].si=dspcellnew(nsa, nwfs);
 		ccell* nominals=dtfs[iwvl].nominal;
 		dspcell* sis=dtfs[iwvl].si;
 		cmat* nominal=cnew(notfx, notfy);
@@ -111,9 +95,9 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		real ct=cos(theta);
 		real st=sin(theta);
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			for(int isa=0; isa<ndtf; isa++){
-				if(ndtf>1){
-					theta=P(PR(srot,iwfs,1),isa);
+			for(int isa=0; isa<nsa; isa++){
+				if(pixrot){
+					theta=P(PR(pixrot,iwfs,0),isa);
 					ct=cos(theta);
 					st=sin(theta);
 				}
@@ -141,13 +125,11 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 				cscale(nominal, 1./(real)(nominal->nx*nominal->ny));
 				ccp(&P(nominals, isa, iwfs), nominal);
 				//Coordinate of pixels
-				if(pixoffx){
-					real dx=PR(pixoffx, isa, iwfs)*pixthetax;
-					real dy=PR(pixoffy, isa, iwfs)*pixthetay;
-					pxo2=pxo-dx;
-					pyo2=pyo-dy;
-				}
-				loc_t* loc_ccd=mksqloc(pixpsax, pixpsay, pixthetax, pixthetay, pxo2, pyo2);
+				
+				real dx=pixoffx?(PR(pixoffx, isa, iwfs)*pixthetax):0;
+				real dy=pixoffy?(PR(pixoffy, isa, iwfs)*pixthetay):0;
+			
+				loc_t* loc_ccd=mksqloc(pixpsax, pixpsay, pixthetax, pixthetay, pxo-dx, pyo-dy);
 				locrot(loc_ccd, theta);
 				P(sis, isa, iwfs)=mkh(loc_psf, loc_ccd, 0, 0, 1);
 				locfree(loc_ccd);
@@ -189,12 +171,14 @@ static inline int wrap_seq(long index, long n){
 	return index;
 }
 
-etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
-	real hs,      /**<LGS WFS focus altitude*/
+etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 	const dcell* sodium,/**<The sodium profile. In each cell First column is coordinate.*/
 	int icol,     /**<Which sodium profile to use*/
 	const dcell* srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	const dcell* srsa,  /**<Subaperture to LLT distance*/
+	real hs,      /**<LGS WFS focus altitude*/
+	real htel,    /**<Telescope altitude*/
+	real za_rad,   /**<Zenith angle in radian*/
 	int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
 ){
 	int nwvl=dtfs[0].nwvl;
@@ -209,7 +193,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	const int ncol=sodium0->ny-1;
 	const int nhp=sodium0->nx;
 	const real* px=sodium0->p;
-
+	const real cosza=cos(za_rad);
 	const int icolwrap=wrap_seq(icol, ncol);
 	//info("Na using column %d.\n",icol);
 
@@ -217,8 +201,8 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	real hpmin=0, dhp1=0;
 
 	if(!no_interp){/**Requires linear spacing*/
-		hpmin=px[0];
-		dhp1=1./(px[1]-px[0]);
+		hpmin=(px[0]-htel)/cosza;
+		dhp1=cosza/(px[1]-px[0]);
 		/*assume linear spacing. check the assumption valid */
 		real diff;
 		if((diff=fabs((px[nhp-1]-px[0])/((nhp-1)*(px[1]-px[0]))-1.))>1.e-5){
@@ -227,12 +211,10 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 	}//else: Any spacing is ok.
 
 	/*the sum of pp determines the scaling of the pixel intensity. */
-	real* psrot[nllt];
 	real* pna[nllt];
 	real i0scale[nllt];
 	for(int illt=0; illt<nllt; illt++){
-		psrot[illt]=P(srot,srot->nx>1?illt:0)->p;
-		pna[illt]=PR(sodium, illt, 0)->p+nhp*(1+icolwrap);
+		pna[illt]=PCOL(PR(sodium, illt, 0), 1+icolwrap);
 		i0scale[illt]=dvecsum(pna[illt], nhp);
 		if(fabs(i0scale[illt]-1)>0.01){
 			warning("Siglev is scaled by %g by sodium profile\n", i0scale[illt]);
@@ -259,8 +241,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 			for(int illt=0; illt<nllt; illt++){
 				for(int isa=0; isa<nsa; isa++){
 					real rsa=P(P(srsa,illt),isa);
-
-					const real theta=psrot[illt][isa];
+					const real theta=P(PR(srot, illt, 0), isa);
 					const real ct=cos(theta);
 					const real st=sin(theta);
 					cmat* etf2d=P(petf, isa, illt);
@@ -271,8 +252,10 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 							const real kx=dux*(icompx>=notfx2?(icompx-notfx):icompx);
 							const real kr=(ct*kx+st*ky);/*along radial*/
 							for(int ih=0; ih<nhp; ih++){
-								const real tmp=(-2*M_PI*(kr*(rsa/px[ih]-rsa/hs)));
-								P(etf2d, icompx, icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
+								if(pna[illt][ih]>0){
+									const real tmp=(-2*M_PI*(kr*(rsa*cosza/(px[ih]-htel)-rsa/hs)));
+									P(etf2d, icompx, icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
+								}
 							}
 						}
 					}
@@ -356,7 +339,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 						/*Rotate the ETF. */
 						/*need to put peak in center. */
 						cfftshift(etf);
-						real theta=psrot[illt][isa];
+						const real theta=P(PR(srot, illt, 0), isa);
 						real ct=cos(theta);
 						real st=sin(theta);
 						cmat* etf2d=P(petf, isa, illt);
@@ -401,7 +384,7 @@ etf_t* mketf(dtf_t* dtfs,  /**<The dtfs*/
 				ccwm(P(petf, isa, illt), P(pnominal, isa*mnominal, illt*mllt));
 			}
 		}
-		dtfs[iwvl].fused=1;
+		etfs[iwvl].fused=1;
 
 	}//for iwvl
 	return etfs;
@@ -436,6 +419,7 @@ dmat* smooth(const dmat* prof, real dxnew){
 	const real dxin=(P(prof,nxin-1)-x0in)/(nxin-1);
 	dmat* out;
 	if(dxnew>dxin*2){
+		dbg("Smoothing sodium profile from %g to %g sampling\n", dxin, dxnew);
 		const long nxnew=ceil((P(prof,nxin-1)-x0in)/dxnew);
 		loc_t* loc_in=mk1dloc_vec(prof->p, nxin);
 		loc_t* loc_out=mk1dloc(x0in, dxnew, nxnew);
@@ -457,6 +441,7 @@ dmat* smooth(const dmat* prof, real dxnew){
 		locfree(loc_in);
 		locfree(loc_out);
 	} else{
+		dbg("Not smoothing sodium profile from %g to %g\n", dxin, dxnew);
 		out=dref(prof);
 	}
 	return out;

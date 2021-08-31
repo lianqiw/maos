@@ -250,11 +250,11 @@ static void test_svd(void){
     }else{
 	writebin(A,"A.bin");
 	tic;
-	dsvd_pow(A, -1, 1e-15);
+	dsvd_pow(A, -1, 1e-15, 0);
 	toc("dsvd_pow");
 	writebin(A,"AI.bin");
 	tic;
-	dsvd_pow(A, -1, 1e-15);
+	dsvd_pow(A, -1, 1e-15, 0);
 	toc("dsvd_pow svd");
 	writebin(A,"A2.bin");
     }
@@ -272,7 +272,7 @@ static void test_psd1d(){
 }
 static void test_svd2(void){
     cmat *A=cread("SVD.bin");
-    csvd_pow(A, -1, 1.e-7);
+    csvd_pow(A, -1, 1.e-7, 0);
     writebin(A, "SVDI");
 }
 static void test_kalman(){

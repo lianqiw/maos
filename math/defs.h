@@ -196,11 +196,11 @@ static inline int ismat(const void* id){
 }
 
 //Check that A is valid and has mat type and has non zero size.
-
-#define check_mat1(A) ((A)?(check(ismat(A))?1:(dbg("type id mismatch\n"),0)):0)
+#define P_GET3(_0,_1,_2,_3,NAME,...) NAME
+#define check_mat1(A) ((A)?(check(ismat(A))?1:(dbg("type id mismatch, got %d, expect %d\n", *(uint32_t*)A, M_T),0)):0)
 #define check_mat2(A,B) (check_mat1(A) && check_mat1(B))
 #define check_mat3(A,B,C) (check_mat1(A) && check_mat1(B) && check_mat1(C))
-#define check_mat(...) P_GET(_0,__VA_ARGS__,check_mat3,check_mat2,check_mat1)(__VA_ARGS__)
+#define check_mat(...) P_GET3(_0,__VA_ARGS__,check_mat3,check_mat2,check_mat1)(__VA_ARGS__)
 #define check_match(A,B) ((check_mat(A,B) && check((A)->nx==(B)->nx) && check((A)->ny==(B)->ny))?1:0)
 #define check_match_vec(A,B) ((check_mat(A,B) && check((A)->nx*(A)->ny==(B)->nx*(B)->ny))?1:0)
 #endif //ifndef AOS_MATH_DEFS_H

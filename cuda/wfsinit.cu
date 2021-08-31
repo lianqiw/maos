@@ -364,7 +364,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 					 /*Need one per wfs in this powfs, or the first wfs. */
 					cuwfs[iwfs].dtf.init(nwvl, 1);
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						int notfused=!powfs[ipowfs].dtf[iwvl].fused;
+						int notfused=!powfs[ipowfs].etfsim||!powfs[ipowfs].etfsim[iwvl].fused;
 						if(notfused){
 							int icol=powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0;
 							cmat* nominal=ccell_col(powfs[ipowfs].dtf[iwvl].nominal, icol);

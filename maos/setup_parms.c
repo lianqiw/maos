@@ -64,7 +64,6 @@ void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	free(powfscfg->neasimfile);
 	free(powfscfg->bkgrndfn);
 	free(powfscfg->qe);
-	dfree(powfscfg->ncpa);
 	dfree(powfscfg->siglevs);
 }
 void free_strarr(char** str, int n){
@@ -229,6 +228,7 @@ static inline int sum_dblarr(int n, real *a){
     readcfg_strarr_nmax((&strtmp), npowfs, "powfs."#B);			\
     for(i=0; i<npowfs; i++){						\
 	parms->powfs[i].B = readstr_##A##mat(strtmp[i]);/*doesn't need ## in B*/ \
+	free(strtmp[i]); strtmp[i]=NULL;\
     }								
 #define READ_POWFS_RELAX(A,B)					\
     readcfg_##A##arr_nmax((&A##tmp), npowfs, "powfs."#B);	\

@@ -20,7 +20,6 @@
 #include "setup_surf.h"
 #include "recon_utils.h"
 #include "setup_powfs.h"
-#include "genseotf.h"
 
 /**
    \file setup_surf.c

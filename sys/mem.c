@@ -283,7 +283,7 @@ static void print_mem_debug(){
 			info3("All allocated memory are freed but memory counter is still not zero: %ld\n", memcnt);
 		}
 	}
-	info3("Memory used is %lu MB, freed is %lu MB.\n", memalloc>>20, memfree>>20);
+	info3("Memory allocation is %lu MB, still in use %lu KB.\n", memalloc>>20, (memalloc-memfree)>>10);
 }
 void read_sys_env(){
 	READ_ENV_INT(MEM_DEBUG, 0, 1);
@@ -297,6 +297,8 @@ void read_sys_env(){
 	}*/
 }
 FILE* fpconsole=NULL;
+int err2out=1;
+int std2out=1;
 static void init_mem(){
 	if(!calloc_default){
 		calloc_default=(void* (*)(size_t, size_t))dlsym(RTLD_DEFAULT, "calloc");
@@ -308,6 +310,7 @@ static void init_mem(){
 		init_process();
 		init_hosts();
 		fpconsole=fdopen(dup(fileno(stdout)),"a");
+		
 	}
 }
 static __attribute__((constructor)) void init(){
