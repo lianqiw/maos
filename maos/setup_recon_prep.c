@@ -887,8 +887,9 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 			error("Invalid twfs_indatmr.\n");
 		}
 		const loc_t *loc=ipsr==0?recon->ploc:P(recon->xloc, ipsr);
-		real reduce=loc->dx*2;//to reduce the edge effect.
-		dmat *opd=zernike(loc, loc_diam(loc)-reduce, rmin, rmax, zradonly);
+		//must use aper.d here to make sure mode in different layers match in strength for TWFS.
+		//real reduce=loc->dx*2;//to reduce the edge effect.
+		dmat *opd=zernike(loc, -parms->aper.d, rmin, rmax, zradonly);
 		
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;

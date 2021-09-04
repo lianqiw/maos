@@ -45,6 +45,7 @@ void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	if(powfscfg->llt){
 		free(powfscfg->llt->fnrange);
 		free(powfscfg->llt->fnprof);
+		free(powfscfg->llt->fnprep);
 		free(powfscfg->llt->fnamp);
 		free(powfscfg->llt->fnsurf);
 		lfree(powfscfg->llt->i);
@@ -400,6 +401,7 @@ static void readcfg_powfs(parms_t* parms){
 			READ_LLT(str, ttpsd);
 			READ_LLT(str, fnrange);
 			READ_LLT(str, fnprof);
+			READ_LLT(str, fnprep);
 			READ_LLT(str, fnamp);
 			READ_LLT(str, fnsurf);
 			READ_LLT(dbl, focus);

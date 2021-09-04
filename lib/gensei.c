@@ -361,7 +361,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 				}*/
 				cmat* nominal=NULL;
 				dsp* si=NULL;
-				if(!etf||!etf[iwvl].fused){
+				if(!etf){
 					nominal=PR(dtf[iwvl].nominal, isa, ii0);
 				}
 				si=PR(dtf[iwvl].si, isa, ii0);
@@ -380,13 +380,14 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 				cembedd(seotfk, sepsfi, 0);
 				cfftshift(seotfk);/*PSF, peak in corner; */
 				cfft2(seotfk, -1);/*turn to OTF, peak in corner, max is 1 */
+				cscale(seotfk, norm);/*normalized so that after fft, psf sum to 1*/
 				if(pgrad[0]||pgrad[1]){
 					ctilt(seotfk, -pgrad[0], -pgrad[1], 0);
 				}
-				if(nominal) ccwm(seotfk, nominal);
-				cscale(seotfk, norm);/*normalized so that after fft, psf sum to 1*/
 				if(petf){/*elongation. */
 					ccwm(seotfk, PR(petf, isa, ii0));
+				}else if(nominal){//nominal is fused into etf.
+					ccwm(seotfk, nominal);
 				}
 				ccp(&seotfj, seotfk);/*save for later use*/
 				if(pfotf){

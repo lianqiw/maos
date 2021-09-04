@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -32,12 +32,12 @@
    \f$I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]\f$
 */
 typedef struct dtf_t{
-    ccell *nominal;      /**<The FFT of the pixel functions*/
-    dspcell *si;         /**<The pixel selection*/
+    ccell* nominal;    /**<The FFT of the pixel functions, don't apply if etf exists .*/
+    dspcell* si;       /**<The pixel selection*/
     real wvl;          /**<Wavelength*/
     real dtheta;       /**<Sampling of PSF*/
-    cmat *Ux;            /**<Special frequency vector along x*/
-    cmat *Uy;            /**<Special frequency vector along y*/
+    cmat* Ux;          /**<Special frequency vector along x*/
+    cmat* Uy;          /**<Special frequency vector along y*/
     real dxsa;         /**<Subaperture size*/
     real pixthetax;    /**<Pixel size along x (radial)*/
     real pixthetay;    /**<Pixel size along y (radial*/
@@ -45,15 +45,14 @@ typedef struct dtf_t{
     int notfy;         /**<FFT size along y*/
     int pixpsax;       /**<Number of pixels along x*/
     int pixpsay;       /**<Number of pixels along y*/
-    int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
-    int nwvl;            /**<Number of dtf_t*/
+    int radpix;        /**<1: Pixels are along radial/azimuthal direction*/
+    int nwvl;          /**<Number of dtf_t*/
 }dtf_t;
 
 typedef struct etf_t{
-    ccell *etf;          /**<Store the 2D ETF when*/
-	double hs;           /**<Guide star height*/
+    ccell* etf;          /**<Store the 2D ETF. nominal is fused in always.*/
+    double hs;           /**<Guide star height*/
     int icol;            /**<Store the column index*/
-    int fused;           /**<Whether the DTF has been fused to ETF*/
     int nwvl;            /**<Number of dtf_t*/
 }etf_t;
 
@@ -71,21 +70,22 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
     real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
     const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
 );
-etf_t *mketf(const dtf_t *dtfs,  /**<The dtfs*/
-         const dcell* sodium, /**<The sodium profile. First column is coordinate.*/
-	     int icol,     /**<Which sodium profile to use*/
-	     const dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	     const dcell *srsa,  /**<Subaperture to LLT distance*/
-         real hs,      /**<Guide star focus range*/
-         real htel,    /**<Telescope altitude*/
-         real za_rad, /**<Telescope zenith angle in radian*/
-   	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
-    );
-void dtf_free_do(dtf_t *dtfs);
-void etf_free_do(etf_t *etfs);
+etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
+    const dcell* sodium, /**<The sodium profile. First column is coordinate.*/
+    int icol,     /**<Which sodium profile to use*/
+    const dcell* srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+    const dcell* srsa,  /**<Subaperture to LLT distance*/
+    real hs,      /**<Guide star focus range*/
+    real htel,    /**<Telescope altitude*/
+    real za_rad, /**<Telescope zenith angle in radian*/
+    int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
+);
+void dtf_free_do(dtf_t* dtfs);
+void etf_free_do(etf_t* etfs);
 /**frees dtf_t */
 #define dtf_free(dtfs) if(dtfs){dtf_free_do(dtfs); dtfs=NULL;}
 /**frees etf_t */
 #define etf_free(etfs) if(etfs){etf_free_do(etfs); etfs=NULL;}
-dmat* smooth(const dmat *profile, real dxnew);
+dmat* smooth(const dmat* profile, real dxnew);
+dcell* smooth_cell(const dcell* profile, real dxnew);
 #endif

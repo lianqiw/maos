@@ -235,7 +235,7 @@ int draw_add(int fd){
 	
 	memset(&sock_draws[ifd], 0, sizeof(sockinfo_t));
 	sock_draws[ifd].fd=fd;
-	sock_draws[ifd].draw_single=draw_single;
+	sock_draws[ifd].draw_single=1;
 	thread_new((thread_fun)listen_drawdaemon, &sock_draws[ifd]);
 	draw_disabled=0;
 	return 0;
@@ -1079,11 +1079,34 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 /**
    Plot gradients using CuReD
 */
-int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real* zlim,
+int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, int trs, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!saloc || !grad || !draw_current(fig, fn)) return 0;
+	if(!saloc || !gradin || !draw_current(fig, fn)) return 0;
+	long nsa=saloc->nloc;
+	dmat* grad=0;
+	if(trs){
+		grad=ddup(gradin);
+		grad->nx=nsa;
+		grad->ny=2;
+		real gxm=0;
+		real gym=0;
+		for(int isa=0; isa<nsa; isa++){
+			gxm+=P(grad, isa, 0);
+			gym+=P(grad, isa, 1);
+		}
+		gxm/=-nsa;
+		gym/=-nsa;
+		for(int isa=0; isa<nsa; isa++){
+			P(grad, isa, 0)+=gxm;
+			P(grad, isa, 1)+=gym;
+		}
+		grad->nx=gradin->nx;
+		grad->ny=gradin->ny;
+	}else{
+		grad=dref(gradin);
+	}
 	if(grad2opd&&grad->nx>8){
 		//This is different from loc_embed. It removes the padding.
 		dmat* phi=0;
@@ -1098,7 +1121,6 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real
 		imagesc(fig, phi->nx, phi->ny, limit, zlim, phi->p, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
 	} else{
-		long nsa=saloc->nloc;
 		dmat* gx=dnew_do(nsa, 1, grad->p, 0);
 		dmat* gy=dnew_do(nsa, 1, grad->p+nsa, 0);
 		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s x", fn);
@@ -1106,6 +1128,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, real
 		dfree(gx);
 		dfree(gy);
 	}
+	dfree(grad);
 	return 1;
 }
 /**

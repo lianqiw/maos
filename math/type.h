@@ -290,8 +290,11 @@ static inline long index_col(long iy, long nx, long ny){
 #define PCOL(A,iy) ((A)->p+index_col((iy), (A)->nx, (A)->ny))
 
 //Define indexing using wrapping. 
-#define PR(A,ix,iy) P2((A), ((ix)%(A)->nx), ((iy)%(A)->ny))
-#define PCOLR(A,iy) PCOL((A),(iy)%(A)->ny)
+#define P_GET3(_0,_1,_2,_3,NAME,...) NAME
+#define PR2(A,ix,iy) P2((A), ((A)->nx==1?0:ix), ((A)->ny==1?0:iy))
+#define PR1(A,ix,iy) P1((A), (((A)->nx==1 && (A)->ny==1)?0:ix))
+#define PR(...) P_GET3(_0,__VA_ARGS__,PR2,PR1,P0)(__VA_ARGS__)
+#define PCOLR(A,iy) PCOL((A),((A)->ny==1?0:iy))
 
 //Return Number of elements
 #define PN(A)  ((A)?(A)->nx*(A)->ny:0)

@@ -98,6 +98,7 @@ typedef struct llt_cfg_t{
     char *ttpsd;   /**<PSD of uplink beam jitter*/
     char *fnrange; /**<File contains range to sodium layer*/
     char *fnprof;  /**<File contains sodium profile*/
+    char *fnprep;/**<File contains sodium profiled used for computing i0. if NULL: equal to fnprof*/
     char *fnsurf;  /**<Pupil Surface OPD error*/
     char *fnamp;   /**<Pupil amplitude map. overrides widthp*/
     dmat *ox;    /**<location x of LLT center wrt telescope aperture center*/

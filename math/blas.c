@@ -456,7 +456,11 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
    if not zero, tikcr*max(eig) is added to the diagonal.
 */
-void X(svd_pow)(X(mat)* A, R power, R thres, R tikcr){
+void X(svd_pow)(X(mat)* A, /**<[in/out] The matrix*/
+	R power, /**<[in] power of eigen values. usually -1 for inverse*/ 
+	R thres, /**<[in] SVD inverse threshold*/
+	R tikcr  /**<[in] Tikhonov regularization. It has similar effect as SVD inverse threshold*/
+	){
 	if(isempty(A)) return;
 	XR(mat)* Sdiag=NULL;
 	X(mat)* U=NULL;
@@ -546,8 +550,8 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
 X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	const void* W,    /**<[in] The weighting matrix. dense or sparse*/
-	R thres,
-	R tikcr
+	R thres,          /**<[in] SVD inverse threshold*/
+	R tikcr           /**<[in] Tikhonov regularization. It has similar effect as SVD inverse threshold*/
 	){
 	if(!A) return NULL;
 	X(cell)* wA=NULL;
@@ -559,9 +563,9 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 			X(cellcwm)(wA, (X(cell)*)W);
 		}else{
 			warning("W is invalid, ignore it\n");
-			wA=X(cellref)(A);
 		}
-	} else{
+	}
+	if(!wA){
 		wA=X(cellref)(A);
 	}
 

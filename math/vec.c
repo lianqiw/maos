@@ -70,26 +70,24 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     if(!check_vec(p, N)) return; 
     R a,b;
     long i;
-#ifdef COMP_LONG
-    a=-INT_MAX;
-    b=INT_MAX;
-#else
-    a=-INFINITY;
-    b=INFINITY;
-#endif
-    for(i=0; i<N; i++){
 #ifdef COMP_COMPLEX
-	R tmp=fabs(p[i]);
+    a=b=fabs(p[0]);
 #else
-	R tmp=p[i];
+    a=b=p[0];
+#endif    
+    for(i=1; i<N; i++){
+#ifdef COMP_COMPLEX
+	    R tmp=fabs(p[i]);
+#else
+	    R tmp=p[i];
 #endif
 #ifndef COMP_LONG	
-	if(!isnan(tmp))
+	    if(!isnan(tmp))
 #endif
-	{
-	    if(tmp>a) a=tmp;
-	    if(tmp<b) b=tmp;
-	}
+	    {
+	        if(tmp>a) a=tmp;
+	        if(tmp<b) b=tmp;
+	    }
     }
     if(max)*max=a; 
     if(min)*min=b; 

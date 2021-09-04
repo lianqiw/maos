@@ -462,7 +462,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			if(powfs[ipowfs].gradncpa){
 				drawgrad("Goff", powfs[ipowfs].saloc, P(powfs[ipowfs].gradncpa,jwfs),
-					parms->plot.grad2opd, NULL,
+					parms->plot.grad2opd, parms->powfs[ipowfs].trs, NULL,
 					"WFS Offset", "x (m)", "y (m)", "Gncpa %d", iwfs);
 			}
 		}

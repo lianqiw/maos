@@ -289,8 +289,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 			}
 
 			for(int illt=0; illt<nllt; illt++){
-				for(long isa=0; isa<nsa; isa++)
-				{
+				for(long isa=0; isa<nsa; isa++){
 					/*1d ETF along radius. */
 					real rsa=P(P(srsa,illt),isa);
 					real etf2sum=0;
@@ -370,22 +369,11 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 			dfree(thetas);
 		}//if na_interp
 		//fuse nominal to etf to avoid multiply again.
-		ccell* pnominal=dtfs[iwvl].nominal;
-		int mnominal=0;/*multiply with isa to get index into pnominal. */
-		if(dtfs[iwvl].nominal->nx>1){
-			mnominal=1;//polar ccd
-		}
-		int mllt=0;
-		if(dtfs[iwvl].nominal->ny>1){
-			mllt=1;
-		}
 		for(int illt=0; illt<nllt; illt++){
 			for(int isa=0; isa<nsa; isa++){
-				ccwm(P(petf, isa, illt), P(pnominal, isa*mnominal, illt*mllt));
+				ccwm(P(petf, isa, illt), PR(dtfs[iwvl].nominal, isa, illt));
 			}
 		}
-		etfs[iwvl].fused=1;
-
 	}//for iwvl
 	return etfs;
 }
@@ -443,6 +431,13 @@ dmat* smooth(const dmat* prof, real dxnew){
 	} else{
 		dbg("Not smoothing sodium profile from %g to %g\n", dxin, dxnew);
 		out=dref(prof);
+	}
+	return out;
+}
+dcell *smooth_cell(const dcell *profs, real dxnew){
+	dcell *out=dcellnew(NX(profs), NY(profs));
+	for(int ix=0; ix<PN(profs); ix++){
+		P(out,ix)=smooth(P(profs, ix), dxnew);
 	}
 	return out;
 }

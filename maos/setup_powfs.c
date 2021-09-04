@@ -1045,26 +1045,34 @@ static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs)
 	if(nprof!=1&&nprof!=parms->powfs[ipowfs].nwfs){
 		error("The sodium profile input %s is in wrong fromat\n", fnprof);
 	}
-	powfs[ipowfs].sodium=dcellnew(nprof, 1);
-	for(int i=0; i<nprof; i++){
-		dmat* Nain=P(Nains, i);
-		if(Nain->ny<2||Nain->nx!=P(Nains, 0)->nx){
-			error("The sodium profile input %s is in wrong format\n", fnprof);
-		}
-		if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
-			/*Make new sampling: */
-			const real rsamax=dmax(powfs[ipowfs].srsamax);
-			const real dthetamin=dmin(powfs[ipowfs].dtheta);
-			/*minimum sampling required. */
-			const real dxnew=pow(parms->powfs[ipowfs].hs, 2)/rsamax*dthetamin;
-			P(powfs[ipowfs].sodium, i)=smooth(Nain, dxnew);//smooth only if necessary
-		} else {
-			P(powfs[ipowfs].sodium, i)=dref(Nain);
-		}
+	real dxnew=0;
+	if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
+		/*Make new sampling: */
+		const real rsamax=dmax(powfs[ipowfs].srsamax);
+		const real dthetamin=dmin(powfs[ipowfs].dtheta);
+		/*minimum sampling required. */
+		 dxnew=pow(parms->powfs[ipowfs].hs, 2)/rsamax*dthetamin;
 	}
+	powfs[ipowfs].sodium=smooth_cell(Nains, dxnew);
 	dcellfree(Nains);
 	if(parms->save.setup){
 		writebin(powfs[ipowfs].sodium, "powfs%d_sodium", ipowfs);
+	}
+	
+	//profile used for i0 and matched filter (if set)
+	fnprof=parms->powfs[ipowfs].llt->fnprep;
+	if(fnprof){
+		Nains=dcellread("%s", fnprof);
+		nprof=PN(Nains);
+		if(nprof!=1&&nprof!=parms->powfs[ipowfs].nwfs){
+			error("The sodium profile input %s is in wrong fromat\n", fnprof);
+		}
+		powfs[ipowfs].sodiumprep=smooth_cell(Nains, dxnew);
+		dcellfree(Nains);
+
+		if(parms->save.setup){
+			writebin(powfs[ipowfs].sodiumprep, "powfs%d_sodiumprep", ipowfs);
+		}
 	}
 }
 typedef struct{
@@ -1110,6 +1118,10 @@ void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, double deltah, int ip
 	if(mode==0){/*preparation. */
 		if(powfs[ipowfs].etfprep&&powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
 			etf_free(powfs[ipowfs].etfprep);
+		}
+		if(powfs[ipowfs].sodiumprep){
+			dbg("Using sodiumprep for etfprep\n");
+			etfdata.sodium=powfs[ipowfs].sodiumprep;
 		}
 		powfs[ipowfs].etfprep=mketf_wrap(&etfdata);
 	} else{/*simulation*/
@@ -1823,6 +1835,7 @@ static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 		free(powfs[ipowfs].llt);
 	}
 	dcellfree(powfs[ipowfs].sodium);
+	dcellfree(powfs[ipowfs].sodiumprep);
 	if(powfs[ipowfs].etfprep!=powfs[ipowfs].etfsim){
 		etf_free(powfs[ipowfs].etfprep);
 	}

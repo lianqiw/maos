@@ -359,13 +359,11 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 			}
 			/*DTF. */
 			if(parms->powfs[ipowfs].usephy){
-				if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->n>1
-					||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+				if((parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->n>1)||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 					 /*Need one per wfs in this powfs, or the first wfs. */
 					cuwfs[iwfs].dtf.init(nwvl, 1);
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						int notfused=!powfs[ipowfs].etfsim||!powfs[ipowfs].etfsim[iwvl].fused;
-						if(notfused){
+						if(!parms->powfs[ipowfs].llt){
 							int icol=powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0;
 							cmat* nominal=ccell_col(powfs[ipowfs].dtf[iwvl].nominal, icol);
 							cp2gpu(cuwfs[iwfs].dtf[iwvl].nominal, nominal);
@@ -374,7 +372,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 						//ETF moved to gpu_wfsgrad_update_etf();
 					}/*for iwvl. */
 					if(parms->powfs[ipowfs].llt){
-						cp2gpu(cuwfs[iwfs].srot, powfs[ipowfs].srot->p[parms->powfs[ipowfs].llt->n>1?wfsind:0]);
+						cp2gpu(cuwfs[iwfs].srot, PR(powfs[ipowfs].srot, wfsind, 0));
 					}
 				} else{
 					cuwfs[iwfs].dtf=cuwfs[iwfs0].dtf;

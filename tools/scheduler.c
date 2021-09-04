@@ -83,7 +83,7 @@ static RUN_T* runned_end=NULL;
 static double usage_cpu;
 static RUN_T* running_add(int pid, int sock);
 static RUN_T* running_get(int pid);
-static RUN_T* running_get_wait(int status);
+static RUN_T* running_get_by_status(int status);
 
 static RUN_T* runned_get(int pid);
 static void runned_remove(int pid);
@@ -98,46 +98,46 @@ static void monitor_send(RUN_T* run, char* path);
 static void monitor_send_initial(MONITOR_T* ic);
 static void monitor_send_load(void);
 static long counter=-1;//an negative index for a pending run
-static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
-	static int ncpu=0;//number of CPUs being used
-	static int ngpu=0;//number of GPUs being used
+static int nused_cpu=0;//number of CPUs being used
+static int nused_gpu=0;//number of GPUs being used
+static int nrun_handle(int cmd, int pid, int nthread, int ngpu){
 	switch(cmd){
 	case 0:
 		if(pid==1){
-			return ngpu;
+			return nused_gpu;
 		} else{
-			return ncpu;
+			return nused_cpu;
 		}
 		break;
 	case 1: //put back resource
-		ncpu+=nthread;
-		ngpu+=ngpu_used;
-		dbg_time("post by %d: ncpu %d->%d. ngpu %d->%d.\n",
-			pid, ncpu-nthread, ncpu, ngpu-ngpu_used, ngpu);
+		nused_cpu+=nthread;
+		nused_gpu+=ngpu;
+		dbg_time("post by %d: nused_cpu %d->%d. nused_gpu %d->%d.\n",
+			pid, nused_cpu-nthread, nused_cpu, nused_gpu-ngpu, nused_gpu);
 		break;
 	case 2: //remove resource
-		ncpu-=nthread;
-		ngpu-=ngpu_used;
-		dbg_time("remove by %d: ncpu %d->%d. ngpu %d->%d.\n",
-			pid, ncpu+nthread, ncpu, ngpu+ngpu_used, ngpu);
-		if(ncpu<0){
-			dbg_time("ncpu=%d\n", ncpu);
-			ncpu=0;
+		nused_cpu-=nthread;
+		nused_gpu-=ngpu;
+		dbg_time("remove by %d: nused_cpu %d->%d. nused_gpu %d->%d.\n",
+			pid, nused_cpu+nthread, nused_cpu, nused_gpu+ngpu, nused_gpu);
+		if(nused_cpu<0){
+			dbg_time("nused_cpu=%d\n", nused_cpu);
+			nused_cpu=0;
 		}
-		if(ngpu<0){
-			dbg_time("ngpu=%d\n", ngpu);
-			ngpu=0;
+		if(nused_gpu<0){
+			dbg_time("nused_gpu=%d\n", nused_gpu);
+			nused_gpu=0;
 		}
 		break;
 	case 3: //reset
-		if(ncpu||ngpu){
-			ncpu=0;
-			ngpu=0;
-			dbg_time("reset: ncpu=%d, ngpu=%d\n", ncpu, ngpu);
+		if(nused_cpu||nused_gpu){
+			nused_cpu=0;
+			nused_gpu=0;
+			dbg_time("reset: nused_cpu=%d, nused_gpu=%d\n", nused_cpu, nused_gpu);
 		}
 		break;
 	}
-	return ncpu;
+	return nused_cpu;
 }
 static int nrun_get(int type){
 	return nrun_handle(0, type, 0, 0);
@@ -331,7 +331,7 @@ static RUN_T* running_get(int pid){
 	return irun;
 }
 
-static RUN_T* running_get_wait(int status){
+static RUN_T* running_get_by_status(int status){
 	RUN_T* irun;
 	int jrun=0;
 	for(irun=running; irun; irun=irun->next){
@@ -381,8 +381,10 @@ static void check_jobs(void){
  examine the process queue to start routines once CPU is available.
 */
 static void process_queue(void){
+	if(!running) return;
 	static time_t lasttime=0;
-	if(nrun_get(0)>0&&myclocki()-lasttime<1){
+	time_t thistime=myclocki();
+	if(nrun_get(0)>0&&thistime<lasttime+1){
 		//dbg_time("process_queue: too son\n");
 		return;
 	}
@@ -392,13 +394,12 @@ static void process_queue(void){
 		return;
 	}
 	int avail=get_cpu_avail();
-
 	if(avail<1){
-		//dbg_time("process_queue: no CPUs are available\n");
+		dbg_time("process_queue: no CPUs are available\n");
 		return;
 	}
-	dbg_time("ncpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
-	RUN_T* irun=running_get_wait(S_WAIT);
+	dbg_time("nused_cpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
+	RUN_T* irun=running_get_by_status(S_WAIT);
 	/*
 	//don't do the test. let check_jobs do it.
 	while(irun&&irun->pid>0&&kill(irun->pid, 0)){//job exited
@@ -406,9 +407,9 @@ static void process_queue(void){
 			dbg_time("Job %d in S_WAIT no longer exists. Change status to S_CRASH\n", irun->pid);
 			running_remove(irun->pid, S_CRASH);
 		}else{
-			irun->status.info=S_UNKNOWN;//prevent running_get_wait from getting stuck
+			irun->status.info=S_UNKNOWN;//prevent running_get_by_status from getting stuck
 		}
-		irun=running_get_wait(S_WAIT);
+		irun=running_get_by_status(S_WAIT);
 	}*/
 	if(irun){//There are jobs waiting.
 		if(irun->sock>0){//already connected.
@@ -438,10 +439,10 @@ static void process_queue(void){
 	} else{
 		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
 			static double lasttime2=0;
-			time_t thistime=myclocki();
+			time_t thistime2=myclocki();
 			if(thistime>lasttime2+0.001){
-				lasttime2=thistime;
-				irun=running_get_wait(S_QUEUED);
+				lasttime2=thistime2;
+				irun=running_get_by_status(S_QUEUED);
 				if(!irun){
 					dbg_time("all jobs are done\n");
 					all_done=1;
@@ -449,7 +450,7 @@ static void process_queue(void){
 					counter=-1; //reset the counter
 				} else{
 					int pid;
-					irun->last_time=thistime;
+					irun->last_time=thistime2;
 					irun->status.timlast=myclocki();
 					if((pid=launch_exe(irun->exe, irun->path0))<0){
 						dbg_time("Launch job %d failed: %d (%s)\n", irun->pid, pid, irun->exe);
@@ -616,14 +617,14 @@ static int respond(int sock){
 		irun->nthread=nthread;
 		irun->ngpu=ngpu;
 		if(waiting&0x1){
-			dbg_time("(%d) Job %d waiting to start with ncpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
+			dbg_time("(%d) Job %d waiting to start with nused_cpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
 			irun->status.info=S_WAIT;
-			all_done=0;
 		} else{/*no waiting, no need reply. */
-			dbg_time("(%d) Job %d started with ncpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
+			dbg_time("(%d) Job %d started with nused_cpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
 			nrun_add(pid, nthread, ngpu);
 			irun->status.info=S_START;
 		}
+		all_done=0;
 		if(irun->path) monitor_send(irun, irun->path);
 		monitor_send(irun, NULL);
 	}
@@ -889,7 +890,7 @@ static int respond(int sock){
 		ret=-1;
 	}
 	//job is finished. process the next job. don't wait for timeout
-	if((cmd[0]==CMD_KILLED||cmd[0]==CMD_FINISH||cmd[0]==CMD_CRASH)&&!all_done){
+	if((cmd[0]==CMD_KILLED||cmd[0]==CMD_FINISH||cmd[0]==CMD_CRASH)&&running){
 		process_queue();
 	}
 end:
@@ -962,7 +963,7 @@ static void scheduler_timeout(void){
 
 	time_t thistime=myclocki();
 	//Process job queue
-	if(!all_done){
+	if(running){
 		process_queue();
 	}
 #if HAS_LWS

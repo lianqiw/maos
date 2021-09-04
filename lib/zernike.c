@@ -76,9 +76,14 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 		nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
 	}
 	real D2=loc_diam(loc);
-	if(D<=0){
+	int limitr=1;//make opd 0 outside of D
+	if(D<0){
+		D=-D;
+		limitr=0;
+	}else if(!D){
 		D=D2;
-	} else if(fabs(D-D2)>D*0.5){
+	}
+	if(fabs(D-D2)>D*0.5){
 		warning("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
 	}
 
@@ -91,7 +96,7 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	long nover=0; real rover=1;
 	for(long iloc=0; iloc<nloc; iloc++){
 		P(locr,iloc)=sqrt(pow(locx[iloc], 2)+pow(locy[iloc], 2))*R1;
-		if(P(locr,iloc)>1){
+		if(P(locr,iloc)>1 && limitr){
 			nover++;
 			if(P(locr,iloc)>rover){
 				rover=P(locr,iloc);

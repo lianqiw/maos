@@ -962,7 +962,10 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 			P(neai,iwfs,iwfs)=dspref(P(recon->saneai,iwfs,iwfs));
 		}
 	}
-	recon->RRtwfs=dcellpinv(GRtwfs, neai);
+	//need to set a high threshold to avoid other modes reconstruct to spherical modes.
+	real thres=1e-10;
+	info("RRtwfs svd threshold is %g\n", thres);
+	recon->RRtwfs=dcellpinv2(GRtwfs, neai, thres, 0);
 	
 	/*
 	if(parms->itwfssph>-1 && itwfs>-1){

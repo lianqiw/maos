@@ -553,18 +553,15 @@ dmat* mkcirmap(long nx, long ny, real cx, real cy, real r){
 	return map;
 }
 /**
-   Estimate the diameter of loc
+   Estimate the diameter of loc.
+   2021-09-03: corrected calculation for square grid. Use the inscribed diameter but not circumcircle.
 */
 real loc_diam(const loc_t* loc){
 	if(!loc) return 0;
-	real R2max=0;
-	for(long i=0; i<loc->nloc; i++){
-		real R2=loc->locx[i]*loc->locx[i]+loc->locy[i]*loc->locy[i];
-		if(R2max<R2){
-			R2max=R2;
-		}
-	}
-	return sqrt(R2max)*2;
+	real xmin, xmax, ymin, ymax;
+	dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+	dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
+	return MAX(xmax-xmin, ymax-ymin);
 }
 /**
    Find the point that closes to origin (0,0) in loc. Useful in single point

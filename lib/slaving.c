@@ -403,7 +403,7 @@ void act_stuck(loccell* aloc, void* HA_, const lcell* stuck){
 		}
 		const int nact=P(aloc,idm)->nloc;
 		for(int ifit=0; ifit<nfit; ifit++){
-			cell* HAi=P(HA,ifit,idm);
+			cell* HAi=nfit==1?P(HA,idm):P(HA,ifit,idm);
 			if(HAi->id==M_REAL){//dense
 				dmat* hb=(dmat*)HAi;
 				if(hb->nx>1&&hb->ny==P(aloc,idm)->nloc){

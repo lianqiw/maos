@@ -312,7 +312,7 @@ void perfevl_ievl(thread_t* info){
 
 		if(parms->plot.run){
 			drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->dbg.draw_opdmax->p,
-				"Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
+				"Science Closed Loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 		}
 		if(save_evlopd){
 			zfarr_push(simu->save->evlopdcl[ievl], isim, iopdevl);
@@ -529,14 +529,14 @@ static void perfevl_mean(sim_t* simu){
 		static int ct=0;
 		if(P(simu->cle,0,isim)>MAX(P(simu->ole,0,isim)*100, 1e-12)){
 			ct++;
-			if(ct>10){
-				sync();
-				error("Divergent simulation.");
-			}
 			warning("Step %5d: The loop is diverging: OL: %g CL: %g\n",
 				isim, sqrt(P(simu->ole,0,isim))*1e9,
 				sqrt(P(simu->cle,0,isim))*1e9);
 			simu->last_report_time=0; //force print out.
+			if(ct>10){
+				warning("Exit after this time step.\n");
+				signal_caught=1;
+			}
 		} else{
 			ct=0;
 		}
@@ -626,9 +626,17 @@ static void perfevl_save(sim_t* simu){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			if(P(simu->evlopdmean, ievl)){
 				zfarr_push(simu->save->evlopdmean[ievl], isim, P(simu->evlopdmean,ievl));
+				if(parms->plot.run){
+					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean, ievl), simu->aper->amp1, parms->dbg.draw_opdmax->p,
+						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL %d", ievl);
+				}
 			}
 			if(P(simu->evlopdmean_ngsr, ievl)){
 				zfarr_push(simu->save->evlopdmean_ngsr[ievl], isim, P(simu->evlopdmean_ngsr,ievl));
+				if(parms->plot.run){
+					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean_ngsr, ievl), simu->aper->amp1, parms->dbg.draw_opdmax->p,
+						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "ngsr %d", ievl);
+				}
 			}
 		}
 
@@ -639,6 +647,10 @@ static void perfevl_save(sim_t* simu){
 			const real scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 			dscale(simu->evlopdmeanol, scaleol);
 			zfarr_push(simu->save->evlopdmeanol, isim, simu->evlopdmeanol);
+			if(parms->plot.run){
+				drawopdamp("Evlol", simu->aper->locs, simu->evlopdmeanol, simu->aper->amp1, parms->dbg.draw_opdmax->p,
+					"Science Open Loop OPD Mean", "x (m)", "y (m)", "OL mean");
+			}
 			dscale(simu->evlopdmeanol, 1./scaleol);
 		}
 	}

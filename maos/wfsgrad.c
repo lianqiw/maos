@@ -830,7 +830,7 @@ void wfsgrad_post(thread_t* info){
 		if(simu->wfsflags[ipowfs].gradout){
 			if(parms->plot.run){
 				/*drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl,
-					parms->plot.grad2opd, parms->dbg.draw_gmax->p,
+					parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->dbg.draw_gmax->p,
 					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);*/
 				if(do_phy){
 					drawints("Ints", simu->powfs[ipowfs].saloc, P(simu->ints, iwfs), NULL,
@@ -1039,8 +1039,9 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dcellzero(simu->gradoffacc);
 					simu->gradoffisim0=isim;
 				}
-				//the following changes are bad. It affects the next seed.
+				
 				if(parms->powfs[ipowfs].phytype_sim!=parms->powfs[ipowfs].phytype_sim2){
+					//the following parms changes need to be moved to simu. It affects the next seed.
 					parms->powfs[ipowfs].phytype_sim=parms->powfs[ipowfs].phytype_sim2;
 					parms->powfs[ipowfs].phytype_recon=parms->powfs[ipowfs].phytype_sim;
 					info2("Step %5d: powfs %d changed to %s\n", isim, ipowfs,
@@ -1190,7 +1191,7 @@ void wfsgrad_twfs_recon(sim_t* simu){
 					int draw_single_save=draw_single;
 					draw_single=0;
 					drawgrad("Goff", simu->powfs[ipowfs].saloc, P(simu->gradoff, iwfs),
-						parms->plot.grad2opd, parms->dbg.draw_gmax->p,
+						parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->dbg.draw_gmax->p,
 						"WFS Offset", "x (m)", "y (m)", "Gtwfs %d", iwfs);
 					draw_single=draw_single_save;
 				}
@@ -1226,7 +1227,7 @@ void wfsgrad(sim_t* simu){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			drawgrad("Gcl", simu->powfs[ipowfs].saloc, P(simu->gradcl, iwfs),
-				parms->plot.grad2opd, parms->dbg.draw_gmax->p,
+				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->dbg.draw_gmax->p,
 				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcal %d", iwfs);
 		}
 	}

@@ -209,15 +209,12 @@ void fit_sodium_profile(
 			gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etfs[ix], saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
 			P(i0m2, 0, ix)=dref(P(i0m, ix)->m);
 		}
-		toc("gensei");tic;
-		print_mem("gensei");
 		dcellzero(ata);
 		dcellzero(atb);
 		dcellmm(&ata, i0m2, i0m2, "tn", 1);
 		dcellmm(&atb, i0m2, i02, "tn", 1);
 		cellfree(i0m2);
-		writebin(ata, "sodium_ata_%d", irep);
-		writebin(atb, "sodium_atb_%d", irep);
+		
 		dcellsvd_pow(ata, -1, svdthres, tikcr);
 		//dcell *pi0m=dcellpinv2(i0m2, NULL, svdthres, tikcr);
 		dcellzero(res);
@@ -226,14 +223,11 @@ void fit_sodium_profile(
 		for(long ix=0; ix<nx; ix++){
 			P(nai, ix, 1)=P(P(res,ix),0)*scale;
 		}
-		toc("pinv");tic;
 		etf_t* etfi=mketf(dtf, nac, 0, srot, srsa, hs, htel, za, 1);
 		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etfi, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
 		etf_free(etfi);
-		toc("gensei");tic;
 		mtch_cell(&mtche, NULL, NULL, NULL, *pi0, *pgx, *pgy, NULL, NULL, NULL, 0, 0, 3, 
 			pixthetax, pixthetay, NULL, radgx, 1, 1);
-		toc("mtch");tic;
 		real gmax=0;
 		for(long ii0=0; ii0<ni0; ii0++){
 			for(long isa=0; isa<nsa; isa++){
@@ -244,13 +238,14 @@ void fit_sodium_profile(
 				gmax=MAX(MAX(gmax, fabs(g[0])), fabs(g[1]));
 			}
 		}
-		toc("grad");tic;
-		dbg("gradient has maximum %g mas\n", gmax*206265000);
+
+		info("gradient has maximum %g mas\n", gmax*206265000);
+		writebin(ata, "sodium_ata_%d", irep);
+		writebin(atb, "sodium_atb_%d", irep);
 		writebin(nai, "sodium_prof_%d", irep);
 		writebin(*pgrad, "sodium_grad_%d", irep);
 		writebin(mtche, "sodium_mtche_%d", irep);
 		writebin(*pi0, "sodium_i0_%d", irep);
-		toc("saving");
 	}
 	dcellfree(ata);
 	dcellfree(atb);

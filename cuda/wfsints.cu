@@ -502,9 +502,8 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 					sa_ccwm_do<<<ksa, 256, 0, stream>>>
 						(otf(), notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), 0);
 					ctoc("ccwm");//0.97 ms
-				}
-				/*multiply with nominal */
-				if(cuwfs[iwfs].dtf[iwvl].nominal){
+				}else if(cuwfs[iwfs].dtf[iwvl].nominal){
+					/*multiply with nominal only if there is no etf. nominal is fused to etf otherwise*/
 					int repeat=0;
 					Comp* pnominal=0;
 					if(cuwfs[iwfs].dtf[iwvl].nominal.Ny()==1){

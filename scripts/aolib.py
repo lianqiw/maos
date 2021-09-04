@@ -4,10 +4,13 @@ import os
 import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
-from numpy import sqrt, exp, log, floor, ceil, nan, pi, sort
+from numpy import sqrt, exp, log, floor, ceil, nan, pi
 from numpy.random import rand, randn
 import matplotlib.pyplot as plt
-
+try:
+    from natsort import natsorted
+except:
+    natsorted=sorted
 try:
     from libaos import *
 except:
@@ -86,12 +89,12 @@ def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "extra/Resp", seeds, iframe1, iframe2)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
-    fds2=sorted(glob.glob(fdin+"/",recursive=1))
+    fds2=natsorted(glob.glob(fdin+"/",recursive=1))
     fds=[]
     resall=None
     for fd in fds2: #loop over directory
         if seeds is None:
-            fns=sorted(glob.glob(fd+"/"+name+"_*.bin"))
+            fns=natsorted(glob.glob(fd+"/"+name+"_*.bin"))
         else:
             fns=list()
             for seed in seeds:
@@ -105,7 +108,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
                 print(fn, 'does not exist')
                 continue
             res=readbin(fn)
-            if res is None:
+            if res is None or res.shape[0]==0:
                 continue
             if name=="Res":
                 if res[3].size>0: #split tomography
@@ -277,7 +280,7 @@ def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
     return opd2
 
 def read_many(fdin):
-    fds2=sorted(glob.glob(fdin,recursive=1))
+    fds2=natsorted(glob.glob(fdin,recursive=1))
     fds=[]
     res=[]
     for fd in fds2: 
@@ -288,4 +291,18 @@ def read_many(fdin):
         except:
             pass
     return np.array(res),fds
-        
+def eye(nx, val=1):
+    dd=np.zeros((nx,nx))
+    np.fill_diagonal(dd, val)
+    return dd
+def svd_inv(A, thres=0, tikcr=0):
+    '''svd_inv(A, thres=0, tikcr=0)'''
+    u,s,v=np.linalg.svd(A)
+    if tikcr>0:
+        dd=np.zeros(A.shape)
+        np.fill_diagonal(dd,s[0]*tikcr)
+        u,s,v=np.linalg.svd(A+eye(A.shape[0], s[0]*tikcr))
+    si=1./s
+    if thres>0:
+        si[s<s[0]*thres]=0
+    return (u*si)@v

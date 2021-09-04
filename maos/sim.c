@@ -112,7 +112,7 @@ void maos_isim(int isim){
 	if(isim==simstart+1){//skip slow first step.
 		tk_atm=myclockd();
 	}
-	if(isim+2+parms->sim.dtrat_hi>=simend){
+	if(isim+2+parms->sim.dtrat_hi>=simend || signal_caught){
 		draw_single=0;
 	}
 	real ck_0=myclockd();

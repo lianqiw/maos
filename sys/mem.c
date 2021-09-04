@@ -404,7 +404,9 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 		//It is not safe to call backtrace in SIGSEGV, so may hang.
 		print_backtrace();
 	}
-	dbg_time("Call signal_handler %p\n", signal_handler);
+	if(signal_handler){
+		dbg_time("Call signal_handler %p\n", signal_handler);
+	}
 	if(signal_handler&&signal_handler(sig)){
 		cancel_action=1;
 	}

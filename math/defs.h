@@ -196,7 +196,6 @@ static inline int ismat(const void* id){
 }
 
 //Check that A is valid and has mat type and has non zero size.
-#define P_GET3(_0,_1,_2,_3,NAME,...) NAME
 #define check_mat1(A) ((A)?(check(ismat(A))?1:(dbg("type id mismatch, got %d, expect %d\n", *(uint32_t*)A, M_T),0)):0)
 #define check_mat2(A,B) (check_mat1(A) && check_mat1(B))
 #define check_mat3(A,B,C) (check_mat1(A) && check_mat1(B) && check_mat1(C))
