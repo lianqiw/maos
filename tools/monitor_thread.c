@@ -35,7 +35,7 @@
 static proc_t** pproc;
 static int* nproc;
 static int* hsock;   //socket of each host
-static double* htime;//last time having signal from each host.
+static time_t* htime;//last time having signal from each host.
 extern int sock_main[2]; /*listens command from main*/
 static fd_set active_fd_set;
 //int pipe_addhost[2]={0,0};
@@ -89,7 +89,6 @@ static proc_t* proc_get(int id, int pid){
 		//iproc->iseed_old=-1;
 		iproc->pid=pid;
 		iproc->hid=id;
-
 		iproc->next=pproc[id];
 		pproc[id]=iproc;
 		nproc[id]++;
@@ -144,7 +143,7 @@ static int host_from_sock(int sock){
 
 /* Record the host after connection is established*/
 static void host_added(int ihost, int sock){
-	htime[ihost]=myclockd();
+	htime[ihost]=myclocki();
 	proc_remove_all(ihost);/*remove all entries. */
 	if(sock>-1){
 		hsock[ihost]=sock;
@@ -284,7 +283,7 @@ static int respond(int sock){
 	}
 	int ihost=host_from_sock(sock);
 	if(ihost>=0){
-		htime[ihost]=myclockd();
+		htime[ihost]=myclocki();
 	}
 	int pid=cmd[2];
 	switch(cmd[0]){
@@ -315,13 +314,19 @@ static int respond(int sock){
 			return -1;
 		}
 		proc_t* iproc=proc_get(ihost, pid);
-		iproc->tlast=myclockd();
+		iproc->tlast=myclocki();
 		/*if(!iproc){
 		iproc=proc_add(ihost,pid);
 		}*/
 		int old_info=iproc->status.info;
 		if(stread(sock, &iproc->status, sizeof(status_t))){
 			return -1;
+		}
+		if(!iproc->timstart){//only set once
+			iproc->timstart=iproc->status.timstart?iproc->status.timstart:myclocki();
+		}
+		if(iproc->status.timlast){
+			iproc->timlast=iproc->status.timlast;
 		}
 		if(iproc->status.info==S_REMOVE){
 			proc_remove(ihost, pid);
@@ -443,7 +448,7 @@ void* listen_host(void* pmsock){
 	for(int i=0; i<=nhost; i++){
 		hsock[i]=-1;
 	}
-	htime=mycalloc(nhost, double);
+	htime=mycalloc(nhost, time_t);
 	FD_ZERO(&active_fd_set);
 	FD_SET(msock, &active_fd_set);//listen to monitor itself
 	int keep_listen=1;
@@ -466,7 +471,7 @@ void* listen_host(void* pmsock){
 				}
 			}
 		}
-		double ntime=myclockd();
+		time_t ntime=myclocki();
 		for(int ihost=0; ihost<nhost; ihost++){
 			if(htime[ihost]){//only handle hosts that are ever connected
 				if(hsock[ihost]<0){//disconnected, trying to reconnect
@@ -488,7 +493,7 @@ void* listen_host(void* pmsock){
 				if(iproc->status.info==S_RUNNING&&iproc->tlast+600<ntime){
 					iproc->status.info=S_CRASH;
 					iproc->status.tot=(ntime-iproc->tlast)/iproc->status.scale;
-					dbg_time("proc %d in %s is not updating in %g seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
+					dbg_time("proc %d in %s is not updating in %lu seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
 					g_idle_add((GSourceFunc)refresh, iproc);
 				}
 			}
