@@ -16,7 +16,7 @@ var draw_8h =
     [ "drawmap", "draw_8h.html#aef0cb494e695878f192ecf5b0a49f9f1", null ],
     [ "drawloc", "draw_8h.html#af6a614e128ea550040fe980a1b1922e6", null ],
     [ "drawopd", "draw_8h.html#aaa43be3eed0b684fc478223d764a1b3a", null ],
-    [ "drawgrad", "draw_8h.html#a05714cc051dfe676c6129c3c5c8827d3", null ],
+    [ "drawgrad", "draw_8h.html#ac6a7712945fda655b849ef0d61be82af", null ],
     [ "drawopdamp", "draw_8h.html#a8525f4c0348a232975c6277d40d85307", null ],
     [ "drawints", "draw_8h.html#ab6fde060312158de634a6f1d23ee6b47", null ]
 ];

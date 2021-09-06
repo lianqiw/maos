@@ -27,7 +27,6 @@ var searchData=
   ['origx',['origx',['../type_8h.html#a78348698d847fde30c184e637da5639f',1,'pts_t']]],
   ['origy',['origy',['../type_8h.html#aea34e9b0cc9e1d4e9ad95eb416f004e8',1,'pts_t']]],
   ['os',['os',['../cn2est_8h.html#a111bffff3aa695200480f268920e3932',1,'cn2est_t::os()'],['../parms_8h.html#a389921eecc54edf5560bf425a2dcb262',1,'atmr_cfg_t::os()'],['../maos_2types_8h.html#a300faac1aa46b7ffde1b98a5674d6911',1,'recon_t::os()']]],
-  ['otf',['otf',['../maos_2types_8h.html#adc4dff83c22e1b7a5070fd39792a7c89',1,'intstat_t']]],
   ['over',['over',['../parms_8h.html#a98fad09a68cb05b822f9c1a3a0a74e71',1,'arg_t']]],
   ['overlapi',['overlapi',['../cn2est_8h.html#abbd22f0f3a95814008472b9036153f7a',1,'cn2est_t']]],
   ['overx',['overx',['../parms_8h.html#a2f885c0eebcc84c3dffcfda28720e321',1,'atm_cfg_t']]],

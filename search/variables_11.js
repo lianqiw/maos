@@ -39,6 +39,7 @@ var searchData=
   ['slope',['slope',['../turbulence_8h.html#a02c9b62d37fd61caf13f528c73d88f54',1,'genatm_t']]],
   ['sninfile',['sninfile',['../parms_8h.html#aa36290db2d198cc23e5518ca8c035cac',1,'powfs_cfg_t']]],
   ['sodium',['sodium',['../maos_2types_8h.html#a625fa37c8d1de10a5924d4f578dd84a8',1,'powfs_t']]],
+  ['sodiumprep',['sodiumprep',['../maos_2types_8h.html#a0b95db9b881d7db77b043a9f750a247f',1,'powfs_t']]],
   ['split',['split',['../parms_8h.html#a0a35373a4ca8d2d1edc8f7787305b709',1,'recon_cfg_t']]],
   ['splitlrt',['splitlrt',['../parms_8h.html#a35ae681e33f2bebd3a0496030523a279',1,'tomo_cfg_t']]],
   ['sprint',['sprint',['../maos_2types_8h.html#aa408cd6bbf0dd0f0c04d38ea3e87e774',1,'powfs_t']]],

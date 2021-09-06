@@ -119,10 +119,10 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aacf77f2c557f938e33483e9397220666"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#aacf77f2c557f938e33483e9397220666">mkdtf</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *wvls, real dxsa, real embfac, <a class="el" href="classlong.html">long</a> notfx, <a class="el" href="classlong.html">long</a> notfy, <a class="el" href="classlong.html">long</a> pixpsax, <a class="el" href="classlong.html">long</a> pixpsay, real pixthetax, real pixthetay, const <a class="el" href="type_8h.html#structdmat">dmat</a> *pixoffx, const <a class="el" href="type_8h.html#structdmat">dmat</a> *pixoffy, real pixblur, const <a class="el" href="type_8h.html#structdcell">dcell</a> *srot, int radpix)</td></tr>
-<tr class="separator:aacf77f2c557f938e33483e9397220666"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9384dbb5f6c50141fa1f34528f53e618"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#a9384dbb5f6c50141fa1f34528f53e618">mketf</a> (<a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *dtfs, real hs, const <a class="el" href="type_8h.html#structdcell">dcell</a> *sodium, int icol, const <a class="el" href="type_8h.html#structdcell">dcell</a> *srot, const <a class="el" href="type_8h.html#structdcell">dcell</a> *srsa, int no_interp)</td></tr>
-<tr class="separator:a9384dbb5f6c50141fa1f34528f53e618"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b787112cceef98c1a2c1aed9362ead9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#a8b787112cceef98c1a2c1aed9362ead9">mkdtf</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *wvls, real dxsa, real embfac, <a class="el" href="classlong.html">long</a> notfx, <a class="el" href="classlong.html">long</a> notfy, <a class="el" href="classlong.html">long</a> pixpsax, <a class="el" href="classlong.html">long</a> pixpsay, real pixthetax, real pixthetay, const <a class="el" href="type_8h.html#structdmat">dmat</a> *pixoffx, const <a class="el" href="type_8h.html#structdmat">dmat</a> *pixoffy, real pixblur, const <a class="el" href="type_8h.html#structdcell">dcell</a> *pixrot)</td></tr>
+<tr class="separator:a8b787112cceef98c1a2c1aed9362ead9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4a76f082321c1a4625ff8461917c57e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#ac4a76f082321c1a4625ff8461917c57e">mketf</a> (const <a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *dtfs, const <a class="el" href="type_8h.html#structdcell">dcell</a> *sodium, int icol, const <a class="el" href="type_8h.html#structdcell">dcell</a> *srot, const <a class="el" href="type_8h.html#structdcell">dcell</a> *srsa, real hs, real htel, real za_rad, int no_interp)</td></tr>
+<tr class="separator:ac4a76f082321c1a4625ff8461917c57e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebceaa4b5aa6ca6e7aaa011d7dea2bc5"><td class="memItemLeft" align="right" valign="top"><a id="aebceaa4b5aa6ca6e7aaa011d7dea2bc5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>dtf_free_do</b> (<a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *dtfs)</td></tr>
 <tr class="separator:aebceaa4b5aa6ca6e7aaa011d7dea2bc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -131,6 +131,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
 <tr class="separator:ad2d2722feb99b759b848cbab3f600eb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42d0fe623bbbd35b36c395fd52904603"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#a42d0fe623bbbd35b36c395fd52904603">smooth</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *profile, real dxnew)</td></tr>
 <tr class="separator:a42d0fe623bbbd35b36c395fd52904603"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3669ec8c74c6fe97b6785ca6a48c77e7"><td class="memItemLeft" align="right" valign="top"><a id="a3669ec8c74c6fe97b6785ca6a48c77e7"></a>
+<a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>smooth_cell</b> (const <a class="el" href="type_8h.html#structdcell">dcell</a> *profile, real dxnew)</td></tr>
+<tr class="separator:a3669ec8c74c6fe97b6785ca6a48c77e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routine to generate detector transfer function and elongation transfer function due to sodium layer. </p>
@@ -154,7 +157,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
 <td class="fieldname">
 nominal</td>
 <td class="fielddoc">
-<p>The FFT of the pixel functions </p>
+<p>The FFT of the pixel functions, don't apply if etf exists . </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a286ad92f245b487cf5683cbb40517b21"></a><a class="el" href="type_8h.html#structdspcell">dspcell</a> *</td>
@@ -199,6 +202,20 @@ dxsa</td>
 <p>Subaperture size </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="a1fa91ac855c2427b5e05ebc11b3269fc"></a>real</td>
+<td class="fieldname">
+pixthetax</td>
+<td class="fielddoc">
+<p>Pixel size along x (radial) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae764aa0535ea748610bb898da0b454e1"></a>real</td>
+<td class="fieldname">
+pixthetay</td>
+<td class="fielddoc">
+<p>Pixel size along y (radial </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a94d3362514e7c5ce115586659307a06b"></a>int</td>
 <td class="fieldname">
 notfx</td>
@@ -234,13 +251,6 @@ radpix</td>
 <p>1: Pixels are along radial/azimuthal direction </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a890fd793d738c02ea952e8d8b2cd8774"></a>int</td>
-<td class="fieldname">
-fused</td>
-<td class="fielddoc">
-<p>Whether the DTF has been fused to ETF </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="ab4a3fd5ff2f8df053bd35e191d096aa6"></a>int</td>
 <td class="fieldname">
 nwvl</td>
@@ -269,7 +279,7 @@ nwvl</td>
 <td class="fieldname">
 etf</td>
 <td class="fielddoc">
-<p>Store the 2D ETF when </p>
+<p>Store the 2D ETF. nominal is fused in always. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a3705a423311b167c48b7e55b2770bc4f"></a>double</td>
@@ -336,8 +346,8 @@ nwvl</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="aacf77f2c557f938e33483e9397220666"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aacf77f2c557f938e33483e9397220666">&#9670;&nbsp;</a></span>mkdtf()</h2>
+<a id="a8b787112cceef98c1a2c1aed9362ead9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b787112cceef98c1a2c1aed9362ead9">&#9670;&nbsp;</a></span>mkdtf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -418,13 +428,7 @@ nwvl</td>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
-          <td class="paramname"><em>srot</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>radpix</em>&#160;</td>
+          <td class="paramname"><em>pixrot</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -433,7 +437,7 @@ nwvl</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p><a class="el" href="mkdtf_8h.html#aacf77f2c557f938e33483e9397220666">mkdtf()</a> computes the parameters used to sample PSFs onto detectors in the Fourier domain. It incorporates size of the detector pixels, and charge diffusion. For polar coordinate detectors, it also rotates the pixels and pixel coordinates so that they are aranged along the radial and azimuthal direction. </p>
+<p><a class="el" href="mkdtf_8h.html#a8b787112cceef98c1a2c1aed9362ead9">mkdtf()</a> computes the parameters used to sample PSFs onto detectors in the Fourier domain. It incorporates size of the detector pixels, and charge diffusion. For polar coordinate detectors, it also rotates the pixels and pixel coordinates so that they are aranged along the radial and azimuthal direction. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">wvls</td><td>List of wavelength </td></tr>
@@ -448,16 +452,15 @@ nwvl</td>
     <tr><td class="paramname">pixoffx</td><td>offset of image center from center of pixel array, along x or radial </td></tr>
     <tr><td class="paramname">pixoffy</td><td>offset of image center from center of pixel array, along y or azimuthal </td></tr>
     <tr><td class="paramname">pixblur</td><td>Pixel blur sigma(fraction of pixel) </td></tr>
-    <tr><td class="paramname">srot</td><td>Rotation angle of each subaperture. NULL for NGS WFS </td></tr>
-    <tr><td class="paramname">radpix</td><td>1: Pixels are along radial/azimuthal direction </td></tr>
+    <tr><td class="paramname">pixrot</td><td>Rotation angle of pixels islands in each subaperture. for polar coordinate only </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a9384dbb5f6c50141fa1f34528f53e618"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9384dbb5f6c50141fa1f34528f53e618">&#9670;&nbsp;</a></span>mketf()</h2>
+<a id="ac4a76f082321c1a4625ff8461917c57e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4a76f082321c1a4625ff8461917c57e">&#9670;&nbsp;</a></span>mketf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -465,14 +468,8 @@ nwvl</td>
         <tr>
           <td class="memname"><a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a>* mketf </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *&#160;</td>
           <td class="paramname"><em>dtfs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real&#160;</td>
-          <td class="paramname"><em>hs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -501,6 +498,24 @@ nwvl</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>hs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>htel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>za_rad</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>no_interp</em>&#160;</td>
         </tr>
@@ -514,11 +529,13 @@ nwvl</td>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">dtfs</td><td>The dtfs </td></tr>
-    <tr><td class="paramname">hs</td><td>Guide star focus range </td></tr>
     <tr><td class="paramname">sodium</td><td>The sodium profile. First column is coordinate. </td></tr>
     <tr><td class="paramname">icol</td><td>Which sodium profile to use </td></tr>
     <tr><td class="paramname">srot</td><td>Rotation angle of each subaperture. NULL for NGS WFS </td></tr>
     <tr><td class="paramname">srsa</td><td>Subaperture to LLT distance </td></tr>
+    <tr><td class="paramname">hs</td><td>Guide star focus range </td></tr>
+    <tr><td class="paramname">htel</td><td>Telescope altitude </td></tr>
+    <tr><td class="paramname">za_rad</td><td>Telescope zenith angle in radian </td></tr>
     <tr><td class="paramname">no_interp</td><td>Use direct sum instead of interpolation + FFT. Slower </td></tr>
   </table>
   </dd>

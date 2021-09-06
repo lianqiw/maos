@@ -238,6 +238,7 @@ var searchData=
   ['socket_5fsend_5ftimeout',['socket_send_timeout',['../sock_8h.html#a9b9b32440b64707b50fbaae8d08f33e5',1,'sock.c']]],
   ['sockio_2eh',['sockio.h',['../sockio_8h.html',1,'']]],
   ['sodium',['sodium',['../maos_2types_8h.html#a625fa37c8d1de10a5924d4f578dd84a8',1,'powfs_t']]],
+  ['sodiumprep',['sodiumprep',['../maos_2types_8h.html#a0b95db9b881d7db77b043a9f750a247f',1,'powfs_t']]],
   ['spatial_5fpsd',['spatial_psd',['../turbulence_8h.html#a003ba466f6608495ae22890661663e8e',1,'turbulence.c']]],
   ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672',1,'daemonize.c']]],
   ['spchol',['spchol',['../chol_8h.html#structspchol',1,'']]],

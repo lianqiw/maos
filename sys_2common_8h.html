@@ -145,7 +145,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>QUIT_FUN</b>(A)&#160;&#160;&#160;quitfun?quitfun(A):default_quitfun(A);</td></tr>
 <tr class="separator:a10f70b101a20e7aa118bf0c944475b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0159bca619b48f22e593fe9b33a36b8"><td class="memItemLeft" align="right" valign="top"><a id="ad0159bca619b48f22e593fe9b33a36b8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logerr</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){fprintf(stdout, A);}})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logerr</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){fprintf(err2out?stdout:stderr, A);}})</td></tr>
 <tr class="separator:ad0159bca619b48f22e593fe9b33a36b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b9a882fdc463a3d4dcc99840fd0adb8"><td class="memItemLeft" align="right" valign="top"><a id="a5b9a882fdc463a3d4dcc99840fd0adb8"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>error</b>(format, ...)&#160;&#160;&#160;({logerr(-4, &quot;%sError(%s:%d,%s): &quot; format &quot;%s&quot;, RED,BASEFILE,__LINE__,__func__, ##__VA_ARGS__, BLACK); signal_caught=11; QUIT_FUN(&quot;Error happened&quot;);})</td></tr>
@@ -160,7 +160,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>warning_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; warning(A);}})</td></tr>
 <tr class="separator:a62dee209121f1ac5d2306b9f6234a1b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25109b9068a7577def63faa4bf329664"><td class="memItemLeft" align="right" valign="top"><a id="a25109b9068a7577def63faa4bf329664"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logstd</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){fprintf(stdout, A);}})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logstd</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){fprintf(std2out?stdout:stderr, A);}})</td></tr>
 <tr class="separator:a25109b9068a7577def63faa4bf329664"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71ca8e156af74e00cb46374435f5fb4b"><td class="memItemLeft" align="right" valign="top"><a id="a71ca8e156af74e00cb46374435f5fb4b"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info</b>(A...)&#160;&#160;&#160;logstd(-1, A)</td></tr>
@@ -178,7 +178,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; info(A);}})</td></tr>
 <tr class="separator:aecfbb1e9291f15553ecf346710b28398"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a625bac7b464519d4050f5ac672c5399a"><td class="memItemLeft" align="right" valign="top"><a id="a625bac7b464519d4050f5ac672c5399a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  format, ...)&#160;&#160;&#160;logstd(level, &quot;%s%s: &quot; format &quot;%s&quot;, CYAN, __func__, ##__VA_ARGS__, BLACK)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  format, ...)&#160;&#160;&#160;logerr(level, &quot;%s%s: &quot; format &quot;%s&quot;, CYAN, __func__, ##__VA_ARGS__, BLACK)</td></tr>
 <tr class="separator:a625bac7b464519d4050f5ac672c5399a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab44f1b142dc82fb4bb8844683baeb68c"><td class="memItemLeft" align="right" valign="top"><a id="ab44f1b142dc82fb4bb8844683baeb68c"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg0</b>(format, ...)&#160;&#160;&#160;logstd(0, &quot;%s&quot; format &quot;%s&quot;, CYAN, ##__VA_ARGS__, BLACK)</td></tr>
@@ -193,7 +193,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3</b>(A...)&#160;&#160;&#160;logdbg(2, A)</td></tr>
 <tr class="separator:a2e51e36b584b061b950ce05578aee507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memItemLeft" align="right" valign="top"><a id="a825b7a63a48fc88a5c00e7ffd20b739b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg_time</b>(level,  format, ...)&#160;&#160;&#160;logstd(level, &quot;%s[%s]%s: &quot; format &quot;%s&quot;, CYAN, <a class="el" href="sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), __func__, ##__VA_ARGS__, BLACK)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg_time</b>(level,  format, ...)&#160;&#160;&#160;logerr(level, &quot;%s[%s]%s: &quot; format &quot;%s&quot;, CYAN, <a class="el" href="sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), __func__, ##__VA_ARGS__, BLACK)</td></tr>
 <tr class="separator:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f66603a37f378b1bc4d794c34526973"><td class="memItemLeft" align="right" valign="top"><a id="a7f66603a37f378b1bc4d794c34526973"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_time</b>(A...)&#160;&#160;&#160;logdbg_time(0, A)</td></tr>

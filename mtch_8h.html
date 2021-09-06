@@ -107,6 +107,8 @@ Functions</h2></td></tr>
 <tr class="separator:ad4eebfaed7d45dbfdad6ba606fc9991e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae10e6ef36938b3107a275fa6afada482"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mtch_8h.html#ae10e6ef36938b3107a275fa6afada482">mtch2</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **mtche, <a class="el" href="type_8h.html#structdmat">dmat</a> **nea, const <a class="el" href="type_8h.html#structdmat">dmat</a> *i0, const <a class="el" href="type_8h.html#structdmat">dmat</a> *gx, const <a class="el" href="type_8h.html#structdmat">dmat</a> *gy, int cr)</td></tr>
 <tr class="separator:ae10e6ef36938b3107a275fa6afada482"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d6a3629fab8f6d8c77da77843108df3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mtch_8h.html#a3d6a3629fab8f6d8c77da77843108df3">mtch_cell</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> **pmtche, <a class="el" href="type_8h.html#structdcell">dcell</a> **psanea, <a class="el" href="type_8h.html#structdmat">dmat</a> **pi0sum, <a class="el" href="type_8h.html#structdmat">dmat</a> **pi0sumsum, const <a class="el" href="type_8h.html#structdcell">dcell</a> *i0s, const <a class="el" href="type_8h.html#structdcell">dcell</a> *gxs, const <a class="el" href="type_8h.html#structdcell">dcell</a> *gys, const <a class="el" href="type_8h.html#structdmat">dmat</a> *qe, const <a class="el" href="type_8h.html#structdcell">dcell</a> *bkgrnd2, const <a class="el" href="type_8h.html#structdcell">dcell</a> *bkgrnd2c, real bkgrnd, real bkgrndc, real rne, real pixthetax, real pixthetay, <a class="el" href="type_8h.html#structdcell">dcell</a> *pixrots, int radgx, int mtchcr, real sigratio)</td></tr>
+<tr class="separator:a3d6a3629fab8f6d8c77da77843108df3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e15c4ecdcba07edeeb2da130a8436b2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mtch_8h.html#a2e15c4ecdcba07edeeb2da130a8436b2">derive_by_fft</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *i0, real theta)</td></tr>
 <tr class="separator:a2e15c4ecdcba07edeeb2da130a8436b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -236,8 +238,8 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Detector read noise </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pixthetax</td><td>Size of pixel along x </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pixthetay</td><td>Size of pixel along y </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pixrot</td><td>Rotation (CCW, radian) of pixel island 0 for cartesian </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">radgx</td><td>1: gx/gy is along r/a coord. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixrot</td><td>Rotation (CCW, radian) of pixel island. 0 for cartesian </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">radgx</td><td>1: gx/gy is along r/a coord. 0 for cartesian. </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">cr</td><td>Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only </td></tr>
   </table>
   </dd>
@@ -295,6 +297,161 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>A simplified wrapper for mtch </p>
+
+</div>
+</div>
+<a id="a3d6a3629fab8f6d8c77da77843108df3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d6a3629fab8f6d8c77da77843108df3">&#9670;&nbsp;</a></span>mtch_cell()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void mtch_cell </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> **&#160;</td>
+          <td class="paramname"><em>pmtche</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> **&#160;</td>
+          <td class="paramname"><em>psanea</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> **&#160;</td>
+          <td class="paramname"><em>pi0sum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> **&#160;</td>
+          <td class="paramname"><em>pi0sumsum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>i0s</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>gxs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>gys</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>qe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>bkgrnd2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>bkgrnd2c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>bkgrnd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>bkgrndc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>rne</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>pixthetax</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>pixthetay</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>pixrots</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>radgx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>mtchcr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>sigratio</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The routine used to generate matched filter from WFS mean short exposure pixel intensities. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">pmtche</td><td>matched filter. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">psanea</td><td>subaperture noise equivalent angle </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pi0sum</td><td>sum of subaperture intensity </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pi0sumsum</td><td>sum of all subaperture intensity </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">i0s</td><td>Subaperture intensities </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">gxs</td><td>Subaperture intensity gradients along x (radial) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">gys</td><td>Subaperture intensity gradients along y (azimuthal) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">qe</td><td>Quantum efficiency of each pixel </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">bkgrnd2</td><td>bkgrnd image </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">bkgrnd2c</td><td>bkgrnd correction image </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">bkgrnd</td><td>bkgrnd per pixel </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">bkgrndc</td><td>bkgrnd correction per pixel </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">rne</td><td>Read out noise per pixel </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">pixthetax</td><td>Pixel size along x (radial) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">pixthetay</td><td>Pixel size along y (azimuthal) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">pixrots</td><td>subaperture pixel rotation. </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">radgx</td><td>Leave gradients at radial direction </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">mtchcr</td><td>constraint. -1: auto </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">sigratio</td><td>scale signal level to increase NEA. default: 1 </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

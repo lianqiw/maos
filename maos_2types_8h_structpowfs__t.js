@@ -15,6 +15,7 @@ var maos_2types_8h_structpowfs__t =
     [ "gradncpa", "maos_2types_8h.html#a162613b54fda54c711284c1b298806d0", null ],
     [ "dtf", "maos_2types_8h.html#a52cb65d094051f9cd59428023a19b255", null ],
     [ "sodium", "maos_2types_8h.html#a625fa37c8d1de10a5924d4f578dd84a8", null ],
+    [ "sodiumprep", "maos_2types_8h.html#a0b95db9b881d7db77b043a9f750a247f", null ],
     [ "etfprep", "maos_2types_8h.html#aa740c4d368599fbc35524b5f0beacc0d", null ],
     [ "etfsim", "maos_2types_8h.html#a8ccad19d8ea94699dab7ed1f6170c755", null ],
     [ "etfsim2", "maos_2types_8h.html#a2f0c8ccb0ccb4ed688afab4a841b9d90", null ],

@@ -7,6 +7,7 @@ var searchData=
   ['up',['Up',['../muv_8h.html#a5cdc5331bf4237d1ccbd7e2ff60c1778',1,'muv_t']]],
   ['upb',['UpB',['../muv_8h.html#a87735c7751cda61faf074e8fea7d733a',1,'muv_t']]],
   ['update_5fdm',['update_dm',['../sim_8h.html#a8115a05357efc3f5259f1eb5cb0b1e23',1,'filter.c']]],
+  ['upsample_5fotf',['upsample_otf',['../gensei_8h.html#aeb97684040b0b54674b200336ce88bd0',1,'gensei.c']]],
   ['used',['used',['../parms_8h.html#ac7478caddd51ca20ceb2c98c140ed550',1,'moao_cfg_t::used()'],['../maos_2types_8h.html#a57579226ab2934985993550e03c153c2',1,'moao_t::used()']]],
   ['useopdr',['useopdr',['../parms_8h.html#adb77e58ed14a4410fc7edc259dd45151',1,'dbg_cfg_t']]],
   ['usephy',['usephy',['../parms_8h.html#a76b632ebb21546c4b2198ae2a3c91f1f',1,'powfs_cfg_t']]],

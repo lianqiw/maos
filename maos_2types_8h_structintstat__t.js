@@ -1,9 +1,6 @@
 var maos_2types_8h_structintstat__t =
 [
-    [ "lotf", "maos_2types_8h.html#af2d5e4fdc5e03f8998dd3d31a23eb2c8", null ],
-    [ "otf", "maos_2types_8h.html#adc4dff83c22e1b7a5070fd39792a7c89", null ],
     [ "fotf", "maos_2types_8h.html#a2ab2f4cccbbf23b5b0e67bb4dafdf1e9", null ],
-    [ "potf", "maos_2types_8h.html#abe48117e42d4c16bbe5c939b779573b2", null ],
     [ "sepsf", "maos_2types_8h.html#afbbfc16176f79ffb1341c270015a81f5", null ],
     [ "i0", "maos_2types_8h.html#aecc7b6a6b8fdc5d501910af0fc5bb2ac", null ],
     [ "gx", "maos_2types_8h.html#a1c61dbea1184e23671439619e912279e", null ],

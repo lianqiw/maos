@@ -135,8 +135,8 @@ Functions</h2></td></tr>
 <tr class="separator:af6a614e128ea550040fe980a1b1922e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa43be3eed0b684fc478223d764a1b3a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#aaa43be3eed0b684fc478223d764a1b3a">drawopd</a> (const char *fig, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *opd, real *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="separator:aaa43be3eed0b684fc478223d764a1b3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05714cc051dfe676c6129c3c5c8827d3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a05714cc051dfe676c6129c3c5c8827d3">drawgrad</a> (const char *fig, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *grad, int grad2opd, real *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
-<tr class="separator:a05714cc051dfe676c6129c3c5c8827d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6a7712945fda655b849ef0d61be82af"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#ac6a7712945fda655b849ef0d61be82af">drawgrad</a> (const char *fig, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *grad, int grad2opd, int trs, real *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
+<tr class="separator:ac6a7712945fda655b849ef0d61be82af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8525f4c0348a232975c6277d40d85307"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a8525f4c0348a232975c6277d40d85307">drawopdamp</a> (const char *fig, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *opd, const <a class="el" href="type_8h.html#structdmat">dmat</a> *amp, real *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="separator:a8525f4c0348a232975c6277d40d85307"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6fde060312158de634a6f1d23ee6b47"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#ab6fde060312158de634a6f1d23ee6b47">drawints</a> (const char *fig, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, const <a class="el" href="type_8h.html#structdcell">dcell</a> *ints, real *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
@@ -1183,8 +1183,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a05714cc051dfe676c6129c3c5c8827d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a05714cc051dfe676c6129c3c5c8827d3">&#9670;&nbsp;</a></span>drawgrad()</h2>
+<a id="ac6a7712945fda655b849ef0d61be82af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6a7712945fda655b849ef0d61be82af">&#9670;&nbsp;</a></span>drawgrad()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1205,13 +1205,19 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>grad</em>, </td>
+          <td class="paramname"><em>gradin</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>grad2opd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>trs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

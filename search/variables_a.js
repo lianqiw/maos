@@ -25,7 +25,6 @@ var searchData=
   ['locx',['locx',['../type_8h.html#a056ba180142ca19558f74c3ac8d2e222',1,'loc_t']]],
   ['locy',['locy',['../type_8h.html#a1a5d6b9152829ba7a7af0fa050ba460e',1,'loc_t']]],
   ['lopowfs',['lopowfs',['../parms_8h.html#a46bd31431f11f209589d74e3be88e305',1,'parms_t']]],
-  ['lotf',['lotf',['../maos_2types_8h.html#af2d5e4fdc5e03f8998dd3d31a23eb2c8',1,'intstat_t']]],
   ['lowfs_5fgtilt',['lowfs_gtilt',['../maos_2types_8h.html#ad713f407bb4f48cd12d6bc49747a1f8b',1,'recon_t']]],
   ['lp2',['lp2',['../maos_2types_8h.html#aa04c964f5a6e2f0016719afa2b06ba87',1,'ngsmod_t']]],
   ['lpfocushi',['lpfocushi',['../parms_8h.html#aafb136b54ee5aa44dd434b1c390edad9',1,'sim_cfg_t']]],
