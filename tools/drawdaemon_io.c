@@ -109,10 +109,98 @@ void* listen_udp(void *dummy){
 	}while(counter>0);
 	return NULL;
 }
-#define STREADINT(p) if(streadint(sock, &p)) {close(sock); sock=-1; goto retry;}
-#define STREAD(p,len) if(stread(sock,p,len)) {close(sock); sock=-1; goto retry;}
-#define STREADSTR(p) if(streadstr(sock, &p)) {close(sock); sock=-1; goto retry;}
-#define STREADFLT(p,len) if(stread(sock, p, len*byte_float)) {close(sock); sock=-1; goto retry;}	\
+void drawdata_free_input(drawdata_t *drawdata){
+	/*Only free the input received via fifo from draw.c */
+	
+#define FREE(A) free(A); A=NULL;
+	FREE(drawdata->p);
+	FREE(drawdata->p0);
+	FREE(drawdata->limit_data);
+	FREE(drawdata->limit_cumu);
+	if(drawdata->npts>0){
+		for(int ipts=0; ipts<drawdata->nptsmax; ipts++){
+			FREE(drawdata->pts[ipts]);
+		}
+		FREE(drawdata->pts);
+		FREE(drawdata->ptsdim);
+	}
+	if(drawdata->nstylemax>0){
+		FREE(drawdata->style);
+	}
+	if(drawdata->ncirmax>0){
+		FREE(drawdata->cir);
+	}
+	FREE(drawdata->fig);
+	FREE(drawdata->name);
+	FREE(drawdata->title);
+	FREE(drawdata->xlabel);
+	FREE(drawdata->ylabel);
+	if(drawdata->legend){
+		for(int i=0; i<drawdata->nptsmax; i++){
+			FREE(drawdata->legend[i]);
+		}
+		FREE(drawdata->legend);
+	}
+	
+	FREE(drawdata);
+}
+static drawdata_t* HEAD=NULL;
+drawdata_t *get_drawdata(char **fig, char **name, int reset){
+	if(!HEAD){
+		HEAD=mycalloc(1, drawdata_t);//dummy head for easy handling
+	}
+	drawdata_t *drawdata=0;
+	drawdata_t *ppriv=HEAD;
+	for(drawdata_t *p=ppriv->next; p; ppriv=p, p=p->next){
+		if(p->recycle){
+			ppriv->next=p->next;
+			drawdata_free_input(p);
+			p=ppriv;
+		}else if(!strcmp(p->fig, *fig) && !strcmp(p->name, *name)){
+			drawdata=p; 
+		}
+	}
+	if(!drawdata){
+		drawdata=mycalloc(1, drawdata_t);
+		drawdata->fig=*fig; *fig=0;
+		drawdata->name=*name; *name=0;
+		drawdata->zoomx=1;
+		drawdata->zoomy=1;
+		drawdata->square=-1;
+		drawdata->format=(cairo_format_t)0;
+		drawdata->gray=0;
+		drawdata->ticinside=1;
+		drawdata->legendbox=1;
+		drawdata->legendcurve=1;
+		drawdata->legendoffx=1;
+		drawdata->legendoffy=0;
+		drawdata->xylog[0]='n';
+		drawdata->xylog[1]='n';
+		drawdata->cumulast=-1;/*mark as unknown. */
+		drawdata->limit_manual=0;
+		drawdata->time=myclockd();
+		
+		drawdata->next=HEAD->next;
+		HEAD->next=drawdata;
+	}else if(reset){
+		//reset image, npoints, to default. do not reset memory
+		drawdata->nx=0;
+		drawdata->ny=0;
+		drawdata->npts=0;
+		drawdata->dtime=myclockd()-drawdata->time;
+		drawdata->time+=drawdata->dtime;
+		drawdata->limit_changed=-1;
+		drawdata->drawn=0;
+		free(*fig); *fig=0;
+		free(*name); *name=0;
+	}
+	return drawdata;
+}
+#define CATCH(A,p) if(A) {close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); goto retry;}
+#define STREADINT(p) CATCH(streadint(sock, &p),p)
+#define STREAD(p,len) CATCH(stread(sock,p,len),p)
+#define STREADSTR(p) ({if(p) {free(p);p=NULL;} CATCH(streadstr(sock, &p),p);})
+#define STREADFLT(p,len) CATCH(stread(sock, p, len*byte_float),p) \
     if(byte_float!=4){							\
 	for(int i=0; i<len; i++){					\
 	    ((float*)p)[i]=(float)(((double*)p)[i]);			\
@@ -156,6 +244,8 @@ retry:
 		}
 	}
 	static drawdata_t* drawdata=NULL;
+	char *fig=0;
+	char *name=0;
 	int cmd=0;
 	int nlen=0;
 	if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
@@ -173,61 +263,55 @@ retry:
 		};break;
 		case DRAW_START:
 			//tic;
-			if(drawdata){
-				warning("listen_draw: drawdata is not empty\n");
-			}
-			drawdata=mycalloc(1, drawdata_t);
-			LOCK(drawdata_mutex);
-			ndrawdata++;
-			UNLOCK(drawdata_mutex);
-			drawdata->zoomx=1;
-			drawdata->zoomy=1;
-			drawdata->square=-1;
-			drawdata->name=NULL;
-			drawdata->format=(cairo_format_t)0;
-			drawdata->gray=0;
-			drawdata->ticinside=1;
-			drawdata->legendbox=1;
-			drawdata->legendcurve=1;
-			drawdata->legendoffx=1;
-			drawdata->legendoffy=0;
-			drawdata->fig=NULL;
-			drawdata->xylog[0]='n';
-			drawdata->xylog[1]='n';
-			drawdata->cumulast=-1;/*mark as unknown. */
-			drawdata->limit_manual=0;
-			drawdata->time=myclockd();
-			break;
+			if(drawdata) warning("listen_draw: drawdata=%p, should be NULL.\n", drawdata);
+			if(fig) warning("fig=%s, should be NULL.\n", fig);
+			if(name) warning("name=%s\n, should be NULL.\n", name);
+		break;
 		case DRAW_DATA:/*image data. */
 		{
 			int32_t header[2];
 			STREAD(header, 2*sizeof(int32_t));
+			long tot=header[0]*header[1];
+			if(drawdata->nmax<tot){
+				drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use double to avoid overflow
+				drawdata->p=realloc(drawdata->p, tot*4);
+				drawdata->nmax=tot;
+			}
 			drawdata->nx=header[0];
 			drawdata->ny=header[1];
-			int nx=drawdata->nx;
-			int ny=drawdata->ny;
-			if(nx*ny>0){				
-				drawdata->p0=malloc(nx*ny*byte_float);//use double to avoid overflow
-				STREADFLT(drawdata->p0, nx*ny);
+			if(tot>0){
+				STREADFLT(drawdata->p0, tot);
 			}
-			drawdata->square=1;//default to square for images.
+			if(drawdata->square==-1) drawdata->square=1;//default to square for images.
 		}
 		break;
 		case DRAW_SHM:/*no action*/
 			break;
 		case DRAW_POINTS:
 		{
-		//dbg("DRAW_POINTS\n");
-			int nptsx, nptsy;
 			int ipts=drawdata->npts;
 			drawdata->npts++;
+			if(drawdata->npts>drawdata->nptsmax){
+				drawdata->pts=myrealloc(drawdata->pts, drawdata->npts, float*);
+				drawdata->style_pts=myrealloc(drawdata->style_pts, drawdata->npts, int);
+				drawdata->ptsdim=realloc(drawdata->ptsdim, drawdata->npts*sizeof(int[2]));
+				drawdata->legend=realloc(drawdata->legend, drawdata->npts*sizeof(char*));
+				for(; drawdata->nptsmax<drawdata->npts; drawdata->nptsmax++){
+					drawdata->pts[drawdata->nptsmax]=NULL;
+					drawdata->legend[drawdata->nptsmax]=NULL;
+					drawdata->ptsdim[drawdata->nptsmax][0]=0;
+					drawdata->ptsdim[drawdata->nptsmax][1]=0;
+				}
+			}
+			int nptsx, nptsy;
+			
 			STREADINT(nptsx);
 			STREADINT(nptsy);
 			STREADINT(drawdata->square);
 			drawdata->grid=1;
-			drawdata->pts=myrealloc(drawdata->pts, drawdata->npts, float*);
-			drawdata->pts[ipts]=malloc(nptsx*nptsy*byte_float);
-			drawdata->ptsdim=(int(*)[2])realloc(drawdata->ptsdim, drawdata->npts*sizeof(int)*2);
+			if(drawdata->ptsdim[ipts][0]*drawdata->ptsdim[ipts][1]<nptsx*nptsy){
+				drawdata->pts[ipts]=realloc(drawdata->pts[ipts], nptsx*nptsy*byte_float);
+			}
 			drawdata->ptsdim[ipts][0]=nptsx;
 			drawdata->ptsdim[ipts][1]=nptsy;
 			if(nptsx*nptsy>0){
@@ -238,29 +322,41 @@ retry:
 					}
 				}
 			}
-
 		}
 		break;
 		case DRAW_STYLE:
 			STREADINT(drawdata->nstyle);
-			drawdata->style=mycalloc(drawdata->nstyle, int32_t);
+			if(drawdata->nstylemax<drawdata->nstyle){
+				drawdata->style=myrealloc(drawdata->style, drawdata->nstyle, int32_t);
+				drawdata->nstylemax=drawdata->nstyle;
+			}
 			STREAD(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
 			break;
 		case DRAW_CIRCLE:
 			STREADINT(drawdata->ncir);
-			drawdata->cir=(float(*)[4])calloc(4*drawdata->ncir, byte_float);
+			if(drawdata->ncirmax<drawdata->ncir){
+				drawdata->cir=(float(*)[4])realloc(drawdata->cir, 4*drawdata->ncir*byte_float);
+				drawdata->ncirmax=drawdata->ncir;
+			}
 			STREADFLT(drawdata->cir, 4*drawdata->ncir);
 			break;
 		case DRAW_LIMIT:
-			drawdata->limit_data=malloc(4*byte_float);
+			if(!drawdata->limit_data){
+				drawdata->limit_data=malloc(4*byte_float);
+			}
 			STREADFLT(drawdata->limit_data, 4);
 			drawdata->limit_manual=1;
 			break;
 		case DRAW_FIG:
-			STREADSTR(drawdata->fig);
+			STREADSTR(fig);
 			break;
 		case DRAW_NAME:
-			STREADSTR(drawdata->name);
+			STREADSTR(name);
+			if(fig && name) {
+				drawdata=get_drawdata(&fig, &name, 1); 
+			}else{
+				warning("Invalid usage: fig should be provided before namen");
+			}
 			break;
 		case DRAW_TITLE:
 			STREADSTR(drawdata->title);
@@ -275,7 +371,6 @@ retry:
 			STREADFLT(drawdata->zlim, 2);
 			break;
 		case DRAW_LEGEND:
-			drawdata->legend=mycalloc(drawdata->npts, char*);
 			for(int i=0; i<drawdata->npts; i++){
 				STREADSTR(drawdata->legend[i]);
 			}
@@ -304,11 +399,11 @@ retry:
 				udp_sock=bind_socket(SOCK_DGRAM, 0, 0);
 			}
 			int server_port=socket_port(udp_sock);
-			struct sockaddr_in name;
-			name.sin_family=AF_INET;
-			name.sin_addr.s_addr=client_addr;
-			name.sin_port=htons(client_port);
-			if(connect(udp_sock, (const struct sockaddr*)&name, sizeof(name))){
+			struct sockaddr_in add;
+			add.sin_family=AF_INET;
+			add.sin_addr.s_addr=client_addr;
+			add.sin_port=htons(client_port);
+			if(connect(udp_sock, (const struct sockaddr*)&add, sizeof(add))){
 				warning("connect udp socket to client failed with error %d\n", errno);
 			}else{
 				//initial handshake with fixed buffer size of 64 ints. The length can not be increased.
@@ -321,7 +416,7 @@ retry:
 				cmd2[5]=UDP_HEADER;
 				udp_client.header=UDP_HEADER;
 				udp_client.payload=UDP_PAYLOAD;
-				udp_client.peer_addr=name;
+				udp_client.peer_addr=add;
 				udp_client.version=1;
 				udp_client.sock=udp_sock;
 				if(send(udp_sock, cmd2, sizeof(cmd2),0)<(ssize_t)sizeof(cmd2)){
@@ -346,14 +441,7 @@ retry:
 				}
 			}
 			if(!drawdata->fig) drawdata->fig=strdup("unknown");
-			drawdata_t** drawdatawrap=mycalloc(1, drawdata_t*);
-			drawdatawrap[0]=drawdata;
-			gdk_threads_add_idle(addpage, drawdatawrap);
-			/*if(drawdata->p0){
-				toc("fifo_read image %dx%d", drawdata->nx, drawdata->ny);
-			}else{
-				toc("fifo_read points");
-				}*/
+			gdk_threads_add_idle(addpage, drawdata);
 			drawdata=NULL;
 		}
 		break;
@@ -370,7 +458,7 @@ retry:
 		}/*switch */
 		cmd=-1;
 	}/*while */
-
+	free(host);
 	warning_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;

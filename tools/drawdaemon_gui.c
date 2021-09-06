@@ -221,7 +221,7 @@ static void update_pixmap(drawdata_t* drawdata){
 		drawdata->pixmap=gdk_pixmap_new(curwindow->window, width, height, -1);
 #endif
 	}
-	if(drawdata->p0||drawdata->npts){
+	if((drawdata->nx && drawdata->ny)||drawdata->npts||drawdata->ncir){
 		/*cairo_t is destroyed in draw */
 #if GTK_MAJOR_VERSION>=3 
 		cairo_draw(cairo_create(drawdata->pixmap), drawdata, width, height);
@@ -338,40 +338,15 @@ on_expose_event(GtkWidget* widget, GdkEventExpose* event, gpointer pdata){
 	return FALSE;
 }
 #endif
-#define FREE(A) free(A); A=NULL;
-static void drawdata_free_input(drawdata_t* drawdata){
-	/*Only free the input received via fifo from draw.c */
+
+static void drawdata_free(drawdata_t** drawdatawrap){
+	if(!drawdatawrap) return;
+	drawdata_t *drawdata=*drawdatawrap;
+	if(!drawdata) return;
 	if(drawdata->image){
 		cairo_surface_destroy(drawdata->image);
 		drawdata->image=NULL;
 	}
-	FREE(drawdata->p);
-	if(drawdata->npts>0){
-		for(int ipts=0; ipts<drawdata->npts; ipts++){
-			FREE(drawdata->pts[ipts]);
-		}
-		FREE(drawdata->pts);
-		FREE(drawdata->ptsdim);
-	}
-	if(drawdata->nstyle>0){
-		FREE(drawdata->style);
-	}
-	if(drawdata->ncir>0){
-		FREE(drawdata->cir);
-	}
-	FREE(drawdata->fig);
-	FREE(drawdata->name);
-	FREE(drawdata->title);
-	FREE(drawdata->xlabel);
-	FREE(drawdata->ylabel);
-	if(drawdata->legend){
-		for(int i=0; i<drawdata->npts; i++){
-			FREE(drawdata->legend[i]);
-		}
-		FREE(drawdata->legend);
-	}
-}
-static void drawdata_free(drawdata_t* drawdata){
 	if(drawdata->pixmap){
 #if GTK_MAJOR_VERSION>=3 
 		cairo_surface_destroy(drawdata->pixmap);
@@ -384,12 +359,11 @@ static void drawdata_free(drawdata_t* drawdata){
 		cairo_surface_destroy(drawdata->cacheplot);
 		drawdata->cacheplot=NULL;
 	}
-	drawdata_free_input(drawdata);
-	FREE(drawdata->p0);
-	FREE(drawdata);
-	LOCK(drawdata_mutex);
+	drawdata->recycle=1;
+	free(drawdatawrap);
+	/*LOCK(drawdata_mutex);
 	ndrawdata--;
-	UNLOCK(drawdata_mutex);
+	UNLOCK(drawdata_mutex);*/
 }
 
 /**
@@ -405,8 +379,7 @@ static void delete_page(GtkButton* btn, drawdata_t** drawdatawrap){
 	/*Find the sub page. it may not be the current page */
 	int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(root), (*drawdatawrap)->page);
 	gtk_notebook_remove_page(GTK_NOTEBOOK(root), ipage);
-	drawdata_free(*drawdatawrap);
-	free(drawdatawrap);
+	drawdata_free(drawdatawrap);
 	if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(root))==0){
 		info("delete top page");
 		int jpage=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), root);
@@ -770,7 +743,6 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event,
 	return TRUE;
 }
 static void page_changed(int topn, int subn){
-	//dbg("page changed. sock=%d. topn=%d, subn=%d\n", sock, topn, subn);
 	if(sock==-1||sock_idle) return;
 	GtkWidget* topnb=curtopnb;
 	GtkWidget* subnb, * subpage;
@@ -840,8 +812,7 @@ for(long i=0; i<n; i++) p0new[i]=p0new[i]*(lpf)+p0old[i]*(1.-lpf);
    the main thread when gtk is idle.
 */
 gboolean addpage(gpointer indata){
-	drawdata_t** drawdatawrap=(drawdata_t**)indata;
-	drawdata_t* drawdata=*drawdatawrap;
+	drawdata_t* drawdata=(drawdata_t*)indata;
 	GtkWidget* drawarea;
 	if(!drawdata->fig){
 		warning("Must set fig before calling addpage");
@@ -909,33 +880,34 @@ gboolean addpage(gpointer indata){
 			}
 		}
 	}
-	drawdata_t* drawdata_old=NULL;
 	if(page){
 		/*
 			we use drawdatawrap so that we don't have to modify the data on the g_object.
 		*/
-		drawdata_old=*(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap");
-		drawdata_free_input(drawdata_old);
+		drawdata_t** drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap");
+		if(*drawdatawrap!=drawdata){
+			warning("drawdata was %p, new is %p, recycle old value.\n", *drawdatawrap, drawdata);
+			(*drawdatawrap)->recycle=1;
+			*drawdatawrap=drawdata;
+		}
+		//drawdata_free_input(drawdata_old);
 	}
-	if(drawdata->p0){/*draw image */
+	if(drawdata->nx && drawdata->ny){/*draw image */
 		int nx=drawdata->nx;
 		int ny=drawdata->ny;
-		if(drawdata_old&&drawdata_old->p0&&lpf<1){
+		/*if(drawdata_old->p0&&lpf<1){
 			extern int byte_float;
 			if(byte_float==4){
 				DO_LPF(float, drawdata_old->p0, drawdata->p0, nx*ny);
 			} else if(byte_float==8){
 				DO_LPF(double, drawdata_old->p0, drawdata->p0, nx*ny);
 			}
-		}
-		size_t size=0;
+		}*/
 		if(nx<=0||ny<=0) error("Please call DRAW_DATA\n");
 		if(drawdata->gray){
 			drawdata->format=(cairo_format_t)CAIRO_FORMAT_A8;
-			size=1;
 		} else{
 			drawdata->format=(cairo_format_t)CAIRO_FORMAT_ARGB32;
-			size=4;
 		}
 		int stride=cairo_format_stride_for_width(drawdata->format, nx);
 		if(!drawdata->limit_manual){
@@ -948,7 +920,6 @@ gboolean addpage(gpointer indata){
 			drawdata->limit_data[3]=drawdata->ny-0.5;
 		}
 		/*convert data from float to int/char. */
-		drawdata->p=(unsigned char*)calloc(nx*ny, size);
 		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
 		drawdata->image=cairo_image_surface_create_for_data
 		(drawdata->p, drawdata->format, nx, ny, stride);
@@ -956,7 +927,7 @@ gboolean addpage(gpointer indata){
 	if(page){
 		/*Instead of freeing drawdata, we replace its content with newdata. this
 		  makes dialog continue to work. Do not replace generated data.*/
-		drawdata_old->dtime=drawdata->time-drawdata_old->time;//compute frame rate.
+		/*drawdata_old->dtime=drawdata->time-drawdata_old->time;//compute frame rate.
 		drawdata_old->time=drawdata->time;//record the time
 		drawdata_old->image=drawdata->image;
 		drawdata_old->p=drawdata->p;
@@ -974,8 +945,8 @@ gboolean addpage(gpointer indata){
 		drawdata_old->xlabel=drawdata->xlabel;
 		drawdata_old->ylabel=drawdata->ylabel;
 		drawdata_old->legend=drawdata->legend;
-		drawdata_old->grid=drawdata->grid;
-		if(drawdata->limit_data){
+		drawdata_old->grid=drawdata->grid;*/
+		/*if(drawdata->limit_data){
 			if(!drawdata_old->limit_data){
 				drawdata_old->limit_data=mycalloc(4, float);
 			}
@@ -987,13 +958,10 @@ gboolean addpage(gpointer indata){
 				}
 			}
 			memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(float)*4);
-		} else{
-			/*free(drawdata_old->limit_data);
-			  drawdata_old->limit_data=NULL;*/
-		}
-		drawdata_old->limit_changed=-1;
+		}*/
+		//drawdata_old->limit_changed=-1;
 		//free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
-		drawdata_old->nx=drawdata->nx;
+		/*drawdata_old->nx=drawdata->nx;
 		drawdata_old->ny=drawdata->ny;
 		if(drawdata->zlim[0]||drawdata->zlim[1]){
 			if(drawdata->zlim[0]<drawdata_old->zlim[0]
@@ -1008,21 +976,21 @@ gboolean addpage(gpointer indata){
 			}
 		}
 		drawdata_old->format=drawdata->format;
-		drawdata_old->gray=drawdata->gray;
-		drawdata_old->drawn=0;/*need redraw. */
-		if(drawdata_old->square==-1) drawdata_old->square=drawdata->square;//otherwise keep old value.
+		drawdata_old->gray=drawdata->gray;*/
+		//drawdata_old->drawn=0;/*need redraw. */
+		//if(drawdata_old->square==-1) drawdata_old->square=drawdata->square;//otherwise keep old value.
 		/*we preserve the limit instead of off, zoom in case we are drawing curves */
 		//if(drawdata_old->npts){
 		//    drawdata_old->limit_changed=-1;
 		//	}
-		{
+		/*{
 			free(drawdata);
 			LOCK(drawdata_mutex);
 			ndrawdata--;
 			UNLOCK(drawdata_mutex);
-		}
-		if(get_current_drawdata()==drawdata_old){/*we are the current page. need to update pixmap */
-			update_pixmap(drawdata_old);
+		}*/
+		if(get_current_drawdata()==drawdata){/*we are the current page. need to update pixmap */
+			update_pixmap(drawdata);
 		} else{
 			/*otherwise, notify client that it is not drawing to active page */
 			page_changed(-1, -1);
@@ -1034,7 +1002,8 @@ gboolean addpage(gpointer indata){
 		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page),
 			GTK_POLICY_AUTOMATIC,
 			GTK_POLICY_AUTOMATIC);
-
+		drawdata_t**drawdatawrap=mycalloc(1, drawdata_t*);
+		*drawdatawrap=drawdata;
 		g_object_set_data(G_OBJECT(page), "drawdatawrap", drawdatawrap);
 		drawdata->drawarea=drawarea=gtk_drawing_area_new();
 		gtk_widget_add_events(drawarea, GDK_BUTTON_PRESS_MASK|
@@ -1539,7 +1508,7 @@ static gboolean close_window(GtkObject* object, GdkEvent* event)
 			GtkWidget* tab=gtk_notebook_get_nth_page(GTK_NOTEBOOK(page), itab);
 			drawdata_t** drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(tab), "drawdatawrap");
 			gtk_widget_hide(tab);
-			drawdata_free(*drawdatawrap);
+			drawdata_free(drawdatawrap);
 		}
 	}
 	gtk_widget_destroy(GTK_WIDGET(object));
@@ -1549,6 +1518,7 @@ static gboolean close_window(GtkObject* object, GdkEvent* event)
 
 		gtk_main_quit();
 	}
+	free(font_name); font_name=NULL;
 	/*don't call exit here. */
 	return FALSE;
 }

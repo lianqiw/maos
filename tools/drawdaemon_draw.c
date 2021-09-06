@@ -587,7 +587,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	/*clip out an rectangular region to draw. */
 	cairo_rectangle(cr, 0, 0, widthim, heightim);
 	cairo_clip(cr);
-	if(drawdata->image){
+	if(drawdata->nx && drawdata->ny){
 		cairo_save(cr);
 		cairo_scale(cr, scalex*zoomx, scaley*zoomy);
 		/*

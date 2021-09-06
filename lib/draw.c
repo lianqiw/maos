@@ -653,7 +653,7 @@ end2:
 				} else{
 					//TIC;tic;
 					if(stwrite(sock_draw, buf, bufsize)){
-						info("write to %d failed\n", sock_draw);
+						info("write to %d failed: %s\n", sock_draw, strerror(errno));
 						ans=-1;
 						draw_remove(sock_draw, 0);
 					}

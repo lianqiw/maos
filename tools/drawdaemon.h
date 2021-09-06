@@ -42,21 +42,30 @@ extern int sock;
 extern int sock_idle;
 extern int cumu;//global cumulative plot mode.
 struct drawdata_t{
+	char* fig;
+	char* name;
+	struct drawdata_t *next;//form an linked list.
 	/*First, input data from draw.c */
 	/*Draw images. */
 	cairo_surface_t* image;
 	void* p0;      /*2d array of data. float or double depends on byte_float*/
+	int nx, ny;   /*array size */
+	int nmax;     /*allocated size of array*/
 	unsigned char* p;/*converted pointer of char or int. */
 	/*Draw points */
 	float** pts;      /*pts; */
 	int(*ptsdim)[2];  /*nx, ny of pts*/
 	int npts;        /*number of pts mat, not points. */
+	int nptsmax;     /**<allocated size of pts*/
+	/*styles*/
 	int32_t* style;
 	int* style_pts;    /*save pts style for legend */
 	int nstyle;
+	int nstylemax;     /*memory storeage of style*/
 	/*draw circles */
 	float(*cir)[4];
 	int ncir;
+	int ncirmax; /*storage size of cir*/
 	/*limit */
 	float* limit_data;/*x,y,limit of data. might be supplied by user. */
 	float* limit_cumu;/*x,y,limit of cumulatively averaged data. */
@@ -65,18 +74,16 @@ struct drawdata_t{
 	int limit_manual; /*limit_data is supplied by user*/
 	char xylog[2];
 	/*The following are for surfaces */
-	int nx, ny;   /*array size */
+	
 	cairo_format_t format;
 
 	int gray;       /*do we draw in gray scale or in colored */
-
-	char* name;
+	
 	char* title;
 	char* xlabel;
 	char* ylabel;
 	char** legend;
-	char* fig;
-
+	int recycle; //drawdaemon_io() will delete the data when set
 	GtkWidget* page;
 	GtkWidget* drawarea;
 #if GTK_MAJOR_VERSION>=3 
