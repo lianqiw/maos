@@ -549,16 +549,16 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
 X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
-	const void* W,    /**<[in] The weighting matrix. dense or sparse*/
+	const cell* W,    /**<[in] The weighting matrix. dense or sparse*/
 	R thres,          /**<[in] SVD inverse threshold*/
 	R tikcr           /**<[in] Tikhonov regularization. It has similar effect as SVD inverse threshold*/
 	){
 	if(!A) return NULL;
 	X(cell)* wA=NULL;
 	if(W){
-		if(NY((cell*)W)==NX(A)){
-			X(cellmm)(&wA, W, A, "nn", 1);
-		}else if(NX(A)==NX((cell*)W) && NY(A)==NY((cell*)W)){
+		if(NY(W)==NX(A)){
+			X(cellmm_cell)(&wA, W, A, "nn", 1);
+		}else if(NX(A)==NX(W) && NY(A)==NY(W)){
 			wA=X(celldup)(A);
 			X(cellcwm)(wA, (X(cell)*)W);
 		}else{
@@ -570,17 +570,17 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	}
 
 	X(cell)* ata=NULL;
-	X(cellmm)(&ata, wA, A, "tn", 1);
+	X(cellmm_cell)(&ata, wA->base, A, "tn", 1);
 	X(cellsvd_pow)(ata, -1, thres, tikcr);
 	X(cell)* out=NULL;
-	X(cellmm)(&out, ata, wA, "nt", 1);
+	X(cellmm_cell)(&out, ata->base, wA, "nt", 1);
 	X(cellfree)(wA);
 	X(cellfree)(ata);
 	return out;
 }
 X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
-	const void* W){
-	return X(cellpinv2)(A, W, 1e-14, 0);
+	const X(spcell)* W){
+	return X(cellpinv2)(A, W?W->base:NULL, 1e-14, 0);
 }
 
 /**

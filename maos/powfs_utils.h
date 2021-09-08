@@ -52,6 +52,7 @@ void fit_sodium_profile(
   real htel,    /**<Telescope hegith*/
   real za,      /**<Telescope zenith angle*/
   real tikcr,    /**<Tikhonov regularization*/
-  real svdthres /**<SVD threshold*/
+  real svdthres, /**<SVD threshold*/
+  int save  /**<Save results*/
 );
 #endif

@@ -412,7 +412,7 @@ void reconstruct(sim_t* simu){
 			//extrapolate DM fitting result to float and edge actuators
 				dcellcp(&simu->dmtmp, simu->dmerr);
 				dcellzero(simu->dmerr);
-				dcellmm(&simu->dmerr, simu->recon->actinterp, simu->dmtmp, "nn", 1);
+				dspcellmm(&simu->dmerr, simu->recon->actinterp, simu->dmtmp, "nn", 1);
 			}
 
 			dcell* dmpsol;

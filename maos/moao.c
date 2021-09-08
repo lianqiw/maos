@@ -180,7 +180,7 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	}
 	real wt=1;
 	applyW(xp, recon->moao[imoao].W0, recon->moao[imoao].W1, &wt);
-	dcellmm(xout, recon->moao[imoao].HA, xp, "tn", alpha);
+	dspcellmm(xout, recon->moao[imoao].HA, xp, "tn", alpha);
 	dcellfree(xp);
 }
 /**
@@ -196,14 +196,14 @@ moao_FitL(dcell** xout, const void* A,
 	const moao_t* moao=(const moao_t*)A;
 	dcell* xp=NULL;
 	real wt=1;
-	dcellmm(&xp, moao->HA, xin, "nn", 1.);
+	dspcellmm(&xp, moao->HA, xin, "nn", 1.);
 	applyW(xp, moao->W0, moao->W1, &wt);
-	dcellmm(xout, moao->HA, xp, "tn", alpha);
+	dspcellmm(xout, moao->HA, xp, "tn", alpha);
 	dcellfree(xp);xp=NULL;
 	dcellmm(&xp, moao->NW, xin, "tn", 1);
 	dcellmm(xout, moao->NW, xp, "nn", alpha);
 	dcellfree(xp);
-	dcellmm(xout, moao->actslave, xin, "nn", alpha);
+	dspcellmm(xout, moao->actslave, xin, "nn", alpha);
 }
 /**
    moao_recon happens after the common DM fitting and its integrator output

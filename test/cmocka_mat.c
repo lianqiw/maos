@@ -42,10 +42,7 @@ static void mat_basic(void** state){
         assert_null(a);
         assert_int_equal(mem_isref(b->mem), 0);
     }
-    {
-        dmat* c=dmat_cast(b);
-        assert_ptr_equal(c, b);
-    }
+    
     {
         dmat* c=dref_reshape(b, 9, 1);
         assert_int_equal(mem_isref(b->mem), 1);

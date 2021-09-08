@@ -28,11 +28,11 @@
 #include "powfs_utils.h"
 
 
-void print_nea(const dcell* sanea, const dcell* sprint, const loc_t* saloc, const dcell *srsa){
+void print_nea(const dcell* sanea, const dcell* sprint, const loc_t* saloc, const dcell* srsa){
 	info2("Matched filter sanea:\n");
 	if(sprint){/*print nea for select subapertures.*/
 		for(int ii0=0; ii0<NX(sanea); ii0++){
-			dmat *saindex=PR(sprint,ii0,0);
+			dmat* saindex=PR(sprint, ii0, 0);
 			info2("ii0 %d\n", ii0);
 			info2("sa index   dist   noise equivalent angle\n");
 			dmat* psanea=P(sanea, ii0);
@@ -54,7 +54,7 @@ void print_nea(const dcell* sanea, const dcell* sprint, const loc_t* saloc, cons
 		for(int isa=0; isa<saloc->nloc; isa++){
 			real locx=saloc->locx[isa];
 			real locy=saloc->locy[isa];
-			if((locx>=0 && locy>llimit && locy<ulimit) || saloc->nloc<=4){
+			if((locx>=0&&locy>llimit&&locy<ulimit)||saloc->nloc<=4){
 				info2("sa%4d:%6.1fm", isa, locx);
 				for(int ii0=0; ii0<NX(sanea); ii0++){
 					info2(" (%4.1f,%4.1f)",
@@ -71,7 +71,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	info("Generating matched filter for %d\n", ipowfs);
 	const real bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
 	const real bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
-	
+
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	const dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx;
 	const dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy;
@@ -79,10 +79,10 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	const int mtchadp=parms->powfs[ipowfs].mtchadp;
 	int mtchcr=mtchadp?-1:parms->powfs[ipowfs].mtchcr;
 	mtch_cell(&intstat->mtche, &powfs[ipowfs].sanea, &intstat->i0sum, &intstat->i0sumsum,
-		intstat->i0, gxs, gys, parms->powfs[ipowfs].qe, 
+		intstat->i0, gxs, gys, parms->powfs[ipowfs].qe,
 		powfs[ipowfs].bkgrnd, powfs[ipowfs].bkgrndc, bkgrnd, bkgrndc,
 		parms->powfs[ipowfs].rne, parms->powfs[ipowfs].radpixtheta, parms->powfs[ipowfs].pixtheta,
-		parms->powfs[ipowfs].radpix?powfs[ipowfs].srot:NULL , parms->powfs[ipowfs].radgx, mtchcr, sigratio
+		parms->powfs[ipowfs].radpix?powfs[ipowfs].srot:NULL, parms->powfs[ipowfs].radgx, mtchcr, sigratio
 	);
 	print_nea(powfs[ipowfs].sanea, powfs[ipowfs].sprint, powfs[ipowfs].saloc, powfs[ipowfs].srsa);
 }
@@ -123,34 +123,35 @@ void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
  * 4. Repeat 1-4.
  * */
 void fit_sodium_profile(
-	dmat **sodium, /**<The sodium profile determined by fit*/
-	dcell **pgrad, /**<The gradients determined by fit.*/
-	dcell **pi0,   /**<The output i0*/
-	dcell **pgx,   /**<The output gx*/
-	dcell **pgy,   /**<The output gy*/
-	const dcell *i0i, /**<The input i0*/
-	const dccell *sepsf,   /**<Short exposure PSF*/
-	const dtf_t *dtf,     /**<Detector transfer function*/
-	const void *saa,      /**<Subaperture area. dmat or dcell*/
-	const dcell *srsa,    /**<Subaperture to LLT distance*/
-	const dcell *srot,    /**<Subaperture to LLT clocking*/
-	const dmat *siglev,  /**<Subaperture signal level*/
-	const dmat *wvlwts,    /**<Wavelength weights*/
+	dmat** sodium, /**<The sodium profile determined by fit*/
+	dcell** pgrad, /**<The gradients determined by fit.*/
+	dcell** pi0,   /**<The output i0*/
+	dcell** pgx,   /**<The output gx*/
+	dcell** pgy,   /**<The output gy*/
+	const dcell* i0i, /**<The input i0*/
+	const dccell* sepsf,   /**<Short exposure PSF*/
+	const dtf_t* dtf,     /**<Detector transfer function*/
+	const void* saa,      /**<Subaperture area. dmat or dcell*/
+	const dcell* srsa,    /**<Subaperture to LLT distance*/
+	const dcell* srot,    /**<Subaperture to LLT clocking*/
+	const dmat* siglev,  /**<Subaperture signal level*/
+	const dmat* wvlwts,    /**<Wavelength weights*/
 	real dh,      /**<The sodium profile sampling in meters*/
 	real hs,      /**<LGS focusing height*/
 	real htel,    /**<Telescope hegith*/
 	real za,      /**<Telescope zenith angle*/
 	real tikcr,   /**<Tikhonov regularization*/
-	real svdthres /**<SVD threshold*/
+	real svdthres, /**<SVD threshold*/
+	int save      /**<Save results to file*/
 ){
-	dcell *nac=dcellnew(1,1);
+	dcell* nac=dcellnew(1, 1);
 	//const double ht=25000;//total thickness
 	const double hmin=80000;
 	const double hmax=105000;
 
 	long nx=(long)floor((hmax-hmin)/dh)+1;
 	const int radgx=0;
-	dmat *nai=P(nac,0)=dnew(nx,2);
+	dmat* nai=P(nac, 0)=dnew(nx, 2);
 	if(sodium){
 		*sodium=dref(nai);
 	}
@@ -170,7 +171,7 @@ void fit_sodium_profile(
 	if(!pgy) pgy=&gy;
 	if(!pgrad) pgrad=&grad;
 	if(!*pgrad){
-		*pgrad=dcellnew_same(ni0,1,nsa,2);
+		*pgrad=dcellnew_same(ni0, 1, nsa, 2);
 	}
 	TIC;tic;
 	for(long ii0=0; ii0<ni0; ii0++){
@@ -178,13 +179,14 @@ void fit_sodium_profile(
 			real g[2]={0,0};
 			dcog(g, P(i0i, isa, ii0), 0, 0, 9, 0, 0);
 			P(*pgrad, isa, 0, ii0, 0)=g[0]*pixthetax;
-			P(*pgrad, isa+nsa, 0, ii0, 0)=g[1]*pixthetay;
+			P(*pgrad, isa, 1, ii0, 0)=g[1]*pixthetay;
 		}
 	}
 	toc("cog");tic;
 	print_mem("grad");
-	writebin(*pgrad, "sodium_grad_in");
-	
+	if(save){
+		writebin(*pgrad, "sodium_grad_in");
+	}
 	dcell* i02=dcellnew(1, 1);
 	P(i02, 0)=dref(i0i->m);
 	dcell* mtche=0;
@@ -214,19 +216,19 @@ void fit_sodium_profile(
 		dcellmm(&ata, i0m2, i0m2, "tn", 1);
 		dcellmm(&atb, i0m2, i02, "tn", 1);
 		cellfree(i0m2);
-		
+
 		dcellsvd_pow(ata, -1, svdthres, tikcr);
 		//dcell *pi0m=dcellpinv2(i0m2, NULL, svdthres, tikcr);
 		dcellzero(res);
 		dcellmm(&res, ata, atb, "nn", 1);
 		real scale=1./dcellsum(res);//make sure nai sum to 1.
 		for(long ix=0; ix<nx; ix++){
-			P(nai, ix, 1)=P(P(res,ix),0)*scale;
+			P(nai, ix, 1)=P(P(res, ix), 0)*scale;
 		}
 		etf_t* etfi=mketf(dtf, nac, 0, srot, srsa, hs, htel, za, 1);
 		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etfi, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
 		etf_free(etfi);
-		mtch_cell(&mtche, NULL, NULL, NULL, *pi0, *pgx, *pgy, NULL, NULL, NULL, 0, 0, 3, 
+		mtch_cell(&mtche, NULL, NULL, NULL, *pi0, *pgx, *pgy, NULL, NULL, NULL, 0, 0, 3,
 			pixthetax, pixthetay, NULL, radgx, 1, 1);
 		real gmax=0;
 		for(long ii0=0; ii0<ni0; ii0++){
@@ -240,12 +242,14 @@ void fit_sodium_profile(
 		}
 
 		info("gradient has maximum %g mas\n", gmax*206265000);
-		writebin(ata, "sodium_ata_%d", irep);
-		writebin(atb, "sodium_atb_%d", irep);
-		writebin(nai, "sodium_prof_%d", irep);
-		writebin(*pgrad, "sodium_grad_%d", irep);
-		writebin(mtche, "sodium_mtche_%d", irep);
-		writebin(*pi0, "sodium_i0_%d", irep);
+		if(save){
+			writebin(ata, "sodium_ata_%d", irep);
+			writebin(atb, "sodium_atb_%d", irep);
+			writebin(nai, "sodium_prof_%d", irep);
+			writebin(*pgrad, "sodium_grad_%d", irep);
+			writebin(mtche, "sodium_mtche_%d", irep);
+			writebin(*pi0, "sodium_i0_%d", irep);
+		}
 	}
 	dcellfree(ata);
 	dcellfree(atb);
@@ -258,7 +262,7 @@ void fit_sodium_profile(
 	cellfree(i02);
 	cellfree(res);
 	cellfree(nac);
-	
+
 	cellfree(i0);
 	cellfree(gx);
 	cellfree(gy);

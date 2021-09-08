@@ -221,7 +221,7 @@ static void test_accuracy(int argc, char** argv){
     if(save){
         mapwrite(screen2, "accphi_screen2");
         mapwrite(screen, "accphi_screen");
-        locwrite((loc_t*)pts, "accphi_pts");
+        locwrite(pts, "accphi_pts");
         locwrite(loc, "accphi_loc");
         locwrite(locin, "accphi_locin");
         loc_create_map_npad(locin, 0, 0, 0);

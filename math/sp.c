@@ -175,11 +175,8 @@ X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
 /**
    Cast a pointer to sparse array.
  */
-X(sp)* X(sp_cast)(const void* A){
-	if(!A) return 0;
-	assert(issp(A));
-	X(sp)* B=(X(sp)*)A;
-	if(!B->nx||!B->ny) return 0; else return B;
+X(sp)* X(sp_cast)(const cell* A){
+	return (A&&A->nx&&A->ny&&issp(A))?(X(sp)*)A:NULL;
 }
 /**
    resize a sparse matrix
@@ -315,11 +312,12 @@ X(spcell)* X(spcellref)(const X(spcell)* A){
 /**
    cast a cell object to X(spcell) after checking
  */
-X(spcell)* X(spcell_cast)(const void* A_){
-	if(!A_) return 0;
-	cell* A=cell_cast(A_);
+X(spcell)* X(spcell_cast)(const cell* A){
+	if(!A) return 0;
 	for(int i=0; i<A->nx*A->ny; i++){
-		assert(!A->p[i]||issp(A->p[i]));
+		if(A->p[i]&&issp(A->p[i])){
+			warning("A[%d] is not sparse\n", i);
+		}
 	}
 	return (X(spcell)*)A;
 }
@@ -928,7 +926,7 @@ void X(spsym)(X(sp)** A){
 */
 void X(spcellsym)(X(spcell)** A){
 	X(spcell)* B=X(spcelltrans)(*A);
-	X(celladd)(A, 1, B, 1);
+	X(spcelladd)(A, 1, B, 1);
 	X(spcellfree)(B);
 	X(spcellscale)(*A, 0.5);
 	X(spcelldroptol)(*A, EPS);

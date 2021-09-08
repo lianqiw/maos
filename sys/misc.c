@@ -398,7 +398,9 @@ char* expand_filename(const char* fn){
    Duplicate a string. Check for NULL.
  */
 char* mystrndup(const char* A, int len){
+	if(!len) return NULL;
 	int len2=strlen(A);
+	if(!len2) return NULL;
 	if(len2<len) len=len2;
 	char* B=(char*)malloc(len+1);
 	memcpy(B, A, len);

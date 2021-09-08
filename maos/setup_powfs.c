@@ -445,7 +445,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 	dfree(ampi);
 
 	if(parms->save.setup){
-		locwrite((loc_t*)powfs[ipowfs].pts, "powfs%d_pts", ipowfs);
+		locwrite(powfs[ipowfs].pts, "powfs%d_pts", ipowfs);
 		locwrite(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);
 		writebin(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
 		locwrite(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
@@ -1602,7 +1602,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 					sepsf, powfs[ipowfs].dtf, powfs[ipowfs].realsaa,
 					powfs[ipowfs].srsa, powfs[ipowfs].srot,
 					parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts,
-					SODIUM_DH, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, SODIUM_TIKCR, SODIUM_SVDTHRES);
+					SODIUM_DH, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, SODIUM_TIKCR, SODIUM_SVDTHRES, parms->save.setup);
 					if(parms->save.setup){
 						writebin(sodium, "powfs%d_sodium_fit", ipowfs);
 					}

@@ -599,7 +599,7 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 		free(neighbor);
 	}/*idm */
 	if(HA){
-		dcelladd(HA, 1, dHA, 1);
+		dspcelladd(HA, 1, dHA, 1);
 		dspcellfree(dHA);
 	}
 }
@@ -785,7 +785,7 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 	dmat* x=dnew(out->nx, 1); dset(x, 1);
 	dmat* y1=dnew(out->nx, 1);
 	dmat* y2=dnew(out->nx, 1);
-	dcellmm(&y1, out, x, "tn", 1);
+	dspmm(&y1, out, x, "tn", 1);
 	real diff;
 	count=0;
 	do{
@@ -793,7 +793,7 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 		dspfree(out);
 		out=tmp;
 		dzero(y2);
-		dcellmm(&y2, out, x, "tn", 1);
+		dspmm(&y2, out, x, "tn", 1);
 		diff=ddiff(y1, y2);
 		dcp(&y1, y2);
 		count++;

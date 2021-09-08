@@ -759,7 +759,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 			if(recon->actinterp){
 				dspcell* GA2=0;
-				dcellmm(&GA2, recon->GA, recon->actinterp, "nn", 1);
+				dspcellmulsp(&GA2, recon->GA, recon->actinterp, "nn", 1);
 				dspcellfree(recon->GA);
 				recon->GA=GA2;
 			}

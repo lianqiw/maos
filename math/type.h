@@ -42,33 +42,51 @@ typedef enum CEMBED{
   partition. */
 
 #define ARR(T)								\
-    uint32_t id;   /**< to identify the array type. Must be the first element*/	\
+    M_ID id;   /**< to identify the array type. Must be the first element*/	\
     T *restrict p; /**<The data pointer*/				\
     long nx;       /**< number of rows */				\
     long ny;       /**< number of columns */				\
     char *header;  /**<The header*/					\
     file_t *fp;    /**<Opened file, to be saved to when called or freed*/\
-    struct fft_t *fft					
+    struct fft_t* fft					\
+
+typedef struct cell{
+    ARR(struct cell*);
+    struct cell* m;
+}cell;
+
 
 #define MATARR(T)				\
-    ARR(T);					\
+    union{\
+        struct cell base[1];\
+        struct{\
+            ARR(T);					\
+        };\
+    };\
     mem_t *mem; /**< Memory management*/	\
     async_t *async /**<async io*/
 
+#define MATDEF(T,S) typedef struct S{MATARR(T);} S
+
 #define SPMATDEF(T,S) typedef struct S{					        \
-	uint32_t id;         /**<to identify the array type*/		\
-	T *restrict px;      /**<numerical values, size nzmax */	\
-	long nx;             /**<number of rows */			        \
-    long ny;             /**<number of columns */			    \
-	char *header;        /**<header*/				            \
+    union{\
+        struct cell base[1];     /**<Use array to get pointer easily*/  \
+        struct{\
+            M_ID id;             /**<to identify the array type*/		\
+            T *restrict px;      /**<numerical values, size nzmax */	\
+            long nx;             /**<number of rows */			        \
+            long ny;             /**<number of columns */			    \
+            char *header;        /**<header*/				            \
+        };\
+    };/*put type specific data outside of union to avoid confusion*/\
     char *fn;            /**<The file, to be saved upon free*/  \
     long nzmax;          /**<maximum number of entries */		\
     spint *restrict pp;  /**<col indices (size nzmax)  */       \
-	spint *restrict pi;  /**<row indices, size nzmax */		    \
-	int *nref;           /**<reference counting for px, pp, pi*/\
-}S;
+    spint *restrict pi;  /**<row indices, size nzmax */		    \
+    int *nref;           /**<reference counting for px, pp, pi*/\
+}S
 
-#define MATDEF(T,S) typedef struct S{MATARR(T);} S;
+
 MATDEF(float, smat);
 MATDEF(fcomplex, zmat);
 
@@ -146,7 +164,12 @@ typedef struct locstat_t{
    Struct for coordinates like plocs, xloc, aloc etc.
 */
 typedef struct loc_t{
-    uint32_t id;
+    union{
+        struct cell base[1];
+        struct{
+            M_ID id;
+        };
+    };
     real* locx;  /**< x coordinates of each point*/
     real* locy;  /**< y coordinates of each point*/
     long nloc;   /**< number of points*/
@@ -165,7 +188,12 @@ typedef struct loc_t{
    don't change the leading 5 elements. so that pts_t can be used as loc_t.
 */
 typedef struct pts_t{
-    uint32_t id;
+    union{
+        struct cell base[1];
+        struct{
+            M_ID id;
+        };
+    };
     real* origx; /**<The x origin of each subaperture*/
     real* origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
@@ -187,9 +215,14 @@ typedef struct pts_t{
 }pts_t;
 
 #define CELLDEF(T,S) typedef struct S{		\
-	ARR(struct T*);				\
-	struct T* m; /*continuous data*/	\
-    }S;
+    union{  \
+            struct cell base[1];\
+            struct{\
+	            ARR(struct T*);				\
+	            struct T* m; /*continuous data*/	\
+            };\
+        };\
+    }S
 
 CELLDEF(cmat, ccell);
 CELLDEF(zmat, zcell);
@@ -222,13 +255,13 @@ CELLDEF(mapcell, mapccell);
 CELLDEF(rmapcell, rmapccell);
 CELLDEF(loccell, locccell);
 
-CELLDEF(cell, cell);
+//CELLDEF(cell, cell);
 
 #undef ARR
 #undef CELLARR
 #undef MATARR
 static inline int iscell(const void* id){
-    return id?(*(const uint32_t*)id==MCC_ANY):0;
+    return id?(*(const M_ID*)id==MCC_ANY):0;
     //return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
 }
 /*A method to simulate operator overloading for indexing arrys*/

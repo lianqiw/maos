@@ -26,7 +26,7 @@
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;		\
     X(mat) *X(new_file)(long nx, long ny, const char* header, const char* format, ...) CHECK_ARG(4);\
     X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
-    X(mat) *X(mat_cast)(const void *A) CHECK_UNUSED_RESULT;		\
+    X(mat) *X(mat_cast)(const cell *A) CHECK_UNUSED_RESULT;		\
     void X(new2)(X(mat)**A, long nx, long ny) ;				\
     void X(free_do)(X(mat) *A);						\
     X(mat) *X(ref)(const X(mat) *in) CHECK_UNUSED_RESULT;		\
@@ -64,13 +64,13 @@
     R X(sumdiffsq)(const X(mat)*A, const X(mat)*B) CHECK_UNUSED_RESULT;	\
     void X(fftshift)(X(mat) *A);					\
     void X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
-    X(cell) *X(cell_cast)(const void *A) CHECK_UNUSED_RESULT;		\
+    X(cell) *X(cell_cast)(const cell *A) CHECK_UNUSED_RESULT;		\
     X(cell) *X(cellnew2)(const X(cell) *A) CHECK_UNUSED_RESULT;		\
     X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny) CHECK_UNUSED_RESULT; \
     X(cell) *X(cellnew_same)(long nx, long ny, long mx, long my) CHECK_UNUSED_RESULT; \
     X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,const char* header, const char* format, ...)CHECK_ARG(6);	\
     X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,const char* header, const char* format, ...)CHECK_ARG(6);	\
-    void X(cellzero)(void *dc);						\
+    void X(cellzero)(X(cell) *dc);						\
     void X(cellset)(X(cell)*dc, T alpha);				\
     X(cell) *X(celltrans)(const X(cell) *A) CHECK_UNUSED_RESULT;	\
     X(cell) *X(cellref)(const X(cell) *in) CHECK_UNUSED_RESULT;		\
@@ -80,7 +80,8 @@
     X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim) CHECK_UNUSED_RESULT; \
     void X(cellcat2)(X(cell) **A, const X(cell) *B, int dim);		\
     X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim) CHECK_UNUSED_RESULT; \
-    X(mat) *X(cell2m)(const void *A) CHECK_UNUSED_RESULT;		\
+    X(mat) *X(cell2m)(const X(cell) *A) CHECK_UNUSED_RESULT;		\
+    X(mat) *X(cell2m_any)(const cell *A) CHECK_UNUSED_RESULT;		\
     X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim) CHECK_UNUSED_RESULT; \
     void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);	\
     X(mat) *X(cell_col)(X(cell) *input, long icol);			\

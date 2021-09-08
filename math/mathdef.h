@@ -45,36 +45,36 @@
 #define cabs2(A)     (abs2(creal(A))+abs2(cimag(A)))
 /*!free a dmat and zero the pointer.*/
 #define dfree(A)     if(A){dfree_do(A);A=NULL;}
-#define dcellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define dcellfree(A) if(A){cellfree_do((A)->base);A=NULL;}
 #define dcellfreearr(A,n) if((A)&&(n)>0){for(int in=0; in<n; in++){dcellfree(A[in]);};free(A);A=NULL;}
 /*!free a smat and zero the pointer.*/
 #define sfree(A)     if(A){sfree_do(A);A=NULL;}
-#define scellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define scellfree(A) if(A){cellfree_do((A)->base);A=NULL;}
 #define scellfreearr(A,n) if((A)&&(n)>0){for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;}
 /*!free a cmat and zero the pointer.*/
 #define cfree(A)     if(A){cfree_do(A);A=NULL;}
-#define ccellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define ccellfree(A) if(A){cellfree_do((A)->base);A=NULL;}
 #define ccellfreearr(A,n) if((A)&&(n)>0){for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;}
 /*!free a zmat and zero the pointer.*/
 #define zfree(A)     if(A){zfree_do(A);A=NULL;}
-#define zcellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define zcellfree(A) if(A){cellfree_do((A)->base);A=NULL;}
 /*!free a lmat and zero the pointer.*/
 #define lfree(A)     if(A){lfree_do(A);A=NULL;}
-#define lcellfree(A) if(A){cellfree_do(A);A=NULL;}
+#define lcellfree(A) if(A){cellfree_do((A)->base);A=NULL;}
 /*!free a dsp and zero the pointer*/
 #define dspfree(A)      if(A){dspfree_do(A); A=NULL;}
-#define dspcellfree(A)  if(A){cellfree_do(A); A=NULL;}
+#define dspcellfree(A)  if(A){cellfree_do((A)->base); A=NULL;}
 /*!free a ssp and zero the pointer*/
 #define sspfree(A)      if(A){sspfree_do(A); A=NULL;}
-#define sspcellfree(A)  if(A){cellfree_do(A); A=NULL;}
+#define sspcellfree(A)  if(A){cellfree_do((A)->base); A=NULL;}
 /*!free a ssp and zero the pointer*/
 #define cspfree(A)     if(A){cspfree_do(A); A=NULL;}
-#define cspcellfree(A) if(A){cellfree_do(A); A=NULL;}
+#define cspcellfree(A) if(A){cellfree_do((A)->base); A=NULL;}
 /*!free a zsp and zero the pointer*/
 #define zspfree(A)     if(A){zspfree_do(A); A=NULL;}
-#define zspcellfree(A) if(A){cellfree_do(A); A=NULL;}
+#define zspcellfree(A) if(A){cellfree_do((A)->base); A=NULL;}
 
-#define mapwrite(out, A...) write_by_id((void*)out, M_MAP, A)
+#define mapwrite(out, A...) write_by_id(out?out->base:NULL, M_MAP, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP, 0, A)
 
 #define mapcellread(A...) (mapcell*)read_by_id(M_MAP, 1, A)
@@ -82,11 +82,11 @@
 #define mapccellnew (mapccell*)cellnew
 
 #define rmapread(A...)    (rmap_t*)read_by_id(M_RECTMAP, 0, A)    
-#define rmapwrite(out, A...)   write_by_id((void*)out, M_RECTMAP, A)
+#define rmapwrite(out, A...)   write_by_id(out?out->base:NULL, M_RECTMAP, A)
 #define rmapcellnew  (rmapcell*)cellnew
 #define rmapccellnew (rmapccell*)cellnew
 
-#define locwrite(out, A...) write_by_id((void*)out, M_LOC, A)
+#define locwrite(out, A...) write_by_id(out?out->base:NULL, M_LOC, A)
 #define locread(A...)    (loc_t*)read_by_id(M_LOC, 0, A)
 #define loccellread(A...) (loccell*)read_by_id(M_LOC, 1, A)
 #define loccellnew (loccell*)cellnew

@@ -45,8 +45,9 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	} else{ //all wfs in integrated mode. 
 		GAlsr=GAM;
 	}
+	info("Building recon->LR\n");
 	int free_GAlsr=0;
-	if(P(GAlsr,0)->id!=M_REAL){//Convert low sparsity matrices to full
+	/*if(P(GAlsr,0)->id!=M_REAL){//Convert low sparsity matrices to full
 		dsp* tmp=dsp_cast(P(GAlsr,0));
 		if(tmp->nzmax>tmp->nx*tmp->ny*0.2){//not very sparse
 			dcell* tmp2=0;
@@ -55,23 +56,23 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 			GAlsr=(cell*)tmp2;
 		}
 	}
-	info("Building recon->LR\n");
-	recon->LR.M=dcellmm2(GAlsr, recon->saneai, "tn");
+	recon->LR.M=dcellmm2(GAlsr, recon->saneai, "tn");*/
+	dcellmm_any(&recon->LR.M, GAlsr, recon->saneai->base, "tn", 1);
 	// Tip/tilt and diff focus removal low rand terms for LGS WFS.
 	if(recon->TTF){
-		dcellmm(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
+		dcellmm_cell(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
 		recon->LR.V=dcelltrans(recon->PTTF);
 	}
 
 	info("Building recon->LL\n");
-	recon->LL.M=dcellmm2(recon->LR.M, GAlsr, "nn");
+	dcellmm_any(&recon->LL.M, recon->LR.M, GAlsr, "nn", 1);
 	if(free_GAlsr){
 		cellfree(GAlsr);
 	}
 	if(recon->LR.U){
 		recon->LL.U=dcelldup(recon->LR.U);
 		dcell* GPTTDF=NULL;
-		dcellmm(&GPTTDF, GAM, recon->LR.V, "tn", 1);
+		dcellmm_cell(&GPTTDF, GAM, recon->LR.V, "tn", 1);
 		recon->LL.V=dcelldup(GPTTDF);
 		dcellfree(GPTTDF);
 	}
@@ -87,7 +88,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	if(fabs(parms->lsr.tikcr)>EPS&&parms->lsr.actslave<=1){
 		info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 		info("The maximum eigen value is estimated to be around %g\n", maxeig);
-		dcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
+		dcelladdI_any(recon->LL.M, parms->lsr.tikcr*maxeig);
 	}
 	dcell* NW=NULL;
 	if(!parms->recon.modal){
@@ -141,7 +142,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 			if(parms->save.setup){
 				writebin(actslave, "lsr_actslave");
 			}
-			dcelladd(&recon->LL.M, 1, actslave, 1);
+			dcelladd_any(&recon->LL.M, 1, actslave->base, 1);
 			cellfree(actslave);
 		}
 		if(parms->lsr.actslave>1){
@@ -152,7 +153,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 			if(parms->save.setup){
 				writebin(actslave, "lsr_actslave2");
 			}
-			dcelladd(&recon->LL.M, 1, actslave, 1);
+			dcelladd_any(&recon->LL.M, 1, actslave->base, 1);
 			cellfree(actslave);
 		}
 	}
@@ -181,7 +182,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	if(parms->lsr.fnreg){
 		warning("Loading LSR regularization from file %s.\n", parms->lsr.fnreg);
 		dspcell* tmp=dspcellread("%s", parms->lsr.fnreg);
-		dcelladd(&recon->LL.M, 1, tmp, 1);
+		if(tmp) dcelladd_any(&recon->LL.M, 1, tmp->base, 1);
 		dspcellfree(tmp);
 	}
 	recon->LL.alg=parms->lsr.alg;

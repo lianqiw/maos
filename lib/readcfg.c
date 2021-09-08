@@ -111,14 +111,26 @@ static void strtrim(char** str){
    remove "" or '' around a string from config file. Accept whole string if
 quotes are not found.  */
 static char* strextract(const char* data){
-	if(!data||!strlen(data)) return NULL;
-	if(data[0]=='"'||data[0]=='\''){
-		if(data[strlen(data)-1]!=data[0]){
-			error("Record is {%s}, quotes must come in pair\n", data);
-			return NULL;
+	const char *start=data, *end=0;
+	trim_string(&start, &end);
+	return mystrndup(start, end-start);
+	/*
+	size_t slen=strlen(data);
+	while(slen>0&&isspace(data[0])){
+		data++;
+		slen--;
+	}
+	while(slen>0&&isspace(data[slen-1])){
+		slen--;
+	}
+	if(!slen) return NULL;
+	if(slen>1 && (data[0]=='"'||data[0]=='\'')){
+		if(data[slen-1]!=data[0]){
+			warning("Record is {%s}, quotes should come in pair\n", data);
+			return strdup(data);
 		} else{
 			char* res=strdup(data+1);
-			res[strlen(res)-1]='\0';
+			res[slen-2]='\0';
 			if(is_end(res[0])){
 				free(res);
 				res=NULL;
@@ -127,7 +139,7 @@ static char* strextract(const char* data){
 		}
 	} else{
 		return strdup(data);
-	}
+	}*/
 }
 /**
    Remove comment (after #), leading spaces, and trailing line break and spaces from a

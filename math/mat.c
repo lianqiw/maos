@@ -95,13 +95,8 @@ void X(new2)(X(mat)** A, long nx, long ny){
 /**
    cast a cell object to matrix
  */
-X(mat)* X(mat_cast)(const void* A){
-	if(!ismat(A)) return 0;
-	X(mat)* B=(X(mat)*)A;
-	if(!B->nx||!B->ny)
-		return 0;
-	else
-		return B;
+X(mat)* X(mat_cast)(const cell* A){
+	return (A && A->nx && A->ny && ismat(A))?(X(mat)*)A:NULL;
 }
 /**
    free a matrix object.
@@ -638,12 +633,11 @@ void X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 /**
    cast a cell object to actual cell after checking.
  */
-X(cell)* X(cell_cast)(const void* A_){
-	if(!A_) return NULL;
-	cell* A=(cell*)A_;
+X(cell)* X(cell_cast)(const cell* A){
 	if(!iscell(A)) return NULL;
 	for(int i=0; i<A->nx*A->ny; i++){
 		if(P(A, i)&&!ismat(P(A, i))){
+			warning("A[%d] is not mat, return NULL.\n", i);
 			return NULL;
 		}
 	}
@@ -716,7 +710,7 @@ X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out, 0, -1);
+		writedata_by_id(out->fp, out->base, 0, -1);
 	}
 	return out;
 }
@@ -733,7 +727,7 @@ X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out, 0, -1);
+		writedata_by_id(out->fp, out->base, 0, -1);
 	}
 	return out;
 }

@@ -312,7 +312,6 @@ mapcell* genscreen_str(const char* header){
 			real wt=1;
 			genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
 			surfs=genscreen(&cfg);
-			P(surfs, 0)->header=strdup(header);
 		}else if (!isnan(mode)){
 			real rms=search_header_num_valid(header, "rms");//in nm.
 			info("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rms);
@@ -328,6 +327,13 @@ mapcell* genscreen_str(const char* header){
 			locfree(loc);
 		}else{
 			error("input is invalid: %s\n", header);
+		}
+		for(int i=0; i<PN(surfs); i++){
+			if(P(surfs,i)){
+				char* old=P(surfs, i)->header;
+				P(surfs, i)->header=stradd(header, old, NULL);
+				if(old) free(old);
+			}
 		}
 	}
 	return surfs;

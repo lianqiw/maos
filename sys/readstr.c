@@ -20,7 +20,7 @@
 #include "readstr.h"
 #include "misc.h"
 #include "bin.h"
-
+#include "scheduler_client.h"
 /**
    Group all routines that are used to parse values from string that contain
    key=value pairs.
@@ -49,8 +49,9 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 		*res=mycalloc(maxcount, char*);
 	}
 	if(!sdata) return count;
-	const char* sdataend=sdata+strlen(sdata);
+	const char* sdataend=0;//sdata+strlen(sdata);
 	const char* sdata2=sdata;
+	trim_string(&sdata2, &sdataend);
 	if(sdata[0]=='['){
 		sdata2++;
 		sdataend--;
@@ -59,11 +60,14 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 		}
 	}
 	/*skip spaces*/
-	while(sdata2<sdataend&&sdata2[0]==' '){
+	while(sdata2<sdataend&&isspace(sdata2[0])){
 		sdata2++;
 	}
 	int end_coma=0;//end with coma. append an additional element.
 	while(sdata2<sdataend||end_coma){
+		//sdata2 is current value star
+		//sdata4 is current value end
+		//sdata3 is next value start		
 		const char* sdata4=sdataend;
 		const char* sdata3;
 		end_coma=0;
@@ -77,7 +81,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			}
 			sdata3=sdata4+1;
 			//Skip spaces
-			while(sdata3<sdataend&&sdata3[0]==' '){
+			while(sdata3<sdataend&&isspace(sdata3[0])){
 				sdata3++;
 			}
 			//separator following the quote.
@@ -92,6 +96,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 				const char* tmp=strchr(sdata2, sep[is]);
 				if(tmp&&tmp<sdata4&&tmp<sdataend){
 					sdata4=tmp;
+					break;
 				}
 			}
 			if(sdata4[0]==','/*||sdata4[0]==';'*/){
@@ -109,6 +114,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			}
 		}
 		if(sdata4>sdata2){/*found non-empty str*/
+			trim_string(&sdata2, &sdata4);
 			(*res)[count++]=mystrndup(sdata2, sdata4-sdata2);
 		} else{/*found empty str*/
 			(*res)[count++]=NULL;
@@ -185,7 +191,7 @@ double readstr_num(const char* data, /**<[in] Input string*/
 	char* endptr;
 	double res=strtod(data, &endptr);
 	if(data==endptr){
-		dbg("{%s}: Unable to parse for a number\n", data);
+		dbg3("{%s}: Unable to parse for a number\n", data);
 		return NAN;
 	}
 	double vmul, vadd;
@@ -472,28 +478,29 @@ void readstr_intarr_relax(int** ret, /**<[out] Result*/
 /**
 	update header and end to point to valid region. Does not modify the string
 */
-int trim_header(const char **pheader, const char **pend){
-	if(!pheader||!pend) return 1;
+void trim_string(const char **pheader, const char **pend){
+	if(!pheader) return;
 	const char* header=*pheader;
-	const char* end=header+strlen(header);
+	const char* end=(pend && *pend)?*pend:(header+strlen(header));
+repeat:
 	while(isspace((int)header[0]) && header<end) header++;
 	while(isspace((int)end[-1])&& header<end) end--;
 	if(header>=end){ 
 		header=NULL;
 		end=NULL;
 	} else{
-		if(header[0]=='\''||header[0]=='"'){
+		if(header+1<end && (header[0]=='\''||header[0]=='"')){
 			if(end[-1]!=header[0]){
 				warning("Quote is not matched: {%s}\n", *pheader);
 			} else{
 				end--;
 			}
 			header++;
+			goto repeat;
 		}
 	}
 	*pheader=header;
-	*pend=end;
-	return 0;
+	if(pend) *pend=end;
 }
 /**
    Search and return the value correspond to key. Case is ignored; 
@@ -505,7 +512,7 @@ const char* search_header(const char* header, const char* key){
 	const char* ans=NULL;
 	//const char* val=header;
 	const char* end=NULL;
-	trim_header(&header, &end);
+	trim_string(&header, &end);
 	if(header&&end){
 		const int nkey=strlen(key);
 		int was_space=1;

@@ -37,7 +37,7 @@
 void muv(dcell** xout, const void* A_, const dcell* xin, const real alpha){
 	const muv_t* A=(const muv_t*)A_;//A_ is declared void for cg to use without casting.
 	if(A->M&&xin){
-		dcellmm(xout, A->M, xin, "nn", alpha);
+		dcellmm_cell(xout, A->M, xin, "nn", alpha);
 		if(A->U&&A->V){
 			dcell* tmp=NULL;
 			dcellmm(&tmp, A->V, xin, "tn", -1.);
@@ -45,10 +45,10 @@ void muv(dcell** xout, const void* A_, const dcell* xin, const real alpha){
 			dcellfree(tmp);
 		}
 		if(A->extra){
-			A->exfun(xout, A->extra, dcell_cast(xin), alpha, -1, -1);
+			A->exfun(xout, A->extra, xin, alpha, -1, -1);
 		}
 	} else{
-		A->Mfun(xout, A->Mdata, dcell_cast(xin), alpha);
+		A->Mfun(xout, A->Mdata, xin, alpha);
 	}
 }
 /**
@@ -59,7 +59,7 @@ void muv_trans(dcell** xout, const void* A_, const dcell* xin, const real alpha)
 	const muv_t* A=(const muv_t*)A_;
 	if(A->M){
 		if(!xin) return;
-		dcellmm(xout, A->M, xin, "tn", alpha);
+		dcellmm_cell(xout, A->M, xin, "tn", alpha);
 		if(A->U&&A->V){
 			dcell* tmp=NULL;
 			dcellmm(&tmp, A->U, xin, "tn", -1.);
@@ -177,7 +177,7 @@ void muv_direct_prep(muv_t* A, real svd){
 	muv_direct_free(A);
 	if(use_svd){/*Do SVD */
 		dfree(A->MI);
-		A->MI=dcell2m(A->M);
+		A->MI=dcell2m_any(A->M);
 		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", A->MI->nx, A->MI->ny);
 		dsvd_pow(A->MI, -1, svd<1?svd:2e-4, 0);
 	} else{/*Do Cholesky decomposition. */

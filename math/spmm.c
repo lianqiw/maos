@@ -356,13 +356,9 @@ X(sp)* X(spmulsp)(const X(sp)* A, const X(sp)* B, const char trans[2]){
    for beta!=1 because for every call to dmm, the already accumulated ones are
    scaled.  removed beta.
 */
-void X(cellmm)(void* C0_, const void* A_, const void* B_, const char trans[2], const R alpha){
-	if(!A_||!B_) return;
-	const cell* A=(const cell*)(A_);
-	const cell* B=(const cell*)(B_);
-	cell** C0=(cell**)C0_;
-	if(iscell(A)&&iscell(B)){
-	//multiplication of cells.
+void X(cellmm_any)(cell** C0, const cell* A, const cell* B, const char trans[2], const R alpha){
+	if(!A||!B) return;
+	if(iscell(A)&&iscell(B)){//multiplication of cells.
 		mm_t D=parse_trans(A, B, trans);
 		cellinit(C0, D.nx, D.ny);
 		cell* C=*C0;
@@ -372,7 +368,7 @@ void X(cellmm)(void* C0_, const void* A_, const void* B_, const char trans[2], c
 	#pragma omp task firstprivate(ix,iy) if(D.nx*D.ny>1 && omp_in_parallel())
 	#endif*/
 				for(int iz=0; iz<D.nz; iz++){
-					X(cellmm)(C->p+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
+					X(cellmm_any)(C->p+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
 				}
 		/*#if _OPENMP >= 200805
 		#pragma omp taskwait
@@ -412,20 +408,43 @@ void X(cellmm)(void* C0_, const void* A_, const void* B_, const char trans[2], c
 		}
 	}
 }
+void X(mm_cell)(X(mat)** C0, const cell* A, const X(mat)* B, const char trans[2], const R alpha){
+	if(!A||!B||!C0) return;
+	X(cellmm_any)((cell**)C0, A, B->base, trans, alpha);
+}
+void X(cellmm)(X(cell)** C0, const X(cell)* A, const X(cell)* B, const char trans[2], const R alpha){
+	if(!A || !B || !C0) return;
+	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
+}
 /**
    a different interface for multiplying cells.
  */
-cell* X(cellmm2)(const void* A_, const void* B_, const char trans[2]){
-	cell* res=0;
-	X(cellmm)(&res, A_, B_, trans, 1);
+X(cell)* X(cellmm2)(const X(cell)* A, const X(cell)* B, const char trans[2]){
+	X(cell)* res=0;
+	X(cellmm)(&res, A, B, trans, 1);
 	return res;
+}
+void X(cellmulsp)(X(cell)** C0, const X(cell)* A, const X(spcell)* B, const char trans[2], const R alpha){
+	if(!A||!B||!C0) return;
+	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
+}
+void X(spcellmm)(X(cell)** C0, const X(spcell)* A, const X(cell)* B, const char trans[2], const R alpha){
+	if(!A||!B||!C0) return;
+	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
+}
+void X(cellmm_cell)(X(cell)** C0, const cell* A, const X(cell)* B, const char trans[2], const R alpha){
+	if(!A||!B||!C0) return;
+	X(cellmm_any)((cell**)C0, A, B->base, trans, alpha);
+}
+void X(spcellmulsp)(X(spcell)** C0, const X(spcell)* A, const X(spcell)* B, const char trans[2], const R alpha){
+	if(!A||!B||!C0) return;
+	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
 }
 /**
    Add alpha to diagnonal elements of A_. A_ can be matrix or sparse matrix.
  */
-void X(celladdI)(void* A_, T alpha){
-	if(!A_) return;
-	cell* A=cell_cast(A_);
+void X(celladdI_any)(cell* A, T alpha){
+	if(!A) return;
 	assert(A->nx==A->ny);
 	for(int ii=0; ii<A->ny; ii++){
 		if(!P(A, ii, ii)){
@@ -439,20 +458,27 @@ void X(celladdI)(void* A_, T alpha){
 		}
 	}
 }
+void X(celladdI)(X(cell)* A, T alpha){
+	if(!A) return;
+	X(celladdI_any)(A->base, alpha);
+}
+void X(spcelladdI)(X(spcell)* A, T alpha){
+	if(!A) return;
+	X(celladdI_any)(A->base, alpha);
+}
 /**
    Calculate A_=A_*ac+B_*bc;
 
    Takes parameters of matrix, sparse matrix, or cell array of them.
  */
-void X(celladd)(void* A_, R ac, const void* B_, R bc){
-	if(!A_||!B_||bc==0) return;
-	cell* B=(cell*)(B_);
-	cell** pA=(cell**)A_;
+void X(celladd_any)(cell** pA, R ac, const cell* B, R bc){
+	if(!pA||!B||!bc) return;
+	
 	if(iscell(B)){//cell
 		cellinit2(pA, B);
 		cell* A=*pA;
 		for(int i=0; i<B->nx*B->ny; i++){
-			X(celladd)(A->p+i, ac, P(B,i), bc);
+			X(celladd_any)(&P(A,i), ac, P(B,i), bc);
 		}
 	} else{//non cell
 		if(!*pA||ismat(*pA)){//A is dense
@@ -477,6 +503,18 @@ void X(celladd)(void* A_, R ac, const void* B_, R bc){
 		}
 	}
 }
+void X(celladd)(X(cell)**pA, R ac, const X(cell)* B, R bc){
+	if(!pA || !B || !bc) return;
+	X(celladd_any)((cell**)pA, ac, B->base, bc);
+}
+void X(celladdsp)(X(cell)** pA, R ac, const X(spcell)* B, R bc){
+	if(!pA||!B||!bc) return;
+	X(celladd_any)((cell**)pA, ac, B->base, bc);
+}
+void X(spcelladd)(X(spcell)** pA, R ac, const X(spcell)* B, R bc){
+	if(!pA||!B||!bc) return;
+	X(celladd_any)((cell**)pA, ac, B->base, bc);
+}
 /**
    Copy B to A.
 
@@ -484,7 +522,7 @@ void X(celladd)(void* A_, R ac, const void* B_, R bc){
  */
 void X(cellcp)(void* A_, const void* B_){
 	if(!B_){
-		X(cellscale)(*((cell**)A_), 0);
+		X(cellscale_any)(*((cell**)A_), 0);
 	} else{
 		X(celladd)(A_, 0, B_, 1);
 	}
@@ -493,12 +531,12 @@ void X(cellcp)(void* A_, const void* B_){
 /**
    scale each element of A.
 */
-void X(cellscale)(void* A_, R w){
+void X(cellscale_any)(cell* A_, R w){
 	if(!A_) return;
 	cell* A=(cell*)A_;
 	if(iscell(A_)){
 		for(int i=0; i<A->nx*A->ny; i++){
-			X(cellscale)(P(A,i), w);
+			X(cellscale_any)(P(A,i), w);
 		}
 	} else{
 		if(ismat(A)){
@@ -510,21 +548,22 @@ void X(cellscale)(void* A_, R w){
 		}
 	}
 }
-
+void X(cellscale)(X(cell)* A, R w){
+	X(cellscale_any)(A?A->base:NULL, w);
+}
 
 /**
    Setting all elements of a cell to zero.
 */
-void X(cellzero)(void* dc){
-	X(cellscale)(dc, 0);
+void X(cellzero)(X(cell)* dc){
+	X(cellscale_any)(dc?dc->base:NULL, 0);
 }
 
 /**
    Convert dense or sparse matrix cell to matrix.
 */
-X(mat)* X(cell2m)(const void* A_){
-	if(!A_) return 0;
-	cell* A=cell_cast(A_);
+X(mat)* X(cell2m_any)(const cell* A){
+	if(!A) return 0;
 	long nx=0, ny=0, *nxs=NULL, *nys=NULL;
 	celldim(A, &nx, &ny, &nxs, &nys);
 	
@@ -556,4 +595,11 @@ X(mat)* X(cell2m)(const void* A_){
 	free(nxs);
 	free(nys);
 	return out;
+}
+X(mat)* X(cell2m)(const X(cell)* A){
+	return X(cell2m_any)(A?A->base:NULL);
+}
+
+X(mat)* X(spcell2m)(const X(spcell)* A){
+	return X(cell2m_any)(A?A->base:NULL);
 }

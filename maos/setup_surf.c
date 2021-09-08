@@ -345,7 +345,7 @@ static void FitR_NCPA(dcell** xout, recon_t* recon, aper_t* aper){
 		}
 	}
 	applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
-	dcellmm(xout, recon->HA_ncpa, xp, "tn", 1);
+	dspcellmm(xout, recon->HA_ncpa, xp, "tn", 1);
 	dcellfree(xp);
 }
 void FitL_NCPA(dcell** xout, const void* A,
@@ -353,9 +353,9 @@ void FitL_NCPA(dcell** xout, const void* A,
 	const recon_t* recon=(const recon_t*)A;
 	const parms_t* parms=global->parms;
 	dcell* xp=NULL;
-	dcellmm(&xp, recon->HA_ncpa, xin, "nn", 1.);
+	dspcellmm(&xp, recon->HA_ncpa, xin, "nn", 1.);
 	applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
-	dcellmm(xout, recon->HA_ncpa, xp, "tn", alpha);
+	dspcellmm(xout, recon->HA_ncpa, xp, "tn", alpha);
 	dcellfree(xp);xp=NULL;
 	/*dcellmm(&xp,recon->fitNW, xin, "tn", 1);
 	dcellmm(xout,recon->fitNW, xp, "nn", alpha);
@@ -388,7 +388,7 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 	if(recon->actinterp){
 		info2("Replacing HA by HA*actinterp");
 		dspcell* HA2=0;
-		dcellmm(&HA2, recon->HA_ncpa, recon->actinterp, "nn", 1);
+		dspcellmulsp(&HA2, recon->HA_ncpa, recon->actinterp, "nn", 1);
 		dspcellfree(recon->HA_ncpa);
 		recon->HA_ncpa=HA2;
 	}

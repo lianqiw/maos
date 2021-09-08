@@ -334,7 +334,7 @@ static void filter_cl(sim_t* simu){
 	} else if(simu->recon->actinterp&&!parms->recon.psol){
 		//Extrapolate to edge actuators
 		dcellzero(simu->dmcmd);
-		dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
+		dspcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
 	} else{
 		dcellcp(&simu->dmcmd, simu->dmtmp);
 	}
@@ -529,7 +529,7 @@ static void filter_ol(sim_t* simu){
 	if(simu->recon->actinterp&&!parms->recon.modal){
 		dcellcp(&simu->dmtmp, simu->dmcmd);
 		dcellzero(simu->dmcmd);
-		dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
+		dspcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
 	}
 	if(simu->ttmreal){
 		ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);

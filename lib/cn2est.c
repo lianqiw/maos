@@ -558,7 +558,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 	}
 	cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
 	dcellzero(cn2est->wtrecon);
-	dcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
+	dspcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
 	/*only 1 cell. norm to sum to 1. */
 	dnormalize_sumabs(P(cn2est->wtrecon,0)->p, P(cn2est->wtrecon,0)->nx, 1);
 	if(verbose){

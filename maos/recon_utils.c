@@ -42,8 +42,8 @@
 void apply_L2(dcell** xout, const dspcell* L2, const dcell* xin,
 	real alpha){
 	dcell* xx=NULL;
-	dcellmm(&xx, L2, xin, "nn", 1.);
-	dcellmm(xout, L2, xx, "tn", alpha);
+	dspcellmm(&xx, L2, xin, "nn", 1.);
+	dspcellmm(xout, L2, xx, "tn", alpha);
 	dcellfree(xx);
 }
 /**
@@ -507,7 +507,7 @@ void FitR(dcell** xout, const void* A,
 			}
 		}
 	} else if(fit->HXF){
-		dcellmm(&xp, fit->HXF, xin, "nn", 1.);
+		dspcellmm(&xp, fit->HXF, xin, "nn", 1.);
 	} else{/*Do the ray tracing from xloc to ploc */
 		const int npsr=fit->xloc->nx;
 		for(int ifit=0; ifit<nfit; ifit++){
@@ -528,7 +528,7 @@ void FitR(dcell** xout, const void* A,
 	//writebin(xp, "CPU_FitR_x1");
 	applyW(xp, fit->W0, fit->W1, fit->wt->p);
 	//writebin(xp, "CPU_FitR_x2");
-	dcellmm(xout, fit->HA, xp, "tn", alpha);
+	dspcellmm(xout, fit->HA, xp, "tn", alpha);
 	//writebin(*xout, "CPU_FitR_x3");
 	dcellfree(xp);
 }
@@ -540,15 +540,15 @@ void FitL(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
 	const fit_t* fit=(const fit_t*)A;
 	dcell* xp=NULL;
-	dcellmm(&xp, fit->HA, xin, "nn", 1.);
+	dspcellmm(&xp, fit->HA, xin, "nn", 1.);
 	applyW(xp, fit->W0, fit->W1, fit->wt->p);
-	dcellmm(xout, fit->HA, xp, "tn", alpha);
+	dspcellmm(xout, fit->HA, xp, "tn", alpha);
 	dcellfree(xp);xp=NULL;
 	dcellmm(&xp, fit->NW, xin, "tn", 1);
 	dcellmm(xout, fit->NW, xp, "nn", alpha);
 	dcellfree(xp);
 	if(fit->actslave){
-		dcellmm(xout, fit->actslave, xin, "nn", alpha);
+		dspcellmm(xout, fit->actslave, xin, "nn", alpha);
 	}
 }
 

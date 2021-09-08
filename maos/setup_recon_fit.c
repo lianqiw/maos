@@ -102,7 +102,7 @@ setup_fit_HA(fit_t* fit){
 		info("Replacing HA by HA*fit->interp\n");
 
 		dspcell* HA2=0;
-		dcellmm(&HA2, HA, fit->actinterp, "nn", 1);
+		dspcellmulsp(&HA2, HA, fit->actinterp, "nn", 1);
 		dspcellfree(HA);
 		HA=HA2;
 	}
@@ -183,7 +183,7 @@ setup_fit_lrt(fit_t* fit){
 			dspcell* actslave2=slaving(fit->aloc, fit->actcpl,
 				global->parms->dbg.recon_stuck?fit->actstuck:0,
 				fit->actfloat, fit->flag.actthres, 1./fit->floc->nloc, 2);
-			dcelladd(&fit->actslave, 1, actslave2, 1);
+			dspcelladd(&fit->actslave, 1, actslave2, 1);
 			cellfree(actslave2);
 		}
 		toc2("slaving");
@@ -296,7 +296,7 @@ setup_fit_matrix(fit_t* fit){
 			real maxeig=4./nact;
 			info("Adding tikhonov constraint of %.1e to FLM\n", tikcr);
 			info("The maximum eigen value is estimated to be around %.1e\n", maxeig);
-			dcelladdI(fit->FL.M, tikcr*maxeig);
+			dcelladdI_any(fit->FL.M, tikcr*maxeig);
 		}
 
 		{/*Low rank terms. */
@@ -307,7 +307,7 @@ setup_fit_matrix(fit_t* fit){
 			dcellfree(tmp);
 		}
 		if(fit->actslave){
-			dcelladd(&fit->FL.M, 1, fit->actslave, 1);
+			dcelladd_any(&fit->FL.M, 1, fit->actslave->base, 1);
 		}
 		/*dspcellsym(fit->FL.M); */
 		info("DM Fit number of Low rank terms: %ld in LHS\n", P(fit->FL.U,0)->ny);

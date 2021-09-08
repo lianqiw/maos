@@ -552,18 +552,18 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		  participate in tomography.
 		*/
 		dspcell* GXtomoT=dspcelltrans(recon->GXtomo);
-		recon->RR.M=dcellmm2(GXtomoT, saneai, "nn");
+		dcellmm_any(&recon->RR.M,GXtomoT->base, saneai->base, "nn", 1);
 		dspcell* RRM=(dspcell*)recon->RR.M/*PDSPCELL*/;
 		/*
 		  Tip/tilt and diff focus removal low rand terms for LGS WFS.
 		*/
 		if(recon->TTF){
-			dcellmm(&recon->RR.U, recon->RR.M, recon->TTF, "nn", 1);
+			dcellmm_cell(&recon->RR.U, recon->RR.M, recon->TTF, "nn", 1);
 			recon->RR.V=dcelltrans(recon->PTTF);
 		}
 
 		info("Building recon->RL\n"); /*left hand side matrix */
-		recon->RL.M=dcellmm2(recon->RR.M, recon->GXtomo, "nn");
+		dcellmm_any(&recon->RL.M, recon->RR.M, recon->GXtomo->base, "nn", 1);
 		dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
 		if(parms->tomo.piston_cr){
 			/*single point piston constraint. no need tikholnov.*/
@@ -580,7 +580,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 			real tikcr=parms->tomo.tikcr;
 			info("Adding tikhonov constraint of %.1e to RLM\n", tikcr);
 			info("The maximum eigen value is estimated to be around %.1e\n", maxeig);
-			dcelladdI(recon->RL.M, tikcr*maxeig);
+			dcelladdI_any(recon->RL.M, tikcr*maxeig);
 		}
 		/*add L2 and ZZT */
 		switch(parms->tomo.cxxalg){
@@ -626,7 +626,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		if(!parms->recon.split||parms->tomo.splitlrt||parms->recon.split==2){
 			recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 			dcell* GPTTDF=NULL;
-			dcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
+			dspcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
 			recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 			dcellfree(GPTTDF);
 		} else{
@@ -755,8 +755,8 @@ static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs
 			}
 		}
 		//dsp *tmp=dspcell2sp(sanealhi);  dspcellfree(sanealhi);
-		dmat* tmp=dcell2m(sanealhi); dspcellfree(sanealhi);
-		dcellmm(&t1, recon->MVM, tmp, "nn", 1);
+		dmat* tmp=dspcell2m(sanealhi); dspcellfree(sanealhi);
+		dmm(&t1, 0, recon->MVM, tmp, "nn", 1);
 		cellfree(tmp);
 		toc2("MVM ");tic;
 	} else if(parms->recon.alg==0){//MV
@@ -965,7 +965,7 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 	//need to set a high threshold to avoid other modes reconstruct to spherical modes.
 	real thres=1e-10;
 	info("RRtwfs svd threshold is %g\n", thres);
-	recon->RRtwfs=dcellpinv2(GRtwfs, neai, thres, 0);
+	recon->RRtwfs=dcellpinv2(GRtwfs, neai->base, thres, 0);
 	
 	/*
 	if(parms->itwfssph>-1 && itwfs>-1){
@@ -1057,7 +1057,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	cellfree(recon->MVFM);
 
 	dcellfree(recon->GXL);
-	dcelladd(&recon->GXL, 1, recon->GXlo, 1);
+	dcelladdsp(&recon->GXL, 1, recon->GXlo, 1);
 	//NEA of low order WFS.
 	dcell* neailo=dcellnew(parms->nwfsr, parms->nwfsr);
 	dcell* nealo=dcellnew(parms->nwfsr, parms->nwfsr);
@@ -1136,7 +1136,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	dcell* QwQc=NULL;
 	{
 		dcell* Q=NULL;/*the NGS modes in ploc. */
-		dcellmm(&Q, recon->fit->HA, FUw, "nn", 1);
+		dspcellmm(&Q, recon->fit->HA, FUw, "nn", 1);
 		QwQc=calcWmcc(Q, Q, recon->W0, recon->W1, parms->fit.wt);
 		dcellfree(Q);
 	}
@@ -1227,7 +1227,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 
 	recon->MVRngs=dcellreduce(Minv, 1);/*1xnwfs cell */
 	recon->MVModes=dcellreduce(FUw, 2);/*ndmx1 cell */
-	dcellmm(&recon->MVGM, recon->GAlo, recon->MVModes, "nn", 1);
+	dcellmm_cell(&recon->MVGM, recon->GAlo, recon->MVModes, "nn", 1);
 	dcellmm(&recon->MVFM, recon->RFngsg, recon->MVGM, "nn", 1);
 	dcellfree(neailo);
 	dcellfree(nealo);
@@ -1238,7 +1238,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	dcellfree(Uw);
 	if(parms->save.setup){
 		dcell* Qn=NULL;
-		dcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
+		dspcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
 		dcell* Qntt=dcellnew(Qn->nx, Qn->ny);
 		dmat* TTploc=loc2mat(recon->floc, 1);/*TT mode. need piston mode too! */
 		dmat* PTTploc=dpinv(TTploc, recon->W0);/*TT projector. no need w1 since we have piston. */

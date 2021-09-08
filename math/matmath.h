@@ -108,22 +108,22 @@
     T X(trapz)(const X(mat)*x, const X(mat)*y);				\
 									\
     R X(cellnorm)(const X(cell) *in);					\
-    void X(cellscale)(void *A, R w);					\
+    void X(cellscale)(X(cell) *A, R w);					\
+    void X(cellscale_any)(cell *A, R w);					\
     void X(celldropempty)(X(cell) **A0, int dim);			\
     T X(cellinn)(const X(cell)*A, const X(cell)*B);			\
     void X(cellcwm)(X(cell) *B, const X(cell) *A);			\
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
     X(cell)* X(cellinvspd_each)(X(cell) *A);				\
-    X(cell)* X(cellpinv2)(const X(cell) *A, const void *W, R thres, R tikcr);		\
-    X(cell)* X(cellpinv)(const X(cell) *A, const void *W);		\
+    X(cell)* X(cellpinv2)(const X(cell) *A, const cell *W, R thres, R tikcr);		\
+    X(cell)* X(cellpinv)(const X(cell) *A, const X(spcell) *W);		\
     void X(cellsvd_pow)(X(cell) *A, R power, R thres, R tikcr);		\
     void X(cellcwpow)(X(cell)*A, R power);				\
     void X(celldropzero)(X(cell) *B, R thres);				\
     R X(celldiff)(const X(cell) *A, const X(cell) *B);			\
     int X(cellclip)(X(cell) *Ac, R min, R max);				\
     void X(celltikcr)(X(cell) *A, R thres);				\
-    void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha); \
     X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);	\
     X(cell) *X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);		\
     X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);

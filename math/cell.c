@@ -37,8 +37,7 @@ cell* cellnew(long nx, long ny){
 /**
    Allocate a new array of the same type
  */
-cell* cellnew2(const void* A_){
-	const cell* A=(const cell*)A_;
+cell* cellnew2(const cell* A){
 	if(!A){
 		return 0;
 	} else if(iscell(A)){
@@ -73,7 +72,7 @@ void cellinit2(cell** A, const cell* B){
 	}if(*A){
 		cellinit(A, B->nx, B->ny);
 	} else{
-		uint32_t magic=0;
+		M_ID magic=0;
 		for(int ib=0; ib<B->nx*B->ny; ib++){
 			if(P(B, ib)){
 				if(!magic){
@@ -138,8 +137,11 @@ void celldim(const cell* A, long* nx, long* ny, long** nxs, long** nys){
    Resize a generic cell array.
 */
 void cellresize(void* A_, long nx, long ny){
-	if(!A_) return;
 	cell* A=cell_cast(A_);
+	if(!A){ 
+		warning("Can only resize a valid cell array\n");
+		return;
+	}
 	if(A->nx==nx||A->ny==1){
 		int nold=A->nx*A->ny;
 		int nnew=nx*ny;
@@ -178,12 +180,12 @@ void cellresize(void* A_, long nx, long ny){
 /**
    free a mat or cell object.
 */
-void cellfree_do(void* A){
+void cellfree_do(cell* A){
 	if(!A) return;
-	uint32_t id=((cell*)A)->id;
+	M_ID id=A->id;
 	switch(id){
 	case MCC_ANY:{
-		cell* dc=(cell*)A;
+		cell* dc=A;
 		//if(dc->fp) writebin_async(dc, 0);//don't do this. only cells need to finish sync
 		//do not close for yet for individual cells may need to do synchronization.
 		if(dc->p){
@@ -234,17 +236,16 @@ void cellfree_do(void* A){
  * ncol: 0: normal writing. -1: initialize async data. >0: async writing.
  * 	
  * */
-void writedata_by_id(file_t* fp, const void* A_, uint32_t id, long ncol){
+void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 	if(fp&&ncol>0){
 		error("writedata_by_id should be called with either fp or ncol, but not both, aborted.\n");
 		return;
 	}
-	const cell* A=(const cell*)A_;
 	if(A){
 		if(!id){
 			id=A->id;
 		} else if(id!=MCC_ANY){
-			uint32_t id2=A->id;
+			M_ID id2=A->id;
 			if((id&id2)!=id&&(id&id2)!=id2){
 				warning("write as %x, data is %x, mismatch\n", id, id2);
 				id=id2;
@@ -319,7 +320,7 @@ void writedata_by_id(file_t* fp, const void* A_, uint32_t id, long ncol){
 	}
 }
 
-void write_by_id(const void* A, uint32_t id, const char* format, ...){
+void write_by_id(const cell* A, M_ID id, const char* format, ...){
 	format2fn;
 	if(!fn) return;
 	file_t* fp=zfopen(fn, "wb");
@@ -327,13 +328,7 @@ void write_by_id(const void* A, uint32_t id, const char* format, ...){
 	writedata_by_id(fp, A, id, 0);
 	zfclose(fp);
 }
-/**
-   A generic routine for write data to file. Do not allow call with null filename.
- */
-void writebin(const void* A, const char* format, ...){
-	format2fn;
-	write_by_id(A, 0, "%s", fn);
-}
+
 /**
  * Calls writebin with build in fp
  * */
@@ -347,10 +342,9 @@ void writebin_async(const void* A, long ncol){
 /**
    A generic routine for write data to file with separate header
  */
-void writebin_header(void* A, const char* header, const char* format, ...){
+void writebin_header(cell* Ac, const char* header, const char* format, ...){
 	format2fn;
-	cell* Ac=cell_cast(A);
-	if(Ac){
+	if(Ac && header){
 		free(Ac->header);
 		Ac->header=strdup(header);
 	}
@@ -366,7 +360,7 @@ void writebin_header(void* A, const char* header, const char* format, ...){
  * id: magic number of request fundamental data. data is converted if it does not match magic number from the file. 
  * Cell dimension may be zero. In this case the dimension will be automatically detected.
  *  */
-cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
+cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){
 		header=&header2;
@@ -479,7 +473,7 @@ cell* readdata_by_id(file_t* fp, uint32_t id, int level, header_t* header){
 	return (cell*)out;
 }
 
-cell* read_by_id(uint32_t id, int level, const char* format, ...){
+cell* read_by_id(M_ID id, int level, const char* format, ...){
 	format2fn;
 	if(!fn) return 0;
 	file_t* fp=zfopen(fn, "rb");
@@ -487,13 +481,6 @@ cell* read_by_id(uint32_t id, int level, const char* format, ...){
 	cell* out=readdata_by_id(fp, id, level, 0);
 	zfclose(fp);
 	return out;
-}
-/**
-   A generic routine for reading data from file. User need to cast the result.
- */
-cell* readbin(const char* format, ...){
-	format2fn;
-	return fn?read_by_id(0, -1, "%s", fn):NULL;
 }
 
 /**
@@ -508,7 +495,7 @@ cell* readsock(int sock){
 /**
    A generic routine for write data to socket.
  */
-void writesock(const void* A, int sock){
+void writesock(const cell* A, int sock){
 	file_t* fp=zfdopen(sock, "wb");
 	if(fp) writedata_by_id(fp, A, 0, 0);
 	zfclose(fp);
