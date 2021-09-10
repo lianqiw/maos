@@ -88,6 +88,7 @@ def as_array(arr, id, shape):
     ''' convert C array arr to numpy based in id'''
     (tt, iscomplex, issparse)=id2ctype.get(id)
     if tt is None or not bool(arr) or shape[0]==0:
+        print("id2ctype: unknown type", id);
         return np.array([])
     else:
         parr=cast(arr, POINTER(tt))
@@ -129,9 +130,10 @@ class cell(Structure):
         ('nx', c_long),
         ('ny', c_long),
         ('header', c_char_p),
-        ('mmap', c_void_p),
-        ('nref', c_void_p),
-        ('fft', c_void_p),
+        ('dummy1', c_void_p),
+        ('dummy2', c_void_p),
+        ('dummy3', c_void_p),
+        ('dummy4', c_void_p),
         ]
  
     def __init__(self, arr=None):#convert from numpy to C. Memory is borrowed
@@ -201,8 +203,8 @@ class cell(Structure):
         try:
             (tt, iscomplex, kind)=id2ctype.get(self.id)
         except:
+            print("id2ctype: unknown type", id);
             kind=-1
-
         if kind==0: #dense matrix
             if self.header:
                 print(self.header)
@@ -234,6 +236,10 @@ class cell(Structure):
 class loc(Structure):
     _fields_ = [
         ('id', c_uint32),
+        ('dummy1',  c_void_p), #due to union base
+        ('dummy2',  c_long),
+        ('dummy3',  c_long),
+        ('header', c_char_p),
         ('locx',  c_void_p),
         ('locy',  c_void_p),
         ('nloc', c_long),
@@ -284,15 +290,21 @@ class loc(Structure):
                 arr[0,]=as_array(self.locx, 25602, shape=(self.nloc,))
                 arr[1,]=as_array(self.locy, 25602, shape=(self.nloc,))
                 return arr
+        else:
+            print("locs is empty: ", self.locx)
+            raise(Exception("loc is empty"))
     def free(self):
         lib.cellfree_do(byref(self))
 class csc(Structure):#CSC sparse matrix
-    _fields_=[
+    _fields_=[ #need to match C memory layout
         ('id', c_uint32),
         ('x', c_void_p),
         ('nx', c_long),
         ('ny', c_long),
         ('header', c_char_p),
+        ('dummy1', c_void_p),
+        ('dummy2', c_void_p),
+        ('dummy3', c_void_p),
         ('nzmax', c_long),
         ('p', c_void_p),
         ('i', c_void_p),

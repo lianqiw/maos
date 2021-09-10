@@ -268,10 +268,11 @@ gboolean update_progress(gpointer input){
 }
 
 void notify_user(proc_t* p){
-	if(p->status.done||p->status.info==S_START) return;
+	if(p->status.info==p->oldinfo || p->status.done) return;
+	p->oldinfo=p->status.info;
 #if WITH_NOTIFY
 	if(!notify_daemon) return;
-	if(p->status.info==p->oldinfo) return;
+	
 	static NotifyNotification* notify_urgent=NULL, * notify_normal=NULL, * notify_low=NULL;
 	if(!notify_urgent){
 #if !defined(NOTIFY_CHECK_VERSION) || !NOTIFY_CHECK_VERSION(0,7,0)
@@ -317,12 +318,11 @@ void notify_user(proc_t* p){
 		snprintf(summary, 80, "Job is Killed on %s!", hosts[p->hid]);
 		break;
 	default:
-		warning("Invalid status: %d\n", p->status.info);
 		return;
 	}
 	notify_notification_update(notify, summary, p->path, NULL);
 	notify_notification_show(notify, NULL);
-	p->oldinfo=p->status.info;
+	
 #endif
 }
 /**

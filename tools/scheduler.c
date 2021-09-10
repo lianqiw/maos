@@ -48,6 +48,9 @@ static int NGPU=0;
 */
 typedef struct RUN_T{
 	struct RUN_T* next;
+	char* exe; /*Path to the executable.*/
+	char* path;/*Job path and Job arguments.*/
+	char* path0;/*same as path, with fields separated by \n instead of space*/
 	status_t status;
 	time_t last_time; //time of last report
 	int pid;
@@ -56,9 +59,6 @@ typedef struct RUN_T{
 	int sock2;//socket for secondary maos connection for maos_command()
 	int nthread;//number of threads
 	int ngpu;//number of gpus requested.
-	char* exe; /*Path to the executable.*/
-	char* path;/*Job path and Job arguments.*/
-	char* path0;/*same as path, with fields separated by \n instead of space*/
 }RUN_T;
 
 /**
@@ -294,14 +294,17 @@ static void running_remove(int pid, int status){
 	RUN_T* irun, * irun2=NULL;
 	for(irun=running; irun; irun2=irun, irun=irun->next){
 		if(irun->pid==pid){
-			if(irun->pid>0&&(irun->status.info==S_START
-							 ||irun->status.info==S_RUNNING)){
+			//Only the following states are used
+			//S_QUEUED, S_WAIT, S_START, S_RUNNING, S_UNKNOWN, S_FINISH
+			//nrun_add is called when state changes to S_START
+			//S_START may change to S_RUNNING, S_UNKNOWN before this function is called
+			//Only maos can change to S_RUNNING
+			if(irun->pid>0&&(irun->status.info==S_START || irun->status.info==S_RUNNING || irun->status.info==S_UNKNOWN)){
 				nrun_sub(irun->pid, irun->nthread, irun->ngpu);
 			}
 			irun->status.timlast=myclocki();
 			irun->status.info=status;
 			dbg_time("remove job %d with status %d\n", pid, irun->status.info);
-			//remove from the running list
 			if(irun2){
 				if(!(irun2->next=irun->next)){
 					running_end=irun2;
@@ -357,25 +360,37 @@ static RUN_T* running_get_by_sock(int sock){
  */
 static void check_jobs(void){
 	RUN_T* irun, * irun2;
+	int nrunning=0;
 	if(running){
 		time_t now=myclocki();
 		for(irun=running; irun; irun=irun2){
 			irun2=irun->next;
-			if(irun->pid>0){
-				if(kill(irun->pid, 0)){
+			if(irun->pid>0){//Running job
+				if(kill(irun->pid, 0)){//No longer exists
 					if(irun->last_time+60<now){//allow grace period.
 						dbg_time("check_jobs: Job %d no longer exists. Change status to S_CRASH\n", irun->pid);
 						running_remove(irun->pid, S_CRASH);
+					}else{
+						nrunning++;
 					}
-				} else if((irun->last_time+600<now)&&irun->status.info==S_RUNNING){
-					dbg_time("check_jobs: Job %d does not update after %lu seconds. Change status to S_UNKNOWN\n",
-							irun->pid, now-irun->last_time);
-					irun->status.info=S_UNKNOWN;
-					monitor_send(irun, NULL);
+				} else {
+					nrunning++;
+					if((irun->last_time+600<now)&&irun->status.info==S_RUNNING){
+						dbg_time("check_jobs: Job %d does not update after %lu seconds. Change status to S_UNKNOWN\n",
+								irun->pid, now-irun->last_time);
+						irun->status.info=S_UNKNOWN;
+						monitor_send(irun, NULL);
+					}
 				}
 			}
 		}
 	}
+	if(!nrunning && (nrun_get(0) || nrun_get(1))){
+		warning("There are no running jobs, but ncpu=%d, ngpu=%d. reset to 0.\n", nrun_get(0), nrun_get(1));
+		nused_cpu=0;
+		nused_gpu=0;
+	}
+
 }
 /**
  examine the process queue to start routines once CPU is available.
@@ -388,7 +403,7 @@ static void process_queue(void){
 		//dbg_time("process_queue: too son\n");
 		return;
 	}
-	lasttime=myclocki();
+	lasttime=thistime;
 	if(nrun_get(0)>=NCPU||(NGPU&&nrun_get(1)>=NGPU)){
 		//dbg_time("process_queue: enough jobs are running\n");
 		return;
@@ -400,17 +415,6 @@ static void process_queue(void){
 	}
 	dbg_time("nused_cpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
 	RUN_T* irun=running_get_by_status(S_WAIT);
-	/*
-	//don't do the test. let check_jobs do it.
-	while(irun&&irun->pid>0&&kill(irun->pid, 0)){//job exited
-		if(irun->last_time+60<lasttime){//allow grace peirod for job to clean it up.
-			dbg_time("Job %d in S_WAIT no longer exists. Change status to S_CRASH\n", irun->pid);
-			running_remove(irun->pid, S_CRASH);
-		}else{
-			irun->status.info=S_UNKNOWN;//prevent running_get_by_status from getting stuck
-		}
-		irun=running_get_by_status(S_WAIT);
-	}*/
 	if(irun){//There are jobs waiting.
 		if(irun->sock>0){//already connected.
 			int nthread=irun->nthread;
@@ -420,13 +424,13 @@ static void process_queue(void){
 				irun->status.timlast=myclocki();
 				if(stwriteint(irun->sock, S_START)){
 					dbg_time("Starting Job %d at %d failed: %s\n", irun->pid, irun->sock, strerror(errno));
-					irun->status.info=S_UNKNOWN;
 				} else{
 					dbg_time("Starting Job %d at %d ok.\n", irun->pid, irun->sock);
-					nrun_add(irun->pid, nthread, irun->ngpu);
-					irun->status.info=S_START;
-					monitor_send(irun, NULL);
 				}
+				//we mark the sate as running in either state and let check_job do the clean up
+				irun->status.info=S_START;
+				nrun_add(irun->pid, irun->nthread, irun->ngpu);
+				monitor_send(irun, NULL);
 			}
 		} else{
 			if(kill(irun->pid, 0)){
@@ -621,8 +625,8 @@ static int respond(int sock){
 			irun->status.info=S_WAIT;
 		} else{/*no waiting, no need reply. */
 			dbg_time("(%d) Job %d started with nused_cpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
-			nrun_add(pid, nthread, ngpu);
 			irun->status.info=S_START;
+			nrun_add(pid, nthread, ngpu);
 		}
 		all_done=0;
 		if(irun->path) monitor_send(irun, irun->path);
@@ -647,6 +651,7 @@ static int respond(int sock){
 			irun->status.info=S_START;
 			irun->nthread=irun->status.nthread;
 			nrun_add(pid, irun->nthread, irun->ngpu);
+			monitor_send(irun, NULL);
 		}
 		//save and restore time information
 		time_t timlast=irun->status.timlast;

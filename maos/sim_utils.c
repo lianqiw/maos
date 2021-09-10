@@ -798,6 +798,7 @@ static void init_simu_wfs(sim_t* simu){
 		if(powfs[ipowfs].gradncpa&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)){
 			//CMF has gradncpa with in matched filter
 			int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+			dbg("wfs %d: copying gradncpa to gradoff\n", iwfs);
 			dadd(&P(simu->gradoff, iwfs), 1, PR(powfs[ipowfs].gradncpa, wfsind, 1), 1);
 		}
 
@@ -1072,7 +1073,7 @@ static void init_simu_wfs(sim_t* simu){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].dither){
 				simu->dither[iwfs]=mycalloc(1, dither_t);
-				if(parms->powfs[ipowfs].dither!=1){
+				if(parms->powfs[ipowfs].dither>1){
 					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, 1, nsim, NULL, "%s/Resdithermr_%d", fnextra, seed);
 				}
 			}

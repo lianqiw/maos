@@ -76,30 +76,40 @@ char* mydirname(const char* fn){
 /**
    Copy a file from file stream src to dest.
 */
-static void copyfile_fp(FILE* dest, FILE* src){
+static int copyfile_fp(FILE* src, FILE* dest){
+	int ans=0;
 	char buffer[4096];
 	size_t br, bw;
 	while(!feof(src)){
 		br=fread(buffer, 1, 4096, src);
 		if((bw=fwrite(buffer, 1, br, dest))!=br){
-			error("copyfile: Write failed %ld of %ld written.\n",
-				(long)bw, (long)br);
+			warning("copyfile: Write failed %ld of %ld written: %s\n",	(long)bw, (long)br, strerror(errno));
+			ans=-1;
 		}
 	}
+	return ans;
 }
 /**
    Copy a file from src to dest
 */
-void copyfile(const char* dest, const char* src){
+int copyfile(const char* src, const char* dest){
+	int ans=0;
 	FILE* psrc=fopen(src, "rb");
-	if(!psrc){
-		error("Open source file failed\n");
+	if(psrc){
+		FILE* pdest=fopen(dest, "wb");
+		if(pdest){
+			ans=copyfile_fp(psrc, pdest);
+			fclose(pdest);
+		} else{
+			warning("Open destination file failed: %s\n", strerror(errno));
+			ans=1;
+		}
+		fclose(psrc);
+	}else{
+		warning("Open source file failed: %s\n", strerror(errno));
+		ans=1;
 	}
-	FILE* pdest=fopen(dest, "wb");
-	if(!pdest){
-		error("Open destination file failed\n");
-	}
-	copyfile_fp(pdest, psrc);
+	return ans;
 }
 
 
@@ -171,9 +181,9 @@ void print_file(const char* fnin){
 	}
 	FILE* fp;
 	if(!(fp=fopen(fn, "r"))){
-		error("Open %s failed\n", fn);
+		warning("Open %s failed\n", fn);
 	}
-	copyfile_fp(stdout, fp);
+	copyfile_fp(fp, stdout);
 	fflush(stdout);
 	fclose(fp);
 	free(fn);
@@ -266,13 +276,30 @@ char* myabspath(const char* path){
 		return strdup(path2);
 	}
 }
-
-void mysymlink(const char* fn, const char* fnlink){
-	if(!exist(fn)) return;
-	remove(fnlink);
-	if(symlink(fn, fnlink)){
-		warning("Unable to make symlink %s->%s\n", fnlink, fn);
+/**
+ * Create symbolic link
+ * */
+int mysymlink(const char* source, const char* dest){
+	int ans=0;
+	if(!exist(source)) ans=-1;
+	if(!ans && exist(dest)) ans=remove(dest);
+	if(!ans) ans=symlink(source, dest);
+	if(ans)	warning("Unable to symlink %s to %s\n", source, dest);
+	return ans;
+}
+/**
+ * Create hard link
+ * */
+int mylink(const char* source, const char* dest){
+	int ans=0;
+	if(!exist(source)) ans=-1;
+	if(!ans&&exist(dest)) ans=remove(dest);
+	if(!ans) ans=link(source, dest);
+	if(ans){
+		warning("Unable to link %s to %s, copyfile instead\n", source, dest);
+		ans=copyfile(source, dest);
 	}
+	return ans;
 }
 /**
    Test whether a file exists.

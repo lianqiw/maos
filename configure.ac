@@ -573,7 +573,7 @@ fi
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'])
 if test "$has_z" = "no" ;then
-    compile ZLIB zlib.tar.bz2 --static
+    compile ZLIB zlib.tar.bz2 #--static
     unset ac_cv_lib_z_gzopen
     AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[AC_MSG_ERROR([Invalid zlib])])
 fi

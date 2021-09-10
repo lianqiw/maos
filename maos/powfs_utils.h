@@ -47,6 +47,7 @@ void fit_sodium_profile(
   const dcell* srot,    /**<Subaperture to LLT clocking*/
   const dmat* siglev,  /**<Subaperture signal level*/
   const dmat* wvlwts,    /**<Wavelength weights*/
+  const dcell* gradncpa,/**<NCPA gradient to be used for pi0,pgx,pgy output.*/
   real dh,      /**<The sodium profile sampling in meters*/
   real hs,      /**<LGS focusing height*/
   real htel,    /**<Telescope hegith*/
@@ -55,4 +56,5 @@ void fit_sodium_profile(
   real svdthres, /**<SVD threshold*/
   int save  /**<Save results*/
 );
+void fit_sodium_profile_wrap(dcell** pgrad, const dcell* i0in, const parms_t* parms, powfs_t* powfs, int ipowfs, int use_ncpa);
 #endif

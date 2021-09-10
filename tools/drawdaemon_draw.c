@@ -416,6 +416,7 @@ static void update_limit(drawdata_t* drawdata){
 		} else{
 			fmaxmin(ptsy, ptsnx, &ymax, &ymin);
 		}
+		info("xmin=%g, xmax=%g, ymin=%g, ymax=%g\n", xmin, xmax, ymin, ymax);
 		if(xmin<xmin0) xmin0=xmin;
 		if(xmax>xmax0) xmax0=xmax;
 		if(ymin<ymin0) ymin0=ymin;
@@ -423,7 +424,7 @@ static void update_limit(drawdata_t* drawdata){
 	}
 	if(isinf(ymin0)) ymin0=0;
 	if(isinf(ymax0)) ymax0=0;
-
+	
 	int xlog=drawdata->xylog[0]=='n'?0:1;
 	int ylog=drawdata->xylog[1]=='n'?0:1;
 	if(!xlog) round_limit(&xmin0, &xmax0, xlog);
@@ -443,6 +444,10 @@ static void update_limit(drawdata_t* drawdata){
    The master routine that draws in the cairo surface.
 */
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
+	if(!drawdata->ready) {
+		dbg("data is not ready, cancelled.\n");
+		return;
+	}
 	/*fill white background */
 	//TIC;tic;
 	drawdata->font_name_version=font_name_version;

@@ -1564,64 +1564,12 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				writebin(intstat->gy, "powfs%d_gy", ipowfs);
 			}
 			{
-				//Try sodium fitting
+				//Test sodium fitting
 				//First, recreate sepsf without opdbias
 				int SODIUM_FIT=0;
 				READ_ENV_INT(SODIUM_FIT, 0, 1);
 				if(SODIUM_FIT){
-					cccell* otf=NULL, * lotf=NULL;
-					dccell* sepsf=NULL;
-					otf=genseotf(powfs[ipowfs].pts, powfs[ipowfs].realamp,
-						NULL, powfs[ipowfs].realsaa, parms->powfs[ipowfs].wvl,
-						parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
-						parms->powfs[ipowfs].embfac);
-					if(parms->powfs[ipowfs].llt){
-									//genselotf(parms, powfs, ipowfs);
-						lotf=genseotf(powfs[ipowfs].llt->pts, powfs[ipowfs].llt->amp,
-							NULL, NULL, parms->powfs[ipowfs].wvl,
-							parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
-							parms->powfs[ipowfs].embfac);
-					}
-					gensepsf(&sepsf, otf, lotf, powfs[ipowfs].realsaa,
-						parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
-					cellfree(otf);
-					cellfree(lotf);
-
-					dmat* sodium=0;
-					dcell* grad=0;
-					dcell* i0=0;
-					dcell* gx=0;
-					dcell* gy=0;
-					real SODIUM_DH=500;
-					real SODIUM_TIKCR=0.;
-					real SODIUM_SVDTHRES=1e-3;
-					READ_ENV_DBL(SODIUM_DH, 0, 1000);
-					READ_ENV_DBL(SODIUM_TIKCR, 0, 1);
-					READ_ENV_DBL(SODIUM_SVDTHRES, 0, 1);
-					fit_sodium_profile(&sodium, &grad, &i0, &gx, &gy, powfs[ipowfs].intstat->i0,
-					sepsf, powfs[ipowfs].dtf, powfs[ipowfs].realsaa,
-					powfs[ipowfs].srsa, powfs[ipowfs].srot,
-					parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts,
-					SODIUM_DH, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, SODIUM_TIKCR, SODIUM_SVDTHRES, parms->save.setup);
-					if(parms->save.setup){
-						writebin(sodium, "powfs%d_sodium_fit", ipowfs);
-					}
-					//replace sodium profile
-					dfree(sodium);
-					cellfree(grad);
-					dcellfree(intstat->i0);
-					dcellfree(intstat->gx);
-					dcellfree(intstat->gy);
-					intstat->i0=i0;i0=0;
-					intstat->gx=gx;gx=0;
-					intstat->gy=gy;gy=0;
-					info("Replacing i0, gx, gy with fitted value\n");
-					dcellfree(sepsf);
-					if(parms->save.setup){
-						writebin(intstat->i0, "powfs%d_i0_fit", ipowfs);
-						writebin(intstat->gx, "powfs%d_gx_fit", ipowfs);
-						writebin(intstat->gy, "powfs%d_gy_fit", ipowfs);
-					}
+					fit_sodium_profile_wrap(NULL, intstat->i0, parms, powfs, ipowfs, 0);
 				}
 			}
 		}
@@ -1671,18 +1619,12 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 							PR(powfs[ipowfs].saimcc, jwfs, 0),
 							realamp, P(powfs[ipowfs].opdbias, jwfs)->p);
 					} else{//Gtilt
-						if(parms->powfs[ipowfs].ncpa_method==NCPA_G){//GS0*opd
+						if(parms->powfs[ipowfs].ncpa_method==NCPA_G 
+							|| (parms->powfs[ipowfs].ncpa_method==NCPA_I0&&parms->powfs[ipowfs].dither)){//GS0*opd
 							dspmm(&P(powfs[ipowfs].gradncpa, jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
 								P(powfs[ipowfs].opdbias, jwfs), "nn", 1);
-						} else if(parms->powfs[ipowfs].ncpa_method==NCPA_I0&&parms->powfs[ipowfs].dither){//CoG(i0)
-							if(!powfs[ipowfs].gradncpa){
-								powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-							}
-							int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-							shwfs_grad(&P(powfs[ipowfs].gradncpa, jwfs),
-								PCOLR(powfs[ipowfs].intstat->i0, jwfs),
-								parms, powfs, iwfs, PTYPE_COG);//this is not added to gradoff. for drift control
-
+							//MF drift control moved to wfsgrad.c
+							//need gradncpa for sodium profile fit.
 						}
 					}
 				}

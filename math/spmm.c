@@ -505,6 +505,9 @@ void X(celladd_any)(cell** pA, R ac, const cell* B, R bc){
 }
 void X(celladd)(X(cell)**pA, R ac, const X(cell)* B, R bc){
 	if(!pA || !B || !bc) return;
+	if(!*pA){
+		*pA=X(cellnew2)(B);//makes m
+	};
 	X(celladd_any)((cell**)pA, ac, B->base, bc);
 }
 void X(celladdsp)(X(cell)** pA, R ac, const X(spcell)* B, R bc){

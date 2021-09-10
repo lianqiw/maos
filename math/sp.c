@@ -314,10 +314,15 @@ X(spcell)* X(spcellref)(const X(spcell)* A){
  */
 X(spcell)* X(spcell_cast)(const cell* A){
 	if(!A) return 0;
+	int err=0;
 	for(int i=0; i<A->nx*A->ny; i++){
 		if(A->p[i]&&issp(A->p[i])){
 			warning("A[%d] is not sparse\n", i);
+			err++;
 		}
+	}
+	if(err){
+		print_backtrace();
 	}
 	return (X(spcell)*)A;
 }

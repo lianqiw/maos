@@ -1624,7 +1624,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			parms->dither=1;
 			if(powfsi->dither==1){//tip/tilt/arcsec->radian
 				powfsi->dither_amp/=206265.;
-			} else{//zernike modes. micron-->meter
+			} else if(powfsi->dither>1){//zernike modes. micron-->meter
 				powfsi->dither_amp/=1e6;
 			}
 			//Convert all rate in unit of WFS frame rate

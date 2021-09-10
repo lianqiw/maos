@@ -368,7 +368,6 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	if(header->magic==0 && read_header(header, fp)){
 		return NULL;
 	}
-	//info("level=%d, magic=%x\n", level, header->magic);
 	void* out=0;
 	//scan file in automatic mode or when cell dimension is 0 or when request cell but data is not cell.
 	if((level==0||level<-1)&&!iscell(&header->magic)){
@@ -454,6 +453,7 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 			out=dcout;
 		}
 	}
+	//info("level=%d, magic=%x, out=%u\n", level, header->magic, out?*(uint32_t*)out:0);
 	free(header->str);header->str=0;
 	if(level==0){//take first none-cell element.
 		while(out && iscell(out)){

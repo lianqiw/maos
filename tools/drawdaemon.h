@@ -48,7 +48,7 @@ struct drawdata_t{
 	/*First, input data from draw.c */
 	/*Draw images. */
 	cairo_surface_t* image;
-	void* p0;      /*2d array of data. float or double depends on byte_float*/
+	float* p0;      /*2d array of data. */
 	int nx, ny;   /*array size */
 	int nmax;     /*allocated size of array*/
 	unsigned char* p;/*converted pointer of char or int. */
@@ -66,6 +66,7 @@ struct drawdata_t{
 	float(*cir)[4];
 	int ncir;
 	int ncirmax; /*storage size of cir*/
+	
 	/*limit */
 	float* limit_data;/*x,y,limit of data. might be supplied by user. */
 	float* limit_cumu;/*x,y,limit of cumulatively averaged data. */
@@ -73,6 +74,10 @@ struct drawdata_t{
 	float zlim[2];
 	int limit_manual; /*limit_data is supplied by user*/
 	char xylog[2];
+	//misc
+	int byte_float; //record the value used
+	int ready;      //ready is set to 0 when data is being read and 1 after wards.
+	int recycle;    //when set in GUI thread, data to be deleted by drawdaemon_io() 
 	/*The following are for surfaces */
 	
 	cairo_format_t format;
@@ -83,7 +88,7 @@ struct drawdata_t{
 	char* xlabel;
 	char* ylabel;
 	char** legend;
-	int recycle; //drawdaemon_io() will delete the data when set
+	
 	GtkWidget* page;
 	GtkWidget* drawarea;
 #if GTK_MAJOR_VERSION>=3 

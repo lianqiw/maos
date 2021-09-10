@@ -29,7 +29,7 @@
 #define UDP_HEADER 12 //size of UDP sub frame header in bytes
 int ndrawdata=0;
 int count=0;
-int byte_float=sizeof(float);
+int byte_float=sizeof(float);//default to double until client changes it.
 udp_t udp_client={0};
 int client_port=-1;//client udp port
 in_addr_t client_addr;
@@ -193,6 +193,7 @@ drawdata_t *get_drawdata(char **fig, char **name, int reset){
 		drawdata->drawn=0;
 		free(*fig); *fig=0;
 		free(*name); *name=0;
+		drawdata->ready=0;
 	}
 	return drawdata;
 }
@@ -200,6 +201,7 @@ drawdata_t *get_drawdata(char **fig, char **name, int reset){
 #define STREADINT(p) CATCH(streadint(sock, &p),p)
 #define STREAD(p,len) CATCH(stread(sock,p,len),p)
 #define STREADSTR(p) ({if(p) {free(p);p=NULL;} CATCH(streadstr(sock, &p),p);})
+//read and convert incoming data to float
 #define STREADFLT(p,len) CATCH(stread(sock, p, len*byte_float),p) \
     if(byte_float!=4){							\
 	for(int i=0; i<len; i++){					\
@@ -273,7 +275,7 @@ retry:
 			STREAD(header, 2*sizeof(int32_t));
 			long tot=header[0]*header[1];
 			if(drawdata->nmax<tot){
-				drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use double to avoid overflow
+				drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use byte_float to avoid overflow
 				drawdata->p=realloc(drawdata->p, tot*4);
 				drawdata->nmax=tot;
 			}
@@ -298,9 +300,10 @@ retry:
 				drawdata->legend=realloc(drawdata->legend, drawdata->npts*sizeof(char*));
 				for(; drawdata->nptsmax<drawdata->npts; drawdata->nptsmax++){
 					drawdata->pts[drawdata->nptsmax]=NULL;
-					drawdata->legend[drawdata->nptsmax]=NULL;
+					drawdata->style_pts[drawdata->nptsmax]=0;
 					drawdata->ptsdim[drawdata->nptsmax][0]=0;
 					drawdata->ptsdim[drawdata->nptsmax][1]=0;
+					drawdata->legend[drawdata->nptsmax]=NULL;
 				}
 			}
 			int nptsx, nptsy;
@@ -383,8 +386,11 @@ retry:
 			sock_idle=1;
 			break;
 		case DRAW_FLOAT:
+			//notice that this value can change from plot to plot
+			//currently, points uses real (default to double), while image uses float.
+			//memory in drawdaemon are allocated ALWAYS using float
 			STREADINT(byte_float);
-			//dbg("byte_float=%d\n", byte_float);
+			info("byte_float=%d\n", byte_float);
 			if(byte_float>8){
 				error("invalid byte_float=%d\n", byte_float);
 			}
@@ -441,6 +447,7 @@ retry:
 				}
 			}
 			if(!drawdata->fig) drawdata->fig=strdup("unknown");
+			drawdata->ready=1;
 			gdk_threads_add_idle(addpage, drawdata);
 			drawdata=NULL;
 		}

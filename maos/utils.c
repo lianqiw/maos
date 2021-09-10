@@ -205,6 +205,8 @@ void rename_file(int sig){
 		snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
 		remove("maos_done.conf");
 		mysymlink(fn, "maos_done.conf");
+		remove("maos");
+		mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
 	}
 	if(global&&global->parms&&global->parms->fdlock&&sig!=0){
 		char fn[80];

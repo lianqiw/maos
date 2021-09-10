@@ -26,7 +26,7 @@
 char *mybasename(const char *fn);
 char *mydirname(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
-void copyfile(const char *dest, const char *src);
+int copyfile(const char* src, const char* dest);
 char *argv2str(int argc, const char *argv[], const char *delim);
 void print_file(const char *fnin);
 time_t myclocki(void);
@@ -36,7 +36,8 @@ char *strtime_pid(void);
 const char *myhostname(void);
 char *mygetcwd(void);
 char *myabspath(const char *path);
-void mysymlink(const char *fn, const char *fnlink);
+int mysymlink(const char *source, const char *dest);
+int mylink(const char* source, const char* dest);
 int exist(const char *fn);
 int isdir(const char *fn);
 int isfile(const char *fn);

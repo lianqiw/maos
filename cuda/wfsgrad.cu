@@ -625,10 +625,13 @@ void gpu_wfsgrad_queue(thread_t* info){
 					curcelladd(cuwfs[iwfs].intsout, 1, ints, 1, stream);
 				}
 				if(parms->powfs[ipowfs].dither&&isim>=parms->powfs[ipowfs].dither_ogskip
-					&&parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
-					real cs, ss;
-					dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
-						parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
+					&&parms->powfs[ipowfs].type==WFS_SH
+					&&(parms->powfs[ipowfs].dither_amp==0||parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
+					real cs=0, ss=0;
+					if(parms->powfs[ipowfs].dither_amp){
+						dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
+							parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
+					}
 					int npll=parms->powfs[ipowfs].dither_pllrat;
 					cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
 					ctoc("dither");

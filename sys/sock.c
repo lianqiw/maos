@@ -358,7 +358,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
 	while(quit_listen!=2&&nlisten){
-		int new_connection=0;
+		//int new_connection=0;
 		if(quit_listen==1){
 			/*
 			  shutdown(sock, SHUT_WR) sends a FIN to the peer, therefore
@@ -432,7 +432,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 							FD_SET(sock2, &active_fd_set);
 							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
 							socket_send_timeout(sock2, 60);
-							new_connection=1;
+							//new_connection=1;
 						}
 					} else{
 						/* Data arriving on an already-connected socket. Call responder to handle.
@@ -445,14 +445,14 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 							FD_CLR(i, &active_fd_set);
 							close(i);
 							dbg_time("close socket %d, ans=%d\n", i, ans);
-							new_connection=-1;
+							//new_connection=-1;
 						}
 					}
 				}
 			}
-		}
-		//only run timeout_fun when timeout actually happens.
-		if((timeout_sec==0||navail==0)&&!new_connection&&timeout_fun){
+		}else if(timeout_fun){
+			//only run timeout_fun when timeout actually happens.
+			//if((timeout_sec==0||navail==0)&&!new_connection&&timeout_fun){
 			timeout_fun();
 		}
 		nlisten=0;

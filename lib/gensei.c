@@ -336,12 +336,15 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 			dcell* psepsf=PR(sepsfs, ii0, iwvl);
 			real* angles=(gxyrot)?(PR(gxyrot, ii0, 0)->p):0;
 			ccell* se_cache=ccellnew_same(2, NTHREAD, notfx, notfy);
-#ifdef _OPENMP
+
+#if _OPENMP>=201511
+#pragma omp taskloop default(shared) //task loop has implicit group
+#elif defined(_OPENMP)
 			if(omp_in_parallel()){
-				warning("Already in parallel\n");
+				warning_once("Already in parallel\n");
 			}
-#endif
 #pragma omp parallel for default(shared)
+#endif
 			for(int isa=0; isa<nsa; isa++){
 				int ith=0;
 				/*loaded psepsf. sum to 1 for full sa. peak in center */

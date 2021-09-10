@@ -127,6 +127,8 @@ for funname in funcs: #loop over functions
     for arg in funargs: #get data from matlab
         argtype=arg[0]
         argname=arg[1]
+        if argtype=='number':
+            continue
         mx2c, c2mx, free_c=handle_type(argtype)
         if len(mx2c)>0: #input argument
             fundef+='    '+argtype+' '+argname+'='+mx2c+'(prhs['+str(count)+']);\n' #input from matlab

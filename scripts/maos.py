@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import re
-#parse C structs and its fields, and return variable name and type
+
 def parse_file(srcdir, files):
     lines=list()
     for fn in files:
@@ -33,7 +33,7 @@ def parse_file(srcdir, files):
         ln=re.sub(r'[ ]+',' ', ln) #remove double space
         lines.append(ln)
     return lines
-
+#parse C structs and its fields, and return variable name and type
 def parse_structs(srcdir, files):
     lines=parse_file(srcdir, files)
     structs=dict()
@@ -87,14 +87,14 @@ def parse_func(srcdir, structs, files):
                 closep2=ln.find(')', closep+1)
                 end=closep2+1
                 continue
-            elif openp2==closep+1:
+            elif openp2==closep+1: #()()
                 closep2=ln.find(')', openp2+2)
                 end=closep2+1
                 continue
 
             args=ln[openp+1:closep].split(',')
             defs=ln[end:openp].lstrip().rstrip().split(' ')
-
+            msg=''
             if len(defs)>=2:
                 funtype=defs[-2]
                 funname=defs[-1]
@@ -102,24 +102,35 @@ def parse_func(srcdir, structs, files):
                 funname=name2[0] #Mex name
                 funname2=name2[len(name2)-1] #C name
             else:
+                msg='ill function definition('+ln[end:openp]+')'
                 funname=''
-                #print('Skipped:', defs)
             if funname=='readbin':
                 print(args)
             funarg=list()
             for arg in args:
                 argpair=arg.lstrip().rstrip().split(' ')
-                if len(argpair)==1 and argpair[0]=='...':
-                    pass #skip this parameter
+                if len(argpair)==1:
+                    if argpair[0]=='...':
+                        pass #skip this parameter
+                    else:
+                        try:
+                            junk=float(argpair[0])
+                            funarg.append(['number', argpair[0]])
+                        except:
+                            msg='ill argument('+arg+')'
+                            funname=''
                 elif len(argpair)==2 :
                     funarg.append(argpair)
-                else:
+                else:#failed to parse function
+                    msg='ill argument('+arg+')'
+                    raise(Exception(msg))
                     funname=''
-                    #print('Skipped:',argpair)
             if funname=='readbin':
                 print(args)
             if len(funname)>0:
                 funcs[funname]=[funtype, funarg, funname2]
+            else:
+                print("Skipped:", ln[end:closep], msg,"\n")
             end=closep+1;
             if ln[end]==';' or ln[end]==' ':
                 end+=1
