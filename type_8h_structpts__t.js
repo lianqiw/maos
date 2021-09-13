@@ -1,6 +1,5 @@
 var type_8h_structpts__t =
 [
-    [ "id", "type_8h.html#ae0a1aa722371337804f231f49d456c0c", null ],
     [ "origx", "type_8h.html#a78348698d847fde30c184e637da5639f", null ],
     [ "origy", "type_8h.html#aea34e9b0cc9e1d4e9ad95eb416f004e8", null ],
     [ "nsa", "type_8h.html#ac90584adaba0ea94227b71ff1c2b7581", null ],

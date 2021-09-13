@@ -1,12 +1,5 @@
 var type_8h_structmap__t =
 [
-    [ "id", "type_8h.html#ad2e8d305ae03b790c9038ea8fbb4fcb0", null ],
-    [ "p", "type_8h.html#a97faebac2c0ecb92e57344d30f6bb6d7", null ],
-    [ "nx", "type_8h.html#a7c61ae5f9b2c0d4997ad21bd5702360f", null ],
-    [ "ny", "type_8h.html#a1ca4de9a0f6584e5d7e7227b678e3e4a", null ],
-    [ "header", "type_8h.html#a88c15b4a6d8e18fa1b544b6df06b4a30", null ],
-    [ "fp", "type_8h.html#a60aaac9d0522076b3bb7eef6c92f9b3e", null ],
-    [ "fft", "type_8h.html#aa21424b6538ad56d21f8534b5bc0cc0d", null ],
     [ "mem", "type_8h.html#a68ced55693dcd27c49dc3ae615eca07e", null ],
     [ "async", "type_8h.html#a4becd34cbaf2a77cc1118b5a34bfd606", null ],
     [ "ox", "type_8h.html#a34eb928be06a75df224949c753beef8f", null ],

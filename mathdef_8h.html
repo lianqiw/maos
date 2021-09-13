@@ -118,7 +118,7 @@ Macros</h2></td></tr>
 <tr class="memitem:aa328fe2a98f3b1b8c359e9866aa3a743"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#aa328fe2a98f3b1b8c359e9866aa3a743">dfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="dmath_8h.html#a0626a73b51a8917f0944c8f5f946478f">dfree_do</a>(A);A=NULL;}</td></tr>
 <tr class="separator:aa328fe2a98f3b1b8c359e9866aa3a743"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab71a0e916934cf0a2d9ead8d8ef70747"><td class="memItemLeft" align="right" valign="top"><a id="ab71a0e916934cf0a2d9ead8d8ef70747"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A);A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base);A=NULL;}</td></tr>
 <tr class="separator:ab71a0e916934cf0a2d9ead8d8ef70747"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af79224451f859ae68072aff9e59dc2f8"><td class="memItemLeft" align="right" valign="top"><a id="af79224451f859ae68072aff9e59dc2f8"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dcellfreearr</b>(A,  n)&#160;&#160;&#160;if((A)&amp;&amp;(n)&gt;0){for(int in=0; in&lt;n; in++){dcellfree(A[in]);};free(A);A=NULL;}</td></tr>
@@ -126,7 +126,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a90dc2c3e889dfdc858955fedc5d3a816"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a90dc2c3e889dfdc858955fedc5d3a816">sfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="smath_8h.html#a061ae93168e5bc1bd962a0763953c1eb">sfree_do</a>(A);A=NULL;}</td></tr>
 <tr class="separator:a90dc2c3e889dfdc858955fedc5d3a816"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2bf07c2ca0f9cd24546afbe8e014561f"><td class="memItemLeft" align="right" valign="top"><a id="a2bf07c2ca0f9cd24546afbe8e014561f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>scellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A);A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>scellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base);A=NULL;}</td></tr>
 <tr class="separator:a2bf07c2ca0f9cd24546afbe8e014561f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35f38c903cba140df83c92372a2dc384"><td class="memItemLeft" align="right" valign="top"><a id="a35f38c903cba140df83c92372a2dc384"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>scellfreearr</b>(A,  n)&#160;&#160;&#160;if((A)&amp;&amp;(n)&gt;0){for(int in=0; A&amp;&amp;in&lt;n; in++){scellfree(A[in]);};free(A);A=NULL;}</td></tr>
@@ -134,7 +134,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a44e10024779613dea5025a17962b9c5c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a44e10024779613dea5025a17962b9c5c">cfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="cmath_8h.html#a8bae6b315a59ab56fc667b6c769e1804">cfree_do</a>(A);A=NULL;}</td></tr>
 <tr class="separator:a44e10024779613dea5025a17962b9c5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab423d846cd7e3e1897b8485a9c267ea1"><td class="memItemLeft" align="right" valign="top"><a id="ab423d846cd7e3e1897b8485a9c267ea1"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ccellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A);A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>ccellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base);A=NULL;}</td></tr>
 <tr class="separator:ab423d846cd7e3e1897b8485a9c267ea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae61cba96f40d9fb50feaada47e35e29a"><td class="memItemLeft" align="right" valign="top"><a id="ae61cba96f40d9fb50feaada47e35e29a"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>ccellfreearr</b>(A,  n)&#160;&#160;&#160;if((A)&amp;&amp;(n)&gt;0){for(int in=0; A&amp;&amp;in&lt;n; in++){ccellfree(A[in]);};free(A);A=NULL;}</td></tr>
@@ -142,35 +142,35 @@ Macros</h2></td></tr>
 <tr class="memitem:af53919eda079c37305116f16aa2d17d6"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#af53919eda079c37305116f16aa2d17d6">zfree</a>(A)&#160;&#160;&#160;if(A){zfree_do(A);A=NULL;}</td></tr>
 <tr class="separator:af53919eda079c37305116f16aa2d17d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f0ea93d8f25cdd2f3e267b5fb88f8cf"><td class="memItemLeft" align="right" valign="top"><a id="a5f0ea93d8f25cdd2f3e267b5fb88f8cf"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>zcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A);A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>zcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base);A=NULL;}</td></tr>
 <tr class="separator:a5f0ea93d8f25cdd2f3e267b5fb88f8cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c6ca2dd2c2455c18a82e75958a00ecc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a1c6ca2dd2c2455c18a82e75958a00ecc">lfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="lmath_8h.html#a15ceffb00e7bb7e57793410cecd33cbd">lfree_do</a>(A);A=NULL;}</td></tr>
 <tr class="separator:a1c6ca2dd2c2455c18a82e75958a00ecc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61bd48f0003297bfcf714b941bc16d49"><td class="memItemLeft" align="right" valign="top"><a id="a61bd48f0003297bfcf714b941bc16d49"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>lcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A);A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>lcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base);A=NULL;}</td></tr>
 <tr class="separator:a61bd48f0003297bfcf714b941bc16d49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae92838bf6d7ccca4515ed741098298ee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#ae92838bf6d7ccca4515ed741098298ee">dspfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="dmath_8h.html#abc2d1cc9832f180b54dd3a0ca8d4771a">dspfree_do</a>(A); A=NULL;}</td></tr>
 <tr class="separator:ae92838bf6d7ccca4515ed741098298ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad84d598c7a2224b46339eb0ea421b5a"><td class="memItemLeft" align="right" valign="top"><a id="aad84d598c7a2224b46339eb0ea421b5a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A); A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base); A=NULL;}</td></tr>
 <tr class="separator:aad84d598c7a2224b46339eb0ea421b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2a4e5c14036a79d26a21bd5fa051e66"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#ab2a4e5c14036a79d26a21bd5fa051e66">sspfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="smath_8h.html#a9a25cfbabc1e4fba75bc7f7751a4aaf4">sspfree_do</a>(A); A=NULL;}</td></tr>
 <tr class="separator:ab2a4e5c14036a79d26a21bd5fa051e66"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74aaaba71d29ea4984743a8f851ca360"><td class="memItemLeft" align="right" valign="top"><a id="a74aaaba71d29ea4984743a8f851ca360"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>sspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A); A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>sspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base); A=NULL;}</td></tr>
 <tr class="separator:a74aaaba71d29ea4984743a8f851ca360"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac404e52bca099a882a4da18b19efffb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#aac404e52bca099a882a4da18b19efffb">cspfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="cmath_8h.html#a4ae0a8c3586b6bc85cc273b3217b2db4">cspfree_do</a>(A); A=NULL;}</td></tr>
 <tr class="separator:aac404e52bca099a882a4da18b19efffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a656ccc2ebc2d69d982c6f1f8c89f81f8"><td class="memItemLeft" align="right" valign="top"><a id="a656ccc2ebc2d69d982c6f1f8c89f81f8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>cspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A); A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>cspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base); A=NULL;}</td></tr>
 <tr class="separator:a656ccc2ebc2d69d982c6f1f8c89f81f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2127d999540fb035258ca6d284643edc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a2127d999540fb035258ca6d284643edc">zspfree</a>(A)&#160;&#160;&#160;if(A){zspfree_do(A); A=NULL;}</td></tr>
 <tr class="separator:a2127d999540fb035258ca6d284643edc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bba8d9beeefd77fd97cd814cba2e0f9"><td class="memItemLeft" align="right" valign="top"><a id="a7bba8d9beeefd77fd97cd814cba2e0f9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#a2c7afa0b15aa41ceb75f8bceb4df0d9c">cellfree_do</a>(A); A=NULL;}</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellfree</b>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((A)-&gt;base); A=NULL;}</td></tr>
 <tr class="separator:a7bba8d9beeefd77fd97cd814cba2e0f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5ee3e0d0203be0f8e3d9e0fe6afcc79"><td class="memItemLeft" align="right" valign="top"><a id="ac5ee3e0d0203be0f8e3d9e0fe6afcc79"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>mapwrite</b>(out,  A...)&#160;&#160;&#160;write_by_id((void*)out, M_MAP, A)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>mapwrite</b>(out,  A...)&#160;&#160;&#160;write_by_id(out?out-&gt;base:NULL, M_MAP, A)</td></tr>
 <tr class="separator:ac5ee3e0d0203be0f8e3d9e0fe6afcc79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64f53dc48dd7d8776a5296898dec0a80"><td class="memItemLeft" align="right" valign="top"><a id="a64f53dc48dd7d8776a5296898dec0a80"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>mapread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structmap__t">map_t</a>*)read_by_id(M_MAP, 0, A)</td></tr>
@@ -188,7 +188,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>rmapread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structrmap__t">rmap_t</a>*)read_by_id(M_RECTMAP, 0, A)</td></tr>
 <tr class="separator:ace0e56bd4ae84560a46c5b6110f5f0e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa525eeafe9f39c08276e1d02141f2dd0"><td class="memItemLeft" align="right" valign="top"><a id="aa525eeafe9f39c08276e1d02141f2dd0"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>rmapwrite</b>(out,  A...)&#160;&#160;&#160;write_by_id((void*)out, M_RECTMAP, A)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>rmapwrite</b>(out,  A...)&#160;&#160;&#160;write_by_id(out?out-&gt;base:NULL, M_RECTMAP, A)</td></tr>
 <tr class="separator:aa525eeafe9f39c08276e1d02141f2dd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d6d4793c02d73aa6a3d7967b3752f63"><td class="memItemLeft" align="right" valign="top"><a id="a7d6d4793c02d73aa6a3d7967b3752f63"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>rmapcellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structrmapcell">rmapcell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
@@ -197,7 +197,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>rmapccellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structrmapccell">rmapccell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
 <tr class="separator:aa6120d4807fbe02ed618dc4b765a5269"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1599c06101f3c9882c324bb0d5c1aee"><td class="memItemLeft" align="right" valign="top"><a id="ad1599c06101f3c9882c324bb0d5c1aee"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>locwrite</b>(out,  A...)&#160;&#160;&#160;write_by_id((void*)out, M_LOC, A)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>locwrite</b>(out,  A...)&#160;&#160;&#160;write_by_id(out?out-&gt;base:NULL, M_LOC, A)</td></tr>
 <tr class="separator:ad1599c06101f3c9882c324bb0d5c1aee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc76b818d3f543a2f9e24b1b85041362"><td class="memItemLeft" align="right" valign="top"><a id="acc76b818d3f543a2f9e24b1b85041362"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>locread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structloc__t">loc_t</a>*)read_by_id(M_LOC, 0, A)</td></tr>
@@ -211,7 +211,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a59c01fe31f1e5203c05dfc8f7fa66fb7"><td class="memItemLeft" align="right" valign="top"><a id="a59c01fe31f1e5203c05dfc8f7fa66fb7"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>locccellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structlocccell">locccell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
 <tr class="separator:a59c01fe31f1e5203c05dfc8f7fa66fb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0368089202674ea67ae0d38214c5783"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#ad0368089202674ea67ae0d38214c5783">dread</a>(A...)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a8d7a0dc35f5202eb52bc9654f2ae8ea9">dmat_cast</a>(read_by_id(M_REAL, 0, A))</td></tr>
+<tr class="memitem:ad0368089202674ea67ae0d38214c5783"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#ad0368089202674ea67ae0d38214c5783">dread</a>(A...)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a5d41d8d746625af710c5c67dd2c0050d">dmat_cast</a>(read_by_id(M_REAL, 0, A))</td></tr>
 <tr class="separator:ad0368089202674ea67ae0d38214c5783"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9366d53f99777005b850d81d441626b"><td class="memItemLeft" align="right" valign="top"><a id="ab9366d53f99777005b850d81d441626b"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dcellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structdcell">dcell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
@@ -220,7 +220,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dccellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structdccell">dccell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
 <tr class="separator:ac2ddeb40dfbf186e9c6989a3fb254f1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe203f785f2a5c1c9a0071712335c616"><td class="memItemLeft" align="right" valign="top"><a id="afe203f785f2a5c1c9a0071712335c616"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dcellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a887aace9501f7ec1fc2d1274266dbdf0">dcell_cast</a>(<a class="el" href="cell_8h.html#a223dc5824d7dd17786ca2ecf5b385fd2">readdata_by_id</a>(fp, M_REAL, 1, header))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dcellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a1ef2354d6c45da201c6142f86fcd6737">dcell_cast</a>(<a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a>(fp, M_REAL, 1, header))</td></tr>
 <tr class="separator:afe203f785f2a5c1c9a0071712335c616"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e5604a0b6f1ecfd3fe9bc8a169e5ead"><td class="memItemLeft" align="right" valign="top"><a id="a5e5604a0b6f1ecfd3fe9bc8a169e5ead"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dcellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structdcell">dcell</a>*)read_by_id(M_REAL, 1, A)</td></tr>
@@ -231,7 +231,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a928ae08dbad31eceed81e615019597f5"><td class="memItemLeft" align="right" valign="top"><a id="a928ae08dbad31eceed81e615019597f5"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dcccellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structdcccell">dcccell</a>*)read_by_id(M_REAL, 3, A)</td></tr>
 <tr class="separator:a928ae08dbad31eceed81e615019597f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5707d9ea2ce497116e9308d7b336bb1a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a5707d9ea2ce497116e9308d7b336bb1a">sread</a>(A...)&#160;&#160;&#160;<a class="el" href="smath_8h.html#ac0c83323d5a168d8ff2d8031019c91c9">smat_cast</a>(read_by_id(M_FLT, 0, A))</td></tr>
+<tr class="memitem:a5707d9ea2ce497116e9308d7b336bb1a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a5707d9ea2ce497116e9308d7b336bb1a">sread</a>(A...)&#160;&#160;&#160;<a class="el" href="smath_8h.html#a1579b768dc699f0d4d1418f8fcdb3d67">smat_cast</a>(read_by_id(M_FLT, 0, A))</td></tr>
 <tr class="separator:a5707d9ea2ce497116e9308d7b336bb1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cca4e92eb949f470224a1f75c53f0da"><td class="memItemLeft" align="right" valign="top"><a id="a9cca4e92eb949f470224a1f75c53f0da"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>scellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structscell">scell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
@@ -240,7 +240,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>sccellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structsccell">sccell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
 <tr class="separator:a7c501cee0c3838205eda73a8a1479caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6fe940f32e08ceba05fc5ddb080097c"><td class="memItemLeft" align="right" valign="top"><a id="ae6fe940f32e08ceba05fc5ddb080097c"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>scellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="smath_8h.html#ae52c4854085205ebd0954b4fbcd79fe2">scell_cast</a>(<a class="el" href="cell_8h.html#a223dc5824d7dd17786ca2ecf5b385fd2">readdata_by_id</a>(fp, M_FLT, 1, header))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>scellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="smath_8h.html#aac46eb8078ea29690e2742c00934fe76">scell_cast</a>(<a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a>(fp, M_FLT, 1, header))</td></tr>
 <tr class="separator:ae6fe940f32e08ceba05fc5ddb080097c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21ab20b800819152be6bf61b566c5b58"><td class="memItemLeft" align="right" valign="top"><a id="a21ab20b800819152be6bf61b566c5b58"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>scellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structscell">scell</a>*)read_by_id(M_FLT, 1, A)</td></tr>
@@ -251,7 +251,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a8d5c2361c63ceb61e38310328ac84c80"><td class="memItemLeft" align="right" valign="top"><a id="a8d5c2361c63ceb61e38310328ac84c80"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>scccellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structscccell">scccell</a>*)read_by_id(M_FLT, 3, A)</td></tr>
 <tr class="separator:a8d5c2361c63ceb61e38310328ac84c80"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab409268cd329a0b6b56a1b48811f5ee9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#ab409268cd329a0b6b56a1b48811f5ee9">cread</a>(A...)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a7b024370283dd8b111e1b7d4ac14ce88">cmat_cast</a>(read_by_id(M_COMP, 0, A))</td></tr>
+<tr class="memitem:ab409268cd329a0b6b56a1b48811f5ee9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#ab409268cd329a0b6b56a1b48811f5ee9">cread</a>(A...)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a5f26c779cd669410fc659045ad7cdfde">cmat_cast</a>(read_by_id(M_COMP, 0, A))</td></tr>
 <tr class="separator:ab409268cd329a0b6b56a1b48811f5ee9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afcfe6158ef841eda3d64a9fbae45d803"><td class="memItemLeft" align="right" valign="top"><a id="afcfe6158ef841eda3d64a9fbae45d803"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>ccellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structccell">ccell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
@@ -260,7 +260,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>cccellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structcccell">cccell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
 <tr class="separator:a3ef3dc4082e01c2d8471385a5968d869"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd9b3f0b09d791141a5363adf4d70a11"><td class="memItemLeft" align="right" valign="top"><a id="abd9b3f0b09d791141a5363adf4d70a11"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ccellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#ae8186854e03d7c0d58be5e7e47463696">ccell_cast</a>(<a class="el" href="cell_8h.html#a223dc5824d7dd17786ca2ecf5b385fd2">readdata_by_id</a>(fp, M_COMP, 1, header))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>ccellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a85721900ae79b776af0e50c3ea3f6747">ccell_cast</a>(<a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a>(fp, M_COMP, 1, header))</td></tr>
 <tr class="separator:abd9b3f0b09d791141a5363adf4d70a11"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c3562a350fbbfa3823250bab5ded4fc"><td class="memItemLeft" align="right" valign="top"><a id="a6c3562a350fbbfa3823250bab5ded4fc"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>ccellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structccell">ccell</a>*)read_by_id(M_COMP, 1, A)</td></tr>
@@ -280,7 +280,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>zccellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structzccell">zccell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
 <tr class="separator:a91d344ed1a55fce342533e343b0494f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab657ba7e420afe4775b00bf22748727b"><td class="memItemLeft" align="right" valign="top"><a id="ab657ba7e420afe4775b00bf22748727b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>zcellreaddata</b>(fp,  header)&#160;&#160;&#160;zcell_cast(<a class="el" href="cell_8h.html#a223dc5824d7dd17786ca2ecf5b385fd2">readdata_by_id</a>(fp, M_ZMP, 1, header))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>zcellreaddata</b>(fp,  header)&#160;&#160;&#160;zcell_cast(<a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a>(fp, M_ZMP, 1, header))</td></tr>
 <tr class="separator:ab657ba7e420afe4775b00bf22748727b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab687b608c9d6bfca1eba1d524f540033"><td class="memItemLeft" align="right" valign="top"><a id="ab687b608c9d6bfca1eba1d524f540033"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>zcellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structzcell">zcell</a>*)read_by_id(M_ZMP, 1, A)</td></tr>
@@ -291,7 +291,7 @@ Macros</h2></td></tr>
 <tr class="memitem:ac1d2e101e05d24711d589a957a48d289"><td class="memItemLeft" align="right" valign="top"><a id="ac1d2e101e05d24711d589a957a48d289"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>zcccellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structzcccell">zcccell</a>*)read_by_id(M_ZMP, 3, A)</td></tr>
 <tr class="separator:ac1d2e101e05d24711d589a957a48d289"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8749f0ee10bd193324605daa04765212"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a8749f0ee10bd193324605daa04765212">lread</a>(A...)&#160;&#160;&#160;<a class="el" href="lmath_8h.html#a7c96e62be5ebf02414c5a270ffd428f4">lmat_cast</a>(read_by_id(M_LONG, 0, A))</td></tr>
+<tr class="memitem:a8749f0ee10bd193324605daa04765212"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a8749f0ee10bd193324605daa04765212">lread</a>(A...)&#160;&#160;&#160;<a class="el" href="lmath_8h.html#aa6473dd108381a0695fd28a7730434d6">lmat_cast</a>(read_by_id(M_LONG, 0, A))</td></tr>
 <tr class="separator:a8749f0ee10bd193324605daa04765212"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8da2e5729df021ee2b5d4490a7bf8e8"><td class="memItemLeft" align="right" valign="top"><a id="ae8da2e5729df021ee2b5d4490a7bf8e8"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>lcellnew</b>&#160;&#160;&#160;(<a class="el" href="type_8h.html#structlcell">lcell</a>*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
@@ -300,7 +300,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>lccellnew</b>&#160;&#160;&#160;(lccell*)<a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a></td></tr>
 <tr class="separator:ae65c3d55211baa89aae95f14251616d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a305fa5f76f2bb165561515f9971475a9"><td class="memItemLeft" align="right" valign="top"><a id="a305fa5f76f2bb165561515f9971475a9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>lcellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="lmath_8h.html#acffd1aa7d542dc1e1e0476a07c2fd63c">lcell_cast</a>(<a class="el" href="cell_8h.html#a223dc5824d7dd17786ca2ecf5b385fd2">readdata_by_id</a>(fp, M_LONG, 1, header))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>lcellreaddata</b>(fp,  header)&#160;&#160;&#160;<a class="el" href="lmath_8h.html#af85b11a2a0c4f79b7fd1e6a45ec55606">lcell_cast</a>(<a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a>(fp, M_LONG, 1, header))</td></tr>
 <tr class="separator:a305fa5f76f2bb165561515f9971475a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4226a476cc87bea36b37381a1c8568ce"><td class="memItemLeft" align="right" valign="top"><a id="a4226a476cc87bea36b37381a1c8568ce"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>lcellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="type_8h.html#structlcell">lcell</a>*)read_by_id(M_LONG, 1, A)</td></tr>
@@ -311,21 +311,21 @@ Macros</h2></td></tr>
 <tr class="memitem:a12daff7c2ab8100dca7aa4b0a25a41b9"><td class="memItemLeft" align="right" valign="top"><a id="a12daff7c2ab8100dca7aa4b0a25a41b9"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>lcccellread</b>(A...)&#160;&#160;&#160;(lcccell*)read_by_id(M_LONG, 3, A)</td></tr>
 <tr class="separator:a12daff7c2ab8100dca7aa4b0a25a41b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a879095e511975ffb2c1ffcff8c44a7b6"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a879095e511975ffb2c1ffcff8c44a7b6">dspread</a>(A...)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a78f4247fe31e1c4aa4cacb0104e69cc2">dsp_cast</a>(read_by_id(M_DSP, 0, A))</td></tr>
+<tr class="memitem:a879095e511975ffb2c1ffcff8c44a7b6"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a879095e511975ffb2c1ffcff8c44a7b6">dspread</a>(A...)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a9d3ee55c0f9df9341ef740f7d3d54433">dsp_cast</a>(read_by_id(M_DSP, 0, A))</td></tr>
 <tr class="separator:a879095e511975ffb2c1ffcff8c44a7b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ea253f1d3db7008ab69e51c11f5ed6d"><td class="memItemLeft" align="right" valign="top"><a id="a4ea253f1d3db7008ab69e51c11f5ed6d"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dspcellread</b>(A...)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a064fdc06e1924cd97081832ad66300c2">dspcell_cast</a>(read_by_id(M_DSP, 1, A))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dspcellread</b>(A...)&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a92be534c2d1f0f0756b0d1652085fd28">dspcell_cast</a>(read_by_id(M_DSP, 1, A))</td></tr>
 <tr class="separator:a4ea253f1d3db7008ab69e51c11f5ed6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76e0f963bd27f4d2053edd72d4c516e9"><td class="memItemLeft" align="right" valign="top"><a id="a76e0f963bd27f4d2053edd72d4c516e9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>sspread</b>(A...)&#160;&#160;&#160;<a class="el" href="smath_8h.html#abce5c93104debd6d90ee2b58ef23b9c8">ssp_cast</a>(read_by_id(M_SSP, 0, A))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>sspread</b>(A...)&#160;&#160;&#160;<a class="el" href="smath_8h.html#a30f555a5dad01890719811ce86afa4f9">ssp_cast</a>(read_by_id(M_SSP, 0, A))</td></tr>
 <tr class="separator:a76e0f963bd27f4d2053edd72d4c516e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac568390170c04103b5a617c26b5eb0b3"><td class="memItemLeft" align="right" valign="top"><a id="ac568390170c04103b5a617c26b5eb0b3"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>sspcellread</b>(A...)&#160;&#160;&#160;<a class="el" href="smath_8h.html#aa4b94c8579dfb9649855112153dd7b8e">sspcell_cast</a>(read_by_id(M_SSP, 1, A))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>sspcellread</b>(A...)&#160;&#160;&#160;<a class="el" href="smath_8h.html#abbbd3ce3342a0670d1c7f043d7dbd0dc">sspcell_cast</a>(read_by_id(M_SSP, 1, A))</td></tr>
 <tr class="separator:ac568390170c04103b5a617c26b5eb0b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6039891eecd57ace24984b452a6dfdf2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a6039891eecd57ace24984b452a6dfdf2">cspread</a>(A...)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a23849a097da334767f13a5bf76335f85">csp_cast</a>(read_by_id(M_CSP, 0, A))</td></tr>
+<tr class="memitem:a6039891eecd57ace24984b452a6dfdf2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathdef_8h.html#a6039891eecd57ace24984b452a6dfdf2">cspread</a>(A...)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a6392099032675eeb32200d1c36154a5e">csp_cast</a>(read_by_id(M_CSP, 0, A))</td></tr>
 <tr class="separator:a6039891eecd57ace24984b452a6dfdf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af688d00b370bdbabb320de6a5b2dc3d3"><td class="memItemLeft" align="right" valign="top"><a id="af688d00b370bdbabb320de6a5b2dc3d3"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>cspcellread</b>(A...)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a439e729c5b39a75b9b8ec7a5384f3915">cspcell_cast</a>(read_by_id(M_CSP, 1, A))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>cspcellread</b>(A...)&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a69f23aabe8d7a67eb05bb6699512517a">cspcell_cast</a>(read_by_id(M_CSP, 1, A))</td></tr>
 <tr class="separator:af688d00b370bdbabb320de6a5b2dc3d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a33efc9e5ab714f45dc5bdc69e280f8bc"><td class="memItemLeft" align="right" valign="top"><a id="a33efc9e5ab714f45dc5bdc69e280f8bc"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>zspread</b>(A...)&#160;&#160;&#160;zsp_cast(read_by_id(M_ZSP, 0, A))</td></tr>
@@ -534,7 +534,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A...</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a8d7a0dc35f5202eb52bc9654f2ae8ea9">dmat_cast</a>(read_by_id(M_REAL, 0, A))</td>
+          <td>&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a5d41d8d746625af710c5c67dd2c0050d">dmat_cast</a>(read_by_id(M_REAL, 0, A))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -553,7 +553,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A...</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="smath_8h.html#ac0c83323d5a168d8ff2d8031019c91c9">smat_cast</a>(read_by_id(M_FLT, 0, A))</td>
+          <td>&#160;&#160;&#160;<a class="el" href="smath_8h.html#a1579b768dc699f0d4d1418f8fcdb3d67">smat_cast</a>(read_by_id(M_FLT, 0, A))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -572,7 +572,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A...</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a7b024370283dd8b111e1b7d4ac14ce88">cmat_cast</a>(read_by_id(M_COMP, 0, A))</td>
+          <td>&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a5f26c779cd669410fc659045ad7cdfde">cmat_cast</a>(read_by_id(M_COMP, 0, A))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -610,7 +610,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A...</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="lmath_8h.html#a7c96e62be5ebf02414c5a270ffd428f4">lmat_cast</a>(read_by_id(M_LONG, 0, A))</td>
+          <td>&#160;&#160;&#160;<a class="el" href="lmath_8h.html#aa6473dd108381a0695fd28a7730434d6">lmat_cast</a>(read_by_id(M_LONG, 0, A))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -629,7 +629,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A...</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a78f4247fe31e1c4aa4cacb0104e69cc2">dsp_cast</a>(read_by_id(M_DSP, 0, A))</td>
+          <td>&#160;&#160;&#160;<a class="el" href="dmath_8h.html#a9d3ee55c0f9df9341ef740f7d3d54433">dsp_cast</a>(read_by_id(M_DSP, 0, A))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -648,7 +648,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A...</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a23849a097da334767f13a5bf76335f85">csp_cast</a>(read_by_id(M_CSP, 0, A))</td>
+          <td>&#160;&#160;&#160;<a class="el" href="cmath_8h.html#a6392099032675eeb32200d1c36154a5e">csp_cast</a>(read_by_id(M_CSP, 0, A))</td>
         </tr>
       </table>
 </div><div class="memdoc">

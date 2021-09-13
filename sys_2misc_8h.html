@@ -122,8 +122,8 @@ Functions</h2></td></tr>
 <tr class="separator:a7eb606f7b007bd7d99f5063742df1b07"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6c9a96f04de8b5f720072691fbec0de"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de">check_suffix</a> (const char *fn, const char *suffix)</td></tr>
 <tr class="separator:ae6c9a96f04de8b5f720072691fbec0de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9b6c79d014b6a3f197b5af40140c877"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#aa9b6c79d014b6a3f197b5af40140c877">copyfile</a> (const char *dest, const char *src)</td></tr>
-<tr class="separator:aa9b6c79d014b6a3f197b5af40140c877"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bd8a670108400bf12f854d3e275c0dd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a6bd8a670108400bf12f854d3e275c0dd">copyfile</a> (const char *src, const char *dest)</td></tr>
+<tr class="separator:a6bd8a670108400bf12f854d3e275c0dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a2802063b35fa082c7e9ca93153e44d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a8a2802063b35fa082c7e9ca93153e44d">argv2str</a> (int argc, const char *argv[], const char *delim)</td></tr>
 <tr class="separator:a8a2802063b35fa082c7e9ca93153e44d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af00e20eff025c19783d48eb289a342c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#af00e20eff025c19783d48eb289a342c1">print_file</a> (const char *fnin)</td></tr>
@@ -143,9 +143,10 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>myhostname</b
 <tr class="separator:aecd6443b6b571cb643489a42df57d79f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa61cdf88f9b664131faf42af0b9f53fc"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#aa61cdf88f9b664131faf42af0b9f53fc">myabspath</a> (const char *path)</td></tr>
 <tr class="separator:aa61cdf88f9b664131faf42af0b9f53fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2eff6bd0ca38317a55e11d4f2ea5cd20"><td class="memItemLeft" align="right" valign="top"><a id="a2eff6bd0ca38317a55e11d4f2ea5cd20"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>mysymlink</b> (const char *fn, const char *fnlink)</td></tr>
-<tr class="separator:a2eff6bd0ca38317a55e11d4f2ea5cd20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f86cdbb374813c70bae4dfbdc893f8a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a4f86cdbb374813c70bae4dfbdc893f8a">mysymlink</a> (const char *source, const char *dest)</td></tr>
+<tr class="separator:a4f86cdbb374813c70bae4dfbdc893f8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9867f2a8994e96bb38589f4ecdbc347a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a9867f2a8994e96bb38589f4ecdbc347a">mylink</a> (const char *source, const char *dest)</td></tr>
+<tr class="separator:a9867f2a8994e96bb38589f4ecdbc347a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bdca4cbc6b53e05e66455d9ffb8af2d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a7bdca4cbc6b53e05e66455d9ffb8af2d">exist</a> (const char *fn)</td></tr>
 <tr class="separator:a7bdca4cbc6b53e05e66455d9ffb8af2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fa8b5dc90e560f9b2c3909b134e69a8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a8fa8b5dc90e560f9b2c3909b134e69a8">isdir</a> (const char *fn)</td></tr>
@@ -326,23 +327,23 @@ nval</td>
 
 </div>
 </div>
-<a id="aa9b6c79d014b6a3f197b5af40140c877"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9b6c79d014b6a3f197b5af40140c877">&#9670;&nbsp;</a></span>copyfile()</h2>
+<a id="a6bd8a670108400bf12f854d3e275c0dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6bd8a670108400bf12f854d3e275c0dd">&#9670;&nbsp;</a></span>copyfile()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void copyfile </td>
+          <td class="memname">int copyfile </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>dest</em>, </td>
+          <td class="paramname"><em>src</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>src</em>&#160;</td>
+          <td class="paramname"><em>dest</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -520,6 +521,64 @@ nval</td>
       </table>
 </div><div class="memdoc">
 <p>Translate a path into absolute path. The caller shall free the returned string. </p>
+
+</div>
+</div>
+<a id="a4f86cdbb374813c70bae4dfbdc893f8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f86cdbb374813c70bae4dfbdc893f8a">&#9670;&nbsp;</a></span>mysymlink()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int mysymlink </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>dest</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create symbolic link </p>
+
+</div>
+</div>
+<a id="a9867f2a8994e96bb38589f4ecdbc347a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9867f2a8994e96bb38589f4ecdbc347a">&#9670;&nbsp;</a></span>mylink()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int mylink </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>dest</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create hard link </p>
 
 </div>
 </div>

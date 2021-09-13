@@ -1,6 +1,5 @@
 var type_8h_structloc__t =
 [
-    [ "id", "type_8h.html#aff8ef15e73005671ac472534e581f575", null ],
     [ "locx", "type_8h.html#a056ba180142ca19558f74c3ac8d2e222", null ],
     [ "locy", "type_8h.html#a1a5d6b9152829ba7a7af0fa050ba460e", null ],
     [ "nloc", "type_8h.html#a4092721662c37875765301cb94bc2a9d", null ],

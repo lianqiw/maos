@@ -5,8 +5,8 @@ var searchData=
   ['main',['main',['../main_8c.html#ac0f2228420376f4db7e1274f2b41667c',1,'main.c']]],
   ['maos_5fiseed',['maos_iseed',['../maos_8h.html#ab642ac48296a45f061bd093ecee20604',1,'sim.c']]],
   ['maos_5fisim',['maos_isim',['../maos_8h.html#afda0654e4cb8f4e37feb53986e044e19',1,'sim.c']]],
-  ['maos_5freset',['maos_reset',['../maos_8h.html#ab51286f168c1230cda425a07100662ea',1,'maos.c']]],
-  ['maos_5fsetup',['maos_setup',['../maos_8h.html#a3a5897e2d10829666c51e453ac960acf',1,'maos.c']]],
+  ['maos_5freset',['maos_reset',['../maos_8h.html#ab51286f168c1230cda425a07100662ea',1,'setup_all.c']]],
+  ['maos_5fsetup',['maos_setup',['../maos_8h.html#a3a5897e2d10829666c51e453ac960acf',1,'setup_all.c']]],
   ['maos_5fsignal_5fhandler',['maos_signal_handler',['../maos_2utils_8h.html#aafb94bb8e11bc2169946336024d6b0fc',1,'utils.c']]],
   ['maos_5fsim',['maos_sim',['../maos_8h.html#a5935e0612a22d888703e8eee46a930bf',1,'sim.c']]],
   ['map2loc',['map2loc',['../loc_8h.html#ab5264c94c53b39c19529e83764319a0d',1,'loc.c']]],
@@ -80,10 +80,12 @@ var searchData=
   ['myclocki',['myclocki',['../sys_2misc_8h.html#a00b62c707841e5d02e553c435497b2a9',1,'misc.c']]],
   ['mydirname',['mydirname',['../sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07',1,'misc.c']]],
   ['mygetcwd',['mygetcwd',['../sys_2misc_8h.html#aecd6443b6b571cb643489a42df57d79f',1,'misc.c']]],
+  ['mylink',['mylink',['../sys_2misc_8h.html#a9867f2a8994e96bb38589f4ecdbc347a',1,'misc.c']]],
   ['mymkdir',['mymkdir',['../sys_2misc_8h.html#a2bd73426371e8d2d46dbf3cb11c45f60',1,'misc.c']]],
   ['mypause',['mypause',['../sys_2misc_8h.html#a13def182b8c8d171bd529e29de5143c9',1,'misc.c']]],
   ['mysleep',['mysleep',['../sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53',1,'misc.c']]],
   ['mystrcmp',['mystrcmp',['../sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f',1,'misc.c']]],
   ['mystrdup',['mystrdup',['../sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9',1,'misc.c']]],
-  ['mystrndup',['mystrndup',['../sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37',1,'misc.c']]]
+  ['mystrndup',['mystrndup',['../sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37',1,'misc.c']]],
+  ['mysymlink',['mysymlink',['../sys_2misc_8h.html#a4f86cdbb374813c70bae4dfbdc893f8a',1,'misc.c']]]
 ];

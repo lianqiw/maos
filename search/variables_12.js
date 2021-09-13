@@ -19,7 +19,7 @@ var searchData=
   ['tomo_5fhxw',['tomo_hxw',['../parms_8h.html#a46e87e499b1b12da3daab4ccd47a2f20',1,'dbg_cfg_t']]],
   ['tomo_5fmaxit',['tomo_maxit',['../parms_8h.html#abdb406869547be985612c9f4e30af857',1,'dbg_cfg_t']]],
   ['tomo_5fupdate',['tomo_update',['../maos_2types_8h.html#adce195f90dbc817cb94aa08f9d492f77',1,'sim_t']]],
-  ['tomoscale',['TOMOSCALE',['../parms_8h.html#a65cb820cf4f1a3b1be3f9fc4fbe17c21',1,'maos.c']]],
+  ['tomoscale',['TOMOSCALE',['../parms_8h.html#a65cb820cf4f1a3b1be3f9fc4fbe17c21',1,'setup_all.c']]],
   ['trs',['trs',['../parms_8h.html#af68295aed03eca4810c88583d7c1ff9d',1,'powfs_cfg_t']]],
   ['tsurf',['tsurf',['../parms_8h.html#a93ae8919035b9670e31715e44d3251e0',1,'parms_t::tsurf()'],['../maos_2types_8h.html#ad0ef0f50270d939ef09f85b7b11a22b0',1,'sim_t::tsurf()']]],
   ['tt',['TT',['../maos_2types_8h.html#aad3b5cf81516a58a4af1a04035c6a739',1,'recon_t']]],
