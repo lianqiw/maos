@@ -47,14 +47,14 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 	real thetay,        /**<[in] direction of WFS*/
 	const PARMS_S* parms  /**<[in] the parms*/
 ){
-	const real* mod=modm->p;
+	const real* mod=P(modm);
 	const comp ik=COMPLEX(0, 2*M_PI/wvl);
 	real dx=powfs->dxwvf;
 	real ox=powfs->saloc->locx[isa]+dx*0.5;
 	real oy=powfs->saloc->locy[isa]+dx*0.5;
 	int nx=powfs->nxwvf;
 	assert(wvf->nx==wvf->ny);
-	comp* p=wvf->p+(wvf->nx-nx)/2*(1+wvf->nx);
+	comp* p=P(wvf)+(wvf->nx-nx)/2*(1+wvf->nx);
 	if(modm->nx==2){
 		for(int iy=0; iy<nx; iy++){
 			real ym=(oy+iy*dx)*mod[1];
@@ -221,9 +221,9 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 		}
 		int plotted=0;
 		for(int istep=0; istep<nstep; istep++){
-			memcpy(merr->p, PCOL(mideal, istep), nmod*sizeof(real));
+			memcpy(P(merr), PCOL(mideal, istep), nmod*sizeof(real));
 			dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
-			memcpy(PCOL(mres, istep), merr->p, sizeof(real)*nmod);
+			memcpy(PCOL(mres, istep), P(merr), sizeof(real)*nmod);
 			if(mpsol){//collect averaged modes for PSOL.
 				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 					dadd(&P(mpsol,iwfs), 1, mreal, 1);
@@ -231,16 +231,16 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 			}
 			pmerrm=0;
 			if(istep>=parms->skyc.evlstart){/*performance evaluation*/
-				real res_ngs=dwdot(merr->p, parms->maos.mcc, merr->p);
+				real res_ngs=dwdot(P(merr), parms->maos.mcc, P(merr));
 				if(res_ngs>ngsol*100){
 					dfree(res); res=NULL;
 					break;
 				}
 				{
 					P(res,0)+=res_ngs;
-					P(res,1)+=dwdot(merr->p, parms->maos.mcc_tt, merr->p);
-					real dot_oa=dwdot(merr->p, parms->maos.mcc_oa, merr->p);
-					real dot_res_ideal=dwdot(merr->p, parms->maos.mcc_oa, PCOL(mideal, istep));
+					P(res,1)+=dwdot(P(merr), parms->maos.mcc_tt, P(merr));
+					real dot_oa=dwdot(P(merr), parms->maos.mcc_oa, P(merr));
+					real dot_res_ideal=dwdot(P(merr), parms->maos.mcc_oa, PCOL(mideal, istep));
 					real dot_res_oa=0;
 					for(int imod=0; imod<nmod; imod++){
 						dot_res_oa+=P(merr,imod)*P(mideal_oa, imod, istep);
@@ -249,9 +249,9 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 					P(res,4)+=dot_oa;
 				}
 				{
-					real dot_oa_tt=dwdot(merr->p, parms->maos.mcc_oa_tt, merr->p);
+					real dot_oa_tt=dwdot(P(merr), parms->maos.mcc_oa_tt, P(merr));
 					/*Notice that mcc_oa_tt2 is 2x5 marix. */
-					real dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, PCOL(mideal, istep));
+					real dot_res_ideal_tt=dwdot(P(merr), parms->maos.mcc_oa_tt2, PCOL(mideal, istep));
 					real dot_res_oa_tt=0;
 					for(int imod=0; imod<2; imod++){
 						dot_res_oa_tt+=P(merr,imod)*P(mideal_oa, imod, istep);
@@ -329,8 +329,8 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 								cfft2i(P(otf,iwfs), 1); /*turn to OTF, peak in corner */
 								ccwm(P(otf,iwfs), powfs[ipowfs].dtf[iwvl].nominal);
 								cfft2(P(otf,iwfs), -1);
-								dspmulcreal(P(ints[iwfs],isa)->p, powfs[ipowfs].dtf[iwvl].si,
-									P(otf,iwfs)->p, siglev);
+								dspmulcreal(P(P(ints[iwfs],isa)), powfs[ipowfs].dtf[iwvl].si,
+									P(P(otf,iwfs)), siglev);
 							}
 
 							/*Add noise and apply matched filter. */
@@ -359,7 +359,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 
 							switch(parms->skyc.phytype){
 							case 1:
-								dmulvec(igrad, P(mtche[iwfs],isa), P(ints[iwfs],isa)->p, 1);
+								dmulvec(igrad, P(mtche[iwfs],isa), P(P(ints[iwfs],isa)), 1);
 								break;
 							case 2:
 								dcog(igrad, P(ints[iwfs],isa), 0, 0, 0, 3*P(rnefs, idtrat, ipowfs), 0);
@@ -444,7 +444,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 				servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
 			}
 			if(parms->skyc.dbg){
-				memcpy(PCOL(gradsave, istep), gradout->m->p, sizeof(real)*gradsave->nx);
+				memcpy(PCOL(gradsave, istep), P(gradout->m), sizeof(real)*gradsave->nx);
 			}
 		}/*istep; */
 	}

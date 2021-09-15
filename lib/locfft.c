@@ -36,7 +36,7 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 	const real oversize,  /**<[in] Factor of oversize. 2 fot FFT*/
 	real fieldstop        /**<[in] Size of field stop (radian) if used*/
 ){
-	const int nwvl=wvl->nx*wvl->ny;
+	const int nwvl=NX(wvl)*NY(wvl);
 	locfft_t* locfft=mycalloc(1, locfft_t);
 	locfft->embed=lcellnew(nwvl, 1);
 	locfft->nembed=lnew(nwvl, 1);
@@ -89,7 +89,7 @@ void locfft_free(locfft_t* locfft){
 static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
 	comp i2pi=COMPLEX(0, 2*M_PI/wvl);
 	comp strehl=0;
-	for(int iloc=0; iloc<iopdevl->nx; iloc++){
+	for(int iloc=0; iloc<NX(iopdevl); iloc++){
 		strehl+=P(amp, iloc)*cexp(i2pi*P(iopdevl, iloc));
 	}
 	return strehl;
@@ -107,13 +107,13 @@ static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
    Extract center part of psfsize.
 */
 void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const lmat* psfsize, int sum2one){
-	long nwvl=locfft->wvl->nx;
+	long nwvl=NX(locfft->wvl);
 	if(!*psf2sp){
 		*psf2sp=ccellnew(nwvl, 1);
 	}
 	ccell* psf2s=*psf2sp;
-	if(opd->nx!=locfft->amp->nx){
-		error("The length of opd should be %ld, but is %ld\n", locfft->amp->nx, opd->nx);
+	if(NX(opd)!=NX(locfft->amp)){
+		error("The length of opd should be %ld, but is %ld\n", NX(locfft->amp), NX(opd));
 	}
 	for(int iwvl=0; iwvl<nwvl; iwvl++)
 #if _OPENMP>=200805
@@ -128,8 +128,8 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
 		} else{
 			TIM(0);
 			long nembed=P(locfft->nembed, iwvl);
-			long* embed=P(locfft->embed, iwvl)->p;
-			const real* amp=locfft->amp->p;
+			long* embed=P(P(locfft->embed, iwvl));
+			const real* amp=P(locfft->amp);
 			const int ref=!psfsize||P(psfsize, iwvl)==nembed;
 			cmat* psf2=0;
 			if(ref){//Full PSF is returned
@@ -150,7 +150,7 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
 #endif
 
 			comp i2pi=COMPLEX(0, 2*M_PI/P(locfft->wvl, iwvl));
-			for(int iloc=0; iloc<opd->nx; iloc++){
+			for(int iloc=0; iloc<NX(opd); iloc++){
 				P(psf2, embed[iloc])=amp[iloc]*cexp(i2pi*P(opd, iloc));
 			}
 			TIM(1);
@@ -193,7 +193,7 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
    Apply a field stop to the OPD.
 */
 void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
-	int nwvl=locfft->wvl->nx;
+	int nwvl=NX(locfft->wvl);
 	if(nwvl>1){
 		warning("Not tested for multi-wavelength case yet.\n");
 	}
@@ -206,8 +206,8 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 		//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
 		real wvl=P(locfft->wvl, iwvl);
 		comp i2pi=COMPLEX(0, 2*M_PI/wvl);
-		const real* amp=locfft->amp->p;
-		for(int iloc=0; iloc<opd->nx; iloc++){
+		const real* amp=P(locfft->amp);
+		for(int iloc=0; iloc<NX(opd); iloc++){
 			P(wvf, P(embed, iloc))=amp[iloc]*cexp(i2pi*P(opd, iloc));
 		}
 		cfft2(wvf, -1);
@@ -226,7 +226,7 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 		real kki=wvl/(2*M_PI);
 		cmat* wvf=P(wvfs, iwvl);
 		lmat* embed=P(locfft->embed, iwvl);
-		for(int iloc=0; iloc<opd->nx; iloc++){
+		for(int iloc=0; iloc<NX(opd); iloc++){
 			real val=carg(P(wvf, P(embed, iloc)))*kki;
 			if(fabs(val-P(opdold, iloc))>wvlh){//need phase unwrapping
 				warning_once("phase unwrapping is needed\n");
@@ -336,7 +336,7 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 		if(!out){
 			out=*pout=cnew(32,32);
 		}
-#pragma omp parallel for
+		OMP_FOR
 		for(long iyo=0; iyo<NY(out); iyo++){
 			const real y=(iyo-NY(out)/2)*dxout;
 			for(long ixo=0; ixo<NX(out); ixo++){

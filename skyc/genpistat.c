@@ -451,10 +451,10 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 									ctilt(P(otf2,isa,iwvl), sx/dtheta[iwvl], sy/dtheta[iwvl], 0);
 									ccwm(P(otf2,isa,iwvl), powfs[ipowfs].dtf[iwvl].nominal);
 									cfft2i(P(otf2,isa,iwvl), 1);//turn to psd space
-									dspmulcreal(P(is,isa)->p, powfs[ipowfs].dtf[iwvl].si,
-										P(otf2,isa,iwvl)->p, sig);
+									dspmulcreal(P(P(is,isa)), powfs[ipowfs].dtf[iwvl].si,
+										P(P(otf2,isa,iwvl)), sig);
 								}
-								dmulvec(sout, P(mtche,isa), P(is,isa)->p, 1);
+								dmulvec(sout, P(mtche,isa), P(P(is,isa)), 1);
 #if SCAN
 								P(resp,istep, 0)=sx;
 								P(resp,istep, 1)=sy;

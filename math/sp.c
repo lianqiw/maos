@@ -316,7 +316,7 @@ X(spcell)* X(spcell_cast)(const cell* A){
 	if(!A) return 0;
 	int err=0;
 	for(int i=0; i<A->nx*A->ny; i++){
-		if(A->p[i]&&issp(A->p[i])){
+		if(P(A,i)&&!issp(P(A,i))){
 			warning("A[%d] is not sparse\n", i);
 			err++;
 		}
@@ -330,7 +330,7 @@ X(spcell)* X(spcell_cast)(const cell* A){
  * inplace scale a X(dspcell) object*/
 void X(spcellscale)(X(spcell)* A, const T beta){
 	for(int i=0; i<A->nx*A->ny; i++){
-		X(spscale)(A->p[i], beta);
+		X(spscale)(P(A,i), beta);
 	}
 }
 /**

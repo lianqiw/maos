@@ -163,6 +163,7 @@ static void topnb_detach(GtkMenuItem* menu){
 	gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), n);
 	GtkWidget* window=create_window(NULL);/*create a new window. */
 	topnb=get_topnb(window);/*another topnb */
+	
 	gtk_notebook_append_page(GTK_NOTEBOOK(topnb), page, label);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), page, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), page, TRUE);
@@ -196,6 +197,7 @@ typedef struct updatetimer_t{
 }updatetimer_t;
 static void update_pixmap(drawdata_t* drawdata){
 	/*no more pending updates, do the updating. */
+	if(drawdata->recycle) return;
 	gint width=drawdata->width;
 	gint height=drawdata->height;
 	if(drawdata->pixmap){
@@ -343,6 +345,7 @@ static void drawdata_free(drawdata_t** drawdatawrap){
 	if(!drawdatawrap) return;
 	drawdata_t *drawdata=*drawdatawrap;
 	if(!drawdata) return;
+	drawdata->recycle=1;
 	if(drawdata->image){
 		cairo_surface_destroy(drawdata->image);
 		drawdata->image=NULL;
@@ -359,7 +362,6 @@ static void drawdata_free(drawdata_t** drawdatawrap){
 		cairo_surface_destroy(drawdata->cacheplot);
 		drawdata->cacheplot=NULL;
 	}
-	drawdata->recycle=1;
 	free(drawdatawrap);
 	/*LOCK(drawdata_mutex);
 	ndrawdata--;
@@ -768,6 +770,7 @@ static void page_changed(int topn, int subn){
 		sock_idle=1;
 	}
 	//info("done\n");
+	io_time2=0;
 }
 /*These signal handlers are called before the notebook page switch is done.*/
 static void topnb_page_switch(GtkNotebook* topnb, GtkWidget* page, guint n, GtkWidget* toolbar){
@@ -822,6 +825,7 @@ gboolean addpage(gpointer indata){
 	GtkWidget* window=0;
 	GtkWidget* topnb=0;
 	int itab=0;
+	int jtab=-1;
 	for(GSList* p=windows; p&&!nsubnb; p=p->next){
 	//scan through all window to find all topnb page that has the same "fig"
 		window=(GtkWidget*)p->data;
@@ -833,9 +837,8 @@ gboolean addpage(gpointer indata){
 			if(!res){//found
 				subnbs=g_slist_append(subnbs, subnb);
 				nsubnb++;/*number of subnbs find. */
-				break;
 			} else if(res>0){//not found. Insert here.
-				break;
+				jtab=itab;//mark insert location
 			}
 		}
 	}
@@ -858,7 +861,7 @@ gboolean addpage(gpointer indata){
 		gtk_widget_add_events(GTK_WIDGET(eventbox), GDK_BUTTON_PRESS);
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
 		g_signal_connect(eventbox, "button-press-event", G_CALLBACK(tab_button_cb), subnb);
-		gtk_notebook_insert_page(GTK_NOTEBOOK(topnb), subnb, eventbox, itab);
+		gtk_notebook_insert_page(GTK_NOTEBOOK(topnb), subnb, eventbox, jtab);
 		gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), subnb, FALSE);
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 		gtk_widget_show_all(eventbox);
@@ -866,17 +869,21 @@ gboolean addpage(gpointer indata){
 	GtkWidget* page=NULL;
 	GtkWidget* subnb=NULL;
 	for(GSList* p=subnbs; p&&!page; p=p->next){
-	/*scan through all the subnb pages with same label */
+		/*scan through all the subnb pages with same label */
 		subnb=(GtkWidget*)p->data;
 		for(itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb)); itab++){
 			GtkWidget* tmp=gtk_notebook_get_nth_page(GTK_NOTEBOOK(subnb), itab);
 			const gchar* labeltext=subnb_label_get(subnb, tmp);
 			int res=strcmp(labeltext, drawdata->name);
 			if(!res){
-				page=tmp;
-				break;
+				if(!page){
+					page=tmp;
+				}else{
+					info("Found duplicate page.\n");
+					gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), itab); itab--;
+				}
 			} else if(res>0){
-				break;
+				jtab=itab;
 			}
 		}
 	}
@@ -925,72 +932,10 @@ gboolean addpage(gpointer indata){
 		(drawdata->p, drawdata->format, nx, ny, stride);
 	}
 	if(page){
-		/*Instead of freeing drawdata, we replace its content with newdata. this
-		  makes dialog continue to work. Do not replace generated data.*/
-		/*drawdata_old->dtime=drawdata->time-drawdata_old->time;//compute frame rate.
-		drawdata_old->time=drawdata->time;//record the time
-		drawdata_old->image=drawdata->image;
-		drawdata_old->p=drawdata->p;
-		drawdata_old->p0=drawdata->p0;
-		drawdata_old->pts=drawdata->pts;
-		drawdata_old->ptsdim=drawdata->ptsdim;
-		drawdata_old->npts=drawdata->npts;
-		drawdata_old->nstyle=drawdata->nstyle;
-		drawdata_old->style=drawdata->style;
-		drawdata_old->ncir=drawdata->ncir;
-		drawdata_old->cir=drawdata->cir;
-		drawdata_old->fig=drawdata->fig;
-		drawdata_old->name=drawdata->name;
-		drawdata_old->title=drawdata->title;
-		drawdata_old->xlabel=drawdata->xlabel;
-		drawdata_old->ylabel=drawdata->ylabel;
-		drawdata_old->legend=drawdata->legend;
-		drawdata_old->grid=drawdata->grid;*/
-		/*if(drawdata->limit_data){
-			if(!drawdata_old->limit_data){
-				drawdata_old->limit_data=mycalloc(4, float);
-			}
-			if(!drawdata_old->cumu){
-				for(int i=0; i<4; i++){//data has different size. Reset the zoom/off.
-					if(fabs(drawdata_old->limit_data[i]-drawdata->limit_data[i])>0.1){
-						do_zoom(drawdata_old, 0, 0, 0);//resets zoom, offset.
-					}
-				}
-			}
-			memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(float)*4);
-		}*/
-		//drawdata_old->limit_changed=-1;
-		//free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
-		/*drawdata_old->nx=drawdata->nx;
-		drawdata_old->ny=drawdata->ny;
-		if(drawdata->zlim[0]||drawdata->zlim[1]){
-			if(drawdata->zlim[0]<drawdata_old->zlim[0]
-				||(drawdata->zlim[0]-drawdata_old->zlim[0])>0.5*fabs(drawdata_old->zlim[0])){
-				//info("update zlim[0] from %g to %g\n", drawdata_old->zlim[0], drawdata->zlim[0]);
-				drawdata_old->zlim[0]=drawdata->zlim[0];
-			}
-			if(drawdata->zlim[1]>drawdata_old->zlim[1]
-				||(drawdata_old->zlim[1]-drawdata->zlim[1])>0.5*fabs(drawdata_old->zlim[1])){
-					//info("update zlim[1] from %g to %g\n", drawdata_old->zlim[1], drawdata->zlim[1]);
-				drawdata_old->zlim[1]=drawdata->zlim[1];
-			}
-		}
-		drawdata_old->format=drawdata->format;
-		drawdata_old->gray=drawdata->gray;*/
-		//drawdata_old->drawn=0;/*need redraw. */
-		//if(drawdata_old->square==-1) drawdata_old->square=drawdata->square;//otherwise keep old value.
-		/*we preserve the limit instead of off, zoom in case we are drawing curves */
-		//if(drawdata_old->npts){
-		//    drawdata_old->limit_changed=-1;
-		//	}
-		/*{
-			free(drawdata);
-			LOCK(drawdata_mutex);
-			ndrawdata--;
-			UNLOCK(drawdata_mutex);
-		}*/
 		if(get_current_drawdata()==drawdata){/*we are the current page. need to update pixmap */
 			update_pixmap(drawdata);
+			io_time2=io_time1;
+			io_time1=myclockd();
 		} else{
 			/*otherwise, notify client that it is not drawing to active page */
 			page_changed(-1, -1);
@@ -998,7 +943,6 @@ gboolean addpage(gpointer indata){
 	} else{
 		/*new tab inside the fig to contain the plot. */
 		drawdata->page=page=gtk_scrolled_window_new(NULL, NULL);
-		drawdata->dtime=INFINITY;
 		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page),
 			GTK_POLICY_AUTOMATIC,
 			GTK_POLICY_AUTOMATIC);
@@ -1047,7 +991,7 @@ gboolean addpage(gpointer indata){
 		gtk_container_add(GTK_CONTAINER(page), drawarea);
 #endif
 		GtkWidget* button=subnb_label_new(drawdatawrap);
-		gtk_notebook_insert_page(GTK_NOTEBOOK(subnb), page, button, itab);
+		gtk_notebook_insert_page(GTK_NOTEBOOK(subnb), page, button, jtab);
 		gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(subnb), page, FALSE);
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(subnb), page, TRUE);
 #if GTK_MAJOR_VERSION>=3
@@ -1179,7 +1123,6 @@ retry:
 		error_msg("surface is NULL\n");
 		return;
 	}
-	drawdata->dtime=100;//disable FPS
 	cairo_draw(cairo_create(surface), drawdata, width, height);
 	if(strcmp(suffix, ".png")==0){
 		cairo_surface_write_to_png(surface, filename);
@@ -1496,29 +1439,57 @@ static gboolean close_window(GtkObject* object, GdkEvent* event)
 	(void)event;
 	windows=g_slist_remove(windows, object);
 	info("close_window called\n");
-
+	if(!windows){
+		info("Close sock %d after last window is about to close.\n", sock);
+		if(sock!=-1) {
+			close(sock); 
+			sock=-1;
+		}
+	}
+	GtkWidget* topnb2=NULL;
+	if(windows) topnb2=get_topnb(GTK_WIDGET(windows->data));
 	GtkWidget* topnb=get_topnb(GTK_WIDGET(object));
 	GtkWidget* toolbar=get_toolbar(GTK_WIDGET(object));
 	g_signal_handlers_disconnect_by_func(topnb, (gpointer)topnb_page_changed, toolbar);
 	int npages=gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb));
-	for(int ipage=0; ipage<npages; ipage++){
+	for(int ipage=npages-1; ipage>=0; ipage--){
 		GtkWidget* page=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb), ipage);
-		int ntabs=gtk_notebook_get_n_pages(GTK_NOTEBOOK(page));
-		for(int itab=0; itab<ntabs; itab++){
-			GtkWidget* tab=gtk_notebook_get_nth_page(GTK_NOTEBOOK(page), itab);
-			drawdata_t** drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(tab), "drawdatawrap");
-			gtk_widget_hide(tab);
-			drawdata_free(drawdatawrap);
+		if(topnb2){//move page to other windows
+			GtkWidget *label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(topnb), page);
+			g_object_ref(page);
+			g_object_ref(label);
+			const gchar* text=topnb_label_get(topnb, page);
+			int itab;
+			for(itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb2)); itab++){
+				GtkWidget* page2=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb2), itab);
+				const gchar *text2=topnb_label_get(topnb2, page2);
+				if(strcmp(text2, text)>0){
+					break;
+				}
+			}
+			gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), ipage);
+			gtk_notebook_insert_page(GTK_NOTEBOOK(topnb2), page, label, itab);
+			gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb2), page, TRUE);
+			gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb2), page, TRUE);
+			g_object_unref(page);
+			g_object_unref(label);
+		}else{//delete page
+			int ntabs=gtk_notebook_get_n_pages(GTK_NOTEBOOK(page));
+			for(int itab=0; itab<ntabs; itab++){
+				GtkWidget* tab=gtk_notebook_get_nth_page(GTK_NOTEBOOK(page), itab);
+				drawdata_t** drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(tab), "drawdatawrap");
+				gtk_widget_hide(tab);
+				drawdata_free(drawdatawrap);
+			}
+			gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), ipage);
 		}
 	}
 	gtk_widget_destroy(GTK_WIDGET(object));
 	if(!windows){
-		info("sock %d closed\n", sock);
-		if(sock!=-1) close(sock);
-
 		gtk_main_quit();
+		free(font_name); font_name=NULL;
 	}
-	free(font_name); font_name=NULL;
+	
 	/*don't call exit here. */
 	return FALSE;
 }
@@ -1531,6 +1502,29 @@ static gboolean window_state(GtkWidget* window, GdkEvent* event){
 		}
 	}
 	return FALSE;
+}
+int update_fpslabel(gpointer label){
+	if(!GTK_IS_LABEL(label)) return FALSE;//deleted
+	float thistime=myclockd();
+	extern float io_time1;
+	extern float io_time2;
+	//using static variable is problematic as this is called for different labels
+	float fps=0;
+	if(io_time1+2>thistime && io_time2+100>io_time1){//current
+		fps=1./(io_time1-io_time2);
+	}else{
+		fps=0;
+	}
+	{
+		char newtext[16];
+		if(fps>0){
+			snprintf(newtext, sizeof(newtext), "FPS: %.1f", fps);
+		}else{
+			newtext[0]='\0';
+		}
+		gtk_label_set_text(GTK_LABEL(label), newtext);
+	}
+	return TRUE;
 }
 //Create a new toolbar item.
 #if GTK_MAJOR_VERSION < 4
@@ -1553,6 +1547,10 @@ void new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name
 		}
 	} else{
 		item=gtk_separator_tool_item_new();
+		gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(item), 0);
+		if(toggle){
+			gtk_tool_item_set_expand(GTK_TOOL_ITEM(item), 1);
+		}
 	}
 
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
@@ -1610,7 +1608,7 @@ GtkWidget* create_window(GtkWidget* window){
 	windows=g_slist_append(windows, window);
 	extern GdkPixbuf* icon_main;
 	gtk_window_set_icon(GTK_WINDOW(window), icon_main);
-	g_object_unref(icon_main);
+	//g_object_unref(icon_main);
 
 	char title[80];
 	if(iwindow==0){
@@ -1659,7 +1657,12 @@ GtkWidget* create_window(GtkWidget* window){
 	new_tool(toolbar, NULL, 1, "media-playback-start", G_CALLBACK(togglebutton_play), NULL);
 	new_tool(toolbar, NULL, 1, "media-playback-pause", G_CALLBACK(togglebutton_pause), NULL);
 	new_tool(toolbar, NULL, 0, "media-playback-stop", G_CALLBACK(toolbutton_stop), NULL);
-
+	
+	new_tool(toolbar, NULL, 1, NULL, NULL, NULL); //separator
+	GtkWidget *fpslabel=gtk_label_new("");
+	gdk_threads_add_idle(update_fpslabel, fpslabel);
+	new_tool(toolbar, fpslabel, 0, "fps", NULL, NULL);
+		
 	GtkWidget* topnb=gtk_notebook_new();
 	//gtk_container_set_border_width(GTK_CONTAINER(topnb),2);
 #if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 24

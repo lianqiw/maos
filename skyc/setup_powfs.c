@@ -96,7 +96,7 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 				dbg("powfs %d, iwvl=%d, dtheta=%g\n", ipowfs, iwvl, dtheta*206265000);
 				writebin(psf2x, "powfs%d_psf2x_%d", ipowfs, iwvl);
 				dmat* psf2=dinterp1(psf1x, psf1y, psf2x, 0);
-				dnormalize_sumabs(psf2->p, psf2->nx*psf2->ny, 1);
+				dnormalize_sumabs(P(psf2), psf2->nx*psf2->ny, 1);
 				psf2->nx=ncomp; psf2->ny=ncomp;
 				writebin(psf2, "powfs%d_psf2_%d", ipowfs, iwvl);
 				cmat* otf2=cnew(ncomp, ncomp);
@@ -138,7 +138,7 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 					"%s/powfs%d_dtf%d_si", dirsetup, ipowfs, iwvl);
 			}
 			powfs[ipowfs].dtf[iwvl].U=cnew(ncomp, 1);
-			comp* U=powfs[ipowfs].dtf[iwvl].U->p;
+			comp* U=P(powfs[ipowfs].dtf[iwvl].U);
 
 			for(int ix=0; ix<ncomp; ix++){
 				int jx=ix<ncomp2?ix:(ix-ncomp);
@@ -169,7 +169,7 @@ static void read_powfs_locamp(POWFS_S* powfs, const PARMS_S* parms){
 		powfs[ipowfs].locxamp=mycalloc(nsa, real);
 		powfs[ipowfs].locyamp=mycalloc(nsa, real);
 		for(long isa=0; isa<nsa; isa++){
-			const real* iamp=amp->p+isa*ptspsa;
+			const real* iamp=P(amp)+isa*ptspsa;
 			const real* locx=loc->locx+isa*ptspsa;
 			const real* locy=loc->locy+isa*ptspsa;
 			real ampsum=0, locxamp=0, locyamp=0;

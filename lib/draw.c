@@ -361,7 +361,7 @@ static int get_drawdaemon(){
 		}
 	}
 	int sock=-1;
-	//First try reusing existing idle drawdaemon
+	//First try reusing existing idle drawdaemon with the same id
 	if(!scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_FINAL)){
@@ -566,8 +566,8 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 						warning("both loc and dc are specified, ignore dc.\n");
 					}
 				} else if(dc){
-					if(ngroup>dc->nx*dc->ny||ngroup==0){
-						ngroup=dc->nx*dc->ny;
+					if(ngroup>PN(dc)||ngroup==0){
+						ngroup=PN(dc);
 					}
 					for(int ig=0; ig<ngroup; ig++){
 						dmat* p=P(dc, ig);
@@ -589,12 +589,12 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 					FWRITEARR(style, sizeof(uint32_t)*ngroup);
 				}
 				if(cir){
-					if(cir->nx!=4){
+					if(NX(cir)!=4){
 						error("Cir should have 4 rows\n");
 					}
-					FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*cir->nx*cir->ny);
-					FWRITEINT(cir->ny);
-					FWRITEARR(cir->p, sizeof(real)*cir->nx*cir->ny);
+					FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*PN(cir));
+					FWRITEINT(NY(cir));
+					FWRITEARR(P(cir), sizeof(real)*PN(cir));
 				}
 				if(limit){/*xmin,xmax,ymin,ymax */
 					FWRITECMDARR(DRAW_LIMIT, limit, sizeof(real)*4);
@@ -703,11 +703,11 @@ static void* imagesc_do(imagesc_t* data){
 	
 	if(!get_drawdaemon()){
 		char* fig=data->fig;
-		long nx=data->nx;
-		long ny=data->ny;
+		long nx=NX(data);
+		long ny=NY(data);
 		dtype* limit=data->limit;
 		dtype* zlim=data->zlim;
-		dtype* p=data->p;
+		dtype* p=P(data);
 		char* title=data->title;
 		char* xlabel=data->xlabel;
 		char* ylabel=data->ylabel;
@@ -792,7 +792,7 @@ end2:
 	free(data->fig);
 	free(data->limit);
 	free(data->zlim);
-	free(data->p);
+	free(P(data));
 	free(data->title);
 	free(data->xlabel);
 	free(data->ylabel);
@@ -845,9 +845,9 @@ int imagesc(const char* fig, /**<Category of the figure*/
 		int nx2=(nx)/xstep;
 		int ny2=(ny)/ystep;
 
-		data->p=malloc(nx2*ny2*sizeof(dtype));
+		P(data)=malloc(nx2*ny2*sizeof(dtype));
 		for(int iy=0; iy<ny2; iy++){
-			dtype* p2=data->p+iy*nx2;
+			dtype* p2=P(data)+iy*nx2;
 			const real* p1=p+iy*ystep*nx;
 			for(int ix=0; ix<nx2; ix++){
 				p2[ix]=(dtype)p1[ix*xstep];
@@ -961,7 +961,7 @@ int ddraw(const char* fig, const dmat* A, real* xylim, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	return imagesc(fig, A->nx, A->ny, xylim, zlim, A->p, title, xlabel, ylabel, "%s", fn);
+	return imagesc(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s", fn);
 }
 
 /**
@@ -972,7 +972,7 @@ int cdrawabs(const char* fig, const cmat* A, real* xylim, real* zlim,
 	const char* format, ...){
 
 	format2fn;
-	return imagesc_cmp_abs(fig, A->nx, A->ny, xylim, zlim, A->p, title, xlabel, ylabel, "%s abs", fn);
+	return imagesc_cmp_abs(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s abs", fn);
 }
 
 /**
@@ -983,7 +983,7 @@ int cdrawri(const char* fig, const cmat* A, real* xylim, real* zlim,
 	const char* format, ...){
 
 	format2fn;
-	return imagesc_cmp_ri(fig, A->nx, A->ny, xylim, zlim, A->p, title, xlabel, ylabel, "%s", fn);
+	return imagesc_cmp_ri(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s", fn);
 }
 
 /**
@@ -993,7 +993,7 @@ int cdraw(const char* fig, const cmat* A, real* xylim, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	return imagesc_cmp_ap(fig, A->nx, A->ny, xylim, zlim, A->p, title, xlabel, ylabel, "%s", fn);
+	return imagesc_cmp_ap(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s", fn);
 }
 
 /**
@@ -1009,7 +1009,7 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 	limit[1]=map->ox+(map->nx-0.5)*map->dx;
 	limit[2]=map->oy-map->dx/2;
 	limit[3]=map->oy+(map->ny-0.5)*map->dx;
-	imagesc(fig, map->nx, map->ny, limit, zlim, map->p, title, xlabel, ylabel, "%s", fn);
+	imagesc(fig, NX(map), NY(map), limit, zlim, P(map), title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
 /**
@@ -1049,8 +1049,8 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 
 	format2fn;
 	if(!loc || !opd || !draw_current(fig, fn)||!loc||!opd) return 0;
-	if(loc->nloc!=opd->nx*opd->ny){
-		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
+	if(loc->nloc!=PN(opd)){
+		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, NX(opd), NY(opd));
 		return 0;
 	}
 	if(!loc->map){
@@ -1072,7 +1072,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	limit[1]=loc->map->ox+fabs(loc->dx)*(nx+npad-1/2);
 	limit[2]=loc->map->oy+fabs(loc->dy)*(npad-1/2);
 	limit[3]=loc->map->oy+fabs(loc->dy)*(ny+npad-1/2);
-	imagesc(fig, nx, ny, limit, zlim, opd0->p, title, xlabel, ylabel, "%s", fn);
+	imagesc(fig, nx, ny, limit, zlim, P(opd0), title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1088,8 +1088,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	dmat* grad=0;
 	if(trs){
 		grad=ddup(gradin);
-		grad->nx=nsa;
-		grad->ny=2;
+		reshape(grad, nsa, 2);
 		real gxm=0;
 		real gym=0;
 		for(int isa=0; isa<nsa; isa++){
@@ -1102,12 +1101,11 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 			P(grad, isa, 0)+=gxm;
 			P(grad, isa, 1)+=gym;
 		}
-		grad->nx=gradin->nx;
-		grad->ny=gradin->ny;
+		reshape(grad, NX(gradin), NY(gradin));
 	}else{
 		grad=dref(gradin);
 	}
-	if(grad2opd&&grad->nx>8){
+	if(grad2opd&&NX(grad)>8){
 		//This is different from loc_embed. It removes the padding.
 		dmat* phi=0;
 		cure_loc(&phi, grad, saloc);
@@ -1118,11 +1116,11 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		limit[2]=saloc->map->oy+fabs(saloc->dy)*(npad-1/2+1);
 		limit[3]=saloc->map->oy+fabs(saloc->dy)*(phi->ny+npad-1/2+1);
 		//writebin(phi, "phi");
-		imagesc(fig, phi->nx, phi->ny, limit, zlim, phi->p, title, xlabel, ylabel, "%s", fn);
+		imagesc(fig, NX(phi), NY(phi), limit, zlim, P(phi), title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
 	} else{
-		dmat* gx=dnew_do(nsa, 1, grad->p, 0);
-		dmat* gy=dnew_do(nsa, 1, grad->p+nsa, 0);
+		dmat* gx=dnew_do(nsa, 1, P(grad), 0);
+		dmat* gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
 		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s x", fn);
 		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s y", fn);
 		dfree(gx);
@@ -1140,9 +1138,9 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	format2fn;
 	if(!loc || !opd || !amp || !draw_current(fig, fn)) return 0;
 	(void)fig;
-	if(loc->nloc!=amp->nx||loc->nloc!=opd->nx*opd->ny){
+	if(loc->nloc!=NX(amp)||loc->nloc!=PN(opd)){
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld, amp has %ldx%ld.\n",
-			loc->nloc, opd->nx, opd->ny, amp->nx, amp->ny);
+			loc->nloc, NX(opd), NY(opd), NX(amp), NY(amp));
 		return 0;
 	}
 	loc_create_map(loc);
@@ -1151,7 +1149,7 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	int nx=loc->map->nx-npad*2;
 	int ny=loc->map->ny-npad*2;
 	real ampthres;
-	dmaxmin(amp->p, loc->nloc, &ampthres, 0);
+	dmaxmin(P(amp), loc->nloc, &ampthres, 0);
 	ampthres*=0.5;
 	real* opd0=mycalloc(nx*ny, real);
 	for(int iy=0; iy<ny; iy++){
@@ -1182,21 +1180,20 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 	format2fn;
 	if(!saloc || !ints || !draw_current(fig, fn)) return 0;
 	dmat* ints2=0;
-	if(ints->nx==1){//TT or PWFS
+	if(NX(ints)==1){//TT or PWFS
 		if(P(ints, 0)->nx==P(ints, 0)->ny){//TT
 			ints2=dref(P(ints, 0));
 		} else{//PWFS
 			dcell* ints3=loc_embed2(saloc, P(ints, 0));
-			if(ints3->nx*ints3->ny==4){
-				ints3->nx=2;
-				ints3->ny=2;
+			if(NX(ints3)*NY(ints3)==4){
+				reshape(ints3, 2, 2);
 			}
 			ints2=dcell2m(ints3);
 			dcellfree(ints3);
 		}
-	} else if(ints->nx==4){//TTF
+	} else if(NX(ints)==4){//TTF
 		dcell* ints3=dcellref(ints);
-		cellreshape(ints3, 2, 2);
+		reshape(ints3, 2, 2);
 		ints2=dcell2m(ints3);
 		dcellfree(ints3);
 	} else{

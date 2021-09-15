@@ -75,7 +75,7 @@ void prep_cachedm(sim_t* simu){
 		cpropdata[idm].displacex1=0;
 		cpropdata[idm].displacey1=0;
 		cpropdata[idm].scale=1;
-		thread_prep(simu->cachedm_prop[idm], 0, cpropdata[idm].mapout->ny,
+		thread_prep(simu->cachedm_prop[idm], 0, NY(cpropdata[idm].mapout),
 			NTHREAD, prop, (void*)&cpropdata[idm]);
 	}
 }

@@ -92,14 +92,14 @@ void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
 	int xb=C->xb;
 	int yb=C->yb;
 	const muv_t* A=C->A;
-	assert(xin->ny==1);/*if this is not true, make a loop here. */
+	assert(NY(xin)==1);/*if this is not true, make a loop here. */
 	if(xb==-1||yb==-1){
 		muv(xout, A, xin, alpha);
 		return;
 	}
 	assert(A->M);/*Don't support A->Mfun yet.  */
 	if(!*xout){
-		*xout=dcellnew(A->M->nx, xin->ny);
+		*xout=dcellnew(NX(A->M), NY(xin));
 	}
 	if(P(A->M, xb, yb)->id==M_REAL){
 		dmm(&P(*xout,xb), 1, dmat_cast(P(A->M, xb, yb)), P(xin,yb), "nn", alpha);
@@ -109,7 +109,7 @@ void muv_ib(dcell** xout, const void* B, const dcell* xin, const real alpha){
 	if(A->V&&A->U){
 		dcell* AV=A->V;
 		dcell* AU=A->U;
-		for(int jb=0; jb<A->U->ny; jb++){
+		for(int jb=0; jb<NY(A->U); jb++){
 			dmat* tmp=NULL;
 			dmm(&tmp, 0, P(AV, yb, jb), P(xin,yb), "tn", -1);
 			dmm(&P(*xout,xb), 1, P(AU, xb, jb), tmp, "nn", alpha);
@@ -141,7 +141,7 @@ static void muv_direct_prep_lowrank(dmat** Up, dmat** Vp, spchol* C, dmat* MI, d
 	dmat* UpV=NULL;
 	/*UpV=(I-Up'*V)^{-1} */
 	dmm(&UpV, 0, *Up, V, "tn", -1);
-	for(long ii=0; ii<UpV->ny; ii++){
+	for(long ii=0; ii<NY(UpV); ii++){
 		P(UpV, ii, ii)+=1;
 	}
 	dinv_inplace(UpV);
@@ -178,18 +178,18 @@ void muv_direct_prep(muv_t* A, real svd){
 	if(use_svd){/*Do SVD */
 		dfree(A->MI);
 		A->MI=dcell2m_any(A->M);
-		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", A->MI->nx, A->MI->ny);
+		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", NX(A->MI), NY(A->MI));
 		dsvd_pow(A->MI, -1, svd<1?svd:2e-4, 0);
 	} else{/*Do Cholesky decomposition. */
 		dsp* muvM=dspcell2sp((const dspcell*)A->M);
-		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->nx, muvM->ny);
+		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", NX(muvM), NY(muvM));
 		A->C=chol_factorize(muvM);
 		dspfree(muvM);
 	}
 	if(A->U&&A->V){
 		dmat* U=dcell2m(A->U);
 		dmat* V=dcell2m(A->V);
-		if(U&&V&&U->nx&&U->ny){
+		if(U&&V&&NX(U)&&NY(U)){
 			muv_direct_prep_lowrank(&A->Up, &A->Vp, A->C, A->MI, U, V);
 			if(use_svd){
 				dmm(&A->MI, 1, A->Up, A->Vp, "nt", -1);
@@ -218,12 +218,12 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 	int use_svd=fabs(svd)>0;
 	if(!A->M) error("M has to be none NULL\n");
 	if(A->extra) error("Direct solutions does not support extra/exfun\n");
-	assert(A->M->nx==A->M->ny);
+	assert(NX(A->M)==NY(A->M));
 	info("muv_direct_prep_diag: (%s) ", use_svd?"svd":"chol");
 	TIC;tic;
 	muv_direct_diag_free(A);
 
-	int nb=A->M->nx;
+	int nb=NX(A->M);
 	A->nb=nb;
 	if(use_svd){
 		A->MIB=dcellnew(nb, 1);
@@ -249,8 +249,8 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 		dcell* V2=dcellreduce(A->V, 2);
 		dcellfree(A->V); A->V=V2;
 
-		A->UpB=dcellnew(A->U->nx, A->U->ny);
-		A->VpB=dcellnew(A->V->nx, A->V->ny);
+		A->UpB=dcellnew(NX(A->U), NY(A->U));
+		A->VpB=dcellnew(NX(A->V), NY(A->V));
 		for(int ib=0; ib<nb; ib++){
 			muv_direct_prep_lowrank(&P(A->UpB,ib),
 				&P(A->VpB,ib),
@@ -346,7 +346,7 @@ void muv_direct_diag_solve(dmat** xout, const muv_t* A, dmat* xin, int ib){
    convert the data from dcell to dmat and apply muv_direct_solve() . May be done in place.*/
 void muv_direct_solve(dcell** xout, const muv_t* A, dcell* xin){
 	if(!xin) return;
-	if(xin->nx*xin->ny==1){/*there is only one cell. */
+	if(NX(xin)*NY(xin)==1){/*there is only one cell. */
 		if(!*xout) *xout=dcellnew(1, 1);
 		muv_direct_solve_mat(&P(*xout,0), A, P(xin,0));
 	} else{
@@ -364,8 +364,8 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
 	const dcell* b /**<[in] The right hand side vector to solve*/
 ){
 	if(!b) return;
-	int nb=b->nx;
-	assert(b->ny==1);
+	int nb=NX(b);
+	assert(NY(b)==1);
 	if(!*px){
 		*px=dcellnew2(b); /*initialize the output array. */
 	} else if(!A->warm){

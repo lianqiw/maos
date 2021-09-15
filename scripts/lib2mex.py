@@ -7,13 +7,13 @@ import sys
 import maos
 from pathlib import Path
 if len(sys.argv)>2:
-    srcdir=sys.argv[1];
-    fnout=sys.argv[2];
+    srcdir=sys.argv[1]
+    fnout=sys.argv[2]
 else:
     srcdir=str(Path.home())+'/work/programming/aos'
     fnout=srcdir+'/mex/aolib.c'
 
-simu_all=list();
+simu_all=list()
 
 headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
           'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h','lib/hyst.h']

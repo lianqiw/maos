@@ -49,7 +49,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	int free_GAlsr=0;
 	/*if(P(GAlsr,0)->id!=M_REAL){//Convert low sparsity matrices to full
 		dsp* tmp=dsp_cast(P(GAlsr,0));
-		if(tmp->nzmax>tmp->nx*tmp->ny*0.2){//not very sparse
+		if(tmp->nzmax>NX(tmp)*NY(tmp)*0.2){//not very sparse
 			dcell* tmp2=0;
 			free_GAlsr=1;
 			dcelladd(&tmp2, 1, (dspcell*)GAlsr, 1);
@@ -103,7 +103,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 				real* p=PCOL(P(NW,idm), idm*nmod);
 
 				//First mode: piston mode.
-				const real* cpl=P(recon->actcpl,idm)->p;
+				const real* cpl=P(P(recon->actcpl,idm));
 				for(long iloc=0; iloc<nloc; iloc++){
 					if(cpl[iloc]>0.1){
 						p[iloc]=1;
@@ -114,8 +114,8 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 				p=PCOL(P(NW,idm), idm*nmod+1);
 				loc_create_map(P(recon->aloc,idm));
 				map_t* map=P(recon->aloc,idm)->map;
-				for(long iy=0; iy<map->ny; iy++){
-					for(long ix=0; ix<map->nx; ix++){
+				for(long iy=0; iy<NY(map); iy++){
+					for(long ix=0; ix<NX(map); ix++){
 						if(P(map, ix, iy)>0){//Some may be negative due to extend.
 							p[(long)P(map, ix, iy)-1]=(real)2*((iy+ix)&1)-1;
 						}

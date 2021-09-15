@@ -299,7 +299,7 @@ static void interp_gain(real* out, const dcell* gain, const dmat* gainx,
 		ig=ifloor(xx);
 		/*2013-12-06: use one of the set, not interpolate*/
 	}
-	memcpy(out, P(gain,ig)->p, sizeof(real)*P(gain,ig)->nx);
+	memcpy(out, P(P(gain,ig)), sizeof(real)*P(gain,ig)->nx);
 }
 dmat* setup_aster_mask_gm(const dcell* gm_in, const lmat* mask){
 	if(!gm_in||gm_in->nx==0) return NULL;
@@ -515,7 +515,7 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 				dmat* sigma2=dnew(1, 1);
 				P(sigma2,0)=sigma;
 				dcell* tmp=servo_optim(P(simu->psds,ipsd), parms->maos.dt, P(parms->skyc.dtrats,idtrat), 0, parms->skyc.pmargin, sigma2, servotype);
-				memcpy(pg, P(tmp,0)->p, (ng+2)*sizeof(real));
+				memcpy(pg, P(P(tmp,0)), (ng+2)*sizeof(real));
 				dcellfree(tmp);
 				dfree(sigma2);
 			}
@@ -669,7 +669,7 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 				dmat* tmp=ddup(P(aster->wfs[iwfs].pistat->sanea,idtrat));/*in rad */
 				dcwpow(tmp, 2);
-				dsp* tmp2=dspnewdiag(tmp->nx, tmp->p, 1);
+				dsp* tmp2=dspnewdiag(tmp->nx, P(tmp), 1);
 				dspfull(&P(P(aster->neam,idtrat), iwfs, iwfs), tmp2, 'n', 1);
 				dfree(tmp); dspfree(tmp2);
 			}
@@ -825,7 +825,7 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 		if(parms->skyc.maxaster>0&&naster>parms->skyc.maxaster){
 			taster=parms->skyc.maxaster;
 		}
-		qsort(imin->p, naster, 2*sizeof(real), (int(*)(const void*, const void*))sortdbl);
+		qsort(P(imin), naster, 2*sizeof(real), (int(*)(const void*, const void*))sortdbl);
 		for(int jaster=0; jaster<taster; jaster++){
 			if(P(imin, 0, jaster)>thres) continue;
 			int iaster=(int)P(imin, 1, jaster);

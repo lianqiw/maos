@@ -491,7 +491,7 @@ void* listen_host(void* pmsock){
 			//check for jobs that may have hung
 			for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 				if(iproc->status.info==S_RUNNING&&iproc->tlast+600<ntime){
-					iproc->status.info=S_CRASH;
+					iproc->status.info=S_WAIT;
 					iproc->status.tot=(ntime-iproc->tlast)/iproc->status.scale;
 					dbg_time("proc %d in %s is not updating in %lu seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
 					g_idle_add((GSourceFunc)refresh, iproc);

@@ -26,7 +26,6 @@
    true, p is treated as external resource and is not reference counted.
 */
 X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
-	assert(nx>=0&&ny>=0);
 	if(!p){//no pointer is supplied
 		if(nx>0&&ny>0){
 			p=mycalloc((nx*ny), T);
@@ -37,13 +36,16 @@ X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 			mem=mem_new(p);
 		}
 	}
-
+	if(nx<=0 || ny<=0){
+		nx=0;
+		ny=0;
+	}
 	X(mat)* out=mycalloc(1, X(mat));
 	out->id=M_T;
 	out->nx=nx;
 	out->ny=ny;
-	out->p=p;
-	out->mem=mem_ref(mem);
+	P(out)=p;
+	if(mem) out->mem=mem_ref(mem);
 	return out;
 }
 
@@ -52,7 +54,7 @@ X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 */
 X(mat)* X(ref)(const X(mat)* in){
 	if(!in) return NULL;
-	X(mat)* out=X(new_do)(in->nx, in->ny, in->p, in->mem);
+	X(mat)* out=X(new_do)(in->nx, in->ny, P(in), in->mem);
 	if(out&&in->header) out->header=strdup(in->header);
 	return out;
 }
@@ -75,7 +77,7 @@ X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ..
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out&&fn) {
 		out->fp=zfopen(fn, "w");
-		out->async=async_init(out->fp, sizeof(T), M_T, out->header, out->p, out->nx, out->ny);
+		out->async=async_init(out->fp, sizeof(T), M_T, out->header, P(out), out->nx, out->ny);
 	}
 	return out;
 }
@@ -107,9 +109,9 @@ void X(free_do)(X(mat)* A){
 		//if(A->fp) X(writedata)(A->fp, A, A->ny);//don't do this. 
 		if(A->async){//make sure entire data is written.
 			async_write(A->async, A->nx*A->ny*sizeof(T), 1);
-			async_free(A->async);
+			async_free(A->async); A->async=NULL;
 		}
-		if(A->fp) zfclose(A->fp);
+		if(A->fp) {zfclose(A->fp); A->fp=NULL;}
 		mem_unref(&A->mem);//takes care of freeing memory.
 		
 #ifndef COMP_LONG
@@ -126,9 +128,7 @@ void X(free_do)(X(mat)* A){
 X(mat)* X(ref_reshape)(const X(mat)* in, long nx, long ny){
 	if(!check_mat(in)) return NULL;
 	X(mat)* out=X(ref)(in);
-	if(in->nx*in->ny!=nx*ny){
-		error("Must not change number of elements\n");
-	}
+	reshape(out, nx, ny);
 	out->nx=nx;
 	out->ny=ny;
 	return out;
@@ -173,7 +173,7 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 void X(resize)(X(mat)* A, long nx, long ny){
 	if(!A) return;
 	else if(!ismat(A)){
-		if(iscell(A)&&!A->p&&(A->nx==0||A->ny==0)){
+		if(iscell(A)&&!P(A)&&(A->nx==0||A->ny==0)){
 			A->id=M_T;//convert empty cell to mat.
 		} else{
 			warning("Incorrect type: id=%d\n", A->id);
@@ -188,9 +188,9 @@ void X(resize)(X(mat)* A, long nx, long ny){
 	}
 	if(A->nx!=nx||A->ny!=ny){
 		if(A->nx==nx||A->ny==1){
-			A->p=myrealloc(A->p, nx*ny, T);
-			if(nx*ny>A->nx*A->ny){
-				memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
+			P(A)=myrealloc(P(A), nx*ny, T);
+			if(nx*ny>PN(A)){
+				memset(P(A)+PN(A), 0, (nx*ny-PN(A))*sizeof(T));
 			}
 		} else{/*copy memory to preserve data*/
 			T* p=mycalloc(nx*ny, T);
@@ -199,13 +199,13 @@ void X(resize)(X(mat)* A, long nx, long ny){
 			for(long iy=0; iy<miny; iy++){
 				memcpy(p+iy*nx, PCOL(A, iy), sizeof(T)*minx);
 			}
-			free(A->p);
-			A->p=p;
+			free(P(A));
+			P(A)=p;
 		}
 		if(A->mem){
-			mem_replace(A->mem, A->p);
+			mem_replace(A->mem, P(A));
 		} else{
-			A->mem=mem_ref(mem_new(A->p));
+			A->mem=mem_ref(mem_new(P(A)));
 		}
 		A->nx=nx;
 		A->ny=ny;
@@ -240,14 +240,14 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 			}
 		}
 	} else if(dim==2){
-   /*along y. */
+   		/*along y. */
 		if(in1->nx!=in2->nx){
 			error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld)\n",
 				in1->nx, in1->ny, in2->nx, in2->ny);
 		} else{
 			out=X(new)(in1->nx, in1->ny+in2->ny);
-			memcpy(out->p, in1->p, in1->nx*in1->ny*sizeof(T));
-			memcpy(out->p+in1->nx*in1->ny, in2->p, in2->nx*in2->ny*sizeof(T));
+			memcpy(P(out), P(in1), in1->nx*in1->ny*sizeof(T));
+			memcpy(P(out)+PN(in1), P(in2), in2->nx*in2->ny*sizeof(T));
 		}
 	} else{
 		error("Invalid dim, excepts 1 or 2.\n");
@@ -259,7 +259,7 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 */
 void X(zero)(X(mat)* A){
 	if(A){
-		memset(A->p, 0, sizeof(T)*A->nx*A->ny);
+		memset(P(A), 0, sizeof(T)*A->nx*A->ny);
 	}
 }
 /**
@@ -279,7 +279,7 @@ void X(zerocol)(X(mat)* A, int icol){
  */
 uint32_t X(hash)(const X(mat)* A, uint32_t key){
 	if(check_mat(A)){
-		key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
+		key=hashlittle(P(A), A->nx*A->ny*sizeof(T), key);
 	}
 	return key;
 }
@@ -294,8 +294,8 @@ void X(cp)(X(mat)** out0, const X(mat)* in){
 			free(out->header);
 			out->header=strdup(in->header);
 		}
-		if(out->p!=in->p){
-			memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
+		if(P(out)!=P(in)){
+			memcpy(P(out), P(in), in->nx*in->ny*sizeof(T));
 		}
 	} else{
 		X(zero)(*out0);
@@ -319,7 +319,7 @@ X(mat)* X(trans)(const X(mat)* A){
 	if(!check_mat(A)) return NULL;
 	X(mat)* B=X(new)(A->ny, A->nx);
 	if(A->nx==1||A->ny==1){
-		memcpy(B->p, A->p, A->nx*A->ny*sizeof(T));
+		memcpy(P(B), P(A), A->nx*A->ny*sizeof(T));
 	} else{
 		for(int iy=0; iy<A->ny; iy++){
 			for(int ix=0; ix<A->nx; ix++){
@@ -420,7 +420,7 @@ void X(flip)(X(mat)* A, int axis){
 T X(sum)(const X(mat)* A){
 	T v=0;
 	if(check_mat(A)){
-		v=X(vecsum)(A->p, A->nx*A->ny);
+		v=X(vecsum)(P(A), A->nx*A->ny);
 	}
 	return v;
 }
@@ -466,7 +466,7 @@ void X(sort)(X(mat)* A, int ascend){
 R X(max)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R max, min;
-	X(maxmin)(A->p, A->nx*A->ny, &max, &min);
+	X(maxmin)(P(A), A->nx*A->ny, &max, &min);
 	return max;
 }
 
@@ -476,7 +476,7 @@ R X(max)(const X(mat)* A){
 R X(min)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R max, min;
-	X(maxmin)(A->p, A->nx*A->ny, &max, &min);
+	X(maxmin)(P(A), A->nx*A->ny, &max, &min);
 	return min;
 }
 /**
@@ -484,7 +484,7 @@ R X(min)(const X(mat)* A){
 */
 R X(maxabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
-	return X(vecmaxabs)(A->p, A->nx*A->ny);
+	return X(vecmaxabs)(P(A), A->nx*A->ny);
 }
 /**
    compute the sum of abs of all elements
@@ -536,7 +536,7 @@ void X(fftshift)(X(mat)* A){
 	const long ny2=ny/2;
 	const long nx2d=nx2*sizeof(T);
 	T* tmp=(T*)malloc(nx2d);
-	T* data=A->p;
+	T* data=P(A);
 	if(ny==1){
 		memcpy(tmp, data, nx2d);
 		memcpy(data, data+nx2, nx2d);
@@ -573,28 +573,26 @@ void X(fftshift)(X(mat)* A){
 */
 void X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 	if(!check_mat(A)||!check_mat(B)) return;
-	const long nx=A->nx;
-	const long ny=A->ny;
-	T* Ap=A->p;
-	const long ninx=B->nx;
-	const long niny=B->ny;
-	if(nx>ninx||ny>niny){
-		memset(Ap, 0, sizeof(T)*nx*ny);
+	const long Anx=A->nx;
+	const long Any=A->ny;
+	const long Bnx=B->nx;
+	const long Bny=B->ny;
+	if(Anx>Bnx||Any>Bny){
+		X(zero)(A);
 	}
-	const T* Bp=B->p;
-	assert((nx&1)==0&&(ny&1)==0&&(ninx&1)==0&&(niny&1)==0);
-
-	const int ny2=MIN(ny, niny)>>1;
-	const int nx2=MIN(nx, ninx)>>1;
-	const int xskip=nx/2-nx2;
-	const int yskip=ny/2-ny2;
-	T* Ap0=Ap+yskip*nx+xskip;
+	if(!((Anx&1)==0&&(Any&1)==0&&(Bnx&1)==0&&(Bny&1)==0)){
+		warning("Arrays with odd index may not work as expected\n");
+	}
+	const int ny2=MIN(Any, Bny)>>1;
+	const int nx2=MIN(Anx, Bnx)>>1;
+	const int xoff=Anx/2-nx2;
+	const int yoff=Any/2-ny2;
 	const int nx2d=nx2*sizeof(T);
 	for(int i=0; i<ny2; i++){
-		memcpy(Ap0+i*nx, Bp+(niny-ny2+i)*ninx+(ninx-nx2), nx2d);
-		memcpy(Ap0+i*nx+nx2, Bp+(niny-ny2+i)*ninx, nx2d);
-		memcpy(Ap0+(i+ny2)*nx, Bp+i*ninx+(ninx-nx2), nx2d);
-		memcpy(Ap0+(i+ny2)*nx+nx2, Bp+i*ninx, nx2d);
+		memcpy(&P(A, xoff, 		yoff+i), 	 &P(B, Bnx-nx2,	Bny-ny2+i), nx2d);
+		memcpy(&P(A, xoff+nx2, 	yoff+i),	 &P(B, 0, 	  	Bny-ny2+i), nx2d);
+		memcpy(&P(A, xoff, 		yoff+i+ny2), &P(B, Bnx-nx2,	i), 		nx2d);
+		memcpy(&P(A, xoff+nx2, 	yoff+i+ny2), &P(B, 0, 		i), 		nx2d);
 	}
 }
 
@@ -660,7 +658,7 @@ X(cell)* X(cellnew2)(const X(cell)* A){
 	tot=0;
 	for(int i=0; i<A->nx*A->ny; i++){
 		if(!isempty(P(A, i))){
-			P(out, i)=X(new_do)(P(A, i)->nx, P(A, i)->ny, out->m->p+tot, out->m->mem);
+			P(out, i)=X(new_do)(P(A, i)->nx, P(A, i)->ny, P(out->m)+tot, out->m->mem);
 			tot+=P(A, i)->nx*P(A, i)->ny;
 		} else{
 			P(out, i)=X(new)(0, 0);//place holder to avoid been overriden.
@@ -679,16 +677,17 @@ X(cell)* X(cellnew3)(long nx, long ny, long* nnx, long* nny){
 		long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
 		tot+=mx*my;
 	}
-	if(!tot) return NULL;
 	X(cell)* out=X(cellnew)(nx, ny);
+	
 	out->m=X(new)(tot, 1);
 	tot=0;
 	for(long i=0; i<nx*ny; i++){
 		long mx=(long)nnx>0?nnx[i]:(-(long)nnx);
 		long my=nny?((long)nny>0?nny[i]:(-(long)nny)):1;
-		P(out, i)=X(new_do)(mx, my, out->m->p+tot, out->m->mem);
+		P(out, i)=X(new_do)(mx, my, P(out->m)+tot, out->m->mem);
 		tot+=mx*my;
 	}
+	
 	return out;
 }
 /**
@@ -806,7 +805,7 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 			long kr=0;
 			for(long iy=0; iy<A->ny; iy++){
 				if(!isempty(P(A, ix, iy))){
-					memcpy(PCOL(P(out, ix), kr), P(A, ix, iy)->p, nxs[ix]*nys[iy]*sizeof(T));
+					memcpy(PCOL(P(out, ix), kr), P(P(A, ix, iy)), nxs[ix]*nys[iy]*sizeof(T));
 				}
 				kr+=nys[iy];
 			}
@@ -861,7 +860,7 @@ void X(celldropempty)(X(cell)** A0, int dim){
 						warning("row %d dropped\n", ix);
 					}
 				}
-				free(A->p); free(A);
+				free(P(A)); free(A);
 				A=B;
 			}
 		}
@@ -890,7 +889,7 @@ void X(celldropempty)(X(cell)** A0, int dim){
 			X(cellfree)(A);
 			*A0=NULL;
 		} else{
-			A->p=myrealloc(A->p, A->ny*A->nx, X(mat)*);
+			P(A)=myrealloc(P(A), A->ny*A->nx, X(mat)*);
 		}
 	} else{
 		error("Invalid dim: %d\n", dim);
@@ -917,7 +916,7 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 	X(cell)* B=X(cellnew)(ndim, 1);
 	B->m=X(ref)(A);
 	for(long ix=0; ix<ndim; ix++){
-		P(B, ix)=X(new_do)(dims[ix], 1, A->p+kr, A->mem);
+		P(B, ix)=X(new_do)(dims[ix], 1, P(A)+kr, A->mem);
 		kr+=dims[ix];
 	}
 	return B;
@@ -1003,7 +1002,7 @@ X(mat)* X(cell_col)(X(cell)* input, long icol){
 	if(icol>NY(input)){
 		error("Column %ld exceeds number of columns %ld\n", icol, NY(input));
 	}
-	long npix=PN(P(input, 0, 0));
+	long npix=PN(input, 0, 0);
 	long nsa=input->nx;
 	if(input->m){
 		if(PN(input->m)!=npix*PN(input)){
@@ -1014,7 +1013,7 @@ X(mat)* X(cell_col)(X(cell)* input, long icol){
 		dbg("Consider using m to speed up\n");
 		X(mat)* output=X(new)(npix, nsa);
 		for(long isa=0; isa<nsa; isa++){
-			if(PN(P(input, isa, icol))!=npix){
+			if(PN(input, isa, icol)!=npix){
 				error("dimension mismatch.\n");
 			}
 			memcpy(PCOL(output, isa), P(P(input, isa, icol)), sizeof(T)*npix);

@@ -66,11 +66,11 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 		||(parms->recon.alg==1&&parms->gpu.lsr)
 		){
 		if(parms->recon.alg==0&&parms->fit.square){
-			dmfit=curcell(parms->ndm, 1, recon->anx->p, recon->any->p);
+			dmfit=curcell(parms->ndm, 1, P(recon->anx), P(recon->any));
 		} else if(parms->recon.modal){
-			dmfit=curcell(parms->ndm, 1, recon->anmod->p, (long*)NULL);
+			dmfit=curcell(parms->ndm, 1, P(recon->anmod), (long*)NULL);
 		} else{
-			dmfit=curcell(parms->ndm, 1, recon->anloc->p, (long*)NULL);
+			dmfit=curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL);
 		}
 		dmfit_vec.init(parms->ndm, 1);
 		for(int idm=0; idm<parms->ndm; idm++){
@@ -81,9 +81,9 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	if(parms->recon.alg==0&&(parms->gpu.tomo||parms->gpu.fit)
 		&&!parms->sim.idealfit&&!parms->load.mvm&&!recon->MVM&&!cuglobal->mvm){
 		if(parms->tomo.square){
-			opdr=curcell(recon->npsr, 1, recon->xnx->p, recon->xny->p);
+			opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));
 		} else{
-			opdr=curcell(recon->npsr, 1, recon->xnloc->p, (long*)NULL);
+			opdr=curcell(recon->npsr, 1, P(recon->xnloc), (long*)NULL);
 		}
 		opdr_vec.init(recon->npsr, 1);
 		for(int ips=0; ips<recon->npsr; ips++){

@@ -50,7 +50,7 @@ void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	ldb=B->nx;
 	ldc=C->nx;
 	Z(gemm)(&trans[0], &trans[1], &m, &n, &k, &alpha,
-		A->p, &lda, B->p, &ldb, &beta, C->p, &ldc);
+		P(A), &lda, P(B), &ldb, &beta, P(C), &ldc);
 }
 
 
@@ -69,12 +69,12 @@ void X(invspd_inplace)(X(mat)* A){
 	for(long i=0;i<N;i++){
 		B[i+i*N]=1;
 	}
-	Z(posv)(&uplo, &N, &N, A->p, &N, B, &N, &info);
+	Z(posv)(&uplo, &N, &N, P(A), &N, B, &N, &info);
 	if(info!=0){
 		writebin(A, "posv");
 		error("posv_ failed, info=%td. data saved to posv.\n", info);
 	}
-	memcpy(A->p, B, sizeof(T)*N*N);
+	memcpy(P(A), B, sizeof(T)*N*N);
 	free(B);
 }
 
@@ -101,12 +101,12 @@ void X(inv_inplace)(X(mat)* A){
 		B[i+i*N]=1;
 	}
 	ptrdiff_t* ipiv=mycalloc(N, ptrdiff_t);
-	Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
+	Z(gesv)(&N, &N, P(A), &N, ipiv, B, &N, &info);
 	if(info!=0){
 		writebin(A, "gesv");
 		error("dgesv_ failed, info=%td. data saved to posv.\n", info);
 	}
-	memcpy(A->p, B, sizeof(T)*N*N);
+	memcpy(P(A), B, sizeof(T)*N*N);
 	free(B);
 	free(ipiv);
 }
@@ -277,7 +277,7 @@ X(mat)* X(chol)(const X(mat)* A){
 	}
 	ptrdiff_t n=B->nx;
 	ptrdiff_t info=0;//some take 4 byte, some take 8 byte in 64 bit machine.
-	Z(potrf)("L", &n, B->p, &n, &info);
+	Z(potrf)("L", &n, P(B), &n, &info);
 	if(info){
 		writebin(A, "error_chol_A");
 		if(A->nx+A->ny<20){
@@ -339,36 +339,36 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		info("(dgesdd)");
 #ifdef COMP_COMPLEX
 		R* rwork=0;
-		Z(gesdd)(&jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work0, &lwork, rwork, iwork, &info);
+		Z(gesdd)(&jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work0, &lwork, rwork, iwork, &info);
 #else
-		Z(gesdd)(&jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work0, &lwork, iwork, &info);
+		Z(gesdd)(&jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work0, &lwork, iwork, &info);
 #endif
 		lwork=(ptrdiff_t)REAL(work0[0]);
 		T* work1=mymalloc(lwork, T);
 #ifdef COMP_COMPLEX
 		rwork=mymalloc(nsvd*MAX(5*nsvd+7, 2*nmax+2*nsvd+1), R);
-		Z(gesdd)(&jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work1, &lwork, rwork, iwork, &info);
+		Z(gesdd)(&jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work1, &lwork, rwork, iwork, &info);
 		free(rwork);
 #else
-		Z(gesdd)(&jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work1, &lwork, iwork, &info);
+		Z(gesdd)(&jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work1, &lwork, iwork, &info);
 #endif
 		free(work1);
 		free(iwork);
 	} else{
 #ifdef COMP_COMPLEX
 		R* rwork=0;
-		Z(gesvd)(&jobuv, &jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work0, &lwork, rwork, &info);
+		Z(gesvd)(&jobuv, &jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work0, &lwork, rwork, &info);
 #else
-		Z(gesvd)(&jobuv, &jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work0, &lwork, &info);
+		Z(gesvd)(&jobuv, &jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work0, &lwork, &info);
 #endif
 		lwork=(ptrdiff_t)REAL(work0[0]);
 		T* work1=mymalloc(lwork, T);
 #ifdef COMP_COMPLEX
 		rwork=mymalloc(nsvd*5, R);
-		Z(gesvd)(&jobuv, &jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work1, &lwork, rwork, &info);
+		Z(gesvd)(&jobuv, &jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work1, &lwork, rwork, &info);
 		free(rwork);
 #else
-		Z(gesvd)(&jobuv, &jobuv, &M, &N, tmp->p, &M, s->p, u->p, &M, vt->p, &nsvd, work1, &lwork, &info);
+		Z(gesvd)(&jobuv, &jobuv, &M, &N, P(tmp), &M, P(s), P(u), &M, P(vt), &nsvd, work1, &lwork, &info);
 #endif
 		free(work1);
 	}
@@ -397,7 +397,7 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	if(A->nx>512){
 	//Cache the result
 		uint32_t key=0;
-		key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
+		key=hashlittle(P(A), A->nx*A->ny*sizeof(T), key);
 		char dirsvd[PATH_MAX];
 		snprintf(dirsvd, sizeof dirsvd, "%s/.aos/cache/svd", HOME);
 		snprintf(fnsvd, sizeof fnsvd, "%s/svd_%ld_%u.bin", dirsvd, A->nx, key);
@@ -491,7 +491,7 @@ void X(svd_pow)(X(mat)* A, /**<[in/out] The matrix*/
 		}
 	}
 	for(long iy=0; iy<VT->ny; iy++){
-		T* p=VT->p+iy*VT->nx;
+		T* p=PCOL(VT, iy);
 		for(long ix=0; ix<VT->nx; ix++){
 			p[ix]*=P(Sdiag,ix);
 		}

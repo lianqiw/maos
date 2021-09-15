@@ -154,13 +154,13 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 		if(parms->tomo.square){
 			map_t map;
 			memcpy(&map, P(recon->xmap,ipsr), sizeof(map_t));
-			map.p=P(opdr,ipsr)->p;
+			map.p=P(P(opdr,ipsr));
 			prop_grid_stat(&map, recon->floc->stat,
-				P(xp,0)->p, 1,
+				P(P(xp,0)), 1,
 				thetax*ht, thetay*ht, scale, 0, 0, 0);
 		} else{
-			prop_nongrid(P(recon->xloc,ipsr), P(opdr,ipsr)->p,
-				recon->floc, P(xp,0)->p, 1,
+			prop_nongrid(P(recon->xloc,ipsr), P(P(opdr,ipsr)),
+				recon->floc, P(P(xp,0)), 1,
 				thetax*ht, thetay*ht, scale, 0, 0);
 		}
 	}
@@ -169,8 +169,8 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	for(int idm=0; idm<parms->ndm; idm++){
 		const real ht=parms->dm[idm].ht;
 		real scale=1.-ht/hs;
-		prop_nongrid(P(recon->aloc,idm), P(dmcommon,idm)->p,
-			recon->floc, P(xp,0)->p, -1,
+		prop_nongrid(P(recon->aloc,idm), P(P(dmcommon,idm)),
+			recon->floc, P(P(xp,0)), -1,
 			thetax*ht, thetay*ht, scale,
 			0, 0);
 	}
@@ -255,8 +255,8 @@ void moao_recon(sim_t* simu){
 				  real ptt[3]={0,0,0};
 				  loc_t *aloc=recon->moao[imoao].aloc;
 				  dmat *aimcc=recon->moao[imoao].aimcc;
-				  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(dmmoao,0)->p);
-				  loc_remove_ptt(P(dmmoao,0)->p, ptt, aloc);
+				  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(P(dmmoao,0)));
+				  loc_remove_ptt(P(P(dmmoao,0)), ptt, aloc);
 				  }*/
 			if(isfinite(parms->moao[imoao].stroke)){
 				int nclip=dclip(P(dmmoao,0),
@@ -267,9 +267,9 @@ void moao_recon(sim_t* simu){
 				}
 			}
 			if(parms->plot.run){
-				drawopd("MOAO WFS RHS", recon->floc, P(rhsout,0), parms->dbg.draw_opdmax->p,
+				drawopd("MOAO WFS RHS", recon->floc, P(rhsout,0), P(parms->dbg.draw_opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs rhs %d", iwfs);
-				drawopd("MOAO WFS", P(recon->moao[imoao].aloc,0), P(dmmoao,0), parms->dbg.draw_opdmax->p,
+				drawopd("MOAO WFS", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->dbg.draw_opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs %d", iwfs);
 			}
 			if(parms->save.dm){
@@ -301,8 +301,8 @@ void moao_recon(sim_t* simu){
 			  real ptt[3]={0,0,0};
 			  loc_t *aloc=recon->moao[imoao].aloc;
 			  dmat *aimcc=recon->moao[imoao].aimcc;
-			  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(dmmoao,0)->p);
-			  loc_remove_ptt(P(dmmoao,0)->p, ptt, aloc);
+			  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(P(dmmoao,0)));
+			  loc_remove_ptt(P(P(dmmoao,0)), ptt, aloc);
 			  }*/
 			if(isfinite(parms->moao[imoao].stroke)){
 				int nclip=dclip(P(dmmoao,0),
@@ -313,9 +313,9 @@ void moao_recon(sim_t* simu){
 				}
 			}
 			if(parms->plot.run){
-				drawopd("MOAO EVL RHS", recon->floc, P(rhsout,0), parms->dbg.draw_opdmax->p,
+				drawopd("MOAO EVL RHS", recon->floc, P(rhsout,0), P(parms->dbg.draw_opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Evl %d", ievl);
-				drawopd("MOAO EVL", P(recon->moao[imoao].aloc,0), P(dmmoao,0), parms->dbg.draw_opdmax->p,
+				drawopd("MOAO EVL", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->dbg.draw_opdmax),
 					"MOAO for EVL", "x (m)", "y(m)", "Evl %d", ievl);
 			}
 			if(parms->save.dm){

@@ -216,8 +216,8 @@ fdpcg_g(cmat** gx, cmat** gy, long nx, long ny, real dx, real dsa){
 	real dfx=1/(nx*dx);
 	*gx=cnew(nx*ny, 1);
 	*gy=cnew(nx*ny, 1);
-	comp* pgx=(*gx)->p;
-	comp* pgy=(*gy)->p;
+	comp* pgx=P(*gx);
+	comp* pgy=P(*gy);
 	for(long iy=0; iy<ny; iy++){
 		real fy=(real)(iy-ny2)*dfy;
 		for(long ix=0; ix<nx; ix++){
@@ -397,7 +397,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 			/*look for a way to obtain this automatically. */
 			const real eps=2.220446049250313e-16;
 			real max;
-			cmaxmin(P(psd), psd->nx*psd->ny, &max, 0);
+			cmaxmin(P(psd), NX(psd)*NY(psd), &max, 0);
 			max=max*sqrt(eps);
 			for(long i=0; i<nx[ips]*ny[ips]; i++){
 				invpsd[offset+i]=creal(P(psd,i))+max;
@@ -457,7 +457,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	const real delay=parms->sim.dt*(parms->powfs[hipowfs].dtrat+1+parms->sim.alhi);
 
 	/* Mhat = Mhat + propx' * Mmid * propx */
-#pragma omp parallel for
+	OMP_FOR
 	for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
 		real dispx[nps];
 		real dispy[nps];
@@ -557,8 +557,8 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	}
 	real svd_thres=1e-7;
 	dbg("fdpcg svd threshold is %g\n", svd_thres);
-#pragma omp parallel for
-	for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
+	OMP_FOR
+	for(long ib=0; ib<NX(fdpcg->Mbinv); ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
 	  one of the cells the conditional is more than 1e8. This creates
 	  problem in GPU code causing a lot of pistion to accumulate and
@@ -605,7 +605,7 @@ static void fdpcg_fft(thread_t* info){
 			  cembed_locstat takes 0.000037
 			*/
 			czero(P(xhati,ips));
-			cembed_locstat(&P(xhati,ips), 0, P(fdpcg->xloc,ips), P(xin,ips)->p, 1, 0);
+			cembed_locstat(&P(xhati,ips), 0, P(fdpcg->xloc,ips), P(P(xin,ips)), 1, 0);
 		}
 		if(fdpcg->scale){
 			cfft2s(P(xhati,ips), -1);
@@ -660,7 +660,7 @@ static void fdpcg_ifft(thread_t* info){
 void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	TIC_tm; tic_tm;
 	const recon_t* recon=(recon_t*)A;
-	if(xin->ny!=1){
+	if(NY(xin)!=1){
 		error("Invalid\n");
 	}
 	const long nps=recon->npsr;

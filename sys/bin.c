@@ -97,8 +97,8 @@ struct file_t{
   the mmaped file and unmap the segment when the nref dropes to 1.
 */
 struct mem_t{
-	void* p;  /**<points to the beginning of mmaped memory for this type of data.*/
-	char* shm;/**<unlink when delete if set*/
+	void* mem;  /**<points to the beginning of memory.*/
+	char* shm;/**<unlink shared memory when delete if set*/
 	long n;   /**<length of mmaped memory.*/
 	int kind; /**<Kind of memory. 0: heap, 1: mmap*/
 	int nref; /**<Number of reference.*/
@@ -1050,11 +1050,11 @@ void mem_unref(mem_t** pin){
 	if(in&&!atomicadd(&(in->nref), -1)){//deallocate
 		switch(in->kind){
 		case 0:
-			free(in->p);
+			free(in->mem);
 			break;
 		case 1:
-			msync(in->p, in->n, MS_SYNC);
-			munmap(in->p, in->n);
+			msync(in->mem, in->n, MS_SYNC);
+			munmap(in->mem, in->n);
 			break;
 		default:
 			warning("invalid in->kind=%d\n", in->kind);
@@ -1063,8 +1063,8 @@ void mem_unref(mem_t** pin){
 			shm_unlink(in->shm);
 		}
 		free(in);
-		pin=0;//this is important to avoid dangling pointer.
 	}
+	*pin=0;//this is important to avoid dangling pointer.
 }
 /**
    Create a mem_t object.
@@ -1073,7 +1073,7 @@ void mem_unref(mem_t** pin){
 */
 mem_t* mem_new(void* p){
 	mem_t* out=mycalloc(1, mem_t);
-	out->p=p;
+	out->mem=p;
 	return out;
 }
 /**
@@ -1098,14 +1098,14 @@ void mem_replace(mem_t* in, void* p){
 	if(!in||in->nref>1||in->kind){
 		error("Replacing referenced or mmaped memory\n");
 	} else{
-		in->p=p;
+		in->mem=p;
 	}
 }
 /**
    Return internal pointer
 */
 void* mem_p(const mem_t* in){
-	return in?in->p:NULL;
+	return in?in->mem:NULL;
 }
 /**
    Open a file for write with mmmap. We don't provide a access control here for

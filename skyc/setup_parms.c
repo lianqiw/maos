@@ -216,7 +216,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 			wtsum+=wt;
 		}
 		parms->skyc.wvlmean=sum/wtsum;
-		dnormalize_sumabs(parms->skyc.wvlwt->p, parms->maos.nwvl, 1);
+		dnormalize_sumabs(P(parms->skyc.wvlwt), parms->maos.nwvl, 1);
 	}
 	if(parms->skyc.maxdtrat<=0){
 		parms->skyc.maxdtrat=parms->skyc.ndtrat;

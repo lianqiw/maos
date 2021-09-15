@@ -68,8 +68,8 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 	} else{
 	/*do tomography. */
 		int maxit=parms->tomo.maxit;
-		if(parms->dbg.tomo_maxit->nx){
-			if(isim<parms->dbg.tomo_maxit->nx){
+		if(NX(parms->dbg.tomo_maxit)){
+			if(isim<NX(parms->dbg.tomo_maxit)){
 				maxit=P(parms->dbg.tomo_maxit,isim);
 				recon->RL.maxit=maxit;/*update maxit information */
 				info2("Running tomo.maxit=%d\n", maxit);
@@ -177,8 +177,8 @@ static void recon_split(sim_t* simu){
 					}
 					if(iRngs==1&&ngsmod->lp2>=0){ //Do LHF on measurements
 						if(ngsmod->lp2>0){//HPF
-							real* valpf=P(simu->Merr_lo2,0)->p;
-							real* val=P(tmp,0)->p;
+							real* valpf=P(P(simu->Merr_lo2,0));
+							real* val=P(P(tmp,0));
 							for(int imod=0; imod<ngsmod->nmod; imod++){
 								if(imod==ngsmod->indfocus){//there is no need to blend focus.
 									continue;
@@ -256,7 +256,7 @@ void recon_servo_update(sim_t* simu){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			for(int idm=0; idm<parms->ndm; idm++){
 				dspmulvec(PCOL(P(simu->dmerrts, ievl), iframe), P(recon->Herr, ievl, idm),
-					P(simu->dmerr,idm)->p, 'n', 1);
+					P(P(simu->dmerr,idm)), 'n', 1);
 			}
 		}
 
@@ -277,7 +277,7 @@ void recon_servo_update(sim_t* simu){
 			psd_sum(psd, 1./(psd->ny-1));
 			if(simu->save->psdcl) zfarr_push(simu->save->psdcl, -1, psd);
 			//writebin(psd, "psdcl_%d_%d", simu->iseed, simu->reconisim);
-			if(simu->dmint->ep->nx==1&&simu->dmint->ep->ny==1){
+			if(NX(simu->dmint->ep)==1&&NY(simu->dmint->ep)==1){
 				dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, P(simu->dmint->ep,0), 0);
 				dcell* coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, M_PI*0.25, 0, 1);
 				real g=0.5;
@@ -299,18 +299,18 @@ void recon_servo_update(sim_t* simu){
 		const int iacc=(simu->reconisim/parms->sim.dtrat_lo);//reconstruction steps
 		const int dtrat=parms->recon.psddtrat_lo;
 		const int iframe=iacc%dtrat;
-		dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(simu->Merr_lo,0)->p, 1);
+		dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(P(simu->Merr_lo,0)), 1);
 		if(iframe+1==dtrat){
 			//writebin(simu->Merrts, "Merrts_%d", simu->reconisim);
 			dmat* ts=dtrans(simu->Merrts);
 			dzero(simu->Merrts);
 			real dt=parms->sim.dt*parms->sim.dtrat_lo;
-			for(int icol=0; icol<ts->ny; icol++){
+			for(int icol=0; icol<NY(ts); icol++){
 				dmat* tsi=dsub(ts, icol, 1, 0, 0);
 				dmat* psd=psd1dt(tsi, parms->recon.psdnseg, dt);
 				if(simu->save->psdcl_lo) zfarr_push(simu->save->psdcl_lo, -1, psd);
 				//writebin(psd, "psdlo%d_cl_%d", icol, simu->reconisim);
-				if(simu->Mint_lo->ep->nx==1){//integrator
+				if(NX(simu->Mint_lo->ep)==1){//integrator
 					dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, P(simu->Mint_lo->ep,0), 0);
 					//writebin(psdol, "psdlo%d_ol_%d", icol, simu->reconisim);
 					if(simu->save->psdol_lo) zfarr_push(simu->save->psdol_lo, -1, psdol);
@@ -382,7 +382,7 @@ void reconstruct(sim_t* simu){
 #endif		
 				{
 					dzero(dmout->m);
-					dmulvec(dmout->m->p, recon->MVM, gradin->m->p, 1);
+					dmulvec(P(dmout->m), recon->MVM, P(gradin->m), 1);
 				}
 		} else{
 			switch(parms->recon.alg){

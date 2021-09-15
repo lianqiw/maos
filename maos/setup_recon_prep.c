@@ -52,7 +52,7 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 		real guard=parms->tomo.guard*dxr;
 		map_t* pmap=0;
 		create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->tomo.square);
-		info("PLOC is %ldx%ld, with sampling of %.2fm\n", pmap->nx, pmap->ny, dxr);
+		info("PLOC is %ldx%ld, with sampling of %.2fm\n", NX(pmap), NY(pmap), dxr);
 		recon->ploc=map2loc(pmap, 0);/*convert map_t to loc_t */
 		mapfree(pmap);
 	}
@@ -138,7 +138,7 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 		real guard=parms->tomo.guard*dxr;
 		map_t* fmap=0;
 		create_metapupil(&fmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
-		info("FLOC is %ldx%ld, with sampling of %.2fm\n", fmap->nx, fmap->ny, dxr);
+		info("FLOC is %ldx%ld, with sampling of %.2fm\n", NX(fmap), NY(fmap), dxr);
 		recon->floc=map2loc(fmap, 0);/*convert map_t to loc_t */
 		mapfree(fmap);
 		/*Do not restrict fmap to within active pupil. */
@@ -189,7 +189,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 		char* fn=parms->load.xloc;
 		warning("Loading xloc from %s\n", fn);
 		recon->xloc=loccellread("%s", fn);
-		int nxloc=recon->xloc->nx;
+		int nxloc=NX(recon->xloc);
 		if(nxloc!=npsr)
 			error("Invalid saved file. npsr=%d, nxloc=%d\n", npsr, nxloc);
 		for(int ips=0; ips<npsr; ips++){
@@ -240,7 +240,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 			P(recon->xloc,ips)=map2loc(map, 0);
 			loc_create_stat(P(recon->xloc,ips));
 			info("    layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
-				ips, map->nx, map->ny, dxr, P(recon->xloc,ips)->nloc);
+				ips, NX(map), NY(map), dxr, P(recon->xloc,ips)->nloc);
 			mapfree(map);
 		}
 	}
@@ -253,7 +253,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 			create_metapupil(&P(recon->xcmap,ips), 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
 			mem_unref(&P(recon->xcmap,ips)->mem);
 			P(recon->xcmap,ips)->mem=0;
-			P(recon->xcmap,ips)->p=NULL;
+			P(P(recon->xcmap,ips))=NULL;
 		}
 	}
 	recon->xmap=mapcellnew(npsr, 1);
@@ -282,7 +282,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 long count_nonzero(const lmat* in){
 	long count=0;
 	if(in){
-		for(long i=0; i<in->nx*in->ny; i++){
+		for(long i=0; i<NX(in)*NY(in); i++){
 			if(P(in,i)){
 				count++;
 			}
@@ -304,9 +304,9 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 		char* fn=parms->load.aloc;
 		warning("Loading aloc from %s\n", fn);
 		recon->aloc=loccellread("%s", fn);
-		if(recon->aloc->nx!=ndm||recon->aloc->ny!=1){
+		if(NX(recon->aloc)!=ndm||NY(recon->aloc)!=1){
 			error("Loaded aloc should have %dx1 cells but has %ldx%ld.\n",
-				ndm, recon->aloc->nx, recon->aloc->ny);
+				ndm, NX(recon->aloc), NY(recon->aloc));
 		}
 		for(int idm=0; idm<ndm; idm++){
 			if(fabs(parms->dm[idm].dx-P(recon->aloc,idm)->dx)>1e-7){
@@ -341,7 +341,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 			} else{
 				create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, ht, dx, dy, offset, guard, 0, 0, 0, parms->fit.square);
 			}
-			info("    DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
+			info("    DM %d: grid is %ld x %ld\n", idm, NX(map), NY(map));
 			P(recon->aloc,idm)=map2loc(map, 0);
 			mapfree(map);
 		}
@@ -439,7 +439,7 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 	if(parms->load.HXW){
 		warning("Loading saved HXW\n");
 		recon->HXW=dspcellread("%s", parms->load.HXW);
-		if(recon->HXW->nx!=nwfs||recon->HXW->ny!=npsr){
+		if(NX(recon->HXW)!=nwfs||NY(recon->HXW)!=npsr){
 			error("Wrong saved HXW\n");
 		}
 		dspcell* HXW=recon->HXW/*PDSPCELL*/;
@@ -485,7 +485,7 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 	if(parms->save.setup){
 		writebin(recon->HXW, "HXW");
 	}
-	recon->HXWtomo=dspcellnew(recon->HXW->nx, recon->HXW->ny);
+	recon->HXWtomo=dspcellnew(NX(recon->HXW), NY(recon->HXW));
 	dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
 	dspcell* HXW=recon->HXW/*PDSPCELL*/;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -510,9 +510,9 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 		warning("Loading saved GP\n");
 		dspcell* GPload=dspcellread("%s", parms->load.GP);
 		int assign=0;
-		if(GPload->nx==nwfs){
+		if(NX(GPload)==nwfs){
 			assign=1;
-		} else if(GPload->nx==parms->npowfs){
+		} else if(NX(GPload)==parms->npowfs){
 			assign=2;
 		} else{
 			error("GP loaded from %s has wrong size.\n", parms->load.GP);
@@ -535,7 +535,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 			}
 		}
 		info("Generating GP with ");TIC;tic;
-#pragma omp parallel for
+		OMP_FOR
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 			const int ipowfs=parms->wfsr[iwfs].powfs;
 			const int iwfs0=P(parms->powfs[ipowfs].wfsr,0);
@@ -551,7 +551,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 						gp=mkg(ploc, gloc, gamp, P(recon->saloc,ipowfs), 1, 0, 0, 1);
 					} else if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z){//Zernike fit
 						info(" Zploc");
-						dsp* ZS0=mkz(gloc, gamp->p, P(recon->saloc,ipowfs), 1, 1, 0, 0);
+						dsp* ZS0=mkz(gloc, P(gamp), P(recon->saloc,ipowfs), 1, 1, 0, 0);
 						dsp* H=mkh(ploc, gloc, 0, 0, 1);
 						gp=dspmulsp(ZS0, H, "nn");
 						dspfree(H);
@@ -593,9 +593,9 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	if(parms->load.GA){
 		warning("Loading GA from %s\n", parms->load.GA);
 		recon->GA=dspcellread("%s", parms->load.GA);
-		if(recon->GA->nx!=nwfs||recon->GA->ny!=ndm)
+		if(NX(recon->GA)!=nwfs||NY(recon->GA)!=ndm)
 			error("Wrong saved GA (%ldx%ld). Need (%dx%d)\n",
-				recon->GA->nx, recon->GA->ny, nwfs, ndm);
+				NX(recon->GA), NY(recon->GA), nwfs, ndm);
 		for(int idm=0; idm<ndm; idm++){
 			int nloc=P(recon->aloc,idm)->nloc;
 			for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -774,8 +774,8 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		}
 	}
 	/*Create GAlo that only contains GA for low order wfs */
-	recon->GAlo=cellnew(recon->GA->nx, recon->GA->ny);
-	recon->GAhi=dspcellnew(recon->GA->nx, recon->GA->ny);
+	recon->GAlo=cellnew(NX(recon->GA), NY(recon->GA));
+	recon->GAhi=dspcellnew(NX(recon->GA), NY(recon->GA));
 	if(parms->recon.modal) recon->GMhi=dcellnew(nwfs, ndm);
 
 	for(int idm=0; idm<ndm; idm++){
@@ -823,10 +823,10 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
 		}/*ips */
 	}
 	toc2(" ");
-	recon->GXtomo=dspcellnew(recon->GX->nx, recon->GX->ny);
+	recon->GXtomo=dspcellnew(NX(recon->GX), NY(recon->GX));
 	dspcell* GXtomo=recon->GXtomo/*PDSPCELL*/;
 
-	recon->GXlo=dspcellnew(recon->GX->nx, recon->GX->ny);
+	recon->GXlo=dspcellnew(NX(recon->GX), NY(recon->GX));
 	dspcell* GXlo=recon->GXlo/*PDSPCELL*/;
 
 	int nlo=parms->nlopowfs;
@@ -963,8 +963,8 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			dmat* TT=0;
 			if(parms->powfs[ipowfs].type==WFS_SH){//SHWFS
 				TT=dnew(nsa*2, 2);
-				real* TTx=TT->p;
-				real* TTy=TT->p+nsa*2;
+				real* TTx=PCOL(TT, 0);
+				real* TTy=PCOL(TT, 1);
 				for(int isa=0; isa<nsa; isa++){
 					TTx[isa]=1;
 					TTy[isa]=0;
@@ -1014,8 +1014,8 @@ setup_recon_DF(recon_t* recon, const parms_t* parms){
 			int nsa=P(recon->saloc,ipowfs)->nloc;
 			dmat* DF=dnew(nsa*2, 1);
 			/*saloc is lower left corner of subaperture. don't have to be the center. */
-			memcpy(DF->p, P(recon->saloc,ipowfs)->locx, sizeof(real)*nsa);
-			memcpy(DF->p+nsa, P(recon->saloc,ipowfs)->locy, sizeof(real)*nsa);
+			memcpy(P(DF), P(recon->saloc,ipowfs)->locx, sizeof(real)*nsa);
+			memcpy(P(DF)+nsa, P(recon->saloc,ipowfs)->locy, sizeof(real)*nsa);
 			/**
 			   postive focus on first wfs. negative focus on diagnonal wfs.
 			*/
@@ -1082,8 +1082,8 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 				real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
 				real dispx=ht*parms->wfsr[iwfs].thetax;
 				real dispy=ht*parms->wfsr[iwfs].thetay;
-				prop_nongrid(P(recon->aloc,idm), P(recon->dither_m,idm)->p,
-					powfs[ipowfs].loc, opd->p,
+				prop_nongrid(P(recon->aloc,idm), P(P(recon->dither_m,idm)),
+					powfs[ipowfs].loc, P(opd),
 					-1, dispx, dispy, scale, 0, 0);
 				dmat* ints=0;
 				dmat* grad=0;
@@ -1134,7 +1134,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	} else{
 		info("Wavefront reconstruction does not use warm restart.\n");
 	}
-	if(parms->cn2.pair&&parms->cn2.pair->nx>0&&!recon->cn2est){
+	if(parms->cn2.pair&&NX(parms->cn2.pair)>0&&!recon->cn2est){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can be fed to the tomography */
 		recon->cn2est=cn2est_prepare(parms, powfs);
 	}
@@ -1197,17 +1197,17 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 			recon->wt=dref(P(cn2est->wtrecon,0));
 			/*the following will be updated later in simulation. */
 			if(parms->cn2.keepht){
-				for(int ips=0; ips<recon->wt->nx; ips++){
+				for(int ips=0; ips<NX(recon->wt); ips++){
 					P(recon->wt,ips)=P(parms->atmr.wt,ips);
 				}
 			} else{
-				dset(recon->wt, 1./recon->wt->nx);/*evenly distributed.  */
+				dset(recon->wt, 1./NX(recon->wt));/*evenly distributed.  */
 			}
 		} else{/*use input information from atmr */
 			recon->wt=dnew(parms->atmr.nps, 1);
 			recon->ht=dnew(parms->atmr.nps, 1);
 			recon->os=dnew(parms->atmr.nps, 1);
-			for(int ips=0; ips<recon->wt->nx; ips++){
+			for(int ips=0; ips<NX(recon->wt); ips++){
 				P(recon->wt,ips)=P(parms->atmr.wt,ips);
 				P(recon->ht,ips)=P(parms->atmr.ht,ips);
 				P(recon->os,ips)=P(parms->atmr.os,ips);
@@ -1217,13 +1217,13 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 		recon->L0=parms->atmr.L0;
 
 		/*sampling of xloc */
-		recon->dx=dnew(recon->ht->nx, 1);
-		for(int iht=0; iht<recon->ht->nx; iht++){
+		recon->dx=dnew(NX(recon->ht), 1);
+		for(int iht=0; iht<NX(recon->ht); iht++){
 			real scale=1.0-P(recon->ht,iht)/parms->atmr.hs;
 			P(recon->dx,iht)=(parms->atmr.dx/P(recon->os,iht))*scale;
 		}
 		/*number of reconstruction layers */
-		recon->npsr=recon->ht->nx;
+		recon->npsr=NX(recon->ht);
 		/*setup atm reconstruction layer grid */
 		setup_recon_xloc(recon, parms);
 		/*setup xloc/aloc to WFS grad */

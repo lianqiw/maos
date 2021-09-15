@@ -43,7 +43,7 @@ setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 		const int ndm=parms->ndm;
 		const int nwfs=parms->nwfsr;
 		int ntotgrad=0;
-		long* ngrad=recon->ngrad->p;
+		long* ngrad=P(recon->ngrad);
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			ntotgrad+=powfs[ipowfs].saloc->nloc*2;
@@ -77,8 +77,7 @@ setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			for(int idm=0; idm<ndm; idm++){
 				dmat* to=P(MVM,idm,curwfs);
 				if(to){
-					int nact=to->nx;
-					memcpy(to->p+curg*nact, P(res,idm)->p, nact*sizeof(real));
+					memcpy(PCOL(to, curg), P(P(res,idm)), NX(to)*sizeof(real));
 				}
 			}
 			curg++;
@@ -130,7 +129,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 	dcell* RLT=NULL;
 	dcell* RRT=NULL;
 	dmat* eye=dnew(ntotact, 1);
-	dcell* eyec=d2cellref(eye, recon->anloc->p, ndm);
+	dcell* eyec=d2cellref(eye, P(recon->anloc), ndm);
 	long(*curp)[2]=data->curp;
 	dcell* MVMt=data->MVMt;
 	int nthread=recon->nthread;
@@ -167,8 +166,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			dmat* to=P(MVMt,iwfs,curdm);
 			if(to){
-				int ng=to->nx;
-				memcpy(to->p+curact*ng, P(RRT,iwfs)->p, ng*sizeof(real));
+				memcpy(PCOL(to, curact), P(P(RRT,iwfs)), NX(to)*sizeof(real));
 			}
 		}
 		//toc2(" %ld", iact);

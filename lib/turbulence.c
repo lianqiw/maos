@@ -44,7 +44,7 @@ static char* create_fnatm(genatm_t* data){
 	key=hashlittle(&data->nlayer, sizeof(long), key);
 	key=hashlittle(&data->ninit, sizeof(long), key);
 	if(data->r0logpsds){
-		key=hashlittle(data->r0logpsds->p, sizeof(real)*data->r0logpsds->nx, key);
+		key=hashlittle(P(data->r0logpsds), sizeof(real)*NX(data->r0logpsds), key);
 	}
 	char diratm[PATH_MAX];
 	snprintf(diratm, PATH_MAX, "%s/atm", CACHE);
@@ -61,9 +61,9 @@ static char* create_fnatm(genatm_t* data){
 	}
 	char fnatm[PATH_MAX+100];
 	snprintf(fnatm, sizeof(fnatm), "%s/%s_%ld_%ldx%ld_%g_%ud.bin",
-		diratm, prefix, data->nlayer, data->nx, data->ny, data->dx, key);
+		diratm, prefix, data->nlayer, NX(data), NY(data), data->dx, key);
 	long avail=available_space(diratm);
-	long need=data->nx*data->ny*data->nlayer*sizeof(real)+500000000;
+	long need=NX(data)*NY(data)*data->nlayer*sizeof(real)+500000000;
 	if(avail>need){
 		return strdup(fnatm);
 	} else{
@@ -82,13 +82,13 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 	real* wt=data->wt;
 	int nlayer=data->nlayer;
 	dcell* dc=dcellnew(2, 1);
-	long nx=data->nx;
-	long ny=data->ny;
+	long nx=NX(data);
+	long ny=NY(data);
 	real dx=data->dx;
 	P(dc, 0)=dnew(nx, ny);
 	P(dc, 1)=dnew(nx, ny);
-	real* restrict p1=P(dc, 0)->p;
-	real* restrict p2=P(dc, 1)->p;
+	real* restrict p1=P(P(dc, 0));
+	real* restrict p2=P(P(dc, 1));
 	char header[1024];
 	real ox=-nx/2*dx;
 	real oy=-ny/2*dx;
@@ -104,10 +104,10 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 		real slope2=P(data->r0logpsds, 0);
 		real strength=P(data->r0logpsds, 1)*(5./3.);//strength of log(wt)
 		real minfreq=0, maxfreq=0;
-		if(data->r0logpsds->nx>2){//low frequency end is converted to outscale
+		if(NX(data->r0logpsds)>2){//low frequency end is converted to outscale
 			minfreq=P(data->r0logpsds, 2);
 		}
-		if(data->r0logpsds->nx>3){
+		if(NX(data->r0logpsds)>3){
 			maxfreq=P(data->r0logpsds, 3);
 		}
 		spatial_psd(&spect2, nx, ny, dx, strength, INFINITY, minfreq, maxfreq, slope2, 0.5);
@@ -130,7 +130,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 			real strength=0.0229*pow(data->r0, -5./3.)*pow((0.5e-6)/(2.*M_PI), 2);;
 			if(!spect||fabs(data->L0[ilayer]-L0)>EPS){
 				L0=data->L0[ilayer];
-				spatial_psd(&spect, data->nx, data->ny, data->dx, strength, L0, data->fmin, data->fmax, slope, 0.5);
+				spatial_psd(&spect, NX(data), NY(data), data->dx, strength, L0, data->fmin, data->fmax, slope, 0.5);
 			}
 			for(long i=0; i<nx*ny; i++){//don't parallelize this one
 				p1[i]=randn(rstat)*P(spect, i);/*real */
@@ -183,28 +183,28 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
  * Generate one screen at a time and save to file
  */
 static void fractal_screen_do(zfarr* fc, genatm_t* data){
-	const long nx=data->nx;
-	const long ny=data->ny;
+	const long nx=NX(data);
+	const long ny=NY(data);
 	if(fc){
-		dmat* screen=dnew(data->nx, data->ny);
+		dmat* screen=dnew(NX(data), NY(data));
 		for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 			drandn(screen, 1, data->rstat);
 			real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 			fractal_do(screen, data->dx, r0i, data->L0[ilayer], data->ninit);
-			//remove_piston(screen->p, nx*ny);
+			//remove_piston(P(screen), nx*ny);
 			dadds(screen, -dsum(screen)/(nx*ny));
 			zfarr_push(fc, ilayer, screen);
 		}
 		dfree(screen);
 	} else{
-		map_t** screen=(map_t**)data->screen->p;
+		map_t** screen=(map_t**)P(data->screen);
 		for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 			drandn((dmat*)screen[ilayer], 1, data->rstat);
 		}
 		OMPTASK_FOR(ilayer, 0, data->nlayer){
 			real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 			fractal_do((dmat*)screen[ilayer], screen[0]->dx, r0i, data->L0[ilayer], data->ninit);
-			//remove_piston(screen[ilayer]->p, nx*ny);
+			//remove_piston(P(screen[ilayer]), nx*ny);
 			dadds((dmat*)screen[ilayer], -dsum((dmat*)screen[ilayer])/(nx*ny));
 		}
 		OMPTASK_END;
@@ -261,8 +261,8 @@ mapcell* genscreen(genatm_t* data){
 		free(fnatm);
 	} else{
 		screen=(mapcell*)cellnew(nlayer, 1);
-		long nx=data->nx;
-		long ny=data->ny;
+		long nx=NX(data);
+		long ny=NY(data);
 		real dx=data->dx;
 		for(int ilayer=0; ilayer<nlayer; ilayer++){
 			P(screen, ilayer)=mapnew(nx, ny, dx, dx);
@@ -319,9 +319,8 @@ mapcell* genscreen_str(const char* header){
 			dmat *opd=zernike(loc, nx*dx, 0, 0, -(int)mode);
 			dscale(opd, rms*1e-9);
 			surfs=mapcellnew(1,1);
-			surfs->p[0]=mapnew(nx, nx, dx, dx);
-			opd->nx=nx;
-			opd->ny=nx;
+			P(surfs, 0)=mapnew(nx, nx, dx, dx);
+			reshape(opd, nx, nx);
 			dcp((dmat**)&P(surfs,0), opd);
 			dfree(opd);
 			locfree(loc);
@@ -358,7 +357,7 @@ dmat* genatm_loc(loc_t* loc, real r0, real dsa){
 	real D=loc_diam(loc);
 	dmat* opd=dnew(loc->nloc, 1);
 	map_t* atm=genatm_simple(r0, dsa, loc->dx, ceil(D/loc->dx)*2);
-	prop_grid(atm, loc, opd->p, 1, 0, 0, 1, 1, 0, 0);
+	prop_grid(atm, loc, P(opd), 1, 0, 0, 1, 1, 0, 0);
 	mapfree(atm);
 	return opd;
 }
@@ -374,8 +373,8 @@ dmat* turbcov(dmat* r, real rmax, real r0, real L0){
 		*pow(2*M_PI/0.5e-6, -2)/pow(M_PI, 8./3.);
 	real vkcoeff=tg1/pow(2, 5./6.);
 	real vkcoeff0=tg1*tgamma(5./6.)/2;/*for variance */
-	dmat* cov=dnew(r->nx, r->ny);
-	long n=r->nx*r->ny;
+	dmat* cov=dnew(NX(r), NY(r));
+	long n=NX(r)*NY(r);
 	if(!isfinite(L0)){/*kolmogorov. */
 		const real power=5./3.;
 		real coeff=0.5*6.88*pow(2*M_PI/0.5e-6, -2)*pow(r0, -power);
@@ -436,7 +435,7 @@ void spatial_psd(dmat** pout,  /**<Output*/
 		*pout=dnew(nx, ny);
 	}
 	dmat* psd=*pout;
-#pragma omp parallel for
+	OMP_FOR
 	for(int iy=0;iy<ny;iy++){
 		real r2y=pow((iy<ny2?iy:iy-ny)*dfy, 2);/* to avoid fft shifting. */
 		for(int ix=0;ix<nx;ix++){

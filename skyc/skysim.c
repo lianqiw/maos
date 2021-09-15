@@ -421,9 +421,9 @@ static void skysim_calc_psd(SIM_S* simu){
 			info("Scaling PSD by %g\n", rms_ratio);
 			long nx=simu->psd_ngs->nx;
 			//scale PSF in place. //
-			real *p_ngs=simu->psd_ngs->p+nx;
-			real *p_tt=simu->psd_tt->p+nx;
-			real *p_ps=simu->psd_ps->p+nx;
+			real *p_ngs=P(simu->psd_ngs)+nx;
+			real *p_tt=P(simu->psd_tt)+nx;
+			real *p_ps=P(simu->psd_ps)+nx;
 			for(long i=0; i<nx; i++){
 			p_ngs[i]*=rms_ratio;
 			p_tt[i]*=rms_ratio;
@@ -502,7 +502,7 @@ static void skysim_prep_sde(SIM_S* simu){
 		if(coeff->ny>1){
 			error("Please handle this case\n");
 		}
-		memcpy(PCOL(pcoeff, im), coeff->p, coeff->nx*sizeof(real));
+		memcpy(PCOL(pcoeff, im), P(coeff), coeff->nx*sizeof(real));
 		dfree(coeff);
 	}
 

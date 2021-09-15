@@ -228,7 +228,7 @@ int mvm_server(int sock){
 			}
 #endif
 		}
-		if(stread(sock, dmres->p, sizeof(float)*nact)){
+		if(stread(sock, P(dmres), sizeof(float)*nact)){
 			warning("read dmres failed: %s\n", strerror(errno));
 			return -1;
 		}

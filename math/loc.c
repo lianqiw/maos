@@ -368,7 +368,7 @@ dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 	dcell* dest=dcellnew(nx, ny);
 	for(int ix=0; ix<nx*ny; ix++){
 		P(dest, ix)=dnew(loc->map->nx, loc->map->ny);
-		loc_embed((map_t*)P(dest, ix), loc, arr->p+ix*loc->nloc);
+		loc_embed((map_t*)P(dest, ix), loc, &P(arr, ix*loc->nloc));
 	}
 	return dest;
 }
@@ -436,7 +436,7 @@ void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 		error("in and map doesn't agree: in is %ldx%ld, map is %ldx%ld\n",
 			in->nx, in->ny, map->nx, map->ny);
 	}
-	real* restrict pdest=dest->p-1;//iphi count from 1
+	real* restrict pdest=P(dest)-1;//iphi count from 1
 	for(long i=0; i<map->nx*map->ny; i++){
 		long iphi=P(map,i);
 		if(iphi>0){
@@ -760,7 +760,7 @@ void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 	const int nsa=pts->nsa;
 	assert(imcc->nx==nsa&&imcc->ny==1);
 	if(!*out) *out=dnew(nsa*2, 1);
-	real* res=(*out)->p;
+	real* res=P(*out);
 	for(int isa=0; isa<nsa; isa++){
 		const real origy=pts->origy[isa];
 		const real origx=pts->origx[isa];
@@ -1153,10 +1153,10 @@ dmat* loc2mat(loc_t* loc, int piston){
 		for(long i=0; i<loc->nloc; i++){
 			P(out,i)=1;
 		}
-		ptt=out->p+loc->nloc;
+		ptt=PCOL(out, 1);
 	} else{
 		out=dnew(loc->nloc, 2);
-		ptt=out->p;
+		ptt=P(out);
 	}
 	memcpy(ptt, loc->locx, sizeof(real)*loc->nloc);
 	memcpy(ptt+loc->nloc, loc->locy, sizeof(real)*loc->nloc);

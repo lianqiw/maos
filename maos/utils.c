@@ -185,7 +185,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	real limit[4];
 	limit[0]=limit[2]=-totfov/2;
 	limit[1]=limit[3]=totfov/2;
-	plot_points(fig, ngroup, locs->p, NULL, style, limit, NULL, cir, legend,
+	plot_points(fig, ngroup, P(locs), NULL, style, limit, NULL, cir, legend,
 		"Asterism", "x (arcsec)", "y (arcsec)", "%s", fn);
 	dfree(cir);
 	cellfree(locs);
@@ -195,7 +195,6 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
    Rename the log files when simulation exits.
 */
 void rename_file(int sig){
-	draw_final(1);
 	if(disable_save) return;
 	if(sig==0){
 		char fn[PATH_MAX];
@@ -205,8 +204,6 @@ void rename_file(int sig){
 		snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
 		remove("maos_done.conf");
 		mysymlink(fn, "maos_done.conf");
-		remove("maos");
-		mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
 	}
 	if(global&&global->parms&&global->parms->fdlock&&sig!=0){
 		char fn[80];
@@ -479,9 +476,9 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 dmat* mkamp(loc_t* loc, map_t* ampground, real misregx, real misregy, real D, real Din){
 	dmat* amp=dnew(loc->nloc, 1);
 	if(ampground){
-		prop_grid(ampground, loc, amp->p, 1, misregx, misregy, 1, 0, 0, 0);
+		prop_grid(ampground, loc, P(amp), 1, misregx, misregy, 1, 0, 0, 0);
 	} else{
-		locannular(amp->p, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
+		locannular(P(amp), loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
 	}
 	return amp;
 }
@@ -510,7 +507,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
 	real* srot=NULL;
 		if(nllt){
-		srot=PR(powfs[ipowfs].srot,wfsind,0)->p;
+		srot=P(PR(powfs[ipowfs].srot,wfsind,0));
 	}
 
 	const int nsep=41;
@@ -579,11 +576,11 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 					dspcell* psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
 					dsp* sis=PR(psi, isa, wfsind);
 					real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
-					real dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+					real dtheta1=NX(powfs[ipowfs].pts)*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 					fotf2=P(fotf,isa,iwvl);
 					ctilt2(P(otf,iwvl), fotf2, gx*dtheta1, gy*dtheta1, 0);
 					cfft2(P(otf,iwvl), 1);
-					dspmulcreal(ints->p, sis, P(otf,iwvl)->p, wvlsig);
+					dspmulcreal(P(ints), sis, P(P(otf,iwvl)), wvlsig);
 				}
 				//ddraw("ints", ints, NULL, NULL, "ints", "x", "y", "ints"); PAUSE;
 				real g[3]={0,0,0};
@@ -592,7 +589,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 				case 0://no-op
 					break;
 				case 1:{/*(constraint) Matched filter give gradients along x/y*/
-					dmulvec(g, mtche[isa], ints->p, 1.);
+					dmulvec(g, mtche[isa], P(ints), 1.);
 				}
 					  break;
 				case 2:{/*tCoG gives gradients along r/a*/
@@ -664,8 +661,8 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	dmat* gradcg=dnew(nsa, 2);
 	int ncol=1000;
 	int dtrat=parms->powfs[ipowfs].llt->coldtrat;
-	dmat* rmodmf=dnew(RR->nx, ncol/dtrat);
-	dmat* rmodcg=dnew(RR->nx, ncol/dtrat);
+	dmat* rmodmf=dnew(NX(RR), ncol/dtrat);
+	dmat* rmodcg=dnew(NX(RR), ncol/dtrat);
 	real scale=1;
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
@@ -687,7 +684,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 		//writebin(i0_new, "i0_%d", icol);
 		for(int isa=0; isa<nsa; isa++){
 			real geach[3]={0,0,1};
-			dmulvec(geach, P(mtche,isa), P(i0_new,isa)->p, 1);
+			dmulvec(geach, P(mtche,isa), P(P(i0_new,isa)), 1);
 			if(parms->powfs[ipowfs].sigmatch){
 				scale=P(i0sum,isa)/dsum(P(i0_new,isa));
 			}
@@ -711,8 +708,8 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 
 		}
 		dcellfree(i0_new);
-		dmulvec(rmodmf->p+icol/dtrat*rmodmf->nx, RR, gradmf->p, 1);
-		dmulvec(rmodcg->p+icol/dtrat*rmodcg->nx, RR, gradcg->p, 1);
+		dmulvec(PCOL(rmodmf, icol/dtrat), RR, P(gradmf), 1);
+		dmulvec(PCOL(rmodcg, icol/dtrat), RR, P(gradcg), 1);
 	}
 	dfree(GR);
 	dfree(RR);
@@ -751,7 +748,7 @@ static real mapfun(real* x, mapdata_t* info){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
 	int isa=info->isa;
-	int nwvl=fotf->ny;
+	int nwvl=NY(fotf);
 	if(!otf){
 		info->otf=ccellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -761,29 +758,29 @@ static real mapfun(real* x, mapdata_t* info){
 		}
 		otf=info->otf;
 	}
-	dmat* ints2=dnew(ints->nx, ints->ny);
+	dmat* ints2=dnew(NX(ints), NY(ints));
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		real wvlsig=P(parms->wfs[iwfs].wvlwts,iwvl)
 			*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		dspcell* psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
-		int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
-		int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
+		int idtf=NY(powfs[ipowfs].dtf[iwvl].si)>1?wfsind:0;
+		int idtfsa=NX(powfs[ipowfs].dtf[iwvl].si)>1?isa:0;
 		dsp* sis=P(psi, idtfsa, idtf);
 		real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
-		real dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+		real dtheta1=NX(powfs[ipowfs].pts)*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		ctilt2(P(info->otf,iwvl), P(info->fotf,isa,iwvl), x[0]*dtheta1, x[1]*dtheta1, 0);
 		cfft2(P(info->otf,iwvl), 1);
-		dspmulcreal(ints2->p, sis, P(P(info->otf,iwvl)), wvlsig*x[2]);
+		dspmulcreal(P(ints2), sis, P(P(info->otf,iwvl)), wvlsig*x[2]);
 	}
 
 	real sigma=0;
 	if(info->noisy){
 		real noise=info->rne*info->rne+info->bkgrnd;
-		for(int i=0; i<ints->nx*ints->ny; i++){
+		for(int i=0; i<NX(ints)*NY(ints); i++){
 			sigma+=pow(P(ints,i)-P(ints2,i), 2)/(P(ints2,i)+noise);
 		}
 	} else{
-		for(int i=0; i<ints->nx*ints->ny; i++){
+		for(int i=0; i<NX(ints)*NY(ints); i++){
 			sigma+=pow(P(ints,i)-P(ints2,i), 2);
 		}
 	}
@@ -816,15 +813,15 @@ void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 		g[1]=-g[0]*sx+g[1]*cx;
 		g[0]=tmp;
 	}
-	real gx=g[0]/pixthetax*2./ints->nx;
-	real gy=g[1]/pixthetay*2./ints->ny;
+	real gx=g[0]/pixthetax*2./NX(ints);
+	real gy=g[1]/pixthetay*2./NY(ints);
 	if(fabs(gx)>0.55||fabs(gy)>0.55){
 		warning("sa %4d iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
 		gx=gx-floor(gx+0.5);
 		gy=gy-floor(gy+0.5);
 		warning("gx=%6.3f, gy=%6.3f\n", gx, gy);
-		g[0]=pixthetax*ints->nx/2*gx;
-		g[1]=pixthetay*ints->ny/2*gy;
+		g[0]=pixthetax*NX(ints)/2*gx;
+		g[1]=pixthetay*NY(ints)/2*gy;
 	}
 	//info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
 	if(parms->powfs[ipowfs].radpix){
@@ -939,8 +936,8 @@ real parabolic_peak_1d(dmat* corr){
    First sum along 1 dimension, then fit 3 points around the peak. More robust than the old method.
 */
 void parabolic_peak_sum(real* grad, dmat* corr, int nbox){
-	const long nx=corr->nx;
-	const long ny=corr->ny;
+	const long nx=NX(corr);
+	const long ny=NY(corr);
 	if(nbox<=0||nbox>nx) nbox=nx;
 	if(nbox<=0||nbox>ny) nbox=ny;
 	dmat* corrx=dnew(nbox, 1);
@@ -988,7 +985,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	if(!*pgrad){
 		*pgrad=dnew(nsa*2, 1);
 	}
-	real* pgradx=(*pgrad)->p;
+	real* pgradx=P(*pgrad);
 	real* pgrady=pgradx+nsa;
 	real i1sum=0;
 	dmat* corr=0;
@@ -1030,7 +1027,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 				scale=i0sumg/i1sum;
 				break;
 			}
-			dmulvec(geach, mtche[isa], ints[isa]->p, scale);
+			dmulvec(geach, mtche[isa], P(ints[isa]), scale);
 		}
 			  break;
 		case PTYPE_COG:{//CoG
@@ -1109,7 +1106,7 @@ dcell* dcellread_prefix(const char* file, const parms_t* parms, int ipowfs){
 		nea=dcellread("%s_powfs%d.bin", file, ipowfs);
 	} else if(zfexist("%s_wfs%d.bin", file, iwfs0)){
 		nea=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-		for(int jwfs=0; jwfs<nea->nx; jwfs++){
+		for(int jwfs=0; jwfs<NX(nea); jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			//info2("using %s_wfs%d.bin\n", file, iwfs);
 			P(nea,jwfs)=dread("%s_wfs%d.bin", file, iwfs);
@@ -1148,7 +1145,7 @@ void wait_dmreal(sim_t* simu, int isim){
 * */
 real average_powfs(dmat *A, lmat *wfsindex, int replace){
 	real avg=0;
-	int nwfs=wfsindex->nx;
+	int nwfs=NX(wfsindex);
 	for(int jwfs=0; jwfs<nwfs; jwfs++){
 		int iwfs=P(wfsindex,jwfs);
 		avg+=P(A, iwfs);

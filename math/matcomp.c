@@ -85,7 +85,7 @@ void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
 	const int nopdx, const int nopdy,
 	const R wvl, const R theta){
 	if(!check_mat(A)) return;
-	T* psf=A->p;
+	T* psf=P(A);
 	const int npsfx=A->nx;
 	const int npsfy=A->ny;
 
@@ -190,7 +190,7 @@ static inline T XY2RA(T A){
    Embed array B into A with rotation theta CW.  Current version, preferred */
 void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMBED flag){
 	if(!check_mat(A, B)) return;
-	const T* restrict in=B->p;
+	const T* restrict in=P(B);
 	const int ninx=B->nx;
 	const int niny=B->ny;
 	const int noutx=A->nx;
@@ -464,8 +464,8 @@ void X(cpcorner)(X(mat)* A, const X(mat)* restrict B, CEMBED flag){
 	const long ny=A->ny;
 	const long ninx=B->nx;
 	const long niny=B->ny;
-	T* psfout=A->p;
-	const T* restrict psfin=B->p;
+	T* psfout=P(A);
+	const T* restrict psfin=P(B);
 	assert((nx&1)==0&&(ny&1)==0&&(ninx&1)==0&&(niny&1)==0);
 	memset(psfout, 0, sizeof(T)*nx*ny);
 	const int ny2=(ny<niny)?ny/2:niny/2;

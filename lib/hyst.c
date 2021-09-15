@@ -80,11 +80,11 @@ void hyst_free(hyst_t* hyst){
    Apply hysteresis to DM vector. dmreal and dmcmd may be the same
 */
 void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
-	real* restrict xlast=hyst->xlast->p;
-	real* restrict ylast=hyst->ylast->p;
-	assert(dmcmd->nx==hyst->xlast->nx);
-	for(int it=0; it<dmcmd->ny; it++){
-		for(int ia=0; ia<dmcmd->nx; ia++){
+	real* restrict xlast=P(hyst->xlast);
+	real* restrict ylast=P(hyst->ylast);
+	assert(NX(dmcmd)==NX(hyst->xlast));
+	for(int it=0; it<NY(dmcmd); it++){
+		for(int ia=0; ia<NX(dmcmd); ia++){
 			real xia=P(dmcmd, ia, it);
 			real dx=xia-xlast[ia];
 			real dy=fabs(dx)*hyst->alpha*(hyst->beta*xlast[ia]-ylast[ia])+dx*(hyst->beta_m_u);
@@ -100,7 +100,7 @@ void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
 */
 void hyst_dcell(hyst_t** hyst, dcell* dmreal, const dcell* dmcmd){
 	if(!hyst) return;
-	for(int idm=0; idm<dmcmd->nx*dmcmd->ny; idm++){
+	for(int idm=0; idm<NX(dmcmd)*NY(dmcmd); idm++){
 		hyst_dmat(hyst[idm], P(dmreal,idm), P(dmcmd,idm));
 	}
 }
@@ -109,8 +109,8 @@ void hyst_dcell(hyst_t** hyst, dcell* dmreal, const dcell* dmcmd){
  * Test hysteresis model. Dmcmd has dimensions of nact*ntime
  * */
 dmat* hyst_test(real hysteresis, real hyst_alpha, real hyst_stroke, const dmat* dmcmd){
-	hyst_t* hyst=hyst_new(hysteresis, hyst_alpha, hyst_stroke, dmcmd->nx);
-	dmat* dmreal=dnew(dmcmd->nx, dmcmd->ny);
+	hyst_t* hyst=hyst_new(hysteresis, hyst_alpha, hyst_stroke, NX(dmcmd));
+	dmat* dmreal=dnew(NX(dmcmd), NY(dmcmd));
 	hyst_dmat(hyst, dmreal, dmcmd);
 	hyst_free(hyst);
 	return dmreal;

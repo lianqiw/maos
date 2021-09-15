@@ -33,7 +33,7 @@ def isloc(arg):
     return arg.ndim == 2 and arg.shape[0] == 2
 
 
-def locembed(loc, opd0):
+def locembed(loc, opd0, return_ext=0):
     # draw(loc, opd): embed opd onto loc
     opd=opd0.view()
     (ix, nx, dx, xi) = coord2grid(loc[0])
@@ -42,11 +42,16 @@ def locembed(loc, opd0):
     nloc = loc.shape[1]
     if opd.dtype==object: #cell
         ims = []
+        ext = None
         for opdi in opd:
-            ims_i,ext=locembed(loc, opdi)
+            ims_i,ext=locembed(loc, opdi, return_ext)
             ims.append(ims_i)
-
-        return np.asarray(ims), ext
+        ims=np.asarray(ims)
+        if return_ext:
+            return ims, ext
+        else:
+            return ims
+        
     elif len(opd.shape)==1: #vector
         nframe = opd.size/nloc
         opd.shape=(int(nframe), nloc) #reshape() may do copy. assign .shape prevents copy
@@ -56,7 +61,7 @@ def locembed(loc, opd0):
         pass
     else:
         print("data has wrong shape", opd.shape)
-        return None,None
+        return None
     nframe=opd.shape[0]
     
     # print('opd=',opd.shape)
@@ -67,11 +72,12 @@ def locembed(loc, opd0):
         im.shape = (ny, nx)  # fixed 2020-10-09
         ims[iframe] = im
     ext = np.r_[xi[0]-dx/2, xi[1]+dx/2, yi[0]-dy/2, yi[1]+dy/2]
-    if nframe > 1:
+    if nframe == 1:
+        ims=im
+    if return_ext:
         return ims, ext
     else:
-        return im, ext
-
+        return ims
 
 def draw(*args, **kargs):
     #if not 'keep' in kargs or kargs['keep'] == 0:
@@ -89,6 +95,8 @@ def draw(*args, **kargs):
         if nframe>60:
             nframe=60
             print('Limit to first {} frames'.format(nframe))
+        elif nframe==0:
+            return
         if 'nx' in kargs:
             nx=kargs['nx']
         elif nframe > 3:
@@ -101,9 +109,9 @@ def draw(*args, **kargs):
             if nx>1 or ny > 1:
                 plt.subplot(ny, nx, iframe+1)
             if len(args) == 1:
-                draw(args[0][iframe], **kargs)
+                draw(args[0].flat[iframe], **kargs)
             elif len(args) == 2:
-                draw(args[0][iframe], args[1][iframe],  **kargs)
+                draw(args[0].flat[iframe], args[1].flat[iframe],  **kargs)
             else:
                 print('Too many arguments')
     elif isloc(args[0]):  # first argument is loc
@@ -115,17 +123,16 @@ def draw(*args, **kargs):
             plt.ylabel('y (m)')
         elif len(args) == 2:
             # draw(loc, opd): embed opd onto loc
-            ims, ext2 = locembed(args[0], args[1])
+            ims, ext2 = locembed(args[0], args[1], 1)
             # print('ext2=',ext2)
             kargs['ext']=ext2
             draw(ims, **kargs)
-            return ims
         else:
             print('Too many arguments')
     
     else: #2-d numeric array
         img = np.squeeze(args[0])
-        if len(img.shape) == 1:
+        if len(img.shape) == 1 and img.shape[0]>0:
             nx = int(np.sqrt(img.shape[0]))
             ny = int(img.shape[0] / nx)
             if nx*ny==img.shape[0]:
@@ -136,11 +143,14 @@ def draw(*args, **kargs):
             plt.gca().images[-1].colorbar.remove()
         except:
             pass
-        if 'ext' in kargs:
+        if 'ext' in kargs and kargs['ext'] is not None :
             im=plt.imshow(img, extent=kargs['ext'], origin='lower', cmap='jet')
         else:
             im=plt.imshow(img, origin='lower', cmap='jet')
-        
+        #for im in gca().get_images():
+        #im.set_clim(0, 0.5)
+        if 'clim' in kargs and kargs['clim'] is not None:
+            plt.clim(kargs['clim'])
         plt.colorbar(im, fraction=0.046, pad=0.04)
         plt.grid(False)
 

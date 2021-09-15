@@ -45,12 +45,12 @@ static mapcell* genatm_do(sim_t* simu){
 			simu->atmcfg=mycalloc(1, genatm_t);/*the data for generating screens. */
 			gs=simu->atmcfg;
 			gs->rstat=simu->atm_rand;
-			gs->wt=atm->wt->p;
+			gs->wt=P(atm->wt);
 			gs->r0=atm->r0;
-			gs->L0=atm->L0->p;
+			gs->L0=P(atm->L0);
 			gs->dx=atm->dx;
-			gs->nx=atm->nx;
-			gs->ny=atm->ny;
+			gs->nx=NX(atm);
+			gs->ny=NY(atm);
 			gs->nlayer=atm->nps;
 			gs->ninit=atm->ninit;
 			gs->share=atm->share;
@@ -87,12 +87,12 @@ static mapcell* genatm_do(sim_t* simu){
 	  layer 5 is at dm layer. otherwise the error is a
 	  little larger.
 	*/
-		int nx=atm->nx;
-		int ny=atm->ny;
+		int nx=NX(atm);
+		int ny=NY(atm);
 		screens=mapcellnew(atm->nps, 1);
 		real dx=atm->dx;
 		int iratio=0;
-		if(parms->dbg.atm->nx>=atm->nps){
+		if(NX(parms->dbg.atm)>=atm->nps){
 			iratio=1;
 		}
 		loc_t* psloc=0;
@@ -143,8 +143,8 @@ static mapcell* genatm_do(sim_t* simu){
 */
 
 void blend_screen_side(map_t* atm1, map_t* atm2, long overx, long overy){
-	const long nx=atm1->nx;
-	const long ny=atm1->ny;
+	const long nx=NX(atm1);
+	const long ny=NY(atm1);
 	int ca=0;
 	if(atm1->vx>EPS){
 		ca=-1;/*reverse sign of vx */
@@ -165,8 +165,8 @@ void blend_screen_side(map_t* atm1, map_t* atm2, long overx, long overy){
 		atm2->oy=atm1->oy+rr*sa*atm1->dx;
 		atm2->ox=atm1->ox;
 		real wty=sa<0?1:0;
-		real* p1=atm1->p+(1-(long)wty)*offy;
-		real* p2=atm2->p+(long)wty*offy;
+		real* p1=P(atm1)+(1-(long)wty)*offy;
+		real* p2=P(atm2)+(long)wty*offy;
 		real(*pp1)[nx]=(real(*)[nx])p1;
 		real(*pp2)[nx]=(real(*)[nx])p2;
 		real overyd=(real)overy;
@@ -182,8 +182,8 @@ void blend_screen_side(map_t* atm1, map_t* atm2, long overx, long overy){
 		atm2->ox=atm1->ox+rr*ca*atm1->dx;
 		atm2->oy=atm1->oy;
 		real wtx=ca<0?1:0;
-		real* p1=atm1->p+(1-(long)wtx)*offx;
-		real* p2=atm2->p+(long)wtx*offx;
+		real* p1=P(atm1)+(1-(long)wtx)*offx;
+		real* p2=P(atm2)+(long)wtx*offx;
 		real(*pp1)[nx]=(real(*)[nx])p1;
 		real(*pp2)[nx]=(real(*)[nx])p2;
 		real wts[overx];
@@ -240,7 +240,7 @@ void genatm(sim_t* simu){
 		const char* fn=simu->parms->load.atm;
 		info("loading atm from %s\n", fn);
 		simu->atm=mapcellread("%s", fn);
-		if(simu->atm->nx!=atm->nps) error("ATM Mismatch\n");
+		if(NX(simu->atm)!=atm->nps) error("ATM Mismatch\n");
 	} else{
 		simu->atm=genatm_do(simu);
 	}
@@ -268,7 +268,7 @@ void genatm(sim_t* simu){
 		dbg("Scaling OPD temporarily\n");
 		simu->atmscale=psd2time(parms->atm.r0logpsdt, simu->atm_rand, parms->sim.dt, parms->sim.end);
 		const real r02wt=(-5./3.);//layer weight is prop to r0^(-5/3)
-		for(long i=0; i<simu->atmscale->nx; i++){
+		for(long i=0; i<NX(simu->atmscale); i++){
 			P(simu->atmscale, i)=exp((P(simu->atmscale, i))*r02wt);//convert to cn2dh
 		}
 		writebin(simu->atmscale, "atmscale_%d", simu->seed);
@@ -356,7 +356,7 @@ void atm2xloc(dcell** opdx, const sim_t* simu){
 			real disx=-P(simu->atm, ips)->vx*isim*parms->sim.dt;
 			real disy=-P(simu->atm, ips)->vy*isim*parms->sim.dt;
 			int ipsr=P(parms->atm.ipsr, ips);
-			prop_grid(P(simu->atm, ips), P(recon->xloc, ipsr), P(*opdx, ipsr)->p,
+			prop_grid(P(simu->atm, ips), P(recon->xloc, ipsr), P(P(*opdx, ipsr)),
 				1, disx, disy, 1, 1, 0, 0);
 		}
 	}
@@ -798,7 +798,7 @@ static void init_simu_wfs(sim_t* simu){
 		if(powfs[ipowfs].gradncpa&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)){
 			//CMF has gradncpa with in matched filter
 			int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
-			dbg("wfs %d: copying gradncpa to gradoff\n", iwfs);
+			dbg3("wfs %d: copying gradncpa to gradoff\n", iwfs);
 			dadd(&P(simu->gradoff, iwfs), 1, PR(powfs[ipowfs].gradncpa, wfsind, 1), 1);
 		}
 
@@ -811,20 +811,22 @@ static void init_simu_wfs(sim_t* simu){
 		simu->ngsfocuslpf=0;
 	}
 	if(parms->nphypowfs){
-		simu->fsmerr_store=dcellnew(nwfs, 1);
-		simu->fsmreal=dcellnew(nwfs, 1);
 		simu->fsmsho=mycalloc(nwfs*2, sho_t*);
+		long nnx[nwfs];
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
+			nnx[iwfs]=0;
 			if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){
-				P(simu->fsmerr_store, iwfs)=dnew(2, 1);
-				P(simu->fsmreal, iwfs)=dnew(2, 1);
+				nnx[iwfs]=2;
 				if(parms->sim.f0fsm>0){
 					simu->fsmsho[iwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//x
 					simu->fsmsho[iwfs+nwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//y
 				}
 			}
 		}
+		simu->fsmerr_store=dcellnew3(nwfs, 1, nnx, NULL);
+		simu->fsmerr_drift=dcellnew3(nwfs, 1, nnx, NULL);
+		simu->fsmreal     =dcellnew3(nwfs, 1, nnx, NULL);
 		if(parms->sim.closeloop){
 			simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
 				parms->sim.dthi, parms->sim.epfsm);
@@ -1047,6 +1049,7 @@ static void init_simu_wfs(sim_t* simu){
 		simu->LGSfocus=dcellnew(parms->nwfs, 1);
 		simu->LGSfocus_drift=dcellnew(parms->nwfs, 1);
 		simu->zoomerr=dnew(parms->nwfs, 1);
+		simu->zoomerr_drift=dnew(parms->nwfs, 1);
 		simu->zoomint=dnew(parms->nwfs, 1);
 		simu->zoomavg=dnew(parms->nwfs, 1);
 		if(!disable_save){
@@ -1096,7 +1099,7 @@ static void init_simu_wfs(sim_t* simu){
 	}
 	if(recon->cn2est){
 		int ncn2=(parms->sim.end-1)/parms->cn2.step;
-		long nnx[2]={ncn2, recon->cn2est->htrecon->nx};
+		long nnx[2]={ncn2, NX(recon->cn2est->htrecon)};
 		long nny[2]={1, ncn2};
 		simu->cn2res=dcellnew_file(2, 1, nnx, nny, NULL, "%s/Rescn2_%d.bin", fnextra, seed);
 	}
@@ -1125,14 +1128,14 @@ static void init_simu_dm(sim_t* simu){
 	}
 	/*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
 	if(1){
-		simu->dmerr_store=dcellnew3(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
+		simu->dmerr_store=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
 	} else{
-		simu->dmerr_store=dcellnew_file(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL, NULL, "/dmerr");
+		simu->dmerr_store=dcellnew_file(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL, NULL, "/dmerr");
 	}
 	simu->dmcmd=dcellnew(parms->ndm, 1);
 	simu->dmreal=dcellnew(parms->ndm, 1);
 	if(parms->fit.cgwarm){
-		simu->dmfit=dcellnew3(parms->ndm, 1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
+		simu->dmfit=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
 	} else{
 		simu->dmfit=simu->dmerr_store;
 	}
@@ -1142,7 +1145,7 @@ static void init_simu_dm(sim_t* simu){
 	simu->dmrealsq=mapcellnew(parms->ndm, 1);
 
 	if(parms->sim.dmproj){
-		simu->dmproj=dcellnew3(parms->ndm, 1, recon->anloc->p, NULL);
+		simu->dmproj=dcellnew3(parms->ndm, 1, P(recon->anloc), NULL);
 		simu->dmprojsq=mapcellnew(parms->ndm, 1);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -1159,11 +1162,11 @@ static void init_simu_dm(sim_t* simu){
 		}
 		if(parms->fit.square){/*dmreal is already square.*/
 			mem_unref(&P(simu->dmrealsq, idm)->mem);
-			P(simu->dmrealsq, idm)->p=P(simu->dmreal, idm)->p;
+			P(P(simu->dmrealsq, idm))=P(P(simu->dmreal, idm));
 			P(simu->dmrealsq, idm)->mem=mem_ref(P(simu->dmreal, idm)->mem);
 			if(simu->dmprojsq){
 				mem_unref(&P(simu->dmprojsq, idm)->mem);
-				P(simu->dmprojsq, idm)->p=P(simu->dmproj, idm)->p;
+				P(P(simu->dmprojsq, idm))=P(P(simu->dmproj, idm));
 				P(simu->dmprojsq, idm)->mem=mem_ref(P(simu->dmprojsq, idm)->mem);
 			}
 		}
@@ -1446,8 +1449,8 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 		gpu_recon_reset(parms);
 	}
 #endif
-	OMPTASK_SINGLE
-		filter_dm(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
+	//OMPTASK_SINGLE
+	filter_dm(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
 	return simu;
 }
 /**
@@ -1558,6 +1561,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->Merr_lo2);
 	dcellfree(simu->ngsmodlpf);
 	dcellfree(simu->fsmerr_store);
+	dcellfree(simu->fsmerr_drift);
 	dcellfree(simu->fsmreal);
 	servo_free(simu->fsmint);
 	if(simu->fsmsho){
@@ -1583,6 +1587,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->telfocusint);
 	dcellfree(simu->telfocusreal);
 	dfree(simu->zoomerr);
+	dfree(simu->zoomerr_drift);
 	dfree(simu->zoomavg);
 	dfree(simu->zoomint);
 	if(parms->recon.split){
@@ -1793,7 +1798,7 @@ void print_progress(sim_t* simu){
 					legs[nline]="Astig";
 					nline++;
 				}
-				if(tmp->nx==4){
+				if(NX(tmp)==4){
 					legs[nline]="Focus";
 					nline++;
 				}
@@ -1817,7 +1822,7 @@ void print_progress(sim_t* simu){
 				}
 			}
 			dcellcwpow(res, 0.5); dcellscale(res, 1e9);
-			plot_points("Res", res->nx, NULL, res, NULL, NULL, "nn", NULL, legs,
+			plot_points("Res", NX(res), NULL, res, NULL, NULL, "nn", NULL, legs,
 				"Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
 			dcellfree(res);
 		}

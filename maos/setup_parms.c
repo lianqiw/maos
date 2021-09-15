@@ -253,7 +253,7 @@ static void readcfg_powfs(parms_t* parms){
 	dmat* wvllist=readcfg_dmat("powfs.wvl");
 	dmat* wvlwts=readcfg_dmat("powfs.wvlwts");
 
-	if(wvllist->nx!=wvlwts->nx&&wvlwts->nx!=0){
+	if(NX(wvllist)!=NX(wvlwts)&&NX(wvlwts)!=0){
 		error("powfs.wvl is not empty and does not match powfs.wvlwts\n");
 	}
 	int count=0;
@@ -272,14 +272,14 @@ static void readcfg_powfs(parms_t* parms){
 			wvlm=wvl;
 			P(parms->powfs[ipowfs].wvl,iwvl)=wvl;
 		}
-		if(wvlwts->nx){
+		if(NX(wvlwts)){
 			parms->powfs[ipowfs].wvlwts=dnew(nwvl, 1);
-			memcpy(parms->powfs[ipowfs].wvlwts->p, wvlwts->p+count, sizeof(real)*nwvl);
-			dnormalize_sumabs(parms->powfs[ipowfs].wvlwts->p, nwvl, 1);
+			memcpy(P(parms->powfs[ipowfs].wvlwts), P(wvlwts)+count, sizeof(real)*nwvl);
+			dnormalize_sumabs(P(parms->powfs[ipowfs].wvlwts), nwvl, 1);
 		}
 		count+=nwvl;
 	}
-	if(count!=wvllist->nx){
+	if(count!=NX(wvllist)){
 		error("powfs.wvl has wrong value\n");
 	}
 	dfree(wvllist);
@@ -412,7 +412,7 @@ static void readcfg_powfs(parms_t* parms){
 			READ_LLT(dmat, misreg);
 			READ_LLT(dmat, ox);
 			READ_LLT(dmat, oy);
-			powfsi->llt->n=powfsi->llt->ox->nx;
+			powfsi->llt->n=NX(powfsi->llt->ox);
 		} else{/*there is no LLT. */
 			powfsi->llt=NULL;
 			if(isfinite(powfsi->hs)){
@@ -523,24 +523,24 @@ static void readcfg_wfs(parms_t* parms){
 	int powfs_siglev_override=readcfg_peek_override("powfs.siglev");
 	int powfs_wvlwts_override=readcfg_peek_override("powfs.wvlwts");
 	int count=0;
-	if(siglev->nx!=0&&siglev->nx!=parms->nwfs){
+	if(NX(siglev)!=0&&NX(siglev)!=parms->nwfs){
 		error("wfs.siglev can be either empty or %d\n", parms->nwfs);
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
 		int nwvl=parms->powfs[ipowfs].nwvl;
 		parms->wfs[iwfs].wvlwts=dnew(nwvl, 1);
-		if(wvlwts->nx==0){
-			memcpy(parms->wfs[iwfs].wvlwts->p, parms->powfs[ipowfs].wvlwts->p, sizeof(real)*nwvl);
+		if(NX(wvlwts)==0){
+			memcpy(P(parms->wfs[iwfs].wvlwts), P(parms->powfs[ipowfs].wvlwts), sizeof(real)*nwvl);
 		} else{
-			memcpy(parms->wfs[iwfs].wvlwts->p, wvlwts->p+count, sizeof(real)*nwvl);
+			memcpy(P(parms->wfs[iwfs].wvlwts), P(wvlwts)+count, sizeof(real)*nwvl);
 			count+=nwvl;
 			if(parms->powfs[ipowfs].wvlwts&&powfs_wvlwts_override){
 				error("when both powfs.wvlwts and wfs.wvlwts are overriden "
 					"must set powfs.wvlwts=[]\n");
 			}
 		}
-		if(siglev->nx==0){
+		if(NX(siglev)==0){
 			parms->wfs[iwfs].siglev=parms->powfs[ipowfs].siglev;
 		} else{
 			parms->wfs[iwfs].siglev=P(siglev,iwfs);
@@ -556,13 +556,13 @@ static void readcfg_wfs(parms_t* parms){
 			parms->wfs[iwfs].hc=parms->powfs[ipowfs].hc;
 		}
 	}
-	if(count!=wvlwts->nx){
-		error("Supplied %ld wvlwts but need %d for all wfs.\n", wvlwts->nx, count);
+	if(count!=NX(wvlwts)){
+		error("Supplied %ld wvlwts but need %d for all wfs.\n", NX(wvlwts), count);
 	}
 	for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		int nwvl=parms->powfs[ipowfs].nwvl;
 		nwfs=parms->powfs[ipowfs].nwfs;
-		if(wvlwts->nx>0){//resize powfs.wvlwts for all wfs
+		if(NX(wvlwts)>0){//resize powfs.wvlwts for all wfs
 			dresize(parms->powfs[ipowfs].wvlwts, nwvl, nwfs);
 		}
 		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].wvlwts); jwfs++){
@@ -571,13 +571,13 @@ static void readcfg_wfs(parms_t* parms){
 				P(parms->powfs[ipowfs].wvlwts, iwvl, jwfs)=P(parms->wfs[iwfs].wvlwts, iwvl, 0);
 			}
 		}
-		dbg("powfs[%d].wvlwts is %ldx%ld\n", ipowfs, NX(parms->powfs[ipowfs].wvlwts), NY(parms->powfs[ipowfs].wvlwts));
-		parms->powfs[ipowfs].siglevs=dnew(siglev->nx>0?nwfs:1, 1);
+		dbg3("powfs[%d].wvlwts is %ldx%ld\n", ipowfs, NX(parms->powfs[ipowfs].wvlwts), NY(parms->powfs[ipowfs].wvlwts));
+		parms->powfs[ipowfs].siglevs=dnew(NX(siglev)>0?nwfs:1, 1);
 		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].siglevs); jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			P(parms->powfs[ipowfs].siglevs, jwfs)=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		}
-		dbg("powfs[%d].siglevs is %ldx1\n", ipowfs, NX(parms->powfs[ipowfs].siglevs));
+		dbg3("powfs[%d].siglevs is %ldx1\n", ipowfs, NX(parms->powfs[ipowfs].siglevs));
 	}
 	
 	dfree(siglev);
@@ -716,7 +716,7 @@ static void readcfg_atm(parms_t* parms){
 	//parms->atm.r0logpsds=readcfg_dmat("atm.r0logpsds");
 	parms->atm.size=readcfg_dmat_n(2, "atm.size");
 	//parms->atm.ht=readcfg_dmat("atm.ht");
-	parms->atm.nps=parms->atm.ht->nx;
+	parms->atm.nps=NX(parms->atm.ht);
 	parms->atm.wt=readcfg_dmat_n(parms->atm.nps, "atm.wt");
 	parms->atm.ws=readcfg_dmat_n(parms->atm.nps, "atm.ws");
 	parms->atm.wddeg=readcfg_dmat_nmax(parms->atm.nps, "atm.wddeg");
@@ -743,17 +743,17 @@ static void readcfg_atmr(parms_t* parms){
 	}
 	READ_DMAT(atmr.ht);
 	READ_DMAT(atmr.wt);
-	if(parms->atmr.ht->nx==0){
+	if(NX(parms->atmr.ht)==0){
 		dcp(&parms->atmr.ht, parms->atm.ht);
 	}
-	if(parms->atmr.wt->nx==0){
+	if(NX(parms->atmr.wt)==0){
 		dcp(&parms->atmr.wt, parms->atm.wt);
 	} else{
-		if(parms->atmr.wt->nx!=parms->atmr.ht->nx){
+		if(NX(parms->atmr.wt)!=NX(parms->atmr.ht)){
 			error("atmr.wt length has to match atmr.ht\n");
 		}
 	}
-	parms->atmr.nps=parms->atmr.ht->nx;
+	parms->atmr.nps=NX(parms->atmr.ht);
 	parms->atmr.os=readcfg_lmat_nmax(parms->atmr.nps, "atmr.os");
 	READ_DBL(atmr.dx);
 }
@@ -794,16 +794,16 @@ static void readcfg_aper(parms_t* parms){
 static void readcfg_evl(parms_t* parms){
 	READ_DMAT(evl.thetax);
 	//parms->evl.thetax=readcfg_dmat("evl.thetax");
-	parms->evl.nevl=parms->evl.thetax->nx;
+	parms->evl.nevl=NX(parms->evl.thetax);
 	parms->evl.thetay=readcfg_dmat_n(parms->evl.nevl, "evl.thetay");
 	parms->evl.wt=readcfg_dmat_nmax(parms->evl.nevl, "evl.wt");
 	parms->evl.hs=readcfg_dmat_nmax(parms->evl.nevl, "evl.hs");
-	dnormalize_sumabs(parms->evl.wt->p, parms->evl.nevl, 1);
+	dnormalize_sumabs(P(parms->evl.wt), parms->evl.nevl, 1);
 	parms->evl.psf=readcfg_lmat_nmax(parms->evl.nevl, "evl.psf");
 	parms->evl.psfr=readcfg_lmat_nmax(parms->evl.nevl, "evl.psfr");
 	READ_DMAT(evl.wvl);
 	//parms->evl.wvl=readcfg_dmat("evl.wvl");
-	parms->evl.nwvl=parms->evl.wvl->nx;
+	parms->evl.nwvl=NX(parms->evl.wvl);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		if(P(parms->evl.wvl,iwvl)>0.1){
 			warning("wvl should be supplied in unit of meter. scale %g by 1e-6\n",
@@ -877,7 +877,7 @@ static void readcfg_tomo(parms_t* parms){
 static void readcfg_fit(parms_t* parms){
 	READ_DMAT(fit.thetax);
 	//parms->fit.thetax=readcfg_dmat("fit.thetax");
-	parms->fit.nfit=parms->fit.thetax->nx;
+	parms->fit.nfit=NX(parms->fit.thetax);
 	parms->fit.thetay=readcfg_dmat_n(parms->fit.nfit, "fit.thetay");
 	parms->fit.wt=readcfg_dmat_nmax(parms->fit.nfit, "fit.wt");
 	parms->fit.hs=readcfg_dmat_nmax(parms->fit.nfit, "fit.hs");
@@ -977,20 +977,20 @@ static void readcfg_sim(parms_t* parms){
 	READ_DBL(sim.allo);
 	READ_DBL(sim.alfsm);
 	/*We append a 0 so that we keep a time history of the integrator. */
-	if(parms->sim.aphi->nx==1){
+	if(NX(parms->sim.aphi)==1){
 		dresize(parms->sim.aphi, 2, 1);
 	}
-	if(parms->sim.aphi->nx>2||parms->sim.aphi->ny!=1){
+	if(NX(parms->sim.aphi)>2||NY(parms->sim.aphi)!=1){
 		error("Invalid use of aphi\n");
 	}
-	if(parms->sim.aplo->nx==1){
+	if(NX(parms->sim.aplo)==1){
 		dresize(parms->sim.aplo, 2, 1);
 	}
-	if(parms->sim.aplo->nx>2||parms->sim.aplo->ny!=1){
+	if(NX(parms->sim.aplo)>2||NY(parms->sim.aplo)!=1){
 		error("Invalid use of aplo\n");
 	}
 	parms->sim.seeds=readcfg_lmat("sim.seeds");
-	parms->sim.nseed=parms->sim.seeds->nx;
+	parms->sim.nseed=NX(parms->sim.seeds);
 	READ_DBL(sim.dt);
 	READ_INT(sim.dtrat_skip);
 	READ_INT(sim.start);
@@ -1022,13 +1022,13 @@ static void readcfg_sim(parms_t* parms){
 	READ_INT(sim.ncpa_calib);
 	READ_INT(sim.ncpa_ttr);
 	parms->sim.ncpa_thetax=readcfg_dmat("sim.ncpa_thetax");
-	parms->sim.ncpa_ndir=parms->sim.ncpa_thetax->nx;
+	parms->sim.ncpa_ndir=NX(parms->sim.ncpa_thetax);
 	parms->sim.ncpa_thetay=readcfg_dmat_n(parms->sim.ncpa_ndir, "sim.ncpa_thetay");
 	parms->sim.ncpa_wt=readcfg_dmat_n(parms->sim.ncpa_ndir, "sim.ncpa_wt");
 	parms->sim.ncpa_hs=readcfg_dmat_nmax(parms->sim.ncpa_ndir, "sim.ncpa_hs");
 	dscale(parms->sim.ncpa_thetax, 1./206265);
 	dscale(parms->sim.ncpa_thetay, 1./206265);
-	dnormalize_sumabs(parms->sim.ncpa_wt->p, parms->sim.ncpa_ndir, 1);
+	dnormalize_sumabs(P(parms->sim.ncpa_wt), parms->sim.ncpa_ndir, 1);
 	READ_STR(sim.dmadd);
 }
 /**
@@ -1048,7 +1048,7 @@ static void readcfg_cn2(parms_t* parms){
 	READ_INT(cn2.psol);
 	READ_DBL(cn2.hmax);
 	READ_DBL(cn2.saat);
-	if(parms->cn2.pair&&(!parms->cn2.pair->nx||parms->sim.noatm==1)){
+	if(parms->cn2.pair&&(!NX(parms->cn2.pair)||parms->sim.noatm==1)){
 		dfree(parms->cn2.pair);
 	}
 	if(!parms->cn2.pair){/*we are not doing cn2 estimation. */
@@ -1212,7 +1212,7 @@ static void readcfg_save(parms_t* parms){
 		}
 	}
 	READ_LMAT(save.gcov);
-	parms->save.ngcov=parms->save.gcov->nx/2;
+	parms->save.ngcov=NX(parms->save.gcov)/2;
 	READ_INT(save.gcovp);
 	READ_INT(save.ecov);
 	READ_INT(save.mvmi);
@@ -1352,7 +1352,7 @@ static void setup_parms_postproc_sim(parms_t* parms){
 			parms->tomo.ahst_wt=3;
 		}
 	}
-	if(parms->dbg.tomo_maxit->nx){
+	if(NX(parms->dbg.tomo_maxit)){
 		warning("dbg.tomo_maxit is set. Will run in open loop mode\n to repeat the simulations"
 			" with different values of tomo.maxit.\n");
 		parms->sim.closeloop=0;
@@ -1360,7 +1360,7 @@ static void setup_parms_postproc_sim(parms_t* parms){
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			P(parms->atm.ws,ips)=0;/*set windspeed to zero. */
 		}
-		parms->sim.end=parms->dbg.tomo_maxit->nx;
+		parms->sim.end=NX(parms->dbg.tomo_maxit);
 	}
 	if(parms->sim.idealfit||parms->sim.idealtomo){
 		if(parms->sim.idealfit&&parms->sim.idealtomo){
@@ -1602,9 +1602,9 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			long pixpsax=powfsi->radpix;
 			if(!pixpsax) pixpsax=pixpsay;
 
-			if(powfsi->qe->nx*powfsi->qe->ny!=pixpsax*pixpsay){
+			if(NX(powfsi->qe)*NY(powfsi->qe)!=pixpsax*pixpsay){
 				error("Input qe [%ldx%ld] does not match subaperture pixel [%ldx%ld]\n.",
-					powfsi->qe->nx, powfsi->qe->ny, pixpsax, pixpsay);
+					NX(powfsi->qe), NY(powfsi->qe), pixpsax, pixpsay);
 			}
 		}
 
@@ -1807,8 +1807,8 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 		}
 		parms->powfs[ipowfs].phytype_sim1=parms->powfs[ipowfs].phytype_sim;//save value
 	}
-	parms->hipowfs->nx=parms->nhipowfs;
-	parms->lopowfs->nx=parms->nlopowfs;
+	lresize(parms->hipowfs, parms->nhipowfs, 1);
+	lresize(parms->lopowfs, parms->nlopowfs, 1);
 	if(parms->npowfs&&!parms->nhipowfs){
 		warning("There is no high order WFS.\n");
 	}
@@ -1956,7 +1956,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		}
 		parms->atmr.nps=nps;
 	} else if((parms->recon.glao||parms->nhiwfs==1)
-		&&parms->recon.alg==0&&parms->atmr.ht->nx>1&&!parms->sim.idealtomo){
+		&&parms->recon.alg==0&&NX(parms->atmr.ht)>1&&!parms->sim.idealtomo){
    /*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 		dbg("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 		dresize(parms->atmr.ht, 1, 1);
@@ -1982,9 +1982,9 @@ static void setup_parms_postproc_atm(parms_t* parms){
 			dresize(parms->atmr.wt, ipsr2, 1);
 		}
 	}
-	dnormalize_sumabs(parms->atm.wt->p, parms->atm.nps, 1);
-	dnormalize_sumabs(parms->atmr.wt->p, parms->atmr.nps, 1);
-	dnormalize_sumabs(parms->fit.wt->p, parms->fit.nfit, 1);
+	dnormalize_sumabs(P(parms->atm.wt), parms->atm.nps, 1);
+	dnormalize_sumabs(P(parms->atmr.wt), parms->atmr.nps, 1);
+	dnormalize_sumabs(P(parms->fit.wt), parms->fit.nfit, 1);
 	/*
 	  We don't drop weak turbulence layers in reconstruction. Instead, we make
 	  it as least parms->tomo.minwt in setup_recon_tomo_prep
@@ -2006,7 +2006,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 				}
 			}
 			P(parms->atm.ipsr,ips)=kpsr;
-			dbg("atm layer %d is maped to atmr %d\n", ips, kpsr);
+			dbg3("atm layer %d is maped to atmr %d\n", ips, kpsr);
 		}
 
 		/* Map reconstructed layers to input layers. for testing tomo.predict*/
@@ -2489,7 +2489,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		parms->recon.warm_restart=0;
 		parms->fit.cgwarm=0;
 	}else{
-		parms->recon.warm_restart=!parms->dbg.nocgwarm&&parms->atm.frozenflow&&!(parms->dbg.tomo_maxit&&parms->dbg.tomo_maxit->nx>0);
+		parms->recon.warm_restart=!parms->dbg.nocgwarm&&parms->atm.frozenflow&&!(parms->dbg.tomo_maxit&&NX(parms->dbg.tomo_maxit)>0);
 		parms->fit.cgwarm=parms->recon.warm_restart&&parms->fit.alg==1;
 	}
 
@@ -2783,13 +2783,13 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 		}
 	}
 	if(parms->dbg.dmoff){
-		if(parms->dbg.dmoff->nx!=parms->ndm){
-			cellresize(parms->dbg.dmoff, parms->ndm, parms->dbg.dmoff->ny);
+		if(NX(parms->dbg.dmoff)!=parms->ndm){
+			cellresize(parms->dbg.dmoff, parms->ndm, NY(parms->dbg.dmoff));
 		}
 	}
 	if(parms->dbg.gradoff){
-		if(parms->dbg.gradoff->nx!=parms->nwfs){
-			cellresize(parms->dbg.gradoff, parms->nwfs, parms->dbg.gradoff->ny);
+		if(NX(parms->dbg.gradoff)!=parms->nwfs){
+			cellresize(parms->dbg.gradoff, parms->nwfs, NY(parms->dbg.gradoff));
 		}
 	}
 }
@@ -2821,8 +2821,8 @@ static void print_parms(const parms_t* parms){
 
 	info2("%sAperture%s is %g m with sampling 1/%g m\n", GREEN, BLACK,
 		parms->aper.d, 1/parms->evl.dx);
-	real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, parms->atm.ws->p, parms->atm.wt->p);
-	real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
+	real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, P(parms->atm.ws), P(parms->atm.wt));
+	real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, P(parms->atm.ht), P(parms->atm.wt));
 
 	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
 		GREEN, parms->sim.zadeg, BLACK, parms->atm.r0, P(parms->atm.L0,0), parms->atm.nps);
@@ -2831,7 +2831,7 @@ static void print_parms(const parms_t* parms){
 	if(parms->ndm==2){
 		real H1=parms->dm[0].ht;
 		real H2=parms->dm[1].ht;
-		real theta2z=calc_aniso2(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p, H1, H2);
+		real theta2z=calc_aniso2(parms->atm.r0z, parms->atm.nps, P(parms->atm.ht), P(parms->atm.wt), H1, H2);
 		info(", generalized is %.2f as\n", theta2z*206265);
 	} else{
 		info("\n");

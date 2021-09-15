@@ -25,8 +25,8 @@
 dmat* zernike_Rnm(const dmat* locr, int ir, int im){
 	if(ir<0||im < 0||im>ir||(ir-im)%2!=0)
 		error("Invalid ir, im (%d, %d)\n", ir, im);
-	const long nloc=locr->nx*locr->ny;
-	dmat* Rnm=dnew(locr->nx, locr->ny);
+	const long nloc=NX(locr)*NY(locr);
+	dmat* Rnm=dnew(NX(locr), NY(locr));
 	const int ns=(ir-im)/2+1;
 	real coeff[ns];
 	int power[ns];
@@ -121,8 +121,8 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 			dmat* Rnm=zernike_Rnm(locr, ir, im);
 			if(im==0){/*Radial*/
 				real coeff=sqrt(ir+1.);
-				real* restrict pmod=PCOL(opd, cmod); //opd->p+nloc*cmod;
-#pragma omp parallel for
+				real* restrict pmod=PCOL(opd, cmod); 
+				OMP_FOR
 				for(long iloc=0; iloc<nloc; iloc++){
 					pmod[iloc]=P(Rnm,iloc)*coeff;
 				}
@@ -133,14 +133,14 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 				int off1=(imod)%2==1?0:1;
 				if(!flag||(imod+off1+flag)==0){
 					real* restrict pmods=PCOL(opd, flag?0:(cmod+off1));//odd imod for sin
-#pragma omp parallel for
+					OMP_FOR
 					for(long iloc=0; iloc<nloc; iloc++){
 						pmods[iloc]=P(Rnm,iloc)*coeff*sin(im*P(locs,iloc));
 					}
 				}
 				if(!flag||(imod+1-off1+flag)==0){
 					real* restrict pmodc=PCOL(opd, flag?0:(cmod+1-off1));//even imod for cos
-#pragma omp parallel for
+					OMP_FOR
 					for(long iloc=0; iloc<nloc; iloc++){
 						pmodc[iloc]=P(Rnm,iloc)*coeff*cos(im*P(locs,iloc));
 					}
@@ -250,9 +250,9 @@ dmat* cov_vonkarman(const loc_t* loc, /**<The location grid*/
 	dmm(&CC, 1, modz, modz, "tn", 1);//the covariance of the modes
 	long nembed=0;
 	lmat* embed=loc_create_embed(&nembed, loc, 2, 0);
-	int nmod=modz->ny;
+	int nmod=NY(modz);
 	ccell* spect=ccellnew(nmod, 1);
-#pragma omp parallel for
+	OMP_FOR
 	for(long ic=0; ic<nmod; ic++){
 		P(spect,ic)=cnew(nembed, nembed);
 		for(long ix=0; ix<loc->nloc; ix++){
@@ -264,7 +264,7 @@ dmat* cov_vonkarman(const loc_t* loc, /**<The location grid*/
 	dmat* turbspec=turbpsd(nembed, nembed, loc->dx, 0.2, L0, -11./3., 1);
 	P(turbspec,0)=0;//remove piston.
 	dmat* DD=dnew(nmod, nmod);
-#pragma omp parallel for
+	OMP_FOR
 	for(long ic=0; ic<nmod; ic++){
 		for(long id=0; id<=ic; id++){
 			real tmp=0;

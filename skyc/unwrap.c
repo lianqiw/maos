@@ -134,7 +134,7 @@ static void do_unwrap(cmat* phi, cmat* wvf, dmat* unwrap, dmat* diff, dmat* phir
 	/*toc2("assemble");tic; */
 	dzero(phirecon);
 	/*writebin(diff,"diff"); */
-	dmulvec(phirecon->p, unwrap, diff->p, 1);
+	dmulvec(P(phirecon), unwrap, P(diff), 1);
 	/*toc2("mul");tic; */
 	/*assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx); */
 	for(int ix=0; ix<npsf*npsf; ix++){

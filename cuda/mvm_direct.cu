@@ -66,11 +66,11 @@ static void mvm_direct_igpu(thread_t* info){
 	const long ntotact=data->ntotact;
 	const long ntotgrad=data->ntotgrad;
 	const long ntotxloc=data->ntotxloc;
-	curcell grad=curcell(parms->nwfsr, 1, recon->ngrad->p, (long*)NULL);//the I
-	curcell opdx=curcell(recon->npsr, 1, recon->xnx->p, recon->xny->p);//right hand size
+	curcell grad=curcell(parms->nwfsr, 1, P(recon->ngrad), (long*)NULL);//the I
+	curcell opdx=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));//right hand size
 	curcell opdr;//initialized later
-	//curcell *fitx=curcellnew(parms->ndm, 1, recon->anloc->p, (long*)NULL);
-	curcell fitr=curcell(parms->ndm, 1, recon->anloc->p, (long*)NULL, (Real*)1);//skip data allocation.
+	//curcell *fitx=curcellnew(parms->ndm, 1, P(recon->anloc), (long*)NULL);
+	curcell fitr=curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL, (Real*)1);//skip data allocation.
 	curmat mvm=curmat(ntotact, info->end-info->start);
 	curmat eye2(2, 1);
 	dmat* residual=data->residual;
@@ -95,9 +95,9 @@ static void mvm_direct_igpu(thread_t* info){
 				ntotxloc*(info->end-info->start)*sizeof(Real),
 				H2D, stream);
 		}
-		opdr=curcell(recon->npsr, 1, recon->xnx->p, recon->xny->p, (Real*)1);
+		opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)1);
 	} else{
-		opdr=curcell(recon->npsr, 1, recon->xnx->p, recon->xny->p);
+		opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));
 	}
 	TIC;tic;
 	curcell tomo_rhs, fit_rhs;

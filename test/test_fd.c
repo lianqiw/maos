@@ -274,7 +274,7 @@ int main(){
     real NEA[]={1.712908313e-07,1.712908313e-07,1.712908313e-07,1.712908313e-07,1.712908313e-07,1.712908313e-07};
     real wt[]={0.383615641256048,0.161455623630726,0.065928670909859,0.140502287357995,0.121599369179309,0.126898407666063};
     dmat *saa=dread("SAA.bin");
-    csp *sel=fdpcg_sa(xloc,saloc,saa->p);/*Tested. fully agree with laos mkapfd */
+    csp *sel=fdpcg_sa(xloc,saloc,P(saa));/*Tested. fully agree with laos mkapfd */
     writebin(sel,"sel.bin");
 
     long nperm;
@@ -320,7 +320,7 @@ int main(){
 		g=gy;
 	    }
 	    csp *tmp=cspdup(sel);
-	    cspmuldiag(tmp,g->p,1);
+	    cspmuldiag(tmp,P(g),1);
 	    csp *tmp2=cspmulsp(tmp,tmp,"tn");
 	    cspadd(&Mmid, 1, tmp2, 1);
 	    cspfree(tmp);

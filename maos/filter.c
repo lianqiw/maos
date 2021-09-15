@@ -68,13 +68,13 @@ static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long s
 */
 static inline void ttsplit_do(recon_t* recon, dcell* dmcmd, dmat* ttm, real lp){
 #if 1
-	int ndm=dmcmd->nx;
+	int ndm=NX(dmcmd);
 	real totaltt[2]={0,0};
 	real tt1[2];
 	for(int idm=0; idm<ndm; idm++){
 		tt1[0]=tt1[1]=0;
-		dmulvec(tt1, P(recon->DMPTT,idm), P(dmcmd,idm)->p, 1);
-		dmulvec(P(dmcmd,idm)->p, P(recon->DMTT,idm), tt1, -1);
+		dmulvec(tt1, P(recon->DMPTT,idm), P(P(dmcmd,idm)), 1);
+		dmulvec(P(P(dmcmd,idm)), P(recon->DMTT,idm), tt1, -1);
 		for(int i=0; i<2; i++){
 			totaltt[i]+=tt1[i];
 		}
@@ -84,14 +84,14 @@ static inline void ttsplit_do(recon_t* recon, dcell* dmcmd, dmat* ttm, real lp){
 	totaltt[0]-=P(ttm,0);
 	totaltt[1]-=P(ttm,1);
 	//Put HPF'ed to ground DM.
-	dmulvec(P(dmcmd,0)->p, P(recon->DMTT,0), totaltt, 1);
+	dmulvec(P(P(dmcmd,0)), P(recon->DMTT,0), totaltt, 1);
 #else
 	//Only touch ground DM
 	real tt1[2]={0,0};
-	dmulvec(tt1, P(recon->DMPTT,0), P(dmcmd,0)->p, 1);
+	dmulvec(tt1, P(recon->DMPTT,0), P(P(dmcmd,0)), 1);
 	P(ttm,0)=P(ttm,0)*(1-lp)+lp*tt1[0];
 	P(ttm,1)=P(ttm,1)*(1-lp)+lp*tt1[1];
-	dmulvec(P(dmcmd,0)->p, P(recon->DMTT,0), ttm->p, -1);
+	dmulvec(P(P(dmcmd,0)), P(recon->DMTT,0), P(ttm), -1);
 #endif
 }
 
@@ -105,8 +105,8 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 	if(!parms->sim.dmclip) return;
 	for(int idm=0; idm<parms->ndm; idm++){
 		const int nact=P(dmcmd,idm)->nx;
-		if(parms->dm[idm].stroke->nx==1){
-			if(parms->dm[idm].stroke->ny!=1){
+		if(NX(parms->dm[idm].stroke)==1){
+			if(NY(parms->dm[idm].stroke)!=1){
 				error("dm.stroke is in wrong format\n");
 			}
 			static int nclip0=0;
@@ -118,14 +118,14 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 				nclip0=nclip;
 				info2("step %d DM %d: %d actuators clipped\n", simu->reconisim, idm, nclip);
 			}
-		} else if(parms->dm[idm].stroke->nx==nact){
-			if(parms->dm[idm].stroke->ny!=2){
+		} else if(NX(parms->dm[idm].stroke)==nact){
+			if(NY(parms->dm[idm].stroke)!=2){
 				error("dm.stroke is in wrong format\n");
 			}
 
-			real* pcmd=P(dmcmd,idm)->p;
-			real* plow=parms->dm[idm].stroke->p;
-			real* phigh=parms->dm[idm].stroke->p+nact;
+			real* pcmd=P(P(dmcmd,idm));
+			real* plow=P(parms->dm[idm].stroke);
+			real* phigh=plow+nact;
 			for(int iact=0; iact<nact; iact++){
 				if(pcmd[iact]<plow[iact]){
 					pcmd[iact]=plow[iact];
@@ -176,14 +176,14 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		}
 		iastroked=iastroke*1.414;//for diagonal separation.
 		if(!parms->fit.square){
-			loc_embed(P(simu->dmrealsq,idm), P(recon->aloc,idm), dm->p);
+			loc_embed(P(simu->dmrealsq,idm), P(recon->aloc,idm), P(dm));
 			dmr=(dmat*)P(simu->dmrealsq,idm);
 		} else{
 			dmr=dm;
 		}
 		lcell* actstuck=recon->actstuck;
 		//offset point by 1 because map is 1 based index.
-		long* stuck=actstuck&&P(actstuck,idm)?(P(actstuck,idm)->p-1):0;
+		long* stuck=actstuck&&P(actstuck,idm)?(P(P(actstuck,idm))-1):0;
 		int count=0, trials=0;
 		do{
 			count=0;
@@ -328,7 +328,7 @@ static void filter_cl(sim_t* simu){
 
 	if(parms->recon.modal){
 		//convert DM command from modal to zonal space
-		for(int idm=0; idm<simu->dmcmd->nx; idm++){
+		for(int idm=0; idm<NX(simu->dmcmd); idm++){
 			dmm(&P(simu->dmcmd,idm), 0, P(simu->recon->amod,idm), P(simu->dmtmp,idm), "nn", 1);
 		}
 	} else if(simu->recon->actinterp&&!parms->recon.psol){
@@ -368,7 +368,7 @@ static void filter_cl(sim_t* simu){
 	}
 	if(parms->dbg.dmoff){
 		info_once("Add injected DM offset vector\n");
-		int icol=(isim+1)%parms->dbg.dmoff->ny;
+		int icol=(isim+1)%NY(parms->dbg.dmoff);
 		for(int idm=0; idm<parms->ndm; idm++){
 			dadd(&P(simu->dmcmd,idm), 1, P(parms->dbg.dmoff, idm, icol), 1);
 		}
@@ -454,8 +454,8 @@ void filter_fsm(sim_t* simu){
 			dcell* ftmp=0;
 			servo_output(simu->fsmint, &ftmp);
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				if(P(simu->fsmreal,iwfs)){
-					real* pin=P(ftmp,iwfs)->p;
+				if(NE(simu->fsmreal, iwfs)){
+					real* pin=P(P(ftmp,iwfs));
 					P(P(simu->fsmreal,iwfs),0)=sho_step(simu->fsmsho[iwfs], pin[0], parms->sim.dt);
 					P(P(simu->fsmreal,iwfs),1)=sho_step(simu->fsmsho[iwfs+parms->nwfs], pin[1], parms->sim.dt);
 				}
@@ -520,7 +520,7 @@ static void filter_ol(sim_t* simu){
 	}
 	if(parms->dbg.dmoff){
 		info_once("Add injected DM offset vector\n");
-		int icol=(simu->reconisim+1)%parms->dbg.dmoff->ny;
+		int icol=(simu->reconisim+1)%NY(parms->dbg.dmoff);
 		for(int idm=0; idm<parms->ndm; idm++){
 			dadd(&P(simu->dmcmd,idm), 1, P(parms->dbg.dmoff, idm, icol), -1);
 		}
@@ -551,9 +551,9 @@ void turb_dm(sim_t* simu){
 	if(!simu->dmadd) return;
 	for(int idm=0; idm<parms->ndm; idm++){
 		if(!P(simu->dmadd,idm)) continue;
-		real* restrict p2=P(simu->dmreal,idm)->p;
+		real* restrict p2=P(P(simu->dmreal,idm));
 		const int icol=(simu->reconisim+1)%P(simu->dmadd,idm)->ny;
-		const real* p=P(simu->dmadd,idm)->p+P(simu->dmadd,idm)->nx*icol;
+		const real* p=P(P(simu->dmadd,idm))+P(simu->dmadd,idm)->nx*icol;
 		if(P(simu->dmadd,idm)->nx==P(simu->dmreal,idm)->nx){//match
 			for(long i=0; i<P(simu->dmadd,idm)->nx; i++){
 				p2[i]+=p[i];
@@ -571,7 +571,7 @@ void update_dm(sim_t* simu){
 	if(!parms->fit.square&&simu->dmrealsq){
 	/* Embed DM commands to a square array for fast ray tracing */
 		for(int idm=0; idm<parms->ndm; idm++){
-			loc_embed(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), P(simu->dmreal,idm)->p);
+			loc_embed(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), P(P(simu->dmreal,idm)));
 		}
 	}
 #if USE_CUDA

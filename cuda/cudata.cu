@@ -362,7 +362,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 				}
 				*(tasks[it].dest)=min_gpu;
 				timtot[min_gpu]+=tasks[it].timing;
-				dbg("%s --> GPU %d\n", tasks[it].name, GPUS(*tasks[it].dest,1));
+				dbg3("%s --> GPU %d\n", tasks[it].name, GPUS(*tasks[it].dest,1));
 			}
 			free(tasks);
 			//if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){

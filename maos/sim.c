@@ -118,9 +118,8 @@ void maos_isim(int isim){
 	real ck_0=myclockd();
 
 	sim_update_flags(simu, isim);
-	sim_update_etf(simu);
 	if(!parms->atm.frozenflow){
-	//Do not put this one inside parallel 
+		//Do not put this one inside parallel single so that FFT can use parallel for
 		genatm(simu);
 		/*re-seed the atmosphere in case atm is loaded from shm/file */
 		seed_rand(simu->atm_rand, lrand(simu->init_rand));
@@ -132,6 +131,7 @@ void maos_isim(int isim){
 	}
 #endif
 OMPTASK_SINGLE{
+	sim_update_etf(simu);
 	if(parms->sim.dmproj){
 		/* temporarily disable FR.M so that Mfun is used.*/
 		cell* FRM=recon->fit->FR.M; recon->fit->FR.M=NULL;
@@ -141,7 +141,7 @@ OMPTASK_SINGLE{
 		if(!parms->fit.square){
 			/* Embed DM commands to a square array for fast ray tracing */
 			for(int idm=0; idm<parms->ndm; idm++){
-				loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(simu->dmproj,idm)->p);
+				loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(P(simu->dmproj,idm)));
 			}
 		}
 #if USE_CUDA
@@ -222,8 +222,6 @@ OMPTASK_SINGLE{
 #if USE_CUDA
 			if(parms->gpu.tomo){
 				gpu_update_recon_control(parms, recon);
-				//warning("Update entire recon in gpu\n");
-				//gpu_setup_recon(parms, recon);
 			}
 #endif
 		}

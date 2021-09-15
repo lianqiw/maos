@@ -79,7 +79,7 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 	B->nrow=A->nx;
 	B->ncol=A->ny;
 	B->nzmax=A->pp[A->ny];
-	B->p=A->pp;/*do not duplicate. */
+	P(B)=A->pp;/*do not duplicate. */
 	B->i=A->pi;
 	DO_CONVERT(B->x, A->px, chol_real, real, B->nzmax);
 	B->dtype=CHOL_DATA;
@@ -98,7 +98,7 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 static dsp* chol2sp(const cholmod_sparse* B){
 	dsp* A;
 	A=dspnew(B->nrow, B->ncol, 0);
-	A->pp=(spint*)B->p;
+	A->pp=(spint*)P(B);
 	A->nzmax=A->pp[A->ny];
 	A->pi=(spint*)B->i;
 	DO_CONVERT(A->px, B->x, real, chol_real, A->nzmax);
@@ -285,7 +285,7 @@ void chol_save(spchol* A, const char* format, ...){
 		writearr(fp, 0, sizeof(spint), M_SPINT, "Perm", L->Perm, L->n, 1);
 		writearr(fp, 0, sizeof(spint), M_SPINT, "ColCount", L->ColCount, L->n, 1);
 		if(L->is_super==0){/*Simplicity */
-			writearr(fp, 0, sizeof(spint), M_SPINT, "p", L->p, L->n+1, 1);
+			writearr(fp, 0, sizeof(spint), M_SPINT, "p", P(L), L->n+1, 1);
 			writearr(fp, 0, sizeof(spint), M_SPINT, "i", L->i, L->nzmax, 1);
 			writearr(fp, 0, sizeof(spint), M_SPINT, "nz", L->nz, L->n, 1);
 			writearr(fp, 0, sizeof(spint), M_SPINT, "next", L->next, L->n+2, 1);

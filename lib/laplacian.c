@@ -49,8 +49,8 @@ static real laplacian_coef3(real r0, real weight, real dx){
 /**
    Apply L2 directly to map with periodic condition.*/
 void apply_laplacian_map(dmat* opdout, const dmat* opd, real dx, real r0, real weight){
-	const long nx=opd->nx;
-	const long ny=opd->ny;
+	const long nx=NX(opd);
+	const long ny=NY(opd);
 	real cf=laplacian_coef(r0, weight, dx);
 	if(!opdout)
 		error("opdout is not allocated\n");
@@ -131,8 +131,8 @@ dsp* mklaplacian_loc(loc_t* loc, real r0, real weight){
 	cfs[3]=laplacian_coef4(r0, weight, loc->dx);
 	cfs[4]=cf;
 #endif
-	for(iy=0; iy<map->ny; iy++){
-		for(ix=0; ix<map->nx; ix++){
+	for(iy=0; iy<NY(map); iy++){
+		for(ix=0; ix<NX(map); ix++){
 			long iphi0;
 			if((iphi0=loc_map_get(map, ix, iy))>0){
 				*(pp++)=px-px0;

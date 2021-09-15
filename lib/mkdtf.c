@@ -40,7 +40,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
 	const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
 ){
-	int nwvl=wvls->nx*wvls->ny;
+	int nwvl=NX(wvls)*NY(wvls);
 	dtf_t* dtfs=mycalloc(nwvl, dtf_t);
 	dtfs->nwvl=nwvl;
 	const real blurx=pixblur*pixthetax;
@@ -122,7 +122,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 				cfftshift(nominal);
 				cfft2(nominal, 1);
 				//cancel FFT scaling effect.
-				cscale(nominal, 1./(real)(nominal->nx*nominal->ny));
+				cscale(nominal, 1./(real)(NX(nominal)*NY(nominal)));
 				ccp(&P(nominals, isa, iwfs), nominal);
 				//Coordinate of pixels
 				
@@ -142,8 +142,8 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		  we don't have to do fftshift later.*/
 		dtfs[iwvl].Ux=cnew(notfx, 1);
 		dtfs[iwvl].Uy=cnew(notfy, 1);
-		comp* Ux=dtfs[iwvl].Ux->p;
-		comp* Uy=dtfs[iwvl].Uy->p;
+		comp* Ux=P(dtfs[iwvl].Ux);
+		comp* Uy=P(dtfs[iwvl].Uy);
 
 		/*The following is used in genseotf to compute shifted i0.*/
 		for(int ix=0; ix<notfx; ix++){
@@ -172,7 +172,7 @@ static inline int wrap_seq(long index, long n){
 }
 
 etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
-	const dcell* sodium,/**<The sodium profile. In each cell First column is coordinate.*/
+	const cell* sodium,/**<The sodium profile. In each cell First column is coordinate. Different cells must have the same coordinate. Can also be a dmat*/
 	int icol,     /**<Which sodium profile to use*/
 	const dcell* srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	const dcell* srsa,  /**<Subaperture to LLT distance*/
@@ -187,19 +187,21 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 	etfs->hs=hs;
 	/*setup elongation along radial direction. don't care azimuthal. */
 	if(!srot) error("srot is required");
-	const int nllt=MAX(srot->nx, sodium->nx);
+	const int nllt=MAX(NX(srot), iscell(sodium)?NX(sodium):1);
 	const int nsa=P(srot,0)->nx;
-	dmat* sodium0=P(sodium,0);
+	dmat* sodium0=dmat_cast(iscell(sodium)?P(sodium,0):sodium);
 	const int ncol=sodium0->ny-1;
-	const int nhp=sodium0->nx;
-	const real* px=sodium0->p;
+	const int nhp=NX(sodium0);
+	const real* px=P(sodium0);
 	const real cosza=cos(za_rad);
 	const int icolwrap=wrap_seq(icol, ncol);
 	//info("Na using column %d.\n",icol);
 
 	//adjusting sodium height for the zenith angle;
 	real hpmin=0, dhp1=0;
-
+	if(nhp==1){
+		no_interp=1;
+	}
 	if(!no_interp){/**Requires linear spacing*/
 		hpmin=(px[0]-htel)/cosza;
 		dhp1=cosza/(px[1]-px[0]);
@@ -214,7 +216,8 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 	real* pna[nllt];
 	real i0scale[nllt];
 	for(int illt=0; illt<nllt; illt++){
-		pna[illt]=PCOL(PR(sodium, illt, 0), 1+icolwrap);
+		dmat* sodiumi=dmat_cast(iscell(sodium)?PR(sodium, illt, 0):sodium);
+		pna[illt]=PCOL(sodiumi, 1+icolwrap);
 		i0scale[illt]=dvecsum(pna[illt], nhp);
 		if(fabs(i0scale[illt]-1)>0.01){
 			warning("Siglev is scaled by %g by sodium profile\n", i0scale[illt]);
@@ -228,24 +231,23 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 		const long notfy2=notfy>>1;
 		const real dux=1./(dtheta*notfx);
 		const real duy=1./(dtheta*notfy);
-		ccell* petf=0;
-
+		
 		/*
 		  PSF/OTF/ETF is defined in x/y coordinate.
 		  2010-01-04: Fuse dtf nominal into etf for this case.
 		*/
-		petf=etfs[iwvl].etf=ccellnew_same(nsa, nllt, notfx, notfy);
+		ccell* petf=etfs[iwvl].etf=ccellnew_same(nsa, nllt, notfx, notfy);
 
 		etfs[iwvl].icol=icol;
 		if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
+			OMP_FOR_COLLAPSE(2)		
 			for(int illt=0; illt<nllt; illt++){
 				for(int isa=0; isa<nsa; isa++){
-					real rsa=P(P(srsa,illt),isa);
+					const real rsa=P(P(srsa,illt),isa);
 					const real theta=P(PR(srot, illt, 0), isa);
 					const real ct=cos(theta);
 					const real st=sin(theta);
 					cmat* etf2d=P(petf, isa, illt);
-//#pragma omp parallel for default(shared)  //mketf is called from a separate thread and does not reuse the group
 					for(int icompy=0; icompy<notfy; icompy++){
 						const real ky=duy*(icompy>=notfy2?(icompy-notfy):icompy);
 						for(int icompx=0; icompx<notfx; icompx++){
@@ -259,7 +261,6 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 							}
 						}
 					}
-
 				}//isa
 			}//illt
 		} else{
@@ -278,7 +279,6 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 			const real dtetf=dtheta/nover;
 			const real dusc=(netf*dtetf)/(dtheta*notfx);
 			dmat* thetas=dnew(netf, 1);
-			cmat* etf=cnew(netf, 1);
 			const int netf2=netf>>1;
 			/*Only interpolating the center part. the rest is padding. */
 			const int etf0=netf2-(int)round(notfx2*(dtheta/dtetf));
@@ -287,10 +287,18 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 			for(int it=etf0; it<etf1; it++){
 				P(thetas,it)=(it-netf2)*dtetf;
 			}
-
+			int ncrop=0;
+			real max_crop=0;
+			ccell *etf_cache=ccellnew_same(MAXTHREAD,1,netf, 1);
+			OMP_FOR_COLLAPSE(2)
 			for(int illt=0; illt<nllt; illt++){
 				for(long isa=0; isa<nsa; isa++){
 					/*1d ETF along radius. */
+					int ithread=0;
+#ifdef _OPENMP
+					ithread=omp_get_thread_num();
+#endif									
+					cmat* etf=P(etf_cache, ithread);
 					real rsa=P(P(srsa,illt),isa);
 					real etf2sum=0;
 					czero(etf);
@@ -314,24 +322,19 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 						}
 					}
 					if(fabs(etf2sum)>1.e-20){
-					/*2010-11-09:
-
-					  We used to normalize the etf before fft so that after fft
-					  it max to 1. The strength of original profile doesn't
-					  matter.
-
-					  Changed: We normalize the etf by sum(profile), so we can model
-					  the variation of the intensity and meteor trails.
-
-					*/
+						/*
+							Changed: We normalize the etf by sum(profile), so we can model
+							the variation of the intensity and meteor trails.
+						*/
 						cscale(etf, i0scale[illt]/etf2sum);
 
 						//check for truncation
 						double ratio_edge=0.5*creal(P(etf,etf0)+P(etf,etf1-1))/creal(P(etf,netf2));
 						if(ratio_edge>0.1){
-							writebin(etf, "etf_%ld", isa);
-							error("sa %ld: sodium profile is cropped when computing etf. Increase powfs.pixpsa or powfs.notf.\n", isa);
+							ncrop++;
+							if(ratio_edge>max_crop) max_crop=ratio_edge;
 						}
+							
 						cfftshift(etf);/*put peak in corner; */
 						cfft2(etf, -1);
 
@@ -342,7 +345,6 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 						real ct=cos(theta);
 						real st=sin(theta);
 						cmat* etf2d=P(petf, isa, illt);
-//#pragma omp parallel for default(shared) //mketf is called from a separate thread and does not reuse the group
 						for(int icompy=0; icompy<notfy; icompy++){
 							real iy=(icompy-notfy2);
 							for(int icompx=0; icompx<notfx; icompx++){
@@ -352,8 +354,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 								ir=ir-iir;
 								if(iir>=0&&iir<netf-1){
 									/*bilinear interpolation. */
-									P(etf2d, icompx, icompy)=P(etf,iir)*(1.-ir)
-										+P(etf,iir+1)*ir;
+									P(etf2d, icompx, icompy)=P(etf,iir)*(1.-ir)+P(etf,iir+1)*ir;
 								}/*else{P(etf2d,icompx,icompy)=0;}*/
 							}
 						}
@@ -365,9 +366,12 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 					
 				}//for isa
 			}//for illt.
-			cfree(etf);
+			ccellfree(etf_cache);
 			dfree(thetas);
-		}//if na_interp
+			if(ncrop){
+				warning("Sodium profile is cropped by up to %g for %d subapertures when computing etf. Increase powfs.pixpsa or powfs.notf.\n", max_crop, ncrop);
+			}
+		}//if na_interp else
 		//fuse nominal to etf to avoid multiply again.
 		for(int illt=0; illt<nllt; illt++){
 			for(int isa=0; isa<nsa; isa++){
@@ -402,20 +406,20 @@ void etf_free_do(etf_t* etfs){
    coordinate with spacing of dxnew.
  */
 dmat* smooth(const dmat* prof, real dxnew){
-	const long nxin=prof->nx;
+	const long nxin=NX(prof);
 	const real x0in=P(prof,0);
 	const real dxin=(P(prof,nxin-1)-x0in)/(nxin-1);
 	dmat* out;
 	if(dxnew>dxin*2){
 		dbg("Smoothing sodium profile from %g to %g sampling\n", dxin, dxnew);
 		const long nxnew=ceil((P(prof,nxin-1)-x0in)/dxnew);
-		loc_t* loc_in=mk1dloc_vec(prof->p, nxin);
+		loc_t* loc_in=mk1dloc_vec(P(prof), nxin);
 		loc_t* loc_out=mk1dloc(x0in, dxnew, nxnew);
 		dsp* ht=mkhb(loc_out, loc_in, 0, 0, 1);
-		out=dnew(nxnew, prof->ny);
-		memcpy(out->p, loc_out->locx, sizeof(real)*nxnew);
-#pragma omp parallel for default(shared)
-		for(long icol=1; icol<prof->ny; icol++){
+		out=dnew(nxnew, NY(prof));
+		memcpy(P(out), loc_out->locx, sizeof(real)*nxnew);
+		OMP_FOR
+		for(long icol=1; icol<NY(prof); icol++){
 			/*input profile */
 			const real* pin=PCOL(prof, icol);
 			/*output profile */

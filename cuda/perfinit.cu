@@ -52,7 +52,7 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 		if(parms->evl.psfmean||parms->evl.psfhist){
 			cudata->perf.embed.init(nwvl, 1);//(int**) calloc(nwvl, sizeof(int*));
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
-				cp2gpu(cudata->perf.embed[iwvl], aper->embed->embed->p[iwvl]->p, aper->locs->nloc, 1);
+				cp2gpu(cudata->perf.embed[iwvl], P(aper->embed->embed->p[iwvl]), aper->locs->nloc, 1);
 			}
 		}
 	}/*for igpu */

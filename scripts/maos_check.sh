@@ -71,9 +71,11 @@ esac
 fnlog=maos_check_${D}.log #log of all
 fntmp=maos_check_${D}.tmp #log of current simulation
 fnres=maos_check_${D}.res #result summary
-if [ -f $fnlog ];then
-    mv $fnlog ${fnlog/.log/.bak}
-fi
+fnerr=maos_check_${D}.err
+
+echo $(date) > $fnlog
+echo $(date) > $fnerr
+
 ii=0
 printf "%-20s   Res   Ref     %%\n" "D=${D}m DM is $((D*2))x$((D*2))" | tee $fnres
 function run_maos(){
@@ -84,18 +86,19 @@ function run_maos(){
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]%.*}
     else
-		RMS[ii]='-1'
-		a=-1
+		cat $fntmp >> $fnerr
+		RMS[ii]=0
+		a=0
 		ans=1
     fi
 	echo $aotype $* >> $fnlog
 	cat $fntmp >> $fnlog
     b=${REF[$ii]%.*}
 	if [ x$b = 'xerror' -o x$b = x ];then
-		b=-1
+		b=0
 	fi
 	
-    if [ "$a" -gt "0" -a "$b" -gt "0" ];then
+    if [ "$a" -gt 0 -a "$b" -gt 0 ];then
 		diff=$(((a-b)*100/a))
 	else
 		diff=100

@@ -36,8 +36,8 @@
 
 
 void FRACTAL(dmat* p0, real dx, real r0, real L0, long ninit){
-	const long nx=p0->nx;
-	const long ny=p0->ny;
+	const long nx=NX(p0);
+	const long ny=NY(p0);
 	assert(nx==ny);
 	LOCK(mutex_cov);
 	long step0=(nx-1)/(ninit-1);
@@ -66,8 +66,7 @@ void FRACTAL(dmat* p0, real dx, real r0, real L0, long ninit){
 			}
 		}
 		/*reshape pi; */
-		pi->nx=ninit*ninit;
-		pi->ny=1;
+		reshape(pi, ninit*ninit, 1);
 		dmat* qi=dnew(ninit*ninit, 1);
 #if INVERSE ==0
 		dmm(&qi, 0, node->K, pi, "nn", 1);
@@ -75,8 +74,7 @@ void FRACTAL(dmat* p0, real dx, real r0, real L0, long ninit){
 		dmm(&qi, 0, node->KI, pi, "tn", 1);
 #endif
 	/*reshape to square. */
-		qi->nx=ninit;
-		qi->ny=ninit;
+		reshape(qi, ninit, ninit);
 		dmat* pqi=qi;
 		for(long iy=0; iy<ninit;iy++){
 			for(long ix=0; ix<ninit; ix++){
@@ -219,17 +217,15 @@ void FRACTAL(dmat* p0, real dx, real r0, real L0, long ninit){
 			}
 		}
 		/*reshape pi; */
-		pi->nx=ninit*ninit;
-		pi->ny=1;
+		reshape(pi, ninit* ninit, 1);
 		dmat* qi=dnew(ninit*ninit, 1);
 #if INVERSE ==0
 		dmm(&qi, 0, node->K, pi, "tn", 1);
 #else
 		dmm(&qi, 0, node->KI, pi, "nn", 1);
 #endif
-	/*reshape to square. */
-		qi->nx=ninit;
-		qi->ny=ninit;
+		/*reshape to square. */
+		reshape(qi, ninit, ninit);
 		dmat* pqi=qi;
 		for(long iy=0; iy<ninit;iy++){
 			for(long ix=0; ix<ninit; ix++){

@@ -296,7 +296,7 @@ int mylink(const char* source, const char* dest){
 	if(!ans&&exist(dest)) ans=remove(dest);
 	if(!ans) ans=link(source, dest);
 	if(ans){
-		warning("Unable to link %s to %s, copyfile instead\n", source, dest);
+		dbg("Unable to link %s to %s, copyfile instead\n", source, dest);
 		ans=copyfile(source, dest);
 	}
 	return ans;

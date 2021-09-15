@@ -55,8 +55,8 @@ void proj_rect_grid(real* phiout,  /**<[out] output OPD*/
 	real betax,    /**<real beam angle*/
 	real betay     /**<real beam angle*/
 ){
-	const int wrapx1=mapin->nx;
-	const int wrapy1=mapin->ny;
+	const int wrapx1=NX(mapin);
+	const int wrapy1=NY(mapin);
 	const int wrapx=wrapx1-1;
 	const int wrapy=wrapy1-1;
 	real offx=hs*betax;
@@ -133,7 +133,7 @@ void m3proj(const rmap_t* tsurf, dmat* opd, const loc_t* locout, real thetax, re
 	/*2010-04-02: do not put - sign */
 	real bx=thetax*(d_img_focus+ftel)/d_img_exit;
 	real by=thetay*(d_img_focus+ftel)/d_img_exit;
-	proj_rect_grid(opd->p, tsurf, alx, aly, locout, scalex, scaley, NULL, scaleopd, d_img_exit, het, bx, by);
+	proj_rect_grid(P(opd), tsurf, alx, aly, locout, scalex, scaley, NULL, scaleopd, d_img_exit, het, bx, by);
 }
 /**
    A convenient wrapper for m3proj() to be called from matlab or python

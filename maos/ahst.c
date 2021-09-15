@@ -52,7 +52,7 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 	real* x=plocs->locx;
 	real* y=plocs->locy;
 	int nloc=plocs->nloc;
-	real* amp=aper->amp->p;
+	real* amp=P(aper->amp);
 	const int nmod=ngsmod->nmod;
 	dcell* mcc=dcellnew(parms->evl.nevl, 1);
 	dmat* aMCC=aper->mcc;
@@ -136,17 +136,17 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
    weighting in PLOC.  */
 static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 	const aper_t* aper, int use_ploc){
-	const real* wt=parms->evl.wt->p;
+	const real* wt=P(parms->evl.wt);
 	const int ndm=parms->ndm;
 	loc_t* loc;
 	real* amp=NULL;
 	if(use_ploc){
 		loc=recon->floc;
 		amp=mycalloc(loc->nloc, real);
-		prop_nongrid_bin(aper->locs, aper->amp->p, loc, amp, 1, 0, 0, 1);
+		prop_nongrid_bin(aper->locs, P(aper->amp), loc, amp, 1, 0, 0, 1);
 		dnormalize_sumabs(amp, loc->nloc, 1);
 	} else{
-		amp=aper->amp->p;
+		amp=P(aper->amp);
 		loc=aper->locs;
 	}
 	dspcell* Wa=NULL;
@@ -184,7 +184,7 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	const real ht=ngsmod->ht;
 	const real scale=ngsmod->scale;
 	const real scale1=1.-scale;
-	const real* wt=parms->evl.wt->p;
+	const real* wt=P(parms->evl.wt);
 	const int ndm=parms->ndm;
 	const int nmod=ngsmod->nmod;
 	loc_t* loc;
@@ -194,10 +194,10 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	if(use_ploc){
 		loc=recon->floc;
 		amp=mycalloc(loc->nloc, real);
-		prop_nongrid_bin(aper->locs, aper->amp->p, loc, amp, 1, 0, 0, 1);
+		prop_nongrid_bin(aper->locs, P(aper->amp), loc, amp, 1, 0, 0, 1);
 		dnormalize_sumabs(amp, loc->nloc, 1);
 	} else{
-		amp=aper->amp->p;
+		amp=P(aper->amp);
 		loc=aper->locs;
 	}
 	x=loc->locx;
@@ -294,7 +294,7 @@ static dcell* ngsmod_dm(const parms_t* parms, recon_t* recon){
 	P(M,0)=dnew(nmod, 1);
 	dcell* mod=dcellnew(ndm, 1);
 	dcell* dmt=dcellnew(ndm, 1);
-	loc_t** aloc=recon->aloc->p;
+	loc_t** aloc=P(recon->aloc);
 	for(int idm=0; idm<ndm; idm++){
 		P(dmt,idm)=dnew(aloc[idm]->nloc, 1);
 		P(mod,idm)=dnew(aloc[idm]->nloc, nmod);
@@ -373,8 +373,8 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 	}
 	ngsmod->scale=pow(1.-ngsmod->ht/ngsmod->hs, -2);
 	/*modal cross coupling matrix along science for performance evaluation. */
-	ngsmod->MCCP=ngsmod_mcc(parms, recon, aper, parms->evl.wt->p);
-	if(ngsmod->MCCP->nx==1){
+	ngsmod->MCCP=ngsmod_mcc(parms, recon, aper, P(parms->evl.wt));
+	if(NX(ngsmod->MCCP)==1){
 		ngsmod->MCC=dref(P(ngsmod->MCCP,0));
 	} else{
 		ngsmod->MCC=NULL;
@@ -517,13 +517,13 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
    below: T/T x, T/T y, PS1, PS2, PS3, Focus.
 */
 static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, lmat** pmodvalid){
-	if(GM->ny!=1){
+	if(NY(GM)!=1){
 		error("To be implemented\n");
 	}
 	dbg("Rngs is using wfs ");
-	dcell* GM2=dcellnew(GM->nx, GM->ny);
+	dcell* GM2=dcellnew(NX(GM), NY(GM));
 	int nmod=0, ntt=0, nttf=0;
-	for(int iwfs=0; iwfs<GM->nx; iwfs++){
+	for(int iwfs=0; iwfs<NX(GM); iwfs++){
 		if((!mask||P(mask, iwfs))&&P(GM, iwfs)&&P(saneai, iwfs, iwfs)->px[0]>0){
 			dbg0(" %d", iwfs);
 			P(GM2, iwfs)=ddup(P(GM, iwfs));
@@ -576,7 +576,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 		}
 	}
 
-	for(int iwfs=0; iwfs<GM->nx; iwfs++){
+	for(int iwfs=0; iwfs<NX(GM); iwfs++){
 		if(P(GM2, iwfs)){
 			for(int imod=0; imod<nmod; imod++){
 				if(!P(modvalid, imod)){
@@ -655,7 +655,7 @@ void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	real* ngsmod_out,
 	const parms_t* parms, const ngsmod_t* ngsmod,
 	const aper_t* aper, const real* opd, int ievl){
-	const real* restrict amp=aper->amp->p;
+	const real* restrict amp=P(aper->amp);
 	const real* restrict locx=aper->locs->locx;
 	const real* restrict locy=aper->locs->locy;
 	real coeff[6]={0,0,0,0,0,0};
@@ -751,13 +751,13 @@ static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 	if(!M||!P(M,0)) return;
 	const ngsmod_t* ngsmod=recon->ngsmod;
 	//const int nmod=ngsmod->nmod;
-	assert(M->nx==1&&M->ny==1&&P(M,0)->nx==ngsmod->nmod);
+	assert(NX(M)==1&&NY(M)==1&&P(M,0)->nx==ngsmod->nmod);
 	real scale=ngsmod->scale;
 	/*The MCC_fcp depends weakly on the aperture sampling. */
 	real MCC_fcp=ngsmod->aper_fcp;
-	loc_t** aloc=recon->aloc->p;
+	loc_t** aloc=P(recon->aloc);
 	/*convert mode vector and add to dm commands */
-	const int ndm=recon->aloc->nx;
+	const int ndm=NX(recon->aloc);
 	if(!*dmc){
 		*dmc=dcellnew(ndm, 1);
 	}
@@ -768,10 +768,10 @@ static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 	}
 
 	/*first dm */
-	real* pm=P(M,0)->p;
+	real* pm=P(P(M,0));
 
 	for(int idm=0; idm<ndm; idm++){
-		real* p=P(*dmc,idm)->p;
+		real* p=P(P(*dmc,idm));
 		long nloc=aloc[idm]->nloc;
 		real* xloc=aloc[idm]->locx;
 		real* yloc=aloc[idm]->locy;
@@ -901,7 +901,7 @@ void remove_dm_ngsmod(sim_t* simu, dcell* dmerr){
 	const ngsmod_t* ngsmod=recon->ngsmod;
 	dcellzero(simu->Mngs);
 	dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
-	real* mngs=P(simu->Mngs,0)->p;
+	real* mngs=P(P(simu->Mngs,0));
 	if(ngsmod->indastig){//LTAO
 	//LTAO is unable to tell where focus/astigmatism occures. NGS WFS needs to control this.
 	//Testing: remove LPF'ed focus/astigmatism from LGS DM command. 

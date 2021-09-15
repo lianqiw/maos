@@ -52,6 +52,7 @@ extern GtkWidget** pages;
 extern GdkPixbuf* icon_main;
 extern GdkPixbuf* icon_finished;
 extern GdkPixbuf* icon_failed;
+extern GdkPixbuf* icon_cancel;
 extern GdkPixbuf* icon_running;
 extern GdkPixbuf* icon_waiting;
 extern GdkPixbuf* icon_skip;

@@ -214,9 +214,9 @@ static void genotf_wrap(thread_t* info){
 	const long pttr=data->pttr;
 	const dmat* B=data->B;
 	const T_VALID* pval=data->pval;
-	if(!(check(!area||area->nx*area->ny==nsa) 
-		|| check(!amp||amp->nx*amp->ny==nxsa*nsa) 
-		||	check(!opdbias||opdbias->nx*opdbias->ny==nxsa*nsa))){
+	if(!(check(!area||NX(area)*NY(area)==nsa) 
+		|| check(!amp||NX(amp)*NY(amp)==nxsa*nsa) 
+		||	check(!opdbias||NX(opdbias)*NY(opdbias)==nxsa*nsa))){
 		error("Invalid input\n");
 	}
 	for(int isa=info->start; isa<info->end; isa++){
@@ -225,14 +225,14 @@ static void genotf_wrap(thread_t* info){
 		}
 		const real* opdbiasi=NULL;
 		if(opdbias){
-			opdbiasi=opdbias->p+isa*nxsa;
+			opdbiasi=P(opdbias)+isa*nxsa;
 		} else{
 			opdbiasi=NULL;
 		}
 		if(otffull&&(!area||P(area,isa)>thres)){
 			ccp(&P(otf,isa), otffull);/*just copy the full array */
 		} else if(!area||P(area,isa)>0.01){
-			genotf_do(&P(otf,isa), pttr, data->npsfx, data->npsfy, loc, amp?amp->p+isa*nxsa:NULL, opdbiasi, wvl, B, pval);
+			genotf_do(&P(otf,isa), pttr, data->npsfx, data->npsfy, loc, amp?P(amp)+isa*nxsa:NULL, opdbiasi, wvl, B, pval);
 		}
 	}
 	//if(!detached && nsa>10) info2("Thread %ld done\n", info->ithread);
@@ -331,9 +331,9 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 	long nsa,      /**<Number of (sub)apertures*/
 	long pttr      /**<Remove piston/tip/tilt*/
 ){
-	if(amp&&loc->nloc*nsa!=amp->nx*amp->ny){
-		error("loc and amp mismatch. loc->nloc=%ld, amp is %ldx%ld, nsa=%ld\n", loc->nloc, amp->nx, amp->ny, nsa);
-	} else if(cov&&(amp->nx!=cov->nx||cov->nx!=cov->ny)){
+	if(amp&&loc->nloc*nsa!=NX(amp)*NY(amp)){
+		error("loc and amp mismatch. loc->nloc=%ld, amp is %ldx%ld, nsa=%ld\n", loc->nloc, NX(amp), NY(amp), nsa);
+	} else if(cov&&(NX(amp)!=NX(cov)||NX(cov)!=NY(cov))){
 		error("loc and cov mismatch\n");
 	} else if(nsa<1||npsfx<1||npsfy<1){
 		error("nsa, notfx, notfy has to be at least 1\n");
@@ -364,7 +364,7 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 			}
 		}
 		if(isafull>0){
-			genotf_do(&otffull, pttr, npsfx, npsfy, loc, amp?amp->p+isafull*nloc:NULL, NULL, wvl, B, pval);
+			genotf_do(&otffull, pttr, npsfx, npsfy, loc, amp?P(amp)+isafull*nloc:NULL, NULL, wvl, B, pval);
 		}
 	}
 	if(!*potf){
@@ -391,8 +391,8 @@ void genotf(ccell** potf,    /**<The otf array for output*/
    the amplitude is less than the threshold, the point does not count.*/
 
 dmat* mk2dcov(loc_t* loc, const dmat* amp, real ampthres, const dmat* cov, int norm){
-	if(loc->nloc!=cov->nx||loc->nloc!=cov->ny){
-		error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, cov->nx, cov->ny);
+	if(loc->nloc!=NX(cov)||loc->nloc!=NY(cov)){
+		error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, NX(cov), NY(cov));
 	}
 	real xmin, xmax, ymin, ymax;
 	long nloc=loc->nloc;

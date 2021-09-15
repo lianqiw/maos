@@ -442,7 +442,7 @@ add2cpu_mat(c, real, Comp)
 	}								\
 	if(!*out) *out=dnew(in.Nx(), in.Ny());				\
 	dmat *pout=*out;						\
-	DO(cudaMemcpyAsync(pout->p, in(), in.N()*sizeof(T),D2H, stream));	\
+	DO(cudaMemcpyAsync(P(pout), in(), in.N()*sizeof(T),D2H, stream));	\
 	CUDA_SYNC_STREAM;\
 	if(pout->header) free(pout->header);				\
 	if(in.header.length()) pout->header=strdup(in.header.c_str());	\

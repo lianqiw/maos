@@ -157,8 +157,8 @@ curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
 		for(int ipsr=0; ipsr<npsr; ipsr++){
 			xmap[ipsr]=recon->xmap->p[ipsr];
 		}
-		xnx=recon->xnx->p;
-		xny=recon->xny->p;
+		xnx=P(recon->xnx);
+		xny=P(recon->xny);
 	}
 	if(recon->xcmap){
 		xcmap=cugridcell(npsr, 1);
@@ -166,10 +166,10 @@ curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
 			xcmap[ipsr]=(recon->xcmap->p[ipsr]);
 		}
 	}
-	anx=recon->anx->p;
-	any=recon->any->p;
-	anloc=recon->anloc->p;
-	ngrad=recon->ngrad->p;
+	anx=P(recon->anx);
+	any=P(recon->any);
+	anloc=P(recon->anloc);
+	ngrad=P(recon->ngrad);
 	dt=parms->sim.dt;
 	delay=2;//2 frame delay
 }

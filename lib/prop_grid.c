@@ -389,13 +389,13 @@ void FUN_NAME_MAP(CONST_IN map_t* mapin,   /**<[in] OPD defind on a square grid*
 #endif
 	}
 
-	CONST_OUT real* phiout=mapout->p;
-	CONST_IN real* phiin=mapin->p;
+	CONST_OUT real* phiout=P(mapout);
+	CONST_IN real* phiin=P(mapin);
 	/*With OpenMP compiler complained uninitialized value for the following
 	  because they are treated as firstprivate*/
-	if(end==0) end=mapout->ny;
-	const long nxin=mapin->nx;
-	const long nyin=mapin->ny;
+	if(end==0) end=NY(mapout);
+	const long nxin=NX(mapin);
+	const long nyin=NY(mapin);
 	/*
 	  convert to unitless variables
 	*/
@@ -407,7 +407,7 @@ void FUN_NAME_MAP(CONST_IN map_t* mapin,   /**<[in] OPD defind on a square grid*
 	displacey=(displacey-mapin->oy)*dy_in1;
 	const real oxout=mapout->ox*dx_in1*scale+displacex;
 	const real oyout=mapout->oy*dy_in1*scale+displacey;
-	const long nxout=mapout->nx;
+	const long nxout=NX(mapout);
 	int missing=FUN_NAME_BLOCK(phiin, nxin, nyin,
 		phiout+start*nxout, nxout, end-start,
 		dxout, dyout, oxout, oyout+dyout*start,
@@ -428,8 +428,8 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 		error("transpose ray tracing is not available with iac\n");
 #endif
 	}
-	const long nxin=mapin->nx;
-	const long nyin=mapin->ny;
+	const long nxin=NX(mapin);
+	const long nyin=NY(mapin);
 	/*
 	  convert to unitless variables
 	*/
@@ -439,15 +439,15 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	const real dyout=pts->dy*dy_in1*scale;
 	displacex=(displacex-mapin->ox)*dx_in1;
 	displacey=(displacey-mapin->oy)*dy_in1;
-	long nxout=pts->nx;
-	long nyout=pts->ny?pts->ny:pts->nx;
+	long nxout=NX(pts);
+	long nyout=NY(pts)?NY(pts):NX(pts);
 	if(!end) end=pts->nsa;
 	int missing=0;
 	OMPTASK_FOR(isa, start, end, shared(missing)){
 	//for(long isa=start; isa<end; isa++){
 		const real oxout=pts->origx[isa]*dx_in1*scale+displacex;
 		const real oyout=pts->origy[isa]*dy_in1*scale+displacey;
-		missing+=FUN_NAME_BLOCK(mapin->p, nxin, nyin,
+		missing+=FUN_NAME_BLOCK(P(mapin), nxin, nyin,
 			phiout+isa*nxout*nyout, nxout, nyout,
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);
@@ -468,8 +468,8 @@ void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 		error("transpose ray tracing is not available with iac\n");
 #endif
 	}
-	const long nxin=mapin->nx;
-	const long nyin=mapin->ny;
+	const long nxin=NX(mapin);
+	const long nyin=NY(mapin);
 	/*
 	  convert to unitless variables
 	*/
@@ -487,7 +487,7 @@ void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 		const long nxout=ostat->cols[icol+1].pos-offset;
 		const real oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;
 		const real oyout=ostat->cols[icol].ystart*dy_in1*scale+displacey;
-		missing+=FUN_NAME_BLOCK(mapin->p, nxin, nyin,
+		missing+=FUN_NAME_BLOCK(P(mapin), nxin, nyin,
 			phiout+offset, nxout, nyout,
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);

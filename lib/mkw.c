@@ -65,7 +65,7 @@ void mkw_amp(loc_t* loc, real* amp, dsp** W0, dmat** W1){
 		amp0=amp-1;/*offset by -1 */
 	}
 	*W1=dnew(nloc, 1);
-	real* W1p=(*W1)->p;
+	real* W1p=P(*W1);
 	for(int iloc=0; iloc<nloc;iloc++){
 		int ix=(int)round((loc->locx[iloc]-ox)*idx);
 		int iy=(int)round((loc->locy[iloc]-oy)*idx);
@@ -155,7 +155,7 @@ void mkw_amp(loc_t* loc, real* amp, dsp** W0, dmat** W1){
 		warning("Sum W1 is not equal to 1. "
 			"Probably loc grid is too small. "
 			"Rescaling W0, W1\n");
-		real* p=(*W1)->p;
+		real* p=P(*W1);
 		for(int i=0; i<(*W1)->nx; i++){
 			p[i]*=sc;
 		}
@@ -377,7 +377,7 @@ void mkw_circular(loc_t* loc, /**<[in] grid coordinate*/
 	real* W0x=(*W0)->px;
 	long count=0;
 	*W1=dnew(nloc, 1);
-	real* W1p=(*W1)->p;
+	real* W1p=P(*W1);
 	real idx=1./loc->dx;
 	/*center of circle in the map. */
 	real icx=(cx-ox)*idx;
@@ -429,7 +429,7 @@ void mkw_circular(loc_t* loc, /**<[in] grid coordinate*/
 	real sumW1=dsum(*W1);
 	if(fabs(sumW1-1)>1.e-12){
 		sc=1./sumW1;
-		real* p=(*W1)->p;
+		real* p=P(*W1);
 		for(int i=0; i<(*W1)->nx; i++){
 			p[i]*=sc;
 		}

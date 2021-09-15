@@ -267,6 +267,9 @@ gboolean refresh(proc_t* p){
 		list_proc_reset(p);
 		list_modify_icon(p->row, icon_waiting);
 		break;
+	case S_UNKNOWN:
+		list_modify_icon(p->row, icon_cancel);
+		break;
 	case S_FINISH:/*Finished */
 		list_proc_update(p);
 		list_modify_icon(p->row, p->frac==0?icon_skip:icon_finished);

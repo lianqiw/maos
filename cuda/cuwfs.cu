@@ -38,13 +38,13 @@ cuwfs_info::cuwfs_dbg(const parms_t* parms, const powfs_t* powfs, int _iwfs, int
 void cufieldstop_t::apply(cuwfs_info* wfsinfo, curmat& opd, cudaStream_t stream){
 	if(nwvl>1) error("Please implemente\n");
 	embed_wvf_do<<<DIM(opd->nx, 256), 0, stream>>>
-		(wvf->p, opd->p, wfsinfo->amp->p, wfsinfo->embed->p, opd->nx, wvl[0]);
-	CUFFT(plan, (Comp*)wvf->p, CUFFT_FORWARD);
+		(P(wvf), P(opd), P(wfsinfo->amp), P(wfsinfo->embed), opd->nx, wvl[0]);
+	CUFFT(plan, (Comp*)P(wvf), CUFFT_FORWARD);
 	cwm_do<<<DIM(wvf->nx*wvf->ny, 256), 0, stream>>>
-		(wvf->p, fieldmask->p, wvf->nx*wvf->ny);
-	CUFFT(plan, (Comp*)wvf->p, CUFFT_INVERSE);
+		(P(wvf), P(fieldmask), wvf->nx*wvf->ny);
+	CUFFT(plan, (Comp*)P(wvf), CUFFT_INVERSE);
 	unwrap_phase_do<<<DIM2(wvf->nx, wvf->ny, 16), 0, stream>>>
-		(wvf->p, opd->p, wfsinfo->embed->p, opd->nx, wvl[0]);
+		(P(wvf), P(opd), P(wfsinfo->embed), opd->nx, wvl[0]);
 }
 __global__ static void setup_rand(curandState* rstat, int seed){
 	int id=threadIdx.x+blockIdx.x*blockDim.x;
@@ -110,10 +110,10 @@ __global__ void add_geom_noise_do(Real* restrict g, const Real* restrict nea,
 	int nsa, curandState* restrict rstat);
 void cushgeom_t::addnoise(){
 	add_geom_noise_do<<<rand->nb, rand->nt, 0, stream>>>
-		(gradacc->p, nea->p, nsa, rand->rstat);
+		(P(gradacc), P(nea), nsa, rand->rstat);
 }
 void cushgeom_t::acc(curmat* opd){
-	if(gradcalc->p!=gradacc->p){
+	if(P(gradcalc)!=P(gradacc)){
 		calcg(opd, 1);
 		curadd(&gradacc, 1, gradcalc, 1.f/(Real)dtrat, stream);
 	} else{
@@ -129,7 +129,7 @@ cushg_t::cushg_t(wfscfg_t* wfscfg)
 	GS0=new cusp(powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0], 1);
 }
 void cushg_t::calcg(curmat& opd, Real ratio){
-	cuspmul(gradcalc->p, GS0, opd->p, 1, 'n', ratio, stream);
+	cuspmul(P(gradcalc), GS0, P(opd), 1, 'n', ratio, stream);
 }
 cushz_t::cushz_t(wfscfg_t* wfscfg)
 	:cushgeom_t(wfscfg), imcc(0){
@@ -146,8 +146,8 @@ cushz_t::cushz_t(wfscfg_t* wfscfg)
 void cushz_t::calcg(curmat& opd, Real ratio){
 	error("need to implement. Decide where to put pts info.\n");
 	/*cuztilt<<<nsa, dim3(16,16), 0, stream>>>
-	(gradcalc->p, opd->p, opd->nx, dxsa, nxsa, imcc,
-	 cupowfs[ipowfs].pts->p, cuwfs[iwfs].amp,
+	(P(gradcalc), P(opd), opd->nx, dxsa, nxsa, imcc,
+	 P(cupowfs[ipowfs].pts), cuwfs[iwfs].amp,
 	 ratio);*/
 }
 cullt_t::cullt_t(wfscfg_t* wfscfg)
@@ -194,7 +194,7 @@ cullt_t::cullt_t(wfscfg_t* wfscfg)
     int n=p[0]->nx*p[0]->ny;				\
     z##mat *tmp=z##new(n, nc);				\
     for(int ic=0; ic<nc; ic++){				\
-	type_convert(tmp->p+n*ic, p[ic]->p, n);		\
+	type_convert(tmp->p+n*ic, P(p[ic]), n);		\
     }							\
     return tmp;						\
 }
@@ -258,10 +258,10 @@ cushphy_t::cushphy_t(wfscfg_t* wfscfg)
 			if(parms->powfs[ipowfs].llt){//Elongation
 				cmat* (*petf)[nsa]=NULL;
 				if(powfs[ipowfs].etfsim[iwvl].p1){
-					petf=(cmat*(*)[nsa])powfs[ipowfs].etfsim[iwvl].p1->p;
+					petf=(cmat*(*)[nsa])P(powfs[ipowfs].etfsim[iwvl].p1);
 					etfis1d=1;
 				} else{
-					petf=(cmat*(*)[nsa])powfs[ipowfs].etfsim[iwvl].p2->p;
+					petf=(cmat*(*)[nsa])P(powfs[ipowfs].etfsim[iwvl].p2);
 					etfis1d=0;
 				}
 				cmat** petfi=petf[parms->powfs[ipowfs].llt->n>1?wfsind:0];

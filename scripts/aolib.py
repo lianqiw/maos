@@ -19,7 +19,7 @@ except:
 
 from readbin import readbin
 
-from draw import draw
+from draw import draw, locembed
 
 
 #To dock multiple figures. Does not work very well.
@@ -71,11 +71,12 @@ def cummean(y,axis=0):
     
     yc=np.cumsum(y,axis=axis)
     return yc*x
-def maos_cumu(files, seeds=None): ##return cumulative average
+def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
     res,fds=maos_res(files,seeds,0,0)
     print(fds)
     nsim=res.shape[-1]
-    nsim0=min(5000, np.int(nsim*0.1))
+    if nsim0<=0:
+        nsim0=min(5000, np.int(nsim*0.1))
     yy=np.arange(1, nsim+1-nsim0)
     xx=nsim0+yy
     yy.shape=(1,1,nsim-nsim0)
@@ -89,7 +90,13 @@ def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "extra/Resp", seeds, iframe1, iframe2)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
-    fds2=natsorted(glob.glob(fdin+"/",recursive=1))
+    if type(fdin) is list:
+        fds2=[]
+        for fdini in fdin:
+            fds2+=natsorted(glob.glob(fdini+"/",recursive=1))
+    else:
+        fds2=natsorted(glob.glob(fdin+"/",recursive=1))
+    
     fds=[]
     resall=None
     for fd in fds2: #loop over directory
@@ -220,8 +227,14 @@ def cellsum(x):
 
     return xsum
 
-#remove piston/tip/tilt from gradients
-def grad_pttr(saloc,g):
+#remove tip/tilt/focus from gradients
+def grad_ttfr(saloc,g):
+    if g.dtype==object:
+        gv=np.empty(g.shape, dtype=object)
+        print(gv.shape)
+        for ig,gi in np.ndenumerate(g):
+            gv[ig]=grad_ttfr(saloc,gi)
+        return gv
     if saloc.shape[0]==2: #2*nsa
         nsa=saloc.shape[1]
         tt=saloc.flatten() 
@@ -233,10 +246,10 @@ def grad_pttr(saloc,g):
     
     if g.shape[0]==2: #2*nsa
         gv=g.flatten('C')
-    elif g.shape[1]==2:
-        gv=g.flatten('F')
     elif g.shape[0]==2*nsa:
         gv=g
+    elif g.shape[1]==2:
+        gv=g.flatten('F')
     else:
         raise(ValueError('g should bd 2*nsa, nsa*2 or nsa*2*m'))
     
@@ -278,14 +291,15 @@ def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
     #rmod=np.linalg.pinv(mod)
     #opd2[mask]=opd[mask]-mod@(rmod@opd[mask])
     return opd2
-
+def opd_loc_remove_focus(opd, loc):
+    return opd_loc_remove_zernike(2,2,1)
 def read_many(fdin):
     fds2=natsorted(glob.glob(fdin,recursive=1))
     fds=[]
     res=[]
     for fd in fds2: 
         try:
-            tmp=read(fd)
+            tmp=readbin(fd)
             fds.append(fd)
             res.append(tmp)
         except:

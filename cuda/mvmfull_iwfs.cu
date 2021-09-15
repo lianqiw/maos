@@ -250,9 +250,9 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		dmres->p[igpu]=X(new)(nact, 1);
 		X(pagelock)(dmres->p[igpu], NULL);
 		/*
-		DO(cudaMemcpyAsync(data[igpu]->pix->p, pix->p, 2*nsa*pixpsa,
+		DO(cudaMemcpyAsync(P(data[igpu]->pix), P(pix), 2*nsa*pixpsa,
 				   H2D, *data[igpu]->stream_p));
-		cudaMemcpyAsync(dmres->p[igpu]->p, data[igpu]->act->p, nact*sizeof(Real),
+		cudaMemcpyAsync(P(dmres->p[igpu]), P(data[igpu]->act), nact*sizeof(Real),
 				D2H, data[igpu]->stream_a[0]);
 		CUDA_SYNC_DEVICE;
 		*/
@@ -325,7 +325,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 #endif
 			void* pcur=pix->p+isa*pixpsa;
 			if(sock!=-1){
-			//pcur=pix->p;//temporary. always use the same buffer
+			//pcur=P(pix);//temporary. always use the same buffer
 			//manually use 2 byte.
 				real tmp0=myclockd();
 				if(stread(sock, pcur, 2*nleft*pixpsa2)){
@@ -359,7 +359,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 			DO(cudaEventRecord(datai->event0_a2[datai->count], datai->stream_a[datai->ism]));
 #endif
 #if 0
-			DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
+			DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, P(datai->act), 1));
 #else
 			multimv_do<<<nblock, naeach, sizeof(Real)* naeach, datai->stream_a[datai->ism]>>>
 				(datai->cumvm()+nact*isa*2, datai->act(), datai->grad()+isa*2,
@@ -419,7 +419,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 #if TIMING
 			DO(cudaEventRecord(datai->event0_a, datai->stream_a[0]));
 #endif
-			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act(), nact*sizeof(Real), D2H, datai->stream_a[0]);
+			cudaMemcpyAsync(P(dmres->p[igpu]), datai->act(), nact*sizeof(Real), D2H, datai->stream_a[0]);
 #if TIMING
 			DO(cudaEventRecord(datai->event_a, datai->stream_a[0]));//record event when all act are copied so mvm can start.
 #endif
@@ -436,7 +436,7 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		}
 		if(sock!=-1){
 			real tmp0=myclockd();
-			if(stwrite(sock, dmres->p[0]->p, sizeof(Real)*nact)){
+			if(stwrite(sock, P(dmres->p[0]), sizeof(Real)*nact)){
 				warning("error write dmres: %s\n", strerror(errno));
 				close(sock); sock=-1;
 			}

@@ -52,9 +52,12 @@ void fit_sodium_profile(
   real hs,      /**<LGS focusing height*/
   real htel,    /**<Telescope hegith*/
   real za,      /**<Telescope zenith angle*/
-  real tikcr,    /**<Tikhonov regularization*/
+  real cogthres,/**<Threshold for cog*/
+  real tikcr,   /**<Tikhonov regularization*/
   real svdthres, /**<SVD threshold*/
-  int save  /**<Save results*/
+  int nrep,     /**<Number of iterations*/
+  int save,      /**<Save results to file*/
+  int use_cache  /**<Use cache*/
 );
-void fit_sodium_profile_wrap(dcell** pgrad, const dcell* i0in, const parms_t* parms, powfs_t* powfs, int ipowfs, int use_ncpa);
+void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, const parms_t* parms, powfs_t* powfs, int ipowfs, int nrep, int use_ncpa, int use_cache);
 #endif

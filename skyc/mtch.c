@@ -37,7 +37,7 @@ void psf2i0gxgy(dmat* i0, dmat* gx, dmat* gy, dmat* psf, DTF_S* dtf, int deriv){
 		ccp(&otfsave, otf);//save for later
 	}
 	cfft2(otf, 1);//convert otf back to psf space
-	dspmulcreal(i0->p, dtf->si, otf->p, 1);//sample psf to detectors.
+	dspmulcreal(P(i0), dtf->si, P(otf), 1);//sample psf to detectors.
 	if(deriv){
 		ccp(&otf, otfsave); //copy back otf
 		//apply derivative.
@@ -49,8 +49,8 @@ void psf2i0gxgy(dmat* i0, dmat* gx, dmat* gy, dmat* psf, DTF_S* dtf, int deriv){
 		}
 		cfft2(otf, 1);
 		cfft2(otfsave, 1);
-		dspmulcreal(gx->p, dtf->si, otf->p, 1);
-		dspmulcreal(gy->p, dtf->si, otfsave->p, 1);
+		dspmulcreal(P(gx), dtf->si, P(otf), 1);
+		dspmulcreal(P(gy), dtf->si, P(otfsave), 1);
 		cfree(otfsave);
 	}
 	cfree(otf);

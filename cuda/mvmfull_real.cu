@@ -174,7 +174,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 		X(randu)(mvm2, 1e-7, &srand);
 		X(randu)(mtch, 1, &srand);
 		X(randu)(pix1, 50, &srand);
-		memcpy(pix2->p, pix1->p, sizeof(Real)*totpix);
+		memcpy(P(pix2), P(pix1), sizeof(Real)*totpix);
 		X(randu)(ptt, 1, &srand);
 		//srandn(pixbias, 1, &srand);
 	}
@@ -184,8 +184,8 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 	im0=X(new)(totpix, 3);
 	if(nstep==1){//Verify accuracy
 	//We use half of the array as short.
-		writearr("pix", 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
-		writearr("pixbias", 1, sizeof(short), M_INT16, NULL, pixbias->p, totpix, 1);
+		writearr("pix", 1, sizeof(short), M_INT16, NULL, P(pix), totpix, 1);
+		writearr("pixbias", 1, sizeof(short), M_INT16, NULL, P(pixbias), totpix, 1);
 		writebin(mvm1, "mvm1");
 		writebin(mtch, "mtch");
 	}
@@ -239,7 +239,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 				cmd[6]=2;
 				if(stwriteintarr(sock, cmd, 7)
 					||stwriteintarr(sock, saind, nsa+1)
-					||stwrite(sock, pix->p, sizeof(short)*totpix)){
+					||stwrite(sock, P(pix), sizeof(short)*totpix)){
 					close(sock); sock=-1;
 					warning("Failed: %s\n", strerror(errno));
 				}
@@ -266,7 +266,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 		cp2gpu(data[igpu]->cumvm1, mvm);
 		data[igpu]->pix=Array<short, Gpu>(totpix, 1);
 		data[igpu]->pixbias=Array<short, Gpu>(totpix, 1);
-		cp2gpu(data[igpu]->pixbias(), (short*)pixbias->p, totpix*sizeof(short), H2D);
+		cp2gpu(data[igpu]->pixbias(), (short*)P(pixbias), totpix*sizeof(short), H2D);
 		data[igpu]->mtch=curcell(nbuf, 1, totpix*2, 1);
 		cp2gpu(data[igpu]->mtch[0], mtch);
 		data[igpu]->grad=curmat(ng, 1);
@@ -359,7 +359,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 				nsaleft=sastep;
 			}
 			//One stream handling the memcpy
-			short* pcur=(short*)(pix->p)+saind[isa];
+			short* pcur=(short*)(P(pix))+saind[isa];
 			if(sock!=-1){
 				real tmp0=myclockd();
 				if(stread(sock, pcur, sizeof(short)*npixleft)){
@@ -396,7 +396,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 
 #if 0
 			Real one=1;
-			DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nsaleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
+			DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nsaleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, P(datai->act), 1));
 #else
 			multimv_do<<<nblock, naeach, sizeof(Real)* naeach, datai->stream_a[datai->ism]>>>
 				(datai->cumvm()+nact*isa*2, datai->act, datai->grad()+isa*2,
@@ -504,7 +504,7 @@ endhere:;
 			for(int ism=1; ism<nsm; ism++){
 				DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 			}
-			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real),
+			cudaMemcpyAsync(P(dmres->p[igpu]), datai->act, nact*sizeof(Real),
 				D2H, datai->stream_a[0]);
 			cuzero(datai->act, datai->stream_a[0]);
 		}
@@ -526,7 +526,7 @@ endhere:;
 			for(int ism=1; ism<nsm; ism++){
 				DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 			}
-			cudaMemcpyAsync(data[0].actelse->p[igpu-1]->p, datai->act->p, nact*sizeof(Real),
+			cudaMemcpyAsync(P(data[0].actelse->p[igpu-1]), P(datai->act), nact*sizeof(Real),
 				D2D, datai->stream_a[0]);
 		}
 		if(ngpu>1){
@@ -538,8 +538,8 @@ endhere:;
 					DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 				}
 				add_do<<<DIM(nact, 256), 0, datai->stream_a[0]>>>
-					(datai->act->p, datai->actelse->p[0]->p, (Real*)0, 1, nact);
-				cudaMemcpyAsync(dmres->p[0]->p, datai->act->p, nact*sizeof(Real),
+					(P(datai->act), P(datai->actelse->p[0]), (Real*)0, 1, nact);
+				cudaMemcpyAsync(P(dmres->p[0]), P(datai->act), nact*sizeof(Real),
 					D2H, datai->stream_a[0]);
 				datai->stream_a[0].sync();
 			} else{
@@ -555,10 +555,10 @@ endhere:;
 			writebin(dmres->p[0], "dmres");
 			for(int igpu=0; igpu<ngpu; igpu++){
 				cudaSetDevice(gpus[igpu]);
-				DO(cudaMemcpyAsync(pix->p, data[igpu]->pix, sizeof(short)* totpix, D2H, data[igpu]->stream_p));
+				DO(cudaMemcpyAsync(P(pix), data[igpu]->pix, sizeof(short)* totpix, D2H, data[igpu]->stream_p));
 				char fn[PATH_MAX];
 				snprintf(fn, PATH_MAX, "pix_gpu%d", igpu);
-				writearr(fn, 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
+				writearr(fn, 1, sizeof(short), M_INT16, NULL, P(pix), totpix, 1);
 				cuwrite(data[igpu]->grad, data[igpu]->stream_p, "grad_gpu%d", igpu);
 			}
 		}
@@ -584,7 +584,7 @@ endhere:;
 		}
 		if(sock!=-1){
 			real tmp0=myclockd();
-			if(stwrite(sock, dmres->p[0]->p, sizeof(Real)*nact)){
+			if(stwrite(sock, P(dmres->p[0]), sizeof(Real)*nact)){
 				warning("error write dmres: %s\n", strerror(errno));
 				close(sock); sock=-1;
 				_Exit(1);

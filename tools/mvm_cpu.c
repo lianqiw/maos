@@ -198,20 +198,20 @@ int main(int argc, char* argv[]){
 				if(isa==0) tic;
 			}
 			//Matched filter
-			mtch_do(mtch->p, pix, pixbias,
-				grad->p+isa*2, im0->p, im0->p+totpix, im0->p+totpix*2,
+			mtch_do(P(mtch), pix, pixbias,
+				P(grad)+isa*2, P(im0), P(im0)+totpix, P(im0)+totpix*2,
 				saind+isa, nsaleft, cd, sd);
 			//MVM
 			for(int irep=0; irep<nrep; irep++){
 				if(use_trans){
-					mvmt_do(mvmt->p+isa*2, grad->p+isa*2, dm->p, nact, nsaleft*2, ng);
+					mvmt_do(P(mvmt)+isa*2, P(grad)+isa*2, P(dm), nact, nsaleft*2, ng);
 				} else{
-					mvm_do(mvm->p+isa*2*nact, grad->p+isa*2, dm->p, nact, nsaleft*2);
+					mvm_do(P(mvm)+isa*2*nact, P(grad)+isa*2, P(dm), nact, nsaleft*2);
 				}
 			}
 		}//for isa
 		if(sock>-1){
-			if(stwrite(sock, dm->p, sizeof(float)*nact)){
+			if(stwrite(sock, P(dm), sizeof(float)*nact)){
 				warning("error write dmres: %s\n", strerror(errno));
 				close(sock); sock=-1;
 				_Exit(1);

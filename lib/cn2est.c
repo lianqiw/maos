@@ -40,7 +40,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	info("Cn2 estimation: ");
 	/*We need at least a pair */
 	if(!wfspair) return 0;
-	int npair=wfspair->nx*wfspair->ny;
+	int npair=NX(wfspair)*NY(wfspair);
 	if(!npair) return 0;
 	if(npair%2==1){
 		error("pair must have even number of entries\n");
@@ -49,7 +49,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	int nwfspair=npair>>1;
 	cn2est_t* cn2est=mycalloc(1, cn2est_t);
 	cn2est->nwfspair=nwfspair;
-	int nwfs=wfstheta->nx;
+	int nwfs=NX(wfstheta);
 	cn2est->nwfs=nwfs;
 	cn2est->nsa=saloc->nloc;
 	/*wfscov is a flag for wfs showing whether this wfs participates in
@@ -71,7 +71,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	/* mask is a mask defined on square grid for subapertures that have
 	 * normalized area above the threshold.*/
 	lmat* mask=lnew(nx, nx);
-	if(saa&&saa->nx!=cn2est->nsa){
+	if(saa&&NX(saa)!=cn2est->nsa){
 		error("saa and saloc mismatch\n");
 	}
 
@@ -141,10 +141,10 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	/*determine the layer height used for tomography. */
 	cn2est->htrecon=ddup(htrecon);
 	cn2est->wtrecon=dcellnew(1, 1);
-	P(cn2est->wtrecon,0)=dnew(cn2est->htrecon->nx, 1);
+	P(cn2est->wtrecon,0)=dnew(NX(cn2est->htrecon), 1);
 	{
 		info("htrecon=[");
-		for(int iht=0; iht<cn2est->htrecon->nx; iht++){
+		for(int iht=0; iht<NX(cn2est->htrecon); iht++){
 			info("%.2f ", P(cn2est->htrecon,iht)*0.001);
 		}
 		info("]km\n");
@@ -160,7 +160,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	long nhtsx[nwfspair];
 	long nhtsy[nwfspair];
 	real hmin, hmax;
-	dmaxmin(cn2est->htrecon->p, cn2est->htrecon->nx, &hmax, &hmin);
+	dmaxmin(P(cn2est->htrecon), NX(cn2est->htrecon), &hmax, &hmin);
 	/*ovs is the over sampling factor in mc. need to be at least 2 to
 	  cover the non-zero PSD (sinc functions.)*/
 
@@ -207,9 +207,9 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 		const real slang=MAX(fabs(cb), fabs(sb));
 #endif
 		real hsm=0;
-		if(hs->nx*hs->ny>=nwfs){
+		if(NX(hs)*NY(hs)>=nwfs){
 			hsm=(P(hs,wfs0)+P(hs,wfs1))*0.5;
-		} else if(hs->nx*hs->ny==1){
+		} else if(NX(hs)*NY(hs)==1){
 			hsm=P(hs,0);
 		} else{
 			error("hs in in wrong format, should have 1 or %d elements\n", nwfs);
@@ -223,7 +223,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 			if(keepht==2){
 			/*slodar output directly to layers used for tomography. may not work well */
 				pair->iht0=0;
-				pair->iht1=cn2est->htrecon->nx;
+				pair->iht1=NX(cn2est->htrecon);
 			} else{
 			/*output to nature slodar heights. and then bin to tomography layers */
 				pair->iht0=(int)floor(hmin*dtheta*slang/(dsa*(1-hmin/hsm)));
@@ -374,23 +374,23 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
    Compute covariance from gradients and embed into a 2d map cn2est->curi.
 */
 static void cn2est_embed(cn2est_t* cn2est, const dcell* gradol, int icol){
-	long* embed=cn2est->embed->p;
-	for(int iwfs=0; iwfs<gradol->nx; iwfs++){
+	long* embed=P(cn2est->embed);
+	for(int iwfs=0; iwfs<NX(gradol); iwfs++){
 		if(!cn2est->wfscov[iwfs]) continue;
 		const int nsa=cn2est->nsa;
 		dmat* grad=P(gradol,iwfs);
 		if(!grad){
 			error("wfs %d: PSOL grads is required to do cn2 estimation\n", iwfs);
 		}
-		if(icol>=grad->ny){
+		if(icol>=NY(grad)){
 			error("icol=%d is invalid\n", icol);
 		}
-		if(grad->nx!=nsa*2){
+		if(NX(grad)!=nsa*2){
 			error("grad and saloc does not match\n");
 		}
 		dmat* gx=P(cn2est->gxs,iwfs);
 		dmat* gy=P(cn2est->gys,iwfs);
-		const real* pgrad=grad->p+grad->nx*icol;
+		const real* pgrad=PCOL(grad,icol);
 		/*Embed gradients in a 2-d array */
 		for(int isa=0; isa<nsa; isa++){
 			P(gx,embed[isa])=pgrad[isa];
@@ -424,9 +424,9 @@ static void cn2est_cov(cn2est_t* cn2est){
 	for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 		const int wfs0=cn2est->pair[iwfspair].wfs0;
 		const int wfs1=cn2est->pair[iwfspair].wfs1;
-		const comp* cur1=P(cn2est->curi,wfs0)->p;
-		const comp* cur2=P(cn2est->curi,wfs1)->p;
-		comp* cov=P(cn2est->covc,iwfspair)->p;
+		const comp* cur1=P(P(cn2est->curi,wfs0));
+		const comp* cur2=P(P(cn2est->curi,wfs1));
+		comp* cov=P(P(cn2est->covc,iwfspair));
 		for(long i=0; i<cn2est->nembed*cn2est->nembed; i++){
 			cov[i]+=conj(cur1[i])*(cur2[i]);
 		}
@@ -437,7 +437,7 @@ static void cn2est_cov(cn2est_t* cn2est){
  */
 void cn2est_push(cn2est_t* cn2est, const dcell* gradol){
 	int ncol=0;
-	if(gradol->nx<cn2est->nwfs){
+	if(NX(gradol)<cn2est->nwfs){
 		error("Grad has less number of wfs than required %d\n", cn2est->nwfs);
 	}
 	for(int iwfs=0; iwfs<cn2est->nwfs; iwfs++){
@@ -464,7 +464,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 #if COV_ROTATE
 	dmat* covr=dnew(cn2est->nembed, cn2est->nembed);
 #endif
-	const int nwfspair=cn2est->wt->nx;
+	const int nwfspair=NX(cn2est->wt);
 	for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 		cadd(&covi, 0, P(cn2est->covc,iwfspair), 1./(cn2est->count*cn2est->nembed*cn2est->nembed));
 		cfft2(covi, 1);
@@ -473,14 +473,14 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 #if COV_ROTATE
 	//roate and embed;
 		dembed(covr, P(cn2est->cov2,iwfspair), -cn2est->pair[iwfspair].beta);
-		real* cc=P(cn2est->cov1,iwfspair)->p;
+		real* cc=P(P(cn2est->cov1,iwfspair));
 		cn2est_pair_t* pair=cn2est->pair+iwfspair;
 		int off=cn2est->nembed/2;
 		for(long isep=pair->iht0; isep<pair->iht1; isep++){
 			cc[isep-pair->iht0]=P(covr, off+isep, off)*P(cn2est->overlapi, off+isep, off);
 		}
 #else
-		for(long isep=0; isep<covi->nx*covi->ny; isep++){
+		for(long isep=0; isep<NX(covi)*NY(covi); isep++){
 			P(P(cn2est->cov2,iwfspair),isep)*=P(cn2est->overlapi,isep);//temporary. apply to mc instead.
 		}
 #endif
@@ -497,7 +497,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 		real wtsum=0;
 		dmat* wt=P(cn2est->wt,iwfspair);//the layer weights. 
 		dmat* ht=P(cn2est->ht,iwfspair);
-		int nlayer=wt->nx;
+		int nlayer=NX(wt);
 		if(CN2EST_NO_NEGATIVE){
 			/*The following tries to remove negative weights.  For small
 			  negatives, we just zero them. For significant ones, we remove the
@@ -544,30 +544,30 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 		}
 		dscale(wt, 1./wtsum);
 		if(verbose){
-			info2("Pair%d: r0=%.4fm theta0=%.2f\" ", iwfspair, r0, calc_aniso(r0, wt->nx, ht->p, wt->p)*206265);
-			if(cn2est->dmht&&cn2est->dmht->nx==2){
-				info2("theta2=%.2f\" ", calc_aniso2(r0, wt->nx, ht->p, wt->p,
+			info2("Pair%d: r0=%.4fm theta0=%.2f\" ", iwfspair, r0, calc_aniso(r0, NX(wt), P(ht), P(wt))*206265);
+			if(cn2est->dmht&&NX(cn2est->dmht)==2){
+				info2("theta2=%.2f\" ", calc_aniso2(r0, NX(wt), P(ht), P(wt),
 					P(cn2est->dmht,0), P(cn2est->dmht,1))*206265);
 			}
 			info2("wt=[");
-			for(int iht=0; iht<wt->nx; iht++){
+			for(int iht=0; iht<NX(wt); iht++){
 				info2("%.4f ", P(wt,iht));
 			}
 			info2("]\n");
 		}
 	}
-	cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
+	cn2est->r0m=pow(wtsumsum/NX(cn2est->wt), -3./5.);
 	dcellzero(cn2est->wtrecon);
 	dspcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
 	/*only 1 cell. norm to sum to 1. */
-	dnormalize_sumabs(P(cn2est->wtrecon,0)->p, P(cn2est->wtrecon,0)->nx, 1);
+	dnormalize_sumabs(P(P(cn2est->wtrecon,0)), P(cn2est->wtrecon,0)->nx, 1);
 	if(verbose){
 		info2("Mean : r0=%.4fm theta0=%.2f\" ", cn2est->r0m,
 			calc_aniso(cn2est->r0m, P(cn2est->wtrecon,0)->nx,
-				cn2est->htrecon->p, P(cn2est->wtrecon,0)->p)*206265);
-		if(cn2est->dmht&&cn2est->dmht->nx==2){
+				P(cn2est->htrecon), P(P(cn2est->wtrecon,0)))*206265);
+		if(cn2est->dmht&&NX(cn2est->dmht)==2){
 			info2("theta2=%.2f\" ", calc_aniso2(cn2est->r0m, P(cn2est->wtrecon,0)->nx,
-				cn2est->htrecon->p, P(cn2est->wtrecon,0)->p,
+				P(cn2est->htrecon), P(P(cn2est->wtrecon,0)),
 				P(cn2est->dmht,0), P(cn2est->dmht,1))*206265);
 		}
 		info2("wt=[");
@@ -632,9 +632,8 @@ cn2est_t* cn2est_all(const dmat* wfspair, dmat* wfstheta, const loc_t* saloc,
 		//Don't scale the matlab one.
 		dscale(wfstheta, 1./206265);
 	}
-	if(grad->nx==1&&grad->ny>1){
-		grad->nx=grad->ny;
-		grad->ny=1;
+	if(NX(grad)==1&&NY(grad)>1){
+		reshape(grad, NY(grad), 1);
 	}
 	struct cn2est_t* cn2est=cn2est_new(wfspair, wfstheta, saloc, saa, saat, hs, htrecon, keepht, l0);
 	cn2est_push(cn2est, grad);

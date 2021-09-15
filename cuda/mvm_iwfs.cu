@@ -193,7 +193,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 			//record event when all grads are copied so mvm copy can start.
 			DO(cudaEventRecord(datai->event_gall, datai->stream_g));
 			//Copy DM commands back to CPU
-			cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real), D2H, datai->stream_a);
+			cudaMemcpyAsync(P(dmres->p[igpu]), datai->act, nact*sizeof(Real), D2H, datai->stream_a);
 			if(datai->copy_mvm){
 				int done=0, nleft;
 				if(mvm->ny-datai->ic<nc){

@@ -166,9 +166,9 @@ static const dsp* A2=NULL;
 static void opb(long n, real *x, real *y){
     (void)n;
     dmat *tmp=dnew(A2->nx, 1);
-    dspmulvec(tmp->p, A2, x, 'n',1);
+    dspmulvec(P(tmp), A2, x, 'n',1);
     memset(y, 0, sizeof(real)*A2->ny);
-    dspmulvec(y, A2, tmp->p, 't',1);
+    dspmulvec(y, A2, P(tmp), 't',1);
     dfree(tmp);
     mxvcount +=2;
 }

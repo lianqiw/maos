@@ -57,8 +57,8 @@ static void test_accuracy(){
     dmat *Atu=dread("atm2_frac_trans.bin");
     dmat *Av=dread("atm_frac.bin");
     dmat *v=dread("atm_rand.bin");
-    real dot1=dvecdot(u->p, Av->p, NULL, nx*ny);
-    real dot2=dvecdot(v->p, Atu->p, NULL, nx*ny);
+    real dot1=dvecdot(P(u), P(Av), NULL, nx*ny);
+    real dot2=dvecdot(P(v), P(Atu), NULL, nx*ny);
     dbg("dot1=%g, dot2=%g, diff=%g\n", dot1, dot2, dot1-dot2);
 
     dmat *u2=dread("atm2_frac_inv_trans.bin");

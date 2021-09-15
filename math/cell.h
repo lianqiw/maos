@@ -34,15 +34,7 @@ void cellinit(cell** A, long nx, long ny);
 void cellinit2(cell** A, const cell* B);
 void celldim(const cell* A_, long* nx, long* ny, long** nxs, long** nys);
 void cellresize(void* in, long nx, long ny);
-static inline void cellreshape(void* in_, long nx, long ny){
-	cell* in=cell_cast(in_);
-	if(!in || in->nx*in->ny!=nx*ny){
-		error("Incorrect dimension\n");
-	} else{
-		in->nx=nx;
-		in->ny=ny;
-	}
-}
+
 /*!free a cell array and zero the pointer.*/
 #define cellfree(A) if(A){cellfree_do((cell*)A); A=NULL;}
 

@@ -268,20 +268,20 @@ dsp* mkhb_cubic(const loc_t* locin, const loc_t* locout,
    incrementally monotonically, but do not require them to be evenly spaced.
  */
 dsp* mkhbin1d(const dmat* xin, const dmat* xout){
-	if(xin->ny!=1||xout->ny!=1){
+	if(NY(xin)!=1||NY(xout)!=1){
 		error("We require both xin and xout to be only one column\n");
 	}
 	int iout=0;
-	dsp* hbin=dspnew(xout->nx, xin->nx, xin->nx*2);
+	dsp* hbin=dspnew(NX(xout), NX(xin), NX(xin)*2);
 	int count=0;
-	for(int iin=0; iin<xin->nx; iin++){
+	for(int iin=0; iin<NX(xin); iin++){
 		hbin->pp[iin]=count;
 		real ixin=P(xin,iin);
-		while(iout+1<xout->nx&&P(xout,iout+1)<ixin){
+		while(iout+1<NX(xout)&&P(xout,iout+1)<ixin){
 			iout++;//find location in xout to the left of ixin
 		}
 		//Changes made on Nov 9, 2018 was incorrect. Correct the test
-		if((iout==0&&P(xout,iout)>=ixin)||(iout+1==xout->nx)){//outside
+		if((iout==0&&P(xout,iout)>=ixin)||(iout+1==NX(xout))){//outside
 			hbin->pi[count]=iout;
 			hbin->px[count]=1;
 			count++;
@@ -295,7 +295,7 @@ dsp* mkhbin1d(const dmat* xin, const dmat* xout){
 			count++;
 		}
 	}
-	hbin->pp[xin->nx]=count;
+	hbin->pp[NX(xin)]=count;
 	return hbin;
 }
 

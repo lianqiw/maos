@@ -58,15 +58,15 @@ static int sock_mvm=-1;
 void mvm_client_send_m(dmat* mvmd, int ngpu){
 	int cmd[N_CMD]={GPU_MVM_M, 0, 0, 0};
 	cmd[1]=ngpu;
-	cmd[2]=mvmd->nx;
-	cmd[3]=mvmd->ny;
+	cmd[2]=NX(mvmd);
+	cmd[3]=NY(mvmd);
 	info2("sending mvm %dx%d ...", cmd[2], cmd[3]);
 	WRITE_CMD(cmd);
-	float* fmvm=mymalloc((mvmd->nx*mvmd->ny), float);
-	for(int i=0; i<mvmd->nx*mvmd->ny; i++){
+	float* fmvm=mymalloc((NX(mvmd)*NY(mvmd)), float);
+	for(int i=0; i<NX(mvmd)*NY(mvmd); i++){
 		fmvm[i]=(float)(P(mvmd,i)*GSCALE1*ASCALE);
 	}
-	WRITE_ARR(fmvm, mvmd->nx*mvmd->ny, float);
+	WRITE_ARR(fmvm, NX(mvmd)*NY(mvmd), float);
 	free(fmvm);
 	info2(" done\n");
 }
@@ -87,7 +87,7 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 		error("please call mvm_client_init first\n");
 	}
 	/* first move gradients to continuous buffer with correct numerical type.*/
-	int nwfs=grad->nx;
+	int nwfs=NX(grad);
 	int ngtot=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(P(grad,iwfs)){
@@ -105,7 +105,7 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 		}
 	}
 	int natot=0;
-	for(int idm=0; idm<dm->nx; idm++){
+	for(int idm=0; idm<NX(dm); idm++){
 		if(P(dm,idm)){
 			natot+=P(dm,idm)->nx;
 		}
@@ -135,10 +135,10 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	READ_ARR(dmall, natot, ATYPE);
 	real tim_aread=toc3;
 	//Copy DM command to the right place.
-	for(int idm=0; idm<dm->nx; idm++){
+	for(int idm=0; idm<NX(dm); idm++){
 		if(P(dm,idm)){
 			int nact=P(dm,idm)->nx;
-			real* restrict pdm=P(dm,idm)->p;
+			real* restrict pdm=P(P(dm,idm));
 			for(int i=0; i<nact; i++){
 				pdm[i]=(real)(*(pdmall++)*ASCALE1);
 			}

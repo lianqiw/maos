@@ -179,7 +179,7 @@ void mvm_test(int igpu){
 		for(int i=0; i<N; i+=iN){
 			int nleft=N-i;
 			if(nleft>iN) nleft=iN;
-			DO(CUBL(gemv)(stream[0], CUBLAS_OP_N, M, nleft, &one, cumvm->p+i*M, M, cux->p+i, 1, &one, cuy->p, 1));
+			DO(CUBL(gemv)(stream[0], CUBLAS_OP_N, M, nleft, &one, cumvm->p+i*M, M, cux->p+i, 1, &one, P(cuy), 1));
 		}
 		event[1].record(stream[0]);
 		stream[0].sync();
@@ -204,7 +204,7 @@ void mvm_test(int igpu){
 				int nleft=N-i;
 				if(nleft>iN) nleft=iN;
 				multimv_do<<<nblock, naeach, sizeof(Real)* naeach, stream[is]>>>
-					(cumvm->p+i*M, cuy->p, cux->p+i, M, nleft);
+					(cumvm->p+i*M, P(cuy), cux->p+i, M, nleft);
 				is=(is+1)%nstream;
 			}
 			//event[1].record(stream[0]);
@@ -226,7 +226,7 @@ void mvm_test(int igpu){
 			int nleft=N-i;
 			if(nleft>iN) nleft=iN;
 			mvm_do<<<mp_count, naeach, sizeof(Real)* naeach, stream[0]>>>
-				(cumvm->p+i*M, cuy->p, cux->p+i, M, nleft);
+				(cumvm->p+i*M, P(cuy), cux->p+i, M, nleft);
 		}
 		event[1].record(stream[0]);
 		stream[0].sync();
@@ -246,7 +246,7 @@ void mvm_test(int igpu){
 		int nleft=N-i;
 		if(nleft>iN) nleft=iN;
 		blockmv<<<nblock, dim3(BLOCKMV_TNX, BLOCKMV_TNY), 0, stream[0]>>>
-		(cuy->p, cumvm->p+i*M, cux->p+i, M, nleft);
+		(P(cuy), cumvm->p+i*M, cux->p+i, M, nleft);
 	}
 	event[1].record(stream[0]);
 	stream[0].sync();
@@ -298,7 +298,7 @@ void mvm_test(int igpu){
 			//nstream=256;
 			event[0].record(stream[0]);
 			test_read_multi<<<nblock, nthread, 0, stream[0]>>>
-			(cumvm->p, M, N);
+			(P(cumvm), M, N);
 			event[1].record(stream[0]);
 			stream[0].sync();
 			DO(cudaEventElapsedTime(&tm, event[0], event[1]));

@@ -51,18 +51,16 @@
 void check_nea(dmat* nea, int nsa){
 	if(!nea){
 		error("nea is not defined.\n");
-	} else if(nea->ny==1){
-		if(nea->nx==2*nsa){
-			nea->nx=nsa;
-			nea->ny=2;
-		} else if(nea->nx==3*nsa){
-			nea->nx=nsa;
-			nea->ny=3;
+	} else if(NY(nea)==1){
+		if(NX(nea)==2*nsa){
+			reshape(nea, nsa, 2);
+		} else if(NX(nea)==3*nsa){
+			reshape(nea, nsa, 3);
 		} else{
-			error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", nea->nx, nea->ny, nsa, 3);
+			error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", NX(nea), NY(nea), nsa, 3);
 		}
-	} else if(nea->nx!=nsa||nea->ny>3){
-		error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", nea->nx, nea->ny, nsa, 3);
+	} else if(NX(nea)!=nsa||NY(nea)>3){
+		error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", NX(nea), NY(nea), nsa, 3);
 	}
 }
 /**
@@ -70,15 +68,15 @@ void check_nea(dmat* nea, int nsa){
    Input and output may be the same.
  */
 void nea_chol(dmat** pout, const dmat* in){
-	if(in->ny!=2&&in->ny!=3){
+	if(NY(in)!=2&&NY(in)!=3){
 		error("nea_chol: wrong format\n");
 	}
 	if(!*pout){
-		*pout=dnew(in->nx, 3);
+		*pout=dnew(NX(in), 3);
 	}
-	int isxy=in->ny==3?1:0;
+	int isxy=NY(in)==3?1:0;
 	dmat* out=*pout;
-	for(int isa=0; isa<in->nx; isa++){
+	for(int isa=0; isa<NX(in); isa++){
 	//Use temporary variable to handle the case that out and in is the same.
 		real a=sqrt(P(in, isa, 0));
 		real b=isxy?(P(in, isa, 2)/a):0;
@@ -93,22 +91,22 @@ void nea_chol(dmat** pout, const dmat* in){
    Input and output may be the same.
  */
 void nea_mm(dmat** pout, const dmat* in){
-	if(in->ny!=2&&in->ny!=3){
+	if(NY(in)!=2&&NY(in)!=3){
 		error("nea_mm: wrong format\n");
 	}
-	int isxy=in->ny==3?1:0;
+	int isxy=NY(in)==3?1:0;
 	if(!*pout){
-		*pout=dnew(in->nx, 3);
+		*pout=dnew(NX(in), 3);
 	}
 	dmat* out=*pout;
-	if(out->ny<in->ny){
+	if(NY(out)<NY(in)){
 		error("nea_mm: wrong format. Need 3 columns in the output.\n");
 	}
 	if(P(in, 0, 0)<1e-11){
 		warning("nea[0,0]=%g may be already in rad^2 unit. Will not square again.\n", P(in, 0, 0));
 		return;
 	}
-	for(int isa=0; isa<in->nx; isa++){
+	for(int isa=0; isa<NX(in); isa++){
 	//Use temporary variable to handle the case that out and in is the same.
 		real a=P(in, isa, 0);
 		real b=isxy?(P(in, isa, 2)):0;
@@ -124,15 +122,15 @@ void nea_mm(dmat** pout, const dmat* in){
 */
 
 void nea_inv(dmat** pout, const dmat* in){
-	if(in->ny!=2&&in->ny!=3){
+	if(NY(in)!=2&&NY(in)!=3){
 		error("nea_inv: wrong format\n");
 	}
 	if(!*pout){
-		*pout=dnew(in->nx, 3);
+		*pout=dnew(NX(in), 3);
 	}
-	int isxy=in->ny==3?1:0;
+	int isxy=NY(in)==3?1:0;
 	dmat* out=*pout;
-	for(int isa=0; isa<in->nx; isa++){
+	for(int isa=0; isa<NX(in); isa++){
 		real xx=P(in, isa, 0);
 		real yy=P(in, isa, 1);
 		real xy=isxy?P(in, isa, 2):0;
@@ -186,7 +184,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		} else{
 			if(parms->powfs[ipowfs].neareconfile){
 				saneac=dcellread_prefix(parms->powfs[ipowfs].neareconfile, parms, ipowfs);
-				for(int i=0; i<saneac->nx*saneac->ny; i++){
+				for(int i=0; i<NX(saneac)*NY(saneac); i++){
 					check_nea(P(saneac,i), nsa);
 					nea_mm(&P(saneac,i), P(saneac,i));
 				}
@@ -205,7 +203,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 		}
 		int do_ref=0;
-		if(saneac->nx==1){
+		if(NX(saneac)==1){
 			do_ref=1;
 		} else if(parms->recon.glao){
 			error("Please average nearecon for GLAO mode.\n");
@@ -228,8 +226,8 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				dmat* sanea0l=0;
 				dmat* sanea0i=0;
 
-				if(!parms->powfs[ipowfs].mtchcpl && sanea0->ny==2){
-					sanea0->ny=2;
+				if(!parms->powfs[ipowfs].mtchcpl && NY(sanea0)!=2){
+					sanea0->ny=2; //reduce coupling
 				}
 				real nea2_sum=0;
 				long nea2_count=0;
@@ -381,14 +379,14 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 	  regularization unstability issues.*/
 	dclip(recon->wt, 0.01, 1);
 	/*normalize the weights to sum to 1. */
-	dnormalize_sumabs(recon->wt->p, recon->npsr, 1);
+	dnormalize_sumabs(P(recon->wt), recon->npsr, 1);
 	const int npsr=recon->npsr;
 	recon->cxxalg=parms->tomo.cxxalg;
 	/*test_cxx(recon, parms); */
 	if(parms->tomo.cxxalg==0){
 		if(parms->load.cxx){
 			recon->L2=dspcellread("%s", parms->load.cxx);
-			if(recon->L2->nx!=npsr||recon->L2->ny!=npsr){
+			if(NX(recon->L2)!=npsr||NY(recon->L2)!=npsr){
 				error("Wrong format of loaded L2\n");
 			}
 		} else{
@@ -414,7 +412,7 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 		recon->invpsd=mycalloc(1, invpsd_t);
 		if(parms->load.cxx){
 			recon->invpsd->invpsd=dcellread("%s", parms->load.cxx);
-			if(recon->invpsd->invpsd->nx!=npsr||recon->invpsd->invpsd->ny!=1){
+			if(NX(recon->invpsd->invpsd)!=npsr||NY(recon->invpsd->invpsd)!=1){
 				error("Wrong format of loaded invpsd\n");
 			}
 		} else{
@@ -445,7 +443,7 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 		recon->fractal->xloc=recon->xloc;
 		recon->fractal->r0=parms->atmr.r0;
 		recon->fractal->L0=parms->atmr.L0;
-		recon->fractal->wt=parms->atmr.wt->p;
+		recon->fractal->wt=P(parms->atmr.wt);
 		recon->fractal->scale=sqrt(parms->tomo.cxxscale*TOMOSCALE);
 		recon->fractal->ninit=parms->tomo.ninit;
 		dcell* xopd=recon->fractal->xopd=dcellnew(npsr, 1);
@@ -652,14 +650,14 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		/*collect statistics.*/
 		long nll=0, nlr=0;
 		if(recon->RR.U){
-			for(int i=0; i<recon->RR.U->ny;i++){
+			for(int i=0; i<NY(recon->RR.U);i++){
 				if(P(recon->RR.U,0,i)){
 					nlr+=P(recon->RR.U,0,i)->ny;
 				}
 			}
 		}
 		if(recon->RL.U){
-			for(int i=0; i<recon->RL.U->ny;i++){
+			for(int i=0; i<NY(recon->RL.U);i++){
 				if(P(recon->RL.U,0,i)){
 					nll+=P(recon->RL.U,0,i)->ny;
 				}
@@ -789,7 +787,7 @@ static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs
 		if(mask&&!P(mask,ievl)) continue;
 		tic;
 		/*Build HX for science directions that need ecov.*/
-		dmat* x1=dnew(locs->nloc, t1->ny);
+		dmat* x1=dnew(locs->nloc, NY(t1));
 		real hs=P(parms->evl.hs,ievl);
 		int offset=0;
 		for(int idm=0; idm<parms->ndm; idm++){
@@ -797,7 +795,7 @@ static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs
 			const real scale=1.-ht/hs;
 			const real dispx=P(parms->evl.thetax,ievl)*ht;
 			const real dispy=P(parms->evl.thetay,ievl)*ht;
-			for(int icol=0; icol<t1->ny; icol++){
+			for(int icol=0; icol<NY(t1); icol++){
 				prop_nongrid(P(recon->aloc,idm), PCOL(t1, icol)+offset,
 					locs, PCOL(x1, icol), 1, dispx, dispy, scale, 0, 0);
 			}
@@ -1153,7 +1151,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 		dmat* tmp=dcell2m(RCRtQwQ);
 		dmat* ptmp=tmp/*PDMAT*/;
 		real rss=0;
-		for(int i=0; i<tmp->nx; i++){
+		for(int i=0; i<NX(tmp); i++){
 			rss+=P(ptmp, i, i);
 		}
 		dfree(tmp);
@@ -1183,7 +1181,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 			dfree(rss2);
 			dbg("dtrat=%d\n", dtrat);
 			dbg("g,a,T was %g,%g,%g\n", P(parms->sim.eplo,0), P(parms->sim.eplo,1), P(parms->sim.eplo,2));
-			memcpy(parms->sim.eplo->p, P(res,0)->p, 3*sizeof(real));
+			memcpy(P(parms->sim.eplo), P(P(res,0)), 3*sizeof(real));
 			dbg("g,a,T=%g,%g,%g\n", P(parms->sim.eplo,0), P(parms->sim.eplo,1), P(parms->sim.eplo,2));
 			dbg("res=%g, resn=%g nm\n", sqrt(P(P(res,0),3))*1e9, sqrt(P(P(res,0),4))*1e9);
 			dcellfree(res);
@@ -1239,11 +1237,11 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	if(parms->save.setup){
 		dcell* Qn=NULL;
 		dspcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
-		dcell* Qntt=dcellnew(Qn->nx, Qn->ny);
+		dcell* Qntt=dcellnew(NX(Qn), NY(Qn));
 		dmat* TTploc=loc2mat(recon->floc, 1);/*TT mode. need piston mode too! */
 		dmat* PTTploc=dpinv(TTploc, recon->W0);/*TT projector. no need w1 since we have piston. */
 		dfree(TTploc);
-		for(int ix=0; ix<Qn->nx*Qn->ny; ix++){
+		for(int ix=0; ix<NX(Qn)*NY(Qn); ix++){
 			if(!P(Qn,ix)) continue;
 			dmm(&P(Qntt,ix), 0, PTTploc, P(Qn,ix), "nn", 1);
 		}
@@ -1257,17 +1255,17 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	if(parms->dbg.mvstlimit>0){/*limit number of modes used. */
 		warning("MVST: Correction is limited to %d modes\n", parms->dbg.mvstlimit);
 		dmat* tmp;
-		for(int iy=0; iy<recon->MVRngs->ny; iy++){
+		for(int iy=0; iy<NY(recon->MVRngs); iy++){
 			tmp=P(recon->MVRngs,iy);
 			if(tmp){
-				P(recon->MVRngs,iy)=dsub(tmp, 0, parms->dbg.mvstlimit, 0, tmp->ny);
+				P(recon->MVRngs,iy)=dsub(tmp, 0, parms->dbg.mvstlimit, 0, NY(tmp));
 				dfree(tmp);
 			}
 		}
-		for(int ix=0; ix<recon->MVModes->nx; ix++){
+		for(int ix=0; ix<NX(recon->MVModes); ix++){
 			tmp=P(recon->MVModes,ix);
 			if(tmp){
-				P(recon->MVModes,ix)=dsub(tmp, 0, tmp->nx, 0, parms->dbg.mvstlimit);
+				P(recon->MVModes,ix)=dsub(tmp, 0, NX(tmp), 0, parms->dbg.mvstlimit);
 				dfree(tmp);
 			}
 		}
@@ -1575,7 +1573,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	locfree(recon->floc);
 	locfree(recon->ploc);
 	cellfree(recon->ploc_tel);
-	free(recon->amap->p);free(recon->amap);//data is referenced
+	free(P(recon->amap));free(recon->amap);//data is referenced
 	cellfree(recon->amod);
 	cellfree(recon->anmod);
 	cellfree(recon->acmap);

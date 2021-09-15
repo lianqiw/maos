@@ -34,7 +34,7 @@ void X(scale)(X(mat)* A, R w){
 		return;
 	}
 	if(w==(T)0){
-		memset(A->p, 0, sizeof(T)*A->nx*A->ny);
+		memset(P(A), 0, sizeof(T)*A->nx*A->ny);
 	} else{
 		for(int i=0; i<A->nx*A->ny; i++){
 			P(A, i)*=w;
@@ -211,7 +211,7 @@ void X(cwm3)(X(mat)* restrict A, const X(mat)* restrict W,
 */
 void X(cwmcol)(X(mat)* restrict A, const X(mat)* restrict B){
 	if(check_mat(A, B)&&A->nx==B->nx&&B->ny==1){
-		T* B1=B->p;
+		T* B1=P(B);
 		for(long iy=0; iy<A->ny; iy++){
 			for(long ix=0; ix<A->nx; ix++){
 				P(A, ix, iy)*=B1[ix];
@@ -266,15 +266,15 @@ void X(cwm3col)(X(mat)* restrict A, const X(mat)* restrict W,
 		int has_b1=check_mat(B1)&&wt1&&(A->nx==B1->nx)&&(B1->ny==1);
 		int has_b2=check_mat(B2)&&wt2&&(A->nx==B2->nx)&&(B2->ny==1);
 		if(has_b1&&has_b2){
-			T* B1p=B1->p;
-			T* B2p=B2->p;
+			T* B1p=P(B1);
+			T* B2p=P(B2);
 			for(long iy=0; iy<A->ny; iy++){
 				for(long ix=0; ix<A->nx; ix++){
 					P(A, ix, iy)=P(A, ix, iy)*P(W, ix, iy)*(B1p[ix]*wt1+B2p[ix]*wt2);
 				}
 			}
 		} else if(has_b1){
-			T* B1p=B1->p;
+			T* B1p=P(B1);
 
 			for(long iy=0; iy<A->ny; iy++){
 				for(long ix=0; ix<A->nx; ix++){
@@ -295,7 +295,7 @@ void X(cwmrow)(X(mat)* restrict A, const X(mat)* restrict B){
 		warning("Input is not valid\n");
 		return;
 	}
-	T* B1=B->p;
+	T* B1=P(B);
 	for(long iy=0; iy<A->ny; iy++){
 		T junk=B1[iy];
 		for(long ix=0; ix<A->nx; ix++){
@@ -760,7 +760,7 @@ void X(gramschmidt)(X(mat)* Mod, R* amp){
 			for(int jmod=0; jmod<imod; jmod++){
 				if(nonvalid[jmod]) continue;
 				cross=-X(vecdot)(PCOL(Mod, imod), PCOL(Mod, jmod), amp, nx)/wtsum;
-#pragma omp parallel for
+				OMP_FOR
 				for(long ix=0; ix<nx; ix++){
 					P(Mod, ix, imod)+=cross*P(Mod, ix, jmod);
 				}
@@ -790,7 +790,7 @@ int X(clip)(X(mat)* A, R min, R max){
 	if(max<=min){
 		error("upper light should be larger than lower limit\n");
 	}
-	T* restrict Ap=A->p;
+	T* restrict Ap=P(A);
 	int nclip=0;
 	for(long i=0; i<A->nx*A->ny; i++){
 		R Ar=REAL(Ap[i]);
@@ -811,7 +811,7 @@ int X(clip)(X(mat)* A, R min, R max){
 void X(muldiag)(X(mat)* A, const X(mat)* s){
 	assert(A->ny==s->nx&&s->ny==1);
 	X(mat)* pA=A;
-	const T* ps=s->p;
+	const T* ps=P(s);
 	for(long iy=0; iy<A->ny; iy++){
 		for(long ix=0; ix<A->nx; ix++){
 			P(pA, ix, iy)*=ps[iy];
@@ -1162,11 +1162,11 @@ void X(blend)(X(mat)* restrict A, X(mat)* restrict B, int overlap){
    center, spaced by spacing, for n bins in total. center if at bin n/2.  */
 void X(histfill)(X(mat)** out, const X(mat)* A,
 	R center, R spacing, int n){
-	if(!A||!A->p) return;
+	if(!A||!P(A)) return;
 	int nn=A->nx*A->ny;
 	X(new2)(out, n, nn);
 	X(mat)* Op=*out;
-	const T* restrict Ap=A->p;
+	const T* restrict Ap=P(A);
 	const R spacingi=1./spacing;
 	const int noff=n/2;
 	const int n1=n-1;
@@ -1227,14 +1227,14 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
 X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 	T* px, * py;
 	const long nx=x->nx;
-	px=x->p;
+	px=P(x);
 	switch(x->ny){
 	case 1:
-		py=y->p;
+		py=P(y);
 		break;
 	case 2:
 		assert(y==NULL);
-		py=x->p+nx;
+		py=P(x)+nx;
 		break;
 	default:
 		py=NULL;
@@ -1335,7 +1335,7 @@ void X(embed)(X(mat)* restrict A, const X(mat)* restrict B, const R theta){
 	const long niny=B->ny;
 	const long noutx=A->nx;
 	const long nouty=A->ny;
-	memset(A->p, 0, sizeof(T)*noutx*nouty);
+	memset(P(A), 0, sizeof(T)*noutx*nouty);
 	if(fabs(theta)<1.e-10){/*no rotation. */
 		const long skipx=(noutx-ninx-1)/2;//-1 to handle odd case
 		const long skipy=(nouty-niny-1)/2;
@@ -1492,7 +1492,7 @@ static void X(enc_thread)(thread_t* pdata){
 	X(mat)* enc=data->enc;
 	X(mat)* ppsf=data->phat;
 	int type=data->type;
-	const R* restrict dr=dvec->p;
+	const R* restrict dr=P(dvec);
 	const long ncomp2=data->phat->nx;
 	const long ncomp=ncomp2/2;
 	const R dk=1./ncomp2;
@@ -1611,7 +1611,7 @@ T X(trapz)(const X(mat)* x, const X(mat)* y){
 			if(x->ny==y->ny){
 				px=PCOL(x, icol);
 			} else{
-				px=x->p;
+				px=P(x);
 			}
 		}
 		T ans=0;
@@ -1805,7 +1805,7 @@ R X(celldiff)(const X(cell)* A, const X(cell)* B){
    clip a X(cell) array to max at 'max', min at 'min'
 */
 int X(cellclip)(X(cell)* Ac, R min, R max){
-	if(!Ac||!Ac->p) return 0;
+	if(!Ac||!P(Ac)) return 0;
 	if(!isfinite(min)&&!isfinite(max)) return 0;
 	int nclip=0;
 	for(long i=0; i<Ac->nx*Ac->ny; i++){

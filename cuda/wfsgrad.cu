@@ -325,7 +325,7 @@ static void wfsgrad_callback(cudaStream_t stream, cudaError_t status, void *data
 	switch(data->op){
 		case 1:{	
 			cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints);
-			shwfs_grad(&simu->gradcl->p[iwfs], simu->ints->p[iwfs]->p, 
+			shwfs_grad(&simu->gradcl->p[iwfs], P(simu->ints->p[iwfs]), 
 				parms, simu->powfs, iwfs, phytype);
 		}break;
 		case 2:{
@@ -411,7 +411,7 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 	default://Use CPU version 
 		cp2cpu(&simu->ints->p[iwfs], ints, stream);//this already syncs stream.
 		info_once("Calling shwfs_grad CPU version for phytype %d\n", parms->powfs[ipowfs].phytype_sim);
-		shwfs_grad(&simu->gradcl->p[iwfs], simu->ints->p[iwfs]->p,
+		shwfs_grad(&simu->gradcl->p[iwfs], P(simu->ints->p[iwfs]),
 			parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 	}
 	CUDA_CHECK_ERROR;
@@ -505,7 +505,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 				ttx+=simu->ttmreal->p[0];
 				tty+=simu->ttmreal->p[1];
 			}
-			if(simu->fsmreal&&simu->fsmreal->p[iwfs]&&!powfs[ipowfs].llt){
+			if(simu->fsmreal&&PN(simu->fsmreal, iwfs)&&!powfs[ipowfs].llt){
 				ttx+=simu->fsmreal->p[iwfs]->p[0];
 				tty+=simu->fsmreal->p[iwfs]->p[1];
 			}

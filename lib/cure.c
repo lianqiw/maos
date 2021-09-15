@@ -29,8 +29,8 @@ void cure1d(dmat** pphix,   /**<Output: opd*/
 	const dmat* gy,/**<y gradients, dimension is ny*ny.*/
 	real dx      /**<Size of subaperture*/
 ){
-	const long nx=gx->nx;
-	const long ny=gy->ny;
+	const long nx=NX(gx);
+	const long ny=NY(gy);
 	const long maxseg=(nx+1)/2;
 	dmat* lx=dnew(nx+1, ny);
 	lmat* flag=lnew(1+maxseg*2, ny);//nseg, iseg[0].start, iseg[0].end, ...
@@ -224,12 +224,12 @@ void cure(dmat** phi, const dmat* gx, const dmat* gy, real dx){
 void cure_loc(dmat** phix, const dmat* grad0, const loc_t* saloc){
 	dmat *grad=0;
 	long nsa=saloc->nloc;
-	if(grad0->nx==2){
+	if(NX(grad0)==2){
 		grad=dtrans(grad0);
 	}else{
 		grad=dref(grad0);
 	}
-	if(grad->nx*grad->ny!=nsa*2){
+	if(NX(grad)*NY(grad)!=nsa*2){
 		error("Invalid dimension of grad: %ldx%ld. nsa=%ld\n", NX(grad0), NY(grad0), nsa);
 		return;
 	}

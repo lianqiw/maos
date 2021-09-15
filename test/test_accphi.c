@@ -100,7 +100,7 @@ static void test_accuracy(int argc, char** argv){
 
     map_t* screen2=mapnew2(locin->map);
     dset((dmat*)screen2, NAN);
-    loc_embed(screen2, locin, screen->p);
+    loc_embed(screen2, locin, P(screen));
 
 
     real* phi_h, * phi_cub, * phi_cub2, * phi_cubh;
@@ -149,9 +149,9 @@ static void test_accuracy(int argc, char** argv){
 
 
 
-    prop_nongrid(locin, screen->p, loc, phi_loc2loc, -2, displacex, displacey, scale, 0, 0);
+    prop_nongrid(locin, P(screen), loc, phi_loc2loc, -2, displacex, displacey, scale, 0, 0);
     toc("nongrid\t"); tic;
-    prop_nongrid(locin, screen->p, loc, phi_loc2loc, 1, displacex, displacey, scale, 0, 0);
+    prop_nongrid(locin, P(screen), loc, phi_loc2loc, 1, displacex, displacey, scale, 0, 0);
     toc("nongrid\t");
 
 
@@ -160,9 +160,9 @@ static void test_accuracy(int argc, char** argv){
     tic;
     dsp* hfor=mkh(locin, loc, displacex, displacey, scale);
     toc("mkh\t\t");
-    dspmulvec(phi_h, hfor, screen->p, 'n', -2);
+    dspmulvec(phi_h, hfor, P(screen), 'n', -2);
     tic;
-    dspmulvec(phi_h, hfor, screen->p, 'n', 1);
+    dspmulvec(phi_h, hfor, P(screen), 'n', 1);
     toc("mul h\t");
 
 
@@ -172,9 +172,9 @@ static void test_accuracy(int argc, char** argv){
     real* phi_cub4=mycalloc(loc->nloc, real);
     phi_cubh=mycalloc(loc->nloc, real);
 
-    prop_nongrid_cubic(locin, screen->p, loc, phi_cub, -2, displacex, displacey, scale, cubic, 0, 0);
+    prop_nongrid_cubic(locin, P(screen), loc, phi_cub, -2, displacex, displacey, scale, cubic, 0, 0);
     tic;
-    prop_nongrid_cubic(locin, screen->p, loc, phi_cub, 1, displacex, displacey, scale, cubic, 0, 0);
+    prop_nongrid_cubic(locin, P(screen), loc, phi_cub, 1, displacex, displacey, scale, cubic, 0, 0);
     toc("nongrid, cubic\t");
     prop_grid_cubic(screen, loc, phi_cub2, -2, displacex, displacey, scale, cubic, 0, 0);
     tic;
@@ -192,9 +192,9 @@ static void test_accuracy(int argc, char** argv){
     tic;
     hforcubic=mkh_cubic(locin, loc, displacex, displacey, scale, cubic);
     toc("mkh cubic \t\t");
-    dspmulvec(phi_cubh, hforcubic, screen->p, 'n', -2);
+    dspmulvec(phi_cubh, hforcubic, P(screen), 'n', -2);
     tic;
-    dspmulvec(phi_cubh, hforcubic, screen->p, 'n', 1);
+    dspmulvec(phi_cubh, hforcubic, P(screen), 'n', 1);
     toc("cubic mul h\t\t");
     real diffc12=0, diff45=0, diff46=0, diff47=0;
     for(ii=0; ii<loc->nloc; ii++){

@@ -46,10 +46,10 @@ static cccell* genseotf_do(const pts_t* pts,
 	const void* saa, const dmat* wvl, real r0, real L0, int embfac){
 
 	/*create a grid representing a sub-aperture. */
-	loc_t* loc=mksqloc_auto(pts->nx, pts->nx, pts->dx, pts->dy);
+	loc_t* loc=mksqloc_auto(NX(pts), NX(pts), pts->dx, pts->dy);
 	/*The embeding factor for embedding the aperture */
-	const int npsfx=pts->nx*embfac;
-	const int npsfy=pts->ny*embfac;
+	const int npsfx=NX(pts)*embfac;
+	const int npsfy=NY(pts)*embfac;
 	const int nwvl=PN(wvl);
 	const int nsa=pts->nsa;
 
@@ -147,13 +147,13 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
    Upsample the otf in to out while preserving the PSF.
  */
 void upsample_otf(cmat* out, const cmat* in){
-	if(in->nx==out->nx&&in->ny==out->ny){
+	if(NX(in)==NX(out)&&NY(in)==NY(out)){
 		ccp(&out, in);
 	} else{
 		cmat* temp=0;
 		ccp(&temp, in);
 		cfft2(temp, -1);
-		cscale(temp, 1./(in->nx*in->ny));
+		cscale(temp, 1./(NX(in)*NY(in)));
 		czero(out);
 		ccpcorner(out, temp, C_FULL);
 		cfft2(out, 1);
@@ -195,7 +195,7 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf,
 			cmat* lotfi=0;
 			if(nlotf){
 				cmat* lotfi2=P(PR(lotf, isepsf, iwvl), 0);
-				if(lotfi2->nx!=notfx||lotfi2->ny!=notfy){
+				if(NX(lotfi2)!=notfx||NY(lotfi2)!=notfy){
 					lotfi=cnew(notfx, notfy);
 					upsample_otf(lotfi, lotfi2);
 				} else{
@@ -280,7 +280,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 	const int pixpsay=dtf[0].pixpsay;
 	const real dtheta=dtf[0].dtheta;
 	if(pi0){
-		if(NX(*pi0)!=nsa||NY(*pi0)!=ni0){
+		if(!*pi0 || NX(*pi0)!=nsa||NY(*pi0)!=ni0){
 			dcellfree(*pi0);
 			*pi0=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
 		} else{
@@ -288,7 +288,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 		}
 	}
 	if(pgx){
-		if(NX(*pgx)!=nsa||NY(*pgx)!=ni0){
+		if(!*pgx || NX(*pgx)!=nsa||NY(*pgx)!=ni0){
 			dcellfree(*pgx);
 			*pgx=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
 		} else{
@@ -296,7 +296,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 		}
 	}
 	if(pgy){
-		if(NX(*pgy)!=nsa||NY(*pgy)!=ni0){
+		if(!*pgy || NX(*pgy)!=nsa||NY(*pgy)!=ni0){
 			dcellfree(*pgy);
 			*pgy=dcellnew_same(nsa, ni0, pixpsax, pixpsay);
 		} else{
@@ -325,26 +325,19 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 	}
 
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		const comp* Ux=dtf[iwvl].Ux->p;
-		const comp* Uy=dtf[iwvl].Uy->p;
+		const comp* Ux=P(dtf[iwvl].Ux);
+		const comp* Uy=P(dtf[iwvl].Uy);
 		const real norm=1./(real)(notfx*notfy);
 		const ccell* petf=etf?etf[iwvl].etf:0;
 		for(int ii0=0; ii0<ni0; ii0++){
-			real* area=PR(saa, ii0, 0)->p;
+			real* area=P(PR(saa, ii0, 0));
 			real wvlsig=PR(wvlwts, iwvl, ii0)*PR(siglev, ii0, 0);
 
 			dcell* psepsf=PR(sepsfs, ii0, iwvl);
-			real* angles=(gxyrot)?(PR(gxyrot, ii0, 0)->p):0;
-			ccell* se_cache=ccellnew_same(2, NTHREAD, notfx, notfy);
+			real* angles=(gxyrot)?P(PR(gxyrot, ii0, 0)):0;
+			ccell* se_cache=ccellnew_same(2, MAXTHREAD, notfx, notfy);
 
-#if _OPENMP>=201511
-#pragma omp taskloop default(shared) //task loop has implicit group
-#elif defined(_OPENMP)
-			if(omp_in_parallel()){
-				warning_once("Already in parallel\n");
-			}
-#pragma omp parallel for default(shared)
-#endif
+			OMP_FOR
 			for(int isa=0; isa<nsa; isa++){
 				int ith=0;
 				/*loaded psepsf. sum to 1 for full sa. peak in center */
@@ -398,7 +391,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 				}
 				cfft2(seotfk, 1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
 				/*no need fftshift because nominal is pre-treated */
-				if(i0) dspmulcreal(P(i0, isa, ii0)->p, si, seotfk->p, wvlsig);
+				if(i0) dspmulcreal(P(P(i0, isa, ii0)), si, P(seotfk), wvlsig);
 				if(gx||gy){
 					ccp(&seotfk, seotfj);
 					if(angles){//Apply derivative in rotated coordinate
@@ -422,11 +415,11 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 					}
 					if(gx){
 						cfft2(seotfk, 1);
-						dspmulcreal(P(gx, isa, ii0)->p, si, seotfk->p, wvlsig);
+						dspmulcreal(P(P(gx, isa, ii0)), si, P(seotfk), wvlsig);
 					}
 					if(gy){
 						cfft2(seotfj, 1);
-						dspmulcreal(P(gy, isa, ii0)->p, si, seotfj->p, wvlsig);
+						dspmulcreal(P(P(gy, isa, ii0)), si, P(seotfj), wvlsig);
 					}
 				}
 				if(i0&&i0scale){

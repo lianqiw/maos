@@ -78,6 +78,12 @@ static float myceil(float a){
  * determine text size
  * */
 static void pango_size(PangoLayout* layout, const char* text, float* legwidth, float* legheight){
+	if(!text){
+		warning("text is null, canceled\n");
+		*legwidth=0;
+		*legheight=0;
+		print_backtrace();
+	}	
 	pango_layout_set_markup(layout, text, -1);
 	int width, height;
 	pango_layout_get_size(layout, &width, &height);
@@ -89,6 +95,11 @@ static void pango_size(PangoLayout* layout, const char* text, float* legwidth, f
 */
 static void pango_text(cairo_t* cr, PangoLayout* layout, float x, float y,
 	const char* text, float fracx, float fracy, int vertical){
+	if(!text){
+		warning("text is null, canceled\n");
+		print_backtrace();
+		return;
+	}
 	cairo_save(cr);
 	pango_layout_set_markup(layout, text, -1);
 	if(fracx>0||fracy>0){
@@ -433,7 +444,7 @@ static void update_limit(drawdata_t* drawdata){
 	drawdata->limit[0]=xmin0;
 	drawdata->limit[1]=xmax0;
 	float gain=1;
-	if(drawdata->dtime<2&&drawdata->cumulast==drawdata->cumu){//continuous update, do not update the y range too quickly.
+	if((io_time1-io_time2)<2&&drawdata->cumulast==drawdata->cumu){//continuous update, do not update the y range too quickly.
 		gain=0.1;
 	}
 	drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
@@ -829,19 +840,20 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				toc("stroke");
 				}*/
 				if(ptsnx>0 && (drawdata->cumu || drawdata->legendcurve)){
-					cairo_save(cr);
-					cairo_translate(cr, ix+2, round((iy-font_size*0.5)/1)*1);
-					cairo_scale(cr, 1, -1);
-					char val[80]; val[1]=0;
-					if(drawdata->legend && connectpts){
+					char val[20]={0};
+					if(drawdata->legend&&drawdata->legend[ipts]&&connectpts){
 						val[0]=drawdata->legend[ipts][0];
 					}
 					if(drawdata->cumu){
 						snprintf(val, sizeof(val), "%c(%.2f)", val[0], y);
 					}
-					pango_text(cr, layout, 0, 0, val, 0, 1, 0);
-					
-					cairo_restore(cr);
+					if(val[0]!=0){
+						cairo_save(cr);
+						cairo_translate(cr, ix+2, round((iy-font_size*0.5)/1)*1);
+						cairo_scale(cr, 1, -1);
+						pango_text(cr, layout, 0, 0, val, 0, 1, 0);
+						cairo_restore(cr);
+					}
 				}
 				cairo_restore(cr);
 			}/*iptsy */
@@ -1000,7 +1012,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		cairo_save(cr);
 		for(int itic=-1; itic<ntic; itic++){
 			float ticv=(tic1+dtic*itic);
-			for(int im=(itic==0?-9:1); im<10; im++){
+			for(int im=1; im<10; im++){
 				float ticvm=ticv+(ylog?log10(im+1):im*0.1)*dtic;
 				float valm=ticvm*pow(10, order);
 				float fracm=(valm-ymin0)/sep;
@@ -1087,6 +1099,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		float symlen=0;/*length of legend symbol */
 		/*first figure out the size required of longest legend entry. */
 		for(int ig=0; ig<ng; ig++){
+			if(!legend[ig]) continue;
 			float legwidth, legheight;
 			pango_size(layout, legend[ig], &legwidth, &legheight);
 			textlen=MAX(textlen, legwidth);/*length of text. */
@@ -1099,52 +1112,55 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				tall=MAX(tall, sym_size*2);
 			}
 		}
-		const float legmarin=3;/*margin inside of box */
-		const float legmarout=5;/*margin outside of box */
-		const float symmargin=5;/*space before and after symbol */
-		float legwidth=textlen+symlen+2*legmarin+symmargin*2;
-		float legheight=tall*ng+legmarin*2;
-		cairo_translate(cr, xoff+legmarout+drawdata->legendoffx*(widthim-legwidth-2*legmarout),
-			yoff+legmarout+drawdata->legendoffy*(heightim-legheight-2*legmarout));
-		if(1){//box
-			cairo_save(cr);
-			cairo_rectangle(cr, 0, 0, legwidth, legheight);
-			cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-			cairo_fill_preserve(cr);
-			cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-			cairo_stroke(cr);
-			cairo_restore(cr);
-		}
-		cairo_translate(cr, legmarin+symmargin, legmarin);
-		for(int ig=0; ig<ng; ig++){
-			PARSE_STYLE(drawdata->style_pts[ig]);
-			set_color(cr, color);
-			float ix=symlen*0.5;
-			float iy=tall*0.5;
-			draw_point(cr, ix, iy, style, sym_size);
-			cairo_stroke(cr);
-			if(connectpts){
-				cairo_move_to(cr, 0, tall*0.5);
-				cairo_line_to(cr, symlen, tall*0.5);
+		if(textlen){//legend is available
+			const float legmarin=3;/*margin inside of box */
+			const float legmarout=5;/*margin outside of box */
+			const float symmargin=5;/*space before and after symbol */
+			float legwidth=textlen+symlen+2*legmarin+symmargin*2;
+			float legheight=tall*ng+legmarin*2;
+			cairo_translate(cr, xoff+legmarout+drawdata->legendoffx*(widthim-legwidth-2*legmarout),
+				yoff+legmarout+drawdata->legendoffy*(heightim-legheight-2*legmarout));
+			if(1){//box
+				cairo_save(cr);
+				cairo_rectangle(cr, 0, 0, legwidth, legheight);
+				cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+				cairo_fill_preserve(cr);
+				cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
 				cairo_stroke(cr);
+				cairo_restore(cr);
 			}
-			cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-			float toff=tall*1.1;
-			cairo_move_to(cr, symlen+symmargin, tall*0.8);
-			/*cairo_show_text(cr, legend[ig]); */
-			pango_text(cr, layout, symlen+symmargin, toff-tall, legend[ig], 0, 0, 0);
-			cairo_translate(cr, 0, tall);
+			cairo_translate(cr, legmarin+symmargin, legmarin);
+			for(int ig=0; ig<ng; ig++){
+				if(!legend[ig]) continue;
+				PARSE_STYLE(drawdata->style_pts[ig]);
+				set_color(cr, color);
+				float ix=symlen*0.5;
+				float iy=tall*0.5;
+				draw_point(cr, ix, iy, style, sym_size);
+				cairo_stroke(cr);
+				if(connectpts){
+					cairo_move_to(cr, 0, tall*0.5);
+					cairo_line_to(cr, symlen, tall*0.5);
+					cairo_stroke(cr);
+				}
+				cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
+				float toff=tall*1.1;
+				cairo_move_to(cr, symlen+symmargin, tall*0.8);
+				/*cairo_show_text(cr, legend[ig]); */
+				pango_text(cr, layout, symlen+symmargin, toff-tall, legend[ig], 0, 0, 0);
+				cairo_translate(cr, 0, tall);
+			}
 		}
 		cairo_restore(cr);
 	}
-	if(drawdata->dtime<10){
+	/*if(drawdata->dtime<10){
 		cairo_save(cr);
 		cairo_identity_matrix(cr);
 		char fps[10];
 		snprintf(fps, 10, "FPS:%5.1f", 1./drawdata->dtime);
 		pango_text(cr, layout, font_size*0.3, font_size*0.2, fps, 0, 0, 0);
 		cairo_restore(cr);
-	}
+	}*/
 	g_object_unref(layout);
 	cairo_destroy(cr);
 	drawdata->icumulast=drawdata->icumu;

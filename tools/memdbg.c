@@ -217,7 +217,7 @@ static void stat_usage(const void* key, VISIT which, int level){
 		key3.nfunc=key2->nfunc-2;
 		if(!(found=tfind(&key3, &MSTATROOT, stat_cmp))){
 			T_STATKEY* keynew=calloc_default(1, sizeof(T_STATKEY));
-			keynew->p=key2->p;
+			P(keynew)=P(key2);
 			keynew->func=malloc_default(key3.nfunc*sizeof(void*));
 			memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
 			keynew->nfunc=key3.nfunc;
@@ -235,16 +235,16 @@ static void print_usage(const void* key, VISIT which, int level){
 	const T_STATKEY* key2=*((const T_STATKEY**)key);
 	(void)level;
 	if(which==leaf||which==postorder){
-		dbg("size %4zu B@%p\n", (key2->size), key2->p);
+		dbg("size %4zu B@%p\n", (key2->size), P(key2));
 		print_backtrace_symbol(key2->func, key2->nfunc);
 	}
 }
-typedef struct T_DEINIT{/*contains either fun or data that need to be freed. */
+typedef struct deinit_t{/*contains either fun or data that need to be freed. */
 	void (*fun)(void);
 	void* data;
-	struct T_DEINIT* next;
-}T_DEINIT;
-T_DEINIT* DEINIT=NULL;
+	struct deinit_t* next;
+}deinit_t;
+deinit_t* deinit_head=NULL;
 
 static int key_cmp(const void* a, const void* b){
 	void* p1, * p2;
@@ -261,7 +261,7 @@ static void memkey_add(void* p, size_t size){
 	int disable_save=disable_memdbg;
 	disable_memdbg=1;//prevent recursive calling
 	T_MEMKEY* key=calloc_default(1, sizeof(T_MEMKEY));
-	key->p=p;
+	P(key)=p;
 	key->size=size;
 	key->nfunc=backtrace(key->func, DT);
 	void** found=tfind(key, &MROOT, key_cmp);

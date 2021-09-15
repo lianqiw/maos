@@ -30,7 +30,7 @@ static void test_ints(){
     int nsim=500;
     int nsa=2582;
     dmat *nea=dnew(nsim,nsa*2);
-    real(*pnea)[nsim]=(void*)nea->p;
+    real(*pnea)[nsim]=(void*)P(nea);
     real rne=3;
     real bkgrnd=0;
     real siglev=1000;
@@ -47,11 +47,11 @@ static void test_ints(){
 		dcp(&im,P(ints,isa));
 		dscale(im,siglev);
 		gnf[0]=0; gnf[1]=0;
-		dmulvec(gnf, P(mtche,isa), im->p,1.);
+		dmulvec(gnf, P(mtche,isa), P(im),1.);
 		gny[0]=0; gny[1]=0;
 		dcp(&imy, im);
 		addnoise(imy, &wfs_rand[iwfs], bkgrnd, bkgrnd, 0,0,rne);
-		dmulvec(gny, P(mtche,isa), imy->p,1.);
+		dmulvec(gny, P(mtche,isa), P(imy),1.);
 		P(pnea,isim,isa)=gny[0]-gnf[0];
 		P(pnea,isim,isa+nsa)=gny[1]-gnf[1];
 	    }
@@ -67,7 +67,7 @@ static void test_i0(){
     int nsim=500;
     int nsa=2582;
     dmat *nea=dnew(nsim,nsa*2);
-    real(*pnea)[nsim]=(void*)nea->p;
+    real(*pnea)[nsim]=(void*)P(nea);
     real rne=3;
     real bkgrnd=0;
     real siglev=1000;
@@ -80,11 +80,11 @@ static void test_i0(){
 	    dcp(&im,P(i0,isa));
 	    dscale(im,siglev);
 	    gnf[0]=0; gnf[1]=0;
-	    dmulvec(gnf, P(mtche,isa), im->p,1.);
+	    dmulvec(gnf, P(mtche,isa), P(im),1.);
 	    gny[0]=0; gny[1]=0;
 	    dcp(&imy, im);
 	    addnoise(imy, &i0rand, bkgrnd, bkgrnd,0,0,rne);
-	    dmulvec(gny, P(mtche,isa), imy->p,1.);
+	    dmulvec(gny, P(mtche,isa), P(imy),1.);
 	    P(pnea,isim,isa)=gny[0]-gnf[0];
 	    P(pnea,isim,isa+nsa)=gny[1]-gnf[1];
 	}

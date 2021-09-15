@@ -33,9 +33,9 @@ void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
 	const real rne,     /**<[in]Read out noise per pixel per read*/
 	real excess   /**<[in]Excess noise factor*/
 ){
-	long np=A->nx*A->ny;
-	assert(!bkgrnd2||bkgrnd2->nx*bkgrnd2->ny==np);
-	assert(!bkgrnd2c||bkgrnd2c->nx*bkgrnd2c->ny==np);
+	long np=NX(A)*NY(A);
+	assert(!bkgrnd2||NX(bkgrnd2)*NY(bkgrnd2)==np);
+	assert(!bkgrnd2c||NX(bkgrnd2c)*NY(bkgrnd2c)==np);
 	if(excess<1) excess=1;
 	for(int ix=0; ix<np; ix++){
 		real tot=P(A,ix)+bkgrnd+(bkgrnd2?P(bkgrnd2,ix):0);
@@ -52,13 +52,13 @@ void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
    Add noise to gradients according to neal, which is LL' decomposition of the sanea
  */
 void addnoise_grad(dmat* grad, const dmat* neal, rand_t* srand){
-	const long nsa=neal->nx;
-	assert(nsa*2==grad->nx*grad->ny);
+	const long nsa=NX(neal);
+	assert(nsa*2==NX(grad)*NY(grad));
 	const real* neax=PCOL(neal, 0);
 	const real* neay=PCOL(neal, 1);
 	const real* neaxy=PCOL(neal, 2);
-	real* restrict ggx=grad->p;
-	real* restrict ggy=grad->p+nsa;
+	real* restrict ggx=P(grad);
+	real* restrict ggy=ggx+nsa;
 	for(long isa=0; isa<nsa; isa++){
 	/*Preserve the random sequence. */
 		real n1=randn(srand);
@@ -79,11 +79,11 @@ int cog_multi(
 	int wsize       /**<[in] window size*/
 ){
 	if(!*cg){
-		*cg=dnew(loc->nx, 3);
+		*cg=dnew(NX(loc), 3);
 	}
 	dmat* pcg=*cg;
 	int wsize2=(wsize-1)/2;
-	for(int iloc=0; iloc<loc->nx; iloc++){
+	for(int iloc=0; iloc<NX(loc); iloc++){
 		int cx=P(loc, iloc, 0);
 		int cy=P(loc, iloc, 1);
 		int cx2=cx, cy2=cy;
@@ -133,7 +133,7 @@ dmat* poly2fit(const dmat* in,  /**<[in] input grid*/
 	const dmat* out, /**<[in] distorted grid*/
 	int maxorder     /**<[in] Maximum order*/
 ){
-	if(!(in->nx==out->nx&&in->ny==2&&out->ny==2)){
+	if(!(NX(in)==NX(out)&&NY(in)==2&&NY(out)==2)){
 		error("polyfit: in and out mismatch\n");
 		return 0;
 	}
@@ -154,8 +154,8 @@ dmat* poly2fit(const dmat* in,  /**<[in] input grid*/
 	if(ic!=nmod){
 		error("incorrect calculation %d vs %d\n", ic, nmod);
 	}
-	dmat* M=dnew(in->nx, nmod);
-	for(long ip=0; ip<in->nx; ip++){
+	dmat* M=dnew(NX(in), nmod);
+	for(long ip=0; ip<NX(in); ip++){
 		const real x=P(in, ip, 0);
 		const real y=P(in, ip, 1);
 		for(ic=0; ic<nmod; ic++){
@@ -185,7 +185,7 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 	int maxorder       /**<[in] Maximum power of x/y. Negative to limit total power*/
 ){
 	static int count=-1; count++;
-	if(GA->nx!=saloc->nloc*2||GA->ny!=aloc->nloc){
+	if(NX(GA)!=saloc->nloc*2||NY(GA)!=aloc->nloc){
 		error("GA, aloc, and saloc does not match\n");
 	}
 
@@ -236,8 +236,8 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 				P(gloc, ng, 0)=(sax-saminx)/saloc->dx;
 				P(gloc, ng, 1)=(say-saminy)/saloc->dy;
 				ng++;
-				if(ng==gloc->nx){
-					dresize(gloc, gloc->nx*2, gloc->ny);
+				if(ng==NX(gloc)){
+					dresize(gloc, NX(gloc)*2, NY(gloc));
 				}
 			}
 		}
@@ -260,10 +260,10 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 	//convert to metrix coordinate. Remove invalid apertures
 
 	real imax;//max of sub-image intensity
-	dmaxmin(PCOL(cg, 2), cg->nx, &imax, 0);
+	dmaxmin(PCOL(cg, 2), NX(cg), &imax, 0);
 	imax*=0.4;//threshold to keep
 	int jloc=0;
-	for(int iloc=0; iloc<gloc->nx; iloc++){
+	for(int iloc=0; iloc<NX(gloc); iloc++){
 		if(P(cg, iloc, 2)>imax){//only keep valid apertures
 			P(gloc, jloc, 0)=P(gloc, iloc, 0)*saloc->dx+saminx;
 			P(gloc, jloc, 1)=P(gloc, iloc, 1)*saloc->dy+saminy;

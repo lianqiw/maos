@@ -60,9 +60,10 @@ void* (*realloc_custom)(void*, size_t);
 void  (*free_custom)(void*);
 */
 static int MEM_VERBOSE=0;
-static int MEM_DEBUG=DEBUG;
+static int MEM_DEBUG=DEBUG+0;
 int LOG_LEVEL=0;
 PNEW(mutex_mem);
+PNEW(mutex_deinit);
 static void* MROOT=NULL;
 static long  memcnt=0;
 static size_t memalloc=0, memfree=0;
@@ -136,12 +137,12 @@ static void print_usage(const void* key, VISIT which, int level){
 		print_backtrace_symbol(key2->func, key2->nfunc-offset);
 	}
 }
-typedef struct T_DEINIT{/*contains either fun or data that need to be freed. */
+typedef struct deinit_t{/*contains either fun or data that need to be freed. */
 	void (*fun)(void);
 	void* data;
-	struct T_DEINIT* next;
-}T_DEINIT;
-T_DEINIT* DEINIT=NULL;
+	struct deinit_t* next;
+}deinit_t;
+deinit_t* deinit_head=NULL;
 
 static int key_cmp(const void* a, const void* b){
 	void* p1, * p2;
@@ -165,7 +166,7 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 	key->nbyte=nbyte;
 	key->size=size;
 #ifndef __CYGWIN__
-	key->nfunc=backtrace(key->func, DT);
+	key->nfunc=backtrace(key->func, DT);//this step requires locking and severely limits multi-thread performance
 #endif
 	LOCK(mutex_mem);
 	if(tfind(key, &MROOT, key_cmp)){
@@ -183,7 +184,7 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 	UNLOCK(mutex_mem);
 	if(MEM_VERBOSE==1){
 		dbg("%p malloced with %zu bytes\n", p, size);
-		print_backtrace();
+		//print_backtrace();
 	} else if(MEM_VERBOSE==2&&size>1024){
 		warning("Alloc:%lu MB mem used\n", (memalloc-memfree)>>20);
 	}
@@ -327,10 +328,10 @@ static __attribute__((destructor)) void deinit(){
 	freepath();
 	free_hosts();
 	thread_pool_destroy();
-	for(T_DEINIT* p1=DEINIT;p1;p1=DEINIT){
-		DEINIT=p1->next;
-		//if(p1->fun) p1->fun();
-		//if(p1->data) myfree(p1->data);
+	for(deinit_t* p1=deinit_head;p1;p1=deinit_head){
+		deinit_head=p1->next;
+		if(p1->fun) p1->fun();
+		if(p1->data) myfree(p1->data);
 		free_default(p1);
 	}
 	if(MEM_DEBUG){
@@ -343,14 +344,26 @@ static __attribute__((destructor)) void deinit(){
 */
 void register_deinit(void (*fun)(void), void* data){
 	if(MEM_DEBUG){
+		LOCK(mutex_deinit);
 		init_mem();
-		T_DEINIT* node=(T_DEINIT*)calloc_default(1, sizeof(T_DEINIT));
-		node->fun=fun;
-		node->data=data;
-		LOCK(mutex_mem);
-		node->next=DEINIT;
-		DEINIT=node;
-		UNLOCK(mutex_mem);
+		deinit_t* node=NULL;
+		for(node=deinit_head; node; node=node->next){
+			if(fun && fun==node->fun){
+				fun=NULL;
+			}
+			if(data && data==node->data){
+				data=NULL;
+			}
+		}
+		if(fun || data){
+			node=(deinit_t*)calloc_default(1, sizeof(deinit_t));
+			node->fun=fun;
+			node->data=data;
+		
+			node->next=deinit_head;
+			deinit_head=node;
+		}
+		UNLOCK(mutex_deinit);
 	}
 }
 

@@ -73,9 +73,9 @@ static void mvm_trans_igpu(thread_t* info){
 	const Real* FLI=data->FLI;
 	if(!FLI&&!load_mvmf){
 		if(parms->fit.square){
-			eyec=curcell(ndm, 1, recon->anx->p, recon->any->p);
+			eyec=curcell(ndm, 1, P(recon->anx), P(recon->any));
 		} else{
-			eyec=curcell(ndm, 1, recon->anloc->p, (long*)0);
+			eyec=curcell(ndm, 1, P(recon->anloc), (long*)0);
 		}
 	}
 	curcell dmfit;
@@ -83,12 +83,12 @@ static void mvm_trans_igpu(thread_t* info){
 		if(parms->fit.square){
 			dmfit=curcell(grid->ndm, 1, grid->anx, grid->any);
 		} else{
-			dmfit=curcell(grid->ndm, 1, recon->anloc->p, (long*)0);
+			dmfit=curcell(grid->ndm, 1, P(recon->anloc), (long*)0);
 		}
 	}
-	curcell opdx(recon->npsr, 1, recon->xnx->p, recon->xny->p, (Real*)(mvmf?1L:0L));
-	curcell opdr(recon->npsr, 1, recon->xnx->p, recon->xny->p, (Real*)(mvmi?1L:0L));
-	curcell grad(parms->nwfsr, 1, recon->ngrad->p, (long*)0, (Real*)1);
+	curcell opdx(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)(mvmf?1L:0L));
+	curcell opdr(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)(mvmi?1L:0L));
+	curcell grad(parms->nwfsr, 1, P(recon->ngrad), (long*)0, (Real*)1);
 	if(ntotact==0){
 		error("ntotact=0;\n");
 	}

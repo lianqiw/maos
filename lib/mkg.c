@@ -205,7 +205,7 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	int valid=1;
 	int iw;
 	int iphi;
-	real* amp=pamp?pamp->p:0;
+	real* amp=pamp?P(pamp):0;
 	if(!same&&amp){
 	/*
 	  Copy and modify amplitude map to fix boundry

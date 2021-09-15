@@ -85,12 +85,12 @@ aper_t* setup_aper(const parms_t* const parms){
 			dfree(B);
 		}
 		dmat* ampmask=dnew(aper->locs->nloc, 1);
-		prop_grid_stat(mask, aper->locs->stat, ampmask->p, 1, 0, 0, 1, 0, 0, 0);
+		prop_grid_stat(mask, aper->locs->stat, P(ampmask), 1, 0, 0, 1, 0, 0, 0);
 		dcwm(aper->amp, ampmask);
 		dfree(ampmask);
 		mapfree(mask);
 	} else{/*apply an annular mask */
-	//locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
+	//locannularmask(P(aper->amp), aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
 	}
 	if(!parms->load.locs){
 		loc_reduce(aper->locs, aper->amp, EPS, 1, NULL);
@@ -121,9 +121,9 @@ aper_t* setup_aper(const parms_t* const parms){
 	/*Set the amp for plotting. */
 	aper->amp1=ddup(aper->amp);
 	/*normalize amp to sum to 1. */
-	dnormalize_sumabs(aper->amp->p, aper->locs->nloc, 1);
+	dnormalize_sumabs(P(aper->amp), aper->locs->nloc, 1);
 	aper->sumamp2=dsumsq(aper->amp);
-	aper->mcc=loc_mcc_ptt(aper->locs, aper->amp->p);
+	aper->mcc=loc_mcc_ptt(aper->locs, P(aper->amp));
 	aper->ipcc=1./P(aper->mcc,0);/*piston inverse. should be 1 since amp is normlaized. */
 	aper->imcc=dinvspd(aper->mcc);/*pttr inverse */
 	/*piston term correction in focus mode */
@@ -133,7 +133,7 @@ aper_t* setup_aper(const parms_t* const parms){
 		if(parms->save.setup){
 			writebin(aper->mod, "aper_mode");
 		}
-		dgramschmidt(aper->mod, aper->amp->p);
+		dgramschmidt(aper->mod, P(aper->amp));
 		if(parms->save.setup){
 			writebin(aper->mod, "aper_mode_gramschmidt");
 		}

@@ -29,7 +29,7 @@ cell* cellnew(long nx, long ny){
 	dc->nx=nx;
 	dc->ny=ny;
 	if(nx*ny>0){
-		dc->p=mycalloc(nx*ny, cell*);
+		P(dc)=mycalloc(nx*ny, cell*);
 	}
 	return dc;
 }
@@ -150,9 +150,9 @@ void cellresize(void* A_, long nx, long ny){
 				cellfree_do(P(A,i));
 			}
 		}
-		A->p=myrealloc(A->p, nnew, cell*);
+		P(A)=myrealloc(P(A), nnew, cell*);
 		if(nnew>nold){
-			memset(A->p+nold, 0, (nnew-nold)*sizeof(cell*));
+			memset(&P(A, nold), 0, (nnew-nold)*sizeof(cell*));
 		}
 	} else{
 		cell** p=mycalloc(nx*ny, cell*);
@@ -169,8 +169,8 @@ void cellresize(void* A_, long nx, long ny){
 				cellfree_do(P(A,i));
 			}
 		}
-		free(A->p);
-		A->p=p;
+		free(P(A));
+		P(A)=p;
 	}
 	A->nx=nx;
 	A->ny=ny;
@@ -188,11 +188,11 @@ void cellfree_do(cell* A){
 		cell* dc=A;
 		//if(dc->fp) writebin_async(dc, 0);//don't do this. only cells need to finish sync
 		//do not close for yet for individual cells may need to do synchronization.
-		if(dc->p){
+		if(P(dc)){
 			for(int ix=0; ix<dc->nx*dc->ny; ix++){
 				cellfree_do(P(dc,ix));
 			}
-			free(dc->p);dc->p=0;
+			free(P(dc));P(dc)=0;
 		}
 		if(dc->header){
 			free(dc->header); dc->header=NULL;		
@@ -448,7 +448,7 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 				}
 			} while(!read_header(header, fp));
 			cell* dcout=cellnew(nx, 1);
-			memcpy(dcout->p, tmp, sizeof(void*)*nx);
+			memcpy(P(dcout), tmp, sizeof(void*)*nx);
 			free(tmp);
 			out=dcout;
 		}

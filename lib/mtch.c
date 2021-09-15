@@ -22,7 +22,7 @@
    shift i0 along x or ywithout wraping into i0s1 (+sx/sy) and i0s2 (-sx/sy)
 */
 static void mki0sh(real* i0x1, real* i0x2, const dmat* i0, real scale, long sx, long sy){
-	int nx=i0->nx;
+	int nx=NX(i0);
 	typedef real pcol[nx];
 	pcol* i0x1p=(pcol*)i0x1;
 	pcol* i0x2p=(pcol*)i0x2;
@@ -41,18 +41,18 @@ dmat* derive_by_fft(const dmat* i0, real theta){
 	cmat* otf=0;
 	ccpd(&otf, i0);
 	cfft2(otf, -1);
-	real sx=cos(theta)*2.*M_PI/i0->nx;
-	real sy=sin(theta)*2.*M_PI/i0->ny;
-	long ny2=i0->ny/2;
-	long nx2=i0->nx/2;
-	for(long iy=0; iy<i0->ny; iy++){
-		for(long ix=0; ix<i0->nx; ix++){
-			P(otf, ix, iy)*=-I*((ix<nx2?ix:(ix-i0->nx))*sx+(iy<ny2?iy:(iy-i0->ny))*sy);
+	real sx=cos(theta)*2.*M_PI/NX(i0);
+	real sy=sin(theta)*2.*M_PI/NY(i0);
+	long ny2=NY(i0)/2;
+	long nx2=NX(i0)/2;
+	for(long iy=0; iy<NY(i0); iy++){
+		for(long ix=0; ix<NX(i0); ix++){
+			P(otf, ix, iy)*=-I*((ix<nx2?ix:(ix-NX(i0)))*sx+(iy<ny2?iy:(iy-NY(i0)))*sy);
 		}
 	}
 	cfft2(otf, 1);
 	dmat* gx=0;
-	creal2d(&gx, 0, otf, 1./(i0->nx*i0->ny));
+	creal2d(&gx, 0, otf, 1./(PN(i0)));
 	cfree(otf);
 	return gx;
 }
@@ -108,8 +108,8 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 	int radgx,      /**<[in] 1: gx/gy is along r/a coord. 0 for cartesian.*/
 	int cr          /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
 ){
-	const real* bkgrnd2=dbkgrnd2?dbkgrnd2->p:0;
-	const real* bkgrnd2c=dbkgrnd2c?dbkgrnd2c->p:0;
+	const real* bkgrnd2=dbkgrnd2?P(dbkgrnd2):0;
+	const real* bkgrnd2c=dbkgrnd2c?P(dbkgrnd2c):0;
 	const real bkgrnd_res=bkgrnd-bkgrndc;
 	const real kpx=1./pixthetax;
 	const real kpy=1./pixthetay;
@@ -125,7 +125,7 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 		mtchcry=nmod;
 		nmod+=2;
 	}
-	const int i0n=i0->nx*i0->ny;
+	const int i0n=NX(i0)*NY(i0);
 	dmat* i0m=dnew(2, nmod);
 	dmat* i0g=dnew(i0n, nmod);
 	dmat* wt=dnew(i0n, 1);
@@ -151,9 +151,9 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 		gx=gx2=derive_by_fft(i0, theta); dscale(gx2, kpx);
 		gy=gy2=derive_by_fft(i0, theta+M_PI/2); dscale(gy2, kpy);
 	}
-	addvec(PCOL(i0g, 0), 1, gx->p, i0n, 1, 0);
-	addvec(PCOL(i0g, 1), 1, gy->p, i0n, 1, 0);
-	addvec(PCOL(i0g, 2), 1, i0->p, i0n, kpx, bkgrnd_res);
+	addvec(PCOL(i0g, 0), 1, P(gx), i0n, 1, 0);
+	addvec(PCOL(i0g, 1), 1, P(gy), i0n, 1, 0);
+	addvec(PCOL(i0g, 2), 1, P(i0), i0n, kpx, bkgrnd_res);
 	addvec(PCOL(i0g, 2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
 	addvec(PCOL(i0g, 2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
 	if(mtchcrx){
@@ -262,7 +262,7 @@ void mtch_cell(
 		*pi0sumsum=dnew(ni0, 1);
 	}
 
-	const int npix=PN(P(i0s, 0, 0));
+	const int npix=PN(i0s, 0, 0);
 	if(pmtche){
 		dcellfree(*pmtche);
 		*pmtche=dcellnew_same(nsa, ni0, 2, npix);

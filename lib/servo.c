@@ -68,7 +68,7 @@ error("Hol is less than 1 from the beginning\n");
 
 	int found=0;
 	real phi=0;
-	for(long i=1; i<nu->nx; i++){
+	for(long i=1; i<NX(nu); i++){
 		real val=cabs(P(Hol,i));
 		if(val<gain){
 			real valpre=cabs(P(Hol,i-1));
@@ -108,14 +108,14 @@ static real gain_at_phase(real* fcross, /**<[out] Cross over frequency*/
 	}
 	long i;
 	//Skip leading terms if they are belowangle
-	for(i=0; i<nu->nx; i++){
+	for(i=0; i<NX(nu); i++){
 		if(phase(P(Hol,i))>angle){
 			break;
 		}
 	}
 	int found=0;
 	real gain=0;
-	for(; i<nu->nx; i++){
+	for(; i<NX(nu); i++){
 		real phi1=phase(P(Hol,i));
 		if(phi1<angle){
 			real phi0=phase(P(Hol,i-1));/*how much above -pi*/
@@ -149,7 +149,7 @@ static real gain_at_phase(real* fcross, /**<[out] Cross over frequency*/
    al: additional latency
 */
 static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long dtrat, real al){
-	if(psdin->ny!=2){
+	if(NY(psdin)!=2){
 		error("psdin should have two columns\n");
 	}
 	real Ts=dt*dtrat;
@@ -161,11 +161,11 @@ static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long d
 	if(st->Hsys||st->Hwfs||st->Hint||st->s){
 		error("Already initialized\n");
 	}
-	st->Hsys=cnew(nu->nx, 1);
-	st->Hwfs=cnew(nu->nx, 1);
-	st->Hint=cnew(nu->nx, 1);
-	st->s=cnew(nu->nx, 1);
-	for(long i=0; i<nu->nx; i++){
+	st->Hsys=cnew(NX(nu), 1);
+	st->Hwfs=cnew(NX(nu), 1);
+	st->Hint=cnew(NX(nu), 1);
+	st->s=cnew(NX(nu), 1);
+	for(long i=0; i<NX(nu); i++){
 		comp s=P(st->s,i)=pi2i*P(nu,i);
 		comp zInv=cexp(-s*Ts);
 		comp Hint=P(st->Hint,i)=1./(1-zInv);
@@ -205,7 +205,7 @@ static int servo_isstable(const dmat* nu, const cmat* Hol){
 /*
 static real servo_calc_max_gain(SERVO_CALC_T *st, real pmargin){
 	if(!st->Hol){
-	st->Hol=cnew(st->nu->nx,1);
+	st->Hol=cnew(NX(st->nu),1);
 	}
 	cadd(&st->Hol, 0, st->Hsys, 1);
 	real angle=pmargin-M_PI;
@@ -224,7 +224,7 @@ static real servo_calc_max_gain(SERVO_CALC_T *st, real pmargin){
 static real servo_calc_do(SERVO_CALC_T* st, real g0){
 	const dmat* nu=st->nu;
 	if(!st->Hol){
-		st->Hol=cnew(nu->nx, 1);
+		st->Hol=cnew(NX(nu), 1);
 	}
 	/*Compute Hol with the first integrator and gain.*/
 	if(g0>EPS){
@@ -256,7 +256,7 @@ static real servo_calc_do(SERVO_CALC_T* st, real g0){
 		}
 		real a=st->a;
 		real T=st->T;
-		for(int i=0; i<nu->nx; i++){
+		for(int i=0; i<NX(nu); i++){
 			comp Hlead=(1+T*P(st->s,i))/(1+a*T*P(st->s,i))*g2;
 			P(st->Hol,i)*=Hlead;
 		}
@@ -264,7 +264,7 @@ static real servo_calc_do(SERVO_CALC_T* st, real g0){
 	real res_sig=0;
 	real sum_n=0, sum_1=0;
 	const dmat* psd=st->psd;
-	for(int i=0; i<nu->nx; i++){
+	for(int i=0; i<NX(nu); i++){
 		comp Hol=P(st->Hol,i);
 		comp Hrej=1./(1.+Hol);
 		//The gain never reach below -50dB
@@ -339,11 +339,11 @@ dcell* servo_optim(const dmat* psdin, real dt, long dtrat, real al, real pmargin
 	default:
 		error("Invalid servo_type=%d\n", servo_type);
 	}
-	dcell* gm=dcellnew(sigma2n?sigma2n->nx:1, sigma2n?sigma2n->ny:1);
+	dcell* gm=dcellnew(sigma2n?NX(sigma2n):1, sigma2n?NY(sigma2n):1);
 	real g0_step=1e-6;
 	real g0_min=1e-6;/*the minimum gain allowed.*/
 	real g0_max=2.0;
-	for(long ins=0; ins<gm->nx*gm->ny; ins++){
+	for(long ins=0; ins<NX(gm)*NY(gm); ins++){
 		st.sigma2n=sigma2n?P(sigma2n,ins):0;
 		real g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, g0_step);
 		servo_calc_do(&st, g0);
@@ -370,10 +370,10 @@ dmat* servo_rej2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, r
 	servo_calc_init(&st, psdcl, dt, dtrat, al);
 	const dmat* nu=st.nu;
 	const dmat* psd=st.psd;
-	dmat* psdol=dnew(psd->nx, psd->ny+1);
+	dmat* psdol=dnew(NX(psd), psd->ny+1);
 	real psdn=sigma2n*(dt*dtrat*2);
 	cadd(&st.Hol, 0, st.Hsys, gain);
-	for(int i=0; i<nu->nx; i++){
+	for(int i=0; i<NX(nu); i++){
 		comp Hol=P(st.Hol,i);
 		comp Hrej=1./(1.+Hol);
 		real normHrej=creal(Hrej*conj(Hrej));
@@ -382,7 +382,7 @@ dmat* servo_rej2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, r
 		//comp Hn=Hcl/Hwfs;
 		//real normHn=Hn*conj(Hn);
 		P(psdol, i, 0)=P(nu,i);//frequency.
-		for(int icol=0; icol<psd->ny; icol++){
+		for(int icol=0; icol<NY(psd); icol++){
 			P(psdol, i, icol+1)=P(psd, i, icol)/(normHrej)-psdn;
 			if(P(psdol, i, icol+1)<0){
 				P(psdol, i, icol+1)=0;
@@ -429,27 +429,27 @@ servo_typeII_filter(servo_t* st, const dcell* merrc){
 	if(!merrc) return;
 	const dmat* gain=st->ep;
 	int indmul=0;
-	if(gain->nx!=3){
+	if(NX(gain)!=3){
 		error("Wrong format in gain\n");
 	}
 	real gg, e1a, e1;
-	for(int ic=0; ic<merrc->nx*merrc->ny; ic++){
+	for(int ic=0; ic<NX(merrc)*NY(merrc); ic++){
 		dmat* merr=P(merrc,ic);
 		if(!merr) continue;
 		dmat* mlead=P(st->mlead,ic);
 		dmat* merrlast=P(st->merrlast,ic);
 		int nmod=0;/*error. */
-		if(merr->ny==1){
-			nmod=merr->nx;
+		if(NY(merr)==1){
+			nmod=NX(merr);
 		} else{
-			if(merr->nx!=1){
+			if(NX(merr)!=1){
 				error("Don't handle this case\n");
 			}
-			nmod=merr->ny;
+			nmod=NY(merr);
 		}
-		if(gain->ny==1){
+		if(NY(gain)==1){
 			indmul=0;
-		} else if(gain->ny==nmod){
+		} else if(NY(gain)==nmod){
 			indmul=1;
 		} else{
 			error("Wrong format in gain\n");
@@ -472,14 +472,14 @@ static void servo_init(servo_t* st, const dcell* merr){
 	if(!merr||st->initialized){
 		error("merr must be valid and servo_t must be not yet initialized\n");
 	}
-	if(st->ep->nx>1){
+	if(NX(st->ep)>1){
 		st->mpreint=dcellnew2(merr);
 	}
-	if(st->ep->nx==3){
+	if(NX(st->ep)==3){
 		st->mlead=dcellnew2(merr);
 		st->merrlast=dcellnew2(merr);
 	}
-	for(int i=0; i<st->mint->nx; i++){
+	for(int i=0; i<NX(st->mint); i++){
 		P(st->mint,i)=dcellnew2(merr);
 	}
 	st->initialized=1;
@@ -489,11 +489,11 @@ static void servo_init(servo_t* st, const dcell* merr){
 */
 void servo_update(servo_t* st, const dmat* ep){
 	dfree(st->ep);
-	if(ep->nx!=3){//type I
+	if(NX(ep)!=3){//type I
 		st->ep=ddup(ep);
 	} else{//type II. convert data format
-		st->ep=dnew(ep->nx, ep->ny);
-		for(int i=0; i<ep->ny; i++){
+		st->ep=dnew(NX(ep), NY(ep));
+		for(int i=0; i<NY(ep); i++){
 			P(st->ep,0,i)=P(ep,0,i);
 			real a=P(ep, 1, i);
 			real T=P(ep, 2, i);
@@ -513,16 +513,16 @@ servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
 		st->ap=dnew(2, 1);
 		P(st->ap,0)=1;
 	}
-	if(st->ap->nx<2){
+	if(NX(st->ap)<2){
 		dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
 	}
-	st->mint=(dccell*)cellnew(st->ap->nx, 1);
+	st->mint=(dccell*)cellnew(NX(st->ap), 1);
 	st->dt=dt;
 	st->alint=(int)floor(al);
 	st->alfrac=al-floor(al);
 	st->merrhist=(dccell*)cellnew(st->alint+1, 1);
 	servo_update(st, ep);
-	if(merr&&merr->nx!=0&&merr->ny!=0&&P(merr,0)){
+	if(merr&&NX(merr)!=0&&NY(merr)!=0&&P(merr,0)){
 		servo_init(st, merr);
 	}
 	return st;
@@ -534,11 +534,11 @@ servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
 static void servo_shift_ap(servo_t* st){
 	const dmat* ap=st->ap;
 	if(!ap) return; //no need to shift.
-	if(st->mint->nx<ap->nx){
-		cellresize(st->mint, ap->nx, 1);
+	if(NX(st->mint)<NX(ap)){
+		cellresize(st->mint, NX(ap), 1);
 	}
 	if(!st->initialized) return;
-	dcell** inte=st->mint->p;
+	dcell** inte=P(st->mint);
 	dcell* recycle=inte[ap->nx-1];
 	dcellscale(recycle, P(ap, ap->nx-1));
 	for(int iap=ap->nx-2; iap>=0; iap--){
@@ -554,7 +554,7 @@ static const dcell* servo_shift_al(servo_t* st, const dcell* merr){
 	if(!st->alint){
 		return merr;
 	} else{
-		long nhist=st->merrhist->nx;
+		long nhist=NX(st->merrhist);
 		dcell* recycle=P(st->merrhist,0);
 		for(int i=0; i<nhist-1; i++){
 			P(st->merrhist,i)=P(st->merrhist,i+1);
@@ -581,21 +581,20 @@ int servo_filter(servo_t* st, const dcell* _merr){
 	if(!st->mint){
 		error("servo_t must be created using servo_new()\n");
 	}
-	if(st->ep->ny==1&&st->ep->nx>3){
-		st->ep->ny=st->ep->nx;
-		st->ep->nx=1;
+	if(NY(st->ep)==1&&NX(st->ep)>3){
+		reshape(st->ep, 1, NX(st->ep));
 	}
-	switch(st->ep->nx){
+	switch(NX(st->ep)){
 	case 1://type I
-		if(st->ep->ny==1){
+		if(NY(st->ep)==1){
 			dcelladd(&st->mpreint, 0, merr, P(st->ep,0));//just record what is added.
 		} else{
 			if(!st->mpreint){
 				st->mpreint=dcellnew2(merr);
 			}
-			for(int ic=0; ic<merr->nx; ic++){
+			for(int ic=0; ic<NX(merr); ic++){
 				if(!P(merr,ic)) continue;
-				assert(P(merr,ic)->nx==st->ep->ny);
+				assert(P(merr,ic)->nx==NY(st->ep));
 				for(long i=0; i<P(merr,ic)->nx; i++){
 					P(P(st->mpreint,ic),i)=P(st->ep,i)*P(P(merr,ic),i);
 				}
@@ -603,7 +602,7 @@ int servo_filter(servo_t* st, const dcell* _merr){
 		}
 		break;
 	case 2:{//PID controller
-		if(st->ep->ny!=1) error("not supported\n");
+		if(NY(st->ep)!=1) error("not supported\n");
 		real g1=P(st->ep,0)+P(st->ep,1);
 		real g2=-P(st->ep,1);
 		dcelladd(&st->mpreint, 0, merr, g1);
@@ -615,9 +614,9 @@ int servo_filter(servo_t* st, const dcell* _merr){
 		servo_typeII_filter(st, merr);
 		break;
 	default:
-		error("Invalid: st->ep->nx=%ld\n", st->ep->nx);
+		error("Invalid: NX(st->ep)=%ld\n", NX(st->ep));
 	}
-	dcelladd(st->mint->p, 1, st->mpreint, 1);
+	dcelladd(P(st->mint), 1, st->mpreint, 1);
 	return 1;
 }
 /**
@@ -641,15 +640,14 @@ void servo_output(const servo_t* st, dcell** out){
    test type I/II filter with ideal measurement to make sure it is implemented correctly.
 */
 dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
-	if(input->ny==1){/*single mode. each column is for a mode.*/
-		input->ny=input->nx;
-		input->nx=1;
+	if(NY(input)==1){/*single mode. each column is for a mode.*/
+		reshape(input, 1, NX(input));
 	}
-	int nmod=input->nx;
+	int nmod=NX(input);
 	dmat* pinput=input;
 	dmat* merr=dnew(nmod, 1);
 	dcell* mreal=dcellnew(1, 1);
-	dmat* mres=dnew(nmod, input->ny);
+	dmat* mres=dnew(nmod, NY(input));
 	dmat* sigman=NULL;
 	if(dnorm(sigma2n)>0){
 		sigman=dchol(sigma2n);
@@ -661,10 +659,10 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 	seed_rand(&rstat, 1);
 	dmat* pmres=mres;
 	/*two step delay is ensured with the order of using, copy, acc*/
-	for(int istep=0; istep<input->ny; istep++){
-		memcpy(merr->p, PCOL(pinput, istep), nmod*sizeof(real));
+	for(int istep=0; istep<NY(input); istep++){
+		memcpy(P(merr), PCOL(pinput, istep), nmod*sizeof(real));
 		dadd(&merr, 1, P(mreal,0), -1);
-		memcpy(PCOL(pmres, istep), merr->p, sizeof(real)*nmod);
+		memcpy(PCOL(pmres, istep), P(merr), sizeof(real)*nmod);
 		if(istep%dtrat==0){
 			dzero(P(meas,0));
 		}
@@ -674,7 +672,7 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 			if(dtrat!=1) dscale(P(meas,0), 1./dtrat);
 			if(sigman){
 				drandn(noise, 1, &rstat);
-				if(sigman->nx>0){
+				if(NX(sigman)>0){
 					dmm(&P(meas,0), 1, sigman, noise, "nn", 1);
 				} else{
 					dadd(&P(meas,0), 1, noise, P(sigman,0));
@@ -698,12 +696,12 @@ void servo_reset(servo_t* st){
 	dcellzero(st->merrlast);
 	dcellzero(st->mpreint);
 	if(st->merrhist){
-		for(int i=0; i<st->merrhist->nx; i++){
+		for(int i=0; i<NX(st->merrhist); i++){
 			dcellzero(P(st->merrhist,i));
 		}
 	}
 	if(st->mint){
-		for(int i=0; i<st->mint->nx; i++){
+		for(int i=0; i<NX(st->mint); i++){
 			dcellzero(P(st->mint,i));
 		}
 	}
@@ -764,14 +762,13 @@ dmat* sho_filter(const dmat* x,/**<Input time series*/
 	real zeta  /**<Damping*/){
 	sho_t* sho=sho_new(f0, zeta);
 	dmat* xi=dref(x);
-	if(xi->nx==1){
-		xi->nx=xi->ny;
-		xi->ny=1;
+	if(NX(xi)==1){
+		reshape(xi, NY(xi), 1);
 	}
-	dmat* yo=dnew(xi->nx, xi->ny);
-	for(long iy=0; iy<xi->ny; iy++){
+	dmat* yo=dnew(NX(xi), NY(xi));
+	for(long iy=0; iy<NY(xi); iy++){
 		sho_reset(sho);
-		for(long ix=0; ix<xi->nx; ix++){
+		for(long ix=0; ix<NX(xi); ix++){
 			P(yo, ix, iy)=sho_step(sho, P(xi, ix, iy), dt);
 		}
 	}

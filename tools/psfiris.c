@@ -111,7 +111,7 @@ static void psfiris_do(thread_t* info){
 		ccwm(otf, P(dtf->nominal,0));
 		cfft2(otf, -1);
 		P(output,iwvl)=dnew(npix, npix);
-		dspmulcreal(P(output,iwvl)->p, P(dtf->si,0), otf->p, impst/sumpsf);
+		dspmulcreal(P(P(output,iwvl)), P(dtf->si,0), P(otf), impst/sumpsf);
 		dtf_free(dtf);
 	} else{
 		cfft2(otf, -1);
@@ -249,17 +249,17 @@ int main(int argc, char* argv[]){
 
 	loc_t* ploc=mksqloc_auto((int)ceil(D/dx1), (int)ceil(D/dx1), dx1, dx1);
 	dmat* pamp=dnew(ploc->nloc, 1);
-	locannular(pamp->p, ploc, 0, 0, 15, 1.8, 1);
+	locannular(P(pamp), ploc, 0, 0, 15, 1.8, 1);
 	dmat* pwt=ddup(pamp);
-	dnormalize_sumabs(pwt->p, pwt->nx, 1);
+	dnormalize_sumabs(P(pwt), pwt->nx, 1);
 	dmat* mode_ploc=dnew(ploc->nloc, nmod);
 	for(int imod=0; imod<nmod; imod++){
 		for(int ialoc=0; ialoc<naloc; ialoc++){
-			prop_nongrid(P(aloc,ialoc), P(mode_aloc,ialoc)->p+imod*P(mode_aloc,ialoc)->nx,
-				ploc, mode_ploc->p+ploc->nloc*imod,
+			prop_nongrid(P(aloc,ialoc), P(P(mode_aloc,ialoc))+imod*P(mode_aloc,ialoc)->nx,
+				ploc, PCOL(mode_ploc, imod),
 				1, thetax[idir]/206265., thetay[idir]/206265., 1, 0, 0);
 		}
-		double inp=dvecdot(mode_ploc->p+ploc->nloc*imod, mode_ploc->p+ploc->nloc*imod, pwt->p, ploc->nloc);
+		double inp=dvecdot(PCOL(mode_ploc, imod), PCOL(mode_ploc, imod), P(pwt), ploc->nloc);
 		dmat* dtmp=drefcols(mode_ploc, imod, 1);
 		dscale(dtmp, sqrt(1./inp));
 		dfree(dtmp);

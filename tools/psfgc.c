@@ -96,7 +96,7 @@ static void psfiris_do(thread_t* info){
 		ccwm(otf, P(dtf->nominal,0));
 		cfft2(otf, -1);
 		P(output,ipsf)=dnew(npix, npix);
-		dspmulcreal(P(output,ipsf)->p, P(dtf->si,0), otf->p, impst/sumpsf);
+		dspmulcreal(P(P(output,ipsf)), P(dtf->si,0), P(otf), impst/sumpsf);
 		dtf_free(dtf);
 	} else{
 		cfft2(otf, -1);

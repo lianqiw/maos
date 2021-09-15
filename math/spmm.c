@@ -137,7 +137,7 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 	X(new2)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
 	X(mat)* y=*yout;
 	if(x->ny==1&&trans[1]=='n'&&transy==0){
-		X(spmulvec)(y->p, A, x->p, trans[0], alpha);
+		X(spmulvec)(P(y), A, P(x), trans[0], alpha);
 	} else{
 
 #define no_conj(A) (A)
@@ -368,7 +368,7 @@ void X(cellmm_any)(cell** C0, const cell* A, const cell* B, const char trans[2],
 	#pragma omp task firstprivate(ix,iy) if(D.nx*D.ny>1 && omp_in_parallel())
 	#endif*/
 				for(int iz=0; iz<D.nz; iz++){
-					X(cellmm_any)(C->p+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
+					X(cellmm_any)(P(C)+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
 				}
 		/*#if _OPENMP >= 200805
 		#pragma omp taskwait
@@ -578,12 +578,9 @@ X(mat)* X(cell2m_any)(const cell* A){
 			for(long ix=0; ix<A->nx; ix++){
 				if(!isempty(P(A, ix, iy))){
 					T* pout=&P(out, kr, icol+jcol);
-					//T* pout=out->p+((icol+jcol)*nx+kr);
 					if(ismat(P(A, ix, iy))){
-						//memcpy(pout, ((X(mat*))P(A, ix, iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));
 						memcpy(pout, PCOL(((X(mat*))P(A, ix, iy)), icol), nxs[ix]*sizeof(T));
-					} else if(issp(P(A, ix, iy))){
-					//convert sparse col to full
+					} else if(issp(P(A, ix, iy))){//convert sparse col to full
 						X(sp*)Asp=(X(sp*))P(A, ix, iy);
 						for(long j=Asp->pp[icol]; j<Asp->pp[icol+1]; j++){
 							pout[Asp->pi[j]]=Asp->px[j];

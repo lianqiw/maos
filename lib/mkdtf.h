@@ -51,7 +51,7 @@ typedef struct dtf_t{
 
 typedef struct etf_t{
     ccell* etf;          /**<Store the 2D ETF. nominal is fused in always.*/
-    double hs;           /**<Guide star height*/
+    real hs;           /**<Guide star height*/
     int icol;            /**<Store the column index*/
     int nwvl;            /**<Number of dtf_t*/
 }etf_t;
@@ -71,7 +71,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
     const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
 );
 etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
-    const dcell* sodium, /**<The sodium profile. First column is coordinate.*/
+    const cell* sodium, /**<The sodium profile. First column is coordinate.*/
     int icol,     /**<Which sodium profile to use*/
     const dcell* srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
     const dcell* srsa,  /**<Subaperture to LLT distance*/

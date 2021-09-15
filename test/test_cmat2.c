@@ -50,7 +50,7 @@ static static void cmat_benchmark(){
     toc("cembed -45, abs/pi");
     tic;
     for(int i=0; i<10000;i++){
-	cembed_wvf(A,D->p,D->p,D->nx,D->ny,0.5e-6,0);
+	cembed_wvf(A,P(D),P(D),D->nx,D->ny,0.5e-6,0);
 	/*not usint LUT: */
 	/*0.067 ms in polaris if D is zero. */
 	/*0.274 ms in polaris if D is non zero; */
@@ -61,7 +61,7 @@ static static void cmat_benchmark(){
     toc("cembed_wvf 0");
     tic;
     for(int i=0; i<10000;i++){
-	cembed_wvf(A,D->p,D->p,D->nx,D->ny,0.5e-6,-45);
+	cembed_wvf(A,P(D),P(D),D->nx,D->ny,0.5e-6,-45);
 	/*0.127 ms in polaris. */
 	/*0.138 ms after change interpolation. */
     }
@@ -87,7 +87,7 @@ static static void cmat_correctness(static void){
     //cfft2plan(A,-1);
     dcircle(D, 40,32, 10, 1);
     ddraw("test_cmat",D,"Pupil");
-    cembed_wvf(A,Q->p,D->p,D->nx,D->ny,2,M_PI*0.25);
+    cembed_wvf(A,P(Q),P(D),D->nx,D->ny,2,M_PI*0.25);
     cdraw("test_cmat",A,"Pupil");
     cfft2(A,-1);
     cdraw("test_cmat",A,"PSF");

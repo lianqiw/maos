@@ -300,7 +300,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 			dmat* tmp=drefcols(mod, imod, 1);
 			//real radial=ceil((sqrt(8.*(imod+1)+1)-3)*0.5)+1;
 			real tmax, tmin;
-			dmaxmin(tmp->p, tmp->nx, &tmax, &tmin);
+			dmaxmin(P(tmp), tmp->nx, &tmax, &tmin);
 			poke/=(tmax-tmin);//sqrt(radial);
 			dadd(&opdin->p[0], 0, tmp, poke);
 			dfree(tmp);
@@ -310,7 +310,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 				opdin->p[0]->p[imod-1]=0;
 			}
 		}
-		loc_embed(mapinsq->p[0], locin, opdin->p[0]->p);
+		loc_embed(mapinsq->p[0], locin, P(opdin->p[0]));
 		CUDA_SYNC_STREAM;
 		cp2gpu(cumapin, mapinsq);
 		//cuzero(phiout, stream);

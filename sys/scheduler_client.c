@@ -507,17 +507,18 @@ void print_backtrace_symbol(void* const* buffer, int size){
 		int sock=scheduler_connect_self(0);
 		if(sock!=-1){
 			int cmd[2];
+			int len;
 			cmd[0]=CMD_TRACE;
 			cmd[1]=getpid();
-			char* ans=NULL;
+			char ans[PATH_MAX];//avoid malloc
 			if(stwrite(sock, cmd, sizeof(int)*2)){
 				dbg("write cmd %d failed\n", cmd[0]);
 			} else if(stwritestr(sock, cmdstr)){
 				dbg("write cmd %s failed\n", cmdstr);
-			} else if(streadstr(sock, &ans)){
+			} else if(streadint(sock, &len) || len>=PATH_MAX || stread(sock, ans, len)){
 				dbg("read cmd failed\n");
 			} else{
-				info3(" %s\n", ans); free(ans);
+				info3(" %s\n", ans);
 			}
 			close(sock);
 		} else{

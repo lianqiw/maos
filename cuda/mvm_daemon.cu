@@ -202,7 +202,7 @@ static int respond(int sock){
 		mvm_data->nact=nact;
 		mvm_data->ngtot=ngtot;
 		mvm_data->mvm=X(new)(nact, ngtot);
-		stread(sock_mvm, mvm_data->mvm->p, (nact*ngtot)*sizeof(Real));
+		stread(sock_mvm, P(mvm_data->mvm), (nact*ngtot)*sizeof(Real));
 		if(!thread_init_joined){
 			pthread_join(thread_init, NULL);
 			thread_init_joined=1;

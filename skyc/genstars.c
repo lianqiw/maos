@@ -155,7 +155,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 void sortstars(dcell* stars){
 	for(long isky=0; isky<stars->nx*stars->ny; isky++){
 		if(!P(stars,isky)) continue;
-		qsort(P(stars,isky)->p, P(stars,isky)->ny, P(stars,isky)->nx*sizeof(real),
+		qsort(P(P(stars,isky)), P(stars,isky)->ny, P(stars,isky)->nx*sizeof(real),
 			(int(*)(const void*, const void*))sortfun);
 	}
 }

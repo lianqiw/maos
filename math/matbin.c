@@ -28,7 +28,7 @@
 void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 	if(ncol==-1){//initialize async data
 		if(A && !A->async){
-			((X(mat)*)A)->async=async_init(fp, sizeof(T), M_T, A->header, A->p, A->nx, A->ny);
+			((X(mat)*)A)->async=async_init(fp, sizeof(T), M_T, A->header, P(A), A->nx, A->ny);
 		}else{
 			dbg("%s: async is already initialized or A=%p is empty\n", zfname(fp), A);
 		}
@@ -36,7 +36,7 @@ void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 		if(ncol>A->ny) ncol=A->ny;
 		async_write(A->async, A->nx*ncol*sizeof(T), 0);
 	}else if(fp){//normal writing
-		writearr(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?A->p:NULL, A?A->nx:0, A?A->ny:0);
+		writearr(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?P(A):NULL, A?A->nx:0, A?A->ny:0);
 	}else{
 		dbg("writedata called with no fp or async information.\n");
 	}
@@ -60,7 +60,7 @@ X(mat)* X(readdata)(file_t* fp, header_t* header){
 	X(mat)* out=X(new)((long)nx, (long)ny);
 	out->header=header->str; header->str=NULL;
 	if(nx&&ny){
-		readvec(out->p, M_T, header->magic, sizeof(T), nx*ny, fp);
+		readvec(P(out), M_T, header->magic, sizeof(T), nx*ny, fp);
 	}
 	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;

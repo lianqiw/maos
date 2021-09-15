@@ -31,10 +31,10 @@ static dspcell*
 setup_fit_HXF(const fit_t* fit){
 	info("Generating HXF");TIC;tic;
 	if(!fit->xloc) return 0;
-	const int nfit=fit->thetax->nx;
-	const int npsr=fit->xloc->nx;
+	const int nfit=NX(fit->thetax);
+	const int npsr=NX(fit->xloc);
 	dspcell* HXF=dspcellnew(nfit, npsr);
-#pragma omp parallel for collapse(2)
+	OMP_FOR_COLLAPSE(2)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int ips=0; ips<npsr; ips++){
 			const real hsi=P(fit->hs,ifit);
@@ -54,11 +54,11 @@ setup_fit_HXF(const fit_t* fit){
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
 static dspcell*
 setup_fit_HA(fit_t* fit){
-	const int nfit=fit->thetax->nx;
-	const int ndm=fit->aloc->nx;
+	const int nfit=NX(fit->thetax);
+	const int ndm=NX(fit->aloc);
 	dspcell* HA=dspcellnew(nfit, ndm);
 	info("Generating HA ");TIC;tic;
-#pragma omp parallel for collapse(2)
+	OMP_FOR_COLLAPSE(2)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int idm=0; idm<ndm; idm++){
 			const real hs=P(fit->hs,ifit);
@@ -115,7 +115,7 @@ setup_fit_HA(fit_t* fit){
    DMs. Becareful with tip/tilt contraint when using CBS.  */
 static void
 setup_fit_lrt(fit_t* fit){
-	const int ndm=fit->aloc->nx;
+	const int ndm=NX(fit->aloc);
 	fit->NW=dcellnew(ndm, 1);
 	//real fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
 	real fitscl=1./fit->floc->nloc;
@@ -144,8 +144,8 @@ setup_fit_lrt(fit_t* fit){
 		info("Adding piston cr to fit matrix\n");
 		for(int idm=0; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
-			real* p=P(fit->NW,idm)->p+(inw+idm)*nloc;
-			const real* cpl=P(actcpl,idm)->p;
+			real* p=P(P(fit->NW,idm))+(inw+idm)*nloc;
+			const real* cpl=P(P(actcpl,idm));
 			for(int iloc=0; iloc<nloc; iloc++){
 				if(cpl[iloc]>0.1){ //don't count floating or stuck actuators
 					p[iloc]=fitscl;
@@ -160,10 +160,10 @@ setup_fit_lrt(fit_t* fit){
 		factor=fitscl*2./loc_diam(P(fit->aloc,0));
 		for(int idm=1; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
-			real* p=P(fit->NW,idm)->p+(inw+(idm-1)*2)*nloc;
+			real* p=P(P(fit->NW,idm))+(inw+(idm-1)*2)*nloc;
 			real* p2x=p;
 			real* p2y=p+nloc;
-			const real* cpl=P(actcpl,idm)->p;
+			const real* cpl=P(P(actcpl,idm));
 			for(int iloc=0; iloc<nloc; iloc++){
 				if(cpl[iloc]>0.1){
 					p2x[iloc]=P(fit->aloc,idm)->locx[iloc]*factor;/*x tilt */
@@ -204,8 +204,8 @@ setup_fit_lrt(fit_t* fit){
 */
 static void
 setup_fit_matrix(fit_t* fit){
-	const int nfit=fit->thetax->nx;
-	const int ndm=fit->aloc->nx;
+	const int nfit=NX(fit->thetax);
+	const int ndm=NX(fit->aloc);
 	if(ndm==0) return;
 
 	dspcell* HA=fit->HA;
@@ -215,7 +215,7 @@ setup_fit_matrix(fit_t* fit){
 	/*Assemble Fit matrix. */
 	if(!fit->FR.M&&fit->flag.assemble){
 		if(fit->HXF){//not idealfit.
-			const int npsr=fit->xloc->nx;
+			const int npsr=NX(fit->xloc);
 			info("Building fit->FR\n");
 			fit->FR.M=cellnew(ndm, npsr);
 			dspcell* FRM=(dspcell*)fit->FR.M;
@@ -233,7 +233,7 @@ setup_fit_matrix(fit_t* fit){
 				}
 			}
 			fit->FR.V=dcellnew(npsr, 1);
-			dmat** FRV=fit->FR.V->p;
+			dmat** FRV=P(fit->FR.V);
 			//FRV
 			for(int ips=0; ips<npsr; ips++){
 				int nloc=P(fit->xloc,ips)->nloc;
@@ -241,8 +241,8 @@ setup_fit_matrix(fit_t* fit){
 				for(int ifit=0; ifit<nfit; ifit++){
 					/*notice the sqrt. */
 					if(fabs(P(fit->wt,ifit))<1.e-12) continue;
-					dspmulvec(FRV[ips]->p+ifit*nloc,
-						P(HXF, ifit, ips), fit->W1->p, 't',
+					dspmulvec(PCOL(FRV[ips], ifit),
+						P(HXF, ifit, ips), P(fit->W1), 't',
 						sqrt(P(fit->wt,ifit)));
 				}
 			}
@@ -254,7 +254,7 @@ setup_fit_matrix(fit_t* fit){
 		}
 		/*Always need FR.U as it is used to do FL.U, FL.V */
 		fit->FR.U=dcellnew(ndm, 1);
-		dmat** FRU=fit->FR.U->p;
+		dmat** FRU=P(fit->FR.U);
 
 		for(int idm=0; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
@@ -262,8 +262,8 @@ setup_fit_matrix(fit_t* fit){
 			for(int ifit=0; ifit<nfit; ifit++){
 			/*notice the sqrt. */
 				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
-				dspmulvec(FRU[idm]->p+ifit*nloc,
-					P(HA, ifit, idm), fit->W1->p, 't',
+				dspmulvec(PCOL(FRU[idm], ifit),
+					P(HA, ifit, idm), P(fit->W1), 't',
 					sqrt(P(fit->wt,ifit)));
 			}
 		}

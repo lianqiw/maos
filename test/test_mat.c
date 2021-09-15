@@ -33,7 +33,7 @@ static void test_dpinv(){
     writebin(Ap,"Ap");
     dmat *ApA=NULL;
     dmm(&ApA,0,Ap,A,"nn",1);
-    dsp *spw=dspnewdiag(w->nx, w->p, 1);
+    dsp *spw=dspnewdiag(w->nx, P(w), 1);
     dmat *Ap2=dpinv(A,spw);
     writebin(w,"w");
     writebin(spw,"spw");
@@ -51,7 +51,7 @@ static void test_dcp(){
     toc("dcp");
     tic;
     for(int i=0; i<100; i++){
-	memcpy(A->p,B->p,A->nx*A->ny*sizeof(real));
+	memcpy(P(A),P(B),A->nx*A->ny*sizeof(real));
     }
     toc("cpy");
     tic;

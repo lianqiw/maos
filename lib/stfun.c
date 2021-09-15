@@ -43,7 +43,7 @@ stfun_t* stfun_init(long nx, long ny, real* amp){
 
 	dmat* damp=dnew(nx, ny);;
 	if(amp){
-		memcpy(damp->p, amp, nx*ny*sizeof(real));
+		memcpy(P(damp), amp, nx*ny*sizeof(real));
 	} else{
 		dset(damp, 1);
 	}
@@ -57,8 +57,8 @@ stfun_t* stfun_init(long nx, long ny, real* amp){
  */
 void stfun_push(stfun_t* A, dmat* opd){
 	A->count++;
-	long ny=A->hat0->ny/2;/*maybe smaller than opd. */
-	long nx=A->hat0->nx/2;
+	long ny=NY(A->hat0)/2;/*maybe smaller than opd. */
+	long nx=NX(A->hat0)/2;
 	long nx2=nx>>1;
 	long ny2=ny>>1;
 	dmat* popd=opd;
@@ -76,7 +76,7 @@ void stfun_push(stfun_t* A, dmat* opd){
 	}
 	cfft2(A->hat1, -1);
 	cfft2(A->hat2, -1);
-	for(long i=0; i<A->hat1->nx*A->hat1->ny; i++){
+	for(long i=0; i<NX(A->hat1)*NY(A->hat1); i++){
 	/*real(t2*t0*)-t1*t1* */
 		P(A->hattot,i)+=creal(P(A->hat2,i)*conj(P(A->hat0,i)))
 			-P(A->hat1,i)*conj(P(A->hat1,i));
@@ -92,8 +92,8 @@ dmat* stfun_finalize(stfun_t* A){
 	cfft2i(A->hat0, 1);
 	cfftshift(A->hattot);
 	cfftshift(A->hat0);
-	long nx=A->hat0->nx;
-	long ny=A->hat0->ny;
+	long nx=NX(A->hat0);
+	long ny=NY(A->hat0);
 	dmat* st=dnew(nx, ny);
 	dmat* pst=st;
 	cmat* p1=A->hattot;

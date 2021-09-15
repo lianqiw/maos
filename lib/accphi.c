@@ -146,61 +146,61 @@ void prop(thread_t* data){
 	const real displacey=propdata->displacey0+propdata->displacey1;
 	switch(propdata->index){
 	case 1:
-		prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout->p,
+		prop_grid_pts(propdata->mapin, propdata->ptsout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
 			data->start, data->end);
 		break;
 	case 2:
-		prop_grid(propdata->mapin, propdata->locout, propdata->phiout->p,
+		prop_grid(propdata->mapin, propdata->locout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
 			data->start, data->end);
 		break;
 	case 3:
-		prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout->p,
+		prop_grid_stat(propdata->mapin, propdata->ostat, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
 			data->start, data->end);
 		break;
 	case 4:
-		prop_nongrid_cubic(propdata->locin, propdata->phiin->p,
-			propdata->locout, propdata->phiout->p,
+		prop_nongrid_cubic(propdata->locin, P(propdata->phiin),
+			propdata->locout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
 			data->start, data->end);
 		break;
 	case 5:
-		prop_nongrid_map_cubic(propdata->locin, propdata->phiin->p,
+		prop_nongrid_map_cubic(propdata->locin, P(propdata->phiin),
 			propdata->mapout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
 			data->start, data->end);
 		break;
 	case 6:
-		prop_nongrid_pts_cubic(propdata->locin, propdata->phiin->p,
-			propdata->ptsout, propdata->phiout->p,
+		prop_nongrid_pts_cubic(propdata->locin, P(propdata->phiin),
+			propdata->ptsout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
 			data->start, data->end);
 		break;
 	case 7:
-		prop_nongrid(propdata->locin, propdata->phiin->p,
-			propdata->locout, propdata->phiout->p,
+		prop_nongrid(propdata->locin, P(propdata->phiin),
+			propdata->locout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
 			data->start, data->end);
 		break;
 	case 8:
-		prop_nongrid_map(propdata->locin, propdata->phiin->p,
+		prop_nongrid_map(propdata->locin, P(propdata->phiin),
 			propdata->mapout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
 			data->start, data->end);
 		break;
 	case 9:
-		prop_nongrid_pts(propdata->locin, propdata->phiin->p,
-			propdata->ptsout, propdata->phiout->p,
+		prop_nongrid_pts(propdata->locin, P(propdata->phiin),
+			propdata->ptsout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
 			data->start, data->end);
@@ -212,13 +212,13 @@ void prop(thread_t* data){
 			data->start, data->end);
 		break;
 	case 11:
-		prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, propdata->phiout->p,
+		prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
 			data->start, data->end);
 		break;
 	case 12:
-		prop_grid_cubic(propdata->mapin, propdata->locout, propdata->phiout->p,
+		prop_grid_cubic(propdata->mapin, propdata->locout, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
 			data->start, data->end);
@@ -229,7 +229,7 @@ void prop(thread_t* data){
 			propdata->scale, propdata->wrap, data->start, data->end);
 		break;
 	case 14:
-		prop_grid_stat_cubic(propdata->mapin, propdata->ostat, propdata->phiout->p,
+		prop_grid_stat_cubic(propdata->mapin, propdata->ostat, P(propdata->phiout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
 			data->start, data->end);
@@ -285,9 +285,9 @@ void prop(thread_t* data){
     const real dyout=mapout->dy;			\
     const real ox=mapout->ox;				\
     const real oy=mapout->oy;				\
-    real *phiout=mapout->p;					\
-    const int nxout=mapout->nx;				\
-    if(!end) end=mapout->ny;
+    real *phiout=P(mapout);					\
+    const int nxout=NX(mapout);				\
+    if(!end) end=NY(mapout);
 
 #define PREPOUT_STAT						\
     const real dxout  = ostat->dx;			\
@@ -436,8 +436,8 @@ void prop_grid(ARGIN_GRID,
 	PREPIN_GRID(0);
 	PREPOUT_LOC;
 	(void)nxmin; (void)nymin;
-	const int nx=mapin->nx;
-	const int ny=mapin->ny;
+	const int nx=NX(mapin);
+	const int ny=NY(mapin);
 
 	OMPTASK_FOR(iloc, start, end){
 		RUNTIME_LINEAR;
@@ -561,16 +561,16 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	PREPOUT_PTS;
 	OMPTASK_FOR(isa, start, end){
 		RUNTIME_LINEAR;
-		const long iloc0=isa*pts->nx*pts->nx;
+		const long iloc0=isa*NX(pts)*NX(pts);
 		const real ox=pts->origx[isa];
 		const real oy=pts->origy[isa];
-		for(int iy=0; iy<pts->nx; iy++){
+		for(int iy=0; iy<NX(pts); iy++){
 			long iloc=iloc0+iy*pts->nx-1;
 			dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 			if(dplocy>=nymin&&dplocy<=nymax){
 				SPLIT(dplocy, dplocy, nplocy);
 				nplocy1=nplocy+1;
-				for(int ix=0; ix<pts->nx; ix++){
+				for(int ix=0; ix<NX(pts); ix++){
 					iloc++;
 					dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 					if(dplocx>=nxmin&&dplocx<=nxmax){
@@ -642,18 +642,18 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	PREP_CUBIC_PARAM;
 	OMPTASK_FOR(isa, start, end){
 		RUNTIME_CUBIC;
-		const long iloc0=isa*pts->nx*pts->nx;
+		const long iloc0=isa*NX(pts)*NX(pts);
 		const real ox=pts->origx[isa];
 		const real oy=pts->origy[isa];
 
-		for(int iy=0; iy<pts->nx; iy++){
+		for(int iy=0; iy<NX(pts); iy++){
 			long iloc=iloc0+iy*pts->nx-1;
 			dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 			if(dplocy>=nymin&&dplocy<=nymax){
 				SPLIT(dplocy, dplocy, nplocy);
 				dplocy0=1.-dplocy;
 				MAKE_CUBIC_COEFF_Y;
-				for(int ix=0; ix<pts->nx; ix++){
+				for(int ix=0; ix<NX(pts); ix++){
 					iloc++;
 					dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 					if(dplocx>=nxmin&&dplocx<=nxmax){
@@ -788,17 +788,17 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	PREP_CUBIC_PARAM;
 	OMPTASK_FOR(isa, start, end){
 		RUNTIME_CUBIC;
-		const long iloc0=isa*pts->nx*pts->nx;
+		const long iloc0=isa*NX(pts)*NX(pts);
 		const real ox=pts->origx[isa];
 		const real oy=pts->origy[isa];
-		for(int iy=0; iy<pts->nx; iy++){
+		for(int iy=0; iy<NX(pts); iy++){
 			long iloc=iloc0+iy*pts->nx-1;
 			dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 			if(dplocy>=nymin&&dplocy<=nymax){
 				SPLIT(dplocy, dplocy, nplocy);
 				dplocy0=1.-dplocy;
 				MAKE_CUBIC_COEFF_Y;
-				for(int ix=0; ix<pts->nx; ix++){
+				for(int ix=0; ix<NX(pts); ix++){
 					iloc++;
 					dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 					if(dplocx>=nxmin&&dplocx<=nxmax){

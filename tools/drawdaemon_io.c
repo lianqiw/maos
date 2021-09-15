@@ -34,7 +34,8 @@ udp_t udp_client={0};
 int client_port=-1;//client udp port
 in_addr_t client_addr;
 int udp_sock=-1;//server udp socket
-
+float io_time1=0;
+float io_time2=0;
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
 void fmaxmin(const float* p, long n, float* pmax, float* pmin){
@@ -178,8 +179,6 @@ drawdata_t *get_drawdata(char **fig, char **name, int reset){
 		drawdata->xylog[1]='n';
 		drawdata->cumulast=-1;/*mark as unknown. */
 		drawdata->limit_manual=0;
-		drawdata->time=myclockd();
-		
 		drawdata->next=HEAD->next;
 		HEAD->next=drawdata;
 	}else if(reset){
@@ -187,8 +186,6 @@ drawdata_t *get_drawdata(char **fig, char **name, int reset){
 		drawdata->nx=0;
 		drawdata->ny=0;
 		drawdata->npts=0;
-		drawdata->dtime=myclockd()-drawdata->time;
-		drawdata->time+=drawdata->dtime;
 		drawdata->limit_changed=-1;
 		drawdata->drawn=0;
 		free(*fig); *fig=0;
@@ -314,6 +311,7 @@ retry:
 			drawdata->grid=1;
 			if(drawdata->ptsdim[ipts][0]*drawdata->ptsdim[ipts][1]<nptsx*nptsy){
 				drawdata->pts[ipts]=realloc(drawdata->pts[ipts], nptsx*nptsy*byte_float);
+				drawdata->icumu=0;
 			}
 			drawdata->ptsdim[ipts][0]=nptsx;
 			drawdata->ptsdim[ipts][1]=nptsy;
@@ -390,7 +388,6 @@ retry:
 			//currently, points uses real (default to double), while image uses float.
 			//memory in drawdaemon are allocated ALWAYS using float
 			STREADINT(byte_float);
-			info("byte_float=%d\n", byte_float);
 			if(byte_float>8){
 				error("invalid byte_float=%d\n", byte_float);
 			}
@@ -435,7 +432,6 @@ retry:
 		break;
 		case DRAW_END:
 		{
-			
 			if(drawdata->npts>0){
 				drawdata->cumuquad=1;
 				if(drawdata->nstyle>1){

@@ -145,7 +145,7 @@ typedef struct ngsmod_t{
     real ht;      /**<height of upper DM.*/
     real scale;   /**<(1-ht/hs)^-2*/
     real aper_fcp;/**<piston term in focus in plocs.*/
-    real lp2;     /**<LPF coefficient for Rngs->p[1]*/
+    real lp2;     /**<LPF coefficient for P(Rngs,1)*/
     dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
@@ -584,6 +584,7 @@ typedef struct sim_t{
     dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
+    dcell *fsmerr_drift;/**<Drift control of uplink*/
     sho_t **fsmsho;     /**<State of FSM SHO*/
     dcell *fsmreal;    /**<uplink real*/
     servo_t *fsmint;    /**<uplink integrator output.*/
@@ -596,6 +597,7 @@ typedef struct sim_t{
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     real ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
+    dmat *zoomerr_drift; /**<Trombone error signal from i0/ib drift control*/
     dmat *zoomint;    /**<Trombone integrator*/
     dmat *zoomavg;    /**<Trombone averager from gradients*/
     dcell *zoompos;    /**<Trombone position history. for saving*/

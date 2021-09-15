@@ -236,10 +236,10 @@ class cell(Structure):
 class loc(Structure):
     _fields_ = [
         ('id', c_uint32),
-        ('dummy1',  c_void_p), #due to union base
-        ('dummy2',  c_long),
-        ('dummy3',  c_long),
-        ('header', c_char_p),
+        #('dummy1',  c_void_p), #due to union base
+        #('dummy2',  c_long),
+        #('dummy3',  c_long),
+        #('header', c_char_p),
         ('locx',  c_void_p),
         ('locy',  c_void_p),
         ('nloc', c_long),

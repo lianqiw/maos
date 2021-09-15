@@ -148,7 +148,7 @@ static void fft_threads(long nx, long ny){
    the array. So do it before filling in data.
 */
 static void X(fft2plan)(X(mat)* A, int dir){
-	assert(abs(dir)==1&&A&&A->p);
+	assert(abs(dir)==1&&A&&P(A));
 	if(!A->fft){
 		A->fft=mycalloc(1, fft_t);
 	} else if(A->fft->plan[dir+1]) return;
@@ -158,9 +158,9 @@ static void X(fft2plan)(X(mat)* A, int dir){
 	fft_threads(A->nx, A->ny);
 	/*!!fft uses row major mode. so need to reverse order */
 	if(A->nx==1||A->ny==1){
-		A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, COMP(A->p), COMP(A->p), dir, FFTW_FLAGS);
+		A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, COMP(P(A)), COMP(P(A)), dir, FFTW_FLAGS);
 	} else{
-		A->fft->plan[dir+1]=FFTW(plan_dft_2d)(A->ny, A->nx, COMP(A->p), COMP(A->p), dir, FFTW_FLAGS);
+		A->fft->plan[dir+1]=FFTW(plan_dft_2d)(A->ny, A->nx, COMP(P(A)), COMP(P(A)), dir, FFTW_FLAGS);
 	}
 	if(!A->fft->plan[dir+1]){
 		error("Plan is empty\n");
@@ -186,18 +186,18 @@ static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
 	fft_threads(A->nx, A->ny);
 	/*along columns for all columns. */
 	plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
-		COMP(A->p), NULL, 1, nx,
-		COMP(A->p), NULL, 1, nx,
+		COMP(P(A)), NULL, 1, nx,
+		COMP(P(A)), NULL, 1, nx,
 		dir, FFTW_FLAGS);
 /*selected along rows, beginning */
 	plan1d->plan[1]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
-		COMP(A->p), NULL, nx, 1,
-		COMP(A->p), NULL, nx, 1,
+		COMP(P(A)), NULL, nx, 1,
+		COMP(P(A)), NULL, nx, 1,
 		dir, FFTW_FLAGS);
 /*selected along rows, end */
 	plan1d->plan[2]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
-		COMP(A->p)+nx-ncomp/2, NULL, nx, 1,
-		COMP(A->p)+nx-ncomp/2, NULL, nx, 1,
+		COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
+		COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
 		dir, FFTW_FLAGS);
 	if(!plan1d->plan[0]||!plan1d->plan[1]||!plan1d->plan[2]){
 		error("Plan is empty\n");
@@ -211,7 +211,7 @@ static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
    Do 2d FFT transforms.
 */
 void X(fft2)(X(mat)* A, int dir){
-	assert(abs(dir)==1); assert(A&&A->p);
+	assert(abs(dir)==1); assert(A&&P(A));
 	/*do 2d FFT on A. */
 	if(!A->fft||!A->fft->plan[dir+1]){
 		X(fft2plan)(A, dir);//Uses FFTW_ESTIMATE to avoid override data.
@@ -243,7 +243,7 @@ void X(fft2s)(X(mat)* A, int dir){/*symmetrical cfft2. */
 */
 void X(fft2partial)(X(mat)* A, int ncomp, int dir){
 	assert(abs(dir)==1);
-	assert(A&&A->p);
+	assert(A&&P(A));
 	if(!A->fft||!A->fft->plan1d[dir+1]){
 		X(fft2partialplan)(A, ncomp, dir);
 	}
@@ -285,8 +285,8 @@ static void X(cell_fft2plan)(X(cell)* dc, int dir){
 	}
 	fftw_iodim dims[2]={{nx,1,1},{ny,nx,nx}};
 	fftw_iodim howmany_dims={1,1,1};
-	T* restrict p1=P(dc,0)->p;
-	T* restrict p2=P(dc,1)->p;
+	T* restrict p1=P(P(dc,0));
+	T* restrict p2=P(P(dc,1));
 	/*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
 	fft_t* fft=mycalloc(1, fft_t);
 	if(!fft->plan[dir+1]){
@@ -318,16 +318,16 @@ void X(fft1plan_r2hc)(X(mat)* A, int dir){
 	if(A->nx!=1&&A->ny!=1){
 		error("not supported\n");
 	}
-	assert(abs(dir)==1&&A&&A->p);
+	assert(abs(dir)==1&&A&&P(A));
 	if(!A->fft) A->fft=mycalloc(1, fft_t);
 	int FFTW_FLAGS;
 	FFTW_FLAGS=FFTW_ESTIMATE;
 	LOCK_FFT;
 	if(!A->fft->plan[dir+1]){
 		if(dir==-1){
-			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, A->p, A->p, FFTW_R2HC, FFTW_FLAGS);
+			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, P(A), P(A), FFTW_R2HC, FFTW_FLAGS);
 		} else{
-			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, A->p, A->p, FFTW_HC2R, FFTW_FLAGS);
+			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, P(A), P(A), FFTW_HC2R, FFTW_FLAGS);
 		}
 		if(!A->fft->plan[dir+1]){
 			error("fftw_plan_r2r_1d: Plan is empty. Please check FFT library.\n");

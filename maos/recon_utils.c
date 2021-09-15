@@ -60,13 +60,13 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 	int ips1, ips2;
 	if(xb<0){/*do all cells */
 		ips1=0;
-		ips2=xin->nx*xin->ny;
+		ips2=NX(xin)*NY(xin);
 	} else{/*do the specified cell */
 		ips1=xb;
 		ips2=xb+1;
 	}
 	for(int ips=ips1; ips<ips2; ips++){
-	/*for(int ips=0; ips<xin->nx*xin->ny; ips++){ */
+	/*for(int ips=0; ips<NX(xin)*NY(xin); ips++){ */
 		long nx=P(fftxopd, ips)->nx;
 		long ny=P(fftxopd, ips)->ny;
 		if(extra->square){
@@ -75,7 +75,7 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 			dfree(xini);
 		} else{
 			czero(P(fftxopd, ips));
-			cembed_locstat(&P(fftxopd, ips), 0, P(extra->xloc, ips), P(xin, ips)->p, alpha, 0);
+			cembed_locstat(&P(fftxopd, ips), 0, P(extra->xloc, ips), P(P(xin, ips)), alpha, 0);
 		}
 		cfft2(P(fftxopd, ips), -1);
 		ccwmd(P(fftxopd, ips), P(invpsd, ips), 1);
@@ -86,7 +86,7 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 			creal2d(&xouti, 1, P(fftxopd, ips), alpha);
 			dfree(xouti);
 		} else{
-			cembed_locstat(&P(fftxopd, ips), 1, P(extra->xloc, ips), P(*xout, ips)->p, 1, 1);
+			cembed_locstat(&P(fftxopd, ips), 1, P(extra->xloc, ips), P(P(*xout, ips)), 1, 1);
 		}
 	}
 }
@@ -103,22 +103,22 @@ void apply_fractal(dcell** xout, const void* A, const dcell* xin, real alpha, in
 	int ips1, ips2;
 	if(xb<0){/*do all cells */
 		ips1=0;
-		ips2=xin->nx*xin->ny;
+		ips2=NX(xin)*NY(xin);
 	} else{/*do the specified cell */
 		ips1=xb;
 		ips2=xb+1;
 	}
 	for(int ips=ips1; ips<ips2; ips++){
-	/*for(int ips=0; ips<xin->nx*xin->ny; ips++){ */
+	/*for(int ips=0; ips<NX(xin)*NY(xin); ips++){ */
 		dzero(P(extra->xopd, ips));
 		real r0i=extra->r0*pow(extra->wt[ips], -3./5.);
-		dembed_locstat(&P(extra->xopd, ips), 0, P(extra->xloc, ips), P(xin, ips)->p,
+		dembed_locstat(&P(extra->xopd, ips), 0, P(extra->xloc, ips), P(P(xin, ips)),
 			alpha*extra->scale, 0);
 		fractal_inv(P(extra->xopd, ips),
 			P(extra->xloc, ips)->dx, r0i, extra->L0, extra->ninit);
 		fractal_inv_trans(P(extra->xopd, ips),
 			P(extra->xloc, ips)->dx, r0i, extra->L0, extra->ninit);
-		dembed_locstat(&P(extra->xopd, ips), 1, P(extra->xloc, ips), P(*xout, ips)->p, 1, 1);
+		dembed_locstat(&P(extra->xopd, ips), 1, P(extra->xloc, ips), P(P(*xout, ips)), 1, 1);
 	}
 }
 
@@ -170,8 +170,8 @@ static void applyWeach(dmat* xin, const dsp* W0, const dmat* W1, const real wt){
    W0*xin-W1*(W1'*xin);
 */
 void applyW(dcell* xin, const dsp* W0, const dmat* W1, const real* wt){
-	const int nevl=xin->nx;
-	for(int iy=0; iy<xin->ny; iy++){
+	const int nevl=NX(xin);
+	for(int iy=0; iy<NY(xin); iy++){
 		for(int ievl=0; ievl<nevl; ievl++){
 			int ind=iy*nevl+ievl;
 			applyWeach(P(xin, ind), W0, W1, wt[ievl]);
@@ -185,10 +185,10 @@ void applyW(dcell* xin, const dsp* W0, const dmat* W1, const real* wt){
 dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0,
 	const dmat* W1, const dmat* wt){
 
-	assert(wt->nx==B->nx&&wt->ny==1&&A->nx==B->nx);
-	const int nevl=B->nx;
-	dcell* res=dcellnew(A->ny, B->ny);
-	for(int iy=0; iy<B->ny; iy++){
+	assert(NX(wt)==NX(B)&&NY(wt)==1&&NX(A)==NX(B));
+	const int nevl=NX(B);
+	dcell* res=dcellnew(NY(A), NY(B));
+	for(int iy=0; iy<NY(B); iy++){
 		for(int ievl=0; ievl<nevl; ievl++){
 			int ind=iy*nevl+ievl;
 			dmat* xout=NULL;
@@ -196,7 +196,7 @@ dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0,
 			dspmm(&xout, W0, P(B, ind), "nn", P(wt, ievl));
 			dmm(&tmp, 0, W1, P(B, ind), "tn", -1);
 			dmm(&xout, 1, W1, tmp, "nn", P(wt, ievl));
-			for(int ix=0; ix<A->ny; ix++){
+			for(int ix=0; ix<NY(A); ix++){
 				dmm(&P(res, ix, iy), 1, P(A, ievl, ix), xout, "tn", 1);
 			}
 			dfree(xout);
@@ -250,8 +250,8 @@ static void Tomo_prop_do(thread_t* info){
 				real scale=1.-(ht-hc)/hs;
 				if(scale<0) continue;
 				memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
-				xmap.p=P(data->xin, ips)->p;
-				prop_grid_stat(&xmap, recon->ploc->stat, xx->p, 1,
+				xmap.p=P(P(data->xin, ips));
+				prop_grid_stat(&xmap, recon->ploc->stat, P(xx), 1,
 					displace[0], displace[1], scale, 0, 0, 0);
 			} else{
 				dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
@@ -269,7 +269,7 @@ static void Tomo_prop_do(thread_t* info){
 */
 void Tomo_prop(Tomo_T* data, int nthread){
 	thread_t info[nthread];
-	thread_prep(info, 0, data->gg->nx, nthread, Tomo_prop_do, data);
+	thread_prep(info, 0, NX(data->gg), nthread, Tomo_prop_do, data);
 	CALL_THREAD(info, 1);
 }
 /**
@@ -308,7 +308,7 @@ static void Tomo_nea_do(thread_t* info){
 /*Wrapp of Tomo_nea_do for multi-threads*/
 void Tomo_nea(Tomo_T* data, int nthread, int gpt){
 	thread_t info[nthread];
-	thread_prep(info, 0, data->gg->nx, nthread, gpt?Tomo_nea_gpt_do:Tomo_nea_do, data);
+	thread_prep(info, 0, NX(data->gg), nthread, gpt?Tomo_nea_gpt_do:Tomo_nea_do, data);
 	CALL_THREAD(info, 1);
 }
 /**
@@ -330,7 +330,7 @@ static void Tomo_iprop_do(thread_t* info){
 				P(data->xout, ips)=dnew(P(recon->xloc, ips)->nloc, 1);
 			}
 			memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
-			xmap.p=P(data->xout, ips)->p;
+			xmap.p=P(P(data->xout, ips));
 			real ht=P(recon->ht, ips);
 			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 				if(!P(data->gg, iwfs)) continue;
@@ -348,7 +348,7 @@ static void Tomo_iprop_do(thread_t* info){
 				}
 				real scale=1.-(ht-hc)/hs;
 				if(scale<0) continue;
-				prop_grid_stat_transpose(&xmap, recon->ploc->stat, P(data->gg, iwfs)->p, 1,
+				prop_grid_stat_transpose(&xmap, recon->ploc->stat, P(P(data->gg, iwfs)), 1,
 					displace[0], displace[1], scale, 0, 0, 0);
 			}
 		} else{
@@ -384,7 +384,7 @@ static void Tomo_iprop_do(thread_t* info){
  */
 void Tomo_iprop(Tomo_T* data, int nthread){
 	thread_t info[nthread];
-	thread_prep(info, 0, data->xout->nx, nthread, Tomo_iprop_do, data);
+	thread_prep(info, 0, NX(data->xout), nthread, Tomo_iprop_do, data);
 	CALL_THREAD(info, 1);
 }
 /**
@@ -419,7 +419,7 @@ void TomoRt(dcell** gout, const void* A,
 	const dcell* xin, const real alpha){
 	const recon_t* recon=(const recon_t*)A;
 	if(!*gout){
-		*gout=dcellnew(recon->saneai->nx, 1);
+		*gout=dcellnew(NX(recon->saneai), 1);
 	}
 	Tomo_T data={recon, alpha, xin, *gout, NULL, 1};
 	Tomo_prop(&data, recon->nthread);
@@ -450,7 +450,7 @@ void TomoL(dcell** xout, const void* A,
 	TIC_tm;tic_tm;
 	const recon_t* recon=(const recon_t*)A;
 	const parms_t* parms=global->parms;
-	assert(xin->ny==1);/*modify the code for ny>1 case. */
+	assert(NY(xin)==1);/*modify the code for ny>1 case. */
 	dcell* gg=dcellnew(parms->nwfsr, 1);
 	if(!*xout){
 		*xout=dcellnew(recon->npsr, 1);
@@ -484,7 +484,7 @@ void TomoL(dcell** xout, const void* A,
 void FitR(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
 	const fit_t* fit=(const fit_t*)A;
-	const int nfit=fit->thetax->nx;
+	const int nfit=NX(fit->thetax);
 	dcell* xp=dcellnew(nfit, 1);
 
 	if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
@@ -502,14 +502,14 @@ void FitR(dcell** xout, const void* A,
 				if(scale<0) continue;
 				displace[0]=P(fit->thetax, ifit)*ht-P(simu->atm, ips)->vx*isim*parms->sim.dt;
 				displace[1]=P(fit->thetay, ifit)*ht-P(simu->atm, ips)->vy*isim*parms->sim.dt;
-				prop_grid(P(simu->atm, ips), fit->floc, P(xp, ifit)->p,
+				prop_grid(P(simu->atm, ips), fit->floc, P(P(xp, ifit)),
 					atmscale, displace[0], displace[1], scale, 1, 0, 0);
 			}
 		}
 	} else if(fit->HXF){
 		dspcellmm(&xp, fit->HXF, xin, "nn", 1.);
 	} else{/*Do the ray tracing from xloc to ploc */
-		const int npsr=fit->xloc->nx;
+		const int npsr=NX(fit->xloc);
 		for(int ifit=0; ifit<nfit; ifit++){
 			real hs=P(fit->hs, ifit);
 			P(xp, ifit)=dnew(fit->floc->nloc, 1);
@@ -520,13 +520,13 @@ void FitR(dcell** xout, const void* A,
 				if(scale<0) continue;
 				displace[0]=P(fit->thetax, ifit)*ht;
 				displace[1]=P(fit->thetay, ifit)*ht;
-				prop_nongrid(P(fit->xloc, ips), P(xin, ips)->p, fit->floc,
-					P(xp, ifit)->p, 1, displace[0], displace[1], scale, 0, 0);
+				prop_nongrid(P(fit->xloc, ips), P(P(xin, ips)), fit->floc,
+					P(P(xp, ifit)), 1, displace[0], displace[1], scale, 0, 0);
 			}
 		}
 	}
 	//writebin(xp, "CPU_FitR_x1");
-	applyW(xp, fit->W0, fit->W1, fit->wt->p);
+	applyW(xp, fit->W0, fit->W1, P(fit->wt));
 	//writebin(xp, "CPU_FitR_x2");
 	dspcellmm(xout, fit->HA, xp, "tn", alpha);
 	//writebin(*xout, "CPU_FitR_x3");
@@ -541,7 +541,7 @@ void FitL(dcell** xout, const void* A,
 	const fit_t* fit=(const fit_t*)A;
 	dcell* xp=NULL;
 	dspcellmm(&xp, fit->HA, xin, "nn", 1.);
-	applyW(xp, fit->W0, fit->W1, fit->wt->p);
+	applyW(xp, fit->W0, fit->W1, P(fit->wt));
 	dspcellmm(xout, fit->HA, xp, "tn", alpha);
 	dcellfree(xp);xp=NULL;
 	dcellmm(&xp, fit->NW, xin, "tn", 1);
@@ -656,12 +656,12 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 						if(scale<0) continue;
 						if(parms->tomo.square){/*square xloc */
 							memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
-							xmap.p=P(opdr, ips)->p;
-							prop_grid_stat(&xmap, locs->stat, xx->p, 1,
+							xmap.p=P(P(opdr, ips));
+							prop_grid_stat(&xmap, locs->stat, P(xx), 1,
 								dispx, dispy, scale, 0, 0, 0);
 						} else{
-							prop_nongrid(P(recon->xloc, ips), P(opdr, ips)->p, locs,
-								xx->p, 1, dispx, dispy, scale, 0, 0);
+							prop_nongrid(P(recon->xloc, ips), P(P(opdr, ips)), locs,
+								P(xx), 1, dispx, dispy, scale, 0, 0);
 						}
 					}
 				}
@@ -672,8 +672,8 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 						real dispx=P(parms->evl.thetax, ievl)*ht;
 						real dispy=P(parms->evl.thetay, ievl)*ht;
 						if(scale<0) continue;
-						prop_nongrid(P(recon->aloc, idm), P(dmadd, idm)->p, locs,
-							xx->p, 1, dispx, dispy, scale, 0, 0);
+						prop_nongrid(P(recon->aloc, idm), P(P(dmadd, idm)), locs,
+							P(xx), 1, dispx, dispy, scale, 0, 0);
 					}
 				}
 				dmm(&P(simu->ecov, ievl), 1, xx, xx, "nt", 1);
@@ -752,7 +752,7 @@ lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
 	const char* fndead /**<[in] File containing dead actuators*/
 ){
 	dmat* dead=dread("%s", fndead);
-	if(dead->ny!=2&&dead->ny!=3){
+	if(NY(dead)!=2&&NY(dead)!=3){
 		error("%s must contain 2 or 3 columns of data\n", fndead);
 	}
 	loc_create_map(aloc);
@@ -762,12 +762,12 @@ lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
 	real dx1=1./aloc->dx;
 	dmat* ps=dead/*PDMAT*/;
 	lmat* out=lnew(aloc->nloc, 1);
-	for(long jact=0; jact<dead->nx; jact++){
+	for(long jact=0; jact<NX(dead); jact++){
 		long mapx=(long)round((P(ps, jact, 0)-ox)*dx1);
 		long mapy=(long)round((P(ps, jact, 1)-oy)*dx1);
 		long iact=loc_map_get(map, mapx, mapy)-1;
 		if(iact>=0){
-			P(out, iact)=(dead->ny==3?P(ps, jact, 2)*1e9:1);//integer in nm.
+			P(out, iact)=(NY(dead)==3?P(ps, jact, 2)*1e9:1);//integer in nm.
 		}
 	}
 	dfree(dead);
@@ -781,7 +781,7 @@ Estimation. The result will be an average of them.  */
 
 cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 	dmat* pair=parms->cn2.pair;
-	int npair=pair->nx*pair->ny;
+	int npair=NX(pair)*NY(pair);
 	int ipowfs=-1;
 	for(int ind=0; ind<npair; ind++){
 		int iwfs=(int)P(pair, ind);
@@ -800,7 +800,7 @@ cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 	dmat* ht=0;
 	if(parms->cn2.keepht){
 		ht=dnew(parms->atmr.nps, 1);
-		for(int iht=0; iht<ht->nx; iht++){
+		for(int iht=0; iht<NX(ht); iht++){
 			P(ht, iht)=P(parms->atmr.ht, iht);
 		}
 	} else{
@@ -821,7 +821,7 @@ cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 	dfree(hs);
 	dfree(wfstheta);
 	if(cn2est){
-		cn2est->os=dnew(ht->nx, 1);
+		cn2est->os=dnew(NX(ht), 1);
 		if(!parms->cn2.keepht){
 			/*preserve the number of over sampled layers. */
 			int osc=0;
@@ -833,7 +833,7 @@ cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 					}
 				}
 			}
-			for(int iht=0; iht<ht->nx; iht++){
+			for(int iht=0; iht<NX(ht); iht++){
 				if(iht<osc){
 					P(cn2est->os, iht)=2;
 				} else{
@@ -841,7 +841,7 @@ cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 				}
 			}
 		} else{
-			for(int iht=0; iht<ht->nx; iht++){
+			for(int iht=0; iht<NX(ht); iht++){
 				P(cn2est->os, iht)=P(parms->atmr.os, iht);
 			}
 		}
@@ -891,8 +891,8 @@ void cn2est_isim(dcell* cn2res, recon_t* recon, const parms_t* parms, const dcel
 
 		if(cn2res){
 			P(P(cn2res, 0), icn2)=cn2est->r0m;
-			memcpy(PCOL(P(cn2res, 1), icn2), P(cn2est->wtrecon, 0)->p,
-				cn2est->htrecon->nx*sizeof(real));
+			memcpy(PCOL(P(cn2res, 1), icn2), P(P(cn2est->wtrecon, 0)),
+				NX(cn2est->htrecon)*sizeof(real));
 		}
 		if(parms->cn2.tomo){
 			if(parms->cn2.moveht){
@@ -904,7 +904,7 @@ void cn2est_isim(dcell* cn2res, recon_t* recon, const parms_t* parms, const dcel
 			}
 			/*Changes recon parameters. cannot be parallel with tomofit(). */
 			/*wtrecon is referenced so should be updated automaticaly. */
-			if(recon->wt->p!=P(cn2est->wtrecon, 0)->p){
+			if(P(recon->wt)!=P(P(cn2est->wtrecon, 0))){
 				dfree(recon->wt);
 				recon->wt=dref(P(cn2est->wtrecon, 0));
 			}

@@ -71,7 +71,7 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 				+pow(star[jstar].thetay-star[kstar].thetay, 2)<keepout){
 			 /*warning("start %d is too close to %d. use J brightest.\n", jstar, kstar); */
 				if(P(pc, 0, istar)<P(star[kstar].mags,0)){
-					memcpy(star[kstar].mags->p, PCOL(pc, istar)+2, sizeof(real)*nwvl);
+					memcpy(P(star[kstar].mags), PCOL(pc, istar)+2, sizeof(real)*nwvl);
 					star[kstar].thetax=star[jstar].thetax;
 					star[kstar].thetay=star[jstar].thetay;
 				}
@@ -84,7 +84,7 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 			continue;
 		}
 		star[jstar].mags=dnew(nwvl, 1);
-		memcpy(star[jstar].mags->p, PCOL(pc, istar)+2, sizeof(real)*nwvl);
+		memcpy(P(star[jstar].mags), PCOL(pc, istar)+2, sizeof(real)*nwvl);
 		star[jstar].use=mycalloc(parms->maos.npowfs, int);
 		jstar++;
 	}
@@ -231,13 +231,13 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 		for(long ipowfs=0; ipowfs<npowfs; ipowfs++){
 			P(star[istar].siglev,ipowfs)=dnew(nwvl, 1);
 			int iscircle=parms->maos.nsa[ipowfs]<=4?1:0;
-			photon_flux(&parms->skyc.zb, P(star[istar].siglev,ipowfs)->p,
+			photon_flux(&parms->skyc.zb, P(P(star[istar].siglev,ipowfs)),
 				&P(star[istar].siglevtot,ipowfs),
 				&P(star[istar].bkgrnd,ipowfs),
 				NULL, NULL,
 				parms->maos.nwvl,
 				parms->maos.wvl,
-				star[istar].mags->p,
+				P(star[istar].mags),
 				parms->maos.dxsa[ipowfs], iscircle,
 				parms->skyc.pixtheta[ipowfs],
 				parms->maos.dt, parms->maos.za,
@@ -666,7 +666,7 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 					for(int isa=0; isa<nsa; isa++){
 					/*dbg("Scaling WVF isa %d iwvl %d with %g\n", isa, iwvl, P(scale,isa,iwvl)); */
 						for(long istep=0; istep<stari->nstep; istep++){
-							if(pwvfout[istep]->p){
+							if(P(pwvfout[istep])){
 								cscale(P(pwvfout[istep],isa,iwvl), P(scale, isa, iwvl));
 							}
 						}/*istep */

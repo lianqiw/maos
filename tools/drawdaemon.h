@@ -141,9 +141,9 @@ struct drawdata_t{
 	float icumu;/*plot cumulative mean from this time step if cumu!=0 */
 	float icumulast;/*plot cumulative mean from this time step if cumu!=0 */
 	int cumulast;/*=0: we are drawing cumu the first time. */
-	float time;/*The time this data is received*/
-	float dtime;/*The time difference between this data and last data.*/
 };
+extern float io_time1;/*The time this data is received.*/
+extern float io_time2;/*The time last data is received.*/
 extern char* font_name;
 extern float font_size;
 extern cairo_font_slant_t font_style;

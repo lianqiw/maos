@@ -195,7 +195,7 @@ void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, co
 				}
 				DO(CUBL(gemv)(datai->stream[ism], CUBLAS_OP_N, nact, nleft*2,
 					&one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2,
-					1, pbeta, datai->act->p, 1));
+					1, pbeta, P(datai->act), 1));
 #else
 				{
 					const int naeach=128;
@@ -216,7 +216,7 @@ void mvmfull_pipe(const char* fnmvm1, const char* fnmvm2, const char* fnpix1, co
 				for(int ism=0; ism<nsm; ism++){
 					datai->stream[ism].sync();
 				}
-				cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real),
+				cudaMemcpyAsync(P(dmres->p[igpu]), datai->act, nact*sizeof(Real),
 					D2H, datai->stream[0]);
 
 			}

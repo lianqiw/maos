@@ -270,12 +270,24 @@ static inline int atomicadd(int *ptr, int val){
 //For those that is only good for icc, use the following
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER) 
 #define ICCTASK_FOR(index, start,end, extra...)	\
-    OMPTASK_FOR(index,start,end,extra)
+        OMPTASK_FOR(index,start,end,extra)
 #define ICCTASK_END OMPTASK_END
 #else
 #define ICCTASK_FOR(index,start,end, extra...)	\
     for(long index=start; index<end; index++)
 #define ICCTASK_END 
+#endif
+
+#define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
+#if _OPENMP>=201511 //version>=4.5 //task loop has implicit group
+#define OMP_FOR             expect_level(1);DO_PRAGMA(omp taskloop default(shared) ) 
+#define OMP_FOR_COLLAPSE(n) expect_level(1);DO_PRAGMA(omp taskloop default(shared) collapse(n)) 
+#elif defined(_OPENMP)
+#define OMP_FOR             expect_level(0);DO_PRAGMA(omp parallel for default(shared) )
+#define OMP_FOR_COLLAPSE(n) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n))
+#else
+#define OMP_FOR
+#define OMP_FOR_COLLAPSE(n)
 #endif
 
 #endif //ifndef AOS_LIB_THREAD_H

@@ -61,10 +61,10 @@ typedef struct cell{
         struct cell base[1];\
         struct{\
             ARR(T);					\
+            mem_t *mem; /**< Memory management*/	\
+            async_t *async; /**<async io*/\
         };\
-    };\
-    mem_t *mem; /**< Memory management*/	\
-    async_t *async /**<async io*/
+    }\
 
 #define MATDEF(T,S) typedef struct S{MATARR(T);} S
 
@@ -77,13 +77,13 @@ typedef struct cell{
             long nx;             /**<number of rows */			        \
             long ny;             /**<number of columns */			    \
             char *header;        /**<header*/				            \
+            char *fn;            /**<The file, to be saved upon free*/  \
+            long nzmax;          /**<maximum number of entries */		\
+            spint *restrict pp;  /**<col indices (size nzmax)  */       \
+            spint *restrict pi;  /**<row indices, size nzmax */		    \
+            int *nref;           /**<reference counting for px, pp, pi*/\
         };\
-    };/*put type specific data outside of union to avoid confusion*/\
-    char *fn;            /**<The file, to be saved upon free*/  \
-    long nzmax;          /**<maximum number of entries */		\
-    spint *restrict pp;  /**<col indices (size nzmax)  */       \
-    spint *restrict pi;  /**<row indices, size nzmax */		    \
-    int *nref;           /**<reference counting for px, pp, pi*/\
+    };/*todo: padding base to the maximum size. Make sure to update python ctypes definition as well*/\
 }S
 
 
@@ -168,19 +168,19 @@ typedef struct loc_t{
         struct cell base[1];
         struct{
             M_ID id;
+            real* locx;  /**< x coordinates of each point*/
+            real* locy;  /**< y coordinates of each point*/
+            long nloc;   /**< number of points*/
+            real dx;     /**< Sampling along x*/
+            real dy;     /**< Sampling along y*/
+            real ht;     /**< Conjugation height of the loc grid.*/
+            real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
+            locstat_t* stat;/**<points to column statistics*/
+            map_t* map;    /**< point to the map used for identifying neihboring points.*/
+            int npad;      /*padding when create map*/
+            int* nref;       /**<Reference counting*/
         };
     };
-    real* locx;  /**< x coordinates of each point*/
-    real* locy;  /**< y coordinates of each point*/
-    long nloc;   /**< number of points*/
-    real dx;     /**< Sampling along x*/
-    real dy;     /**< Sampling along y*/
-    real ht;     /**< Conjugation height of the loc grid.*/
-    real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
-    locstat_t* stat;/**<points to column statistics*/
-    map_t* map;    /**< point to the map used for identifying neihboring points.*/
-    int npad;      /*padding when create map*/
-    int* nref;       /**<Reference counting*/
 }loc_t;
 /**
    low left point of each subaperture.
@@ -192,26 +192,26 @@ typedef struct pts_t{
         struct cell base[1];
         struct{
             M_ID id;
+            real* origx; /**<The x origin of each subaperture*/
+            real* origy; /**<The y origin of each subaperture*/
+            long nsa;      /**<number of subapertures.*/
+            union{
+                real dsa;    /**<side length of subaperture*/
+                real dsax;   /**<side length of subaperture*/
+            };
+            real dsay;   /**<side length of subaperture*/
+            real dummy1; /**<Place holder*/
+            real dummy2;  /**<Place holder*/
+            locstat_t* stat;/**<padding so that we can be casted to loc_t*/
+            map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
+            int npad;      /*padding when create map*/
+            int* nref;     /**<Reference counting*/
+            int nx;        /**<number of cols per subaperture*/
+            int ny;        /**<number of rows per subaperture*/
+            real dx;     /**<sampling of points in each subaperture*/
+            real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
         };
     };
-    real* origx; /**<The x origin of each subaperture*/
-    real* origy; /**<The y origin of each subaperture*/
-    long nsa;      /**<number of subapertures.*/
-    union{
-        real dsa;    /**<side length of subaperture*/
-        real dsax;   /**<side length of subaperture*/
-    };
-    real dsay;   /**<side length of subaperture*/
-    real dummy1; /**<Place holder*/
-    real dummy2;  /**<Place holder*/
-    locstat_t* stat;/**<padding so that we can be casted to loc_t*/
-    map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
-    int npad;      /*padding when create map*/
-    int* nref;     /**<Reference counting*/
-    int nx;        /**<number of cols per subaperture*/
-    int ny;        /**<number of rows per subaperture*/
-    real dx;     /**<sampling of points in each subaperture*/
-    real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;
 
 #define CELLDEF(T,S) typedef struct S{		\
@@ -256,7 +256,26 @@ CELLDEF(rmapcell, rmapccell);
 CELLDEF(loccell, locccell);
 
 //CELLDEF(cell, cell);
-
+/*
+    Reshape array without altering number of elements.
+*/
+#define reshape(in, nx_, ny_) \
+if(in){\
+    long nx__=nx_;/*preserve input value*/\
+    long ny__=ny_;\
+    if(PN(in)==nx__*ny__){\
+        in->nx=nx__;\
+        in->ny=ny__;\
+    } else if(nx__>0 && PN(in)%nx__==0){\
+        in->nx=nx__;\
+        in->ny=PN(in)/nx__;\
+        if(ny__>0){\
+            warning("ny=%ld is invalid, use %ld instead\n", ny__, in->ny);\
+        }\
+    } else{\
+        error("Must not change number of elements, aborted.\n");\
+    }\
+}
 #undef ARR
 #undef CELLARR
 #undef MATARR
@@ -312,7 +331,7 @@ static inline long index_col(long iy, long nx, long ny){
     Return number of cols (outer dimension)
  */
 
-#define P0(A)       (A)->p
+#define P0(A)       (A)->p //cannot do test here, bothers memcpy
 #define P1(A,i)     (A)->p[index_1d((i),        (A)->nx, (A)->ny)]
 #define P2(A,ix,iy) (A)->p[index_2d((ix), (iy), (A)->nx, (A)->ny)]
 #define P3(Ac,ix,iy,icx) P2(P1(Ac,icx),ix,iy)
@@ -324,13 +343,32 @@ static inline long index_col(long iy, long nx, long ny){
 
 //Define indexing using wrapping. 
 #define P_GET3(_0,_1,_2,_3,NAME,...) NAME
+#define PR1(A,ix)    P1((A), (((A)->nx==1 && (A)->ny==1)?0:ix))
 #define PR2(A,ix,iy) P2((A), ((A)->nx==1?0:ix), ((A)->ny==1?0:iy))
-#define PR1(A,ix,iy) P1((A), (((A)->nx==1 && (A)->ny==1)?0:ix))
 #define PR(...) P_GET3(_0,__VA_ARGS__,PR2,PR1,P0)(__VA_ARGS__)
 #define PCOLR(A,iy) PCOL((A),((A)->ny==1?0:iy))
 
 //Return Number of elements
-#define PN(A)  ((A)?(A)->nx*(A)->ny:0)
-#define NX(A) ((A)?(A)->nx:0)
-#define NY(A) ((A)?(A)->ny:0)
+#define PN0(A)       ((A)?((A)->nx*(A)->ny):0)
+#define NX0(A)       ((A)?(A)->nx:0)
+#define NY0(A)       ((A)?(A)->ny:0)
+
+//Do not do checking which slows done loops a lot
+#define PN1(A,i)     PN0(P1(A,i))
+#define PN2(A,ix,iy) PN0(P2(A,ix,iy))
+#define PN(...)      P_GET3(_0,__VA_ARGS__,PN2,PN1,PN0)(__VA_ARGS__)
+
+#define NX1(A,i)     NX0(P1(A,i))
+#define NX2(A,ix,iy) NX0(P2(A,ix,iy))
+#define NX(...)      P_GET3(_0,__VA_ARGS__,NX2,NX1,NX0)(__VA_ARGS__)
+
+#define NY1(A,i)     NY0(P1(A,i))
+#define NY2(A,ix,iy) NY0(P2(A,ix,iy))
+#define NY(...)      P_GET3(_0,__VA_ARGS__,NY2,NY1,NY0)(__VA_ARGS__)
+
+//Check non-empty array
+#define NE0(A)       ((A) && (A)->nx && (A)->ny)
+#define NE1(A,i)     ((A) && NE0(P(A,i)))
+#define NE2(A,ix,iy) ((A) && NE0(P(A,ix,iy)))
+#define NE(...)      P_GET3(_0,__VA_ARGS__,NE2,NE1,NE0)(__VA_ARGS__)
 #endif

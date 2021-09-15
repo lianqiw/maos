@@ -62,7 +62,7 @@ void wfsints(thread_t* thread_data){
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;
 	const int notf=MAX(notfx, notfy);
-	const int nopd=powfs[ipowfs].pts->nx;
+	const int nopd=NX(powfs[ipowfs].pts);
 	const int nxsa=nopd*nopd;
 	const int nwvf=nopd*parms->powfs[ipowfs].embfac;
 	const int use1d=(nwvf>2*notfy?1:0)&&(!hasllt)&&(!lltopd);
@@ -77,7 +77,7 @@ void wfsints(thread_t* thread_data){
 	cmat* lotfc=NULL;
 	cmat* lwvf=NULL;
 	/*this coefficient normalize the complex psf so its abs2 sum to 1.*/
-	real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(powfs[ipowfs].pts->nx*nwvf);
+	real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(NX(powfs[ipowfs].pts)*nwvf);
 	/*normalized pistat. notf is due to a pair of FFT on psf. */
 	real norm_pistat=norm_psf*norm_psf/((real)notf*notf);
 	/*this notfx*notfy is due to cfft2 after cwm and detector transfer function. */
@@ -101,7 +101,7 @@ void wfsints(thread_t* thread_data){
 	}
 	/* there is uplink beam */
 	if(lltopd){
-		const int nlx=powfs[ipowfs].llt->pts->nx;
+		const int nlx=NX(powfs[ipowfs].llt->pts);
 		const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 		lwvf=cnew(nlwvf, nlwvf);
 		if(nlwvf!=notf){
@@ -115,30 +115,30 @@ void wfsints(thread_t* thread_data){
 	ccell* psfout=data->psfout;
 	/* need to output psf time history */
 	if(psfout){
-		fftpsfout=cnew(psf->nx, psf->ny);
+		fftpsfout=cnew(NX(psf), NY(psf));
 	}
 	real* gx=NULL; real* gy=NULL;
 	/* need to output pixel itnensity averages */
 	if(pistatout){
-		assert(pistatout->nx==nsa&&pistatout->ny==nwvl);
-		psftmp=cnew(psf->nx, psf->ny);
+		assert(NX(pistatout)==nsa&&NY(pistatout)==nwvl);
+		psftmp=cnew(NX(psf), NY(psf));
 		/* the gradient reference for pistatout*/
 		if(data->gradref){
-			gx=data->gradref->p;
+			gx=P(data->gradref);
 			gy=gx+nsa;
 		}
 	}
-	real* realamp=P(powfs[ipowfs].realamp,wfsind)->p;
+	real* realamp=P(P(powfs[ipowfs].realamp,wfsind));
 	TIM0;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		const real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
 		const real dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;//: 1/dtheta
 		/* uplink llt opd*/
 		if(lltopd){
-			const int nlx=powfs[ipowfs].llt->pts->nx;
+			const int nlx=NX(powfs[ipowfs].llt->pts);
 			const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 			/*embed opd to compute complex pupil function*/
-			cembed_wvf(lwvf, lltopd->p, powfs[ipowfs].llt->amp->p, nlx, nlx, wvl, 0);
+			cembed_wvf(lwvf, P(lltopd), P(powfs[ipowfs].llt->amp), nlx, nlx, wvl, 0);
 			/*turn to complex psf*/
 			cfft2(lwvf, -1);
 			/*turn to psf*/
@@ -158,7 +158,7 @@ void wfsints(thread_t* thread_data){
 			/*lotfc has peak nlwvf*nlwvf in corner. */
 			cscale(lotfc, 1./(real)((long)nlwvf*nlwvf));/*max of 1 */
 		}
-		int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
+		int multi_nominal=(NX(powfs[ipowfs].dtf[iwvl].si)==nsa);
 		/* nominal and si are used to sampled PSF onto detector pixels */
 		cmat* nominal=NULL;
 		dsp* si=NULL;
@@ -192,7 +192,7 @@ void wfsints(thread_t* thread_data){
 			}
 			int ioffset=isa*nxsa;
 			/*embed amp/opd to complex wvf with a embedding factor of 2. */
-			cembed_wvf(wvf, opd->p+ioffset,
+			cembed_wvf(wvf, P(opd)+ioffset,
 				realamp+ioffset, nopd, nopd,
 				P(parms->powfs[ipowfs].wvl,iwvl), 0);
 			TIM(1);
@@ -264,7 +264,7 @@ void wfsints(thread_t* thread_data){
 				/*max(otf) is 1 after multiply with norm. peak in corner  */
 				cfft2(otf, 1);
 				/*Now peak in center because nominal is pre-treated.  */
-				dspmulcreal(P(ints,isa)->p, si, otf->p, P(wvlwts,iwvl)*norm_ints);
+				dspmulcreal(P(P(ints,isa)), si, P(otf), P(wvlwts,iwvl)*norm_ints);
 			}
 			TIM(6);
 		}/*isa */

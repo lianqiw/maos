@@ -713,6 +713,8 @@ static int respond(int sock){
 				if(irun->status.info==S_WAIT){//wait up the process.
 					stwriteint(irun->sock, S_START);
 				}
+				irun->status.info=S_UNKNOWN;
+				monitor_send(irun, NULL);
 			} else{
 				running_remove(pid, S_KILLED);
 			}
@@ -751,9 +753,9 @@ static int respond(int sock){
 				socket_save(sock_save, pid);
 			}
 		} else if(pid<0){//send existing sock to draw()
-			int sock_save=socket_get(-pid);
+			int sock_save=socket_get(-pid);//drawdaemon with the same session id.
 			if(sock_save==-1){
-				sock_save=socket_get(0);
+				sock_save=socket_get(0);//available drawdaemon with no session id.
 			}
 			dbg_time("(%d) received socket request, sock_saved=%d\n", sock, sock_save);
 

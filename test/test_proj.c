@@ -34,7 +34,7 @@ static void test_grid_proj(){
     real by=P(tmp,1);
     dfree(tmp);
     rmap_t *mapin=mycalloc(1,rmap_t);
-    mapin->p=junk->p;
+    P(mapin)=P(junk);
     mapin->ox=P(X,0);
     mapin->oy=P(Y,0);
     mapin->dx=P(X,1)-P(X,0);
@@ -63,9 +63,9 @@ static void test_grid_proj(){
     
     dmat *amp=dread("aper_amp.bin");
     dmat *phi2=dnew(loc2->nloc,1);
-    proj_rect_grid(phi2->p,mapin,M_PI*0.75,M_PI*0.5,
+    proj_rect_grid(P(phi2),mapin,M_PI*0.75,M_PI*0.5,
 		   loc2,-r_exitpupil/r_pupil,r_exitpupil/r_pupil,
-		   amp->p,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
+		   P(amp),-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
     /*drawopdamp("test_proj",loc2,phi2,amp,"phi"); */
     
     writebin(phi2,"phi");
