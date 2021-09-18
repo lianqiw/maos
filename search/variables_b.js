@@ -1,7 +1,6 @@
 var searchData=
 [
   ['m',['M',['../kalman_8h.html#ae2aeabf3a7c79c16c9bd76c1a1caaaa7',1,'kalman_t::M()'],['../muv_8h.html#a788f22a3be5e5bc809459f3be177b98a',1,'muv_t::M()']]],
-  ['map',['map',['../type_8h.html#ac56220a98267328ad973d6c842d07156',1,'loc_t::map()'],['../type_8h.html#a4f0e14cab60eb534da9a796a50aeb7b9',1,'pts_t::map()']]],
   ['mask',['mask',['../cn2est_8h.html#a3fb3eee55725a2837bdd280aff4fef62',1,'cn2est_t']]],
   ['maxit',['maxit',['../muv_8h.html#a01fa5335b5adf8b7689f3e09bdb97760',1,'muv_t::maxit()'],['../parms_8h.html#a5be7bf62274b812a85a2d88af53abbdd',1,'tomo_cfg_t::maxit()'],['../parms_8h.html#a7c7f2b7b6ffa94243467f9d33797b27a',1,'fit_cfg_t::maxit()'],['../parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd',1,'lsr_cfg_t::maxit()']]],
   ['maxthread',['MAXTHREAD',['../process_8h.html#aaf201d9c154f29dd2853b04a1ec9533f',1,'process.c']]],
@@ -10,7 +9,6 @@ var searchData=
   ['mccp',['MCCP',['../maos_2types_8h.html#a19b11645d2b5beb485409dc0d18a3416',1,'ngsmod_t']]],
   ['mccu',['MCCu',['../maos_2types_8h.html#ac538ab602aefc638055c95ae48c7795e',1,'ngsmod_t']]],
   ['mdata',['Mdata',['../muv_8h.html#aa30689f9fb9ae039a0fc04175ba7134d',1,'muv_t']]],
-  ['mem',['mem',['../type_8h.html#afcfc436a5cf203a9d4a1855b00ea1db4',1,'smat::mem()'],['../type_8h.html#a381f4bfc7935fcbd9f0a380c8a166b88',1,'zmat::mem()'],['../type_8h.html#ace7f877fd34c3f699d35a6a81c081a26',1,'dmat::mem()'],['../type_8h.html#a33b4349cf54302d233ab43e5b272b4f8',1,'cmat::mem()'],['../type_8h.html#a95fa1e2213888b5415c204febbe5a49f',1,'lmat::mem()'],['../type_8h.html#aad75f2a38593e510766ad8d6dfee6e04',1,'imat::mem()'],['../type_8h.html#a68ced55693dcd27c49dc3ae615eca07e',1,'map_t::mem()'],['../type_8h.html#a3114add9e867676ae76013f4210a01b9',1,'rmap_t::mem()']]],
   ['merr_5flo2',['Merr_lo2',['../maos_2types_8h.html#a4edeb61820d6ef51499a737a6c907299',1,'sim_t']]],
   ['merr_5flo_5fstore',['Merr_lo_store',['../maos_2types_8h.html#ade788c0b0681a6cd1dec0a9620e0fc53',1,'sim_t']]],
   ['merrhist',['merrhist',['../servo_8h.html#a25ac4e49bfce258074fbd968332d34e2',1,'servo_t']]],

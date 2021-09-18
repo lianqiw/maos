@@ -48,7 +48,6 @@ var searchData=
   ['srsa',['srsa',['../maos_2types_8h.html#ac30143607f18cf7c2993d5a019a21313',1,'powfs_t']]],
   ['srsamax',['srsamax',['../maos_2types_8h.html#a1578360552fcb598c2d42d3131131d81',1,'powfs_t']]],
   ['start',['start',['../parms_8h.html#aa3b6c743a591b326d06c5d2e42d428f0',1,'sim_cfg_t']]],
-  ['stat',['stat',['../type_8h.html#aeefce377653b1be3d342783286600d47',1,'loc_t::stat()'],['../type_8h.html#ae6b0281a2022f3f67336d6d521d0dff9',1,'pts_t::stat()']]],
   ['stateptr',['stateptr',['../structmt__state.html#aee0052353c8cec5ac527484928f36745',1,'mt_state']]],
   ['statevec',['statevec',['../structmt__state.html#a11de820957450a4b49de2e90f046f596',1,'mt_state']]],
   ['status',['status',['../maos_2types_8h.html#a31c5bb23de574b69dcdb2fc8730a11e8',1,'sim_t']]],

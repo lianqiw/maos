@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['matarr',['MATARR',['../type_8h.html#a2e62a38d7281e7d3eb937e1bd9bd9b38',1,'type.h']]]
+  ['nx',['NX',['../type_8h.html#afe7fbb6b2b187cd6e7fb2de743368378',1,'type.h']]],
+  ['ny',['NY',['../type_8h.html#a740ad3c2e76d06da584ebe3328750115',1,'type.h']]]
 ];

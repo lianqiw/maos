@@ -142,8 +142,6 @@ var searchData=
   ['loctransform',['loctransform',['../loc_8h.html#a518b3075429e9c48d1a7fad02c88bcf6',1,'loc.c']]],
   ['loctransform2',['loctransform2',['../loc_8h.html#a16ac8b0fd6ef604a4d999cac3d1b0bf2',1,'loc.c']]],
   ['locwritedata',['locwritedata',['../loc_8h.html#a6b18e8ba6f4e742d165285096127f677',1,'loc.c']]],
-  ['locx',['locx',['../type_8h.html#a056ba180142ca19558f74c3ac8d2e222',1,'loc_t']]],
-  ['locy',['locy',['../type_8h.html#a1a5d6b9152829ba7a7af0fa050ba460e',1,'loc_t']]],
   ['lookup_5fhost',['lookup_host',['../scheduler__client_8h.html#ada4498265f5e79cf1d2362dded5b83b3',1,'scheduler_client.c']]],
   ['lopowfs',['lopowfs',['../parms_8h.html#a46bd31431f11f209589d74e3be88e305',1,'parms_t']]],
   ['lowfs_5fgtilt',['lowfs_gtilt',['../maos_2types_8h.html#ad713f407bb4f48cd12d6bc49747a1f8b',1,'recon_t']]],

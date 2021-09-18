@@ -1,7 +1,5 @@
 var type_8h_structmap__t =
 [
-    [ "mem", "type_8h.html#a68ced55693dcd27c49dc3ae615eca07e", null ],
-    [ "async", "type_8h.html#a4becd34cbaf2a77cc1118b5a34bfd606", null ],
     [ "ox", "type_8h.html#a34eb928be06a75df224949c753beef8f", null ],
     [ "oy", "type_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159", null ],
     [ "dx", "type_8h.html#ae181f26dba81f910257529c82596f699", null ],

@@ -19,14 +19,14 @@ var mkdtf_8h =
     ] ],
     [ "etf_t", "mkdtf_8h.html#structetf__t", [
       [ "etf", "mkdtf_8h.html#a01fca37394bea435cdd481c6af060af1", null ],
-      [ "hs", "mkdtf_8h.html#a3705a423311b167c48b7e55b2770bc4f", null ],
+      [ "hs", "mkdtf_8h.html#a2f466c101dff4a5f95705d14154b6b27", null ],
       [ "icol", "mkdtf_8h.html#a951b28fa012fe5115c9edc6dedc05d4f", null ],
       [ "nwvl", "mkdtf_8h.html#a3fcb5545d0b241bfd10256e1956fd79f", null ]
     ] ],
     [ "dtf_free", "mkdtf_8h.html#a3a970db34227c79d8b55302019889911", null ],
     [ "etf_free", "mkdtf_8h.html#a74e74e9b6320fc56da458c784afd7368", null ],
     [ "mkdtf", "mkdtf_8h.html#a8b787112cceef98c1a2c1aed9362ead9", null ],
-    [ "mketf", "mkdtf_8h.html#ac4a76f082321c1a4625ff8461917c57e", null ],
+    [ "mketf", "mkdtf_8h.html#a36eece1fba4d03e3d4a41138d893d73e", null ],
     [ "dtf_free_do", "mkdtf_8h.html#aebceaa4b5aa6ca6e7aaa011d7dea2bc5", null ],
     [ "etf_free_do", "mkdtf_8h.html#ad2d2722feb99b759b848cbab3f600eb3", null ],
     [ "smooth", "mkdtf_8h.html#a42d0fe623bbbd35b36c395fd52904603", null ],

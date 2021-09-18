@@ -22,8 +22,6 @@ var searchData=
   ['locfft',['locfft',['../pywfs_8h.html#a214559a0d59d0c6d7d7828e1ff55c19f',1,'pywfs_t']]],
   ['locs',['locs',['../parms_8h.html#a07a8a56b6968583ca4f22907b93abb50',1,'load_cfg_t::locs()'],['../maos_2types_8h.html#ac63f9af1f96b9494da73641be8d9f225',1,'aper_t::locs()']]],
   ['locs_5fdm',['locs_dm',['../maos_2types_8h.html#aeebf41252a1f794cf5347af1f60036fa',1,'aper_t']]],
-  ['locx',['locx',['../type_8h.html#a056ba180142ca19558f74c3ac8d2e222',1,'loc_t']]],
-  ['locy',['locy',['../type_8h.html#a1a5d6b9152829ba7a7af0fa050ba460e',1,'loc_t']]],
   ['lopowfs',['lopowfs',['../parms_8h.html#a46bd31431f11f209589d74e3be88e305',1,'parms_t']]],
   ['lowfs_5fgtilt',['lowfs_gtilt',['../maos_2types_8h.html#ad713f407bb4f48cd12d6bc49747a1f8b',1,'recon_t']]],
   ['lp2',['lp2',['../maos_2types_8h.html#aa04c964f5a6e2f0016719afa2b06ba87',1,'ngsmod_t']]],
