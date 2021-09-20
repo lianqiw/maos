@@ -114,7 +114,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             if not os.path.exists(fn):
                 print(fn, 'does not exist')
                 continue
-            res=readbin(fn)
+            res=read(fn)
             if res is None or res.shape[0]==0:
                 continue
             if name=="Res":
@@ -299,7 +299,7 @@ def read_many(fdin):
     res=[]
     for fd in fds2: 
         try:
-            tmp=readbin(fd)
+            tmp=read(fd)
             fds.append(fd)
             res.append(tmp)
         except:

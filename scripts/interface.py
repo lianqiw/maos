@@ -87,8 +87,10 @@ def pt2py(pointer):
 def as_array(arr, id, shape):
     ''' convert C array arr to numpy based in id'''
     (tt, iscomplex, issparse)=id2ctype.get(id)
-    if tt is None or not bool(arr) or shape[0]==0:
-        print("id2ctype: unknown type", id);
+    if tt is None:
+        print("id2ctype: unknown type:", id)
+        return np.array([])
+    elif not bool(arr) or shape[0]==0:
         return np.array([])
     else:
         parr=cast(arr, POINTER(tt))

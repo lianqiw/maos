@@ -44,8 +44,9 @@ def locembed(loc, opd0, return_ext=0):
         ims = []
         ext = None
         for opdi in opd:
-            ims_i,ext=locembed(loc, opdi, return_ext)
-            ims.append(ims_i)
+            if opdi.size>0:
+                ims_i,ext=locembed(loc, opdi, return_ext)
+                ims.append(ims_i)
         ims=np.asarray(ims)
         if return_ext:
             return ims, ext

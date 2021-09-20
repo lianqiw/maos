@@ -163,6 +163,7 @@ void fit_sodium_profile(
 	real cogthres,/**<Threshold for cog*/
 	real tikcr,   /**<Tikhonov regularization*/
 	real svdthres, /**<SVD threshold*/
+	int use_mtche, /**<Use mtche to compute gradient error*/
 	int nrep,     /**<Number of iterations*/
 	int save,      /**<Save results to file*/
 	int use_cache  /**<Use cache*/
@@ -202,11 +203,8 @@ void fit_sodium_profile(
 	
 	//avoid overriding i0 input
 	dcell **pi0tmp=(pi0 && (nrep==1 || *pi0 != i0i))?pi0:&i0tmp;
-#define USE_MTCH 0
-#if USE_MTCH	
 	dcell **pgxtmp=pgx?pgx:&gxtmp;//ok to override input
 	dcell **pgytmp=pgy?pgy:&gytmp;
-#endif	
 	if(!pgrad) pgrad=&gradtmp;
 	else if(*pgrad && NY(*pgrad)!=ni0){
 		warning("pgrad has wrong dimensions %ldx%ld, recreate\n", NX(*pgrad), NY(*pgrad));
@@ -247,15 +245,14 @@ void fit_sodium_profile(
 	int skip_first=0;
 	if(!etfs){
 		etfs=mycalloc(nx, etf_t*);
-		dcell *na2=dcellnew_same(nx,1,1,2);
+		dmat *na2i=dnew(1,2);
 		//OMP_FOR	
 		for(long ix=0; ix<nx; ix++){
-			dmat *na2i=P(na2, ix);
 			P(na2i, 0, 0)=P(nai, ix, 0);
 			P(na2i, 0, 1)=1;
 			etfs[ix]=mketf(dtf, na2i->base, 0, srot, srsa, hs, htel, za, 1);//no need to update
 		}
-		dcellfree(na2);
+		dfree(na2i);
 		toc2("mketf");tic;
 		print_mem("mketf");
 		i0mv=dcellnew(1, nx);
@@ -264,6 +261,7 @@ void fit_sodium_profile(
 			fit_cache.etfs=etfs;
 			fit_cache.i0m=i0m;
 			fit_cache.i0mv=i0mv;
+			fit_cache.nx=nx;
 		}
 	}else{
 		skip_first=1;
@@ -299,47 +297,47 @@ void fit_sodium_profile(
 		for(long ix=0; ix<nx; ix++){
 			P(nai, ix, 1)=P(P(res, ix), 0)*scale;
 		}
-#if USE_MTCH		
-		if(etfi) etf_free(etfi);
-		//mketf for full profile must use the same no_interp flag 
-		etfi=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
-		toc2("mketf full"); tic;
-		gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etfi, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
-		toc2("gensei full"); tic;
-		mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
-			pixthetax, pixthetay, NULL, radgx, 1, 1);
-		toc2("mtche create"); tic;
-		OMP_FOR
-		for(long ii0=0; ii0<ni0; ii0++){
-			dmat* gradi=P(*pgrad, ii0);
-			for(long isa=0; isa<nsa; isa++){
-				real g[2]={0,0};
-				dmulvec(g, P(mtche, isa, ii0), P(P(i0i, isa, ii0)), 1);
-				P(gradi, isa)+=g[0];
-				P(gradi, isa+nsa)+=g[1];
+		if(use_mtche){
+			if(etfi) etf_free(etfi);
+			//mketf for full profile must use the same no_interp flag 
+			etfi=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
+			toc2("mketf full"); tic;
+			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etfi, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
+			toc2("gensei full"); tic;
+			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
+				pixthetax, pixthetay, NULL, radgx, 1, 1);
+			toc2("mtche create"); tic;
+			OMP_FOR
+			for(long ii0=0; ii0<ni0; ii0++){
+				dmat* gradi=P(*pgrad, ii0);
+				for(long isa=0; isa<nsa; isa++){
+					real g[2]={0,0};
+					dmulvec(g, P(mtche, isa, ii0), P(P(i0i, isa, ii0)), 1);
+					P(gradi, isa)+=g[0];
+					P(gradi, isa+nsa)+=g[1];
+				}
 			}
-		}
-		toc2("mtche apply"); tic;
-#else //use CoG difference
-		if(*pi0tmp) dcellzero(*pi0tmp);
-		for(long ix=0; ix<nx; ix++){
-			dcelladd(pi0tmp, 1, P(i0m, ix), P(nai, ix, 1));
-		}
-		const dcell* i0o=*pi0tmp;
-		OMP_FOR
-		for(long ii0=0; ii0<ni0; ii0++){
-			dmat* gradi=P(*pgrad, ii0);
-			for(long isa=0; isa<nsa; isa++){
-				real g1[2],g2[2];
-				dcog(g1, P(i0o, isa, ii0), 0, 0, cogthres, 0, 0);
-				dcog(g2, P(i0i, isa, ii0), 0, 0, cogthres, 0, 0);
-				//i0o has real gradient of pgrad.
-				P(gradi, isa)+=(g2[0]-g1[0])*pixthetax;
-				P(gradi, isa+nsa)+=(g2[1]-g1[1])*pixthetay;
+			toc2("mtche apply"); tic;
+		}else{
+			if(*pi0tmp) dcellzero(*pi0tmp);
+			for(long ix=0; ix<nx; ix++){
+				dcelladd(pi0tmp, 1, P(i0m, ix), P(nai, ix, 1));
 			}
+			const dcell* i0o=*pi0tmp;
+			OMP_FOR
+			for(long ii0=0; ii0<ni0; ii0++){
+				dmat* gradi=P(*pgrad, ii0);
+				for(long isa=0; isa<nsa; isa++){
+					real g1[2],g2[2];
+					dcog(g1, P(i0o, isa, ii0), 0, 0, cogthres, 0, 0);
+					dcog(g2, P(i0i, isa, ii0), 0, 0, cogthres, 0, 0);
+					//i0o has real gradient of pgrad.
+					P(gradi, isa)+=(g2[0]-g1[0])*pixthetax;
+					P(gradi, isa+nsa)+=(g2[1]-g1[1])*pixthetay;
+				}
+			}
+			toc2("tcog diff"); tic;
 		}
-		toc2("tcog diff"); tic;
-#endif		
 		if(save){
 			writebin(ata, "sodium_ata_%d_%d", count, irep);
 			writebin(atb, "sodium_atb_%d_%d", count, irep);
@@ -382,7 +380,8 @@ void fit_sodium_profile(
 /**
  * Fit i0 to sodium profile and replace i0, gx, gy with derived parameters
  * */
-void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, const parms_t* parms, powfs_t* powfs, int ipowfs, int nrep, int use_ncpa, int use_cache){
+void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, const parms_t* parms, 
+	powfs_t* powfs, int ipowfs, int use_mtche, int nrep, int use_ncpa, int use_cache){
 	dccell* sepsf=use_cache?fit_cache.sepsf:NULL;
 	if(!sepsf){
 		cccell* otf=NULL, * lotf=NULL;
@@ -424,7 +423,7 @@ void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, c
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
 		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, use_ncpa?powfs[ipowfs].gradncpa:NULL,
 		SODIUM_DH, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, parms->powfs[ipowfs].cogthres,
-		SODIUM_TIKCR, SODIUM_SVDTHRES, nrep, 0, use_cache);//parms->save.setup);
+		SODIUM_TIKCR, SODIUM_SVDTHRES, use_mtche, nrep, 0, use_cache);//parms->save.setup);
 	
 	if(parms->save.setup){
 		writebin(intstat->i0, "powfs%d_i0_fit", ipowfs);

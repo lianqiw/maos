@@ -365,11 +365,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 				dbg3("%s --> GPU %d\n", tasks[it].name, GPUS(*tasks[it].dest,1));
 			}
 			free(tasks);
-			//if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
-			//NTHREAD=NGPU+1;
-			//info("Reset nthread to %d\n", NTHREAD);
-			//THREAD_POOL_INIT(NTHREAD);Don't call this now. Too early
-			//}
+
 			{
 				info("Use %d GPUs for %s%s%s%s%s\n", NGPU,
 					parms->gpu.wfs?" WFS":"",

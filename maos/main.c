@@ -425,7 +425,7 @@ int main(int argc, const char* argv[]){
 		if(scheduler_listen(maos_listener)){
 			info2("Failed to start maos_listener\n");
 		}
-		setup_parms_gpu(parms, arg->gpus, arg->ngpu);
+		setup_parms_gpu(parms, arg->gpus, arg->ngpu);//only do this after start running
 
 		/* do not use prallel single in maos(). It causes blas to run single threaded
 		 * during preparation. Selective enable parallel for certain setup functions

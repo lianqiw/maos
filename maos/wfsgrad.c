@@ -1063,16 +1063,18 @@ static void wfsgrad_dither_post(sim_t* simu){
 				if(parms->powfs[ipowfs].dither_amp==0){
 					dmat* sodium=0;
 					dcell* grad=0;
-					int use_i0=parms->powfs[ipowfs].phytype_sim2==PTYPE_MF?1:0;
-					fit_sodium_profile_wrap(&sodium, &grad, intstat->i0, parms, powfs, ipowfs, 1, use_i0, 1);
+					int use_i0=parms->powfs[ipowfs].phytype_sim2==PTYPE_MF?1:0;//flag for using gradncpa to compute i0 for matched filter.
+					int use_mtche=use_i0?0:1;//for tcog, must use mtch to calculate the gradient of i0 during fitting.
+					int niter=use_i0?1:3; //1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
+					fit_sodium_profile_wrap(&sodium, &grad, intstat->i0, parms, powfs, ipowfs, use_mtche, niter, use_i0, 1);
+					dcelladd(&grad, 1, powfs[ipowfs].gradncpa, -1);
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						dcelladd(&grad, -1, powfs[ipowfs].gradncpa, 1);
+						//splits tip/tilt/focus from reference vector to FSM and trombone control
 						wfsgrad_ttf_drift(P(grad, jwfs), simu, iwfs, 1);
-						//use focus, tip/tilt to control drift and remove from gradient
 						if(parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
 							if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
-							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), 1);
+							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
 						} else if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
 							if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
 							dzero(P(simu->gradoff, iwfs));
