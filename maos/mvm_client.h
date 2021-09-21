@@ -32,15 +32,15 @@
 #define GSCALE1 4.848132257047973e-10 //convert back
 #define ASCALE 1.e9 //convert DM commands to int
 #define ASCALE1 1.e-9 //convert int to DM commands
-typedef short GTYPE; //type used for gradients
-typedef short ATYPE; //type used for actuator commands
+typedef short GReal; //type used for gradients
+typedef short AReal; //type used for actuator commands
 #else
 #if CUDA_DOUBLE
-typedef real GTYPE;
-typedef real ATYPE;
+typedef real GReal;
+typedef real AReal;
 #else
-typedef float GTYPE;
-typedef float ATYPE;
+typedef float GReal;
+typedef float AReal;
 #endif
 #define GSCALE 1
 #define GSCALE1 1

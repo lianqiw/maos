@@ -27,8 +27,8 @@ Make sure the results is correct first.
 Test using transpose.
 
 */
-typedef Real ATYPE;
-typedef Real GTYPE;
+typedef Real AReal;
+typedef Real GReal;
 
 #define tix threadIdx.x
 #define tiy threadIdx.y

@@ -504,7 +504,7 @@ static void wfsgrad_fsm(sim_t* simu, int iwfs){
 	P(P(simu->fsmerrs, iwfs), 0, isim)=P(P(simu->fsmerr, iwfs), 0);
 	P(P(simu->fsmerrs, iwfs), 1, isim)=P(P(simu->fsmerr, iwfs), 1);
 }
-static void wfsgrad_ttf_drift(dmat *grad, sim_t *simu, int iwfs, int remove){
+static void wfsgrad_ttf_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, int remove){
 	//gain can be set to 1 if the rate is slower than the main tip/tilt and focus control rate.
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
@@ -520,8 +520,8 @@ static void wfsgrad_ttf_drift(dmat *grad, sim_t *simu, int iwfs, int remove){
 			dmat *TT=P(recon->TT, iwfsr, iwfsr);
 			dmm(&grad, 1, TT, tt, "nn", -1);
 		}
-		P(P(simu->fsmerr_drift, iwfs), 0)=P(tt, 0);
-		P(P(simu->fsmerr_drift, iwfs), 1)=P(tt, 1);
+		P(P(simu->fsmerr_drift, iwfs), 0)=P(tt, 0)*gdrift;
+		P(P(simu->fsmerr_drift, iwfs), 1)=P(tt, 1)*gdrift;
 		if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
 			dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f)mas\n",
 			simu->wfsisim, iwfs, P(tt, 0)*206265000, P(tt, 1)*206265000);
@@ -536,7 +536,7 @@ static void wfsgrad_ttf_drift(dmat *grad, sim_t *simu, int iwfs, int remove){
 		if(remove){
 			dmm(&grad, 1, P(recon->GFall, iwfs), focus, "nn", -1);
 		}
-		P(simu->zoomerr_drift, iwfs)=P(focus, 0);
+		P(simu->zoomerr_drift, iwfs)=P(focus, 0)*gdrift;
 		if(iwfs==P(parms->powfs[ipowfs].wfs, 0)||!parms->powfs[ipowfs].zoomshare){
 			double deltah=P(focus, 0)*2*pow(parms->powfs[ipowfs].hs, 2);
 			dbg("Step %5d: wfs %d trombone drift control error is %.3f m\n",
@@ -1063,37 +1063,42 @@ static void wfsgrad_dither_post(sim_t* simu){
 				if(parms->powfs[ipowfs].dither_amp==0){
 					dmat* sodium=0;
 					dcell* grad=0;
-					int use_i0=parms->powfs[ipowfs].phytype_sim2==PTYPE_MF?1:0;//flag for using gradncpa to compute i0 for matched filter.
-					int use_mtche=use_i0?0:1;//for tcog, must use mtch to calculate the gradient of i0 during fitting.
-					int niter=use_i0?1:3; //1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
+					//flag for using gradncpa to compute i0 for matched filter.
+					int use_i0=parms->powfs[ipowfs].phytype_sim2==PTYPE_MF?1:0;
+					//algorithm for gradient, for tcog, must use mtch to calculate the gradient of i0 during fitting.
+					int use_mtche=parms->dbg.na_fit_alg?parms->dbg.na_fit_alg:(use_i0?0:1);
+					//1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
+					int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(use_i0?1:3); 
+					
 					fit_sodium_profile_wrap(&sodium, &grad, intstat->i0, parms, powfs, ipowfs, use_mtche, niter, use_i0, 1);
-					dcelladd(&grad, 1, powfs[ipowfs].gradncpa, -1);
+					if(parms->save.dither){
+						writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
+						writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
+					}
+					//dcelladd(&grad, 1, powfs[ipowfs].gradncpa, -1);
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 						//splits tip/tilt/focus from reference vector to FSM and trombone control
-						wfsgrad_ttf_drift(P(grad, jwfs), simu, iwfs, 1);
+						wfsgrad_ttf_drift(P(grad, jwfs), simu, 0, iwfs, 1);
 						if(parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
 							if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
+							dadd(&P(grad, jwfs), 1, P(powfs[ipowfs].gradncpa, jwfs), -1);
 							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
 						} else if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
 							if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
 							dzero(P(simu->gradoff, iwfs));
 						}
 					}
-					if(parms->save.dither){
-						writebin(grad, "extra/powfs%d_NaFit_grad_%d", ipowfs, isim);
-						writebin(sodium, "extra/powfs%d_NaFit_sodium_%d", ipowfs, isim);
-					}
 					dcellfree(grad);
 					dfree(sodium);
-				}else{
+				}else{//Necessary
 					//tip/tilt and focus drift control.
 					//we use gain of 1 as this output is slower than gradient based control.
 					dmat* ibgrad=0;
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 						shwfs_grad(&ibgrad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
-						wfsgrad_ttf_drift(ibgrad, simu, iwfs, 0);
+						wfsgrad_ttf_drift(ibgrad, simu, 1, iwfs, 0);
 					}
 					dfree(ibgrad);
 				}

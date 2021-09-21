@@ -1081,7 +1081,7 @@ static void readcfg_plot(parms_t* parms){
 /**
    Convert real to value pair of [-val, val].
 */
-dmat* dbl2pair(real val){
+static dmat* dbl2pair(real val){
 	dmat* out=dnew(2, 1);
 	P(out,0)=-fabs(val);
 	P(out,1)=-P(out,0);
@@ -1111,6 +1111,10 @@ static void readcfg_dbg(parms_t* parms){
 	READ_INT(dbg.na_smooth);
 	READ_INT(dbg.na_interp);
 	READ_DBL(dbg.na_thres);
+	READ_DBL(dbg.na_fit_dh);
+	READ_DBL(dbg.na_fit_svdthres);
+	READ_INT(dbg.na_fit_alg);
+	READ_INT(dbg.na_fit_maxit);
 	READ_INT(dbg.ncpa_preload);
 	READ_INT(dbg.ncpa_rmsci);
 	READ_INT(dbg.gp_noamp);

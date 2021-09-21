@@ -822,17 +822,11 @@ void readcfg_dblarr_nmax(real** ret, int len, const char* format, ...){
 */
 int readcfg_int(const char* format, ...){
 	format2key;
-	char* val=getrecord(key, 1)->data;
+	char* val;
 	char* endstr;
-	real ans=readstr_num(val, &endstr);
-	if(isnan(ans)){
-		warning("Failed to read int from {%s}", val);
-	}
-	if(fabs(ans-(int)ans)>EPS){
-		warning("Floating point number supplied while integer is needed: %s=%s\n", key, val);
-	}
-	if(endstr[0]!='\0'){
-		error("Garbage found in %s=%s.\n", key, val);
+	real ans=0;
+	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(val, &endstr))||endstr[0]!='\0'||fabs(ans-(int)ans)>EPS){
+		error("Invalid data: %s=%s\n", key, val);
 	}
 	return (int)ans;
 }
@@ -841,14 +835,11 @@ int readcfg_int(const char* format, ...){
 */
 real readcfg_dbl(const char* format, ...){
 	format2key;
-	char* val=getrecord(key, 1)->data;
-	char* endstr;
-	real ans=readstr_num(val, &endstr);
-	if(isnan(ans)){
-		warning("Failed to read number from {%s}", val);
-	}
-	if(endstr[0]!='\0'){
-		error("Garbage found in %s=%s.\n", key, val);
+	char *val; 
+	char *endstr;
+	real ans=0;
+	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(val, &endstr))||endstr[0]!='\0'){
+		error("Invalid data: %s=%s\n", key, val);
 	}
 	return ans;
 }

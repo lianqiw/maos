@@ -67,9 +67,9 @@ typedef struct mvm_g_mul_t{
 	int icol;
 	int ngpu;
 	int k;
-	Array<GTYPE, Pinned>g;/*full g*/
-	Array<Array<ATYPE, Pinned> > ac;/*a for each gpu.*/
-	Array<ATYPE, Pinned> a;/*final a*/
+	Array<GReal, Pinned>g;/*full g*/
+	Array<Array<AReal, Pinned> > ac;/*a for each gpu.*/
+	Array<AReal, Pinned> a;/*final a*/
 	X(mat)* mvm;
 	int* icols;
 	int* kcols;
@@ -83,7 +83,7 @@ int nleft;
 char* start;
 
 int sock_mvm;
-__global__ static void mvm_g_mul_do(const Real* restrict mvm, ATYPE* restrict a, const GTYPE* restrict g, int nact, int ng){
+__global__ static void mvm_g_mul_do(const Real* restrict mvm, AReal* restrict a, const GReal* restrict g, int nact, int ng){
 	extern __shared__ Real acc[];
 	int iact=threadIdx.x+blockIdx.x*blockDim.x;
 	if(iact<nact){
@@ -92,7 +92,7 @@ __global__ static void mvm_g_mul_do(const Real* restrict mvm, ATYPE* restrict a,
 			register Real mvmi=mvm[nact*ig+iact];
 			acc[threadIdx.x]+=mvmi*(Real)(g[ig]);
 		}
-		a[iact]+=(ATYPE)acc[threadIdx.x];
+		a[iact]+=(AReal)acc[threadIdx.x];
 	}
 }
 /*A couple of threads that does jobs upon available.*/
@@ -121,7 +121,7 @@ static void* mvm_thread(void* ithread0){
 			cudata->mvm_a.init(mvm->nx, 1);
 			cudata->mvm_g.init(mvm->ny, 1);
 
-			cudaMemsetAsync(cudata->mvm_a(), 0, mvm->nx*sizeof(ATYPE), cudata->mvm_stream);
+			cudaMemsetAsync(cudata->mvm_a(), 0, mvm->nx*sizeof(AReal), cudata->mvm_stream);
 			cudaStreamSynchronize(cudata->mvm_stream);
 			cmds[ithread]=0;
 		}
@@ -129,7 +129,7 @@ static void* mvm_thread(void* ithread0){
 		case CMD_GMUL:{
 			int icol=mvm_data->icols[ithread];
 			int k=mvm_data->kcols[ithread];
-			cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GTYPE),
+			cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GReal),
 				H2D, cudata->mvm_stream);
 
 			mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)* naeach, cudata->mvm_stream>>>
@@ -143,7 +143,7 @@ static void* mvm_thread(void* ithread0){
 			int icol=mvm_data->icol+ki*ithread;
 			int ki2=mvm_data->k+mvm_data->icol-icol;
 			int k=MIN(ki, ki2);
-			cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GTYPE),
+			cudaMemcpyAsync(cudata->mvm_g()+icol, mvm_data->g()+icol, k*sizeof(GReal),
 				H2D, cudata->mvm_stream);
 			mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)* naeach, cudata->mvm_stream>>>
 				(cudata->mvm_m.Col(icol), cudata->mvm_a(), cudata->mvm_g()+icol, nact, k);
@@ -152,7 +152,7 @@ static void* mvm_thread(void* ithread0){
 		}
 					  break;
 		case CMD_DMCP:{
-			cudaMemcpyAsync(mvm_data->ac[ithread], cudata->mvm_a, nact*sizeof(ATYPE),
+			cudaMemcpyAsync(mvm_data->ac[ithread], cudata->mvm_a, nact*sizeof(AReal),
 				D2H, cudata->mvm_stream);
 			cudaStreamSynchronize(cudata->mvm_stream);
 			cudata->mvm_a.Zero(cudata->mvm_stream);
@@ -161,7 +161,7 @@ static void* mvm_thread(void* ithread0){
 					 break;
 		case CMD_DMADD:{
 			for(int iact=iact1; iact<iact2; iact++){
-				register ATYPE temp=0;
+				register AReal temp=0;
 				for(int igpu=0; igpu<NGPU; igpu++){
 					temp+=mvm_data->ac[igpu][iact];
 				}
@@ -250,7 +250,7 @@ static int respond(int sock){
 		tim_gfirst=myclockd();
 		for(int icol=cmd[1]; icol<ngtot; icol+=ngeach){
 			int k=MIN(ngeach, ngtot-icol);
-			stread(sock_mvm, mvm_data->g()+icol, k*sizeof(GTYPE));
+			stread(sock_mvm, mvm_data->g()+icol, k*sizeof(GReal));
 			tim_gsend+=toc3;tic;
 			if(cmd[2]<1800){//Use next available GPU to handle this task.
 				int igpu=gpu_next();
@@ -299,7 +299,7 @@ static int respond(int sock){
 			}
 		}
 		tim_dmsum+=toc3;tic;
-		stwrite(sock_mvm, mvm_data->a, mvm_data->nact*sizeof(ATYPE));
+		stwrite(sock_mvm, mvm_data->a, mvm_data->nact*sizeof(AReal));
 		tim_dmsend+=toc3;tic;
 		info("k=%4d CMD %1.0f, gsend %2.0f, gcp %3.0f, queue %3.0f, sync %3.0f sum %3.0f, send %2.0f, total %4.0f\n", ngeach,
 			tim_cmd*1e6, tim_gsend*1e6, tim_gcp*1e6, tim_queue*1e6, tim_dmcp*1e6,

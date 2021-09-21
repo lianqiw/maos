@@ -412,18 +412,12 @@ void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, c
 	
 	info("Replacing i0, gx, gy with fitted value\n");
 	
-	real SODIUM_DH=500;
-	real SODIUM_TIKCR=0.;
-	real SODIUM_SVDTHRES=1e-3;
-	READ_ENV_DBL(SODIUM_DH, 0, 1000);
-	READ_ENV_DBL(SODIUM_TIKCR, 0, 1);
-	READ_ENV_DBL(SODIUM_SVDTHRES, 0, 1);
 	fit_sodium_profile(psodium, pgrad, &intstat->i0, &intstat->gx, &intstat->gy, i0in,
 		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].realsaa,
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
 		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, use_ncpa?powfs[ipowfs].gradncpa:NULL,
-		SODIUM_DH, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, parms->powfs[ipowfs].cogthres,
-		SODIUM_TIKCR, SODIUM_SVDTHRES, use_mtche, nrep, 0, use_cache);//parms->save.setup);
+		parms->dbg.na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, parms->powfs[ipowfs].cogthres,
+		0, parms->dbg.na_fit_svdthres, use_mtche, nrep, 0, use_cache);//parms->save.setup);
 	
 	if(parms->save.setup){
 		writebin(intstat->i0, "powfs%d_i0_fit", ipowfs);

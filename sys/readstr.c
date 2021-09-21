@@ -189,6 +189,10 @@ double readstr_num(const char* data, /**<[in] Input string*/
 	char** endptr0    /**<[out] Location in Input string after readed number.*/
 ){
 	char* endptr;
+	if(!data){
+		warning("readstr_num called with NULL string.\n");
+		return NAN;
+	}
 	double res=strtod(data, &endptr);
 	if(data==endptr){
 		dbg3("{%s}: Unable to parse for a number\n", data);
@@ -226,6 +230,10 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 	const char* data /**<[in] Input string*/
 ){
 	if(!data||strlen(data)==0){
+		return 0;
+	}
+	if(!ret){
+		warning("ret is not set\n");
 		return 0;
 	}
 	size_t nmax=10;

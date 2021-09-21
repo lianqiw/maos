@@ -25,8 +25,8 @@
 extern int NGPU;//Actual number of GPUs being used. 
 extern int MAXGPU;
 extern Array<int> GPUS;//Used GPUS in cuda (col 0) and nvidia-smi index (col 1). nrow may be more than NGPU
-typedef Real ATYPE;
-typedef Real GTYPE;
+typedef Real AReal;
+typedef Real GReal;
 /*namespace cuda_recon{
 class curecon_t;
 class curecon_geom;
@@ -97,8 +97,8 @@ public:
     Array<cumapcell> dm_evl;
     /*for mvm*/
     curmat mvm_m;/*the control matrix*/
-    Array<ATYPE, Gpu>mvm_a; /*contains act result from mvm_m*mvm_g*/
-    Array<GTYPE, Gpu>mvm_g;/*the gradients copied from gpu*/
+    Array<AReal, Gpu>mvm_a; /*contains act result from mvm_m*mvm_g*/
+    Array<GReal, Gpu>mvm_g;/*the gradients copied from gpu*/
     stream_t mvm_stream;
     cudata_t():recon(0){
     }

@@ -95,13 +95,13 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 			ngtot+=n;
 		}
 	}
-	GTYPE* gall=mymalloc(ngtot, GTYPE);
-	GTYPE* pgall=gall;
+	GReal* gall=mymalloc(ngtot, GReal);
+	GReal* pgall=gall;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(!P(grad,iwfs)) continue;
 		int ng=P(grad,iwfs)->nx;
 		for(int ig=0; ig<ng; ig++){
-			*(pgall++)=(GTYPE)(P(P(grad,iwfs),ig)*GSCALE);
+			*(pgall++)=(GReal)(P(P(grad,iwfs),ig)*GSCALE);
 		}
 	}
 	int natot=0;
@@ -110,8 +110,8 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 			natot+=P(dm,idm)->nx;
 		}
 	}
-	ATYPE* dmall=mymalloc(natot, ATYPE);
-	ATYPE* pdmall=dmall;
+	AReal* dmall=mymalloc(natot, AReal);
+	AReal* pdmall=dmall;
 	int neach=mvmsize;//testing parms->sim.mvmsize;
 	if(neach<=0){//scan different sizes.
 		static int neach0=10;
@@ -125,14 +125,14 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	WRITE_CMD(cmd);
 #if 0 //write set of data each time.
 	for(int i=0; i<ngtot; i+=neach){
-		WRITE_ARR(gall+i, MIN(neach, ngtot-i), GTYPE);
+		WRITE_ARR(gall+i, MIN(neach, ngtot-i), GReal);
 	}
 #else //write all the data once
-	WRITE_ARR(gall, ngtot, GTYPE);
+	WRITE_ARR(gall, ngtot, GReal);
 #endif
 	real tim_gsend=toc3;
 	//Read computed DM command
-	READ_ARR(dmall, natot, ATYPE);
+	READ_ARR(dmall, natot, AReal);
 	real tim_aread=toc3;
 	//Copy DM command to the right place.
 	for(int idm=0; idm<NX(dm); idm++){

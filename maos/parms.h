@@ -642,6 +642,10 @@ typedef struct dbg_cfg_t{
     int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
     int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
     real na_thres;   /**<altitude error threshold to move trombone, in unit of meter.*/
+    real na_fit_svdthres;/**<threshold for SVD inverse in sodium fitting.*/
+    real na_fit_dh;  /**<sampling in height in sodium fitting*/
+    int na_fit_alg;  /**<Algorithm for NA fitting gradient calculatiion. 0: auto. >0: see enum PTYPE*/
+    int na_fit_maxit;/**<Number of iterations. 0: auto, 1 for CMF, 3 for COG. see wfsgrad.c*/
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
@@ -868,15 +872,15 @@ typedef enum T_TYPE{
 }T_TYPE;
 void plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...);
 
-enum{ //WFS type
+enum WFS_TYPE{ //WFS type
     WFS_SH=0,//shack-hartmann WFS
     WFS_PY=1, //pyramid WFS
 };
-enum{//geometric WFS gradient algoirthm
+enum GTYPE{//geometric WFS gradient algoirthm
     GTYPE_G=0,//G tilt: average gradient over aperture (high order WFS)
     GTYPE_Z=1,//Z tilt: zernike best fit tilt (low order WFS)
 };
-enum{//physical optics pixel processing algorithm
+enum PTYPE{//physical optics pixel processing algorithm
     PTYPE_MF=1, //matched filter
     PTYPE_COG=2,//COG
     PTYPE_MAP=3,//maximum apriori (deprecated)
@@ -884,7 +888,7 @@ enum{//physical optics pixel processing algorithm
     PTYPE_CORRS=5, //Correlation sum first (deprecated)
 };
 
-enum{//method to handle NCPA
+enum NCPA_METHOD{//method to handle NCPA
     NCPA_G=1,  //with gradient offset
     NCPA_I0=2, //with i0 offset (opd)
 };
