@@ -468,6 +468,10 @@ var parms_8h =
       [ "na_smooth", "parms_8h.html#af8ab185ff63193e57117c1ad53c51510", null ],
       [ "na_interp", "parms_8h.html#a74e87eb91309b735bf6c098061de9be7", null ],
       [ "na_thres", "parms_8h.html#ac3af414f13966874a37499f92dc598bb", null ],
+      [ "na_fit_svdthres", "parms_8h.html#a862a0bdf561448d46ac5f116270b6c20", null ],
+      [ "na_fit_dh", "parms_8h.html#a9103dd56c93415d15445726d30154905", null ],
+      [ "na_fit_alg", "parms_8h.html#a7426f467bacd737e5517e94335d1b9e7", null ],
+      [ "na_fit_maxit", "parms_8h.html#a0ddf4d898208930ac11aa00bf3e5960e", null ],
       [ "ncpa_preload", "parms_8h.html#a76602ea9e795f7028ecc562d4d98e09c", null ],
       [ "ncpa_rmsci", "parms_8h.html#a978014e63729f484b3843aac58c78cc0", null ],
       [ "gp_noamp", "parms_8h.html#a9c48e15856c949aa188c2bc002fc990b", null ],
@@ -655,17 +659,25 @@ var parms_8h =
       [ "T_XLOC", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49a768d170364561a103dbda61d71d776aa", null ],
       [ "T_ATM", "parms_8h.html#aa54a3168fd46da424c10df2764f9ef49a4418c1a2575f3cf5689ed32e0e904b48", null ]
     ] ],
-    [ "WFS_SH", "parms_8h.html#abed82baf7f470b522273a3e37c24c600afb1fb19a0616e5b23db8e9219bd2f51f", null ],
-    [ "WFS_PY", "parms_8h.html#abed82baf7f470b522273a3e37c24c600af8d15240f98fad47ec572347b27324e8", null ],
-    [ "GTYPE_G", "parms_8h.html#ab04a0655cd1e3bcac5e8f48c18df1a57a5add25dd2489095bb5befe83e3101c70", null ],
-    [ "GTYPE_Z", "parms_8h.html#ab04a0655cd1e3bcac5e8f48c18df1a57a0e54af4008e0dfe060b31b12d2555375", null ],
-    [ "PTYPE_MF", "parms_8h.html#a385c44f6fb256e5716a2302a5b940388a4bca58d701a7da8964a1d8177d45ee6c", null ],
-    [ "PTYPE_COG", "parms_8h.html#a385c44f6fb256e5716a2302a5b940388a187f8b67ea8e8dd1f8747c6dcc069842", null ],
-    [ "PTYPE_MAP", "parms_8h.html#a385c44f6fb256e5716a2302a5b940388aaaeb75f8ad3790c0d26cc2a0dcf388f4", null ],
-    [ "PTYPE_CORR", "parms_8h.html#a385c44f6fb256e5716a2302a5b940388aebf0ea6808d57ee8a4979925e7f86826", null ],
-    [ "PTYPE_CORRS", "parms_8h.html#a385c44f6fb256e5716a2302a5b940388a9c6f3a00878a789b7bd25420087c9149", null ],
-    [ "NCPA_G", "parms_8h.html#abc5c98fcc1211af2b80116dd6e0a035da5156b015016a65a98be166f80b132ac1", null ],
-    [ "NCPA_I0", "parms_8h.html#abc5c98fcc1211af2b80116dd6e0a035da7eda49b62264d74fec4234b8816b4439", null ],
+    [ "WFS_TYPE", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08", [
+      [ "WFS_SH", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08afb1fb19a0616e5b23db8e9219bd2f51f", null ],
+      [ "WFS_PY", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08af8d15240f98fad47ec572347b27324e8", null ]
+    ] ],
+    [ "GTYPE", "parms_8h.html#a5ef8499ada234887dd13961489943440", [
+      [ "GTYPE_G", "parms_8h.html#a5ef8499ada234887dd13961489943440a5add25dd2489095bb5befe83e3101c70", null ],
+      [ "GTYPE_Z", "parms_8h.html#a5ef8499ada234887dd13961489943440a0e54af4008e0dfe060b31b12d2555375", null ]
+    ] ],
+    [ "PTYPE", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1", [
+      [ "PTYPE_MF", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a4bca58d701a7da8964a1d8177d45ee6c", null ],
+      [ "PTYPE_COG", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a187f8b67ea8e8dd1f8747c6dcc069842", null ],
+      [ "PTYPE_MAP", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1aaaeb75f8ad3790c0d26cc2a0dcf388f4", null ],
+      [ "PTYPE_CORR", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1aebf0ea6808d57ee8a4979925e7f86826", null ],
+      [ "PTYPE_CORRS", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a9c6f3a00878a789b7bd25420087c9149", null ]
+    ] ],
+    [ "NCPA_METHOD", "parms_8h.html#a866c2c89834fc11b07977c38386cd37b", [
+      [ "NCPA_G", "parms_8h.html#a866c2c89834fc11b07977c38386cd37ba5156b015016a65a98be166f80b132ac1", null ],
+      [ "NCPA_I0", "parms_8h.html#a866c2c89834fc11b07977c38386cd37ba7eda49b62264d74fec4234b8816b4439", null ]
+    ] ],
     [ "setup_parms", "parms_8h.html#ad6dd439c2115b1f50b1a177073cbd23c", null ],
     [ "setup_parms_gpu", "parms_8h.html#aad108d3a5091968e86ec8adcc269d450", null ],
     [ "free_parms", "parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26", null ],

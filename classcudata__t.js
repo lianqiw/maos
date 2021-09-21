@@ -14,7 +14,7 @@ var classcudata__t =
     [ "dm_wfs", "classcudata__t.html#a115fc3343cf5fe801d8464f4c686d971", null ],
     [ "dm_evl", "classcudata__t.html#a7baa17f30db981adbaad7a75a6828fc5", null ],
     [ "mvm_m", "classcudata__t.html#a9f23cd6e1814e97636133fdb76fb0d1e", null ],
-    [ "mvm_a", "classcudata__t.html#a1ab268663d8f1c37966d5349ae9bf44a", null ],
-    [ "mvm_g", "classcudata__t.html#a3bfc667e10ef666f94563c5536d2e187", null ],
+    [ "mvm_a", "classcudata__t.html#a1c384a4303349b6a5aed0a3d98cf846a", null ],
+    [ "mvm_g", "classcudata__t.html#a3247d5362a488c8e315bad826bd52154", null ],
     [ "mvm_stream", "classcudata__t.html#a1822a51a78b1dbfbae434b86b12cc007", null ]
 ];

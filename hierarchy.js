@@ -27,19 +27,19 @@ var hierarchy =
     [ "Cpu< T >", "class_cpu.html", [
       [ "Pinned< T >", "class_pinned.html", null ]
     ] ],
+    [ "Cpu< AReal >", "class_cpu.html", [
+      [ "Pinned< AReal >", "class_pinned.html", null ]
+    ] ],
     [ "Cpu< Array< Comp, Gpu > >", "class_cpu.html", null ],
     [ "Cpu< Array< int, Gpu > >", "class_cpu.html", null ],
     [ "Cpu< Array< Real, Gpu > >", "class_cpu.html", null ],
     [ "Cpu< Array< short2, Gpu > >", "class_cpu.html", null ],
     [ "Cpu< Array< T, Dev > >", "class_cpu.html", null ],
-    [ "Cpu< ATYPE >", "class_cpu.html", [
-      [ "Pinned< ATYPE >", "class_pinned.html", null ]
-    ] ],
     [ "Cpu< Comp * >", "class_cpu.html", [
       [ "Pinned< Comp *>", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< GTYPE >", "class_cpu.html", [
-      [ "Pinned< GTYPE >", "class_pinned.html", null ]
+    [ "Cpu< GReal >", "class_cpu.html", [
+      [ "Pinned< GReal >", "class_pinned.html", null ]
     ] ],
     [ "Cpu< int * >", "class_cpu.html", [
       [ "Pinned< int *>", "class_pinned.html", null ]
@@ -146,13 +146,13 @@ var hierarchy =
     [ "genatm_t", "turbulence_8h.html#structgenatm__t", null ],
     [ "global_t", "maos_2types_8h.html#structglobal__t", null ],
     [ "Gpu< T >", "class_gpu.html", null ],
-    [ "Gpu< ATYPE >", "class_gpu.html", null ],
+    [ "Gpu< AReal >", "class_gpu.html", null ],
     [ "Gpu< Comp *>", "class_gpu.html", null ],
     [ "Gpu< Comp >", "class_gpu.html", null ],
     [ "Gpu< cuda_recon::lap_t >", "class_gpu.html", null ],
     [ "Gpu< gpu_fdpcg_t >", "class_gpu.html", null ],
     [ "Gpu< gpu_gp_t >", "class_gpu.html", null ],
-    [ "Gpu< GTYPE >", "class_gpu.html", null ],
+    [ "Gpu< GReal >", "class_gpu.html", null ],
     [ "Gpu< int *>", "class_gpu.html", null ],
     [ "Gpu< int >", "class_gpu.html", null ],
     [ "Gpu< Real *>", "class_gpu.html", null ],
@@ -253,11 +253,17 @@ var hierarchy =
     [ "RefP< T, Dev >", "class_ref_p.html", [
       [ "Array< T, Dev >", "class_array.html", null ]
     ] ],
+    [ "RefP< AReal, Gpu >", "class_ref_p.html", [
+      [ "Array< AReal, Gpu >", "class_array.html", null ]
+    ] ],
+    [ "RefP< AReal, Pinned >", "class_ref_p.html", [
+      [ "Array< AReal, Pinned >", "class_array.html", null ]
+    ] ],
     [ "RefP< Array, Dev >", "class_ref_p.html", [
       [ "Array< Array >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array< ATYPE, Pinned >, Dev >", "class_ref_p.html", [
-      [ "Array< Array< ATYPE, Pinned > >", "class_array.html", null ]
+    [ "RefP< Array< AReal, Pinned >, Dev >", "class_ref_p.html", [
+      [ "Array< Array< AReal, Pinned > >", "class_array.html", null ]
     ] ],
     [ "RefP< Array< Comp, Gpu >, Cpu >", "class_ref_p.html", [
       [ "Array< Array< Comp, Gpu >, Cpu >", "class_array.html", [
@@ -292,12 +298,6 @@ var hierarchy =
     ] ],
     [ "RefP< atm_prep_t, Dev >", "class_ref_p.html", [
       [ "Array< atm_prep_t >", "class_array.html", null ]
-    ] ],
-    [ "RefP< ATYPE, Gpu >", "class_ref_p.html", [
-      [ "Array< ATYPE, Gpu >", "class_array.html", null ]
-    ] ],
-    [ "RefP< ATYPE, Pinned >", "class_ref_p.html", [
-      [ "Array< ATYPE, Pinned >", "class_array.html", null ]
     ] ],
     [ "RefP< Comp *, Gpu >", "class_ref_p.html", [
       [ "Array< Comp *, Gpu >", "class_array.html", null ]
@@ -347,11 +347,11 @@ var hierarchy =
     [ "RefP< gpu_gp_t, Gpu >", "class_ref_p.html", [
       [ "Array< gpu_gp_t, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< GTYPE, Gpu >", "class_ref_p.html", [
-      [ "Array< GTYPE, Gpu >", "class_array.html", null ]
+    [ "RefP< GReal, Gpu >", "class_ref_p.html", [
+      [ "Array< GReal, Gpu >", "class_array.html", null ]
     ] ],
-    [ "RefP< GTYPE, Pinned >", "class_ref_p.html", [
-      [ "Array< GTYPE, Pinned >", "class_array.html", null ]
+    [ "RefP< GReal, Pinned >", "class_ref_p.html", [
+      [ "Array< GReal, Pinned >", "class_array.html", null ]
     ] ],
     [ "RefP< int *, Gpu >", "class_ref_p.html", [
       [ "Array< int *, Gpu >", "class_array.html", null ]

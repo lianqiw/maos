@@ -1,6 +1,10 @@
 var searchData=
 [
   ['n',['n',['../parms_8h.html#a6b394a95b47f77d90c339203675842b5',1,'llt_cfg_t']]],
+  ['na_5ffit_5falg',['na_fit_alg',['../parms_8h.html#a7426f467bacd737e5517e94335d1b9e7',1,'dbg_cfg_t']]],
+  ['na_5ffit_5fdh',['na_fit_dh',['../parms_8h.html#a9103dd56c93415d15445726d30154905',1,'dbg_cfg_t']]],
+  ['na_5ffit_5fmaxit',['na_fit_maxit',['../parms_8h.html#a0ddf4d898208930ac11aa00bf3e5960e',1,'dbg_cfg_t']]],
+  ['na_5ffit_5fsvdthres',['na_fit_svdthres',['../parms_8h.html#a862a0bdf561448d46ac5f116270b6c20',1,'dbg_cfg_t']]],
   ['na_5finterp',['na_interp',['../parms_8h.html#a74e87eb91309b735bf6c098061de9be7',1,'dbg_cfg_t']]],
   ['na_5fsmooth',['na_smooth',['../parms_8h.html#af8ab185ff63193e57117c1ad53c51510',1,'dbg_cfg_t']]],
   ['na_5fthres',['na_thres',['../parms_8h.html#ac3af414f13966874a37499f92dc598bb',1,'dbg_cfg_t']]],

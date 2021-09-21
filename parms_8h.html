@@ -169,15 +169,15 @@ Enumerations</h2></td></tr>
 <b>T_ATM</b>
  }</td></tr>
 <tr class="separator:aa54a3168fd46da424c10df2764f9ef49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abed82baf7f470b522273a3e37c24c600"><td class="memItemLeft" align="right" valign="top"><a id="abed82baf7f470b522273a3e37c24c600"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>WFS_SH</b> =0, 
+<tr class="memitem:aaeb77ce3cefb2e3282964b3fceec2c08"><td class="memItemLeft" align="right" valign="top"><a id="aaeb77ce3cefb2e3282964b3fceec2c08"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>WFS_TYPE</b> { <b>WFS_SH</b> =0, 
 <b>WFS_PY</b> =1
  }</td></tr>
-<tr class="separator:abed82baf7f470b522273a3e37c24c600"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab04a0655cd1e3bcac5e8f48c18df1a57"><td class="memItemLeft" align="right" valign="top"><a id="ab04a0655cd1e3bcac5e8f48c18df1a57"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>GTYPE_G</b> =0, 
+<tr class="separator:aaeb77ce3cefb2e3282964b3fceec2c08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ef8499ada234887dd13961489943440"><td class="memItemLeft" align="right" valign="top"><a id="a5ef8499ada234887dd13961489943440"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>GTYPE</b> { <b>GTYPE_G</b> =0, 
 <b>GTYPE_Z</b> =1
  }</td></tr>
-<tr class="separator:ab04a0655cd1e3bcac5e8f48c18df1a57"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a385c44f6fb256e5716a2302a5b940388"><td class="memItemLeft" align="right" valign="top"><a id="a385c44f6fb256e5716a2302a5b940388"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+<tr class="separator:a5ef8499ada234887dd13961489943440"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a0944fd4c266098d168c34db1d1e8c1"><td class="memItemLeft" align="right" valign="top"><a id="a5a0944fd4c266098d168c34db1d1e8c1"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>PTYPE</b> { <br />
 &#160;&#160;<b>PTYPE_MF</b> =1, 
 <b>PTYPE_COG</b> =2, 
 <b>PTYPE_MAP</b> =3, 
@@ -186,11 +186,11 @@ Enumerations</h2></td></tr>
 &#160;&#160;<b>PTYPE_CORRS</b> =5
 <br />
  }</td></tr>
-<tr class="separator:a385c44f6fb256e5716a2302a5b940388"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc5c98fcc1211af2b80116dd6e0a035d"><td class="memItemLeft" align="right" valign="top"><a id="abc5c98fcc1211af2b80116dd6e0a035d"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>NCPA_G</b> =1, 
+<tr class="separator:a5a0944fd4c266098d168c34db1d1e8c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a866c2c89834fc11b07977c38386cd37b"><td class="memItemLeft" align="right" valign="top"><a id="a866c2c89834fc11b07977c38386cd37b"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>NCPA_METHOD</b> { <b>NCPA_G</b> =1, 
 <b>NCPA_I0</b> =2
  }</td></tr>
-<tr class="separator:abc5c98fcc1211af2b80116dd6e0a035d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a866c2c89834fc11b07977c38386cd37b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -3577,6 +3577,34 @@ na_interp</td>
 na_thres</td>
 <td class="fielddoc">
 <p>altitude error threshold to move trombone, in unit of meter. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a862a0bdf561448d46ac5f116270b6c20"></a>real</td>
+<td class="fieldname">
+na_fit_svdthres</td>
+<td class="fielddoc">
+<p>threshold for SVD inverse in sodium fitting. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9103dd56c93415d15445726d30154905"></a>real</td>
+<td class="fieldname">
+na_fit_dh</td>
+<td class="fielddoc">
+<p>sampling in height in sodium fitting </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7426f467bacd737e5517e94335d1b9e7"></a>int</td>
+<td class="fieldname">
+na_fit_alg</td>
+<td class="fielddoc">
+<p>Algorithm for NA fitting gradient calculatiion. 0: auto. &gt;0: see enum PTYPE </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a0ddf4d898208930ac11aa00bf3e5960e"></a>int</td>
+<td class="fieldname">
+na_fit_maxit</td>
+<td class="fielddoc">
+<p>Number of iterations. 0: auto, 1 for CMF, 3 for COG. see wfsgrad.c </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a76602ea9e795f7028ecc562d4d98e09c"></a>int</td>
