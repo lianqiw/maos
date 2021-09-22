@@ -1,5 +1,8 @@
 var NAVTREEINDEX5 =
 {
+"fit_cir48.html":[4,4,11],
+"fit_sq34.html":[4,4,12],
+"fov_oa.html":[4,4,13],
 "fov_pmos.html":[4,4,14],
 "fov_sq34.html":[4,4,15],
 "fractal_8h.html":[10,0,1,4],
@@ -246,8 +249,5 @@ var NAVTREEINDEX5 =
 "lmath_8h.html#a15ceffb00e7bb7e57793410cecd33cbd":[10,0,3,4,7],
 "lmath_8h.html#a1a9682af3bcc9e9204bee31d081c2f1d":[10,0,3,4,52],
 "lmath_8h.html#a1c526d90e9a22a8faf33f614b6b14a95":[10,0,3,4,73],
-"lmath_8h.html#a24c9b7e45c2ab7fbc1dc8a9602b57326":[10,0,3,4,11],
-"lmath_8h.html#a25a5f7966752dedb601aa5d2f64836ca":[10,0,3,4,40],
-"lmath_8h.html#a29afa34a86fd0dda18cd6caf79fd3a4a":[10,0,3,4,65],
-"lmath_8h.html#a2eebb7d69266919a41e725377f37c3fc":[10,0,3,4,71]
+"lmath_8h.html#a24c9b7e45c2ab7fbc1dc8a9602b57326":[10,0,3,4,11]
 };

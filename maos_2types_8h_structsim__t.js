@@ -78,6 +78,7 @@ var maos_2types_8h_structsim__t =
     [ "fsmcmds", "maos_2types_8h.html#ab5121345ac62a534dd0fbf214e5c949f", null ],
     [ "LGSfocus", "maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95", null ],
     [ "LGSfocus_drift", "maos_2types_8h.html#a439831c6667df780fbfba6d4b18a7b2d", null ],
+    [ "LGSfocusts", "maos_2types_8h.html#acfa489411f06aa49cd5ebbdc8b082c04", null ],
     [ "lgsfocuslpf", "maos_2types_8h.html#ac7280331f2805e1438cdbf11256e3ef9", null ],
     [ "ngsfocuslpf", "maos_2types_8h.html#a68470d6b731fca75ce22488d2b942c30", null ],
     [ "zoomerr", "maos_2types_8h.html#a391a465f5eb4c2f57ba4694a4c40a52f", null ],

@@ -110,6 +110,12 @@ Macros</h2></td></tr>
 <tr class="separator:ab1d9a9bae6eafd580462028dc872484c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab19dbf41490724c2f3d7897c8fd6995b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ab19dbf41490724c2f3d7897c8fd6995b">readbin</a>(format...)&#160;&#160;&#160;read_by_id(M_0, -1, format);</td></tr>
 <tr class="separator:ab19dbf41490724c2f3d7897c8fd6995b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed548cf39b1be47ae83cb37198544edd"><td class="memItemLeft" align="right" valign="top"><a id="aed548cf39b1be47ae83cb37198544edd"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>readdata</b>(fp)&#160;&#160;&#160;<a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a>(fp, 0, -1, 0)</td></tr>
+<tr class="separator:aed548cf39b1be47ae83cb37198544edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a896f1cb693d59566539d74ad0e639dea"><td class="memItemLeft" align="right" valign="top"><a id="a896f1cb693d59566539d74ad0e639dea"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>writedata</b>(fp,  A)&#160;&#160;&#160;<a class="el" href="cell_8h.html#afcbacd5dc6a654c3632f30e37b512b54">writedata_by_id</a>(fp, A, 0, 0)</td></tr>
+<tr class="separator:a896f1cb693d59566539d74ad0e639dea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -598,7 +604,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A generic routine for reading data from socket. User need to cast the result. </p>
+<p>A generic routine for reading data from socket. User need to cast the result. We dup the fd to avoid close it after read. </p>
 
 </div>
 </div>
@@ -627,7 +633,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A generic routine for write data to socket. </p>
+<p>A generic routine for write data to socket. We dup the fd to avoid close it after read. </p>
 
 </div>
 </div>

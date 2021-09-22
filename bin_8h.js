@@ -41,7 +41,8 @@ var bin_8h =
       [ "M_LOC32", "bin_8h.html#ad19d6aaec27e278423aae876b41c5dfea1fc85ef0d1c675971c73164531178294", null ],
       [ "M_MAP64", "bin_8h.html#ad19d6aaec27e278423aae876b41c5dfea6c438c3985a18380f2a96903e3dc594f", null ],
       [ "M_RECTMAP64", "bin_8h.html#ad19d6aaec27e278423aae876b41c5dfea162510f9add752539a72e99252ab691c", null ],
-      [ "M_LOC64", "bin_8h.html#ad19d6aaec27e278423aae876b41c5dfea2b0c36ba200b7c60034007abf61119d0", null ]
+      [ "M_LOC64", "bin_8h.html#ad19d6aaec27e278423aae876b41c5dfea2b0c36ba200b7c60034007abf61119d0", null ],
+      [ "M_EOD", "bin_8h.html#ad19d6aaec27e278423aae876b41c5dfea07bf09dd94797b23038ed65e7554a326", null ]
     ] ],
     [ "zfexist", "bin_8h.html#a55e5dc1b9fd29f858d152f3194dd1d22", null ],
     [ "zftouch", "bin_8h.html#a413945d9b9ed2b96159910115707a7ad", null ],
@@ -50,7 +51,7 @@ var bin_8h =
     [ "zfseek", "bin_8h.html#acff7a399a7daacbf8fcca57c18732f57", null ],
     [ "zfrewind", "bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289", null ],
     [ "zfopen", "bin_8h.html#a43fd0b9636dd5ca782e8c718eeb8b7f1", null ],
-    [ "zfdopen", "bin_8h.html#af4cd6af6ada2d05acfa25434af1ba956", null ],
+    [ "zfdopen", "bin_8h.html#ad161e85bf0a438ab4f30a67f9dcc009f", null ],
     [ "zfname", "bin_8h.html#a4b81bfaf82d10ec42e8d296544a0b3dc", null ],
     [ "zfisfits", "bin_8h.html#a01b67a362199a6b984e5759f7d84c168", null ],
     [ "zfclose", "bin_8h.html#a4ed840d37c980314e41e565e7dd617d3", null ],

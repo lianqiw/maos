@@ -41,6 +41,7 @@ var searchData=
   ['lgsfocus',['LGSfocus',['../maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95',1,'sim_t']]],
   ['lgsfocus_5fdrift',['LGSfocus_drift',['../maos_2types_8h.html#a439831c6667df780fbfba6d4b18a7b2d',1,'sim_t']]],
   ['lgsfocuslpf',['lgsfocuslpf',['../maos_2types_8h.html#ac7280331f2805e1438cdbf11256e3ef9',1,'sim_t']]],
+  ['lgsfocusts',['LGSfocusts',['../maos_2types_8h.html#acfa489411f06aa49cd5ebbdc8b082c04',1,'sim_t']]],
   ['lhash',['lhash',['../lmath_8h.html#a7d4b41a7759f736e9271e22710a99d02',1,'ltmp.c']]],
   ['listen_5fport',['listen_port',['../sock_8h.html#a6d79915ff976b61b5e9f1cbefdb7be97',1,'sock.c']]],
   ['ll',['LL',['../maos_2types_8h.html#ab209612b1005f4f61a645eebf9a16543',1,'recon_t']]],

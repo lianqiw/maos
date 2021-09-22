@@ -7,6 +7,7 @@ var searchData=
   ['lgsfocus',['LGSfocus',['../maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95',1,'sim_t']]],
   ['lgsfocus_5fdrift',['LGSfocus_drift',['../maos_2types_8h.html#a439831c6667df780fbfba6d4b18a7b2d',1,'sim_t']]],
   ['lgsfocuslpf',['lgsfocuslpf',['../maos_2types_8h.html#ac7280331f2805e1438cdbf11256e3ef9',1,'sim_t']]],
+  ['lgsfocusts',['LGSfocusts',['../maos_2types_8h.html#acfa489411f06aa49cd5ebbdc8b082c04',1,'sim_t']]],
   ['ll',['LL',['../maos_2types_8h.html#ab209612b1005f4f61a645eebf9a16543',1,'recon_t']]],
   ['llt',['llt',['../structcupowfs__t.html#a115e3915d7266c73537f40fbd527cc00',1,'cupowfs_t::llt()'],['../parms_8h.html#a176fda60e684602e4da9bd5382c42b0f',1,'powfs_cfg_t::llt()'],['../maos_2types_8h.html#a3ae7b8fc8e71e9e2caf9378614888191',1,'powfs_t::llt()']]],
   ['llt_5ftt',['llt_tt',['../maos_2types_8h.html#af7f5504268fb3897cc6d3cb8594c08c7',1,'sim_t']]],
