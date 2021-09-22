@@ -58,4 +58,7 @@ void writebin_async(const void* A, long ncol);
 void writebin_header(cell* dc, const char* header, const char* format, ...) CHECK_ARG(3);
 cell* readsock(int sock);
 void writesock(const cell* dc, int sock);
+#define readdata(fp) readdata_by_id(fp, 0, -1, 0)
+#define writedata(fp, A) writedata_by_id(fp, A, 0, 0)
+
 #endif

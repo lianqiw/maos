@@ -34,7 +34,8 @@ magic2dname={
     #25856: 'M_COMMENT',
     #26112: 'M_SKIP'
 }
-
+M_EOD=0x64FF
+M_SKIP=0x6600
 dname2type={
     'M_ZMP': np.complex64,
     'M_CMP': np.complex128,
@@ -86,23 +87,24 @@ def readbin(file, want_header=0):
         isfits=False
         isfile=False
         issock=True
-    elif not os.path.isfile(file): #file not found
-        if os.path.isfile(file+'.bin'):
-            file=file+'.bin'
-        elif os.path.isfile(file+'.bin.gz'):
-            file=file+'.bin.gz'
-        elif os.path.isfile(file+'.fits'):
-            file=file+'.fits'
-            isfits=True
-        elif os.path.isfile(file+'.fits.gz'):
-            file=file+'.fits.gz'
-            isfits=True
-        else:
-            print('File does not exist:', file)
-    if os.path.isfile(file):
-        isfile=True
-        if (file[-5:]=='.fits' or file[-8:] == '.fits.gz'):
-            isfits=True
+    else:
+        if not os.path.isfile(file): #file not found
+            if os.path.isfile(file+'.bin'):
+                file=file+'.bin'
+            elif os.path.isfile(file+'.bin.gz'):
+                file=file+'.bin.gz'
+            elif os.path.isfile(file+'.fits'):
+                file=file+'.fits'
+                isfits=True
+            elif os.path.isfile(file+'.fits.gz'):
+                file=file+'.fits.gz'
+                isfits=True
+            else:
+                print('File does not exist:', file)
+        if os.path.isfile(file):
+            isfile=True
+            if (file[-5:]=='.fits' or file[-8:] == '.fits.gz'):
+                isfits=True
     if isfile or issock:
         try:
             fp=open(file, 'rb', closefd=isfile)
@@ -117,8 +119,7 @@ def readbin(file, want_header=0):
         except Exception as error:#file may not be ready
             print("readbin failed:", file, error)
         finally:
-            if isfile:
-                fp.close()
+            fp.close()
     if want_header: 
         return (out, header)
     else:
@@ -155,8 +156,8 @@ def readbin_do(fp, isfits):
     if magic<0:
         dname='Unknown'
         err=-1
-    elif magic==0:
-        dname='EOF'
+    elif magic==M_EOD:
+        dname='EOD'
         err=1
     else:
         try:
@@ -275,13 +276,12 @@ def readfits_header(fp):
 def readbin_magic(fp):
     try:
         magic=readuint32(fp)
-        M_SKIP=26112
         if magic==M_SKIP: #padding
             magic=readuint32(fp)
         return magic
     except Exception as error:
         print(error)
-        return 0 
+        return M_EOD 
 def readbin_header(fp):
     M_COMMENT=25856
     header={}

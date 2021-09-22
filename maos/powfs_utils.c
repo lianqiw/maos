@@ -307,10 +307,10 @@ void fit_sodium_profile(
 			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
 				pixthetax, pixthetay, NULL, radgx, 1, 1);
 			toc2("mtche create"); tic;
-			OMP_FOR
+			OMP_FOR_COLLAPSE(2)
 			for(long ii0=0; ii0<ni0; ii0++){
-				dmat* gradi=P(*pgrad, ii0);
 				for(long isa=0; isa<nsa; isa++){
+					dmat* gradi=P(*pgrad, ii0);
 					real g[2]={0,0};
 					dmulvec(g, P(mtche, isa, ii0), P(P(i0i, isa, ii0)), 1);
 					P(gradi, isa)+=g[0];
@@ -324,10 +324,10 @@ void fit_sodium_profile(
 				dcelladd(pi0tmp, 1, P(i0m, ix), P(nai, ix, 1));
 			}
 			const dcell* i0o=*pi0tmp;
-			OMP_FOR
+			OMP_FOR_COLLAPSE(2)
 			for(long ii0=0; ii0<ni0; ii0++){
-				dmat* gradi=P(*pgrad, ii0);
 				for(long isa=0; isa<nsa; isa++){
+					dmat* gradi=P(*pgrad, ii0);
 					real g1[2],g2[2];
 					dcog(g1, P(i0o, isa, ii0), 0, 0, cogthres, 0, 0);
 					dcog(g2, P(i0i, isa, ii0), 0, 0, cogthres, 0, 0);

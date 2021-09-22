@@ -594,6 +594,7 @@ typedef struct sim_t{
     /*focus tracking loop*/
     dcell *LGSfocus;  /**<LGS focus error*/
     dcell *LGSfocus_drift;  /**<LGS focus drift error*/
+    dcell *LGSfocusts; /**<Time history of focus error*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     real ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/

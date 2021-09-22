@@ -1052,23 +1052,22 @@ static void init_simu_wfs(sim_t* simu){
 		simu->zoomerr_drift=dnew(parms->nwfs, 1);
 		simu->zoomint=dnew(parms->nwfs, 1);
 		simu->zoomavg=dnew(parms->nwfs, 1);
-		if(!disable_save){
-			long nnx[parms->nwfs];
-			long nny[parms->nwfs];
-			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				int ipowfs=parms->wfs[iwfs].powfs;
-				if(parms->powfs[ipowfs].llt){
-					nnx[iwfs]=(parms->sim.end+1)/parms->powfs[ipowfs].zoomdtrat;
-					nny[iwfs]=1;
-				} else{
-					nnx[iwfs]=0;
-					nny[iwfs]=0;
-				}
+		long nnx2[parms->nwfs];
+		long nnx[parms->nwfs];
+		long nny[parms->nwfs];
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			int ipowfs=parms->wfs[iwfs].powfs;
+			if(parms->powfs[ipowfs].llt){
+				nnx[iwfs]=(parms->sim.end+1)/parms->powfs[ipowfs].zoomdtrat;
+				nnx2[iwfs]=nsim;
+				nny[iwfs]=1;
+			} else{
+				nnx[iwfs]=0;
+				nny[iwfs]=0;
 			}
-			
-		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
 		}
-
+		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
+		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx2, nny, NULL, "%s/Resfocuserrs_%d.bin", fnextra, seed);
 	}
 	if(parms->dither){
 		simu->dither=mycalloc(nwfs, dither_t*);
@@ -1584,6 +1583,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->fsmcmds);
 	dcellfree(simu->LGSfocus);
 	dcellfree(simu->LGSfocus_drift);
+	dcellfree(simu->LGSfocusts);
 	dcellfree(simu->telfocusint);
 	dcellfree(simu->telfocusreal);
 	dfree(simu->zoomerr);
@@ -1728,6 +1728,11 @@ void print_progress(sim_t* simu){
 			//writebin_async(simu->resdither, simu->perfisim+1);//column is different
 			writebin_async(simu->fsmerrs, simu->wfsisim+1);
 			writebin_async(simu->fsmcmds, simu->wfsisim+1);
+			if(parms->nlgspowfs){
+				writebin_async(simu->LGSfocusts, simu->wfsisim+1);
+				int ncol=(simu->wfsisim+1)/parms->powfs[parms->ilgspowfs].zoomdtrat;
+				writebin_async(simu->zoompos, ncol);
+			}
 			last_save_time=this_time;
 		}
 	}

@@ -207,6 +207,8 @@ drawdata_t *get_drawdata(char **fig, char **name, int reset){
     }									
 int sock;//socket 
 int sock_idle=0;//1: no active drawing. 0: active drawing connection. -1: do not retry connection
+drawdata_t* drawdata=NULL;//current 
+drawdata_t* drawdata_prev=NULL;//previous
 void* listen_draw(void* user_data){
 	char* str2=0;
 	char *host=0;
@@ -242,7 +244,7 @@ retry:
 			sock=-1;
 		}
 	}
-	static drawdata_t* drawdata=NULL;
+
 	char *fig=0;
 	char *name=0;
 	int cmd=0;
@@ -445,6 +447,13 @@ retry:
 			if(!drawdata->fig) drawdata->fig=strdup("unknown");
 			drawdata->ready=1;
 			gdk_threads_add_idle(addpage, drawdata);
+			if(drawdata_prev && drawdata_prev==drawdata){//same drawdata is updated, enable computing framerate.
+				io_time2=io_time1;
+			}else{
+				io_time2=0;//this disables frame rate printing
+			}
+			io_time1=myclockd();
+			drawdata_prev=drawdata;//for computing time
 			drawdata=NULL;
 		}
 		break;

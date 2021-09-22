@@ -18,9 +18,8 @@ except:
     from libaos import *
 
 from readbin import readbin
-
 from draw import draw, locembed
-
+import maos_client
 
 #To dock multiple figures. Does not work very well.
 def dock_figure():

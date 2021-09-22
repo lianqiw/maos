@@ -485,18 +485,20 @@ cell* read_by_id(M_ID id, int level, const char* format, ...){
 
 /**
    A generic routine for reading data from socket. User need to cast the result.
+   We dup the fd to avoid close it after read.
  */
 cell* readsock(int sock){
-	file_t* fp=zfdopen(sock, "rb");
+	file_t* fp=zfdopen(dup(sock));
 	cell* out=fp?readdata_by_id(fp, 0, -1, 0):NULL;
 	zfclose(fp);
 	return out;
 }
 /**
    A generic routine for write data to socket.
+   We dup the fd to avoid close it after read.
  */
 void writesock(const cell* A, int sock){
-	file_t* fp=zfdopen(sock, "wb");
+	file_t* fp=zfdopen(dup(sock));
 	if(fp) writedata_by_id(fp, A, 0, 0);
 	zfclose(fp);
 }

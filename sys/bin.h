@@ -63,8 +63,8 @@ typedef enum M_ID{
 
   M_MAP64     =0x016402, /*map_t, compatible with M_DBL*/
   M_RECTMAP64 =0x026402, /*map_t, compatible with M_DBL*/
-  M_LOC64     =0x036402 /*loc_t with double data*/
-
+  M_LOC64     =0x036402, /*loc_t with double data*/
+  M_EOD       =0x64FF    /*Indicate end of valid data */
 }M_ID;
 #if LONG_MAX==2147483647L //long is 32 bit
 #define M_LONG M_INT32
@@ -117,7 +117,7 @@ long zfpos(file_t *fp);
 long zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
 file_t *zfopen(const char *fn, const char *mod);
-file_t *zfdopen(int fd, const char *mod);
+file_t *zfdopen(int fd);
 const char *zfname(file_t *fp);
 int zfisfits(file_t *fp);
 void zfclose(file_t *fp);

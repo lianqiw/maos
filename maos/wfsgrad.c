@@ -520,11 +520,14 @@ static void wfsgrad_ttf_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, in
 			dmat *TT=P(recon->TT, iwfsr, iwfsr);
 			dmm(&grad, 1, TT, tt, "nn", -1);
 		}
-		P(P(simu->fsmerr_drift, iwfs), 0)=P(tt, 0)*gdrift;
-		P(P(simu->fsmerr_drift, iwfs), 1)=P(tt, 1)*gdrift;
-		if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
-			dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f)mas\n",
-			simu->wfsisim, iwfs, P(tt, 0)*206265000, P(tt, 1)*206265000);
+		//need to use integrator here and then use as offset
+		if(gdrift){
+			P(P(simu->fsmerr_drift, iwfs), 0)+=P(tt, 0)*gdrift;
+			P(P(simu->fsmerr_drift, iwfs), 1)+=P(tt, 1)*gdrift;
+			if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
+				dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f)mas\n",
+				simu->wfsisim, iwfs, P(tt, 0)*206265000, P(tt, 1)*206265000);
+			}
 		}
 		dfree(tt);
 	}
@@ -536,11 +539,14 @@ static void wfsgrad_ttf_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, in
 		if(remove){
 			dmm(&grad, 1, P(recon->GFall, iwfs), focus, "nn", -1);
 		}
-		P(simu->zoomerr_drift, iwfs)=P(focus, 0)*gdrift;
-		if(iwfs==P(parms->powfs[ipowfs].wfs, 0)||!parms->powfs[ipowfs].zoomshare){
-			double deltah=P(focus, 0)*2*pow(parms->powfs[ipowfs].hs, 2);
-			dbg("Step %5d: wfs %d trombone drift control error is %.3f m\n",
-			simu->wfsisim, iwfs, deltah);
+		//need to use integrator here and then use as offset
+		if(gdrift){
+			P(simu->zoomerr_drift, iwfs)+=P(focus, 0)*gdrift;
+			if(iwfs==P(parms->powfs[ipowfs].wfs, 0)||!parms->powfs[ipowfs].zoomshare){
+				double deltah=P(focus, 0)*2*pow(parms->powfs[ipowfs].hs, 2);
+				dbg("Step %5d: wfs %d trombone drift control error is %.3f m\n",
+				simu->wfsisim, iwfs, deltah);
+			}
 		}
 		dfree(focus);
 	}
@@ -751,10 +757,11 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 				lgsfocusm+=P(P(LGSfocus, iwfs), 0);
+				P(P(simu->LGSfocusts, iwfs), simu->wfsisim)=P(P(LGSfocus, iwfs), 0);
 			}
 			lgsfocusm/=parms->powfs[ipowfs].nwfs;
 		}
-
+		
 		/*Here we set trombone position according to focus in the first
 		  measurement. And adjust the focus content of this
 		  measurement. This simulates the initial focus acquisition
@@ -778,8 +785,10 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 					//drift signal is used as bias. do not zero zoomerr_drift
 					P(simu->zoomerr, iwfs)=zoomout+P(simu->zoomerr_drift, iwfs);
 					P(simu->zoomavg, iwfs)=0;
+					real wve2h=2*pow(parms->powfs[ipowfs].hs, 2);//convert WFE to height
 					if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
-						dbg("wfs %d: trombone averager output %.1f m\n", iwfs, zoomout*2*pow(parms->powfs[ipowfs].hs, 2));
+						dbg("Step %d wfs %d: trombone averager output %5.1f m, drift offset is %.1fm\n", 
+						simu->wfsisim, iwfs, zoomout*wve2h, P(simu->zoomerr_drift, iwfs)*wve2h);
 					}
 				}
 			}
@@ -814,7 +823,8 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			}
 			dhc=(dhc/parms->powfs[ipowfs].nwfs)*2*pow(parms->powfs[ipowfs].hs, 2);
 			//only force update ETF if dh changes by more than 100 (1% of the sodium profile depth).
-			if(parms->powfs[ipowfs].llt->coldtrat==0&& fabs(dhc)>parms->dbg.na_thres){//otherwise, wait until next sodium profile column
+			/*if(fabs(dhc)>parms->dbg.na_thres)*/
+			{//otherwise, wait until next sodium profile column
 				update_etf=1;
 			}
 		}
@@ -1060,6 +1070,16 @@ static void wfsgrad_dither_post(sim_t* simu){
 						}
 					}
 				}
+				if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
+					//tip/tilt and focus drift control is needed for matched filter with either dithering or sodium fitting
+					dmat* ibgrad=0;
+					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+						shwfs_grad(&ibgrad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
+						wfsgrad_ttf_drift(ibgrad, simu, 1, iwfs, 0);
+					}
+					dfree(ibgrad);
+				}
 				if(parms->powfs[ipowfs].dither_amp==0){
 					dmat* sodium=0;
 					dcell* grad=0;
@@ -1075,33 +1095,28 @@ static void wfsgrad_dither_post(sim_t* simu){
 						writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
 						writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
 					}
-					//dcelladd(&grad, 1, powfs[ipowfs].gradncpa, -1);
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						//splits tip/tilt/focus from reference vector to FSM and trombone control
-						wfsgrad_ttf_drift(P(grad, jwfs), simu, 0, iwfs, 1);
 						if(parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
 							if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
 							dadd(&P(grad, jwfs), 1, P(powfs[ipowfs].gradncpa, jwfs), -1);
+							//only need to make sure the reference vector
+							//contains no tip/tilt or focus mode. no need to use
+							//drift control
 							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
+							wfsgrad_ttf_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
 						} else if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
 							if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
+							//since we are building ideal matched filter with
+							//the correct gradncpa and sodium profile. no need
+							//to use gradient reference vector. 
 							dzero(P(simu->gradoff, iwfs));
 						}
 					}
 					dcellfree(grad);
 					dfree(sodium);
-				}else{//Necessary
-					//tip/tilt and focus drift control.
-					//we use gain of 1 as this output is slower than gradient based control.
-					dmat* ibgrad=0;
-					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						shwfs_grad(&ibgrad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
-						wfsgrad_ttf_drift(ibgrad, simu, 1, iwfs, 0);
-					}
-					dfree(ibgrad);
 				}
+				
 				//there is no need to reset trombone error signal
 				if((parms->save.gradoff||parms->save.dither)&&parms->dbg.gradoff_reset!=1){
 					writebin(simu->gradoff, "extra/gradoff_%d_dither", isim);

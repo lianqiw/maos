@@ -934,8 +934,6 @@ gboolean addpage(gpointer indata){
 	if(page){
 		if(get_current_drawdata()==drawdata){/*we are the current page. need to update pixmap */
 			update_pixmap(drawdata);
-			io_time2=io_time1;
-			io_time1=myclockd();
 		} else{
 			/*otherwise, notify client that it is not drawing to active page */
 			page_changed(-1, -1);
@@ -1282,14 +1280,14 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
 	gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffx);
 	g_signal_connect(checkbtn, "value-changed", G_CALLBACK(range_changed), &drawdata->legendoffx);
-	box_append(GTK_BOX(hbox), gtk_label_new("Position: H"), FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), gtk_label_new("Position: H  "), FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
 	checkbtn=gtk_hscale_new_with_range(0, 1, 0.01);
 	gtk_widget_set_size_request(checkbtn, 80, 20);
 	gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
 	gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffy);
 	g_signal_connect(checkbtn, "value-changed", G_CALLBACK(range_changed), &drawdata->legendoffy);
-	box_append(GTK_BOX(hbox), gtk_label_new("V"), FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), gtk_label_new("  V  "), FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
@@ -1506,8 +1504,8 @@ static gboolean window_state(GtkWidget* window, GdkEvent* event){
 int update_fpslabel(gpointer label){
 	if(!GTK_IS_LABEL(label)) return FALSE;//deleted
 	float thistime=myclockd();
-	extern float io_time1;
-	extern float io_time2;
+	extern float io_time1;//receiving time for latest frame
+	extern float io_time2;//previous frame or 0 if different
 	//using static variable is problematic as this is called for different labels
 	float fps=0;
 	if(io_time1+2>thistime && io_time2+100>io_time1){//current
@@ -1660,7 +1658,7 @@ GtkWidget* create_window(GtkWidget* window){
 	
 	new_tool(toolbar, NULL, 1, NULL, NULL, NULL); //separator
 	GtkWidget *fpslabel=gtk_label_new("");
-	gdk_threads_add_idle(update_fpslabel, fpslabel);
+	g_timeout_add(2000, update_fpslabel, fpslabel);
 	new_tool(toolbar, fpslabel, 0, "fps", NULL, NULL);
 		
 	GtkWidget* topnb=gtk_notebook_new();

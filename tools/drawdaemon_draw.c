@@ -358,25 +358,13 @@ draw_point(cairo_t* cr, float ix, float iy, long style, float size){
 static void update_limit(drawdata_t* drawdata){
 	/*need to update max/minimum. */
 	drawdata->limit_changed=0;//do not try to update zoom from the updated limit.
-	if(drawdata->cumulast!=drawdata->cumu){
+	if(drawdata->cumulast!=drawdata->cumu || (drawdata->cumu && (drawdata->icumu != drawdata->icumulast))){
 		drawdata->offx=0;
 		drawdata->offy=0;
 		drawdata->zoomx=1;
 		drawdata->zoomy=1;
 	}
-	if(!drawdata->limit){
-		if(drawdata->cumu){
-			if(!drawdata->limit_cumu){
-				drawdata->limit_cumu=mycalloc(4, float);
-			}
-			drawdata->limit=drawdata->limit_cumu;
-		} else{
-			if(!drawdata->limit_data){
-				drawdata->limit_data=mycalloc(4, float);
-			}
-			drawdata->limit=drawdata->limit_data;
-		}
-	}
+
 	float xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 		const float* ptsx=drawdata->pts[ipts], * ptsy=0;
@@ -427,7 +415,7 @@ static void update_limit(drawdata_t* drawdata){
 		} else{
 			fmaxmin(ptsy, ptsnx, &ymax, &ymin);
 		}
-		info("xmin=%g, xmax=%g, ymin=%g, ymax=%g\n", xmin, xmax, ymin, ymax);
+		//info("xmin=%g, xmax=%g, ymin=%g, ymax=%g\n", xmin, xmax, ymin, ymax);
 		if(xmin<xmin0) xmin0=xmin;
 		if(xmax>xmax0) xmax0=xmax;
 		if(ymin<ymin0) ymin0=ymin;
@@ -444,9 +432,9 @@ static void update_limit(drawdata_t* drawdata){
 	drawdata->limit[0]=xmin0;
 	drawdata->limit[1]=xmax0;
 	float gain=1;
-	if((io_time1-io_time2)<2&&drawdata->cumulast==drawdata->cumu){//continuous update, do not update the y range too quickly.
+	/*if((io_time1-io_time2)<2&&drawdata->cumulast==drawdata->cumu){//continuous update, do not update the y range too quickly.
 		gain=0.1;
-	}
+	}*/
 	drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
 	drawdata->limit[3]=ymax0*gain+(1-gain)*drawdata->limit[3];
 }
@@ -464,31 +452,25 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->font_name_version=font_name_version;
 	PangoLayout* layout=pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, desc);
-	cairo_rectangle(cr, 0, 0, width, height);
-	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_fill(cr);
-	cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
-	/*{
-	  cairo_font_options_t *fonto= cairo_font_options_create();
-	  cairo_font_options_set_hint_metrics(fonto,CAIRO_HINT_METRICS_ON);
-	  cairo_font_options_set_hint_style (fonto, CAIRO_HINT_STYLE_MEDIUM);
-	  cairo_font_options_set_antialias (fonto,CAIRO_ANTIALIAS_SUBPIXEL);
-	  cairo_set_font_options(cr, fonto);
-	  cairo_font_options_destroy(fonto);
-	  }*/
+
 	if(!drawdata->image&&!drawdata->square){
 		drawdata->cumu=cumu;
 	} else{
 		drawdata->cumu=0;
 	}
 	if(drawdata->cumu){
-		if((int)drawdata->icumulast==(int)drawdata->icumu){
-			drawdata->limit=drawdata->limit_cumu;
-		} else{
+		if((int)drawdata->icumulast!=(int)drawdata->icumu){
 			free(drawdata->limit_cumu);
-			drawdata->limit=drawdata->limit_cumu=NULL;
+			drawdata->limit_cumu=NULL;
 		}
+		if(!drawdata->limit_cumu){
+			drawdata->limit_cumu=mycalloc(4, float);
+		}
+		drawdata->limit=drawdata->limit_cumu;
 	} else{
+		if(!drawdata->limit_data){
+			drawdata->limit_data=mycalloc(4, float);
+		}
 		drawdata->limit=drawdata->limit_data;
 	}
 	if(!drawdata->image){
@@ -584,16 +566,29 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->centery=yoff+heightim*0.5;
 	float zoomx=drawdata->zoomx;/*Zoom of the image when displayed. */
 	float zoomy=drawdata->zoomy;
+	
 	cairo_select_font_face(cr, font_name, font_style, font_weight);
 	cairo_set_font_size(cr, font_size);
 	float linewidth=round(font_size*0.08);
 	float ticlength=font_size*0.5;
 	float ticskip=drawdata->ticinside?5:ticlength;
-	float gridskip=drawdata->ticinside?ticlength:0;
+	//float gridskip=drawdata->ticinside?ticlength:0;
 	if(drawdata->ticinside){
 		ticlength=-ticlength;
 	}
 	if(linewidth<1) linewidth=1;
+	cairo_rectangle(cr, 0, 0, width, height);
+	cairo_set_source_rgb(cr, 1, 1, 1);
+	cairo_fill(cr);
+	cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+	/*{
+	  cairo_font_options_t *fonto= cairo_font_options_create();
+	  cairo_font_options_set_hint_metrics(fonto,CAIRO_HINT_METRICS_ON);
+	  cairo_font_options_set_hint_style (fonto, CAIRO_HINT_STYLE_MEDIUM);
+	  cairo_font_options_set_antialias (fonto,CAIRO_ANTIALIAS_SUBPIXEL);
+	  cairo_set_font_options(cr, fonto);
+	  cairo_font_options_destroy(fonto);
+	  }*/
 	cairo_set_line_width(cr, linewidth);
 	/*Save the state of cairo before we drawing the image/points. */
 	cairo_save(cr);
@@ -603,7 +598,13 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	/*clip out an rectangular region to draw. */
 	cairo_rectangle(cr, 0, 0, widthim, heightim);
 	cairo_clip(cr);
-	if(drawdata->nx && drawdata->ny){
+	/*
+		2021-09-20:
+		Tried to draw tics before points usin cairo_push_group and
+		cairo_pop_group. It didn't work because the points were drawing into an
+		intermediate buffer to facilitate paning, but it covers all the grids.
+	*/
+	if(drawdata->nx && drawdata->ny){//draw 2-d image
 		cairo_save(cr);
 		cairo_scale(cr, scalex*zoomx, scaley*zoomy);
 		/*
@@ -636,7 +637,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		cairo_restore(cr);
 		//toc("cairo_draw image");
 	}
-	if(drawdata->npts>0){
+	if(drawdata->npts>0){//plot points
 		cairo_save(cr);
 		float centerx=(xmax+xmin)*0.5;
 		float centery=(ymax+ymin)*0.5;
@@ -876,7 +877,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		//toc("cairo_draw pts");
 	}
 
-	if(drawdata->ncir>0){
+	if(drawdata->ncir>0){//plot circles
 		cairo_save(cr);
 		cairo_set_antialias(cr, CAIRO_ANTIALIAS_GRAY);
 
@@ -895,11 +896,10 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}
 		cairo_restore(cr);
 	}
-	cairo_restore(cr);
+	cairo_restore(cr);//undo the clip and scale
+
+	//now draw the tics 
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-	/*the border */
-	cairo_rectangle(cr, xoff, yoff, widthim, heightim);
-	cairo_stroke(cr);/*border */
 	/*Now doing the tic, and colobar */
 	/*When there is no zoom, panning, limit0 equals to limit. */
 	drawdata->limit0[0]=xmin0;
@@ -922,111 +922,101 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	float sep;
 	calc_tic(&tic1, &dtic, &ntic, &order, xmax0, xmin0, maxtic_x, xlog);
 	sep=xmax0-xmin0;
-	int nXticShown=0;
 
+	//draw the x axis
 	for(int itic=0; itic<ntic; itic++){
 		float ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-12) ticv=0;
 		float val=ticv*pow(10, order);
 		float frac=(val-xmin0)/sep;
 		float xpos=xoff+widthim*frac;
-		/*draw the tic */
+
 		if(frac>0.0&&frac<1){
-			cairo_move_to(cr, xpos, yoff+heightim);
-			cairo_line_to(cr, xpos, yoff+heightim+ticlength);
-			cairo_stroke(cr);
-			/*draw the grid */
+			/*draw the vertical grid */
 			if(drawdata->grid){
 				cairo_save(cr);
-				cairo_set_dash(cr, stroke_dot, 2, 0);
+				//cairo_set_dash(cr, stroke_dot, 2, gridskip);
+				cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 1);
 				cairo_move_to(cr, xpos, yoff);
 				cairo_line_to(cr, xpos, yoff+heightim);
 				cairo_stroke(cr);
 				cairo_restore(cr);
 			}
+			/*draw the tic */
+			cairo_move_to(cr, xpos, yoff+heightim);
+			cairo_line_to(cr, xpos, yoff+heightim+ticlength);
+			cairo_stroke(cr);
 		}
 		if(frac>=0&&frac<=1){
 			snprintf(ticval, 80, "%g", (xlog?pow(10, ticv):ticv));
 			pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1, ticval, 0.5, 0.5, 0);
-			nXticShown++;
 		}
 	}
 
-	{//draw the minor ticks
-
-		for(int itic=-1; itic<ntic; itic++){
-			float ticv=(tic1+dtic*itic);
-			for(int im=1; im<10; im++){
-				float ticvm=ticv+(xlog?log10(1+im):im*0.1)*dtic;
-				float valm=ticvm*pow(10, order);
-				float fracm=(valm-xmin0)/sep;
-				float xposm=xoff+widthim*fracm;
-				if((fracm)>0.&&(fracm)<1){
-					cairo_move_to(cr, xposm, yoff+heightim);
-					cairo_line_to(cr, xposm, yoff+heightim+ticlength/2);
-					cairo_stroke(cr);
-					if(drawdata->grid&&nXticShown<3){
-						cairo_save(cr);
-						cairo_set_dash(cr, stroke_dot, 2, 0);
-						cairo_move_to(cr, xposm, yoff);
-						cairo_line_to(cr, xposm, yoff+heightim);
-						cairo_stroke(cr);
-						cairo_restore(cr);
-					}
-				}
-				if((fracm)>=0.&&(fracm)<=1&&nXticShown<3){//shown minor tic values
-					snprintf(ticval, 80, "%g", (xlog?pow(10, ticvm):ticvm));
-					pango_text(cr, layout, xposm, yoff+heightim+font_size*0.6+ticskip+1, ticval, 0.5, 0.5, 0);
-				}
+	//draw the x axis minor ticks
+	for(int itic=-1; itic<ntic; itic++){
+		float ticv=(tic1+dtic*itic);
+		for(int im=1; im<10; im++){
+			float ticvm=ticv+(xlog?log10(1+im):im*0.1)*dtic;
+			float valm=ticvm*pow(10, order);
+			float fracm=(valm-xmin0)/sep;
+			float xposm=xoff+widthim*fracm;
+			if((fracm)>0.&&(fracm)<1){
+				cairo_move_to(cr, xposm, yoff+heightim);
+				cairo_line_to(cr, xposm, yoff+heightim+ticlength/2);
 			}
 		}
 	}
-	pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2, order, 0);
+	cairo_stroke(cr);
+	//draw the x axis power
+	if(order) pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2, order, 0);
 	calc_tic(&tic1, &dtic, &ntic, &order, ymax0, ymin0, maxtic_y, ylog);
 	sep=ymax0-ymin0;
+
+	//draw the y axis tic
 	for(int itic=0; itic<ntic; itic++){
 		float ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-12) ticv=0;
 		float val=ticv*pow(10, order);
 		float frac=(val-ymin0)/sep;
 		float ypos=yoff+heightim*(1-frac);
-		/*draw the tic */
 		if(frac>0.&&frac<1){
-			cairo_move_to(cr, xoff, ypos);
-			cairo_line_to(cr, xoff-ticlength, ypos);
-			cairo_stroke(cr);
-			/*draw the grid */
+			/*draw the horizontal grid */
 			if(drawdata->grid){
 				cairo_save(cr);
-				cairo_set_dash(cr, stroke_dot, 2, gridskip);
+				//cairo_set_dash(cr, stroke_dot, 2, gridskip);
+				cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 1);
 				cairo_move_to(cr, xoff, ypos);
 				cairo_line_to(cr, xoff+widthim, ypos);
 				cairo_stroke(cr);
 				cairo_restore(cr);
 			}
+			/*draw the tic */
+			cairo_move_to(cr, xoff, ypos);
+			cairo_line_to(cr, xoff-ticlength, ypos);
+			cairo_stroke(cr);
 		}
 		if(frac>=0&&frac<=1){
 			snprintf(ticval, 80, "%g", (ylog?pow(10, ticv):ticv));
 			pango_text(cr, layout, xoff-font_size*0.6-ticskip+1, ypos, ticval, 0.5, 0.5, 1);
 		}
 	}
-	{//draw minor ticks
-		cairo_save(cr);
-		for(int itic=-1; itic<ntic; itic++){
-			float ticv=(tic1+dtic*itic);
-			for(int im=1; im<10; im++){
-				float ticvm=ticv+(ylog?log10(im+1):im*0.1)*dtic;
-				float valm=ticvm*pow(10, order);
-				float fracm=(valm-ymin0)/sep;
-				float yposm=yoff+heightim*(1-fracm);
-				if((fracm)>0.&&(fracm)<1){
-					cairo_move_to(cr, xoff, yposm);
-					cairo_line_to(cr, xoff-ticlength/2, yposm);
-				}
+
+	//draw y axis minor ticks
+	for(int itic=-1; itic<ntic; itic++){
+		float ticv=(tic1+dtic*itic);
+		for(int im=1; im<10; im++){
+			float ticvm=ticv+(ylog?log10(im+1):im*0.1)*dtic;
+			float valm=ticvm*pow(10, order);
+			float fracm=(valm-ymin0)/sep;
+			float yposm=yoff+heightim*(1-fracm);
+			if((fracm)>0.&&(fracm)<1){
+				cairo_move_to(cr, xoff, yposm);
+				cairo_line_to(cr, xoff-ticlength/2, yposm);
 			}
 		}
-		cairo_stroke(cr);
-		cairo_restore(cr);
 	}
-	pango_text_powindex(cr, layout, xoff-font_size*2.8, yoff+font_size*1.8, order, 1);
+	cairo_stroke(cr);
+	//draws the y axis power
+	if(order) pango_text_powindex(cr, layout, xoff-font_size*2.8, yoff+font_size*1.8, order, 1);
 
 	if(drawdata->zlim[0]||drawdata->zlim[1]){/*draw colorbar */
 		cairo_save(cr);
@@ -1161,6 +1151,9 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		pango_text(cr, layout, font_size*0.3, font_size*0.2, fps, 0, 0, 0);
 		cairo_restore(cr);
 	}*/
+	/*draw the border in the end to avoid covering it.*/
+	cairo_rectangle(cr, xoff, yoff, widthim, heightim);
+	cairo_stroke(cr);/*border */
 	g_object_unref(layout);
 	cairo_destroy(cr);
 	drawdata->icumulast=drawdata->icumu;

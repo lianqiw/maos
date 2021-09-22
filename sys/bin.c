@@ -252,11 +252,10 @@ void zftouch(const char* format, ...){
   convert a socket or fd into file_t.
 */
 
-file_t* zfdopen(int fd, const char* mode){
+file_t* zfdopen(int fd){
 	file_t* fp=mycalloc(1, file_t);
 	fp->isgzip=0;
 	fp->fd=fd;
-	(void)mode;
 	return fp;
 }
 /**
@@ -633,7 +632,9 @@ read_bin_header(header_t* header, file_t* fp){
 		/*read the magic number.*/
 		zfread_check_eof(&magic, sizeof(uint32_t), 1, fp);
 		/*If it is hstr, read or skip it.*/
-		if((magic&M_SKIP)==M_SKIP){//dummy
+		if(magic==M_EOD){//end of data. useful in socket i/o to indicate end of current dataset
+			return -1;
+		}else if((magic&M_SKIP)==M_SKIP){//dummy
 			continue;
 		} else if(magic==M_COMMENT){//comment
 			zfread_check(&nlen, sizeof(uint64_t), 1, fp);

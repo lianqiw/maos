@@ -35,6 +35,10 @@ static void* find_var(const char* name){
 		char* name;
 		void* var;
 	};
+	if(!global || !global->simu){
+		dbg("Variables are not available\n");
+		return NULL;
+	}
 #define VAR_GET(STRUCT,FIELD) {#STRUCT "." #FIELD, global->STRUCT->FIELD}
 #define VAR_GET_2(STRUCT,FIELD,NUM) {#STRUCT "[" #NUM "]." #FIELD, global->STRUCT[NUM].FIELD}
 	struct VAR_MAP simu_map[]={
@@ -69,6 +73,7 @@ static void* find_var(const char* name){
 	VAR_GET(simu,fsmerrs),
 	VAR_GET(simu,fsmcmds),
 	VAR_GET(simu,LGSfocus),
+	VAR_GET(simu,LGSfocusts),
 	VAR_GET(simu,zoomerr),
 	VAR_GET(simu,zoomint),
 	VAR_GET(simu,zoompos),
@@ -174,10 +179,10 @@ static void* find_var(const char* name){
 								return var_map[i].var;
 							}
 						}
-						warning("%s not found.\n", name);
 					}
 				}
 			}
+			warning("%s not found.\n", name);
 			{
 				static cell* dummy=NULL;
 				if(!dummy){
@@ -200,7 +205,7 @@ static void* find_var(const char* name){
 						}
 					}
 				}
-				dbg("return dummy cell with header %s\n", dummy->header);
+				dbg("return dummy cell with header %s for %s\n", dummy->header, name);
 				return dummy;
 			}
 		} else{
@@ -217,8 +222,10 @@ static void* maos_var(void* psock){
 	int cmd[2];
 	int sock=(int)(long)psock;
 	socket_recv_timeout(sock, 0);//make sure it blocks when no data is readable
+	file_t *fp=zfdopen(dup(sock));//duplicate socket to avoid closing it.
+	dbg("started\n");
 	while(!streadintarr(sock, cmd, 2)){
-		dbg("maos_var: cmd=%d, %d\n", cmd[0], cmd[1]);
+		dbg("cmd=%d, %d\n", cmd[0], cmd[1]);
 		switch(cmd[0]){
 		case MAOS_VAR:
 		{
@@ -226,15 +233,17 @@ static void* maos_var(void* psock){
 				char* name=NULL;
 				streadstr(sock, &name);
 				cell* var=(cell*)find_var(name);
-				dbg("maos_var: request[%d] %s %p\n", cmd[1], name, var);
+				dbg("request[%d] %s %p\n", cmd[1], name, var);
 				{
 					if(cmd[1]==1){//client to get
-						writesock(var, sock);
+						writedata(fp, var);
+						int magic=M_EOD;
+						zfwrite(&magic, sizeof(uint32_t), 1, fp);
 					} else if(cmd[1]==2){//client to put
-						cell* newdata=readsock(sock);
+						cell* newdata=readdata(fp);
 						dcellcp(&var, newdata);
 					} else{
-						warning("maos_var: unknown operation %d\n", cmd[1]);
+						warning("unknown operation %d\n", cmd[1]);
 					}
 				}
 			}
@@ -253,13 +262,14 @@ static void* maos_var(void* psock){
 					}
 				}
 				global->simu->pause=cmd[1];
-				dbg("maos_var: set simu->pause=%d\n", cmd[1]);
+				dbg("set simu->pause=%d\n", cmd[1]);
 			}
 		}
 		break;
 		}//switch
 	}//while
-	dbg("maos_var: client closed\n");
+	dbg("client closed\n");
+	zfclose(fp);
 	close(sock);
 	return NULL;
 }
