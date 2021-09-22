@@ -576,7 +576,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 					dspcell* psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
 					dsp* sis=PR(psi, isa, wfsind);
 					real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
-					real dtheta1=NX(powfs[ipowfs].pts)*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+					real dtheta1=powfs[ipowfs].pts->nxsa*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 					fotf2=P(fotf,isa,iwvl);
 					ctilt2(P(otf,iwvl), fotf2, gx*dtheta1, gy*dtheta1, 0);
 					cfft2(P(otf,iwvl), 1);
@@ -767,7 +767,7 @@ static real mapfun(real* x, mapdata_t* info){
 		int idtfsa=NX(powfs[ipowfs].dtf[iwvl].si)>1?isa:0;
 		dsp* sis=P(psi, idtfsa, idtf);
 		real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
-		real dtheta1=NX(powfs[ipowfs].pts)*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+		real dtheta1=powfs[ipowfs].pts->nxsa*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		ctilt2(P(info->otf,iwvl), P(info->fotf,isa,iwvl), x[0]*dtheta1, x[1]*dtheta1, 0);
 		cfft2(P(info->otf,iwvl), 1);
 		dspmulcreal(P(ints2), sis, P(P(info->otf,iwvl)), wvlsig*x[2]);

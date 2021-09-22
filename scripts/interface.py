@@ -237,22 +237,19 @@ class cell(Structure):
         
 class loc(Structure):
     _fields_ = [
-        ('id', c_uint32),
-        #('dummy1',  c_void_p), #due to union base
-        #('dummy2',  c_long),
-        #('dummy3',  c_long),
-        #('header', c_char_p),
-        ('locx',  c_void_p),
-        ('locy',  c_void_p),
+        ('id',   c_uint32),
+        ('locx', c_void_p),
         ('nloc', c_long),
-        ('dx', c_double),
-        ('dy', c_double),
-        ('ht', c_double),
-        ('iac', c_double),
+        ('two',  c_long),        
+        ('locy', c_void_p),
         ('locstat_t', c_void_p),
-        ('map', c_void_p),
-        ('npad', c_int),
+        ('map',  c_void_p),
         ('nref', c_void_p),
+        ('dx',   c_double),
+        ('dy',   c_double),
+        ('ht',   c_double),
+        ('iac',  c_double),
+        ('npad', c_int),
         ]
     def __init__(self, arr=None): #convert from numpy to C. Memory is borrowed
         self.id= 222210 #0x036402 #M_LOC64
@@ -263,12 +260,13 @@ class loc(Structure):
                 if arr.flags['C']==False:
                     arr=self.arr=arr.copy()
                 self.nloc=arr.shape[1]
-                self.locx=arr[0,].ctypes.data_as(c_void_p)
-                self.locy=arr[1,].ctypes.data_as(c_void_p)
+                self.two=2;
+                self.locx=arr.ctypes.data_as(c_void_p)
+                self.locy=self.locx+self.nloc #arr[1,].ctypes.data_as(c_void_p)
                 dlocx=arr[0,1:]-arr[0,0:-1]
-                self.dx=min(dlocx[dlocx>0]);
+                self.dx=min(dlocx[dlocx>0])
                 dlocy=arr[1,1:]-arr[1,0:-1]
-                self.dy=min(dlocy[dlocy>0]);
+                self.dy=min(dlocy[dlocy>0])
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         else:
             self.nloc=0
@@ -288,10 +286,7 @@ class loc(Structure):
             if self.id!=222210:
                 raise(Exception('Wrong type'))
             else:
-                arr=np.empty((2, self.nloc))
-                arr[0,]=as_array(self.locx, 25602, shape=(self.nloc,))
-                arr[1,]=as_array(self.locy, 25602, shape=(self.nloc,))
-                return arr
+                return as_array(self.locx, 25602, shape=(2, self.nloc))
         else:
             print("locs is empty: ", self.locx)
             raise(Exception("loc is empty"))

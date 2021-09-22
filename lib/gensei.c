@@ -46,10 +46,10 @@ static cccell* genseotf_do(const pts_t* pts,
 	const void* saa, const dmat* wvl, real r0, real L0, int embfac){
 
 	/*create a grid representing a sub-aperture. */
-	loc_t* loc=mksqloc_auto(NX(pts), NX(pts), pts->dx, pts->dy);
+	loc_t* loc=mksqloc_auto(pts->nxsa, pts->nxsa, pts->dx, pts->dy);
 	/*The embeding factor for embedding the aperture */
-	const int npsfx=NX(pts)*embfac;
-	const int npsfy=NY(pts)*embfac;
+	const int npsfx=pts->nxsa*embfac;
+	const int npsfy=pts->nysa*embfac;
 	const int nwvl=PN(wvl);
 	const int nsa=pts->nsa;
 

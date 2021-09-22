@@ -185,18 +185,18 @@
 #define M_SPT M_SPT32
 #endif
 static inline int issp(const void* id){
-	return id?(*((const uint32_t*)id)==M_SPT):0;
+	return id?(*((const M_ID*)id)==M_SPT):0;
 }
 
 #endif //if COMP_LONG
 
 #define ABS2(A) creal((A)*conj(A))
 static inline int ismat(const void* id){
-	return id?(*((const uint32_t*)id)==M_T):0;
+	return id?(*((const M_ID*)id)==M_T):0;
 }
 
 //Check that A is valid and has mat type and has non zero size.
-#define check_mat1(A) ((A)?(check(ismat(A))?1:(dbg("type id mismatch, got %d, expect %d\n", *(uint32_t*)A, M_T),0)):0)
+#define check_mat1(A) ((A)?(check(ismat(A))?1:(dbg("type id mismatch, got %d, expect %d\n", *(M_ID*)A, M_T),0)):0)
 #define check_mat2(A,B) (check_mat1(A) && check_mat1(B))
 #define check_mat3(A,B,C) (check_mat1(A) && check_mat1(B) && check_mat1(C))
 #define check_mat(...) P_GET3(_0,__VA_ARGS__,check_mat3,check_mat2,check_mat1)(__VA_ARGS__)

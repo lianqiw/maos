@@ -59,6 +59,7 @@ def get_all():
     vars=get_list()
     res={}
     for nf in vars:
+        print(nf)
         res[nf]=get_var(nf)
 
     return res

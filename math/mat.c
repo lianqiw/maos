@@ -182,7 +182,7 @@ void X(resize)(X(mat)* A, long nx, long ny){
 	}
 	if(!nx) nx=A->nx;
 	if(!ny) ny=A->ny;
-	if(mem_isref(A->mem)){
+	if(mem_nref(A->mem)>1){
 		error("Trying to resize referenced matrix\n");
 		return;
 	}

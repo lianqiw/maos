@@ -277,7 +277,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;
 	const int notf=MAX(notfx, notfy);
-	const int nx=powfs[ipowfs].pts->nx;
+	const int nx=powfs[ipowfs].pts->nxsa;
 	const int nwvf=nx*parms->powfs[ipowfs].embfac;
 	const int pixpsax=powfs[ipowfs].pixpsax;
 	const int pixpsay=powfs[ipowfs].pixpsay;
@@ -302,7 +302,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	if(parms->powfs[ipowfs].psfout){
 		wvfout=cuwfs[iwfs].wvfout;
 	}
-	Real norm_psf=sqrt(powfs[ipowfs].areascale)/((Real)powfs[ipowfs].pts->nx*nwvf);
+	Real norm_psf=sqrt(powfs[ipowfs].areascale)/((Real)powfs[ipowfs].pts->nxsa*nwvf);
 	Real norm_pistat=norm_psf*norm_psf/((Real)notf*notf);
 	Real norm_ints=siglev*norm_psf*norm_psf/((Real)notfx*notfy);
 	/* Do msa subapertures in a batch to avoid using too much memory.*/
@@ -311,7 +311,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	curmat lltopd;
 
 	if(powfs[ipowfs].llt&&parms->powfs[ipowfs].trs){
-		int nlx=powfs[ipowfs].llt->pts->nx;
+		int nlx=powfs[ipowfs].llt->pts->nxsa;
 		lltopd=cuwfs[iwfs].lltopd;
 		if(cuwfs[iwfs].lltncpa){
 			cucp(lltopd, cuwfs[iwfs].lltncpa, stream);
@@ -398,7 +398,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		Real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 		Real dtheta=wvl/(nwvf*powfs[ipowfs].pts->dx);
 		if(lltopd){ /*First calculate LOTF */
-			int nlx=powfs[ipowfs].llt->pts->nx;
+			int nlx=powfs[ipowfs].llt->pts->nxsa;
 			int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 			lwvf.Zero(stream);
 			if(lotfc()!=lwvf()){

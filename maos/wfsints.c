@@ -62,7 +62,7 @@ void wfsints(thread_t* thread_data){
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;
 	const int notf=MAX(notfx, notfy);
-	const int nopd=NX(powfs[ipowfs].pts);
+	const int nopd=powfs[ipowfs].pts->nxsa;
 	const int nxsa=nopd*nopd;
 	const int nwvf=nopd*parms->powfs[ipowfs].embfac;
 	const int use1d=(nwvf>2*notfy?1:0)&&(!hasllt)&&(!lltopd);
@@ -77,7 +77,7 @@ void wfsints(thread_t* thread_data){
 	cmat* lotfc=NULL;
 	cmat* lwvf=NULL;
 	/*this coefficient normalize the complex psf so its abs2 sum to 1.*/
-	real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(NX(powfs[ipowfs].pts)*nwvf);
+	real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(powfs[ipowfs].pts->nxsa*nwvf);
 	/*normalized pistat. notf is due to a pair of FFT on psf. */
 	real norm_pistat=norm_psf*norm_psf/((real)notf*notf);
 	/*this notfx*notfy is due to cfft2 after cwm and detector transfer function. */
@@ -101,7 +101,7 @@ void wfsints(thread_t* thread_data){
 	}
 	/* there is uplink beam */
 	if(lltopd){
-		const int nlx=NX(powfs[ipowfs].llt->pts);
+		const int nlx=powfs[ipowfs].llt->pts->nxsa;
 		const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 		lwvf=cnew(nlwvf, nlwvf);
 		if(nlwvf!=notf){
@@ -135,7 +135,7 @@ void wfsints(thread_t* thread_data){
 		const real dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;//: 1/dtheta
 		/* uplink llt opd*/
 		if(lltopd){
-			const int nlx=NX(powfs[ipowfs].llt->pts);
+			const int nlx=powfs[ipowfs].llt->pts->nxsa;
 			const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 			/*embed opd to compute complex pupil function*/
 			cembed_wvf(lwvf, P(lltopd), P(powfs[ipowfs].llt->amp), nlx, nlx, wvl, 0);

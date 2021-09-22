@@ -42,7 +42,7 @@ static void* find_var(const char* name){
 #define VAR_GET(STRUCT,FIELD) {#STRUCT "." #FIELD, global->STRUCT->FIELD}
 #define VAR_GET_2(STRUCT,FIELD,NUM) {#STRUCT "[" #NUM "]." #FIELD, global->STRUCT[NUM].FIELD}
 	struct VAR_MAP simu_map[]={
-	VAR_GET(simu,atm),
+	//VAR_GET(simu,atm),//skip this, too big
 	VAR_GET(simu,wfsopd),
 	VAR_GET(simu,ints),
 	VAR_GET(simu,gradcl),
@@ -161,60 +161,55 @@ static void* find_var(const char* name){
 	MAP_ALL(powfs),
 	{NULL, NULL}
 	};
-	if(global){
-		if(global->simu){
-			if(name && strcmp(name, "list")){
-				for(int j=0; map_map[j].name; j++){
-					char* div=strchr(name, '.');
-					if(!div) continue;
-					char* div2=strchr(name, '[');
-					if(div2&&div2<div){
-						div=div2;
-					}
-					if(!strncmp(map_map[j].name, name, div-name)){//first find the correct map
-						struct VAR_MAP* var_map=map_map[j].map;
-						for(int i=0; var_map[i].name; i++){
-							if(!strcmp(var_map[i].name, name)){//then find the correct variable
-								dbg("%s is found at %p\n", name, var_map[i].var);
-								return var_map[i].var;
-							}
-						}
-					}
-				}
-			}
-			warning("%s not found.\n", name);
-			{
-				static cell* dummy=NULL;
-				if(!dummy){
-					dummy=cellnew(0,0);
-					const char* msg0="Available variables are:\n";
-					long count=strlen(msg0);
-					for(int j=0; map_map[j].name; j++){
-						struct VAR_MAP* var_map=map_map[j].map;
-						for(int i=0; var_map[i].name; i++){
-							count+=strlen(var_map[i].name)+1;
-						}
-					}
-					dummy->header=mycalloc(count, char);
-					strcat(dummy->header, msg0);
-					for(int j=0; map_map[j].name; j++){
-						struct VAR_MAP* var_map=map_map[j].map;
-						for(int i=0; var_map[i].name; i++){
-							strcat(dummy->header, var_map[i].name);
-							strcat(dummy->header, "\n");
-						}
-					}
-				}
-				dbg("return dummy cell with header %s for %s\n", dummy->header, name);
-				return dummy;
-			}
-		} else{
-			warning("global->simu is NULL\n");
-		}
-	} else{
+	if(!global){
 		warning("global is NULL\n");
+		return NULL;
 	}
-	return NULL;
+	int j0=global->simu?0:1;
+	if(name && strcmp(name, "list")){
+		for(int j=j0; map_map[j].name; j++){
+			char* div=strchr(name, '.');
+			if(!div) continue;
+			char* div2=strchr(name, '[');
+			if(div2&&div2<div){
+				div=div2;
+			}
+			if(!strncmp(map_map[j].name, name, div-name)){//first find the correct map
+				struct VAR_MAP* var_map=map_map[j].map;
+				for(int i=0; var_map[i].name; i++){
+					if(!strcmp(var_map[i].name, name)){//then find the correct variable
+						dbg("%s is found at %p\n", name, var_map[i].var);
+						return var_map[i].var;
+					}
+				}
+			}
+		}
+	}
+	warning("%s not found.\n", name);
+	static cell* dummy=NULL;
+	if(!dummy){
+		dummy=cellnew(0,0);
+		const char* msg0="Available variables are:\n";
+		long count=strlen(msg0);
+		for(int j=j0; map_map[j].name; j++){
+			struct VAR_MAP* var_map=map_map[j].map;
+			for(int i=0; var_map[i].name; i++){
+				count+=strlen(var_map[i].name)+1;
+			}
+		}
+		dummy->header=mycalloc(count, char);
+		strcat(dummy->header, msg0);
+		for(int j=0; map_map[j].name; j++){
+			struct VAR_MAP* var_map=map_map[j].map;
+			for(int i=0; var_map[i].name; i++){
+				strcat(dummy->header, var_map[i].name);
+				strcat(dummy->header, "\n");
+			}
+		}
+	}
+	dbg("return dummy cell with header %s for %s\n", dummy->header, name);
+	return dummy;
+
 }
 //Listen to requests coming from other client.
 static void* maos_var(void* psock){

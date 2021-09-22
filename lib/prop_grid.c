@@ -439,8 +439,8 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	const real dyout=pts->dy*dy_in1*scale;
 	displacex=(displacex-mapin->ox)*dx_in1;
 	displacey=(displacey-mapin->oy)*dy_in1;
-	long nxout=NX(pts);
-	long nyout=NY(pts)?NY(pts):NX(pts);
+	long nxout=pts->nxsa;
+	long nyout=pts->nysa?pts->nysa:pts->nxsa;
 	if(!end) end=pts->nsa;
 	int missing=0;
 	OMPTASK_FOR(isa, start, end, shared(missing)){

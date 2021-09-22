@@ -428,22 +428,22 @@ void lenslet_saspherical(const parms_t* parms, powfs_t* powfs){
 			  a=(R4-b*N)/R2;
 
 			*/
-			const int nx=NX(powfs[ipowfs].pts);
+			const int nxsa=powfs[ipowfs].pts->nxsa;
 			//Can be upgraded to actual amplitude for fill factor, but need to use a full subaperture.
-			dmat* ampw=dnew(nx, nx);
-			for(int ix=0; ix<nx*nx; ix++){
+			dmat* ampw=dnew(nxsa, nxsa);
+			for(int ix=0; ix<nxsa*nxsa; ix++){
 				P(ampw, ix)=1;
 			}
 			dnormalize_sumabs(P(ampw), NX(ampw)*NY(ampw), 1);
 
-			real nx2=(nx-1)*0.5;
+			real nx2=(nxsa-1)*0.5;
 			real fill1d=sqrt(parms->powfs[ipowfs].safill2d);
 			//normalize x,y from -1 to 1 in clear aperture
-			real Rx2=pow(fill1d*nx/2, -2);
-			dmat* opdi=dnew(nx, nx);
+			real Rx2=pow(fill1d*nxsa/2, -2);
+			dmat* opdi=dnew(nxsa, nxsa);
 			real R2=0, R4=0, RfR2=0, Rf=0, RN=0;
-			for(int iy=0; iy<nx; iy++){
-				for(int ix=0; ix<nx; ix++){
+			for(int iy=0; iy<nxsa; iy++){
+				for(int ix=0; ix<nxsa; ix++){
 #define MEASURED_LENSLET 0
 					real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
 #if MEASURED_LENSLET
@@ -466,8 +466,8 @@ void lenslet_saspherical(const parms_t* parms, powfs_t* powfs){
 			real b=(R2*RfR2-R4*Rf)/(R2*R2-R4*RN);//fixed in 8/27/2019
 			real a=(Rf-b*RN)/R2;
 			real var=0;
-			for(int iy=0; iy<nx; iy++){
-				for(int ix=0; ix<nx; ix++){
+			for(int iy=0; iy<nxsa; iy++){
+				for(int ix=0; ix<nxsa; ix++){
 					real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
 					P(opdi, ix, iy)-=a*rr+b;
 					var+=P(opdi, ix, iy)*P(opdi, ix, iy)*P(ampw, ix, iy);
@@ -483,8 +483,8 @@ void lenslet_saspherical(const parms_t* parms, powfs_t* powfs){
 					P(powfs[ipowfs].opdadd, jwfs)=dnew(NX(powfs[ipowfs].amp), 1);
 				}
 				for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
-					for(int i=0; i<nx*nx; i++){
-						P(P(powfs[ipowfs].opdadd, jwfs), nx*nx*isa+i)+=P(opdi, i);
+					for(int i=0; i<nxsa*nxsa; i++){
+						P(P(powfs[ipowfs].opdadd, jwfs), nxsa*nxsa*isa+i)+=P(opdi, i);
 					}
 				}
 			}
@@ -504,21 +504,21 @@ void lenslet_safocuspv(const parms_t* parms, powfs_t* powfs){
 			if(!powfs[ipowfs].opdadd){
 				powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 			}
-			const int nx=NX(powfs[ipowfs].pts);
-			const int nxsa=nx*nx;
+			const int nxsa=powfs[ipowfs].pts->nxsa;
+			const int npsa=nxsa*nxsa;
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				if(!P(powfs[ipowfs].opdadd, jwfs)){
 					P(powfs[ipowfs].opdadd, jwfs)=dnew(NX(powfs[ipowfs].amp), 1);
 				}
-				real nx2=(nx-1)*0.5;
+				real nx2=(nxsa-1)*0.5;
 				real Rx2=pow(nx2, -2);//do not use fill2d here as defocus is caused by misregistration.
 				real rmax2=2*nx2*nx2*Rx2;
 				real scale=pv/rmax2;
 				for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
-					for(int iy=0; iy<nx; iy++){
-						for(int ix=0; ix<nx; ix++){
+					for(int iy=0; iy<nxsa; iy++){
+						for(int ix=0; ix<nxsa; ix++){
 							real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-							P(P(powfs[ipowfs].opdadd, jwfs), isa*nxsa+ix+iy*nx)+=rr*scale;
+							P(P(powfs[ipowfs].opdadd, jwfs), isa*npsa+ix+iy*nxsa)+=rr*scale;
 						}
 					}
 				}

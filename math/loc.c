@@ -58,14 +58,14 @@ void loc_free_stat(loc_t* loc){
 	}
 }
 /**
-   Free loc_t data
+   Free loc_t data.
  */
 void locfree_do(loc_t* loc){
 	if(loc&&loc->nref&&!atomicadd(loc->nref, -1)){
 		loc_free_stat(loc);
 		loc_free_map(loc);
-		free(loc->locx);
-		free(loc->locy);
+		free(loc->p);
+		//free(loc->locy);
 		free(loc->nref);
 	}
 	free(loc);
@@ -89,11 +89,14 @@ loc_t* locnew(long nloc, real dx, real dy){
 	loc_t* loc=mycalloc(1, loc_t);
 	loc->id=M_LOC;
 	if(nloc>0){
-		loc->locx=mycalloc(nloc, real);
-		loc->locy=mycalloc(nloc, real);
+		loc->p=mycalloc(nloc*2, real);
+		loc->locy=loc->p+nloc;
+		//loc->locx=mycalloc(nloc, real);
+		//loc->locy=mycalloc(nloc, real);
 		loc->nref=mycalloc(1, int); loc->nref[0]=1;
 	}
 	loc->nloc=nloc;
+	loc->two=2;
 	if(!isnan(dx)) loc->dx=dx;
 	if(!isnan(dy)) loc->dy=dy;
 
@@ -114,19 +117,23 @@ loc_t* locref(const loc_t* in){
 /**
    Create a pts with nsa, dsa, nx, dx
 */
-pts_t* ptsnew(long nsa, real dsax, real dsay, long nx, real dx, real dy){
+pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy){
 	pts_t* pts=mycalloc(1, pts_t);
 	pts->id=M_LOC;
-	pts->origx=mycalloc(nsa, real);
-	pts->origy=mycalloc(nsa, real);
-	pts->dsa=dsax;
+	pts->origx=mycalloc(nsa*2, real);
+	pts->origy=pts->origx+nsa;
+	pts->two=2;
+	pts->dsax=dsax;
 	pts->dsay=dsay;
 	pts->nref=mycalloc(1, int); pts->nref[0]=1;
-	pts->nx=nx;
-	pts->ny=nx;
+	pts->nxsa=nxsa;
+	pts->nysa=nysa;
 	pts->dx=dx;
 	pts->dy=dy;
 	pts->nsa=nsa;
+	if(dx!=dy || dsax != dsay || nxsa!=nysa){
+		warning("please double check non-square grid\n");
+	}
 	return pts;
 }
 /**
@@ -474,9 +481,7 @@ loc_t* map2loc(map_t* map, real thres){
 		writebin(map, "map2loc");
 		print_backtrace();
 	}
-	loc->locx=myrealloc(loc->locx, count, real);
-	loc->locy=myrealloc(loc->locy, count, real);
-	loc->nloc=count;
+	locresize(loc, count);
 	loc->iac=map->iac;
 	loc->ht=map->h;
 	return loc;
@@ -615,13 +620,13 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
 		const real origx=pts->origx[isa];
 		const real dx=pts->dx;
 		const real dy=pts->dy;
-		const real* ampi=amp+pts->nx*pts->nx*isa;
+		const real* ampi=amp+pts->nxsa*pts->nysa*isa;
 		dmat* ATA=P(mcc,isa);
 		real a00=0, a01=0, a02=0, a11=0, a12=0, a22=0;
-		for(int iy=0; iy<pts->nx; iy++){
+		for(int iy=0; iy<pts->nysa; iy++){
 			real y=iy*dy+origy;
-			const real* ampx=ampi+iy*pts->nx;
-			for(int ix=0; ix<pts->nx; ix++){
+			const real* ampx=ampi+iy*pts->nxsa;
+			for(int ix=0; ix<pts->nxsa; ix++){
 				real x=ix*dx+origx;
 				real a=ampx[ix];
 				a00+=a;
@@ -766,16 +771,16 @@ void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 		const real origx=pts->origx[isa];
 		const real dx=pts->dx;
 		const real dy=pts->dy;
-		const real* ampi=amp+pts->nx*pts->nx*isa;
-		const real* opdi=opd+pts->nx*pts->nx*isa;
+		const real* ampi=amp+pts->nxsa*pts->nysa*isa;
+		const real* opdi=opd+pts->nxsa*pts->nysa*isa;
 		assert(P(imcc,isa)->nx==3&&P(imcc,isa)->ny==3);
 		real coeff[3]={0,0,0};
 		real a0=0, a1=0, a2=0;
-		for(int iy=0; iy<pts->nx; iy++){
+		for(int iy=0; iy<pts->nysa; iy++){
 			real y=iy*dy+origy;
-			const real* ampx=ampi+iy*pts->nx;
-			const real* opdx=opdi+iy*pts->nx;
-			for(int ix=0; ix<pts->nx; ix++){
+			const real* ampx=ampi+iy*pts->nxsa;
+			const real* opdx=opdi+iy*pts->nxsa;
+			for(int ix=0; ix<pts->nxsa; ix++){
 				real x=ix*dx+origx;
 				real tmp=ampx[ix]*opdx[ix];
 				a0+=tmp;
@@ -1170,24 +1175,23 @@ dmat* loc2mat(loc_t* loc, int piston){
 loc_t* pts2loc(pts_t* pts){
 	if(!pts) return NULL;
 	long nsa=pts->nsa;
-	long nx=pts->nx;
-	long nxsa=nx*nx;
+	long npsa=pts->nxsa*pts->nysa;
 	real dx=pts->dx;
 	real dy=pts->dy;
 	if(dy==0){
 		dy=dx;
 	}
-	loc_t* loc=locnew(nsa*nxsa, dx, dy);
+	loc_t* loc=locnew(nsa*npsa, dx, dy);
 	for(int isa=0; isa<nsa; isa++){
 		const real origx=pts->origx[isa];
 		const real origy=pts->origy[isa];
-		real* locx=loc->locx+isa*nxsa;
-		real* locy=loc->locy+isa*nxsa;
-		for(int jj=0; jj<nx; jj++){
+		real* locx=loc->locx+isa*npsa;
+		real* locy=loc->locy+isa*npsa;
+		for(int jj=0; jj<pts->nysa; jj++){
 			const real yy=origy+(real)jj*dy;
-			for(int ii=0; ii<nx; ii++){
-				locx[jj*nx+ii]=origx+(real)ii*dx;
-				locy[jj*nx+ii]=yy;
+			for(int ii=0; ii<pts->nxsa; ii++){
+				locx[jj*pts->nxsa+ii]=origx+(real)ii*dx;
+				locy[jj*pts->nxsa+ii]=yy;
 			}
 		}
 	}
@@ -1508,11 +1512,17 @@ void loc_nxny(long* nx, long* ny, const loc_t* loc){
    Resize a loc_t by shrinking.
 */
 void locresize(loc_t* loc, long nloc){
-	if(!loc) return;
+	if(!loc || loc->nloc==nloc) return;
 	loc_free_map(loc);
 	loc_free_stat(loc);
-	loc->locx=myrealloc(loc->locx, nloc, real);
-	loc->locy=myrealloc(loc->locy, nloc, real);
+	if(nloc>loc->nloc){//expand size
+		loc->p=myrealloc(loc->p, nloc*2, real);
+		memmove(loc->p+nloc, loc->p+loc->nloc, loc->nloc*sizeof(real));
+	}else{//reduce size
+		memmove(loc->p+nloc, loc->p+loc->nloc, nloc*sizeof(real));
+		loc->p=myrealloc(loc->p, nloc*2, real);
+	}
+	loc->locy=loc->p+nloc;
 	loc->nloc=nloc;
 }
 
@@ -1655,7 +1665,7 @@ loc_t* d2loc(const dmat *A){
  */
 loc_t* locreaddata(file_t* fp, header_t* header){
 	if(!fp) return NULL;
-	header_t header2;
+	header_t header2={0};
 	if(!header){
 		header=&header2;
 	}
@@ -1663,7 +1673,8 @@ loc_t* locreaddata(file_t* fp, header_t* header){
 		read_header(header, fp);
 	}
 	if((header->magic&M_REAL)!=M_REAL){
-		error("magic=%u. Expect %x\n", header->magic, M_REAL);
+		warning("magic=%u. Expect %x\n", header->magic, M_REAL);
+		return NULL;
 	}
 	real dx=fabs(search_header_num(header->str, "dx"));
 	real dy=fabs(search_header_num(header->str, "dy"));
@@ -1691,7 +1702,7 @@ void locwritedata(file_t* fp, const loc_t* loc){
 	if(!fp||!loc) return;
 	char str[120];
 	snprintf(str, 120, "dx=%.15g;\ndy=%.15g;iac=%.15g\n", loc->dx, loc->dy, loc->iac);
-	header_t header={M_LOC, 0, 0, str};
+	header_t header={M_REAL, 0, 0, str};
 	if(loc){
 		header.nx=loc->nloc;
 		header.ny=2;

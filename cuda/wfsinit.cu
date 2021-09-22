@@ -305,7 +305,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				}
 			}
 			/*CUFFTW is row major. */
-			int nwvf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
+			int nwvf=powfs[ipowfs].pts->nxsa*parms->powfs[ipowfs].embfac;/*size of fft */
 			int nwvf2[2]={nwvf, nwvf};
 			const int notfx=powfs[ipowfs].notfx;
 			const int notfy=powfs[ipowfs].notfy;
@@ -340,7 +340,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				cufftSetStream(cuwfs[iwfs].plan3, cuwfs[iwfs].stream);
 			}
 			if(parms->powfs[ipowfs].llt){
-				int nlwvf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
+				int nlwvf=powfs[ipowfs].llt->pts->nxsa*parms->powfs[ipowfs].embfac;
 				int nlwvf2[2]={nlwvf, nlwvf};
 				if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlwvf2, NULL, 1, 0, NULL, 1, 0,
 								 FFT_T_C2C, 1)){
@@ -427,7 +427,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				cuwfs[iwfs].psfstat=cucmat(notf*notf, msa);
 			}
 			if(powfs[ipowfs].llt&&parms->powfs[ipowfs].trs){
-				int nlx=powfs[ipowfs].llt->pts->nx;
+				int nlx=powfs[ipowfs].llt->pts->nxsa;
 				int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 				cuwfs[iwfs].lltopd=curmat(nlx, nlx);
 				if(parms->powfs[ipowfs].pistatout||parms->sim.idealfsm){

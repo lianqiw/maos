@@ -82,8 +82,8 @@ static void test_accuracy(int argc, char** argv){
     pts_t* pts=(pts_t*)realloc(mksqloc_auto(D/dsa, D/dsa, dsa, dsa), sizeof(pts_t));
     pts->dx=dx;
     pts->dy=dx;
-    pts->nx=dsa/dx;
-    pts->ny=pts->nx;
+    pts->nxsa=dsa/dx;
+    pts->nysa=pts->nxsa;
     loc_t* loc=pts2loc(pts);
 
 

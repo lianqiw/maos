@@ -42,7 +42,8 @@ void fit_sodium_profile(
   const dcell* i0i, /**<The input i0*/
   const dccell* sepsf,   /**<Short exposure PSF*/
   const dtf_t* dtf,     /**<Detector transfer function*/
-  const void* saa,      /**<Subaperture area. dmat or dcell*/
+	const loc_t* saloc,   /**<Saloc*/
+  const dcell* saa,      /**<Subaperture area. dmat or dcell*/
   const dcell* srsa,    /**<Subaperture to LLT distance*/
   const dcell* srot,    /**<Subaperture to LLT clocking*/
   const dmat* siglev,  /**<Subaperture signal level*/

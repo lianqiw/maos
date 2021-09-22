@@ -609,7 +609,7 @@ public:
 	cupts_t(pts_t* in=0):culoc_t((loc_t*)in), dxsa(0), nxsa(0){
 		if(in){
 			dxsa=in->dx;
-			nxsa=in->nx;
+			nxsa=in->nxsa;
 		}
 	}
 };

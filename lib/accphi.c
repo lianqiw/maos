@@ -561,16 +561,16 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	PREPOUT_PTS;
 	OMPTASK_FOR(isa, start, end){
 		RUNTIME_LINEAR;
-		const long iloc0=isa*NX(pts)*NX(pts);
+		const long iloc0=isa*pts->nxsa*pts->nysa;
 		const real ox=pts->origx[isa];
 		const real oy=pts->origy[isa];
-		for(int iy=0; iy<NX(pts); iy++){
-			long iloc=iloc0+iy*pts->nx-1;
+		for(int iy=0; iy<pts->nysa; iy++){
+			long iloc=iloc0+iy*pts->nxsa-1;
 			dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 			if(dplocy>=nymin&&dplocy<=nymax){
 				SPLIT(dplocy, dplocy, nplocy);
 				nplocy1=nplocy+1;
-				for(int ix=0; ix<NX(pts); ix++){
+				for(int ix=0; ix<pts->nxsa; ix++){
 					iloc++;
 					dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 					if(dplocx>=nxmin&&dplocx<=nxmax){
@@ -642,18 +642,18 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	PREP_CUBIC_PARAM;
 	OMPTASK_FOR(isa, start, end){
 		RUNTIME_CUBIC;
-		const long iloc0=isa*NX(pts)*NX(pts);
+		const long iloc0=isa*pts->nxsa*pts->nysa;
 		const real ox=pts->origx[isa];
 		const real oy=pts->origy[isa];
 
-		for(int iy=0; iy<NX(pts); iy++){
-			long iloc=iloc0+iy*pts->nx-1;
+		for(int iy=0; iy<pts->nysa; iy++){
+			long iloc=iloc0+iy*pts->nxsa-1;
 			dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 			if(dplocy>=nymin&&dplocy<=nymax){
 				SPLIT(dplocy, dplocy, nplocy);
 				dplocy0=1.-dplocy;
 				MAKE_CUBIC_COEFF_Y;
-				for(int ix=0; ix<NX(pts); ix++){
+				for(int ix=0; ix<pts->nxsa; ix++){
 					iloc++;
 					dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 					if(dplocx>=nxmin&&dplocx<=nxmax){
@@ -788,17 +788,17 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	PREP_CUBIC_PARAM;
 	OMPTASK_FOR(isa, start, end){
 		RUNTIME_CUBIC;
-		const long iloc0=isa*NX(pts)*NX(pts);
+		const long iloc0=isa*pts->nxsa*pts->nysa;
 		const real ox=pts->origx[isa];
 		const real oy=pts->origy[isa];
-		for(int iy=0; iy<NX(pts); iy++){
-			long iloc=iloc0+iy*pts->nx-1;
+		for(int iy=0; iy<pts->nysa; iy++){
+			long iloc=iloc0+iy*pts->nxsa-1;
 			dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 			if(dplocy>=nymin&&dplocy<=nymax){
 				SPLIT(dplocy, dplocy, nplocy);
 				dplocy0=1.-dplocy;
 				MAKE_CUBIC_COEFF_Y;
-				for(int ix=0; ix<NX(pts); ix++){
+				for(int ix=0; ix<pts->nxsa; ix++){
 					iloc++;
 					dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 					if(dplocx>=nxmin&&dplocx<=nxmax){

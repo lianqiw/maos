@@ -162,39 +162,51 @@ typedef struct locstat_t{
 
 /**
    Struct for coordinates like plocs, xloc, aloc etc.
+   TODO: use rmat interface of mem_t?
 */
 typedef struct loc_t{
     union{
         struct cell base[1];
         struct{
             M_ID id;
-            real* locx;  /**< x coordinates of each point*/
-            real* locy;  /**< y coordinates of each point*/
+            union{
+                real* p;     /**< storage of locx and locy*/
+                real* locx;  /**< x coordinates of each point*/
+            };
             long nloc;   /**< number of points*/
+            long two;    /**<Constant 2. to be binary compatble with rmat*/
+            real* locy;  /**< y coordinates of each point*/
+            locstat_t* stat;/**<points to column statistics*/
+            map_t* map;    /**< point to the map used for identifying neihboring points.*/
+            int* nref;       /**<Reference counting*/
             real dx;     /**< Sampling along x*/
             real dy;     /**< Sampling along y*/
             real ht;     /**< Conjugation height of the loc grid.*/
             real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
-            locstat_t* stat;/**<points to column statistics*/
-            map_t* map;    /**< point to the map used for identifying neihboring points.*/
             int npad;      /*padding when create map*/
-            int* nref;       /**<Reference counting*/
         };
     };
 }loc_t;
 /**
    low left point of each subaperture.
 
-   don't change the leading 5 elements. so that pts_t can be used as loc_t.
+   don't change the leading elements. so that pts_t can be used as loc_t.
 */
 typedef struct pts_t{
     union{
         struct cell base[1];
         struct{
             M_ID id;
-            real* origx; /**<The x origin of each subaperture*/
-            real* origy; /**<The y origin of each subaperture*/
+            union{
+                real* p;     /**<Storage for origx and origy*/
+                real* origx; /**<The x origin of each subaperture*/
+            };
             long nsa;      /**<number of subapertures.*/
+            long two;
+            real* origy; /**<The y origin of each subaperture*/
+            locstat_t* stat;/**<padding so that we can be casted to loc_t*/
+            map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
+            int* nref;     /**<Reference counting*/
             union{
                 real dsa;    /**<side length of subaperture*/
                 real dsax;   /**<side length of subaperture*/
@@ -202,12 +214,11 @@ typedef struct pts_t{
             real dsay;   /**<side length of subaperture*/
             real dummy1; /**<Place holder*/
             real dummy2;  /**<Place holder*/
-            locstat_t* stat;/**<padding so that we can be casted to loc_t*/
-            map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
             int npad;      /*padding when create map*/
-            int* nref;     /**<Reference counting*/
-            int nx;        /**<number of cols per subaperture*/
-            int ny;        /**<number of rows per subaperture*/
+            //before this line same memory layout as loc_t
+            //the following are specific to pts_t
+            int nxsa;        /**<number of cols per subaperture*/
+            int nysa;        /**<number of rows per subaperture*/
             real dx;     /**<sampling of points in each subaperture*/
             real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
         };

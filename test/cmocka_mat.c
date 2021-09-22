@@ -31,21 +31,21 @@ static void mat_basic(void** state){
     dmat* b=NULL;
     {
         dmat* a=dnew(3, 3);
-        assert_int_equal(mem_isref(a->mem), 0);
+        assert_int_equal(mem_nref(a->mem), 0);
         b=dref(a);
         P(b, 2, 2)=1;
         assert_float_equal(P(a, 2, 2), 1, 0);
         dset(a, 2);
         assert_float_equal(P(b, 2, 2), 2, 0);
-        assert_int_equal(mem_isref(b->mem), 1);
+        assert_int_equal(mem_nref(b->mem), 1);
         dfree(a);
         assert_null(a);
-        assert_int_equal(mem_isref(b->mem), 0);
+        assert_int_equal(mem_nref(b->mem), 0);
     }
     
     {
         dmat* c=dref_reshape(b, 9, 1);
-        assert_int_equal(mem_isref(b->mem), 1);
+        assert_int_equal(mem_nref(b->mem), 1);
         assert_float_equal(P(c, 8), 2, 0);
         dfree(c);
     }
@@ -59,7 +59,7 @@ static void mat_basic(void** state){
     }
     {
         dmat* e=dsub(b, 1, 2, 2, 1);
-        assert_int_equal(mem_isref(e->mem), 0);
+        assert_int_equal(mem_nref(e->mem), 0);
         assert_int_equal(e->nx, 2);
         assert_int_equal(e->ny, 1);
         assert_int_equal(P(b, 1, 2), P(e,0, 0));
@@ -69,8 +69,8 @@ static void mat_basic(void** state){
     }
     {// test dcat
         dmat* f=ddup(b);
-        assert_int_equal(mem_isref(f->mem), 0);
-        assert_int_equal(mem_isref(b->mem), 0);
+        assert_int_equal(mem_nref(f->mem), 0);
+        assert_int_equal(mem_nref(b->mem), 0);
         dmat* f2=dcat(b, f, 0);
         assert_null(f2);
         f2=dcat(b, f, 1);

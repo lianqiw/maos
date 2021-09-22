@@ -260,7 +260,7 @@ void wfsgrad_iwfs(thread_t* info){
 			if(powfs[ipowfs].llt->ncpa){
 				lltopd=ddup(PR(powfs[ipowfs].llt->ncpa, wfsind, 0));
 			} else{
-				lltopd=dnew(NX(powfs[ipowfs].llt->pts), NX(powfs[ipowfs].llt->pts));
+				lltopd=dnew(powfs[ipowfs].llt->pts->nxsa, powfs[ipowfs].llt->pts->nysa);
 			}
 			const long illt=P(parms->powfs[ipowfs].llt->i, wfsind);
 			if(atm){/*LLT OPD */

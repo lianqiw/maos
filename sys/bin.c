@@ -1089,8 +1089,8 @@ mem_t* mem_ref(mem_t* in){
 /**
    Check whether it is a referenced data.
 */
-int mem_isref(const mem_t* in){
-	return (in&&(in->nref>1||in->kind))?1:0;
+int mem_nref(const mem_t* in){
+	return in?(in->kind+in->nref):0;
 }
 /**
    Replace internal vector. If p is null, checking only. Use with care.

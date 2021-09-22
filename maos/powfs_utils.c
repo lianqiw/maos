@@ -135,6 +135,19 @@ void fit_cache_free(){
 	fit_cache.nx=0;
 }
 /**
+ * Remove focus mode from gradients. Do not consider noise weighting
+ * */
+void remove_focus_grad(const loc_t *saloc, dmat *grad){
+	dmat* mode=dnew_do(saloc->nloc*2, 1, saloc->locx, NULL);
+	dmat* rmod=dpinv(mode, NULL);
+	dmat* focus=0;
+	dmm(&focus, 0, rmod, grad, "nn", 1);
+	dmm(&grad, 1, mode, focus, "nn", -1);
+	dfree(focus);
+	dfree(rmod);
+	dfree(mode);
+}
+/**
  * Fit i0 to sodium profile using iterative algorithm. The steps are as follows
  * 1. Create sub images for each sodium profile bin
  * 2. Fit such sub-images against i0 to determine the profile
@@ -150,7 +163,8 @@ void fit_sodium_profile(
 	const dcell* i0i, /**<The input i0*/
 	const dccell* sepsf,   /**<Short exposure PSF*/
 	const dtf_t* dtf,     /**<Detector transfer function*/
-	const void* saa,      /**<Subaperture area. dmat or dcell*/
+	const loc_t* saloc,   /**<Saloc*/
+	const dcell* saa,      /**<Subaperture area. */
 	const dcell* srsa,    /**<Subaperture to LLT distance*/
 	const dcell* srot,    /**<Subaperture to LLT clocking*/
 	const dmat* siglev,  /**<Subaperture signal level*/
@@ -338,6 +352,10 @@ void fit_sodium_profile(
 			}
 			toc2("tcog diff"); tic;
 		}
+		//Need to remove focus mode from the gradients as it degenerates with sodidum profile shift.
+		for(long ii0=0; ii0<ni0; ii0++){
+			remove_focus_grad(saloc, P(*pgrad, ii0));
+		}
 		if(save){
 			writebin(ata, "sodium_ata_%d_%d", count, irep);
 			writebin(atb, "sodium_atb_%d_%d", count, irep);
@@ -413,7 +431,7 @@ void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, c
 	info("Replacing i0, gx, gy with fitted value\n");
 	
 	fit_sodium_profile(psodium, pgrad, &intstat->i0, &intstat->gx, &intstat->gy, i0in,
-		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].realsaa,
+		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].saloc, powfs[ipowfs].realsaa,
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
 		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, use_ncpa?powfs[ipowfs].gradncpa:NULL,
 		parms->dbg.na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, parms->powfs[ipowfs].cogthres,

@@ -135,7 +135,7 @@ struct mem_t *mem_new(void *p)__attribute__((warn_unused_result));
 void mem_unref(mem_t **in);
 mem_t*mem_ref(mem_t *in)__attribute__((warn_unused_result));
 void mem_replace(mem_t *in, void *p);
-int mem_isref(const mem_t *in);
+int mem_nref(const mem_t *in);
 void* mem_p(const mem_t *in);
 mem_t* mmap_open(const char *fn, size_t msize, int rw);
 void mmap_write_header(char **p0, uint32_t magic, long nx, long ny, const char *header);
