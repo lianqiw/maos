@@ -51,7 +51,7 @@ void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 	}else if(fp){//normal writing
 		writearr(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?P(A):NULL, A?A->nx:0, A?A->ny:0);
 	}else{
-		dbg("writedata called with no fp or wrong async (ncol=%ld) information, canceled.\n", ncol);
+		dbg("writedata called with invalid fp(%p) or async (ncol=%ld) information, canceled.\n", fp, ncol);
 		print_backtrace();
 	}
 }

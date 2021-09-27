@@ -403,7 +403,7 @@ void sim_update_etf(sim_t* simu){
 					dzero(simu->zoomdrift);
 					lzero(simu->zoomdrift_count);
 				}
-			
+
 				real gain=parms->powfs[ipowfs].zoomgain?parms->powfs[ipowfs].zoomgain:0.5;
 				P(simu->zoomint, iwfs0)+=gain*(zoomerr1+zoomerr2);
 				if(simu->zoompos&&P(simu->zoompos, iwfs0)){
@@ -1758,15 +1758,17 @@ void print_progress(sim_t* simu){
 		const real gap=isim<10000?10:60;
 		if(this_time>last_save_time+gap){
 			writebin_async(simu->res, simu->perfisim+1);
-			writebin_async(simu->resp, simu->perfisim+1);
-			//writebin_async(simu->restwfs, simu->perfisim+1);//column is different
-			//writebin_async(simu->resdither, simu->perfisim+1);//column is different
-			writebin_async(simu->fsmerrs, simu->wfsisim+1);
-			writebin_async(simu->fsmcmds, simu->wfsisim+1);
-			if(parms->nlgspowfs){
-				writebin_async(simu->LGSfocusts, simu->wfsisim+1);
-				if(simu->zoompos_icol){
-					writebin_async(simu->zoompos, simu->zoompos_icol);
+			if(parms->save.extra){
+				writebin_async(simu->resp, simu->perfisim+1);
+				//writebin_async(simu->restwfs, simu->perfisim+1);//column is different
+				//writebin_async(simu->resdither, simu->perfisim+1);//column is different
+				writebin_async(simu->fsmerrs, simu->wfsisim+1);
+				writebin_async(simu->fsmcmds, simu->wfsisim+1);
+				if(parms->nlgspowfs){
+					writebin_async(simu->LGSfocusts, simu->wfsisim+1);
+					if(simu->zoompos_icol){
+						writebin_async(simu->zoompos, simu->zoompos_icol);
+					}
 				}
 			}
 			last_save_time=this_time;

@@ -540,32 +540,10 @@ static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, 
 	if(parms->powfs[ipowfs].llt){
 		//here we don't use RFlgsg which is noise weighted
 		real focus=remove_focus_grad(simu->powfs[ipowfs].saloc, grad, remove?1:0);
-		/*dmat* focus=dnew(1, 1);
-		dmat* RFlgsg=P(recon->RFlgsg, iwfs, iwfs);
-		dmm(&focus, 0, RFlgsg, grad, "nn", 1);
-		if(remove){
-			dmm(&grad, 1, P(recon->GFall, iwfs), focus, "nn", -1);
-		}*/
-		//need to use integrator here and then use as offset
-
-		(void)gdrift;
-		//real zint=0;
-		//if(gdrift){
-		P(simu->zoomdrift, iwfs)+=focus;
-		P(simu->zoomdrift_count, iwfs)++;
-		/*if(1){
-			zint=(P(simu->zoomint, iwfs)+=focus*gdrift);
-		} else{
-			zint=(P(simu->zoomerr_drift, iwfs)+=focus*gdrift);
+		if(gdrift){
+			P(simu->zoomdrift, iwfs)+=focus;
+			P(simu->zoomdrift_count, iwfs)++;
 		}
-		extern int update_etf;
-		update_etf=1;*/
-	//}
-	/*if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
-		real conv=2*pow(parms->powfs[ipowfs].hs, 2);
-		dbg("Step %5d: wfs %d trombone drift control error is %.1f m, integerator is %.1f m\n",
-		simu->wfsisim, iwfs, focus*conv, zint*conv);
-	}*/
 	}
 }
 /**
@@ -797,18 +775,6 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				//Trombone from gradients. always enable
 				P(simu->zoomavg, iwfs)+=zoomerr;//zoom averager.
 				P(simu->zoomavg_count, iwfs)++;
-				/*if(simu->wfsflags[ipowfs].zoomout){
-					//zoom error is zero order hold even if no output from averager
-					real zoomout=P(simu->zoomavg, iwfs)/parms->powfs[ipowfs].zoomdtrat;
-					//drift signal is used as bias. do not zero zoomerr_drift
-					P(simu->zoomerr, iwfs)=zoomout+P(simu->zoomerr_drift, iwfs);
-					P(simu->zoomavg, iwfs)=0;
-					real wve2h=2*pow(parms->powfs[ipowfs].hs, 2);//convert WFE to height
-					if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
-						dbg("Step %d wfs %d: trombone averager output %.1f m, drift offset is %.1f m\n",
-						simu->wfsisim, iwfs, zoomout*wve2h, P(simu->zoomerr_drift, iwfs)*wve2h);
-					}
-				}*/
 			}
 			if(parms->sim.mffocus){//Focus HPF
 				real infocus=parms->sim.mffocus==2?lgsfocusm:P(P(LGSfocus, iwfs), 0);
@@ -819,32 +785,9 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			}
 		}//for jwfs
 
-		/*The zoomerr is prescaled, and ZoH. moved from filter.c as it only relates to WFS.*/
-		//Do not trigger update_etf here as it will interfere with i0 accumulation.
-
 		if(simu->wfsflags[ipowfs].zoomout&&!parms->powfs[ipowfs].llt->coldtrat){
 			update_etf=1;
 		}
-			/*if(parms->powfs[ipowfs].zoomshare){//average zoomerr
-				average_powfs(simu->zoomerr, parms->powfs[ipowfs].wfs, 1);
-			}
-			real dhc=0;
-			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-				real errsig=P(simu->zoomerr, iwfs)*parms->powfs[ipowfs].zoomgain;
-				P(simu->zoomint, iwfs)+=errsig;
-				P(simu->zoomerr, iwfs)=0;
-				dhc+=errsig;
-				if(simu->zoompos&&P(simu->zoompos, iwfs)){
-					P(P(simu->zoompos, iwfs), simu->wfsflags[ipowfs].zoomout-1)=P(simu->zoomint, iwfs);
-				}
-			}
-			dhc=(dhc/parms->powfs[ipowfs].nwfs)*2*pow(parms->powfs[ipowfs].hs, 2);
-			//only force update ETF if dh changes by more than 100 (1% of the sodium profile depth).
-			if(fabs(dhc)>parms->dbg.na_thres)			{//otherwise, wait until next sodium profile column
-				update_etf=1;
-			}
-		}//if zoom out*/
 	}//for ipowfs
 }
 
@@ -1136,14 +1079,10 @@ static void wfsgrad_dither_post(sim_t* simu){
 						shwfs_grad(&ibgrad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
 						wfsgrad_tt_drift(ibgrad, simu, 0.5, iwfs, 0);
 						//adjust the gain based on dtrat difference.
-						//the drift control BW has to be at least 20 times less than grad based signal to avoid fighting
-						/*int ratio=20;
-						if(parms->powfs[ipowfs].zoomdtrat){
-							ratio=parms->powfs[ipowfs].dither_ograt/parms->powfs[ipowfs].zoomdtrat;
-							if(ratio>20) ratio=20;
-							if(ratio<=0) ratio=1;
-						}*/
-						wfsgrad_focus_drift(ibgrad, simu, 0, iwfs, 1);
+						const real dtdrift=parms->powfs[ipowfs].dither_ograt*parms->sim.dt;
+						const real dtwant=20; //dt where gain should be 0.5
+						const real fgain=dtdrift/dtwant*0.5;
+						wfsgrad_focus_drift(ibgrad, simu, fgain, iwfs, 1);
 					}
 					dfree(ibgrad);
 				}

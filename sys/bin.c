@@ -308,8 +308,7 @@ static file_t* zfopen_try(const char* fni, const char* mod){
 			fp->isgzip=0;
 		}
 	}
-	/*Now open the file to get a fd number that we can use to lock on the
-	  file.*/
+	/*Now open the file to get a fd number that we can use to lock on the file.*/
 	switch(mod[0]){
 	case 'r':/*read only */
 		if((fp->fd=myopen(fn2, O_RDONLY, 0666))==-1){
@@ -317,11 +316,6 @@ static file_t* zfopen_try(const char* fni, const char* mod){
 		} else{//file exist
 			if(!mystrcmp(fn2, CACHE)){
 				futimes(fp->fd, NULL);
-				/*
-				  Relocated to destructor of mem.c
-				  char *cpath=mydirname(fn2);
-				  remove_file_older(cpath, 30*24*3600);
-				  free(cpath);*/
 			}
 		}
 		break;
@@ -340,7 +334,8 @@ static file_t* zfopen_try(const char* fni, const char* mod){
 		}
 		break;
 	default:
-		dbg("Unknown mod=%s\n", mod);
+		dbg("Unknown mod=%s. Supported are r, w, a\n", mod);
+		goto fail;
 	}
 	if(fp->fd==-1){
 		dbg("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));

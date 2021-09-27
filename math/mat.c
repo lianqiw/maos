@@ -77,7 +77,8 @@ X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ..
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out&&fn) {
 		out->fp=zfopen(fn, "w");
-		out->async=async_init(out->fp, sizeof(T), M_T, out->header, P(out), out->nx, out->ny);
+		writedata_by_id(out->fp, out->base, 0, -1);
+		//out->async=async_init(out->fp, sizeof(T), M_T, out->header, P(out), out->nx, out->ny);
 	}
 	return out;
 }
