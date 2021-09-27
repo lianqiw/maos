@@ -33,6 +33,7 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs);
 void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
   rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
 );
+real remove_focus_grad(const loc_t* saloc, dmat* grad, real factor);
 void fit_sodium_profile(
   dmat** sodium, /**<The sodium profile determined by fit*/
   dcell** pgrad, /**<The gradients determined by fit.*/

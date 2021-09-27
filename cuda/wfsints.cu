@@ -309,7 +309,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	
 	cucmat psf, wvf, otf, psfstat, lotfc, lwvf;
 	curmat lltopd;
-
+	real wt1=0, wt2=0;
 	if(powfs[ipowfs].llt&&parms->powfs[ipowfs].trs){
 		int nlx=powfs[ipowfs].llt->pts->nxsa;
 		lltopd=cuwfs[iwfs].lltopd;
@@ -368,6 +368,15 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		}
 		if(parms->save.wfsopd->p[iwfs]){
 			zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
+		}
+		if(cuwfs[iwfs].dtf[0].etf[1].etf){
+			const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
+			wt2=(real)(isim%dtrat)/(real)dtrat;
+			//wt2=(real)isim/dtrat; wt2=wt2-floor(wt2);
+			wt1=1.-wt2;
+			//if(iwfs==0) dbg("isim=%d, wt1=%g, wt2=%g\n", isim, wt1, wt2);
+		}else{
+			wt1=1;
 		}
 	}/*if has llt */
 
@@ -491,14 +500,11 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 					ctoc("fft to otf");
 				}
 				/*now we have otf. multiply with etf, dtf. */
-				if(cuwfs[iwfs].dtf[iwvl].etf[1].etf){
-					const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
-					Real wt2=(Real)(isim%dtrat)/(real)dtrat;
-					Real wt1=1.-wt2;
+				if(wt2){
 					sa_ccwm2_do<<<ksa, dim3(16, 16), 0, stream>>>
 						(otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf[1].etf.Col(isa), wt2, 0);
 					ctoc("ccwm2");
-				} else if(cuwfs[iwfs].dtf[iwvl].etf[0].etf){
+				} else if(wt1){
 					sa_ccwm_do<<<ksa, 256, 0, stream>>>
 						(otf(), notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), 0);
 					ctoc("ccwm");//0.97 ms

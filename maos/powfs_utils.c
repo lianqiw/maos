@@ -117,35 +117,28 @@ void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
 }
 struct fit_cache{
 	dccell *sepsf;
-	etf_t **etfs;
 	dccell *i0m;
 	dcell *i0mv;
-	int nx;
 }fit_cache={0};
 void fit_cache_free(){
-	if(!fit_cache.nx) return;
 	cellfree(fit_cache.sepsf);
 	cellfree(fit_cache.i0m);
 	cellfree(fit_cache.i0mv);
-	for(long ix=0; ix<fit_cache.nx; ix++){
-		etf_free(fit_cache.etfs[ix]);
-	}
-	free(fit_cache.etfs);
-	fit_cache.etfs=0;
-	fit_cache.nx=0;
 }
 /**
  * Remove focus mode from gradients. Do not consider noise weighting
  * */
-void remove_focus_grad(const loc_t *saloc, dmat *grad){
+real remove_focus_grad(const loc_t *saloc, dmat *grad, real factor){
 	dmat* mode=dnew_do(saloc->nloc*2, 1, saloc->locx, NULL);
 	dmat* rmod=dpinv(mode, NULL);
-	dmat* focus=0;
-	dmm(&focus, 0, rmod, grad, "nn", 1);
-	dmm(&grad, 1, mode, focus, "nn", -1);
-	dfree(focus);
+	dmat* mfocus=0;
+	dmm(&mfocus, 0, rmod, grad, "nn", 1);
+	dmm(&grad, 1, mode, mfocus, "nn", -factor);
+	real focus=P(mfocus,0);
+	dfree(mfocus);
 	dfree(rmod);
 	dfree(mode);
+	return focus;
 }
 /**
  * Fit i0 to sodium profile using iterative algorithm. The steps are as follows
@@ -253,29 +246,17 @@ void fit_sodium_profile(
 	P(i02, 0)=dref(i0i->m);
 	dcell* mtche=0;
 	dcell* res=0;
-	etf_t** etfs=use_cache?fit_cache.etfs:NULL;
+	//etf_t** etfs=use_cache?fit_cache.etfs:NULL;
 	dccell* i0m=use_cache?fit_cache.i0m:NULL;//sa image for each sodium bin
 	dcell* i0mv=use_cache?fit_cache.i0mv:NULL;//vectorized i0m
 	int skip_first=0;
-	if(!etfs){
-		etfs=mycalloc(nx, etf_t*);
-		dmat *na2i=dnew(1,2);
-		//OMP_FOR	
-		for(long ix=0; ix<nx; ix++){
-			P(na2i, 0, 0)=P(nai, ix, 0);
-			P(na2i, 0, 1)=1;
-			etfs[ix]=mketf(dtf, na2i->base, 0, srot, srsa, hs, htel, za, 1);//no need to update
-		}
-		dfree(na2i);
-		toc2("mketf");tic;
-		print_mem("mketf");
+
+	if(!i0m){
 		i0mv=dcellnew(1, nx);
 		i0m=dccellnew(nx, 1);
 		if(use_cache){
-			fit_cache.etfs=etfs;
 			fit_cache.i0m=i0m;
 			fit_cache.i0mv=i0mv;
-			fit_cache.nx=nx;
 		}
 	}else{
 		skip_first=1;
@@ -284,17 +265,30 @@ void fit_sodium_profile(
 	dbg("svdthres=%g, tikcr=%g, nrep=%d\n", svdthres, tikcr, nrep);
 	//don't try to cachc fotf. It is per WFS and uses too much storage.
 	dcell* ata=0, * atb=0;
-	etf_t *etfi=0;
+	etf_t *etf_full=0;
+	dcell *na2s=dcellnew_same(nx, 1, 1, 2);
 	for(int irep=0; irep<nrep; irep++){
 		dbg("repeat %d of %d\n", irep+1, nrep);
 		if(irep>0 || !skip_first){
 			OMP_FOR
+			for(long ii0=0; ii0<ni0; ii0++){
+				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
+				remove_focus_grad(saloc, P(*pgrad, ii0), 1);
+			}
+			OMP_FOR
 			for(long ix=0; ix<nx; ix++){
-				gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etfs[ix], saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
+				dmat *na2i=P(na2s, ix);
+				P(na2i, 0, 0)=P(nai, ix, 0);
+				P(na2i, 0, 1)=1;
+				//ETF takes a lot of storage but is inexpensive to build. So we choose to build it on the fly
+				etf_t *etf_i=mketf(dtf, na2i->base, 0, srot, srsa, hs, htel, za, 1);
+				gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etf_i, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
+				etf_free(etf_i);
 				if(!P(i0mv, 0, ix)||P(P(i0mv, 0, ix))!=P(P(i0m, ix)->m)){
 					dfree(P(i0mv, 0, ix));
 					P(i0mv, 0, ix)=dref(P(i0m, ix)->m);
 				}
+
 			}
 			toc2("gensei");tic;
 			print_mem("gensei");
@@ -312,11 +306,11 @@ void fit_sodium_profile(
 			P(nai, ix, 1)=P(P(res, ix), 0)*scale;
 		}
 		if(use_mtche){
-			if(etfi) etf_free(etfi);
+			if(etf_full) etf_free(etf_full);
 			//mketf for full profile must use the same no_interp flag 
-			etfi=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
+			etf_full=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
 			toc2("mketf full"); tic;
-			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etfi, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
+			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
 			toc2("gensei full"); tic;
 			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
 				pixthetax, pixthetay, NULL, radgx, 1, 1);
@@ -352,44 +346,47 @@ void fit_sodium_profile(
 			}
 			toc2("tcog diff"); tic;
 		}
-		//Need to remove focus mode from the gradients as it degenerates with sodidum profile shift.
-		for(long ii0=0; ii0<ni0; ii0++){
-			remove_focus_grad(saloc, P(*pgrad, ii0));
-		}
+		
 		if(save){
 			writebin(ata, "sodium_ata_%d_%d", count, irep);
 			writebin(atb, "sodium_atb_%d_%d", count, irep);
 			writebin(nai, "sodium_prof_%d_%d", count, irep);
 			writebin(*pgrad, "sodium_grad_%d_%d", count, irep);
 			writebin(mtche, "sodium_mtche_%d_%d", count, irep);
-			writebin(*pi0, "sodium_i0_%d_%d", count, irep);
+			writebin(*pi0tmp, "sodium_i0_%d_%d", count, irep);
+			if(irep==0) writebin(i0i, "sodium_i0i_%d", count);
 		}
 	}
+	//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
+	/*if(pgrad!=&gradtmp || !gradncpa){//output is used
+	OMP_FOR
+		for(long ii0=0; ii0<ni0; ii0++){
+			remove_focus_grad(saloc, P(*pgrad, ii0));
+		}
+	}*/
 	//output is desired. build final i0, gx, gy with the final gradient or ncpa gradient.
 	if(pi0 || pgx || pgy){
-		if(!etfi) etfi=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
+		if(!etf_full){
+			etf_full=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
+			toc2("mketf final");tic;
+		}
 		const dcell *gradf=gradncpa?gradncpa:(*pgrad);
-		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etfi, saa, radgx?srot:NULL, siglev, wvlwts, gradf, 0, 0);
+		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, gradf, 0, 0);
+		toc2("gensei final");tic;
 	}
-	toc2("gensei final");tic;
 
-	if(etfi) etf_free(etfi);
+	if(etf_full) etf_free(etf_full);
 	dcellfree(ata);
 	dcellfree(atb);
 	if(!use_cache){
 		cellfree(i0m);
 		cellfree(i0mv);
-	
-		for(long ix=0; ix<nx; ix++){
-			etf_free(etfs[ix]);
-		}
-		free(etfs);
 	}
 	cellfree(mtche);
 	cellfree(i02);
 	cellfree(res);
 	if(!sodium) dfree(nai);
-
+	cellfree(na2s);
 	cellfree(i0tmp);
 	cellfree(gxtmp);
 	cellfree(gytmp);

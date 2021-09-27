@@ -48,7 +48,7 @@ void write_by_id(const cell* dc, M_ID id, const char* format, ...) CHECK_ARG(3);
 cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header);
 cell* read_by_id(M_ID id, int level, const char* format, ...) CHECK_ARG(3);
 /**
-   A generic routine for reading data from file. User need to cast the result.
+   A generic routine for reading data from file. User need to cast the result. -1 means scan the file
  */
 #define readbin(format...) read_by_id(M_0, -1, format);
 //cell* readbin(const char* format, ...) CHECK_ARG(1);

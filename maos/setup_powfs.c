@@ -1127,6 +1127,7 @@ void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, double deltah, int ip
 		error("Invalid mode=%d\n", mode);
 	}
 	if(petf){
+		dbg("mketf: powfs %d using column %d with trombone dh=%g\n", ipowfs, icol, deltah);
 		*petf=mketf(powfs[ipowfs].dtf, sodium, icol, 
 					powfs[ipowfs].srot, powfs[ipowfs].srsa,
 					parms->powfs[ipowfs].hs+deltah, 

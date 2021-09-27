@@ -95,7 +95,10 @@ typedef int spint;
 
 typedef struct file_t file_t;
 typedef struct {
-    uint32_t magic;//this must be the first element because we cast header_t to uint32_t.
+  union{
+    M_ID id;//this must be the first element because we cast header_t to uint32_t.
+    uint32_t magic;
+  };
     uint64_t nx;
     uint64_t ny;
     char *str;

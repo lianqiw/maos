@@ -27,14 +27,27 @@
    library developer */
 void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 	if(ncol==-1){//initialize async data
-		if(A && !A->async){
-			((X(mat)*)A)->async=async_init(fp, sizeof(T), M_T, A->header, P(A), A->nx, A->ny);
-		}else{
-			dbg("%s: async is already initialized or A=%p is empty\n", zfname(fp), A);
+		if(A){
+			if(!A->async){
+				((X(mat)*)A)->async=async_init(fp, sizeof(T), M_T, A->header, P(A), A->nx, A->ny);
+			}else{
+				dbg("%s: async is already initialized or A=%p is empty\n", zfname(fp), A);
+			}
 		}
 	}else if(A && ncol>0 && A->async){//write async data
-		if(ncol>A->ny) ncol=A->ny;
-		async_write(A->async, A->nx*ncol*sizeof(T), 0);
+		long nx=A->nx;
+		long ny=A->ny;
+		if(ny==1){//for row vectors, allow saving by row instead.
+			ny=nx;
+			nx=1;
+		}
+		if(nx && ny){
+			if(ncol>ny){
+				warning("ncol=%ld>ny=%ld\n", ncol, ny);
+				ncol=ny;
+			}
+			async_write(A->async, nx*ncol*sizeof(T), 0);
+		}
 	}else if(fp){//normal writing
 		writearr(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?P(A):NULL, A?A->nx:0, A?A->ny:0);
 	}else{

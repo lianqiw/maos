@@ -28,7 +28,7 @@
 
 /**
    \file sim_utils.h
-   
+
    Contains a few support functions for simulation.
 */
 /*static real opdzlim[2]={-3e-5,3e-5}; */
@@ -383,12 +383,37 @@ void sim_update_etf(sim_t* simu){
 				icol=colsim+isim/dtrat;
 				icol2=icol+1;
 			}
-			double deltah=0;
+			real deltah=0;
+			const real factor=2*pow(parms->powfs[ipowfs].hs, 2);
 			if(simu->zoomint){
-				deltah=-P(simu->zoomint, P(parms->powfs[ipowfs].wfs, 0));
-				deltah*=2*pow(parms->powfs[ipowfs].hs, 2);//focus to range.
+				if(!parms->powfs[ipowfs].zoomshare){
+					error("Please implement\n");
+				}
+				int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
+				real zoomerr1=0, zoomerr2=0;
+				if(P(simu->zoomavg_count, iwfs0)){//gradient based
+					average_powfs(simu->zoomavg, parms->powfs[ipowfs].wfs, 1);
+					zoomerr1=P(simu->zoomavg, iwfs0)/P(simu->zoomavg_count, iwfs0);
+					dzero(simu->zoomavg);
+					lzero(simu->zoomavg_count);
+				}
+				if(P(simu->zoomdrift_count, iwfs0)){//i0 based
+					average_powfs(simu->zoomdrift, parms->powfs[ipowfs].wfs, 1);
+					zoomerr2=P(simu->zoomdrift, iwfs0)/P(simu->zoomdrift_count, iwfs0);
+					dzero(simu->zoomdrift);
+					lzero(simu->zoomdrift_count);
+				}
+			
+				real gain=parms->powfs[ipowfs].zoomgain?parms->powfs[ipowfs].zoomgain:0.5;
+				P(simu->zoomint, iwfs0)+=gain*(zoomerr1+zoomerr2);
+				if(simu->zoompos&&P(simu->zoompos, iwfs0)){
+					P(P(simu->zoompos, iwfs0), simu->zoompos_icol)=P(simu->zoomint, iwfs0);
+					simu->zoompos_icol++;
+				}
+				dbg("Step %5d: powfs %d: trombone error is %g, %g\n", isim, ipowfs, zoomerr1*factor, zoomerr2*factor);
+				deltah=-P(simu->zoomint, iwfs0)*factor;
 			}
-			info("Step %5d: powfs %d: Updating ETF using column %d with trombone dh=%g\n", isim, ipowfs, icol2, -deltah);
+			info("Step %5d: powfs %d: Updating ETF (update_etf=%d)\n", isim, ipowfs, update_etf);
 			TIC;tic;
 			setup_powfs_etf(powfs, parms, deltah, ipowfs, 1, icol);
 			if(icol2!=icol){
@@ -444,8 +469,9 @@ void sim_update_flags(sim_t* simu, int isim){
 				simu->gradoffisim=simu->wfsisim;
 			}
 		}
-		if(parms->powfs[ipowfs].llt){
-			wfsflags->zoomout=(simu->wfsisim+1)%parms->powfs[ipowfs].zoomdtrat==0?((simu->wfsisim+1)/parms->powfs[ipowfs].zoomdtrat):0;
+		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].zoomdtrat&&parms->powfs[ipowfs].zoomgain>0){
+			int zd=parms->powfs[ipowfs].zoomdtrat;
+			wfsflags->zoomout=((simu->wfsisim+1)%zd==0)?((simu->wfsisim+1)/zd):0;
 		}
 	}
 
@@ -512,13 +538,13 @@ static void init_simu_evl(sim_t* simu){
 		simu->clem=P(simu->res, 3);
 		dcellset(simu->res, NAN);
 	}
-	
+
 
 	{/*USE MMAP for data that need to save at every time step */
-		
+
 		const char* header="Results per direction: olmp; clmp; olep; clep";
 		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, header, "%s/Resp_%d.bin", fnextra, seed);
-		
+
 		simu->olmp=dcellsub(simu->resp, 0, nevl, 0, 1);
 		simu->clmp=dcellsub(simu->resp, 0, nevl, 1, 1);
 		simu->olep=dcellsub(simu->resp, 0, nevl, 2, 1);
@@ -610,10 +636,10 @@ static void init_simu_evl(sim_t* simu){
 					save->evlpsfhist[ievl]=zfarr_init(parms->sim.end, 1, "evlpsfhist" DIR_SUFFIX);
 				}
 				if(parms->evl.cov){
-					save->evlopdcov[ievl]=zfarr_init(0,0, "evlopdcov" DIR_SUFFIX);
+					save->evlopdcov[ievl]=zfarr_init(0, 0, "evlopdcov" DIR_SUFFIX);
 				}
 				if(parms->evl.cov||parms->evl.opdmean){
-					save->evlopdmean[ievl]=zfarr_init(0,0, "evlopdmean" DIR_SUFFIX);
+					save->evlopdmean[ievl]=zfarr_init(0, 0, "evlopdmean" DIR_SUFFIX);
 				}
 			}
 			if(P(parms->evl.psfngsr, ievl)!=0&&!parms->sim.evlol){
@@ -624,10 +650,10 @@ static void init_simu_evl(sim_t* simu){
 					save->evlpsfhist_ngsr[ievl]=zfarr_init(parms->sim.end, 1, "evlpsfhist_ngsr" DIR_SUFFIX);
 				}
 				if(parms->evl.cov){
-					save->evlopdcov_ngsr[ievl]=zfarr_init(0,0, "evlopdcov_ngsr" DIR_SUFFIX);
+					save->evlopdcov_ngsr[ievl]=zfarr_init(0, 0, "evlopdcov_ngsr" DIR_SUFFIX);
 				}
 				if(parms->evl.cov||parms->evl.opdmean){
-					save->evlopdmean_ngsr[ievl]=zfarr_init(0,0, "evlopdmean_ngsr" DIR_SUFFIX);
+					save->evlopdmean_ngsr[ievl]=zfarr_init(0, 0, "evlopdmean_ngsr" DIR_SUFFIX);
 				}
 			}
 #undef DIR_SUFFIX			
@@ -640,10 +666,10 @@ static void init_simu_evl(sim_t* simu){
 				save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov){
-				save->evlopdcovol=zfarr_init(0,0, "evlopdcovol_" DIR_SUFFIX_OL);
+				save->evlopdcovol=zfarr_init(0, 0, "evlopdcovol_" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov||parms->evl.opdmean){
-				save->evlopdmeanol=zfarr_init(0,0, "evlopdmeanol" DIR_SUFFIX_OL);
+				save->evlopdmeanol=zfarr_init(0, 0, "evlopdmeanol" DIR_SUFFIX_OL);
 			}
 		}
 #undef DIR_SUFFIX_OL
@@ -826,7 +852,7 @@ static void init_simu_wfs(sim_t* simu){
 		}
 		simu->fsmerr_store=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmerr_drift=dcellnew3(nwfs, 1, nnx, NULL);
-		simu->fsmreal     =dcellnew3(nwfs, 1, nnx, NULL);
+		simu->fsmreal=dcellnew3(nwfs, 1, nnx, NULL);
 		if(parms->sim.closeloop){
 			simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
 				parms->sim.dthi, parms->sim.epfsm);
@@ -851,7 +877,7 @@ static void init_simu_wfs(sim_t* simu){
 				nny[iwfs]=0;
 			}
 		}
-		
+
 		simu->fsmerrs=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmerr_%d.bin", fnextra, seed);
 		simu->fsmcmds=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_%d.bin", fnextra, seed);
 	}
@@ -1048,26 +1074,34 @@ static void init_simu_wfs(sim_t* simu){
 	if(parms->nlgspowfs){
 		simu->LGSfocus=dcellnew(parms->nwfs, 1);
 		simu->LGSfocus_drift=dcellnew(parms->nwfs, 1);
-		simu->zoomerr=dnew(parms->nwfs, 1);
-		simu->zoomerr_drift=dnew(parms->nwfs, 1);
+		simu->zoomdrift=dnew(parms->nwfs, 1);
+		simu->zoomdrift_count=lnew(parms->nwfs, 1);
 		simu->zoomint=dnew(parms->nwfs, 1);
 		simu->zoomavg=dnew(parms->nwfs, 1);
-		long nnx2[parms->nwfs];
+		simu->zoomavg_count=lnew(parms->nwfs, 1);
+		//To use writebin_async, the number of columns must be related to timestep
 		long nnx[parms->nwfs];
 		long nny[parms->nwfs];
+		long nny2[parms->nwfs];
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].llt){
-				nnx[iwfs]=(parms->sim.end+1)/parms->powfs[ipowfs].zoomdtrat;
-				nnx2[iwfs]=nsim;
-				nny[iwfs]=1;
+				nnx[iwfs]=1;
+				nny[iwfs]=0;
+				if(parms->powfs[ipowfs].zoomdtrat){
+					nny[iwfs]=(parms->sim.end+1)/parms->powfs[ipowfs].zoomdtrat;
+				}
+				if(parms->powfs[ipowfs].llt->coldtrat){
+					nny[iwfs]=MAX(nny[iwfs], (parms->sim.end+1)/parms->powfs[ipowfs].llt->coldtrat);
+				}
+				nny2[iwfs]=nsim;
 			} else{
 				nnx[iwfs]=0;
 				nny[iwfs]=0;
 			}
 		}
 		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
-		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx2, nny, NULL, "%s/Resfocuserrs_%d.bin", fnextra, seed);
+		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx, nny2, NULL, "%s/Resfocuserrs_%d.bin", fnextra, seed);
 	}
 	if(parms->dither){
 		simu->dither=mycalloc(nwfs, dither_t*);
@@ -1106,7 +1140,7 @@ static void init_simu_wfs(sim_t* simu){
 		const int ipowfs=parms->itpowfs;
 		const int nacc=parms->sim.end-parms->powfs[ipowfs].step;
 		if(nacc>0){
-			save->restwfs=zfarr_init(0,0,"%s/Restwfs_%d.bin", fnextra, seed);
+			save->restwfs=zfarr_init(0, 0, "%s/Restwfs_%d.bin", fnextra, seed);
 		}
 	}
 }
@@ -1586,9 +1620,10 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->LGSfocusts);
 	dcellfree(simu->telfocusint);
 	dcellfree(simu->telfocusreal);
-	dfree(simu->zoomerr);
-	dfree(simu->zoomerr_drift);
+	dfree(simu->zoomdrift);
+	lfree(simu->zoomdrift_count);
 	dfree(simu->zoomavg);
+	lfree(simu->zoomavg_count);
 	dfree(simu->zoomint);
 	if(parms->recon.split){
 		dcellfree(simu->clemp);
@@ -1648,7 +1683,7 @@ void free_simu(sim_t* simu){
 		free(simu->dither);
 	}
 	cellfree(simu->resdither);
-	
+
 	cellfree(simu->zoompos);
 	cellfree(simu->llt_tt);
 	/*Close all files */
@@ -1689,7 +1724,7 @@ void free_simu(sim_t* simu){
 		snprintf(fn, 80, "Res_%d.lock", simu->seed);
 		if(signal_caught){
 			(void)remove(fn);
-		}else{
+		} else{
 			snprintf(fnnew, 80, "Res_%d.done", simu->seed);
 			(void)rename(fn, fnnew);
 		}
@@ -1718,7 +1753,7 @@ void print_progress(sim_t* simu){
 	}
 
 	real this_time=myclockd();
-	if(simu->res && simu->res->fp){//save res periodically for plotting.
+	if(simu->res&&simu->res->fp){//save res periodically for plotting.
 		static real last_save_time=0;
 		const real gap=isim<10000?10:60;
 		if(this_time>last_save_time+gap){
@@ -1730,8 +1765,9 @@ void print_progress(sim_t* simu){
 			writebin_async(simu->fsmcmds, simu->wfsisim+1);
 			if(parms->nlgspowfs){
 				writebin_async(simu->LGSfocusts, simu->wfsisim+1);
-				int ncol=(simu->wfsisim+1)/parms->powfs[parms->ilgspowfs].zoomdtrat;
-				writebin_async(simu->zoompos, ncol);
+				if(simu->zoompos_icol){
+					writebin_async(simu->zoompos, simu->zoompos_icol);
+				}
 			}
 			last_save_time=this_time;
 		}

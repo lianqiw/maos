@@ -262,19 +262,18 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 			nx=A->nx;
 			ny=A->ny;
 		}
-		id=0;/*determine id first for non-empty cell*/
+		M_ID id2=0;//determine id first for non-empty cell
+		
 		if(nx&&ny){
 			for(uint64_t ix=0; ix<(nx*ny); ix++){
 				if(P(A,ix)){
-					id=P(A,ix)->id;
-					if(!id){
-						warning("id is not set\n");
-					}else{
-						break;
+					if(!id2) id2=P(A,ix)->id;
+					else if(id2!=P(A, ix)->id){
+						warning("cell (%ld) has different id (%u) than others (%u)\n", ix, P(A,ix)->id, id2);
 					}
 				}
 			}
-			if(!id){//empty cell
+			if(!id2){//empty cell
 				nx=0; ny=0;
 			}
 		}
@@ -282,13 +281,12 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 			header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
 			write_header(&header, fp);
 		}
-		if(id){
-			for(long ix=0; ix<(A->nx*A->ny); ix++){
-				writedata_by_id(fp, P(A,ix), 0, ncol);
-			}
+		
+		for(uint64_t ix=0; ix<(nx*ny); ix++){
+			writedata_by_id(fp, P(A,ix), id2, ncol);
 		}
 	}
-				break;
+	break;
 	case M_DBL:
 		dwritedata(fp, (dmat*)A, ncol);break;
 	case M_CMP:

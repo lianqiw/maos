@@ -74,7 +74,6 @@ static void* find_var(const char* name){
 	VAR_GET(simu,fsmcmds),
 	VAR_GET(simu,LGSfocus),
 	VAR_GET(simu,LGSfocusts),
-	VAR_GET(simu,zoomerr),
 	VAR_GET(simu,zoomint),
 	VAR_GET(simu,zoompos),
 	VAR_GET(simu,evlopd),

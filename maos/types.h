@@ -597,11 +597,14 @@ typedef struct sim_t{
     dcell *LGSfocusts; /**<Time history of focus error*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     real ngsfocuslpf;/**<low pass filtered NGS focus*/
-    dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
-    dmat *zoomerr_drift; /**<Trombone error signal from i0/ib drift control*/
+    //dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
+    dmat *zoomdrift; /**<Trombone error signal from i0/ib drift control*/
+    lmat *zoomdrift_count;
     dmat *zoomint;    /**<Trombone integrator*/
     dmat *zoomavg;    /**<Trombone averager from gradients*/
+    lmat *zoomavg_count;/**<Count of zoomavg accumulation*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
+    long zoompos_icol;  /**<Current column*/
     /*focus offloading*/
     dcell *telfocusint; /**<Telescope focus integrated*/
     dcell *telfocusreal;/**<Telescope focus integrated*/
