@@ -62,7 +62,7 @@ X(mat)* X(ref)(const X(mat)* in){
 /**
    Create a new T matrix object. initialized all to zero.
 */
-X(mat)* X(new)(long nx, long ny){
+ X(mat)* X(new)(long nx, long ny){
 	return X(new_do)(nx, ny, NULL, 0);
 }
 /**

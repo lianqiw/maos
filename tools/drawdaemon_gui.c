@@ -1063,12 +1063,12 @@ retry:
 		gtk_widget_destroy(dialog);
 		return;
 	}
-	char* suffix=rindex(filename, '.');
+	char* suffix=strrchr(filename, '.');
 	if(!suffix){
 		char* filename2=stradd(filename, ".png", NULL);
 		g_free(filename);
 		filename=filename2;
-		suffix=rindex(filename, '.');
+		suffix=strrchr(filename, '.');
 	}
 
 	if(strcmp(suffix, ".eps")==0){

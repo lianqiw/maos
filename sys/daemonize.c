@@ -165,7 +165,7 @@ int single_instance_daemonize(const char* lockfolder_in,
 		}
 	} else if(pid>0){
 		close(fd);/*release lock in parent process. */
-		usleep(1e5);
+		mysleep(0.1);
 		waitpid(pid, NULL, 0);/*prevent child (parent of another fork) from defunct*/
 		if(daemon_func){/*The process that launched this routine will return. */
 			return 0;

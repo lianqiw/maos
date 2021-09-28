@@ -28,11 +28,9 @@
    evaluation.
  */
 typedef struct aper_t{
-    loc_t *locs;         /**<PLOCS in laos. the fine sampled grid on aperture
-			    for peformance evaluation.*/
+    loc_t *locs;         /**<PLOCS in laos. the fine sampled grid on aperture for peformance evaluation.*/
     loccell *locs_dm;    /**<Distorted locs when mapped onto DM*/
-    dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for
-			    performance evaluation*/
+    dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for performance evaluation*/
     dmat *amp1;          /**<amplitude map defined on locs, maximum is 1. use for plotting.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
@@ -370,6 +368,11 @@ typedef struct recon_t{
     ngsmod_t *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     cn2est_t *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
+
+    //for sodium fitting
+    dcell *GSF;        /**<sodium fitting: Mapping controlled zernike modes to WFS gradients*/
+    dcell* RSF;        /**<sodium fitting: Reconstruct controlled zernike from WFS gradients*/
+
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/
     int has_ttr;       /**<whether there is any tip/tilt removed WFS*/

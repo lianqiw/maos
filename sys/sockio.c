@@ -152,7 +152,7 @@ int stwritefd(int sfd, int fd){
 	msg.msg_iov=&iov;
 	msg.msg_iovlen=1;
 	char cms[CMSG_SPACE(sizeof(int))];
-	msg.msg_control=(caddr_t)cms;
+	msg.msg_control=cms;
 	msg.msg_controllen=CMSG_LEN(sizeof(int));
 	struct cmsghdr* cmsg=CMSG_FIRSTHDR(&msg);
 	cmsg->cmsg_level=SOL_SOCKET;
@@ -180,7 +180,7 @@ int streadfd(int sfd, int* fd){
 	msg.msg_iov=&iov;
 	msg.msg_iovlen=1;
 	char cms[CMSG_SPACE(sizeof(int))];
-	msg.msg_control=(caddr_t)cms;
+	msg.msg_control=cms;
 	msg.msg_controllen=CMSG_LEN(sizeof(int));
 	struct cmsghdr* cmsg=CMSG_FIRSTHDR(&msg);
 	if(recvmsg(sfd, &msg, 0)<0){

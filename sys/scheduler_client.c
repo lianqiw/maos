@@ -30,6 +30,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <limits.h>
+#include <strings.h> //strncasecmp
+#include <unistd.h> //sync
 
 #include "sock.h"
 #include "sockio.h"
@@ -252,7 +254,7 @@ static int scheduler_connect_self(int block){
 		}
 		if(sock<0){
 			launch_scheduler(block?10:0);
-			usleep(100000);
+			mysleep(0.1);
 			retry--;
 		}
 	}while(sock<0 && retry>0);
@@ -487,13 +489,9 @@ void print_backtrace_symbol(void* const* buffer, int size){
 		snprintf(add, 24, " %p", buffer[it]);
 		strncat(cmdstr, add, PATH_MAX-strlen(cmdstr)-1);
 	}
-	if(connect_failed){
-		dbg("%s\n", cmdstr);
-		return;
-	}
 	PNEW(mutex);//Only one thread can do this.
 	LOCK(mutex);
-	if(MAOS_DISABLE_SCHEDULER||is_scheduler){
+	if(MAOS_DISABLE_SCHEDULER||is_scheduler||connect_failed){
 		dbg("backtrace directly\n");
 		char ans[10000];
 		if(!call_addr2line(ans, 10000, cmdstr)){
@@ -530,7 +528,7 @@ void print_backtrace_symbol(void* const* buffer, int size){
 #endif
 	}
 	UNLOCK(mutex);
-	sync();
+	//sync();
 #else
 	(void)buffer; (void)size;
 #endif
@@ -543,7 +541,7 @@ void print_backtrace(){
 	void* buffer[size0];
 	size1=backtrace(buffer, size0);
 	print_backtrace_symbol(buffer, size1);
-	sync();
+	//sync();
 }
 #else
 void print_backtrace(){}

@@ -34,7 +34,7 @@ void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
   rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
 );
 real remove_focus_grad(const loc_t* saloc, dmat* grad, real factor);
-void fit_sodium_profile(
+void sodium_fit(
   dmat** sodium, /**<The sodium profile determined by fit*/
   dcell** pgrad, /**<The gradients determined by fit.*/
   dcell** pi0,   /**<The output i0*/
@@ -54,14 +54,24 @@ void fit_sodium_profile(
   real hs,      /**<LGS focusing height*/
   real htel,    /**<Telescope hegith*/
   real za,      /**<Telescope zenith angle*/
-  real cogthres,/**<Threshold for cog*/
   real tikcr,   /**<Tikhonov regularization*/
   real svdthres, /**<SVD threshold*/
-  int use_mtche, /**<Use mtche to compute gradient error*/
   int nrep,     /**<Number of iterations*/
   int save,      /**<Save results to file*/
   int use_cache  /**<Use cache*/
 );
-void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, const parms_t* parms, 
-  powfs_t* powfs, int ipowfs, int use_mtche, int nrep, int use_ncpa, int use_cache);
+void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
+  dcell** pgrad, /**<[out] estimated actual gradient*/
+  dcell** pi0,   /**<[out] The output i0*/
+  dcell** pgx,   /**<[out] The output gx*/
+  dcell** pgy,   /**<[out] The output gy*/
+  const dcell* i0in, /**<[in]The input sa intensities. may equal to *pi0 */
+  const parms_t* parms,/**<[in]parms*/
+  powfs_t* powfs, /**<[in]powfs*/
+  int ipowfs, /**<[in] ipowfs*/
+  real r0,  /**<[in] Fried parameter*/
+  real L0,  /**<[in] outer scale*/
+  int nrep, /**<[in] Number of iterations. 1 for mtche, 3 for cog*/
+  int use_cache /**<[in] cache intermediate results.*/
+);
 #endif

@@ -43,7 +43,6 @@ int main(int argc, char** argv){
 	} else{
 		sec=0.1;
 	}
-	unsigned int usec=(int)(sec*1e6);
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "/proc/%ld/stat", pid);
 	FILE* fp=fopen(fn, "r");
@@ -61,7 +60,7 @@ int main(int argc, char** argv){
 	}
 	long last=utime+stime;
 	rewind(fp);
-	usleep(usec);
+	mysleep(sec);
 	setbuf(fp, NULL);
 	for(int count=0; count<1000;count++){
 		if(fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
@@ -72,7 +71,7 @@ int main(int argc, char** argv){
 		fflush(fpout);
 		rewind(fp);
 		last=stime+utime;
-		usleep(usec);
+		mysleep(sec);
 	}
 	fclose(fpout);
 }

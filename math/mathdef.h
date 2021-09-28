@@ -37,7 +37,13 @@
 #include "loc.h"
 #include "map.h"
 #include "random.h"
-
+/*
+#define dnew(nx, ny) (funtrace_set,dnew_do(nx,ny,NULL,0));funtrace_unset
+#define snew(nx, ny) (funtrace_set,snew_do(nx,ny,NULL,0));funtrace_unset
+#define znew(nx, ny) (funtrace_set,znew_do(nx,ny,NULL,0));funtrace_unset
+#define cnew(nx, ny) (funtrace_set,cnew_do(nx,ny,NULL,0));funtrace_unset
+#define lnew(nx, ny) (funtrace_set,lnew_do(nx,ny,NULL,0));funtrace_unset
+*/
 #define isempty(A) (!(A) || !(A)->nx || !(A)->ny)
 
 #define abs2(A)      ((A)*(A))

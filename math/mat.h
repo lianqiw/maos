@@ -23,7 +23,7 @@
 #endif
 
 #define AOS_MAT_DEF(X,T,R)						\
-    X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;		\
+    X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;\
     X(mat) *X(new_file)(long nx, long ny, const char* header, const char* format, ...) CHECK_ARG(4);\
     X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
     X(mat) *X(mat_cast)(const cell *A) CHECK_UNUSED_RESULT;		\

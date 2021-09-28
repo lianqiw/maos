@@ -1514,7 +1514,8 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				int SODIUM_FIT=0;
 				READ_ENV_INT(SODIUM_FIT, 0, 1);
 				if(SODIUM_FIT){
-					fit_sodium_profile_wrap(NULL, NULL, intstat->i0, parms, powfs, ipowfs, 0, 1, 0, 0);
+					sodium_fit_wrap(NULL, NULL, &intstat->i0, &intstat->gx, &intstat->gy, intstat->i0, parms, powfs, ipowfs, 
+					parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 1, 0);
 				}
 			}
 		}

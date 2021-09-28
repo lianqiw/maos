@@ -17,6 +17,7 @@
 */
 #include <tgmath.h>
 #include <ctype.h> /*isspace */
+#include <strings.h> //strncasecmp
 #include "readstr.h"
 #include "misc.h"
 #include "bin.h"

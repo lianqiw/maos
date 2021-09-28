@@ -27,7 +27,7 @@
   2009-10-12
   make mkg.c a standalone routine. gather mex related into a separate file.
 */
-#define _ISOC99_SOURCE
+//#define _ISOC99_SOURCE
 
 #include "../math/mathdef.h"
 #include "mkg.h"

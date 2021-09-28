@@ -15,9 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define _DEFAULT_SOURCE //DT_DIR
 #include <dirent.h>
 #include <getopt.h>
 #include <errno.h>
+
 #include "../lib/aos.h"
 static void usage(){
 	fprintf(stderr, "Usage:\n"

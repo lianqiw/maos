@@ -31,6 +31,7 @@
 #endif
 #include "scheduler_ws.h"
 #include "../sys/mem.h" //make sure memory debugging is used 
+#include "../sys/misc.h"
 /**
    Contains code for handling websocket connection using libwebsockets. Part of
    the code is copied from test-server.c in libwebsockets
@@ -454,7 +455,7 @@ int ws_service(int waiting){
 			ans=lws_service(context, 0);//<3.2 stable, use 0 for polling, but may not work for version close to 3.2
 #endif		
 			if(pending && waiting){
-				usleep(1000);//this sleep is necessary 
+				mysleep(0.001);//this sleep is necessary 
 				repeat++;
 			}
 		}while(pending && (waiting--)>0);//service all available requests

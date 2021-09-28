@@ -410,10 +410,10 @@ void sim_update_etf(sim_t* simu){
 					P(P(simu->zoompos, iwfs0), simu->zoompos_icol)=P(simu->zoomint, iwfs0);
 					simu->zoompos_icol++;
 				}
-				dbg("Step %5d: powfs %d: trombone error is %g, %g\n", isim, ipowfs, zoomerr1*factor, zoomerr2*factor);
 				deltah=-P(simu->zoomint, iwfs0)*factor;
+				dbg("Step %d\t: powfs %d: trombone error is %g %g zoompos is %g\n", isim, ipowfs, zoomerr1*factor, zoomerr2*factor, deltah);
 			}
-			info("Step %5d: powfs %d: Updating ETF (update_etf=%d)\n", isim, ipowfs, update_etf);
+			info("Step %d\t: powfs %d: Updating ETF (update_etf=%d)\n", isim, ipowfs, update_etf);
 			TIC;tic;
 			setup_powfs_etf(powfs, parms, deltah, ipowfs, 1, icol);
 			if(icol2!=icol){

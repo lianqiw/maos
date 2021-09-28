@@ -311,7 +311,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			ssline[strlen(ssline)-1]='\0';
 			continue;
 		}
-		char* eql=index(ssline, '=');
+		char* eql=strchr(ssline, '=');
 		if(!eql){//no equal sign
 			if(check_suffix(ssline, ".conf")){
 				char* embeded=strextract(ssline);

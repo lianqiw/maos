@@ -1202,6 +1202,7 @@ int main(int argc, const char* argv[]){
 			flag=2;
 		}
 	}
+	//Handle different ways of launching drawdaemon
 	switch(flag){
 	case 0:{
 		char fnlock[PATH_MAX];

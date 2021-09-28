@@ -109,7 +109,7 @@ int client(const char* hostname, int port, int nmin, int nmax, int nstep, int nr
 	for(int i=0;i<10;i++){//warm up
 		stwrite(sock, buf1, nmax);
 		stread(sock, buf1, 64);
-		usleep(500);
+		mysleep(0.0005);
 	}
 	double tim1, tim2, tim3;
 	int nlen=(nmax-nmin+nstep)/nstep;
@@ -123,7 +123,7 @@ int client(const char* hostname, int port, int nmin, int nmax, int nstep, int nr
 			if(irep%800==0){
 				info("irep=%d of %d\n", irep, nrep);
 			}
-			usleep(500);
+			mysleep(0.0005);
 			tim1=myclockd();
 			stwrite(sock, buf1, len);
 			tim2=myclockd();

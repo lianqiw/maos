@@ -51,4 +51,10 @@ void read_sys_env();
 ///Check whether signal is crash
 #define iscrash(sig) (sig==SIGABRT||sig==SIGSEGV||sig==SIGILL||sig==SIGFPE)
 void register_signal_handler(int(*)(int));
+#ifndef __cplusplus
+extern _Thread_local char funtrace[];//stores info about top level function ca
+#define funtrace_len 256
+#define funtrace_set ({if(!funtrace[0]) snprintf(funtrace, funtrace_len, "%s:%d,%s", BASEFILE,__LINE__,__func__);})
+#define funtrace_unset funtrace[0]=0;
+#endif
 #endif

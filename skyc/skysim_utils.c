@@ -142,7 +142,8 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 	kalman_t* kalman=0;
 	dcell* mpsol=0;
 	int multirate=parms->skyc.multirate;
-	dmat* moffset=multirate?dnew(nmod, 1):0;
+	dmat* moffset=0;
+	if(multirate) moffset=dnew(nmod, 1);
 	lmat* dtrats=aster->dtrats;//only in multirate case. dtrat of each wfs in the asterism
 	if(parms->skyc.servo>0){
 		if(multirate){//only supports integrator

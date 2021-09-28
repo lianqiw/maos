@@ -504,7 +504,7 @@ static void wfsgrad_fsm(sim_t* simu, int iwfs){
 	P(P(simu->fsmerrs, iwfs), 0, isim)=P(P(simu->fsmerr, iwfs), 0);
 	P(P(simu->fsmerrs, iwfs), 1, isim)=P(P(simu->fsmerr, iwfs), 1);
 }
-static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, int remove){
+static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int remove){
 	//gain can be set to 1 if the rate is slower than the main tip/tilt and focus control rate.
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
@@ -521,9 +521,9 @@ static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, int
 			dmm(&grad, 1, TT, tt, "nn", -1);
 		}
 		//need to use integrator here and then use as offset
-		if(gdrift){
-			P(P(simu->fsmerr_drift, iwfs), 0)+=P(tt, 0)*gdrift;
-			P(P(simu->fsmerr_drift, iwfs), 1)+=P(tt, 1)*gdrift;
+		if(gain){
+			P(P(simu->fsmerr_drift, iwfs), 0)+=P(tt, 0)*gain;
+			P(P(simu->fsmerr_drift, iwfs), 1)+=P(tt, 1)*gain;
 			if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
 				dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f)mas\n",
 				simu->wfsisim, iwfs, P(tt, 0)*206265000, P(tt, 1)*206265000);
@@ -532,16 +532,16 @@ static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, int
 		dfree(tt);
 	}
 }
-static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gdrift, int iwfs, int remove){
-	//gain can be set to 1 if the rate is slower than the main tip/tilt and focus control rate.
+static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int remove){
+	//gain can be set to 1 as zoomgain is applied at zoomint.
 	const parms_t* parms=simu->parms;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	//Output focus error in ib to trombone error signal.
 	if(parms->powfs[ipowfs].llt){
 		//here we don't use RFlgsg which is noise weighted
 		real focus=remove_focus_grad(simu->powfs[ipowfs].saloc, grad, remove?1:0);
-		if(gdrift){
-			P(simu->zoomdrift, iwfs)+=focus;
+		if(gain){
+			P(simu->zoomdrift, iwfs)+=gain*focus;
 			P(simu->zoomdrift_count, iwfs)++;
 		}
 	}
@@ -945,6 +945,7 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 static void wfsgrad_dither_post(sim_t* simu){
 	powfs_t* powfs=simu->powfs;
 	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
 	const int isim=simu->wfsisim;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(!parms->powfs[ipowfs].dither) continue;
@@ -955,8 +956,8 @@ static void wfsgrad_dither_post(sim_t* simu){
 		if(simu->wfsflags[ipowfs].ogout){//This is matched filter or cog update
 			const int nsa=powfs[ipowfs].saloc->nloc;
 			const real scale1=(real)parms->powfs[ipowfs].dither_pllrat/(real)parms->powfs[ipowfs].dither_ograt;
-
-			if(parms->powfs[ipowfs].dither_amp==0||(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
+			int ptype2=parms->powfs[ipowfs].phytype_sim2;
+			if(parms->powfs[ipowfs].dither_amp==0||(ptype2==PTYPE_MF)){
 				if(parms->powfs[ipowfs].dither_amp==0){
 					info2("Step %5d: Update sodium fit for powfs %d\n", isim, ipowfs);
 				} else{
@@ -1035,32 +1036,42 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dmat* sodium=0;
 					dcell* grad=0;
 					//don't need gradient output for matched filter
-					dcell** pgrad=(parms->powfs[ipowfs].phytype_sim2==PTYPE_COG)?&grad:NULL;
-
+					dcell** pgrad=(ptype2==PTYPE_COG)?&grad:NULL;
+					dcell** pi0=(ptype2==PTYPE_MF)?&intstat->i0:NULL;
+					dcell** pgx=(ptype2==PTYPE_MF)?&intstat->gx:NULL;
+					dcell** pgy=(ptype2==PTYPE_MF)?&intstat->gy:NULL;
 					//flag for using gradncpa to compute i0 for matched filter.
-					int use_i0=parms->powfs[ipowfs].phytype_sim2==PTYPE_MF?1:0;
-					//algorithm for gradient, for tcog, must use mtch to calculate the gradient of i0 during fitting.
-					int use_mtche=parms->dbg.na_fit_alg?parms->dbg.na_fit_alg:(use_i0?0:1);
+					int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(ptype2==PTYPE_MF?1:3);
+
 					//1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
-					int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(use_i0?1:3);
+					//int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(need_i0?1:3);
 					if(parms->save.dither){
 						writebin(intstat->i0, "extra/powfs%d_i0i_%d", ipowfs, isim);
 					}
-					fit_sodium_profile_wrap(&sodium, pgrad, intstat->i0, parms, powfs, ipowfs, use_mtche, niter, use_i0, 1);
+					sodium_fit_wrap(&sodium, pgrad, pi0, pgx, pgy, intstat->i0, parms, powfs, ipowfs,
+						recon->r0, recon->L0, niter, 1);
 					if(parms->save.dither){
 						if(grad) writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
 						writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
+						writebin(intstat->i0, "extra/powfs%d_i0o_%d", ipowfs, isim);
 					}
+					dmat* gsf=NULL;
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						if(parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
+						if(ptype2==PTYPE_COG){
 							if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
 							dadd(&P(grad, jwfs), 1, P(powfs[ipowfs].gradncpa, jwfs), -1);
+							//The correction need to be restricted in MVR control mode to avoid instability
+							if(recon->RSF){
+								warning_once("Restricting corrected modes\n");
+								dmm(&gsf, 0, P(recon->RSF, ipowfs), P(grad, jwfs), "nn", 1);
+								dmm(&P(grad, jwfs), 0, P(recon->GSF, ipowfs), gsf, "nn", 1);
+							}
 							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
 							//prevent gradoff from accumulating tip/tilt or focus mode if any. no need to do drift control.
 							wfsgrad_tt_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
 							wfsgrad_focus_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
-						} else if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
+						} else if(ptype2==PTYPE_MF){
 							if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
 							//since we are building ideal matched filter with
 							//the correct gradncpa and sodium profile. no need
@@ -1068,10 +1079,11 @@ static void wfsgrad_dither_post(sim_t* simu){
 							dzero(P(simu->gradoff, iwfs));
 						}
 					}
+					dfree(gsf);
 					dcellfree(grad);
 					dfree(sodium);
 				}
-				if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
+				if(ptype2==PTYPE_MF){
 				//tip/tilt and focus drift control is needed for matched filter with either dithering or sodium fitting
 					dmat* ibgrad=0;
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -1079,10 +1091,11 @@ static void wfsgrad_dither_post(sim_t* simu){
 						shwfs_grad(&ibgrad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
 						wfsgrad_tt_drift(ibgrad, simu, 0.5, iwfs, 0);
 						//adjust the gain based on dtrat difference.
-						const real dtdrift=parms->powfs[ipowfs].dither_ograt*parms->sim.dt;
+						/*const real dtdrift=parms->powfs[ipowfs].dither_ograt*parms->sim.dt;
 						const real dtwant=20; //dt where gain should be 0.5
-						const real fgain=dtdrift/dtwant*0.5;
-						wfsgrad_focus_drift(ibgrad, simu, fgain, iwfs, 1);
+						const real fgain=dtdrift/dtwant*0.5;*/
+						//higher gain is bad. why?
+						wfsgrad_focus_drift(ibgrad, simu, 1, iwfs, 1);
 					}
 					dfree(ibgrad);
 				}
@@ -1111,9 +1124,9 @@ static void wfsgrad_dither_post(sim_t* simu){
 					}
 				}
 
-				if(parms->powfs[ipowfs].phytype_sim!=parms->powfs[ipowfs].phytype_sim2){
+				if(parms->powfs[ipowfs].phytype_sim!=ptype2){
 					//the following parms changes need to be moved to simu. It affects the next seed.
-					parms->powfs[ipowfs].phytype_sim=parms->powfs[ipowfs].phytype_sim2;
+					parms->powfs[ipowfs].phytype_sim=ptype2;
 					parms->powfs[ipowfs].phytype_recon=parms->powfs[ipowfs].phytype_sim;
 					info2("Step %5d: powfs %d changed to %s\n", isim, ipowfs,
 						parms->powfs[ipowfs].phytype_sim==PTYPE_MF?"matched filter":"CoG");
@@ -1124,7 +1137,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					parms->powfs[ipowfs].neareconfile=NULL;
 					parms->powfs[ipowfs].phyusenea=0;
 				}
-				if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
+				if(ptype2==PTYPE_MF){
 					parms->powfs[ipowfs].phytype_recon=PTYPE_MF;//Make sure nea is used for reconstruction.
 					genmtch(parms, powfs, ipowfs);
 #if USE_CUDA
@@ -1135,7 +1148,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 				}
 				if(parms->save.dither>1){
 					writebin(intstat->i0, "extra/powfs%d_i0_%d", ipowfs, isim);
-					if(parms->powfs[ipowfs].phytype_sim2==PTYPE_MF){
+					if(ptype2==PTYPE_MF){
 						writebin(intstat->gx, "extra/powfs%d_gx_%d", ipowfs, isim);
 						writebin(intstat->gy, "extra/powfs%d_gy_%d", ipowfs, isim);
 						writebin(intstat->mtche, "extra/powfs%d_mtche_%d", ipowfs, isim);
@@ -1150,7 +1163,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					wfsgrad_sa_drift(simu, ipowfs);
 				}
 			} else if(parms->powfs[ipowfs].dither_amp){
-				if(parms->powfs[ipowfs].phytype_sim!=parms->powfs[ipowfs].phytype_sim2){
+				if(parms->powfs[ipowfs].phytype_sim!=ptype2){
 					error("Does not support switching to CoG.\n");
 				}
 				//For CoG gain

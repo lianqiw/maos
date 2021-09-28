@@ -151,13 +151,13 @@ void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*
 	for(int i=0; i<FD_SETSIZE; i++){
 		if(FD_ISSET(i, &active_fd_set)){
 			shutdown(i, SHUT_RDWR);
-			usleep(100);
+			mysleep(0.0001);
 			close(i);
 			FD_CLR(i, &active_fd_set);
 		}
 	}
 	close(sock);
-	usleep(100);
+	mysleep(0.0001);
 	_Exit(1);
 }
 int init_sockaddr(struct sockaddr_in* name,

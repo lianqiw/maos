@@ -118,6 +118,7 @@ void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
 struct fit_cache{
 	dccell *sepsf;
 	dccell *i0m;
+	dcell *grad;
 	dcell *i0mv;
 }fit_cache={0};
 void fit_cache_free(){
@@ -147,7 +148,7 @@ real remove_focus_grad(const loc_t *saloc, dmat *grad, real factor){
  * 3. Determine subaperture tip/tilt comparing i0 and fitted i0 (using matched filter)
  * 4. Repeat 1-4.
  * */
-void fit_sodium_profile(
+void sodium_fit(
 	dmat** sodium, /**<The sodium profile determined by fit*/
 	dcell** pgrad, /**<The gradients determined by fit.*/
 	dcell** pi0,   /**<The output i0*/
@@ -167,18 +168,16 @@ void fit_sodium_profile(
 	real hs,      /**<LGS focusing height*/
 	real htel,    /**<Telescope hegith*/
 	real za,      /**<Telescope zenith angle*/
-	real cogthres,/**<Threshold for cog*/
 	real tikcr,   /**<Tikhonov regularization*/
 	real svdthres, /**<SVD threshold*/
-	int use_mtche, /**<Use mtche to compute gradient error*/
 	int nrep,     /**<Number of iterations*/
 	int save,      /**<Save results to file*/
 	int use_cache  /**<Use cache*/
 ){
 	static int count=-1; count++;
-	//const double ht=25000;//total thickness
-	const double hmin=80000;
-	const double hmax=105000;
+	//const real ht=25000;//total thickness
+	const real hmin=80000;
+	const real hmax=105000;
 
 	long nx=(long)floor((hmax-hmin)/dh)+1;
 	const int radgx=0;
@@ -197,12 +196,7 @@ void fit_sodium_profile(
 	const long ni0=NY(i0i);
 	real pixthetax=dtf[0].pixthetax;
 	real pixthetay=dtf[0].pixthetay;
-	if(*pi0&&NY(*pi0)!=ni0){
-		warning("i0 has wrong dimensions %ldx%ld, recreate i0, gx, gy.\n", NX(*pi0), NY(*pi0));
-		dcellfree(*pi0);
-		dcellfree(*pgx);
-		dcellfree(*pgy);
-	}
+
 	dcell* i0tmp=0;
 	dcell* gxtmp=0;
 	dcell* gytmp=0;
@@ -213,29 +207,8 @@ void fit_sodium_profile(
 	dcell **pgxtmp=pgx?pgx:&gxtmp;//ok to override input
 	dcell **pgytmp=pgy?pgy:&gytmp;
 	if(!pgrad) pgrad=&gradtmp;
-	else if(*pgrad && NY(*pgrad)!=ni0){
-		warning("pgrad has wrong dimensions %ldx%ld, recreate\n", NX(*pgrad), NY(*pgrad));
-		dcellfree(*pgrad);
-	}
-	if(!*pgrad){
+	if(!*pgrad && nrep>1){
 		*pgrad=dcellnew_same(ni0, 1, nsa*2, 1);
-		dbg("Initial gradient uses %s.\n", gradncpa?"gradncpa":"cog of i0");
-		for(long ii0=0; ii0<ni0; ii0++){
-			dmat *gradi=P(*pgrad, ii0);
-			if(gradncpa){
-				dcp(&gradi, PR(gradncpa, ii0, 0));
-			}else{
-				for(long isa=0; isa<nsa; isa++){
-					real g[2]={0,0};
-					dcog(g, P(i0i, isa, ii0), 0, 0, cogthres, 0, 0);
-					P(gradi, isa)    =g[0]*pixthetax;
-					P(gradi, isa+nsa)=g[1]*pixthetay;
-				}
-			}
-		}
-		if(save){
-			writebin(*pgrad, "sodium_grad_in");
-		}
 	}
 	print_mem("grad");
 	TIC;tic;
@@ -249,19 +222,40 @@ void fit_sodium_profile(
 	//etf_t** etfs=use_cache?fit_cache.etfs:NULL;
 	dccell* i0m=use_cache?fit_cache.i0m:NULL;//sa image for each sodium bin
 	dcell* i0mv=use_cache?fit_cache.i0mv:NULL;//vectorized i0m
+	dcell *grad=use_cache?fit_cache.grad:NULL;
 	int skip_first=0;
 
 	if(!i0m){
 		i0mv=dcellnew(1, nx);
 		i0m=dccellnew(nx, 1);
+		grad=dcellnew_same(ni0, 1, nsa*2, 1);
+		dbg("Initial gradient uses %s.\n", gradncpa?"gradncpa":"zero");
+		for(long ii0=0; ii0<ni0; ii0++){
+			dmat* gradi=P(grad, ii0);
+			if(gradncpa){
+				dcp(&gradi, PR(gradncpa, ii0, 0));
+			}/* else{
+				for(long isa=0; isa<nsa; isa++){
+					real g[2]={0,0};
+					dcog(g, P(i0i, isa, ii0), 0, 0, cogthres, 0, 0);
+					P(gradi, isa)=g[0]*pixthetax;
+					P(gradi, isa+nsa)=g[1]*pixthetay;
+				}
+			}*/
+		}
 		if(use_cache){
 			fit_cache.i0m=i0m;
 			fit_cache.i0mv=i0mv;
+			fit_cache.grad=grad;
+		}
+		if(save){
+			writebin(grad, "sodium_grad_in");
 		}
 	}else{
-		skip_first=1;
-		dbg("reuse previous etf, i0m, i0mv\n");
+		skip_first=1;//cache available.
+		dbg("reuse previous grad, i0m, i0mv\n");
 	}
+
 	dbg("svdthres=%g, tikcr=%g, nrep=%d\n", svdthres, tikcr, nrep);
 	//don't try to cachc fotf. It is per WFS and uses too much storage.
 	dcell* ata=0, * atb=0;
@@ -270,10 +264,13 @@ void fit_sodium_profile(
 	for(int irep=0; irep<nrep; irep++){
 		dbg("repeat %d of %d\n", irep+1, nrep);
 		if(irep>0 || !skip_first){
+			if(irep>0 && &grad!=pgrad){
+				dcellcp(&grad, *pgrad);
+			}
 			OMP_FOR
 			for(long ii0=0; ii0<ni0; ii0++){
 				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
-				remove_focus_grad(saloc, P(*pgrad, ii0), 1);
+				remove_focus_grad(saloc, P(grad, ii0), 1);
 			}
 			OMP_FOR
 			for(long ix=0; ix<nx; ix++){
@@ -282,7 +279,7 @@ void fit_sodium_profile(
 				P(na2i, 0, 1)=1;
 				//ETF takes a lot of storage but is inexpensive to build. So we choose to build it on the fly
 				etf_t *etf_i=mketf(dtf, na2i->base, 0, srot, srsa, hs, htel, za, 1);
-				gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etf_i, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
+				gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etf_i, saa, radgx?srot:NULL, siglev, wvlwts, grad, 0, 0);
 				etf_free(etf_i);
 				if(!P(i0mv, 0, ix)||P(P(i0mv, 0, ix))!=P(P(i0m, ix)->m)){
 					dfree(P(i0mv, 0, ix));
@@ -305,12 +302,12 @@ void fit_sodium_profile(
 		for(long ix=0; ix<nx; ix++){
 			P(nai, ix, 1)=P(P(res, ix), 0)*scale;
 		}
-		if(use_mtche){
+		if(nrep>1 || pgrad!=&gradtmp){
 			if(etf_full) etf_free(etf_full);
 			//mketf for full profile must use the same no_interp flag 
 			etf_full=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
 			toc2("mketf full"); tic;
-			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, *pgrad, 0, 0);
+			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, grad, 0, 0);
 			toc2("gensei full"); tic;
 			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
 				pixthetax, pixthetay, NULL, radgx, 1, 1);
@@ -318,33 +315,16 @@ void fit_sodium_profile(
 			OMP_FOR_COLLAPSE(2)
 			for(long ii0=0; ii0<ni0; ii0++){
 				for(long isa=0; isa<nsa; isa++){
-					dmat* gradi=P(*pgrad, ii0);
+					dmat* grad1=P(grad, ii0);//model
+					dmat* grad2=P(*pgrad, ii0);//output
+					
 					real g[2]={0,0};
 					dmulvec(g, P(mtche, isa, ii0), P(P(i0i, isa, ii0)), 1);
-					P(gradi, isa)+=g[0];
-					P(gradi, isa+nsa)+=g[1];
+					P(grad2, isa)    =P(grad1, isa    )+g[0];
+					P(grad2, isa+nsa)=P(grad1, isa+nsa)+g[1];
 				}
 			}
 			toc2("mtche apply"); tic;
-		}else{
-			if(*pi0tmp) dcellzero(*pi0tmp);
-			for(long ix=0; ix<nx; ix++){
-				dcelladd(pi0tmp, 1, P(i0m, ix), P(nai, ix, 1));
-			}
-			const dcell* i0o=*pi0tmp;
-			OMP_FOR_COLLAPSE(2)
-			for(long ii0=0; ii0<ni0; ii0++){
-				for(long isa=0; isa<nsa; isa++){
-					dmat* gradi=P(*pgrad, ii0);
-					real g1[2],g2[2];
-					dcog(g1, P(i0o, isa, ii0), 0, 0, cogthres, 0, 0);
-					dcog(g2, P(i0i, isa, ii0), 0, 0, cogthres, 0, 0);
-					//i0o has real gradient of pgrad.
-					P(gradi, isa)+=(g2[0]-g1[0])*pixthetax;
-					P(gradi, isa+nsa)+=(g2[1]-g1[1])*pixthetay;
-				}
-			}
-			toc2("tcog diff"); tic;
 		}
 		
 		if(save){
@@ -366,11 +346,12 @@ void fit_sodium_profile(
 	}*/
 	//output is desired. build final i0, gx, gy with the final gradient or ncpa gradient.
 	if(pi0 || pgx || pgy){
+		dbg("Replacing i0, gx, gy with fitted value\n");
 		if(!etf_full){
 			etf_full=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
 			toc2("mketf final");tic;
 		}
-		const dcell *gradf=gradncpa?gradncpa:(*pgrad);
+		const dcell *gradf=gradncpa?gradncpa:(pgrad?(*pgrad):grad);
 		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, gradf, 0, 0);
 		toc2("gensei final");tic;
 	}
@@ -381,6 +362,7 @@ void fit_sodium_profile(
 	if(!use_cache){
 		cellfree(i0m);
 		cellfree(i0mv);
+		cellfree(grad);
 	}
 	cellfree(mtche);
 	cellfree(i02);
@@ -391,24 +373,35 @@ void fit_sodium_profile(
 	cellfree(gxtmp);
 	cellfree(gytmp);
 	cellfree(gradtmp);
+	
 }
 /**
  * Fit i0 to sodium profile and replace i0, gx, gy with derived parameters
  * */
-void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, const parms_t* parms, 
-	powfs_t* powfs, int ipowfs, int use_mtche, int nrep, int use_ncpa, int use_cache){
+void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
+	dcell** pgrad, /**<[out] estimated actual gradient*/
+	dcell** pi0,   /**<[out] The output i0*/
+	dcell** pgx,   /**<[out] The output gx*/
+	dcell** pgy,   /**<[out] The output gy*/
+	const dcell* i0in, /**<[in]The input sa intensities. may equal to *pi0 */
+	const parms_t* parms,/**<[in]parms*/
+	powfs_t* powfs, /**<[in]powfs*/
+	int ipowfs, /**<[in] ipowfs*/
+	real r0,  /**<[in] Fried parameter*/
+	real L0,  /**<[in] outer scale*/
+	int nrep, /**<[in] Number of iterations. 1 for mtche, 3 for cog*/
+	int use_cache /**<[in] cache intermediate results.*/
+	){
 	dccell* sepsf=use_cache?fit_cache.sepsf:NULL;
 	if(!sepsf){
 		cccell* otf=NULL, * lotf=NULL;
 		otf=genseotf(powfs[ipowfs].pts, powfs[ipowfs].realamp,
-			NULL, powfs[ipowfs].realsaa, parms->powfs[ipowfs].wvl,
-			parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
+			NULL, powfs[ipowfs].realsaa, parms->powfs[ipowfs].wvl, r0, L0,
 			parms->powfs[ipowfs].embfac);
 		if(parms->powfs[ipowfs].llt){
 						//genselotf(parms, powfs, ipowfs);
 			lotf=genseotf(powfs[ipowfs].llt->pts, powfs[ipowfs].llt->amp,
-				NULL, NULL, parms->powfs[ipowfs].wvl,
-				parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
+				NULL, NULL, parms->powfs[ipowfs].wvl, r0, L0, 
 				parms->powfs[ipowfs].embfac);
 		}
 		gensepsf(&sepsf, otf, lotf, powfs[ipowfs].realsaa,
@@ -419,25 +412,18 @@ void fit_sodium_profile_wrap(dmat** psodium, dcell** pgrad, const dcell* i0in, c
 			fit_cache.sepsf=sepsf;
 		}
 	}
-	//i0, gx, gy
-	if(!powfs[ipowfs].intstat){
-		powfs[ipowfs].intstat=mycalloc(1, intstat_t);
-	}
-	intstat_t* intstat=powfs[ipowfs].intstat;
-	
-	info("Replacing i0, gx, gy with fitted value\n");
-	
-	fit_sodium_profile(psodium, pgrad, &intstat->i0, &intstat->gx, &intstat->gy, i0in,
+
+	sodium_fit(psodium, pgrad, pi0, pgx, pgy, i0in,
 		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].saloc, powfs[ipowfs].realsaa,
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
-		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, use_ncpa?powfs[ipowfs].gradncpa:NULL,
-		parms->dbg.na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, parms->powfs[ipowfs].cogthres,
-		0, parms->dbg.na_fit_svdthres, use_mtche, nrep, 0, use_cache);//parms->save.setup);
+		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, powfs[ipowfs].gradncpa,
+		parms->dbg.na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, 
+		0, parms->dbg.na_fit_svdthres, nrep, 0, use_cache);//parms->save.setup);
 	
 	if(parms->save.setup){
-		writebin(intstat->i0, "powfs%d_i0_fit", ipowfs);
-		writebin(intstat->gx, "powfs%d_gx_fit", ipowfs);
-		writebin(intstat->gy, "powfs%d_gy_fit", ipowfs);
+		if(pi0) writebin(*pi0, "powfs%d_i0_fit", ipowfs);
+		if(pgx) writebin(*pgx, "powfs%d_gx_fit", ipowfs);
+		if(pgy) writebin(*pgy, "powfs%d_gy_fit", ipowfs);
 		if(psodium) writebin(*psodium, "powfs%d_sodium_fit", ipowfs);
 	}
 	if(!use_cache){

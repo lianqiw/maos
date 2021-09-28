@@ -1600,6 +1600,8 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	cellfree(recon->dither_m);
 	cellfree(recon->dither_rg);
 	cellfree(recon->dither_ra);
+	cellfree(recon->GSF);
+	cellfree(recon->RSF);
 	free(recon);
 }
 

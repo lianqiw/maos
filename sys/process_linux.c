@@ -55,7 +55,8 @@ int get_job_mem(void){
 	FILE* pfile;
 	static int pagesize=0;//in kB
 	if(!pagesize){
-		pagesize=getpagesize()/1024;
+		pagesize=sysconf(_SC_PAGESIZE)/1024;
+		//pagesize=getpagesize()/1024;
 	}
 	if((pfile=fopen("/proc/self/statm", "r"))){
 		if(fscanf(pfile, "%*d %d", &mem)!=1){
@@ -306,7 +307,7 @@ int get_ncpu(void){
 	while(fp&&fgets(line, 1024, fp)){
 		if(!mystrcmp(line, s_phy)){/*contains physical id */
 			int kphy;
-			char* ss=index(line, ':');
+			char* ss=strchr(line, ':');
 			int jphy=strtol(ss+1, NULL, 10);
 			for(kphy=0; kphy<iphy; kphy++){
 				if(phyid[kphy]==jphy){
@@ -323,7 +324,7 @@ int get_ncpu(void){
 		}
 		if(!mystrcmp(line, s_core)){/*contains core id */
 			int kcore;
-			char* ss=index(line, ':');
+			char* ss=strchr(line, ':');
 			int jcore=strtol(ss+1, NULL, 10);
 			for(kcore=0; kcore<icore; kcore++){
 				if(coreid[kcore]==jcore){
@@ -339,7 +340,7 @@ int get_ncpu(void){
 			}
 		}
 		if(!mystrcmp(line, s_cores)){/*contains cpu cores */
-			int mcore=strtol(index(line, ':')+1, NULL, 10);
+			int mcore=strtol(strchr(line, ':')+1, NULL, 10);
 			if(ncore==0||ncore==mcore){
 				ncore=mcore;
 			} else{

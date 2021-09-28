@@ -24,10 +24,19 @@ AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_HOST
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
+case "$CFLAGS" in
+	*-std=c11*|*-std=C11*)
+	;;
+	*)
+	CFLAGS+=" -std=c11"
+
+	;;
+esac
 AC_PROG_CC([$CC])
 #AM_PROG_CC_C_O #deprecated. Included in AC_PROG_CC.
 #AC_PROG_CC_STDC #enable the current c standard, which is c99 circa 2014
 AC_PROG_CC_C99  #enable C99
+#AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS+=" -std=c11"], AC_MSG_ERROR("C compiler cannot compile C11 code"))
 #AC_PROG_CXX([$CXX])
 AC_OPENMP
 #The following must be after AC_PROG_CC
@@ -37,7 +46,6 @@ AC_DISABLE_SHARED
 AC_ENABLE_STATIC
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_LIBTOOL
-
 AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
 AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 
@@ -297,7 +305,10 @@ case "$host_os" in
 		LDRT=" -lrt" #need real time library.
 		LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 		CFLAGS+=" -fPIC"
-		#CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
+		#The following are needed when no gnu extension is used.
+		#CFLAGS_EXTRA=" -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
+		CFLAGS_EXTRA=" -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L"
+		#CFLAGS_EXTRA=" -D_DEFAULT_SOURCE "
 		if test "$enable_release" = "yes" ;then
 			CFLAGS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective
 		fi
@@ -938,7 +949,7 @@ if test "$with_cuda" != "no" ;then
     fi
     #CUDAOPT+=" -std=c++11"
     CUDAOPT+=" -Wno-deprecated-gpu-targets"
-    CCBINOPT="$OPTScommon $OPTSprof -fPIC $CPPFLAGS $CFLAGS -Wno-unused-parameter"
+    CCBINOPT="$OPTScommon $OPTSprof -fPIC $CPPFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
     CCBINOPT="${CCBINOPT/-fpermissive/}"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     if $CCBIN -v 2>&1 |grep clang ;then

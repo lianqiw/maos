@@ -48,6 +48,7 @@ int signal_caught=0;//indicate that signal is caught.
   matlab manage the memory during referencing..
   */
 
+_Thread_local char funtrace[funtrace_len];
 
 void* (*calloc_default)(size_t, size_t)=NULL;
 void* (*malloc_default)(size_t)=NULL;
@@ -370,10 +371,10 @@ void register_deinit(void (*fun)(void), void* data){
 quitfun_t quitfun=NULL;
 void default_quitfun(const char* msg){
 	info("%s", msg);
-	sync();
+	//sync();
 	if(strncmp(msg, "FATAL", 5)){
 		print_backtrace();
-		sync();
+		//sync();
 		raise(1);
 	}
 	exit(0);
@@ -390,7 +391,7 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 		info("Code is %d, send by %d (uid=%d, %s).\n",
 			siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
 	}
-	sync();
+	//sync();
 	int cancel_action=0;
 	/*
 	{
@@ -423,7 +424,7 @@ void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
 	if(signal_handler&&signal_handler(sig)){
 		cancel_action=1;
 	}
-	sync();
+	//sync();
 	if(!cancel_action){//Propagate signal to default handler.
 		struct sigaction act={0};
 		act.sa_handler=SIG_DFL;

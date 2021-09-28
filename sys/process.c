@@ -150,7 +150,7 @@ double get_usage_cpu(void){
 	long user2=0, tot2=0;
 	if(thistime>=lasttime+2){/*information was too old. */
 		read_cpu_counter(&user1, &tot1);
-		usleep(50000);
+		mysleep(0.05);
 	}
 	if(thistime<=lasttime+0.1){
 		return cent;

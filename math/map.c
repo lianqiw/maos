@@ -22,7 +22,7 @@
    create a new map_t object.
 */
 map_t* mapnew(long nx, long ny, real dx, real dy){
-	map_t* map=(map_t*)realloc(dnew(nx, ny), sizeof(map_t));
+	map_t* map=(map_t*)realloc(dnew_do(nx, ny, NULL, 0), sizeof(map_t));
 	map->h=0;
 	map->dx=dx;
 	map->dy=dy;
@@ -38,7 +38,7 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 */
 map_t* mapnew2(map_t* A){
 	if(!check_map(A)) return NULL;
-	map_t* map=(map_t*)realloc(dnew(A->nx, A->ny), sizeof(map_t));
+	map_t* map=(map_t*)realloc(dnew_do(A->nx, A->ny, NULL, 0), sizeof(map_t));
 	map->h=A->h;
 	map->dx=A->dx;
 	map->dy=A->dy;

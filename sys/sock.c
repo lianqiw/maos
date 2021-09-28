@@ -76,6 +76,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
@@ -482,8 +483,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			FD_CLR(i, &active_fd_set);
 		}
 	}
-	usleep(100);
-	sync();
+	//sync();
 }
 
 /**
