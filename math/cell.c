@@ -346,7 +346,7 @@ void writebin_header(cell* Ac, const char* header, const char* format, ...){
 		free(Ac->header);
 		Ac->header=strdup(header);
 	}
-	writebin(Ac, "%s", fn);
+	write_by_id(Ac, M_0, "%s", fn);
 }
 /**
  * Read data from file. 

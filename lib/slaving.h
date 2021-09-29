@@ -24,7 +24,7 @@
 */
 dcell *genactcpl(const dspcell *HA, const dmat *W1);
 dspcell *slaving(loccell *aloc, const dcell *actcpl, const lcell *actstuck, const lcell *actfloat, real thres, real scale, int mode);
-void act_stuck(loccell *aloc, void *HA, const lcell *stuck);
+void act_stuck(loccell *aloc, cell *HA, const lcell *stuck);
 void act_zero(loccell *aloc, const dcell *HB, const lcell *dead);
 void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actfloat);
 void act_stuck_cmd(loccell *aloc, const dcell *adm, const lcell *stuck);

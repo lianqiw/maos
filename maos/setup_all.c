@@ -125,7 +125,7 @@ void maos_setup(const parms_t* parms){
 			}
 		}
 		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
-		setup_recon_sodium_fit(recon, parms);//to restrict modes in sodium fitting correction
+		//setup_recon_sodium_fit(recon, parms);//to restrict modes in sodium fitting correction
 		if(parms->recon.alg==0||parms->sim.dmproj||parms->sim.ncpa_calib){
 			setup_recon_fit(recon, parms);
 		}

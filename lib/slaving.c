@@ -385,9 +385,9 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 /**
    When some actuators are stuck, zero the corresponding column in HA
 */
-void act_stuck(loccell* aloc, void* HA_, const lcell* stuck){
-	if(!stuck||!HA_) return;
-	cell* HA=(cell*)HA_;
+void act_stuck(loccell* aloc, cell* HA, const lcell* stuck){
+	if(!stuck||!HA) return;
+	
 	int ndm=NX(aloc);
 	int nfit=0;
 	if(NY(HA)==ndm){

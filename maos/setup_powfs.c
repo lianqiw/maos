@@ -1259,7 +1259,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		int nmod=parms->powfs[ipowfs].llt->ttfr==2?4:3;
 		dmat* pttfa=zernike(llt->loc, parms->powfs[ipowfs].llt->d, 0, 2, 0);
 		dmat* pttf=drefcols(pttfa, 0, nmod);
-		dmat* proj=dpinv(pttf, llt->amp);
+		dmat* proj=dpinv(pttf, llt->amp->base);
 		dmat* res=dnew(nmod, 1);
 		for(int ilotf=0; ilotf<NX(llt->ncpa)*NY(llt->ncpa); ilotf++){
 			dzero(res);

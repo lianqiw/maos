@@ -1055,18 +1055,32 @@ static void wfsgrad_dither_post(sim_t* simu){
 						writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
 						writebin(intstat->i0, "extra/powfs%d_i0o_%d", ipowfs, isim);
 					}
-					dmat* gsf=NULL;
+
+					if(ptype2==PTYPE_COG){//project pgrad to TWFS corrected modes
+						dcelladd(pgrad, 1, powfs[ipowfs].gradncpa, -1);
+						dbg("project pgrad to TWFS corrected modes\n");
+						dcell *zm=0;
+						dcellmm(&zm, recon->RRlgs, *pgrad, "nn", 1);
+						dcellzero(*pgrad);
+						dcellmm(pgrad, recon->GRlgs, zm, "nn", 1);
+						if(parms->save.dither){
+							writebin(zm, "extra/powfs%d_zm_%d", ipowfs, isim);
+							writebin(*pgrad, "extra/powfs%d_fit_grad_proj_%d", ipowfs, isim);
+						}
+						dcellfree(zm);
+					}
+					//dmat* gsf=NULL;
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 						if(ptype2==PTYPE_COG){
 							if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
-							dadd(&P(grad, jwfs), 1, P(powfs[ipowfs].gradncpa, jwfs), -1);
+							//dadd(&P(grad, jwfs), 1, P(powfs[ipowfs].gradncpa, jwfs), -1);//moved up
 							//The correction need to be restricted in MVR control mode to avoid instability
-							if(recon->RSF){
+							/*if(recon->RSF){
 								warning_once("Restricting corrected modes\n");
 								dmm(&gsf, 0, P(recon->RSF, ipowfs), P(grad, jwfs), "nn", 1);
 								dmm(&P(grad, jwfs), 0, P(recon->GSF, ipowfs), gsf, "nn", 1);
-							}
+							}*/
 							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
 							//prevent gradoff from accumulating tip/tilt or focus mode if any. no need to do drift control.
 							wfsgrad_tt_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
@@ -1079,7 +1093,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 							dzero(P(simu->gradoff, iwfs));
 						}
 					}
-					dfree(gsf);
+					//dfree(gsf);
 					dcellfree(grad);
 					dfree(sodium);
 				}

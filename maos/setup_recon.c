@@ -665,11 +665,11 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		}
 		info("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr, nll);
 		if(parms->save.recon){
-			writebin(recon->RR.M, "tomo_RRM");
+			writecell(recon->RR.M, "tomo_RRM");
 			writebin(recon->RR.U, "tomo_RRU");
 			writebin(recon->RR.V, "tomo_RRV");
 
-			writebin(recon->RL.M, "tomo_RLM.bin");/*disable compression */
+			writecell(recon->RL.M, "tomo_RLM.bin");/*disable compression */
 			writebin(recon->RL.U, "tomo_RLU");
 			writebin(recon->RL.V, "tomo_RLV");
 		}
@@ -912,7 +912,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 				int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 				int iwfs0=P(parms->powfs[ipowfs].wfs,0);
 				if(iwfs==iwfs0||!parms->recon.glao){
-					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), P(recon->saneai, iwfs, iwfs));
+					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), P(recon->saneai, iwfs, iwfs)->base);
 				} else{
 					P(recon->RFlgsg, iwfs, iwfs)=dref(P(recon->RFlgsg, iwfs0, iwfs0));
 				}
@@ -941,47 +941,37 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 }
 
 /**
-   Setup reconstructor for TWFS
+   Setup reconstructor for TWFS or sodium fit gradient
 */
 static void
 setup_recon_twfs(recon_t* recon, const parms_t* parms){
-	cellfree(recon->RRtwfs);
-	int nlayer=PN(parms->recon.twfs_ipsr);
-	dcell* GRtwfs=dcellnew(parms->nwfsr, nlayer);
-	dspcell* neai=dspcellnew(parms->nwfsr, parms->nwfsr);
+	if(parms->itpowfs==-1){
+		return;
+	}
+
+	dspcell* neai=NULL;
 	//int itwfs=-1;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2){//twfs
-			//itwfs=iwfs;
-			for(int ilayer=0; ilayer<nlayer; ilayer++){
-				P(GRtwfs,iwfs, ilayer)=dref(P(recon->GRall,iwfs, ilayer));
+			if(!neai){
+				neai=dspcellnew(parms->nwfs, parms->nwfs);
 			}
 			P(neai,iwfs,iwfs)=dspref(P(recon->saneai,iwfs,iwfs));
-		}
+		} 
 	}
-	//need to set a high threshold to avoid other modes reconstruct to spherical modes.
-	real thres=1e-10;
-	info("RRtwfs svd threshold is %g\n", thres);
-	recon->RRtwfs=dcellpinv2(GRtwfs, neai->base, thres, 0);
+	//need to set a threshold to avoid other modes reconstruct to spherical modes.
 	
-	/*
-	if(parms->itwfssph>-1 && itwfs>-1){
-		int imod=parms->itwfssph;
-		real scale=parms->sim.eptsph/parms->sim.eptwfs;
-		if(fabs(scale-1)>0.01){
-			warning("Scale RRtwfs row %d by %g to increase the gain of aspherical mode to %g\n", imod, scale, parms->sim.eptsph);
-			dmat *R=P(recon->RRtwfs,0,itwfs);
-			for(int iy=0; iy<NY(R); iy++){
-				P(R, imod, iy)*=scale;
-			}
-		}
+	if(recon->GRtwfs){
+		real thres=1e-10;
+		info("RRtwfs svd threshold is %g\n", thres);
+		cellfree(recon->RRtwfs);
+		recon->RRtwfs=dcellpinv2(recon->GRtwfs, neai->base, thres, 0);
 	}
-	*/
+
 	if(parms->save.setup){
-		writebin(recon->RRtwfs, "twfs_recon");
+		if(recon->RRtwfs) writebin(recon->RRtwfs, "twfs_recon");
 	}
-	cellfree(GRtwfs);
 	cellfree(neai);
 }
 
@@ -1239,7 +1229,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 		dspcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
 		dcell* Qntt=dcellnew(NX(Qn), NY(Qn));
 		dmat* TTploc=loc2mat(recon->floc, 1);/*TT mode. need piston mode too! */
-		dmat* PTTploc=dpinv(TTploc, recon->W0);/*TT projector. no need w1 since we have piston. */
+		dmat* PTTploc=dpinv(TTploc, recon->W0->base);/*TT projector. no need w1 since we have piston. */
 		dfree(TTploc);
 		for(int ix=0; ix<NX(Qn)*NY(Qn); ix++){
 			if(!P(Qn,ix)) continue;
@@ -1363,9 +1353,9 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	setup_recon_TTFR(recon, parms);
 	/*mvst uses information here*/
 	setup_recon_focus(recon, parms);
-	if(parms->itpowfs!=-1){ /*setup Truth wfs*/
-		setup_recon_twfs(recon, parms);
-	}
+	/*setup Truth wfs*/
+	setup_recon_twfs(recon, parms);
+	
 	if(!parms->sim.idealfit&&!parms->sim.idealtomo){
 		if(parms->recon.mvm&&parms->load.mvm){
 			recon->MVM=dread("%s", parms->load.mvm);
@@ -1600,8 +1590,8 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	cellfree(recon->dither_m);
 	cellfree(recon->dither_rg);
 	cellfree(recon->dither_ra);
-	cellfree(recon->GSF);
-	cellfree(recon->RSF);
+	//cellfree(recon->GSF);
+	//cellfree(recon->RSF);
 	free(recon);
 }
 

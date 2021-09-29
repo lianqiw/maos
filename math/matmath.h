@@ -53,8 +53,8 @@
     X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv2)(const X(mat) *A, const void *W,R thres, R tikcr) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv)(const X(mat) *A, const void *W) CHECK_UNUSED_RESULT; \
+    X(mat) *X(pinv2)(const X(mat) *A, const cell *W,R thres, R tikcr) CHECK_UNUSED_RESULT; \
+    X(mat) *X(pinv)(const X(mat) *A, const cell *W) CHECK_UNUSED_RESULT; \
     T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;	\
     void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
     void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r);	\

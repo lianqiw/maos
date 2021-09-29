@@ -364,18 +364,11 @@ void X(cellmm_any)(cell** C0, const cell* A, const cell* B, const char trans[2],
 		cell* C=*C0;
 		for(int iy=0; iy<D.ny; iy++){
 			for(int ix=0; ix<D.nx; ix++){
-	/*#if _OPENMP >= 200805
-	#pragma omp task firstprivate(ix,iy) if(D.nx*D.ny>1 && omp_in_parallel())
-	#endif*/
 				for(int iz=0; iz<D.nz; iz++){
 					X(cellmm_any)(P(C)+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
 				}
-		/*#if _OPENMP >= 200805
-		#pragma omp taskwait
-		#endif*/
 			}
 		}
-
 	} else{//multiplication between dense or sparse 
 		if(ismat(B)){//dense B
 			if(ismat(A)){ //dense A

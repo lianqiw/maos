@@ -195,10 +195,10 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	dcelldropempty(&recon->LL.U, 2);
 	dcelldropempty(&recon->LL.V, 2);
 	if(parms->save.recon){
-		writebin(recon->LR.M, "LRM");
+		writecell(recon->LR.M, "LRM");
 		writebin(recon->LR.U, "LRU");
 		writebin(recon->LR.V, "LRV");
-		writebin(recon->LL.M, "LLM.bin");/*disable compression */
+		writecell(recon->LL.M, "LLM.bin");/*disable compression */
 		writebin(recon->LL.U, "LLU");
 		writebin(recon->LL.V, "LLV");
 	}

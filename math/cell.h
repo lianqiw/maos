@@ -44,7 +44,8 @@ void write_by_id(const cell* dc, M_ID id, const char* format, ...) CHECK_ARG(3);
 /**
    A generic routine for write data to file.
  */
-#define writebin(A,format...) write_by_id((const cell*)A, M_0, format);
+#define writebin(A,format...) write_by_id((A)?(A)->base:NULL, M_0, format)
+#define writecell(A,format...) write_by_id(A, M_0, format)
 cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header);
 cell* read_by_id(M_ID id, int level, const char* format, ...) CHECK_ARG(3);
 /**

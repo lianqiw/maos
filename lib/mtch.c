@@ -183,7 +183,7 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 		}
 	}
 
-	dmat* tmp=dpinv(i0g, wt);
+	dmat* tmp=dpinv(i0g, wt->base);
 	dmat* mtche0=0;
 	if(!mtche) mtche=&mtche0;
 	dmm(mtche, 0, i0m, tmp, "nn", 1);

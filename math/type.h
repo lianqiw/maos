@@ -55,6 +55,18 @@ typedef struct cell{
     struct cell* m;
 }cell;
 
+//Make sure the memory layout of CELLDEF is compatible with cell
+//base[1] is conveniently used to return a pointer as cell without casting which is error prone
+#define CELLDEF(T,S) typedef struct S{		\
+    union{  \
+            struct cell base[1];\
+            struct{\
+	            ARR(struct T*);				\
+	            struct T* m; /*continuous data*/	\
+            };\
+        };\
+    }S
+
 
 #define MATARR(T)				\
     union{\
@@ -224,16 +236,6 @@ typedef struct pts_t{
         };
     };
 }pts_t;
-
-#define CELLDEF(T,S) typedef struct S{		\
-    union{  \
-            struct cell base[1];\
-            struct{\
-	            ARR(struct T*);				\
-	            struct T* m; /*continuous data*/	\
-            };\
-        };\
-    }S
 
 CELLDEF(cmat, ccell);
 CELLDEF(zmat, zcell);

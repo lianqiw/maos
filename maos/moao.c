@@ -86,7 +86,7 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 			recon->moao[imoao].actstuck=lcellnew(1, 1);
 			P(recon->moao[imoao].actstuck,0)=loc_coord2ind(P(recon->moao[imoao].aloc,0), parms->moao[imoao].actstuck);
 			if(parms->dbg.recon_stuck){
-				act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
+				act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA->base, recon->moao[imoao].actstuck);
 			}
 		}
 		if(parms->moao[imoao].actfloat){

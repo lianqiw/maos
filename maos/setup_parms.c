@@ -2679,6 +2679,8 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		}
 	}
 	switch(parms->recon.twfs_rmin){
+		case 1:
+			parms->itwfssph=parms->recon.twfs_radonly?1:9; break;
 		case 2:
 			parms->itwfssph=parms->recon.twfs_radonly?1:7; break;
 		case 3:

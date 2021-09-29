@@ -128,7 +128,7 @@ X(mat)* X(inv)(const X(mat)* A){
    for diagonal weighting.  B=inv(A'*W*A+tikcr)*A'*W;
    thres is the threshold to truncate eigenvalues.
 */
-X(mat)* X(pinv2)(const X(mat)* A, const void* W, R thres, R tikcr){
+X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres, R tikcr){
 	if(!A) return NULL;
 	X(mat)* AtW=NULL;
 	/*Compute AtW=A'*W */
@@ -167,7 +167,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const void* W, R thres, R tikcr){
 		writebin(cc, "cc_isnan");
 		writebin(A, "A_isnan");
 		writebin(AtW, "AtW_isnan");
-		writebin(W, "W_isnan");
+		writecell(W, "W_isnan");
 	}
 	X(svd_pow)(cc, -1, thres, tikcr);/*invert the matrix using SVD. safe with small eigen values. */
 	X(mat)* out=NULL;
@@ -181,7 +181,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const void* W, R thres, R tikcr){
 /**
    A convenient wrapper.
  */
-X(mat)* X(pinv)(const X(mat)* A, const void* W){
+X(mat)* X(pinv)(const X(mat)* A, const cell* W){
 	return X(pinv2)(A, W, 1e-14, 0);
 }
 /**
@@ -432,7 +432,7 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 					P(in,0)=(cell*)*U;
 					P(in,1)=(cell*)*Sdiag;
 					P(in,2)=(cell*)*VT;
-					writebin(in, "%s", fntmp);
+					writecell(in, "%s", fntmp);
 					if(rename(fntmp, fnsvd)){
 						error("Unable to rename %s to %s\n", fntmp, fnsvd);
 					}

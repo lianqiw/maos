@@ -357,8 +357,12 @@ typedef struct recon_t{
     /*For focus offloading*/
     dcell *RFdm;       /**<Focus from DM commands. For telescope offloading*/
     
-    dcell *GRall;      /**<Radial order zernike to gradient*/
-    dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
+    dcell *GRall;      /**<Truth zernike modes to gradient. Was only radial modes but now all modes (depends on recon.twfs_radonly*/
+    dcell* GRtwfs;     /**<Truth zernike modes to gradient for twfs*/
+    dcell* RRtwfs;     /**<Truth zernike modes reconstruction from twfs grads*/
+    dcell* GRlgs;      /**<Truth zernike modes to gradient for LGS (sodium fit)*/
+    dcell* RRlgs;      /**<Truth zernike modes reconstruction from LGS grad adjustments (sodium fit)*/
+
     //For common path dithering
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/
@@ -368,10 +372,6 @@ typedef struct recon_t{
     ngsmod_t *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     cn2est_t *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
-
-    //for sodium fitting
-    dcell *GSF;        /**<sodium fitting: Mapping controlled zernike modes to WFS gradients*/
-    dcell* RSF;        /**<sodium fitting: Reconstruct controlled zernike from WFS gradients*/
 
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/

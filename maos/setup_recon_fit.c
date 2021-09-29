@@ -81,10 +81,10 @@ setup_fit_HA(fit_t* fit){
 	toc2(" ");
 	fit->actcpl=genactcpl(HA, fit->W1);
 	//cpl accounts for floating actuators, but not stuck actuators.
-	act_stuck(fit->aloc, fit->actcpl, fit->actfloat);
+	act_stuck(fit->aloc, fit->actcpl->base, fit->actfloat);
 	if(global->parms->dbg.recon_stuck){
 	//Do not modify HA by floating actuators, otherwise, HA*actinterp will not work.
-		act_stuck(fit->aloc, HA, fit->actstuck);
+		act_stuck(fit->aloc, HA->base, fit->actstuck);
 	}
 
 	if(fit->flag.actinterp){
@@ -133,7 +133,7 @@ setup_fit_lrt(fit_t* fit){
 	dcell* actcpl=dcelldup(fit->actcpl);
 	if(global->parms->dbg.recon_stuck){
 	//avoid stuck actuators for piston constraint.
-		act_stuck(fit->aloc, actcpl, fit->actstuck);
+		act_stuck(fit->aloc, actcpl->base, fit->actstuck);
 	}
 	for(int idm=0; idm<ndm; idm++){
 		int nloc=P(fit->aloc,idm)->nloc;
@@ -322,7 +322,7 @@ setup_fit_matrix(fit_t* fit){
 		} else{
 			muv_direct_prep(&(fit->FL), (fit->flag.alg==2)*fit->flag.svdthres);
 			if(0){
-				writebin(fit->FL.M, "FLM");
+				writecell(fit->FL.M, "FLM");
 				writebin(fit->FL.U, "FLU");
 				writebin(fit->FL.V, "FLV");
 			}
@@ -429,11 +429,11 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 		writebin(recon->actcpl, "actcpl");
 	}
 	if(parms->save.recon){
-		writebin(fit->FR.M, "FRM");
+		writecell(fit->FR.M, "FRM");
 		writebin(fit->FR.V, "FRV");
 		writebin(fit->FR.U, "FRU");
 
-		writebin(fit->FL.M, "FLM");
+		writecell(fit->FL.M, "FLM");
 		writebin(fit->FL.U, "FLU");
 		writebin(fit->FL.V, "FLV");
 		if(fit->FL.C){
