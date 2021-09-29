@@ -1169,33 +1169,6 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 	}
 }
 /**
- * When tCoG gradient offset is updated using sodium fit, we need to restrict
- * corrections to fewer zernike modes to avoid unstable.
- * It reuses twfs mode parameters.
- * Noise weighting is not used as it doesn't operate in instantenous gradients.
- * */
-/*void setup_recon_sodium_fit(recon_t* recon, const parms_t* parms){
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].dither
-			&& parms->powfs[ipowfs].dither_amp==0 && parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
-			if(!recon->GSF){
-				recon->GSF=dcellnew(parms->npowfs, 1);
-				recon->RSF=dcellnew(parms->npowfs, 1);
-			}
-			const int rmax=parms->recon.twfs_rmax?parms->recon.twfs_rmax:(parms->powfs[parms->itpowfs].order/2);
-			const int rmin=parms->recon.twfs_rmin?parms->recon.twfs_rmin:3;
-			const int zradonly=parms->recon.twfs_radonly;
-			const loc_t* loc=recon->ploc;
-			dmat* opd=zernike(loc, -parms->aper.d, rmin, rmax, zradonly);
-			int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
-			dspmm(&P(recon->GSF, ipowfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs0), opd, "nn", 1);
-			dfree(opd);
-			P(recon->RSF, ipowfs)=dpinv2(P(recon->GSF, ipowfs), NULL, 1e-10, 0);
-			dbg("Restrict corrected gradient offset to within Zernike order %d and %d (radial only=%d)\n", rmin, rmax, zradonly);
-		}
-	}
-}*/
-/**
    Create reconstruction parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
 

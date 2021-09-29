@@ -36,6 +36,7 @@ in_addr_t client_addr;
 int udp_sock=-1;//server udp socket
 float io_time1=0;
 float io_time2=0;
+int io_heartbeat=0;
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
 void fmaxmin(const float* p, long n, float* pmax, float* pmin){
@@ -232,7 +233,7 @@ retry:
 		}
 		int cmd[2]={CMD_DISPLAY, 0};
 		if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
-			warning("Failed to pass sock to scheduler.\n");
+			warning("Failed to register sock in scheduler.\n");
 			close(sock);
 			sock=-1;
 			return NULL;
@@ -240,7 +241,9 @@ retry:
 	}
 	
 	if(sock>=0){
-		if(socket_block(sock, 0) || socket_recv_timeout(sock, 0)){
+		//we set socket timeout to 60 to check disconnection.
+		//server sends heartbeat every 10 seconds (since 2021-09-29).
+		if(socket_block(sock, 0) || socket_recv_timeout(sock, 60)){
 			sock=-1;
 		}
 	}
@@ -286,7 +289,9 @@ retry:
 			if(drawdata->square==-1) drawdata->square=1;//default to square for images.
 		}
 		break;
-		case DRAW_SHM:/*no action*/
+		case DRAW_HEARTBEAT:/*no action*/
+			io_heartbeat=myclocki();
+			dbg("heatbeat=%d\n", io_heartbeat);
 			break;
 		case DRAW_POINTS:
 		{
@@ -313,7 +318,7 @@ retry:
 			drawdata->grid=1;
 			if(drawdata->ptsdim[ipts][0]*drawdata->ptsdim[ipts][1]<nptsx*nptsy){
 				drawdata->pts[ipts]=realloc(drawdata->pts[ipts], nptsx*nptsy*byte_float);
-				drawdata->icumu=0;
+				//drawdata->icumu=0;
 			}
 			drawdata->ptsdim[ipts][0]=nptsx;
 			drawdata->ptsdim[ipts][1]=nptsy;

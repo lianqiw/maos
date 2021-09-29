@@ -153,7 +153,7 @@ static void list_proc_reset(proc_t* p){
 	snprintf(spid, 12, " %d ", p->pid);
 
 	char sdate[80];
-	struct tm* tim=localtime(&p->timlast);
+	struct tm* tim=localtime(&p->status.timlast);
 	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
 	gtk_list_store_set(listall, &iter,
 		COL_DATE, sdate,
@@ -176,7 +176,7 @@ static void list_proc_append(proc_t *p){
 	char sdate[80];
 	char spid[12];
 	snprintf(spid, 12, " %d ", p->pid);
-	struct tm* tim=localtime(&p->timlast);
+	struct tm* tim=localtime(&p->status.timlast);
 	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
 	char* spath=p->path;
 	char* sstart=NULL, * sout=NULL, * sargs=NULL;
@@ -212,7 +212,7 @@ static void list_proc_append(proc_t *p){
 	gtk_list_store_append(listall, &iter);
 	gtk_list_store_set(listall, &iter,
 		COL_DATE, sdate,
-		COL_TIME, p->timstart,
+		COL_TIME, p->status.timstart,
 		COL_PID, spid,
 		COL_FULL, spath?spath:" ",
 		COL_PATH, sstart?sstart:" ",

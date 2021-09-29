@@ -57,7 +57,7 @@ int stread(int sfd, void* p, size_t len){
 	return (nread<0||(nread==0&&len!=0)||left)>0?-1:0; //-1 indicated error/closed
 }
 /*Write long messages with smaller buffer*/
-int stwrite2(int sfd, const void* p, size_t len, size_t nbuf){
+/*int stwrite2(int sfd, const void* p, size_t len, size_t nbuf){
 	if(nbuf>len) nbuf=len;
 	ssize_t nwrite;
 	long left=len;//do not use size_t which is unsigned
@@ -75,9 +75,9 @@ int stwrite2(int sfd, const void* p, size_t len, size_t nbuf){
 		p=(char*)p+nwrite; left-=nwrite;
 	} while(nwrite>0&&left>0);
 	return (nwrite<0||left)?-1:0;
-}
+}*/
 /*Read long messages with smaller buffer*/
-int stread2(int sfd, void* p, size_t len, size_t nbuf){
+/*int stread2(int sfd, void* p, size_t len, size_t nbuf){
 	if(nbuf>len) nbuf=len;
 	ssize_t nread;
 	long left=len;
@@ -86,7 +86,7 @@ int stread2(int sfd, void* p, size_t len, size_t nbuf){
 		p=(char*)p+nread; left-=nread;
 	} while(nread>0&&left>0);
 	return (nread<0||(nread==0&&len!=0)||left)?-1:0;
-}
+}*/
 /**
    Write a string to socket
 */

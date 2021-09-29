@@ -322,12 +322,12 @@ static int respond(int sock){
 		if(stread(sock, &iproc->status, sizeof(status_t))){
 			return -1;
 		}
-		if(!iproc->timstart){//only set once
+		/*if(!iproc->timstart){//only set once
 			iproc->timstart=iproc->status.timstart?iproc->status.timstart:myclocki();
 		}
 		if(iproc->status.timlast){
 			iproc->timlast=iproc->status.timlast;
-		}
+		}*/
 		if(iproc->status.info==S_REMOVE){
 			proc_remove(ihost, pid);
 		} else{

@@ -115,7 +115,7 @@ enum{
 enum{
     DRAW_START=0, /*Mark the starting of data stream. */
     DRAW_DATA,//1
-    DRAW_SHM,//2
+    DRAW_HEARTBEAT,//2
     DRAW_POINTS,//3
     DRAW_STYLE,//4
     DRAW_CIRCLE,//5
@@ -139,5 +139,5 @@ enum{
     DRAW_END=100,
     DRAW_ENTRY=9999 /*A new entry*/
 };
-#define scheduler_version 51
+#define scheduler_version 52
 #endif

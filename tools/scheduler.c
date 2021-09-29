@@ -540,6 +540,18 @@ static void socket_save(int sock_save, int id){
 		shead=tmp;
 	}
 }
+static void socket_remove(SOCKID_T*p){
+	//remove from list. make sure p->next is saved
+	if(p->prev){//middle item
+		p->prev->next=p->next;
+	} else{//first item
+		shead=p->next;
+	}
+	if(p->next){//not last item
+		p->next->prev=p->prev;
+	}
+	free(p);
+}
 //retrieve socket from linked list based in id. 
 static int socket_get(int id){
 	int sock_save=-1;
@@ -552,19 +564,19 @@ static int socket_get(int id){
 			} else{
 				sock_save=p->sock; //valid match
 			}
-			//remove from list 
-			if(p->prev){//middle item
-				p->prev->next=p->next;
-			} else{//first item
-				shead=p->next;
-			}
-			if(p->next){//not last item
-				p->next->prev=p->prev;
-			}
-			free(p);
+			socket_remove(p);
 		}
 	}
 	return sock_save;
+}
+static void socket_heartbeat(){
+	for(SOCKID_T* p_next, *p=shead; p; p=p_next){
+		p_next=p->next;
+		int cmd[1]={DRAW_HEARTBEAT};
+		if(stwrite(p->sock, cmd, sizeof(cmd))){
+			socket_remove(p);
+		}
+	}
 }
 
 static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
@@ -806,11 +818,11 @@ static int respond(int sock){
 	break;
 	case CMD_DISPLAY://12: called by monitor enable connection of drawdaemon to draw().*/
 		dbg_time("(%d) CMD_DISPLAY received with pid=%d\n", sock, pid);
-		if(pid==0){//this is for pending scheduler_recv_socket
+		if(pid<=0){//this is for pending scheduler_recv_socket
 			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
 				||stwritefd(scheduler_recv_wait, sock)){
 				dbg_time("(%d) Failed to pass sock to draw at %d, save socket for future\n", sock, scheduler_recv_wait);
-				socket_save(dup(sock), 0);//duplicate socket and keep it 
+				socket_save(dup(sock), abs(pid));//duplicate socket and keep it 
 				ret=-1;//prevent scheduler from listening to this socket.
 			} else{
 				dbg_time("(%d) passed sock to draw at %d\n", sock, scheduler_recv_wait);
@@ -973,6 +985,7 @@ static void scheduler_timeout(void){
 	if(running){
 		process_queue();
 	}
+	//respond to heatbeat of saved sockets
 #if HAS_LWS
 	ws_service(1000);//service http.
 #endif	
@@ -980,15 +993,16 @@ static void scheduler_timeout(void){
 		if(running){
 			check_jobs();
 		}
+		
 		lasttime3=thistime;
 	}
-	//Report CPU usage every 3 seconds. 
+	//Report CPU usage and drawdaemon heartbeat every 10 seconds. 
 	if(thistime>=(lasttime10+10)){
 		usage_cpu=get_usage_cpu();
 		monitor_send_load();
+		socket_heartbeat();
 		lasttime10=thistime;
 	}
-
 }
 
 /*The following routines maintains the MONITOR_T linked list. */
