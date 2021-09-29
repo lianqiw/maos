@@ -260,37 +260,45 @@ var type_8h =
     ] ],
     [ "loc_t.__unnamed__.__unnamed__", "type_8h.html#structloc__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "locx", "type_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ],
-      [ "locy", "type_8h.html#ad2412cc515d4ebddbf286f9a9afe53e5", null ],
       [ "nloc", "type_8h.html#a6eaa0afbec778db997a7fdcd4c3f3123", null ],
+      [ "two", "type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
+      [ "locy", "type_8h.html#ad2412cc515d4ebddbf286f9a9afe53e5", null ],
+      [ "stat", "type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
+      [ "map", "type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
+      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ],
       [ "dx", "type_8h.html#aacd2b09d39705a84bff035c18c9faea9", null ],
       [ "dy", "type_8h.html#a8e7dd5d3e76aa952e21999a5537dcffb", null ],
       [ "ht", "type_8h.html#aeb5e48e74123cacc52761302ea4a7d22", null ],
       [ "iac", "type_8h.html#aaed3eced69a81bcc445a6f3215f7e23c", null ],
-      [ "stat", "type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
-      [ "map", "type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
-      [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ],
-      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
+      [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
+    ] ],
+    [ "loc_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionloc__t_8____unnamed_____8____unnamed_____8____unnamed____", [
+      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
+      [ "locx", "type_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ]
     ] ],
     [ "pts_t.__unnamed__", "type_8h.html#unionpts__t_8____unnamed____", [
       [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
     ] ],
     [ "pts_t.__unnamed__.__unnamed__", "type_8h.html#structpts__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "origx", "type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df", null ],
-      [ "origy", "type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
       [ "nsa", "type_8h.html#a8d2a959e6b154ec9215882b82f28cfcb", null ],
+      [ "two", "type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
+      [ "origy", "type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
+      [ "stat", "type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
+      [ "map", "type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
+      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ],
       [ "dsay", "type_8h.html#a19dfd1eb18f0cd511ae2e820376eb615", null ],
       [ "dummy1", "type_8h.html#a8c2753548775b4161e531c323ea24c08", null ],
       [ "dummy2", "type_8h.html#ac0c40e7a94eea7e2c238b75273087710", null ],
-      [ "stat", "type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
-      [ "map", "type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
       [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ],
-      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
+      [ "nxsa", "type_8h.html#a0a2d27f7d64db51bcec44b4fc84ab83c", null ],
+      [ "nysa", "type_8h.html#aecee41078f1f9719276a530b727cbdfa", null ],
       [ "dx", "type_8h.html#aacd2b09d39705a84bff035c18c9faea9", null ],
       [ "dy", "type_8h.html#a8e7dd5d3e76aa952e21999a5537dcffb", null ]
+    ] ],
+    [ "pts_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____", [
+      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
+      [ "origx", "type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df", null ]
     ] ],
     [ "pts_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____", [
       [ "dsa", "type_8h.html#a5f039b4ef0058a1d652f13d612375a5b", null ],
@@ -622,10 +630,10 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "ARR", "type_8h.html#a03f463a93452d4a47b80ee67e0ac1cea", null ],
+    [ "CELLDEF", "type_8h.html#a4d2e723924aaa0c6ec6d9a43ed479f39", null ],
     [ "MATARR", "type_8h.html#a2e62a38d7281e7d3eb937e1bd9bd9b38", null ],
     [ "MATDEF", "type_8h.html#a4a89f4e3f08304b6e58dd9b4624dc537", null ],
     [ "SPMATDEF", "type_8h.html#a5e24a899d5eba05f00080278021660e7", null ],
-    [ "CELLDEF", "type_8h.html#a4d2e723924aaa0c6ec6d9a43ed479f39", null ],
     [ "reshape", "type_8h.html#a5dbb29bc89ab7c0aa20a95843357503d", null ],
     [ "index_1d", "type_8h.html#a0e8de8cafce91fe393887a3b18438bc3", null ],
     [ "index_2d", "type_8h.html#aa33e46d60ad710db3271415750851624", null ],

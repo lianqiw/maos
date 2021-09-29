@@ -1,5 +1,13 @@
 var NAVTREEINDEX10 =
 {
+"mvm__trans_8cu.html#a8bde6bc8209a9da5c664bc17629f5b55":[10,0,0,5,0,7],
+"mvm__trans_8cu.html#a8dcedc38f0d7086435bab70c50e96368":[10,0,0,2,0,10],
+"mvm__trans_8cu.html#a8dcedc38f0d7086435bab70c50e96368":[10,0,0,5,0,10],
+"mvm__trans_8cu.html#a9c3bdbebfbe8053418caf4d7a6d2dc44":[10,0,0,2,0,14],
+"mvm__trans_8cu.html#a9c3bdbebfbe8053418caf4d7a6d2dc44":[10,0,0,5,0,14],
+"mvm__trans_8cu.html#aa2978c6da0bc28566b4af2107296305b":[10,0,0,2,0,12],
+"mvm__trans_8cu.html#aa2978c6da0bc28566b4af2107296305b":[10,0,0,5,0,12],
+"mvm__trans_8cu.html#aacfedaca2784575031777e321eac0d37":[10,0,0,2,0,13],
 "mvm__trans_8cu.html#aacfedaca2784575031777e321eac0d37":[10,0,0,5,0,13],
 "mvm__trans_8cu.html#abca33f5a2146ce3289ee052885f29808":[10,0,0,2,0,0],
 "mvm__trans_8cu.html#abca33f5a2146ce3289ee052885f29808":[10,0,0,5,0,0],
@@ -181,8 +189,8 @@ var NAVTREEINDEX10 =
 "mvmfull__real_8cu.html#afcdeea356b29dee00ac0d632eabce4e4":[10,0,0,3,0,25],
 "mvmfull__real_8cu.html#afcdeea356b29dee00ac0d632eabce4e4":[10,0,0,6,0,25],
 "mvmfull__real_8cu.html#afcdeea356b29dee00ac0d632eabce4e4":[10,0,0,7,0,25],
-"mvmfull__real_8cu.html#structgpu__data__t":[10,0,0,6,0],
 "mvmfull__real_8cu.html#structgpu__data__t":[10,0,0,3,0],
+"mvmfull__real_8cu.html#structgpu__data__t":[10,0,0,6,0],
 "mvmfull__real_8cu.html#structgpu__data__t":[10,0,0,7,0],
 "mvmfull__real_8cu.html#structgpu__data__t":[10,0,0,8,0],
 "namespacecuda__wfs.html":[9,0,1],
@@ -241,13 +249,5 @@ var NAVTREEINDEX10 =
 "page91_basics.html#sect-array":[7,0,0],
 "page91_basics.html#sect-bin":[7,0,2],
 "page91_basics.html#sect-const":[7,0,0,2],
-"page91_basics.html#sect-guide":[7,0,3],
-"page91_basics.html#sect-maos-data":[7,0,1],
-"page91_basics.html#sect-maos-math":[7,0,1,0],
-"page91_basics.html#sect-pointer":[7,0,0,0],
-"page91_basics.html#sect-specific-type":[7,0,1,1],
-"page93_maos.html":[7,1],
-"page93_maos.html#sect-structure":[7,1,0],
-"page95_profiling.html":[7,2],
-"page95_profiling.html#Code":[7,2,1]
+"page91_basics.html#sect-guide":[7,0,3]
 };

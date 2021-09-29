@@ -250,7 +250,7 @@ var searchData=
   ['spatial_5fpsd',['spatial_psd',['../turbulence_8h.html#a003ba466f6608495ae22890661663e8e',1,'turbulence.c']]],
   ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672',1,'daemonize.c']]],
   ['spchol',['spchol',['../chol_8h.html#structspchol',1,'']]],
-  ['spinv',['spinv',['../smath_8h.html#a186eac459e0e4b5a8c96740a9c4ad797',1,'stmp.c']]],
+  ['spinv',['spinv',['../smath_8h.html#a34466c2314bb94fe25308be75c03d81b',1,'stmp.c']]],
   ['split',['split',['../parms_8h.html#a0a35373a4ca8d2d1edc8f7787305b709',1,'recon_cfg_t']]],
   ['splitlrt',['splitlrt',['../parms_8h.html#a35ae681e33f2bebd3a0496030523a279',1,'tomo_cfg_t']]],
   ['sprint',['sprint',['../maos_2types_8h.html#aa408cd6bbf0dd0f0c04d38ea3e87e774',1,'powfs_t']]],

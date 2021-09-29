@@ -22,7 +22,7 @@ var loc_8h =
     [ "loccenter", "loc_8h.html#a061a12b16222483d272d19cf53030f1c", null ],
     [ "locnew", "loc_8h.html#a1d868e2d9576be1bb354d904dc002662", null ],
     [ "locref", "loc_8h.html#ab929d93ab02c2d3931fb10fdd78ec4ad", null ],
-    [ "ptsnew", "loc_8h.html#a3e5fd670d221e9c4e53c200fbb68a2ee", null ],
+    [ "ptsnew", "loc_8h.html#a234dd697bbc4adce9b26502fcf424df2", null ],
     [ "loc_calc_ptt", "loc_8h.html#a1d53b929f24c992480fde5e79d1af436", null ],
     [ "loc_calc_mod", "loc_8h.html#a8df253e112de8cf6973422c38810ce67", null ],
     [ "loc_mcc_ptt", "loc_8h.html#aa6c7336fe9eb53e2a396e72cd95e63eb", null ],

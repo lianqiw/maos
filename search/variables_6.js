@@ -50,6 +50,8 @@ var searchData=
   ['gradpsol',['gradpsol',['../parms_8h.html#a90dc2dd0ba6e31a888e90ba846cedda3',1,'save_cfg_t']]],
   ['gradscale',['gradscale',['../parms_8h.html#a6c3ddbbabb0b102212567d573c4a1180',1,'powfs_cfg_t::gradscale()'],['../maos_2types_8h.html#afbbeea9628533032448d257c526e5225',1,'sim_t::gradscale()']]],
   ['grall',['GRall',['../maos_2types_8h.html#a52f7ada5cebe7a83b05bd89bc303db25',1,'recon_t']]],
+  ['grlgs',['GRlgs',['../maos_2types_8h.html#abd36ea165120af1ecba440122ad018f6',1,'recon_t']]],
+  ['grtwfs',['GRtwfs',['../maos_2types_8h.html#acd4472b8a0042ade77cbe67742b3da37',1,'recon_t']]],
   ['gs0',['GS0',['../classcuwfs__t.html#a4d2133499879b2ac36c148962c60f96b',1,'cuwfs_t::GS0()'],['../parms_8h.html#a112f6ac97f6fc015048c57a468ad0400',1,'load_cfg_t::GS0()'],['../maos_2types_8h.html#ae3871024c46b75c7655d904ee168a6bc',1,'powfs_t::GS0()']]],
   ['gtt',['GTT',['../pywfs_8h.html#ab511e9b7adbbddd52b563fc7cec80ecf',1,'pywfs_t']]],
   ['gtype_5frecon',['gtype_recon',['../parms_8h.html#a18f0af83ee3302aabaf885e260caeaad',1,'powfs_cfg_t']]],

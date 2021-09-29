@@ -156,8 +156,8 @@ Functions</h2></td></tr>
 <tr class="separator:a1d868e2d9576be1bb354d904dc002662"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab929d93ab02c2d3931fb10fdd78ec4ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab929d93ab02c2d3931fb10fdd78ec4ad">locref</a> (const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *in)</td></tr>
 <tr class="separator:ab929d93ab02c2d3931fb10fdd78ec4ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e5fd670d221e9c4e53c200fbb68a2ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structpts__t">pts_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a3e5fd670d221e9c4e53c200fbb68a2ee">ptsnew</a> (<a class="el" href="classlong.html">long</a> nsa, real dsax, real dsay, <a class="el" href="classlong.html">long</a> nx, real dx, real dy)</td></tr>
-<tr class="separator:a3e5fd670d221e9c4e53c200fbb68a2ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a234dd697bbc4adce9b26502fcf424df2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structpts__t">pts_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a234dd697bbc4adce9b26502fcf424df2">ptsnew</a> (<a class="el" href="classlong.html">long</a> nsa, real dsax, real dsay, <a class="el" href="classlong.html">long</a> nxsa, <a class="el" href="classlong.html">long</a> nysa, real dx, real dy)</td></tr>
+<tr class="separator:a234dd697bbc4adce9b26502fcf424df2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d53b929f24c992480fde5e79d1af436"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a1d53b929f24c992480fde5e79d1af436">loc_calc_ptt</a> (real *out, real *coeffout, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, const real ipcc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *imcc, const real *amp, const real *opd)</td></tr>
 <tr class="separator:a1d53b929f24c992480fde5e79d1af436"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8df253e112de8cf6973422c38810ce67"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a8df253e112de8cf6973422c38810ce67">loc_calc_mod</a> (real *out, real *coeffout, const <a class="el" href="type_8h.html#structdmat">dmat</a> *mod, const real *amp, real *opd)</td></tr>
@@ -608,7 +608,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free <a class="el" href="type_8h.html#structloc__t">loc_t</a> data </p>
+<p>Free <a class="el" href="type_8h.html#structloc__t">loc_t</a> data. </p>
 
 </div>
 </div>
@@ -733,8 +733,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 
 </div>
 </div>
-<a id="a3e5fd670d221e9c4e53c200fbb68a2ee"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3e5fd670d221e9c4e53c200fbb68a2ee">&#9670;&nbsp;</a></span>ptsnew()</h2>
+<a id="a234dd697bbc4adce9b26502fcf424df2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a234dd697bbc4adce9b26502fcf424df2">&#9670;&nbsp;</a></span>ptsnew()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -761,7 +761,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
+          <td class="paramname"><em>nxsa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>nysa</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

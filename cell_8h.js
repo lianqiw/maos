@@ -2,6 +2,7 @@ var cell_8h =
 [
     [ "cellfree", "cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420", null ],
     [ "writebin", "cell_8h.html#ab1d9a9bae6eafd580462028dc872484c", null ],
+    [ "writecell", "cell_8h.html#a67875c85ee2a66991d854265dfb10852", null ],
     [ "readbin", "cell_8h.html#ab19dbf41490724c2f3d7897c8fd6995b", null ],
     [ "readdata", "cell_8h.html#aed548cf39b1be47ae83cb37198544edd", null ],
     [ "writedata", "cell_8h.html#a896f1cb693d59566539d74ad0e639dea", null ],

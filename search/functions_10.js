@@ -157,7 +157,7 @@ var searchData=
   ['socket_5fsend_5ftimeout',['socket_send_timeout',['../sock_8h.html#a9b9b32440b64707b50fbaae8d08f33e5',1,'sock.c']]],
   ['spatial_5fpsd',['spatial_psd',['../turbulence_8h.html#a003ba466f6608495ae22890661663e8e',1,'turbulence.c']]],
   ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672',1,'daemonize.c']]],
-  ['spinv',['spinv',['../smath_8h.html#a186eac459e0e4b5a8c96740a9c4ad797',1,'stmp.c']]],
+  ['spinv',['spinv',['../smath_8h.html#a34466c2314bb94fe25308be75c03d81b',1,'stmp.c']]],
   ['sread_5fmmap',['sread_mmap',['../smath_8h.html#a327839514714faab26fdc51dff170dd8',1,'stmp.c']]],
   ['sreaddata',['sreaddata',['../smath_8h.html#a34f24ce33f4c2f938d90756d90e51bf3',1,'stmp.c']]],
   ['sref',['sref',['../smath_8h.html#a1dc61e5e5658d02897a0c61e5f51df3c',1,'stmp.c']]],

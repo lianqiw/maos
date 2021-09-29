@@ -1,5 +1,8 @@
 var NAVTREEINDEX4 =
 {
+"dmath_8h.html#a125bb9563a60a306860d432e4a4eb328":[10,0,3,3,203],
+"dmath_8h.html#a1316ccf466cc310d562aae0acf6b8674":[10,0,3,3,170],
+"dmath_8h.html#a13194f51788887f9713158fd24f33736":[10,0,3,3,109],
 "dmath_8h.html#a131e99be189eda7c5b32aba76bcbe8d8":[10,0,3,3,14],
 "dmath_8h.html#a13970db19b2517e7f7a86d1f417bc5a1":[10,0,3,3,208],
 "dmath_8h.html#a150194ac9df5c8e85aeeaaec0dc0295e":[10,0,3,3,48],
@@ -13,12 +16,13 @@ var NAVTREEINDEX4 =
 "dmath_8h.html#a1ec8d910f977601178ac538dfe7274d5":[10,0,3,3,26],
 "dmath_8h.html#a1ef2354d6c45da201c6142f86fcd6737":[10,0,3,3,44],
 "dmath_8h.html#a21df3af4f34fcf035e54f5c41e15eb8a":[10,0,3,3,184],
+"dmath_8h.html#a22be6f3b76f2461166ab48d813bee4ae":[10,0,3,3,95],
 "dmath_8h.html#a22e9d9dcc7a553467535acc6b674fece":[10,0,3,3,120],
 "dmath_8h.html#a22fbcf9f244a5acde6f97a70d83e98a6":[10,0,3,3,110],
 "dmath_8h.html#a246700e98a5d709e25ab656f35d232cf":[10,0,3,3,237],
 "dmath_8h.html#a2595b8ece090d00e6fe6e22ff106d123":[10,0,3,3,116],
 "dmath_8h.html#a26368a3fd5e21307ece0429640f617ed":[10,0,3,3,47],
-"dmath_8h.html#a26e552d3509c4c8b8f2fc3caa062adf3":[10,0,3,3,96],
+"dmath_8h.html#a2688359cc99ce9b4773e957096e81f0b":[10,0,3,3,96],
 "dmath_8h.html#a27d2806c24b43eda63b424adb1241a58":[10,0,3,3,102],
 "dmath_8h.html#a2836217ec30215e4efa3de20483414cf":[10,0,3,3,207],
 "dmath_8h.html#a2ba9dc8e8213b56b1395c8a63313774f":[10,0,3,3,242],
@@ -188,7 +192,6 @@ var NAVTREEINDEX4 =
 "dmath_8h.html#ad2c4cc88ab1ac42c60dff31180ebaf47":[10,0,3,3,149],
 "dmath_8h.html#ad380e26b2e7068cd7362663c45052afa":[10,0,3,3,33],
 "dmath_8h.html#ad39779cf7385f55fc2688354291ddaa0":[10,0,3,3,172],
-"dmath_8h.html#ad414c560ee2e1733c6eae7f7718849b5":[10,0,3,3,95],
 "dmath_8h.html#ad55b31a5f99d2b815e0753c77da70cdf":[10,0,3,3,126],
 "dmath_8h.html#ad6518403ee2ca0e2d52eaf2a0813e6c7":[10,0,3,3,41],
 "dmath_8h.html#ad6c71f329b21ee28435a06fd64e828c8":[10,0,3,3,134],
@@ -246,8 +249,5 @@ var NAVTREEINDEX4 =
 "draw_8h.html#aef0cb494e695878f192ecf5b0a49f9f1":[10,0,1,3,13],
 "draw_8h.html#af0a0e5118e9bc8e4ff96d73d417f250f":[10,0,1,3,7],
 "draw_8h.html#af6a614e128ea550040fe980a1b1922e6":[10,0,1,3,14],
-"evl_sq34.html":[4,4,8],
-"evl_x.html":[4,4,9],
-"files.html":[10,0],
-"fit_cir30.html":[4,4,10]
+"evl_sq34.html":[4,4,8]
 };

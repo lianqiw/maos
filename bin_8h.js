@@ -1,10 +1,13 @@
 var bin_8h =
 [
     [ "header_t", "bin_8h.html#structheader__t", [
-      [ "magic", "bin_8h.html#a7fafb06c258e0d65060c3471e1a05ff8", null ],
       [ "nx", "bin_8h.html#a72ab2223d410da93e0a586bf8d7a8840", null ],
       [ "ny", "bin_8h.html#aa71a34dd56dcaac2b83d6d0b7de01474", null ],
       [ "str", "bin_8h.html#a66647f2919e9e15330a797bfce09f4b0", null ]
+    ] ],
+    [ "header_t.__unnamed__", "bin_8h.html#unionheader__t_8____unnamed____", [
+      [ "id", "bin_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
+      [ "magic", "bin_8h.html#a2f3a4fccca6406e35bcf33e92dd93135", null ]
     ] ],
     [ "M_INT", "bin_8h.html#a7d7a62842f24cb108f65eccaffd1792e", null ],
     [ "M_STR", "bin_8h.html#ae4ed8c773baf80e6ca472bb27587922e", null ],
@@ -66,7 +69,7 @@ var bin_8h =
     [ "mem_unref", "bin_8h.html#aa3c54c42831a640968dd760dab69abf3", null ],
     [ "mem_ref", "bin_8h.html#acd115483d5a175a3162ecb5ff7837414", null ],
     [ "mem_replace", "bin_8h.html#af7da0f869b3a0eb2e8bc15e3f9b38a67", null ],
-    [ "mem_isref", "bin_8h.html#a42789b8dc80cbfc3e3aab499623872a5", null ],
+    [ "mem_nref", "bin_8h.html#a5fa87f47e76e8670336e59846fe2e986", null ],
     [ "mem_p", "bin_8h.html#ab90b10101a8a04135e48d6fd545a42fb", null ],
     [ "mmap_open", "bin_8h.html#aa8a17b269aed5fb1ef2d79fe70ac4077", null ],
     [ "mmap_write_header", "bin_8h.html#a30c2423f18febf174e2c8a3397fcfdc6", null ],

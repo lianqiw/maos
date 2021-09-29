@@ -106,8 +106,11 @@ $(document).ready(function(){initNavTree('cell_8h.html','');});
 Macros</h2></td></tr>
 <tr class="memitem:a088fe3d13e53e5d92d0b9c0165d92420"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((<a class="el" href="type_8h.html#structcell">cell</a>*)A); A=NULL;}</td></tr>
 <tr class="separator:a088fe3d13e53e5d92d0b9c0165d92420"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1d9a9bae6eafd580462028dc872484c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ab1d9a9bae6eafd580462028dc872484c">writebin</a>(A,  format...)&#160;&#160;&#160;write_by_id((const <a class="el" href="type_8h.html#structcell">cell</a>*)A, M_0, format);</td></tr>
+<tr class="memitem:ab1d9a9bae6eafd580462028dc872484c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ab1d9a9bae6eafd580462028dc872484c">writebin</a>(A,  format...)&#160;&#160;&#160;write_by_id((A)?(A)-&gt;base:NULL, M_0, format)</td></tr>
 <tr class="separator:ab1d9a9bae6eafd580462028dc872484c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67875c85ee2a66991d854265dfb10852"><td class="memItemLeft" align="right" valign="top"><a id="a67875c85ee2a66991d854265dfb10852"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>writecell</b>(A,  format...)&#160;&#160;&#160;write_by_id(A, M_0, format)</td></tr>
+<tr class="separator:a67875c85ee2a66991d854265dfb10852"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab19dbf41490724c2f3d7897c8fd6995b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ab19dbf41490724c2f3d7897c8fd6995b">readbin</a>(format...)&#160;&#160;&#160;read_by_id(M_0, -1, format);</td></tr>
 <tr class="separator:ab19dbf41490724c2f3d7897c8fd6995b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed548cf39b1be47ae83cb37198544edd"><td class="memItemLeft" align="right" valign="top"><a id="aed548cf39b1be47ae83cb37198544edd"></a>
@@ -195,7 +198,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;write_by_id((const <a class="el" href="type_8h.html#structcell">cell</a>*)A, M_0, format);</td>
+          <td></td><td>&#160;&#160;&#160;write_by_id((A)?(A)-&gt;base:NULL, M_0, format)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -218,7 +221,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A generic routine for reading data from file. User need to cast the result. </p>
+<p>A generic routine for reading data from file. User need to cast the result. -1 means scan the file </p>
 
 </div>
 </div>

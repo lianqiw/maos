@@ -30,6 +30,7 @@ var searchData=
   ['rngs',['Rngs',['../maos_2types_8h.html#a2ccb26fdd3335f819cca66138403dcd1',1,'ngsmod_t']]],
   ['rotdeg',['rotdeg',['../parms_8h.html#a14f3320d745e66fa755da933adc4a0a4',1,'aper_cfg_t']]],
   ['rr',['RR',['../maos_2types_8h.html#aa2c6710576891f095f5ce354a4f5ffa8',1,'recon_t']]],
+  ['rrlgs',['RRlgs',['../maos_2types_8h.html#ae9f39ba587807aed467fddf03162a7a7',1,'recon_t']]],
   ['rrtwfs',['RRtwfs',['../maos_2types_8h.html#a8fbe32ec1601595810f894d61d795330',1,'recon_t']]],
   ['rstat',['rstat',['../turbulence_8h.html#a06bae77b23497a10e8a04568bc702dc4',1,'genatm_t']]],
   ['run',['run',['../parms_8h.html#ab9b7cb477412c24a924ecf280dd846c8',1,'plot_cfg_t::run()'],['../parms_8h.html#a89d512a054496f3ed146f710a2aab730',1,'save_cfg_t::run()']]],

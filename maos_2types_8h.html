@@ -2047,14 +2047,35 @@ RFdm</td>
 <td class="fieldname">
 GRall</td>
 <td class="fielddoc">
-<p>Radial order zernike to gradient </p>
+<p>Truth zernike modes to gradient. Was only radial modes but now all modes (depends on recon.twfs_radonly </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="acd4472b8a0042ade77cbe67742b3da37"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+GRtwfs</td>
+<td class="fielddoc">
+<p>Truth zernike modes to gradient for twfs </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a8fbe32ec1601595810f894d61d795330"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
 RRtwfs</td>
 <td class="fielddoc">
-<p>Radial order zernike reconstruction from twfs grads </p>
+<p>Truth zernike modes reconstruction from twfs grads </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="abd36ea165120af1ecba440122ad018f6"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+GRlgs</td>
+<td class="fielddoc">
+<p>Truth zernike modes to gradient for LGS (sodium fit) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae9f39ba587807aed467fddf03162a7a7"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+RRlgs</td>
+<td class="fielddoc">
+<p>Truth zernike modes reconstruction from LGS grad adjustments (sodium fit) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a0315c8beee67362d7ab03b9bdc8660ea"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
@@ -3294,18 +3315,17 @@ ngsfocuslpf</td>
 <p>low pass filtered NGS focus </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a391a465f5eb4c2f57ba4694a4c40a52f"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<a id="a7ba232fc197eb33ed4103b54edf2fe30"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
-zoomerr</td>
-<td class="fielddoc">
-<p>Trombone error signal from zoomavg </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a258e332c4744eff316a3fb80778e1288"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-zoomerr_drift</td>
+zoomdrift</td>
 <td class="fielddoc">
 <p>Trombone error signal from i0/ib drift control </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a02ee88c24d1653b9fa7653833a895ea3"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
+<td class="fieldname">
+zoomdrift_count</td>
+<td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a62609fa0dbe51b15b2964f8cee5ab92a"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
@@ -3322,11 +3342,25 @@ zoomavg</td>
 <p>Trombone averager from gradients </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="ada9d1a9e1e7714cea84fedd1f25a5252"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
+<td class="fieldname">
+zoomavg_count</td>
+<td class="fielddoc">
+<p>Count of zoomavg accumulation </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a83204668f1a2bf97e07e4a28799aca25"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
 zoompos</td>
 <td class="fielddoc">
 <p>Trombone position history. for saving </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a4533bbeacf67d4386ef01662d7de56ca"></a><a class="el" href="classlong.html">long</a></td>
+<td class="fieldname">
+zoompos_icol</td>
+<td class="fielddoc">
+<p>Current column </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a67f76f8323de717caa899f43b0022b85"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
