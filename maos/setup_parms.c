@@ -1113,7 +1113,6 @@ static void readcfg_dbg(parms_t* parms){
 	READ_DBL(dbg.na_thres);
 	READ_DBL(dbg.na_fit_dh);
 	READ_DBL(dbg.na_fit_svdthres);
-	READ_INT(dbg.na_fit_alg);
 	READ_INT(dbg.na_fit_maxit);
 	READ_INT(dbg.ncpa_preload);
 	READ_INT(dbg.ncpa_rmsci);

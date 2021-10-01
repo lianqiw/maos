@@ -91,3 +91,4 @@ double dgauss_width(dmat* A, double thres);
 void dgauss_fit(double* mr, double* ma, double* mb, double* theta, dmat* A, double thres);
 dmat* dpinv2(dmat*A, cell *wt, real svdthres, real tikcr);
 dcell* dcellpinv2(dcell *A, cell *wt, real svdthres, real tikcr);
+real loc_remove_focus_grad(dmat *grad, const loc_t *saloc, real factor);

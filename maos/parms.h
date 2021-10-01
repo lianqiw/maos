@@ -644,7 +644,6 @@ typedef struct dbg_cfg_t{
     real na_thres;   /**<altitude error threshold to move trombone, in unit of meter.*/
     real na_fit_svdthres;/**<threshold for SVD inverse in sodium fitting.*/
     real na_fit_dh;  /**<sampling in height in sodium fitting*/
-    int na_fit_alg;  /**<Algorithm for NA fitting gradient calculatiion. 0: auto. >0: see enum PTYPE*/
     int na_fit_maxit;/**<Number of iterations. 0: auto, 1 for CMF, 3 for COG. see wfsgrad.c*/
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/

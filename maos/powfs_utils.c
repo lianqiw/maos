@@ -126,21 +126,7 @@ void fit_cache_free(){
 	cellfree(fit_cache.i0m);
 	cellfree(fit_cache.i0mv);
 }
-/**
- * Remove focus mode from gradients. Do not consider noise weighting
- * */
-real remove_focus_grad(const loc_t *saloc, dmat *grad, real factor){
-	dmat* mode=dnew_do(saloc->nloc*2, 1, saloc->locx, NULL);
-	dmat* rmod=dpinv(mode, NULL);
-	dmat* mfocus=0;
-	dmm(&mfocus, 0, rmod, grad, "nn", 1);
-	dmm(&grad, 1, mode, mfocus, "nn", -factor);
-	real focus=P(mfocus,0);
-	dfree(mfocus);
-	dfree(rmod);
-	dfree(mode);
-	return focus;
-}
+
 /**
  * Fit i0 to sodium profile using iterative algorithm. The steps are as follows
  * 1. Create sub images for each sodium profile bin
@@ -202,7 +188,7 @@ void sodium_fit(
 	dcell* gytmp=0;
 	dcell* gradtmp=0;
 	
-	//avoid overriding i0 input
+	//avoid overriding i0 input. Array for gensei full output to build temporal matched filter
 	dcell **pi0tmp=(pi0 && (nrep==1 || *pi0 != i0i))?pi0:&i0tmp;
 	dcell **pgxtmp=pgx?pgx:&gxtmp;//ok to override input
 	dcell **pgytmp=pgy?pgy:&gytmp;
@@ -222,27 +208,24 @@ void sodium_fit(
 	//etf_t** etfs=use_cache?fit_cache.etfs:NULL;
 	dccell* i0m=use_cache?fit_cache.i0m:NULL;//sa image for each sodium bin
 	dcell* i0mv=use_cache?fit_cache.i0mv:NULL;//vectorized i0m
-	dcell *grad=use_cache?fit_cache.grad:NULL;
+	dcell *grad=use_cache?fit_cache.grad:*pgrad;
 	int skip_first=0;
 
 	if(!i0m){
 		i0mv=dcellnew(1, nx);
 		i0m=dccellnew(nx, 1);
-		grad=dcellnew_same(ni0, 1, nsa*2, 1);
-		dbg("Initial gradient uses %s.\n", gradncpa?"gradncpa":"zero");
-		for(long ii0=0; ii0<ni0; ii0++){
-			dmat* gradi=P(grad, ii0);
-			if(gradncpa){
-				dcp(&gradi, PR(gradncpa, ii0, 0));
-			}/* else{
-				for(long isa=0; isa<nsa; isa++){
-					real g[2]={0,0};
-					dcog(g, P(i0i, isa, ii0), 0, 0, cogthres, 0, 0);
-					P(gradi, isa)=g[0]*pixthetax;
-					P(gradi, isa+nsa)=g[1]*pixthetay;
-				}
-			}*/
+		if(gradncpa){
+			dcellcp(&grad, gradncpa);
+		}else{
+			grad=dcellnew_same(ni0, 1, nsa*2, 1);
+OMP_FOR
+			for(long ii0=0; ii0<ni0; ii0++){
+				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
+				loc_remove_focus_grad(P(grad, ii0), saloc, 1);
+			}
 		}
+		dbg("Initial gradient uses %s.\n", gradncpa?"gradncpa":"zero");
+		
 		if(use_cache){
 			fit_cache.i0m=i0m;
 			fit_cache.i0mv=i0mv;
@@ -266,11 +249,6 @@ void sodium_fit(
 		if(irep>0 || !skip_first){
 			if(irep>0 && &grad!=pgrad){
 				dcellcp(&grad, *pgrad);
-			}
-			OMP_FOR
-			for(long ii0=0; ii0<ni0; ii0++){
-				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
-				remove_focus_grad(saloc, P(grad, ii0), 1);
 			}
 			OMP_FOR
 			for(long ix=0; ix<nx; ix++){
@@ -312,7 +290,7 @@ void sodium_fit(
 			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
 				pixthetax, pixthetay, NULL, radgx, 1, 1);
 			toc2("mtche create"); tic;
-			OMP_FOR_COLLAPSE(2)
+OMP_FOR_COLLAPSE(2)
 			for(long ii0=0; ii0<ni0; ii0++){
 				for(long isa=0; isa<nsa; isa++){
 					dmat* grad1=P(grad, ii0);//model
@@ -325,6 +303,11 @@ void sodium_fit(
 				}
 			}
 			toc2("mtche apply"); tic;
+OMP_FOR
+			for(long ii0=0; ii0<ni0; ii0++){
+				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
+				loc_remove_focus_grad(P(*pgrad, ii0), saloc, 1);
+			}
 		}
 		
 		if(save){
@@ -337,13 +320,7 @@ void sodium_fit(
 			if(irep==0) writebin(i0i, "sodium_i0i_%d", count);
 		}
 	}
-	//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
-	/*if(pgrad!=&gradtmp || !gradncpa){//output is used
-	OMP_FOR
-		for(long ii0=0; ii0<ni0; ii0++){
-			remove_focus_grad(saloc, P(*pgrad, ii0));
-		}
-	}*/
+
 	//output is desired. build final i0, gx, gy with the final gradient or ncpa gradient.
 	if(pi0 || pgx || pgy){
 		dbg("Replacing i0, gx, gy with fitted value\n");

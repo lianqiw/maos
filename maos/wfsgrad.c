@@ -539,7 +539,7 @@ static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gain, int iwfs, in
 	//Output focus error in ib to trombone error signal.
 	if(parms->powfs[ipowfs].llt){
 		//here we don't use RFlgsg which is noise weighted
-		real focus=remove_focus_grad(simu->powfs[ipowfs].saloc, grad, remove?1:0);
+		real focus=loc_remove_focus_grad(grad, simu->powfs[ipowfs].saloc, remove?1:0);
 		if(gain){
 			P(simu->zoomdrift, iwfs)+=gain*focus;
 			P(simu->zoomdrift_count, iwfs)++;
@@ -1040,11 +1040,9 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dcell** pi0=(ptype2==PTYPE_MF)?&intstat->i0:NULL;
 					dcell** pgx=(ptype2==PTYPE_MF)?&intstat->gx:NULL;
 					dcell** pgy=(ptype2==PTYPE_MF)?&intstat->gy:NULL;
-					//flag for using gradncpa to compute i0 for matched filter.
+					//1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
 					int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(ptype2==PTYPE_MF?1:3);
 
-					//1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
-					//int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(need_i0?1:3);
 					if(parms->save.dither){
 						writebin(intstat->i0, "extra/powfs%d_i0i_%d", ipowfs, isim);
 					}
@@ -1069,18 +1067,11 @@ static void wfsgrad_dither_post(sim_t* simu){
 						}
 						dcellfree(zm);
 					}
-					//dmat* gsf=NULL;
+					
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 						if(ptype2==PTYPE_COG){
 							if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
-							//dadd(&P(grad, jwfs), 1, P(powfs[ipowfs].gradncpa, jwfs), -1);//moved up
-							//The correction need to be restricted in MVR control mode to avoid instability
-							/*if(recon->RSF){
-								warning_once("Restricting corrected modes\n");
-								dmm(&gsf, 0, P(recon->RSF, ipowfs), P(grad, jwfs), "nn", 1);
-								dmm(&P(grad, jwfs), 0, P(recon->GSF, ipowfs), gsf, "nn", 1);
-							}*/
 							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
 							//prevent gradoff from accumulating tip/tilt or focus mode if any. no need to do drift control.
 							wfsgrad_tt_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
@@ -1093,7 +1084,6 @@ static void wfsgrad_dither_post(sim_t* simu){
 							dzero(P(simu->gradoff, iwfs));
 						}
 					}
-					//dfree(gsf);
 					dcellfree(grad);
 					dfree(sodium);
 				}
