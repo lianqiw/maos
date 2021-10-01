@@ -35,22 +35,6 @@ cell* cellnew(long nx, long ny){
 }
 
 /**
-   Allocate a new array of the same type
- */
-cell* cellnew2(const cell* A){
-	if(!A){
-		return 0;
-	} else if(iscell(A)){
-		return cellnew(A->nx, A->ny);
-	} else if(A->id==M_REAL){
-		return (cell*)dnew(A->nx, A->ny);
-	} else{
-		error("Invalid type: id=%u\n", A->id);
-		return 0;
-	}
-}
-
-/**
    check the size of cell array if exist. Otherwise create it
 */
 void cellinit(cell** A, long nx, long ny){
@@ -136,10 +120,9 @@ void celldim(const cell* A, long* nx, long* ny, long** nxs, long** nys){
 /**
    Resize a generic cell array.
 */
-void cellresize(void* A_, long nx, long ny){
-	cell* A=cell_cast(A_);
-	if(!A){ 
-		warning("Can only resize a valid cell array\n");
+void cellresize_do(cell* A, long nx, long ny){
+	if(!A || A->m){ 
+		warning("Can only resize a valid cell array with m unset.\n");
 		return;
 	}
 	if(A->nx==nx||A->ny==1){
@@ -330,9 +313,9 @@ void write_by_id(const cell* A, M_ID id, const char* format, ...){
 /**
  * Calls writebin with build in fp
  * */
-void writebin_async(const void* A, long ncol){
+void writecell_async(const cell* A, long ncol){
 	if(ncol==0){
-		warning("writebin_async shall not be called with ncol=0, aborted.\n");
+		warning("writecell_async shall not be called with ncol=0, aborted.\n");
 	}else{
 		writedata_by_id(NULL, A, 0, ncol);
 	}

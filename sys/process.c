@@ -188,19 +188,7 @@ int get_cpu_avail(void){
 	/*dbg("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail); */
 	return avail;
 }
-/**
-   Wait for available CPUs in case scheduler is not available.
-*/
-void wait_cpu(int nthread){
-	char fnlock[64];
-	snprintf(fnlock, 64, "%s/aos.lock", getenv("HOME"));
-	int fd;
-	fd=lock_file(fnlock, 1, -1);
-	while(get_cpu_avail()<nthread-1){
-		sleep(5);
-	}
-	close(fd);/*remove lock */
-}
+
 #if defined(__APPLE__)
 #include "process_apple.c"
 #elif defined(__linux__)

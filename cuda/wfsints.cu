@@ -367,7 +367,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			lotfc=lwvf;
 		}
 		if(parms->save.wfsopd->p[iwfs]){
-			zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
+			zfarr_push_scale(simu->save->wfslltopd[iwfs], isim, lltopd, 1, stream);
 		}
 		if(cuwfs[iwfs].dtf[0].etf[1].etf){
 			const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
@@ -536,6 +536,6 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		}/*for isa block loop */
 	}/*for iwvl */
 	if(parms->powfs[ipowfs].psfout){
-		zfarr_push(simu->save->wfspsfout[iwfs], isim, wvfout, stream);
+		zfarr_push_scale(simu->save->wfspsfout[iwfs], isim, wvfout, 1, stream);
 	}
 }

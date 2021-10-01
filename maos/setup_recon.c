@@ -550,7 +550,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		  participate in tomography.
 		*/
 		dspcell* GXtomoT=dspcelltrans(recon->GXtomo);
-		dcellmm_any(&recon->RR.M,GXtomoT->base, saneai->base, "nn", 1);
+		dcellmm_any(&recon->RR.M,CELL(GXtomoT), CELL(saneai), "nn", 1);
 		dspcell* RRM=(dspcell*)recon->RR.M/*PDSPCELL*/;
 		/*
 		  Tip/tilt and diff focus removal low rand terms for LGS WFS.
@@ -561,7 +561,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		}
 
 		info("Building recon->RL\n"); /*left hand side matrix */
-		dcellmm_any(&recon->RL.M, recon->RR.M, recon->GXtomo->base, "nn", 1);
+		dcellmm_any(&recon->RL.M, recon->RR.M, CELL(recon->GXtomo), "nn", 1);
 		dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
 		if(parms->tomo.piston_cr){
 			/*single point piston constraint. no need tikholnov.*/
@@ -912,7 +912,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 				int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 				int iwfs0=P(parms->powfs[ipowfs].wfs,0);
 				if(iwfs==iwfs0||!parms->recon.glao){
-					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), P(recon->saneai, iwfs, iwfs)->base);
+					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), CELL(P(recon->saneai, iwfs, iwfs)));
 				} else{
 					P(recon->RFlgsg, iwfs, iwfs)=dref(P(recon->RFlgsg, iwfs0, iwfs0));
 				}
@@ -966,7 +966,7 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 		real thres=1e-10;
 		info("RRtwfs svd threshold is %g\n", thres);
 		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv2(recon->GRtwfs, neai->base, thres, 0);
+		recon->RRtwfs=dcellpinv2(recon->GRtwfs, CELL(neai), thres, 0);
 	}
 
 	if(parms->save.setup){
@@ -1229,7 +1229,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 		dspcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
 		dcell* Qntt=dcellnew(NX(Qn), NY(Qn));
 		dmat* TTploc=loc2mat(recon->floc, 1);/*TT mode. need piston mode too! */
-		dmat* PTTploc=dpinv(TTploc, recon->W0->base);/*TT projector. no need w1 since we have piston. */
+		dmat* PTTploc=dpinv(TTploc, CELL(recon->W0));/*TT projector. no need w1 since we have piston. */
 		dfree(TTploc);
 		for(int ix=0; ix<NX(Qn)*NY(Qn); ix++){
 			if(!P(Qn,ix)) continue;

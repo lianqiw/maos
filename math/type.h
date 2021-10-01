@@ -55,11 +55,11 @@ typedef struct cell{
     struct cell* m;
 }cell;
 
-//Make sure the memory layout of CELLDEF is compatible with cell
+//Make sure the memory layout of CELLDEF is identical to cell
 //base[1] is conveniently used to return a pointer as cell without casting which is error prone
 #define CELLDEF(T,S) typedef struct S{		\
     union{  \
-            struct cell base[1];\
+            cell cell[1];\
             struct{\
 	            ARR(struct T*);				\
 	            struct T* m; /*continuous data*/	\
@@ -70,7 +70,7 @@ typedef struct cell{
 
 #define MATARR(T)				\
     union{\
-        struct cell base[1];\
+        cell cell[1];\
         struct{\
             ARR(T);					\
             mem_t *mem; /**< Memory management*/	\
@@ -82,7 +82,7 @@ typedef struct cell{
 
 #define SPMATDEF(T,S) typedef struct S{					        \
     union{\
-        struct cell base[1];     /**<Use array to get pointer easily*/  \
+        cell cell[1];     /**<Use array to get pointer easily*/  \
         struct{\
             M_ID id;             /**<to identify the array type*/		\
             T *restrict px;      /**<numerical values, size nzmax */	\
@@ -178,13 +178,11 @@ typedef struct locstat_t{
 */
 typedef struct loc_t{
     union{
-        struct cell base[1];
+        cell cell[1];
+        dmat dmat[1];
         struct{
             M_ID id;
-            union{
-                real* p;     /**< storage of locx and locy*/
-                real* locx;  /**< x coordinates of each point*/
-            };
+            real* locx;  /**< x coordinates of each point [allocates memory for both locx and locy]*/
             long nloc;   /**< number of points*/
             long two;    /**<Constant 2. to be binary compatble with rmat*/
             real* locy;  /**< y coordinates of each point*/
@@ -206,13 +204,12 @@ typedef struct loc_t{
 */
 typedef struct pts_t{
     union{
-        struct cell base[1];
+        cell cell[1];
+        dmat dmat[1];
+        loc_t loc[1];
         struct{
             M_ID id;
-            union{
-                real* p;     /**<Storage for origx and origy*/
-                real* origx; /**<The x origin of each subaperture*/
-            };
+            real* origx; /**<The x origin of each subaperture. Contains memory for origy*/
             long nsa;      /**<number of subapertures.*/
             long two;
             real* origy; /**<The y origin of each subaperture*/

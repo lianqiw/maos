@@ -256,7 +256,7 @@ OMP_FOR
 				P(na2i, 0, 0)=P(nai, ix, 0);
 				P(na2i, 0, 1)=1;
 				//ETF takes a lot of storage but is inexpensive to build. So we choose to build it on the fly
-				etf_t *etf_i=mketf(dtf, na2i->base, 0, srot, srsa, hs, htel, za, 1);
+				etf_t *etf_i=mketf(dtf, CELL(na2i), 0, srot, srsa, hs, htel, za, 1);
 				gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etf_i, saa, radgx?srot:NULL, siglev, wvlwts, grad, 0, 0);
 				etf_free(etf_i);
 				if(!P(i0mv, 0, ix)||P(P(i0mv, 0, ix))!=P(P(i0m, ix)->m)){
@@ -283,7 +283,7 @@ OMP_FOR
 		if(nrep>1 || pgrad!=&gradtmp){
 			if(etf_full) etf_free(etf_full);
 			//mketf for full profile must use the same no_interp flag 
-			etf_full=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
+			etf_full=mketf(dtf, CELL(nai), 0, srot, srsa, hs, htel, za, 1);
 			toc2("mketf full"); tic;
 			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, grad, 0, 0);
 			toc2("gensei full"); tic;
@@ -325,7 +325,7 @@ OMP_FOR
 	if(pi0 || pgx || pgy){
 		dbg("Replacing i0, gx, gy with fitted value\n");
 		if(!etf_full){
-			etf_full=mketf(dtf, nai->base, 0, srot, srsa, hs, htel, za, 1);
+			etf_full=mketf(dtf, CELL(nai), 0, srot, srsa, hs, htel, za, 1);
 			toc2("mketf final");tic;
 		}
 		const dcell *gradf=gradncpa?gradncpa:(pgrad?(*pgrad):grad);
@@ -372,16 +372,16 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 	dccell* sepsf=use_cache?fit_cache.sepsf:NULL;
 	if(!sepsf){
 		cccell* otf=NULL, * lotf=NULL;
-		otf=genseotf(powfs[ipowfs].pts, powfs[ipowfs].realamp,
-			NULL, powfs[ipowfs].realsaa, parms->powfs[ipowfs].wvl, r0, L0,
+		otf=genseotf(powfs[ipowfs].pts, CELL(powfs[ipowfs].realamp),
+			NULL, CELL(powfs[ipowfs].realsaa), parms->powfs[ipowfs].wvl, r0, L0,
 			parms->powfs[ipowfs].embfac);
 		if(parms->powfs[ipowfs].llt){
 						//genselotf(parms, powfs, ipowfs);
-			lotf=genseotf(powfs[ipowfs].llt->pts, powfs[ipowfs].llt->amp,
+			lotf=genseotf(powfs[ipowfs].llt->pts, CELL(powfs[ipowfs].llt->amp),
 				NULL, NULL, parms->powfs[ipowfs].wvl, r0, L0, 
 				parms->powfs[ipowfs].embfac);
 		}
-		gensepsf(&sepsf, otf, lotf, powfs[ipowfs].realsaa,
+		gensepsf(&sepsf, otf, lotf, CELL(powfs[ipowfs].realsaa),
 			parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
 		cellfree(otf);
 		cellfree(lotf);

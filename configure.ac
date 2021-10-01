@@ -199,11 +199,11 @@ fi
 LDEXE=
 LDRT=
 OPTS=
-COMMON_ALL="-Wall -Wshadow -Wextra " 
+COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers" 
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-COMMON_GCC+=" -Wno-missing-braces -Wno-missing-field-initializers" #gcc-4.8 error
+#COMMON_GCC+=" " #gcc-4.8 error
 COMMON_CLANG+=" -Wno-sign-compare" #CLANG has false positive in detecting sign comparison.
 
 OPTIM_ALL="-g -O3 -mtune=native "

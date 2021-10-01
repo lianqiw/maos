@@ -48,7 +48,7 @@ zfarr* zfarr_init(long nx, long ny, const char* format, ...){
 /**
    Append a A of type type into the zfarr ca, at location i.
 */
-void zfarr_push(zfarr* ca, int i, const void* p){
+void zfarr_push_cell(zfarr* ca, int i, const cell* A){
 	if(!ca){
 		warning_once("zfarr is NULL\n");
 		return;
@@ -63,9 +63,9 @@ void zfarr_push(zfarr* ca, int i, const void* p){
 		print_backtrace();
 		return;
 	}
-	uint32_t id=0;
-	if(p){
-		id=((cell*)p)->id;
+	M_ID id=0;
+	if(A){
+		id=A->id;
 		if(!ca->id){
 			ca->id=id;
 		}else if(ca->id!=id){
@@ -76,8 +76,8 @@ void zfarr_push(zfarr* ca, int i, const void* p){
 		writedata_by_id(ca->fp, 0, ca->id, 0);
 		ca->cur++;
 	}
-	if(p || ca->tot){
-		writedata_by_id(ca->fp, p, ca->id, 0);
+	if(A || ca->tot){
+		writedata_by_id(ca->fp, A, ca->id, 0);
 		ca->cur++;
 	}
 }
@@ -110,7 +110,7 @@ void zfarr_close(zfarr* ca){
 				"but %ld elements were written\n",
 				zfname(ca->fp), ca->tot, ca->cur);
 		} else if(ca->cur<ca->tot){//under fill
-			zfarr_push(ca, ca->tot-1, NULL);
+			zfarr_push_cell(ca, ca->tot-1, NULL);
 		}
 	}else if(!zfisfits(ca->fp)){//total is not specified for bin file
 		zfrewind(ca->fp);

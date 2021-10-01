@@ -430,10 +430,13 @@ add2cpu_mat(c, real, Comp)
 	    add2cpu((*out)->p+i, alpha, in[i], beta, stream, mutex);	\
 	}								\
     }
-	add2cpu_cell(d, real, curcell)
-	add2cpu_cell(s, float, curcell)
-	add2cpu_cell(c, real, cuccell)
-	add2cpu_cell(z, float, cuccell)
+
+add2cpu_cell(d, real, curcell)
+add2cpu_cell(c, real, cuccell)
+
+add2cpu_cell(s, float, curcell)
+add2cpu_cell(z, float, cuccell)
+
 #define cp2cpu_same(dmat,dzero,dnew,T)				\
     void cp2cpu(dmat **out, const Array<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in) {							\
@@ -486,30 +489,34 @@ cp2cpu_cell(d, Real)
 cp2cpu_cell(c, Comp)
 cp2cpu_cell(z, Comp)
 
-void zfarr_push(struct zfarr* ca, int i, const curmat& A, cudaStream_t stream){
+void zfarr_push_scale(struct zfarr* ca, int i, const curmat& A, Real scale, cudaStream_t stream){
 	X(mat)* tmp=NULL;
-	cp2cpu(&tmp, A, stream);
+	if(scale==1) cp2cpu(&tmp, A, stream);
+	else add2cpu(&tmp, 0, A, scale, stream);
 	zfarr_push(ca, i, tmp);
 	X(free)(tmp);
 }
 
-void zfarr_push(struct zfarr* ca, int i, const cucmat& A, cudaStream_t stream){
+void zfarr_push_scale(struct zfarr *ca, int i, const cucmat &A, Real scale, cudaStream_t stream){
 	XC(mat)* tmp=NULL;
-	cp2cpu(&tmp, A, stream);
+	if(scale==1) cp2cpu(&tmp, A, stream);
+	else add2cpu(&tmp, 0, A, scale, stream);
 	zfarr_push(ca, i, tmp);
 	XC(free)(tmp);
 }
 
-void zfarr_push(struct zfarr* ca, int i, const curcell& A, cudaStream_t stream){
+void zfarr_push_scale(struct zfarr *ca, int i, const curcell &A, Real scale, cudaStream_t stream){
 	X(cell)* tmp=NULL;
-	cp2cpu(&tmp, A, stream);
+	if(scale==1) cp2cpu(&tmp, A, stream);
+	else add2cpu(&tmp, 0, A, scale, stream);
 	zfarr_push(ca, i, tmp);
 	X(cellfree)(tmp);
 }
 
-void zfarr_push(struct zfarr* ca, int i, const cuccell& A, cudaStream_t stream){
+void zfarr_push_scale(struct zfarr *ca, int i, const cuccell &A, Real scale, cudaStream_t stream){
 	XC(cell)* tmp=NULL;
-	cp2cpu(&tmp, A, stream);
+	if(scale==1) cp2cpu(&tmp, A, stream);
+	else add2cpu(&tmp, 0, A, scale, stream);
 	zfarr_push(ca, i, tmp);
 	XC(cellfree)(tmp);
 }

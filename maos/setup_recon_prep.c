@@ -746,12 +746,12 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		  effect on GA is also removed
 		 */
 			warning("Apply stuck actuators to GA\n");
-			act_stuck(recon->aloc, recon->GA->base, recon->actstuck);
+			act_stuck(recon->aloc, CELL(recon->GA), recon->actstuck);
 
 		}
 		if(parms->recon.alg==1){//LSR.
 			recon->actcpl=genactcpl(recon->GA, 0);
-			act_stuck(recon->aloc, recon->actcpl->base, recon->actfloat);
+			act_stuck(recon->aloc, CELL(recon->actcpl), recon->actfloat);
 			if(parms->lsr.actinterp){
 				recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
 			} else if(recon->actfloat){
@@ -1138,7 +1138,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 				dmat* grad=0;
 				pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 				pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-				P(recon->dither_rg, iwfs, iwfs)=dpinv(grad, P(recon->saneai, iwfs, iwfs)->base);
+				P(recon->dither_rg, iwfs, iwfs)=dpinv(grad, CELL(P(recon->saneai, iwfs, iwfs)));
 				if(0){//test linearity
 					dscale(opd, 1./4.);
 					dmat* tmp=0;

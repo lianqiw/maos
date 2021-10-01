@@ -574,7 +574,7 @@ void X(rotvecnn)(X(mat)** B0, const X(mat)* A, R theta){
 		warning("A has wrong dimension\n");
 		return;
 	}
-	X(new2)(B0, 2, 2);
+	X(init)(B0, 2, 2);
 	X(mat)* B=*B0;
 	assert(B->nx==2&&B->ny==2);
 	const T ctheta=cos(theta);
@@ -886,25 +886,24 @@ void X(addI)(X(mat)* A, T val){
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
 */
 void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
-	if(A&&A->nx&&ac){
+	if(A&&A->nx){
 		if(!*B0){
 			bc=0;/*no bother to accumulate. */
+			X(init)(B0, A->nx, A->ny);
+		}else if(PN(A) != PN(*B0)){
+			error("A is %ldx%ld, B is %ldx%ld. They should match in size.\n",
+				NX(A), NY(A), NX(*B0), NY(*B0));
 		}
-		X(new2)(B0, A->nx, A->ny);
-		X(mat)* B=*B0;
-		if(A->nx!=B->nx||A->ny!=B->ny){
-			error("A is %ldx%ld, B is %ldx%ld. They should match\n",
-				A->nx, A->ny, B->nx, B->ny);
-		}
+		X(mat) *B=*B0;
 		if(bc){
-			for(int i=0; i<A->nx*A->ny; i++){
+			for(int i=0; i<PN(A); i++){
 				P(B, i)=P(B, i)*bc+P(A, i)*ac;
 			}
 		} else{
 			if(ac==(T)1){
 				X(cp)(B0, A);
 			} else{/*just assign */
-				for(int i=0; i<A->nx*A->ny; i++){
+				for(int i=0; i<PN(A); i++){
 					P(B, i)=P(A, i)*ac;
 				}
 			}
@@ -919,7 +918,7 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 	if(A&&A->nx&&ac){
 		if(!*B0){
 			bc=0;/*no bother to accumulate. */
-			X(new2)(B0, A->nx, A->ny);
+			X(init)(B0, A->nx, A->ny);
 		}
 		X(mat)* B=*B0;
 		long nx=MIN(A->nx, B->nx);
@@ -1164,7 +1163,7 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
 	R center, R spacing, int n){
 	if(!A||!P(A)) return;
 	int nn=A->nx*A->ny;
-	X(new2)(out, n, nn);
+	X(init)(out, n, nn);
 	X(mat)* Op=*out;
 	const T* restrict Ap=P(A);
 	const R spacingi=1./spacing;
@@ -1662,7 +1661,7 @@ X(cell)* X(cellcat)(const X(cell)* A, const X(cell)* B, int dim){
 			error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
 				A->nx, A->ny, B->nx, B->ny);
 		}
-		out=(X(cell*))cellnew(A->nx+B->nx, A->ny);
+		out=X(cellnew)(A->nx+B->nx, A->ny);
 		for(long iy=0; iy<A->ny; iy++){
 			for(long ix=0; ix<A->nx; ix++){
 				P(out, ix, iy)=X(dup)(P(A, ix, iy));
@@ -1677,7 +1676,7 @@ X(cell)* X(cellcat)(const X(cell)* A, const X(cell)* B, int dim){
 			error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n",
 				A->nx, A->ny, B->nx, B->ny);
 		}
-		out=(X(cell*))cellnew(A->nx, A->ny+B->ny);
+		out=X(cellnew)(A->nx, A->ny+B->ny);
 		for(long iy=0; iy<A->ny; iy++){
 			for(long ix=0; ix<A->nx; ix++){
 				P(out, ix, iy)=X(dup)(P(A, ix, iy));
@@ -1720,7 +1719,7 @@ X(cell)* X(cellcat_each)(const X(cell)* A, const X(cell)* B, int dim){
 	if(A->nx!=B->nx||A->ny!=B->ny){
 		error("Mismatch: (%ld %ld), (%ld %ld)\n", A->nx, A->ny, B->nx, B->ny);
 	}
-	X(cell)* out=(X(cell*))cellnew(A->nx, A->ny);
+	X(cell)* out=X(cellnew)(A->nx, A->ny);
 	for(long ix=0; ix<A->nx*A->ny; ix++){
 		P(out, ix)=X(cat)(P(A, ix), P(B, ix), dim);
 	}

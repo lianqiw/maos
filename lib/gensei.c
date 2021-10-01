@@ -42,8 +42,8 @@ static int count_unique(const dcell* opdbias){
 	return different?PN(opdbias):1;
 }
 static cccell* genseotf_do(const pts_t* pts,
-	const void* amp, const dcell* opdbias,
-	const void* saa, const dmat* wvl, real r0, real L0, int embfac){
+	const cell* amp, const dcell* opdbias,
+	const cell* saa, const dmat* wvl, real r0, real L0, int embfac){
 
 	/*create a grid representing a sub-aperture. */
 	loc_t* loc=mksqloc_auto(pts->nxsa, pts->nxsa, pts->dx, pts->dy);
@@ -82,9 +82,9 @@ static cccell* genseotf_do(const pts_t* pts,
    Generates short exposure OTF by calling genotf() with p/t/t removal set.
 */
 cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
-				const void* amp, /**<[in] amplitude map. can be dcell or dmat*/
+				const cell* amp, /**<[in] amplitude map. can be dcell or dmat*/
 				const dcell* opdbias, /**<[in] opd bias for otf.*/
-				const void* saa, /**<[in] list of subaperture area, can be dcell or dmat*/
+				const cell* saa, /**<[in] list of subaperture area, can be dcell or dmat*/
 				const dmat* wvl, /**<[in] list of wavelength*/
 				const real r0, /**<[in] Fried parameter*/
 				const real L0, /**<[in] Outer scale*/
@@ -164,7 +164,7 @@ void upsample_otf(cmat* out, const cmat* in){
    Createing subaperture short exposure PSF from the tip/tilt removed turbulence
    OTF and uplink OTF. Not including detector or elongation characteristics.  */
 void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf,
-	const void* saa, const dmat* wvl, int notfx, int notfy
+	const cell* saa, const dmat* wvl, int notfx, int notfy
 ){
 	const int nwvl=PN(wvl);
 	const int nsa=NX(P(otfs, 0, 0));

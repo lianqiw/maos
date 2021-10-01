@@ -64,7 +64,7 @@ void locfree_do(loc_t* loc){
 	if(loc&&loc->nref&&!atomicadd(loc->nref, -1)){
 		loc_free_stat(loc);
 		loc_free_map(loc);
-		free(loc->p);
+		free(loc->locx);
 		//free(loc->locy);
 		free(loc->nref);
 	}
@@ -89,8 +89,8 @@ loc_t* locnew(long nloc, real dx, real dy){
 	loc_t* loc=mycalloc(1, loc_t);
 	loc->id=M_LOC;
 	if(nloc>0){
-		loc->p=mycalloc(nloc*2, real);
-		loc->locy=loc->p+nloc;
+		loc->locx=mycalloc(nloc*2, real);
+		loc->locy=loc->locx+nloc;
 		//loc->locx=mycalloc(nloc, real);
 		//loc->locy=mycalloc(nloc, real);
 		loc->nref=mycalloc(1, int); loc->nref[0]=1;
@@ -755,6 +755,27 @@ void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	for(long iloc=0; iloc<nloc; iloc++){
 		P(opd,iloc)+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
 	}
+}
+/**
+ * Remove focus mode from gradients. Do not consider noise weighting
+ * */
+real loc_remove_focus_grad(dmat *grad, const loc_t *saloc, real factor){
+	const dmat *mode=saloc->dmat;
+	real d1=dvecdot(P(mode), P(grad), NULL, PN(grad));
+	real d2=dvecdot(P(mode), P(mode), NULL, PN(grad));
+	real focus=d1/d2;
+	if(factor) dadd(&grad, 1, mode, -focus*factor);
+	/*
+	dmat* mode=dnew_do(saloc->nloc*2, 1, saloc->p, NULL);
+	dmat* rmod=dpinv(mode, NULL);
+	dmat* mfocus=0;
+	dmm(&mfocus, 0, rmod, grad, "nn", 1);
+	dmm(&grad, 1, mode, mfocus, "nn", -factor);
+	real focus=P(mfocus,0);
+	dfree(mfocus);
+	dfree(rmod);
+	dfree(mode);*/
+	return focus;
 }
 /**
    Compute zernike best fit for all subapertures. add result to out.  returns
@@ -1516,13 +1537,13 @@ void locresize(loc_t* loc, long nloc){
 	loc_free_map(loc);
 	loc_free_stat(loc);
 	if(nloc>loc->nloc){//expand size
-		loc->p=myrealloc(loc->p, nloc*2, real);
-		memmove(loc->p+nloc, loc->p+loc->nloc, loc->nloc*sizeof(real));
+		loc->locx=myrealloc(loc->locx, nloc*2, real);
+		memmove(loc->locx+nloc, loc->locx+loc->nloc, loc->nloc*sizeof(real));
 	}else{//reduce size
-		memmove(loc->p+nloc, loc->p+loc->nloc, nloc*sizeof(real));
-		loc->p=myrealloc(loc->p, nloc*2, real);
+		memmove(loc->locx+nloc, loc->locx+loc->nloc, nloc*sizeof(real));
+		loc->locx=myrealloc(loc->locx, nloc*2, real);
 	}
-	loc->locy=loc->p+nloc;
+	loc->locy=loc->locx+nloc;
 	loc->nloc=nloc;
 }
 

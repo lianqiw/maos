@@ -50,8 +50,15 @@ fi
 #sed -i -E "s|P\(([[:blank:]]+)|\1P(|g" $@
 
 #replace A->nx by NX(A)
-sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<>%-]+)->nx([^a-zA-Z+-])|NX(\1)\2|g" $@
-sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<%-]+)->NX\(|NX(\1->|g" $@
+#sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<>%-]+)->nx([^a-zA-Z+-])|NX(\1)\2|g" $@
+#replace A->NX(B) by NX(A->B)
+#sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<%-]+)->NX\(|NX(\1->|g" $@
 #replace A->ny by NY(A)
-sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<>%-]+)->ny([^a-zA-Z+-])|NY(\1)\2|g" $@
-sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<%-]+)->NY\(|NY(\1->|g" $@
+#sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<>%-]+)->ny([^a-zA-Z+-])|NY(\1)\2|g" $@
+#replace A->NY(B) by NY(A->B)
+#sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<%-]+)->NY\(|NY(\1->|g" $@
+
+#replace A->base by CELL(A)
+sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<>%-]+)->base([^a-zA-Z+-])|CELL(\1)\2|g" $@
+#replace A->CELL(B) by CELL(A->B)
+sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<%-]+)->CELL\(|CELL(\1->|g" $@

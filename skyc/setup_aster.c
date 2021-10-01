@@ -479,7 +479,7 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 			dfree(gm);
 			gm=setup_aster_mask_gm(aster->g, mask);
 		}
-		P(aster->pgm,icase)=dpinv(gm, nea->m->base);
+		P(aster->pgm,icase)=dpinv(gm, CELL(nea->m));
 
 		//Noise propagation
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){

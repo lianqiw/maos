@@ -56,6 +56,19 @@ int is_scheduler=0;
 #endif
 
 
+void wait_cpu(int nthread){
+	char fnlock[64];
+	snprintf(fnlock, 64, "%s/aos.lock", getenv("HOME"));
+	int fd;
+	fd=lock_file(fnlock, 1, -1);
+	int nvail=0;
+	if(nthread>NCPU) nthread=NCPU;
+	while((nvail=get_cpu_avail())+1<nthread){
+		dbg("needs %d threads but only %d is available\n", nthread-1, nvail);
+		sleep(5);
+	}
+	close(fd);
+}
 #if MAOS_DISABLE_SCHEDULER
 void parse_host(const char* line){
 	(void)line;
@@ -72,6 +85,10 @@ int scheduler_connect(const char* hostname){
 void scheduler_report_path(const char* path){
 	(void)path;
 }
+/**
+   Wait for available CPUs in case scheduler is not available.
+*/
+
 void scheduler_start(int nthread, int ngpu, int waiting){
 	(void)waiting;
 	(void)ngpu;
@@ -322,21 +339,19 @@ void scheduler_start(int nthread, int ngpu, int waiting){
 		cmd[2]=nthread;
 		cmd[3]=(waiting?1:0)|(ngpu<<1);;
 		CATCH_ERR(stwriteintarr(psock, cmd, 4));
+		if(waiting){
+			int cmd2;
+			if(streadint(psock, &cmd2)){
+				warning_time("Failed to get answer from scheduler.\n");
+			}else{
+				waiting=0;
+			}
+		}
 	}else{
 		warning_time("Failed to connect to scheduler\n");
 	}
 	if(waiting){
-		if(psock>=0){
-			int cmd;
-			if(streadint(psock, &cmd)){
-				warning_time("Failed to get answer from scheduler.\n");
-			}else{
-				waiting=0;//signal received
-			}
-		}
-		if(waiting){
-			wait_cpu(nthread);
-		}
+		wait_cpu(nthread);
 	}
 }
 

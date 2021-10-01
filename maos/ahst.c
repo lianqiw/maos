@@ -639,7 +639,7 @@ void setup_ngsmod_recon(const parms_t* parms, recon_t* recon){
 	if(parms->tomo.ahst_wt==1){
 	/*Use gradient weighting. */
 		dcellzero(ngsmod->Pngs);
-		dcellmm_any((cell**)&ngsmod->Pngs, P(ngsmod->Rngs,0)->base, recon->GAlo, "nn", 1);
+		dcellmm_any((cell**)&ngsmod->Pngs, CELL(P(ngsmod->Rngs,0)), recon->GAlo, "nn", 1);
 		if(parms->save.setup){
 			writebin(ngsmod->Pngs, "ahst_Pngs");
 		}

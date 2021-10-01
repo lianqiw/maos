@@ -57,7 +57,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 		}
 	}
 	recon->LR.M=dcellmm2(GAlsr, recon->saneai, "tn");*/
-	dcellmm_any(&recon->LR.M, GAlsr, recon->saneai->base, "tn", 1);
+	dcellmm_any(&recon->LR.M, GAlsr, CELL(recon->saneai), "tn", 1);
 	// Tip/tilt and diff focus removal low rand terms for LGS WFS.
 	if(recon->TTF){
 		dcellmm_cell(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
@@ -142,7 +142,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 			if(parms->save.setup){
 				writebin(actslave, "lsr_actslave");
 			}
-			dcelladd_any(&recon->LL.M, 1, actslave->base, 1);
+			dcelladd_any(&recon->LL.M, 1, CELL(actslave), 1);
 			cellfree(actslave);
 		}
 		if(parms->lsr.actslave>1){
@@ -153,7 +153,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 			if(parms->save.setup){
 				writebin(actslave, "lsr_actslave2");
 			}
-			dcelladd_any(&recon->LL.M, 1, actslave->base, 1);
+			dcelladd_any(&recon->LL.M, 1, CELL(actslave), 1);
 			cellfree(actslave);
 		}
 	}
@@ -182,7 +182,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	if(parms->lsr.fnreg){
 		warning("Loading LSR regularization from file %s.\n", parms->lsr.fnreg);
 		dspcell* tmp=dspcellread("%s", parms->lsr.fnreg);
-		if(tmp) dcelladd_any(&recon->LL.M, 1, tmp->base, 1);
+		if(tmp) dcelladd_any(&recon->LL.M, 1, CELL(tmp), 1);
 		dspcellfree(tmp);
 	}
 	recon->LL.alg=parms->lsr.alg;

@@ -37,7 +37,6 @@ double get_job_launchtime(int pid);
 
 int get_cpu_avail(void);
 int read_cpu_counter(long *user, long *tot);
-void wait_cpu(int nthread);
 double read_self_cpu(void);
 extern int NCPU;  /**<True number of cores*/
 extern int MAXTHREAD;/**<Number of hyper threads. may be larger than NCPU*/

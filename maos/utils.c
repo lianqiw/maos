@@ -653,7 +653,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	dmat* GR=0;
 	dspmm(&GR, P(recon->GP,iwfs), opd, "nn", 1);
 	dfree(opd);
-	dmat* RR=dpinv(GR, P(recon->saneai,iwfs,iwfs)->base);
+	dmat* RR=dpinv(GR, CELL(P(recon->saneai,iwfs,iwfs)));
 	//writebin(GR, "GR");
 	//writebin(RR, "RR");
 	int nsa=powfs[ipowfs].saloc->nloc;

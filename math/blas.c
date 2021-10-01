@@ -44,7 +44,7 @@ void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	}
 	if(k!=k2) error("dmm: Matrix doesn't match: A: %tdx%td, B: %tdx%td, trans=%s\n",
 		m, k, k2, n, trans);
-	X(new2)(C0, m, n);
+	X(init)(C0, m, n);
 	X(mat)* C=*C0;
 	lda=A->nx;
 	ldb=B->nx;
@@ -153,7 +153,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres, R tikcr){
 			X(mulsp)(&AtW, At, Wsp, "nn", 1);
 			X(free)(At);
 		} else{
-			error("Invalid data type :%u\n", ((cell*)W)->id);
+			error("Invalid data type :%u\n", W->id);
 		}
 	} else{
 		AtW=X(trans)(A);
@@ -570,17 +570,17 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	}
 
 	X(cell)* ata=NULL;
-	X(cellmm_cell)(&ata, wA->base, A, "tn", 1);
+	X(cellmm_cell)(&ata, CELL(wA), A, "tn", 1);
 	X(cellsvd_pow)(ata, -1, thres, tikcr);
 	X(cell)* out=NULL;
-	X(cellmm_cell)(&out, ata->base, wA, "nt", 1);
+	X(cellmm_cell)(&out, CELL(ata), wA, "nt", 1);
 	X(cellfree)(wA);
 	X(cellfree)(ata);
 	return out;
 }
 X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	const X(spcell)* W){
-	return X(cellpinv2)(A, W?W->base:NULL, 1e-14, 0);
+	return X(cellpinv2)(A, W?CELL(W):NULL, 1e-14, 0);
 }
 
 /**

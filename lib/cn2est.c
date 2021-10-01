@@ -358,7 +358,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 		  iPnk is a block diagonal matrix for Cn2 Estimation.
 		*/
 		P(cn2est->Pnk, iwfspair, iwfspair)=dref(Pnk);
-		P(cn2est->iPnk, iwfspair, iwfspair)=dpinv(Pnk, 0);
+		P(cn2est->iPnk, iwfspair, iwfspair)=dpinv(Pnk, NULL);
 		P(cn2est->wtconvert,iwfspair)=mkhbin1d(P(cn2est->ht,iwfspair), cn2est->htrecon);
 		dfree(Pnk);
 		cfree(mc);

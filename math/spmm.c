@@ -134,7 +134,7 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const int transy, const T alpha){
 	if(!A||!x) return;
 	mm_t D=parse_trans((cell*)A, (cell*)x, trans);
-	X(new2)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
+	X(init)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
 	X(mat)* y=*yout;
 	if(x->ny==1&&trans[1]=='n'&&transy==0){
 		X(spmulvec)(P(y), A, P(x), trans[0], alpha);
@@ -403,11 +403,11 @@ void X(cellmm_any)(cell** C0, const cell* A, const cell* B, const char trans[2],
 }
 void X(mm_cell)(X(mat)** C0, const cell* A, const X(mat)* B, const char trans[2], const R alpha){
 	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, A, B->base, trans, alpha);
+	X(cellmm_any)((cell**)C0, A, CELL(B), trans, alpha);
 }
 void X(cellmm)(X(cell)** C0, const X(cell)* A, const X(cell)* B, const char trans[2], const R alpha){
 	if(!A || !B || !C0) return;
-	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
+	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
 }
 /**
    a different interface for multiplying cells.
@@ -419,19 +419,19 @@ X(cell)* X(cellmm2)(const X(cell)* A, const X(cell)* B, const char trans[2]){
 }
 void X(cellmulsp)(X(cell)** C0, const X(cell)* A, const X(spcell)* B, const char trans[2], const R alpha){
 	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
+	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
 }
 void X(spcellmm)(X(cell)** C0, const X(spcell)* A, const X(cell)* B, const char trans[2], const R alpha){
 	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
+	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
 }
 void X(cellmm_cell)(X(cell)** C0, const cell* A, const X(cell)* B, const char trans[2], const R alpha){
 	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, A, B->base, trans, alpha);
+	X(cellmm_any)((cell**)C0, A, CELL(B), trans, alpha);
 }
 void X(spcellmulsp)(X(spcell)** C0, const X(spcell)* A, const X(spcell)* B, const char trans[2], const R alpha){
 	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, A->base, B->base, trans, alpha);
+	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
 }
 /**
    Add alpha to diagnonal elements of A_. A_ can be matrix or sparse matrix.
@@ -453,11 +453,11 @@ void X(celladdI_any)(cell* A, T alpha){
 }
 void X(celladdI)(X(cell)* A, T alpha){
 	if(!A) return;
-	X(celladdI_any)(A->base, alpha);
+	X(celladdI_any)(CELL(A), alpha);
 }
 void X(spcelladdI)(X(spcell)* A, T alpha){
 	if(!A) return;
-	X(celladdI_any)(A->base, alpha);
+	X(celladdI_any)(CELL(A), alpha);
 }
 /**
    Calculate A_=A_*ac+B_*bc;
@@ -501,15 +501,15 @@ void X(celladd)(X(cell)**pA, R ac, const X(cell)* B, R bc){
 	if(!*pA){
 		*pA=X(cellnew2)(B);//makes m
 	};
-	X(celladd_any)((cell**)pA, ac, B->base, bc);
+	X(celladd_any)((cell**)pA, ac, CELL(B), bc);
 }
 void X(celladdsp)(X(cell)** pA, R ac, const X(spcell)* B, R bc){
 	if(!pA||!B||!bc) return;
-	X(celladd_any)((cell**)pA, ac, B->base, bc);
+	X(celladd_any)((cell**)pA, ac, CELL(B), bc);
 }
 void X(spcelladd)(X(spcell)** pA, R ac, const X(spcell)* B, R bc){
 	if(!pA||!B||!bc) return;
-	X(celladd_any)((cell**)pA, ac, B->base, bc);
+	X(celladd_any)((cell**)pA, ac, CELL(B), bc);
 }
 /**
    Copy B to A.
@@ -545,14 +545,14 @@ void X(cellscale_any)(cell* A_, R w){
 	}
 }
 void X(cellscale)(X(cell)* A, R w){
-	X(cellscale_any)(A?A->base:NULL, w);
+	X(cellscale_any)(A?CELL(A):NULL, w);
 }
 
 /**
    Setting all elements of a cell to zero.
 */
 void X(cellzero)(X(cell)* dc){
-	X(cellscale_any)(dc?dc->base:NULL, 0);
+	X(cellscale_any)(dc?CELL(dc):NULL, 0);
 }
 
 /**
@@ -590,9 +590,9 @@ X(mat)* X(cell2m_any)(const cell* A){
 	return out;
 }
 X(mat)* X(cell2m)(const X(cell)* A){
-	return X(cell2m_any)(A?A->base:NULL);
+	return X(cell2m_any)(A?CELL(A):NULL);
 }
 
 X(mat)* X(spcell2m)(const X(spcell)* A){
-	return X(cell2m_any)(A?A->base:NULL);
+	return X(cell2m_any)(A?CELL(A):NULL);
 }

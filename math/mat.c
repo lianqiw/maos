@@ -77,7 +77,7 @@ X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ..
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out&&fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out->base, 0, -1);
+		writedata_by_id(out->fp, CELL(out), 0, -1);
 		//out->async=async_init(out->fp, sizeof(T), M_T, out->header, P(out), out->nx, out->ny);
 	}
 	return out;
@@ -85,7 +85,7 @@ X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ..
 /**
    check the size of matrix if exist. Otherwise create it. content is not zeroed.
 */
-void X(new2)(X(mat)** A, long nx, long ny){
+void X(init)(X(mat)** A, long nx, long ny){
 	if(!*A){
 		*A=X(new)(nx, ny);
 	} else if((*A)->nx==0||(*A)->ny==0){
@@ -289,7 +289,7 @@ uint32_t X(hash)(const X(mat)* A, uint32_t key){
 */
 void X(cp)(X(mat)** out0, const X(mat)* in){
 	if(check_mat(in)){
-		X(new2)(out0, in->nx, in->ny);
+		X(init)(out0, in->nx, in->ny);
 		X(mat)* out=*out0;
 		if(in->header){
 			free(out->header);
@@ -607,7 +607,7 @@ void X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 */
 void X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 	if(!check_mat(A)) return;
-	X(new2)(B0, A->nx, A->ny);
+	X(init)(B0, A->nx, A->ny);
 	X(mat)* B=*B0;
 
 	const int nx=A->nx;
@@ -710,7 +710,7 @@ X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out->base, 0, -1);
+		writedata_by_id(out->fp, CELL(out), 0, -1);
 	}
 	return out;
 }
@@ -727,7 +727,7 @@ X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out->base, 0, -1);
+		writedata_by_id(out->fp, CELL(out), 0, -1);
 	}
 	return out;
 }
@@ -780,7 +780,7 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 	if(!A) return NULL;
 	X(cell)* out=NULL;
 	long nx, ny, * nxs, * nys;
-	celldim((const cell*)A, &nx, &ny, &nxs, &nys);
+	celldim(CELL(A), &nx, &ny, &nxs, &nys);
 	if(nx==0||ny==0) return NULL;
 	if(dim==1){
 		out=X(cellnew)(1, A->ny);
@@ -931,7 +931,7 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 	long nx, ny, * nxs, * nys;
 	if(*B) ref=*B;/*use B as reference. */
-	celldim((const cell*)ref, &nx, &ny, &nxs, &nys);
+	celldim(CELL(ref), &nx, &ny, &nxs, &nys);
 	if(!A){
 		if(nx!=0||ny!=0){
 			error("Shape doesn't agree. A is 0x0. Reference is %ldx%ld\n",
