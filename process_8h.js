@@ -11,7 +11,6 @@ var process_8h =
     [ "get_job_launchtime", "process_8h.html#a0dee8cc569401f4424d40079c84135a1", null ],
     [ "get_cpu_avail", "process_8h.html#a1c176fb9d3525328cc87386d587b156a", null ],
     [ "read_cpu_counter", "process_8h.html#a9c4709c0dd3a1116498f55e126e39e8b", null ],
-    [ "wait_cpu", "process_8h.html#a3ddf5ace92596c8cd7f870df5544cb4d", null ],
     [ "read_self_cpu", "process_8h.html#a03994ae73698e7ec9c5f08e3321ab399", null ],
     [ "get_ncpu", "process_8h.html#ac98d2202992eb71111685678bae4eb41", null ]
 ];

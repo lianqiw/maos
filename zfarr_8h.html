@@ -95,18 +95,25 @@ $(document).ready(function(){initNavTree('zfarr_8h.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">zfarr.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a3512ef7fff9591a5647a34948eabc44b"><td class="memItemLeft" align="right" valign="top"><a id="a3512ef7fff9591a5647a34948eabc44b"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>zfarr_push</b>(ca,  i,  A)&#160;&#160;&#160;<a class="el" href="zfarr_8h.html#ae24e3a6368fdab0e06e9e08d85d4131a">zfarr_push_cell</a>(ca, i, CELL(A))</td></tr>
+<tr class="separator:a3512ef7fff9591a5647a34948eabc44b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a245a46d3c1e49146ce516c883cca6c0e"><td class="memItemLeft" align="right" valign="top">zfarr *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#a245a46d3c1e49146ce516c883cca6c0e">zfarr_init</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *format,...)</td></tr>
 <tr class="separator:a245a46d3c1e49146ce516c883cca6c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace3d2c38d319c69b6ee988dfe1d6bdd2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#ace3d2c38d319c69b6ee988dfe1d6bdd2">zfarr_push</a> (zfarr *ca, int i, const void *A)</td></tr>
-<tr class="separator:ace3d2c38d319c69b6ee988dfe1d6bdd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae24e3a6368fdab0e06e9e08d85d4131a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#ae24e3a6368fdab0e06e9e08d85d4131a">zfarr_push_cell</a> (zfarr *ca, int i, const <a class="el" href="type_8h.html#structcell">cell</a> *A)</td></tr>
+<tr class="separator:ae24e3a6368fdab0e06e9e08d85d4131a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a749eb5424ce0ab50cc3ad55b1560ddf3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#a749eb5424ce0ab50cc3ad55b1560ddf3">zfarr_close</a> (zfarr *ca)</td></tr>
 <tr class="separator:a749eb5424ce0ab50cc3ad55b1560ddf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4da312d93e7d98d003098db6976392fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#a4da312d93e7d98d003098db6976392fc">zfarr_close_n</a> (zfarr **ca, int nc)</td></tr>
@@ -156,14 +163,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ace3d2c38d319c69b6ee988dfe1d6bdd2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ace3d2c38d319c69b6ee988dfe1d6bdd2">&#9670;&nbsp;</a></span>zfarr_push()</h2>
+<a id="ae24e3a6368fdab0e06e9e08d85d4131a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae24e3a6368fdab0e06e9e08d85d4131a">&#9670;&nbsp;</a></span>zfarr_push_cell()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void zfarr_push </td>
+          <td class="memname">void zfarr_push_cell </td>
           <td>(</td>
           <td class="paramtype">zfarr *&#160;</td>
           <td class="paramname"><em>ca</em>, </td>
@@ -177,8 +184,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const void *&#160;</td>
-          <td class="paramname"><em>p</em>&#160;</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
+          <td class="paramname"><em>A</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

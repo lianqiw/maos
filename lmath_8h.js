@@ -6,7 +6,7 @@ var lmath_8h =
     [ "lnew_file", "lmath_8h.html#a9444e0ffc9c4f0a2f7d7eddcb265958e", null ],
     [ "lnew_do", "lmath_8h.html#afbd472f639e70eec689fe486df62b6d8", null ],
     [ "lmat_cast", "lmath_8h.html#aa6473dd108381a0695fd28a7730434d6", null ],
-    [ "lnew2", "lmath_8h.html#a156cb1cdac79c25b93d62a5d1731ed67", null ],
+    [ "linit", "lmath_8h.html#aa924ec8d18248737757a6c544b5e50fd", null ],
     [ "lfree_do", "lmath_8h.html#a15ceffb00e7bb7e57793410cecd33cbd", null ],
     [ "lref", "lmath_8h.html#a58ac729e8fc54bad45f2306f5853df4e", null ],
     [ "lref_reshape", "lmath_8h.html#a3874bf43ddc435f69c574128ae61f897", null ],

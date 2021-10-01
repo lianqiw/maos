@@ -7,7 +7,7 @@ var dmath_8h =
     [ "dnew_file", "dmath_8h.html#a7f0da2861d0b31b428ea513679fd081e", null ],
     [ "dnew_do", "dmath_8h.html#a86fe6fb768ee1be1720318e600af104b", null ],
     [ "dmat_cast", "dmath_8h.html#a5d41d8d746625af710c5c67dd2c0050d", null ],
-    [ "dnew2", "dmath_8h.html#a8ac7b4ae84cea7e56b574b704b4d15c8", null ],
+    [ "dinit", "dmath_8h.html#a32e4981ef3fff75eb73e5ce6ac632d0d", null ],
     [ "dfree_do", "dmath_8h.html#a0626a73b51a8917f0944c8f5f946478f", null ],
     [ "dref", "dmath_8h.html#a2e1ff58653a461432804d20406207982", null ],
     [ "dref_reshape", "dmath_8h.html#a68cd0fb4c765694df6f15d8d9e8f598c", null ],

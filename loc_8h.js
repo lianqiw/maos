@@ -29,6 +29,7 @@ var loc_8h =
     [ "pts_mcc_ptt", "loc_8h.html#ad2c46c7e29c5b96c508c5ec853220456", null ],
     [ "loc_remove_ptt", "loc_8h.html#ad53eb0aa83d02d7833ca03cae43d2db0", null ],
     [ "loc_add_ptt", "loc_8h.html#aa67d37dc351390ca94b64ea7da64949f", null ],
+    [ "loc_remove_focus_grad", "loc_8h.html#a71434437fb7a8dd3979639757e506eb1", null ],
     [ "pts_ztilt", "loc_8h.html#a14ca3161124674983c579cd327b77a4a", null ],
     [ "mk1dloc_vec", "loc_8h.html#a663fc241b000a530501cf2ff8fbdf0e6", null ],
     [ "mk1dloc", "loc_8h.html#a6d0f284d5566a17f38e9cb9a9b9300af", null ],

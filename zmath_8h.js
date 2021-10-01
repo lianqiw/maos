@@ -8,7 +8,7 @@ var zmath_8h =
     [ "znew_file", "zmath_8h.html#a8517933a4843582b3e0e4e3a94475296", null ],
     [ "znew_do", "zmath_8h.html#a20ea4521bc4cad4978c1b19da5e64e59", null ],
     [ "zmat_cast", "zmath_8h.html#af161d134de868b41171a698b8142efec", null ],
-    [ "znew2", "zmath_8h.html#ac9eaee9a6c9b49c6c9e3796718807bac", null ],
+    [ "zinit", "zmath_8h.html#a28d3fc3d8a80ecf79f70a6474ac44981", null ],
     [ "zfree_do", "zmath_8h.html#a07c0e5ce11c200b3ce4fa48eda679d6c", null ],
     [ "zref", "zmath_8h.html#af77e2b64f347ea69900f34df9b9e2d9e", null ],
     [ "zref_reshape", "zmath_8h.html#ab7b614ade9942ab71506e26d99f1c591", null ],

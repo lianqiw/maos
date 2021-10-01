@@ -84,7 +84,7 @@ var type_8h =
     [ "rmapccell", "type_8h.html#structrmapccell", null ],
     [ "locccell", "type_8h.html#structlocccell", null ],
     [ "smat.__unnamed__", "type_8h.html#unionsmat_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "smat.__unnamed__.__unnamed__", "type_8h.html#structsmat_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -98,7 +98,7 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "zmat.__unnamed__", "type_8h.html#unionzmat_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "zmat.__unnamed__.__unnamed__", "type_8h.html#structzmat_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -112,7 +112,7 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "dmat.__unnamed__", "type_8h.html#uniondmat_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "dmat.__unnamed__.__unnamed__", "type_8h.html#structdmat_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -126,7 +126,7 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "cmat.__unnamed__", "type_8h.html#unioncmat_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "cmat.__unnamed__.__unnamed__", "type_8h.html#structcmat_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -140,7 +140,7 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "lmat.__unnamed__", "type_8h.html#unionlmat_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "lmat.__unnamed__.__unnamed__", "type_8h.html#structlmat_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -154,7 +154,7 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "imat.__unnamed__", "type_8h.html#unionimat_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "imat.__unnamed__.__unnamed__", "type_8h.html#structimat_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -168,7 +168,7 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "ssp.__unnamed__", "type_8h.html#unionssp_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "ssp.__unnamed__.__unnamed__", "type_8h.html#structssp_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -183,7 +183,7 @@ var type_8h =
       [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
     ] ],
     [ "zsp.__unnamed__", "type_8h.html#unionzsp_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "zsp.__unnamed__.__unnamed__", "type_8h.html#structzsp_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -198,7 +198,7 @@ var type_8h =
       [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
     ] ],
     [ "dsp.__unnamed__", "type_8h.html#uniondsp_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "dsp.__unnamed__.__unnamed__", "type_8h.html#structdsp_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -213,7 +213,7 @@ var type_8h =
       [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
     ] ],
     [ "csp.__unnamed__", "type_8h.html#unioncsp_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "csp.__unnamed__.__unnamed__", "type_8h.html#structcsp_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -228,7 +228,7 @@ var type_8h =
       [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
     ] ],
     [ "map_t.__unnamed__", "type_8h.html#unionmap__t_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "map_t.__unnamed__.__unnamed__", "type_8h.html#structmap__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -242,7 +242,7 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "rmap_t.__unnamed__", "type_8h.html#unionrmap__t_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "rmap_t.__unnamed__.__unnamed__", "type_8h.html#structrmap__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -256,10 +256,12 @@ var type_8h =
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "loc_t.__unnamed__", "type_8h.html#unionloc__t_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ],
+      [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ]
     ] ],
     [ "loc_t.__unnamed__.__unnamed__", "type_8h.html#structloc__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
+      [ "locx", "type_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ],
       [ "nloc", "type_8h.html#a6eaa0afbec778db997a7fdcd4c3f3123", null ],
       [ "two", "type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
       [ "locy", "type_8h.html#ad2412cc515d4ebddbf286f9a9afe53e5", null ],
@@ -272,15 +274,14 @@ var type_8h =
       [ "iac", "type_8h.html#aaed3eced69a81bcc445a6f3215f7e23c", null ],
       [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
     ] ],
-    [ "loc_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionloc__t_8____unnamed_____8____unnamed_____8____unnamed____", [
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "locx", "type_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ]
-    ] ],
     [ "pts_t.__unnamed__", "type_8h.html#unionpts__t_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ],
+      [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ],
+      [ "loc", "type_8h.html#a4c3aa741ca3a3433b19aea06e0a597fe", null ]
     ] ],
     [ "pts_t.__unnamed__.__unnamed__", "type_8h.html#structpts__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
+      [ "origx", "type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df", null ],
       [ "nsa", "type_8h.html#a8d2a959e6b154ec9215882b82f28cfcb", null ],
       [ "two", "type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
       [ "origy", "type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
@@ -297,15 +298,11 @@ var type_8h =
       [ "dy", "type_8h.html#a8e7dd5d3e76aa952e21999a5537dcffb", null ]
     ] ],
     [ "pts_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____", [
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "origx", "type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df", null ]
-    ] ],
-    [ "pts_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____", [
       [ "dsa", "type_8h.html#a5f039b4ef0058a1d652f13d612375a5b", null ],
       [ "dsax", "type_8h.html#ac00f31f2b88090d3b65908bc03a79765", null ]
     ] ],
     [ "ccell.__unnamed__", "type_8h.html#unionccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "ccell.__unnamed__.__unnamed__", "type_8h.html#structccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -318,7 +315,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "zcell.__unnamed__", "type_8h.html#unionzcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "zcell.__unnamed__.__unnamed__", "type_8h.html#structzcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -331,7 +328,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "dcell.__unnamed__", "type_8h.html#uniondcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "dcell.__unnamed__.__unnamed__", "type_8h.html#structdcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -344,7 +341,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "scell.__unnamed__", "type_8h.html#unionscell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "scell.__unnamed__.__unnamed__", "type_8h.html#structscell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -357,7 +354,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "lcell.__unnamed__", "type_8h.html#unionlcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "lcell.__unnamed__.__unnamed__", "type_8h.html#structlcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -370,7 +367,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "dspcell.__unnamed__", "type_8h.html#uniondspcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "dspcell.__unnamed__.__unnamed__", "type_8h.html#structdspcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -383,7 +380,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "sspcell.__unnamed__", "type_8h.html#unionsspcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "sspcell.__unnamed__.__unnamed__", "type_8h.html#structsspcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -396,7 +393,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "cspcell.__unnamed__", "type_8h.html#unioncspcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "cspcell.__unnamed__.__unnamed__", "type_8h.html#structcspcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -409,7 +406,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "zspcell.__unnamed__", "type_8h.html#unionzspcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "zspcell.__unnamed__.__unnamed__", "type_8h.html#structzspcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -422,7 +419,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "cccell.__unnamed__", "type_8h.html#unioncccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "cccell.__unnamed__.__unnamed__", "type_8h.html#structcccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -435,7 +432,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "zccell.__unnamed__", "type_8h.html#unionzccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "zccell.__unnamed__.__unnamed__", "type_8h.html#structzccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -448,7 +445,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "dccell.__unnamed__", "type_8h.html#uniondccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "dccell.__unnamed__.__unnamed__", "type_8h.html#structdccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -461,7 +458,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "sccell.__unnamed__", "type_8h.html#unionsccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "sccell.__unnamed__.__unnamed__", "type_8h.html#structsccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -474,7 +471,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "iccell.__unnamed__", "type_8h.html#unioniccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "iccell.__unnamed__.__unnamed__", "type_8h.html#structiccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -487,7 +484,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "ccccell.__unnamed__", "type_8h.html#unionccccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "ccccell.__unnamed__.__unnamed__", "type_8h.html#structccccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -500,7 +497,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "zcccell.__unnamed__", "type_8h.html#unionzcccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "zcccell.__unnamed__.__unnamed__", "type_8h.html#structzcccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -513,7 +510,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "dcccell.__unnamed__", "type_8h.html#uniondcccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "dcccell.__unnamed__.__unnamed__", "type_8h.html#structdcccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -526,7 +523,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "scccell.__unnamed__", "type_8h.html#unionscccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "scccell.__unnamed__.__unnamed__", "type_8h.html#structscccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -539,7 +536,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "icccell.__unnamed__", "type_8h.html#unionicccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "icccell.__unnamed__.__unnamed__", "type_8h.html#structicccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -552,7 +549,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "mapcell.__unnamed__", "type_8h.html#unionmapcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "mapcell.__unnamed__.__unnamed__", "type_8h.html#structmapcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -565,7 +562,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "rmapcell.__unnamed__", "type_8h.html#unionrmapcell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "rmapcell.__unnamed__.__unnamed__", "type_8h.html#structrmapcell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -578,7 +575,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "loccell.__unnamed__", "type_8h.html#unionloccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "loccell.__unnamed__.__unnamed__", "type_8h.html#structloccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -591,7 +588,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "mapccell.__unnamed__", "type_8h.html#unionmapccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "mapccell.__unnamed__.__unnamed__", "type_8h.html#structmapccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -604,7 +601,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "rmapccell.__unnamed__", "type_8h.html#unionrmapccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "rmapccell.__unnamed__.__unnamed__", "type_8h.html#structrmapccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
@@ -617,7 +614,7 @@ var type_8h =
       [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
     ] ],
     [ "locccell.__unnamed__", "type_8h.html#unionlocccell_8____unnamed____", [
-      [ "base", "type_8h.html#a53ae273576113634363c38170b1e8d6f", null ]
+      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
     [ "locccell.__unnamed__.__unnamed__", "type_8h.html#structlocccell_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],

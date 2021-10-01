@@ -8,7 +8,7 @@ var cmath_8h =
     [ "cnew_file", "cmath_8h.html#a82063c303f99b6d52ecb408c9b9b77e1", null ],
     [ "cnew_do", "cmath_8h.html#aa5c54717bb94a81ed8dd71d4b29b553b", null ],
     [ "cmat_cast", "cmath_8h.html#a5f26c779cd669410fc659045ad7cdfde", null ],
-    [ "cnew2", "cmath_8h.html#a9d1f4cb9f176235f4dc33f577b113947", null ],
+    [ "cinit", "cmath_8h.html#aab66261d868db34e1aa325004f7e3d3e", null ],
     [ "cfree_do", "cmath_8h.html#a8bae6b315a59ab56fc667b6c769e1804", null ],
     [ "cref", "cmath_8h.html#ab5acbf30c164ae75415b4301ee329d1f", null ],
     [ "cref_reshape", "cmath_8h.html#a0f343af65e16d9311173151dd3f1705c", null ],

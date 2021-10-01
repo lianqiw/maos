@@ -6,7 +6,7 @@ var searchData=
   ['zfarr_5fclose',['zfarr_close',['../zfarr_8h.html#a749eb5424ce0ab50cc3ad55b1560ddf3',1,'zfarr.c']]],
   ['zfarr_5fclose_5fn',['zfarr_close_n',['../zfarr_8h.html#a4da312d93e7d98d003098db6976392fc',1,'zfarr.c']]],
   ['zfarr_5finit',['zfarr_init',['../zfarr_8h.html#a245a46d3c1e49146ce516c883cca6c0e',1,'zfarr.c']]],
-  ['zfarr_5fpush',['zfarr_push',['../zfarr_8h.html#ace3d2c38d319c69b6ee988dfe1d6bdd2',1,'zfarr.c']]],
+  ['zfarr_5fpush_5fcell',['zfarr_push_cell',['../zfarr_8h.html#ae24e3a6368fdab0e06e9e08d85d4131a',1,'zfarr.c']]],
   ['zfclose',['zfclose',['../bin_8h.html#a4ed840d37c980314e41e565e7dd617d3',1,'bin.c']]],
   ['zfeof',['zfeof',['../bin_8h.html#afb7723b26befc0c6f2a95a7e1a516201',1,'bin.c']]],
   ['zfexist',['zfexist',['../bin_8h.html#a55e5dc1b9fd29f858d152f3194dd1d22',1,'bin.c']]],

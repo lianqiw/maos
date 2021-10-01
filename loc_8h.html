@@ -170,6 +170,8 @@ Functions</h2></td></tr>
 <tr class="separator:ad53eb0aa83d02d7833ca03cae43d2db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa67d37dc351390ca94b64ea7da64949f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#aa67d37dc351390ca94b64ea7da64949f">loc_add_ptt</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *opd, const real *ptt, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc)</td></tr>
 <tr class="separator:aa67d37dc351390ca94b64ea7da64949f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71434437fb7a8dd3979639757e506eb1"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a71434437fb7a8dd3979639757e506eb1">loc_remove_focus_grad</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *grad, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, real factor)</td></tr>
+<tr class="separator:a71434437fb7a8dd3979639757e506eb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14ca3161124674983c579cd327b77a4a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a14ca3161124674983c579cd327b77a4a">pts_ztilt</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **out, const <a class="el" href="type_8h.html#structpts__t">pts_t</a> *pts, const <a class="el" href="type_8h.html#structdcell">dcell</a> *imcc, const real *amp, const real *opd)</td></tr>
 <tr class="separator:a14ca3161124674983c579cd327b77a4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a663fc241b000a530501cf2ff8fbdf0e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a663fc241b000a530501cf2ff8fbdf0e6">mk1dloc_vec</a> (real *x, <a class="el" href="classlong.html">long</a> nx)</td></tr>
@@ -1026,6 +1028,41 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
       </table>
 </div><div class="memdoc">
 <p>Add Piston/Tip/Tilt from OPD </p>
+
+</div>
+</div>
+<a id="a71434437fb7a8dd3979639757e506eb1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a71434437fb7a8dd3979639757e506eb1">&#9670;&nbsp;</a></span>loc_remove_focus_grad()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real loc_remove_focus_grad </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>grad</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>saloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>factor</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Remove focus mode from gradients. Do not consider noise weighting </p>
 
 </div>
 </div>

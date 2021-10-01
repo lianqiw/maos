@@ -470,7 +470,6 @@ var parms_8h =
       [ "na_thres", "parms_8h.html#ac3af414f13966874a37499f92dc598bb", null ],
       [ "na_fit_svdthres", "parms_8h.html#a862a0bdf561448d46ac5f116270b6c20", null ],
       [ "na_fit_dh", "parms_8h.html#a9103dd56c93415d15445726d30154905", null ],
-      [ "na_fit_alg", "parms_8h.html#a7426f467bacd737e5517e94335d1b9e7", null ],
       [ "na_fit_maxit", "parms_8h.html#a0ddf4d898208930ac11aa00bf3e5960e", null ],
       [ "ncpa_preload", "parms_8h.html#a76602ea9e795f7028ecc562d4d98e09c", null ],
       [ "ncpa_rmsci", "parms_8h.html#a978014e63729f484b3843aac58c78cc0", null ],

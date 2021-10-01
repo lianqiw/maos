@@ -1,6 +1,9 @@
 var mathdef_8h =
 [
     [ "isempty", "mathdef_8h.html#a8f2a2ca135c533310f29d67afd6b4faf", null ],
+    [ "CELL", "mathdef_8h.html#a1f5e85ed2468c1efe1a16f43fb693162", null ],
+    [ "DMAT", "mathdef_8h.html#a0a998f3aa39f59ee0cecf466df254caf", null ],
+    [ "LOC", "mathdef_8h.html#a706360ad97cc8eb9ab03fb30f8e8f3ea", null ],
     [ "abs2", "mathdef_8h.html#a961041ffc5791f313972c32fcb6bb36c", null ],
     [ "cabs2f", "mathdef_8h.html#a252c7f826f10e8d45b75024836692936", null ],
     [ "cabs2", "mathdef_8h.html#a50bbc9b636fcf1c4b0c69e19628a909f", null ],
@@ -85,6 +88,5 @@ var mathdef_8h =
     [ "dspcellnew", "mathdef_8h.html#af64c16fc592737d61c27ff55cb509c17", null ],
     [ "dspccellnew", "mathdef_8h.html#a5bf742ba3778fa4cee270545581fff42", null ],
     [ "cspcellnew", "mathdef_8h.html#a80403a6da6e463568b2afe9063760691", null ],
-    [ "cspccellnew", "mathdef_8h.html#a440b2ba964f39fe50b3a6b14a407a711", null ],
-    [ "writebin_delayed", "mathdef_8h.html#a262ecc34521e4265e710be288182f303", null ]
+    [ "cspccellnew", "mathdef_8h.html#a440b2ba964f39fe50b3a6b14a407a711", null ]
 ];
