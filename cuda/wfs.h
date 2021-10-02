@@ -65,8 +65,9 @@ class Dither_t{
 	curcell imy;
 public:
 	Dither_t():imc(0){}
-	Dither_t(int nsa, int pixpsax, int pixpsay);
+	Dither_t(int nsa, int pixpsax, int pixpsay, int xy);
 	void acc(dither_t* dither, curcell& ints, Real cs, Real ss, int nstat, cudaStream_t stream);
+	void acc_i0(dither_t *dither, curcell &ints, int nstat, cudaStream_t stream);
 };
 class cuwfs_t{//one for each WFS.
 public:

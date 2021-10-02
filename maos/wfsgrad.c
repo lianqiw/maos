@@ -254,7 +254,7 @@ void wfsgrad_iwfs(thread_t* info){
 	}
 	TIM(2);
 	/* Now begin Physical Optics Intensity calculations */
-	if(do_phy||psfout||do_pistat||parms->powfs[ipowfs].dither==1){
+	if(do_phy||psfout||do_pistat||abs(parms->powfs[ipowfs].dither)==1){
 		dmat* lltopd=NULL;
 		if(powfs[ipowfs].llt){//If there is LLT, apply FSM onto LLT
 			if(powfs[ipowfs].llt->ncpa){
@@ -378,13 +378,13 @@ void wfsgrad_iwfs(thread_t* info){
 			if(parms->powfs[ipowfs].i0save==2){
 				dcelladd(&P(simu->ints, iwfs), 1, ints, 1);
 			}
-			if(parms->powfs[ipowfs].dither==1&&isim>=parms->powfs[ipowfs].dither_ogskip
+			if(abs(parms->powfs[ipowfs].dither)==1 && isim>=parms->powfs[ipowfs].dither_ogskip
 				&&parms->powfs[ipowfs].type==WFS_SH
-				&&(parms->powfs[ipowfs].dither_amp==0||parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
+				&&(parms->powfs[ipowfs].dither==-1||parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
 				 /*Collect statistics with dithering*/
 				dither_t* pd=simu->dither[iwfs];
 				dcelladd(&pd->imb, 1, ints, 1.);
-				if(parms->powfs[ipowfs].dither_amp){//when dither_amp==0, only accumulate i0
+				if(parms->powfs[ipowfs].dither==1){
 					real cs, ss;
 					dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
 						parms->powfs[ipowfs].dither_npoint, isim, pd->deltam);
@@ -567,7 +567,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 	}
 	real cs, ss; //Current phase of tip/tilt dithering signal
 	dither_t* pd=simu->dither[iwfs];
-	if(parms->powfs[ipowfs].dither==1&&parms->powfs[ipowfs].dither_amp){ //T/T dithering.
+	if(parms->powfs[ipowfs].dither==1){ //T/T dithering.
 		//Current dithering signal phase
 		dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
 			parms->powfs[ipowfs].dither_npoint, isim, pd->deltam);
@@ -605,7 +605,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 		P(P(pd->mr, 1), isim)=P(tmp, 0);
 		dfree(tmp);
 	}
-	if(simu->wfsflags[ipowfs].pllout&&parms->powfs[ipowfs].dither_amp){
+	if(simu->wfsflags[ipowfs].pllout&&parms->powfs[ipowfs].dither>0){
 		//Synchronous detection of dither signal amplitude in input (DM) and output (gradients).
 		//The ratio between the two is used for (optical) gain adjustment.
 		const int npoint=parms->powfs[ipowfs].dither_npoint;
@@ -651,7 +651,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 			simu->gradoffisim0=simu->wfsisim;
 			simu->gradoffisim=simu->wfsisim;
 		}*/
-		if(parms->powfs[ipowfs].dither==1){//TT Dither
+		if(abs(parms->powfs[ipowfs].dither)==1){//TT Dither or i0 collection
 			real scale1=1./pllrat;
 			real amp=pd->a2m;
 			real scale2=amp?(scale1*2./(amp)):0;
@@ -660,20 +660,21 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 				//Accumulate data for matched filter
 				dcelladd(&pd->i0, 1, pd->imb, 1);//imb was already scaled
 				dcellzero(pd->imb);
-				if(parms->powfs[ipowfs].dither_amp){
+				if(parms->powfs[ipowfs].dither==1){
 					dcelladd(&pd->gx, 1, pd->imx, scale2);
 					dcelladd(&pd->gy, 1, pd->imy, scale2);
+				
+					dcellzero(pd->imx);
+					dcellzero(pd->imy);
 				}
-				dcellzero(pd->imx);
-				dcellzero(pd->imy);
-			} else if(pd->ggm&&parms->powfs[ipowfs].dither_amp){//cog
+			} else if(pd->ggm&&parms->powfs[ipowfs].dither==1){//cog
 				dadd(&pd->gg0, 1, pd->ggm, scale2);
 				dzero(pd->ggm);
 			}
 		}
 	}
 
-	if(parms->powfs[ipowfs].dither==1&&parms->powfs[ipowfs].dither_amp){
+	if(parms->powfs[ipowfs].dither==1){
 		/* subtract estimated tip/tilt dithering signal to avoid perturbing the loop or dithering pattern.*/
 		real amp=pd->a2me;
 		real tt[2]={-cs*amp, -ss*amp};
@@ -785,9 +786,9 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			}
 		}//for jwfs
 
-		if(simu->wfsflags[ipowfs].zoomout&&!parms->powfs[ipowfs].llt->coldtrat){
+		/*if(simu->wfsflags[ipowfs].zoomout&&!parms->powfs[ipowfs].llt->coldtrat){
 			update_etf=1;
-		}
+		}*/
 	}//for ipowfs
 }
 
@@ -957,8 +958,8 @@ static void wfsgrad_dither_post(sim_t* simu){
 			const int nsa=powfs[ipowfs].saloc->nloc;
 			const real scale1=(real)parms->powfs[ipowfs].dither_pllrat/(real)parms->powfs[ipowfs].dither_ograt;
 			int ptype2=parms->powfs[ipowfs].phytype_sim2;
-			if(parms->powfs[ipowfs].dither_amp==0||(ptype2==PTYPE_MF)){
-				if(parms->powfs[ipowfs].dither_amp==0){
+			if(parms->powfs[ipowfs].dither==-1||(ptype2==PTYPE_MF)){
+				if(parms->powfs[ipowfs].dither==-1){
 					info2("Step %5d: Update sodium fit for powfs %d\n", isim, ipowfs);
 				} else{
 					info2("Step %5d: Update matched filter for powfs %d\n", isim, ipowfs);
@@ -998,7 +999,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					//TODO: accumulate directly to instat->i0 instead of to pd->imx
 					for(int isa=0; isa<nsa; isa++){
 						dadd(&P(intstat->i0, isa, jwfs), 1-g2, P(pd->i0, isa), scale1*g2);
-						if(parms->powfs[ipowfs].dither_amp){
+						if(parms->powfs[ipowfs].dither==1){
 							dadd(&P(intstat->gx, isa, jwfs), 1-g2, P(pd->gx, isa), scale1*g2);
 							dadd(&P(intstat->gy, isa, jwfs), 1-g2, P(pd->gy, isa), scale1*g2);
 						}
@@ -1006,7 +1007,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dcellzero(pd->i0);
 					dcellzero(pd->gx);
 					dcellzero(pd->gy);
-					if(parms->powfs[ipowfs].dither_amp){
+					if(parms->powfs[ipowfs].dither==1){
 						if(parms->dbg.gradoff_reset==0){
 							if(jwfs==0) info("Step %5d: powfs%d reducing gradoff by grad of i0.\n", isim, ipowfs);
 							dmat* goff=0;
@@ -1031,64 +1032,77 @@ static void wfsgrad_dither_post(sim_t* simu){
 						}
 					}
 				}
+				//i0 is collected
+				if(parms->powfs[ipowfs].dither==-1){
+					if(parms->powfs[ipowfs].llt){//LGS, require fiting sodiu profile
+						dmat* sodium=0;
+						dcell* grad=0;
+						//don't need gradient output for matched filter
+						dcell** pgrad=(ptype2==PTYPE_COG)?&grad:NULL;
+						dcell** pi0=(ptype2==PTYPE_MF)?&intstat->i0:NULL;
+						dcell** pgx=(ptype2==PTYPE_MF)?&intstat->gx:NULL;
+						dcell** pgy=(ptype2==PTYPE_MF)?&intstat->gy:NULL;
+						//1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
+						int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(ptype2==PTYPE_MF?1:3);
 
-				if(parms->powfs[ipowfs].dither_amp==0){
-					dmat* sodium=0;
-					dcell* grad=0;
-					//don't need gradient output for matched filter
-					dcell** pgrad=(ptype2==PTYPE_COG)?&grad:NULL;
-					dcell** pi0=(ptype2==PTYPE_MF)?&intstat->i0:NULL;
-					dcell** pgx=(ptype2==PTYPE_MF)?&intstat->gx:NULL;
-					dcell** pgy=(ptype2==PTYPE_MF)?&intstat->gy:NULL;
-					//1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
-					int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(ptype2==PTYPE_MF?1:3);
-
-					if(parms->save.dither){
-						writebin(intstat->i0, "extra/powfs%d_i0i_%d", ipowfs, isim);
-					}
-					sodium_fit_wrap(&sodium, pgrad, pi0, pgx, pgy, intstat->i0, parms, powfs, ipowfs,
-						recon->r0, recon->L0, niter, 1);
-					if(parms->save.dither){
-						if(grad) writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
-						writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
-						writebin(intstat->i0, "extra/powfs%d_i0o_%d", ipowfs, isim);
-					}
-
-					if(ptype2==PTYPE_COG){//project pgrad to TWFS corrected modes
-						dcelladd(pgrad, 1, powfs[ipowfs].gradncpa, -1);
-						dbg("project pgrad to TWFS corrected modes\n");
-						dcell *zm=0;
-						dcellmm(&zm, recon->RRlgs, *pgrad, "nn", 1);
-						dcellzero(*pgrad);
-						dcellmm(pgrad, recon->GRlgs, zm, "nn", 1);
 						if(parms->save.dither){
-							writebin(zm, "extra/powfs%d_zm_%d", ipowfs, isim);
-							writebin(*pgrad, "extra/powfs%d_fit_grad_proj_%d", ipowfs, isim);
+							writebin(intstat->i0, "extra/powfs%d_i0i_%d", ipowfs, isim);
 						}
-						dcellfree(zm);
-					}
-					
-					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						if(ptype2==PTYPE_COG){
-							if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
-							dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
-							//prevent gradoff from accumulating tip/tilt or focus mode if any. no need to do drift control.
-							wfsgrad_tt_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
-							wfsgrad_focus_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
-						} else if(ptype2==PTYPE_MF){
-							if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
-							//since we are building ideal matched filter with
-							//the correct gradncpa and sodium profile. no need
-							//to use gradient reference vector. 
-							dzero(P(simu->gradoff, iwfs));
+						sodium_fit_wrap(&sodium, pgrad, pi0, pgx, pgy, intstat->i0, parms, powfs, ipowfs,
+							recon->r0, recon->L0, niter, 1);
+						if(parms->save.dither){
+							if(grad) writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
+							writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
+							writebin(intstat->i0, "extra/powfs%d_i0o_%d", ipowfs, isim);
+						}
+
+						if(ptype2==PTYPE_COG){//project pgrad to TWFS corrected modes
+							dcelladd(pgrad, 1, powfs[ipowfs].gradncpa, -1);
+							dbg("project pgrad to TWFS corrected modes\n");
+							dcell *zm=0;
+							dcellmm(&zm, recon->RRlgs, *pgrad, "nn", 1);
+							dcellzero(*pgrad);
+							dcellmm(pgrad, recon->GRlgs, zm, "nn", 1);
+							if(parms->save.dither){
+								writebin(zm, "extra/powfs%d_zm_%d", ipowfs, isim);
+								writebin(*pgrad, "extra/powfs%d_fit_grad_proj_%d", ipowfs, isim);
+							}
+							dcellfree(zm);
+						}
+						
+						for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+							int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+							if(ptype2==PTYPE_COG){
+								if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
+								dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
+								//prevent gradoff from accumulating tip/tilt or focus mode if any. no need to do drift control.
+								wfsgrad_tt_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
+								wfsgrad_focus_drift(P(simu->gradoff, iwfs), simu, 0, iwfs, 1);
+							} else if(ptype2==PTYPE_MF){
+								if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
+								//since we are building ideal matched filter with
+								//the correct gradncpa and sodium profile. no need
+								//to use gradient reference vector. 
+								dzero(P(simu->gradoff, iwfs));
+							}
+						}
+						dcellfree(grad);
+						dfree(sodium);
+					}else{//NGS, just use i0 
+						if(ptype2==PTYPE_MF){
+							if(simu->gradoff) {
+								for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+									int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+									dzero(P(simu->gradoff, iwfs));
+								}
+							}
+						}else{
+							warning("Not handled: powfs%d: dither=-1, phytype_sim2=%d\n", ipowfs, ptype2);
 						}
 					}
-					dcellfree(grad);
-					dfree(sodium);
 				}
-				if(ptype2==PTYPE_MF){
-				//tip/tilt and focus drift control is needed for matched filter with either dithering or sodium fitting
+				if(ptype2==PTYPE_MF&&parms->powfs[ipowfs].llt){
+					//for LGS only. tip/tilt and focus drift control is needed for matched filter with either dithering or sodium fitting
 					dmat* ibgrad=0;
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
@@ -1111,7 +1125,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dcellzero(simu->gradoffacc);
 					simu->gradoffisim0=isim;
 				}
-				if(!simu->gradoffdrift&&parms->powfs[ipowfs].dither_amp){
+				if(!simu->gradoffdrift&&parms->powfs[ipowfs].dither==1){
 					//Use gradoff before adjustment is not good. There are difference between i and i0.
 					if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
 						info2("Step %5d: powfs%d set gradoffdrift to cog of initial i0\n", isim, ipowfs);
@@ -1163,10 +1177,10 @@ static void wfsgrad_dither_post(sim_t* simu){
 				if(!parms->powfs[ipowfs].lo&&parms->recon.alg==0){//no need to update LSR.
 					simu->tomo_update=2;
 				}
-				if(parms->powfs[ipowfs].dither_gdrift>0&&parms->powfs[ipowfs].dither_amp){
+				if(parms->powfs[ipowfs].dither_gdrift>0&&parms->powfs[ipowfs].dither==1){
 					wfsgrad_sa_drift(simu, ipowfs);
 				}
-			} else if(parms->powfs[ipowfs].dither_amp){
+			} else {
 				if(parms->powfs[ipowfs].phytype_sim!=ptype2){
 					error("Does not support switching to CoG.\n");
 				}

@@ -239,8 +239,8 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 	}
 	switch(id){
 	case MCC_ANY:{//write cell
-		uint64_t nx=0;
-		uint64_t ny=0;
+		long nx=0;
+		long ny=0;
 		if(A){
 			nx=A->nx;
 			ny=A->ny;
@@ -248,7 +248,7 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 		M_ID id2=0;//determine id first for non-empty cell
 		
 		if(nx&&ny){
-			for(uint64_t ix=0; ix<(nx*ny); ix++){
+			for(long ix=0; ix<(nx*ny); ix++){
 				if(P(A,ix)){
 					if(!id2) id2=P(A,ix)->id;
 					else if(id2!=P(A, ix)->id){
@@ -265,7 +265,7 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 			write_header(&header, fp);
 		}
 		
-		for(uint64_t ix=0; ix<(nx*ny); ix++){
+		for(long ix=0; ix<(nx*ny); ix++){
 			writedata_by_id(fp, P(A,ix), id2, ncol);
 		}
 	}

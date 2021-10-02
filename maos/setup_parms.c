@@ -1533,7 +1533,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			}
 		}
 		real wvlmax=dmax(powfsi->wvl);
-		if(powfsi->type==0&&powfsi->usephy){//shwfs, physical optics mode
+		if(powfsi->type==0){//shwfs, physical optics mode
 			if(powfsi->phytype_sim==-1){
 				powfsi->phytype_sim=powfsi->phytype_recon;
 			}
@@ -1625,10 +1625,15 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 
 		if(powfsi->dither){
 			parms->dither=1;
-			if(powfsi->dither==1){//tip/tilt/arcsec->radian
+			if(powfsi->dither==-1){//no dithering, just collect i0
+				powfsi->dither_amp=0;
+			}else if(powfsi->dither==1){//tip/tilt/arcsec->radian
 				powfsi->dither_amp/=206265.;
 			} else if(powfsi->dither>1){//zernike modes. micron-->meter
 				powfsi->dither_amp/=1e6;
+				if(powfsi->phytype_sim2==PTYPE_MF){
+					error("Cannot build matched filter with dither>1.");
+				}
 			}
 			//Convert all rate in unit of WFS frame rate
 			//pllrat was already in WFS frame rate.

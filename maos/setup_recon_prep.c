@@ -874,7 +874,7 @@ setup_recon_GF(recon_t* recon, const parms_t* parms){
  */
 static void
 setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
-	if(parms->itpowfs==-1&&!(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither&&parms->powfs[parms->ilgspowfs].dither_amp==0&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG)){
+	if(parms->itpowfs==-1&&!(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG)){
 		return;
 	}
 
@@ -945,7 +945,7 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 				P(recon->GRtwfs, iwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
 			}
 		}
-		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].dither&&parms->powfs[ipowfs].dither_amp==0&&parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
+		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].dither==-1&&parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
 			int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
 			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
 				error("recon.twfs_ipsr should have more than 1 entry for sodium fitting projection.\n");

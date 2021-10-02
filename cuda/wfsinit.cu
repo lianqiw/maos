@@ -406,8 +406,10 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 						cuwfs[iwfs].bkgrnd2c=cuwfs[iwfs0].bkgrnd2c;
 					}
 				}
-				if(parms->powfs[ipowfs].dither){
-					cuwfs[iwfs].dither=Dither_t(nsa, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
+				if(parms->powfs[ipowfs].dither==1){
+					cuwfs[iwfs].dither=Dither_t(nsa, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay, 1);
+				} else if(parms->powfs[ipowfs].dither==-1){
+					cuwfs[iwfs].dither=Dither_t(nsa, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay, 0);
 				}
 			}
 			const int msa=cuwfs[iwfs].msa;

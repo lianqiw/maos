@@ -278,10 +278,12 @@ dither_acc_do(Real* restrict* imb, Real* restrict* imx, Real* restrict* imy,
 		}
 	}
 }
-Dither_t::Dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
+Dither_t::Dither_t(int nsa, int pixpsax, int pixpsay, int xy):imc(0){
 	imb=curcell(nsa, 1, pixpsax, pixpsay);
-	imx=curcell(nsa, 1, pixpsax, pixpsay);
-	imy=curcell(nsa, 1, pixpsax, pixpsay);
+	if(xy){
+		imx=curcell(nsa, 1, pixpsax, pixpsay);
+		imy=curcell(nsa, 1, pixpsax, pixpsay);
+	}
 }
 
 /**Accumulate for matched filter updating*/
@@ -299,6 +301,17 @@ void Dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, 
 		cuzero(imb);
 		cuzero(imx);
 		cuzero(imy);
+	}
+}
+
+/**Accumulate for matched filter updating*/
+void Dither_t::acc_i0(dither_t *dither, curcell &ints, int npll, cudaStream_t stream){
+	curcelladd(imb, 1, ints, 1, stream);
+	imc++;
+	if(imc%npll==0){
+		//dbg("Dither::acc: output imb, imx, imy\n");
+		cp2cpu(&dither->imb, imb, stream);
+		cuzero(imb);
 	}
 }
 /*
@@ -624,16 +637,19 @@ void gpu_wfsgrad_queue(thread_t* info){
 				if(parms->powfs[ipowfs].i0save){
 					curcelladd(cuwfs[iwfs].intsout, 1, ints, 1, stream);
 				}
-				if(parms->powfs[ipowfs].dither&&isim>=parms->powfs[ipowfs].dither_ogskip
+				if(abs(parms->powfs[ipowfs].dither)==1
+					&&isim>=parms->powfs[ipowfs].dither_ogskip
 					&&parms->powfs[ipowfs].type==WFS_SH
-					&&(parms->powfs[ipowfs].dither_amp==0||parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
-					real cs=0, ss=0;
-					if(parms->powfs[ipowfs].dither_amp){
+					&&(parms->powfs[ipowfs].dither==-1||parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
+					int npll=parms->powfs[ipowfs].dither_pllrat;
+					if(parms->powfs[ipowfs].dither==1){
+						real cs=0, ss=0;
 						dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
 							parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
+						cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
+					}else{//just accumulate i0
+						cuwfs[iwfs].dither.acc_i0(simu->dither[iwfs], ints, npll, stream);
 					}
-					int npll=parms->powfs[ipowfs].dither_pllrat;
-					cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
 					ctoc("dither");
 				}
 			}
