@@ -197,7 +197,10 @@ typedef struct updatetimer_t{
 }updatetimer_t;
 static void update_pixmap(drawdata_t* drawdata){
 	/*no more pending updates, do the updating. */
-	if(drawdata->recycle) return;
+	if(drawdata->recycle) {
+		warning_time("recycle is set, do not draw\n");
+		return;
+	}
 	gint width=drawdata->width;
 	gint height=drawdata->height;
 	if(drawdata->pixmap){

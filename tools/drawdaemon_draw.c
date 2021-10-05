@@ -444,7 +444,7 @@ static void update_limit(drawdata_t* drawdata){
 */
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	if(!drawdata->ready) {
-		dbg("data is not ready, cancelled.\n");
+		dbg_time("data is not ready, cancelled.\n");
 		return;
 	}
 	/*fill white background */

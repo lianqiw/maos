@@ -184,14 +184,15 @@ drawdata_t *get_drawdata(char **fig, char **name, int reset){
 		HEAD->next=drawdata;
 	}else if(reset){
 		//reset image, npoints, to default. do not reset memory
-		drawdata->nx=0;
-		drawdata->ny=0;
-		drawdata->npts=0;
-		drawdata->limit_changed=-1;
-		drawdata->drawn=0;
+		/*while(!drawdata->drawn && drawdata->ready){
+			warning_time("Wait for previous data to draw before receiving new data\n");
+			mysleep(1);
+		}*/
+		//drawdata->limit_changed=-1;
+		//drawdata->drawn=0;
 		free(*fig); *fig=0;
 		free(*name); *name=0;
-		drawdata->ready=0;
+		//drawdata->ready=0;
 	}
 	return drawdata;
 }
@@ -210,6 +211,7 @@ int sock;//socket
 int sock_idle=0;//1: no active drawing. 0: active drawing connection. -1: do not retry connection
 drawdata_t* drawdata=NULL;//current 
 drawdata_t* drawdata_prev=NULL;//previous
+int npts=0;
 void* listen_draw(void* user_data){
 	char* str2=0;
 	char *host=0;
@@ -228,15 +230,16 @@ retry:
 		dbg_time("Connecting to %s\n", host);
 		sock=scheduler_connect(host);
 		if(sock==-1){
-			warning("connect to %s failed\n", host);
-			return NULL;
+			warning("connect to %s failed, retry in 60 seconds.\n", host);
+			mysleep(60);
+			goto retry;
 		}
 		int cmd[2]={CMD_DISPLAY, 0};
 		if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
-			warning("Failed to register sock in scheduler.\n");
+			warning("Failed to register sock in scheduler, retry in 60 seconds.\n");
 			close(sock);
-			sock=-1;
-			return NULL;
+			mysleep(60);
+			goto retry;
 		}
 	}
 	
@@ -252,6 +255,7 @@ retry:
 	char *name=0;
 	int cmd=0;
 	int nlen=0;
+	int pid=getpid();
 	if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
 	while(sock!=-1){
 		STREADINT(cmd);//will block if no data is available.
@@ -260,6 +264,8 @@ retry:
 			STREADINT(nlen);
 			STREADINT(cmd);
 		}
+		if(cmd!=DRAW_HEARTBEAT) dbg_time("%d received %d\n", pid, cmd);
+		
 		switch(cmd){
 		case DRAW_FRAME:{//in new format, every frame start with this. Place holder to handle UDP.
 			int sizes[4];
@@ -281,28 +287,28 @@ retry:
 				drawdata->p=realloc(drawdata->p, tot*4);
 				drawdata->nmax=tot;
 			}
-			drawdata->nx=header[0];
-			drawdata->ny=header[1];
 			if(tot>0){
 				STREADFLT(drawdata->p0, tot);
 			}
+			drawdata->nx=header[0];
+			drawdata->ny=header[1];
 			if(drawdata->square==-1) drawdata->square=1;//default to square for images.
 		}
 		break;
 		case DRAW_HEARTBEAT:/*no action*/
 			io_heartbeat=myclocki();
-			dbg("heatbeat=%d\n", io_heartbeat);
+			//dbg("heatbeat=%d\n", io_heartbeat);
 			break;
 		case DRAW_POINTS:
 		{
-			int ipts=drawdata->npts;
-			drawdata->npts++;
-			if(drawdata->npts>drawdata->nptsmax){
-				drawdata->pts=myrealloc(drawdata->pts, drawdata->npts, float*);
-				drawdata->style_pts=myrealloc(drawdata->style_pts, drawdata->npts, int);
-				drawdata->ptsdim=realloc(drawdata->ptsdim, drawdata->npts*sizeof(int[2]));
-				drawdata->legend=realloc(drawdata->legend, drawdata->npts*sizeof(char*));
-				for(; drawdata->nptsmax<drawdata->npts; drawdata->nptsmax++){
+			int ipts=npts;
+			npts++;
+			if(npts>drawdata->nptsmax){
+				drawdata->pts=myrealloc(drawdata->pts, npts, float*);
+				drawdata->style_pts=myrealloc(drawdata->style_pts, npts, int);
+				drawdata->ptsdim=realloc(drawdata->ptsdim, npts*sizeof(int[2]));
+				drawdata->legend=realloc(drawdata->legend, npts*sizeof(char*));
+				for(; drawdata->nptsmax<npts; drawdata->nptsmax++){
 					drawdata->pts[drawdata->nptsmax]=NULL;
 					drawdata->style_pts[drawdata->nptsmax]=0;
 					drawdata->ptsdim[drawdata->nptsmax][0]=0;
@@ -362,6 +368,7 @@ retry:
 			STREADSTR(name);
 			if(fig && name) {
 				drawdata=get_drawdata(&fig, &name, 1); 
+				npts=0;
 			}else{
 				warning("Invalid usage: fig should be provided before namen");
 			}
@@ -379,7 +386,7 @@ retry:
 			STREADFLT(drawdata->zlim, 2);
 			break;
 		case DRAW_LEGEND:
-			for(int i=0; i<drawdata->npts; i++){
+			for(int i=0; i<npts; i++){
 				STREADSTR(drawdata->legend[i]);
 			}
 			break;
@@ -439,6 +446,7 @@ retry:
 		break;
 		case DRAW_END:
 		{
+			drawdata->npts=npts;
 			if(drawdata->npts>0){
 				drawdata->cumuquad=1;
 				if(drawdata->nstyle>1){
@@ -450,6 +458,7 @@ retry:
 				}
 			}
 			if(!drawdata->fig) drawdata->fig=strdup("unknown");
+			drawdata->drawn=0;
 			drawdata->ready=1;
 			gdk_threads_add_idle(addpage, drawdata);
 			if(drawdata_prev && drawdata_prev==drawdata){//same drawdata is updated, enable computing framerate.

@@ -414,8 +414,8 @@ void kill_all_jobs(GtkButton* btn, gpointer data){
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
-		"Kill all jobs on server %s or all servers?", hosts[this_host]);
-	gtk_dialog_add_buttons(GTK_DIALOG(dia), "This server", 1, "All servers", 2, "Cancel", 0, NULL);
+		"Kill all jobs on server %s?", hosts[this_host]);
+	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill all", 1, "Cancel", 0, NULL);
 #if GTK_MAJOR_VERSION>3
 	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(kill_all_job_callback), GINT_TO_POINTER(this_host));
 	gtk_widget_show(dia);
@@ -514,10 +514,10 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 
 void clear_jobs(GtkButton* btn, gpointer flag){
 	(void)btn;
-	//int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
-	for(int ihost=0; ihost<nhost; ihost++){
-		clear_job_wrap(ihost, GPOINTER_TO_INT(flag));
-	}
+	int this_host=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook))-1;
+	//for(int ihost=0; ihost<nhost; ihost++){
+	clear_job_wrap(this_host, GPOINTER_TO_INT(flag));
+	//}
 }
 
 void save_all_jobs(GtkButton* btn, gpointer data){
