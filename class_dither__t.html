@@ -103,11 +103,13 @@ $(document).ready(function(){initNavTree('class_dither__t.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a81b440869096c11c64555de9823994ea"><td class="memItemLeft" align="right" valign="top"><a id="a81b440869096c11c64555de9823994ea"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Dither_t</b> (int nsa, int pixpsax, int pixpsay)</td></tr>
-<tr class="separator:a81b440869096c11c64555de9823994ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4c020aee673e33cd3333cdb018e11d6"><td class="memItemLeft" align="right" valign="top"><a id="ab4c020aee673e33cd3333cdb018e11d6"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Dither_t</b> (int nsa, int pixpsax, int pixpsay, int xy)</td></tr>
+<tr class="separator:ab4c020aee673e33cd3333cdb018e11d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f6d1f8ffb802cc97f8968a2942cb48c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dither__t.html#a3f6d1f8ffb802cc97f8968a2942cb48c">acc</a> (<a class="el" href="maos_2types_8h.html#structdither__t">dither_t</a> *dither, curcell &amp;ints, Real cs, Real ss, int nstat, cudaStream_t stream)</td></tr>
 <tr class="separator:a3f6d1f8ffb802cc97f8968a2942cb48c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae96a6270a929792f1f03add4358c871c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dither__t.html#ae96a6270a929792f1f03add4358c871c">acc_i0</a> (<a class="el" href="maos_2types_8h.html#structdither__t">dither_t</a> *dither, curcell &amp;ints, int nstat, cudaStream_t stream)</td></tr>
+<tr class="separator:ae96a6270a929792f1f03add4358c871c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>For matched filter update </p>
@@ -141,6 +143,47 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">Real&#160;</td>
           <td class="paramname"><em>ss</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>npll</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cudaStream_t&#160;</td>
+          <td class="paramname"><em>stream</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Accumulate for matched filter updating </p>
+
+</div>
+</div>
+<a id="ae96a6270a929792f1f03add4358c871c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae96a6270a929792f1f03add4358c871c">&#9670;&nbsp;</a></span>acc_i0()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Dither_t::acc_i0 </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structdither__t">dither_t</a> *&#160;</td>
+          <td class="paramname"><em>dither</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">curcell &amp;&#160;</td>
+          <td class="paramname"><em>ints</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

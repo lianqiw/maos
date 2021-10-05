@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('fov_oa.html','');});
 <div class="title">fov_oa.conf </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><div class="fragment"><div class="line">#FILE evl_oa.conf Contains performance evaluation direction defined for on axis only</div><div class="line"></div><div class="line">#performance evaluation directions.</div><div class="line">evl.thetax = [0]</div><div class="line">evl.thetay = [0]</div><div class="line">evl.wt     = [1]</div><div class="line"></div><div class="line"></div><div class="line">#DM Fitting directions </div><div class="line">fit.thetax = [0]</div><div class="line">fit.thetay = [0]</div><div class="line">fit.wt     = [1]</div></div><!-- fragment --> </div></div><!-- contents -->
+<div class="textblock"><div class="fragment"><div class="line">#FILE fovl_oa.conf Contains directions defined for on axis only</div><div class="line"></div><div class="line">#performance evaluation directions.</div><div class="line">include = &quot;evl_oa.conf&quot;</div><div class="line"></div><div class="line">#DM Fitting directions </div><div class="line">include = &quot;fit_oa.conf&quot;</div></div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

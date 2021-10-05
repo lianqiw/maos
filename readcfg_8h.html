@@ -119,6 +119,8 @@ Functions</h2></td></tr>
 <tr class="separator:a2e922a9c36a239462733acec6cd00827"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a82c0679f3fb4519b902b2e616032e6cd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a82c0679f3fb4519b902b2e616032e6cd">readcfg_peek_override</a> (const char *format,...)</td></tr>
 <tr class="separator:a82c0679f3fb4519b902b2e616032e6cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d049e1fb1b83a7c3cd7b1d5866f43f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a3d049e1fb1b83a7c3cd7b1d5866f43f9">readcfg_ignore</a> (const char *format,...)</td></tr>
+<tr class="separator:a3d049e1fb1b83a7c3cd7b1d5866f43f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36b85bb80ce8ab0ecdf6fd0762d4921d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a36b85bb80ce8ab0ecdf6fd0762d4921d">readcfg_str</a> (const char *format,...)</td></tr>
 <tr class="separator:a36b85bb80ce8ab0ecdf6fd0762d4921d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9511bcf6918f17458ee5a33fb2463797"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a9511bcf6918f17458ee5a33fb2463797">readcfg_strarr</a> (char ***res, const char *format,...)</td></tr>
@@ -137,6 +139,9 @@ Functions</h2></td></tr>
 <tr class="separator:aaf546b96b714c72088ba80354969756a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2f8cc2e6faca7a9fcde66c684b4c9a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#ae2f8cc2e6faca7a9fcde66c684b4c9a1">readstr_dmat</a> (const char *str)</td></tr>
 <tr class="separator:ae2f8cc2e6faca7a9fcde66c684b4c9a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7af9bb17659fcac9051c90b01a6ea3e2"><td class="memItemLeft" align="right" valign="top"><a id="a7af9bb17659fcac9051c90b01a6ea3e2"></a>
+<a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_dmat_n</b> (int n, const char *str)</td></tr>
+<tr class="separator:a7af9bb17659fcac9051c90b01a6ea3e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a45f9445048b5f0da0573a563aeeed5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a9a45f9445048b5f0da0573a563aeeed5">readcfg_dmat</a> (const char *format,...)</td></tr>
 <tr class="separator:a9a45f9445048b5f0da0573a563aeeed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57db729a2f0617087f8afed5288eea06"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a57db729a2f0617087f8afed5288eea06">readcfg_dmat_n</a> (int n, const char *format,...)</td></tr>
@@ -334,6 +339,35 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Check whether the record is overriden by user supplied conf files. </p>
+
+</div>
+</div>
+<a id="a3d049e1fb1b83a7c3cd7b1d5866f43f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d049e1fb1b83a7c3cd7b1d5866f43f9">&#9670;&nbsp;</a></span>readcfg_ignore()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void readcfg_ignore </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Ignore an entry </p>
 
 </div>
 </div>

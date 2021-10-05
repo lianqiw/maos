@@ -490,13 +490,13 @@ magic</td>
           <td class="memname">file_t* zfopen </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fn</em>, </td>
+          <td class="paramname"><em>fni</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>mode</em>&#160;</td>
+          <td class="paramname"><em>mod</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -505,7 +505,7 @@ magic</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Open a bin file or socket for read/write access.</p>
+<p>Open a bin file for read/write access.</p>
 <p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, if the file name ends with .bin or .fits, will not be gzipped. If the file has no suffix, the file will be gzipped and .bin is appened to file name. </p>
 
 </div>
@@ -525,7 +525,8 @@ magic</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return the underlining filename </p>
+<p>Open a bin file or socket for read/write access.</p>
+<p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, if the file name ends with .bin or .fits, will not be gzipped. If the file has no suffix, the file will be gzipped and .bin is appened to file name. Return the underlining filename </p>
 
 </div>
 </div>
