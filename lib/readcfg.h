@@ -39,7 +39,7 @@ void   close_config(const char*format,...) CHECK_ARG(1);
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
 int    readcfg_peek_n(const char *format, ...) CHECK_ARG(1);
 int    readcfg_peek_override(const char *format,...) CHECK_ARG(1);
-
+void   readcfg_ignore(const char *format, ...) CHECK_ARG(1);
 char*  readcfg_str (const char*format,...) CHECK_ARG(1);
 int    readcfg_strarr(char ***res, const char *format,...) CHECK_ARG(2);
 void   readcfg_strarr_n(char ***ret, int len, const char *format,...) CHECK_ARG(3);
@@ -50,6 +50,7 @@ real readcfg_dbl (const char*format,...) CHECK_ARG(1);
 int    readcfg_intarr(int **ret,   const char *format,...) CHECK_ARG(2);
 int    readcfg_dblarr(real **ret,const char *format,...) CHECK_ARG(2);
 dmat*  readstr_dmat(const char *str);
+dmat*  readstr_dmat_n(int n, const char *str);
 dmat*  readcfg_dmat(const char *format,...) CHECK_ARG(1);
 dmat*  readcfg_dmat_n(int n, const char *format,...) CHECK_ARG(2);
 dmat*  readcfg_dmat_nmax(int nmax, const char *format,...) CHECK_ARG(2);

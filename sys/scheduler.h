@@ -48,7 +48,7 @@ typedef struct status_t{
     time_t timstart;//Job launch time
     time_t timlast; //last status change
 }status_t;
-/*For scheduler()*/
+/*Commands handled by scheduler server. Do not modify existing values*/
 enum{
     CMD_START=1,
     CMD_FINISH,
@@ -71,7 +71,7 @@ enum{
     CMD_PAUSE,
     CMD_RESUME,
 };
-/*command from scheduler etc to maos*/
+/*Command handled by maos listener. Do not modify existing values.*/
 enum{
     MAOS_SERVER=1,/*not used*/
     MAOS_DRAW=10, /*tell maos to start drawing with the received fd*/
@@ -82,7 +82,7 @@ enum{
     MAOS_ASSIGN_RECON,/*102*/
     MAOS_ASSIGN_DONE=199,/*199*/
 };
-/*command from scheduler etc and monitor*/
+/*Commands handled by monitor. May modify by restarting scheduler*/
 enum{
     MON_CMD=1, /*called by monitor main thread to relay cmd to scheduler*/
     MON_DRAWDAEMON=2,/*start drawdaemon*/
@@ -97,13 +97,15 @@ enum{
     MON_LOAD=14,
     MON_ADDHOST=17,
 };
-/*For job status*/
+/*For job status. Do not modify existing values*/
 enum{
+    //below 10 is active
     S_RUNNING=1,/*1*/
     S_WAIT,  /*2*/
     S_START,/*3*/
     S_QUEUED,/*4*/
     S_UNKNOWN,//5
+    //above 10 is no longer active
     S_FINISH=11,/*11*/
     S_CRASH,/*12*/
     S_TOKILL,/*13*/
@@ -111,7 +113,7 @@ enum{
     S_KILLED,/*15*/
     S_NONEXIST,/*16*/
 };
-//For tools/drawdaemon and lib/draw.c
+//Commands exchanged between drawdaemon and draw() from maos or drawres. Do not modify existing values
 enum{
     DRAW_START=0, /*Mark the starting of data stream. */
     DRAW_DATA,//1

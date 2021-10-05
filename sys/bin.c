@@ -85,6 +85,7 @@ extern "C"{
 */
 struct file_t{
 	char* fn;  /**<The disk file name*/
+	const char *msg; /**<Error message if any*/
 	voidp gp;   /**<only used when gzipped*/
 	int isgzip;/**<Is the file zipped.*/
 	int isfits;/**<Is the file fits.*/
@@ -287,7 +288,7 @@ static inline int myopen(const char* name, int oflag, mode_t mode){
    will not be gzipped. If the file has no suffix, the file will be gzipped and
    .bin is appened to file name.
 */
-static file_t* zfopen_try(const char* fni, const char* mod){
+file_t* zfopen(const char* fni, const char* mod){
 	//LOCK(lock);//nothing to protect
 	file_t* fp=mycalloc(1, file_t);
 	const char* fn2=fp->fn=procfn(fni, mod);
@@ -347,6 +348,7 @@ static file_t* zfopen_try(const char* fni, const char* mod){
 		uint16_t magic;
 		if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
 			dbg("Unable to read %s.\n", fn2);
+			goto fail;
 		} else{
 			if(magic==0x8b1f){
 				fp->isgzip=1;
@@ -372,6 +374,7 @@ static file_t* zfopen_try(const char* fni, const char* mod){
 	return fp;
 fail:
   //UNLOCK(lock);
+	if(fp->fd!=-1) close(fp->fd);
 	free(fp->fn); free(fp); fp=NULL;
 	return fp;
 }
@@ -383,14 +386,14 @@ fail:
    will not be gzipped. If the file has no suffix, the file will be gzipped and
    .bin is appened to file name.
 */
-file_t* zfopen(const char* fn, const char* mode){
+/*file_t* zfopen(const char* fn, const char* mode){
 	file_t* fp;
 	fp=zfopen_try(fn, mode);
 	if(!fp&&!disable_save){
 		error("Open file %s for %s failed\n", fn, mode[0]=='r'?"read":"write");
 	}
 	return fp;
-}
+}*/
 /**
    Return the underlining filename
 */
@@ -607,8 +610,8 @@ void zflush(file_t* fp){
 		gzflush(fp->gp, 4);
 	}
 }*/
-#define zfread_check_eof(A...) if(zfread(A)){ if(fp->err==1) goto read_error_eof; else goto read_error;}//eof is not error
-#define zfread_check(A...) if(zfread(A)) goto read_error //eof is error
+#define CHECK_EOF(A, errmsg) if(A){if(fp->err==1) goto read_error_eof; else  {fp->msg=errmsg;goto read_error;}}//eof is not error
+#define CHECK_ERR(A, errmsg) if(A){if(!fp->err) fp->err=2; fp->msg=errmsg; goto read_error;} //eof is error
 /*
   Obtain the current magic number, string header, and array size from a bin
   format file. In file, the string header is located before the data magic.
@@ -625,18 +628,18 @@ read_bin_header(header_t* header, file_t* fp){
 	}
 	while(!fp->err){
 		/*read the magic number.*/
-		zfread_check_eof(&magic, sizeof(uint32_t), 1, fp);
+		CHECK_EOF(zfread(&magic, sizeof(uint32_t), 1, fp),"Read frame start failed.");
 		/*If it is hstr, read or skip it.*/
 		if(magic==M_EOD){//end of data. useful in socket i/o to indicate end of current dataset
 			return -1;
 		}else if((magic&M_SKIP)==M_SKIP){//dummy
 			continue;
 		} else if(magic==M_COMMENT){//comment
-			zfread_check(&nlen, sizeof(uint64_t), 1, fp);
+			CHECK_ERR(zfread(&nlen, sizeof(uint64_t), 1, fp),"Read length of comment failed");
 			if(nlen>0){
 				/*zfseek failed in cygwin (gzseek). so we always read in the hstr instead.*/
 				char hstr2[nlen];
-				zfread_check(hstr2, 1, nlen, fp);
+				CHECK_ERR(zfread(hstr2, 1, nlen, fp), "Read comment failed");
 				hstr2[nlen-1]='\0'; /*make sure it is NULL terminated. */
 				if(header->str){
 					header->str=(char*)realloc(header->str, ((header->str)?strlen(header->str):0)+strlen(hstr2)+1);
@@ -645,19 +648,12 @@ read_bin_header(header_t* header, file_t* fp){
 					header->str=strdup(hstr2);
 				}
 			}
-			zfread_check(&nlen2, sizeof(uint64_t), 1, fp);
-			zfread_check(&magic2, sizeof(uint32_t), 1, fp);
-			if(magic!=magic2||nlen!=nlen2){
-				dbg("magic=%u, magic2=%u, nlen=%lu, nlen2=%lu\n",
-					magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
-				fp->err=2;
-				warning("Header string verification failed\n");
-				goto read_error;
-			}
+			CHECK_ERR(zfread(&nlen2, sizeof(uint64_t), 1, fp)||nlen2!=nlen, "Read length of comment 2 failed");
+			CHECK_ERR(zfread(&magic2, sizeof(uint32_t), 1, fp)||magic2!=magic, "Read data type 2 failed");
 		} else{ //Finish
 			header->magic=magic;
-			zfread_check(&header->nx, sizeof(uint64_t), 1, fp);
-			zfread_check(&header->ny, sizeof(uint64_t), 1, fp);
+			CHECK_ERR(zfread(&header->nx, sizeof(uint64_t), 1, fp), "Read nx failed");
+			CHECK_ERR(zfread(&header->ny, sizeof(uint64_t), 1, fp), "Real ny failed");
 			if((magic&0x6400)!=0x6400){
 				warning("wrong magic number=%x at %ld. cancelled.\n", magic, zfpos(fp));
 				fp->err=2;
@@ -747,7 +743,8 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 		bitpix=8;
 		break;
 	default:
-		error("Data type is not yet supported. magic=%x\n", magic);
+		warning("Data type is not yet supported. magic=%x\n", magic);
+		return;
 	}
 	const int nh=36;//each fits page can only contain 36 headers.
 	char header[nh][80];
@@ -839,26 +836,23 @@ read_fits_header(header_t* header, file_t* fp){
 	while(!end){
 		int start=0;
 		if(page==0){
-			zfread_check_eof(line, 1, 80, fp);
+			CHECK_EOF(zfread(line, 1, 80, fp), "Read line 1 failed");
 			line[80]='\0';
-			if(strncmp(line, "SIMPLE", 6)&&strncmp(line, "XTENSION= 'IMAGE", 16)){
-				warning("Garbage in fits file %s\n", fp->fn);
-				return -1;
-			}
-			zfread_check(line, 1, 80, fp); line[80]='\0';
-			if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
-			zfread_check(line, 1, 80, fp); line[80]='\0';
-			if(sscanf(line+10, "%20d", &naxis)!=1) error("Unable to determine naxis\n");
-			if(naxis>2) error("Data type not supported\n");
+			CHECK_ERR(strncmp(line, "SIMPLE", 6)&&strncmp(line, "XTENSION= 'IMAGE", 16), "Invalid frame data type");
+			CHECK_ERR(zfread(line, 1, 80, fp), "Read line 2 failed"); line[80]='\0';
+			CHECK_ERR(sscanf(line+10, "%20d", &bitpix)!=1, "Read bitpix failed");
+			CHECK_ERR(zfread(line, 1, 80, fp), "Read line 3 failed"); line[80]='\0';
+			CHECK_ERR(sscanf(line+10, "%20d", &naxis)!=1, "Read naxis failed");
+			CHECK_ERR(naxis>2, "Unable to handle naxis>2");
 			if(naxis>0){
-				zfread_check(line, 1, 80, fp); line[80]='\0';
-				if(sscanf(line+10, "%20lu", (unsigned long*)&header->nx)!=1) error("Unable to determine nx\n");
+				CHECK_ERR(zfread(line, 1, 80, fp), "Read line 4 failed"); line[80]='\0';
+				CHECK_ERR(sscanf(line+10, "%20lu", (unsigned long*)&header->nx)!=1, "Read nx failed");
 			} else{
 				header->nx=0;
 			}
 			if(naxis>1){
-				zfread_check(line, 1, 80, fp); line[80]='\0';
-				if(sscanf(line+10, "%20lu", (unsigned long*)&header->ny)!=1) error("Unable to determine ny\n");
+				CHECK_ERR(zfread(line, 1, 80, fp), "Read line 5 failed"); line[80]='\0';
+				CHECK_ERR(sscanf(line+10, "%20lu", (unsigned long*)&header->ny)!=1, "Read ny failed");
 			} else{
 				header->ny=0;
 			}
@@ -866,7 +860,7 @@ read_fits_header(header_t* header, file_t* fp){
 		}
 		int was_comment=0;
 		for(int i=start; i<36; i++){
-			zfread_check(line, 1, 80, fp); line[80]='\0';
+			CHECK_ERR(zfread(line, 1, 80, fp), "Read data line failed"); line[80]='\0';
 			if(!strncmp(line, "END", 3)){
 				end=1;
 			} else{
@@ -929,6 +923,7 @@ read_fits_header(header_t* header, file_t* fp){
 	default:
 		fp->err=2;
 		warning("Unsupported bitpix=%d.\n", bitpix);
+		goto read_error;
 	}
 	return 0;
 read_error:

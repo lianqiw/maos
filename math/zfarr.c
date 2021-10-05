@@ -58,11 +58,12 @@ void zfarr_push_cell(zfarr* ca, int i, const cell* A){
 		print_backtrace();
 		return;
 	}
+	/*
 	if(ca->tot && i>=ca->tot){
 		warning_once("zfarr %s overflow. Size is %ld, current position is %ld\n", zfname(ca->fp), ca->tot, ca->cur);
 		print_backtrace();
 		return;
-	}
+	}*/
 	M_ID id=0;
 	if(A){
 		id=A->id;
@@ -81,23 +82,6 @@ void zfarr_push_cell(zfarr* ca, int i, const cell* A){
 		ca->cur++;
 	}
 }
-/**
-   Initializing an zfarray object that contains a dmat
- */
-/*
-zfarr* zfarr_dmat(long nx, long ny, const char* format, ...){
-	format2fn;
-	if(!fn) return NULL;
-	if(nx<0) nx=0;
-	if(ny<0) ny=0;
-	zfarr* out=mycalloc(1, zfarr);
-	out->fp=zfopen(fn, "wb");
-	out->cur=0;
-	out->tot=nx*ny;
-	header_t header={M_DBL, (uint64_t)nx, (uint64_t)ny, NULL};
-	write_header(&header, out->fp);
-	return out;
-}*/
 
 /**
    Close the zfarr.

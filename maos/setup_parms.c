@@ -787,16 +787,42 @@ static void readcfg_aper(parms_t* parms){
 	READ_STR(aper.fnamp);
 	READ_STR(aper.pupmask);
 }
-
+//check and scale fov.
+static void scale_fov(dmat* thetax, dmat* thetay, dmat*wt, real fov){
+	if(fov==0){//on axis field.
+		if(PN(thetax)!=1){ 
+			dresize(thetax, 1, 1);
+			dresize(thetay, 1, 1);
+			dresize(wt, 1, 1);
+		}
+		P(thetax,0)=0;
+		P(thetay,0)=0;
+		P(wt,0)=1;
+	}else if(fov!=1){
+		real maxx, minx, maxy, miny;
+		dmaxmin(P(thetax), PN(thetax), &maxx, &minx);
+		dmaxmin(P(thetay), PN(thetay), &maxy, &miny);
+		if(fabs(MAX(maxx-minx, maxy-miny)-1)>EPS){
+			warning("thetax and thetay is not within unit circle, disable scaling by fov. please set fov=1.\n");
+		}else{
+			dscale(thetax, fov);
+			dscale(thetay, fov);
+		}
+	}
+	if(PN(thetax)!=PN(thetay)||PN(thetax)!=PN(wt)){
+		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n", PN(thetax), PN(thetay), PN(wt));
+	}
+}
 /**
    Read in performance evaluation science point parameters.
 */
 static void readcfg_evl(parms_t* parms){
 	READ_DMAT(evl.thetax);
-	//parms->evl.thetax=readcfg_dmat("evl.thetax");
-	parms->evl.nevl=NX(parms->evl.thetax);
-	parms->evl.thetay=readcfg_dmat_n(parms->evl.nevl, "evl.thetay");
-	parms->evl.wt=readcfg_dmat_nmax(parms->evl.nevl, "evl.wt");
+	READ_DMAT(evl.thetay);
+	READ_DMAT(evl.wt);
+	real evl_fov=readcfg_dbl("evl.fov");
+	scale_fov(parms->evl.thetax, parms->evl.thetay, parms->evl.wt, evl_fov);
+	parms->evl.nevl=NX(parms->evl.thetax);//maybe changed by scale_fov
 	parms->evl.hs=readcfg_dmat_nmax(parms->evl.nevl, "evl.hs");
 	dnormalize_sumabs(P(parms->evl.wt), parms->evl.nevl, 1);
 	parms->evl.psf=readcfg_lmat_nmax(parms->evl.nevl, "evl.psf");
@@ -876,10 +902,11 @@ static void readcfg_tomo(parms_t* parms){
    Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao() */
 static void readcfg_fit(parms_t* parms){
 	READ_DMAT(fit.thetax);
-	//parms->fit.thetax=readcfg_dmat("fit.thetax");
-	parms->fit.nfit=NX(parms->fit.thetax);
-	parms->fit.thetay=readcfg_dmat_n(parms->fit.nfit, "fit.thetay");
-	parms->fit.wt=readcfg_dmat_nmax(parms->fit.nfit, "fit.wt");
+	READ_DMAT(fit.thetay);
+	READ_DMAT(fit.wt);
+	real fit_fov=readcfg_dbl("fit.fov");
+	scale_fov(parms->fit.thetax, parms->fit.thetay, parms->fit.wt, fit_fov);
+	parms->fit.nfit=NX(parms->fit.thetax);//maybe changed by scale_fov
 	parms->fit.hs=readcfg_dmat_nmax(parms->fit.nfit, "fit.hs");
 	real ramin=INFINITY;
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
@@ -1498,9 +1525,9 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			warning("PWFS must run in physical optics mode, changed.\n");
 			powfsi->phystep=0;
 		}
-		if(powfsi->dither&&powfsi->phystep!=0){
+		if(powfsi->dither&&powfsi->phystep<powfsi->step){
 			warning("Dither requires physical optics mode from the beginning, changed.\n");
-			powfsi->phystep=0;
+			powfsi->phystep=powfsi->step;
 		}
 		if(powfsi->phystep>0){
 			/*round phystep to be multiple of dtrat. */

@@ -350,11 +350,9 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 	ngsmod->nmod=2; //Basic tip/tilt mode.
 	if(isfinite(hs)){
 	//LGS WFS.
-		if(ndm>1){//Plate scale mode
-			if(parms->evl.nevl>1){//cannot determine plate scale with only 1 direction.
-				ngsmod->indps=ngsmod->nmod;
-				ngsmod->nmod+=3;
-			}
+		if(ndm>1&&parms->evl.nevl>1){//Plate scale mode for multi-dm with fov
+			ngsmod->indps=ngsmod->nmod;
+			ngsmod->nmod+=3;
 		} else if(parms->nhiwfs>1){//Astigmatism for LTAO
 			ngsmod->indastig=ngsmod->nmod;
 			ngsmod->nmod+=2;
@@ -364,7 +362,8 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 			ngsmod->nmod+=1;
 		}
 	}
-	info("ahst: nmod=%d, mffocus=%d, ahst_focus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus);
+	info("ahst: nmod=%d, mffocus=%d, ahst_focus=%d, indps=%d, indastig=%d\n", 
+		ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus, ngsmod->indps, ngsmod->indastig);
 	ngsmod->hs=hs;
 	if(ndm>1){
 		ngsmod->ht=parms->dm[ndm-1].ht;//last DM.

@@ -557,6 +557,13 @@ int readcfg_peek_n(const char* format, ...){
 	return count;
 }
 /**
+ * Ignore an entry
+ * */
+void readcfg_ignore(const char *format, ...){
+	format2key;
+	getrecord(key, 1);
+}
+/**
    Check whether the record is overriden by user supplied conf files.
 */
 int readcfg_peek_override(const char* format, ...){
@@ -677,7 +684,7 @@ int readcfg_dblarr(real** ret, const char* format, ...){
 	return readstr_numarr((void**)ret, 0, NULL, NULL, M_REAL, getrecord(key, 1)->data);
 }
 
-static dmat* readstr_dmat_do(int n, const char* str){
+dmat* readstr_dmat_n(int n, const char* str){
 	if(!str){
 		return 0;
 	}
@@ -702,7 +709,7 @@ static dmat* readstr_dmat_do(int n, const char* str){
    Read as a dmat. It can be a file name or an array.
  */
 dmat* readstr_dmat(const char* str){
-	return readstr_dmat_do(0, str);
+	return readstr_dmat_n(0, str);
 }
 /**
    Read as a dmat. It can be a file name or an array.
@@ -710,7 +717,7 @@ dmat* readstr_dmat(const char* str){
 dmat* readcfg_dmat(const char* format, ...){
 	format2key;
 	char* str=getrecord(key, 1)->data;
-	return readstr_dmat_do(0, str);
+	return readstr_dmat_n(0, str);
 }
 
 /**
@@ -719,7 +726,7 @@ dmat* readcfg_dmat(const char* format, ...){
 dmat* readcfg_dmat_n(int n, const char* format, ...){
 	format2key;
 	char* str=getrecord(key, 1)->data;
-	dmat* out=readstr_dmat_do(n, str);
+	dmat* out=readstr_dmat_n(n, str);
 	long nread=out?(NX(out)*NY(out)):0;
 	if(n!=0&&nread!=n){
 		error("Need %d elements, got %ld\n", n, nread);
@@ -732,7 +739,7 @@ dmat* readcfg_dmat_n(int n, const char* format, ...){
 dmat* readcfg_dmat_nmax(int n, const char* format, ...){
 	format2key;
 	char* str=getrecord(key, 1)->data;
-	dmat* out=readstr_dmat_do(n, str);
+	dmat* out=readstr_dmat_n(n, str);
 	long nread=out?(NX(out)*NY(out)):0;
 	if(nread<=1){
 		dresize(out, n, 1);

@@ -126,12 +126,11 @@ add the suffix when use \c read.
 
 - \c Resp_1: \c resp: Results for each direction. Combines the following four files previous saved individually: Resolmp_1, Resclmp_1, Resolep_1, Resclep_1. 
     - Use \c resp=read('Resp_1)
-    - \c resp[0]: Open loop wavefront Zernike (not normalized wrt radius) modes
-      defined on not-normalized coordinate on the aperture. The format is
-      similar to res{1} above.
+    - \c resp[0]: Open loop wavefront Zernike modes
+      defined on not-normalized coordinate on the aperture, in the order of piston/tip/tilt ...
 
     - \c resp[1]: Close loop wavefront Zernike modes, in the
-      same format as \c Resolmp_1
+      same format as \c resp[0].
 
     - \c resp[2]: Open loop wavefront variance for each science field point.
       Each cell represent a science field point. The format is similar to res{1}

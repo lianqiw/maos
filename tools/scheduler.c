@@ -555,14 +555,16 @@ static void socket_remove(SOCKID_T*p){
 //retrieve socket from linked list based in id. 
 static int socket_get(int id){
 	int sock_save=-1;
-	for(SOCKID_T* p_next, *p=shead; p&&sock_save==-1; p=p_next){
-		p_next=p->next;
+	for(SOCKID_T* p_next, *p=shead; p; p=p_next){
+		p_next=p->next;//save so that socket_remove can be called
 		int badsock=0;
 		if((badsock=stcheck(p->sock))||p->id==id){
 			if(badsock){
 				close(p->sock); //closed socket
-			} else{
+			} else if(sock_save==-1){
 				sock_save=p->sock; //valid match
+			}else{
+				continue;//check next socket for disconnection.
 			}
 			socket_remove(p);
 		}
@@ -573,7 +575,7 @@ static void socket_heartbeat(){
 	for(SOCKID_T* p_next, *p=shead; p; p=p_next){
 		p_next=p->next;
 		int cmd[1]={DRAW_HEARTBEAT};
-		if(stwrite(p->sock, cmd, sizeof(cmd))){
+		if(stcheck(p->sock) || stwrite(p->sock, cmd, sizeof(cmd))){
 			socket_remove(p);
 		}
 	}

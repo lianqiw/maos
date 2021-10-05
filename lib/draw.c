@@ -179,7 +179,7 @@ retry:
 			break;
 		}
 	}
-	dbg_time("stopped lisening to drawdaemon at %d, errno=%d, %s\n", sock_draw, errno, strerror(errno));
+	//dbg_time("stopped lisening to drawdaemon at %d, errno=%d, %s\n", sock_draw, errno, strerror(errno));
 	listening=0;
 	return NULL;
 }
@@ -362,12 +362,15 @@ static int get_drawdaemon(){
 	}
 	int sock=-1;
 	//First try reusing existing idle drawdaemon with the same id
-	if(!scheduler_socket(-1, &sock, draw_id)){
+	while(!scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_FINAL)){
 			dbg("received socket=%d is already closed.\n", sock);
 			close(sock);
 			sock=-1;
+		}else{
+			break;
+			dbg("received socket=%d.\n", sock);
 		}
 	}
 	if(sock==-1){

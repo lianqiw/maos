@@ -316,9 +316,9 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	}
 	info2(" mas\n");
 	if(parms->save.setup){
-		writebin(recon->sanea, "recon_sanea");
-		writebin(recon->saneai, "recon_saneai");
-		writebin(recon->saneal, "recon_saneal");
+		writebin(recon->sanea, "sanea");
+		writebin(recon->saneai, "saneai");
+		writebin(recon->saneal, "saneal");
 	}
 }
 
@@ -336,9 +336,9 @@ setup_recon_TTFR(recon_t* recon, const parms_t* parms){
 	recon->PDF=dcellpinv(recon->DF, recon->saneai);
 	recon->PTTF=dcellpinv(recon->TTF, recon->saneai);
 	if(parms->save.setup){
-		writebin(recon->TTF, "recon_TTF");
-		writebin(recon->PTT, "recon_PTT");
-		writebin(recon->PTTF, "recon_PTTF");
+		writebin(recon->TTF, "TTF");
+		writebin(recon->PTT, "PTT");
+		writebin(recon->PTTF, "PTTF");
 	}
 	/*dcellfree(recon->DF);//don't free DF to use in PDF. */
 	/*Keep TT, PTT, used in fsm pointing or dithering. */
@@ -404,7 +404,7 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 			}
 		}
 		if(parms->save.setup){
-			writebin(recon->L2, "recon_L2");
+			writebin(recon->L2, "L2");
 		}
 		dspcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	}

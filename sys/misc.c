@@ -550,8 +550,10 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 	info2("Press enter to step, c to resume:\n");
 	fd_set active_fd_set;
 	FD_ZERO(&active_fd_set);
-	FD_SET(fd1, &active_fd_set);
-	if(fd2>0){
+	if(fd1>0|| (fd1==0 && !detached) ){
+		FD_SET(fd1, &active_fd_set);
+	}
+	if(fd2>0 && fd2 != fd1){
 		FD_SET(fd2, &active_fd_set);
 	}
 	int ans=select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0);
@@ -569,6 +571,8 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 				}
 			}
 		}
+	}else{
+		warning("Select failed: %s\n", strerror(errno));
 	}
 	return 1;
 }

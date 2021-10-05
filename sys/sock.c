@@ -256,7 +256,7 @@ int bind_socket(int protocol, char* ip, uint16_t port){
 		sleep(10);
 		count++;
 		if(count>100){
-			error("Failed to bind to port %d\n", port);
+			warning("Failed to bind to port %d\n", port);
 			close(sock);
 			sock=-1;
 		}
@@ -323,9 +323,28 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	FD_ZERO(&active_fd_set);
 	char* ip=0;
 	int sock_local=-1;
+	int sock=-1;
+	if(port){
+		if((sock=bind_socket(SOCK_STREAM, ip, port))==-1){
+			warning("bind_socket failed\n");
+			return;
+		}
+		if(nodelay){//turn off tcp caching.
+			dbg("Turn on tcp nodelay\n");
+			socket_tcp_nodelay(sock);
+		}
+		if(listen(sock, 10)<0){
+			perror("listen (sock)");
+			exit(EXIT_FAILURE);
+		}
+		FD_SET(sock, &active_fd_set);
+		socket_recv_timeout(sock, 60);
+		socket_send_timeout(sock, 60);
+	}
 	if(localpath){
 		if(localpath[0]=='/'){
 			//also bind to AF_UNIX
+			remove(localpath);//if tcp port bind is success, no other process is running
 			sock_local=bind_socket_unix(localpath);
 			if(sock_local==-1){
 				dbg_time("bind to %s failed\n", localpath);
@@ -344,18 +363,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			ip=localpath;
 		}
 	}
-	int sock=bind_socket(SOCK_STREAM, ip, port);
-	if(nodelay){//turn off tcp caching.
-		dbg("Turn on tcp nodelay\n");
-		socket_tcp_nodelay(sock);
-	}
-	if(listen(sock, 10)<0){
-		perror("listen (sock)");
-		exit(EXIT_FAILURE);
-	}
-	FD_SET(sock, &active_fd_set);
-	socket_recv_timeout(sock, 60);
-	socket_send_timeout(sock, 60);
+
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
 	while(quit_listen!=2&&nlisten){

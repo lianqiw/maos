@@ -259,30 +259,13 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			} else{
 				int* wfscover2=0;
 				int ncover=readstr_intarr(&wfscover2, 0, strwfs);
-				for(int i=0; i<MIN(ncover, nwfs); i++){
-					wfscover[i]=wfscover2[i];
+				int iwfs=0;
+				int val=0;
+				for(iwfs=0; iwfs<MIN(ncover, nwfs); iwfs++){
+					val=(wfscover[iwfs]=wfscover2[iwfs]);
 				}
-				if(ncover!=nwfs){
-					int val;
-					if(ncover==0){
-						warning("wfscover has zero length. Assume all 0.\n");
-						val=0;
-					} else{
-						//warning("SURFWFS has length of %d, expect %d. Will replicate ", ncover, nwfs);
-						if(parms->sim.skysim){
-							val=wfscover2[ncover-1];
-							dbg("last wfs: %d\n", val);
-						} else{
-							val=wfscover2[0];
-							for(int i=1; i<ncover; i++){
-								if(val>wfscover2[i]) val=wfscover2[i];
-							}
-							dbg("lowest value: %d\n", val);
-						}
-					}
-					for(int i=ncover; i<nwfs; i++){
-						wfscover[i]=val;
-					}
+				for(; iwfs<nwfs; iwfs++){//copy last value to all
+					wfscover[iwfs]=val;
 				}
 				free(wfscover2);
 				ncover=0;

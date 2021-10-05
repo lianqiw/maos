@@ -83,6 +83,7 @@ def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
     resc[res[:,:,nsim0:]==0]=nan
     return resc,xx
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
+    '''Results are in order of High, T/T, NGS total, Focus'''
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
 def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Resclep", seeds, iframe1, iframe2)
@@ -138,6 +139,9 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
                 n1=iframe1
             if iframe2<=1:
                 n2=round(iframe2*res.shape[0])
+                n2max=np.nonzero(res[:,0]>0)[0][-1]
+                if n2>n2max:
+                    n2=n2max
             else:
                 n2=iframe2
             if n1 < n2 and n2 <= res.shape[0]:
