@@ -43,6 +43,7 @@ static GtkWidget* curwindow=NULL;
 static GtkWidget* curtopnb=NULL;
 static GtkWidget* contexmenu=NULL;
 static drawdata_t* drawdata_dialog=NULL;
+drawdata_t* cur_drawdata=NULL;
 //static GtkToolItem* toggle_cumu=NULL;
 #if GTK_MAJOR_VERSION<3
 static GtkRcStyle* btn_rcstyle=NULL;
@@ -106,6 +107,7 @@ static GtkWidget* get_current_page(GtkWidget* notebook){
 	return gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), n);
 }
 static drawdata_t* get_current_drawdata(void){
+	if(!curtopnb) return NULL;
 	GtkWidget* topnb=curtopnb;
 	GtkWidget* w1=get_current_page(topnb);
 	GtkWidget* w2=get_current_page(w1);
@@ -764,6 +766,9 @@ static void page_changed(int topn, int subn){
 		subpage=get_current_page(subnb);
 	}
 	if(!subpage) return;
+	
+	drawdata_t** pdrawdata=(drawdata_t **)g_object_get_data(G_OBJECT(subpage), "drawdatawrap");
+	if(pdrawdata) cur_drawdata=*pdrawdata;
 	const char* fn=subnb_label_get(subnb, subpage);
 	//info("send fig=%s, fn=%s", fig, fn);
 	if(stwriteint(sock, DRAW_FIGFN)||
@@ -829,8 +834,8 @@ gboolean addpage(gpointer indata){
 	GtkWidget* topnb=0;
 	int itab=0;
 	int jtab=-1;
-	for(GSList* p=windows; p&&!nsubnb; p=p->next){
-	//scan through all window to find all topnb page that has the same "fig"
+	for(GSList* p=windows; p; p=p->next){
+		//scan through all window to find all topnb page that has the same "fig"
 		window=(GtkWidget*)p->data;
 		topnb=(GtkWidget*)get_topnb(window);
 		for(itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb)); itab++){
@@ -840,8 +845,8 @@ gboolean addpage(gpointer indata){
 			if(!res){//found
 				subnbs=g_slist_append(subnbs, subnb);
 				nsubnb++;/*number of subnbs find. */
-			} else if(res>0){//not found. Insert here.
-				jtab=itab;//mark insert location
+			} else if(res<0){//not found. Insert after string less than fig.
+				jtab=itab+1;//mark insert location
 			}
 		}
 	}
@@ -871,7 +876,7 @@ gboolean addpage(gpointer indata){
 	}
 	GtkWidget* page=NULL;
 	GtkWidget* subnb=NULL;
-	for(GSList* p=subnbs; p&&!page; p=p->next){
+	for(GSList* p=subnbs; p; p=p->next){
 		/*scan through all the subnb pages with same label */
 		subnb=(GtkWidget*)p->data;
 		for(itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb)); itab++){
@@ -885,8 +890,8 @@ gboolean addpage(gpointer indata){
 					info("Found duplicate page.\n");
 					gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), itab); itab--;
 				}
-			} else if(res>0){
-				jtab=itab;
+			} else if(res<0){
+				jtab=itab+1;
 			}
 		}
 	}

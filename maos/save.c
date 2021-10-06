@@ -260,8 +260,7 @@ void save_dmproj(sim_t* simu){
 		for(int idm=0; idm<parms->ndm; idm++){
 			if(P(simu->dmproj,idm)){
 				drawopd("DM", P(recon->aloc,idm), P(simu->dmproj,idm), P(parms->dbg.draw_opdmax),
-					"ATM to DM Projection (Hi)", "x (m)", "y (m)",
-					"Proj Hi %d", idm);
+					"ATM to DM Projection (Hi)", "x (m)", "y (m)", "Proj Hi %d", idm);
 			}
 		}
 	}
@@ -278,8 +277,7 @@ void save_dmreal(sim_t* simu){
 				if(P(P(simu->dmint->mint,0),idm)){
 					dmat* tmp=convert_dm(recon, P(P(simu->dmint->mint,0),idm), idm);
 					drawopd("DM", P(recon->aloc,idm), tmp, NULL,
-						"DM Integrator (Hi)", "x (m)", "y (m)",
-						"Int Hi %d", idm);
+						"DM Integrator (Hi)", "x (m)", "y (m)", "Int Hi %d", idm);
 					dfree(tmp);
 				}
 			}

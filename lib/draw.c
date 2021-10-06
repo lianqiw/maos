@@ -386,8 +386,9 @@ static int get_drawdaemon(){
 					close(sock_helper);
 					sock_helper=-1;
 					warning("Unable to talk to the helper to launch drawdaemon.\n");
+				}else{
+					dbg("launch using sock helper: sock=%d\n", sock);
 				}
-				dbg("launch using sock helper: sock=%d\n", sock);
 			}
 		} else{//no display is available. use scheduler to launch drawdaemon
 			dbg("launch using scheduler\n");

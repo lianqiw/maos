@@ -177,6 +177,7 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
    adjust xmin, xmax properly.
 */
 void round_limit(float* xmin, float* xmax, int logscale){
+	if(*xmin==0 && *xmax==0) return;
 	if(logscale){
 		if(*xmin<=0) *xmin=0.1;
 		if(*xmax<=0) *xmax=1;
@@ -184,8 +185,8 @@ void round_limit(float* xmin, float* xmax, int logscale){
 		*xmax=log10(*xmax);
 	}
 	if(fabs(*xmin)<1e-15&&fabs(*xmax)<1e-15){/*both are zero. */
-		*xmin=-1;
-		*xmax=1;
+		*xmin=0;
+		*xmax=0;
 	} else{
 		float tic1, dtic;
 		int ntic, order;

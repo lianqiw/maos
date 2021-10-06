@@ -67,12 +67,18 @@ static unsigned int crp(float x, float x0){
 /**
    convert float to char with color map*/
 void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* zlim){
-	if(zlim[0]>=zlim[1]){
-		fmaxmin(p, nx*ny, zlim+1, zlim);
+	float max, min;
+	fmaxmin(p, nx*ny, &max, &min);
+	//update if range change by 10%
+	if(max > zlim[1]*1.1 || max < zlim[1]*0.9){
+		zlim[1]=max;
+	}
+	if(min>zlim[0]*1.1||min<zlim[0]*0.9){
+		zlim[0]=min;
 	}
 	round_limit(zlim, zlim+1, 0);
-	float min=zlim[0];
-	float max=zlim[1];
+	min=zlim[0];
+	max=zlim[1];
 	if(color){/*colored */
 		int* pi=(int*)pout;
 		float scale, offset;
@@ -255,7 +261,7 @@ retry:
 	char *name=0;
 	int cmd=0;
 	int nlen=0;
-	int pid=getpid();
+	//int pid=getpid();
 	if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
 	while(sock!=-1){
 		STREADINT(cmd);//will block if no data is available.
@@ -264,7 +270,7 @@ retry:
 			STREADINT(nlen);
 			STREADINT(cmd);
 		}
-		if(cmd!=DRAW_HEARTBEAT) dbg_time("%d received %d\n", pid, cmd);
+		//if(cmd!=DRAW_HEARTBEAT) dbg_time("%d received %d\n", pid, cmd);
 		
 		switch(cmd){
 		case DRAW_FRAME:{//in new format, every frame start with this. Place holder to handle UDP.
