@@ -398,6 +398,7 @@ static int get_drawdaemon(){
 
 	if(sock!=-1){
 		draw_add(sock);
+		socket_send_timeout(sock, 2);//prevent hang.
 		return 0;
 	}else{
 		draw_disabled=1;

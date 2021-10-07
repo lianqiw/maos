@@ -672,7 +672,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	const real cogthres=parms->powfs[ipowfs].cogthres;
 	const real cogoff=parms->powfs[ipowfs].cogoff;
 	for(int icol=0; icol<1000; icol+=dtrat){
-		setup_powfs_etf(powfs, parms, 0, ipowfs, 0, icol);
+		setup_powfs_etf(powfs, parms, 0, 0, ipowfs, 0, icol);
 		dcell *i0_new=0;
 		
 		gensei(&i0_new, NULL, NULL, NULL, 

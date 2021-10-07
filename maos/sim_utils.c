@@ -361,7 +361,6 @@ void atm2xloc(dcell** opdx, const sim_t* simu){
 		}
 	}
 }
-int update_etf=0;//set this variable to trigger ETF update
 /**
    Evolving the Sodium layer by updating the elongation transfer function.
 */
@@ -371,11 +370,16 @@ void sim_update_etf(sim_t* simu){
 	powfs_t* powfs=simu->powfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		/* Update ETF if necessary. */
-		if((parms->powfs[ipowfs].usephy
-			||parms->powfs[ipowfs].psfout
-			||parms->powfs[ipowfs].pistatout)
-			&&parms->powfs[ipowfs].llt
-			&&((parms->powfs[ipowfs].llt->coldtrat>0&&isim%parms->powfs[ipowfs].llt->coldtrat==0)||update_etf)){
+		if(!parms->powfs[ipowfs].llt) continue;
+		//Needs ETF for imaging
+		const int has_phy=parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout;
+		//Need to initialize trombone position
+		const int zoomset=parms->powfs[ipowfs].zoomset
+			&&simu->wfsisim==parms->sim.start+parms->powfs[ipowfs].zoomset
+			&&parms->powfs[ipowfs].phytype_sim!=PTYPE_MF;
+		//Time for sodium profile update
+		const int na_update=parms->powfs[ipowfs].llt->coldtrat>0&&isim%parms->powfs[ipowfs].llt->coldtrat==0;
+		if(has_phy &&(na_update||zoomset)){
 			int icol=0, icol2=0;
 			if(parms->powfs[ipowfs].llt->coldtrat>0){
 				int dtrat=parms->powfs[ipowfs].llt->coldtrat;
@@ -384,7 +388,9 @@ void sim_update_etf(sim_t* simu){
 				icol2=icol+1;
 			}
 			real deltah=0;
-			const real factor=2*pow(parms->powfs[ipowfs].hs, 2);
+			//factor converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
+			//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
+			const real factor=-2*pow(parms->powfs[ipowfs].hs, 2);
 			if(simu->zoomint){
 				if(!parms->powfs[ipowfs].zoomshare){
 					error("Please implement\n");
@@ -403,21 +409,28 @@ void sim_update_etf(sim_t* simu){
 					dzero(simu->zoomdrift);
 					lzero(simu->zoomdrift_count);
 				}
-
-				real gain=parms->powfs[ipowfs].zoomgain?parms->powfs[ipowfs].zoomgain:0.5;
-				P(simu->zoomint, iwfs0)+=gain*(zoomerr1+zoomerr2);
+				if(zoomset){
+					P(simu->zoomint, iwfs0)=(zoomerr1+zoomerr2);
+					//more accurate method:
+					real hold=parms->powfs[ipowfs].hs;
+					real hnew=1./(1./hold+2*P(simu->zoomint, iwfs0));
+					deltah=hnew-hold;
+				}else{
+					P(simu->zoomint, iwfs0)+=parms->powfs[ipowfs].zoomgain*zoomerr1
+						+parms->powfs[ipowfs].zoomgain_drift*zoomerr2;
+					deltah=P(simu->zoomint, iwfs0)*factor;
+				}
 				if(simu->zoompos&&P(simu->zoompos, iwfs0)){
 					P(P(simu->zoompos, iwfs0), simu->zoompos_icol)=P(simu->zoomint, iwfs0);
 					simu->zoompos_icol++;
 				}
-				deltah=-P(simu->zoomint, iwfs0)*factor;
-				dbg("Step %d\t: powfs %d: trombone error is %g %g zoompos is %g\n", isim, ipowfs, zoomerr1*factor, zoomerr2*factor, deltah);
+				dbg("Step %d: powfs %d: trombone error is %g %g zoompos is %g zoomset=%d.\n", isim, ipowfs, zoomerr1*factor, zoomerr2*factor, deltah, zoomset);
 			}
-			info("Step %d\t: powfs %d: Updating ETF (update_etf=%d)\n", isim, ipowfs, update_etf);
+			info("Step %d: powfs %d: Updating ETF.\n", isim, ipowfs);
 			TIC;tic;
-			setup_powfs_etf(powfs, parms, deltah, ipowfs, 1, icol);
+			setup_powfs_etf(powfs, parms, deltah, zoomset?0:100, ipowfs, 1, icol);
 			if(icol2!=icol){
-				setup_powfs_etf(powfs, parms, deltah, ipowfs, 2, icol2);
+				setup_powfs_etf(powfs, parms, deltah, 0, ipowfs, 2, icol2);
 			}
 			toc2("ETF");
 #if USE_CUDA
@@ -427,7 +440,6 @@ void sim_update_etf(sim_t* simu){
 #endif
 		}
 	}
-	update_etf=0;
 }
 /**
  * Update flags
@@ -469,12 +481,7 @@ void sim_update_flags(sim_t* simu, int isim){
 				simu->gradoffisim=simu->wfsisim;
 			}
 		}
-		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].zoomdtrat&&parms->powfs[ipowfs].zoomgain>0){
-			int zd=parms->powfs[ipowfs].zoomdtrat;
-			wfsflags->zoomout=((simu->wfsisim+1)%zd==0)?((simu->wfsisim+1)/zd):0;
-		}
 	}
-
 }
 /**
    use random number dirived from input seed to seed other stream.  necessary to
@@ -1088,11 +1095,8 @@ static void init_simu_wfs(sim_t* simu){
 			if(parms->powfs[ipowfs].llt){
 				nnx[iwfs]=1;
 				nny[iwfs]=0;
-				if(parms->powfs[ipowfs].zoomdtrat){
-					nny[iwfs]=(parms->sim.end+1)/parms->powfs[ipowfs].zoomdtrat;
-				}
 				if(parms->powfs[ipowfs].llt->coldtrat){
-					nny[iwfs]=MAX(nny[iwfs], (parms->sim.end+1)/parms->powfs[ipowfs].llt->coldtrat);
+					nny[iwfs]=(parms->sim.end+parms->powfs[ipowfs].llt->coldtrat-1)/parms->powfs[ipowfs].llt->coldtrat;
 				}
 				nny2[iwfs]=nsim;
 			} else{

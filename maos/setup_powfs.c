@@ -1075,9 +1075,8 @@ static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs)
 		}
 	}
 }
-static int etf_match(etf_t* etf, int icol, real hs){
-	const double thres_dh=4;//allow 4 meter difference
-	return (etf&&etf->icol==icol&&fabs(etf->hs-hs)<thres_dh);
+static int etf_match(etf_t* etf, int icol, real hs, real thresh){
+	return (etf&&etf->icol==icol&&fabs(etf->hs-hs)<thresh);
 }
 /**
    Compute Elongation Transfer function.
@@ -1085,7 +1084,7 @@ static int etf_match(etf_t* etf, int icol, real hs){
    - mode=1: for simulation.
    - mode=2: for simulation, next profile (linear interpolation.)
 */
-void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, double deltah, int ipowfs, int mode, int icol){
+void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, real deltah, real thresh, int ipowfs, int mode, int icol){
 	if(!parms->powfs[ipowfs].llt) return;
     etf_t** petf=0;
 	const cell* sodium=CELL(powfs[ipowfs].sodium);
@@ -1099,22 +1098,23 @@ void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, double deltah, int ip
 		}
 		petf=&powfs[ipowfs].etfprep;
 	} else if(mode==1){/*first pair for interpolation*/
-		if(etf_match(powfs[ipowfs].etfsim, icol, parms->powfs[ipowfs].hs+deltah)){
+		if(etf_match(powfs[ipowfs].etfsim, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 			dbg("No need to update etfsim\n");
 		} else{
 			if(powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
 				etf_free(powfs[ipowfs].etfsim);
 			}
 			powfs[ipowfs].etfsim=0;
-			if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah)){
+			if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 				//reuse etfsim2 as etfsim
+				dbg("reuse etfsim2 as etfsim.\n");
 				powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 			} else{
 				petf=&powfs[ipowfs].etfsim;
 			}
 		}
 	} else if(mode==2){/*second pair for interpolation*/
-		if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah)){
+		if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 			dbg("No need to update etfsim2\n");
 		} else{
 			if(powfs[ipowfs].etfsim2!=powfs[ipowfs].etfsim){
@@ -1127,7 +1127,7 @@ void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, double deltah, int ip
 		error("Invalid mode=%d\n", mode);
 	}
 	if(petf){
-		dbg("mketf: powfs %d using column %d with trombone dh=%g\n", ipowfs, icol, deltah);
+		dbg("mketf: powfs %d using column %d with dh=%g\n", ipowfs, icol, deltah);
 		*petf=mketf(powfs[ipowfs].dtf, sodium, icol, 
 					powfs[ipowfs].srot, powfs[ipowfs].srsa,
 					parms->powfs[ipowfs].hs+deltah, 
@@ -1650,12 +1650,12 @@ void setup_powfs_phy(const parms_t* parms, powfs_t* powfs){
 			if(parms->powfs[ipowfs].llt){
 			/*prepare Laser launch telescope. */
 				setup_powfs_sodium(powfs, parms, ipowfs);/*read sodium profile and smooth it */
-				setup_powfs_etf(powfs, parms, 0, ipowfs, 0, parms->powfs[ipowfs].llt->colprep);/*etf for prep */
+				setup_powfs_etf(powfs, parms, 0, ipowfs, 0, 0, parms->powfs[ipowfs].llt->colprep);/*etf for prep */
 				if(!parms->powfs[ipowfs].llt->coldtrat){/*const etf for sim */
 					if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim){
 						powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
 					} else{
-						setup_powfs_etf(powfs, parms, 0, ipowfs, 1, parms->powfs[ipowfs].llt->colsim);
+						setup_powfs_etf(powfs, parms, 0, ipowfs, 1, 0, parms->powfs[ipowfs].llt->colsim);
 					}
 				}
 				setup_powfs_llt(powfs, parms, ipowfs);

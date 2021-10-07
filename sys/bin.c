@@ -170,6 +170,7 @@ int disable_save=0;
 */
 static char* procfn(const char* fn, const char* mod){
 	char* fn2;
+	if(!fn) return NULL;
 	if(fn[0]=='~'){
 		fn2=(char*)malloc(strlen(HOME)+strlen(fn)+16);
 		strcpy(fn2, HOME);
@@ -177,6 +178,9 @@ static char* procfn(const char* fn, const char* mod){
 	} else{
 		fn2=(char*)malloc(strlen(fn)+16);
 		strcpy(fn2, fn);
+	}
+	if(fn2[strlen(fn2)-1]=='\n'){//avoid accidental newline in filename
+		fn2[strlen(fn2)-1]='\0';
 	}
 	/*If there is no recognized suffix, add .bin in the end. */
 	if(mod[0]=='r'){

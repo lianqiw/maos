@@ -713,7 +713,6 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 static void wfsgrad_lgsfocus(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
-	extern int update_etf;
 
 	dcell* LGSfocus=simu->LGSfocus;//computed in wfsgrad_post from gradcl.
 
@@ -741,12 +740,6 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), focus);
 			}
 		}
-
-
-		const int zoomset=(parms->powfs[ipowfs].zoomset
-			&&simu->wfsisim==parms->sim.start
-			&&parms->powfs[ipowfs].phytype_sim!=PTYPE_MF);
-
 		real lgsfocusm=0;
 		if(parms->powfs[ipowfs].zoomshare||parms->sim.mffocus==2){
 			lgsfocusm=0;
@@ -764,17 +757,9 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 		  step. No need if start with pre-built matched filter.*/
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			real zoomerr=parms->powfs[ipowfs].zoomshare?lgsfocusm:P(P(LGSfocus, iwfs), 0);
-			if(zoomset){
-				P(simu->zoomint, iwfs)=zoomerr;
-				if(jwfs==0||!parms->powfs[ipowfs].zoomshare){
-					info2("wfs %d: Move trombone by %.1f m.\n", iwfs,
-						P(simu->zoomint, iwfs)*2*pow(parms->powfs[ipowfs].hs, 2));
-				}
-				update_etf=1;//this is important in bootstraping.
-			} else if(parms->powfs[ipowfs].zoomgain>0&&parms->powfs[ipowfs].zoomdtrat){
+			if(parms->powfs[ipowfs].zoomgain){
 				//Trombone from gradients. always enable
-				P(simu->zoomavg, iwfs)+=zoomerr;//zoom averager.
+				P(simu->zoomavg, iwfs)+=P(P(LGSfocus, iwfs), 0);//zoom averager.
 				P(simu->zoomavg_count, iwfs)++;
 			}
 			if(parms->sim.mffocus){//Focus HPF
@@ -785,10 +770,6 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), -P(simu->lgsfocuslpf, iwfs));
 			}
 		}//for jwfs
-
-		/*if(simu->wfsflags[ipowfs].zoomout&&!parms->powfs[ipowfs].llt->coldtrat){
-			update_etf=1;
-		}*/
 	}//for ipowfs
 }
 
@@ -1107,13 +1088,16 @@ static void wfsgrad_dither_post(sim_t* simu){
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 						shwfs_grad(&ibgrad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
+						if(parms->save.dither){
+							writebin(ibgrad, "extra/wfs%d_i0grad_%d", iwfs, isim);
+						}
 						wfsgrad_tt_drift(ibgrad, simu, 0.5, iwfs, 0);
 						//adjust the gain based on dtrat difference.
 						/*const real dtdrift=parms->powfs[ipowfs].dither_ograt*parms->sim.dt;
 						const real dtwant=20; //dt where gain should be 0.5
 						const real fgain=dtdrift/dtwant*0.5;*/
 						//higher gain is bad. why?
-						wfsgrad_focus_drift(ibgrad, simu, 1, iwfs, 1);
+						wfsgrad_focus_drift(ibgrad, simu, 0.01, iwfs, 0);
 					}
 					dfree(ibgrad);
 				}

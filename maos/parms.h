@@ -262,9 +262,10 @@ typedef struct powfs_cfg_t{
 	int dither_ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
 	int dither_ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
     //options for zoom corrector
-    int zoomdtrat;   /**<dtrat of the trombone averager*/
+    //int zoomdtrat;   /**<Use llt.coldtrat instead*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
     real zoomgain; /**<gain of the trombone controller*/
+    real zoomgain_drift; /**<gain for the trombone controller with i0 drift input*/
     int zoomset;     /**<Set zoom position from the beginning*/
     /*Options for Pywfs*/
     real modulate;  /**<Pyramid modulation diamter in arcsec*/

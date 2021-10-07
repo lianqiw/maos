@@ -487,7 +487,7 @@ typedef struct {
     //int ogcount;   /**<Number of optical gain accumulations*/
     int ogacc;    /**<OG accumulation count or 0 if no action*/
     int ogout;    /**<OG output count or 0 if no update*/
-	int zoomout;  /**<Trombone zoom output*/
+	//int zoomout;  /**<Trombone zoom output*/
 }wfsflags_t;
 /**
    contains all the run time data struct.
