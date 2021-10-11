@@ -416,6 +416,18 @@ void sim_update_etf(sim_t* simu){
 					real hnew=1./(1./hold+2*P(simu->zoomint, iwfs0));
 					deltah=hnew-hold;
 				}else{
+					//create a zoom bias may help to degrade performance that
+					//also depends on the sodium profile. Not a universal
+					//solution
+					/*real zoomerr2_bias=0;
+					if(getenv("MAOS_ZOOM_BIAS")){//trombone bias in meter
+						real ZOOM_BIAS=0;
+						READ_ENV_DBL(ZOOM_BIAS, -10000, 10000);
+						if(ZOOM_BIAS){
+							warning_once("trombine bias is set to %g m\n", ZOOM_BIAS);
+							zoomerr2_bias=ZOOM_BIAS/factor;//convert to focus
+						}
+					}*/
 					P(simu->zoomint, iwfs0)+=parms->powfs[ipowfs].zoomgain*zoomerr1
 						+parms->powfs[ipowfs].zoomgain_drift*zoomerr2;
 					deltah=P(simu->zoomint, iwfs0)*factor;
@@ -428,9 +440,9 @@ void sim_update_etf(sim_t* simu){
 			}
 			info("Step %d: powfs %d: Updating ETF.\n", isim, ipowfs);
 			TIC;tic;
-			setup_powfs_etf(powfs, parms, deltah, zoomset?0:100, ipowfs, 1, icol);
+			setup_powfs_etf(powfs, parms, ipowfs, 1, icol, deltah, zoomset?0:100);
 			if(icol2!=icol){
-				setup_powfs_etf(powfs, parms, deltah, 0, ipowfs, 2, icol2);
+				setup_powfs_etf(powfs, parms, ipowfs, 2, icol2, deltah, 0);
 			}
 			toc2("ETF");
 #if USE_CUDA

@@ -541,7 +541,7 @@ static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gain, int iwfs, in
 		//here we don't use RFlgsg which is noise weighted
 		real focus=loc_remove_focus_grad(grad, simu->powfs[ipowfs].saloc, remove?1:0);
 		if(gain){
-			P(simu->zoomdrift, iwfs)+=gain*focus;
+			P(simu->zoomdrift, iwfs)+=gain*focus;//accumulate to the averager
 			P(simu->zoomdrift_count, iwfs)++;
 		}
 	}
@@ -1091,13 +1091,13 @@ static void wfsgrad_dither_post(sim_t* simu){
 						if(parms->save.dither){
 							writebin(ibgrad, "extra/wfs%d_i0grad_%d", iwfs, isim);
 						}
-						wfsgrad_tt_drift(ibgrad, simu, 0.5, iwfs, 0);
+						wfsgrad_tt_drift(ibgrad, simu, P(parms->sim.eplo, 0), iwfs, 0);
 						//adjust the gain based on dtrat difference.
 						/*const real dtdrift=parms->powfs[ipowfs].dither_ograt*parms->sim.dt;
 						const real dtwant=20; //dt where gain should be 0.5
 						const real fgain=dtdrift/dtwant*0.5;*/
 						//higher gain is bad. why?
-						wfsgrad_focus_drift(ibgrad, simu, 0.01, iwfs, 0);
+						wfsgrad_focus_drift(ibgrad, simu, 1, iwfs, 0);
 					}
 					dfree(ibgrad);
 				}

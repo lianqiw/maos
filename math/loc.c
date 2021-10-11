@@ -765,17 +765,8 @@ real loc_remove_focus_grad(dmat *grad, const loc_t *saloc, real factor){
 	real d2=dvecdot(P(mode), P(mode), NULL, PN(grad));
 	real focus=d1/d2;
 	if(factor) dadd(&grad, 1, mode, -focus*factor);
-	/*
-	dmat* mode=dnew_do(saloc->nloc*2, 1, saloc->p, NULL);
-	dmat* rmod=dpinv(mode, NULL);
-	dmat* mfocus=0;
-	dmm(&mfocus, 0, rmod, grad, "nn", 1);
-	dmm(&grad, 1, mode, mfocus, "nn", -factor);
-	real focus=P(mfocus,0);
-	dfree(mfocus);
-	dfree(rmod);
-	dfree(mode);*/
-	return focus;
+	//multiply by 0.5 because focus has gradient of 2*locx, 2*locy
+	return focus*0.5;
 }
 /**
    Compute zernike best fit for all subapertures. add result to out.  returns

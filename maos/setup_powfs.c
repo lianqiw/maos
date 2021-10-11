@@ -1080,11 +1080,11 @@ static int etf_match(etf_t* etf, int icol, real hs, real thresh){
 }
 /**
    Compute Elongation Transfer function.
-   - mode=0: for preparation.
+   - mode=0: for preparation of matched filter.
    - mode=1: for simulation.
    - mode=2: for simulation, next profile (linear interpolation.)
 */
-void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, real deltah, real thresh, int ipowfs, int mode, int icol){
+void setup_powfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode, int icol, real deltah, real thresh){
 	if(!parms->powfs[ipowfs].llt) return;
     etf_t** petf=0;
 	const cell* sodium=CELL(powfs[ipowfs].sodium);
@@ -1095,8 +1095,13 @@ void setup_powfs_etf(powfs_t* powfs, const parms_t* parms, real deltah, real thr
 		if(powfs[ipowfs].sodiumprep){
 			dbg("Using sodiumprep for etfprep\n");
 			sodium=CELL(powfs[ipowfs].sodiumprep);
+			petf=&powfs[ipowfs].etfprep;
+		} else if(etf_match(powfs[ipowfs].etfsim, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
+			powfs[ipowfs].etfprep=powfs[ipowfs].etfsim;
+			dbg("Using etfsim as etfprep\n");
+		}else{
+			petf=&powfs[ipowfs].etfprep;
 		}
-		petf=&powfs[ipowfs].etfprep;
 	} else if(mode==1){/*first pair for interpolation*/
 		if(etf_match(powfs[ipowfs].etfsim, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 			dbg("No need to update etfsim\n");
@@ -1383,7 +1388,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(powfs[ipowfs].intstat){
 		error("Should only be called once\n");
 	}
-	if(parms->powfs[ipowfs].phytype_recon==1||parms->powfs[ipowfs].phytype_sim==1||!parms->powfs[ipowfs].phyusenea
+	if(parms->powfs[ipowfs].phytype_recon==PTYPE_MF||parms->powfs[ipowfs].phytype_sim==PTYPE_MF||!parms->powfs[ipowfs].phyusenea
 		||(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)
 		||parms->powfs[ipowfs].phytype_sim==4
 		){
@@ -1480,7 +1485,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 
 				/*Generating short exposure psfs for both uplink and downlink
 				turbulence effect. */
-
+				
 				gensepsf(&intstat->sepsf, otf, lotf, CELL(powfs[ipowfs].realsaa),
 					parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
 				//gensepsf(parms, powfs, ipowfs);
@@ -1493,7 +1498,10 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				cellfree(otf);
 			}
 			/*generate short exposure i0,gx,gy from psf. */
-			{
+			{	
+				if(parms->powfs[ipowfs].llt){
+					setup_powfs_etf(powfs, parms, ipowfs, 0, parms->powfs[ipowfs].llt->colprep, 0, 0);
+				}
 				cccell** pfotf=(parms->powfs[ipowfs].phytype_sim==3
 					||(parms->dbg.wfslinearity!=-1&&parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs))?&intstat->fotf:0;
 				gensei(&intstat->i0, &intstat->gx, &intstat->gy, pfotf,
@@ -1648,21 +1656,15 @@ void setup_powfs_phy(const parms_t* parms, powfs_t* powfs){
 			setup_powfs_prep_phy(powfs, parms, ipowfs);
 			setup_powfs_dtf(powfs, parms, ipowfs);
 			if(parms->powfs[ipowfs].llt){
-			/*prepare Laser launch telescope. */
+				//load and smooth sodium profile
 				setup_powfs_sodium(powfs, parms, ipowfs);/*read sodium profile and smooth it */
-				setup_powfs_etf(powfs, parms, 0, ipowfs, 0, 0, parms->powfs[ipowfs].llt->colprep);/*etf for prep */
-				if(!parms->powfs[ipowfs].llt->coldtrat){/*const etf for sim */
-					if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim){
-						powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
-					} else{
-						setup_powfs_etf(powfs, parms, 0, ipowfs, 1, 0, parms->powfs[ipowfs].llt->colsim);
-					}
-				}
+				//etf for first time step. etfprep is moved to before i0 generation
+				setup_powfs_etf(powfs, parms, ipowfs, 1, parms->powfs[ipowfs].llt->colsim, 0., 0.);
 				setup_powfs_llt(powfs, parms, ipowfs);
 			}
 
 			if(parms->powfs[ipowfs].llt){
-			/*If there is LLT, setup the extra focus term if needed. */
+				/*If there is LLT, setup the extra focus term if needed. */
 				setup_powfs_focus(powfs, parms, ipowfs);
 			}
 			if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy){
