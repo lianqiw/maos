@@ -1,6 +1,5 @@
 var NAVTREEINDEX14 =
 {
-"pywfs_8h.html#aef48199fd578484ed3d4208c19e1fdaf":[10,0,2,7,0,21],
 "pywfs_8h.html#structpywfs__t":[10,0,2,7,0],
 "readcfg_8h.html":[10,0,1,22],
 "readcfg_8h.html#a0258dd21e9b70280d7b8fd9de5614c76":[10,0,1,22,0],
@@ -137,11 +136,11 @@ var NAVTREEINDEX14 =
 "setup__powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e":[10,0,2,12,0],
 "setup__powfs_8h.html#a1a9c34e6fc651433c73473e0e039dc63":[10,0,2,12,7],
 "setup__powfs_8h.html#a26a75b0436e21b8fca94ac004676e984":[10,0,2,12,6],
+"setup__powfs_8h.html#a27873550d48d038d255cc7e4cfd31bd1":[10,0,2,12,8],
 "setup__powfs_8h.html#a33bf8889280bcb05fb321b5397ccb49e":[10,0,2,12,5],
 "setup__powfs_8h.html#a36b1526a9936b7bfd6256e5abbfe94a8":[10,0,2,12,4],
 "setup__powfs_8h.html#a54fc7e790ae6161b15c2a69f6fbee260":[10,0,2,12,2],
 "setup__powfs_8h.html#a6e46d89a923330dddfe6a0dd31811ada":[10,0,2,12,3],
-"setup__powfs_8h.html#a77c3dd827cf5f4422c1eb7ad0ef59b0c":[10,0,2,12,8],
 "setup__powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f":[10,0,2,12,9],
 "setup__powfs_8h.html#af73db6cefef80ad4855578d44bec2f9d":[10,0,2,12,1],
 "setup__recon_8h.html":[10,0,2,13],
@@ -249,5 +248,6 @@ var NAVTREEINDEX14 =
 "smath_8h.html#a0d63bad5fa8dd1fcee405d33fd55ab3a":[10,0,3,9,16],
 "smath_8h.html#a0d95222182c104a56c939d02be8f791d":[10,0,3,9,60],
 "smath_8h.html#a0fc83d1e642cacdd19d2b9c4e431f0d0":[10,0,3,9,85],
-"smath_8h.html#a103f199d42c3eebbdc9c55711ef11514":[10,0,3,9,7]
+"smath_8h.html#a103f199d42c3eebbdc9c55711ef11514":[10,0,3,9,7],
+"smath_8h.html#a108b4663c182519c6016972d84589024":[10,0,3,9,100]
 };

@@ -121,8 +121,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 <tr class="separator:a26a75b0436e21b8fca94ac004676e984"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a9c34e6fc651433c73473e0e039dc63"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a1a9c34e6fc651433c73473e0e039dc63">free_powfs</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
 <tr class="separator:a1a9c34e6fc651433c73473e0e039dc63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77c3dd827cf5f4422c1eb7ad0ef59b0c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a77c3dd827cf5f4422c1eb7ad0ef59b0c">setup_powfs_etf</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, double deltah, int ipowfs, int mode, int icol)</td></tr>
-<tr class="separator:a77c3dd827cf5f4422c1eb7ad0ef59b0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27873550d48d038d255cc7e4cfd31bd1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#a27873550d48d038d255cc7e4cfd31bd1">setup_powfs_etf</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, int ipowfs, int mode, int icol, real deltah, real thresh)</td></tr>
+<tr class="separator:a27873550d48d038d255cc7e4cfd31bd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2d609d5e539eeb17e1a57f6365a1c4f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f">wfspupmask</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, <a class="el" href="type_8h.html#structdmat">dmat</a> *amp, int iwfs)</td></tr>
 <tr class="separator:ac2d609d5e539eeb17e1a57f6365a1c4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -345,8 +345,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
 
 </div>
 </div>
-<a id="a77c3dd827cf5f4422c1eb7ad0ef59b0c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a77c3dd827cf5f4422c1eb7ad0ef59b0c">&#9670;&nbsp;</a></span>setup_powfs_etf()</h2>
+<a id="a27873550d48d038d255cc7e4cfd31bd1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27873550d48d038d255cc7e4cfd31bd1">&#9670;&nbsp;</a></span>setup_powfs_etf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -366,12 +366,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>deltah</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>ipowfs</em>, </td>
         </tr>
@@ -385,7 +379,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>icol</em>&#160;</td>
+          <td class="paramname"><em>icol</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>deltah</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>thresh</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -395,7 +401,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b>
       </table>
 </div><div class="memdoc">
 <p>Compute Elongation Transfer function.</p><ul>
-<li>mode=0: for preparation.</li>
+<li>mode=0: for preparation of matched filter.</li>
 <li>mode=1: for simulation.</li>
 <li>mode=2: for simulation, next profile (linear interpolation.) </li>
 </ul>

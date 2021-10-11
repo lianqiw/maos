@@ -6,6 +6,5 @@ var maos_2types_8h_structwfsflags__t =
     [ "pllind", "maos_2types_8h.html#a942f756674db632e1c53b6f1b31f76e3", null ],
     [ "pllout", "maos_2types_8h.html#acf262c84d0f25430470446a8ee476de8", null ],
     [ "ogacc", "maos_2types_8h.html#a2b2533199310f266a924b0b5c6948205", null ],
-    [ "ogout", "maos_2types_8h.html#a84e8e62ecde6b798940df410a7f348c1", null ],
-    [ "zoomout", "maos_2types_8h.html#ab468a3d7e64119bb53bf1021fcbe0fed", null ]
+    [ "ogout", "maos_2types_8h.html#a84e8e62ecde6b798940df410a7f348c1", null ]
 ];

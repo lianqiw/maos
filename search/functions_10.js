@@ -92,7 +92,7 @@ var searchData=
   ['setup_5fngsmod_5frecon',['setup_ngsmod_recon',['../ahst_8h.html#a0233b7fe22a8218d6a5241f7baa880eb',1,'ahst.c']]],
   ['setup_5fparms',['setup_parms',['../parms_8h.html#ad6dd439c2115b1f50b1a177073cbd23c',1,'setup_parms.c']]],
   ['setup_5fparms_5fgpu',['setup_parms_gpu',['../parms_8h.html#aad108d3a5091968e86ec8adcc269d450',1,'setup_parms.c']]],
-  ['setup_5fpowfs_5fetf',['setup_powfs_etf',['../setup__powfs_8h.html#a77c3dd827cf5f4422c1eb7ad0ef59b0c',1,'setup_powfs.c']]],
+  ['setup_5fpowfs_5fetf',['setup_powfs_etf',['../setup__powfs_8h.html#a27873550d48d038d255cc7e4cfd31bd1',1,'setup_powfs.c']]],
   ['setup_5fpowfs_5ffit',['setup_powfs_fit',['../setup__recon_8h.html#a58f4cbdab5f06550701e99866c9e6002',1,'setup_powfs_fit(powfs_t *powfs, const recon_t *recon, const parms_t *parms):&#160;setup_recon_fit.c'],['../setup__recon__fit_8c.html#a58f4cbdab5f06550701e99866c9e6002',1,'setup_powfs_fit(powfs_t *powfs, const recon_t *recon, const parms_t *parms):&#160;setup_recon_fit.c']]],
   ['setup_5fpowfs_5finit',['setup_powfs_init',['../setup__powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e',1,'setup_powfs.c']]],
   ['setup_5fpowfs_5fmisreg_5fdm',['setup_powfs_misreg_dm',['../setup__powfs_8h.html#a54fc7e790ae6161b15c2a69f6fbee260',1,'setup_powfs.c']]],

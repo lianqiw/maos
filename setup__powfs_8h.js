@@ -8,6 +8,6 @@ var setup__powfs_8h =
     [ "setup_powfs_calib", "setup__powfs_8h.html#a33bf8889280bcb05fb321b5397ccb49e", null ],
     [ "free_powfs_unused", "setup__powfs_8h.html#a26a75b0436e21b8fca94ac004676e984", null ],
     [ "free_powfs", "setup__powfs_8h.html#a1a9c34e6fc651433c73473e0e039dc63", null ],
-    [ "setup_powfs_etf", "setup__powfs_8h.html#a77c3dd827cf5f4422c1eb7ad0ef59b0c", null ],
+    [ "setup_powfs_etf", "setup__powfs_8h.html#a27873550d48d038d255cc7e4cfd31bd1", null ],
     [ "wfspupmask", "setup__powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f", null ]
 ];
