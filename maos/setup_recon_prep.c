@@ -653,9 +653,9 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			if(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].lo){
 				continue;
 			}
-			if(parms->powfs[ipowfs].skip==2){//no need for TWFS
+			/*if(parms->powfs[ipowfs].skip==2){//no need for TWFS [use for TWFS mode]
 				continue;
-			}
+			}*/
 			const real hs=parms->wfs[iwfs].hs;
 			const real hc=parms->wfs[iwfs].hc;
 			const loc_t* saloc=P(recon->saloc, ipowfs);
@@ -873,58 +873,40 @@ setup_recon_GF(recon_t* recon, const parms_t* parms){
    From radial order modes to gradients.
  */
 static void
-setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
+setup_recon_GR(recon_t* recon, const parms_t* parms){
 	if(parms->itpowfs==-1&&!(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG)){
 		return;
 	}
-
-	const int nlayer=PN(parms->recon.twfs_ipsr);
+	int nlayer=1;
+	//Need two layers when there are multiple TWFS or LGS WFS gradient offset needs projection adjustment
+	if((parms->itpowfs!=-1 && parms->powfs[parms->itpowfs].nwfs>1)
+		||(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG&&parms->powfs[parms->ilgspowfs].nwfs>1)){
+		nlayer=parms->ndm;
+	}
 	recon->GRall=dcellnew(parms->nwfs, nlayer);
 
 	const int rmax=parms->recon.twfs_rmax?parms->recon.twfs_rmax:(parms->powfs[parms->itpowfs].order/2);
 	const int rmin=parms->recon.twfs_rmin?parms->recon.twfs_rmin:3;
 	const int zradonly=parms->recon.twfs_radonly;
-	dbg("twfs mode is %s from order %d to %d.\n", zradonly?"radial":"all modes", rmin, rmax);
+	dbg("twfs mode is %s from order %d to %d on %d layers.\n", zradonly?"radial":"all modes", rmin, rmax, nlayer);
 	for(int ilayer=0; ilayer<nlayer; ilayer++){
-		int ipsr=P(parms->recon.twfs_ipsr, ilayer);
-		if(ipsr<0||ipsr>PN(recon->xloc)){
-			error("Invalid twfs_indatmr.\n");
-		}
-		const loc_t* loc=ipsr==0?recon->ploc:P(recon->xloc, ipsr);
-		//must use aper.d here to make sure mode in different layers match in strength for TWFS.
-		//real reduce=loc->dx*2;//to reduce the edge effect.
-		
+		const loc_t* loc=P(recon->aloc, ilayer);
 		int rmin2=rmin;
-		if(ipsr>0 && rmin2<3){//don't place those on upper layer.
+		if(ilayer>0 && rmin2<3){//don't place those on upper layer.
 			rmin2=3;
 		}
+		//must use aper.d here to make sure mode in different layers match in strength for TWFS.
 		dmat* opd=zernike(loc, -parms->aper.d, rmin2, rmax, zradonly);
 
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].skip==2||parms->powfs[ipowfs].llt){
-				const real hs=parms->wfs[iwfs].hs;
-				const real hc=parms->wfs[iwfs].hc;
-				const real ht=P(parms->atmr.ht, ipsr);
-				const real scale=1.-(ht-hc)/hs;
-				const real dispx=parms->wfsr[iwfs].thetax*ht;
-				const real dispy=parms->wfsr[iwfs].thetay*ht;
-				if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
-					P(recon->GRall, iwfs, ilayer)=pywfs_mkg(powfs[ipowfs].pywfs, loc, NULL, opd, 0, dispx, dispy);
-				} else{//SHWFS
-					dmat* opd2=0;
-					if(ipsr==0){
-						opd2=dref(opd);
-					} else{
-						dsp* hxw=mkh(P(recon->xloc, ipsr), recon->ploc, dispx, dispy, scale);
-						dspmm(&opd2, hxw, opd, "nn", 1);
-						dspfree(hxw);
-					}
-					dspmm(&P(recon->GRall, iwfs, ilayer), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd2, "nn", 1);
-					dfree(opd2);
+				if(P(recon->GA, iwfs, ilayer)){
+					dspmm(&P(recon->GRall, iwfs, ilayer), P(recon->GA, iwfs, ilayer), opd, "nn", 1);
+				}else{
+					error("Please implement without GA\n");
 				}
 			}
-
 		}
 		dfree(opd);
 	}
@@ -933,7 +915,7 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 		if(parms->powfs[ipowfs].skip==2){//twfs
 			int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
 			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
-				error("recon.twfs_ipsr should have more than 1 entry when there are multiple twfs.\n");
+				error("recon.GRwfs should have more than 1 layer when there are multiple twfs.\n");
 			}
 			if(rmin<3){
 				warning("rmin should be 3 for truth wfs.\n");
@@ -948,7 +930,7 @@ setup_recon_GR(recon_t* recon, const powfs_t* powfs, const parms_t* parms){
 		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].dither==-1&&parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
 			int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
 			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
-				error("recon.twfs_ipsr should have more than 1 entry for sodium fitting projection.\n");
+				error("recon.GRwfs should have more than 1 layer for sodium fitting projection.\n");
 			}
 			if(rmin>2){
 				error("rmin should be 1 or 2 for sodium fitting projection\n");
@@ -1289,7 +1271,7 @@ void setup_recon_prep2(recon_t* recon, const parms_t* parms, const aper_t* aper,
 	info2("\n%sSetting up reconstructor%s\n\n", GREEN, BLACK);
 	setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
 	setup_recon_GF(recon, parms);//GF depends on GA.
-	setup_recon_GR(recon, powfs, parms);
+	setup_recon_GR(recon, parms);
 
 	if(parms->recon.split){
 		setup_ngsmod_prep(parms, recon, aper, powfs);

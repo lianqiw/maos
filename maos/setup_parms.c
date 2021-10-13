@@ -186,7 +186,6 @@ void free_parms(parms_t* parms){
 	free_strarr(parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfsr);
 	free_strarr(parms->recon.misreg_dm2sci, parms->ndm*parms->fit.nfit);
 	free_strarr(parms->recon.misreg_tel2wfs, parms->nwfsr);
-	lfree(parms->recon.twfs_ipsr);
 	dfree(parms->dirs);
 	lfree(parms->dbg.tomo_maxit);
 	dfree(parms->dbg.pwfs_psx);
@@ -974,7 +973,6 @@ static void readcfg_recon(parms_t* parms){
 	READ_INT(recon.psddtrat_lo);
 	READ_DBL(recon.psdservo_gain);
 	READ_INT(recon.psdnseg);
-	READ_LMAT(recon.twfs_ipsr);
 	READ_INT(recon.twfs_rmin);
 	READ_INT(recon.twfs_rmax);
 	READ_INT(recon.twfs_radonly);

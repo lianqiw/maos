@@ -489,7 +489,6 @@ typedef struct recon_cfg_t{
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
     int psdservo_gain; /**<Gain used to update servo parameter*/
     int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
-    lmat* twfs_ipsr;   /**<index into atmr.ht for reconstruction*/
     int twfs_rmin; /**<minimum zernike order (inclusive)*/
     int twfs_rmax; /**<maximum zernike order (inclusive)*/
     int twfs_radonly;/**<1: radial only, 0: all modes*/
