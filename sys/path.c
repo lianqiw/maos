@@ -95,9 +95,11 @@ void rmpath(const char* path){
    Print current path.
 */
 void printpath(void){
-	info("PATH is :\n");
-	for(PATH_T* ia=PATH;ia;ia=ia->next){
-		info("%s\n", ia->path);
+	if(PATH){
+		info("PATH is :\n");
+		for(PATH_T* ia=PATH;ia;ia=ia->next){
+			info("%s\n", ia->path);
+		}
 	}
 }
 /**

@@ -823,7 +823,11 @@ static int respond(int sock){
 		if(pid<=0){//this is for pending scheduler_recv_socket
 			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
 				||stwritefd(scheduler_recv_wait, sock)){
-				dbg_time("(%d) Failed to pass sock to draw at %d, save socket for future\n", sock, scheduler_recv_wait);
+				if(scheduler_recv_wait!=-1){
+					dbg_time("(%d) Failed to pass sock to draw at %d, save socket for future\n", sock, scheduler_recv_wait);
+				}else{
+					dbg_time("(%d) No pending socket request, save socket for future\n", sock);
+				}
 				socket_save(dup(sock), abs(pid));//duplicate socket and keep it 
 				ret=-1;//prevent scheduler from listening to this socket.
 			} else{

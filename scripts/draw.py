@@ -89,10 +89,14 @@ def draw(*args, **kargs):
         kargs['keep'] = 1  # do not clear
         if type(args[0]) == list:
             nframe = len(args[0])
-        elif args[0].ndim==3:
-            nframe=args[0].shape[0]
-        else:
+        elif type(args[0]) == np.ndarray and args[0].dtype==object:
+            old_shape=args[0].shape
             nframe = args[0].size
+            args[0].shape=(args[0].size,)
+        elif args[0].ndim==3:
+            nframe = args[0].shape[0]
+        else:
+            raise(Exception('Unknow data type'))
         if nframe>60:
             nframe=60
             print('Limit to first {} frames'.format(nframe))
@@ -110,11 +114,13 @@ def draw(*args, **kargs):
             if nx>1 or ny > 1:
                 plt.subplot(ny, nx, iframe+1)
             if len(args) == 1:
-                draw(args[0].flat[iframe], **kargs)
+                draw(args[0][iframe], **kargs)
             elif len(args) == 2:
-                draw(args[0].flat[iframe], args[1].flat[iframe],  **kargs)
+                draw(args[0][iframe], args[1][iframe],  **kargs)
             else:
                 print('Too many arguments')
+        if type(args[0])==object:
+            args[0].shape=old_shape
     elif isloc(args[0]):  # first argument is loc
         if len(args) == 1:
             # plot grid
@@ -144,10 +150,7 @@ def draw(*args, **kargs):
             plt.gca().images[-1].colorbar.remove()
         except:
             pass
-        if 'ext' in kargs and kargs['ext'] is not None :
-            im=plt.imshow(img, extent=kargs['ext'], origin='lower', cmap='jet')
-        else:
-            im=plt.imshow(img, origin='lower', cmap='jet')
+        im=plt.imshow(img, extent=kargs.get('ext'), origin='lower', cmap='jet')
         #for im in gca().get_images():
         #im.set_clim(0, 0.5)
         if 'clim' in kargs and kargs['clim'] is not None:

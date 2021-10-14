@@ -231,28 +231,28 @@ def cellsum(x):
     return xsum
 
 #remove tip/tilt/focus from gradients
-def grad_ttfr(saloc,g):
-    if g.dtype==object:
-        gv=np.empty(g.shape, dtype=object)
+def grad_ttfr(grad, saloc):
+    if grad.dtype==object:
+        gv=np.empty(grad.shape, dtype=object)
         print(gv.shape)
-        for ig,gi in np.ndenumerate(g):
+        for ig,gi in np.ndenumerate(grad):
             gv[ig]=grad_ttfr(saloc,gi)
         return gv
+    if saloc.shape[1]==2 and saloc.shape[0]!=2: #nsa*2
+        saloc=saloc.T
+        
     if saloc.shape[0]==2: #2*nsa
         nsa=saloc.shape[1]
         tt=saloc.flatten() 
-    elif saloc.shape[1]==2: #nsa*2
-        nsa=saloc.shape[0]
-        tt=saloc.T.flatten()
     else:
         raise(ValueError('saloc should be 2xnsa or nsax2'))
     
-    if g.shape[0]==2: #2*nsa
-        gv=g.flatten('C')
-    elif g.shape[0]==2*nsa:
-        gv=g
-    elif g.shape[1]==2:
-        gv=g.flatten('F')
+    if grad.shape[0]==2: #2*nsa
+        gv=grad.flatten('C')
+    elif grad.shape[0]==2*nsa:
+        gv=grad
+    elif grad.shape[1]==2:
+        gv=grad.flatten('F')
     else:
         raise(ValueError('g should bd 2*nsa, nsa*2 or nsa*2*m'))
     

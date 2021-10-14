@@ -261,8 +261,8 @@ class loc(Structure):
                     arr=self.arr=arr.copy()
                 self.nloc=arr.shape[1]
                 self.two=2;
-                self.locx=arr.ctypes.data_as(c_void_p)
-                self.locy=self.locx+self.nloc #arr[1,].ctypes.data_as(c_void_p)
+                self.locx=arr[0,].ctypes.data_as(c_void_p)
+                self.locy=arr[1,].ctypes.data_as(c_void_p)
                 dlocx=arr[0,1:]-arr[0,0:-1]
                 self.dx=min(dlocx[dlocx>0])
                 dlocy=arr[1,1:]-arr[1,0:-1]
