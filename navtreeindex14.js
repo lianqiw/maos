@@ -1,6 +1,5 @@
 var NAVTREEINDEX14 =
 {
-"pywfs_8h.html#structpywfs__t":[10,0,2,7,0],
 "readcfg_8h.html":[10,0,1,22],
 "readcfg_8h.html#a0258dd21e9b70280d7b8fd9de5614c76":[10,0,1,22,0],
 "readcfg_8h.html#a2e922a9c36a239462733acec6cd00827":[10,0,1,22,4],
@@ -249,5 +248,6 @@ var NAVTREEINDEX14 =
 "smath_8h.html#a0d95222182c104a56c939d02be8f791d":[10,0,3,9,60],
 "smath_8h.html#a0fc83d1e642cacdd19d2b9c4e431f0d0":[10,0,3,9,85],
 "smath_8h.html#a103f199d42c3eebbdc9c55711ef11514":[10,0,3,9,7],
-"smath_8h.html#a108b4663c182519c6016972d84589024":[10,0,3,9,100]
+"smath_8h.html#a108b4663c182519c6016972d84589024":[10,0,3,9,100],
+"smath_8h.html#a11024234a0a310f7abd98b8f5f671216":[10,0,3,9,15]
 };

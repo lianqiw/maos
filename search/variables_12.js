@@ -27,7 +27,6 @@ var searchData=
   ['ttfr',['ttfr',['../parms_8h.html#a68b3246948f5391cf11cba0ce5245d88',1,'llt_cfg_t']]],
   ['ttpsd',['ttpsd',['../parms_8h.html#aaafdf85c0702c2520e67e8bcfb674495',1,'llt_cfg_t']]],
   ['ttrat',['ttrat',['../parms_8h.html#ab7c18c14a6c7934793b061debb067022',1,'llt_cfg_t']]],
-  ['twfs_5fipsr',['twfs_ipsr',['../parms_8h.html#a06d31d388725bd5541e8cd6cc6741e3e',1,'recon_cfg_t']]],
   ['twfs_5fradonly',['twfs_radonly',['../parms_8h.html#a6742907419017f9e85e4dde099f4f524',1,'recon_cfg_t']]],
   ['twfs_5frmax',['twfs_rmax',['../parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5',1,'recon_cfg_t']]],
   ['twfs_5frmin',['twfs_rmin',['../parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da',1,'recon_cfg_t']]],

@@ -346,7 +346,6 @@ var parms_8h =
       [ "psddtrat_lo", "parms_8h.html#a609e7c8272861608ee46370578fbc723", null ],
       [ "psdservo_gain", "parms_8h.html#ae369a7c654aac70a708cbe167a11724f", null ],
       [ "psdnseg", "parms_8h.html#a512a720e55ae17bb9195cd29c516ed42", null ],
-      [ "twfs_ipsr", "parms_8h.html#a06d31d388725bd5541e8cd6cc6741e3e", null ],
       [ "twfs_rmin", "parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da", null ],
       [ "twfs_rmax", "parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5", null ],
       [ "twfs_radonly", "parms_8h.html#a6742907419017f9e85e4dde099f4f524", null ]

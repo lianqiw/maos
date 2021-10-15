@@ -133,15 +133,15 @@ var NAVTREEINDEX =
 "mathdef_8h.html#a305fa5f76f2bb165561515f9971475a9",
 "mvm__trans_8cu.html#a4b78f2747213086c77589a3ed0aaf2ad",
 "page91_basics.html#sect-array",
-"parms_8h.html#a6916639ecb67bcbc48c49f36a44993d7",
-"parms_8h.html#ac972f92a5caada81c9d80b6a670f55ec",
-"pywfs_8h.html#structpywfs__t",
-"smath_8h.html#a11024234a0a310f7abd98b8f5f671216",
-"sockio_8h.html#a70c5e49d5651e03eaf83f87fabc76c6f",
-"thread_8h.html#a757f72629b527b6b5b824e88561c19fe",
+"parms_8h.html#a69588f63ff48ddd8e9b0bba6c9c86ab0",
+"parms_8h.html#aca0e45964fac5e6abb6d1dcd79bb91cb",
+"readcfg_8h.html",
+"smath_8h.html#a1252f1bc587dcf2059560f212694ec3c",
+"sockio_8h.html#a7fcad7b6c004d6e16dddff1dbbd8a20d",
+"thread_8h.html#a79f3df608bf0b04b381c917bff0e6238",
 "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a",
-"type_8h.html#ad0691bf8a0831de1dbeeeb533a4f98cd",
-"zmath_8h.html#a4f8d3a92f430420051f782f910fbfb12"
+"type_8h.html#ad2412cc515d4ebddbf286f9a9afe53e5",
+"zmath_8h.html#a4f9f196a81025cd71c2333c5ff791b10"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
