@@ -453,12 +453,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->font_name_version=font_name_version;
 	PangoLayout* layout=pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, desc);
-
+	/*
 	if(!drawdata->image&&!drawdata->square){
 		drawdata->cumu=cumu;
 	} else{
 		drawdata->cumu=0;
-	}
+	}*/
 	if(drawdata->cumu){
 		if((int)drawdata->icumulast!=(int)drawdata->icumu){
 			free(drawdata->limit_cumu);
@@ -477,8 +477,13 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	if(!drawdata->image){
 		update_limit(drawdata);
 	}
-	if(drawdata->cumulast!=drawdata->cumu||drawdata->cumuquadlast!=drawdata->cumuquad){
+	if(drawdata->cumulast!=drawdata->cumu){
 		drawdata->drawn=0;
+	}
+	if(drawdata->cumu){
+		if(drawdata->cumuquadlast!=drawdata->cumuquad || drawdata->icumu != drawdata->icumulast){
+			drawdata->drawn=0;
+		}
 	}
 	int xlog=drawdata->xylog[0]=='n'?0:1;
 	int ylog=drawdata->xylog[1]=='n'?0:1;

@@ -15,31 +15,78 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/*
+CSS selector: 
+  A B #B inside A.
+  A,B #A or B
 
+In CSS, a margin is the space around an element's border, while padding is the
+space between an element's border and the element's content. Put another way,
+the margin property controls the space outside an element, and the padding
+property controls the space inside an element.
+
+min-height and min-width are affective at controller widget size
+//padding is top, right, bottom, left
+//border-radius is TL, TR, BR, BL
+*/
 const gchar* all_style=
 "progress, trough {\n"
 "min-height:4px;"
 "min-width: 4px;"
 "}\n"
 "*{\n"
-"padding:1px;" //OK.
+"margin:0px;" //OK. margin is outside
+"padding:1px;" //OK. Padding is blank inside
 "border-radius:1px;" //OK
 "border-width:1px;" //OK
 "font:12px Sans;"
+"vertical-align: middle;"
 "}\n"
+"entry{"
+"min-height:12px;"
+"padding: 2px;"
+"}"
+"checkbutton *{"
+"min-height:8px;"
+"min-width:8px;"
+"}"
+"scale *{" //need * to match sub components
+"min-height:6px;"
+"min-width:6px;"
+"}"
+"box {"
+"align-items: start;"
+"padding: 2px;"
+"}"
 "notebook{\n"
 "background-color:@theme_bg_color;"
 "}\n"
 "notebook tab{\n" //OK
-"border-width: 1px 1px 1px 1px;" //OK
-"border-color: #FF0000;"
+"border-width: 1px;" //OK
+//"border-color: #FF0000;"
 "border-style: none;"
-"border-radius:4px 4px 0px 0px;"  //OK
-"padding: 0px 0px 0px 0px;" //OK
-"background-color:@selected_bg_color;" //OK
+//"padding: 2px 2px 5px 2px;" 
+"background-color:@selected_bg_color;" //OK. selected_bg_color is grayish
+"min-height: 8px;"
+"min-width:  32px;"
 "}\n"
-"notebook tab:checked{\n" //OK
-"background-color:@theme_bg_color;"
+"notebook header.top tab{"
+"border-radius: 4px 4px 0px 0px;"  
+"}\n"
+"notebook header.right tab{"
+"border-radius: 0px 4px 4px 0px;" 
+"}\n"
+"notebook tab:checked, tab:checked *, tab:checked * *{\n" //OK
+"background-color:@theme_bg_color;"//theme_bg_color is white
+"}\n"
+"notebook tab button {"
+"padding: 0px;" //OK. Padding is blank inside
+"min-height:4px;"
+"min-width: 4px;"
+"}\n"
+"spinbutton, spinbutton *{"
+"min-height: 8px;"
+"min-width:  8px;"
 "}\n"
 "textview{\n"
 "font:14px Sans;"
@@ -51,7 +98,7 @@ const gchar* all_style=
 "-GtkEntry-inner-border:0px,0px,0px,0px;"*/
 "background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));"
 "border-width:1px;"
-"border-style:none; \n"
+"border-style:none;"
 "border-color:#000000;"
 "}\n"
 ;

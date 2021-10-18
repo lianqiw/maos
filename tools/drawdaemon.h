@@ -40,7 +40,7 @@
 typedef struct drawdata_t drawdata_t;
 extern int sock;
 extern int sock_idle;
-extern int cumu;//global cumulative plot mode.
+
 struct drawdata_t{
 	char* fig;
 	char* name;
@@ -78,6 +78,8 @@ struct drawdata_t{
 	int byte_float; //record the value used
 	int ready;      //ready is set to 0 when data is being read and 1 after wards.
 	int recycle;    //when set in GUI thread, data to be deleted by drawdaemon_io() 
+	int delete;     //when set in io thread, page will be deleted by addpage()
+	float io_time;  //time data was received.
 	/*The following are for surfaces */
 	
 	cairo_format_t format;
@@ -171,7 +173,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);
 void apply_limit(drawdata_t* drawdata);
 /*from drawdaemon_gui */
 GtkWidget* create_window(GtkWidget *window);
-gboolean addpage(gpointer junk);
+gboolean addpage(gpointer user_data);
+int delete_page(gpointer user_data);
 /*from drawdaemon_io */
 void* listen_draw(void*);
 void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* info);

@@ -364,7 +364,7 @@ static int get_drawdaemon(){
 	//First try reusing existing idle drawdaemon with the same id
 	while(!scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
-		if(stwriteint(sock, DRAW_FINAL)){
+		if(stwriteint(sock, DRAW_INIT)){
 			dbg("received socket=%d is already closed.\n", sock);
 			close(sock);
 			sock=-1;

@@ -34,8 +34,9 @@ udp_t udp_client={0};
 int client_port=-1;//client udp port
 in_addr_t client_addr;
 int udp_sock=-1;//server udp socket
-float io_time1=0;
-float io_time2=0;
+float io_time1=0;//time the latest drawdata is receievd
+float io_time2=0;//time the previous drawdata is receveid
+float io_timeclear=0;//plots 
 int io_heartbeat=0;
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
@@ -153,7 +154,7 @@ void drawdata_free_input(drawdata_t *drawdata){
 	FREE(drawdata);
 }
 static drawdata_t* HEAD=NULL;
-drawdata_t *get_drawdata(char **fig, char **name, int reset){
+drawdata_t *drawdata_get(char **fig, char **name, int reset){
 	if(!HEAD){
 		HEAD=mycalloc(1, drawdata_t);//dummy head for easy handling
 	}
@@ -201,6 +202,19 @@ drawdata_t *get_drawdata(char **fig, char **name, int reset){
 		//drawdata->ready=0;
 	}
 	return drawdata;
+}
+/**
+ * Delete pages that are not updated between DRAW_INIT and DRAW_FINAL
+ * */
+static void drawdata_clear_older(float timclear){
+	if(!HEAD) return;
+	for(drawdata_t *p=HEAD->next; p; p=p->next){
+		if(p->io_time<timclear){
+			p->delete=1;
+			info("Request deleting page %s %s\n", p->fig, p->name);
+			gdk_threads_add_idle(delete_page, p);
+		}
+	}
 }
 #define CATCH(A,p) if(A) {close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); goto retry;}
 #define STREADINT(p) CATCH(streadint(sock, &p),p)
@@ -373,7 +387,7 @@ retry:
 		case DRAW_NAME:
 			STREADSTR(name);
 			if(fig && name) {
-				drawdata=get_drawdata(&fig, &name, 1); 
+				drawdata=drawdata_get(&fig, &name, 1); 
 				npts=0;
 			}else{
 				warning("Invalid usage: fig should be provided before namen");
@@ -401,6 +415,9 @@ retry:
 			break;
 		case DRAW_FINAL:
 			//dbg("client is done\n");
+			if(io_timeclear){
+				drawdata_clear_older(io_timeclear);
+			}
 			sock_idle=1;
 			break;
 		case DRAW_FLOAT:
@@ -450,6 +467,11 @@ retry:
 			}
 		}
 		break;
+		case DRAW_INIT:
+		{
+			io_timeclear=myclockd();
+		}
+		break;
 		case DRAW_END:
 		{
 			drawdata->npts=npts;
@@ -466,17 +488,20 @@ retry:
 			if(!drawdata->fig) drawdata->fig=strdup("unknown");
 			drawdata->drawn=0;
 			drawdata->ready=1;
-			gdk_threads_add_idle(addpage, drawdata);
+			
 			if(drawdata_prev && drawdata_prev==drawdata){//same drawdata is updated, enable computing framerate.
 				io_time2=io_time1;
 			}else{
 				io_time2=0;//this disables frame rate printing
 			}
 			io_time1=myclockd();
+			drawdata->io_time=io_time1;
 			drawdata_prev=drawdata;//for computing time
+			gdk_threads_add_idle(addpage, drawdata);
 			drawdata=NULL;
 		}
 		break;
+
 		case -1:
 			goto retry;/*read failed. */
 			break;

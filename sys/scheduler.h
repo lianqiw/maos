@@ -138,7 +138,9 @@ enum{
     DRAW_FRAME,//20 information about UDP frame, following this is frame index, total bytes, sub-frame index, sub-frame bytes/
     DRAW_SINGLE,//21 toggle single/continuous drawing
     DRAW_UDPPORT,//22 send udp port of the client
-    DRAW_END=100,
+    DRAW_INIT,//set the time to delete old plots that are not updated when draw_final is called
+    DRAW_END=100,//data send is over. start drawing
+    
     DRAW_ENTRY=9999 /*A new entry*/
 };
 #define scheduler_version 52

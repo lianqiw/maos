@@ -18,7 +18,6 @@
 
 #include "drawdaemon.h"
 //int sock;
-int cumu=0;
 const char *host=0;
 #if MAC_INTEGRATION
 #include <gtkosxapplication.h>

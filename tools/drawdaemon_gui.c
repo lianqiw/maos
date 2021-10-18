@@ -42,6 +42,8 @@ static int iwindow=0;
 static GtkWidget* curwindow=NULL;
 static GtkWidget* curtopnb=NULL;
 static GtkWidget* contexmenu=NULL;
+static GtkWidget* cur_menu_cumu=NULL;
+static GtkWidget *cur_menu_icumu=NULL;
 static drawdata_t* drawdata_dialog=NULL;
 drawdata_t* cur_drawdata=NULL;
 //static GtkToolItem* toggle_cumu=NULL;
@@ -85,8 +87,10 @@ static const char* rc_string_notebook={
 	gtk_widget_destroy(dialog0);			\
     }
 
-static void set_cur_window(GtkWidget* window){
+static void window_changed(GtkWidget* window){
 	curwindow=window;
+	cur_menu_cumu=g_object_get_data(G_OBJECT(window), "menu_cumu");
+	cur_menu_icumu=g_object_get_data(G_OBJECT(window), "menu_icumu");
 #if GTK_MAJOR_VERSION>=4 		
 	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
 
@@ -101,17 +105,14 @@ static void set_cur_window(GtkWidget* window){
 /*Get the current page for notebook*/
 static GtkWidget* get_current_page(GtkWidget* notebook){
 	int n=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
-	/*if(n<0){
-	warning_once("get_current_page returns %d\n", n);
-	}*/
 	return gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), n);
 }
 static drawdata_t* get_current_drawdata(void){
 	if(!curtopnb) return NULL;
 	GtkWidget* topnb=curtopnb;
-	GtkWidget* w1=get_current_page(topnb);
-	GtkWidget* w2=get_current_page(w1);
-	drawdata_t** pdrawdata=(drawdata_t**)g_object_get_data(G_OBJECT(w2), "drawdatawrap");
+	GtkWidget* subnb=get_current_page(topnb);
+	GtkWidget* page=get_current_page(subnb);
+	drawdata_t** pdrawdata=(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap");
 	if(pdrawdata){
 		return *pdrawdata;
 	} else{
@@ -251,6 +252,7 @@ static gboolean update_pixmap_timer(updatetimer_t* timer){
    the time, the "pending" counter will mismatch and no action will be taken.
  */
 static void delayed_update_pixmap(drawdata_t* drawdata){
+	if(!drawdata) return;
 	if(!drawdata->pixmap){
 		update_pixmap(drawdata);
 	} else{
@@ -317,8 +319,7 @@ on_draw_event(GtkWidget* widget, cairo_t* cr, gpointer pdata){
 static gboolean
 on_expose_event(GtkWidget* widget, GdkEventExpose* event, gpointer pdata){
 	drawdata_t* drawdata=*((drawdata_t**)pdata);
-	int cumu_effective=cumu&&!drawdata->image&&!drawdata->square;
-	if(drawdata->font_name_version!=font_name_version||!drawdata->drawn||drawdata->cumu!=cumu_effective){
+	if(drawdata->font_name_version!=font_name_version||!drawdata->drawn||drawdata->cumu!=drawdata->cumulast){
 		delayed_update_pixmap(drawdata);
 	}
 	if(drawdata->pixmap){
@@ -345,11 +346,12 @@ on_expose_event(GtkWidget* widget, GdkEventExpose* event, gpointer pdata){
 	return FALSE;
 }
 #endif
-
-static void drawdata_free(drawdata_t** drawdatawrap){
-	if(!drawdatawrap) return;
-	drawdata_t *drawdata=*drawdatawrap;
-	if(!drawdata) return;
+//do not call explicitly. Used by drawdatawrap_free
+static void drawdata_delete(drawdata_t* drawdata){
+	if(!drawdata || !drawdata->page){
+		warning("drawdata_free called with NULL page. canceled\n");
+		return ;
+	}
 	drawdata->recycle=1;
 	if(drawdata->image){
 		cairo_surface_destroy(drawdata->image);
@@ -367,52 +369,52 @@ static void drawdata_free(drawdata_t** drawdatawrap){
 		cairo_surface_destroy(drawdata->cacheplot);
 		drawdata->cacheplot=NULL;
 	}
-	free(drawdatawrap);
+	drawdata->page=NULL;
+	//free(drawdatawrap);
 	/*LOCK(drawdata_mutex);
 	ndrawdata--;
 	UNLOCK(drawdata_mutex);*/
 }
-
+///Called with g_object_set_data
+static void drawdatawrap_delete(gpointer user_data){
+	drawdata_t **drawdatawrap=user_data;
+	//info("drawdatawrap_delete called with %p\n", drawdatawrap);
+	if(drawdatawrap){
+		drawdata_delete(*drawdatawrap);
+		free(drawdatawrap);
+	}
+}
 /**
    Delete a figure page.
 */
-static void delete_page(GtkButton* btn, drawdata_t** drawdatawrap){
-	(void)btn;
-	info("deleting page\n");
-	GtkWidget* root;
-	/*First find the root page */
-	GtkWidget* topnb=curtopnb;
-	root=get_current_page(topnb);
-	/*Find the sub page. it may not be the current page */
-	int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(root), (*drawdatawrap)->page);
-	gtk_notebook_remove_page(GTK_NOTEBOOK(root), ipage);
-	drawdata_free(drawdatawrap);
-	if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(root))==0){
-		info("delete top page");
-		int jpage=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), root);
-		gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), jpage);
+int delete_page(gpointer user_data){
+	drawdata_t* drawdata=user_data;
+	if(!drawdata) return 0;
+	
+	for(GSList *p=windows; p; p=p->next){
+		GtkWidget* window=(GtkWidget *)p->data;
+		GtkWidget* topnb=get_topnb(window);
+		for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb)); itab++){
+			GtkWidget *subnb=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb), itab);
+			int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(subnb), drawdata->page);
+			if(ipage!=-1){
+				gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), ipage);
+				//info("deleting page %d\n", ipage);
+			}
+			if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb))==0){
+				//info("delete top page %d\n", itab);
+				gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), itab);
+				itab--;
+			}
+		}
 	}
+	return 0;
+}
+static void delete_page_btn(GtkButton *btn, drawdata_t **drawdatawrap){
+	(void)btn;
+	delete_page(*drawdatawrap);
 }
 
-#if ! defined(__linux__)
-/**
-   Delete a figure page using button-press-event. button works not good in mac.
-*/
-#if GTK_MAJOR_VERSION>=4
-static void delete_page_event(GtkWidget* widget, drawdata_t** drawdatawrap){
-	(void)widget;
-	delete_page(NULL, drawdatawrap);
-}
-#else
-static void delete_page_event(GtkWidget* widget, GdkEventButton* event, drawdata_t** drawdatawrap){
-	(void)widget;
-	(void)event;
-	if(event->button==1&&event->type==GDK_BUTTON_PRESS){
-		delete_page(NULL, drawdatawrap);
-	}
-}
-#endif
-#endif
 static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	GtkWidget* out;
 #if GTK_MAJOR_VERSION>=4
@@ -420,73 +422,50 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	//GtkWidget* image=gtk_image_new_from_icon_name("window-close");
 #else
 	out=gtk_hbox_new(FALSE, 0);
-	GtkWidget* image=gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
+	
 #endif
-
 	/* create label for tab */
 	drawdata_t* drawdata=*drawdatawrap;
 	const gchar* str=drawdata->name;
 	GtkWidget* label=gtk_label_new(str);
-	//
+	
 #if GTK_MAJOR_VERSION >= 3
 	gtk_widget_set_halign(label, GTK_ALIGN_START);
-	gtk_widget_set_margin_start(label, 0);
-	gtk_widget_set_margin_end(label, 0);
-	gtk_widget_set_margin_top(label, 0);
-	gtk_widget_set_margin_bottom(label, 0);
+	gtk_widget_set_margin_start(label, 5);//since 3.12
+	//gtk_widget_set_margin_end(label, 0);
+	//gtk_widget_set_margin_top(label, 0);//no use
+	//gtk_widget_set_margin_bottom(label, 0);//no use
 
 	gtk_widget_set_hexpand(label, 1);
+	gtk_label_set_xalign(GTK_LABEL(label), 0);//works
 #else	
 	gtk_misc_set_padding(GTK_MISC(label), 0, 0);
 	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 #endif
 	gtk_label_set_width_chars(GTK_LABEL(label), 12);
-#if GTK_MAJOR_VERSION>=4
-	gtk_box_append(GTK_BOX(out), label);
-	//gtk_widget_show(out);
-#else
+	gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);//this is the default
+	
 	box_append(GTK_BOX(out), label, TRUE, TRUE, 0);
-	gtk_widget_show_all(out);
-#endif
 
-	//create close button
-#if defined(__linux__)
-	GtkWidget* close_btn;
-	close_btn=gtk_button_new();
-#if GTK_MAJOR_VERSION>=3
-	gtk_widget_set_focus_on_click(close_btn, FALSE);
-#else
-	gtk_button_set_focus_on_click(GTK_BUTTON(close_btn), FALSE);
-#endif
+	GtkWidget* close_btn=gtk_button_new();
 #if GTK_MAJOR_VERSION>=4
 	gtk_button_set_icon_name(GTK_BUTTON(close_btn), "window-close");
-#else
-	gtk_container_add(GTK_CONTAINER(close_btn), image);
-#endif
-	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
-	/* make button as small as possible */
-#if GTK_MAJOR_VERSION<3
+#else	
+	GtkWidget *image=gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_BUTTON);
+	gtk_button_set_image(GTK_BUTTON(close_btn), image);
+	gtk_button_set_always_show_image(GTK_BUTTON(close_btn), TRUE);
+#endif	
 	gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
+
+#if GTK_MAJOR_VERSION<3
 	gtk_widget_modify_style(close_btn, btn_rcstyle);
-	gtk_widget_set_size_request(close_btn, 20, 20);
-	gtk_container_set_border_width(GTK_CONTAINER(close_btn), 0);
+	//gtk_widget_set_size_request(close_btn, 20, 20);
+	//gtk_container_set_border_width(GTK_CONTAINER(close_btn), 0);
 #endif
-	box_prepend(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
+	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page_btn), drawdatawrap);
+	box_append(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
+	gtk_widget_show_all(out);
 
-#else//macos
-
-#if GTK_MAJOR_VERSION>=4
-	GtkWidget* ebox=gtk_button_new();
-	gtk_button_set_icon_name(GTK_BUTTON(ebox), "window-close");
-	g_signal_connect(ebox, "clicked", G_CALLBACK(delete_page_event), drawdatawrap);
-#else
-	GtkWidget* ebox=gtk_event_box_new();
-	gtk_container_add(GTK_CONTAINER(ebox), image);
-	g_signal_connect(ebox, "button_press_event", G_CALLBACK(delete_page_event), drawdatawrap);
-#endif
-	box_append(GTK_BOX(out), ebox, FALSE, FALSE, 0);
-
-#endif
 	return out;
 }
 /*Get the label of itab'th child of notebook subnb*/
@@ -749,8 +728,8 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event,
 	}
 	return TRUE;
 }
+//handles action when either top of sub label note book changed
 static void page_changed(int topn, int subn){
-	if(sock==-1||sock_idle) return;
 	GtkWidget* topnb=curtopnb;
 	GtkWidget* subnb, * subpage;
 	if(topn>-1){
@@ -769,21 +748,33 @@ static void page_changed(int topn, int subn){
 	
 	drawdata_t** pdrawdata=(drawdata_t **)g_object_get_data(G_OBJECT(subpage), "drawdatawrap");
 	if(pdrawdata) cur_drawdata=*pdrawdata;
+	if(cur_drawdata){
+		if(cur_menu_cumu){
+			gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(cur_menu_cumu), cur_drawdata->cumu);
+			//dbg("set cumu tool button to %d (%d, %d)\n", cur_drawdata->cumu, topn, subn);
+		}
+		if(cur_menu_icumu){
+			gtk_spin_button_set_value(GTK_SPIN_BUTTON(cur_menu_icumu), cur_drawdata->cumu?cur_drawdata->icumu:0);
+			//dbg("set icumu tool button to %g (%d, %d)\n", cur_drawdata->icumu, topn, subn);
+		}
+	}
 	const char* fn=subnb_label_get(subnb, subpage);
 	//info("send fig=%s, fn=%s", fig, fn);
-	if(stwriteint(sock, DRAW_FIGFN)||
-		stwritestr(sock, fig)||
-		stwritestr(sock, fn)){
-		warning("Talk to client failed\n");
-		sock_idle=1;
+	if(sock!=-1&&!sock_idle){
+		if(stwriteint(sock, DRAW_FIGFN)||
+			stwritestr(sock, fig)||
+			stwritestr(sock, fn)){
+			warning("Talk to client failed\n");
+			sock_idle=1;
+		}
 	}
 	//info("done\n");
 	io_time2=0;
 }
 /*These signal handlers are called before the notebook page switch is done.*/
 static void topnb_page_switch(GtkNotebook* topnb, GtkWidget* page, guint n, GtkWidget* toolbar){
-	(void)topnb; (void)page;
-	gtk_widget_set_sensitive(toolbar, TRUE);
+	(void)topnb; (void)page; (void) toolbar;
+	//gtk_widget_set_sensitive(toolbar, TRUE);
 	page_changed(n, -1);
 }
 static void subnb_page_switch(GtkNotebook* subnb, GtkWidget* page, guint n, gpointer dummy){
@@ -791,6 +782,7 @@ static void subnb_page_switch(GtkNotebook* subnb, GtkWidget* page, guint n, gpoi
 	(void)dummy;
 	page_changed(-1, n);
 }
+//close additional window if there are no more pages left
 static void topnb_page_changed(GtkNotebook* topnb, GtkWidget* child, guint n, GtkWidget* toolbar){
 	(void)child;
 	(void)n;
@@ -862,7 +854,8 @@ gboolean addpage(gpointer indata){
 #endif
 		gtk_notebook_set_tab_pos(GTK_NOTEBOOK(subnb), GTK_POS_RIGHT);
 		gtk_notebook_set_scrollable(GTK_NOTEBOOK(subnb), TRUE);
-		g_signal_connect(subnb, "switch-page", G_CALLBACK(subnb_page_switch), NULL);
+		//we use connect_after so that get_current_page gives right answer
+		g_signal_connect_after(subnb, "switch-page", G_CALLBACK(subnb_page_switch), NULL);
 		GtkWidget* label=gtk_label_new(drawdata->fig);
 		GtkWidget* eventbox=gtk_event_box_new();
 		gtk_container_add(GTK_CONTAINER(eventbox), label);
@@ -954,7 +947,7 @@ gboolean addpage(gpointer indata){
 			GTK_POLICY_AUTOMATIC);
 		drawdata_t**drawdatawrap=mycalloc(1, drawdata_t*);
 		*drawdatawrap=drawdata;
-		g_object_set_data(G_OBJECT(page), "drawdatawrap", drawdatawrap);
+		g_object_set_data_full(G_OBJECT(page), "drawdatawrap", drawdatawrap, drawdatawrap_delete);
 		drawdata->drawarea=drawarea=gtk_drawing_area_new();
 		gtk_widget_add_events(drawarea, GDK_BUTTON_PRESS_MASK|
 			GDK_BUTTON_RELEASE_MASK|
@@ -1180,14 +1173,29 @@ static void spin_changed(GtkSpinButton* spin, gfloat* val){
 	drawdata_dialog->drawn=0;
 	delayed_update_pixmap(drawdata_dialog);
 }
-static void toolbutton_cumu_click(GtkToggleToolButton* btn){
-	(void)btn;
-	drawdata_t* page=get_current_drawdata();
-	if(!page->image&&!page->square){
-		cumu=gtk_toggle_tool_button_get_active(btn);
-		//cumu=1-cumu;
+static void spin_icumu(GtkSpinButton* spin){
+	drawdata_t *drawdata=get_current_drawdata();
+	if(drawdata && !drawdata->image&&!drawdata->square && drawdata->cumu){
+		drawdata->icumu=gtk_spin_button_get_value(spin);
+		delayed_update_pixmap(drawdata);
+		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
 	}
-	delayed_update_pixmap(page);
+}
+static void togglebutton_cumu(GtkToggleToolButton* btn){
+	(void)btn;
+	drawdata_t* drawdata=get_current_drawdata();
+	if(!drawdata) return;
+	if(!drawdata->image&&!drawdata->square){
+		drawdata->cumu=gtk_toggle_tool_button_get_active(btn);
+		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
+		if(cur_menu_icumu){
+			gtk_spin_button_set_value(GTK_SPIN_BUTTON(cur_menu_icumu), 
+				drawdata->cumu?drawdata->icumu:0);
+		}
+	}else{
+		gtk_toggle_tool_button_set_active(btn, 0);
+	}
+	delayed_update_pixmap(drawdata);
 }
 static void toolbutton_stop(GtkToolButton* btn){
 	(void)btn;
@@ -1248,50 +1256,60 @@ static void tool_property(GtkToolButton* button, gpointer data){
 		float* val;
 		if(i<4){
 			val=&drawdata->limit0[i];
+			gtk_spin_button_set_value(GTK_SPIN_BUTTON(spins[i]), *val);
 			g_signal_connect(spins[i], "value-changed", G_CALLBACK(limit_change), val);
 		} else{
 			val=&drawdata->zlim[i-4];
+			gtk_spin_button_set_value(GTK_SPIN_BUTTON(spins[i]), *val);
 			g_signal_connect(spins[i], "value-changed", G_CALLBACK(limit_change2), val);
 		}
-		gtk_spin_button_set_value(GTK_SPIN_BUTTON(spins[i]), *val);
 	}
 	drawdata->spins=spins;
 
 	checkbtn=gtk_check_button_new_with_label("Make image square");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->square);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->square);
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->square);
 
 	checkbtn=gtk_check_button_new_with_label("Enable grids");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->grid);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->grid);
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->grid);
 
 	checkbtn=gtk_check_button_new_with_label("Put tic inside");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->ticinside);
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
 
 	checkbtn=gtk_check_button_new_with_label("Legend on curve");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendcurve);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendcurve);
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendcurve);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	checkbtn=gtk_check_button_new_with_label("Legend.");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendbox);
+	gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
-	gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendbox);
+#if GTK_MAJOR_VERSION>=3
+	checkbtn=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 1, 0.01);
+#else
 	checkbtn=gtk_hscale_new_with_range(0, 1, 0.01);
-	gtk_widget_set_size_request(checkbtn, 80, 20);
+#endif
+	//gtk_widget_set_size_request(checkbtn, 80, 20);
 	gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
 	gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffx);
 	g_signal_connect(checkbtn, "value-changed", G_CALLBACK(range_changed), &drawdata->legendoffx);
 	box_append(GTK_BOX(hbox), gtk_label_new("Position: H  "), FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+
+#if GTK_MAJOR_VERSION>=3
+	checkbtn=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 1, 0.01);
+#else
 	checkbtn=gtk_hscale_new_with_range(0, 1, 0.01);
-	gtk_widget_set_size_request(checkbtn, 80, 20);
+#endif	
+	//gtk_widget_set_size_request(checkbtn, 80, 20);
 	gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
 	gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffy);
 	g_signal_connect(checkbtn, "value-changed", G_CALLBACK(range_changed), &drawdata->legendoffy);
@@ -1301,15 +1319,17 @@ static void tool_property(GtkToolButton* button, gpointer data){
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	checkbtn=gtk_check_button_new_with_label("Plot cumulative average (");
-	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &cumu);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), cumu);
 	gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumu);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumu);
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
 	checkbtn=gtk_check_button_new_with_label("quadrature ");
-	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumuquad);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumuquad);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumuquad);
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), gtk_label_new(") from"), FALSE, FALSE, 0);
+	
 	spin=gtk_spin_button_new_with_range(0, drawdata->limit[1], 1);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), drawdata->icumu);
 	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &drawdata->icumu);
@@ -1317,16 +1337,21 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	//Set update low pass filter 
+	int lwidth=10;
 	hbox=gtk_hbox_new(FALSE, 0);
+	label=gtk_label_new("Update LPF");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
+	gtk_label_set_xalign(GTK_LABEL(label), 0);
 	spin=gtk_spin_button_new_with_range(0, 1, 0.01);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), lpf);
 	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &lpf);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
-	label=gtk_label_new("Title"); gtk_label_set_width_chars(GTK_LABEL(label), 6);
+	label=gtk_label_new("Title"); gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
+	gtk_label_set_xalign(GTK_LABEL(label), 0);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->title);
@@ -1335,7 +1360,8 @@ static void tool_property(GtkToolButton* button, gpointer data){
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
-	label=gtk_label_new("X label");gtk_label_set_width_chars(GTK_LABEL(label), 6);
+	label=gtk_label_new("X label");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
+	gtk_label_set_xalign(GTK_LABEL(label), 0);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
@@ -1344,7 +1370,8 @@ static void tool_property(GtkToolButton* button, gpointer data){
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
-	label=gtk_label_new("Y label");gtk_label_set_width_chars(GTK_LABEL(label), 6);
+	label=gtk_label_new("Y label");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
+	gtk_label_set_xalign(GTK_LABEL(label), 0);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);
@@ -1353,29 +1380,29 @@ static void tool_property(GtkToolButton* button, gpointer data){
 
 
 	hbox=gtk_hbox_new(FALSE, 0);
-	label=gtk_label_new("xmin");gtk_label_set_width_chars(GTK_LABEL(label), 5);
+	label=gtk_label_new("X min");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spins[0], TRUE, TRUE, 0);
-	label=gtk_label_new("xmax");gtk_label_set_width_chars(GTK_LABEL(label), 5);
+	label=gtk_label_new("X max");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spins[1], TRUE, TRUE, 0);
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
-	label=gtk_label_new("ymin");gtk_label_set_width_chars(GTK_LABEL(label), 5);
+	label=gtk_label_new("Y min");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spins[2], TRUE, TRUE, 0);
-	label=gtk_label_new("ymax");gtk_label_set_width_chars(GTK_LABEL(label), 5);
+	label=gtk_label_new("Y max");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spins[3], TRUE, TRUE, 0);
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	if(n>4){
 		hbox=gtk_hbox_new(FALSE, 0);
-		label=gtk_label_new("zmin");gtk_label_set_width_chars(GTK_LABEL(label), 5);
+		label=gtk_label_new("Z min");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 		box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 		box_append(GTK_BOX(hbox), spins[4], TRUE, TRUE, 0);
-		label=gtk_label_new("zmax");gtk_label_set_width_chars(GTK_LABEL(label), 5);
+		label=gtk_label_new("Z max");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 		box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 		box_append(GTK_BOX(hbox), spins[5], TRUE, TRUE, 0);
 		box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
@@ -1481,11 +1508,15 @@ static gboolean close_window(GtkObject* object, GdkEvent* event)
 			g_object_unref(label);
 		}else{//delete page
 			int ntabs=gtk_notebook_get_n_pages(GTK_NOTEBOOK(page));
-			for(int itab=0; itab<ntabs; itab++){
+			for(int itab=ntabs-1; itab>=0; itab--){
+				/*
 				GtkWidget* tab=gtk_notebook_get_nth_page(GTK_NOTEBOOK(page), itab);
 				drawdata_t** drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(tab), "drawdatawrap");
 				gtk_widget_hide(tab);
-				drawdata_free(drawdatawrap);
+				drawdata_free(*drawdatawrap);
+				free(g_object_steal_data(G_OBJECT(tab), "drawdatawrap"));
+				*/
+				gtk_notebook_remove_page(GTK_NOTEBOOK(page), itab);
 			}
 			gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), ipage);
 		}
@@ -1504,7 +1535,7 @@ static gboolean window_state(GtkWidget* window, GdkEvent* event){
 	if(event->type==GDK_FOCUS_CHANGE){
 		GdkEventFocus* focus=(GdkEventFocus*)event;
 		if(focus->in){
-			set_cur_window(window);
+			window_changed(window);
 		}
 	}
 	return FALSE;
@@ -1534,11 +1565,11 @@ int update_fpslabel(gpointer label){
 }
 //Create a new toolbar item.
 #if GTK_MAJOR_VERSION < 4
-void new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name,
+GtkWidget* new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name,
 	GCallback callback, gpointer user_data){
 	GtkToolItem* item=NULL;
 
-	if(name){
+	if(name || child){
 		if(child){
 			item=gtk_tool_item_new();
 		} else if(toggle){
@@ -1563,9 +1594,10 @@ void new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name
 	if(callback){
 		g_signal_connect(item, toggle?"toggled":"clicked", G_CALLBACK(callback), user_data);
 	}
+	return GTK_WIDGET(item);
 }
 #else
-void new_tool(GtkWidget* toolbar, GtkWidget* item, int toggle, const char* name,
+GtkWidget* new_tool(GtkWidget* toolbar, GtkWidget* item, int toggle, const char* name,
 	GCallback callback, gpointer user_data){
 	if(!item){
 		if(name){
@@ -1585,6 +1617,7 @@ void new_tool(GtkWidget* toolbar, GtkWidget* item, int toggle, const char* name,
 	if(callback){
 		g_signal_connect(item, toggle?"toggled":"clicked", G_CALLBACK(callback), user_data);
 	}
+	return item;
 }
 #endif
 GtkWidget* create_window(GtkWidget* window){
@@ -1654,8 +1687,14 @@ GtkWidget* create_window(GtkWidget* window){
 	new_tool(toolbar, NULL, 0, "zoom-out", G_CALLBACK(tool_zoom), GINT_TO_POINTER(-1));
 	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
 	new_tool(toolbar, NULL, 0, "document-properties", G_CALLBACK(tool_property), NULL);
-	new_tool(toolbar, NULL, 1, "edit-copy", G_CALLBACK(toolbutton_cumu_click), NULL);
+	GtkWidget* menu_cumu=new_tool(toolbar, NULL, 1, "edit-copy", G_CALLBACK(togglebutton_cumu), NULL);
+	g_object_set_data(G_OBJECT(window), "menu_cumu", menu_cumu);
 	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
+
+	GtkWidget *menu_icumu=gtk_spin_button_new_with_range(0, 100000, 100);
+	g_signal_connect(menu_icumu, "value-changed", G_CALLBACK(spin_icumu), NULL);
+	new_tool(toolbar, menu_icumu, 0, "menu_icumu", NULL, NULL);
+	g_object_set_data(G_OBJECT(window), "menu_icumu", menu_icumu);
 
 	GtkWidget* fontsel=gtk_font_button_new_with_font("Sans 12");
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
@@ -1677,9 +1716,10 @@ GtkWidget* create_window(GtkWidget* window){
 	gtk_notebook_set_group(GTK_NOTEBOOK(topnb), "toplevel");
 #endif
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(topnb), TRUE);
+	//gtk_notebook_set_show_border(GTK_NOTEBOOK(topnb), FALSE);
 	g_signal_connect(GTK_NOTEBOOK(topnb), "page-added", G_CALLBACK(topnb_page_changed), toolbar);
 	g_signal_connect(GTK_NOTEBOOK(topnb), "page-removed", G_CALLBACK(topnb_page_changed), toolbar);
-	g_signal_connect(GTK_NOTEBOOK(topnb), "switch-page", G_CALLBACK(topnb_page_switch), toolbar);
+	g_signal_connect_after(GTK_NOTEBOOK(topnb), "switch-page", G_CALLBACK(topnb_page_switch), toolbar);
 	GtkWidget* vbox=gtk_vbox_new(FALSE, 0);
 	box_append(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 	box_append(GTK_BOX(vbox), topnb, TRUE, TRUE, 0);
@@ -1688,7 +1728,7 @@ GtkWidget* create_window(GtkWidget* window){
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	gtk_window_set_default_size(GTK_WINDOW(window), 1050, 900);
 	gtk_widget_add_events(GTK_WIDGET(window), GDK_FOCUS_CHANGE_MASK);/*in case this is not on. */
-	set_cur_window(window);
+	window_changed(window);
 	g_signal_connect(GTK_WIDGET(window), "event", G_CALLBACK(window_state), NULL);
 	gtk_widget_show_all(window);
 	gtk_window_present(GTK_WINDOW(window));
