@@ -945,9 +945,11 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 		}
 	}
 	if(recon->GRlgs){
-		real thres=1e-10; 
-		info("RRlgs svd threshold is %g\n", thres);
-		recon->RRlgs=dcellpinv2(recon->GRlgs, NULL, thres, 0);
+		//2021-10-15: Since we are not selecting modes, there is no need for high threshold
+		//to high threshold makes the filtering ill formed
+		const real thres=1e-14; 
+		info("RRlgs svd tikcr is %g\n", thres);
+		recon->RRlgs=dcellpinv2(recon->GRlgs, NULL, 0, thres);
 	}
 	if(parms->save.setup){
 		writebin(recon->GRall, "twfs_GR");
