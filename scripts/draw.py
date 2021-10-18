@@ -36,9 +36,6 @@ def isloc(arg):
 def locembed(loc, opd0, return_ext=0):
     # draw(loc, opd): embed opd onto loc
     opd=opd0.view()
-    (ix, nx, dx, xi) = coord2grid(loc[0])
-    (iy, ny, dy, yi) = coord2grid(loc[1])
-
     nloc = loc.shape[1]
     if opd.dtype==object: #cell
         ims = []
@@ -52,21 +49,20 @@ def locembed(loc, opd0, return_ext=0):
             return ims, ext
         else:
             return ims
-        
-    elif len(opd.shape)==1: #vector
-        nframe = opd.size/nloc
-        opd.shape=(int(nframe), nloc) #reshape() may do copy. assign .shape prevents copy
-    elif opd.shape[0]==nloc and opd.shape[1]!=nloc:
+    elif opd.ndim==2 and (opd.shape[0]==nloc or opd.shape[0]==nloc*2) and opd.shape[1]!=nloc:
         opd=opd.T
-    elif opd.shape[0]!=nloc and opd.shape[1]==nloc:
-        pass
-    else:
+    if not opd.size % nloc == 0:
         print("data has wrong shape", opd.shape)
         return None
-    nframe=opd.shape[0]
-    
+    if not opd.flags['FORC']:
+        opd=np.ascontiguousarray(opd)
+    nframe = int(opd.size/nloc)
+    opd.shape=(nframe, nloc) #reshape() may do copy. assign .shape prevents copy
+
     # print('opd=',opd.shape)
     ims = np.empty(nframe, dtype=object)
+    (ix, nx, dx, xi) = coord2grid(loc[0])
+    (iy, ny, dy, yi) = coord2grid(loc[1])
     for iframe in range(nframe):
         im = np.full((nx*ny),np.NaN)
         im[ix+iy*nx] = opd[iframe, :]
@@ -110,6 +106,8 @@ def draw(*args, **kargs):
             nx = nframe
         ny = int(np.ceil(nframe/nx))
         # print(nx,ny)
+        if nx>1 or ny > 1:
+            plt.clf()
         for iframe in range(nframe):
             if nx>1 or ny > 1:
                 plt.subplot(ny, nx, iframe+1)

@@ -316,10 +316,19 @@ def svd_inv(A, thres=0, tikcr=0):
     '''svd_inv(A, thres=0, tikcr=0)'''
     u,s,v=np.linalg.svd(A)
     if tikcr>0:
-        dd=np.zeros(A.shape)
-        np.fill_diagonal(dd,s[0]*tikcr)
         u,s,v=np.linalg.svd(A+eye(A.shape[0], s[0]*tikcr))
     si=1./s
     if thres>0:
         si[s<s[0]*thres]=0
     return (u*si)@v
+def svd_pinv(mod, thres=0, tikcr=0):
+    '''svd_pinv(mod, thres=0, tikcr=0)'''
+    '''Each row of mod is treated as a mod'''
+    if mod.shape[1]<mod.shape[0]:
+        print('mod has wrong shape, use its transpose instead:', mod.shape)
+        return svd_pinv(mod.T, thres, tikcr)
+
+    mmt=mod@mod.T 
+    immt=svd_inv(mmt, thres, tikcr)
+    return mod.T@immt
+    
