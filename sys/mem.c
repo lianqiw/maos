@@ -50,10 +50,10 @@ int signal_caught=0;//indicate that signal is caught.
 
 _Thread_local char funtrace[funtrace_len]={0};
 
-void* (*calloc_default)(size_t, size_t)=NULL;
-void* (*malloc_default)(size_t)=NULL;
-void* (*realloc_default)(void*, size_t)=NULL;
-void  (*free_default)(void*)=NULL;
+void *(*calloc_default)(size_t, size_t)=NULL;
+void *(*malloc_default)(size_t)=NULL;
+void *(*realloc_default)(void *, size_t)=NULL;
+void  (*free_default)(void *)=NULL;
 
 /*void* (*calloc_custom)(size_t, size_t);
 void* (*malloc_custom)(size_t);
@@ -73,20 +73,20 @@ static void *MSTATROOT=NULL;//reuses keys from MROOT.
 /*max depth in backtrace */
 #define DT 16
 typedef struct{
-	void* p;
+	void *p;
 	char funtrace[funtrace_len];//new way of recording initial call location
-	void* func[DT];
+	void *func[DT];
 	int nfunc;
 	size_t size;
 	size_t nbyte;
 }T_MEMKEY;
 
-typedef int(*compar)(const void*, const void*);
-static int stat_cmp(const T_MEMKEY* pa, const T_MEMKEY* pb){
-	if(!pa->nfunc && !pb->nfunc){
-		if(pa->funtrace[0] && pb->funtrace[0]){
+typedef int(*compar)(const void *, const void *);
+static int stat_cmp(const T_MEMKEY *pa, const T_MEMKEY *pb){
+	if(!pa->nfunc&&!pb->nfunc){
+		if(pa->funtrace[0]&&pb->funtrace[0]){
 			return strcmp(pa->funtrace, pb->funtrace);
-		}else{
+		} else{
 			dbg("nfunc not set but also funtrace not set\n");
 			return 1;
 		}
@@ -106,51 +106,60 @@ static int stat_cmp(const T_MEMKEY* pa, const T_MEMKEY* pb){
 	}
 	return 0;
 }
-static void stat_usage(const void* key, VISIT which, int level){
-	const T_MEMKEY* key2=*((const T_MEMKEY**)key);
+static void stat_usage(const void *key, VISIT which, int level){
+	const T_MEMKEY *key2=*((const T_MEMKEY **)key);
 	(void)level;
 	//merge calls from the same location
 	if(which==leaf||which==postorder){
-		void* found;
+		void *found;
 		if(!(found=tfind(key2, &MSTATROOT, (compar)stat_cmp))){//not found
 			if(!tsearch(key2, &MSTATROOT, (compar)stat_cmp)){
 				warning("Error inserting to tree\n");
 			}
 		} else{
-			(*(T_MEMKEY**)found)->size+=key2->size;
+			(*(T_MEMKEY **)found)->size+=key2->size;
 		}
 	}
 }
-static void print_usage(const void* key, VISIT which, int level){
-	const T_MEMKEY* key2=*((const T_MEMKEY**)key);
+static int print_count=0;
+static void print_usage(const void *key, VISIT which, int level){
+	const T_MEMKEY *key2=*((const T_MEMKEY **)key);
 	(void)level;
 	if(which==leaf||which==postorder){
-		info3("%9zu(%4zu)", key2->size, key2->nbyte);
-		if(key2->nfunc){
-			int offset=key2->nfunc>3?1:0;
-			print_backtrace_symbol(key2->func, key2->nfunc-offset);
-		}else if(key2->funtrace){
-			info3(" %s\n", key2->funtrace);
+		print_count++;
+		if(print_count<100){
+			info3("%9zu(%4zu)", key2->size, key2->nbyte);
+			if(key2->nfunc){
+				int offset=key2->nfunc>3?1:0;
+				if(print_backtrace_symbol(key2->func, key2->nfunc-offset)){
+					info3("print_backtrace_symbol failed, stop.\n");
+					print_count=101;
+				}
+			} else if(key2->funtrace){
+				info3(" %s\n", key2->funtrace);
+			}
+		} else if(print_count==100){
+			info3("Stop after %d records\n", print_count);
 		}
 	}
 }
 typedef struct deinit_t{/*contains either fun or data that need to be freed. */
 	void (*fun)(void);
-	void* data;
-	struct deinit_t* next;
+	void *data;
+	struct deinit_t *next;
 }deinit_t;
-deinit_t* deinit_head=NULL;
+deinit_t *deinit_head=NULL;
 
-static int key_cmp(const void* a, const void* b){
-	void* p1, * p2;
+static int key_cmp(const void *a, const void *b){
+	void *p1, *p2;
 	if(!a||!b) return 1;
-	p1=((T_MEMKEY*)a)->p;
-	p2=((T_MEMKEY*)b)->p;
+	p1=((T_MEMKEY *)a)->p;
+	p2=((T_MEMKEY *)b)->p;
 	if(p1<p2) return -1;
 	else if(p1>p2) return 1;
 	else return 0;
 }
-static void memkey_add(void* p, size_t nbyte, size_t size){
+static void memkey_add(void *p, size_t nbyte, size_t size){
 	if(!p){
 		if(size){
 			warning("memory allocation for %zu failed\n", size);
@@ -158,13 +167,13 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 		return;
 	}
 
-	T_MEMKEY* key=(T_MEMKEY*)calloc_default(1, sizeof(T_MEMKEY));
+	T_MEMKEY *key=(T_MEMKEY *)calloc_default(1, sizeof(T_MEMKEY));
 	key->p=p;
 	key->nbyte=nbyte;
 	key->size=size;
 	if(funtrace[0]){//do not use backtrace
 		memcpy(key->funtrace, funtrace, funtrace_len);
-	}else{
+	} else{
 #ifndef __CYGWIN__
 		key->nfunc=backtrace(key->func, DT);//this step requires locking and severely limits multi-thread performance
 #endif
@@ -174,10 +183,10 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 		print_backtrace();
 		warning("%p already exists\n", p);
 		free(key);
-	}else{
+	} else{
 		if(!tsearch(key, &MROOT, key_cmp)){
 			warning("Error inserting to tree\n");
-		}else{
+		} else{
 			memcnt++;
 			memalloc+=size*nbyte;
 		}
@@ -192,15 +201,15 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 
 }
 //Return 0 if success. 1 if failed.
-static int memkey_del(void* p){
+static int memkey_del(void *p){
 	if(!p) return 0;
-	void* found=0;
+	void *found=0;
 	T_MEMKEY key;
 	key.p=p;
 	LOCK(mutex_mem);
 	found=tfind(&key, &MROOT, key_cmp);
 	if(found){
-		T_MEMKEY* key1=*(T_MEMKEY**)found;/*the address of allocated T_MEMKEY. */
+		T_MEMKEY *key1=*(T_MEMKEY **)found;/*the address of allocated T_MEMKEY. */
 		memfree+=key1->size*key1->nbyte;
 		memcnt--;
 		if(MEM_VERBOSE==1){
@@ -222,23 +231,23 @@ static int memkey_del(void* p){
 	}
 
 }
-static void* calloc_dbg(size_t nmemb, size_t size){
-	void* p=calloc_default(nmemb, size);
+static void *calloc_dbg(size_t nmemb, size_t size){
+	void *p=calloc_default(nmemb, size);
 	memkey_add(p, size, nmemb);
 	return p;
 }
-static void* malloc_dbg(size_t size){
-	void* p=malloc_default(size);
+static void *malloc_dbg(size_t size){
+	void *p=malloc_default(size);
 	memkey_add(p, 1, size);
 	return p;
 }
-static void* realloc_dbg(void* p0, size_t size){
+static void *realloc_dbg(void *p0, size_t size){
 	if(p0) memkey_del(p0);
-	void* p=realloc_default(p0, size);
+	void *p=realloc_default(p0, size);
 	memkey_add(p, 1, size);
 	return p;
 }
-static void free_dbg(void* p){
+static void free_dbg(void *p){
 	if(!p) return;
 	memkey_del(p);
 	free_default(p);
@@ -256,16 +265,16 @@ if(_p){			\
 	return NULL;\
 }
 
-void* malloc_maos(size_t size){
+void *malloc_maos(size_t size){
 	check_alloc(MEM_DEBUG?malloc_dbg(size):malloc_default(size));
 }
-void* calloc_maos(size_t nmemb, size_t size){
+void *calloc_maos(size_t nmemb, size_t size){
 	check_alloc(MEM_DEBUG?calloc_dbg(nmemb, size):calloc_default(nmemb, size));
 }
-void* realloc_maos(void* p, size_t size){
+void *realloc_maos(void *p, size_t size){
 	check_alloc(MEM_DEBUG?realloc_dbg(p, size):realloc_default(p, size));
 }
-void free_maos(void* p){
+void free_maos(void *p){
 	if(MEM_DEBUG) free_dbg(p); else free_default(p);
 }
 #ifdef __cpluspluc
@@ -275,9 +284,10 @@ static void print_mem_debug(){
 	if(MROOT){
 		info3("%ld (%lu MB) allocated memory not freed!!!\n", memcnt, (memalloc-memfree)>>20);
 		if(!signal_caught){
+			print_count=0;
 			twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
 			twalk(MSTATROOT, print_usage);//print results.
-		}else{
+		} else{
 			info3("Printing of not freed memory is enabled only when signal_caught=0.\n");
 		}
 	} else{
@@ -298,21 +308,21 @@ void read_sys_env(){
 		free_custom=free_dbg;
 	}*/
 }
-FILE* fpconsole=NULL;
+FILE *fpconsole=NULL;
 int err2out=1;
 int std2out=1;
 static void init_mem(){
 	if(!calloc_default){
-		calloc_default=(void* (*)(size_t, size_t))dlsym(RTLD_DEFAULT, "calloc");
-		malloc_default=(void* (*)(size_t))dlsym(RTLD_DEFAULT, "malloc");
-		realloc_default=(void* (*)(void*, size_t))dlsym(RTLD_DEFAULT, "realloc");
-		free_default=(void(*)(void*))dlsym(RTLD_DEFAULT, "free");
+		calloc_default=(void *(*)(size_t, size_t))dlsym(RTLD_DEFAULT, "calloc");
+		malloc_default=(void *(*)(size_t))dlsym(RTLD_DEFAULT, "malloc");
+		realloc_default=(void *(*)(void *, size_t))dlsym(RTLD_DEFAULT, "realloc");
+		free_default=(void(*)(void *))dlsym(RTLD_DEFAULT, "free");
 		read_sys_env();
 		void init_process(void);
 		init_process();
 		init_hosts();
-		fpconsole=fdopen(dup(fileno(stdout)),"a");
-		
+		fpconsole=fdopen(dup(fileno(stdout)), "a");
+
 	}
 }
 static __attribute__((constructor)) void init(){
@@ -329,7 +339,7 @@ static __attribute__((destructor)) void deinit(){
 	freepath();
 	free_hosts();
 	thread_pool_destroy();
-	for(deinit_t* p1=deinit_head;p1;p1=deinit_head){
+	for(deinit_t *p1=deinit_head;p1;p1=deinit_head){
 		deinit_head=p1->next;
 		if(p1->fun) p1->fun();
 		if(p1->data) myfree(p1->data);
@@ -343,24 +353,24 @@ static __attribute__((destructor)) void deinit(){
 /**
    Register a function or data to call or free upon exit
 */
-void register_deinit(void (*fun)(void), void* data){
+void register_deinit(void (*fun)(void), void *data){
 	if(MEM_DEBUG){
 		LOCK(mutex_deinit);
 		init_mem();
-		deinit_t* node=NULL;
+		deinit_t *node=NULL;
 		for(node=deinit_head; node; node=node->next){
-			if(fun && fun==node->fun){
+			if(fun&&fun==node->fun){
 				fun=NULL;
 			}
-			if(data && data==node->data){
+			if(data&&data==node->data){
 				data=NULL;
 			}
 		}
-		if(fun || data){
-			node=(deinit_t*)calloc_default(1, sizeof(deinit_t));
+		if(fun||data){
+			node=(deinit_t *)calloc_default(1, sizeof(deinit_t));
 			node->fun=fun;
 			node->data=data;
-		
+
 			node->next=deinit_head;
 			deinit_head=node;
 		}
@@ -369,7 +379,7 @@ void register_deinit(void (*fun)(void), void* data){
 }
 
 quitfun_t quitfun=NULL;
-void default_quitfun(const char* msg){
+void default_quitfun(const char *msg){
 	info("%s", msg);
 	//sync();
 	if(strncmp(msg, "FATAL", 5)){
@@ -381,7 +391,7 @@ void default_quitfun(const char* msg){
 }
 static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
-void default_signal_handler(int sig, siginfo_t* siginfo, void* unused){
+void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	(void)unused;
 	signal_caught=sig;
 	info("\ndefault_signal_handler: %s (%d)\n", strsignal(sig), sig);

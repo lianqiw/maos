@@ -490,8 +490,10 @@ int call_addr2line(char* ans, int nans, const char* buf){
 /**
    Convert backtrace address to source line.
    Do not call routines that may call malloc as the mutex in malloc may already be locked.
+   return 0 if success otherwise -1
  */
-void print_backtrace_symbol(void* const* buffer, int size){
+int print_backtrace_symbol(void* const* buffer, int size){
+	int ans=-1;
 	//disable memory debugging as this code may be called from within malloc_dbg
 #if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
 	static int connect_failed=0;
@@ -500,7 +502,7 @@ void print_backtrace_symbol(void* const* buffer, int size){
 	char progname[PATH_MAX+20]={0};
 	if(get_job_progname(progname, sizeof progname, 0)){
 		dbg("Unable to get progname\n");
-		return;
+		return ans;
 	}
 	snprintf(cmdstr, sizeof cmdstr, "addr2line -f -e %s", progname);
 	for(int it=size-1; it>0; it--){
@@ -510,39 +512,40 @@ void print_backtrace_symbol(void* const* buffer, int size){
 	PNEW(mutex);//Only one thread can do this.
 	LOCK(mutex);
 	if(MAOS_DISABLE_SCHEDULER||is_scheduler||connect_failed){
-		dbg("backtrace directly\n");
-		char ans[10000];
-		if(!call_addr2line(ans, 10000, cmdstr)){
-			info3("%s\n", ans);
-		} else{
-			dbg("Command failed\n");
+		char line[200];
+		if(!call_addr2line(line, sizeof line, cmdstr)){
+			info3("%s\n", line);
+			if(strlen(line)){
+				ans=0;
+			}
 		}
 	} else{//Create a new socket and ask scheduler to do popen and return answer.
 #if MAOS_DISABLE_SCHEDULER == 0
-	//Create a new connection.
+		//Create a new connection.
 		int sock=scheduler_connect_self(0);
 		if(sock!=-1){
 			int cmd[2];
 			int len;
 			cmd[0]=CMD_TRACE;
 			cmd[1]=getpid();
-			char ans[PATH_MAX];//avoid malloc
+			char line[PATH_MAX];//avoid malloc
 			if(stwrite(sock, cmd, sizeof(int)*2)){
 				dbg("write cmd %d failed\n", cmd[0]);
 			} else if(stwritestr(sock, cmdstr)){
 				dbg("write cmd %s failed\n", cmdstr);
-			} else if(streadint(sock, &len) || len>=PATH_MAX || stread(sock, ans, len)){
+			} else if(streadint(sock, &len) || len>=PATH_MAX || stread(sock, line, len)){
 				dbg("read cmd failed\n");
 			} else{
-				info3(" %s\n", ans);
+				info3(" %s\n", line);
+				if(strlen(line)){
+					ans=0;
+				}
 			}
 			close(sock);
 		} else{
 			dbg("Failed to connect to scheduler\n");
 			connect_failed=1;
 		}
-#else
-		dbg("MAOS_DISABLE_SCHEDULER is set\n");
 #endif
 	}
 	UNLOCK(mutex);
@@ -550,6 +553,7 @@ void print_backtrace_symbol(void* const* buffer, int size){
 #else
 	(void)buffer; (void)size;
 #endif
+	return ans;
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>

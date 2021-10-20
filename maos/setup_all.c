@@ -222,6 +222,7 @@ void maos_setup(const parms_t* parms){
    keep track of all the memory allocation.*/
 void maos_reset(){
 	if(!global) return;
+	dbg("Deleting allocated data\n");
 	parms_t* parms=(parms_t*)global->parms;
 	free_recon(parms, global->recon);
 	free_powfs(parms, global->powfs);

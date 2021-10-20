@@ -125,6 +125,7 @@ extern int signal_caught;
 #define dbg( A...) logdbg(0, A)
 #define dbg2(A...) logdbg(1, A)
 #define dbg3(A...) logdbg(2, A)
+#define dbg_once(A...) ({static int done=0; if(!done){done=1; dbg(A);}})
 #define logdbg_time(level, format, ...) logerr(level, "%s[%s]%s: " format "%s", CYAN, myasctime(0), __func__, ##__VA_ARGS__, BLACK)
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)

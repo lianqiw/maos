@@ -738,9 +738,9 @@ static int respond(int sock){
 	break;
 	case CMD_TRACE://8: Called by MAOS to request a backtrace
 	{
-		char* buf=NULL, out[10000];
+		char* buf=NULL, out[200];
 		if(streadstr(sock, &buf)
-			||call_addr2line(out, 10000, buf)
+			||call_addr2line(out, sizeof out, buf)
 			||stwritestr(sock, out)){
 			warning_time("CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
 			ret=-1;

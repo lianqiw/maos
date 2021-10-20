@@ -35,7 +35,7 @@ esac
 AC_PROG_CC([$CC])
 #AM_PROG_CC_C_O #deprecated. Included in AC_PROG_CC.
 #AC_PROG_CC_STDC #enable the current c standard, which is c99 circa 2014
-AC_PROG_CC_C99  #enable C99
+#AC_PROG_CC_C99  #enable C99
 #AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS+=" -std=c11"], AC_MSG_ERROR("C compiler cannot compile C11 code"))
 #AC_PROG_CXX([$CXX])
 AC_OPENMP
@@ -52,6 +52,7 @@ AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd "$srcdir" && pwd)
 BUILD_DIR=$(pwd)
+
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
@@ -338,8 +339,7 @@ case "$host_os" in
 			CFLAGS+=" -stdlib=libc++"
 		fi
 		LDSO="-Wl,-undefined,error" #force an error if symbols are not resolved.
-		#MACOS supports openmp with separate omp library
-		#AC_CHECK_LIB([omp],[omp_set_num_threads],[OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+="-lomp" libtool_fix_openmp=1],[])
+		
 	;;
     *bsd*)
 		AM_CONDITIONAL(BSD, true)
@@ -358,17 +358,9 @@ case "$host_os" in
 	echo host_os=$host_os
 	AC_MSG_ERROR([Unrecognized OS])
 esac
-AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1"])
-if test -z "$OPENMP_CFLAGS" ;then
-    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
-    has_openmp=0
-else
-    CFLAGS+=" $OPENMP_CFLAGS"
-    has_openmp=1
-fi
-AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
-
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
+
+#depends on libsuffix 
 PRE_DIR="${HOME}/.aos"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
@@ -376,21 +368,25 @@ LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 CPPFLAGS+=" -I${PRE_DIR}/include " #use CPPFLAGS so that the preprocessor can also use it.
 PATH+=":${PRE_DIR}/bin"
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
-OPTS+=" $CFLAGS_EXTRA "
-if test "$system" = "win" ;then
-    LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
-fi
-if test "$host_cpu" = "x86_64" ;then
-    CFLAGS+=" -DDLONG "
-    mflag="-m64"
-else
-    CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
-    mflag="-m32"
-fi
-if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
-    CFLAGS+=" $mflag"
-fi
-unset mflag
+
+extract(){
+    fn="$1"
+    OUTDIR="$2"
+    if test -z "$OUTDIR" ;then
+		AC_MSG_ERROR([Please specify third argument])
+		return 1
+    else
+		echo Extracting "${DOWNLOAD_DIR}/${fn}" to "${OUTDIR}"
+		mkdir -p "${OUTDIR}" || die "failed to mkdir"
+		if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
+			rm -rf ${DOWNLOAD_DIR}/${fn}
+			AC_MSG_NOTICE([File downloaded is not correct.])
+			return 1
+		else
+			return 0
+		fi
+    fi
+}
 
 #Discover default download method
 if test -x "`which curl 2>/dev/null`" ;then
@@ -403,55 +399,6 @@ else
     wget="die wget/curl not found ; "
 fi
 
-
-AM_CONDITIONAL(USE_SCHEDULER, true)
-if test "$enable_scheduler" = "no" ;then
-    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
-    AM_CONDITIONAL(USE_SCHEDULER, false)
-    enable_websockets="no"
-fi
-if test "$host_cpu" = "x86_64" ;then 
-    chol_fun=cholmod_l_factorize
-    AM_CONDITIONAL(USE_LONG, true)
-else
-    chol_fun=cholmod_factorize
-    AM_CONDITIONAL(USE_LONG, false)
-fi
-
-LDEXE+="$LDRT " #-static" #show that we prefer static linking.
-if test "x$enable_allstatic" = "xyes" ;then
-    LDEXE_MAOS="-all-static" #only all static linking for maos
-    AM_CONDITIONAL(USE_STATIC, true)
-    AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
-	mkl="mkl-static mkl" #prefer static
-else
-    AM_CONDITIONAL(USE_STATIC, false)
-    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
-	mkl="mkl mkl-static" #prefer dynamic
-fi
-
-#call convention of fortran libraries
-#AC_F77_FUNC(dgemm)
-#AC_F77_FUNC(dposv)
-#download LIBNANE file.tar.bz2 [outdir]
-extract(){
-    fn="$1"
-    OUTDIR="$2"
-    if test -z "$OUTDIR" ;then
-	AC_MSG_ERROR([Please specify third argument])
-	return 1
-    else
-	echo Extracting "${DOWNLOAD_DIR}/${fn}" to "${OUTDIR}"
-	mkdir -p "${OUTDIR}" || die "failed to mkdir"
-	if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
-	    rm -rf ${DOWNLOAD_DIR}/${fn}
-	    AC_MSG_NOTICE([File downloaded is not correct.])
-	    return 1
-	else
-	    return 0
-	fi
-    fi
-}
 download(){
     fn="$2"
     OUTDIR="$3"
@@ -494,6 +441,73 @@ compile(){
 		cat $fnlog
     fi
 }
+if test "$system" = "apple" -o -z "$OPENMP_CFLAGS";then
+	#MACOS supports openmp with separate omp library
+	AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
+	AS_IF([test "$has_omp" = "0" ], [
+		download LIBOMP "libomp${libsuffix}.tar.bz2" ${PRE_DIR} 1
+		unset ac_cv_lib_omp_omp_set_num_threads
+		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+	])
+	AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
+fi
+AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1"])
+if test -z "$OPENMP_CFLAGS" ;then
+    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
+    has_openmp=0
+else
+    CFLAGS+=" $OPENMP_CFLAGS"
+    has_openmp=1
+fi
+AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
+
+OPTS+=" $CFLAGS_EXTRA "
+if test "$system" = "win" ;then
+    LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
+fi
+if test "$host_cpu" = "x86_64" ;then
+    CFLAGS+=" -DDLONG "
+    mflag="-m64"
+else
+    CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
+    mflag="-m32"
+fi
+if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
+    CFLAGS+=" $mflag"
+fi
+unset mflag
+
+AM_CONDITIONAL(USE_SCHEDULER, true)
+if test "$enable_scheduler" = "no" ;then
+    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
+    AM_CONDITIONAL(USE_SCHEDULER, false)
+    enable_websockets="no"
+fi
+if test "$host_cpu" = "x86_64" ;then 
+    chol_fun=cholmod_l_factorize
+    AM_CONDITIONAL(USE_LONG, true)
+else
+    chol_fun=cholmod_factorize
+    AM_CONDITIONAL(USE_LONG, false)
+fi
+
+LDEXE+="$LDRT " #-static" #show that we prefer static linking.
+if test "x$enable_allstatic" = "xyes" ;then
+    LDEXE_MAOS="-all-static" #only all static linking for maos
+    AM_CONDITIONAL(USE_STATIC, true)
+    AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
+	mkl="mkl-static mkl" #prefer static
+else
+    AM_CONDITIONAL(USE_STATIC, false)
+    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
+	mkl="mkl mkl-static" #prefer dynamic
+fi
+
+#call convention of fortran libraries
+#AC_F77_FUNC(dgemm)
+#AC_F77_FUNC(dposv)
+#download LIBNANE file.tar.bz2 [outdir]
+
 function set_lapack(){
     type=$1
     case $type in
@@ -827,16 +841,16 @@ if test "$with_matlab" != "no" ;then
 	    ;;
     esac
     if test "$mex_cpu" != "$host_cpu" ;then
-	echo mex_cpu=$mex_cpu
-	echo host_cpu=$host_cpu
-	echo Architecture mismatch, disable mex support.
-	mex_lib="no"
+		echo mex_cpu=$mex_cpu
+		echo host_cpu=$host_cpu
+		echo Architecture mismatch, disable mex support.
+		mex_lib="no"
     else       
-	LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
-	AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
+		LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
+		AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
     fi
     if test x$mex_lib = xyes ;then
-    	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
+    	MEXOPT+=" -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
 		#2021-05-24: Linking with mwfftw3 crashes matlab. (mwfftw3 contains thread support)
 		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDRT $LDFFT_MEX"
 		LDMEX+="-no-fast-install -static -Xcompiler -shared"
@@ -1034,6 +1048,8 @@ LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)
 AC_SUBST(CN)
 AC_SUBST(LDAOS)
+CFLAGS+=" $OPTS"
+OPTS=""
 AC_SUBST(OPTS)
 AC_SUBST(LDCHOL)
 AC_SUBST(LDFFT)

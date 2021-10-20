@@ -44,7 +44,7 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]);
 int scheduler_socket(int dir, int *sfd, int id);
 /*Handling backtrace*/
 int call_addr2line(char *ans, int nans, const char *cmd);
-void print_backtrace_symbol(void *const *buffer, int size);
+int print_backtrace_symbol(void *const *buffer, int size);
 
 void print_backtrace();
 

@@ -26,8 +26,8 @@
 #include "interface.h"
 #include "../maos/maos.h"
 #include "maos2mex.h"
-static __attribute__((destructor)) void deinit_maos(){
-	maos_reset();
+static __attribute__((constructor)) void init_maos(){
+	register_deinit(maos_reset, NULL);
 }
 #ifdef __cplusplus
 extern "C" {
