@@ -132,8 +132,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_report_path
 <tr class="separator:a4a334a554ca5c7ac7d9a5828c82e7bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a928e4a2456fb419b4361122459bf63fb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a928e4a2456fb419b4361122459bf63fb">call_addr2line</a> (char *ans, int nans, const char *cmd)</td></tr>
 <tr class="separator:a928e4a2456fb419b4361122459bf63fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a7861b01cc62c04cfeacec8b8ed27aab2">print_backtrace_symbol</a> (void *const *buffer, int size)</td></tr>
-<tr class="separator:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c35208c8888c74ab0eac162dd93801e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a8c35208c8888c74ab0eac162dd93801e">print_backtrace_symbol</a> (void *const *buffer, int size)</td></tr>
+<tr class="separator:a8c35208c8888c74ab0eac162dd93801e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3019ac0eb0800bb9d3c5df9818216b6"><td class="memItemLeft" align="right" valign="top"><a id="ae3019ac0eb0800bb9d3c5df9818216b6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> ()</td></tr>
 <tr class="separator:ae3019ac0eb0800bb9d3c5df9818216b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -400,14 +400,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
 
 </div>
 </div>
-<a id="a7861b01cc62c04cfeacec8b8ed27aab2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7861b01cc62c04cfeacec8b8ed27aab2">&#9670;&nbsp;</a></span>print_backtrace_symbol()</h2>
+<a id="a8c35208c8888c74ab0eac162dd93801e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c35208c8888c74ab0eac162dd93801e">&#9670;&nbsp;</a></span>print_backtrace_symbol()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void print_backtrace_symbol </td>
+          <td class="memname">int print_backtrace_symbol </td>
           <td>(</td>
           <td class="paramtype">void *const *&#160;</td>
           <td class="paramname"><em>buffer</em>, </td>
@@ -425,7 +425,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert backtrace address to source line. Do not call routines that may call malloc as the mutex in malloc may already be locked. </p>
+<p>Convert backtrace address to source line. Do not call routines that may call malloc as the mutex in malloc may already be locked. return 0 if success otherwise -1 </p>
 
 </div>
 </div>
