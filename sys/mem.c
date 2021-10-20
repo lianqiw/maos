@@ -48,7 +48,7 @@ int signal_caught=0;//indicate that signal is caught.
   matlab manage the memory during referencing..
   */
 
-_Thread_local char funtrace[funtrace_len];
+_Thread_local char funtrace[funtrace_len]={0};
 
 void* (*calloc_default)(size_t, size_t)=NULL;
 void* (*malloc_default)(size_t)=NULL;
@@ -65,28 +65,32 @@ static int MEM_DEBUG=DEBUG+0;
 int LOG_LEVEL=0;
 PNEW(mutex_mem);
 PNEW(mutex_deinit);
-static void* MROOT=NULL;
+
 static long  memcnt=0;
 static size_t memalloc=0, memfree=0;
-static void* MSTATROOT=NULL;
+static void *MROOT=NULL;
+static void *MSTATROOT=NULL;//reuses keys from MROOT.
 /*max depth in backtrace */
 #define DT 16
 typedef struct{
 	void* p;
+	char funtrace[funtrace_len];//new way of recording initial call location
 	void* func[DT];
 	int nfunc;
 	size_t size;
 	size_t nbyte;
 }T_MEMKEY;
-typedef struct{
-	void* p;
-	void** func;
-	int nfunc;
-	size_t size;
-	size_t nbyte;
-}T_STATKEY;
+
 typedef int(*compar)(const void*, const void*);
-static int stat_cmp(const T_STATKEY* pa, const T_STATKEY* pb){
+static int stat_cmp(const T_MEMKEY* pa, const T_MEMKEY* pb){
+	if(!pa->nfunc && !pb->nfunc){
+		if(pa->funtrace[0] && pb->funtrace[0]){
+			return strcmp(pa->funtrace, pb->funtrace);
+		}else{
+			dbg("nfunc not set but also funtrace not set\n");
+			return 1;
+		}
+	}
 	if(pa->nfunc<pb->nfunc){
 		return -1;
 	} else if(pa->nfunc>pb->nfunc){
@@ -105,37 +109,29 @@ static int stat_cmp(const T_STATKEY* pa, const T_STATKEY* pb){
 static void stat_usage(const void* key, VISIT which, int level){
 	const T_MEMKEY* key2=*((const T_MEMKEY**)key);
 	(void)level;
+	//merge calls from the same location
 	if(which==leaf||which==postorder){
-	/*printf("%p: size %8zu B", key2->p, (key2->size));
-	  print_backtrace_symbol(key2->func, key2->nfunc-2);*/
 		void* found;
-		T_STATKEY key3;
-		key3.func=(void**)key2->func;
-		key3.nfunc=key2->nfunc-2;
-		if(!(found=tfind(&key3, &MSTATROOT, (compar)stat_cmp))){
-			T_STATKEY* keynew=(T_STATKEY*)calloc_default(1, sizeof(T_STATKEY));
-			keynew->p=key2->p;
-			keynew->func=(void**)malloc_default(key3.nfunc*sizeof(void*));
-			memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
-			keynew->nfunc=key3.nfunc;
-			keynew->size=key2->size;
-			keynew->nbyte=key2->nbyte;
-			if(!tsearch(keynew, &MSTATROOT, (compar)stat_cmp)){
-				error("Error inserting to tree\n");
+		if(!(found=tfind(key2, &MSTATROOT, (compar)stat_cmp))){//not found
+			if(!tsearch(key2, &MSTATROOT, (compar)stat_cmp)){
+				warning("Error inserting to tree\n");
 			}
 		} else{
-			T_STATKEY* keynew=*(T_STATKEY**)found;
-			keynew->size+=key2->size;
+			(*(T_MEMKEY**)found)->size+=key2->size;
 		}
 	}
 }
 static void print_usage(const void* key, VISIT which, int level){
-	const T_STATKEY* key2=*((const T_STATKEY**)key);
+	const T_MEMKEY* key2=*((const T_MEMKEY**)key);
 	(void)level;
 	if(which==leaf||which==postorder){
-		info3("size %4zu(%2zu) B@%p", key2->size, key2->nbyte, key2->p);
-		int offset=key2->nfunc>3?1:0;
-		print_backtrace_symbol(key2->func, key2->nfunc-offset);
+		info3("%9zu(%4zu)", key2->size, key2->nbyte);
+		if(key2->nfunc){
+			int offset=key2->nfunc>3?1:0;
+			print_backtrace_symbol(key2->func, key2->nfunc-offset);
+		}else if(key2->funtrace){
+			info3(" %s\n", key2->funtrace);
+		}
 	}
 }
 typedef struct deinit_t{/*contains either fun or data that need to be freed. */
@@ -157,7 +153,7 @@ static int key_cmp(const void* a, const void* b){
 static void memkey_add(void* p, size_t nbyte, size_t size){
 	if(!p){
 		if(size){
-			error("memory allocation for %zu failed\n", size);
+			warning("memory allocation for %zu failed\n", size);
 		}
 		return;
 	}
@@ -166,9 +162,13 @@ static void memkey_add(void* p, size_t nbyte, size_t size){
 	key->p=p;
 	key->nbyte=nbyte;
 	key->size=size;
+	if(funtrace[0]){//do not use backtrace
+		memcpy(key->funtrace, funtrace, funtrace_len);
+	}else{
 #ifndef __CYGWIN__
-	key->nfunc=backtrace(key->func, DT);//this step requires locking and severely limits multi-thread performance
+		key->nfunc=backtrace(key->func, DT);//this step requires locking and severely limits multi-thread performance
 #endif
+	}
 	LOCK(mutex_mem);
 	if(tfind(key, &MROOT, key_cmp)){
 		print_backtrace();
@@ -252,7 +252,7 @@ void* _p=(A); 	\
 if(_p){			\
 	return _p;	\
 } else{			\
-	error("Memory allocation failed: %s\n", strerror(errno)); \
+	info("Memory allocation failed: %s\n", strerror(errno)); \
 	return NULL;\
 }
 

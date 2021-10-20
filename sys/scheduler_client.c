@@ -475,6 +475,9 @@ int call_addr2line(char* ans, int nans, const char* buf){
 				tmp++;
 				char* tmp2=strchr(tmp, '\n'); if(tmp2) tmp2[0]='\0';
 				tmp2=strchr(tmp,'('); if(tmp2) tmp2[-1]='\0';
+				if(!mystrcmp(tmp, "sp")||!mystrcmp(tmp, "mat")||!mystrcmp(tmp, "cell.c")||!mystrcmp(tmp, "loc.c")||!mystrcmp(tmp, "mem.c")){
+					break;
+				}
 				strncat(ans, "->", nans); nans-=3;
 				strncat(ans, tmp, nans);nans-=strlen(tmp);
 			}
