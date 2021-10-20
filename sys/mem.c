@@ -74,7 +74,7 @@ static void *MSTATROOT=NULL;//reuses keys from MROOT.
 #define DT 16
 typedef struct{
 	void *p;
-	char funtrace[funtrace_len];//new way of recording initial call location
+	char *funtrace;//new way of recording initial call location (not yet used)
 	void *func[DT];
 	int nfunc;
 	size_t size;
@@ -84,7 +84,7 @@ typedef struct{
 typedef int(*compar)(const void *, const void *);
 static int stat_cmp(const T_MEMKEY *pa, const T_MEMKEY *pb){
 	if(!pa->nfunc&&!pb->nfunc){
-		if(pa->funtrace[0]&&pb->funtrace[0]){
+		if(pa->funtrace&&pb->funtrace){
 			return strcmp(pa->funtrace, pb->funtrace);
 		} else{
 			dbg("nfunc not set but also funtrace not set\n");
@@ -172,7 +172,7 @@ static void memkey_add(void *p, size_t nbyte, size_t size){
 	key->nbyte=nbyte;
 	key->size=size;
 	if(funtrace[0]){//do not use backtrace
-		memcpy(key->funtrace, funtrace, funtrace_len);
+		key->funtrace=strdup(funtrace);
 	} else{
 #ifndef __CYGWIN__
 		key->nfunc=backtrace(key->func, DT);//this step requires locking and severely limits multi-thread performance
