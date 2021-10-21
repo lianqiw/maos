@@ -331,4 +331,16 @@ def svd_pinv(mod, thres=0, tikcr=0):
     mmt=mod@mod.T 
     immt=svd_inv(mmt, thres, tikcr)
     return mod.T@immt
-    
+
+def plot_smooth(x,y,color=''):
+    from scipy.interpolate import make_interp_spline, BSpline
+
+    #define x as 200 equally spaced values between the min and max of original x 
+    xnew = np.linspace(x.min(), x.max(), 200) 
+
+    #define spline
+    spl = make_interp_spline(x, y, k=3)
+    y_smooth = spl(xnew)
+
+    #create smooth line chart 
+    plt.plot(xnew, y_smooth,color)
