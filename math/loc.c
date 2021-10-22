@@ -752,6 +752,7 @@ void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	const long nloc=loc->nloc;
 	const real* restrict locx=loc->locx;
 	const real* restrict locy=loc->locy;
+OMP_TASK_FOR(4)
 	for(long iloc=0; iloc<nloc; iloc++){
 		P(opd,iloc)+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
 	}

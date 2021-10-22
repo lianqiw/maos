@@ -252,10 +252,12 @@ static inline int atomicadd(int *ptr, int val){
 #endif
 
 #if _OPENMP>=201511 //version>=4.5 //task loop has implicit group
-#define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(5))
+#define OMPTASK_FOR(A...)        expect_level(1);DO_PRAGMA(omp taskloop default(shared) A)
+#define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(1))
 #define OMP_TASK_FOR_COLLAPSE(n) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(NCPU) collapse(n))
 #else
-#define OMP_TASK_FOR(n)
+#define OMPTASK_FOR(A...)
+#define OMP_TASK_FOR(ntask)
 #define OMP_TASK_FOR_COLLAPSE(n)
 #endif
 #endif //ifndef AOS_LIB_THREAD_H

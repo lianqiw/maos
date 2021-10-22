@@ -15,7 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE //DT_DIR
+#endif
 #include <dirent.h>
 #include <getopt.h>
 #include <errno.h>

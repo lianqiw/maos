@@ -224,6 +224,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 					if(rowdiv>nxout) rowdiv=nxout;
 				} while(wrap&&irow<nxout);
 			}
+//OMP_TASK_FOR(4) //enable task loop hurts timing per step by 20%
 			for(long icol=icols; icol<nyout; icol++){
 				CONST_OUT real* phiout2=phiout+icol*nxout;
 				real dplocy=myfma(icol, dyout, oyout);
@@ -245,18 +246,18 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 
 #if TRANSPOSE == 0
 #define GRID_ADD(irow,offset)						\
-		phiout2[irow]+=alpha*					\
-		    (+dplocy1*((1-dplocx0)*phicol[nplocx0]		\
-			       +dplocx0*phicol[nplocx0+offset])		\
-		     +dplocy0*((1-dplocx0)*phicol2[nplocx0]		\
-			       +dplocx0*phicol2[nplocx0+offset]));
+				phiout2[irow]+=alpha*					\
+					( dplocy1*((1.-dplocx0)*phicol[nplocx0]		\
+						+dplocx0*phicol[nplocx0+offset])		\
+					+dplocy0*((1.-dplocx0)*phicol2[nplocx0]		\
+						+dplocx0*phicol2[nplocx0+offset]));
 #else
 #define GRID_ADD(irow,offset)					\
-		real tmp=phiout2[irow]*alpha;			\
-		phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);	\
-		phicol[nplocx0+offset]+=tmp*dplocy1*dplocx0;	\
-		phicol2[nplocx0]+=tmp*dplocy0*(1-dplocx0);	\
-		phicol2[nplocx0+offset]+=tmp*dplocy0*dplocx0;
+				real tmp=phiout2[irow]*alpha;			\
+				phicol[nplocx0]+=tmp*dplocy1*(1.-dplocx0);	\
+				phicol[nplocx0+offset]+=tmp*dplocy1*dplocx0;	\
+				phicol2[nplocx0]+=tmp*dplocy0*(1.-dplocx0);	\
+				phicol2[nplocx0+offset]+=tmp*dplocy0*dplocx0;
 #endif
 
 				rowdiv=rowdiv0;
@@ -264,16 +265,16 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 
 				if(dplocx_arr){//use cached results
 					//First handle points fall within [0, wrapx)
-#pragma omp simd
+#pragma omp simd //not effective
 					for(int irow=irows; irow<rowdiv; irow++){
 						dplocx0=dplocx_arr[irow];
 						nplocx0=nplocx_arr[irow];
-						GRID_ADD(irow, (nplocx2_arr[irow]));
+						GRID_ADD(irow, (nplocx2_arr[irow]));//hotspot for NFIRAOS simulation
 					}
 					//Then handle points fall within [wrapx, wrapx+xover)
 					//xover is EPS if wrap==0, 1 if wrap==1.
 					if(wrap){
-#pragma omp simd
+#pragma omp simd //not effective
 						for(int irow=rowdiv; irow<nxout; irow++){//right on edge
 							dplocx0=dplocx_arr[irow];
 							nplocx0=nplocx_arr[irow];

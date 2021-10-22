@@ -351,14 +351,14 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 		ampi=dnew(nxsa, nxsa);
 		real alpha=(nxsa*nxsa*parms->powfs[ipowfs].safill2d-(nxsa-2*nedge)*(nxsa-2*nedge))
 			/((nxsa-2*(nedge-1))*(nxsa-2*(nedge-1))-(nxsa-2*nedge)*(nxsa-2*nedge));
-		real tot=0;
+		//real tot=0;
 		for(int iy=nedge-1; iy<nxsa-nedge+1; iy++){
 			for(int ix=nedge-1; ix<nxsa-nedge+1; ix++){
 				P(ampi, ix, iy)=1;
 				if(ix==nedge-1||ix==nxsa-nedge||iy==nedge-1||iy==nxsa-nedge){
 					P(ampi, ix, iy)=alpha;
 				}
-				tot+=P(ampi, ix, iy);
+				//tot+=P(ampi, ix, iy);
 			}
 		}
 		if(parms->save.setup){

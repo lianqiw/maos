@@ -670,14 +670,14 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	ccell* xhat2i=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
 	cmat* xhat=cref(xhati->m);
 	cmat* xhat2=cref(xhat2i->m);
-	long* nx=P(recon->xnx);
+	/*long* nx=P(recon->xnx);
 	long* ny=P(recon->xny);
 	long offset=0;
 	for(int ips=0; ips<nps; ips++){
 	//cfft2plan(P(xhati,ips),-1);
 	//cfft2plan(P(xhat2i,ips),1);
 		offset+=nx[ips]*ny[ips];
-	}
+	}*/
 	if(!*xout){
 		*xout=dcellnew2(xin);
 	}

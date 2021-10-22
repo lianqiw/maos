@@ -138,11 +138,12 @@ T X(wdot)(const T* a, const X(mat)* w, const T* b){
 /**
    Compute component wise multiply A=A.*B
 */
-void X(cwm)(X(mat)* A, const X(mat)* B){
+void X(cwm)(X(mat)* restrict A, const X(mat)* restrict B){
 	if(!check_mat(A, B)||!check_match(A, B)){
 		error("Input is not valid\n");
 		return;
 	}
+#pragma omp simd
 	for(long i=0; i<B->nx*B->ny; i++){
 		P(A, i)*=P(B, i);
 	}
@@ -150,7 +151,7 @@ void X(cwm)(X(mat)* A, const X(mat)* B){
 /**
    Compute component wise multiply A=A.*(B1*wt1+B2*wt2)
 */
-void X(cwm2)(X(mat)* A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt2){
+void X(cwm2)(X(mat)* restrict A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt2){
 	if(!check_mat(A)){
 		warning("A is not valid\n");
 		return;
@@ -158,14 +159,17 @@ void X(cwm2)(X(mat)* A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt2){
 	int has_b1=B1&&wt1&&check_match(A, B1);
 	int has_b2=B2&&wt2&&check_match(A, B2);
 	if(has_b1&&has_b2){
+#pragma omp simd
 		for(long i=0; i<B1->nx*B1->ny; i++){
 			P(A, i)*=(P(B1, i)*wt1+P(B2, i)*wt2);
 		}
 	} else if(has_b1){
+#pragma omp simd
 		for(long i=0; i<B1->nx*B1->ny; i++){
 			P(A, i)*=P(B1, i)*wt1;
 		}
 	} else if(has_b2){
+#pragma omp simd
 		for(long i=0; i<B2->nx*B2->ny; i++){
 			P(A, i)*=P(B2, i)*wt2;
 		}

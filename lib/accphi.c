@@ -438,7 +438,7 @@ void prop_grid(ARGIN_GRID,
 	(void)nxmin; (void)nymin;
 	const int nx=NX(mapin);
 	const int ny=NY(mapin);
-//OMP_TASK_FOR(2)
+OMP_TASK_FOR(2)
 	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_LINEAR;
 		dplocx=myfma(px[iloc], dx_in2, displacex);
@@ -471,8 +471,8 @@ void prop_grid(ARGIN_GRID,
 		const real m10=P(mapin, nplocx1, nplocy);
 		const real m01=P(mapin, nplocx, nplocy1);
 		const real m11=P(mapin, nplocx1, nplocy1);
-		phiout[iloc]+=alpha*(+(m00+(m10-m00)*dplocx)*(1.-dplocy)
-			+(m01+(m11-m01)*dplocx)*dplocy);
+		phiout[iloc]+=alpha*((m00+(m10-m00)*dplocx)*(1.-dplocy)
+							+(m01+(m11-m01)*dplocx)*    dplocy);
 	}
 	WARN_MISSING;
 }

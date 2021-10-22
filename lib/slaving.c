@@ -79,7 +79,7 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 	int ndm=NX(aloc);
 	dspcell* actslavec=(dspcell*)cellnew(ndm, ndm);/*block diagonal. */
 	dspcell* actslave=actslavec;
-	int nslavetot=0;
+	//int nslavetot=0;
 	/*Next process stuck and floating actuators. Adjust actcplc and compute slaving matrix.*/
 	for(int idm=0; idm<ndm; idm++){
 		int nact=P(aloc,idm)->nloc;
@@ -102,7 +102,7 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 			}
 		}
 
-		nslavetot+=nslave;
+		//nslavetot+=nslave;
 		info("dm %d, mode %d: there are %d slave actuators\n", idm, mode, nslave);
 
 		loc_create_map(P(aloc,idm));

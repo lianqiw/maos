@@ -28,8 +28,7 @@ case "$CFLAGS" in
 	*-std=c11*|*-std=C11*)
 	;;
 	*)
-	CFLAGS+=" -std=c11"
-
+		CFLAGS+=" -std=c11"
 	;;
 esac
 AC_PROG_CC([$CC])
@@ -61,13 +60,20 @@ die(){
     shift
     AC_MSG_ERROR(["Error:$@"])
 }
-
+LDOPTS=
+LDEXE=
+LDRT=
+OPTS=
 USE_CPP=0
 #find the real flavor of CC
 CCv=`$CC -v 2>&1`
-if grep clang++ <<< $CCv ;then
+if grep "clang++" <<< $CCv ;then
     CN=CLANG
     USE_CPP=1
+elif grep "DPC++" <<< $CCv ;then	
+  	CN=CLANG
+	LDOPTS+=" -limf"
+	INTEL=1
 elif grep clang <<< $CCv ;then
     CN=CLANG
 elif grep icpc <<< $CCv ;then
@@ -198,15 +204,13 @@ if test "${USER}" = "lianqiw" ;then
     OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wno-unknown-pragmas -Wformat=2"
     #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
 fi
-LDEXE=
-LDRT=
-OPTS=
+
 COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers" 
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
 #COMMON_GCC+=" " #gcc-4.8 error
-COMMON_CLANG+=" -Wno-sign-compare" #CLANG has false positive in detecting sign comparison.
+COMMON_CLANG+=" -Wno-sign-compare -Wno-error=pass-failed" #CLANG has false positive in detecting sign comparison.
 
 OPTIM_ALL="-g -O3 -mtune=native "
 OPTIM_GCC="-ftree-vectorize -ffast-math -fno-finite-math-only "
@@ -310,6 +314,9 @@ case "$host_os" in
 		#The following are needed when no gnu extension is used.
 		#CFLAGS_EXTRA=" -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
 		CFLAGS_EXTRA=" -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L"
+		if test "$INTEL" = "1" ;then
+			CFLAGS_EXTRA+=" -D_DEFAULT_SOURCE " #DEFAULT_SOURCE is needed for oneAPI clang
+		fi			
 		#CFLAGS_EXTRA=" -D_DEFAULT_SOURCE "
 		if test "$enable_release" = "yes" ;then
 			CFLAGS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective

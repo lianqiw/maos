@@ -49,7 +49,7 @@ using std::strerror;
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+#include <tgmath.h>
 #endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 
 #undef	MAX
