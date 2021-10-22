@@ -38,7 +38,7 @@ AC_PROG_CC([$CC])
 #AC_PROG_CC_C99  #enable C99
 #AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS+=" -std=c11"], AC_MSG_ERROR("C compiler cannot compile C11 code"))
 #AC_PROG_CXX([$CXX])
-AC_OPENMP
+
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
@@ -157,6 +157,7 @@ AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad com
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downlong precompiled library]))
+AC_ARG_ENABLE(openmp, AS_HELP_STRING([--disable-openmp], [Disable openmp support]))
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -441,16 +442,19 @@ compile(){
 		cat $fnlog
     fi
 }
-if test "$system" = "apple" -a -z "$OPENMP_CFLAGS";then
-	#MACOS supports openmp with separate omp library
-	AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
-	AS_IF([test "$has_omp" = "0" ], [
-		download LIBOMP "libomp${libsuffix}.tar.bz2" ${PRE_DIR} 1
-		unset ac_cv_lib_omp_omp_set_num_threads
-		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+AS_IF([test "$enable_openmp" != "no"], [
+	AC_OPENMP
+	AS_IF([test "$system" = "apple" -a -z "$OPENMP_CFLAGS"],[
+		#MACOS supports openmp with separate omp library
+		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
+		AS_IF([test "$has_omp" = "0" ], [
+			download LIBOMP "libomp${libsuffix}.tar.bz2" ${PRE_DIR} 1
+			unset ac_cv_lib_omp_omp_set_num_threads
+			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+		])
+		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
 	])
-	AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
-fi
+])
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1"])
 if test -z "$OPENMP_CFLAGS" ;then
     CFLAGS+=" -pthread" #enables pthreads feature and links in the library

@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <unistd.h>
+#include <signal.h>
 #include <netdb.h>
 #include <fcntl.h> 
 #include <errno.h>

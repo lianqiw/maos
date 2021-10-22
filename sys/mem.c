@@ -137,7 +137,7 @@ static void print_usage(const void *key, VISIT which, int level){
 					info3("print_backtrace_symbol failed, stop.\n");
 					print_count=101;
 				}
-			} else if(key2->funtrace){
+			} else if(key2->funtrace[0]){
 				info3(" %s\n", key2->funtrace);
 			}
 		} else if(print_count==100){

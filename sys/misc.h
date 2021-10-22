@@ -18,6 +18,7 @@
 
 #ifndef AOS_SYS_MISC_H
 #define AOS_SYS_MISC_H
+#include <time.h>
 #include "common.h"
 /**
    \file sys/misc.h
