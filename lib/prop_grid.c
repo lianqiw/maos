@@ -226,10 +226,8 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			}
 //OMP_TASK_FOR(4) //enable task loop hurts timing per step by 20%
 			for(long icol=icols; icol<nyout; icol++){
-				CONST_OUT real* phiout2=phiout+icol*nxout;
+				CONST_OUT real* restrict phiout2=phiout+icol*nxout;
 				real dplocy=myfma(icol, dyout, oyout);
-
-				CONST_IN real* phicol, * phicol2;
 				real dplocx, dplocx0, dplocy0;
 				int nplocx0, nplocy;
 				int rowdiv;
@@ -239,9 +237,9 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 					oyout-=nyin;
 				}
 				SPLIT(dplocy, dplocy0, nplocy);
-				phicol=phiin+nplocy*nxin;
+				CONST_IN real *restrict phicol=phiin+nplocy*nxin;
 						//The points on [wrapy nyout) is handled correctly
-				phicol2=phiin+(nplocy==wrapy?0:(nplocy+1))*nxin;
+				CONST_IN real *restrict phicol2=phiin+(nplocy==wrapy?0:(nplocy+1))*nxin;
 				const real dplocy1=1.-dplocy0;
 
 #if TRANSPOSE == 0
