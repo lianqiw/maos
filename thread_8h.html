@@ -166,27 +166,21 @@ Macros</h2></td></tr>
 <tr class="memitem:a79f3df608bf0b04b381c917bff0e6238"><td class="memItemLeft" align="right" valign="top"><a id="a79f3df608bf0b04b381c917bff0e6238"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>SPIN_UNLOCK</b>(i)&#160;&#160;&#160;__sync_lock_release(&amp;i)</td></tr>
 <tr class="separator:a79f3df608bf0b04b381c917bff0e6238"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5bc854cbeb575d1ae88535ab850d5f44"><td class="memItemLeft" align="right" valign="top"><a id="a5bc854cbeb575d1ae88535ab850d5f44"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>OMPTASK_FOR</b>(index,  start,  end,  extra...)&#160;&#160;&#160;for(<a class="el" href="classlong.html">long</a> index=start; index&lt;end; index++)</td></tr>
-<tr class="separator:a5bc854cbeb575d1ae88535ab850d5f44"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c906b430971b36c0ebdc013c3bcfc4d"><td class="memItemLeft" align="right" valign="top"><a id="a7c906b430971b36c0ebdc013c3bcfc4d"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>OMPTASK_END</b></td></tr>
-<tr class="separator:a7c906b430971b36c0ebdc013c3bcfc4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40b05fdcb5f4c47d8f9d5d285d3e838f"><td class="memItemLeft" align="right" valign="top"><a id="a40b05fdcb5f4c47d8f9d5d285d3e838f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ICCTASK_FOR</b>(index,  start,  end,  extra...)&#160;&#160;&#160;for(<a class="el" href="classlong.html">long</a> index=start; index&lt;end; index++)</td></tr>
-<tr class="separator:a40b05fdcb5f4c47d8f9d5d285d3e838f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7471fb80365f9f09c80dc488852295ae"><td class="memItemLeft" align="right" valign="top"><a id="a7471fb80365f9f09c80dc488852295ae"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ICCTASK_END</b></td></tr>
-<tr class="separator:a7471fb80365f9f09c80dc488852295ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7247c60724ec85988716ce873e3a23e4"><td class="memItemLeft" align="right" valign="top"><a id="a7247c60724ec85988716ce873e3a23e4"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>expect_level</b>(n)&#160;&#160;&#160;if(omp_get_level()!=n) dbg(&quot;omp_get_level=%d, want %d\n&quot;, omp_get_level(), n)</td></tr>
 <tr class="separator:a7247c60724ec85988716ce873e3a23e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe0f036c03be403ab677441f07b4fff6"><td class="memItemLeft" align="right" valign="top"><a id="afe0f036c03be403ab677441f07b4fff6"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>OMP_FOR</b></td></tr>
-<tr class="separator:afe0f036c03be403ab677441f07b4fff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82d3687cb27dfe9ee3d7ed0bd3ac2586"><td class="memItemLeft" align="right" valign="top"><a id="a82d3687cb27dfe9ee3d7ed0bd3ac2586"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OMP_FOR</b>(n)</td></tr>
+<tr class="separator:a82d3687cb27dfe9ee3d7ed0bd3ac2586"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51e37c5d8fc47fc5626fab2a04981756"><td class="memItemLeft" align="right" valign="top"><a id="a51e37c5d8fc47fc5626fab2a04981756"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>OMP_FOR_COLLAPSE</b>(n)</td></tr>
 <tr class="separator:a51e37c5d8fc47fc5626fab2a04981756"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0355deb3b92d1d10eedc1aca309d838a"><td class="memItemLeft" align="right" valign="top"><a id="a0355deb3b92d1d10eedc1aca309d838a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OMP_TASK_FOR</b>(n)</td></tr>
+<tr class="separator:a0355deb3b92d1d10eedc1aca309d838a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b0e217bb3a9b706d04a4162232d34d4"><td class="memItemLeft" align="right" valign="top"><a id="a6b0e217bb3a9b706d04a4162232d34d4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OMP_TASK_FOR_COLLAPSE</b>(n)</td></tr>
+<tr class="separator:a6b0e217bb3a9b706d04a4162232d34d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
