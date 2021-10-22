@@ -142,6 +142,8 @@ static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
     *nperm=xloctot;
     return perm;
 }
+
+
 static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, real dx, real dsa){
     /**
        Compute gradient operator in Fourier domain
@@ -151,8 +153,8 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, real dx, real dsa){
 	error("dsa must be multiple of dx");
     }
  
-    real *wt=(real*)alloca(sizeof(real)*(os+1));
-    real *st=(real*)alloca(sizeof(real)*(os+1));
+    real *wt=mymalloc(os+1, real);
+    real *st=mymalloc(os+1, real);
     /*Trapzoidal weights for averaging. */
     wt[os]=wt[0]=0.5/(real)os/dsa;
     for(long ios=1; ios<os; ios++){
@@ -189,6 +191,8 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, real dx, real dsa){
 	    pgy[ix+iy*nx]=offset*ty;
 	}
     }
+	free(wt);
+	free(st);
 }
 static csp *fdpcg_prop(long nps, const long *os, long nxg, real dx, 
 		    real *dispx, real *dispy){

@@ -24,8 +24,6 @@
 #ifndef AOS_COMMON_H
 #define AOS_COMMON_H
 //C standard headers
-#include <unistd.h>
-#include <time.h>
 
 typedef void (*quitfun_t)(const char*);
 extern quitfun_t quitfun;
@@ -35,15 +33,9 @@ void default_quitfun(const char* msg);
 #include "config.h" 
 #endif
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
-#include <alloca.h>
-#endif
-
-
 #if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 //c++ mode, not CUDA
-#include <csignal>
-#include <cstdarg>
+#include <cstdarg> //for va_start
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -53,8 +45,7 @@ using std::isfinite;
 using std::isnan;
 using std::strerror;
 #else//C99 mode or CUDA.
-#include <signal.h>
-#include <stdarg.h>
+#include <stdarg.h> //for va_start
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

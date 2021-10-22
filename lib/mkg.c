@@ -191,8 +191,8 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	poffset[0]+=dsa2;/*offset to SALOC to make it subaperture center.*/
 	poffset[1]+=dsa2;
 	real amp2[3][3];
-	real wtfull[4]={0.5/3, 1./3, 0.5, 0.5};
-	real* wtalpha, * wtbeta;
+	real wtalpha[4]={0.5/3, 1./3, 0.5, 0.5};//if do_partial is set, the values will be updated
+	real wtbeta[4]={0.5/3, 1./3, 0.5, 0.5};
 	real signx, signy;
 	real ampsum;
 	real limx1, limx2, limy1, limy2;
@@ -232,13 +232,7 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	} else{
 		ampcopy=amp;
 	}
-	if(do_partial){
-		wtalpha=(real*)alloca(sizeof(real)*4);
-		wtbeta=(real*)alloca(sizeof(real)*4);
-	} else{
-		wtalpha=(real*)wtfull;
-		wtbeta=(real*)wtfull;
-	}
+	
 	/*if no amplitude weighting, set all to one.*/
 	if(!amp){
 		for(jtmp=0; jtmp<3; jtmp++){

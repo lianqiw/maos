@@ -76,13 +76,14 @@ void photon_flux(const ZB_S* zb,        /**<[in] Sky background and zero magnitu
 	real Npsum=0;
 	real Nbsum=0;
 	real saa;
+	real Nptmp[nwvl];
 	if(iscircle){
 		saa=M_PI*pow(dxsa*0.5, 2);
 	} else{
 		saa=pow(dxsa, 2);
 	}
 	if(!Np){
-		Np=myalloca(nwvl, real);
+		Np=Nptmp;
 	}
 	real Npwvl=0;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){

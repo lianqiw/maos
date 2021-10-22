@@ -110,7 +110,7 @@ static void* mvm_thread(void* ithread0){
 	while(listen){
 		switch(cmds[ithread]){
 		case 0:
-			usleep(10);
+			mysleep(1e-5);
 			break;
 		case CMD_MCOPY:{
 			if(ithread<NGPU){
@@ -234,7 +234,7 @@ static int respond(int sock){
 		//Wait for all copying to be finish.
 		for(int i=0; i<NGPU; i++){
 			while(cmds[i]==CMD_MCOPY){
-				usleep(1);
+				mysleep(1e-6);
 			}
 		}
 		toc2("copy mvm to gpu");
@@ -255,7 +255,7 @@ static int respond(int sock){
 			if(cmd[2]<1800){//Use next available GPU to handle this task.
 				int igpu=gpu_next();
 				while(cmds[igpu]){//wait until last job is finished.
-					usleep(10);
+					mysleep(1e-5);
 				}
 				mvm_data->icols[igpu]=icol;
 				mvm_data->kcols[igpu]=k;
@@ -269,7 +269,7 @@ static int respond(int sock){
 				}
 				for(int i=0; i<NGPU; i++){
 					while(cmds[i]==CMD_GMULF){
-						usleep(1);
+						mysleep(1e-6);
 					}
 				}
 				tim_queue+=toc3;tic;
@@ -277,14 +277,14 @@ static int respond(int sock){
 		}
 		for(int i=0; i<NGPU; i++){
 			while(cmds[i]){
-				usleep(10);
+				mysleep(1e-5);
 			}
 			//Copy partial DM commands back.
 			cmds[i]=CMD_DMCP;
 		}
 		for(int i=0; i<NGPU; i++){
 			while(cmds[i]==CMD_DMCP){
-				usleep(10);
+				mysleep(1e-5);
 			}
 		}
 		tim_dmcp+=toc3;tic;
@@ -295,7 +295,7 @@ static int respond(int sock){
 		}
 		for(int i=0; i<NCPU; i++){
 			while(cmds[i]==CMD_DMADD){
-				usleep(10);
+				mysleep(1e-5);
 			}
 		}
 		tim_dmsum+=toc3;tic;

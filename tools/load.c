@@ -24,10 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-
-
-
-
+#include <unistd.h>
 #include <limits.h>
 #include "../sys/sys.h"
 long matlab_pid;

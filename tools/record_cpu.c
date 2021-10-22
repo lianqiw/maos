@@ -17,9 +17,7 @@
 */
 #if defined(__linux__)
 
-
-
-
+#include <unistd.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <dirent.h>

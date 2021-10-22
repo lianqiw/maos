@@ -20,6 +20,7 @@
    \file skyc/setup_star.c
   setup stars.
 */
+#include <alloca.h>
 #include "skyc.h"
 #include "parms.h"
 #include "types.h"

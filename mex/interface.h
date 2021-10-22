@@ -17,7 +17,7 @@
 */
 #ifndef AOS_MEX_INTERFACE_H
 #define AOS_MEX_INTERFACE_H
-
+#include <signal.h>
 #include <stdint.h>
 #include <setjmp.h>
 #if __GNUC__ && defined(__STDC_UTF_16__) && !defined(__cplusplus)

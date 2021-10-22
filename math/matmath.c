@@ -130,8 +130,7 @@ T X(wdot)(const T* a, const X(mat)* w, const T* b){
 		writebin(w, "wdot_w");
 		writearr("wdot_a", 1, sizeof(real), M_T, NULL, a, w->nx, w->ny);
 		writearr("wdot_b", 1, sizeof(real), M_T, NULL, b, w->nx, w->ny);
-		warning("NaN found.\n");
-		raise(1);
+		error("NaN found.\n");
 	}
 	return res;
 }

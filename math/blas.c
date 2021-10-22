@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <unistd.h>
 #include "mathdef.h"
 #include "defs.h" //Defines T, X, etc 
 #include "blas.h" //defines blas headers

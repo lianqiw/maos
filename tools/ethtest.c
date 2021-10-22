@@ -20,6 +20,7 @@
    \file ethtest.c
    Testing network throughput.
 */
+#include <unistd.h>
 #include <errno.h>
 #include <sched.h>
 #include <sys/types.h>

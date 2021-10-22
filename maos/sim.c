@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include <unistd.h>
 #include <search.h>
 #include <sys/stat.h>
 #include <sys/types.h>

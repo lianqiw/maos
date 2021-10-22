@@ -15,6 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifdef __linux__
+#define _GNU_SOURCE //for SYSCALL
+#endif
+#include <signal.h>
 #include "thread.h"
 #include "common.h"
 /**
@@ -92,6 +96,7 @@ long thread_id(){
 #else
 #ifdef __linux__
 #include <sys/types.h>
+#include <unistd.h>
 #include <sys/syscall.h>
 long thread_id(){
 	return (long)syscall(SYS_gettid);

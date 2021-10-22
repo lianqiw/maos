@@ -201,7 +201,7 @@ void gpu_setup_recon_mvm_direct(const parms_t* parms, recon_t* recon){
 		thread_prep(info, 0, ntotgrad, nthread, mvm_direct_igpu, &data);
 		if(nthread>NGPU){
 			THREAD_POOL_INIT(NGPU);//limit to only NGPU threads to avoid fighting
-			sleep(1);
+			mysleep(1);
 			gpu_avail=(int*)calloc(NGPU, sizeof(int));
 			for(int igpu=0; igpu<NGPU; igpu++){
 				gpu_avail[gpu_pos++]=igpu;

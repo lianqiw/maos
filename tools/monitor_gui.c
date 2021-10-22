@@ -19,7 +19,6 @@
 	This file is a supplement to monitor.c It defines and operations an treeview to organize jobs.
 */
 #define NOTIFY_IS_SUPPORTED 1
-#include <tgmath.h>
 #include <netdb.h>
 #include <netdb.h>
 #include <fcntl.h> 

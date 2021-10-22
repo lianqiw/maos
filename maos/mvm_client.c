@@ -15,13 +15,13 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#include "mvm_client.h"
+#include <unistd.h>
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
 #include <errno.h>
+#include "mvm_client.h"
 
 static int sock_mvm=-1;
 /*Read into real array until we get all*/

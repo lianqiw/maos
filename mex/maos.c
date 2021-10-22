@@ -22,7 +22,7 @@
    maos() is the single entrace. Different functionalities are provided by the
    first parameter as a string.
 */
-
+#include <unistd.h>
 #include "interface.h"
 #include "../maos/maos.h"
 #include "maos2mex.h"

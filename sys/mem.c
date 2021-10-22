@@ -18,6 +18,8 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE //For RTLD_NEXT in linux
 #endif
+#include <signal.h>
+#include <unistd.h>
 #include <search.h>
 #ifndef __CYGWIN__
 #include <execinfo.h>

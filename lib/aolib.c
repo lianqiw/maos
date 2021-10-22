@@ -17,6 +17,7 @@
 */
 
 //#include <setjmp.h>
+#include <signal.h>
 #include <stdio.h>
 #include "aos.h"
 //jmp_buf exception_return;

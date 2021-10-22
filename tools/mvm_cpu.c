@@ -20,6 +20,7 @@
    \file mvm_cpu.c
    Testing mvm on CPU
 */
+#include <unistd.h>
 #include <errno.h>
 #include "../lib/aos.h"
 

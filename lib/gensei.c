@@ -23,7 +23,7 @@
 
 
 */
-
+#include <unistd.h>
 #include "gensei.h"
 #include "genotf.h"
 /**

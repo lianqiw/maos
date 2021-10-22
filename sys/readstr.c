@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <tgmath.h>
+
 #include <ctype.h> /*isspace */
 #include <strings.h> //strncasecmp
 #include "readstr.h"

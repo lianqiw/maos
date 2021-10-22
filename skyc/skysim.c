@@ -72,7 +72,7 @@
    if maos.mffocus==0, set skyc.addfocus to 0 because focus error is included in maos simulations.
    2013-12-20: removed skyc.addfocus option. The correct way to model focus is to use in maos presimulations
 */
-
+#include <unistd.h>
 #include "skyc.h"
 #include "parms.h"
 #include "skysim.h"

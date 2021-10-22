@@ -441,7 +441,7 @@ compile(){
 		cat $fnlog
     fi
 }
-if test "$system" = "apple" -o -z "$OPENMP_CFLAGS";then
+if test "$system" = "apple" -a -z "$OPENMP_CFLAGS";then
 	#MACOS supports openmp with separate omp library
 	AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
 	AS_IF([test "$has_omp" = "0" ], [

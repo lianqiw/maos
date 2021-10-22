@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <unistd.h>
 #include <errno.h>
 #include "utils.h"
 #include "curmat.h"
