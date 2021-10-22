@@ -267,9 +267,11 @@ Functions</h2></td></tr>
 <tr class="separator:a329eb26031f9567dcb26c67d62170161"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5f1f7191d68f2629d767d4c04b19936"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ab5f1f7191d68f2629d767d4c04b19936">dwdot</a> (const real *a, const <a class="el" href="type_8h.html#structdmat">dmat</a> *w, const real *b)</td></tr>
 <tr class="separator:ab5f1f7191d68f2629d767d4c04b19936"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf36a4c01ef10127030a2f26bde8f47e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#acf36a4c01ef10127030a2f26bde8f47e">dcwm</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, const <a class="el" href="type_8h.html#structdmat">dmat</a> *B)</td></tr>
+<tr class="memitem:acf36a4c01ef10127030a2f26bde8f47e"><td class="memItemLeft" align="right" valign="top"><a id="acf36a4c01ef10127030a2f26bde8f47e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>dcwm</b> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, const <a class="el" href="type_8h.html#structdmat">dmat</a> *B)</td></tr>
 <tr class="separator:acf36a4c01ef10127030a2f26bde8f47e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08aba36db07b7963b9f3288220018b09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a08aba36db07b7963b9f3288220018b09">dcwm2</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, const <a class="el" href="type_8h.html#structdmat">dmat</a> *B1, real wt1, const <a class="el" href="type_8h.html#structdmat">dmat</a> *B2, real wt2)</td></tr>
+<tr class="memitem:a08aba36db07b7963b9f3288220018b09"><td class="memItemLeft" align="right" valign="top"><a id="a08aba36db07b7963b9f3288220018b09"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>dcwm2</b> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, const <a class="el" href="type_8h.html#structdmat">dmat</a> *B1, real wt1, const <a class="el" href="type_8h.html#structdmat">dmat</a> *B2, real wt2)</td></tr>
 <tr class="separator:a08aba36db07b7963b9f3288220018b09"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0034c29e2976bef5c3adc84f28e2b81a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a0034c29e2976bef5c3adc84f28e2b81a">dcwm3</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *__restrict A, const <a class="el" href="type_8h.html#structdmat">dmat</a> *__restrict W, const <a class="el" href="type_8h.html#structdmat">dmat</a> *__restrict B1, const real wt1, const <a class="el" href="type_8h.html#structdmat">dmat</a> *__restrict B2, const real wt2)</td></tr>
 <tr class="separator:a0034c29e2976bef5c3adc84f28e2b81a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2745,82 +2747,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft2partial</b> (<a 
       </table>
 </div><div class="memdoc">
 <p>compute weighted dot product a'*(w*b) </p>
-
-</div>
-</div>
-<a id="acf36a4c01ef10127030a2f26bde8f47e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf36a4c01ef10127030a2f26bde8f47e">&#9670;&nbsp;</a></span>dcwm()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void dcwm </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>B</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compute component wise multiply A=A.*B </p>
-
-</div>
-</div>
-<a id="a08aba36db07b7963b9f3288220018b09"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a08aba36db07b7963b9f3288220018b09">&#9670;&nbsp;</a></span>dcwm2()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void dcwm2 </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>B1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>wt1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>B2</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>wt2</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compute component wise multiply A=A.*(B1*wt1+B2*wt2) </p>
 
 </div>
 </div>

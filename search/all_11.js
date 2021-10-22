@@ -94,7 +94,6 @@ var searchData=
   ['screen',['screen',['../turbulence_8h.html#ae6ab6609cc4b8fa90c08562e818f590d',1,'genatm_t']]],
   ['scwlog',['scwlog',['../smath_8h.html#ab196a9711f28510474047bed43ac9f0a',1,'stmp.c']]],
   ['scwlog10',['scwlog10',['../smath_8h.html#a708870ff3ac3a5bb1e2376ad68594b1e',1,'stmp.c']]],
-  ['scwm',['scwm',['../smath_8h.html#af956788b4f2ba6956ad09f77ba845efb',1,'stmp.c']]],
   ['scwmcol',['scwmcol',['../smath_8h.html#a0433396ee78a8d19c6e08056ac86fff9',1,'stmp.c']]],
   ['scwmrow',['scwmrow',['../smath_8h.html#a3611b46255d85092ef60d51ff37b65af',1,'stmp.c']]],
   ['sde_5ffit',['sde_fit',['../kalman_8h.html#af94af56f9ba672f94231abea41a46227',1,'kalman.c']]],

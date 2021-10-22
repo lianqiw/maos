@@ -76,8 +76,6 @@ var searchData=
   ['dcwexp',['dcwexp',['../dmath_8h.html#ae55d5f2527984cf9b14a2bc68eb134e4',1,'dtmp.c']]],
   ['dcwlog',['dcwlog',['../dmath_8h.html#aa34266ebb9c8de30410738e534f0654a',1,'dtmp.c']]],
   ['dcwlog10',['dcwlog10',['../dmath_8h.html#a86b0f400003435e6813588d09861f438',1,'dtmp.c']]],
-  ['dcwm',['dcwm',['../dmath_8h.html#acf36a4c01ef10127030a2f26bde8f47e',1,'dtmp.c']]],
-  ['dcwm2',['dcwm2',['../dmath_8h.html#a08aba36db07b7963b9f3288220018b09',1,'dtmp.c']]],
   ['dcwm3',['dcwm3',['../dmath_8h.html#a0034c29e2976bef5c3adc84f28e2b81a',1,'dtmp.c']]],
   ['dcwm3col',['dcwm3col',['../dmath_8h.html#a88c49e7678c168c357d4739d4fd23133',1,'dtmp.c']]],
   ['dcwmcol',['dcwmcol',['../dmath_8h.html#abb29bb196d5f2a434fd37d07e35124b9',1,'dtmp.c']]],
