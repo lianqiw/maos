@@ -100,23 +100,23 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 				}
 			}
 		} else if(trans=='t'){
-			OMPTASK_FOR(icol, 0, A->ny){
+OMP_TASK_FOR(4)
+			for(long icol=0; icol<A->ny; icol++){			
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
 					tmp+=alpha*(A->px[ix])*x[A->pi[ix]];
 				}
 				y[icol]+=tmp;
 			}
-			OMPTASK_END;
 		} else if(trans=='c'){
-			OMPTASK_FOR(icol, 0, A->ny){
+OMP_TASK_FOR(4)			
+			for(long icol=0; icol<A->ny; icol++){
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
 					tmp+=alpha*conj(A->px[ix])*x[A->pi[ix]];
 				}
 				y[icol]+=tmp;
 			}
-			OMPTASK_END;
 		} else{
 			error("Invalid trans=%c\n", trans);
 		}
@@ -155,14 +155,14 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 
 #define LOOP_TRANSA(ppy, yny, conjA, ppx, conjx)				\
 	{								\
-	    OMPTASK_FOR(icol, 0, A->ny){					\
-		for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){		\
-		    for(long jcol=0; jcol<yny; jcol++){			\
-			ppy(y, icol, jcol)+=alpha*conjA(A->px[ix])*conjx(ppx(x, A->pi[ix], jcol)); \
-		    }							\
-		}							\
+		OMP_TASK_FOR(4)\
+		for(long icol=0; icol<A->ny; icol++){\
+			for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){		\
+				for(long jcol=0; jcol<yny; jcol++){			\
+				ppy(y, icol, jcol)+=alpha*conjA(A->px[ix])*conjx(ppx(x, A->pi[ix], jcol)); \
+				}							\
+			}							\
 	    }								\
-	    OMPTASK_END;						\
 	}
 		if(transy){
 			if(trans[0]=='n'){

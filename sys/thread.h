@@ -242,52 +242,20 @@ static inline int atomicadd(int *ptr, int val){
     return old+val;
 }
 
-//Using taskloop causes memory double free error in icc.
-#if _OPENMP >= 201511  && !defined(__INTEL_COMPILER)  //ICC V17 taskloop is not correct.
-#define OMPTASK_FOR(index, start, end, extra...)	\
-    DO_PRAGMA(omp taskloop extra grainsize(50))		\
-    for(long index=start; index<end; index++)
-#define OMPTASK_END 
-#elif _OPENMP >= 200805 //Openmp 3.0 (task introduced). Emulating taskloop.
-#define OMPTASK_FOR(index, start, end, extra...)	\
-    const long nratio=(end-start+NTHREAD-1)/NTHREAD;	\
-    const long nsect=(nratio+4)/5;			\
-    const long omp_sect=(end-start+nsect-1)/nsect;	\
-    OMP_TASKSYNC_START					\
-    for(long omp_j=0; omp_j<nsect; omp_j++){		\
-        long omp_start=start+omp_sect*omp_j;		\
-        long omp_end=omp_start+omp_sect;		\
-	if(omp_end>end) omp_end=end;			\
-	DO_PRAGMA(omp task extra firstprivate(omp_start, omp_end))	\
-	for(long index=omp_start; index<omp_end; index++)
-#define OMPTASK_END } OMP_TASKSYNC_END
-#else
-#define OMPTASK_FOR(index,start,end, extra...)	\
-    for(long index=start; index<end; index++)
-#define OMPTASK_END
-#endif
-
-//For those that is only good for icc, use the following
-#if _OPENMP >= 200805 && defined(__INTEL_COMPILER) 
-#define ICCTASK_FOR(index, start,end, extra...)	\
-        OMPTASK_FOR(index,start,end,extra)
-#define ICCTASK_END OMPTASK_END
-#else
-#define ICCTASK_FOR(index,start,end, extra...)	\
-    for(long index=start; index<end; index++)
-#define ICCTASK_END 
-#endif
-
 #define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
-#if _OPENMP>=201511 //version>=4.5 //task loop has implicit group
-#define OMP_FOR             expect_level(1);DO_PRAGMA(omp taskloop default(shared) ) 
-#define OMP_FOR_COLLAPSE(n) expect_level(1);DO_PRAGMA(omp taskloop default(shared) collapse(n)) 
-#elif defined(_OPENMP)
-#define OMP_FOR             expect_level(0);DO_PRAGMA(omp parallel for default(shared) )
+#if _OPENMP > 0
+#define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))
 #define OMP_FOR_COLLAPSE(n) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n))
 #else
-#define OMP_FOR
+#define OMP_FOR(n)
 #define OMP_FOR_COLLAPSE(n)
 #endif
 
+#if _OPENMP>=201511 //version>=4.5 //task loop has implicit group
+#define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(5))
+#define OMP_TASK_FOR_COLLAPSE(n) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(NCPU) collapse(n))
+#else
+#define OMP_TASK_FOR(n)
+#define OMP_TASK_FOR_COLLAPSE(n)
+#endif
 #endif //ifndef AOS_LIB_THREAD_H

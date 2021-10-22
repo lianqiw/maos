@@ -478,7 +478,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		dmat* opdbias_astigx=dread("opdbias_astigx");
 		dmat* opdbias_polish=dread("opdbias_polish");
 		const real atmscale=1;
-		OMP_FOR
+		OMP_TASK_FOR(4)
 		for(int i=0; i<100; i++){
 			info2("%d ", i);
 			dmat* ints=0;
@@ -815,7 +815,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 
 	const real scale=1.-(locin->ht-pywfs->hc)/pywfs->hs;
 	TIC;tic;
-	OMP_FOR
+	OMP_TASK_FOR(4)
 	for(int imod=0; imod<nmod; imod++){
 		dmat* opdin=dnew(locin->nloc, 1);
 		dmat* opdfft=ddup(opd0);

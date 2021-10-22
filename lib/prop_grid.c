@@ -42,7 +42,7 @@
 #define FUN_NAME_STAT prop_grid_stat_transpose
 #define FUN_NAME_BLOCK prop_grid_block_transpose
 #endif
-
+//OMP_TASK_FOR in this file does not help with performance.
 /**
    Ray tracing from phiin with size of nxin*nyin to
    phiout with size of nxout*nyout, normalized spacing of dxout, dyout, origin offset of oxout, oyout.
@@ -100,7 +100,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			if(nyout==640){
 				dbg("icols=%d, nyout=%ld\n", icols, nyout);
 			}
-			OMPTASK_FOR(icol, icols, nyout){
+			for(long icol=icols; icol<nyout; icol++){
 				CONST_IN real* restrict phicol, * restrict phicol2;
 				CONST_OUT real* restrict phiout2=phiout+icol*nxout;//starting address of output
 				long nplocy=nplocy0+icol;
@@ -112,18 +112,18 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 				phicol2=phiin+(nplocy==wrapy?0:(nplocy+1))*nxin;
 #if TRANSPOSE == 0				
 #define GRID_ADD(irow, offset)			\
-		phiout2[irow]+=alpha*		\
-		    (bl*phicol2[irow+offset]	\
-		     +br*phicol2[irow]		\
-		     +tl*phicol[irow+offset]	\
-		     +tr*phicol[irow]);
+				phiout2[irow]+=alpha*		\
+					(bl*phicol2[irow+offset]	\
+					+br*phicol2[irow]		\
+					+tl*phicol[irow+offset]	\
+					+tr*phicol[irow]);
 #else
 #define GRID_ADD(irow,offset)			\
-		real tmp=alpha*phiout2[irow];	\
-		phicol2[irow+offset]+=tmp*bl;	\
-		phicol2[irow]+=tmp*br;		\
-		phicol[irow+offset]+=tmp*tl;	\
-		phicol[irow]+=tmp*tr;
+					real tmp=alpha*phiout2[irow];	\
+					phicol2[irow+offset]+=tmp*bl;	\
+					phicol2[irow]+=tmp*br;		\
+					phicol[irow+offset]+=tmp*tl;	\
+					phicol[irow]+=tmp*tr;
 #endif
 				int irow=irows;
 				int rowdiv=rowdiv0;
@@ -145,7 +145,6 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 				} while(wrap&&irow<nxout);
 #undef GRID_ADD
 			}/*end for icol*/
-			OMPTASK_END;
 		} else{
 			//grid size of loc_in and loc_out doesn't agree
 			assert(dyout>0);
@@ -312,7 +311,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 	} else{
 	//warning_once("Using unoptmized prop_grid_map\n");
 	/*non optimized case. slower, but hopefully accurate*/
-		OMPTASK_FOR(icol, 0, nyout){
+		for(long icol=0; icol<nyout; icol++){
 			real dplocy1;
 			real dplocx, dplocx0;
 			int nplocx, nplocy, nplocy1, nplocx1;
@@ -355,8 +354,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			} else{
 				missing+=nxout;
 			}
-		}//OMPTASK_FOR;
-		OMPTASK_END;
+		}//FOR;
 	}
 	return missing;
 }/*function*/
@@ -443,8 +441,7 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	long nyout=pts->nysa?pts->nysa:pts->nxsa;
 	if(!end) end=pts->nsa;
 	int missing=0;
-	OMPTASK_FOR(isa, start, end, shared(missing)){
-	//for(long isa=start; isa<end; isa++){
+	for(long isa=start; isa<end; isa++){
 		const real oxout=pts->origx[isa]*dx_in1*scale+displacex;
 		const real oyout=pts->origy[isa]*dy_in1*scale+displacey;
 		missing+=FUN_NAME_BLOCK(P(mapin), nxin, nyin,
@@ -452,7 +449,6 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }
 
@@ -482,7 +478,7 @@ void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	const long nyout=1;
 	int missing=0;
 	if(end==0) end=ostat->ncol;
-	OMPTASK_FOR(icol, start, end, shared(missing)){
+	for(long icol=start; icol<end; icol++){	
 		const long offset=ostat->cols[icol].pos;
 		const long nxout=ostat->cols[icol+1].pos-offset;
 		const real oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;
@@ -492,6 +488,5 @@ void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }

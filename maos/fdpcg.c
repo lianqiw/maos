@@ -457,7 +457,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	const real delay=parms->sim.dt*(parms->powfs[hipowfs].dtrat+1+parms->sim.alhi);
 
 	/* Mhat = Mhat + propx' * Mmid * propx */
-	OMP_FOR
+	OMP_TASK_FOR(4)
 	for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
 		real dispx[nps];
 		real dispy[nps];
@@ -557,7 +557,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	}
 	real svd_thres=1e-7;
 	dbg("fdpcg svd threshold is %g\n", svd_thres);
-	OMP_FOR
+	OMP_TASK_FOR(4)
 	for(long ib=0; ib<NX(fdpcg->Mbinv); ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
 	  one of the cells the conditional is more than 1e8. This creates

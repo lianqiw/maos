@@ -240,7 +240,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 
 		etfs[iwvl].icol=icol;
 		if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
-			OMP_FOR_COLLAPSE(2)		
+			OMP_TASK_FOR_COLLAPSE(2)		
 			for(int illt=0; illt<nllt; illt++){
 				for(int isa=0; isa<nsa; isa++){
 					const real rsa=P(P(srsa,illt),isa);
@@ -290,7 +290,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 			int ncrop=0;
 			real max_crop=0;
 			ccell *etf_cache=ccellnew_same(MAXTHREAD,1,netf, 1);
-			OMP_FOR_COLLAPSE(2)
+			OMP_TASK_FOR_COLLAPSE(2)
 			for(int illt=0; illt<nllt; illt++){
 				for(long isa=0; isa<nsa; isa++){
 					/*1d ETF along radius. */
@@ -418,7 +418,7 @@ dmat* smooth(const dmat* prof, real dxnew){
 		dsp* ht=mkhb(loc_out, loc_in, 0, 0, 1);
 		out=dnew(nxnew, NY(prof));
 		memcpy(P(out), loc_out->locx, sizeof(real)*nxnew);
-		OMP_FOR
+		OMP_TASK_FOR(4)
 		for(long icol=1; icol<NY(prof); icol++){
 			/*input profile */
 			const real* pin=PCOL(prof, icol);

@@ -1499,7 +1499,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 		gpu_recon_reset(parms);
 	}
 #endif
-	//OMPTASK_SINGLE
+OMPTASK_SINGLE
 	filter_dm(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
 	return simu;
 }

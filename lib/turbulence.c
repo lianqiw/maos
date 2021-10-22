@@ -201,13 +201,13 @@ static void fractal_screen_do(zfarr* fc, genatm_t* data){
 		for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 			drandn((dmat*)screen[ilayer], 1, data->rstat);
 		}
-		OMPTASK_FOR(ilayer, 0, data->nlayer){
+OMP_TASK_FOR(4)
+		for(long ilayer=0; ilayer<data->nlayer; ilayer++){	
 			real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 			fractal_do((dmat*)screen[ilayer], screen[0]->dx, r0i, data->L0[ilayer], data->ninit);
 			//remove_piston(P(screen[ilayer]), nx*ny);
 			dadds((dmat*)screen[ilayer], -dsum((dmat*)screen[ilayer])/(nx*ny));
 		}
-		OMPTASK_END;
 	}
 }
 static void genscreen_do(zfarr* fc, genatm_t* data){
@@ -435,7 +435,7 @@ void spatial_psd(dmat** pout,  /**<Output*/
 		*pout=dnew(nx, ny);
 	}
 	dmat* psd=*pout;
-	OMP_FOR
+	OMP_TASK_FOR(4)
 	for(int iy=0;iy<ny;iy++){
 		real r2y=pow((iy<ny2?iy:iy-ny)*dfy, 2);/* to avoid fft shifting. */
 		for(int ix=0;ix<nx;ix++){

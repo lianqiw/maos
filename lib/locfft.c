@@ -336,7 +336,7 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 		if(!out){
 			out=*pout=cnew(32,32);
 		}
-		OMP_FOR
+		OMP_TASK_FOR(4)
 		for(long iyo=0; iyo<NY(out); iyo++){
 			const real y=(iyo-NY(out)/2)*dxout;
 			for(long ixo=0; ixo<NX(out); ixo++){

@@ -337,7 +337,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 			real* angles=(gxyrot)?P(PR(gxyrot, ii0, 0)):0;
 			ccell* se_cache=ccellnew_same(2, MAXTHREAD, notfx, notfy);
 
-			OMP_FOR
+			OMP_TASK_FOR(4)
 			for(int isa=0; isa<nsa; isa++){
 				int ith=0;
 				/*loaded psepsf. sum to 1 for full sa. peak in center */

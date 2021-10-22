@@ -438,8 +438,8 @@ void prop_grid(ARGIN_GRID,
 	(void)nxmin; (void)nymin;
 	const int nx=NX(mapin);
 	const int ny=NY(mapin);
-
-	OMPTASK_FOR(iloc, start, end){
+//OMP_TASK_FOR(2)
+	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_LINEAR;
 		dplocx=myfma(px[iloc], dx_in2, displacex);
 		dplocy=myfma(py[iloc], dy_in2, displacey);
@@ -474,7 +474,6 @@ void prop_grid(ARGIN_GRID,
 		phiout[iloc]+=alpha*(+(m00+(m10-m00)*dplocx)*(1.-dplocy)
 			+(m01+(m11-m01)*dplocx)*dplocy);
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }
 
@@ -493,7 +492,8 @@ void prop_nongrid(ARGIN_NONGRID,
 	}
 	PREPIN_NONGRID(0);
 	PREPOUT_LOC;
-	OMPTASK_FOR(iloc, start, end){
+//OMP_TASK_FOR(2)
+	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_LINEAR;
 		dplocx=myfma(px[iloc], dx_in2, displacex);
 		dplocy=myfma(py[iloc], dy_in2, displacey);
@@ -504,7 +504,6 @@ void prop_nongrid(ARGIN_NONGRID,
 		nplocy1=nplocy+1;
 		LINEAR_ADD_NONGRID;
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }
 /**
@@ -521,7 +520,8 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	}
 	PREPIN_NONGRID(0);
 	PREPOUT_MAP;
-	OMPTASK_FOR(iy, start, end){
+//OMP_TASK_FOR(2)	
+	for(long iy=start; iy<end; iy++){
 		RUNTIME_LINEAR;
 		dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 		if(dplocy+EPS>=nymin&&dplocy<=nymax+EPS){
@@ -542,7 +542,6 @@ void prop_nongrid_map(ARGIN_NONGRID,
 			missing++;
 		}
 	}
-	OMPTASK_END;
 	//WARN_MISSING;//will always be triggered.
 }
 /**
@@ -559,7 +558,8 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	}
 	PREPIN_NONGRID(0);
 	PREPOUT_PTS;
-	OMPTASK_FOR(isa, start, end){
+//OMP_TASK_FOR(2)	
+	for(long isa=start; isa<end; isa++){
 		RUNTIME_LINEAR;
 		const long iloc0=isa*pts->nxsa*pts->nysa;
 		const real ox=pts->origx[isa];
@@ -586,7 +586,6 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 			}
 		}
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }
 
@@ -606,7 +605,8 @@ void prop_grid_cubic(ARGIN_GRID,
 	(void)nymin;
 	PREPOUT_LOC;
 	PREP_CUBIC_PARAM;
-	OMPTASK_FOR(iloc, start, end){
+OMP_TASK_FOR(4)
+	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_CUBIC;
 		dplocx=myfma(px[iloc], dx_in2, displacex);
 		dplocy=myfma(py[iloc], dy_in2, displacey);
@@ -622,8 +622,6 @@ void prop_grid_cubic(ARGIN_GRID,
 			missing++;
 		}
 	}
-
-	OMPTASK_END;
 	WARN_MISSING;
 }
 /**
@@ -640,7 +638,8 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_PTS;
 	PREP_CUBIC_PARAM;
-	OMPTASK_FOR(isa, start, end){
+OMP_TASK_FOR(4)
+	for(long isa=start; isa<end; isa++){
 		RUNTIME_CUBIC;
 		const long iloc0=isa*pts->nxsa*pts->nysa;
 		const real ox=pts->origx[isa];
@@ -670,7 +669,6 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 			}
 		}
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }
 /**
@@ -683,7 +681,8 @@ void prop_grid_map_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_MAP;
 	PREP_CUBIC_PARAM;
-	OMPTASK_FOR(iy, start, end){
+OMP_TASK_FOR(2)	
+	for(long iy=start; iy<end; iy++){
 		RUNTIME_CUBIC;
 		dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 		if(dplocy>=nymin&&dplocy<=nymax){
@@ -706,7 +705,6 @@ void prop_grid_map_cubic(ARGIN_GRID,
 			missing++;
 		}
 	}
-	OMPTASK_END;
 	//WARN_MISSING;
 }
 /**
@@ -719,7 +717,8 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_STAT;
 	PREP_CUBIC_PARAM;
-	OMPTASK_FOR(icol, start, end){
+OMP_TASK_FOR(2)
+	for(long icol=start; icol<end; icol++){
 		RUNTIME_CUBIC;
 		dplocy=myfma(ostat->cols[icol].ystart, dy_in2, displacey);
 		if(dplocy>=nymin&&dplocy<=nymax){
@@ -742,7 +741,6 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 		} else{
 			missing++;
 		}
-		OMPTASK_END;
 		WARN_MISSING;
 	}
 }
@@ -758,7 +756,8 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 	PREPIN_NONGRID(1);
 	PREPOUT_LOC;
 	PREP_CUBIC_PARAM;
-	OMPTASK_FOR(iloc, start, end){
+OMP_TASK_FOR(2)	
+	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_CUBIC;
 		dplocy=myfma(py[iloc], dy_in2, displacey);
 		dplocx=myfma(px[iloc], dx_in2, displacex);
@@ -774,7 +773,6 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 			missing++;
 		}
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }
 /**
@@ -786,7 +784,8 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	PREPIN_NONGRID(1);
 	PREPOUT_PTS;
 	PREP_CUBIC_PARAM;
-	OMPTASK_FOR(isa, start, end){
+OMP_TASK_FOR(2)	
+	for(int isa=start; isa<end; isa++){
 		RUNTIME_CUBIC;
 		const long iloc0=isa*pts->nxsa*pts->nysa;
 		const real ox=pts->origx[isa];
@@ -815,7 +814,6 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 			}
 		}
 	}
-	OMPTASK_END;
 	WARN_MISSING;
 }
 /**
@@ -828,7 +826,8 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 	PREPIN_NONGRID(1);
 	PREPOUT_MAP;
 	PREP_CUBIC_PARAM;
-	OMPTASK_FOR(iy, start, end){
+OMP_TASK_FOR(2)
+	for(int iy=start; iy<end; iy++){
 		RUNTIME_CUBIC;
 		dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 		if(dplocy>=nymin&&dplocy<=nymax){
@@ -851,7 +850,6 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 			missing++;
 		}
 	}
-	OMPTASK_END;
 	//WARN_MISSING;//will always be triggered
 }
 

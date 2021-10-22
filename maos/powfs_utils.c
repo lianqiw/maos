@@ -218,7 +218,7 @@ void sodium_fit(
 			dcellcp(&grad, gradncpa);
 		}else{
 			grad=dcellnew_same(ni0, 1, nsa*2, 1);
-OMP_FOR
+OMP_TASK_FOR(4)
 			for(long ii0=0; ii0<ni0; ii0++){
 				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
 				loc_remove_focus_grad(P(grad, ii0), saloc, 1);
@@ -250,7 +250,7 @@ OMP_FOR
 			if(irep>0 && &grad!=pgrad){
 				dcellcp(&grad, *pgrad);
 			}
-			OMP_FOR
+			OMP_TASK_FOR(4)
 			for(long ix=0; ix<nx; ix++){
 				dmat *na2i=P(na2s, ix);
 				P(na2i, 0, 0)=P(nai, ix, 0);
@@ -290,7 +290,7 @@ OMP_FOR
 			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
 				pixthetax, pixthetay, NULL, radgx, 1, 1);
 			toc2("mtche create"); tic;
-OMP_FOR_COLLAPSE(2)
+OMP_TASK_FOR_COLLAPSE(2)
 			for(long ii0=0; ii0<ni0; ii0++){
 				for(long isa=0; isa<nsa; isa++){
 					dmat* grad1=P(grad, ii0);//model
@@ -303,7 +303,7 @@ OMP_FOR_COLLAPSE(2)
 				}
 			}
 			toc2("mtche apply"); tic;
-OMP_FOR
+OMP_TASK_FOR(4)
 			for(long ii0=0; ii0<ni0; ii0++){
 				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
 				loc_remove_focus_grad(P(*pgrad, ii0), saloc, 1);
