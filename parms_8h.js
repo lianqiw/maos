@@ -659,22 +659,43 @@ var parms_8h =
     ] ],
     [ "WFS_TYPE", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08", [
       [ "WFS_SH", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08afb1fb19a0616e5b23db8e9219bd2f51f", null ],
-      [ "WFS_PY", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08af8d15240f98fad47ec572347b27324e8", null ]
+      [ "WFS_PY", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08af8d15240f98fad47ec572347b27324e8", null ],
+      [ "WFS_TOT", "parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08aa85724cedaaa5ff9f4e769779a527c61", null ]
     ] ],
     [ "GTYPE", "parms_8h.html#a5ef8499ada234887dd13961489943440", [
       [ "GTYPE_G", "parms_8h.html#a5ef8499ada234887dd13961489943440a5add25dd2489095bb5befe83e3101c70", null ],
-      [ "GTYPE_Z", "parms_8h.html#a5ef8499ada234887dd13961489943440a0e54af4008e0dfe060b31b12d2555375", null ]
+      [ "GTYPE_Z", "parms_8h.html#a5ef8499ada234887dd13961489943440a0e54af4008e0dfe060b31b12d2555375", null ],
+      [ "GTYPE_TOT", "parms_8h.html#a5ef8499ada234887dd13961489943440a40322a8b2528cc0f76d17077eea82cd6", null ]
     ] ],
     [ "PTYPE", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1", [
       [ "PTYPE_MF", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a4bca58d701a7da8964a1d8177d45ee6c", null ],
       [ "PTYPE_COG", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a187f8b67ea8e8dd1f8747c6dcc069842", null ],
       [ "PTYPE_MAP", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1aaaeb75f8ad3790c0d26cc2a0dcf388f4", null ],
       [ "PTYPE_CORR", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1aebf0ea6808d57ee8a4979925e7f86826", null ],
-      [ "PTYPE_CORRS", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a9c6f3a00878a789b7bd25420087c9149", null ]
+      [ "PTYPE_CORRS", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a9c6f3a00878a789b7bd25420087c9149", null ],
+      [ "PTYPE_TOT", "parms_8h.html#a5a0944fd4c266098d168c34db1d1e8c1a1183744c6a46e9bac1d319c762c5266e", null ]
     ] ],
     [ "NCPA_METHOD", "parms_8h.html#a866c2c89834fc11b07977c38386cd37b", [
       [ "NCPA_G", "parms_8h.html#a866c2c89834fc11b07977c38386cd37ba5156b015016a65a98be166f80b132ac1", null ],
-      [ "NCPA_I0", "parms_8h.html#a866c2c89834fc11b07977c38386cd37ba7eda49b62264d74fec4234b8816b4439", null ]
+      [ "NCPA_I0", "parms_8h.html#a866c2c89834fc11b07977c38386cd37ba7eda49b62264d74fec4234b8816b4439", null ],
+      [ "NCPA_TOT", "parms_8h.html#a866c2c89834fc11b07977c38386cd37bac29d17dacb23a956b5732b0e67245e66", null ]
+    ] ],
+    [ "RECON_ALG", "parms_8h.html#a80f63ef15e3a37778d2c755e4abba909", [
+      [ "RECON_MVR", "parms_8h.html#a80f63ef15e3a37778d2c755e4abba909ab27801020a518db3a88e5fe8378e976c", null ],
+      [ "RECON_LSR", "parms_8h.html#a80f63ef15e3a37778d2c755e4abba909a325dd58585a06d6872102169e31595f5", null ],
+      [ "RECON_TOT", "parms_8h.html#a80f63ef15e3a37778d2c755e4abba909a13d89b87e5193142cd2737b09c1e5510", null ]
+    ] ],
+    [ "ALG_TOMO_FIT", "parms_8h.html#aff446746fa8ea1ada6f47ecd6fd232a1", [
+      [ "ALG_CBS", "parms_8h.html#aff446746fa8ea1ada6f47ecd6fd232a1a30fcdf62e5be5bd42df1bd6a3c062921", null ],
+      [ "ALG_CG", "parms_8h.html#aff446746fa8ea1ada6f47ecd6fd232a1a4506007b00db681ca163d1a663f2aa81", null ],
+      [ "ALG_SVD", "parms_8h.html#aff446746fa8ea1ada6f47ecd6fd232a1af07c6f00c84ff86144ba19630a836c15", null ],
+      [ "ALG_BGS", "parms_8h.html#aff446746fa8ea1ada6f47ecd6fd232a1acd862769823b6ed7fc852856743d82fe", null ],
+      [ "ALG_TOT", "parms_8h.html#aff446746fa8ea1ada6f47ecd6fd232a1ab4f50f2e91e0baa1f0c66cfe34473f2a", null ]
+    ] ],
+    [ "PCG_ALG", "parms_8h.html#a9c0bae7238a8b4f3a8c1133d4a99f5ea", [
+      [ "PCG_NONE", "parms_8h.html#a9c0bae7238a8b4f3a8c1133d4a99f5eaa8dbe6a335897486cfaadb66e9d8e45a7", null ],
+      [ "PCG_FD", "parms_8h.html#a9c0bae7238a8b4f3a8c1133d4a99f5eaa59dfeebf13005fb10e64098e4b4bb91a", null ],
+      [ "PCG_TOT", "parms_8h.html#a9c0bae7238a8b4f3a8c1133d4a99f5eaa76c18b8dcc121ca567ca2ab358a24bb8", null ]
     ] ],
     [ "setup_parms", "parms_8h.html#ad6dd439c2115b1f50b1a177073cbd23c", null ],
     [ "setup_parms_gpu", "parms_8h.html#aad108d3a5091968e86ec8adcc269d450", null ],

@@ -18,7 +18,7 @@ var recon__utils_8h =
     [ "cn2est_prepare", "recon__utils_8h.html#a080bbb9fecf387ac6107766369a76aae", null ],
     [ "cn2est_isim", "recon__utils_8h.html#a74f945e450ef8677f831285a7fefce90", null ],
     [ "nea_chol", "recon__utils_8h.html#ad707e69a8fa5604c71e5a2d0fadcfbb5", null ],
-    [ "nea_inv", "recon__utils_8h.html#ac585c2fa925a41f60b9bb757a9ef640b", null ],
+    [ "nea_inv", "recon__utils_8h.html#a261871cdf0c901f2295c70fa54c1c08b", null ],
     [ "nea_mm", "recon__utils_8h.html#a182387c2aadfaac90464c33a249699ce", null ],
     [ "check_nea", "recon__utils_8h.html#ae988b19359343246c5c05ffe6000caa0", null ]
 ];

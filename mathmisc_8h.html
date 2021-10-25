@@ -106,7 +106,7 @@ $(document).ready(function(){initNavTree('mathmisc_8h.html','');});
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ad4bf26a596bb2b6847c446bb236467c9"><td class="memItemLeft" align="right" valign="top"><a id="ad4bf26a596bb2b6847c446bb236467c9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>sinc</b>(x)&#160;&#160;&#160;(fabs(x)&lt;1.e-5?1:sin(M_PI*x)/(M_PI*x))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>sinc</b>(x)&#160;&#160;&#160;((x)!=0?(sin(M_PI*x)/(M_PI*x)):1)</td></tr>
 <tr class="separator:ad4bf26a596bb2b6847c446bb236467c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adcf5d650cc795811ce7cee7bceea1c13"><td class="memItemLeft" align="right" valign="top"><a id="adcf5d650cc795811ce7cee7bceea1c13"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>mysqrt</b>(A)&#160;&#160;&#160;(A&lt;0?-sqrt(-A):sqrt(A))</td></tr>
@@ -114,17 +114,14 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:aa50a1e38054cf0b4f828244ce73b676b"><td class="memItemLeft" align="right" valign="top"><a id="aa50a1e38054cf0b4f828244ce73b676b"></a>
-typedef double(*&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_fun</b>) (void *param, double x)</td></tr>
-<tr class="separator:aa50a1e38054cf0b4f828244ce73b676b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac517b343c1c3f2def350c76047f9ccab"><td class="memItemLeft" align="right" valign="top"><a id="ac517b343c1c3f2def350c76047f9ccab"></a>
+typedef real(*&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_fun</b>) (void *param, real x)</td></tr>
+<tr class="separator:ac517b343c1c3f2def350c76047f9ccab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:aaaa4c88a31aa854fbedaa09ab5c48278"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a> double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#aaaa4c88a31aa854fbedaa09ab5c48278">factorial</a> (<a class="el" href="classlong.html">long</a> n1, <a class="el" href="classlong.html">long</a> n2)</td></tr>
 <tr class="separator:aaaa4c88a31aa854fbedaa09ab5c48278"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73ced4ffb73a0819e1a0eea29a401b92"><td class="memItemLeft" align="right" valign="top"><a id="a73ced4ffb73a0819e1a0eea29a401b92"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>invsq</b> (<a class="el" href="classlong.html">long</a> n, double *__restrict A)</td></tr>
-<tr class="separator:a73ced4ffb73a0819e1a0eea29a401b92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fc7d93797b6932ee8fd6e4bd9037437"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4fc7d93797b6932ee8fd6e4bd9037437">invperm</a> (<a class="el" href="classlong.html">long</a> *p, <a class="el" href="classlong.html">long</a> np)</td></tr>
 <tr class="separator:a4fc7d93797b6932ee8fd6e4bd9037437"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaaaed679d152deb02470ebcb73919242"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#aaaaed679d152deb02470ebcb73919242">maxminlong</a> (const <a class="el" href="classlong.html">long</a> *__restrict p, <a class="el" href="classlong.html">long</a> N, <a class="el" href="classlong.html">long</a> *__restrict max, <a class="el" href="classlong.html">long</a> *__restrict min)</td></tr>
@@ -136,9 +133,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>invsq</b> (<a class="
 <tr class="memitem:ae0a9c8af7043c7b58bf51d49d8a48ea9"><td class="memItemLeft" align="right" valign="top"><a id="ae0a9c8af7043c7b58bf51d49d8a48ea9"></a>
 unsigned <a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><b>mylog2</b> (unsigned <a class="el" href="classlong.html">long</a> n)</td></tr>
 <tr class="separator:ae0a9c8af7043c7b58bf51d49d8a48ea9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ce6ad13180bb05668fcea47b866d4cb"><td class="memItemLeft" align="right" valign="top"><a id="a1ce6ad13180bb05668fcea47b866d4cb"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search</b> (golden_section_fun f, void *param, double x1, double x4, double tau)</td></tr>
-<tr class="separator:a1ce6ad13180bb05668fcea47b866d4cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9c48e33e0913833217cf18edacc69e6"><td class="memItemLeft" align="right" valign="top"><a id="aa9c48e33e0913833217cf18edacc69e6"></a>
+real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search</b> (golden_section_fun f, void *param, real x1, real x4, real tau)</td></tr>
+<tr class="separator:aa9c48e33e0913833217cf18edacc69e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17976d85cba2939873589c6a8bc3e08b"><td class="memItemLeft" align="right" valign="top">spint *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a17976d85cba2939873589c6a8bc3e08b">readspint</a> (file_t *fp, <a class="el" href="classlong.html">long</a> *nx, <a class="el" href="classlong.html">long</a> *ny)</td></tr>
 <tr class="separator:a17976d85cba2939873589c6a8bc3e08b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35d1cc335d45d63efe5d6692256b9438"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a35d1cc335d45d63efe5d6692256b9438">readvec</a> (void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t *fp)</td></tr>

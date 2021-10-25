@@ -2,7 +2,7 @@ var searchData=
 [
   ['nea2sp',['nea2sp',['../recon__utils_8h.html#a99d30f4ef11d433665a7bab304633435',1,'recon_utils.c']]],
   ['nea_5fchol',['nea_chol',['../recon__utils_8h.html#ad707e69a8fa5604c71e5a2d0fadcfbb5',1,'setup_recon.c']]],
-  ['nea_5finv',['nea_inv',['../recon__utils_8h.html#ac585c2fa925a41f60b9bb757a9ef640b',1,'setup_recon.c']]],
+  ['nea_5finv',['nea_inv',['../recon__utils_8h.html#a261871cdf0c901f2295c70fa54c1c08b',1,'setup_recon.c']]],
   ['nea_5fmm',['nea_mm',['../recon__utils_8h.html#a182387c2aadfaac90464c33a249699ce',1,'setup_recon.c']]],
   ['nextfftsize',['nextfftsize',['../mathmisc_8h.html#ab2457f6b21851a0a5d62695be54331ca',1,'mathmisc.c']]],
   ['nextpow2',['nextpow2',['../mathmisc_8h.html#a17bd719e22e15aaff05bc4c8773dede2',1,'mathmisc.c']]],

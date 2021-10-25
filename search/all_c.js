@@ -27,7 +27,7 @@ var searchData=
   ['ndm',['ndm',['../parms_8h.html#aa75a572a969ccaeeb99ae398ea6dde58',1,'parms_t']]],
   ['nea2sp',['nea2sp',['../recon__utils_8h.html#a99d30f4ef11d433665a7bab304633435',1,'recon_utils.c']]],
   ['nea_5fchol',['nea_chol',['../recon__utils_8h.html#ad707e69a8fa5604c71e5a2d0fadcfbb5',1,'setup_recon.c']]],
-  ['nea_5finv',['nea_inv',['../recon__utils_8h.html#ac585c2fa925a41f60b9bb757a9ef640b',1,'setup_recon.c']]],
+  ['nea_5finv',['nea_inv',['../recon__utils_8h.html#a261871cdf0c901f2295c70fa54c1c08b',1,'setup_recon.c']]],
   ['nea_5fmm',['nea_mm',['../recon__utils_8h.html#a182387c2aadfaac90464c33a249699ce',1,'setup_recon.c']]],
   ['neaextra',['neaextra',['../parms_8h.html#ad7911042310cb23e169838ee6a42a4e9',1,'powfs_cfg_t']]],
   ['neam',['neam',['../maos_2types_8h.html#a538bc2bad5964f578aca74b2aded59f5',1,'recon_t']]],
