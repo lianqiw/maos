@@ -657,7 +657,7 @@ void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	const real* restrict amp=P(aper->amp);
 	const real* restrict locx=aper->locs->locx;
 	const real* restrict locy=aper->locs->locy;
-	real coeff[6]={0,0,0,0,0,0};
+	double coeff[6]={0,0,0,0,0,0};//use double to enhance precision of accumulation
 	double tot=0; //use double for accumulation.
 	const int nmod=ngsmod->nmod;
 	if(nmod==2){
@@ -688,7 +688,8 @@ OMP_TASK_FOR(4)
 	}
 	const real thetax=P(parms->evl.thetax,ievl);
 	const real thetay=P(parms->evl.thetay,ievl);
-	calc_ngsmod_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff, ngsmod, aper, thetax, thetay);
+	real coeff2[6]={coeff[0],coeff[1],coeff[2],coeff[3],coeff[4],coeff[5]};
+	calc_ngsmod_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff2, ngsmod, aper, thetax, thetay);
 }
 /**
    Separate post processing part so that GPU code can call it. Return non zero if error happens.

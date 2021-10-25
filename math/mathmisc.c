@@ -123,20 +123,20 @@ unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
 	}
 	return m;
 }
-double golden_section_search(golden_section_fun f, void* param,
-	double x1, double x4, double tau){
-	static double resphi=0.381966011250105;/*2-0.5*(1+sqrt(5)); */
-	double x2=(x4-x1)*resphi+x1;
-	double f2=f(param, x2);
-	double x3, f3;
+real golden_section_search(golden_section_fun f, void* param,
+	real x1, real x4, real tau){
+	static real resphi=0.381966011250105;/*2-0.5*(1+sqrt(5)); */
+	real x2=(x4-x1)*resphi+x1;
+	real f2=f(param, x2);
+	real x3, f3;
 	/*stop searching. */
 #undef DBG_GF
 	do{
 		x3=(x4-x2)*resphi+x2;
 		f3=f(param, x3);
 #ifdef DBG_GF 
-		double f1=f(param, x1);
-		double f4=f(param, x4);
+		real f1=f(param, x1);
+		real f4=f(param, x4);
 		info("x=%.4g, %.4g, %.4g, %.4g\n", x1, x2, x3, x4);
 		info("f=%.4g, %.4g, %.4g, %.4g\n", f1, f2, f3, f4);
 #endif

@@ -488,7 +488,7 @@ void filter_fsm(sim_t* simu){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].dither==1){//T/T dithering.
 			    //adjust delay due to propagation, and computation delay.
-				const double adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat+0.5;//0.5 is for testing. the value here shouldn't matter
+				const real adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat+0.5;//0.5 is for testing. the value here shouldn't matter
 				//Use isim+1 because the command is for next time step.
 				//minus adjust for delay
 				real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);

@@ -181,7 +181,7 @@ static inline void cp2gpu_dedup(Real** dest, const dmat* src, cudaStream_t strea
 	if(!src) return;
 	cp2gpu_dedup(dest, src->p, src->nx, src->ny, stream);
 }
-#if CPU_SINGLE==0
+//#if CPU_SINGLE==0
 static inline void cp2gpu(curmat& dest, const dmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
@@ -190,7 +190,7 @@ static inline void cp2gpu(cucmat& dest, const cmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-#endif
+//#endif
 static inline void cp2gpu(curmat& dest, const smat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
@@ -224,12 +224,12 @@ void add2cpu(zcell **out, float alpha, const cuccell &in, float beta, cudaStream
 void add2cpu(dcell **out, real alpha, const curcell &in, real beta, cudaStream_t stream, pthread_mutex_t *mutex=0);
 void add2cpu(ccell **out, real alpha, const cuccell &in, real beta, cudaStream_t stream, pthread_mutex_t *mutex=0);
 #if CPU_SINGLE==0
-void add2cpu(double* restrict* dest, double alpha, Real* src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
-void add2cpu(dmat** out, double alpha, const curmat& in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
-void add2cpu(cmat** out, double alpha, const cucmat& in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(real* restrict* dest, real alpha, Real* src, real beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
+#endif
+void add2cpu(dmat** out, real alpha, const curmat& in, real beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(cmat** out, real alpha, const cucmat& in, real beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream=0);
 void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream=0);
-#endif
 
 void cp2cpu(smat** out, const curmat& in, cudaStream_t stream=0);
 void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream=0);

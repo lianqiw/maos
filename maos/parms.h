@@ -874,10 +874,12 @@ void plotdir(const char *fig, const parms_t *parms, real totfov, const char *for
 enum WFS_TYPE{ //WFS type
     WFS_SH=0,//shack-hartmann WFS
     WFS_PY=1, //pyramid WFS
+    WFS_TOT
 };
 enum GTYPE{//geometric WFS gradient algoirthm
     GTYPE_G=0,//G tilt: average gradient over aperture (high order WFS)
     GTYPE_Z=1,//Z tilt: zernike best fit tilt (low order WFS)
+    GTYPE_TOT
 };
 enum PTYPE{//physical optics pixel processing algorithm
     PTYPE_MF=1, //matched filter
@@ -885,10 +887,32 @@ enum PTYPE{//physical optics pixel processing algorithm
     PTYPE_MAP=3,//maximum apriori (deprecated)
     PTYPE_CORR=4,//Correlation peak first
     PTYPE_CORRS=5, //Correlation sum first (deprecated)
+    PTYPE_TOT
 };
 
 enum NCPA_METHOD{//method to handle NCPA
     NCPA_G=1,  //with gradient offset
     NCPA_I0=2, //with i0 offset (opd)
+    NCPA_TOT
 };
+
+enum RECON_ALG{
+    RECON_MVR=0,//least squares reconstructor
+    RECON_LSR=1,//minimum reconstructor
+    RECON_TOT
+};
+enum ALG_TOMO_FIT{
+    ALG_CBS=0, //cholesky backsolve
+    ALG_CG=1,  //conjugate gradients
+    ALG_SVD=2, //svd inverse
+    ALG_BGS=3, //block gauss seidel
+    ALG_TOT
+};
+
+enum PCG_ALG{
+    PCG_NONE=0,  //no PCG
+    PCG_FD=1,    //fourier domain PCG
+    PCG_TOT
+};
+
 #endif

@@ -121,7 +121,7 @@ void nea_mm(dmat** pout, const dmat* in){
    Input and output may be the same.
 */
 
-void nea_inv(dmat** pout, const dmat* in){
+void nea_inv(dmat** pout, const dmat* in, real scale){
 	if(NY(in)!=2&&NY(in)!=3){
 		error("nea_inv: wrong format\n");
 	}
@@ -131,10 +131,11 @@ void nea_inv(dmat** pout, const dmat* in){
 	int isxy=NY(in)==3?1:0;
 	dmat* out=*pout;
 	for(int isa=0; isa<NX(in); isa++){
-		real xx=P(in, isa, 0);
-		real yy=P(in, isa, 1);
-		real xy=isxy?P(in, isa, 2):0;
-		real invdet=1./(xx*yy-xy*xy);
+		//use double to prevent overflow of intermediate value
+		double xx=P(in, isa, 0);
+		double yy=P(in, isa, 1);
+		double xy=isxy?P(in, isa, 2):0;
+		double invdet=scale/(xx*yy-xy*xy);
 
 		P(out, isa, 0)=invdet*yy;
 		P(out, isa, 1)=invdet*xx;
@@ -250,7 +251,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				}
 				
 				nea_chol(&sanea0l, sanea0);
-				nea_inv(&sanea0i, sanea0);
+				nea_inv(&sanea0i, sanea0, TOMOSCALE);//without TOMOSCALE, it overflows in float mode
 				
 				real nea_mean=sqrt(nea2_sum/nea2_count*0.5);
 				P(recon->neam,iwfs)=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
@@ -271,7 +272,6 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				}
 				dfree(sanea0l);
 				dfree(sanea0i);
-				dspscale(P(recon->saneai,iwfs,iwfs), TOMOSCALE);
 			} else if(do_ref){
 				P(sanea, iwfs, iwfs)=dspref(P(sanea, iwfs0, iwfs0));
 				P(saneal, iwfs, iwfs)=dspref(P(saneal, iwfs0, iwfs0));

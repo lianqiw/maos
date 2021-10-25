@@ -56,20 +56,20 @@ typedef float chol_real;
 
 #define DO_CONVERT(p1, p2, t1, t2, size)	\
     if(sizeof(t1)!=sizeof(t2)){			\
-	p1=mymalloc(size, t1);			\
-	for(long i=0; i<(long)size; i++){	\
-	    ((t1*)p1)[i]=((t2*)p2)[i];		\
-	}					\
+		p1=mymalloc(size, t1);			\
+		for(long i=0; i<(long)size; i++){	\
+		    ((t1*)p1)[i]=((t2*)p2)[i];		\
+		}					\
     }else{					\
-	p1=p2;					\
+		p1=p2;					\
     }
 #define DO_COPY(p1, p2, t1, t2, size)		\
     if(sizeof(t1)!=sizeof(t2)){			\
-	for(long i=0; i<(long)size; i++){	\
-	    ((t1*)p1)[i]=((t2*)p2)[i];		\
-	}					\
+		for(long i=0; i<(long)size; i++){	\
+		    ((t1*)p1)[i]=((t2*)p2)[i];		\
+		}					\
     }else{					\
-	memcpy(p1, p2, sizeof(t1)*size);	\
+		memcpy(p1, p2, sizeof(t1)*size);	\
     }
 /**
    Convert our dsp spase type to cholmod_sparse type. Data is shared.
@@ -177,11 +177,12 @@ spchol* chol_factorize(const dsp* A_in){
 		error("Cholmod factorize failed\n");
 	}
 #if CHOL_SIMPLE 
-	if(!out->c->final_asis){
-	/*Our solver is much slower than the cholmod simplicity solver, or the
-	 * supernodal solver. Keep original data to use cholmod solver*/
-	//chol_convert(out, 0);
-	//out->Cu=dsptrans(out->Cl); dspfree(out->Cl);
+	if(!out->c->final_asis && sizeof(real)!=sizeof(chol_real)){
+		/*Our solver is much slower than the cholmod simplicity solver, or the
+	 	* supernodal solver. Keep original data to use cholmod solver*/
+	 	dbg("Converting chol result to sparse\n");
+		chol_convert(out, 0);
+		out->Cu=dsptrans(out->Cl); dspfree(out->Cl);
 	}
 #endif
 	if(A->x!=A_in->px){
@@ -530,8 +531,8 @@ static void chol_solve_upper(const dsp* A, dmat* y2, long start, long end){
 			}
 		}
 	}
-
 }
+//Solve from column start to end (excluding)
 static void chol_solve_each(dmat** x, spchol* A, const dmat* y, long start, long end){
 	if(end==0) end=y->ny;
 	if(A->L){
@@ -569,6 +570,11 @@ void chol_solve(dmat** x, spchol* A, dmat* y){
 		thread_t info[NTHREAD];
 		thread_prep(info, 0, y->ny, NTHREAD, chol_solve_thread, &data);
 		CALL_THREAD(info, 1);
+	}
+	if(0){
+		static int count=-1; count++;
+		writebin(*x, "chol_solve_x_%d", count);
+		writebin(y, "chol_solve_y_%d", count);
 	}
 }
 /**

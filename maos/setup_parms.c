@@ -1354,7 +1354,7 @@ static void setup_parms_postproc_sim(parms_t* parms){
 		if(disable_save){
 			error("sim.skysim requires saving. Please specify output folder\n");
 		}
-		/*if(parms->recon.alg!=0){
+		/*if(parms->recon.alg!=RECON_MVR){
 		  error("skysim need MVR");
 		  }*/
 		if(!parms->tomo.ahst_idealngs){
@@ -1396,9 +1396,9 @@ static void setup_parms_postproc_sim(parms_t* parms){
 		if(parms->sim.idealfit&&parms->sim.idealtomo){
 			warning("idealfit takes precedence over idealtomo\n");
 		}
-		if(parms->recon.alg!=0){
+		if(parms->recon.alg!=RECON_MVR){
 			//warning("idealfit only works in recon.alg=0 mode. changed\n");
-			parms->recon.alg=0;
+			parms->recon.alg=RECON_MVR;
 		}
 		if(parms->recon.split){
 			//warning("idealfit only works in integrated tomo mode. changed\n");
@@ -1991,7 +1991,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		}
 		parms->atmr.nps=nps;
 	} else if((parms->recon.glao||parms->nhiwfs==1)
-		&&parms->recon.alg==0&&NX(parms->atmr.ht)>1&&!parms->sim.idealtomo){
+		&&parms->recon.alg==RECON_MVR&&NX(parms->atmr.ht)>1&&!parms->sim.idealtomo){
    /*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 		dbg("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 		dresize(parms->atmr.ht, 1, 1);
@@ -2369,11 +2369,11 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	if(parms->recon.glao&&parms->ndm!=1){
 		error("GLAO only works with 1 dm\n");
 	}
-	if(parms->recon.alg==0&&parms->recon.modal){
+	if(parms->recon.alg==RECON_MVR&&parms->recon.modal){
 		warning("Modal control is not supported yet with MV reconstructor. Disabled.\n");
 		parms->recon.modal=0;
 	}
-	if(parms->recon.alg==1){
+	if(parms->recon.alg==RECON_LSR){
 		if(parms->recon.split==2){
 			error("MVST does not work with least square reconstructor.\n");
 		}
@@ -2402,7 +2402,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	} else if(parms->recon.psol==-1){
 		if(parms->sim.idealfit){
 			parms->recon.psol=1;
-		} else if(parms->recon.alg==0){//MV perfers psol
+		} else if(parms->recon.alg==RECON_MVR){//MV perfers psol
 			parms->recon.psol=1;
 		} else{//LSR perfers cl
 			parms->recon.psol=0;
@@ -2514,18 +2514,18 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		}
 	}
 	if(parms->tomo.alg==-1){//default to FDPCG
-		parms->tomo.alg=1;
-		parms->tomo.precond=1;
+		parms->tomo.alg=ALG_CG;
+		parms->tomo.precond=PCG_FD;
 	}
-	if(parms->fit.alg==-1){
-		parms->fit.alg=parms->recon.mvm?0:1;//MVM is only good with CBS.
+	if(parms->tomo.alg!=ALG_CG){
+		parms->tomo.precond=PCG_NONE;
 	}
 	if(parms->recon.mvm){
 		parms->recon.warm_restart=0;
 		parms->fit.cgwarm=0;
 	}else{
 		parms->recon.warm_restart=!parms->dbg.nocgwarm&&parms->atm.frozenflow&&!(parms->dbg.tomo_maxit&&NX(parms->dbg.tomo_maxit)>0);
-		parms->fit.cgwarm=parms->recon.warm_restart&&parms->fit.alg==1;
+		parms->fit.cgwarm=parms->recon.warm_restart&&parms->fit.alg==ALG_CG;
 	}
 
 	if(parms->recon.split==1&&!parms->sim.closeloop&&parms->ndm>1){
@@ -2545,31 +2545,51 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	if(parms->recon.split&&parms->evl.tomo){
 		warning("Evaluating tomography performance is best done with integrated tomography.\n");
 	}
-	if(parms->sim.ecnn||parms->load.tomo||parms->tomo.alg!=1||parms->tomo.bgs){
-		parms->tomo.assemble=1;
+	if(parms->fit.alg==-1){
+		parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS.
 	}
-	if(parms->recon.alg==0){
-		if((parms->tomo.bgs||parms->tomo.alg!=1)&&parms->tomo.cxxalg!=0){
+	if(parms->recon.alg==RECON_MVR){
+
+		//fit is also used for idealfit, idealwfs.
+		if(parms->recon.mvm&&parms->fit.alg==ALG_CG){
+			warning("CG based fit is not suitable for building MVM\n");
+		}
+		if(parms->sim.ecnn||parms->load.tomo||parms->tomo.alg!=ALG_CG||parms->tomo.bgs){
+			parms->tomo.assemble=1;
+		}
+		if((parms->tomo.bgs||parms->tomo.alg!=ALG_CG)&&parms->tomo.cxxalg!=0){
 			error("Only CG work with non L2 cxx.\n");
 			parms->tomo.cxxalg=0;
 		}
-		if(parms->tomo.predict==1&&parms->tomo.alg!=1){
+		if(parms->tomo.predict==1&&parms->tomo.alg!=ALG_CG){
 			error("Predictive tomography only works with CG. need to redo CBS/MVM after wind velocity is know.\n");
 		}
-		if(parms->tomo.alg==1){/*MVR with CG*/
-			if(parms->tomo.precond>1){
+		if(parms->tomo.alg==ALG_CG){/*MVR with CG*/
+			if(parms->tomo.precond>PCG_TOT){
 				error("Invalid preconditoner\n");
 			}
 		}
+
+		/*Fitting tip/tilt constraint is only intended for multi DM*/
+		if(parms->ndm<2&&parms->fit.lrt_tt){
+			parms->fit.lrt_tt=0;
+		}
+		if(parms->ndm>2&&parms->fit.lrt_tt==2){
+			warning("When there are more than 2 DMs, lrt_tt has to be 1 instead of 2. changed\n");
+			parms->fit.lrt_tt=1;
+		}
+		if(parms->fit.lrt_tt<0||parms->fit.lrt_tt>2){
+			error("parms->fit.lrt_tt=%d is invalid\n", parms->fit.lrt_tt);
+		}
 		/*Assign CG interations*/
-		if(parms->tomo.alg==1&&parms->tomo.maxit==0){
+		if(parms->tomo.alg==ALG_CG&&parms->tomo.maxit==0){
 			int factor;
 			if(parms->recon.mvm){
 				factor=parms->load.mvmi?1:25;//assembly mvm needs more steps
 			} else{
 				factor=parms->recon.warm_restart?1:10;
 			}
-			if(!parms->tomo.precond){
+			if(parms->tomo.precond==PCG_NONE){
 				factor*=10;//non-precond CG needs more steps
 			}
 			if(!parms->recon.split){
@@ -2585,35 +2605,22 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			error("Please implement the preconditioner for each block for BGS.\n");
 		}
 	}
-	//fit is also used for idealfit, idealwfs.
-	if(parms->recon.mvm&&parms->fit.alg==1){
-		warning("CG based fit does not to build MVM\n");
-	}
-	/*DM Fitting related*/
-	if(parms->fit.alg==1&&parms->fit.maxit==0){
+	
+	/*DM Fitting related. fit parameters are also used for dmproj.*/
+	if(parms->fit.alg==ALG_CG&&parms->fit.maxit==0){
 		int factor;
 		factor=parms->recon.warm_restart?1:10;
 		parms->fit.maxit=10*factor;
 	}
-	/*Fitting tip/tilt constraint is only intended for multi DM*/
-	if(parms->ndm<2&&parms->fit.lrt_tt){
-		parms->fit.lrt_tt=0;
-	}
-	if(parms->ndm>2&&parms->fit.lrt_tt==2){
-		warning("When there are more than 2 DMs, lrt_tt has to be 1 instead of 2. changed\n");
-		parms->fit.lrt_tt=1;
-	}
-	if(parms->fit.lrt_tt<0||parms->fit.lrt_tt>2){
-		error("parms->fit.lrt_tt=%d is invalid\n", parms->fit.lrt_tt);
-	}
-	if(parms->load.fit||parms->fit.alg!=1||parms->fit.bgs){
+	
+	if(parms->load.fit||parms->fit.alg!=ALG_CG||parms->fit.bgs){
 		parms->fit.assemble=1;
 	}
 	if(parms->fit.bgs&&parms->fit.precond){
 		error("Please implement the preconditioner for each block for BGS.\n");
 	}
 	if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
-	if(parms->recon.alg==1){
+	if(parms->recon.alg==RECON_LSR){
 	/*if(parms->lsr.actslave>1 && parms->lsr.tikcr>0){
 		info2("lsr.actslave>1 disables lsr.tikcr\n");
 		parms->lsr.tikcr=0;
@@ -2648,7 +2655,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	}
 
 	if(!parms->recon.mvm){
-		if(parms->tomo.alg!=1&&parms->load.mvmi){
+		if(parms->tomo.alg!=ALG_CG&&parms->load.mvmi){
 			free(parms->load.mvmi);
 			parms->load.mvmi=NULL;
 		}
@@ -2883,7 +2890,7 @@ static void print_parms(const parms_t* parms){
 		info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
 			ips, P(parms->atm.ht,ips), P(parms->atm.wt,ips), P(parms->atm.ws,ips));
 	}
-	if(parms->recon.alg==0){
+	if(parms->recon.alg==RECON_MVR){
 		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n", GREEN, BLACK,
 			parms->atmr.r0, parms->atmr.L0,
 			parms->atmr.nps, (parms->tomo.cone?" use cone coordinate.":""));
@@ -2976,24 +2983,24 @@ static void print_parms(const parms_t* parms){
 			info("     Bilinear influence function.\n");
 		}
 	}
-	if(parms->recon.alg==0){
+	if(parms->recon.alg==RECON_MVR){
 		if(!parms->sim.idealfit){
 			info2("%sTomography%s is using ", GREEN, BLACK);
 			if(parms->tomo.bgs){
 				info2("Block Gauss Seidel with ");
 			}
 			switch(parms->tomo.alg){
-			case 0:
+			case ALG_CBS:
 				info2("Cholesky back solve ");
 				break;
-			case 1:
+			case ALG_CG:
 				info2("CG, with %s%s%s preconditioner, %s%d%s iterations",
 					GREEN, tomo_precond[parms->tomo.precond], BLACK, GREEN, parms->tomo.maxit, BLACK);
 				break;
-			case 2:
+			case ALG_SVD:
 				info2("SVD direct solve ");
 				break;
-			case 3:
+			case ALG_BGS:
 				info2("Block Gauss Seidel ");
 				break;
 			default:
@@ -3015,17 +3022,17 @@ static void print_parms(const parms_t* parms){
 			info2("Block Gauss Seidel with ");
 		}
 		switch(parms->fit.alg){
-		case 0:
+		case ALG_CBS:
 			info2("Cholesky back solve (CBS)\n");
 			break;
-		case 1:
+		case ALG_CG:
 			info2("CG, with %s%s%s preconditioner, %s%d%s iterations\n",
 				GREEN, tomo_precond[parms->fit.precond], BLACK, GREEN, parms->fit.maxit, BLACK);
 			break;
-		case 2:
+		case ALG_SVD:
 			info2("SVD\n");
 			break;
-		case 3:
+		case ALG_BGS:
 			info2("Block Gauss Seidel (BGS)\n");
 			break;
 		default:
@@ -3040,19 +3047,19 @@ static void print_parms(const parms_t* parms){
 				warning("fit thetax or thetay appears too large\n");
 			}
 		}
-	} else if(parms->recon.alg==1){
+	} else if(parms->recon.alg==RECON_LSR){
 		info2("%sLeast square reconstructor%s is using ", GREEN, BLACK);
 		if(parms->tomo.bgs){
 			info2("Block Gauss Seidel with ");
 		}
 		switch(parms->lsr.alg){
-		case 0:
+		case ALG_CBS:
 			info2("Cholesky back solve (CBS)");
 			break;
-		case 1:
+		case ALG_CG:
 			info2("CG%d", parms->tomo.maxit);
 			break;
-		case 2:
+		case ALG_SVD:
 			info2("SVD");
 			break;
 		default:
@@ -3213,7 +3220,7 @@ void setup_parms_gpu(parms_t* parms, int* gpus, int ngpu){
 			warning("evl.rmax>1 is not implemented in gpu. disable gpu.evl\n");
 			parms->gpu.evl=0;
 		}
-		if(parms->recon.alg==0){/*MV*/
+		if(parms->recon.alg==RECON_MVR){/*MV*/
 			parms->gpu.lsr=0;
 			if(parms->gpu.tomo&&parms->dbg.tomo_hxw){
 				warning("Disable gpu.tomo when dbg.tomo_hxw=1\n");
@@ -3235,7 +3242,7 @@ void setup_parms_gpu(parms_t* parms, int* gpus, int ngpu){
 				parms->gpu.fit=2;//In idealfit, FR is not assembled.
 			}
 
-		} else if(parms->recon.alg==1){
+		} else if(parms->recon.alg==RECON_LSR){
 			parms->gpu.tomo=0;
 			parms->gpu.fit=0;
 		}
@@ -3258,7 +3265,7 @@ void setup_parms_gpu(parms_t* parms, int* gpus, int ngpu){
 #endif
 	//Other flags that depends on GPU enabling flags
 	if(use_cuda){
-		if(parms->recon.alg==0){/*MV*/
+		if(parms->recon.alg==RECON_MVR){/*MV*/
 			if(parms->gpu.fit==1&&!parms->fit.assemble){
 				info("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
 				parms->fit.assemble=1;

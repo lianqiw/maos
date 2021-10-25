@@ -87,6 +87,12 @@ function run_maos(){
     if [ $? -eq 0 ];then
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]%.*}
+		if [ x$a = x ];then
+			cat $fntmp >> $fnerr
+			RMS[ii]=0
+			a=0
+			ans=1
+		fi
     else
 		cat $fntmp >> $fnerr
 		RMS[ii]=0

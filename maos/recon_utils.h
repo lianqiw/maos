@@ -46,7 +46,7 @@ lmat* loc_coord2ind(loc_t *aloc, const char *fndead);
 cn2est_t* cn2est_prepare(const parms_t *parms, const powfs_t *powfs);
 void cn2est_isim(dcell *cn2res, recon_t *recon, const parms_t *parms, const dcell *grad, int *tomo_update);
 void nea_chol(dmat **pout, const dmat *in);
-void nea_inv(dmat **pout, const dmat *in);
+void nea_inv(dmat **pout, const dmat *in, real scale);
 void nea_mm(dmat **pout, const dmat *in);
 void check_nea(dmat *nea, int nsa);
 #endif

@@ -329,7 +329,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 						cscale(etf, i0scale[illt]/etf2sum);
 
 						//check for truncation
-						double ratio_edge=0.5*creal(P(etf,etf0)+P(etf,etf1-1))/creal(P(etf,netf2));
+						const real ratio_edge=0.5*creal(P(etf,etf0)+P(etf,etf1-1))/creal(P(etf,netf2));
 						if(ratio_edge>0.1){
 							ncrop++;
 							if(ratio_edge>max_crop) max_crop=ratio_edge;

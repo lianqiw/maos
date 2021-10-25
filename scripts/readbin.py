@@ -10,14 +10,14 @@ import socket
 # dname descrinebs data type. M_ types are fundamental types. 
 # MC_ types has been superseded by MCC_ANY
 magic2dname={
-    25600: 'M_CSP64',
-    25601: 'M_SP64',
+    25600: 'M_CSP64', 
+    25601: 'M_DSP64',
     25602: 'M_DBL',
     25603: 'M_INT64',
     25604: 'M_CMP',
     25605: 'M_INT32',
-    25606: 'M_CSP32',
-    25607: 'M_SP32',
+    25606: 'M_CSP32', #32 is for integer index
+    25607: 'M_DSP32',
     25608: 'M_FLT',
     25609: 'M_ZMP',
     25610: 'M_INT8',
@@ -29,28 +29,34 @@ magic2dname={
     25620: 'MC_CMP',
     25621: 'MC_INT32',
     25633: 'MCC_ANY',
-    25634: 'MCC_DBL',
-    25636: 'MCC_CMP',
-    #25856: 'M_COMMENT',
-    #26112: 'M_SKIP'
+    0x6430: 'M_SSP64',
+    0x6431: 'M_SSP32',
+    0x6432: 'M_ZSP64',
+    0x6433: 'M_ZSP32',
 }
 M_EOD=0x64FF
 M_SKIP=0x6600
+M_COMMENT=0x6500
 dname2type={
     'M_ZMP': np.complex64,
     'M_CMP': np.complex128,
-    'M_CSP32': np.complex64,
-    'M_CSP64': np.complex128,
     'M_DBL': np.double,
     'M_FLT': np.float32,
-    #'M_COMMENT': object,
+
     'M_INT16': np.int16,
     'M_INT32': np.int32,
     'M_INT64': np.int64,
     'M_INT8': np.int8,
-    'M_SKIP': object,
-    'M_SP32': np.float32,
-    'M_SP64': np.double
+    
+    'M_CSP32': np.complex128,
+    'M_CSP64': np.complex128,
+    'M_DSP32': np.double,
+    'M_DSP64': np.double,
+
+    'M_ZSP32': np.complex64,
+    'M_ZSP64': np.complex64,
+    'M_SSP32': np.float32,
+    'M_SSP64': np.float32
 }
 
 bitpix2magic={
@@ -136,7 +142,7 @@ def readbin_auto(fp, isfits, scan=0):
                 header.append(header_i)
         if len(out)==1:
             out=out[0]
-            header=header[0]
+            #header=header[0]
         else:
             out=np.array(out)
     else:
@@ -147,7 +153,6 @@ def readbin_auto(fp, isfits, scan=0):
 
 def readbin_do(fp, isfits):
     err=0
-    header={}
     if isfits:
         [magic, nx, ny, header]=readfits_header(fp)
     else:
@@ -166,18 +171,18 @@ def readbin_do(fp, isfits):
             raise ValueError("Invalid magic number {} at {}".format(magic, fp.tell()))
         
     if dname[0:2]=='MC': #cell array
+        header_cell=header
+        header={}
+        header['global']=header_cell
         if nx>0 and ny>0:
-            header_cell=header
-            header=np.zeros((ny, nx), dtype=object)
+            header['cell']=np.zeros((ny, nx), dtype=object)
         #else:
         #    return readbin_auto(fp, isfits, 1)
         out=np.zeros((ny, nx), dtype=object)
 
         for iy in range(0, ny):
             for ix in range(0, nx):
-                out[iy,ix], header[iy,ix], err=readbin_do(fp, isfits)
-                if len(header[iy,ix])==0:
-                    header[iy,ix]=header_cell
+                out[iy,ix], header['cell'][iy,ix], err=readbin_do(fp, isfits)
                 if err:
                     break
             if err:
@@ -185,7 +190,7 @@ def readbin_do(fp, isfits):
     
         if ny==1:
             out=out[0,]
-            header=header[0,]
+            header['cell']=header['cell'][0,]
     elif 'SP' in dname and nx>0 and ny>0: #sparse matrix
         datatype=np.dtype(dname2type[dname])
         nz=readvec(fp, np.dtype(np.int64), 1)[0]
@@ -283,12 +288,11 @@ def readbin_magic(fp):
         print(error)
         return M_EOD 
 def readbin_header(fp):
-    M_COMMENT=25856
-    header={}
+    header=''
     magic=readbin_magic(fp)
     while magic&0xFFFF==M_COMMENT:
         nlen=readuint64(fp)
-        header['COMMENT']=header.get('COMMENT','')+fp.read(nlen).strip().decode('ascii')
+        header=header+fp.read(nlen).decode('ascii').strip('\x00')
         #header+=fp.read(nlen).strip() #.decode('utf-8')
         nlen2=readuint64(fp)
         magic2=readbin_magic(fp)
@@ -301,6 +305,9 @@ def readbin_header(fp):
     else:
         nx=0
         ny=0
+    header=header.strip('\n')
+    if header.find('\n')!=-1:
+        header=np.array(header.split('\n'))
     return (magic, nx, ny, header)
 
 if __name__ == '__main__':

@@ -51,7 +51,7 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	:grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0), moao(0){
 	if(!parms) return;
 	dbg("initialize reconstructor in GPU\n");
-	if(parms->recon.alg==0&&!(parms->recon.mvm&&parms->load.mvm)){
+	if(parms->recon.alg==RECON_MVR&&!(parms->recon.mvm&&parms->load.mvm)){
 		grid=new curecon_geom(parms, recon);//does not change
 	}
 	if(parms->recon.split==2){//mvst
@@ -62,10 +62,10 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	init_tomo(parms, recon);
 	init_moao(parms, recon);
 
-	if((parms->recon.alg==0&&parms->gpu.fit||parms->recon.mvm||parms->gpu.moao)
-		||(parms->recon.alg==1&&parms->gpu.lsr)
+	if((parms->recon.alg==RECON_MVR&&parms->gpu.fit||parms->recon.mvm||parms->gpu.moao)
+		||(parms->recon.alg==RECON_LSR&&parms->gpu.lsr)
 		){
-		if(parms->recon.alg==0&&parms->fit.square){
+		if(parms->recon.alg==RECON_MVR&&parms->fit.square){
 			dmfit=curcell(parms->ndm, 1, P(recon->anx), P(recon->any));
 		} else if(parms->recon.modal){
 			dmfit=curcell(parms->ndm, 1, P(recon->anmod), (long*)NULL);
@@ -78,7 +78,7 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 		}
 	}
 
-	if(parms->recon.alg==0&&(parms->gpu.tomo||parms->gpu.fit)
+	if(parms->recon.alg==RECON_MVR&&(parms->gpu.tomo||parms->gpu.fit)
 		&&!parms->sim.idealfit&&!parms->load.mvm&&!recon->MVM&&!cuglobal->mvm){
 		if(parms->tomo.square){
 			opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));
@@ -157,13 +157,13 @@ void curecon_t::init_fit(const parms_t* parms, recon_t* recon){
 			error("Invalid");
 		}
 		switch(parms->fit.alg){
-		case 0:
+		case ALG_CBS:
 			FL=new cusolve_cbs(recon->fit->FL.C, recon->fit->FL.Up, recon->fit->FL.Vp);
 			break;
-		case 1:
+		case ALG_CG:
 			FL=dynamic_cast<cusolve_l*>(FR);
 			break;
-		case 2:
+		case ALG_SVD:
 			FL=new cusolve_mvm(recon->fit->FL.MI);
 			break;
 		default:
@@ -179,13 +179,13 @@ void curecon_t::init_tomo(const parms_t*parms, recon_t*recon){
 		dbg("initialize tomography in GPU %d.\n", current_gpu());
 		RR=new cutomo_grid(parms, recon, grid);
 		switch(parms->tomo.alg){
-		case 0:
+		case ALG_CBS:
 			RL=new cusolve_cbs(recon->RL.C, recon->RL.Up, recon->RL.Vp);
 			break;
-		case 1:
+		case ALG_CG:
 			RL=dynamic_cast<cusolve_l*>(RR);
 			break;
-		case 2:
+		case ALG_SVD:
 			RL=new cusolve_mvm(recon->RL.MI);
 			break;
 		default:
@@ -407,7 +407,7 @@ void curecon_t::tomo_test(sim_t* simu){
 	writebin(rhsc, "CPU_TomoR");
 	muv_trans(&rtc, &recon->RR, rhsc, 1);
 	writebin(rtc, "CPU_TomoRt");
-	if(parms->tomo.alg==1){
+	if(parms->tomo.alg==ALG_CG){
 		muv(&lc, &recon->RL, rhsc, 1);
 		writebin(lc, "CPU_TomoL");
 		muv(&lc, &recon->RL, rhsc, -1);
@@ -432,7 +432,7 @@ void curecon_t::tomo_test(sim_t* simu){
 	cuwrite(rhsg, stream, "GPU_TomoR");
 	RR->Rt(rtg, 0, rhsg, 1, stream);
 	cuwrite(rtg, stream, "GPU_TomoRt");
-	if(parms->tomo.alg==1){
+	if(parms->tomo.alg==ALG_CG){
 		cusolve_cg* RL2=dynamic_cast<cusolve_cg*>(RL);
 		RL2->L(lg, 0, rhsg, 1, stream);
 		cuwrite(lg, stream, "GPU_TomoL");

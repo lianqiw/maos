@@ -622,7 +622,7 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
 		const real dy=pts->dy;
 		const real* ampi=amp+pts->nxsa*pts->nysa*isa;
 		dmat* ATA=P(mcc,isa);
-		real a00=0, a01=0, a02=0, a11=0, a12=0, a22=0;
+		double a00=0, a01=0, a02=0, a11=0, a12=0, a22=0;//use double for accumulation
 		for(int iy=0; iy<pts->nysa; iy++){
 			real y=iy*dy+origy;
 			const real* ampx=ampi+iy*pts->nxsa;
@@ -661,7 +661,7 @@ void loc_calc_ptt(real* rmsout, real* coeffout,
 	const real* restrict locy=loc->locy;
 
 	real tot=0;
-	real coeff[3]={0,0,0};
+	double coeff[3]={0,0,0};//use double for accumulation
 	if(amp){
 		for(long iloc=0; iloc<nloc; iloc++){
 			const real junk=opd[iloc]*amp[iloc];
@@ -679,12 +679,13 @@ void loc_calc_ptt(real* rmsout, real* coeffout,
 			tot+=junk*opd[iloc];
 		}
 	}
+	real coeff2[3]={coeff[0],coeff[1],coeff[2]};
 	if(coeffout){
-		dmulvec3(coeffout, imcc, coeff);
+		dmulvec3(coeffout, imcc, coeff2);
 	}
 	if(rmsout){
 		real pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
-		real ptt=dwdot(coeff, imcc, coeff);/*p/t/t mode variance. */
+		real ptt=dwdot(coeff2, imcc, coeff2);/*p/t/t mode variance. */
 		rmsout[0]=tot-pis;/*PR */
 		rmsout[1]=ptt-pis;/*TT */
 		rmsout[2]=tot-ptt;/*PTTR */
@@ -707,8 +708,8 @@ void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod,
 	if(!mod||!opd) return;
 	const int nmod=mod->ny;
 	const int nloc=mod->nx;
-	real tot=0;
-	real val[nmod];
+	double tot=0; //use double for accumulation
+	double val[nmod];
 	memset(val, 0, sizeof(real)*nmod);
 	for(long iloc=0; iloc<nloc; iloc++){
 		real junk=opd[iloc]*amp[iloc];
@@ -788,7 +789,7 @@ void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 		const real* opdi=opd+pts->nxsa*pts->nysa*isa;
 		assert(P(imcc,isa)->nx==3&&P(imcc,isa)->ny==3);
 		real coeff[3]={0,0,0};
-		real a0=0, a1=0, a2=0;
+		double a0=0, a1=0, a2=0;
 		for(int iy=0; iy<pts->nysa; iy++){
 			real y=iy*dy+origy;
 			const real* ampx=ampi+iy*pts->nxsa;

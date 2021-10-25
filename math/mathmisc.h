@@ -24,8 +24,8 @@
    A few math routines
 */
 long double factorial(long n1, long n2);
-#define sinc(x) (fabs(x)<1.e-5?1:sin(M_PI*x)/(M_PI*x))
-void invsq(long n, double *restrict A);
+#define sinc(x) ((x)!=0?(sin(M_PI*x)/(M_PI*x)):1)
+//void invsq(long n, double *restrict A);
 #define mysqrt(A) (A<0?-sqrt(-A):sqrt(A))
 long *invperm(long *p, long np);
 void maxminlong(const long *restrict p, long N,
@@ -33,9 +33,8 @@ void maxminlong(const long *restrict p, long N,
 long nextpow2(long n);
 long nextfftsize(long n);
 unsigned long mylog2(unsigned long n);
-typedef double(*golden_section_fun)(void *param, double x);
-double golden_section_search(golden_section_fun f, void *param, 
-			     double x1, double x4, double tau);
+typedef real(*golden_section_fun)(void *param, real x);
+real golden_section_search(golden_section_fun f, void *param, real x1, real x4, real tau);
 spint *readspint(file_t *fp, long* nx, long* ny);
 int readvec(void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t *fp);
 
