@@ -361,7 +361,7 @@ var parms_8h =
       [ "seeds", "parms_8h.html#a3559396cb01e83303920574e71fcca0c", null ],
       [ "nseed", "parms_8h.html#ab9c88554d64721107e7ecd31bf3387ca", null ],
       [ "closeloop", "parms_8h.html#a3aeaa7e5f6043df458945d951cffb31d", null ],
-      [ "wspsd", "parms_8h.html#ad8ab64686e4a9ded1c0c823cc164d740", null ],
+      [ "wspsd", "parms_8h.html#a50d844c15f62d07456f9b37d2e10f518", null ],
       [ "wsseq", "parms_8h.html#afea1ff3ebd4c2eaab9d6b79d9263c75c", null ],
       [ "aphi", "parms_8h.html#ae6d05bfccc18d0de4bc183cfbca212c0", null ],
       [ "ephi", "parms_8h.html#ad21eec9162edd89a58cd77f93b717ffe", null ],
