@@ -121,7 +121,7 @@ void free_parms(parms_t* parms){
 	dfree(parms->sim.apfsm);
 	dfree(parms->sim.epfsm);
 	lfree(parms->sim.seeds);
-	free(parms->sim.wspsd);
+	dfree(parms->sim.wspsd);
 
 	dfree(parms->sim.ncpa_thetax);
 	dfree(parms->sim.ncpa_thetay);
@@ -1023,7 +1023,7 @@ static void readcfg_sim(parms_t* parms){
 	READ_INT(sim.start);
 	READ_INT(sim.end);
 	READ_INT(sim.pause);
-	READ_STR(sim.wspsd);
+	READ_DMAT(sim.wspsd);
 	READ_INT(sim.wsseq);
 	READ_INT(sim.cachedm);
 	READ_INT(sim.fuseint);

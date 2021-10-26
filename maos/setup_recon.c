@@ -1155,10 +1155,8 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 			warning("Temporary solution for testing\n");
 			dmat* psd_ngs=dread("../../psd_ngs.bin");
 			if(parms->sim.wspsd){//windshake
-			//need to convert from rad to m2.
-				dmat* psd_ws=dread("%s", parms->sim.wspsd);
-				dmat* psd_ws_m=ddup(psd_ws);
-				dfree(psd_ws);
+				//need to convert from rad to m2.
+				dmat* psd_ws_m=ddup(parms->sim.wspsd);
 				dmat* psd_ws_y=drefcols(psd_ws_m, 1, 1);
 				dscale(psd_ws_y, 4./parms->aper.d); dfree(psd_ws_y);
 				add_psd2(&psd_ngs, psd_ws_m, 1); dfree(psd_ws_m);

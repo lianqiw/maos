@@ -507,7 +507,7 @@ typedef struct sim_cfg_t{
     lmat *seeds;      /**<simulation seeds*/
     int nseed;       /**<How many simulation seed*/
     int closeloop;   /**<closed loop or open loop*/
-    char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
+    dmat *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/
     /*control */

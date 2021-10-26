@@ -742,8 +742,10 @@ if test "$enable_cmocka" != "no" ;then
 	fi
 fi
 AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
-PKG_PROG_PKG_CONFIG
-gtk_ver="0"
+gtk_ver=0
+has_cairo=0
+has_notify=0
+m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG], [PKG_CONFIG=""])
 AS_IF([ test -n "$PKG_CONFIG"],[#use AS_IF instead of if to avoid error regarding pkgconfig not available.
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10

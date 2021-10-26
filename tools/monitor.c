@@ -515,9 +515,13 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 void clear_jobs(GtkButton* btn, gpointer flag){
 	(void)btn;
 	int this_host=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook))-1;
-	//for(int ihost=0; ihost<nhost; ihost++){
-	clear_job_wrap(this_host, GPOINTER_TO_INT(flag));
-	//}
+	if(this_host==-1){
+		for(int ihost=0; ihost<nhost; ihost++){
+			clear_job_wrap(ihost, GPOINTER_TO_INT(flag));
+		}
+	}else{
+		clear_job_wrap(this_host, GPOINTER_TO_INT(flag));
+	}
 }
 
 void save_all_jobs(GtkButton* btn, gpointer data){

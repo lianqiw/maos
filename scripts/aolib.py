@@ -344,3 +344,57 @@ def plot_smooth(x,y,color=''):
 
     #create smooth line chart 
     plt.plot(xnew, y_smooth,color)
+
+def radial_profile(data, center, enclosed=0):
+    '''Compute the radial average or radially enclosed energy. radial start with 1'''
+    y,x = np.indices((data.shape)) # first determine radii of all pixels
+    r   = np.sqrt((x-center[0])**2+(y-center[1])**2)
+    ind = np.argsort(r.flat) # get sorted indices
+    sr  = r.flat[ind] # sorted radii
+    sim = data.flat[ind] # image values sorted by radii
+    ri  = sr.astype(np.int32) # integer part of radii (bin size = 1)
+    csim = np.cumsum(sim, dtype=np.float64) # cumulative sum to figure out sums for each radii bin
+    # determining distance between changes
+    deltar = ri[1:] - ri[:-1] # assume all radii represented
+    rind = np.where(deltar)[0] # location of changed radius
+
+    if enclosed==1: #radially enclosed
+        radialprofile = csim[rind[1:]]
+    else: #radial averaging
+        nr   = rind[1:] - rind[:-1] # number in radius bin
+        tbin = csim[rind[1:]] - csim[rind[:-1]] # sum for image values in radius bins
+        radialprofile = tbin/nr # the answer
+    
+    return radialprofile
+
+def center(A, n):
+    '''crop or embed A into nxn array from the center'''
+    indx=(A.shape[0]-n+1)>>1
+    indy=(A.shape[1]-n+1)>>1
+    if indx >= 0 and indy >= 0:
+        A2=A[indx:indx+n, indy:indy+n]
+    elif indx <0 and indy <0 :
+        A2=np.zeros((n,n))
+        A2[-indx:-indx+A.shape[0], -indy:-indy+A.shape[1]]=A
+    return A2
+
+def photon_flux(magnitude, wvls):
+    '''Claculate photon flux for magnitude at wavelength wvls'''
+    Jy=1.51e7 #photons /sec / m^2 / dl_l
+    name =  'UBVRIJHK';
+    wvlc= np.array([0.35,0.44,0.55,0.64,0.79,1.26,1.60,2.22 ]) #center wavelength in micron
+    dl_l= np.array([0.15,0.22,0.16,0.23,0.19,0.16,0.23,0.23 ])
+    flux0=np.array([1810,4260,3640,3080,2550,1600,1080,670 ]) #zero magnitude flux
+    flux= np.zeros((len(magnitude), len(wvls)))
+    if np.max(wvls)<0.1:
+        wvls=wvls*1e6
+        
+    for iwvl in range(len(wvls)):
+        ind=np.argmin(abs(wvlc-wvls[iwvl]))
+        zs=flux0[ind]*Jy*dl_l[ind]
+        for imag in range(len(magnitude)):
+            flux[imag, iwvl]=zs*10.**(-0.4*magnitude[imag]) #photon m^-2 s^-1
+        #pde1=flux*dsa^2*dt*thru_tot*strehl;
+    if len(flux)==1:
+        flux=flux[0,0]
+    return flux

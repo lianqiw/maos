@@ -282,12 +282,12 @@ dmat* psd2time(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
 		}
 	} else if(NY(psdin)==2){
 		if(NX(psdin)<2){
-			error("Invalid PSD\n");
+			error("Invalid PSD. nx should be more than 1\n");
 		}
 		psd=dinterp1(psdin, 0, fs, 1e-40);
 		P(psd,0)=0;/*disable pistion. */
 	} else{
-		error("psdin is invalid format.\n");
+		error("psdin is invalid format. shape is %ldx%ld\n", NX(psdin), NY(psdin));
 	}
 	cmat* wshat=cnew(nstep, 1);
 	//cfft2plan(wshat, -1);
