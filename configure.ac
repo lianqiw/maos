@@ -142,6 +142,7 @@ fi
 AC_ARG_ENABLE(allstatic, AS_HELP_STRING([--enable-allstatic], [Compile statically]))
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]))
 AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]))
+AC_ARG_ENABLE(double, AS_HELP_STRING([--disable-double],[Use single precision for CPU and cuda.]))
 AC_ARG_ENABLE(single, AS_HELP_STRING([--enable-single],[Use single precision for CPU and cuda.]))
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler, AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]))
@@ -156,7 +157,7 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
-AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downlong precompiled library]))
+AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downling precompiled library]))
 AC_ARG_ENABLE(openmp, AS_HELP_STRING([--disable-openmp], [Disable openmp support]))
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
@@ -167,6 +168,9 @@ if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
     with_cuda=no
 else
     with_cuda=yes
+fi
+if test "$enable_double" = "no" ;then
+	enable_single = "yes"
 fi
 if test "$enable_single" = "yes" ;then
     if test "$cuda_double" = "yes" ;then
@@ -1002,8 +1006,6 @@ if test "$with_cuda" != "no" ;then
     if test -n "$OPENMP_CFLAGS";then
         CCBINOPT+=" $OPENMP_CFLAGS"
     fi
-else
-    cudaver="no"
 fi
 if test "$with_cuda" != "no" ;then
     if test "$cuda_double" = "yes" ;then
@@ -1116,15 +1118,13 @@ echo
 echo "CC:              $CC"
 echo "OpenMP:          $has_openmp"
 echo "Single:          $enable_single"
-echo "CUDA:            $cudaver (double: $cuda_double, arch: $cuarch)"
-echo "Drawdaemon:      $has_cairo"
-echo "Monitor:         $((gtk_ver>0)) (libnotify: $has_notify)"
+echo "CUDA:            ${cudaver:+$cudaver (double: $cuda_double, arch: $cuarch)}${cudaver:-no}"
 echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       ${enable_websockets:-yes}"
 echo "MATLAB MEX:      $with_matlab"
 
-echo "Doxygen:         ${DX_DOXYGEN:+yes (make doc)}"
+echo "Doxygen:         ${DX_DOXYGEN:+yes (make doc)}${DX_DOXYGEN:-no}"
 echo "CMOCKA:          $enable_cmocka"
 echo
 

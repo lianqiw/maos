@@ -264,7 +264,7 @@ void maos_sim(){
 			sim_pipe[1]=-1;//indicate error
 		}
 	}
-	dbg("PARALLEL=%d\n", PARALLEL);
+	dbg("PARALLEL=%d, NTHREAD=%d\n", PARALLEL, NTHREAD);
 	long rescount=0;
 	dmat* restot=dnew(parms->evl.nmod, 1);
 	for(int iseed=0; iseed<parms->sim.nseed&&!signal_caught; iseed++){

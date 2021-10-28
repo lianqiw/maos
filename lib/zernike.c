@@ -122,7 +122,7 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 			if(im==0){/*Radial*/
 				real coeff=sqrt(ir+1.);
 				real* restrict pmod=PCOL(opd, cmod); 
-				OMP_TASK_FOR(4)
+				//OMP_TASK_FOR(4)
 				for(long iloc=0; iloc<nloc; iloc++){
 					pmod[iloc]=P(Rnm,iloc)*coeff;
 				}
@@ -133,14 +133,14 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 				int off1=(imod)%2==1?0:1;
 				if(!flag||(imod+off1+flag)==0){
 					real* restrict pmods=PCOL(opd, flag?0:(cmod+off1));//odd imod for sin
-					OMP_TASK_FOR(4)
+					//OMP_TASK_FOR(4)
 					for(long iloc=0; iloc<nloc; iloc++){
 						pmods[iloc]=P(Rnm,iloc)*coeff*sin(im*P(locs,iloc));
 					}
 				}
 				if(!flag||(imod+1-off1+flag)==0){
 					real* restrict pmodc=PCOL(opd, flag?0:(cmod+1-off1));//even imod for cos
-					OMP_TASK_FOR(4)
+					//OMP_TASK_FOR(4)
 					for(long iloc=0; iloc<nloc; iloc++){
 						pmodc[iloc]=P(Rnm,iloc)*coeff*cos(im*P(locs,iloc));
 					}

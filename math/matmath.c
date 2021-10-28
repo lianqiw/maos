@@ -763,7 +763,7 @@ void X(gramschmidt)(X(mat)* Mod, R* amp){
 			for(int jmod=0; jmod<imod; jmod++){
 				if(nonvalid[jmod]) continue;
 				cross=-X(vecdot)(PCOL(Mod, imod), PCOL(Mod, jmod), amp, nx)/wtsum;
-				OMP_TASK_FOR(4)
+//OMP_TASK_FOR(4)
 				for(long ix=0; ix<nx; ix++){
 					P(Mod, ix, imod)+=cross*P(Mod, ix, jmod);
 				}
