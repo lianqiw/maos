@@ -661,7 +661,6 @@ void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	double tot=0; //use double for accumulation.
 	const int nmod=ngsmod->nmod;
 	if(nmod==2){
-OMP_TASK_FOR(4)
 		for(int iloc=0; iloc<aper->locs->nloc; iloc++){
 			const real junk=amp[iloc]*opd[iloc];
 			tot+=junk*opd[iloc];
@@ -672,7 +671,6 @@ OMP_TASK_FOR(4)
 			coeff[2]+=junky;
 		}
 	} else{
-OMP_TASK_FOR(4)
 		for(int iloc=0; iloc<aper->locs->nloc; iloc++){
 			const real junk=amp[iloc]*opd[iloc];
 			tot+=junk*opd[iloc];

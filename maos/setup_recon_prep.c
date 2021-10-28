@@ -535,7 +535,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 			}
 		}
 		info("Generating GP with ");TIC;tic;
-		OMP_TASK_FOR(4)
+OMP_TASK_FOR(4)
 			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 				const int ipowfs=parms->wfsr[iwfs].powfs;
 				const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);

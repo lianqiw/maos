@@ -520,7 +520,7 @@ setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int i
 		if(parms->powfs[ipowfs].type==WFS_SH){
 			powfs[ipowfs].saa_tel=dcellnew(nwfsp, 1);
 		}
-		OMP_TASK_FOR(4)
+OMP_TASK_FOR(4)
 		for(int jwfs=0; jwfs<nwfsp; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			if(parms->misreg.tel2wfs[iwfs]){
@@ -562,7 +562,7 @@ setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ip
 		*/
 		powfs[ipowfs].loc_dm=(loccell*)cellnew(nwfsp*parms->ndm, 1);
 		int isset=0;
-		OMP_TASK_FOR_COLLAPSE(2)
+//OMP_TASK_FOR_COLLAPSE(2)
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int jwfs=0; jwfs<nwfsp; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);

@@ -478,7 +478,6 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		dmat* opdbias_astigx=dread("opdbias_astigx");
 		dmat* opdbias_polish=dread("opdbias_polish");
 		const real atmscale=1;
-		OMP_TASK_FOR(4)
 		for(int i=0; i<100; i++){
 			info2("%d ", i);
 			dmat* ints=0;
@@ -807,7 +806,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 		dfree(ints);
 	}
 	_Atomic(int) count=0;
-	int nmod=mod?NY(mod):locin->nloc;
+	const int nmod=mod?NY(mod):locin->nloc;
 	dmat* ggd=dnew(nsa*2, nmod);
 	if(mod&&NX(mod)!=locin->nloc){
 		error("NX(mod) must equal to %ld", locin->nloc);
@@ -815,7 +814,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 
 	const real scale=1.-(locin->ht-pywfs->hc)/pywfs->hs;
 	TIC;tic;
-	OMP_TASK_FOR(4)
+OMP_TASK_FOR(4)
 	for(int imod=0; imod<nmod; imod++){
 		dmat* opdin=dnew(locin->nloc, 1);
 		dmat* opdfft=ddup(opd0);
