@@ -22,7 +22,7 @@ var searchData=
   ['hxf',['HXF',['../maos_2types_8h.html#a1fb70be63efd72412f81111fa111163b',1,'fit_t']]],
   ['hxw',['HXW',['../parms_8h.html#a7a40ea0ea4c0aecbe7f0273aaa3e7977',1,'load_cfg_t::HXW()'],['../maos_2types_8h.html#a52a3792e0e117afc983d8b9329a47061',1,'recon_t::HXW()']]],
   ['hxwtomo',['HXWtomo',['../maos_2types_8h.html#aa528b84665ddc2317b5d0d61fa372912',1,'recon_t']]],
-  ['hyst',['hyst',['../parms_8h.html#aac7b3b1f294ecf8767ec10b62e360257',1,'dm_cfg_t::hyst()'],['../maos_2types_8h.html#aef119e2742a976fff5d75c01330c6b03',1,'sim_t::hyst()']]],
+  ['hyst',['hyst',['../parms_8h.html#aac7b3b1f294ecf8767ec10b62e360257',1,'dm_cfg_t::hyst()'],['../structsim__t.html#aef119e2742a976fff5d75c01330c6b03',1,'sim_t::hyst()']]],
   ['hyst_5falpha',['hyst_alpha',['../parms_8h.html#aac44493de6fe775066ca7d8cdb76e4b9',1,'dm_cfg_t']]],
   ['hyst_5fstroke',['hyst_stroke',['../parms_8h.html#aeba26ceee96f7ea6333318f18bf436a4',1,'dm_cfg_t']]]
 ];

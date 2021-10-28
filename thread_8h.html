@@ -158,14 +158,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a46cd5810acdabad3f9ac588daa499e41"><td class="memItemLeft" align="right" valign="top"><a id="a46cd5810acdabad3f9ac588daa499e41"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>UNLOCK_FFT</b>&#160;&#160;&#160;UNLOCK(<a class="el" href="thread_8h.html#a6cb5787469a53f1468e29580abc056ec">mutex_fftw</a>)</td></tr>
 <tr class="separator:a46cd5810acdabad3f9ac588daa499e41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75325cd833e386206969f01592ae467b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>LOCKADD</b>(dest,  src,  step)</td></tr>
-<tr class="separator:a75325cd833e386206969f01592ae467b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5b2b7b50e8a555ed7588bfbe98b96fb7"><td class="memItemLeft" align="right" valign="top"><a id="a5b2b7b50e8a555ed7588bfbe98b96fb7"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>SPIN_LOCK</b>(i)&#160;&#160;&#160;while(__sync_lock_test_and_set(&amp;i, 1)) while(i)</td></tr>
-<tr class="separator:a5b2b7b50e8a555ed7588bfbe98b96fb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79f3df608bf0b04b381c917bff0e6238"><td class="memItemLeft" align="right" valign="top"><a id="a79f3df608bf0b04b381c917bff0e6238"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>SPIN_UNLOCK</b>(i)&#160;&#160;&#160;__sync_lock_release(&amp;i)</td></tr>
-<tr class="separator:a79f3df608bf0b04b381c917bff0e6238"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7247c60724ec85988716ce873e3a23e4"><td class="memItemLeft" align="right" valign="top"><a id="a7247c60724ec85988716ce873e3a23e4"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>expect_level</b>(n)&#160;&#160;&#160;if(omp_get_level()!=n) dbg(&quot;omp_get_level=%d, want %d\n&quot;, omp_get_level(), n)</td></tr>
 <tr class="separator:a7247c60724ec85988716ce873e3a23e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -201,9 +193,6 @@ Functions</h2></td></tr>
 <tr class="separator:a46d357a9305be4f48b8166cb27ec41ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c1f2b6e57a822b6ae203dc855a89a96"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#a8c1f2b6e57a822b6ae203dc855a89a96">thread_prep</a> (<a class="el" href="thread_8h.html#structthread__t">thread_t</a> *thd, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end, <a class="el" href="classlong.html">long</a> nthread, thread_wrapfun fun, void *data)</td></tr>
 <tr class="separator:a8c1f2b6e57a822b6ae203dc855a89a96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9930843fcf00924f1a4076af69232a5b"><td class="memItemLeft" align="right" valign="top"><a id="a9930843fcf00924f1a4076af69232a5b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>lockadd</b> (int *src, int step)</td></tr>
-<tr class="separator:a9930843fcf00924f1a4076af69232a5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a026c95e6b2a9ee10f90a5a254548786a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#a026c95e6b2a9ee10f90a5a254548786a">thread_new</a> (thread_fun fun, void *arg)</td></tr>
 <tr class="separator:a026c95e6b2a9ee10f90a5a254548786a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcf2784ffc1cb49a293c75cdfe6d64e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#abcf2784ffc1cb49a293c75cdfe6d64e7">thread_block_signal</a> ()</td></tr>
@@ -287,40 +276,6 @@ thread_data</td>
 </div><div class="memdoc">
 <p>Queue jobs to group. Do not wait </p>
 
-</div>
-</div>
-<a id="a75325cd833e386206969f01592ae467b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a75325cd833e386206969f01592ae467b">&#9670;&nbsp;</a></span>LOCKADD</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LOCKADD</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">dest, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">src, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">step&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">(({__asm__ __volatile__ (<span class="stringliteral">&quot;lock; xaddl %0,%1&quot;</span>    \</div><div class="line">        : <span class="stringliteral">&quot;=r&quot;</span> (dest), <span class="stringliteral">&quot;=m&quot;</span> (src)       \</div><div class="line">        : <span class="stringliteral">&quot;0&quot;</span> (step), <span class="stringliteral">&quot;m&quot;</span> (src));}),dest)</div></div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>

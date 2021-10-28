@@ -8,6 +8,5 @@ var type_8h_structzsp_8____unnamed_____8____unnamed____ =
     [ "fn", "type_8h.html#a4d9d6c17eeae2754c9b49171261b93bd", null ],
     [ "nzmax", "type_8h.html#a3fda2232a7f3399b9f2d4b0a0769758c", null ],
     [ "pp", "type_8h.html#ac483f6ce851c9ecd9fb835ff7551737c", null ],
-    [ "pi", "type_8h.html#a72ab8af56bddab33b269c5964b26620a", null ],
-    [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
+    [ "pi", "type_8h.html#a72ab8af56bddab33b269c5964b26620a", null ]
 ];

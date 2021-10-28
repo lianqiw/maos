@@ -428,7 +428,7 @@ var hierarchy =
     [ "sho_t", "servo_8h.html#structsho__t", null ],
     [ "sim_cfg_t", "parms_8h.html#structsim__cfg__t", null ],
     [ "sim_save_t", "maos_2types_8h.html#structsim__save__t", null ],
-    [ "sim_t", "maos_2types_8h.html#structsim__t", null ],
+    [ "sim_t", "structsim__t.html", null ],
     [ "smat", "type_8h.html#structsmat", null ],
     [ "smat.__unnamed__", "type_8h.html#unionsmat_8____unnamed____", null ],
     [ "smat.__unnamed__.__unnamed__", "type_8h.html#structsmat_8____unnamed_____8____unnamed____", null ],

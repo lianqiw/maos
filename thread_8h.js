@@ -25,9 +25,6 @@ var thread_8h =
     [ "PNEW2", "thread_8h.html#a36c3446c1c6c86a0cd375beb6724bbab", null ],
     [ "LOCK_FFT", "thread_8h.html#a8a8f75f08ed7e1844893c3c8ae8bb821", null ],
     [ "UNLOCK_FFT", "thread_8h.html#a46cd5810acdabad3f9ac588daa499e41", null ],
-    [ "LOCKADD", "thread_8h.html#a75325cd833e386206969f01592ae467b", null ],
-    [ "SPIN_LOCK", "thread_8h.html#a5b2b7b50e8a555ed7588bfbe98b96fb7", null ],
-    [ "SPIN_UNLOCK", "thread_8h.html#a79f3df608bf0b04b381c917bff0e6238", null ],
     [ "expect_level", "thread_8h.html#a7247c60724ec85988716ce873e3a23e4", null ],
     [ "OMP_FOR", "thread_8h.html#a82d3687cb27dfe9ee3d7ed0bd3ac2586", null ],
     [ "OMP_FOR_COLLAPSE", "thread_8h.html#a51e37c5d8fc47fc5626fab2a04981756", null ],
@@ -38,7 +35,6 @@ var thread_8h =
     [ "thread_wrapfun", "thread_8h.html#a735e98ad9d08fe72a5a2e20051ebf72a", null ],
     [ "thread_id", "thread_8h.html#a46d357a9305be4f48b8166cb27ec41ff", null ],
     [ "thread_prep", "thread_8h.html#a8c1f2b6e57a822b6ae203dc855a89a96", null ],
-    [ "lockadd", "thread_8h.html#a9930843fcf00924f1a4076af69232a5b", null ],
     [ "thread_new", "thread_8h.html#a026c95e6b2a9ee10f90a5a254548786a", null ],
     [ "thread_block_signal", "thread_8h.html#abcf2784ffc1cb49a293c75cdfe6d64e7", null ]
 ];
