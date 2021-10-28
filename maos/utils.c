@@ -1133,7 +1133,7 @@ void wait_dmreal(sim_t* simu, int isim){
 			pthread_cond_wait(&simu->dmreal_condr, &simu->dmreal_mutex);
 		}
 		//dbg("ready: dmreal_isim is %d need %d\n", simu->dmreal_isim, isim);
-		atomicadd(&simu->dmreal_count, 1);
+		simu->dmreal_count++;
 		//}
 		pthread_mutex_unlock(&simu->dmreal_mutex);
 		pthread_cond_signal(&simu->dmreal_condw);

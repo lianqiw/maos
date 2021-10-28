@@ -30,7 +30,7 @@ typedef long long4[4];
 typedef struct GENPISTAT_S{
 	int ncase;
 	long4* cases;
-	int icase;
+	_Atomic(int) icase;
 	pthread_mutex_t mutex_read;/*don't let them read in the same time. */
 	const PARMS_S* parms;
 	POWFS_S* powfs;
@@ -50,7 +50,7 @@ static void calc_pistat(GENPISTAT_S* data){
 	mymkdir("%s/pistat", dirstart);
 	mymkdir("%s/neaspec", dirstart);
 	mymkdir("%s/phygrad", dirstart);
-	while(LOCKADD(icase, data->icase, 1)<data->ncase)
+	while((icase=atomic_fetch_add(&data->icase, 1))<data->ncase)
 #if _OPENMP>=200805
 #pragma omp task default(shared) firstprivate(icase)
 #endif
@@ -223,6 +223,7 @@ void genpistat(const PARMS_S* parms, POWFS_S* powfs){
 	long ng=ceil(patfov/2/ngsgrid);
 	info("Genpistat..");
 	GENPISTAT_S* data=mycalloc(1, GENPISTAT_S);
+	atomic_init(&data->icase, 0);
 	data->parms=parms;
 	data->powfs=powfs;
 	data->ncase=parms->maos.nseed*(2*ng+1)*(2*ng+1)*parms->maos.npowfs;
@@ -251,7 +252,6 @@ void genpistat(const PARMS_S* parms, POWFS_S* powfs){
 	}/*for iseed */
 	/*dbg("count=%ld, data->ncase=%ld\n",count,data->ncase); */
 	data->ncase=count;
-	data->icase=0;
 	data->cases=myrealloc(data->cases, data->ncase, long4);
 	CALL((thread_wrapfun)calc_pistat, (void*)data, parms->skyc.nthread, 0);
 	info("done\n");

@@ -22,6 +22,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 #defines host host_os host_cpu host_vendor etc
 AC_CANONICAL_HOST
+AC_CANONICAL_BUILD
+AC_CANONICAL_TARGET
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
 case "$CFLAGS" in
@@ -91,15 +93,7 @@ else
     AC_MSG_ERROR([Compiler $CC is unknown])
 fi
 AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], ["Whether MAOS is using C++ compiler"])
-#canonicalize the host_cpu name
-case "$host_cpu" in
-    *86)
-	host_cpu=x86
-	;;
-    *64)
-	host_cpu=x86_64
-	;;
-esac
+
 #AUTO detect libraries in the system
 #Try to discover CUDA install in the system
 if ! which which >/dev/null 2>&1;then
@@ -339,9 +333,13 @@ case "$host_os" in
 		libsuffix=fat
 		system="apple"
 		ldsuffix="dylib"
-		#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
 		if test "$enable_release" = "yes" ;then
-			CFLAGS+=" -mmacosx-version-min=10.7"
+			CFLAGS+=" -mmacosx-version-min=10.13" #_open_memstream is only available on macos 10.13 and later
+		fi
+		if test "$host_cpu" = "aarch64" ;then
+			libsuffix=a64
+		else
+			libsuffix=fat
 		fi
 		if test "$CN" = "CLANG" ;then
 			CFLAGS+=" -stdlib=libc++"
@@ -476,13 +474,15 @@ OPTS+=" $CFLAGS_EXTRA "
 if test "$system" = "win" ;then
     LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
 fi
-if test "$host_cpu" = "x86_64" ;then
+case $host_cpu in
+	*64)
     CFLAGS+=" -DDLONG "
     mflag="-m64"
-else
+	;;
+	*86)
     CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
     mflag="-m32"
-fi
+esac
 if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
     CFLAGS+=" $mflag"
 fi
@@ -494,13 +494,18 @@ if test "$enable_scheduler" = "no" ;then
     AM_CONDITIONAL(USE_SCHEDULER, false)
     enable_websockets="no"
 fi
-if test "$host_cpu" = "x86_64" ;then 
-    chol_fun=cholmod_l_factorize
-    AM_CONDITIONAL(USE_LONG, true)
-else
-    chol_fun=cholmod_factorize
-    AM_CONDITIONAL(USE_LONG, false)
-fi
+case $host_cpu in
+	*64)
+    	chol_fun=cholmod_l_factorize
+    	AM_CONDITIONAL(USE_LONG, true)
+		;;
+	*86)
+	    chol_fun=cholmod_factorize
+    	AM_CONDITIONAL(USE_LONG, false)
+		;;
+	*)
+		AC_MSG_ERROR([Invalid host_cpu=$host_cpu])
+esac
 
 LDEXE+="$LDRT " #-static" #show that we prefer static linking.
 if test "x$enable_allstatic" = "xyes" ;then
@@ -636,11 +641,13 @@ else
 
 		if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 			#compile from source
-			FLAGS="--enable-threads --enable-static --enable-shared"
+			FLAGS="--enable-threads --enable-static --enable-shared --disable-fortran "
 			if test -n "$OPENMP_CFLAGS" ;then
 				FLAGS+=" --enable-openmp"
 			fi
-			FLAGS+=" --disable-fortran --enable-sse2 --enable-avx --enable-avx2"
+			if test "$host_cpu" != "aarch64" ;then
+				FLAGS+=" --enable-sse2 --enable-avx --enable-avx2"
+			fi
 			compile FFTW fftw.tar.bz2 $FLAGS  
 			compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
 			unset ac_cv_lib_fftw3_fftw_execute

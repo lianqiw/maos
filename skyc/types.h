@@ -164,7 +164,7 @@ typedef struct SIM_S{
     dcccell *gain_pre; /**<TypeII gain and result of different sigman and different dtrat*/
     dcell ***bspstrehl;/**<Coeffiecients of bicubic spline fit of Strehl on the grid.*/
     dmat *bspstrehlxy; /**<Coordinate of the grid.*/
-    int isky;          /**<current star field being evaluated*/
+    _Atomic(int) isky;          /**<current star field being evaluated*/
     int isky_start;    /**<first star field to evaluate*/
     int isky_end;      /**<last star field to evalaute (exclusive)*/
     real tk_0;       /**<initial star time*/

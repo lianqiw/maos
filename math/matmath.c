@@ -143,7 +143,7 @@ void X(cwm)(X(mat)* restrict A, const X(mat)* restrict B){
 		error("Input is not valid\n");
 		return;
 	}
-#pragma omp simd
+//#pragma omp simd //not effective
 	for(long i=0; i<B->nx*B->ny; i++){
 		P(A, i)*=P(B, i);
 	}
@@ -159,17 +159,17 @@ void X(cwm2)(X(mat)* restrict A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt
 	int has_b1=B1&&wt1&&check_match(A, B1);
 	int has_b2=B2&&wt2&&check_match(A, B2);
 	if(has_b1&&has_b2){
-#pragma omp simd
+//#pragma omp simd
 		for(long i=0; i<B1->nx*B1->ny; i++){
 			P(A, i)*=(P(B1, i)*wt1+P(B2, i)*wt2);
 		}
 	} else if(has_b1){
-#pragma omp simd
+//#pragma omp simd
 		for(long i=0; i<B1->nx*B1->ny; i++){
 			P(A, i)*=P(B1, i)*wt1;
 		}
 	} else if(has_b2){
-#pragma omp simd
+//#pragma omp simd
 		for(long i=0; i<B2->nx*B2->ny; i++){
 			P(A, i)*=P(B2, i)*wt2;
 		}

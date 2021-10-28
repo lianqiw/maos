@@ -136,10 +136,9 @@ to specify the classname before the key like GtkTreeView::allow-rules */
 #if GTK_MAJOR_VERSION<3
 static const gchar* rc_string_widget=
 {
-
-"style \"widget\" {               \n"
-"font_name = \"Sans 8\""
-	"}\n"
+"style \"widget\" {\n"
+	"font_name = \"Sans 12\""
+"}\n"
 "class \"GtkWidget\" style \"widget\" \n"
 };
 static const gchar* rc_string_treeview=

@@ -62,6 +62,8 @@
 #if USE_SPIN_LOCK == 1 && !defined(__INTEL_COMPILER)
 /*Important to be volatile, otherwise lockes up in Sandy Bridge CPUs */
 #define LOCK_T volatile int 
+#define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)
+#define SPIN_UNLOCK(i) __sync_lock_release(&i)
 #define LOCK_DO(A) SPIN_LOCK(A)
 #define LOCK_UN(A) SPIN_UNLOCK(A)
 #define LOCK_INIT(A) A=0
@@ -87,8 +89,8 @@ typedef struct jobs_t{
  *  The thread pool struct.
  */
 struct thread_pool_t{
-	pthread_mutex_t mutex; /**<the mutex.*/
-	LOCK_T mutex_pool;         /**<the mutex for jobpool.*/
+	pthread_mutex_t mutex; /**<mutex to protect jobshead and jobstail.*/
+	LOCK_T mutex_pool;     /**<mutex to jobpool which saves unused jobs_t.*/
 	pthread_cond_t jobwait;/**<there are jobs jobwait.*/
 	pthread_cond_t idle;   /**<all threads are idle*/
 	pthread_cond_t exited; /**<all threads have exited*/
@@ -96,7 +98,7 @@ struct thread_pool_t{
 	pthread_attr_t attr;   /**<The attribution of newly created threads.*/
 	jobs_t* jobshead;      /**<Start of the fifo list of jobwait jobs*/
 	jobs_t* jobstail;      /**<End of the fifo list of jobwait jobs*/
-	jobs_t* jobspool;      /**<Save the allocated but finished job data here*/
+	jobs_t* jobspool;      /**<Save the allocated but unused/idle job data here*/
 	int icur; /**<the top of the threads stack.*/
 	int nmax; /**<the maximum number of threads. constant.*/
 	int ncur; /**<the maximum number of live threads, excluding the master thread.*/
@@ -127,7 +129,7 @@ static inline void do_job(void){
 	  their job to finish*/
 		pthread_cond_broadcast(&pool.jobdone);
 	}
-	/*return job to the pool. */
+	/*return job to the pool instead of freeing. */
 	LOCK_DO(pool.mutex_pool);
 	job->next=pool.jobspool;
 	pool.jobspool=job;
@@ -400,7 +402,15 @@ void thread_pool_wait_all(void){
  *   Exit all threads and free thread pool.
  */
 void thread_pool_destroy(void){
-	if(atomicadd(&pool.inited, -1)!=0) return;
+	int cleanup=0;
+	pthread_mutex_lock(&pool.mutex);
+	if(pool.inited){
+		pool.inited=0;
+		cleanup=1;
+	}
+	pthread_mutex_unlock(&pool.mutex);
+	if(!cleanup) return;//only 1 thread can do cleanup
+	//if(atomicadd(&pool.inited, -1)!=0) return;
 	thread_pool_wait_all();/*let all jobs finish. */
 	/*tell all jobs to quit. */
 	pool.quit=1;

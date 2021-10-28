@@ -40,7 +40,7 @@ repeat:
 			cgtmp.count_fail++;
 			//failure is usually caused by a rare temporary memory corruption.
 			info("CG %5d(%d) does not converge: residual=%.5f, threshold is %.5f.\n", 
-				cgtmp.count, maxit, ans, thres);
+				cgtmp.count, id, ans, thres);
 			if(!restarted){
 				info("CG %5d(%d) is restarted\n", cgtmp.count, id);
 				restarted++;

@@ -452,7 +452,7 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 #else	
 	GtkWidget *image=gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_BUTTON);
 	gtk_button_set_image(GTK_BUTTON(close_btn), image);
-	gtk_button_set_always_show_image(GTK_BUTTON(close_btn), TRUE);
+	//gtk_button_set_always_show_image(GTK_BUTTON(close_btn), TRUE);//>=gtk3
 #endif	
 	gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
 
@@ -1339,7 +1339,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	int lwidth=10;
 	hbox=gtk_hbox_new(FALSE, 0);
 	label=gtk_label_new("Update LPF");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
-	gtk_label_set_xalign(GTK_LABEL(label), 0);
+	//gtk_label_set_xalign(GTK_LABEL(label), 0);//gtk>=3.16
 	spin=gtk_spin_button_new_with_range(0, 1, 0.01);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), lpf);
 	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &lpf);
@@ -1350,7 +1350,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
 	label=gtk_label_new("Title"); gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
-	gtk_label_set_xalign(GTK_LABEL(label), 0);
+	//gtk_label_set_xalign(GTK_LABEL(label), 0);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->title);
@@ -1360,7 +1360,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
 	label=gtk_label_new("X label");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
-	gtk_label_set_xalign(GTK_LABEL(label), 0);
+	//gtk_label_set_xalign(GTK_LABEL(label), 0);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
@@ -1370,7 +1370,7 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
 	label=gtk_label_new("Y label");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
-	gtk_label_set_xalign(GTK_LABEL(label), 0);
+	//gtk_label_set_xalign(GTK_LABEL(label), 0);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	gtk_entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);

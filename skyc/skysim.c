@@ -103,7 +103,7 @@ static void skysim_isky(SIM_S* simu){
 	dmat* pres=simu->res;
 	dmat* pres_oa=simu->res_oa;
 	dmat* pres_geom=simu->res_geom;
-	while(LOCKADD(isky, simu->isky, 1)<simu->isky_end){
+	while((isky=atomic_fetch_add(&simu->isky, 1))<simu->isky_end){
 		real tk_1=myclockd();
 		/*Setup star parameters. */
 		STAR_S* star=setup_star(&nstar, simu, P(stars,isky), seed_maos);
@@ -521,6 +521,7 @@ void skysim(const PARMS_S* parms){
 	}*/
 	const int npowfs=parms->maos.npowfs;
 	SIM_S* simu=mycalloc(1, SIM_S);
+	atomic_init(&simu->isky, 0);
 	simu->status=mycalloc(1, status_t);
 	simu->status->info=S_RUNNING;
 	simu->status->scale=1;

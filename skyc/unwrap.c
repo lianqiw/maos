@@ -149,7 +149,7 @@ static void convert_wvf(GENPISTAT_S* data){
 	long icase=0;
 	/*Do not run this function. */
 	return;
-	while((LOCKADD(icase, data->icase, 1))<data->ncase){
+	while((icase=atomic_fetch_add(&data->icase, 1))<data->ncase){
 		TIC;tic;
 		real thetax=data->ngsgrid*P(data->cases, 0, icase);
 		real thetay=data->ngsgrid*P(data->cases, 1, icase);

@@ -103,7 +103,7 @@ struct mem_t{
 	char* shm;/**<unlink shared memory when delete if set*/
 	long n;   /**<length of mmaped memory.*/
 	int kind; /**<Kind of memory. 0: heap, 1: mmap*/
-	int nref; /**<Number of reference.*/
+	_Atomic int nref; /**<Number of reference.*/
 };
 
 #define swap2bytes(data) \
@@ -1043,7 +1043,7 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 */
 void mem_unref(mem_t** pin){
 	mem_t* in=*pin;
-	if(in&&!atomicadd(&(in->nref), -1)){//deallocate
+	if(in&&!(--in->nref)){//deallocate
 		switch(in->kind){
 		case 0:
 			free(in->mem);
@@ -1069,6 +1069,7 @@ void mem_unref(mem_t** pin){
 */
 mem_t* mem_new(void* p){
 	mem_t* out=mycalloc(1, mem_t);
+	atomic_init(&out->nref, 0);
 	out->mem=p;
 	return out;
 }
@@ -1077,7 +1078,7 @@ mem_t* mem_new(void* p){
 */
 mem_t* mem_ref(mem_t* in){
 	if(in){
-		atomicadd(&in->nref, 1);
+		in->nref++;
 	}
 	return in;
 }
@@ -1297,7 +1298,11 @@ static void async_sync(async_t* async, int wait){
 }
 void async_write(async_t* async, long offset, int wait){
 	if(!async||async->fp->err){
-		dbg("async is empty or error, aborted.\n");
+		if(!async){
+			dbg("async is empty.\n");
+		}else{
+			dbg("%s: previous aio_write returned err=%d.\n", zfname(async->fp), async->fp->err);
+		}
 		return;
 	}
 	long ans;
@@ -1311,13 +1316,19 @@ void async_write(async_t* async, long offset, int wait){
 		return;
 	}
 	if(offset>async->prev){//queue next.
+		memset(&async->aio, 0, sizeof(struct aiocb));//macos recommends zeroing the buffer.
+		async->aio.aio_fildes=async->fp->fd;
 		async->aio.aio_offset=async->pos+async->prev;
 		async->aio.aio_buf=(void*)(async->p+async->prev);
 		async->aio.aio_nbytes=offset-async->prev;
 		//dbg("%s: Async writing from %ld to %ld at offset %ld\n", zfname(async->fp), async->prev, offset, async->aio.aio_offset);
 		if((ans=aio_write(&async->aio))){
-			async->fp->err=2;
-			dbg("%s: aio_write returns %ld, mark eof.\n", zfname(async->fp), ans);
+			if(errno==35){
+				async->aio.aio_nbytes=0;//mark as idle
+			}else{
+				async->fp->err=2;
+				dbg("%s: aio_write failed with errno %d:%s.\n", zfname(async->fp), errno, strerror(errno));
+			}
 		}
 		async->prev=offset;
 	}

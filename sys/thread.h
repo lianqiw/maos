@@ -26,7 +26,7 @@
    4.0 (201307): Introduced taskgroup.
    4.5 (201511): Introduced taskloop and priority. Taskloop has implicit taskgroup.
 */
-
+#include <stdatomic.h>
 #include "common.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
 
@@ -209,38 +209,11 @@ extern pthread_mutex_t mutex_fftw;
 void thread_prep(thread_t *thd, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data);
 
-#define LOCKADD(dest,src,step)				\
-    (({__asm__ __volatile__ ("lock; xaddl %0,%1"	\
-		: "=r" (dest), "=m" (src)		\
-		: "0" (step), "m" (src));}),dest)
-
-int lockadd(int *src, int step);
-
-#define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)
-#define SPIN_UNLOCK(i) __sync_lock_release(&i)
 /**
    Create a new thread and forget.
 */
 int thread_new(thread_fun fun, void* arg);
 void thread_block_signal();
-
-static inline int cmpxchg(int *ptr, int old, int newval){
-    volatile int *__ptr = (volatile int *)(ptr);	
-    int __ret;                                     
-    __asm__ volatile( "lock; cmpxchg %2,%1"
-		      : "=a" (__ret), "+m" (*__ptr) 
-		      : "r" (newval), "0" (old)                     
-		      : "memory");				 
-    return __ret;
-}
-
-static inline int atomicadd(int *ptr, int val){
-    int old;
-    do{
-	old=*ptr;
-    }while(cmpxchg(ptr, old, old+val)!=old);
-    return old+val;
-}
 
 #define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
 #if _OPENMP > 0
