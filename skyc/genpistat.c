@@ -30,7 +30,7 @@ typedef long long4[4];
 typedef struct GENPISTAT_S{
 	int ncase;
 	long4* cases;
-	_Atomic(int) icase;
+	int icase;
 	pthread_mutex_t mutex_read;/*don't let them read in the same time. */
 	const PARMS_S* parms;
 	POWFS_S* powfs;
@@ -223,7 +223,6 @@ void genpistat(const PARMS_S* parms, POWFS_S* powfs){
 	long ng=ceil(patfov/2/ngsgrid);
 	info("Genpistat..");
 	GENPISTAT_S* data=mycalloc(1, GENPISTAT_S);
-	atomic_init(&data->icase, 0);
 	data->parms=parms;
 	data->powfs=powfs;
 	data->ncase=parms->maos.nseed*(2*ng+1)*(2*ng+1)*parms->maos.npowfs;

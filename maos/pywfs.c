@@ -805,7 +805,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 		//writebin(ints, "ints0_cpu");
 		dfree(ints);
 	}
-	_Atomic(int) count=0;
+	int count=0;
 	const int nmod=mod?NY(mod):locin->nloc;
 	dmat* ggd=dnew(nsa*2, nmod);
 	if(mod&&NX(mod)!=locin->nloc){
@@ -841,7 +841,7 @@ OMP_TASK_FOR(4)
 		pywfs_grad(&grad, pywfs, ints);
 		dadd(&grad, 1, grad0, -1);
 		dscale(grad, 1./poke);
-		count++;
+		atomic_add_fetch(&count, 1);
 		if(count%10==0){
 			real ts=myclockd()-tk;
 			info2("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", count, locin->nloc, ts, ts/count*locin->nloc, dstd(grad));

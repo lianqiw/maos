@@ -103,7 +103,7 @@ struct mem_t{
 	char* shm;/**<unlink shared memory when delete if set*/
 	long n;   /**<length of mmaped memory.*/
 	int kind; /**<Kind of memory. 0: heap, 1: mmap*/
-	_Atomic int nref; /**<Number of reference.*/
+	int nref; /**<Number of reference.*/
 };
 
 #define swap2bytes(data) \
@@ -1043,7 +1043,7 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 */
 void mem_unref(mem_t** pin){
 	mem_t* in=*pin;
-	if(in&&!(--in->nref)){//deallocate
+	if(in&&!atomic_add_fetch(&(in->nref), -1)){//deallocate
 		switch(in->kind){
 		case 0:
 			free(in->mem);
@@ -1069,7 +1069,6 @@ void mem_unref(mem_t** pin){
 */
 mem_t* mem_new(void* p){
 	mem_t* out=mycalloc(1, mem_t);
-	atomic_init(&out->nref, 0);
 	out->mem=p;
 	return out;
 }
@@ -1078,7 +1077,7 @@ mem_t* mem_new(void* p){
 */
 mem_t* mem_ref(mem_t* in){
 	if(in){
-		in->nref++;
+		atomic_add_fetch(&in->nref, 1);
 	}
 	return in;
 }

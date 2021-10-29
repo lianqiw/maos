@@ -157,7 +157,7 @@ public:
 		return nref?nref[0]:0;
 	}
 	void deinit(){
-		if(nref&&!atomicadd(nref, -1)){
+		if(nref&&!atomic_add_fetch(nref, -1)){
 			delete[] p0;
 			myfree(nref);
 		}
@@ -173,7 +173,7 @@ public:
 	}
 	//Create a new pointer with offset for p.
 	RefP(const RefP& pin, long offset=0):p(pin.p+offset), p0(pin.p0), nref(pin.nref){
-		if(nref) atomicadd(nref, 1);
+		if(nref) atomic_add_fetch(nref, 1);
 	}
 	/*
 	  template<template <typename> class Dev2>
@@ -186,7 +186,7 @@ public:
 			p=in.p;
 			p0=in.p0;
 			nref=in.nref;
-			if(nref) atomicadd(nref, 1);
+			if(nref) atomic_add_fetch(nref, 1);
 		}
 		return *this;
 	}
@@ -541,7 +541,7 @@ public:
 		deinit();
 	}
 	void deinit(){
-		if(nref&&!atomicadd(nref, -1)){
+		if(nref&&!atomic_add_fetch(nref, -1)){
 #if __CUDACC_VER_MAJOR__ >= 10	
 			cusparseDestroySpMat(desc);
 #endif

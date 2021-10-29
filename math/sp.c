@@ -43,14 +43,14 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
 	sp->nx=nx;
 	sp->ny=ny;
 	sp->nzmax=nzmax;
-	sp->nref=mycalloc(1, _Atomic(int));
-	atomic_init(sp->nref, 1);
+	sp->nref=mycalloc(1, int);
+	sp->nref[0]=1;	
 	return sp;
 }
 static void X(spfree_content)(X(sp)* sp){
 	if(!sp) return;
 	assert(issp(sp));
-	if(sp->nref && !(--(*sp->nref))){
+	if(sp->nref && !atomic_add_fetch(sp->nref,-1)){
 		free(sp->px);
 		free(sp->pp);
 		free(sp->pi);
@@ -84,7 +84,7 @@ X(sp)* X(spref)(X(sp)* A){
 			warning_once("Referencing non-referenced data. This may cause error.\n");
 		}
 	} else{
-		(*(A->nref))++;
+		atomic_add_fetch(A->nref,1);
 	}
 	memcpy(out, A, sizeof(X(sp)));
 	return out;

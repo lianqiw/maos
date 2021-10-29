@@ -25,7 +25,7 @@ struct loc_private{};
    Free pts_t data
 */
 void ptsfree_do(pts_t* pts){
-	if(pts&&pts->nref&&!(--(*pts->nref))){
+	if(pts&&pts->nref&&!atomic_add_fetch(pts->nref, -1)){
 		if(pts->origx){
 			free(pts->origx);
 			free(pts->origy);
@@ -61,7 +61,7 @@ void loc_free_stat(loc_t* loc){
    Free loc_t data.
  */
 void locfree_do(loc_t* loc){
-	if(loc&&loc->nref&&!(--(*loc->nref))){
+	if(loc&&loc->nref&&!atomic_add_fetch(loc->nref,-1)){
 		loc_free_stat(loc);
 		loc_free_map(loc);
 		free(loc->locx);
@@ -93,8 +93,7 @@ loc_t* locnew(long nloc, real dx, real dy){
 		loc->locy=loc->locx+nloc;
 		//loc->locx=mycalloc(nloc, real);
 		//loc->locy=mycalloc(nloc, real);
-		loc->nref=mycalloc(1, _Atomic(int)); 
-		atomic_init(loc->nref, 1);
+		loc->nref=mycalloc(1, int); loc->nref[0]=1;
 	}
 	loc->nloc=nloc;
 	loc->two=2;
@@ -111,7 +110,7 @@ loc_t* locref(const loc_t* in){
 	loc_t* out=mycalloc(1, loc_t);
 	memcpy(out, in, sizeof(loc_t));
 	if(out->nref){
-		(*(out->nref))++;
+		atomic_add_fetch(out->nref,1);
 	}
 	return out;
 }
@@ -126,8 +125,7 @@ pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, rea
 	pts->two=2;
 	pts->dsax=dsax;
 	pts->dsay=dsay;
-	pts->nref=mycalloc(1, _Atomic(int)); 
-	atomic_init(pts->nref, 1);
+	pts->nref=mycalloc(1, int);pts->nref[0]=1;
 	pts->nxsa=nxsa;
 	pts->nysa=nysa;
 	pts->dx=dx;

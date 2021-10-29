@@ -26,7 +26,7 @@
    4.0 (201307): Introduced taskgroup.
    4.5 (201511): Introduced taskloop and priority. Taskloop has implicit taskgroup.
 */
-#include <stdatomic.h>
+//#include <stdatomic.h> //_Atomic with OPENMP is not supported in compilares <=6. We use builtin atomic functions instead.
 #include "common.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
 
@@ -214,7 +214,12 @@ void thread_prep(thread_t *thd, long start, long end, long nthread,
 */
 int thread_new(thread_fun fun, void* arg);
 void thread_block_signal();
-
+static inline int atomic_add_fetch(int *ptr, int val){
+    return __atomic_add_fetch(ptr, val, __ATOMIC_RELAXED);
+}
+static inline int atomic_fetch_add(int *ptr, int val){
+    return __atomic_fetch_add(ptr, val, __ATOMIC_RELAXED);
+}
 #define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
 #if _OPENMP > 0
 #define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))

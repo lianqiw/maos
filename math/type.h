@@ -93,7 +93,7 @@ typedef struct cell{
             long nzmax;          /**<maximum number of entries */		\
             spint *restrict pp;  /**<col indices (size nzmax)  */       \
             spint *restrict pi;  /**<row indices, size nzmax */		    \
-            _Atomic(int) *nref;           /**<reference counting for px, pp, pi*/\
+            int *nref;           /**<reference counting for px, pp, pi*/\
         };\
     };/*todo: padding base to the maximum size. Make sure to update python ctypes definition as well*/\
 }S
@@ -188,7 +188,7 @@ typedef struct loc_t{
             real* locy;  /**< y coordinates of each point*/
             locstat_t* stat;/**<points to column statistics*/
             map_t* map;    /**< point to the map used for identifying neihboring points.*/
-            _Atomic(int) *nref;       /**<Reference counting*/
+            int *nref;    /**<Reference counting*/
             real dx;     /**< Sampling along x*/
             real dy;     /**< Sampling along y*/
             real ht;     /**< Conjugation height of the loc grid.*/
@@ -215,7 +215,7 @@ typedef struct pts_t{
             real* origy; /**<The y origin of each subaperture*/
             locstat_t* stat;/**<padding so that we can be casted to loc_t*/
             map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
-            _Atomic(int) *nref;     /**<Reference counting*/
+            int *nref;     /**<Reference counting*/
             union{
                 real dsa;    /**<side length of subaperture*/
                 real dsax;   /**<side length of subaperture*/

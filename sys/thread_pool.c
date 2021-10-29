@@ -410,7 +410,7 @@ void thread_pool_destroy(void){
 	}
 	pthread_mutex_unlock(&pool.mutex);
 	if(!cleanup) return;//only 1 thread can do cleanup
-	//if(atomicadd(&pool.inited, -1)!=0) return;
+	//if(atomic_add_fetch(&pool.inited, -1)!=0) return;
 	thread_pool_wait_all();/*let all jobs finish. */
 	/*tell all jobs to quit. */
 	pool.quit=1;
