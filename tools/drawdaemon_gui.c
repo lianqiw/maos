@@ -594,7 +594,7 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event,
 	drawdata_t* drawdata=*drawdatawrap;
 #define DO_ZOOM 1
 #if DO_ZOOM	
-	static uint last_time=0;
+	static unsigned int last_time=0;
 	if(event->time>last_time+100){//prevent fast scroll
 		float xdiff=event->x-drawdata->centerx;
 		float ydiff=-(event->y-drawdata->centery);

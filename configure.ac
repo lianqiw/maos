@@ -22,8 +22,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 #defines host host_os host_cpu host_vendor etc
 AC_CANONICAL_HOST
-AC_CANONICAL_BUILD
-AC_CANONICAL_TARGET
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
 case "$CFLAGS" in
@@ -43,10 +41,12 @@ AC_PROG_CC([$CC])
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
+
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_DISABLE_SHARED
 AC_ENABLE_STATIC
-m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_LIBTOOL
+
 AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
 AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 
@@ -365,7 +365,6 @@ case "$host_os" in
 		AC_MSG_NOTICE([OS is none])
 	;;
     *)
-	echo host_os=$host_os
 	AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
@@ -464,7 +463,7 @@ AS_IF([test "$enable_openmp" != "no"], [
 		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
 	])
 ])
-AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1"])
+AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
 if test -z "$OPENMP_CFLAGS" ;then
     CFLAGS+=" -pthread" #enables pthreads feature and links in the library
     has_openmp=0
@@ -480,12 +479,13 @@ if test "$system" = "win" ;then
 fi
 case $host_cpu in
 	*64)
-    CFLAGS+=" -DDLONG "
-    mflag="-m64"
+    	CFLAGS+=" -DDLONG "
+    	mflag="-m64"
 	;;
 	*86)
-    CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
-    mflag="-m32"
+    	CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
+    	mflag="-m32"
+	;;
 esac
 if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
     CFLAGS+=" $mflag"
@@ -1087,15 +1087,12 @@ AC_SUBST(LDSO)
 AC_OUTPUT
 echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR
-echo host_os=$host_os
 echo BIGENDIAN=$BIGENDIAN
 echo enable_allstatic=$enable_allstatic
 
-echo CN=$CN
 echo CFLAGS=$CFLAGS
 echo CPPFLAGS=$CPPFLAGS
 echo LDFLAGS=$LDFLAGS
-echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
 echo LDEXE_FULL=$LDEXE_FULL
 if test "$gtk_ver" != "0" ;then
@@ -1115,7 +1112,9 @@ fi
 echo
 echo Compiling options:
 echo 
-echo "CC:              $CC"
+echo "host_os:         $host_os"
+echo "host_cpu:        $host_cpu"
+echo "CC:              $CN"
 echo "OpenMP:          $has_openmp"
 echo "Single:          $enable_single"
 echo "CUDA:            ${cudaver:+$cudaver (double: $cuda_double, arch: $cuarch)}${cudaver:-no}"

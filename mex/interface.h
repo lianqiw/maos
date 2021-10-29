@@ -478,7 +478,7 @@ static __attribute__((constructor)) void init(){
 	    default_handler=signal(SIGTERM, mex_signal_handler);
     }
     quitfun=mex_quitfun;
-#ifdef _OPENMP > 0
+#if _OPENMP 
     NTHREAD=1;//MAOS with openmp does not play well with matlab. 
 #endif
 }
