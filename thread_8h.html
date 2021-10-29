@@ -158,6 +158,15 @@ Macros</h2></td></tr>
 <tr class="memitem:a46cd5810acdabad3f9ac588daa499e41"><td class="memItemLeft" align="right" valign="top"><a id="a46cd5810acdabad3f9ac588daa499e41"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>UNLOCK_FFT</b>&#160;&#160;&#160;UNLOCK(<a class="el" href="thread_8h.html#a6cb5787469a53f1468e29580abc056ec">mutex_fftw</a>)</td></tr>
 <tr class="separator:a46cd5810acdabad3f9ac588daa499e41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4100682992ea19709d4e7e9f88c693ec"><td class="memItemLeft" align="right" valign="top"><a id="a4100682992ea19709d4e7e9f88c693ec"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_add_fetch</b>(ptr,  val)&#160;&#160;&#160;__atomic_add_fetch(ptr, val, __ATOMIC_RELAXED)</td></tr>
+<tr class="separator:a4100682992ea19709d4e7e9f88c693ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad30ebb56edfded6e52d088e0a5472e42"><td class="memItemLeft" align="right" valign="top"><a id="ad30ebb56edfded6e52d088e0a5472e42"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_fetch_add</b>(ptr,  val)&#160;&#160;&#160;__atomic_fetch_add(ptr, val, __ATOMIC_RELAXED)</td></tr>
+<tr class="separator:ad30ebb56edfded6e52d088e0a5472e42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6c39dbaacf6a83088d41293751277b0"><td class="memItemLeft" align="right" valign="top"><a id="aa6c39dbaacf6a83088d41293751277b0"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_compare_exchange</b>(ptr,  pexpected,  desired)&#160;&#160;&#160;__atomic_compare_exchange_n(ptr, pexpected, desired, 1, __ATOMIC_RELAXED, __ATOMIC_RELAXED)</td></tr>
+<tr class="separator:aa6c39dbaacf6a83088d41293751277b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7247c60724ec85988716ce873e3a23e4"><td class="memItemLeft" align="right" valign="top"><a id="a7247c60724ec85988716ce873e3a23e4"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>expect_level</b>(n)&#160;&#160;&#160;if(omp_get_level()!=n) dbg(&quot;omp_get_level=%d, want %d\n&quot;, omp_get_level(), n)</td></tr>
 <tr class="separator:a7247c60724ec85988716ce873e3a23e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
