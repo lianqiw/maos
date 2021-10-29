@@ -157,7 +157,7 @@ public:
 		return nref?nref[0]:0;
 	}
 	void deinit(){
-		if(nref&&!atomic_add_fetch(nref, -1)){
+		if(nref&&!atomic_sub_fetch(nref, 1)){
 			delete[] p0;
 			myfree(nref);
 		}
@@ -541,7 +541,7 @@ public:
 		deinit();
 	}
 	void deinit(){
-		if(nref&&!atomic_add_fetch(nref, -1)){
+		if(nref&&!atomic_sub_fetch(nref, 1)){
 #if __CUDACC_VER_MAJOR__ >= 10	
 			cusparseDestroySpMat(desc);
 #endif

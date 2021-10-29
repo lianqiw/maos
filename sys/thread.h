@@ -214,9 +214,12 @@ void thread_prep(thread_t *thd, long start, long end, long nthread,
 */
 int thread_new(thread_fun fun, void* arg);
 void thread_block_signal();
+#define atomic_sub_fetch(ptr, val) __atomic_sub_fetch(ptr, val, __ATOMIC_RELAXED)
 #define atomic_add_fetch(ptr, val) __atomic_add_fetch(ptr, val, __ATOMIC_RELAXED)
 #define atomic_fetch_add(ptr, val) __atomic_fetch_add(ptr, val, __ATOMIC_RELAXED)
 #define atomic_compare_exchange(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 1, __ATOMIC_RELAXED, __ATOMIC_RELAXED)
+#define atomic_load(ptr) __atomic_load_n(ptr, __ATOMIC_RELAXED)
+
 #define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
 #if _OPENMP > 0
 #define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))
