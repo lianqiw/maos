@@ -3,8 +3,6 @@ var searchData=
   ['thread_5fblock_5fsignal',['thread_block_signal',['../thread_8h.html#abcf2784ffc1cb49a293c75cdfe6d64e7',1,'thread.c']]],
   ['thread_5fnew',['thread_new',['../thread_8h.html#a026c95e6b2a9ee10f90a5a254548786a',1,'thread.c']]],
   ['thread_5fpool_5fdestroy',['thread_pool_destroy',['../thread__pool_8h.html#aa378a77f3685cc18aca2affedf9e4965',1,'thread_pool.c']]],
-  ['thread_5fpool_5fdo_5fjob_5fonce',['thread_pool_do_job_once',['../thread__pool_8h.html#a0cb238954345359eeb34f909a8a784b6',1,'thread_pool.c']]],
-  ['thread_5fpool_5fdo_5furgent_5fjob',['thread_pool_do_urgent_job',['../thread__pool_8h.html#aad4da45409669c4e9ef4312c07790b2a',1,'thread_pool.c']]],
   ['thread_5fpool_5finit',['thread_pool_init',['../thread__pool_8h.html#aabe039cf94ca9a629ec8aab0be916c92',1,'thread_pool.c']]],
   ['thread_5fpool_5fqueue',['thread_pool_queue',['../thread__pool_8h.html#ac9004fd958be4499b04ef5e0ade69ab1',1,'thread_pool.c']]],
   ['thread_5fpool_5fqueue_5fmany',['thread_pool_queue_many',['../thread__pool_8h.html#a3d5e520c3c4917a9c25320733aa27337',1,'thread_pool.c']]],

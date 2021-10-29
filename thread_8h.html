@@ -129,7 +129,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>THREAD_POOL_INIT</b>(A)&#160;&#160;&#160;({<a class="el" href="thread__pool_8h.html#aabe039cf94ca9a629ec8aab0be916c92">thread_pool_init</a>(A);info(&quot;Using thread pool with %d threads\n&quot;, A);})</td></tr>
 <tr class="separator:a69ae147f21aa19b9e8528cf665c8c143"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a590f81aa4d6983735bfc128139a11395"><td class="memItemLeft" align="right" valign="top"><a id="a590f81aa4d6983735bfc128139a11395"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>THREAD_YIELD</b>&#160;&#160;&#160;<a class="el" href="thread__pool_8h.html#a0cb238954345359eeb34f909a8a784b6">thread_pool_do_job_once</a>()</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>THREAD_YIELD</b>&#160;&#160;&#160;thread_pool_do_job_once()</td></tr>
 <tr class="separator:a590f81aa4d6983735bfc128139a11395"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a662929086396591a2ce1ad15f451c4e7"><td class="memItemLeft" align="right" valign="top"><a id="a662929086396591a2ce1ad15f451c4e7"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>LOCK</b>(A)&#160;&#160;&#160;pthread_mutex_lock(&amp;A)</td></tr>
@@ -158,6 +158,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a46cd5810acdabad3f9ac588daa499e41"><td class="memItemLeft" align="right" valign="top"><a id="a46cd5810acdabad3f9ac588daa499e41"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>UNLOCK_FFT</b>&#160;&#160;&#160;UNLOCK(<a class="el" href="thread_8h.html#a6cb5787469a53f1468e29580abc056ec">mutex_fftw</a>)</td></tr>
 <tr class="separator:a46cd5810acdabad3f9ac588daa499e41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe723d15dd141fdf18b9aec14d48dc86"><td class="memItemLeft" align="right" valign="top"><a id="abe723d15dd141fdf18b9aec14d48dc86"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_sub_fetch</b>(ptr,  val)&#160;&#160;&#160;__atomic_sub_fetch(ptr, val, __ATOMIC_RELAXED)</td></tr>
+<tr class="separator:abe723d15dd141fdf18b9aec14d48dc86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4100682992ea19709d4e7e9f88c693ec"><td class="memItemLeft" align="right" valign="top"><a id="a4100682992ea19709d4e7e9f88c693ec"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_add_fetch</b>(ptr,  val)&#160;&#160;&#160;__atomic_add_fetch(ptr, val, __ATOMIC_RELAXED)</td></tr>
 <tr class="separator:a4100682992ea19709d4e7e9f88c693ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -167,6 +170,9 @@ Macros</h2></td></tr>
 <tr class="memitem:aa6c39dbaacf6a83088d41293751277b0"><td class="memItemLeft" align="right" valign="top"><a id="aa6c39dbaacf6a83088d41293751277b0"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_compare_exchange</b>(ptr,  pexpected,  desired)&#160;&#160;&#160;__atomic_compare_exchange_n(ptr, pexpected, desired, 1, __ATOMIC_RELAXED, __ATOMIC_RELAXED)</td></tr>
 <tr class="separator:aa6c39dbaacf6a83088d41293751277b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc1b422f50e81011bf8ce86885540d8d"><td class="memItemLeft" align="right" valign="top"><a id="acc1b422f50e81011bf8ce86885540d8d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_load</b>(ptr)&#160;&#160;&#160;__atomic_load_n(ptr, __ATOMIC_RELAXED)</td></tr>
+<tr class="separator:acc1b422f50e81011bf8ce86885540d8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7247c60724ec85988716ce873e3a23e4"><td class="memItemLeft" align="right" valign="top"><a id="a7247c60724ec85988716ce873e3a23e4"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>expect_level</b>(n)&#160;&#160;&#160;if(omp_get_level()!=n) dbg(&quot;omp_get_level=%d, want %d\n&quot;, omp_get_level(), n)</td></tr>
 <tr class="separator:a7247c60724ec85988716ce873e3a23e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
