@@ -375,8 +375,8 @@ static int get_drawdaemon(){
 			close(sock);
 			sock=-1;
 		}else{
+			dbg("received socket=%d is ok.\n", sock);
 			break;
-			dbg("received socket=%d.\n", sock);
 		}
 	}
 	if(sock==-1){
@@ -397,8 +397,8 @@ static int get_drawdaemon(){
 				}
 			}
 		} else{//no display is available. use scheduler to launch drawdaemon
-			dbg("launch using scheduler\n");
 			scheduler_socket(-1, &sock, 0);
+			dbg("launch using scheduler: sock=%d\n", sock);
 		}
 	}
 

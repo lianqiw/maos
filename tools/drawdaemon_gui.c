@@ -35,7 +35,7 @@
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
 #define MAX_ZOOM 10000
-#define MIN_ZOOM 0.01
+#define MIN_ZOOM 1
 static GSList* windows=NULL;
 static int iwindow=0;
 static GtkWidget* curwindow=NULL;
@@ -455,11 +455,11 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	//gtk_button_set_always_show_image(GTK_BUTTON(close_btn), TRUE);//>=gtk3
 #endif	
 	gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
-
+	gtk_image_set_pixel_size(GTK_IMAGE(image), 10);//works
 #if GTK_MAJOR_VERSION<3
-	gtk_widget_modify_style(close_btn, btn_rcstyle);
-	//gtk_widget_set_size_request(close_btn, 20, 20);
-	//gtk_container_set_border_width(GTK_CONTAINER(close_btn), 0);
+	gtk_widget_modify_style(close_btn, btn_rcstyle);//helps a tiny bit
+	//gtk_widget_set_size_request(close_btn, 24, 24);//just crops faceplate. does not reduce icon.
+	//gtk_container_set_border_width(GTK_CONTAINER(close_btn), 0);//useless
 #endif
 	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page_btn), drawdatawrap);
 	box_append(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
@@ -552,7 +552,6 @@ static gboolean motion_notify(GtkWidget* widget, GdkEventMotion* event,
 	return FALSE;
 }
 
-
 static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 	float old_zoomx=drawdata->zoomx;
 	float old_zoomy=drawdata->zoomy;
@@ -568,14 +567,16 @@ static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 		drawdata->offx=0;
 		drawdata->offy=0;
 	}
-	if(drawdata->zoomx<MIN_ZOOM)
+	if(drawdata->zoomx<MIN_ZOOM){
 		drawdata->zoomx=MIN_ZOOM;
-	else if(drawdata->zoomx>MAX_ZOOM){
+		drawdata->offx=0;
+	}else if(drawdata->zoomx>MAX_ZOOM){
 		drawdata->zoomx=MAX_ZOOM;
 	}
-	if(drawdata->zoomy<MIN_ZOOM)
+	if(drawdata->zoomy<MIN_ZOOM){
 		drawdata->zoomy=MIN_ZOOM;
-	else if(drawdata->zoomy>MAX_ZOOM){
+		drawdata->offy=0;
+	}else if(drawdata->zoomy>MAX_ZOOM){
 		drawdata->zoomy=MAX_ZOOM;
 	}
 	if(mode){/*not zero. */
@@ -591,13 +592,34 @@ static gboolean scroll_event(GtkWidget* widget, GdkEventScroll* event,
 	drawdata_t** drawdatawrap){
 	(void)widget;
 	drawdata_t* drawdata=*drawdatawrap;
-	float xdiff=event->x-drawdata->centerx;
-	float ydiff=-(event->y-drawdata->centery);
-	if(event->direction==GDK_SCROLL_UP){
-		do_zoom(drawdata, xdiff, ydiff, 1);
-	} else if(event->direction==GDK_SCROLL_DOWN){
-		do_zoom(drawdata, xdiff, ydiff, -1);
+#define DO_ZOOM 1
+#if DO_ZOOM	
+	static uint last_time=0;
+	if(event->time>last_time+100){//prevent fast scroll
+		float xdiff=event->x-drawdata->centerx;
+		float ydiff=-(event->y-drawdata->centery);
+		if(event->direction==GDK_SCROLL_UP){
+			do_zoom(drawdata, xdiff, ydiff, 1);
+		} else if(event->direction==GDK_SCROLL_DOWN){
+			do_zoom(drawdata, xdiff, ydiff, -1);
+		}
+		last_time=event->time;
 	}
+#else
+	float xscale=0;
+	float yscale=0;
+	switch(event->direction){
+	case GDK_SCROLL_UP:
+		yscale=0.01;break;
+	case GDK_SCROLL_DOWN:
+		yscale=-0.01;break;
+	case GDK_SCROLL_LEFT:
+		xscale=-0.01;break;
+	case GDK_SCROLL_RIGHT:
+		xscale=0.01;break;
+	}
+	do_move(drawdata, drawdata->widthim*xscale, drawdata->heightim*yscale);
+#endif
 	return FALSE;
 }
 static gboolean focus_in_handler(GtkWidget* widget, GdkEvent* event, drawdata_t** drawdatawrap){
@@ -1698,7 +1720,11 @@ GtkWidget* create_window(GtkWidget* window){
 	GtkWidget* fontsel=gtk_font_button_new_with_font("Sans 12");
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
 	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL);
+#if GTK_MAJOR_VERSION<3	
+	new_tool(toolbar, NULL, 1, "media-playback-start-ltr", G_CALLBACK(togglebutton_play), NULL);
+#else
 	new_tool(toolbar, NULL, 1, "media-playback-start", G_CALLBACK(togglebutton_play), NULL);
+#endif
 	new_tool(toolbar, NULL, 1, "media-playback-pause", G_CALLBACK(togglebutton_pause), NULL);
 	new_tool(toolbar, NULL, 0, "media-playback-stop", G_CALLBACK(toolbutton_stop), NULL);
 	

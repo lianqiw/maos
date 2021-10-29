@@ -760,11 +760,11 @@ static int respond(int sock){
 		if(pid>0){//receive sock from draw()
 			int sock_save;
 			if(streadfd(sock, &sock_save)){
-				warning_time("(%d) receive socket failed\n", sock);
+				warning_time("(%d) receive socket for saving failed\n", sock);
 				sock_save=-1;
 				ret=-1;
 			} else{
-				dbg_time("(%d) received socket %d\n", sock, sock_save);
+				dbg_time("(%d) received socket %d for saving.\n", sock, sock_save);
 				socket_save(sock_save, pid);
 			}
 		} else if(pid<0){//send existing sock to draw()
@@ -776,7 +776,7 @@ static int respond(int sock){
 
 			//cannot pass -1 as sock, so return a flag first. sock can be zero.
 			if(stwriteint(sock, sock_save>-1?0:-1)){
-				warning_time("(%d) Unable to talk to draw\n", sock);
+				warning_time("(%d) send socket status failed.\n", sock);
 				ret=-1;
 			}
 			if(sock_save>-1){
@@ -803,7 +803,7 @@ static int respond(int sock){
 				//there is no available drawdameon. Need to create one by sending request to monitor.
 				warning_time("(%d) there is no monitor available to start drawdaemon\n", sock);
 				if(stwriteint(sock, -1)){
-					warning_time("(%d) Failed to respond to draw.\n", sock);
+					warning_time("(%d) failed to respond to draw.\n", sock);
 				}
 			}
 		}
@@ -820,16 +820,17 @@ static int respond(int sock){
 	}
 	break;
 	case CMD_DISPLAY://12: called by monitor enable connection of drawdaemon to draw().*/
-		dbg_time("(%d) CMD_DISPLAY received with pid=%d\n", sock, pid);
+		dbg_time("(%d) CMD_DISPLAY for pid=%d\n", sock, pid);
 		if(pid<=0){//this is for pending scheduler_recv_socket
 			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
 				||stwritefd(scheduler_recv_wait, sock)){
+				int sock2=dup(sock);
 				if(scheduler_recv_wait!=-1){
-					dbg_time("(%d) Failed to pass sock to draw at %d, save socket for future\n", sock, scheduler_recv_wait);
+					dbg_time("(%d) Failed to pass sock to draw at %d, save socket as %d for future\n", sock, scheduler_recv_wait, sock2);
 				}else{
-					dbg_time("(%d) No pending socket request, save socket for future\n", sock);
+					dbg_time("(%d) No pending socket request, save socket as %d for future\n", sock, sock2);
 				}
-				socket_save(dup(sock), abs(pid));//duplicate socket and keep it 
+				socket_save(sock2, abs(pid));//duplicate socket and keep it 
 				ret=-1;//prevent scheduler from listening to this socket.
 			} else{
 				dbg_time("(%d) passed sock to draw at %d\n", sock, scheduler_recv_wait);
