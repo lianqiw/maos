@@ -14,7 +14,7 @@ var searchData=
   ['sho_5ft',['sho_t',['../servo_8h.html#structsho__t',1,'']]],
   ['sim_5fcfg_5ft',['sim_cfg_t',['../parms_8h.html#structsim__cfg__t',1,'']]],
   ['sim_5fsave_5ft',['sim_save_t',['../maos_2types_8h.html#structsim__save__t',1,'']]],
-  ['sim_5ft',['sim_t',['../structsim__t.html',1,'']]],
+  ['sim_5ft',['sim_t',['../maos_2types_8h.html#structsim__t',1,'']]],
   ['smat',['smat',['../type_8h.html#structsmat',1,'']]],
   ['smat_2e_5f_5funnamed_5f_5f',['smat.__unnamed__',['../type_8h.html#unionsmat_8____unnamed____',1,'']]],
   ['smat_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f',['smat.__unnamed__.__unnamed__',['../type_8h.html#structsmat_8____unnamed_____8____unnamed____',1,'']]],

@@ -207,7 +207,7 @@ var annotated_dup =
     [ "sho_t", "servo_8h.html#structsho__t", "servo_8h_structsho__t" ],
     [ "sim_cfg_t", "parms_8h.html#structsim__cfg__t", "parms_8h_structsim__cfg__t" ],
     [ "sim_save_t", "maos_2types_8h.html#structsim__save__t", "maos_2types_8h_structsim__save__t" ],
-    [ "sim_t", "structsim__t.html", "structsim__t" ],
+    [ "sim_t", "maos_2types_8h.html#structsim__t", "maos_2types_8h_structsim__t" ],
     [ "smat", "type_8h.html#structsmat", null ],
     [ "smat.__unnamed__", "type_8h.html#unionsmat_8____unnamed____", "type_8h_unionsmat_8____unnamed____" ],
     [ "smat.__unnamed__.__unnamed__", "type_8h.html#structsmat_8____unnamed_____8____unnamed____", "type_8h_structsmat_8____unnamed_____8____unnamed____" ],
