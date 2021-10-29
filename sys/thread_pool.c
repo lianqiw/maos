@@ -58,23 +58,6 @@
 #include "thread_pool.h"
 #include "process.h"
 
-#define USE_SPIN_LOCK 1
-#if USE_SPIN_LOCK == 1 && !defined(__INTEL_COMPILER)
-/*Important to be volatile, otherwise lockes up in Sandy Bridge CPUs */
-#define LOCK_T volatile int 
-#define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)
-#define SPIN_UNLOCK(i) __sync_lock_release(&i)
-#define LOCK_DO(A) SPIN_LOCK(A)
-#define LOCK_UN(A) SPIN_UNLOCK(A)
-#define LOCK_INIT(A) A=0
-#define LOCK_DESTROY(A)
-#else
-#define LOCK_T pthread_mutex_t
-#define LOCK_DO(A) pthread_mutex_lock(&A)
-#define LOCK_UN(A) pthread_mutex_unlock(&A)
-#define LOCK_INIT(A) pthread_mutex_init(&A, NULL)
-#define LOCK_DESTROY(A) pthread_mutex_destroy(&A)
-#endif
 /**
  * struct of jobs for the linked first in first out (fifo) list.
  */
@@ -90,7 +73,6 @@ typedef struct jobs_t{
  */
 struct thread_pool_t{
 	pthread_mutex_t mutex; /**<mutex to protect jobshead and jobstail.*/
-	LOCK_T mutex_pool;     /**<mutex to jobpool which saves unused jobs_t.*/
 	pthread_cond_t jobwait;/**<there are jobs jobwait.*/
 	pthread_cond_t idle;   /**<all threads are idle*/
 	pthread_cond_t exited; /**<all threads have exited*/
@@ -98,7 +80,6 @@ struct thread_pool_t{
 	pthread_attr_t attr;   /**<The attribution of newly created threads.*/
 	jobs_t* jobshead;      /**<Start of the fifo list of jobwait jobs*/
 	jobs_t* jobstail;      /**<End of the fifo list of jobwait jobs*/
-	jobs_t* jobspool;      /**<Save the allocated but unused/idle job data here*/
 	int icur; /**<the top of the threads stack.*/
 	int nmax; /**<the maximum number of threads. constant.*/
 	int ncur; /**<the maximum number of live threads, excluding the master thread.*/
@@ -107,7 +88,22 @@ struct thread_pool_t{
 	int inited;/**<Whether the thread pool has been inited*/
 };
 static thread_pool_t pool;/*The default pool; */
-
+static jobs_t* jobspool=NULL;//saving unused jobs_t
+static jobs_t* jobspool_get(){/*get available jobs_t from the pool*/
+	jobs_t* job=jobspool;
+	while(!atomic_compare_exchange(&jobspool, &job, jobspool?jobspool->next:NULL));
+	return job;
+}
+static void jobspool_put(jobs_t *job){/*store unused jobs_t to the pool*/
+	job->next=jobspool;
+	while(!atomic_compare_exchange(&jobspool, &job->next, job));
+}
+static void jobspool_free(){
+	jobs_t* job=0;
+	while((job=jobspool_get())){
+		free(job);
+	}
+}
 /**
  * Do a job. The mutex should have already been locked when calling this
  * routine. It will take a job from the head of the job queue, release the mutex,
@@ -129,11 +125,8 @@ static inline void do_job(void){
 	  their job to finish*/
 		pthread_cond_broadcast(&pool.jobdone);
 	}
-	/*return job to the pool instead of freeing. */
-	LOCK_DO(pool.mutex_pool);
-	job->next=pool.jobspool;
-	pool.jobspool=job;
-	LOCK_UN(pool.mutex_pool);
+	/*return job to the pool instead of freeing, using lock free approach. */
+	jobspool_put(job);
 }
 /**
    In the middle of an active thread, we can use do_urgent_job() periodically to
@@ -214,7 +207,7 @@ void thread_pool_init(int nthread){
 		memset(&pool, 0, sizeof(thread_pool_t));
 		pool.inited=1;
 		pthread_mutex_init(&pool.mutex, NULL);
-		LOCK_INIT(pool.mutex_pool);
+		//LOCK_INIT(pool.mutex_pool);
 		pthread_cond_init(&pool.idle, NULL);
 		pthread_cond_init(&pool.jobwait, NULL);
 		pthread_cond_init(&pool.jobdone, NULL);
@@ -222,7 +215,6 @@ void thread_pool_init(int nthread){
 		pthread_attr_init(&pool.attr);
 		pthread_attr_setdetachstate(&pool.attr, PTHREAD_CREATE_DETACHED);
 		pool.nidle=0;
-		pool.jobspool=NULL;
 		pool.jobshead=NULL;
 		pool.jobstail=NULL;
 		pool.ncur=1;/*counting the master thread. */
@@ -254,13 +246,8 @@ void thread_pool_init(int nthread){
  */
 void thread_pool_queue(long* group, thread_wrapfun fun, void* arg, int urgent){
 	/*Add the job to the head if urgent>0, otherwise to the tail. */
-	jobs_t* job=0;
-	LOCK_DO(pool.mutex_pool);
-	if(pool.jobspool){/*take it from the pool. */
-		job=pool.jobspool;
-		pool.jobspool=pool.jobspool->next;
-	}
-	LOCK_UN(pool.mutex_pool);
+	/*take it from the pool using lock free approach. */
+	jobs_t*	job=jobspool_get();
 	if(!job){
 		job=(jobs_t*)malloc(sizeof(jobs_t));
 	}
@@ -303,13 +290,7 @@ void thread_pool_queue_many(long* group, thread_wrapfun fun, void* arg, int njob
 	jobs_t* tail=NULL;
 	int njob2=0;
 	for(int ijob=0; ijob<njob; ijob++){
-		jobs_t* job=NULL;
-		LOCK_DO(pool.mutex_pool);
-		if(pool.jobspool){
-			job=pool.jobspool;
-			pool.jobspool=pool.jobspool->next;
-		}
-		LOCK_UN(pool.mutex_pool);
+		jobs_t *job=jobspool_get();
 		if(!job){
 			job=(jobs_t*)malloc(sizeof(jobs_t));
 		}
@@ -321,11 +302,8 @@ void thread_pool_queue_many(long* group, thread_wrapfun fun, void* arg, int njob
 			job->fun=arg2[ijob].fun;
 			job->arg=arg2+ijob;
 			if(!job->fun||((thread_t*)job->arg)->end==((thread_t*)job->arg)->start){
-			/*empty job. don't queue it. */
-				LOCK_DO(pool.mutex_pool);
-				job->next=pool.jobspool;
-				pool.jobspool=job;
-				LOCK_UN(pool.mutex_pool);
+				/*empty job. don't queue it. */
+				jobspool_put(job);
 				continue;
 			}
 		}
@@ -402,15 +380,7 @@ void thread_pool_wait_all(void){
  *   Exit all threads and free thread pool.
  */
 void thread_pool_destroy(void){
-	int cleanup=0;
-	pthread_mutex_lock(&pool.mutex);
-	if(pool.inited){
-		pool.inited=0;
-		cleanup=1;
-	}
-	pthread_mutex_unlock(&pool.mutex);
-	if(!cleanup) return;//only 1 thread can do cleanup
-	//if(atomic_add_fetch(&pool.inited, -1)!=0) return;
+	if(atomic_add_fetch(&pool.inited, -1)!=0) return;
 	thread_pool_wait_all();/*let all jobs finish. */
 	/*tell all jobs to quit. */
 	pool.quit=1;
@@ -420,17 +390,11 @@ void thread_pool_destroy(void){
 		pthread_cond_wait(&pool.exited, &pool.mutex);
 	}
 	pthread_mutex_unlock(&pool.mutex);
-	LOCK_DO(pool.mutex_pool);
-	for(jobs_t* job=pool.jobspool; job; job=pool.jobspool){
-		pool.jobspool=job->next;
-		free(job);
-	}
-	LOCK_UN(pool.mutex_pool);
 	pthread_mutex_destroy(&pool.mutex);
-	LOCK_DESTROY(pool.mutex_pool);
 	pthread_cond_destroy(&pool.idle);
 	pthread_cond_destroy(&pool.jobwait);
 	pthread_cond_destroy(&pool.jobdone);
 	pthread_cond_destroy(&pool.exited);
 	pthread_attr_destroy(&pool.attr);
+	jobspool_free();
 }
