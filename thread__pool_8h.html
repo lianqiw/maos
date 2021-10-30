@@ -109,18 +109,12 @@ Functions</h2></td></tr>
 <tr class="separator:ac9004fd958be4499b04ef5e0ade69ab1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d5e520c3c4917a9c25320733aa27337"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#a3d5e520c3c4917a9c25320733aa27337">thread_pool_queue_many</a> (<a class="el" href="classlong.html">long</a> *group, thread_wrapfun fun, void *arg, int njob, int urgent)</td></tr>
 <tr class="separator:a3d5e520c3c4917a9c25320733aa27337"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79b566858a2ae70eccaed225a60474b1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#a79b566858a2ae70eccaed225a60474b1">thread_pool_wait</a> (<a class="el" href="classlong.html">long</a> *count)</td></tr>
-<tr class="separator:a79b566858a2ae70eccaed225a60474b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a813fe2e9c1993ca832ca6e524686e869"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#a813fe2e9c1993ca832ca6e524686e869">thread_pool_wait</a> (<a class="el" href="classlong.html">long</a> *count, int urgent)</td></tr>
+<tr class="separator:a813fe2e9c1993ca832ca6e524686e869"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac930193c7a790038045e36ec091f2a3c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#ac930193c7a790038045e36ec091f2a3c">thread_pool_wait_all</a> (void)</td></tr>
 <tr class="separator:ac930193c7a790038045e36ec091f2a3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa378a77f3685cc18aca2affedf9e4965"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#aa378a77f3685cc18aca2affedf9e4965">thread_pool_destroy</a> (void)</td></tr>
 <tr class="separator:aa378a77f3685cc18aca2affedf9e4965"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad4da45409669c4e9ef4312c07790b2a"><td class="memItemLeft" align="right" valign="top"><a id="aad4da45409669c4e9ef4312c07790b2a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>thread_pool_do_urgent_job</b> (void)</td></tr>
-<tr class="separator:aad4da45409669c4e9ef4312c07790b2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0cb238954345359eeb34f909a8a784b6"><td class="memItemLeft" align="right" valign="top"><a id="a0cb238954345359eeb34f909a8a784b6"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>thread_pool_do_job_once</b> (void)</td></tr>
-<tr class="separator:a0cb238954345359eeb34f909a8a784b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains implementation of a thread pool. </p>
@@ -233,8 +227,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>thread_pool_do_job_onc
 
 </div>
 </div>
-<a id="a79b566858a2ae70eccaed225a60474b1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a79b566858a2ae70eccaed225a60474b1">&#9670;&nbsp;</a></span>thread_pool_wait()</h2>
+<a id="a813fe2e9c1993ca832ca6e524686e869"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a813fe2e9c1993ca832ca6e524686e869">&#9670;&nbsp;</a></span>thread_pool_wait()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -243,8 +237,18 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>thread_pool_do_job_onc
           <td class="memname">void thread_pool_wait </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a> *&#160;</td>
-          <td class="paramname"><em>count</em></td><td>)</td>
+          <td class="paramname"><em>group</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>urgent</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
