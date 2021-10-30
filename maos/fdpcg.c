@@ -585,16 +585,20 @@ typedef struct{
 	fdpcg_t* fdpcg;
 	const dcell* xin;
 	dcell* xout;
+	int ips;
+	int nps;
+	int ib;
+	int nb;
 }fdpcg_info_t;
 /**
    Copy x vector and do FFT on each layer
 */
-static void fdpcg_fft(thread_t* info){
-	fdpcg_info_t* data=(fdpcg_info_t*)info->data;
+static void fdpcg_fft(fdpcg_info_t* data){
 	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhati=data->xhati;
 	const dcell* xin=data->xin;
-	for(int ips=info->start; ips<info->end; ips++){
+	int ips;
+	while((ips=atomic_fetch_add(&data->ips, 1))<data->nps){
 		if(fdpcg->square){
 			for(long i=0; i<P(xhati,ips)->nx*P(xhati,ips)->ny; i++){
 				P(P(xhati,ips),i)=P(P(xin,ips),i);
@@ -618,11 +622,11 @@ static void fdpcg_fft(thread_t* info){
 /**
    Multiply each block in pthreads
  */
-static void fdpcg_mulblock(thread_t* info){
-	fdpcg_info_t* data=(fdpcg_info_t*)info->data;
+static void fdpcg_mulblock(fdpcg_info_t* data){
 	fdpcg_t* fdpcg=data->fdpcg;
 	long bs=P(fdpcg->Mbinv,0)->nx;
-	for(int ib=info->start; ib<info->end; ib++){
+	int ib;
+	while((ib=atomic_fetch_add(&data->ib, 1))<data->nb){
 		cmulvec(&P(data->xhat,ib*bs), P(fdpcg->Mbinv,ib), &P(data->xhat2,ib*bs), 1);
 	}
 }
@@ -630,12 +634,12 @@ static void fdpcg_mulblock(thread_t* info){
 /**
    Inverse FFT for each block. Put result in xout, replace content, do not accumulate.
  */
-static void fdpcg_ifft(thread_t* info){
-	fdpcg_info_t* data=(fdpcg_info_t*)info->data;
+static void fdpcg_ifft(fdpcg_info_t* data){
 	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhat2i=data->xhat2i;
 	dcell* xout=data->xout;
-	for(int ips=info->start; ips<info->end; ips++){
+	int ips;
+	while((ips=atomic_fetch_add(&data->ips, 1))<data->nps){
 		if(fdpcg->scale){
 			cfft2s(P(xhat2i,ips), 1);
 		} else{
@@ -665,6 +669,8 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	}
 	const long nps=recon->npsr;
 	fdpcg_t* fdpcg=recon->fdpcg;
+	long bs=recon->fdpcg->bs;
+	long nb=recon->fdpcg->nxtot/bs;
 	//long nxtot=fdpcg->nxtot;
 	ccell* xhati=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
 	ccell* xhat2i=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
@@ -682,20 +688,20 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 		*xout=dcellnew2(xin);
 	}
 	//info.xout=*xout;
-	fdpcg_info_t data={xhat, xhat2, xhati, xhat2i, recon->fdpcg, xin, *xout};
+	fdpcg_info_t data={xhat, xhat2, xhati, xhat2i, recon->fdpcg, xin, *xout, 0, nps, 0, nb};
 	int NTH=recon->nthread;
-	thread_t info_fft[NTH], info_ifft[NTH], info_mulblock[NTH];
-	thread_prep(info_fft, 0, nps, NTH, fdpcg_fft, &data);
-	thread_prep(info_ifft, 0, nps, NTH, fdpcg_ifft, &data);
-	long bs=recon->fdpcg->bs;
-	long nb=recon->fdpcg->nxtot/bs;
-	thread_prep(info_mulblock, 0, nb, NTH, fdpcg_mulblock, &data);
+	
+	//thread_prep(info_fft, 0, nps, NTH, fdpcg_fft, &data);
+	//thread_prep(info_ifft, 0, nps, NTH, fdpcg_ifft, &data);
+
+	//thread_prep(info_mulblock, 0, nb, NTH, fdpcg_mulblock, &data);
 	/*apply forward FFT */
 #define DBG_FD 0
 #if DBG_FD
 	writebin(xin, "fdc_xin");
 #endif
-	CALL_THREAD(info_fft, 1);
+	data.ips=0;
+	CALL((thread_wrapfun)fdpcg_fft, &data, NTH, 1);
 #if DBG_FD
 	writebin(xhati, "fdc_fft");
 #endif
@@ -706,14 +712,18 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	/*permute xhat and put into xhat2 */
 	cvecperm(xhat2, xhat, P(recon->fdpcg->perm));
 	czero(xhat);
-	CALL_THREAD(info_mulblock, 1);
+	data.ib=0;
+	CALL((thread_wrapfun)fdpcg_mulblock, &data, NTH, 1);
+	//CALL_THREAD(info_mulblock, 1);
 	cvecpermi(xhat2, xhat, P(fdpcg->perm));
 #if DBG_FD
 	writebin(xhat2i, "fdc_mul");
 #endif
 #endif
 	/*Apply inverse FFT */
-	CALL_THREAD(info_ifft, 1);
+	data.ips=0;
+	CALL((thread_wrapfun)fdpcg_ifft, &data, NTH, 1);
+	//CALL_THREAD(info_ifft, 1);
 #if DBG_FD
 	writebin(*xout, "fdc_xout");
 #endif

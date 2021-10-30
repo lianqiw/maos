@@ -26,9 +26,7 @@ typedef struct thread_pool_t thread_pool_t;
 void thread_pool_init(int nthread);
 void thread_pool_queue(long *count, thread_wrapfun fun, void *arg, int urgent);
 void thread_pool_queue_many(long *group, thread_wrapfun fun, void *arg, int njob, int urgent);
-void thread_pool_wait(long *count);
+void thread_pool_wait(long *count, int urgent);
 void thread_pool_wait_all(void);
 void thread_pool_destroy(void);
-void thread_pool_do_urgent_job(void);
-int thread_pool_do_job_once(void);
 #endif

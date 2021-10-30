@@ -738,7 +738,7 @@ static void init_simu_evl(sim_t* simu){
 	simu->evl_prop_dm=mycalloc(nevl*parms->ndm, thread_t*);
 	simu->evl_propdata_dm=mycalloc(nevl*parms->ndm, propdata_t);
 	for(int ievl=0; ievl<nevl; ievl++){
-		const int nthread=1;
+		int nthread=4;
 		int tot;
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			const int ind=ievl+nevl*ips;
@@ -780,7 +780,6 @@ static void init_simu_evl(sim_t* simu){
 				data->ostat=aper->locs->stat;
 				tot=aper->locs->stat->ncol;
 			}
-
 			data->phiout=(dmat*)1;/*replace later in simulation. */
 			simu->evl_prop_dm[ind]=mycalloc(nthread, thread_t);
 			thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
@@ -1008,6 +1007,7 @@ static void init_simu_wfs(sim_t* simu){
 		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 		const real hs=parms->wfs[iwfs].hs;
 		const real hc=parms->wfs[iwfs].hc;
+		int nthread=4;//NTHREAD;
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			const real ht=P(parms->atm.ht, ips);
 			propdata_t* data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
@@ -1029,7 +1029,6 @@ static void init_simu_wfs(sim_t* simu){
 				data->ptsout=powfs[ipowfs].pts;
 				tot=data->ptsout->nsa;
 			}
-			int nthread=1;//NTHREAD;
 			simu->wfs_prop_atm[iwfs+nwfs*ips]=mycalloc(nthread, thread_t);
 			thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips], 0, tot, nthread, prop, data);
 		}
@@ -1063,7 +1062,6 @@ static void init_simu_wfs(sim_t* simu){
 				data->ptsout=powfs[ipowfs].pts;
 				tot=data->ptsout->nsa;
 			}
-			int nthread=1;//NTHREAD
 			simu->wfs_prop_dm[iwfs+nwfs*idm]=mycalloc(nthread, thread_t);
 			thread_prep(simu->wfs_prop_dm[iwfs+nwfs*idm], 0, tot, nthread, prop, data);
 		}/*idm */

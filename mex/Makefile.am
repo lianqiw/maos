@@ -40,8 +40,8 @@ maos2mex.h:../scripts/maos2mex.py ../maos/parms.h ../maos/types.h ../lib/accphi.
           ../lib/mkdtf.h ../math/chol.h ../sys/scheduler.h
 	$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR) maos2mex.h
 aolib.c:../maos/parms.h ../maos/types.h ../scripts/lib2mex.py ../scripts/maos.py aolib.h
-	$(SRC_DIR)/scripts/lib2mex.py $(SRC_DIR) $(CURDIR)/aolib.c
-nodist_aolib_SOURCES=$(CURDIR)/aolib.c
+	$(SRC_DIR)/scripts/lib2mex.py $(SRC_DIR) aolib.c
+nodist_aolib_SOURCES=aolib.c
 
 CLEANFILES=aolib.c maos2mex.h
 

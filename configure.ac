@@ -188,7 +188,7 @@ AC_DEFINE_UNQUOTED(CPU_SINGLE, $enable_single, "Use single precision mode")
 
 if test x$enable_gcov = "xyes" ;then
     OPTSprof+="  -fprofile-arcs -ftest-coverage --coverage"
-    debug="yes"
+    enable_debug="yes"
 fi
 if test "$enable_release" = "yes" ;then
     enable_scheduler="no"
@@ -466,12 +466,13 @@ AS_IF([test "$enable_openmp" != "no"], [
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
 if test -z "$OPENMP_CFLAGS" ;then
     CFLAGS+=" -pthread" #enables pthreads feature and links in the library
-    has_openmp=0
+    has_openmp="no"
 else
     CFLAGS+=" $OPENMP_CFLAGS"
-    has_openmp=1
+    has_openmp="yes"
+	AC_DEFINE(HAS_OPENMP,[1],["Defined to 1 if Openmp is enabled"])
 fi
-AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_openmp],["Defined to 1 if Openmp is enabled"])
+
 
 OPTS+=" $CFLAGS_EXTRA "
 if test "$system" = "win" ;then
@@ -1115,6 +1116,7 @@ echo
 echo "host_os:         $host_os"
 echo "host_cpu:        $host_cpu"
 echo "CC:              $CN"
+echo "Debug:           $enable_debug"
 echo "OpenMP:          $has_openmp"
 echo "Single:          $enable_single"
 echo "CUDA:            ${cudaver:+$cudaver (double: $cuda_double, arch: $cuarch)}${cudaver:-no}"

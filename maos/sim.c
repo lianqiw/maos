@@ -175,24 +175,24 @@ OMPTASK_SINGLE{
 		if(!NO_EVL){
 			if(parms->gpu.evl){
 				//wait for GPU tasks to be queued before calling sync
-				WAIT(group);
+				WAIT(group, 0);
 			}
 			QUEUE(&group, (thread_wrapfun)perfevl, simu, 1, 0);
 		}
 		if(!NO_WFS){
 			if(parms->tomo.ahst_idealngs==1||(parms->gpu.wfs&&!parms->gpu.evl)){
 				/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
-				WAIT(group);
+				WAIT(group, 0);
 			}
 			QUEUE(&group, (thread_wrapfun)wfsgrad, simu, 1, 0);
 		}
 		if(!NO_RECON){
 			//wait for all tasks to finish before modifying dmreal
-			WAIT(group);
+			WAIT(group, 0);
 			shift_grad(simu);/*before filter() */
 			filter_dm(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
 		}
-		WAIT(group);
+		WAIT(group, 0);
 	} else{/*do the big loop in serial mode. */
 		if(parms->sim.closeloop){
 			if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */

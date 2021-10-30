@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -62,8 +62,8 @@
    Information about job to launch for each thread. start and end are the two indices.
 */
 typedef struct thread_t thread_t;
-typedef void *(*thread_fun)(void*);
-typedef void (*thread_wrapfun)(thread_t*);
+typedef void *(*thread_fun)(void *);
+typedef void (*thread_wrapfun)(thread_t *);
 struct thread_t{
     long start;
     long end;
@@ -77,11 +77,11 @@ long thread_id(void);
 /*
   For all the following calls, if urgent is 1, the job is queued in the front, otherwise in the end.
 
-  CALL(fun,arg,nthread,urgent) executes "nthread" instances of fun with argument arg. 
+  CALL(fun,arg,nthread,urgent) executes "nthread" instances of fun with argument arg.
   QUEUE is like CALL, but need an explicit WAIT
-  
+
   The following use thread_t to manage the index
-  QUEUE_THREAD(group, A, nthread, urgent) will queue arrays of thread_t (A) 
+  QUEUE_THREAD(group, A, nthread, urgent) will queue arrays of thread_t (A)
   CALL_THREAD(A, urgent) calls QUEUE_THREAD and waits for all to finish.
 */
 #include <pthread.h>
@@ -101,17 +101,17 @@ static inline void THREAD_POOL_INIT(int nthread){
     omp_set_num_threads(nthread);
 }
 static inline void QUEUE(long *group, thread_wrapfun fun, void *arg, int nthread, int urgent){
-    (void) group;
-    (void) urgent;
+    (void)group;
+    (void)urgent;
     for(int it=0; it<nthread; it++){
-	OMP_TASK(urgent)
-	    fun((thread_t*)arg);
+        OMP_TASK(urgent)
+            fun(arg);
     }
 }
 static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
     (void)urgent;
     OMP_TASKSYNC_START
-	QUEUE(NULL, fun, arg, nthread, urgent);
+        QUEUE(NULL, fun, arg, nthread, urgent);
     OMP_TASKSYNC_END
 }
 
@@ -121,21 +121,21 @@ static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
 #define QUEUE(group,fun,arg,nthread,urgent)	\
     (void) group; (void) urgent;		\
     for(int it=0; it<nthread; it++){		\
-	OMP_TASK(urgent)			\
-	    fun(arg);				\
+    OMP_TASK(urgent)			\
+        fun(arg);				\
     }
 */
-#define WAIT(group) DO_PRAGMA(omp taskwait)
+#define WAIT(group, urgent) DO_PRAGMA(omp taskwait)
 
 /*Turn to static inline function because nvcc concatenates _Pragma to } */
 static inline void QUEUE_THREAD(long *group, thread_t *A, int urgent){
     (void)urgent;
     (void)group;
-    for(int it=0; it<A[0].nthread; it++){		
-	if(A[it].fun){
-	    OMP_TASK(urgent)
-		A[it].fun((A+it)); 
-	}
+    for(int it=0; it<A[0].nthread; it++){
+        if(A[it].fun){
+            OMP_TASK(urgent)
+                A[it].fun((A+it));
+        }
     }
 }
 
@@ -143,15 +143,15 @@ static inline void CALL_THREAD(thread_t *A, int urgent){
     /*Split CALL_THREAD_DO to a separate routing to avoid recursiving calling
      * CALL_THREAD. This is to work about a bug in icc that always return 0 for
      * omp_in_parallel when nthread==1*/
-    (void) urgent;
+    (void)urgent;
     if(!OMP_IN_PARALLEL){
-	//Wraps call in parallel region. No need to sync here.
-	OMPTASK_SINGLE
-	    QUEUE_THREAD(NULL, A, urgent);
-    }else{
-	OMP_TASKSYNC_START
-	    QUEUE_THREAD(NULL, A, urgent);
-	OMP_TASKSYNC_END
+    //Wraps call in parallel region. No need to sync here.
+        OMPTASK_SINGLE
+            QUEUE_THREAD(NULL, A, urgent);
+    } else{
+        OMP_TASKSYNC_START
+            QUEUE_THREAD(NULL, A, urgent);
+        OMP_TASKSYNC_END
     }
 }
 
@@ -163,30 +163,30 @@ static inline void CALL_THREAD(thread_t *A, int urgent){
 */
 #define QUEUE thread_pool_queue_many
 static inline void  QUEUE_THREAD(long *group, thread_t *A, int urgent){
-    thread_pool_queue_many(group,NULL,A,A[0].nthread,urgent);
+    thread_pool_queue_many(group, NULL, A, A[0].nthread, urgent);
 }
-#define WAIT(group) thread_pool_wait(&group);
+#define WAIT(group, urgent) thread_pool_wait(&group, urgent);
 /**
    Queue jobs to a temp group, Then wait for it to complete.
 */
 static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
-    if(nthread>1){							
-	long group=0; 
-	QUEUE(&group, fun, arg, nthread, urgent); 
-	WAIT(group); 
-    }else{								
-	fun((thread_t*)arg);							
+    if(nthread>1){
+        long group=0;
+        QUEUE(&group, fun, arg, nthread, urgent);
+        thread_pool_wait(&group, urgent);
+    } else{
+        fun((thread_t *)arg);
     }
 }
 
 
 static inline void  CALL_THREAD(thread_t *A, int urgent){
-    if((A[0].nthread)>1){ 
-	long group=0; 
-	QUEUE_THREAD(&group,A,urgent);
-	WAIT(group); 
-    }else{ 
-	(A)->fun(A); 
+    if((A[0].nthread)>1){
+        long group=0;
+        QUEUE_THREAD(&group, A, urgent);
+        thread_pool_wait(&group, urgent);
+    } else{
+        (A)->fun(A);
     }
 }
 
@@ -206,17 +206,17 @@ extern pthread_mutex_t mutex_fftw;
 #define LOCK_FFT LOCK(mutex_fftw)
 #define UNLOCK_FFT UNLOCK(mutex_fftw)
 
-void thread_prep(thread_t *thd, long start, long end, long nthread, 
-		 thread_wrapfun fun, void *data);
+void thread_prep(thread_t *thd, long start, long end, long nthread, thread_wrapfun fun, void *data);
 
 /**
    Create a new thread and forget.
 */
-int thread_new(thread_fun fun, void* arg);
+int thread_new(thread_fun fun, void *arg);
 void thread_block_signal();
 #define atomic_sub_fetch(ptr, val) __atomic_sub_fetch(ptr, val, __ATOMIC_RELAXED)
 #define atomic_add_fetch(ptr, val) __atomic_add_fetch(ptr, val, __ATOMIC_RELAXED)
 #define atomic_fetch_add(ptr, val) __atomic_fetch_add(ptr, val, __ATOMIC_RELAXED)
+#define atomic_fetch_sub(ptr, val) __atomic_fetch_sub(ptr, val, __ATOMIC_RELAXED)
 #define atomic_compare_exchange(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 1, __ATOMIC_RELAXED, __ATOMIC_RELAXED)
 #define atomic_load(ptr) __atomic_load_n(ptr, __ATOMIC_RELAXED)
 

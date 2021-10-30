@@ -49,11 +49,8 @@ int thread_new(thread_fun fun, void* arg){
 */
 void thread_prep(thread_t* thd, long start, long end, long nthread,
 	thread_wrapfun fun, void* data){
-	if(nthread==0||end<=start) return;
+	if(nthread==0) return;
 	long nt=(end-start+nthread-1)/nthread;
-	if(nt==0){
-		error("nt=%ld\n", nt);
-	}
 	int skip=0;
 	for(long ithread=0; ithread<nthread; ithread++){
 		thd[ithread].ithread=ithread;

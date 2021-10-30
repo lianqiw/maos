@@ -252,7 +252,7 @@ void genpistat(const PARMS_S* parms, POWFS_S* powfs){
 	/*dbg("count=%ld, data->ncase=%ld\n",count,data->ncase); */
 	data->ncase=count;
 	data->cases=myrealloc(data->cases, data->ncase, long4);
-	CALL((thread_wrapfun)calc_pistat, (void*)data, parms->skyc.nthread, 0);
+	CALL((thread_wrapfun)calc_pistat, data, parms->skyc.nthread, 0);
 	info("done\n");
 
 	dcellfree(data->unwrap);

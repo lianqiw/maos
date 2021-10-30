@@ -192,7 +192,7 @@ void perfevl_ievl(thread_t* info){
 					simu->evl_propdata_atm[ind].displacex1=-P(simu->atm,ips)->vx*isim*dt;
 					simu->evl_propdata_atm[ind].displacey1=-P(simu->atm,ips)->vy*isim*dt;
 					simu->evl_propdata_atm[ind].alpha=atmscale;
-					CALL_THREAD(simu->evl_prop_atm[ind], 0);
+					CALL_THREAD(simu->evl_prop_atm[ind], 1);
 				}
 			}
 		}
@@ -290,7 +290,7 @@ void perfevl_ievl(thread_t* info){
 				for(int idm=0; idm<ndm; idm++){
 					int ind=ievl+parms->evl.nevl*idm;
 					simu->evl_propdata_dm[ind].phiout=iopdevl;
-					CALL_THREAD(simu->evl_prop_dm[ind], 0);
+					CALL_THREAD(simu->evl_prop_dm[ind], 1);
 				}
 			}
 		}
@@ -687,7 +687,7 @@ void perfevl(sim_t* simu){
 			simu->evl_propdata_atm[ind].displacex1=-P(simu->atm,ips)->vx*isim*dt;
 			simu->evl_propdata_atm[ind].displacey1=-P(simu->atm,ips)->vy*isim*dt;
 			simu->evl_propdata_atm[ind].alpha=atmscale;
-			CALL_THREAD(simu->evl_prop_atm[ind], 0);
+			CALL_THREAD(simu->evl_prop_atm[ind], 1);
 		}
 	}
 	if(PARALLEL!=1||!parms->gpu.evl){

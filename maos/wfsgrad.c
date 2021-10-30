@@ -135,7 +135,7 @@ void wfsgrad_iwfs(thread_t* info){
 			wfs_propdata->displacey1=-P(atm, ips)->vy*dt*isim;
 			wfs_propdata->alpha=atmscale;
 			/* have to wait to finish before another phase screen. */
-			CALL_THREAD(wfs_prop, 0);
+			CALL_THREAD(wfs_prop, 1);
 		}
 	}
 	/*
@@ -177,7 +177,7 @@ void wfsgrad_iwfs(thread_t* info){
 			thread_t* wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
 			propdata_t* wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 			wfs_propdata->phiout=opd;
-			CALL_THREAD(wfs_prop, 0);
+			CALL_THREAD(wfs_prop, 1);
 		}/*idm */
 		real ptt[3]={0,0,0};
 		if(simu->ttmreal){
@@ -323,7 +323,7 @@ void wfsgrad_iwfs(thread_t* info){
 			intsdata->opd=opd;
 			intsdata->lltopd=lltopd;
 			intsdata->isim=isim;
-			CALL_THREAD(simu->wfs_ints[iwfs], 0);
+			CALL_THREAD(simu->wfs_ints[iwfs], 1);
 			dfree(lltopd);
 			intsdata->lltopd=0;
 			intsdata->opd=0;

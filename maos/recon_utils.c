@@ -213,6 +213,8 @@ typedef struct Tomo_T{
 	dcell* gg;/*intermediate gradient */
 	dcell* xout;/*output */
 	int isR;/*Mark that we are right hand side.*/
+	int ips;//counter for CALL
+	int iwfs;//counter for CALL
 }Tomo_T;
 
 /**
@@ -221,14 +223,14 @@ typedef struct Tomo_T{
 
    gg  = GP * HXW * xin
 */
-static void Tomo_prop_do(thread_t* info){
-	Tomo_T* data=(Tomo_T*)info->data;
+static void Tomo_prop_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
 	const parms_t* parms=global->parms;
 	sim_t* simu=global->simu;
 	const int nps=recon->npsr;
 	map_t xmap;/*make a temporary xmap for thread safety.*/
-	for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	int iwfs=0;
+	while((iwfs=atomic_fetch_add(&data->iwfs, 1))<parms->nwfsr){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip) continue;
 		const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
@@ -268,9 +270,11 @@ static void Tomo_prop_do(thread_t* info){
    Wrapper of Tomo_prop_do
 */
 void Tomo_prop(Tomo_T* data, int nthread){
-	thread_t info[nthread];
-	thread_prep(info, 0, NX(data->gg), nthread, Tomo_prop_do, data);
-	CALL_THREAD(info, 1);
+	//thread_t info[nthread];
+	//thread_prep(info, 0, NX(data->gg), nthread, Tomo_prop_do, data);
+	//CALL_THREAD(info, 1);
+	data->iwfs=0;
+	CALL((thread_wrapfun)Tomo_prop_do, data, nthread, 1);
 }
 /**
    Speed up TomoL by gathering the second part of operations (GP') belonging to
@@ -278,11 +282,12 @@ void Tomo_prop(Tomo_T* data, int nthread){
 
    gg = GP' * NEAI * gg;
 */
-static void Tomo_nea_gpt_do(thread_t* info){
-	Tomo_T* data=(Tomo_T*)info->data;
+static void Tomo_nea_gpt_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
+	const parms_t *parms=global->parms;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
-	for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	int iwfs=0;
+	while((iwfs=atomic_fetch_add(&data->iwfs, 1))<parms->nwfsr){
 		dmat* gg2=NULL;
 		/*Apply the gradient operation */
 		dspmm(&gg2, P(NEAI, iwfs, iwfs), P(data->gg, iwfs), "nn", 1);
@@ -292,11 +297,12 @@ static void Tomo_nea_gpt_do(thread_t* info){
 	}
 }
 
-static void Tomo_nea_do(thread_t* info){
-	Tomo_T* data=(Tomo_T*)info->data;
+static void Tomo_nea_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
+	const parms_t *parms=global->parms;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
-	for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	int iwfs=0;
+	while((iwfs=atomic_fetch_add(&data->iwfs, 1))<parms->nwfsr){
 		dmat* gg2=NULL;
 		/*Apply the gradient operation */
 		dspmm(&gg2, P(NEAI, iwfs, iwfs), P(data->gg, iwfs), "nn", 1);
@@ -307,9 +313,11 @@ static void Tomo_nea_do(thread_t* info){
 
 /*Wrapp of Tomo_nea_do for multi-threads*/
 void Tomo_nea(Tomo_T* data, int nthread, int gpt){
-	thread_t info[nthread];
-	thread_prep(info, 0, NX(data->gg), nthread, gpt?Tomo_nea_gpt_do:Tomo_nea_do, data);
-	CALL_THREAD(info, 1);
+	//thread_t info[nthread];
+	//thread_prep(info, 0, NX(data->gg), nthread, gpt?Tomo_nea_gpt_do:Tomo_nea_do, data);
+	//CALL_THREAD(info, 1);
+	data->iwfs=0;
+	CALL((thread_wrapfun)(gpt?Tomo_nea_gpt_do:Tomo_nea_do), data, nthread, 1);
 }
 /**
    Speed up TomoL by gathering the third part of operations (GP') belonging to
@@ -317,13 +325,13 @@ void Tomo_nea(Tomo_T* data, int nthread, int gpt){
 
    xout = Cxx^-1 * xin + HXW * gg;
 */
-static void Tomo_iprop_do(thread_t* info){
-	Tomo_T* data=(Tomo_T*)info->data;
+static void Tomo_iprop_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
 	const parms_t* parms=global->parms;
 	sim_t* simu=global->simu;
 	map_t xmap;
-	for(int ips=info->start; ips<info->end; ips++){
+	int ips;
+	while((ips=atomic_fetch_add(&data->ips, 1))<NX(data->xout)){
 		if(parms->tomo.square&&!parms->dbg.tomo_hxw){
 			/*Do the ray tracing instead of using HXW. */
 			if(!P(data->xout, ips)){
@@ -383,9 +391,11 @@ static void Tomo_iprop_do(thread_t* info){
    Wrapper of Tomo_iprop_do
  */
 void Tomo_iprop(Tomo_T* data, int nthread){
-	thread_t info[nthread];
-	thread_prep(info, 0, NX(data->xout), nthread, Tomo_iprop_do, data);
-	CALL_THREAD(info, 1);
+	//thread_t info[nthread];
+	//thread_prep(info, 0, NX(data->xout), nthread, Tomo_iprop_do, data);
+	//CALL_THREAD(info, 1);
+	data->ips=0;
+	CALL((thread_wrapfun)Tomo_iprop_do, data, nthread, 1);
 }
 /**
    Apply tomography right hand operator without using assembled matrix. Fast and

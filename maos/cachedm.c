@@ -94,7 +94,7 @@ void calc_cachedm(sim_t* simu){
 			/*do the multi-threaded ray tracing */
 			QUEUE_THREAD(&group, (simu->cachedm_prop[idm]), 1);
 		}
-		WAIT(group);
+		WAIT(group, 1);
 		simu->tk_cache=myclockd()-tk_start;
 	}
 }
