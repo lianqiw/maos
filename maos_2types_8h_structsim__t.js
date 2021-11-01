@@ -157,7 +157,7 @@ var maos_2types_8h_structsim__t =
     [ "tomo_update", "maos_2types_8h.html#adce195f90dbc817cb94aa08f9d492f77", null ],
     [ "pause", "maos_2types_8h.html#a14ef8a333a0e6595ec7c5856dee2d91a", null ],
     [ "dmreal_isim", "maos_2types_8h.html#af2c10389cb5f633161f5683d02c6abb2", null ],
-    [ "dmreal_count", "maos_2types_8h.html#a52adc638dc4ac351b2c452b0d0dc9748", null ],
+    [ "dmreal_count", "maos_2types_8h.html#a91fe6c8ede9de6aff5378d9b76430aeb", null ],
     [ "dmreal_condr", "maos_2types_8h.html#ae2d43b2cd7a0cafaffa10827867f5ddb", null ],
     [ "dmreal_condw", "maos_2types_8h.html#ac5bf7691e21aec1a26514cda50002322", null ],
     [ "dmreal_mutex", "maos_2types_8h.html#aa542fa01146eeb59242f1942c346ae19", null ],

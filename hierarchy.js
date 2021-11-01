@@ -470,6 +470,6 @@ var hierarchy =
     [ "zspcell.__unnamed__.__unnamed__", "type_8h.html#structzspcell_8____unnamed_____8____unnamed____", null ],
     [ "Array< T, Dev >", "class_array_3_01_t_00_01_dev_01_4.html", null ],
     [ "Array< T, Dev > *", "class_array_3_01_t_00_01_dev_01_4_01_5.html", null ],
-    [ "int *", "classint_01_5.html", null ],
-    [ "long", "classlong.html", null ]
+    [ "long", "classlong.html", null ],
+    [ "unsigned int *", "classunsigned_01int_01_5.html", null ]
 ];

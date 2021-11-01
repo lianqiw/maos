@@ -105,12 +105,10 @@ $(document).ready(function(){initNavTree('thread__pool_8h.html','');});
 Functions</h2></td></tr>
 <tr class="memitem:aabe039cf94ca9a629ec8aab0be916c92"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#aabe039cf94ca9a629ec8aab0be916c92">thread_pool_init</a> (int nthread)</td></tr>
 <tr class="separator:aabe039cf94ca9a629ec8aab0be916c92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9004fd958be4499b04ef5e0ade69ab1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#ac9004fd958be4499b04ef5e0ade69ab1">thread_pool_queue</a> (<a class="el" href="classlong.html">long</a> *count, thread_wrapfun fun, void *arg, int urgent)</td></tr>
-<tr class="separator:ac9004fd958be4499b04ef5e0ade69ab1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d5e520c3c4917a9c25320733aa27337"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#a3d5e520c3c4917a9c25320733aa27337">thread_pool_queue_many</a> (<a class="el" href="classlong.html">long</a> *group, thread_wrapfun fun, void *arg, int njob, int urgent)</td></tr>
-<tr class="separator:a3d5e520c3c4917a9c25320733aa27337"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a813fe2e9c1993ca832ca6e524686e869"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#a813fe2e9c1993ca832ca6e524686e869">thread_pool_wait</a> (<a class="el" href="classlong.html">long</a> *count, int urgent)</td></tr>
-<tr class="separator:a813fe2e9c1993ca832ca6e524686e869"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a097809e3c1ba1b4d1868e517b41625c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#a097809e3c1ba1b4d1868e517b41625c5">thread_pool_queue</a> (unsigned int *group, thread_wrapfun fun, void *arg, int njob, int urgent)</td></tr>
+<tr class="separator:a097809e3c1ba1b4d1868e517b41625c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8264947355188e13152830ba54dd7f0f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#a8264947355188e13152830ba54dd7f0f">thread_pool_wait</a> (unsigned int *count, int urgent)</td></tr>
+<tr class="separator:a8264947355188e13152830ba54dd7f0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac930193c7a790038045e36ec091f2a3c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#ac930193c7a790038045e36ec091f2a3c">thread_pool_wait_all</a> (void)</td></tr>
 <tr class="separator:ac930193c7a790038045e36ec091f2a3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa378a77f3685cc18aca2affedf9e4965"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread__pool_8h.html#aa378a77f3685cc18aca2affedf9e4965">thread_pool_destroy</a> (void)</td></tr>
@@ -138,8 +136,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ac9004fd958be4499b04ef5e0ade69ab1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac9004fd958be4499b04ef5e0ade69ab1">&#9670;&nbsp;</a></span>thread_pool_queue()</h2>
+<a id="a097809e3c1ba1b4d1868e517b41625c5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a097809e3c1ba1b4d1868e517b41625c5">&#9670;&nbsp;</a></span>thread_pool_queue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -147,49 +145,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void thread_pool_queue </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a> *&#160;</td>
-          <td class="paramname"><em>group</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">thread_wrapfun&#160;</td>
-          <td class="paramname"><em>fun</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>arg</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>urgent</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Queue a job that belongs to group denoted by group. The argument count, will be incremented by 1 when queued and decreased by 1 if job is finished. Wait on it will clear when count is decreased to zero.</p>
-<p>Job is added to jobsnormal or joburgent depending on urgent value </p>
-
-</div>
-</div>
-<a id="a3d5e520c3c4917a9c25320733aa27337"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3d5e520c3c4917a9c25320733aa27337">&#9670;&nbsp;</a></span>thread_pool_queue_many()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void thread_pool_queue_many </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a> *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>group</em>, </td>
         </tr>
         <tr>
@@ -223,12 +179,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Queue njob jobs. If fun is NULL, arg is <a class="el" href="thread_8h.html#structthread__t">thread_t</a> array otherwise, arg is argument to fun directly. </p>
+<p>Queue a job that belongs to group denoted by group. The argument count, will be incremented by 1 when queued and decreased by 1 if job is finished. Wait on it will clear when count is decreased to zero.</p>
+<p>Job is added to jobsnormal or joburgent depending on urgent value </p>
 
 </div>
 </div>
-<a id="a813fe2e9c1993ca832ca6e524686e869"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a813fe2e9c1993ca832ca6e524686e869">&#9670;&nbsp;</a></span>thread_pool_wait()</h2>
+<a id="a8264947355188e13152830ba54dd7f0f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8264947355188e13152830ba54dd7f0f">&#9670;&nbsp;</a></span>thread_pool_wait()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -236,7 +193,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void thread_pool_wait </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a> *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>group</em>, </td>
         </tr>
         <tr>
@@ -252,7 +209,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wait for jobs in the count to be done. </p>
+<p>Queue njob jobs. If fun is NULL, arg is <a class="el" href="thread_8h.html#structthread__t">thread_t</a> array otherwise, arg is argument to fun directly. Wait for jobs in the count to be done. </p>
 
 </div>
 </div>

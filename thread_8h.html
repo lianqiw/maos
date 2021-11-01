@@ -120,11 +120,11 @@ Macros</h2></td></tr>
 <tr class="memitem:a230a4715e7482e66162f3bf1a95202a2"><td class="memItemLeft" align="right" valign="top"><a id="a230a4715e7482e66162f3bf1a95202a2"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>OMP_IN_PARALLEL</b>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:a230a4715e7482e66162f3bf1a95202a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafc57d44738df70f43ac87ed969eed47"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#aafc57d44738df70f43ac87ed969eed47">QUEUE</a>&#160;&#160;&#160;<a class="el" href="thread__pool_8h.html#a3d5e520c3c4917a9c25320733aa27337">thread_pool_queue_many</a></td></tr>
+<tr class="memitem:aafc57d44738df70f43ac87ed969eed47"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#aafc57d44738df70f43ac87ed969eed47">QUEUE</a>&#160;&#160;&#160;<a class="el" href="thread__pool_8h.html#a097809e3c1ba1b4d1868e517b41625c5">thread_pool_queue</a></td></tr>
 <tr class="separator:aafc57d44738df70f43ac87ed969eed47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad8f93dba1ac31f379f983c0c98e4a035"><td class="memItemLeft" align="right" valign="top"><a id="ad8f93dba1ac31f379f983c0c98e4a035"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>WAIT</b>(group,  urgent)&#160;&#160;&#160;<a class="el" href="thread__pool_8h.html#a813fe2e9c1993ca832ca6e524686e869">thread_pool_wait</a>(&amp;group, urgent);</td></tr>
-<tr class="separator:ad8f93dba1ac31f379f983c0c98e4a035"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab93072ca29bdf5174ec34686ea9bc3b6"><td class="memItemLeft" align="right" valign="top"><a id="ab93072ca29bdf5174ec34686ea9bc3b6"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>WAIT</b>(pgroup,  urgent)&#160;&#160;&#160;<a class="el" href="thread__pool_8h.html#a8264947355188e13152830ba54dd7f0f">thread_pool_wait</a>(pgroup, urgent);</td></tr>
+<tr class="separator:ab93072ca29bdf5174ec34686ea9bc3b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69ae147f21aa19b9e8528cf665c8c143"><td class="memItemLeft" align="right" valign="top"><a id="a69ae147f21aa19b9e8528cf665c8c143"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>THREAD_POOL_INIT</b>(A)&#160;&#160;&#160;({<a class="el" href="thread__pool_8h.html#aabe039cf94ca9a629ec8aab0be916c92">thread_pool_init</a>(A);info(&quot;Using thread pool with %d threads\n&quot;, A);})</td></tr>
 <tr class="separator:a69ae147f21aa19b9e8528cf665c8c143"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,24 +158,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a46cd5810acdabad3f9ac588daa499e41"><td class="memItemLeft" align="right" valign="top"><a id="a46cd5810acdabad3f9ac588daa499e41"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>UNLOCK_FFT</b>&#160;&#160;&#160;UNLOCK(<a class="el" href="thread_8h.html#a6cb5787469a53f1468e29580abc056ec">mutex_fftw</a>)</td></tr>
 <tr class="separator:a46cd5810acdabad3f9ac588daa499e41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe723d15dd141fdf18b9aec14d48dc86"><td class="memItemLeft" align="right" valign="top"><a id="abe723d15dd141fdf18b9aec14d48dc86"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_sub_fetch</b>(ptr,  val)&#160;&#160;&#160;__atomic_sub_fetch(ptr, val, __ATOMIC_RELAXED)</td></tr>
-<tr class="separator:abe723d15dd141fdf18b9aec14d48dc86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4100682992ea19709d4e7e9f88c693ec"><td class="memItemLeft" align="right" valign="top"><a id="a4100682992ea19709d4e7e9f88c693ec"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_add_fetch</b>(ptr,  val)&#160;&#160;&#160;__atomic_add_fetch(ptr, val, __ATOMIC_RELAXED)</td></tr>
-<tr class="separator:a4100682992ea19709d4e7e9f88c693ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad30ebb56edfded6e52d088e0a5472e42"><td class="memItemLeft" align="right" valign="top"><a id="ad30ebb56edfded6e52d088e0a5472e42"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_fetch_add</b>(ptr,  val)&#160;&#160;&#160;__atomic_fetch_add(ptr, val, __ATOMIC_RELAXED)</td></tr>
-<tr class="separator:ad30ebb56edfded6e52d088e0a5472e42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd748162e0b1e765bb8511f9b3b96003"><td class="memItemLeft" align="right" valign="top"><a id="afd748162e0b1e765bb8511f9b3b96003"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_fetch_sub</b>(ptr,  val)&#160;&#160;&#160;__atomic_fetch_sub(ptr, val, __ATOMIC_RELAXED)</td></tr>
-<tr class="separator:afd748162e0b1e765bb8511f9b3b96003"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6c39dbaacf6a83088d41293751277b0"><td class="memItemLeft" align="right" valign="top"><a id="aa6c39dbaacf6a83088d41293751277b0"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_compare_exchange</b>(ptr,  pexpected,  desired)&#160;&#160;&#160;__atomic_compare_exchange_n(ptr, pexpected, desired, 1, __ATOMIC_RELAXED, __ATOMIC_RELAXED)</td></tr>
-<tr class="separator:aa6c39dbaacf6a83088d41293751277b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc1b422f50e81011bf8ce86885540d8d"><td class="memItemLeft" align="right" valign="top"><a id="acc1b422f50e81011bf8ce86885540d8d"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_load</b>(ptr)&#160;&#160;&#160;__atomic_load_n(ptr, __ATOMIC_RELAXED)</td></tr>
-<tr class="separator:acc1b422f50e81011bf8ce86885540d8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a082f17e8313eee11ac19d8275f886a4d"><td class="memItemLeft" align="right" valign="top"><a id="a082f17e8313eee11ac19d8275f886a4d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MEM_ORDER</b>&#160;&#160;&#160;__ATOMIC_SEQ_CST</td></tr>
+<tr class="separator:a082f17e8313eee11ac19d8275f886a4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7247c60724ec85988716ce873e3a23e4"><td class="memItemLeft" align="right" valign="top"><a id="a7247c60724ec85988716ce873e3a23e4"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>expect_level</b>(n)&#160;&#160;&#160;if(omp_get_level()!=n) dbg(&quot;omp_get_level=%d, want %d\n&quot;, omp_get_level(), n)</td></tr>
 <tr class="separator:a7247c60724ec85988716ce873e3a23e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -288,7 +273,7 @@ thread_data</td>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define QUEUE&#160;&#160;&#160;<a class="el" href="thread__pool_8h.html#a3d5e520c3c4917a9c25320733aa27337">thread_pool_queue_many</a></td>
+          <td class="memname">#define QUEUE&#160;&#160;&#160;<a class="el" href="thread__pool_8h.html#a097809e3c1ba1b4d1868e517b41625c5">thread_pool_queue</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
