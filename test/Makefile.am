@@ -11,7 +11,7 @@ bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
 #endif
 
 if USE_CMOCKA
-bin_PROGRAMS+=cmocka_mat cmocka_readstr
+bin_PROGRAMS+=cmocka_mat cmocka_readstr cmocka_threadpool
 LDADD+=-lcmocka
 endif
 
