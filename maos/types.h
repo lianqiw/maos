@@ -702,7 +702,7 @@ typedef struct sim_t{
     //For synchronization. perfevl and wfsgrad waist for dmreal to be updated.
     //reconstruct waist for gradients to be available.
     int dmreal_isim;//which isim this dmreal is valid for
-    int dmreal_count;//how many time this dmreal has been consumed (parms->evl.nevl + parms->nwfs)
+    unsigned int dmreal_count;//how many time this dmreal has been consumed (parms->evl.nevl + parms->nwfs)
     pthread_cond_t dmreal_condr;
     pthread_cond_t dmreal_condw;
     pthread_mutex_t dmreal_mutex;

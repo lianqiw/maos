@@ -136,7 +136,7 @@ protected:
 	T* p;  //The memory address being used.
 private:
 	Dev<T>* p0; //The allocated memory address. p>=p0;
-	int* nref;  //The reference counter. Delete p0 only if nref is valid and has value of 1.
+	unsigned int* nref;  //The reference counter. Delete p0 only if nref is valid and has value of 1.
 	void init_(long n=0, T* pin=0, int own=1){
 	//Initialize from uninitialized state.
 		if(n>0){
@@ -472,7 +472,7 @@ class cusp{
 	int nx;
 	int ny;
 	int nzmax;
-	int* nref;
+	unsigned int* nref;
 	enum TYPE_SP type;
 #if __CUDACC_VER_MAJOR__ >= 10	
 	cusparseSpMatDescr_t desc;

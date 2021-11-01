@@ -213,8 +213,8 @@ typedef struct Tomo_T{
 	dcell* gg;/*intermediate gradient */
 	dcell* xout;/*output */
 	int isR;/*Mark that we are right hand side.*/
-	int ips;//counter for CALL
-	int iwfs;//counter for CALL
+	unsigned int ips;//counter for CALL
+	unsigned int iwfs;//counter for CALL
 }Tomo_T;
 
 /**
@@ -228,7 +228,6 @@ static void Tomo_prop_do(Tomo_T *data){
 	const parms_t* parms=global->parms;
 	sim_t* simu=global->simu;
 	const int nps=recon->npsr;
-	map_t xmap;/*make a temporary xmap for thread safety.*/
 	int iwfs=0;
 	while((iwfs=atomic_fetch_add(&data->iwfs, 1))<parms->nwfsr){
 		int ipowfs=parms->wfsr[iwfs].powfs;
@@ -251,6 +250,7 @@ static void Tomo_prop_do(Tomo_T *data){
 				}
 				real scale=1.-(ht-hc)/hs;
 				if(scale<0) continue;
+				map_t xmap;/*make a temporary xmap for thread safety.*/
 				memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
 				xmap.p=P(P(data->xin, ips));
 				prop_grid_stat(&xmap, recon->ploc->stat, P(xx), 1,
@@ -274,6 +274,7 @@ void Tomo_prop(Tomo_T* data, int nthread){
 	//thread_prep(info, 0, NX(data->gg), nthread, Tomo_prop_do, data);
 	//CALL_THREAD(info, 1);
 	data->iwfs=0;
+	nthread=1;
 	CALL((thread_wrapfun)Tomo_prop_do, data, nthread, 1);
 }
 /**
@@ -317,6 +318,7 @@ void Tomo_nea(Tomo_T* data, int nthread, int gpt){
 	//thread_prep(info, 0, NX(data->gg), nthread, gpt?Tomo_nea_gpt_do:Tomo_nea_do, data);
 	//CALL_THREAD(info, 1);
 	data->iwfs=0;
+	nthread=1;
 	CALL((thread_wrapfun)(gpt?Tomo_nea_gpt_do:Tomo_nea_do), data, nthread, 1);
 }
 /**
@@ -395,6 +397,7 @@ void Tomo_iprop(Tomo_T* data, int nthread){
 	//thread_prep(info, 0, NX(data->xout), nthread, Tomo_iprop_do, data);
 	//CALL_THREAD(info, 1);
 	data->ips=0;
+	nthread=1;
 	CALL((thread_wrapfun)Tomo_iprop_do, data, nthread, 1);
 }
 /**

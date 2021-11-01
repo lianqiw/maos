@@ -805,7 +805,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 		//writebin(ints, "ints0_cpu");
 		dfree(ints);
 	}
-	int count=0;
+	unsigned int count=0;
 	const int nmod=mod?NY(mod):locin->nloc;
 	dmat* ggd=dnew(nsa*2, nmod);
 	if(mod&&NX(mod)!=locin->nloc){

@@ -43,14 +43,14 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
 	sp->nx=nx;
 	sp->ny=ny;
 	sp->nzmax=nzmax;
-	sp->nref=mycalloc(1, int);
+	sp->nref=mycalloc(1, unsigned int);
 	sp->nref[0]=1;	
 	return sp;
 }
 static void X(spfree_content)(X(sp)* sp){
 	if(!sp) return;
 	assert(issp(sp));
-	if(sp->nref && !atomic_add_fetch(sp->nref,-1)){
+	if(sp->nref && !atomic_sub_fetch(sp->nref, 1)){
 		free(sp->px);
 		free(sp->pp);
 		free(sp->pi);

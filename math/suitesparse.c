@@ -104,7 +104,7 @@ static cs* ss_spalloc(SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT tr
 	A->pp=(SS_INT*)ss_malloc(triplet?nzmax:n+1, sizeof(SS_INT));
 	A->pi=(SS_INT*)ss_malloc(nzmax, sizeof(SS_INT));
 	A->px=values?(SS_ENTRY*)ss_malloc(nzmax, sizeof(SS_ENTRY)):NULL;
-	A->nref=mycalloc(1, int);A->nref[0]=1;
+	A->nref=mycalloc(1, unsigned int);A->nref[0]=1;
 	
 	if((!A->pp||!A->pi||(values&&!A->px))){
 		error("Out of memory: p=%p, i=%p, x=%p\n", A->pp, A->pi, A->px);

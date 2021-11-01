@@ -30,7 +30,7 @@ typedef long long4[4];
 typedef struct GENPISTAT_S{
 	int ncase;
 	long4* cases;
-	int icase;
+	unsigned int icase;
 	pthread_mutex_t mutex_read;/*don't let them read in the same time. */
 	const PARMS_S* parms;
 	POWFS_S* powfs;

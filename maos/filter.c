@@ -419,7 +419,7 @@ static void filter_cl(sim_t* simu){
 	if(PARALLEL==2){
 	//Wait until all clients has consumed the last dmreal
 		if(simu->dmreal_isim!=-1){
-			int count=parms->evl.nevl;
+			unsigned int count=parms->evl.nevl;
 			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 				if(simu->reconisim+1>=parms->powfs[ipowfs].step){
 					count+=parms->powfs[ipowfs].nwfs;
@@ -430,8 +430,8 @@ static void filter_cl(sim_t* simu){
 				pthread_cond_wait(&simu->dmreal_condw, &simu->dmreal_mutex);
 				pthread_mutex_unlock(&simu->dmreal_mutex);
 			}
-			if(simu->dmreal_count>parms->evl.nevl+parms->nwfs){
-				warning("error: dmreal_count is %d need %d\n", simu->dmreal_count, parms->evl.nevl+parms->nwfs);
+			if(simu->dmreal_count>(unsigned int)(parms->evl.nevl+parms->nwfs)){
+				warning("error: dmreal_count is %u need %d\n", simu->dmreal_count, parms->evl.nevl+parms->nwfs);
 			}
 		}
 		//dbg("ready: dmreal_count is %d\n", simu->dmreal_count);

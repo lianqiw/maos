@@ -100,7 +100,7 @@ static inline void THREAD_POOL_INIT(int nthread){
     info("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
 }
-static inline void QUEUE(long *group, thread_wrapfun fun, void *arg, int nthread, int urgent){
+static inline void QUEUE(unsigned int *group, thread_wrapfun fun, void *arg, int nthread, int urgent){
     (void)group;
     (void)urgent;
     for(int it=0; it<nthread; it++){
@@ -125,10 +125,10 @@ static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
         fun(arg);				\
     }
 */
-#define WAIT(group, urgent) DO_PRAGMA(omp taskwait)
+#define WAIT(pgroup, urgent) DO_PRAGMA(omp taskwait)
 
 /*Turn to static inline function because nvcc concatenates _Pragma to } */
-static inline void QUEUE_THREAD(long *group, thread_t *A, int urgent){
+static inline void QUEUE_THREAD(unsigned int *group, thread_t *A, int urgent){
     (void)urgent;
     (void)group;
     for(int it=0; it<A[0].nthread; it++){
@@ -161,19 +161,19 @@ static inline void CALL_THREAD(thread_t *A, int urgent){
 /**
    Queue jobs to group. Do not wait
 */
-#define QUEUE thread_pool_queue_many
-static inline void  QUEUE_THREAD(long *group, thread_t *A, int urgent){
-    thread_pool_queue_many(group, NULL, A, A[0].nthread, urgent);
+#define QUEUE thread_pool_queue
+static inline void  QUEUE_THREAD(unsigned int *group, thread_t *A, int urgent){
+    QUEUE(group, NULL, A, A[0].nthread, urgent);
 }
-#define WAIT(group, urgent) thread_pool_wait(&group, urgent);
+#define WAIT(pgroup, urgent) thread_pool_wait(pgroup, urgent);
 /**
    Queue jobs to a temp group, Then wait for it to complete.
 */
 static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
     if(nthread>1){
-        long group=0;
+        unsigned int group=0;
         QUEUE(&group, fun, arg, nthread, urgent);
-        thread_pool_wait(&group, urgent);
+        WAIT(&group, urgent);
     } else{
         fun((thread_t *)arg);
     }
@@ -182,9 +182,9 @@ static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
 
 static inline void  CALL_THREAD(thread_t *A, int urgent){
     if((A[0].nthread)>1){
-        long group=0;
+        unsigned int group=0;
         QUEUE_THREAD(&group, A, urgent);
-        thread_pool_wait(&group, urgent);
+        WAIT(&group, urgent);
     } else{
         (A)->fun(A);
     }
@@ -213,13 +213,21 @@ void thread_prep(thread_t *thd, long start, long end, long nthread, thread_wrapf
 */
 int thread_new(thread_fun fun, void *arg);
 void thread_block_signal();
-#define atomic_sub_fetch(ptr, val) __atomic_sub_fetch(ptr, val, __ATOMIC_RELAXED)
-#define atomic_add_fetch(ptr, val) __atomic_add_fetch(ptr, val, __ATOMIC_RELAXED)
-#define atomic_fetch_add(ptr, val) __atomic_fetch_add(ptr, val, __ATOMIC_RELAXED)
-#define atomic_fetch_sub(ptr, val) __atomic_fetch_sub(ptr, val, __ATOMIC_RELAXED)
-#define atomic_compare_exchange(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 1, __ATOMIC_RELAXED, __ATOMIC_RELAXED)
-#define atomic_load(ptr) __atomic_load_n(ptr, __ATOMIC_RELAXED)
-
+#define MEM_ORDER __ATOMIC_SEQ_CST
+//The build in functions assume pointer is of type unsigned int
+static inline unsigned int atomic_sub_fetch(unsigned int *ptr, unsigned int val){
+    return __atomic_sub_fetch(ptr, val, MEM_ORDER);
+}
+static inline unsigned int atomic_add_fetch(unsigned int *ptr, unsigned int val){
+    return __atomic_add_fetch(ptr, val, MEM_ORDER);
+}
+static inline unsigned int atomic_fetch_add(unsigned int *ptr, unsigned int val){
+    return __atomic_fetch_add(ptr, val, MEM_ORDER);
+}
+static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val){
+    return __atomic_fetch_sub(ptr, val, MEM_ORDER);
+}
+#undef MEM_ORDER
 #define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
 #if _OPENMP > 0
 #define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))
