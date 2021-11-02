@@ -139,7 +139,9 @@ mtche_do(Real* restrict grad, Real(*mtches)[2], const Real* restrict ints,
 	__syncthreads();
 	if(threadIdx.x<2){
 		if(sigmatch==1){/*normalize gradients according to siglev.*/
-			g[threadIdx.x][0]*=i0sum[isa]/g[2][0];
+			Real scale_isa=i0sum[isa]/g[2][0];
+			if(scale_isa>10 || scale_isa <= 0) scale_isa=1;
+			g[threadIdx.x][0]*=scale_isa;
 		} else if(sigmatch==2){
 			g[threadIdx.x][0]*=scale;
 		}
@@ -182,7 +184,7 @@ tcog_do(Real* grad, const Real* restrict ints, Real siglev, Real* saa,
 	if(threadIdx.x==0&&threadIdx.y==0){
 		if(saa){
 			Real sum2=siglev*saa[isa];
-			if(sum[0]<sum2) sum[0]=sum2;
+			/*if(sum[0]<sum2)*/ sum[0]=sum2;
 		}
 		if(sum[0]>thres){
 			Real gx=(sum[1]/sum[0]-(nx-1)*0.5)*pixthetax;

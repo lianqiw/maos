@@ -1022,6 +1022,9 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 				break;
 			case 1://match per subaperture
 				scale=i0sum[isa]/dsum(ints[isa]);
+				//This happens for za=60, 75p profile randomly
+				//limit maximum scaling (randomly extremely low signal level)
+				if(scale <= 0 || scale>10) scale=1;
 				break;
 			case 2://match globally.
 				scale=i0sumg/i1sum;
