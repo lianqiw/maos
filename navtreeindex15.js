@@ -1,5 +1,6 @@
 var NAVTREEINDEX15 =
 {
+"slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5":[11,0,1,24,7],
 "slaving_8h.html#a7bcbb1b8de1d45851f3ac5c1c2b34d01":[11,0,1,24,0],
 "slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf":[11,0,1,24,3],
 "slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3":[11,0,1,24,5],
@@ -248,6 +249,5 @@ var NAVTREEINDEX15 =
 "smath_8h.html#af6428ce8bbb520ae6ae4438841101fa2":[11,0,3,9,146],
 "smath_8h.html#af6e541d58a31b11b86c674b1ea36f107":[11,0,3,9,239],
 "smath_8h.html#af6e693242a32e22e285acedab440205a":[11,0,3,9,149],
-"smath_8h.html#af7ce707358410f9a72df886e740cd1bf":[11,0,3,9,160],
-"smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724":[11,0,3,9,12]
+"smath_8h.html#af7ce707358410f9a72df886e740cd1bf":[11,0,3,9,160]
 };

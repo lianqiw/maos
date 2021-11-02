@@ -1,6 +1,7 @@
 var parms_8h_structsim__cfg__t =
 [
     [ "dt", "parms_8h.html#ad84ee4962f5b74090774e7467508eeaa", null ],
+    [ "dtref", "parms_8h.html#a6765bd0af9b651c2fcf55701086597d3", null ],
     [ "za", "parms_8h.html#a6b51a9ddc11c0ce89dafbc845e1a71ea", null ],
     [ "zadeg", "parms_8h.html#ae3fa55d3b6a3885eefe638c89690ec97", null ],
     [ "htel", "parms_8h.html#a7b15776821fd592c84f1e42f3e469aa0", null ],

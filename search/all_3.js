@@ -349,6 +349,7 @@ var searchData=
   ['dtrat_5flo2',['dtrat_lo2',['../parms_8h.html#a5039dab4f497cf757ca2b5be1c829893',1,'sim_cfg_t']]],
   ['dtrat_5flof',['dtrat_lof',['../parms_8h.html#a8644b21c8952aefa286974b1c93c3c15',1,'sim_cfg_t']]],
   ['dtrat_5fskip',['dtrat_skip',['../parms_8h.html#a77217e88a710d1fcaed2b3d90044572f',1,'sim_cfg_t']]],
+  ['dtref',['dtref',['../parms_8h.html#a6765bd0af9b651c2fcf55701086597d3',1,'sim_cfg_t']]],
   ['dvecdot',['dvecdot',['../dmath_8h.html#a516deec76701e8b37ea215636697654a',1,'vec.c']]],
   ['dvecmaxabs',['dvecmaxabs',['../dmath_8h.html#af9e1b1ce1a66ce2fb8800346e353b997',1,'vec.c']]],
   ['dvecperm',['dvecperm',['../dmath_8h.html#a971761d7459f6772c359eb04ce1408f0',1,'dtmp.c']]],
