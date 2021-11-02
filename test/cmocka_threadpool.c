@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <cmocka.h>
 #include "../lib/aos.h"
+
 static void dummy_loader(unsigned int depth, int urgent);
 static void dummy_quitfun(const char *msg){
     info("quitfun called with %s.\n", msg);
@@ -54,7 +55,9 @@ static void dummy_loader(unsigned int depth, int urgent){
 	const int n=10000;
 	data_t data={0,n,0,depth-1};
 	const int nthread=1000;
-	CALL((thread_wrapfun)dummy_runner, &data, nthread, urgent);
+	tp_counter_t counter={0};
+	thread_pool_queue(&counter, (thread_wrapfun)dummy_runner, &data, nthread, urgent);
+	thread_pool_wait(&counter, urgent);
 	assert_int_equal(data.tot, n*(n-1)/2);
 	dbg("data.tot=%u, depth=%u\n", data.tot, depth);
 }

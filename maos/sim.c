@@ -107,7 +107,7 @@ void maos_isim(int isim){
 	int iseed=global->iseed;
 	int simstart=parms->sim.start;
 	int simend=parms->sim.end;
-	unsigned int group=0;
+	tp_counter_t group={0};
 	extern int NO_RECON, NO_WFS, NO_EVL;
 	if(isim==simstart+1){//skip slow first step.
 		tk_atm=myclockd();
@@ -170,21 +170,21 @@ OMPTASK_SINGLE{
 		}
 		if(!NO_RECON){
 			//don't put this first. It has cpu overhead in computing gradol
-			QUEUE(&group, (thread_wrapfun)reconstruct, simu, 1, 0);
+			QUEUE(&group, reconstruct, simu, 1, 0);
 		}
 		if(!NO_EVL){
 			if(parms->gpu.evl){
 				//wait for GPU tasks to be queued before calling sync
 				WAIT(&group, 0);
 			}
-			QUEUE(&group, (thread_wrapfun)perfevl, simu, 1, 0);
+			QUEUE(&group, perfevl, simu, 1, 0);
 		}
 		if(!NO_WFS){
 			if(parms->tomo.ahst_idealngs==1||(parms->gpu.wfs&&!parms->gpu.evl)){
 				/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 				WAIT(&group, 0);
 			}
-			QUEUE(&group, (thread_wrapfun)wfsgrad, simu, 1, 0);
+			QUEUE(&group, wfsgrad, simu, 1, 0);
 		}
 		if(!NO_RECON){
 			//wait for all tasks to finish before modifying dmreal

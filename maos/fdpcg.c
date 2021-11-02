@@ -689,19 +689,13 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	}
 	//info.xout=*xout;
 	fdpcg_info_t data={xhat, xhat2, xhati, xhat2i, recon->fdpcg, xin, *xout, 0, nps, 0, nb};
-	int NTH=recon->nthread;
-	
-	//thread_prep(info_fft, 0, nps, NTH, fdpcg_fft, &data);
-	//thread_prep(info_ifft, 0, nps, NTH, fdpcg_ifft, &data);
-
-	//thread_prep(info_mulblock, 0, nb, NTH, fdpcg_mulblock, &data);
 	/*apply forward FFT */
 #define DBG_FD 0
 #if DBG_FD
 	writebin(xin, "fdc_xin");
 #endif
 	data.ips=0;
-	CALL((thread_wrapfun)fdpcg_fft, &data, NTH, 1);
+	CALL(fdpcg_fft, &data, 1, 1);//fast
 #if DBG_FD
 	writebin(xhati, "fdc_fft");
 #endif
@@ -713,7 +707,7 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	cvecperm(xhat2, xhat, P(recon->fdpcg->perm));
 	czero(xhat);
 	data.ib=0;
-	CALL((thread_wrapfun)fdpcg_mulblock, &data, NTH, 1);
+	CALL(fdpcg_mulblock, &data, 4, 1);//slower than FFT
 	//CALL_THREAD(info_mulblock, 1);
 	cvecpermi(xhat2, xhat, P(fdpcg->perm));
 #if DBG_FD
@@ -722,7 +716,7 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 #endif
 	/*Apply inverse FFT */
 	data.ips=0;
-	CALL((thread_wrapfun)fdpcg_ifft, &data, NTH, 1);
+	CALL(fdpcg_ifft, &data, 1, 1);
 	//CALL_THREAD(info_ifft, 1);
 #if DBG_FD
 	writebin(*xout, "fdc_xout");

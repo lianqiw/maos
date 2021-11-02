@@ -111,7 +111,7 @@ extern int signal_caught;
 //dbg are not shown at default log level
 //dbg do not shown when detached
 //use __func__ to indicate function name
-#define logdbg(level, format, ...) logerr(level, "%s%s: " format "%s", CYAN, __func__, ##__VA_ARGS__, BLACK)
+#define logdbg(level, format, ...) logerr(level, "%s%s(%s:%d): " format "%s", CYAN, __func__,BASEFILE,__LINE__,##__VA_ARGS__, BLACK)
 #define dbg0(format, ...) logstd(0, "%s" format "%s", CYAN, ##__VA_ARGS__, BLACK)
 #define dbg( A...) logdbg(0, A)
 #define dbg2(A...) logdbg(1, A)

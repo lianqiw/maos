@@ -283,8 +283,8 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		}
 		mvm_igpu_t data={parms, recon, mvmig, mvmfg, mvmt, FLI(), residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 		int nthread=NGPU;
-		thread_t info[nthread];
-		thread_prep(info, 0, ntotact, nthread, mvm_trans_igpu, &data);
+		thread_t thdata[nthread];
+		thread_prep(thdata, 0, ntotact, nthread, mvm_trans_igpu, &data);
 
 		/*Initialyze intermediate TomoL result array in GPU. Send intermediate
 		  TomoL results to GPU if load.mvmi is set.*/
@@ -292,10 +292,10 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 			tic;
 			for(int i=0; i<NGPU; i++){
 				gpu_set(i);
-				mvmig[i]=curmat(ntotxloc, info[i].end-info[i].start);
+				mvmig[i]=curmat(ntotxloc, thdata[i].end-thdata[i].start);
 				if(parms->load.mvmi){
-					cudaMemcpy(mvmig[i](), mvmi->p+info[i].start*ntotxloc,
-						sizeof(Real)*ntotxloc*(info[i].end-info[i].start), H2D);
+					cudaMemcpy(mvmig[i](), mvmi->p+thdata[i].start*ntotxloc,
+						sizeof(Real)*ntotxloc*(thdata[i].end-thdata[i].start), H2D);
 				}
 			}
 			if(parms->load.mvmi){
@@ -308,10 +308,10 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 			tic;
 			for(int i=0; i<NGPU; i++){
 				gpu_set(i);
-				mvmfg[i]=curmat(ntotxloc, info[i].end-info[i].start);
+				mvmfg[i]=curmat(ntotxloc, thdata[i].end-thdata[i].start);
 				if(parms->load.mvmf){
-					cudaMemcpy(mvmfg[i](), mvmf->p+info[i].start*ntotxloc,
-						sizeof(Real)*ntotxloc*(info[i].end-info[i].start), H2D);
+					cudaMemcpy(mvmfg[i](), mvmf->p+thdata[i].start*ntotxloc,
+						sizeof(Real)*ntotxloc*(thdata[i].end-thdata[i].start), H2D);
 				}
 			}
 			if(parms->load.mvmf){
@@ -320,7 +320,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		}
 		/*Do real MVM control matrix assemble in multiply CPU/GPU*/
 		tic;
-		CALL_THREAD(info, 1);
+		CALL_THREAD(thdata, 1);
 		toc2("MVM Assembly in GPU");
 
 
@@ -331,16 +331,16 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		if(parms->save.mvmi){
 			for(int i=0; i<NGPU; i++){
 				gpu_set(i);
-				cudaMemcpy(mvmi->p+info[i].start*ntotxloc, mvmig[i](),
-					sizeof(Real)*ntotxloc*(info[i].end-info[i].start), D2H);
+				cudaMemcpy(mvmi->p+thdata[i].start*ntotxloc, mvmig[i](),
+					sizeof(Real)*ntotxloc*(thdata[i].end-thdata[i].start), D2H);
 			}
 			writebin(mvmi, "MVM_Tomo.bin");
 		}
 		if(parms->save.mvmf){
 			for(int i=0; i<NGPU; i++){
 				gpu_set(i);
-				cudaMemcpy(mvmf->p+info[i].start*ntotxloc, mvmfg[i](),
-					sizeof(Real)*ntotxloc*(info[i].end-info[i].start), D2H);
+				cudaMemcpy(mvmf->p+thdata[i].start*ntotxloc, mvmfg[i](),
+					sizeof(Real)*ntotxloc*(thdata[i].end-thdata[i].start), D2H);
 			}
 			writebin(mvmf, "MVM_FitL.bin");
 		}

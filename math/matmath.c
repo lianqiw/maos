@@ -1588,6 +1588,7 @@ X(mat)* X(enc)(X(mat)* psf, /**<The input array*/
 	XC(free)(psf2);
 	X(mat)* enc=X(new)(dvec->nx, 1);
 	ENC_T data={enc, dvec, phat, type};
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 	thread_t info[nthread];
 	thread_prep(info, 0, dvec->nx, nthread, X(enc_thread), &data);
 	CALL_THREAD(info, 0);

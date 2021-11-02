@@ -567,6 +567,7 @@ void chol_solve(dmat** x, spchol* A, dmat* y){
 	} else{//Multi-threaded call
 		if(!*x) *x=dnew(y->nx, y->ny);
 		CHOLSOLVE_T data={*x,A,y};
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		thread_t info[NTHREAD];
 		thread_prep(info, 0, y->ny, NTHREAD, chol_solve_thread, &data);
 		CALL_THREAD(info, 1);

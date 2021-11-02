@@ -146,7 +146,7 @@ private:
 				own=1;
 			}
 			if(own){
-				nref=mymalloc(1, int);
+				nref=mymalloc(1, unsigned int);
 				nref[0]=1;
 			}
 			p=(T*)p0;

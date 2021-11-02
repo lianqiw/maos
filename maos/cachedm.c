@@ -75,8 +75,9 @@ void prep_cachedm(sim_t* simu){
 		cpropdata[idm].displacex1=0;
 		cpropdata[idm].displacey1=0;
 		cpropdata[idm].scale=1;
+		int nthread=2;//operation is fast
 		thread_prep(simu->cachedm_prop[idm], 0, NY(cpropdata[idm].mapout),
-			NTHREAD, prop, (void*)&cpropdata[idm]);
+			nthread, prop, (void*)&cpropdata[idm]);
 	}
 }
 
@@ -87,7 +88,7 @@ void prep_cachedm(sim_t* simu){
 void calc_cachedm(sim_t* simu){
 	if(simu->cachedm){
 		real tk_start=myclockd();
-		unsigned int group=0;
+		tp_counter_t group={0};
 		/*zero out the data. */
 		for(int idm=0; idm<simu->parms->ndm; idm++){
 			dzero((dmat*)P(simu->cachedm,idm));

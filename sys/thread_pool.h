@@ -22,10 +22,19 @@
    Contains implementation of a thread pool. 
 */
 #include "thread.h"
-typedef struct thread_pool_t thread_pool_t;
+///define to 1 to enable report of timing for each thread launch. Reduce number of threads when timing is small.
+#define ENABLE_TP_TIMING 0 
+typedef struct tp_counter_t{
+  unsigned int group;
+#if ENABLE_TP_TIMING
+  unsigned int tmin;//in milli-seconds
+  unsigned int tmax;
+#endif  
+}tp_counter_t __attribute__((unused));
+
 void thread_pool_init(int nthread);
-void thread_pool_queue(unsigned int *group, thread_wrapfun fun, void *arg, int njob, int urgent);
-void thread_pool_wait(unsigned int *count, int urgent);
+void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int njob, int urgent);
+void thread_pool_wait(tp_counter_t *counter, int urgent);
 void thread_pool_wait_all(void);
 void thread_pool_destroy(void);
 #endif

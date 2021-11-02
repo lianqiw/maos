@@ -64,15 +64,16 @@
 #include <pthread.h>
 #include <limits.h>
 #include "common.h"
-#include "misc.h"
+#include "misc.h" //mysleep
 #include "thread.h"
 #include "thread_pool.h"
-#include "process.h"
+//#include "process.h"
 _Thread_local unsigned int tid=0;//thread id
+
 /**
  *  The thread pool struct.
  */
-struct thread_pool_t{
+typedef struct thread_pool_t{
 	pthread_mutex_t mutex; /**<mutex to protect jobshead and jobstail.*/
 	pthread_cond_t jobwait;/**<there are jobs jobwait.*/
 	pthread_cond_t idle;   /**<all threads are idle*/
@@ -85,7 +86,7 @@ struct thread_pool_t{
 	unsigned int quit; /**<1: quit the threads.*/
 	unsigned int nidle;/**<Number of idle threads, excluding the master thread.*/
 	unsigned int inited;/**<Whether the thread pool has been inited*/
-};
+}thread_pool_t;
 static thread_pool_t pool;/*The default pool; */
 
 /**
@@ -95,7 +96,7 @@ static thread_pool_t pool;/*The default pool; */
 typedef struct jobs_t{
 	thread_wrapfun fun; /**<The function*/
 	void* arg;          /**<The argument*/
-	unsigned int *group;/**<address of the job group, whos value keeps track of queued jobs.*/
+	tp_counter_t *counter;/**<address of the job group, whos value keeps track of queued jobs.*/
 	unsigned int next;  /**<4 byte index into jobsall for next job, replacing pointer*/
 }jobs_t;
 
@@ -150,8 +151,23 @@ static inline int do_job(int urgent){
 	unsigned int jobind=0;
 	if((jobind=jobs_pop(&jobsurgent)) || (!urgent && (jobind=jobs_pop(&jobsnormal)))){
 		jobs_t *job=&jobsall[jobind];
+#if ENABLE_TP_TIMING
+		double tk0=myclockd();
+#endif		
 		job->fun(job->arg);//run the job
-		atomic_sub_fetch(job->group, 1);
+#if ENABLE_TP_TIMING
+		{
+			unsigned int tk1=(unsigned int)ceil((myclockd()-tk0)*1e3);
+			unsigned int old_value=job->counter->tmax;
+			while(old_value<tk1 && !atomic_compare_exchange_n(&job->counter->tmax, &old_value, tk1));
+			old_value=job->counter->tmin;
+			unsigned int zero=0;
+			if(!atomic_compare_exchange_n(&job->counter->tmin, &zero, tk1)){//not zero
+				while(old_value>tk1&&!atomic_compare_exchange_n(&job->counter->tmin, &old_value, tk1));
+			}
+		}
+#endif		
+		atomic_sub_fetch(&job->counter->group, 1);
 		jobs_push(&jobspool, jobind, jobind);//return job to the pool.
 		return 1;//more jobs pending
 	}
@@ -193,7 +209,7 @@ static void* run_thread(void* data){
  *
  *  Job is added to jobsnormal or joburgent depending on urgent value
  */
-void thread_pool_queue(unsigned int *group, thread_wrapfun fun, void* arg, int njob, int urgent){
+void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void* arg, int njob, int urgent){
 	unsigned int headind=0, tailind=0;
 	thread_t *arg2=(thread_t *)arg;
 	for(int ijob=0; ijob<njob; ijob++){
@@ -222,15 +238,15 @@ void thread_pool_queue(unsigned int *group, thread_wrapfun fun, void* arg, int n
 			job->fun=fun;
 			job->arg=arg;
 		}else{
-			if(arg2[ijob].start>=arg2[ijob].end){//invalid job
+			if(!arg2[ijob].fun || arg2[ijob].start>=arg2[ijob].end){//invalid job
 				jobs_push(&jobspool, jobind, jobind);
 				continue;
 			}
 			job->fun=arg2[ijob].fun;
 			job->arg=&arg2[ijob];
 		}
-		job->group=group;
-		atomic_add_fetch(group, 1);
+		job->counter=counter;
+		atomic_add_fetch(&counter->group, 1);
 		job->next=0;
 		if(!headind){
 			headind=jobind;
@@ -250,15 +266,14 @@ void thread_pool_queue(unsigned int *group, thread_wrapfun fun, void* arg, int n
 /**
  * Wait for jobs in the count to be done. 
  */
-void thread_pool_wait(unsigned int *group, int urgent){
-	while(*group){
+void thread_pool_wait(tp_counter_t *counter, int urgent){
+	while(counter->group){
 		//if urgent is true, do not do do_job(0) to prevent slow down
 		if(!do_job(urgent)){
 			//do not use cond waiting. The wakeup is not gauranteed.
 			mysleep(1e-6);
 		}
 	}
-		
 }
 /**
  * Wait for all jobs to be done.

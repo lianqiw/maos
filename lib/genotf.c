@@ -371,7 +371,7 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 		*potf=ccellnew_same(nsa,1,npsfx,npsfy);
 	}
 	GENOTF_T data={*potf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, B, pval, isafull, otffull};
-
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 	thread_t info[NCPU];
 	thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
 	CALL_THREAD(info, 1);

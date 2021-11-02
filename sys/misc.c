@@ -229,7 +229,7 @@ char* strtime_pid(void){
 }
 
 /**
-   Get current time in milli-second resolution.
+   Get current time in nano-second resolution.
 */
 double myclockd(void){
 	static time_t t0=0;//to avoid precision error when cast to float

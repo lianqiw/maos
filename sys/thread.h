@@ -81,7 +81,7 @@ long thread_id(void);
   QUEUE is like CALL, but need an explicit WAIT
 
   The following use thread_t to manage the index
-  QUEUE_THREAD(group, A, nthread, urgent) will queue arrays of thread_t (A)
+  QUEUE_THREAD(counter, A, nthread, urgent) will queue arrays of thread_t (A)
   CALL_THREAD(A, urgent) calls QUEUE_THREAD and waits for all to finish.
 */
 #include <pthread.h>
@@ -100,37 +100,26 @@ static inline void THREAD_POOL_INIT(int nthread){
     info("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
 }
-static inline void QUEUE(unsigned int *group, thread_wrapfun fun, void *arg, int nthread, int urgent){
-    (void)group;
-    (void)urgent;
-    for(int it=0; it<nthread; it++){
-        OMP_TASK(urgent)
-            fun(arg);
+//static inline void QUEUE(tp_counter_t *counter, thread_wrapfun fun, void *arg, int nthread, int urgent){
+#define QUEUE(counter, fun, arg, njob, urgent) \
+    for(int it=0; it<njob; it++){\
+        OMP_TASK(urgent)\
+            fun(arg);\
     }
-}
-static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
-    (void)urgent;
-    OMP_TASKSYNC_START
-        QUEUE(NULL, fun, arg, nthread, urgent);
+
+//static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
+#define CALL(fun, arg, nthread, urgent) \
+    OMP_TASKSYNC_START\
+        QUEUE(NULL, fun, arg, nthread, urgent)\
     OMP_TASKSYNC_END
-}
 
-/*The following QUEUE, CALL, WAIT acts on function (fun) and argument (arg).*/
-/*Don't turn the following into static inline function becase task will be waited*/
-/*
-#define QUEUE(group,fun,arg,nthread,urgent)	\
-    (void) group; (void) urgent;		\
-    for(int it=0; it<nthread; it++){		\
-    OMP_TASK(urgent)			\
-        fun(arg);				\
-    }
-*/
-#define WAIT(pgroup, urgent) DO_PRAGMA(omp taskwait)
-
+#define WAIT(pcounter, urgent) DO_PRAGMA(omp taskwait)
+#define __NEW_LINE__
 /*Turn to static inline function because nvcc concatenates _Pragma to } */
-static inline void QUEUE_THREAD(unsigned int *group, thread_t *A, int urgent){
+//Define causes _Pragma to appear in sameline in gcc4.9
+static inline void QUEUE_THREAD(tp_counter_t *counter, thread_t *A, int urgent){
+    (void)counter;
     (void)urgent;
-    (void)group;
     for(int it=0; it<A[0].nthread; it++){
         if(A[it].fun){
             OMP_TASK(urgent)
@@ -138,14 +127,9 @@ static inline void QUEUE_THREAD(unsigned int *group, thread_t *A, int urgent){
         }
     }
 }
-
-static inline void CALL_THREAD(thread_t *A, int urgent){
-    /*Split CALL_THREAD_DO to a separate routing to avoid recursiving calling
-     * CALL_THREAD. This is to work about a bug in icc that always return 0 for
-     * omp_in_parallel when nthread==1*/
-    (void)urgent;
+//Define causes _Pragma to appear in sameline in gcc4.9
+static inline void CALL_THREAD(thread_t*A, int urgent){
     if(!OMP_IN_PARALLEL){
-    //Wraps call in parallel region. No need to sync here.
         OMPTASK_SINGLE
             QUEUE_THREAD(NULL, A, urgent);
     } else{
@@ -159,36 +143,47 @@ static inline void CALL_THREAD(thread_t *A, int urgent){
 
 
 /**
-   Queue jobs to group. Do not wait
+   Queue jobs to counter. Do not wait
 */
-#define QUEUE thread_pool_queue
-static inline void  QUEUE_THREAD(unsigned int *group, thread_t *A, int urgent){
-    QUEUE(group, NULL, A, A[0].nthread, urgent);
-}
-#define WAIT(pgroup, urgent) thread_pool_wait(pgroup, urgent);
+#define QUEUE(counter, fun, arg, njob, urgent) thread_pool_queue(counter, (thread_wrapfun)fun, arg, njob, urgent)
+#define QUEUE_THREAD(counter, A, urgent) thread_pool_queue(counter, NULL, (thread_wrapfun)A, A[0].nthread, urgent)
+//static inline void  QUEUE_THREAD(tp_counter_t *counter, thread_t *A, int urgent){
+    //QUEUE(counter, NULL, A, A[0].nthread, urgent);
+//}
+//We use define so that we can print the calling line 
+#if ENABLE_TP_TIMING
+#define WAIT(counter, urgent) ({thread_pool_wait(counter, urgent);\
+dbg("tmin=%u, tmax=%u ms\n", (counter)->tmin, (counter)->tmax);(counter)->tmin=0;(counter)->tmax=0;})
+#else
+#define WAIT(counter, urgent) thread_pool_wait(counter, urgent)
+#endif
 /**
-   Queue jobs to a temp group, Then wait for it to complete.
+   Queue jobs to a temp counter, Then wait for it to complete.
 */
-static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
-    if(nthread>1){
-        unsigned int group=0;
-        QUEUE(&group, fun, arg, nthread, urgent);
-        WAIT(&group, urgent);
-    } else{
-        fun((thread_t *)arg);
-    }
-}
+//static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
+#define CALL(fun, arg, nthread, urgent) \
+({\
+    if(nthread>1){\
+        tp_counter_t counter={0};\
+        QUEUE(&counter, fun, arg, nthread, urgent);\
+        WAIT(&counter, urgent);\
+    } else{\
+        fun((void *)(arg));\
+    }\
+})\
 
 
-static inline void  CALL_THREAD(thread_t *A, int urgent){
-    if((A[0].nthread)>1){
-        unsigned int group=0;
-        QUEUE_THREAD(&group, A, urgent);
-        WAIT(&group, urgent);
-    } else{
-        (A)->fun(A);
-    }
-}
+//static inline void  CALL_THREAD(thread_t *A, int urgent){
+#define CALL_THREAD(A, urgent)\
+({\
+    if((A[0].nthread)>1){\
+        tp_counter_t counter={0};\
+        QUEUE_THREAD(&counter, A, urgent);\
+        WAIT(&counter, urgent);\
+    } else{\
+        (A)->fun(A);\
+    }\
+})
 
 #define THREAD_POOL_INIT(A) ({thread_pool_init(A);info("Using thread pool with %d threads\n", A);})
 #define THREAD_YIELD thread_pool_do_job_once()

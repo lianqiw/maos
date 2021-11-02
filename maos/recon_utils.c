@@ -275,7 +275,7 @@ void Tomo_prop(Tomo_T* data, int nthread){
 	//CALL_THREAD(info, 1);
 	data->iwfs=0;
 	nthread=1;
-	CALL((thread_wrapfun)Tomo_prop_do, data, nthread, 1);
+	CALL(Tomo_prop_do, data, nthread, 1);
 }
 /**
    Speed up TomoL by gathering the second part of operations (GP') belonging to
@@ -319,7 +319,11 @@ void Tomo_nea(Tomo_T* data, int nthread, int gpt){
 	//CALL_THREAD(info, 1);
 	data->iwfs=0;
 	nthread=1;
-	CALL((thread_wrapfun)(gpt?Tomo_nea_gpt_do:Tomo_nea_do), data, nthread, 1);
+	if(gpt){
+		CALL(Tomo_nea_gpt_do, data, nthread, 1);
+	}else{
+		CALL(Tomo_nea_do, data, nthread, 1);
+	}
 }
 /**
    Speed up TomoL by gathering the third part of operations (GP') belonging to
@@ -398,7 +402,7 @@ void Tomo_iprop(Tomo_T* data, int nthread){
 	//CALL_THREAD(info, 1);
 	data->ips=0;
 	nthread=1;
-	CALL((thread_wrapfun)Tomo_iprop_do, data, nthread, 1);
+	CALL(Tomo_iprop_do, data, nthread, 1);
 }
 /**
    Apply tomography right hand operator without using assembled matrix. Fast and
