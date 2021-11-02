@@ -497,7 +497,8 @@ typedef struct recon_cfg_t{
    contains input parameters for simulation, like loop gain, seeds, etc.
 */
 typedef struct sim_cfg_t{
-    real dt;         /**<sampling period. 1/800*/
+    real dt;         /**<sampling period for simulation*/
+    real dtref;      /**<sampling period for setting siglev*/
     real za;         /**<zenith angle in radian*/
     real zadeg;      /**<zenith angle in degree. For print out.*/
     real htel;       /**<Height of telescope. Used to adjust sodium profile range*/

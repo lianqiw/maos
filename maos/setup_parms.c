@@ -1019,6 +1019,7 @@ static void readcfg_sim(parms_t* parms){
 	parms->sim.seeds=readcfg_lmat("sim.seeds");
 	parms->sim.nseed=NX(parms->sim.seeds);
 	READ_DBL(sim.dt);
+	READ_DBL(sim.dtref);
 	READ_INT(sim.dtrat_skip);
 	READ_INT(sim.start);
 	READ_INT(sim.end);
@@ -1917,10 +1918,10 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 }
 
 /**
-   The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
+   The siglev is always specified in sim.dtref. If sim.dt is different, rescale the siglev.
 */
 static void setup_parms_postproc_siglev(parms_t* parms){
-	real sigscale=parms->sim.dt>0?(parms->sim.dt*800):1;
+	real sigscale=parms->sim.dt>0?(parms->sim.dt/parms->sim.dtref):1;
 	if(fabs(sigscale-1.)>EPS){
 		info("sim.dt is 1/%g, need to scale siglev and bkgrnd by %g.\n", 1/parms->sim.dt, sigscale);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
