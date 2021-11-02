@@ -178,7 +178,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; info(A);}})</td></tr>
 <tr class="separator:aecfbb1e9291f15553ecf346710b28398"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a625bac7b464519d4050f5ac672c5399a"><td class="memItemLeft" align="right" valign="top"><a id="a625bac7b464519d4050f5ac672c5399a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  format, ...)&#160;&#160;&#160;logerr(level, &quot;%s%s: &quot; format &quot;%s&quot;, CYAN, __func__, ##__VA_ARGS__, BLACK)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  format, ...)&#160;&#160;&#160;logerr(level, &quot;%s%s(%s:%d): &quot; format &quot;%s&quot;, CYAN, __func__,BASEFILE,__LINE__,##__VA_ARGS__, BLACK)</td></tr>
 <tr class="separator:a625bac7b464519d4050f5ac672c5399a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab44f1b142dc82fb4bb8844683baeb68c"><td class="memItemLeft" align="right" valign="top"><a id="ab44f1b142dc82fb4bb8844683baeb68c"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg0</b>(format, ...)&#160;&#160;&#160;logstd(0, &quot;%s&quot; format &quot;%s&quot;, CYAN, ##__VA_ARGS__, BLACK)</td></tr>

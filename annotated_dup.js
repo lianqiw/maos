@@ -223,6 +223,7 @@ var annotated_dup =
     [ "task_t", "structtask__t.html", "structtask__t" ],
     [ "thread_t", "thread_8h.html#structthread__t", "thread_8h_structthread__t" ],
     [ "tomo_cfg_t", "parms_8h.html#structtomo__cfg__t", "parms_8h_structtomo__cfg__t" ],
+    [ "tp_counter_t", "thread__pool_8h.html#structtp__counter__t", "thread__pool_8h_structtp__counter__t" ],
     [ "udp_t", "sockio_8h.html#structudp__t", "sockio_8h_structudp__t" ],
     [ "wfs_cfg_t", "parms_8h.html#structwfs__cfg__t", "parms_8h_structwfs__cfg__t" ],
     [ "wfsflags_t", "maos_2types_8h.html#structwfsflags__t", "maos_2types_8h_structwfsflags__t" ],

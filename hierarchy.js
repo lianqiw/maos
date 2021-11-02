@@ -444,6 +444,7 @@ var hierarchy =
     [ "task_t", "structtask__t.html", null ],
     [ "thread_t", "thread_8h.html#structthread__t", null ],
     [ "tomo_cfg_t", "parms_8h.html#structtomo__cfg__t", null ],
+    [ "tp_counter_t", "thread__pool_8h.html#structtp__counter__t", null ],
     [ "udp_t", "sockio_8h.html#structudp__t", null ],
     [ "cuda_recon::w01_t", "classcuda__recon_1_1w01__t.html", null ],
     [ "wfs_cfg_t", "parms_8h.html#structwfs__cfg__t", null ],
