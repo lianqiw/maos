@@ -1,15 +1,18 @@
 \page page20_compile  Compile the Code
 
 \tableofcontents
-
+<!--
 This step can be skipped if the user choose to use the pre-compiled binary files,
 which are available for all the popular platforms: Windows, Mac, and
 Linux. Please notice that the job scheduling and monitoring utilities are not
 included in the released binaries (the binaries may not be up to date).
-
+-->
 # Requirements
 
-- C99 compliant compiler: GCC, Intel ICC, or clang.
+- Posix compatatible platform: Linux, macOS, or WSL for windows. BSDs may work
+  but are not actively verified.
+
+- C11 compliant compiler: GCC, Intel ICC, or clang, and make.
 
 - FFTW version 3. Will download from MAOS site if not available in the system.
 
@@ -19,6 +22,8 @@ included in the released binaries (the binaries may not be up to date).
 
 - Cholmod. For sparse matrix cholesky factorization. Will download from MAOS
   site if not available in the system.
+
+- If compile from git repo, autotools (autoconf, automake, libtool) are needed.
 
 - (Optional) CUDA. For GPU acceleration.
 
@@ -34,12 +39,13 @@ included in the released binaries (the binaries may not be up to date).
 
 # Preparing the folders and compiling
 
-We recommend using three different folders to 1) store the source tree, 2)
-compile the code, and 3) run the simulation.
+We recommend using different folders to 1) store the source code, 2) compile the
+code (different directory can be used for different compiling options), and 3)
+run simulations.
 
-The source tree is where the source is extracted or cloned to. Obtain the software in the
-form of the compressed tar ball: maos_version.tar.gz and extract it into some
-directory and name the directory src_dir. Example:
+The source code is where the source is extracted or cloned to. Obtain the
+software in the form of the compressed tar ball: maos_version.tar.gz and extract
+it into some directory and name the directory src_dir. Example:
 
 ```
 cd ~/work/programming
@@ -61,9 +67,9 @@ Next we create another folder, where we are going to compile the code. example:
 
 ```
 cd ~/work/maos
-mkdir comp_optim && cd comp_optim
+mkdir comp/optim && cd comp/optim
 $src_dir/configure
-make -j4 #this will compile using 4 threads.
+make #this will compile using multiple threads.
 ```
 
 For clusters that use job management tools, disable the built-in scheduler by using
@@ -86,6 +92,8 @@ $src_dir/configure CC=icc    #ICC compiler
 $src_dir/configure CC=clang  #clang compiler
 $src_dir/configure CC=gcc4.5 #use gcc4.5
 $src_dir/configure --enable-debug #enable debugging
+$src_dir/configure --disable-openmp #Use pthreads instead of openmp
+$src_dir/configure --disable-double #Use single precision (double is always used for most reduction operation for improved precision)
 ```
 
 \subsection sect-cuda GPU acceleration
@@ -99,12 +107,12 @@ The configure can automatically detect cuda if nvcc is in the path, or if
 cuda is installed in /usr/local/cuda. For other locations, you
 need to pass the cuda directory to configure:
 
-`$src_dir/configure --with-cuda=cuda_dir`
+`$src_dir/configure --with-cuda=$cuda_dir`
 
 When GPU compute is compiled in maos and Nvidia GPUs are available, maos
 will make use of all suitable GPUs to run simulation. If that is not desired, the
 GPU compute can be disabled at run time by passing -g-1 to maos. Different
-set of GPU can also be selected by passing one or multiple -gn:
+set of GPU can also be selected by passing one or multiple -gi or -Gn:
 
 ```
 $maos -g-1    #disable GPU compute
@@ -117,7 +125,7 @@ $maos -G2     #Automatically choose 2 gpus.
 To compile mex routines for matlab, pass the matlab directory to configure if it is not in \c $PATH:
 
 ```
-$src_dir/configure --with-matlab=matlab_dir
+$src_dir/configure --with-matlab=$matlab_dir
 ```
 
 The compiled mex routines are in \c mex folder in the compilation
@@ -129,51 +137,26 @@ directory.
 
 \subsection sect-mac-gtk Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon
 
-It is simplest to install gtk using macport or homebrew. For manual install,
-follow the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for
-osx. The environmental variables are set by jhbuild, here we take important
-ones and put them in our .bash_profile to avoid running jhbuild each
-time. Put the following in your .bash_profile. Adjust the path accordingly if
-you changed gtk-osx installing options.
+For macOS, it is simplest to install gtk and gtk-mac-integration. using macport
+or homebrew. No additional configuration is required. For manual install, follow
+the instructions on [page](https://www.gtk.org/docs/installations/) to install
+gtk+ for osx and configure the envirionmental parameters. Version 2 and 3 are
+supported. Make sure pkg-config is in the path.
 
-First, if xcode is not installed in full, make sure the following packages are installed
-
+Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now. To select gtk version when multiple ones are available:
 ```
-DeveloperToolsCLI.pkg
-gcc4.x.pkg
-MACOSX10.x.pkg
-DevSDK.pkg
-OpenGLSDK.pkg
-DeveloperToolsSystemSupport
+$src_dir/configure --disable-gtk-3 #disables gtk-3
+$src_dir/configure --disable-gtk-2 #disable gtk-2
 ```
-Then download and install pkg-config from pkgconfig.freedesktop.org/releases/
-
-
-```
-export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib"
-export PATH="$PATH:$HOME/gtk/inst/bin"
-export C_INCLUDE_PATH="$HOME/gtk/inst/include"
-```
-Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now.
-
-To make the app bundles.
-First, install quartz engine and ige-mac-buildler.
-sourceforge.net/apps/trac/gtk-osx/wiki/Bundle
-jhbuild build gtk-quartz-engine
-
-Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin
-And cd to scripts/bundle folder, run build.sh. .app files should appear in your desktop.
 
 # Graphical User Interface
 
-When GTK+ libraries are present in the system, additional executables will
+When GTK+ libraries are found in the system, additional executables will
 be compiled, \c drawdaemon, \c drawres, \c drawbin and \c monitor in the \c bin folder.
 
-- The plotting utility \c drawdaemon is launched automatically when plotting
-commands are issued in simulation (`maos plot.all=1`) or in post processing with \c drawres or \c drawbin
+- The plotting utility \c drawdaemon is launched automatically when plotting commands are issued in simulation (`maos plot.all=1`) or in post processing with \c drawres or \c drawbin
 
-- The monitoring utility \c monitor can be used to monitor jobs in this and linked machines.
+- The monitoring utility \c monitor can be used to monitor jobs in this and linked machines. 
 
 - The \c drawres can be used to automatically plot the results folder.
 
@@ -189,11 +172,14 @@ these files in all the machines you want to monitor.
 - \c ~/.aos/hosts Each line contains a machine's hostname you want to monitor. It also supports the
 full format \c prettyname=full_hostname:port
 
-- \c ~/.aos/port contains the port you want the \c scheduler to bind to so that the
-monitor can connect to it.  Any non-privileged port numbers are fine (like
-10000).  Different users should have different port number.  The port has to
-be the same on all the machines unless explicitly specified in \c hosts. 
-If not set, the number will be automatically computed based on username. Make sure the firewall allows them.
+- \c ~/.aos/port contains the port you want the \c scheduler to bind to so that
+  the monitor can connect to it.  Any non-privileged port numbers are fine (like
+  10000).  Different users should have different port number.  The port has to
+  be the same on all the machines unless explicitly specified in \c hosts. If
+  not set, the number will be automatically computed based on username. Make
+  sure the firewall allows them. 
+
+- Please be aware that no authentication is performed. The user should make sure such ports are protected.
 
 ## Drawdaemon
 
@@ -202,8 +188,12 @@ Right click on a running job and select `Plot selected jobs` will launch drawdae
 and start plotting the telemetry data in realtime. This works for local and remote host.
 Multiple drawdaemon windows can be started for the same or different jobs.
 
-An alternative way to launch drawdaemon is to include \c plot.setup=1 \c plot.run=1 or \c plot.all=1 in maos command line.
-This method can only invoke the drawdaemon locally.
+An alternative way to launch drawdaemon is to include \c plot.setup=1 \c
+plot.run=1 or \c plot.all=1 in maos command line.
+
+Remote plotting: when a job is running remotely or in a headless machine, and
+`drawres`, `drawbin`, or `maos` plotting is issued, the `monitor` can open a
+`drawdaemon` in the local computer and plot remotely.
 
 ## Plotting results
 
@@ -216,19 +206,20 @@ This can be used to view results remotely.
 
 MAOS comes with a few useful python routines location in \c scripts/ folder:
 
-- \c readbin.py contains `readbin` that can read `bin` or `fits` files.
+- `readbin.py` contains `readbin` that can read `bin` or `fits` files.
 
-- \c aolib.py contains routines to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py
+- `aolib.py` contains routines to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py
 
-- \c libaos.py contains routines that wraps \c MAOS library routines via \c aolib.so and \c ctypes 
+- `libaos.py` contains routines that wraps \c MAOS library routines via \c aolib.so and \c ctypes 
 
-- \c lib2py.py generates \c libaos.py
+- `lib2py.py` generates \c libaos.py
 
-- \c draw.py used to draw opd defined on coordinate loc. \c draw(loc, opd) or \c draw(map) where \c map is a 2d array.
+- `draw.py` used to draw opd defined on coordinate loc. \c draw(loc, opd) or \c draw(map) where \c map is a 2d array.
 
-- \c maos_client provides an interface to a running maos session. See next subsection.
+- `maos_client` provides an interface to a running maos session. See next subsection.
 
-For \c libaos.py to work, an environment variable \c MAOS_AOLIB need to set to the path of \c aolib.so
+For `libaos.py` to work, an environment variable \c MAOS_AOLIB need to set to
+the path of `aolib.so` or `aolib.dylib`
 
 ## Interface to MAOS
 
@@ -243,7 +234,7 @@ Then open \c ipython (or \c python) and run the following
 - \c import \c maos_client  #import the module
 - \c maos_client.connect(host,port) #the host and port is the same as used by monitor
 - \c maos_client.get_list() #get list of available variables
-- \c maos_client.get(name)  #get variable with the name
+- \c maos_client.get_var(name)  #get variable with the name
 - \c maos_client.get_all()  #get all variables
 - \c maos_client.pause(0)   #unpause maos
 - \c maos_client.pause(1)   #pause or step maos.

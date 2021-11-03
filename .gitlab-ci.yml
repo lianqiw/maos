@@ -28,5 +28,5 @@ build:
       - build/*/*.o
   cache:
     key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - ~/.aos  
+    #paths:
+    #  - ~/.aos  

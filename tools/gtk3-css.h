@@ -40,7 +40,6 @@ const gchar* all_style=
 "border-radius:1px;" //OK
 "border-width:1px;" //OK
 "font:12px Sans;"
-"vertical-align: middle;"
 "}\n"
 "entry{"
 "min-height:12px;"
@@ -55,7 +54,6 @@ const gchar* all_style=
 "min-width:6px;"
 "}"
 "box {"
-"align-items: start;"
 "padding: 2px;"
 "}"
 "notebook{\n"

@@ -171,12 +171,12 @@ static void host_removed(int sock, int notify){
 		}
 	}
 }
-//connect to scheduler(host)
+//connect to scheduler(host). The call is always from the thread running listen_host()
 static int add_host(int ihost){
 	if(ihost<0 || ihost>=nhost){
-		dbg_time("Invalid ihost=%d\n", ihost);
+		dbg2("Invalid ihost=%d\n", ihost);
 	}else if(hsock[ihost]>-1){
-		dbg_time("host %d is already connected\n", ihost);
+		dbg2("host %d is already connected\n", ihost);
 	}else if(hsock[ihost]==-1){
 		hsock[ihost]--;//make it -2 so no concurrent access.
 		int sock=scheduler_connect(hosts[ihost]);
@@ -196,8 +196,6 @@ static int add_host(int ihost){
 			dbg_time("Cannot reach %s\n", hosts[ihost]);
 			hsock[ihost]=-1;
 		}
-	}else{
-		dbg_time("add_host is already in progress\n");
 	}
 	return hsock[ihost];
 }
