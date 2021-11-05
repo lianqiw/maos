@@ -281,13 +281,14 @@ struct a_message{
 /*The receiver modifies the head of the ring buffer. Each client maintains its
   own tail of the ring buffer so they can proceed that their own speed. */
 static struct a_message ringbuffer[MAX_MESSAGE_QUEUE]={0};
-static int ringbuffer_head=0;//ring buffer head 
+static int ringbuffer_head=0;//ring buffer head for all clients
 struct per_session_data__maos_monitor{//per client
 	struct lws* wsi;
-	l_message* head;//head of list for initialization
-	l_message* tail;//tail of list for initialization
+	l_message* head;//head of list just for initialization
+	l_message* tail;//tail of list just for initialization
 	int ringbuffer_tail;//ring buffer tail per client
 };
+int nclient=0;//count number of clients
 int pending=0;//pending message for sending
 static int
 callback_maos_monitor(struct lws* wsi,
@@ -299,7 +300,8 @@ callback_maos_monitor(struct lws* wsi,
 	switch(reason){
 
 	case LWS_CALLBACK_ESTABLISHED:
-		lwsl_info("callback_maos_monitor: LWS_CALLBACK_ESTABLISHED\n");
+		nclient++;
+		lwsl_info("callback_maos_monitor: LWS_CALLBACK_ESTABLISHED, nclient=%d\n", nclient);
 		pss->ringbuffer_tail=ringbuffer_head;//initialize to zero length
 		pss->wsi=wsi;
 		pss->head=pss->tail=0;
@@ -309,7 +311,8 @@ callback_maos_monitor(struct lws* wsi,
 		break;
 
 	case LWS_CALLBACK_PROTOCOL_DESTROY:
-		lwsl_notice("mirror protocol cleaning up\n");
+		nclient--;
+		lwsl_notice("mirror protocol cleaning up, nclient=%d\n", nclient);
 		for(n=0; n<(int)(sizeof ringbuffer/sizeof ringbuffer[0]); n++)
 			if(ringbuffer[n].payload)
 				free(ringbuffer[n].payload);
@@ -435,7 +438,7 @@ void ws_end(){
 		lwsl_notice("libwebsockets-test-server exited cleanly\n");
 	}
 }
-//Run in a separate thread.
+//Calls by scheduler timeout periodically.
 int ws_service(int waiting){
 	static int ans=0;
 	if(!context){
@@ -470,7 +473,7 @@ int ws_service(int waiting){
 }
 //Initiate server to client message with ring buffer.
 void ws_push(const char* in, size_t len){
-	if(!context) return;
+	if(!context || !nclient) return;
 	size_t new_size=LWS_SEND_BUFFER_PRE_PADDING+len+
 		LWS_SEND_BUFFER_POST_PADDING;
 	//make sure buffer is big enough.

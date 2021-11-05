@@ -73,7 +73,7 @@ typedef struct MONITOR_T{
 }MONITOR_T;
 
 
-static MONITOR_T* pmonitor=NULL;
+static MONITOR_T* pmonitor=NULL;//head of linked list
 static int all_done=0;
 /*A linked list to store running process*/
 static RUN_T* running=NULL;/*points to the begining */
@@ -95,7 +95,7 @@ static RUN_T* running_get_by_sock(int sock);
 static void monitor_remove(int hostid);
 static MONITOR_T* monitor_add(int hostid);
 static void scheduler_timeout(void);
-static void monitor_send(RUN_T* run, char* path);
+static void monitor_send(RUN_T* run, const char* path);
 static void monitor_send_initial(MONITOR_T* ic);
 static void monitor_send_load(void);
 static long counter=-1;//an negative index for a pending run
@@ -154,18 +154,14 @@ static void nrun_sub(int pid, int nthread, int ngpu){
    "runned" which contains the already finished jobs.
 */
 static int runned_add(RUN_T* irun){
-	/*
-	  Add to the end of the runned list intead of the beggining.
-	*/
-
-	/*move irun to runned list from running list. */
+	/*move irun to end of runned list from running list. */
 	irun->next=NULL;
 	if(runned_end){
 		runned_end->next=irun;
-		runned_end=irun;
-	} else{
-		runned_end=runned=irun;
+	} else{//empty list
+		runned=irun;
 	}
+	runned_end=irun;
 	irun->status.done=1;
 	if(irun->status.info<10){
 		warning_time("Should be a finished process\n");
@@ -175,27 +171,27 @@ static int runned_add(RUN_T* irun){
 	}
 }
 static void runned_remove(int pid){
-	RUN_T* irun, * irun2=NULL;
+	RUN_T* irun, * irun_prev=NULL, *irun_next=NULL;
 	int removed=0;
-	for(irun=runned; irun; irun2=irun, irun=irun->next){
-		if(irun->pid==pid){
+	for(irun=runned; irun; irun_prev=irun, irun=irun_next){
+		irun_next=irun->next;
+		if(irun->pid==pid || pid==-1){
 			irun->status.info=S_REMOVE;
 			monitor_send(irun, NULL);
-			if(irun2){
-				irun2->next=irun->next;
-				if(irun->next==NULL)
-					runned_end=irun2;
+			if(irun_prev){
+				irun_prev->next=irun->next;
 			} else{
 				runned=irun->next;
-				if(irun->next==NULL)
-					runned_end=runned;
+			}
+			if(runned_end==irun){
+				runned_end=irun_prev;
 			}
 			free(irun->path);
 			free(irun->path0);
 			free(irun->exe);
 			free(irun);
 			removed=1;
-			break;
+			if(pid!=-1) break;
 		}
 	}
 	if(!removed){
@@ -292,8 +288,8 @@ static RUN_T* running_add(int pid, int sock){
 
 static void running_remove(int pid, int status){
 	//dbg_time("Removing %d from running\n", pid);
-	RUN_T* irun, * irun2=NULL;
-	for(irun=running; irun; irun2=irun, irun=irun->next){
+	RUN_T* irun, * irun_prev=NULL;
+	for(irun=running; irun; irun_prev=irun, irun=irun->next){
 		if(irun->pid==pid){
 			//Only the following states are used
 			//S_QUEUED, S_WAIT, S_START, S_RUNNING, S_UNKNOWN, S_FINISH
@@ -306,9 +302,9 @@ static void running_remove(int pid, int status){
 			irun->status.timlast=myclocki();
 			irun->status.info=status;
 			dbg_time("remove job %d with status %d\n", pid, irun->status.info);
-			if(irun2){
-				if(!(irun2->next=irun->next)){
-					running_end=irun2;
+			if(irun_prev){
+				if(!(irun_prev->next=irun->next)){
+					running_end=irun_prev;
 				}
 			} else{//beginning of list
 				if(!(running=irun->next)){
@@ -360,12 +356,12 @@ static RUN_T* running_get_by_sock(int sock){
 	check all the jobs. remove if any job quited.
  */
 static void check_jobs(void){
-	RUN_T* irun, * irun2;
+	RUN_T* irun, * irun_prev;
 	int nrunning=0;
 	if(running){
 		time_t now=myclocki();
-		for(irun=running; irun; irun=irun2){
-			irun2=irun->next;
+		for(irun=running; irun; irun=irun_prev){
+			irun_prev=irun->next;
 			if(irun->pid>0){//Running job
 				if(kill(irun->pid, 0)){//No longer exists
 					if(irun->last_time+60<now){//allow grace period.
@@ -530,7 +526,7 @@ static void socket_save(int sock_save, int id){
 		}
 	}
 	if(!found){
-		SOCKID_T* tmp=(SOCKID_T*)malloc(sizeof(SOCKID_T));
+		SOCKID_T* tmp=mycalloc(1, SOCKID_T);
 		tmp->id=id;
 		tmp->sock=sock_save;
 		tmp->next=shead;
@@ -706,8 +702,8 @@ static int respond(int sock){
 			warning_time("(%d) running_add %d failed. Exe already exited.\n", sock, pid);
 			break;
 		}
-		free(irun->path0);
-		free(irun->path);
+		if(irun->path0) free(irun->path0);
+		if(irun->path) free(irun->path);
 		if(streadstr(sock, &irun->path0)){
 			dbg_time("(%d) Job %d receiving path failed. \n", sock, pid);
 			ret=-1;
@@ -810,14 +806,7 @@ static int respond(int sock){
 	}
 	break;
 	case CMD_REMOVE://11: Called by Monitor to remove a finished job fron the list*/
-	{
-		RUN_T* irun=runned_get(pid);
-		if(irun){
-			runned_remove(pid);
-		} else{
-			dbg_time("(%d) CMD_REMOVE: %s:%d not found\n", sock, HOST, pid);
-		}
-	}
+		runned_remove(pid);
 	break;
 	case CMD_DISPLAY://12: called by monitor enable connection of drawdaemon to draw().*/
 		dbg_time("(%d) CMD_DISPLAY for pid=%d\n", sock, pid);
@@ -1015,13 +1004,13 @@ static void scheduler_timeout(void){
 
 /*The following routines maintains the MONITOR_T linked list. */
 static MONITOR_T* monitor_add(int sock){
-	/*dbg_time("added monitor on sock %d\n",sock); */
+	dbg_time("added monitor on sock %d\n",sock);
 	MONITOR_T* node=mycalloc(1, MONITOR_T);
 	node->sock=sock;
 	node->next=pmonitor;
 	pmonitor=node;
 	monitor_send_initial(node);
-	return pmonitor;
+	return node;
 }
 static void monitor_remove(int sock){
 	MONITOR_T* ic, * ic2=NULL;
@@ -1046,7 +1035,8 @@ static void monitor_remove(int sock){
    Convert RUN_T to string for websocket.
 */
 #if HAS_LWS
-static void html_push(RUN_T* irun, char* path, char** dest, size_t* plen, long prepad, long postpad){
+//do the real conversion
+static void html_push(RUN_T *irun, const char *path, char **dest, size_t *plen, long prepad, long postpad){
 	char temp[4096]={0};
 	size_t len;
 	if(path){
@@ -1073,9 +1063,10 @@ static void html_push(RUN_T* irun, char* path, char** dest, size_t* plen, long p
 		memcpy(*dest+prepad, temp, len);
 	}
 }
-static void html_push_all_do(RUN_T* irun, l_message** head, l_message** tail, long prepad, long postpad){
-	l_message* node=(l_message*)calloc(1, sizeof(l_message));
-	l_message* node2=(l_message*)calloc(1, sizeof(l_message));
+//Push path, and status as two nodes
+static void html_push_all_do(RUN_T *irun, l_message **head, l_message **tail, long prepad, long postpad){
+	l_message* node=mycalloc(1, l_message);
+	l_message* node2=mycalloc(1,l_message);
 	node->next=node2;
 	node2->next=0;
 	if(*tail){
@@ -1100,7 +1091,7 @@ void html_push_all(l_message** head, l_message** tail, long prepad, long postpad
 	//UNLOCK(mutex_sch);
 }
 #endif
-static int monitor_send_do(RUN_T* irun, char* path, int sock){
+static int monitor_send_do(RUN_T* irun, const char* path, int sock){
 	int cmd[3];
 	cmd[1]=irun->pidnew;
 	cmd[2]=irun->pid;
@@ -1113,7 +1104,7 @@ static int monitor_send_do(RUN_T* irun, char* path, int sock){
 	}
 }
 /* Notify alreadyed connected monitors job update. */
-static void monitor_send(RUN_T* irun, char* path){
+static void monitor_send(RUN_T* irun, const char* path){
 #if HAS_LWS
 	html_push(irun, path, 0, 0, 0, 0);
 #endif
@@ -1289,6 +1280,7 @@ int main(int argc, const char* argv[]){
 	extern int PORT;
 	listen_port(PORT, slocal, respond, 1, scheduler_timeout, 0);
 	remove(slocal);
-
+	runned_remove(-1);
+	signal_caught=0;//enable printing memory debug information
 	exit(0);
 }

@@ -43,10 +43,12 @@ public:
 		if(p) memset(p, 0, size*sizeof(T));
 	}
 	void* operator new[](size_t size){
-		return ::calloc(size, 1);
+		//return ::calloc(size, 1);
+		return (void*) mycalloc(size, char);
 	}
 	void operator delete[](void* p){
-		::free(p);
+		//::free(p);
+		myfree(p);
 	}
 	static void Copy(T* pout, const T* pin, size_t size, cudaStream_t stream=0){
 		(void) stream;
@@ -68,7 +70,7 @@ public:
 		memset(p, 0, size);
 		return p;
 	}
-		void operator delete[](void* p){
+	void operator delete[](void* p){
 		cudaFreeHost(p);
 	}
 };

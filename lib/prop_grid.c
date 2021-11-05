@@ -188,15 +188,15 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			const real dplocx00=oxout+irows*dxout;
 			//allow points falls between [wrapx, wrapx+xover)
 			const real xover=wrap?1:EPS;
-			real* dplocx_arr=0;
-			int* nplocx_arr=0;
-			int* nplocx2_arr=0;
+			struct interp_cache_t{
+				real dplocx;
+				int nplocx;
+				int nplocx2;
+			};
+			struct interp_cache_t *interp_cache=0;
 			if(nyout>10&&nxout<2000){//cache SPLIT() results
-			//alloca is not good in mac due to stack limitation.
-				dplocx_arr=mymalloc(nxout, real);
-				nplocx_arr=mymalloc(nxout, int);
-				nplocx2_arr=mymalloc(nxout, int);
-
+				//alloca is not good in mac due to stack limitation.
+				interp_cache=mycalloc(nxout, struct interp_cache_t);
 				real rowdiv=rowdiv0;
 				real dplocx=dplocx00;
 				int irow=irows;
@@ -206,17 +206,17 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 					//First handle points fall within [0, wrapx)
 					for(; irow<rowdiv; irow++, dplocx+=dxout){
 						SPLIT(dplocx, dplocx0, nplocx0);
-						dplocx_arr[irow]=dplocx0;
-						nplocx_arr[irow]=nplocx0;
-						nplocx2_arr[irow]=1;
+						interp_cache[irow].dplocx=dplocx0;
+						interp_cache[irow].nplocx=nplocx0;
+						interp_cache[irow].nplocx2=1;
 					}
 					//Then handle points fall within [wrapx, wrapx+xover)
 					//xover is EPS if wrap==0, 1 if wrap==1.
 					for(; irow<nxout&&dplocx<wrapx+xover; irow++, dplocx+=dxout){//right on edge
 						SPLIT(dplocx, dplocx0, nplocx0);
-						dplocx_arr[irow]=dplocx0;
-						nplocx_arr[irow]=nplocx0;
-						nplocx2_arr[irow]=-wrapx;
+						interp_cache[irow].dplocx=dplocx0;
+						interp_cache[irow].nplocx=nplocx0;
+						interp_cache[irow].nplocx2=-wrapx;
 					}
 					//wrap the points around;
 					dplocx-=nxin;
@@ -261,22 +261,22 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 				rowdiv=rowdiv0;
 				dplocx=dplocx00;
 
-				if(dplocx_arr){//use cached results
+				if(interp_cache){//use cached results
 					//First handle points fall within [0, wrapx)
 #pragma omp simd //not effective
 					for(int irow=irows; irow<rowdiv; irow++){
-						dplocx0=dplocx_arr[irow];
-						nplocx0=nplocx_arr[irow];
-						GRID_ADD(irow, (nplocx2_arr[irow]));//hotspot for NFIRAOS simulation
+						dplocx0=interp_cache[irow].dplocx;
+						nplocx0=interp_cache[irow].nplocx;
+						GRID_ADD(irow, (interp_cache[irow].nplocx2));//hotspot for NFIRAOS simulation
 					}
 					//Then handle points fall within [wrapx, wrapx+xover)
 					//xover is EPS if wrap==0, 1 if wrap==1.
 					if(wrap){
 #pragma omp simd //not effective
 						for(int irow=rowdiv; irow<nxout; irow++){//right on edge
-							dplocx0=dplocx_arr[irow];
-							nplocx0=nplocx_arr[irow];
-							GRID_ADD(irow, (nplocx2_arr[irow]));
+							dplocx0=interp_cache[irow].dplocx;
+							nplocx0=interp_cache[irow].nplocx;
+							GRID_ADD(irow, (interp_cache[irow].nplocx2));
 						}
 					}
 				} else{
@@ -301,11 +301,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 				}
 #undef GRID_ADD
 			}/*for icol*/
-			if(dplocx_arr){
-				free(dplocx_arr);
-				free(nplocx_arr);
-				free(nplocx2_arr);
-			}
+			free(interp_cache);
 		}/*fabs(dx_in2*dxout-1)<EPS*/
 	} else{
 	//warning_once("Using unoptmized prop_grid_map\n");

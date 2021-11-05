@@ -22,7 +22,8 @@
    create a new map_t object.
 */
 map_t* mapnew(long nx, long ny, real dx, real dy){
-	map_t* map=(map_t*)realloc(dnew_do(nx, ny, NULL, 0), sizeof(map_t));
+	dmat *tmp=dnew_do(nx, ny, NULL, 0);
+	map_t* map=myrealloc(tmp, 1, map_t);
 	map->h=0;
 	map->dx=dx;
 	map->dy=dy;
@@ -38,7 +39,8 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 */
 map_t* mapnew2(map_t* A){
 	if(!check_map(A)) return NULL;
-	map_t* map=(map_t*)realloc(dnew_do(A->nx, A->ny, NULL, 0), sizeof(map_t));
+	dmat *tmp=dnew_do(A->nx, A->ny, NULL, 0);
+	map_t* map=myrealloc(tmp, 1, map_t);
 	map->h=A->h;
 	map->dx=A->dx;
 	map->dy=A->dy;
@@ -217,7 +219,8 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 */
 map_t* d2map(const dmat* in){
 	if(!check_map(in)) return NULL;
-	map_t* map=myrealloc(dref(in), 1, map_t);
+	dmat *tmp=dref(in);
+	map_t* map=myrealloc(tmp, 1, map_t);
 	memset((char*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
 	char* header=in->header;
 	map->iac=0;
@@ -266,7 +269,8 @@ mapcell* dcell2map(const dcell* in){
 */
 rmap_t* d2rmap(const dmat* in){
 	if(!check_map(in)) return NULL;
-	rmap_t* map=myrealloc(dref(in), 1, rmap_t);
+	dmat *tmp=dref(in);
+	rmap_t* map=myrealloc(tmp, 1, rmap_t);
 	memset((char*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
 	char* header=in->header;
 	if(!in->header){

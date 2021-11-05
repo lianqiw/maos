@@ -64,7 +64,8 @@ extern char* (*strdup0)(const char *);
 char *mystrdup(const char *A);
 #undef strdup
 #define strdup mystrdup /*our strdup handles NULL correctly, and talk to mem.c */
-
+#undef strndup
+#define strndup mystrndup
 typedef struct argopt_t{
     const char *name;    /**<The long name*/
     char key;      /**<The short name*/

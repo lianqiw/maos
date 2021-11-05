@@ -423,7 +423,7 @@ char* expand_filename(const char* fn){
 	return out;
 }
 /**
-   Duplicate a string. Check for NULL.
+   Duplicate a string. Check for NULL.  Do not call strndup to avoid recursive deadlock.
  */
 char* mystrndup(const char* A, int len){
 	if(!len) return NULL;
@@ -438,7 +438,7 @@ char* mystrndup(const char* A, int len){
 
 /**
    declare strdup so my memory mangement mem.c is happy when DEBUG=1. Handles
-NULL pointer correctly.  */
+NULL pointer correctly.  Do not call strdup to avoid recursive deadlock. */
 char* mystrdup(const char* A){
 	if(!A){
 		return NULL;

@@ -461,16 +461,17 @@ int scheduler_socket(int dir, int *sfd, int id){
 /**
    Execute addr2line as specified in buf, combine the answer, and return the
    string.*/
-int call_addr2line(char* ans, int nans, const char* buf){
+int call_addr2line(char* ans, int nans, const char* cmdstr){
 	ans[0]=0;
-	FILE* fpcmd=popen(buf, "r");
+	int res=1;
+	FILE *fpcmd=popen(cmdstr, "r");
 	if(!fpcmd){
-		return 1;
+		warning("popen failed: %s", cmdstr);
 	} else{
 		char line[4096];
 		nans--;
 		while(fgets(line, sizeof(line), fpcmd)){
-			char* tmp=strrchr(line, '/');
+			char *tmp=strrchr(line, '/');
 			if(tmp){
 				tmp++;
 				char* tmp2=strchr(tmp, '\n'); if(tmp2) tmp2[0]='\0';
@@ -480,11 +481,17 @@ int call_addr2line(char* ans, int nans, const char* buf){
 				}
 				strncat(ans, "->", nans); nans-=3;
 				strncat(ans, tmp, nans);nans-=strlen(tmp);
+				res=0;
 			}
 		}
 		pclose(fpcmd);
 	}
-	return 0;
+	if(res){//failed. copy the progname and addresses
+		char *prog=strrchr(cmdstr, '/');
+		strncat(ans, prog?(prog+1):cmdstr, nans);
+		res=0;
+	}
+	return res;
 }
 
 /**
@@ -495,7 +502,7 @@ int call_addr2line(char* ans, int nans, const char* buf){
 int print_backtrace_symbol(void* const* buffer, int size){
 	int ans=-1;
 	//disable memory debugging as this code may be called from within malloc_dbg
-#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
+//#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
 	static int connect_failed=0;
 	char cmdstr[PATH_MAX+40]={0};
 	char add[24]={0};
@@ -518,8 +525,13 @@ int print_backtrace_symbol(void* const* buffer, int size){
 			if(strlen(line)){
 				ans=0;
 			}
+		} else{
+			char *prog=strrchr(cmdstr, '/');
+			if(prog){
+				info3("%s\n", prog+1);
+			}
 		}
-	} else{//Create a new socket and ask scheduler to do popen and return answer.
+	} else{
 #if MAOS_DISABLE_SCHEDULER == 0
 		//Create a new connection.
 		int sock=scheduler_connect_self(0);
@@ -550,9 +562,9 @@ int print_backtrace_symbol(void* const* buffer, int size){
 	}
 	UNLOCK(mutex);
 	//sync();
-#else
-	(void)buffer; (void)size;
-#endif
+//#else
+	//(void)buffer; (void)size;
+//#endif
 	return ans;
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
