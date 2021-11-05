@@ -1,5 +1,7 @@
 var NAVTREEINDEX20 =
 {
+"zmath_8h.html#a2d4a8c0f8143841e59b78cd6b925de1e":[11,0,3,12,143],
+"zmath_8h.html#a2e28f685427cbad2dd3d0e1567ca68f2":[11,0,3,12,65],
 "zmath_8h.html#a2f5a9d637fde2b42664a983de043a5aa":[11,0,3,12,221],
 "zmath_8h.html#a317216904f4da40cf0a02afa12a7e33d":[11,0,3,12,72],
 "zmath_8h.html#a345ade7cc39967289fd30a27936f724b":[11,0,3,12,71],

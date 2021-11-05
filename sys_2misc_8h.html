@@ -113,6 +113,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a9254b089d435892385cf14d0ab4a7a2d"><td class="memItemLeft" align="right" valign="top"><a id="a9254b089d435892385cf14d0ab4a7a2d"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>strdup</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9">mystrdup</a> /*our strdup handles NULL correctly, and talk to mem.c */</td></tr>
 <tr class="separator:a9254b089d435892385cf14d0ab4a7a2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad03229fc70e029be3fb59fe8dc7aef6f"><td class="memItemLeft" align="right" valign="top"><a id="ad03229fc70e029be3fb59fe8dc7aef6f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>strndup</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37">mystrndup</a></td></tr>
+<tr class="separator:ad03229fc70e029be3fb59fe8dc7aef6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -916,7 +919,7 @@ nval</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Duplicate a string. Check for NULL. </p>
+<p>Duplicate a string. Check for NULL. Do not call strndup to avoid recursive deadlock. </p>
 
 </div>
 </div>
@@ -1028,7 +1031,7 @@ nval</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>declare strdup so my memory mangement mem.c is happy when DEBUG=1. Handles NULL pointer correctly. </p>
+<p>declare strdup so my memory mangement mem.c is happy when DEBUG=1. Handles NULL pointer correctly. Do not call strdup to avoid recursive deadlock. </p>
 
 </div>
 </div>

@@ -162,6 +162,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a25109b9068a7577def63faa4bf329664"><td class="memItemLeft" align="right" valign="top"><a id="a25109b9068a7577def63faa4bf329664"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>logstd</b>(level,  A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){fprintf(std2out?stdout:stderr, A);}})</td></tr>
 <tr class="separator:a25109b9068a7577def63faa4bf329664"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a900f4a34f3fd50e06d9e3f6dbc1dbbed"><td class="memItemLeft" align="right" valign="top"><a id="a900f4a34f3fd50e06d9e3f6dbc1dbbed"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_line</b>(format, ...)&#160;&#160;&#160;logerr(-4, &quot;Info(%s:%d,%s): &quot; format ,BASEFILE,__LINE__,__func__,##__VA_ARGS__)</td></tr>
+<tr class="separator:a900f4a34f3fd50e06d9e3f6dbc1dbbed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71ca8e156af74e00cb46374435f5fb4b"><td class="memItemLeft" align="right" valign="top"><a id="a71ca8e156af74e00cb46374435f5fb4b"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info</b>(A...)&#160;&#160;&#160;logstd(-1, A)</td></tr>
 <tr class="separator:a71ca8e156af74e00cb46374435f5fb4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
