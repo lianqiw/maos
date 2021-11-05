@@ -119,12 +119,6 @@ static jobshead_t jobsnormal={0L};/**<Start of the fifo list of pending jobs*/
 static jobshead_t jobsurgent={0L};/**<Start of the fifo list of urgent jobs*/
 static jobshead_t jobspool={0L};  /**<saving unused jobs_t*/
 
-//weak is ok since we do while
-#define MEM_ORDER __ATOMIC_RELAXED
-#define atomic_compare_exchange_n(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 1, MEM_ORDER, MEM_ORDER)
-#define atomic_compare_exchange(ptr, pexpected, pdesired) __atomic_compare_exchange(ptr, pexpected, pdesired, 1, MEM_ORDER, MEM_ORDER) 
-#define atomic_load(ptr) __atomic_load_n(ptr, MEM_ORDER) 
-#define atomic_store(ptr, val) __atomic_store_n(ptr, val, MEM_ORDER) 
 
 //Place job to the beginning of list.
 static void jobs_push(jobshead_t *head, unsigned int jobheadind, unsigned int jobtailind){

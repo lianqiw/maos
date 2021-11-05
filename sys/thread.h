@@ -208,8 +208,10 @@ void thread_prep(thread_t *thd, long start, long end, long nthread, thread_wrapf
 */
 int thread_new(thread_fun fun, void *arg);
 void thread_block_signal();
-#define MEM_ORDER __ATOMIC_SEQ_CST
+//More strict mem order are not applicable for our application
+#define MEM_ORDER __ATOMIC_RELAXED
 //The build in functions assume pointer is of type unsigned int
+//We use functions instead of defines to enforce type
 static inline unsigned int atomic_sub_fetch(unsigned int *ptr, unsigned int val){
     return __atomic_sub_fetch(ptr, val, MEM_ORDER);
 }
@@ -222,7 +224,12 @@ static inline unsigned int atomic_fetch_add(unsigned int *ptr, unsigned int val)
 static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val){
     return __atomic_fetch_sub(ptr, val, MEM_ORDER);
 }
-#undef MEM_ORDER
+//weak is ok since we do while
+#define atomic_compare_exchange_n(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 1, MEM_ORDER, MEM_ORDER)
+#define atomic_compare_exchange(ptr, pexpected, pdesired) __atomic_compare_exchange(ptr, pexpected, pdesired, 1, MEM_ORDER, MEM_ORDER) 
+#define atomic_load(ptr) __atomic_load_n(ptr, MEM_ORDER) 
+#define atomic_store(ptr, val) __atomic_store_n(ptr, val, MEM_ORDER) 
+
 #define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
 #if _OPENMP > 0
 #define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))

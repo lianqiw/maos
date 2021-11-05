@@ -74,25 +74,21 @@ static size_t memalloc=0, memfree=0;
 static void *MROOT=NULL;
 static void *MSTATROOT=NULL;//reuses keys from MROOT.
 /*max depth in backtrace */
-#define DT 16
+#define DT 10
 typedef struct{
 	void *p;
-	char *funtrace;//new way of recording initial call location (not yet used)
-	void *func[DT];
+	size_t size;
+	union{
+		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
+		void *func[DT];
+	};
 	int nfunc;
-	size_t nelem;
-	size_t nbyte;
 }T_MEMKEY;
 
 typedef int(*compar)(const void *, const void *);
 static int stat_cmp(const T_MEMKEY *pa, const T_MEMKEY *pb){
 	if(!pa->nfunc&&!pb->nfunc){
-		if(pa->funtrace&&pb->funtrace){
-			return strcmp(pa->funtrace, pb->funtrace);
-		} else{
-			dbg("nfunc not set but also funtrace not set\n");
-			return 1;
-		}
+		return strcmp(pa->funtrace, pb->funtrace);
 	}
 	if(pa->nfunc<pb->nfunc){
 		return -1;
@@ -120,7 +116,7 @@ static void stat_usage(const void *key, VISIT which, int level){
 				warning("Error inserting to tree\n");
 			}
 		} else{
-			(*(T_MEMKEY **)found)->nelem+=key2->nelem;
+			(*(T_MEMKEY **)found)->size+=key2->size;
 		}
 	}
 }
@@ -131,7 +127,7 @@ static void print_usage(const void *key, VISIT which, int level){
 	if(which==leaf||which==postorder){
 		print_count++;
 		if(print_count<100){
-			info3("%9zu(%4zu)", key2->nelem, key2->nbyte);
+			info3("%9zu", key2->size);
 			if(key2->funtrace[0]){
 				info3(" %s\n", key2->funtrace);
 			}else if(key2->nfunc){
@@ -146,12 +142,6 @@ static void print_usage(const void *key, VISIT which, int level){
 		}
 	}
 }
-typedef struct deinit_t{/*contains either fun or data that need to be freed. */
-	void (*fun)(void);
-	void *data;
-	struct deinit_t *next;
-}deinit_t;
-deinit_t *deinit_head=NULL;
 
 static int key_cmp(const void *a, const void *b){
 	void *p1, *p2;
@@ -162,20 +152,20 @@ static int key_cmp(const void *a, const void *b){
 	else if(p1>p2) return 1;
 	else return 0;
 }
-static void memkey_add(void *p, size_t nbyte, size_t nelem){
+static void memkey_add(void *p, size_t size){
 	if(!p){
-		if(nelem){
-			warning("memory allocation for %zu failed\n", nelem);
+		if(size){
+			warning("memory allocation for %zu failed\n", size);
 		}
 		return;
 	}
 
 	T_MEMKEY *key=(T_MEMKEY *)calloc_default(1, sizeof(T_MEMKEY));
 	key->p=p;
-	key->nbyte=nbyte;
-	key->nelem=nelem;
+	key->size=size;
+	
 	if(funtrace[0]){//do not use backtrace
-		key->funtrace=strdup(funtrace);
+		memcpy(key->funtrace, funtrace, funtrace_len);
 	} else{
 #ifndef __CYGWIN__
 		dbg("Using backtrace\n");
@@ -192,7 +182,7 @@ static void memkey_add(void *p, size_t nbyte, size_t nelem){
 			warning("Error inserting to tree\n");
 		} else{
 			memcnt++;
-			memalloc+=nelem*nbyte;
+			memalloc+=size;
 		}
 	}
 	UNLOCK(mutex_mem);
@@ -208,9 +198,7 @@ static int memkey_del(void *p){
 	found=tfind(&key, &MROOT, key_cmp);
 	if(found){
 		T_MEMKEY *key1=*(T_MEMKEY **)found;/*the address of allocated T_MEMKEY. */
-		size_t nelem=key1->nelem;
-		size_t nbyte=key1->nbyte;
-		memfree+=nelem*nbyte;
+		memfree+=key1->size;
 		memcnt--;
 		if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
 			warning("%p free: Record deleting error\n", p);
@@ -225,16 +213,15 @@ static int memkey_del(void *p){
 	}
 	return ans;
 }
-static void memkey_update(void *p, size_t nbyte, size_t nelem){
+static void memkey_update(void *p, size_t size){
 	T_MEMKEY key;
 	key.p=p;
 	LOCK(mutex_mem);
 	void* found=tfind(&key, &MROOT, key_cmp);
 	if(found){
 		T_MEMKEY *key1=*(T_MEMKEY **)found;
-		memalloc+=(nbyte*nelem-key1->nbyte*key1->nelem);
-		key1->nbyte=nbyte;
-		key1->nelem=nelem;
+		memalloc+=(size-key1->size);
+		key1->size=size;
 	}else{
 		warning("%p realloc: Record not found\n", p);
 	}
@@ -243,7 +230,7 @@ static void memkey_update(void *p, size_t nbyte, size_t nelem){
 void *calloc_maos(size_t nbyte, size_t nelem){
 	void *p=calloc_default(nbyte, nelem);
 	if(MEM_DEBUG){
-		memkey_add(p, nbyte, nelem);
+		memkey_add(p, nbyte*nelem);
 	}
 	if(MEM_VERBOSE){
 		info("%s calloc: %p with %zu (%2zu) bytes\n", funtrace, p, nelem, nbyte);
@@ -254,7 +241,7 @@ void *calloc_maos(size_t nbyte, size_t nelem){
 void *malloc_maos(size_t size){
 	void *p=malloc_default(size);
 	if(MEM_DEBUG){
-		memkey_add(p, 1, size);
+		memkey_add(p, size);
 	}
 	if(MEM_VERBOSE){
 		info("%s malloc: %p with %zu bytes\n", funtrace, p, size);
@@ -267,9 +254,9 @@ void *realloc_maos(void *p0, size_t size){
 	if(MEM_DEBUG){
 		if(p!=p0){
 			if(p0) memkey_del(p0);
-			memkey_add(p, 1, size);
+			memkey_add(p, size);
 		}else{
-			memkey_update(p, 1, size);
+			memkey_update(p, size);
 		}
 	}
 	if(MEM_VERBOSE){
@@ -331,6 +318,13 @@ static void init_mem(){
 static __attribute__((constructor)) void init(){
 	init_mem();
 }
+typedef struct deinit_t{/*contains either fun or data that need to be freed. */
+	void (*fun)(void);
+	void *data;
+	struct deinit_t *next;
+}deinit_t;
+deinit_t *deinit_head=NULL;
+
 /**
    Register routines to be called with mem.c is unloading (deinit).
  */
