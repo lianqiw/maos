@@ -46,12 +46,12 @@ static void dummy_runner(data_t *data){
 	}
 	atomic_fetch_add(&data->tot, tot);
 	if(do_loader){
-		dbg("depth=%u\n", data->depth);
+		//dbg("depth=%u\n", data->depth);
 		dummy_loader(data->depth,1);
 	}
 }
 static void dummy_loader(unsigned int depth, int urgent){
-	dbg("depth=%u\n", depth);
+	//dbg("depth=%u\n", depth);
 	const int n=10000;
 	data_t data={0,n,0,depth-1};
 	const int nthread=1000;
@@ -59,7 +59,9 @@ static void dummy_loader(unsigned int depth, int urgent){
 	thread_pool_queue(&counter, (thread_wrapfun)dummy_runner, &data, nthread, urgent);
 	thread_pool_wait(&counter, urgent);
 	assert_int_equal(data.tot, n*(n-1)/2);
-	dbg("data.tot=%u, depth=%u\n", data.tot, depth);
+	if(data.tot!=n*(n-1)/2){
+		dbg("data.tot=%u, depth=%u\n", data.tot, depth);
+	}
 }
 static void test_thread_pool(void** state){
     (void)state;
@@ -67,18 +69,32 @@ static void test_thread_pool(void** state){
 	thread_pool_init(nthread);
 	dummy_loader(10,1);
 }
-
+void print_mem_debug();
+static void test_mem(void** state){
+	(void)state;
+#pragma omp parallel for	
+	for(int i=0; i<10000; i++){
+		int *a=mycalloc(100, int);
+		a[0]=1;
+		a[99]=1;
+		myfree(a);
+	}
+}
 int main(void){
 #if 1
     quitfun=dummy_quitfun;
     LOG_LEVEL=-4;
     const struct CMUnitTest tests[]={
         cmocka_unit_test(test_thread_pool),
+		cmocka_unit_test(test_mem)
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
 #else	
-	test_thread_pool(NULL);
+	test_mem(NULL);
+	//test_thread_pool(NULL);
+	(void) test_thread_pool;
 	(void)dummy_quitfun;
+	(void) test_mem;
 #endif	
 }

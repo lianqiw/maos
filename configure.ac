@@ -213,7 +213,7 @@ COMMON_CLANG+=" -Wno-sign-compare -Wno-error=pass-failed" #CLANG has false posit
 OPTIM_ALL="-g -O3 -mtune=native "
 OPTIM_GCC="-ftree-vectorize -ffast-math -fno-finite-math-only "
 
-DEBUG_ALL="-g3 -Og -DDEBUG_TRACE"
+DEBUG_ALL="-g3 -O0 -DDEBUG_TRACE" #-og
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls " #-fsanitize=address"
 
 #inline definition:

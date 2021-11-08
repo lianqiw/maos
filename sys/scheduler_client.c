@@ -503,7 +503,7 @@ int print_backtrace_symbol(void* const* buffer, int size){
 	int ans=-1;
 	//disable memory debugging as this code may be called from within malloc_dbg
 //#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
-	static int connect_failed=0;
+#if __linux__ //mac does not have addr2line. //TODO: use atos
 	char cmdstr[PATH_MAX+40]={0};
 	char add[24]={0};
 	char progname[PATH_MAX+20]={0};
@@ -516,6 +516,8 @@ int print_backtrace_symbol(void* const* buffer, int size){
 		snprintf(add, 24, " %p", buffer[it]);
 		strncat(cmdstr, add, PATH_MAX-strlen(cmdstr)-1);
 	}
+
+	static int connect_failed=0;
 	PNEW(mutex);//Only one thread can do this.
 	LOCK(mutex);
 	if(MAOS_DISABLE_SCHEDULER||is_scheduler||connect_failed){
@@ -527,9 +529,7 @@ int print_backtrace_symbol(void* const* buffer, int size){
 			}
 		} else{
 			char *prog=strrchr(cmdstr, '/');
-			if(prog){
-				info3("%s\n", prog+1);
-			}
+			info3("%s\n", prog?(prog+1):cmdstr);
 		}
 	} else{
 #if MAOS_DISABLE_SCHEDULER == 0
@@ -562,9 +562,9 @@ int print_backtrace_symbol(void* const* buffer, int size){
 	}
 	UNLOCK(mutex);
 	//sync();
-//#else
-	//(void)buffer; (void)size;
-//#endif
+#else
+	(void)buffer; (void)size;
+#endif
 	return ans;
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)

@@ -66,15 +66,16 @@ void  (*free_custom)(void*);
 int MEM_VERBOSE=0;
 int MEM_DEBUG=DEBUG+0;
 int LOG_LEVEL=0;
-PNEW(mutex_mem);
+
 PNEW(mutex_deinit);
 
-static long  memcnt=0;
+static unsigned int  memcnt=0;
 static size_t memalloc=0, memfree=0;
-static void *MROOT=NULL;
-static void *MSTATROOT=NULL;//reuses keys from MROOT.
 /*max depth in backtrace */
 #define DT 10
+
+#define METHOD 1
+#if METHOD == 1 //Use hash table
 typedef struct{
 	void *p;
 	size_t size;
@@ -83,10 +84,395 @@ typedef struct{
 		void *func[DT];
 	};
 	int nfunc;
-}T_MEMKEY;
+	
+}memkey_t;
+memkey_t *memkey_all=NULL;
+const unsigned int memkey_max=0xFFFFFF; //should be all 1 at lower bits
+unsigned int memkey_thres = 0;
+unsigned int memkey_maxtry=0;
+static void memkey_init(){
+	memkey_all=calloc_default(memkey_max, sizeof(memkey_t));
+	memkey_thres=memkey_max>>1;
+}
+//convert address to index
+static unsigned int addr2ind(void*p){
+	return (unsigned int)(((unsigned long)p>>4)&memkey_max);
+}
+static void memkey_add(void *p, size_t size){
+	if(atomic_add_fetch(&memcnt, 1)>memkey_thres){
+		memkey_thres=memcnt;
+		dbg("memcnt=%u >= memkey_max=%u. Half slots are filled. please increase memkey_max.\n", memcnt, memkey_max);
+	}
+	memalloc+=size;
+	unsigned int counter=0;
+	for(unsigned int ind=addr2ind(p); counter<memkey_max ; ind=(ind+1)&memkey_max, counter++){
+		if(!memkey_all[ind].p){//found empty slot
+			void *dummy=NULL;
+			//try to occupy slot using CAS
+			if(atomic_compare_exchange_n(&memkey_all[ind].p, &dummy, p)){//success
+				memkey_all[ind].size=size;
+				if(funtrace[0] && 0){
+					memcpy(memkey_all[ind].funtrace, funtrace, funtrace_len);
+				} else{
+					memkey_all[ind].nfunc=backtrace(memkey_all[ind].func, DT);
+				}
+				if(counter>memkey_maxtry){
+					memkey_maxtry=counter;
+					dbg("Max try is %u\n", memkey_maxtry);
+				}
+				break;
+			}//else: failed, occupied by another thread. Try next slot
+		}
+	}
+}
+static void memkey_del(void *p){
+	unsigned int counter=0;
+	for(unsigned int ind=addr2ind(p); counter<memkey_max ; ind=(ind+1)&memkey_max, counter++){
+		if(memkey_all[ind].p==p){//found. no race condition can occure
+			memfree+=memkey_all[ind].size;
+			atomic_sub_fetch(&memcnt, 1);
+			memkey_all[ind].p=0;
+			break;
+		}
+	}
+	if(counter>memkey_maxtry){
+		memkey_maxtry=counter;
+		dbg("Max try is %u\n", memkey_maxtry);
+	}
+}
+static void print_mem_debug(){
+	if(!memcnt){
+		info3("All allocated memory are freed.\n");
+	} else{
+		info3("%u (%lu kB) allocated memory not freed. \n", memcnt, (memalloc-memfree)>>10);
+	}
+	unsigned int counter=0;
+	unsigned int ans=0;
+	for(unsigned int i=0; i<memkey_max; i++){
+		if(memkey_all[i].p){
+			if(counter<50){
+				counter++;
+				info3("%9zu", memkey_all[i].size);
+				if(memkey_all[i].nfunc){
+					int offset=memkey_all[i].nfunc>3?1:0;
+					if(!ans || !(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
+						info3(" %p\n", memkey_all[i].p);
+					}
+				}else{
+					info3(" %s\n", memkey_all[i].funtrace);
+				}
+			}else{
+				info3("Stop after %u prints\n", counter);
+				break;
+			}
+		}
+	}
+}
+#elif METHOD == 2 //linked list//slow due to mutex
+#error "Implementation is not complete. race condition not resolved" 
+/*
+	Head counter is added by 1 when popped.
+
+	For a node
+	* A freshly added node has a counter of 10. 
+	* Counter is set to 0 when marked as deleted.
+	* Counter is set to 1 when locked by a thread (for deletion).
+
+	For a stack like usage, only the head can be pushed or popped. Push is easy
+	as we own the node to be pushed. Pop is more involved as we need to make
+	sure both the head and the node to pop is not modified.  Since the first
+	node cannot be modified when the head is not modified, we only need to make
+	sure the head has not been modified (check next alone is not sufficient) .
+	We put a counter on the head and any pop will increment the counter by 1.
+
+	For a list like usage, insert node is again straightforward as we owns the
+	node to be inserted. To delete a node, we need to assign the next values of
+	the node to the previous node which requires atomic operation on both the
+	current node and previous node. This is not possible with single CAS. We
+	need to have a way to *lock* or own the node to be deleted so that its value
+	is modified, then do a CAS on the previous node. We need to also make sure
+	the previous node is not modified (still points to current node). Delete a
+	node may fail as the previous node may be changed by another thread. So we
+	first mark a node as to be deleted (counter=0), then try to recycle it. To
+	actually recycle a node, we first mark it as locked (counter=1), and do CAS
+	on the previous node only if the previous node is not locked (counter!=1). 
+
+	Steps to delete a node:
+	1. Mark counter to = 0
+	2. CAS counter from 0 to 1. Cancel if failed
+	3. CAS previous code only if its counter is not 1. Keep its counter.
+
+	When tranversing a list, also need to check for race condition that the node
+	is deleted which will have next point the wrong list 
+
+	NOTICE: The implementation does not yet support insert into the list.
+	Requires avoid inserting after a node if its counter is 0 or 1.
+ */
+typedef struct{
+	union {
+		unsigned long state;
+		struct{//in small indian machine, state takes value of next when counter=0
+			unsigned int next;
+			unsigned int counter;
+		};
+	};
+}memhead_t;
+typedef struct{
+	memhead_t list;//first element so it can be casted to memkey_head
+	void *p;
+	size_t size;
+	union{
+		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
+		void *func[DT];
+	};
+	int nfunc;
+}memkey_t;
+
+enum{
+	S_DEL =0, //to be deleted
+	S_LOCK=1, //locked
+	S_IDLE=2, //free node
+	S_USED=3  //used ndoe
+};
+unsigned int memkey_count=0;
+unsigned int memkey_i=1;//start with 1.
+unsigned int memkey_max=0;
+memkey_t *memkey_all=NULL;
+memhead_t memhead_idle={0L};
+memhead_t memhead_used={0L};
+//Place to to the beginning of list.
+static void memhead_push(memhead_t *head, unsigned int ind){
+	memkey_all[ind].list.next=head->next;
+	do{
+		if(memkey_all[ind].list.next==ind){//why can this happen?
+			warning("ind=%u, head->next=%u, p=%p, counter=%u, %s\n", ind, memkey_all[ind].list.next, memkey_all[ind].p, memkey_all[ind].list.counter, head==&memhead_idle?"idle":"used");
+			return;
+		}
+	}
+	while(!atomic_compare_exchange_n(&(head->next), &memkey_all[ind].list.next, ind));
+	
+}
+//Remove memkey from beginning of list (only
+static unsigned int memhead_pop(memhead_t *head){
+	memhead_t key, key2;
+	//compare both counter and pointer to make sure the node is not changed.
+	key.counter=atomic_add_fetch(&(head->counter), 1);//increse the counter
+	key.next=head->next;
+	do{
+		key2.counter=key.counter;
+		key2.next=memkey_all[key.next].list.next;
+	} while(!atomic_compare_exchange(&head->state, &key.state, &key2.state));
+	
+	return key.next;
+}
+
+/**
+	Delete node i if the previous node is not locked. Returns True if success.
+*/
+static int memhead_recycle(memhead_t *head, unsigned int iprev, unsigned int i){
+	int ans=0;
+	if(i==iprev){
+		error("i=%u, iprev=%u; cancel\n", i, iprev);
+		return ans;
+	}
+	//Check and lock current node to be deleted. Important
+	unsigned int dummy=S_DEL;
+	if(!atomic_compare_exchange_n(&memkey_all[i].list.counter, &dummy, S_LOCK)){
+		return ans;//lock node failed. cancel operation. some other thread may have done it.
+	}
+	//After lock success, we owns node i so can modify its values.
+	memhead_t *phead;
+	memhead_t key, key2;
+	if(iprev==0){//head
+		phead=head;
+	} else{
+		phead=&memkey_all[iprev].list;
+	}
+	key.counter=phead->counter;//save and check its value
+	//Only proceed if the previous node is not locked for delete (head is never marked as such)
+	if(key.counter!=S_LOCK){
+		key.next=i;//check link is right
+		key2.counter=key.counter;//keep its value
+		key2.next=memkey_all[i].list.next;
+		if(i==memkey_all[i].list.next){
+			warning("invalid list: i=%u, next=%u\n", i, memkey_all[i].list.next);
+		}
+		if(atomic_compare_exchange(&phead->state, &key.state, &key2.state)){//success
+			//we already own the node i. Can directly modify its value.
+			memkey_all[i].p=NULL;
+			memkey_all[i].list.counter=S_IDLE;
+			//no longer owns node i after the following step
+			memhead_push(&memhead_idle, i);//recycle the node 
+			atomic_sub_fetch(&memkey_count, 1);
+			//info("%u delete succeed memkey_count=%u\n", i, memkey_count);
+			ans=1;
+		}//else: phead is changed due to insertion or it self is deleted.
+	}//else phead is changed due to insertion or it self is deleted.
+		//info("%u is not recycled prev is locked, counter=%u\n", i, key.counter);
+	//}
+	if(!ans){//failed to delete. unlock the node. set is back to pending recycle
+		dummy=S_LOCK;
+		if(!atomic_compare_exchange_n(&memkey_all[i].list.counter, &dummy, S_DEL)){
+			dbg("%u unlock node failed.\n", i);
+		}
+	}
+	return ans;
+}
+
+//delete a node (first mark as delete then recycle nodes)
+static void memkey_del(void *p){
+	int done=0;
+	memhead_t next={0L};
+	unsigned int nretry=0;
+	if(!p) info("recyling all\n");
+retry:
+	//mark node as delete if p is valid. Otherwise, just try recyle all deleted nodes
+	for(unsigned int i=memhead_used.next, iprev=0; i&&!done; iprev=i, i=next.next){
+		next=memkey_all[i].list;//copy both the conter and index
+		if(next.counter==S_IDLE){
+			nretry++;
+			if(nretry<5){
+				warning("node is deleted. Retry for %u times\n", nretry);
+				goto retry;
+			}
+			warning("node %u is deleted. cancel for\n", i);
+			break;
+		}
+		if(i&&next.next==i){
+			error("i=%u == inext. counter=%u\n", i, next.counter);
+			nretry++;
+			if(nretry<5){
+				goto retry;
+			}
+			break;
+		}
+
+		if(p && memkey_all[i].p==p){//found
+			//Mark as current node as delete atomically (do we need atomic?)
+			unsigned int counter=memkey_all[i].list.counter;
+			while(counter>1&&!atomic_compare_exchange_n(&memkey_all[i].list.counter, &counter, S_DEL)){
+				dbg("unexpected: mark delete failed: counter=%u\n", counter);
+			}
+			if(counter>1){//mark success.
+				atomic_sub_fetch(&memcnt,1);
+			}else{//Why would the following happen? counter is shown as 0
+				//It seems this failure follows failure of memkey_push() which has ind==head->next which is not expected. p is the same as us.
+				//It seems the same memory is used by two threads?
+				warning("unexpected: mark delete %p at %u canceled: counter=%u\n", p, i, counter);
+			}
+			done=1;
+		}
+		if(!memkey_all[i].list.counter){//try recycle
+			if(memhead_recycle(&memhead_used, iprev, i)){
+				if(!p){
+					info("Recycle %u failed\n", i);
+				}
+			}else{
+				if(!p){
+					warning("Recycle %u failed\n", i);
+				}
+			}
+		}else if(!p){
+			warning("unexpected: %u still has counter %u\n", i, memkey_all[i].list.counter);
+		}
+
+	}
+	if(p && !done){//should never happen
+		dbg("unexpected: %p is not found memcnt=%u, memkey_count=%u, nretry=%u\n", p, memcnt, memkey_count, nretry);
+	}
+}
+//Add a memkey
+static void memkey_add(void *p, size_t size){
+	unsigned int ind;
+	memalloc+=size;
+	atomic_add_fetch(&memcnt, 1);
+	atomic_add_fetch(&memkey_count, 1);
+	int nretry=0;
+retry:	
+	ind=memhead_pop(&memhead_idle);
+	if(!ind){
+		ind=atomic_fetch_add(&memkey_i, 1);
+		if(ind>=memkey_max){
+			warning("All nodes are used. recycle unused\n");
+			memkey_del(NULL);//recycle deleted nodes
+			nretry++;
+			if(nretry<2){
+				goto retry;
+			}else{
+				error("Please increase memkey_max and recompile\n");
+				return;
+			}
+		}
+	}else{
+		if(memkey_all[ind].list.counter!=S_IDLE){
+			dbg("memkey_all[%u].p=%p should have counter=%u but is %u. Retry.\n", ind, memkey_all[ind].p, S_IDLE, memkey_all[ind].list.counter);
+			goto retry;
+		}
+	}
+	memkey_all[ind].p=p;
+	memkey_all[ind].size=size;
+	memkey_all[ind].list.counter=S_USED;
+	if(funtrace[0]){
+		memcpy(memkey_all[ind].funtrace, funtrace, funtrace_len);
+	}else{
+		memkey_all[ind].nfunc=backtrace(memkey_all[ind].func, DT);
+	}
+	memhead_push(&memhead_used, ind);
+}
+
+void print_mem_debug(){
+	unsigned int i;
+	unsigned int print_count=0;
+	unsigned int print_max=10;
+	memkey_del(NULL);//recycle
+	if(!memcnt){
+		info3("All allocated memory are freed. %u not recycled\n", memkey_count);
+	}else{
+		info3("%u (%lu kB) allocated memory not freed. %u not recycled!!!\n", memcnt, (memalloc-memfree)>>10, memkey_count);
+	}
+	for(i=memhead_used.next; i; i=memkey_all[i].list.next){
+		print_count++;
+		if(print_count<print_max){
+			info3("%9zu", memkey_all[i].size);
+			if(memkey_all[i].funtrace[0]){
+				info3(" %s i=%u p=%p counter=%u\n", memkey_all[i].funtrace, i, memkey_all[i].p, memkey_all[i].list.counter);
+			} else if(memkey_all[i].nfunc){
+				int offset=memkey_all[i].nfunc>3?1:0;
+				if(print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset)){
+					info3("print_backtrace_symbol failed, stop.\n");
+					print_count=101;
+				}
+			}
+		} else {
+			info3("Stop after %d records\n", print_count);
+			break;
+		}
+	}
+	
+	info3("Memory allocation is %lu kB, still in use %lu KB.\n", memalloc>>10, (memalloc-memfree)>>10);
+}
+void memkey_init(){
+	memkey_max=1000000;
+	memkey_all=calloc_default(memkey_max, sizeof(memkey_t));
+	memhead_used.counter=S_USED;//start with 10
+	memhead_idle.counter=S_USED;
+}
+#else
+typedef struct{
+	void *p;
+	size_t size;
+	union{
+		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
+		void *func[DT];
+	};
+	int nfunc;
+}memkey_t;
+PNEW(mutex_mem);
+static void *MROOT=NULL;
+static void *MSTATROOT=NULL;//reuses keys from MROOT.
 
 typedef int(*compar)(const void *, const void *);
-static int stat_cmp(const T_MEMKEY *pa, const T_MEMKEY *pb){
+static int stat_cmp(const memkey_t *pa, const memkey_t *pb){
 	if(!pa->nfunc&&!pb->nfunc){
 		return strcmp(pa->funtrace, pb->funtrace);
 	}
@@ -106,7 +492,7 @@ static int stat_cmp(const T_MEMKEY *pa, const T_MEMKEY *pb){
 	return 0;
 }
 static void stat_usage(const void *key, VISIT which, int level){
-	const T_MEMKEY *key2=*((const T_MEMKEY **)key);
+	const memkey_t *key2=*((const memkey_t **)key);
 	(void)level;
 	//merge calls from the same location
 	if(which==leaf||which==postorder){
@@ -116,13 +502,14 @@ static void stat_usage(const void *key, VISIT which, int level){
 				warning("Error inserting to tree\n");
 			}
 		} else{
-			(*(T_MEMKEY **)found)->size+=key2->size;
+			(*(memkey_t **)found)->size+=key2->size;
 		}
 	}
 }
+
 static int print_count=0;
 static void print_usage(const void *key, VISIT which, int level){
-	const T_MEMKEY *key2=*((const T_MEMKEY **)key);
+	const memkey_t *key2=*((const memkey_t **)key);
 	(void)level;
 	if(which==leaf||which==postorder){
 		print_count++;
@@ -143,11 +530,29 @@ static void print_usage(const void *key, VISIT which, int level){
 	}
 }
 
+void print_mem_debug(){
+	if(MROOT){
+		info3("%u (%lu MB) allocated memory not freed!!!\n", memcnt, (memalloc-memfree)>>20);
+		if(!signal_caught){
+			print_count=0;
+			twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
+			twalk(MSTATROOT, print_usage);//print results.
+		} else{
+			info3("Printing of not freed memory is enabled only when signal_caught=0.\n");
+		}
+	} else{
+		info3("All allocated memory are freed.\n");
+		if(memcnt>0){
+			info3("Memory counter is still not zero: %u\n", memcnt);
+		}
+	}
+	info3("Memory allocation is %lu kB, still in use %lu KB.\n", memalloc>>10, (memalloc-memfree)>>10);
+}
 static int key_cmp(const void *a, const void *b){
 	void *p1, *p2;
 	if(!a||!b) return 1;
-	p1=((T_MEMKEY *)a)->p;
-	p2=((T_MEMKEY *)b)->p;
+	p1=((memkey_t *)a)->p;
+	p2=((memkey_t *)b)->p;
 	if(p1<p2) return -1;
 	else if(p1>p2) return 1;
 	else return 0;
@@ -160,7 +565,7 @@ static void memkey_add(void *p, size_t size){
 		return;
 	}
 
-	T_MEMKEY *key=(T_MEMKEY *)calloc_default(1, sizeof(T_MEMKEY));
+	memkey_t *key=(memkey_t *)calloc_default(1, sizeof(memkey_t));
 	key->p=p;
 	key->size=size;
 	
@@ -192,12 +597,12 @@ static int memkey_del(void *p){
 	if(!p) return 0;
 	int ans=1;
 	void *found=0;
-	T_MEMKEY key;
+	memkey_t key;
 	key.p=p;
 	LOCK(mutex_mem);
 	found=tfind(&key, &MROOT, key_cmp);
 	if(found){
-		T_MEMKEY *key1=*(T_MEMKEY **)found;/*the address of allocated T_MEMKEY. */
+		memkey_t *key1=*(memkey_t **)found;/*the address of allocated memkey_t. */
 		memfree+=key1->size;
 		memcnt--;
 		if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
@@ -213,20 +618,12 @@ static int memkey_del(void *p){
 	}
 	return ans;
 }
-static void memkey_update(void *p, size_t size){
-	T_MEMKEY key;
-	key.p=p;
-	LOCK(mutex_mem);
-	void* found=tfind(&key, &MROOT, key_cmp);
-	if(found){
-		T_MEMKEY *key1=*(T_MEMKEY **)found;
-		memalloc+=(size-key1->size);
-		key1->size=size;
-	}else{
-		warning("%p realloc: Record not found\n", p);
-	}
-	UNLOCK(mutex_mem);
+
+static void memkey_init(){
+
 }
+#endif
+
 void *calloc_maos(size_t nbyte, size_t nelem){
 	void *p=calloc_default(nbyte, nelem);
 	if(MEM_DEBUG){
@@ -250,14 +647,14 @@ void *malloc_maos(size_t size){
 	return p;
 }
 void *realloc_maos(void *p0, size_t size){
+	//to avoid race condition if p0 and p is different and p0 is allocated to another thread
+	//We delete p0 first and then readd p.
+	if(MEM_DEBUG && p0){
+		memkey_del(p0);
+	}
 	void *p=realloc_default(p0, size);
 	if(MEM_DEBUG){
-		if(p!=p0){
-			if(p0) memkey_del(p0);
-			memkey_add(p, size);
-		}else{
-			memkey_update(p, size);
-		}
+		memkey_add(p, size);
 	}
 	if(MEM_VERBOSE){
 		info("%s realloc: %p with %zu bytes\n", funtrace, p, size);
@@ -266,8 +663,8 @@ void *realloc_maos(void *p0, size_t size){
 	return p;
 }
 void free_maos(void *p){
-	if(MEM_DEBUG){
-		memkey_del(p);
+	if(MEM_DEBUG && p){
+		memkey_del(p);//calls free_default when marked success.
 	}
 	free_default(p);//must be after memkey_del to avoid race condition (add before del)
 	if(MEM_VERBOSE){
@@ -276,24 +673,6 @@ void free_maos(void *p){
 	funtrace_unset;
 }
 
-static void print_mem_debug(){
-	if(MROOT){
-		info3("%ld (%lu MB) allocated memory not freed!!!\n", memcnt, (memalloc-memfree)>>20);
-		if(!signal_caught){
-			print_count=0;
-			twalk(MROOT, stat_usage);//walk over the recording tree and combine records with the same backtrace
-			twalk(MSTATROOT, print_usage);//print results.
-		} else{
-			info3("Printing of not freed memory is enabled only when signal_caught=0.\n");
-		}
-	} else{
-		info3("All allocated memory are freed.\n");
-		if(memcnt>0){
-			info3("Memory counter is still not zero: %ld\n", memcnt);
-		}
-	}
-	info3("Memory allocation is %lu kB, still in use %lu KB.\n", memalloc>>10, (memalloc-memfree)>>10);
-}
 void read_sys_env(){
 	READ_ENV_INT(MEM_DEBUG, 0, 1);
 	READ_ENV_INT(MEM_VERBOSE, 0, 2);
@@ -309,10 +688,12 @@ static void init_mem(){
 		realloc_default=(void *(*)(void *, size_t))dlsym(RTLD_DEFAULT, "realloc");
 		free_default=(void(*)(void *))dlsym(RTLD_DEFAULT, "free");
 		read_sys_env();
+		memkey_init();
 		void init_process(void);
 		init_process();
 		init_hosts();
 		fpconsole=fdopen(dup(fileno(stdout)), "a");
+		
 	}
 }
 static __attribute__((constructor)) void init(){

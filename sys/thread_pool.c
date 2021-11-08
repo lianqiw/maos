@@ -128,11 +128,11 @@ static void jobs_push(jobshead_t *head, unsigned int jobheadind, unsigned int jo
 //Get job from the beginning of list
 static unsigned int jobs_pop(jobshead_t *head){
 	jobshead_t job, job2;
+	job.counter=atomic_add_fetch(&(head->counter), 1);
+	job.head=head->head;//get both values
 	do{
 		//compare both counter and pointer to make sure the node is not changed.
-		atomic_add_fetch(&(head->counter), 1);//increse the counter
-		job=*head;//get both values
-		job2.counter=job.counter;
+		job2.counter=job.counter;//increse the counter
 		job2.head=jobsall[job.head].next;
 	}while(!atomic_compare_exchange(head, &job, &job2));
 	return job.head;
@@ -213,7 +213,8 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void* arg, int
 		jobind=jobs_pop(&jobspool);//take idle job from the pool using lock free approach. 
 		if(jobind==0){//no more jobs in the pool, allocate from jobsall
 			jobind=atomic_fetch_add(&jobsall_i, 1);
-			if(jobind+1>jobsall_count){//all jobs are being used
+			//need to check >= not = as jobs_pop may fail multiple times.
+			if(jobind>=jobsall_count){//all jobs are being used
 				//do not try to realloc jobsall as it is used by running threads.
 				if(headind){//queue jobs already processed
 					jobs_push(urgent?&jobsurgent:&jobsnormal, headind, tailind);

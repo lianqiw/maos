@@ -225,8 +225,8 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
     return __atomic_fetch_sub(ptr, val, MEM_ORDER);
 }
 //weak is ok since we do while
-#define atomic_compare_exchange_n(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 1, MEM_ORDER, MEM_ORDER)
-#define atomic_compare_exchange(ptr, pexpected, pdesired) __atomic_compare_exchange(ptr, pexpected, pdesired, 1, MEM_ORDER, MEM_ORDER) 
+#define atomic_compare_exchange_n(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 0, MEM_ORDER, MEM_ORDER)
+#define atomic_compare_exchange(ptr, pexpected, pdesired) __atomic_compare_exchange(ptr, pexpected, pdesired, 0, MEM_ORDER, MEM_ORDER) 
 #define atomic_load(ptr) __atomic_load_n(ptr, MEM_ORDER) 
 #define atomic_store(ptr, val) __atomic_store_n(ptr, val, MEM_ORDER) 
 
