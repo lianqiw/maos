@@ -167,8 +167,20 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>UNLOCK_FFT</b>&#160;&#160;&#160;UNLOCK(<a class="el" href="thread_8h.html#a6cb5787469a53f1468e29580abc056ec">mutex_fftw</a>)</td></tr>
 <tr class="separator:a46cd5810acdabad3f9ac588daa499e41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a082f17e8313eee11ac19d8275f886a4d"><td class="memItemLeft" align="right" valign="top"><a id="a082f17e8313eee11ac19d8275f886a4d"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>MEM_ORDER</b>&#160;&#160;&#160;__ATOMIC_SEQ_CST</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MEM_ORDER</b>&#160;&#160;&#160;__ATOMIC_RELAXED</td></tr>
 <tr class="separator:a082f17e8313eee11ac19d8275f886a4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a981cf3693ebbbe18b3f37aed1015de18"><td class="memItemLeft" align="right" valign="top"><a id="a981cf3693ebbbe18b3f37aed1015de18"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_compare_exchange_n</b>(ptr,  pexpected,  desired)&#160;&#160;&#160;__atomic_compare_exchange_n(ptr, pexpected, desired, 0, MEM_ORDER, MEM_ORDER)</td></tr>
+<tr class="separator:a981cf3693ebbbe18b3f37aed1015de18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af25ffd3c8210cb55d96b762f9f0826e8"><td class="memItemLeft" align="right" valign="top"><a id="af25ffd3c8210cb55d96b762f9f0826e8"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_compare_exchange</b>(ptr,  pexpected,  pdesired)&#160;&#160;&#160;__atomic_compare_exchange(ptr, pexpected, pdesired, 0, MEM_ORDER, MEM_ORDER)</td></tr>
+<tr class="separator:af25ffd3c8210cb55d96b762f9f0826e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc1b422f50e81011bf8ce86885540d8d"><td class="memItemLeft" align="right" valign="top"><a id="acc1b422f50e81011bf8ce86885540d8d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_load</b>(ptr)&#160;&#160;&#160;__atomic_load_n(ptr, MEM_ORDER)</td></tr>
+<tr class="separator:acc1b422f50e81011bf8ce86885540d8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9f25fe930c00ce5f7d4402342afad2f"><td class="memItemLeft" align="right" valign="top"><a id="aa9f25fe930c00ce5f7d4402342afad2f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>atomic_store</b>(ptr,  val)&#160;&#160;&#160;__atomic_store_n(ptr, val, MEM_ORDER)</td></tr>
+<tr class="separator:aa9f25fe930c00ce5f7d4402342afad2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7247c60724ec85988716ce873e3a23e4"><td class="memItemLeft" align="right" valign="top"><a id="a7247c60724ec85988716ce873e3a23e4"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>expect_level</b>(n)&#160;&#160;&#160;if(omp_get_level()!=n) dbg(&quot;omp_get_level=%d, want %d\n&quot;, omp_get_level(), n)</td></tr>
 <tr class="separator:a7247c60724ec85988716ce873e3a23e4"><td class="memSeparator" colspan="2">&#160;</td></tr>

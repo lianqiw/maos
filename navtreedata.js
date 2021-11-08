@@ -152,9 +152,9 @@ var NAVTREEINDEX =
 "slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5",
 "smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724",
 "test_8cu.html#a2d3ad980853e29e52dca365350f4bc29",
-"type_8h.html#a5792fec74b998515bb4ccca87df68948",
+"type_8h.html#a55f956630e6ba03d1760e7f4b27fb7a1",
 "type_8h.html#ab80bb7740288fda1f201890375a60c8f",
-"zmath_8h.html#a2d4a8c0f8143841e59b78cd6b925de1e"
+"zmath_8h.html#a2a98a34256dd396f8b4302359ce22d1d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
