@@ -103,13 +103,7 @@ static void mvm_direct_igpu(thread_t* info){
 	curcell tomo_rhs, fit_rhs;
 	for(int ig=info->start; ig<info->end; ig++){
 		ctoc_init(10);
-		if(info->ithread==0){
-			if(!detached){
-				info_console("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
-			} else if(ig%100==0){
-				info2("%6d of %6ld\n", ig*NGPU, ntotgrad);
-			}
-		}
+		info_progress(ig, ntotgrad);
 		if(ig){
 			cudaMemcpyAsync(grad.M()()+ig-1, eye2(), 2*sizeof(Real), D2D, stream);
 		} else{

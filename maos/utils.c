@@ -539,7 +539,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 		dzero(gnfra);
 		dzero(gnfxy);
 		for(int isa=0; isa<nsa; isa++){
-			info_console("isa=%4d\b\b\b\b\b\b\b\b", nsa);
+			info_progress(isa, nsa);
 			if(srot){
 				theta=srot[isa];
 				cx=cos(theta);

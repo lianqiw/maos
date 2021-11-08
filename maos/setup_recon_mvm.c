@@ -63,11 +63,7 @@ setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 		dmat* eye=dnew(ntotgrad, 1);
 		dcell* eyec=d2cellref(eye, ngrad, nwfs);
 		for(int ig=0; ig<ntotgrad; ig++){
-			if(!detached){
-				info_console("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
-			} else if(ig%100==0){
-				info("%6d of %6d\n", ig, ntotgrad);
-			}
+			info_progress(ig, ntotgrad);
 			if(ig) P(eye,ig-1)=0;
 			P(eye,ig)=1;
 			if(!parms->powfs[parms->wfsr[curwfs].powfs].skip){
@@ -132,7 +128,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 	dcell* eyec=d2cellref(eye, P(recon->anloc), ndm);
 	long(*curp)[2]=data->curp;
 	dcell* MVMt=data->MVMt;
-	int nthread=recon->nthread;
+	//int nthread=recon->nthread;
 	for(long iact=info->start; iact<info->end; iact++){
 	//TIC;tic;
 		int curdm=curp[iact][0];
@@ -140,13 +136,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 		if(recon->actcpl&&P(P(recon->actcpl,curdm),curact)<EPS){
 			continue;
 		}
-		if(info->ithread==0){
-			if(!detached){
-				info_console("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
-			} else if(iact%100==0){
-				info("%6ld of %6ld\n", iact*nthread, ntotact);
-			}
-		}
+		info_progress(iact, ntotact);
 		//TIC;tic;
 		dcellzero(FRT);
 		dcellzero(RRT);

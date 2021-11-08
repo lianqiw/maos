@@ -87,47 +87,56 @@ typedef struct{
 	
 }memkey_t;
 memkey_t *memkey_all=NULL;
-const unsigned int memkey_max=0xFFFFFF; //should be all 1 at lower bits
+const unsigned int memkey_len=0xFFFFFF; //should be all 1 at lower bits
 unsigned int memkey_thres = 0;
-unsigned int memkey_maxtry=0;
+unsigned int memkey_maxadd=0;
+unsigned int memkey_maxdel=0;
 static void memkey_init(){
-	memkey_all=calloc_default(memkey_max, sizeof(memkey_t));
-	memkey_thres=memkey_max>>1;
+	memkey_all=calloc_default(memkey_len, sizeof(memkey_t));
+	memkey_thres=memkey_len>>1;
 }
-//convert address to index
+//convert address to index. Make sure last two bits has at least 1 set
 static unsigned int addr2ind(void*p){
-	return (unsigned int)(((unsigned long)p>>4)&memkey_max);
+	unsigned long ind=(unsigned long)p;
+	do{
+		ind=ind>>1;
+	}while(!(ind & 3));
+	return (unsigned int)(ind&memkey_len);
 }
+//add memory pointer to list
 static void memkey_add(void *p, size_t size){
 	if(atomic_add_fetch(&memcnt, 1)>memkey_thres){
 		memkey_thres=memcnt;
-		dbg("memcnt=%u >= memkey_max=%u. Half slots are filled. please increase memkey_max.\n", memcnt, memkey_max);
+		dbg("memcnt=%u >= memkey_max=%u. Half slots are filled. please increase memkey_max.\n", memcnt, memkey_len);
 	}
 	memalloc+=size;
 	unsigned int counter=0;
-	for(unsigned int ind=addr2ind(p); counter<memkey_max ; ind=(ind+1)&memkey_max, counter++){
+	for(unsigned int ind=addr2ind(p); counter<memkey_len ; ind=(ind+1)&memkey_len, counter++){
 		if(!memkey_all[ind].p){//found empty slot
 			void *dummy=NULL;
 			//try to occupy slot using CAS
 			if(atomic_compare_exchange_n(&memkey_all[ind].p, &dummy, p)){//success
 				memkey_all[ind].size=size;
-				if(funtrace[0] && 0){
+				if(funtrace[0]){
 					memcpy(memkey_all[ind].funtrace, funtrace, funtrace_len);
 				} else{
 					memkey_all[ind].nfunc=backtrace(memkey_all[ind].func, DT);
 				}
-				if(counter>memkey_maxtry){
-					memkey_maxtry=counter;
-					dbg("Max try is %u\n", memkey_maxtry);
+				if(counter>memkey_maxadd){
+					memkey_maxadd=counter;
+					if(memkey_maxadd>100){
+						dbg("Max try is %u for add\n", memkey_maxadd);
+					}
 				}
 				break;
 			}//else: failed, occupied by another thread. Try next slot
 		}
 	}
 }
+//Memory allocated from exterior library will not be found. We limit number of tries to avoid searching too much
 static void memkey_del(void *p){
 	unsigned int counter=0;
-	for(unsigned int ind=addr2ind(p); counter<memkey_max ; ind=(ind+1)&memkey_max, counter++){
+	for(unsigned int ind=addr2ind(p); counter<=memkey_maxadd ; ind=(ind+1)&memkey_len, counter++){
 		if(memkey_all[ind].p==p){//found. no race condition can occure
 			memfree+=memkey_all[ind].size;
 			atomic_sub_fetch(&memcnt, 1);
@@ -135,9 +144,15 @@ static void memkey_del(void *p){
 			break;
 		}
 	}
-	if(counter>memkey_maxtry){
-		memkey_maxtry=counter;
-		dbg("Max try is %u\n", memkey_maxtry);
+	if(counter>memkey_maxdel){
+		memkey_maxdel=counter;
+		if(memkey_maxdel>100){
+			dbg("Max try is %u for del\n", memkey_maxdel);
+		}
+	}
+	if(counter>memkey_maxadd){
+		dbg("%16p: unable to find after %u tries\n", p, memkey_maxadd);
+		print_backtrace();
 	}
 }
 static void print_mem_debug(){
@@ -148,7 +163,7 @@ static void print_mem_debug(){
 	}
 	unsigned int counter=0;
 	unsigned int ans=0;
-	for(unsigned int i=0; i<memkey_max; i++){
+	for(unsigned int i=0; i<memkey_len; i++){
 		if(memkey_all[i].p){
 			if(counter<50){
 				counter++;
@@ -678,7 +693,7 @@ void read_sys_env(){
 	READ_ENV_INT(MEM_VERBOSE, 0, 2);
 	READ_ENV_INT(LOG_LEVEL, -5, 5);
 }
-FILE *fpconsole=NULL;
+//FILE *fpconsole=NULL;
 int err2out=1;
 int std2out=1;
 static void init_mem(){
@@ -692,8 +707,7 @@ static void init_mem(){
 		void init_process(void);
 		init_process();
 		init_hosts();
-		fpconsole=fdopen(dup(fileno(stdout)), "a");
-		
+		//fpconsole=fdopen(dup(fileno(stdout)), "a");
 	}
 }
 static __attribute__((constructor)) void init(){

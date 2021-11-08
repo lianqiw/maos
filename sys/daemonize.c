@@ -290,7 +290,7 @@ void redirect(void){
 		} else{
 			static dup_stdout_t dup_data;
 			dup_data.nfp=2;
-			dup_data.fps[0]=fileno(fpconsole);//console
+			dup_data.fps[0]=dup(fileno(stdout));
 			dup_data.fps[1]=open(fnlog, O_WRONLY|O_CREAT, 0666);//log
 			dup_data.pfd=pfd[0];//read
 			//spawn a thread to duplicate output to both console and file.

@@ -91,7 +91,6 @@ extern int detached;
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
 
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
-extern FILE* fpconsole;
 extern int err2out;//output error() to stdout or stderr
 extern int std2out;//outout info() to stdout or stderr
 extern int signal_caught;
@@ -107,7 +106,7 @@ extern int signal_caught;
 #define info(A...)  logstd(-1, A) //least important info
 #define info2(A...) logstd(-2, A)
 #define info3(A...) logstd(-3, A) //most important info
-#define info_console(A...) ({if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A);}) //only output to console.
+//#define info_console(A...) ({if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A);}) //only output to console.
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
 //dbg are not shown at default log level
 //dbg do not shown when detached
@@ -122,7 +121,7 @@ extern int signal_caught;
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)
-
+#define info_progress(i,n) ({if((i)%(((n)>>4)+1)==0) fprintf(stderr,">");if((i)+1==(n)) fprintf(stderr,"\n");})
 #ifndef assert
 #if DEBUG
 #define assert(A) if(!(A)) error("assertion failed: %s\n", #A)

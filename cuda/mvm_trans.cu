@@ -98,13 +98,7 @@ static void mvm_trans_igpu(thread_t* info){
 	for(int iact=info->start; iact<info->end; iact++){
 		int curdm=curp[iact][0];
 		int curact=curp[iact][1];
-		if(info->ithread==0){
-			if(!detached){
-				info_console("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*NGPU, ntotact);
-			} else if(iact%100==0){
-				info2("%6d of %6d\n", iact*NGPU, ntotact);
-			}
-		}
+		info_progress(iact, ntotact);
 		if(eyec){
 			if(iact){
 				cudaMemcpyAsync(eyec.M()()+iact-1, eye2(), 2*sizeof(Real),

@@ -418,10 +418,10 @@ static void chol_solve_cholmod(dmat** x, const spchol* A, const dmat* y, long st
 			error("Matrix mismatch\n");
 		}
 		DO_COPY(PCOL(*x, start), x2->x, real, chol_real, (x2->nrow*x2->ncol));
-		free(x2->x);
+		free_default(x2->x);
 	}
 	free(y2);/*keep data */
-	free(x2);/*keep data */
+	free_default(x2);/*keep data */
 }
 
 /**
