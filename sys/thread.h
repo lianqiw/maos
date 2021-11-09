@@ -101,25 +101,25 @@ static inline void THREAD_POOL_INIT(int nthread){
     omp_set_num_threads(nthread);
 }
 //static inline void QUEUE(tp_counter_t *counter, thread_wrapfun fun, void *arg, int nthread, int urgent){
-#define QUEUE(counter, fun, arg, njob, urgent) \
-    for(int it=0; it<njob; it++){\
+#define QUEUE(counter, fun, arg, nthread, urgent) {\
+    (void)counter; (void)urgent;\
+    for(int it=0; it<nthread; it++){\
         OMP_TASK(urgent)\
             fun(arg);\
-    }
-
+    }\
+}
 //static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
-#define CALL(fun, arg, nthread, urgent) \
+#define CALL(fun, arg, nthread, urgent) {\
+    (void)urgent;\
     OMP_TASKSYNC_START\
-        QUEUE(NULL, fun, arg, nthread, urgent)\
-    OMP_TASKSYNC_END
-
+        QUEUE(NULL, fun, arg, nthread, urgent);\
+    OMP_TASKSYNC_END\
+}
 #define WAIT(pcounter, urgent) DO_PRAGMA(omp taskwait)
-#define __NEW_LINE__
 /*Turn to static inline function because nvcc concatenates _Pragma to } */
 //Define causes _Pragma to appear in sameline in gcc4.9
 static inline void QUEUE_THREAD(tp_counter_t *counter, thread_t *A, int urgent){
-    (void)counter;
-    (void)urgent;
+    (void)counter; (void)urgent;
     for(int it=0; it<A[0].nthread; it++){
         if(A[it].fun){
             OMP_TASK(urgent)
@@ -239,7 +239,7 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #define OMP_FOR_COLLAPSE(n)
 #endif
 
-#if _OPENMP>=201511 //version>=4.5 //task loop has implicit group
+#if _OPENMP>=201511 && 0//version>=4.5 //task loop has implicit group
 #define OMPTASK_FOR(A...)        expect_level(1);DO_PRAGMA(omp taskloop default(shared) A)
 #define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(1))
 #define OMP_TASK_FOR_COLLAPSE(n) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(NCPU) collapse(n))

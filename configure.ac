@@ -43,10 +43,7 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
-AC_DISABLE_SHARED
-AC_ENABLE_STATIC
-AC_PROG_LIBTOOL
-
+LT_INIT([disable-shared, static]) #prefer static internal linking.
 AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
 AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 
@@ -234,14 +231,9 @@ case "$CN" in
 	    major=${CC_VERSION%%.*}
 	    minor=${CC_VERSION#*.}
 	    minor=${minor%%.*}
-	    if test $major -lt 11 ;then
-			AC_MSG_ERROR([OpenMP is not supported by ICC $CC_VERSION])
-			unset OPENMP_CFLAGS
-	    fi
 	fi
 	;;
     GCC)
-	#Test GCC version
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
 	    major=${CC_VERSION%%.*}
@@ -254,12 +246,6 @@ case "$CN" in
 	    echo major=$major minor=$minor
 	    if test "$major" -lt 4 ;then
 			AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
-	    fi
-
-	    #GCC introduced openmp task in 4.4
-	    if test $major -le 4 -a $minor -le 4 ;then
-			AC_MSG_WARN([OpenMP is not supported by GCC $CC_VERSION])
-			unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
@@ -421,8 +407,17 @@ download(){
 		extract "${fn}" "$OUTDIR"
     fi
     if ! test -f ${DOWNLOAD_DIR}/${fn} ;then
-		echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
-		$wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
+		case "$fn" in 
+		http*)
+			url="$fn"
+			fn=`basename $fn`
+			;;
+		*)
+			url=${BASEURL}/${fn}
+			;;
+		esac
+		echo $wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
+		$wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
 		if ! extract "$fn" "$OUTDIR" ;then
 			AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 			rm -rf ${DOWNLOAD_DIR}/${fn}
@@ -439,9 +434,9 @@ compile(){
     rm -rf ${TMP_DIR}/$name
     download $name $file ${TMP_DIR}/$name 1
     fnlog=${TMP_DIR}/compile.log
-    echo "Compiling $name with CFLAGS=$CFLAGS $@. Check $fnlog for details"
+    echo "Compiling $name with CFLAGS=\"$CFLAGS\" CPPFLAGS=\"$CPPFLAGS\" LDFLAGS=\"$LDFLAGS\" \"$@\". Check $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
-    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3 -Wno-error"  && \
+    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3 -Wno-error"  && export CPPFLAGS="$CPPFLAGS" && export LDFLAGS="$LDFLAGS" && \
 		((./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} && make -j4 install) ||
 		 (mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install)))	>> $fnlog 2>&1 ;then
 		echo "Compiled $name successfully."
@@ -456,23 +451,26 @@ AS_IF([test "$enable_openmp" != "no"], [
 		#MACOS supports openmp with separate omp library
 		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
 		AS_IF([test "$has_omp" = "0" ], [
-			download LIBOMP "libomp${libsuffix}.tar.bz2" ${PRE_DIR} 1
+			download LIBOMP "libomp${libsuffix}.tar.bz2" ${PRE_DIR} 
 			unset ac_cv_lib_omp_omp_set_num_threads
 			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 		])
-		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
+		AS_IF([test "$has_omp" = "0" ], [
+			#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
+			compile LIBOMP "libomp.tar.xz" ${PRE_DIR} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
+			unset ac_cv_lib_omp_omp_set_num_threads
+			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+		])
+		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" CPPFLAGS+="$OPENMP_CFLAGS" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
+	], [
+		AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp="0"], [CFLAGS+=" $OPENMP_CFLAGS" has_omp="1"])
 	])
+],[
+	has_omp="0"
 ])
+AS_IF([test "$has_omp" = "0"], [CFLAGS+=" -pthread"])
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
-if test -z "$OPENMP_CFLAGS" ;then
-    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
-    has_openmp="no"
-else
-    CFLAGS+=" $OPENMP_CFLAGS"
-    has_openmp="yes"
-	AC_DEFINE(HAS_OPENMP,[1],["Defined to 1 if Openmp is enabled"])
-fi
-
+AC_DEFINE(HAS_OPENMP,[$has_omp], ["Defined to 1 if Openmp is enabled"])
 
 OPTS+=" $CFLAGS_EXTRA "
 if test "$system" = "win" ;then
@@ -546,7 +544,7 @@ function set_lapack(){
 
 	    LAPACK+=" -lmkl_core"
 
-	    if test -z "$OPENMP_CFLAGS"; then
+	    if test "$has_omp" = "0"; then
 			LAPACK+=" -lmkl_sequential -lpthread"
 	    else 
 			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
@@ -647,7 +645,7 @@ else
 		if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 			#compile from source
 			FLAGS="--enable-threads --enable-static --enable-shared --disable-fortran "
-			if test -n "$OPENMP_CFLAGS" ;then
+			if test "$has_omp" = "1" ;then
 				FLAGS+=" --enable-openmp"
 			fi
 			if test "$host_cpu" != "aarch64" ;then
@@ -662,10 +660,10 @@ else
 	fi
 	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1 LDFFT+=" -lfftw3f"] ,[has_fftwf=0])
 	
-	if test -z "$OPENMP_CFLAGS" ;then
-		THREADS_SUFFIX="_threads"
-	else
+	if test "$has_omp" = "1" ;then
 		THREADS_SUFFIX="_omp"
+	else
+		THREADS_SUFFIX="_threads"
 	fi
 	LDFFT_THREADS=
 	for name in $LDFFT ;do
@@ -715,7 +713,7 @@ if test "$enable_websockets" != "no" ;then
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     
 		if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
-			compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
+			compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=ON -DLWS_WITH_STATIC=ON
 			unset ac_cv_lib_websockets_lws_service
 			AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
 		fi
@@ -1116,8 +1114,9 @@ echo
 echo "host_os:         $host_os"
 echo "host_cpu:        $host_cpu"
 echo "CC:              $CN"
-echo "Debug:           $enable_debug"
-echo "OpenMP:          $has_openmp"
+echo "Debug:           ${enable_debug:-no}"
+echo "OpenMP:          $has_omp"
+echo "FFTW Threads:    $fftw_threads"
 echo "Single:          $enable_single"
 echo "CUDA:            ${cudaver:+$cudaver (double: $cuda_double, arch: $cuarch)}${cudaver:-no}"
 echo "GTK version:     ${gtk_ver}"
