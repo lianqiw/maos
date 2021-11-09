@@ -174,9 +174,6 @@ Macros</h2></td></tr>
 <tr class="memitem:aa30612d0b25f8f68181596f70d352efb"><td class="memItemLeft" align="right" valign="top"><a id="aa30612d0b25f8f68181596f70d352efb"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info3</b>(A...)&#160;&#160;&#160;logstd(-3, A)</td></tr>
 <tr class="separator:aa30612d0b25f8f68181596f70d352efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbbb641e671fa06a7061e1845ccda317"><td class="memItemLeft" align="right" valign="top"><a id="acbbb641e671fa06a7061e1845ccda317"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_console</b>(A...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;-2 &amp;&amp; fpconsole) fprintf(fpconsole, A);})</td></tr>
-<tr class="separator:acbbb641e671fa06a7061e1845ccda317"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecfbb1e9291f15553ecf346710b28398"><td class="memItemLeft" align="right" valign="top"><a id="aecfbb1e9291f15553ecf346710b28398"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; info(A);}})</td></tr>
 <tr class="separator:aecfbb1e9291f15553ecf346710b28398"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -210,6 +207,9 @@ Macros</h2></td></tr>
 <tr class="memitem:af4d4cf56c4bf1313fb881373e3f58caa"><td class="memItemLeft" align="right" valign="top"><a id="af4d4cf56c4bf1313fb881373e3f58caa"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3_time</b>(A...)&#160;&#160;&#160;logdbg_time(2, A)</td></tr>
 <tr class="separator:af4d4cf56c4bf1313fb881373e3f58caa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a642678006d495d706eb924be24717e81"><td class="memItemLeft" align="right" valign="top"><a id="a642678006d495d706eb924be24717e81"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_progress</b>(i,  n)&#160;&#160;&#160;({if((i)%(((n)&gt;&gt;4)+1)==0) fprintf(stderr,&quot;&gt;&quot;);if((i)+1==(n)) fprintf(stderr,&quot;\n&quot;);})</td></tr>
+<tr class="separator:a642678006d495d706eb924be24717e81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a742396b7da9970f25d52858fa166fc6f"><td class="memItemLeft" align="right" valign="top"><a id="a742396b7da9970f25d52858fa166fc6f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>assert</b>(A)</td></tr>
 <tr class="separator:a742396b7da9970f25d52858fa166fc6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
