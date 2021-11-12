@@ -66,13 +66,13 @@ void  (*free_custom)(void*);
 int MEM_VERBOSE=0;
 int MEM_DEBUG=DEBUG+0;
 int LOG_LEVEL=0;
-
+static void print_mem_debug();
 PNEW(mutex_deinit);
 
 static unsigned int  memcnt=0;
 static size_t memalloc=0, memfree=0;
 /*max depth in backtrace */
-#define DT 10
+#define DT 8 //matches funtrace_len/8
 
 #define METHOD 1
 #if METHOD == 1 //Use hash table
@@ -81,19 +81,45 @@ typedef struct{
 	size_t size;
 	union{
 		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
-		void *func[DT];
+		struct{
+			long nfunc;
+			void *func[DT];
+		};
 	};
-	int nfunc;
-	
 }memkey_t;
 memkey_t *memkey_all=NULL;
-const unsigned int memkey_len=0xFFFFFF; //should be all 1 at lower bits
+unsigned int memkey_len=0; //should be all 1 at lower bits
 unsigned int memkey_thres = 0;
 unsigned int memkey_maxadd=0;
 unsigned int memkey_maxdel=0;
-static void memkey_init(){
-	memkey_all=calloc_default(memkey_len, sizeof(memkey_t));
-	memkey_thres=memkey_len>>1;
+//Enable or disable MEM_DEBUG
+static void memkey_init(int enabled){
+	if(memkey_len){
+		print_mem_debug();
+	}
+	if(MEM_DEBUG==enabled) return;
+	memcnt=0;
+	memalloc=0;
+	memfree=0;
+	memkey_maxadd=0;
+	memkey_maxdel=0;
+	if(enabled){
+		if(!memkey_len){//already enabled
+			memkey_len=0xFFFFF;
+			dbg("initializing memkey_all for %u of %lu bytes\n", memkey_len, sizeof(memkey_t));
+			memkey_all=calloc_default(memkey_len, sizeof(memkey_t));
+			memkey_thres=memkey_len>>1;
+		}
+		MEM_DEBUG=enabled;//enable after we setup.
+	}else{
+		MEM_DEBUG=enabled;//disable before we clean up.
+		dbg("free memkey_all and disable MEM_DEBUG\n");
+		memkey_len=0;
+		memkey_thres=0;
+		free(memkey_all);
+		memkey_all=0;
+	}
+	
 }
 //convert address to index. Make sure last two bits has at least 1 set
 static unsigned int addr2ind(void*p){
@@ -156,6 +182,10 @@ static void memkey_del(void *p){
 	}
 }
 static void print_mem_debug(){
+	if(!memkey_len){
+		dbg("MEM_DEBUG was not enabled, canceled.\n");
+		return;
+	}
 	if(!memcnt){
 		info3("All allocated memory are freed.\n");
 	} else{
@@ -168,13 +198,13 @@ static void print_mem_debug(){
 			if(counter<50){
 				counter++;
 				info3("%9zu", memkey_all[i].size);
-				if(memkey_all[i].nfunc){
+				if(memkey_all[i].funtrace[0]){
+					info3(" %s\n", memkey_all[i].funtrace);
+				}else if(memkey_all[i].nfunc){
 					int offset=memkey_all[i].nfunc>3?1:0;
 					if(!ans || !(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
 						info3(" %p\n", memkey_all[i].p);
 					}
-				}else{
-					info3(" %s\n", memkey_all[i].funtrace);
 				}
 			}else{
 				info3("Stop after %u prints\n", counter);
@@ -238,9 +268,11 @@ typedef struct{
 	size_t size;
 	union{
 		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
-		void *func[DT];
+		struct{
+			long nfunc;
+			void *func[DT];
+		}
 	};
-	int nfunc;
 }memkey_t;
 
 enum{
@@ -467,10 +499,15 @@ void print_mem_debug(){
 	info3("Memory allocation is %lu kB, still in use %lu KB.\n", memalloc>>10, (memalloc-memfree)>>10);
 }
 void memkey_init(){
-	memkey_max=1000000;
-	memkey_all=calloc_default(memkey_max, sizeof(memkey_t));
-	memhead_used.counter=S_USED;//start with 10
-	memhead_idle.counter=S_USED;
+	if(MEM_DEBUG){
+		memkey_max=1000000;
+		memkey_all=calloc_default(memkey_max, sizeof(memkey_t));
+		memhead_used.counter=S_USED;//start with 10
+		memhead_idle.counter=S_USED;
+	}else{
+		free(memkey_all);
+		memkey_all=NULL;
+		memkey_max=0;
 }
 #else
 typedef struct{
@@ -703,7 +740,7 @@ static void init_mem(){
 		realloc_default=(void *(*)(void *, size_t))dlsym(RTLD_DEFAULT, "realloc");
 		free_default=(void(*)(void *))dlsym(RTLD_DEFAULT, "free");
 		read_sys_env();
-		memkey_init();
+		memkey_init(MEM_DEBUG);
 		void init_process(void);
 		init_process();
 		init_hosts();
@@ -746,28 +783,26 @@ static __attribute__((destructor)) void deinit(){
    Register a function or data to call or free upon exit
 */
 void register_deinit(void (*fun)(void), void *data){
-	if(MEM_DEBUG){
-		LOCK(mutex_deinit);
-		init_mem();
-		deinit_t *node=NULL;
-		for(node=deinit_head; node; node=node->next){
-			if(fun&&fun==node->fun){
-				fun=NULL;
-			}
-			if(data&&data==node->data){
-				data=NULL;
-			}
+	LOCK(mutex_deinit);
+	init_mem();
+	deinit_t *node=NULL;
+	for(node=deinit_head; node; node=node->next){
+		if(fun&&fun==node->fun){
+			fun=NULL;
 		}
-		if(fun||data){
-			node=(deinit_t *)calloc_default(1, sizeof(deinit_t));
-			node->fun=fun;
-			node->data=data;
-
-			node->next=deinit_head;
-			deinit_head=node;
+		if(data&&data==node->data){
+			data=NULL;
 		}
-		UNLOCK(mutex_deinit);
 	}
+	if(fun||data){
+		node=(deinit_t *)calloc_default(1, sizeof(deinit_t));
+		node->fun=fun;
+		node->data=data;
+
+		node->next=deinit_head;
+		deinit_head=node;
+	}
+	UNLOCK(mutex_deinit);
 }
 
 quitfun_t quitfun=NULL;
@@ -785,14 +820,23 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	(void)unused;
-	signal_caught=sig;
-	info("\ndefault_signal_handler: %s (%d)\n", strsignal(sig), sig);
-	if(sig==SIGTERM){
+	if(sig==0){
+		dbg_time("Signal 0 caught. do nothing\n");
+		return;
+	}else if(sig==SIGUSR1){//Use SIGUSR1 to enable MEM_DEBUG and print memory infromation
+		memkey_init(1);
+		return;
+	}else if(sig==SIGUSR2){//Use SIGUSR2 to disable MEM_DEBUG
+		memkey_init(0);
+		return;
+	}else if(sig==SIGTERM){
 		char sender[PATH_MAX]={0};
 		get_job_progname(sender, PATH_MAX, siginfo->si_pid);
 		info("Code is %d, send by %d (uid=%d, %s).\n",
 			siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
 	}
+	signal_caught=sig;
+	info("\ndefault_signal_handler: %s (%d)\n", strsignal(sig), sig);
 	//sync();
 	int cancel_action=0;
 	/*
@@ -803,10 +847,6 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	sync();
 	}
 	*/
-	if(sig==0){
-		dbg_time("Signal 0 caught. do nothing\n");
-		return;
-	}
 	if(fatal_error_in_progress){
 		info("Signal handler is already in progress. force abort.\n");
 		_Exit(1);
@@ -857,6 +897,7 @@ void register_signal_handler(int (*func)(int)){
 	//sigaction(SIGHUP, &act, 0);
 	signal(SIGHUP, SIG_IGN);//ignore the signal.
 	sigaction(SIGUSR1, &act, 0);
+	sigaction(SIGUSR2, &act, 0);
 	sigaction(SIGQUIT, &act, 0);
 	signal_handler=func;
 }

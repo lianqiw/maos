@@ -415,7 +415,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 		int navail=select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0);
 		if(navail<0){//select failed
 			if(errno==EINTR){
-				warning_time("select failed: %s\n", strerror(errno));
+				dbg_time("select failed: %s\n", strerror(errno));
 				continue;
 			} else if(errno==EBADF){
 				warning_time("bad file descriptor: %s\n", strerror(errno));

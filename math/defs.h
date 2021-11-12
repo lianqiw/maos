@@ -189,6 +189,12 @@ static inline int issp(const void* id){
 }
 
 #endif //if COMP_LONG
+#define DO_PRAGMA(A...) _Pragma(#A)
+#ifdef COMP_COMPLEX
+#define OMP_SIMD(...) //simd is not available for complex numbers
+#else
+#define OMP_SIMD(A...) DO_PRAGMA(omp simd A)
+#endif
 
 #define ABS2(A) creal((A)*conj(A))
 static inline int ismat(const void* id){

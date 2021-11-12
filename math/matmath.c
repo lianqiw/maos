@@ -36,6 +36,7 @@ void X(scale)(X(mat)* A, R w){
 	if(w==(T)0){
 		memset(P(A), 0, sizeof(T)*A->nx*A->ny);
 	} else{
+		OMP_SIMD()
 		for(int i=0; i<A->nx*A->ny; i++){
 			P(A, i)*=w;
 		}
@@ -104,6 +105,7 @@ void X(randn)(X(mat)* A, const T sigma, rand_t* rstat){
 T X(inn)(const X(mat)* A, const X(mat)* B){
 	if(!check_match(A, B)) return -1;
 	TD out=0;
+	OMP_SIMD(reduction(+:out))
 	for(int i=0; i<A->nx*A->ny; i++){
 		out+=P(A, i)*P(B, i);
 	}
@@ -121,6 +123,7 @@ T X(inn)(const X(mat)* A, const X(mat)* B){
 T X(wdot)(const T* a, const X(mat)* w, const T* b){
 	if(!check_mat(w)||!a||!b) return 0;
 	TD res=0;
+	OMP_SIMD(reduction(+:res) collapse(2))
 	for(int j=0; j<w->ny; j++){
 		for(int i=0; i<w->nx; i++){
 			res+=P(w, i, j)*a[i]*b[j];
@@ -143,7 +146,7 @@ void X(cwm)(X(mat)* restrict A, const X(mat)* restrict B){
 		error("Input is not valid\n");
 		return;
 	}
-//#pragma omp simd //not effective
+OMP_SIMD()
 	for(long i=0; i<B->nx*B->ny; i++){
 		P(A, i)*=P(B, i);
 	}
@@ -159,17 +162,17 @@ void X(cwm2)(X(mat)* restrict A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt
 	int has_b1=B1&&wt1&&check_match(A, B1);
 	int has_b2=B2&&wt2&&check_match(A, B2);
 	if(has_b1&&has_b2){
-//#pragma omp simd
+OMP_SIMD()
 		for(long i=0; i<B1->nx*B1->ny; i++){
 			P(A, i)*=(P(B1, i)*wt1+P(B2, i)*wt2);
 		}
 	} else if(has_b1){
-//#pragma omp simd
+OMP_SIMD()
 		for(long i=0; i<B1->nx*B1->ny; i++){
 			P(A, i)*=P(B1, i)*wt1;
 		}
 	} else if(has_b2){
-//#pragma omp simd
+OMP_SIMD()
 		for(long i=0; i<B2->nx*B2->ny; i++){
 			P(A, i)*=P(B2, i)*wt2;
 		}
@@ -479,7 +482,7 @@ void X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
 					R iiy=iy+(jy-resm)*res;
 					R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
 					R wty=1.-fabs(iy-iiy);
-//#pragma omp simd
+OMP_SIMD()
 					for(int jx=0; jx<nres; jx++){
 						R iix=ix+(jx-resm)*res;
 						R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
@@ -543,6 +546,7 @@ void X(rotvec)(X(mat)* A, const R theta){
 	}
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
+	//OMP_SIMD()
 	for(int i=0; i<A->nx; i++){
 		T tmp=P(A, i, 0)*ctheta-P(A, i, 1)*stheta;
 		P(A, i, 1)=P(A, i, 0)*stheta+P(A, i, 1)*ctheta;
@@ -560,6 +564,7 @@ void X(rotvect)(X(mat)* A, const R theta){
 	}
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
+	OMP_SIMD()
 	for(int i=0; i<A->ny; i++){
 		T tmp=P(A, 0, i)*ctheta-P(A, 1, i)*stheta;
 		P(A, 1, i)=P(A, 0, i)*stheta+P(A, 1, i)*ctheta;
@@ -624,6 +629,7 @@ void X(corr)(X(mat)** pout, const X(mat)* A, const X(mat)* B){
 			long sx1, nnx;
 			SHIFT_PEX(sx1, nnx, A->nx, offx);
 			T tmp=0;
+			OMP_SIMD(reduction(+:tmp) collapse(2))
 			for(long iy1=sy1; iy1<nny; iy1++){
 				for(long ix1=sx1; ix1<nnx; ix1++){
 					tmp+=P(A, ix1, iy1)*P(B, ix1-offx, iy1-offy);
@@ -679,6 +685,7 @@ void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
 	R thres, R bkgrnd, R flux){
 	R sum=0, sumx=0, sumy=0;
 	R iI;
+	OMP_SIMD(reduction(+:sum,sumx,sumy) collapse(2))
 	for(int iy=0; iy<im->ny; iy++){
 		for(int ix=0; ix<im->nx; ix++){
 			iI=REAL(P(im, ix, iy))-bkgrnd;
@@ -744,7 +751,7 @@ void X(shift2center)(X(mat)* A, R offsetx, R offsety){
    <Mod|wt|Mod> is equal to sum(wt).
    2010-07-21: Bug found: The result was not orthonormal. cause: nonvalid was not initialized to 0.
 */
-void X(gramschmidt)(X(mat)* Mod, R* amp){
+void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
 	const int nmod=Mod->ny;
 	const long nx=Mod->nx;
 	R wtsum=(R)nx;
@@ -758,12 +765,11 @@ void X(gramschmidt)(X(mat)* Mod, R* amp){
 			info("Gramschmidt: %d of %d\n", imod, nmod);
 		}
 		if(imod>0){/*orthogonalize */
-			T cross;
 			/*compute dot product. */
 			for(int jmod=0; jmod<imod; jmod++){
 				if(nonvalid[jmod]) continue;
-				cross=-X(vecdot)(PCOL(Mod, imod), PCOL(Mod, jmod), amp, nx)/wtsum;
-//OMP_TASK_FOR(4)
+				const T cross=-X(vecdot)(PCOL(Mod, imod), PCOL(Mod, jmod), amp, nx)/wtsum;
+				OMP_SIMD()
 				for(long ix=0; ix<nx; ix++){
 					P(Mod, ix, imod)+=cross*P(Mod, ix, jmod);
 				}
@@ -773,6 +779,7 @@ void X(gramschmidt)(X(mat)* Mod, R* amp){
 		R norm=sqrt(REAL(X(vecdot)(PCOL(Mod, imod), PCOL(Mod, imod), amp, nx)/wtsum));
 		if(fabs(norm)>1.e-15){
 			norm=1./norm;
+			OMP_SIMD()
 			for(long ix=0; ix<nx; ix++){
 				P(Mod, ix, imod)*=norm;
 			}
@@ -787,7 +794,7 @@ void X(gramschmidt)(X(mat)* Mod, R* amp){
 /**
    Limit numbers in A to within [min, max]. used for DM clipping.
 */
-int X(clip)(X(mat)* A, R min, R max){
+int X(clip)(X(mat)* restrict A, R min, R max){
 	if(!A) return 0;
 	if(!isfinite(min)&&!isfinite(max)) return 0;
 	if(max<=min){
@@ -795,6 +802,7 @@ int X(clip)(X(mat)* A, R min, R max){
 	}
 	T* restrict Ap=P(A);
 	int nclip=0;
+	OMP_SIMD(reduction(+:nclip))
 	for(long i=0; i<A->nx*A->ny; i++){
 		R Ar=REAL(Ap[i]);
 		if(Ar>max){
@@ -811,10 +819,11 @@ int X(clip)(X(mat)* A, R min, R max){
 /**
    A=A*B, where diag(B)=s
 */
-void X(muldiag)(X(mat)* A, const X(mat)* s){
+void X(muldiag)(X(mat)* restrict A, const X(mat)* restrict s){
 	assert(A->ny==s->nx&&s->ny==1);
 	X(mat)* pA=A;
-	const T* ps=P(s);
+	const T* restrict ps=P(s);
+	OMP_SIMD(collapse(2))
 	for(long iy=0; iy<A->ny; iy++){
 		for(long ix=0; ix<A->nx; ix++){
 			P(pA, ix, iy)*=ps[iy];
@@ -827,6 +836,7 @@ void X(muldiag)(X(mat)* A, const X(mat)* s){
 */
 void X(cwpow)(X(mat)* A, R power){
 	if(!A) return;
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=pow(P(A, i), power);
 	}
@@ -837,6 +847,7 @@ void X(cwpow)(X(mat)* A, R power){
 */
 void X(cwexp)(X(mat)* A, R alpha){
 	if(!A) return;
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=exp(P(A, i)*alpha);
 	}
@@ -845,7 +856,7 @@ void X(cwexp)(X(mat)* A, R alpha){
 /**
    Raise all elements above thres*maxabs(A) to pow power. Set others to zero.
 */
-void X(cwpow_thres)(X(mat)* A, R power, R thres){
+void X(cwpow_thres)(X(mat)* restrict A, R power, R thres){
 	thres*=X(maxabs)(A);
 	for(long i=0; i<A->nx*A->ny; i++){
 		if(fabs(P(A, i))>thres){
@@ -866,6 +877,7 @@ void X(polyval)(X(mat)* A, XR(mat)* p){
 	int np=p->nx;
 	for(long i=0; i<A->nx*A->ny; i++){
 		T tmp=0;
+		OMP_SIMD(reduction(+:tmp))
 		for(long ip=0; ip<np; ip++){
 			tmp+=P(p, ip)*(T)pow(P(A, i), np-ip-1);
 		}
@@ -875,7 +887,7 @@ void X(polyval)(X(mat)* A, XR(mat)* p){
 /**
    add val to diagonal values of A.
 */
-void X(addI)(X(mat)* A, T val){
+void X(addI)(X(mat)*restrict A, T val){
 	if(!A) return;
 	if(A->nx!=A->ny)
 		warning("daddI: A is not square\n");
@@ -897,8 +909,9 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 			error("A is %ldx%ld, B is %ldx%ld. They should match in size.\n",
 				NX(A), NY(A), NX(*B0), NY(*B0));
 		}
-		X(mat) *B=*B0;
+		X(mat) * restrict B=*B0;
 		if(bc){
+			OMP_SIMD()
 			for(int i=0; i<PN(A); i++){
 				P(B, i)=P(B, i)*bc+P(A, i)*ac;
 			}
@@ -906,6 +919,7 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 			if(ac==(T)1){
 				X(cp)(B0, A);
 			} else{/*just assign */
+				OMP_SIMD()
 				for(int i=0; i<PN(A); i++){
 					P(B, i)=P(A, i)*ac;
 				}
@@ -923,10 +937,10 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 			bc=0;/*no bother to accumulate. */
 			X(init)(B0, A->nx, A->ny);
 		}
-		X(mat)* B=*B0;
+		X(mat)* restrict B=*B0;
 		long nx=MIN(A->nx, B->nx);
 		long ny=MIN(A->ny, B->ny);
-
+		OMP_SIMD(collapse(2))
 		for(long iy=0; iy<ny; iy++){
 			for(long ix=0; ix<nx; ix++){
 				P(B, ix, iy)=P(B, ix, iy)*bc+P(A, ix, iy)*ac;
@@ -937,8 +951,9 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 /**
    Add a scalar to matrix
 */
-void X(adds)(X(mat*)A, const T ac){
+void X(adds)(X(mat)*restrict A, const T ac){
 	if(!A||!A->nx||ac==(T)0) return;
+	OMP_SIMD()
 	for(int i=0; i<A->nx*A->ny; i++){
 		P(A, i)+=ac;
 	}
@@ -951,8 +966,7 @@ X(mat)* X(logspace)(R emin, R emax, long n){
 	X(mat)* out=X(new)(n, 1);
 	R esep=(emax-emin)/(n-1);
 	for(long i=0; i<n; i++){
-		R ex=emin+esep*i;
-		P(out, i)=pow(10, ex);
+		P(out, i)=pow(10, emin+esep*i);
 	}
 	return out;
 }
@@ -962,6 +976,7 @@ X(mat)* X(logspace)(R emin, R emax, long n){
 */
 X(mat)* X(linspace)(R min, R dx, long n){
 	X(mat)* out=X(new)(n, 1);
+	OMP_SIMD()
 	for(long i=0; i<n; i++){
 		P(out, i)=min+dx*i;
 	}
@@ -1072,9 +1087,9 @@ X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, 
    Interpolation of 1d array
  */
 X(mat)* X(interp1)(const X(mat)* xin_, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
-	X(mat)* ynew=NULL;
-	X(mat)* xin=X(refcols)(xin_, 0, 1);
-	X(mat)* yin=yin_?X(ref)(yin_):X(refcols)(xin_, 1, 1);
+	X(mat)* restrict ynew=NULL;
+	X(mat) *restrict xin=X(refcols)(xin_, 0, 1);
+	X(mat) *restrict yin=yin_?X(ref)(yin_):X(refcols)(xin_, 1, 1);
 
 	if(X(islinear)(xin)){
 		ynew=X(interp1linear)(xin, yin, xnew, ydefault);
@@ -1138,8 +1153,8 @@ void X(blend)(X(mat)* restrict A, X(mat)* restrict B, int overlap){
 	X(mat)* pB=B;
 	R wty, wtx;
 	for(long iy=0; iy<iylen; iy++){
-		T* outi=&P(pA, ixstart+skipx, iystart+skipy+iy);
-		T* ini=&P(pB, ixstart, iystart+iy);
+		T* restrict outi=&P(pA, ixstart+skipx, iystart+skipy+iy);
+		T* restrict ini=&P(pB, ixstart, iystart+iy);
 		if(iy<overlap){
 			wty=(R)iy/(R)(overlap-1);
 		} else if(iylen-iy-1<overlap){
@@ -1147,6 +1162,7 @@ void X(blend)(X(mat)* restrict A, X(mat)* restrict B, int overlap){
 		} else{
 			wty=1;
 		}
+		OMP_SIMD()
 		for(long ix=0; ix<ixlen; ix++){
 			if(ix<overlap){
 				wtx=(R)ix/(R)(overlap-1);
@@ -1248,6 +1264,7 @@ X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 
 	X(mat)* pc=coeff;
 	T ypriv, ynext;
+	OMP_SIMD()
 	for(long ix=0; ix<nx-1; ix++){
 		if(fabs(px[ix+1]-px[ix]-xsep)>thres){
 			error("The coordinate is not evenly spaced\n");
@@ -1282,7 +1299,8 @@ X(mat)* X(spline_eval)(X(mat)* coeff, X(mat)* x, X(mat)* xnew){
 	X(mat)* pc=coeff;
 	T xmin=P(x, 0);
 	T xsep1=(T)(nx-1)/(P(x, nx-1)-xmin);
-	X(mat)* out=X(new)(xnew->nx, xnew->ny);
+	X(mat)* restrict out=X(new)(xnew->nx, xnew->ny);
+	OMP_SIMD()
 	for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
 		R xn=REAL((P(xnew, ix)-xmin)*xsep1);
 		long xnf=floor(xn);
@@ -1310,6 +1328,7 @@ X(mat)* X(spline)(X(mat)* x, X(mat)* y, X(mat)* xnew){
 */
 void X(cwlog10)(X(mat)* A){
 	R ratio=1./log(10);
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=log(P(A, i))*ratio;
 	}
@@ -1318,6 +1337,7 @@ void X(cwlog10)(X(mat)* A){
    Do a component wise log10 on each element of A.
 */
 void X(cwlog)(X(mat)* A){
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=log(P(A, i));
 	}
@@ -1368,6 +1388,7 @@ void X(embed)(X(mat)* restrict A, const X(mat)* restrict B, const R theta){
 		long ix2, iy2;
 		for(long iy=0; iy<nouty; iy++){
 			y=(R)(iy-nouty2);
+			OMP_SIMD()
 			for(long ix=0; ix<noutx; ix++){
 				x=(R)(ix-noutx2);
 				x2=x*ctheta+y*stheta+ninx2;
@@ -1397,6 +1418,7 @@ R X(fwhm)(X(mat)* A){
 	if(!A) return 0;
 	R hm=0.5*X(max)(A);
 	long n=0;
+	OMP_SIMD(reduction(+:n))
 	for(long ix=0; ix<A->nx*A->ny; ix++){
 		if(fabs(P(A, ix))>=hm){
 			n++;
@@ -1420,6 +1442,7 @@ void X(gauss_fit)(
 	long nx=NX(A);
 
 	R sum=0, sumx=0, sumy=0, Amax=0;
+	//OMP_SIMD(reduction(+:sum,sumx,sumy) reduction(max:Amax) collapse(2))
 	for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
 			R Ai=REAL(P(A, ix, iy));
@@ -1444,6 +1467,7 @@ void X(gauss_fit)(
 	sum=0;
 	for(long iy=0; iy<ny; iy++){
 		R y=(R)iy-sumy;
+		OMP_SIMD(reduction(+:sumx2, sumy2, sumxy, sum))
 		for(long ix=0; ix<nx; ix++){
 			R x=(R)ix-sumx;
 			R Ai=REAL(P(A, ix, iy));
@@ -1491,8 +1515,8 @@ typedef struct{
 static void X(enc_thread)(thread_t* pdata){
 	ENC_T* data=(ENC_T*)pdata->data;
 	const X(mat)* dvec=data->dvec;
-	X(mat)* enc=data->enc;
-	X(mat)* ppsf=data->phat;
+	X(mat)* restrict enc=data->enc;
+	const X(mat)* restrict ppsf=data->phat;
 	int type=data->type;
 	const R* restrict dr=P(dvec);
 	const long ncomp2=data->phat->nx;
@@ -1505,12 +1529,14 @@ static void X(enc_thread)(thread_t* pdata){
 		/*Cache the data. */
 		for(long iy=0; iy<ncomp2; iy++){
 			R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
+			OMP_SIMD()
 			for(long ir=pdata->start; ir<pdata->end; ir++){
 				P(pks, ir, iy)=sinc(ky*dr[ir])*dr[ir];
 			}
 		}
 		for(long iy=0; iy<ncomp2; iy++){
 			for(long ix=0; ix<ncomp2; ix++){
+				OMP_SIMD()
 				for(long ir=pdata->start; ir<pdata->end; ir++){
 					R s=P(pks, ir, iy)*P(pks, ir, ix);
 					P(enc, ir)+=s*P(ppsf, ix, iy);
@@ -1525,6 +1551,7 @@ static void X(enc_thread)(thread_t* pdata){
 				switch(type){
 				case -1: {/*azimuthal average. dr is radius */
 					R k=sqrt(kx*kx+ky*ky);
+					//OMP_SIMD()
 					for(long ir=pdata->start; ir<pdata->end; ir++){
 						R s=j0(k*pi2*dr[ir]);
 						P(enc, ir)+=s*P(ppsf, ix, iy);
@@ -1534,6 +1561,7 @@ static void X(enc_thread)(thread_t* pdata){
 					break;
 				case 1: {/*Encircled energy. dr is diameter */
 					R k=sqrt(kx*kx+ky*ky);
+					//OMP_SIMD()
 					for(long ir=pdata->start; ir<pdata->end; ir++){
 						const R r=dr[ir]*0.5;
 						const R tmp=k*pi2*r;
@@ -1600,15 +1628,15 @@ X(mat)* X(enc)(X(mat)* psf, /**<The input array*/
 /**
    Trapzoidal integration
 */
-T X(trapz)(const X(mat)* x, const X(mat)* y){
+T X(trapz)(const X(mat)* restrict x, const X(mat)* restrict y){
 	if(!y) return 0;
 	if(x&&x->nx!=y->nx){
 		error("First dimension of x must match y\n");
 	}
 	T out=0;
 	for(long icol=0; icol<y->ny; icol++){
-		T* py=PCOL(y, icol);
-		T* px=0;
+		T* restrict py=PCOL(y, icol);
+		T* restrict px=0;
 		if(x){
 			if(x->ny==y->ny){
 				px=PCOL(x, icol);
@@ -1618,11 +1646,13 @@ T X(trapz)(const X(mat)* x, const X(mat)* y){
 		}
 		T ans=0;
 		if(px){
+			OMP_SIMD(reduction(+:ans))
 			for(long i=0; i<y->nx-1; i++){
 			//notice use of abs here.
 				ans+=fabs(px[i+1]-px[i])*(py[i+1]+py[i]);
 			}
 		} else{
+			OMP_SIMD(reduction(+:ans))
 			for(long i=0; i<y->nx; i++){
 				ans+=py[i];
 			}
