@@ -559,9 +559,7 @@ static void init_simu_evl(sim_t* simu){
 		dcellset(simu->res, NAN);
 	}
 
-
-	{/*USE MMAP for data that need to save at every time step */
-
+	{/*USE async write for data that need to save at every time step */
 		const char* header="Results per direction: olmp; clmp; olep; clep";
 		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, header, "%s/Resp_%d.bin", fnextra, seed);
 
@@ -1816,14 +1814,15 @@ void print_progress(sim_t* simu){
 			info("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
 				status->tot*tkmean, status->mean*tkmean, lapsh, lapsm, resth, restm);
 		} else{
-			info2("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
+			info2("%sStep %5d: OL %6.1f %6.1f  OA %6.1f %5.1f CL %6.1f %5.1f ",
 				GREEN, isim,
 				mysqrt(P(simu->ole, 0, isim))*1e9,
 				mysqrt(P(simu->ole, 1, isim))*1e9,
-				mysqrt(P(simu->ole, 2, isim))*1e9,
+				mysqrt(P(simu->clep, 0, 0, 0, isim))*1e9,
+				mysqrt(P(simu->clep, 0, 0, 1, isim))*1e9,
 				mysqrt(P(simu->cle, 0, isim))*1e9,
-				mysqrt(P(simu->cle, 1, isim))*1e9,
-				mysqrt(P(simu->cle, 2, isim))*1e9);
+				mysqrt(P(simu->cle, 1, isim))*1e9				
+				);
 			if(parms->recon.split){
 				info2(" Split %6.1f %6.1f %6.1f nm",
 					mysqrt(P(simu->clem, 0, isim))*1e9,

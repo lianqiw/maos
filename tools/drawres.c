@@ -365,8 +365,8 @@ int main(int argc, char* argv[]){
 						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_LO), ipath, iseed), 1);
 						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_TT), ipath, iseed), -1);
 						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_F), ipath, iseed), -1);
-						if(dmax(P(res, ipath, iseed, P_PS))<1e-24){//<1e-3 nm
-							dfree(P(res, ipath, iseed, P_PS));
+						if(dmax(P(res, P_PS, ipath, iseed))<1e-24){//<1e-3 nm
+							dfree(P(res, P_PS, ipath, iseed));
 						}
 					}
 				}

@@ -23,7 +23,7 @@
 .libs
 .nfs*
 .svn
-.stignore
+.st*
 .vscode
 Makefile
 Makefile.in

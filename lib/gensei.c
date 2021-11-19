@@ -31,15 +31,14 @@
 */
 static int count_unique(const dcell* opdbias){
 	if(!opdbias) return 1;
-	int different=0;
 	for(int iwfs=1; iwfs<PN(opdbias); iwfs++){
 		real diff=ddiff(P(opdbias, 0), P(opdbias, iwfs));
 		if(diff>1e-4){
-			dbg("opdbias[%d] is different from opdbias[0] by %g.\n", iwfs, diff);
-			different=1;
+			//dbg("opdbias[%d] is different from opdbias[0] by %g.\n", iwfs, diff);
+			return PN(opdbias);
 		}
 	}
-	return different?PN(opdbias):1;
+	return 1;
 }
 static cccell* genseotf_do(const pts_t* pts,
 	const cell* amp, const dcell* opdbias,

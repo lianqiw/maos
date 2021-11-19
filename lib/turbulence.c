@@ -300,6 +300,9 @@ mapcell* genscreen_str(const char* header){
 		real mode=search_header_num(header, "mode");
 		real dx=search_header_num_default(header, "dx", 1./64.);
 		real nx=search_header_num_default(header, "nx", 2048);
+		real ht=search_header_num_default(header, "ht", 0);
+		real vx=search_header_num_default(header, "vx", 0);
+		real vy=search_header_num_default(header, "vy", 0);
 		if(!isnan(r0)){
 			static real seed=0;//avoid using the same seed
 			real L0=search_header_num_default(header, "L0", 30);
@@ -331,6 +334,9 @@ mapcell* genscreen_str(const char* header){
 			if(P(surfs,i)){
 				char* old=P(surfs, i)->header;
 				P(surfs, i)->header=stradd(header, old, NULL);
+				P(surfs,i)->h=ht;
+				P(surfs, i)->vx=vx;
+				P(surfs, i)->vx=vy;
 				if(old) free(old);
 			}
 		}

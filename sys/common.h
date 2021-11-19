@@ -121,7 +121,7 @@ extern int signal_caught;
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)
-#define info_progress(i,n) ({if((i)%(((n)>>4)+1)==0) fprintf(stderr,">");if((i)+1==(n)) fprintf(stderr,"\n");})
+#define info_progress(i,n) if((i)%(((n)>>4)+1)==0) fprintf(stderr,">") //;/*if((i)+1==(n)) fprintf(stderr,"\n");*/})
 #ifndef assert
 #if DEBUG
 #define assert(A) if(!(A)) error("assertion failed: %s\n", #A)

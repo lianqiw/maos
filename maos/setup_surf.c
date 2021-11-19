@@ -172,7 +172,7 @@ static void prop_surf_wfs(thread_t* info){
 */
 static void
 setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* recon){
-	info2("Setting up surface OPD (M1/M2/M3)\n");
+	info2("Setting up surface OPD\n");
 	if(fabs(P(parms->misreg.pupil, 0))>EPS||fabs(P(parms->misreg.pupil, 1))>EPS){
 		warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
 			"in maos because some surfaces may belong to instrument.\n");
@@ -196,6 +196,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	for(int isurf=0; isurf<parms->nsurf; isurf++){
 		char* fn=parms->surf[isurf];
 		if(!fn) continue;
+		info("Surface %d:\n", isurf);
 		mapcell* surfs=genscreen_str(fn);
 		if(!surfs) continue;
 		for(int isurf2=0; isurf2<PN(surfs); isurf2++){
@@ -220,7 +221,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			}
 			int evlct=0;
 			if(!strevl){
-				warning("%s does not contain SURFEVL. Assume it covers all science.\n", fn);
+				info("Does not contain SURFEVL. Assume it covers all evaluation directions.\n");
 				for(int ievl=0; ievl<nevl; ievl++){
 					evlcover[ievl]=1;
 				}
@@ -231,7 +232,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					evlct+=evlcover[ievl]==1?1:0;
 				}
 				if(evlct>0){
-					info2("%s covers evl", fn);
+					info2("Covers evl");
 					for(int ievl=0; ievl<nevl; ievl++){
 						if(evlcover[ievl]){
 							info2(" %d", ievl);
@@ -252,7 +253,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				error("Not handled\n");
 			}
 			if(!strwfs){
-				warning("%s does not contain SURFWFS, Assume it covers all WFS.\n", fn);
+				info("Does not contain SURFWFS, Assume it covers all WFS.\n");
 				for(int iwfs=0;iwfs<nwfs; iwfs++){
 					wfscover[iwfs]=1;
 				}
@@ -273,7 +274,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					ncover+=wfscover[i]?1:0;
 				}
 				if(ncover){
-					info2("%s covers WFS", fn);
+					info2("Covers WFS");
 					for(int i=0; i<nwfs; i++){
 						if(wfscover[i]){
 							info2(" %d", i);

@@ -344,8 +344,8 @@ static inline long index_col(long iy, long nx, long ny){
 #define P0(A)       (A)->p //cannot do test here, bothers memcpy
 #define P1(A,i)     (A)->p[index_1d((i),        (A)->nx, (A)->ny)]
 #define P2(A,ix,iy) (A)->p[index_2d((ix), (iy), (A)->nx, (A)->ny)]
-#define P3(Ac,ix,iy,icx) P2(P1(Ac,icx),ix,iy)
-#define P4(Ac,ix,iy,icx,icy) P2(P2(Ac,icx,icy),ix,iy)
+#define P3(Ac,icx,ix,iy) P2(P1(Ac,icx),ix,iy)
+#define P4(Ac,icx,icy,ix,iy) P2(P2(Ac,icx,icy),ix,iy)
 
 #define P_GET5(_0,_1,_2,_3,_4,_5,NAME,...) NAME
 #define P(...) P_GET5(_0,__VA_ARGS__,P4,P3,P2,P1,P0)(__VA_ARGS__)

@@ -1322,14 +1322,15 @@ void async_write(async_t* async, long offset, int wait){
 		async->aio.aio_nbytes=offset-async->prev;
 		//dbg("%s: Async writing from %ld to %ld at offset %ld\n", zfname(async->fp), async->prev, offset, async->aio.aio_offset);
 		if((ans=aio_write(&async->aio))){
-			if(errno==35){
-				async->aio.aio_nbytes=0;//mark as idle
-			}else{
+			if(errno==EAGAIN){//mark as temporary failure.
+				async->aio.aio_nbytes=0;
+			}else{//mark as permanent failure
 				async->fp->err=2;
 				dbg("%s: aio_write failed with errno %d:%s.\n", zfname(async->fp), errno, strerror(errno));
 			}
+		}else{//update previous marker only if success
+			async->prev=offset;
 		}
-		async->prev=offset;
 	}
 }
 void async_free(async_t* async){
