@@ -337,7 +337,7 @@ void writebin_header(cell* Ac, const char* header, const char* format, ...){
  * Usage: level=0: array of fundamental data. 
  * 		  level=1: cell of fundamental data. 
  * 		  level>1: cell of cell ...
- * 	      level<0: automatically identify and read all data
+ * 	      level==-1: automatically identify and read all data
  * 
  * id: magic number of request fundamental data. data is converted if it does not match magic number from the file. 
  * Cell dimension may be zero. In this case the dimension will be automatically detected.
@@ -347,8 +347,9 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	if(!header){
 		header=&header2;
 	}
+	//if header is not supplied, read from file
 	if(header->magic==0 && read_header(header, fp)){
-		return NULL;
+		return NULL;//read header failed
 	}
 	void* out=0;
 	//scan file in automatic mode or when cell dimension is 0 or when request cell but data is not cell.
@@ -394,7 +395,7 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 			warning("data type id=%u not supported\n", id);
 			out=NULL;
 		}
-	}else if(iscell(&header->magic) && header->nx>0 && header->ny>0){//cell array with known dimensions
+	}else if(iscell(&header->magic) /*&& header->nx>0 && header->ny>0*/){//cell array with known dimensions
 		//info("iscell && nx, ny >0\n");
 		long nx=header->nx;
 		long ny=header->ny;
@@ -411,7 +412,7 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 			P(dcout,i)=readdata_by_id(fp, id, level-1, &headerc);
 		}
 		out=dcout;
-	}else if(level>-2){//scan file only when auto.
+	}else if(level==-1){//scan file only when auto.
 		if(!iscell(&header->magic)||!read_header(header, fp)){
 			int maxlen=10;
 			void** tmp=mymalloc(maxlen, void*);
@@ -434,8 +435,10 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 			free(tmp);
 			out=dcout;
 		}
+	}else{
+		info("unknown how to handle: level=%d, magic=%x, nx=%ld, ny=%ld\n", level, header->magic, header->nx, header->ny);
 	}
-	//info("level=%d, magic=%x, out=%u\n", level, header->magic, out?*(uint32_t*)out:0);
+	
 	free(header->str);header->str=0;
 	if(level==0){//take first none-cell element.
 		while(out && iscell(out)){

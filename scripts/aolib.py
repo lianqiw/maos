@@ -306,8 +306,19 @@ def read_many(fdin):
             fds.append(fd)
             res.append(tmp)
         except:
+            print('Fail to read',fd)
             pass
     return np.array(res),fds
+def read_many_dict(fdin):
+    fds2=natsorted(glob.glob(fdin,recursive=1))
+    res={}
+    for fd in fds2: 
+        try:
+            res[fd]=read(fd)
+        except:
+            print('Fail to read',fd)
+            pass
+    return res
 def eye(nx, val=1):
     dd=np.zeros((nx,nx))
     np.fill_diagonal(dd, val)

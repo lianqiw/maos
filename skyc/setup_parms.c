@@ -164,7 +164,7 @@ static void setup_parms_maos(PARMS_S* parms){
 	READ_INT(maos.ahstfocus);
 	READ_INT(maos.mffocus);
 	READ_STR(maos.fnrange);
-	warning("maos.ahstofocus=%d, maos.mffocus=%d\n", parms->maos.ahstfocus, parms->maos.mffocus);
+	info("maos.ahstofocus=%d, maos.mffocus=%d\n", parms->maos.ahstfocus, parms->maos.mffocus);
 
 	if(readcfg_peek("maos.wddeg")){
 		parms->maos.nwddeg=readcfg_dblarr(&parms->maos.wddeg, "maos.wddeg");
