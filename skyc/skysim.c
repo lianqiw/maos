@@ -123,13 +123,13 @@ static void skysim_isky(SIM_S* simu){
 		  a few combinations are kept for each star field for further time
 		  domain simulations.
 		*/
-		for(int iaster=0; iaster<naster; iaster++)
+		for(int iaster=0; iaster<naster; iaster++){
+			if(parms->skyc.dbgaster<0||iaster==parms->skyc.dbgaster)
 #if _OPENMP >= 200805
 #pragma omp task default(shared) firstprivate(iaster)
 #endif
-		{
-			if(parms->skyc.dbgaster<0||iaster==parms->skyc.dbgaster){
-			/*Parallelizing over aster gives same random stream. */
+			{
+				/*Parallelizing over aster gives same random stream. */
 				seed_rand(&aster[iaster].rand, parms->skyc.seed+iaster+40);
 				/*Compute signal level. */
 				setup_aster_copystar(&aster[iaster], star, parms);
@@ -176,19 +176,19 @@ static void skysim_isky(SIM_S* simu){
 						goto skip1;
 					}
 				}
-				if(parms->skyc.verbose>1){
-					for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
-						info("wfs %d: istar=%d, ipowfs=%d\n", iwfs, aster[iaster].wfs[iwfs].istar,
-							aster[iaster].wfs[iwfs].ipowfs);
-						info("wfs %d: at (%g,%g). siglev=%g\n", iwfs,
-							aster[iaster].wfs[iwfs].thetax*206265,
-							aster[iaster].wfs[iwfs].thetay*206265, aster[iaster].wfs[iwfs].siglevtot);
+				/*if(parms->skyc.verbose>1){
+					for(int iwfs=0; iwfs<asteri->nwfs; iwfs++){
+						info("wfs %d: ipowfs=%d, istar=%d, at (%5.1f,%5.1f). siglev=%.1f\n", iwfs, 
+							asteri->wfs[iwfs].ipowfs, asteri->wfs[iwfs].istar,
+							asteri->wfs[iwfs].thetax*206265,
+							asteri->wfs[iwfs].thetay*206265, 
+							asteri->wfs[iwfs].siglevtot);
 					}
-				}
+				}*/
 				if(parms->skyc.verbose){
 					info("Aster %d, Estimated minimum error is %.2fnm at %.1f Hz. Try %.1f to %.1f Hz\n", iaster,
-						sqrt(asteri->mresest)*1e9, parms->skyc.fss[asteri->mdtrat],
-						parms->skyc.fss[asteri->idtratmin], parms->skyc.fss[asteri->idtratmax-1]);
+						sqrt(asteri->mresest)*1e9, P(parms->skyc.fss, asteri->mdtrat),
+						P(parms->skyc.fss, asteri->idtratmin), P(parms->skyc.fss, asteri->idtratmax-1));
 				}
 				setup_aster_ztilt(asteri, star, parms);
 				/*Assign wvf from star to aster */
@@ -220,23 +220,19 @@ static void skysim_isky(SIM_S* simu){
 					}
 					dmat* ires;
 					if((ires=P(asteri->phyRes,idtrat))){
-						if(parms->skyc.verbose){
-							info("%5.1f Hz %7.2f +%7.2f =%7.2f", parms->skyc.fss[idtrat],
-								sqrt(P(ires,0))*1e9, sqrt(resadd)*1e9,
-								sqrt(P(ires,0)+resadd)*1e9);
-						}
 						/*Add windshake contribution. */
-						real thisVar=P(ires,0)+resadd;
+						real thisVar=P(ires, 0)+resadd;
+						if(parms->skyc.verbose){
+							info("%3.0f Hz: %6.1f nm.", P(parms->skyc.fss, idtrat),	sqrt(thisVar)*1e9);
+						}
 						if(thisVar<asterMinPhy){
 							asterMinPhy=thisVar;
 							asterMinRat=idtrat;
-							if(parms->skyc.verbose){
+							/*if(parms->skyc.verbose && !parms->skyc.multirate){
 								info(" [Selected]");
-							}
+							}*/
 						}
-						if(parms->skyc.verbose){
-							info("\n");
-						}
+					
 					}
 				}
 #if _OPENMP >= 200805 
@@ -248,7 +244,8 @@ static void skysim_isky(SIM_S* simu){
 					skymini=asterMinPhy;
 					dmat* pmini=P(asteri->phyRes,asterMinRat);
 					/*Field Averaged Performance. */
-					P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error */
+					//May include ws/vib if skyc.addws is true.
+					P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error. */
 					P(pres, 2, isky)=P(pmini,1);/*ATM Tip/tilt Error. */
 					P(pres, 3, isky)=parms->skyc.addws?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
 					P(pres, 4, isky)=0;/*always zero*/
@@ -261,11 +258,14 @@ static void skysim_isky(SIM_S* simu){
 					P(pres_oa, 0, isky)=P(pres_oa, 1, isky)+P(pres_oa, 3, isky)+P(pres_oa, 4, isky);
 
 					if(parms->skyc.verbose){
-						info("%5.1f Hz: Update Tot: %6.2f nm NGS: %6.2f nm TT: %6.2f nm\n",
-							parms->skyc.fss[seldtrat],
-							sqrt(P(pres, 0, isky))*1e9, sqrt(P(pres, 1, isky))*1e9, sqrt(P(pres, 2, isky))*1e9);
+						info(" Update result: NGS: %5.1f nm, TT: %5.1f nm, PS/F: %5.1f nm",
+							sqrt(P(pres, 1, isky))*1e9, sqrt(P(pres, 2, isky))*1e9,
+							sqrt(P(pres, 1, isky)-P(pres, 2, isky))*1e9);
 					}
 					dcp(&P(simu->mres,isky), P(asteri->phyMRes,asterMinRat));
+				}
+				if(parms->skyc.verbose){
+					info("\n");
 				}
 skip1:;
 			}/*iaster */
@@ -290,7 +290,7 @@ skip1:;
 			}
 		}
 		if(seldtrat!=-1){
-			P(simu->fss,isky)=parms->skyc.fss[seldtrat];
+			P(simu->fss,isky)=P(parms->skyc.fss, seldtrat);
 			if(parms->skyc.servo>0&&!parms->skyc.multirate){
 				dcp(&P(simu->gain,isky), P(aster[selaster].gain,seldtrat));
 			}
@@ -319,7 +319,7 @@ skip1:;
 		long laps_m=simu->status->laps/60-laps_h*60;
 		long rest_h=simu->status->rest/3600;
 		long rest_m=simu->status->rest/60-rest_h*60;
-		info("Field%4d,%2d stars %3d/%-3d(%1d),%3.0f Hz:%7.2f nm "
+		info("Field%4d,%2d stars %3d/%-3d(%1d),%3.0f Hz:%6.1f nm "
 			"Sel%3.0fs Load%3.0fs Phy%3.0fs Tot%2ld:%02ld Used%2ld:%02ld Left%2ld:%02ld\n",
 			isky, nstar, selaster, naster, nsel, P(simu->fss,isky), sqrt(skymini)*1e9,
 			tk_2-tk_1, tk_3-tk_2, tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
@@ -358,7 +358,7 @@ static void skysim_update_mideal(SIM_S* simu){
 	const PARMS_S* parms=simu->parms;
 	if(parms->skyc.addws){
 	/*Add ws to mideal. After genstars so we don't purturb it. */
-		warning("Add tel wind shake time series to mideal\n");
+		info("Add tel wind shake time series to mideal\n");
 		dmat* telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 		/*telws is in m. need to convert to rad since mideal is in this unit. */
 		dscale(telws, 4./parms->maos.D);//convert from wfe to radian.
@@ -565,6 +565,10 @@ void skysim(const PARMS_S* parms){
 			} else{
 				simu->stars=dcellnew(1, 1);
 				P(simu->stars,0)=readstr_dmat(parms->skyc.stars);
+			}
+			if(PN(simu->stars)<1 || NX(simu->stars,0)<2+parms->maos.nwvl){
+				error("Loaded stars (%s) has wrong rows (%ld, expect %d)\n", 
+					parms->skyc.stars, NX(simu->stars, 0), 2+parms->maos.nwvl);
 			}
 		} else{
 			simu->stars=genstars(parms->skyc.nsky,

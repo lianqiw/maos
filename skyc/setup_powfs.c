@@ -122,7 +122,7 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 			cfft2(nominal, -1);
 			cfftshift(nominal);//peak in center
 			cfft2i(nominal, 1);
-			warning_once("real check nominal for off centered skyc.fnpsf1\n");
+			dbg_once("double check nominal for off centered skyc.fnpsf1\n");
 			/*This nominal will multiply to OTF with peak in corner. But after
 			  inverse fft, peak will be in center*/
 			ccp(&powfs[ipowfs].dtf[iwvl].nominal, nominal);

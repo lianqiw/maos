@@ -43,7 +43,9 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 	real keepout=pow(parms->skyc.keepout/206265., 2);
 	real minrad2=pow(parms->skyc.minrad/206265., 2);
 	int jstar=0;
-	assert(nwvl+2==coord->nx);
+	if(nwvl+2>coord->nx){
+		error("input coord has too few rows (need %d, has %ld\n", nwvl+2, coord->nx);
+	}
 	for(int istar=0; istar<nstar; istar++){
 		if(parms->skyc.ngsalign){
 			star[jstar].thetax=round(P(pc, 0, istar)/ngsgrid)*ngsgrid;
@@ -311,7 +313,7 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 					psf2i0gxgy(P(i0, isa, iwvl), P(gx, isa, iwvl), P(gy, isa, iwvl),
 						P(psf, isa, iwvl), powfs[ipowfs].dtf+iwvl, !parms->skyc.mtchfft);
 					if(parms->skyc.mtchfft){
-						warning_once("Using derivative by FFT\n");
+						dbg_once("Using derivative by FFT\n");
 						P(gx, isa, iwvl)=derive_by_fft(P(i0, isa, iwvl), 0);
 						P(gy, isa, iwvl)=derive_by_fft(P(i0, isa, iwvl), M_PI/2);
 						dscale(P(gx, isa, iwvl), 1./pixtheta);
@@ -374,11 +376,11 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 			}//for idtrat
 			if(P(star[istar].minidtrat,ipowfs)==-1){
 				star[istar].use[ipowfs]=-1;
-				if(parms->skyc.dbg){
+				if(parms->skyc.verbose){
 					info("star %2d, powfs %1d: skipped\n", istar, ipowfs);
 				}
 			} else{
-				if(parms->skyc.dbg){
+				if(parms->skyc.verbose){
 					int idtrat=(int)P(star[istar].minidtrat,ipowfs);
 					info("star %2d, powfs %1d: min dtrat=%3d, snr=%4.1f\n", istar, ipowfs,
 						(int)P(parms->skyc.dtrats,idtrat), P(pistat->snr,idtrat));
@@ -389,8 +391,8 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 			dcellfree(i0s);
 			dcellfree(gxs);
 			dcellfree(gys);
-		}/*for istar */
-	}/*for ipowfs */
+		}/*for ipowfs */
+	}/*for istar */
 }
 /**
    Compute Modal to gradient operator using average gradients. Similar to Z tilt
@@ -485,10 +487,11 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 					}
 					fnztilt[iy][ix]=myalloca(PATH_MAX, char);
 					if(parms->skyc.usephygrad){
-						warning_once("Using phygrad\n");
+						dbg_once("Using phygrad\n");
 						snprintf(fnztilt[iy][ix], PATH_MAX, "%s/phygrad/phygrad_seed%d_sa%d_x%g_y%g",
 							dirstart, seed, msa, thx, thy);
 					} else{
+						dbg_once("Using ztilt out\n");
 						snprintf(fnztilt[iy][ix], PATH_MAX, "%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
 							dirstart, seed, msa, thx, thy);
 					}

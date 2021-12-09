@@ -200,8 +200,6 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	open_config(arg->conf, NULL, 0);
 	open_config(arg->confcmd, NULL, 1);
 	remove(arg->confcmd);
-	free(arg->conf);
-	free(arg->confcmd);
 	PARMS_S* parms=mycalloc(1, PARMS_S);
 	parms->skyc.nthread=arg->nthread;
 	setup_parms_maos(parms);
@@ -325,10 +323,10 @@ PARMS_S* setup_parms(const ARG_S* arg){
 			error("skyc.dtrats must be specified in descending order\n");
 		}
 	}
-	parms->skyc.fss=mycalloc(parms->skyc.ndtrat, real);
+	parms->skyc.fss=dnew(parms->skyc.ndtrat, 1);
 	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		int dtrat=P(parms->skyc.dtrats,idtrat);
-		parms->skyc.fss[idtrat]=1./(parms->maos.dt*dtrat);
+		P(parms->skyc.fss,idtrat)=1./(parms->maos.dt*dtrat);
 	}
 	parms->skyc.rnefs=dnew(parms->skyc.ndtrat, parms->maos.npowfs);
 	if(parms->skyc.rne<0){
@@ -364,7 +362,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 					//0.85 is a factor expected for newer detectors
 					P(rnefs, idtrat, ipowfs)=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
 					info("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
-						parms->skyc.fss[idtrat], P(rnefs, idtrat, ipowfs));
+						P(parms->skyc.fss,idtrat), P(rnefs, idtrat, ipowfs));
 				}
 			}
 		} else if(fabs(parms->skyc.rne+2)<EPS){//older model.
@@ -428,7 +426,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	info("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);
 
 	if(parms->skyc.dbg||parms->skyc.dbgsky>-1){
-		warning("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);
+		dbg("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);
 		if(parms->skyc.verbose<1){
 			parms->skyc.verbose=1;
 		}
@@ -457,10 +455,22 @@ void free_parms(PARMS_S* parms){
 	dfree(parms->skyc.psd_ws);
 	dfree(parms->skyc.psd_ps);
 	dfree(parms->skyc.dtrats);
+	free(parms->skyc.stars);parms->skyc.stars=NULL;
+	dfree(parms->skyc.fss);
+	dfree(parms->skyc.wvlwt);
+	dfree(parms->skyc.rnefs);
 	dfree(parms->maos.mcc);
 	dfree(parms->maos.mcc_oa);
 	dfree(parms->maos.mcc_tt);
 	dfree(parms->maos.mcc_oa_tt);
 	dfree(parms->maos.mcc_oa_tt2);
-	dfree(parms->skyc.rnefs);
+	free(parms->maos.msa);parms->maos.msa=NULL;
+	free(parms->maos.nsa);parms->maos.nsa=NULL;
+	free(parms->maos.ncomp);parms->maos.ncomp=NULL;
+	free(parms->maos.embfac);parms->maos.embfac=NULL;
+	free(parms->maos.dxsa);parms->maos.dxsa=NULL;
+	free_strarr(parms->maos.fnwfsloc, parms->maos.npowfs);parms->maos.fnwfsloc=NULL;
+	free_strarr(parms->maos.fnwfsamp, parms->maos.npowfs);parms->maos.fnwfsamp=NULL;
+	free_strarr(parms->maos.fnsaloc, parms->maos.npowfs);parms->maos.fnsaloc=NULL;
+	free(parms);
 }

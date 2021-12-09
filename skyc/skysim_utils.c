@@ -110,10 +110,7 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngsol,
 	ASTER_S* aster, const POWFS_S* powfs,
 	const PARMS_S* parms, int idtratc, int noisy, int phystart){
-	int dtratc=0;
-	if(!parms->skyc.multirate){
-		dtratc=P(parms->skyc.dtrats,idtratc);
-	}
+	const int dtratc=P(parms->skyc.dtrats,idtratc);
 	int hasphy;
 	if(phystart>-1&&phystart<aster->nstep){
 		hasphy=1;
@@ -133,6 +130,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 	dmat* rnefs=parms->skyc.rnefs;
 	dcell* zgradc=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
 	dcell* gradout=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
+	dcell *gradavg=dcellnew3(aster->nwfs, 1, aster->ngs, 0);//for multirate
 	dmat* gradsave=0;
 	if(parms->skyc.dbg){
 		gradsave=dnew(aster->tsa*2, nstep);
@@ -142,18 +140,33 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 	kalman_t* kalman=0;
 	dcell* mpsol=0;
 	int multirate=parms->skyc.multirate;
-	dmat* moffset=0;
-	if(multirate) moffset=dnew(nmod, 1);
-	lmat* dtrats=aster->dtrats;//only in multirate case. dtrat of each wfs in the asterism
+	dmat* moffsetint=0;
+	dmat* moffseterr=0;
+	int ind_fast=0;//index into gain and pgm for faster loop in multirate
+	if(multirate) {
+		moffsetint=dnew(nmod, 1);
+		moffseterr=dnew(nmod, 1);
+	}
+	int dtrat_slow=0;//dtrat of slow loop
+	//aster->dtrats is only set in multirate case. dtrat of each wfs in the asterism
 	if(parms->skyc.servo>0){
 		if(multirate){//only supports integrator
-			dmat* gtmp=dnew(1, 1); P(gtmp,0)=1;
-			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, gtmp);
-			dfree(gtmp);
-		} else{
-			//dmat *gtmp=dnew(1,1); P(gtmp,0)=0.5;
-			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain,idtratc));
+			//dmat* gtmp=dnew(1, 1); P(gtmp,0)=1;
+			int indk=0;
+			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+				if(P(aster->idtrats, iwfs)==idtratc){//active wfs at fastest rate
+					indk |= (1<<iwfs);
+				}else{
+					dtrat_slow=P(aster->dtrats,iwfs);
+				}
+			}
+			ind_fast=indk-1;
+			//dbg("using gain[%d]\n", indk-1);
+			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain, ind_fast));
 			//dfree(gtmp);
+			//dbg("ind_fast=%d\n", ind_fast);
+		} else{
+			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain,idtratc));
 		}
 	} else{
 		if(multirate){
@@ -204,8 +217,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 	}
 	zfarr* zfmerr=0;
 	if(parms->skyc.dbg){
-		int dtrati=(multirate?P(dtrats,0):dtratc);
-		zfmerr=zfarr_init(nstep, 1, "%s/skysim_merr_aster%d_dtrat%d", dirsetup, aster->iaster, dtrati);
+		zfmerr=zfarr_init(nstep, 1, "%s/skysim_merr_aster%d_dtrat%d", dirsetup, aster->iaster, dtratc);
 	}
 	for(int irep=0; irep<parms->skyc.navg; irep++){
 		if(kalman){
@@ -220,7 +232,6 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 				dcellzero(ints[iwfs]);
 			}
 		}
-		int plotted=0;
 		for(int istep=0; istep<nstep; istep++){
 			memcpy(P(merr), PCOL(mideal, istep), nmod*sizeof(real));
 			dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
@@ -235,6 +246,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 				real res_ngs=dwdot(P(merr), parms->maos.mcc, P(merr));
 				if(res_ngs>ngsol*100){
 					dfree(res); res=NULL;
+					dbg("Loop is diverging at step %d\n", istep);
 					break;
 				}
 				{
@@ -263,7 +275,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 			}//if evl
 
 			if(istep<phystart||phystart<0){
-			/*Ztilt, noise free simulation for acquisition. */
+				/*Ztilt, noise free simulation for acquisition. */
 				dmm(&zgradc->m, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 					const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -274,7 +286,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 				}
 
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-					int dtrati=(multirate?P(dtrats,iwfs):dtratc);
+					int dtrati=(multirate?P(aster->dtrats,iwfs):dtratc);
 					if((istep+1)%dtrati==0){
 						dadd(&P(gradout,iwfs), 0, P(zgradc,iwfs), 1./dtrati);
 						dzero(P(zgradc,iwfs));
@@ -289,7 +301,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 					}
 				}
 			} else{
-			/*Accumulate PSF intensities*/
+				/*Accumulate PSF intensities*/
 				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 					const real thetax=aster->wfs[iwfs].thetax;
 					const real thetay=aster->wfs[iwfs].thetay;
@@ -317,7 +329,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 					int dtrati=dtratc, idtrat=idtratc;
 					if(multirate){//multirate
 						idtrat=P(aster->idtrats,iwfs);
-						dtrati=P(dtrats,iwfs);
+						dtrati=P(aster->dtrats,iwfs);
 					}
 					if((istep+1)%dtrati==0){/*has output */
 						dcellzero(ints[iwfs]);
@@ -396,7 +408,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 				int indk=0;
 				//Form PSOL grads and obtain index to LQG M
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-					int dtrati=(multirate?P(dtrats,iwfs):dtratc);
+					int dtrati=(multirate?P(aster->dtrats,iwfs):dtratc);
 					if((istep+1)%dtrati==0){
 						indk|=1<<iwfs;
 						dmm(&P(gradout,iwfs), 1, P(aster->g,iwfs), P(mpsol,iwfs), "nn", 1./dtrati);
@@ -413,35 +425,46 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 					} else{
 						int indk=0;
 						for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-							int dtrati=(multirate?P(dtrats,iwfs):dtratc);
-							if((istep+1)%dtrati==0){
+							if((istep+1)%P(aster->dtrats, iwfs)==0){
 								indk|=1<<iwfs;
+								dadd(&P(gradavg, iwfs), 1, P(gradout, iwfs), 1);
+								//if(istep<100) info("step %d accumulating wfs %d\n", istep, iwfs);
 							}
 						}
-						dzero(P(merrm,0));
-						if(indk==aster->pgm->nx){//slower loop
-							dmm(&moffset, 1, P(aster->pgm,indk-1), gradout->m, "nn", 0.5);
+						dzero(P(merrm, 0));
+						
+						if(/*NX(aster->pgm)>1 && indk==aster->pgm->nx && */indk!=(ind_fast+1)){//slower loop when there is faster loop
+							//slower loop (all wfs active) runs a cascaded integrator as offset to the faster loop
+							for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+								real avgf=(real)P(aster->dtrats, iwfs)/(real)dtrat_slow;
+								//if(istep<100) info("step %d iwfs %d scaled by %g\n", istep, iwfs, avgf);
+								dscale(P(gradavg, iwfs), avgf);
+							}
+							dmm(&moffseterr, 0, P(aster->pgm,indk-1), gradavg->m, "nn", 1);
+							dzero(gradavg->m);
 							for(int imod=0; imod<nmod; imod++){
-								if((P(aster->pgm,0)&&imod==2)
-									||(P(aster->pgm,1)&&imod>1)
-									||(!P(aster->pgm,0)&&!P(aster->pgm,1))){//direct output some modes
-									if(!plotted){
-									//info("directly output %d\n", imod);
-									}
-									P(P(merrm,0),imod)=P(moffset,imod);
-									P(moffset,imod)=0;
+								if(aster->mdirect && P(aster->mdirect, imod)){//directly output modes not controlled by the faster loop
+									P(P(merrm,0),imod)=P(moffseterr,imod);
+									//if(istep<100) info("step %d copying slow to fast mode %d\n", istep, imod);
+								}else if (imod!=5){//temporary: skip focus
+									P(moffsetint, imod)+=P(moffseterr, imod)*P(P(aster->gain, indk-1), imod);
 								}
 							}
-							plotted=1;
-						} else{
-							dmm(&P(merrm,0), 1, P(aster->pgm,indk-1), gradout->m, "nn", 0.5);
-							dadd(&P(merrm,0), 1, moffset, 1);
+							//if(istep<100) dshow(P(merrm, 0), "merrm");
+							//if(istep<100) dshow(moffseterr, "moffseterr");
+							//warning("step %d: slow loop\n", istep);
 						}
+						if((indk & (ind_fast+1))){//check whether fast loop is active
+							dmm(&P(merrm,0), 1, P(aster->pgm,ind_fast), gradout->m, "nn", 1);
+							dadd(&P(merrm, 0), 1, moffsetint, 0.15);//todo: optimize the gain
+							//if(istep<100) info("step %d: fast loop\n", istep);
+						}
+						
 						if(zfmerr){
 							zfarr_push(zfmerr, istep, P(merrm,0));
 						}
 					}
-				}
+				}//if pmerrm
 				servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
 			}
 			if(parms->skyc.dbg){
@@ -450,9 +473,8 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 		}/*istep; */
 	}
 	if(parms->skyc.dbg){
-		int dtrati=(multirate?P(dtrats,0):dtratc);
-		writebin(gradsave, "%s/skysim_grads_aster%d_dtrat%d", dirsetup, aster->iaster, dtrati);
-		writebin(mres, "%s/skysim_mres_aster%d_dtrat%d", dirsetup, aster->iaster, dtrati);
+		writebin(gradsave, "%s/skysim_grads_aster%d_dtrat%d", dirsetup, aster->iaster, dtratc);
+		writebin(mres, "%s/skysim_mres_aster%d_dtrat%d", dirsetup, aster->iaster, dtratc);
 	}
 	if(zfmerr){
 		zfarr_close(zfmerr);
@@ -463,6 +485,9 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 	dcellfree(merrm);
 	dcellfree(zgradc);
 	dcellfree(gradout);
+	dcellfree(gradavg);
+	dcellfree(moffsetint);
+	dcellfree(moffseterr);
 	dfree(gradsave);
 	dfree(corr);
 	if(hasphy){
@@ -506,9 +531,7 @@ void skysim_save(const SIM_S* simu, const ASTER_S* aster, const real* ipres, int
 		writebin(aster[selaster].wfs[iwfs].pistat->sanea,
 			"%s/neafull_wfs%d", path, iwfs+6);
 	}
-	if(parms->skyc.servo>0&&!parms->skyc.multirate){
-		writebin(P(aster[selaster].gain,seldtrat), "%s/gain", path);
-	}
+	
 	writebin(P(simu->mres,isky), "%s/mres", path);
 	writebin(simu->psds, "%s/psds", path);
 	char fnconf[PATH_MAX];
@@ -523,9 +546,17 @@ void skysim_save(const SIM_S* simu, const ASTER_S* aster, const real* ipres, int
 	fprintf(fp, "tomo.ahst_focus=%d\n", parms->maos.ahstfocus);
 	fprintf(fp, "tomo.ahst_wt=3\n");
 	if(parms->skyc.servo>0){
-		fprintf(fp, "sim.eplo='gain.bin'\n");
+		const int idtrat=parms->skyc.multirate?0:seldtrat;
+		if(PN(aster[selaster].gain, idtrat)==1){
+			fprintf(fp, "sim.eplo=%g\n", P(P(aster[selaster].gain, idtrat),0));
+		}else {
+			fprintf(fp, "sim.eplo='gain.bin'\n");
+			writebin(P(aster[selaster].gain, idtrat), "%s/gain", path);
+		}
 	}
-	fprintf(fp, "powfs0_llt.fnrange='%s'\n", parms->maos.fnrange);
+	if(parms->maos.fnrange){
+		fprintf(fp, "powfs0_llt.fnrange='%s'\n", parms->maos.fnrange);
+	}
 	fprintf(fp, "atm.r0z=%.4f\n", parms->maos.r0z);
 	fprintf(fp, "atm.size=[128 128]\n");
 	if(parms->maos.wddeg){
@@ -546,7 +577,7 @@ void skysim_save(const SIM_S* simu, const ASTER_S* aster, const real* ipres, int
 	}
 	fprintf(fp, "]\n");
 
-	fprintf(fp, "wfs.siglev=[900 900 900 900 900 900");
+	fprintf(fp, "wfs.siglev=[614 614 614 614 614 614");
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 		fprintf(fp, " %.2f", aster[selaster].wfs[iwfs].siglevtot);
 	}

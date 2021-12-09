@@ -98,9 +98,11 @@ int main(int argc, const char* argv[]){
 		OMPTASK_SINGLE skysim(parms);
 	}
 	free(scmd);
-	free(arg->dirout);
+	free(arg->conf); 
+	free(arg->confcmd);
+	free(arg->dirout); 
 	free(arg);
-	free_parms(parms);
+	free_parms(parms);parms=NULL;
 	free(dirsetup);
 	free(dirstart);
 	rename_file(0);

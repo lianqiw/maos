@@ -172,7 +172,9 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
    possible.
 */
 void X(resize)(X(mat)* A, long nx, long ny){
-	if(!A) return;
+	if(!A) {
+		error("Trying to resize an empty array\n");
+	}
 	else if(!ismat(A)){
 		if(iscell(A)&&!P(A)&&(A->nx==0||A->ny==0)){
 			A->id=M_T;//convert empty cell to mat.

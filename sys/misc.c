@@ -840,6 +840,13 @@ void set_realtime(int icpu, int niceness){
 		warning("Please run program as setsid or as root to lift priority\n");
 	}
 }
-
+void free_strarr(char **str, int n){
+	if(str){
+		for(int i=0; i<n; i++){
+			free(str[i]);
+		}
+		free(str);
+	}
+}
 #undef strdup
 char* (*strdup0)(const char*)=strdup;

@@ -412,7 +412,7 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 			P(dcout,i)=readdata_by_id(fp, id, level-1, &headerc);
 		}
 		out=dcout;
-	}else if(level==-1){//scan file only when auto.
+	}else if(level>=-1){//scan file when auto (-1) or request cell but mat is found.
 		if(!iscell(&header->magic)||!read_header(header, fp)){
 			int maxlen=10;
 			void** tmp=mymalloc(maxlen, void*);
@@ -436,7 +436,7 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 			out=dcout;
 		}
 	}else{
-		info("unknown how to handle: level=%d, magic=%x, nx=%ld, ny=%ld\n", level, header->magic, header->nx, header->ny);
+		info("unknown how to handle: level=%d, magic=%x, nx=%ld, ny=%ld\n", level, header->magic, (long)header->nx, (long)header->ny);
 	}
 	
 	free(header->str);header->str=0;

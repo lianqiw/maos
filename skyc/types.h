@@ -111,7 +111,7 @@ typedef struct ASTER_S{
     WFS_S *wfs;        /**<list of wfs for this asterism*/
     dcell *g;          /**<NGS mode to grad operator*/
     dmat *gm;          /**<matrix version of g.*/
-
+    lmat *mdirect;     /**<in multirate mode, directly output such modes for slower mode*/
     /*The following are for each dtrat */
     dcell *pgm;        /**<mode reconstructor */
     dcell *gain;       /**<type II gain vector*/

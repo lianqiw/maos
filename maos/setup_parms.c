@@ -39,9 +39,7 @@ extern int use_cuda;
 
 void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	dfree(powfscfg->wvl);
-	if(powfscfg->wvlwts){
-		dfree(powfscfg->wvlwts);
-	}
+	dfree(powfscfg->wvlwts);
 	dfree(powfscfg->ncpa);
 	if(powfscfg->llt){
 		free(powfscfg->llt->fnrange);
@@ -67,14 +65,6 @@ void free_powfs_cfg(powfs_cfg_t* powfscfg){
 	free(powfscfg->bkgrndfn);
 	free(powfscfg->qe);
 	dfree(powfscfg->siglevs);
-}
-void free_strarr(char** str, int n){
-	if(str){
-		for(int i=0; i<n; i++){
-			free(str[i]);
-		}
-		free(str);
-	}
 }
 
 /**
@@ -564,7 +554,8 @@ static void readcfg_wfs(parms_t* parms){
 		int nwvl=parms->powfs[ipowfs].nwvl;
 		nwfs=parms->powfs[ipowfs].nwfs;
 		if(NX(wvlwts)>0){//resize powfs.wvlwts for all wfs
-			dresize(parms->powfs[ipowfs].wvlwts, nwvl, nwfs);
+			dfree(parms->powfs[ipowfs].wvlwts);
+			parms->powfs[ipowfs].wvlwts=dnew(nwvl, nwfs);
 		}
 		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].wvlwts); jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
@@ -574,7 +565,7 @@ static void readcfg_wfs(parms_t* parms){
 		}
 		dbg3("powfs[%d].wvlwts is %ldx%ld\n", ipowfs, NX(parms->powfs[ipowfs].wvlwts), NY(parms->powfs[ipowfs].wvlwts));
 		parms->powfs[ipowfs].siglevs=dnew(NX(siglev)>0?nwfs:1, 1);
-		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].siglevs); jwfs++){
+		for(int jwfs=0; jwfs<NX(parms->powfs[ipowfs].siglevs); jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			P(parms->powfs[ipowfs].siglevs, jwfs)=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		}
@@ -829,7 +820,7 @@ static void readcfg_evl(parms_t* parms){
 	parms->evl.psf=readcfg_lmat_nmax(parms->evl.nevl, "evl.psf");
 	parms->evl.psfr=readcfg_lmat_nmax(parms->evl.nevl, "evl.psfr");
 	READ_DMAT(evl.wvl);
-	//parms->evl.wvl=readcfg_dmat("evl.wvl");
+	
 	parms->evl.nwvl=NX(parms->evl.wvl);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		if(P(parms->evl.wvl,iwvl)>0.1){

@@ -59,17 +59,27 @@ def isequal(a, b):
     else:
         return a==b
 
-def cummean(y,axis=0):
+def cummean(y,axis=0,skip=0,rms=0):
     ys=y.shape
-    x=1/np.arange(1,1+ys[axis])
+    x=1/np.arange(1,1+ys[axis]-skip)
+    yc=np.zeros(y.shape)
     if len(ys)==2:
         if axis==0:
             x.shape=(x.shape[0],1)
+            y2=y[skip:]
+            yc2=yc[skip:]
         else:
             x.shape=(1,x.shape[0])
-    
-    yc=np.cumsum(y,axis=axis)
-    return yc*x
+            y2=y[:,skip:]
+            yc2=yc[skip:,:]
+    else:
+        y2=y[skip:]
+        yc2=yc[skip:]
+    if rms!=0:
+        yc2[:]=np.sqrt(np.cumsum(y2**2,axis=axis)*x)
+    else:
+        yc2[:]=np.cumsum(y2,axis=axis)*x
+    return yc
 def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
     res,fds=maos_res(files,seeds,0,0)
     print(fds)

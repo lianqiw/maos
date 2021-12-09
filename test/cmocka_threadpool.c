@@ -52,7 +52,7 @@ static void dummy_runner(data_t *data){
 }
 static void dummy_loader(unsigned int depth, int urgent){
 	//dbg("depth=%u\n", depth);
-	const int n=10000;
+	const unsigned int n=10000;
 	data_t data={0,n,0,depth-1};
 	const int nthread=1000;
 	tp_counter_t counter={0};

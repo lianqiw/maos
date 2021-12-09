@@ -65,6 +65,7 @@ void  (*free_custom)(void*);
 */
 int MEM_VERBOSE=0;
 int MEM_DEBUG=DEBUG+0;
+int MEM_FUNTRACE=0;
 int LOG_LEVEL=0;
 static void print_mem_debug();
 PNEW(mutex_deinit);
@@ -79,12 +80,10 @@ static size_t memalloc=0, memfree=0;
 typedef struct{
 	void *p;
 	size_t size;
+	long nfunc;
 	union{
 		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
-		struct{
-			long nfunc;
-			void *func[DT];
-		};
+		void *func[DT];
 	};
 }memkey_t;
 memkey_t *memkey_all=NULL;
@@ -97,21 +96,21 @@ static void memkey_init(int enabled){
 	if(memkey_len){
 		print_mem_debug();
 	}
-	if(MEM_DEBUG==enabled) return;
-	memcnt=0;
-	memalloc=0;
-	memfree=0;
-	memkey_maxadd=0;
-	memkey_maxdel=0;
-	if(enabled){
-		if(!memkey_len){//already enabled
-			memkey_len=0xFFFFF;
-			dbg("initializing memkey_all for %u of %lu bytes\n", memkey_len, sizeof(memkey_t));
-			memkey_all=calloc_default(memkey_len, sizeof(memkey_t));
-			memkey_thres=memkey_len>>1;
-		}
+	if(enabled && !memkey_len){
+		memcnt=0;
+		memalloc=0;
+		memfree=0;
+		memkey_maxadd=0;
+		memkey_maxdel=0;
+	
+
+		memkey_len=0x1FFFFF;
+		dbg("initializing memkey_all for %u of %lu bytes\n", memkey_len, sizeof(memkey_t));
+		memkey_all=calloc_default(memkey_len+1, sizeof(memkey_t));
+		memkey_thres=memkey_len>>1;
+
 		MEM_DEBUG=enabled;//enable after we setup.
-	}else{
+	}else if(!enabled && memkey_len){
 		MEM_DEBUG=enabled;//disable before we clean up.
 		dbg("free memkey_all and disable MEM_DEBUG\n");
 		memkey_len=0;
@@ -133,11 +132,11 @@ static unsigned int addr2ind(void*p){
 static void memkey_add(void *p, size_t size){
 	if(atomic_add_fetch(&memcnt, 1)>memkey_thres){
 		memkey_thres=memcnt;
-		dbg("memcnt=%u >= memkey_max=%u. Half slots are filled. please increase memkey_max.\n", memcnt, memkey_len);
+		dbg_once("memcnt=%u >= memkey_len=%u. Half slots are filled. please increase memkey_max.\n", memcnt, memkey_len);
 	}
 	memalloc+=size;
 	unsigned int counter=0;
-	for(unsigned int ind=addr2ind(p); counter<memkey_len ; ind=(ind+1)&memkey_len, counter++){
+	for(unsigned int ind=addr2ind(p); counter<=memkey_len ; ind=(ind+1)&memkey_len, counter++){
 		if(!memkey_all[ind].p){//found empty slot
 			void *dummy=NULL;
 			//try to occupy slot using CAS
@@ -193,18 +192,18 @@ static void print_mem_debug(){
 	}
 	unsigned int counter=0;
 	unsigned int ans=0;
-	for(unsigned int i=0; i<memkey_len; i++){
+	for(unsigned int i=0; i<=memkey_len; i++){
 		if(memkey_all[i].p){
 			if(counter<50){
 				counter++;
 				info3("%9zu", memkey_all[i].size);
-				if(memkey_all[i].funtrace[0]){
-					info3(" %s\n", memkey_all[i].funtrace);
-				}else if(memkey_all[i].nfunc){
+				if(memkey_all[i].nfunc){
 					int offset=memkey_all[i].nfunc>3?1:0;
-					if(!ans || !(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
+					if(ans||(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
 						info3(" %p\n", memkey_all[i].p);
 					}
+				}else if(memkey_all[i].funtrace[0]){
+					info3(" %s\n", memkey_all[i].funtrace);
 				}
 			}else{
 				info3("Stop after %u prints\n", counter);
@@ -726,8 +725,9 @@ void free_maos(void *p){
 }
 
 void read_sys_env(){
-	READ_ENV_INT(MEM_DEBUG, 0, 1);
-	READ_ENV_INT(MEM_VERBOSE, 0, 2);
+	READ_ENV_INT(MEM_DEBUG, 0, 1);//enable memory accounting
+	READ_ENV_INT(MEM_VERBOSE, 0, 2);//enable verbose memory operation
+	READ_ENV_INT(MEM_FUNTRACE, 0, 1);//enable use funtrace instead of backtrace
 	READ_ENV_INT(LOG_LEVEL, -5, 5);
 }
 //FILE *fpconsole=NULL;
