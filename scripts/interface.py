@@ -228,7 +228,7 @@ class cell(Structure):
                         res[iy, ix]=np.array([])
             if self.ny==1:
                 res=res[0,]
-            return simplify(res, 0)
+            return res #simplify(res, 0)
         else:
             print('as_array: Unknown data, id='+ str(self.id))
             return np.array([],dtype=object)

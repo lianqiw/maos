@@ -245,7 +245,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 			if(istep>=parms->skyc.evlstart){/*performance evaluation*/
 				real res_ngs=dwdot(P(merr), parms->maos.mcc, P(merr));
 				if(res_ngs>ngsol*100){
-					dfree(res); res=NULL;
+					//dfree(res); res=NULL;
 					dbg("Loop is diverging at step %d\n", istep);
 					break;
 				}
@@ -433,7 +433,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 						}
 						dzero(P(merrm, 0));
 						
-						if(/*NX(aster->pgm)>1 && indk==aster->pgm->nx && */indk!=(ind_fast+1)){//slower loop when there is faster loop
+						if(indk!=(ind_fast+1)){//slower loop when there is faster loop
 							//slower loop (all wfs active) runs a cascaded integrator as offset to the faster loop
 							for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 								real avgf=(real)P(aster->dtrats, iwfs)/(real)dtrat_slow;
@@ -525,11 +525,9 @@ void skysim_save(const SIM_S* simu, const ASTER_S* aster, const real* ipres, int
 		}
 		writebin(sepsf, "%s/pistat_wfs%d", path, iwfs+6);
 		dcellfree(sepsf);
-		writebin(P(aster->wfs[iwfs].pistat->sanea,seldtrat), "%s/nea_tot_wfs%d", path, iwfs+6);
-		writebin(P(aster[selaster].wfs[iwfs].pistat->sanea,seldtrat),
-			"%s/nea_wfs%d", path, iwfs+6);
-		writebin(aster[selaster].wfs[iwfs].pistat->sanea,
-			"%s/neafull_wfs%d", path, iwfs+6);
+		writebin(P(aster[selaster].wfs[iwfs].pistat->sanea,seldtrat), "%s/nea_tot_wfs%d", path, iwfs+6);
+		//writebin(P(aster[selaster].wfs[iwfs].pistat->sanea,seldtrat), "%s/nea_wfs%d", path, iwfs+6);
+		//writebin(aster[selaster].wfs[iwfs].pistat->sanea, "%s/neafull_wfs%d", path, iwfs+6);
 	}
 	
 	writebin(P(simu->mres,isky), "%s/mres", path);

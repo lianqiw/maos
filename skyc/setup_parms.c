@@ -72,8 +72,15 @@ static void setup_parms_skyc(PARMS_S* parms){
 	READ_INT(skyc.mtchcr);
 	READ_INT(skyc.mtchfft);
 	READ_INT(skyc.phytype);
-	readcfg_dblarr_nmax(&parms->skyc.qe, parms->maos.nwvl, "skyc.qe");
-	readcfg_dblarr_nmax(&parms->skyc.telthruput, parms->maos.nwvl, "skyc.telthruput");
+	READ_MAT(skyc.zb.wvl);
+	READ_MAT(skyc.zb.qe);
+	READ_MAT(skyc.zb.thruput);
+	READ_MAT(skyc.zb.excessbkgrnd);
+	READ_MAT(skyc.zb.Z);
+	READ_MAT(skyc.zb.B);
+	/*readcfg_dblarr_nmax(&parms->skyc.zb.qe, parms->maos.nwvl, "skyc.zb.qe");
+	readcfg_dblarr_nmax(&parms->skyc.zb.thruput, parms->maos.nwvl, "skyc.zb.thruput");
+	readcfg_dblarr_nmax(&parms->skyc.zb.excessbkgrnd, parms->maos.nwvl, "skyc.zb.excessbkgrnd");*/
 	parms->skyc.dtrats=readcfg_dmat("skyc.dtrats");
 	parms->skyc.dtrats_mr=readcfg_dmat("skyc.dtrats_mr");
 	READ_INT(skyc.seed);
@@ -90,19 +97,6 @@ static void setup_parms_skyc(PARMS_S* parms){
 		parms->skyc.psd_ws=dread("%s", temp);
 	}
 	free(temp);
-
-	READ_DBL(skyc.zb.ZJ);
-	READ_DBL(skyc.zb.ZH);
-	READ_DBL(skyc.zb.ZK);
-	READ_DBL(skyc.zb.BJ);
-	READ_DBL(skyc.zb.BH);
-	READ_DBL(skyc.zb.BK);
-
-	READ_DBL(skyc.zc_f);
-	READ_DBL(skyc.zc_zeta);
-	READ_DBL(skyc.na_alpha);
-	READ_DBL(skyc.na_beta);
-	READ_STR(skyc.fnrange);
 
 	READ_STR(skyc.stars);
 	READ_INT(skyc.addws);
@@ -207,10 +201,16 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	{
 		real sum=0;
 		real wtsum=0;
+		real wt=0;
 		parms->skyc.wvlwt=dnew(parms->maos.nwvl, 1);
 		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-			real wt=parms->skyc.qe[iwvl]*parms->skyc.telthruput[iwvl];
-			P(parms->skyc.wvlwt,iwvl)=wt;
+			for(int jwvl=0; jwvl<NX(parms->skyc.zb.qe); jwvl++){
+				if(fabs(parms->maos.wvl[iwvl]-P(parms->skyc.zb.wvl, jwvl))<0.1e-6){
+					wt=P(parms->skyc.zb.qe,iwvl)*P(parms->skyc.zb.thruput,iwvl);
+					break;
+				}
+			}
+			P(parms->skyc.wvlwt, iwvl)=wt;
 			sum+=parms->maos.wvl[iwvl]*wt;
 			wtsum+=wt;
 		}
@@ -386,20 +386,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 		info("Using constant read out noise of %g\n", parms->skyc.rne);
 		dset(parms->skyc.rnefs, parms->skyc.rne);
 	}
-	/*parms->skyc.resfocus=dnew(parms->skyc.ndtrat, 1);
-	if(parms->maos.nmod<6){//Do not model focus in time series.
-	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		int dtrat=P(parms->skyc.dtrats,idtrat);
-		real fs=1./(parms->maos.dt*dtrat);
 
-		P(parms->skyc.resfocus,idtrat)=
-		pow(nafocus_residual(fs, parms->maos.dt, parms->skyc.zc_f,
-					 parms->skyc.zc_zeta,
-					 parms->maos.D, parms->maos.hs,
-					 parms->skyc.na_alpha,
-					 parms->skyc.na_beta),2);
-	}
-	}*/
 	if(parms->skyc.npowfs!=parms->maos.npowfs){
 		error("skyc.npowfs should match maos.npowfs\n");
 	}

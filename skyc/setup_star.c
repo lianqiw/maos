@@ -246,8 +246,6 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 				parms->maos.dt, parms->maos.za,
 				NULL,
 				imperrnm,
-				parms->skyc.telthruput,
-				parms->skyc.qe,
 				P(rnefs, parms->skyc.ndtrat-1, ipowfs));
 			if(parms->skyc.verbose&&ipowfs==npowfs-1){
 				info("star %d at (%5.1f %5.1f)", istar,

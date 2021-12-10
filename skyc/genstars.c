@@ -52,14 +52,23 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	real* wvls,      /**<wavelength vector*/
 	rand_t* rstat /**<random stream*/
 ){
-	char fn[80];
-	real cat_fov=0;/*catalogue fov */
-	int Jind=-1;
-	if(nwvl==2&&fabs(wvls[0]-1.25e-6)<1.e-10&&fabs(wvls[1]-1.65e-6)<1.e-10){
+	char fn[80];   //file containing list of stars over the entire fov.
+	real cat_fov=0;//Catalog FoV in degree squared
+	int Jind=-1;   //Index of J band
+	const real wvl_cat[3]={1.25e-6, 1.65e-6, 2.2e-6};
+	if(nwvl<=3){
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+			if(fabs(wvls[iwvl]-wvl_cat[iwvl])>1e-7){
+				error("wvl[%d]=%g does not agree with catalog\n", iwvl, wvls[iwvl]);
+			}
+		}
+	}
+	/*if(nwvl==2){
 		snprintf(fn, 80, "besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
-		cat_fov=5.0;/*5 arc-degree squared. */
+		cat_fov=5.0;//5 arc-degree squared. 
 		Jind=0;
-	} else if(nwvl==3&&fabs(wvls[0]-1.25e-6)<1.e-10&&fabs(wvls[1]-1.65e-6)<1.e-10&&fabs(wvls[2]-2.2e-6)<1.e-10){
+	} else */
+	if(nwvl<=3){
 		snprintf(fn, 80, "besancon/JHK_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
 		cat_fov=5.0;/*5 arc-degree squared. */
 		Jind=0;
@@ -69,13 +78,12 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	}
 	info("Loading star catalogue from %s\n", fn);
 	dmat* catalog=dread("%s", fn);
-	if(catalog->ny!=nwvl){
-		error("Catalogue and wanted doesn't match\n");
+	if(catalog->ny<nwvl){
+		error("Catalogue has not have enough wavelength\n");
 	}
 	long ntot=catalog->nx;
 	long nsky0=0;
 	dcell* res=dcellnew(nsky, 1);
-	dmat* pcatalog=catalog;
 	real fov22=pow(fov/2/206265, 2);
 
 
@@ -92,7 +100,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 			for(long istar=0; istar<nstar; istar++){
 				long ind=round(ntot*randu(rstat));/*randomly draw a star index in the catlog */
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					P(pres, 2+iwvl, istar)=P(pcatalog, ind, iwvl);
+					P(pres, 2+iwvl, istar)=P(catalog, ind, iwvl);
 				}
 			}
 		}
@@ -117,7 +125,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 			for(long istar=0; istar<nstar; istar++){
 				long ind=round((ntot-1)*randu(rstat));
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					P(pres, 2+iwvl, istar)=P(pcatalog, ind, iwvl);
+					P(pres, 2+iwvl, istar)=P(catalog, ind, iwvl);
 				}
 				if(P(pres, 2+Jind, istar)<=19){
 					J19c++;

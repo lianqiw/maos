@@ -196,7 +196,7 @@ static void skysim_isky(SIM_S* simu){
 				/*Compute the reconstructor, nea, sigman and optimize controller again. no need redo?*/
 				//setup_aster_controller(simu, asteri, parms);
 
-				asterMinPhy=simu->varol;
+				asterMinPhy=1;//simu->varol;
 				asteri->phyRes=dcellnew(asteri->idtratmax, 1);
 				asteri->phyMRes=dcellnew(asteri->idtratmax, 1);
 				for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++)
@@ -238,25 +238,26 @@ static void skysim_isky(SIM_S* simu){
 #if _OPENMP >= 200805 
 #pragma omp critical 
 #endif	
-				if(asterMinPhy<skymini){
+				if(asterMinPhy<skymini||parms->skyc.dbgaster==iaster){
 					selaster=iaster;
 					seldtrat=asterMinRat;
 					skymini=asterMinPhy;
 					dmat* pmini=P(asteri->phyRes,asterMinRat);
-					/*Field Averaged Performance. */
-					//May include ws/vib if skyc.addws is true.
-					P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error. */
-					P(pres, 2, isky)=P(pmini,1);/*ATM Tip/tilt Error. */
-					P(pres, 3, isky)=parms->skyc.addws?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
-					P(pres, 4, isky)=0;/*always zero*/
-					P(pres, 0, isky)=P(pres, 1, isky)+P(pres, 3, isky)+P(pres, 4, isky);/*Total */
-					/*On axis performance. */
-					P(pres_oa, 1, isky)=P(pmini,2);
-					P(pres_oa, 2, isky)=P(pmini,3);
-					P(pres_oa, 3, isky)=P(pres, 3, isky);
-					P(pres_oa, 4, isky)=P(pres, 4, isky);
-					P(pres_oa, 0, isky)=P(pres_oa, 1, isky)+P(pres_oa, 3, isky)+P(pres_oa, 4, isky);
-
+					if(pmini && P(pmini, 0)<simu->varol){
+						/*Field Averaged Performance. */
+						//May include ws/vib if skyc.addws is true.
+						P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error. */
+						P(pres, 2, isky)=P(pmini,1);/*ATM Tip/tilt Error. */
+						P(pres, 3, isky)=parms->skyc.addws?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
+						P(pres, 4, isky)=0;/*always zero*/
+						P(pres, 0, isky)=P(pres, 1, isky)+P(pres, 3, isky)+P(pres, 4, isky);/*Total */
+						/*On axis performance. */
+						P(pres_oa, 1, isky)=P(pmini,2);
+						P(pres_oa, 2, isky)=P(pmini,3);
+						P(pres_oa, 3, isky)=P(pres, 3, isky);
+						P(pres_oa, 4, isky)=P(pres, 4, isky);
+						P(pres_oa, 0, isky)=P(pres_oa, 1, isky)+P(pres_oa, 3, isky)+P(pres_oa, 4, isky);
+					}
 					if(parms->skyc.verbose){
 						info(" Update result: NGS: %5.1f nm, TT: %5.1f nm, PS/F: %5.1f nm",
 							sqrt(P(pres, 1, isky))*1e9, sqrt(P(pres, 2, isky))*1e9,
@@ -356,7 +357,7 @@ static void skysim_read_mideal(SIM_S* simu){
 */
 static void skysim_update_mideal(SIM_S* simu){
 	const PARMS_S* parms=simu->parms;
-	if(parms->skyc.addws){
+	if(parms->skyc.addws&&parms->skyc.psd_ws){
 	/*Add ws to mideal. After genstars so we don't purturb it. */
 		info("Add tel wind shake time series to mideal\n");
 		dmat* telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);

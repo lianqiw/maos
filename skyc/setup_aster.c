@@ -605,11 +605,12 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 	}//for dtrat
 	if(multirate){//for setup_aster_select() to use.
 		P(pres_ngs, 0, 0)=minres;
-		if(aster->mdirect){
-			for(int imod=0; imod<nmod; imod++){
-				if(P(aster->mdirect, imod)){//mode only measured by slow loop. Use the slow loop gain.
-					P(P(aster->gain, icase_fast), imod)=P(P(aster->gain, icase_slow), imod);
-				}
+		
+		for(int imod=0; imod<nmod; imod++){
+			if(aster->mdirect && P(aster->mdirect, imod)){//mode only measured by slow loop. Use the slow loop gain.
+				P(P(aster->gain, icase_fast), imod)=P(P(aster->gain, icase_slow), imod);
+			} else if(P(P(aster->gain, icase_slow), imod)>1.){
+				P(P(aster->gain, icase_slow), imod)=1.;//avoid gain >1 to help stability
 			}
 		}
 	}
@@ -790,7 +791,10 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 	int ndtrat=parms->skyc.multirate?1:parms->skyc.ndtrat;
 	dmat* res=dnew(ndtrat, naster);
 	dmat* imin=dnew(2, naster);//record best performance of each asterism.
-	dset(imin, INFINITY);
+	for(int iaster=0; iaster<naster; iaster++){
+		P(imin, 0, iaster)=INFINITY;
+		P(imin, 1, iaster)=iaster;
+	}
 	int master=-1;
 	real fieldMinRes=INFINITY;//minimum of this field.
 	const real wvfMargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
@@ -815,7 +819,6 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 			}
 		}
 		P(imin, 0, iaster)=asterMinRes;
-		P(imin, 1, iaster)=iaster;
 		if(asterMinRes<fieldMinRes){
 			master=iaster;
 			fieldMinRes=asterMinRes;
@@ -898,7 +901,7 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 		}
 		qsort(P(imin), naster, 2*sizeof(real), (int(*)(const void*, const void*))sortdbl);
 		for(int jaster=0; jaster<taster; jaster++){
-			if(P(imin, 0, jaster)>thres) continue;
+			if(P(imin, 0, jaster)>thres && naster>3) continue;
 			int iaster=(int)P(imin, 1, jaster);
 			if(aster[iaster].mdtrat==-1) continue;
 			count++;

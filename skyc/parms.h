@@ -18,7 +18,7 @@
 
 #ifndef SKYC_PARMS_H
 #define SKYC_PARMS_H
-#include <photon.h>
+#include "photon.h"
 /**
    \file skyc/parms.h
    Parameters for simulation.
@@ -121,8 +121,9 @@ typedef struct SKYC_S{
     real rne;      /**<detector read out noise in electron. -1 to use the formula.*/
     real excess;   /**<detector excess photon noise factor*/
     dmat *rnefs;     /**<derived, actual read out noise, may be frame rate dependent.*/
-    real *telthruput;/**<Telescope throughput at each wvl*/
-    real *qe;      /**<quantum efficiency at each wvl.*/
+    //real *telthruput;/**<Telescope throughput at each wvl*/
+    //real *qe;      
+    //real *excessbkgrnd;
     real wvlmean;  /**<Mean wavelength*/
     dmat *wvlwt;     /**<Weight for each wavelength*/
     int ngsalign;    /**<align NGS to the grid.*/
@@ -147,11 +148,7 @@ typedef struct SKYC_S{
     dmat *psd_ps;    /**<PSD of plate scale modes*/
     dmat *psd_ws;    /**<PSD of windshake*/
     dmat *psd_focus; /**<PSD of residual focus due to sodium layer variation, propagated by LGS WFS*/
-    real zc_f;     /**<focus zoom corrector frequency*/
-    real zc_zeta;  /**<focus zoom corrector dampling */
-    real na_alpha; /**<sodium PSD parameter. PSD is beta*f^alpha*/
-    real na_beta;  /**<sodium PSD parameter. PSD is beta*f^alpha*/
-    char *fnrange;   /**<Change of sodium height for LGS. in meter. Replaes na_alpha, na_beta*/
+    
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/
     real pmargin;  /**<phase margin of type II*/

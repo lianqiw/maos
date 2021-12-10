@@ -64,8 +64,6 @@ void photon_flux(const ZB_S* zb,        /**<[in] Sky background and zero magnitu
 	real za,       /**<[in] zenith angle*/
 	real* strehl,  /**<[in] Strehl of the image. set to 1 for full flux.*/
 	real imperrnm, /**<[in] Implementation error in nm*/
-	real* thruput, /**<[in] end to end optical throughput*/
-	real* qe,      /**<[in] detector quantum efficiency.*/
 	real rne       /**<[in] detector read out noise.*/
 ){
 /*
@@ -88,27 +86,32 @@ void photon_flux(const ZB_S* zb,        /**<[in] Sky background and zero magnitu
 	real Npwvl=0;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		real wvl=wvls[iwvl];
-		real Z=0, ZB=0;
 		real imperr_rad2=pow(imperrnm*1e-9*(2*M_PI/wvl), 2);
 		real imperr_strehl=exp(-imperr_rad2);
-		if(fabs(wvl-1.25e-6)<1.e-7){ /*J band */
-			Z=zb->ZJ; ZB=pow(10, -zb->BJ/2.5)*Z;
-		} else if(fabs(wvl-1.65e-6)<1.e-7){/*H band */
-			Z=zb->ZH; ZB=pow(10, -zb->BH/2.5)*Z;
-		} else if(fabs(wvl-2.2e-6)<1.e-7){/*K band */
-			Z=zb->ZK; ZB=pow(10, -zb->BK/2.5)*Z;
-		} else{
-			error("Invalid");
+		
+		int jwvl;
+		for(jwvl=0; jwvl<NX(zb->wvl); jwvl++){
+			if(fabs(wvl-P(zb->wvl, jwvl)<0.1e-6)){
+				break;
+			}
 		}
+		if(jwvl==NX(zb->wvl)){
+			error("wvl=%g is not configured\n", wvl);
+			continue;
+		}
+		real Z=P(zb->Z, jwvl);
+		real ZB=pow(10, -P(zb->B, jwvl)/2.5)*Z;
+		real thruputqe=P(zb->thruput, jwvl)*P(zb->qe, jwvl);
+		real excessbkgrnd=P(zb->excessbkgrnd, jwvl);
+		
 		real absorp=(1./cos(za)-1)*(-log(0.98));/*atmosphere absorption. */
 		real strehl_iwvl=1;
 		if(strehl){
 			strehl_iwvl=strehl[iwvl];
 		}
-		Np[iwvl]=dt*saa*pow(10, -(absorp+mags[iwvl])/2.5)*Z
-			*thruput[iwvl]*qe[iwvl]*strehl_iwvl*imperr_strehl;
+		Np[iwvl]=dt*saa*pow(10, -(absorp+mags[iwvl])/2.5)*Z*thruputqe*strehl_iwvl*imperr_strehl;
 		Npsum+=Np[iwvl];
-		Nbsum+=dt*saa*pow(pixas, 2)*ZB*thruput[iwvl]*qe[iwvl]/cos(za);//background scale with sec(za). 2012-10-31.
+		Nbsum+=dt*saa*pow(pixas, 2)*ZB*thruputqe*(1.+excessbkgrnd)/cos(za);//background scale with sec(za). 2012-10-31.
 		Npwvl+=Np[iwvl]/wvl;
 	}
 	//warning_once("How does background scale with zenith angle? Surface brightness is independent of distance\n");

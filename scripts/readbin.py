@@ -94,6 +94,8 @@ def readbin(file, want_header=0):
         isfile=False
         issock=True
     else:
+        if file[0]=='~':
+            file=os.path.expanduser(file)
         if not os.path.isfile(file): #file not found
             if os.path.isfile(file+'.bin'):
                 file=file+'.bin'

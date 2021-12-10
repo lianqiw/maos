@@ -98,7 +98,7 @@ void zfarr_close(zfarr* ca){
 		}
 	}else if(!zfisfits(ca->fp)){//total is not specified for bin file
 		zfrewind(ca->fp);
-		header_t header={MCC_ANY, (uint64_t)ca->cur, (uint64_t)0, NULL};
+		header_t header={MCC_ANY, (uint64_t)ca->cur, (uint64_t)1, NULL};
 		write_header(&header, ca->fp);
 	}
 	zfclose(ca->fp);

@@ -337,10 +337,11 @@ void writebin_header(cell* Ac, const char* header, const char* format, ...){
  * Usage: level=0: array of fundamental data. 
  * 		  level=1: cell of fundamental data. 
  * 		  level>1: cell of cell ...
- * 	      level==-1: automatically identify and read all data
+ * 	      level==-1: automatically identify and read all data. top level non-cell data will be combined to a cell (e.g., fits)
+ * 		  level<-1: only from recursive calling when scanning
  * 
  * id: magic number of request fundamental data. data is converted if it does not match magic number from the file. 
- * Cell dimension may be zero. In this case the dimension will be automatically detected.
+ * Cell dimension may be zero. In this case the dimension will be automatically detected by scanning.
  *  */
 cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	header_t header2={0,0,0,0};
@@ -395,8 +396,8 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 			warning("data type id=%u not supported\n", id);
 			out=NULL;
 		}
-	}else if(iscell(&header->magic) /*&& header->nx>0 && header->ny>0*/){//cell array with known dimensions
-		//info("iscell && nx, ny >0\n");
+	}else if(iscell(&header->magic) && (level!=-1||(header->nx>0 && header->ny>0))){//cell array with known dimensions
+		//scan only if level==-1 and dimension is 0.
 		long nx=header->nx;
 		long ny=header->ny;
 		cell* dcout=cellnew(nx, ny);
@@ -413,7 +414,9 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 		}
 		out=dcout;
 	}else if(level>=-1){//scan file when auto (-1) or request cell but mat is found.
-		if(!iscell(&header->magic)||!read_header(header, fp)){
+		if(!iscell(&header->magic) //wrap mat to cell
+			|| !read_header(header, fp)//scan content of cell
+		){
 			int maxlen=10;
 			void** tmp=mymalloc(maxlen, void*);
 			int nx=0;
@@ -430,13 +433,15 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 					break;
 				}
 			} while(!read_header(header, fp));
-			cell* dcout=cellnew(nx, 1);
-			memcpy(P(dcout), tmp, sizeof(void*)*nx);
+			if(nx>0){
+				cell* dcout=cellnew(nx, 1);
+				memcpy(P(dcout), tmp, sizeof(void*)*nx);
+				out=dcout;
+			}
 			free(tmp);
-			out=dcout;
 		}
 	}else{
-		info("unknown how to handle: level=%d, magic=%x, nx=%ld, ny=%ld\n", level, header->magic, (long)header->nx, (long)header->ny);
+		error("unhandled: level=%d, magic=%x, nx=%ld, ny=%ld\n", level, header->magic, (long)header->nx, (long)header->ny);
 	}
 	
 	free(header->str);header->str=0;

@@ -83,7 +83,7 @@ printf "%-20s   Res   Ref     %%\n" "D=${D}m DM is $((D*2))x$((D*2))" | tee $fnr
 function run_maos(){
 	aotype=$1
 	shift
-    ./maos sim.end=100 $args "$*" > $fntmp
+    ./maos sim.end=100 $args "$*" > $fntmp 2>&1
     if [ $? -eq 0 ];then
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]%.*}
