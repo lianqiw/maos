@@ -46,5 +46,6 @@ var sys_2misc_8h =
     [ "available_space", "sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4", null ],
     [ "mystrdup", "sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9", null ],
     [ "parse_argopt", "sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],
-    [ "set_realtime", "sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ]
+    [ "set_realtime", "sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ],
+    [ "free_strarr", "sys_2misc_8h.html#abb6e36b04cc59e87a10f7ef9378cb5a0", null ]
 ];

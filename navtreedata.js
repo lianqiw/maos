@@ -151,10 +151,10 @@ var NAVTREEINDEX =
 "pywfs_8h.html#a268491858839c93d7e3f79ed514f3b47",
 "slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5",
 "smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724",
-"test_8cu.html#a2d3ad980853e29e52dca365350f4bc29",
-"type_8h.html#a55f956630e6ba03d1760e7f4b27fb7a1",
+"test_8cu.html",
+"type_8h.html#a546c88ba8a0e1904479cc349aef10feb",
 "type_8h.html#ab80bb7740288fda1f201890375a60c8f",
-"zmath_8h.html#a2a98a34256dd396f8b4302359ce22d1d"
+"zmath_8h.html#a29d71d5b8f782fca890c372a12e4e50b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
