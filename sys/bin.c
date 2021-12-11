@@ -299,8 +299,8 @@ file_t* zfopen(const char* fni, const char* mod){
 	const char* fn2=fp->fn=procfn(fni, mod);
 	if(!fn2){
 		if(mod[0]=='r'){
-			printpath();
 			dbg("%s does not exist for read\n", fni);
+			printpath();
 		}
 		goto fail;
 	}

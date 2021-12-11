@@ -691,7 +691,9 @@ dmat* readstr_dmat_n(int n, const char* str){
 	dmat* res=NULL;
 	char* fn=strextract(str);
 	if(check_suffix(fn, ".gz")||check_suffix(fn, ".bin")||check_suffix(fn, ".fits")){
-		res=dread("%s", fn);
+		if(!(res=dread("%s", fn))){
+			error("Read %s failed\n", fn);
+		}
 	} else{
 		int nx, ny;
 		real* val=NULL;

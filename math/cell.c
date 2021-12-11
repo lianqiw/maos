@@ -465,9 +465,12 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 
 cell* read_by_id(M_ID id, int level, const char* format, ...){
 	format2fn;
-	if(!fn) return 0;
-	file_t* fp=zfopen(fn, "rb");
-	if(!fp) return 0;
+	file_t* fp;
+	if(!fn||!(fp=zfopen(fn, "rb"))){
+		error("Unable to open file %s for read\n", fn);
+		return 0;
+	}
+	
 	cell* out=readdata_by_id(fp, id, level, 0);
 	zfclose(fp);
 	return out;
