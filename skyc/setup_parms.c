@@ -83,6 +83,7 @@ static void setup_parms_skyc(PARMS_S* parms){
 	readcfg_dblarr_nmax(&parms->skyc.zb.excessbkgrnd, parms->maos.nwvl, "skyc.zb.excessbkgrnd");*/
 	parms->skyc.dtrats=readcfg_dmat("skyc.dtrats");
 	parms->skyc.dtrats_mr=readcfg_dmat("skyc.dtrats_mr");
+	parms->skyc.snrmin_mr=readcfg_dmat_nmax(PN(parms->skyc.dtrats_mr),"skyc.snrmin_mr");
 	READ_INT(skyc.seed);
 	READ_INT(skyc.navg);
 	READ_INT(skyc.servo);
@@ -233,11 +234,10 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	}
 	if(parms->skyc.multirate){
 		dfree(parms->skyc.dtrats);
-		parms->skyc.dtrats=parms->skyc.dtrats_mr;
-		parms->skyc.dtrats_mr=0;
-	} else{
-		dfree(parms->skyc.dtrats_mr);
+		parms->skyc.dtrats=dref(parms->skyc.dtrats_mr);
+		parms->skyc.snrmin=dmin(parms->skyc.snrmin_mr);
 	}
+	dfree(parms->skyc.dtrats_mr);
 	parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;
 	if(parms->skyc.addws==-1){
 		parms->skyc.addws=1;

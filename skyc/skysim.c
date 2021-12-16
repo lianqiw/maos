@@ -117,6 +117,9 @@ static void skysim_isky(SIM_S* simu){
 			info("Field %d, Aster is empty. skip\n", isky);
 			continue;
 		}
+		if(parms->skyc.dbgaster>=naster){
+			error("skyc.dbgaster=%d, but naster=%d\n", parms->skyc.dbgaster, naster);
+		}
 		/*
 		  We first estimate the matched filter, reconstructor, and servo
 		  loop optimization to determine the approximate wavefront error. Only
@@ -350,6 +353,13 @@ static void skysim_read_mideal(SIM_S* simu){
 		real scale=0;
 		dscale(simu->mideal, scale);
 		dscale(simu->mideal_oa, scale);
+	}
+	if(0){
+		for(long i=0; i<simu->mideal->ny; i++){
+			P(simu->mideal, 2, i)*=10;
+			P(simu->mideal_oa, 2, i)*=10;
+		}
+		warning_once("PS1 mode magnified by 10 times\n");
 	}
 }
 /**
@@ -650,7 +660,7 @@ void skysim(const PARMS_S* parms){
 		dfree(simu->bspstrehlxy);
 		cellfree(simu->gain_pre);
 		dfree(simu->gain_x);
-		dcellfreearr(simu->nonlin, parms->maos.npowfs);free(simu->nonlin);
+		cellfree(simu->nonlin);
 	}/*iseed_maos */
 	free(simu->status);
 	dfree(simu->neaspec_dtrats);

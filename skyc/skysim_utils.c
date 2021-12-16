@@ -147,6 +147,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 		moffsetint=dnew(nmod, 1);
 		moffseterr=dnew(nmod, 1);
 	}
+	int divergence=0;
 	int dtrat_slow=0;//dtrat of slow loop
 	//aster->dtrats is only set in multirate case. dtrat of each wfs in the asterism
 	if(parms->skyc.servo>0){
@@ -166,7 +167,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 			//dfree(gtmp);
 			//dbg("ind_fast=%d\n", ind_fast);
 		} else{
-			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain,idtratc));
+			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain, idtratc));
 		}
 	} else{
 		if(multirate){
@@ -247,6 +248,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 				if(res_ngs>ngsol*100){
 					//dfree(res); res=NULL;
 					dbg("Loop is diverging at step %d\n", istep);
+					divergence=1;
 					break;
 				}
 				{
@@ -375,7 +377,7 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 								dmulvec(igrad, P(mtche[iwfs],isa), P(P(ints[iwfs],isa)), 1);
 								break;
 							case 2:
-								dcog(igrad, P(ints[iwfs],isa), 0, 0, 0, 3*P(rnefs, idtrat, ipowfs), 0);
+								dcog(igrad, P(ints[iwfs],isa), 0, 0, 3*P(rnefs, idtrat, ipowfs), 0, 0);
 								igrad[0]*=pixtheta;
 								igrad[1]*=pixtheta;
 								break;
@@ -454,15 +456,14 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 							//if(istep<100) dshow(moffseterr, "moffseterr");
 							//warning("step %d: slow loop\n", istep);
 						}
-						if((indk & (ind_fast+1))){//check whether fast loop is active
+						if((indk & (ind_fast+1))){//only when fast WFS is active
 							dmm(&P(merrm,0), 1, P(aster->pgm,ind_fast), gradout->m, "nn", 1);
 							dadd(&P(merrm, 0), 1, moffsetint, 0.15);//todo: optimize the gain
 							//if(istep<100) info("step %d: fast loop\n", istep);
 						}
-						
-						if(zfmerr){
-							zfarr_push(zfmerr, istep, P(merrm,0));
-						}
+					}
+					if(zfmerr){
+						zfarr_push(zfmerr, istep, P(merrm, 0));
 					}
 				}//if pmerrm
 				servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
@@ -506,7 +507,11 @@ dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real
 	} else{
 		dfree(mres);
 	}
-	dscale(res, 1./((nstep-parms->skyc.evlstart)*parms->skyc.navg));
+	if(!divergence){
+		dscale(res, 1./((nstep-parms->skyc.evlstart)*parms->skyc.navg));
+	}else{
+		dfree(res);
+	}
 	return res;
 }
 

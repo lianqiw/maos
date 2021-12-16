@@ -139,6 +139,7 @@ typedef struct SKYC_S{
     int ndtrat;      /**<number of dtrat*/
     dmat *dtrats;     /**<ratio between NGS and LGS WFS sampling period*/
     dmat *dtrats_mr; /**<For multirate*/
+    dmat *snrmin_mr; /**<#minimum snr to select each dtrats_mr. balances servo lag error vs noise propagation*/
     dmat *fss;       /**<sampling frequency at each dtrat*/
     int servo;       /**<servo type of NGS LOOP. 2: type II*/
     int ngain;       /**<Number of parameters for gain*/

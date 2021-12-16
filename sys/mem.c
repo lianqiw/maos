@@ -79,8 +79,8 @@ static size_t memalloc=0, memfree=0;
 #if METHOD == 1 //Use hash table
 typedef struct{
 	void *p;
-	size_t size;
-	long nfunc;
+	int size;
+	int nfunc;
 	union{
 		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
 		void *func[DT];
@@ -196,7 +196,7 @@ static void print_mem_debug(){
 		if(memkey_all[i].p){
 			if(counter<50){
 				counter++;
-				info3("%9zu", memkey_all[i].size);
+				info3("%9d", memkey_all[i].size);
 				if(memkey_all[i].nfunc){
 					int offset=memkey_all[i].nfunc>3?1:0;
 					if(ans||(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){

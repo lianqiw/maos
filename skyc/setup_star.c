@@ -208,8 +208,8 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 				}
 			}
 			if(parms->skyc.dbg){
-				writebin(avgpsf, "%s/avgpsf_star%d_ipowfs%d_psf", dirsetup, istar, ipowfs);
-				writebin(stari->pistat[ipowfs].neaspec, "%s/pistat_star%d_ipowfs%d_neaspec", dirsetup, istar, ipowfs);
+				writebin(avgpsf, "%s/star%d_ipowfs%d_avgpsf", dirsetup, istar, ipowfs);
+				writebin(stari->pistat[ipowfs].neaspec, "%s/star%d_ipowfs%d_pistat_neaspec", dirsetup, istar, ipowfs);
 			}
 		}
 	}
@@ -247,11 +247,10 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 				NULL,
 				imperrnm,
 				P(rnefs, parms->skyc.ndtrat-1, ipowfs));
-			if(parms->skyc.verbose&&ipowfs==npowfs-1){
+			if(parms->skyc.verbose&&parms->maos.nsa[ipowfs]==1){
 				info("star %d at (%5.1f %5.1f)", istar,
 					star[istar].thetax*206265, star[istar].thetay*206265);
-				info(" bkgrnd=%5.2f, pixtheta=%4.1fmas mag=[",
-					P(star[istar].bkgrnd,ipowfs), parms->skyc.pixtheta[ipowfs]*206265000);
+				info(" bkgrnd=%5.2f, mag=[", P(star[istar].bkgrnd,ipowfs));
 				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 					info("%5.2f ", P(star[istar].mags,iwvl));
 				}
@@ -268,7 +267,7 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 /**
    Setup matched filter for stars.
  */
-static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, int nstar, dcell** nonlin){
+static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, int nstar, dccell* nonlin){
 	const long nwvl=parms->maos.nwvl;
 	const long npowfs=parms->maos.npowfs;
 	dmat* rnefs=parms->skyc.rnefs;
@@ -342,15 +341,19 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 				genmtch(&pistat->mtche[idtrat], &P(pistat->sanea,idtrat),
 					i0s, gxs, gys, pixtheta, P(rnefs, idtrat, ipowfs),
 					P(star[istar].bkgrnd,ipowfs)*dtrat, parms->skyc.mtchcr);
+				if(parms->skyc.dbg){
+					writebin(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d", dirsetup, istar, ipowfs, dtrat);
+					writebin(P(pistat->sanea,idtrat), "%s/star%d_ipowfs%d_sanea0_dtrat%d", dirsetup, istar, ipowfs, dtrat);
+				}
 				/*Add nolinearity*/
 				if(nonlin){
 					//add linearly not quadratically since the errors are related.
-					dmat* nea_nonlin=dinterp1(P(nonlin[ipowfs],igg), NULL, P(pistat->sanea,idtrat), 0);
+					dmat* nea_nonlin=dinterp1(P(P(nonlin,ipowfs),igg), NULL, P(pistat->sanea,idtrat), 0);
 					for(int i=0; i<nsa*2; i++){
-					//info("%g mas", P(P(pistat->sanea,idtrat),i)*206265000);
+						//info("%g mas", P(P(pistat->sanea,idtrat),i)*206265000);
 						P(P(pistat->sanea,idtrat),i)=sqrt(pow(P(P(pistat->sanea,idtrat),i), 2)
 							+pow(P(nea_nonlin,i), 2));
-		//info("-->%g mas\n", P(P(pistat->sanea,idtrat),i)*206265000);
+						//info("-->%g mas\n", P(P(pistat->sanea,idtrat),i)*206265000);
 					}
 					dfree(nea_nonlin);
 				}
@@ -362,13 +365,16 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 					}
 				}
 				if(parms->skyc.dbg){
-					writebin(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
-						dirsetup, istar, ipowfs, dtrat);
+					writebin(P(pistat->sanea, idtrat), "%s/star%d_ipowfs%d_sanea_dtrat%d", dirsetup, istar, ipowfs, dtrat);
 				}
-				real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/(nsa*2));
+				//real nea=sqrt(dsumsq(P(pistat->sanea, idtrat))/2/nsa);//original version. averaged all subapertures
+				//real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/2)/(nsa);// /2 to separate x/y. nsa is outside of sqrt(). averging sa to get tip/tilt
+				//real nea=sqrt(dsumsq(P(pistat->sanea, idtrat)))/(nsa*2)*(nsa==1?2:5);// /2 to separate x/y. tt estimate 2 mode, ttf estimate 5 mode.
+				real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/2)/(nsa==1?1:2.5);// /2 to separate x/y. nsa is outside of sqrt(). averging sa to get tip/tilt
 				real snr=sigma_theta/nea;
 				P(pistat->snr,idtrat)=snr;
-				if(snr>=parms->skyc.snrmin){
+				real snrmin=parms->skyc.multirate?P(parms->skyc.snrmin_mr, idtrat):parms->skyc.snrmin;
+				if(snr>=snrmin){
 					P(star[istar].minidtrat,ipowfs)=idtrat;
 				}
 			}//for idtrat
@@ -419,7 +425,7 @@ static void setup_star_gm(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, in
 				P(pg, isa+nsa, 1)=1.;//tilt
 				if(parms->maos.indps){
 					int indps=parms->maos.indps;
-					if(parms->maos.ahstfocus){/*This mode has no global focus*/
+					if(parms->maos.ahstfocus){/*PS1 mode has no global focus*/
 						P(pg, isa, indps)=(-2*thetax*hc*scale);
 						P(pg, isa+nsa, indps)=(-2*thetay*hc*scale);
 					} else{
