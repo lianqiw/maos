@@ -69,9 +69,8 @@ static cccell* genseotf_do(const pts_t* pts,
 			const dmat* ampi=iscell(amp)?PR((dcell*)amp, iotf, 1):(dmat*)amp;
 			const dmat* saai=iscell(saa)?PR((dcell*)saa, iotf, 1):(dmat*)saa;
 			//OTFs are always generated with native sampling. It is upsampled at gensepsf if necessary.
-			OMPTASK_SINGLE
-				genotf(&P(otf, iotf, iwvl), loc, ampi, opdi, saai,
-					thres, P(wvl, iwvl), NULL, r0, L0, npsfx, npsfy, nsa, 1);
+			genotf(&P(otf, iotf, iwvl), loc, ampi, opdi, saai,
+				thres, P(wvl, iwvl), NULL, r0, L0, npsfx, npsfy, nsa, 1);
 		}
 	}/*iwvl */
 	locfree(loc);

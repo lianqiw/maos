@@ -601,7 +601,6 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				setup_surf_tilt(parms, aper, powfs, recon);
 			}
 			if(parms->nsurf>0){
-				//OMPTASK_SINGLE 
 				setup_surf_perp(parms, aper, powfs, recon);
 			}
 			toc2("surf prop");

@@ -437,18 +437,17 @@ int main(int argc, const char* argv[]){
 		 * that doesn't use blas*/
 
 		info2("\n*** Preparation started at %s in %s. ***\n\n", myasctime(0), HOST);
-#if _OPENMP>=201511 //With openmp 4.5 and above, we use taskloop which requires the OMPTASK_SINGLE
-		OMPTASK_SINGLE
-#endif		
-		maos_setup(parms);
-		parms->save.setup=0; //setup is finished. do not save if calling again.
-		if(parms->sim.end>parms->sim.start){
-			if(!disable_save){
-				remove("maos");
-				mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
+	OMPTASK_SINGLE{
+			maos_setup(parms);
+			parms->save.setup=0; //setup is finished. do not save if calling again.
+			if(parms->sim.end>parms->sim.start){
+				if(!disable_save){
+					remove("maos");
+					mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
+				}
+				info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(0), HOST);
+				maos_sim();
 			}
-			info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(0), HOST);
-			maos_sim();
 		}
 		rename_file(signal_caught);
 		draw_final(1);

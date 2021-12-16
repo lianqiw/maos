@@ -330,7 +330,7 @@ void prep_bspstrehl(SIM_S* simu){
 }
 #include "mtch.h"
 /**Determine WFS nonlinearity.*/
-dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
+dccell* wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 	const int npowfs=parms->maos.npowfs;
 	const int nwvl=parms->maos.nwvl;
 	real patfov=parms->skyc.patfov;
@@ -340,12 +340,12 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 	rand_t rstat;
 	seed_rand(&rstat, 1);
 	long ng=round(patfov/2/ngsgrid)+1;
-	dcell** nonlin=mycalloc(npowfs, dcell*);
+	dccell* nonlin=dccellnew(npowfs, 1);//mycalloc(npowfs, dcell*);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		char fnnonlin[PATH_MAX];
 		snprintf(fnnonlin, PATH_MAX, "%s/powfs%d_nonlin", dirstart, ipowfs);
 		if(zfexist("%s",fnnonlin)){
-			nonlin[ipowfs]=dcellread("%s", fnnonlin);
+			P(nonlin, ipowfs)=dcellread("%s", fnnonlin);
 		} else{
 			dcell* avgpi=0;
 			const long msa=parms->maos.msa[ipowfs];
@@ -473,7 +473,6 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 					}
 				}
 			}//for ng
-			writebin(nonxy, "powfs%d_nonxy", ipowfs);
 			dcellfree(avgpi);
 			dcellfree(i0);
 			dcellfree(gx);
@@ -488,7 +487,7 @@ dcell** wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
 			dfree(sanea);
 			ccellfree(otf1);
 			ccellfree(otf2);
-			nonlin[ipowfs]=nonxy;
+			P(nonlin, ipowfs)=nonxy;
 			writebin(nonxy, "%s", fnnonlin);
 		}
 	}//for ipowfs

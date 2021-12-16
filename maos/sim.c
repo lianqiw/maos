@@ -130,7 +130,7 @@ void maos_isim(int isim){
 		gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, isim);
 	}
 #endif
-OMPTASK_SINGLE{
+
 	sim_update_etf(simu);
 	if(parms->sim.dmproj){
 		/* temporarily disable FR.M so that Mfun is used.*/
@@ -227,7 +227,7 @@ OMPTASK_SINGLE{
 		}
 		simu->tomo_update=0;
 	}
-}//OMPTASK_SINGLE
+
 	real ck_end=myclockd();
 	long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
 	long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
