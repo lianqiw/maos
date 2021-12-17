@@ -2,7 +2,7 @@ SUBDIRS =
 
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDOPTS)
-
+nobase_include_HEADERS=types.h skyc.h utils.h skysim.h powfs.h aster.h photon.h physim.h  mtch.h nafocus.h genstars.h genpistat.h star.h
 bin_PROGRAMS=../bin/skyc 
-___bin_skyc_SOURCES=parms.h types.h setup_parms.c  skyc.c  skyc.h  utils.c  utils.h skysim.c skysim.h setup_powfs.c setup_powfs.h setup_aster.c setup_aster.h photon.c photon.h skysim_utils.c skysim_utils.h mtch.c mtch.h  nafocus.c nafocus.h genstars.c genstars.h genpistat.c genpistat.h setup_star.c setup_star.h
+___bin_skyc_SOURCES=parms.h parms.c skyc.c utils.c skysim.c powfs.c aster.c photon.c physim.c mtch.c nafocus.c genstars.c genpistat.c  star.c 
 ___bin_skyc_LDADD=../lib/libaos.la $(LDEXE_FULL)

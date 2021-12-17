@@ -18,7 +18,7 @@
 #include "skyc.h"
 #include "parms.h"
 #include "types.h"
-#include "skysim_utils.h"
+#include "physim.h"
 /**
    \file skyc/skysim_utils.c
    Utilities for skysim.c
@@ -107,7 +107,7 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
    - 1: poisson and read out noise.
    - 2: only poisson noise.
 */
-dmat* skysim_sim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngsol,
+dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngsol,
 	ASTER_S* aster, const POWFS_S* powfs,
 	const PARMS_S* parms, int idtratc, int noisy, int phystart){
 	const int dtratc=P(parms->skyc.dtrats,idtratc);

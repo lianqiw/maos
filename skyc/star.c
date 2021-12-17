@@ -24,7 +24,7 @@
 #include "skyc.h"
 #include "parms.h"
 #include "types.h"
-#include "setup_star.h"
+#include "star.h"
 #include "photon.h"
 #include "mtch.h"
 /**

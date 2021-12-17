@@ -17,12 +17,12 @@
 */
 
 #include "skyc.h"
-#include "setup_aster.h"
+#include "aster.h"
 #include "photon.h"
-#include "skysim_utils.h"
+#include "physim.h"
 #include "mtch.h"
 #include "utils.h"
-#include "setup_star.h"
+#include "star.h"
 /**
    \file skyc/setup_aster.c
    Routines to handle asterisms.
@@ -710,7 +710,7 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 			dmat* rests=0;
 #define USE_SIM 0 //ztiltout is not available here.
 #if USE_SIM   //more accurate
-			dmat* res=skysim_sim(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->varol,
+			dmat* res=physim(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->varol,
 				aster, 0, parms, -1, 1, -1);
 			real res0=res?P(res,0):simu->varol;
 			dfree(res);
@@ -769,7 +769,7 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 			aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, P(aster->neam,idtrat), 0);
 			//toc2("kalman");
 #if USE_SIM 
-			dmat* res=skysim_sim(0, simu->mideal, simu->mideal_oa, simu->varol, aster, 0, parms, idtrat, 1, -1);
+			dmat* res=physim(0, simu->mideal, simu->mideal_oa, simu->varol, aster, 0, parms, idtrat, 1, -1);
 			real rms=res?P(res,0):simu->varol;
 			dfree(res);
 #else

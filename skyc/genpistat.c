@@ -24,7 +24,7 @@
 #include "skyc.h"
 #include "parms.h"
 #include "types.h"
-#include "skysim_utils.h"
+#include "physim.h"
 #include "genpistat.h"
 typedef long long4[4];
 typedef struct GENPISTAT_S{

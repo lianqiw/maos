@@ -19,7 +19,7 @@
 #include "skyc.h"
 #include "parms.h"
 #include "types.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 /**
    \file skyc/setup_powfs.c
 */

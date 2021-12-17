@@ -77,13 +77,13 @@
 #include "parms.h"
 #include "skysim.h"
 #include "types.h"
-#include "setup_powfs.h"
-#include "setup_aster.h"
-#include "skysim_utils.h"
+#include "powfs.h"
+#include "aster.h"
+#include "physim.h"
 #include "mtch.h"
 #include "genstars.h"
 #include "genpistat.h"
-#include "setup_star.h"
+#include "star.h"
 #include "utils.h"
 #include "nafocus.h"
 
@@ -208,7 +208,7 @@ static void skysim_isky(SIM_S* simu){
 #endif
 				{
 
-					P(asteri->phyRes,idtrat)=skysim_sim(&P(asteri->phyMRes,idtrat),
+					P(asteri->phyRes,idtrat)=physim(&P(asteri->phyMRes,idtrat),
 						simu->mideal, simu->mideal_oa, simu->varol,
 						asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart);
 				}
