@@ -150,11 +150,13 @@ typedef struct SIM_S{
 			  - Total
 			  - NGS mode
 			  - TT mode
-			  - Residual wind shake
-			  - Residual focus error
+			  - Residual wind shake (if separately estimated)
+			  - 0
 		       */
     dmat *res_oa;      /**<residual error on axis 5*nsky. in the same format as res*/
     dmat *res_geom;      /**<residual error estimated from servo analysis. in the same foramt as res*/
+    dmat *res_aster;   /**<Performance and parameter of all asterisms evaluated.*/
+    unsigned int res_iaster;   /**<counter for res_aster*/
     dcell *mres;       /**<residual NGS modes. 5*nsky*/
     dcell *sel;        /**<selected stars for each star field.*/
     dmat *fss;         /**<optimal sampling freq for each star field*/

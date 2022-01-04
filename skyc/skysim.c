@@ -252,14 +252,15 @@ static void skysim_isky(SIM_S* simu){
 						P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error. */
 						P(pres, 2, isky)=P(pmini,1);/*ATM Tip/tilt Error. */
 						P(pres, 3, isky)=parms->skyc.addws?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
-						P(pres, 4, isky)=0;/*always zero*/
-						P(pres, 0, isky)=P(pres, 1, isky)+P(pres, 3, isky)+P(pres, 4, isky);/*Total */
+						P(pres, 0, isky)=P(pres, 1, isky)+P(pres, 3, isky);/*Total */
+						P(pres, 4, isky)=asteri->mresest;/*estimated error, changed on 12/17/2021*/
+						
 						/*On axis performance. */
 						P(pres_oa, 1, isky)=P(pmini,2);
 						P(pres_oa, 2, isky)=P(pmini,3);
 						P(pres_oa, 3, isky)=P(pres, 3, isky);
+						P(pres_oa, 0, isky)=P(pres_oa, 1, isky)+P(pres_oa, 3, isky);
 						P(pres_oa, 4, isky)=P(pres, 4, isky);
-						P(pres_oa, 0, isky)=P(pres_oa, 1, isky)+P(pres_oa, 3, isky)+P(pres_oa, 4, isky);
 					}
 					if(parms->skyc.verbose){
 						info(" Update result: NGS: %5.1f nm, TT: %5.1f nm, PS/F: %5.1f nm",
@@ -270,6 +271,27 @@ static void skysim_isky(SIM_S* simu){
 				}
 				if(parms->skyc.verbose){
 					info("\n");
+				}
+				{//collect statistics of all asterisms
+					int res_iaster=atomic_fetch_add(&simu->res_iaster, 1);
+					if(res_iaster<NY(simu->res_aster)){
+						real *p=PCOL(simu->res_aster, res_iaster);
+						*(p++)=P(asteri->phyRes, asterMinRat)?P(P(asteri->phyRes, asterMinRat), 0):simu->varol;//phy result
+						*(p++)=asteri->mresest;//estimate
+						for(int iwfs=0; iwfs<asteri->nwfs; iwfs++){
+							const int istar=asteri->wfs[iwfs].istar;
+							const int idtrat=parms->skyc.multirate?P(asteri->idtrats, iwfs):asterMinRat;
+							*(p++)=P(parms->skyc.fss, idtrat);
+							*(p++)=P(asteri->wfs[iwfs].pistat->snr, idtrat);
+							*(p++)=star[istar].thetax;
+							*(p++)=star[istar].thetay;
+							for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
+								*(p++)=P(star[istar].mags, iwvl);
+							}
+						}
+					}else{
+						warning("res_iaster=%u exceeds ny=%ld, skip saving.\n", res_iaster, NY(simu->res_aster));
+					}
 				}
 skip1:;
 			}/*iaster */
@@ -604,6 +626,8 @@ void skysim(const PARMS_S* parms){
 		simu->res=dnew_mmap(5, nsky, NULL, "Res%d_%d", seed_maos, parms->skyc.seed);//Total, ATM NGS, ATM TT, WS, 0
 		simu->res_oa=dnew_mmap(5, nsky, NULL, "Res%d_%d_oa", seed_maos, parms->skyc.seed);//On axis version
 		simu->res_geom=dnew_mmap(3, nsky, NULL, "Res%d_%d_geom", seed_maos, parms->skyc.seed);//wfe, min_aster, fss
+		simu->res_aster=dnew(2+(4+parms->maos.nwvl)*parms->skyc.nwfstot, nsky*parms->skyc.maxaster);
+		simu->res_iaster=0;
 		simu->fss=dnew_mmap(nsky, 1, NULL, "Res%d_%d_fss", seed_maos, parms->skyc.seed);//Sampling frequency
 		int ng=parms->skyc.ngain;
 		simu->gain=dcellnewsame_mmap(nsky, 1, ng, parms->maos.nmod,
@@ -643,6 +667,9 @@ void skysim(const PARMS_S* parms){
 		dfree(simu->res);
 		dfree(simu->res_oa);
 		dfree(simu->res_geom);
+		dresize(simu->res_aster, NX(simu->res_aster), simu->res_iaster);
+		writebin(simu->res_aster, "Res%d_%d_aster", seed_maos, parms->skyc.seed);
+		dfree(simu->res_aster);
 		dfree(simu->fss);
 		dcellfree(simu->gain);
 		dcellfree(simu->sel);

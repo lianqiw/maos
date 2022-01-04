@@ -381,14 +381,14 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 	aster->idtrats=lnew(aster->nwfs, 1);
 	aster->dtrats=lnew(aster->nwfs, 1);
 	int idtrat_fast=0;
-	int idtrat_slowest=parms->skyc.ndtrat;
+	real snr_fast=0;
+	int idtrat_slow=parms->skyc.ndtrat;
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		int idtrat;
 		for(idtrat=ndtrat-1; idtrat>=0; idtrat--){
 			//select highest idtrat that meets snrmin for each WFS.
 			if(P(aster->wfs[iwfs].pistat->snr,idtrat)>=P(parms->skyc.snrmin_mr,idtrat)){
 				P(aster->idtrats,iwfs)=idtrat;
-				P(aster->dtrats,iwfs)=P(parms->skyc.dtrats,idtrat);
 				break;
 			}
 		}
@@ -398,36 +398,31 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 		}
 		if(idtrat>idtrat_fast){
 			idtrat_fast=idtrat;
+			snr_fast=P(aster->wfs[iwfs].pistat->snr, idtrat);
+			if(idtrat_slow==parms->skyc.ndtrat) idtrat_slow=idtrat;
 		}
-		if(idtrat<idtrat_slowest){
-			idtrat_slowest=idtrat;
+		if(idtrat<idtrat_slow){
+			real snr=P(aster->wfs[iwfs].pistat->snr, idtrat);
+			int ipowfs=aster->wfs[iwfs].ipowfs;
+			if(parms->maos.nsa[ipowfs]==1 && idtrat+2 >= idtrat_fast && (snr_fast-snr)<5 && snr>3){
+				//We speed up TT wfs that is slower than fast WFS to the fast rate under the following conditions:
+				//We don't speed up TTF wfs as it will degrade focus correction too much.
+				idtrat=P(aster->idtrats, iwfs)=idtrat_fast;
+			}
+			//info("aster %d snr=%g %g\n", aster->iaster, snr_fast, snr);
+			idtrat_slow=idtrat;
 		}
 	}
-	//info("aster %d: idtrat_fast=%d, _slow=%d\n", aster->iaster, idtrat_fast, idtrat_slowest);
-		
-	if(1){//Initial implementation:. Only use two rates.
-		/*if(idtrat_slowest!=idtrat_fast){
-			dbg("Use 2 rates: %d %d (%g %g)\n", idtrat_slowest, idtrat_fast, P(parms->skyc.dtrats, idtrat_slowest), 
-				P(parms->skyc.dtrats,idtrat_fast));
-		}*/
-		//is the slow rate is very close to the fast rate, make them equal
-		/*if(idtrat_slowest+1==idtrat_fast&&idtrat_slowest>0){
-			idtrat_slowest--;
-		}*/
-		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			if(P(aster->idtrats, iwfs)<idtrat_fast){
-				P(aster->idtrats, iwfs)=idtrat_slowest;
-				P(aster->dtrats, iwfs)=P(parms->skyc.dtrats, idtrat_slowest);
-			}
-			/*
-			if(iwfs!=iwfs_fast){
-				if(P(aster->idtrats,iwfs)<3){
-					aster->use=-1;//mark as invalid asterism.
-				}
-				P(aster->idtrats,iwfs)=3;//P(aster->idtrats,iwfs_fast)-3;
-				P(aster->dtrats,iwfs)=P(parms->skyc.dtrats,P(aster->idtrats,iwfs));
-			}*/
+	int idtrat_fast2=MAX(2, idtrat_fast);
+	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+		//force fast loop to be faster than dtrat=16
+		if(P(aster->idtrats, iwfs)==idtrat_fast && idtrat_fast!=idtrat_fast2){
+			P(aster->idtrats, iwfs)=idtrat_fast2;
 		}
+		if(P(aster->idtrats, iwfs)<idtrat_fast){
+			P(aster->idtrats, iwfs)=idtrat_slow;
+		}
+		P(aster->dtrats, iwfs)=P(parms->skyc.dtrats, P(aster->idtrats, iwfs));
 	}
 }
 

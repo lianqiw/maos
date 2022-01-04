@@ -320,6 +320,24 @@ number of LGS in this powfs (6 for NFIRAOS).
 
 The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront.
 
+\section skycoverage Sky coverage
+
+The sky coverage simulation is done in two parts. \c maos is run first used to prepare NGS mode and WFS PSF time series:
+
+\c maos -c nfiraos_lgs.conf skyc_10.conf -o 50p_za0_ncpa
+
+The second step is to run \c skyc in the sky sim folder
+\c cd 50p_za0_ncpa/skysim
+\c skyc -d -o APD_JHKs_typeImr
+
+The results are stored in \c Res1_1.bin for \c maos seed 1, \c skyc seed 1. There are \c nsky=500 columns with the following row definitions:
+
+0. Total residual error
+1. Residual atmpheric (included in \c maos simulations) error
+2. Residual atmosphere error only in tip/tilt modes.
+3. Residual windshake if skyc.psd_is is set and skyc.addws=0. (deprecated use)
+4. 0 (not used)
+
 ===
 
 See \ref page40_results for further explanation and results interpretation.

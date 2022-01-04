@@ -462,7 +462,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 							//if(istep<100) info("step %d: fast loop\n", istep);
 						}
 					}
-					if(zfmerr){
+					if(zfmerr && irep==0){
 						zfarr_push(zfmerr, istep, P(merrm, 0));
 					}
 				}//if pmerrm
