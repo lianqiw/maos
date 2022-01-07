@@ -419,3 +419,17 @@ def photon_flux(magnitude, wvls):
     if len(flux)==1:
         flux=flux[0,0]
     return flux
+
+def fftshift(a):
+    a=a+0 #make a copy
+    if a.dtype.name=='object':
+        for it in np.ndindex(a.shape):
+            a[it]=fftshift(a[it])
+    else:
+        na=a.ndim
+        ia=na-2
+        if ia<0:
+            ia=0;
+        for ic in range(ia, na):
+            a=np.roll(a, int(a.shape[ic]/2), axis=ic)
+    return a

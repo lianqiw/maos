@@ -52,6 +52,7 @@ static void setup_parms_skyc(PARMS_S* parms){
 	READ_INT(skyc.psd_scale);
 	READ_INT(skyc.noisy);
 	READ_INT(skyc.ttfbrightest);
+	READ_INT(skyc.ttffastest);
 	READ_INT(skyc.bspstrehl);
 	READ_INT(skyc.maxaster);
 	READ_INT(skyc.maxdtrat);

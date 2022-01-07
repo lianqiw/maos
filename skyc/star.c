@@ -47,6 +47,7 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 		error("input coord has too few rows (need %d, has %ld\n", nwvl+2, coord->nx);
 	}
 	for(int istar=0; istar<nstar; istar++){
+		int skip=0;
 		if(parms->skyc.ngsalign){
 			star[jstar].thetax=round(P(pc, 0, istar)/ngsgrid)*ngsgrid;
 			star[jstar].thetay=round(P(pc, 1, istar)/ngsgrid)*ngsgrid;
@@ -72,24 +73,27 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 		for(int kstar=0; kstar<jstar; kstar++){
 			if(pow(star[jstar].thetax-star[kstar].thetax, 2)
 				+pow(star[jstar].thetay-star[kstar].thetay, 2)<keepout){
-			 /*warning("start %d is too close to %d. use J brightest.\n", jstar, kstar); */
-				if(P(pc, 0, istar)<P(star[kstar].mags,0)){
+				if(P(pc, 2, istar)<P(star[kstar].mags,0)){
 					memcpy(P(star[kstar].mags), PCOL(pc, istar)+2, sizeof(real)*nwvl);
 					star[kstar].thetax=star[jstar].thetax;
 					star[kstar].thetay=star[jstar].thetay;
 				}
-				continue;
+				dbg("Star %d is too close to %d. Keep brightest.\n", jstar, kstar);
+				skip=1;
+				break;
 			}
 		}
 		if(pow(star[istar].thetax, 2)+pow(star[istar].thetay, 2)<minrad2){
-			info("Skip star at (%.0f, %.0f) because minrad=%g\n",
+			dbg("Skip star at (%.1f, %.1f) because minrad=%g\n",
 				star[istar].thetax*206265, star[istar].thetay*206265, parms->skyc.minrad);
-			continue;
+			skip=1;
 		}
-		star[jstar].mags=dnew(nwvl, 1);
-		memcpy(P(star[jstar].mags), PCOL(pc, istar)+2, sizeof(real)*nwvl);
-		star[jstar].use=mycalloc(parms->maos.npowfs, int);
-		jstar++;
+		if(!skip){
+			star[jstar].mags=dnew(nwvl, 1);
+			memcpy(P(star[jstar].mags), PCOL(pc, istar)+2, sizeof(real)*nwvl);
+			star[jstar].use=mycalloc(parms->maos.npowfs, int);
+			jstar++;
+		}
 	}
 	if(jstar<nstar){
 	/*warning("%d stars dropped\n", nstar-jstar); */
@@ -170,7 +174,7 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 					dmat* val=dbspline_eval(simu->bspstrehl[ipowfs][ic],
 						simu->bspstrehlxy, simu->bspstrehlxy,
 						gx, gy);
-					real ratio=P(val,0)/P(P(avgpsf,ic),0);
+					real ratio=P(val,0)/dsum(P(avgpsf,ic));
 					/*dbg("strehl: bilinear: %g, cubic: %g\n", P(P(avgpsf,ic),0),P(val,0)); */
 					if(ratio<0){
 						warning("Ratio=%g is less than zero.\n", ratio);
@@ -689,12 +693,16 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 	//close(fd);
 	return nstep;
 }
+static int sortfun_snr(const STAR_S *p1, const STAR_S *p2){
+	real s1=P(p1->pistat[0].snr, 0);
+	real s2=P(p2->pistat[0].snr, 0);
+	return s1<s2?1:-1; //-1: keep order. 1: reverse order
+}
 /**
    setup "star" data array from star information and read in average pixel
    intensitys.  Check for star PSF size. If it is larger than 5, we don't use
    the star because the PSF is too broad.
 */
-
 STAR_S* setup_star(int* nstarout, SIM_S* simu, dmat* stars, int seed){
 	const PARMS_S* parms=simu->parms;
 	POWFS_S* powfs=simu->powfs;
@@ -730,6 +738,8 @@ STAR_S* setup_star(int* nstarout, SIM_S* simu, dmat* stars, int seed){
 		nstar=jstar;
 		star=myrealloc(star, jstar, STAR_S);
 	}
+	//sort stars to have descending snr order.
+	qsort(star, jstar, sizeof(STAR_S), (int(*)(const void *, const void *))sortfun_snr);
 	*nstarout=nstar;
 	if(parms->skyc.verbose){
 		info("There are %d stars usable from %d stars\n", jstar, nstar);

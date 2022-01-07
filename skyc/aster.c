@@ -45,7 +45,7 @@ static int* comb_init(long k){
 	return comb;
 }
 /**
-   Find the next combination.
+   Find the next combination of selecting k from n. 
  */
 static int comb_next(int* comb, long n, long k){
 	if(n<1||k<1){
@@ -70,7 +70,7 @@ static int comb_next(int* comb, long n, long k){
    Create combination of stars to form asterism. It has the option to put TTF
    always on the brightest for testing purpose.  */
 ASTER_S* setup_aster_comb(int* naster, const STAR_S* star, int nstar, const PARMS_S* parms){
-	if(nstar==0){
+	if(!star || !nstar){
 		*naster=0;
 		return NULL;
 	} else if(parms->skyc.keeporder){
@@ -123,7 +123,7 @@ ASTER_S* setup_aster_comb(int* naster, const STAR_S* star, int nstar, const PARM
 		if(parms->maos.msa[0]==2){
 			ncomb/=comb_select(nwfstot, nwfs[0]);
 		} else{
-			error("Please revise\n");
+			error("Please revise when wfs[0] is not TTF\n");
 		}
 	}
 	
@@ -146,7 +146,7 @@ ASTER_S* setup_aster_comb(int* naster, const STAR_S* star, int nstar, const PARM
 			if(!skip) count++; else free(aster[count].wfs);
 		} else if(npowfs==2){
 			int mask[nwfstot];//mask stars that are selected already.
-			int* comb2=comb_init(nwfs[0]);//select nwfs[0] from nwfstot for first ipowfs.
+			int* comb2=comb_init(nwfs[0]);//select nwfs[0] from nwfstot for the first ipowfs.
 			do{
 				int skip=0;
 				memset(mask, 0, sizeof(int)*nwfstot);
@@ -396,15 +396,15 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 			warning("Invalid asterism: wfs%d idtrat=%d\n", iwfs, idtrat);
 			idtrat=0;
 		}
-		if(idtrat>idtrat_fast){
+		int isttf=parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1;
+		if((parms->skyc.ttfbrightest&&isttf)||(!parms->skyc.ttfbrightest &&idtrat>idtrat_fast)){
 			idtrat_fast=idtrat;
 			snr_fast=P(aster->wfs[iwfs].pistat->snr, idtrat);
 			if(idtrat_slow==parms->skyc.ndtrat) idtrat_slow=idtrat;
 		}
 		if(idtrat<idtrat_slow){
 			real snr=P(aster->wfs[iwfs].pistat->snr, idtrat);
-			int ipowfs=aster->wfs[iwfs].ipowfs;
-			if(parms->maos.nsa[ipowfs]==1 && idtrat+2 >= idtrat_fast && (snr_fast-snr)<5 && snr>3){
+			if(!isttf && idtrat+2 >= idtrat_fast && (snr_fast-snr)<5 && snr>3){
 				//We speed up TT wfs that is slower than fast WFS to the fast rate under the following conditions:
 				//We don't speed up TTF wfs as it will degrade focus correction too much.
 				idtrat=P(aster->idtrats, iwfs)=idtrat_fast;

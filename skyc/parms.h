@@ -97,6 +97,7 @@ typedef struct SKYC_S{
     int psd_scale;   /**<scale the PSD to equal to open loop error*/
     int noisy;       /**<noise simulations.*/
     int ttfbrightest;/**<make ttf the brightest always.*/
+    int ttffastest; /**<make ttf the fastest always in multirate.*/
     int bspstrehl;   /**<Do bicubic spline interpolation on strehl*/
     int npowfs;      /**<number of powfs, has to match MAOS_S.npowfs*/
     real lat;      /**<Galactic latitude*/

@@ -58,7 +58,7 @@ typedef struct PISTAT_S{
     dcell **mtche;     /**<matched filter estimator*/
     dcell *sanea;      /**<noise equivalent angle, including all effect*/
     dcell *sanea0;     /**<noise equivalent angle due to photon noise alone*/
-    dmat  *scale;      /**<extra scaling factor due to bicubic spline on strehl*/
+    dmat  *scale;      /**<extra scaling factor for pistat and psf due to bicubic spline on strehl*/
     dmat  *snr;        /**<signal to noise ratio*/
 }PISTAT_S;
 /**
@@ -85,7 +85,6 @@ typedef struct WFS_S{
 typedef struct STAR_S{
     real thetax;     /**<star location*/
     real thetay;     /**<star location*/
-    real scbcs;      /**<scale factor to match strehl for bi-cubic spline*/
     dmat  *mags;       /**<star magnitude at each wavelength*/
     /*The following is for each ipowfs */
     dcell  *siglev;    /**<signal level of size npowfs, nwvl*/

@@ -306,8 +306,8 @@ void prep_bspstrehl(SIM_S* simu){
 				if(zfexist("%s",fnpistat)){
 					dcell* tmp=dcellread("%s", fnpistat);
 					for(long ic=0; ic<nsa*nwvl; ic++){
-					/*peak is in the corner */
-						P(P(strehlgrid,ic),gx+ng,gy+ng)=P(P(tmp,ic),0);
+						/*peak is in the corner */
+						P(P(strehlgrid,ic),gx+ng,gy+ng)=dsum(P(tmp,ic));
 					}
 					dcellfree(tmp);
 				}
