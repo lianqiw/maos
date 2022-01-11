@@ -108,8 +108,8 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	/*instead of doing draws on nb of stars, we scan all possibilities and
 	  assemble the curve in postprocessing.  catscl is negative, with
 	  absolute value indicating the max number of J<=19 stars to consider*/
-		long nmax=round(-catscl);
-		nsky0=nsky/nmax;
+		long nmax=round(-catscl);//maximum number of J<=19 stars. set to 10
+		nsky0=nsky/nmax;//number of random instances for each number of J<=19 stars
 		if(nsky0*nmax!=nsky){
 			error("nsky=%ld, has to be dividable by max # of stars=%ld", nsky, nmax);
 		}

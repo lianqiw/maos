@@ -272,49 +272,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 		}
 	}
 
-	info("There are %d MAOS PSF seeds: ", parms->maos.nseed);
-	for(int i=0; i<parms->maos.nseed; i++){
-		info(" %d", parms->maos.seeds[i]);
-	}
-	info("\n");
-	{
-	//skip unwanted seeds
-		parms->fdlock=mycalloc(parms->maos.nseed, int);
-		char fn[81];
-		int nseed=0;
-		for(int i=0; i<parms->maos.nseed; i++){
-			long maos_seed=parms->maos.seeds[i];
-			snprintf(fn, 80, "Res%ld_%d.done", maos_seed, parms->skyc.seed);
-			if(exist(fn)&&!arg->override){
-				parms->fdlock[i]=-1;
-				warning("Will skip seed %ld because %s exist.\n", maos_seed, fn);
-			} else{
-				snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
-				parms->fdlock[i]=lock_file(fn, 0, 0);
-				if(parms->fdlock[i]<0){
-					warning("Will skip seed %ld because it is already running.\n", maos_seed);
-				} else{
-					cloexec(parms->fdlock[i]);
-					if(nseed!=i){
-						parms->maos.seeds[nseed]=parms->maos.seeds[i];
-						parms->fdlock[nseed]=parms->fdlock[i];
-					}
-					nseed++;
-				}
-			}
-		}
-		if(nseed!=parms->maos.nseed){
-			info("Skip %d seeds.\n", parms->maos.nseed-nseed);
-			parms->maos.nseed=nseed;
-		}
-		if(!parms->maos.nseed){
-			warning("There are no seed to run. Use -O to override.\n");
-			//remove log and conf files
-			char fnpid[PATH_MAX];
-			snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
-			remove(fnpid);
-		}
-	}
+
 	for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 		parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec
 		info("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
@@ -431,6 +389,50 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	parms->skyc.nwfstot=0;
 	for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 		parms->skyc.nwfstot+=parms->skyc.nwfsmax[ipowfs];
+	}
+	info("There are %d MAOS PSF seeds: ", parms->maos.nseed);
+	for(int i=0; i<parms->maos.nseed; i++){
+		info(" %d", parms->maos.seeds[i]);
+	}
+	info("\n");
+	if(parms->maos.nseed){
+		//skip unwanted seeds
+		parms->fdlock=mycalloc(parms->maos.nseed, int);
+		char fn[81];
+		int nseed=0;
+		for(int i=0; i<parms->maos.nseed; i++){
+			long maos_seed=parms->maos.seeds[i];
+			snprintf(fn, 80, "Res%ld_%d.done", maos_seed, parms->skyc.seed);
+			if(exist(fn)&&!arg->override){
+				parms->fdlock[i]=-1;
+				warning("Will skip seed %ld because %s exist.\n", maos_seed, fn);
+			} else{
+				snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
+				parms->fdlock[i]=lock_file(fn, 0, 0);
+				if(parms->fdlock[i]<0){
+					warning("Will skip seed %ld because it is already running.\n", maos_seed);
+				} else{
+					warning("Lock seed %ld success.\n", maos_seed);
+					cloexec(parms->fdlock[i]);
+					if(nseed!=i){
+						parms->maos.seeds[nseed]=parms->maos.seeds[i];
+						parms->fdlock[nseed]=parms->fdlock[i];
+					}
+					nseed++;
+				}
+			}
+		}
+		if(nseed!=parms->maos.nseed){
+			info("Skip %d seeds.\n", parms->maos.nseed-nseed);
+			parms->maos.nseed=nseed;
+		}
+		if(!nseed){
+			warning("There are no seed to run. Use -O to override.\n");
+			//remove log and conf files
+			char fnpid[PATH_MAX];
+			snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
+			remove(fnpid);
+		}
 	}
 	return parms;
 }

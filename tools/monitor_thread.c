@@ -60,7 +60,7 @@ CHECK_ARG(1)
 static void sendmail(const char*format,...){
 	format2fn;
 	if(mailto && fn){
-		dbg_time("Sending mail to %s\n", mailto);
+		info_time("Sending mail to %s\n", mailto);
 		char cmd[1024];
 		snprintf(cmd, sizeof(cmd), "sendmail -t %s", mailto);
 		FILE* p=popen(cmd, "w");
@@ -92,7 +92,7 @@ static proc_t* proc_get(int id, int pid){
 		iproc->next=pproc[id];
 		pproc[id]=iproc;
 		nproc[id]++;
-		g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+		if(!headless) g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
 	}
 	return iproc;
 }
@@ -102,13 +102,13 @@ static void proc_remove_all(int id){
 	proc_t* iproc, * jproc=NULL;
 	for(iproc=pproc[id]; iproc; iproc=jproc){
 		jproc=iproc->next;
-		g_idle_add((GSourceFunc)remove_entry, iproc->row);//frees iproc
+		if(!headless) g_idle_add((GSourceFunc)remove_entry, iproc->row);//frees iproc
 		free(iproc->path);
 		free(iproc);
 	}
 	nproc[id]=0;
 	pproc[id]=NULL;
-	g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+	if(!headless) g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
 }
 
 static void proc_remove(int id, int pid){
@@ -122,8 +122,10 @@ static void proc_remove(int id, int pid){
 			}
 			nproc[id]--;
 
-			g_idle_add((GSourceFunc)remove_entry, iproc->row);
-			g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+			if(!headless) {
+				g_idle_add((GSourceFunc)remove_entry, iproc->row);
+				g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+			}
 			free(iproc->path);
 			free(iproc);
 			break;
@@ -148,9 +150,9 @@ static void host_added(int ihost, int sock){
 	if(sock>-1){
 		hsock[ihost]=sock;
 		FD_SET(sock, &active_fd_set);
-		g_idle_add(host_up, GINT_TO_POINTER(ihost));
+		if(!headless) g_idle_add(host_up, GINT_TO_POINTER(ihost));
 	}
-	dbg_time("connected to %s\n", hosts[ihost]);
+	info_time("connected to %s\n", hosts[ihost]);
 }
 
 /*remove the host upon disconnection*/
@@ -163,7 +165,7 @@ static void host_removed(int sock, int notify){
 	int ihost=host_from_sock(sock);
 	if(ihost!=-1 && hsock[ihost]!=-1){
 		hsock[ihost]=-1;
-		g_idle_add(host_down, GINT_TO_POINTER(ihost));
+		if(!headless) g_idle_add(host_down, GINT_TO_POINTER(ihost));
 		warning_time("Disconnected from %s\n", hosts[ihost]);
 		if(notify){
 			sendmail("Subject:monitor on disconnected from %s\n\nAt %s\n",
@@ -193,7 +195,7 @@ static int add_host(int ihost){
 			}
 		}
 		if(sock<0){
-			dbg_time("Cannot reach %s\n", hosts[ihost]);
+			info_time("Cannot reach %s\n", hosts[ihost]);
 			hsock[ihost]=-1;
 		}
 	}
@@ -273,6 +275,18 @@ static void save_all_jobs(){
 }
 static int scheduler_cmd(int ihost, int pid, int command);
 //called by listen_host to respond to scheduler
+const char *status_msg[]={
+	"",
+	"running",
+	"waiting",
+	"started",
+	"queued",
+	"","","","","","", 
+	"finished",//11
+	"crashed",//12
+	"to be killed",//13
+	"removed",	"killed",//15
+	};
 static int respond(int sock){
 	int cmd[3];
 	//read fixed length header info.
@@ -286,7 +300,7 @@ static int respond(int sock){
 	int pid=cmd[2];
 	switch(cmd[0]){
 	case -1:{//server request shutdown
-		dbg_time("Received shutdown request\n");
+		info_time("Received shutdown request\n");
 		return -3;
 	}
 		break;
@@ -294,21 +308,21 @@ static int respond(int sock){
 	{
 		int command;
 		streadint(sock, &command);
-		//dbg_time("received command %d for relaying to scheduler\n", command);
+		//info_time("received command %d for relaying to scheduler\n", command);
 		int ans=scheduler_cmd(cmd[1], cmd[2], command);
 		stwriteint(sock, ans);
 	}
 	break;
 	case MON_DRAWDAEMON://called by scheduler to open drawdaemon
 	{
-		dbg_time("Received drawdaemon request\n");
+		info_time("Received drawdaemon request\n");
 		scheduler_cmd(ihost, 0, CMD_DISPLAY);
 	}
 	break;
 	case MON_STATUS://called by scheduler to pass maos status
 	{
 		if(ihost<0){
-			dbg_time("Host not found\n");
+			info_time("Host not found\n");
 			return -1;
 		}
 		proc_t* iproc=proc_get(ihost, pid);
@@ -350,14 +364,18 @@ static int respond(int sock){
 				sendmail("Subject: Job %d crashed on %s\n\nOn %s\n\nPath is %s\n", 
 					iproc->pid, hosts[iproc->hid], myasctime(0), iproc->path);
 			}
-			g_idle_add((GSourceFunc)refresh, iproc);
+			if(!headless) g_idle_add((GSourceFunc)refresh, iproc);
+		}
+		if(old_info&&old_info!=iproc->status.info &&
+			iproc->status.info>0 && iproc->status.info<(int)sizeof(status_msg)){
+			info_time("Job %d on host %s is %s.\n", iproc->pid, hosts[ihost], status_msg[iproc->status.info]);
 		}
 	}
 	break;
 	case MON_PATH://called by scheduler to pass maos path
 	{
 		if(ihost<0){
-			dbg_time("Host not found\n");
+			info_time("Host not found\n");
 			return -1;
 		}
 		proc_t* iproc=proc_get(ihost, pid);
@@ -380,7 +398,9 @@ static int respond(int sock){
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 			if((flag < 0 && test_jobs(iproc->status.info, flag)) || iproc->pid==flag){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_REMOVE)){
-					warning_time("Failed to clear the job %d on host %d\n", iproc->pid, ihost);
+					warning_time("Clear job %d on host %d failed.\n", iproc->pid, ihost);
+				}else{
+					info_time("Clear job %d on host %d ok.\n", iproc->pid, ihost);
 				}
 			}
 		}
@@ -392,7 +412,9 @@ static int respond(int sock){
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 			if(iproc->status.info<11&&(!pid||pid==iproc->pid)){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_KILL)){
-					warning_time("Failed to kill the job %d on host %d\n", iproc->pid, ihost);
+					warning_time("Kill job %d on host %d failed.\n", iproc->pid, ihost);
+				}else{
+					info_time("Kill job %d on host %d ok.\n", iproc->pid, ihost);
 				}
 			}
 		}
@@ -408,14 +430,14 @@ static int respond(int sock){
 	case MON_LOAD:
 	{
 		if(ihost<0){
-			dbg_time("Host not found\n");
+			info_time("Host not found\n");
 			return -1;
 		}
 		usage_cpu[ihost]=(double)((pid>>16)&0xFFFF)/100.;
 		//usage_mem[ihost]=(double)(pid & 0xFFFF)/100.;
 		usage_cpu[ihost]=MAX(MIN(1, usage_cpu[ihost]), 0);
 		//usage_mem[ihost]=MAX(MIN(1,usage_mem[ihost]),0);
-		g_idle_add((GSourceFunc)update_progress, GINT_TO_POINTER(ihost));
+		if(!headless) g_idle_add((GSourceFunc)update_progress, GINT_TO_POINTER(ihost));
 	}
 	break;
 	case MON_ADDHOST:
@@ -478,11 +500,11 @@ void* listen_host(void* pmsock){
 						add_host(ihost);//do not use _add_host_wrap. It will deadlock.
 					}
 				} else if(htime[ihost]>0&&ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
-					dbg_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
+					info_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
 					scheduler_cmd(ihost, 0, CMD_PROBE);
 					htime[ihost]=-ntime;
 				} else if(htime[ihost]<0&&ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
-					dbg_time("no respond. disconnect server %s.\n", hosts[ihost]);
+					info_time("no respond. disconnect server %s.\n", hosts[ihost]);
 					host_removed(hsock[ihost], 1);
 				}
 			}
@@ -491,8 +513,8 @@ void* listen_host(void* pmsock){
 				if(iproc->status.info==S_RUNNING&&iproc->tlast+600<ntime){
 					iproc->status.info=S_WAIT;
 					iproc->status.tot=(ntime-iproc->tlast)/iproc->status.scale;
-					dbg_time("proc %d in %s is not updating in %lu seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
-					g_idle_add((GSourceFunc)refresh, iproc);
+					info_time("proc %d in %s is not updating in %lu seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
+					if(!headless) g_idle_add((GSourceFunc)refresh, iproc);
 				}
 			}
 		}
@@ -511,7 +533,7 @@ void* listen_host(void* pmsock){
 static int scheduler_display(int ihost, int pid){
 	int ans=1;
 	if(ihost<0||ihost>=nhost) return ans;
-	dbg_time("scheduler_display: %s, pid=%d\n", hosts[ihost], pid);
+	info_time("scheduler_display: %s, pid=%d\n", hosts[ihost], pid);
 	/*connect to scheduler with a new port. The schedule pass the other
 	  end of the port to drawdaemon so we can communicate with it.*/
 	int sock=scheduler_connect(hosts[ihost]);

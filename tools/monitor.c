@@ -90,6 +90,7 @@ GtkCssProvider* provider_blue;
 #endif
 #define MAX_HOST 20
 const char *mailto=NULL;
+int headless=0;//set to 1 when GTK cannot create window
 /*
 #define DIALOG_MSG(A...) {				\
 	GtkWidget *dialog0=gtk_message_dialog_new	\
@@ -730,10 +731,7 @@ void create_window(
 	cmdconnect=mycalloc(nhost+1, GtkWidget*);
 	buffers=mycalloc(nhost+1, GtkTextBuffer*);
 
-	usage_cpu=mycalloc(nhost, double);
-	//usage_mem=mycalloc(nhost,double);
-	usage_cpu2=mycalloc(nhost, double);
-	//usage_mem2=mycalloc(nhost,double);
+	
 	prog_cpu=mycalloc(nhost, GtkWidget*);
 	//prog_mem=mycalloc(nhost,GtkWidget *);
 
@@ -911,7 +909,11 @@ int main(int argc, char* argv[]){
 	}
 #endif
 #if GTK_MAJOR_VERSION<4
-	gtk_init(&argc, &argv);
+	if(!gtk_init_check(&argc, &argv)){
+		headless=1;
+		plot_enabled=0;
+		warning("Running in headless mode\n");
+	}
 #endif
 #if WITH_NOTIFY
 	if(!notify_init("AOS Notification")){
@@ -920,7 +922,6 @@ int main(int argc, char* argv[]){
 #endif
 	parse_icons();
 	register_signal_handler(NULL);
-	create_status_icon();
 	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
 		error("failed to create socketpair\n");
 	}
@@ -930,16 +931,26 @@ int main(int argc, char* argv[]){
 	for(int ihost=0; ihost<nhost; ihost++){
 		add_host_wrap(ihost);
 	}
-	
+	if(!headless){
+		create_status_icon();
 #if MAC_INTEGRATION
 	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	//g_signal_connect(theApp,"NSApplicationDidBecomeActive", G_CALLBACK(status_icon_on_click), GINT_TO_POINTER(1));//useless
 	gtkosx_application_ready(theApp);
 #endif
+	}
+	usage_cpu=mycalloc(nhost, double);
+	//usage_mem=mycalloc(nhost,double);
+	usage_cpu2=mycalloc(nhost, double);
+	//usage_mem2=mycalloc(nhost,double);
 #if GTK_MAJOR_VERSION<4
-	create_window();
-	gtk_main();
+	if(!headless){
+		create_window();
+		gtk_main();
+	}else{
+		pause();
+	}
 #else
 	GtkApplication* app;
 	int status;

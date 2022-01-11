@@ -102,7 +102,8 @@ extern int signal_caught;
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
 //all info are shown at default log level
 #define logstd(level, A...) ({if(LOG_LEVEL>level){fprintf(std2out?stdout:stderr, A);}})
-#define info_line(format,...) logerr(-4, "Info(%s:%d,%s): " format ,BASEFILE,__LINE__,__func__,##__VA_ARGS__)
+#define info_line(format,...) logstd(-4, "Info(%s:%d,%s): " format ,BASEFILE,__LINE__,__func__,##__VA_ARGS__)
+#define info_time(format,...) logstd(-1, "[%s] " format, myasctime(0), ##__VA_ARGS__)
 #define info(A...)  logstd(-1, A) //least important info
 #define info2(A...) logstd(-2, A)
 #define info3(A...) logstd(-3, A) //most important info

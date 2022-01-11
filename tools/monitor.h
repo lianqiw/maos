@@ -75,4 +75,5 @@ void save_job_wrap();
 int scheduler_cmd_wrap(int ihost, int pid, int command);
 extern const char *mailto;
 extern int plot_enabled;
+extern int headless;
 #endif

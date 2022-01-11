@@ -587,9 +587,7 @@ void skysim(const PARMS_S* parms){
 		/*generate star fields. */
 		if(parms->skyc.stars){
 			info("Loading stars from %s\n", parms->skyc.stars);
-			if(check_suffix(parms->skyc.stars, ".bin.gz")
-				||check_suffix(parms->skyc.stars, ".bin")
-				||check_suffix(parms->skyc.stars, ".fits")){
+			if(zfexist("%s", parms->skyc.stars)){
 				simu->stars=dcellread("%s", parms->skyc.stars);
 			} else{
 				simu->stars=dcellnew(1, 1);

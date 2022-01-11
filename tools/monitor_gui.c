@@ -287,13 +287,13 @@ gboolean refresh(proc_t* p){
 		list_modify_icon(p->row, icon_failed);
 		//list_modify_color(p->row,"#CCCC00");
 		break;
+	case S_REMOVE:
+		break;
 	case S_KILLED:
 	//list_modify_status(p, "Killed");
 		list_modify_icon(p->row, icon_failed);
 		//list_modify_color(p->row,"#CC0000");
 		notify_user(p);
-		break;
-	case S_REMOVE:
 		break;
 	default:
 		warning("Unknown info: %d\n", p->status.info);
