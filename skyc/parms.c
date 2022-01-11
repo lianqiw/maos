@@ -408,12 +408,13 @@ PARMS_S* setup_parms(const ARG_S* arg){
 				parms->fdlock[i]=-1;
 				warning("Will skip seed %ld because %s exist.\n", maos_seed, fn);
 			} else{
+				remove(fn);
 				snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
 				parms->fdlock[i]=lock_file(fn, 0, 0);
 				if(parms->fdlock[i]<0){
 					warning("Will skip seed %ld because it is already running.\n", maos_seed);
 				} else{
-					warning("Lock seed %ld success.\n", maos_seed);
+					warning("Lock file %s success.\n", fn);
 					cloexec(parms->fdlock[i]);
 					if(nseed!=i){
 						parms->maos.seeds[nseed]=parms->maos.seeds[i];

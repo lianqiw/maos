@@ -331,8 +331,8 @@ file_t* zfopen(const char* fni, const char* mod){
 		if((fp->fd=myopen(fn2, O_RDWR|O_CREAT, 0666))==-1){
 			perror("open for write");
 		} else{
-			if(flock(fp->fd, LOCK_EX)){//2018-03-07: Removed LOCK_NB
-				perror("flock");
+			if(lockf(fp->fd, F_TLOCK, 0)){//2018-03-07: Removed LOCK_NB. 2021-01-11 replaced with lockf
+				perror("lockf");
 				close(fp->fd);
 				fp->fd=-1;
 			} else if(mod[0]=='w'&&ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */

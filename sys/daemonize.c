@@ -54,7 +54,7 @@
    fd (>-1): successfully locked
 */
 int lock_file(const char* fnlock, /**<The filename to lock on*/
-	int block,         /**<block on weighting. set to 0 for no waiting.*/
+	int block,         /**<block on waiting. set to 0 for no waiting.*/
 	int version        /**<The version of the software that locks the file, primarily for managing scheduler. May be zero.*/
 ){
 	int fd;
@@ -71,8 +71,8 @@ int lock_file(const char* fnlock, /**<The filename to lock on*/
 		FILE* fp=fdopen(dup(fd), "r");
 		if(fp){//check existing instance
 			ans1=fscanf(fp, "%d %d", &pid, &version_old);
-			if(ans1>0){
-				if((ans2=kill(pid, 0))){//already exited
+			if(ans1>0 && pid>0){
+				if((ans2=kill(pid, 0))){//already exited or in a different host
 					pid=0;
 				}
 			}
@@ -98,7 +98,7 @@ int lock_file(const char* fnlock, /**<The filename to lock on*/
 		//fcntl(fd, F_SETFD, FD_CLOEXEC);//do not set CLOEXEC to hold the lock after fork/exec.
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
-		if(flock(fd, op)){/*lock faild. another process already locked file.*/
+		if(lockf(fd, F_TLOCK, 0)){/*lock faild. another process already locked file.*/
 			if(block){/*In block mode, we should never fail. */
 				dbg_time("Blocked Lock failed: %s\n", strerror(errno));
 			}
