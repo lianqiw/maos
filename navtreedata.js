@@ -52,7 +52,8 @@ var NAVTREE =
         [ "Point Spread Function", "page30_run.html#sect-perfevl", null ],
         [ "Actuator Slaving", "page30_run.html#sect-act", null ],
         [ "Sodium range variation", "page30_run.html#sect-sodium", null ]
-      ] ]
+      ] ],
+      [ "Sky coverage", "page30_run.html#skycoverage", null ]
     ] ],
     [ "Examples", "page33_example.html", "page33_example" ],
     [ "Simulation Results", "page40_results.html", [
@@ -145,16 +146,16 @@ var NAVTREEINDEX =
 "maos_2types_8h.html#aaa286b3af6f54cc7c0157956a85e90c3",
 "mathdef_8h.html#a305fa5f76f2bb165561515f9971475a9",
 "mvm__trans_8cu.html#a89e6c5c637455fc0b9c1b43cb1d0e78e",
-"page43_nfiraos.html#autotoc_md25",
-"parms_8h.html#a6172520813e1bd7d0a7464cb0c6dd3fa",
-"parms_8h.html#ac08de94a88488ca5f106a8db93990bc4",
-"pywfs_8h.html#a268491858839c93d7e3f79ed514f3b47",
-"slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5",
-"smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724",
-"test_8cu.html",
-"type_8h.html#a546c88ba8a0e1904479cc349aef10feb",
+"page43_nfiraos.html#autotoc_md24",
+"parms_8h.html#a612cbf098321429befc1e161bdef7ab6",
+"parms_8h.html#ac03c72da51af407d0395a8604fe072a2",
+"pywfs_8h.html#a214559a0d59d0c6d7d7828e1ff55c19f",
+"slaving_8h.html#a764f42e10a49c6f968268d1a365b118b",
+"smath_8h.html#af7ce707358410f9a72df886e740cd1bf",
+"sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539",
+"type_8h.html#a531beb50ffb32d08756e6462c037c8e1",
 "type_8h.html#ab80bb7740288fda1f201890375a60c8f",
-"zmath_8h.html#a29d71d5b8f782fca890c372a12e4e50b"
+"zmath_8h.html#a28d3fc3d8a80ecf79f70a6474ac44981"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

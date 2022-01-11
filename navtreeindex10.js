@@ -87,10 +87,10 @@ var NAVTREEINDEX10 =
 "mvmfull__real_8cu.html#a607d8159ba421b60a38be284a737a72f":[11,0,0,3,0,31],
 "mvmfull__real_8cu.html#a607d8159ba421b60a38be284a737a72f":[11,0,0,6,0,31],
 "mvmfull__real_8cu.html#a607d8159ba421b60a38be284a737a72f":[11,0,0,7,0,31],
+"mvmfull__real_8cu.html#a667084a849ff2050498dc64987f0dbd2":[11,0,0,8,0,1],
 "mvmfull__real_8cu.html#a667084a849ff2050498dc64987f0dbd2":[11,0,0,3,0,1],
 "mvmfull__real_8cu.html#a667084a849ff2050498dc64987f0dbd2":[11,0,0,6,0,1],
 "mvmfull__real_8cu.html#a667084a849ff2050498dc64987f0dbd2":[11,0,0,7,0,1],
-"mvmfull__real_8cu.html#a667084a849ff2050498dc64987f0dbd2":[11,0,0,8,0,1],
 "mvmfull__real_8cu.html#a71b0510f71a12385cddcd03eef66e2a5":[11,0,0,8,0,8],
 "mvmfull__real_8cu.html#a71b0510f71a12385cddcd03eef66e2a5":[11,0,0,3,0,8],
 "mvmfull__real_8cu.html#a71b0510f71a12385cddcd03eef66e2a5":[11,0,0,6,0,8],
@@ -224,6 +224,7 @@ var NAVTREEINDEX10 =
 "page30_run.html#sect-sodium":[3,3,4],
 "page30_run.html#sect-surface":[3,3,0],
 "page30_run.html#sect-wfs":[3,3,1],
+"page30_run.html#skycoverage":[3,4],
 "page33_example.html":[4],
 "page34_conf.html":[4,4],
 "page40_results.html":[5],
@@ -248,6 +249,5 @@ var NAVTREEINDEX10 =
 "page43_nfiraos.html":[6],
 "page43_nfiraos.html#autotoc_md21":[6,0],
 "page43_nfiraos.html#autotoc_md22":[6,1],
-"page43_nfiraos.html#autotoc_md23":[6,1,0],
-"page43_nfiraos.html#autotoc_md24":[6,1,1]
+"page43_nfiraos.html#autotoc_md23":[6,1,0]
 };

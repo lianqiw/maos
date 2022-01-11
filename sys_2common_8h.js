@@ -20,6 +20,7 @@ var sys_2common_8h =
     [ "warning_once", "sys_2common_8h.html#a62dee209121f1ac5d2306b9f6234a1b5", null ],
     [ "logstd", "sys_2common_8h.html#a25109b9068a7577def63faa4bf329664", null ],
     [ "info_line", "sys_2common_8h.html#a900f4a34f3fd50e06d9e3f6dbc1dbbed", null ],
+    [ "info_time", "sys_2common_8h.html#af752dd4571ccba7677d3bda718be99c6", null ],
     [ "info", "sys_2common_8h.html#a71ca8e156af74e00cb46374435f5fb4b", null ],
     [ "info2", "sys_2common_8h.html#a57551296bf9e99969b62d6c06c1aed51", null ],
     [ "info3", "sys_2common_8h.html#aa30612d0b25f8f68181596f70d352efb", null ],

@@ -109,6 +109,7 @@ $(document).ready(function(){initNavTree('page30_run.html','');});
 <li class="level2"><a href="#sect-sodium">Sodium range variation</a></li>
 </ul>
 </li>
+<li class="level1"><a href="#skycoverage">Sky coverage</a></li>
 </ul>
 </div>
 <div class="textblock"><h1><a class="anchor" id="sect-run"></a>
@@ -188,7 +189,20 @@ Actuator Slaving</h2>
 <h2><a class="anchor" id="sect-sodium"></a>
 Sodium range variation</h2>
 <p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="llt__c_l.html">llt_CL.conf</a> or <a class="el" href="llt__s_l.html">llt_SL.conf</a>. When supplied by user, use <code>powfs0_llt.fnrange</code>. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS).</p>
-<p>The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront. </p><hr/>
+<p>The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront.</p>
+<h1><a class="anchor" id="skycoverage"></a>
+Sky coverage</h1>
+<p>The sky coverage simulation is done in two parts. <code>maos</code> is run first used to prepare NGS mode and WFS PSF time series:</p>
+<p><code>maos</code> -c nfiraos_lgs.conf skyc_10.conf -o 50p_za0_ncpa</p>
+<p>The second step is to run <code>skyc</code> in the sky sim folder <code>cd</code> 50p_za0_ncpa/skysim <code>skyc</code> -d -o APD_JHKs_typeImr</p>
+<p>The results are stored in <code>Res1_1.bin</code> for <code>maos</code> seed 1, <code>skyc</code> seed 1. There are <code>nsky=500</code> columns with the following row definitions:</p>
+<p>0. Total residual error</p><ol type="1">
+<li>Residual atmpheric (included in <code>maos</code> simulations) error</li>
+<li>Residual atmosphere error only in tip/tilt modes.</li>
+<li>Residual windshake if skyc.psd_is is set and skyc.addws=0. (deprecated use)</li>
+<li>0 (not used) <hr/>
+</li>
+</ol>
 <p>See <a class="el" href="page40_results.html">Simulation Results</a> for further explanation and results interpretation. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

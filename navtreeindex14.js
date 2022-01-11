@@ -1,5 +1,6 @@
 var NAVTREEINDEX14 =
 {
+"pywfs_8h.html#a214559a0d59d0c6d7d7828e1ff55c19f":[11,0,2,7,0,12],
 "pywfs_8h.html#a268491858839c93d7e3f79ed514f3b47":[11,0,2,7,0,25],
 "pywfs_8h.html#a2b1ffe55318ce98df952ece9110b96eb":[11,0,2,7,0,5],
 "pywfs_8h.html#a2e92e084525e7c8c2b55354cf15d69b7":[11,0,2,7,0,4],
@@ -248,6 +249,5 @@ var NAVTREEINDEX14 =
 "skyc_10.html":[4,4,38],
 "skyc_20.html":[4,4,39],
 "slaving_8h.html":[11,0,1,24],
-"slaving_8h.html#a3b37cf698f5019d025dc68b0d5e714af":[11,0,1,24,1],
-"slaving_8h.html#a764f42e10a49c6f968268d1a365b118b":[11,0,1,24,2]
+"slaving_8h.html#a3b37cf698f5019d025dc68b0d5e714af":[11,0,1,24,1]
 };
