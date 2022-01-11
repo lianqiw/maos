@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2021 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 void TomoR(dcell **xout, const void *A, 
 	   const dcell *xin, const real alpha){
     
