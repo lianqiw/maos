@@ -285,6 +285,7 @@ var parms_8h =
       [ "bgs", "parms_8h.html#aab059096759e6a895e2c52935a5cb695", null ],
       [ "precond", "parms_8h.html#ac820686f19e0aa3de5d2f2f52d52fe7f", null ],
       [ "maxit", "parms_8h.html#a5be7bf62274b812a85a2d88af53abbdd", null ],
+      [ "cgwarm", "parms_8h.html#ab498d7546c0f2bd3ef637b95cf3815bc", null ],
       [ "assemble", "parms_8h.html#a90bc409f77f7501b01782da66f02b5d2", null ],
       [ "predict", "parms_8h.html#a767ef1df986c5f796fb8a8c141691f8f", null ],
       [ "ninit", "parms_8h.html#a98b9de051e2ddf0a19bf86b601ce917e", null ],
@@ -326,7 +327,8 @@ var parms_8h =
       [ "actslave", "parms_8h.html#a5ee115049b15930905c7e6c407bd0845", null ],
       [ "bgs", "parms_8h.html#a15e318faa040a437f927fa7c142ec24a", null ],
       [ "alg", "parms_8h.html#a426abfb7663cb37771603c9c89b4acb7", null ],
-      [ "maxit", "parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd", null ]
+      [ "maxit", "parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd", null ],
+      [ "cgwarm", "parms_8h.html#ab835223b0f4bbf4e4c8f6ca05b979154", null ]
     ] ],
     [ "recon_cfg_t", "parms_8h.html#structrecon__cfg__t", [
       [ "alg", "parms_8h.html#ac87660610cae7d45661ec52354ca507e", null ],
@@ -334,7 +336,6 @@ var parms_8h =
       [ "split", "parms_8h.html#a0a35373a4ca8d2d1edc8f7787305b709", null ],
       [ "modal", "parms_8h.html#a396786f0b194e94ff9c323a365a51f04", null ],
       [ "nmod", "parms_8h.html#ace46c0fa0cc56318cd5a7725fa4d5a04", null ],
-      [ "warm_restart", "parms_8h.html#a5c23d5178a26fec299a3ec5170b9ffb8", null ],
       [ "psol", "parms_8h.html#a1dbad5eb7644f49a10ca1fd4ea7bf01d", null ],
       [ "mvm", "parms_8h.html#a368695bc152258fd6d6af9d2439588fa", null ],
       [ "misreg_dm2wfs", "parms_8h.html#a814d51a4966d48e0874b9310160273da", null ],

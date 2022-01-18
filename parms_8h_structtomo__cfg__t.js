@@ -19,6 +19,7 @@ var parms_8h_structtomo__cfg__t =
     [ "bgs", "parms_8h.html#aab059096759e6a895e2c52935a5cb695", null ],
     [ "precond", "parms_8h.html#ac820686f19e0aa3de5d2f2f52d52fe7f", null ],
     [ "maxit", "parms_8h.html#a5be7bf62274b812a85a2d88af53abbdd", null ],
+    [ "cgwarm", "parms_8h.html#ab498d7546c0f2bd3ef637b95cf3815bc", null ],
     [ "assemble", "parms_8h.html#a90bc409f77f7501b01782da66f02b5d2", null ],
     [ "predict", "parms_8h.html#a767ef1df986c5f796fb8a8c141691f8f", null ],
     [ "ninit", "parms_8h.html#a98b9de051e2ddf0a19bf86b601ce917e", null ],

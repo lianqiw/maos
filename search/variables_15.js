@@ -7,7 +7,6 @@ var searchData=
   ['wa',['Wa',['../maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61',1,'ngsmod_t']]],
   ['wamethod',['wamethod',['../parms_8h.html#a1bdf71f0b68a210e130fa366fec8cadc',1,'dbg_cfg_t']]],
   ['warm',['warm',['../muv_8h.html#a38ec5f82d89907f1b9455b38f6465343',1,'muv_t']]],
-  ['warm_5frestart',['warm_restart',['../parms_8h.html#a5c23d5178a26fec299a3ec5170b9ffb8',1,'recon_cfg_t']]],
   ['wddeg',['wddeg',['../parms_8h.html#a57f5298ecf45e88da98c2d3fa20f058b',1,'atm_cfg_t']]],
   ['wdrand',['wdrand',['../parms_8h.html#a71396a5a017ea33af69f66cbd0725766',1,'atm_cfg_t']]],
   ['wfs',['wfs',['../parms_8h.html#a06e5fa0a0b45c1f44c6258f91b83c54e',1,'powfs_cfg_t::wfs()'],['../parms_8h.html#a5486ce707449be0aa065ef667fb9b4b0',1,'gpu_cfg_t::wfs()'],['../parms_8h.html#a4eabb79f5637692b3f661502c4fb31cb',1,'parms_t::wfs()']]],

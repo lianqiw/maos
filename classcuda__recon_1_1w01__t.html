@@ -106,10 +106,45 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5662b9291ec62f61261e335eeeb9c38b"><td class="memItemLeft" align="right" valign="top"><a id="a5662b9291ec62f61261e335eeeb9c38b"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>w01_t</b> (const <a class="el" href="type_8h.html#structdsp">dsp</a> *R_W0, const <a class="el" href="type_8h.html#structdmat">dmat</a> *R_W1, int R_nxx)</td></tr>
 <tr class="separator:a5662b9291ec62f61261e335eeeb9c38b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0c3f0feb210672971a2b413250e7e63"><td class="memItemLeft" align="right" valign="top"><a id="aa0c3f0feb210672971a2b413250e7e63"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>apply</b> (Real *__restrict out, const Real *in, int ndir, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream) const</td></tr>
-<tr class="separator:aa0c3f0feb210672971a2b413250e7e63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2120d579085537621941625a83d3f3f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcuda__recon_1_1w01__t.html#ac2120d579085537621941625a83d3f3f">apply</a> (curcell &amp;out, const curcell &amp;in, <a class="el" href="classstream__t.html">stream_t</a> &amp;stream) const</td></tr>
+<tr class="separator:ac2120d579085537621941625a83d3f3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="ac2120d579085537621941625a83d3f3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2120d579085537621941625a83d3f3f">&#9670;&nbsp;</a></span>apply()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cuda_recon::w01_t::apply </td>
+          <td>(</td>
+          <td class="paramtype">curcell &amp;&#160;</td>
+          <td class="paramname"><em>xout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const curcell &amp;&#160;</td>
+          <td class="paramname"><em>xin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classstream__t.html">stream_t</a> &amp;&#160;</td>
+          <td class="paramname"><em>stream</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>xout=w0*xin - w1*(w1'*xin). Notice that the weighting per direction is applied at the next step (HA^T) </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>cuda/recon_geom.h</li>
 <li>cuda/recon_geom.cu</li>

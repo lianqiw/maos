@@ -2288,6 +2288,13 @@ maxit</td>
 <p>max iterations. Usually 30 for CG, 3 for FDPCG in closed loop warm restart. x10 in open loop </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="ab498d7546c0f2bd3ef637b95cf3815bc"></a>int</td>
+<td class="fieldname">
+cgwarm</td>
+<td class="fielddoc">
+<p>Warm restart in CG. </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a90bc409f77f7501b01782da66f02b5d2"></a>int</td>
 <td class="fieldname">
 assemble</td>
@@ -2499,7 +2506,7 @@ cachex</td>
 <td class="fieldname">
 cgwarm</td>
 <td class="fielddoc">
-<p>Warm restart in CG. inherits recon.warm_restart </p>
+<p>Warm restart in CG. </p>
 </td></tr>
 </table>
 
@@ -2589,6 +2596,13 @@ maxit</td>
 <td class="fielddoc">
 <p>max iterations. Usually 30 for CG </p>
 </td></tr>
+<tr><td class="fieldtype">
+<a id="ab835223b0f4bbf4e4c8f6ca05b979154"></a>int</td>
+<td class="fieldname">
+cgwarm</td>
+<td class="fielddoc">
+<p>Warm restart in CG. </p>
+</td></tr>
 </table>
 
 </div>
@@ -2644,13 +2658,6 @@ modal</td>
 nmod</td>
 <td class="fielddoc">
 <p>-2: emulate zonal, -1: zernike, 0: zonal, 1: KL modes Maximum number of modes to control in modal controller </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a5c23d5178a26fec299a3ec5170b9ffb8"></a>int</td>
-<td class="fieldname">
-warm_restart</td>
-<td class="fielddoc">
-<p>Warm restart in CG </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a1dbad5eb7644f49a10ca1fd4ea7bf01d"></a>int</td>

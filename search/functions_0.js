@@ -15,6 +15,7 @@ var searchData=
   ['addnoise_5fgrad',['addnoise_grad',['../lib_2misc_8h.html#a48f27901c57db366ade9713f9eabc688',1,'misc.c']]],
   ['addpath2',['addpath2',['../path_8h.html#a2360bff9d3cee0d880596ed915f54463',1,'path.c']]],
   ['addr2name',['addr2name',['../sock_8h.html#aea2693b4a873c21f2c2d4835a56b2e3b',1,'sock.c']]],
+  ['apply',['apply',['../classcuda__recon_1_1w01__t.html#ac2120d579085537621941625a83d3f3f',1,'cuda_recon::w01_t']]],
   ['apply_5ffractal',['apply_fractal',['../recon__utils_8h.html#a6a6ad264e91cb4ab88c057011ca80fd9',1,'recon_utils.c']]],
   ['apply_5finvpsd',['apply_invpsd',['../recon__utils_8h.html#abfaa311b9be11571120dff4f870dca5e',1,'recon_utils.c']]],
   ['apply_5fl2',['apply_L2',['../recon__utils_8h.html#ab783a16cfb484ce0c36371e3161e1689',1,'recon_utils.c']]],

@@ -9,5 +9,6 @@ var parms_8h_structlsr__cfg__t =
     [ "actslave", "parms_8h.html#a5ee115049b15930905c7e6c407bd0845", null ],
     [ "bgs", "parms_8h.html#a15e318faa040a437f927fa7c142ec24a", null ],
     [ "alg", "parms_8h.html#a426abfb7663cb37771603c9c89b4acb7", null ],
-    [ "maxit", "parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd", null ]
+    [ "maxit", "parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd", null ],
+    [ "cgwarm", "parms_8h.html#ab835223b0f4bbf4e4c8f6ca05b979154", null ]
 ];

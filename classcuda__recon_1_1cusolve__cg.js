@@ -1,6 +1,6 @@
 var classcuda__recon_1_1cusolve__cg =
 [
-    [ "cusolve_cg", "classcuda__recon_1_1cusolve__cg.html#ae250e6b3fc0d7b7841952d292e7229ad", null ],
+    [ "cusolve_cg", "classcuda__recon_1_1cusolve__cg.html#a4a0dff07644a6ab32604a24c74b7520a", null ],
     [ "~cusolve_cg", "classcuda__recon_1_1cusolve__cg.html#a762a8c12110ecbc84ec5ca042aaf937b", null ],
     [ "L", "classcuda__recon_1_1cusolve__cg.html#a95899aad971a759f4495a6fd3adde703", null ],
     [ "operator()", "classcuda__recon_1_1cusolve__cg.html#aed3ead3e11a37c6bcbb636929266130a", null ],

@@ -5,7 +5,6 @@ var parms_8h_structrecon__cfg__t =
     [ "split", "parms_8h.html#a0a35373a4ca8d2d1edc8f7787305b709", null ],
     [ "modal", "parms_8h.html#a396786f0b194e94ff9c323a365a51f04", null ],
     [ "nmod", "parms_8h.html#ace46c0fa0cc56318cd5a7725fa4d5a04", null ],
-    [ "warm_restart", "parms_8h.html#a5c23d5178a26fec299a3ec5170b9ffb8", null ],
     [ "psol", "parms_8h.html#a1dbad5eb7644f49a10ca1fd4ea7bf01d", null ],
     [ "mvm", "parms_8h.html#a368695bc152258fd6d6af9d2439588fa", null ],
     [ "misreg_dm2wfs", "parms_8h.html#a814d51a4966d48e0874b9310160273da", null ],
