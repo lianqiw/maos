@@ -388,7 +388,7 @@ static void skysim_update_mideal(SIM_S* simu){
 	const PARMS_S* parms=simu->parms;
 	if(parms->skyc.addws&&parms->skyc.psd_ws){
 		/*Add ws to mideal. After genstars so we don't purturb it. */
-		int im=parms->skyc.addws==1?0:1;
+		int im=parms->skyc.addws<=1?0:1;
 		info("Add wind shake time series to mideal mode %d\n", im);
 		dmat* telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 		/*telws is in m. need to convert to rad since mideal is in this unit. */
@@ -470,8 +470,9 @@ static void skysim_calc_psd(SIM_S* simu){
 		info("Windshake PSD integrates to %g nm\n", sqrt(var_ws)*1e9);
 		simu->varol+=var_ws;//testing
 
-		//add windshake PSD to ngs/tt
-		add_psd2(&P(simu->psds,0), parms->skyc.psd_ws, 1);
+		//add windshake PSD to ngs/tt. 
+		int im_ws=parms->skyc.addws<=1?0:1;
+		add_psd2(&P(simu->psds, im_ws), parms->skyc.psd_ws, 1); //all in m^2 unit.
 	}
 	if(parms->skyc.dbg||1){
 		writebin(simu->psds, "psds_m2.bin");
@@ -518,7 +519,8 @@ static void skysim_prep_sde(SIM_S* simu){
 		dmat* xi=dsub(x, 20, 0, im, 1);
 		P(simu->psdi,im)=psd1dt(xi, 1, parms->maos.dt);
 		dfree(xi);
-		if(im==0&&parms->skyc.psd_ws){
+		int im_ws=parms->skyc.addws<=1?0:1;
+		if(parms->skyc.psd_ws && im==im_ws){
 			//add windshake on first mode only
 			//2018-09-05: need to scale psd_ws by 1/sqrt(mcc) to convert to radian.
 			add_psd2(&P(simu->psdi,im), parms->skyc.psd_ws, 1./sqrt(P(parms->maos.mcc, 0, 0)));
