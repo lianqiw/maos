@@ -404,6 +404,7 @@ typedef struct tomo_cfg_t{
 		     */
     int maxit;       /**<max iterations. Usually 30 for CG, 3 for FDPCG in
 			closed loop warm restart. x10 in open loop*/
+    int cgwarm;      /**<Warm restart in CG. */
     int assemble;    /**<force assemble tomography matrix in CG*/
     int predict;     /**<test predictive control.*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
@@ -440,7 +441,7 @@ typedef struct fit_cfg_t{
     int indoa;       /**<Index of on axis point.*/
     int cachedm;     /**<Cache DM command in intermediate plane*/
     int cachex;      /**<Cache X (xloc) in intermediate plane*/
-    int cgwarm;      /**<Warm restart in CG. inherits recon.warm_restart*/
+    int cgwarm;      /**<Warm restart in CG. */
 }fit_cfg_t;
 /**
    contains input parameters for the least square reconstructor.
@@ -460,6 +461,7 @@ typedef struct lsr_cfg_t{
 			2: SVD or EVD: Eigen value decompsition
 		     */
     int maxit;       /**<max iterations. Usually 30 for CG*/
+    int cgwarm;      /**<Warm restart in CG. */
 }lsr_cfg_t;
 /**
    contains input parameters for wavefront reconstruction.
@@ -473,7 +475,6 @@ typedef struct recon_cfg_t{
 		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
     int modal;       /**-2: emulate zonal, -1: zernike, 0: zonal, 1: KL modes*/
     int nmod;        /**<Maximum number of modes to control in modal controller*/
-    int warm_restart;/**<Warm restart in CG*/
     int psol;        /**<Use pseudo open loop gradients for wavefront reconstruction*/
     int mvm;         /**<Use the various algorithms recon.alg to assemble a control
 		       matrix to multiply to gradients to get DM commands. If

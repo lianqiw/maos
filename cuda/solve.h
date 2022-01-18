@@ -45,7 +45,7 @@ public:
 
 class cusolve_cg:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorithm*/
     int maxit;       //number of iterations
-    int warm_restart;//warm restart when first_run is 0.
+    int cgwarm;//warm restart when first_run is 0.
     int first_run;   //indicate first run to temporarily use cold start rather than warm-restart
     cgtmp_t cgtmp;
     int id;
@@ -55,7 +55,7 @@ protected:
 private:
     
 public:
-    cusolve_cg(int _maxit=0, int _warm_restart=0):maxit(_maxit), warm_restart(_warm_restart), precond(0), first_run(_warm_restart?1:0){
+    cusolve_cg(int _maxit=0, int _cgwarm=0):maxit(_maxit), cgwarm(_cgwarm), precond(0), first_run(_cgwarm?0:0){
         id=counter; counter++;
     }
     ~cusolve_cg(){
@@ -98,7 +98,7 @@ class cusolve_sparse:public cusolve_r,public cusolve_cg{
 protected:
     cusolve_muv CR, CL;
 public:
-    cusolve_sparse(int _maxit, int _warm_restart, muv_t *_R, muv_t *_L);
+    cusolve_sparse(int _maxit, int _cgwarm, muv_t *_R, muv_t *_L);
     virtual void R(curcell &out, Real beta, 
 		   curcell &xin, Real alpha, stream_t &stream){
 	CR.Forward(out, beta, xin, alpha, stream);

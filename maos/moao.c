@@ -251,7 +251,7 @@ void moao_recon(sim_t* simu){
 				parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
 				hs, simu->opdr, dmcommon, parms->plot.run?&rhsout:NULL, 1);
 			pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
-				parms->recon.warm_restart, parms->fit.maxit);
+				parms->fit.cgwarm, parms->fit.maxit);
 				/*if(parms->recon.split){//remove the tip/tilt form MEMS DM
 				  real ptt[3]={0,0,0};
 				  loc_t *aloc=recon->moao[imoao].aloc;
@@ -293,7 +293,7 @@ void moao_recon(sim_t* simu){
 				INFINITY, simu->opdr, dmcommon, (parms->plot.run||1)?&rhsout:NULL, 1);
 
 			pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
-				parms->recon.warm_restart, parms->fit.maxit);
+				parms->fit.cgwarm, parms->fit.maxit);
 			if(0){
 				writebin(P(rhsout,0), "evl_rhs_%d_%d", ievl, simu->perfisim);
 				writebin(P(dmmoao,0), "evl_dmfit_%d_%d", ievl, simu->perfisim);

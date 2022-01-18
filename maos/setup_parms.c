@@ -2513,13 +2513,16 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	if(parms->tomo.alg!=ALG_CG){
 		parms->tomo.precond=PCG_NONE;
 	}
-	if(parms->recon.mvm){
-		parms->recon.warm_restart=0;
-		parms->fit.cgwarm=0;
-	}else{
-		parms->recon.warm_restart=!parms->dbg.nocgwarm&&parms->atm.frozenflow&&!(parms->dbg.tomo_maxit&&NX(parms->dbg.tomo_maxit)>0);
-		parms->fit.cgwarm=parms->recon.warm_restart&&parms->fit.alg==ALG_CG;
+	if(parms->fit.alg==-1){
+		parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS.
 	}
+	if(parms->atm.frozenflow && !parms->dbg.nocgwarm){
+		parms->fit.cgwarm=1;
+		parms->lsr.cgwarm=1;
+		if(!parms->dbg.tomo_maxit){
+			parms->tomo.cgwarm=1;
+		}
+	}//else: no warm
 
 	if(parms->recon.split==1&&!parms->sim.closeloop&&parms->ndm>1){
 		warning("ahst split tomography does not have good NGS correction in open loop\n");
@@ -2537,9 +2540,6 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	}
 	if(parms->recon.split&&parms->evl.tomo){
 		warning("Evaluating tomography performance is best done with integrated tomography.\n");
-	}
-	if(parms->fit.alg==-1){
-		parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS.
 	}
 	if(parms->recon.alg==RECON_MVR){
 
@@ -2580,7 +2580,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			if(parms->recon.mvm){
 				factor=parms->load.mvmi?1:25;//assembly mvm needs more steps
 			} else{
-				factor=parms->recon.warm_restart?1:10;
+				factor=parms->tomo.cgwarm?1:10;
 			}
 			if(parms->tomo.precond==PCG_NONE){
 				factor*=10;//non-precond CG needs more steps
@@ -2602,7 +2602,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	/*DM Fitting related. fit parameters are also used for dmproj.*/
 	if(parms->fit.alg==ALG_CG&&parms->fit.maxit==0){
 		int factor;
-		factor=parms->recon.warm_restart?1:10;
+		factor=parms->fit.cgwarm?1:10;
 		parms->fit.maxit=10*factor;
 	}
 	
@@ -2620,7 +2620,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		}*/
 		if(parms->lsr.alg==1&&parms->lsr.maxit==0){
 			int factor;
-			factor=parms->recon.warm_restart?1:10;
+			factor=parms->lsr.cgwarm?1:10;
 			parms->lsr.maxit=30*factor;
 		}
 	}
@@ -2741,7 +2741,7 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 			} else{
 				remove(fn);
 				snprintf(fn, 80, "Res_%ld.lock", P(parms->sim.seeds,iseed));
-				P(parms->fdlock,iseed)=lock_file(fn, 0, 0);
+				P(parms->fdlock,iseed)=lock_file(fn, 0);
 				if(P(parms->fdlock,iseed)<0){
 					warning("Skip seed %ld because it is already running.\n",
 						P(parms->sim.seeds,iseed));

@@ -1222,7 +1222,7 @@ int main(int argc, const char* argv[]){
 		char fnlock[PATH_MAX];
 		snprintf(fnlock, PATH_MAX, "%s/scheduler.pid", TEMP);
 		int fd=0;
-		if((fd=lock_file(fnlock, 0, scheduler_version))<0){
+		if((fd=lock_file_version(fnlock, 0, scheduler_version))<0){
 			dbg_time("Failed to lock_file. exit\n");
 			return 1;
 		}else{

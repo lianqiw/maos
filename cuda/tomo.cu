@@ -176,7 +176,7 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 }
 
 cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
-	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
+	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->tomo.cgwarm:0),
 	grid(_grid), ptt(0), nwfs(0){
 	nwfs=parms->nwfsr;
 

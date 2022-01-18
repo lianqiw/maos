@@ -29,7 +29,8 @@ int single_instance_daemonize(const char *lockfolder_in,
 			       const char *progname, int version,
 			       void(*daemon_func)(void*), 
 			       void* daemon_arg);
-int lock_file(const char *fn, int block, int version);
+int lock_file(const char *fn, int block);
+int lock_file_version(const char *fn, int block, int version);
 void daemonize(void);
 void redirect(void);
 pid_t launch_exe(const char *exepath, const char *cmd);

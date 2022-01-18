@@ -61,7 +61,7 @@ void wait_cpu(int nthread){
 	char fnlock[64];
 	snprintf(fnlock, 64, "%s/aos.lock", getenv("HOME"));
 	int fd;
-	fd=lock_file(fnlock, 1, -1);
+	fd=lock_file(fnlock, 1);
 	int nvail=0;
 	if(nthread>NCPU) nthread=NCPU;
 	while((nvail=get_cpu_avail())+1<nthread){

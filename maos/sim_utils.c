@@ -1864,8 +1864,8 @@ void print_progress(sim_t* simu){
 				}
 			}
 			dcell* res=dcellnew_same(nline, 1, simu->perfisim+1, 1);
-			if(parms->recon.split){
-				for(int i=0; i<=simu->perfisim; i++){
+			for(int i=0; i<=simu->perfisim; i++){
+				if(parms->recon.split){
 					P(P(res, 0), i)=P(tmp, 0, i);//LGS
 					P(P(res, 1), i)=P(tmp, 1, i);//TT
 					if(nline>2){
@@ -1874,9 +1874,7 @@ void print_progress(sim_t* simu){
 					if(nline>3){
 						P(P(res, 3), i)=P(tmp, 3, i);//Focus
 					}
-				}
-			} else{
-				for(int i=0; i<simu->perfisim; i++){
+				} else{
 					P(P(res, 0), i)=P(tmp, 2, i);//PTTR
 					P(P(res, 1), i)=P(tmp, 0, i)-P(tmp, 2, i);//TT
 				}

@@ -373,7 +373,7 @@ redo:
 		kl=dread("%s", fn);
 	} else{
 		dbg("trying to lock %s\n", fnlock);
-		int fd=lock_file(fnlock, 0, 0);
+		int fd=lock_file(fnlock, 0);
 		if(fd>=0){//start preparing
 			dbg("locked\n");
 			kl=KL_vonkarman_do(loc, L0);
@@ -381,7 +381,7 @@ redo:
 			close(fd); remove(fnlock);
 		} else{
 			dbg("waiting to lock %s\n", fnlock);
-			fd=lock_file(fnlock, 1, 0);
+			fd=lock_file(fnlock, 1);
 			dbg("locked\n");
 			close(fd); remove(fnlock);
 			goto redo;

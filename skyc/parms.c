@@ -410,7 +410,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 			} else{
 				remove(fn);
 				snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
-				parms->fdlock[i]=lock_file(fn, 0, 0);
+				parms->fdlock[i]=lock_file(fn, 0);
 				if(parms->fdlock[i]<0){
 					warning("Will skip seed %ld because it is already running.\n", maos_seed);
 				} else{

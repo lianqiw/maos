@@ -188,7 +188,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	}
 	recon->LL.alg=parms->lsr.alg;
 	recon->LL.bgs=parms->lsr.bgs;
-	recon->LL.warm=parms->recon.warm_restart;
+	recon->LL.warm=parms->lsr.cgwarm;
 	recon->LL.maxit=parms->lsr.maxit;
 	/*Remove empty cells. */
 	dcelldropempty(&recon->LR.U, 2);

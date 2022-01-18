@@ -167,7 +167,7 @@ else
     with_cuda=yes
 fi
 if test "$enable_double" = "no" ;then
-	enable_single = "yes"
+	enable_single="yes"
 fi
 if test "$enable_single" = "yes" ;then
     if test "$cuda_double" = "yes" ;then
@@ -1118,13 +1118,13 @@ echo "Debug:           ${enable_debug:-no}"
 echo "OpenMP:          $has_omp"
 echo "FFTW Threads:    $fftw_threads"
 echo "Single:          $enable_single"
-echo "CUDA:            ${cudaver:+$cudaver (double: $cuda_double, arch: $cuarch)}${cudaver:-no}"
+echo "CUDA:            ${cudaver:-no}${cudaver:+ (double: $cuda_double, arch: $cuarch)}"
 echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       ${enable_websockets:-yes}"
 echo "MATLAB MEX:      $with_matlab"
 
-echo "Doxygen:         ${DX_DOXYGEN:+yes (make doc)}${DX_DOXYGEN:-no}"
+echo "Doxygen:         ${DX_DOXYGEN:-no}${DX_DOXYGEN:+ (make doc)}"
 echo "CMOCKA:          $enable_cmocka"
 echo
 

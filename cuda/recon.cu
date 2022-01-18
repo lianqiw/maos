@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include <signal.h>
 #include "curmat.h"
 #include "cucmat.h"
 #include "utils.h"
@@ -145,10 +145,10 @@ void curecon_t::init_fit(const parms_t* parms, recon_t* recon){
 	int skip_tomofit=parms->recon.mvm&&(cuglobal->mvm||recon->MVM);
 	if(parms->gpu.fit&&!skip_tomofit){
 		reset_fit();
-		dbg("Initialize DM fit in GPU %d.\n", current_gpu());
+		dbg("Initialize DM fit in GPU %d with gpu.fit=%d and fit.alg=%d.\n", current_gpu(), parms->gpu.fit, parms->fit.alg);
 		switch(parms->gpu.fit){
 		case 1:
-			FR=new cusolve_sparse(parms->fit.maxit, parms->recon.warm_restart,
+			FR=new cusolve_sparse(parms->fit.maxit, parms->fit.cgwarm,
 				&recon->fit->FR, &recon->fit->FL);
 			break;
 		case 2:
@@ -473,18 +473,18 @@ void curecon_t::fit_test(sim_t* simu){	//Debugging.
 	writebin(rhsc, "CPU_FitR");
 	muv(&lc, &recon->fit->FL, rhsc, 1);
 	writebin(lc, "CPU_FitL");
-	muv(&lc, &recon->fit->FL, rhsc, -1);
-	writebin(lc, "CPU_FitL2");
+	/*muv(&lc, &recon->fit->FL, rhsc, -1);
+	writebin(lc, "CPU_FitL2");*/
 	dcellzero(lc);
 	for(int i=0; i<5; i++){
 		muv_solve(&lc, &recon->fit->FL, NULL, rhsc);
 		writebin(lc, "CPU_FitSolve%d", i);
 	}
-	dcell* lhs=NULL;
+	/*dcell* lhs=NULL;
 	if(recon->fit->FR.M){
 		muv_trans(&lhs, &recon->fit->FR, rhsc, 1);
 		writebin(lhs, "CPU_FitRt");
-	}
+	}*/
 	curcell rhsg;
 	curcell lg;
 	FR->R(rhsg, 0.f, opdr, 1.f, stream);
@@ -493,8 +493,8 @@ void curecon_t::fit_test(sim_t* simu){	//Debugging.
 	if(FL2){
 		FL2->L(lg, 0, rhsg, 1, stream);
 		cuwrite(lg, stream, "GPU_FitL");
-		FL2->L(lg, 1, rhsg, -1, stream);
-		cuwrite(lg, stream, "GPU_FitL2");
+		/*FL2->L(lg, 1, rhsg, -1, stream);
+		cuwrite(lg, stream, "GPU_FitL2");*/
 	}
 	cuzero(lg, stream);
 	for(int i=0; i<5; i++){
@@ -508,11 +508,11 @@ void curecon_t::fit_test(sim_t* simu){	//Debugging.
 		FL->solve(lg, rhsg, stream);
 		cuwrite(lg, stream, "GPU_FitSolveCPU%d", i);
 	}
-	curcell lhsg;
+	/*curcell lhsg;
 	FR->Rt(lhsg, 0, rhsg, 1, stream);
-	cuwrite(lhsg, stream, "GPU_FitRt");
+	cuwrite(lhsg, stream, "GPU_FitRt");*/ //fix crash
 	CUDA_SYNC_DEVICE;
-	exit(0);
+	exit(1);
 }
 }//namespace
 
@@ -527,9 +527,11 @@ void gpu_setup_recon(const parms_t* parms, recon_t* recon){
 /**Assembles MVM in gpu and put in recon->MVM. */
 void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 	if(!recon->MVM){
-		const int warm_restart=parms->recon.warm_restart;
+		const int tomo_cgwarm=parms->tomo.cgwarm;
+		const int fit_cgwarm=parms->fit.cgwarm;
 		//disable warm_restart to disable solve.cu checking
-		((parms_t*)parms)->recon.warm_restart=0;
+		((parms_t *)parms)->tomo.cgwarm=0;
+		((parms_t *)parms)->fit.cgwarm=0;
 		for(int igpu=0; igpu<NGPU; igpu++){
 			gpu_set(igpu);
 			if(cudata->recon){
@@ -552,7 +554,8 @@ void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 				cudata->recon=NULL;
 			}
 		}
-		((parms_t*)parms)->recon.warm_restart=warm_restart;
+		((parms_t *)parms)->tomo.cgwarm=tomo_cgwarm;
+		((parms_t *)parms)->fit.cgwarm=fit_cgwarm;
 		gpu_print_mem("MVM");
 	}
 }

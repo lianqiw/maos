@@ -123,7 +123,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 	cccell* otf=0;
 	while(!otf){
 		if(exist(fnlock)||!zfexist("%s", fnotf)){/*need to create data */
-			int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
+			int fd=lock_file(fnlock, 0);/*nonblocking exclusive lock */
 			if(fd>=0){/*succeed */
 				info("Generating OTF for %s...", fnotf);
 				TIC;tic;
@@ -132,7 +132,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 				writebin(otf, "%s", fnotf);
 			} else{
 				warning("Waiting for previous lock to release ...");
-				fd=lock_file(fnlock, 1, 0);
+				fd=lock_file(fnlock, 1);
 			}
 			close(fd); remove(fnlock);
 		} else{

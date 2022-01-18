@@ -150,7 +150,7 @@ retry:
 				if(figfn[0]&&figfn[1]&&(strcmp(figfn[0], fig)||strcmp(figfn[1], fn))){
 					draw_changed=1;
 					if(sock_data->draw_single){
-						dbg("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+						//dbg("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 					}
 				}
 				free(figfn[0]);
@@ -489,7 +489,7 @@ int draw_current(const char* fig, const char* fn){
 	if(current==2){//check whether draw is busy
 		if((TRYLOCK(lock))){//lock failed
 			current=0;
-			dbg("line busy, skip drawing current page\n");
+			//dbg("line busy, skip drawing current page\n");
 		} else{
 			UNLOCK(lock);
 		}

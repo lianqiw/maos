@@ -23,7 +23,7 @@
 
 namespace cuda_recon{
 cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
-	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0), grid(_grid),
+	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->fit.cgwarm:0), grid(_grid),
 	nfit(0), dir(0){
 	if(!parms||!recon) return;
 	/*Initialize*/
@@ -151,13 +151,13 @@ void cufit_grid::do_ha(const curcell& xin, stream_t& stream){
    xout+=alpha*HA'*opdfit2*/
 void cufit_grid::do_hat(curcell& xout, Real alpha, stream_t& stream){
 	if(dmcache){
-	/*opdfit2->dmcache*/
+		/*opdfit2->dmcache*/
 		cuzero(dmcache.M(), stream);
 		ha1.backward(opdfit2.pm, dmcache.pm, alpha, fitwt(), stream);
 		/*dmcache->xout*/
 		ha0.backward(dmcache.pm, xout.pm, 1, NULL, stream);
 	} else{
-	/*opfit2->xout	*/
+		/*opfit2->xout	*/
 		ha.backward(opdfit2.pm, xout.pm, alpha, fitwt(), stream);
 	}
 }
@@ -172,9 +172,17 @@ void cufit_grid::R(curcell& xout, Real beta, curcell& xin, Real alpha, stream_t&
 		curscale(xout.M(), beta, stream);
 	}
 	do_hxp(xin, stream);//xin->opdfit. 153 us
-	//cuwrite(opdfit.M(), stream, "GPU_FitR_x1");
-	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);//opdfit->opdfit2. 123 us
-	//cuwrite(opdfit2.M(), stream, "GPU_FitR_x2");
+	//cuwrite(opdfit, stream, "GPU_FitR_x1");
+	grid->W01.apply(opdfit2, opdfit, stream);//opdfit->opdfit2. 123 us
+	//cuwrite(opdfit2, stream, "GPU_FitR_x2");//Notice that the weighting per direction is applied at the next step(HA^T)
+	/*{
+		cuzero(opdfit2.M(), stream); 
+		CUDA_SYNC_STREAM;
+		Real one=1e-7; 
+		long nx=opdfit2[0].Nx();
+		DO(cudaMemcpy(opdfit2.M()()+opdfit2.M().N()-1, &one, sizeof(Real), H2D));
+		CUDA_SYNC_STREAM;
+	}*/
 	do_hat(xout, alpha, stream);//opdfit2->xout. 390 us
 	//cuwrite(xout, stream, "GPU_FitR_x3");
 }
@@ -185,7 +193,7 @@ void cufit_grid::Rt(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 		curscale(xout.M(), beta, stream);
 	}
 	do_ha(xin, stream);
-	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
+	grid->W01.apply(opdfit2, opdfit, stream);
 	do_hxpt(xout, alpha, stream);
 }
 void cufit_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
@@ -198,7 +206,7 @@ void cufit_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, str
 	}
 	do_ha(xin, stream);//112 us
 	ctoc("HA");
-	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
+	grid->W01.apply(opdfit2, opdfit, stream);
 	ctoc("W");
 	do_hat(xout, alpha, stream);//390 us
 	ctoc("HAT");

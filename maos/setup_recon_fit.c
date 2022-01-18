@@ -249,7 +249,7 @@ setup_fit_matrix(fit_t* fit){
 			}
 			cellfree(fit->HXF);
 		} else{
-			dbg("Avoid building fit->FR.M\n");
+			dbg("Avoid building fit->FR.M for idealfit\n");
 			fit->FR.M=NULL;
 			fit->FR.V=NULL;
 		}

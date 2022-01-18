@@ -26,7 +26,7 @@
 
 namespace cuda_recon{
 cumoao_t::cumoao_t(const parms_t* parms, moao_t* moao, dir_t* dir, int _ndir, curecon_geom* _grid)
-	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0), grid(_grid), ndir(_ndir){
+	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->fit.cgwarm:0), grid(_grid), ndir(_ndir){
 	amap=cugridcell(1, 1);
 	amap[0]=(moao->amap->p[0]);
 	if(moao->NW){
@@ -61,7 +61,7 @@ Real cumoao_t::moao_solve(curccell& xout, const curcell& xin, const curcell& ain
 		//dbg("hap[%d]\n", idir);
 		hap[idir].forward(opdfit.pm, ain.pm, -1.f, NULL, stream);//minus common DM.
 		//cuwrite(opdfit, stream, "opdfit1_%d", idir);
-		grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
+		grid->W01.apply(opdfit2, opdfit, stream);
 		//cuwrite(opdfit2, stream, "opdfit2_%d", idir);
 		cuzero(rhs.M(), stream);
 		ha.backward(opdfit2.pm, rhs.pm, 1, NULL, stream);
@@ -87,7 +87,7 @@ void cumoao_t::L(curcell& xout, Real beta, const curcell& xin, Real alpha, strea
 	}
 	cuzero(opdfit.M(), stream);
 	ha.forward(opdfit.pm, xin.pm, 1, NULL, stream);
-	grid->W01.apply(opdfit2.M()(), opdfit.M()(), opdfit.Nx(), stream);
+	grid->W01.apply(opdfit2, opdfit, stream);
 	ha.backward(opdfit2.pm, xout.pm, alpha, NULL, stream);
 	if(NW){
 		curmv(dotNW(), 0, NW, xin.M()(), 't', 1, stream);

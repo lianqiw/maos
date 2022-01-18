@@ -1329,7 +1329,7 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	}
 	recon->RL.alg=parms->tomo.alg;
 	recon->RL.bgs=parms->tomo.bgs;
-	recon->RL.warm=parms->recon.warm_restart;
+	recon->RL.warm=parms->tomo.cgwarm;
 	recon->RL.maxit=parms->tomo.maxit;
 
 	toc2("setup_recon_tomo");

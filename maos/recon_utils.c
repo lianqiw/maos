@@ -546,6 +546,7 @@ void FitR(dcell** xout, const void* A,
 	//writebin(xp, "CPU_FitR_x1");
 	applyW(xp, fit->W0, fit->W1, P(fit->wt));
 	//writebin(xp, "CPU_FitR_x2");
+	//dcellzero(xp); P(P(xp,0), PN(xp,0)-1)=1e-7;
 	dspcellmm(xout, fit->HA, xp, "tn", alpha);
 	//writebin(*xout, "CPU_FitR_x3");
 	dcellfree(xp);

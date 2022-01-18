@@ -200,7 +200,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	}
 	char fnlock[PATH_MAX];
 	snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);
-	int fdlock=lock_file(fnlock, 1, 0);
+	int fdlock=lock_file(fnlock, 1);
 	/*
 	  Create a mapping between CUDA device ordering and NVML ordering (nvidia-smi).
 	  gmap[i][0] is CUDA index

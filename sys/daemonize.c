@@ -40,6 +40,23 @@
 
   Process handling routines.
 */
+int lock_file(const char *fnlock, /**<The filename to lock on*/
+	int block         /**<block on waiting. set to 0 for no waiting.*/
+){
+	int fd=open(fnlock, O_RDWR|O_CREAT, 0644);
+	if(fd<0){
+		warning_time("Open file %s failed: %s\n", fnlock, strerror(errno));
+	}else{
+		int op=block?F_LOCK:F_TLOCK;
+		//lockf() works on both local and NFS
+		if(lockf(fd, op, 0)){/*lock faild. another process already locked file.*/
+			dbg_time("Lock failed: %s\n", strerror(errno));
+		}else{
+			return 0;
+		}
+	}
+	return -1;//failed
+}
 /**
    Ensure exclusive access by opening and maintaining lock of file fn.
 
@@ -53,7 +70,7 @@
    -1: failed to lock
    fd (>-1): successfully locked
 */
-int lock_file(const char* fnlock, /**<The filename to lock on*/
+int lock_file_version(const char* fnlock, /**<The filename to lock on*/
 	int block,         /**<block on waiting. set to 0 for no waiting.*/
 	int version        /**<The version of the software that locks the file, primarily for managing scheduler. May be zero.*/
 ){
@@ -98,7 +115,8 @@ int lock_file(const char* fnlock, /**<The filename to lock on*/
 		//fcntl(fd, F_SETFD, FD_CLOEXEC);//do not set CLOEXEC to hold the lock after fork/exec.
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
-		if(lockf(fd, F_TLOCK, 0)){/*lock faild. another process already locked file.*/
+		//lockf does not inherit to fork(), so we have to use flock here
+		if(flock(fd, op)){/*lock faild. another process already locked file.*/
 			if(block){/*In block mode, we should never fail. */
 				dbg_time("Blocked Lock failed: %s\n", strerror(errno));
 			}
@@ -141,10 +159,10 @@ int single_instance_daemonize(const char* lockfolder_in,
 	snprintf(fnlog, PATH_MAX, "%s/%s.log", lockfolder, progname);
 	free(lockfolder);
 	
-	fd=lock_file(fnlock, 0, version);//non-blocking lock
+	fd=lock_file_version(fnlock, 0, version);//non-blocking lock
 	if(fd<0){
 		/*lock failed. daemon already running. no need to start the daemon. */
-		dbg_time("failed to lock_file. return\n");
+		dbg_time("failed to lock_file %s. return\n", fnlock);
 		if(daemon_func){
 			if(fd==-1){
 				return -1;//failed to lock for some reason.

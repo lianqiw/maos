@@ -859,8 +859,9 @@ gboolean addpage(gpointer indata){
 			if(!res){//found
 				subnbs=g_slist_append(subnbs, subnb);
 				nsubnb++;/*number of subnbs find. */
-			} else if(res<0){//not found. Insert after string less than fig.
-				jtab=itab+1;//mark insert location
+			} else if(res>0){//not found. Insert before string more than fig.
+				jtab=itab;//mark insert location
+				break;
 			}
 		}
 	}
@@ -905,8 +906,9 @@ gboolean addpage(gpointer indata){
 					info("Found duplicate page.\n");
 					gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), itab); itab--;
 				}
-			} else if(res<0){
-				jtab=itab+1;
+			} else if(res>0){
+				jtab=itab;
+				break;
 			}
 		}
 	}

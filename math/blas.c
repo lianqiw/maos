@@ -317,7 +317,7 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	//Prevent multiple processes class gesvd simultaneously.
 		char fnlock[PATH_MAX];
 		snprintf(fnlock, PATH_MAX, "%s/%s", TEMP, "svd");
-		fd=lock_file(fnlock, 1, 0);
+		fd=lock_file(fnlock, 1);
 	}
 	ptrdiff_t M=(int)A->nx;
 	ptrdiff_t N=(int)A->ny;
@@ -424,7 +424,7 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 				info("Reading %s\n", fnsvd);
 				in=readbin("%s", fnsvd);
 			} else{
-				int fd=lock_file(fnlock, 0, 0);
+				int fd=lock_file(fnlock, 0);
 				if(fd>=0){//success
 					char fntmp[PATH_MAX+100];
 					snprintf(fntmp, sizeof fntmp, "%s.partial.bin", fnsvd);
@@ -439,7 +439,7 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 					}
 				} else{//wait
 					warning("Waiting for previous lock to release ...");
-					fd=lock_file(fnlock, 1, 0);
+					fd=lock_file(fnlock, 1);
 				}
 				close(fd); remove(fnlock);
 			}

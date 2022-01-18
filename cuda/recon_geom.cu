@@ -118,7 +118,12 @@ apply_W0_do(Real* outs, const Real* ins, const int* W0f, Real W0v, int nx, int n
 			+0.0625*(in[i-nx-1]+in[i-nx+1]+in[i+nx-1]+in[i+nx+1]));
 	}
 }
-void w01_t::apply(Real* restrict xout, const Real* xin, int ndir, stream_t& stream) const{
+/**
+ * xout=w0*xin - w1*(w1'*xin).
+ * Notice that the weighting per direction is applied at the next step (HA^T)
+ * */
+void w01_t::apply(curcell& xout, const curcell& xin, stream_t& stream) const{
+	int ndir=xin.Nx();
 	if(pis.Nx()<ndir){
 		pis=curmat(ndir, 1);
 	} else{
@@ -126,16 +131,16 @@ void w01_t::apply(Real* restrict xout, const Real* xin, int ndir, stream_t& stre
 	}
 	//Apply W1: Piston removal
 	inn_multi_do<<<dim3(32, ndir), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(Real), stream>>>
-		(pis(), xin, W1(), W1.Nx());
+		(pis(), xin.M()(), W1(), W1.Nx());
 	assign_multi_do<<<dim3(32, ndir), dim3(256), 0, stream>>>
-		(xout, W1(), pis(), -1, W1.Nx());
-		//Apply W0: bilinar-weighting
+		(xout.M()(), W1(), pis(), -1, W1.Nx());
+	//Apply W0: bilinar-weighting
 	if(W0f){
 		apply_W0_do<<<dim3(16, ndir), dim3(256, 1), 0, stream>>>
-			(xout, xin, W0f(), W0v, nxx, W1.Nx(), W0f.Nx());
+			(xout.M()(), xin.M()(), W0f(), W0v, nxx, W1.Nx(), W0f.Nx());
 	}
 	if(W0p){
-		cuspmul(xout, W0p, xin, ndir, 'n', 1.f, stream);
+		cuspmul(xout.M()(), W0p, xin.M()(), ndir, 'n', 1.f, stream);
 	}
 }
 

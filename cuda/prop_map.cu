@@ -152,8 +152,8 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 			if(trans=='t'){
 				if(Z(fabs)(xratio-0.5f)<EPS&&Z(fabs)(yratio-.5f)<EPS){
 					//do without atomic operations.
-					const int nxin=ceil(nx*xratio)+1;
-					const int nyin=ceil(ny*xratio)+1;
+					const int nxin=npsx;//ceil(nx*xratio)+1;
+					const int nyin=datai->nyps;//ceil(ny*xratio)+1;
 					const int xmaxdir=ndirx-datai->offdirx;
 					const int ymaxdir=ndiry-datai->offdiry;
 					const int xmindir=-datai->offdirx-1;
@@ -352,7 +352,7 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 	}/*for*/
 }
 /*
-  Prepare data and copy to GPU so that one kernel (map2map_do) can handle multiple independent ray tracing.
+  Prepare data and copy to GPU so that one kernel (map2map_do) can handle multiple independent ray tracing without range checking.
   Forward: ps->dir (xloc -> wfs or dm->floc)
   Backward: dir->ps (wfs -> xloc or floc->dm)
 */
@@ -385,7 +385,7 @@ void map2map_prep(map2map_t* res, const cugrid_t& g_dir, const cugrid_t& g_ps,
 	dispx=(dispx-g_ps.ox+g_dir.ox)*uxi;
 	dispy=(dispy-g_ps.oy+g_dir.oy)*uyi;
 	int offx1=0, offy1=0;/*for output. fine sampling. */
-	/*if output is bigger than input. */
+	/*if output is bigger than input, limit output grid. */
 	if(dispx<0){
 		offx1=(int)ceilf(-dispx*xratio1);
 		dispx+=offx1*xratio;
@@ -394,26 +394,33 @@ void map2map_prep(map2map_t* res, const cugrid_t& g_dir, const cugrid_t& g_ps,
 		offy1=(int)ceilf(-dispy*yratio1);
 		dispy+=offy1*yratio;
 	}
+	int nd=cc?-1:1;//cubic allows extra points to be interpolated
 	/*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
-	int nx=(int)Z(floor)((nxps-1-dispx-EPS)*xratio1+1);
-	int ny=(int)Z(floor)((nyps-1-dispy-EPS)*yratio1+1);
+	int nx=(int)Z(floor)((nxps-nd-dispx-EPS)*xratio1+1);
+	int ny=(int)Z(floor)((nyps-nd-dispy-EPS)*yratio1+1);
 	//Sanity check.
-	while((nx-1)*xratio+dispx+1>=nxps){
+	while((nx-1)*xratio+dispx+nd>=nxps){
 		nx--;
 	}
-	while((nx)*xratio+dispx+1<nxps){
+	while((nx)*xratio+dispx+nd<nxps){
 		nx++;
 	}
-	while((ny-1)*yratio+dispy+1>=nyps){
+	while((ny-1)*yratio+dispy+nd>=nyps){
 		ny--;
 	}
-	while((ny)*yratio+dispy+1<nyps){
+	while((ny)*yratio+dispy+nd<nyps){
 		ny++;
 	}
 	if(nx>nxdir-offx1) nx=nxdir-offx1;
 	if(ny>nydir-offy1) ny=nydir-offy1;
-	int offx2=(int)Z(floor)(dispx); dispx-=offx2;/*for input. coarse sampling. */
-	int offy2=(int)Z(floor)(dispy); dispy-=offy2;
+	int offx2=(int)Z(floor)(dispx); 
+	int offy2=(int)Z(floor)(dispy);
+	if(cc){
+		if(offx2>0) offx2--;
+		if(offy2>0) offy2--;
+	}
+	dispx-=offx2;/*for input. coarse sampling. */
+	dispy-=offy2;
 	if(res->isreverse){//We un-reverse the naming
 		res->offpsx=offx1;
 		res->offpsy=offy1;

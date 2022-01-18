@@ -915,7 +915,7 @@ dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, cons
 	}*/
 retry:
 	if(exist(fnlock)||!zfexist("%s",fn)){
-		int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
+		int fd=lock_file(fnlock, 0);//non blocking, exclusive
 		if(fd>0){//succeed
 			info2("Generating PYWFS poke matrix\n");
 			gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey);
@@ -923,7 +923,7 @@ retry:
 			close(fd); remove(fnlock);
 		} else{
 			info2("Trying to lock %s\n", fnlock);
-			fd=lock_file(fnlock, 1, 0);
+			fd=lock_file(fnlock, 1);
 			close(fd); remove(fnlock);
 			goto retry;
 		}

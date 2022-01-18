@@ -240,7 +240,7 @@ mapcell* genscreen(genatm_t* data){
 				in=dcellread_mmap("%s", fnatm);
 			} else{
 			/*non blocking exclusive lock. */
-				int fd=lock_file(fnlock, 0, 0);
+				int fd=lock_file(fnlock, 0);
 				if(fd>=0){/*succeed to lock file. */
 					char fntmp[PATH_MAX];
 					snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnatm);
@@ -252,7 +252,7 @@ mapcell* genscreen(genatm_t* data){
 					}
 				} else{/*wait for the previous lock to release.*/
 					warning("Waiting for previous lock to release ...");
-					fd=lock_file(fnlock, 1, 0);
+					fd=lock_file(fnlock, 1);
 				}
 				close(fd); remove(fnlock);
 			}

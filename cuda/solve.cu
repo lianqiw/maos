@@ -29,10 +29,10 @@ repeat:
 	if(first_run){
 		dbg("CG %5d(%d) %s with maxit scaled by %d.\n", cgtmp.count, id, first_run==2?"restart":"cold start", first_run+1);
 	}
-	ans=pcg(xout, this, precond, xin, cgtmp, first_run?0:warm_restart, 
-			(first_run&&warm_restart)?(maxit*(1+first_run)):maxit, stream);
+	ans=pcg(xout, this, precond, xin, cgtmp, first_run?0:cgwarm, 
+			(first_run&&cgwarm)?(maxit*(1+first_run)):maxit, stream);
 	first_run=0;
-	if(warm_restart){
+	if(cgwarm){
 		if(restarted){
 			info("CG %5d(%d) after restart %d times, residual=%.5f threshold is %.5f.\n", cgtmp.count, id, restarted, ans, thres);
 		}
@@ -98,7 +98,10 @@ void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, 
 	}
 }
 void cusolve_muv::init(const muv_t* in){
-	if(!in||!in->M) return;
+	if(!in||!in->M) {
+		dbg("in or in.M is empty, do nothing\n");
+		return;
+	}
 	dspcell* inM=dspcell_cast(in->M);
 	dsp* Mc=dspcell2sp(inM);
 	dmat* Uc=dcell2m(in->U);
@@ -120,8 +123,8 @@ void cusolve_muv::init(const muv_t* in){
 	Vx=curmat(V.Ny(), 1);
 }
 
-cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, muv_t* _R, muv_t* _L)
-	:cusolve_cg(_maxit, _warm_restart){
+cusolve_sparse::cusolve_sparse(int _maxit, int _cgwarm, muv_t* _R, muv_t* _L)
+	:cusolve_cg(_maxit, _cgwarm){
 	CR.init(_R);
 	CL.init(_L);
 }

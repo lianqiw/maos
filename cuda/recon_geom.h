@@ -27,13 +27,13 @@ namespace cuda_recon{
 class w01_t{
 	curmat W1;    /**< The aperture weighting, piston removal*/
 	cusp   W0p;   /**< W0 for partial points*/
-	cuimat W0f;/**< index for fully illuminated points.*/
+	cuimat W0f;   /**< index for fully illuminated points.*/
 	Real   W0v;   /**< maximum Value of W0*/
 	int     nxx;  /**< First dimension of grid*/
 	mutable curmat pis;   /**< Temporary data*/
 public:
 	w01_t(const dsp* R_W0, const dmat* R_W1, int R_nxx);
-	void apply(Real* restrict out, const Real* in, int ndir, stream_t& stream) const;
+	void apply(curcell& out, const curcell& in, stream_t& stream) const;
 };
 
 /**
