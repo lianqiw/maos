@@ -430,7 +430,7 @@ int main(int argc, char* argv[]){
 			}
 			if(seedcount>0){
 				dscale(P(P(resm, im), ipath), 1./seedcount);
-				dresize(P(P(resm, im), ipath), nsim, 1);
+				dresize(P(P(resm, im), ipath), nsim, NY(P(resm, im), ipath));
 			}
 		}
 	}
@@ -502,6 +502,7 @@ int main(int argc, char* argv[]){
 	}
 	
 	draw_final(1);
+	cellfree(ysky);
 	cellfree(res);
 	cellfree(resm);
 	for(int ipath=0; ipath<npath; ipath++){

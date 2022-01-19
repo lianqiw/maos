@@ -113,8 +113,8 @@ extern int signal_caught;
 //dbg are not shown at default log level
 //dbg do not shown when detached
 //use __func__ to indicate function name
-#define logdbg(level, format, ...) logerr(level, "%s%s(%s:%d): " format "%s", CYAN, __func__,BASEFILE,__LINE__,##__VA_ARGS__, BLACK)
-#define dbg0(format, ...) logstd(0, "%s" format "%s", CYAN, ##__VA_ARGS__, BLACK)
+//#define logdbg(level, format, ...) logerr(level, "%s%s(%s:%d): " format "%s", CYAN, __func__,BASEFILE,__LINE__,##__VA_ARGS__, BLACK)
+#define logdbg(level, format, ...) logerr(level, "%s" format "%s", YELLOW, ##__VA_ARGS__, BLACK)
 #define dbg( A...) logdbg(0, A)
 #define dbg2(A...) logdbg(1, A)
 #define dbg3(A...) logdbg(2, A)
@@ -152,7 +152,7 @@ extern int signal_caught;
 #define TIC double tk
 #define tic tk=myclockd()
 #define toc(format,...) logstd(-1, format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
-#define toc2(format,...) dbg0(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
+#define toc2(format,...) dbg(format " takes %.6f seconds.\n", ##__VA_ARGS__, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

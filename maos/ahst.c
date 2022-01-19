@@ -525,7 +525,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 	int nmod=0, ntt=0, nttf=0;
 	for(int iwfs=0; iwfs<NX(GM); iwfs++){
 		if((!mask||P(mask, iwfs))&&P(GM, iwfs)&&P(saneai, iwfs, iwfs)->px[0]>0){
-			dbg0(" %d", iwfs);
+			dbg(" %d", iwfs);
 			P(GM2, iwfs)=ddup(P(GM, iwfs));
 			nmod=P(GM2, iwfs)->ny;
 			int ng=P(GM2, iwfs)->nx;

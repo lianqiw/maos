@@ -272,7 +272,9 @@ PARMS_S* setup_parms(const ARG_S* arg){
 			parms->skyc.interpg=0;
 		}
 	}
-
+	if(parms->skyc.ttffastest && !parms->skyc.ttfbrightest){
+		warning("skyc.ttfastest is set but skyc.ttfbrightest is not\n");
+	}
 
 	for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 		parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec

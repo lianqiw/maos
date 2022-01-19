@@ -198,6 +198,9 @@ def mysqrt(x):
 def rss(*args):
     arr=np.array(args)
     return mysqrt(np.sum(np.sign(arr)* arr**2))
+def rms(*args):
+    arr=np.array(args)
+    return np.sqrt(np.mean(arr**2))
     
 def styles(ii):
     reset_color()

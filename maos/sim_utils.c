@@ -1806,17 +1806,17 @@ void print_progress(sim_t* simu){
 		const long lapsm=(laps-lapsh*3600)/60;
 
 		if(parms->sim.evlol){
-			info2("%sStep %5d: OL: %6.1f %6.1f %6.1f nm%s\n", GREEN,
+			info2("Step %5d: OL: %6.1f %6.1f %6.1f nm\n", 
 				isim,
 				mysqrt(P(simu->ole, 0, isim))*1e9,
 				mysqrt(P(simu->ole, 1, isim))*1e9,
-				mysqrt(P(simu->ole, 2, isim))*1e9, BLACK);
+				mysqrt(P(simu->ole, 2, isim))*1e9);
 
-			info("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
+			dbg("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
 				status->tot*tkmean, status->mean*tkmean, lapsh, lapsm, resth, restm);
 		} else{
-			info2("%sStep %5d: OL %6.1f %6.1f  OA %6.1f %5.1f CL %6.1f %5.1f ",
-				GREEN, isim,
+			info2("Step %5d: OL %6.1f %6.1f  OA %6.1f %5.1f CL %6.1f %5.1f ",
+				isim,
 				mysqrt(P(simu->ole, 0, isim))*1e9,
 				mysqrt(P(simu->ole, 1, isim))*1e9,
 				mysqrt(P(simu->clep, 0, 0, 0, isim))*1e9,
@@ -1825,14 +1825,16 @@ void print_progress(sim_t* simu){
 				mysqrt(P(simu->cle, 1, isim))*1e9				
 				);
 			if(parms->recon.split){
-				info2(" Split %6.1f %6.1f %6.1f nm",
+				info2(" Split %6.1f %6.1f %6.1f nm\n",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
 					mysqrt(P(simu->clem, 2, isim))*1e9);
+			}else{
+				info2("\n");
 			}
-			info2("%s\n", BLACK);
+			//info2("%s\n", BLACK);
 
-			info("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
+			dbg("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
 				" Used %ld:%02ld, Left %ld:%02ld\n",
 				status->wfs*tkmean, status->recon*tkmean,
 				status->eval*tkmean, status->other*tkmean,

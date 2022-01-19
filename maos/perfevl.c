@@ -376,9 +376,11 @@ static void perfevl_mean(sim_t* simu){
 			P(simu->ole,imod,isim)+=wt*P(P(simu->olep,ievl),imod,isim);
 		}
 	}
-	if(parms->sim.evlol)
+	if(parms->sim.evlol){
+		simu->status->clerrhi=sqrt(P(simu->ole, 0, isim))*1e9;//pttr
+		simu->status->clerrlo=sqrt(P(simu->ole, 1, isim))*1e9;//tt
 		return;
-
+	}
 		/*Field average the CL error */
 	for(int imod=0; imod<nevlmod; imod++){
 		P(simu->cle,imod,isim)=0;

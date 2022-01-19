@@ -139,10 +139,10 @@ static void list_proc_update(proc_t* p){
 		COL_STEP, tmp,
 		COL_STEPP, (gint)(p->frac*100),
 		-1);
-
-	snprintf(tmp, 64, "%.1f", p->status.clerrlo);
+#define ERR_MAX 9999.9
+	snprintf(tmp, 64, "%.1f", MIN(p->status.clerrlo, ERR_MAX));
 	gtk_list_store_set(listall, &iter, COL_ERRLO, tmp, -1);
-	snprintf(tmp, 64, "%.1f", p->status.clerrhi);
+	snprintf(tmp, 64, "%.1f", MIN(p->status.clerrhi, ERR_MAX));
 	gtk_list_store_set(listall, &iter, COL_ERRHI, tmp, -1);
 
 }

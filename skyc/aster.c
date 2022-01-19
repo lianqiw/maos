@@ -398,7 +398,7 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 			idtrat=0;
 		}
 		int isttf=parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1;
-		if((parms->skyc.ttfbrightest&&isttf)||(!parms->skyc.ttfbrightest &&idtrat>idtrat_fast)){
+		if((parms->skyc.ttffastest&&isttf)||(!parms->skyc.ttffastest &&idtrat>idtrat_fast)){
 			idtrat_fast=idtrat;
 			snr_fast=P(aster->wfs[iwfs].pistat->snr, idtrat);
 			if(idtrat_slow==parms->skyc.ndtrat) idtrat_slow=idtrat;
@@ -417,7 +417,7 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 	int idtrat_fast2=MAX(2, idtrat_fast);
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		//force fast loop to be faster than dtrat=16
-		if(P(aster->idtrats, iwfs)==idtrat_fast && idtrat_fast!=idtrat_fast2){
+		if(P(aster->idtrats, iwfs)>=idtrat_fast){
 			P(aster->idtrats, iwfs)=idtrat_fast2;
 		}
 		if(P(aster->idtrats, iwfs)<idtrat_fast){

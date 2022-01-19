@@ -186,9 +186,10 @@ static void skysim_isky(SIM_S* simu){
 					}
 				}*/
 				if(parms->skyc.verbose){
-					info("Aster %d, Estimated minimum error is %.2fnm at %.1f Hz. Try %.1f to %.1f Hz\n", iaster,
-						sqrt(asteri->mresest)*1e9, P(parms->skyc.fss, asteri->mdtrat),
-						P(parms->skyc.fss, asteri->idtratmin), P(parms->skyc.fss, asteri->idtratmax-1));
+					info("Aster %d, estimate is %.2fnm. ", iaster,sqrt(asteri->mresest)*1e9);//, P(parms->skyc.fss, asteri->mdtrat));
+					if(!parms->skyc.multirate){
+						info("Try %.1f to %.1f Hz. \n",P(parms->skyc.fss, asteri->idtratmin), P(parms->skyc.fss, asteri->idtratmax-1));
+					}
 				}
 				setup_aster_ztilt(asteri, star, parms);
 				/*Assign wvf from star to aster */
@@ -215,7 +216,7 @@ static void skysim_isky(SIM_S* simu){
 				for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++){
 					/*focus and windshake residual; */
 					real resadd=0;
-					if(!parms->skyc.addws){
+					if(!parms->skyc.addws && asteri->res_ws){
 						resadd+=P(asteri->res_ws,idtrat);
 					}
 					dmat* ires;
@@ -223,7 +224,7 @@ static void skysim_isky(SIM_S* simu){
 						/*Add windshake contribution. */
 						real thisVar=P(ires, 0)+resadd;
 						if(parms->skyc.verbose){
-							info("%3.0f Hz: %6.1f nm.", P(parms->skyc.fss, idtrat),	sqrt(thisVar)*1e9);
+							info("sim:%4.0f Hz:%6.1f nm.", P(parms->skyc.fss, idtrat),	sqrt(thisVar)*1e9);
 						}
 						if(thisVar<asterMinPhy){
 							asterMinPhy=thisVar;
@@ -248,7 +249,7 @@ static void skysim_isky(SIM_S* simu){
 						//May include ws/vib if skyc.addws is true.
 						P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error. */
 						P(pres, 2, isky)=P(pmini,1);/*ATM Tip/tilt Error. */
-						P(pres, 3, isky)=parms->skyc.addws?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
+						P(pres, 3, isky)=(parms->skyc.addws||!asteri->res_ws)?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
 						P(pres, 0, isky)=P(pres, 1, isky)+P(pres, 3, isky);/*Total */
 						P(pres, 4, isky)=asteri->mresest;/*estimated error, changed on 12/17/2021*/
 						
@@ -392,7 +393,8 @@ static void skysim_update_mideal(SIM_S* simu){
 		info("Add wind shake time series to mideal mode %d\n", im);
 		dmat* telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 		/*telws is in m. need to convert to rad since mideal is in this unit. */
-		dscale(telws, 4./parms->maos.D);//convert from wfe to radian.
+		real alpha=1./sqrt(P(parms->maos.mcc, 0, 0));
+		dscale(telws, alpha);//convert from wfe to radian.
 		dmat* pm1=simu->mideal;
 		dmat* pm2=simu->mideal_oa;
 		
