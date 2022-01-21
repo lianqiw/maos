@@ -192,8 +192,7 @@ void gpu_setup_recon_mvm_direct(const parms_t* parms, recon_t* recon){
 			dbg("npass=%d\n", npass);
 			nthread=NGPU*npass;
 		}
-		thread_t info[nthread];
-		thread_prep(info, 0, ntotgrad, nthread, mvm_direct_igpu, &data);
+		thread_t *tdata=thread_prep(0, ntotgrad, nthread, mvm_direct_igpu, &data);
 		if(nthread>NGPU){
 			THREAD_POOL_INIT(NGPU);//limit to only NGPU threads to avoid fighting
 			mysleep(1);
@@ -202,12 +201,13 @@ void gpu_setup_recon_mvm_direct(const parms_t* parms, recon_t* recon){
 				gpu_avail[gpu_pos++]=igpu;
 			}
 		}
-		CALL_THREAD(info, 1);
+		CALL_THREAD(tdata, 1);
 		if(nthread>NGPU){
 			THREAD_POOL_INIT(NTHREAD);
 			free(gpu_avail); gpu_avail=NULL;
 		}
 		toc2("Assembly");tic;
+		free(tdata);
 		dfree(residual);
 		dfree(residualfit);
 		if(parms->save.mvmf){

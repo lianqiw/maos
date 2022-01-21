@@ -367,18 +367,9 @@ void X(mulvec)(T* restrict y, const X(mat)* restrict A,
 		warning("input is not valid\n");
 		return;
 	}
-	if(fabs(alpha-(T)1.)>1.e-15){
-		for(int iy=0; iy<A->ny; iy++){
-			T tmp=x[iy]*alpha;
-			for(int ix=0; ix<A->nx; ix++){
-				y[ix]+=P(A, ix, iy)*tmp;
-			}
-		}
-	} else{
-		for(int iy=0; iy<A->ny; iy++){
-			for(int ix=0; ix<A->nx; ix++){
-				y[ix]+=P(A, ix, iy)*x[iy];
-			}
+	for(int iy=0; iy<A->ny; iy++){
+		for(int ix=0; ix<A->nx; ix++){
+			y[ix]+=(x[iy]*alpha)*P(A, ix, iy);
 		}
 	}
 }
@@ -413,8 +404,9 @@ X(mat)* X(mcc)(const X(mat)* A, const X(mat)* wt){
 				tmp+=P(A, ik, imod)*P(A, ik, jmod)*P(wt, ik);
 			}
 			P(ata, jmod, imod)=tmp;
-			if(imod!=jmod)
+			if(imod!=jmod){
 				P(ata, imod, jmod)=P(ata, jmod, imod);
+			}
 		}
 	}
 	return ata;
@@ -1617,9 +1609,9 @@ X(mat)* X(enc)(X(mat)* psf, /**<The input array*/
 	XC(free)(psf2);
 	X(mat)* enc=X(new)(dvec->nx, 1);
 	ENC_T data={enc, dvec, phat, type};
-	thread_t info[nthread];
-	thread_prep(info, 0, dvec->nx, nthread, X(enc_thread), &data);
-	CALL_THREAD(info, 0);
+	thread_t* tdata=thread_prep(0, dvec->nx, nthread, X(enc_thread), &data);
+	CALL_THREAD(tdata, 0);
+	free(tdata);
 	X(free)(phat);
 	return enc;
 }

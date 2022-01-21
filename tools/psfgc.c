@@ -256,13 +256,12 @@ int main(int argc, char* argv[]){
 	dcell* output=dcellnew(nwvl, nexp);
 	info("%d: ", nwvl);
 	psfiris_t data={notf, nwvl, dx, sumpsf, npix, pixsize, pixoffx, pixoffy, blur, imperr, wvls, psf_lgs, output, msg};
-	thread_t* info=mycalloc(npsf, thread_t);
-	thread_prep(info, 0, npsf, npsf, psfiris_do, &data);
+	thread_t* tdata=thread_prep(0, npsf, npsf, psfiris_do, &data);
 	THREAD_POOL_INIT(NCPU);
-	CALL_THREAD(info, 0);
+	CALL_THREAD(tdata, 0);
 	info(" done\n");
 	writebin(output, "%s", outfile);
-
+	free(tdata);
 	dcellfree(psf_lgs);
 	dcellfree(output);
 	free(outfile);

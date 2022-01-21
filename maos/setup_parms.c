@@ -1048,7 +1048,9 @@ static void readcfg_sim(parms_t* parms){
 	parms->sim.ncpa_hs=readcfg_dmat_nmax(parms->sim.ncpa_ndir, "sim.ncpa_hs");
 	dscale(parms->sim.ncpa_thetax, 1./206265);
 	dscale(parms->sim.ncpa_thetay, 1./206265);
-	dnormalize_sumabs(P(parms->sim.ncpa_wt), parms->sim.ncpa_ndir, 1);
+	if(parms->sim.ncpa_wt){
+		dnormalize_sumabs(P(parms->sim.ncpa_wt), parms->sim.ncpa_ndir, 1);
+	}
 	READ_STR(sim.dmadd);
 }
 /**
@@ -2519,7 +2521,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	if(parms->atm.frozenflow && !parms->dbg.nocgwarm){
 		parms->fit.cgwarm=1;
 		parms->lsr.cgwarm=1;
-		if(!parms->dbg.tomo_maxit){
+		if(!NX(parms->dbg.tomo_maxit)){
 			parms->tomo.cgwarm=1;
 		}
 	}//else: no warm

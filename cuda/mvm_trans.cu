@@ -278,8 +278,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		}
 		mvm_igpu_t data={parms, recon, mvmig, mvmfg, mvmt, FLI(), residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 		int nthread=NGPU;
-		thread_t thdata[nthread];
-		thread_prep(thdata, 0, ntotact, nthread, mvm_trans_igpu, &data);
+		thread_t *thdata=thread_prep(0, ntotact, nthread, mvm_trans_igpu, &data);
 
 		/*Initialyze intermediate TomoL result array in GPU. Send intermediate
 		  TomoL results to GPU if load.mvmi is set.*/
@@ -317,7 +316,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		tic;
 		CALL_THREAD(thdata, 1);
 		toc2("MVM Assembly in GPU");
-
+		
 
 		if(parms->save.setup){
 			writebin(residual, "MVM_RL_residual");
@@ -339,7 +338,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 			}
 			writebin(mvmf, "MVM_FitL.bin");
 		}
-
+		free(thdata);
 		X(free)(mvmi);
 		X(free)(mvmf);
 		X(free)(residual);

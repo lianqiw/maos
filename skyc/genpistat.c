@@ -51,11 +51,7 @@ static void calc_pistat(GENPISTAT_S* data){
 	mymkdir("%s/pistat", dirstart);
 	mymkdir("%s/neaspec", dirstart);
 	mymkdir("%s/phygrad", dirstart);
-	while((icase=atomic_fetch_add(&data->icase, 1))<data->ncase)
-#if _OPENMP>=200805
-#pragma omp task default(shared) firstprivate(icase)
-#endif
-	{
+	while((icase=atomic_fetch_add(&data->icase, 1))<data->ncase){
 		if(icase==0){
 			writebin(dtrats, "%s/neaspec/neaspec_dtrats", dirstart);
 		}
@@ -212,9 +208,6 @@ static void calc_pistat(GENPISTAT_S* data){
 			toc2("Processing %s:", fnwvf);
 		}/*if exist */
 	}
-#if _OPENMP >= 200805
-#pragma omp taskwait
-#endif
 	dfree(dtrats);
 }
 

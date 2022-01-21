@@ -34,6 +34,16 @@ void default_quitfun(const char* msg);
 #include "config.h" 
 #endif
 
+#if HAS_OPENMP && !defined(_OPENMP)
+#define _OPENMP 201511 //Sometimes GPU code does not define this
+#endif
+
+#if _OPENMP >= 201511
+#include <omp.h>
+#else
+#undef _OPENMP
+#endif
+
 #if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 //c++ mode, not CUDA
 #include <cstdarg> //for va_start

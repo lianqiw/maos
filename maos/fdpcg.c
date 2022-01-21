@@ -621,11 +621,11 @@ static void fdpcg_fft(fdpcg_info_t* data){
 }
 
 /**
-   Multiply each block in pthreads
+   Multiply each block in parallel
  */
 static void fdpcg_mulblock(fdpcg_info_t* data){
 	fdpcg_t* fdpcg=data->fdpcg;
-	long bs=P(fdpcg->Mbinv,0)->nx;
+	long bs=P(fdpcg->Mbinv,0)->nx;//size of block
 	unsigned int ib;
 	while((ib=atomic_fetch_add(&data->ib, 1))<data->nb){
 		cmulvec(&P(data->xhat,ib*bs), P(fdpcg->Mbinv,ib), &P(data->xhat2,ib*bs), 1);
@@ -706,13 +706,19 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 #else/*permute vectors and apply block diagonal matrix */
 	/*permute xhat and put into xhat2 */
 	cvecperm(xhat2, xhat, P(recon->fdpcg->perm));
+#if DBG_FD
+	writebin(xhat2i, "fdc_perm");
+#endif
 	czero(xhat);
 	data.ib=0;
-	CALL(fdpcg_mulblock, &data, 4, 1);//slower than FFT
+	CALL(fdpcg_mulblock, &data, 4, 1);//slower than FFT. **Wrong result in taurus if use nthread=4**
 	//CALL_THREAD(info_mulblock, 1);
+#if DBG_FD
+	writebin(xhati, "fdc_mul");
+#endif
 	cvecpermi(xhat2, xhat, P(fdpcg->perm));
 #if DBG_FD
-	writebin(xhat2i, "fdc_mul");
+	writebin(xhat2i, "fdc_permi");
 #endif
 #endif
 	/*Apply inverse FFT */
@@ -721,6 +727,7 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	//CALL_THREAD(info_ifft, 1);
 #if DBG_FD
 	writebin(*xout, "fdc_xout");
+	exit(1);
 #endif
 	ccellfree(xhati);
 	ccellfree(xhat2i);

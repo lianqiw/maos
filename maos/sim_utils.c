@@ -750,8 +750,7 @@ static void init_simu_evl(sim_t* simu){
 			data->wrap=1;
 			data->ostat=aper->locs->stat;
 			tot=aper->locs->stat->ncol;
-			simu->evl_prop_atm[ind]=mycalloc(nthread, thread_t);
-			thread_prep(simu->evl_prop_atm[ind], 0, tot, nthread, prop, data);
+			simu->evl_prop_atm[ind]=thread_prep(0, tot, nthread, prop, data);
 		}
 		for(int idm=0; idm<parms->ndm&&!parms->sim.evlol; idm++){
 			const int ind=ievl+nevl*idm;
@@ -780,8 +779,7 @@ static void init_simu_evl(sim_t* simu){
 				tot=aper->locs->stat->ncol;
 			}
 			data->phiout=(dmat*)1;/*replace later in simulation. */
-			simu->evl_prop_dm[ind]=mycalloc(nthread, thread_t);
-			thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
+			simu->evl_prop_dm[ind]=thread_prep(0, tot, nthread, prop, data);
 		}
 	}
 }
@@ -1029,8 +1027,7 @@ static void init_simu_wfs(sim_t* simu){
 				tot=data->ptsout->nsa;
 			}
 			int nthread=data->scale==1?2:8;//use more threads for LGS as ray tracing is slow due to cone coordinate.
-			simu->wfs_prop_atm[iwfs+nwfs*ips]=mycalloc(nthread, thread_t);
-			thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips], 0, tot, nthread, prop, data);
+			simu->wfs_prop_atm[iwfs+nwfs*ips]=thread_prep(0, tot, nthread, prop, data);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
@@ -1063,8 +1060,7 @@ static void init_simu_wfs(sim_t* simu){
 				tot=data->ptsout->nsa;
 			}
 			int nthread=data->scale==1?2:4;//use more threads for LGS as ray tracing is slow due to cone coordinate.
-			simu->wfs_prop_dm[iwfs+nwfs*idm]=mycalloc(nthread, thread_t);
-			thread_prep(simu->wfs_prop_dm[iwfs+nwfs*idm], 0, tot, nthread, prop, data);
+			simu->wfs_prop_dm[iwfs+nwfs*idm]=thread_prep(0, tot, nthread, prop, data);
 		}/*idm */
 	}/*iwfs */
 	simu->wfs_intsdata=mycalloc(nwfs, wfsints_t);
@@ -1076,8 +1072,7 @@ static void init_simu_wfs(sim_t* simu){
 		wfsints_t* data=simu->wfs_intsdata+iwfs;
 		data->iwfs=iwfs;
 		int nthread=NTHREAD;
-		simu->wfs_ints[iwfs]=mycalloc(nthread, thread_t);
-		thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints, data);
+		simu->wfs_ints[iwfs]=thread_prep(0, tot, nthread, wfsints, data);
 	}
 	if(parms->nlgspowfs){
 		simu->llt_tt=dcellnew(parms->nwfs, 1);
@@ -1429,30 +1424,27 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	}
 
 	/* Select GPU or CPU for the tasks.*/
-	simu->perfevl_pre=mycalloc(nevl, thread_t);
 #if USE_CUDA
 	if(parms->gpu.evl){
-		thread_prep(simu->perfevl_pre, 0, nevl, nevl, gpu_perfevl_queue, simu);
-		simu->perfevl_post=mycalloc(nevl, thread_t);
-		thread_prep(simu->perfevl_post, 0, nevl, nevl, gpu_perfevl_sync, simu);
+		simu->perfevl_pre=thread_prep(0, nevl, nevl, gpu_perfevl_queue, simu);
+		simu->perfevl_post=thread_prep(0, nevl, nevl, gpu_perfevl_sync, simu);
 	} else
 #endif
 	{
-		thread_prep(simu->perfevl_pre, 0, nevl, nevl, perfevl_ievl, simu);
+		simu->perfevl_pre=thread_prep(0, nevl, nevl, perfevl_ievl, simu);
 	}
-	simu->wfsgrad_pre=mycalloc(nwfs, thread_t);
+	
 #if USE_CUDA
 	if(parms->gpu.wfs){
-		thread_prep(simu->wfsgrad_pre, 0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
+		simu->wfsgrad_pre=thread_prep(0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
 	} else
 #endif
 	{
-		thread_prep(simu->wfsgrad_pre, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
+		simu->wfsgrad_pre=thread_prep(0, nwfs, nwfs, wfsgrad_iwfs, simu);
 	}
 	{
 		int nthread=2;
-		simu->wfsgrad_post=mycalloc(nthread, thread_t);
-		thread_prep(simu->wfsgrad_post, 0, nwfs, nthread, wfsgrad_post, simu);
+		simu->wfsgrad_post=thread_prep(0, nwfs, nthread, wfsgrad_post, simu);
 	}
 	if(!parms->sim.evlol){
 		init_simu_dm(simu);

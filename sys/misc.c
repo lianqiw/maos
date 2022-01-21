@@ -679,6 +679,9 @@ void parse_argopt(char* cmds, argopt_t* options){
 					value[0]=' ';
 					value++;
 				}
+				if(value[0]=='\0'){
+					value=NULL;
+				}
 			} else{
 				value=NULL;
 			}
@@ -703,6 +706,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 					}
 				} else{
 					int val=value?strtol(value, &start, 10):1;
+					if(value==start) val=1;//no entry, default to 1.
 					if(isfun){/*Is function */
 						void (*tmp)(int)=(void (*)(int))options[iopt].val;
 						tmp(val);

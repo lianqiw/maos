@@ -283,6 +283,7 @@ static T_VALID* gen_pval(long npsfx, long npsfy, loc_t* loc){
 			qval[jm][im].n=count-count2;
 		}
 	}
+	lfree(mloc);
 	if(count>pvaltot){
 		error("count=%ld > pvaltot=%ld\n", count, pvaltot);
 	}
@@ -370,9 +371,9 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 		*potf=ccellnew_same(nsa,1,npsfx,npsfy);
 	}
 	GENOTF_T data={*potf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, B, pval, isafull, otffull};
-	thread_t info[NCPU];
-	thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
-	CALL_THREAD(info, 1);
+	thread_t* tdata=thread_prep(0, nsa, NCPU, genotf_wrap, &data);
+	CALL_THREAD(tdata, 1);
+	free(tdata);
 	cfree(otffull);
 	if(!cov) dfree(B);
 	free(pval[0].loc);

@@ -94,12 +94,7 @@ static void setup_parms_skyc(PARMS_S* parms){
 	READ_INT(skyc.phystart);
 	READ_INT(skyc.neaaniso);
 	READ_INT(skyc.neanonlin);
-	char* temp;
-	temp=readcfg_str("skyc.psd_ws");
-	if(temp){
-		parms->skyc.psd_ws=dread("%s", temp);
-	}
-	free(temp);
+	READ_MAT(skyc.psd_ws);
 
 	READ_STR(skyc.stars);
 	READ_INT(skyc.addws);

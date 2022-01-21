@@ -289,12 +289,11 @@ int main(int argc, char* argv[]){
 	dcell* output=dcellnew(nwvl, 1);
 	info("%d: ", nwvl);
 	psfiris_t data={npix, notf1, notf2, dx1, dx2, pixsize, pixoffx, pixoffy, blur, ploc, pamp, cc_opd, cc_zero, imperr, wvls, psf_lgs, output, msg};
-	thread_t* info=mycalloc(nwvl, thread_t);
-	thread_prep(info, 0, nwvl, nwvl, psfiris_do, &data);
+	thread_t* tdata=thread_prep(0, nwvl, nwvl, psfiris_do, &data);
 	THREAD_POOL_INIT(NCPU);
-	CALL_THREAD(info, 0);
+	CALL_THREAD(tdata, 0);
 	writebin(output, "%s", outfile);
-
+	free(tdata);
 	locfree(ploc);
 	dfree(pamp);
 	dfree(cc_opd);

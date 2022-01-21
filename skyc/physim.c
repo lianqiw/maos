@@ -350,7 +350,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 							}
 
 							/*Add noise and apply matched filter. */
-#if _OPENMP >= 200805 
+#if _OPENMP
 #pragma omp critical 
 #endif
 							switch(noisy){

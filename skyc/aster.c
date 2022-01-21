@@ -631,7 +631,9 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 		writebin(aster->pgm, "%s/aster%d_pgm", dirsetup, aster->iaster);
 		writebin(aster->sigman, "%s/aster%d_sigman", dirsetup, aster->iaster);
 		writebin(aster->gain, "%s/aster%d_gain", dirsetup, aster->iaster);
-		writebin(aster->res_ws, "%s/aster%d_res_ws", dirsetup, aster->iaster);
+		if(parms->skyc.psd_ws){
+			writebin(aster->res_ws, "%s/aster%d_res_ws", dirsetup, aster->iaster);
+		}
 		writebin(aster->res_ngs, "%s/aster%d_res_ngs", dirsetup, aster->iaster);
 	}
 	dfree(gm);

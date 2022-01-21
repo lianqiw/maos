@@ -568,9 +568,9 @@ void chol_solve(dmat** x, spchol* A, dmat* y){
 	} else{//Multi-threaded call
 		if(!*x) *x=dnew(y->nx, y->ny);
 		CHOLSOLVE_T data={*x,A,y};
-		thread_t info[NTHREAD];
-		thread_prep(info, 0, y->ny, NTHREAD, chol_solve_thread, &data);
-		CALL_THREAD(info, 1);
+		thread_t *tdata=thread_prep(0, y->ny, NTHREAD, chol_solve_thread, &data);
+		CALL_THREAD(tdata, 1);
+		free(tdata);
 	}
 	if(0){
 		static int count=-1; count++;

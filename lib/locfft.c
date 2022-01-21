@@ -116,11 +116,8 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
 	if(NX(opd)!=NX(locfft->amp)){
 		error("The length of opd should be %ld, but is %ld\n", NX(locfft->amp), NX(opd));
 	}
-	for(int iwvl=0; iwvl<nwvl; iwvl++)
-#if _OPENMP>=200805
-#pragma omp task
-#endif
-	{
+OMP_TASK_FOR(4)	
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		if(psfsize&&P(psfsize, iwvl)==1){
 			if(!P(psf2s, iwvl)){
 				P(psf2s, iwvl)=cnew(1, 1);
@@ -186,9 +183,6 @@ void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const l
 			cscale(P(psf2s, iwvl), psfnorm);
 		}
 	}
-#if _OPENMP>=200805
-#pragma omp taskwait
-#endif
 }
 /**
    Apply a field stop to the OPD.

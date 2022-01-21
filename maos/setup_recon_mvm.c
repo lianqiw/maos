@@ -211,9 +211,9 @@ setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	}
 	MVR_MVM_T data={parms, recon, MVMt, curp, ntotact};
 	int nthread=recon->nthread;
-	thread_t info[nthread];
-	thread_prep(info, 0, ntotact, nthread, setup_recon_mvr_mvm_iact, &data);
-	CALL_THREAD(info, 1);
+	thread_t *tdata=thread_prep(0, ntotact, nthread, setup_recon_mvr_mvm_iact, &data);
+	CALL_THREAD(tdata, 1);
+	free(tdata);
 	dcell* MVM=dcelltrans(MVMt);
 	dcellfree(MVMt);
 	recon->MVM=dcell2m(MVM);

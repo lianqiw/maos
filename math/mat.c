@@ -174,7 +174,11 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 */
 void X(resize)(X(mat)* A, long nx, long ny){
 	if(!A) {
-		error("Trying to resize an empty array\n");
+		if(!nx || !ny){
+			return;
+		}else{
+			error("Trying to resize NULL array to %ldx%ld\n", nx, ny);
+		}
 	}
 	else if(!ismat(A)){
 		if(iscell(A)&&!P(A)&&(A->nx==0||A->ny==0)){

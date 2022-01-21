@@ -20,8 +20,8 @@
 #define _GNU_SOURCE //for SYSCALL
 #endif
 #include <signal.h>
-#include "thread.h"
 #include "common.h"
+#include "thread.h"
 /**
    Functions regarding to threading
 */
@@ -48,9 +48,10 @@ int thread_new(thread_fun fun, void* arg){
 /**
    Break out the job to be executed by multiple threads.
 */
-void thread_prep(thread_t* thd, long start, long end, long nthread,
+thread_t* thread_prep(long start, long end, long nthread,
 	thread_wrapfun fun, void* data){
-	if(nthread==0) return;
+	if(nthread==0) return NULL;
+	thread_t *thd=mycalloc(nthread, thread_t);
 	long nt=(end-start+nthread-1)/nthread;
 	int skip=0;
 	for(long ithread=0; ithread<nthread; ithread++){
@@ -77,6 +78,7 @@ void thread_prep(thread_t* thd, long start, long end, long nthread,
 	if(thd[nthread-1].end&&thd[nthread-1].end!=end){
 		error("Not correctly terminated\n");
 	}
+	return thd;
 }
 
 /**

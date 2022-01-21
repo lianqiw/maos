@@ -123,11 +123,9 @@ static void skysim_isky(SIM_S* simu){
 		  a few combinations are kept for each star field for further time
 		  domain simulations.
 		*/
+	OMP_TASK_FOR(4)
 		for(int iaster=0; iaster<naster; iaster++){
 			if(parms->skyc.dbgaster<0||iaster==parms->skyc.dbgaster)
-#if _OPENMP >= 200805
-#pragma omp task default(shared) firstprivate(iaster)
-#endif
 			{
 				/*Parallelizing over aster gives same random stream. */
 				seed_rand(&aster[iaster].rand, parms->skyc.seed+iaster+40);
@@ -139,10 +137,7 @@ static void skysim_isky(SIM_S* simu){
 				setup_aster_controller(simu, &aster[iaster], parms);
 			}
 		}
-#if _OPENMP >= 200805
-#pragma omp taskwait
-#endif
-	/*Select asters that have good performance. */
+		/*Select asters that have good performance. */
 		setup_aster_select(PCOL(pres_geom, isky), aster, naster, star,
 			parms->skyc.phytype==1?0.5*simu->varol:INFINITY, parms);
 		real tk_2=myclockd();
@@ -158,10 +153,8 @@ static void skysim_isky(SIM_S* simu){
 			/*
 			  Now begin time domain Physical Optics Simulations.
 			*/
+OMP_TASK_FOR(4)
 			for(int iaster=0; iaster<naster; iaster++)
-#if _OPENMP >= 200805
-#pragma omp task default(shared) firstprivate(iaster)
-#endif
 			{
 				ASTER_S* asteri=&aster[iaster];
 				real asterMinPhy=0;//best performance of this asterism.
@@ -200,23 +193,17 @@ static void skysim_isky(SIM_S* simu){
 				asterMinPhy=1;//simu->varol;
 				asteri->phyRes=dcellnew(asteri->idtratmax, 1);
 				asteri->phyMRes=dcellnew(asteri->idtratmax, 1);
+OMP_TASK_FOR(4)
 				for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++)
-#if _OPENMP >= 200805
-#pragma omp task default(shared) firstprivate(idtrat)
-#endif
 				{
-
 					P(asteri->phyRes,idtrat)=physim(&P(asteri->phyMRes,idtrat),
 						simu->mideal, simu->mideal_oa, simu->varol,
 						asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart);
 				}
-#if _OPENMP >= 200805
-#pragma omp taskwait
-#endif
 				for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++){
 					/*focus and windshake residual; */
 					real resadd=0;
-					if(!parms->skyc.addws && asteri->res_ws){
+					if(!parms->skyc.addws && parms->skyc.psd_ws){
 						resadd+=P(asteri->res_ws,idtrat);
 					}
 					dmat* ires;
@@ -236,7 +223,7 @@ static void skysim_isky(SIM_S* simu){
 					
 					}
 				}
-#if _OPENMP >= 200805 
+#if _OPENMP  
 #pragma omp critical 
 #endif	
 				if(asterMinPhy<skymini||parms->skyc.dbgaster==iaster){
@@ -249,7 +236,7 @@ static void skysim_isky(SIM_S* simu){
 						//May include ws/vib if skyc.addws is true.
 						P(pres, 1, isky)=P(pmini,0);/*ATM NGS Mode error. */
 						P(pres, 2, isky)=P(pmini,1);/*ATM Tip/tilt Error. */
-						P(pres, 3, isky)=(parms->skyc.addws||!asteri->res_ws)?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
+						P(pres, 3, isky)=(parms->skyc.addws||!parms->skyc.psd_ws)?0:P(asteri->res_ws,asterMinRat);/*Residual wind shake TT*/
 						P(pres, 0, isky)=P(pres, 1, isky)+P(pres, 3, isky);/*Total */
 						P(pres, 4, isky)=asteri->mresest;/*estimated error, changed on 12/17/2021*/
 						
@@ -293,9 +280,6 @@ static void skysim_isky(SIM_S* simu){
 				}
 skip1:;
 			}/*iaster */
-#if _OPENMP >= 200805
-#pragma omp taskwait
-#endif
 		} else{//If(skyc.estimate)
 			skymini=P(pres_geom, 0, isky);
 			selaster=P(pres_geom, 1, isky);
@@ -647,14 +631,10 @@ void skysim(const PARMS_S* parms){
 		}
 		simu->status->simstart=simu->isky_start;
 		simu->status->simend=simu->isky_end;
-#if _OPENMP >= 200805//parallel within each sky
-		int nthread=2;
-#else
-		int nthread=parms->skyc.nthread;
-#endif
+
 		if(simu->isky_start<simu->isky_end){
 			simu->isky=simu->isky_start;
-			CALL(skysim_isky, simu, nthread, 0);/*isky iteration. */
+			CALL(skysim_isky, simu, 4, 0);/*isky iteration. */
 		}
 		if(parms->skyc.dbgsky<0){
 			char fn[80];

@@ -191,24 +191,28 @@ static void print_mem_debug(){
 	} else{
 		info3("%u (%lu kB) allocated memory not freed. \n", memcnt, (memalloc-memfree)>>10);
 	}
-	unsigned int counter=0;
-	unsigned int ans=0;
-	for(unsigned int i=0; i<=memkey_len; i++){
-		if(memkey_all[i].p){
-			if(counter<50){
-				counter++;
-				info3("%9d", memkey_all[i].size);
-				if(memkey_all[i].nfunc){
-					int offset=memkey_all[i].nfunc>3?1:0;
-					if(ans||(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
-						info3(" %p\n", memkey_all[i].p);
+	if(signal_caught){
+		info3("Signal is caught, will not print detailed memory usage.\n");
+	}else{
+		unsigned int counter=0;
+		unsigned int ans=0;
+		for(unsigned int i=0; i<=memkey_len; i++){
+			if(memkey_all[i].p){
+				if(counter<50){
+					counter++;
+					info3("%9d", memkey_all[i].size);
+					if(memkey_all[i].nfunc){
+						int offset=memkey_all[i].nfunc>3?1:0;
+						if(ans||(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
+							info3(" %p\n", memkey_all[i].p);
+						}
+					}else if(memkey_all[i].funtrace[0]){
+						info3(" %s\n", memkey_all[i].funtrace);
 					}
-				}else if(memkey_all[i].funtrace[0]){
-					info3(" %s\n", memkey_all[i].funtrace);
+				}else{
+					info3("Stop after %u prints\n", counter);
+					break;
 				}
-			}else{
-				info3("Stop after %u prints\n", counter);
-				break;
 			}
 		}
 	}

@@ -85,7 +85,9 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 		parms->powfs[ipowfs].rne, parms->powfs[ipowfs].radpixtheta, parms->powfs[ipowfs].pixtheta,
 		parms->powfs[ipowfs].radpix?powfs[ipowfs].srot:NULL, parms->powfs[ipowfs].radgx, mtchcr, sigratio
 	);
-	print_nea(powfs[ipowfs].sanea, powfs[ipowfs].sprint, powfs[ipowfs].saloc, powfs[ipowfs].srsa);
+	if(powfs[ipowfs].srsa){
+		print_nea(powfs[ipowfs].sanea, powfs[ipowfs].sprint, powfs[ipowfs].saloc, powfs[ipowfs].srsa);
+	}
 }
 
 

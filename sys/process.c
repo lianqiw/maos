@@ -31,7 +31,7 @@
 #include "misc.h"
 #include "process.h"
 #include "daemonize.h"
-#if _OPENMP>200805
+#if _OPENMP
 #include <omp.h>
 #endif
 /**
@@ -115,7 +115,7 @@ void init_process(void){
 
 	NCPU=get_ncpu();
 	MAXTHREAD=sysconf(_SC_NPROCESSORS_ONLN);
-#if _OPENMP>200805
+#if _OPENMP
 	//The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
 	if(getenv("OMP_NUM_THREADS")){
 		int nthread=strtol(getenv("OMP_NUM_THREADS"), 0, 10);

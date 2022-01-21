@@ -9,6 +9,11 @@ if [ -n "$1" ];then
 else
     D=30
 fi
+if nvidia-smi -i 0 >/dev/null 2>&1 ;then
+	has_gpu=1
+else
+	has_gpu=0
+fi
 
 case $D in
     2)
@@ -65,10 +70,17 @@ case $D in
 	#8/27/2021; v2.6 beginning
 	#REF=(1712.96 113.29 113.47 137.46 144.56 138.33 140.96 139.50 122.58 329.92 335.95 112.38 114.86 129.91 152.13 346.44 366.63 122.65 139.24 117.84 117.68 144.53 202.84 209.85 213.39 92.03)
 	#10/22/2021; v2.7 
-	REF=(1712.96 113.30 113.47 137.60 144.04 138.37 141.05 139.78 122.37 329.45 336.49 113.33 114.44 129.67 152.71 345.76 365.66 123.36 139.02 117.84 117.33 144.00 203.39 210.10 201.37 92.02)
+	#REF=(1712.96 113.30 113.47 137.60 144.04 138.37 141.05 139.78 122.37 329.45 336.49 113.33 114.44 129.67 152.71 345.76 365.66 123.36 139.02 117.84 117.33 144.00 203.39 210.10 201.37 92.02)
+	#1/21/2022
+	if [ $has_gpu -eq 1 ];then
+		REF=(1712.96 113.49 113.67 137.03 144.71 138.25 142.64 139.77 121.97 329.28 336.81 112.01 114.16 128.10 141.48 346.92 364.55 123.55 139.96 116.80 117.06 144.37 199.58 206.35 196.79 89.64)
+	else
+		REF=(1712.96 113.42 113.71 137.99 144.41 138.02 141.30 0      122.29 329.37 336.48 112.41 113.42 127.60 130.98 345.81 365.43 123.01 139.62 116.24 118.47 144.29 198.43 203.82 196.33 92.11)
+	fi
 	;;
     *)
 	REF=()
+	;;
 esac
 fnlog=maos_check_${D}.log #log of all
 fntmp=maos_check_${D}.tmp #log of current simulation
@@ -83,7 +95,7 @@ printf "%-20s   Res   Ref     %%\n" "D=${D}m DM is $((D*2))x$((D*2))" | tee $fnr
 function run_maos(){
 	aotype=$1
 	shift
-    ./maos sim.end=100 $args "$*" > $fntmp 2>&1
+    ./maos sim.end=100 "$*" $args > $fntmp 2>&1
     if [ $? -eq 0 ];then
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]%.*}
@@ -114,6 +126,15 @@ function run_maos(){
 	printf "%-20s %5.0f %5.0f %4d%%\n" "$aotype" "$a" "$b" "$diff" | tee -a $fnres
 	ii=$((ii+1)) 
 }
+function run_maos_gpu(){
+	if [ $has_gpu -eq 1 ];then
+		run_maos "$@"
+	else
+		printf "%-20s skipped\n" "$1" | tee -a $fnres
+		RMS[ii]=0
+		ii=$((ii+1)) 
+	fi
+}
 export MAOS_LOG_LEVEL=-1
 
 run_maos "Openloop:        " sim.evlol=1
@@ -133,7 +154,7 @@ run_maos "LGS MCAO (CBS):  " tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
 if [ $D -le 10 ];then
 run_maos "LGS MCAO (SVD):  " tomo.alg=2 fit.alg=2 atmr.os=[2 2 1 1 1 1 1] gpu.tomo=0
 fi
-run_maos "LGS MCAO (MVM):  " atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
+run_maos_gpu "LGS MCAO (MVM):  " atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
 
 run_maos "LGS MOAO:        " evl.moao=0 moao.dx=[1/2]
 
@@ -168,9 +189,8 @@ run_maos "LGS MCAO SL:    " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.
 run_maos "LGS MCAO PCCD SL:" tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[18,0,0] powfs.pixpsa=[6,0,0] powfs.fnllt=['llt_SL.conf',,]
 if [ $D -eq 30 ];then
 run_maos "NFIRAOS LGS: " nfiraos_lgs.conf
-run_maos "NFIRAOS PWFS:" nfiraos_ngs.conf
+run_maos_gpu "NFIRAOS PWFS:" nfiraos_ngs.conf
 fi
-
 echo ${RMS[*]}
 
 exit $ans

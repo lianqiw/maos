@@ -634,8 +634,9 @@ lmat* readcfg_lmat_do(int n, char* key){
 	lmat* res=NULL;
 	if(!nx||!ny){
 		free(val); val=NULL;
+	}else{
+		res=lnew_do(nx, ny, val, mem_new(val));
 	}
-	res=lnew_do(nx, ny, val, mem_new(val));
 	return res;
 }
 /**
@@ -665,7 +666,11 @@ lmat* readcfg_lmat_nmax(int n, const char* format, ...){
 	lmat* out=readcfg_lmat_do(n, key);
 	long nread=out?(NX(out)*NY(out)):0;
 	if(nread<=1){
-		lresize(out, n, 1);
+		if(!out){
+			out=lnew(n,1);
+		}else{
+			lresize(out, n, 1);
+		}
 		if(nread==1){
 			for(int i=1; i<n; i++){
 				P(out,i)=P(out,0);
@@ -702,8 +707,9 @@ dmat* readstr_dmat_n(int n, const char* str){
 		readstr_numarr((void**)pval, n, &nx, &ny, M_REAL, fn);
 		if(!nx||!ny){
 			free(val); val=NULL;
+		}else{
+			res=dnew_do(nx, ny, val, mem_new(val));
 		}
-		res=dnew_do(nx, ny, val, mem_new(val));
 	}
 	free(fn);
 	return res;
@@ -745,7 +751,11 @@ dmat* readcfg_dmat_nmax(int n, const char* format, ...){
 	dmat* out=readstr_dmat_n(n, str);
 	long nread=out?(NX(out)*NY(out)):0;
 	if(nread<=1){
-		dresize(out, n, 1);
+		if(!out){
+			out=dnew(n,1);
+		}else{
+			dresize(out, n, 1);
+		}
 		if(nread==1){
 			dset(out, P(out,0));
 		}

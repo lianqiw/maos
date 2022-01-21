@@ -187,12 +187,9 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	int opdxcover=1;
 	SURF_DATA sdata={parms, aper, powfs, recon, NULL, 0, nevl, nwfs, nncpa, evlcover, wfscover, ncpacover, 0};
 	const int nthread=NTHREAD;
-	thread_t  tdata_wfs[nthread], tdata_evl[nthread], tdata_ncpa[nthread];
-	thread_prep(tdata_evl, 0, nevl, nthread, prop_surf_evl, &sdata);
-	thread_prep(tdata_wfs, 0, nwfs, nthread, prop_surf_wfs, &sdata);
-	if(nncpa){
-		thread_prep(tdata_ncpa, 0, nncpa, nthread, prop_surf_ncpa, &sdata);
-	}
+	thread_t* tdata_evl=thread_prep(0, nevl, nthread, prop_surf_evl, &sdata);
+	thread_t* tdata_wfs=thread_prep(0, nwfs, nthread, prop_surf_wfs, &sdata);
+	thread_t* tdata_ncpa=nncpa?thread_prep(0, nncpa, nthread, prop_surf_ncpa, &sdata):NULL;
 
 	for(int isurf=0; isurf<parms->nsurf; isurf++){
 		char* fn=parms->surf[isurf];
@@ -310,6 +307,9 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	free(evlcover);
 	free(wfscover);
 	free(ncpacover);
+	free(tdata_evl);
+	free(tdata_wfs);
+	free(tdata_ncpa);
 }
 
 /** We trace rays from Science focal plan OPD to ploc along evaluation
