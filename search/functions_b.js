@@ -2,11 +2,10 @@ var searchData=
 [
   ['m3proj',['m3proj',['../proj_8h.html#a90190c181f11b90a3bbd15f5b83c6ca4',1,'proj.c']]],
   ['m3proj2',['m3proj2',['../proj_8h.html#a63fa9db6477e688b65d03ddf4b7ae6db',1,'proj.c']]],
-  ['main',['main',['../main_8c.html#ac0f2228420376f4db7e1274f2b41667c',1,'main.c']]],
   ['maos_5fiseed',['maos_iseed',['../maos_8h.html#ab642ac48296a45f061bd093ecee20604',1,'sim.c']]],
   ['maos_5fisim',['maos_isim',['../maos_8h.html#afda0654e4cb8f4e37feb53986e044e19',1,'sim.c']]],
-  ['maos_5freset',['maos_reset',['../maos_8h.html#ab51286f168c1230cda425a07100662ea',1,'setup_all.c']]],
-  ['maos_5fsetup',['maos_setup',['../maos_8h.html#a3a5897e2d10829666c51e453ac960acf',1,'setup_all.c']]],
+  ['maos_5freset',['maos_reset',['../maos_8h.html#ab51286f168c1230cda425a07100662ea',1,'setup.c']]],
+  ['maos_5fsetup',['maos_setup',['../maos_8h.html#a3a5897e2d10829666c51e453ac960acf',1,'setup.c']]],
   ['maos_5fsignal_5fhandler',['maos_signal_handler',['../maos_2utils_8h.html#aafb94bb8e11bc2169946336024d6b0fc',1,'utils.c']]],
   ['maos_5fsim',['maos_sim',['../maos_8h.html#a5935e0612a22d888703e8eee46a930bf',1,'sim.c']]],
   ['map2loc',['map2loc',['../loc_8h.html#ab5264c94c53b39c19529e83764319a0d',1,'loc.c']]],

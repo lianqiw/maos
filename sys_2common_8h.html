@@ -181,11 +181,8 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; info(A);}})</td></tr>
 <tr class="separator:aecfbb1e9291f15553ecf346710b28398"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a625bac7b464519d4050f5ac672c5399a"><td class="memItemLeft" align="right" valign="top"><a id="a625bac7b464519d4050f5ac672c5399a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  format, ...)&#160;&#160;&#160;logerr(level, &quot;%s%s(%s:%d): &quot; format &quot;%s&quot;, CYAN, __func__,BASEFILE,__LINE__,##__VA_ARGS__, BLACK)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  format, ...)&#160;&#160;&#160;logerr(level, &quot;%s&quot; format &quot;%s&quot;, YELLOW, ##__VA_ARGS__, BLACK)</td></tr>
 <tr class="separator:a625bac7b464519d4050f5ac672c5399a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab44f1b142dc82fb4bb8844683baeb68c"><td class="memItemLeft" align="right" valign="top"><a id="ab44f1b142dc82fb4bb8844683baeb68c"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg0</b>(format, ...)&#160;&#160;&#160;logstd(0, &quot;%s&quot; format &quot;%s&quot;, CYAN, ##__VA_ARGS__, BLACK)</td></tr>
-<tr class="separator:ab44f1b142dc82fb4bb8844683baeb68c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7033895ed53df94af8dc30f4ae8a2e0e"><td class="memItemLeft" align="right" valign="top"><a id="a7033895ed53df94af8dc30f4ae8a2e0e"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg</b>(A...)&#160;&#160;&#160;logdbg(0, A)</td></tr>
 <tr class="separator:a7033895ed53df94af8dc30f4ae8a2e0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -229,7 +226,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>toc</b>(format, ...)&#160;&#160;&#160;logstd(-1, format &quot; takes %.6f seconds.\n&quot;, ##__VA_ARGS__, myclockd()-tk)</td></tr>
 <tr class="separator:afaece5ad9cda01b33f134d1d6d8c3fb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a977d0e7229a9c0a29efd9a697aeed163"><td class="memItemLeft" align="right" valign="top"><a id="a977d0e7229a9c0a29efd9a697aeed163"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>toc2</b>(format, ...)&#160;&#160;&#160;dbg0(format &quot; takes %.6f seconds.\n&quot;, ##__VA_ARGS__, myclockd()-tk)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>toc2</b>(format, ...)&#160;&#160;&#160;dbg(format &quot; takes %.6f seconds.\n&quot;, ##__VA_ARGS__, myclockd()-tk)</td></tr>
 <tr class="separator:a977d0e7229a9c0a29efd9a697aeed163"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fade71545b5da6ed1a62dfa2b8bacfa"><td class="memItemLeft" align="right" valign="top"><a id="a9fade71545b5da6ed1a62dfa2b8bacfa"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>toc3</b>&#160;&#160;&#160;(<a class="el" href="sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()-tk)</td></tr>

@@ -26,7 +26,6 @@ var sys_2common_8h =
     [ "info3", "sys_2common_8h.html#aa30612d0b25f8f68181596f70d352efb", null ],
     [ "info_once", "sys_2common_8h.html#aecfbb1e9291f15553ecf346710b28398", null ],
     [ "logdbg", "sys_2common_8h.html#a625bac7b464519d4050f5ac672c5399a", null ],
-    [ "dbg0", "sys_2common_8h.html#ab44f1b142dc82fb4bb8844683baeb68c", null ],
     [ "dbg", "sys_2common_8h.html#a7033895ed53df94af8dc30f4ae8a2e0e", null ],
     [ "dbg2", "sys_2common_8h.html#a9cf96b2f370da5366df0efdecdaea2fc", null ],
     [ "dbg3", "sys_2common_8h.html#a2e51e36b584b061b950ce05578aee507", null ],
