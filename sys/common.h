@@ -60,7 +60,7 @@ using std::strerror;
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <tgmath.h>
+#include <math.h> //don't use tgmath here. it is included in math/numtype.h
 #endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 
 #undef	MAX

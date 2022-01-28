@@ -17,7 +17,10 @@
 */
 
 #ifndef _DEFAULT_SOURCE
-#define _DEFAULT_SOURCE //DT_DIR
+#define _DEFAULT_SOURCE //DT_DIR #glibc > 2.19
+#endif
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE //DT_DIR glibc < 2.19
 #endif
 #include <dirent.h>
 #include <getopt.h>

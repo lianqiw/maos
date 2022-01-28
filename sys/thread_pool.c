@@ -68,8 +68,6 @@
 #include "misc.h" //mysleep
 #include "thread.h"
 #include "thread_pool.h"
-//#include "process.h"
-_Thread_local unsigned int tid=0;//thread id
 
 /**
  *  The thread pool struct.
@@ -174,7 +172,7 @@ static inline int do_job(int urgent){
  */
 static void* run_thread(void* data){
 	(void)data;
-	tid=atomic_add_fetch(&pool.ncur, 1);//increment pool counter
+	atomic_add_fetch(&pool.ncur, 1);//increment pool counter
 	while(1){
 		while(do_job(0));//do until no jobs are left
 		pthread_mutex_lock(&pool.mutex);//acquire lock before modifying pool and wait. 	
@@ -310,7 +308,7 @@ void thread_pool_init(int nthread){
 		pool.nidle=0;
 		pool.ncur=1;/*counting the master thread. */
 		pool.nmax=1;
-		tid=1;//master thread
+
 		jobsall_i=1;//start with 1. 0 indicate empty job.
 		jobsall_count=nthread*100;
 		jobsall=mycalloc(jobsall_count, jobs_t);
