@@ -607,8 +607,10 @@ static void readcfg_dm(parms_t* parms){
 	READ_DM_RELAX(dbl, dx);
 	READ_DM_RELAX(dbl, ar);
 	for(int idm=0; idm<ndm; idm++){
-		if(parms->dm[idm].dx<0){//this is the order.
+		if(parms->dm[idm].dx<=-1){//this is the order.
 			parms->dm[idm].dx=-parms->aper.d/parms->dm[idm].dx;
+		}else if(parms->dm[idm].dx<0){
+			parms->dm[idm].dx*=-parms->aper.d;
 		}
 		parms->dm[idm].order=ceil(parms->aper.d/parms->dm[idm].dx);
 		parms->dm[idm].dy=parms->dm[idm].dx*parms->dm[idm].ar;
@@ -674,6 +676,11 @@ static void readcfg_moao(parms_t* parms){
 	char** strtmp=NULL;
 	READ_MOAO_RELAX(dbl, dx);
 	for(int imoao=0; imoao<nmoao; imoao++){
+		if(parms->moao[imoao].dx<=-1){
+			parms->moao[imoao].dx=parms->aper.d/(-parms->moao[imoao].dx);
+		} else if(parms->moao[imoao].dx<0){
+			parms->moao[imoao].dx*=-parms->aper.d;
+		}
 		parms->moao[imoao].order=ceil(parms->aper.d/parms->moao[imoao].dx);
 	}
 	READ_MOAO_RELAX(dbl, iac);
@@ -2138,7 +2145,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 				mindsa=parms->powfs[ipowfs].dsa;
 			}
 		}
-		for(int idm=0; idm<parms->ndm; idm++){
+		/*for(int idm=0; idm<parms->ndm; idm++){
 			if(parms->dm[idm].dx<mindsa){
 				mindsa=parms->dm[idm].dx;
 			}
@@ -2147,7 +2154,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 			if(parms->moao[imoao].dx<mindsa){
 				mindsa=parms->moao[imoao].dx;
 			}
-		}
+		}*/
 		parms->atmr.dx=mindsa;
 	}
 

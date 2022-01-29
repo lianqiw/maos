@@ -4,6 +4,7 @@ import os
 import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
+from scipy.integrate import cumtrapz
 from numpy import sqrt, exp, log, floor, ceil, nan, pi
 from numpy.random import rand, randn
 import matplotlib.pyplot as plt
@@ -436,3 +437,29 @@ def fftshift(a):
         for ic in range(ia, na):
             a=np.roll(a, int(a.shape[ic]/2), axis=ic)
     return a
+def calc_psd(v, dt=1, fold=1, axis=-1):
+    '''compute PSD from time histories'''
+    nstep=v.shape[axis]
+    nmid=(nstep>>1)
+    df=1/(nstep*dt);
+    af=np.abs(np.fft.fft(v,axis=axis))**2*(1/(df*nstep*nstep))
+    
+    if fold:
+        f=np.arange(nmid+1)*df
+        psd=af[:,0:1+nmid]
+        psd[:,1:-1]+=af[:,-1:nmid:-1]
+    else:
+        f=np.arange(nstep)*df
+        psd=af
+    
+    return(f,psd)
+def plot_psd_cumu(f, psd, plot_options='-'):
+    '''Plot the PSD cumulative integral from high to low'''
+    fr=f[::-1]
+    if psd.ndim==2:
+        fr2=fr[:,None]
+    else:
+        fr2=fr;
+    psdr=mysqrt(-cumtrapz(psd[::-1],fr2,axis=0,initial=0))
+    loglog(fr,psdr, plot_options)
+    

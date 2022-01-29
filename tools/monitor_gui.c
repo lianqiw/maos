@@ -773,7 +773,7 @@ GtkWidget* new_page(int ihost){
 	/*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */
 	//gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
 	//gtk_tree_view_set_headers_clickable(GTK_TREE_VIEW(view), TRUE);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
+
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
 	if(ihost==nhost){
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Host", "text", COL_HOST, NULL));
@@ -787,6 +787,7 @@ GtkWidget* new_page(int ihost){
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, "foreground", COL_COLOR, NULL));
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value", COL_SEEDP, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_STEPT, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value", COL_STEPP, NULL));
 	
 	gtk_tree_view_columns_autosize(GTK_TREE_VIEW(view));
