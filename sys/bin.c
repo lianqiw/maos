@@ -802,10 +802,22 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 			if(length>70) length=70;//each line can contain maximum 70 values
 
 			if(eq){//there is an equal sign.
-				strncpy(header[hc], str, MIN(8, (eq-str)));
+				//strncpy(header[hc], str, MIN(8, (eq-str)));//replaced by below
+				for(int ic=0; ic<MIN(8, (eq-str)); ic++){//fits standard requires upper case keywords
+					if(!str[ic]) break;
+					header[hc][ic]=toupper((unsigned char)str[ic]);
+				}
 				header[hc][8]='=';
 				header[hc][9]=' ';
-				strncpy(header[hc]+10, eq+1, length);
+				//strncpy(header[hc]+10, eq+1, length);//replaced by below
+				int slash_found=0;//convert char before / to upper case for the FITS standard
+				for(int ic=0; ic<length; ic++){
+					if(eq[1+ic]=='/'){
+						slash_found=1;
+					}
+					header[hc][10+ic]=slash_found?eq[1+ic]:toupper((unsigned char)eq[1+ic]);
+					if(!eq[1+ic]) break;
+				}
 			} else{
 				strncpy(header[hc], "COMMENT   ", 11);
 				strncpy(header[hc]+10, str, length);
