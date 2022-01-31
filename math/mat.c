@@ -119,7 +119,7 @@ void X(free_do)(X(mat)* A){
 #ifndef COMP_LONG
 		if(A->fft) X(fft_free_plan)(A->fft);
 #endif
-		if(A->header) free(A->header);
+		if(A->header) {free(A->header); A->header=NULL;}
 	}
 	free(A);
 }

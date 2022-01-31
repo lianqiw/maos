@@ -403,6 +403,7 @@ static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
 	}								\
 	if(!*out) {							\
 	    *out=D##new(in.Nx(), in.Ny());				\
+		if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
 	}else{								\
 	    assert((*out)->nx*(*out)->ny==in.N());			\
 	}								\
@@ -424,6 +425,7 @@ add2cpu_mat(c, real, Comp)
 	}								\
 	if(!*out) {							\
 	    *out=D##cellnew(in.Nx(), in.Ny());				\
+		if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
 	}else{								\
 	    assert((*out)->nx*(*out)->ny==in.N());			\
 	}								\
@@ -444,7 +446,10 @@ add2cpu_cell(z, float, cuccell)
 	    if(*out) dzero(*out);					\
 	    return;							\
 	}								\
-	if(!*out) *out=dnew(in.Nx(), in.Ny());				\
+	if(!*out) {\
+		*out=dnew(in.Nx(), in.Ny());				\
+		if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
+	}\
 	dmat *pout=*out;						\
 	DO(cudaMemcpyAsync(P(pout), in(), in.N()*sizeof(T),D2H, stream));	\
 	CUDA_SYNC_STREAM;\
@@ -480,7 +485,10 @@ void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream){
 	    if(*out) S##cellzero(*out);					\
 	    return;							\
 	}								\
-	if(!*out) *out=S##cellnew(in.Nx(), in.Ny());			\
+	if(!*out){\
+		 *out=S##cellnew(in.Nx(), in.Ny());			\
+		 if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
+	}\
 	for(int i=0; i<in.N(); i++){					\
 	    cp2cpu(&(*out)->p[i], in[i], stream);			\
 	}								\
