@@ -317,7 +317,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>default_quitfun</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(LOG_LEVEL&gt;level){\</div><div class="line">  if(!detached) fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); <span class="keywordflow">if</span>(fplog) fprintf(fplog, format, ##__VA_ARGS__);}})</div></div><!-- fragment -->
+<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(LOG_LEVEL&gt;level){\</div><div class="line">  if(!detached){fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__);} <span class="keywordflow">if</span>(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})</div></div><!-- fragment -->
 </div>
 </div>
 <a id="a25109b9068a7577def63faa4bf329664"></a>
@@ -345,7 +345,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>default_quitfun</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(LOG_LEVEL&gt;level){\</div><div class="line">  if(!detached)fprintf(stdout, A); <span class="keywordflow">if</span>(fplog) fprintf(fplog, A);}})</div></div><!-- fragment -->
+<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(LOG_LEVEL&gt;level){\</div><div class="line">  if(!detached){fprintf(stdout, A);} <span class="keywordflow">if</span>(fplog){fprintf(fplog, A);}}})</div></div><!-- fragment -->
 </div>
 </div>
 <a id="a09be4f80cada4e5b2082a65011fc90db"></a>
