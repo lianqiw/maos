@@ -90,6 +90,37 @@ else
     AC_MSG_ERROR([Compiler $CC is unknown])
 fi
 AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], ["Whether MAOS is using C++ compiler"])
+AM_CONDITIONAL(GCC, [test x$CN = xGCC])
+AM_CONDITIONAL(ICC, [test x$CN = xICC])
+AM_CONDITIONAL(CLANG, [test x$CN = xCLANG])
+CC_VERSION=$($CC -dumpversion)
+AC_DEFINE_UNQUOTED(COMPILER, ["$CN ($CC_VERSION)"], ["Compiler"])
+
+if test -n "$CC_VERSION" ;then
+	major=${CC_VERSION%%.*}
+	minor=${CC_VERSION#*.}
+	if test $minor = $CC_VERSION ;then
+		minor=0
+	else
+		minor=${minor%%.*}
+	fi
+fi
+
+case "$CN" in
+    GCC)
+	    if test "$major" -lt 4 ;then
+			AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
+	    fi
+	;;
+    CLANG)
+		if test "$system" = "apple" ;then
+			CFLAGS+=" -stdlib=libc++"
+		fi
+	;;
+    *)
+	;;	
+esac
+
 
 #AUTO detect libraries in the system
 #Try to discover CUDA install in the system
@@ -221,45 +252,7 @@ DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-funct
 #in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline 
 #GCC mode can be forced on using __attribute__((gnu_inline))
 #always_inline causes inline to be done in debug mode.
-AM_CONDITIONAL(GCC, [test x$CN = xGCC])
-AM_CONDITIONAL(ICC, [test x$CN = xICC])
-AM_CONDITIONAL(CLANG, [test x$CN = xCLANG])
-case "$CN" in
-    ICC)
-	CC_VERSION=$($CC -dumpversion)
-	if test -n "$CC_VERSION" ;then
-	    major=${CC_VERSION%%.*}
-	    minor=${CC_VERSION#*.}
-	    minor=${minor%%.*}
-	fi
-	;;
-    GCC)
-	CC_VERSION=$($CC -dumpversion)
-	if test -n "$CC_VERSION" ;then
-	    major=${CC_VERSION%%.*}
-	    minor=${CC_VERSION#*.}
-	    if test $minor = $CC_VERSION ;then
-			minor=0
-	    else
-			minor=${minor%%.*}
-	    fi
-	    echo major=$major minor=$minor
-	    if test "$major" -lt 4 ;then
-			AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
-	    fi
-	fi
-	;;
-    CLANG)
-		CC_VERSION=$($CC -dumpversion)
-		if test "$system" = "apple" ;then
-			CFLAGS+=" -stdlib=libc++"
-		fi
-	;;
-    *)
-	;;	
-esac
 
-AC_DEFINE_UNQUOTED(COMPILER, ["$CN ($CC_VERSION)"], ["Compiler"])
 if test "x$enable_debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
@@ -1113,7 +1106,7 @@ echo Compiling options:
 echo 
 echo "host_os:         $host_os"
 echo "host_cpu:        $host_cpu"
-echo "CC:              $CN"
+echo "CC:              $CN ($major.$minor)"
 echo "Debug:           ${enable_debug:-no}"
 echo "OpenMP:          $has_omp"
 echo "FFTW Threads:    $fftw_threads"

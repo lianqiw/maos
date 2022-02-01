@@ -105,9 +105,9 @@ extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value 
 extern int signal_caught;
 extern FILE* fplog;//The output to fplog is always without color unless user specified.
 #define logerr(level, COLOR, format, ...) ({if(LOG_LEVEL>level){\
-  if(!detached) fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); if(fplog) fprintf(fplog, format, ##__VA_ARGS__);}})
+  if(!detached){fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__);} if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 #define logstd(level, A...) ({if(LOG_LEVEL>level){\
-  if(!detached)fprintf(stdout, A); if(fplog) fprintf(fplog, A);}})
+  if(!detached){fprintf(stdout, A);} if(fplog){fprintf(fplog, A);}}})
 
 #define error(format,...) ({logerr(-4, RED, "Error(%s:%d,%s): " format, BASEFILE,__LINE__,__func__, ##__VA_ARGS__); signal_caught=11; QUIT_FUN("Error happened");})
 #define warning(format,...)    logerr(-4, YELLOW, "Warning(%s:%d,%s): " format, BASEFILE,__LINE__,__func__,##__VA_ARGS__)
