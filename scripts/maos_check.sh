@@ -130,7 +130,7 @@ function run_maos_gpu(){
 	if [ $has_gpu -eq 1 ];then
 		run_maos "$@"
 	else
-		printf "%-20s skipped\n" "$1" | tee -a $fnres
+		printf "%-20s   skipped in CPU mode.\n" "$1" | tee -a $fnres
 		RMS[ii]=0
 		ii=$((ii+1)) 
 	fi

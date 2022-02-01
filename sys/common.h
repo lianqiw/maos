@@ -92,27 +92,29 @@ using std::strerror;
   use () to make the statements a single statement.
 */
 extern int detached;
-#define BLACK (detached?"":"\033[00;00m")
-#define RED (detached?"":"\033[01;31m")
-#define GREEN (detached?"":"\033[0;32m")
-#define YELLOW (detached?"":"\033[0;33m")
-#define BLUE (detached?"":"\033[0;34m")
-#define MAGENTA (detached?"":"\033[0;35m")
-#define CYAN (detached?"":"\033[0;36m")
+#define BLACK "\033[00;00m"
+#define RED "\033[01;31m"
+#define GREEN "\033[0;32m"
+#define YELLOW "\033[0;33m"
+#define BLUE "\033[0;34m"
+#define MAGENTA "\033[0;35m"
+#define CYAN "\033[0;36m"
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
 
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
-extern int err2out;//output error() to stdout or stderr
-extern int std2out;//outout info() to stdout or stderr
 extern int signal_caught;
-//We only output to stdout. Its buffer is disabled for immediate output.
-#define logerr(level, A...) ({if(LOG_LEVEL>level){fprintf(err2out?stdout:stderr, A);}})
-#define error(format,...) ({logerr(-4, "%sError(%s:%d,%s): " format "%s", RED,BASEFILE,__LINE__,__func__, ##__VA_ARGS__, BLACK); signal_caught=11; QUIT_FUN("Error happened");})
-#define warning(format,...) logerr(-4, "%sWarning(%s:%d,%s): " format "%s", YELLOW,BASEFILE,__LINE__,__func__,##__VA_ARGS__,BLACK)
-#define warning_time(format,...) logerr(-4,"%s[%s] (%s:%d,%s): " format "%s", YELLOW,myasctime(0),BASEFILE,__LINE__,__func__,##__VA_ARGS__,BLACK)
+extern FILE* fplog;//The output to fplog is always without color unless user specified.
+#define logerr(level, COLOR, format, ...) ({if(LOG_LEVEL>level){\
+  if(!detached) fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); if(fplog) fprintf(fplog, format, ##__VA_ARGS__);}})
+#define logstd(level, A...) ({if(LOG_LEVEL>level){\
+  if(!detached)fprintf(stdout, A); if(fplog) fprintf(fplog, A);}})
+
+#define error(format,...) ({logerr(-4, RED, "Error(%s:%d,%s): " format, BASEFILE,__LINE__,__func__, ##__VA_ARGS__); signal_caught=11; QUIT_FUN("Error happened");})
+#define warning(format,...)    logerr(-4, YELLOW, "Warning(%s:%d,%s): " format, BASEFILE,__LINE__,__func__,##__VA_ARGS__)
+#define warning_time(format,...) logerr(-4, YELLOW, "[%s] (%s:%d,%s): " format, myasctime(0),BASEFILE,__LINE__,__func__,##__VA_ARGS__)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
 //all info are shown at default log level
-#define logstd(level, A...) ({if(LOG_LEVEL>level){fprintf(std2out?stdout:stderr, A);}})
+
 #define info_line(format,...) logstd(-4, "Info(%s:%d,%s): " format ,BASEFILE,__LINE__,__func__,##__VA_ARGS__)
 #define info_time(format,...) logstd(-1, "[%s] " format, myasctime(0), ##__VA_ARGS__)
 #define info(A...)  logstd(-1, A) //least important info
@@ -124,12 +126,12 @@ extern int signal_caught;
 //dbg do not shown when detached
 //use __func__ to indicate function name
 //#define logdbg(level, format, ...) logerr(level, "%s%s(%s:%d): " format "%s", CYAN, __func__,BASEFILE,__LINE__,##__VA_ARGS__, BLACK)
-#define logdbg(level, format, ...) logerr(level, "%s" format "%s", YELLOW, ##__VA_ARGS__, BLACK)
+#define logdbg(level, format, ...) logerr(level, YELLOW, format, ##__VA_ARGS__)
 #define dbg( A...) logdbg(0, A)
 #define dbg2(A...) logdbg(1, A)
 #define dbg3(A...) logdbg(2, A)
 #define dbg_once(A...) ({static int done=0; if(!done){done=1; dbg(A);}})
-#define logdbg_time(level, format, ...) logerr(level, "%s[%s]%s: " format "%s", CYAN, myasctime(0), __func__, ##__VA_ARGS__, BLACK)
+#define logdbg_time(level, format, ...) logerr(level, CYAN, "[%s]%s: " format, myasctime(0), __func__, ##__VA_ARGS__)
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)

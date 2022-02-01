@@ -34,7 +34,8 @@
 #include "process.h"
 #include "misc.h"
 #include "daemonize.h"
-
+int detached=0;
+FILE *fplog=NULL;
 /*
   \file daemonize.c
 
@@ -237,43 +238,6 @@ int single_instance_daemonize(const char* lockfolder_in,
 		return 0;
 	}
 }
-int detached=0;
-typedef struct{
-	int pfd;//input fd
-	int fps[2];//output fds
-	int nfp;//2
-}dup_stdout_t;
-/**
-  Replicate stream written to stdout to both stdout and file.
-* */
-static void* dup_stdout(dup_stdout_t* data){
-	int fd=data->pfd;//read.
-	int nfp=data->nfp;
-	char buf[400];
-	int nactive=nfp;
-	while(nactive){
-		int len=read(fd, buf, sizeof buf);
-		if(len<=0&&errno==EINTR){
-			continue;
-		}
-		if(len<=0){/*pipe closed. parent exited. we exit also.*/
-			break;
-		}
-		nactive=0;
-		for(int i=0; i<2; i++){
-			if(data->fps[i]!=-1){
-				if(write(data->fps[i], buf, len)!=len){
-					data->fps[i]=-1;
-				} else{
-					nactive++;
-				}
-			}
-		}
-	}
-	free(data);
-	return 0;
-}
-
 /**
   Redirect output.
   If we are in detached mode, will output to file, otherwise will output to both file and screen.
@@ -281,48 +245,20 @@ static void* dup_stdout(dup_stdout_t* data){
 void redirect(void){
 	extern int disable_save;
 	if(disable_save) return;
-	static int count=0;
-	count++;
-	if(count>1){
-		dbg("redirect can only be called once\n");
+	if(fplog){
+		dbg("redirect is already setup\n");
 		return;
+	}
+	if(detached){
+		if(!freopen("/dev/null", "r", stdin)||!freopen("/dev/null", "w", stdout)||!freopen("/dev/null", "w", stderr)){
+			dbg("Unable to redirect stdin, stdout, or stderr\n");
+		}
+	}else{
+		setbuf(stdout, NULL);/*disable buffering. */
 	}
 	char fnlog[PATH_MAX];
 	snprintf(fnlog, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-	//don't close stdin to prevent fd=0 from being used by file.
-	if(!freopen("/dev/null", "r", stdin)) warning("Error redirecting stdin\n");
-	if(detached){//only output to file
-		//2021-07-09: All print goes to stdout (error() goes also to stderr). 
-		//It is problematic to redirect both stdout and stderr to the same file (ordering is messed up)
-		if(!freopen(fnlog, "w", stdout)) warning("Error redirecting stdout.\n");
-		char fnerr[PATH_MAX];
-		snprintf(fnerr, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-		if(!freopen(fnerr, "w", stderr)) warning("Error redirecting stderr.\n");
-	} else{
-		/* output to both file and screen. we first keep a reference to our
-		console output fd. The stdout and stderr is redirected to one of of the
-		pipe and the other end of the pipe is output to the screen and file.
-		*/
-		int pfd[2];
-		if(pipe(pfd)){//fail to create pipe.
-			warning("pipe failed, failed to redirect stdout.\n");
-		} else{
-			static dup_stdout_t dup_data;
-			dup_data.nfp=2;
-			dup_data.fps[0]=dup(fileno(stdout));
-			dup_data.fps[1]=open(fnlog, O_WRONLY|O_CREAT, 0666);//log
-			dup_data.pfd=pfd[0];//read
-			//spawn a thread to duplicate output to both console and file.
-			pthread_t thread;
-			//child thread read from pfd[0] and write to stdout.
-			pthread_create(&thread, NULL, (void* (*)(void*))dup_stdout, &dup_data);
-			//master threads redirects stderr and stdout to pfd[1]
-			if(dup2(pfd[1], 1)==-1){
-				warning("Error redirecting stdout ");
-			}
-		}
-	}
-	setbuf(stdout, NULL);
+	fplog=fopen(fnlog, "w");
 }
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.

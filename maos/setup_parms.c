@@ -2145,16 +2145,23 @@ static void setup_parms_postproc_atm(parms_t* parms){
 				mindsa=parms->powfs[ipowfs].dsa;
 			}
 		}
-		/*for(int idm=0; idm<parms->ndm; idm++){
-			if(parms->dm[idm].dx<mindsa){
-				mindsa=parms->dm[idm].dx;
+		if(isinf(mindsa)){
+			for(int idm=0; idm<parms->ndm; idm++){
+				if(parms->dm[idm].dx<mindsa){
+					mindsa=parms->dm[idm].dx;
+				}
 			}
 		}
-		for(int imoao=0; imoao<parms->nmoao; imoao++){
-			if(parms->moao[imoao].dx<mindsa){
-				mindsa=parms->moao[imoao].dx;
+		if(isinf(mindsa)){
+			for(int imoao=0; imoao<parms->nmoao; imoao++){
+				if(parms->moao[imoao].dx<mindsa){
+					mindsa=parms->moao[imoao].dx;
+				}
 			}
-		}*/
+		}
+		if(isinf(mindsa)){
+			error("Unable to determine atmr.dx. Please specify manually atmr.dx\n");
+		}
 		parms->atmr.dx=mindsa;
 	}
 

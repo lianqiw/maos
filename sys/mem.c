@@ -735,9 +735,7 @@ void read_sys_env(){
 	READ_ENV_INT(MEM_FUNTRACE, 0, 1);//enable use funtrace instead of backtrace
 	READ_ENV_INT(LOG_LEVEL, -5, 5);
 }
-//FILE *fpconsole=NULL;
-int err2out=1;
-int std2out=1;
+
 static void init_mem(){
 	if(!calloc_default){
 		calloc_default=(void *(*)(size_t, size_t))dlsym(RTLD_DEFAULT, "calloc");
@@ -812,11 +810,12 @@ void register_deinit(void (*fun)(void), void *data){
 
 quitfun_t quitfun=NULL;
 void default_quitfun(const char *msg){
-	info("%s", msg);
-	//sync();
+	info("%s\n", msg);
+	if(fplog){
+		fclose(fplog);
+	}
 	if(strncmp(msg, "FATAL", 5)){
 		print_backtrace();
-		//sync();
 		raise(1);
 	}
 	exit(0);
