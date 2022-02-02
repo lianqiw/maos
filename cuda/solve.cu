@@ -21,7 +21,7 @@ namespace cuda_recon{
 Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	Real ans=0;
 	cgtmp.count++;
-	Real thres=cgtmp.residual*2;
+	Real thres=cgtmp.residual*3;
 	int restarted=0;
 repeat:
 	if(first_run){
