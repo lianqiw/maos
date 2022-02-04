@@ -15,7 +15,7 @@ var searchData=
   ['saspherical',['saspherical',['../parms_8h.html#a2a48f7ed6d8bd38e82e4ba94761f7c76',1,'powfs_cfg_t']]],
   ['save',['save',['../parms_8h.html#ab5d91958df13f96afc87b3f22665f0b9',1,'parms_t::save()'],['../maos_2types_8h.html#a28794c33de4b1ab98071ba470a5499b9',1,'sim_t::save()']]],
   ['scale',['scale',['../maos_2types_8h.html#a23ba1bb4fccb3df5f0c6d6bfbe762929',1,'ngsmod_t::scale()'],['../maos_2types_8h.html#ac45bb243c907f8e1abaff9a951613e39',1,'fdpcg_t::scale()'],['../maos_2types_8h.html#afd050b5ecb48c0eb7a89c6dae46f7f7a',1,'fractal_t::scale()']]],
-  ['screen',['screen',['../turbulence_8h.html#ae6ab6609cc4b8fa90c08562e818f590d',1,'genatm_t']]],
+  ['screen',['screen',['../turbulence_8h.html#ab812022f4956b0712a16646d09015b0c',1,'genatm_t']]],
   ['seed',['seed',['../maos_2types_8h.html#a70068bd1ecc6478dc836162e2bfbf777',1,'sim_t']]],
   ['seeds',['seeds',['../parms_8h.html#a3559396cb01e83303920574e71fcca0c',1,'sim_cfg_t']]],
   ['sepsf',['sepsf',['../maos_2types_8h.html#afbbfc16176f79ffb1341c270015a81f5',1,'intstat_t']]],
