@@ -375,7 +375,7 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 	CUDA_CHECK_ERROR;
 	//cuzero(gradcalc, stream);//no need, mtche, tcog_do does not accumulate.
 	const int totpix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
-	static int last_phytype=-1;
+	//static int last_phytype=-1;
 	const Real cogthres=parms->powfs[ipowfs].cogthres;
 	const Real cogoff=parms->powfs[ipowfs].cogoff;
 	switch(parms->powfs[ipowfs].phytype_sim){
@@ -383,9 +383,6 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 		break; //no-op
 	case PTYPE_MF://Matched filter
 	{
-		if(last_phytype!=PTYPE_MF){ 
-			dbg("powfs %d: Computing matched filter. sigmatch=%d\n", ipowfs, parms->powfs[ipowfs].sigmatch);
-		}
 		Real sigratio=parms->powfs[ipowfs].sigmatch==2?(cuwfs[iwfs].i0sumsum/cursum(ints.M(), stream)):0;
 		mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche()), ints.M(),
 			parms->powfs[ipowfs].sigmatch, cuwfs[iwfs].i0sum(), sigratio,
@@ -394,9 +391,6 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 	break;
 	case PTYPE_COG:
 	{//CoG
-		if(last_phytype!=PTYPE_COG) {
-			dbg("powfs %d: Computing Cog. sigmatch=%d\n", ipowfs, parms->powfs[ipowfs].sigmatch);
-		}
 		Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
 		Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
 		int pixpsax=powfs[ipowfs].pixpsax;
@@ -431,7 +425,6 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 			parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 	}
 	CUDA_CHECK_ERROR;
-	last_phytype=parms->powfs[ipowfs].phytype_sim;
 }
 /**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering

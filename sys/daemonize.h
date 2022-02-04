@@ -38,7 +38,9 @@ char* find_exe(const char *name);
 int spawn_process(const char *exename, const char *arg, const char *path);
 extern int detached;
 #define CACHE_FILE(var, fn_cache, f_read, f_create, f_write)\
-{\
+if((char*)NULL==(char*)fn_cache || !fn_cache[0]){\
+  f_create;\
+}else{\
   int retry_count=0;\
   char fn_lock[PATH_MAX+10];\
   snprintf(fn_lock, sizeof fn_lock, "%s.lock", fn_cache);\
