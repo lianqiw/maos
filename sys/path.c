@@ -45,7 +45,7 @@ PNEW(mutex_path);
 void addpath2(const char* path, int priority){
 	char* abspath=myabspath(path);
 	if(!path||!abspath){
-		warning("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath, mygetcwd());
+		warning("Path not found: path=%s; abspath=%s; Ignored.\n", path, abspath);
 		return;
 	}
 	PATH_T* node=mycalloc(1, PATH_T);
@@ -135,9 +135,7 @@ char* search_file(const char* fn){
 				if(!fnout){
 					fnout=strdup(fntmp);
 				} else if(strcmp(fnout, fntmp)){
-					info("at %s\n", fnout);
-					info("at %s\n", fntmp);
-					error("Found multiple %s. Please rename.\n", fn);
+					dbg("Found multiple %s at %s, %s. Will use the first one found.\n", fn, fnout, fntmp);
 				}
 			}
 		}

@@ -29,10 +29,12 @@
 X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 	if(!p){//no pointer is supplied
 		if(nx>0&&ny>0){
-			p=mycalloc((nx*ny), T);
+			if(!(p=mycalloc((nx*ny), T))){
+				error("malloc for %ldx%ld of size %ld failed.\n", nx, ny, sizeof(T));
+			}
 			if(mem){
-				warning("mem must be NULL when p is NULL.\n");
 				print_backtrace();
+				error("mem=%p must be NULL when p is NULL.\n", mem);
 			}
 			mem=mem_new(p);
 		}
@@ -42,11 +44,16 @@ X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 		ny=0;
 	}
 	X(mat)* out=mycalloc(1, X(mat));
-	out->id=M_T;
-	out->nx=nx;
-	out->ny=ny;
-	P(out)=p;
-	if(mem) out->mem=mem_ref(mem);
+	if(!out) {//failed
+		free(p);
+		mem_unref(&mem);
+	}else{
+		out->id=M_T;
+		out->nx=nx;
+		out->ny=ny;
+		out->p=p;
+		if(mem) out->mem=mem_ref(mem);
+	}
 	return out;
 }
 
@@ -202,6 +209,9 @@ void X(resize)(X(mat)* A, long nx, long ny){
 			}
 		} else{/*copy memory to preserve data*/
 			T* p=mycalloc(nx*ny, T);
+			if(!p){
+				error("malloc for %ldx%ld of size %ld failed.\n", nx, ny, sizeof(T));
+			}
 			long minx=A->nx<nx?A->nx:nx;
 			long miny=A->ny<ny?A->ny:ny;
 			for(long iy=0; iy<miny; iy++){

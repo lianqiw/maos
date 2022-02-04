@@ -45,11 +45,11 @@ int PID=0;
 long NMEM=0;/*Total memory in byte. */
 const char* HOME=NULL;
 const char* USER=NULL;
-char HOST[256];
-char TEMP[PATH_MAX];//Do not put temp in user home as it may be shared by hosts and flock over nfs does not work well
-char CACHE[PATH_MAX];//Directory for caching files that are expensive to compute.
-char EXEP[PATH_MAX];/*absolute path of the exe.*/
-char DIRSTART[PATH_MAX];//Start up directory.
+char* HOST=NULL;
+char* TEMP=NULL;//Do not put temp in user home as it may be shared by hosts and flock over nfs does not work well
+char* CACHE=NULL;//Directory for caching files that are expensive to compute.
+char* EXEP=NULL;/*absolute path of the exe.*/
+char* DIRSTART=NULL;//Start up directory.
 /**
    Set the HOME, TEMP, USER names.
 */
@@ -58,9 +58,12 @@ void init_process(void){
 	cygwin_internal(CW_SYNC_WINENV);
 #endif
 	//Local host name
-	if(gethostname(HOST, 255)){
+	char htemp[255];
+	if(gethostname(htemp, sizeof htemp)){
 		warning("Unable to get hostname, set to localhost\n");
-		sprintf(HOST, "localhost");
+		HOST=mystrdup("localhost");
+	}else{
+		HOST=mystrdup(htemp);
 	}
 
 	//Get User
@@ -81,19 +84,19 @@ void init_process(void){
 	//Get Temp directory
 #if defined(__CYGWIN__)
 	if(HOME){
-		snprintf(TEMP, sizeof(TEMP), "%s/.aos/tmp/%s", HOME, HOST);
+		TEMP=stradd(HOME, "/.aos/tmp/", HOST, NULL);
 	}else
 #endif
-	snprintf(TEMP, sizeof(TEMP), "/tmp/maos-%s", USER);
-
+	TEMP=stradd("/tmp/maos-",USER,NULL);
 
 	//Create temporary folders
 	mymkdir("%s", TEMP);
 	if(!HOME) HOME=TEMP;
 	mymkdir("%s/.aos/", HOME);
-	snprintf(CACHE, PATH_MAX, "%s/.aos/cache", HOME);
+	CACHE=stradd(HOME, "/.aos/cache",NULL);
 	mymkdir("%s", CACHE);
 	
+	DIRSTART=mygetcwd();
 	if(!getcwd(DIRSTART, PATH_MAX)){
 		snprintf(DIRSTART, PATH_MAX, "./");
 	}
@@ -104,12 +107,10 @@ void init_process(void){
 			char* tmp=strrchr(exepath, '/');
 			if(exepath[0]=='/'&&tmp){
 				*tmp=0;
+				EXEP=mystrdup(exepath);
 			} else{
-				strncpy(exepath, mygetcwd(), PATH_MAX-1);
+				EXEP=mygetcwd();
 			}
-			strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]=0;
-		} else{
-			EXEP[0]=0;
 		}
 	}
 
@@ -139,7 +140,16 @@ void init_process(void){
 #endif
 	PID=(int)getpid();
 }
-
+/**
+ * free memory
+ * */
+void free_process(){
+	free(TEMP); TEMP=NULL;
+	free(CACHE); CACHE=NULL;
+	free(EXEP); EXEP=NULL;
+	free(DIRSTART); DIRSTART=NULL;
+	free(HOST); HOST=NULL;
+}
 /**
    Obtain the current usage level of CPU, between 0 and 1.
 */

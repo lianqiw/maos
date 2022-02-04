@@ -27,6 +27,7 @@
 void GetTempPath(long, char*);
 #endif
 void init_process(void);
+void free_process(void);
 int    get_usage_running(void);
 double get_usage_load(void);
 double get_usage_mem(void);
@@ -47,11 +48,11 @@ extern int PID;
 extern long NMEM;
 extern const char *HOME;/*the user home */
 extern const char *USER;/*the user name */
-extern char HOST[];/*the host name */
-extern char TEMP[];/*the temporary folder */
-extern char CACHE[]; /*the caching folder */
-extern char EXEP[];/*the exe path*/
-extern char DIRSTART[]; /*the startup directory*/
+extern char* HOST;/*the host name */
+extern char* TEMP;/*the temporary folder */
+extern char* CACHE; /*the caching folder */
+extern char* EXEP;/*the exe path*/
+extern char* DIRSTART; /*the startup directory*/
 int get_ncpu(void);
 #define print_mem(A,...) info(A ":\t%.1f MiB.\n", ##__VA_ARGS__, get_job_mem()/1024.);
 #endif

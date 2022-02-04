@@ -251,8 +251,10 @@ double myclockd(void){
 */
 char* mygetcwd(void){
 	char cwd0[PATH_MAX];
-	if(!getcwd(cwd0, PATH_MAX))
-		error("Error getting current directory\n");
+	if(!getcwd(cwd0, PATH_MAX)){
+		dbg("Error getting current directory\n");
+		cwd0[0]='.'; cwd0[1]=0;
+	}
 	return strdup(cwd0);
 }
 /**

@@ -47,28 +47,27 @@ static char* create_fnatm(genatm_t* data){
 	if(data->r0logpsds){
 		key=hashlittle(P(data->r0logpsds), sizeof(real)*NX(data->r0logpsds), key);
 	}
-	char diratm[PATH_MAX];
-	snprintf(diratm, PATH_MAX, "%s/atm", CACHE);
-	if(!exist(diratm)) mymkdir("%s", diratm);
-	const char* prefix=NULL;
-	if(fabs(data->slope+11./3.)<EPS){
-		prefix="vonkarman";
-	} else if(fabs(data->slope+4.)<EPS){
-		prefix="biharmonic";
-	} else if(data->slope==0){
-		prefix="fractal";
-	} else{
-		prefix="spect";
-	}
-	char fnatm[PATH_MAX+100];
-	snprintf(fnatm, sizeof(fnatm), "%s/%s_%ld_%ldx%ld_%g_%ud.bin",
-		diratm, prefix, data->nlayer, NX(data), NY(data), data->dx, key);
-	long avail=available_space(diratm);
+	char fnatm[PATH_MAX];
+	snprintf(fnatm, PATH_MAX, "%s/atm", CACHE);
+	if(!exist(fnatm)) mymkdir("%s", fnatm);
+	long avail=available_space(fnatm);
 	long need=NX(data)*NY(data)*data->nlayer*sizeof(real)+500000000;
-	if(avail>need){
-		return strdup(fnatm);
-	} else{
+	if(avail<need){
 		return NULL;
+	}else{
+		const char* prefix=NULL;
+		if(fabs(data->slope+11./3.)<EPS){
+			prefix="vonkarman";
+		} else if(fabs(data->slope+4.)<EPS){
+			prefix="biharmonic";
+		} else if(data->slope==0){
+			prefix="fractal";
+		} else{
+			prefix="spect";
+		}
+		snprintf(fnatm, sizeof(fnatm), "%s/atm/%s_%ld_%ldx%ld_%g_%ud.bin",
+			CACHE, prefix, data->nlayer, NX(data), NY(data), data->dx, key);
+		return strdup(fnatm);
 	}
 }
 
@@ -224,54 +223,22 @@ static void genscreen_do(zfarr* fc, genatm_t* data){
  * used.
  */
 mapcell* genscreen(genatm_t* data){
-	mapcell* screen;
+	mapcell* screen=NULL;
 	long nlayer=data->nlayer;
 	char* fnatm=NULL;
 	if(data->share){/*shared with file */
 		fnatm=create_fnatm(data);
 	}
-	if(fnatm){
-		char fnlock[PATH_MAX];
-		snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);
-		dcell* in=NULL;
-		while(!in){
-			if(exist(fnatm)){
-				info("Using %s\n", fnatm);
-				in=dcellread_mmap("%s", fnatm);
-			} else{
-			/*non blocking exclusive lock. */
-				int fd=lock_file(fnlock, 0);
-				if(fd>=0){/*succeed to lock file. */
-					char fntmp[PATH_MAX];
-					snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnatm);
-					zfarr* fc=zfarr_init(nlayer, 1, "%s", fntmp);
+	dcell *in=NULL;
+	CACHE_FILE(in, fnatm, ({info("Using %s\n", fnatm);in=dcellread_mmap("%s", fnatm);}),
+				({zfarr*fc=zfarr_init(nlayer, 1, "%s", fnatm);
 					genscreen_do(fc, data);
 					zfarr_close(fc);
-					if(rename(fntmp, fnatm)){
-						error("Unable to rename %s to %s\n", fntmp, fnatm);
-					}
-				} else{/*wait for the previous lock to release.*/
-					warning("Waiting for previous lock to release ...");
-					fd=lock_file(fnlock, 1);
-				}
-				close(fd); remove(fnlock);
-			}
-		}
-		screen=dcell2map(in);
-		dcellfree(in);
-		free(fnatm);
-	} else{
-		screen=(mapcell*)cellnew(nlayer, 1);
-		long nx=NX(data);
-		long ny=NY(data);
-		real dx=data->dx;
-		for(int ilayer=0; ilayer<nlayer; ilayer++){
-			P(screen, ilayer)=mapnew(nx, ny, dx, dx);
-		}
-		data->screen=screen;
-		genscreen_do(0, data);
-		data->screen=0;
-	}
+				}),
+				{});
+	screen=dcell2map(in);
+	cellfree(in);
+	free(fnatm);fnatm=0;
 	return screen;
 }
 /**

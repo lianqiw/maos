@@ -46,17 +46,18 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 ){
 	int fd=open(fnlock, O_RDWR|O_CREAT, 0644);
 	if(fd<0){
-		warning_time("Open file %s failed: %s\n", fnlock, strerror(errno));
+		warning("Open file %s failed: %s\n", fnlock, strerror(errno));
 	}else{
 		int op=block?F_LOCK:F_TLOCK;
 		//lockf() works on both local and NFS
 		if(lockf(fd, op, 0)){/*lock faild. another process already locked file.*/
-			dbg_time("Lock failed: %s\n", strerror(errno));
-		}else{
-			return 0;
+			dbg("Lock %s failed: %s\n", fnlock, strerror(errno));
+			close(fd); fd=-1;
+		}else{//: success
+			dbg("Lock %s success.\n", fnlock);
 		}
 	}
-	return -1;//failed
+	return fd;
 }
 /**
    Ensure exclusive access by opening and maintaining lock of file fn.

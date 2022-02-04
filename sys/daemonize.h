@@ -37,4 +37,30 @@ pid_t launch_exe(const char *exepath, const char *cmd);
 char* find_exe(const char *name);
 int spawn_process(const char *exename, const char *arg, const char *path);
 extern int detached;
+#define CACHE_FILE(var, fn_cache, f_read, f_create, f_write)\
+{\
+  int retry_count=0;\
+  char fn_lock[PATH_MAX+10];\
+  snprintf(fn_lock, sizeof fn_lock, "%s.lock", fn_cache);\
+  while(!var){\
+    if(zfexist("%s",fn_cache) && !exist(fn_lock)){\
+      zftouch("%s",fn_cache);\
+      f_read;\
+    }else{\
+      int fd=lock_file(fn_lock, 0);/*try lock*/ \
+      if(fd>-1 || (retry_count++)>5){/*lock success or too many retries*/ \
+        f_create; \
+        if(fd>-1){\
+          f_write;\
+          remove(fn_lock);\
+        }\
+      }else{\
+        fd=lock_file(fn_lock,1);/*blocking lock to wait for release*/\
+      }\
+      if(fd>-1){\
+        close(fd);\
+      }\
+    }\
+  }\
+}
 #endif

@@ -110,36 +110,20 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 		snprintf(tmp2, 80, "_%ud", key);
 		strcat(fnprefix, tmp2);
 	}
-	char fnotf[PATH_MAX+20];
-	char fnlock[PATH_MAX+40];
-	snprintf(fnotf, PATH_MAX, "%s/SEOTF/", CACHE);
+	char fnotf[PATH_MAX];
+
+	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/", CACHE);
 	if(!exist(fnotf)){
 		mymkdir("%s", fnotf);
 	}
 
-	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/%s_r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_embfac%d_v3",
+	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/%s_r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_embfac%d_v3.bin",
 		CACHE, fnprefix, r0, L0, pts->dsa, pts->nsa, 1./pts->dx, embfac);
-	snprintf(fnlock, sizeof(fnlock), "%s.lock", fnotf);
-	cccell* otf=0;
-	while(!otf){
-		if(exist(fnlock)||!zfexist("%s", fnotf)){/*need to create data */
-			int fd=lock_file(fnlock, 0);/*nonblocking exclusive lock */
-			if(fd>=0){/*succeed */
-				info("Generating OTF for %s...", fnotf);
-				TIC;tic;
-				otf=genseotf_do(pts, amp, opdbias, saa, wvl, r0, L0, embfac);
-				toc2("done");
-				writebin(otf, "%s", fnotf);
-			} else{
-				warning("Waiting for previous lock to release ...");
-				fd=lock_file(fnlock, 1);
-			}
-			close(fd); remove(fnlock);
-		} else{
-			info("Reading OTF from %s\n", fnotf);
-			otf=cccellread("%s", fnotf);
-		}
-	}
+	cccell *otf=0;
+
+	CACHE_FILE(otf, fnotf, ({otf=cccellread("%s", fnotf);}), 
+		({otf=genseotf_do(pts, amp, opdbias, saa, wvl, r0, L0, embfac);}),
+		({writebin(otf, "%s", fnotf);}));
 	return otf;
 }
 /**

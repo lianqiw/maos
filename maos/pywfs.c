@@ -913,23 +913,8 @@ dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, cons
 	cellfree(gg1);
 	exit(0);
 	}*/
-retry:
-	if(exist(fnlock)||!zfexist("%s",fn)){
-		int fd=lock_file(fnlock, 0);//non blocking, exclusive
-		if(fd>0){//succeed
-			info2("Generating PYWFS poke matrix\n");
-			gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey);
-			writebin(gg, "%s", fn);
-			close(fd); remove(fnlock);
-		} else{
-			info2("Trying to lock %s\n", fnlock);
-			fd=lock_file(fnlock, 1);
-			close(fd); remove(fnlock);
-			goto retry;
-		}
-	} else{
-		gg=dread("%s", fn);
-	}
+	CACHE_FILE(gg, fn, ({gg=dread("%s", fn);}), ({gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey);}),
+		({writebin(gg, "%s", fn);}));
 	if(distortion){
 		locfree(locfft);
 	}

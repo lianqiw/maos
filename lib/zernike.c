@@ -359,36 +359,19 @@ static dmat* KL_vonkarman_do(const loc_t* loc, real L0){
 */
 dmat* KL_vonkarman(const loc_t* loc, int nmod, real L0){
 	if(!loc) return 0;
-	uint32_t key=lochash(loc, 0);
-	mymkdir("%s/.aos/cache", HOME);
-	char fn[PATH_MAX+100];
-	snprintf(fn, sizeof(fn), "%s/.aos/cache/KL_vonkarman_%u_%g_%ld.bin", HOME, key, L0, loc->nloc);
-	char fnlock[PATH_MAX+110];
-	snprintf(fnlock, sizeof(fnlock), "%s.lock", fn);
-	dmat* kl=0;
-redo:
-	if(loc->nloc<500){//fast. no need cache.
+	dmat *kl=0;
+	if(loc->nloc<500){
 		kl=KL_vonkarman_do(loc, L0);
-	} else if(!exist(fnlock)&&zfexist("%s",fn)){
-		kl=dread("%s", fn);
-	} else{
-		dbg("trying to lock %s\n", fnlock);
-		int fd=lock_file(fnlock, 0);
-		if(fd>=0){//start preparing
-			dbg("locked\n");
-			kl=KL_vonkarman_do(loc, L0);
-			writebin(kl, "%s", fn);
-			close(fd); remove(fnlock);
-		} else{
-			dbg("waiting to lock %s\n", fnlock);
-			fd=lock_file(fnlock, 1);
-			dbg("locked\n");
-			close(fd); remove(fnlock);
-			goto redo;
-		}
+	}else{
+		uint32_t key=lochash(loc, 0);
+		mymkdir("%s/.aos/cache", HOME);
+		char fn[PATH_MAX];
+		snprintf(fn, sizeof(fn), "%s/.aos/cache/KL_vonkarman_%u_%g_%ld.bin", HOME, key, L0, loc->nloc);
+		CACHE_FILE(kl, fn, ({kl=dread("%s", fn);}), ({kl=KL_vonkarman_do(loc, L0);}), 
+			({writebin(kl, "%s", fn);}));
 	}
 	if(nmod>0&&nmod<loc->nloc){
-	//Take sub matrix
+		//Take sub matrix
 		dmat* klorig=kl;
 		kl=dsub(klorig, 0, 0, 0, nmod);
 		dfree(klorig);

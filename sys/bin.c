@@ -261,8 +261,10 @@ void zftouch(const char* format, ...){
 
 file_t* zfdopen(int fd){
 	file_t* fp=mycalloc(1, file_t);
-	fp->isgzip=0;
-	fp->fd=fd;
+	if(fp){
+		fp->isgzip=0;
+		fp->fd=fd;
+	}
 	return fp;
 }
 /**
@@ -297,6 +299,7 @@ static inline int myopen(const char* name, int oflag, mode_t mode){
 file_t* zfopen(const char* fni, const char* mod){
 	//LOCK(lock);//nothing to protect
 	file_t* fp=mycalloc(1, file_t);
+	if(!fp) return NULL;
 	const char* fn2=fp->fn=procfn(fni, mod);
 	if(!fn2){
 		if(mod[0]=='r'){
@@ -1082,7 +1085,9 @@ void mem_unref(mem_t** pin){
 */
 mem_t* mem_new(void* p){
 	mem_t* out=mycalloc(1, mem_t);
-	out->mem=p;
+	if(out){
+		out->mem=p;
+	}
 	return out;
 }
 /**
@@ -1275,11 +1280,13 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 		return NULL;
 	}
 	async_t* async=mycalloc(1, struct async_t);
-	async->fp=fp;
-	async->p=p;
-	async->pos=pos;
-	async->prev=0;
-	async->aio.aio_fildes=fp->fd;
+	if(async){
+		async->fp=fp;
+		async->p=p;
+		async->pos=pos;
+		async->prev=0;
+		async->aio.aio_fildes=fp->fd;
+	}
 	return async;
 }
 static void async_sync(async_t* async, int wait){

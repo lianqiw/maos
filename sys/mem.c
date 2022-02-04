@@ -682,6 +682,9 @@ static void memkey_init(){
 
 void *calloc_maos(size_t nbyte, size_t nelem){
 	void *p=calloc_default(nbyte, nelem);
+	if(!p){
+		error("calloc failed: %s\n", strerror(errno));
+	}
 	if(MEM_DEBUG){
 		memkey_add(p, nbyte*nelem);
 	}
@@ -693,6 +696,9 @@ void *calloc_maos(size_t nbyte, size_t nelem){
 }
 void *malloc_maos(size_t size){
 	void *p=malloc_default(size);
+	if(!p){
+		error("malloc failed: %s\n", strerror(errno));
+	}
 	if(MEM_DEBUG){
 		memkey_add(p, size);
 	}
@@ -709,6 +715,9 @@ void *realloc_maos(void *p0, size_t size){
 		memkey_del(p0);
 	}
 	void *p=realloc_default(p0, size);
+	if(!p){
+		error("realloc failed: %s\n", strerror(errno));
+	}
 	if(MEM_DEBUG){
 		memkey_add(p, size);
 	}
@@ -770,6 +779,7 @@ static __attribute__((destructor)) void deinit(){
 	remove_file_older(CACHE, 1, 30*24*3600);//1 month
 	freepath();
 	free_hosts();
+	free_process();
 	thread_pool_destroy();
 	for(deinit_t *p1=deinit_head;p1;p1=deinit_head){
 		deinit_head=p1->next;
@@ -777,6 +787,7 @@ static __attribute__((destructor)) void deinit(){
 		if(p1->data) myfree(p1->data);
 		free_default(p1);
 	}
+
 	if(MEM_DEBUG){
 		print_mem_debug();
 	}
