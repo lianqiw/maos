@@ -1,5 +1,6 @@
 var daemonize_8h =
 [
+    [ "CACHE_FILE", "daemonize_8h.html#aee375a410e4732c98fa384493dc394ad", null ],
     [ "single_instance_daemonize", "daemonize_8h.html#a11717d53b875bab717d53dc7c280b1af", null ],
     [ "lock_file", "daemonize_8h.html#ae6acbb2f2605de7c5aaef9e4b4dd421c", null ],
     [ "lock_file_version", "daemonize_8h.html#a2cf440f7f061b747c2e06b0cef9f045b", null ],

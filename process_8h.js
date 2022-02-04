@@ -2,6 +2,7 @@ var process_8h =
 [
     [ "print_mem", "process_8h.html#a0e3bdf0d398b63bfeb41850b67ae7a97", null ],
     [ "init_process", "process_8h.html#a453c688586be0b4133d5cd3508985e41", null ],
+    [ "free_process", "process_8h.html#ab669b7d706b102f1f5cc460624f626b3", null ],
     [ "get_usage_running", "process_8h.html#a65811386f4e5c975de8cb6c1e8e7735b", null ],
     [ "get_usage_load", "process_8h.html#af884d998c4c02dffae80baf345ab1720", null ],
     [ "get_usage_mem", "process_8h.html#a1a10d4fee6c8290b8d8d9308e56cc0e2", null ],

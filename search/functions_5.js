@@ -20,6 +20,7 @@ var searchData=
   ['free_5fpowfs',['free_powfs',['../setup__powfs_8h.html#a1a9c34e6fc651433c73473e0e039dc63',1,'setup_powfs.c']]],
   ['free_5fpowfs_5ffit',['free_powfs_fit',['../setup__recon_8h.html#ae4acd7dfb4d394a30d98e3fc887c7d68',1,'free_powfs_fit(powfs_t *powfs, const parms_t *parms):&#160;setup_recon_fit.c'],['../setup__recon__fit_8c.html#ae4acd7dfb4d394a30d98e3fc887c7d68',1,'free_powfs_fit(powfs_t *powfs, const parms_t *parms):&#160;setup_recon_fit.c']]],
   ['free_5fpowfs_5funused',['free_powfs_unused',['../setup__powfs_8h.html#a26a75b0436e21b8fca94ac004676e984',1,'setup_powfs.c']]],
+  ['free_5fprocess',['free_process',['../process_8h.html#ab669b7d706b102f1f5cc460624f626b3',1,'process.c']]],
   ['free_5frecon',['free_recon',['../setup__recon_8h.html#a533fa88200e668fe0bce42af7f3e6794',1,'setup_recon.c']]],
   ['free_5frecon_5fmoao',['free_recon_moao',['../maos_2moao_8h.html#ac67cb937d05b108cd085a0854bfd9ca0',1,'moao.c']]],
   ['free_5frecon_5funused',['free_recon_unused',['../setup__recon_8h.html#a9a15286be2826aa71cfca6227bb58f07',1,'setup_recon.c']]],
