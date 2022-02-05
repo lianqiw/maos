@@ -354,7 +354,7 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 	const int ndm=parms->ndm;
 	recon->HA_ncpa=dspcellnew(nevl, ndm);
 	dspcell* HA=recon->HA_ncpa/*PDSPCELL*/;
-	info2("Generating HA ");TIC;tic;
+	TIC;tic;
 	for(int ievl=0; ievl<nevl; ievl++){
 		real hs=P(parms->sim.ncpa_hs, ievl);
 		for(int idm=0; idm<ndm; idm++){
@@ -377,7 +377,7 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 		dspcellfree(recon->HA_ncpa);
 		recon->HA_ncpa=HA2;
 	}
-	toc2(" ");
+	toc2("HA_ncpa");
 	if(parms->save.setup){
 		writebin(recon->HA_ncpa, "HA_ncpa");
 	}

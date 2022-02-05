@@ -1,5 +1,3 @@
-SUBDIRS=../math
-
 AM_CFLAGS=$(OPTS) -I$(top_srcdir)
 AM_LDFLAGS=$(LDOPTS)
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."

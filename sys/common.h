@@ -108,34 +108,34 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
   if(!detached){fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__);} if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 #define logstd(level, A...) ({if(LOG_LEVEL>level){\
   if(!detached){fprintf(stdout, A);} if(fplog){fprintf(fplog, A);}}})
+#define logstd_color(level, COLOR, format, ...) ({if(LOG_LEVEL>level){\
+  if(!detached){fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__);} if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 
 #define error(format,...) ({logerr(-4, RED, "Error(%s:%d,%s): " format, BASEFILE,__LINE__,__func__, ##__VA_ARGS__); signal_caught=11; QUIT_FUN("Error happened");})
-#define warning(format,...)    logerr(-4, YELLOW, "Warning(%s:%d,%s): " format, BASEFILE,__LINE__,__func__,##__VA_ARGS__)
-#define warning_time(format,...) logerr(-4, YELLOW, "[%s] (%s:%d,%s): " format, myasctime(0),BASEFILE,__LINE__,__func__,##__VA_ARGS__)
+#define warning(format,...)    logerr(-4, CYAN, "Warning(%s:%d,%s): " format, BASEFILE,__LINE__,__func__,##__VA_ARGS__)
+#define warning_time(format,...) logerr(-4, CYAN, "[%s] (%s:%d,%s): " format, myasctime(0),BASEFILE,__LINE__,__func__,##__VA_ARGS__)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
-//all info are shown at default log level
 
+//all info are shown at default log level
 #define info_line(format,...) logstd(-4, "Info(%s:%d,%s): " format ,BASEFILE,__LINE__,__func__,##__VA_ARGS__)
 #define info_time(format,...) logstd(-1, "[%s] " format, myasctime(0), ##__VA_ARGS__)
 #define info(A...)  logstd(-1, A) //least important info
 #define info2(A...) logstd(-2, A)
 #define info3(A...) logstd(-3, A) //most important info
-//#define info_console(A...) ({if(LOG_LEVEL>-2 && fpconsole) fprintf(fpconsole, A);}) //only output to console.
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
+#define info_progress(i,n) if((i)%(((n)>>4)+1)==0) fprintf(stderr,">") //;/*if((i)+1==(n)) fprintf(stderr,"\n");*/})
+
 //dbg are not shown at default log level
-//dbg do not shown when detached
-//use __func__ to indicate function name
-//#define logdbg(level, format, ...) logerr(level, "%s%s(%s:%d): " format "%s", CYAN, __func__,BASEFILE,__LINE__,##__VA_ARGS__, BLACK)
-#define logdbg(level, format, ...) logerr(level, YELLOW, format, ##__VA_ARGS__)
-#define dbg( A...) logdbg(0, A)
+#define logdbg(level, format, ...) logstd_color(level, YELLOW, format, ##__VA_ARGS__)
+#define dbg( A...) logdbg(0, A)//most important dbg
 #define dbg2(A...) logdbg(1, A)
-#define dbg3(A...) logdbg(2, A)
+#define dbg3(A...) logdbg(2, A)//least important dbg
 #define dbg_once(A...) ({static int done=0; if(!done){done=1; dbg(A);}})
-#define logdbg_time(level, format, ...) logerr(level, CYAN, "[%s]%s: " format, myasctime(0), __func__, ##__VA_ARGS__)
+#define logdbg_time(level, format, ...) logstd_color(level, YELLOW, "[%s]%s: " format, myasctime(0), __func__, ##__VA_ARGS__)
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)
-#define info_progress(i,n) if((i)%(((n)>>4)+1)==0) fprintf(stderr,">") //;/*if((i)+1==(n)) fprintf(stderr,"\n");*/})
+
 #ifndef assert
 #if DEBUG
 #define assert(A) if(!(A)) error("assertion failed: %s\n", #A)

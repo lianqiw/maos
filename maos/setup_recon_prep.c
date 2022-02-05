@@ -456,7 +456,7 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 			}
 		}
 	} else{
-		dbg("Generating HXW ");TIC;tic;
+		TIC;tic;
 		recon->HXW=dspcellnew(nwfs, npsr);
 		dspcell* HXW=recon->HXW/*PDSPCELL*/;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -481,7 +481,7 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 					dispx, dispy, scale);
 			}
 		}
-		toc2(" ");
+		toc2("HXW");
 	}
 	if(parms->save.setup){
 		writebin(recon->HXW, "HXW");
@@ -535,37 +535,33 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 				share_gp=0;
 			}
 		}
-		info("Generating GP with ");TIC;tic;
+		TIC;tic;
 OMP_TASK_FOR(4)
-			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-				const int ipowfs=parms->wfsr[iwfs].powfs;
-				const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);
-				if(parms->powfs[ipowfs].type==WFS_PY){
-					info(" PWFS (skip)");
-				} else{
-					dmat* gamp=0;
-					loc_t* gloc=make_gloc(&gamp, parms, aper, iwfs);
-					if(!share_gp||iwfs==iwfs0){
-						dsp* gp=0;
-						if(parms->powfs[ipowfs].gtype_recon==GTYPE_G){//Average tilt
-							info(" Gploc");
-							gp=mkg(ploc, gloc, gamp, P(recon->saloc, ipowfs), 1, 0, 0, 1);
-						} else if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z){//Zernike fit
-							info(" Zploc");
-							dsp* ZS0=mkz(gloc, P(gamp), P(recon->saloc, ipowfs), 1, 1, 0, 0);
-							dsp* H=mkh(ploc, gloc, 0, 0, 1);
-							gp=dspmulsp(ZS0, H, "nn");
-							dspfree(H);
-							dspfree(ZS0);
-						} else{
-							error("Invalid gtype_recon\n");
-						}
-						P(recon->GP, iwfs)=gp;
+		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+			const int ipowfs=parms->wfsr[iwfs].powfs;
+			const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);
+			if(parms->powfs[ipowfs].type!=WFS_PY){
+				dmat* gamp=0;
+				loc_t* gloc=make_gloc(&gamp, parms, aper, iwfs);
+				if(!share_gp||iwfs==iwfs0){
+					dsp* gp=0;
+					if(parms->powfs[ipowfs].gtype_recon==GTYPE_G){//Average tilt
+						gp=mkg(ploc, gloc, gamp, P(recon->saloc, ipowfs), 1, 0, 0, 1);
+					} else if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z){//Zernike fit
+						dsp* ZS0=mkz(gloc, P(gamp), P(recon->saloc, ipowfs), 1, 1, 0, 0);
+						dsp* H=mkh(ploc, gloc, 0, 0, 1);
+						gp=dspmulsp(ZS0, H, "nn");
+						dspfree(H);
+						dspfree(ZS0);
+					} else{
+						error("Invalid gtype_recon\n");
 					}
-					locfree(gloc);
-					dfree(gamp);
+					P(recon->GP, iwfs)=gp;
 				}
+				locfree(gloc);
+				dfree(gamp);
 			}
+		}
 		if(share_gp){
 			for(int iwfs=0; iwfs<nwfs; iwfs++){
 				const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -575,7 +571,7 @@ OMP_TASK_FOR(4)
 				}
 			}
 		}
-		toc2(" ");
+		toc2("GP");
 		if(parms->save.setup){
 			writebin(recon->GP, "GP");
 		}
@@ -612,7 +608,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 		}
 	} else{
-		dbg("Generating GA ");TIC;tic;
+		TIC;tic;
 		recon->GA=dspcellnew(nwfs, ndm);
 		if(parms->recon.modal){
 			recon->GM=dcellnew(nwfs, ndm);
@@ -721,7 +717,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				}
 			}/*idm */
 		}//iwfs
-		toc2(" ");
+		toc2("GA");
 	}
 	if(parms->recon.modal&&parms->recon.nmod>0){
 		for(int idm=0; idm<ndm; idm++){
@@ -816,14 +812,14 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
 	recon->GX=dspcellnew(nwfs, npsr);
 	dspcell* GX=recon->GX/*PDSPCELL*/;
 	dspcell* HXW=recon->HXW/*PDSPCELL*/;
-	dbg("Generating GX ");TIC;tic;
+	TIC;tic;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	/*gradient from xloc. Also useful for lo WFS in MVST mode. */
 		for(int ips=0; ips<npsr; ips++){
 			P(GX, iwfs, ips)=dspmulsp(P(recon->GP, iwfs), P(HXW, iwfs, ips), "nn");
 		}/*ips */
 	}
-	toc2(" ");
+	toc2("GX");
 	recon->GXtomo=dspcellnew(NX(recon->GX), NY(recon->GX));
 	dspcell* GXtomo=recon->GXtomo/*PDSPCELL*/;
 

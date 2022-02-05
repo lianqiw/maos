@@ -20,7 +20,7 @@ dictall=maos.parse_structs(srcdir, headlist)
 
 simu=dict()
 simu=dictall['sim_t']
-
+unknowns=dict()
 def expand_struct(struct):
     for key in struct:
         val0=struct[key]
@@ -56,13 +56,19 @@ def var2mx(mexname, cname, ctype):
         if len(fun_c)>0:
             return mexname+"="+fun_c+'2mx('+ccast+cname+');'
         else:
-            print("//unknown pointer "+cname+":"+ctype0)
+            if unknowns.get(ctype0):
+                unknowns[ctype0]+=1
+            else:
+                unknowns[ctype0]=1
             return "//unknown pointer "+cname+":"+ctype0+';'
     else:
         if ctype=='char' or ctype=='int' or ctype=='long' or ctype=='double' or ctype=='float' or ctype=='real':
             return mexname+'=mxCreateDoubleScalar('+cname+');'
         else:
-            print("//unknown type    "+cname+":"+ctype0)
+            if unknowns.get(ctype0):
+                unknowns[ctype0]+=1
+            else:
+                unknowns[ctype0]=1
             return "//unknown type    "+cname+":"+ctype0+';'
 
 fundefs=dict()
@@ -153,7 +159,8 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
         return "get_"+funname+"("+parentpointer+varname+");"
 
 struct2mx("sim_t*", "1", "","","", "simu", simu)
-
+#for x in unknowns:
+    #print("  Unknown ({:2d}) times type: {}".format(unknowns[x], x))
 
 fc=open(fnout,'w')
 keys=funheaders.keys()
@@ -170,7 +177,7 @@ for key in funcalls:
 print("}", file=fc)
 print("static mxArray *get_data(sim_t *simu, const char *key){\n\t", end="", file=fc)
 for key in funcalls:
-    print(key)
+    #print(key)
     print("if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse ", end="", file=fc)
 print("{get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}\n}", file=fc)
 fc.close()

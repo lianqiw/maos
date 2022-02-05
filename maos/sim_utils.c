@@ -74,7 +74,6 @@ static mapcell* genatm_do(sim_t* simu){
 				gs->slope=parms->atm.method;
 			}
 		}
-		info("Generating Atmospheric Screen...\n");
 		tic;
 		screens=genscreen(gs);
 		toc2("Atmosphere ");
@@ -301,7 +300,7 @@ void setup_recon_HXW_predict(sim_t* simu){
 	loc_t* ploc=recon->ploc;
 	const int nwfs=parms->nwfsr;
 	const int npsr=recon->npsr;
-	info("Generating Predictive HXW\n");
+	TIC;tic;
 	dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
@@ -326,6 +325,7 @@ void setup_recon_HXW_predict(sim_t* simu){
 			}
 		}
 	}
+	toc2("HXWtomo");
 }
 /**
    Propagate the atmosphere to closest xloc. skip wavefront sensing and

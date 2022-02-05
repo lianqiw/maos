@@ -19,5 +19,3 @@ TESTS=$(bin_PROGRAMS)
 clean-local:
 	@rm -rf *.bin *.fits
 
-MAKEOVERRIDES=--no-print-directory
-MAKEFLAGS=-j8 #enable parallel build

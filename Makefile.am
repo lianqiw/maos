@@ -1,6 +1,11 @@
 ACLOCAL_AMFLAGS=-I m4 --install
+AM_MAKEFLAGS=--no-print-directory
 
-SUBDIRS=bin test
+SUBDIRS=sys math lib 
+if USE_CUDA
+SUBDIRS+=cuda
+endif
+SUBDIRS+=maos skyc test
 if USE_MEX
 SUBDIRS+=mex
 endif

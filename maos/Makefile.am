@@ -1,8 +1,3 @@
-SUBDIRS=../lib
-if USE_CUDA
-SUBDIRS+=../cuda
-endif
-
 AM_CFLAGS=$(OPTS) -I $(top_srcdir) #Compiler flags for each target that doesn't specify per target CFLAGS. Supplements CFLAGS
 AM_LDFLAGS=$(LDOPTS)
 #the libs can not be in AM_LDFLAGS otherwise in mac the binary will not be updated when the libs change (in MAC)#Notice the order. previous dependent on later

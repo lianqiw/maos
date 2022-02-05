@@ -115,7 +115,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 	static int nx0=0, ny0=0;
 	if(!nx0){
 		if(parms->dbg.fullatm){
-			info("Always host full atmosphere in GPU. Set dbg.fullatm=0 to disable\n");
+			dbg("Always host full atmosphere in GPU. Set dbg.fullatm=0 to disable\n");
 			nx0=parms->atm.nx;
 			ny0=parms->atm.ny;
 		} else{
@@ -133,7 +133,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			//avail_min-=256<<19;//reserve 128MiB 
 			//avail_max-=256<<19;
 			long need=nps*sizeof(Real)*nxn*nxn;
-			info("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n",
+			dbg("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n",
 				nxn, nxn, avail_min>>20, avail_max>>20, need>>20);
 			if(avail_min<need){
 				if(avail_max<need){
@@ -162,7 +162,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 					ny0=MIN(parms->atm.ny, MIN(nxa, nxn*2));
 				}
 			}
-			info("We will host %dx%d in GPU, taking %zd MiB\n",
+			dbg("We will host %dx%d in GPU, taking %zd MiB\n",
 				nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
 		}
 	}

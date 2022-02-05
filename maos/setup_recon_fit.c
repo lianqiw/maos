@@ -30,7 +30,7 @@
    Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
 static dspcell*
 setup_fit_HXF(const fit_t* fit){
-	info("Generating HXF");TIC;tic;
+	TIC;tic;
 	if(!fit->xloc) return 0;
 	const int nfit=NX(fit->thetax);
 	const int npsr=NX(fit->xloc);
@@ -47,7 +47,7 @@ OMP_TASK_FOR_COLLAPSE(2)
 			P(HXF, ifit, ips)=mkh(P(fit->xloc,ips), fit->floc, displace[0], displace[1], scale);
 		}
 	}
-	toc2(" ");
+	toc2("HXF");
 	return HXF;
 }
 
@@ -58,7 +58,7 @@ setup_fit_HA(fit_t* fit){
 	const int nfit=NX(fit->thetax);
 	const int ndm=NX(fit->aloc);
 	dspcell* HA=dspcellnew(nfit, ndm);
-	info("Generating HA ");TIC;tic;
+	TIC;tic;
 OMP_TASK_FOR_COLLAPSE(2)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int idm=0; idm<ndm; idm++){
@@ -79,7 +79,7 @@ OMP_TASK_FOR_COLLAPSE(2)
 			}
 		}
 	}
-	toc2(" ");
+	toc2("HA");
 	fit->actcpl=genactcpl(HA, fit->W1);
 	//cpl accounts for floating actuators, but not stuck actuators.
 	act_stuck(fit->aloc, CELL(fit->actcpl), fit->actfloat);

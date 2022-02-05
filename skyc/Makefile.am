@@ -1,5 +1,3 @@
-SUBDIRS =
-
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDOPTS)
 nobase_include_HEADERS=types.h skyc.h utils.h skysim.h powfs.h aster.h photon.h physim.h  mtch.h nafocus.h genstars.h genpistat.h star.h
