@@ -5,7 +5,7 @@ SUBDIRS=sys math lib
 if USE_CUDA
 SUBDIRS+=cuda
 endif
-SUBDIRS+=maos skyc test
+SUBDIRS+=maos skyc tools test
 if USE_MEX
 SUBDIRS+=mex
 endif
