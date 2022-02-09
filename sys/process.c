@@ -97,9 +97,6 @@ void init_process(void){
 	mymkdir("%s", CACHE);
 	
 	DIRSTART=mygetcwd();
-	if(!getcwd(DIRSTART, PATH_MAX)){
-		snprintf(DIRSTART, PATH_MAX, "./");
-	}
 	
 	{/*PATH to executable*/
 		char exepath[PATH_MAX];
@@ -109,7 +106,7 @@ void init_process(void){
 				*tmp=0;
 				EXEP=mystrdup(exepath);
 			} else{
-				EXEP=mygetcwd();
+				EXEP=mystrdup(DIRSTART);
 			}
 		}
 	}

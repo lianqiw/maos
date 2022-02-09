@@ -186,7 +186,7 @@ AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad com
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downling precompiled library]))
-AC_ARG_ENABLE(openmp, AS_HELP_STRING([--disable-openmp], [Disable openmp support]))
+AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -437,7 +437,7 @@ compile(){
 		cat $fnlog
     fi
 }
-AS_IF([test "$enable_openmp" != "no"], [
+AS_IF([test "$enable_openmp" = "yes"], [
 	AC_OPENMP
 	AS_IF([test "$system" = "apple" -a -z "$OPENMP_CFLAGS"],[
 		#MACOS supports openmp with separate omp library
@@ -462,7 +462,7 @@ AS_IF([test "$enable_openmp" != "no"], [
 ])
 AS_IF([test "$has_omp" = "0"], [CFLAGS+=" -pthread"])
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
-AC_DEFINE(HAS_OPENMP,[$has_omp], ["Defined to 1 if Openmp is enabled"])
+AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_omp], ["Defined to 1 if Openmp is enabled"])
 
 OPTS+=" $CFLAGS_EXTRA "
 if test "$system" = "win" ;then

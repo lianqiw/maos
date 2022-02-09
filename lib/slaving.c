@@ -104,7 +104,7 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 		}
 
 		//nslavetot+=nslave;
-		info("dm %d, mode %d: there are %d slave actuators\n", idm, mode, nslave);
+		info("    dm %d, mode %d: there are %d slave actuators\n", idm, mode, nslave);
 
 		loc_create_map(P(aloc,idm));
 		map_t* map=P(aloc,idm)->map;

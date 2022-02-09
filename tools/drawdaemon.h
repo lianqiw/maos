@@ -168,6 +168,8 @@ extern float SP_YT;/*space on y, top */
 extern float SP_YB;/*space on y, buttom */
 extern PangoFontDescription* desc;
 extern pthread_mutex_t drawdata_mutex;
+extern int client_pid;
+extern char *client_hostname;
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);
@@ -181,4 +183,5 @@ void* listen_draw(void*);
 void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* info);
 void fmaxmin(const float* p, long n, float* max, float* min);
 void round_limit(float* xmin, float* xmax, int logscale);
+gboolean update_title(gpointer data);
 #endif

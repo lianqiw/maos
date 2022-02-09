@@ -1,4 +1,3 @@
-if USE_CUDA
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDOPTS) 
 #In the order of include:
@@ -19,12 +18,12 @@ SRCS=$(SRC_LIB) $(SRC_RECON) $(SRC_WFS) $(SRC_MVM) perfinit.cu perfevl.cu
 #libaogpu_a_LDFLAGS=$(LDOPTS)
 
 #else
-
+if USE_CUDA
 lib_LTLIBRARIES=libaogpu.la
 libaogpu_la_SOURCES=$(SRCS) $(EXTRA_DIST)
 libaogpu_la_LIBADD=../lib/libaos.la $(LIBCUDA)
 libaogpu_la_LDFLAGS=$(LDOPTS)
-
+endif
 #endif
 #if USE_STATIC
 #all-local:dlink.o
@@ -51,5 +50,3 @@ LDADD=libaogpu.la $(LIBCUDA) $(LDEXE_FULL)
 
 clean-local:
 	-rm -rf $(DEPDIR)/*.Po
-
-endif

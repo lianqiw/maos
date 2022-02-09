@@ -804,7 +804,7 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		}
 		powfs[ipowfs].notfx=notf;
 		powfs[ipowfs].notfy=notf;
-		info("notf is %dx%d (%s)\n", powfs[ipowfs].notfx, powfs[ipowfs].notfy, okind);
+		info("OTF dimension is %dx%d (%s)\n", powfs[ipowfs].notfx, powfs[ipowfs].notfy, okind);
 		if(safov>dtheta*notf){
 			warning("Subaperture PSF size (%g\") is smaller than detector FoV (%g\").\n",
 				dtheta*notf*206265, safov*206265);
@@ -1475,7 +1475,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 							snprintf(header, 64, "dtheta=%g; #arcsecond\n", dpsf);
 							psf->header=strdup(header);
 							real fwhm=dfwhm_gauss(psf)*dpsf;
-							info("illt %d, iwvl %d has FWHM of %g\"\n", illt, iwvl, fwhm);
+							info("Uplink FWHM (illt %d, iwvl %d) is %g\"\n", illt, iwvl, fwhm);
 						}
 					}
 					if(parms->save.setup){//Save uplink PSF.

@@ -33,6 +33,7 @@ typedef struct data_t{
 	unsigned int n;
 	unsigned int tot;
 	unsigned int depth;
+	int urgent;
 }data_t;
 
 static void dummy_runner(data_t *data){
@@ -41,20 +42,20 @@ static void dummy_runner(data_t *data){
 	unsigned int tot=0;
 	while((i=atomic_fetch_add(&data->i, 1))<data->n){
 		tot+=i;
-		if(i<100&&data->depth){
+		if(i+1==data->n&&data->depth){
 			do_loader=1;
 		}
 	}
 	atomic_fetch_add(&data->tot, tot);
 	if(do_loader){
 		//dbg("depth=%u\n", data->depth);
-		dummy_loader(data->depth,1);
+		dummy_loader(data->depth, data->urgent);
 	}
 }
 static void dummy_loader(unsigned int depth, int urgent){
 	//dbg("depth=%u\n", depth);
 	const unsigned int n=10000;
-	data_t data={0,n,0,depth-1};
+	data_t data={0,n,0,depth-1,urgent};
 	const int nthread=1000;
 	tp_counter_t counter={0};
 	thread_pool_queue(&counter, (thread_wrapfun)dummy_runner, &data, nthread, urgent);
@@ -68,7 +69,7 @@ static void test_thread_pool(void** state){
     (void)state;
 	const int nthread=NTHREAD;
 	thread_pool_init(nthread);
-	dummy_loader(10,1);
+	dummy_loader(100,0);//depth>1 may cause deadlock.
 }
 void print_mem_debug();
 static void test_mem(void** state){
@@ -82,7 +83,7 @@ static void test_mem(void** state){
 	}
 }
 int main(void){
-#if 1
+#if 0
     quitfun=dummy_quitfun;
     LOG_LEVEL=-4;
     const struct CMUnitTest tests[]={
@@ -92,8 +93,12 @@ int main(void){
 
     return cmocka_run_group_tests(tests, NULL, NULL);
 #else	
-	test_mem(NULL);
-	//test_thread_pool(NULL);
+	//test_mem(NULL);
+	int nrepeat=0;
+	if((nrepeat++)<100){//recursive call to catch error with gdb.
+		test_thread_pool(NULL);
+		thread_pool_destroy();
+	}
 	(void) test_thread_pool;
 	(void)dummy_quitfun;
 	(void) test_mem;

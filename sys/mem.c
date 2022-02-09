@@ -217,7 +217,7 @@ static void print_mem_debug(){
 		}
 	}
 }
-#elif METHOD == 2 //linked list//slow due to mutex
+#elif METHOD == 2 //linked list. unsolved race condition.
 #error "Implementation is not complete. race condition not resolved" 
 /*
 	Head counter is added by 1 when popped.
@@ -775,12 +775,12 @@ deinit_t *deinit_head=NULL;
 static __attribute__((destructor)) void deinit(){
 	void freepath();
 	void thread_pool_destroy();
+	thread_pool_destroy();
 	//remove files that are 365 days old.
 	remove_file_older(CACHE, 1, 30*24*3600);//1 month
 	freepath();
 	free_hosts();
 	free_process();
-	thread_pool_destroy();
 	for(deinit_t *p1=deinit_head;p1;p1=deinit_head){
 		deinit_head=p1->next;
 		if(p1->fun) p1->fun();

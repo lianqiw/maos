@@ -30,17 +30,16 @@
 
 
 void print_nea(const dcell* sanea, const dcell* sprint, const loc_t* saloc, const dcell* srsa){
-	info2("Matched filter sanea:\n");
+	//info2("Matched filter sanea:\n");
 	if(sprint){/*print nea for select subapertures.*/
 		for(int ii0=0; ii0<NX(sanea); ii0++){
 			dmat* saindex=PR(sprint, ii0, 0);
-			info2("ii0 %d\n", ii0);
-			info2("sa index   dist   noise equivalent angle\n");
+			info2("    sa index   dist   noise equivalent angle\n");
 			dmat* psanea=P(sanea, ii0);
 			for(int ksa=0; ksa<NX(saindex); ksa++){
 				int isa=(int)P(saindex, ksa);
 				if(isa>0){
-					info2("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n",
+					info2("    sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n",
 						isa, P(PR(srsa, ii0, 0), isa),
 						sqrt(P(psanea, isa, 0))*206265000,
 						sqrt(P(psanea, isa, 1))*206265000);
@@ -51,12 +50,12 @@ void print_nea(const dcell* sanea, const dcell* sprint, const loc_t* saloc, cons
 		real dsa=saloc->dx;
 		real llimit=-dsa*0.6;
 		real ulimit=dsa*0.4;
-		info2("index: position noise equivalent angle\n");
+		info2("    index: position noise equivalent angle\n");
 		for(int isa=0; isa<saloc->nloc; isa++){
 			real locx=saloc->locx[isa];
 			real locy=saloc->locy[isa];
 			if((locx>=0&&locy>llimit&&locy<ulimit)||saloc->nloc<=4){
-				info2("sa%4d:%6.1fm", isa, locx);
+				info2("    sa%4d:%6.1fm", isa, locx);
 				for(int ii0=0; ii0<NX(sanea); ii0++){
 					info2(" (%4.1f,%4.1f)",
 						sqrt(P(P(sanea, ii0), isa, 0))*206265000,
@@ -69,7 +68,7 @@ void print_nea(const dcell* sanea, const dcell* sprint, const loc_t* saloc, cons
 }
 
 void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
-	info("Generating matched filter for %d\n", ipowfs);
+	info("Generating matched filter for powfs %d\n", ipowfs);
 	const real bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
 	const real bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
 

@@ -445,7 +445,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 						error("newdata='%s' should be encapsulated by bare [].\n", newdata);
 					} else{
 						oldstore->data=myrealloc(oldstore->data, (nolddata+nnewdata), char);
-						oldstore->data[nolddata-1]=' ';
+						oldstore->data[nolddata-1]=oldstore->data[nolddata-2]=='['?0:' ';
 						strncat(oldstore->data, newdata+1, nnewdata-1);
 						oldstore->priority=priority;
 					}

@@ -313,16 +313,15 @@ void maos_sim(){
 		}
 		{
 			/*Compute average performance*/
-			const int nsim=simu->perfisim+1;
-			const int isim0=parms->sim.closeloop?MAX(20, nsim*0.2):0;
+			const long nsim=simu->perfisim+1;
+			const long isim0=parms->sim.closeloop?MAX(20, nsim/5):0;
 			const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
 			for(long i=isim0; i<nsim; i++){
 				for(long imod=0; imod<parms->evl.nmod; imod++){
 					P(restot, imod)+=P(cle, imod, i);
 				}
 			}
-			dscale(restot, 1./(nsim-isim0));
-			rescount++;
+			rescount+=(nsim-isim0);
 		}
 		free_simu(simu);
 		global->simu=NULL;

@@ -363,7 +363,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 			ngsmod->nmod+=1;
 		}
 	}
-	info("ahst: nmod=%d, mffocus=%d, ahst_focus=%d, indps=%d, indastig=%d\n", 
+	info("Low order modes: nmod=%d, mffocus=%d, ahst_focus=%d, indps=%d, indastig=%d\n", 
 		ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus, ngsmod->indps, ngsmod->indastig);
 	ngsmod->hs=hs;
 	if(ndm>1){

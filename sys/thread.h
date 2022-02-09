@@ -70,7 +70,8 @@ thread_t *thread_prep(long start, long end, long nthread, thread_wrapfun fun, vo
 ///Create a thread and take it away
 int thread_new(thread_fun fun, void *arg);
 void thread_block_signal();
-//More strict mem order are not applicable for our application
+//Becareful about memory order. It determines the optimization constraints of other operations around the atomic operation
+//For example, if the store before atomic store must be visible after atomic load, memory acquire/release or sequential has to be used
 #define MEM_ORDER __ATOMIC_RELAXED
 //The build in functions assume pointer is of type unsigned int
 //We use functions instead of defines to enforce type

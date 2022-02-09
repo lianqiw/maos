@@ -42,7 +42,7 @@ version.h:FORCE #non existent target will always run
 	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || echo $(VERSION)`\";" && \
 	if test ! -f version.h -o -n "`echo $$str | diff version.h -`" ;then echo $$str >version.h;fi
 FORCE:
-bin/Makefile:
+bin/Makefile:Makefile
 	@mkdir -p bin/
 	@echo -e "all:\n\t@+make --no-print-directory -C .." > bin/Makefile
 .ONESHELL:

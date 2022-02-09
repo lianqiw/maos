@@ -29,7 +29,7 @@
 #define UDP_HEADER 12 //size of UDP sub frame header in bytes
 int ndrawdata=0;
 int count=0;
-int byte_float=sizeof(float);//default to double until client changes it.
+int byte_float=sizeof(float);//default to float until client changes it.
 udp_t udp_client={0};
 int client_port=-1;//client udp port
 in_addr_t client_addr;
@@ -229,28 +229,32 @@ static void drawdata_clear_older(float timclear){
     }									
 int sock;//socket 
 int sock_idle=0;//1: no active drawing. 0: active drawing connection. -1: do not retry connection
+int client_pid=-1;//client PID
 drawdata_t* drawdata=NULL;//current 
 drawdata_t* drawdata_prev=NULL;//previous
+char *client_hostname=NULL;
 int npts=0;
 void* listen_draw(void* user_data){
 	char* str2=0;
-	char *host=0;
 	sock=strtol((char*)user_data, &str2, 10);
 	if(str2!=user_data){//argument is a number
 		if(sock<0){
 			error("sock=%d is invalid\n", sock);
 		}
-		host=strdup(addr2name(socket_peer(sock)));
+		client_hostname=strdup(addr2name(socket_peer(sock)));
 	} else{//not a number, hostname
-		host=strdup((char*)user_data);
+		client_hostname=strdup((char*)user_data);
 		sock=-1;
 	}
 retry:
-	if(sock<0 && host && sock_idle!=-1){
-		dbg_time("Connecting to %s\n", host);
-		sock=scheduler_connect(host);
+	client_pid=-1;
+	g_idle_add((GSourceFunc)update_title, NULL);
+
+	if(sock<0&&client_hostname&&sock_idle!=-1){
+		dbg_time("Connecting to %s\n", client_hostname);
+		sock=scheduler_connect(client_hostname);
 		if(sock==-1){
-			warning("connect to %s failed, retry in 60 seconds.\n", host);
+			warning("connect to %s failed, retry in 60 seconds.\n", client_hostname);
 			mysleep(60);
 			goto retry;
 		}
@@ -264,6 +268,8 @@ retry:
 	}
 	
 	if(sock>=0){
+		client_pid=0;
+		g_idle_add((GSourceFunc)update_title, NULL);
 		//we set socket timeout to 60 to check disconnection.
 		//server sends heartbeat every 10 seconds (since 2021-09-29).
 		if(socket_block(sock, 0) || socket_recv_timeout(sock, 60)){
@@ -419,6 +425,8 @@ retry:
 				drawdata_clear_older(io_timeclear);
 			}
 			sock_idle=1;
+			client_pid=0;
+			g_idle_add((GSourceFunc)update_title, NULL);
 			break;
 		case DRAW_FLOAT:
 			//notice that this value can change from plot to plot
@@ -472,6 +480,12 @@ retry:
 			io_timeclear=myclockd();
 		}
 		break;
+		case DRAW_PID:
+		{
+			STREADINT(client_pid);
+			g_idle_add((GSourceFunc)update_title, NULL);
+		}
+		break;
 		case DRAW_END:
 		{
 			drawdata->npts=npts;
@@ -515,7 +529,7 @@ retry:
 		}/*switch */
 		cmd=-1;
 	}/*while */
-	free(host);
+	free(client_hostname);client_hostname=NULL;
 	warning_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;

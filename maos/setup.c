@@ -67,10 +67,9 @@ void maos_setup(const parms_t* parms){
 	if(PARALLEL&&(parms->sim.closeloop==0||parms->evl.tomo)){
 		PARALLEL=0;	/*need to disable parallelizing the big loop. */
 	}
-#if _OPENMP
-	if(PARALLEL==2&&(parms->sim.dmproj||!parms->atm.frozenflow))
-#endif	
-	{
+	//dmproj/frozen flow does not work with PRALLEL=1 implementation
+	if(PARALLEL==2&&(parms->sim.dmproj||!parms->atm.frozenflow)){
+		warning("dmproj/frozen flow does not work with PRALLEL=2 implementation. Set to 1.\n");
 		PARALLEL=1;
 	}
 

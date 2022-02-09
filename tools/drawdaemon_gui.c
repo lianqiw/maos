@@ -38,7 +38,6 @@
 #define MAX_ZOOM 10000
 #define MIN_ZOOM 1
 static GSList* windows=NULL;
-static int iwindow=0;
 static GtkWidget* curwindow=NULL;
 static GtkWidget* curtopnb=NULL;
 static GtkWidget* contexmenu=NULL;
@@ -414,7 +413,32 @@ static void delete_page_btn(GtkButton *btn, drawdata_t **drawdatawrap){
 	(void)btn;
 	delete_page(*drawdatawrap);
 }
-
+gboolean update_title(gpointer data){
+	int pid=data?GPOINTER_TO_INT(data):client_pid; 
+	int iwindow=1;
+	for(GSList *p=windows; p; p=p->next){
+		GtkWidget *window=(GtkWidget *)p->data;
+		char title[80];
+		snprintf(title, 80, "MAOS Drawdaemon (%s:", client_hostname);
+		int nt=strlen(title);
+		if(nt<75){
+			if(pid>0){
+				snprintf(title+nt, 80-nt, "%d)", pid);
+			}else{
+				snprintf(title+nt, 80-nt, "%s)", pid==-1?"disconnected":"idle");
+			}
+		}
+		if(iwindow>1){
+			nt=strlen(title);
+			if(nt<75){
+				snprintf(title+nt, 80-nt, " (%d)", iwindow);
+			}
+		}
+		gtk_window_set_title(GTK_WINDOW(window), title);
+		iwindow++;
+	}
+	return 0;
+}
 static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	GtkWidget* out;
 #if GTK_MAJOR_VERSION>=4
@@ -1670,14 +1694,7 @@ GtkWidget* create_window(GtkWidget* window){
 	extern GdkPixbuf* icon_main;
 	gtk_window_set_icon(GTK_WINDOW(window), icon_main);
 	//g_object_unref(icon_main);
-
-	char title[80];
-	if(iwindow==0){
-		snprintf(title, 80, "MAOS Drawdaemon");
-	} else{
-		snprintf(title, 80, "MAOS Drawdaemon (%d)", iwindow);
-	}
-	gtk_window_set_title(GTK_WINDOW(window), title);
+	update_title(NULL);
 #if GTK_MAJOR_VERSION>=3
 	GtkCssProvider* provider_default=gtk_css_provider_new();
 	gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);
@@ -1759,6 +1776,5 @@ GtkWidget* create_window(GtkWidget* window){
 	gtk_widget_show_all(window);
 	gtk_window_present(GTK_WINDOW(window));
 	tool_font_set(GTK_FONT_BUTTON(fontsel));/*initialize. */
-	iwindow++;
 	return window;
 }

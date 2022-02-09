@@ -137,9 +137,10 @@ maos -c mcao_ngs.conf  # NGS MCAO
 maos -c scao_ngs.conf  # NGS SCAO
 maos -c scao_pwfs.conf # NGS SCAO using PWFS
 maos -c scao_lgs.conf  # LGS SCAO
+maos -c examples/keck_lgs.conf #KECK LGS AO
 ```
 
-To customize
+To customize number of components
 
 ```
 maos dm_single.conf wfs_lgs_only.conf recon.glao=1 # LGS GLAO
@@ -158,15 +159,15 @@ maos aper.d=[10, 1] aper.fnamp=aper.bin # with supplied amplitude map. Diameters
 
 Change turbulence
 
-Override keys listed in \c atm_mk13n50p.conf
-
 ```
+maos atm_mk13n25p.conf #use another predefined profile. The default is atm_mk13n50p.conf
 maos atm.r0z=0.1     # change r0 at zenith to 0.1m
 maos sim.zadeg=30    # change zenith angle to 30 degrees
 maos atm_single.conf # use single ground layer turbulence
 ```
 
-Configuring WFS
+Configuring WFS. Adjust the number of elements depending on how many powfs is in use. A powfs
+is a type of WFS. Each type can have multiple WFS.
 
 ```
 maos powfs.noisy=[0]     # use noise free WFS for all wfs types
@@ -174,8 +175,7 @@ maos powfs.noisy=[1 0 0] # use noise free WFS for wfs type 1 and 2.
 maos powfs.phystep=[-1]  # use geometric wfs instead of physical optics wfs for all
 ```
 
-Adjust the number of elements depending on how many powfs is in use. A powfs
-is a type of WFS. Each type can have multiple WFS.
+
 
 Adjust the controller
 
@@ -259,8 +259,8 @@ powfs.noisy=[0]         #set noise free for all powfs
 powfs.noisy=[1 0 0]     #set noise free only for powfs 1 and 2.
 powfs.phystep=[0 -1 -1] #use physical optics wfs for the first type (high order), and geometric for the remaining (t/t/f)
 powfs.phytype=[1 2 2]   #pixel processing 1: use matched filter, 2: cog
-powfs.siglev=[900 100 100] #specify signal level for physical optics wfs mode at 800 Hz per pixel.
-powfs.bkgrnd=[10 0 0]   #specify background level at 800 Hz per pixel
+powfs.siglev=[900 100 100] #specify signal level for physical optics wfs mode at sim.dtref Hz per pixel.
+powfs.bkgrnd=[10 0 0]   #specify background level at sim.dtref Hz per pixel
 powfs.rne=[3 1 1]       #specify read out noise for physical optics wfs mode
 powfs.nearecon=[20 2 1] #specify noise equivalent angle in milli-arcsecond for geometric wfs mode
 powfs.neasim=[20 2 1]   #specify nea for simulation. -1 to match nearecon.

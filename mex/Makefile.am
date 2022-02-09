@@ -1,4 +1,3 @@
-if USE_MEX
 AM_CFLAGS=$(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math 
 AM_LDFLAGS=$(LDMEX)  $(LDSO)
 #LDFLAGS goes before LDADD. Must put maos libraries before matlab libraries.
@@ -8,7 +7,7 @@ EXTRA_DIST=io.h interface.h Makefile.mex compile.sh aolib.h
 EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c
-
+if USE_MEX
 bin_PROGRAMS=read write aolib maos 
 
 #.c.o:
@@ -33,7 +32,7 @@ if USE_CUDA
 maos_LDADD+=$(LIBCUDA) #must be before LIBMEX, otherwise linking error in debug mode
 endif
 maos_LDADD+=-lmwcholmod $(LIBMEX) 
-
+endif
 
 BUILT_SOURCES=maos2mex.h aolib.c
 maos2mex.h:../scripts/maos2mex.py ../maos/parms.h ../maos/types.h ../lib/accphi.h ../lib/cn2est.h ../lib/kalman.h \
@@ -45,5 +44,3 @@ aolib.c:../maos/parms.h ../maos/types.h ../scripts/lib2mex.py ../scripts/maos.py
 nodist_aolib_SOURCES=aolib.c
 
 CLEANFILES=aolib.c maos2mex.h
-
-endif

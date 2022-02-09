@@ -1109,6 +1109,7 @@ static void init_simu_wfs(sim_t* simu){
 			} else{
 				nnx[iwfs]=0;
 				nny[iwfs]=0;
+				nny2[iwfs]=0;
 			}
 		}
 		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
@@ -1797,46 +1798,40 @@ void print_progress(sim_t* simu){
 		const long lapsh=laps/3600;
 		const long lapsm=(laps-lapsh*3600)/60;
 
-		if(parms->sim.evlol){
-			info2("Step %5d: OL: %6.1f %6.1f %6.1f nm\n", 
-				isim,
-				mysqrt(P(simu->ole, 0, isim))*1e9,
-				mysqrt(P(simu->ole, 1, isim))*1e9,
-				mysqrt(P(simu->ole, 2, isim))*1e9);
-
-			dbg("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
-				status->tot*tkmean, status->mean*tkmean, lapsh, lapsm, resth, restm);
-		} else{
-			info2("Step %5d: OL %6.1f %6.1f  OA %6.1f %5.1f CL %6.1f %5.1f ",
-				isim,
-				mysqrt(P(simu->ole, 0, isim))*1e9,
-				mysqrt(P(simu->ole, 1, isim))*1e9,
+		info2("Step %5d: OL %6.1f %6.1f", 
+			isim,
+			mysqrt(P(simu->ole, 0, isim))*1e9,
+			mysqrt(P(simu->ole, 1, isim))*1e9);
+		if(!parms->sim.evlol){
+			info2("  OA %6.1f %5.1f CL %6.1f %5.1f",
 				mysqrt(P(simu->clep, 0, 0, 0, isim))*1e9,
 				mysqrt(P(simu->clep, 0, 0, 1, isim))*1e9,
 				mysqrt(P(simu->cle, 0, isim))*1e9,
 				mysqrt(P(simu->cle, 1, isim))*1e9				
-				);
+			);
 			if(parms->recon.split){
-				info2(" Split %6.1f %6.1f %6.1f nm\n",
+				info2(" Split %6.1f %5.1f %5.1f",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
 					mysqrt(P(simu->clem, 2, isim))*1e9);
-			}else{
-				info2("\n");
 			}
-			//info2("%s\n", BLACK);
-
-			dbg("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
-				" Used %ld:%02ld, Left %ld:%02ld\n",
-				status->wfs*tkmean, status->recon*tkmean,
-				status->eval*tkmean, status->other*tkmean,
-				status->tot*tkmean, status->mean*tkmean,
-				lapsh, lapsm, resth, restm);
 			extern int NO_EVL;
 			if(!NO_EVL&&!isfinite(P(simu->cle, 0, isim))){
-				error("Step %d: NaN/inf found: cle is %g\n", isim, P(simu->cle, 0, isim));
+				error("\nStep %d: NaN/inf found: cle is %g\n", isim, P(simu->cle, 0, isim));
 			}
 		}
+		if(LOG_LEVEL<2){//dbg is inactive
+			info2(" nm  %.3f s\n", status->tot*tkmean);
+		}else{
+			info2(" nm\n");
+		}
+
+		dbg2("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
+					" Used %ld:%02ld, Left %ld:%02ld\n",
+					status->wfs*tkmean, status->recon*tkmean,
+					status->eval*tkmean, status->other*tkmean,
+					status->tot*tkmean, status->mean*tkmean,
+					lapsh, lapsm, resth, restm);
 
 		if(parms->plot.run&&draw_current("Res", "Close loop")){
 			dmat* tmp=parms->recon.split?simu->clem:simu->cle;

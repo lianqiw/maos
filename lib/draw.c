@@ -216,8 +216,15 @@ static void list_destroy(list_t** head){
 	}
 }
 /**Add fd to list of drawing socks*/
-int draw_add(int fd){
-	if(fd==-1) return -1;
+int draw_add(int sock){
+	if(sock!=-1){
+		int cmd[2]={DRAW_PID, getpid()};
+		if(stwrite(sock, cmd, sizeof(cmd))){
+			dbg("failed to write: sock=%d\n", sock);
+			close(sock); sock=-1;
+		}
+	}
+	if(sock==-1) return -1;
 	int ifd;
 	for(ifd=0; ifd<sock_ndraw; ifd++){
 		if(sock_draws[ifd].fd<0){//fill a empty slot
@@ -237,7 +244,7 @@ int draw_add(int fd){
 	}
 	
 	memset(&sock_draws[ifd], 0, sizeof(sockinfo_t));
-	sock_draws[ifd].fd=fd;
+	sock_draws[ifd].fd=sock;
 	sock_draws[ifd].draw_single=1;
 	thread_new((thread_fun)listen_drawdaemon, &sock_draws[ifd]);
 	draw_disabled=0;
@@ -403,9 +410,8 @@ static int get_drawdaemon(){
 		}
 	}
 
-	if(sock!=-1){
-		draw_add(sock);
-		socket_send_timeout(sock, 60);//prevent hang. too small timeout will prevent large data from passing through.
+	if(sock!=-1 && !draw_add(sock) && !socket_send_timeout(sock, 60)){
+		//prevent hang. too small timeout will prevent large data from passing through.
 		return 0;
 	}else{
 		draw_disabled=1;

@@ -128,7 +128,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	}
 	count++;
 	legend[count]="NCPA";
-	style[count]=(0x22FF00<<8)+(4<<4)+3;
+	style[count]=(0x22FF00<<8)+(4<<4)+2;
 	P(locs,count)=locnew(parms->sim.ncpa_ndir, 0, 0);
 	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
 		P(locs,count)->locx[ifit]=P(parms->sim.ncpa_thetax,ifit)*206265;

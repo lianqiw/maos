@@ -2217,8 +2217,8 @@ static void setup_parms_postproc_dirs(parms_t* parms){
 	}
 	real fov=2*sqrt(rmax2);
 	if(parms->sim.fov<fov){
-		if(parms->dbg.dmfullfov){
-			warning("sim.fov=%g is less than actual fov=%g. Changed\n", parms->sim.fov*206265, fov*206265);
+		if(parms->dbg.dmfullfov && parms->sim.fov>0){
+			dbg("sim.fov=%g is less than actual fov=%g. Changed\n", parms->sim.fov*206265, fov*206265);
 		}
 		parms->sim.fov=fov;
 	}

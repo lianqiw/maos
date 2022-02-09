@@ -366,7 +366,7 @@ static void update_limit(drawdata_t* drawdata){
 		drawdata->zoomx=1;
 		drawdata->zoomy=1;
 	}
-
+	if(drawdata->limit_manual) return;
 	float xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 		const float* ptsx=drawdata->pts[ipts], * ptsy=0;
