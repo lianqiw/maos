@@ -31,3 +31,9 @@ ___bin_maos_LDADD+=$(libmaos_la_LIBADD) $(LIBCUDA)
 #endif
 endif
 ___bin_maos_LDADD+=$(LDEXE_MAOS) $(LDEXE_FULL) 
+
+TESTS=maos.test
+maos.test:
+	@echo ../bin/maos aper.d=10 sim.end=10 atm.size=[16 16]> maos.test && chmod u+x maos.test
+
+CLEANFILES=maos.test

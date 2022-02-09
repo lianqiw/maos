@@ -1,3 +1,4 @@
+if USE_MEX
 AM_CFLAGS=$(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math 
 AM_LDFLAGS=$(LDMEX)  $(LDSO)
 #LDFLAGS goes before LDADD. Must put maos libraries before matlab libraries.
@@ -45,3 +46,4 @@ nodist_aolib_SOURCES=aolib.c
 
 CLEANFILES=aolib.c maos2mex.h
 
+endif

@@ -1,4 +1,4 @@
-AC_INIT(maos, 2.7.0, lianqiw@gmail.com)
+AC_INIT(maos, 2.8.0, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
 AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
@@ -254,14 +254,13 @@ DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-funct
 #always_inline causes inline to be done in debug mode.
 
 if test "x$enable_debug" = "xyes" ;then
-    AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
     ccprefix=DEBUG
 else
-    AM_CONDITIONAL(DEBUG,false)
     AC_DEFINE(DEBUG,[0],["Do not debug"])
     ccprefix=OPTIM
 fi
+AM_CONDITIONAL(DEBUG, [test "x$enable_debug" = "xyes"])
 optname1=COMMON_ALL
 optname2=COMMON_${CN}
 optname3=${ccprefix}_ALL
@@ -484,10 +483,9 @@ if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
 fi
 unset mflag
 
-AM_CONDITIONAL(USE_SCHEDULER, true)
+AM_CONDITIONAL(USE_SCHEDULER, [test "$enable_scheduler" != "no"])
 if test "$enable_scheduler" = "no" ;then
     AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
-    AM_CONDITIONAL(USE_SCHEDULER, false)
     enable_websockets="no"
 fi
 case $host_cpu in
@@ -504,13 +502,12 @@ case $host_cpu in
 esac
 
 LDEXE+="$LDRT " #-static" #show that we prefer static linking.
+AM_CONDITIONAL(USE_STATIC, [test "x$enable_allstatic" = "xyes"])
 if test "x$enable_allstatic" = "xyes" ;then
     LDEXE_MAOS="-all-static" #only all static linking for maos
-    AM_CONDITIONAL(USE_STATIC, true)
     AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
 	mkl="mkl-static mkl" #prefer static
 else
-    AM_CONDITIONAL(USE_STATIC, false)
     AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 	mkl="mkl mkl-static" #prefer dynamic
 fi
@@ -696,7 +693,7 @@ fi
 LDCHOL="-lcholmod"
 
 #Check for libwebsocket
-AM_CONDITIONAL(HAS_LWS, false)
+has_lws=no
 if test "$enable_websockets" != "no" ;then
     AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
@@ -715,13 +712,14 @@ if test "$enable_websockets" != "no" ;then
 		AC_CHECK_HEADERS([libwebsockets.h], [], [AC_MSG_ERROR([libwebsocket header is not available])])
 	fi
 	if test "$has_lws" != "no" ;then
-		AM_CONDITIONAL(HAS_LWS, true)
 		AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
 	else
 		AC_MSG_NOTICE(["libwebsocket library or header is not available"])
 		enable_websockets="no"
 	fi
 fi
+AM_CONDITIONAL(HAS_LWS, [test "$has_lws" != "no"])
+
 if test "$enable_cmocka" != "no" ;then
 	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	AC_CHECK_HEADERS([cmocka.h],[],[enable_cmocka="no"],[
@@ -795,9 +793,9 @@ AS_IF([ test -n "$PKG_CONFIG"],[#use AS_IF instead of if to avoid error regardin
     AC_SUBST(GTK_LIBS)
 ])
 
-AM_CONDITIONAL(GUI,  test x$gtk_ver  != x0)
-AM_CONDITIONAL(CAIRO, test x$has_cairo = x1)
-AM_CONDITIONAL(NOTIFY, test x$has_notify = x1)
+AM_CONDITIONAL(GUI,    [test x$gtk_ver  != x0])
+AM_CONDITIONAL(CAIRO,  [test x$has_cairo = x1])
+AM_CONDITIONAL(NOTIFY, [test x$has_notify = x1])
 
 AC_CHECK_HEADERS([unistd.h])
 OPTS+=" $OPTScommon $OPTScc $OPTSprof "
@@ -870,19 +868,16 @@ if test "$with_matlab" != "no" ;then
 		#2021-05-24: Linking with mwfftw3 crashes matlab. (mwfftw3 contains thread support)
 		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDRT $LDFFT_MEX"
 		LDMEX+="-no-fast-install -static -Xcompiler -shared"
-		AM_CONDITIONAL(USE_MEX, true)
     else
 		with_matlab="no"
 		AC_MSG_NOTICE([mex library test failed. Disable mex])
-		AM_CONDITIONAL(USE_MEX, false)
     fi
     AC_SUBST(MEXEXT)
     AC_SUBST(LIBMEX)
     AC_SUBST(LDMEX)
     AC_SUBST(MEXOPT)
-else
-    AM_CONDITIONAL(USE_MEX, false)
 fi
+AM_CONDITIONAL(USE_MEX, [test "$with_matlab" != "no"])
 
 if test "$with_cuda" != "no" ;then
     if test -n "$with_cuda" ;then
@@ -1002,22 +997,19 @@ fi
 if test "$with_cuda" != "no" ;then
     if test "$cuda_double" = "yes" ;then
 		AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
-		AM_CONDITIONAL(CUDA_DOUBLE, true)
     else
 		AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
-		AM_CONDITIONAL(CUDA_DOUBLE, false)
     fi
-    AM_CONDITIONAL(USE_CUDA, true)
     AC_DEFINE(USE_CUDA, [1], "Has Cuda")
     AC_SUBST(CUDAOPT)
     AC_SUBST(CCBINOPT)
     AC_SUBST(LIBCUDA)
     AC_SUBST(NVCC)
 else
-    AM_CONDITIONAL(USE_CUDA, false)
-    AM_CONDITIONAL(CUDA_DOUBLE, false)
     AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
+AM_CONDITIONAL(CUDA_DOUBLE, [test "$with_cuda" != "no" -a "$cuda_double" = "yes" ])
+AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
@@ -1043,16 +1035,13 @@ AC_CONFIG_FILES( [Makefile
 	sys/Makefile
 	math/Makefile
 	lib/Makefile
-	tools/Makefile
+	cuda/Makefile
 	maos/Makefile 
 	skyc/Makefile
-	bin/Makefile
+	tools/Makefile
+	test/Makefile
 	mex/Makefile
-	cuda/Makefile
-	])
-if test -d "${srcdir}/test" ;then
-    AC_CONFIG_FILES([test/Makefile])
-fi
+])
 
 LDOPTS+=" -no-fast-install -avoid-version"
 LDEXE+=" -lz -lm -ldl"

@@ -1,14 +1,8 @@
 ACLOCAL_AMFLAGS=-I m4 --install
 AM_MAKEFLAGS=--no-print-directory
 
-SUBDIRS=sys math lib 
-if USE_CUDA
-SUBDIRS+=cuda
-endif
-SUBDIRS+=maos skyc tools test
-if USE_MEX
-SUBDIRS+=mex
-endif
+SUBDIRS=sys math lib cuda maos skyc tools test mex
+
 # include doxygen definition.
 include $(top_srcdir)/aminclude.am
 
@@ -37,7 +31,7 @@ clear-doc:
 	@rm -rf doxygen-doc
 
 EXTRA_DIST = doxygen.cfg docs scripts config 
-BUILT_SOURCES=version.h 
+BUILT_SOURCES=version.h bin/Makefile
 if LIBTOOL_FIX_OPENMP
 BUILT_SOURCES+=fixlibtool
 endif
@@ -45,12 +39,17 @@ fixlibtool:libtool
 	@sed 's/|-fopenmp|/|/g' libtool > libtool.new
 	@mv libtool.new libtool
 version.h:FORCE #non existent target will always run
-	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || echo unknown`\";" && \
+	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || echo $(VERSION)`\";" && \
 	if test ! -f version.h -o -n "`echo $$str | diff version.h -`" ;then echo $$str >version.h;fi
 FORCE:
+bin/Makefile:
+	@mkdir -p bin/
+	@echo -e "all:\n\t@+make --no-print-directory -C .." > bin/Makefile
 .ONESHELL:
 
-CLEANFILES=version.h
+CLEANFILES=version.h bin/Makefile
 
 clean-local:
 	-rm -rf external
+
+#- before command means ignore error
