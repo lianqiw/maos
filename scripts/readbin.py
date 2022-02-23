@@ -34,7 +34,7 @@ magic2dname={
     0x6432: 'M_ZSP64',
     0x6433: 'M_ZSP32',
 }
-M_EOD=0x64FF
+M_EOD=0x64FF #end of file
 M_SKIP=0x6600
 M_COMMENT=0x6500
 dname2type={
@@ -81,13 +81,13 @@ def readvec(fp, datatype, nxy):#enable read from socket and file
         return np.fromfile(fp, dtype=datatype, count=nxy, sep='')
     else:#for socket reading, or gzip
         return np.frombuffer(fp.read(nxy*datatype.itemsize), dtype=datatype)
-
-def readbin(file, want_header=0):
+headers=[] #global variable
+def readbin(file):
+    headers.clear()
     isfits=False
     isfile=False
     issock=False
     out=np.array(())
-    header={}
     if isinstance(file, socket.socket):
         file=file.fileno()
         isfits=False
@@ -124,14 +124,13 @@ def readbin(file, want_header=0):
                 else:
                     fp.seek(0, 0)
             (out, header, err)=readbin_auto(fp, isfits)
+            headers.extend(header)
         except Exception as error:#file may not be ready
             print("readbin failed:", file, error)
         finally:
             fp.close()
-    if want_header: 
-        return (out, header)
-    else:
-        return out
+    return out
+
 def readbin_auto(fp, isfits, scan=0):
     err=0
     out=list()
@@ -277,7 +276,7 @@ def readfits_header(fp):
     if END == 1:
         return (bitpix2magic[bitpix], nx, ny, header)
     elif END == 2: #end of file
-        return (0, 0, 0, header)
+        return (M_EOD, 0, 0, header)
     else:
         return (-1, 0, 0, header)
 def readbin_magic(fp):

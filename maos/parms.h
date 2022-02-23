@@ -277,21 +277,19 @@ typedef struct powfs_cfg_t{
    contains input parmaeters for each wfs
 */
 typedef struct wfs_cfg_t{
-    dmat *wvlwts;   /**<Weights of signal value for each wavelength. if not
-		       specified in config, will use powfs.wvlwts*/
-    char *sabad;    /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
+    dmat *wvlwts; /**<Weights of signal value for each wavelength. if not specified in config, will use powfs.wvlwts*/
+    char *sabad;  /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     real thetax;  /**<x direction*/
     real thetay;  /**<y direction*/
     real misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
     real misreg_y;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
     real misreg_r;/**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs.*/
-    real hc;      /**<conjugation height of WFS pupil*/
-    real siglev;  /**<Total signal value for all wavelength. if not specified
-		       in config, will use powfs.siglev*/
-    real sigsim;/**<Signal value used for simulation. (derived parameter)*/
-    real hs;      /**height of star. Derived from powfs.hs or from input*/
-    real fitwt;   /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
-    int powfs;      /**<powfs type*/
+    real hc;      /**<conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input)*/
+    real hs;      /**height of star is wfs.hs=powfs.hs+wfs.delta_hs (input)*/
+    real siglev; /**<Total signal value for all wavelength. if not specified in config, will use powfs.siglev*/
+    real sigsim; /**<Signal value used for simulation. (derived parameter)*/
+    real fitwt;  /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
+    int powfs;   /**<powfs type*/
 }wfs_cfg_t;
 /**
    contains input parameters for each deformable mirror.

@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
+#include <ctype.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -187,24 +187,28 @@ static void list_proc_append(proc_t *p){
 			pos=strstr(spath, "/skyc ");
 		}
 		if(pos){
-			sstart=(char*)malloc(pos-spath+1);
+			sstart=(char*)malloc(pos-spath+1);//job start directory
 			memcpy(sstart, spath, pos-spath);
 			sstart[pos-spath]='\0';
-			sargs=strdup(pos+1);
+			sargs=strdup(pos+1);//job arguments. 
 			char* pos2=NULL;
-			for(char* tmp=sargs; (tmp=strstr(tmp, " -o ")); tmp+=4){
-				pos2=tmp;
-			}
-			if(pos2){
-				pos2+=4;
-				char* pos3=strchr(pos2, ' ');
-				if(!pos3) pos3=strchr(pos2, '\0');
+			char* tmp=sargs;
+			while((tmp=strstr(tmp, " -o"))){
+				pos2=tmp+3;//start of output directory
+				while(isspace(pos2[0])) pos2++;//skip space
+				char* pos3=strchr(pos2, ' ');//end of output directory
+				if(!pos3) pos3=strchr(pos2, 0);//end of string
 				if(pos3){
+					if(sout) free(sout);
 					sout=(char*)malloc(pos3-pos2+1);
 					memcpy(sout, pos2, pos3-pos2);
 					sout[pos3-pos2]='\0';
-					memmove(pos2-4, pos3, strlen(pos3)+1);
+					memmove(tmp, pos3, strlen(pos3)+1);
 				}
+			}
+			if(sout){
+				strcat(sargs, " -o");
+				strcat(sargs, sout);//append sout back to sargs. Cannot overflow
 			}
 		}
 	}
@@ -216,8 +220,8 @@ static void list_proc_append(proc_t *p){
 		COL_PID, spid,
 		COL_FULL, spath?spath:" ",
 		COL_PATH, sstart?sstart:" ",
-		COL_ARGS, sargs?sargs:" ",
-		COL_OUT, sout?sout:" ",
+		COL_ARGS, sargs?sargs:" ",//arguments
+		COL_OUT, sout?sout:" ",//output directory
 		COL_ERRHI, " ",
 		COL_ERRLO, " ",
 		COL_STEPT, " ",
@@ -666,6 +670,7 @@ static void concat_selected_path(GtkTreeModel* model, GtkTreePath* path, GtkTree
 		gtk_tree_model_get_value(model, iter, COL_FULL, &value);
 		const gchar* val=g_value_get_string(&value);
 		*buf=g_strdup(val);
+		parse_argopt(*buf, NULL);
 		g_value_unset(&value);
 	} else{
 		//*buf=g_strjoin("\n", *buf, val, NULL);
@@ -781,8 +786,8 @@ GtkWidget* new_page(int ihost){
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
 	}
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Path", "text", COL_PATH, NULL));
-	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Args", "text", COL_ARGS, NULL));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Out", "text", COL_OUT, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Args", "text", COL_ARGS, NULL));
+	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Out", "text", COL_OUT, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low", "text", COL_ERRLO, "foreground", COL_COLOR, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, "foreground", COL_COLOR, NULL));
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value", COL_SEEDP, NULL));

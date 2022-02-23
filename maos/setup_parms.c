@@ -208,9 +208,10 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with real value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_DMAT(A) parms->A= readcfg_dmat(#A) /*read a key with dmat. */
+#define READ_DMAT_NMAX(A,n) parms->A= readcfg_dmat_nmax(n,#A) /*read a key with dmat. */
 #define READ_DCELL(A) parms->A= readcfg_dcell(#A) /*read a key with dmat. */
 #define READ_LMAT(A) parms->A= readcfg_lmat(#A) /*read a key with lmat. */
-
+#define READ_LMAT_NMAX(A,n) parms->A= readcfg_lmat_nmax(n,#A) /*read a key with lmat. */
 #define READ_POWFS(A,B)						\
     readcfg_##A##arr_n((&A##tmp), npowfs, "powfs."#B);		\
     for(i=0; i<npowfs; i++){					\
@@ -379,6 +380,8 @@ static void readcfg_powfs(parms_t* parms){
 			warning("powfs %d is at infinity, disable LLT\n", ipowfs);
 			free(powfsi->fnllt);
 			powfsi->fnllt=NULL;
+		}else{
+			parms->powfs[ipowfs].hs-=parms->sim.htel;
 		}
 		char prefix[60];
 		snprintf(prefix, 60, "powfs%d_", ipowfs);
@@ -448,7 +451,12 @@ static void readcfg_powfs(parms_t* parms){
     for(i=0; i<nwfs; i++){				\
 	parms->wfs[i].B = A##tmp[i];			\
     }									
-
+#define READ_WFS_DELTA(A,B,BD)				\
+    readcfg_##A##arr_nmax((&A##tmp),nwfs,"wfs."#BD);	\
+    for(i=0; i<nwfs; i++){				\
+		ipowfs=parms->wfs[i].powfs;	\
+		parms->wfs[i].B = parms->powfs[ipowfs].B+A##tmp[i];	\
+    }	
 /**
    Read in parameters of wfs, including GS direction, signal level, wvlwts, etc.
 */
@@ -465,8 +473,6 @@ static void readcfg_wfs(parms_t* parms){
 		parms->wfs[i].thetax/=206265.;
 		parms->wfs[i].thetay/=206265.;
 	}
-	READ_WFS_RELAX(dbl, hs);
-	//READ_WFS_RELAX(dbl,hc); //do not enable before implementation is fixed.
 	READ_WFS_RELAX(dbl, fitwt);
 	READ_WFS_RELAX(str, sabad);
 	/*link wfs with powfs*/
@@ -509,7 +515,8 @@ static void readcfg_wfs(parms_t* parms){
 		error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n",
 			parms->nwfs, wfscount);
 	}
-
+	READ_WFS_DELTA(dbl, hs, delta_hs);
+	READ_WFS_DELTA(dbl, hc, delta_hc);
 	dmat* wvlwts=readcfg_dmat("wfs.wvlwts");
 	dmat* siglev=readcfg_dmat("wfs.siglev");
 	int powfs_siglev_override=readcfg_peek_override("powfs.siglev");
@@ -540,12 +547,6 @@ static void readcfg_wfs(parms_t* parms){
 				error("when both powfs.siglev and wfs.siglev are overriden "
 					"must set powfs.siglev=[]\n");
 			}
-		}
-		if(parms->wfs[iwfs].hs<=0){
-			parms->wfs[iwfs].hs=parms->powfs[ipowfs].hs;
-		}
-		if(!parms->wfs[iwfs].hc){
-			parms->wfs[iwfs].hc=parms->powfs[ipowfs].hc;
 		}
 	}
 	if(count!=NX(wvlwts)){
@@ -819,16 +820,17 @@ static void scale_fov(dmat* thetax, dmat* thetay, dmat*wt, real fov){
 static void readcfg_evl(parms_t* parms){
 	READ_DMAT(evl.thetax);
 	READ_DMAT(evl.thetay);
-	READ_DMAT(evl.wt);
+	READ_DMAT_NMAX(evl.wt, NX(parms->evl.thetax));
 	real evl_fov=readcfg_dbl("evl.fov");
 	scale_fov(parms->evl.thetax, parms->evl.thetay, parms->evl.wt, evl_fov);
 	parms->evl.nevl=NX(parms->evl.thetax);//maybe changed by scale_fov
-	parms->evl.hs=readcfg_dmat_nmax(parms->evl.nevl, "evl.hs");
 	dnormalize_sumabs(P(parms->evl.wt), parms->evl.nevl, 1);
-	parms->evl.psf=readcfg_lmat_nmax(parms->evl.nevl, "evl.psf");
-	parms->evl.psfr=readcfg_lmat_nmax(parms->evl.nevl, "evl.psfr");
+	READ_DMAT_NMAX(evl.hs, parms->evl.nevl);
+	READ_LMAT_NMAX(evl.psf, parms->evl.nevl);
+	READ_LMAT_NMAX(evl.psfr, parms->evl.nevl);
+	READ_LMAT_NMAX(evl.pttr, parms->evl.nevl);
+	READ_LMAT_NMAX(evl.psfngsr, parms->evl.nevl);
 	READ_DMAT(evl.wvl);
-	
 	parms->evl.nwvl=NX(parms->evl.wvl);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		if(P(parms->evl.wvl,iwvl)>0.1){
@@ -855,8 +857,7 @@ static void readcfg_evl(parms_t* parms){
 	READ_INT(evl.rmax);
 	READ_INT(evl.psfol);
 	READ_INT(evl.psfisim);
-	parms->evl.pttr=readcfg_lmat_nmax(parms->evl.nevl, "evl.pttr");
-	parms->evl.psfngsr=readcfg_lmat_nmax(parms->evl.nevl, "evl.psfngsr");
+	
 	READ_INT(evl.psfmean);
 	READ_INT(evl.psfhist);
 	READ_INT(evl.cov);/*Science OPD covariance. */
@@ -1337,7 +1338,7 @@ static void setup_parms_postproc_za(parms_t* parms){
 			dscale(parms->powfs[ipowfs].siglevs, cosz);
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
-				parms->wfs[iwfs].hs=(parms->wfs[iwfs].hs-parms->sim.htel)*secz;
+				parms->wfs[iwfs].hs*=secz;
 				real siglev=parms->wfs[iwfs].siglev;
 				parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
 			}
@@ -1694,32 +1695,6 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 					P(parms->powfs[ipowfs].llt->i,iwfs)=iwfs;
 				}
 			}
-		}
-
-		real wfs_hs=0;
-		real wfs_hc=0;
-		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
-			wfs_hs+=parms->wfs[iwfs].hs;
-			wfs_hc+=parms->wfs[iwfs].hc;
-		}
-		wfs_hs/=parms->powfs[ipowfs].nwfs;
-		wfs_hc/=parms->powfs[ipowfs].nwfs;
-		if(parms->powfs[ipowfs].hs==0){
-			if(wfs_hs){
-				parms->powfs[ipowfs].hs=wfs_hs;
-				warning("powfs[%d].hs is set to average of wfs[].hs: %g\n", ipowfs, parms->powfs[ipowfs].hs);
-			} else{
-				error("either wfs.hs or powfs.hs has to be specified\n");
-			}
-		} else if(wfs_hs&&fabs(wfs_hs-parms->powfs[ipowfs].hs)>100){
-			warning("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
-		}
-		if(parms->powfs[ipowfs].hc==0&&wfs_hc){
-			parms->powfs[ipowfs].hs=wfs_hc;
-			warning("powfs[%d].hc is set to average of wfs[].hc: %g\n", ipowfs, parms->powfs[ipowfs].hc);
-		} else if(wfs_hc>0&&fabs(wfs_hc-parms->powfs[ipowfs].hc)>100){
-			warning("powfs[%d].hc is %g, but wfs average hc is %g\n", ipowfs, parms->powfs[ipowfs].hc, wfs_hc);
 		}
 	}//for ipowfs
 
@@ -2106,7 +2081,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		parms->sim.dt=0;
 	}
 
-	if(parms->atmr.hs<EPS){
+	if(!parms->atmr.hs){
 		real hs=NAN;
 		/*find out the height to setup cone coordinate. */
 		if(parms->tomo.cone){
@@ -2171,7 +2146,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 static void setup_parms_postproc_dirs(parms_t* parms){
 	//Collect all beam directions 
 	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
-	parms->dirs=dnew(3, ndir);
+	parms->dirs=dnew(4, ndir);
 	dmat* pdir=parms->dirs/*PDMAT*/;
 	int count=0;
 
@@ -2179,6 +2154,7 @@ static void setup_parms_postproc_dirs(parms_t* parms){
 		P(pdir, 0, count)=parms->wfs[i].thetax;
 		P(pdir, 1, count)=parms->wfs[i].thetay;
 		P(pdir, 2, count)=parms->wfs[i].hs;
+		P(pdir, 3, count)=parms->wfs[i].hc;
 		count++;
 	}
 
@@ -2207,7 +2183,7 @@ static void setup_parms_postproc_dirs(parms_t* parms){
 	} else if(count>ndir){
 		error("count=%d, ndir=%d\n", count, ndir);
 	}
-	dresize(parms->dirs, 3, count);
+	dresize(parms->dirs, 4, count);
 	real rmax2=0;
 	for(int ic=0; ic<count; ic++){
 		real x=P(parms->dirs, 0, ic);
@@ -2243,7 +2219,7 @@ static void setup_parms_postproc_atm_size(parms_t* parms){
 	/*Minimum screen size required. Used to transport atm to GPU. */
 	parms->atm.nxnmax=Nmax;
 	Nmax=nextpow2(Nmax);
-	if(fabs(P(parms->atm.size,0))<EPS||fabs(P(parms->atm.size,1))<EPS){
+	if(!P(parms->atm.size,0)||!P(parms->atm.size,1)){
 		parms->atm.nx=Nmax;
 		parms->atm.ny=Nmax;
 	} else{/*user specified.*/
@@ -2258,10 +2234,16 @@ static void setup_parms_postproc_atm_size(parms_t* parms){
 		parms->atm.ny=parms->atm.nx;
 	}
 	/*record the size of the atmosphere. */
+	real atm_size_x=P(parms->atm.size, 0);
+	real atm_size_y=P(parms->atm.size, 1);
 	P(parms->atm.size,0)=parms->atm.nx*parms->atm.dx;
 	P(parms->atm.size,1)=parms->atm.ny*parms->atm.dx;
+	if(P(parms->atm.size, 0)>atm_size_x||P(parms->atm.size, 1)>atm_size_y){
+		info("Atmospheric size is increased from (%g, %g) to (%g, %g) m.\n", 
+			atm_size_x, atm_size_y, P(parms->atm.size, 0), P(parms->atm.size, 1));
+	}
 	if(P(parms->atm.L0,0)>P(parms->atm.size,0)){
-		warning("Atmospheric size is smaller than outer scale!\n");
+		info("Atmospheric size is smaller than outer scale.\n");
 	}
 	/*for screen evolving. */
 	parms->atm.overx=lnew(parms->atm.nps, 1);
@@ -2965,13 +2947,13 @@ static void print_parms(const parms_t* parms){
 	}
 	info2("%sThere are %d wfs%s\n", GREEN, parms->nwfs, BLACK);
 	for(i=0; i<parms->nwfs; i++){
+		const int ipowfs=parms->wfs[i].powfs;
 		info("    wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
 			i, parms->wfs[i].powfs, parms->wfs[i].thetax*206265,
 			parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3, parms->wfs[i].siglev);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
 			info(" (%g in simulation)", parms->wfs[i].sigsim);
 		}
-		const int ipowfs=parms->wfs[i].powfs;
 		info(" bkgrnd is %g", parms->powfs[ipowfs].bkgrnd);
 		info("\n");
 		if(fabs(parms->wfs[i].thetax)>1||fabs(parms->wfs[i].thetay)>1){

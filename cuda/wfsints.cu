@@ -273,7 +273,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const Real hs=parms->wfs[iwfs].hs;
-	const Real hc=parms->wfs[iwfs].hc;
+	const Real hc=0;//uplink is always from ground.
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;

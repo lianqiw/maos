@@ -419,17 +419,16 @@ gboolean update_title(gpointer data){
 	for(GSList *p=windows; p; p=p->next){
 		GtkWidget *window=(GtkWidget *)p->data;
 		char title[80];
-		snprintf(title, 80, "MAOS Drawdaemon (%s:", client_hostname);
-		int nt=strlen(title);
-		if(nt<75){
-			if(pid>0){
-				snprintf(title+nt, 80-nt, "%d)", pid);
-			}else{
-				snprintf(title+nt, 80-nt, "%s)", pid==-1?"disconnected":"idle");
-			}
+		if(pid>0){
+			snprintf(title, 80, "Drawdaemon (%s:%d)", client_hostname, pid);
+		}else if(pid==0){
+			snprintf(title, 80, "Drawdaemon (%s:idle)", client_hostname);
+		}else{
+			snprintf(title, 80, "Drawdaemon (disconnected)");
 		}
+
 		if(iwindow>1){
-			nt=strlen(title);
+			int nt=strlen(title);
 			if(nt<75){
 				snprintf(title+nt, 80-nt, " (%d)", iwindow);
 			}
@@ -1245,6 +1244,8 @@ static void togglebutton_cumu(GtkToggleToolButton* btn){
 }
 static void toolbutton_stop(GtkToolButton* btn){
 	(void)btn;
+	extern int keep_listen;
+	keep_listen=0;
 	close(sock); sock=-1; sock_idle=-1;
 }
 static void togglebutton_pause(GtkToggleToolButton* btn){

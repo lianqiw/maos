@@ -775,7 +775,19 @@ void parse_argopt(char* cmds, argopt_t* options){
 			/*create a \n before the key. and \n after .conf */
 			for(char* start2=start-1; start2>=cmds; start2--){
 				if(isspace((int)*start2)||*start2=='\n'){
-					*start2='\n';
+					//check whether -c is before *.conf
+					char *start3=start2;
+					//skip continuous space
+					while(start3-1>=cmds && isspace((int)start3[-1])){
+						start3--;
+					}
+					if(start3-2>=cmds&&start3[-2]=='-'&&start3[-1]=='c'){
+						if(start2-3>=cmds){
+							start2[-3]='\n';
+						}
+					}else{
+						*start2='\n';
+					}
 					break;
 				}
 			}
@@ -801,6 +813,9 @@ void parse_argopt(char* cmds, argopt_t* options){
 				warning("Quote is not closed\n");
 				start++;
 			}
+		} else if(start[0]=='-' && start[1]=='o'){//-o dir
+			if(start-1>=cmds) start[-1]='\n';
+			start+=2;
 		} else{
 			start++;
 		}

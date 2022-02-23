@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -40,7 +40,7 @@ float io_timeclear=0;//plots
 int io_heartbeat=0;
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
-void fmaxmin(const float* p, long n, float* pmax, float* pmin){
+void fmaxmin(const float *p, long n, float *pmax, float *pmin){
 	float max=-INFINITY, min=INFINITY;
 	for(long i=0; i<n; i++){
 		if(!isnan(p[i])){//not NAN
@@ -67,11 +67,11 @@ static unsigned int crp(float x, float x0){
 
 /**
    convert float to char with color map*/
-void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* zlim){
+void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, float *zlim){
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
 	//update if range change by 10%
-	if(max > zlim[1]*1.1 || max < zlim[1]*0.9){
+	if(max>zlim[1]*1.1||max<zlim[1]*0.9){
 		zlim[1]=max;
 	}
 	if(min>zlim[0]*1.1||min<zlim[0]*0.9){
@@ -81,7 +81,7 @@ void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, f
 	min=zlim[0];
 	max=zlim[1];
 	if(color){/*colored */
-		int* pi=(int*)pout;
+		int *pi=(int *)pout;
 		float scale, offset;
 		if(fabs(max-min)>1.e-4*fabs(min)){
 			scale=1./(max-min);
@@ -99,28 +99,28 @@ void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, f
 			}
 		}
 	} else{/*b/w */
-		unsigned char* pc=(unsigned char*)pout;
+		unsigned char *pc=(unsigned char *)pout;
 		float scale=255./(max-min);
 		for(int i=0; i<nx*ny; i++){
 			pc[i]=(unsigned char)((p[i]-min)*scale);
 		}
 	}
 }
-void* listen_udp(void *dummy){
+void *listen_udp(void *dummy){
 	(void)dummy;
 	dbg("listen_dup listening at socket %d\n", udp_sock);
-	void *buf=0; 
+	void *buf=0;
 	size_t bufsize=0;
 	int counter=0;
 	do{
 		counter=udp_recv(&udp_client, &buf, &bufsize);
 		info("listen_udp: %lu bytes received with counter %d.\n", bufsize, counter);
-	}while(counter>0);
+	} while(counter>0);
 	return NULL;
 }
 void drawdata_free_input(drawdata_t *drawdata){
 	/*Only free the input received via fifo from draw.c */
-	
+
 #define FREE(A) free(A); A=NULL;
 	FREE(drawdata->p);
 	FREE(drawdata->p0);
@@ -150,10 +150,10 @@ void drawdata_free_input(drawdata_t *drawdata){
 		}
 		FREE(drawdata->legend);
 	}
-	
+
 	FREE(drawdata);
 }
-static drawdata_t* HEAD=NULL;
+static drawdata_t *HEAD=NULL;
 drawdata_t *drawdata_get(char **fig, char **name, int reset){
 	if(!HEAD){
 		HEAD=mycalloc(1, drawdata_t);//dummy head for easy handling
@@ -165,8 +165,8 @@ drawdata_t *drawdata_get(char **fig, char **name, int reset){
 			ppriv->next=p->next;
 			drawdata_free_input(p);
 			p=ppriv;
-		}else if(!strcmp(p->fig, *fig) && !strcmp(p->name, *name)){
-			drawdata=p; 
+		} else if(!strcmp(p->fig, *fig)&&!strcmp(p->name, *name)){
+			drawdata=p;
 		}
 	}
 	if(!drawdata){
@@ -189,7 +189,7 @@ drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->limit_manual=0;
 		drawdata->next=HEAD->next;
 		HEAD->next=drawdata;
-	}else if(reset){
+	} else if(reset){
 		//reset image, npoints, to default. do not reset memory
 		/*while(!drawdata->drawn && drawdata->ready){
 			warning_time("Wait for previous data to draw before receiving new data\n");
@@ -216,7 +216,7 @@ static void drawdata_clear_older(float timclear){
 		}
 	}
 }
-#define CATCH(A,p) if(A) {close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); goto retry;}
+#define CATCH(A,p) if(A) {close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); break;}
 #define STREADINT(p) CATCH(streadint(sock, &p),p)
 #define STREAD(p,len) CATCH(stread(sock,p,len),p)
 #define STREADSTR(p) ({if(p) {free(p);p=NULL;} CATCH(streadstr(sock, &p),p);})
@@ -230,309 +230,314 @@ static void drawdata_clear_older(float timclear){
 int sock;//socket 
 int sock_idle=0;//1: no active drawing. 0: active drawing connection. -1: do not retry connection
 int client_pid=-1;//client PID
-drawdata_t* drawdata=NULL;//current 
-drawdata_t* drawdata_prev=NULL;//previous
+int keep_listen=1;//set to 0 to stop listening
+drawdata_t *drawdata=NULL;//current 
+drawdata_t *drawdata_prev=NULL;//previous
 char *client_hostname=NULL;
 int npts=0;
-void* listen_draw(void* user_data){
-	char* str2=0;
-	sock=strtol((char*)user_data, &str2, 10);
+void *listen_draw(void *user_data){
+	char *str2=0;
+	sock=strtol((char *)user_data, &str2, 10);
 	if(str2!=user_data){//argument is a number
 		if(sock<0){
 			error("sock=%d is invalid\n", sock);
 		}
 		client_hostname=strdup(addr2name(socket_peer(sock)));
 	} else{//not a number, hostname
-		client_hostname=strdup((char*)user_data);
+		client_hostname=strdup((char *)user_data);
 		sock=-1;
 	}
-retry:
-	client_pid=-1;
-	g_idle_add((GSourceFunc)update_title, NULL);
-
-	if(sock<0&&client_hostname&&sock_idle!=-1){
-		dbg_time("Connecting to %s\n", client_hostname);
-		sock=scheduler_connect(client_hostname);
-		if(sock==-1){
-			warning("connect to %s failed, retry in 60 seconds.\n", client_hostname);
-			mysleep(60);
-			goto retry;
-		}
-		int cmd[2]={CMD_DISPLAY, 0};
-		if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
-			warning("Failed to register sock in scheduler, retry in 60 seconds.\n");
-			close(sock);
-			mysleep(60);
-			goto retry;
-		}
-	}
-	
-	if(sock>=0){
-		client_pid=0;
+	while(keep_listen){
+		client_pid=-1;
 		g_idle_add((GSourceFunc)update_title, NULL);
-		//we set socket timeout to 60 to check disconnection.
-		//server sends heartbeat every 10 seconds (since 2021-09-29).
-		if(socket_block(sock, 0) || socket_recv_timeout(sock, 60)){
-			sock=-1;
-		}
-	}
 
-	char *fig=0;
-	char *name=0;
-	int cmd=0;
-	int nlen=0;
-	//int pid=getpid();
-	if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
-	while(sock!=-1){
-		STREADINT(cmd);//will block if no data is available.
-		sock_idle=0;//Indicate connection is active
-		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
-			STREADINT(nlen);
-			STREADINT(cmd);
-		}
-		//if(cmd!=DRAW_HEARTBEAT) dbg_time("%d received %d\n", pid, cmd);
-		
-		switch(cmd){
-		case DRAW_FRAME:{//in new format, every frame start with this. Place holder to handle UDP.
-			int sizes[4];
-			STREAD(sizes, sizeof(int)*4);
-		};break;
-		case DRAW_START:
-			//tic;
-			if(drawdata) warning("listen_draw: drawdata=%p, should be NULL.\n", drawdata);
-			if(fig) warning("fig=%s, should be NULL.\n", fig);
-			if(name) warning("name=%s\n, should be NULL.\n", name);
-		break;
-		case DRAW_DATA:/*image data. */
-		{
-			int32_t header[2];
-			STREAD(header, 2*sizeof(int32_t));
-			long tot=header[0]*header[1];
-			if(drawdata->nmax<tot){
-				drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use byte_float to avoid overflow
-				drawdata->p=realloc(drawdata->p, tot*4);
-				drawdata->nmax=tot;
+		if(sock<0&&client_hostname&&sock_idle!=-1){
+			dbg_time("Connecting to %s\n", client_hostname);
+			sock=scheduler_connect(client_hostname);
+			if(sock==-1){
+				warning("connect to %s failed, retry in 60 seconds.\n", client_hostname);
+				mysleep(60);
+				continue;
 			}
-			if(tot>0){
-				STREADFLT(drawdata->p0, tot);
-			}
-			drawdata->nx=header[0];
-			drawdata->ny=header[1];
-			if(drawdata->square==-1) drawdata->square=1;//default to square for images.
-		}
-		break;
-		case DRAW_HEARTBEAT:/*no action*/
-			io_heartbeat=myclocki();
-			//dbg("heatbeat=%d\n", io_heartbeat);
-			break;
-		case DRAW_POINTS:
-		{
-			int ipts=npts;
-			npts++;
-			if(npts>drawdata->nptsmax){
-				drawdata->pts=myrealloc(drawdata->pts, npts, float*);
-				drawdata->style_pts=myrealloc(drawdata->style_pts, npts, int);
-				drawdata->ptsdim=realloc(drawdata->ptsdim, npts*sizeof(int[2]));
-				drawdata->legend=realloc(drawdata->legend, npts*sizeof(char*));
-				for(; drawdata->nptsmax<npts; drawdata->nptsmax++){
-					drawdata->pts[drawdata->nptsmax]=NULL;
-					drawdata->style_pts[drawdata->nptsmax]=0;
-					drawdata->ptsdim[drawdata->nptsmax][0]=0;
-					drawdata->ptsdim[drawdata->nptsmax][1]=0;
-					drawdata->legend[drawdata->nptsmax]=NULL;
-				}
-			}
-			int nptsx, nptsy;
-			
-			STREADINT(nptsx);
-			STREADINT(nptsy);
-			STREADINT(drawdata->square);
-			drawdata->grid=1;
-			if(drawdata->ptsdim[ipts][0]*drawdata->ptsdim[ipts][1]<nptsx*nptsy){
-				drawdata->pts[ipts]=realloc(drawdata->pts[ipts], nptsx*nptsy*byte_float);
-				//drawdata->icumu=0;
-			}
-			drawdata->ptsdim[ipts][0]=nptsx;
-			drawdata->ptsdim[ipts][1]=nptsy;
-			if(nptsx*nptsy>0){
-				STREADFLT(drawdata->pts[ipts], nptsx*nptsy);
-				if(nptsx>50){
-					if(!drawdata->icumu){
-						drawdata->icumu=nptsx/10;
-					}
-				}
+			int cmd[2]={CMD_DISPLAY, 0};
+			if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
+				warning("Failed to register sock in scheduler, retry in 60 seconds.\n");
+				close(sock);
+				mysleep(60);
+				continue;
 			}
 		}
-		break;
-		case DRAW_STYLE:
-			STREADINT(drawdata->nstyle);
-			if(drawdata->nstylemax<drawdata->nstyle){
-				drawdata->style=myrealloc(drawdata->style, drawdata->nstyle, int32_t);
-				drawdata->nstylemax=drawdata->nstyle;
-			}
-			STREAD(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
-			break;
-		case DRAW_CIRCLE:
-			STREADINT(drawdata->ncir);
-			if(drawdata->ncirmax<drawdata->ncir){
-				drawdata->cir=(float(*)[4])realloc(drawdata->cir, 4*drawdata->ncir*byte_float);
-				drawdata->ncirmax=drawdata->ncir;
-			}
-			STREADFLT(drawdata->cir, 4*drawdata->ncir);
-			break;
-		case DRAW_LIMIT:
-			if(!drawdata->limit_data){
-				drawdata->limit_data=malloc(4*byte_float);
-			}
-			STREADFLT(drawdata->limit_data, 4);
-			drawdata->limit_manual=1;
-			break;
-		case DRAW_FIG:
-			STREADSTR(fig);
-			break;
-		case DRAW_NAME:
-			STREADSTR(name);
-			if(fig && name) {
-				drawdata=drawdata_get(&fig, &name, 1); 
-				npts=0;
-			}else{
-				warning("Invalid usage: fig should be provided before namen");
-			}
-			break;
-		case DRAW_TITLE:
-			STREADSTR(drawdata->title);
-			break;
-		case DRAW_XLABEL:
-			STREADSTR(drawdata->xlabel);
-			break;
-		case DRAW_YLABEL:
-			STREADSTR(drawdata->ylabel);
-			break;
-		case DRAW_ZLIM:
-			STREADFLT(drawdata->zlim, 2);
-			break;
-		case DRAW_LEGEND:
-			for(int i=0; i<npts; i++){
-				STREADSTR(drawdata->legend[i]);
-			}
-			break;
-		case DRAW_XYLOG:
-			STREAD(drawdata->xylog, sizeof(char)*2);
-			break;
-		case DRAW_FINAL:
-			//dbg("client is done\n");
-			if(io_timeclear){
-				drawdata_clear_older(io_timeclear);
-			}
-			sock_idle=1;
+
+		if(sock>=0){
 			client_pid=0;
 			g_idle_add((GSourceFunc)update_title, NULL);
-			break;
-		case DRAW_FLOAT:
-			//notice that this value can change from plot to plot
-			//currently, points uses real (default to double), while image uses float.
-			//memory in drawdaemon are allocated ALWAYS using float
-			STREADINT(byte_float);
-			if(byte_float>8){
-				error("invalid byte_float=%d\n", byte_float);
+			//we set socket timeout to 60 to check disconnection.
+			//server sends heartbeat every 10 seconds (since 2021-09-29).
+			if(socket_block(sock, 0)||socket_recv_timeout(sock, 60)){
+				sock=-1;
 			}
-			break;
-		case DRAW_UDPPORT://received UDP port from client
-		{
-			STREADINT(client_port);
-			client_addr=socket_peer(sock);
-			info("received udp port %d fron client %s\n", client_port, addr2name(client_addr));
-			
-			if(udp_sock<=0){
-				udp_sock=bind_socket(SOCK_DGRAM, 0, 0);
+		}
+
+		char *fig=0;
+		char *name=0;
+		int cmd=0;
+		int nlen=0;
+		//int pid=getpid();
+		if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
+		while(sock!=-1){
+			STREADINT(cmd);//will block if no data is available.
+			sock_idle=0;//Indicate connection is active
+			if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
+				STREADINT(nlen);
+				STREADINT(cmd);
 			}
-			int server_port=socket_port(udp_sock);
-			struct sockaddr_in add;
-			add.sin_family=AF_INET;
-			add.sin_addr.s_addr=client_addr;
-			add.sin_port=htons(client_port);
-			if(connect(udp_sock, (const struct sockaddr*)&add, sizeof(add))){
-				warning("connect udp socket to client failed with error %d\n", errno);
-			}else{
-				//initial handshake with fixed buffer size of 64 ints. The length can not be increased.
-				int cmd2[64]={0};
-				cmd2[0]=DRAW_ENTRY;
-				cmd2[1]=sizeof(int)*4;
-				cmd2[2]=1;//protocol version
-				cmd2[3]=server_port;
-				cmd2[4]=UDP_PAYLOAD;
-				cmd2[5]=UDP_HEADER;
-				udp_client.header=UDP_HEADER;
-				udp_client.payload=UDP_PAYLOAD;
-				udp_client.peer_addr=add;
-				udp_client.version=1;
-				udp_client.sock=udp_sock;
-				if(send(udp_sock, cmd2, sizeof(cmd2),0)<(ssize_t)sizeof(cmd2)){
-					warning("write to client failed with error %d\n", errno);
-				}else{
-					thread_new(listen_udp, NULL);
+			//if(cmd!=DRAW_HEARTBEAT) dbg_time("%d received %d\n", pid, cmd);
+
+			switch(cmd){
+			case DRAW_FRAME:{//in new format, every frame start with this. Place holder to handle UDP.
+				int sizes[4];
+				STREAD(sizes, sizeof(int)*4);
+			};break;
+			case DRAW_START:
+				//tic;
+				if(drawdata) warning("listen_draw: drawdata=%p, should be NULL.\n", drawdata);
+				if(fig) warning("fig=%s, should be NULL.\n", fig);
+				if(name) warning("name=%s\n, should be NULL.\n", name);
+				break;
+			case DRAW_DATA:/*image data. */
+			{
+				int32_t header[2];
+				STREAD(header, 2*sizeof(int32_t));
+				long tot=header[0]*header[1];
+				if(drawdata->nmax<tot){
+					drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use byte_float to avoid overflow
+					drawdata->p=realloc(drawdata->p, tot*4);
+					drawdata->nmax=tot;
 				}
+				if(tot>0){
+					STREADFLT(drawdata->p0, tot);
+				}
+				drawdata->nx=header[0];
+				drawdata->ny=header[1];
+				if(drawdata->square==-1) drawdata->square=1;//default to square for images.
 			}
-		}
-		break;
-		case DRAW_INIT:
-		{
-			io_timeclear=myclockd();
-		}
-		break;
-		case DRAW_PID:
-		{
-			STREADINT(client_pid);
-			g_idle_add((GSourceFunc)update_title, NULL);
-		}
-		break;
-		case DRAW_END:
-		{
-			drawdata->npts=npts;
-			if(drawdata->npts>0){
-				drawdata->cumuquad=1;
-				if(drawdata->nstyle>1){
-					if(drawdata->nstyle!=drawdata->npts){
-						warning("nstyle must equal to npts\n");
-						drawdata->nstyle=0;/*disable it. */
-						free(drawdata->style);
+			break;
+			case DRAW_HEARTBEAT:/*no action*/
+				io_heartbeat=myclocki();
+				//dbg("heatbeat=%d\n", io_heartbeat);
+				break;
+			case DRAW_POINTS:
+			{
+				int ipts=npts;
+				npts++;
+				if(npts>drawdata->nptsmax){
+					drawdata->pts=myrealloc(drawdata->pts, npts, float *);
+					drawdata->style_pts=myrealloc(drawdata->style_pts, npts, int);
+					drawdata->ptsdim=realloc(drawdata->ptsdim, npts*sizeof(int[2]));
+					drawdata->legend=realloc(drawdata->legend, npts*sizeof(char *));
+					for(; drawdata->nptsmax<npts; drawdata->nptsmax++){
+						drawdata->pts[drawdata->nptsmax]=NULL;
+						drawdata->style_pts[drawdata->nptsmax]=0;
+						drawdata->ptsdim[drawdata->nptsmax][0]=0;
+						drawdata->ptsdim[drawdata->nptsmax][1]=0;
+						drawdata->legend[drawdata->nptsmax]=NULL;
+					}
+				}
+				int nptsx, nptsy;
+
+				STREADINT(nptsx);
+				STREADINT(nptsy);
+				STREADINT(drawdata->square);
+				drawdata->grid=1;
+				if(drawdata->ptsdim[ipts][0]*drawdata->ptsdim[ipts][1]<nptsx*nptsy){
+					drawdata->pts[ipts]=realloc(drawdata->pts[ipts], nptsx*nptsy*byte_float);
+					//drawdata->icumu=0;
+				}
+				drawdata->ptsdim[ipts][0]=nptsx;
+				drawdata->ptsdim[ipts][1]=nptsy;
+				if(nptsx*nptsy>0){
+					STREADFLT(drawdata->pts[ipts], nptsx*nptsy);
+					if(nptsx>50){
+						if(!drawdata->icumu){
+							drawdata->icumu=nptsx/10;
+						}
 					}
 				}
 			}
-			if(!drawdata->fig) drawdata->fig=strdup("unknown");
-			drawdata->drawn=0;
-			drawdata->ready=1;
-			
-			if(drawdata_prev && drawdata_prev==drawdata){//same drawdata is updated, enable computing framerate.
-				io_time2=io_time1;
-			}else{
-				io_time2=0;//this disables frame rate printing
-			}
-			io_time1=myclockd();
-			drawdata->io_time=io_time1;
-			drawdata_prev=drawdata;//for computing time
-			gdk_threads_add_idle(addpage, drawdata);
-			drawdata=NULL;
-		}
-		break;
-
-		case -1:
-			goto retry;/*read failed. */
 			break;
-		default:
-			warning_time("Unknown cmd: %d with size %d\n", cmd, nlen);
-			if(nlen){
-				void* p=malloc(nlen);
-				STREAD(p, nlen);
-				free(p);
+			case DRAW_STYLE:
+				STREADINT(drawdata->nstyle);
+				if(drawdata->nstylemax<drawdata->nstyle){
+					drawdata->style=myrealloc(drawdata->style, drawdata->nstyle, int32_t);
+					drawdata->nstylemax=drawdata->nstyle;
+				}
+				STREAD(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
+				break;
+			case DRAW_CIRCLE:
+				STREADINT(drawdata->ncir);
+				if(drawdata->ncirmax<drawdata->ncir){
+					drawdata->cir=(float(*)[4])realloc(drawdata->cir, 4*drawdata->ncir*byte_float);
+					drawdata->ncirmax=drawdata->ncir;
+				}
+				STREADFLT(drawdata->cir, 4*drawdata->ncir);
+				break;
+			case DRAW_LIMIT:
+				if(!drawdata->limit_data){
+					drawdata->limit_data=malloc(4*byte_float);
+				}
+				STREADFLT(drawdata->limit_data, 4);
+				drawdata->limit_manual=1;
+				break;
+			case DRAW_FIG:
+				STREADSTR(fig);
+				break;
+			case DRAW_NAME:
+				STREADSTR(name);
+				if(fig&&name){
+					drawdata=drawdata_get(&fig, &name, 1);
+					npts=0;
+				} else{
+					warning("Invalid usage: fig should be provided before namen");
+				}
+				break;
+			case DRAW_TITLE:
+				STREADSTR(drawdata->title);
+				break;
+			case DRAW_XLABEL:
+				STREADSTR(drawdata->xlabel);
+				break;
+			case DRAW_YLABEL:
+				STREADSTR(drawdata->ylabel);
+				break;
+			case DRAW_ZLIM:
+				STREADFLT(drawdata->zlim, 2);
+				break;
+			case DRAW_LEGEND:
+				for(int i=0; i<npts; i++){
+					STREADSTR(drawdata->legend[i]);
+				}
+				break;
+			case DRAW_XYLOG:
+				STREAD(drawdata->xylog, sizeof(char)*2);
+				break;
+			case DRAW_FINAL:
+				//dbg("client is done\n");
+				if(io_timeclear){
+					drawdata_clear_older(io_timeclear);
+				}
+				sock_idle=1;
+				client_pid=0;
+				g_idle_add((GSourceFunc)update_title, NULL);
+				break;
+			case DRAW_FLOAT:
+				//notice that this value can change from plot to plot
+				//currently, points uses real (default to double), while image uses float.
+				//memory in drawdaemon are allocated ALWAYS using float
+				STREADINT(byte_float);
+				if(byte_float>8){
+					error("invalid byte_float=%d\n", byte_float);
+				}
+				break;
+			case DRAW_UDPPORT://received UDP port from client
+			{
+				STREADINT(client_port);
+				client_addr=socket_peer(sock);
+				info("received udp port %d fron client %s\n", client_port, addr2name(client_addr));
+
+				if(udp_sock<=0){
+					udp_sock=bind_socket(SOCK_DGRAM, 0, 0);
+				}
+				int server_port=socket_port(udp_sock);
+				struct sockaddr_in add;
+				add.sin_family=AF_INET;
+				add.sin_addr.s_addr=client_addr;
+				add.sin_port=htons(client_port);
+				if(connect(udp_sock, (const struct sockaddr *)&add, sizeof(add))){
+					warning("connect udp socket to client failed with error %d\n", errno);
+				} else{
+					//initial handshake with fixed buffer size of 64 ints. The length can not be increased.
+					int cmd2[64]={0};
+					cmd2[0]=DRAW_ENTRY;
+					cmd2[1]=sizeof(int)*4;
+					cmd2[2]=1;//protocol version
+					cmd2[3]=server_port;
+					cmd2[4]=UDP_PAYLOAD;
+					cmd2[5]=UDP_HEADER;
+					udp_client.header=UDP_HEADER;
+					udp_client.payload=UDP_PAYLOAD;
+					udp_client.peer_addr=add;
+					udp_client.version=1;
+					udp_client.sock=udp_sock;
+					if(send(udp_sock, cmd2, sizeof(cmd2), 0)<(ssize_t)sizeof(cmd2)){
+						warning("write to client failed with error %d\n", errno);
+					} else{
+						thread_new(listen_udp, NULL);
+					}
+				}
 			}
-		}/*switch */
-		cmd=-1;
-	}/*while */
+			break;
+			case DRAW_INIT:
+			{
+				io_timeclear=myclockd();
+			}
+			break;
+			case DRAW_PID:
+			{
+				STREADINT(client_pid);
+				g_idle_add((GSourceFunc)update_title, NULL);
+			}
+			break;
+			case DRAW_END:
+			{
+				drawdata->npts=npts;
+				if(drawdata->npts>0){
+					drawdata->cumuquad=1;
+					if(drawdata->nstyle>1){
+						if(drawdata->nstyle!=drawdata->npts){
+							warning("nstyle must equal to npts\n");
+							drawdata->nstyle=0;/*disable it. */
+							free(drawdata->style);
+						}
+					}
+				}
+				if(!drawdata->fig) drawdata->fig=strdup("unknown");
+				drawdata->drawn=0;
+				drawdata->ready=1;
+
+				if(drawdata_prev&&drawdata_prev==drawdata){//same drawdata is updated, enable computing framerate.
+					io_time2=io_time1;
+				} else{
+					io_time2=0;//this disables frame rate printing
+				}
+				io_time1=myclockd();
+				drawdata->io_time=io_time1;
+				drawdata_prev=drawdata;//for computing time
+				gdk_threads_add_idle(addpage, drawdata);
+				drawdata=NULL;
+			}
+			break;
+			case -1://read failed.
+				close(sock); 
+				sock=-1;
+				break;
+			default:
+				warning_time("Unknown cmd: %d with size %d\n", cmd, nlen);
+				if(nlen){
+					void *p=malloc(nlen);
+					STREAD(p, nlen);
+					free(p);
+				}
+			}/*switch */
+			cmd=-1;
+			nlen=0;
+		}/*while */
+	}
 	free(client_hostname);client_hostname=NULL;
 	warning_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;
 	sock_idle=1;
+	client_pid=-1;
+	g_idle_add((GSourceFunc)update_title, NULL);
 	return NULL;
 }

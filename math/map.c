@@ -110,9 +110,9 @@ void map_d_din(map_t* map, real* d, real* din){
 void create_metapupil(map_t** mapout,/**<[out] map*/
 	long* nxout,  /**<[out] nx*/
 	long* nyout,  /**<[out] ny*/
-	dmat* dirs,   /**<[in] All Directions to cover (thetax, thetay, hs)*/
+	dmat* dirs,   /**<[in] All Directions to cover (thetax, thetay, hs, hc)*/
 	real D,     /**<[in] Diameter (meter)*/
-	real ht,    /**<[in] Height (meter)*/
+	real ht0,   /**<[in] Conjugation Height (meter)*/
 	real dx,    /**<[in] Sampling along x (meter)*/
 	real dy,    /**<[in] Sampling along y (meter)*/
 	real offset,/**<[in] Fractional offset of point closet from origin. between [0, 1)*/
@@ -125,10 +125,11 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 	if(!dirs) return;
 	const real R=D/2;
 	real minx=INFINITY, miny=INFINITY, maxx=-INFINITY, maxy=-INFINITY;
-	if(dirs->nx<3||dirs->ny<=0){
+	if(dirs->nx<4||dirs->ny<=0){
 		error("dirs should have no less than 3 rows and positive number of cols.\n");
 	}
 	for(int idir=0; idir<dirs->ny; idir++){
+		real ht=ht0-P(dirs,3, idir);//hc
 		real RR=(1.-ht/P(dirs, 2, idir))*R+guard;
 		real sx1=(P(dirs, 0, idir)*ht)-RR;
 		real sx2=(P(dirs, 0, idir)*ht)+RR;
@@ -197,12 +198,13 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		*mapout=mapnew(nx, ny, dx, dy);
 		(*mapout)->ox=ox;
 		(*mapout)->oy=oy;
-		(*mapout)->h=ht;
+		(*mapout)->h=ht0;
 		dmat* dmap=(dmat*)(*mapout);
 		if(square){/**Only want square grid*/
 			dset(dmap, 1);
 		} else{/*Want non square grid*/
 			for(int idir=0; idir<dirs->ny; idir++){
+				real ht=ht0-P(dirs, 3, idir);
 				real sx=-ox+(P(dirs, 0, idir)*ht);
 				real sy=-oy+(P(dirs, 1, idir)*ht);
 				real RR=R*(1.-ht/P(dirs, 2, idir))+guard;

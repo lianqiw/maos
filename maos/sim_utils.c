@@ -259,8 +259,8 @@ void genatm(sim_t* simu){
 
 	if(parms->plot.atm&&simu->atm){
 		for(int ips=0; ips<atm->nps; ips++){
-			drawmap("atm", P(simu->atm, ips), opdzlim,
-				"Atmosphere OPD", "x (m)", "y (m)", "layer%d", ips);
+			drawmap("Atm", P(simu->atm, ips), opdzlim,
+				"Atmosphere OPD", "x (m)", "y (m)", "layer %d", ips);
 		}
 	}
 
@@ -310,8 +310,8 @@ void setup_recon_HXW_predict(sim_t* simu){
 			const real hc=parms->wfs[iwfs].hc;
 			for(int ips=0; ips<npsr; ips++){
 				dspfree(P(HXWtomo, iwfs, ips));
-				real  ht=P(recon->ht, ips);
-				real  scale=1.-(ht-hc)/hs;
+				real  ht=P(recon->ht, ips)-hc;
+				real  scale=1.-ht/hs;
 				real  displace[2];
 				displace[0]=parms->wfsr[iwfs].thetax*ht;
 				displace[1]=parms->wfsr[iwfs].thetay*ht;
@@ -682,10 +682,10 @@ static void init_simu_evl(sim_t* simu){
 			if(parms->evl.psfmean){
 				simu->evlpsfolmean=dcellnew(parms->evl.nwvl, 1);
 				simu->evlpsfolmean->header=strdup(header);
-				save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_" DIR_SUFFIX_OL);
+				save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov){
-				save->evlopdcovol=zfarr_init(0, 0, "evlopdcovol_" DIR_SUFFIX_OL);
+				save->evlopdcovol=zfarr_init(0, 0, "evlopdcovol" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov||parms->evl.opdmean){
 				save->evlopdmeanol=zfarr_init(0, 0, "evlopdmeanol" DIR_SUFFIX_OL);
@@ -1006,11 +1006,11 @@ static void init_simu_wfs(sim_t* simu){
 		const real hc=parms->wfs[iwfs].hc;
 		
 		for(int ips=0; ips<parms->atm.nps; ips++){
-			const real ht=P(parms->atm.ht, ips);
+			const real ht=P(parms->atm.ht, ips)-hc;
 			propdata_t* data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
 			data->displacex0=ht*parms->wfs[iwfs].thetax;
 			data->displacey0=ht*parms->wfs[iwfs].thetay;
-			data->scale=1.-(ht-hc)/hs;
+			data->scale=1.-ht/hs;
 			data->alpha=1;
 			data->wrap=1;
 			data->mapin=(map_t*)1;/*need to update this in genatm. */
@@ -1030,12 +1030,12 @@ static void init_simu_wfs(sim_t* simu){
 			simu->wfs_prop_atm[iwfs+nwfs*ips]=thread_prep(0, tot, nthread, prop, data);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
-			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
 			propdata_t* data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
 			int tot;
 			data->displacex0=ht*parms->wfs[iwfs].thetax;
 			data->displacey0=ht*parms->wfs[iwfs].thetay;
-			data->scale=1.-(ht-hc)/hs;
+			data->scale=1.-ht/hs;
 			data->alpha=-1;/*remove dm contribution. */
 			data->wrap=0;
 			if(parms->sim.cachedm){
@@ -1798,19 +1798,19 @@ void print_progress(sim_t* simu){
 		const long lapsh=laps/3600;
 		const long lapsm=(laps-lapsh*3600)/60;
 
-		info2("Step %5d: OL %6.1f %6.1f", 
+		info2("Step %5d: OL%7.1f %6.1f", 
 			isim,
 			mysqrt(P(simu->ole, 0, isim))*1e9,
 			mysqrt(P(simu->ole, 1, isim))*1e9);
 		if(!parms->sim.evlol){
-			info2("  OA %6.1f %5.1f CL %6.1f %5.1f",
+			info2("  OA%7.1f %5.1f CL%7.1f %5.1f",
 				mysqrt(P(simu->clep, 0, 0, 0, isim))*1e9,
 				mysqrt(P(simu->clep, 0, 0, 1, isim))*1e9,
 				mysqrt(P(simu->cle, 0, isim))*1e9,
 				mysqrt(P(simu->cle, 1, isim))*1e9				
 			);
 			if(parms->recon.split){
-				info2(" Split %6.1f %5.1f %5.1f",
+				info2(" Split%7.1f %5.1f %5.1f",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
 					mysqrt(P(simu->clem, 2, isim))*1e9);
@@ -1821,7 +1821,7 @@ void print_progress(sim_t* simu){
 			}
 		}
 		if(LOG_LEVEL<2){//dbg is inactive
-			info2(" nm  %.3f s\n", status->tot*tkmean);
+			info2(" nm %6.3f s\n", status->tot*tkmean);
 		}else{
 			info2(" nm\n");
 		}

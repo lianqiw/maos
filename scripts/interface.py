@@ -37,7 +37,7 @@ try:
     lib=cdll.LoadLibrary(aolib_so)
 except:
     raise Exception('aolib.so is not found at '+aolib_so)
-
+from readbin import headers
 
 def simplify(arr, do_stack=1):
     '''simplify object array by removing singleton dimensions and stack into numeric array'''
@@ -77,6 +77,7 @@ id2ctype={
 }
 #convert C array pointer to numpy array. Freeing C memory
 def pt2py(pointer):
+    headers.clear()
     if bool(pointer):
         out=pointer.contents.as_array()
         pointer.contents.free()
@@ -209,7 +210,8 @@ class cell(Structure):
             kind=-1
         if kind==0: #dense matrix
             if self.header:
-                print(self.header)
+                headers.append(self.header)
+                #print(self.header)
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
             return cast(addressof(self), POINTER(csc)).contents.as_array()

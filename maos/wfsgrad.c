@@ -218,7 +218,7 @@ void wfsgrad_iwfs(thread_t* info){
 		zfarr_push(simu->save->wfsopd[iwfs], isim, opd);
 	}
 	if(parms->plot.run){
-		drawopdamp("wfsopd", powfs[ipowfs].loc, opd, realamp, P(parms->dbg.draw_opdmax),
+		drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, realamp, P(parms->dbg.draw_opdmax),
 			"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 	}
 	if(do_geom){

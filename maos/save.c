@@ -155,8 +155,8 @@ void save_recon(sim_t* simu){
 		if(parms->recon.alg==0&&simu->opdr){
 			for(int i=0; i<NX(simu->opdr); i++){
 				if(P(simu->opdr,i)){
-					drawopd("opdr", P(recon->xloc,i), P(simu->opdr,i), P(parms->dbg.draw_opdmax),
-						"Reconstructed Atmosphere", "x (m)", "y (m)", "opdr %d", i);
+					drawopd("Opdr", P(recon->xloc,i), P(simu->opdr,i), P(parms->dbg.draw_opdmax),
+						"Reconstructed Atmosphere", "x (m)", "y (m)", "Layer %d", i);
 				}
 			}
 		}

@@ -65,11 +65,6 @@ sim_t* maos_iseed(int iseed){
 	}
 	sim_t* simu=init_simu(parms, powfs, aper, recon, iseed);
 	global->simu=simu;
-	if(!simu->pause){
-		draw_single=1;//Only draw active frame.
-	} else{
-		draw_single=0;
-	}
 	global->iseed=iseed;
 
 	if(parms->atm.frozenflow){
@@ -150,6 +145,11 @@ void maos_isim(int isim){
 			gpu_dmproj2gpu(simu->dmprojsq);
 		}
 #endif
+	}
+	if(!simu->pause && parms->sim.end>10+parms->sim.start){
+		draw_single=1;//Only draw active frame.
+	} else{
+		draw_single=0;
 	}
 	if(PARALLEL==1){
 		simu->tk_0=myclockd();

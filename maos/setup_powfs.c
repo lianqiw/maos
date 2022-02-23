@@ -102,11 +102,11 @@ static dmat* wfsamp2saa(dmat* wfsamp, long npsa){
 void wfspupmask(const parms_t* parms, loc_t* loc, dmat* amp, int iwfs){
 	long nloc=loc->nloc;
 	dmat* ampmask=dnew(nloc, 1);
-	real ht=parms->atm.hmax*0.7;
 	for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
 		int jpowfs=parms->wfs[jwfs].powfs;
 		if(parms->powfs[jpowfs].lo) continue;
-		real hs=parms->wfs[iwfs].hs;
+		real hs=parms->wfs[jwfs].hs;
+		real ht=parms->atm.hmax*0.7-parms->wfs[jwfs].hc;
 		real r=parms->aper.d*0.5*(1.-ht/hs)/(1.-ht/hs);
 		real sx=(parms->wfs[jwfs].thetax-parms->wfs[iwfs].thetax)*ht;
 		real sy=(parms->wfs[jwfs].thetay-parms->wfs[iwfs].thetay)*ht;

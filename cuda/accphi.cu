@@ -161,12 +161,12 @@ void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Re
 	for(int ips=0; ips<cudata->atm.N(); ips++){
 		const Real dx=cuatm[ips].dx;
 		const Real dy=cuatm[ips].dy;
-		const Real ht=cuatm[ips].ht;
+		const Real ht=cuatm[ips].ht-hc;
 		const Real vx=cuatm[ips].vx;
 		const Real vy=cuatm[ips].vy;
 		const Real dispx=(ht*thetax+mispx-vx*dt*isim-cuatm[ips].ox)/dx;
 		const Real dispy=(ht*thetay+mispy-vy*dt*isim-cuatm[ips].oy)/dy;
-		const Real scale=1.f-(ht-hc)/hs;
+		const Real scale=1.f-ht/hs;
 		if(scale<0) continue;
 		const int nloc=loc.Nloc();
 
@@ -225,8 +225,8 @@ void dm2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, 
 	Real hs, Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-		const Real ht=cudm[idm].ht;
-		map2loc(cudm[idm], locondm[idm], phiout, alpha, ht*thetax+mispx, ht*thetay+mispy, 1.-(ht-hc)/hs, 0, stream);
+		const Real ht=cudm[idm].ht-hc;
+		map2loc(cudm[idm], locondm[idm], phiout, alpha, ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
 	}
 }
 /**
@@ -236,8 +236,8 @@ void dm2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, int ndm,
 	Real hs, Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-		const Real ht=cudm[idm].ht;
-		map2loc(cudm[idm], locout, phiout, alpha, ht*thetax+mispx, ht*thetay+mispy, 1.-(ht-hc)/hs, 0, stream);
+		const Real ht=cudm[idm].ht-hc;
+		map2loc(cudm[idm], locout, phiout, alpha, ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
 	}/*idm */
 }
 /**

@@ -75,8 +75,8 @@ void plotloc(const char* fig, const parms_t* parms,
 	}
 
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		real hs=parms->wfs[iwfs].hs;
 		int ipowfs=parms->wfs[iwfs].powfs;
+		real hs=parms->wfs[iwfs].hs;
 		P(cir, 0, count)=parms->wfs[iwfs].thetax*ht;
 		P(cir, 1, count)=parms->wfs[iwfs].thetay*ht;
 		P(cir, 2, count)=parms->aper.d*0.5*(1.-ht/hs);

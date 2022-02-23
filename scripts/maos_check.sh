@@ -163,9 +163,9 @@ run_maos_gpu "LGS MCAO (MVM):  " atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.a
 
 run_maos "LGS MOAO:        " evl.moao=0 moao.dx=[1/2]
 
-run_maos "LGS GLAO (inte): " glao.conf recon.split=0 
+run_maos "LGS GLAO (inte): " glao.conf recon.split=0 evl.psfmean=0
 
-run_maos "LGS GLAO (split):" glao.conf recon.split=1
+run_maos "LGS GLAO (split):" glao.conf recon.split=1 evl.psfmean=0
 
 run_maos "NGS SCAO (inte): " -cscao_ngs.conf recon.split=0
 
@@ -195,6 +195,6 @@ if [ $D -eq 30 ];then
 run_maos "NFIRAOS LGS: " nfiraos_lgs.conf
 run_maos_gpu "NFIRAOS PWFS:" nfiraos_ngs.conf
 fi
-echo REF=(${RMS[*]})
+echo "REF=(${RMS[*]})"
 
 exit $ans

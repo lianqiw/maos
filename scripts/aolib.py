@@ -18,7 +18,7 @@ except:
     import lib2py #it generates libaos
     from libaos import *
 
-from readbin import readbin
+from readbin import readbin, headers
 from draw import draw, locembed
 import maos_client
 
@@ -316,7 +316,7 @@ def read_many(fdin):
     res=[]
     for fd in fds2: 
         try:
-            tmp=read(fd)
+            tmp=readbin(fd)
             fds.append(fd)
             res.append(tmp)
         except:
@@ -328,7 +328,7 @@ def read_many_dict(fdin):
     res={}
     for fd in fds2: 
         try:
-            res[fd]=read(fd)
+            res[fd]=readbin(fd)
         except:
             print('Fail to read',fd)
             pass
@@ -462,4 +462,24 @@ def plot_psd_cumu(f, psd, plot_options='-'):
         fr2=fr;
     psdr=mysqrt(-cumtrapz(psd[::-1],fr2,axis=0,initial=0))
     loglog(fr,psdr, plot_options)
+
+def cog(data):
+    '''Center of gravity'''
+    nx,ny=data.shape
+    x=np.arange(nx)
+    y=np.arange(ny)
+    [Y,X]=np.meshgrid(y,x)
+    ss=np.sum(data)
+    cx=np.sum(X*data)/ss-(nx-1)/2
+    cy=np.sum(Y*data)/ss-(ny-1)/2
+    return cx,cy
+
+def cog_shift(data):
+    '''Shift cog to center'''
+    cx,cy=cog(data)
+    ccx=-int(round(cx))
+    ccy=-int(round(cy))
+
+    return np.roll(data, (ccx,ccy),axis=(0,1))
+    
     
