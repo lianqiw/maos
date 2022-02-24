@@ -1719,14 +1719,20 @@ misreg_r</td>
 <td class="fieldname">
 hc</td>
 <td class="fielddoc">
-<p>conjugation height of WFS pupil </p>
+<p>conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a93a303c0cc4ce9005ed741c597cea62b"></a>real</td>
+<td class="fieldname">
+hs</td>
+<td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
 <a id="abeb043fd7d329947de33b16aab8c763b"></a>real</td>
 <td class="fieldname">
 siglev</td>
 <td class="fielddoc">
-<p>Total signal value for all wavelength. if not specified in config, will use powfs.siglev </p>
+<p>height of star is wfs.hs=powfs.hs+wfs.delta_hs (input) Total signal value for all wavelength. if not specified in config, will use powfs.siglev </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a8969a82b783ae320b7bb775ab9a6d623"></a>real</td>
@@ -1736,17 +1742,11 @@ sigsim</td>
 <p>Signal value used for simulation. (derived parameter) </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a93a303c0cc4ce9005ed741c597cea62b"></a>real</td>
-<td class="fieldname">
-hs</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
 <a id="ad8a9271a8f30a49f263fcb6aed99f8d5"></a>real</td>
 <td class="fieldname">
 fitwt</td>
 <td class="fielddoc">
-<p>height of star. Derived from powfs.hs or from input Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0 </p>
+<p>Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0 </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a35fc9a273f3f745c1a670f5f4c1d8d7f"></a>int</td>
