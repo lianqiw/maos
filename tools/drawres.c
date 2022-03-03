@@ -300,9 +300,14 @@ int main(int argc, char* argv[]){
 			}
 			if(!zfexist("%s", fn)) continue;
 			if(restype==1){//MAOS results.
-				dcell* ires;
-				ires=dcellread("%s", fn);
-				if(ires->nx<3||!ires->p){
+				dcell* ires=NULL;
+				file_t *fp=zfopen(fn,"rb");
+				if(fp){
+					ires=dcellreaddata(fp, NULL);
+					///dcellread("%s", fn);
+					zfclose(fp);
+				}
+				if(!ires||ires->nx<3||!ires->p){
 					continue;
 				}
 				int ind=0;

@@ -566,7 +566,7 @@ typedef struct sim_t{
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
-    dmat *ttmreal;
+    dmat *ttmreal;     /**<TT mirror command*/
     mapcell *dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<The projection of atm onto DM space directly.*/
     mapcell *dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
@@ -580,7 +580,8 @@ typedef struct sim_t{
     /*High order*/
     servo_t *dmint;    /**<dm integrator. (used of fuseint==1)*/
     dcell *dmfit;      /**<direct high order fit output*/
-    dcell *dmerr,*dmerr_store;      /**<high order dm error signal.*/
+    dcell *dmerr;      /**<equals to dmerr_store when there is output.*/
+    dcell *dmerr_store; /**<high order dm error signal.*/
     /*Low order*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
     dcell *Merr_lo2;   /**<Saves LPF of Merr_lo result*/
@@ -589,7 +590,6 @@ typedef struct sim_t{
     /*llt pointing loop*/
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
     dcell *fsmerr_drift;/**<Drift control of uplink*/
-    sho_t **fsmsho;     /**<State of FSM SHO*/
     dcell *fsmreal;    /**<uplink real*/
     servo_t *fsmint;    /**<uplink integrator output.*/
     dcell *fsmerrs;    /**<mmaped file to store fsmerr history*/

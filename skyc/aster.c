@@ -572,7 +572,7 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 			} else{
 				dmat* sigma2=dnew(1, 1);
 				P(sigma2,0)=sigma;
-				dcell* tmp=servo_optim(P(simu->psds,ipsd), parms->maos.dt, P(parms->skyc.dtrats,idtrat), 0, parms->skyc.pmargin, sigma2, servotype);
+				dcell *tmp=servo_optim(parms->maos.dt, P(parms->skyc.dtrats, idtrat), 0, parms->skyc.pmargin, 0, 0, servotype, P(simu->psds, ipsd), sigma2);
 				memcpy(pg, P(P(tmp,0)), (ng+2)*sizeof(real));
 				dcellfree(tmp);
 				dfree(sigma2);

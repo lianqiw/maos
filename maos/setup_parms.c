@@ -995,8 +995,12 @@ static void readcfg_sim(parms_t* parms){
 	READ_DMAT(sim.eplo);
 	READ_DMAT(sim.apfsm);
 	READ_DMAT(sim.epfsm);
-	READ_DBL(sim.zetafsm);
+	READ_DBL(sim.f0dm);
+	READ_DBL(sim.zetadm);
+	//READ_DBL(sim.f0tt);
+	//READ_DBL(sim.zetatt);
 	READ_DBL(sim.f0fsm);
+	READ_DBL(sim.zetafsm);
 	READ_DBL(sim.aptwfs);
 	READ_DBL(sim.eptwfs);
 	READ_DBL(sim.eptsph);
@@ -1890,7 +1894,22 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dt*parms->sim.dtrat_lof);
 
 	parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
-	
+	if(parms->nphypowfs>0 && !P(parms->sim.epfsm,0)){
+		real g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alfsm, 
+			M_PI/4, parms->sim.f0fsm, parms->sim.zetafsm);
+		P(parms->sim.epfsm, 0)=g;
+		info("sim.epfsm is set to %g\n", g);
+	}
+	if(parms->nphypowfs>0&&!P(parms->sim.ephi, 0)){
+		real g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi,
+			M_PI/4, parms->sim.f0dm, parms->sim.zetadm);
+		P(parms->sim.ephi, 0)=g;
+		info("sim.ephi is set to %g\n", g);
+		if(!P(parms->sim.eplo, 0)){
+			P(parms->sim.eplo, 0)=g;
+			info("sim.eplo is set to %g\n", g);
+		}
+	}
 }
 
 /**

@@ -517,6 +517,11 @@ typedef struct sim_cfg_t{
 			A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
 		     */
     dmat *ephi;      /**<error gain for DM commands (high order)*/
+
+    real f0dm;      /**<Natural frequency of the DMs.*/
+    real zetadm;    /**<Damping of the DMs.*/
+    //real f0tt;      /**<Natural frequency of tip/tilt mirror. We do not implement SHO for tip/tilt as it offloads from DM which does high speed tip/tilt */
+    //real zetatt;    /**<Damping frequency of tip/tilt mirror.*/
     dmat *aplo;      /**<servo coefficient for ngs modes.*/
     dmat *eplo;      /**<error gain for NGS modes (low order)*/
     dmat *apfsm;     /**<servo coefficient for for LGS uplink pointing loop.*/

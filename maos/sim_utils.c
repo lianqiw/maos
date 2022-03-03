@@ -853,25 +853,21 @@ static void init_simu_wfs(sim_t* simu){
 		simu->ngsfocuslpf=0;
 	}
 	if(parms->nphypowfs){
-		simu->fsmsho=mycalloc(nwfs*2, sho_t*);
+		//TODO: split implementation for each POWFS.
 		long nnx[nwfs];
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			nnx[iwfs]=0;
 			if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){
 				nnx[iwfs]=2;
-				if(parms->sim.f0fsm>0){
-					simu->fsmsho[iwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//x
-					simu->fsmsho[iwfs+nwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//y
-				}
 			}
 		}
 		simu->fsmerr_store=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmerr_drift=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmreal=dcellnew3(nwfs, 1, nnx, NULL);
 		if(parms->sim.closeloop){
-			simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
-				parms->sim.dthi, parms->sim.epfsm);
+			simu->fsmint=servo_new_sho(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
+				parms->sim.dthi, parms->sim.epfsm, parms->sim.f0fsm, parms->sim.zetafsm);
 		}
 	}
 
@@ -1239,8 +1235,8 @@ static void init_simu_dm(sim_t* simu){
 #endif
 	simu->wfspsol=dccellnew(parms->npowfs, 1);
 	if(parms->sim.closeloop){
-		simu->dmint=servo_new(simu->dmerr_store, parms->sim.aphi, parms->sim.alhi,
-			parms->sim.dthi, parms->sim.ephi);
+		simu->dmint=servo_new_sho(simu->dmerr_store, parms->sim.aphi, parms->sim.alhi,
+			parms->sim.dthi, parms->sim.ephi, parms->sim.f0dm, parms->sim.zetadm);
 	}
 	if(parms->dbg.ncpa_preload&&recon->dm_ncpa){//set the integrator
 		warning_once("Preload integrator with NCPA\n");
@@ -1606,12 +1602,12 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->fsmerr_drift);
 	dcellfree(simu->fsmreal);
 	servo_free(simu->fsmint);
-	if(simu->fsmsho){
+	/*if(simu->fsmsho){
 		for(int i=0; i<parms->nwfs*2; i++){
 			free(simu->fsmsho[i]);
 		}
 		free(simu->fsmsho);
-	}
+	}*/
 	dcellfree(simu->cgres);
 	dcellfree(simu->dm_wfs);
 	dcellfree(simu->dm_evl);

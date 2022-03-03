@@ -327,6 +327,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 		}
 		if(getenv("MAOS_DIRECT_LAUNCH")){
 			/*being lanuched by scheduler. We are already detached, so don't daemonize again.*/
+			dbg3("Launched locally by scheduler.\n");
 			arg->detach=0;
 			arg->force=0;
 			detached=1;
@@ -336,8 +337,9 @@ arg_t* parse_args(int argc, const char* argv[]){
 		/*Detached version. Always launch through scheduler if available.*/
 			if(!arg->host){//launch locally
 				if(scheduler_launch_exe("localhost", argc, argv)){
-					warning("Launch locally without scheduler.\n");
+					dbg("Launch locally without scheduler.\n");
 				}else{
+					dbg3("Launch locally using scheduler.\n");
 					free_arg(&arg);
 					exit(EXIT_SUCCESS);
 				}

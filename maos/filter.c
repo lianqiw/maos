@@ -450,21 +450,8 @@ static void filter_cl(sim_t* simu){
 void filter_fsm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(simu->fsmint){
-	/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
-		if(parms->sim.f0fsm>0){//Apply SHO filter
-			dcell* ftmp=0;
-			servo_output(simu->fsmint, &ftmp);
-			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				if(NE(simu->fsmreal, iwfs)){
-					real* pin=P(P(ftmp,iwfs));
-					P(P(simu->fsmreal,iwfs),0)=sho_step(simu->fsmsho[iwfs], pin[0], parms->sim.dt);
-					P(P(simu->fsmreal,iwfs),1)=sho_step(simu->fsmsho[iwfs+parms->nwfs], pin[1], parms->sim.dt);
-				}
-			}
-			dcellfree(ftmp);
-		} else{//Copy directly
-			servo_output(simu->fsmint, &simu->fsmreal);
-		}
+		/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
+		servo_output(simu->fsmint, &simu->fsmreal);//embeds sho
 		if(parms->sim.commonfsm&&simu->fsmerr){//not good
 			warning_once("Using common fsm\n");
 			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

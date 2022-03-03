@@ -272,7 +272,7 @@ static int scheduler_connect_self(int block){
 		}
 		if(sock<0){
 			launch_scheduler(block?10:0);
-			mysleep(0.1);
+			mysleep(1);
 			retry--;
 		}
 	}while(sock<0 && retry>0);

@@ -336,22 +336,18 @@ static void test_mm(){
 }
 void test_sho(){
     dmat *x=dread("input");
-    dmat *y=dnew(x->nx, x->ny);
-    sho_t *sho=sho_new(200, 0.9);
+    //dmat *y=dnew(x->nx, x->ny);
+    //sho_t *sho=sho_new(200, 0.9);
+    real f0=200;
     real dt=1./64000.;
-    for(int i=1; i<x->nx*x->ny; i++){
-	P(y,i)=sho_step(sho, P(x,i-1), dt);
-    }
-    sho_reset(sho);
+    real zeta=0.9;
+    dmat *y=sho_filter(x, dt, f0, zeta);
     writebin(y, "output");
     dmat *x2=dread("input2");
-    dmat *y2=dnew(x2->nx, x2->ny);
     real dt2=1./800.;
-    for(int i=1; i<x2->nx*x2->ny; i++){
-	P(y2,i)=sho_step(sho, P(x2,i-1), dt2);
-    }
+    dmat *y2=sho_filter(x2, dt2, f0, zeta);
+
     writebin(y2, "output2");
-    free(sho);
     dfree(x);
     dfree(y);
     dfree(x2);
@@ -397,7 +393,13 @@ void test_async(){
     dcellfree(xc);
     exit(0);
 }
+void test_servo(){
+    real g=servo_optim_margin(1/600., 1, 1, M_PI/4, 0, 0);
+    info("gain=%g\n", g);
+    exit(0);
+}
 int main(int argc, char **argv){
+    test_servo();
     test_async();
     test_sde();
     test_sho();
