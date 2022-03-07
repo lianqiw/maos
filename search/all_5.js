@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['f0dm',['f0dm',['../parms_8h.html#a96c2b651a693a675253be5aacc0645e2',1,'sim_cfg_t']]],
   ['f0fsm',['f0fsm',['../parms_8h.html#a2d9081ac11c381092e5594c7eed9fbff',1,'sim_cfg_t']]],
   ['factorial',['factorial',['../mathmisc_8h.html#aaaa4c88a31aa854fbedaa09ab5c48278',1,'mathmisc.c']]],
   ['fcfocus',['fcfocus',['../parms_8h.html#af89b05e322912b2be93a7e2cb870dd04',1,'sim_cfg_t']]],
@@ -80,7 +81,6 @@ var searchData=
   ['fsmerrs',['fsmerrs',['../maos_2types_8h.html#af45de4971282fca370154ce75b1a8792',1,'sim_t']]],
   ['fsmint',['fsmint',['../maos_2types_8h.html#ad6b654b3fcc4ed466e7906405d0cb43d',1,'sim_t']]],
   ['fsmreal',['fsmreal',['../maos_2types_8h.html#aa6fb8b2d74119f81e0a7734454bd51be',1,'sim_t']]],
-  ['fsmsho',['fsmsho',['../maos_2types_8h.html#ae71a6207ada2a7685529a8de571de447',1,'sim_t']]],
   ['fsurf',['fsurf',['../type_8h.html#a8a82dce54716bb5f11ece361ebc64b8c',1,'rmap_t']]],
   ['ftel',['ftel',['../type_8h.html#a41840a56fbfdd9eb0a25b4213f466c57',1,'rmap_t']]],
   ['fullatm',['fullatm',['../parms_8h.html#a1dcc3f9751e686e97c05d21b02bff1b5',1,'dbg_cfg_t']]],

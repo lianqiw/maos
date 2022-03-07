@@ -25,6 +25,7 @@ var searchData=
   ['tt',['TT',['../maos_2types_8h.html#aad3b5cf81516a58a4af1a04035c6a739',1,'recon_t']]],
   ['ttf',['TTF',['../maos_2types_8h.html#a73169a032b60839f353886e03c7da578',1,'recon_t']]],
   ['ttfr',['ttfr',['../parms_8h.html#a68b3246948f5391cf11cba0ce5245d88',1,'llt_cfg_t']]],
+  ['ttmreal',['ttmreal',['../maos_2types_8h.html#a722aacf8de6afe7683e6293a293c4bac',1,'sim_t']]],
   ['ttpsd',['ttpsd',['../parms_8h.html#aaafdf85c0702c2520e67e8bcfb674495',1,'llt_cfg_t']]],
   ['ttrat',['ttrat',['../parms_8h.html#ab7c18c14a6c7934793b061debb067022',1,'llt_cfg_t']]],
   ['twfs_5fradonly',['twfs_radonly',['../parms_8h.html#a6742907419017f9e85e4dde099f4f524',1,'recon_cfg_t']]],

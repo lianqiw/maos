@@ -15,6 +15,8 @@ var parms_8h_structsim__cfg__t =
     [ "wsseq", "parms_8h.html#afea1ff3ebd4c2eaab9d6b79d9263c75c", null ],
     [ "aphi", "parms_8h.html#ae6d05bfccc18d0de4bc183cfbca212c0", null ],
     [ "ephi", "parms_8h.html#ad21eec9162edd89a58cd77f93b717ffe", null ],
+    [ "f0dm", "parms_8h.html#a96c2b651a693a675253be5aacc0645e2", null ],
+    [ "zetadm", "parms_8h.html#a552f9dedd7c75fb9e4d5cd0fc09abc6e", null ],
     [ "aplo", "parms_8h.html#ae65ef8c7e32ec1905c34e73156b779de", null ],
     [ "eplo", "parms_8h.html#adc3f5fc04222abb1aea2ebafe100eac9", null ],
     [ "apfsm", "parms_8h.html#a9e3f7c414158e6aad9dec29f38a658b0", null ],

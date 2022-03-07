@@ -1,5 +1,13 @@
 var NAVTREEINDEX20 =
 {
+"zmath_8h.html#a276ac4ed323b2719c1372eadffff3d83":[11,0,3,12,128],
+"zmath_8h.html#a27a901aa94502aae3b6234253f59a6ca":[11,0,3,12,182],
+"zmath_8h.html#a27cadbef2e6068286ddcc063b118b33c":[11,0,3,12,268],
+"zmath_8h.html#a28d3fc3d8a80ecf79f70a6474ac44981":[11,0,3,12,8],
+"zmath_8h.html#a290a2d54b9c3a0ef973b1d4ef3ae6869":[11,0,3,12,251],
+"zmath_8h.html#a29d71d5b8f782fca890c372a12e4e50b":[11,0,3,12,239],
+"zmath_8h.html#a2a98a34256dd396f8b4302359ce22d1d":[11,0,3,12,69],
+"zmath_8h.html#a2b989c54dded35049321e39e0b44f340":[11,0,3,12,50],
 "zmath_8h.html#a2d2278128dba820acb0429360327e946":[11,0,3,12,237],
 "zmath_8h.html#a2d3dc807e32a2dca1f8c5885ecfd535a":[11,0,3,12,3],
 "zmath_8h.html#a2d4a8c0f8143841e59b78cd6b925de1e":[11,0,3,12,143],

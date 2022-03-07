@@ -2,6 +2,7 @@ var searchData=
 [
   ['za',['za',['../parms_8h.html#a6b51a9ddc11c0ce89dafbc845e1a71ea',1,'sim_cfg_t']]],
   ['zadeg',['zadeg',['../parms_8h.html#ae3fa55d3b6a3885eefe638c89690ec97',1,'sim_cfg_t']]],
+  ['zetadm',['zetadm',['../parms_8h.html#a552f9dedd7c75fb9e4d5cd0fc09abc6e',1,'sim_cfg_t']]],
   ['zetafsm',['zetafsm',['../parms_8h.html#a609290fd17696311c6d1ee65de869ff0',1,'sim_cfg_t']]],
   ['zoomavg',['zoomavg',['../maos_2types_8h.html#a3ba3b15c2b64a4d07a27845cbabbe70a',1,'sim_t']]],
   ['zoomavg_5fcount',['zoomavg_count',['../maos_2types_8h.html#ada9d1a9e1e7714cea84fedd1f25a5252',1,'sim_t']]],

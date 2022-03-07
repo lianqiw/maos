@@ -111,8 +111,10 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a6abebf76fe8dd0fd6a34b22489a8deea"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a6abebf76fe8dd0fd6a34b22489a8deea">servo_optim</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdin, real dt, <a class="el" href="classlong.html">long</a> dtrat, real al, real pmargin, const <a class="el" href="type_8h.html#structdmat">dmat</a> *sigma2n, int servo_type)</td></tr>
-<tr class="separator:a6abebf76fe8dd0fd6a34b22489a8deea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a403214adf62020a6f707a29d0c4d14d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a403214adf62020a6f707a29d0c4d14d6">servo_optim</a> (real dt, <a class="el" href="classlong.html">long</a> dtrat, real al, real pmargin, real f0, real zeta, int servo_type, const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdin, const <a class="el" href="type_8h.html#structdmat">dmat</a> *sigma2n)</td></tr>
+<tr class="separator:a403214adf62020a6f707a29d0c4d14d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63c6a3e2b3d97d0ab387a2c7a3b09ade"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a63c6a3e2b3d97d0ab387a2c7a3b09ade">servo_optim_margin</a> (real dt, <a class="el" href="classlong.html">long</a> dtrat, real al, real pmargin, real f0, real zeta)</td></tr>
+<tr class="separator:a63c6a3e2b3d97d0ab387a2c7a3b09ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1aab2a4d37e5fb57e6ddb6a28bfc7e56"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a1aab2a4d37e5fb57e6ddb6a28bfc7e56">servo_rej2ol</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdcl, real dt, <a class="el" href="classlong.html">long</a> dtrat, real al, real gain, real sigma2n)</td></tr>
 <tr class="separator:a1aab2a4d37e5fb57e6ddb6a28bfc7e56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c1610b9a8a5bf2d2e260a4ce8ca5633"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a6c1610b9a8a5bf2d2e260a4ce8ca5633">servo_residual</a> (real *noise_amp, const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdin, real dt, <a class="el" href="classlong.html">long</a> dtrat, real al, const <a class="el" href="type_8h.html#structdmat">dmat</a> *gain, int servo_type)</td></tr>
@@ -121,6 +123,9 @@ Functions</h2></td></tr>
 <tr class="separator:aad6d4d54f623cc4a8a134eec68f56ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29d0be1c907299b934692f1ec98bd8e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a29d0be1c907299b934692f1ec98bd8e0">servo_new</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> *merr, const <a class="el" href="type_8h.html#structdmat">dmat</a> *ap, real al, real dt, const <a class="el" href="type_8h.html#structdmat">dmat</a> *ep)</td></tr>
 <tr class="separator:a29d0be1c907299b934692f1ec98bd8e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90990729322229a21bf79229f49500ec"><td class="memItemLeft" align="right" valign="top"><a id="a90990729322229a21bf79229f49500ec"></a>
+<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>servo_new_sho</b> (<a class="el" href="type_8h.html#structdcell">dcell</a> *merr, const <a class="el" href="type_8h.html#structdmat">dmat</a> *ap, real al, real dt, const <a class="el" href="type_8h.html#structdmat">dmat</a> *ep, real f0, real zeta)</td></tr>
+<tr class="separator:a90990729322229a21bf79229f49500ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a898d8cda7cc48e166731990d79d8fc49"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a898d8cda7cc48e166731990d79d8fc49">servo_filter</a> (<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st, const <a class="el" href="type_8h.html#structdcell">dcell</a> *merr)</td></tr>
 <tr class="separator:a898d8cda7cc48e166731990d79d8fc49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae796bbfe1ba648eec14a85bda77ea585"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#ae796bbfe1ba648eec14a85bda77ea585">servo_add</a> (<a class="el" href="servo_8h.html#structservo__t">servo_t</a> *st, const <a class="el" href="type_8h.html#structdcell">dcell</a> *madj, real alpha)</td></tr>
@@ -135,8 +140,13 @@ Functions</h2></td></tr>
 <tr class="separator:a90db8b0851f40c4080286b84f5ac203c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8c19d3a61994201d9dd0457af46187d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="servo_8h.html#structsho__t">sho_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#af8c19d3a61994201d9dd0457af46187d">sho_new</a> (real f0, real zeta)</td></tr>
 <tr class="separator:af8c19d3a61994201d9dd0457af46187d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6713626409c5aa2d54b712d441486dbc"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a6713626409c5aa2d54b712d441486dbc">sho_step</a> (<a class="el" href="servo_8h.html#structsho__t">sho_t</a> *sho, real xi, real dt)</td></tr>
-<tr class="separator:a6713626409c5aa2d54b712d441486dbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81dc7529927d5f54365c4c95b703be8d"><td class="memItemLeft" align="right" valign="top"><a id="a81dc7529927d5f54365c4c95b703be8d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>sho_free</b> (<a class="el" href="servo_8h.html#structsho__t">sho_t</a> *sho)</td></tr>
+<tr class="separator:a81dc7529927d5f54365c4c95b703be8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8fcc61afe2aece4dad4d08f68c0a852"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#af8fcc61afe2aece4dad4d08f68c0a852">sho_step</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> **xout, <a class="el" href="servo_8h.html#structsho__t">sho_t</a> *sho, <a class="el" href="type_8h.html#structdcell">dcell</a> *xi, real dt)</td></tr>
+<tr class="separator:af8fcc61afe2aece4dad4d08f68c0a852"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23c45b17ba0c32172b4d73224b57a38c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a23c45b17ba0c32172b4d73224b57a38c">sho_step_avg</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> **xout, <a class="el" href="servo_8h.html#structsho__t">sho_t</a> *sho, <a class="el" href="type_8h.html#structdcell">dcell</a> *xi, real dt)</td></tr>
+<tr class="separator:a23c45b17ba0c32172b4d73224b57a38c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa29234f8fe794556f32704e97553f64e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#aa29234f8fe794556f32704e97553f64e">sho_reset</a> (<a class="el" href="servo_8h.html#structsho__t">sho_t</a> *sho)</td></tr>
 <tr class="separator:aa29234f8fe794556f32704e97553f64e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af73da05983185a3e29a86a480fb06e17"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#af73da05983185a3e29a86a480fb06e17">sho_filter</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *xi, real dt, real f0, real zeta)</td></tr>
@@ -233,6 +243,12 @@ ep</td>
 dt</td>
 <td class="fielddoc">
 </td></tr>
+<tr><td class="fieldtype">
+<a id="a914c135cb739879a514e85e2ab845e61"></a><a class="el" href="servo_8h.html#structsho__t">sho_t</a> *</td>
+<td class="fieldname">
+sho</td>
+<td class="fielddoc">
+</td></tr>
 </table>
 
 </div>
@@ -270,15 +286,27 @@ c2</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a8ec4ab633f785f80f58be9505c4da32b"></a>real</td>
+<a id="ac67080c43cd5c3a0b76a0e6228f48afe"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-x1</td>
+dx</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
-<a id="af315bfe315ec157b3dcc9f70538a79bd"></a>real</td>
+<a id="a6308e6eb722a24300eaca27c63521535"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-x2</td>
+x</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a1c2abc1cfd0be494fabf7d87af6344bb"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+xtmp</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af90fb2803458c06a4da027f6cbb23e76"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+ytmp</td>
 <td class="fielddoc">
 </td></tr>
 </table>
@@ -286,8 +314,8 @@ x2</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a6abebf76fe8dd0fd6a34b22489a8deea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6abebf76fe8dd0fd6a34b22489a8deea">&#9670;&nbsp;</a></span>servo_optim()</h2>
+<a id="a403214adf62020a6f707a29d0c4d14d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a403214adf62020a6f707a29d0c4d14d6">&#9670;&nbsp;</a></span>servo_optim()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -295,12 +323,6 @@ x2</td>
         <tr>
           <td class="memname"><a class="el" href="type_8h.html#structdcell">dcell</a>* servo_optim </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>psdin</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">real&#160;</td>
           <td class="paramname"><em>dt</em>, </td>
         </tr>
@@ -325,14 +347,32 @@ x2</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>sigma2n</em>, </td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>f0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>zeta</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>servo_type</em>&#160;</td>
+          <td class="paramname"><em>servo_type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>psdin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>sigma2n</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -341,13 +381,68 @@ x2</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Optimize the type II servo gains by balancing errors due to noise and signal propagation.</p>
+<p>Optimize the servo gains by balancing errors due to noise and signal propagation.</p>
 <p>Written: 2010-06-11</p>
 <p>Tested OK: 2010-06-11</p>
 <p>2011-01-17: The optimization process is quite slow, but the result is only dependent on the sigma2n and fs. psdin does not change during the simulation. Built a lookup table in skyc using various sigma2n and interpolate to get ress, resn, and gain.</p>
 <p>2012-03-28: Cleaned up this routine. groupped similar calculations together. Change g2=a from g=sqrt(a)</p>
 <p>2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);</p>
-<p>sigma2n is a dmat array of all wanted sigma2n. Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n] </p>
+<p>sigma2n is a dmat array of all wanted sigma2n. Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n]</p>
+<p>The upper end of frequency must be nyquist freq so that noise transfer can be computed. But we need to capture the turbulence PSD beyond nyquist freq, which are uncorrectable.</p>
+<p>2022-03-04: added SHO response parameter. </p>
+
+</div>
+</div>
+<a id="a63c6a3e2b3d97d0ab387a2c7a3b09ade"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a63c6a3e2b3d97d0ab387a2c7a3b09ade">&#9670;&nbsp;</a></span>servo_optim_margin()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real servo_optim_margin </td>
+          <td>(</td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>dt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>dtrat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>al</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>pmargin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>f0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>zeta</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Optimize integrator control with optional SHO response (output) to have correct phase margin (pi/4) when abs(Hol)==1. </p>
 
 </div>
 </div>
@@ -400,7 +495,7 @@ x2</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert Closed loop residual PSD back to OL psd using rejection transfer function: PSD_OL=PSD_CL/Hrej-sigma2n/F_nyquist; </p>
+<p>Convert Closed loop residual PSD back to OL psd using rejection transfer function: PSD_OL=PSD_CL/Hrej-sigma2n/F_nyquist; Only implemented for integrator. </p>
 
 </div>
 </div>
@@ -755,22 +850,28 @@ x2</td>
 
 </div>
 </div>
-<a id="a6713626409c5aa2d54b712d441486dbc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6713626409c5aa2d54b712d441486dbc">&#9670;&nbsp;</a></span>sho_step()</h2>
+<a id="af8fcc61afe2aece4dad4d08f68c0a852"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8fcc61afe2aece4dad4d08f68c0a852">&#9670;&nbsp;</a></span>sho_step()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">real sho_step </td>
+          <td class="memname">void sho_step </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> **&#160;</td>
+          <td class="paramname"><em>xout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="servo_8h.html#structsho__t">sho_t</a> *&#160;</td>
           <td class="paramname"><em>sho</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real&#160;</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
           <td class="paramname"><em>xi</em>, </td>
         </tr>
         <tr>
@@ -786,7 +887,48 @@ x2</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Second harmonic oscillator. Step. </p>
+<p>Second harmonic oscillator state space update. xi is driving position. Update the position after time dt. </p>
+
+</div>
+</div>
+<a id="a23c45b17ba0c32172b4d73224b57a38c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23c45b17ba0c32172b4d73224b57a38c">&#9670;&nbsp;</a></span>sho_step_avg()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sho_step_avg </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> **&#160;</td>
+          <td class="paramname"><em>xout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="servo_8h.html#structsho__t">sho_t</a> *&#160;</td>
+          <td class="paramname"><em>sho</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>xi</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>dt</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Second harmonic oscillator state space update. xi is driving position. Compute the average position between 0 and dt (for WFS integration) </p>
 
 </div>
 </div>

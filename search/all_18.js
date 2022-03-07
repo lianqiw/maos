@@ -15,6 +15,7 @@ var searchData=
   ['zernike_2eh',['zernike.h',['../zernike_8h.html',1,'']]],
   ['zernike_5fcov_5fkolmogorov',['zernike_cov_kolmogorov',['../zernike_8h.html#ae1ffbd181e4b0dd153cf914d4b3b1b55',1,'zernike.c']]],
   ['zernike_5frnm',['zernike_Rnm',['../zernike_8h.html#a5d9a80af0c9899a97dac3e7c231e5f5e',1,'zernike.c']]],
+  ['zetadm',['zetadm',['../parms_8h.html#a552f9dedd7c75fb9e4d5cd0fc09abc6e',1,'sim_cfg_t']]],
   ['zetafsm',['zetafsm',['../parms_8h.html#a609290fd17696311c6d1ee65de869ff0',1,'sim_cfg_t']]],
   ['zfarr_2eh',['zfarr.h',['../zfarr_8h.html',1,'']]],
   ['zfarr_5fclose',['zfarr_close',['../zfarr_8h.html#a749eb5424ce0ab50cc3ad55b1560ddf3',1,'zfarr.c']]],
