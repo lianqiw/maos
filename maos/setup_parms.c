@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -38,7 +38,7 @@ extern int use_cuda;
   This file contains necessary routines to read parametes for
   WFS, DM and wavefront reconstruction.  */
 
-void free_powfs_cfg(powfs_cfg_t* powfscfg){
+void free_powfs_cfg(powfs_cfg_t *powfscfg){
 	dfree(powfscfg->wvl);
 	dfree(powfscfg->wvlwts);
 	dfree(powfscfg->ncpa);
@@ -71,7 +71,7 @@ void free_powfs_cfg(powfs_cfg_t* powfscfg){
 /**
    Free the parms struct.
 */
-void free_parms(parms_t* parms){
+void free_parms(parms_t *parms){
 	dfree(parms->atm.ht);
 	dfree(parms->atm.wt);
 	dfree(parms->atm.ws);
@@ -145,8 +145,7 @@ void free_parms(parms_t* parms){
 	for(int idm=0; idm<parms->ndm; idm++){
 		free(parms->dm[idm].actstuck);
 		free(parms->dm[idm].actfloat);
-		free(parms->dm[idm].iastrokefn);
-		cellfree(parms->dm[idm].iastrokescale);
+		cellfree(parms->dm[idm].strokescale);
 		dfree(parms->dm[idm].stroke);
 	}
 	free(parms->dm);
@@ -172,12 +171,12 @@ void free_parms(parms_t* parms){
 	lfree(parms->lopowfs);
 
 	dfree(parms->misreg.pupil);
-	free_strarr(parms->misreg.tel2wfs, parms->nwfs);
-	free_strarr(parms->misreg.dm2wfs, parms->ndm*parms->nwfs);
-	free_strarr(parms->misreg.dm2sci, parms->ndm*parms->evl.nevl);
-	free_strarr(parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfsr);
-	free_strarr(parms->recon.misreg_dm2sci, parms->ndm*parms->fit.nfit);
-	free_strarr(parms->recon.misreg_tel2wfs, parms->nwfsr);
+	free_strarr(parms->misreg.tel2wfs,parms->nwfs);
+	free_strarr(parms->misreg.dm2wfs,parms->ndm*parms->nwfs);
+	free_strarr(parms->misreg.dm2sci,parms->ndm*parms->evl.nevl);
+	free_strarr(parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr);
+	free_strarr(parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit);
+	free_strarr(parms->recon.misreg_tel2wfs,parms->nwfsr);
 	dfree(parms->dirs);
 	lfree(parms->dbg.tomo_maxit);
 	dfree(parms->dbg.pwfs_psx);
@@ -207,24 +206,24 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with real value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
-#define READ_DMAT(A) parms->A= readcfg_dmat(#A) /*read a key with dmat. */
-#define READ_DMAT_NMAX(A,n) parms->A= readcfg_dmat_nmax(n,#A) /*read a key with dmat. */
+#define READ_DMAT(A) parms->A= readcfg_dmat(0,0,#A) /*read a key with dmat. */
+#define READ_DMAT_NMAX(A,n) parms->A= readcfg_dmat(n,1,#A) /*read a key with dmat. */
 #define READ_DCELL(A) parms->A= readcfg_dcell(#A) /*read a key with dmat. */
-#define READ_LMAT(A) parms->A= readcfg_lmat(#A) /*read a key with lmat. */
-#define READ_LMAT_NMAX(A,n) parms->A= readcfg_lmat_nmax(n,#A) /*read a key with lmat. */
+#define READ_LMAT(A) parms->A= readcfg_lmat(0,0,#A) /*read a key with lmat. */
+#define READ_LMAT_NMAX(A,n) parms->A= readcfg_lmat(n,1,#A) /*read a key with lmat. */
 #define READ_POWFS(A,B)						\
-    readcfg_##A##arr_n((&A##tmp), npowfs, "powfs."#B);		\
+    readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B);		\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }	
 #define READ_POWFS_MAT(A,B)						\
-    readcfg_strarr_nmax((&strtmp), npowfs, "powfs."#B);			\
+    readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B);			\
     for(i=0; i<npowfs; i++){						\
-	parms->powfs[i].B = readstr_##A##mat(strtmp[i]);/*doesn't need ## in B*/ \
+	parms->powfs[i].B = readstr_##A##mat(0,0,strtmp[i]);/*doesn't need ## in B*/ \
 	free(strtmp[i]); strtmp[i]=NULL;\
     }								
 #define READ_POWFS_RELAX(A,B)					\
-    readcfg_##A##arr_nmax((&A##tmp), npowfs, "powfs."#B);	\
+    readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
@@ -233,17 +232,17 @@ static inline int sum_dblarr(int n, real *a){
    Read wfs geometry. powfs stands for physical optics wfs,
    it is used to represent the types of WFS.
 */
-static void readcfg_powfs(parms_t* parms){
-	int     npowfs, i;
+static void readcfg_powfs(parms_t *parms){
+	int     npowfs,i;
 	parms->npowfs=npowfs=readcfg_peek_n("powfs.dsa");
-	parms->powfs=mycalloc(parms->npowfs, powfs_cfg_t);
-	int* inttmp=NULL;
-	real* dbltmp=NULL;
-	char** strtmp=NULL;
-	READ_POWFS(dbl, dsa);
-	READ_POWFS(int, nwvl);
-	dmat* wvllist=readcfg_dmat("powfs.wvl");
-	dmat* wvlwts=readcfg_dmat("powfs.wvlwts");
+	parms->powfs=mycalloc(parms->npowfs,powfs_cfg_t);
+	int *inttmp=NULL;
+	real *dbltmp=NULL;
+	char **strtmp=NULL;
+	READ_POWFS(dbl,dsa);
+	READ_POWFS(int,nwvl);
+	dmat *wvllist=readcfg_dmat(0,0,"powfs.wvl");
+	dmat *wvlwts=readcfg_dmat(0,0,"powfs.wvlwts");
 
 	if(NX(wvllist)!=NX(wvlwts)&&NX(wvlwts)!=0){
 		error("powfs.wvl is not empty and does not match powfs.wvlwts\n");
@@ -251,7 +250,7 @@ static void readcfg_powfs(parms_t* parms){
 	int count=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		int nwvl=parms->powfs[ipowfs].nwvl;
-		parms->powfs[ipowfs].wvl=dnew(nwvl, 1);
+		parms->powfs[ipowfs].wvl=dnew(nwvl,1);
 		real wvlm=0;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			real wvl=P(wvllist,count+iwvl);
@@ -265,9 +264,9 @@ static void readcfg_powfs(parms_t* parms){
 			P(parms->powfs[ipowfs].wvl,iwvl)=wvl;
 		}
 		if(NX(wvlwts)){
-			parms->powfs[ipowfs].wvlwts=dnew(nwvl, 1);
-			memcpy(P(parms->powfs[ipowfs].wvlwts), P(wvlwts)+count, sizeof(real)*nwvl);
-			dnormalize_sumabs(P(parms->powfs[ipowfs].wvlwts), nwvl, 1);
+			parms->powfs[ipowfs].wvlwts=dnew(nwvl,1);
+			memcpy(P(parms->powfs[ipowfs].wvlwts),P(wvlwts)+count,sizeof(real)*nwvl);
+			dnormalize_sumabs(P(parms->powfs[ipowfs].wvlwts),nwvl,1);
 		}
 		count+=nwvl;
 	}
@@ -277,145 +276,146 @@ static void readcfg_powfs(parms_t* parms){
 	dfree(wvllist);
 	dfree(wvlwts);
 
-	READ_POWFS_RELAX(dbl, siglev);
-	READ_POWFS_RELAX(dbl, sigrecon);
+	READ_POWFS_RELAX(dbl,siglev);
+	READ_POWFS_RELAX(dbl,sigrecon);
 
-	READ_POWFS_RELAX(str, saloc);
-	READ_POWFS_RELAX(str, amp);
-	READ_POWFS_RELAX(str, piinfile);
-	READ_POWFS_RELAX(str, sninfile);
-	READ_POWFS_RELAX(dbl, saat);
-	READ_POWFS_RELAX(dbl, safill2d);
-	READ_POWFS_RELAX(dbl, saspherical);
-	READ_POWFS_RELAX(dbl, safocuspv);
-	READ_POWFS_RELAX(int, neaphy);
-	READ_POWFS_RELAX(str, neareconfile);
-	READ_POWFS_RELAX(str, neasimfile);
-	READ_POWFS_RELAX(dbl, neasim);
-	READ_POWFS_RELAX(dbl, neaextra);
-	READ_POWFS_RELAX(dbl, neamin);
-	READ_POWFS_RELAX(dbl, bkgrnd);
-	READ_POWFS_RELAX(dbl, bkgrndc);
-	READ_POWFS_RELAX(str, bkgrndfn);
-	READ_POWFS_RELAX(str, bkgrndfnc);
-	READ_POWFS_RELAX(dbl, pixblur);
-	READ_POWFS_RELAX(dbl, radpixtheta);
-	READ_POWFS_RELAX(dbl, fieldstop);
-	READ_POWFS_RELAX(dbl, pixoffx);
-	READ_POWFS_RELAX(dbl, pixoffy);
-	READ_POWFS_RELAX(int, phyusenea);
-	READ_POWFS_RELAX(int, radpix);
-	READ_POWFS_RELAX(int, radgx);
-	READ_POWFS_RELAX(int, embfac);
-	READ_POWFS_RELAX(int, notf);
-	READ_POWFS_RELAX(int, psfout);
-	READ_POWFS_RELAX(int, pistatout);
-	READ_POWFS_RELAX(int, pistatstart);
-	READ_POWFS_RELAX(int, pistatstc);
-	READ_POWFS_RELAX(int, gtype_sim);
-	READ_POWFS_RELAX(int, gtype_recon);
-	READ_POWFS_RELAX(int, phytype_recon);
-	READ_POWFS_RELAX(int, phytype_sim);
-	READ_POWFS_RELAX(int, phytype_sim2);
-	READ_POWFS_RELAX(dbl, r0);
-	READ_POWFS_RELAX(dbl, L0);
-	READ_POWFS_RELAX(int, mtchcpl);
-	READ_POWFS_RELAX(int, sigmatch);
-	READ_POWFS_RELAX(int, mtchadp);
-	READ_POWFS_RELAX(int, mtchfft);
-	READ_POWFS_RELAX(dbl, cogthres);
-	READ_POWFS_RELAX(dbl, cogoff);
-	READ_POWFS_MAT(d, ncpa);
-	READ_POWFS_RELAX(int, ncpa_method);
-	READ_POWFS_RELAX(int, i0scale);
-	READ_POWFS_RELAX(int, i0save);
-	READ_POWFS_RELAX(str, i0load);
-	READ_POWFS_RELAX(dbl, sigscale);
-	READ_POWFS_RELAX(int, moao);
-	READ_POWFS_RELAX(int, dither);
-	READ_POWFS_RELAX(dbl, gradscale);
-	READ_POWFS_RELAX(dbl, dither_amp);
-	READ_POWFS_RELAX(int, dither_npoint);
-	READ_POWFS_RELAX(int, dither_pllskip);
-	READ_POWFS_RELAX(int, dither_pllrat);
-	READ_POWFS_RELAX(dbl, dither_gpll);
-	READ_POWFS_RELAX(int, dither_ogskip);
-	READ_POWFS_RELAX(int, dither_ograt);
-	READ_POWFS_RELAX(int, dither_ogsingle);
-	READ_POWFS_RELAX(dbl, dither_gog);
-	READ_POWFS_RELAX(dbl, dither_gdrift);
-	READ_POWFS_RELAX(dbl, dither_glpf);
+	READ_POWFS_RELAX(str,saloc);
+	READ_POWFS_RELAX(str,amp);
+	READ_POWFS_RELAX(str,piinfile);
+	READ_POWFS_RELAX(str,sninfile);
+	READ_POWFS_RELAX(dbl,saat);
+	READ_POWFS_RELAX(dbl,safill2d);
+	READ_POWFS_RELAX(dbl,saspherical);
+	READ_POWFS_RELAX(dbl,safocuspv);
+	READ_POWFS_RELAX(int,neaphy);
+	READ_POWFS_RELAX(str,neareconfile);
+	READ_POWFS_RELAX(str,neasimfile);
+	READ_POWFS_RELAX(dbl,neasim);
+	READ_POWFS_RELAX(dbl,neaextra);
+	READ_POWFS_RELAX(dbl,neamin);
+	READ_POWFS_RELAX(dbl,bkgrnd);
+	READ_POWFS_RELAX(dbl,bkgrndc);
+	READ_POWFS_RELAX(str,bkgrndfn);
+	READ_POWFS_RELAX(str,bkgrndfnc);
+	READ_POWFS_RELAX(dbl,pixblur);
+	READ_POWFS_RELAX(dbl,radpixtheta);
+	READ_POWFS_RELAX(dbl,fieldstop);
+	READ_POWFS_RELAX(dbl,pixoffx);
+	READ_POWFS_RELAX(dbl,pixoffy);
+	READ_POWFS_RELAX(int,phyusenea);
+	READ_POWFS_RELAX(int,radpix);
+	READ_POWFS_RELAX(int,radgx);
+	READ_POWFS_RELAX(int,embfac);
+	READ_POWFS_RELAX(int,notf);
+	READ_POWFS_RELAX(int,psfout);
+	READ_POWFS_RELAX(int,pistatout);
+	READ_POWFS_RELAX(int,pistatstart);
+	READ_POWFS_RELAX(int,pistatstc);
+	READ_POWFS_RELAX(int,gtype_sim);
+	READ_POWFS_RELAX(int,gtype_recon);
+	READ_POWFS_RELAX(int,phytype_recon);
+	READ_POWFS_RELAX(int,phytype_sim);
+	READ_POWFS_RELAX(int,phytype_sim2);
+	READ_POWFS_RELAX(dbl,r0);
+	READ_POWFS_RELAX(dbl,L0);
+	READ_POWFS_RELAX(int,mtchcpl);
+	READ_POWFS_RELAX(int,sigmatch);
+	READ_POWFS_RELAX(int,mtchadp);
+	READ_POWFS_RELAX(int,mtchfft);
+	READ_POWFS_RELAX(dbl,cogthres);
+	READ_POWFS_RELAX(dbl,cogoff);
+	READ_POWFS_MAT(d,ncpa);
+	READ_POWFS_RELAX(int,ncpa_method);
+	READ_POWFS_RELAX(int,i0scale);
+	READ_POWFS_RELAX(int,i0save);
+	READ_POWFS_RELAX(str,i0load);
+	READ_POWFS_RELAX(dbl,sigscale);
+	READ_POWFS_RELAX(int,moao);
+	READ_POWFS_RELAX(int,dither);
+	READ_POWFS_RELAX(dbl,gradscale);
+	READ_POWFS_RELAX(dbl,dither_amp);
+	READ_POWFS_RELAX(int,dither_npoint);
+	READ_POWFS_RELAX(int,dither_pllskip);
+	READ_POWFS_RELAX(int,dither_pllrat);
+	READ_POWFS_RELAX(dbl,dither_gpll);
+	READ_POWFS_RELAX(int,dither_ogskip);
+	READ_POWFS_RELAX(int,dither_ograt);
+	READ_POWFS_RELAX(int,dither_ogsingle);
+	READ_POWFS_RELAX(dbl,dither_gog);
+	READ_POWFS_RELAX(dbl,dither_gdrift);
+	READ_POWFS_RELAX(dbl,dither_glpf);
 	//READ_POWFS_RELAX(int, zoomdtrat);
-	READ_POWFS_RELAX(int, zoomshare);
-	READ_POWFS_RELAX(dbl, zoomgain);
-	READ_POWFS_RELAX(dbl, zoomgain_drift);
-	READ_POWFS_RELAX(int, zoomset);
-	READ_POWFS(dbl, hs);
-	READ_POWFS_RELAX(dbl, hc);
-	READ_POWFS_RELAX(dbl, nearecon);
-	READ_POWFS_RELAX(dbl, rne);
-	READ_POWFS_MAT(d, qe);
-	READ_POWFS_RELAX(dbl, dx);
-	READ_POWFS(dbl, pixtheta);
-	READ_POWFS_RELAX(str, fnllt);
-	READ_POWFS_RELAX(int, trs);
-	READ_POWFS_RELAX(int, dfrs);
-	READ_POWFS(int, lo);
-	READ_POWFS(int, pixpsa);
-	READ_POWFS_RELAX(int, mtchcr);
-	READ_POWFS_RELAX(int, mtchstc);
-	READ_POWFS_RELAX(int, phystep);
-	READ_POWFS_RELAX(int, noisy);
-	READ_POWFS_RELAX(int, dtrat);
-	READ_POWFS_RELAX(int, skip);
-	READ_POWFS(int, type);
-	READ_POWFS_RELAX(int, step);
-	READ_POWFS_RELAX(dbl, modulate);
-	READ_POWFS_RELAX(int, modulpos);
-	READ_POWFS_RELAX(int, modulring);
-	READ_POWFS(int, nwfs);
+	READ_POWFS_RELAX(int,zoomshare);
+	READ_POWFS_RELAX(dbl,zoomgain);
+	READ_POWFS_RELAX(dbl,zoomgain_drift);
+	READ_POWFS_RELAX(int,zoomset);
+	READ_POWFS(dbl,hs);
+	READ_POWFS_RELAX(dbl,hc);
+	READ_POWFS_RELAX(dbl,nearecon);
+	READ_POWFS_RELAX(dbl,rne);
+	READ_POWFS_MAT(d,qe);
+	READ_POWFS_RELAX(dbl,dx);
+	READ_POWFS(dbl,pixtheta);
+	READ_POWFS_RELAX(str,fnllt);
+	READ_POWFS_RELAX(int,trs);
+	READ_POWFS_RELAX(int,dfrs);
+	READ_POWFS(int,lo);
+	READ_POWFS(int,pixpsa);
+	READ_POWFS_RELAX(int,mtchcr);
+	READ_POWFS_RELAX(int,mtchstc);
+	READ_POWFS_RELAX(int,phystep);
+	READ_POWFS_RELAX(int,noisy);
+	READ_POWFS_RELAX(int,dtrat);
+	READ_POWFS_RELAX(int,skip);
+	READ_POWFS(int,type);
+	READ_POWFS_RELAX(int,step);
+	READ_POWFS_RELAX(dbl,modulate);
+	READ_POWFS_RELAX(int,modulpos);
+	READ_POWFS_RELAX(int,modulring);
+	READ_POWFS(int,nwfs);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-		powfs_cfg_t* powfsi=&parms->powfs[ipowfs];
+		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(!isfinite(powfsi->hs)&&powfsi->fnllt){
-			warning("powfs %d is at infinity, disable LLT\n", ipowfs);
+			warning("powfs %d is at infinity, disable LLT\n",ipowfs);
 			free(powfsi->fnllt);
 			powfsi->fnllt=NULL;
-		}else{
+		} else{
 			parms->powfs[ipowfs].hs-=parms->sim.htel;
 		}
 		char prefix[60];
-		snprintf(prefix, 60, "powfs%d_", ipowfs);
+		snprintf(prefix,60,"powfs%d_",ipowfs);
 
 		if(powfsi->fnllt){
 #define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
-			open_config(powfsi->fnllt, prefix, -1);
-			powfsi->llt=mycalloc(1, llt_cfg_t);
-			READ_LLT(dbl, d);
-			READ_LLT(dbl, widthp);
-			READ_LLT(dbl, ttrat);
-			READ_LLT(str, ttpsd);
-			READ_LLT(str, fnrange);
-			READ_LLT(str, fnprof);
-			READ_LLT(str, fnprep);
-			READ_LLT(str, fnamp);
-			READ_LLT(str, fnsurf);
-			READ_LLT(dbl, focus);
-			READ_LLT(int, ttfr);
-			READ_LLT(int, colprep);
-			READ_LLT(int, colsim);
-			READ_LLT(int, coldtrat);
-			READ_LLT(dmat, misreg);
-			READ_LLT(dmat, ox);
-			READ_LLT(dmat, oy);
+#define READ_LLT_ARR(T,key) powfsi->llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
+			open_config(powfsi->fnllt,prefix,-1);
+			powfsi->llt=mycalloc(1,llt_cfg_t);
+			READ_LLT(dbl,d);
+			READ_LLT(dbl,widthp);
+			READ_LLT(dbl,ttrat);
+			READ_LLT(str,ttpsd);
+			READ_LLT(str,fnrange);
+			READ_LLT(str,fnprof);
+			READ_LLT(str,fnprep);
+			READ_LLT(str,fnamp);
+			READ_LLT(str,fnsurf);
+			READ_LLT(dbl,focus);
+			READ_LLT(int,ttfr);
+			READ_LLT(int,colprep);
+			READ_LLT(int,colsim);
+			READ_LLT(int,coldtrat);
+			READ_LLT_ARR(dmat,misreg);
+			READ_LLT_ARR(dmat,ox);
+			READ_LLT_ARR(dmat,oy);
 			powfsi->llt->n=NX(powfsi->llt->ox);
 		} else{/*there is no LLT. */
 			powfsi->llt=NULL;
 			if(isfinite(powfsi->hs)){
 				error("powfs%d has finite hs at %g but no llt specified\n",
-					ipowfs, powfsi->hs);
+					ipowfs,powfsi->hs);
 			}
 			if(powfsi->radpix){
-				warning("powfs%d has no LLT, disable radial coordinate.\n", ipowfs);
+				warning("powfs%d has no LLT, disable radial coordinate.\n",ipowfs);
 				powfsi->radpix=0;
 			}
 		}
@@ -435,24 +435,24 @@ static void readcfg_powfs(parms_t* parms){
 			READ_DITHER(int, ogsingle);
 			READ_DITHER(dbl, gog);
 			READ_DITHER(dbl, gdrift);
-		}*/	
+		}*/
 	}
 	free(inttmp);
 	free(dbltmp);
 	free(strtmp);
 }
 #define READ_WFS(A,B)					\
-    readcfg_##A##arr_n((&A##tmp),nwfs,"wfs."#B);	\
+    readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B);	\
     for(i=0; i<nwfs; i++){				\
 	parms->wfs[i].B = A##tmp[i];			\
     }									
 #define READ_WFS_RELAX(A,B)				\
-    readcfg_##A##arr_nmax((&A##tmp),nwfs,"wfs."#B);	\
+    readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B);	\
     for(i=0; i<nwfs; i++){				\
 	parms->wfs[i].B = A##tmp[i];			\
     }									
 #define READ_WFS_DELTA(A,B,BD)				\
-    readcfg_##A##arr_nmax((&A##tmp),nwfs,"wfs."#BD);	\
+    readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#BD);	\
     for(i=0; i<nwfs; i++){				\
 		ipowfs=parms->wfs[i].powfs;	\
 		parms->wfs[i].B = parms->powfs[ipowfs].B+A##tmp[i];	\
@@ -460,25 +460,25 @@ static void readcfg_powfs(parms_t* parms){
 /**
    Read in parameters of wfs, including GS direction, signal level, wvlwts, etc.
 */
-static void readcfg_wfs(parms_t* parms){
+static void readcfg_wfs(parms_t *parms){
 	int i;
 	int nwfs=parms->nwfs=readcfg_peek_n("wfs.thetax");
-	parms->wfs=mycalloc(parms->nwfs, struct wfs_cfg_t);
-	real* dbltmp=NULL;
-	int* inttmp=NULL;
-	char** strtmp=NULL;
-	READ_WFS(dbl, thetax);
-	READ_WFS(dbl, thetay);
+	parms->wfs=mycalloc(parms->nwfs,struct wfs_cfg_t);
+	real *dbltmp=NULL;
+	int *inttmp=NULL;
+	char **strtmp=NULL;
+	READ_WFS(dbl,thetax);
+	READ_WFS(dbl,thetay);
 	for(i=0; i<parms->nwfs; i++){
 		parms->wfs[i].thetax/=206265.;
 		parms->wfs[i].thetay/=206265.;
 	}
-	READ_WFS_RELAX(dbl, fitwt);
-	READ_WFS_RELAX(str, sabad);
+	READ_WFS_RELAX(dbl,fitwt);
+	READ_WFS_RELAX(str,sabad);
 	/*link wfs with powfs*/
 	int wfscount=0;
 	int ipowfs=0;
-	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++, ipowfs++){
+	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++,ipowfs++){
 		if(parms->powfs[kpowfs].nwfs==0){//no stars.
 			free_powfs_cfg(&parms->powfs[kpowfs]);
 			parms->nwfs-=parms->powfs[kpowfs].nwfs;
@@ -486,12 +486,12 @@ static void readcfg_wfs(parms_t* parms){
 			continue;
 		} else{
 			if(ipowfs<kpowfs){
-				memcpy(parms->powfs+ipowfs, parms->powfs+kpowfs, sizeof(powfs_cfg_t));
+				memcpy(parms->powfs+ipowfs,parms->powfs+kpowfs,sizeof(powfs_cfg_t));
 			}
 		}
 		int mwfs=parms->powfs[ipowfs].nwfs;
-		parms->powfs[ipowfs].wfs=lnew(mwfs, 1);
-		parms->powfs[ipowfs].wfsind=lnew(parms->nwfs, 1);
+		parms->powfs[ipowfs].wfs=lnew(mwfs,1);
+		parms->powfs[ipowfs].wfsind=lnew(parms->nwfs,1);
 		int count=0;
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			if(iwfs>=wfscount&&iwfs<wfscount+mwfs){
@@ -513,26 +513,26 @@ static void readcfg_wfs(parms_t* parms){
 		}
 	} else if(parms->nwfs!=wfscount){
 		error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n",
-			parms->nwfs, wfscount);
+			parms->nwfs,wfscount);
 	}
-	READ_WFS_DELTA(dbl, hs, delta_hs);
-	READ_WFS_DELTA(dbl, hc, delta_hc);
-	dmat* wvlwts=readcfg_dmat("wfs.wvlwts");
-	dmat* siglev=readcfg_dmat("wfs.siglev");
+	READ_WFS_DELTA(dbl,hs,delta_hs);
+	READ_WFS_DELTA(dbl,hc,delta_hc);
+	dmat *wvlwts=readcfg_dmat(0,0,"wfs.wvlwts");
+	dmat *siglev=readcfg_dmat(0,0,"wfs.siglev");
 	int powfs_siglev_override=readcfg_peek_override("powfs.siglev");
 	int powfs_wvlwts_override=readcfg_peek_override("powfs.wvlwts");
 	int count=0;
 	if(NX(siglev)!=0&&NX(siglev)!=parms->nwfs){
-		error("wfs.siglev can be either empty or %d\n", parms->nwfs);
+		error("wfs.siglev can be either empty or %d\n",parms->nwfs);
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
 		int nwvl=parms->powfs[ipowfs].nwvl;
-		parms->wfs[iwfs].wvlwts=dnew(nwvl, 1);
+		parms->wfs[iwfs].wvlwts=dnew(nwvl,1);
 		if(NX(wvlwts)==0){
-			memcpy(P(parms->wfs[iwfs].wvlwts), P(parms->powfs[ipowfs].wvlwts), sizeof(real)*nwvl);
+			memcpy(P(parms->wfs[iwfs].wvlwts),P(parms->powfs[ipowfs].wvlwts),sizeof(real)*nwvl);
 		} else{
-			memcpy(P(parms->wfs[iwfs].wvlwts), P(wvlwts)+count, sizeof(real)*nwvl);
+			memcpy(P(parms->wfs[iwfs].wvlwts),P(wvlwts)+count,sizeof(real)*nwvl);
 			count+=nwvl;
 			if(parms->powfs[ipowfs].wvlwts&&powfs_wvlwts_override){
 				error("when both powfs.wvlwts and wfs.wvlwts are overriden "
@@ -550,30 +550,30 @@ static void readcfg_wfs(parms_t* parms){
 		}
 	}
 	if(count!=NX(wvlwts)){
-		error("Supplied %ld wvlwts but need %d for all wfs.\n", NX(wvlwts), count);
+		error("Supplied %ld wvlwts but need %d for all wfs.\n",NX(wvlwts),count);
 	}
 	for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		int nwvl=parms->powfs[ipowfs].nwvl;
 		nwfs=parms->powfs[ipowfs].nwfs;
 		if(NX(wvlwts)>0){//resize powfs.wvlwts for all wfs
 			dfree(parms->powfs[ipowfs].wvlwts);
-			parms->powfs[ipowfs].wvlwts=dnew(nwvl, nwfs);
+			parms->powfs[ipowfs].wvlwts=dnew(nwvl,nwfs);
 		}
 		for(int jwfs=0; jwfs<NY(parms->powfs[ipowfs].wvlwts); jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
-				P(parms->powfs[ipowfs].wvlwts, iwvl, jwfs)=P(parms->wfs[iwfs].wvlwts, iwvl, 0);
+				P(parms->powfs[ipowfs].wvlwts,iwvl,jwfs)=P(parms->wfs[iwfs].wvlwts,iwvl,0);
 			}
 		}
-		dbg3("powfs[%d].wvlwts is %ldx%ld\n", ipowfs, NX(parms->powfs[ipowfs].wvlwts), NY(parms->powfs[ipowfs].wvlwts));
-		parms->powfs[ipowfs].siglevs=dnew(NX(siglev)>0?nwfs:1, 1);
+		dbg3("powfs[%d].wvlwts is %ldx%ld\n",ipowfs,NX(parms->powfs[ipowfs].wvlwts),NY(parms->powfs[ipowfs].wvlwts));
+		parms->powfs[ipowfs].siglevs=dnew(NX(siglev)>0?nwfs:1,1);
 		for(int jwfs=0; jwfs<NX(parms->powfs[ipowfs].siglevs); jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			P(parms->powfs[ipowfs].siglevs, jwfs)=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+			P(parms->powfs[ipowfs].siglevs,jwfs)=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		}
-		dbg3("powfs[%d].siglevs is %ldx1\n", ipowfs, NX(parms->powfs[ipowfs].siglevs));
+		dbg3("powfs[%d].siglevs is %ldx1\n",ipowfs,NX(parms->powfs[ipowfs].siglevs));
 	}
-	
+
 	dfree(siglev);
 	dfree(wvlwts);
 	free(dbltmp);
@@ -581,13 +581,13 @@ static void readcfg_wfs(parms_t* parms){
 	free(strtmp);
 }
 #define READ_DM(A,B)				\
-    readcfg_##A##arr_n((&A##tmp),ndm,"dm."#B);	\
+    readcfg_##A##arr((&A##tmp),ndm,0,"dm."#B);	\
     for(i=0; i<ndm; i++){			\
 	parms->dm[i].B = A##tmp[i];		\
     }							     
 
 #define READ_DM_RELAX(A,B)				\
-    readcfg_##A##arr_nmax((&A##tmp),ndm,"dm."#B);	\
+    readcfg_##A##arr((&A##tmp),ndm,1,"dm."#B);	\
     for(i=0; i<ndm; i++){				\
 	parms->dm[i].B = A##tmp[i];			\
     }							     
@@ -595,22 +595,22 @@ static void readcfg_wfs(parms_t* parms){
 /**
    Read in deformable mirror parameters.
 */
-static void readcfg_dm(parms_t* parms){
-	int ndm, i;
+static void readcfg_dm(parms_t *parms){
+	int ndm,i;
 	ndm=parms->ndm=readcfg_peek_n("dm.ht");
-	parms->dm=mycalloc(parms->ndm, struct dm_cfg_t);
-	int* inttmp=NULL;
-	real* dbltmp=NULL;
-	char** strtmp=NULL;
-	dmat** dmattmp=NULL;
-	READ_DM(dbl, ht);
-	READ_DM(dbl, offset);
-	READ_DM_RELAX(dbl, dx);
-	READ_DM_RELAX(dbl, ar);
+	parms->dm=mycalloc(parms->ndm,struct dm_cfg_t);
+	int *inttmp=NULL;
+	real *dbltmp=NULL;
+	char **strtmp=NULL;
+	dmat **dmattmp=NULL;
+	READ_DM(dbl,ht);
+	READ_DM(dbl,offset);
+	READ_DM_RELAX(dbl,dx);
+	READ_DM_RELAX(dbl,ar);
 	for(int idm=0; idm<ndm; idm++){
 		if(parms->dm[idm].dx<=-1){//this is the order.
 			parms->dm[idm].dx=-parms->aper.d/parms->dm[idm].dx;
-		}else if(parms->dm[idm].dx<0){
+		} else if(parms->dm[idm].dx<0){
 			parms->dm[idm].dx*=-parms->aper.d;
 		}
 		parms->dm[idm].order=ceil(parms->aper.d/parms->dm[idm].dx);
@@ -619,47 +619,84 @@ static void readcfg_dm(parms_t* parms){
 			error("ar must be positive\n");
 		}
 	}
-	READ_DM_RELAX(dbl, guard);
+	READ_DM_RELAX(dbl,guard);
 	{
-		char** tmp=0;
-		int nstroke=readcfg_strarr(&tmp, "dm.stroke");
-		for(int idm=0; idm<ndm; idm++){
-			if(nstroke==ndm){
-				parms->dm[idm].stroke=readstr_dmat(tmp[idm]);
-				free(tmp[idm]); tmp[idm]=NULL;
-			} else if(nstroke==1){
-				parms->dm[idm].stroke=readstr_dmat(tmp[0]);
-			} else{
-				error("dm.stroke is in wrong format\n");
+		char **tmp=0;
+
+		int nstroke=readcfg_strarr(&tmp,0,0,"dm.stroke");
+		if(nstroke==1&&!zfexist("%s",tmp[0])){//is number array without separation
+			real *ret=0;
+			readstr_numarr((void **)&ret,NULL,NULL,ndm,1,M_REAL,tmp[0]);
+			for(int idm=0; idm<ndm; idm++){
+				parms->dm[idm].stroke=dnew(1,1);
+				P(parms->dm[idm].stroke,0)=ret[idm];
+			}
+			free(ret);
+			free(tmp[0]); tmp[0]=0;
+		} else{
+
+			for(int idm=0; idm<ndm; idm++){
+				if(idm==0||nstroke==ndm){
+					char *stmp;
+					real x=strtod(tmp[idm],&stmp);
+					if(stmp==tmp[idm]){//unable to parse number
+						parms->dm[idm].stroke=readstr_dmat(0,0,tmp[idm]);
+					} else{
+						parms->dm[idm].stroke=dnew(1,1);
+						P(parms->dm[idm].stroke,0)=x;
+					}
+					free(tmp[idm]); tmp[idm]=NULL;
+				} else if(nstroke==1){
+					parms->dm[idm].stroke=dref(parms->dm[0].stroke);
+				} else{
+					error("dm.stroke is in wrong format\n");
+				}
 			}
 		}
-		free(tmp[0]);
 		free(tmp);
 	}
-	READ_DM_RELAX(dbl, iastroke);
-	READ_DM_RELAX(str, iastrokefn);
-	READ_DM_RELAX(dbl, vmisreg);
-	READ_DM_RELAX(dbl, histbin);
-	READ_DM_RELAX(int, histn);
-	READ_DM_RELAX(int, hist);
-	READ_DM_RELAX(dbl, iac);
-	READ_DM_RELAX(dbl, hyst);
-	READ_DM_RELAX(dbl, hyst_alpha);
-	READ_DM_RELAX(dbl, hyst_stroke);
-	READ_DM_RELAX(str, actfloat);
-	READ_DM_RELAX(str, actstuck);
+	READ_DM_RELAX(dbl,iastroke);
+	{
+		char **tmp=0;
+		int nstroke=readcfg_strarr(&tmp,0,0,"dm.strokescale");
+		if(nstroke){
+			for(int idm=0; idm<ndm; idm++){
+				if(idm==0||nstroke==ndm){
+					if(tmp[idm]){
+						parms->dm[idm].strokescale=dcellread("%s",tmp[idm]);
+						free(tmp[idm]); tmp[idm]=NULL;
+					}
+				} else if(nstroke==1){
+					parms->dm[idm].strokescale=dcellref(parms->dm[0].strokescale);
+				} else{
+					error("dm.stroke is in wrong format\n");
+				}
+			}
+		}
+		free(tmp);
+	}
+	READ_DM_RELAX(dbl,vmisreg);
+	READ_DM_RELAX(dbl,histbin);
+	READ_DM_RELAX(int,histn);
+	READ_DM_RELAX(int,hist);
+	READ_DM_RELAX(dbl,iac);
+	READ_DM_RELAX(dbl,hyst);
+	READ_DM_RELAX(dbl,hyst_alpha);
+	READ_DM_RELAX(dbl,hyst_stroke);
+	READ_DM_RELAX(str,actfloat);
+	READ_DM_RELAX(str,actstuck);
 	free(strtmp);
 	free(inttmp);
 	free(dbltmp);
 	free(dmattmp);
 }
 #define READ_MOAO(A,B)					\
-    readcfg_##A##arr_n((&A##tmp),nmoao,"moao."#B);	\
+    readcfg_##A##arr((&A##tmp),nmoao,0,"moao."#B);	\
     for(i=0; i<nmoao; i++){				\
 	parms->moao[i].B = A##tmp[i];			\
     }							      
 #define READ_MOAO_RELAX(A,B)				\
-    readcfg_##A##arr_nmax((&A##tmp),nmoao,"moao."#B);	\
+    readcfg_##A##arr((&A##tmp),nmoao,1,"moao."#B);	\
     for(i=0; i<nmoao; i++){				\
 	parms->moao[i].B = A##tmp[i];			\
     }							      
@@ -667,15 +704,15 @@ static void readcfg_dm(parms_t* parms){
 /**
    Read in MOAO parameters.
 */
-static void readcfg_moao(parms_t* parms){
+static void readcfg_moao(parms_t *parms){
 	int nmoao=readcfg_peek_n("moao.dx");
 	int i;
 	parms->nmoao=nmoao;
-	parms->moao=mycalloc(nmoao, moao_cfg_t);
-	int* inttmp=NULL;
-	real* dbltmp=NULL;
-	char** strtmp=NULL;
-	READ_MOAO_RELAX(dbl, dx);
+	parms->moao=mycalloc(nmoao,moao_cfg_t);
+	int *inttmp=NULL;
+	real *dbltmp=NULL;
+	char **strtmp=NULL;
+	READ_MOAO_RELAX(dbl,dx);
 	for(int imoao=0; imoao<nmoao; imoao++){
 		if(parms->moao[imoao].dx<=-1){
 			parms->moao[imoao].dx=parms->aper.d/(-parms->moao[imoao].dx);
@@ -684,15 +721,15 @@ static void readcfg_moao(parms_t* parms){
 		}
 		parms->moao[imoao].order=ceil(parms->aper.d/parms->moao[imoao].dx);
 	}
-	READ_MOAO_RELAX(dbl, iac);
-	READ_MOAO_RELAX(dbl, gdm);
-	READ_MOAO_RELAX(dbl, stroke);
-	READ_MOAO_RELAX(dbl, ar);
-	READ_MOAO_RELAX(int, actslave);
-	READ_MOAO_RELAX(int, lrt_ptt);
-	READ_MOAO_RELAX(dbl, guard);
-	READ_MOAO_RELAX(str, actstuck);
-	READ_MOAO_RELAX(str, actfloat);
+	READ_MOAO_RELAX(dbl,iac);
+	READ_MOAO_RELAX(dbl,gdm);
+	READ_MOAO_RELAX(dbl,stroke);
+	READ_MOAO_RELAX(dbl,ar);
+	READ_MOAO_RELAX(int,actslave);
+	READ_MOAO_RELAX(int,lrt_ptt);
+	READ_MOAO_RELAX(dbl,guard);
+	READ_MOAO_RELAX(str,actstuck);
+	READ_MOAO_RELAX(str,actfloat);
 	free(inttmp);
 	free(dbltmp);
 	free(strtmp);
@@ -700,7 +737,7 @@ static void readcfg_moao(parms_t* parms){
 /**
    Read in atmosphere parameters.
 */
-static void readcfg_atm(parms_t* parms){
+static void readcfg_atm(parms_t *parms){
 	READ_DBL(atm.r0z);
 	//READ_DBL(atm.L0);
 	READ_DBL(atm.dx);
@@ -713,15 +750,15 @@ static void readcfg_atm(parms_t* parms){
 	READ_DMAT(atm.r0logpsdt);
 	READ_DMAT(atm.r0logpsds);
 	READ_DMAT(atm.ht);
-	//parms->atm.r0logpsdt=readcfg_dmat("atm.r0logpsdt");
-	//parms->atm.r0logpsds=readcfg_dmat("atm.r0logpsds");
-	parms->atm.size=readcfg_dmat_n(2, "atm.size");
-	//parms->atm.ht=readcfg_dmat("atm.ht");
+	//parms->atm.r0logpsdt=readcfg_dmat(0,0,"atm.r0logpsdt");
+	//parms->atm.r0logpsds=readcfg_dmat(0,0,"atm.r0logpsds");
+	parms->atm.size=readcfg_dmat(2,0,"atm.size");
+	//parms->atm.ht=readcfg_dmat(0,0,"atm.ht");
 	parms->atm.nps=NX(parms->atm.ht);
-	parms->atm.wt=readcfg_dmat_n(parms->atm.nps, "atm.wt");
-	parms->atm.ws=readcfg_dmat_n(parms->atm.nps, "atm.ws");
-	parms->atm.wddeg=readcfg_dmat_nmax(parms->atm.nps, "atm.wddeg");
-	parms->atm.L0=readcfg_dmat_nmax(parms->atm.nps, "atm.L0");
+	parms->atm.wt=readcfg_dmat(parms->atm.nps,0,"atm.wt");
+	parms->atm.ws=readcfg_dmat(parms->atm.nps,0,"atm.ws");
+	parms->atm.wddeg=readcfg_dmat(parms->atm.nps,1,"atm.wddeg");
+	parms->atm.L0=readcfg_dmat(parms->atm.nps,1,"atm.L0");
 	for(int ih=0; ih<parms->atm.nps; ih++){
 		if(fabs(P(parms->atm.wddeg,ih))>1){
 			warning("wddeg is not zero. Disable wdrand\n");
@@ -733,7 +770,7 @@ static void readcfg_atm(parms_t* parms){
 /**
    Read in atmosphere reconstruction parameters.
 */
-static void readcfg_atmr(parms_t* parms){
+static void readcfg_atmr(parms_t *parms){
 	READ_DBL(atmr.r0z);
 	if(parms->atmr.r0z<=0){
 		parms->atmr.r0z=parms->atm.r0z;
@@ -745,27 +782,27 @@ static void readcfg_atmr(parms_t* parms){
 	READ_DMAT(atmr.ht);
 	READ_DMAT(atmr.wt);
 	if(NX(parms->atmr.ht)==0){
-		dcp(&parms->atmr.ht, parms->atm.ht);
+		dcp(&parms->atmr.ht,parms->atm.ht);
 	}
 	if(NX(parms->atmr.wt)==0){
-		dcp(&parms->atmr.wt, parms->atm.wt);
+		dcp(&parms->atmr.wt,parms->atm.wt);
 	} else{
 		if(NX(parms->atmr.wt)!=NX(parms->atmr.ht)){
 			error("atmr.wt length has to match atmr.ht\n");
 		}
 	}
 	parms->atmr.nps=NX(parms->atmr.ht);
-	parms->atmr.os=readcfg_lmat_nmax(parms->atmr.nps, "atmr.os");
+	parms->atmr.os=readcfg_lmat(parms->atmr.nps,1,"atmr.os");
 	READ_DBL(atmr.dx);
 }
 
 /**
    Read in aperture definitions.
 */
-static void readcfg_aper(parms_t* parms){
-	real* dtmp;
+static void readcfg_aper(parms_t *parms){
+	real *dtmp;
 	/*aper.d may contain one for [d] or two numbers for [d din] */
-	int nd=readcfg_dblarr(&dtmp, "aper.d");
+	int nd=readcfg_dblarr(&dtmp,0,0,"aper.d");
 	switch(nd){
 	case 2:
 		parms->aper.din=dtmp[1];
@@ -774,14 +811,14 @@ static void readcfg_aper(parms_t* parms){
 		parms->aper.d=dtmp[0];
 		break;
 	default:
-		error("aper.d contains %d elements. But only 1 or 2 elements expected.\n", nd);
+		error("aper.d contains %d elements. But only 1 or 2 elements expected.\n",nd);
 	}
 	free(dtmp);
 
 	if(parms->aper.d<=parms->aper.din){
-		error("Inner dimeter(%g) should be less than Outer Diameter(%g).\n", parms->aper.din, parms->aper.d);
-	}else if(parms->aper.d<0 || parms->aper.din<0){
-		error("Inner (%g) and outer (%g) diameters should be positive.\n", parms->aper.din, parms->aper.d);
+		error("Inner dimeter(%g) should be less than Outer Diameter(%g).\n",parms->aper.din,parms->aper.d);
+	} else if(parms->aper.d<0||parms->aper.din<0){
+		error("Inner (%g) and outer (%g) diameters should be positive.\n",parms->aper.din,parms->aper.d);
 	}
 	READ_DBL(aper.rotdeg);
 	parms->aper.fnampuser=readcfg_peek_override("aper.fnamp");
@@ -789,65 +826,65 @@ static void readcfg_aper(parms_t* parms){
 	READ_STR(aper.pupmask);
 }
 //check and scale fov.
-static void scale_fov(dmat* thetax, dmat* thetay, dmat*wt, real fov){
+static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 	if(fov==0){//on axis field.
-		if(PN(thetax)!=1){ 
-			dresize(thetax, 1, 1);
-			dresize(thetay, 1, 1);
-			dresize(wt, 1, 1);
+		if(PN(thetax)!=1){
+			dresize(thetax,1,1);
+			dresize(thetay,1,1);
+			dresize(wt,1,1);
 		}
 		P(thetax,0)=0;
 		P(thetay,0)=0;
 		P(wt,0)=1;
-	}else if(fov!=1){
-		real maxx, minx, maxy, miny;
-		dmaxmin(P(thetax), PN(thetax), &maxx, &minx);
-		dmaxmin(P(thetay), PN(thetay), &maxy, &miny);
-		if(fabs(MAX(maxx-minx, maxy-miny)-1)>EPS){
+	} else if(fov!=1){
+		real maxx,minx,maxy,miny;
+		dmaxmin(P(thetax),PN(thetax),&maxx,&minx);
+		dmaxmin(P(thetay),PN(thetay),&maxy,&miny);
+		if(fabs(MAX(maxx-minx,maxy-miny)-1)>EPS){
 			warning("thetax and thetay is not within unit circle, disable scaling by fov. please set fov=1.\n");
-		}else{
-			dscale(thetax, fov);
-			dscale(thetay, fov);
+		} else{
+			dscale(thetax,fov);
+			dscale(thetay,fov);
 		}
 	}
 	if(PN(thetax)!=PN(thetay)||PN(thetax)!=PN(wt)){
-		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n", PN(thetax), PN(thetay), PN(wt));
+		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n",PN(thetax),PN(thetay),PN(wt));
 	}
 }
 /**
    Read in performance evaluation science point parameters.
 */
-static void readcfg_evl(parms_t* parms){
+static void readcfg_evl(parms_t *parms){
 	READ_DMAT(evl.thetax);
 	READ_DMAT(evl.thetay);
-	READ_DMAT_NMAX(evl.wt, NX(parms->evl.thetax));
+	READ_DMAT_NMAX(evl.wt,NX(parms->evl.thetax));
 	real evl_fov=readcfg_dbl("evl.fov");
-	scale_fov(parms->evl.thetax, parms->evl.thetay, parms->evl.wt, evl_fov);
+	scale_fov(parms->evl.thetax,parms->evl.thetay,parms->evl.wt,evl_fov);
 	parms->evl.nevl=NX(parms->evl.thetax);//maybe changed by scale_fov
-	dnormalize_sumabs(P(parms->evl.wt), parms->evl.nevl, 1);
-	READ_DMAT_NMAX(evl.hs, parms->evl.nevl);
-	READ_LMAT_NMAX(evl.psf, parms->evl.nevl);
-	READ_LMAT_NMAX(evl.psfr, parms->evl.nevl);
-	READ_LMAT_NMAX(evl.pttr, parms->evl.nevl);
-	READ_LMAT_NMAX(evl.psfngsr, parms->evl.nevl);
+	dnormalize_sumabs(P(parms->evl.wt),parms->evl.nevl,1);
+	READ_DMAT_NMAX(evl.hs,parms->evl.nevl);
+	READ_LMAT_NMAX(evl.psf,parms->evl.nevl);
+	READ_LMAT_NMAX(evl.psfr,parms->evl.nevl);
+	READ_LMAT_NMAX(evl.pttr,parms->evl.nevl);
+	READ_LMAT_NMAX(evl.psfngsr,parms->evl.nevl);
 	READ_DMAT(evl.wvl);
 	parms->evl.nwvl=NX(parms->evl.wvl);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		if(P(parms->evl.wvl,iwvl)>0.1){
-			warning("wvl should be supplied in unit of meter. scale %g by 1e-6\n",
+			warning("wvl is supplied in micron. scale %g by 1e-6\n",
 				P(parms->evl.wvl,iwvl));
 			P(parms->evl.wvl,iwvl)*=1e-6;
 		}
 	}
-	parms->evl.psfgridsize=readcfg_lmat_nmax(parms->evl.nwvl, "evl.psfgridsize");
-	parms->evl.psfsize=readcfg_lmat_nmax(parms->evl.nwvl, "evl.psfsize");
+	parms->evl.psfgridsize=readcfg_lmat(parms->evl.nwvl,1,"evl.psfgridsize");
+	parms->evl.psfsize=readcfg_lmat(parms->evl.nwvl,1,"evl.psfsize");
 	int ievl;
 	real ramin=INFINITY;
 	for(ievl=0; ievl<parms->evl.nevl; ievl++){
 	/*First Convert theta to radian from arcsec. */
 		P(parms->evl.thetax,ievl)/=206265.;
 		P(parms->evl.thetay,ievl)/=206265.;
-		real ra2=pow(P(parms->evl.thetax,ievl), 2)+pow(P(parms->evl.thetay,ievl), 2);
+		real ra2=pow(P(parms->evl.thetax,ievl),2)+pow(P(parms->evl.thetay,ievl),2);
 		if(ra2<ramin){
 			parms->evl.indoa=ievl;
 			ramin=ra2;
@@ -857,7 +894,7 @@ static void readcfg_evl(parms_t* parms){
 	READ_INT(evl.rmax);
 	READ_INT(evl.psfol);
 	READ_INT(evl.psfisim);
-	
+
 	READ_INT(evl.psfmean);
 	READ_INT(evl.psfhist);
 	READ_INT(evl.cov);/*Science OPD covariance. */
@@ -873,7 +910,7 @@ static void readcfg_evl(parms_t* parms){
 /**
    Read in turbulence tomography parameters.
 */
-static void readcfg_tomo(parms_t* parms){
+static void readcfg_tomo(parms_t *parms){
 	READ_INT(tomo.pos);
 	READ_INT(tomo.cone);
 	READ_INT(tomo.square);
@@ -901,19 +938,19 @@ static void readcfg_tomo(parms_t* parms){
 
 /**
    Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao() */
-static void readcfg_fit(parms_t* parms){
+static void readcfg_fit(parms_t *parms){
 	READ_DMAT(fit.thetax);
 	READ_DMAT(fit.thetay);
 	READ_DMAT(fit.wt);
 	real fit_fov=readcfg_dbl("fit.fov");
-	scale_fov(parms->fit.thetax, parms->fit.thetay, parms->fit.wt, fit_fov);
+	scale_fov(parms->fit.thetax,parms->fit.thetay,parms->fit.wt,fit_fov);
 	parms->fit.nfit=NX(parms->fit.thetax);//maybe changed by scale_fov
-	parms->fit.hs=readcfg_dmat_nmax(parms->fit.nfit, "fit.hs");
+	parms->fit.hs=readcfg_dmat(parms->fit.nfit,1,"fit.hs");
 	real ramin=INFINITY;
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 		P(parms->fit.thetax,ifit)/=206265.;
 		P(parms->fit.thetay,ifit)/=206265.;
-		real ra2=pow(P(parms->fit.thetax,ifit), 2)+pow(P(parms->fit.thetay,ifit), 2);
+		real ra2=pow(P(parms->fit.thetax,ifit),2)+pow(P(parms->fit.thetay,ifit),2);
 		if(ra2<ramin){
 			parms->fit.indoa=ifit;
 			ramin=ra2;
@@ -941,7 +978,7 @@ static void readcfg_fit(parms_t* parms){
 /**
    Read LSR parameters.
 */
-static void readcfg_lsr(parms_t* parms){
+static void readcfg_lsr(parms_t *parms){
 	READ_DBL(lsr.tikcr);
 	READ_DBL(lsr.svdthres);
 	READ_STR(lsr.fnreg);
@@ -956,7 +993,7 @@ static void readcfg_lsr(parms_t* parms){
 /**
    Read general reconstruction parameters
 */
-static void readcfg_recon(parms_t* parms){
+static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.alg);
 	READ_INT(recon.glao);
 	READ_INT(recon.split);
@@ -966,9 +1003,9 @@ static void readcfg_recon(parms_t* parms){
 	READ_INT(recon.psol);
 	READ_DBL(recon.poke);
 	parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
-	readcfg_strarr_nmax(&parms->recon.misreg_tel2wfs, parms->nwfsr, "recon.misreg_tel2wfs");
-	readcfg_strarr_nmax(&parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfsr, "recon.misreg_dm2wfs");
-	readcfg_strarr_nmax(&parms->recon.misreg_dm2sci, parms->ndm*parms->fit.nfit, "recon.misreg_dm2sci");
+	readcfg_strarr(&parms->recon.misreg_tel2wfs,parms->nwfsr,1,"recon.misreg_tel2wfs");
+	readcfg_strarr(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr,1,"recon.misreg_dm2wfs");
+	readcfg_strarr(&parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit,1,"recon.misreg_dm2sci");
 	READ_INT(recon.psd);
 	READ_INT(recon.psddtrat_hi);
 	READ_INT(recon.psddtrat_lo);
@@ -981,7 +1018,7 @@ static void readcfg_recon(parms_t* parms){
 /**
    Read in simulation parameters
 */
-static void readcfg_sim(parms_t* parms){
+static void readcfg_sim(parms_t *parms){
 	READ_DBL(sim.fcfocus);
 	READ_DBL(sim.fcttm);
 	READ_INT(sim.mffocus);
@@ -1009,18 +1046,18 @@ static void readcfg_sim(parms_t* parms){
 	READ_DBL(sim.alfsm);
 	/*We append a 0 so that we keep a time history of the integrator. */
 	if(NX(parms->sim.aphi)==1){
-		dresize(parms->sim.aphi, 2, 1);
+		dresize(parms->sim.aphi,2,1);
 	}
 	if(NX(parms->sim.aphi)>2||NY(parms->sim.aphi)!=1){
 		error("Invalid use of aphi\n");
 	}
 	if(NX(parms->sim.aplo)==1){
-		dresize(parms->sim.aplo, 2, 1);
+		dresize(parms->sim.aplo,2,1);
 	}
 	if(NX(parms->sim.aplo)>2||NY(parms->sim.aplo)!=1){
 		error("Invalid use of aplo\n");
 	}
-	parms->sim.seeds=readcfg_lmat("sim.seeds");
+	parms->sim.seeds=readcfg_lmat(0,0,"sim.seeds");
 	parms->sim.nseed=NX(parms->sim.seeds);
 	READ_DBL(sim.dt);
 	READ_DBL(sim.dtref);
@@ -1053,25 +1090,24 @@ static void readcfg_sim(parms_t* parms){
 
 	READ_INT(sim.ncpa_calib);
 	READ_INT(sim.ncpa_ttr);
-	parms->sim.ncpa_thetax=readcfg_dmat("sim.ncpa_thetax");
+	parms->sim.ncpa_thetax=readcfg_dmat(0,0,"sim.ncpa_thetax");
 	parms->sim.ncpa_ndir=NX(parms->sim.ncpa_thetax);
-	parms->sim.ncpa_thetay=readcfg_dmat_n(parms->sim.ncpa_ndir, "sim.ncpa_thetay");
-	parms->sim.ncpa_wt=readcfg_dmat_n(parms->sim.ncpa_ndir, "sim.ncpa_wt");
-	parms->sim.ncpa_hs=readcfg_dmat_nmax(parms->sim.ncpa_ndir, "sim.ncpa_hs");
-	dscale(parms->sim.ncpa_thetax, 1./206265);
-	dscale(parms->sim.ncpa_thetay, 1./206265);
+	parms->sim.ncpa_thetay=readcfg_dmat(parms->sim.ncpa_ndir,0,"sim.ncpa_thetay");
+	parms->sim.ncpa_wt=readcfg_dmat(parms->sim.ncpa_ndir,1,"sim.ncpa_wt");
+	parms->sim.ncpa_hs=readcfg_dmat(parms->sim.ncpa_ndir,1,"sim.ncpa_hs");
+	dscale(parms->sim.ncpa_thetax,1./206265);
+	dscale(parms->sim.ncpa_thetay,1./206265);
 	if(parms->sim.ncpa_wt){
-		dnormalize_sumabs(P(parms->sim.ncpa_wt), parms->sim.ncpa_ndir, 1);
+		dnormalize_sumabs(P(parms->sim.ncpa_wt),parms->sim.ncpa_ndir,1);
 	}
 	READ_STR(sim.dmadd);
 }
 /**
    Read in parameters for Cn2 estimation.
 */
-static void readcfg_cn2(parms_t* parms){
+static void readcfg_cn2(parms_t *parms){
 /*for Cn2 Estimation. */
 	READ_DMAT(cn2.pair);
-	//parms->cn2.pair = readcfg_dmat("cn2.pair");
 	READ_INT(cn2.step);
 	READ_INT(cn2.reset);
 	READ_INT(cn2.tomo);
@@ -1092,7 +1128,7 @@ static void readcfg_cn2(parms_t* parms){
 /**
    Specify which variables to plot
 */
-static void readcfg_plot(parms_t* parms){
+static void readcfg_plot(parms_t *parms){
 
 	READ_INT(plot.setup);
 	READ_INT(plot.atm);
@@ -1115,8 +1151,8 @@ static void readcfg_plot(parms_t* parms){
 /**
    Convert real to value pair of [-val, val].
 */
-static dmat* dbl2pair(real val){
-	dmat* out=dnew(2, 1);
+static dmat *dbl2pair(real val){
+	dmat *out=dnew(2,1);
 	P(out,0)=-fabs(val);
 	P(out,1)=-P(out,0);
 	return out;
@@ -1124,7 +1160,7 @@ static dmat* dbl2pair(real val){
 /**
    Read in debugging parameters
 */
-static void readcfg_dbg(parms_t* parms){
+static void readcfg_dbg(parms_t *parms){
 	READ_INT(dbg.wamethod);
 	READ_DMAT(dbg.atm); if(dsumabs(parms->dbg.atm)==0){ dfree(parms->dbg.atm); parms->dbg.atm=NULL; }
 	READ_INT(dbg.mvstlimit);
@@ -1161,8 +1197,6 @@ static void readcfg_dbg(parms_t* parms){
 	READ_DBL(dbg.pwfs_pupelong);
 	READ_DCELL(dbg.dmoff);
 	READ_DCELL(dbg.gradoff);
-	//READ_INT(dbg.twfsflag);
-	//READ_INT(dbg.twfsrmax);
 	parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
 	parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
 	READ_INT(dbg.wfs_iac);
@@ -1175,7 +1209,7 @@ static void readcfg_dbg(parms_t* parms){
 /**
    Read in GPU options
 */
-static void readcfg_gpu(parms_t* parms){
+static void readcfg_gpu(parms_t *parms){
 	READ_INT(gpu.wfs);
 	READ_INT(gpu.evl);
 	READ_INT(gpu.tomo);
@@ -1187,7 +1221,7 @@ static void readcfg_gpu(parms_t* parms){
 /**
    Specify which variables to save
 */
-static void readcfg_save(parms_t* parms){
+static void readcfg_save(parms_t *parms){
 	READ_INT(save.extra);
 	READ_INT(save.all);
 	READ_INT(save.setup);
@@ -1203,12 +1237,12 @@ static void readcfg_save(parms_t* parms){
 	READ_INT(save.dm);/*save DM commands */
 	READ_INT(save.dither);
 	READ_INT(save.gradoff);//save gradient reference vector
-	parms->save.ints=readcfg_lmat_nmax(parms->nwfs, "save.ints");
-	parms->save.wfsopd=readcfg_lmat_nmax(parms->nwfs, "save.wfsopd");
-	parms->save.grad=readcfg_lmat_nmax(parms->nwfs, "save.grad");
-	parms->save.gradnf=readcfg_lmat_nmax(parms->nwfs, "save.gradnf");
-	parms->save.gradpsol=readcfg_lmat_nmax(parms->nwfs, "save.gradpsol");
-	parms->save.gradgeom=readcfg_lmat_nmax(parms->nwfs, "save.gradgeom");
+	parms->save.ints=readcfg_lmat(parms->nwfs,1,"save.ints");
+	parms->save.wfsopd=readcfg_lmat(parms->nwfs,1,"save.wfsopd");
+	parms->save.grad=readcfg_lmat(parms->nwfs,1,"save.grad");
+	parms->save.gradnf=readcfg_lmat(parms->nwfs,1,"save.gradnf");
+	parms->save.gradpsol=readcfg_lmat(parms->nwfs,1,"save.gradpsol");
+	parms->save.gradgeom=readcfg_lmat(parms->nwfs,1,"save.gradgeom");
 	if(disable_save){
 		parms->save.extra=0;
 	}
@@ -1256,16 +1290,16 @@ static void readcfg_save(parms_t* parms){
 	READ_INT(save.mvmf);
 	READ_INT(save.mvm);
 }
-static void readcfg_misreg(parms_t* parms){
-	parms->misreg.pupil=readcfg_dmat_nmax(2, "misreg.pupil");
-	readcfg_strarr_nmax(&parms->misreg.tel2wfs, parms->nwfs, "misreg.tel2wfs");
-	readcfg_strarr_nmax(&parms->misreg.dm2wfs, parms->ndm*parms->nwfs, "misreg.dm2wfs");
-	readcfg_strarr_nmax(&parms->misreg.dm2sci, parms->ndm*parms->evl.nevl, "misreg.dm2sci");
+static void readcfg_misreg(parms_t *parms){
+	parms->misreg.pupil=readcfg_dmat(2,1,"misreg.pupil");
+	readcfg_strarr(&parms->misreg.tel2wfs,parms->nwfs,1,"misreg.tel2wfs");
+	readcfg_strarr(&parms->misreg.dm2wfs,parms->ndm*parms->nwfs,1,"misreg.dm2wfs");
+	readcfg_strarr(&parms->misreg.dm2sci,parms->ndm*parms->evl.nevl,1,"misreg.dm2sci");
 }
 /**
    Specify which variables to load from saved files (Usually from LAOS
    simulations) */
-static void readcfg_load(parms_t* parms){
+static void readcfg_load(parms_t *parms){
 
 	READ_STR(load.atm);
 	READ_STR(load.locs);
@@ -1300,14 +1334,14 @@ static void readcfg_load(parms_t* parms){
    DM conjugation range is not changed!
    2012-04-07: Relocated to beginning
 */
-static void setup_parms_postproc_za(parms_t* parms){
+static void setup_parms_postproc_za(parms_t *parms){
 	real cosz=cos(parms->sim.za);
 	real secz=1./cosz;
 	if(parms->sim.htel){
-		info("Adjust LGS range by telescope altitude %gm.\n", parms->sim.htel);
+		info("Adjust LGS range by telescope altitude %gm.\n",parms->sim.htel);
 	}
 	if(fabs(parms->sim.za)>1.e-14){
-		info("Zenith angle is %g degree.\n", parms->sim.zadeg);
+		info("Zenith angle is %g degree.\n",parms->sim.zadeg);
 		info("    Scaling turbulence height and LGS hs by sec(za).\n"
 			"    Scaling r0 by cos(za)^(3/5).\n"
 			"    Scaling wind speed and LGS signal level by cos(za).\n");
@@ -1317,10 +1351,10 @@ static void setup_parms_postproc_za(parms_t* parms){
 	  The input r0z is the r0 at zenith. Scale it if off zenith
 	*/
 	if(parms->atm.r0z>parms->aper.d){
-		error("atm.r0z=%g appears too big.\n", parms->atm.r0z);
+		error("atm.r0z=%g appears too big.\n",parms->atm.r0z);
 	}
-	parms->atm.r0=parms->atm.r0z*pow(cosz, 3./5.);
-	parms->atmr.r0=parms->atmr.r0z*pow(cosz, 3./5.);
+	parms->atm.r0=parms->atm.r0z*pow(cosz,3./5.);
+	parms->atmr.r0=parms->atmr.r0z*pow(cosz,3./5.);
 
 	//Adjust turbulence only by zenith angle.
 	for(int ips=0; ips<parms->atm.nps; ips++){
@@ -1339,7 +1373,7 @@ static void setup_parms_postproc_za(parms_t* parms){
 		if(isfinite(parms->powfs[ipowfs].hs)){//LGS
 			parms->powfs[ipowfs].hs=(parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
 			parms->powfs[ipowfs].siglev*=cosz;
-			dscale(parms->powfs[ipowfs].siglevs, cosz);
+			dscale(parms->powfs[ipowfs].siglevs,cosz);
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
 				parms->wfs[iwfs].hs*=secz;
@@ -1349,14 +1383,14 @@ static void setup_parms_postproc_za(parms_t* parms){
 		}
 	}
 
-	dadds(parms->evl.hs, -parms->sim.htel); dscale(parms->evl.hs, secz);
-	dadds(parms->sim.ncpa_hs, -parms->sim.htel); dscale(parms->sim.ncpa_hs, secz);
-	dadds(parms->fit.hs, -parms->sim.htel); dscale(parms->fit.hs, secz);
+	dadds(parms->evl.hs,-parms->sim.htel); dscale(parms->evl.hs,secz);
+	dadds(parms->sim.ncpa_hs,-parms->sim.htel); dscale(parms->sim.ncpa_hs,secz);
+	dadds(parms->fit.hs,-parms->sim.htel); dscale(parms->fit.hs,secz);
 }
 /**
    Process simulation parameters to find incompatibility.
 */
-static void setup_parms_postproc_sim(parms_t* parms){
+static void setup_parms_postproc_sim(parms_t *parms){
 	if(parms->sim.skysim){
 		if(disable_save){
 			error("sim.skysim requires saving. Please specify output folder\n");
@@ -1451,14 +1485,14 @@ static void setup_parms_postproc_sim(parms_t* parms){
 		dfree(parms->sim.ncpa_thetay);
 		dfree(parms->sim.ncpa_wt);
 		dfree(parms->sim.ncpa_hs);
-		parms->sim.ncpa_thetax=dnew(ndir, 1);
-		parms->sim.ncpa_thetay=dnew(ndir, 1);
-		parms->sim.ncpa_wt=dnew(ndir, 1);
-		parms->sim.ncpa_hs=dnew(ndir, 1);
-		dcp(&parms->sim.ncpa_thetax, parms->evl.thetax);
-		dcp(&parms->sim.ncpa_thetay, parms->evl.thetay);
-		dcp(&parms->sim.ncpa_wt, parms->evl.wt);
-		dcp(&parms->sim.ncpa_hs, parms->evl.hs);
+		parms->sim.ncpa_thetax=dnew(ndir,1);
+		parms->sim.ncpa_thetay=dnew(ndir,1);
+		parms->sim.ncpa_wt=dnew(ndir,1);
+		parms->sim.ncpa_hs=dnew(ndir,1);
+		dcp(&parms->sim.ncpa_thetax,parms->evl.thetax);
+		dcp(&parms->sim.ncpa_thetay,parms->evl.thetay);
+		dcp(&parms->sim.ncpa_wt,parms->evl.wt);
+		dcp(&parms->sim.ncpa_hs,parms->evl.hs);
 	}
 }
 
@@ -1471,7 +1505,7 @@ static void setup_parms_postproc_sim(parms_t* parms){
    -# which wfs belongs to which powfs.
    -# necessary adjustments if outputing WFS PSF.
 */
-static void setup_parms_postproc_wfs(parms_t* parms){
+static void setup_parms_postproc_wfs(parms_t *parms){
 	if(parms->sim.evlol||parms->sim.idealfit||parms->sim.idealtomo){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			free_powfs_cfg(&parms->powfs[ipowfs]);
@@ -1487,14 +1521,14 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 	}
 	//Check powfs.dsa
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		powfs_cfg_t* powfsi=&parms->powfs[ipowfs];
+		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(powfsi->dsa<=-1){//Order
 			powfsi->dsa=parms->aper.d/(-powfsi->dsa);
 		} else if(powfsi->dsa<0){//In unit of d
 			powfsi->dsa*=-parms->aper.d;
 		} else if(powfsi->dsa==0){
 			if(powfsi->lo){
-				error("powfs[%d].dsa=%g is incorrect for LO powfs.\n", ipowfs, powfsi->dsa);
+				error("powfs[%d].dsa=%g is incorrect for LO powfs.\n",ipowfs,powfsi->dsa);
 			} else{//Follow ground DM.
 				if(parms->ndm){
 					powfsi->dsa=parms->dm[0].dx;
@@ -1513,14 +1547,14 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			real dx=dsa/nx;/*adjust dx. */
 			if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
 				info("powfs %d: Adjusting dx from %g to %g. \n",
-					ipowfs, parms->powfs[ipowfs].dx, dx);
+					ipowfs,parms->powfs[ipowfs].dx,dx);
 			}
 			parms->powfs[ipowfs].dx=dx;
 		}
 		if(!parms->sim.closeloop&&parms->powfs[ipowfs].dtrat){
 			parms->powfs[ipowfs].dtrat=1;
 			parms->powfs[ipowfs].step=0;
-		}else if(parms->powfs[ipowfs].dtrat==0){//wfs disabled.
+		} else if(parms->powfs[ipowfs].dtrat==0){//wfs disabled.
 			parms->powfs[ipowfs].dtrat=1;
 			parms->powfs[ipowfs].step=INT_MAX;
 		}
@@ -1591,7 +1625,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			if(powfsi->pixtheta<=0){//minus means ratio to lambda/dsa
 				powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
 			} else if(powfsi->pixtheta<1e-4){
-				warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
+				warning("powfs%d: pixtheta should be supplied in arcsec\n",ipowfs);
 			} else{//input is arcsecond.
 				powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
 			}
@@ -1601,7 +1635,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				if(powfsi->radpixtheta>1e-4){
 					powfsi->radpixtheta/=206265.;
 				} else if(powfsi->radpixtheta<0){
-					error("powfs %d radpixtheta<0\n", ipowfs);
+					error("powfs %d radpixtheta<0\n",ipowfs);
 				}
 			}
 			if(powfsi->phytype_sim==2||powfsi->phytype_sim2==2){//COG
@@ -1620,7 +1654,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			}
 			if(powfsi->llt&&!powfsi->radpix&&!powfsi->mtchcpl){
 				powfsi->mtchcpl=1;
-				warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n", ipowfs);
+				warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
 			}
 		} else if(powfsi->type==1){//pywfs only uses quad-cell algorithm
 			powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
@@ -1641,18 +1675,18 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 
 			if(NX(powfsi->qe)*NY(powfsi->qe)!=pixpsax*pixpsay){
 				error("Input qe [%ldx%ld] does not match subaperture pixel [%ldx%ld]\n.",
-					NX(powfsi->qe), NY(powfsi->qe), pixpsax, pixpsay);
+					NX(powfsi->qe),NY(powfsi->qe),pixpsax,pixpsay);
 			}
 		}
 
 		if(powfsi->fieldstop>0){
 			if(powfsi->fieldstop>10||powfsi->fieldstop<1e-4){
-				warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+				warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n",ipowfs,powfsi->fieldstop);
 			}
 			powfsi->fieldstop/=206265.;
 			if(powfsi->type==1&&powfsi->fieldstop<powfsi->modulate*2+0.5/206265.){
 				warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
-					powfsi->fieldstop*206265, powfsi->modulate*206265*2);
+					powfsi->fieldstop*206265,powfsi->modulate*206265*2);
 				powfsi->fieldstop=powfsi->modulate*2+0.5/206265.;
 			}
 		}
@@ -1661,7 +1695,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			parms->dither=1;
 			if(powfsi->dither==-1){//no dithering, just collect i0
 				powfsi->dither_amp=0;
-			}else if(powfsi->dither==1){//tip/tilt/arcsec->radian
+			} else if(powfsi->dither==1){//tip/tilt/arcsec->radian
 				powfsi->dither_amp/=206265.;
 			} else if(powfsi->dither>1){//zernike modes. micron-->meter
 				powfsi->dither_amp/=1e6;
@@ -1675,7 +1709,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			powfsi->dither_pllrat*=powfsi->dtrat;
 			powfsi->dither_pllskip*=powfsi->dtrat;
 			if(powfsi->dtrat>1){
-				warning("dither_npoint, pllrat, pllskip scaled by dtrat=%d", powfsi->dtrat);
+				warning("dither_npoint, pllrat, pllskip scaled by dtrat=%d",powfsi->dtrat);
 			}
 			powfsi->dither_ograt*=powfsi->dither_pllrat;
 			powfsi->dither_ogskip=powfsi->dither_ogskip*powfsi->dither_pllrat+powfsi->dither_pllskip;
@@ -1690,7 +1724,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		int mwfs=parms->powfs[ipowfs].nwfs;
 		if(parms->powfs[ipowfs].llt){
-			parms->powfs[ipowfs].llt->i=lnew(mwfs, 1);/*default to zero. */
+			parms->powfs[ipowfs].llt->i=lnew(mwfs,1);/*default to zero. */
 			if(parms->powfs[ipowfs].llt->n>1){
 				/*this is single llt for this powfs. */
 				if(parms->powfs[ipowfs].llt->n!=mwfs)
@@ -1721,7 +1755,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			parms->itpowfs=ipowfs;
 			int lgspowfs=parms->ilgspowfs;
 			if(lgspowfs!=-1){
-				info("powfs %d is TWFS for powfs %d\n", ipowfs, lgspowfs);
+				info("powfs %d is TWFS for powfs %d\n",ipowfs,lgspowfs);
 				/*
 				//Set TWFS integration start time to pll start time to synchronize with matched filter update.
 				if(parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
@@ -1731,7 +1765,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 		}
 
 		if(parms->powfs[ipowfs].step<0) parms->powfs[ipowfs].step=0;
-		if(parms->powfs[ipowfs].phystep>0 && parms->powfs[ipowfs].phystep<parms->powfs[ipowfs].step){
+		if(parms->powfs[ipowfs].phystep>0&&parms->powfs[ipowfs].phystep<parms->powfs[ipowfs].step){
 			parms->powfs[ipowfs].phystep=parms->powfs[ipowfs].step;
 		}
 		/*
@@ -1742,8 +1776,8 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 		//warning("powfs %d step is set to %d, dtrat=%d\n", ipowfs, parms->powfs[ipowfs].step, dtrat);
 	}
 	parms->hipowfs_hs=INFINITY;
-	parms->hipowfs=lnew(parms->npowfs, 1);
-	parms->lopowfs=lnew(parms->npowfs, 1);
+	parms->hipowfs=lnew(parms->npowfs,1);
+	parms->lopowfs=lnew(parms->npowfs,1);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].nwfs>0){
 			if(parms->powfs[ipowfs].lo){
@@ -1755,7 +1789,7 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 				}
 				if(parms->powfs[ipowfs].gtype_sim==GTYPE_G&&parms->powfs[ipowfs].type==WFS_SH){
 					warning("Low order powfs %d is using gtilt in simulation. "
-						"This is not recommended\n", ipowfs);
+						"This is not recommended\n",ipowfs);
 				}
 			} else{
 				P(parms->hipowfs,parms->nhipowfs)=ipowfs;
@@ -1792,19 +1826,19 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 
 		if(parms->powfs[ipowfs].usephy){
 			if(parms->powfs[ipowfs].neaextra){
-				warning("powfs%d: Adding extra NEA of %.2f mas\n", ipowfs, parms->powfs[ipowfs].neaextra);
+				warning("powfs%d: Adding extra NEA of %.2f mas\n",ipowfs,parms->powfs[ipowfs].neaextra);
 			}
 			if(parms->powfs[ipowfs].neamin){
-				warning("powfs%d: Limit minimum NEA to %.2f mas\n", ipowfs, parms->powfs[ipowfs].neamin);
+				warning("powfs%d: Limit minimum NEA to %.2f mas\n",ipowfs,parms->powfs[ipowfs].neamin);
 			}
 		}
 		if(!parms->powfs[ipowfs].usephy&&parms->powfs[ipowfs].bkgrndfn){
 			warning("powfs %d: there is sky background, but is using geometric wfs. "
-				"background won't be effective.\n", ipowfs);
+				"background won't be effective.\n",ipowfs);
 		}
 		if(parms->sim.ncpa_calib){
 			int enable_2=(parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].usephy)
-						&&!(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].skip);
+				&&!(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].skip);
 			if(parms->powfs[ipowfs].ncpa_method==-1){//auto
 				if(enable_2){//mtch
 					parms->powfs[ipowfs].ncpa_method=NCPA_I0;//default to 2
@@ -1814,17 +1848,17 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 			}
 			if(parms->powfs[ipowfs].ncpa_method==NCPA_I0){
 				if(!enable_2){
-					dbg("powfs %d: ncpa_method changed from 2 to 1 for non-matched filter mode.\n", ipowfs);
+					dbg("powfs %d: ncpa_method changed from 2 to 1 for non-matched filter mode.\n",ipowfs);
 					parms->powfs[ipowfs].ncpa_method=NCPA_G;
-				}else{
+				} else{
 					parms->powfs[ipowfs].mtchstc=0;
 				}
 			}
 		}
 		parms->powfs[ipowfs].phytype_sim1=parms->powfs[ipowfs].phytype_sim;//save value
 	}
-	lresize(parms->hipowfs, parms->nhipowfs, 1);
-	lresize(parms->lopowfs, parms->nlopowfs, 1);
+	lresize(parms->hipowfs,parms->nhipowfs,1);
+	lresize(parms->lopowfs,parms->nlopowfs,1);
 	if(parms->npowfs&&!parms->nhipowfs){
 		warning("There is no high order WFS.\n");
 	}
@@ -1881,33 +1915,33 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 		}
 	}
 	if(parms->sim.dtrat_lo%parms->sim.dtrat_lo2!=0){
-		error("Slower dtrat=%d has to be multiple of %d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
+		error("Slower dtrat=%d has to be multiple of %d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lo2);
 	}
-	dbg("dtrat_lo=%d, dtrat_lo2=%d, dtrat_lof=%d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2, parms->sim.dtrat_lof);
+	dbg("dtrat_lo=%d, dtrat_lo2=%d, dtrat_lof=%d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lo2,parms->sim.dtrat_lof);
 	parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
 	parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
 	if(parms->sim.fcfocus<0){
 		parms->sim.fcfocus=0.1/parms->sim.dtlo;
 	}
 
-	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
-	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dt*parms->sim.dtrat_lof);
+	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);
+	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
 
-	parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
-	if(parms->nphypowfs>0 && !P(parms->sim.epfsm,0)){
-		real g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alfsm, 
-			M_PI/4, parms->sim.f0fsm, parms->sim.zetafsm);
-		P(parms->sim.epfsm, 0)=g;
-		info("sim.epfsm is set to %g\n", g);
+	parms->sim.lpttm=fc2lp(parms->sim.fcttm,parms->sim.dthi);
+	if(parms->nphypowfs>0&&!P(parms->sim.epfsm,0)){
+		real g=servo_optim_margin(parms->sim.dt,parms->sim.dtrat_hi,parms->sim.alfsm,
+			M_PI/4,parms->sim.f0fsm,parms->sim.zetafsm);
+		P(parms->sim.epfsm,0)=g;
+		info("sim.epfsm is set to %g\n",g);
 	}
-	if(parms->nphypowfs>0&&!P(parms->sim.ephi, 0)){
-		real g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi,
-			M_PI/4, parms->sim.f0dm, parms->sim.zetadm);
-		P(parms->sim.ephi, 0)=g;
-		info("sim.ephi is set to %g\n", g);
-		if(!P(parms->sim.eplo, 0)){
-			P(parms->sim.eplo, 0)=g;
-			info("sim.eplo is set to %g\n", g);
+	if(parms->nphypowfs>0&&!P(parms->sim.ephi,0)){
+		real g=servo_optim_margin(parms->sim.dt,parms->sim.dtrat_hi,parms->sim.alhi,
+			M_PI/4,parms->sim.f0dm,parms->sim.zetadm);
+		P(parms->sim.ephi,0)=g;
+		info("sim.ephi is set to %g\n",g);
+		if(!P(parms->sim.eplo,0)){
+			P(parms->sim.eplo,0)=g;
+			info("sim.eplo is set to %g\n",g);
 		}
 	}
 }
@@ -1915,16 +1949,16 @@ static void setup_parms_postproc_wfs(parms_t* parms){
 /**
    The siglev is always specified in sim.dtref. If sim.dt is different, rescale the siglev.
 */
-static void setup_parms_postproc_siglev(parms_t* parms){
+static void setup_parms_postproc_siglev(parms_t *parms){
 	real sigscale=parms->sim.dt>0?(parms->sim.dt/parms->sim.dtref):1;
 	if(fabs(sigscale-1.)>EPS){
-		info("sim.dt is 1/%g, need to scale siglev and bkgrnd by %g.\n", 1/parms->sim.dt, sigscale);
+		info("sim.dt is 1/%g, need to scale siglev and bkgrnd by %g.\n",1/parms->sim.dt,sigscale);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			parms->wfs[iwfs].siglev*=sigscale;
 		}
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->powfs[ipowfs].siglev*=sigscale;
-			dscale(parms->powfs[ipowfs].siglevs, sigscale);
+			dscale(parms->powfs[ipowfs].siglevs,sigscale);
 			parms->powfs[ipowfs].bkgrnd*=sigscale;
 		}
 	}
@@ -1935,7 +1969,7 @@ static void setup_parms_postproc_siglev(parms_t* parms){
 		parms->wfs[iwfs].sigsim=parms->wfs[iwfs].siglev*sigscale;
 		if(fabs(sigscale-1)>1.e-12){
 			warning("wfs%d: siglev is scaled by %g to %g for simulation (not pixel processing).\n",
-				iwfs, sigscale, parms->wfs[iwfs].sigsim);
+				iwfs,sigscale,parms->wfs[iwfs].sigsim);
 		}
 	}
 }
@@ -1944,7 +1978,7 @@ static void setup_parms_postproc_siglev(parms_t* parms){
    1) drop weak layers.
    2) find ground layer
 */
-static void setup_parms_postproc_atm(parms_t* parms){
+static void setup_parms_postproc_atm(parms_t *parms){
 	/*
 	  Drop weak turbulence layers in simulation.
 
@@ -1977,11 +2011,11 @@ static void setup_parms_postproc_atm(parms_t* parms){
 	if(parms->sim.idealfit){/*If fit only, we using atm for atmr. */
 		dbg("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 		int nps=parms->atm.nps;
-		dresize(parms->atmr.ht, nps, 1);
-		dresize(parms->atmr.wt, nps, 1);
-		dcp(&parms->atmr.ht, parms->atm.ht);
-		dcp(&parms->atmr.wt, parms->atm.wt);
-		lresize(parms->atmr.os, nps, 1);
+		dresize(parms->atmr.ht,nps,1);
+		dresize(parms->atmr.wt,nps,1);
+		dcp(&parms->atmr.ht,parms->atm.ht);
+		dcp(&parms->atmr.wt,parms->atm.wt);
+		lresize(parms->atmr.os,nps,1);
 		for(int ips=parms->atmr.nps; ips<nps; ips++){
 			P(parms->atmr.os,ips)=P(parms->atmr.os,parms->atmr.nps-1);
 		}
@@ -1990,9 +2024,9 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		&&parms->recon.alg==RECON_MVR&&NX(parms->atmr.ht)>1&&!parms->sim.idealtomo){
    /*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 		dbg("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
-		dresize(parms->atmr.ht, 1, 1);
-		dresize(parms->atmr.wt, 1, 1);
-		lresize(parms->atmr.os, 1, 1);
+		dresize(parms->atmr.ht,1,1);
+		dresize(parms->atmr.wt,1,1);
+		lresize(parms->atmr.os,1,1);
 		P(parms->atmr.ht,0)=parms->dm[0].ht;
 		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
@@ -2000,7 +2034,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		int ipsr2=0;
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
 			if(P(parms->atmr.ht,ipsr)>parms->hipowfs_hs){
-				dbg("Tomography Layer %d is above high order guide star and therefore dropped.\n", ipsr);
+				dbg("Tomography Layer %d is above high order guide star and therefore dropped.\n",ipsr);
 			} else{
 				P(parms->atmr.ht,ipsr2)=P(parms->atmr.ht,ipsr);
 				P(parms->atmr.wt,ipsr2)=P(parms->atmr.wt,ipsr);
@@ -2009,13 +2043,13 @@ static void setup_parms_postproc_atm(parms_t* parms){
 		}
 		if(ipsr2!=parms->atmr.nps){
 			parms->atmr.nps=ipsr2;
-			dresize(parms->atmr.ht, ipsr2, 1);
-			dresize(parms->atmr.wt, ipsr2, 1);
+			dresize(parms->atmr.ht,ipsr2,1);
+			dresize(parms->atmr.wt,ipsr2,1);
 		}
 	}
-	dnormalize_sumabs(P(parms->atm.wt), parms->atm.nps, 1);
-	dnormalize_sumabs(P(parms->atmr.wt), parms->atmr.nps, 1);
-	dnormalize_sumabs(P(parms->fit.wt), parms->fit.nfit, 1);
+	dnormalize_sumabs(P(parms->atm.wt),parms->atm.nps,1);
+	dnormalize_sumabs(P(parms->atmr.wt),parms->atmr.nps,1);
+	dnormalize_sumabs(P(parms->fit.wt),parms->fit.nfit,1);
 	/*
 	  We don't drop weak turbulence layers in reconstruction. Instead, we make
 	  it as least parms->tomo.minwt in setup_recon_tomo_prep
@@ -2023,7 +2057,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 	if(!parms->recon.glao){
 	/*Assign each turbulence layer to a corresponding reconstructon layer. Used
 	  to compute opdx in a simple minded way.*/
-		parms->atm.ipsr=lnew(parms->atm.nps, 1);
+		parms->atm.ipsr=lnew(parms->atm.nps,1);
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			real dist=INFINITY;
 			int kpsr=-1;
@@ -2037,11 +2071,11 @@ static void setup_parms_postproc_atm(parms_t* parms){
 				}
 			}
 			P(parms->atm.ipsr,ips)=kpsr;
-			dbg3("atm layer %d is maped to atmr %d\n", ips, kpsr);
+			dbg3("atm layer %d is maped to atmr %d\n",ips,kpsr);
 		}
 
 		/* Map reconstructed layers to input layers. for testing tomo.predict*/
-		parms->atmr.indps=lnew(parms->atmr.nps, 1);
+		parms->atmr.indps=lnew(parms->atmr.nps,1);
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
 			P(parms->atmr.indps,ipsr)=-1;
 			for(int ips=0; ips<parms->atm.nps; ips++){
@@ -2068,11 +2102,11 @@ static void setup_parms_postproc_atm(parms_t* parms){
 			}
 		}
 		if(P(parms->atm.ht,ips)<0){
-			warning("Layer %d height %g is below ground\n", ips, P(parms->atm.ht,ips));
+			warning("Layer %d height %g is below ground\n",ips,P(parms->atm.ht,ips));
 		}
 		if(ips>0&&fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<20){
 			warning("Layer %d at %gm is too close to layer %d at %gm\n",
-				ips, P(parms->atm.ht,ips), ips-1, P(parms->atm.ht,ips-1));
+				ips,P(parms->atm.ht,ips),ips-1,P(parms->atm.ht,ips-1));
 		}
 		if(parms->atm.hmax<P(parms->atm.ht,ips)){
 			parms->atm.hmax=P(parms->atm.ht,ips);
@@ -2091,7 +2125,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 	if(!parms->atm.frozenflow||parms->dbg.atm){
 		parms->atm.r0evolve=0;/*disable r0 evolution*/
 	}
-	
+
 	if(!parms->atm.frozenflow){
 		if(parms->sim.end>parms->sim.start+10){
 			warning("Disable turbulence file based sharing in open loop nonfrozenflow simulation\n");
@@ -2116,7 +2150,7 @@ static void setup_parms_postproc_atm(parms_t* parms){
 					if(isfinite(hs)||isfinite(parms->powfs[ipowfs].hs)){
 						if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
 							warning("Two high order POWFS with different hs found: %g and %g\n",
-								hs, parms->powfs[ipowfs].hs);
+								hs,parms->powfs[ipowfs].hs);
 							if(parms->powfs[ipowfs].hs>hs){
 								hs=parms->powfs[ipowfs].hs;
 							}
@@ -2162,58 +2196,58 @@ static void setup_parms_postproc_atm(parms_t* parms){
 
 
 }
-static void setup_parms_postproc_dirs(parms_t* parms){
+static void setup_parms_postproc_dirs(parms_t *parms){
 	//Collect all beam directions 
 	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
-	parms->dirs=dnew(4, ndir);
-	dmat* pdir=parms->dirs/*PDMAT*/;
+	parms->dirs=dnew(4,ndir);
+	dmat *pdir=parms->dirs/*PDMAT*/;
 	int count=0;
 
 	for(int i=0; i<parms->nwfs; i++){
-		P(pdir, 0, count)=parms->wfs[i].thetax;
-		P(pdir, 1, count)=parms->wfs[i].thetay;
-		P(pdir, 2, count)=parms->wfs[i].hs;
-		P(pdir, 3, count)=parms->wfs[i].hc;
+		P(pdir,0,count)=parms->wfs[i].thetax;
+		P(pdir,1,count)=parms->wfs[i].thetay;
+		P(pdir,2,count)=parms->wfs[i].hs;
+		P(pdir,3,count)=parms->wfs[i].hc;
 		count++;
 	}
 
 	for(int i=0; i<parms->evl.nevl; i++){
-		P(pdir, 0, count)=P(parms->evl.thetax,i);
-		P(pdir, 1, count)=P(parms->evl.thetay,i);
-		P(pdir, 2, count)=P(parms->evl.hs,i);
+		P(pdir,0,count)=P(parms->evl.thetax,i);
+		P(pdir,1,count)=P(parms->evl.thetay,i);
+		P(pdir,2,count)=P(parms->evl.hs,i);
 		count++;
 	}
 	for(int i=0; i<parms->fit.nfit; i++){
-		P(pdir, 0, count)=P(parms->fit.thetax,i);
-		P(pdir, 1, count)=P(parms->fit.thetay,i);
-		P(pdir, 2, count)=P(parms->fit.hs,i);
+		P(pdir,0,count)=P(parms->fit.thetax,i);
+		P(pdir,1,count)=P(parms->fit.thetay,i);
+		P(pdir,2,count)=P(parms->fit.hs,i);
 		count++;
 	}
 	if(parms->sim.ncpa_calib){
 		for(int i=0; i<parms->sim.ncpa_ndir; i++){
-			P(pdir, 0, count)=P(parms->sim.ncpa_thetax,i);
-			P(pdir, 1, count)=P(parms->sim.ncpa_thetay,i);
-			P(pdir, 2, count)=P(parms->sim.ncpa_hs,i);
+			P(pdir,0,count)=P(parms->sim.ncpa_thetax,i);
+			P(pdir,1,count)=P(parms->sim.ncpa_thetay,i);
+			P(pdir,2,count)=P(parms->sim.ncpa_hs,i);
 			count++;
 		}
 	}
 	if(count<ndir){
-		warning("count=%d, ndir=%d\n", count, ndir);
+		warning("count=%d, ndir=%d\n",count,ndir);
 	} else if(count>ndir){
-		error("count=%d, ndir=%d\n", count, ndir);
+		error("count=%d, ndir=%d\n",count,ndir);
 	}
-	dresize(parms->dirs, 4, count);
+	dresize(parms->dirs,4,count);
 	real rmax2=0;
 	for(int ic=0; ic<count; ic++){
-		real x=P(parms->dirs, 0, ic);
-		real y=P(parms->dirs, 1, ic);
+		real x=P(parms->dirs,0,ic);
+		real y=P(parms->dirs,1,ic);
 		real r2=x*x+y*y;
 		if(r2>rmax2) rmax2=r2;
 	}
 	real fov=2*sqrt(rmax2);
 	if(parms->sim.fov<fov){
-		if(parms->dbg.dmfullfov && parms->sim.fov>0){
-			dbg("sim.fov=%g is less than actual fov=%g. Changed\n", parms->sim.fov*206265, fov*206265);
+		if(parms->dbg.dmfullfov&&parms->sim.fov>0){
+			dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*206265,fov*206265);
 		}
 		parms->sim.fov=fov;
 	}
@@ -2223,17 +2257,17 @@ static void setup_parms_postproc_dirs(parms_t* parms){
    all layers.  todo:may need to consider L0 Must be after
    setup_parms_postproc_za.
 */
-static void setup_parms_postproc_atm_size(parms_t* parms){
+static void setup_parms_postproc_atm_size(parms_t *parms){
 	const int nps=parms->atm.nps;
 	int Nmax=0;
-	long nxout[nps], nyout[nps];
-	parms->atm.nxn=lnew(nps, 1);
+	long nxout[nps],nyout[nps];
+	parms->atm.nxn=lnew(nps,1);
 	for(int ips=0; ips<nps; ips++){
-		double guard=MAX(parms->atm.dx*3, parms->tomo.guard*parms->atmr.dx);
-		create_metapupil(0, &nxout[ips], &nyout[ips], parms->dirs, parms->aper.d, P(parms->atm.ht,ips),
-			parms->atm.dx, parms->atm.dx, 0.5, guard, 0, 0, 0, 1);
-		P(parms->atm.nxn,ips)=MAX(nxout[ips], nyout[ips]);
-		Nmax=MAX(Nmax, P(parms->atm.nxn,ips));
+		double guard=MAX(parms->atm.dx*3,parms->tomo.guard*parms->atmr.dx);
+		create_metapupil(0,&nxout[ips],&nyout[ips],parms->dirs,parms->aper.d,P(parms->atm.ht,ips),
+			parms->atm.dx,parms->atm.dx,0.5,guard,0,0,0,1);
+		P(parms->atm.nxn,ips)=MAX(nxout[ips],nyout[ips]);
+		Nmax=MAX(Nmax,P(parms->atm.nxn,ips));
 	}
 	/*Minimum screen size required. Used to transport atm to GPU. */
 	parms->atm.nxnmax=Nmax;
@@ -2253,20 +2287,20 @@ static void setup_parms_postproc_atm_size(parms_t* parms){
 		parms->atm.ny=parms->atm.nx;
 	}
 	/*record the size of the atmosphere. */
-	real atm_size_x=P(parms->atm.size, 0);
-	real atm_size_y=P(parms->atm.size, 1);
+	real atm_size_x=P(parms->atm.size,0);
+	real atm_size_y=P(parms->atm.size,1);
 	P(parms->atm.size,0)=parms->atm.nx*parms->atm.dx;
 	P(parms->atm.size,1)=parms->atm.ny*parms->atm.dx;
-	if(P(parms->atm.size, 0)>atm_size_x||P(parms->atm.size, 1)>atm_size_y){
-		info("Atmospheric size is increased from (%g, %g) to (%g, %g) m.\n", 
-			atm_size_x, atm_size_y, P(parms->atm.size, 0), P(parms->atm.size, 1));
+	if(P(parms->atm.size,0)>atm_size_x||P(parms->atm.size,1)>atm_size_y){
+		info("Atmospheric size is increased from (%g, %g) to (%g, %g) m.\n",
+			atm_size_x,atm_size_y,P(parms->atm.size,0),P(parms->atm.size,1));
 	}
 	if(P(parms->atm.L0,0)>P(parms->atm.size,0)){
 		info("Atmospheric size is smaller than outer scale.\n");
 	}
 	/*for screen evolving. */
-	parms->atm.overx=lnew(parms->atm.nps, 1);
-	parms->atm.overy=lnew(parms->atm.nps, 1);
+	parms->atm.overx=lnew(parms->atm.nps,1);
+	parms->atm.overy=lnew(parms->atm.nps,1);
 	for(int ips=0; ips<parms->atm.nps; ips++){
 		P(parms->atm.overx,ips)=nxout[ips];
 		P(parms->atm.overy,ips)=nyout[ips];
@@ -2299,7 +2333,7 @@ static int arrind(real *arr, int *n, real val){
    star range..
 
 */
-static void setup_parms_postproc_dm(parms_t* parms){
+static void setup_parms_postproc_dm(parms_t *parms){
 	/*disable cache for low order systems. */
 	if(parms->sim.cachedm){
 		if(parms->evl.nevl<2&&parms->nwfs<2){
@@ -2319,19 +2353,19 @@ static void setup_parms_postproc_dm(parms_t* parms){
 		}
 		if(isfinite(P(parms->dm[i].stroke,0))){
 			real strokemicron=fabs(P(parms->dm[i].stroke,0))*1e6;
-			if(strokemicron<1||strokemicron>50){
-				warning("dm %d: stroke %g um is probably wrong\n",
-					i, strokemicron);
+			if(strokemicron>1000){
+				dscale(parms->dm[i].stroke,1e-6);
+				info("dm %d: stroke=%g um is provided in micron.\n",i,strokemicron*1e-6);
 			}
 			if(parms->sim.fcttm==0){
 				warning("Please set sim.fcttm to cross over frequency for offloading to tip/tilt mirror\n");
 			}
 		}
-		if(isfinite(parms->dm[i].iastroke)&&!parms->dm[i].iastrokefn){
+		if(isfinite(parms->dm[i].iastroke)&&!parms->dm[i].strokescale){
 			real strokemicron=parms->dm[i].iastroke*1e6;
-			if(strokemicron<.1||strokemicron>50){
-				warning("dm %d: iastroke %g um is probably wrong\n",
-					i, strokemicron);
+			if(strokemicron>1000){
+				parms->dm[i].iastroke*=1e-6;
+				info("dm %d: ia stroke=%g um is provided in micron.\n",i,strokemicron*1e-6);
 			}
 		}
 	}
@@ -2342,14 +2376,14 @@ static void setup_parms_postproc_dm(parms_t* parms){
    simulation. First find out the guide star conjugate. Only 1
    altitude is allowed.
 */
-static void setup_parms_postproc_recon(parms_t* parms){
+static void setup_parms_postproc_recon(parms_t *parms){
 	if(parms->nmoao>0){//remove unused moao configurations
 		int count=0;
 		for(int imoao=0; imoao<parms->nmoao; imoao++){
 			int used=0;
 			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 				if(parms->powfs[ipowfs].moao>=parms->nmoao){
-					error("invalid powfs[%d].moao=%d", ipowfs, parms->powfs[ipowfs].moao);
+					error("invalid powfs[%d].moao=%d",ipowfs,parms->powfs[ipowfs].moao);
 				}
 				if(parms->powfs[ipowfs].moao==imoao){
 					used=1;
@@ -2357,7 +2391,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 				}
 			}
 			if(parms->evl.moao>=parms->nmoao){
-				error("invalid evl.moao=%d\n", parms->evl.moao);
+				error("invalid evl.moao=%d\n",parms->evl.moao);
 			}
 			if(parms->evl.moao==imoao){
 				used=1;
@@ -2466,7 +2500,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	}
 
 	if(parms->recon.glao){
-		parms->wfsr=mycalloc(parms->npowfs, wfs_cfg_t);
+		parms->wfsr=mycalloc(parms->npowfs,wfs_cfg_t);
 		parms->nwfsr=parms->npowfs;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->wfsr[ipowfs].thetax=0;
@@ -2475,7 +2509,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			parms->wfsr[ipowfs].hc=parms->powfs[ipowfs].hc;
 			parms->wfsr[ipowfs].powfs=ipowfs;
 			parms->powfs[ipowfs].nwfsr=1;
-			parms->powfs[ipowfs].wfsr=lnew(1, 1);
+			parms->powfs[ipowfs].wfsr=lnew(1,1);
 			P(parms->powfs[ipowfs].wfsr,0)=ipowfs;
 		}
 		/*
@@ -2503,15 +2537,15 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		}
 		if(nwfsfit){
 			int nfit2=parms->fit.nfit+nwfsfit;
-			dresize(parms->fit.thetax, nfit2, 1);
-			dresize(parms->fit.thetay, nfit2, 1);
-			dresize(parms->fit.wt, nfit2, 1);
-			dresize(parms->fit.hs, nfit2, 1);
+			dresize(parms->fit.thetax,nfit2,1);
+			dresize(parms->fit.thetay,nfit2,1);
+			dresize(parms->fit.wt,nfit2,1);
+			dresize(parms->fit.hs,nfit2,1);
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 				if(parms->wfs[iwfs].fitwt<EPS){
 					continue;
 				}
-				warning("Including wfs %d with wt %g in fitting\n", iwfs, parms->wfs[iwfs].fitwt);
+				warning("Including wfs %d with wt %g in fitting\n",iwfs,parms->wfs[iwfs].fitwt);
 				P(parms->fit.thetax,parms->fit.nfit)=parms->wfs[iwfs].thetax;
 				P(parms->fit.thetay,parms->fit.nfit)=parms->wfs[iwfs].thetay;
 				P(parms->fit.hs,parms->fit.nfit)=parms->wfs[iwfs].hs;
@@ -2519,7 +2553,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 				parms->fit.nfit++;
 			}
 			if(nfit2!=parms->fit.nfit){
-				error("nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
+				error("nfit2=%d, parms->fit.nfit=%d\n",nfit2,parms->fit.nfit);
 			}
 		}
 	}
@@ -2533,7 +2567,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	if(parms->fit.alg==-1){
 		parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS.
 	}
-	if(parms->atm.frozenflow && !parms->dbg.nocgwarm){
+	if(parms->atm.frozenflow&&!parms->dbg.nocgwarm){
 		parms->fit.cgwarm=1;
 		parms->lsr.cgwarm=1;
 		if(!NX(parms->dbg.tomo_maxit)){
@@ -2589,7 +2623,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			parms->fit.lrt_tt=1;
 		}
 		if(parms->fit.lrt_tt<0||parms->fit.lrt_tt>2){
-			error("parms->fit.lrt_tt=%d is invalid\n", parms->fit.lrt_tt);
+			error("parms->fit.lrt_tt=%d is invalid\n",parms->fit.lrt_tt);
 		}
 		/*Assign CG interations*/
 		if(parms->tomo.alg==ALG_CG&&parms->tomo.maxit==0){
@@ -2615,14 +2649,14 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			error("Please implement the preconditioner for each block for BGS.\n");
 		}
 	}
-	
+
 	/*DM Fitting related. fit parameters are also used for dmproj.*/
 	if(parms->fit.alg==ALG_CG&&parms->fit.maxit==0){
 		int factor;
 		factor=parms->fit.cgwarm?1:10;
 		parms->fit.maxit=10*factor;
 	}
-	
+
 	if(parms->load.fit||parms->fit.alg!=ALG_CG||parms->fit.bgs){
 		parms->fit.assemble=1;
 	}
@@ -2655,7 +2689,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 	}
 
 	if(parms->sim.mffocus<0||parms->sim.mffocus>2){
-		error("parms->sim.mffocus=%d is invalid\n", parms->sim.mffocus);
+		error("parms->sim.mffocus=%d is invalid\n",parms->sim.mffocus);
 	}
 	if(parms->tomo.ahst_focus){
 		if(parms->recon.split!=1||!parms->sim.mffocus){
@@ -2681,9 +2715,6 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		}
 		if(isfinite(parms->dm[idm].iastroke)&&parms->dm[idm].iastroke>0){
 			parms->sim.dmclipia=1;
-			if(parms->dm[idm].iastrokefn){
-				parms->dm[idm].iastrokescale=dcellread("%s", parms->dm[idm].iastrokefn);
-			}
 		}
 	}
 	if(parms->sim.psfr){
@@ -2691,7 +2722,7 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		if(fnd==0){
 			error("sim.psfr is specified, but evl.psfr are all zero\n");
 		} else{
-			info("Output PSF reconstruction telemetry for %d directions\n", fnd);
+			info("Output PSF reconstruction telemetry for %d directions\n",fnd);
 		}
 		if(!parms->evl.psfmean){
 			parms->evl.psfmean=1;/*Saves psfmean for verification. */
@@ -2700,9 +2731,9 @@ static void setup_parms_postproc_recon(parms_t* parms){
 			parms->save.ecov=1;
 		}
 		/*required memory to hold memory. */
-		long covmem=(long)round(pow(parms->aper.d/parms->evl.dx, 4))*8*fnd;
-		if(covmem>MAX(NMEM, LONG_MAX/2)&&parms->evl.dx>parms->atmr.dx*0.25+EPS){/*4G or actual */
-			warning("parms->evl.dx=%g is probably too large to save ecxx. Recommend parms->evl.dx=%g\n", parms->evl.dx, parms->atmr.dx*0.25);
+		long covmem=(long)round(pow(parms->aper.d/parms->evl.dx,4))*8*fnd;
+		if(covmem>MAX(NMEM,LONG_MAX/2)&&parms->evl.dx>parms->atmr.dx*0.25+EPS){/*4G or actual */
+			warning("parms->evl.dx=%g is probably too large to save ecxx. Recommend parms->evl.dx=%g\n",parms->evl.dx,parms->atmr.dx*0.25);
 		}
 	}
 
@@ -2727,15 +2758,15 @@ static void setup_parms_postproc_recon(parms_t* parms){
 		}
 	}
 	switch(parms->recon.twfs_rmin){
-		case 1:
-			parms->itwfssph=parms->recon.twfs_radonly?1:9; break;
-		case 2:
-			parms->itwfssph=parms->recon.twfs_radonly?1:7; break;
-		case 3:
-			parms->itwfssph=parms->recon.twfs_radonly?0:4; break;
-		default:
-			parms->itwfssph=-1;
-			error("Please implement\n");
+	case 1:
+		parms->itwfssph=parms->recon.twfs_radonly?1:9; break;
+	case 2:
+		parms->itwfssph=parms->recon.twfs_radonly?1:7; break;
+	case 3:
+		parms->itwfssph=parms->recon.twfs_radonly?0:4; break;
+	default:
+		parms->itwfssph=-1;
+		error("Please implement\n");
 	}
 }
 
@@ -2743,22 +2774,22 @@ static void setup_parms_postproc_recon(parms_t* parms){
 /**
    postproc misc parameters.
 */
-static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
+static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
 	if(!disable_save&&parms->sim.end>parms->sim.start){
 	/*Remove seeds that are already done. */
 		char fn[80];
 		int iseed=0;
 		int jseed=0;
-		parms->fdlock=lnew(parms->sim.nseed, 1);
+		parms->fdlock=lnew(parms->sim.nseed,1);
 		for(iseed=0; iseed<parms->sim.nseed; iseed++){
-			snprintf(fn, 80, "Res_%ld.done", P(parms->sim.seeds,iseed));
+			snprintf(fn,80,"Res_%ld.done",P(parms->sim.seeds,iseed));
 			if(exist(fn)&&!over_ride){
 				P(parms->fdlock,iseed)=-1;
-				warning("Skip seed %ld because %s exists.\n", P(parms->sim.seeds,iseed), fn);
+				warning("Skip seed %ld because %s exists.\n",P(parms->sim.seeds,iseed),fn);
 			} else{
 				remove(fn);
-				snprintf(fn, 80, "Res_%ld.lock", P(parms->sim.seeds,iseed));
-				P(parms->fdlock,iseed)=lock_file(fn, 0);
+				snprintf(fn,80,"Res_%ld.lock",P(parms->sim.seeds,iseed));
+				P(parms->fdlock,iseed)=lock_file(fn,0);
 				if(P(parms->fdlock,iseed)<0){
 					warning("Skip seed %ld because it is already running.\n",
 						P(parms->sim.seeds,iseed));
@@ -2780,9 +2811,9 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 		info2("There are no seed to run. Use -O to override. Exit\n");
 		return;
 	} else if(parms->sim.end>parms->sim.start){
-		info2("There are %d valid simulation seeds: ", parms->sim.nseed);
+		info2("There are %d valid simulation seeds: ",parms->sim.nseed);
 		for(int i=0; i<parms->sim.nseed; i++){
-			info2(" %ld", P(parms->sim.seeds,i));
+			info2(" %ld",P(parms->sim.seeds,i));
 		}
 		info2("\n");
 		if(parms->sim.nseed>1&&parms->dither){
@@ -2803,7 +2834,7 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 	}
 
 	if(!parms->atm.frozenflow){
-		warning("psfisim is set from %d to %d in openloop mode\n", parms->evl.psfisim, parms->sim.start);
+		warning("psfisim is set from %d to %d in openloop mode\n",parms->evl.psfisim,parms->sim.start);
 		parms->evl.psfisim=parms->sim.start;
 	}
 	if(parms->evl.psfisim<parms->sim.start){
@@ -2815,7 +2846,7 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 		if(fnd==0){
 			warning("Required to output PSF, but evl.psf are all zero\n");
 		} else{
-			info("Output PSF for %d directions\n", fnd);
+			info("Output PSF for %d directions\n",fnd);
 		}
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -2826,7 +2857,7 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 		if(isfinite(P(parms->evl.hs,ievl))&&P(parms->evl.psfngsr,ievl)){
 			P(parms->evl.psfngsr,ievl)=0;
 			if(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov){
-				warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
+				warning("evl %d: star is not at infinity. disable NGS mode removal for it\n",ievl);
 			}
 		}
 		if(parms->tomo.ahst_idealngs==1){
@@ -2838,12 +2869,12 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 	}
 	if(parms->dbg.dmoff){
 		if(NX(parms->dbg.dmoff)!=parms->ndm){
-			cellresize(parms->dbg.dmoff, parms->ndm, NY(parms->dbg.dmoff));
+			cellresize(parms->dbg.dmoff,parms->ndm,NY(parms->dbg.dmoff));
 		}
 	}
 	if(parms->dbg.gradoff){
 		if(NX(parms->dbg.gradoff)!=parms->nwfs){
-			cellresize(parms->dbg.gradoff, parms->nwfs, NY(parms->dbg.gradoff));
+			cellresize(parms->dbg.gradoff,parms->nwfs,NY(parms->dbg.gradoff));
 		}
 	}
 }
@@ -2851,10 +2882,10 @@ static void setup_parms_postproc_misc(parms_t* parms, int over_ride){
 /**
    Selectively print out parameters for easy diagnose of possible mistakes.
 */
-static void print_parms(const parms_t* parms){
+static void print_parms(const parms_t *parms){
 
 	int i;
-	const char* const phytype[]={
+	const char *const phytype[]={
 	"Skip",
 	"matched filter",
 	"CoG",
@@ -2863,78 +2894,78 @@ static void print_parms(const parms_t* parms){
 	"correlation (sum first)",
 	"Invalid"
 	};
-	const char* const tomo_precond[]={
+	const char *const tomo_precond[]={
 	"No",
 	"Fourer Domain",
 	"Invalid"
 	};
-	const char* const closeloop[]={
+	const char *const closeloop[]={
 	"open",
 	"close"
 	};
 
-	info2("%sAperture%s is %g m with sampling 1/%g m\n", GREEN, BLACK,
-		parms->aper.d, 1/parms->evl.dx);
-	real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, P(parms->atm.ws), P(parms->atm.wt));
-	real theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, P(parms->atm.ht), P(parms->atm.wt));
+	info2("%sAperture%s is %g m with sampling 1/%g m\n",GREEN,BLACK,
+		parms->aper.d,1/parms->evl.dx);
+	real fgreen=calc_greenwood(parms->atm.r0z,parms->atm.nps,P(parms->atm.ws),P(parms->atm.wt));
+	real theta0z=calc_aniso(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt));
 
 	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
-		GREEN, parms->sim.zadeg, BLACK, parms->atm.r0, P(parms->atm.L0,0), parms->atm.nps);
+		GREEN,parms->sim.zadeg,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
 	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
-		fgreen, theta0z*206265);
+		fgreen,theta0z*206265);
 	if(parms->ndm==2){
 		real H1=parms->dm[0].ht;
 		real H2=parms->dm[1].ht;
-		real theta2z=calc_aniso2(parms->atm.r0z, parms->atm.nps, P(parms->atm.ht), P(parms->atm.wt), H1, H2);
-		info(", generalized is %.2f as\n", theta2z*206265);
+		real theta2z=calc_aniso2(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt),H1,H2);
+		info(", generalized is %.2f as\n",theta2z*206265);
 	} else{
 		info("\n");
 	}
 	info("    Sampled %dx%d at 1/%gm. wind dir is%s randomized.\n",
-		parms->atm.nx, parms->atm.ny, 1./parms->atm.dx,
+		parms->atm.nx,parms->atm.ny,1./parms->atm.dx,
 		(parms->atm.wdrand?"":" not"));
 	if(parms->atm.nps>1&&theta0z*206265>4){
 		warning("Atmosphere theta0 maybe wrong\n");
 	}
 	for(int ips=0; ips<parms->atm.nps; ips++){
 		info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
-			ips, P(parms->atm.ht,ips), P(parms->atm.wt,ips), P(parms->atm.ws,ips));
+			ips,P(parms->atm.ht,ips),P(parms->atm.wt,ips),P(parms->atm.ws,ips));
 	}
 	if(parms->recon.alg==RECON_MVR){
-		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n", GREEN, BLACK,
-			parms->atmr.r0, parms->atmr.L0,
-			parms->atmr.nps, (parms->tomo.cone?" use cone coordinate.":""));
+		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n",GREEN,BLACK,
+			parms->atmr.r0,parms->atmr.L0,
+			parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
 
 		for(int ips=0; ips<parms->atmr.nps; ips++){
 			info("    layer %d: ht= %6.0f m, wt= %5.3f\n",
-				ips, P(parms->atmr.ht,ips), P(parms->atmr.wt,ips));
+				ips,P(parms->atmr.ht,ips),P(parms->atmr.wt,ips));
 		}
 	}
-	info2("%sThere are %d powfs%s\n", GREEN, parms->npowfs, BLACK);
+	info2("%sThere are %d powfs%s\n",GREEN,parms->npowfs,BLACK);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		info("  powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
-			ipowfs, parms->powfs[ipowfs].order, (parms->powfs[ipowfs].llt?"L":"N"),
-			parms->powfs[ipowfs].hs/1000, 1./parms->powfs[ipowfs].dx, parms->powfs[ipowfs].saat*100);
+			ipowfs,parms->powfs[ipowfs].order,(parms->powfs[ipowfs].llt?"L":"N"),
+			parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 		int lrt=(parms->recon.split&&parms->tomo.splitlrt);
 		if(parms->powfs[ipowfs].trs||parms->powfs[ipowfs].dfrs){
-			info("%s%s%sis removed in %s side in tomography.%s", GREEN,
-				parms->powfs[ipowfs].trs?"T/T ":"", parms->powfs[ipowfs].dfrs?"Diff Focus ":"",
-				lrt?"both":"right hand", BLACK);
+			info("%s%s%sis removed in %s side in tomography.%s",GREEN,
+				parms->powfs[ipowfs].trs?"T/T ":"",parms->powfs[ipowfs].dfrs?"Diff Focus ":"",
+				lrt?"both":"right hand",BLACK);
 		}
 		info("\n");
 		if(parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].usephy){
 			info("    CCD image is %dx%d @ %gx%g mas, blur %g%% (sigma), %gHz, ",
 				(parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa),
 				parms->powfs[ipowfs].pixpsa,
-				parms->powfs[ipowfs].radpixtheta*206265000, parms->powfs[ipowfs].pixtheta*206265000,
+				parms->powfs[ipowfs].radpixtheta*206265000,parms->powfs[ipowfs].pixtheta*206265000,
 				parms->powfs[ipowfs].pixblur*100,
 				1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 		} else{
-			info("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
+			info("    PWFS, %gHz, ",1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 		}
 		info("wvl: [");
 		for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-			info(" %g", P(parms->powfs[ipowfs].wvl,iwvl));
+			info(" %g",P(parms->powfs[ipowfs].wvl,iwvl));
 		}
 		info("]\n");
 		info("    %s in reconstruction. ",
@@ -2948,42 +2979,42 @@ static void print_parms(const parms_t* parms){
 		if(parms->powfs[ipowfs].phystep>-1&&parms->powfs[ipowfs].phystep<parms->sim.end){
 			info("Physical optics start at %d with %s'%s'%s ",
 				parms->powfs[ipowfs].phystep,
-				parms->powfs[ipowfs].phytype_sim==PTYPE_MF?GREEN:RED, 
-				phytype[parms->powfs[ipowfs].phytype_sim], BLACK);
+				parms->powfs[ipowfs].phytype_sim==PTYPE_MF?GREEN:RED,
+				phytype[parms->powfs[ipowfs].phytype_sim],BLACK);
 		}
 
 		if(parms->powfs[ipowfs].noisy){
-			info("%s(noisy)%s\n", GREEN, BLACK);
+			info("%s(noisy)%s\n",GREEN,BLACK);
 		} else{
-			info("%s(noise free)%s\n", RED, BLACK);
+			info("%s(noise free)%s\n",RED,BLACK);
 		}
 		if(parms->powfs[ipowfs].dither){
 			info("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
-				parms->powfs[ipowfs].dither_pllskip, parms->powfs[ipowfs].dither_pllrat);
+				parms->powfs[ipowfs].dither_pllskip,parms->powfs[ipowfs].dither_pllrat);
 			info("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
-				parms->powfs[ipowfs].dither_ogskip, parms->powfs[ipowfs].dither_ograt);
+				parms->powfs[ipowfs].dither_ogskip,parms->powfs[ipowfs].dither_ograt);
 		}
 	}
-	info2("%sThere are %d wfs%s\n", GREEN, parms->nwfs, BLACK);
+	info2("%sThere are %d wfs%s\n",GREEN,parms->nwfs,BLACK);
 	for(i=0; i<parms->nwfs; i++){
 		const int ipowfs=parms->wfs[i].powfs;
 		info("    wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
-			i, parms->wfs[i].powfs, parms->wfs[i].thetax*206265,
-			parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3, parms->wfs[i].siglev);
+			i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
+			parms->wfs[i].thetay*206265,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
-			info(" (%g in simulation)", parms->wfs[i].sigsim);
+			info(" (%g in simulation)",parms->wfs[i].sigsim);
 		}
-		info(" bkgrnd is %g", parms->powfs[ipowfs].bkgrnd);
+		info(" bkgrnd is %g",parms->powfs[ipowfs].bkgrnd);
 		info("\n");
 		if(fabs(parms->wfs[i].thetax)>1||fabs(parms->wfs[i].thetay)>1){
 			warning("wfs thetax or thetay appears too large\n");
 		}
 	}
-	info2("%sThere are %d DMs%s\n", GREEN, parms->ndm, BLACK);
+	info2("%sThere are %d DMs%s\n",GREEN,parms->ndm,BLACK);
 	for(i=0; i<parms->ndm; i++){
 		info("    DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
-			i, parms->dm[i].order,
-			parms->dm[i].ht/1000, parms->dm[i].dx,
+			i,parms->dm[i].order,
+			parms->dm[i].ht/1000,parms->dm[i].dx,
 			parms->dm[i].offset,
 			fabs(P(parms->dm[i].stroke,0))*1e6);
 		if(parms->dm[i].iac){
@@ -2995,7 +3026,7 @@ static void print_parms(const parms_t* parms){
 	}
 	if(parms->recon.alg==RECON_MVR){
 		if(!parms->sim.idealfit){
-			info2("%sTomography%s is using ", GREEN, BLACK);
+			info2("%sTomography%s is using ",GREEN,BLACK);
 			if(parms->tomo.bgs){
 				info2("Block Gauss Seidel with ");
 			}
@@ -3005,7 +3036,7 @@ static void print_parms(const parms_t* parms){
 				break;
 			case ALG_CG:
 				info2("CG, with %s%s%s preconditioner, %s%d%s iterations",
-					GREEN, tomo_precond[parms->tomo.precond], BLACK, GREEN, parms->tomo.maxit, BLACK);
+					GREEN,tomo_precond[parms->tomo.precond],BLACK,GREEN,parms->tomo.maxit,BLACK);
 				break;
 			case ALG_SVD:
 				info2("SVD direct solve ");
@@ -3027,7 +3058,7 @@ static void print_parms(const parms_t* parms){
 				error(", Invalid\n");
 			}
 		}
-		info2("%sDM Fitting %sis using ", GREEN, BLACK);
+		info2("%sDM Fitting %sis using ",GREEN,BLACK);
 		if(parms->fit.bgs){
 			info2("Block Gauss Seidel with ");
 		}
@@ -3037,7 +3068,7 @@ static void print_parms(const parms_t* parms){
 			break;
 		case ALG_CG:
 			info2("CG, with %s%s%s preconditioner, %s%d%s iterations\n",
-				GREEN, tomo_precond[parms->fit.precond], BLACK, GREEN, parms->fit.maxit, BLACK);
+				GREEN,tomo_precond[parms->fit.precond],BLACK,GREEN,parms->fit.maxit,BLACK);
 			break;
 		case ALG_SVD:
 			info2("SVD\n");
@@ -3048,17 +3079,17 @@ static void print_parms(const parms_t* parms){
 		default:
 			error("Invalid\n");
 		}
-		info2("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
+		info2("%sThere are %d fit directions%s\n",GREEN,parms->fit.nfit,BLACK);
 		for(i=0; i<parms->fit.nfit; i++){
 			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-				i, P(parms->fit.wt,i), P(parms->fit.thetax,i)*206265,
+				i,P(parms->fit.wt,i),P(parms->fit.thetax,i)*206265,
 				P(parms->fit.thetay,i)*206265);
 			if(fabs(P(parms->fit.thetax,i))>1||fabs(P(parms->fit.thetay,i))>1){
 				warning("fit thetax or thetay appears too large\n");
 			}
 		}
 	} else if(parms->recon.alg==RECON_LSR){
-		info2("%sLeast square reconstructor%s is using ", GREEN, BLACK);
+		info2("%sLeast square reconstructor%s is using ",GREEN,BLACK);
 		if(parms->tomo.bgs){
 			info2("Block Gauss Seidel with ");
 		}
@@ -3067,7 +3098,7 @@ static void print_parms(const parms_t* parms){
 			info2("Cholesky back solve (CBS)");
 			break;
 		case ALG_CG:
-			info2("CG%d", parms->tomo.maxit);
+			info2("CG%d",parms->tomo.maxit);
 			break;
 		case ALG_SVD:
 			info2("SVD");
@@ -3077,14 +3108,14 @@ static void print_parms(const parms_t* parms){
 		}
 		info2("\n");
 	} else{
-		error("parms->recon.alg=%d is not supported.\n", parms->recon.alg);
+		error("parms->recon.alg=%d is not supported.\n",parms->recon.alg);
 	}
 
 	info2("%sThere are %d evaluation directions%s at sampling 1/%g m.\n",
-		GREEN, parms->evl.nevl, BLACK, 1./parms->evl.dx);
+		GREEN,parms->evl.nevl,BLACK,1./parms->evl.dx);
 	for(i=0; i<parms->evl.nevl; i++){
 		info("    Evl %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-			i, P(parms->evl.wt,i), P(parms->evl.thetax,i)*206265,
+			i,P(parms->evl.wt,i),P(parms->evl.thetax,i)*206265,
 			P(parms->evl.thetay,i)*206265);
 		if(fabs(P(parms->evl.thetax,i))>1||fabs(P(parms->evl.thetay,i))>1){
 			warning("evl thetax or thetay appears too large\n");
@@ -3093,34 +3124,34 @@ static void print_parms(const parms_t* parms){
 
 	info2("%sSimulation%s start at step %d, end at step %d, "
 		"with time step 1/%gs, %s%s loop%s.\n",
-		GREEN, BLACK, parms->sim.start, parms->sim.end, 1./parms->sim.dt,
-		parms->sim.closeloop==1?GREEN:RED, closeloop[parms->sim.closeloop], BLACK);
+		GREEN,BLACK,parms->sim.start,parms->sim.end,1./parms->sim.dt,
+		parms->sim.closeloop==1?GREEN:RED,closeloop[parms->sim.closeloop],BLACK);
 }
 
 /**
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-parms_t* setup_parms(const char* mainconf, const char* extraconf, int over_ride){
+parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	if(!mainconf){
 		mainconf="default.conf";
 	}
-	info("Main config file is %s\n", mainconf);
+	info("Main config file is %s\n",mainconf);
 
 	/*Setup PATH and result directory so that the config_path is in the back of path */
-	char* config_path=find_config("maos");
+	char *config_path=find_config("maos");
 	if(!config_path||!exist(config_path)){
 		error("Unable to find usable configuration file\n");
 	}
 	/*info2("Using config files found in %s\n", config_path); */
-	char* bin_path=stradd(config_path, "/bin", NULL);
+	char *bin_path=stradd(config_path,"/bin",NULL);
 	addpath(config_path);
 	addpath(bin_path);
 	free(bin_path);
 	free(config_path);
-	open_config(mainconf, NULL, 0);/*main .conf file. */
-	open_config(extraconf, NULL, 1);
-	parms_t* parms=mycalloc(1, parms_t);
+	open_config(mainconf,NULL,0);/*main .conf file. */
+	open_config(extraconf,NULL,1);
+	parms_t *parms=mycalloc(1,parms_t);
 	readcfg_sim(parms);
 	readcfg_aper(parms);
 	readcfg_atm(parms);
@@ -3141,8 +3172,8 @@ parms_t* setup_parms(const char* mainconf, const char* extraconf, int over_ride)
 	readcfg_save(parms);
 	readcfg_misreg(parms);
 	readcfg_load(parms);
-	parms->nsurf=readcfg_strarr(&parms->surf, "surf");
-	parms->ntsurf=readcfg_strarr(&parms->tsurf, "tsurf");
+	parms->nsurf=readcfg_strarr(&parms->surf,0,0,"surf");
+	parms->ntsurf=readcfg_strarr(&parms->tsurf,0,0,"tsurf");
 	/*
 	  Output all the readed parms to a single file that can be used to reproduce
 	  the same simulation.
@@ -3151,8 +3182,8 @@ parms_t* setup_parms(const char* mainconf, const char* extraconf, int over_ride)
 		close_config(NULL);
 	} else{
 		char fn[PATH_MAX];
-		snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
-		close_config("%s", fn);
+		snprintf(fn,PATH_MAX,"maos_%s_%ld.conf",HOST,(long)getpid());
+		close_config("%s",fn);
 	}
 	/*
 	  Postprocess the parameters for integrity. The ordering of the following
@@ -3172,25 +3203,25 @@ parms_t* setup_parms(const char* mainconf, const char* extraconf, int over_ride)
 	setup_parms_postproc_atm_size(parms);
 	setup_parms_postproc_dm(parms);
 	setup_parms_postproc_recon(parms);
-	setup_parms_postproc_misc(parms, over_ride);
+	setup_parms_postproc_misc(parms,over_ride);
 	if(parms->sim.nseed>0){
 		print_parms(parms);
 		if(!disable_save){
 			//Make symlink after simulation runs.
 			char fn[PATH_MAX];
-			snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
+			snprintf(fn,PATH_MAX,"maos_%s_%ld.conf",HOST,(long)getpid());
 			//remove("maos_done.conf");
 			remove("maos_recent.conf");
-			mysymlink(fn, "maos_recent.conf");
+			mysymlink(fn,"maos_recent.conf");
 			//remove("run_done.log");
 			remove("run_recent.log");
-			snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-			mysymlink(fn, "run_recent.log");
+			snprintf(fn,PATH_MAX,"run_%s_%ld.log",HOST,(long)getpid());
+			mysymlink(fn,"run_recent.log");
 		}
 		print_mem("After setup_parms");
 	} else{
 		char fn[PATH_MAX];
-		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+		snprintf(fn,PATH_MAX,"run_%s_%ld.log",HOST,(long)getpid());
 		remove(fn);
 	}
 	return parms;
@@ -3199,7 +3230,7 @@ parms_t* setup_parms(const char* mainconf, const char* extraconf, int over_ride)
    Additional setup_parms code to run when maos is running. It only contains GPU
    initialization code for the moment.
 */
-void setup_parms_gpu(parms_t* parms, int* gpus, int ngpu){
+void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 #if USE_CUDA 
 	if(parms->sim.end==0){
 		use_cuda=0;
@@ -3269,7 +3300,7 @@ void setup_parms_gpu(parms_t* parms, int* gpus, int ngpu){
 	}
 	/*use a max of one gpu if there is only 1 wfs.*/
 	if(parms->nwfs==1&&ngpu==0) ngpu=1;
-	if(use_cuda) use_cuda=gpu_init(parms, gpus, ngpu);
+	if(use_cuda) use_cuda=gpu_init(parms,gpus,ngpu);
 #else
 	use_cuda=0; (void)gpus; (void)ngpu;
 #endif
@@ -3315,6 +3346,6 @@ void setup_parms_gpu(parms_t* parms, int* gpus, int ngpu){
 			parms->fit.cachex=0;
 		}
 	} else{
-		memset(&(parms->gpu), 0, sizeof(gpu_cfg_t));
+		memset(&(parms->gpu),0,sizeof(gpu_cfg_t));
 	}
 }

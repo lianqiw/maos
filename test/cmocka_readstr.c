@@ -45,15 +45,45 @@ static void readstr_array(void **state){
 	double *ret=0;
 	int nrow;
 	int ncol;
-	readstr_numarr((void**)&ret, 0, &nrow, &ncol, M_DBL, "2/[1]");
+	//Simple read
+	int nr=readstr_numarr((void**)&ret, &nrow, &ncol, 0, 0, M_DBL, "2/[1 2]");
 	assert_float_equal(ret[0], 2, 0.0001);
-	free(ret);
-	readstr_numarr((void**)&ret, 0, &nrow, &ncol, M_DBL, "3.2/[1/2*3+2*4/2 1*2 1+1*2 1-2; 1 2 3 -4]*2+1*2");
+	assert_float_equal(ret[1],1,0.0001);
+	assert_int_equal(nrow, 2);
+	assert_int_equal(ncol, 1);
+	assert_int_equal(nr, 2);
+	free(ret);ret=NULL;
+
+	//Relaxed read type 1
+	nr=readstr_numarr((void **)&ret,&nrow,&ncol,10,1,M_DBL,"2/[2]");
+	assert_float_equal(ret[1],1,0.0001);
+	assert_float_equal(ret[9],1,0.0001);
+	assert_int_equal(nrow,10);
+	assert_int_equal(ncol,1);
+	assert_int_equal(nr,1);
+	free(ret);ret=NULL;
+	//Relaxed read type 2
+	nr=readstr_numarr((void **)&ret,&nrow,&ncol,10,2,M_DBL,"2/[1 2]");
+	assert_float_equal(ret[2],1,0.0001);
+	assert_float_equal(ret[9],1,0.0001);
+	assert_int_equal(nrow,10);
+	assert_int_equal(ncol,1);
+	assert_int_equal(nr,2);
+	free(ret);ret=NULL;
+
+	//Marix
+	readstr_numarr((void**)&ret, &nrow, &ncol, 0, 0, M_DBL, "3.2/[1/2*3+2*4/2 1*2 1+1*2 1-2; 1 2 3 -4]*2+1*2");
 	assert_int_equal(nrow, 4);
 	assert_int_equal(ncol, 2);
 	assert_float_equal(ret[0], 3.2/(1./2*3+2.*4/2)*2+1.*2, 0.0001);
 	assert_float_equal(ret[7], 3.2/(-4)*2+1.*2, 0.0001);
-	free(ret);
+	free(ret);ret=NULL;
+
+	//If not enough data is available, a relaxed vector is read
+	nr=readstr_numarr((void **)&ret,&nrow,&ncol,9,2,M_DBL,"3.2/[1/2*3+2*4/2 1*2 1+1*2 1-2; 1 2 3 -4]*2+1*2");
+	assert_int_equal(nrow,9);
+	assert_int_equal(ncol,1);
+	assert_int_equal(nr,8);
 }
 int main(void){
 	quitfun=dummy_quitfun;

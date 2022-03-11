@@ -296,13 +296,11 @@ typedef struct wfs_cfg_t{
 */
 typedef struct dm_cfg_t{
     real guard;   /**<extra DM actuator rings outside of aper.d*/
-    dmat *stroke;  /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke. array: per actuator$*/
+    dmat *stroke; /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke. nactx2 array: min and max per actuator$*/
     real iastroke;/**<Inter actuator stroke (surface)*/
-    char *iastrokefn;   /**< describes polynomials that convert
-			  * opd to voltage (first cell), and voltage to opd
-			  * (second cell). The two operations has to be strict
-			  * inverse of each other*/
-    dcell *iastrokescale;/**<Input from iastrokefn*/
+    dcell *strokescale;   /**< describes polynomials that convert opd to voltage (first cell), and voltage to opd
+			    * (second cell). The two operations has to be strict inverse of each other*/
+    
     real vmisreg; /**<vertical misregistration*/
     real ht;      /**<height conjugation range*/
     real dx;      /**<actuator separation along x (derived from order)*/

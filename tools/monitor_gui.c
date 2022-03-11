@@ -84,39 +84,33 @@ static void list_modify_color(GtkTreeRowReference* row, const char* color){
 }
 
 static void list_proc_update(proc_t* p){
-	if(!p || p->status.nseed==0) return;
+	if(!p || p->status.nseed==0 || p->status.simend==0) return;//skipped simulation
 	GtkTreeIter iter;
 	if(list_get_iter(p->row, &iter)) return;//failure
-
-	double total=(double)(p->status.rest+p->status.laps);
+	status_t *ps=&p->status;
+	double total=(double)(ps->rest+ps->laps);
 	if(fabs(total)>1.e-10){
-		p->frac=(double)p->status.laps/total;
+		p->frac=MIN(1, (double)ps->laps/total);
 	} else{
-		p->frac=0;
+		p->frac=1;//finish too soon.
 	}
-	if(p->frac>1){
-		p->frac=1;
-	} else if(p->frac<0){
-		p->frac=0;
-	}
-
-	const long tot=p->status.rest+p->status.laps;/*show total time. */
+	const long tot=ps->rest+ps->laps;/*show total time. */
 	const long toth=tot/3600;
 	const long totm=(tot-toth*3600)/60;
 	const long tots=tot-toth*3600-totm*60;
-	const long rest=p->status.rest;
+	const long rest=ps->rest;
 	const long resth=rest/3600;
 	const long restm=(rest-resth*3600)/60;
 	const long rests=rest-resth*3600-restm*60;
-	const double step=p->status.tot*p->status.scale;//scale is normally 1
-	/*if(p->status.iseed!=p->iseed_old){
+	const double step=ps->tot*ps->scale;//scale is normally 1
+	/*if(ps->iseed!=p->iseed_old){
 		char tmp[64];
-		snprintf(tmp, 64, "%d/%d", p->status.iseed+1, p->status.nseed);
+		snprintf(tmp, 64, "%d/%d", ps->iseed+1, ps->nseed);
 		gtk_list_store_set(listall, &iter,
 			COL_SEED, tmp,
-			COL_SEEDP, (100*(p->status.iseed+1)/p->status.nseed),
+			COL_SEEDP, (100*(ps->iseed+1)/ps->nseed),
 			-1);
-		p->iseed_old=p->status.iseed;
+		p->iseed_old=ps->iseed;
 	}*/
 	char stmp[8];
 	if(snprintf(stmp, 8, "%.2f", step)>=8){
@@ -125,11 +119,11 @@ static void list_proc_update(proc_t* p){
 	char tmp[64];
 	size_t np=0;
 	if(toth>99){
-		np=snprintf(tmp, 64, "%d/%d %d/%d %ldh/%ldh", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, toth);
+		np=snprintf(tmp, 64, "%d/%d %d/%d %ldh/%ldh", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend, resth, toth);
 	} else if(toth>0){
-		np=snprintf(tmp, 64, "%d/%d %d/%d %ldh%02ld/%ldh%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, resth, restm, toth, totm);
+		np=snprintf(tmp, 64, "%d/%d %d/%d %ldh%02ld/%ldh%02ld", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend, resth, restm, toth, totm);
 	} else{
-		np=snprintf(tmp, 64, "%d/%d %d/%d %02ld:%02ld/%02ld:%02ld", p->status.iseed+1, p->status.nseed, p->status.isim+1, p->status.simend, restm, rests, totm, tots);
+		np=snprintf(tmp, 64, "%d/%d %d/%d %02ld:%02ld/%02ld:%02ld", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend, restm, rests, totm, tots);
 	}
 	if(np>=sizeof(tmp)){
 		warning_once("format is truncated\n");
@@ -140,9 +134,9 @@ static void list_proc_update(proc_t* p){
 		COL_STEPP, (gint)(p->frac*100),
 		-1);
 #define ERR_MAX 9999.9
-	snprintf(tmp, 64, "%.1f", MIN(p->status.clerrlo, ERR_MAX));
+	snprintf(tmp, 64, "%.1f", MIN(ps->clerrlo, ERR_MAX));
 	gtk_list_store_set(listall, &iter, COL_ERRLO, tmp, -1);
-	snprintf(tmp, 64, "%.1f", MIN(p->status.clerrhi, ERR_MAX));
+	snprintf(tmp, 64, "%.1f", MIN(ps->clerrhi, ERR_MAX));
 	gtk_list_store_set(listall, &iter, COL_ERRHI, tmp, -1);
 
 }

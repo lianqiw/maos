@@ -378,7 +378,7 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
  */
 static void *run_thread(void *data){
 	(void)data;
-	tid=atomic_add_fetch(&pool.ncur, 1);//increment pool counter
+	tid=(int)(long)data;
 	while(1){
 		while(do_job(0));//do until no jobs are left
 		pthread_mutex_lock(&pool.mutex);//acquire lock before modifying pool and wait. 	
@@ -437,7 +437,7 @@ void thread_pool_wait_all(void){
 /**
  *   Initialize the thread pool. Repeated call to resize the pool
  */
-void thread_pool_init(int nthread){
+void thread_pool_init(unsigned int nthread){
 	if(!jobsall){
 		memset(&pool, 0, sizeof(thread_pool_t));
 		pool.inited=1;
@@ -465,20 +465,19 @@ void thread_pool_init(int nthread){
 		jobsall=mycalloc(jobsall_mask+1, jobs_t);
 
 	}
-	int nthread_max=sysconf(_SC_NPROCESSORS_ONLN);
+	unsigned int nthread_max=sysconf(_SC_NPROCESSORS_ONLN);
 	if(nthread<=0) nthread=nthread_max;
 	if(nthread>nthread_max) nthread=nthread_max;
 	pthread_mutex_lock(&pool.mutex);
-	int ncur=pool.nmax;
 	pool.nmax=nthread;
-	if(ncur<nthread){/*need to launch more threads. */
+	if(pool.ncur<pool.nmax){/*need to launch more threads. we change ncur here instead of in new thread for consistency. */
 		pthread_t thread;/*we don't need the thread information. */
-		for(int ith=0; ith<nthread-ncur; ith++){
-			if(pthread_create(&thread, &pool.attr, run_thread, NULL)){
+		for(; pool.ncur<pool.nmax; pool.ncur++){
+			if(pthread_create(&thread, &pool.attr, run_thread, (void*)(long)pool.ncur)){
 				error("Can not create thread\n");
 			}
 		}
-	} else if(ncur>nthread){/*need to quit some threads. */
+	} else if(pool.ncur>pool.nmax){/*need to quit some threads. */
 		pthread_cond_broadcast(&pool.jobwait);/*wake up all threads. */
 	}
 	pthread_mutex_unlock(&pool.mutex);

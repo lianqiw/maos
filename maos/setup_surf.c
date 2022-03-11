@@ -225,7 +225,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				}
 				evlct=nevl;
 			} else{
-				readstr_intarr_relax(&evlcover, nevl, strevl);
+				readstr_numarr((void**)&evlcover, NULL, NULL, nevl, 2, M_INT, strevl);
 				for(int ievl=0; ievl<nevl; ievl++){
 					evlct+=evlcover[ievl]==1?1:0;
 				}
@@ -256,18 +256,8 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					wfscover[iwfs]=1;
 				}
 			} else{
-				int* wfscover2=0;
-				int ncover=readstr_intarr(&wfscover2, 0, strwfs);
-				int iwfs=0;
-				int val=0;
-				for(iwfs=0; iwfs<MIN(ncover, nwfs); iwfs++){
-					val=(wfscover[iwfs]=wfscover2[iwfs]);
-				}
-				for(; iwfs<nwfs; iwfs++){//copy last value to all
-					wfscover[iwfs]=val;
-				}
-				free(wfscover2);
-				ncover=0;
+				readstr_numarr((void**)&wfscover, NULL, NULL, nwfs, 2, M_INT, strwfs);
+				int ncover=0;
 				for(int i=0; i<nwfs; i++){
 					ncover+=wfscover[i]?1:0;
 				}

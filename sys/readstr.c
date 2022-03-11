@@ -39,7 +39,8 @@
    ['a b']: one string "a b".
  */
 int readstr_strarr(char*** res, /**<[out] Result*/
-	int len,     /**<[in] Length of array*/
+	int len,     /**<[in] max number f values to read*/
+	int relax,	 /**<[in] Whether fewer entries are permitted. If true, will copy from last.*/
 	const char* sdata /**<[in] Input string*/
 ){
 	int count=0;
@@ -126,7 +127,16 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			sdata2++;
 		}
 	}
-	if(!len){
+	if(count && count<len){//not enough entry
+		if(!relax||(relax==1&&count>1)){
+			error("{%s}: Require %d numbers, but got %d\n", sdata, len, count);
+		}else{
+			dbg3("Fill %d to %d by value in %d\n", count, len, count-1);
+			for(int i=count; i<len; i++){
+				(*res)[i]=(*res)[count-1]?strdup((*res)[count-1]):NULL;
+			}
+		}
+	}else if(!len){
 		if(count>0){
 			*res=myrealloc(*res, count, char*);
 		} else{
@@ -222,14 +232,15 @@ double readstr_num(const char* data, /**<[in] Input string*/
    transpose is supported:
    [1 2 3; 4 5 6]' is 2 d array, 2 rows, 3 columns. In memory is stored as [1 4 2 5 3 6]
 
-   \return Number of values actually read.
+   \return Number of values actually read not including duplicated when relax is set.
 */
-int readstr_numarr(void** ret, /**<[out] Result*/
+int readstr_numarr(void **ret, /**<[out] Result*/
+	int *nrow0, /**<[out] Number of rows (nx)*/
+	int *ncol0, /**<[out] Number of columns (ny)*/
 	int len,    /**<[in]  Max number of values to read.*/
-	int* nrow0, /**<[out] Number of rows (nx)*/
-	int* ncol0, /**<[out] Number of columns (ny)*/
+	int relax,  /**<[in] Whether fewer entries are permitted. If true, will copy from last.*/
 	int type,   /**<[in]  Data type*/
-	const char* data /**<[in] Input string*/
+	const char *data /**<[in] Input string*/
 ){
 	if(!data||strlen(data)==0){
 		return 0;
@@ -238,8 +249,8 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 		warning("ret is not set\n");
 		return 0;
 	}
-	size_t nmax=10;
-	size_t size=0;/*size of each number */
+	int nmax=10;
+	int size=0;/*size of each number */
 	switch(type){
 	case M_INT:
 		size=sizeof(int);
@@ -323,10 +334,10 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 			error("{%s}: There is garbage in the end of the string.\n", data);return 0;
 		}
 	}
-	size_t count=0;
-	size_t nrow=0;/*number of rows*/
-	size_t ncol=0;/*number of columns*/
-	size_t rowbegin=0;/*beginning of this row*/
+	int count=0;
+	int nrow=0;/*number of rows*/
+	int ncol=0;/*number of columns*/
+	int rowbegin=0;/*beginning of this row*/
 	/*Read in the array */
 	while(startptr[0]!=']'&&!is_end(startptr[0])){
 		if(count>=nmax){
@@ -381,7 +392,7 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 				if(nrow==0){
 					nrow=count-rowbegin;
 				} else if(nrow!=count-rowbegin){
-					error("{%s}: last row has %zu numbers while new row has %zu numbers\n", data, nrow, count-rowbegin);
+					error("{%s}: last row has %d numbers while new row has %d numbers\n", data, nrow, count-rowbegin);
 				}
 				rowbegin=count;
 			}
@@ -393,22 +404,44 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 		if(nrow==0){
 			nrow=count-rowbegin;
 		} else if(nrow!=count-rowbegin){
-			error("{%s}: last row has %zu numbers while new row has %zu numbers\n", data, nrow, count-rowbegin);
+			error("{%s}: last row has %d numbers while new row has %d numbers\n", data, nrow, count-rowbegin);
 		}
 	}
 	if(nrow*ncol!=count){
-		error("{%s}: nrow=%zu, ncol=%zu, count=%zu\n", data, nrow, ncol, count);
+		error("{%s}: nrow=%d, ncol=%d, count=%d\n", data, nrow, ncol, count);
 	}
-
-	if(trans&&count>0){
-		dbg("Transposing %zux%zu array\n", ncol, nrow);
+	
+	if(count&&count<len){//not enough values are read
+		if(!relax||(relax==1&&count>1)||trans){
+			error("{%s}: Require %d numbers, but got %d\n", data, len, count);
+		} else{//Fill the array with the last number
+			dbg3("Fill %d to %d by value in %d\n", count, len, count-1);
+			for(int i=count; i<len; i++){
+				switch(type){
+				case M_INT:
+					((int *)(*ret))[i]=((int *)(*ret))[count-1];break;
+				case M_LONG:
+					((long *)(*ret))[i]=((long *)(*ret))[count-1];break;
+				case M_DBL:
+					((double *)(*ret))[i]=((double *)(*ret))[count-1];break;
+				case M_FLT:
+					((float *)(*ret))[i]=((float *)(*ret))[count-1];break;
+				}
+			}
+			if(nrow*ncol!=len){//vector
+				ncol=1;
+				nrow=len;
+			}
+		}
+	}else if(trans&&count>0){
+		dbg("Transposing %dx%d array\n", ncol, nrow);
 		void* newer=calloc(count, size);
 #define DO_TRANS(T)						\
 	{							\
 	    T *from=(T*)(*ret);					\
 	    T *to=(T*)newer;					\
-	    for(size_t icol=0; icol<ncol; icol++){		\
-		for(size_t irow=0; irow<ncol; irow++){		\
+	    for(int icol=0; icol<ncol; icol++){		\
+		for(int irow=0; irow<ncol; irow++){		\
 		    to[icol+ncol*irow]=from[irow+nrow*icol];	\
 		}						\
 	    }							\
@@ -445,45 +478,6 @@ int readstr_numarr(void** ret, /**<[out] Result*/
 	if(nrow0) *nrow0=nrow;
 	if(ncol0) *ncol0=ncol;
 	return count;
-}
-int readstr_intarr(int** ret, int len, const char* data){
-	return readstr_numarr((void**)ret, len, NULL, NULL, M_INT, data);
-}
-/**
-   Read an integer array. Duplicate if only one number is present.
- */
-void readstr_intarr_nmax(int** ret, /**<[out] Result*/
-	int len,   /**<[in]  Max number of values to read.*/
-	const char* data /**<[in] Input string*/
-){
-	int len2=readstr_intarr(ret, len, data);
-	if(len2==1){
-		for(int i=1; i<len; i++){
-			(*ret)[i]=(*ret)[0];
-		}
-	} else if(len2!=0&&len2!=len){
-		error("{%s}: Require %d numbers, but got %d\n", data, len, len2);
-	}
-}
-void readstr_intarr_relax(int** ret, /**<[out] Result*/
-	int len,   /**<[in]  Max number of values to read.*/
-	const char* data /**<[in] Input string*/
-){
-	int* ret0=0;
-	int len2=readstr_intarr(&ret0, 0, data);
-	int* ret2=ret0;
-	if(len2==1){
-		for(int i=0; i<len; i++){
-			(*ret)[i]=ret2[0];
-		}
-	} else if(len2>=len){
-		for(int i=0; i<len; i++){
-			(*ret)[i]=ret2[i];
-		}
-	} else{
-		error("{%s}: Require %d numbers, but got %d\n", data, len, len2);
-	}
-	free(ret2);
 }
 /**
 	update header and end to point to valid region. Does not modify the string

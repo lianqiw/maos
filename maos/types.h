@@ -561,7 +561,8 @@ typedef struct sim_t{
     
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
-    dcell *dmtmp;      /**<Holds a temporary dm vector.*/
+    dcell *dmtmp;      /**<Holds a temporary dm vector. Maybe in zonal or modal space.*/
+    dcell *dmtmp2;     /**<Holds a temporary dm vector. Always in zonal space.*/
     dcell *dmcmd;      /**<This is the final DM command send to DME.*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in

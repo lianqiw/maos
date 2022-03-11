@@ -29,7 +29,7 @@
     X(sp) *X(spref)(X(sp) *A) CHECK_UNUSED_RESULT;			\
     X(sp) *X(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;		\
     X(sp) *X(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;		\
-    X(sp) *X(spnewrandu)(int nx, int ny, const T mean, R fill,rand_t *rstat) CHECK_UNUSED_RESULT; \
+    X(sp) *X(spnewrandu)(long nx, long ny, const T mean, R fill,rand_t *rstat) CHECK_UNUSED_RESULT; \
     void X(spsetnzmax)(X(sp) *sp, long nzmax);				\
     X(sp)* X(sp_cast)(const cell *A);					\
     void X(spfree_do)(X(sp) *sp);					\

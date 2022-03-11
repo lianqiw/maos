@@ -33,7 +33,7 @@ typedef struct tp_counter_t{
 #endif  
 }tp_counter_t __attribute__((unused));
 
-void thread_pool_init(int nthread);
+void thread_pool_init(unsigned int nthread);
 void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int njob, int urgent);
 void thread_pool_wait(tp_counter_t *counter, int urgent);
 void thread_pool_wait_all(void);

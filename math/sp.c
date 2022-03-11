@@ -134,7 +134,7 @@ X(sp)* X(spnew2)(const X(sp)* A){
    Create a new sparse matrix and fill in uniform random
    numbers with filling factor of 'fill'
 */
-X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
+X(sp)* X(spnewrandu)(long nx, long ny, const T mean,
 	R fill, rand_t* rstat){
 	if(fill>1) fill=1.;
 	if(fill<0) fill=0.;

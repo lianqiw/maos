@@ -101,13 +101,14 @@ def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "extra/Resp", seeds, iframe1, iframe2)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
-    if type(fdin) is list:
-        fds2=[]
-        for fdini in fdin:
-            fds2+=natsorted(glob.glob(fdini+"/",recursive=1))
-    else:
-        fds2=natsorted(glob.glob(fdin+"/",recursive=1))
-    
+    if type(fdin) is not list:
+        fdin=[fdin]
+    fds2=[]
+    for fdini in fdin:
+        fds2+=glob.glob(fdini+'/',recursive=1) #find only directory
+
+    #natsorted not work well if there is trailing /
+    fds2=natsorted([fd[0:-1] for fd in fds2])
     fds=[]
     resall=None
     for fd in fds2: #loop over directory
@@ -168,7 +169,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             mres+=res*1e18
             nseed+=1
         if nseed>0:
-            fds.append(fd[0:-1])
+            fds.append(fd)
             mres=mres*(1/nseed)
             if resall is None:
                 resall=mres
@@ -322,7 +323,7 @@ def read_many(fdin):
         except:
             print('Fail to read',fd)
             pass
-    return np.array(res),fds
+    return simplify(np.array(res)),fds
 def read_many_dict(fdin):
     fds2=natsorted(glob.glob(fdin,recursive=1))
     res={}
@@ -482,4 +483,14 @@ def cog_shift(data):
 
     return np.roll(data, (ccx,ccy),axis=(0,1))
     
+def plot_circle(radius, *args):
+    '''plot_circle(radius, *args):'''
+    theta=np.arange(0,np.pi*2,0.01)
+    if type(radius) is list or type(radius) is np.ndarray:
+        rx=radius[0]
+        ry=radius[1]
+    else:
+        rx=radius
+        ry=radius
+    plot(rx*np.cos(theta), ry*np.sin(theta), *args)
     

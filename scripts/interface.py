@@ -40,20 +40,29 @@ except:
 from readbin import headers
 
 def simplify(arr, do_stack=1):
-    '''simplify object array by removing singleton dimensions and stack into numeric array'''
-    arr=np.squeeze(arr)
+    #'''simplify object array by removing singleton dimensions and stack into numeric array'''
+    '''convert object array a[i,j][k,n]... to simple ndarray a[i,j,k,n,...]
+        shape and singleton dimensions are preserved.
+    '''
     if arr.dtype.name=='object':
-        if arr.size==1:
-            return arr.item(0) #this works for 0d array
+        #arr=np.squeeze(arr)
+        #if arr.size==1:
+        #    return arr.item(0) #this works for 0d array
         flags=np.zeros(arr.shape,dtype=bool)
+        can_stack=0
         for ind,iarr in np.ndenumerate(arr):
             arr[ind]=simplify(iarr)
             if arr[ind].size>0:
                 flags[ind]=True
-        if do_stack:
+                if arr[ind].dtype.name!='object':
+                    can_stack=1
+                    shape=arr.shape+arr[ind].shape
+        if do_stack and can_stack:
             try:
                 arr=np.stack(arr[flags])
-            except:
+                arr.shape=shape
+            except Exception as err:
+                #print('stack failed', err)
                 pass
     return arr
 
@@ -230,7 +239,7 @@ class cell(Structure):
                         res[iy, ix]=np.array([])
             if self.ny==1:
                 res=res[0,]
-            return res #simplify(res, 0)
+            return simplify(res)
         else:
             print('as_array: Unknown data, id='+ str(self.id))
             return np.array([],dtype=object)

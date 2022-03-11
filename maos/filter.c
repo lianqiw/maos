@@ -105,16 +105,16 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 	*/
 	if(!parms->sim.dmclip) return;
 	for(int idm=0; idm<parms->ndm; idm++){
-		const int nact=P(dmcmd,idm)->nx;
+		const int nact=P(dmcmd, idm)->nx;
 		if(NX(parms->dm[idm].stroke)==1){
 			if(NY(parms->dm[idm].stroke)!=1){
 				error("dm.stroke is in wrong format\n");
 			}
 			static int nclip0=0;
 			if(simu->reconisim<10) nclip0=0;
-			int nclip=dclip(P(dmcmd,idm),
-				-P(parms->dm[idm].stroke,0),
-				P(parms->dm[idm].stroke,0));
+			int nclip=dclip(P(dmcmd, idm),
+				-P(parms->dm[idm].stroke, 0),
+				P(parms->dm[idm].stroke, 0));
 			if(nclip>nclip0){
 				nclip0=nclip;
 				info2("step %d DM %d: %d actuators clipped\n", simu->reconisim, idm, nclip);
@@ -124,9 +124,9 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 				error("dm.stroke is in wrong format\n");
 			}
 
-			real* pcmd=P(P(dmcmd,idm));
-			real* plow=P(parms->dm[idm].stroke);
-			real* phigh=plow+nact;
+			real *pcmd=P(P(dmcmd, idm));
+			real *plow=P(parms->dm[idm].stroke);
+			real *phigh=plow+nact;
 			for(int iact=0; iact<nact; iact++){
 				if(pcmd[iact]<plow[iact]){
 					pcmd[iact]=plow[iact];
@@ -168,8 +168,8 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		int nx=P(recon->anx,idm);
 		dmat* dmr;
 		dmat* dm;
-		if(parms->dm[idm].iastrokescale){ //convert dm to voltage
-			dm=dinterp1(P(parms->dm[idm].iastrokescale,0), 0, P(dmcmd,idm), NAN);
+		if(parms->dm[idm].strokescale){ //convert dm to voltage
+			dm=dinterp1(P(parms->dm[idm].strokescale,0), 0, P(dmcmd,idm), NAN);
 			iastroke=parms->dm[idm].iastroke;//voltage.
 		} else{
 			dm=P(dmcmd,idm);
@@ -223,8 +223,8 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		if(!parms->fit.square){//copy data back
 			loc_extract(P(simu->dmreal,idm), P(recon->aloc,idm), P(simu->dmrealsq,idm));
 		}
-		if(parms->dm[idm].iastrokescale){//convert back to opd
-			dmat* dm2=dinterp1(P(parms->dm[idm].iastrokescale,1), 0, dm, NAN);
+		if(parms->dm[idm].strokescale){//convert back to opd
+			dmat* dm2=dinterp1(P(parms->dm[idm].strokescale,1), 0, dm, NAN);
 			dcp(&P(dmcmd,idm), dm2);
 			dfree(dm); dfree(dm2);
 		}
@@ -377,13 +377,16 @@ static void filter_cl(sim_t* simu){
 	//Need to clip
 	if(parms->sim.dmclip||parms->sim.dmclipia||recon->actstuck){
 		int feedback=(parms->sim.dmclip||parms->sim.dmclipia)||(recon->actstuck&&parms->dbg.recon_stuck);
+		if(feedback){
+			dcellcp(&simu->dmtmp2, simu->dmcmd);
+		}
 		if(parms->sim.dmclip) clipdm(simu, simu->dmcmd);
 		if(parms->sim.dmclipia) clipdm_ia(simu, simu->dmcmd);
 		if(recon->actstuck&&parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
 		if(feedback){
-			dcelladd(&simu->dmtmp, 1, simu->dmcmd, -1); //find what is clipped
-			servo_add(simu->dmint, simu->dmtmp, -1);//remove from integrator (anti wind up)
-			dcelladd(&simu->dmpsol, 1, simu->dmtmp, -1);//remove from dmpsol.
+			dcelladd(&simu->dmtmp2, 1, simu->dmcmd, -1); //find what is clipped
+			servo_add(simu->dmint,     simu->dmtmp2, -1);//remove from integrator (anti wind up)
+			dcelladd(&simu->dmpsol, 1, simu->dmtmp2, -1);//remove from dmpsol.
 		}
 		if(recon->actstuck&&!parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
 	}
@@ -515,9 +518,9 @@ static void filter_ol(sim_t* simu){
 	}
 	//Extrapolate to edge actuators
 	if(simu->recon->actinterp&&!parms->recon.modal){
-		dcellcp(&simu->dmtmp, simu->dmcmd);
+		dcellcp(&simu->dmtmp2, simu->dmcmd);
 		dcellzero(simu->dmcmd);
-		dspcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
+		dspcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp2, "nn", 1);
 	}
 	if(simu->ttmreal){
 		ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);

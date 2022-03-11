@@ -545,14 +545,14 @@ int readcfg_peek_n(const char* format, ...){
 	int count=0;
 	if(quote&&quote<endptr){/*this is string array */
 		char** ret=NULL;
-		count=readstr_strarr(&ret, 0, sdata);
+		count=readstr_strarr(&ret, 0, 0, sdata);
 		for(int i=0; i<count; i++){
 			free(ret[i]);
 		}
 		free(ret);
 	} else{/*this is numerical array */
 		void* ret;
-		count=readstr_numarr(&ret, 0, NULL, NULL, M_REAL, sdata);
+		count=readstr_numarr(&ret, NULL, NULL, 0, 0, M_REAL, sdata);
 		free(ret);
 	}
 	return count;
@@ -582,55 +582,23 @@ int readcfg_peek_override(const char* format, ...){
  */
 char* readcfg_str(const char* format, ...){
 	format2key;
-	char* data;
+	char* data=NULL;
 	const STORE_T* store=getrecord(key, 1);
-	if(store){
-		const char* sdata=store->data;
-		if(sdata&&strlen(sdata)>0){
-			data=strextract(sdata);
-		} else{
-			data=NULL;
-		}
-	} else{
-		error("key '%s' not found\n", key);
-		data=NULL;
+	const char* sdata=store->data;
+	if(sdata&&strlen(sdata)>0){
+		data=strextract(sdata);
 	}
 	return data;
 }
-/**
-   Obtain a string array from the key.
- */
-int readcfg_strarr(char*** res, const char* format, ...){
-	format2key;
-	*res=NULL;/*initialize */
-	const STORE_T* store=getrecord(key, 1);
-	if(!store){/*record not found. */
-		error("key '%s' not found\n", key);
-		return 0;
-	} else{
-		const char* sdata=store->data;
-		if(!sdata){/*record is empty. */
-			return 0;
-		}
-		return readstr_strarr(res, 0, sdata);
-	}
-}
 
-/**
-   Read integer array
-*/
-int readcfg_intarr(int** ret, const char* format, ...){
-	format2key;
-	return readstr_numarr((void**)ret, 0, NULL, NULL, M_INT, getrecord(key, 1)->data);
-}
 /**
    Read as an lmat.
  */
-lmat* readcfg_lmat_do(int n, char* key){
+lmat *readcfg_lmat(int n, int relax, const char *format, ...){
+	format2key;
 	long* val=NULL;
-	//long **ret=&val;
 	int nx, ny;
-	readstr_numarr((void**)&val, n, &nx, &ny, M_LONG, getrecord(key, 1)->data);
+	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, getrecord(key, 1)->data);
 	lmat* res=NULL;
 	if(!nx||!ny){
 		free(val); val=NULL;
@@ -640,71 +608,38 @@ lmat* readcfg_lmat_do(int n, char* key){
 	return res;
 }
 /**
-   Read as an lmat.
+   Read as a dmat. It can be a file name or an array.
  */
-lmat* readcfg_lmat(const char* format, ...){
-	format2key;
-	return readcfg_lmat_do(0, key);
-}
-/**
-   Read as an lmat. Exactly n numbers if n>0
- */
-lmat* readcfg_lmat_n(int n, const char* format, ...){
-	format2key;
-	lmat* out=readcfg_lmat_do(n, key);
-	int nread=out?(NX(out)*NY(out)):0;
-	if(n!=0&&nread!=n){
-		error("Need %d elements, got %d\n", n, nread);
-	}
-	return out;
-}
-/**
-   Read as an lmat. A max of n numbers
- */
-lmat* readcfg_lmat_nmax(int n, const char* format, ...){
-	format2key;
-	lmat* out=readcfg_lmat_do(n, key);
-	long nread=out?(NX(out)*NY(out)):0;
-	if(nread<=1){
-		if(!out){
-			out=lnew(n,1);
-		}else{
-			lresize(out, n, 1);
-		}
-		if(nread==1){
-			for(int i=1; i<n; i++){
-				P(out,i)=P(out,0);
-			}
-		}
-	} else if(nread!=n){
-		print_backtrace();
-		error("Need %d elements, got %ld\n", n, nread);
-	}
-	return out;
-}
-/**
-   Read real array
-*/
-int readcfg_dblarr(real** ret, const char* format, ...){
-	format2key;
-	return readstr_numarr((void**)ret, 0, NULL, NULL, M_REAL, getrecord(key, 1)->data);
-}
-
-dmat* readstr_dmat_n(int n, const char* str){
+dmat* readstr_dmat(int n, ///[in]Number of elements requested
+				int relax, ///[in]1: allow fewer values and fill the rest
+				const char *str///[in]input
+				){
 	if(!str){
-		return 0;
+		return NULL;
 	}
 	dmat* res=NULL;
 	char* fn=strextract(str);
-	if(check_suffix(fn, ".gz")||check_suffix(fn, ".bin")||check_suffix(fn, ".fits")){
+	if(check_suffix(fn, ".bin.gz")||check_suffix(fn, ".fits.gz")||
+		check_suffix(fn, ".bin")||check_suffix(fn, ".fits")){
 		if(!(res=dread("%s", fn))){
 			error("Read %s failed\n", fn);
+		}
+		if(n>0 && PN(res)!=n){
+			if((relax==2&& n>0) || (relax==1 && n==1)){//resize and fill remaining values
+				long n2=PN(res);
+				dresize(res, n, 1);
+				for(long i=n2; i<n; i++){
+					P(res,i)=P(res,n2-1);
+				}
+			}else{
+				error("{%s}: need %d values, got %ld\n", fn, n, PN(res));
+			}
 		}
 	} else{
 		int nx, ny;
 		real* val=NULL;
 		real** pval=&val;
-		readstr_numarr((void**)pval, n, &nx, &ny, M_REAL, fn);
+		readstr_numarr((void**)pval, &nx, &ny, n, relax, M_REAL, fn);
 		if(!nx||!ny){
 			free(val); val=NULL;
 		}else{
@@ -714,128 +649,37 @@ dmat* readstr_dmat_n(int n, const char* str){
 	free(fn);
 	return res;
 }
-/**
-   Read as a dmat. It can be a file name or an array.
- */
-dmat* readstr_dmat(const char* str){
-	return readstr_dmat_n(0, str);
-}
-/**
-   Read as a dmat. It can be a file name or an array.
- */
-dmat* readcfg_dmat(const char* format, ...){
-	format2key;
-	char* str=getrecord(key, 1)->data;
-	return readstr_dmat_n(0, str);
-}
 
 /**
    Read as a dmat. It can be a file name or an array.
  */
-dmat* readcfg_dmat_n(int n, const char* format, ...){
+dmat* readcfg_dmat(int n, int relax, const char* format, ...){
 	format2key;
-	char* str=getrecord(key, 1)->data;
-	dmat* out=readstr_dmat_n(n, str);
-	long nread=out?(NX(out)*NY(out)):0;
-	if(n!=0&&nread!=n){
-		error("Need %d elements, got %ld\n", n, nread);
-	}
-	return out;
+	return readstr_dmat(n, relax, getrecord(key, 1)->data);
 }
-/**
-   Read as a dmat. It can be a file name or an array.
- */
-dmat* readcfg_dmat_nmax(int n, const char* format, ...){
-	format2key;
-	char* str=getrecord(key, 1)->data;
-	dmat* out=readstr_dmat_n(n, str);
-	long nread=out?(NX(out)*NY(out)):0;
-	if(nread<=1){
-		if(!out){
-			out=dnew(n,1);
-		}else{
-			dresize(out, n, 1);
-		}
-		if(nread==1){
-			dset(out, P(out,0));
-		}
-	} else if(nread!=0&&nread!=n){
-		error("Need %d elements, got %ld\n", n, nread);
-	}
-	return out;
-}
+
 /**
    Read string array of len elements
 */
-void readcfg_strarr_n(char*** ret, int len, const char* format, ...){
+int readcfg_strarr(char*** ret, int len, int relax, const char* format, ...){
 	format2key;
-	int len2;
-	const char* val=getrecord(key, 1)->data;
-	if(len!=(len2=readstr_strarr((char***)ret, len, val))){
-		error("%s: Require %d elements, but got %d from %s\n", key, len, len2, val);
-	}
+	return readstr_strarr((char ***)ret, len, relax, getrecord(key, 1)->data);
 }
+
 /**
-   Read str array of upto len elements
+   Read integer array of len elements
 */
-void readcfg_strarr_nmax(char*** ret, int len, const char* format, ...){
+int readcfg_intarr(int** ret, int len, int relax, const char* format, ...){
 	format2key;
-	int len2=readstr_strarr((char***)ret, len, getrecord(key, 1)->data);
-	if(len2==1){
-		for(int i=1; i<len; i++){
-			(*ret)[i]=(*ret)[0]?strdup((*ret)[0]):NULL;
-		}
-	} else if(len2!=0&&len2!=len){
-		error("%s=%s: Require %d elements, but got %d\n", key, getrecord(key, 0)->data, len, len2);
-	}
+	return readstr_numarr((void**)ret,  NULL, NULL, len, relax,  M_INT, getrecord(key, 1)->data);
+
 }
 /**
    Read integer array of len elements
 */
-void readcfg_intarr_n(int** ret, int len, const char* format, ...){
+int readcfg_dblarr(real **ret, int len, int relax, const char *format, ...){
 	format2key;
-	int len2;
-	if(len!=(len2=readstr_numarr((void**)ret, len, NULL, NULL, M_INT, getrecord(key, 1)->data))){
-		error("%s=%s: Need %d, got %d integers\n", key, getrecord(key, 0)->data, len, len2);
-	}
-}
-/**
-   Read integer array of maximum of len elements
-*/
-void readcfg_intarr_nmax(int** ret, int len, const char* format, ...){
-	format2key;
-	int len2=readstr_numarr((void**)ret, len, NULL, NULL, M_INT, getrecord(key, 1)->data);
-	if(len2==1){
-		for(int i=1; i<len; i++){
-			(*ret)[i]=(*ret)[0];
-		}
-	} else if(len2!=0&&len2!=len){
-		error("%s=%s: Require %d numbers, but got %d\n", key, getrecord(key, 0)->data, len, len2);
-	}
-}
-/**
-   Read real array of len elements
-*/
-void readcfg_dblarr_n(real** ret, int len, const char* format, ...){
-	format2key;
-	int len2;
-	if(len!=(len2=readstr_numarr((void**)ret, len, NULL, NULL, M_REAL, getrecord(key, 1)->data))){
-		error("%s=%s: Need %d, got %d real\n", key, getrecord(key, 0)->data, len, len2);
-	}
-}
-/**
-   Read real array of len elements
-*/
-void readcfg_dblarr_nmax(real** ret, int len, const char* format, ...){
-	format2key;
-	int len2=readstr_numarr((void**)ret, len, NULL, NULL, M_REAL, getrecord(key, 1)->data);
-	if(len2==1){
-		for(int i=1; i<len; i++){
-			(*ret)[i]=(*ret)[0];
-		}
-	} else if(len2!=0&&len2!=len){
-		error("%s=%s: Require %d numbers, but got %d\n", key, getrecord(key, 0)->data, len, len2);
-	}
+	return readstr_numarr((void **)ret, NULL, NULL, len, relax, M_REAL, getrecord(key, 1)->data);
 }
 /**
    Read integer
