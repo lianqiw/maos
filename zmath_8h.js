@@ -196,7 +196,7 @@ var zmath_8h =
     [ "zspref", "zmath_8h.html#ae9835e030e811361e4a57d5113923f87", null ],
     [ "zspdup", "zmath_8h.html#a99cbaab0ecd35f7fd63725bb39d8adf3", null ],
     [ "zspnew2", "zmath_8h.html#a238b74157821eef2202096d0f1786bf4", null ],
-    [ "zspnewrandu", "zmath_8h.html#ac9dd5e21207d609229ebf918208e883b", null ],
+    [ "zspnewrandu", "zmath_8h.html#aa2564c4eeb80e31a79e4e878f8c0ff93", null ],
     [ "zspsetnzmax", "zmath_8h.html#a7a1bb3babb4d4fd946b6b3e4003baca7", null ],
     [ "zsp_cast", "zmath_8h.html#ac7eacdd5e82eaf34963f641d910659d4", null ],
     [ "zspfree_do", "zmath_8h.html#ad28b46d2a2dbcf3ec0c8734f828c4bd9", null ],

@@ -1785,7 +1785,7 @@ guard</td>
 <td class="fieldname">
 stroke</td>
 <td class="fielddoc">
-<p>Stroke of DM (surface). OPD goes to \(\pm\) stroke. array: per actuator$ </p>
+<p>Stroke of DM (surface). OPD goes to \(\pm\) stroke. nactx2 array: min and max per actuator$ </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ab49b483f1b6a14f8be562605833c9522"></a>real</td>
@@ -1795,18 +1795,11 @@ iastroke</td>
 <p>Inter actuator stroke (surface) </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ae2a83237ea5088dc111b383e89d8c5a8"></a>char *</td>
+<a id="ad6415fdca79642e38adfb6f1116a8552"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-iastrokefn</td>
+strokescale</td>
 <td class="fielddoc">
 <p>describes polynomials that convert opd to voltage (first cell), and voltage to opd (second cell). The two operations has to be strict inverse of each other </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a352b2228a81aac8558e2ceb4c2eb4e17"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
-<td class="fieldname">
-iastrokescale</td>
-<td class="fielddoc">
-<p>Input from iastrokefn </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af81a20c35a750e761d550ba5974ba8b6"></a>real</td>

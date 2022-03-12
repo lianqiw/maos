@@ -103,19 +103,12 @@ $(document).ready(function(){initNavTree('readstr_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ac4e8a5fd8356383ad30696d4140fa47f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#ac4e8a5fd8356383ad30696d4140fa47f">readstr_strarr</a> (char ***res, int len, const char *sdata)</td></tr>
-<tr class="separator:ac4e8a5fd8356383ad30696d4140fa47f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e912c6f68d757a3b60c53e4d1c70cfb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a1e912c6f68d757a3b60c53e4d1c70cfb">readstr_strarr</a> (char ***res, int len, int relax, const char *sdata)</td></tr>
+<tr class="separator:a1e912c6f68d757a3b60c53e4d1c70cfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f23448c252708e467790d7edf1d0fd0"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a0f23448c252708e467790d7edf1d0fd0">readstr_num</a> (const char *data, char **endptr0)</td></tr>
 <tr class="separator:a0f23448c252708e467790d7edf1d0fd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a038cb517bca7318b353919bf81361f28"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a038cb517bca7318b353919bf81361f28">readstr_numarr</a> (void **ret, int len, int *nrow0, int *ncol0, int type, const char *data)</td></tr>
-<tr class="separator:a038cb517bca7318b353919bf81361f28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d2ba322d0c3af31fcc73d27b49376ac"><td class="memItemLeft" align="right" valign="top"><a id="a5d2ba322d0c3af31fcc73d27b49376ac"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (int **ret, int len, const char *data)</td></tr>
-<tr class="separator:a5d2ba322d0c3af31fcc73d27b49376ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8708b4c5638fbcc7cd84373027f4869"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aa8708b4c5638fbcc7cd84373027f4869">readstr_intarr_nmax</a> (int **ret, int len, const char *data)</td></tr>
-<tr class="separator:aa8708b4c5638fbcc7cd84373027f4869"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d29469601ed39c1cc611626f89d27d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a9d29469601ed39c1cc611626f89d27d4">readstr_intarr_relax</a> (int **ret, int len, const char *data)</td></tr>
-<tr class="separator:a9d29469601ed39c1cc611626f89d27d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f43dbd58ddc961aabd03fb7b0167919"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a8f43dbd58ddc961aabd03fb7b0167919">readstr_numarr</a> (void **ret, int *nrow0, int *ncol0, int len, int relax, int type, const char *data)</td></tr>
+<tr class="separator:a8f43dbd58ddc961aabd03fb7b0167919"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa740d6879e4af2bdd01f9624ef206fe3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aa740d6879e4af2bdd01f9624ef206fe3">trim_string</a> (const char **pheader, const char **pend)</td></tr>
 <tr class="separator:aa740d6879e4af2bdd01f9624ef206fe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf3e8d275430f33c2cd8262fac88cac8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#adf3e8d275430f33c2cd8262fac88cac8">search_header</a> (const char *header, const char *key)</td></tr>
@@ -130,8 +123,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Group all routines that are used to parse values from string that contain key=value pairs. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="ac4e8a5fd8356383ad30696d4140fa47f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac4e8a5fd8356383ad30696d4140fa47f">&#9670;&nbsp;</a></span>readstr_strarr()</h2>
+<a id="a1e912c6f68d757a3b60c53e4d1c70cfb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e912c6f68d757a3b60c53e4d1c70cfb">&#9670;&nbsp;</a></span>readstr_strarr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -151,6 +144,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>relax</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>sdata</em>&#160;</td>
         </tr>
@@ -165,7 +164,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>Result </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Length of array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>max number f values to read </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted. If true, will copy from last. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">sdata</td><td>Input string </td></tr>
   </table>
   </dd>
@@ -209,8 +209,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
 
 </div>
 </div>
-<a id="a038cb517bca7318b353919bf81361f28"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a038cb517bca7318b353919bf81361f28">&#9670;&nbsp;</a></span>readstr_numarr()</h2>
+<a id="a8f43dbd58ddc961aabd03fb7b0167919"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f43dbd58ddc961aabd03fb7b0167919">&#9670;&nbsp;</a></span>readstr_numarr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -224,12 +224,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>len</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>nrow0</em>, </td>
         </tr>
@@ -238,6 +232,18 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
           <td></td>
           <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>ncol0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>relax</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -260,99 +266,15 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
 </div><div class="memdoc">
 <p>Read numerical array from a string. if len is nonzero, <em>ret should be already allocated. NOTICe that continuous numbers are readin as column vector, not row vector(as in matlab) Can read in the following formats: [1 2 3] as 3 rows, 1 col [1 2 3] in memory [1 2 3]+2 as [3 4 5] in memory 2</em>[1 2 3] or [1 2 3]*2 as [2 4 6] in memory [1 2 3]/2 as [0.5 1 1.5] in memory 2/[1 2 3] as [2/1 2/2 2/3] in memory 2/[1 2 3]*2+1 as [5 3 7/3] in memory</p>
 <p>2-d arrays are groups as column vecotrs (in contrast to matlab that uses rows); semi-colon is used to separate columns. [1 2 3; 4 5 6] is 2 d array, 3 rows, 2 columns. In memory is stored as [1 2 3 4 5 6] transpose is supported: [1 2 3; 4 5 6]' is 2 d array, 2 rows, 3 columns. In memory is stored as [1 4 2 5 3 6]</p>
-<dl class="section return"><dt>Returns</dt><dd>Number of values actually read. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of values actually read not including duplicated when relax is set. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">ret</td><td>Result </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">nrow0</td><td>Number of rows (nx) </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">ncol0</td><td>Number of columns (ny) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted. If true, will copy from last. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Data type </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="aa8708b4c5638fbcc7cd84373027f4869"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa8708b4c5638fbcc7cd84373027f4869">&#9670;&nbsp;</a></span>readstr_intarr_nmax()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void readstr_intarr_nmax </td>
-          <td>(</td>
-          <td class="paramtype">int **&#160;</td>
-          <td class="paramname"><em>ret</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>len</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>data</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Read an integer array. Duplicate if only one number is present. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">ret</td><td>Result </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a9d29469601ed39c1cc611626f89d27d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9d29469601ed39c1cc611626f89d27d4">&#9670;&nbsp;</a></span>readstr_intarr_relax()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void readstr_intarr_relax </td>
-          <td>(</td>
-          <td class="paramtype">int **&#160;</td>
-          <td class="paramname"><em>ret</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>len</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>data</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">ret</td><td>Result </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string </td></tr>
   </table>
   </dd>

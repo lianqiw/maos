@@ -56,6 +56,7 @@ var searchData=
   ['dmreal',['dmreal',['../classcudata__t.html#ad9bad0392b15a8e1f189e0ee768f7952',1,'cudata_t::dmreal()'],['../maos_2types_8h.html#a135185304228805d95443e066f1d3a08',1,'sim_t::dmreal()']]],
   ['dmrealsq',['dmrealsq',['../maos_2types_8h.html#a89d9de13974b3201315e4907b13f4485',1,'sim_t']]],
   ['dmtmp',['dmtmp',['../maos_2types_8h.html#a9d7b0ba4afd9d1cf333f8ec2485192db',1,'sim_t']]],
+  ['dmtmp2',['dmtmp2',['../maos_2types_8h.html#a43496769569c86d9e1df05a7966911b5',1,'sim_t']]],
   ['dmtt',['DMTT',['../maos_2types_8h.html#a9db32cf2a1625f48a9b6df5feff92602',1,'recon_t']]],
   ['do_5fphy',['do_phy',['../maos_2types_8h.html#a672810f440e4e76c053bf9ad1fbc9624',1,'wfsflags_t']]],
   ['do_5fpistat',['do_pistat',['../maos_2types_8h.html#a6822d60f11dc7860d7b63095a988fbd9',1,'wfsflags_t']]],

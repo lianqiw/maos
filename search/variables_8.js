@@ -9,8 +9,6 @@ var searchData=
   ['i0sumsum',['i0sumsum',['../classcuwfs__t.html#a4300695719c53b84704f7198999596fc',1,'cuwfs_t::i0sumsum()'],['../maos_2types_8h.html#aed12a3eca32089c23f0b4b83e2dfd54e',1,'intstat_t::i0sumsum()']]],
   ['iac',['iac',['../parms_8h.html#a6172520813e1bd7d0a7464cb0c6dd3fa',1,'dm_cfg_t::iac()'],['../parms_8h.html#acfff41365c504a270316bfbf61158c16',1,'tomo_cfg_t::iac()'],['../parms_8h.html#a4ceaea645c5a5df203140e4e3af96fb2',1,'moao_cfg_t::iac()'],['../type_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1',1,'map_t::iac()']]],
   ['iastroke',['iastroke',['../parms_8h.html#ab49b483f1b6a14f8be562605833c9522',1,'dm_cfg_t']]],
-  ['iastrokefn',['iastrokefn',['../parms_8h.html#ae2a83237ea5088dc111b383e89d8c5a8',1,'dm_cfg_t']]],
-  ['iastrokescale',['iastrokescale',['../parms_8h.html#a352b2228a81aac8558e2ceb4c2eb4e17',1,'dm_cfg_t']]],
   ['icol',['icol',['../mkdtf_8h.html#a951b28fa012fe5115c9edc6dedc05d4f',1,'etf_t']]],
   ['id',['id',['../type_8h.html#a8de9ad2bda53e2da59969024fbc3660f',1,'cell']]],
   ['idealevl',['idealevl',['../parms_8h.html#af351e09d239a171f9d2e8b876f4daccc',1,'sim_cfg_t']]],

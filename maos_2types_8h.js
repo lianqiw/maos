@@ -416,6 +416,7 @@ var maos_2types_8h =
       [ "resdither", "maos_2types_8h.html#a15a0fb4bca39bccb08cae37081b6f48f", null ],
       [ "dmpsol", "maos_2types_8h.html#ac189e162b7ee3e5f8f35a870fd74a501", null ],
       [ "dmtmp", "maos_2types_8h.html#a9d7b0ba4afd9d1cf333f8ec2485192db", null ],
+      [ "dmtmp2", "maos_2types_8h.html#a43496769569c86d9e1df05a7966911b5", null ],
       [ "dmcmd", "maos_2types_8h.html#a369952c063dea869678bf83ae0239789", null ],
       [ "dmreal", "maos_2types_8h.html#a135185304228805d95443e066f1d3a08", null ],
       [ "ttmreal", "maos_2types_8h.html#a722aacf8de6afe7683e6293a293c4bac", null ],

@@ -206,7 +206,7 @@ var searchData=
   ['dspnew',['dspnew',['../dmath_8h.html#ae26564191f570aa9079ad9ab980f9b4e',1,'dtmp.c']]],
   ['dspnew2',['dspnew2',['../dmath_8h.html#af7d8bce18517389d5c155b5c655ca6ac',1,'dtmp.c']]],
   ['dspnewdiag',['dspnewdiag',['../dmath_8h.html#ad7f22b2da4013c229e4f2d353a3158e8',1,'dtmp.c']]],
-  ['dspnewrandu',['dspnewrandu',['../dmath_8h.html#a840cf2b1d084bdc1c7912302652c8aff',1,'dtmp.c']]],
+  ['dspnewrandu',['dspnewrandu',['../dmath_8h.html#a5c6d0e8901848aecd790ee361dced060',1,'dtmp.c']]],
   ['dspperm',['dspperm',['../dmath_8h.html#a246700e98a5d709e25ab656f35d232cf',1,'dtmp.c']]],
   ['dspreaddata',['dspreaddata',['../dmath_8h.html#a2ba9dc8e8213b56b1395c8a63313774f',1,'dtmp.c']]],
   ['dspref',['dspref',['../dmath_8h.html#a98a25b63ca4713a784053360c4c38ac0',1,'dtmp.c']]],

@@ -55,6 +55,7 @@ var searchData=
   ['step_5fhi',['step_hi',['../parms_8h.html#a321f3d5b71b7f3cf59af6fe8c97d0c8e',1,'parms_t']]],
   ['step_5flo',['step_lo',['../parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf',1,'parms_t']]],
   ['stroke',['stroke',['../parms_8h.html#ab8b2c621cd08d7b33b6856e7c0b0baaf',1,'dm_cfg_t::stroke()'],['../parms_8h.html#a8b6f8f507486a91da6777f2915f137fd',1,'moao_cfg_t::stroke()']]],
+  ['strokescale',['strokescale',['../parms_8h.html#ad6415fdca79642e38adfb6f1116a8552',1,'dm_cfg_t']]],
   ['sumamp',['sumamp',['../maos_2types_8h.html#ab3f64c65fd8e4563771c922cc8ed2f37',1,'powfs_t']]],
   ['sumamp2',['sumamp2',['../maos_2types_8h.html#ae4b26f5c53393308db9f99f9369ae258',1,'aper_t::sumamp2()'],['../maos_2types_8h.html#a94883ef7919c01b79ed74f9b80442cc1',1,'powfs_t::sumamp2()']]],
   ['surf',['surf',['../parms_8h.html#ad7305af35ee2d5d669c0bbb60d7e1bcc',1,'parms_t::surf()'],['../maos_2types_8h.html#abd70a079d3a7b338115527764ebc9c78',1,'sim_t::surf()']]],

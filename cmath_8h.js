@@ -196,7 +196,7 @@ var cmath_8h =
     [ "cspref", "cmath_8h.html#a80f3f0a59125204877db212a85e8c6c7", null ],
     [ "cspdup", "cmath_8h.html#a6f0c670abe3c96cce9afb0f0e733b350", null ],
     [ "cspnew2", "cmath_8h.html#aba26181f356f45e0c66bb677a6c32698", null ],
-    [ "cspnewrandu", "cmath_8h.html#a5ca77a4d7595581a18143651fd1693c3", null ],
+    [ "cspnewrandu", "cmath_8h.html#aaa6fd0b674c3ed1f5ff184cc26e728e0", null ],
     [ "cspsetnzmax", "cmath_8h.html#a0f62850af8a0a48f2cc063bf95df8856", null ],
     [ "csp_cast", "cmath_8h.html#a6392099032675eeb32200d1c36154a5e", null ],
     [ "cspfree_do", "cmath_8h.html#a4ae0a8c3586b6bc85cc273b3217b2db4", null ],

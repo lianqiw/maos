@@ -342,6 +342,7 @@ var searchData=
   ['stream_5ft',['stream_t',['../classstream__t.html',1,'']]],
   ['strnadd',['strnadd',['../sys_2misc_8h.html#a90dc0551d4782f8c65972a6ad75f3be6',1,'misc.c']]],
   ['stroke',['stroke',['../parms_8h.html#ab8b2c621cd08d7b33b6856e7c0b0baaf',1,'dm_cfg_t::stroke()'],['../parms_8h.html#a8b6f8f507486a91da6777f2915f137fd',1,'moao_cfg_t::stroke()']]],
+  ['strokescale',['strokescale',['../parms_8h.html#ad6415fdca79642e38adfb6f1116a8552',1,'dm_cfg_t']]],
   ['strtime_5fpid',['strtime_pid',['../sys_2misc_8h.html#a013143354b1e7e65954ffb2b94e49b1b',1,'misc.c']]],
   ['stwritefd',['stwritefd',['../sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f',1,'sockio.c']]],
   ['stwritestr',['stwritestr',['../sockio_8h.html#ac252e98eb123fd187c8d6b0ec247867d',1,'sockio.c']]],

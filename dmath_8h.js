@@ -178,7 +178,7 @@ var dmath_8h =
     [ "dspref", "dmath_8h.html#a98a25b63ca4713a784053360c4c38ac0", null ],
     [ "dspdup", "dmath_8h.html#a6b5d0810af2c12e7a53415611511867e", null ],
     [ "dspnew2", "dmath_8h.html#af7d8bce18517389d5c155b5c655ca6ac", null ],
-    [ "dspnewrandu", "dmath_8h.html#a840cf2b1d084bdc1c7912302652c8aff", null ],
+    [ "dspnewrandu", "dmath_8h.html#a5c6d0e8901848aecd790ee361dced060", null ],
     [ "dspsetnzmax", "dmath_8h.html#a67379990f0901126143cebeb9fbe503e", null ],
     [ "dsp_cast", "dmath_8h.html#a9d3ee55c0f9df9341ef740f7d3d54433", null ],
     [ "dspfree_do", "dmath_8h.html#abc2d1cc9832f180b54dd3a0ca8d4771a", null ],
