@@ -463,7 +463,8 @@ static int check_figfn(int ifd, const char* fig, const char* fn, int add){
 	}
 	int ans=0;//default is false
 	if(!found){//page is not found
-		ans=3; //draw without test lock
+		//ans=3; //draw without test lock
+		plot_empty(sock_draws[ifd].fd, fig, fn);
 	} else{//page is found
 		char** figfn=sock_draws[ifd].figfn;
 		if(!mystrcmp(figfn[0], fig)){
@@ -521,6 +522,29 @@ static int count=0;
 #define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, (nlen)+sizeof(int)) || fwriteint(fbuf, cmd))
 #define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, strlen(str)+1); FWRITESTR(str);}
 #define FWRITECMDARR(cmd,p,len) if((len)>0){FWRITECMD(cmd, len); FWRITEARR(p,len);}
+//Plot an empty page
+int plot_empty(int sock_draw, const char *fig, const char *fn){
+	char *buf=0;
+	int ans=0;
+	size_t bufsize=0;
+	FILE *fbuf=open_memstream(&buf,&bufsize);
+	int zeros[4]={0,0,0,0};
+	FWRITECMDARR(DRAW_FRAME,zeros,4*sizeof(int));
+	FWRITECMD(DRAW_START,0);
+	FWRITECMD(DRAW_FLOAT,sizeof(int));FWRITEINT(sizeof(real));
+	FWRITECMDSTR(DRAW_FIG,fig);
+	FWRITECMDSTR(DRAW_NAME,fn);
+	FWRITECMD(DRAW_END,0);
+end2:
+	fclose(fbuf);
+	if(stwrite(sock_draw,buf,bufsize)){
+		info("write to %d failed: %s\n",sock_draw,strerror(errno));
+		ans=-1;
+		draw_remove(sock_draw,0);
+	}
+	free(buf);
+	return ans;
+}
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
@@ -570,76 +594,75 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(real));
 			FWRITECMDSTR(DRAW_FIG, fig);
 			FWRITECMDSTR(DRAW_NAME, fn);
-			if(needed!=3){//current page
-				if(loc){/*there are points to plot. */
-					for(int ig=0; ig<ngroup; ig++){
-						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*loc[ig]->nloc*2);
-						FWRITEINT(loc[ig]->nloc);
-						FWRITEINT(2);
-						FWRITEINT(1);
-						FWRITEARR(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
-						FWRITEARR(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
-					}
-					if(dc){
-						warning("both loc and dc are specified, ignore dc.\n");
-					}
-				} else if(dc){
-					if(ngroup>PN(dc)||ngroup==0){
-						ngroup=PN(dc);
-					}
-					for(int ig=0; ig<ngroup; ig++){
-						dmat* p=P(dc, ig);
-						uint32_t nlen=sizeof(real)*PN(p);
-						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen);
-						FWRITEINT(NX(p));
-						FWRITEINT(NY(p));
-						FWRITEINT(0);
-						if(p){
-							FWRITEARR(P(p), nlen);
-						}
-					}
-				} else{
-					error("Invalid Usage\n");
+			if(loc){/*there are points to plot. */
+				for(int ig=0; ig<ngroup; ig++){
+					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*loc[ig]->nloc*2);
+					FWRITEINT(loc[ig]->nloc);
+					FWRITEINT(2);
+					FWRITEINT(1);
+					FWRITEARR(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
+					FWRITEARR(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
 				}
-				if(style){
-					FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*ngroup);
-					FWRITEINT(ngroup);
-					FWRITEARR(style, sizeof(uint32_t)*ngroup);
+				if(dc){
+					warning("both loc and dc are specified, ignore dc.\n");
 				}
-				if(cir){
-					if(NX(cir)!=4){
-						error("Cir should have 4 rows\n");
-					}
-					FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*PN(cir));
-					FWRITEINT(NY(cir));
-					FWRITEARR(P(cir), sizeof(real)*PN(cir));
+			} else if(dc){
+				if(ngroup>PN(dc)||ngroup==0){
+					ngroup=PN(dc);
 				}
-				if(limit){/*xmin,xmax,ymin,ymax */
-					FWRITECMDARR(DRAW_LIMIT, limit, sizeof(real)*4);
-				}
-				if(xylog){
-					FWRITECMDARR(DRAW_XYLOG, xylog, sizeof(char)*2);
-				}
-				/*if(format){
-					FWRITECMDSTR(DRAW_NAME, fn);
-				}*/
-				if(legend){
-					int nlen=0;
-					for(int ig=0; ig<ngroup; ig++){
-						if(legend[ig]){
-							nlen+=strlen(legend[ig])+1;
-						}
-					}
-					FWRITECMD(DRAW_LEGEND, nlen);
-					for(int ig=0; ig<ngroup; ig++){
-						FWRITESTR(legend[ig]);
+				for(int ig=0; ig<ngroup; ig++){
+					dmat* p=P(dc, ig);
+					uint32_t nlen=sizeof(real)*PN(p);
+					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen);
+					FWRITEINT(NX(p));
+					FWRITEINT(NY(p));
+					FWRITEINT(0);
+					if(p){
+						FWRITEARR(P(p), nlen);
 					}
 				}
-
-				FWRITECMDSTR(DRAW_TITLE, title);
-				FWRITECMDSTR(DRAW_XLABEL, xlabel);
-				FWRITECMDSTR(DRAW_YLABEL, ylabel);
+			} else{
+				error("Invalid Usage\n");
 			}
+			if(style){
+				FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*ngroup);
+				FWRITEINT(ngroup);
+				FWRITEARR(style, sizeof(uint32_t)*ngroup);
+			}
+			if(cir){
+				if(NX(cir)!=4){
+					error("Cir should have 4 rows\n");
+				}
+				FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*PN(cir));
+				FWRITEINT(NY(cir));
+				FWRITEARR(P(cir), sizeof(real)*PN(cir));
+			}
+			if(limit){/*xmin,xmax,ymin,ymax */
+				FWRITECMDARR(DRAW_LIMIT, limit, sizeof(real)*4);
+			}
+			if(xylog){
+				FWRITECMDARR(DRAW_XYLOG, xylog, sizeof(char)*2);
+			}
+			/*if(format){
+				FWRITECMDSTR(DRAW_NAME, fn);
+			}*/
+			if(legend){
+				int nlen=0;
+				for(int ig=0; ig<ngroup; ig++){
+					if(legend[ig]){
+						nlen+=strlen(legend[ig])+1;
+					}
+				}
+				FWRITECMD(DRAW_LEGEND, nlen);
+				for(int ig=0; ig<ngroup; ig++){
+					FWRITESTR(legend[ig]);
+				}
+			}
+
+			FWRITECMDSTR(DRAW_TITLE, title);
+			FWRITECMDSTR(DRAW_XLABEL, xlabel);
+			FWRITECMDSTR(DRAW_YLABEL, ylabel);
+		
 			FWRITECMD(DRAW_END, 0);
 end2:
 			fclose(fbuf);
@@ -752,25 +775,25 @@ static void* imagesc_do(imagesc_t* data){
 			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(dtype));
 			FWRITECMDSTR(DRAW_FIG, fig);
 			FWRITECMDSTR(DRAW_NAME, fn);
-			if(needed!=3){
-				size_t nlen=2*sizeof(int32_t)+sizeof(dtype)*nx*ny;
-				FWRITECMD(DRAW_DATA, nlen);
-				int32_t header[2];
-				header[0]=nx;
-				header[1]=ny;
-				FWRITEARR(header, sizeof(int32_t)*2);
-				FWRITEARR(p, sizeof(dtype)*nx*ny);
-				if(zlim){
-					FWRITECMDARR(DRAW_ZLIM, zlim, sizeof(dtype)*2);
-				}
-				if(limit){/*xmin,xmax,ymin,ymax */
-					FWRITECMDARR(DRAW_LIMIT, limit, sizeof(dtype)*4);
-				}
-
-				FWRITECMDSTR(DRAW_TITLE, title);
-				FWRITECMDSTR(DRAW_XLABEL, xlabel);
-				FWRITECMDSTR(DRAW_YLABEL, ylabel);
+			
+			size_t nlen=2*sizeof(int32_t)+sizeof(dtype)*nx*ny;
+			FWRITECMD(DRAW_DATA, nlen);
+			int32_t header[2];
+			header[0]=nx;
+			header[1]=ny;
+			FWRITEARR(header, sizeof(int32_t)*2);
+			FWRITEARR(p, sizeof(dtype)*nx*ny);
+			if(zlim){
+				FWRITECMDARR(DRAW_ZLIM, zlim, sizeof(dtype)*2);
 			}
+			if(limit){/*xmin,xmax,ymin,ymax */
+				FWRITECMDARR(DRAW_LIMIT, limit, sizeof(dtype)*4);
+			}
+
+			FWRITECMDSTR(DRAW_TITLE, title);
+			FWRITECMDSTR(DRAW_XLABEL, xlabel);
+			FWRITECMDSTR(DRAW_YLABEL, ylabel);
+			
 			FWRITECMD(DRAW_END, 0);
 end2:
 			fclose(fbuf);
@@ -862,7 +885,6 @@ int imagesc(const char* fig, /**<Category of the figure*/
 		int ystep=(ny+MAXNX-1)/MAXNX;
 		int nx2=(nx)/xstep;
 		int ny2=(ny)/ystep;
-
 		P(data)=malloc(nx2*ny2*sizeof(dtype));
 		for(int iy=0; iy<ny2; iy++){
 			dtype* p2=P(data)+iy*nx2;

@@ -106,36 +106,38 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 	if(!parms->sim.dmclip) return;
 	for(int idm=0; idm<parms->ndm; idm++){
 		const int nact=P(dmcmd, idm)->nx;
+		int nclip=0;
 		if(NX(parms->dm[idm].stroke)==1){
 			if(NY(parms->dm[idm].stroke)!=1){
 				error("dm.stroke is in wrong format\n");
 			}
-			static int nclip0=0;
-			if(simu->reconisim<10) nclip0=0;
-			int nclip=dclip(P(dmcmd, idm),
-				-P(parms->dm[idm].stroke, 0),
-				P(parms->dm[idm].stroke, 0));
-			if(nclip>nclip0){
-				nclip0=nclip;
-				info2("step %d DM %d: %d actuators clipped\n", simu->reconisim, idm, nclip);
+			if(P(parms->dm[idm].stroke,0)>0){
+				nclip=dclip(P(dmcmd, idm),-P(parms->dm[idm].stroke, 0),P(parms->dm[idm].stroke, 0));
 			}
 		} else if(NX(parms->dm[idm].stroke)==nact){
 			if(NY(parms->dm[idm].stroke)!=2){
 				error("dm.stroke is in wrong format\n");
 			}
-
 			real *pcmd=P(P(dmcmd, idm));
 			real *plow=P(parms->dm[idm].stroke);
 			real *phigh=plow+nact;
 			for(int iact=0; iact<nact; iact++){
 				if(pcmd[iact]<plow[iact]){
 					pcmd[iact]=plow[iact];
+					nclip++;
 				} else if(pcmd[iact]>phigh[iact]){
 					pcmd[iact]=phigh[iact];
+					nclip++;
 				}
 			}
 		} else{
 			error("Invalid format\n");
+		}
+		static int nclip0=0;
+		if(simu->reconisim<10) nclip0=0;
+		if(nclip>nclip0){
+			nclip0=nclip;
+			info2("step %d DM %d: %d actuators clipped\n",simu->reconisim,idm,nclip);
 		}
 	}
 }

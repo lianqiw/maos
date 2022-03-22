@@ -387,7 +387,7 @@ typedef struct tomo_cfg_t{
 			3: Identity weighting (bad)
 		     */
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
-    int ahst_focus;   /**<Make magnification mode free of focus in science (only effective when sim.mffocus=1*/
+    int ahst_focus;   /**<1: Make magnification mode free of focus in science (only effective when sim.mffocus=1*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.

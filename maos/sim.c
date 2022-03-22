@@ -108,9 +108,6 @@ void maos_isim(int isim){
 	if(isim==simstart+1){//skip slow first step.
 		tk_atm=myclockd();
 	}
-	if(isim+2+parms->sim.dtrat_hi>=simend || signal_caught){
-		draw_single=0;
-	}
 	real ck_0=myclockd();
 
 	sim_update_flags(simu, isim);
@@ -146,7 +143,7 @@ void maos_isim(int isim){
 		}
 #endif
 	}
-	if(!simu->pause && parms->sim.end>10+parms->sim.start){
+	if(!simu->pause && parms->sim.end>10+parms->sim.start && parms->sim.dtrat_hi+isim<simend && !signal_caught){
 		draw_single=1;//Only draw active frame.
 	} else{
 		draw_single=0;

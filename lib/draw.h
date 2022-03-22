@@ -32,6 +32,7 @@ void draw_helper(void);
 int draw_add(int fd);
 void draw_final(int reuse);
 int draw_current(const char* fig, const char* fn);
+int plot_empty(int sock_draw,const char *fig,const char *fn);
 int imagesc(const char* fig, long nx, long ny, const real* limit, const real* zlimit,
 	const real* p, const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(10);

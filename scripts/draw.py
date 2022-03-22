@@ -101,7 +101,7 @@ def draw(*args, **kargs):
         if 'nx' in kargs:
             nx=kargs['nx']
         elif nframe > 3:
-            nx = np.ceil(np.sqrt(nframe))
+            nx = int(np.ceil(np.sqrt(nframe)))
         else:
             nx = nframe
         ny = int(np.ceil(nframe/nx))

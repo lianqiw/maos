@@ -3012,9 +3012,8 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("%sThere are %d DMs%s\n",GREEN,parms->ndm,BLACK);
 	for(i=0; i<parms->ndm; i++){
-		info("    DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
-			i,parms->dm[i].order,
-			parms->dm[i].ht/1000,parms->dm[i].dx,
+		info("    DM %d at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+			i, parms->dm[i].ht/1000,parms->dm[i].dx,
 			parms->dm[i].offset,
 			fabs(P(parms->dm[i].stroke,0))*1e6);
 		if(parms->dm[i].iac){

@@ -410,12 +410,12 @@ void kill_all_jobs(GtkButton* btn, gpointer data){
 	(void)btn;
 	(void)data;
 	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook))-1;
-
+	
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
-		"Kill all jobs on server %s?", hosts[this_host]);
+		"Kill all jobs on %s?", this_host==-1?"all servers":hosts[this_host]);
 	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill all", 1, "Cancel", 0, NULL);
 #if GTK_MAJOR_VERSION>3
 	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(kill_all_job_callback), GINT_TO_POINTER(this_host));
@@ -425,7 +425,7 @@ void kill_all_jobs(GtkButton* btn, gpointer data){
 	gtk_widget_destroy(dia);
 	if(result){
 		for(int ihost=0; ihost<nhost; ihost++){
-			if(result==1&&ihost!=this_host){
+			if(this_host!=-1&&ihost!=this_host){
 				continue;
 			}
 			kill_job_wrap(ihost, 0);
