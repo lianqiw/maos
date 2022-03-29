@@ -28,9 +28,9 @@
 */
 
 #include <errno.h>
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <glib/gprintf.h>
+//#include <glib.h>
+//#include <gtk/gtk.h>
+//#include <glib/gprintf.h>
 #include <pthread.h>
 #include <fcntl.h>
 
@@ -588,21 +588,48 @@ static void add_host_event(GtkButton* button, gpointer data){
 		}
 	}
 }
-#if GTK_MAJOR_VERSION<4
-static GtkToolItem* new_toolbar_item(const char* iconname, GdkPixbuf* iconbuf, const char* cmdname, void(*func)(GtkButton*, gpointer data), int data){
+//todo: consolidate with drawdaemon_gui.new_tool()
+static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf* iconbuf, const char* cmdname, void(*func)(GtkButton*, gpointer data), int data){
+#if GTK_MAJOR_VERSION<3
 	GtkToolItem* item;
-	GtkWidget* image;
-	if(iconbuf){
-		image=gtk_image_new_from_pixbuf(iconbuf);
-	} else{
-		image=gtk_image_new_from_icon_name(iconname, GTK_ICON_SIZE_SMALL_TOOLBAR);
+	if(cmdname){
+		GtkWidget* image;
+		if(iconbuf){
+			image=gtk_image_new_from_pixbuf(iconbuf);
+		} else{
+			image=gtk_image_new_from_icon_name(iconname, GTK_ICON_SIZE_SMALL_TOOLBAR);
+		}
+		item=gtk_tool_button_new(image, cmdname);
+		gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(item), cmdname);
+		g_signal_connect(item, "clicked", G_CALLBACK(func), GINT_TO_POINTER(data));
+	}else{
+		item=gtk_separator_tool_item_new();
 	}
-	item=gtk_tool_button_new(image, cmdname);
-	gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(item), cmdname);
-	g_signal_connect(item, "clicked", G_CALLBACK(func), GINT_TO_POINTER(data));
-	return item;
-}
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item,-1);
+#else //gtk4
+	GtkWidget *item;
+	if(cmdname){
+		item=button_new(iconname);
+		gtk_button_set_relief(GTK_BUTTON(item),GTK_RELIEF_NONE);
+	
+		if(iconbuf){
+			GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
+	#if GTK_MAJOR_VERSION<=3
+			gtk_button_set_image(GTK_BUTTON(item), image);
+	#else
+			gtk_button_set_child(GTK_BUTTON(item), image);
+	#endif		
+		}
+		if(func) g_signal_connect(item,"clicked",G_CALLBACK(func),GINT_TO_POINTER(data));
+		if(cmdname) gtk_widget_set_tooltip_text(item, cmdname);
+		gtk_widget_set_size_request(item, 16, 16);
+	}else{
+		item=gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+	}
+	box_append(GTK_BOX(toolbar), item, FALSE, FALSE, 0);
 #endif
+}
+
 
 void parse_icons(){
 #if GDK_MAJOR_VERSION < 3
@@ -688,30 +715,32 @@ void create_window(
 	parse_provider();//requires window to be set
 	gtk_window_set_title(GTK_WINDOW(window), "MAOS Monitor");
 	GtkWidget* vbox=gtk_vbox_new(FALSE, 0);
-#if GTK_MAJOR_VERSION<4	
+	gtk_container_add(GTK_CONTAINER(window),vbox);
 	
-	gtk_container_add(GTK_CONTAINER(window), vbox);
-	{
-		toptoolbar=gtk_toolbar_new();
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("computer", icon_connect, "Connect", add_host_event, -1), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-		//gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-skip-forward", icon_skip, "Clear skipped jobs", clear_jobs, -2), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("object-select", icon_finished, "Clear finished jobs", clear_jobs, -1), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, -3), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, -4), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("process-stop", icon_cancel, "Kill all jobs", kill_all_jobs, -1), -1);
-		gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), new_toolbar_item("media-floppy", icon_save, "Save jobs to file", save_all_jobs, -1), -1);
-
-		gtk_widget_show_all(toptoolbar);
-		box_append(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);
-		gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar), GTK_ICON_SIZE_MENU);
-	}
+#if GTK_MAJOR_VERSION<4 && 0
+	toptoolbar=gtk_toolbar_new();
+	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar),GTK_ICON_SIZE_MENU);
 #else
-	gtk_window_set_child(GTK_WINDOW(window), vbox);
-#endif
-	
+	toptoolbar=gtk_hbox_new(FALSE, 0);
+#endif		
+	new_toolbar_item(toptoolbar,"computer", icon_connect, "Connect", add_host_event, -1);
+	new_toolbar_item(toptoolbar, NULL, NULL, NULL, NULL, 0);
+	new_toolbar_item(toptoolbar,"object-select",icon_finished,"Clear finished jobs",clear_jobs,-1);
+	new_toolbar_item(toptoolbar,"media-skip-forward",icon_skip,"Clear skipped jobs",clear_jobs,-2);
+	new_toolbar_item(toptoolbar,"dialog-error",icon_failed,"Clear crashed jobs",clear_jobs,-3);
+	new_toolbar_item(toptoolbar,"edit-clear-all",icon_clear,"Clear all jobs",clear_jobs,-4);
+	new_toolbar_item(toptoolbar,NULL,NULL,NULL,NULL,0);
+	new_toolbar_item(toptoolbar,"process-stop",icon_cancel,"Kill all jobs",kill_all_jobs,-1);
+	new_toolbar_item(toptoolbar,"media-floppy",icon_save,"Save jobs to file",save_all_jobs,-1);
+	new_toolbar_item(toptoolbar,NULL,NULL,NULL,NULL,0);
+	gtk_widget_show_all(toptoolbar);
+
 	notebook=gtk_notebook_new();
+	if(1){
+		gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toptoolbar, GTK_PACK_START);
+	}else{
+		box_append(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);
+	}
 	//gtk_widget_show(notebook);
 	box_append(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
 

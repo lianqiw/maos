@@ -17,6 +17,14 @@
 */
 
 #ifndef AOS_TOOLS_MYGTK_H
+#include <cairo-pdf.h>
+#include <cairo-ps.h>
+#include <cairo-svg.h>
+#include <cairo.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <pango/pango.h>
+
 #define AOS_TOOLS_MYGTK_H
 #if GTK_MAJOR_VERSION >2
 #define gtk_hbox_new(A,B) gtk_box_new(GTK_ORIENTATION_HORIZONTAL, B)
@@ -54,6 +62,11 @@
 #define box_prepend(box, child, ...) gtk_box_prepend(GTK_BOX(box), child)
 #endif	
 
+#if GTK_MAJOR_VERSION<4	
+#define button_new(iconname) gtk_button_new_from_icon_name(iconname, GTK_ICON_SIZE_BUTTON)
+#else
+#define button_new(iconname)  gtk_button_new_from_icon_name(iconname)
+#endif
 
 #endif
 

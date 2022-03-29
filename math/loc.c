@@ -550,14 +550,7 @@ loc_t* mkannloc(real D, real Din, real dx, real thres){
 	mapfree(xy);
 	return loc;
 }
-/**
-   A convenient wrapp for dcircle.
- */
-dmat* mkcirmap(long nx, long ny, real cx, real cy, real r){
-	dmat* map=dnew(nx, ny);
-	dcircle(map, cx, cy, 1, 1, r, 1);
-	return map;
-}
+
 /**
    Estimate the diameter of loc.
    2021-09-03: corrected calculation for square grid. Use the inscribed diameter but not circumcircle.

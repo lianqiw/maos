@@ -228,9 +228,9 @@ static void drawdata_clear_older(float timclear){
 	}								\
     }									
 int sock;//socket 
-int sock_idle=0;//1: no active drawing. 0: active drawing connection. -1: do not retry connection
-int client_pid=-1;//client PID
+int client_pid=-1;//client PID. -1: disconnected. 0: idle. >1: active plotting
 int keep_listen=1;//set to 0 to stop listening
+int draw_single=0;//whether client only wants to draw to the active tab.
 drawdata_t *drawdata=NULL;//current 
 drawdata_t *drawdata_prev=NULL;//previous
 char *client_hostname=NULL;
@@ -250,8 +250,7 @@ void *listen_draw(void *user_data){
 	while(keep_listen){
 		client_pid=-1;
 		g_idle_add((GSourceFunc)update_title, NULL);
-
-		if(sock<0&&client_hostname&&sock_idle!=-1){
+		if(sock<0&&client_hostname){
 			dbg_time("Connecting to %s\n", client_hostname);
 			sock=scheduler_connect(client_hostname);
 			if(sock==-1){
@@ -271,13 +270,13 @@ void *listen_draw(void *user_data){
 		if(sock>=0){
 			client_pid=0;
 			g_idle_add((GSourceFunc)update_title, NULL);
-			//we set socket timeout to 60 to check disconnection.
+			//we set socket timeout to check disconnection.
 			//server sends heartbeat every 10 seconds (since 2021-09-29).
-			if(socket_block(sock, 0)||socket_recv_timeout(sock, 60)){
+			if(socket_block(sock, 0)||socket_recv_timeout(sock, 600)){
 				sock=-1;
 			}
 		}
-
+		draw_single=0;
 		char *fig=0;
 		char *name=0;
 		int cmd=0;
@@ -286,7 +285,6 @@ void *listen_draw(void *user_data){
 		if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
 		while(sock!=-1){
 			STREADINT(cmd);//will block if no data is available.
-			sock_idle=0;//Indicate connection is active
 			if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 				STREADINT(nlen);
 				STREADINT(cmd);
@@ -425,7 +423,6 @@ void *listen_draw(void *user_data){
 				if(io_timeclear){
 					drawdata_clear_older(io_timeclear);
 				}
-				sock_idle=1;
 				client_pid=0;
 				g_idle_add((GSourceFunc)update_title, NULL);
 				break;
@@ -533,10 +530,9 @@ void *listen_draw(void *user_data){
 		}/*while */
 	}
 	free(client_hostname);client_hostname=NULL;
-	warning_time("Stop listening.\n");
+	dbg_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;
-	sock_idle=1;
 	client_pid=-1;
 	g_idle_add((GSourceFunc)update_title, NULL);
 	return NULL;

@@ -440,13 +440,7 @@ gboolean update_title(gpointer data){
 }
 static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	GtkWidget* out;
-#if GTK_MAJOR_VERSION>=4
-	out=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	//GtkWidget* image=gtk_image_new_from_icon_name("window-close");
-#else
 	out=gtk_hbox_new(FALSE, 0);
-	
-#endif
 	/* create label for tab */
 	drawdata_t* drawdata=*drawdatawrap;
 	const gchar* str=drawdata->name;
@@ -476,10 +470,11 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 #else	
 	GtkWidget *image=gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_BUTTON);
 	gtk_button_set_image(GTK_BUTTON(close_btn), image);
+	gtk_image_set_pixel_size(GTK_IMAGE(image),10);//works
 	//gtk_button_set_always_show_image(GTK_BUTTON(close_btn), TRUE);//>=gtk3
+    gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
 #endif	
-	gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
-	gtk_image_set_pixel_size(GTK_IMAGE(image), 10);//works
+	
 #if GTK_MAJOR_VERSION<3
 	gtk_widget_modify_style(close_btn, btn_rcstyle);//helps a tiny bit
 	//gtk_widget_set_size_request(close_btn, 24, 24);//just crops faceplate. does not reduce icon.
@@ -487,8 +482,9 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 #endif
 	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page_btn), drawdatawrap);
 	box_append(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
-	gtk_widget_show_all(out);
-
+#if GTK_MAJOR_VERSION < 4
+    gtk_widget_show_all(out);
+#endif
 	return out;
 }
 /*Get the label of itab'th child of notebook subnb*/
@@ -783,35 +779,44 @@ static void page_changed(int topn, int subn){
 		subnb=get_current_page(topnb);
 	}
 	if(!subnb) return;
-	const char* fig=topnb_label_get(topnb, subnb);
+	
 	if(subn>-1){
 		subpage=gtk_notebook_get_nth_page(GTK_NOTEBOOK(subnb), subn);
 	} else{
 		subpage=get_current_page(subnb);
 	}
 	if(!subpage) return;
-	
-	drawdata_t** pdrawdata=(drawdata_t **)g_object_get_data(G_OBJECT(subpage), "drawdatawrap");
-	if(pdrawdata) cur_drawdata=*pdrawdata;
-	if(cur_drawdata){
-		if(cur_menu_cumu){
-			gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(cur_menu_cumu), cur_drawdata->cumu);
-			//dbg("set cumu tool button to %d (%d, %d)\n", cur_drawdata->cumu, topn, subn);
+	if(topn!=-1 || subn!=-1){
+		drawdata_t** pdrawdata=(drawdata_t **)g_object_get_data(G_OBJECT(subpage), "drawdatawrap");
+		if(pdrawdata) cur_drawdata=*pdrawdata;
+		if(cur_drawdata){
+			if(cur_menu_cumu){
+				gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(cur_menu_cumu), cur_drawdata->cumu);
+				//dbg("set cumu tool button to %d (%d, %d)\n", cur_drawdata->cumu, topn, subn);
+			}
+			if(cur_menu_icumu){
+				gtk_spin_button_set_value(GTK_SPIN_BUTTON(cur_menu_icumu), cur_drawdata->cumu?cur_drawdata->icumu:0);
+				//dbg("set icumu tool button to %g (%d, %d)\n", cur_drawdata->icumu, topn, subn);
+			}
 		}
-		if(cur_menu_icumu){
-			gtk_spin_button_set_value(GTK_SPIN_BUTTON(cur_menu_icumu), cur_drawdata->cumu?cur_drawdata->icumu:0);
-			//dbg("set icumu tool button to %g (%d, %d)\n", cur_drawdata->icumu, topn, subn);
+	}else{
+		static int client_pid_last=0;
+		if(client_pid==client_pid_last){
+			return;//avoid sending repeatedly to the same client
 		}
+		client_pid_last=client_pid;
 	}
-	const char* fn=subnb_label_get(subnb, subpage);
-	//info("send fig=%s, fn=%s", fig, fn);
-	if(sock!=-1&&!sock_idle){
+	if(sock!=-1&&client_pid>0){
+		const char *fig=topnb_label_get(topnb, subnb);
+		const char *fn=subnb_label_get(subnb, subpage);
+		dbg("send fig=%s, fn=%s\n", fig, fn);
 		if(stwriteint(sock, DRAW_FIGFN)||
 			stwritestr(sock, fig)||
 			stwritestr(sock, fn)){
 			warning("Talk to client failed\n");
-			sock_idle=1;
 		}
+	}else{
+		//dbg("cannot send fig=%s, fn=%s, sock=%d, client_pid=%d\n", fig, fn, sock, client_pid);
 	}
 	//info("done\n");
 	io_time2=0;
@@ -1053,8 +1058,7 @@ gboolean addpage(gpointer indata){
 		g_signal_connect(drawarea, "configure-event",
 			G_CALLBACK(on_configure_event), drawdatawrap);
 #endif
-		gtk_widget_set_size_request(drawarea, DRAWAREA_MIN_WIDTH,
-			DRAWAREA_MIN_HEIGHT);
+		gtk_widget_set_size_request(drawarea, DRAWAREA_MIN_WIDTH, DRAWAREA_MIN_HEIGHT);
 		gtk_widget_show_all(subnb);
 		if(get_current_drawdata()!=drawdata){
 			//The new page is not activated. notify client that it is not drawing to active page
@@ -1244,21 +1248,24 @@ static void togglebutton_cumu(GtkToggleToolButton* btn){
 }
 static void toolbutton_stop(GtkToolButton* btn){
 	(void)btn;
-	extern int keep_listen;
-	keep_listen=0;
-	close(sock); sock=-1; sock_idle=-1;
+	keep_listen=0;//disable reconnection
+	close(sock); sock=-1;
 }
 static void togglebutton_pause(GtkToggleToolButton* btn){
-	if(sock_idle) return;
-	if(gtk_toggle_tool_button_get_active(btn)){
-		if(stwriteint(sock, DRAW_PAUSE)) sock_idle=1;
-	} else{
-		if(stwriteint(sock, DRAW_RESUME)) sock_idle=1;
+	if(sock==-1) return;
+	int cmd=gtk_toggle_tool_button_get_active(btn)?DRAW_PAUSE:DRAW_RESUME;
+	if(stwriteint(sock, cmd)){
+		close(sock); 
+		sock=-1; 
 	}
 }
 static void togglebutton_play(GtkToggleToolButton* btn){
 	(void)btn;
-	if(stwriteint(sock, DRAW_SINGLE)) sock_idle=1;
+	if(sock==-1) return;
+	if(stwriteint(sock, DRAW_SINGLE)){
+		close(sock);
+		sock=-1;
+	}
 }
 
 /**
@@ -1521,6 +1528,7 @@ static gboolean close_window(GtkObject* object, GdkEvent* event)
 	info("close_window called\n");
 	if(!windows){
 		info("Close sock %d after last window is about to close.\n", sock);
+		keep_listen=0;
 		if(sock!=-1) {
 			close(sock); 
 			sock=-1;

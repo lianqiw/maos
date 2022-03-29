@@ -18,9 +18,9 @@
 
 #ifndef AOS_MONITOR_H
 #define AOS_MONITOR_H
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <glib/gprintf.h>
+//#include <glib.h>
+//#include <gtk/gtk.h>
+//#include <glib/gprintf.h>
 #include "../sys/sys.h"
 #include "mygtk.h"
 

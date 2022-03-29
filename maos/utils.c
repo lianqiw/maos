@@ -91,7 +91,7 @@ void plotloc(const char* fig, const parms_t* parms,
 		}
 		count++;
 	}
-	plot_points(fig, 1, &loc, NULL, NULL, NULL, NULL, cir, NULL,
+	plot_points(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir},
 		"Coordinate", "x (m)", "y (m)", "%s", fn);
 	dfree(cir);
 }
@@ -186,7 +186,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	real limit[4];
 	limit[0]=limit[2]=-totfov/2;
 	limit[1]=limit[3]=totfov/2;
-	plot_points(fig, ngroup, P(locs), NULL, style, limit, NULL, cir, legend,
+	plot_points(fig, (plot_opts){.ngroup=ngroup, .loc=P(locs), .style=style, .limit=limit, .cir=cir, .legend=legend},
 		"Asterism", "x (arcsec)", "y (arcsec)", "%s", fn);
 	dfree(cir);
 	cellfree(locs);

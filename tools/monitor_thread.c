@@ -203,14 +203,15 @@ static int add_host(int ihost){
 	return hsock[ihost];
 }
 
-static int test_jobs(int status, int flag){
+static int test_jobs(proc_t *p, int flag){
+	int status=p->status.info;
 	switch(flag){
 	case -1://finished
 		return status==S_FINISH;
 		break;
-	/*case -2://skipped
-		return status==S_FINISH&&frac<1;
-		break;*/
+	case -2://skipped
+		return status==S_FINISH&&p->frac==0;
+		break;
 	case -3://crashed
 		return status==S_CRASH||status==S_KILLED||status==S_TOKILL;
 		break;
@@ -397,7 +398,7 @@ static int respond(int sock){
 		ihost=cmd[1];
 		int flag=cmd[2];
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
-			if((flag < 0 && test_jobs(iproc->status.info, flag)) || iproc->pid==flag){
+			if((flag < 0 && test_jobs(iproc, flag)) || iproc->pid==flag){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_REMOVE)){
 					warning_time("Clear job %d on host %d failed.\n", iproc->pid, ihost);
 				}else{

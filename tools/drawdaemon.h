@@ -19,19 +19,12 @@
 #ifndef AOS_TOOLS_DRAWDAEMON_H
 #define AOS_TOOLS_DRAWDAEMON_H
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <fcntl.h>
-#include <cairo.h>
-#include <cairo-ps.h>
-#include <cairo-pdf.h>
-#include <cairo-svg.h>
-#include <pango/pango.h>
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <stdlib.h>
-#include <stdio.h>
+//#include <sys/types.h>
+//#include <sys/stat.h>
+//#include <sys/file.h>
+//#include <fcntl.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include "../sys/sys.h"
 #include "mygtk.h"
 #ifndef CAIRO_FORMAT_A8
@@ -170,6 +163,7 @@ extern PangoFontDescription* desc;
 extern pthread_mutex_t drawdata_mutex;
 extern int client_pid;
 extern char *client_hostname;
+extern int keep_listen;
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);

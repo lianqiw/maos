@@ -477,7 +477,7 @@ int main(int argc, char* argv[]){
 						cellresize(P(res, ic), 1, nseed+1);
 						P(P(res, ic), nseed)=dref(P(P(resm, ic), 0));
 					}
-					plot_points(toptab[ic], 0, NULL, P(res, ic), NULL, NULL, xylog, NULL, (const char* const*)legs0,
+					plot_points(toptab[ic], (plot_opts){.dc=P(res, ic), .xylog=xylog, .legend=(const char* const*)legs0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 					if(nseed>1){//seed average
 						dfree(P(P(res, ic), nseed));
@@ -492,7 +492,7 @@ int main(int argc, char* argv[]){
 		} else{//only plot mean
 			for(int ic=0; ic<res->nx; ic++){
 				if(P(res, ic)){
-					plot_points(toptab[ic], npath, NULL, P(resm, ic), NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
+					plot_points(toptab[ic], (plot_opts){.ngroup=npath,.dc=P(resm, ic), .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 				}
 			}
@@ -502,7 +502,7 @@ int main(int argc, char* argv[]){
 		for(int ic=0; ic<res->nx; ic++){
 			if(P(res, ic)){
 				dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
-				plot_points(toptab[ic], npath, NULL, tmp, NULL, NULL, xylog, NULL, (const char* const*)pathtag0,
+				plot_points(toptab[ic], (plot_opts){.ngroup=npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
 					title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
 				dcellfree(tmp);
 			}

@@ -37,7 +37,6 @@ void map_d_din(map_t *map, real *d, real *din);
 void create_metapupil(map_t **map, long* nx, long* ny, dmat *dirs, real D, 
 		      real ht, real dx, real dy, real offset,real guard, 
 		      long ninx, long niny, int pad,int square);
-dmat *mkcirmap(long nx, long ny, real cx, real cy, real r);
 
 map_t* d2map(const dmat *in);
 mapcell *dcell2map(const dcell *in);

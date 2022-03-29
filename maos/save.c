@@ -303,7 +303,7 @@ void save_dmreal(sim_t* simu){
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(P(simu->dmreal,idm)){
 						drawopd("DM", P(recon->aloc,idm), P(simu->dmreal,idm), P(parms->dbg.draw_opdmax),
-							"DM Actuator Stroke", "x (m)", "y (m)", "Real %d", idm);
+							"DM Command OPD", "x (m)", "y (m)", "Real %d", idm);
 					}
 				}
 				if(simu->ttmreal&&draw_current("DM", "Real TTM")){
@@ -314,7 +314,7 @@ void save_dmreal(sim_t* simu){
 					dmat* tmp=dnew(P(recon->aloc,idm)->nloc, 1);
 					loc_add_ptt(tmp, ptt, P(recon->aloc,idm));
 					drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
-						"DM Actuator Stroke", "x (m)", "y (m)", "Real TTM");
+						"TTM Command OPD", "x (m)", "y (m)", "Real TTM");
 					dfree(tmp);
 				}
 

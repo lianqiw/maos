@@ -1865,7 +1865,7 @@ void print_progress(sim_t* simu){
 				}
 			}
 			dcellcwpow(res, 0.5); dcellscale(res, 1e9);
-			plot_points("Res", NX(res), NULL, res, NULL, NULL, "nn", NULL, legs,
+			plot_points("Res", (plot_opts){.ngroup=NX(res), .dc=res, .xylog="nn", .legend=legs},
 				"Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
 			dcellfree(res);
 		}

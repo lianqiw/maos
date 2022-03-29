@@ -24,7 +24,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <search.h>
-#include "../math/mathdef.h"
+
 #include "draw.h"
 #include "cure.h"
 int draw_id=0;
@@ -35,7 +35,6 @@ PNEW(lock);
 static int sock_helper=-1;
 int listening=0;
 int draw_single=0;//1: Only draw active frame. 0: draw all frames.
-int draw_changed=0; //1: switched pages
 
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
@@ -66,20 +65,21 @@ typedef struct list_t{
 	struct list_t* next;
 	struct list_t* child;//child list
 }list_t;
-int sock_ndraw=0;//number of displays
-int sock_ndraw2=0;//number of valid displays
 
-typedef struct{
-	int fd;
+typedef struct sockinfo_t{
+	int fd;//socket;
 #if TEST_UDP
 	udp_t udp;
 #endif
-	int pause;
-	int draw_single;
-	list_t* list;
-	char* figfn[2];
+	int pause;//do not draw anything
+	int draw_single;//only draw active figure
+	list_t* list; //list of existing figures
+	char* figfn[2];//active figure group and name
+    pthread_t thread;//thread that is listening
+	struct sockinfo_t* next;//next dradaemon
 }sockinfo_t;
-sockinfo_t sock_draws[MAXDRAW];
+sockinfo_t *sock_draws=NULL;
+int use_udp=0;
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
 */
@@ -134,7 +134,13 @@ retry:
 #endif	
 	int cmd;
 	int nlen=0;
-	socket_recv_timeout(sock_draw, 0);//make sure it blocks when no data is readable
+
+	if(!socket_recv_timeout(sock_draw, 0)){
+        //make sure it blocks when no data is readable
+        dbg("started listening at %d\n", sock_draw);
+    }else{
+        dbg("set timeout=0 failed for %d\n", sock_draw);
+    }
 	while(sock_data->fd!=-1&&!streadint(sock_draw, &cmd)){
 		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 			streadint(sock_draw, &nlen);
@@ -148,9 +154,8 @@ retry:
 			streadstr(sock_draw, &fn);
 			if(fig&&fn){
 				if(figfn[0]&&figfn[1]&&(strcmp(figfn[0], fig)||strcmp(figfn[1], fn))){
-					draw_changed=1;
 					if(sock_data->draw_single){
-						//dbg("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+						dbg("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 					}
 				}
 				free(figfn[0]);
@@ -182,20 +187,21 @@ retry:
 			break;
 		}
 	}
-	//dbg_time("stopped lisening to drawdaemon at %d, errno=%d, %s\n", sock_draw, errno, strerror(errno));
+	dbg_time("stopped lisening to drawdaemon at %d, errno=%d, %s\n", sock_draw, errno, strerror(errno));
 	listening=0;
 	return NULL;
 }
 
 static int list_search(list_t** head, list_t** node, const char* key, int add){
 	list_t* p=0;
+    int ans=0;
 	for(p=*head; p; p=p->next){
 		if(!strcmp(p->key, key)){
+            ans=1;
 			break;
 		}
 	}
-	int ans=p?1:0;
-	if(add&&!p){
+	if(add&&!ans){
 		p=mycalloc(1, list_t);
 		p->key=strdup(key);
 		p->next=*head;
@@ -217,6 +223,7 @@ static void list_destroy(list_t** head){
 }
 /**Add fd to list of drawing socks*/
 int draw_add(int sock){
+	//Check that the drawdaemon is live.
 	if(sock!=-1){
 		int cmd[2]={DRAW_PID, getpid()};
 		if(stwrite(sock, cmd, sizeof(cmd))){
@@ -225,61 +232,49 @@ int draw_add(int sock){
 		}
 	}
 	if(sock==-1) return -1;
-	int ifd;
-	for(ifd=0; ifd<sock_ndraw; ifd++){
-		if(sock_draws[ifd].fd<0){//fill a empty slot
-			sock_ndraw2++;
-			break;
-		}
-	}
-	if(ifd==sock_ndraw){//no slot found
-		if(sock_ndraw<MAXDRAW){
-			ifd=sock_ndraw;
-			sock_ndraw++;
-			sock_ndraw2++;
-		}else{
-			ifd=-1;
-			return -1;
-		}
-	}
-	
-	memset(&sock_draws[ifd], 0, sizeof(sockinfo_t));
-	sock_draws[ifd].fd=sock;
-	sock_draws[ifd].draw_single=1;
-	thread_new((thread_fun)listen_drawdaemon, &sock_draws[ifd]);
+	sockinfo_t *p=mycalloc(1, sockinfo_t);
+	p->fd=sock;
+	p->draw_single=1;
+	p->next=sock_draws;
+	sock_draws=p;
+    pthread_create(&p->thread, NULL, (thread_fun)listen_drawdaemon, p);
 	draw_disabled=0;
 	return 0;
 }
+///fd==-1 will remove all clients
+///reuse==0 is called when write failed, do not try to write again
 static void draw_remove(int fd, int reuse){
-	if(fd<0) return;
-	if(reuse){
-		dbg("send %d back to scheduler for reuse\n", fd);
-		scheduler_socket(1, &fd, draw_id?draw_id:1);
-	}
-	close(fd);
-	int found=0;
-	for(int ifd=0; ifd<sock_ndraw; ifd++){
-		if(sock_draws[ifd].fd==fd){
-			found=1;
-			sock_draws[ifd].fd=-1;
+	for(sockinfo_t *p=sock_draws,*ppriv=NULL; p; ppriv=p,p=p->next){
+		if(p->fd==fd || fd==-1){
+			if(reuse){
+				stwriteint(p->fd, DRAW_FINAL);
+				dbg("send %d back to scheduler for reuse\n", p->fd);
+				scheduler_socket(1, &p->fd, draw_id?draw_id:1);
+			}
+			if(p->thread){
+				void *ans;
+				if(pthread_cancel(p->thread) || pthread_join(p->thread, &ans)){
+					dbg("Unable to cancel or join thread\n");
+				}
+			}
+			if(fd!=-1) close(fd);
 #if TEST_UDP			
-			if(sock_draws[ifd].udp.sock>0) {
-				close(sock_draws[ifd].udp.sock);
-				sock_draws[ifd].udp.sock=-1;
+			if(p->udp.sock>0) {
+				close(p->udp.sock);
 			}
 #endif
-			list_destroy(&sock_draws[ifd].list);
-			free(sock_draws[ifd].figfn[0]);sock_draws[ifd].figfn[0]=NULL;
-			free(sock_draws[ifd].figfn[1]);sock_draws[ifd].figfn[1]=NULL;
+			list_destroy(&p->list);
+			free(p->figfn[0]);
+			free(p->figfn[1]);
+			if(ppriv){
+				ppriv=p->next;
+			}else{
+				sock_draws=p->next;
+			}
+			free(p);
 		}
 	}
-
-	if(found){
-		sock_ndraw2--;
-	} else{
-		dbg("draw_remove: fd=%d is not found\n", fd);
-	}
-	if(sock_ndraw2<=0){
+	if(!sock_draws){
 		draw_disabled=1;//do not try to restart drawdaemon
 	}
 }
@@ -354,7 +349,7 @@ void draw_helper(void){
 */
 static int get_drawdaemon(){
 	signal(SIGPIPE, SIG_IGN);
-	if(sock_ndraw2){//drawdaemon already connected
+	if(sock_draws){//drawdaemon already connected
 		return 0;
 	}
 	if(draw_disabled){
@@ -415,7 +410,7 @@ static int get_drawdaemon(){
 		return 0;
 	}else{
 		draw_disabled=1;
-		warning("Disable drawing.\n");
+		warning("Unable to open drawdaemon. Disable drawing.\n");
 		return 1;
 	}
 }
@@ -423,17 +418,10 @@ static int get_drawdaemon(){
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
 */
 void draw_final(int reuse){
-	if(sock_ndraw){
-		LOCK(lock);
-		dbg("draw_final()\n");
-		for(int ifd=0; ifd<sock_ndraw; ifd++){
-			int sock_draw=sock_draws[ifd].fd;
-			if(sock_draw==-1) continue;
-			stwriteint(sock_draw, DRAW_FINAL);
-			draw_remove(sock_draw, reuse);
-		}
-		UNLOCK(lock);
-	}
+	//called from other threads, need to lock
+	LOCK(lock);
+	draw_remove(-1, reuse);
+	UNLOCK(lock);
 }
 
 /*
@@ -448,15 +436,15 @@ void draw_final(int reuse){
    2: draw if lock success
    3: create an empty page.
 */
-static int check_figfn(int ifd, const char* fig, const char* fn, int add){
-	if(draw_disabled||sock_draws[ifd].fd==-1||sock_draws[ifd].pause) return 0;
-	if(!(draw_single && sock_draws[ifd].draw_single)) return 1;
+static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
+	if(draw_disabled||ps->fd==-1||ps->pause) return 0;
+	if(!(draw_single && ps->draw_single)) return 1;
 	list_t* child=0;
-	list_search(&sock_draws[ifd].list, &child, fig, add);
+	list_search(&ps->list, &child, fig, 1);
 	int found=0;
 	if(child){
 		if(fn){
-			found=list_search(&child->child, NULL, fn, add);
+			found=list_search(&child->child, NULL, fn, 1);
 		} else{//don't check fn
 			found=1;
 		}
@@ -464,9 +452,9 @@ static int check_figfn(int ifd, const char* fig, const char* fn, int add){
 	int ans=0;//default is false
 	if(!found){//page is not found
 		//ans=3; //draw without test lock
-		plot_empty(sock_draws[ifd].fd, fig, fn);
+		plot_empty(ps->fd, fig, fn);
 	} else{//page is found
-		char** figfn=sock_draws[ifd].figfn;
+		char** figfn=ps->figfn;
 		if(!mystrcmp(figfn[0], fig)){
 			if(!fn){
 				ans=1;//draw without test lock
@@ -482,25 +470,33 @@ static int check_figfn(int ifd, const char* fig, const char* fn, int add){
    Check whether what we are drawing is current page of any drawdaemon.
 */
 int draw_current(const char* fig, const char* fn){
-	if(draw_disabled) return 0;
-	if(!draw_single) return 1;
-	int current=0;
-	for(int ifd=0; ifd<sock_ndraw; ifd++){
-		int sock_draw=sock_draws[ifd].fd;
-		if(sock_draw==-1) continue;
-		/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-		if((current=check_figfn(ifd, fig, fn, 0))){
-			break;
-		}
-	}
-	if(current==2){//check whether draw is busy
-		if((TRYLOCK(lock))){//lock failed
-			current=0;
-			//dbg("line busy, skip drawing current page\n");
-		} else{
-			UNLOCK(lock);
-		}
-	}
+    int current=0;
+	if(draw_disabled){
+        current=0;
+    }else if(!draw_single){
+        current=1;
+    }else{
+		for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
+            if((current=check_figfn(ps, fig, fn))){
+                break;
+            }
+        }
+        if(current==2){//check whether draw is busy
+			static int nskip=0;
+			static int nplot=0;
+            if((TRYLOCK(lock))){//lock failed
+                current=0;
+				nskip++;
+                if(nplot) dbg2("Skip after plot %d times\n", nplot);
+				nplot=0;			
+            } else{
+				nplot++;
+				if(nskip) dbg2("Resume after skip %d times\n", nskip);
+				nskip=0;
+                UNLOCK(lock);
+            }
+        }
+    }
 	return current;
 }
 static inline int fwriteint(FILE* fbuf, int A){
@@ -545,18 +541,55 @@ end2:
 	free(buf);
 	return ans;
 }
+int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize){
+	int ans=0;
+	for(sockinfo_t *ps=sock_draws, *ps_next=NULL; ps; ps=ps_next){
+		ps_next=ps->next;//draw_remove change ps node, so save info here;
+		/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+		int sock_draw=ps->fd;
+		int needed_i=check_figfn(ps, fig, fn);
+		if(!needed_i){
+			continue;
+		}
+		if(needed_i==2){
+			if(TRYLOCK(lock)){//line busy
+				continue;
+			}
+		} else{
+			LOCK(lock);
+		}
+		if(use_udp){
+			error("To be implemented\n");
+			//use sendmmsg with GSO is fastest.
+		} else{
+			//TIC;tic;
+			if(stwrite(sock_draw, buf, bufsize)){
+				info("write to %d failed: %s\n", sock_draw, strerror(errno));
+				ans=-1;
+				draw_remove(sock_draw, 0);
+			} else{
+				//toc2("write %s:%s %lu MiB", fig, fn, bufsize>>20);
+			}
+		}
+		
+#if TEST_UDP				
+		if(ps->udp.sock>0){
+			//test UDP data
+			int counter=myclocki();
+			udp_send(&ps->udp, buf, bufsize, counter);
+			udp_send(&ps->udp, buf, bufsize, counter);
+			udp_send(&ps->udp, buf, bufsize, counter);
+		}
+#endif	
+		UNLOCK(lock);
+	}
+	return ans;
+}
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
 int plot_points(const char* fig,    /**<Category of the figure*/
-	long ngroup,        /**<Number of groups to plot*/
-	loc_t** loc,        /**<Plot arrays of loc as grid*/
-	const dcell* dc,    /**<If loc isempty, use cell to plot curves*/
-	const int32_t* style,/**<Style of each point*/
-	const real* limit,/**<x min, xmax, ymin and ymax*/
-	const char* xylog,  /**<Whether use logscale for x, y*/
-	const dmat* cir,    /**<Data for the circles: x, y origin, radius, and color*/
-	const char* const* const legend, /**<ngroup number of char**/
+	plot_opts opts,
 	const char* title,  /**<title of the plot*/
 	const char* xlabel, /**<x axis label*/
 	const char* ylabel, /**<y axis label*/
@@ -564,15 +597,14 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 	...){
 	if(draw_disabled) return 0;
 	format2fn;
-	LOCK(lock);
+	
 	count++;
 	int ans=0;
-	int use_udp=0;
 	if(!get_drawdaemon()){
 		int needed=0;
-		for(int ifd=0; ifd<sock_ndraw; ifd++){
+		for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-			int needed_i=check_figfn(ifd, fig, fn, 0);
+			int needed_i=check_figfn(ps, fig, fn);
 			//dbg("%s %s: %d\n", fig, fn, needed_i);
 			if(needed_i){
 				if(!needed||needed==3){
@@ -594,24 +626,24 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(real));
 			FWRITECMDSTR(DRAW_FIG, fig);
 			FWRITECMDSTR(DRAW_NAME, fn);
-			if(loc){/*there are points to plot. */
-				for(int ig=0; ig<ngroup; ig++){
-					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*loc[ig]->nloc*2);
-					FWRITEINT(loc[ig]->nloc);
+			if(opts.loc){/*there are points to plot. */
+				for(int ig=0; ig<opts.ngroup; ig++){
+					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*opts.loc[ig]->nloc*2);
+					FWRITEINT(opts.loc[ig]->nloc);
 					FWRITEINT(2);
 					FWRITEINT(1);
-					FWRITEARR(loc[ig]->locx, sizeof(real)*loc[ig]->nloc);
-					FWRITEARR(loc[ig]->locy, sizeof(real)*loc[ig]->nloc);
+					FWRITEARR(opts.loc[ig]->locx, sizeof(real)*opts.loc[ig]->nloc);
+					FWRITEARR(opts.loc[ig]->locy, sizeof(real)*opts.loc[ig]->nloc);
 				}
-				if(dc){
+				if(opts.dc){
 					warning("both loc and dc are specified, ignore dc.\n");
 				}
-			} else if(dc){
-				if(ngroup>PN(dc)||ngroup==0){
-					ngroup=PN(dc);
+			} else if(opts.dc){
+				if(opts.ngroup>PN(opts.dc)||opts.ngroup==0){
+					opts.ngroup=PN(opts.dc);
 				}
-				for(int ig=0; ig<ngroup; ig++){
-					dmat* p=P(dc, ig);
+				for(int ig=0; ig<opts.ngroup; ig++){
+					dmat* p=P(opts.dc, ig);
 					uint32_t nlen=sizeof(real)*PN(p);
 					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen);
 					FWRITEINT(NX(p));
@@ -624,38 +656,38 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 			} else{
 				error("Invalid Usage\n");
 			}
-			if(style){
-				FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*ngroup);
-				FWRITEINT(ngroup);
-				FWRITEARR(style, sizeof(uint32_t)*ngroup);
+			if(opts.style){
+				FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*opts.ngroup);
+				FWRITEINT(opts.ngroup);
+				FWRITEARR(opts.style, sizeof(uint32_t)*opts.ngroup);
 			}
-			if(cir){
-				if(NX(cir)!=4){
+			if(opts.cir){
+				if(NX(opts.cir)!=4){
 					error("Cir should have 4 rows\n");
 				}
-				FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*PN(cir));
-				FWRITEINT(NY(cir));
-				FWRITEARR(P(cir), sizeof(real)*PN(cir));
+				FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*PN(opts.cir));
+				FWRITEINT(NY(opts.cir));
+				FWRITEARR(P(opts.cir), sizeof(real)*PN(opts.cir));
 			}
-			if(limit){/*xmin,xmax,ymin,ymax */
-				FWRITECMDARR(DRAW_LIMIT, limit, sizeof(real)*4);
+			if(opts.limit){/*xmin,xmax,ymin,ymax */
+				FWRITECMDARR(DRAW_LIMIT, opts.limit, sizeof(real)*4);
 			}
-			if(xylog){
-				FWRITECMDARR(DRAW_XYLOG, xylog, sizeof(char)*2);
+			if(opts.xylog){
+				FWRITECMDARR(DRAW_XYLOG, opts.xylog, sizeof(char)*2);
 			}
 			/*if(format){
 				FWRITECMDSTR(DRAW_NAME, fn);
 			}*/
-			if(legend){
+			if(opts.legend){
 				int nlen=0;
-				for(int ig=0; ig<ngroup; ig++){
-					if(legend[ig]){
-						nlen+=strlen(legend[ig])+1;
+				for(int ig=0; ig<opts.ngroup; ig++){
+					if(opts.legend[ig]){
+						nlen+=strlen(opts.legend[ig])+1;
 					}
 				}
 				FWRITECMD(DRAW_LEGEND, nlen);
-				for(int ig=0; ig<ngroup; ig++){
-					FWRITESTR(legend[ig]);
+				for(int ig=0; ig<opts.ngroup; ig++){
+					FWRITESTR(opts.legend[ig]);
 				}
 			}
 
@@ -670,50 +702,19 @@ end2:
 				warning("write failed:%d\n", ans);
 				free(buf); bufsize=0; buf=0;
 			} else{
-				//The following is not used. Sub-frame index needs to be used with msghdr
 				int* bufp=(int*)(buf+3*sizeof(int));
 				bufp[0]=(int)bufsize;//frame size
 				bufp[1]=count;//frame number
 				bufp[2]=(int)bufsize;//sub-frame size
 				bufp[3]=0;//sub-frame number
-				//dbg("plot_points: buf has size %ld. %d %d %d %d\n", bufsize,
-				//	bufp[0], bufp[1], bufp[2], bufp[3]);
 			}
 		}
 		if(bufsize&&!ans){
-			for(int ifd=0; ifd<sock_ndraw; ifd++){
-				/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-				int sock_draw=sock_draws[ifd].fd;
-				int needed_i=check_figfn(ifd, fig, fn, 1);
-				if(!needed_i){
-					continue;
-				}
-				if(use_udp){
-					error("To be implemented\n");
-					//use sendmmsg with GSO is fastest.
-				} else{
-					//TIC;tic;
-					if(stwrite(sock_draw, buf, bufsize)){
-						info("write to %d failed: %s\n", sock_draw, strerror(errno));
-						ans=-1;
-						draw_remove(sock_draw, 0);
-					}
-					//toc2("write %lu MiB", bufsize>>20);
-				}
-#if TEST_UDP				
-				if(sock_draws[ifd].udp.sock>0){
-					//test UDP data
-					int counter=myclocki();
-					udp_send(&sock_draws[ifd].udp, buf, bufsize, counter);
-					udp_send(&sock_draws[ifd].udp, buf, bufsize, counter);
-					udp_send(&sock_draws[ifd].udp, buf, bufsize, counter);
-				}
-#endif			
-			}
+			ans=send_buf(fig, fn, buf, bufsize);
 			free(buf);
 		}
 	}
-	UNLOCK(lock);
+
 	return ans;
 }
 
@@ -737,9 +738,7 @@ typedef struct imagesc_t{
 	char* fn;
 }imagesc_t;
 static void* imagesc_do(imagesc_t* data){
-	int use_udp=0;
 	if(draw_disabled) return NULL;
-	LOCK(lock);
 	count++;
 	
 	if(!get_drawdaemon()){
@@ -754,9 +753,9 @@ static void* imagesc_do(imagesc_t* data){
 		char* ylabel=data->ylabel;
 		char* fn=data->fn;
 		int needed=0;
-		for(int ifd=0; ifd<sock_ndraw; ifd++){
+		for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-			int needed_i=check_figfn(ifd, fig, fn, 0);
+			int needed_i=check_figfn(ps, fig, fn);
 			//dbg("%s %s: %d\n", fig, fn, needed_i);
 			if(needed_i){
 				if(!needed||needed==3){
@@ -772,7 +771,7 @@ static void* imagesc_do(imagesc_t* data){
 			int zeros[4]={0,0,0,0};
 			FWRITECMDARR(DRAW_FRAME, zeros, 4*sizeof(int));
 			FWRITECMD(DRAW_START, 0);
-			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(dtype));
+            FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(dtype));
 			FWRITECMDSTR(DRAW_FIG, fig);
 			FWRITECMDSTR(DRAW_NAME, fn);
 			
@@ -812,24 +811,10 @@ end2:
 		}
 
 		if(bufsize&&!ans){
-			for(int ifd=0; ifd<sock_ndraw; ifd++){
-				/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-				int sock_draw=sock_draws[ifd].fd;
-				int needed_i=check_figfn(ifd, fig, fn, 1);
-				if(!needed_i) continue;
-				if(use_udp){
-					error("To be implemented\n");
-				} else{
-					if(stwrite(sock_draw, buf, bufsize)) {
-						ans=-1;
-						draw_remove(sock_draw, 0);
-					}
-				}
-			}
+			ans=send_buf(fig, fn, buf, bufsize);
 			free(buf);
 		}
 	}
-	UNLOCK(lock);
 	free(data->fig);
 	free(data->limit);
 	free(data->zlim);
@@ -846,25 +831,23 @@ end2:
 
    It uses a separate thread to avoid slowing down the simulation. Skip if socket is busy.
  */
-int imagesc(const char* fig, /**<Category of the figure*/
-	long nx,   /**<the image is of size nx*ny*/
-	long ny,   /**<the image is of size nx*ny*/
-	const real* limit, /**<x min, xmax, ymin and ymax*/
-	const real* zlim,/**< min,max, the data*/
-	const real* p, /**<The image*/
-	const char* title,  /**<title of the plot*/
-	const char* xlabel, /**<x axis label*/
-	const char* ylabel, /**<y axis label*/
-	const char* format, /**<subcategory of the plot.*/
-	...){
-	format2fn;
-	if(!p||!draw_current(fig, fn)){
-		return 0;
-	}
+int ddraw(const char *fig, /**<Category of the figure*/
+            const dmat *p,   /**<The image*/
+            const real *limit,  /**<x min, xmax, ymin and ymax*/
+            const real *zlim,   /**< min,max, the data*/
+            const char *title,  /**<title of the plot*/
+            const char *xlabel, /**<x axis label*/
+            const char *ylabel, /**<y axis label*/
+            const char *format, /**<subcategory of the plot.*/
+            ...){
+    format2fn;
+    if(!p||!draw_current(fig, fn)){
+        return 0;
+    }
 
-	//We copy all the data and put the imagesc job into a task
-	//The task will free the data after it finishes.
-	imagesc_t* data=mycalloc(1, imagesc_t);
+    // We copy all the data and put the imagesc job into a task
+    // The task will free the data after it finishes.
+    imagesc_t *data=mycalloc(1, imagesc_t);
 #define datastrdup(x) data->x=(x)?strdup(x):0
 #define datamemdup(x, size, type)		\
     if(x){					\
@@ -875,109 +858,75 @@ int imagesc(const char* fig, /**<Category of the figure*/
     }else{					\
 	data->x=0;				\
     }
-	datastrdup(fig);
-	data->bsize=sizeof(dtype);//always send float.
-	datamemdup(limit, 4, dtype);
-	datamemdup(zlim, 2, dtype);
-	{
-	//down sampling and change to float
-		int xstep=(nx+MAXNX-1)/MAXNX;
-		int ystep=(ny+MAXNX-1)/MAXNX;
-		int nx2=(nx)/xstep;
-		int ny2=(ny)/ystep;
-		P(data)=malloc(nx2*ny2*sizeof(dtype));
-		for(int iy=0; iy<ny2; iy++){
-			dtype* p2=P(data)+iy*nx2;
-			const real* p1=p+iy*ystep*nx;
-			for(int ix=0; ix<nx2; ix++){
-				p2[ix]=(dtype)p1[ix*xstep];
-			}
-		}
-		data->nx=nx2;
-		data->ny=ny2;
-	}
-	datastrdup(title);
-	datastrdup(xlabel);
-	datastrdup(ylabel);
-	data->fn=format?strdup(fn):0;
+    datastrdup(fig);
+    data->bsize=sizeof(dtype);//always send float.
+    datamemdup(limit, 4, dtype);
+    datamemdup(zlim, 2, dtype);
+    {
+        //down sampling and change to float
+        int xstep=(NX(p)+MAXNX-1)/MAXNX;
+        int ystep=(NY(p)+MAXNX-1)/MAXNX;
+        int nx2=(NX(p))/xstep;
+        int ny2=(NY(p))/ystep;
+        P(data)=malloc(nx2*ny2*sizeof(dtype));
+        for(int iy=0; iy<ny2; iy++){
+            dtype *p2=P(data)+iy*nx2;
+            const real *p1=P(p)+iy*ystep*NX(p);
+            for(int ix=0; ix<nx2; ix++){
+                p2[ix]=(dtype)p1[ix*xstep];
+            }
+        }
+        data->nx=nx2;
+        data->ny=ny2;
+    }
+    datastrdup(title);
+    datastrdup(xlabel);
+    datastrdup(ylabel);
+    data->fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
-	if(draw_single){
-		thread_new((thread_fun)imagesc_do, data);
-	} else{
-		imagesc_do(data);
-	}
-	return 1;
+    if(draw_single){
+        thread_new((thread_fun)imagesc_do, data);
+    } else{
+        imagesc_do(data);
+    }
+    return 1;
 }
 
 /**
-   Draw the OPD of real and imaginary of complex p defined on nx*ny grid. see imagesc()
+   Draw the OPD of abs and phase of complex p defined on nx*ny grid. see ddraw()
+   type: 0: abs only. 1: abs and phase. 2: real and imaginary
 */
-int imagesc_cmp_ri(const char* fig, long nx, long ny, const real* limit, const real* zlim,
-	const comp* p, const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-	format2fn;
-	if(!draw_current(fig, fn)) return 0;
-
-	real* pr, * pi;
-	pr=mymalloc(nx*ny, real);
-	pi=mymalloc(nx*ny, real);
-	for(int i=0; i<nx*ny; i++){
-		pr[i]=creal(p[i]);
-		pi[i]=cimag(p[i]);
-	}
-	imagesc(fig, nx, ny, limit, zlim, pr, title, xlabel, ylabel, "%s real", fn);
-	free(pr);
-	imagesc(fig, nx, ny, limit, zlim, pi, title, xlabel, ylabel, "%s imag", fn);
-	free(pi);
-	return 1;
-}
-/**
-   Draw the OPD of abs and phase of complex p defined on nx*ny grid. see imagesc()
-*/
-int imagesc_cmp_ap(const char* fig, long nx, long ny, const real* limit, const real* zlim,
-	const comp* p, const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-	format2fn;
-	if(!draw_current(fig, fn)) return 0;
-	real* pr, * pi;
-	int isreal=1;
-	pr=mymalloc(nx*ny, real);
-	pi=mycalloc(nx*ny, real);
-	for(int i=0; i<nx*ny; i++){
-		pr[i]=cabs(p[i]);
-		if(pr[i]>1.e-10){
-			pi[i]=atan2(cimag(p[i]), creal(p[i]));
-			if(isreal&&fabs(pi[i])>1.e-10) isreal=0;
-		}
-	}
-	imagesc(fig, nx, ny, limit, zlim, pr, title, xlabel, ylabel,
-		"%s abs", fn);
-	free(pr);
-	if(!isreal){
-		imagesc(fig, nx, ny, limit, zlim, pi, title, xlabel, ylabel,
-			"%s phi", fn);
-	}
-	free(pi);
-	return 1;
-}
-/**
-   Draw the OPD of abs of complex p defined on nx*ny grid. see imagesc()
-*/
-int imagesc_cmp_abs(const char* fig, long nx, long ny, const real* limit, const real* zlim,
-	const comp* p, const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-	format2fn;
-	if(!draw_current(fig, fn)) return 0;
-	real* pr;
-	pr=mymalloc(nx*ny, real);
-	for(int i=0; i<nx*ny; i++){
-		pr[i]=cabs(p[i]);
-	}
-	imagesc(fig, nx, ny, limit, zlim, pr, title, xlabel, ylabel,
-		"%s abs", fn);
-	free(pr);
-	return 1;
+int cdraw(const char *fig, const cmat *p, const real *limit, const real *zlim,
+    int type, const char *title, const char *xlabel, const char *ylabel,
+    const char *format, ...){
+    format2fn;
+    if(!draw_current(fig, fn)) return 0;
+    int isreal=1;
+    long nx=NX(p);
+    long ny=NY(p);
+    dmat *pr=dnew(nx, ny);
+    dmat *pi=dnew(nx, ny);
+    for(int i=0; i<nx*ny; i++){
+        comp ppi=P(p, i);
+        if(type==2){
+            P(pr, i)=creal(ppi);
+            P(pi, i)=cimag(ppi);
+        } else{
+            P(pr, i)=cabs(ppi);
+            if(type==1&&P(pr, i)>1.e-10){
+                P(pi, i)=atan2(cimag(ppi), creal(ppi));
+            }
+        }
+        if(isreal&&fabs(P(pi, i))>1.e-10) isreal=0;
+    }
+    ddraw(fig, pr, limit, zlim, title, xlabel, ylabel, "%s abs", fn);
+    dfree(pr);
+    if(!isreal){
+        ddraw(fig, pi, limit, zlim, title, xlabel, ylabel, "%s phi", fn);
+    }
+    dfree(pi);
+    return 1;
 }
 #include "../math/mathdef.h"
 #include "../math/mathdef.h"
@@ -994,50 +943,11 @@ int imagesc_cmp_abs(const char* fig, long nx, long ny, const real* limit, const 
 */
 /**
    Mapping the floating point numbers onto screen with scaling similar to matlab
-   imagesc.  . see imagesc()
+   imagesc.  . see ddraw()
 */
 
-int ddraw(const char* fig, const dmat* A, real* xylim, real* zlim,
-	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-	format2fn;
-	return imagesc(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s", fn);
-}
-
 /**
-   Mapping the absolution value of complex array. see imagesc()
-*/
-int cdrawabs(const char* fig, const cmat* A, real* xylim, real* zlim,
-	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-
-	format2fn;
-	return imagesc_cmp_abs(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s abs", fn);
-}
-
-/**
-   Mapping the real/imaginary part of complex array. see imagesc()
-*/
-int cdrawri(const char* fig, const cmat* A, real* xylim, real* zlim,
-	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-
-	format2fn;
-	return imagesc_cmp_ri(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s", fn);
-}
-
-/**
-   Mapping the absolute and phase of complex array. see imagesc()
-*/
-int cdraw(const char* fig, const cmat* A, real* xylim, real* zlim,
-	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-	format2fn;
-	return imagesc_cmp_ap(fig, NX(A), NY(A), xylim, zlim, P(A), title, xlabel, ylabel, "%s", fn);
-}
-
-/**
-   like ddraw, acting on map object. see imagesc()
+   like ddraw, acting on map object. see ddraw()
 */
 int drawmap(const char* fig, const map_t* map, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -1049,11 +959,11 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 	limit[1]=map->ox+(map->nx-0.5)*map->dx;
 	limit[2]=map->oy-map->dx/2;
 	limit[3]=map->oy+(map->ny-0.5)*map->dx;
-	imagesc(fig, NX(map), NY(map), limit, zlim, P(map), title, xlabel, ylabel, "%s", fn);
+	ddraw(fig, (const dmat*)map, limit, zlim, title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
 /**
-   Plot the loc on the screen. see imagesc()
+   Plot the loc on the screen. see ddraw()
 */
 int drawloc(const char* fig, loc_t* loc, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -1064,10 +974,10 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	int npad=loc->npad;
 	int nx=loc->map->nx-npad*2;
 	int ny=loc->map->ny-npad*2;
-	real* opd0=mycalloc(nx*ny, real);
+    dmat *opd0=dnew(nx,ny);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
-			opd0[ix+iy*nx]=(P(loc->map, (ix+npad), (iy+npad))>0);
+			P(opd0, ix, iy)=(P(loc->map, (ix+npad), (iy+npad))>0);
 		}
 	}
 	real limit[4];
@@ -1075,20 +985,20 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	limit[1]=limit[0]+loc->dx*nx;
 	limit[2]=loc->map->oy+loc->dx*(npad-1/2);
 	limit[3]=limit[2]+loc->dx*ny;
-	imagesc(fig, nx, ny, limit, zlim, opd0, title, xlabel, ylabel, "%s", fn);
-	free(opd0);
+	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
+	dfree(opd0);
 	return 1;
 }
 
 /**
-   Plot the opd using coordinate loc. see imagesc()
+   Plot the opd using coordinate loc. see ddraw()
 */
 int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 
 	format2fn;
-	if(!loc || !opd || !draw_current(fig, fn)||!loc||!opd) return 0;
+	if(!loc || !opd || !draw_current(fig, fn)) return 0;
 	if(loc->nloc!=PN(opd)){
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, NX(opd), NY(opd));
 		return 0;
@@ -1112,7 +1022,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	limit[1]=loc->map->ox+fabs(loc->dx)*(nx+npad-1/2);
 	limit[2]=loc->map->oy+fabs(loc->dy)*(npad-1/2);
 	limit[3]=loc->map->oy+fabs(loc->dy)*(ny+npad-1/2);
-	imagesc(fig, nx, ny, limit, zlim, P(opd0), title, xlabel, ylabel, "%s", fn);
+	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1123,10 +1033,21 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!saloc || !gradin || !draw_current(fig, fn)) return 0;
-	long nsa=saloc->nloc;
+	if(!saloc || !gradin) return 0;
+    long nsa=saloc->nloc;
+    //check current plotting target
+    if(grad2opd&&nsa>4){
+        if(!draw_current(fig, fn)) return 0;
+    } else{
+        char fnx[100];
+        char fny[100];
+        snprintf(fnx, sizeof(fnx), "%s x", fn);
+        snprintf(fny, sizeof(fny), "%s y", fn);
+        if(!draw_current(fig, fnx) && !draw_current(fig, fny)) return 0;
+    }
+	
 	dmat* grad=0;
-	if(trs){
+	if(trs){//remove tip/tilt
 		grad=ddup(gradin);
 		reshape(grad, nsa, 2);
 		real gxm=0;
@@ -1145,7 +1066,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	}else{
 		grad=dref(gradin);
 	}
-	if(grad2opd&&NX(grad)>8){
+	if(grad2opd&&nsa>4){
 		//This is different from loc_embed. It removes the padding.
 		dmat* phi=0;
 		cure_loc(&phi, grad, saloc);
@@ -1156,7 +1077,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		limit[2]=saloc->map->oy+fabs(saloc->dy)*(npad-1/2+1);
 		limit[3]=saloc->map->oy+fabs(saloc->dy)*(phi->ny+npad-1/2+1);
 		//writebin(phi, "phi");
-		imagesc(fig, NX(phi), NY(phi), limit, zlim, P(phi), title, xlabel, ylabel, "%s", fn);
+		ddraw(fig, phi, limit, zlim, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
 	} else{
 		dmat* gx=dnew_do(nsa, 1, P(grad), 0);
@@ -1170,7 +1091,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	return 1;
 }
 /**
-   Plot opd*amp with coordinate loc. see imagesc()
+   Plot opd*amp with coordinate loc. see ddraw()
 */
 int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -1191,15 +1112,11 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	real ampthres;
 	dmaxmin(P(amp), loc->nloc, &ampthres, 0);
 	ampthres*=0.5;
-	real* opd0=mycalloc(nx*ny, real);
+    dmat* opd0=dnew(nx,ny);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			long ii=P(loc->map, (ix+npad), (iy+npad))-1;
-			if(ii>-1&&P(amp, ii)>ampthres){
-				opd0[ix+iy*nx]=P(opd, ii);
-			} else{
-				opd0[ix+iy*nx]=NAN;
-			}
+            P(opd0, ix, iy)=(ii>-1&&P(amp, ii)>ampthres)?P(opd, ii):NAN;
 		}
 	}
 	real limit[4];
@@ -1207,8 +1124,8 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	limit[1]=limit[0]+loc->dx*nx;
 	limit[2]=loc->map->oy+loc->dx*(npad-1);
 	limit[3]=limit[2]+loc->dx*ny;
-	imagesc(fig, nx, ny, limit, zlim, opd0, title, xlabel, ylabel, "%s", fn);
-	free(opd0);
+	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
+	dfree(opd0);
 	return 1;
 }
 /**
