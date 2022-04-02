@@ -141,7 +141,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Upsample the otf in to out while preserving the PSF. </p>
+<p>Upsample the otf in to out while preserving the PSF sampling. It changes the sampling of OTF. Do not use this if the sampling of OTFs are needed to be preserved. </p>
 
 </div>
 </div>
@@ -263,13 +263,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>notfx</em>, </td>
+          <td class="paramname"><em>npsfx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>notfy</em>&#160;</td>
+          <td class="paramname"><em>npsfy</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -278,7 +278,19 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF. Not including detector or elongation characteristics. </p>
+<p>Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF. Not including detector or elongation characteristics. <br />
+otfs and lotf must have the same sampling, but may have different dimension. Assumes that the otfs have peak in center. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">psepsfs</td><td>PSF. The sampling depends on sampling of OTF and notfx </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">otfs</td><td>OTFs of down link </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lotf</td><td>OTFs of uplink, optional </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saa</td><td>subaperture area, optional </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>wavelength </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">npsfx</td><td>PSF dimension. optional. If specified, the psf will be padded by 0 or truncated </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

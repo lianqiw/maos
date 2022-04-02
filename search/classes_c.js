@@ -11,6 +11,7 @@ var searchData=
   ['pinned_3c_20short2_20_2a_3e',['Pinned&lt; short2 *&gt;',['../class_pinned.html',1,'']]],
   ['pinned_3c_20t_20_2a_3e',['Pinned&lt; T *&gt;',['../class_pinned.html',1,'']]],
   ['plot_5fcfg_5ft',['plot_cfg_t',['../parms_8h.html#structplot__cfg__t',1,'']]],
+  ['plot_5fopts',['plot_opts',['../draw_8h.html#structplot__opts',1,'']]],
   ['powfs_5fcfg_5ft',['powfs_cfg_t',['../parms_8h.html#structpowfs__cfg__t',1,'']]],
   ['powfs_5ft',['powfs_t',['../maos_2types_8h.html#structpowfs__t',1,'']]],
   ['propdata_5ft',['propdata_t',['../lib_2accphi_8h.html#structpropdata__t',1,'']]],

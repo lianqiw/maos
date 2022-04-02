@@ -9,7 +9,6 @@ var map_8h =
     [ "mapcircle_symbolic", "map_8h.html#a234a7b23db40b4c795339ff6a5fb730f", null ],
     [ "map_d_din", "map_8h.html#a37d70ae639530fbecf1e8393a360114a", null ],
     [ "create_metapupil", "map_8h.html#a1863fb416c429ceb5076bbcec266245c", null ],
-    [ "mkcirmap", "map_8h.html#a21a9f0fa93f226af84658e03cda72aa6", null ],
     [ "d2map", "map_8h.html#a57e2c14a9a54502236a94debfbb3e762", null ],
     [ "dcell2map", "map_8h.html#abe32b0b92dfaa49231903dc15896dc14", null ],
     [ "d2rmap", "map_8h.html#a1644a6c8b061768555f7312cd6703ab0", null ],

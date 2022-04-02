@@ -241,6 +241,7 @@ var hierarchy =
     ] ],
     [ "parms_t", "parms_8h.html#structparms__t", null ],
     [ "plot_cfg_t", "parms_8h.html#structplot__cfg__t", null ],
+    [ "plot_opts", "draw_8h.html#structplot__opts", null ],
     [ "powfs_cfg_t", "parms_8h.html#structpowfs__cfg__t", null ],
     [ "powfs_t", "maos_2types_8h.html#structpowfs__t", null ],
     [ "propdata_t", "lib_2accphi_8h.html#structpropdata__t", null ],

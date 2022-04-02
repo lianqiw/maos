@@ -86,7 +86,6 @@ var searchData=
   ['mk2dcov',['mk2dcov',['../genotf_8h.html#ab61ec7aab9356b134cd3a6ebb2db184c',1,'genotf.c']]],
   ['mkamp',['mkamp',['../maos_2utils_8h.html#a83cb0a7d0009262a81f1c1019a49f949',1,'utils.c']]],
   ['mkannloc',['mkannloc',['../loc_8h.html#a87f60a7c39b02cac24e81bab2f5d0c74',1,'loc.c']]],
-  ['mkcirmap',['mkcirmap',['../map_8h.html#a21a9f0fa93f226af84658e03cda72aa6',1,'loc.c']]],
   ['mkdtf',['mkdtf',['../mkdtf_8h.html#a8b787112cceef98c1a2c1aed9362ead9',1,'mkdtf.c']]],
   ['mkdtf_2eh',['mkdtf.h',['../mkdtf_8h.html',1,'']]],
   ['mketf',['mketf',['../mkdtf_8h.html#a36eece1fba4d03e3d4a41138d893d73e',1,'mkdtf.c']]],

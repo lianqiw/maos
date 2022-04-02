@@ -81,7 +81,7 @@ var searchData=
   ['dcwmrow2',['dcwmrow2',['../dmath_8h.html#acde2e10c22e9630f3505326535ea5952',1,'dtmp.c']]],
   ['dcwpow',['dcwpow',['../dmath_8h.html#a6957a4dae51bdac2e2bb97ebdc74b1a9',1,'dtmp.c']]],
   ['ddiff',['ddiff',['../dmath_8h.html#a3b6a8c7b668648836b26571978b2faaf',1,'dtmp.c']]],
-  ['ddraw',['ddraw',['../draw_8h.html#a30567656d979819f7c0cf179c18a9101',1,'draw.c']]],
+  ['ddraw',['ddraw',['../draw_8h.html#a7e74d1babc170932259128477be1f48f',1,'draw.c']]],
   ['ddup',['ddup',['../dmath_8h.html#a7ecadca31195b8b40135b7dbeb808906',1,'dtmp.c']]],
   ['dembed',['dembed',['../dmath_8h.html#a6d616d187ac43db30de304b02ef77842',1,'dtmp.c']]],
   ['denc',['denc',['../dmath_8h.html#ab6743155753b6f928eb8541b83358577',1,'dtmp.c']]],

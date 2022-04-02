@@ -94,7 +94,7 @@ var searchData=
   ['dcwmrow2',['dcwmrow2',['../dmath_8h.html#acde2e10c22e9630f3505326535ea5952',1,'dtmp.c']]],
   ['dcwpow',['dcwpow',['../dmath_8h.html#a6957a4dae51bdac2e2bb97ebdc74b1a9',1,'dtmp.c']]],
   ['ddiff',['ddiff',['../dmath_8h.html#a3b6a8c7b668648836b26571978b2faaf',1,'dtmp.c']]],
-  ['ddraw',['ddraw',['../draw_8h.html#a30567656d979819f7c0cf179c18a9101',1,'draw.c']]],
+  ['ddraw',['ddraw',['../draw_8h.html#a7e74d1babc170932259128477be1f48f',1,'draw.c']]],
   ['ddup',['ddup',['../dmath_8h.html#a7ecadca31195b8b40135b7dbeb808906',1,'dtmp.c']]],
   ['default_2econf',['default.conf',['../default.html',1,'page34_conf']]],
   ['delay',['delay',['../structdir__t.html#aa3017b821bec4b5ce1d3f606cd1d6526',1,'dir_t::delay()'],['../maos_2types_8h.html#a4bf63456d6d5ba2b4fd471efeeb2ea22',1,'dither_t::delay()']]],

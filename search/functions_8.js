@@ -1,9 +1,5 @@
 var searchData=
 [
-  ['imagesc',['imagesc',['../draw_8h.html#ab1c767ef4bb19f93fb7d67197258b299',1,'draw.c']]],
-  ['imagesc_5fcmp_5fabs',['imagesc_cmp_abs',['../draw_8h.html#af0a0e5118e9bc8e4ff96d73d417f250f',1,'draw.c']]],
-  ['imagesc_5fcmp_5fap',['imagesc_cmp_ap',['../draw_8h.html#a8f29ef2c53c814e5e94d06b3cfcf9f03',1,'draw.c']]],
-  ['imagesc_5fcmp_5fri',['imagesc_cmp_ri',['../draw_8h.html#a9fe61c9ec5bb1a6453541f7b97b4cc76',1,'draw.c']]],
   ['init_5fl2d',['init_l2d',['../classmap2map.html#a871442f9e4d57be83c9fb8edee78687a',1,'map2map']]],
   ['init_5fl2l',['init_l2l',['../classmap2map.html#ae8853e7cd021990d3dcc6d89e281fe5c',1,'map2map']]],
   ['init_5fprocess',['init_process',['../process_8h.html#a453c688586be0b4133d5cd3508985e41',1,'process.c']]],

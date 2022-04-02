@@ -1,5 +1,8 @@
 var NAVTREEINDEX15 =
 {
+"slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7":[11,0,1,24,4],
+"slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7":[11,0,1,24,6],
+"smath_8h.html":[11,0,3,9],
 "smath_8h.html#a00259ef4be59b306d5359e1135c77c54":[11,0,3,9,18],
 "smath_8h.html#a00588f0fc2927520dbcb3484135b454a":[11,0,3,9,219],
 "smath_8h.html#a0097e64fb9b61b4f5db289f1b5eb33d6":[11,0,3,9,128],
@@ -246,8 +249,5 @@ var NAVTREEINDEX15 =
 "smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724":[11,0,3,9,12],
 "smath_8h.html#af956788b4f2ba6956ad09f77ba845efb":[11,0,3,9,76],
 "smath_8h.html#afa710a69788ccc733b231264144ccf45":[11,0,3,9,36],
-"smath_8h.html#afbdb4fdaea97abe00b679ac378a0d5a4":[11,0,3,9,113],
-"smath_8h.html#afce1b08af75769f6c765fab002def9fb":[11,0,3,9,134],
-"smath_8h.html#afec275089ac8cb58cd8495d1e6a5b3a6":[11,0,3,9,98],
-"smath_8h.html#afefd1fe3b27160f0a485df0b9a8095fc":[11,0,3,9,225]
+"smath_8h.html#afbdb4fdaea97abe00b679ac378a0d5a4":[11,0,3,9,113]
 };
