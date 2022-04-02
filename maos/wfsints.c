@@ -144,6 +144,7 @@ void wfsints(thread_t* thread_data){
 			const int nlx=powfs[ipowfs].llt->pts->nxsa;
 			const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 			/*embed opd to compute complex pupil function*/
+			if(!lwvf) lwvf=cnew(nlx, nlx);
 			cembed_wvf(lwvf, P(lltopd), P(powfs[ipowfs].llt->amp), nlx, nlx, wvl, 0);
 			/*turn to complex psf*/
 			cfft2(lwvf, -1);
