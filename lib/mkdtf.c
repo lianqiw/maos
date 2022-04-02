@@ -370,7 +370,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 			ccellfree(etf_cache);
 			dfree(thetas);
 			if(ncrop){
-				warning("Sodium profile is cropped by up to %g for %d subapertures when computing etf. Increase powfs.pixpsa or powfs.notf.\n", max_crop, ncrop);
+				warning("Sodium profile is cropped by up to %.2f%% for %d subapertures when computing etf. Increase powfs.pixpsa or powfs.notfx/y.\n", max_crop*100, ncrop);
 			}
 		}//if na_interp else
 		//fuse nominal to etf to avoid multiply again.

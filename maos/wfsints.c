@@ -39,10 +39,14 @@
    fft doesn't have 1/n^2 scaling.  this function lives inside the threading
    routine wfsgradx
 
-   Notice that the uplink psf have to have the same sampling as the subaperture psf.
-   uplink psf has sampling lambda/(nlwvf*ldx)
+   Notice that the uplink have to have the same spatial sampling as the subaperture (dx).
+   uplink psf has sampling lambda/(nlwvf*dx)
    subaperture has sampling lambda/(nwvf*dx)
-   When the uplink pupil is larger than subaperture, we need to scale ldx accordingly.
+   uplink otf has the sampling dx/lambda sampling as subaperture. 
+
+   WHen notf is bigger than nwvf*embfac, the PSF is embeded which preserves the sampling.
+   The uplink OTF need to be upsampled to dx/lambda *(nwvf/notf)
+   
 */
 void wfsints(thread_t* thread_data){
 	/* first, unwrap the data */
@@ -62,9 +66,9 @@ void wfsints(thread_t* thread_data){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;
-	const int notf=MAX(notfx, notfy);
+	const int notf=MAX(notfx, notfy);//\todo: verify notf is used correctly. can we use notfx and notfy?
 	const int nopd=powfs[ipowfs].pts->nxsa;
-	const int nxsa=nopd*nopd;
+	const int saoffset=nopd*nopd;
 	const int nwvf=nopd*parms->powfs[ipowfs].embfac;
 	const int use1d=(nwvf>2*notfy?1:0)&&(!hasllt)&&(!lltopd);
 	const int nwvl=parms->powfs[ipowfs].nwvl;
@@ -77,8 +81,9 @@ void wfsints(thread_t* thread_data){
 	cmat* otf=NULL;
 	cmat* lotfc=NULL;
 	cmat* lwvf=NULL;
-	/*this coefficient normalize the complex psf so its abs2 sum to 1.*/
-	real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(powfs[ipowfs].pts->nxsa*nwvf);
+	//this coefficient normalize the complex psf so its abs2 sum to 1.
+	//nopd scales the amplitude map, nwvf canceling the scaling of FFT.
+	real norm_psf=sqrt(powfs[ipowfs].areascale)/(real)(nopd*nwvf);
 	/*normalized pistat. notf is due to a pair of FFT on psf. */
 	real norm_pistat=norm_psf*norm_psf/((real)notf*notf);
 	/*this notfx*notfy is due to cfft2 after cwm and detector transfer function. */
@@ -101,7 +106,7 @@ void wfsints(thread_t* thread_data){
 		otf=psf;
 	}
 	/* there is uplink beam */
-	if(lltopd){
+	/*if(lltopd){//moved down
 		const int nlx=powfs[ipowfs].llt->pts->nxsa;
 		const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 		lwvf=cnew(nlwvf, nlwvf);
@@ -110,7 +115,7 @@ void wfsints(thread_t* thread_data){
 		} else{
 			lotfc=lwvf;
 		}
-	}
+	}*/
 	cmat* fftpsfout=NULL;
 	/* hold the complex psf to save to file. */
 	ccell* psfout=data->psfout;
@@ -152,12 +157,27 @@ void wfsints(thread_t* thread_data){
 			}*/
 			/*turn to otf. */
 			cfft2(lwvf, 1);
-			if(lwvf!=lotfc){
-			/* uplink llt has different aperture size than LGS subaperture*/
+			if(nlwvf!=nwvf){
+				/* uplink llt has different aperture size than LGS subaperture. 
+				They do have the same spatial sampling. so simply crop or pad otf.*/
+				cfree(lotfc);
+				lotfc=cnew(nwvf, nwvf);
 				ccpcorner(lotfc, lwvf, C_FULL);
+				cfree(lwvf);
+			}else{
+				lotfc=lwvf; lwvf=NULL;
+			}
+			if(nwvf!=notf){/* subaperture OTF is also resampled, need to pad in PSF space*/
+				cmat *lotfc2=lotfc;
+				lotfc=cnew(notf, notf);
+				cfft2(lotfc2, -1);//turn back to psf
+				ccpcorner(lotfc, lotfc2, C_FULL);//embed or crop psf
+				cfft2(lotfc, 1);//turn to otf
+				cscale(lotfc, 1./((real)notf*nwvf));
+				cfree(lotfc2);
 			}
 			/*lotfc has peak nlwvf*nlwvf in corner. */
-			cscale(lotfc, 1./(real)((long)nlwvf*nlwvf));/*max of 1 */
+			cscale(lotfc, 1./((real)nlwvf*nlwvf));/*max of 1 */
 		}
 		int multi_nominal=(NX(powfs[ipowfs].dtf[iwvl].si)==nsa);
 		/* nominal and si are used to sampled PSF onto detector pixels */
@@ -191,11 +211,9 @@ void wfsints(thread_t* thread_data){
 				}
 				si=P(powfs[ipowfs].dtf[iwvl].si,isa,illt);
 			}
-			int ioffset=isa*nxsa;
+			int ioffset=isa*saoffset;
 			/*embed amp/opd to complex wvf with a embedding factor of 2. */
-			cembed_wvf(wvf, P(opd)+ioffset,
-				realamp+ioffset, nopd, nopd,
-				P(parms->powfs[ipowfs].wvl,iwvl), 0);
+			cembed_wvf(wvf, P(opd)+ioffset,realamp+ioffset, nopd, nopd, P(parms->powfs[ipowfs].wvl,iwvl), 0);
 			TIM(1);
 			if(use1d){ /*use 1d fft */
 				cfft2partial(wvf, notf, -1);
@@ -203,8 +221,7 @@ void wfsints(thread_t* thread_data){
 				cfft2(wvf, -1); /*use 2d fft to form PSF. */
 			}
 			TIM(2);
-			if(psf!=wvf){
-			/*copy the peaks (at corner) from wvf to psf */
+			if(psf!=wvf){/*copy the peaks (at corner) from wvf to psf */
 				ccpcorner(psf, wvf, C_FULL);
 			}
 
@@ -221,12 +238,12 @@ void wfsints(thread_t* thread_data){
 			/* form PSF with peak in corner*/
 			cabs2toreal(psf);
 			TIM(3);
-		/* need to turn to otf to add llt contribution or output pixel intensities.*/
+			/* need to turn to otf to add llt contribution or output pixel intensities.*/
 			if(isotf){
 				cfft2(psf, -1);   /*turn to otf. peak in corner */
 				TIM(4);
 				if(pistatout){  /*The pistat does not include uplink effect*/
-								 /*copy to temporary array. peak in in corner*/
+					/*copy to temporary array. peak in in corner*/
 					ccp(&psftmp, psf);
 					if(gx){      /*remove tip/tilt from OTF using tilt reference. */
 						ctilt(psftmp, -gx[isa]*dtheta1, -gy[isa]*dtheta1, 0);
@@ -237,7 +254,7 @@ void wfsints(thread_t* thread_data){
 					if(!gx){           /*no gradient reference. compute using cog and shift.*/
 						cshift2center(psftmp, 0.5, 0.5);
 					}
-									   /*accumulate the real part of psf*/
+					/*accumulate the real part of psf*/
 					creal2d(&P(pistatout, isa, iwvl), 1, psftmp, norm_pistat);
 				}
 				if(lltopd){            /*add uplink otf */
@@ -276,7 +293,7 @@ void wfsints(thread_t* thread_data){
 	cfree(psftmp);
 	cfree(fftpsfout);
 	if(lltopd){
-		if(lwvf!=lotfc) cfree(lotfc);
+		cfree(lotfc);
 		cfree(lwvf);
 	}
 #if TIMING==1

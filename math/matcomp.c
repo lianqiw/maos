@@ -320,7 +320,7 @@ void X(embedd)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
 	const long noutx=A->nx;
 	const long nouty=A->ny;
 	X(zero)(A);
-	if(fabs(theta)<1.e-10){/*no rotation. */
+	if(!theta){/*no rotation. */
 		const long skipx=(noutx-ninx)/2;
 		const long skipy=(nouty-niny)/2;
 		long ixstart=0, ixend=ninx;

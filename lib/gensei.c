@@ -127,7 +127,8 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 	return otf;
 }
 /**
-   Upsample the otf in to out while preserving the PSF.
+   Upsample the otf in to out while preserving the PSF sampling. It changes the sampling of OTF.
+   Do not use this if the sampling of OTFs are needed to be preserved.
  */
 void upsample_otf(cmat* out, const cmat* in){
 	if(NX(in)==NX(out)&&NY(in)==NY(out)){
@@ -145,9 +146,17 @@ void upsample_otf(cmat* out, const cmat* in){
 }
 /**
    Createing subaperture short exposure PSF from the tip/tilt removed turbulence
-   OTF and uplink OTF. Not including detector or elongation characteristics.  */
-void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf,
-	const cell* saa, const dmat* wvl, int notfx, int notfy
+   OTF and uplink OTF. Not including detector or elongation characteristics.  
+   otfs and lotf must have the same sampling, but may have different dimension.
+   Assumes that the otfs have peak in center.
+   */
+void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling of OTF and notfx*/
+	const cccell* otfs, /**<[in] OTFs of down link*/
+	const cccell* lotf, /**<[in] OTFs of uplink, optional*/
+	const cell* saa, /**<[in] subaperture area, optional*/
+	const dmat* wvl, /**<[in] wavelength*/
+	int npsfx,/**<[in] PSF dimension. optional. If specified, the psf will be padded by 0 or truncated*/
+	int npsfy
 ){
 	const int nwvl=PN(wvl);
 	const int nsa=NX(P(otfs, 0, 0));
@@ -167,20 +176,26 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf,
 		*psepsfs=dccellnew(nsepsf, nwvl);
 	}
 	sepsfs=*psepsfs;
-	if(!notfx) notfx=NX(P(P(otfs, 0), 0));
-	if(!notfy) notfy=NX(P(P(otfs, 0), 0));
+	int notfx=NX(P(P(otfs, 0), 0));
+	int notfy=NY(P(P(otfs, 0), 0));
+	if(!npsfx) npsfx=notfx;
+	if(!npsfy) npsfy=notfy;
+	dmat *sepsftmp=0;
 	for(int isepsf=0; isepsf<nsepsf; isepsf++){
 		const dmat* saai=saa?(iscell(saa)?PR((dcell*)saa, isepsf, 1):(dmat*)saa):NULL;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			P(sepsfs, isepsf, iwvl)=dcellnew_same(nsa, 1, notfx, notfy);
+			P(sepsfs, isepsf, iwvl)=dcellnew_same(nsa, 1, npsfx, npsfy);
 			const ccell* otf=PR(otfs, isepsf, iwvl);
 			cmat* sepsf=cnew(notfx, notfy);
 			cmat* lotfi=0;
+			//OTFs peak in center.
+			//2022-04-01: do not upsample OTF, crop instead to preserve the sampling.
 			if(nlotf){
 				cmat* lotfi2=P(PR(lotf, isepsf, iwvl), 0);
 				if(NX(lotfi2)!=notfx||NY(lotfi2)!=notfy){
 					lotfi=cnew(notfx, notfy);
-					upsample_otf(lotfi, lotfi2);
+					//upsample_otf(lotfi, lotfi2);//old way, wrong, perturbs otf sampling
+					cembed(lotfi, lotfi2, 0);//OTF sampling.
 				} else{
 					lotfi=cref(lotfi2);
 				}
@@ -188,7 +203,8 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf,
 			for(int isa=0; isa<nsa; isa++){
 				real norm=(saai?P(saai, isa):1)/((real)(notfx*notfy));
 				if(P(otf, isa, 0)){
-					upsample_otf(sepsf, P(otf, isa, 0));/*peak in center */
+					//upsample_otf(sepsf, P(otf, isa, 0));//old way, wrong, perturbs otf sampling
+					cembed(sepsf, P(otf, isa, 0), 0);
 				} else{
 					czero(sepsf);
 				}
@@ -198,12 +214,18 @@ void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf,
 				cfftshift(sepsf); /*peak now in corner. */
 				cfft2(sepsf, 1);   /*turn to psf. FFT 1th */
 				cfftshift(sepsf); /*psf with peak in center */
-				creal2d(&P(P(sepsfs, isepsf, iwvl), isa, 0), 0, sepsf, norm);/*copy to output. */
+				if(notfx==npsfx && notfy==npsfy){
+					creal2d(&P(P(sepsfs, isepsf, iwvl), isa, 0), 0, sepsf, norm);/*copy to output. */
+				}else{
+					creal2d(&sepsftmp, 0, sepsf, norm);/*copy to output. */
+					dembed(P(P(sepsfs, isepsf, iwvl), isa, 0), sepsftmp, 0);
+				}
 			}
 			cfree(sepsf);
 			cfree(lotfi);
 		}
 	}
+	dfree(sepsftmp);
 }
 /**
    generate subaperture short exposure average pixel intensities sampled on
