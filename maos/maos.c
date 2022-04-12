@@ -442,10 +442,10 @@ int main(int argc, const char* argv[]){
 			maos_setup(parms);
 			parms->save.setup=0; //setup is finished. do not save if calling again.
 			if(parms->sim.end>parms->sim.start){
-				if(!disable_save){
+				/*if(!disable_save){
 					remove("maos");
 					mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
-				}
+				}*/
 				info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(0), HOST);
 				maos_sim();
 			}

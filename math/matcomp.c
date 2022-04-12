@@ -504,10 +504,10 @@ void X(cpcorner)(X(mat)* A, const X(mat)* restrict B, CEMBED flag){
    Put abs square of each element into its realpart.
    A=abs(A).^2;
 */
-void X(abs2toreal)(X(mat)* A){
+void X(abs2toreal)(X(mat)* A, R scale){
 	if(!check_mat(A)) return;
 	for(int i=0; i<A->nx*A->ny; i++){
-		P(A,i)=ABS2(P(A,i));
+		P(A,i)=ABS2(P(A,i))*scale;
 	}
 }
 /**

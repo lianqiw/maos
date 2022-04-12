@@ -23,7 +23,7 @@ int cusolve_cg::counter=0;
 Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	Real ans=0;
 	cgtmp.count++;
-	Real thres=cgtmp.residual*3;
+	Real thres=cgtmp.residual*5;
 	int restarted=0;
 repeat:
 	if(first_run){

@@ -81,7 +81,7 @@ public:
 	curmat imcc;     /**<size is 9*nsa*/
 	curmat neasim;     /**<The noise equivalent angles for each subaperture.*/
 	curmat  amp;        /**<Amplitude map*/
-	cufftHandle plan1, plan2, plan3, plan_fs;   /**<FFTW plan if any*/
+	cufftHandle plan_fs;   /**<FFTW plan for fieldstop*/
 	Array<cudtf_t> dtf;       /**<array for each wvl.*/
 	curmat qe;        /**<See powfs.qe*/
 	curmat srot;      /**<angle to rotate PSF/OTF*/
@@ -95,7 +95,6 @@ public:
 	curmat lltimcc;      /**<size of 9x1*/
 	curmat lltamp;
 	int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
-	cufftHandle lltplan_wvf, lltplan_otf;/**<FFTW plan for LLT*/
 	curmat opdadd;     /**<The ncpa and surface aberration.*/
 	/*For random number of this wfs. */
 	struct curandStateXORWOW* custat;
@@ -107,11 +106,16 @@ public:
 	curmat gradcalc;   /**<For outputing grads*/
 	curmat lltopd;
 	Array<Real, Pinned> lltg; //pinned memory.
-	cucmat lltwvf;
-	cucmat lltotfc;
-	cucmat wvf;
-	cucmat psf;
-	cucmat otf;
+	cucmat lltwvf;//native uplink PSF/OTF (nlwvf)
+	cufftHandle lltplan_wvf;
+	cucmat lltotfc;//same otf sampling and size as downlink psf (notfx,notfy)
+	cufftHandle lltplan_lotfc;
+	cucmat lltotfc2;//same otf sampling and size as downlink wvf (nwvf). temporary.
+	cufftHandle lltplan_lotfc2;
+	cucmat wvf;//native downlink subaperture PSF/OTF
+	cufftHandle plan_wvf;
+	cucmat psf;//subaperture PSF/OTF with optional PSF padding/cropping to fill the detector*/
+	cufftHandle plan_psf;
 	curcell ints;       /**<For accumulating subaperture image.*/
 	curcell pistatout;  /**<For output pistatout*/
 	curcell intsout;    /**<For output time averaged subaperture iamges*/

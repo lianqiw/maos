@@ -194,7 +194,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	for(int isurf=0; isurf<parms->nsurf; isurf++){
 		char* fn=parms->surf[isurf];
 		if(!fn) continue;
-		info("Surface %d:\n", isurf);
+		info("\nSurface %d:\n", isurf);
 		mapcell* surfs=genscreen_str(fn);
 		if(!surfs) continue;
 		for(int isurf2=0; isurf2<PN(surfs); isurf2++){

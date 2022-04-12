@@ -143,7 +143,7 @@
 			  const R theta, CEMBED flag);			\
     void X(cpcorner)(X(mat) *A, const X(mat) *restrict B, CEMBED flag);	\
     void X(abstoreal)(X(mat) *A);					\
-    void X(abs2toreal)(X(mat) *A);					\
+    void X(abs2toreal)(X(mat) *A, R scale);					\
     void X(cpd)(X(mat)**restrict A, const XR(mat) *restrict B);		\
     void X(real2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(imag2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \

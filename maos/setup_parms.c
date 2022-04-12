@@ -2903,7 +2903,8 @@ static void print_parms(const parms_t *parms){
 	"open",
 	"close"
 	};
-
+#undef GREEN
+#define GREEN BLACK
 	info2("%sAperture%s is %g m with sampling 1/%g m\n",GREEN,BLACK,
 		parms->aper.d,1/parms->evl.dx);
 	real fgreen=calc_greenwood(parms->atm.r0z,parms->atm.nps,P(parms->atm.ws),P(parms->atm.wt));
@@ -2998,7 +2999,7 @@ static void print_parms(const parms_t *parms){
 	info2("%sThere are %d wfs%s\n",GREEN,parms->nwfs,BLACK);
 	for(i=0; i<parms->nwfs; i++){
 		const int ipowfs=parms->wfs[i].powfs;
-		info("    wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
+		info("    wfs %d: type %d, at (%7.2f, %7.2f) arcsec, %3.0f km, siglev is %g",
 			i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
 			parms->wfs[i].thetay*206265,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
@@ -3012,15 +3013,15 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("%sThere are %d DMs%s\n",GREEN,parms->ndm,BLACK);
 	for(i=0; i<parms->ndm; i++){
-		info("    DM %d at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+		info("  DM %d at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
 			i, parms->dm[i].ht/1000,parms->dm[i].dx,
 			parms->dm[i].offset,
 			fabs(P(parms->dm[i].stroke,0))*1e6);
 		if(parms->dm[i].iac){
-			info("     Normalized cubic influence function with inter-actuator coupling of %g\n",
+			info("    Normalized cubic influence function with inter-actuator coupling of %g\n",
 				parms->dm[i].iac);
 		} else{
-			info("     Bilinear influence function.\n");
+			info("    Bilinear influence function.\n");
 		}
 	}
 	if(parms->recon.alg==RECON_MVR){

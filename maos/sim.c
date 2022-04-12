@@ -328,6 +328,6 @@ void maos_sim(){
 	for(long imod=0; imod<parms->evl.nmod; imod++){
 		info3("%.2f ", sqrt(P(restot, imod)/rescount)*1e9);
 	}
-	info3("\n");
+	info3(" nm.\n");
 	dfree(restot);
 }

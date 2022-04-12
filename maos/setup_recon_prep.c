@@ -23,7 +23,8 @@
 #include "setup_powfs.h"
 #include "pywfs.h"
 #include "ahst.h"
-
+#undef GREEN
+#define GREEN BLACK
 /**
    \file setup_recon_prep.c
 

@@ -118,10 +118,10 @@ __global__ void sa_cpcenter_do(Comp* restrict out, int noutx, int nouty,
 /**
    abs2 to real.
 */
-__global__ static void sa_abs2real_do(Comp* wvf, const int nx, Real alpha){
+__global__ static void sa_abs2real_do(Comp* wvf, const int nx, const int ny,Real alpha){
 	const int isa=blockIdx.x;
-	wvf+=nx*nx*isa;
-	for(int iy=threadIdx.y; iy<nx; iy+=blockDim.y){
+	wvf+=nx*ny*isa;
+	for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 		for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
 			Real r=Z(cuCreal)(wvf[iy*nx+ix]);
 			Real i=Z(cuCimag)(wvf[iy*nx+ix]);
@@ -277,7 +277,6 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;
-	const int notf=MAX(notfx, notfy);
 	const int nx=powfs[ipowfs].pts->nxsa;
 	const int nwvf=nx*parms->powfs[ipowfs].embfac;
 	const int pixpsax=powfs[ipowfs].pixpsax;
@@ -299,16 +298,17 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		pistatout=cuwfs[iwfs].pistatout;
 	}
 	cuccell wvfout;
-	const int wvf_n=notf/2+2;//was notf/2
+	const int wvf_nx=notfx/2+2;//was notf/2
+	const int wvf_ny=notfy/2+2;//was notf/2
 	if(parms->powfs[ipowfs].psfout){
 		wvfout=cuwfs[iwfs].wvfout;
 	}
 	Real norm_psf=sqrt(powfs[ipowfs].areascale)/((Real)powfs[ipowfs].pts->nxsa*nwvf);
-	Real norm_pistat=norm_psf*norm_psf/((Real)notf*notf);
+	Real norm_pistat=norm_psf*norm_psf/((Real)notfx*notfy);
 	Real norm_ints=siglev*norm_psf*norm_psf/((Real)notfx*notfy);
 	/* Do msa subapertures in a batch to avoid using too much memory.*/
 	
-	cucmat psf, wvf, otf, psfstat, lotfc, lwvf;
+	cucmat psf, wvf, psfstat, lotfc, lotfc2, lwvf;
 	curmat lltopd;
 	real wt1=0, wt2=0;
 	if(powfs[ipowfs].llt&&parms->powfs[ipowfs].trs){
@@ -360,13 +360,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			const real oy=powfs[ipowfs].llt->pts->origy[0];
 			add_tilt_do<<<1, dim3(16, 16), 0, stream>>>(lltopd, nlx, nlx, ox, oy, dx, ttx, tty);
 		}
-		int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 		lwvf=cuwfs[iwfs].lltwvf;
-		if(nlwvf!=notf){
-			lotfc=cuwfs[iwfs].lltotfc;
-		} else{
-			lotfc=lwvf;
-		}
 		if(parms->save.wfsopd->p[iwfs]){
 			zfarr_push_scale(simu->save->wfslltopd[iwfs], isim, lltopd, 1, stream);
 		}
@@ -382,48 +376,54 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	}/*if has llt */
 
 	/* Now begin physical optics preparation*/
-	int isotf=(lltopd||pistatout);
 	int msa=cuwfs[iwfs].msa;/* number of subaps to process at each time.*/
 	wvf=cuwfs[iwfs].wvf;
-	if(nwvf==notf){
+	if(nwvf==notfx && notfx==notfy){
 		psf=wvf;
 	} else{
 		psf=cuwfs[iwfs].psf;
 	}
-	if(notfx!=notf||notfy!=notf){
-		otf=cuwfs[iwfs].otf;
-		if(isotf){/*There is an additional pair of FFT.*/
-			norm_ints/=((Real)notf*notf);
-		}
-	} else{
-		otf=psf;
-	}
-
+	
 	if(pistatout){
 		psfstat=cuwfs[iwfs].psfstat;
 	}
 	/* Now begin physical optics  */
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-
 		Real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 		Real dtheta=wvl/(nwvf*powfs[ipowfs].pts->dx);
 		if(lltopd){ /*First calculate LOTF */
 			int nlx=powfs[ipowfs].llt->pts->nxsa;
 			int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 			lwvf.Zero(stream);
-			if(lotfc()!=lwvf()){
-				lotfc.Zero(stream);
-			}
-			sa_embed_wvf_do<<<1, dim3(16, 16), 0, stream>>>
-				(lwvf, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
-				/*Turn to PSF. peak in corner */
+			//Embed OPD to complex wavefront
+			sa_embed_wvf_do<<<1, dim3(16, 16), 0, stream>>>(lwvf, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
+			/*Turn to PSF. peak in corner */
 			CUFFT(cuwfs[iwfs].lltplan_wvf, lwvf, CUFFT_FORWARD);
-			sa_abs2real_do<<<1, dim3(16, 16), 0, stream>>>(lwvf, nlwvf, 1./(Real)(nlwvf*nlwvf));
-			/*Turn to OTF. peak in corner*/
-			/*Use backward to make lotfc the conjugate of otf. peak is in corner. */
-			CUFFT(cuwfs[iwfs].lltplan_wvf, lwvf, CUFFT_INVERSE);
-			if(lwvf()!=lotfc()){
-				sa_cpcorner_do<<<1, dim3(16, 16), 0, stream>>>(lotfc, notf, notf, lwvf, nlwvf, nlwvf);
+			sa_abs2real_do<<<1, dim3(16, 16), 0, stream>>>(lwvf, nlwvf, nlwvf, 1./(Real)(nlwvf*nlwvf));
+			int islotf=0;//whether lotfc contains OTF
+			if(nlwvf!=nwvf){//need to embed/crop uplink OTF
+				/* uplink has different aperture size than LGS subaperture, but
+				the same spatial and OTF sampling. Crop or pad OTF toget to get
+				the same PSF/OTF sampling.*/
+				islotf=1; CUFFT(cuwfs[iwfs].lltplan_wvf, lwvf, CUFFT_INVERSE);/*Turn to OTF. peak in corner*/
+				lotfc2=cuwfs[iwfs].lltotfc2;
+				sa_cpcorner_do<<<1, dim3(16, 16), 0, stream>>>(lotfc2, nwvf, nwvf, lwvf, nlwvf, nlwvf);
+			}else{
+				lotfc2=lwvf;
+			}
+			if(nwvf!=notfx||notfx!=notfy){//need to embed/crop uplink PSF
+				if(islotf){///*Turn to PSF. peak in corner*/
+					islotf=0; CUFFT(cuwfs[iwfs].lltplan_lotfc2, lotfc2, CUFFT_FORWARD);
+					cucscale(lotfc2, 1./((Real)nwvf*nwvf), stream);
+				}
+				lotfc=cuwfs[iwfs].lltotfc;
+				lotfc.Zero(stream);
+				sa_cpcorner_do<<<1, dim3(16, 16), 0, stream>>>(lotfc, notfx, notfy, lotfc2, nwvf, nwvf);
+			}else{
+				lotfc=lotfc2;
+			}
+			if(!islotf){
+				islotf=1; CUFFT(cuwfs[iwfs].lltplan_lotfc, lotfc, CUFFT_INVERSE);
 			}
 		}
 
@@ -439,75 +439,59 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 				(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp()+isa*nx*nx, wvl, nx, nwvf);
 			ctoc("embed");//0.7 ms
 			/* turn to complex psf, peak in corner */
-			CUFFT(cuwfs[iwfs].plan1, wvf, CUFFT_FORWARD);
+			CUFFT(cuwfs[iwfs].plan_wvf, wvf, CUFFT_FORWARD);
 			/* copy big psf to smaller psf covering detector focal plane. */
 			if(psf()!=wvf()){
 				sa_cpcorner_do<<<ksa, dim3(16, 16), 0, stream>>>
-					(psf, notf, notf, wvf, nwvf, nwvf);
+					(psf, notfx, notfy, wvf, nwvf, nwvf);
 			}
 			//gpu_write(psf, notf, notf*ksa, "psf_out_1");
 			ctoc("psf");//1.1ms
 			if(wvfout){
 				cuzero(cuwfs[iwfs].psfout, stream);
-				CUFFT2(cuwfs[iwfs].plan2, psf, cuwfs[iwfs].psfout, CUFFT_INVERSE);
+				CUFFT2(cuwfs[iwfs].plan_psf, psf, cuwfs[iwfs].psfout, CUFFT_INVERSE);
 				sa_cpcenter_do<<<ksa, dim3(16, 16), 0, stream>>>
-					(wvfout[isa+nsa*iwvl], wvf_n, wvf_n,
-						cuwfs[iwfs].psfout, notf, notf, norm_psf/(notf*notf));
+					(wvfout[isa+nsa*iwvl], wvf_nx, wvf_ny,
+						cuwfs[iwfs].psfout, notfx, notfy, norm_psf/(notfx*notfy));
 			}
 			/* abs2 part to real, peak in corner */
-			sa_abs2real_do<<<ksa, dim3(16, 16), 0, stream>>>(psf, notf, 1);
+			sa_abs2real_do<<<ksa, dim3(16, 16), 0, stream>>>(psf, notfx, notfy, 1);
 			ctoc("abs2real");//0.8ms
 			//gpu_write(psf, notf, notf*ksa, "psf_out_2");
-			if(isotf){
+			
 			/* turn to otf. peak in corner */
-				CUFFT(cuwfs[iwfs].plan2, psf, CUFFT_FORWARD);
-				ctoc("fft to otf");//3.7 ms for notf=84. 2.6 ms for 70. 0.7ms for 64.
-				if(pistatout){
-					DO(cudaMemcpyAsync(psfstat, psf, sizeof(Comp)*notf*notf*ksa,D2D, stream));
-					if(parms->powfs[ipowfs].pistatout){
-						sa_add_otf_tilt_corner_do<<<ksa, dim3(16, 16), 0, stream>>>
-							(psfstat, notf, notf, gradref()+isa, gradref()+nsa+isa, -1.f/dtheta);
-					}
-					CUFFT(cuwfs[iwfs].plan2, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/
-					if(parms->sim.skysim){/*want peak in corner*/
-						sa_acc_real_do<<<ksa, dim3(16, 16), 0, stream>>>
-							(pistatout[isa+nsa*iwvl], psfstat, notf, notf, norm_pistat);
-					} else{/*want peak in center*/
-						sa_acc_real_fftshift_do<<<ksa, dim3(16, 16), 0, stream>>>
-							(pistatout[isa+nsa*iwvl], psfstat, notf, notf, norm_pistat);
-					}
+			CUFFT(cuwfs[iwfs].plan_psf, psf, CUFFT_FORWARD);
+			ctoc("fft to OTF");//3.7 ms for notf=84. 2.6 ms for 70. 0.7ms for 64.
+			if(pistatout){
+				DO(cudaMemcpyAsync(psfstat, psf, sizeof(Comp)*notfx*notfy*ksa,D2D, stream));
+				if(parms->powfs[ipowfs].pistatout){
+					sa_add_otf_tilt_corner_do<<<ksa, dim3(16, 16), 0, stream>>>
+						(psfstat, notfx, notfy, gradref()+isa, gradref()+nsa+isa, -1.f/dtheta);
 				}
-				if(lltopd){/*multiply with uplink otf. */
-					sa_ccwm_do<<<ksa, 256, 0, stream>>>(psf(), notf*notf, lotfc(), 1);
-					ctoc("ccwm with lotfc");//0.66 ms
+				CUFFT(cuwfs[iwfs].plan_psf, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/
+				if(parms->sim.skysim){/*want peak in corner*/
+					sa_acc_real_do<<<ksa, dim3(16, 16), 0, stream>>>
+						(pistatout[isa+nsa*iwvl], psfstat, notfx, notfy, norm_pistat);
+				} else{/*want peak in center*/
+					sa_acc_real_fftshift_do<<<ksa, dim3(16, 16), 0, stream>>>
+						(pistatout[isa+nsa*iwvl], psfstat, notfx, notfy, norm_pistat);
 				}
-				/* is OTF now. */
 			}
+			if(lltopd){/*multiply with uplink otf. */
+				sa_ccwm_do<<<ksa, 256, 0, stream>>>(psf(), notfx*notfy, lotfc(), 1);
+				ctoc("ccwm with lotfc");//0.66 ms
+			}
+			
 			//gpu_write(psf, notf, notf*ksa, "psf_out_3");
 			if(ints){
-				if(!isotf||otf()!=psf()){/*rotate PSF, or turn to OTF first time. */
-					if(isotf){/*srot1 is true. turn otf back to psf for rotation. */
-						CUFFT(cuwfs[iwfs].plan2, psf, CUFFT_INVERSE);
-						ctoc("fft to psf");
-					}
-					if(otf()!=psf()){
-						otf.Zero(stream);
-						sa_cpcorner_do<<<ksa, dim3(16, 16), 0, stream>>>
-							(otf, notfx, notfy, psf, notf, notf);
-						ctoc("cpcorner");
-					}
-					/*Turn PSF to OTF. */
-					CUFFT(cuwfs[iwfs].plan3, otf, CUFFT_FORWARD);
-					ctoc("fft to otf");
-				}
 				/*now we have otf. multiply with etf, dtf. */
 				if(wt2){
 					sa_ccwm2_do<<<ksa, dim3(16, 16), 0, stream>>>
-						(otf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf[1].etf.Col(isa), wt2, 0);
+						(psf, notfx, notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf[1].etf.Col(isa), wt2, 0);
 					ctoc("ccwm2");
 				} else if(wt1){
 					sa_ccwm_do<<<ksa, 256, 0, stream>>>
-						(otf(), notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), 0);
+						(psf(), notfx*notfy, cuwfs[iwfs].dtf[iwvl].etf[0].etf.Col(isa), 0);
 					ctoc("ccwm");//0.97 ms
 				}else if(cuwfs[iwfs].dtf[iwvl].nominal){
 					/*multiply with nominal only if there is no etf. nominal is fused to etf otherwise*/
@@ -521,15 +505,15 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 						pnominal=cuwfs[iwfs].dtf[iwvl].nominal.Col(isa);
 					}
 					sa_ccwm_do<<<ksa, 256, 0, stream>>>
-						(otf(), notfx*notfy, pnominal, repeat);
+						(psf(), notfx*notfy, pnominal, repeat);
 					ctoc("nominal");
 				}
 				/*back to spatial domain. */
-				CUFFT(cuwfs[iwfs].plan3, otf, CUFFT_INVERSE);
+				CUFFT(cuwfs[iwfs].plan_psf, psf, CUFFT_INVERSE);
 				ctoc("fft");//3.7 ms
 				sa_si_rot_do<<<ksa, dim3(16, 16), 0, stream>>>
 					(ints[isa], pixpsax, pixpsay, pixoffx?pixoffx+isa:NULL, pixoffy?pixoffy+isa:NULL,
-						pixthetax, pixthetay, otf, dtheta, notfx, notfy, srot?srot+isa:NULL,
+						pixthetax, pixthetay, psf, dtheta, notfx, notfy, srot?srot+isa:NULL,
 						norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
 				ctoc("si");//0.1 ms
 				ctoc_final("wfsints %d", iwfs);

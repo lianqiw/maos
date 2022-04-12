@@ -89,7 +89,7 @@ void stfun_push(stfun_t* A, dmat* opd){
 dmat* stfun_finalize(stfun_t* A){
 	cscale(A->hattot, 2./A->count);
 	cfft2i(A->hattot, 1);
-	cabs2toreal(A->hat0);
+	cabs2toreal(A->hat0, 1);
 	cfft2i(A->hat0, 1);
 	cfftshift(A->hattot);
 	cfftshift(A->hat0);

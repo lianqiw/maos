@@ -1793,7 +1793,13 @@ void print_progress(sim_t* simu){
 		const long restm=(rest-resth*3600)/60;
 		const long lapsh=laps/3600;
 		const long lapsm=(laps-lapsh*3600)/60;
-
+		if(isim==parms->sim.start){
+			const char *hol="Step        Open Loop  PR TT  ";
+			const char *hoa="On axis  PR TT  Field RMS PR TT ";
+			const char *hsp="Split     LGS    TT    NGS ";
+			const char *htm="    Timing ";
+			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->recon.split)?hsp:"", LOG_LEVEL<2?htm:"");
+		}
 		info2("Step %5d: OL%7.1f %6.1f", 
 			isim,
 			mysqrt(P(simu->ole, 0, isim))*1e9,
@@ -1806,7 +1812,7 @@ void print_progress(sim_t* simu){
 				mysqrt(P(simu->cle, 1, isim))*1e9				
 			);
 			if(parms->recon.split){
-				info2(" Split%7.1f %5.1f %5.1f",
+				info2(" Split %7.1f %5.1f %6.1f",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
 					mysqrt(P(simu->clem, 2, isim))*1e9);
