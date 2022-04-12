@@ -13,7 +13,6 @@ var searchData=
   ['llt_5ftt',['llt_tt',['../maos_2types_8h.html#af7f5504268fb3897cc6d3cb8594c08c7',1,'sim_t']]],
   ['lltimcc',['lltimcc',['../classcuwfs__t.html#a28b47e2cdf7b0a5fc4b657ff13998fee',1,'cuwfs_t']]],
   ['lltncpa',['lltncpa',['../classcuwfs__t.html#abddedc77034bea1554d93f6b04af0d13',1,'cuwfs_t']]],
-  ['lltplan_5fotf',['lltplan_otf',['../classcuwfs__t.html#aca30f005953663bfbed04a96d5f463f3',1,'cuwfs_t']]],
   ['lo',['lo',['../parms_8h.html#a34debbb11cfb8d49440ef9ddf3fcc961',1,'powfs_cfg_t']]],
   ['lo_5fblend',['lo_blend',['../parms_8h.html#a6916639ecb67bcbc48c49f36a44993d7',1,'dbg_cfg_t']]],
   ['load',['load',['../parms_8h.html#acb0b1c413f63c73fb21a2799c7913faf',1,'parms_t']]],
