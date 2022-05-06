@@ -450,7 +450,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 									P(P(merrm,0),imod)=P(moffseterr,imod);
 									//if(istep<100) info("step %d copying slow to fast mode %d\n", istep, imod);
 								}else if (imod!=5){//temporary: skip focus
-									P(moffsetint, imod)+=P(moffseterr, imod)*P(P(aster->gain, indk-1), imod);
+									P(moffsetint, imod)+=P(moffseterr, imod)*P(P(aster->gain, indk-1), imod)*0.15;//todo: optimize the gain
 								}
 							}
 							//if(istep<100) dshow(P(merrm, 0), "merrm");
@@ -459,7 +459,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 						}
 						if((indk & (ind_fast+1))){//only when fast WFS is active
 							dmm(&P(merrm,0), 1, P(aster->pgm,ind_fast), gradout->m, "nn", 1);
-							dadd(&P(merrm, 0), 1, moffsetint, 0.15);//todo: optimize the gain
+							dadd(&P(merrm, 0), 1, moffsetint, 1);
 							//if(istep<100) info("step %d: fast loop\n", istep);
 						}
 					}

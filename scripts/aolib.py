@@ -96,6 +96,16 @@ def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
     '''Results are in order of High, T/T, NGS total, Focus'''
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
+def maos_res_tot(fds, seeds=None, iframe1=0.2, iframe2=1):
+    '''Results are High + NGS tot'''
+    res,fds=maos_res_do(fds, "Res", seeds, iframe1, iframe2)
+    res2=res[:,0]+res[:,2]
+    return res2,fds
+def maos_res_hi(fds, seeds=None, iframe1=0.2, iframe2=1):
+    '''Results are High order only'''
+    res,fds=maos_res_do(fds, "Res", seeds, iframe1, iframe2)
+    res2=res[:,0]
+    return res2,fds
 def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
     return maos_res_do(fds, "Resclep", seeds, iframe1, iframe2)
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
@@ -145,15 +155,14 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             else:
                 print('Invalid result')
                 continue
+            n_valid=np.nonzero(res[:,0]>0)[0][-1]                
             if iframe1<1:
-                n1=round(iframe1*res.shape[0])
+                n1=round(iframe1*n_valid)
             else:
                 n1=iframe1
+
             if iframe2<=1:
-                n2=round(iframe2*res.shape[0])
-                n2max=np.nonzero(res[:,0]>0)[0][-1]
-                if n2>n2max:
-                    n2=n2max
+                n2=round(iframe2*n_valid)
             else:
                 n2=iframe2
             if n1 < n2 and n2 <= res.shape[0]:
@@ -185,7 +194,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
         print(fdin, ' has no valid results')
     #if len(fds)>1:
     #    print(*fds, sep="\n")
-    print(len(fds), ' results are read')
+    print('{} results are read for {} seeds.'.format(len(fds), nseed))
     return (resall,np.array(fds))
     #else:
     #return resall

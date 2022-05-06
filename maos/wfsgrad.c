@@ -710,6 +710,8 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
    then remove this value from all LGS WFS. The differential focus is still
    present and powfs.dfrs need to be set to 1 to handle it in tomography. This
    is the original focus tracking method, and is no longer recommended.
+
+   2022-04-12: the cut off frequency is now set to inf to ignore LGS focus completely.
 */
 static void wfsgrad_lgsfocus(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -1085,22 +1087,17 @@ static void wfsgrad_dither_post(sim_t* simu){
 				}
 				if(ptype2==PTYPE_MF&&parms->powfs[ipowfs].llt){
 					//for LGS only. tip/tilt and focus drift control is needed for matched filter with either dithering or sodium fitting
-					dmat* ibgrad=0;
+					dmat* i0grad=0;
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						shwfs_grad(&ibgrad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
+						shwfs_grad(&i0grad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
 						if(parms->save.dither){
-							writebin(ibgrad, "extra/wfs%d_i0grad_%d", iwfs, isim);
+							writebin(i0grad, "extra/wfs%d_i0grad_%d", iwfs, isim);
 						}
-						wfsgrad_tt_drift(ibgrad, simu, P(parms->sim.eplo, 0), iwfs, 0);
-						//adjust the gain based on dtrat difference.
-						/*const real dtdrift=parms->powfs[ipowfs].dither_ograt*parms->sim.dt;
-						const real dtwant=20; //dt where gain should be 0.5
-						const real fgain=dtdrift/dtwant*0.5;*/
-						//higher gain is bad. why?
-						wfsgrad_focus_drift(ibgrad, simu, 1, iwfs, 0);
+						wfsgrad_tt_drift(i0grad, simu, P(parms->sim.eplo, 0), iwfs, 0);
+						wfsgrad_focus_drift(i0grad, simu, 1, iwfs, 0);
 					}
-					dfree(ibgrad);
+					dfree(i0grad);
 				}
 				//there is no need to reset trombone error signal
 				if((parms->save.gradoff||parms->save.dither)&&parms->dbg.gradoff_reset!=1){

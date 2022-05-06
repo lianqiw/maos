@@ -81,14 +81,24 @@ void init_process(void){
 #else
 	HOME=getenv("HOME");
 #endif
-	//Get Temp directory
-#if defined(__CYGWIN__)
-	if(HOME){
+	if(!HOME || !exist("/tmp")){
+		HOME=".";
+	}
+	//Get Temp directory. It must not be shared by different servers that runs MAOS.
+	if(HOME){//new method
 		TEMP=stradd(HOME, "/.aos/tmp/", HOST, NULL);
-	}else
-#endif
-	TEMP=stradd("/tmp/maos-",USER,NULL);
-
+	}else{//deprecated
+		const char *TMP=getenv("XDG_RUNTIME_DIR");
+		if(TMP && exist(TMP)){
+			TEMP=stradd(TMP, "/maos", NULL);
+		}else if (exist("/var/tmp")){// /var/tmp is more persistent than /tmp
+			TEMP=stradd("/var/tmp/maos-",USER,NULL);
+		}else if (exist("/tmp")){
+			TEMP=stradd("/tmp/maos-", USER, NULL);
+		}else{
+			TEMP=stradd(HOME, "/.aos/tmp/", HOST, NULL);
+		}
+	}
 	//Create temporary folders
 	mymkdir("%s", TEMP);
 	if(!HOME) HOME=TEMP;

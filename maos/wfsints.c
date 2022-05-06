@@ -168,7 +168,6 @@ void wfsints(thread_t* thread_data){
 			}
 			if(!islotf) cfft2(lotfc, 1);/*turn to otf. */
 			/*lotfc has peak in lower left corner. */
-			info_once("lotfc max is %g, nlwvf=%d, nwvf=%d, notfx=%d\n", creal(P(lotfc,0)), nlwvf, nwvf, notfx);
 		}
 		int multi_nominal=(NX(powfs[ipowfs].dtf[iwvl].si)==nsa);
 		/* nominal and si are used to sampled PSF onto detector pixels */
