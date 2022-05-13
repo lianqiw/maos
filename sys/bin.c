@@ -300,6 +300,7 @@ file_t* zfopen(const char* fni, const char* mod){
 	//LOCK(lock);//nothing to protect
 	file_t* fp=mycalloc(1, file_t);
 	if(!fp) return NULL;
+	fp->fd=-1;
 	const char* fn2=fp->fn=procfn(fni, mod);
 	if(!fn2){
 		if(mod[0]=='r'){

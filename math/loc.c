@@ -1286,8 +1286,11 @@ void locmean(real* xm, real* ym, const loc_t* loc){
 
 /**
 Parse string representation of polynominal to array representation.*/
-static dmat* parse_poly(const char* _ps){
+dmat* parse_poly(const char* _ps){
 	if(!_ps) return NULL;
+	if(strchr(_ps, ';')){
+		warning("There should not be any ';' :%s", _ps);
+	}
 	char* ps=(char*)_ps;
 	int ncx=5;
 	dmat* cx=dnew(3, ncx);
@@ -1315,7 +1318,7 @@ static dmat* parse_poly(const char* _ps){
 		while(ps[0]==' ') ps++;
 		if(ps[0]=='*') ps++;
 		while(ps[0]==' ') ps++;
-			//parse each term
+		//parse each term
 		while(ps[0]!=0&&ps[0]!='+'&&ps[0]!='-'&&ps[0]!=';'){
 			if(ps[0]=='x'||ps[0]=='y'){
 				int iy=1;
@@ -1419,7 +1422,9 @@ static loc_t* loctransform_do(const loc_t* loc, const dmat* cx, const dmat* cy){
 /**
    Transform coordinate with coefficients. See loctransform()
  */
-loc_t* loctransform2(const loc_t* loc, const dmat* coeff){
+loc_t* loctransform2(const loc_t* loc, /**<Input loc_t*/
+					const dmat* coeff /**<n*4 matrix*/
+					){
 	if(!loc||!coeff) return NULL;
 	dmat* cx=dnew(3, coeff->nx);
 	dmat* cy=dnew(3, coeff->nx);
@@ -1443,17 +1448,18 @@ loc_t* loctransform2(const loc_t* loc, const dmat* coeff){
    \f]
    was using string input. New scheme uses bin files to preserve precision.
 */
-loc_t* loctransform(const loc_t* loc, const char* polycoeff){
+loc_t* loctransform(const loc_t* loc, 
+	const char* polycoeff){
 	if(!loc||!polycoeff) return NULL;
 	/*Test whether the transform is pure shift. */
 	//Parse from string to 3xn array
 	int input_type;
-	if(check_suffix(polycoeff, ".bin")){
+	if(check_suffix(polycoeff, ".bin")){//file input
 		input_type=1;
-	} else if(*((const uint32_t*)polycoeff)==M_REAL){
+	} else if(*((const uint32_t*)polycoeff)==M_REAL){//dmat input
 		input_type=2;
 	} else{
-		input_type=0;
+		input_type=0;//string input as formula
 	}
 	loc_t* locm=0;
 	if(input_type>0){
@@ -1476,7 +1482,7 @@ loc_t* loctransform(const loc_t* loc, const char* polycoeff){
 		char* polyn=strdup(polycoeff);
 		char* px=polyn;
 		char* py=strchr(polyn, ';');
-		if(py==polyn||!py) error("Wrong format '%s'\n", polyn);
+		if(py==px||!py) error("Wrong format. There should be a ';': {%s}\n", polycoeff);
 		py[0]='\0';
 		py++;
 		//info("polyn=(%s)\npx=(%s)\npy=(%s)\n", _polyn, px, py);

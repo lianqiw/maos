@@ -96,6 +96,7 @@ real loc_angle(const loc_t* loc1, const loc_t* loc2);
 void locstretch(loc_t* loc, const real theta, const real frac);
 loc_t* locdup(loc_t* loc);
 void locmean(real* xm, real* ym, const loc_t* loc);
+dmat *parse_poly(const char *_ps);
 loc_t* loctransform(const loc_t* loc, const char* ps);
 loc_t* loctransform2(const loc_t* loc, const dmat* coeff);
 loc_t* locshift(const loc_t* loc, real sx, real sy);

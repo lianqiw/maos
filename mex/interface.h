@@ -438,24 +438,8 @@ static inline rand_t *mx2rand(const mxArray *A){
     seed_rand(out, seed);
     return out;
 }
-void mex_signal_handler(int sig){
-    if(sig){
-	mexErrMsgTxt("Signal caught.\n");
-    }else{
-	dbg("signal 0 caught\n");
-    }
-}
-static jmp_buf *exception_env;
-void mex_quitfun(const char *msg){
-    if(exception_env){
-	info("error: %s\n", msg);
-	longjmp(*exception_env, 1);
-    }else{
-	info("mexerrmsg\n");
-	mexErrMsgTxt(msg);
-    }
-}
-static void(*default_handler)(int)=NULL;
+
+
 static inline void *calloc_mex(size_t nmemb, size_t size){
     void *p=mxCalloc(nmemb, size);
     mexMakeMemoryPersistent(p);
@@ -474,21 +458,22 @@ static inline void *realloc_mex(void *p, size_t size){
 static inline void free_mex(void*p){
     mxFree(p);
 }
-static __attribute__((constructor)) void init(){
-    if(!default_handler){
-	    default_handler=signal(SIGTERM, mex_signal_handler);
+int mex_signal_handler(int sig){
+    if(sig){
+        mexErrMsgTxt("Signal caught.\n");
+    } else{
+        dbg("signal 0 caught\n");
     }
-    quitfun=mex_quitfun;
+    return 1;
+}
+static __attribute__((constructor)) void init(){
+    fprintf(stderr, "mex loaded\n");
+    register_signal_handler(mex_signal_handler);
 #if _OPENMP 
     NTHREAD=1;//MAOS with openmp does not play well with matlab. 
 #endif
 }
 static __attribute__((destructor)) void deinit(){
     fprintf(stderr, "mex unloaded\n");
-    if(default_handler){
-	signal(SIGTERM, default_handler);
-    }else{
-	signal(SIGTERM, SIG_DFL);
-    }
 }
 #endif

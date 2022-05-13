@@ -795,6 +795,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 			start[0]='\n';
 			start++;
 		} else if(start[0]=='['){/*make sure we don't split brackets that are part of value. */
+			const char *save_start=start;
 			char* bend=strchr(start+1, ']');
 			char* bnextstart=strchr(start+1, '[');
 			if(bend&&(!bnextstart||bend<bnextstart)){/*There is a closing bracket */
@@ -802,7 +803,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 					if(start[0]=='\n') start[0]=' ';
 				}
 			} else{
-				error("Bracket is not closed\n");
+				error("Bracket is not closed: {%s} from {%s}\n", save_start, cmds);
 				start++;
 			}
 		} else if(start[0]=='\''||start[0]=='"'){/*make sure we don't split strings that are part of value. */

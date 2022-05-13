@@ -156,7 +156,12 @@ static void test_embed(){
     dembed_locstat(&opd, loc, NULL);
     writebin(opd, "locopd");
     }*/
-int main(){
+static void test_parse_poly(const char *str){
+    dmat *c=parse_poly(str);
+    dshow(c, "parsed");
+    dfree(c);
+}
+int main(int argc, const char *argv[]){
     /*  
     test_zernike();
     test_loc_reduce_spcell();
@@ -167,8 +172,11 @@ int main(){
     test_int_reg();
     test_int_rand();
     test_embed();
-    */
+    
     for(long i=1; i<1000;i++){
 	dbg("i=%ld, %ld\n", i, nextpow2(i));
+    }*/
+    if(argc>1){
+        test_parse_poly(argv[1]);
     }
 }

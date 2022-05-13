@@ -80,10 +80,7 @@ X(sp)* X(spref)(X(sp)* A){
 	assert_sp(A);
 	X(sp)* out=mycalloc(1, X(sp));
 	if(!A->nref){
-		extern quitfun_t quitfun;
-		if(quitfun==&default_quitfun){
-			warning_once("Referencing non-referenced data. This may cause error.\n");
-		}
+		warning_once("Referencing not owned data. This may cause error.\n");
 	} else{
 		atomic_add_fetch(A->nref,1);
 	}

@@ -469,7 +469,7 @@ cell* read_by_id(M_ID id, int level, const char* format, ...){
 	file_t* fp;
 	if(!fn||!(fp=zfopen(fn, "rb"))){
 		error("Unable to open file %s for read\n", fn);
-		return 0;
+		return NULL;
 	}
 	
 	cell* out=readdata_by_id(fp, id, level, 0);

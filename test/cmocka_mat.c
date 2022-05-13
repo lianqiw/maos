@@ -23,9 +23,6 @@
 #include <stdint.h>
 #include <cmocka.h>
 #include "../lib/aos.h"
-static void dummy_quitfun(const char *msg){
-    info("quitfun called with %s.\n", msg);
-}
 
 static void mat_basic(void** state){
     (void)state;
@@ -141,9 +138,12 @@ static void mat_fresnel_prop(void** state){
         fresnel_prop(&wvf1, &dxout, wvf0, 1./64, 0.589e-6, 100, 1, 1);
     }
 }
-
+static int dummy_signal_handler(int sig){
+    info("Signal=%d caught, will ignore.\n", sig);
+    return 1;
+}
 int main(void){
-    quitfun=dummy_quitfun;
+    register_signal_handler(dummy_signal_handler);
     LOG_LEVEL=-4;
     const struct CMUnitTest tests[]={
         cmocka_unit_test(mat_basic),

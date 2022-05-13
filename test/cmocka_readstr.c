@@ -23,9 +23,6 @@
 #include <stdint.h>
 #include <cmocka.h>
 #include "../lib/aos.h"
-static void dummy_quitfun(const char* msg){
-	info("quitfun called with %s.\n", msg);
-}
 
 static void readstr_basic(void** state){
 	(void)state;
@@ -85,8 +82,12 @@ static void readstr_array(void **state){
 	assert_int_equal(ncol,1);
 	assert_int_equal(nr,8);
 }
+static int dummy_signal_handler(int sig){
+	info("Signal=%d caught, will ignore.\n", sig);
+	return 1;
+}
 int main(void){
-	quitfun=dummy_quitfun;
+	register_signal_handler(dummy_signal_handler);
 	LOG_LEVEL=0;
 	const struct CMUnitTest tests[]={
 		cmocka_unit_test(readstr_basic),

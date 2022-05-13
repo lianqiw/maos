@@ -538,7 +538,7 @@ end2:
 		ans=-1;
 		draw_remove(sock_draw,0);
 	}
-	free(buf);
+	free_default(buf);
 	return ans;
 }
 int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize){
@@ -700,7 +700,7 @@ end2:
 			fclose(fbuf);
 			if(ans){
 				warning("write failed:%d\n", ans);
-				free(buf); bufsize=0; buf=0;
+				free_default(buf); bufsize=0; buf=0;
 			} else{
 				int* bufp=(int*)(buf+3*sizeof(int));
 				bufp[0]=(int)bufsize;//frame size
@@ -711,7 +711,7 @@ end2:
 		}
 		if(bufsize&&!ans){
 			ans=send_buf(fig, fn, buf, bufsize);
-			free(buf);
+			free_default(buf);
 		}
 	}
 
@@ -798,7 +798,7 @@ end2:
 			fclose(fbuf);
 			if(ans){
 				warning("write failed:%d\n", ans);
-				free(buf); bufsize=0; buf=0;
+				free_default(buf); bufsize=0; buf=0;
 			} else{
 				int* bufp=(int*)(buf+3*sizeof(int));
 				bufp[0]=(int)bufsize;//frame number
@@ -812,7 +812,7 @@ end2:
 
 		if(bufsize&&!ans){
 			ans=send_buf(fig, fn, buf, bufsize);
-			free(buf);
+			free_default(buf);
 		}
 	}
 	free(data->fig);

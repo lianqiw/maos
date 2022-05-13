@@ -28,9 +28,14 @@ extern "C"{
   void *malloc_maos(size_t);
   void *realloc_maos(void *, size_t);
   void  free_maos(void *);
+  extern void *(*calloc_default)(size_t, size_t);
+  extern void *(*malloc_default)(size_t);
+  extern void *(*realloc_default)(void *, size_t);
+  extern void  (*free_default)(void *);
 #ifdef __cplusplus
 }
 #endif
+#include <signal.h>
 extern int MEM_VERBOSE;
 extern int MEM_DEBUG;
 extern int MEM_FUNTRACE;
@@ -57,5 +62,5 @@ void read_sys_env();
 ///Check whether signal is crash
 #define iscrash(sig) (sig==SIGABRT||sig==SIGSEGV||sig==SIGILL||sig==SIGFPE)
 void register_signal_handler(int(*)(int));
-
+void default_signal_handler(int sig, siginfo_t *siginfo, void *unused);
 #endif

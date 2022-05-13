@@ -38,12 +38,12 @@ extern "C" {
 }
 #endif
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
-	exception_env=(jmp_buf*)malloc(sizeof(jmp_buf));
-	if(setjmp(*exception_env)){
-	//We use longjump because calling mexErrMsgTxt causing matlab to crash (bug?)
+	//exception_env=(jmp_buf*)malloc(sizeof(jmp_buf));
+	/*if(setjmp(*exception_env)){
+		//We use longjump because calling mexErrMsgTxt causing matlab to crash (bug?)
 		printf("Exception happened\n");
 		return;
-	} else{
+	} else{*/
 		static int isim=0;
 		static int iseed=0;
 		int nstep=0;
@@ -200,6 +200,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 		}
 end:;
 		if(free_cmd) mxFree((char*)cmd);
-	}
+	//}
 }
 

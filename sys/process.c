@@ -151,7 +151,7 @@ void init_process(void){
  * free memory
  * */
 void free_process(){
-	free(TEMP); TEMP=NULL;
+	//free(TEMP); TEMP=NULL;//do not free. used by scheduler_connect_self for print backtrace. 
 	free(CACHE); CACHE=NULL;
 	free(EXEP); EXEP=NULL;
 	free(DIRSTART); DIRSTART=NULL;

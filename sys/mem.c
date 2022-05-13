@@ -26,6 +26,7 @@
 #include <execinfo.h>
 #endif
 #include <sys/stat.h>
+#include <sys/time.h> //setitimer
 #include <errno.h>
 #include <dlfcn.h>
 int signal_caught=0;//indicate that signal is caught.
@@ -89,9 +90,10 @@ typedef struct{
 }memkey_t;
 memkey_t *memkey_all=NULL;
 unsigned int memkey_len=0; //should be all 1 at lower bits
-unsigned int memkey_thres = 0;
+unsigned int memkey_thres =0;
 unsigned int memkey_maxadd=0;
 unsigned int memkey_maxdel=0;
+unsigned int memkey_notfound=0;
 //Enable or disable MEM_DEBUG
 static void memkey_init(int enabled){
 	if(memkey_len){
@@ -135,7 +137,7 @@ static void memkey_add(void *p, size_t size){
 		memkey_thres=memcnt;
 		dbg_once("memcnt=%u >= memkey_len=%u. Half slots are filled. please increase memkey_max.\n", memcnt, memkey_len);
 	}
-	memalloc+=size;
+	__atomic_add_fetch(&memalloc, size, MEM_ORDER);
 	unsigned int counter=0;
 	for(unsigned int ind=addr2ind(p); counter<=memkey_len ; ind=(ind+1)&memkey_len, counter++){
 		if(!memkey_all[ind].p){//found empty slot
@@ -161,10 +163,11 @@ static void memkey_add(void *p, size_t size){
 }
 //Memory allocated from exterior library will not be found. We limit number of tries to avoid searching too much
 static void memkey_del(void *p){
+	if(!memkey_maxadd) return;
 	unsigned int counter=0;
 	for(unsigned int ind=addr2ind(p); counter<=memkey_maxadd ; ind=(ind+1)&memkey_len, counter++){
 		if(memkey_all[ind].p==p){//found. no race condition can occure
-			memfree+=memkey_all[ind].size;
+			__atomic_add_fetch(&memfree, memkey_all[ind].size, MEM_ORDER);
 			atomic_sub_fetch(&memcnt, 1);
 			memkey_all[ind].p=0;
 			break;
@@ -177,8 +180,9 @@ static void memkey_del(void *p){
 		}
 	}
 	if(counter>memkey_maxadd){
-		dbg("%16p: unable to find after %u tries\n", p, memkey_maxadd);
-		print_backtrace();
+		memkey_notfound++;
+		//dbg("%16p: unable to find after %u tries\n", p, memkey_maxadd);
+		//print_backtrace();
 	}
 }
 static void print_mem_debug(){
@@ -189,7 +193,10 @@ static void print_mem_debug(){
 	if(!memcnt){
 		info3("All allocated memory are freed.\n");
 	} else{
-		info3("%u (%lu kB) allocated memory not freed. \n", memcnt, (memalloc-memfree)>>10);
+		if(memkey_notfound) info3("%u memory is not found to delete.\n", memkey_notfound);
+		if(memalloc > memfree){
+			info3("%u (%lu kB) allocated memory not freed. \n", memcnt, (memalloc-memfree)>>10);
+		}
 	}
 	if(signal_caught){
 		info3("Signal is caught, will not print detailed memory usage.\n");
@@ -819,19 +826,7 @@ void register_deinit(void (*fun)(void), void *data){
 	UNLOCK(mutex_deinit);
 }
 
-quitfun_t quitfun=NULL;
-void default_quitfun(const char *msg){
-	info("%s\n", msg);
-	if(fplog){
-		fclose(fplog);
-	}
-	if(strncmp(msg, "FATAL", 5)){
-		print_backtrace();
-		raise(1);
-	}
-	exit(0);
-}
-static int (*signal_handler)(int)=0;
+static int (*signal_handler)(int)=0;//If set will be called by default_signal_handler to avoid exit.
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	(void)unused;
@@ -841,17 +836,17 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	}else if(sig==SIGUSR1){//Use SIGUSR1 to enable MEM_DEBUG and print memory infromation
 		memkey_init(1);
 		return;
-	}else if(sig==SIGUSR2){//Use SIGUSR2 to disable MEM_DEBUG
+	/*}else if(sig==SIGUSR2){//Use SIGUSR2 to disable MEM_DEBUG
 		memkey_init(0);
-		return;
-	}else if(sig==SIGTERM){
+		return;*/
+	}else if(sig==SIGTERM && siginfo){
 		char sender[PATH_MAX]={0};
 		get_job_progname(sender, PATH_MAX, siginfo->si_pid);
 		info("Code is %d, send by %d (uid=%d, %s).\n",
 			siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
 	}
 	signal_caught=sig;
-	info("\ndefault_signal_handler: %s (%d)\n", strsignal(sig), sig);
+	info("\nSignal caught: %s (%d)\n", strsignal(sig), sig);
 	//sync();
 	int cancel_action=0;
 	/*
@@ -864,36 +859,38 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	*/
 	if(fatal_error_in_progress){
 		info("Signal handler is already in progress. force abort.\n");
-		_Exit(1);
+		if(sig==SIGINT || sig==SIGQUIT) _Exit(1);
 		return;
+	}else{
+		fatal_error_in_progress++;
 	}
-	fatal_error_in_progress++;
 	if(iscrash(sig)){
 		if(siginfo&&siginfo->si_addr){
 			info("Memory location: %p\n", siginfo->si_addr);
 		}
-		//It is not safe to call backtrace in SIGSEGV, so may hang.
+		struct itimerval timer={{10,0},{10,0}};
+		if(setitimer(ITIMER_REAL, &timer, NULL)){
+			warning("Setitimer failed\n");
+		}
+		//It is not safe to call backtrace in SIGSEGV, to prevent hang, we set an alarm to force quit
 		print_backtrace();
 	}
 	if(signal_handler){
 		dbg_time("Call signal_handler %p\n", signal_handler);
+		cancel_action=signal_handler(sig);
+		dbg_time("Signal handler returns %d\n", cancel_action);
 	}
-	if(signal_handler&&signal_handler(sig)){
-		cancel_action=1;
-	}
-	//sync();
 	if(!cancel_action){//Propagate signal to default handler.
+		dbg_time("Propagate signal\n");
 		struct sigaction act={0};
 		act.sa_handler=SIG_DFL;
 		sigaction(sig, &act, 0);
 		raise(sig);
-	}/*else{//cancel signal, keep going
-		struct sigaction act={0};
-		act.sa_handler=NULL;
-		act.sa_sigaction=default_signal_handler;
-		act.sa_flags=SA_SIGINFO;
-		sigaction(sig, &act, 0);
-	}*/
+	}else{//cancel signal, keep going
+		dbg_time("Cancel action\n");
+		sync();
+		fatal_error_in_progress=0;
+	}
 }
 
 /**
@@ -907,6 +904,7 @@ void register_signal_handler(int (*func)(int)){
 	sigaction(SIGILL, &act, 0);
 	sigaction(SIGSEGV, &act, 0);
 	sigaction(SIGINT, &act, 0);
+	sigaction(SIGALRM, &act, 0);
 	sigaction(SIGTERM, &act, 0);
 	sigaction(SIGABRT, &act, 0);
 	//sigaction(SIGHUP, &act, 0);

@@ -26,10 +26,6 @@
 #define AOS_COMMON_H
 //C standard headers
 
-typedef void (*quitfun_t)(const char*);
-extern quitfun_t quitfun;
-void default_quitfun(const char* msg);
-
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
 #endif
@@ -68,12 +64,14 @@ using std::strerror;
 #undef	MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
-#include "mem.h"
+
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
 #else
 #include <limits.h>
 #endif/*__linux__ */
+#include <signal.h>
+#include "mem.h"
 
 #ifndef restrict
 #define restrict __restrict
@@ -99,7 +97,6 @@ extern int detached;
 #define BLUE "\033[0;34m"
 #define MAGENTA "\033[0;35m"
 #define CYAN "\033[0;36m"
-#define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
 
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
 extern int signal_caught;
@@ -111,7 +108,7 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 #define logstd_color(level, COLOR, format, ...) ({if(LOG_LEVEL>level){\
   if(!detached){fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__);} if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 
-#define error(format,...)      ({logerr(-4, RED,        "Error(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__); signal_caught=11; QUIT_FUN("Error happened");})
+#define error(format,...)      ({logerr(-4, RED,        "Error(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__); default_signal_handler(SIGUSR2,0,0);})
 #define warning(format,...)      logerr(-4, CYAN,     "Warning(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_time(format,...) logerr(-4, CYAN, "[%s]Warning(%s:%d): " format, myasctime(0),BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
