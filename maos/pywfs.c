@@ -119,7 +119,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	powfs[ipowfs].loc=map2loc(map, 0);
 	mapfree(map);
 	powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground,
-		P(parms->misreg.pupil,0), P(parms->misreg.pupil,1),
+		-P(parms->aper.misreg,0), -P(parms->aper.misreg,1),
 		parms->aper.d, parms->aper.din);
 	loc_reduce(powfs[ipowfs].loc, powfs[ipowfs].amp, EPS, 0, NULL);
 	//For convenience.
@@ -134,7 +134,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	powfs[ipowfs].realamp=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-		if(parms->misreg.tel2wfs&&parms->misreg.tel2wfs[iwfs]){
+		if(parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfs]){
 			P(powfs[ipowfs].realamp,jwfs)=dref(P(powfs[ipowfs].amp_tel,jwfs));
 		} else{
 			P(powfs[ipowfs].realamp,jwfs)=dref(powfs[ipowfs].amp);

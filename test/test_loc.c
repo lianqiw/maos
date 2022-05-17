@@ -21,7 +21,7 @@
 static void test_w1(){
     loc_t *loc=mksqloc2(200,200,1./64.);
     real *amp=mycalloc(loc->nloc,real);
-    loccircle(amp,loc,0,0, 1,1);
+    loc_circle_add(amp,loc,0,0, 1,1);
     drawopd("test_loc",loc,amp,"loc");
     normalize(amp,loc->nloc,1);
     dsp *W0=NULL;

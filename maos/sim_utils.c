@@ -1837,37 +1837,36 @@ void print_progress(sim_t* simu){
 
 		if(parms->plot.run&&draw_current("Res", "Close loop")){
 			dmat* tmp=parms->recon.split?simu->clem:simu->cle;
-			const char* legs[4]={0,0,0,0};
-			int nline=2;
-			legs[0]="High Order";
-			legs[1]="Tip/Tilt";
+			const char* legs[5]={0,0,0,0,0};
+			int nline=0;
+			legs[nline++]="Total";
+			legs[nline++]="High Order";
+			legs[nline++]="Tip/Tilt";
 			if(parms->recon.split){
 				if(simu->recon->ngsmod->indps){
-					legs[nline]="Plate Scale";
-					nline++;
+					legs[nline++]="Plate Scale";
 				} else if(simu->recon->ngsmod->indastig){
-					legs[nline]="Astig";
-					nline++;
+					legs[nline++]="Astig";
 				}
 				if(NX(tmp)==4){
-					legs[nline]="Focus";
-					nline++;
+					legs[nline++]="Focus";
 				}
 			}
 			dcell* res=dcellnew_same(nline, 1, simu->perfisim+1, 1);
 			for(int i=0; i<=simu->perfisim; i++){
+				P(P(res, 0), i)=P(simu->cle, 0, i);//PR
 				if(parms->recon.split){
-					P(P(res, 0), i)=P(tmp, 0, i);//LGS
-					P(P(res, 1), i)=P(tmp, 1, i);//TT
-					if(nline>2){
-						P(P(res, 2), i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
-					}
+					P(P(res, 1), i)=P(tmp, 0, i);//LGS
+					P(P(res, 2), i)=P(tmp, 1, i);//TT
 					if(nline>3){
-						P(P(res, 3), i)=P(tmp, 3, i);//Focus
+						P(P(res, 3), i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
+					}
+					if(nline>4){
+						P(P(res, 4), i)=P(tmp, 3, i);//Focus
 					}
 				} else{
-					P(P(res, 0), i)=P(tmp, 2, i);//PTTR
-					P(P(res, 1), i)=P(tmp, 0, i)-P(tmp, 2, i);//TT
+					P(P(res, 1), i)=P(tmp, 2, i);//PTTR
+					P(P(res, 2), i)=P(tmp, 0, i)-P(tmp, 2, i);//TT
 				}
 			}
 			dcellcwpow(res, 0.5); dcellscale(res, 1e9);

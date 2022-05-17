@@ -865,10 +865,13 @@ void loc_create_stat_do(loc_t* loc){
 	locstat->nx=(long)round((xmax-locstat->xmin)/dx)+1;
 }
 /**
-   Create a gray pixel circular map in phi using coordinates defined in loc, center
+   Add a gray pixel circular map in phi using coordinates defined in loc, center
    defined using cx, cy, radius of r, and value of val */
-void loccircle(real* phi, loc_t* loc, real cx, real cy, real r, real val){
-	if(!phi||!loc) return;
+void loc_circle_add(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val){
+	if(!phi||!loc || PN(phi)!=loc->nloc){
+		warning("Invalid usage: requires phi, loc and compatible dimension.\n");
+		return;
+	}
 	/*cx,cy,r are in unit of true unit, as in loc */
 	real dx=loc->dx;
 	real dy=loc->dy;
@@ -889,7 +892,7 @@ void loccircle(real* phi, loc_t* loc, real cx, real cy, real r, real val){
 		real y=locy[iloc];
 		real r2r=pow(x-cx, 2)+pow(y-cy, 2);
 		if(r2r<r2l)
-			phi[iloc]+=val;
+			P(phi,iloc)+=val;
 		else if(r2r<r2u){
 			long tot=0;
 			for(int jres=0; jres<nres; jres++){
@@ -902,40 +905,26 @@ void loccircle(real* phi, loc_t* loc, real cx, real cy, real r, real val){
 						tot++;
 				}
 			}
-			phi[iloc]+=(real)tot*res2*val;
+			P(phi,iloc)+=(real)tot*res2*val;
 		}
+	}
+	if(rin>0){
+		loc_circle_add(phi, loc, cx, cy, rin, 0, -val);
 	}
 }
 /**
-   Create a gray pixel annular map in phi using coordinates defined in loc,
-   center defined using cx, cy, radius of r, and value of val
+   Apply an annular mask in phi.
 */
-void locannular(real* phi, loc_t* loc, real cx, real cy, real r, real rin, real val){
-	if(!phi||!loc) return;
-	loccircle(phi, loc, cx, cy, r, val);
-	if(rin>EPS){
-		loccircle(phi, loc, cx, cy, rin, -val);
-	}
-}
-/**
-   Create a hard annular mask in phi.
-*/
-void locannularmask(real* phi, loc_t* loc, real cx, real cy, real r, real rin){
-	/*apply the hard pupil mask of aper.d, using loc. not locm */
-	/* 2011-07-13: changed from r^2 to (r+0.5*dx)^2*/
-	real rr2max=pow(r+0.25*(loc->dx+loc->dy), 2);
-	real rr2min=MIN(rin*rin, pow(rin-0.25*(loc->dx+loc->dy), 2));
-	for(long iloc=0; iloc<loc->nloc; iloc++){
-		real r2=pow(loc->locx[iloc]-cx, 2)+pow(loc->locy[iloc]-cy, 2);
-		if(r2<rr2min||r2>rr2max){
-			phi[iloc]=0;
-		}
-	}
+void loc_circle_mul(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val){
+	dmat *mask=dnew(loc->nloc,1);
+	loc_circle_add(mask, loc, cx, cy, r, rin, val);
+	dcwm(phi, mask);
+	dfree(mask);
 }
 /**
    Create a gray pixel elliptical map in phi using coordinates defined in loc,
    center defined using cx, cy, radii of rx, ry, and value of val */
-void locellipse(real* phi, loc_t* loc, real cx, real cy,
+void locellipse_add(dmat* phi, loc_t* loc, real cx, real cy,
 	real rx, real ry, real val){
 	if(!phi||!loc) return;
 /*cx,cy,r are in unit of true unit, as in loc */
@@ -962,7 +951,7 @@ void locellipse(real* phi, loc_t* loc, real cx, real cy,
 		real y=locy[iloc];
 		real r2r=pow(x-cx, 2)*rx12+pow(y-cy, 2)*ry12;
 		if(r2r<r2l)
-			phi[iloc]+=val;
+			P(phi,iloc)+=val;
 		else if(r2r<r2u){
 			long tot=0;
 			for(int jres=0; jres<nres; jres++){
@@ -975,7 +964,7 @@ void locellipse(real* phi, loc_t* loc, real cx, real cy,
 						tot++;
 				}
 			}
-			phi[iloc]+=tot*res2*val;
+			P(phi,iloc)+=tot*res2*val;
 		}
 	}
 }

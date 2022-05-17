@@ -121,6 +121,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
     fds2=natsorted([fd[0:-1] for fd in fds2])
     fds=[]
     resall=None
+    nseed=0
     for fd in fds2: #loop over directory
         if seeds is None:
             fns=natsorted(glob.glob(fd+"/"+name+"_*.bin"))
@@ -380,8 +381,10 @@ def plot_smooth(x,y,color=''):
     #create smooth line chart 
     plt.plot(xnew, y_smooth,color)
 
-def radial_profile(data, center, enclosed=0):
+def radial_profile(data, center=None, enclosed=0):
     '''Compute the radial average or radially enclosed energy. radial start with 1'''
+    if center is None:
+        center=(data.shape[0]>>1, data.shape[1]>>1)
     y,x = np.indices((data.shape)) # first determine radii of all pixels
     r   = np.sqrt((x-center[0])**2+(y-center[1])**2)
     ind = np.argsort(r.flat) # get sorted indices

@@ -398,7 +398,7 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 
 	fit->actfloat=recon->actfloat;
 	fit->actstuck=recon->actstuck;
-	fit->misreg=parms->recon.misreg_dm2sci;
+	fit->misreg=parms->recon.distortion_dm2sci;
 	memcpy(&fit->flag, &parms->fit, sizeof(fit_cfg_t));//use parms->fit.
 	if(parms->fit.assemble){
 		if(parms->load.fit){

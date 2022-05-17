@@ -83,7 +83,7 @@ typedef struct powfs_t{
     dmat *amp;          /**<amplitude map defined on loc, max at 1.*/
     loccell *loc_dm;    /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
     loccell *loc_tel;   /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
-    dcell *amp_tel;     /**<real amplitude map on misregistered grid, loc_tel. used for gradient computing*/
+    dcell *amp_tel;     /**<real amplitude map on loc_tel. used for gradient computing*/
     dcell *saa_tel;        /**<mis-registered saa, if any*/
     real areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */

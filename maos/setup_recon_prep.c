@@ -64,17 +64,17 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 	loc_create_map_npad(recon->ploc, parms->tomo.square?0:1, 0, 0);
 	recon->pmap=recon->ploc->map;
 	loc_create_stat(recon->ploc);
-	if(parms->recon.misreg_tel2wfs){
+	if(parms->recon.distortion_tel2wfs){
 		real ploc_xm=0, ploc_ym=0;
 		int any_ploc=0;
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-			if(parms->recon.misreg_tel2wfs[iwfs]){
+			if(parms->recon.distortion_tel2wfs[iwfs]){
 				if(!recon->ploc_tel){
 					recon->ploc_tel=loccellnew(parms->nwfsr, 1);
 					locmean(&ploc_xm, &ploc_ym, recon->ploc);
 					any_ploc=1;
 				}
-				P(recon->ploc_tel, iwfs)=loctransform(recon->ploc, parms->recon.misreg_tel2wfs[iwfs]);
+				P(recon->ploc_tel, iwfs)=loctransform(recon->ploc, parms->recon.distortion_tel2wfs[iwfs]);
 				loc_t* ploc2=P(recon->ploc_tel, iwfs);
 				real xm, ym;
 				locmean(&xm, &ym, ploc2);
@@ -114,10 +114,10 @@ make_gloc(dmat** gamp, const parms_t* parms, const aper_t* aper, int iwfsr){
 			din=0;
 		}
 		loc_t* gloc2=0;
-		if(ampground&&parms->recon.misreg_tel2wfs&&parms->recon.misreg_tel2wfs[iwfsr]){
-			gloc2=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfsr]);
+		if(ampground&&parms->recon.distortion_tel2wfs&&parms->recon.distortion_tel2wfs[iwfsr]){
+			gloc2=loctransform(gloc, parms->recon.distortion_tel2wfs[iwfsr]);
 		}
-		*gamp=mkamp(gloc2?gloc2:gloc, ampground, 0, 0, dout, din);
+		*gamp=mkamp(gloc2?gloc2:gloc, ampground, -P(parms->aper.misreg, 0), -P(parms->aper.misreg, 1), dout, din);
 		locfree(gloc2);
 	}
 	return gloc;
@@ -532,7 +532,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 	} else{
 		int share_gp=1;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			if(parms->recon.misreg_tel2wfs&&parms->recon.misreg_tel2wfs[iwfs]){
+			if(parms->recon.distortion_tel2wfs&&parms->recon.distortion_tel2wfs[iwfs]){
 				share_gp=0;
 			}
 		}
@@ -673,20 +673,20 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 						}
 						if(!parms->recon.modal){
 							info("\nPyWFS from aloc to saloc directly\n");
-							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
+							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfs+idm*nwfs],
 								0, opdadd, dispx, dispy);
 							P(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
 							dfree(tmp);
 						} else{
 							info("\nPyWFS from amod to saloc directly\n");
 							//We compute the GM for full set of modes so that it is cached only once.
-							P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
+							P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfs+idm*nwfs],
 								P(recon->amod, idm), opdadd, dispx, dispy);
 						}
 					}
 				} else{//SHWFS
-					char* input=parms->misreg.dm2wfs?parms->misreg.dm2wfs[iwfs+idm*nwfs]:0;
-					char* calib=parms->recon.misreg_dm2wfs?parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]:0;
+					char* input=parms->distortion.dm2wfs?parms->distortion.dm2wfs[iwfs+idm*nwfs]:0;
+					char* calib=parms->recon.distortion_dm2wfs?parms->recon.distortion_dm2wfs[iwfs+idm*nwfs]:0;
 					loc_t* loc=ploc;
 
 					if(input&&saloc->nloc>4){//there is distortion input			
@@ -701,6 +701,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 							dsp* GA2=dspmulsp(P(recon->GP, iwfs), H2, "nn"); //measured GA.
 							dspfree(H2);
 							dmat* calib2=loc_calib(GA2, aloc, saloc, dispx, dispy, scale, 2);
+							dshow(calib2, "dm2wfs calib fitting");
 							dspfree(GA2);
 							loc=loctransform2(ploc, calib2);
 							dfree(calib2);

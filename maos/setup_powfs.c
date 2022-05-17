@@ -111,7 +111,7 @@ void wfspupmask(const parms_t* parms, loc_t* loc, dmat* amp, int iwfs){
 		real r=parms->aper.d*0.5*(1.-ht/hs)/(1.-ht/hs);
 		real sx=(parms->wfs[jwfs].thetax-parms->wfs[iwfs].thetax)*ht;
 		real sy=(parms->wfs[jwfs].thetay-parms->wfs[iwfs].thetay)*ht;
-		loccircle(P(ampmask), loc, sx, sy, r, 1);
+		loc_circle_add(ampmask, loc, sx, sy, r, 0, 1);
 	}
 	for(int i=0; i<nloc; i++){
 		if(P(ampmask, i)<0.5) P(amp, i)=0;
@@ -233,6 +233,16 @@ sa_reduce(powfs_t* powfs, int ipowfs, real thresarea){
 	}
 }
 /**
+ * wrap val to between low and high
+ * */
+real wrap2range(real val, real low, real high){
+	if(low>=high) {
+		warning("Invalid usage: low=%g should be smaller than high %g\n", low ,high);
+		return val;
+	}
+	return remainder(val-low, high-low)+low;
+}
+/**
    setting up subaperture geometry.
 
    - powfs->pts: the location of the lower left grid coordinate in this subaperture >=saloc.
@@ -284,27 +294,25 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 				powfs[ipowfs].saloc->dx, dsa);
 		}
 	} else{
-	/*The coordinate of the subaperture (lower left coordinate) */
-		powfs[ipowfs].saloc=locnew(order*order, dsa, dsa);
+		/*The coordinate of the subaperture (lower left coordinate) */
+		const int orderpad=order+(order>2?2:0); //to avoid missing subapertures when there is saoffx/saoffy
+		powfs[ipowfs].saloc=locnew(orderpad*orderpad, dsa, dsa);
 		int count=0;
 		/*Offset of the coordinate of the center most subaperture from the center. */
-		real offset;
-		if(order&1){/*odd */
-			offset=-0.5;
-		} else{
-			offset=0.0;
-		}
+		real offsetx=wrap2range(parms->powfs[ipowfs].misregx,-0.5,0.5)+((order&1)?-0.5:0);
+		real offsety=wrap2range(parms->powfs[ipowfs].misregy,-0.5,0.5)+((order&1)?-0.5:0);
+		dbg("offsetx=%g, offsety=%g, order=%d, orderpad=%d\n", offsetx, offsety, order, orderpad);
 		/*r2max: Maximum distance^2 from the center to keep a subaperture */
 		real r2max=pow(order*0.5, 2);
 		real r2min=dsa<parms->aper.din?pow(parms->aper.din/dsa/2, 2):-1;
 		/*the lower left *grid* coordinate of the subaperture */
 
 		/*Collect all the subapertures that are within the allowed radius*/
-		for(int j=-order/2; j<=(order-1)/2; j++){
-			for(int i=-order/2; i<=(order-1)/2; i++){
+		for(int j=-orderpad/2; j<=(orderpad-1)/2; j++){
+			for(int i=-orderpad/2; i<=(orderpad-1)/2; i++){
 			//Normalized coordinate in uniq of sa size
-				real xc=((real)i+offset);
-				real yc=((real)j+offset);
+				real xc=((real)i+offsetx);
+				real yc=((real)j+offsety);
 				//Radius of four corners.
 				real r1=pow(xc+1, 2)+pow(yc+1, 2);
 				real r2=pow(xc+1, 2)+pow(yc, 2);
@@ -318,6 +326,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 				}
 			}
 		}
+		info("count=%d\n", count);
 		powfs[ipowfs].saloc->nloc=count;
 	}
 	/*convert saloc to pts*/
@@ -338,7 +347,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 		}
 	} else{
 		powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground,
-			-P(parms->misreg.pupil, 0), -P(parms->misreg.pupil, 1),
+			-P(parms->aper.misreg,0), -P(parms->aper.misreg,1),
 			parms->aper.d, parms->aper.din);
 	}
 	/*The threashold for normalized area (by areafulli) to keep subaperture. */
@@ -508,7 +517,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 void
 setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
 	int nwfsp=parms->powfs[ipowfs].nwfs;
-	if(parms->misreg.tel2wfs){
+	if(parms->distortion.tel2wfs){
 		TIC;tic;
 		/*
 		  Misregistration/distortion from Telescope pupil to WFS pupil. The
@@ -525,13 +534,13 @@ setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int i
 OMP_TASK_FOR(4)
 		for(int jwfs=0; jwfs<nwfsp; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			if(parms->misreg.tel2wfs[iwfs]){
+			if(parms->distortion.tel2wfs[iwfs]){
 				isset=1;
 				P(powfs[ipowfs].loc_tel, jwfs)
-					=loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
+					=loctransform(powfs[ipowfs].loc, parms->distortion.tel2wfs[iwfs]);
 				P(powfs[ipowfs].amp_tel, jwfs)
 					=mkamp(P(powfs[ipowfs].loc_tel, jwfs), aper->ampground,
-						-P(parms->misreg.pupil, 0), -P(parms->misreg.pupil, 1),
+						-P(parms->aper.misreg,0), -P(parms->aper.misreg,1),
 						parms->aper.d, parms->aper.din);
 				if(parms->powfs[ipowfs].type==WFS_SH){
 					const int npsa=powfs[ipowfs].pts->nxsa*powfs[ipowfs].pts->nysa;
@@ -544,7 +553,7 @@ OMP_TASK_FOR(4)
 			dcellfree(powfs[ipowfs].saa_tel);
 			dcellfree(powfs[ipowfs].amp_tel);
 		} else{
-			toc2("misreg.tel2wfs");
+			toc2("distortion.tel2wfs");
 		}
 	}/*if misreg */
 }
@@ -555,22 +564,22 @@ void
 setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
 	(void)aper;
 	int nwfsp=parms->powfs[ipowfs].nwfs;
-	if(parms->misreg.dm2wfs){
+	if(parms->distortion.dm2wfs){
 		TIC;tic;
 		/*
 		  Misregistration/distortion from DM to WFS pupil. Not about telescope
 		  pupil. The distorted grid are used for ray tracing from DM to WFS.
 		  They are not used for wavefront reconstruction
 		*/
-		powfs[ipowfs].loc_dm=loccellnew(nwfsp*parms->ndm, 1);
+		powfs[ipowfs].loc_dm=loccellnew(nwfsp,parms->ndm);
 		int isset=0;
 OMP_TASK_FOR_COLLAPSE(2)
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int jwfs=0; jwfs<nwfsp; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-				if(parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]){
+				if(parms->distortion.dm2wfs[iwfs+idm*parms->nwfs]){
 					P(powfs[ipowfs].loc_dm, jwfs, idm)
-						=loctransform(powfs[ipowfs].loc, parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]);
+						=loctransform(powfs[ipowfs].loc, parms->distortion.dm2wfs[iwfs+idm*parms->nwfs]);
 					isset=1;
 				}
 			}
@@ -578,7 +587,7 @@ OMP_TASK_FOR_COLLAPSE(2)
 		if(!isset){
 			cellfree(powfs[ipowfs].loc_dm);
 		} else{
-			toc2("misreg.dm2wfs");
+			toc2("distortion.dm2wfs");
 		}
 	}
 }
@@ -911,7 +920,7 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 
    - If pixoffx==1 : There is a rotational offset with maximum value of pixoffy (pixel) at the edge.
 
-   - If pixoffx==2: There is a global offset along x and y of pixoffy (pixel).
+   - If pixoffx==2: There is a global offset along x and y of pixoffy (pixel) that accounts for PCCCD geometry
 
 */
 static void

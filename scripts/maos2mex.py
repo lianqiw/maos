@@ -123,22 +123,30 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
     else:
         stind='0'
     funbody=list()
+    nvalid=0
     for key in struct: 
         valtype=struct[key]
         ans=""
         if type(valtype)==type(list()):
             if key=='save':
                 continue
-            ans+="\ttmp2="+struct2mx(valtype[0], nvar, funname+"_", childpointer, fullpointer+childpointer, key, valtype[1])
+            tmp=struct2mx(valtype[0], nvar, funname+"_", childpointer, fullpointer+childpointer, key, valtype[1])
+            if len(tmp)>0 and tmp[0:2]!='//':
+                ans="\ttmp2="+tmp
+            else:
+                ans="//unable to parse struct"+valtype[0]
         else:
-            ans+=var2mx("\ttmp2", childpointer+key, valtype)
-        if len(ans)>0:
+            ans=var2mx("\ttmp2", childpointer+key, valtype)
+        if len(ans)>0 and ans[0:2]!='//':
             funbody.append(ans+"i=mxAddField(tmp, \""+key+"\");mxSetFieldByNumber(tmp, "+stind+", i, tmp2);")
+            nvalid+=1
     funbody.sort()
     fundef+="\n".join(funbody)
     if nvar!="1":
         fundef+="\n}\n"
     fundef+="\n\treturn tmp;\n}\n"
+    if nvalid==0:
+        return ''
     fundefs[funname]=fundef
     funheaders[funname]=funheader
     #print(funname, funprefix)

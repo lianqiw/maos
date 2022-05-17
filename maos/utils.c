@@ -480,8 +480,11 @@ dmat* mkamp(loc_t* loc, map_t* ampground, real misregx, real misregy, real D, re
 	dmat* amp=dnew(loc->nloc, 1);
 	if(ampground){
 		prop_grid(ampground, loc, P(amp), 1, misregx, misregy, 1, 0, 0, 0);
-	} else{
-		locannular(P(amp), loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
+	}else{
+		loc_circle_add(amp, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
+	}
+	if(misregx || misregy){//apply centered circular mask
+		loc_circle_mul(amp, loc, 0, 0, D*0.5, 0, 1);
 	}
 	return amp;
 }

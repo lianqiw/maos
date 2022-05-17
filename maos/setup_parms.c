@@ -21,7 +21,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include "../lib/aos.h"
 #include "parms.h"
 #include "mvm_client.h"
 #if USE_CUDA
@@ -170,13 +169,13 @@ void free_parms(parms_t *parms){
 	lfree(parms->hipowfs);
 	lfree(parms->lopowfs);
 
-	dfree(parms->misreg.pupil);
-	free_strarr(parms->misreg.tel2wfs,parms->nwfs);
-	free_strarr(parms->misreg.dm2wfs,parms->ndm*parms->nwfs);
-	free_strarr(parms->misreg.dm2sci,parms->ndm*parms->evl.nevl);
-	free_strarr(parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr);
-	free_strarr(parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit);
-	free_strarr(parms->recon.misreg_tel2wfs,parms->nwfsr);
+	dfree(parms->aper.misreg);
+	free_strarr(parms->distortion.tel2wfs,parms->nwfs);
+	free_strarr(parms->distortion.dm2wfs,parms->ndm*parms->nwfs);
+	free_strarr(parms->distortion.dm2sci,parms->ndm*parms->evl.nevl);
+	free_strarr(parms->recon.distortion_dm2wfs,parms->ndm*parms->nwfsr);
+	free_strarr(parms->recon.distortion_dm2sci,parms->ndm*parms->fit.nfit);
+	free_strarr(parms->recon.distortion_tel2wfs,parms->nwfsr);
 	dfree(parms->dirs);
 	lfree(parms->dbg.tomo_maxit);
 	dfree(parms->dbg.pwfs_psx);
@@ -280,6 +279,8 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(dbl,sigrecon);
 
 	READ_POWFS_RELAX(str,saloc);
+	READ_POWFS_RELAX(dbl,misregx);
+	READ_POWFS_RELAX(dbl,misregy);
 	READ_POWFS_RELAX(str,amp);
 	READ_POWFS_RELAX(str,piinfile);
 	READ_POWFS_RELAX(str,sninfile);
@@ -821,6 +822,7 @@ static void readcfg_aper(parms_t *parms){
 		error("Inner (%g) and outer (%g) diameters should be positive.\n",parms->aper.din,parms->aper.d);
 	}
 	READ_DBL(aper.rotdeg);
+	parms->aper.misreg=readcfg_dmat(2, 0, "aper.misreg");
 	parms->aper.fnampuser=readcfg_peek_override("aper.fnamp");
 	READ_STR(aper.fnamp);
 	READ_STR(aper.pupmask);
@@ -1003,9 +1005,9 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.psol);
 	READ_DBL(recon.poke);
 	parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
-	readcfg_strarr(&parms->recon.misreg_tel2wfs,parms->nwfsr,1,"recon.misreg_tel2wfs");
-	readcfg_strarr(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr,1,"recon.misreg_dm2wfs");
-	readcfg_strarr(&parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit,1,"recon.misreg_dm2sci");
+	readcfg_strarr(&parms->recon.distortion_tel2wfs,parms->nwfsr,1,"recon.distortion_tel2wfs");
+	readcfg_strarr(&parms->recon.distortion_dm2wfs,parms->ndm*parms->nwfsr,1,"recon.distortion_dm2wfs");
+	readcfg_strarr(&parms->recon.distortion_dm2sci,parms->ndm*parms->fit.nfit,1,"recon.distortion_dm2sci");
 	READ_INT(recon.psd);
 	READ_INT(recon.psddtrat_hi);
 	READ_INT(recon.psddtrat_lo);
@@ -1291,10 +1293,9 @@ static void readcfg_save(parms_t *parms){
 	READ_INT(save.mvm);
 }
 static void readcfg_misreg(parms_t *parms){
-	parms->misreg.pupil=readcfg_dmat(2,1,"misreg.pupil");
-	readcfg_strarr(&parms->misreg.tel2wfs,parms->nwfs,1,"misreg.tel2wfs");
-	readcfg_strarr(&parms->misreg.dm2wfs,parms->ndm*parms->nwfs,1,"misreg.dm2wfs");
-	readcfg_strarr(&parms->misreg.dm2sci,parms->ndm*parms->evl.nevl,1,"misreg.dm2sci");
+	readcfg_strarr(&parms->distortion.tel2wfs,parms->nwfs,1,"distortion.tel2wfs");
+	readcfg_strarr(&parms->distortion.dm2wfs,parms->ndm*parms->nwfs,1,"distortion.dm2wfs");
+	readcfg_strarr(&parms->distortion.dm2sci,parms->ndm*parms->evl.nevl,1,"distortion.dm2sci");
 }
 /**
    Specify which variables to load from saved files (Usually from LAOS
@@ -2738,7 +2739,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	}
 
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		if(parms->recon.misreg_tel2wfs&&parms->recon.misreg_tel2wfs[iwfs]&&!parms->dbg.tomo_hxw){
+		if(parms->recon.distortion_tel2wfs&&parms->recon.distortion_tel2wfs[iwfs]&&!parms->dbg.tomo_hxw){
 			warning_once("Without dbg.tomo_hxw, only pure shift between telescope and LGS WFS is calibrated.\n");
 		}
 	}

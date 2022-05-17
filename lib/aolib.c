@@ -35,7 +35,7 @@ static __attribute__((constructor)) void init(){
 	//if(setjmp(exception_return)){
 //	info2("Error setting jmp_buf\n");
 	// }
-	default_signal_handler(SIGUSR2, 0, 0);
+	//default_signal_handler(SIGUSR2, 0, 0);
 }
 static __attribute__((destructor)) void deinit(){
 	fprintf(stderr, "aolib unloaded\n");

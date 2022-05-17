@@ -250,7 +250,7 @@ int main(int argc, char* argv[]){
 
 	loc_t* ploc=mksqloc_auto((int)ceil(D/dx1), (int)ceil(D/dx1), dx1, dx1);
 	dmat* pamp=dnew(ploc->nloc, 1);
-	locannular(P(pamp), ploc, 0, 0, 15, 1.8, 1);
+	loc_circle_add(pamp, ploc, 0, 0, 15, 1.8, 1);
 	dmat* pwt=ddup(pamp);
 	dnormalize_sumabs(P(pwt), pwt->nx, 1);
 	dmat* mode_ploc=dnew(ploc->nloc, nmod);

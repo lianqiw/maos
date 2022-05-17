@@ -19,7 +19,7 @@
 
 #ifndef __AOS_PARMS_H__
 #define __AOS_PARMS_H__
-
+#include "../lib/aos.h"
 /**
    \file maos/parms.h
    
@@ -84,6 +84,8 @@ typedef struct aper_cfg_t{
     real d;     /**<Telescope aperture diameter*/
     real din;   /**<Telescope inner blocking diameter*/
     real rotdeg;/**<pupil rotation in degree*/
+    dmat *misreg;  /**<Misregistration of the telescope pupil. 2x1
+                    The intersection between the misregistered pupil (aper.d or fnamp) and a centered aper.d defines the actual pupil.*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
     int fnampuser;/**<User provided amplitude map (not default)*/
@@ -137,6 +139,8 @@ typedef struct powfs_cfg_t{
     dmat *wvl;     /**<list of wavelength in ascending order.*/
     dmat *wvlwts;  /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
     char *saloc;   /**<saloc override file*/
+    real misregx;  /**<offset of saloc from pupil illumination in unit of dsa*/
+    real misregy;  /**<offset of saloc from pupil illumination in unit of dsa*/
     char *amp;     /**<amplitude override file*/
     char *piinfile;/**<input averaged pixel intensities for matched filter. NULL
 		      to disable*/
@@ -281,9 +285,9 @@ typedef struct wfs_cfg_t{
     char *sabad;  /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     real thetax;  /**<x direction*/
     real thetay;  /**<y direction*/
-    real misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
-    real misreg_y;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
-    real misreg_r;/**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs.*/
+    real misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs.*/
+    real misreg_y;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs.*/
+    real misreg_r;/**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.distortion_tel2wfs.*/
     real hc;      /**<conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input)*/
     real hs;      /**height of star is wfs.hs=powfs.hs+wfs.delta_hs (input)*/
     real siglev; /**<Total signal value for all wavelength. if not specified in config, will use powfs.siglev*/
@@ -477,9 +481,9 @@ typedef struct recon_cfg_t{
 		       the algorithm needs PSOL gradient, we will have an
 		       auxillary matrix to multiply to the DM actuators and
 		       subtract from the result.*/
-    char **misreg_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
-    char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
-    char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
+    char **distortion_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
+    char **distortion_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
+    char **distortion_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
 
     real poke;       /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
     int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
@@ -780,12 +784,11 @@ typedef struct save_cfg_t{
     int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
     int mvm;         /**<save computed mvm control matrix*/
 }save_cfg_t;
-typedef struct misreg_cfg_t{
+typedef struct dist_cfg_t{
     char **tel2wfs;  /**<Distortion from telescope pupil to each WFS*/
     char **dm2wfs;   /**<Distortion from DM to each WFS. Displacement due to altitude should not be included here*/
     char **dm2sci;   /**<Distortion from DM to science. Not specified for individual science*/
-    dmat   *pupil;   /**<Misregistration of the telescope pupil*/
-}misreg_cfg_t;
+}dist_cfg_t;
 /**
    is a wrapper of all _CFG_T data types.
 */
@@ -814,7 +817,7 @@ typedef struct parms_t{
     gpu_cfg_t    gpu;   /**<Specify GPU options.*/
     load_cfg_t   load;  /**<Specify what matrices to load for debugging*/
     save_cfg_t   save;  /**<Specify what to save to file for debugging*/
-    misreg_cfg_t misreg;
+    dist_cfg_t   distortion;/**<Field distortion. Not misregistration*/
     int npowfs;      /**<Number of wfs types*/
     int nwfs;        /**<Number of wfs*/
     int nwfsr;       /**<Number of wfs used in reconstruction. =npowfs in glao, =nwfs otherwise*/

@@ -72,9 +72,9 @@ aper_t* setup_aper(const parms_t* const parms){
 		mapfree(smap);
 	}
 	if(!aper->amp){
-	/*Use negative misreg.pupil because it is the misreg of telescope entrace, not our pupil.*/
+		/*Use negative misreg.pupil because it is the misreg of telescope entrace, not our pupil.*/
 		aper->amp=mkamp(aper->locs, aper->ampground,
-			-P(parms->misreg.pupil,0), -P(parms->misreg.pupil,1),
+			-P(parms->aper.misreg,0), -P(parms->aper.misreg,1),
 			parms->aper.d, parms->aper.din);
 	}
 	if(parms->aper.pupmask){
@@ -90,24 +90,22 @@ aper_t* setup_aper(const parms_t* const parms){
 		dcwm(aper->amp, ampmask);
 		dfree(ampmask);
 		mapfree(mask);
-	} else{/*apply an annular mask */
-	//locannularmask(P(aper->amp), aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
 	}
 	if(!parms->load.locs){
 		loc_reduce(aper->locs, aper->amp, EPS, 1, NULL);
 	}
 	loc_create_stat(aper->locs);
-	if(parms->misreg.dm2sci){
+	if(parms->distortion.dm2sci){
 		int isset=0;
 		int nevl=parms->evl.nevl;
 		aper->locs_dm=loccellnew(nevl, parms->ndm);
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int ievl=0; ievl<nevl; ievl++){
-				if(parms->misreg.dm2sci[ievl+idm*nevl])
+				if(parms->distortion.dm2sci[ievl+idm*nevl])
 #pragma omp task shared(isset)
 				{
 					P(aper->locs_dm, ievl, idm)
-						=loctransform(aper->locs, parms->misreg.dm2sci[ievl+idm*nevl]);
+						=loctransform(aper->locs, parms->distortion.dm2sci[ievl+idm*nevl]);
 					isset=1;
 				}
 			}

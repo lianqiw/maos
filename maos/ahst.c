@@ -443,7 +443,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 						dispx=parms->wfsr[iwfs].thetax*ht;
 						dispy=parms->wfsr[iwfs].thetay*ht;
 						dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, P(recon->aloc,idm),
-							parms->misreg.dm2wfs[iwfs+idm*parms->nwfs],
+							parms->distortion.dm2wfs[iwfs+idm*parms->nwfs],
 							P(ngsmod->Modes, idm), 0, dispx, dispy);
 						dadd(&P(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
 					}

@@ -79,11 +79,9 @@ loc_t* mkannloc(real D, real Din, real dx, real thres);
 void loc_create_stat_do(loc_t* loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t* loc);
-void loccircle(real* phi, loc_t* loc, real cx, real cy, real r, real val);
-void locannular(real* phi, loc_t* loc, real cx, real cy, real r, real rin, real val);
-void locannularmask(real* phi, loc_t* loc, real cx, real cy, real r, real rin);
-void locellipse(real* phi, loc_t* loc, real cx, real cy,
-	real rx, real ry, real val);
+void loc_circle_add(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val);
+void loc_circle_mul(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val);
+void locellipse_add(dmat* phi, loc_t* loc, real cx, real cy,real rx, real ry, real val);
 void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout);
 void loc_reduce_spcell(loc_t* loc, dspcell* sp, int dim, int cont);
 void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont);

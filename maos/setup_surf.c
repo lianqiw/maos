@@ -174,10 +174,7 @@ static void prop_surf_wfs(thread_t* info){
 static void
 setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* recon){
 	info2("Setting up surface OPD\n");
-	if(fabs(P(parms->misreg.pupil, 0))>EPS||fabs(P(parms->misreg.pupil, 1))>EPS){
-		warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
-			"in maos because some surfaces may belong to instrument.\n");
-	}
+
 	const int nevl=parms->evl.nevl;
 	const int nwfs=parms->nwfs;
 	const int nncpa=parms->sim.ncpa_ndir;
@@ -205,8 +202,11 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			const char* strwfs=search_header(surf->header, "SURFWFS");
 			const char* stropdx=search_header(surf->header, "SURFOPDX");
 			if(strname&&(!strcmp(strname, "M1"))){
-				surf->ox+=P(parms->misreg.pupil, 0);
-				surf->oy+=P(parms->misreg.pupil, 1);
+				if(fabs(P(parms->aper.misreg, 0))>EPS||fabs(P(parms->aper.misreg, 1))>EPS){
+					warning("M1 surface ox, oy is adjusted by aper.misreg\n");
+				}
+				surf->ox+=P(parms->aper.misreg,0);
+				surf->oy+=P(parms->aper.misreg,1);
 			}
 			//pupil rotation. rotate the surface directly
 			if(strname&&(!strcmp(strname, "M1")||!strcmp(strname, "M2"))){
