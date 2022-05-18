@@ -20,7 +20,7 @@ var parms_8h_structparms__t =
     [ "gpu", "parms_8h.html#a2a5c9dba1e2b9e1b329576678164074e", null ],
     [ "load", "parms_8h.html#acb0b1c413f63c73fb21a2799c7913faf", null ],
     [ "save", "parms_8h.html#ab5d91958df13f96afc87b3f22665f0b9", null ],
-    [ "misreg", "parms_8h.html#aef4d011ca79988c3e7cf9bdbf8027e99", null ],
+    [ "distortion", "parms_8h.html#aaac871dc3cb6b986c381e633c076fa27", null ],
     [ "npowfs", "parms_8h.html#ab2a77150bf3223adc72e134e02d484a0", null ],
     [ "nwfs", "parms_8h.html#a59235634d45e2d444e826ffee808a98b", null ],
     [ "nwfsr", "parms_8h.html#a8dfd89ed68dad87b3e4985b98db47142", null ],

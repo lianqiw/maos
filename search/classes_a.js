@@ -19,7 +19,6 @@ var searchData=
   ['mapcell',['mapcell',['../type_8h.html#structmapcell',1,'']]],
   ['mapcell_2e_5f_5funnamed_5f_5f',['mapcell.__unnamed__',['../type_8h.html#unionmapcell_8____unnamed____',1,'']]],
   ['mapcell_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f',['mapcell.__unnamed__.__unnamed__',['../type_8h.html#structmapcell_8____unnamed_____8____unnamed____',1,'']]],
-  ['misreg_5fcfg_5ft',['misreg_cfg_t',['../parms_8h.html#structmisreg__cfg__t',1,'']]],
   ['moao_5fcfg_5ft',['moao_cfg_t',['../parms_8h.html#structmoao__cfg__t',1,'']]],
   ['moao_5ft',['moao_t',['../maos_2types_8h.html#structmoao__t',1,'']]],
   ['mt_5fstate',['mt_state',['../structmt__state.html',1,'']]],

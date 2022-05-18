@@ -12,7 +12,6 @@ var sys_2common_8h =
     [ "BLUE", "sys_2common_8h.html#a79d10e672abb49ad63eeaa8aaef57c38", null ],
     [ "MAGENTA", "sys_2common_8h.html#a6f699060902f800f12aaae150f3a708e", null ],
     [ "CYAN", "sys_2common_8h.html#ad243f93c16bc4c1d3e0a13b84421d760", null ],
-    [ "QUIT_FUN", "sys_2common_8h.html#a10f70b101a20e7aa118bf0c944475b06", null ],
     [ "logerr", "sys_2common_8h.html#a5a8f12a619dc1d59a2e8e5ccedfade40", null ],
     [ "logstd", "sys_2common_8h.html#a25109b9068a7577def63faa4bf329664", null ],
     [ "logstd_color", "sys_2common_8h.html#aa4e9243dda8a10a67c6186e4ae19681f", null ],
@@ -54,7 +53,5 @@ var sys_2common_8h =
     [ "READ_ENV_NUM", "sys_2common_8h.html#a904a77a71ac13416e587657a16fad733", null ],
     [ "READ_ENV_INT", "sys_2common_8h.html#a0ddf141399d43194f28448a38c2316dc", null ],
     [ "READ_ENV_DBL", "sys_2common_8h.html#a748c831084487edf646cbe09e605fc8c", null ],
-    [ "DEF_ENV_FLAG", "sys_2common_8h.html#a09be4f80cada4e5b2082a65011fc90db", null ],
-    [ "quitfun_t", "sys_2common_8h.html#a4fbc2d8a10f9cc1972ba752334d1a36b", null ],
-    [ "default_quitfun", "sys_2common_8h.html#aacf0bc50547e8f699da937d932124c12", null ]
+    [ "DEF_ENV_FLAG", "sys_2common_8h.html#a09be4f80cada4e5b2082a65011fc90db", null ]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['p',['p',['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
+  ['p',['P',['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
   ['pair',['pair',['../cn2est_8h.html#a8984a6f7acbcd94ccd68c2a94fa7275f',1,'cn2est_t::pair()'],['../parms_8h.html#a5fa2b03fef6524369da80328ac5b4da6',1,'cn2est_cfg_t::pair()']]],
   ['parms',['parms',['../maos_2types_8h.html#a0fa3fc80828e7714dbe3b2ae58ccb437',1,'sim_t']]],
   ['parms_2eh',['parms.h',['../parms_8h.html',1,'']]],
@@ -8,6 +8,7 @@ var searchData=
   ['parse_5fargopt',['parse_argopt',['../sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6',1,'misc.c']]],
   ['parse_5fargs',['parse_args',['../maos_2utils_8h.html#a669f9c0a37d07dde23e30d0fa4593e30',1,'utils.c']]],
   ['parse_5fhost',['parse_host',['../scheduler__client_8h.html#a0f53c3d23f04efdd0d3dbc2312e24c62',1,'scheduler_client.c']]],
+  ['parse_5fpoly',['parse_poly',['../loc_8h.html#a3076eea48b393539b5e299184ed886cf',1,'loc.c']]],
   ['path_2eh',['path.h',['../path_8h.html',1,'']]],
   ['pause',['pause',['../parms_8h.html#a301b7c751e28f1ed691e99f7548b3469',1,'sim_cfg_t::pause()'],['../maos_2types_8h.html#a14ef8a333a0e6595ec7c5856dee2d91a',1,'sim_t::pause()']]],
   ['pcg',['pcg',['../lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3',1,'pcg.c']]],
@@ -152,7 +153,6 @@ var searchData=
   ['ptt',['PTT',['../maos_2types_8h.html#a6d17397dbac0b629b9ec2bd032eda634',1,'recon_t']]],
   ['pttf',['PTTF',['../maos_2types_8h.html#a7a5c174cd764b24d02da1015c9e2db95',1,'recon_t']]],
   ['pttr',['pttr',['../parms_8h.html#a3c53ba47910f252699b7ef0182ea7fcf',1,'evl_cfg_t']]],
-  ['pupil',['pupil',['../parms_8h.html#ae416c074af9861ec1c4fda35b85f3107',1,'misreg_cfg_t']]],
   ['pupilshift',['pupilshift',['../pywfs_8h.html#aef48199fd578484ed3d4208c19e1fdaf',1,'pywfs_t']]],
   ['pupmask',['pupmask',['../parms_8h.html#ad5e99c7003917875264e61c295f514bd',1,'aper_cfg_t::pupmask()'],['../parms_8h.html#a6254fda2f0eac927fe835142f00b639d',1,'dbg_cfg_t::pupmask()']]],
   ['pwfs_5fflate',['pwfs_flate',['../parms_8h.html#a4079f7fa774bab7c42c8fcb824af9b4b',1,'dbg_cfg_t']]],

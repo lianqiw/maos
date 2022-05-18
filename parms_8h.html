@@ -148,8 +148,8 @@ Data Structures</h2></td></tr>
 <tr class="separator:structload__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structsave__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structsave__cfg__t">save_cfg_t</a></td></tr>
 <tr class="separator:structsave__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:structmisreg__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structmisreg__cfg__t">misreg_cfg_t</a></td></tr>
-<tr class="separator:structmisreg__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structdist__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structdist__cfg__t">dist_cfg_t</a></td></tr>
+<tr class="separator:structdist__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structparms__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structparms__t">parms_t</a></td></tr>
 <tr class="separator:structparms__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structarg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structarg__t">arg_t</a></td></tr>
@@ -568,6 +568,13 @@ rotdeg</td>
 <p>pupil rotation in degree </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="ae2954c86dea9ddd31254a7b5e940e765"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+misreg</td>
+<td class="fielddoc">
+<p>Misregistration of the telescope pupil. 2x1 The intersection between the misregistered pupil (aper.d or fnamp) and a centered aper.d defines the actual pupil. </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="ab58fa659977e671d883dc4597bb11ea9"></a>char *</td>
 <td class="fieldname">
 fnamp</td>
@@ -876,6 +883,20 @@ wvlwts</td>
 saloc</td>
 <td class="fielddoc">
 <p>saloc override file </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="afd7eb74863493ba55fcfc788babbd42e"></a>real</td>
+<td class="fieldname">
+misregx</td>
+<td class="fielddoc">
+<p>offset of saloc from pupil illumination in unit of dsa </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="affa17d36ac1346eefe3619b40da0efca"></a>real</td>
+<td class="fieldname">
+misregy</td>
+<td class="fielddoc">
+<p>offset of saloc from pupil illumination in unit of dsa </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a3fe2f10062d01707ad74beb00d0b399e"></a>char *</td>
@@ -1698,21 +1719,21 @@ thetay</td>
 <td class="fieldname">
 misreg_x</td>
 <td class="fielddoc">
-<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs. </p>
+<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a9c94e2684735dd3855e9bea993ad9056"></a>real</td>
 <td class="fieldname">
 misreg_y</td>
 <td class="fielddoc">
-<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs. </p>
+<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af8ad5aed8d91061bb5b1c4c93e38f0d1"></a>real</td>
 <td class="fieldname">
 misreg_r</td>
 <td class="fielddoc">
-<p>misregistration wrt telescope pupil. This is pure rotation extracted from recon.misreg_tel2wfs. </p>
+<p>misregistration wrt telescope pupil. This is pure rotation extracted from recon.distortion_tel2wfs. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a7c41560bed32d05c78942861a3782a89"></a>real</td>
@@ -2667,23 +2688,23 @@ mvm</td>
 <p>Use the various algorithms recon.alg to assemble a control matrix to multiply to gradients to get DM commands. If the algorithm needs PSOL gradient, we will have an auxillary matrix to multiply to the DM actuators and subtract from the result. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a814d51a4966d48e0874b9310160273da"></a>char **</td>
+<a id="a185514284ff87c3ac54162d7d0daf5c6"></a>char **</td>
 <td class="fieldname">
-misreg_dm2wfs</td>
+distortion_dm2wfs</td>
 <td class="fielddoc">
 <p>Distortion from DM to each WFS model used in reconstruction. Affects GA </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a78fc5c76ed609e2255ae93bc4d8443d2"></a>char **</td>
+<a id="afdbafb6fc04edd13d5bdd8cfe5d9d730"></a>char **</td>
 <td class="fieldname">
-misreg_dm2sci</td>
+distortion_dm2sci</td>
 <td class="fielddoc">
 <p>Distortion from DM to each science model used in reconstruction. Affects HA </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a0f3843d3eeeb87f480c96ae4de9d8356"></a>char **</td>
+<a id="a8544e4837a99f0c7857756b583a72989"></a>char **</td>
 <td class="fieldname">
-misreg_tel2wfs</td>
+distortion_tel2wfs</td>
 <td class="fielddoc">
 <p>Distortion from Telescope to each WFS model used in reconstruction. Affects HXW </p>
 </td></tr>
@@ -4405,46 +4426,39 @@ mvm</td>
 
 </div>
 </div>
-<a name="structmisreg__cfg__t" id="structmisreg__cfg__t"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#structmisreg__cfg__t">&#9670;&nbsp;</a></span>misreg_cfg_t</h2>
+<a name="structdist__cfg__t" id="structdist__cfg__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structdist__cfg__t">&#9670;&nbsp;</a></span>dist_cfg_t</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">struct misreg_cfg_t</td>
+          <td class="memname">struct dist_cfg_t</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <div class="textblock"></div><table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
-<a id="a6e4ff74e3e8f65ba2f26a9d0c91754fa"></a>char **</td>
+<a id="a0628b20e4203ce315c151f13fb857495"></a>char **</td>
 <td class="fieldname">
 tel2wfs</td>
 <td class="fielddoc">
 <p>Distortion from telescope pupil to each WFS </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab58d36828b06ce39711555ebd34166de"></a>char **</td>
+<a id="ab8562a7a7789fe55cea826185eb6012f"></a>char **</td>
 <td class="fieldname">
 dm2wfs</td>
 <td class="fielddoc">
 <p>Distortion from DM to each WFS. Displacement due to altitude should not be included here </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a9a6aec2b82647033e97250d81665b7d4"></a>char **</td>
+<a id="a218ea7d101755cb860fbfa2a45b8234e"></a>char **</td>
 <td class="fieldname">
 dm2sci</td>
 <td class="fielddoc">
 <p>Distortion from DM to science. Not specified for individual science </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ae416c074af9861ec1c4fda35b85f3107"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-pupil</td>
-<td class="fielddoc">
-<p>Misregistration of the telescope pupil </p>
 </td></tr>
 </table>
 
@@ -4605,10 +4619,11 @@ save</td>
 <p>Specify what to save to file for debugging </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="aef4d011ca79988c3e7cf9bdbf8027e99"></a><a class="el" href="parms_8h.html#structmisreg__cfg__t">misreg_cfg_t</a></td>
+<a id="aaac871dc3cb6b986c381e633c076fa27"></a><a class="el" href="parms_8h.html#structdist__cfg__t">dist_cfg_t</a></td>
 <td class="fieldname">
-misreg</td>
+distortion</td>
 <td class="fielddoc">
+<p>Field distortion. Not misregistration </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ab2a77150bf3223adc72e134e02d484a0"></a>int</td>

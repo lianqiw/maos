@@ -3,6 +3,8 @@ var parms_8h_structpowfs__cfg__t =
     [ "wvl", "parms_8h.html#a96f91d5fc23b2bd23f801a16cc799669", null ],
     [ "wvlwts", "parms_8h.html#ae59464bff179ac7ca34fb1e9a6b5d8c9", null ],
     [ "saloc", "parms_8h.html#a5670ab9fc69fa9ed4a053636a19f7867", null ],
+    [ "misregx", "parms_8h.html#afd7eb74863493ba55fcfc788babbd42e", null ],
+    [ "misregy", "parms_8h.html#affa17d36ac1346eefe3619b40da0efca", null ],
     [ "amp", "parms_8h.html#a3fe2f10062d01707ad74beb00d0b399e", null ],
     [ "piinfile", "parms_8h.html#af0efc45bacceee721bd5d61db82ef00a", null ],
     [ "sninfile", "parms_8h.html#aa36290db2d198cc23e5518ca8c035cac", null ],

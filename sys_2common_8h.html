@@ -95,9 +95,7 @@ $(document).ready(function(){initNavTree('sys_2common_8h.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#define-members">Macros</a>  </div>
   <div class="headertitle">
 <div class="title">common.h File Reference</div>  </div>
 </div><!--header-->
@@ -141,9 +139,6 @@ Macros</h2></td></tr>
 <tr class="memitem:ad243f93c16bc4c1d3e0a13b84421d760"><td class="memItemLeft" align="right" valign="top"><a id="ad243f93c16bc4c1d3e0a13b84421d760"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CYAN</b>&#160;&#160;&#160;&quot;\033[0;36m&quot;</td></tr>
 <tr class="separator:ad243f93c16bc4c1d3e0a13b84421d760"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10f70b101a20e7aa118bf0c944475b06"><td class="memItemLeft" align="right" valign="top"><a id="a10f70b101a20e7aa118bf0c944475b06"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>QUIT_FUN</b>(A)&#160;&#160;&#160;quitfun?quitfun(A):default_quitfun(A);</td></tr>
-<tr class="separator:a10f70b101a20e7aa118bf0c944475b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a8f12a619dc1d59a2e8e5ccedfade40"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>logerr</b>(level,  COLOR,  format, ...)</td></tr>
 <tr class="separator:a5a8f12a619dc1d59a2e8e5ccedfade40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25109b9068a7577def63faa4bf329664"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>logstd</b>(level,  A...)</td></tr>
@@ -151,7 +146,7 @@ Macros</h2></td></tr>
 <tr class="memitem:aa4e9243dda8a10a67c6186e4ae19681f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>logstd_color</b>(level,  COLOR,  format, ...)</td></tr>
 <tr class="separator:aa4e9243dda8a10a67c6186e4ae19681f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b9a882fdc463a3d4dcc99840fd0adb8"><td class="memItemLeft" align="right" valign="top"><a id="a5b9a882fdc463a3d4dcc99840fd0adb8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>error</b>(format, ...)&#160;&#160;&#160;({logerr(-4, RED,        &quot;Error(%s:%d): &quot; format, BASEFILE,__LINE__, ##__VA_ARGS__); signal_caught=11; QUIT_FUN(&quot;Error happened&quot;);})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>error</b>(format, ...)&#160;&#160;&#160;({logerr(-4, RED,        &quot;Error(%s:%d): &quot; format, BASEFILE,__LINE__, ##__VA_ARGS__); default_signal_handler(SIGUSR2,0,0);})</td></tr>
 <tr class="separator:a5b9a882fdc463a3d4dcc99840fd0adb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d3ff0e9f81516a70ebb38e09b9ef34e"><td class="memItemLeft" align="right" valign="top"><a id="a5d3ff0e9f81516a70ebb38e09b9ef34e"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>warning</b>(format, ...)&#160;&#160;&#160;logerr(-4, CYAN,     &quot;Warning(%s:%d): &quot; format, BASEFILE,__LINE__, ##__VA_ARGS__)</td></tr>
@@ -266,18 +261,6 @@ Macros</h2></td></tr>
 <tr class="separator:a748c831084487edf646cbe09e605fc8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09be4f80cada4e5b2082a65011fc90db"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>DEF_ENV_FLAG</b>(A,  default_val)</td></tr>
 <tr class="separator:a09be4f80cada4e5b2082a65011fc90db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a4fbc2d8a10f9cc1972ba752334d1a36b"><td class="memItemLeft" align="right" valign="top"><a id="a4fbc2d8a10f9cc1972ba752334d1a36b"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>quitfun_t</b>) (const char *)</td></tr>
-<tr class="separator:a4fbc2d8a10f9cc1972ba752334d1a36b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:aacf0bc50547e8f699da937d932124c12"><td class="memItemLeft" align="right" valign="top"><a id="aacf0bc50547e8f699da937d932124c12"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>default_quitfun</b> (const char *msg)</td></tr>
-<tr class="separator:aacf0bc50547e8f699da937d932124c12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Every source file in this folder should include this file </p>

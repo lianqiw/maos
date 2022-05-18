@@ -2,7 +2,7 @@ var searchData=
 [
   ['tmt_20nfiraos_20lgs_20mcao',['TMT NFIRAOS LGS MCAO',['../nfiraos_example.html',1,'page33_example']]],
   ['task_5ft',['task_t',['../structtask__t.html',1,'']]],
-  ['tel2wfs',['tel2wfs',['../parms_8h.html#a6e4ff74e3e8f65ba2f26a9d0c91754fa',1,'misreg_cfg_t']]],
+  ['tel2wfs',['tel2wfs',['../parms_8h.html#a0628b20e4203ce315c151f13fb857495',1,'dist_cfg_t']]],
   ['telfocusint',['telfocusint',['../maos_2types_8h.html#a67f76f8323de717caa899f43b0022b85',1,'sim_t']]],
   ['telfocusreal',['telfocusreal',['../maos_2types_8h.html#aece79bac5fe519437b96396a277d0527',1,'sim_t']]],
   ['telws',['telws',['../maos_2types_8h.html#abb5f50409d8cca6e56b84d82c8f0b2a4',1,'sim_t']]],

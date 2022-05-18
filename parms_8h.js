@@ -46,6 +46,7 @@ var parms_8h =
       [ "d", "parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7", null ],
       [ "din", "parms_8h.html#a09ae154f837db49c7cb8ba98666c8c5a", null ],
       [ "rotdeg", "parms_8h.html#a14f3320d745e66fa755da933adc4a0a4", null ],
+      [ "misreg", "parms_8h.html#ae2954c86dea9ddd31254a7b5e940e765", null ],
       [ "fnamp", "parms_8h.html#ab58fa659977e671d883dc4597bb11ea9", null ],
       [ "fnampuser", "parms_8h.html#a4ca899cd1f3e07d55ca844b4b04d5359", null ],
       [ "pupmask", "parms_8h.html#ad5e99c7003917875264e61c295f514bd", null ]
@@ -89,6 +90,8 @@ var parms_8h =
       [ "wvl", "parms_8h.html#a96f91d5fc23b2bd23f801a16cc799669", null ],
       [ "wvlwts", "parms_8h.html#ae59464bff179ac7ca34fb1e9a6b5d8c9", null ],
       [ "saloc", "parms_8h.html#a5670ab9fc69fa9ed4a053636a19f7867", null ],
+      [ "misregx", "parms_8h.html#afd7eb74863493ba55fcfc788babbd42e", null ],
+      [ "misregy", "parms_8h.html#affa17d36ac1346eefe3619b40da0efca", null ],
       [ "amp", "parms_8h.html#a3fe2f10062d01707ad74beb00d0b399e", null ],
       [ "piinfile", "parms_8h.html#af0efc45bacceee721bd5d61db82ef00a", null ],
       [ "sninfile", "parms_8h.html#aa36290db2d198cc23e5518ca8c035cac", null ],
@@ -337,9 +340,9 @@ var parms_8h =
       [ "nmod", "parms_8h.html#ace46c0fa0cc56318cd5a7725fa4d5a04", null ],
       [ "psol", "parms_8h.html#a1dbad5eb7644f49a10ca1fd4ea7bf01d", null ],
       [ "mvm", "parms_8h.html#a368695bc152258fd6d6af9d2439588fa", null ],
-      [ "misreg_dm2wfs", "parms_8h.html#a814d51a4966d48e0874b9310160273da", null ],
-      [ "misreg_dm2sci", "parms_8h.html#a78fc5c76ed609e2255ae93bc4d8443d2", null ],
-      [ "misreg_tel2wfs", "parms_8h.html#a0f3843d3eeeb87f480c96ae4de9d8356", null ],
+      [ "distortion_dm2wfs", "parms_8h.html#a185514284ff87c3ac54162d7d0daf5c6", null ],
+      [ "distortion_dm2sci", "parms_8h.html#afdbafb6fc04edd13d5bdd8cfe5d9d730", null ],
+      [ "distortion_tel2wfs", "parms_8h.html#a8544e4837a99f0c7857756b583a72989", null ],
       [ "poke", "parms_8h.html#a5c184980785a17c9ef1b72ab7e01b530", null ],
       [ "psd", "parms_8h.html#ab4d4972861877b925caec10fd38f528b", null ],
       [ "psddtrat_hi", "parms_8h.html#af4e5cc1e1b7d722759040ce14803cc02", null ],
@@ -581,11 +584,10 @@ var parms_8h =
       [ "mvmf", "parms_8h.html#a69e673fb0e04e5226d1d7ca8ad89efad", null ],
       [ "mvm", "parms_8h.html#a9d9f17deafa9a0dcc11f8934548b230d", null ]
     ] ],
-    [ "misreg_cfg_t", "parms_8h.html#structmisreg__cfg__t", [
-      [ "tel2wfs", "parms_8h.html#a6e4ff74e3e8f65ba2f26a9d0c91754fa", null ],
-      [ "dm2wfs", "parms_8h.html#ab58d36828b06ce39711555ebd34166de", null ],
-      [ "dm2sci", "parms_8h.html#a9a6aec2b82647033e97250d81665b7d4", null ],
-      [ "pupil", "parms_8h.html#ae416c074af9861ec1c4fda35b85f3107", null ]
+    [ "dist_cfg_t", "parms_8h.html#structdist__cfg__t", [
+      [ "tel2wfs", "parms_8h.html#a0628b20e4203ce315c151f13fb857495", null ],
+      [ "dm2wfs", "parms_8h.html#ab8562a7a7789fe55cea826185eb6012f", null ],
+      [ "dm2sci", "parms_8h.html#a218ea7d101755cb860fbfa2a45b8234e", null ]
     ] ],
     [ "parms_t", "parms_8h.html#structparms__t", [
       [ "atm", "parms_8h.html#a9779bb236dc3842d0106e21d8d953bef", null ],
@@ -608,7 +610,7 @@ var parms_8h =
       [ "gpu", "parms_8h.html#a2a5c9dba1e2b9e1b329576678164074e", null ],
       [ "load", "parms_8h.html#acb0b1c413f63c73fb21a2799c7913faf", null ],
       [ "save", "parms_8h.html#ab5d91958df13f96afc87b3f22665f0b9", null ],
-      [ "misreg", "parms_8h.html#aef4d011ca79988c3e7cf9bdbf8027e99", null ],
+      [ "distortion", "parms_8h.html#aaac871dc3cb6b986c381e633c076fa27", null ],
       [ "npowfs", "parms_8h.html#ab2a77150bf3223adc72e134e02d484a0", null ],
       [ "nwfs", "parms_8h.html#a59235634d45e2d444e826ffee808a98b", null ],
       [ "nwfsr", "parms_8h.html#a8dfd89ed68dad87b3e4985b98db47142", null ],
