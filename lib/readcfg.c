@@ -283,9 +283,10 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			char* p0=strchr(config_line, '\n');
 			const int len=p0?(p0-config_line):(MAXLN-1);
 			if(len+1>MAXLN){
-				error("Input line is too long. Please make MAXLN larger to accomodate.\n");
+				error("Input line is too long. Please make MAXLN larger to accomodate.\n");break;
+			}else{
+				strncpy(line, config_line, len); line[len]='\0';
 			}
-			strncpy(line, config_line, len); line[len]='\0';
 			if(p0){
 				config_line=p0+1;//start of next line
 			} else{
