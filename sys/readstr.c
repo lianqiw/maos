@@ -410,7 +410,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	if(nrow*ncol!=count){
 		error("{%s}: nrow=%d, ncol=%d, count=%d\n", data, nrow, ncol, count);
 	}
-	
+	//count is gauranteed to not exceed len
 	if(count&&count<len){//not enough values are read
 		if(!relax||(relax==1&&count>1)||trans){
 			error("{%s}: Require %d numbers, but got %d\n", data, len, count);
@@ -437,15 +437,15 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		dbg("Transposing %dx%d array\n", ncol, nrow);
 		void* newer=calloc(count, size);
 #define DO_TRANS(T)						\
-	{							\
-	    T *from=(T*)(*ret);					\
-	    T *to=(T*)newer;					\
-	    for(int icol=0; icol<ncol; icol++){		\
-		for(int irow=0; irow<ncol; irow++){		\
-		    to[icol+ncol*irow]=from[irow+nrow*icol];	\
-		}						\
-	    }							\
-	}
+		{							\
+			T *from=(T*)(*ret);					\
+			T *to=(T*)newer;					\
+			for(int icol=0; icol<ncol; icol++){		\
+			for(int irow=0; irow<ncol; irow++){		\
+				to[icol+ncol*irow]=from[irow+nrow*icol];	\
+			}						\
+			}							\
+		}
 
 		switch(type){
 		case M_INT:
@@ -467,12 +467,17 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		int tmp=ncol; ncol=nrow; nrow=tmp;
 		free(*ret);
 		*ret=newer;
-	} else if(!len){
-		if(count>0){
-			*ret=myrealloc(*ret, size*count, char);
-		} else{
-			free(*ret);
-			*ret=NULL;
+	} else {
+		if(!len){//automatic read
+			if(count>0){
+				*ret=myrealloc(*ret, size*count, char);
+			} else{
+				free(*ret);
+				*ret=NULL;
+			}
+		}else{//keep data at zero.
+			nrow=len;
+			ncol=1;
 		}
 	}
 	if(nrow0) *nrow0=nrow;

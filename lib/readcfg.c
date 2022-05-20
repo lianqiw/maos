@@ -270,32 +270,26 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	int countnew=0;
 	int countold=0;
 	int countskip=0;
-#define MAXLN 40960
+#define MAXLN 10000
 	char ssline[MAXLN];
 	ssline[0]='\0';/*stores the available line. */
-	char line[MAXLN];
-	char* config_line=config_file;
+	char line[MAXLN];//line concatenates to ssline if ends with /
+	char* config_line=config_file;//contains config lines
 	while(1){
 		if(fd){/*read from file*/
 			if(!fgets(line, MAXLN, fd)) break;
 		} else{/*read from string*/
 			if(!config_line) break;
 			char* p0=strchr(config_line, '\n');
-			int len;
-			if(p0){
-				len=p0-config_line;
-			} else{
-				len=MAXLN-1;
-			}
+			const int len=p0?(p0-config_line):(MAXLN-1);
 			if(len+1>MAXLN){
 				error("Input line is too long. Please make MAXLN larger to accomodate.\n");
 			}
-			strncpy(line, config_line, len);
-			line[len]='\0';
+			strncpy(line, config_line, len); line[len]='\0';
 			if(p0){
-				config_line=p0+1;
+				config_line=p0+1;//start of next line
 			} else{
-				config_line=NULL;
+				config_line=NULL;//no more
 			}
 		}
 		sline=squeeze(line);
@@ -600,9 +594,7 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 	int nx, ny;
 	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, getrecord(key, 1)->data);
 	lmat* res=NULL;
-	if(!nx||!ny){
-		free(val); val=NULL;
-	}else{
+	if(nx && ny){
 		res=lnew_do(nx, ny, val, mem_new(val));
 	}
 	return res;
@@ -640,9 +632,7 @@ dmat* readstr_dmat(int n, ///[in]Number of elements requested
 		real* val=NULL;
 		real** pval=&val;
 		readstr_numarr((void**)pval, &nx, &ny, n, relax, M_REAL, fn);
-		if(!nx||!ny){
-			free(val); val=NULL;
-		}else{
+		if(nx&&ny){
 			res=dnew_do(nx, ny, val, mem_new(val));
 		}
 	}
