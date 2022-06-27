@@ -82,39 +82,10 @@ int lock_file_version(const char* fnlock, /**<The filename to lock on*/
 		return -1;
 	}
 	fd=open(fnlock, O_RDWR|O_CREAT, 0644);
+retry:
 	if(fd<0){
 		warning_time("Open file %s failed: %s\n", fnlock, strerror(errno));
 	}else{//check file content first
-		int pid=0, version_old=0;
-		int ans1=0, ans2=-1;
-		FILE* fp=fdopen(dup(fd), "r");
-		if(fp){//check existing instance
-			ans1=fscanf(fp, "%d %d", &pid, &version_old);
-			if(ans1>0 && pid>0){
-				if((ans2=kill(pid, 0))){//already exited or in a different host
-					pid=0;
-				}
-			}
-			if(pid){//already running
-				if(ans1>1 && version && version_old && version>version_old){
-					ans2=kill(pid, SIGTERM);
-					if(ans2){//signal send failed
-						dbg_time("%d failed to send TERM signal to old executive %d, return -1.\n", getpid(), pid);
-						return -pid;
-					}else{
-						dbg_time("%d successfully sends TERM signal to old executive %d\n", getpid(), pid);
-						sleep(1);
-					}
-				}else{
-					dbg_time("Already running as PID %d.\n", pid);
-					return -pid;//keep existing drawdaemon
-				}
-			}
-			fclose(fp); fp=NULL;
-		}
-		//obtain lock before writing to file.
-
-		//fcntl(fd, F_SETFD, FD_CLOEXEC);//do not set CLOEXEC to hold the lock after fork/exec.
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
 		//lockf does not inherit to fork(), so we have to use flock here
@@ -122,13 +93,43 @@ int lock_file_version(const char* fnlock, /**<The filename to lock on*/
 			if(block){/*In block mode, we should never fail. */
 				dbg_time("Blocked Lock failed: %s\n", strerror(errno));
 			}
-			return -1;
+			//lock failed. check version of the running process. kill it if old version
+			int pid=0, version_old=0;
+			int ans1=0, ans2=-1;
+			FILE* fp=fdopen(dup(fd), "r");
+			if(fp){//check existing instance
+				ans1=fscanf(fp, "%d %d", &pid, &version_old);
+				fclose(fp); fp=NULL;
+				if(ans1>0 && pid>0){
+					if((ans2=kill(pid, 0))){//already exited or in a different host
+						pid=0;
+					}
+				}
+				if(pid){//already running
+					if(ans1>1 && version && version_old && version>version_old){
+						ans2=kill(pid, SIGTERM);
+						if(ans2){//signal send failed
+							dbg_time("%d failed to send TERM signal to old executive %d, return -1.\n", getpid(), pid);
+							return -pid;
+						}else{
+							dbg_time("%d successfully sends TERM signal to old executive %d\n", getpid(), pid);
+							sleep(1);
+							goto retry;
+						}
+					}else{
+						dbg_time("Already running as PID %d.\n", pid);
+						return -pid;//keep existing drawdaemon
+					}
+				}
+				
+			}
 		} else{/*lock succeed. write pid. the pid will be updated with correct pid later. */
 			char strpid[60];
 			snprintf(strpid, 60, "%d %d\n", getpid(), version);
 			lseek(fd, 0, SEEK_SET);
-			if(ftruncate(fd, 0)<0)
+			if(ftruncate(fd, 0)<0){
 				warning_time("Unable to truncate the file\n");
+			}
 			if(write(fd, strpid, strlen(strpid)+1)!=(long)strlen(strpid)+1){
 				warning_time("Write pid %d to %s failed\n", getpid(), fnlock);
 			}

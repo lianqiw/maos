@@ -195,7 +195,7 @@ static void runned_remove(int pid){
 			if(pid!=-1) break;
 		}
 	}
-	if(!removed){
+	if(!removed && pid!=-1){
 		warning_time("runned_remove: Record %s:%d not found!\n", HOST, pid);
 	}
 }
