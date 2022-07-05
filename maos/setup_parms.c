@@ -97,7 +97,6 @@ void free_parms(parms_t *parms){
 	lfree(parms->evl.psfgridsize);
 	lfree(parms->evl.psfsize);
 	lfree(parms->evl.pttr);
-	lfree(parms->evl.psfngsr);
 
 	dfree(parms->fit.thetax);
 	dfree(parms->fit.thetay);
@@ -831,6 +830,8 @@ static void readcfg_aper(parms_t *parms){
 static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 	if(fov==0){//on axis field.
 		if(PN(thetax)!=1){
+			//do not silently drop directions to avoid misuse.
+			error("fov is 0 but there are more than one evaluation directions.\n");
 			dresize(thetax,1,1);
 			dresize(thetay,1,1);
 			dresize(wt,1,1);
@@ -868,7 +869,6 @@ static void readcfg_evl(parms_t *parms){
 	READ_LMAT_NMAX(evl.psf,parms->evl.nevl);
 	READ_LMAT_NMAX(evl.psfr,parms->evl.nevl);
 	READ_LMAT_NMAX(evl.pttr,parms->evl.nevl);
-	READ_LMAT_NMAX(evl.psfngsr,parms->evl.nevl);
 	READ_DMAT(evl.wvl);
 	parms->evl.nwvl=NX(parms->evl.wvl);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
@@ -2852,19 +2852,15 @@ static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		parms->evl.npsf+=(P(parms->evl.psf,ievl)>0);
-		if(!parms->recon.split){
-			P(parms->evl.psfngsr,ievl)=0;
-		}
-		if(isfinite(P(parms->evl.hs,ievl))&&P(parms->evl.psfngsr,ievl)){
-			P(parms->evl.psfngsr,ievl)=0;
-			if(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov){
-				warning("evl %d: star is not at infinity. disable NGS mode removal for it\n",ievl);
+		if((P(parms->evl.psf,ievl)&2)){//request ngs mode removed PSF
+			if(!parms->recon.split||isfinite(P(parms->evl.hs, ievl))){
+				P(parms->evl.psf, ievl)^=2;
 			}
 		}
 		if(parms->tomo.ahst_idealngs==1){
 			//Output NGS mode removed PSF as there is no CL control of NGS mode
-			if(!P(parms->evl.psfngsr,ievl)){
-				P(parms->evl.psfngsr,ievl)=2;
+			if(!(P(parms->evl.psf,ievl)&2)){
+				P(parms->evl.psf,ievl)^=2;
 			}
 		}
 	}

@@ -352,8 +352,6 @@ typedef struct evl_cfg_t{
     int cov;        /**<save covairance of science OPD ,every this time step, for directions where evl.psf is 1*/
     int opdmean;    /**<save science OPD time average every `evlopdmean` time steps*/
     lmat *pttr;     /**<remove p/t/t from psf. 1 number for each evl.*/
-    lmat *psfngsr;  /**<remove ngs modes from psf.*/
-
 
     int psfisim;    /**<time step to start psfmean.*/
     lmat *psfsize;  /**<save this number of pixels of the center of the psf. 1

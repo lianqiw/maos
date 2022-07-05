@@ -323,12 +323,12 @@ void perfevl_ievl(thread_t* info){
 		PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
 		TIM(5);
 		if(do_psf_cov){
-			if(P(parms->evl.psfngsr,ievl)!=0){
+			if((P(parms->evl.psf,ievl)&2)){
 			/* even if psfpttr=1, referencing is ok.  Change to copy if
 			   incompatible in the future.*/
 				P(simu->evlopd,ievl)=dref(iopdevl);
 			}
-			if(P(parms->evl.psfngsr,ievl)!=2){/*ngsr==2 means only want ngsr. */
+			if((P(parms->evl.psf,ievl)&1)){
 			/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
 				if(P(parms->evl.pttr,ievl)){
 					warning_once("Removing piston/tip/tilt from OPD.\n");
@@ -477,8 +477,6 @@ static void perfevl_mean(sim_t* simu){
 		}
 		int do_psf=(parms->evl.psfmean||parms->evl.psfhist);
 		if(isim>=parms->evl.psfisim&&(do_psf||parms->evl.cov||parms->evl.opdmean)){
-			/*Only here if NGS mode removal flag is set (evl.psfngsr[ievl])*/
-			/*2013-01-23: Was using dot product before converting to modes. Fixed.*/
 #if USE_CUDA
 			if(parms->gpu.evl){
 				gpu_perfevl_ngsr(simu, pcleNGSm);
@@ -486,7 +484,7 @@ static void perfevl_mean(sim_t* simu){
 #endif
 				const aper_t* aper=simu->aper;
 				for(int ievl=0; ievl<parms->evl.nevl; ievl++)
-					if(P(parms->evl.psf,ievl)&&P(parms->evl.psfngsr,ievl))
+					if((P(parms->evl.psf,ievl)&2))
 #pragma omp task
 					{
 

@@ -843,7 +843,7 @@ OMP_TASK_FOR(4)
 		dadd(&grad, 1, grad0, -1);
 		dscale(grad, 1./poke);
 		atomic_add_fetch(&count, 1);
-		if(count%10==0){
+		if(count%((nmod+9)/10)==0){
 			real ts=myclockd()-tk;
 			info2("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", count, locin->nloc, ts, ts/count*locin->nloc, dstd(grad));
 		}

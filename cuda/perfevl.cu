@@ -454,7 +454,7 @@ void gpu_perfevl_queue(thread_t* info){
 				"Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 		}
 		PERFEVL_WFE_GPU(cuglobal->perf.cc_cl[ievl](), cuglobal->perf.ccb_cl[ievl]);
-		if(do_psf_cov&&parms->evl.psfngsr->p[ievl]!=2){//also do normal one.
+		if(do_psf_cov&&(parms->evl.psf->p[ievl]&1)){//also do normal psf
 			curmv(cuglobal->perf.coeff[ievl](), 0, cudata->perf.imcc,
 				cuglobal->perf.cc_cl[ievl](), 'n', 1, stream);
 			if(parms->evl.pttr->p[ievl]){
@@ -542,7 +542,7 @@ void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 	const int nloc=aper->locs->nloc;
 	const int nwvl=parms->evl.nwvl;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++)
-		if(parms->evl.psfngsr->p[ievl]&&parms->evl.psf->p[ievl])
+		if((parms->evl.psf->p[ievl] &2))
 #pragma omp task
 		{
 
@@ -636,7 +636,7 @@ void gpu_perfevl_save(sim_t* simu){
 		}
 		if(cuglobal->perf.psfcl){
 			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-				if(!parms->evl.psf->p[ievl]||parms->evl.psfngsr->p[ievl]==2) continue;
+				if(!(parms->evl.psf->p[ievl]&1)) continue;
 				gpu_set(cuglobal->evlgpu[ievl]);
 				cudaStream_t stream=cudata->perf_stream;
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -652,7 +652,7 @@ void gpu_perfevl_save(sim_t* simu){
 		}
 		if(cuglobal->perf.psfcl_ngsr){
 			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-				if(!parms->evl.psf->p[ievl]||!parms->evl.psfngsr->p[ievl]) continue;
+				if(!(parms->evl.psf->p[ievl]&2)) continue;
 				gpu_set(cuglobal->evlgpu[ievl]);
 				cudaStream_t stream=cudata->perf_stream;
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -676,7 +676,7 @@ void gpu_perfevl_save(sim_t* simu){
 			if(!parms->evl.psf->p[ievl]) continue;
 			gpu_set(cuglobal->evlgpu[ievl]);
 			cudaStream_t stream=cudata->perf_stream;
-			if(parms->evl.psfngsr->p[ievl]!=2){
+			if((parms->evl.psf->p[ievl]&1)){
 				if(parms->evl.cov){
 					curmat& pp=cuglobal->perf.opdcov[ievl];
 					zfarr_push_scale(simu->save->evlopdcov[ievl], isim, pp, scale, stream);
@@ -686,7 +686,7 @@ void gpu_perfevl_save(sim_t* simu){
 					zfarr_push_scale(simu->save->evlopdmean[ievl], isim, pp, scale, stream);
 				}
 			}
-			if(parms->evl.psfngsr->p[ievl]){
+			if((parms->evl.psf->p[ievl]&2)){
 				if(parms->evl.cov){
 					curmat& pp=cuglobal->perf.opdcov_ngsr[ievl];
 					zfarr_push_scale(simu->save->evlopdcov_ngsr[ievl], isim, pp, scale, stream);

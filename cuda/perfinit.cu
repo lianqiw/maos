@@ -165,11 +165,11 @@ void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper){
 				continue;
 			}
 			gpu_set(cuglobal->evlgpu[ievl]);
-			if(parms->evl.psfngsr->p[ievl]){
+			if((parms->evl.psf->p[ievl]&2)){//ngs mode removed PSF
 				if(parms->evl.cov) initzero(cuglobal->perf.opdcov_ngsr[ievl], nloc, nloc);
 				if(parms->evl.opdmean) initzero(cuglobal->perf.opdmean_ngsr[ievl], nloc, 1);
 			}
-			if(parms->evl.psfngsr->p[ievl]!=2){
+			if((parms->evl.psf->p[ievl]&1)){//regular PSF
 				if(parms->evl.cov) initzero(cuglobal->perf.opdcov[ievl], nloc, nloc);
 				if(parms->evl.opdmean) initzero(cuglobal->perf.opdmean[ievl], nloc, 1);
 			}
@@ -183,11 +183,11 @@ void gpu_perfevl_init_sim(const parms_t* parms, aper_t* aper){
 			}
 			gpu_set(cuglobal->evlgpu[ievl]);
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
-				if(parms->evl.psfngsr->p[ievl]){
+				if((parms->evl.psf->p[ievl]&2)){//ngs mode removed PSF
 					initzero(cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl],
 						cuglobal->perf.psfsize[iwvl], cuglobal->perf.psfsize[iwvl]);
 				}
-				if(parms->evl.psfngsr->p[ievl]!=2){
+				if((parms->evl.psf->p[ievl]&1)){//regular PSF
 					initzero(cuglobal->perf.psfcl[iwvl+nwvl*ievl],
 						cuglobal->perf.psfsize[iwvl], cuglobal->perf.psfsize[iwvl]);
 				}

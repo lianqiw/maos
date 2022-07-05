@@ -640,14 +640,14 @@ static void init_simu_evl(sim_t* simu){
 			save->evlopdmean_ngsr=mycalloc(nevl, zfarr*);
 		}
 		for(int ievl=0; ievl<nevl; ievl++){
-			if(!P(parms->evl.psf, ievl)) continue;
+			if(!P(parms->evl.psf, ievl)||parms->sim.evlol) continue;
 			if(isfinite(P(parms->evl.hs, ievl))){
 				snprintf(strht, 24, "_%g", P(parms->evl.hs, ievl));
 			} else{
 				strht[0]='\0';
 			}
 #define DIR_SUFFIX "_%d_x%g_y%g%s.fits", seed,P(parms->evl.thetax, ievl)*206265, P(parms->evl.thetay, ievl)*206265, strht
-			if(P(parms->evl.psfngsr, ievl)!=2&&!parms->sim.evlol){
+			if((P(parms->evl.psf, ievl)&1)){
 				if(parms->evl.psfmean){
 					save->evlpsfmean[ievl]=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfcl" DIR_SUFFIX);
 				}
@@ -661,7 +661,7 @@ static void init_simu_evl(sim_t* simu){
 					save->evlopdmean[ievl]=zfarr_init(0, 0, "evlopdmean" DIR_SUFFIX);
 				}
 			}
-			if(P(parms->evl.psfngsr, ievl)!=0&&!parms->sim.evlol){
+			if((P(parms->evl.psf, ievl)&2)){
 				if(parms->evl.psfmean){
 					save->evlpsfmean_ngsr[ievl]=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfcl_ngsr" DIR_SUFFIX);
 				}
