@@ -39,26 +39,23 @@ int main(int argc, char* argv[]){
 	draw_direct=1;
 	/*launch scheduler if it is not already running. */
 	dcell *arg1=0, *arg2=0;
-	const char *title1=NULL, *title2=NULL;
 	if(argc>1){
 		arg1=dcellread("%s", argv[1]);
 		info("arg1 is %ldx%ld\n", arg1->nx, arg1->ny);
-		if((title1=strrchr(argv[1],'/'))){
-			title1++;
-		}else{
-			title1=argv[1];
-		}
 	}
 	if(argc>2){
 		arg2=dcellread("%s",argv[2]);
 		info("arg2 is %ldx%ld\n", arg2->nx, arg2->ny);
-		if((title2=strrchr(argv[2], '/'))){
-			title2++;
-		} else{
-			title2=argv[2];
-		}
 	}
-
+	char *title1=argv[argc>2?2:1];
+	char *title2=NULL;
+	if((title2=strrchr(title1, '/'))){
+		title1=title2+1;
+	}
+	if((title2=strrchr(title1, '.'))){
+		title2[0]='\0';
+	}
+	
 	long nx=MAX(NX(arg1), arg2?NX(arg2):0);
 	long ny=MAX(NY(arg1), arg2?NY(arg2):0);
 	int id=0;
@@ -101,7 +98,7 @@ int main(int argc, char* argv[]){
 				}
 			}else{//two parameter
 				if(loc&&p2&&p2->nx&&p2->ny){
-					drawopd("opd", loc, p2, NULL, title2, "x", "y", "%s[%d]", title2, id++);
+					drawopd("opd", loc, p2, NULL, title1, "x", "y", "%s[%d]", title1, id++);
 				}
 			}
 		}

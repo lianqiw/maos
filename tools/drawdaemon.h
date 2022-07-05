@@ -67,7 +67,8 @@ struct drawdata_t{
 	float* limit;/*points to either limit_data or limit_cumu */
 	float zlim[4];//2 additional elements for i/o in case double is passed in
 	int limit_manual; /*limit_data is supplied by user*/
-	char xylog[2];
+	char xylog[2];  /*draw in log scale x, y axis*/
+	int zlog; 	    /*draw image in log scale*/
 	//misc
 	int byte_float; //record the value used
 	int ready;      //ready is set to 0 when data is being read and 1 after wards.
@@ -174,7 +175,7 @@ gboolean addpage(gpointer user_data);
 int delete_page(gpointer user_data);
 /*from drawdaemon_io */
 void* listen_draw(void*);
-void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* info);
+void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* zlim, int zlog);
 void fmaxmin(const float* p, long n, float* max, float* min);
 void round_limit(float* xmin, float* xmax, int logscale);
 gboolean update_title(gpointer data);

@@ -226,8 +226,8 @@ void apply_limit(drawdata_t* drawdata){
 		return;
 	}
 	/*limit0 matches limit in unzoomed state */
-	int xlog=drawdata->xylog[0]=='n'?0:1;
-	int ylog=drawdata->xylog[1]=='n'?0:1;
+	int xlog=drawdata->xylog[0]=='y'?1:0;
+	int ylog=drawdata->xylog[1]=='y'?1:0;
 	float xmin, xmax, ymin, ymax;
 	if(xlog){
 		xmin=log10(drawdata->limit[0]);
@@ -426,8 +426,8 @@ static void update_limit(drawdata_t* drawdata){
 	if(isinf(ymin0)) ymin0=0;
 	if(isinf(ymax0)) ymax0=0;
 	
-	int xlog=drawdata->xylog[0]=='n'?0:1;
-	int ylog=drawdata->xylog[1]=='n'?0:1;
+	int xlog=drawdata->xylog[0]=='y'?1:0;
+	int ylog=drawdata->xylog[1]=='y'?1:0;
 	if(!xlog) round_limit(&xmin0, &xmax0, xlog);
 	if(!ylog) round_limit(&ymin0, &ymax0, ylog);
 	//dbg("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
@@ -486,9 +486,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			drawdata->drawn=0;
 		}
 	}
-	int xlog=drawdata->xylog[0]=='n'?0:1;
-	int ylog=drawdata->xylog[1]=='n'?0:1;
-
+	int xlog=drawdata->xylog[0]=='y'?1:0;
+	int ylog=drawdata->xylog[1]=='y'?1:0;
 	int widthim, heightim;
 	static float xmin, xmax, ymin, ymax;
 	if(xlog){
@@ -555,7 +554,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		int ny=drawdata->ny;
 		int stride=cairo_format_stride_for_width(drawdata->format, nx);
 
-		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
+		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim, drawdata->zlog);
 		cairo_surface_destroy(drawdata->image);
 		drawdata->image=cairo_image_surface_create_for_data
 		(drawdata->p, drawdata->format, nx, ny, stride);

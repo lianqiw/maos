@@ -67,9 +67,13 @@ static unsigned int crp(float x, float x0){
 
 /**
    convert float to char with color map*/
-void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, float *zlim){
+void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, float *zlim, int zlog){
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
+	if(zlog){
+		max=log10(max);
+		min=log10(min);
+	}
 	//update if range change by 10%
 	if(max>zlim[1]*1.1||max<zlim[1]*0.9){
 		zlim[1]=max;
@@ -91,10 +95,12 @@ void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, f
 			offset=0.5;
 		}
 		for(int i=0; i<nx*ny; i++){
-			if(isnan(p[i])){
+			float xi=p[i];
+			if(isnan(xi)){
 				pi[i]=0;
 			} else{
-				float x=(p[i]-min)*scale+offset;
+				if(zlog) xi=log10(xi);
+				float x=(xi-min)*scale+offset;
 				pi[i]=255<<24|crp(x, 0.75)<<16|crp(x, 0.5)<<8|crp(x, 0.25);
 			}
 		}
@@ -102,7 +108,13 @@ void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, f
 		unsigned char *pc=(unsigned char *)pout;
 		float scale=255./(max-min);
 		for(int i=0; i<nx*ny; i++){
-			pc[i]=(unsigned char)((p[i]-min)*scale);
+			float xi=p[i];
+			if(isnan(xi)){
+				pc[i]=0;
+			}else{
+				if(zlog) xi=log10(xi);
+				pc[i]=(unsigned char)((xi-min)*scale);
+			}
 		}
 	}
 }

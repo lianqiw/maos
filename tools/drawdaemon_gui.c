@@ -43,6 +43,7 @@ static GtkWidget* curtopnb=NULL;
 static GtkWidget* contexmenu=NULL;
 static GtkWidget* cur_menu_cumu=NULL;
 static GtkWidget *cur_menu_icumu=NULL;
+static GtkWidget *cur_menu_zlog=NULL;
 static drawdata_t* drawdata_dialog=NULL;
 drawdata_t* cur_drawdata=NULL;
 //static GtkToolItem* toggle_cumu=NULL;
@@ -90,6 +91,7 @@ static void window_changed(GtkWidget* window){
 	curwindow=window;
 	cur_menu_cumu=g_object_get_data(G_OBJECT(window), "menu_cumu");
 	cur_menu_icumu=g_object_get_data(G_OBJECT(window), "menu_icumu");
+	cur_menu_zlog=g_object_get_data(G_OBJECT(window), "menu_zlog");
 #if GTK_MAJOR_VERSION>=4 		
 	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
 
@@ -792,11 +794,17 @@ static void page_changed(int topn, int subn){
 		if(cur_drawdata){
 			if(cur_menu_cumu){
 				gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(cur_menu_cumu), cur_drawdata->cumu);
+				gtk_widget_set_sensitive(cur_menu_cumu, cur_drawdata->npts>0);
 				//dbg("set cumu tool button to %d (%d, %d)\n", cur_drawdata->cumu, topn, subn);
 			}
 			if(cur_menu_icumu){
 				gtk_spin_button_set_value(GTK_SPIN_BUTTON(cur_menu_icumu), cur_drawdata->cumu?cur_drawdata->icumu:0);
+				gtk_widget_set_sensitive(cur_menu_icumu, cur_drawdata->npts>0);
 				//dbg("set icumu tool button to %g (%d, %d)\n", cur_drawdata->icumu, topn, subn);
+			}
+			if(cur_menu_zlog){
+				gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(cur_menu_zlog), cur_drawdata->zlog);
+				gtk_widget_set_sensitive(cur_menu_cumu, cur_drawdata->image?TRUE:FALSE);
 			}
 		}
 	}else{
@@ -978,7 +986,7 @@ gboolean addpage(gpointer indata){
 			drawdata->limit_data[3]=drawdata->ny-0.5;
 		}
 		/*convert data from float to int/char. */
-		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
+		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim, drawdata->zlog);
 		drawdata->image=cairo_image_surface_create_for_data
 		(drawdata->p, drawdata->format, nx, ny, stride);
 	}
@@ -1202,6 +1210,15 @@ static void limit_change2(GtkSpinButton* spin, gfloat* val){
 }
 static void checkbtn_toggle(GtkToggleButton* btn, gint* key){
 	*key=gtk_toggle_button_get_active(btn);
+	drawdata_dialog->limit_changed=2;
+	delayed_update_pixmap(drawdata_dialog);
+	/*if(key==&cumu){
+		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
+	}*/
+}
+static void checkbtn_toggle_char(GtkToggleButton *btn, char *key){
+	*key=gtk_toggle_button_get_active(btn)?'y':'n';
+	drawdata_dialog->limit_changed=2;
 	delayed_update_pixmap(drawdata_dialog);
 	/*if(key==&cumu){
 		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
@@ -1242,6 +1259,19 @@ static void togglebutton_cumu(GtkToggleToolButton* btn){
 				drawdata->cumu?drawdata->icumu:0);
 		}
 	}else{
+		gtk_toggle_tool_button_set_active(btn, 0);
+	}
+	delayed_update_pixmap(drawdata);
+}
+static void togglebutton_zlog(GtkToggleToolButton *btn){
+	(void)btn;
+	drawdata_t *drawdata=get_current_drawdata();
+	if(!drawdata) return;
+	if(drawdata->image){
+		drawdata->zlog=gtk_toggle_tool_button_get_active(btn);
+		drawdata->limit_changed=2;
+		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
+	} else{
 		gtk_toggle_tool_button_set_active(btn, 0);
 	}
 	delayed_update_pixmap(drawdata);
@@ -1371,6 +1401,26 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
+	//set log scale
+	hbox=gtk_hbox_new(FALSE, 0);
+	//label=gtk_label_new("Set log scale:");
+	//box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	checkbtn=gtk_check_button_new_with_label("log(X)");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->xylog[0]=='y'?1:0);
+	gtk_widget_set_sensitive(checkbtn, !drawdata->square);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_char), &drawdata->xylog[0]);
+	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	checkbtn=gtk_check_button_new_with_label("log(Y)");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->xylog[1]=='y'?1:0);
+	gtk_widget_set_sensitive(checkbtn, !drawdata->square);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_char), &drawdata->xylog[1]);
+	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	checkbtn=gtk_check_button_new_with_label("log(Value)");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->zlog);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->zlog);
+	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
 	hbox=gtk_hbox_new(FALSE, 0);
 	checkbtn=gtk_check_button_new_with_label("Plot cumulative average (");
 	gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
@@ -1379,12 +1429,14 @@ static void tool_property(GtkToolButton* button, gpointer data){
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 
 	checkbtn=gtk_check_button_new_with_label("quadrature ");
+	gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumuquad);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumuquad);
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), gtk_label_new(") from"), FALSE, FALSE, 0);
 	
 	spin=gtk_spin_button_new_with_range(0, drawdata->limit[1], 1);
+	gtk_widget_set_sensitive(spin, (drawdata->npts>0));
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), drawdata->icumu);
 	g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &drawdata->icumu);
 	box_append(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
@@ -1735,14 +1787,21 @@ GtkWidget* create_window(GtkWidget* window){
 	new_tool(toolbar, NULL, 0, "zoom-out", G_CALLBACK(tool_zoom), GINT_TO_POINTER(-1));
 	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
 	new_tool(toolbar, NULL, 0, "document-properties", G_CALLBACK(tool_property), NULL);
+	
+	//Log scale
+	GtkWidget *menu_zlog=new_tool(toolbar, NULL, 1, "media-playlist-shuffle", G_CALLBACK(togglebutton_zlog), NULL);
+	g_object_set_data(G_OBJECT(window), "menu_zlog", menu_zlog);
+	//Cumulative
 	GtkWidget* menu_cumu=new_tool(toolbar, NULL, 1, "edit-copy", G_CALLBACK(togglebutton_cumu), NULL);
 	g_object_set_data(G_OBJECT(window), "menu_cumu", menu_cumu);
-	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
-
+	
+	//Cumulative step
 	GtkWidget *menu_icumu=gtk_spin_button_new_with_range(0, 100000, 100);
 	g_signal_connect(menu_icumu, "value-changed", G_CALLBACK(spin_icumu), NULL);
 	new_tool(toolbar, menu_icumu, 0, "menu_icumu", NULL, NULL);
 	g_object_set_data(G_OBJECT(window), "menu_icumu", menu_icumu);
+	
+	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
 
 	GtkWidget* fontsel=gtk_font_button_new_with_font("Sans 12");
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
