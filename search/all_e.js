@@ -134,7 +134,6 @@ var searchData=
   ['psfhist',['psfhist',['../parms_8h.html#ac33ac28eb5ac113cd42e973694319916',1,'evl_cfg_t']]],
   ['psfisim',['psfisim',['../parms_8h.html#ad4f591afdc6f61dc9c00d7506231a791',1,'evl_cfg_t']]],
   ['psfmean',['psfmean',['../parms_8h.html#a3b9b4afc3b8f1ba0d9a39844aebb5aab',1,'evl_cfg_t']]],
-  ['psfngsr',['psfngsr',['../parms_8h.html#a2f0b69d6ebdf4d1d38ee723ef8980b51',1,'evl_cfg_t']]],
   ['psfol',['psfol',['../parms_8h.html#a7e210733b6be806db1572e215eed6cd3',1,'evl_cfg_t']]],
   ['psfout',['psfout',['../parms_8h.html#a29d2386b13dc63051f39fac069852c4a',1,'powfs_cfg_t']]],
   ['psfr',['psfr',['../parms_8h.html#a898a7dfeba15002122a6de7a4f14ff0c',1,'evl_cfg_t::psfr()'],['../parms_8h.html#a7fd03e733e426226b1f2353525151830',1,'sim_cfg_t::psfr()']]],
