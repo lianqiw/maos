@@ -104,7 +104,7 @@ def handle_type(argtype, argname):
             elif pytype=='c_double' or pytype=='c_float':
                 py2c='byref('+argname+')'
             elif pytype=='c_char':
-                py2c='c_char_p('+argname+'.encode(\'ascii\'))'
+                py2c='c_char_p('+argname+'.encode("utf-8"))'
             else:
                 py2c=argname+'.ctypes.data_as(c_void_p)'
 
@@ -120,9 +120,8 @@ def handle_type(argtype, argname):
         prep2=''
     return (py2c, prep1, prep2)
 
-#process function type
+#process function return type
 def handle_output(funtype, funname):
-  
     if funtype[-1:]=='*': #pointer
         ispointer=1;
         funtype=funtype[:-1]
@@ -185,7 +184,7 @@ for funname in funcs: #loop over functions
             if prep1: #output argument
                 prepout+='    '+prep1+'\n'
                 pyargout+=prep2+','
-                if len(funargs)==1:
+                if len(funargs)==1: #when only 1 argument, assume is also input.
                     pyargin+=argname+','
             else: #python function input argument
                 pyargin+=argname+','
@@ -205,8 +204,8 @@ for funname in funcs: #loop over functions
         fundef+='\n'+prepout          #C function arguments
     fundef+='\n    '+argout+'lib.'+funname2+'('+argin+')'
     if len(pyargout)>0:
-        fundef+='\n    return ('+pyargout+')'
-
+        fundef+='\n    return '+pyargout
+        
     if(fundef.find('Unknown'))>-1:
         print("'''", file=fpout)
     print(fundef, file=fpout);

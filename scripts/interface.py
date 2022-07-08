@@ -31,6 +31,7 @@ from ctypes import *
 import json
 import numpy as np
 import scipy.sparse as sp
+from copy import deepcopy
 from warnings import warn
 aolib_so=os.environ.get('MAOS_AOLIB', 'aolib.so')
 try:
@@ -90,9 +91,11 @@ def pt2py(pointer):
     if bool(pointer):
         out=pointer.contents.as_array()
         pointer.contents.free()
-        return out
     else:
-        return np.array([])
+        out=np.array([])
+    return out
+def pt2py_header(pointer):
+    return (pt2py(pointer), deepcopy(headers))
 #convert C vector to numpy array. Memory is copied.
 def as_array(arr, id, shape):
     ''' convert C array arr to numpy based in id'''
@@ -150,19 +153,25 @@ class cell(Structure):
  
     def __init__(self, arr=None):#convert from numpy to C. Memory is borrowed
         dtype2id={#Conversion from numpy type to maos id
-            np.double:25602,
-            np.complex128:25604,
-            np.int64: 25603,
-            np.object_:25633,
+            np.double:  0x6402,
+            np.int64:   0x6403,
+            np.complex128:0x6404,
+            np.int32:   0x6405,
+            np.float32: 0x6408,
+            np.complex64:0x6409,
+            np.int8:    0x640A,
+            np.int16:   0x640B,
+            np.object_: 0x6421
         }
         if type(arr) is list:
             arr=np.asarray(arr)
         
         if arr is not None:
-            self.id=dtype2id.get(arr.dtype.type)
-            if self.id is None:
+            tmpid=dtype2id.get(arr.dtype.type)
+            if tmpid is None:
                 print("init: Unknown data" +str( arr.dtype.type))
                 return None
+            self.id=tmpid
             if arr.ndim>2:
                 print("init: Only use 2 dimensions\n");
             if arr.ndim>0:
@@ -219,7 +228,7 @@ class cell(Structure):
             kind=-1
         if kind==0: #dense matrix
             if self.header:
-                headers.append(self.header)
+                headers.append(self.header.decode("utf-8"))
                 #print(self.header)
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix

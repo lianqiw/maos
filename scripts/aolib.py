@@ -138,6 +138,8 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
                 print(fn, 'does not exist')
                 continue
             res=read(fn)
+            if type(res) is tuple:
+                res=res[0]
             if res is None or res.shape[0]==0:
                 continue
             if name=="Res":
@@ -506,3 +508,22 @@ def plot_circle(radius, *args):
         ry=radius
     plot(rx*np.cos(theta), ry*np.sin(theta), *args)
     
+def calc_width_gauss(dx,data):
+    '''Compute the Gaussian width'''
+    n=data.shape[0]
+    n2=int(n/2)
+    x=np.arange(-n2,n2)*dx
+    XX,YY=np.meshgrid(x,x,indexing='xy')
+    ds=np.sum(data)
+    xb=np.sum(XX*data)/ds;
+    yb=np.sum(YY*data)/ds;
+    xsq=np.sum((XX-xb)**2*data)/ds
+    ysq=np.sum((YY-yb)**2*data)/ds
+    xysq=np.sum((XX-xb)*(YY-yb)*data)/ds
+    #(ISO11146)
+    mr=2*(xsq*ysq-xysq*xysq)**(1./4)
+    return mr
+
+def calc_fwhm(dx, intensity):
+    '''A simple way to compute the FWHM'''
+    return sqrt(np.sum(intensity>=0.5*np.max(intensity))*4/np.pi)*dx

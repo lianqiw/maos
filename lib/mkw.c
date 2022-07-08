@@ -32,9 +32,9 @@
    1) sum(W0,1)==W1, sum(W0,2)==W1, 2) sum(W1)==1
    2009-11-20: bug found:
    using a circular gray pixel amplitude map,
-   sum(W1) is less than 1 if loc is not enough large.
+   sum(W1) is less than 1 if loc is not large enough.
    This method is not good! Prefer the mkw_circular instead
-   which follows closely the loas method.
+   which follows closely the laos method.
    The LAOS W0/W1 gives very good performance in NGS modes.
 
    This function does not work well.

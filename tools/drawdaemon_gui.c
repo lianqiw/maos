@@ -804,7 +804,7 @@ static void page_changed(int topn, int subn){
 			}
 			if(cur_menu_zlog){
 				gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(cur_menu_zlog), cur_drawdata->zlog);
-				gtk_widget_set_sensitive(cur_menu_cumu, cur_drawdata->image?TRUE:FALSE);
+				gtk_widget_set_sensitive(cur_menu_zlog, cur_drawdata->image?TRUE:FALSE);
 			}
 		}
 	}else{

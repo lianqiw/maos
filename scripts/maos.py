@@ -12,8 +12,12 @@ def parse_file(srcdir, files):
             start=ln.find('#include')
             if start==-1:
                 start=ln.find('//')
+            if start==-1:
+                start=ln.find('#define')
+            if start==-1:
+                break
             end=ln.find('\n', start)
-            if start==-1 or end==-1:
+            if end==-1:
                 break
             ln=ln[0:start]+ln[end+1:]
 

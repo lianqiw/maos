@@ -694,7 +694,7 @@ static gboolean filter_status(GtkTreeModel* model, GtkTreeIter* iter, gpointer s
 	GdkPixbuf* status2=0;
 	(void)status;
 	gtk_tree_model_get(model, iter, COL_ACTION, &status2, -1);
-	return (status2==icon_running || status2==icon_finished);
+	return (status2==icon_running||status2==icon_finished||status2==icon_waiting);
 }
 GtkWidget* new_page(int ihost){
 	if(!listall){

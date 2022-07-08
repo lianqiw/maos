@@ -357,7 +357,7 @@ file_t* zfopen(const char* fni, const char* mod){
 	if(mod[0]=='r'){
 		uint16_t magic;
 		if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
-			dbg("Unable to read %s.\n", fn2);
+			dbg("Unable to read from %s.\n", fn2);
 			goto fail;
 		} else{
 			if(magic==0x8b1f){
@@ -882,7 +882,8 @@ read_fits_header(header_t* header, file_t* fp){
 		}
 		int was_comment=0;
 		for(int i=start; i<36; i++){
-			CHECK_ERR(zfread(line, 1, 80, fp), "Read data line failed"); line[80]='\0';
+			CHECK_ERR(zfread(line, 1, 80, fp), "Read data line failed"); 
+			line[80]='\0';
 			if(!strncmp(line, "END", 3)){
 				end=1;
 			} else{
@@ -909,10 +910,10 @@ read_fits_header(header_t* header, file_t* fp){
 
 				if(length>0){
 					if(header->str){
-						if(!(is_comment&&was_comment)){
-							strcat(header->str, ";\0");
-						}
 						header->str=myrealloc(header->str, strlen(header->str)+length+3, char);
+						if(!(is_comment&&was_comment)){
+							strcat(header->str, "\n\0");
+						}
 					} else{
 						header->str=(char*)malloc(length+3); (header->str)[0]='\0';
 					}

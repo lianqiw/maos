@@ -826,8 +826,15 @@ static void readcfg_aper(parms_t *parms){
 	READ_STR(aper.fnamp);
 	READ_STR(aper.pupmask);
 }
-//check and scale fov.
+/**<
+ * check and scale thetax and thetay to match fov in diameter. If thetax and
+ * thetay have only a single on axis point, will make a grid of points
+ * sufficient pacing. The unit of thetax, thetay, fov are in arcsec.
+ * */
 static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
+	if(PN(thetax)!=PN(thetay)||PN(thetax)!=PN(wt)){
+		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n", PN(thetax), PN(thetay), PN(wt));
+	}
 	if(fov==0){//on axis field.
 		if(PN(thetax)!=1){
 			//do not silently drop directions to avoid misuse.
@@ -839,19 +846,44 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 		P(thetax,0)=0;
 		P(thetay,0)=0;
 		P(wt,0)=1;
-	} else if(fov!=1){
-		real maxx,minx,maxy,miny;
-		dmaxmin(P(thetax),PN(thetax),&maxx,&minx);
-		dmaxmin(P(thetay),PN(thetay),&maxy,&miny);
-		if(fabs(MAX(maxx-minx,maxy-miny)-1)>EPS){
-			warning("thetax and thetay is not within unit circle, disable scaling by fov. please set fov=1.\n");
-		} else{
+	} else {
+		real maxxy=0;
+		for(int i=0; i<PN(thetax); i++){
+			if(fabs(P(thetax, i))>maxxy) maxxy=fabs(P(thetax, i));
+			if(fabs(P(thetay, i))>maxxy) maxxy=fabs(P(thetay, i));
+		}
+		if(maxxy==0){//need to make a field
+			int nx=round(fov/30.)*2+1; //need sufficient sampling of the focal plane
+			if(nx<3) nx=3;
+			int np=nx*nx;
+			warning("maxxy=0, will make a square field with %dx%d points.\n", nx, nx);
+			
+			dresize(thetax, nx, nx);
+			dresize(thetay, nx, nx);
+			dresize(wt, nx, nx);
+			real cx=(nx-1)*0.5;
+			real rfov=fov/(2*cx);
+			for(int iy=0; iy<nx; iy++){
+				//sympson weighting is 1 4 2 4 2 ... 2 4 1 for odd number of points
+#define SIMPSON_1D(ix,nx) (((ix)==0||(ix)+1==(nx))?1:(((ix)%2==0)?2:4))
+				for(int ix=0; ix<nx; ix++){
+					P(thetax, ix, iy)=(ix-cx)*rfov;
+					P(thetay, ix, iy)=(iy-cx)*rfov;
+					P(wt, ix, iy)=SIMPSON_1D(ix,nx)*SIMPSON_1D(iy,nx);
+				}
+			}
+			//the weighting is very different from simpson weighting
+			reshape(thetax, np, 1);
+			reshape(thetay, np, 1);
+			reshape(wt, np, 1);
+		}else{
+			if(fabs(maxxy-0.5)>EPS){
+				warning("maxxy=%g is not 0.5, adjust the scaling properly.\n", maxxy);
+				fov=fov/(2*maxxy);
+			}
 			dscale(thetax,fov);
 			dscale(thetay,fov);
 		}
-	}
-	if(PN(thetax)!=PN(thetay)||PN(thetax)!=PN(wt)){
-		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n",PN(thetax),PN(thetay),PN(wt));
 	}
 }
 /**

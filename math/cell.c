@@ -468,7 +468,7 @@ cell* read_by_id(M_ID id, int level, const char* format, ...){
 	format2fn;
 	file_t* fp;
 	if(!fn||!(fp=zfopen(fn, "rb"))){
-		error("Unable to open file %s for read\n", fn);
+		error("Unable to read from file %s.\n", fn);
 		return NULL;
 	}
 	
