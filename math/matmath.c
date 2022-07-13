@@ -1345,15 +1345,19 @@ void X(cwlog)(X(mat)* A){
 */
 
 void X(embed)(X(mat)* restrict A, const X(mat)* restrict B, const R theta){
-
 	const long ninx=B->nx;
 	const long niny=B->ny;
 	const long noutx=A->nx;
 	const long nouty=A->ny;
-	memset(P(A), 0, sizeof(T)*noutx*nouty);
+	//middle points
+	const long ninx2=ninx/2;
+	const long noutx2=noutx/2;
+	const long niny2=niny/2;
+	const long nouty2=nouty/2;
+	X(zero)(A);
 	if(fabs(theta)<1.e-10){/*no rotation. */
-		const long skipx=(noutx-ninx-1)/2;//-1 to handle odd case
-		const long skipy=(nouty-niny-1)/2;
+		const long skipx=noutx2-ninx2;//2022-07-13: fixed offset error.
+		const long skipy=nouty2-niny2;
 		long ixstart=0, ixend=ninx;
 		long iystart=0, iyend=niny;
 		if(skipx<0){
@@ -1374,10 +1378,6 @@ void X(embed)(X(mat)* restrict A, const X(mat)* restrict B, const R theta){
 		const R stheta=sin(theta);
 		R x2, y2;
 		R x, y;
-		long ninx2=ninx/2;
-		long noutx2=noutx/2;
-		long niny2=niny/2;
-		long nouty2=nouty/2;
 		long ix2, iy2;
 		for(long iy=0; iy<nouty; iy++){
 			y=(R)(iy-nouty2);

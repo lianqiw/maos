@@ -101,6 +101,13 @@ void init_process(void){
 	}
 	//Create temporary folders
 	mymkdir("%s", TEMP);
+	{//preserve compatibility with old maos versions. Notice that it may be removed by automatic tmp cleanup.
+		char TEMP2[100];
+		snprintf(TEMP2, sizeof(TEMP2), "/tmp/maos-%s", USER);
+		if(exist("/tmp") && !exist(TEMP2)){
+			mysymlink(TEMP, TEMP2);
+		}
+	}
 	if(!HOME) HOME=TEMP;
 	mymkdir("%s/.aos/", HOME);
 	CACHE=stradd(HOME, "/.aos/cache",NULL);

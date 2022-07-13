@@ -196,6 +196,11 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 	const int niny=B->ny;
 	const int noutx=A->nx;
 	const int nouty=A->ny;
+	//middle points
+	const long ninx2=ninx/2;
+	const long noutx2=noutx/2;
+	const long niny2=niny/2;
+	const long nouty2=nouty/2;
 	/*
 	  rotate (around fft center: (nx/2,ny/2)) CCW theta and embed in into A.
 	  flag==0: pure copy
@@ -204,8 +209,8 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 	*/
 	X(zero(A));
 	if(fabs(theta)<1.e-10){/*no rotation. */
-		const int skipx=(noutx-ninx)/2;
-		const int skipy=(nouty-niny)/2;
+		const long skipx=noutx2-ninx2;//2022-07-13: fixed offset error.
+		const long skipy=nouty2-niny2;
 		int ixstart=0, ixend=ninx;
 		int iystart=0, iyend=niny;
 		if(skipx<0){
@@ -257,13 +262,11 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 		R x2, y2;
 		R x4, y4;
 		R x3, y3, x31;
-		R noutx2=noutx>>1;
-		R nouty2=nouty>>1;
 		int ix2, iy2;
 
 #define DO_LOOP(AFTER,CMD)						\
-	x4=(ninx>>1)-noutx2*ctheta-nouty2*stheta;			\
-	y4=(niny>>1)+noutx2*stheta-nouty2*ctheta;			\
+	x4=ninx2-noutx2*ctheta-nouty2*stheta;			\
+	y4=niny2+noutx2*stheta-nouty2*ctheta;			\
 	for(int iy=0; iy<nouty; iy++){					\
 	    R xbd1=-x4/ctheta; R xbd2=(ninx-1-x4)/ctheta;	\
 	    R ybd1=-y4/negstheta; R ybd2=(ninx-1-y4)/negstheta; \
@@ -319,10 +322,15 @@ void X(embedd)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
 	long niny=B->ny;
 	const long noutx=A->nx;
 	const long nouty=A->ny;
+	//middle points
+	const long ninx2=ninx/2;
+	const long noutx2=noutx/2;
+	const long niny2=niny/2;
+	const long nouty2=nouty/2;
 	X(zero)(A);
 	if(!theta){/*no rotation. */
-		const long skipx=(noutx-ninx)/2;
-		const long skipy=(nouty-niny)/2;
+		const long skipx=noutx2-ninx2;//2022-07-13: fixed offset error.
+		const long skipy=nouty2-niny2;
 		long ixstart=0, ixend=ninx;
 		long iystart=0, iyend=niny;
 		if(skipx<0){
@@ -346,10 +354,6 @@ void X(embedd)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
 		const R stheta=sin(theta);
 		R x2, y2;
 		R x, y;
-		long ninx2=ninx/2;
-		long noutx2=noutx/2;
-		long niny2=niny/2;
-		long nouty2=nouty/2;
 		long ix2, iy2;
 		for(long iy=0; iy<nouty; iy++){
 			y=(R)(iy-nouty2);

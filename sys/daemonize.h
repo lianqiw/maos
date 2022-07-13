@@ -47,6 +47,7 @@ if((char*)NULL==(char*)fn_cache || !fn_cache[0]){\
   while(!var){\
     if(zfexist("%s",fn_cache) && !exist(fn_lock)){\
       zftouch("%s",fn_cache);\
+      dbg("Reading from %s\n", fn_cache);\
       f_read;\
     }else{\
       int fd=lock_file(fn_lock, 0);/*try lock*/ \

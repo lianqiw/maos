@@ -230,11 +230,11 @@ int main(int argc, char* argv[]){
 	//name of the top tab. 
 	const char* toptab[]={
 	"CL",
-	"CL hi",
-	"CL lo",
-	"CL lo",
-	"CL lo",
-	"CL lo",
+	"CL",
+	"CL",
+	"CL",
+	"CL",
+	"CL",
 	"OL",//Openloop
 	"OL",
 	"OL"
@@ -506,6 +506,15 @@ int main(int argc, char* argv[]){
 					title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
 				dcellfree(tmp);
 			}
+		}
+		if(npath==1){//plot all modes together
+			dcell *restmp=dcellnew(6,1);
+			for(int ic=0; ic<restmp->nx; ic++){
+				P(restmp, ic, 0)=dref(P(P(res, ic),0,iseed));
+			}
+			plot_points("CL", (plot_opts){ .ngroup=restmp->nx, .dc=restmp, .xylog=xylog, .legend=(const char *const *)sidetab },
+					"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
+			dcellfree(restmp);
 		}
 	}
 	

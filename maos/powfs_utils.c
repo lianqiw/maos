@@ -167,17 +167,17 @@ void sodium_fit(
 	const real hmin=80000;
 	const real hmax=105000;
 
-	long nx=(long)floor((hmax-hmin)/dh)+1;
+	long nh=(long)floor((hmax-hmin)/dh)+1;
 	const int radgx=0;
 	dmat *nai=(sodium&&*sodium)?*sodium:NULL;
 	if(!nai){
-		nai=dnew(nx, 2);
+		nai=dnew(nh, 2);
 		if(sodium) *sodium=nai;
-	}else if(NX(nai)!=nx || NY(nai)!=2){
-		dresize(nai, nx, 2);
+	}else if(NX(nai)!=nh || NY(nai)!=2){
+		dresize(nai, nh, 2);
 	}
 
-	for(long ix=0; ix<nx; ix++){
+	for(long ix=0; ix<nh; ix++){
 		P(nai, ix, 0)=hmin+ix*dh;
 	}
 	const long nsa=NX(i0i);
@@ -195,7 +195,7 @@ void sodium_fit(
 	dcell **pgxtmp=pgx?pgx:&gxtmp;//ok to override input
 	dcell **pgytmp=pgy?pgy:&gytmp;
 	if(!pgrad) pgrad=&gradtmp;
-	if(!*pgrad && nrep>1){
+	if(!*pgrad && (nrep>1 || pgrad!=&gradtmp)){//need output
 		*pgrad=dcellnew_same(ni0, 1, nsa*2, 1);
 	}
 	print_mem("grad");
@@ -214,8 +214,8 @@ void sodium_fit(
 	int skip_first=0;
 
 	if(!i0m){
-		i0mv=dcellnew(1, nx);
-		i0m=dccellnew(nx, 1);
+		i0mv=dcellnew(1, nh);
+		i0m=dccellnew(nh, 1);
 		if(gradncpa){
 			dcellcp(&grad, gradncpa);
 		}else{
@@ -245,7 +245,7 @@ OMP_TASK_FOR(4)
 	//don't try to cachc fotf. It is per WFS and uses too much storage.
 	dcell* ata=0, * atb=0;
 	etf_t *etf_full=0;
-	dcell *na2s=dcellnew_same(nx, 1, 1, 2);
+	dcell *na2s=dcellnew_same(nh, 1, 1, 2);
 	for(int irep=0; irep<nrep; irep++){
 		dbg("repeat %d of %d\n", irep+1, nrep);
 		if(irep>0 || !skip_first){
@@ -253,7 +253,7 @@ OMP_TASK_FOR(4)
 				dcellcp(&grad, *pgrad);
 			}
 			OMP_TASK_FOR(4)
-			for(long ix=0; ix<nx; ix++){
+			for(long ix=0; ix<nh; ix++){
 				dmat *na2i=P(na2s, ix);
 				P(na2i, 0, 0)=P(nai, ix, 0);
 				P(na2i, 0, 1)=1;
@@ -267,7 +267,7 @@ OMP_TASK_FOR(4)
 				}
 
 			}
-			toc2("gensei");tic;
+			toc2("gensei each");tic;
 			print_mem("gensei");
 		}
 		dcellzero(ata);
@@ -279,7 +279,7 @@ OMP_TASK_FOR(4)
 		dcellzero(res);
 		dcellmm(&res, ata, atb, "nn", 1);
 		real scale=1./dcellsum(res);//make sure nai sum to 1.
-		for(long ix=0; ix<nx; ix++){
+		for(long ix=0; ix<nh; ix++){
 			P(nai, ix, 1)=P(P(res, ix), 0)*scale;
 		}
 		if(nrep>1 || pgrad!=&gradtmp){
@@ -292,12 +292,12 @@ OMP_TASK_FOR(4)
 			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
 				pixthetax, pixthetay, NULL, radgx, 1, 1);
 			toc2("mtche create"); tic;
-OMP_TASK_FOR_COLLAPSE(2)
+
 			for(long ii0=0; ii0<ni0; ii0++){
+				dmat* grad1=P(grad, ii0);//model
+				dmat* grad2=P(*pgrad, ii0);//output
+OMP_TASK_FOR(8)
 				for(long isa=0; isa<nsa; isa++){
-					dmat* grad1=P(grad, ii0);//model
-					dmat* grad2=P(*pgrad, ii0);//output
-					
 					real g[2]={0,0};
 					dmulvec(g, P(mtche, isa, ii0), P(P(i0i, isa, ii0)), 1);
 					P(grad2, isa)    =P(grad1, isa    )+g[0];
@@ -307,7 +307,7 @@ OMP_TASK_FOR_COLLAPSE(2)
 			toc2("mtche apply"); tic;
 OMP_TASK_FOR(4)
 			for(long ii0=0; ii0<ni0; ii0++){
-				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
+				//Remove focus mode from the gradients as it degenerates with sodium profile shift.
 				loc_remove_focus_grad(P(*pgrad, ii0), saloc, 1);
 			}
 		}
@@ -319,7 +319,6 @@ OMP_TASK_FOR(4)
 			writebin(*pgrad, "sodium_grad_%d_%d", count, irep);
 			writebin(mtche, "sodium_mtche_%d_%d", count, irep);
 			writebin(*pi0tmp, "sodium_i0_%d_%d", count, irep);
-			if(irep==0) writebin(i0i, "sodium_i0i_%d", count);
 		}
 	}
 
@@ -390,6 +389,11 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 		if(use_cache){
 			fit_cache.sepsf=sepsf;
 		}
+		if(parms->save.dither){
+			static int count=0;
+			writebin(sepsf, "sodium_sepsf_%d", count);
+			count++;
+		}
 	}
 
 	sodium_fit(psodium, pgrad, pi0, pgx, pgy, i0in,
@@ -397,14 +401,14 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
 		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, powfs[ipowfs].gradncpa,
 		parms->dbg.na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, 
-		0, parms->dbg.na_fit_svdthres, nrep, 0, use_cache);//parms->save.setup);
+		0, parms->dbg.na_fit_svdthres, nrep, parms->save.dither>1, use_cache);//parms->save.setup);
 	
-	if(parms->save.setup){
+	/*if(parms->save.setup){
 		if(pi0) writebin(*pi0, "powfs%d_i0_fit", ipowfs);
 		if(pgx) writebin(*pgx, "powfs%d_gx_fit", ipowfs);
 		if(pgy) writebin(*pgy, "powfs%d_gy_fit", ipowfs);
 		if(psodium) writebin(*psodium, "powfs%d_sodium_fit", ipowfs);
-	}
+	}*/
 	if(!use_cache){
 		dcellfree(sepsf);
 	}else{

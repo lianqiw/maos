@@ -129,6 +129,31 @@ static void mat_basic(void** state){
     dfree(b);
     assert_null(b);
 }
+void mat_embed_n(int nin, int nout){
+    dmat *in=dnew(nin, nin);
+    dmat *out=dnew(nout, nout);
+    int nin2=nin>>1;
+    int nout2=nout>>1;
+    P(in, nin2)=1;
+    P(in, nin2+1)=2;
+    dembed(out, in, 0);
+    for(long ix=0; ix<nout*nout; ix++){
+        print_message("%g ", P(out,ix));
+    }
+    assert_float_equal(P(in, nin2), P(out, nout2), 1e-16);
+}
+//test the embedding routines
+static void mat_embed(void** state){
+    (void)state;
+    mat_embed_n(4, 8);
+    mat_embed_n(4, 7);
+    mat_embed_n(5, 8);
+    mat_embed_n(5, 7);
+    mat_embed_n(8, 4);
+    mat_embed_n(7, 4);
+    mat_embed_n(8, 5);
+    mat_embed_n(7, 5);
+}
 static void mat_fresnel_prop(void** state){
     (void)state;
     if(zfexist("wvf0")){
@@ -147,8 +172,9 @@ int main(void){
     LOG_LEVEL=-4;
     const struct CMUnitTest tests[]={
         cmocka_unit_test(mat_basic),
+        cmocka_unit_test(mat_embed),
         cmocka_unit_test(mat_fresnel_prop),
     };
-
+    (void)tests;
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

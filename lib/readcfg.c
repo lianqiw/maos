@@ -44,7 +44,7 @@ DEF_ENV_FLAG(PERMISSIVE, 0)
 #define IGNORE(old)
 #endif
 static void* MROOT=NULL;
-
+static char* default_config=NULL;
 typedef struct STORE_T{
 	char* key;    //Name of the entry
 	char* data;   //Value of the entry
@@ -218,6 +218,7 @@ void erase_config(){
 	}
 	nused=0;
 	nstore=0;
+	free(default_config); default_config=NULL;
 }
 /**
    Save all configs to file and check for unused config options.
@@ -228,6 +229,7 @@ void close_config(const char* format, ...){
 	if(MROOT){
 		info("Used %ld of %ld supplied keys\n", nused, nstore);
 		if(fnout&&strlen(fnout)>0&&!disable_save) fpout=fopen(fnout, "w");
+		if(fpout && default_config) fprintf(fpout, "include=%s\n", default_config);
 		twalk(MROOT, print_key);
 		if(fpout){ fclose(fpout); fpout=NULL; }
 	}
@@ -249,6 +251,9 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		config_file=find_file(config_in);
 		if(!config_file||!(fd=fopen(config_file, "r"))){
 			error("Cannot open file %s for reading.\n", config_file);
+		}
+		if(!priority && !default_config){//used in close_config
+			default_config=strdup(config_in);
 		}
 	} else{
 		config_file=strdup(config_in);

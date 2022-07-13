@@ -836,9 +836,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	}else if(sig==SIGUSR1){//Use SIGUSR1 to enable MEM_DEBUG and print memory infromation
 		memkey_init(1);
 		return;
-	/*}else if(sig==SIGUSR2){//Use SIGUSR2 to disable MEM_DEBUG
-		memkey_init(0);
-		return;*/
+		//SIGUSR2 is raised by error()	
 	}else if(sig==SIGTERM && siginfo){
 		char sender[PATH_MAX]={0};
 		get_job_progname(sender, PATH_MAX, siginfo->si_pid);
@@ -889,7 +887,9 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	}else{//cancel signal, keep going
 		dbg_time("Cancel action\n");
 		sync();
-		fatal_error_in_progress=0;
+		if(sig!=SIGUSR2){
+			fatal_error_in_progress=0;
+		}
 	}
 }
 

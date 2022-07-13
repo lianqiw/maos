@@ -108,7 +108,7 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #define OMP_FOR_COLLAPSE(n)
 #endif
 
-#if _OPENMP>=201511 && 0 //need further testing for speed
+#if _OPENMP>=201511 //need further testing for speed
 #define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(1))
 #define OMP_TASK_FOR_COLLAPSE(n) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(NCPU) collapse(n))
 #else

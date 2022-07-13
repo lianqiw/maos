@@ -165,7 +165,12 @@ else
 	fi
     done
 fi
-
+openmp_default="no"
+case "$host_os" in
+    *linux*)
+		openmp_default="yes"
+		;;
+esac
 #Common configure options.
 AC_ARG_ENABLE(allstatic, AS_HELP_STRING([--enable-allstatic], [Compile statically]))
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]))
@@ -186,7 +191,9 @@ AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad com
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downling precompiled library]))
-AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
+AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]), [], [enable_openmp="$openmp_default"])
+echo enable_openmp="$enable_openmp"
+echo openmp_default="$openmp_default"
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -327,7 +334,6 @@ case "$host_os" in
 			CFLAGS+=" -stdlib=libc++"
 		fi
 		LDSO="-Wl,-undefined,error" #force an error if symbols are not resolved.
-		
 	;;
     *bsd*)
 		AM_CONDITIONAL(BSD, true)

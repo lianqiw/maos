@@ -379,8 +379,6 @@ static void readcfg_powfs(parms_t *parms){
 			warning("powfs %d is at infinity, disable LLT\n",ipowfs);
 			free(powfsi->fnllt);
 			powfsi->fnllt=NULL;
-		} else{
-			parms->powfs[ipowfs].hs-=parms->sim.htel;
 		}
 		char prefix[60];
 		snprintf(prefix,60,"powfs%d_",ipowfs);
@@ -1409,9 +1407,8 @@ static void setup_parms_postproc_za(parms_t *parms){
 			dscale(parms->powfs[ipowfs].siglevs,cosz);
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
-				parms->wfs[iwfs].hs*=secz;
-				real siglev=parms->wfs[iwfs].siglev;
-				parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
+				parms->wfs[iwfs].hs=(parms->wfs[iwfs].hs-parms->sim.htel)*secz;
+				parms->wfs[iwfs].siglev*=cosz;
 			}
 		}
 	}
@@ -1620,7 +1617,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			powfsi->needGS0=0;
 		}
 
-		if(powfsi->usephy&&powfsi->sigmatch==-1){
+		if(powfsi->sigmatch==-1){
 			if(powfsi->type==0){//SHWFS
 				if(powfsi->phytype_sim==PTYPE_COG){//CoG
 					powfsi->sigmatch=1;
@@ -1629,7 +1626,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				}
 			} else if(powfsi->type==1){
 				powfsi->sigmatch=2;//global match
-			} else{
+			} else if(powfsi->usephy){
 				error("Please specify sigmatch\n");
 			}
 		}
@@ -1679,7 +1676,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 					powfsi->cogoff*=-powfsi->rne;
 				}
 				if((powfsi->cogthres||powfsi->cogoff)&&powfsi->sigmatch!=1){
-					error("When cogthres or cogoff is set, only sigmatch==1 is supported\n");
+					error("When cogthres or cogoff is set, only sigmatch==1 is supported but is %d\n", powfsi->sigmatch);
 				}
 			}
 			if(powfsi->radgx&&!powfsi->radpix){

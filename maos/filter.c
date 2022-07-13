@@ -491,7 +491,7 @@ void filter_fsm(sim_t* simu){
 			}
 		}
 	}
-	simu->fsmerr=0;
+	simu->fsmerr=NULL;
 }
 /**
    filter DM commands in open loop mode by simply copy the output

@@ -526,8 +526,9 @@ static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int r
 			P(P(simu->fsmerr_drift, iwfs), 0)+=P(tt, 0)*gain;
 			P(P(simu->fsmerr_drift, iwfs), 1)+=P(tt, 1)*gain;
 			if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
-				dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f)mas\n",
-				simu->wfsisim, iwfs, P(tt, 0)*206265000, P(tt, 1)*206265000);
+				dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f) mas output is (%.3f, %.3f) mas.\n",
+				simu->wfsisim, iwfs, P(tt, 0)*206265000, P(tt, 1)*206265000, 
+				P(P(simu->fsmerr_drift, iwfs), 0)*206265000, P(P(simu->fsmerr_drift, iwfs), 1)*206265000);
 			}
 		}
 		dfree(tt);
@@ -979,8 +980,8 @@ static void wfsgrad_dither_post(sim_t* simu){
 					dither_t* pd=simu->dither[iwfs];
 					//Scale the output due to accumulation
 					//TODO: remove the LPF which is not useful. 
-					//TODO: combine pd->i0 with instat->i0
-					//TODO: accumulate directly to instat->i0 instead of to pd->imx
+					//TODO: combine pd->i0 with intstat->i0
+					//TODO: accumulate directly to intstat->i0 instead of to pd->imx
 					for(int isa=0; isa<nsa; isa++){
 						dadd(&P(intstat->i0, isa, jwfs), 1-g2, P(pd->i0, isa), scale1*g2);
 						if(parms->powfs[ipowfs].dither==1){
@@ -1016,6 +1017,21 @@ static void wfsgrad_dither_post(sim_t* simu){
 						}
 					}
 				}
+				if(ptype2==PTYPE_MF&&parms->powfs[ipowfs].llt){
+					//for LGS only. tip/tilt and focus drift control is needed for matched filter with either dithering or sodium fitting
+					//2022-07-12: moved before the next block because sodium_fit_wrap() modifies intstat->i0 in place.
+					dmat *i0grad=0;
+					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+						shwfs_grad(&i0grad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
+						if(parms->save.dither){
+							writebin(i0grad, "extra/wfs%d_i0grad_%d", iwfs, isim);
+						}
+						wfsgrad_tt_drift(i0grad, simu, P(parms->sim.eplo, 0), iwfs, 0);
+						wfsgrad_focus_drift(i0grad, simu, 1, iwfs, 0);
+					}
+					dfree(i0grad);
+				}
 				//i0 is collected
 				if(parms->powfs[ipowfs].dither==-1){
 					if(parms->powfs[ipowfs].llt){//LGS, require fiting sodiu profile
@@ -1037,7 +1053,9 @@ static void wfsgrad_dither_post(sim_t* simu){
 						if(parms->save.dither){
 							if(grad) writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
 							writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
-							writebin(intstat->i0, "extra/powfs%d_i0o_%d", ipowfs, isim);
+							if(pi0) writebin(intstat->i0, "extra/powfs%d_i0o_%d", ipowfs, isim);
+							if(pgx) writebin(intstat->i0, "extra/powfs%d_gxo_%d", ipowfs, isim);
+							if(pgy) writebin(intstat->i0, "extra/powfs%d_gyo_%d", ipowfs, isim);
 						}
 
 						if(ptype2==PTYPE_COG){//project pgrad to TWFS corrected modes
@@ -1085,20 +1103,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						}
 					}
 				}
-				if(ptype2==PTYPE_MF&&parms->powfs[ipowfs].llt){
-					//for LGS only. tip/tilt and focus drift control is needed for matched filter with either dithering or sodium fitting
-					dmat* i0grad=0;
-					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						shwfs_grad(&i0grad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
-						if(parms->save.dither){
-							writebin(i0grad, "extra/wfs%d_i0grad_%d", iwfs, isim);
-						}
-						wfsgrad_tt_drift(i0grad, simu, P(parms->sim.eplo, 0), iwfs, 0);
-						wfsgrad_focus_drift(i0grad, simu, 1, iwfs, 0);
-					}
-					dfree(i0grad);
-				}
+
 				//there is no need to reset trombone error signal
 				if((parms->save.gradoff||parms->save.dither)&&parms->dbg.gradoff_reset!=1){
 					writebin(simu->gradoff, "extra/gradoff_%d_dither", isim);

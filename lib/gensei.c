@@ -130,7 +130,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
    Upsample the otf in to out while preserving the PSF sampling. It changes the sampling of OTF.
    Do not use this if the sampling of OTFs are needed to be preserved.
  */
-void upsample_otf(cmat* out, const cmat* in){
+/*void upsample_otf(cmat* out, const cmat* in){
 	if(NX(in)==NX(out)&&NY(in)==NY(out)){
 		ccp(&out, in);
 	} else{
@@ -143,7 +143,7 @@ void upsample_otf(cmat* out, const cmat* in){
 		cfft2(out, 1);
 		cfree(temp);
 	}
-}
+}*/
 /**
    Createing subaperture short exposure PSF from the tip/tilt removed turbulence
    OTF and uplink OTF. Not including detector or elongation characteristics.  
@@ -342,7 +342,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 			real* angles=(gxyrot)?P(PR(gxyrot, ii0, 0)):0;
 			ccell* se_cache=ccellnew_same(2, MAXTHREAD, notfx, notfy);
 
-			OMP_TASK_FOR(4)
+OMP_TASK_FOR(8)
 			for(int isa=0; isa<nsa; isa++){
 				int ith=0;
 				/*loaded psepsf. sum to 1 for full sa. peak in center */
