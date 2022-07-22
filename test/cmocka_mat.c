@@ -129,18 +129,43 @@ static void mat_basic(void** state){
     dfree(b);
     assert_null(b);
 }
+void print_mat(dmat *out){
+    for(long iy=0; iy<NY(out); iy++){
+        for(long ix=0; ix<NX(out); ix++){
+            print_message("%4.0f ", P(out, ix, iy));
+        }
+        print_message("\n");
+    }   
+}
+void set_mat(dmat *out){
+    int ny2=NY(out)>>1;
+    int nx2=NX(out)>>1;
+    for(long iy=0; iy<NY(out); iy++){
+        for(long ix=0; ix<NX(out); ix++){
+            P(out,ix,iy)=(ix-nx2)+(iy-ny2)*10;
+        }
+    }
+}
 void mat_embed_n(int nin, int nout){
     dmat *in=dnew(nin, nin);
     dmat *out=dnew(nout, nout);
+    set_mat(in);
+    dembed(out, in, 0);
+   //print_mat(in);
+    //print_mat(out);
     int nin2=nin>>1;
     int nout2=nout>>1;
-    P(in, nin2)=1;
-    P(in, nin2+1)=2;
-    dembed(out, in, 0);
-    for(long ix=0; ix<nout*nout; ix++){
-        print_message("%g ", P(out,ix));
+    for(int io=-1; io<2; io++){
+        for(int jo=-1; jo<2; jo++){
+            assert_float_equal(P(in, nin2+io, nin2+jo), P(out, nout2+io, nout2+jo), 1e-16);
+        }
     }
-    assert_float_equal(P(in, nin2), P(out, nout2), 1e-16);
+    dzero(out);
+    dembed(out, in, M_PI/2);
+    //print_mat(in);
+    //rint_mat(out);
+    assert_float_equal(P(in, nin2+1, nin2), P(out, nout2, nout2+1), 1e-16);
+    
 }
 //test the embedding routines
 static void mat_embed(void** state){
@@ -167,7 +192,15 @@ static int dummy_signal_handler(int sig){
     info("Signal=%d caught, will ignore.\n", sig);
     return 1;
 }
+
 int main(void){
+#if 0
+    (void)dummy_signal_handler;
+    (void)mat_basic;
+    (void)mat_embed;
+    (void)mat_fresnel_prop;
+    mat_embed(NULL);
+#else
     register_signal_handler(dummy_signal_handler);
     LOG_LEVEL=-4;
     const struct CMUnitTest tests[]={
@@ -177,4 +210,5 @@ int main(void){
     };
     (void)tests;
     return cmocka_run_group_tests(tests, NULL, NULL);
+#endif
 }

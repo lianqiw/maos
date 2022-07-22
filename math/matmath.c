@@ -1344,18 +1344,18 @@ void X(cwlog)(X(mat)* A){
    }
 */
 
-void X(embed)(X(mat)* restrict A, const X(mat)* restrict B, const R theta){
-	const long ninx=B->nx;
-	const long niny=B->ny;
-	const long noutx=A->nx;
-	const long nouty=A->ny;
+void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
+	const long ninx=in->nx;
+	const long niny=in->ny;
+	const long noutx=out->nx;
+	const long nouty=out->ny;
 	//middle points
 	const long ninx2=ninx/2;
 	const long noutx2=noutx/2;
 	const long niny2=niny/2;
 	const long nouty2=nouty/2;
-	X(zero)(A);
-	if(fabs(theta)<1.e-10){/*no rotation. */
+	X(zero)(out);
+	if(theta==0){/*no rotation. */
 		const long skipx=noutx2-ninx2;//2022-07-13: fixed offset error.
 		const long skipy=nouty2-niny2;
 		long ixstart=0, ixend=ninx;
@@ -1369,33 +1369,31 @@ void X(embed)(X(mat)* restrict A, const X(mat)* restrict B, const R theta){
 			iyend=niny+skipy;
 		}
 		for(long iy=iystart; iy<iyend; iy++){
-			T* outi=&P(A, skipx+ixstart, skipy+iy);
-			T* ini=&P(B, ixstart, iy);
+			T* outi=&P(out, skipx+ixstart, skipy+iy);
+			T* ini=&P(in, ixstart, iy);
 			memcpy(outi, ini, sizeof(T)*(ixend-ixstart));
 		}
 	} else{
 		const R ctheta=cos(theta);
 		const R stheta=sin(theta);
-		R x2, y2;
-		R x, y;
 		long ix2, iy2;
 		for(long iy=0; iy<nouty; iy++){
-			y=(R)(iy-nouty2);
-			OMP_SIMD()
+			R y=(R)(iy-nouty2);
+			//OMP_SIMD()
 			for(long ix=0; ix<noutx; ix++){
-				x=(R)(ix-noutx2);
-				x2=x*ctheta+y*stheta+ninx2;
-				y2=-x*stheta+y*ctheta+niny2;
-				if(x2>0&&x2<ninx-1&&y2>0&&y2<niny-1){
+				R x=(R)(ix-noutx2);
+				R x2=x*ctheta+y*stheta+ninx2;
+				R y2=-x*stheta+y*ctheta+niny2;
+				if(x2>=0&&x2<=ninx-1&&y2>=0&&y2<=niny-1){
 					ix2=ifloor(x2);
 					iy2=ifloor(y2);
 					x2=x2-ix2;
 					y2=y2-iy2;
-					P(A, ix, iy)=
-						+P(B, ix2, iy2)*((1.-x2)*(1.-y2))
-						+P(B, ix2+1, iy2)*(x2*(1.-y2))
-						+P(B, ix2, iy2+1)*((1-x2)*y2)
-						+P(B, ix2+1, iy2+1)*(x2*y2);
+					P(out, ix, iy)=
+						+P(in, ix2, iy2)*((1.-x2)*(1.-y2))
+						+(x2>0?(P(in, ix2+1, iy2)*(x2*(1.-y2))):0)
+						+(y2>0?(P(in, ix2, iy2+1)*((1.-x2)*y2)
+							+(x2>0?P(in, ix2+1, iy2+1)*(x2*y2):0)):0);
 				}
 			}
 		}
