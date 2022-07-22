@@ -103,7 +103,8 @@ $(document).ready(function(){initNavTree('gensei_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aeb97684040b0b54674b200336ce88bd0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gensei_8h.html#aeb97684040b0b54674b200336ce88bd0">upsample_otf</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *out, const <a class="el" href="type_8h.html#structcmat">cmat</a> *in)</td></tr>
+<tr class="memitem:aeb97684040b0b54674b200336ce88bd0"><td class="memItemLeft" align="right" valign="top"><a id="aeb97684040b0b54674b200336ce88bd0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>upsample_otf</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *out, const <a class="el" href="type_8h.html#structcmat">cmat</a> *in)</td></tr>
 <tr class="separator:aeb97684040b0b54674b200336ce88bd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac69becfe684a72a709e5c3a8907f353"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcccell">cccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gensei_8h.html#aac69becfe684a72a709e5c3a8907f353">genseotf</a> (const <a class="el" href="type_8h.html#structpts__t">pts_t</a> *pts, const <a class="el" href="type_8h.html#structcell">cell</a> *amp, const <a class="el" href="type_8h.html#structdcell">dcell</a> *opdbias, const <a class="el" href="type_8h.html#structcell">cell</a> *saa, const <a class="el" href="type_8h.html#structdmat">dmat</a> *wvl, real r0, real L0, int embfac)</td></tr>
 <tr class="separator:aac69becfe684a72a709e5c3a8907f353"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,35 +117,6 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Contains routines to generate mean short exposure (tip/tilt removed) pixel intensities. Mostly used for LGS pixel intensity for its matched filter. Structure functions from kolmogorov spectrum is used. Not able to take into account outerscale yet.</p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>find ways to factor in outerscale effect (use von karman spectrum instead of kolmogorov) </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="aeb97684040b0b54674b200336ce88bd0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeb97684040b0b54674b200336ce88bd0">&#9670;&nbsp;</a></span>upsample_otf()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void upsample_otf </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
-          <td class="paramname"><em>out</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
-          <td class="paramname"><em>in</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Upsample the otf in to out while preserving the PSF sampling. It changes the sampling of OTF. Do not use this if the sampling of OTFs are needed to be preserved. </p>
-
-</div>
-</div>
 <a id="aac69becfe684a72a709e5c3a8907f353"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aac69becfe684a72a709e5c3a8907f353">&#9670;&nbsp;</a></span>genseotf()</h2>
 
@@ -278,7 +250,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF. Not including detector or elongation characteristics. <br />
+<p>Upsample the otf in to out while preserving the PSF sampling. It changes the sampling of OTF. Do not use this if the sampling of OTFs are needed to be preserved. Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF. Not including detector or elongation characteristics. <br />
 otfs and lotf must have the same sampling, but may have different dimension. Assumes that the otfs have peak in center. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
