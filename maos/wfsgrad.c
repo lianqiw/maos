@@ -1050,12 +1050,14 @@ static void wfsgrad_dither_post(sim_t* simu){
 						}
 						sodium_fit_wrap(&sodium, pgrad, pi0, pgx, pgy, intstat->i0, parms, powfs, ipowfs,
 							recon->r0, recon->L0, niter, 1);
-						if(parms->save.dither){
-							if(grad) writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
+						if(parms->save.extra){
 							writebin(sodium, "extra/powfs%d_fit_sodium_%d", ipowfs, isim);
+							if(grad) writebin(grad, "extra/powfs%d_fit_grad_%d", ipowfs, isim);
+						}
+						if(parms->save.dither){
 							if(pi0) writebin(intstat->i0, "extra/powfs%d_i0o_%d", ipowfs, isim);
-							if(pgx) writebin(intstat->i0, "extra/powfs%d_gxo_%d", ipowfs, isim);
-							if(pgy) writebin(intstat->i0, "extra/powfs%d_gyo_%d", ipowfs, isim);
+							if(pgx) writebin(intstat->gx, "extra/powfs%d_gxo_%d", ipowfs, isim);
+							if(pgy) writebin(intstat->gy, "extra/powfs%d_gyo_%d", ipowfs, isim);
 						}
 
 						if(ptype2==PTYPE_COG){//project pgrad to TWFS corrected modes

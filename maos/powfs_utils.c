@@ -165,7 +165,7 @@ void sodium_fit(
 	static int count=-1; count++;
 	//const real ht=25000;//total thickness
 	const real hmin=80000;
-	const real hmax=105000;
+	const real hmax=105000;//wrapp around happens at 10000 for 10 pixel if alined along x/y.
 
 	long nh=(long)floor((hmax-hmin)/dh)+1;
 	const int radgx=0;
@@ -213,18 +213,13 @@ void sodium_fit(
 	dcell *grad=use_cache?fit_cache.grad:*pgrad;
 	int skip_first=0;
 
-	if(!i0m){
+	if(!i0m){//prepare to create the sub layer image model
 		i0mv=dcellnew(1, nh);
 		i0m=dccellnew(nh, 1);
 		if(gradncpa){
 			dcellcp(&grad, gradncpa);
 		}else{
 			grad=dcellnew_same(ni0, 1, nsa*2, 1);
-OMP_TASK_FOR(4)
-			for(long ii0=0; ii0<ni0; ii0++){
-				//Remove focus mode from the gradients as it degenerates with sodidum profile shift.
-				loc_remove_focus_grad(P(grad, ii0), saloc, 1);
-			}
 		}
 		dbg("Initial gradient uses %s.\n", gradncpa?"gradncpa":"zero");
 		
@@ -248,7 +243,7 @@ OMP_TASK_FOR(4)
 	dcell *na2s=dcellnew_same(nh, 1, 1, 2);
 	for(int irep=0; irep<nrep; irep++){
 		dbg("repeat %d of %d\n", irep+1, nrep);
-		if(irep>0 || !skip_first){
+		if(irep>0 || !skip_first){//Compute subaperture sublayer imaging model
 			if(irep>0 && &grad!=pgrad){
 				dcellcp(&grad, *pgrad);
 			}
@@ -274,7 +269,11 @@ OMP_TASK_FOR(4)
 		dcellzero(atb);
 		dcellmm(&ata, i0mv, i0mv, "tn", 1);
 		dcellmm(&atb, i0mv, i02, "tn", 1);
-
+		if(save){
+			writebin(ata, "sodium_ata_%d_%d", count, irep);
+			writebin(atb, "sodium_atb_%d_%d", count, irep);
+			if(count==0&&irep==0) writebin(i0m, "sodium_i0m_%d_%d", count, irep);
+		}
 		dcellsvd_pow(ata, -1, svdthres, tikcr);
 		dcellzero(res);
 		dcellmm(&res, ata, atb, "nn", 1);
@@ -282,7 +281,7 @@ OMP_TASK_FOR(4)
 		for(long ix=0; ix<nh; ix++){
 			P(nai, ix, 1)=P(P(res, ix), 0)*scale;
 		}
-		if(nrep>1 || pgrad!=&gradtmp){
+		if(nrep>1 || pgrad!=&gradtmp){//need to determine error in applying gradient offset
 			if(etf_full) etf_free(etf_full);
 			//mketf for full profile must use the same no_interp flag 
 			etf_full=mketf(dtf, CELL(nai), 0, srot, srsa, hs, htel, za, 1);
@@ -305,20 +304,18 @@ OMP_TASK_FOR(8)
 				}
 			}
 			toc2("mtche apply"); tic;
+			
 OMP_TASK_FOR(4)
 			for(long ii0=0; ii0<ni0; ii0++){
 				//Remove focus mode from the gradients as it degenerates with sodium profile shift.
 				loc_remove_focus_grad(P(*pgrad, ii0), saloc, 1);
 			}
-		}
-		
-		if(save){
-			writebin(ata, "sodium_ata_%d_%d", count, irep);
-			writebin(atb, "sodium_atb_%d_%d", count, irep);
-			writebin(nai, "sodium_prof_%d_%d", count, irep);
-			writebin(*pgrad, "sodium_grad_%d_%d", count, irep);
-			writebin(mtche, "sodium_mtche_%d_%d", count, irep);
-			writebin(*pi0tmp, "sodium_i0_%d_%d", count, irep);
+			if(save){
+				writebin(nai, "sodium_prof_%d_%d", count, irep);
+				writebin(*pgrad, "sodium_grad_%d_%d", count, irep);
+				//writebin(mtche, "sodium_mtche_%d_%d", count, irep);
+				//writebin(*pi0tmp, "sodium_i0_%d_%d", count, irep);
+			}
 		}
 	}
 

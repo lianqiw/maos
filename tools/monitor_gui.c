@@ -173,22 +173,23 @@ static void list_proc_append(proc_t *p){
 	struct tm* tim=localtime(&p->status.timlast);
 	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
 	char* spath=p->path;
-	char* sstart=NULL, * sout=NULL, * sargs=NULL;
+	char* sstart=NULL;//starting directory
+	char* sout=NULL;  //output directory
+	char* sargs=NULL; //job arguments
 	if(spath){
 		const char* pos=NULL;
-		pos=strstr(spath, "/maos ");
+		pos=strstr(spath, "/maos");
 		if(!pos){
-			pos=strstr(spath, "/skyc ");
+			pos=strstr(spath, "/skyc");
 		}
 		if(pos){
 			sstart=(char*)malloc(pos-spath+1);//job start directory
 			memcpy(sstart, spath, pos-spath);
 			sstart[pos-spath]='\0';
 			sargs=strdup(pos+1);//job arguments. 
-			char* pos2=NULL;
 			char* tmp=sargs;
 			while((tmp=strstr(tmp, " -o"))){
-				pos2=tmp+3;//start of output directory
+				char* pos2=tmp+3;//start of output directory
 				while(isspace(pos2[0])) pos2++;//skip space
 				char* pos3=strchr(pos2, ' ');//end of output directory
 				if(!pos3) pos3=strchr(pos2, 0);//end of string
@@ -201,7 +202,11 @@ static void list_proc_append(proc_t *p){
 				}
 			}
 			if(sout){
-				strcat(sargs, " -o");
+				if(strstr(spath, " -o ")){//there is room for space after -o
+					strcat(sargs, " -o ");
+				}else{
+					strcat(sargs, " -o");
+				}
 				strcat(sargs, sout);//append sout back to sargs. Cannot overflow
 			}
 		}
