@@ -26,7 +26,7 @@
 
 #include "common.h"
 static TIC;
-#include "setup_aper.h"
+#include "aper.h"
 
 /**
    Setting up aperture cordinate grid aper_locs, and amplitude map for

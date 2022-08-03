@@ -21,8 +21,8 @@
 #include "common.h"
 #include "sim.h"
 #include "sim_utils.h"
-#include "setup_surf.h"
-#include "setup_powfs.h"
+#include "surf.h"
+#include "powfs.h"
 #include "pywfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"

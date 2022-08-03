@@ -18,9 +18,9 @@
 
 
 #include "common.h"
-#include "setup_surf.h"
+#include "surf.h"
 #include "recon_utils.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 
 /**
    \file setup_surf.c

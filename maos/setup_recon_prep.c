@@ -20,7 +20,7 @@
 #include "common.h"
 #include "setup_recon.h"
 #include "recon_utils.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 #include "pywfs.h"
 #include "ahst.h"
 #undef GREEN

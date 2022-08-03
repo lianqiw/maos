@@ -32,7 +32,7 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-#include "setup_powfs.h"
+#include "powfs.h"
 /*
    A few utility routines
 */

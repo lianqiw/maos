@@ -24,7 +24,7 @@
 #include "ahst.h"
 #include "recon_utils.h"
 #include "moao.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 #include "pywfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
@@ -46,125 +46,6 @@
 
    All routines in this file depends on saneai and may be called repeatedly during simulation.
 */
-/**
-   Check the dimension of NEA and fix if possible
-*/
-void nea_check(dmat* nea, int nsa, int ng){
-	if(!nea){
-		error("nea is not defined.\n");
-	}else if(NY(nea)==1){
-		reshape(nea, nsa, NX(nea)/nsa);
-	}
-	if(NX(nea)!=nsa||(NY(nea)!=ng&&NY(nea)!=3)){
-		error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", NX(nea), NY(nea), nsa, 3);
-	}
-}
-/**
-   Apply cholesky in a 2x2 symmetric matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
-   Input and output may be the same.
-   if ng>2, treat as diagonal matrix
- */
-void nea_chol(dmat** pout, const dmat* in, const int ng){
-	if(NY(in)!=ng&&NY(in)!=3){
-		error("nea_chol: wrong format\n");
-	}
-	int isxy=(NY(in)!=ng)?1:0;//cross term
-	if(!*pout){
-		*pout=dnew(NX(in), MAX(ng,3));
-	}else if(isxy && NY((*pout))!=3){
-		dresize(*pout, NX(in), 3);
-	}
-	dmat* out=*pout;
-	if(ng==2){
-		for(int isa=0; isa<NX(in); isa++){
-		//Use temporary variable to handle the case that out and in is the same.
-			real a=sqrt(P(in, isa, 0));
-			real b=isxy?(P(in, isa, 2)/a):0;
-			real c=sqrt(P(in, isa, 1)-b*b);
-			P(out, isa, 0)=a;
-			P(out, isa, 1)=c;
-			if(isxy) P(out, isa, 2)=b;
-		}
-	}else{
-		for(int ig=0; ig<NX(in)*ng; ig++){
-			P(out, ig)=sqrt(P(in, ig));
-		}
-	}
-}
-/**
-   Apply LL' to lower diagonal matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
-   Input and output may be the same.
-   if ng>2, treat as diagonal matrix
- */
-void nea_mm(dmat** pout, const dmat* in, const int ng){
-	if(NY(in)!=ng&&NY(in)!=3){
-		error("nea_mm: wrong format\n");
-	}
-	int isxy=(NY(in)!=ng)?1:0;
-	if(!*pout){
-		*pout=dnew(NX(in), MAX(ng,3));
-	}else if(isxy&&NY((*pout))!=3){
-		dresize(*pout, NX(in), 3);
-	}
-	dmat* out=*pout;
-	if(NY(out)<NY(in)){
-		error("nea_mm: wrong format. Need 3 columns in the output.\n");
-	}
-	if(P(in, 0, 0)<1e-11){
-		warning("nea[0,0]=%g may be already in rad^2 unit. Will not square again.\n", P(in, 0, 0));
-		return;
-	}
-	if(ng==2){
-		for(int isa=0; isa<NX(in); isa++){
-		//Use temporary variable to handle the case that out and in is the same.
-			real a=P(in, isa, 0);
-			real b=isxy?(P(in, isa, 2)):0;
-			real c=P(in, isa, 1);
-			P(out, isa, 0)=a*a;
-			P(out, isa, 1)=c*c+b*b;
-			if(isxy) P(out, isa, 2)=a*b;
-		}
-	}else{
-		for(int ig=0; ig<NX(in)*ng; ig++){
-			P(out, ig)=P(in, ig)*P(in,ig);
-		}
-	}
-}
-/**
-   Apply matrix inversion in a 2x2 symmetrisa matrix packed in row vector [a[0,0],a[1,1],a[0,1]] 
-   Input and output may be the same.
-*/
-
-void nea_inv(dmat** pout, const dmat* in, int ng, real scale){
-	if(NY(in)!=ng&&NY(in)!=3){
-		error("nea_inv: wrong format\n");
-	}
-	int isxy=NY(in)!=ng?1:0;
-	if(!*pout){
-		*pout=dnew(NX(in), MAX(ng,3));
-	}if(isxy&&NY((*pout))!=3){
-		dresize(*pout, NX(in), 3);
-	}
-	
-	dmat* out=*pout;
-	if(ng==2){
-		for(int isa=0; isa<NX(in); isa++){
-			//use double to prevent overflow of intermediate value
-			double xx=P(in, isa, 0);
-			double yy=P(in, isa, 1);
-			double xy=isxy?P(in, isa, 2):0;
-			double invdet=scale/(xx*yy-xy*xy);
-
-			P(out, isa, 0)=invdet*yy;
-			P(out, isa, 1)=invdet*xx;
-			if(isxy) P(out, isa, 2)=-invdet*xy;
-		}
-	}else{
-		for(int ig=0; ig<NX(in)*ng; ig++){
-			P(out, ig)=scale/P(in, ig);
-		}
-	}
-}
 
 
 /**

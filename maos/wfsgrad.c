@@ -24,7 +24,7 @@
 #include "save.h"
 #include "setup_recon.h"
 #include "recon_utils.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 #include "pywfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"

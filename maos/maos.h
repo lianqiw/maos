@@ -20,11 +20,11 @@
 #ifndef __MAOS_H
 #define __MAOS_H
 #include "common.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 #include "setup_recon.h"
-#include "setup_aper.h"
+#include "aper.h"
 #include "sim_utils.h"
-#include "setup_surf.h"
+#include "surf.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif

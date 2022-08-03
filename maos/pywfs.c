@@ -18,7 +18,7 @@
 
 #include <unistd.h>
 #include "common.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 #include "pywfs.h"
 #include "../cuda/gpu.h"
 #define PYWFS_GUARD 1.5 //separate the pupil by this amount in relative

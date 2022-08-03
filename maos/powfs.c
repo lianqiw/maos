@@ -18,7 +18,7 @@
 
 
 #include "common.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 #include "powfs_utils.h"
 #include "pywfs.h"
 #include "setup_recon.h"
@@ -26,7 +26,7 @@
 #undef GREEN
 #define GREEN BLACK
 /**
-   \file setup_powfs.h
+   \file powfs.h
 
    Setting up WFS geometry. like the subaperture location, subaperture grid
    points, physical optics detection transfer function, LGS elongation transfer

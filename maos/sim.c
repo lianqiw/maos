@@ -24,7 +24,7 @@
 #include "common.h"
 #include "recon.h"
 #include "recon_utils.h"
-#include "setup_powfs.h"
+#include "powfs.h"
 #include "setup_recon.h"
 #include "sim.h"
 #include "sim_utils.h"
