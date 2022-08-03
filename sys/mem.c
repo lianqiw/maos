@@ -887,9 +887,9 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	}else{//cancel signal, keep going
 		dbg_time("Cancel action\n");
 		sync();
-		if(sig!=SIGUSR2){
-			fatal_error_in_progress=0;
-		}
+		//if(sig!=SIGUSR2){
+		//	fatal_error_in_progress=0;
+		//}
 	}
 }
 

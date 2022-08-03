@@ -49,55 +49,62 @@
 /**
    Check the dimension of NEA and fix if possible
 */
-void check_nea(dmat* nea, int nsa){
+void nea_check(dmat* nea, int nsa, int ng){
 	if(!nea){
 		error("nea is not defined.\n");
-	} else if(NY(nea)==1){
-		if(NX(nea)==2*nsa){
-			reshape(nea, nsa, 2);
-		} else if(NX(nea)==3*nsa){
-			reshape(nea, nsa, 3);
-		} else{
-			error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", NX(nea), NY(nea), nsa, 3);
-		}
-	} else if(NX(nea)!=nsa||NY(nea)>3){
+	}else if(NY(nea)==1){
+		reshape(nea, nsa, NX(nea)/nsa);
+	}
+	if(NX(nea)!=nsa||(NY(nea)!=ng&&NY(nea)!=3)){
 		error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", NX(nea), NY(nea), nsa, 3);
 	}
 }
 /**
    Apply cholesky in a 2x2 symmetric matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
    Input and output may be the same.
+   if ng>2, treat as diagonal matrix
  */
-void nea_chol(dmat** pout, const dmat* in){
-	if(NY(in)!=2&&NY(in)!=3){
+void nea_chol(dmat** pout, const dmat* in, const int ng){
+	if(NY(in)!=ng&&NY(in)!=3){
 		error("nea_chol: wrong format\n");
 	}
+	int isxy=(NY(in)!=ng)?1:0;//cross term
 	if(!*pout){
-		*pout=dnew(NX(in), 3);
+		*pout=dnew(NX(in), MAX(ng,3));
+	}else if(isxy && NY((*pout))!=3){
+		dresize(*pout, NX(in), 3);
 	}
-	int isxy=NY(in)==3?1:0;
 	dmat* out=*pout;
-	for(int isa=0; isa<NX(in); isa++){
-	//Use temporary variable to handle the case that out and in is the same.
-		real a=sqrt(P(in, isa, 0));
-		real b=isxy?(P(in, isa, 2)/a):0;
-		real c=sqrt(P(in, isa, 1)-b*b);
-		P(out, isa, 0)=a;
-		P(out, isa, 1)=c;
-		P(out, isa, 2)=b;
+	if(ng==2){
+		for(int isa=0; isa<NX(in); isa++){
+		//Use temporary variable to handle the case that out and in is the same.
+			real a=sqrt(P(in, isa, 0));
+			real b=isxy?(P(in, isa, 2)/a):0;
+			real c=sqrt(P(in, isa, 1)-b*b);
+			P(out, isa, 0)=a;
+			P(out, isa, 1)=c;
+			if(isxy) P(out, isa, 2)=b;
+		}
+	}else{
+		for(int ig=0; ig<NX(in)*ng; ig++){
+			P(out, ig)=sqrt(P(in, ig));
+		}
 	}
 }
 /**
    Apply LL' to lower diagonal matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
    Input and output may be the same.
+   if ng>2, treat as diagonal matrix
  */
-void nea_mm(dmat** pout, const dmat* in){
-	if(NY(in)!=2&&NY(in)!=3){
+void nea_mm(dmat** pout, const dmat* in, const int ng){
+	if(NY(in)!=ng&&NY(in)!=3){
 		error("nea_mm: wrong format\n");
 	}
-	int isxy=NY(in)==3?1:0;
+	int isxy=(NY(in)!=ng)?1:0;
 	if(!*pout){
-		*pout=dnew(NX(in), 3);
+		*pout=dnew(NX(in), MAX(ng,3));
+	}else if(isxy&&NY((*pout))!=3){
+		dresize(*pout, NX(in), 3);
 	}
 	dmat* out=*pout;
 	if(NY(out)<NY(in)){
@@ -107,14 +114,20 @@ void nea_mm(dmat** pout, const dmat* in){
 		warning("nea[0,0]=%g may be already in rad^2 unit. Will not square again.\n", P(in, 0, 0));
 		return;
 	}
-	for(int isa=0; isa<NX(in); isa++){
-	//Use temporary variable to handle the case that out and in is the same.
-		real a=P(in, isa, 0);
-		real b=isxy?(P(in, isa, 2)):0;
-		real c=P(in, isa, 1);
-		P(out, isa, 0)=a*a;
-		P(out, isa, 1)=c*c+b*b;
-		if(isxy) P(out, isa, 2)=a*b;
+	if(ng==2){
+		for(int isa=0; isa<NX(in); isa++){
+		//Use temporary variable to handle the case that out and in is the same.
+			real a=P(in, isa, 0);
+			real b=isxy?(P(in, isa, 2)):0;
+			real c=P(in, isa, 1);
+			P(out, isa, 0)=a*a;
+			P(out, isa, 1)=c*c+b*b;
+			if(isxy) P(out, isa, 2)=a*b;
+		}
+	}else{
+		for(int ig=0; ig<NX(in)*ng; ig++){
+			P(out, ig)=P(in, ig)*P(in,ig);
+		}
 	}
 }
 /**
@@ -122,25 +135,34 @@ void nea_mm(dmat** pout, const dmat* in){
    Input and output may be the same.
 */
 
-void nea_inv(dmat** pout, const dmat* in, real scale){
-	if(NY(in)!=2&&NY(in)!=3){
+void nea_inv(dmat** pout, const dmat* in, int ng, real scale){
+	if(NY(in)!=ng&&NY(in)!=3){
 		error("nea_inv: wrong format\n");
 	}
+	int isxy=NY(in)!=ng?1:0;
 	if(!*pout){
-		*pout=dnew(NX(in), 3);
+		*pout=dnew(NX(in), MAX(ng,3));
+	}if(isxy&&NY((*pout))!=3){
+		dresize(*pout, NX(in), 3);
 	}
-	int isxy=NY(in)==3?1:0;
+	
 	dmat* out=*pout;
-	for(int isa=0; isa<NX(in); isa++){
-		//use double to prevent overflow of intermediate value
-		double xx=P(in, isa, 0);
-		double yy=P(in, isa, 1);
-		double xy=isxy?P(in, isa, 2):0;
-		double invdet=scale/(xx*yy-xy*xy);
+	if(ng==2){
+		for(int isa=0; isa<NX(in); isa++){
+			//use double to prevent overflow of intermediate value
+			double xx=P(in, isa, 0);
+			double yy=P(in, isa, 1);
+			double xy=isxy?P(in, isa, 2):0;
+			double invdet=scale/(xx*yy-xy*xy);
 
-		P(out, isa, 0)=invdet*yy;
-		P(out, isa, 1)=invdet*xx;
-		P(out, isa, 2)=-invdet*xy;
+			P(out, isa, 0)=invdet*yy;
+			P(out, isa, 1)=invdet*xx;
+			if(isxy) P(out, isa, 2)=-invdet*xy;
+		}
+	}else{
+		for(int ig=0; ig<NX(in)*ng; ig++){
+			P(out, ig)=scale/P(in, ig);
+		}
 	}
 }
 
@@ -167,6 +189,8 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].skip==3) continue;
 		const int nsa=powfs[ipowfs].saloc->nloc;
+		const int ng=parms->powfs[ipowfs].ng;
+		int ncol=MAX(ng,3);
 		const real pixtheta=parms->powfs[ipowfs].pixtheta;
 		dcell* saneac=0;//in unit of rad^2.
 
@@ -187,12 +211,12 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			if(parms->powfs[ipowfs].neareconfile){
 				saneac=dcellread_prefix(parms->powfs[ipowfs].neareconfile, parms, ipowfs);
 				for(int i=0; i<NX(saneac)*NY(saneac); i++){
-					check_nea(P(saneac,i), nsa);
-					nea_mm(&P(saneac,i), P(saneac,i));
+					nea_check(P(saneac,i), nsa, ng);
+					nea_mm(&P(saneac,i), P(saneac,i), ng);
 				}
 			} else{
 				saneac=dcellnew(1, 1);
-				P(saneac,0)=dnew(nsa, 3);
+				P(saneac,0)=dnew(nsa, ncol);
 				real neamas=parms->powfs[ipowfs].nearecon;
 				if(neamas<0.001||neamas > 2000){
 					warning("powfs[%d].nearecon=%g mas may have unit incorrect.\n", ipowfs, neamas);
@@ -201,6 +225,9 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				real nearad=pow(neamas/206265000., 2)/(parms->powfs[ipowfs].dtrat);
 				for(int isa=0; isa<nsa; isa++){
 					P(P(saneac,0), isa, 0)=P(P(saneac,0), isa, 1)=nearad/(P(powfs[ipowfs].saa, isa));
+					for(int ig=2; ig<ng; ig++){
+						P(P(saneac, 0), isa, ig)=P(P(saneac, 0), isa, 0);
+					}
 				}
 			}
 		}
@@ -228,7 +255,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				dmat* sanea0l=0;
 				dmat* sanea0i=0;
 
-				if(!parms->powfs[ipowfs].mtchcpl && NY(sanea0)!=2){
+				if(!parms->powfs[ipowfs].mtchcpl && NY(sanea0)!=2 && ng==2){
 					sanea0->ny=2; //reduce coupling
 				}
 				real nea2_sum=0;
@@ -236,11 +263,11 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				for(int isa=0; isa<nsa; isa++){
 					if(samask && P(samask, isa)){
 						warning("wfs %d sa %d is masked\n", iwfs, isa);
-						for(int iy=0; iy<NY(sanea0); iy++){
+						for(int iy=0; iy<ng; iy++){
 							P(sanea0, isa, iy)=INFINITY;
 						}
 					}
-					for(int iy=0; iy<2; iy++){
+					for(int iy=0; iy<ng; iy++){
 						if((P(sanea0, isa, iy)+=neaextra2)<neamin2){
 							P(sanea0, isa, iy)=neamin2;
 						}
@@ -251,8 +278,8 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					}
 				}
 				
-				nea_chol(&sanea0l, sanea0);
-				nea_inv(&sanea0i, sanea0, TOMOSCALE);//without TOMOSCALE, it overflows in float mode
+				nea_chol(&sanea0l, sanea0, ng);
+				nea_inv(&sanea0i, sanea0, ng, TOMOSCALE);//without TOMOSCALE, it overflows in float mode
 				
 				real nea_mean=sqrt(nea2_sum/nea2_count*0.5);
 				P(recon->neam,iwfs)=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
@@ -263,13 +290,13 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					){
 					warning("TT WFS %d has too much measurement error: %g mas\". Ignore it\n",
 						iwfs, nea_mean*206265000);
-					P(sanea,iwfs,iwfs)=dspnewdiag(nsa*2, NULL, INFINITY);
-					P(saneal,iwfs,iwfs)=dspnewdiag(nsa*2, NULL, 0);
-					P(saneai,iwfs,iwfs)=dspnewdiag(nsa*2, NULL, 0);
+					P(sanea,iwfs,iwfs)=dspnewdiag(nsa*ng, NULL, INFINITY);
+					P(saneal,iwfs,iwfs)=dspnewdiag(nsa*ng, NULL, 0);
+					P(saneai,iwfs,iwfs)=dspnewdiag(nsa*ng, NULL, 0);
 				} else{
-					P(sanea,iwfs,iwfs)=nea2sp(sanea0, 1, 1);
-					P(saneal,iwfs,iwfs)=nea2sp(sanea0l, 1, 0);
-					P(saneai,iwfs,iwfs)=nea2sp(sanea0i, 1, 1);
+					P(sanea,iwfs,iwfs)=nea2sp(sanea0, 1, 1, ng);
+					P(saneal,iwfs,iwfs)=nea2sp(sanea0l, 1, 0, ng);
+					P(saneai,iwfs,iwfs)=nea2sp(sanea0i, 1, 1, ng);
 				}
 				dfree(sanea0l);
 				dfree(sanea0i);

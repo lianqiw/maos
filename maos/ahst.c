@@ -427,13 +427,12 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 	*/
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
 		ngsmod->GM=dcellnew(parms->nwfsr, 1);
-		info2("Low order control includes WFS");
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+			info2("Low order control includes WFS %d\n", iwfs);
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			if(parms->powfs[ipowfs].skip!=3 &&
 				(parms->powfs[ipowfs].lo
 				||(parms->recon.split && !parms->powfs[ipowfs].trs))){
-				info2(" %d", iwfs);
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(parms->powfs[ipowfs].type==WFS_SH || parms->recon.modal){//shwfs or modal control
 						dmm_cell(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);

@@ -3,7 +3,8 @@ Algorithms {#algorithm}
 <!--The following shows how various algorithms are implemented.-->
 
 <!--
-pandoc -t pdf -V geometry:margin=2cm -o ~/Sync/fresnel.pdf thisfile.md
+Use the following to convert to pdf
+sed 's/\\f\[/$$/g' 50_pop.md |sed 's/\\f\]/$$/g' | sed 's/\\f\$/$/g' | pandoc -t pdf -V geometry:margin=2cm -o ~/Downloads/fresnel.pdf
 -->
 
 # Physical Optics Beam Propagation {#pop}
@@ -14,7 +15,7 @@ The Maxwell equation predicts that
 \f[
 	\nabla^2 \mathbf{E} = \mu_0 \epsilon_0 \frac{\partial^2 \mathbf{E}}{\partial t^2} \f]
 
-where \f$\mu_0 \epsilon_0 = 1/c_0^2 \f$
+where \f${\mu}_0{\epsilon}_0=1/{c}_0^2\f$
 
 It has a general solution of the form
 
@@ -39,7 +40,7 @@ Taylor expansion:
 \f[r=\sqrt{\rho^2+z^2}=z\sqrt{1+\frac{\rho^2}{z^2}}=z+\frac{\rho^2}{2z}-\frac{\rho^4}{8z^3}+...\f]
 The equation can be simplified if we can ignore the third term, which requires
 that the phase \f$k\frac{\rho^4}{8z^3}\ll2\pi\f$ or
-\f[z^3\gg\frac{\rho^4}{8\lambda}.\f] For the \f$r\f$ outside of the phase, we make
+\f[z^3\gg\frac{\rho^4}{8\lambda}.\f] For the \f$r\f$ at the denominator (not within the exponential), we make
 another approximate by keeping only the first term,  which is valid if the
 aperture is significantly smaller than the propagation distance: \f$\rho\ll z\f$.
 The electric field can then be simplified as

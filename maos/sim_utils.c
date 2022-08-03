@@ -820,9 +820,10 @@ static void init_simu_wfs(sim_t* simu){
 	simu->gradoff=dcellnew(nwfs, 1);
 	simu->gradscale=dcellnew(nwfs, 1);//leave empty first
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		int nsa=powfs[ipowfs].saloc->nloc;
-		P(simu->gradcl, iwfs)=dnew(nsa*2, 1);
+		const int ipowfs=parms->wfs[iwfs].powfs;
+		const int nsa=powfs[ipowfs].saloc->nloc;
+		const int ng=parms->powfs[ipowfs].ng;
+		P(simu->gradcl, iwfs)=dnew(nsa*ng, 1);
 		P(simu->wfsopd, iwfs)=dnew(powfs[ipowfs].loc->nloc, 1);
 		if(parms->powfs[ipowfs].usephy){
 			if(parms->powfs[ipowfs].type==WFS_SH){
@@ -832,7 +833,7 @@ static void init_simu_wfs(sim_t* simu){
 			}
 		}
 		if(parms->powfs[ipowfs].phystep!=0||P(parms->save.gradgeom, iwfs)||parms->powfs[ipowfs].pistatout){
-			P(simu->gradacc, iwfs)=dnew(nsa*2, 1);
+			P(simu->gradacc, iwfs)=dnew(nsa*ng, 1);
 		}
 		if(parms->powfs[ipowfs].pistatout){
 			P(simu->pistatout, iwfs)=dcellnew(nsa, parms->powfs[ipowfs].nwvl);

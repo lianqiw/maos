@@ -276,7 +276,7 @@ static void apply_h(cmat* out, const cmat* in, real dx, real wvl, real z){
  * method=1 or 2 when the sampling agrees and the approximation holds.
  */
 void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on method. Should not be empty if method is 0.*/
-	real* pdxout,  /**<Sampling of output, should be supplied if method=0*/
+	real* pdxout,  /**<Sampling of output, can be supplied if method=0, use dp if not supplied.*/
 	const cmat* in, /**<Input complex field, , Amp*exp(-i*k*opd)*/
 	real dxin,   /**<Spatial sampling of in*/
 	real wvl,    /**<Wavelength*/

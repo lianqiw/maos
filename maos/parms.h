@@ -276,6 +276,7 @@ typedef struct powfs_cfg_t{
     real modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/
     int    modulring; /**<Number of rings within the maximum radius to modulate*/
+    int ng;         /**<number of gradients per subaperture. 2 for SHWFS. >2 for raw PWFS*/
 }powfs_cfg_t;
 /**
    contains input parmaeters for each wfs
@@ -659,10 +660,11 @@ typedef struct dbg_cfg_t{
 	int gradoff_reset;/**<reset gradoff after creating matched filter with dithering*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
-    real pwfs_flate;/**<pyramid flat edge angular width */
-    real pwfs_flatv;/**<pyramid flat vertex angular width*/
+    real pwfs_flate; /**<pyramid flat edge angular width */
+    real pwfs_flatv; /**<pyramid flat vertex angular width*/
     real pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
-    int pwfs_side; /**<Make pyramid WFS a single roof only.*/
+    int pwfs_side;   /**<Make pyramid WFS a single roof only.*/
+    int pwfs_raw;    /**<1: use normalized ints as gradient.*/
     dcell *dmoff;    /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;  /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
     int twfsflag;    /**<use TWFS to control 0: all modes, 1: radial only*/

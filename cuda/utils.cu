@@ -441,7 +441,7 @@ add2cpu_cell(s, float, curcell)
 add2cpu_cell(z, float, cuccell)
 
 #define cp2cpu_same(dmat,dzero,dnew,T)				\
-    void cp2cpu(dmat **out, const Array<T, Gpu> &in, cudaStream_t stream){ \
+void cp2cpu(dmat **out, const Array<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in) {							\
 	    if(*out) dzero(*out);					\
 	    return;							\
@@ -449,13 +449,17 @@ add2cpu_cell(z, float, cuccell)
 	if(!*out) {\
 		*out=dnew(in.Nx(), in.Ny());				\
 		if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
+	}else{\
+		if(PN((*out))!=in.N()){\
+			error("Dimension mismatch: %ldx%ld vs %ldx%ld\n", NX((*out)), NY((*out)), in.Nx(), in.Ny());\
+		}\
 	}\
 	dmat *pout=*out;						\
 	DO(cudaMemcpyAsync(P(pout), in(), in.N()*sizeof(T),D2H, stream));	\
 	CUDA_SYNC_STREAM;\
 	if(pout->header) free(pout->header);				\
 	if(in.header.length()) pout->header=strdup(in.header.c_str());	\
-    }
+}
 #if COMP_SINGLE==0
 	cp2cpu_same(dmat, dzero, dnew, double)
 	cp2cpu_same(cmat, czero, cnew, double2)
@@ -464,7 +468,7 @@ add2cpu_cell(z, float, cuccell)
 	cp2cpu_same(zmat, zzero, znew, float2)
 #if ! CUDA_DOUBLE 
 #if COMP_SINGLE==0
-	void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream){
+void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
 void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream){
@@ -472,7 +476,7 @@ void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream){
 }
 #endif
 #else
-	void cp2cpu(smat** out, const curmat& in, cudaStream_t stream){
+void cp2cpu(smat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
 void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream){
@@ -480,7 +484,7 @@ void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream){
 }
 #endif
 #define cp2cpu_cell(S, T)						\
-    void cp2cpu(S##cell **out, const Cell<T, Gpu> &in, cudaStream_t stream){ \
+void cp2cpu(S##cell **out, const Cell<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in){							\
 	    if(*out) S##cellzero(*out);					\
 	    return;							\

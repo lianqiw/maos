@@ -104,6 +104,8 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	pywfs_free(powfs[ipowfs].pywfs);
 	pywfs_t* pywfs=powfs[ipowfs].pywfs=mycalloc(1, pywfs_t);
 	const int pyside=pywfs->nside=parms->dbg.pwfs_side;
+	pywfs->raw=parms->dbg.pwfs_raw;
+	const int ng=pywfs->raw?pyside:2;
 	map_t* map=0;
 	pywfs->hs=parms->powfs[ipowfs].hs;
 	pywfs->hc=parms->powfs[ipowfs].hc;
@@ -373,31 +375,29 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		dfree(ints);
 		//Determine optical gain.
 		dmat* TT=pywfs_tt(pywfs);
-		real gxm=0, gym=0;
-		for(int isa=0; isa<nsa; isa++){
-			gxm+=P(TT, isa, 0);
-			gym+=P(TT, isa+nsa, 1);
-		}
-		//info2("gxm=%g, gym=%g.\n", gxm/nsa, gym/nsa);
-		real gainscl=2.*nsa/(gxm+gym);
+		real gsum=dsum(TT);
+		real gainscl=ng*nsa/gsum;
 		/*
 		  pywfs->gain is inverse of optical gain, to insure 1rad of input
 		  tip/tilt wavefront gives 1rad of gradient output.*/
 		pywfs->gain*=gainscl;
 		dscale(pywfs->gradoff, gainscl);
 		dscale(TT, gainscl);
-		pywfs->GTT=TT;
-		//dbg("pywfs_gain=%g\n", pywfs->gain);
+		pywfs->GTT=TT;TT=NULL;
+		dbg("pywfs_gain=%g\n", pywfs->gain);
 	}
 	//Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
 	{
 		powfs[ipowfs].sanea=dcellnew(1, 1);
-		dmat* sanea=P(powfs[ipowfs].sanea,0)=dnew(nsa, 3);
+		dmat* sanea=P(powfs[ipowfs].sanea,0)=dnew(nsa, ng);
 		real rne=parms->powfs[ipowfs].rne;
 		for(int isa=0; isa<nsa; isa++){
 			real ogi=pywfs->gain*parms->powfs[ipowfs].gradscale;
 			real sig=P(pywfs->saa,isa)*parms->powfs[ipowfs].siglev;//siglev of subaperture
-			P(sanea, isa, 0)=P(sanea, isa, 1)=pow(ogi/sig, 2)*(sig+4*rne*rne);
+			real neai=pow(ogi/sig, 2)*(sig+4*rne*rne);
+			for(int ig=0; ig<ng; ig++){
+				P(sanea, isa, ig)=neai;
+			}
 		}
 	}
 	if(parms->save.setup){
@@ -643,11 +643,13 @@ void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
 void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 	const long nsa=NX(ints);
 	const int pyside=pywfs->nside;
+	const int ng=pywfs->raw?pyside:2;
 	if(!*pgrad){
-		*pgrad=dnew(nsa*2, 1);
+		*pgrad=dnew(nsa*ng, 1);
 	}
-	real* pgx=P(*pgrad);
-	real* pgy=P(*pgrad)+nsa;
+	dmat *grad=*pgrad;
+	real* pgx=P(grad);
+	real* pgy=P(grad)+nsa;
 	real gain=pywfs->gain;
 	real triscalex=sqrt(3.)/2;
 	real imean=0;
@@ -673,17 +675,23 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 			break;
 		}
 		real alpha2=gain/isum;
-		switch(pyside){
-		case 3:
-			pgx[isa]=(P(ints, isa, 1)-P(ints, isa, 2))*alpha2*triscalex;
-			pgy[isa]=(P(ints, isa, 0)-0.5*(P(ints, isa, 1)+P(ints, isa, 2)))*alpha2;
-			break;
-		case 4:
-			pgx[isa]=(P(ints, isa, 0)-P(ints, isa, 1)
-				+P(ints, isa, 2)-P(ints, isa, 3))*alpha2;
-			pgy[isa]=(P(ints, isa, 0)+P(ints, isa, 1)
-				-P(ints, isa, 2)-P(ints, isa, 3))*alpha2;
-			break;
+		if(pywfs->raw){
+			for(int iside=0; iside<pyside; iside++){
+				P(grad,isa+nsa*iside)=P(ints, isa, iside)*alpha2;
+			}
+		}else{
+			switch(pyside){
+			case 3:
+				pgx[isa]=(P(ints, isa, 1)-P(ints, isa, 2))*alpha2*triscalex;
+				pgy[isa]=(P(ints, isa, 0)-0.5*(P(ints, isa, 1)+P(ints, isa, 2)))*alpha2;
+				break;
+			case 4:
+				pgx[isa]=(P(ints, isa, 0)-P(ints, isa, 1)
+					+P(ints, isa, 2)-P(ints, isa, 3))*alpha2;
+				pgy[isa]=(P(ints, isa, 0)+P(ints, isa, 1)
+					-P(ints, isa, 2)-P(ints, isa, 3))*alpha2;
+				break;
+			}
 		}
 	}
 
@@ -700,7 +708,8 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 	dmat* opd=dnew(loc->nloc, 1);
 	dmat* ints=0;
 	long nsa=P(pywfs->si,0)->nx;
-	dmat* out=dnew(nsa*2, 2);
+	const int ng=pywfs->raw?pywfs->nside:2;
+	dmat* out=dnew(nsa*ng, 2);
 	dmat* gradx=drefcols(out, 0, 1);
 	dmat* grady=drefcols(out, 1, 1);
 
@@ -775,6 +784,8 @@ static uint32_t pywfs_hash(const pywfs_t* pywfs, uint32_t key){
 	if(pywfs->pupilshift){
 		key=dhash(pywfs->pupilshift, key);
 	}
+	key=hashlittle(&pywfs->raw, sizeof(int), key);
+	key=hashlittle(&pywfs->nside, sizeof(int), key);
 	return key;
 }
 /**
@@ -791,7 +802,8 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 	}
 #endif
 	const int nsa=P(pywfs->si,0)->nx;
-	dmat* grad0=dnew(nsa*2, 1);
+	const int ng=pywfs->raw?pywfs->nside:2;
+	dmat* grad0=dnew(nsa*ng, 1);
 	dmat* opd0;
 	if(pywfs->opdadd){
 		opd0=dref(pywfs->opdadd);
@@ -808,7 +820,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 	}
 	unsigned int count=0;
 	const int nmod=mod?NY(mod):locin->nloc;
-	dmat* ggd=dnew(nsa*2, nmod);
+	dmat* ggd=dnew(nsa*ng, nmod);
 	if(mod&&NX(mod)!=locin->nloc){
 		error("NX(mod) must equal to %ld", locin->nloc);
 	}

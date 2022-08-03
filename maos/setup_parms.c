@@ -1224,6 +1224,7 @@ static void readcfg_dbg(parms_t *parms){
 	READ_DMAT(dbg.pwfs_psx);
 	READ_DMAT(dbg.pwfs_psy);
 	READ_INT(dbg.pwfs_side);
+	READ_INT(dbg.pwfs_raw);
 	READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate/=206265000.;
 	READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv/=206265000.;
 	READ_DBL(dbg.pwfs_pupelong);
@@ -1568,7 +1569,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 		powfsi->order=ceil(parms->aper.d/powfsi->dsa);
-
+		parms->powfs[ipowfs].ng=(parms->powfs[ipowfs].type==WFS_PY&&parms->dbg.pwfs_raw)?parms->dbg.pwfs_side:2;
 		{
 			/*Adjust dx if the subaperture does not contain integer, even number of points.*/
 			const real dsa=parms->powfs[ipowfs].dsa;

@@ -166,7 +166,7 @@ cs* X(ss_multiply) (const cs* A, const cs* B){
 		return (NULL);      /* check inputs */
 	}
 	if(A->ny!=B->nx){
-		error("Matrix mismatch\n");
+		error("Matrix mismatch: A->ny=%ld != B->nx=%ld\n", A->ny, B->nx);
 		return (NULL);
 	}
 	m=A->nx; anz=A->pp[A->ny];

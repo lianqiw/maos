@@ -575,50 +575,43 @@ void FitL(dcell** xout, const void* A,
 /**
  * Convert column vector nsax2 or nsax3 to sparse matrix. The third column of nea is coupling.
  * ll: controls lower left
- * uu: controls upper right 
+ * ur: controls upper right 
  */
-dsp* nea2sp(dmat* nea, int ll, int ur){
-	if(NY(nea)!=2 && NY(nea)!=3){
+dsp* nea2sp(dmat* nea, int ll, int ur, int ng){
+	if(NY(nea) != ng && NY(nea)!=3){
 		error("nea has wrong format:%ldx%ld. Expect 2 or 3 columns.\n", NX(nea), NY(nea));
 	}
-	if(NY(nea)<3){//not available
+	if(NY(nea)==ng){//off-diagonal not available
 		ll=0;
 		ur=0;
 	}
 	const long nsa=NX(nea);
-	dsp* sanea=dspnew(nsa*2, nsa*2, (2+(ll?1:0)+(ur?1:0))*nsa);
+	dsp* sanea=dspnew(nsa*ng, nsa*ng, (ng+(ll?1:0)+(ur?1:0))*nsa);
 	spint* pp=sanea->pp;
 	spint* pi=sanea->pi;
 	real* px=sanea->px;
 	long count=0;
-	
-	for(long isa=0; isa<nsa; isa++){
-		pp[isa]=count;
-		/*Cxx */
-		pi[count]=isa;
-		px[count]=P(nea, isa, 0);
-		count++;
-		if(ll){
-		/*Cyx */
-			pi[count]=isa+nsa;
-			px[count]=P(nea, isa, 2);
-			count++;
+	for(long ig=0; ig<ng; ig++){
+		for(long isa=0; isa<nsa; isa++){
+			pp[isa+nsa*ig]=count;
+			if(ig==1 && ur){/*Cxy */
+				pi[count]=isa;
+				px[count]=P(nea, isa, 2);
+				count++;
+			}
+			{/*Cxx */
+				pi[count]=isa+nsa*ig;
+				px[count]=P(nea, isa, ig);
+				count++;
+			}
+			if(ig==0 && ll){/*Cyx */
+				pi[count]=isa+nsa;
+				px[count]=P(nea, isa, 2);
+				count++;
+			}
 		}
 	}
-	for(long isa=0; isa<nsa; isa++){
-		pp[isa+nsa]=count;
-		if(ur){
-			/*Cxy */
-			pi[count]=isa;
-			px[count]=P(nea, isa, 2);
-			count++;
-		}
-		/*Cyy */
-		pi[count]=isa+nsa;
-		px[count]=P(nea, isa, 1);
-		count++;
-	}
-	pp[nsa*2]=count;
+	pp[nsa*ng]=count;
 	if(count>sanea->nzmax){
 		error("memory overflow\n");
 	}

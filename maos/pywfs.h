@@ -32,6 +32,7 @@ typedef struct pywfs_t{
     int modulring;     /**<Number of rings within the maximum radius to modulate*/
     int iwfs0;         /**<First iwfs for this powfs*/
     int nside;         /**<Number of sides*/
+    int raw;           /**<use normalized ints as gradient*/
     int gpu;           /**<Whether GPU can be used*/
     dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/

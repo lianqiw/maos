@@ -210,11 +210,13 @@ def mysqrt(x):
         return np.sqrt(x)
 
 def rss(*args):
+    '''compute rss of input'''
     arr=np.array(args)
-    return mysqrt(np.sum(np.sign(arr)* arr**2))
+    return mysqrt(np.sum(np.real(np.sign(arr)*arr*np.conj(arr))))
 def rms(*args):
+    '''compute rms of input'''
     arr=np.array(args)
-    return np.sqrt(np.mean(arr**2))
+    return np.sqrt(np.mean(np.real(arr*np.conj(arr))))
     
 def styles(ii):
     reset_color()
@@ -247,6 +249,7 @@ def figure(*args, **kargs):
 
     
 def width_at(x, y, height):
+    '''compute width of 1d function defined on x above a threshold height'''
     return len(np.argwhere(y>=max(y)*height))*(x[1]-x[0])
 
 def cellsum(x):
@@ -259,6 +262,7 @@ def cellsum(x):
 
 #remove tip/tilt/focus from gradients
 def grad_ttfr(grad, saloc):
+    '''remove tip/tilt/focus move from gradients defined on subaperture location saloc'''
     if grad.dtype==object:
         gv=np.empty(grad.shape, dtype=object)
         print(gv.shape)
@@ -293,12 +297,14 @@ def grad_ttfr(grad, saloc):
     return g2v
 #remove zernike modes from rmin to rmax from 1-D OPD and loc
 def opd_loc_project_zernike(opd, loc, rmin, rmax, radonly=0):
+    '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
     D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
     mod=zernike(loc, D, rmin, rmax, radonly).T
     rmod=np.linalg.pinv(mod)
     return mod@(rmod@opd)
     
 def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
+    '''Remove zernike mode between rmin and rmax from opd which is defined on loc'''
     D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
     mod=zernike(loc, D, rmin, rmax, radonly).T
     rmod=np.linalg.pinv(mod)
@@ -322,8 +328,10 @@ def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
     #opd2[mask]=opd[mask]-mod@(rmod@opd[mask])
     return opd2
 def opd_loc_remove_focus(opd, loc):
+    '''Remove focus mode from opd which is defined on loc'''
     return opd_loc_remove_zernike(2,2,1)
 def read_many(fdin):
+    '''read many files together'''
     fds2=natsorted(glob.glob(fdin,recursive=1))
     fds=[]
     res=[]
@@ -337,6 +345,7 @@ def read_many(fdin):
             pass
     return simplify(np.array(res)),fds
 def read_many_dict(fdin):
+    '''read many files together into a dictionary'''
     fds2=natsorted(glob.glob(fdin,recursive=1))
     res={}
     for fd in fds2: 
@@ -347,11 +356,12 @@ def read_many_dict(fdin):
             pass
     return res
 def eye(nx, val=1):
+    """create an identity matrix"""
     dd=np.zeros((nx,nx))
     np.fill_diagonal(dd, val)
     return dd
 def svd_inv(A, thres=0, tikcr=0):
-    '''svd_inv(A, thres=0, tikcr=0)'''
+    '''SVD inversion of matrix: svd_inv(A, thres=0, tikcr=0)'''
     u,s,v=np.linalg.svd(A)
     if tikcr>0:
         u,s,v=np.linalg.svd(A+eye(A.shape[0], s[0]*tikcr))

@@ -1115,8 +1115,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 				real dispx=ht*parms->wfsr[iwfs].thetax;
 				real dispy=ht*parms->wfsr[iwfs].thetay;
 				prop_nongrid(P(recon->aloc, idm), P(P(recon->dither_m, idm)),
-					powfs[ipowfs].loc, P(opd),
-					-1, dispx, dispy, scale, 0, 0);
+					powfs[ipowfs].loc, P(opd),-1, dispx, dispy, scale, 0, 0);
 				dmat* ints=0;
 				dmat* grad=0;
 				pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);

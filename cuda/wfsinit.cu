@@ -456,8 +456,9 @@ void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		int nsa=powfs[ipowfs].saloc->nloc;
 		//gradacc is used for accumulation in geom mode and for output in phy mode
-		initzero(cuwfs[iwfs].gradacc, nsa*2, 1);
-		initzero(cuwfs[iwfs].gradcalc, nsa*2, 1);
+		int ng=parms->powfs[ipowfs].ng;
+		initzero(cuwfs[iwfs].gradacc, nsa*ng, 1);
+		initzero(cuwfs[iwfs].gradcalc, nsa*ng, 1);
 		if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].dither){
 			if(!cuwfs[iwfs].ints){
 				if(parms->powfs[ipowfs].type==WFS_PY){//PYWFS

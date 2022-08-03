@@ -1177,7 +1177,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
-					const int ng=powfs[ipowfs].saloc->nloc*2;
+					const int ng=powfs[ipowfs].saloc->nloc*parms->powfs[ipowfs].ng;
 					if(!P(simu->gradscale, iwfs)){
 						P(simu->gradscale, iwfs)=dnew(ng, 1);
 						dset(P(simu->gradscale, iwfs), parms->powfs[ipowfs].gradscale);

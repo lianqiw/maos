@@ -646,13 +646,14 @@ setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const long nsa=powfs[ipowfs].saloc->nloc;
+		const int ng=parms->powfs[ipowfs].ng;
 		dcell* nea=0;
 		//if(parms->powfs[ipowfs].neaphy || parms->powfs[ipowfs].phystep>-1){
 		if(powfs[ipowfs].sanea){
 			info("Use sanea to derive neasim\n");
 			nea=dcelldup(powfs[ipowfs].sanea);
 			for(int ii=0; ii<NX(nea); ii++){
-				nea_chol(&P(nea, ii), P(nea, ii));
+				nea_chol(&P(nea, ii), P(nea, ii),ng);
 			}
 		} else{
 			//neasimfile/neareconfile is saved by skyc in rad, not in rad^2.
@@ -666,7 +667,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 		}
 		if(nea){
 			for(int ii=0; ii<NX(nea)*NY(nea); ii++){
-				check_nea(P(nea, ii), nsa);
+				nea_check(P(nea, ii), nsa, ng);
 			}
 		} else{
 			int nnea=powfs[ipowfs].loc_tel?parms->powfs[ipowfs].nwfs:1;

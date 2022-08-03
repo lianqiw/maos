@@ -41,6 +41,11 @@ extern "C"{
     grad[i]=(ints[i+nsa]-ints[nsa*2+i])*alpha*triscalex-goff[i]; \
     grad[i+nsa]=(ints[i]-0.5*(ints[i+nsa]+ints[nsa*2+i]))*alpha-goff[i+nsa]
 
+#define PYWFSR_GRAD_CALC\
+	for(int ig=0; ig<ng; ig++){\
+		grad[nsa*ig+i]=ints[nsa*ig+i]*alpha;\
+	}
+//4 side pyramid
 __global__ static void
 pywfs4_grad_0_do(Real* grad, const Real* ints, const Real* saa, const Real siglev, const Real* goff, Real gain, int nsa){
 	const Real alpha0=gain/siglev;
@@ -64,6 +69,7 @@ pywfs4_grad_2_do(Real* grad, const Real* ints, const Real* saa, const Real* isum
 		PYWFS4_GRAD_CALC;
 	}
 }
+//3 side pyramid
 __global__ static void
 pywfs3_grad_0_do(Real* grad, const Real* ints, const Real* saa, const Real siglev, const Real* goff, Real gain, int nsa){
 	const Real alpha0=gain/siglev;
@@ -87,53 +93,81 @@ pywfs3_grad_2_do(Real* grad, const Real* ints, const Real* saa, const Real* isum
 		PYWFS3_GRAD_CALC;
 	}
 }
-
+//RAW: use normalized ints as grads
+__global__ static void
+pywfsr_grad_0_do(Real *grad, const Real *ints, const Real *saa, const Real siglev, const Real *goff, Real gain, int nsa,int ng){
+	const Real alpha0=gain/siglev;
+	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<nsa; i+=blockDim.x*gridDim.x){
+		const Real alpha=alpha0/saa[i];
+		PYWFSR_GRAD_CALC;
+	}
+}
+__global__ static void
+pywfsr_grad_1_do(Real *grad, const Real *ints, const Real *saa, const Real *goff, Real gain, int nsa,int ng){
+	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<nsa; i+=blockDim.x*gridDim.x){
+		Real sumi=0;
+		for(int ig=0; ig<ng; ig++){
+			sumi+=ints[i+nsa*ig];
+		}
+		const Real alpha=gain/sumi;
+		PYWFSR_GRAD_CALC;
+	}
+}
+__global__ static void
+pywfsr_grad_2_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, const Real *goff, Real gain, int nsa, int ng){
+	const Real alpha0=gain*nsa/(*isum);
+	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<nsa; i+=blockDim.x*gridDim.x){
+		const Real alpha=alpha0/saa[i];
+		PYWFSR_GRAD_CALC;
+	}
+}
 void pywfs_grad(curmat& grad, /**<[out] gradients*/
-	const curmat& ints, /**<[in] Intensity*/
-	const curmat& saa,  /**<[in] Subaperture normalized area*/
-	curmat& isum, /**<[out] Sum intensity*/
-	const curmat& goff, /**<[in] Gradient of flat wavefront*/
-	const pywfs_t* pywfs,
-	cudaStream_t stream){
+		const curmat& ints, /**<[in] Intensity*/
+		const curmat& saa,  /**<[in] Subaperture normalized area*/
+		curmat& isum, /**<[out] Sum intensity*/
+		const curmat& goff, /**<[in] Gradient of flat wavefront*/
+		const pywfs_t* pywfs,
+		cudaStream_t stream){
+	const int ng=pywfs->raw?pywfs->nside:2;
 	switch(pywfs->sigmatch){
 	case 0://No siglev correction
 		info_once("No siglev correction\n");
-		switch(pywfs->nside){
-		case 3:
+		if(pywfs->raw){
+			pywfsr_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+				(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx(),ng);
+		}else if(pywfs->nside==3){
 			pywfs3_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx());
-			break;
-		case 4:
+		}else if(pywfs->nside==4){
 			pywfs4_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx());
-			break;
 		}
 		break;
 	case 1:
 		info_once("Individual correction\n");
-		switch(pywfs->nside){
-		case 3:
+		if(pywfs->raw){
+			pywfsr_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+				(grad, ints, saa, goff, pywfs->gain, ints.Nx(),ng);
+		}else if(pywfs->nside==3){
 			pywfs3_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, goff, pywfs->gain, ints.Nx());
-			break;
-		case 4:
+		}else if(pywfs->nside==4){
 			pywfs4_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, goff, pywfs->gain, ints.Nx());
-			break;
 		}
 		break;
 	case 2:
 		info_once("Global correction (preferred);\n");
 		cursum2(isum, ints, stream);//sum of ints
-		switch(pywfs->nside){
-		case 3:
+		if(pywfs->raw){
+			pywfsr_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+				(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx(),ng);
+		}else if(pywfs->nside==3){
 			pywfs3_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
-			break;
-		case 4:
+		}else if(pywfs->nside==4){
 			pywfs4_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
-			break;
 		}
 		break;
 	default:
@@ -283,8 +317,9 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	culoc_t culocout(locfft);
 	const int nsa=cupowfs->saloc.Nloc();
 	curmat ints(nsa, pywfs->nside);
-	curmat grad(nsa*2, 1);
-	curmat grad0(nsa*2, 1);
+	const int ng=pywfs->raw?pywfs->nside:2;
+	curmat grad(nsa*ng, 1);
+	curmat grad0(nsa*ng, 1);
 	cuzero(ints, stream);
 	curadd(phiout, 1, phiout0, 1, stream);
 	pywfs_ints(ints, phiout, cuwfs, siglev);
@@ -293,7 +328,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	//cuwrite(grad0, stream, "grad0_gpu");
 	//cuwrite(ints, stream, "ints0_gpu");
 	const int nmod=mod?mod->ny:locin->nloc;
-	dmat* ggd=dnew(nsa*2, nmod);
+	dmat* ggd=dnew(nsa*ng, nmod);
 
 	for(int imod=0; imod<nmod; imod++){
 		Real poke=pywfs->poke;
