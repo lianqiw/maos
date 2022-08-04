@@ -196,6 +196,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memItemLeft" align="right" valign="top"><a id="a825b7a63a48fc88a5c00e7ffd20b739b"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg_time</b>(level,  format, ...)&#160;&#160;&#160;logstd_color(level, YELLOW, &quot;[%s]%s: &quot; format, <a class="el" href="sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), __func__, ##__VA_ARGS__)</td></tr>
 <tr class="separator:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c4f6455d41cb73b1d3f6d415b36565f"><td class="memItemLeft" align="right" valign="top"><a id="a6c4f6455d41cb73b1d3f6d415b36565f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_line</b>(format, ...)&#160;&#160;&#160;logstd_color(0, YELLOW, &quot;Debug(%s:%d): &quot; format ,BASEFILE,__LINE__,##__VA_ARGS__)</td></tr>
+<tr class="separator:a6c4f6455d41cb73b1d3f6d415b36565f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f66603a37f378b1bc4d794c34526973"><td class="memItemLeft" align="right" valign="top"><a id="a7f66603a37f378b1bc4d794c34526973"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_time</b>(A...)&#160;&#160;&#160;logdbg_time(0, A)</td></tr>
 <tr class="separator:a7f66603a37f378b1bc4d794c34526973"><td class="memSeparator" colspan="2">&#160;</td></tr>

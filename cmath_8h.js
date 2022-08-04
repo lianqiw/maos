@@ -267,7 +267,8 @@ var cmath_8h =
     [ "cfft2s", "cmath_8h.html#a9ee95d19c60ca917f6f61708ff6544b6", null ],
     [ "cfft2partial", "cmath_8h.html#ab3159a1cba08cacee28341ac4fc74cd9", null ],
     [ "cffttreat", "cmath_8h.html#a7b04bda35e161da1cb91a619fcf46829", null ],
-    [ "ccell_fft2", "cmath_8h.html#a9daebd09bb4e95e852c03038eea0434a", null ],
-    [ "cfft1plan_r2hc", "cmath_8h.html#a238ee5c810495f41e97080a9398d77cb", null ],
-    [ "cfft1", "cmath_8h.html#a5c08bbf44dd8738f12469ee4d7adb30c", null ]
+    [ "dfft_free_plan", "cmath_8h.html#aae8fee69c712490f1929a7a4f1d63d47", null ],
+    [ "dcell_fft2", "cmath_8h.html#ab2e05ad023fa279a021fe4d78e2e164f", null ],
+    [ "dfft1plan_r2hc", "cmath_8h.html#a5baf540c57c23d758fd1b123539866f7", null ],
+    [ "dfft1", "cmath_8h.html#a5aa34b0d84643af55e8e7dcb07d80000", null ]
 ];

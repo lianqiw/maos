@@ -125,7 +125,6 @@ var searchData=
   ['cgtmp_5ft',['cgtmp_t',['../classcuda__recon_1_1cgtmp__t.html',1,'cuda_recon']]],
   ['cgwarm',['cgwarm',['../parms_8h.html#ab498d7546c0f2bd3ef637b95cf3815bc',1,'tomo_cfg_t::cgwarm()'],['../parms_8h.html#a0738094a8c492bb5a64a34b07e581acd',1,'fit_cfg_t::cgwarm()'],['../parms_8h.html#ab835223b0f4bbf4e4c8f6ca05b979154',1,'lsr_cfg_t::cgwarm()']]],
   ['chash',['chash',['../cmath_8h.html#a2ed7b4dbda308400bef750ae292a011b',1,'ctmp.c']]],
-  ['check_5fnea',['check_nea',['../recon__utils_8h.html#ae988b19359343246c5c05ffe6000caa0',1,'setup_recon.c']]],
   ['check_5fsuffix',['check_suffix',['../sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de',1,'misc.c']]],
   ['chol_2eh',['chol.h',['../chol_8h.html',1,'']]],
   ['chol_5fconvert',['chol_convert',['../chol_8h.html#ad676f4d815948a8ca80f5a85e3a89c70',1,'chol.c']]],

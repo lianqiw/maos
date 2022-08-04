@@ -34,6 +34,7 @@ var parms_8h_structdbg__cfg__t =
     [ "pwfs_flatv", "parms_8h.html#a86cce69c5f6ec213c6b2131c8aac09cc", null ],
     [ "pwfs_pupelong", "parms_8h.html#ac08de94a88488ca5f106a8db93990bc4", null ],
     [ "pwfs_side", "parms_8h.html#ae3deb092bfe5dc3a50b83e5cf260386a", null ],
+    [ "pwfs_raw", "parms_8h.html#ae75085a11958558ad3a91823d596fc65", null ],
     [ "dmoff", "parms_8h.html#a5fd3fe216f7e8580569b3b23b5fa90f7", null ],
     [ "gradoff", "parms_8h.html#a3ea6a96df4168e2e1a6fdf823080040f", null ],
     [ "twfsflag", "parms_8h.html#ac146f818a483505d0b26f65a0e45b151", null ],

@@ -38,6 +38,7 @@ var searchData=
   ['nembed',['nembed',['../structcupowfs__t.html#a4811843f646256d6056c44fd3c212f87',1,'cupowfs_t::nembed()'],['../cn2est_8h.html#af0048c6171e8397dda90603d89c2e44f',1,'cn2est_t::nembed()'],['../locfft_8h.html#a2d8185a707d0395fb77c7e2eb5598f62',1,'locfft_t::nembed()']]],
   ['nevl',['nevl',['../parms_8h.html#a409f89d4f375f44c8d12fde411cee215',1,'evl_cfg_t']]],
   ['nfit',['nfit',['../parms_8h.html#af1a85154e53005746da5ebc3436a63fb',1,'fit_cfg_t']]],
+  ['ng',['ng',['../parms_8h.html#abb349e921acd3f558dad1d163e868d53',1,'powfs_cfg_t']]],
   ['ngcov',['ngcov',['../parms_8h.html#a5c1842cb554ddd94daa285d4fc3486c4',1,'save_cfg_t']]],
   ['ngpu',['ngpu',['../parms_8h.html#af23c42a9b0647dbad3464fd349bcf2f2',1,'arg_t']]],
   ['ngpu2',['ngpu2',['../parms_8h.html#a7356cd98a8c2d8b193ed97a1ab568b29',1,'arg_t']]],

@@ -76,6 +76,7 @@ var searchData=
   ['pwfs_5fpsx',['pwfs_psx',['../parms_8h.html#ae639b8d6520afe65e17477936c005586',1,'dbg_cfg_t']]],
   ['pwfs_5fpsy',['pwfs_psy',['../parms_8h.html#a8e1c36384416b4875ece10a3b634a583',1,'dbg_cfg_t']]],
   ['pwfs_5fpupelong',['pwfs_pupelong',['../parms_8h.html#ac08de94a88488ca5f106a8db93990bc4',1,'dbg_cfg_t']]],
+  ['pwfs_5fraw',['pwfs_raw',['../parms_8h.html#ae75085a11958558ad3a91823d596fc65',1,'dbg_cfg_t']]],
   ['pwfs_5fside',['pwfs_side',['../parms_8h.html#ae3deb092bfe5dc3a50b83e5cf260386a',1,'dbg_cfg_t']]],
   ['pyramid',['pyramid',['../pywfs_8h.html#aee96eeac0e08462d90b62d877b9d0f9c',1,'pywfs_t']]],
   ['pywfs',['pywfs',['../maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93',1,'powfs_t']]]

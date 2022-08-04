@@ -740,15 +740,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cspmulsp2</b> (<a cla
 <tr class="separator:ab3159a1cba08cacee28341ac4fc74cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b04bda35e161da1cb91a619fcf46829"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a7b04bda35e161da1cb91a619fcf46829">cffttreat</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
 <tr class="separator:a7b04bda35e161da1cb91a619fcf46829"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9daebd09bb4e95e852c03038eea0434a"><td class="memItemLeft" align="right" valign="top"><a id="a9daebd09bb4e95e852c03038eea0434a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ccell_fft2</b> (<a class="el" href="type_8h.html#structccell">ccell</a> *dc, int dir)</td></tr>
-<tr class="separator:a9daebd09bb4e95e852c03038eea0434a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a238ee5c810495f41e97080a9398d77cb"><td class="memItemLeft" align="right" valign="top"><a id="a238ee5c810495f41e97080a9398d77cb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1plan_r2hc</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *out, int dir)</td></tr>
-<tr class="separator:a238ee5c810495f41e97080a9398d77cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c08bbf44dd8738f12469ee4d7adb30c"><td class="memItemLeft" align="right" valign="top"><a id="a5c08bbf44dd8738f12469ee4d7adb30c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, int dir)</td></tr>
-<tr class="separator:a5c08bbf44dd8738f12469ee4d7adb30c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae8fee69c712490f1929a7a4f1d63d47"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aae8fee69c712490f1929a7a4f1d63d47">dfft_free_plan</a> (struct fft_t *fft)</td></tr>
+<tr class="separator:aae8fee69c712490f1929a7a4f1d63d47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2e05ad023fa279a021fe4d78e2e164f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ab2e05ad023fa279a021fe4d78e2e164f">dcell_fft2</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> *dc, int dir)</td></tr>
+<tr class="separator:ab2e05ad023fa279a021fe4d78e2e164f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5baf540c57c23d758fd1b123539866f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a5baf540c57c23d758fd1b123539866f7">dfft1plan_r2hc</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *out, int dir)</td></tr>
+<tr class="separator:a5baf540c57c23d758fd1b123539866f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5aa34b0d84643af55e8e7dcb07d80000"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a5aa34b0d84643af55e8e7dcb07d80000">dfft1</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, int dir)</td></tr>
+<tr class="separator:a5aa34b0d84643af55e8e7dcb07d80000"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="abb2b86ffc48237c760e652708aaf1415"></a>
@@ -5912,6 +5911,112 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cfft1</b> (<a class="
       </table>
 </div><div class="memdoc">
 <p>returns IFFT(fftshift(FFT(A))) </p>
+
+</div>
+</div>
+<a id="aae8fee69c712490f1929a7a4f1d63d47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae8fee69c712490f1929a7a4f1d63d47">&#9670;&nbsp;</a></span>dfft_free_plan()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dfft_free_plan </td>
+          <td>(</td>
+          <td class="paramtype">fft_t *&#160;</td>
+          <td class="paramname"><em>fft</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Free FFTW plans. </p>
+
+</div>
+</div>
+<a id="ab2e05ad023fa279a021fe4d78e2e164f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2e05ad023fa279a021fe4d78e2e164f">&#9670;&nbsp;</a></span>dcell_fft2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dcell_fft2 </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
+          <td class="paramname"><em>dc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>dir</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Do FFT based on a 2 element cell array that contains real/imaginary parts respectively. </p>
+
+</div>
+</div>
+<a id="a5baf540c57c23d758fd1b123539866f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5baf540c57c23d758fd1b123539866f7">&#9670;&nbsp;</a></span>dfft1plan_r2hc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dfft1plan_r2hc </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>dir</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create a fftw plan for 1d real to real FFT. </p>
+
+</div>
+</div>
+<a id="a5aa34b0d84643af55e8e7dcb07d80000"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5aa34b0d84643af55e8e7dcb07d80000">&#9670;&nbsp;</a></span>dfft1()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dfft1 </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>dir</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Do 1d real to real FFT. </p>
 
 </div>
 </div>

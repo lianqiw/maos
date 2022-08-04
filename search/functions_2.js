@@ -97,7 +97,6 @@ var searchData=
   ['cgauss_5ffit',['cgauss_fit',['../cmath_8h.html#a027a0fda383088c50bcebac7b6bf2a89',1,'ctmp.c']]],
   ['cgauss_5fwidth',['cgauss_width',['../cmath_8h.html#a2ab4f2a4155bba498f4a5c54a0c5fc1d',1,'ctmp.c']]],
   ['chash',['chash',['../cmath_8h.html#a2ed7b4dbda308400bef750ae292a011b',1,'ctmp.c']]],
-  ['check_5fnea',['check_nea',['../recon__utils_8h.html#ae988b19359343246c5c05ffe6000caa0',1,'setup_recon.c']]],
   ['check_5fsuffix',['check_suffix',['../sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de',1,'misc.c']]],
   ['chol_5fconvert',['chol_convert',['../chol_8h.html#ad676f4d815948a8ca80f5a85e3a89c70',1,'chol.c']]],
   ['chol_5ffactorize',['chol_factorize',['../chol_8h.html#a7d6f48a409c439318634f2627356c4b3',1,'chol.c']]],

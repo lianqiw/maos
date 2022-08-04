@@ -10,6 +10,7 @@ var searchData=
   ['radgx',['radgx',['../parms_8h.html#aa92dec25643fad0a7ca921dfb8561e0f',1,'powfs_cfg_t']]],
   ['radpix',['radpix',['../mkdtf_8h.html#ae99947a455a836518b0efc123fc76d49',1,'dtf_t::radpix()'],['../parms_8h.html#ab65cc300544ae140930343e96b5422e4',1,'powfs_cfg_t::radpix()']]],
   ['radpixtheta',['radpixtheta',['../parms_8h.html#aa79332f6ce41159a7568cdcd2d877296',1,'powfs_cfg_t']]],
+  ['raw',['raw',['../pywfs_8h.html#a618e8115e0f317a83d339288650d71a8',1,'pywfs_t']]],
   ['read_5fheader',['read_header',['../bin_8h.html#adae7a5ada62a1a4bb2f5934e2ebc538f',1,'bin.c']]],
   ['readbin',['readbin',['../cell_8h.html#ab19dbf41490724c2f3d7897c8fd6995b',1,'cell.h']]],
   ['readcfg_2eh',['readcfg.h',['../readcfg_8h.html',1,'']]],

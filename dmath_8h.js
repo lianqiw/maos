@@ -242,14 +242,5 @@ var dmath_8h =
     [ "dspblockextract", "dmath_8h.html#a4bc029bf273d20d389f4838dacd14c67", null ],
     [ "dspcell2m", "dmath_8h.html#ac716fb6fe015c64532686f9222001cf3", null ],
     [ "dspwritedata", "dmath_8h.html#a9d997c0860c24949a42180f0540450a6", null ],
-    [ "dspreaddata", "dmath_8h.html#a2ba9dc8e8213b56b1395c8a63313774f", null ],
-    [ "dfft_free_plan", "dmath_8h.html#aae8fee69c712490f1929a7a4f1d63d47", null ],
-    [ "dfft2", "dmath_8h.html#a0b6d11a5ec5ecb73e6c2e9a5e959f2dc", null ],
-    [ "dfft2i", "dmath_8h.html#a38afeb57037455a29a0095d76c58b9bb", null ],
-    [ "dfft2s", "dmath_8h.html#a66ac90a23dd14b71b0ed8cfddf0f38f3", null ],
-    [ "dfft2partial", "dmath_8h.html#a4a26429769c37ba96cda972fb301757e", null ],
-    [ "dffttreat", "dmath_8h.html#a05fd6e3f6783c6ac34c2931334708496", null ],
-    [ "dcell_fft2", "dmath_8h.html#ab2e05ad023fa279a021fe4d78e2e164f", null ],
-    [ "dfft1plan_r2hc", "dmath_8h.html#a5baf540c57c23d758fd1b123539866f7", null ],
-    [ "dfft1", "dmath_8h.html#a5aa34b0d84643af55e8e7dcb07d80000", null ]
+    [ "dspreaddata", "dmath_8h.html#a2ba9dc8e8213b56b1395c8a63313774f", null ]
 ];

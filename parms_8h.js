@@ -199,7 +199,8 @@ var parms_8h =
       [ "zoomset", "parms_8h.html#a5aea9dc5cc99570a54fd28232ea55b37", null ],
       [ "modulate", "parms_8h.html#ab79f6d4014453311d2cfe27f8a588971", null ],
       [ "modulpos", "parms_8h.html#a28a43c12b79d409c563e2591e4d538b6", null ],
-      [ "modulring", "parms_8h.html#a2bdb4ad90002240b3fde97901f61a6e5", null ]
+      [ "modulring", "parms_8h.html#a2bdb4ad90002240b3fde97901f61a6e5", null ],
+      [ "ng", "parms_8h.html#abb349e921acd3f558dad1d163e868d53", null ]
     ] ],
     [ "wfs_cfg_t", "parms_8h.html#structwfs__cfg__t", [
       [ "wvlwts", "parms_8h.html#af15d8288b79591828c56e42a21ff6b93", null ],
@@ -487,6 +488,7 @@ var parms_8h =
       [ "pwfs_flatv", "parms_8h.html#a86cce69c5f6ec213c6b2131c8aac09cc", null ],
       [ "pwfs_pupelong", "parms_8h.html#ac08de94a88488ca5f106a8db93990bc4", null ],
       [ "pwfs_side", "parms_8h.html#ae3deb092bfe5dc3a50b83e5cf260386a", null ],
+      [ "pwfs_raw", "parms_8h.html#ae75085a11958558ad3a91823d596fc65", null ],
       [ "dmoff", "parms_8h.html#a5fd3fe216f7e8580569b3b23b5fa90f7", null ],
       [ "gradoff", "parms_8h.html#a3ea6a96df4168e2e1a6fdf823080040f", null ],
       [ "twfsflag", "parms_8h.html#ac146f818a483505d0b26f65a0e45b151", null ],

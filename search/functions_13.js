@@ -8,7 +8,7 @@ var searchData=
   ['wfsgrad_5fpost',['wfsgrad_post',['../sim_8h.html#a96035f15795975f539aaac8050d89b88',1,'wfsgrad.c']]],
   ['wfsints',['wfsints',['../sim_8h.html#a4aa8e0cc5984b2881e54c0000ae754ae',1,'wfsints.c']]],
   ['wfslinearity',['wfslinearity',['../maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5',1,'utils.c']]],
-  ['wfspupmask',['wfspupmask',['../setup__powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f',1,'setup_powfs.c']]],
+  ['wfspupmask',['wfspupmask',['../powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f',1,'powfs.c']]],
   ['write_5fheader',['write_header',['../bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e',1,'bin.c']]],
   ['writearr',['writearr',['../bin_8h.html#a546b25cd4878494b18d9af3f929042ba',1,'bin.c']]],
   ['writebin_5fheader',['writebin_header',['../cell_8h.html#a2c7af1f7b98e0be507434eebb94afc49',1,'cell.c']]],

@@ -8,6 +8,7 @@ var pywfs_8h_structpywfs__t =
     [ "modulring", "pywfs_8h.html#a2b1ffe55318ce98df952ece9110b96eb", null ],
     [ "iwfs0", "pywfs_8h.html#a89978edc12c2761bf8cda0fc5b31281e", null ],
     [ "nside", "pywfs_8h.html#a124b1bc353888ec30a8eef9551d43c63", null ],
+    [ "raw", "pywfs_8h.html#a618e8115e0f317a83d339288650d71a8", null ],
     [ "gpu", "pywfs_8h.html#aea7b10710994fc11ffb7259f75fb21ae", null ],
     [ "wvlwts", "pywfs_8h.html#ac3b17ade068b4bd758a0317a619e72da", null ],
     [ "loc", "pywfs_8h.html#a784fc485fd9cf7e0bd12b452a6953d40", null ],

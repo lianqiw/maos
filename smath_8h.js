@@ -242,14 +242,5 @@ var smath_8h =
     [ "sspblockextract", "smath_8h.html#af6e541d58a31b11b86c674b1ea36f107", null ],
     [ "sspcell2m", "smath_8h.html#a086c173e600838645899ed9890fb9684", null ],
     [ "sspwritedata", "smath_8h.html#ad1fb07fe18d545a1f186111799409def", null ],
-    [ "sspreaddata", "smath_8h.html#a4ff8484ceae7b9f079310dcd762faa93", null ],
-    [ "sfft_free_plan", "smath_8h.html#a33d44217669daf304b908c9cb0c30f7b", null ],
-    [ "sfft2", "smath_8h.html#abaa7467591e1161cc56d75188230e31a", null ],
-    [ "sfft2i", "smath_8h.html#a3ada3c429a29d4712df477c39327fd83", null ],
-    [ "sfft2s", "smath_8h.html#af0c980ace45f088ddd8763d7d45910eb", null ],
-    [ "sfft2partial", "smath_8h.html#a8333ba5af482fee4f02fe8b6bd2b7424", null ],
-    [ "sffttreat", "smath_8h.html#a1aef1f9b0de7c79eacbf3b7e91ea6946", null ],
-    [ "scell_fft2", "smath_8h.html#a1252f1bc587dcf2059560f212694ec3c", null ],
-    [ "sfft1plan_r2hc", "smath_8h.html#ad7c94891a46d47be9cbd55f628b146c6", null ],
-    [ "sfft1", "smath_8h.html#aabde1e3bc8237309ee414b097fb34c17", null ]
+    [ "sspreaddata", "smath_8h.html#a4ff8484ceae7b9f079310dcd762faa93", null ]
 ];

@@ -29,7 +29,7 @@ var thread_8h =
     [ "OMP_FOR", "thread_8h.html#a82d3687cb27dfe9ee3d7ed0bd3ac2586", null ],
     [ "OMP_FOR_COLLAPSE", "thread_8h.html#a51e37c5d8fc47fc5626fab2a04981756", null ],
     [ "OMP_TASK_FOR", "thread_8h.html#a1628cee339d0340bd8ff692035f135fa", null ],
-    [ "OMP_TASK_FOR_COLLAPSE", "thread_8h.html#a6b0e217bb3a9b706d04a4162232d34d4", null ],
+    [ "OMP_TASK_FOR_COLLAPSE", "thread_8h.html#a8effac8c329e233d5fa38ce3c90c6921", null ],
     [ "THREAD_POOL_INIT", "thread_8h.html#a69ae147f21aa19b9e8528cf665c8c143", null ],
     [ "QUEUE", "thread_8h.html#ab1d4c33237acfb7e3b6165ae68c13792", null ],
     [ "QUEUE_THREAD", "thread_8h.html#a4a87c9013710f08d5f111d08a4fa196d", null ],

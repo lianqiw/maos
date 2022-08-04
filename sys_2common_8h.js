@@ -32,6 +32,7 @@ var sys_2common_8h =
     [ "dbg3", "sys_2common_8h.html#a2e51e36b584b061b950ce05578aee507", null ],
     [ "dbg_once", "sys_2common_8h.html#a85bf8b7e73023c82d5e3474af826f6cb", null ],
     [ "logdbg_time", "sys_2common_8h.html#a825b7a63a48fc88a5c00e7ffd20b739b", null ],
+    [ "dbg_line", "sys_2common_8h.html#a6c4f6455d41cb73b1d3f6d415b36565f", null ],
     [ "dbg_time", "sys_2common_8h.html#a7f66603a37f378b1bc4d794c34526973", null ],
     [ "dbg2_time", "sys_2common_8h.html#abbd0891d9ca256fe2ae264ce78a91807", null ],
     [ "dbg3_time", "sys_2common_8h.html#af4d4cf56c4bf1313fb881373e3f58caa", null ],

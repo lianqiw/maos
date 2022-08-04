@@ -267,7 +267,8 @@ var zmath_8h =
     [ "zfft2s", "zmath_8h.html#aa797cbf755bc7b9239761a587538ad73", null ],
     [ "zfft2partial", "zmath_8h.html#a08641153120fa068f86563da42e9d76f", null ],
     [ "zffttreat", "zmath_8h.html#a34aaca84f7dfceb11749f53fd879bbb4", null ],
-    [ "zcell_fft2", "zmath_8h.html#a442aebfedf59d24d0394642afd34367a", null ],
-    [ "zfft1plan_r2hc", "zmath_8h.html#a27cadbef2e6068286ddcc063b118b33c", null ],
-    [ "zfft1", "zmath_8h.html#a4f8d3a92f430420051f782f910fbfb12", null ]
+    [ "sfft_free_plan", "zmath_8h.html#a33d44217669daf304b908c9cb0c30f7b", null ],
+    [ "scell_fft2", "zmath_8h.html#a1252f1bc587dcf2059560f212694ec3c", null ],
+    [ "sfft1plan_r2hc", "zmath_8h.html#ad7c94891a46d47be9cbd55f628b146c6", null ],
+    [ "sfft1", "zmath_8h.html#aabde1e3bc8237309ee414b097fb34c17", null ]
 ];
