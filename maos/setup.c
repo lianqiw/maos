@@ -89,7 +89,6 @@ void maos_setup(const parms_t* parms){
 	extern int cuda_dedup;
 	cuda_dedup=1;
 #endif
-	THREAD_POOL_INIT(NTHREAD);
 	global->aper=aper=setup_aper(parms);
 	print_mem("After setup_aper");
 #if USE_CUDA

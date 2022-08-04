@@ -26,14 +26,15 @@
    Routines to do FFT on X(mat) or dcell.
 */
 typedef struct fft_t fft_t;
-#define AOS_FFT_DEF(X)						\
+#define AOS_FFT_DEF(X, XR)						\
     void X(fft_free_plan)(struct fft_t *fft);			\
     void X(fft2)(X(mat) *A, int dir);				\
     void X(fft2i)(X(mat) *A, int dir);				\
     void X(fft2s)(X(mat) *A, int dir);				\
     void X(fft2partial)(X(mat) *A, int ncomp, int dir);		\
     X(mat) *X(ffttreat)(X(mat) *A);				\
-    void X(cell_fft2)(X(cell) *dc, int dir);			\
-    void X(fft1plan_r2hc)(X(mat) *out, int dir);		\
-    void X(fft1)(X(mat) *A, int dir);
+    void XR(fft_free_plan)(struct fft_t *fft);			\
+    void XR(cell_fft2)(XR(cell) *dc, int dir);			\
+    void XR(fft1plan_r2hc)(XR(mat) *out, int dir);		\
+    void XR(fft1)(XR(mat) *A, int dir);
 #endif

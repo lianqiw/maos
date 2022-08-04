@@ -98,7 +98,11 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
     DO_PRAGMA(omp parallel)\
     DO_PRAGMA(omp single)			
 #define OMP_IN_PARALLEL omp_in_parallel()
-#define expect_level(n) if(omp_get_level()!=n) dbg("omp_get_level=%d, want %d\n", omp_get_level(), n)
+#if DEBUG
+#define expect_level(n) if(omp_get_level()!=n+1) {dbg_once("omp_get_level=%d, want %d, omp_get_active_level=%d, omp_in_parallel=%d\n", omp_get_level(), n, omp_get_active_level(), omp_in_parallel());}
+#else
+#define expect_level(n)
+#endif
 #define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))
 #define OMP_FOR_COLLAPSE(n) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n))
 #else
@@ -110,10 +114,10 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 
 #if _OPENMP>=201511 //need further testing for speed
 #define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(1))
-#define OMP_TASK_FOR_COLLAPSE(n) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(NCPU) collapse(n))
+#define OMP_TASK_FOR_COLLAPSE(n, ntask) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) collapse(n) priority(1))
 #else
 #define OMP_TASK_FOR(ntask)
-#define OMP_TASK_FOR_COLLAPSE(n)
+#define OMP_TASK_FOR_COLLAPSE(n, ntask)
 #endif
 
 /*

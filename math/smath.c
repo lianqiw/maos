@@ -24,7 +24,7 @@
 #include "blas.c"
 #include "matbin.c"
 #include "matmmap.c"
-#include "fft.c"
+//#include "fft.c"
 #include "amoeba.c"
 #include "bessik.c"
 

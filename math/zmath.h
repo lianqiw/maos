@@ -43,5 +43,5 @@ AOS_CMATMATH_DEF(AOS_ZMAT,AOS_SMAT,fcomplex,float);
 AOS_MATBIN_DEF(AOS_ZMAT,fcomplex);
 AOS_SP_DEF(AOS_ZMAT,fcomplex,float,fcomplex);
 AOS_SPBIN_DEF(AOS_ZMAT,fcomplex);
-AOS_FFT_DEF(AOS_ZMAT);
+AOS_FFT_DEF(AOS_ZMAT, AOS_SMAT);
 #endif

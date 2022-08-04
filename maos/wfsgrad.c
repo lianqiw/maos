@@ -32,13 +32,22 @@
 /**
    contains functions that computes WFS gradients in geometric or physical optics mode.
 */
-#define TIMING 0
+/*#define TIMING 1
 #if TIMING
 #define TIM(A) real tk##A=myclockd()
 #else
 #define TIM(A)
+#endif*/
+#define TIMING 0
+#if TIMING
+#define TIM0 static real tk1=0,tk2=0,tk3=0,tk4=0;static int tkct=0;real tk=0,tk0=myclockd();tkct++;
+#define TIM(A) tk=myclockd(); tk##A+=tk-tk0;tk0=tk;
+#define TIM1 info2("wfsgrad timing: atm %.3f dm %.3f ints %.3f grad %.3f tot %.3f.\n", tk1/tkct, tk2/tkct, tk3/tkct, tk4/tkct, (tk1+tk2+tk3+tk4)/tkct)
+#else
+#define TIM0
+#define TIM(A)
+#define TIM1
 #endif
-
 /**
    Propagate atm onto WFS subaperture grid, and then to fine lenslet grid.
 */
@@ -100,7 +109,6 @@ void wfsgrad_iwfs(thread_t* info){
 	const int nps=parms->atm.nps;
 	const real atmscale=simu->atmscale?P(simu->atmscale, isim):1;
 	const real dt=parms->sim.dt;
-	TIM(0);
 	/*The following are truly constants for this powfs */
 	const int imoao=parms->powfs[ipowfs].moao;
 	const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
@@ -120,6 +128,7 @@ void wfsgrad_iwfs(thread_t* info){
 	dmat** gradout=&P(simu->gradcl, iwfs);
 	dcell* ints=P(simu->ints, iwfs);
 	dmat* opd=P(simu->wfsopd, iwfs);
+	TIM0;
 	dzero(opd);
 	if(isim%dtrat==0){
 		dcellzero(ints);
@@ -425,9 +434,7 @@ void wfsgrad_iwfs(thread_t* info){
 	}//dtrat_out
 	dfree(gradcalc);
 	TIM(4);
-#if TIMING==1
-	info2("WFS %d grad timing: atm %.2f dm %.2f ints %.2f grad %.2f\n", iwfs, tk1-tk0, tk2-tk1, tk3-tk2, tk4-tk3);
-#endif
+	TIM1;
 }
 /**
    Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.

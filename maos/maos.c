@@ -438,6 +438,7 @@ int main(int argc, const char* argv[]){
 		 * that doesn't use blas*/
 
 		info2("\n*** Preparation started at %s in %s. ***\n\n", myasctime(0), HOST);
+		THREAD_POOL_INIT(NTHREAD);
 	OMPTASK_SINGLE{
 			maos_setup(parms);
 			parms->save.setup=0; //setup is finished. do not save if calling again.

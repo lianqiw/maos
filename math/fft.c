@@ -20,7 +20,8 @@
 #include <fftw3.h>
 #include "mathdef.h"
 #include "defs.h"
-#if !defined(COMP_SINGLE) || HAS_FFTWF==1
+//This file is only used by cmath and zmath, which defines COMP_COMPLEX
+#if defined(COMP_COMPLEX) && (!defined(COMP_SINGLE) || HAS_FFTWF==1) || 1
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
 */
@@ -71,7 +72,7 @@ static void load_wisdom(){
 /**
    save FFT wisdom to file.
 */
-#if defined(COMP_COMPLEX) && !defined (COMP_SINGLE)
+#if !defined (COMP_SINGLE)
 //Put the following within COMP_COMPLEX to avoid run multiple copies of it.
 static void save_wisdom(){
 	FILE* fpwisdom;
@@ -86,12 +87,19 @@ static void save_wisdom(){
 static __attribute__((destructor))void deinit(){
 	save_wisdom();
 }
-/**
-   executed before main()
-*/
 #endif
-//#if defined(COMP_COMPLEX) 
-#include <dlfcn.h>
+//The following are static, one per data type
+#if HAS_FFTW_CALLBACK
+#if _OPENMP>=201511
+static void fftw_task_callback(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
+	(void)data;
+#pragma omp taskloop
+	for(int i=0; i<njobs; ++i){
+		work(jobdata+elsize*i);
+	}
+}
+#endif
+#endif
 static void (*init_threads())(int){
 	void (*p_fftw_plan_with_nthreads)(int)=NULL;
 #if HAS_FFTW_THREADS
@@ -116,25 +124,40 @@ static void (*init_threads())(int){
 	load_wisdom();
 	return p_fftw_plan_with_nthreads;
 }
-//#endif
+
 static void fft_execute(FFTW(plan) plan){
+#if _OPENMP
+	if(NTHREAD>1 && !omp_in_parallel()){
+		warning("fft_execute not in parallel\n");
+	}
+#endif
 	FFTW(execute)(plan);
 }
 
 static void fft_threads(long nx, long ny){
 	static int fft_has_threads=-1;
-	void (*p_fftw_plan_with_nthreads)(int)=NULL;
-	if(fft_has_threads==-1){
+	static int last_nthread=-1;
+	static void (*p_fftw_plan_with_nthreads)(int)=NULL;
+	if(fft_has_threads==-1){//first initialization
 		if((p_fftw_plan_with_nthreads=init_threads())){
+#if HAS_FFTW_CALLBACK
+#if _OPENMP>=201511
+			fftw_threads_set_callback(fftw_task_callback, NULL);
+			dbg("fftw_thread_set_callback with fftw_task_callback\n");
+#endif
+#endif
 			fft_has_threads=1;
 		} else{
 			fft_has_threads=0;
 		}
 	}
-	if(p_fftw_plan_with_nthreads){
+	if(fft_has_threads==1){
 		int nth=(nx*ny>256*256)?NTHREAD:1;
-		dbg3("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
-		p_fftw_plan_with_nthreads(nth);
+		if(nth!=last_nthread){
+			dbg("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
+			p_fftw_plan_with_nthreads(nth);
+			last_nthread=nth;
+		}
 	}
 }
 #ifdef __cplusplus
@@ -143,7 +166,6 @@ static void fft_threads(long nx, long ny){
 #define COMP(A) A
 #endif
 
-#ifdef COMP_COMPLEX
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
    the array. So do it before filling in data.
@@ -190,12 +212,12 @@ static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
 		COMP(P(A)), NULL, 1, nx,
 		COMP(P(A)), NULL, 1, nx,
 		dir, FFTW_FLAGS);
-/*selected along rows, beginning */
+	/*selected along rows, beginning */
 	plan1d->plan[1]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
 		COMP(P(A)), NULL, nx, 1,
 		COMP(P(A)), NULL, nx, 1,
 		dir, FFTW_FLAGS);
-/*selected along rows, end */
+	/*selected along rows, end */
 	plan1d->plan[2]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
 		COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
 		COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
@@ -270,24 +292,26 @@ X(mat)* X(ffttreat)(X(mat)* A){
 	X(scale)(B, 1./(R)(A->nx*A->ny));
 	return B;
 }
-#else
+void XR(fft_free_plan)(fft_t *fft){
+	if(fft) X(fft_free_plan)(fft);
+}
 /**
    Create a fftw plan based on a 2 element cell array that contains real/imaginary parts respectively.
  */
-static void X(cell_fft2plan)(X(cell)* dc, int dir){
+static void XR(cell_fft2plan)(XR(cell)* dc, int dir){
 	assert(abs(dir)==1);
 	if(dc->nx*dc->ny!=2){
-		error("X(cell) of two elements is required\n");
+		error("XR(cell) of two elements is required\n");
 	}
 	int nx=P(dc,0)->nx;
 	int ny=P(dc,0)->ny;
 	if(P(dc,1)->nx!=nx||P(dc,1)->ny!=ny){
-		error("The two elements in X(cell) must be of the same size\n");
+		error("The two elements in XR(cell) must be of the same size\n");
 	}
 	fftw_iodim dims[2]={{nx,1,1},{ny,nx,nx}};
 	fftw_iodim howmany_dims={1,1,1};
-	T* restrict p1=P(P(dc,0));
-	T* restrict p2=P(P(dc,1));
+	R* restrict p1=P(P(dc,0));
+	R* restrict p2=P(P(dc,1));
 	/*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
 	fft_t* fft=mycalloc(1, fft_t);
 	if(!fft->plan[dir+1]){
@@ -305,17 +329,17 @@ static void X(cell_fft2plan)(X(cell)* dc, int dir){
 /**
    Do FFT based on a 2 element cell array that contains real/imaginary parts respectively.
  */
-void X(cell_fft2)(X(cell)* dc, int dir){
+void XR(cell_fft2)(XR(cell)* dc, int dir){
 	assert(abs(dir)==1);
 	if(!dc->fft||!dc->fft->plan[dir+1]){
-		X(cell_fft2plan)(dc, dir);
+		XR(cell_fft2plan)(dc, dir);
 	}
 	fft_execute(dc->fft->plan[dir+1]);
 }
 /**
    Create a fftw plan for 1d real to real FFT.
  */
-void X(fft1plan_r2hc)(X(mat)* A, int dir){
+void XR(fft1plan_r2hc)(XR(mat)* A, int dir){
 	if(A->nx!=1&&A->ny!=1){
 		error("not supported\n");
 	}
@@ -339,20 +363,9 @@ void X(fft1plan_r2hc)(X(mat)* A, int dir){
 /**
    Do 1d real to real FFT.
  */
-void X(fft1)(X(mat)* A, int dir){
+void XR(fft1)(XR(mat)* A, int dir){
 	assert(A->fft&&abs(dir)==1);
 	fft_execute(A->fft->plan[dir+1]);
 }
 
-#endif //#ifdef COMP_COMPLEX
-#else
-void X(fft_free_plan)(fft_t* fft){
-	if(fft){
-		error("libfftw3f is not available\n");
-	}
-}
-void X(fft2)(X(mat)* A, int dir){
-	(void)A; (void)dir;
-	error("libfftw3f is not available\n");
-}
-#endif //!defined(COMP_SINGLE) || HAS_FFTWF==1
+#endif //if defined(COMP_COMPLEX) && (!defined(COMP_SINGLE) || HAS_FFTWF==1) 

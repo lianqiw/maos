@@ -311,7 +311,7 @@ void maos_sim(){
 		{
 			/*Compute average performance*/
 			const long nsim=simu->perfisim+1;
-			const long isim0=parms->sim.closeloop?MAX(20, nsim/5):0;
+			const long isim0=parms->sim.closeloop?MIN(MAX(20, nsim/5), nsim/2):0;
 			const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
 			for(long i=isim0; i<nsim; i++){
 				for(long imod=0; imod<parms->evl.nmod; imod++){

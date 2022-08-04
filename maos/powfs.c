@@ -573,7 +573,7 @@ setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ip
 		*/
 		powfs[ipowfs].loc_dm=loccellnew(nwfsp,parms->ndm);
 		int isset=0;
-OMP_TASK_FOR_COLLAPSE(2)
+OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int jwfs=0; jwfs<nwfsp; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);

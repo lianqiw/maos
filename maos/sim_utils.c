@@ -1829,7 +1829,7 @@ void print_progress(sim_t* simu){
 			info2(" nm\n");
 		}
 
-		dbg2("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
+		dbg("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
 					" Used %ld:%02ld, Left %ld:%02ld\n",
 					status->wfs*tkmean, status->recon*tkmean,
 					status->eval*tkmean, status->other*tkmean,

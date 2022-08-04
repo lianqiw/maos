@@ -679,6 +679,8 @@ else
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
+AC_CHECK_LIB([m], [fftw_threads_set_callback], [has_fftw_callback=1], [has_fftw_callback=0], [$LDFFT $OPENMP_CFLAGS])
+AC_DEFINE_UNQUOTED(HAS_FFTW_CALLBACK, [$has_fftw_callback], "Has fftw_threads_set_callpack support")
 AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])])
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])

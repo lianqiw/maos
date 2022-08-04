@@ -35,7 +35,7 @@ setup_fit_HXF(const fit_t* fit){
 	const int nfit=NX(fit->thetax);
 	const int npsr=NX(fit->xloc);
 	dspcell* HXF=dspcellnew(nfit, npsr);
-OMP_TASK_FOR_COLLAPSE(2)
+OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int ips=0; ips<npsr; ips++){
 			const real hsi=P(fit->hs,ifit);
@@ -59,7 +59,7 @@ setup_fit_HA(fit_t* fit){
 	const int ndm=NX(fit->aloc);
 	dspcell* HA=dspcellnew(nfit, ndm);
 	TIC;tic;
-OMP_TASK_FOR_COLLAPSE(2)
+OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int idm=0; idm<ndm; idm++){
 			const real hs=P(fit->hs,ifit);

@@ -23,11 +23,13 @@
 #include "sim.h"
 #define TIMING 0
 #if TIMING
-#define TIM0 TIC;tic;real tk1=0,tk2=0,tk3=0,tk4=0,tk5=0,tk6=0;
-#define TIM(A) tk##A+=toc3;tic;
+#define TIM0 static real tk1=0,tk2=0,tk3=0,tk4=0;static int tkct=0;real tk=0,tk0=myclockd();tkct++;
+#define TIM(A) tk=myclockd(); tk##A+=tk-tk0;tk0=tk;
+#define TIM1 info2("wfsints timing: copy %.3f fft %.3f cwm %.3f spmul %.3f tot %.3f\n", tk1/tkct, tk2/tkct, tk3/tkct, tk4/tkct, (tk1+tk2+tk3+tk4)/tkct)
 #else
 #define TIM0
 #define TIM(A)
+#define TIM1
 #endif
 
 /*
@@ -204,13 +206,13 @@ void wfsints(thread_t* thread_data){
 			int ioffset=isa*saoffset;
 			/*embed amp/opd to complex wvf with a embedding factor of 2. */
 			cembed_wvf(wvf, P(opd)+ioffset,realamp+ioffset, nopd, nopd, P(parms->powfs[ipowfs].wvl,iwvl), 0);
-			TIM(1);
+			TIM(1);//1 is copy
 			if(use1d){ /*use 1d fft */
 				cfft2partial(wvf, notfy, -1);
 			} else{
 				cfft2(wvf, -1); /*use 2d fft to form PSF. */
 			}
-			TIM(2);
+			TIM(2);//2 is fft
 			if(psf!=wvf){/*copy the peaks (at corner) from wvf to psf */
 				ccpcorner(psf, wvf, C_FULL);
 			}
@@ -227,10 +229,10 @@ void wfsints(thread_t* thread_data){
 			}
 			/* form PSF with peak in corner*/
 			cabs2toreal(psf, 1);
-			TIM(3);
+			TIM(1);
 			/* need to turn to otf to add llt contribution or output pixel intensities.*/
 			cfft2(psf, -1);   /*turn to otf. peak in corner */
-			TIM(4);
+			TIM(2);
 			if(pistatout){  /*The pistat does not include uplink effect*/
 				/*copy to temporary array. peak in in corner*/
 				ccp(&psftmp, psf);
@@ -250,20 +252,20 @@ void wfsints(thread_t* thread_data){
 				ccwm(psf, lotfc);   /*normalization done in gen of lotfc. */
 			}
 			/* we have otf here in psf*/
-		
-			TIM(5);
 			if(ints){
 				if(hasllt){/*has llt, multiply with DTF and ETF.*/
 					ccwm3(psf, nominal, P(petf1, isa, illt), etf1wt, petf2?P(petf2, isa, illt):0, etf2wt);
 				} else{/*no uplink, multiply with DTF only.*/
 					ccwm(psf, nominal);
 				}
+				TIM(3);
 				/*max(otf) is 1 after multiply with norm. peak in corner  */
 				cfft2(psf, 1);
+				TIM(2);
 				/*Now peak in center because nominal is pre-treated.  */
 				dspmulcreal(P(P(ints,isa)), si, P(psf), P(wvlwts,iwvl)*norm_ints);
+				TIM(4);
 			}
-			TIM(6);
 		}/*isa */
 	}/*iwvl */
 	if(psf!=wvf) cfree(psf);
@@ -276,7 +278,5 @@ void wfsints(thread_t* thread_data){
 		}
 		cfree(lotfc);
 	}
-#if TIMING==1
-	info2("ints timing: embed %.3f fft %.3f copy %.3f otf %.3f llt %.3f dtf %.f\n", tk1, tk2, tk3, tk4, tk5, tk6);
-#endif
+	TIM1;
 }
