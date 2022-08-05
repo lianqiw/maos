@@ -87,8 +87,6 @@ static void plot_psf(ccell* psf2s, const char* psfname, int closeloop, int ievl,
 			if(uselog==2){
 				dcwlog10(psftemp);
 			}
-
-
 			ddraw(psfname, psftemp, NULL, NULL, title, "x", "y", "%s", tabname);
 		}
 	}

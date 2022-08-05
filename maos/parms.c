@@ -833,55 +833,45 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 	if(PN(thetax)!=PN(thetay)||PN(thetax)!=PN(wt)){
 		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n", PN(thetax), PN(thetay), PN(wt));
 	}
-	if(fov==0){//on axis field.
-		if(PN(thetax)!=1){
-			//do not silently drop directions to avoid misuse.
-			error("fov is 0 but there are more than one evaluation directions.\n");
-			dresize(thetax,1,1);
-			dresize(thetay,1,1);
-			dresize(wt,1,1);
-		}
-		P(thetax,0)=0;
-		P(thetay,0)=0;
-		P(wt,0)=1;
-	} else {
-		real maxxy=0;
-		for(int i=0; i<PN(thetax); i++){
-			if(fabs(P(thetax, i))>maxxy) maxxy=fabs(P(thetax, i));
-			if(fabs(P(thetay, i))>maxxy) maxxy=fabs(P(thetay, i));
-		}
-		if(maxxy==0){//need to make a field
-			int nx=round(fov/30.)*2+1; //need sufficient sampling of the focal plane
-			if(nx<3) nx=3;
-			int np=nx*nx;
-			warning("maxxy=0, will make a square field with %dx%d points.\n", nx, nx);
-			
-			dresize(thetax, nx, nx);
-			dresize(thetay, nx, nx);
-			dresize(wt, nx, nx);
-			real cx=(nx-1)*0.5;
-			real rfov=fov/(2*cx);
-			for(int iy=0; iy<nx; iy++){
-				//sympson weighting is 1 4 2 4 2 ... 2 4 1 for odd number of points
+	if(fov==0 || fov==1){//when fov is 0 or 1. will not do anything. use thetax and thetay as it.
+		return;
+	} 
+	real maxxy=0;
+	for(int i=0; i<PN(thetax); i++){
+		if(fabs(P(thetax, i))>maxxy) maxxy=fabs(P(thetax, i));
+		if(fabs(P(thetay, i))>maxxy) maxxy=fabs(P(thetay, i));
+	}
+	if(maxxy==0){//need to make a field
+		int nx=round(fov/30.)*2+1; //need sufficient sampling of the focal plane
+		if(nx<3) nx=3;
+		int np=nx*nx;
+		warning("maxxy=0, will make a square field with %dx%d points.\n", nx, nx);
+		
+		dresize(thetax, nx, nx);
+		dresize(thetay, nx, nx);
+		dresize(wt, nx, nx);
+		real cx=(nx-1)*0.5;
+		real rfov=fov/(2*cx);
+		for(int iy=0; iy<nx; iy++){
+			//sympson weighting is 1 4 2 4 2 ... 2 4 1 for odd number of points
 #define SIMPSON_1D(ix,nx) (((ix)==0||(ix)+1==(nx))?1:(((ix)%2==0)?2:4))
-				for(int ix=0; ix<nx; ix++){
-					P(thetax, ix, iy)=(ix-cx)*rfov;
-					P(thetay, ix, iy)=(iy-cx)*rfov;
-					P(wt, ix, iy)=SIMPSON_1D(ix,nx)*SIMPSON_1D(iy,nx);
-				}
+			for(int ix=0; ix<nx; ix++){
+				P(thetax, ix, iy)=(ix-cx)*rfov;
+				P(thetay, ix, iy)=(iy-cx)*rfov;
+				P(wt, ix, iy)=SIMPSON_1D(ix,nx)*SIMPSON_1D(iy,nx);
 			}
-			//the weighting is very different from simpson weighting
-			reshape(thetax, np, 1);
-			reshape(thetay, np, 1);
-			reshape(wt, np, 1);
-		}else{
-			if(fabs(maxxy-0.5)>EPS){
-				warning("maxxy=%g is not 0.5, adjust the scaling properly.\n", maxxy);
-				fov=fov/(2*maxxy);
-			}
-			dscale(thetax,fov);
-			dscale(thetay,fov);
 		}
+		//the weighting is very different from simpson weighting
+		reshape(thetax, np, 1);
+		reshape(thetay, np, 1);
+		reshape(wt, np, 1);
+	}else{
+		if(fabs(maxxy-0.5)>EPS){
+			warning("maxxy=%g is not 0.5, adjust the scaling properly.\n", maxxy);
+			fov=fov/(2*maxxy);
+		}
+		dscale(thetax,fov);
+		dscale(thetay,fov);
 	}
 }
 /**
@@ -2936,7 +2926,7 @@ static void print_parms(const parms_t *parms){
 		parms->aper.d,1/parms->evl.dx);
 	real fgreen=calc_greenwood(parms->atm.r0z,parms->atm.nps,P(parms->atm.ws),P(parms->atm.wt));
 	real theta0z=calc_aniso(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt));
-
+if(!parms->sim.noatm){
 	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
 		GREEN,parms->sim.zadeg,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
 	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
@@ -2959,6 +2949,7 @@ static void print_parms(const parms_t *parms){
 		info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
 			ips,P(parms->atm.ht,ips),P(parms->atm.wt,ips),P(parms->atm.ws,ips));
 	}
+}
 	if(parms->recon.alg==RECON_MVR){
 		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n",GREEN,BLACK,
 			parms->atmr.r0,parms->atmr.L0,

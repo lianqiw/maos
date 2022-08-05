@@ -232,6 +232,7 @@ double readstr_num(const char* data, /**<[in] Input string*/
    transpose is supported:
    [1 2 3; 4 5 6]' is 2 d array, 2 rows, 3 columns. In memory is stored as [1 4 2 5 3 6]
 
+   when there is no [], only read until there is ';', '\n', or end of str.
    \return Number of values actually read not including duplicated when relax is set.
 */
 int readstr_numarr(void **ret, /**<[out] Result*/
@@ -279,13 +280,16 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			*ret=calloc(len, size);
 		}
 	}
-	const char* startptr=data;
-	const char* endptr;
+	const char *startptr=data;
+	const char *endptr=0;//temporary pointer
+	const char *endarr=0;//indicate end of array parsing
+	const char *bopen=0;//bracket open
+	const char *bclose=0;//bracket close
 	double fact=1;
-	int power=1;
 	double addval=0;
+	int power=1;
 	int trans=0;
-	const char* bopen=0, *bclose=0;
+	
 	/*process possible numbers before the array. */
 	bopen=strchr(startptr, '[');
 	if(bopen){/*there is indeed '[' */
@@ -316,10 +320,14 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		startptr++;/*points to the beginning of the array in [] */
 		/*process possible numbers after the array. do not use startptr here.*/
 	} else{
-	/*warning("Expecting array: {%s} should start with [\n", data); */
+		/*warning("Expecting array: {%s} should start with [\n", data); */
+		endarr=strchr(startptr, ';');
+		if(!endarr) endarr=strchr(startptr, '\n');
+		if(!endarr) endarr=startptr+strlen(startptr);
 	}
 	bclose=strchr(startptr, ']');
 	if(bclose){/*there is indeed ']'. Handle operations after ] */
+		endarr=bclose;
 		endptr=bclose+1;
 		while(isspace(endptr[0])||endptr[0]=='\''){
 			if(endptr[0]=='\'') trans=1-trans;
@@ -334,12 +342,15 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			error("{%s}: There is garbage in the end of the string.\n", data);return 0;
 		}
 	}
+	if((bopen!=NULL) != (bclose!=NULL)){
+		error("[] must appear in pair.\n");
+	}
 	int count=0;
 	int nrow=0;/*number of rows*/
 	int ncol=0;/*number of columns*/
 	int rowbegin=0;/*beginning of this row*/
 	/*Read in the array */
-	while(startptr[0]!=']'&&!is_end(startptr[0])){
+	while(startptr<endarr){
 		if(count>=nmax){
 			if(len){
 				error("{%s}: Needs %d numbers, but more are supplied.\n", data, len);

@@ -42,10 +42,20 @@ static void readstr_array(void **state){
 	double *ret=0;
 	int nrow;
 	int ncol;
+	int nr;
 	//Simple read
-	int nr=readstr_numarr((void**)&ret, &nrow, &ncol, 0, 0, M_DBL, "2/[1 2]");
+	nr=readstr_numarr((void**)&ret, &nrow, &ncol, 0, 0, M_DBL, "2/[1 2]");
 	assert_float_equal(ret[0], 2, 0.0001);
 	assert_float_equal(ret[1],1,0.0001);
+	assert_int_equal(nrow, 2);
+	assert_int_equal(ncol, 1);
+	assert_int_equal(nr, 2);
+	free(ret);ret=NULL;
+
+	//Simple read without bracket
+	nr=readstr_numarr((void **)&ret, &nrow, &ncol, 0, 0, M_DBL, "2 1;3");
+	assert_float_equal(ret[0], 2, 0.0001);
+	assert_float_equal(ret[1], 1, 0.0001);
 	assert_int_equal(nrow, 2);
 	assert_int_equal(ncol, 1);
 	assert_int_equal(nr, 2);

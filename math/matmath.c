@@ -1257,7 +1257,7 @@ X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 
 	X(mat)* pc=coeff;
 	T ypriv, ynext;
-	OMP_SIMD()
+	//OMP_SIMD() //not useful
 	for(long ix=0; ix<nx-1; ix++){
 		if(fabs(px[ix+1]-px[ix]-xsep)>thres){
 			error("The coordinate is not evenly spaced\n");
