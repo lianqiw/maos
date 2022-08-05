@@ -266,7 +266,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Read numerical array from a string. if len is nonzero, <em>ret should be already allocated. NOTICe that continuous numbers are readin as column vector, not row vector(as in matlab) Can read in the following formats: [1 2 3] as 3 rows, 1 col [1 2 3] in memory [1 2 3]+2 as [3 4 5] in memory 2</em>[1 2 3] or [1 2 3]*2 as [2 4 6] in memory [1 2 3]/2 as [0.5 1 1.5] in memory 2/[1 2 3] as [2/1 2/2 2/3] in memory 2/[1 2 3]*2+1 as [5 3 7/3] in memory</p>
 <p>2-d arrays are groups as column vecotrs (in contrast to matlab that uses rows); semi-colon is used to separate columns. [1 2 3; 4 5 6] is 2 d array, 3 rows, 2 columns. In memory is stored as [1 2 3 4 5 6] transpose is supported: [1 2 3; 4 5 6]' is 2 d array, 2 rows, 3 columns. In memory is stored as [1 4 2 5 3 6]</p>
-<dl class="section return"><dt>Returns</dt><dd>Number of values actually read not including duplicated when relax is set. </dd></dl>
+<p>when there is no [], only read until there is ';', '<br />
+', or end of str. </p><dl class="section return"><dt>Returns</dt><dd>Number of values actually read not including duplicated when relax is set. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">ret</td><td>Result </td></tr>
