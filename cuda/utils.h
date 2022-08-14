@@ -214,9 +214,9 @@ void cp2gpu(cuccell& dest, const ccell* src);
 void cuspmul(Real* y, const cusp& A, const Real* x, int ncol, char trans,
 	Real alpha, stream_t& stream);
 
-void gpu_write(const Real* p, int nx, int ny, const char* format, ...);
-void gpu_write(const Comp* p, int nx, int ny, const char* format, ...);
-void gpu_write(const int* p, int nx, int ny, const char* format, ...);
+void gpu_write(const Real* p, int nx, int ny, const char* format, ...) CHECK_ARG(4);
+void gpu_write(const Comp* p, int nx, int ny, const char* format, ...) CHECK_ARG(4);
+void gpu_write(const int* p, int nx, int ny, const char* format, ...) CHECK_ARG(4);
 void add2cpu(float* restrict* dest,Real alpha, Real* src, Real beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(smat** out, float alpha, const curmat& in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(zmat** out, float alpha, const cucmat& in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);

@@ -33,7 +33,7 @@
     X(mat) *X(ref)(const X(mat) *in) CHECK_UNUSED_RESULT;		\
     X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny) CHECK_UNUSED_RESULT; \
     X(mat) *X(refcols)(const X(mat) *in, long icol, long ncol) CHECK_UNUSED_RESULT; \
-    void X(resize)(X(mat) *A, long nx, long ny);			\
+    int X(resize)(X(mat) *A, long nx, long ny);			\
     X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny) CHECK_UNUSED_RESULT; \
     X(mat) *X(cat)(const X(mat) *in1, const X(mat) *in2, int dim) CHECK_UNUSED_RESULT; \
     X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;		\

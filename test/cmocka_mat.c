@@ -52,7 +52,8 @@ static void mat_basic(void** state){
         assert_int_equal(b->nx, d->nx);
         assert_int_equal(d->ny, 2);
         assert_ptr_equal(&P(b, 0, 1), &P(d, 0, 0));
-        dresize(d, 2, 3);
+        reshape(d, 2, 3);
+        assert_int_equal(dresize(d, 2, 3), -1);
         dfree(d);
     }
     {
@@ -194,21 +195,23 @@ static int dummy_signal_handler(int sig){
 }
 
 int main(void){
-#if 0
+    register_signal_handler(dummy_signal_handler);//captures error().
     (void)dummy_signal_handler;
     (void)mat_basic;
     (void)mat_embed;
     (void)mat_fresnel_prop;
+#if 0
+    mat_basic(NULL);
     mat_embed(NULL);
+    mat_fresnel_prop(NULL);
 #else
-    register_signal_handler(dummy_signal_handler);
     LOG_LEVEL=-4;
     const struct CMUnitTest tests[]={
-        cmocka_unit_test(mat_basic),
+        //cmocka_unit_test(mat_basic),
         cmocka_unit_test(mat_embed),
         cmocka_unit_test(mat_fresnel_prop),
     };
-    (void)tests;
+    //(void)tests;
     return cmocka_run_group_tests(tests, NULL, NULL);
 #endif
 }

@@ -179,27 +179,28 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
    Resize a matrix by adding or removing columns or rows. Data is kept whenever
    possible.
 */
-void X(resize)(X(mat)* A, long nx, long ny){
+int X(resize)(X(mat)* A, long nx, long ny){
 	if(!A) {
 		if(!nx || !ny){
-			return;
+			return 0;
 		}else{
-			error("Trying to resize NULL array to %ldx%ld\n", nx, ny);
+			error("Trying to resize NULL array to %ldx%ld, cancelled.\n", nx, ny);
+			return -1;
 		}
 	}
 	else if(!ismat(A)){
 		if(iscell(A)&&!P(A)&&(A->nx==0||A->ny==0)){
 			A->id=M_T;//convert empty cell to mat.
 		} else{
-			warning("Incorrect type: id=%d\n", A->id);
-			return;
+			error("Incorrect type: id=%d, cancelled\n", A->id);
+			return -1;
 		}
 	}
 	if(!nx) nx=A->nx;
 	if(!ny) ny=A->ny;
 	if(mem_nref(A->mem)>1){
-		error("Trying to resize referenced matrix\n");
-		return;
+		error("Trying to resize referenced matrix, cancelled.\n");
+		return -1;
 	}
 	if(A->nx!=nx||A->ny!=ny){
 		if(A->nx==nx||A->ny==1){
@@ -211,6 +212,7 @@ void X(resize)(X(mat)* A, long nx, long ny){
 			T* p=mycalloc(nx*ny, T);
 			if(!p){
 				error("malloc for %ldx%ld of size %ld failed.\n", nx, ny, sizeof(T));
+				return -1;
 			}
 			long minx=A->nx<nx?A->nx:nx;
 			long miny=A->ny<ny?A->ny:ny;
@@ -228,10 +230,11 @@ void X(resize)(X(mat)* A, long nx, long ny){
 		A->nx=nx;
 		A->ny=ny;
 	}
+	return 0;
 }
 
 /**
-   Concatenate two matrixes into 1 along dimension "dim"
+   Concatenate two matrixes into 1 along "dim" (1 for x, 2 for y)
 */
 X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 	if(!check_mat(in2)){
@@ -245,10 +248,9 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 	}
 	X(mat)* out=NULL;
 
-	if(dim==1){
-		/*along x. */
+	if(dim==1){ /*along x. */
 		if(in1->ny!=in2->ny){
-			error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld)\n",
+			error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld), cancelled.\n",
 				in1->nx, in1->ny, in2->nx, in2->ny);
 		} else{
 			out=X(new)(in1->nx+in2->nx, in1->ny);
@@ -257,10 +259,9 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 				memcpy(PCOL(out, iy)+in1->nx, PCOL(in2, iy), in2->nx*sizeof(T));
 			}
 		}
-	} else if(dim==2){
-   		/*along y. */
+	} else if(dim==2){	/*along y. */
 		if(in1->nx!=in2->nx){
-			error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld)\n",
+			error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld), cancelled.\n",
 				in1->nx, in1->ny, in2->nx, in2->ny);
 		} else{
 			out=X(new)(in1->nx, in1->ny+in2->ny);
@@ -268,7 +269,7 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 			memcpy(P(out)+PN(in1), P(in2), in2->nx*in2->ny*sizeof(T));
 		}
 	} else{
-		error("Invalid dim, excepts 1 or 2.\n");
+		error("Invalid dim, excepts 1 or 2, cancelled.\n");
 	}
 	return out;
 }

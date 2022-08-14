@@ -90,7 +90,8 @@ cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	if(src_trans){
 		dspfree(src_trans);
 	}
-#if __CUDACC_VER_MAJOR__ >= 10	
+
+#if CUDA_VERSION >= 10000
 	int nrow=(type==SP_CSR?nx:ny);
 	int ncol=(type==SP_CSR?ny:nx);
 	cusparseCreateCsr(&desc, nrow, ncol, nzmax, p, i, x, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_BASE_ZERO, CUDA_R);
@@ -151,7 +152,7 @@ void cuspmul(Real* y, const cusp& A, const Real* x, int ncolvec, char trans, Rea
 	int status;
 	Real one=1.f;
 	
-#if __CUDACC_VER_MAJOR__ >= 10
+#if CUDA_VERSION >= 10000
 	/*
 cusparseStatus_t
 cusparseSpMVcusparseHandle_t     handle,
@@ -187,7 +188,7 @@ cusparseSpMM(cusparseHandle_t     handle,
 		cusparseDnVecDescr_t xv, yv;
 		cusparseCreateDnVec(&xv, nx, (void*)x, CUDA_R);
 		cusparseCreateDnVec(&yv, ny, (void*)y, CUDA_R);
-#if __CUDACC_VER_MAJOR__ > 11 ||  (__CUDACC_VER_MAJOR__ == 11 &&  __CUDACC_VER_MINOR__ > 1)
+#if CUDA_VERSION > 11010 
 		cusparseSpMVAlg_t alg=CUSPARSE_SPMV_ALG_DEFAULT;
 #else
 		cusparseSpMVAlg_t alg=CUSPARSE_MV_ALG_DEFAULT;
@@ -203,7 +204,7 @@ cusparseSpMM(cusparseHandle_t     handle,
 		cusparseCreateDnMat(&Bm, nx, ncolvec, nx, (void*)x, CUDA_R, CUSPARSE_ORDER_COL);
 		cusparseCreateDnMat(&Cm, ny, ncolvec, ny, (void*)y, CUDA_R, CUSPARSE_ORDER_COL);
 		cusparseOperation_t opB=CUSPARSE_OPERATION_NON_TRANSPOSE;
-#if __CUDACC_VER_MAJOR__ >= 11
+#if CUDA_VERSION > 11010
 		cusparseSpMMAlg_t alg=CUSPARSE_SPMM_ALG_DEFAULT;
 #else
 		cusparseSpMMAlg_t alg=CUSPARSE_MM_ALG_DEFAULT;

@@ -287,9 +287,9 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	const Real* srot=(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].radpix)?cuwfs[iwfs].srot():NULL;
 	const Real* pixoffx=0, * pixoffy=0;
 	if(cupowfs[ipowfs].pixoffx){
-		int icol=cupowfs[ipowfs].pixoffx>1?wfsind:0;
-		pixoffx=cupowfs[ipowfs].pixoffx()+cupowfs[ipowfs].pixoffx.Nx()*icol;
-		pixoffy=cupowfs[ipowfs].pixoffy()+cupowfs[ipowfs].pixoffy.Nx()*icol;
+		int icol=cupowfs[ipowfs].pixoffx.Ny()>1?wfsind:0;
+		pixoffx=cupowfs[ipowfs].pixoffx.Col(icol);//()+cupowfs[ipowfs].pixoffx.Nx()*icol;
+		pixoffy=cupowfs[ipowfs].pixoffy.Col(icol);//()+cupowfs[ipowfs].pixoffy.Nx()*icol;
 	}
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	curcell& ints=cuwfs[iwfs].ints;

@@ -477,7 +477,7 @@ class cusp{
 	int nzmax;
 	unsigned int* nref;
 	enum TYPE_SP type;
-#if __CUDACC_VER_MAJOR__ >= 10	
+#if CUDA_VERSION >= 10000
 	cusparseSpMatDescr_t desc;
 #else
 	void* desc;
@@ -514,7 +514,7 @@ public:
 	const Real* Px() const{
 		return x;
 	}
-#if __CUDACC_VER_MAJOR__ >= 10	
+#if CUDA_VERSION >= 10000
 	cusparseSpMatDescr_t Desc() const{
 		return desc;
 	}
@@ -545,8 +545,8 @@ public:
 	}
 	void deinit(){
 		if(nref&&!atomic_sub_fetch(nref, 1)){
-#if __CUDACC_VER_MAJOR__ >= 10	
-			cusparseDestroySpMat(desc);
+#if CUDA_VERSION >= 10000
+			if(desc) cusparseDestroySpMat(desc);
 #endif
 			cudaFree(p);
 			cudaFree(i);

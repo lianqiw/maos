@@ -36,7 +36,8 @@ typedef void *(*thread_fun)(void *);
 typedef void (*thread_wrapfun)(thread_t *);
 #include "thread_pool.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
-
+#define PRINT_MACRO(x) DO_PRAGMA(message #x " is " STR(x))
+#define STR(x) #x
 //The following are common to OPENMP or PTHREADS 
 
 #define LOCK(A) pthread_mutex_lock(&A)
@@ -99,7 +100,7 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
     DO_PRAGMA(omp single)			
 #define OMP_IN_PARALLEL omp_in_parallel()
 #if DEBUG
-#define expect_level(n) if(omp_get_level()!=n+1) {dbg_once("omp_get_level=%d, want %d, omp_get_active_level=%d, omp_in_parallel=%d\n", omp_get_level(), n, omp_get_active_level(), omp_in_parallel());}
+#define expect_level(n) if(omp_get_level()!=n) {dbg_once("omp_get_level=%d, want %d, omp_get_active_level=%d, omp_in_parallel=%d\n", omp_get_level(), n, omp_get_active_level(), omp_in_parallel());}
 #else
 #define expect_level(n)
 #endif

@@ -37,12 +37,12 @@ LDADD=libaogpu.la $(LIBCUDA) $(LDEXE_FULL)
 
 #The following does the depency generation/tracking and verbosity right.
 .cu.o:
-	$(AM_V_CC)$(NVCC) $(CUDAOPT) -Xcompiler "$(CCBINOPT)" -c -o $@ $<
+	$(AM_V_CC)$(NVCC) $(CUDAOPT) $(CCBINOPT) -c -o $@ $<
 	@mkdir -p $(DEPDIR)
 	@$(NVCC) $(CUDAOPT) -M $< -MT $@ > $(DEPDIR)/$*.Po
 
 .cu.lo:
-	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDAOPT) --compiler-options "$(CCBINOPT) " -c $< -o $@ 
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDAOPT) $(CCBINOPT)  -c $< -o $@ 
 	@mkdir -p $(DEPDIR)
 	@$(NVCC) $(CUDAOPT) -M $< -MT $@ > $(DEPDIR)/$*.Po
 

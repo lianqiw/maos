@@ -53,8 +53,8 @@ __global__ static void
 blockmv(Real* restrict y, const Real* restrict A, const Real* restrict x, const int nrow, const int ncol){
 	__shared__ Real shared[BLOCKMV_TNX][BLOCKMV_TNY];
 	//Real *sx=shared;//stores x in shared memory
-	register Real* sy=&shared[tix][tiy];//stores non-reduced y in shared memory, transposed for easy reduction.
-	register const int irow=(tnx*bix+tix);
+	Real* sy=&shared[tix][tiy];//stores non-reduced y in shared memory, transposed for easy reduction.
+	const int irow=(tnx*bix+tix);
 	*sy=0;
 #if 1
 	if(irow<nrow){
@@ -116,7 +116,7 @@ multimv(Real *restrict y, const Real *restrict A, const Real *restrict x, const 
 __global__ static void
 test_read(Real* A, int nx, int ny){
 	//extern __shared__ Real sh[];
-	register const int irow=tnx*bix+tix;
+	const int irow=tnx*bix+tix;
 	Real __shared__ sum;
 	sum=0;
 	for(int i=0; i<ny; i++){
@@ -126,7 +126,7 @@ test_read(Real* A, int nx, int ny){
 __global__ static void
 test_read_multi(Real* A, int nx, int ny){
 	//extern __shared__ Real sh[];
-	register int irow=tnx*bix+tix;
+	int irow=tnx*bix+tix;
 	const int nset=(tnx*bnx+nx-1)/nx;
 	const int iset=irow/nx;
 	irow=irow-iset*nx;

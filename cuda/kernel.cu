@@ -172,7 +172,7 @@ __global__ void sum2_do(Real* restrict res, const Real* a, const int n){
 	volatile Real* s=sb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
 	s[-16]=0;
 	//Read in vector from global mem
-	register Real sum=0;
+	Real sum=0;
 	const int step=blockDim.x*gridDim.x;
 	for(int i=blockIdx.x*blockDim.x+idx; i<n; i+=step){
 		sum+=a[i];
@@ -462,11 +462,11 @@ __global__ void unwrap_phase_do(Comp* wvf, Real* opd, int* embed, int n, Real wv
 __global__ void
 mvm_do(const Real* restrict mvm, Real* restrict a, const Real* restrict g, int nact, int ng){
 	extern __shared__ Real acc[];
-	register int iact=threadIdx.x+blockIdx.x*blockDim.x;
+	int iact=threadIdx.x+blockIdx.x*blockDim.x;
 	if(iact<nact){
 		acc[threadIdx.x]=0;
 		for(int ig=0; ig<ng; ig++){
-			register Real mvmi=mvm[nact*ig+iact];
+			Real mvmi=mvm[nact*ig+iact];
 			acc[threadIdx.x]+=mvmi*g[ig];
 		}
 		a[iact]+=acc[threadIdx.x];

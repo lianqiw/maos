@@ -68,7 +68,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 				   with the subaperture edge, the coupled points are
 				   confined within the subaperture.
 				*/
-				if((zx<0||zx>zmax||zy<0||zy>zmax)&fabs(px[ir])>1e-7){
+				if((zx<0||zx>zmax||zy<0||zy>zmax)&&fabs(px[ir])>1e-7){
 					warning("isa=%d, G(%d, %d)=%g\n", isa, zx, zy, px[ir]);
 				}
 				if(zx<0) zx=0;

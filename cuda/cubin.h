@@ -80,7 +80,9 @@ static inline void cuwritedata(const Array<T, Dev>& A, cudaStream_t stream, file
 		writearr(fp, 0, sizeof(T), magic, header, NULL, 0, 0);
 	}
 }
+
 template <typename T, template<typename> class Dev>
+CHECK_ARG(3)
 static inline void cuwrite(const Array<T, Dev>& A, cudaStream_t stream, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");
@@ -88,6 +90,7 @@ static inline void cuwrite(const Array<T, Dev>& A, cudaStream_t stream, const ch
 	zfclose(fp);
 }
 template <typename T, template<typename> class Dev>
+CHECK_ARG(3)
 static inline void cuwrite(const Cell<T, Dev>& A, cudaStream_t stream, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");

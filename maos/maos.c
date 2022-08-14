@@ -22,6 +22,7 @@
 #include "maos.h"
 #include "version.h"
 
+//PRINT_MACRO(USE_CUDA)
 /**
  * \file main.c
  * main() is created separately in this main.c instead of maos.c so that we can

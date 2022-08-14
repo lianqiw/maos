@@ -431,12 +431,15 @@ void curecon_t::tomo_test(sim_t* simu){
 	cp2gpu(gradin, simu->gradlastol);
 	RR->R(rhsg, 0, gradin, 1, stream);
 	cuwrite(rhsg, stream, "GPU_TomoR");
+	CUDA_SYNC_STREAM;//check for errors
 	RR->Rt(rtg, 0, rhsg, 1, stream);
 	cuwrite(rtg, stream, "GPU_TomoRt");
+	CUDA_SYNC_STREAM;//check for errors
 	if(parms->tomo.alg==ALG_CG){
 		cusolve_cg* RL2=dynamic_cast<cusolve_cg*>(RL);
 		RL2->L(lg, 0, rhsg, 1, stream);
 		cuwrite(lg, stream, "GPU_TomoL");
+		CUDA_SYNC_STREAM;//check for errors
 		RL2->L(lg, 1, rhsg, -1, stream);
 		cuwrite(lg, stream, "GPU_TomoL2");
 		if(parms->tomo.precond==1){
@@ -444,6 +447,7 @@ void curecon_t::tomo_test(sim_t* simu){
 			curcell lp;
 			RL2->Pre(lp, rhsg, stream);
 			cuwrite(lp, stream, "GPU_TomoP");
+			CUDA_SYNC_STREAM;//check for errors
 			RL2->Pre(lp, rhsg, stream);
 			cuwrite(lp, stream, "GPU_TomoP2");
 		}
@@ -452,6 +456,7 @@ void curecon_t::tomo_test(sim_t* simu){
 	for(int i=0; i<5; i++){
 		RL->solve(lg, rhsg, stream);
 		cuwrite(lg, stream, "GPU_TomoCG%d", i);
+		CUDA_SYNC_STREAM;//check for errors
 	}
 	CUDA_SYNC_DEVICE;
 	exit(0);

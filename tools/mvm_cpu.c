@@ -30,7 +30,7 @@ static void mvmt_do(const float* mvmt, float* g, float* dm, int nact, int ngleft
 
 #pragma omp parallel for
 	for(int ia=0; ia<nact; ia++){
-		register float tmp=dm[ia];
+		float tmp=dm[ia];
 #ifdef __INTEL_COMPILER
 #pragma unroll
 		__assume_aligned(mvmt, 128);

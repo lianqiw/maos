@@ -858,7 +858,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	if(fatal_error_in_progress){
 		info("Signal handler is already in progress. force abort.\n");
 		if(sig==SIGINT || sig==SIGQUIT) _Exit(1);
-		return;
+		_Exit(1);
+		//return;
 	}else{
 		fatal_error_in_progress++;
 	}

@@ -104,11 +104,13 @@ if test -n "$CC_VERSION" ;then
 	else
 		minor=${minor%%.*}
 	fi
+	CC_VERSION="$major${minor:0:1}"
+	echo CC_VERSION=$CC_VERSION
 fi
 
 case "$CN" in
     GCC)
-	    if test "$major" -lt 4 ;then
+	    if test "$CC_VERSION" -lt 40 ;then
 			AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
 	;;
@@ -130,16 +132,8 @@ fi
 if test -n "`which nvcc 2>/dev/null`" ;then
     NVCC="$(which nvcc)"
     if test -L "$NVCC" ;then
-	NVCC="$(readlink "$NVCC")"
+		NVCC="$(readlink "$NVCC")"
     fi
-else
-    for cuda in /etc/alternatives/cuda /usr/local/cuda /usr/local/cuda-* /opt/cuda /opt/cuda-* /opt/cuda/default /opt/cuda/cuda-*;do
-		if test -x "${cuda}/bin/nvcc" ;then
-			NVCC="${cuda}/bin/nvcc"
-			break;
-		fi
-    done
-    unset nvcc
 fi
 if test -n "$NVCC" ;then
     CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
@@ -181,7 +175,7 @@ AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda do
 AC_ARG_ENABLE(scheduler, AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]))
 AC_ARG_ENABLE(websockets, AS_HELP_STRING([--disable-websockets],[Disable websockets]))
 AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_mkl="$enableval"], [use_mkl="default"])
-AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
+AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR=])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="yes"])
@@ -199,6 +193,12 @@ if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
 else
     with_matlab=yes
 fi
+if test -z "$CUDADIR" ;then #default value
+	CUDADIR=$CUDADIR_AUTO
+elif test -n "$CUDADIR" -a "$CUDADIR" != "no" ;then #user specified
+	user_enabled_cuda=yes
+fi
+
 if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
     with_cuda=no
 else
@@ -887,27 +887,43 @@ if test "$with_matlab" != "no" ;then
 fi
 AM_CONDITIONAL(USE_MEX, [test "$with_matlab" != "no"])
 
-if test "$with_cuda" != "no" ;then
-    if test -n "$with_cuda" ;then
-		user_enable_cuda=yes
-    fi
+if test "$with_cuda" != "no" ;then #test CUDA availability
     #if test "$enable_allstatic" = "yes"; then
 	#AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
     #fi
-    AC_MSG_NOTICE([Enabling CUDA])
+    AC_MSG_NOTICE([Checking CUDA])
     #Check for nvcc executable
     if test ${CUDADIR:0:1} = '~' ;then
 		CUDADIR=$HOME:${CUDADIR:1}
     fi
     NVCC="$CUDADIR/bin/nvcc"
-    if test ! -x "$NVCC" ;then
+    if test ! -x "$NVCC" -a -x "$CUDADIR/nvcc"; then
 		NVCC="$CUDADIR/nvcc"
 		CUDADIR="$(dirname $CUDADIR)"
-		if test ! -x "$NVCC" ;then
-            AC_MSG_NOTICE([nvcc not found])
-	    	with_cuda="no"
+	fi
+	if test ! -x "$NVCC" ;then
+		AC_MSG_NOTICE([nvcc not found])
+		with_cuda="no"
+	else
+		cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
+		cudaver="${cudaver/.}"
+		echo CUDA toolkit version is $cudaver
+		if test "$cudaver" -lt 90 ;then
+			cuarch=20 #<cuda-8.0 supports compute_20
+		elif test "$cudaver" -lt 110 ;then
+			cuarch=30 #compute_30 is the minimum version
+		else
+			cuarch=50 #compute_50 is the minimum version
 		fi
-    fi
+		if test $CN = GCC ;then
+			if test "$cudaver" -lt 80 -a "$CC_VERSION" -gt 49 ;then
+				AC_MSG_NOTICE([CUDA version $cudaver is not compatible with GCC $CC_VERSION])
+				with_cuda="no"
+			fi
+		fi
+	fi
+fi
+if test "$with_cuda" != "no" ;then
     #Check cor cuda library
     if test -f "${CUDADIR}/lib${libsuffix}/libcudart.$ldsuffix" ;then
 		CUDA_L="${CUDADIR}/lib${libsuffix}"
@@ -934,20 +950,46 @@ if test "$with_cuda" != "no" ;then
 		AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]);with_cuda="no"])
 		CUDAOPT=
     fi
-    if test "$with_cuda" = "no" ;then
-		if test "$user_enable_cuda" = "yes" ;then
-			AC_MSG_ERROR([Specified cuda DIR is not valid])
+    if test "$with_cuda" != "no" ;then
+	    LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
+		if test "$enable_debug" = "yes" ;then
+			CUDAOPT+=" -O0 -g"
 		else
-			AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR to specify CUDA location or --without-cuda"])
+			CUDAOPT+=" -O3 -g"
+		fi
+		CUDAOPT+=" -DHAVE_CONFIG_H -I.. "
+		if test "$host_cpu" = "x86_64" ;then
+			CUDAOPT+=" -DDLONG"
+		fi
+ 
+		#CUDAOPT+=" -std=c++11"
+		CCBINOPT="$OPTScommon $OPTSprof -fPIC $CPPFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
+		CCBINOPT="${CCBINOPT/-fpermissive/}"
+		if $CCBIN -v 2>&1 |grep clang ;then
+			CCN=CLANG
+			LIBCUDA+=" -lstdc++"
+		elif $CCBIN -v 2>&1 |grep icc ;then
+			CCN=ICC
+			LIBCUDA+=" -lstdc++"
+		else
+			CCN=GCC
+			CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
+			LIBCUDA+=" -lstdc++"
+		fi
+		optname=${ccprefix}_${CCN}
+		CCBINOPT+=" ${!optname}"
+		if test -n "$OPENMP_CFLAGS";then
+			CCBINOPT+=" $OPENMP_CFLAGS"
 		fi
     fi
 fi
-
-if test "$with_cuda" != "no" ;then
+if test "$with_cuda" != "no" -a $CN = CLANG ;then #set clang flags. 
+	NVCC="clang++ "
+	CUDAOPT+=" --cuda-gpu-arch=sm_${cuarch} $CCBINOPT --cuda-path=$CUDADIR"
+	CUDAOPT+=" --no-cuda-version-check -Wno-unknown-cuda-version -Wno-format-nonliteral"
+	LIBCUDA+=" -lstdc++"
+elif test "$with_cuda" != "no" ;then #Set nvcc flags
     AC_MSG_NOTICE(["Use cuda in directory $CUDADIR"])
-    cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
-    cudaver="${cudaver/.}"
-    echo CUDA toolkit is $cudaver
     NVCC+=" $CFLAGS_CPU"
     if test -n "$CCBIN" -a "$with_ccbin" != "no" ;then
 		CCBIN="${CCBIN%% *}"
@@ -958,49 +1000,19 @@ if test "$with_cuda" != "no" ;then
 		#CUDA 7.0 supports C++11.
 		AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
     fi
+	
     #virtual GPUs are used here to allow JIT compilation during runtime
     #set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
-    if test "$cudaver" -lt 90 ;then
-		cuarch=20 #<cuda-8.0 supports compute_20
-    elif test "$cudaver" -lt 110 ;then
-		cuarch=30 #compute_30 is the minimum version
-	else
-		cuarch=50 #compute_50 is the minimum version
-    fi
+	CUDAOPT+=" -lineinfo "
+	CUDAOPT+=" -Wno-deprecated-gpu-targets"
 	CUDAOPT+=" -arch=compute_$cuarch" 
+	#CUDAOPT+="-Xptxas=-v -dlcm=cg"
     #To specify multiple architectures, use
     #CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
-    if test "$enable_debug" = "yes" ;then
-        CUDAOPT+=" -O0"
-    else
-	CUDAOPT+=" -O3"
-    fi
-    CUDAOPT+=" -g -lineinfo -DHAVE_CONFIG_H -I.. "
-    #CUDAOPT+="-Xptxas=-v -dlcm=cg"
-    if test "$host_cpu" = "x86_64" ;then
-        CUDAOPT+=" -DDLONG"
-    fi
-    #CUDAOPT+=" -std=c++11"
-    CUDAOPT+=" -Wno-deprecated-gpu-targets"
-    CCBINOPT="$OPTScommon $OPTSprof -fPIC $CPPFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
-    CCBINOPT="${CCBINOPT/-fpermissive/}"
-    LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
-    if $CCBIN -v 2>&1 |grep clang ;then
-		CCN=CLANG
-		LIBCUDA+=" -lstdc++"
-    elif $CCBIN -v 2>&1 |grep icc ;then
-	 	CCN=ICC
-	 	LIBCUDA+=" -lstdc++"
-    else
-		CCN=GCC
-		CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
-		LIBCUDA+=" -lstdc++"
-    fi
-    optname=${ccprefix}_${CCN}
-    CCBINOPT+=" ${!optname}"
-    if test -n "$OPENMP_CFLAGS";then
-        CCBINOPT+=" $OPENMP_CFLAGS"
-    fi
+ 
+	if test -n "$CCBINOPT" ;then
+		CCBINOPT="--compiler-options \"$CCBINOPT\""
+	fi
 fi
 if test "$with_cuda" != "no" ;then
     if test "$cuda_double" = "yes" ;then
@@ -1014,7 +1026,13 @@ if test "$with_cuda" != "no" ;then
     AC_SUBST(LIBCUDA)
     AC_SUBST(NVCC)
 else
+	if test "$user_enabled_cuda" = "yes" ;then
+		AC_MSG_ERROR([Specified cuda directory $CUDADIR is not valid])
+	else
+		AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR to specify CUDA location to enable CUDA support"])
+	fi
     AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
+	unset cudaver
 fi
 AM_CONDITIONAL(CUDA_DOUBLE, [test "$with_cuda" != "no" -a "$cuda_double" = "yes" ])
 AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
@@ -1038,7 +1056,6 @@ DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
-
 AC_CONFIG_FILES( [Makefile
 	sys/Makefile
 	math/Makefile

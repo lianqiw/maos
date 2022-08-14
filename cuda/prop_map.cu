@@ -173,7 +173,7 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 					const Real tcx2=tcx+0.5f;
 					const Real tcy2=tcy+0.5f;
 					//Each thread has the same coefficients, so we use
-					// shared memory to store them to avoid register spill.
+					// shared memory to store them to avoid spill.
 					Real* const& fx=(Real*)shared.fx;
 					Real* const& fy=(Real*)shared.fy;
 					if(threadIdx.x==0&&threadIdx.y==0){

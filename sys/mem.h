@@ -51,7 +51,7 @@ extern void  (*free_default)(void *);
 #define myrealloc(p, nelem, type) (type*)(funtrace_set, realloc_maos(p, nelem*sizeof(type)))
 #define myfree(p) if(p) free_maos(p)
 
-#ifndef IN_MEM_C
+#if !defined(IN_MEM_C) && !defined(AOS_CUDA_GPU_H)
 #define calloc(nelem, size) (funtrace_set, calloc_maos(nelem, size))
 #define malloc(size)        (funtrace_set, malloc_maos(size))
 #define realloc(p, size)    (funtrace_set, realloc_maos(p, size))

@@ -829,7 +829,7 @@ void X(muldiag)(X(mat)* restrict A, const X(mat)* restrict s){
 */
 void X(cwpow)(X(mat)* A, R power){
 	if(!A) return;
-	OMP_SIMD()
+	//OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=pow(P(A, i), power);
 	}
@@ -840,7 +840,7 @@ void X(cwpow)(X(mat)* A, R power){
 */
 void X(cwexp)(X(mat)* A, R alpha){
 	if(!A) return;
-	OMP_SIMD()
+	//OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=exp(P(A, i)*alpha);
 	}
@@ -870,7 +870,7 @@ void X(polyval)(X(mat)* A, XR(mat)* p){
 	int np=p->nx;
 	for(long i=0; i<A->nx*A->ny; i++){
 		T tmp=0;
-		OMP_SIMD(reduction(+:tmp))
+		//OMP_SIMD(reduction(+:tmp))
 		for(long ip=0; ip<np; ip++){
 			tmp+=P(p, ip)*(T)pow(P(A, i), np-ip-1);
 		}
@@ -1321,7 +1321,7 @@ X(mat)* X(spline)(X(mat)* x, X(mat)* y, X(mat)* xnew){
 */
 void X(cwlog10)(X(mat)* A){
 	R ratio=1./log(10);
-	OMP_SIMD()
+	//OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=log(P(A, i))*ratio;
 	}
@@ -1330,7 +1330,7 @@ void X(cwlog10)(X(mat)* A){
    Do a component wise log10 on each element of A.
 */
 void X(cwlog)(X(mat)* A){
-	OMP_SIMD()
+	//OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=log(P(A, i));
 	}
@@ -1520,7 +1520,7 @@ static void X(enc_thread)(thread_t* pdata){
 		/*Cache the data. */
 		for(long iy=0; iy<ncomp2; iy++){
 			R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
-			OMP_SIMD()
+			//OMP_SIMD()
 			for(long ir=pdata->start; ir<pdata->end; ir++){
 				P(pks, ir, iy)=sinc(ky*dr[ir])*dr[ir];
 			}

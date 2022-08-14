@@ -38,9 +38,9 @@ BUILT_SOURCES=maos2mex.h aolib.c
 maos2mex.h:../scripts/maos2mex.py ../maos/parms.h ../maos/types.h ../lib/accphi.h ../lib/cn2est.h ../lib/kalman.h \
           ../lib/locfft.h ../lib/muv.h ../lib/servo.h ../lib/stfun.h ../lib/turbulence.h \
           ../lib/mkdtf.h ../math/chol.h ../sys/scheduler.h
-	$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR) maos2mex.h
+	@$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR) maos2mex.h
 aolib.c:../maos/parms.h ../maos/types.h ../scripts/lib2mex.py ../scripts/maos.py aolib.h
-	$(SRC_DIR)/scripts/lib2mex.py $(SRC_DIR) aolib.c
+	@$(SRC_DIR)/scripts/lib2mex.py $(SRC_DIR) aolib.c
 nodist_aolib_SOURCES=aolib.c
 
 CLEANFILES=aolib.c maos2mex.h
