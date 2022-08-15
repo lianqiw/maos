@@ -10,6 +10,8 @@ var thread_8h =
       [ "thread_data", "thread_8h.html#afbfb86904241e75f24b54408a01da875", null ]
     ] ],
     [ "DO_PRAGMA", "thread_8h.html#a06984b6d18cdc8e8b34fba68710d3c88", null ],
+    [ "PRINT_MACRO", "thread_8h.html#a381c935ba92cfa06b2206dca05462064", null ],
+    [ "STR", "thread_8h.html#a18d295a837ac71add5578860b55e5502", null ],
     [ "LOCK", "thread_8h.html#a662929086396591a2ce1ad15f451c4e7", null ],
     [ "TRYLOCK", "thread_8h.html#a55fc678ee398cdadd9e6f7e3007db306", null ],
     [ "UNLOCK", "thread_8h.html#a8d93e3cae5962010a94c35fba4cef924", null ],

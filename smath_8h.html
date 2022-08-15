@@ -139,8 +139,8 @@ Functions</h2></td></tr>
 <tr class="separator:ab482e2894ec1fa75eff33b00e4798b7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4401aec4fbc231454b0158978892d29"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#af4401aec4fbc231454b0158978892d29">srefcols</a> (const <a class="el" href="type_8h.html#structsmat">smat</a> *in, <a class="el" href="classlong.html">long</a> icol, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
 <tr class="separator:af4401aec4fbc231454b0158978892d29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8f3f1729491c128bbccf8e3b9eba724"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724">sresize</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
-<tr class="separator:af8f3f1729491c128bbccf8e3b9eba724"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2142f864377839e118347712f53df5e4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a2142f864377839e118347712f53df5e4">sresize</a> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
+<tr class="separator:a2142f864377839e118347712f53df5e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1c23a17c97445bc4cae17b0df14a4d5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#ad1c23a17c97445bc4cae17b0df14a4d5">ssub</a> (const <a class="el" href="type_8h.html#structsmat">smat</a> *in, <a class="el" href="classlong.html">long</a> sx, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> sy, <a class="el" href="classlong.html">long</a> ny)</td></tr>
 <tr class="separator:ad1c23a17c97445bc4cae17b0df14a4d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b00d5a9dc712b5ba0ca1ff074f46cd8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#a5b00d5a9dc712b5ba0ca1ff074f46cd8">scat</a> (const <a class="el" href="type_8h.html#structsmat">smat</a> *in1, const <a class="el" href="type_8h.html#structsmat">smat</a> *in2, int dim)</td></tr>
@@ -944,14 +944,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sspcelldroptol</b> (<
 
 </div>
 </div>
-<a id="af8f3f1729491c128bbccf8e3b9eba724"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af8f3f1729491c128bbccf8e3b9eba724">&#9670;&nbsp;</a></span>sresize()</h2>
+<a id="a2142f864377839e118347712f53df5e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2142f864377839e118347712f53df5e4">&#9670;&nbsp;</a></span>sresize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void sresize </td>
+          <td class="memname">int sresize </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="type_8h.html#structsmat">smat</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -1057,7 +1057,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sspcelldroptol</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Concatenate two matrixes into 1 along dimension "dim" </p>
+<p>Concatenate two matrixes into 1 along "dim" (1 for x, 2 for y) </p>
 
 </div>
 </div>

@@ -138,8 +138,8 @@ Functions</h2></td></tr>
 <tr class="separator:a68cd0fb4c765694df6f15d8d9e8f598c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add90f20b6ec6a22f02bf31cb6a23dbeb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#add90f20b6ec6a22f02bf31cb6a23dbeb">drefcols</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *in, <a class="el" href="classlong.html">long</a> icol, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
 <tr class="separator:add90f20b6ec6a22f02bf31cb6a23dbeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a301b5a86cec0090378b142a09fb2066a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a301b5a86cec0090378b142a09fb2066a">dresize</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
-<tr class="separator:a301b5a86cec0090378b142a09fb2066a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab1b019f9087931a38abb3470d0d2a9d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ab1b019f9087931a38abb3470d0d2a9d9">dresize</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
+<tr class="separator:ab1b019f9087931a38abb3470d0d2a9d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e149114c808ff424f7fe215ee44d307"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a0e149114c808ff424f7fe215ee44d307">dsub</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *in, <a class="el" href="classlong.html">long</a> sx, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> sy, <a class="el" href="classlong.html">long</a> ny)</td></tr>
 <tr class="separator:a0e149114c808ff424f7fe215ee44d307"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a131e99be189eda7c5b32aba76bcbe8d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a131e99be189eda7c5b32aba76bcbe8d8">dcat</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *in1, const <a class="el" href="type_8h.html#structdmat">dmat</a> *in2, int dim)</td></tr>
@@ -907,14 +907,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladdI</b> (<a c
 
 </div>
 </div>
-<a id="a301b5a86cec0090378b142a09fb2066a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a301b5a86cec0090378b142a09fb2066a">&#9670;&nbsp;</a></span>dresize()</h2>
+<a id="ab1b019f9087931a38abb3470d0d2a9d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab1b019f9087931a38abb3470d0d2a9d9">&#9670;&nbsp;</a></span>dresize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void dresize </td>
+          <td class="memname">int dresize </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -1020,7 +1020,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladdI</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Concatenate two matrixes into 1 along dimension "dim" </p>
+<p>Concatenate two matrixes into 1 along "dim" (1 for x, 2 for y) </p>
 
 </div>
 </div>

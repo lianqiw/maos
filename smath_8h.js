@@ -12,7 +12,7 @@ var smath_8h =
     [ "sref", "smath_8h.html#a1dc61e5e5658d02897a0c61e5f51df3c", null ],
     [ "sref_reshape", "smath_8h.html#ab482e2894ec1fa75eff33b00e4798b7c", null ],
     [ "srefcols", "smath_8h.html#af4401aec4fbc231454b0158978892d29", null ],
-    [ "sresize", "smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724", null ],
+    [ "sresize", "smath_8h.html#a2142f864377839e118347712f53df5e4", null ],
     [ "ssub", "smath_8h.html#ad1c23a17c97445bc4cae17b0df14a4d5", null ],
     [ "scat", "smath_8h.html#a5b00d5a9dc712b5ba0ca1ff074f46cd8", null ],
     [ "sdup", "smath_8h.html#a11024234a0a310f7abd98b8f5f671216", null ],

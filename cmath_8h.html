@@ -142,8 +142,8 @@ Functions</h2></td></tr>
 <tr class="separator:a0f343af65e16d9311173151dd3f1705c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26f4e7a7bc9a0a30c5bd9a6cb0e906d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a26f4e7a7bc9a0a30c5bd9a6cb0e906d8">crefcols</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *in, <a class="el" href="classlong.html">long</a> icol, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
 <tr class="separator:a26f4e7a7bc9a0a30c5bd9a6cb0e906d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35b15d57f984dca577d67bc75fd1cf75"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a35b15d57f984dca577d67bc75fd1cf75">cresize</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
-<tr class="separator:a35b15d57f984dca577d67bc75fd1cf75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84f39f5db045f82392eeb610f71ceae9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a84f39f5db045f82392eeb610f71ceae9">cresize</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
+<tr class="separator:a84f39f5db045f82392eeb610f71ceae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac82f2f9e84a8c582dfa64b207036fab9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ac82f2f9e84a8c582dfa64b207036fab9">csub</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *in, <a class="el" href="classlong.html">long</a> sx, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> sy, <a class="el" href="classlong.html">long</a> ny)</td></tr>
 <tr class="separator:ac82f2f9e84a8c582dfa64b207036fab9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa599a4058986f102d01ddcb6723af232"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aa599a4058986f102d01ddcb6723af232">ccat</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *in1, const <a class="el" href="type_8h.html#structcmat">cmat</a> *in2, int dim)</td></tr>
@@ -989,14 +989,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cspmulsp2</b> (<a cla
 
 </div>
 </div>
-<a id="a35b15d57f984dca577d67bc75fd1cf75"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a35b15d57f984dca577d67bc75fd1cf75">&#9670;&nbsp;</a></span>cresize()</h2>
+<a id="a84f39f5db045f82392eeb610f71ceae9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a84f39f5db045f82392eeb610f71ceae9">&#9670;&nbsp;</a></span>cresize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void cresize </td>
+          <td class="memname">int cresize </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -1102,7 +1102,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cspmulsp2</b> (<a cla
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Concatenate two matrixes into 1 along dimension "dim" </p>
+<p>Concatenate two matrixes into 1 along "dim" (1 for x, 2 for y) </p>
 
 </div>
 </div>

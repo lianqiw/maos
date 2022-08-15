@@ -13,7 +13,7 @@ var cmath_8h =
     [ "cref", "cmath_8h.html#ab5acbf30c164ae75415b4301ee329d1f", null ],
     [ "cref_reshape", "cmath_8h.html#a0f343af65e16d9311173151dd3f1705c", null ],
     [ "crefcols", "cmath_8h.html#a26f4e7a7bc9a0a30c5bd9a6cb0e906d8", null ],
-    [ "cresize", "cmath_8h.html#a35b15d57f984dca577d67bc75fd1cf75", null ],
+    [ "cresize", "cmath_8h.html#a84f39f5db045f82392eeb610f71ceae9", null ],
     [ "csub", "cmath_8h.html#ac82f2f9e84a8c582dfa64b207036fab9", null ],
     [ "ccat", "cmath_8h.html#aa599a4058986f102d01ddcb6723af232", null ],
     [ "cdup", "cmath_8h.html#a66d5a6e5e44f4035aa069d75c47eaf84", null ],

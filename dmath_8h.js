@@ -12,7 +12,7 @@ var dmath_8h =
     [ "dref", "dmath_8h.html#a2e1ff58653a461432804d20406207982", null ],
     [ "dref_reshape", "dmath_8h.html#a68cd0fb4c765694df6f15d8d9e8f598c", null ],
     [ "drefcols", "dmath_8h.html#add90f20b6ec6a22f02bf31cb6a23dbeb", null ],
-    [ "dresize", "dmath_8h.html#a301b5a86cec0090378b142a09fb2066a", null ],
+    [ "dresize", "dmath_8h.html#ab1b019f9087931a38abb3470d0d2a9d9", null ],
     [ "dsub", "dmath_8h.html#a0e149114c808ff424f7fe215ee44d307", null ],
     [ "dcat", "dmath_8h.html#a131e99be189eda7c5b32aba76bcbe8d8", null ],
     [ "ddup", "dmath_8h.html#a7ecadca31195b8b40135b7dbeb808906", null ],

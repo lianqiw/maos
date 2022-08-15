@@ -257,7 +257,7 @@ var searchData=
   ['sref',['sref',['../smath_8h.html#a1dc61e5e5658d02897a0c61e5f51df3c',1,'stmp.c']]],
   ['sref_5freshape',['sref_reshape',['../smath_8h.html#ab482e2894ec1fa75eff33b00e4798b7c',1,'stmp.c']]],
   ['srefcols',['srefcols',['../smath_8h.html#af4401aec4fbc231454b0158978892d29',1,'stmp.c']]],
-  ['sresize',['sresize',['../smath_8h.html#af8f3f1729491c128bbccf8e3b9eba724',1,'stmp.c']]],
+  ['sresize',['sresize',['../smath_8h.html#a2142f864377839e118347712f53df5e4',1,'stmp.c']]],
   ['srot',['srot',['../classcuwfs__t.html#a71b6bb8f6b72ca8101c1211414ee51ff',1,'cuwfs_t::srot()'],['../maos_2types_8h.html#a06f49fc4dfae43b0cd3aca62bd65530d',1,'powfs_t::srot()']]],
   ['srsa',['srsa',['../maos_2types_8h.html#ac30143607f18cf7c2993d5a019a21313',1,'powfs_t']]],
   ['srsamax',['srsamax',['../maos_2types_8h.html#a1578360552fcb598c2d42d3131131d81',1,'powfs_t']]],

@@ -157,7 +157,7 @@ var searchData=
   ['dref',['dref',['../dmath_8h.html#a2e1ff58653a461432804d20406207982',1,'dtmp.c']]],
   ['dref_5freshape',['dref_reshape',['../dmath_8h.html#a68cd0fb4c765694df6f15d8d9e8f598c',1,'dtmp.c']]],
   ['drefcols',['drefcols',['../dmath_8h.html#add90f20b6ec6a22f02bf31cb6a23dbeb',1,'dtmp.c']]],
-  ['dresize',['dresize',['../dmath_8h.html#a301b5a86cec0090378b142a09fb2066a',1,'dtmp.c']]],
+  ['dresize',['dresize',['../dmath_8h.html#ab1b019f9087931a38abb3470d0d2a9d9',1,'dtmp.c']]],
   ['drotvec',['drotvec',['../dmath_8h.html#a8f45a8289d4ed3596288ced6b0a08389',1,'dtmp.c']]],
   ['drotvecnn',['drotvecnn',['../dmath_8h.html#aed72ea03bbea7c8ef187e554250b3217',1,'dtmp.c']]],
   ['drotvect',['drotvect',['../dmath_8h.html#a27d2806c24b43eda63b424adb1241a58',1,'dtmp.c']]],

@@ -149,7 +149,7 @@ var searchData=
   ['cref',['cref',['../cmath_8h.html#ab5acbf30c164ae75415b4301ee329d1f',1,'ctmp.c']]],
   ['cref_5freshape',['cref_reshape',['../cmath_8h.html#a0f343af65e16d9311173151dd3f1705c',1,'ctmp.c']]],
   ['crefcols',['crefcols',['../cmath_8h.html#a26f4e7a7bc9a0a30c5bd9a6cb0e906d8',1,'ctmp.c']]],
-  ['cresize',['cresize',['../cmath_8h.html#a35b15d57f984dca577d67bc75fd1cf75',1,'ctmp.c']]],
+  ['cresize',['cresize',['../cmath_8h.html#a84f39f5db045f82392eeb610f71ceae9',1,'ctmp.c']]],
   ['crotvec',['crotvec',['../cmath_8h.html#a14c53b64890a8d75683c0421b4810593',1,'ctmp.c']]],
   ['crotvecnn',['crotvecnn',['../cmath_8h.html#a1c8e350f5726049ab6d1b015f9dfa264',1,'ctmp.c']]],
   ['crotvect',['crotvect',['../cmath_8h.html#a5f87b233f6f3283794697c9403240dce',1,'ctmp.c']]],

@@ -13,7 +13,7 @@ var zmath_8h =
     [ "zref", "zmath_8h.html#af77e2b64f347ea69900f34df9b9e2d9e", null ],
     [ "zref_reshape", "zmath_8h.html#ab7b614ade9942ab71506e26d99f1c591", null ],
     [ "zrefcols", "zmath_8h.html#ac7c247374d9d6893b29ba53b19857245", null ],
-    [ "zresize", "zmath_8h.html#ac43c8c6f653af99cc4b7004240bd6b4d", null ],
+    [ "zresize", "zmath_8h.html#a60d4dd5059294f31733d9243a8119b19", null ],
     [ "zsub", "zmath_8h.html#af388bf8f248211e9b743b277aeaa2f55", null ],
     [ "zcat", "zmath_8h.html#ad83089296d997fa67aee7d584fbf21fb", null ],
     [ "zdup", "zmath_8h.html#a57b3c91c89644b4c3433b1ba00a84e96", null ],

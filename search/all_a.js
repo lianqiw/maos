@@ -157,7 +157,7 @@ var searchData=
   ['lref',['lref',['../lmath_8h.html#a58ac729e8fc54bad45f2306f5853df4e',1,'ltmp.c']]],
   ['lref_5freshape',['lref_reshape',['../lmath_8h.html#a3874bf43ddc435f69c574128ae61f897',1,'ltmp.c']]],
   ['lrefcols',['lrefcols',['../lmath_8h.html#a7cbca09004b84001b316a93dfb422f17',1,'ltmp.c']]],
-  ['lresize',['lresize',['../lmath_8h.html#a24c9b7e45c2ab7fbc1dc8a9602b57326',1,'ltmp.c']]],
+  ['lresize',['lresize',['../lmath_8h.html#a610b87a45884486978e518990de6a5a2',1,'ltmp.c']]],
   ['lrt_5fpiston',['lrt_piston',['../parms_8h.html#a75ae08c2d06aa69701a4518c2273f51c',1,'fit_cfg_t']]],
   ['lrt_5fptt',['lrt_ptt',['../parms_8h.html#a1a37004e05a2c83250bab99920fba463',1,'moao_cfg_t']]],
   ['lrt_5ftt',['lrt_tt',['../parms_8h.html#a93a1ad8d5f81a5577dcec9040929e8bd',1,'fit_cfg_t']]],

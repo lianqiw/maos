@@ -11,7 +11,7 @@ var lmath_8h =
     [ "lref", "lmath_8h.html#a58ac729e8fc54bad45f2306f5853df4e", null ],
     [ "lref_reshape", "lmath_8h.html#a3874bf43ddc435f69c574128ae61f897", null ],
     [ "lrefcols", "lmath_8h.html#a7cbca09004b84001b316a93dfb422f17", null ],
-    [ "lresize", "lmath_8h.html#a24c9b7e45c2ab7fbc1dc8a9602b57326", null ],
+    [ "lresize", "lmath_8h.html#a610b87a45884486978e518990de6a5a2", null ],
     [ "lsub", "lmath_8h.html#adcebdf3ffe4aaf26df65238b192823ad", null ],
     [ "lcat", "lmath_8h.html#acccac50e7076e735cc85387b91895706", null ],
     [ "ldup", "lmath_8h.html#a0cfd009dd2fcbc0a5f9584b0fa7f3aeb", null ],

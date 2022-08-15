@@ -114,6 +114,12 @@ Macros</h2></td></tr>
 <tr class="memitem:a06984b6d18cdc8e8b34fba68710d3c88"><td class="memItemLeft" align="right" valign="top"><a id="a06984b6d18cdc8e8b34fba68710d3c88"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>DO_PRAGMA</b>(A...)&#160;&#160;&#160;_Pragma(#A)</td></tr>
 <tr class="separator:a06984b6d18cdc8e8b34fba68710d3c88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a381c935ba92cfa06b2206dca05462064"><td class="memItemLeft" align="right" valign="top"><a id="a381c935ba92cfa06b2206dca05462064"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PRINT_MACRO</b>(x)&#160;&#160;&#160;DO_PRAGMA(message #x &quot; is &quot; STR(x))</td></tr>
+<tr class="separator:a381c935ba92cfa06b2206dca05462064"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18d295a837ac71add5578860b55e5502"><td class="memItemLeft" align="right" valign="top"><a id="a18d295a837ac71add5578860b55e5502"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>STR</b>(x)&#160;&#160;&#160;#x</td></tr>
+<tr class="separator:a18d295a837ac71add5578860b55e5502"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a662929086396591a2ce1ad15f451c4e7"><td class="memItemLeft" align="right" valign="top"><a id="a662929086396591a2ce1ad15f451c4e7"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>LOCK</b>(A)&#160;&#160;&#160;pthread_mutex_lock(&amp;A)</td></tr>
 <tr class="separator:a662929086396591a2ce1ad15f451c4e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
