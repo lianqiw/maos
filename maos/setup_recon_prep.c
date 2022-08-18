@@ -156,19 +156,23 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 		recon->W0=dspread("W0");
 		recon->W1=dread("W1");
 	} else{
-	/*
-	  Compute W0,W1 weighting matrix that can be used to compute piston
-	  removed wavefront variance of OPD: RMS=OPD'*(W0-W1*W1')*OPD; W0 is
-	  sparse. W1 is a vector. These matrices are used for weighting in DM
-	  fitting.
-	*/
+		/*
+		Compute W0,W1 weighting matrix that can be used to compute piston
+		removed wavefront variance of OPD: RMS=OPD'*(W0-W1*W1')*OPD; W0 is
+		sparse. W1 is a vector. These matrices are used for weighting in DM
+		fitting.
+		*/
 		real rin=0;
+		real rout=parms->aper.d/2;
 		if(parms->dbg.annular_W&&parms->aper.din>0){
-			warning("Define the W0/W1 on annular aperture instead of circular.\n");
+			dbg("Define the W0/W1 on annular aperture instead of circular.\n");
 			rin=parms->aper.din/2;
 		}
-		mkw_annular(recon->floc, 0, 0, rin, parms->aper.d/2,
-			&(recon->W0), &(recon->W1));
+		{
+			rout=loc_diam(recon->floc)/2;
+			dbg("rout is set to floc radius %g\n", rout);
+		}
+		mkw_annular(recon->floc, 0, 0, rin, rout, &(recon->W0), &(recon->W1));
 	}
 	if(parms->save.setup){
 		writebin(recon->W0, "W0");
@@ -751,20 +755,20 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		if(parms->recon.alg==1){//LSR.
 			recon->actcpl=genactcpl(recon->GA, 0);
 			act_stuck(recon->aloc, CELL(recon->actcpl), recon->actfloat);
-			if(parms->lsr.actinterp){
-				recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
+			if(parms->lsr.actextrap){
+				recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
 			} else if(recon->actfloat){
-				warning("There are float actuators, but fit.actinterp is off\n");
+				warning("There are float actuators, but fit.actextrap is off\n");
 			}
-			if(recon->actinterp){
+			if(recon->actextrap){
 				dspcell* GA2=0;
-				dspcellmulsp(&GA2, recon->GA, recon->actinterp, "nn", 1);
+				dspcellmulsp(&GA2, recon->GA, recon->actextrap, "nn", 1);
 				dspcellfree(recon->GA);
 				recon->GA=GA2;
 			}
 			if(parms->save.setup){
-				if(recon->actinterp){
-					writebin(recon->actinterp, "lsr_actinterp");
+				if(recon->actextrap){
+					writebin(recon->actextrap, "lsr_actinterp");
 				}
 				if(recon->actcpl){
 					writebin(recon->actcpl, "lsr_actcpl");
@@ -1026,44 +1030,35 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	}
 }
 /**
-   operator to remove diffrential focus modes that might be caused by sodium layer
+   operator to remove global or diffrential focus modes that might be caused by sodium layer
    horizontal structure.
 */
 
 static void
-setup_recon_DF(recon_t* recon, const parms_t* parms){
-	if(!recon->has_dfr) return;
-
+setup_recon_FF(recon_t* recon, const parms_t* parms){
 	int nwfs=parms->nwfsr;
-	recon->DF=dcellnew(nwfs, nwfs);
 	/*Then differential focus modes. */
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs==0) continue;
-		if(parms->powfs[ipowfs].dfrs){
-			if(parms->powfs[ipowfs].nwfs<2){
-				error("This powfs group has only 1 wfs. Could not remove diff focus\n");
-			}
-			int nsa=P(recon->saloc, ipowfs)->nloc;
-			dmat* DF=dnew(nsa*2, 1);
+		if(parms->powfs[ipowfs].nwfs>0 
+			&& !parms->powfs[ipowfs].skip
+			&& parms->powfs[ipowfs].llt
+			&& parms->powfs[ipowfs].frs){
+			const int nsa=P(recon->saloc, ipowfs)->nloc;
+			dmat* FF=dnew(nsa*2, 1);
 			/*saloc is lower left corner of subaperture. don't have to be the center. */
-			memcpy(P(DF), P(recon->saloc, ipowfs)->locx, sizeof(real)*nsa);
-			memcpy(P(DF)+nsa, P(recon->saloc, ipowfs)->locy, sizeof(real)*nsa);
-			/**
-			   postive focus on first wfs. negative focus on diagnonal wfs.
-			*/
-			for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			memcpy(P(FF), P(recon->saloc, ipowfs)->locx, sizeof(real)*nsa);
+			memcpy(P(FF)+nsa, P(recon->saloc, ipowfs)->locy, sizeof(real)*nsa);
+			if(!recon->FF) recon->FF=dcellnew(nwfs, nwfs);
+			dbg("powfs %d has focus mode in recon->FF\n", ipowfs);
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-				if(parms->powfs[ipowfs].skip){
-					error("This WFS %d should be included in Tomo.\n", iwfs);
-				}
-				dcp(&P(recon->DF, 0, iwfs), DF);
-				dadd(&P(recon->DF, iwfs, iwfs), 0, DF, -1);
+				P(recon->FF, iwfs, iwfs)=dref(FF);
 			}
-			dfree(DF);
+			dfree(FF);
 		}
 	}
-	if(parms->save.setup){
-		writebin(recon->DF, "DF");
+	if(parms->save.setup && recon->FF){
+		writebin(recon->FF, "FF");
 	}
 }
 /**
@@ -1167,23 +1162,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		P(recon->saloc, ipowfs)=locref(powfs[ipowfs].saloc);
 	}
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs==0) continue;
-		/*we will remove tip/tilt from the high order NGS wfs in split tomo mode.*/
-		if(parms->powfs[ipowfs].trs||(parms->recon.split&&!parms->powfs[ipowfs].lo)){
-			recon->has_ttr=1;
-			break;
-		}
-	}
-	if(!parms->recon.glao){
-		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			if(parms->powfs[ipowfs].nwfs<=1) continue;
-			if(parms->powfs[ipowfs].dfrs){
-				recon->has_dfr=1;
-				break;
-			}
-		}
-	}
+	
 	recon->ngrad=lnew(parms->nwfsr, 1);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -1203,12 +1182,11 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	setup_recon_GP(recon, parms, aper);
 	//TT Removal
 	setup_recon_TT(recon, parms, powfs);
-	//DF removal. //Deprecated
-	if(recon->has_dfr){
-		setup_recon_DF(recon, parms);
-	}
-	if(recon->DF){
-		recon->TTF=dcellcat(recon->TT, recon->DF, 2);
+	//Global or Differential focus removal.
+	setup_recon_FF(recon, parms);
+	
+	if(recon->FF){
+		recon->TTF=dcellcat_each(recon->TT, recon->FF, 2);
 	} else{
 		recon->TTF=dcellref(recon->TT);
 	}

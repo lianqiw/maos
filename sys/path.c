@@ -52,18 +52,16 @@ void addpath2(const char* path, int priority){
 	node->path=abspath; abspath=NULL;
 	node->priority=priority;
 	LOCK(mutex_path);
-	PATH_T* ia1=0, * ia2=0;
-	for(ia1=PATH; ia1; ia2=ia1, ia1=ia1->next){
-		if(ia1->priority<=priority){
+	PATH_T **curr;
+	for(curr=&PATH;*curr;){
+		PATH_T *old=*curr;
+		if(old->priority<=priority){
 			break;
 		}
+		curr=&old->next;
 	}
-	node->next=ia1;
-	if(ia2){
-		ia2->next=node;
-	} else{
-		PATH=node;
-	}
+	node->next=*curr;
+	*curr=node;
 	UNLOCK(mutex_path);
 }
 void addpath(const char* path){
@@ -74,20 +72,17 @@ void addpath(const char* path){
  */
 void rmpath(const char* path){
 	char* abspath=myabspath(path);
-	PATH_T* ia, * ib=NULL;
 	LOCK(mutex_path);
-	for(ia=PATH;ia;ia=ia->next){
-		if(!strcmp(ia->path, abspath)){/*found */
-			if(ib){/*there is parent node */
-				ib->next=ia->next;
-			} else{
-				PATH=ia->next;
-			}
-			free(ia->path);
-			free(ia);
+	for(PATH_T **curr=&PATH;*curr;){
+		PATH_T *node=*curr;
+		if(!strcmp(node->path, abspath)){/*found */
+			*curr=node->next;
+			free(node->path);
+			free(node);
 			break;
+		}else{
+			curr=&node->next;
 		}
-		ib=ia;
 	}
 	UNLOCK(mutex_path);
 	free(abspath);

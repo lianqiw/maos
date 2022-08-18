@@ -334,10 +334,10 @@ static void filter_cl(sim_t* simu){
 		for(int idm=0; idm<NX(simu->dmcmd); idm++){
 			dmm(&P(simu->dmcmd,idm), 0, P(simu->recon->amod,idm), P(simu->dmtmp,idm), "nn", 1);
 		}
-	} else if(simu->recon->actinterp&&!parms->recon.psol){
+	} else if(simu->recon->actextrap&&!parms->recon.psol){
 		//Extrapolate to edge actuators
 		dcellzero(simu->dmcmd);
-		dspcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
+		dspcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
 	} else{
 		dcellcp(&simu->dmcmd, simu->dmtmp);
 	}
@@ -519,10 +519,10 @@ static void filter_ol(sim_t* simu){
 		}
 	}
 	//Extrapolate to edge actuators
-	if(simu->recon->actinterp&&!parms->recon.modal){
+	if(simu->recon->actextrap&&!parms->recon.modal){
 		dcellcp(&simu->dmtmp2, simu->dmcmd);
 		dcellzero(simu->dmcmd);
-		dspcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp2, "nn", 1);
+		dspcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp2, "nn", 1);
 	}
 	if(simu->ttmreal){
 		ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);

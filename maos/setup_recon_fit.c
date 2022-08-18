@@ -84,26 +84,26 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 	//cpl accounts for floating actuators, but not stuck actuators.
 	act_stuck(fit->aloc, CELL(fit->actcpl), fit->actfloat);
 	if(global->parms->dbg.recon_stuck){
-	//Do not modify HA by floating actuators, otherwise, HA*actinterp will not work.
+	//Do not modify HA by floating actuators, otherwise, HA*actextrap will not work.
 		act_stuck(fit->aloc, CELL(HA), fit->actstuck);
 	}
 
-	if(fit->flag.actinterp){
-		fit->actinterp=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres);
+	if(fit->flag.actextrap){
+		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres);
 	} else if(fit->actfloat){
-		warning("There are float actuators, but fit.actinterp is off\n");
+		warning("There are float actuators, but fit.actextrap is off\n");
 	}
-	if(fit->actinterp){
+	if(fit->actextrap){
 	/*
 	  DM fitting output a is extrapolated to edge actuators by
-	  actinterp*a. The corresponding ray tracing from DM would be
-	  HA*actinterp*a. We replace HA by HA*actinterp to take this into
+	  actextrap*a. The corresponding ray tracing from DM would be
+	  HA*actextrap*a. We replace HA by HA*actextrap to take this into
 	  account during DM fitting.
 	*/
 		info("Replacing HA by HA*fit->interp\n");
 
 		dspcell* HA2=0;
-		dspcellmulsp(&HA2, HA, fit->actinterp, "nn", 1);
+		dspcellmulsp(&HA2, HA, fit->actextrap, "nn", 1);
 		dspcellfree(HA);
 		HA=HA2;
 	}
@@ -370,7 +370,7 @@ void free_fit(fit_t* fit, int nfit){
 			cellfree(fit[ifit].HXF);
 			cellfree(fit[ifit].HA);
 			cellfree(fit[ifit].actcpl);
-			cellfree(fit[ifit].actinterp);
+			cellfree(fit[ifit].actextrap);
 			cellfree(fit[ifit].actslave);
 			cellfree(fit[ifit].NW);
 			muv_free(&fit[ifit].FR);
@@ -421,12 +421,12 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 
 	dcellfree(recon->actcpl);
 	recon->actcpl=dcellref(fit->actcpl);
-	dcellfree(recon->actinterp);
-	recon->actinterp=dspcellref(fit->actinterp);
+	dcellfree(recon->actextrap);
+	recon->actextrap=dspcellref(fit->actextrap);
 
 	if(parms->save.setup){
 		writebin(fit->HA, "HA");
-		writebin(recon->actinterp, "actinterp");
+		writebin(recon->actextrap, "actextrap");
 		writebin(recon->actcpl, "actcpl");
 	}
 	if(parms->save.recon){

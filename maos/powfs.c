@@ -326,7 +326,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 				}
 			}
 		}
-		info("count=%d\n", count);
+		//info("count=%d\n", count);
 		powfs[ipowfs].saloc->nloc=count;
 	}
 	/*convert saloc to pts*/

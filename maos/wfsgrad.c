@@ -729,18 +729,18 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const int do_phy=simu->wfsflags[ipowfs].do_phy;
-		/*New plate mode focus offset for LGS WFS. Not really needed*/
 		if(!simu->wfsflags[ipowfs].gradout||!parms->powfs[ipowfs].llt
 			||simu->wfsisim<parms->powfs[ipowfs].step||!do_phy){
 			continue;
 		}
 
+		/*New plate mode focus offset for LGS WFS. Not really needed*/
 		if(parms->tomo.ahst_focus==2
 			&&simu->Mint_lo&&P(simu->Mint_lo->mint, 1)&&simu->wfsflags[ipowfs].gradout){
 			 /*When tomo.ahst_focus>0, the first plate scale mode contains focus for
 			   lgs. But it turns out to be not necessary to remove it because the
 			   HPF in the LGS path removed the influence of this focus mode. set
-			   tomo.ahst_focus=2 to enable adjust gradients.*/
+			   tomo.ahst_focus=2 to enable adjust gradients. (testing only)*/
 
 			real scale=simu->recon->ngsmod->scale;
 			int indps=simu->recon->ngsmod->indps;
@@ -751,13 +751,11 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), focus);
 			}
 		}
-		real lgsfocusm=0;
-		if(parms->powfs[ipowfs].zoomshare||parms->sim.mffocus==2){
-			lgsfocusm=0;
+		real lgsfocusm=0;//LGS averaged focus
+		if(parms->sim.mffocus==2){
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 				lgsfocusm+=P(P(LGSfocus, iwfs), 0);
-				P(P(simu->LGSfocusts, iwfs), simu->wfsisim)=P(P(LGSfocus, iwfs), 0);
 			}
 			lgsfocusm/=parms->powfs[ipowfs].nwfs;
 		}
@@ -768,17 +766,22 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 		  step. No need if start with pre-built matched filter.*/
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			P(P(simu->LGSfocusts, iwfs), simu->wfsisim)=P(P(LGSfocus, iwfs), 0);//save time history 
 			if(parms->powfs[ipowfs].zoomgain){
 				//Trombone from gradients. always enable
-				P(simu->zoomavg, iwfs)+=P(P(LGSfocus, iwfs), 0);//zoom averager.
+				P(simu->zoomavg, iwfs)+=P(P(LGSfocus, iwfs), 0);//zoom averager
 				P(simu->zoomavg_count, iwfs)++;
 			}
 			if(parms->sim.mffocus){//Focus HPF
-				real infocus=parms->sim.mffocus==2?lgsfocusm:P(P(LGSfocus, iwfs), 0);
-				//In RTC. LPF can be put after using the value to put it off critical path.
-				real lpfocus=parms->sim.lpfocushi;
-				P(simu->lgsfocuslpf, iwfs)=P(simu->lgsfocuslpf, iwfs)*(1-lpfocus)+infocus*lpfocus;
+				real focus=parms->sim.mffocus==2?lgsfocusm:P(P(LGSfocus, iwfs), 0);
+				/*2022-08-26: focus removal in tomo RHS (unless LHS also) has
+				worse performance because it removes focus from PSOL grads, not
+				CL grads.*/
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), -P(simu->lgsfocuslpf, iwfs));
+				P(P(simu->LGSfocusts, iwfs), simu->wfsisim)+=-P(simu->lgsfocuslpf, iwfs);
+				//LPF is after using the value to put it off critical path of the RTC.
+				real lpfocus=parms->sim.lpfocushi;
+				P(simu->lgsfocuslpf, iwfs)=P(simu->lgsfocuslpf, iwfs)*(1-lpfocus)+focus*lpfocus;
 			}
 		}//for jwfs
 	}//for ipowfs

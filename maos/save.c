@@ -278,7 +278,7 @@ void save_dmreal(sim_t* simu){
 				if(P(P(simu->dmint->mint,0),idm)){
 					dmat* tmp=convert_dm(recon, P(P(simu->dmint->mint,0),idm), idm);
 					drawopd("DM", P(recon->aloc,idm), tmp, NULL,
-						"DM Integrator (Hi)", "x (m)", "y (m)", "Int Hi %d", idm);
+						"DM Integrator (Hi)", "x (m)", "y (m)", "Int %d", idm);
 					dfree(tmp);
 				}
 			}

@@ -134,6 +134,7 @@ void TTFR(dcell* x, const dcell* TTF, const dcell* PTTF){
 	dcell* junk=NULL;
 	dcellmm(&junk, PTTF, x, "nn", 1);
 	dcellmm(&x, TTF, junk, "nn", -1);
+	//dbg("PTTF: %g %g %g\n", P(P(junk, 0, 0), 0), P(P(junk, 0, 0),1), P(P(junk, 0, 0), 2));
 	dcellfree(junk);
 }
 /**

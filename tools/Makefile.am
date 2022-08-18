@@ -25,12 +25,6 @@ ___bin_record_cpu_SOURCES=record_cpu.c
 endif
 
 if GUI
-if CAIRO
-PROGS+=../bin/drawdaemon 
-___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c resources.c
-___bin_drawdaemon_CFLAGS=$(CAIRO_CFLAGS) $(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
-___bin_drawdaemon_LDADD=../sys/libaosys.la $(CAIRO_LIBS) $(GTK_LIBS) $(MAC_LIBS) -lgthread-2.0
-endif
 if USE_SCHEDULER
 PROGS+=../bin/monitor 
 ___bin_monitor_SOURCES=monitor_gui.c monitor.c monitor_thread.c resources.c
@@ -40,6 +34,12 @@ if NOTIFY
 ___bin_monitor_CFLAGS+=$(NOTIFY_CFLAGS) -DWITH_NOTIFY=1
 ___bin_monitor_LDADD+=$(NOTIFY_LIBS)
 endif
+endif
+if CAIRO
+PROGS+=../bin/drawdaemon 
+___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c resources.c
+___bin_drawdaemon_CFLAGS=$(CAIRO_CFLAGS) $(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
+___bin_drawdaemon_LDADD=../sys/libaosys.la $(CAIRO_LIBS) $(GTK_LIBS) $(MAC_LIBS) -lgthread-2.0
 endif
 endif
 

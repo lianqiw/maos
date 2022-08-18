@@ -127,6 +127,15 @@ OMP_TASK_FOR(4)
 			}
 		}
 	}
+	/*{
+		dcell *junk=NULL;
+		dcellmm(&junk, recon->PTTF, simu->gradlastcl, "nn", 1);
+		dbg("gradcl TTF: %g %g %g\n", P(P(junk, 0, 0), 0), P(P(junk, 0, 0), 1), P(P(junk, 0, 0), 2));
+		dcellzero(junk);
+		dcellmm(&junk, recon->PTTF, simu->gradlastol, "nn", 1);
+		dbg("gradol TTF: %g %g %g\n", P(P(junk, 0, 0), 0), P(P(junk, 0, 0), 1), P(P(junk, 0, 0), 2));
+		cellfree(junk);
+	}*/
 }
 static void recon_split(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -410,11 +419,17 @@ void reconstruct(sim_t* simu){
 		}
 		if(parms->recon.psol){
 			//form error signal in PSOL mode
-			if(simu->recon->actinterp){
-			//extrapolate DM fitting result to float and edge actuators
-				dcellcp(&simu->dmtmp, simu->dmerr);
+			if(simu->recon->actextrap){
+				//extrapolate DM fitting result to float and edge actuators
+				dcell *dmtmp;
+				if(simu->dmfit!=simu->dmerr){
+					dmtmp=simu->dmfit;
+				}else{
+					dcellcp(&simu->dmtmp, simu->dmerr);
+					dmtmp=simu->dmtmp;
+				}
 				dcellzero(simu->dmerr);
-				dspcellmm(&simu->dmerr, simu->recon->actinterp, simu->dmtmp, "nn", 1);
+				dspcellmm(&simu->dmerr, simu->recon->actextrap, dmtmp, "nn", 1);
 			}
 
 			dcell* dmpsol;

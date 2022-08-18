@@ -249,7 +249,7 @@ typedef struct fit_t{
     dspcell *HXF;      /**<ray tracing propagator from xloc to floc for fitting directions.*/
     dspcell *HA;       /**<ray tracing from aloc to floc for fitting directions.*/
     dcell *actcpl;
-    dspcell* actinterp;     /**<actautor interpolation*/
+    dspcell* actextrap;     /**<actuator interpolation*/
     dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     dcell *NW;         /**<null modes for DM fit.*/
     
@@ -324,15 +324,15 @@ typedef struct recon_t{
     dspcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
-    dcell *DF;         /**<Differential focus modes for LGS wfs*/
-    dcell *PDF;        /**<pinv of DF. to use in RTC.*/
+    dcell *FF;         /**<Global focus or Differential focus modes for LGS wfs low rank*/
+    dcell *PFF;        /**<pinv of FF. to use in RTC.*/
     dcell *TTF;        /**<Concatenation of TT and DF*/
     dcell *PTTF;       /**<pinv of TTF*/
     dspcell *ZZT;       /**<single point piston constraint in tomography.*/
     dcell *DMTT;       /**<DM tip/tilt mode.*/
     dcell *DMPTT;      /**<DM tip/tilt reconstructor.*/
     dcell *actcpl;     /**<actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved.*/
-    dspcell *actinterp; /**<Interpolation operator for floating actuators and edge actuators. Slaving does not work well in CG. */
+    dspcell *actextrap; /**<Interpolation operator for floating actuators and edge actuators. Slaving does not work well in CG. */
     dspcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
     dspcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/
     dspcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
@@ -376,8 +376,6 @@ typedef struct recon_t{
 
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/
-    int has_ttr;       /**<whether there is any tip/tilt removed WFS*/
-    int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
     int cxxalg;        /**<records parms->tomo.cxxalg*/
 

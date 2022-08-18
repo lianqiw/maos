@@ -37,9 +37,6 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#ifndef GTK_WIDGET_VISIBLE
-#define GTK_WIDGET_VISIBLE gtk_widget_get_visible
-#endif
 #include "monitor.h"
 #if MAC_INTEGRATION //In newer GTK>3.6, using GtkApplication instead of this extension.
 #include <gtkosxapplication.h>
@@ -47,6 +44,9 @@
 #if WITH_NOTIFY
 #include <libnotify/notify.h>
 static int notify_daemon=1;
+#endif
+#ifndef GTK_WIDGET_VISIBLE
+#define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
 int sock_main[2]={0,0}; /*Used to talk to the thread that runs listen_host*/
 GdkPixbuf* icon_main=NULL;
@@ -591,7 +591,7 @@ static void add_host_event(GtkButton* button, gpointer data){
 //todo: consolidate with drawdaemon_gui.new_tool()
 static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf* iconbuf, const char* cmdname, void(*func)(GtkButton*, gpointer data), int data){
 #if GTK_MAJOR_VERSION<3
-	GtkToolItem* item;
+	GtkWidget* item;
 	if(cmdname){
 		GtkWidget* image;
 		if(iconbuf){
@@ -599,19 +599,22 @@ static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf
 		} else{
 			image=gtk_image_new_from_icon_name(iconname, GTK_ICON_SIZE_SMALL_TOOLBAR);
 		}
-		item=gtk_tool_button_new(image, cmdname);
-		gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(item), cmdname);
+		item=gtk_button_new();//image, cmdname);
+		gtk_button_set_image(GTK_BUTTON(item), image);
+		//gtk_button_set_label(GTK_BUTTON(item), cmdname);
+		gtk_widget_set_tooltip_text(item, cmdname);
 		g_signal_connect(item, "clicked", G_CALLBACK(func), GINT_TO_POINTER(data));
 	}else{
-		item=gtk_separator_tool_item_new();
+		item=gtk_vseparator_new();
 	}
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item,-1);
-#else //gtk4
+	//gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item,-1);
+#else //gtk3 or gtk4
 	GtkWidget *item;
 	if(cmdname){
 		item=button_new(iconname);
+#if GTK_MAJOR_VERSION<=3
 		gtk_button_set_relief(GTK_BUTTON(item),GTK_RELIEF_NONE);
-	
+#endif
 		if(iconbuf){
 			GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
 	#if GTK_MAJOR_VERSION<=3
@@ -626,8 +629,8 @@ static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf
 	}else{
 		item=gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
 	}
-	box_append(GTK_BOX(toolbar), item, FALSE, FALSE, 0);
 #endif
+	box_append(GTK_BOX(toolbar), item, FALSE, FALSE, 0);
 }
 
 
@@ -715,8 +718,11 @@ void create_window(
 	parse_provider();//requires window to be set
 	gtk_window_set_title(GTK_WINDOW(window), "MAOS Monitor");
 	GtkWidget* vbox=gtk_vbox_new(FALSE, 0);
+#if GTK_MAJOR_VERSION<4
 	gtk_container_add(GTK_CONTAINER(window),vbox);
-	
+#else
+	gtk_window_set_child(GTK_WINDOW(window),vbox);
+#endif
 #if GTK_MAJOR_VERSION<4 && 0
 	toptoolbar=gtk_toolbar_new();
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar),GTK_ICON_SIZE_MENU);
@@ -733,8 +739,9 @@ void create_window(
 	new_toolbar_item(toptoolbar,"process-stop",icon_cancel,"Kill all jobs",kill_all_jobs,-1);
 	new_toolbar_item(toptoolbar,"media-floppy",icon_save,"Save jobs to file",save_all_jobs,-1);
 	new_toolbar_item(toptoolbar,NULL,NULL,NULL,NULL,0);
+#if GTK_MAJOR_VERSION<4
 	gtk_widget_show_all(toptoolbar);
-
+#endif
 	notebook=gtk_notebook_new();
 	if(1){
 		gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toptoolbar, GTK_PACK_START);
@@ -988,5 +995,6 @@ int main(int argc, char* argv[]){
 	g_signal_connect(app, "activate", G_CALLBACK(create_window), NULL);
 	status=g_application_run(G_APPLICATION(app), argc, argv);
 	g_object_unref(app);
+	return status;
 #endif
 }

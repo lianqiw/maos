@@ -924,7 +924,7 @@ void loc_circle_mul(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, r
 /**
    Create a gray pixel elliptical map in phi using coordinates defined in loc,
    center defined using cx, cy, radii of rx, ry, and value of val */
-void locellipse_add(dmat* phi, loc_t* loc, real cx, real cy,
+void loc_ellipse_add(dmat* phi, loc_t* loc, real cx, real cy,
 	real rx, real ry, real val){
 	if(!phi||!loc) return;
 /*cx,cy,r are in unit of true unit, as in loc */

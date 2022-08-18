@@ -177,39 +177,13 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 
 cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
 	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->tomo.cgwarm:0),
-	grid(_grid), ptt(0), nwfs(0){
+	grid(_grid), nttf(0), lhs_nttf(0), nwfs(0){
 	nwfs=parms->nwfsr;
 
-	if(recon->PTT&&!PTT){//for t/t proj in 1)uplink t/t 2) recon
-		//dbg("Copying PTT\n");
-		cp2gpu(PTT, recon->PTT);
+	if(recon->PTTF&&!PTTF){//for t/t proj in 1)uplink t/t 2) recon
+		cp2gpu(PTTF, recon->PTTF);
 	}
-	ptt=!parms->recon.split||(parms->tomo.splitlrt&&parms->recon.mvm!=2);
-	{
-		//dbg("Copying PDF, PDFTT\n");
-		PDF=curcell(parms->npowfs, 1);
-		PDFTT=curcell(parms->npowfs, 1);
-		dcell* pdftt=NULL;
-		dcellmm(&pdftt, recon->PDF, recon->TT, "nn", 1);
-		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			if(parms->powfs[ipowfs].dfrs){//deprecated.	
-			/*We only use the first diagonal block for each powfs. The
-			  off diagonal is simply -1/(nlgswfs-1) times the diagonal block*/
-				int iwfs1=parms->powfs[ipowfs].wfs->p[1];//second wfs
-				cp2gpu(PDF[ipowfs], recon->PDF->p[iwfs1*nwfs+iwfs1]);
-				if(parms->powfs[ipowfs].trs){
-					/*coupling between TT and DF modes.
-					  We desire (I-DF*PDF)(I-TT*PTT)g=(I-TT*PTT-DF*PDF+DF*PDF*TT*PTT)g
-					  So we first compute tt=PTT*g; df=PDF*g; then
-					  g2=(I-TT*tt-DF*(df-(PDF*TT)*tt))
-					  Here we record the values of PDF*TT
-					*/
-					cp2gpu(PDFTT[ipowfs], pdftt->p[iwfs1*nwfs+iwfs1]);
-				}
-			}
-		}
-		dcellfree(pdftt);
-	}
+	
 	{
 		//dbg("Copying GP\n");
 		GPp=Cell<short2, Gpu>(nwfs, 1);
@@ -271,11 +245,11 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			GPDATA[iwfs].GPp=(short2*)GPp[iwfs]();
 			GPDATA[iwfs].GPscale=GPscale[iwfs];
 			if(parms->powfs[ipowfs].trs){
-				GPDATA[iwfs].PTT=PTT(iwfs, iwfs)();
-			}
-			if(parms->powfs[ipowfs].dfrs){
-				GPDATA[iwfs].PDF=PDF[ipowfs]();
-				GPDATA[iwfs].PDFTT=PDFTT[ipowfs]();
+				GPDATA[iwfs].PTTF=PTTF(iwfs, iwfs)();
+				if(!nttf) nttf=PTTF(iwfs, iwfs).Nx();
+				else if(nttf!=PTTF(iwfs, iwfs).Nx()){
+					error("PTTF for different WFS does not match: %d vs %ld\n", nttf, PTTF(iwfs, iwfs).Nx());
+				}
 			}
 
 			GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs]();
@@ -287,6 +261,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			GPDATA[iwfs].oxp=recon->pmap->ox;
 			GPDATA[iwfs].oyp=recon->pmap->oy;
 		}
+		lhs_nttf=(!parms->recon.split||(parms->tomo.splitlrt&&parms->recon.mvm!=2))?nttf:0;
 		gpdata.init(nwfs, 1);
 		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, H2D));
 		//delete [] GPDATA;
@@ -331,7 +306,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 		opdwfs=curcell(nwfs, 1, nxpw, nypw);
 
 		grad=curcell(nwfs, 1, ngw, (int*)NULL);
-		ttf=curmat(3*nwfs, 1);
+		ttf=curmat(nttf,nwfs);
 	}
 }
 
@@ -381,12 +356,12 @@ __global__ void gpu_laplacian_do(lap_t* datai, Real* const* outall, const Real* 
    Handles TTDF*GP
 */
 #define DIM_GP 128
-__global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttout, Real* dfout, Real* const* wfsopd, int ptt){
-	__shared__ Real gx[DIM_GP];
-	__shared__ Real gy[DIM_GP];
-	__shared__ Real gdf[DIM_GP];
+__global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout, Real* const* wfsopd, int nttf){
+	__shared__ Real ggf[3][DIM_GP];
+	//__shared__ Real gy[DIM_GP];
+	//__shared__ Real gf[DIM_GP];
 	const int iwfs=blockIdx.z;
-	const int nwfs=gridDim.z;
+	//const int nwfs=gridDim.z;
 	gpu_gp_t* datai=data+iwfs;
 	const int pos=datai->pos;
 	if(!pos) return;
@@ -446,55 +421,29 @@ __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttout,
 			}/*for isa */
 		}
 	}
-	/* Global TT, Diff-Focus projection. Modifed from previous kernel so that
-	   each thread handle the same subaperture as previous gradient operation to
-	   avoid synchronization */
-	if(datai->PTT&&ptt){
-		Real(*restrict PTT)[2]=(Real(*)[2])datai->PTT;
-		gx[threadIdx.x]=0;
-		gy[threadIdx.x]=0;
+	/* Global TT, Focus projection. Make sure  each thread handle the same
+	subaperture as previous gradient operation to avoid synchronization issue.*/
+	if(datai->PTTF&&nttf){//npttf has number of modes
+		Real *PTTF=datai->PTTF;
+		for(int im=0; im<nttf; im++){
+			ggf[im][threadIdx.x]=0;
+		}
 		for(int isa=blockIdx.x*blockDim.x+threadIdx.x; isa<nsa; isa+=step){/*ng is nsa*2. */
-			Real tmpx=PTT[isa][0]*g[isa];
-			Real tmpy=PTT[isa][1]*g[isa];
-			gx[threadIdx.x]+=tmpx+PTT[isa+nsa][0]*g[isa+nsa];
-			gy[threadIdx.x]+=tmpy+PTT[isa+nsa][1]*g[isa+nsa];
+			for (int im=0; im<nttf; im++){
+				ggf[im][threadIdx.x]+=PTTF[isa*nttf+im]*g[isa]+PTTF[(isa+nsa)*nttf+im]*g[isa+nsa];
+			}
 		}
 		for(int step=(DIM_GP>>1); step>0; step>>=1){
 			__syncthreads();
 			if(threadIdx.x<step){
-				gx[threadIdx.x]+=gx[threadIdx.x+step];
-				gy[threadIdx.x]+=gy[threadIdx.x+step];
+				for(int im=0; im<nttf; im++){
+					ggf[im][threadIdx.x]+=ggf[im][threadIdx.x+step];
+				}
 			}
 		}
 		if(threadIdx.x==0){
-			atomicAdd(&ttout[iwfs*2], -gx[0]);
-			atomicAdd(&ttout[iwfs*2+1], -gy[0]);
-		}
-	}
-	if(datai->PDF&&ptt){
-		Real* restrict PDF=datai->PDF;//the diagonal block
-		const int ipowfs=datai->ipowfs;
-		Real scale=-1./(datai->nwfs-1);//PDF*scale gives the off diagonal block
-		for(int irow=0; irow<nwfs; irow++){//skip first row
-			if(data[irow].ipowfs!=ipowfs||data[irow].jwfs==0) continue;//different group or first wfs.
-			gdf[threadIdx.x]=0;
-			for(int isa=blockIdx.x*blockDim.x+threadIdx.x; isa<nsa; isa+=step){/*ng is nsa*2. */
-				gdf[threadIdx.x]+=PDF[isa]*g[isa]+PDF[isa+nsa]*g[isa+nsa];
-			}
-			for(int step=(DIM_GP>>1); step>0; step>>=1){
-				__syncthreads();
-				if(threadIdx.x<step){
-					gdf[threadIdx.x]+=gdf[threadIdx.x+step];
-				}
-			}
-			if(threadIdx.x==0){
-				if(datai->PTT){//adjust by TT coupling
-					gdf[0]-=datai->PDFTT[0]*gx[0]+datai->PDFTT[1]*gy[0];
-				}
-				if(irow!=iwfs){
-					gdf[0]*=scale;
-				}
-				atomicAdd(&dfout[irow], -gdf[0]);
+			for(int im=0; im<nttf; im++){
+				atomicAdd(&ttfout[iwfs*nttf+im], -ggf[im][0]);
 			}
 		}
 	}
@@ -504,9 +453,9 @@ __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttout,
    Handles GP'*nea*(1-TTDF)
    Be carefulll about the ptt flag. It is always 1 for Right hand side, but may be zero for Left hand side.
 */
-__global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Real* ttin, const Real* dfin, Real* const* gin, int ptt){
+__global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Real* ttfin, Real* const* gin, int nttf){
 	const int iwfs=blockIdx.z;
-	const int nwfs=gridDim.z;
+	//const int nwfs=gridDim.z;
 	gpu_gp_t* datai=data+iwfs;
 	const int pos=datai->pos;
 	if(!pos) return;
@@ -517,23 +466,15 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 	const Real dxp=datai->dxp;
 	const Real oxp=datai->oxp;
 	const Real oyp=datai->oyp;
-	Real focus=0;
-	if(datai->PDF&&ptt){
-		if(iwfs==0){
-			for(int id=1; id<nwfs; id++){
-				focus+=dfin[id];
-			}
-		} else{
-			focus=-dfin[iwfs];
-		}
-	}
+
 	Real* restrict g=gin[iwfs];
 	Real* restrict map=wfsopd?wfsopd[iwfs]:0;
 	Real GPscale=datai->GPscale;
-	Real ttx=0, tty=0;
-	if(datai->PTT&&ptt){
-		ttx=ttin[iwfs*2+0];
-		tty=ttin[iwfs*2+1];
+	Real ttx=0, tty=0, focus=0;
+	if(datai->PTTF&&nttf){
+		ttx=ttfin[iwfs*nttf+0];
+		tty=ttfin[iwfs*nttf+1];
+		if(nttf>2) focus=ttfin[iwfs*nttf+2];
 	}
 	const int nx=datai->nxp;
 	const short2* restrict pxy=datai->GPp;
@@ -604,7 +545,7 @@ void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, stream
 	}
 	cuzero(ttf, stream);
 	gpu_gp_do<<<dim3(24, 1, nwfs), dim3(DIM_GP, 1), 0, stream>>>
-		(gpdata(), _grad.pm(), ttf(), ttf()+nwfs*2, _opdwfs?_opdwfs.pm():NULL, ptt2);
+		(gpdata(), _grad.pm(), ttf(), _opdwfs?_opdwfs.pm():NULL, ptt2);
 }
 void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& stream){
 	if(_opdwfs){
@@ -612,7 +553,7 @@ void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& s
 	}
 	//Does  GP'*NEA*(1-TTDF) if _opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
 	gpu_gpt_do<<<dim3(24, 1, nwfs), dim3(DIM_GP, 1), 0, stream>>>
-		(gpdata(), _opdwfs?_opdwfs.pm():0, ttf(), ttf()+nwfs*2, _grad.pm(), ptt2);
+		(gpdata(), _opdwfs?_opdwfs.pm():0, ttf(), _grad.pm(), ptt2);
 
 	if(_opdwfs){//Does GP' for GP with sparse
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -656,8 +597,8 @@ void cutomo_grid::R(curcell& xout, Real beta, curcell& _grad, Real alpha, stream
 	} else{
 		curcellscale(xout, beta, stream);
 	}
-	do_gp(_grad, curcell(), 1, stream);
-	do_gpt(opdwfs, _grad, 1, stream);
+	do_gp(_grad, curcell(), nttf, stream);
+	do_gpt(opdwfs, _grad, nttf, stream);
 	HXT(xout, alpha, stream);
 }
 
@@ -668,9 +609,9 @@ void cutomo_grid::Rt(curcell& gout, Real beta, const curcell& xin, Real alpha, s
 		curcellscale(gout, beta, stream);
 	}
 	HX(xin, alpha, stream);
-	do_gp(gout, opdwfs, 1, stream);
+	do_gp(gout, opdwfs, nttf, stream);
 	curcell dummy;
-	do_gpt(dummy, gout, 1, stream);
+	do_gpt(dummy, gout, nttf, stream);
 }
 
 /*
@@ -692,10 +633,10 @@ void cutomo_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 	HX(xin, 1, stream);
 	ctoc("Hx");
 	//opdwfs to grad to ttf
-	do_gp(grad, opdwfs, ptt, stream);
+	do_gp(grad, opdwfs, lhs_nttf, stream);
 	ctoc("Gp");
 	//grad and ttf to opdwfs
-	do_gpt(opdwfs, grad, ptt, stream);
+	do_gpt(opdwfs, grad, lhs_nttf, stream);
 	ctoc("Gpt");
 	//opdwfs to xout
 	HXT(xout, alpha, stream);

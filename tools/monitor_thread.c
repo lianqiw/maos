@@ -153,7 +153,7 @@ static void host_added(int ihost, int sock){
 		FD_SET(sock, &active_fd_set);
 		if(!headless) g_idle_add(host_up, GINT_TO_POINTER(ihost));
 	}
-	info_time("connected to %s\n", hosts[ihost]);
+	dbg_time("connected to %s\n", hosts[ihost]);
 }
 
 /*remove the host upon disconnection*/
@@ -196,7 +196,7 @@ static int add_host(int ihost){
 			}
 		}
 		if(sock<0){
-			info_time("Cannot reach %s\n", hosts[ihost]);
+			dbg_time("Cannot reach %s\n", hosts[ihost]);
 			hsock[ihost]=-1;
 		}
 	}

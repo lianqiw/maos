@@ -775,7 +775,7 @@ AS_IF([ test -n "$PKG_CONFIG"],[#use AS_IF instead of if to avoid error regardin
 		gtk_ver="2"
     else
 		AS_IF([test "$use_gtk_4" != "no" ], [PKG_CHECK_MODULES([GTK], gtk4,               [gtk_ver="4"], [gtk_ver="0"])])
-		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0,           [gtk_ver="3"], [gtk_ver="0"])])
+		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0,[gtk_ver="3"], [gtk_ver="0"])])
 		AS_IF([test "$gtk_ver" = "0" ],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
     fi
     AS_IF([test "$gtk_ver" != "0"], [
@@ -793,6 +793,8 @@ AS_IF([ test -n "$PKG_CONFIG"],[#use AS_IF instead of if to avoid error regardin
 			fi
 		fi
 		GTK_CFLAGS+=" -Wno-deprecated-declarations"
+	elif test "$gtk_ver" = "3" ;then
+		GTK_CFLAGS+=" -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
     fi
     AC_DEFINE_UNQUOTED(MAC_INTEGRATION, [$has_mac], ["Mac integration"])
     #The following will substitute the variables name 

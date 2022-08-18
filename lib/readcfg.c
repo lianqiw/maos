@@ -410,6 +410,8 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			RENAME(recon.psddtrat, recon.psddtrat_hi);
 			RENAME(powfs.ncomp, powfs.notf);
 			IGNORE(powfs.radrot);
+			RENAME(fit.actinterp, fit.actextrap);
+			RENAME(lsr.actinterp, lsr.actextrap);
 #endif
 			STORE_T* store=mycalloc(1, STORE_T);
 			if(prefix){

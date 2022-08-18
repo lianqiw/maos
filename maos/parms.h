@@ -187,7 +187,7 @@ typedef struct powfs_cfg_t{
     int type;      /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
     int step;      /**<frame to start using WFS*/
     int trs;       /**<tip/tilt removal flag. True for LGS, False for NGS*/
-    int dfrs;      /**<differential focus removal flag. True for LGS, False for NGS*/
+    int frs;      /**Global focus removal flag. Optional for LGS, False for NGS*/
     int lo;        /**<whether this is a low order wfs. False for LGS, True for NGS*/
     int skip;      /**<skip in high order tomography, for split tomo (derived parameter)*/
     int psol;      /**<Compute pseudo open loop gradients (derived parameter)*/
@@ -422,7 +422,7 @@ typedef struct fit_cfg_t{
     real actthres; /**<Threshold for slaving value of weakly coupled actuators*/
     real actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
     int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
-    int actinterp;   /**<interpolate actuator results to non-active actuators.*/
+    int actextrap;   /**<extrapolate actuator results to non-active actuators.*/
     int nfit;        /**<Number of DM fit directions */
     int lrt_piston;  /**<Piston constraint low rank term in fit coefficient matrix*/
     int lrt_tt;      /**<differential tip/tilt constraint on two DMs or tt on upper dms.*/
@@ -451,7 +451,7 @@ typedef struct lsr_cfg_t{
     real actthres; /**<Threshold for slaving value of weakly coupled actuators*/
     real actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
     char  *fnreg;    /**<File containing a regularization term to add to LL.M*/
-    int actinterp;   /**<interpolate actuator results to non-active actuators .*/
+    int actextrap;   /**<extrapolate actuator results to non-active actuators .*/
     int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
     int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int alg;         /**<algorithm to solve the linear equation.

@@ -358,7 +358,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS(dbl,pixtheta);
 	READ_POWFS_RELAX(str,fnllt);
 	READ_POWFS_RELAX(int,trs);
-	READ_POWFS_RELAX(int,dfrs);
+	READ_POWFS_RELAX(int,frs);
 	READ_POWFS(int,lo);
 	READ_POWFS(int,pixpsa);
 	READ_POWFS_RELAX(int,mtchcr);
@@ -978,13 +978,67 @@ static void readcfg_fit(parms_t *parms){
 			ramin=ra2;
 		}
 	}
-
+	//expand fitting directions
+	{
+		int nwfsfit=0;
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			if(parms->wfs[iwfs].fitwt>EPS){
+				nwfsfit++;
+			}
+		}
+		if(nwfsfit){
+			int nfit2=parms->fit.nfit+nwfsfit;
+			dresize(parms->fit.thetax, nfit2, 1);
+			dresize(parms->fit.thetay, nfit2, 1);
+			dresize(parms->fit.wt, nfit2, 1);
+			dresize(parms->fit.hs, nfit2, 1);
+			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+				if(parms->wfs[iwfs].fitwt<EPS){
+					continue;
+				}
+				warning("Including wfs %d with wt %g in fitting\n", iwfs, parms->wfs[iwfs].fitwt);
+				P(parms->fit.thetax, parms->fit.nfit)=parms->wfs[iwfs].thetax;
+				P(parms->fit.thetay, parms->fit.nfit)=parms->wfs[iwfs].thetay;
+				P(parms->fit.hs, parms->fit.nfit)=parms->wfs[iwfs].hs;
+				P(parms->fit.wt, parms->fit.nfit)=parms->wfs[iwfs].fitwt;
+				parms->fit.nfit++;
+			}
+			if(nfit2!=parms->fit.nfit){
+				error("nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
+			}
+		}
+		if(parms->dbg.dmfullfov>1){//Fit over the entire fov. Hurts performance.
+			int ndir=8;
+			int nfit2=parms->fit.nfit+ndir;
+			real rfov=parms->sim.fov*0.5;
+			real fitwt=0.001;
+			dresize(parms->fit.thetax, nfit2, 1);
+			dresize(parms->fit.thetay, nfit2, 1);
+			dresize(parms->fit.wt, nfit2, 1);
+			dresize(parms->fit.hs, nfit2, 1);
+			for(int idir=0; idir<ndir; idir++){
+				real theta=(2.*M_PI*idir)/ndir;
+				P(parms->fit.thetax, parms->fit.nfit)=rfov*cos(theta);
+				P(parms->fit.thetay, parms->fit.nfit)=rfov*sin(theta);
+				P(parms->fit.hs, parms->fit.nfit)=P(parms->fit.hs,0);
+				P(parms->fit.wt, parms->fit.nfit)=fitwt;
+				warning("Including virtual direction (%g, %g) with wt %g in fitting\n", 
+					P(parms->fit.thetax, parms->fit.nfit),P(parms->fit.thetay, parms->fit.nfit),
+					P(parms->fit.wt, parms->fit.nfit));
+				parms->fit.nfit++;
+			}
+			if(nfit2!=parms->fit.nfit){
+				error("nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
+			}
+		}
+	}
+	dnormalize_sumabs(P(parms->fit.wt), parms->fit.nfit, 1);
 	READ_DBL(fit.tikcr);
 	READ_DBL(fit.svdthres);
 	READ_INT(fit.actslave);
 	READ_DBL(fit.actthres);
 	READ_DBL(fit.actthres2);
-	READ_INT(fit.actinterp);
+	READ_INT(fit.actextrap);
 	READ_INT(fit.lrt_piston);
 	READ_INT(fit.lrt_tt);
 	READ_INT(fit.alg);
@@ -1010,7 +1064,7 @@ static void readcfg_lsr(parms_t *parms){
 	READ_INT(lsr.maxit);
 	READ_DBL(lsr.actthres);
 	READ_DBL(lsr.actthres2);
-	READ_INT(lsr.actinterp);
+	READ_INT(lsr.actextrap);
 }
 /**
    Read general reconstruction parameters
@@ -2070,7 +2124,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 	}
 	dnormalize_sumabs(P(parms->atm.wt),parms->atm.nps,1);
 	dnormalize_sumabs(P(parms->atmr.wt),parms->atmr.nps,1);
-	dnormalize_sumabs(P(parms->fit.wt),parms->fit.nfit,1);
+	
 	/*
 	  We don't drop weak turbulence layers in reconstruction. Instead, we make
 	  it as least parms->tomo.minwt in setup_recon_tomo_prep
@@ -2445,12 +2499,12 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		if(parms->lsr.alg==2){
 			parms->recon.mvm=1;
 		}
-		if(parms->lsr.actinterp==-1){
+		if(parms->lsr.actextrap==-1){
 			if(parms->recon.modal){
 				//no need in modal lsr control
-				parms->lsr.actinterp=0;
+				parms->lsr.actextrap=0;
 			} else{
-				parms->lsr.actinterp=1;
+				parms->lsr.actextrap=1;
 			}
 		}
 	}
@@ -2501,12 +2555,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		if(parms->recon.split&&parms->powfs[ipowfs].lo){
 			parms->powfs[ipowfs].skip=1;
 		}
-		if(parms->powfs[ipowfs].nwfs<2&&parms->powfs[ipowfs].dfrs){
-			parms->powfs[ipowfs].dfrs=0;
-		}
-		if(parms->powfs[ipowfs].dfrs&&!parms->powfs[ipowfs].llt){
-			warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
-		}
+
 		if(parms->save.ngcov>0||(parms->cn2.pair&&!parms->powfs[ipowfs].lo&&!parms->powfs[ipowfs].skip)){
 			/*focus tracking or cn2 estimation, or save gradient covariance.  */
 			parms->powfs[ipowfs].psol=1;
@@ -2549,34 +2598,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
 			parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
-		}
-		int nwfsfit=0;
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			if(parms->wfs[iwfs].fitwt>EPS){
-				nwfsfit++;
-			}
-		}
-		if(nwfsfit){
-			int nfit2=parms->fit.nfit+nwfsfit;
-			dresize(parms->fit.thetax,nfit2,1);
-			dresize(parms->fit.thetay,nfit2,1);
-			dresize(parms->fit.wt,nfit2,1);
-			dresize(parms->fit.hs,nfit2,1);
-			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				if(parms->wfs[iwfs].fitwt<EPS){
-					continue;
-				}
-				warning("Including wfs %d with wt %g in fitting\n",iwfs,parms->wfs[iwfs].fitwt);
-				P(parms->fit.thetax,parms->fit.nfit)=parms->wfs[iwfs].thetax;
-				P(parms->fit.thetay,parms->fit.nfit)=parms->wfs[iwfs].thetay;
-				P(parms->fit.hs,parms->fit.nfit)=parms->wfs[iwfs].hs;
-				P(parms->fit.wt,parms->fit.nfit)=parms->wfs[iwfs].fitwt;
-				parms->fit.nfit++;
-			}
-			if(nfit2!=parms->fit.nfit){
-				error("nfit2=%d, parms->fit.nfit=%d\n",nfit2,parms->fit.nfit);
-			}
-		}
+		}	
 	}
 	if(parms->tomo.alg==-1){//default to FDPCG
 		parms->tomo.alg=ALG_CG;
@@ -2966,9 +2988,9 @@ if(!parms->sim.noatm){
 			ipowfs,parms->powfs[ipowfs].order,(parms->powfs[ipowfs].llt?"L":"N"),
 			parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 		int lrt=(parms->recon.split&&parms->tomo.splitlrt);
-		if(parms->powfs[ipowfs].trs||parms->powfs[ipowfs].dfrs){
+		if(parms->powfs[ipowfs].trs){
 			info("%s%s%sis removed in %s side in tomography.%s",GREEN,
-				parms->powfs[ipowfs].trs?"T/T ":"",parms->powfs[ipowfs].dfrs?"Diff Focus ":"",
+				parms->powfs[ipowfs].trs?"T/T ":"",parms->powfs[ipowfs].frs?"Focus ":"",
 				lrt?"both":"right hand",BLACK);
 		}
 		info("\n");
@@ -3170,6 +3192,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	open_config(mainconf,NULL,0);/*main .conf file. */
 	open_config(extraconf,NULL,1);
 	parms_t *parms=mycalloc(1,parms_t);
+	readcfg_dbg(parms);//2022-08-26: moved to front to use flags here.
 	readcfg_sim(parms);
 	readcfg_aper(parms);
 	readcfg_atm(parms);
@@ -3185,7 +3208,6 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	readcfg_evl(parms);
 	readcfg_cn2(parms);
 	readcfg_plot(parms);
-	readcfg_dbg(parms);
 	readcfg_gpu(parms);
 	readcfg_save(parms);
 	readcfg_misreg(parms);

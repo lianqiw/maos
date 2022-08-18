@@ -505,9 +505,14 @@ static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
 	drawdata->offy+=ydiff/drawdata->zoomy;
 	delayed_update_pixmap(drawdata);/*no need delay since motion notify already did it. */
 }
+#if GTK_MAJOR_VERSION>=4
+static gboolean motion_notify(GtkEventControllerMotion *controller, gdouble x, gdouble y, drawdata_t **drawdatawrap){
+	(void) controller; (void)x; (void)y; (void)drawdatawrap;
+	return FALSE;
+}
+#else
+static gboolean motion_notify(GtkWidget* widget, GdkEventMotion* event,	drawdata_t** drawdatawrap){
 
-static gboolean motion_notify(GtkWidget* widget, GdkEventMotion* event,
-	drawdata_t** drawdatawrap){
 	(void)widget;
 	drawdata_t* drawdata=*drawdatawrap;
 	if(((event->state&GDK_BUTTON1_MASK)||(event->state&GDK_BUTTON3_MASK))
@@ -573,7 +578,7 @@ static gboolean motion_notify(GtkWidget* widget, GdkEventMotion* event,
 	}
 	return FALSE;
 }
-
+#endif
 static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 	float old_zoomx=drawdata->zoomx;
 	float old_zoomy=drawdata->zoomy;
@@ -1021,7 +1026,8 @@ gboolean addpage(gpointer indata){
 		GTK_WIDGET_SET_FLAGS(drawarea, GTK_SENSITIVE);
 #endif
 #if GTK_MAJOR_VERSION>=4
-		GtkEventController* controller=gtk_event_controller_new(drawarea);
+		GtkEventController* controller=gtk_event_controller_motion_new();
+		gtk_widget_add_controller(drawarea, controller);
 		g_signal_connect(controller, "motion", motion_notify, drawdatawrap);
 #else
 		g_signal_connect(drawarea, "motion-notify-event",

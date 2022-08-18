@@ -360,10 +360,10 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 				displace[0], displace[1], scale);
 		}
 	}
-	if(recon->actinterp){
-		info2("Replacing HA by HA*actinterp");
+	if(recon->actextrap){
+		info2("Replacing HA by HA*actextrap");
 		dspcell* HA2=0;
-		dspcellmulsp(&HA2, recon->HA_ncpa, recon->actinterp, "nn", 1);
+		dspcellmulsp(&HA2, recon->HA_ncpa, recon->actextrap, "nn", 1);
 		dspcellfree(recon->HA_ncpa);
 		recon->HA_ncpa=HA2;
 	}

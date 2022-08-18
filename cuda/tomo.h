@@ -27,9 +27,7 @@ typedef struct gpu_gp_t{
 	int nwfs; //number of wfs in this group
 	int jwfs; //wfs index in this group.
 	int(*saptr)[2];//index in ploc for lower left corner of subaperture
-	Real* PTT;
-	Real* PDF;
-	Real* PDFTT;
+	Real* PTTF;
 	Real dsa;
 	int nsa;
 	short2* GPp;
@@ -59,14 +57,13 @@ class cutomo_grid:public cusolve_r, public cusolve_cg{
 
 	/*Configuration data*/
 	curcell neai;
-	curcell PTT;  /**< Global tip/tilt */
-	curcell PDF;  /**< Differential focus removal */
-	curcell PDFTT;/**<Coupling between DF and TT*/
+	curcell PTTF;  /**< Global tip/tilt and optionally focus*/
 	Cell<int, Gpu> saptr;
 	Cell<short2, Gpu> GPp;
 	Array<Real> GPscale;
 	cuspcell GP;
-	int ptt;       /**< piston/tip/tilt removal in L()*/
+	int nttf;		/**<Number of modes in TTF projection (2 for TT only and 3 with focus)*/
+	int lhs_nttf;   /**<LHS flag for L(). =0 or nttf*/
 	int nwfs;
 	map2map hx;
 	Array<gpu_gp_t, Gpu>gpdata;

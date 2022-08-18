@@ -78,20 +78,20 @@ static MONITOR_T* pmonitor=NULL;//head of linked list
 static int all_done=0;
 /*A linked list to store running process*/
 static RUN_T* running=NULL;/*points to the begining */
-static RUN_T* running_end=NULL;/*points to the last to add. */
+static RUN_T** running_end=&running;/*points to the last to add. */
 /*A linked list to store ended process*/
 static RUN_T* runned=NULL;
-static RUN_T* runned_end=NULL;
+static RUN_T** runned_end=&runned;//points to the pointer of end slot
 static double usage_cpu;
 static RUN_T* running_add(int pid, int sock);
-static RUN_T* running_get(int pid);
+static RUN_T* running_get_by_pid(int pid);
 static RUN_T* running_get_by_status(int status);
+static RUN_T *running_get_by_sock(int sock);
 
 static RUN_T* runned_get(int pid);
 static void runned_remove(int pid);
 static int runned_add(RUN_T* irun);
 static void running_remove(int pid, int status);
-static RUN_T* running_get_by_sock(int sock);
 //static MONITOR_T *monitor_get(int hostid);
 static void monitor_remove(int hostid);
 static MONITOR_T* monitor_add(int hostid);
@@ -157,13 +157,8 @@ static void nrun_sub(int pid, int nthread, int ngpu){
 static int runned_add(RUN_T* irun){
 	/*move irun to end of runned list from running list. */
 	irun->next=NULL;
-	if(runned_end){
-		runned_end->next=irun;
-	} else{//empty list
-		runned=irun;
-	}
-	runned_end=irun;
 	irun->status.done=1;
+	*runned_end=irun; runned_end=&irun->next;
 	if(irun->status.info<10){
 		warning_time("Should be a finished process\n");
 		return 1;
@@ -172,30 +167,26 @@ static int runned_add(RUN_T* irun){
 	}
 }
 static void runned_remove(int pid){
-	RUN_T* irun, * irun_prev=NULL, *irun_next=NULL;
-	int removed=0;
-	for(irun=runned; irun; irun_prev=irun, irun=irun_next){
-		irun_next=irun->next;
-		if(irun->pid==pid || pid==-1){
+	RUN_T *irun=NULL;
+	for(RUN_T **curr=&runned; *curr;){
+		irun=*curr;
+		if(irun->pid==pid || pid==-1){//remove node
+			if(runned_end==&irun->next){
+				runned_end=curr;
+			}
+			*curr=irun->next;
 			irun->status.info=S_REMOVE;
 			monitor_send(irun, NULL);
-			if(irun_prev){
-				irun_prev->next=irun->next;
-			} else{
-				runned=irun->next;
-			}
-			if(runned_end==irun){
-				runned_end=irun_prev;
-			}
 			free(irun->path);
 			free(irun->path0);
 			free(irun->exe);
 			free(irun);
-			removed=1;
 			if(pid!=-1) break;
+		}else{
+			curr=&irun->next;
 		}
 	}
-	if(!removed && pid!=-1){
+	if(!irun && pid!=-1){
 		warning_time("runned_remove: Record %s:%d not found!\n", HOST, pid);
 	}
 }
@@ -212,27 +203,22 @@ static RUN_T* runned_get(int pid){
    Restart a crashed/finished job
 */
 static void runned_restart(int pid){
-	RUN_T* irun, * irun_prev=NULL;
-	for(irun=runned; irun; irun_prev=irun, irun=irun->next){
+	RUN_T *irun=NULL;
+	for(RUN_T **curr=&runned; *curr;){
+		irun=*curr;
 		if(irun->pid==pid){
 			if(irun->status.info<10){
-				dbg_time("status.info=%d\n", irun->status.info);
+				dbg_time("status.info=%d, cancelled.\n", irun->status.info);
 				break;
 			}
-			if(irun_prev){//not start of list
-				irun_prev->next=irun->next;
-			} else{//start if list
-				irun_prev=runned=irun->next;
+			if(runned_end==&irun->next){
+				runned_end=curr;
 			}
-			if(!irun->next){
-				runned_end=irun_prev;
-			}
+			*curr=irun->next;
 			//Insert to the beginning of running list
 			irun->next=running;
-			running=irun;
-			if(!running_end){
-				running_end=irun;
-			}
+			if(running_end==&running) running_end=&irun->next;
+			running=irun; 
 			//update status
 			memset(&irun->status, 0, sizeof(status_t));
 			irun->status.info=S_QUEUED;
@@ -244,6 +230,8 @@ static void runned_restart(int pid){
 			irun->sock=0;
 			all_done=0;
 			break;
+		}else{
+			curr=&irun->next;
 		}
 	}
 	if(!irun){
@@ -256,14 +244,15 @@ static void runned_restart(int pid){
 */
 static RUN_T* running_add(int pid, int sock){
 	RUN_T* irun;
-	if((irun=running_get(pid))){
-		dbg2_time("PID %d is already in running.\n", pid); /*create the node */
+	if((irun=running_get_by_pid(pid))){
+		dbg_time("PID %d is already in running.\n", pid); /*create the node */
 		if(irun->sock!=sock) irun->sock=sock;
 		return irun;
 	} else{
 		char progname[PATH_MAX];
 		if(pid>0){
 			if(get_job_progname(progname, PATH_MAX, pid)){//failed. Already exited.
+				warning_time("PID %d already exited. will not add\n", pid);
 				return NULL;
 			}
 		}
@@ -277,21 +266,21 @@ static RUN_T* running_add(int pid, int sock){
 		}
 		/*record the launch time */
 		irun->next=NULL;
-		if(running_end){/*list is not empty*/
-			running_end->next=irun;
-			running_end=irun;
-		} else{
-			running_end=running=irun;
-		}
+		*running_end=irun; running_end=&irun->next;//add to the end
 		return irun;
 	}
 }
 
 static void running_remove(int pid, int status){
 	//dbg_time("Removing %d from running\n", pid);
-	RUN_T* irun, * irun_prev=NULL;
-	for(irun=running; irun; irun_prev=irun, irun=irun->next){
+	RUN_T* irun=NULL;
+	for(RUN_T** curr=&running; *curr; ){
+		irun=*curr;
 		if(irun->pid==pid){
+			if(running_end==&irun->next){
+				running_end=curr;
+			}
+			*curr=irun->next;
 			//Only the following states are used
 			//S_QUEUED, S_WAIT, S_START, S_RUNNING, S_UNKNOWN, S_FINISH
 			//nrun_add is called when state changes to S_START
@@ -303,18 +292,11 @@ static void running_remove(int pid, int status){
 			irun->status.timlast=myclocki();
 			irun->status.info=status;
 			dbg_time("remove job %d with status %d\n", pid, irun->status.info);
-			if(irun_prev){
-				if(!(irun_prev->next=irun->next)){
-					running_end=irun_prev;
-				}
-			} else{//beginning of list
-				if(!(running=irun->next)){
-					running_end=running;
-				}
-			}
 			monitor_send(irun, NULL);
 			runned_add(irun);
 			break;
+		}else{
+			curr=&irun->next;
 		}
 	}
 	if(!irun){
@@ -322,7 +304,7 @@ static void running_remove(int pid, int status){
 	}
 }
 
-static RUN_T* running_get(int pid){
+static RUN_T* running_get_by_pid(int pid){
 	RUN_T* irun;
 	for(irun=running; irun; irun=irun->next){
 		if(irun->pid==pid||(irun->pid>0&&pid==0)){
@@ -357,12 +339,12 @@ static RUN_T* running_get_by_sock(int sock){
 	check all the jobs. remove if any job quited.
  */
 static void check_jobs(void){
-	RUN_T* irun, * irun_prev;
+	RUN_T* irun=NULL, *irun_next=NULL;
 	int nrunning=0;
 	if(running){
 		time_t now=myclocki();
-		for(irun=running; irun; irun=irun_prev){
-			irun_prev=irun->next;
+		for(irun=running; irun; irun=irun_next){
+			irun_next=irun->next;
 			if(irun->pid>0){//Running job
 				if(kill(irun->pid, 0)){//No longer exists
 					if(irun->last_time+60<now){//allow grace period.
@@ -499,7 +481,7 @@ static void queue_new_job(const char* exename, const char* execmd){
    Pass socket and command to maos.
  */
 static int maos_command(int pid, int sock, int cmd){
-	RUN_T* irun=running_get(pid);
+	RUN_T* irun=running_get_by_pid(pid);
 	int cmd2[2]={cmd, 0};
 	if(!irun||!irun->sock2||(stwriteintarr(irun->sock2, cmd2, 2)||stwritefd(irun->sock2, sock))){
 		warning_time("Unable to pass socket (%d) to maos (%d, %d)\n", sock, irun?irun->pid:-1, irun?irun->sock2:-1);
@@ -652,7 +634,7 @@ static int respond(int sock){
 		break;
 	case CMD_STATUS://3: Called by MAOS to report status at every time step
 	{
-		RUN_T* irun=running_get(pid);
+		RUN_T* irun=running_get_by_pid(pid);
 		if(!irun){/*started before scheduler is relaunched. */
 			dbg_time("(%d) pid=%d is running but not recorded.\n", sock, pid);
 			irun=running_add(pid, sock);
@@ -717,7 +699,7 @@ static int respond(int sock){
 	break;
 	case CMD_KILL://7: Called by Monitor to kill a task.
 	{
-		RUN_T* irun=running_get(pid);
+		RUN_T* irun=running_get_by_pid(pid);
 		warning_time("(%d) Received monitor command to kill %d\n", sock, pid);
 		if(irun){
 			if(irun->status.info!=S_QUEUED){
@@ -838,7 +820,7 @@ static int respond(int sock){
 		break;
 	case CMD_MAOSDAEMON://14; called by maos to save a port to run maos_command
 	{
-		RUN_T* irun=running_get(pid);
+		RUN_T* irun=running_get_by_pid(pid);
 		if(irun){
 			irun->sock2=sock;
 			dbg_time("(%d) maos socket is saved\n", sock);
@@ -957,7 +939,7 @@ void scheduler_handle_ws(char* in, size_t len){
 			warning_time("CMD_REMOVE: %s:%d not found\n", HOST, pid);
 		}
 	} else if(!strcmp(sep, "KILL")){
-		RUN_T* irun=running_get(pid);
+		RUN_T* irun=running_get_by_pid(pid);
 		if(irun){
 			if(irun->status.info!=S_QUEUED){
 				kill(pid, SIGTERM);

@@ -238,11 +238,11 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 static void
 setup_recon_TTFR(recon_t* recon, const parms_t* parms){
 	cellfree(recon->PTT);
-	cellfree(recon->PDF);
+	cellfree(recon->PFF);
 	cellfree(recon->PTTF);
 
 	recon->PTT=dcellpinv(recon->TT, recon->saneai);
-	recon->PDF=dcellpinv(recon->DF, recon->saneai);
+	recon->PFF=dcellpinv(recon->FF, recon->saneai);
 	recon->PTTF=dcellpinv(recon->TTF, recon->saneai);
 	if(parms->save.setup){
 		writebin(recon->TTF, "TTF");
@@ -434,7 +434,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 	/*right hand side. */
 		warning("Loading saved recon->RR\n");
 		recon->RR.M=readbin("RRM");
-		if(recon->has_ttr){
+		if(zfexist("RRU")){
 			recon->RR.U=dcellread("RRU");
 			recon->RR.V=dcellread("RRV");
 		}
@@ -1437,8 +1437,8 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	free_cxx(recon);
 	dcellfree(recon->TT);
 	dcellfree(recon->PTT);
-	dcellfree(recon->DF);
-	dcellfree(recon->PDF);
+	dcellfree(recon->FF);
+	dcellfree(recon->PFF);
 	dcellfree(recon->TTF);
 	dcellfree(recon->PTTF);
 	dcellfree(recon->GFngs);
@@ -1477,7 +1477,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	cellfree(recon->aloc);
 	cellfree(recon->actstuck);
 	cellfree(recon->actfloat);
-	cellfree(recon->actinterp);
+	cellfree(recon->actextrap);
 	cellfree(recon->actcpl);
 	cellfree(recon->aimcc);/*used in filter.c */
 	muv_free(&recon->RR);
