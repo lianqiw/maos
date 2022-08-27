@@ -41,7 +41,7 @@ var loc_8h =
     [ "loc_free_stat", "loc_8h.html#a5d8fd7f128a52013ed66af307793e0e9", null ],
     [ "loc_circle_add", "loc_8h.html#aca36cc3a06a22895e360649e1a6e4c15", null ],
     [ "loc_circle_mul", "loc_8h.html#aac2cc7e8322e321fbb1db99058676d70", null ],
-    [ "locellipse_add", "loc_8h.html#af69d3cca2e14775fc2014aea062cf560", null ],
+    [ "loc_ellipse_add", "loc_8h.html#a46d426d78508acb31f4a8e7fa3f33d57", null ],
     [ "loc_reduce", "loc_8h.html#a4131d6d75c196d07ef1ad110e6fd9556", null ],
     [ "loc_reduce_spcell", "loc_8h.html#a8a2bbfc477710e2aa86c65630e07c786", null ],
     [ "loc_reduce_sp", "loc_8h.html#ace526a66d1e3f71d9585bc75a48edee1", null ],

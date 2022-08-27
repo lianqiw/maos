@@ -7,8 +7,6 @@ var searchData=
   ['deltam',['deltam',['../maos_2types_8h.html#a85f154a82c7001dcd69f1f555061ef5e',1,'dither_t']]],
   ['deltao',['deltao',['../maos_2types_8h.html#a986eb94d5aec4aa5bf15f9a36bc4c089',1,'dither_t']]],
   ['detach',['detach',['../parms_8h.html#a304070322d22658ae216c8be4832d820',1,'arg_t']]],
-  ['df',['DF',['../maos_2types_8h.html#a8cbe4ae6558aa827aa4efb5a5c9273db',1,'recon_t']]],
-  ['dfrs',['dfrs',['../parms_8h.html#a794db13a01caba4270a97f0844bffb1d',1,'powfs_cfg_t']]],
   ['din',['din',['../parms_8h.html#a09ae154f837db49c7cb8ba98666c8c5a',1,'aper_cfg_t']]],
   ['dirout',['dirout',['../parms_8h.html#ae27eb782c897db66719a088a8470fda4',1,'arg_t']]],
   ['dirs',['dirs',['../parms_8h.html#a9a5f86b7cfd6cb08e50dfac4e17df26c',1,'parms_t']]],

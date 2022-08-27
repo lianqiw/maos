@@ -1,8 +1,5 @@
 var NAVTREEINDEX8 =
 {
-"maos_2types_8h.html#aad3b5cf81516a58a4af1a04035c6a739":[11,0,2,18,10,56],
-"maos_2types_8h.html#aad4dae006bdb736bf5ba9b6224b2ce6f":[11,0,2,18,10,64],
-"maos_2types_8h.html#aada325f0ecf54bc0f66adfdbf5be156f":[11,0,2,18,15,92],
 "maos_2types_8h.html#aade787f55b2a50462d46a49b472f7872":[11,0,2,18,10,12],
 "maos_2types_8h.html#aafc3dd415c75885f6035f7c97f95af1b":[11,0,2,18,10,54],
 "maos_2types_8h.html#ab0cb15bdc62b253b9decd6cbcc21fd57":[11,0,2,18,15,0],
@@ -104,6 +101,7 @@ var NAVTREEINDEX8 =
 "maos_2types_8h.html#ade0824ca484c50afc3878a7400f75ac1":[11,0,2,18,0,2],
 "maos_2types_8h.html#ade6a7f9cc880946bc23ac1f3d1e64197":[11,0,2,18,10,65],
 "maos_2types_8h.html#ade788c0b0681a6cd1dec0a9620e0fc53":[11,0,2,18,15,65],
+"maos_2types_8h.html#ade7946655375173353e35110eee0ff86":[11,0,2,18,10,59],
 "maos_2types_8h.html#ae05f17c8f9cdbb04ab09c668b03b370e":[11,0,2,18,12,4],
 "maos_2types_8h.html#ae09109304ea3466f12a92c26d59f7f39":[11,0,2,18,10,51],
 "maos_2types_8h.html#ae2d43b2cd7a0cafaffa10827867f5ddb":[11,0,2,18,15,158],
@@ -126,7 +124,7 @@ var NAVTREEINDEX8 =
 "maos_2types_8h.html#ae9f39ba587807aed467fddf03162a7a7":[11,0,2,18,10,92],
 "maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93":[11,0,2,18,3,46],
 "maos_2types_8h.html#aeb6b3013b915d6f3a775b47e8c12cf79":[11,0,2,18,3,19],
-"maos_2types_8h.html#aebedfac394ed5b874fd14e8afda31671":[11,0,2,18,10,107],
+"maos_2types_8h.html#aebedfac394ed5b874fd14e8afda31671":[11,0,2,18,10,105],
 "maos_2types_8h.html#aecc7b6a6b8fdc5d501910af0fc5bb2ac":[11,0,2,18,2,2],
 "maos_2types_8h.html#aece79bac5fe519437b96396a277d0527":[11,0,2,18,15,89],
 "maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95":[11,0,2,18,15,76],
@@ -249,5 +247,7 @@ var NAVTREEINDEX8 =
 "mathdef_8h.html#a4226a476cc87bea36b37381a1c8568ce":[11,0,3,7,74],
 "mathdef_8h.html#a440b2ba964f39fe50b3a6b14a407a711":[11,0,3,7,88],
 "mathdef_8h.html#a44e10024779613dea5025a17962b9c5c":[11,0,3,7,13],
-"mathdef_8h.html#a4787e4aac3b874ce1d927e27f84d77d3":[11,0,3,7,61]
+"mathdef_8h.html#a4787e4aac3b874ce1d927e27f84d77d3":[11,0,3,7,61],
+"mathdef_8h.html#a4ea253f1d3db7008ab69e51c11f5ed6d":[11,0,3,7,78],
+"mathdef_8h.html#a4ebd3ef2554e1f76a1244f612c3a4513":[11,0,3,7,64]
 };

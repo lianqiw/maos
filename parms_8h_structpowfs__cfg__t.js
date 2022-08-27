@@ -43,7 +43,7 @@ var parms_8h_structpowfs__cfg__t =
     [ "type", "parms_8h.html#aa4df9de485454ee311c4bc4b4242d67a", null ],
     [ "step", "parms_8h.html#a2d518726fcd51b01de833317d48acd89", null ],
     [ "trs", "parms_8h.html#af68295aed03eca4810c88583d7c1ff9d", null ],
-    [ "dfrs", "parms_8h.html#a794db13a01caba4270a97f0844bffb1d", null ],
+    [ "frs", "parms_8h.html#acfae77329bb29b27bb08960a65662dcc", null ],
     [ "lo", "parms_8h.html#a34debbb11cfb8d49440ef9ddf3fcc961", null ],
     [ "skip", "parms_8h.html#a415ef190d7d1dff0393acec7760bb3a6", null ],
     [ "psol", "parms_8h.html#ab08542e404fce2214ce876388e4ca131", null ],

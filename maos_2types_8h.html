@@ -1375,11 +1375,11 @@ actcpl</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a830cab25c8141fe799191b2449c661f8"></a><a class="el" href="type_8h.html#structdspcell">dspcell</a> *</td>
+<a id="a03b755a914805e0ae089b4f752f486ac"></a><a class="el" href="type_8h.html#structdspcell">dspcell</a> *</td>
 <td class="fieldname">
-actinterp</td>
+actextrap</td>
 <td class="fielddoc">
-<p>actautor interpolation </p>
+<p>actuator interpolation </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aacec90dc0ed8ad2221722ad73798de64"></a><a class="el" href="type_8h.html#structdspcell">dspcell</a> *</td>
@@ -1833,18 +1833,18 @@ PTT</td>
 <p>pinv of TT for tt removal from LGS gradients </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a8cbe4ae6558aa827aa4efb5a5c9273db"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="a07aebe5c2c1195f58a0e78eee4fd261f"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-DF</td>
+FF</td>
 <td class="fielddoc">
-<p>Differential focus modes for LGS wfs </p>
+<p>Global focus or Differential focus modes for LGS wfs low rank </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a27e9a87e2fa0331329b53cbcdd5534bd"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="ade7946655375173353e35110eee0ff86"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-PDF</td>
+PFF</td>
 <td class="fielddoc">
-<p>pinv of DF. to use in RTC. </p>
+<p>pinv of FF. to use in RTC. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a73169a032b60839f353886e03c7da578"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
@@ -1889,9 +1889,9 @@ actcpl</td>
 <p>actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a10a498ec60575badb4b3d9f492a713ad"></a><a class="el" href="type_8h.html#structdspcell">dspcell</a> *</td>
+<a id="a62e8893405865fb512a00038307a99e3"></a><a class="el" href="type_8h.html#structdspcell">dspcell</a> *</td>
 <td class="fieldname">
-actinterp</td>
+actextrap</td>
 <td class="fielddoc">
 <p>Interpolation operator for floating actuators and edge actuators. Slaving does not work well in CG. </p>
 </td></tr>
@@ -2146,20 +2146,6 @@ lowfs_gtilt</td>
 npsr</td>
 <td class="fielddoc">
 <p>number of reconstructor phase screens. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a7e5f7129406f86eed18935284da4eb06"></a>int</td>
-<td class="fieldname">
-has_ttr</td>
-<td class="fielddoc">
-<p>whether there is any tip/tilt removed WFS </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a410c20cb924b71313b803bf75de3c8ea"></a>int</td>
-<td class="fieldname">
-has_dfr</td>
-<td class="fielddoc">
-<p>whether there is any differential focus removed WFS </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a62a2826f0026371368a178ee77a560bc"></a>int</td>

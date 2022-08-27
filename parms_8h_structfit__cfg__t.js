@@ -9,7 +9,7 @@ var parms_8h_structfit__cfg__t =
     [ "actthres", "parms_8h.html#adb4a056f5560a8337a87860fbbfe4517", null ],
     [ "actthres2", "parms_8h.html#a7edda15a4295e9551b323f376a32fb9b", null ],
     [ "actslave", "parms_8h.html#a04c428aff172d04c039e961c99a17bb5", null ],
-    [ "actinterp", "parms_8h.html#a11d065d5d96a60374a3f7743b8c3267d", null ],
+    [ "actextrap", "parms_8h.html#ade54c87d5f3a03b988c22f4f6e96b3b2", null ],
     [ "nfit", "parms_8h.html#af1a85154e53005746da5ebc3436a63fb", null ],
     [ "lrt_piston", "parms_8h.html#a75ae08c2d06aa69701a4518c2273f51c", null ],
     [ "lrt_tt", "parms_8h.html#a93a1ad8d5f81a5577dcec9040929e8bd", null ],

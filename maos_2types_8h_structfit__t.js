@@ -18,7 +18,7 @@ var maos_2types_8h_structfit__t =
     [ "HXF", "maos_2types_8h.html#a1fb70be63efd72412f81111fa111163b", null ],
     [ "HA", "maos_2types_8h.html#a224eca72144f5b8d9bed02e0e9f48282", null ],
     [ "actcpl", "maos_2types_8h.html#afd3bf7999f66779351e1ce2b60aeb42f", null ],
-    [ "actinterp", "maos_2types_8h.html#a830cab25c8141fe799191b2449c661f8", null ],
+    [ "actextrap", "maos_2types_8h.html#a03b755a914805e0ae089b4f752f486ac", null ],
     [ "actslave", "maos_2types_8h.html#aacec90dc0ed8ad2221722ad73798de64", null ],
     [ "NW", "maos_2types_8h.html#a51b74d1a1f68a169746dbebf50af9a76", null ],
     [ "FR", "maos_2types_8h.html#a003357aa8f66b0acfe21415a2b976c26", null ],

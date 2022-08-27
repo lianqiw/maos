@@ -5,7 +5,7 @@ var parms_8h_structlsr__cfg__t =
     [ "actthres", "parms_8h.html#a480306c6fa99ef58229456854bea827f", null ],
     [ "actthres2", "parms_8h.html#a5cfe77f376e87ae804d47dc7370215f4", null ],
     [ "fnreg", "parms_8h.html#a7a3f62a40fb9268d9fa4bf10f5969918", null ],
-    [ "actinterp", "parms_8h.html#ab1bae2214cb4e266e0273049b843d27a", null ],
+    [ "actextrap", "parms_8h.html#a351c0258e176d0167b72e3a023d5c671", null ],
     [ "actslave", "parms_8h.html#a5ee115049b15930905c7e6c407bd0845", null ],
     [ "bgs", "parms_8h.html#a15e318faa040a437f927fa7c142ec24a", null ],
     [ "alg", "parms_8h.html#a426abfb7663cb37771603c9c89b4acb7", null ],

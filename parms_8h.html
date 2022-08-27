@@ -1165,18 +1165,17 @@ trs</td>
 <p>tip/tilt removal flag. True for LGS, False for NGS </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a794db13a01caba4270a97f0844bffb1d"></a>int</td>
+<a id="acfae77329bb29b27bb08960a65662dcc"></a>int</td>
 <td class="fieldname">
-dfrs</td>
+frs</td>
 <td class="fielddoc">
-<p>differential focus removal flag. True for LGS, False for NGS </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a34debbb11cfb8d49440ef9ddf3fcc961"></a>int</td>
 <td class="fieldname">
 lo</td>
 <td class="fielddoc">
-<p>whether this is a low order wfs. False for LGS, True for NGS </p>
+<p>Global focus removal flag. Optional for LGS, False for NGS whether this is a low order wfs. False for LGS, True for NGS </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a415ef190d7d1dff0393acec7760bb3a6"></a>int</td>
@@ -2418,11 +2417,11 @@ actslave</td>
 <p>Enable slaving for non-active actuators. Useful in CBS method </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a11d065d5d96a60374a3f7743b8c3267d"></a>int</td>
+<a id="ade54c87d5f3a03b988c22f4f6e96b3b2"></a>int</td>
 <td class="fieldname">
-actinterp</td>
+actextrap</td>
 <td class="fielddoc">
-<p>interpolate actuator results to non-active actuators. </p>
+<p>extrapolate actuator results to non-active actuators. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af1a85154e53005746da5ebc3436a63fb"></a>int</td>
@@ -2576,11 +2575,11 @@ fnreg</td>
 <p>File containing a regularization term to add to LL.M </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab1bae2214cb4e266e0273049b843d27a"></a>int</td>
+<a id="a351c0258e176d0167b72e3a023d5c671"></a>int</td>
 <td class="fieldname">
-actinterp</td>
+actextrap</td>
 <td class="fielddoc">
-<p>interpolate actuator results to non-active actuators . </p>
+<p>extrapolate actuator results to non-active actuators . </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a5ee115049b15930905c7e6c407bd0845"></a>int</td>
