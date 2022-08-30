@@ -220,7 +220,7 @@ void moao_recon(sim_t* simu){
 	const int nevl=parms->evl.nevl;
 	dcell* dmcommon=NULL;
 	if(1){/*Take High order fitting result */
-		dcellcp(&dmcommon, simu->dmfit);
+		dcellcp(&dmcommon, simu->dmrecon);
 	} else{/*Take integrator output, remove NGS modes if any. */
 		if(parms->sim.closeloop){
 			if(parms->sim.fuseint){
@@ -296,7 +296,7 @@ void moao_recon(sim_t* simu){
 				parms->fit.cgwarm, parms->fit.maxit);
 			if(0){
 				writebin(P(rhsout,0), "evl_rhs_%d_%d", ievl, simu->perfisim);
-				writebin(P(dmmoao,0), "evl_dmfit_%d_%d", ievl, simu->perfisim);
+				writebin(P(dmmoao,0), "evl_dmrecon_%d_%d", ievl, simu->perfisim);
 			}
 			/*if(parms->recon.split){//remove the tip/tilt form MEMS DM
 			  real ptt[3]={0,0,0};

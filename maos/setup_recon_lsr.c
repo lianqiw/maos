@@ -59,7 +59,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	}
 	recon->LR.M=dcellmm2(GAlsr, recon->saneai, "tn");*/
 	dcellmm_any(&recon->LR.M, GAlsr, CELL(recon->saneai), "tn", 1);
-	// Tip/tilt and diff focus removal low rand terms for LGS WFS.
+	// Tip/tilt and diff focus removal low rand terms for LGS WFS or split control.
 	if(recon->TTF){
 		dcellmm_cell(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
 		recon->LR.V=dcelltrans(recon->PTTF);
@@ -70,7 +70,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	if(free_GAlsr){
 		cellfree(GAlsr);
 	}
-	if(recon->LR.U){
+	if(recon->LR.U&&(parms->recon.split!=1 || parms->lsr.splitlrt)){
 		recon->LL.U=dcelldup(recon->LR.U);
 		dcell* GPTTDF=NULL;
 		dcellmm_cell(&GPTTDF, GAM, recon->LR.V, "tn", 1);

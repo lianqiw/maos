@@ -530,7 +530,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 				}
 			}
 		}
-		if(!parms->recon.split||parms->tomo.splitlrt||parms->recon.split==2){
+		if(parms->recon.split!=1||parms->tomo.splitlrt){
 			recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 			dcell* GPTTDF=NULL;
 			dspcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);

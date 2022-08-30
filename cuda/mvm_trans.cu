@@ -79,12 +79,12 @@ static void mvm_trans_igpu(thread_t* info){
 			eyec=curcell(ndm, 1, P(recon->anloc), (long*)0);
 		}
 	}
-	curcell dmfit;
+	curcell dmrecon;
 	if(!load_mvmf){
 		if(parms->fit.square){
-			dmfit=curcell(grid->ndm, 1, grid->anx, grid->any);
+			dmrecon=curcell(grid->ndm, 1, grid->anx, grid->any);
 		} else{
-			dmfit=curcell(grid->ndm, 1, P(recon->anloc), (long*)0);
+			dmrecon=curcell(grid->ndm, 1, P(recon->anloc), (long*)0);
 		}
 	}
 	curcell opdx(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)(mvmf?1L:0L));
@@ -118,18 +118,18 @@ static void mvm_trans_igpu(thread_t* info){
 			}
 			if(!load_mvmf){
 				if(eyec){ /*Fitting operator*/
-					cuzero(dmfit, stream);//temp
-					residualfit->p[iact]=curecon->FL->solve(dmfit, eyec, stream);
+					cuzero(dmrecon, stream);//temp
+					residualfit->p[iact]=curecon->FL->solve(dmrecon, eyec, stream);
 #if MVM_DEBUG == 1
-					cuwrite(dmfit, stream, "mvm_dmfit_%d", iact);
+					cuwrite(dmrecon, stream, "mvm_dmrecon_%d", iact);
 #endif
 				} else{
-					cudaMemcpyAsync(dmfit.M()(), FLI+iact*ntotact, sizeof(Real)*ntotact,
+					cudaMemcpyAsync(dmrecon.M()(), FLI+iact*ntotact, sizeof(Real)*ntotact,
 						H2D, stream);
 				}
 				tk_fitL+=toc3; tic;
 			/*Transpose of fitting operator*/
-				curecon->FR->Rt(opdx, 0.f, dmfit, 1.f, stream);
+				curecon->FR->Rt(opdx, 0.f, dmrecon, 1.f, stream);
 #if MVM_DEBUG == 1
 				cuwrite(opdx, stream, "mvm_opdx_%d", iact);
 #endif

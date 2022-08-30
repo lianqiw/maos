@@ -505,6 +505,7 @@ int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
  * */
 int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
 	if(!fp||fp->fd<0||fp->err||!ptr){
+		dbg("zfread_wrap: error encountered\n");
 		return -1;
 	} else if(fp->isgzip){
 		return gzread(fp->gp, ptr, tot);
@@ -518,8 +519,9 @@ int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
 int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	ssize_t tot=size*nmemb;
 	while(!fp->err){
-		int count=zfread_wrap(ptr, tot, fp);
+		long count=zfread_wrap(ptr, tot, fp);
 		if(count>0){
+			//dbg("tot=%lu, count=%ld, zfeof=%d, pos=%ld, len=%ld\n", tot, count, zfeof(fp), zfpos(fp), zflen(fp));
 			if(count<tot){
 				ptr+=count;
 				tot-=count;
@@ -527,8 +529,10 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 				break;
 			}
 		} else if(count==0){//eof
+			//dbg("%s: EOF tot=%lu, count=%ld, pos=%ld, len=%ld\n", fp->fn, tot, count, zfpos(fp), zflen(fp));
 			fp->err=1;
 		} else{//-1 indicates error
+			dbg("%s: unknown error happend during reading.\n", fp->fn);
 			fp->err=2;
 		}
 	}
@@ -569,7 +573,7 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 */
 long zfseek(file_t* fp, long offset, int whence){
 	if(fp->isgzip){
-		return gzseek(fp->gp, offset, whence)<0?-1:0;
+		return gzseek(fp->gp, offset, whence);
 	} else{
 		return lseek(fp->fd, offset, whence);
 	}
@@ -592,11 +596,12 @@ void zfrewind(file_t* fp){
    Tell position pointer in file.
 */
 long zfpos(file_t* fp){
-	if(fp->isgzip){
+	/*if(fp->isgzip){
 		return gztell(fp->gp);
 	} else{
 		return lseek(fp->fd, 0, SEEK_CUR);
-	}
+	}*/
+	return zfseek(fp, 0, SEEK_CUR);
 }
 /**
    Return 1 if end of file is reached.
@@ -610,6 +615,15 @@ int zfeof(file_t* fp){
 		}
 	}
 	return fp->err==1;
+}
+/**
+ * Return file length
+ * */
+long zflen(file_t *fp){
+	long pos=zfpos(fp);
+	long end=zfseek(fp, 0, SEEK_END);
+	zfseek(fp, pos, SEEK_SET);
+	return end;
 }
 /**
    Flush the buffer.
@@ -986,6 +1000,7 @@ int read_header(header_t* header, file_t* fp){
 	int ans;
 	header->str=NULL;
 	if(fp->err){
+		warning("fp->err=%d\n", fp->err);
 		ans=-1;
 	} else if(fp->isfits){
 		ans=read_fits_header(header, fp);

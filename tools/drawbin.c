@@ -41,11 +41,19 @@ int main(int argc, char* argv[]){
 	dcell *arg1=0, *arg2=0;
 	if(argc>1){
 		arg1=dcellread("%s", argv[1]);
-		info("arg1 is %ldx%ld\n", arg1->nx, arg1->ny);
+		info("%s is %ldx%ld\n", argv[1], arg1->nx, arg1->ny);
 	}
 	if(argc>2){
 		arg2=dcellread("%s",argv[2]);
-		info("arg2 is %ldx%ld\n", arg2->nx, arg2->ny);
+		info("%s is %ldx%ld\n", argv[2], arg2->nx, arg2->ny);
+	}
+	int mx=0;
+	int my=0;
+	if(argc>3){
+		mx=strtol(argv[3], NULL, 10);
+	}
+	if(argc>4){
+		my=strtol(argv[4], NULL, 10);
 	}
 	char *title1=argv[argc>2?2:1];
 	char *title2=NULL;
@@ -56,16 +64,16 @@ int main(int argc, char* argv[]){
 		title2[0]='\0';
 	}
 	
-	long nx=MAX(NX(arg1), arg2?NX(arg2):0);
-	long ny=MAX(NY(arg1), arg2?NY(arg2):0);
+	long nx=MAX(NX(arg1), arg2?NX(arg2):0); nx=MIN(nx, mx+20);
+	long ny=MAX(NY(arg1), arg2?NY(arg2):0); ny=MIN(ny, my+20);
 	int id=0;
 	loc_t *loc_save=0;
 	dmat* p1_save=0;
-	for(long iy=0; iy<ny; iy++){
-		for(long ix=0; ix<nx; ix++){
+	for(long iy=my; iy<ny; iy++){
+		for(long ix=mx; ix<nx; ix++){
 			dmat *p1=(dmat*)PR(arg1, ix, iy);
 			dmat *p2=arg2?(dmat*)PR(arg2, ix, iy):NULL;
-			if(!p1) continue;
+			if(!p1 || (!p2 && (ix>=NX(arg1) || iy>=NY(arg1)))) continue;
 			loc_t* loc=0;
 			if(NY(p1)==2&&NX(p1)>2){//first parameter is loc
 				if(p1==p1_save){
@@ -82,23 +90,23 @@ int main(int argc, char* argv[]){
 			if(!p2){//single parameter
 				if(loc){//is loc
 					if(loc->nloc>100000){/*if too many points, we draw it. */
-						drawloc("loc", loc, NULL, title1, "x", "y", "%s[%d]", title1, id++);
+						drawloc("loc", loc, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
 					} else{/*we plot individual points. */
-						plot_points("loc", (plot_opts){.ngroup=1,.loc=&loc},  title1, "x", "y", "%s[%d]", title1, id++);
+						plot_points("loc", (plot_opts){.ngroup=1,.loc=&loc},  title1, "x", "y", "%s[%02d]", title1, id++);
 					}
 					if(loc!=loc_save){
 						locfree(loc);
 					}
 				}else if(p1->nx>1 && p1->ny>1){//map
 					map_t* data=d2map(p1);
-					drawmap("map", data, NULL, title1, "x", "y", "%s[%d]", title1, id++);
+					drawmap("map", data, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
 					mapfree(data);
 				}else{
-					plot_points("points", (plot_opts){.ngroup=1, .dc=arg1} , title1, "x", "y", "%s[%d]", title1, id++);
+					plot_points("points", (plot_opts){.ngroup=1, .dc=arg1} , title1, "x", "y", "%s[%02d]", title1, id++);
 				}
 			}else{//two parameter
 				if(loc&&p2&&p2->nx&&p2->ny){
-					drawopd("opd", loc, p2, NULL, title1, "x", "y", "%s[%d]", title1, id++);
+					drawopd("opd", loc, p2, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
 				}
 			}
 		}

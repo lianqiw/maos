@@ -18,7 +18,7 @@
 
 #include "../math/mathdef.h"
 #include "slaving.h"
-
+#include "zernike.h"
 /**
    Compute the actuator coupling coefficient to be used to identify non-coupled
    actuators. W1 is optional weighting function. The max value is 1.
@@ -474,10 +474,17 @@ void act_zero(loccell* aloc, const dcell* HB, const lcell* dead){
 
 /**
    When some actuators are float, remove the corresponding column in HA and/or HB,
-   and add to neigh boring actuators. This is implemented using a second matrix and
+   and add to neighboring actuators. This is implemented using a second matrix and
    then add to the original matrix.*/
-void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actfloat){
-	if(!actfloat||((!HA||!*HA)&&!HB)) return;
+void act_float(loccell* aloc, 	///coordinate of actuators
+	dspcell** HA, 				///sparse matrix to modify
+	const dcell* HB, 			///dense matrix to modify
+	const lcell* actfloat		///floating actuator mask
+	){
+	if(!actfloat||((!HA||!*HA)&&!HB)){
+		warning("Nothing to do\n");
+		return;
+	}
 	int ndm=NX(actfloat);
 	dspcell* dHA=NULL;
 	if(HA&&*HA){
@@ -505,7 +512,8 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 		long* isfloat=P(P(actfloat,idm));
 		/*loop through the floating actuators */
 		for(int iact=0; iact<nact; iact++){
-			if(!P(P(actfloat,idm),iact)) continue;
+			if(!isfloat[iact]) continue;
+			//warning("DM %d act %d is floating\n", idm, iact);
 			long mapx=(long)round((locx[iact]-ox)*dx1);
 			long mapy=(long)round((locy[iact]-oy)*dy1);
 			/*find all its neighbors. */
@@ -542,7 +550,7 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 				long count=0;
 				for(long iact=0; iact<nact; iact++){
 					pp2[iact]=count;
-					if(nindfloat[iact]){
+					if(nindfloat[iact]){//active actuator with a float neighbor
 						for(long in=0; in<nindfloat[iact]; in++){
 							long jact=P(indfloat, in, iact);/*the floating act. */
 							real scale=1./neighbor[jact];
@@ -555,7 +563,7 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 									px2=P(pdHA, ifit, idm)->px;
 								}
 								pi2[count]=pi[ie];
-								px2[count]=px[ie]*scale;
+								px2[count]=px[ie]*scale;//move weight from floating to active actuator
 								count++;
 							}
 						}
@@ -564,34 +572,35 @@ void act_float(loccell* aloc, dspcell** HA, const dcell* HB, const lcell* actflo
 				pp2[nact]=count;
 				dspsetnzmax(P(pdHA, ifit, idm), count);
 				/*Remove weights of floating actuatorsf from HA. */
-				for(int jact=0; jact<P(actfloat,idm)->nx; jact++){
-					int iact=P(P(actfloat,idm),jact);
-					for(int ic=pp[iact]; ic<pp[iact+1]; ic++){
-						px[ic]=0;
+				for(int iact=0; iact<nact; iact++){
+					if(isfloat[iact]){
+						for(int ic=pp[iact]; ic<pp[iact+1]; ic++){
+							px[ic]=0;
+						}
 					}
 				}
 			}/*ifit */
 		} else{/*Do dense matrix */
 			for(long iact=0; iact<nact; iact++){
-				if(nindfloat[iact]){
+				if(nindfloat[iact]){//active actuator with a float neighbor
 					for(long in=0; in<nindfloat[iact]; in++){
 						long jact=P(indfloat, in, iact);/*the floating act. */
 						real scale=1./neighbor[jact];
 						for(int ifit=0; ifit<NX(HB); ifit++){
 							dmat* hbi=P(HB, ifit, idm);
-							dmat* phbi=hbi;
-							for(long ix=0; ix<NX(hbi); ix++){
-								P(phbi, ix, iact)+=P(phbi, ix, jact)*scale;
+							for(long ix=0; ix<NX(hbi); ix++){//move weight from floating to active actuator
+								P(hbi, ix, iact)+=P(hbi, ix, jact)*scale;
 							}
 						}
 					}
 				}
 			}
-			for(int jact=0; jact<P(actfloat,idm)->nx; jact++){
-				int iact=P(P(actfloat,idm),jact);
-				for(int ifit=0; ifit<NX(HB); ifit++){
-					dmat* hbi=P(HB, ifit, idm);
-					memset(PCOL(hbi, iact), 0, NX(hbi)*sizeof(real));
+			for(long iact=0; iact<nact; iact++){
+				if(isfloat[iact]){
+					for(int ifit=0; ifit<NX(HB); ifit++){
+						dmat* hbi=P(HB, ifit, idm);
+						memset(PCOL(hbi, iact), 0, NX(hbi)*sizeof(real));
+					}
 				}
 			}
 		}
@@ -701,62 +710,78 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 	const dmat* actcplc,/**<[in] Actuator coupling coefficiency*/
 	const real thres  /**<[in] Threshold of coupling to turn on interpolation*/
 ){
-	TIC;tic;
-
-	dsp* out=0;
-	const real* cpl=P(actcplc);
-	const real* cpl0=cpl-1;
+	//TIC;tic;
 	loc_create_map(aloc);
-	map_t* map=aloc->map;
-	real ox=map->ox;
-	real oy=map->oy;
-	real dx1=1./aloc->dx;
-	real dy1=1./aloc->dy;
-	const real* locx=aloc->locx;
-	const real* locy=aloc->locy;
+	map_t *map=aloc->map;
+	const real ox=map->ox;
+	const real oy=map->oy;
+	const real dx1=1./aloc->dx;
+	const real dy1=1./aloc->dy;
+	const real *locx=aloc->locx;
+	const real *locy=aloc->locy;
 	long nact=aloc->nloc;
-	dsp* outit=dspnew(nact, nact, nact*4);
-	real* px=outit->px;
-	spint* pp=outit->pp;
-	spint* pi=outit->pi;
-	long count=0;
-	for(long iact=0; iact<nact; iact++){
-		pp[iact]=count;
-		if(cpl[iact]<thres){
-			long mapx=(long)round((locx[iact]-ox)*dx1);
-			long mapy=(long)round((locy[iact]-oy)*dy1);
-			int count2=count;
-			real sum=0;
-			/*first, interpolate from neighbors of higher cpl*/
-			int near_active=0;
-			//real thres2=0.1;
-			real thres2=MAX(0.1, cpl[iact]);
-			//Find active neighbors
-			for(int iy=-1; iy<2; iy++){
-				for(int ix=-1; ix<2; ix++){
-					if(abs(ix)+abs(iy)==2){
-						continue;//skip corner
-					}
-					//include self and neighbor
-					int kact1=loc_map_get(map, mapx+ix, mapy+iy);
-					if(kact1>0&&cpl0[kact1]>=thres2){
-						near_active++;
+	/*dmat *actcpl2=NULL;
+	if(dmin(actcplc)==0){//there are acts with no active neighbors. need to process actcplc
+		dmat *actcpl1=ddup(actcplc);
+		actcpl2=ddup(actcplc);
+		cpl=P(actcpl1); cpl0=cpl-1;
+		while(dmin(actcpl2)==0){
+			dcp(&actcpl1, actcpl2);
+			//warning("dmin=%g, repeat\n", dmin(actcpl2));
+			for(long iact=0; iact<nact; iact++){
+				for(int iy=-1; iy<2; iy++){
+					for(int ix=-1; ix<2; ix++){
+						if(abs(ix)+abs(iy)==2){
+							continue;//skip corner
+						}
+						//include self and neighbor
+						long mapx=(long)round((locx[iact]-ox)*dx1);
+						long mapy=(long)round((locy[iact]-oy)*dy1);
+						int kact1=loc_map_get(map, mapx+ix, mapy+iy);
+						if(kact1>0){
+							P(actcpl2,iact)+=cpl0[kact1];
+						}
 					}
 				}
 			}
-			for(int iy=-1; iy<2; iy++){
-				for(int ix=-1; ix<2; ix++){
-					if(abs(ix)+abs(iy)==2){
-						continue;
-					}
-					int kact1=loc_map_get(map, mapx+ix, mapy+iy);
-					if(kact1>0){
-						if(!near_active){
-							//there are no active neighbors, use the average
-							pi[count]=kact1-1;
-							sum+=(px[count]=1);
-							count++;
-						} else if(cpl0[kact1]>=thres2||(ix==0&&iy==0)){
+		}
+		//writebin(actcpl2, "actcpl2");
+		dscale(actcpl2, 1./dmax(actcpl2));
+		cpl=P(actcpl2);
+		cpl0=cpl-1;
+		dfree(actcpl1);
+	}*/
+	const real *cpl=P(actcplc);
+	const real *cpl0=cpl-1;
+	dsp *outt=NULL;
+	long nmissing=0;
+	do{
+		long count=0;
+		nmissing=0;
+		dmat *actcpl2=0;
+		if(outt){
+			dspmm(&actcpl2, outt, actcplc, "tn", 1);
+			cpl=P(actcpl2);
+			cpl0=cpl-1;
+		}
+		dsp *outit=dspnew(nact, nact, nact*5);
+		real *px=outit->px;
+		spint *pp=outit->pp;
+		spint *pi=outit->pi;
+		for(long iact=0; iact<nact; iact++){
+			pp[iact]=count;
+			if(cpl[iact]<thres){
+				long mapx=(long)round((locx[iact]-ox)*dx1);
+				long mapy=(long)round((locy[iact]-oy)*dy1);
+				int count2=count;
+				real sum=0;
+				for(int iy=-1; iy<2; iy++){
+					for(int ix=-1; ix<2; ix++){
+						if(abs(ix)+abs(iy)==2){
+							continue;
+						}
+						int kact1=loc_map_get(map, mapx+ix, mapy+iy);
+						if(kact1>0 &&(cpl0[kact1]>=thres||(ix==0&&iy==0))){
 							//there are a few active neighbors
 							pi[count]=kact1-1;
 							sum+=(px[count]=cpl0[kact1]);
@@ -764,24 +789,39 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 						}
 					}
 				}
-			}
-			if(count>count2){
-				real scl=1./sum;
-				for(;count2<count; count2++){
-					px[count2]*=scl;
+				//info("iact=%ld, sum=%g, count=%ld\n", iact, sum, count-pp[iact]);
+				if(count==count2+1){
+					//warning("actuator %ld receives no data\n", iact);
+					nmissing++;
 				}
+				if(sum>0){
+					real scl=1./sum;
+					for(;count2<count; count2++){
+						px[count2]*=scl;
+					}
+				}
+			} else{
+				/*just copy over data */
+				pi[count]=iact;
+				px[count]=1;
+				count++;
 			}
-		} else{
-			/*just copy over data */
-			pi[count]=iact;
-			px[count]=1;
-			count++;
 		}
-	}
-	pp[nact]=count;
-	out=dsptrans(outit);
-	dspfree(outit);
-
+		pp[nact]=count;
+		if(!outt){
+			outt=dspref(outit);
+		}else{
+			dsp *tmp=dspmulsp(outt, outit, "nn");
+			dspfree(outt);
+			outt=tmp;
+		}
+		dspfree(outit);
+		dfree(actcpl2);
+		dbg("act_extrap: nmissing=%ld\n", nmissing);
+	}while(nmissing>0);
+	dsp* out=dsptrans(outt);
+	dspfree(outt);
+	/*
 	//New method. Test convergence
 	dmat* x=dnew(NX(out), 1); dset(x, 1);
 	dmat* y1=dnew(NX(out), 1);
@@ -801,14 +841,72 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 	} while(diff>EPS);
 	dfree(x);
 	dfree(y1);
-	dfree(y2);
-	dspdroptol(out, 1e-3);
-	toc2("act_extrap: %ld iterations", count);
-
+	dfree(y2);*/
+	
+	dspdroptol(out, 1e-12);
+	//toc2("act_extrap: %ld iterations", count);
 	return out;
 }
 /**
-   Create an interpreter that make inactive actuators equal avearage of active
+ * Create an extrapolator that does the following
+ * 1. Reduce the information to active actuators
+ * 2. Project low order modes out from the active actuators
+ * 3. Project back to full vector
+ * 4. Extrapolate to inactive actuators
+ * 5. Add back low order modes to the full vector
+ * extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^
+ * */
+
+dsp *act_extrap_each(loc_t *aloc,
+	const dmat *actcplc,
+	const real thres
+){
+	//step1: reduce to active actuators
+	dmat *mask=dnew(NX(actcplc), NY(actcplc));
+	for(long i=0; i<PN(actcplc); i++){
+		if(P(actcplc,i)>thres){
+			P(mask,i)=1;
+		}
+	}
+	dsp *Hr=dspnewdiag(PN(mask), P(mask), 1); 
+	//writebin(Hr, "Hr");
+	//step2: project 
+	dmat *Mz=zernike(aloc, loc_diam(aloc), 1, 3, 0);//Modes
+	dmat *Md=dpinv2(Mz, CELL(mask), 1e-12, 0);//projector
+	//writebin(mask, "mask");
+	dfree(mask);
+	dmat *MMp=NULL;//MMp=1-Mz*Md. //removal projector
+	dmm(&MMp, 0, Mz, Md, "nn", -1);
+	//writebin(MMp, "MMp");
+	//writebin(Md, "Md");
+	//writebin(Mz, "Mz");
+	dfree(Mz);
+	dfree(Md);
+	daddI(MMp, 1); 
+	dmat *MMr=NULL;//MMr=Hr*MMp
+	dspmm(&MMr, Hr, MMp, "nn", 1);
+	//writebin(MMr, "MMr");
+	cellfree(Hr);
+	dsp *He=act_extrap_do(aloc, actcplc, thres);
+	//writebin(He, "He");
+	dmat *MMe=NULL;//MMe=He*MMr+MMp
+	dspmm(&MMe, He, MMr, "nn", 1);
+	//writebin(MMe, "MMe");
+	daddI(MMp, -1);
+	dadd(&MMe, 1, MMp, -1); //+Mz*Md
+	//writebin(MMp, "MMp2");
+	//writebin(MMe, "MMe2");
+	cellfree(MMp);
+	cellfree(MMr);
+	cellfree(Hr);
+	dsp *res=d2sp(MMe, 1e-12);
+	dfree(MMe);
+	//writebin(res, "MMe3");
+	return res;
+}
+
+/**
+   Create an extrapolator that make inactive actuators equal avearage of active
    neighbors if exist or all other neighbors.
 */
 dspcell* act_extrap(loccell* aloc,     /**<[in] Actuator grid array*/
@@ -818,7 +916,7 @@ dspcell* act_extrap(loccell* aloc,     /**<[in] Actuator grid array*/
 	int ndm=NX(actcplc);
 	dspcell* out=dspcellnew(ndm, ndm);
 	for(int idm=0; idm<ndm; idm++){
-		P(out,idm,idm)=act_extrap_do(P(aloc,idm), P(actcplc,idm), thres);
+		P(out,idm,idm)=act_extrap_each(P(aloc,idm), P(actcplc,idm), thres);
 	}
 	return out;
 }

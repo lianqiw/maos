@@ -48,7 +48,7 @@ void nea_check(dmat *nea, int nsa, int ng);
 
 void psfr_calc(sim_t *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
 void shift_grad(sim_t *simu);
-lmat* loc_coord2ind(loc_t *aloc, const char *fndead);
+lmat* loc_coord2ind(loc_t *aloc, dmat *dead);
 cn2est_t* cn2est_prepare(const parms_t *parms, const powfs_t *powfs);
 void cn2est_isim(dcell *cn2res, recon_t *recon, const parms_t *parms, const dcell *grad, int *tomo_update);
 

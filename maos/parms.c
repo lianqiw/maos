@@ -137,19 +137,19 @@ void free_parms(parms_t *parms){
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		dfree(parms->wfs[iwfs].wvlwts);
-		free(parms->wfs[iwfs].sabad);
+		dfree(parms->wfs[iwfs].sabad);
 	}
 	free(parms->wfs);
 	for(int idm=0; idm<parms->ndm; idm++){
-		free(parms->dm[idm].actstuck);
-		free(parms->dm[idm].actfloat);
+		dfree(parms->dm[idm].actstuck);
+		dfree(parms->dm[idm].actfloat);
 		cellfree(parms->dm[idm].strokescale);
 		dfree(parms->dm[idm].stroke);
 	}
 	free(parms->dm);
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
-		free(parms->moao[imoao].actstuck);
-		free(parms->moao[imoao].actfloat);
+		dfree(parms->moao[imoao].actstuck);
+		dfree(parms->moao[imoao].actfloat);
 	}
 	free(parms->moao);
 	free(parms->aper.fnamp);
@@ -455,6 +455,12 @@ static void readcfg_powfs(parms_t *parms){
 		ipowfs=parms->wfs[i].powfs;	\
 		parms->wfs[i].B = parms->powfs[ipowfs].B+A##tmp[i];	\
     }	
+#define READ_WFS_MAT(A,B)						\
+    readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B);	\
+    for(i=0; i<nwfs; i++){						\
+	parms->wfs[i].B = readstr_##A##mat(0,0,strtmp[i]); \
+	free(strtmp[i]); strtmp[i]=NULL;\
+    }
 /**
    Read in parameters of wfs, including GS direction, signal level, wvlwts, etc.
 */
@@ -472,7 +478,7 @@ static void readcfg_wfs(parms_t *parms){
 		parms->wfs[i].thetay/=206265.;
 	}
 	READ_WFS_RELAX(dbl,fitwt);
-	READ_WFS_RELAX(str,sabad);
+	READ_WFS_MAT(d,sabad);
 	/*link wfs with powfs*/
 	int wfscount=0;
 	int ipowfs=0;
@@ -589,7 +595,12 @@ static void readcfg_wfs(parms_t *parms){
     for(i=0; i<ndm; i++){				\
 	parms->dm[i].B = A##tmp[i];			\
     }							     
-
+#define READ_DM_MAT(A,B)						\
+    readcfg_strarr((&strtmp), ndm, 1,"dm."#B);	\
+    for(i=0; i<ndm; i++){						\
+	parms->dm[i].B = readstr_##A##mat(0,0,strtmp[i]); \
+	free(strtmp[i]); strtmp[i]=NULL;\
+    }
 /**
    Read in deformable mirror parameters.
 */
@@ -681,8 +692,8 @@ static void readcfg_dm(parms_t *parms){
 	READ_DM_RELAX(dbl,hyst);
 	READ_DM_RELAX(dbl,hyst_alpha);
 	READ_DM_RELAX(dbl,hyst_stroke);
-	READ_DM_RELAX(str,actfloat);
-	READ_DM_RELAX(str,actstuck);
+	READ_DM_MAT(d,actfloat);
+	READ_DM_MAT(d,actstuck);
 	free(strtmp);
 	free(inttmp);
 	free(dbltmp);
@@ -698,7 +709,12 @@ static void readcfg_dm(parms_t *parms){
     for(i=0; i<nmoao; i++){				\
 	parms->moao[i].B = A##tmp[i];			\
     }							      
-
+#define READ_MOAO_MAT(A,B)						\
+    readcfg_strarr((&strtmp), nmoao, 1,"moao."#B);	\
+    for(i=0; i<nmoao; i++){						\
+	parms->moao[i].B = readstr_##A##mat(0,0,strtmp[i]); \
+	free(strtmp[i]); strtmp[i]=NULL;\
+    }
 /**
    Read in MOAO parameters.
 */
@@ -726,8 +742,8 @@ static void readcfg_moao(parms_t *parms){
 	READ_MOAO_RELAX(int,actslave);
 	READ_MOAO_RELAX(int,lrt_ptt);
 	READ_MOAO_RELAX(dbl,guard);
-	READ_MOAO_RELAX(str,actstuck);
-	READ_MOAO_RELAX(str,actfloat);
+	READ_MOAO_MAT(d,actstuck);
+	READ_MOAO_MAT(d,actfloat);
 	free(inttmp);
 	free(dbltmp);
 	free(strtmp);
@@ -1065,6 +1081,7 @@ static void readcfg_lsr(parms_t *parms){
 	READ_DBL(lsr.actthres);
 	READ_DBL(lsr.actthres2);
 	READ_INT(lsr.actextrap);
+	READ_INT(lsr.splitlrt);
 }
 /**
    Read general reconstruction parameters

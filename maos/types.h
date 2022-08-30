@@ -249,7 +249,7 @@ typedef struct fit_t{
     dspcell *HXF;      /**<ray tracing propagator from xloc to floc for fitting directions.*/
     dspcell *HA;       /**<ray tracing from aloc to floc for fitting directions.*/
     dcell *actcpl;
-    dspcell* actextrap;     /**<actuator interpolation*/
+    dspcell* actextrap; /**<actuator interpolation*/
     dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     dcell *NW;         /**<null modes for DM fit.*/
     
@@ -404,7 +404,7 @@ typedef struct sim_save_t{
     /*Deformable mirror. */
     zfarr *dmerr;
     zfarr *dmint;
-    zfarr *dmfit;
+    zfarr *dmrecon;
     zfarr *dmreal;
     dmat *ttmreal;
     zfarr *dmcmd;
@@ -578,7 +578,7 @@ typedef struct sim_t{
 			  end*/
     /*High order*/
     servo_t *dmint;    /**<dm integrator. (used of fuseint==1)*/
-    dcell *dmfit;      /**<direct high order fit output*/
+    dcell *dmrecon;      /**<direct high order fit output*/
     dcell *dmerr;      /**<equals to dmerr_store when there is output.*/
     dcell *dmerr_store; /**<high order dm error signal.*/
     /*Low order*/

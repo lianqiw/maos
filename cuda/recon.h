@@ -37,12 +37,12 @@ private:
     curcell opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart. Free with new seed*/
     curcell opdr_vec; /**<Referencing opdr in vector form*/
     curcell tomo_rhs;
-    curcell dmfit;
-    curcell dmfit_vec;
+    curcell dmrecon;
+    curcell dmrecon_vec;
     curcell fit_rhs;
     stream_t cgstream;
     curcell opdr_save;/*for debugging*/
-    curcell dmfit_save;/*for debugging*/
+    curcell dmrecon_save;/*for debugging*/
 
     curcell GXL;
 
@@ -79,8 +79,8 @@ public:
     void init_moao(const parms_t* parms, recon_t* recon);
     void update_cn2(const parms_t *parms, recon_t *recon);
     Real tomo(dcell **_opdr, dcell **gngsmvst, const dcell *_gradin);
-    Real fit(dcell **_dmfit, dcell *_opdr);
-    Real moao_recon(dcell *_dmfit, dcell *_opdr);
+    Real fit(dcell **_dmrecon, dcell *_opdr);
+    Real moao_recon(dcell *_dmrecon, dcell *_opdr);
     void moao_filter(dcell *_dm_wfs, dcell *_dm_evl);
     void mvm(dcell **_dmerr, dcell *_gradin);
     void tomo_test(sim_t *simu);

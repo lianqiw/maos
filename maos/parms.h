@@ -283,7 +283,7 @@ typedef struct powfs_cfg_t{
 */
 typedef struct wfs_cfg_t{
     dmat *wvlwts; /**<Weights of signal value for each wavelength. if not specified in config, will use powfs.wvlwts*/
-    char *sabad;  /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
+    dmat *sabad;  /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     real thetax;  /**<x direction*/
     real thetay;  /**<y direction*/
     real misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs.*/
@@ -320,8 +320,8 @@ typedef struct dm_cfg_t{
     int hist;       /**<Compute histogram of commands of each actuator*/
     int order;      /**<Nominal order of the DM within telescope clear subaperture*/
     int isground;   /**<Is this DM the ground DM (derived)*/
-    char *actfloat; /**<file containing floating actuators. nx2 coordinate*/
-    char *actstuck; /**<file containing stuck actuators. nx2 coordinate.*/
+    dmat *actfloat; /**<floating actuators. nx2 coordinate*/
+    dmat *actstuck; /**<stuck actuators. nx2 coordinate.*/
 
     real hyst;       /**<The hysteresis amount (ratio)*/
     real hyst_alpha; /**<The DM hysteresis model alpha parameter*/
@@ -407,7 +407,7 @@ typedef struct tomo_cfg_t{
     int assemble;    /**<force assemble tomography matrix in CG*/
     int predict;     /**<test predictive control.*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
-    int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
+    int splitlrt;    /**<1: low rank terms also in LHS.*/
 }tomo_cfg_t;
 /**
    contains input parameters for deformable mirror fitting.
@@ -453,6 +453,7 @@ typedef struct lsr_cfg_t{
     char  *fnreg;    /**<File containing a regularization term to add to LL.M*/
     int actextrap;   /**<extrapolate actuator results to non-active actuators .*/
     int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
+    int splitlrt;    /**<1: low rank terms also in LHS.*/
     int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int alg;         /**<algorithm to solve the linear equation.
 			0: Cholesky direct solve for the large matrix.  (CBS)
@@ -461,6 +462,7 @@ typedef struct lsr_cfg_t{
 		     */
     int maxit;       /**<max iterations. Usually 30 for CG*/
     int cgwarm;      /**<Warm restart in CG. */
+    
 }lsr_cfg_t;
 /**
    contains input parameters for wavefront reconstruction.
@@ -705,8 +707,8 @@ typedef struct moao_cfg_t{
     real gdm;      /**<The gain of type I controller. a[n]=a[n-1]+e*g where g=o[n]-a[n-1]*/
     real ar;       /**<Aspect ratio dy/dx*/
     real guard;
-    char *actfloat;  /**<file containing floating actuators. nx2 coordinate*/
-    char *actstuck;  /**<file containing stuck actuators. nx2 coordinate.*/
+    dmat *actfloat;  /**<file containing floating actuators. nx2 coordinate*/
+    dmat *actstuck;  /**<file containing stuck actuators. nx2 coordinate.*/
 }moao_cfg_t;
 /**
    contains input parameters for reusing of saved variables.

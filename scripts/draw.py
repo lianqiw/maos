@@ -79,18 +79,26 @@ def locembed(loc, opd0, return_ext=0):
 def draw(*args, **kargs):
     #if not 'keep' in kargs or kargs['keep'] == 0:
     #    plt.clf()
-    if args[0] is None:
+    arg0=args[0]
+    if arg0 is None:
         return
-    if type(args[0]) == list or args[0].dtype == object or args[0].ndim==3:  # list, array of array or 3d array
+    if type(arg0) == list:
+        if len(arg0)==1:
+            arg0=arg0[0]
+    elif arg0.dtype == object or arg0.ndim==3:
+        if arg0.shape[0]==1:
+            arg0=arg0[0]
+    
+    if type(arg0) == list or arg0.dtype == object or arg0.ndim==3:  # list, array of array or 3d array
         kargs['keep'] = 1  # do not clear
-        if type(args[0]) == list:
-            nframe = len(args[0])
-        elif type(args[0]) == np.ndarray and args[0].dtype==object:
-            old_shape=args[0].shape
-            nframe = args[0].size
-            args[0].shape=(args[0].size,)
-        elif args[0].ndim==3:
-            nframe = args[0].shape[0]
+        if type(arg0) == list:
+            nframe = len(arg0)
+        elif type(arg0) == np.ndarray and arg0.dtype==object:
+            old_shape=arg0.shape
+            nframe = arg0.size
+            arg0.shape=(arg0.size,)
+        elif arg0.ndim==3:
+            nframe = arg0.shape[0]
         else:
             raise(Exception('Unknow data type'))
         if nframe>60:
@@ -112,23 +120,26 @@ def draw(*args, **kargs):
             if nx>1 or ny > 1:
                 plt.subplot(ny, nx, iframe+1)
             if len(args) == 1:
-                draw(args[0][iframe], **kargs)
+                draw(arg0[iframe], **kargs)
             elif len(args) == 2:
-                draw(args[0][iframe], args[1][iframe],  **kargs)
+                #if args[1].dtype==object or args[1].ndim>1:
+                draw(arg0[iframe], args[1][iframe],  **kargs)
+                #else:
+                #    draw(arg0[iframe], args[1],  **kargs)
             else:
                 print('Too many arguments')
-        if type(args[0])==object:
-            args[0].shape=old_shape
-    elif isloc(args[0]):  # first argument is loc
+        if type(arg0)==object:
+            arg0.shape=old_shape
+    elif isloc(arg0):  # first argument is loc
         if len(args) == 1:
             # plot grid
-            plt.plot(args[0][0], args[0][1], '+')
+            plt.plot(arg0[0], arg0[1], '+')
             plt.axis('scaled')  # better than equal
             plt.xlabel('x (m)')
             plt.ylabel('y (m)')
         elif len(args) == 2:
             # draw(loc, opd): embed opd onto loc
-            ims, ext2 = locembed(args[0], args[1], 1)
+            ims, ext2 = locembed(arg0, args[1], 1)
             # print('ext2=',ext2)
             kargs['ext']=ext2
             draw(ims, **kargs)
@@ -136,7 +147,7 @@ def draw(*args, **kargs):
             print('Too many arguments')
     
     else: #2-d numeric array
-        img = np.squeeze(args[0])
+        img = np.squeeze(arg0)
         if len(img.shape) == 1 and img.shape[0]>0:
             nx = int(np.sqrt(img.shape[0]))
             ny = int(img.shape[0] / nx)

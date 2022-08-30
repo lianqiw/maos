@@ -65,7 +65,7 @@ static void* find_var(const char* name){
 	VAR_GET(simu,dmcmd),
 	VAR_GET(simu,dmreal),
 	VAR_GET(simu,dmadd),
-	VAR_GET(simu,dmfit),
+	VAR_GET(simu,dmrecon),
 	VAR_GET(simu,dmerr),
 	VAR_GET(simu,dmerr_store),
 	VAR_GET(simu,Merr_lo),

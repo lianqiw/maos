@@ -1177,9 +1177,9 @@ static void init_simu_dm(sim_t* simu){
 	simu->dmcmd=dcellnew(parms->ndm, 1);
 	simu->dmreal=dcellnew(parms->ndm, 1);
 	if(parms->fit.cgwarm){
-		simu->dmfit=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
+		simu->dmrecon=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
 	} else{
-		simu->dmfit=simu->dmerr_store;
+		simu->dmrecon=simu->dmerr_store;
 	}
 	if(parms->sim.lpttm>EPS){
 		simu->ttmreal=dnew(2, 1);
@@ -1286,7 +1286,7 @@ static void init_simu_dm(sim_t* simu){
 	int nrstep=nstep-(parms->sim.closeloop?1:0);
 	if(parms->save.dm){
 		save->dmerr=zfarr_init(nrstep, 1, "dmerr_%d.bin", seed);
-		save->dmfit=zfarr_init(nrstep, 1, "dmfit_%d.bin", seed);
+		save->dmrecon=zfarr_init(nrstep, 1, "dmrecon_%d.bin", seed);
 		if(parms->recon.split){
 			save->Merr_lo=zfarr_init(nstep, 1, "Merr_lo_%d.bin", seed);
 			if(!parms->sim.fuseint){
@@ -1591,8 +1591,8 @@ void free_simu(sim_t* simu){
 	cellfree(simu->Merrts);
 	dcellfree(simu->gcov);
 	dcellfree(simu->ecov);
-	if(simu->dmfit!=simu->dmerr_store){
-		dcellfree(simu->dmfit);
+	if(simu->dmrecon!=simu->dmerr_store){
+		dcellfree(simu->dmrecon);
 	}
 	dcellfree(simu->dmerr_store);
 	dcellfree(simu->dmhist);
@@ -1698,7 +1698,7 @@ void free_simu(sim_t* simu){
 	zfarr_close_n(save->ztiltout, nwfs);
 	zfarr_close(save->dmerr);
 	zfarr_close(save->dmint);
-	zfarr_close(save->dmfit);
+	zfarr_close(save->dmrecon);
 	zfarr_close(save->dmreal);
 	zfarr_close(save->dmcmd);
 	dfree(save->ttmreal);

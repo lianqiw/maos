@@ -162,7 +162,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 		}
 		//toc2(" %ld", iact);
 		/*{
-			writebin(FLI, "cpu_dmfit_%ld", iact);
+			writebin(FLI, "cpu_dmrecon_%ld", iact);
 			writebin(FRT, "cpu_opdx_%ld", iact);
 			writebin(RLT, "cpu_opdr_%ld", iact);
 			writebin(RRT, "cpu_grad_%ld", iact);

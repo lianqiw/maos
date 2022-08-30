@@ -328,21 +328,23 @@ static void filter_cl(sim_t* simu){
 		addlow2dm(&simu->dmtmp, simu, Mtmp, 1);
 		dcellfree(Mtmp);
 	}
-
+	//dmpsol should not contain DM NCPA vector, which may not be recovered by reconstruction.
+	//for modal reconstruction, it should be before the conversion.
+	if(parms->recon.psol){
+		dcellcp(&simu->dmpsol, simu->dmtmp);//dmpsol should be before extrapolation
+	}
 	if(parms->recon.modal){
 		//convert DM command from modal to zonal space
 		for(int idm=0; idm<NX(simu->dmcmd); idm++){
 			dmm(&P(simu->dmcmd,idm), 0, P(simu->recon->amod,idm), P(simu->dmtmp,idm), "nn", 1);
 		}
-	} else if(simu->recon->actextrap&&!parms->recon.psol){
+	} else if(simu->recon->actextrap && !(parms->recon.psol && parms->fit.actextrap)){
 		//Extrapolate to edge actuators
 		dcellzero(simu->dmcmd);
 		dspcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
 	} else{
 		dcellcp(&simu->dmcmd, simu->dmtmp);
 	}
-	//dmpsol should not contain DM offset vector, which may not be recovered by reconstruction.
-	dcellcp(&simu->dmpsol, simu->dmcmd);
 	//The DM commands are always on zonal modes from this moment
 
 	if(simu->ttmreal){
@@ -364,7 +366,7 @@ static void filter_cl(sim_t* simu){
 		dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
 	}
 
-	if(recon->actstuck&&!parms->recon.modal&&parms->dbg.recon_stuck){
+	if(parms->recon.psol&&recon->actstuck&&!parms->recon.modal&&parms->dbg.recon_stuck){
 	//zero stuck actuators so that gradpsol still contains gradients caused
 	//by stuck actuators, so that MVR can smooth it out.
 		act_stuck_cmd(recon->aloc, simu->dmpsol, recon->actstuck);
@@ -388,7 +390,7 @@ static void filter_cl(sim_t* simu){
 		if(feedback){
 			dcelladd(&simu->dmtmp2, 1, simu->dmcmd, -1); //find what is clipped
 			servo_add(simu->dmint,     simu->dmtmp2, -1);//remove from integrator (anti wind up)
-			dcelladd(&simu->dmpsol, 1, simu->dmtmp2, -1);//remove from dmpsol.
+			if(parms->recon.psol) dcelladd(&simu->dmpsol, 1, simu->dmtmp2, -1);//remove from dmpsol.
 		}
 		if(recon->actstuck&&!parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
 	}
@@ -519,10 +521,10 @@ static void filter_ol(sim_t* simu){
 		}
 	}
 	//Extrapolate to edge actuators
-	if(simu->recon->actextrap&&!parms->recon.modal){
+	if(simu->recon->actextrap&&!parms->recon.modal&&!(parms->recon.psol&&parms->fit.actextrap)){
 		dcellcp(&simu->dmtmp2, simu->dmcmd);
 		dcellzero(simu->dmcmd);
-		dspcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp2, "nn", 1);
+		dcellmm_any((cell**)&simu->dmcmd, CELL(simu->recon->actextrap), CELL(simu->dmtmp2), "nn", 1);
 	}
 	if(simu->ttmreal){
 		ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);

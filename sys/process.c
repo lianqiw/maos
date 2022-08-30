@@ -63,6 +63,10 @@ void init_process(void){
 		warning("Unable to get hostname, set to localhost\n");
 		HOST=mystrdup("localhost");
 	}else{
+		char *tmp;
+		if((tmp=strchr(htemp, '.'))){
+			tmp[0]='\0';
+		}
 		HOST=mystrdup(htemp);
 	}
 

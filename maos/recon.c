@@ -373,7 +373,7 @@ void reconstruct(sim_t* simu){
 	}
 	if(hi_output||parms->sim.idealfit||parms->sim.idealtomo){
 		simu->dmerr=simu->dmerr_store;
-		dcell* dmout=simu->dmfit;//always output to dmfit to enable warm restart.
+		dcell* dmout=simu->dmrecon;//always output to dmrecon to enable warm restart.
 		dcell* gradin;
 		if(parms->recon.psol){
 			gradin=simu->gradlastol;
@@ -381,7 +381,7 @@ void reconstruct(sim_t* simu){
 			gradin=simu->gradlastcl;
 		}
 		if(!dmout) error("dmout cannot be empty\n");
-		//The following takes gradin as input and computs dmfit in dmout.
+		//The following takes gradin as input and computs dmrecon in dmout.
 		if(parms->recon.mvm){
 			if(parms->sim.mvmport){
 				mvm_client_recon(parms->sim.mvmsize, dmout, gradin);
@@ -414,16 +414,18 @@ void reconstruct(sim_t* simu){
 				error("recon.alg=%d is not recognized\n", parms->recon.alg);
 			}
 		}
-		if(simu->dmfit!=simu->dmerr){
-			dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
+		if(simu->dmrecon!=simu->dmerr){
+			dcellcp(&simu->dmerr, simu->dmrecon);/*keep dmrecon for warm restart */
 		}
 		if(parms->recon.psol){
 			//form error signal in PSOL mode
-			if(simu->recon->actextrap){
-				//extrapolate DM fitting result to float and edge actuators
+			if(parms->recon.alg==0 && parms->fit.actextrap){
+				//extrapolate DM fitting result to float and edge actuators.
+				//If not enabled, extrapolate integrator output.
+				//Must be enabled if HA is altered by actextrap.
 				dcell *dmtmp;
-				if(simu->dmfit!=simu->dmerr){
-					dmtmp=simu->dmfit;
+				if(simu->dmrecon!=simu->dmerr){
+					dmtmp=simu->dmrecon;
 				}else{
 					dcellcp(&simu->dmtmp, simu->dmerr);
 					dmtmp=simu->dmtmp;
@@ -456,6 +458,9 @@ void reconstruct(sim_t* simu){
 		recon_servo_update(simu);
 	}
 	if(hi_output&&parms->save.ecov&&isim>=parms->evl.psfisim){
+		if(!parms->recon.psol){
+			error("Please enable PSOL\n");
+		}
 	//For PSF reconstruction.
 		psfr_calc(simu, simu->opdr, P(simu->wfspsol,P(parms->hipowfs,0)),
 			simu->dmerr, simu->Merr_lo);

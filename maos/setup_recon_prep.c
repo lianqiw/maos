@@ -425,7 +425,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 		for(int idm=0; idm<ndm; idm++){
 			int nstuck=recon->actstuck?count_nonzero(P(recon->actstuck, idm)):0;
 			int nfloat=recon->actfloat?count_nonzero(P(recon->actfloat, idm)):0;
-			info2("DM %d has %d stuck and %d floating actuators\n", idm, nstuck, nfloat);
+			info2("    DM %d has %d stuck and %d floating actuators\n", idm, nstuck, nfloat);
 		}
 	}
 	if(parms->save.setup){
@@ -754,25 +754,21 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		}
 		if(parms->recon.alg==1){//LSR.
 			recon->actcpl=genactcpl(recon->GA, 0);
+			if(parms->save.setup){
+				writebin(recon->actcpl, "lsr_actcpl");
+			}
 			act_stuck(recon->aloc, CELL(recon->actcpl), recon->actfloat);
 			if(parms->lsr.actextrap){
 				recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
-			} else if(recon->actfloat){
-				warning("There are float actuators, but fit.actextrap is off\n");
-			}
-			if(recon->actextrap){
-				dspcell* GA2=0;
+				dspcell *GA2=0;
 				dspcellmulsp(&GA2, recon->GA, recon->actextrap, "nn", 1);
 				dspcellfree(recon->GA);
 				recon->GA=GA2;
-			}
-			if(parms->save.setup){
-				if(recon->actextrap){
-					writebin(recon->actextrap, "lsr_actinterp");
+				if(parms->save.setup){
+					writebin(recon->actextrap, "lsr_actextrap");
 				}
-				if(recon->actcpl){
-					writebin(recon->actcpl, "lsr_actcpl");
-				}
+			} else if(recon->actfloat){//avoid commanding floating actuators
+				act_float(recon->aloc, &recon->GA, NULL, recon->actfloat);
 			}
 		}
 	}

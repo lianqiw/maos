@@ -131,9 +131,9 @@ void save_recon(sim_t* simu){
 					"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
 			}
 		}
-		for(int idm=0; parms->recon.alg==0&&simu->dmfit&&idm<parms->ndm; idm++){
-			if(P(simu->dmfit,idm)){
-				dmat* tmp=convert_dm(recon, P(simu->dmfit,idm), idm);
+		for(int idm=0; parms->recon.alg==0&&simu->dmrecon&&idm<parms->ndm; idm++){
+			if(P(simu->dmrecon,idm)){
+				dmat* tmp=convert_dm(recon, P(simu->dmrecon,idm), idm);
 				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
 				"DM Fitting Output", "x (m)", "y (m)", "Fit %d", idm);
 				dfree(tmp);
@@ -203,8 +203,8 @@ void save_recon(sim_t* simu){
 		}
 	}
 	if(parms->save.dm&&(!parms->sim.closeloop||simu->reconisim>=0)){
-		if(simu->dmfit){
-			zfarr_push(simu->save->dmfit, simu->reconisim, simu->dmfit);
+		if(simu->dmrecon){
+			zfarr_push(simu->save->dmrecon, simu->reconisim, simu->dmrecon);
 		}
 		if(simu->dmerr){
 			zfarr_push(simu->save->dmerr, simu->reconisim, simu->dmerr);
@@ -345,9 +345,8 @@ void save_dmreal(sim_t* simu){
 				}
 			}
 
-
 			for(int idm=0; idm<parms->ndm; idm++){
-				if(simu->dmpsol&&P(simu->dmpsol,idm)){
+				if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
 					drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), P(parms->dbg.draw_opdmax),
 						"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
 				}

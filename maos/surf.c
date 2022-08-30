@@ -360,13 +360,10 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 				displace[0], displace[1], scale);
 		}
 	}
-	if(recon->actextrap){
-		info2("Replacing HA by HA*actextrap");
-		dspcell* HA2=0;
-		dspcellmulsp(&HA2, recon->HA_ncpa, recon->actextrap, "nn", 1);
-		dspcellfree(recon->HA_ncpa);
-		recon->HA_ncpa=HA2;
-	}
+	//We don't handle float ot stuck actuators in NCPA calibration.
+	/*if(recon->actfloat){//avoid commanding float actuators
+		act_float(recon->aloc, &recon->HA_ncpa, NULL, recon->actfloat);
+	}*/
 	toc2("HA_ncpa");
 	if(parms->save.setup){
 		writebin(recon->HA_ncpa, "HA_ncpa");

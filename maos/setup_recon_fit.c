@@ -53,11 +53,11 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 
 /**
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
-static dspcell*
+static void
 setup_fit_HA(fit_t* fit){
 	const int nfit=NX(fit->thetax);
 	const int ndm=NX(fit->aloc);
-	dspcell* HA=dspcellnew(nfit, ndm);
+	fit->HA=dspcellnew(nfit, ndm);
 	TIC;tic;
 OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 	for(int ifit=0; ifit<nfit; ifit++){
@@ -72,7 +72,7 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 			if(fit->misreg&&fit->misreg[ifit+idm*nfit]){
 				loc=loctransform(loc, fit->misreg[ifit+idm*nfit]);
 			}
-			P(HA, ifit, idm)=mkh(P(fit->aloc,idm), loc,
+			P(fit->HA, ifit, idm)=mkh(P(fit->aloc,idm), loc,
 				displace[0], displace[1], scale);
 			if(loc!=fit->floc){
 				locfree(loc);
@@ -80,35 +80,31 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 		}
 	}
 	toc2("HA");
-	fit->actcpl=genactcpl(HA, fit->W1);
-	//cpl accounts for floating actuators, but not stuck actuators.
-	act_stuck(fit->aloc, CELL(fit->actcpl), fit->actfloat);
+	fit->actcpl=genactcpl(fit->HA, fit->W1);
+	if(fit->actfloat){//zero coupling for floating actuators. Do not zero for sutck actuators.
+		act_stuck(fit->aloc, CELL(fit->actcpl), fit->actfloat);
+	}
 	if(global->parms->dbg.recon_stuck){
-	//Do not modify HA by floating actuators, otherwise, HA*actextrap will not work.
-		act_stuck(fit->aloc, CELL(HA), fit->actstuck);
+		act_stuck(fit->aloc, CELL(fit->HA), fit->actstuck);
 	}
 
 	if(fit->flag.actextrap){
+		/*
+			DM fitting output a is extrapolated to edge actuators by
+			actextrap*a. The corresponding ray tracing from DM would be
+			HA*actextrap*a. We replace HA by HA*actextrap to take this into
+			account during DM fitting. 
+			This needs to be used with extrapolation on dmpsol.
+		*/
 		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres);
-	} else if(fit->actfloat){
-		warning("There are float actuators, but fit.actextrap is off\n");
+		info("Replacing HA by HA*fit->actextrap\n");
+		dspcell *HA2=0;
+		dspcellmulsp(&HA2, fit->HA, fit->actextrap, "nn", 1);
+		dspcellfree(fit->HA);
+		fit->HA=HA2;
+	} else if(fit->actfloat){//avoid commanding floating actuators
+		act_float(fit->aloc, &fit->HA, NULL, fit->actfloat);
 	}
-	if(fit->actextrap){
-	/*
-	  DM fitting output a is extrapolated to edge actuators by
-	  actextrap*a. The corresponding ray tracing from DM would be
-	  HA*actextrap*a. We replace HA by HA*actextrap to take this into
-	  account during DM fitting.
-	*/
-		info("Replacing HA by HA*fit->interp\n");
-
-		dspcell* HA2=0;
-		dspcellmulsp(&HA2, HA, fit->actextrap, "nn", 1);
-		dspcellfree(HA);
-		HA=HA2;
-	}
-
-	return HA;
 }
 /**
    Setup fitting low rank terms that are in the NULL space of DM fitting
@@ -344,7 +340,7 @@ void setup_fit(fit_t* fit, int idealfit){
 	if(!idealfit&&fit->xloc){
 		fit->HXF=setup_fit_HXF(fit);
 	}
-	fit->HA=setup_fit_HA(fit);
+	setup_fit_HA(fit);
 	setup_fit_lrt(fit);
 
 	/*always assemble fit matrix, faster if many directions */
@@ -418,16 +414,18 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 		}
 	}
 	setup_fit(fit, parms->sim.idealfit);
-
-	dcellfree(recon->actcpl);
-	recon->actcpl=dcellref(fit->actcpl);
-	dcellfree(recon->actextrap);
-	recon->actextrap=dspcellref(fit->actextrap);
-
+	if(fit->actcpl){
+		dcellfree(recon->actcpl);
+		recon->actcpl=dcellref(fit->actcpl);
+	}
+	if(fit->actextrap) {
+		dcellfree(recon->actextrap);
+		recon->actextrap=dspcellref(fit->actextrap);
+	}
 	if(parms->save.setup){
 		writebin(fit->HA, "HA");
-		writebin(recon->actextrap, "actextrap");
-		writebin(recon->actcpl, "actcpl");
+		if(fit->actcpl) writebin(fit->actcpl, "fit_actcpl");
+		if(fit->actextrap) writebin(fit->actextrap, "fit_actextrap");
 	}
 	if(parms->save.recon){
 		writecell(fit->FR.M, "FRM");

@@ -865,11 +865,14 @@ void shift_grad(sim_t* simu){
    2015-03-30: build a mask for dead actuators based on coordinate.
 */
 lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
-	const char* fndead /**<[in] File containing dead actuators*/
+	dmat* dead /**<[in] File containing dead actuators*/
 ){
-	dmat* dead=dread("%s", fndead);
+	if(NY(dead)==1 && NX(dead)>1){
+		dead->ny=dead->nx;
+		dead->nx=1;
+	}
 	if(NY(dead)!=2&&NY(dead)!=3){
-		error("%s must contain 2 or 3 columns of data\n", fndead);
+		error("dead must contain 2 or 3 columns of data. %ldx%ld\n", NX(dead), NY(dead));
 	}
 	loc_create_map(aloc);
 	map_t* map=aloc->map;
@@ -886,7 +889,6 @@ lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
 			P(out, iact)=(NY(dead)==3?P(ps, jact, 2)*1e9:1);//integer in nm.
 		}
 	}
-	dfree(dead);
 	return out;
 }
 

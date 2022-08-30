@@ -119,8 +119,8 @@ def as_array(arr, id, shape):
 def py2cell(arr):
     if type(arr) is list:
         arr=np.asarray(arr)
-    if sp.isspmatrix_csc(arr):
-        return csc(arr)
+    if sp.isspmatrix_csr(arr):
+        return csr(arr)
     else:
         return cell(arr)
 
@@ -132,8 +132,8 @@ def py2cellref(arr):
     if type(arr) is np.ndarray:        
         if arr.size==0:
             return None #turn empty ndarray to Null pointer. do not use 0
-        elif sp.isspmatrix_csc(arr):
-            return byref(csc(arr))
+        elif sp.isspmatrix_csr(arr):
+            return byref(csr(arr))
         else:
             return byref(cell(arr))
     else:
@@ -232,7 +232,7 @@ class cell(Structure):
                 #print(self.header)
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
-            return cast(addressof(self), POINTER(csc)).contents.as_array()
+            return cast(addressof(self), POINTER(csr)).contents.as_array()
         elif kind==2: #loc
             return cast(addressof(self), POINTER(loc)).contents.as_array()
         elif kind==10: #cell
@@ -312,7 +312,7 @@ class loc(Structure):
             raise(Exception("loc is empty"))
     def free(self):
         lib.cellfree_do(byref(self))
-class csc(Structure):#CSC sparse matrix
+class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just like arrays as numpy is row order
     _fields_=[ #need to match C memory layout
         ('id', c_uint32),
         ('x', c_void_p),
@@ -332,7 +332,7 @@ class csc(Structure):#CSC sparse matrix
             np.complex64: 25606,
             np.complex128:25600,
         }
-        if arr is not None and sp.isspmatrix_csc(arr):
+        if arr is not None and sp.isspmatrix_csr(arr):
             self.id=dtype2id.get(arr.dtype.type)
             #save subarrays
             self.xp=arr.data
@@ -341,7 +341,7 @@ class csc(Structure):#CSC sparse matrix
             self.x=self.xp.ctypes.data_as(c_void_p) #data
             self.i=self.ip.ctypes.data_as(c_void_p) #row index
             self.p=self.pp.ctypes.data_as(c_void_p)
-            self.nx, self.ny=arr.shape #Fortran order
+            self.ny, self.nx=arr.shape #Fortran order
             self.nzmax=self.pp[-1]
         else:
             self.id=dtype2id.get(np.float64)
@@ -358,9 +358,9 @@ class csc(Structure):#CSC sparse matrix
             self.xp=as_array(self.x, self.id, (self.nzmax,))
             self.ip=as_array(self.i, 25603, (self.nzmax,))
             self.pp=as_array(self.p, 25603, (self.ny+1,))
-            return sp.csc_matrix((self.xp, self.ip, self.pp), shape=(self.nx, self.ny))
+            return sp.csr_matrix((self.xp, self.ip, self.pp), shape=(self.ny, self.nx))
         else:
-            return sp.csc_matrix((self.nx,self.ny))
+            return sp.csr_matrix((self.nx,self.ny))
     def free(self):
         lib.cellfree_do(byref(self))
 def convert_fields(fields):

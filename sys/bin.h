@@ -120,6 +120,7 @@ int zfeof(file_t *fp);
 long zfpos(file_t *fp);
 long zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
+long zflen(file_t *fp);
 file_t *zfopen(const char *fn, const char *mod);
 file_t *zfdopen(int fd);
 const char *zfname(file_t *fp);

@@ -129,8 +129,14 @@ void maos_setup(const parms_t* parms){
 		}
 		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
 		//setup_recon_sodium_fit(recon, parms);//to restrict modes in sodium fitting correction
-		if(parms->recon.alg==0||parms->sim.dmproj||parms->sim.ncpa_calib){
+		if(parms->recon.alg==0||parms->sim.dmproj){
 			setup_recon_fit(recon, parms);
+		}
+		if(recon->actcpl && !recon->actextrap){
+			recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
+			if(parms->save.setup){
+				writebin(recon->actextrap, "actextrap");
+			}
 		}
 		if(parms->sim.wfsalias==2||parms->sim.idealwfs==2){
 			setup_powfs_fit(powfs, recon, parms);

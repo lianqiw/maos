@@ -356,7 +356,7 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	void* out=0;
 	//scan file in automatic mode or when cell dimension is 0 or when request cell but data is not cell.
 	if((level==0||level<-1)&&!iscell(&header->magic)){
-		//info("level==0 && !iscell\n");
+		//dbg("level==0 && !iscell\n");
 		if(!id) id=header->magic;
 		switch(id){
 		case M_DBL:
@@ -399,19 +399,23 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 		}
 	}else if(iscell(&header->magic) && (level!=-1||(header->nx>0 && header->ny>0))){//cell array with known dimensions
 		//scan only if level==-1 and dimension is 0.
+		//dbg("level=%d, iscell=1, nx=%llu, ny=%llu\n", level, header->nx, header->ny);
 		long nx=header->nx;
 		long ny=header->ny;
 		cell* dcout=cellnew(nx, ny);
 		dcout->header=header->str; header->str=0;
 		header_t headerc={0,0,0,0};
+		int ans=0;
+		int level1=level>0?(level-1):0;//do not allow it to be -1.
 		for(long i=0; i<nx*ny; i++){
-			if(read_header(&headerc, fp)){
+			if((ans=read_header(&headerc, fp))){
+				dbg("read_header failed:ans=%d, i=%ld\n", ans,i);
 				break;
 			}
 			/*if(!headerc.str&&dcout->header){//copy str from cell to mat.
 				headerc.str=strdup(dcout->header);
 			}*/
-			P(dcout,i)=readdata_by_id(fp, id, level-1, &headerc);
+			P(dcout,i)=readdata_by_id(fp, id, level1, &headerc);
 		}
 		out=dcout;
 	}else if(level>=-1){//scan file when auto (-1) or request cell but mat is found.
@@ -448,13 +452,15 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	free(header->str);header->str=0;
 	if(level==0){//take first none-cell element.
 		while(out && iscell(out)){
+			//dbg("level=0, but out is cell, taking first none-cell element\n");
 			cell* out2=P((cell*)out,0);
 			P((cell*)out,0)=0;
 			cellfree(out);
 			out=out2;
 		}
-	} else if(level<0&&!iscell(&header->magic)&&out&&iscell(out)&&((cell*)out)->nx==1&&((cell*)out)->ny==1){
-		//automatic mode with only one element
+	} else if(level==-1&&!iscell(&header->magic)&&out&&iscell(out)&&((cell*)out)->nx==1&&((cell*)out)->ny==1){
+		//automatic scan mode with only one element, do not wrap into array
+		//dbg("level=%d, scan mode find only a single element.\n", level);
 		cell* out2=P((cell*)out, 0);
 		P((cell*)out, 0)=0;
 		cellfree(out);
