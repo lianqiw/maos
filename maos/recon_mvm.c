@@ -18,13 +18,13 @@
 
 
 #include "common.h"
-#include "setup_recon.h"
+#include "recon.h"
 #include "mvm_client.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
 /**
-   \file setup_recon_mvm.c
+   \file recon_mvm.c
 
    Contains routines that setup the matrix for matrix vector multiply
 

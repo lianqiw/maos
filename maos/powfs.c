@@ -21,7 +21,7 @@
 #include "powfs.h"
 #include "powfs_utils.h"
 #include "pywfs.h"
-#include "setup_recon.h"
+#include "recon.h"
 #include "recon_utils.h"
 #undef GREEN
 #define GREEN BLACK

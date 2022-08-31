@@ -26,19 +26,13 @@ void apply_invpsd(dcell **xout, const void *extra, const dcell *xin, real alpha,
 void apply_fractal(dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb);
 void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF);
 void applyW(dcell *xin, const dsp *W0, const dmat *W1, const real *wt);
-dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, 
-		const dmat *W1, const dmat *wt);
-void TomoR(dcell **xout, const void *A, 
-	   const dcell *xin, const real alpha);
-void TomoRt(dcell **gout, const void *A, 
-	    const dcell *xin, const real alpha);
-void TomoL(dcell **xout, const void *A, 
-	   const dcell *xin, const real alpha);
+dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, const dmat *W1, const dmat *wt);
+void TomoR(dcell **xout, const void *A, const dcell *xin, const real alpha);
+void TomoRt(dcell **gout, const void *A, const dcell *xin, const real alpha);
+void TomoL(dcell **xout, const void *A, const dcell *xin, const real alpha);
 
-void FitL(dcell **xout, const void *A, 
-	  const dcell *xin, const real alpha);
-void FitR(dcell **xout, const void *A, 
-	  const dcell *xin, const real alpha);
+void FitL(dcell **xout, const void *A, const dcell *xin, const real alpha);
+void FitR(dcell **xout, const void *A, const dcell *xin, const real alpha);
 
 dsp *nea2sp(dmat *nea, int ll, int ur, int ng);
 void nea_chol(dmat **pout, const dmat *in, int ng);

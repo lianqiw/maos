@@ -18,7 +18,6 @@
 
 
 #include "common.h"
-#include "setup_recon.h"
 #include "recon.h"
 #include "fdpcg.h"
 #include "ahst.h"
@@ -30,7 +29,7 @@
 #include "../cuda/gpu.h"
 #endif
 /**
-   \file setup_recon.h
+   \file recon_setup.c
 
    Contains routines that setup the wavefront reconstructor and DM fitting.
 

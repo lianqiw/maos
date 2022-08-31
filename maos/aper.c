@@ -18,7 +18,7 @@
 
 
 /**
-   \file setup_aper.h
+   \file aper.h
 
    Contains routines that setup the telescope aperture for performance evaluation.
 */

@@ -23,7 +23,7 @@
 #include "powfs.h"
 
 /**
-   \file setup_surf.c
+   \file surf.h
    Setup NCPA surfaces for WFS and Performance evaluation.
 */
 

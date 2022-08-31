@@ -18,10 +18,10 @@
 
 
 #include "common.h"
-#include "setup_recon.h"
+#include "recon.h"
 #include "recon_utils.h"
 /**
-   \file setup_recon_fit.c
+   \file recon_fit.c
 
    Contains routines that setup the DM fitting.
 

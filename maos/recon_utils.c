@@ -18,7 +18,7 @@
 
 
 #include "recon_utils.h"
-#include "setup_recon.h"
+#include "recon.h"
 #include "ahst.h"
 #include "sim.h"
 #undef TIMING

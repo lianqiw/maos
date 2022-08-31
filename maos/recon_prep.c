@@ -18,7 +18,7 @@
 
 
 #include "common.h"
-#include "setup_recon.h"
+#include "recon.h"
 #include "recon_utils.h"
 #include "powfs.h"
 #include "pywfs.h"
@@ -26,7 +26,7 @@
 #undef GREEN
 #define GREEN BLACK
 /**
-   \file setup_recon_prep.c
+   \file recon_prep.c
 
    Setup grid and ray tracing operators regarding DM. This is independent of
    1) WFS geometry or noise parameters

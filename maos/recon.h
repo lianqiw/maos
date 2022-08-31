@@ -20,7 +20,29 @@
 #ifndef AOS_RECON_H
 #define AOS_RECON_H
 #include "common.h"
+//Called by maos.c
+recon_t *setup_recon_prep(const parms_t *parms, const aper_t *aper, const powfs_t *powfs);
+void setup_recon_prep2(recon_t *recon, const parms_t *parms, const aper_t *aper, const powfs_t *powfs);
+void setup_recon_fit(recon_t *recon, const parms_t *parms);
+void setup_powfs_fit(powfs_t *powfs, const recon_t *recon, const parms_t *parms);
+void free_powfs_fit(powfs_t *powfs, const parms_t *parms);
+void free_fit(fit_t *fit, int nfit);
+//Called by setup_recon.c
+void setup_recon_tomo_prep(recon_t *recon, const parms_t *parms);
+void setup_recon_tomo_matrix(recon_t *recon, const parms_t *parms);
+void setup_recon_update_cn2(recon_t *recon, const parms_t *parms);
+void setup_recon_tomo(recon_t *recon, const parms_t *parms, powfs_t *powfs);
+void setup_recon_lsr(recon_t *recon, const parms_t *parms);
+void setup_recon_mvm(const parms_t *parms, recon_t *recon, powfs_t *powfs);
+void setup_recon_control(recon_t *recon, const parms_t *parms, powfs_t *powfs);
+void setup_recon_post(recon_t *recon, const parms_t *parms, const aper_t *aper);
+void free_recon(const parms_t *parms, recon_t *recon);
+void free_recon_unused(const parms_t *parms, recon_t *recon);
 
+void setup_recon_mvst(recon_t *recon, const parms_t *parms);
+void setup_recon_dmttr(recon_t *recon, const parms_t *parms);
+void setup_recon_dither_dm(recon_t *recon, const powfs_t *powfs, const parms_t *parms);
+//void setup_recon_sodium_fit(recon_t* recon, const parms_t* parms);
 void tomofit(dcell **dmout, sim_t *simu, dcell *gradin);
 //void lsr(sim_t *simu);
 void reconstruct(sim_t *simu);

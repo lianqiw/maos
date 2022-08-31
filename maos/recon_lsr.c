@@ -18,11 +18,11 @@
 
 
 #include "common.h"
-#include "setup_recon.h"
+#include "recon.h"
 #include "ahst.h"
 
 /**
-   \file setup_recon_lsr.c
+   \file recon_lsr.c
 
    Contains routines that setup the least squares reconstructor
 

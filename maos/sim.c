@@ -25,7 +25,6 @@
 #include "recon.h"
 #include "recon_utils.h"
 #include "powfs.h"
-#include "setup_recon.h"
 #include "sim.h"
 #include "sim_utils.h"
 #include "fdpcg.h"

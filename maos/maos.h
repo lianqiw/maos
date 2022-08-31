@@ -21,7 +21,7 @@
 #define __MAOS_H
 #include "common.h"
 #include "powfs.h"
-#include "setup_recon.h"
+#include "recon.h"
 #include "aper.h"
 #include "sim_utils.h"
 #include "surf.h"
