@@ -117,6 +117,8 @@ Functions</h2></td></tr>
 <tr class="separator:adc1b4899c000ff26f846ec7c8be176c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1bb469cd3e559bed0d4230b872d1ba7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7">act_float_interp</a> (<a class="el" href="type_8h.html#structloccell">loccell</a> *aloc, const <a class="el" href="type_8h.html#structlcell">lcell</a> *actfloat)</td></tr>
 <tr class="separator:af1bb469cd3e559bed0d4230b872d1ba7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3143e78f0f46c9866fac1ee5cf60d6c4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a3143e78f0f46c9866fac1ee5cf60d6c4">act_extrap_each</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *aloc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *actcpl, const real scl)</td></tr>
+<tr class="separator:a3143e78f0f46c9866fac1ee5cf60d6c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bbac27715f60f0b22b05b548ed840e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5">act_extrap</a> (<a class="el" href="type_8h.html#structloccell">loccell</a> *aloc, const <a class="el" href="type_8h.html#structdcell">dcell</a> *actcpl, const real scl)</td></tr>
 <tr class="separator:a7bbac27715f60f0b22b05b548ed840e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -332,7 +334,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>When some actuators are float, remove the corresponding column in HA and/or HB, and add to neigh boring actuators. This is implemented using a second matrix and then add to the original matrix. </p>
+<p>When some actuators are float, remove the corresponding column in HA and/or HB, and add to neighboring actuators. This is implemented using a second matrix and then add to the original matrix. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">HA</td><td>coordinate of actuators </td></tr>
+    <tr><td class="paramname">HB</td><td>sparse matrix to modify </td></tr>
+    <tr><td class="paramname">actfloat</td><td>dense matrix to modifyfloating actuator mask </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -415,6 +425,47 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a3143e78f0f46c9866fac1ee5cf60d6c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3143e78f0f46c9866fac1ee5cf60d6c4">&#9670;&nbsp;</a></span>act_extrap_each()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structdsp">dsp</a>* act_extrap_each </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>aloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>actcplc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const real&#160;</td>
+          <td class="paramname"><em>thres</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create an extrapolator that does the following</p><ol type="1">
+<li>Reduce the information to active actuators</li>
+<li>Project low order modes out from the active actuators</li>
+<li>Project back to full vector</li>
+<li>Extrapolate to inactive actuators</li>
+<li>Add back low order modes to the full vector extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^ </li>
+</ol>
+
+</div>
+</div>
 <a id="a7bbac27715f60f0b22b05b548ed840e5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7bbac27715f60f0b22b05b548ed840e5">&#9670;&nbsp;</a></span>act_extrap()</h2>
 
@@ -446,7 +497,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create an interpreter that make inactive actuators equal avearage of active neighbors if exist or all other neighbors. </p>
+<p>Create an extrapolator that make inactive actuators equal avearage of active neighbors if exist or all other neighbors. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array </td></tr>

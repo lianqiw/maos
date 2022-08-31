@@ -1700,7 +1700,7 @@ wvlwts</td>
 <p>Weights of signal value for each wavelength. if not specified in config, will use powfs.wvlwts </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="afa33a50e1f0a1e9843a2b0f2a819a12e"></a>char *</td>
+<a id="a75568811134ed6c9cc6474c1bc9cb72b"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
 sabad</td>
 <td class="fielddoc">
@@ -1916,18 +1916,18 @@ isground</td>
 <p>Is this DM the ground DM (derived) </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a5352a649023d0772b850fc58af0bea9d"></a>char *</td>
+<a id="ae625645b8211d61e519e8998f5d1e2c5"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
 actfloat</td>
 <td class="fielddoc">
-<p>file containing floating actuators. nx2 coordinate </p>
+<p>floating actuators. nx2 coordinate </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a9bed5854430634409f26daba39567cf8"></a>char *</td>
+<a id="af8bd7c663fa4ef86812359510410418b"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
 actstuck</td>
 <td class="fielddoc">
-<p>file containing stuck actuators. nx2 coordinate. </p>
+<p>stuck actuators. nx2 coordinate. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aac7b3b1f294ecf8767ec10b62e360257"></a>real</td>
@@ -2333,7 +2333,7 @@ ninit</td>
 <td class="fieldname">
 splitlrt</td>
 <td class="fielddoc">
-<p>1: use LGS low rank terms in split tomography. </p>
+<p>1: low rank terms also in LHS. </p>
 </td></tr>
 </table>
 
@@ -2587,6 +2587,13 @@ actextrap</td>
 actslave</td>
 <td class="fielddoc">
 <p>Enable slaving for non-active actuators. Useful in CBS method </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae4f621a7bdd9ab737eabbb4bd87bfeef"></a>int</td>
+<td class="fieldname">
+splitlrt</td>
+<td class="fielddoc">
+<p>1: low rank terms also in LHS. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a15e318faa040a437f927fa7c142ec24a"></a>int</td>
@@ -3994,14 +4001,14 @@ guard</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a3b23a80c75fa32ba439809f62cca3a27"></a>char *</td>
+<a id="ae06bc46c384fac3d23623002ac3c7025"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
 actfloat</td>
 <td class="fielddoc">
 <p>file containing floating actuators. nx2 coordinate </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="aa3ea8aba3d640487a0402705a31e7911"></a>char *</td>
+<a id="ab4a2774b77af51158ec81d6847851c81"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
 actstuck</td>
 <td class="fielddoc">

@@ -16,7 +16,7 @@ var maos_2types_8h_structsim__save__t =
     [ "ecovxx", "maos_2types_8h.html#a79530c152f772b99fd6ac44ac2567111", null ],
     [ "dmerr", "maos_2types_8h.html#ad94a27a13a9c89e7bfb6166d209faaac", null ],
     [ "dmint", "maos_2types_8h.html#ad6b469d6e30a0f36803a48e97f315f4a", null ],
-    [ "dmfit", "maos_2types_8h.html#a2ee33fe4269b2e9efa4029a26cc36e43", null ],
+    [ "dmrecon", "maos_2types_8h.html#acd168c9397884bd28ae213f287f14d17", null ],
     [ "dmreal", "maos_2types_8h.html#ad903fa390f3995d98ec8e966dee79625", null ],
     [ "ttmreal", "maos_2types_8h.html#a7e4026d9b9413ce247a7e4ade7cb6553", null ],
     [ "dmcmd", "maos_2types_8h.html#aff46476e484faa342442e8209f9808ad", null ],

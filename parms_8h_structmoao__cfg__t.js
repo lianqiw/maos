@@ -10,6 +10,6 @@ var parms_8h_structmoao__cfg__t =
     [ "gdm", "parms_8h.html#acdf16fb27cb39ec470183569dfb2ccfd", null ],
     [ "ar", "parms_8h.html#a51c0168f22222353aac82edcf4304342", null ],
     [ "guard", "parms_8h.html#a12966e3020a6de016257ba430bf94770", null ],
-    [ "actfloat", "parms_8h.html#a3b23a80c75fa32ba439809f62cca3a27", null ],
-    [ "actstuck", "parms_8h.html#aa3ea8aba3d640487a0402705a31e7911", null ]
+    [ "actfloat", "parms_8h.html#ae06bc46c384fac3d23623002ac3c7025", null ],
+    [ "actstuck", "parms_8h.html#ab4a2774b77af51158ec81d6847851c81", null ]
 ];

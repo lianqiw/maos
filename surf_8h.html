@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
-<title>MAOS: maos/setup_recon_mvm.c File Reference</title>
+<title>MAOS: maos/surf.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -75,7 +75,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('setup__recon__mvm_8c.html','');});
+$(document).ready(function(){initNavTree('surf_8h.html','');});
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -97,26 +97,26 @@ $(document).ready(function(){initNavTree('setup__recon__mvm_8c.html','');});
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">setup_recon_mvm.c File Reference</div>  </div>
+<div class="title">surf.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:adf3a2226f6dd77e250e122600b393c57"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon__mvm_8c.html#adf3a2226f6dd77e250e122600b393c57">setup_recon_mvm</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
-<tr class="separator:adf3a2226f6dd77e250e122600b393c57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9d628f58bc2c7aa07274f9f00462107"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107">setup_surf</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="separator:ab9d628f58bc2c7aa07274f9f00462107"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Contains routines that setup the matrix for matrix vector multiply </p>
+<div class="textblock"><p>Setup NCPA surfaces for WFS and Performance evaluation. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="adf3a2226f6dd77e250e122600b393c57"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf3a2226f6dd77e250e122600b393c57">&#9670;&nbsp;</a></span>setup_recon_mvm()</h2>
+<a id="ab9d628f58bc2c7aa07274f9f00462107"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9d628f58bc2c7aa07274f9f00462107">&#9670;&nbsp;</a></span>setup_surf()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void setup_recon_mvm </td>
+          <td class="memname">void setup_surf </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
@@ -124,14 +124,20 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
-          <td class="paramname"><em>recon</em>, </td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
+          <td class="paramname"><em>aper</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
-          <td class="paramname"><em>powfs</em>&#160;</td>
+          <td class="paramname"><em>powfs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -140,7 +146,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used. </p>
+<p>Setup common and non common OPDs from surf and tsurf </p>
 
 </div>
 </div>

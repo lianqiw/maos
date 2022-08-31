@@ -204,7 +204,7 @@ var parms_8h =
     ] ],
     [ "wfs_cfg_t", "parms_8h.html#structwfs__cfg__t", [
       [ "wvlwts", "parms_8h.html#af15d8288b79591828c56e42a21ff6b93", null ],
-      [ "sabad", "parms_8h.html#afa33a50e1f0a1e9843a2b0f2a819a12e", null ],
+      [ "sabad", "parms_8h.html#a75568811134ed6c9cc6474c1bc9cb72b", null ],
       [ "thetax", "parms_8h.html#aae77804c23e6d3cdbdb6a369f32a19d1", null ],
       [ "thetay", "parms_8h.html#adfa061b95f51bae9238d7c2501535475", null ],
       [ "misreg_x", "parms_8h.html#a7ba546d77f1477dc4061771d51e6287a", null ],
@@ -234,8 +234,8 @@ var parms_8h =
       [ "hist", "parms_8h.html#a7fe8aa10a324d356794ba5b57b4f54ec", null ],
       [ "order", "parms_8h.html#ad797af78c1614e5e46aa692d782dc522", null ],
       [ "isground", "parms_8h.html#a111386ee98f97bf56186bed917aabc93", null ],
-      [ "actfloat", "parms_8h.html#a5352a649023d0772b850fc58af0bea9d", null ],
-      [ "actstuck", "parms_8h.html#a9bed5854430634409f26daba39567cf8", null ],
+      [ "actfloat", "parms_8h.html#ae625645b8211d61e519e8998f5d1e2c5", null ],
+      [ "actstuck", "parms_8h.html#af8bd7c663fa4ef86812359510410418b", null ],
       [ "hyst", "parms_8h.html#aac7b3b1f294ecf8767ec10b62e360257", null ],
       [ "hyst_alpha", "parms_8h.html#aac44493de6fe775066ca7d8cdb76e4b9", null ],
       [ "hyst_stroke", "parms_8h.html#aeba26ceee96f7ea6333318f18bf436a4", null ]
@@ -327,6 +327,7 @@ var parms_8h =
       [ "fnreg", "parms_8h.html#a7a3f62a40fb9268d9fa4bf10f5969918", null ],
       [ "actextrap", "parms_8h.html#a351c0258e176d0167b72e3a023d5c671", null ],
       [ "actslave", "parms_8h.html#a5ee115049b15930905c7e6c407bd0845", null ],
+      [ "splitlrt", "parms_8h.html#ae4f621a7bdd9ab737eabbb4bd87bfeef", null ],
       [ "bgs", "parms_8h.html#a15e318faa040a437f927fa7c142ec24a", null ],
       [ "alg", "parms_8h.html#a426abfb7663cb37771603c9c89b4acb7", null ],
       [ "maxit", "parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd", null ],
@@ -523,8 +524,8 @@ var parms_8h =
       [ "gdm", "parms_8h.html#acdf16fb27cb39ec470183569dfb2ccfd", null ],
       [ "ar", "parms_8h.html#a51c0168f22222353aac82edcf4304342", null ],
       [ "guard", "parms_8h.html#a12966e3020a6de016257ba430bf94770", null ],
-      [ "actfloat", "parms_8h.html#a3b23a80c75fa32ba439809f62cca3a27", null ],
-      [ "actstuck", "parms_8h.html#aa3ea8aba3d640487a0402705a31e7911", null ]
+      [ "actfloat", "parms_8h.html#ae06bc46c384fac3d23623002ac3c7025", null ],
+      [ "actstuck", "parms_8h.html#ab4a2774b77af51158ec81d6847851c81", null ]
     ] ],
     [ "load_cfg_t", "parms_8h.html#structload__cfg__t", [
       [ "atm", "parms_8h.html#a88294ea1aa96c8c5ed79387e5f20d7b4", null ],

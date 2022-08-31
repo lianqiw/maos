@@ -16,8 +16,8 @@ var parms_8h_structdm__cfg__t =
     [ "hist", "parms_8h.html#a7fe8aa10a324d356794ba5b57b4f54ec", null ],
     [ "order", "parms_8h.html#ad797af78c1614e5e46aa692d782dc522", null ],
     [ "isground", "parms_8h.html#a111386ee98f97bf56186bed917aabc93", null ],
-    [ "actfloat", "parms_8h.html#a5352a649023d0772b850fc58af0bea9d", null ],
-    [ "actstuck", "parms_8h.html#a9bed5854430634409f26daba39567cf8", null ],
+    [ "actfloat", "parms_8h.html#ae625645b8211d61e519e8998f5d1e2c5", null ],
+    [ "actstuck", "parms_8h.html#af8bd7c663fa4ef86812359510410418b", null ],
     [ "hyst", "parms_8h.html#aac7b3b1f294ecf8767ec10b62e360257", null ],
     [ "hyst_alpha", "parms_8h.html#aac44493de6fe775066ca7d8cdb76e4b9", null ],
     [ "hyst_stroke", "parms_8h.html#aeba26ceee96f7ea6333318f18bf436a4", null ]

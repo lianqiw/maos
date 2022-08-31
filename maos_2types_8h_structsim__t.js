@@ -61,7 +61,7 @@ var maos_2types_8h_structsim__t =
     [ "hyst", "maos_2types_8h.html#aef119e2742a976fff5d75c01330c6b03", null ],
     [ "dmadd", "maos_2types_8h.html#a2076fcc4ab27d77870fab9c24646b5ac", null ],
     [ "dmint", "maos_2types_8h.html#a4974fb654dbc919141dc96dce32440ce", null ],
-    [ "dmfit", "maos_2types_8h.html#ab14234b4671aef87c59da67fb59718df", null ],
+    [ "dmrecon", "maos_2types_8h.html#a4f5919241ee8ecaed8b313d07bbb8377", null ],
     [ "dmerr", "maos_2types_8h.html#a1e041c2b0d29b5113e1b5f4cea706a00", null ],
     [ "dmerr_store", "maos_2types_8h.html#aaa3cff9c8e1a107375ec9f6c9a8bb127", null ],
     [ "Merr_lo", "maos_2types_8h.html#a954ae42ba5c26ce41b3d6d63d62cdf78", null ],

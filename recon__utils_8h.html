@@ -139,8 +139,8 @@ Functions</h2></td></tr>
 <tr class="separator:a9f4664a8c57cd234087fd70daf7ff7b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7b6fd38efb1954ea36cc7b9082b126b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
 <tr class="separator:af7b6fd38efb1954ea36cc7b9082b126b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a069780ed16a2fa71439c5dbc9a95126b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a069780ed16a2fa71439c5dbc9a95126b">loc_coord2ind</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *aloc, const char *fndead)</td></tr>
-<tr class="separator:a069780ed16a2fa71439c5dbc9a95126b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8e6d5462056cea3258e7eb2d2fd612f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#ab8e6d5462056cea3258e7eb2d2fd612f">loc_coord2ind</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *aloc, <a class="el" href="type_8h.html#structdmat">dmat</a> *dead)</td></tr>
+<tr class="separator:ab8e6d5462056cea3258e7eb2d2fd612f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a080bbb9fecf387ac6107766369a76aae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="cn2est_8h.html#structcn2est__t">cn2est_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a080bbb9fecf387ac6107766369a76aae">cn2est_prepare</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
 <tr class="separator:a080bbb9fecf387ac6107766369a76aae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74f945e450ef8677f831285a7fefce90"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8h.html#a74f945e450ef8677f831285a7fefce90">cn2est_isim</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> *cn2res, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="type_8h.html#structdcell">dcell</a> *grad, int *tomo_update)</td></tr>
@@ -879,8 +879,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a069780ed16a2fa71439c5dbc9a95126b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a069780ed16a2fa71439c5dbc9a95126b">&#9670;&nbsp;</a></span>loc_coord2ind()</h2>
+<a id="ab8e6d5462056cea3258e7eb2d2fd612f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8e6d5462056cea3258e7eb2d2fd612f">&#9670;&nbsp;</a></span>loc_coord2ind()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -894,8 +894,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fndead</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>dead</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -908,7 +908,7 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Aloc </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fndead</td><td>File containing dead actuators </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dead</td><td>File containing dead actuators </td></tr>
   </table>
   </dd>
 </dl>

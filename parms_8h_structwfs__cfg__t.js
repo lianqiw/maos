@@ -1,7 +1,7 @@
 var parms_8h_structwfs__cfg__t =
 [
     [ "wvlwts", "parms_8h.html#af15d8288b79591828c56e42a21ff6b93", null ],
-    [ "sabad", "parms_8h.html#afa33a50e1f0a1e9843a2b0f2a819a12e", null ],
+    [ "sabad", "parms_8h.html#a75568811134ed6c9cc6474c1bc9cb72b", null ],
     [ "thetax", "parms_8h.html#aae77804c23e6d3cdbdb6a369f32a19d1", null ],
     [ "thetay", "parms_8h.html#adfa061b95f51bae9238d7c2501535475", null ],
     [ "misreg_x", "parms_8h.html#a7ba546d77f1477dc4061771d51e6287a", null ],

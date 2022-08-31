@@ -1,5 +1,9 @@
 var NAVTREEINDEX5 =
 {
+"draw_8h.html#aef0cb494e695878f192ecf5b0a49f9f1":[11,0,1,3,9],
+"draw_8h.html#af6a614e128ea550040fe980a1b1922e6":[11,0,1,3,10],
+"draw_8h.html#structplot__opts":[11,0,1,3,0],
+"evl_sq34.html":[4,4,8],
 "evl_x.html":[4,4,9],
 "files.html":[11,0],
 "fit_cir30.html":[4,4,10],
@@ -245,9 +249,5 @@ var NAVTREEINDEX5 =
 "lmath_8h.html#a0a67ad7eda6a3530db3d5a76316a7787":[11,0,3,4,30],
 "lmath_8h.html#a0bd8a378817027f0ed0c83172bbbe670":[11,0,3,4,1],
 "lmath_8h.html#a0cfd009dd2fcbc0a5f9584b0fa7f3aeb":[11,0,3,4,14],
-"lmath_8h.html#a124dbb7d5176fe340599594d76fe21f5":[11,0,3,4,44],
-"lmath_8h.html#a129e4033d5c3a02a35397f8452835ae2":[11,0,3,4,26],
-"lmath_8h.html#a13293f598e36b00fe332e5fa7afe9f43":[11,0,3,4,61],
-"lmath_8h.html#a15ceffb00e7bb7e57793410cecd33cbd":[11,0,3,4,7],
-"lmath_8h.html#a1a9682af3bcc9e9204bee31d081c2f1d":[11,0,3,4,52]
+"lmath_8h.html#a124dbb7d5176fe340599594d76fe21f5":[11,0,3,4,44]
 };

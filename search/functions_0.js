@@ -3,6 +3,7 @@ var searchData=
   ['acc',['acc',['../class_dither__t.html#a3f6d1f8ffb802cc97f8968a2942cb48c',1,'Dither_t']]],
   ['acc_5fi0',['acc_i0',['../class_dither__t.html#ae96a6270a929792f1f03add4358c871c',1,'Dither_t']]],
   ['act_5fextrap',['act_extrap',['../slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5',1,'slaving.c']]],
+  ['act_5fextrap_5feach',['act_extrap_each',['../slaving_8h.html#a3143e78f0f46c9866fac1ee5cf60d6c4',1,'slaving.c']]],
   ['act_5ffloat',['act_float',['../slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7',1,'slaving.c']]],
   ['act_5ffloat_5finterp',['act_float_interp',['../slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7',1,'slaving.c']]],
   ['act_5fstuck',['act_stuck',['../slaving_8h.html#a764f42e10a49c6f968268d1a365b118b',1,'slaving.c']]],
