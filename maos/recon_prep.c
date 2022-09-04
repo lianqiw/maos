@@ -54,7 +54,7 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 		real guard=parms->tomo.guard*dxr;
 		map_t* pmap=0;
 		create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->tomo.square);
-		info("PLOC is %ldx%ld, with sampling of %.2fm\n", NX(pmap), NY(pmap), dxr);
+		info("PLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(pmap), NY(pmap), dxr, parms->tomo.square?"":"not ");
 		recon->ploc=map2loc(pmap, 0);/*convert map_t to loc_t */
 		mapfree(pmap);
 	}
@@ -140,7 +140,7 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 		real guard=parms->tomo.guard*dxr;
 		map_t* fmap=0;
 		create_metapupil(&fmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
-		info("FLOC is %ldx%ld, with sampling of %.2fm\n", NX(fmap), NY(fmap), dxr);
+		info("FLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(fmap), NY(fmap), dxr, parms->fit.square?"":"not ");
 		recon->floc=map2loc(fmap, 0);/*convert map_t to loc_t */
 		mapfree(fmap);
 		/*Do not restrict fmap to within active pupil. */
@@ -759,7 +759,8 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 			act_stuck(recon->aloc, CELL(recon->actcpl), recon->actfloat);
 			if(parms->lsr.actextrap){
-				recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
+				//when lor is enabled, the resulting matrix is much less sparse.
+				recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres, 0);
 				dspcell *GA2=0;
 				dspcellmulsp(&GA2, recon->GA, recon->actextrap, "nn", 1);
 				dspcellfree(recon->GA);
@@ -958,7 +959,8 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 /**
    Tilt removal from DM command. Used by filter.c
  */
-void setup_recon_dmttr(recon_t* recon, const parms_t* parms){
+static void 
+setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 	recon->DMTT=dcellnew(parms->ndm, 1);
 	recon->DMPTT=dcellnew(parms->ndm, 1);
 	/*if(!recon->actcpl && parms->nwfs>0){
@@ -1243,7 +1245,7 @@ void setup_recon_prep2(recon_t* recon, const parms_t* parms, const aper_t* aper,
 	setup_recon_GR(recon, parms);
 
 	if(parms->recon.split){
-		setup_ngsmod_prep(parms, recon, aper, powfs);
+		ngsmod_prep(parms, recon, aper, powfs);
 	}
 	setup_recon_dmttr(recon, parms);
 }

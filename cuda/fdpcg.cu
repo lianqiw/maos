@@ -43,7 +43,7 @@ void cufdpcg_t::update(fdpcg_t* fdpcg){
 	}
 }
 cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
-	:grid(_grid), fftnc(0), fftips(0), nb(0), bs(0), nby(0), nbz(0), scale(0){
+	:grid(_grid), fftnc(0), fftips(), nb(0), bs(0), nby(0), nbz(0), scale(0){
 	if(!fdpcg) return;
 	scale=fdpcg->scale;
 	bs=fdpcg->bs;//linear size of each block.

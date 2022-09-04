@@ -140,6 +140,7 @@ int read_cpu_counter(long* user, long* tot){
 		*user+=tmp;
 		*tot+=tmp+pinfo[i].cpu_ticks[CPU_STATE_IDLE];
 	}
+	vm_deallocate(mach_task_self(), (vm_address_t)pinfo, info_count);
 	return 0;
 }
 

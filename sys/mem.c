@@ -195,7 +195,7 @@ static void print_mem_debug(){
 	} else{
 		if(memkey_notfound) info3("%u memory is not found to delete.\n", memkey_notfound);
 		if(memalloc > memfree){
-			info3("%u (%lu kB) allocated memory not freed. \n", memcnt, (memalloc-memfree)>>10);
+			info3("%u (%'lu B) allocated memory not freed. \n", memcnt, (memalloc-memfree));
 		}
 	}
 	if(signal_caught){
@@ -207,7 +207,7 @@ static void print_mem_debug(){
 			if(memkey_all[i].p){
 				if(counter<50){
 					counter++;
-					info3("%9d", memkey_all[i].size);
+					info3("%9dB", memkey_all[i].size);
 					if(memkey_all[i].nfunc){
 						int offset=memkey_all[i].nfunc>3?1:0;
 						if(ans||(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
@@ -486,12 +486,12 @@ void print_mem_debug(){
 	if(!memcnt){
 		info3("All allocated memory are freed. %u not recycled\n", memkey_count);
 	}else{
-		info3("%u (%lu kB) allocated memory not freed. %u not recycled!!!\n", memcnt, (memalloc-memfree)>>10, memkey_count);
+		info3("%u (%'lu B) allocated memory not freed. %u not recycled!!!\n", memcnt, (memalloc-memfree), memkey_count);
 	}
 	for(i=memhead_used.next; i; i=memkey_all[i].list.next){
 		print_count++;
 		if(print_count<print_max){
-			info3("%9zu", memkey_all[i].size);
+			info3("%9zuB (%.40s)", memkey_all[i].size, (char*)memkey_all[i].p);
 			if(memkey_all[i].funtrace[0]){
 				info3(" %s i=%u p=%p counter=%u\n", memkey_all[i].funtrace, i, memkey_all[i].p, memkey_all[i].list.counter);
 			} else if(memkey_all[i].nfunc){
@@ -692,7 +692,7 @@ void *calloc_maos(size_t nbyte, size_t nelem){
 	if(!p){
 		error("calloc failed: %s\n", strerror(errno));
 	}
-	if(MEM_DEBUG){
+	if(memkey_len){
 		memkey_add(p, nbyte*nelem);
 	}
 	if(MEM_VERBOSE){
@@ -706,7 +706,7 @@ void *malloc_maos(size_t size){
 	if(!p){
 		error("malloc failed: %s\n", strerror(errno));
 	}
-	if(MEM_DEBUG){
+	if(memkey_len){
 		memkey_add(p, size);
 	}
 	if(MEM_VERBOSE){
@@ -718,14 +718,14 @@ void *malloc_maos(size_t size){
 void *realloc_maos(void *p0, size_t size){
 	//to avoid race condition if p0 and p is different and p0 is allocated to another thread
 	//We delete p0 first and then readd p.
-	if(MEM_DEBUG && p0){
+	if(memkey_len&&p0){
 		memkey_del(p0);
 	}
 	void *p=realloc_default(p0, size);
 	if(!p){
 		error("realloc failed: %s\n", strerror(errno));
 	}
-	if(MEM_DEBUG){
+	if(memkey_len){
 		memkey_add(p, size);
 	}
 	if(MEM_VERBOSE){
@@ -735,7 +735,7 @@ void *realloc_maos(void *p0, size_t size){
 	return p;
 }
 void free_maos(void *p){
-	if(MEM_DEBUG && p){
+	if(memkey_len && p){
 		memkey_del(p);//calls free_default when marked success.
 	}
 	free_default(p);//must be after memkey_del to avoid race condition (add before del)
@@ -759,9 +759,9 @@ static void init_mem(){
 		realloc_default=(void *(*)(void *, size_t))dlsym(RTLD_DEFAULT, "realloc");
 		free_default=(void(*)(void *))dlsym(RTLD_DEFAULT, "free");
 		read_sys_env();
-		memkey_init(MEM_DEBUG);
 		void init_process(void);
-		init_process();
+		init_process();//call before memkey_init to avoid mem counting
+		memkey_init(MEM_DEBUG);
 		init_hosts();
 		//fpconsole=fdopen(dup(fileno(stdout)), "a");
 	}
@@ -787,17 +787,16 @@ static __attribute__((destructor)) void deinit(){
 	remove_file_older(CACHE, 1, 30*24*3600);//1 month
 	freepath();
 	free_hosts();
-	free_process();
 	for(deinit_t *p1=deinit_head;p1;p1=deinit_head){
 		deinit_head=p1->next;
 		if(p1->fun) p1->fun();
 		if(p1->data) myfree(p1->data);
 		free_default(p1);
 	}
-
 	if(MEM_DEBUG){
 		print_mem_debug();
 	}
+	free_process();//call after print_mem_debug which needs TEMP
 }
 
 /**

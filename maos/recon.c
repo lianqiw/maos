@@ -446,7 +446,7 @@ void reconstruct(sim_t* simu){
 			dcelladd(&simu->dmerr, 1, dmpsol, -1);
 		}
 		if(parms->recon.split){
-			remove_dm_ngsmod(simu, simu->dmerr);
+			ngsmod_remove(simu, simu->dmerr);
 		}
 
 	}

@@ -288,13 +288,13 @@ void free_arg(arg_t **parg){
 	free(arg->conf);
 	if(arg->confcmd){
 		remove(arg->confcmd);
+		free(arg->confcmd);
 	}
-	free(arg->confcmd);
 	free(arg->gpus);
 	free(arg->host);
 	free(arg->execmd);
 	free(arg);
-	parg=0;
+	*parg=NULL;
 }
 /**
    Parse command line arguments argc, argv

@@ -475,9 +475,12 @@ if test "$system" = "win" ;then
     LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
 fi
 case $host_cpu in
-	*64)
+	x86_64)
     	CFLAGS+=" -DDLONG "
     	mflag="-m64"
+	;;
+	*64)
+		CFLAGS+=" -DDLONG "
 	;;
 	*86)
     	CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
@@ -715,9 +718,10 @@ if test "$enable_websockets" != "no" ;then
 			unset ac_cv_lib_websockets_lws_service
 			AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
 		fi
-		
-		unset ac_cv_header_libwebsockets_h
-		AC_CHECK_HEADERS([libwebsockets.h], [], [AC_MSG_ERROR([libwebsocket header is not available])])
+		if test "$has_lws" != "no" ;then
+			unset ac_cv_header_libwebsockets_h
+			AC_CHECK_HEADERS([libwebsockets.h], [], [AC_MSG_ERROR([has_lws="no"])])
+		fi
 	fi
 	if test "$has_lws" != "no" ;then
 		AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")

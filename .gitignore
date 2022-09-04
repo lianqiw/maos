@@ -46,3 +46,5 @@ bin/*
 build
 !Makefile.am
 !Makefile.mex
+cscope.out
+ctags.out

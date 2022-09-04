@@ -513,28 +513,35 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		/*dspcellsym(recon->RL.M); */
 
 		/*Low rank terms for low order wfs. Only in Integrated tomography. */
-		dcell* ULo=dcellnew(npsr, nwfs);
-		dcell* pULo=ULo/*PDELL*/;
-		dcell* VLo=dcellnew(npsr, nwfs);
-		dcell* pVLo=VLo/*PDELL*/;
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			int ipowfs=parms->wfsr[iwfs].powfs;
-			if(parms->powfs[ipowfs].skip){
-				continue;
-			}
-			if(parms->powfs[ipowfs].lo){
-				for(int ips=0; ips<npsr; ips++){
-					dspfull(&P(pULo, ips, iwfs), P(RRM, ips, iwfs), 'n', -1);
-					dspfull(&P(pVLo, ips, iwfs), P(GX, iwfs, ips), 't', 1);
+		dcell* ULo=NULL;
+		dcell* VLo=NULL; 
+		if(!parms->recon.split){
+			ULo=dcellnew(npsr, nwfs);
+			VLo=dcellnew(npsr, nwfs);
+			for(int iwfs=0; iwfs<nwfs; iwfs++){
+				int ipowfs=parms->wfsr[iwfs].powfs;
+				if(parms->powfs[ipowfs].skip){
+					continue;
+				}
+				if(parms->powfs[ipowfs].lo){
+					for(int ips=0; ips<npsr; ips++){
+						dspfull(&P(ULo, ips, iwfs), P(RRM, ips, iwfs), 'n', -1);
+						dspfull(&P(VLo, ips, iwfs), P(GX, iwfs, ips), 't', 1);
+					}
 				}
 			}
 		}
-		if(parms->recon.split!=1||parms->tomo.splitlrt){
+		if(parms->recon.split!=1 || parms->tomo.splitlrt==2){//require low rank term in LHS
 			recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 			dcell* GPTTDF=NULL;
 			dspcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
 			recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 			dcellfree(GPTTDF);
+		} else if(parms->tomo.splitlrt && recon->FF){
+			//include removal focus low rank term in LHS, not tip/tilt
+			//Including tip/tilt in LHS causing rank deficiency.
+			dcellmm_cell(&recon->RL.U, recon->RR.M, recon->FF, "nn", 1);
+			dspcellmm(&recon->RL.V, recon->GX, recon->PFF, "tt", 1);
 		} else{
 			info("Skipping RL Low rank terms in split tomography\n");
 		}

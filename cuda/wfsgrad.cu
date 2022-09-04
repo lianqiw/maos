@@ -469,7 +469,7 @@ void gpu_wfsgrad_queue(thread_t* info){
 		curmat phiout=cuwfs[iwfs].phiout;
 		curmat gradacc=cuwfs[iwfs].gradacc;
 		curmat gradcalc=cuwfs[iwfs].gradcalc;
-		curmat gradref=0;
+		curmat gradref;
 		ctoc_init(30);
 		if(isim%dtrat==0){
 			cuzero(cuwfs[iwfs].ints, stream);

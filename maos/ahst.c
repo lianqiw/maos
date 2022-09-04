@@ -321,7 +321,7 @@ static dcell* ngsmod_dm(const parms_t* parms, recon_t* recon){
    AHST parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
 */
-void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
+void ngsmod_prep(const parms_t* parms, recon_t* recon,
 	const aper_t* aper, const powfs_t* powfs){
 	if(recon->ngsmod){
 		warning("Should only be called once\n");
@@ -468,7 +468,7 @@ void setup_ngsmod_prep(const parms_t* parms, recon_t* recon,
 
 	*/
 	if(parms->tomo.ahst_wt==1){
-	//Do it in setup_ngsmod_recon();
+	//Do it in ngsmod_setup();
 	} else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting to isolate active meta pupil. */
 		if(parms->dbg.wamethod==0){
@@ -597,7 +597,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 /**
    setup NGS modes reconstructor in ahst mode.
  */
-void setup_ngsmod_recon(const parms_t* parms, recon_t* recon){
+void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	ngsmod_t* ngsmod=recon->ngsmod;
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
 		cellfree(ngsmod->Rngs);
@@ -652,7 +652,7 @@ void setup_ngsmod_recon(const parms_t* parms, recon_t* recon){
 }
 /**
    used in performance evaluation on science opds. accumulate to out*/
-void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
+void ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	real* ngsmod_out,
 	const parms_t* parms, const ngsmod_t* ngsmod,
 	const aper_t* aper, const real* opd, int ievl){
@@ -689,12 +689,12 @@ void calc_ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	const real thetax=P(parms->evl.thetax,ievl);
 	const real thetay=P(parms->evl.thetay,ievl);
 	real coeff2[6]={coeff[0],coeff[1],coeff[2],coeff[3],coeff[4],coeff[5]};
-	calc_ngsmod_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff2, ngsmod, aper, thetax, thetay);
+	ngsmod_dot_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff2, ngsmod, aper, thetax, thetay);
 }
 /**
    Separate post processing part so that GPU code can call it. Return non zero if error happens.
 */
-int calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
+int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 	real tot, const real* coeff, const ngsmod_t* ngsmod,
 	const aper_t* aper, real thetax, real thetay){
 	const real MCC_fcp=ngsmod->aper_fcp;
@@ -747,18 +747,21 @@ int calc_ngsmod_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 }
 /**
    Convert NGS modes to DM actuator commands using analytical expression. For >2
-   DMs, we only put NGS modes on ground and top-most DM.
+   DMs, we only put NGS modes on ground and top-most DM. 
+
+   Used to create ngsmod->Modes.
 */
+
 static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real gain){
 	if(!M||!P(M,0)) return;
 	const ngsmod_t* ngsmod=recon->ngsmod;
 	//const int nmod=ngsmod->nmod;
 	assert(NX(M)==1&&NY(M)==1&&P(M,0)->nx==ngsmod->nmod);
 	real scale=ngsmod->scale;
-	/*The MCC_fcp depends weakly on the aperture sampling. */
+	//The MCC_fcp depends weakly on the aperture sampling. 
 	real MCC_fcp=ngsmod->aper_fcp;
 	loc_t** aloc=P(recon->aloc);
-	/*convert mode vector and add to dm commands */
+	//convert mode vector and add to dm commands 
 	const int ndm=NX(recon->aloc);
 	if(!*dmc){
 		*dmc=dcellnew(ndm, 1);
@@ -769,7 +772,7 @@ static void ngsmod2dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 		}
 	}
 
-	/*first dm */
+	//first dm 
 	real* pm=P(P(M,0));
 
 	for(int idm=0; idm<ndm; idm++){
@@ -896,7 +899,7 @@ void ngsmod_free(ngsmod_t* ngsmod){
    remove NGS modes from LGS DM commands
    if nmod==6: make sure the global focus mode is not removed from LGS result.
 */
-void remove_dm_ngsmod(sim_t* simu, dcell* dmerr){
+void ngsmod_remove(sim_t* simu, dcell* dmerr){
 	if(!dmerr) return;
 	const recon_t* recon=simu->recon;
 	const parms_t* parms=simu->parms;

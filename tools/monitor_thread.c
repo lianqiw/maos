@@ -67,7 +67,7 @@ static void sendmail(const char*format,...){
 		FILE* p=popen(cmd, "w");
 		if(p){
 			fprintf(p, "To:%s\n%s\n", mailto, fn);
-			fclose(p);
+			pclose(p);
 		}else{
 			warning_time("sendmail failed for message (%s)\n", fn);
 		}

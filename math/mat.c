@@ -740,7 +740,7 @@ X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
-	X(cell*) out=X(cellnew_same)(nx, ny, mx, my);
+	X(cell)* out=X(cellnew_same)(nx, ny, mx, my);
 	if(out&&header) out->header=strdup(header);
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {

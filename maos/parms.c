@@ -3364,6 +3364,10 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 	//Other flags that depends on GPU enabling flags
 	if(use_cuda){
 		if(parms->recon.alg==RECON_MVR){/*MV*/
+			if(parms->gpu.tomo||parms->gpu.fit==2){
+				/*Tomography RHS in cuda always requrie full grid.*/
+				parms->tomo.square=1;
+			}
 			if(parms->gpu.fit==1&&!parms->fit.assemble){
 				info("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
 				parms->fit.assemble=1;
@@ -3371,6 +3375,13 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 			if(parms->gpu.fit==2&&!parms->fit.square){
 				info("GPU fitting=2 requires fit.square=1. Changed\n");
 				parms->fit.square=1;
+			}
+			if(parms->gpu.tomo&&parms->tomo.bgs){
+				error("BGS in GPU is not implemented yet\n");
+			}
+			if(parms->gpu.fit!=2){//cache in gpu. only for grid based fit.
+				parms->fit.cachedm=0;
+				parms->fit.cachex=0;
 			}
 			if(parms->nmoao>0){
 				if(parms->gpu.moao||parms->gpu.fit){
@@ -3387,20 +3398,8 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 		} else{
 			parms->fit.square=0;
 		}
-
 		if((parms->gpu.evl||!parms->evl.nevl)&&(parms->gpu.wfs||!parms->nwfs)){
 			parms->sim.cachedm=0; /*No need in CUDA. */
-		}
-		if(parms->gpu.tomo||parms->gpu.fit==2){
-			/*Tomography RHS in cuda requries full grid.*/
-			parms->tomo.square=1;
-		}
-		if(parms->gpu.tomo&&parms->tomo.bgs){
-			error("BGS in GPU is not implemented yet\n");
-		}
-		if(parms->gpu.fit!=2){
-			parms->fit.cachedm=0;
-			parms->fit.cachex=0;
 		}
 	} else{
 		memset(&(parms->gpu),0,sizeof(gpu_cfg_t));

@@ -20,21 +20,11 @@
 #ifndef AOS_AHST_H
 #define AOS_AHST_H
 
-void ngsmod2science(dmat *iopd, const loc_t *loc, const ngsmod_t *ngsmod, 
-		    real thetax, real thetay,
-		    const real *mod, real alpha);
-void setup_ngsmod_prep(const parms_t *parms, recon_t *recon, 
-		       const aper_t *aper, const powfs_t* powfs);
-
-void setup_ngsmod_recon(const parms_t *parms, recon_t *recon);
-
-void calc_ngsmod_dot(real *pttr_out, real *pttrcoeff_out,
-		     real *ngsmod_out,
-		     const parms_t *parms, const ngsmod_t *ngsmod, const aper_t *aper, 
-		     const real *opd, int ievl);
-int calc_ngsmod_post(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out,
-		      real tot, const real *coeff,  const ngsmod_t *ngsmod, 
-		      const aper_t *aper,real thetax, real thetay);
+void ngsmod_prep(const parms_t *parms, recon_t *recon,  const aper_t *aper, const powfs_t* powfs);
+void ngsmod_setup(const parms_t *parms, recon_t *recon);
+void ngsmod_dot(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, const parms_t *parms, const ngsmod_t *ngsmod, const aper_t *aper, const real *opd, int ievl);
+int  ngsmod_dot_post(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, real tot, const real *coeff,  const ngsmod_t *ngsmod, const aper_t *aper,real thetax, real thetay);
 void ngsmod_free(ngsmod_t *ngsmod);
-void remove_dm_ngsmod(sim_t *simu, dcell *dmerr);
+void ngsmod_remove(sim_t *simu, dcell *dmerr);
+void ngsmod2science(dmat *iopd, const loc_t *loc, const ngsmod_t *ngsmod, real thetax, real thetay, const real *mod, real alpha);
 #endif

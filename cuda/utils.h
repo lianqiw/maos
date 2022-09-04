@@ -183,6 +183,10 @@ static inline void cp2gpu_dedup(Real** dest, const dmat* src, cudaStream_t strea
 	cp2gpu_dedup(dest, src->p, src->nx, src->ny, stream);
 }
 //#if CPU_SINGLE==0
+template <typename T, typename S>
+static inline void cp2gpu(Array<T, Gpu>& dest, Array<S, Cpu>& src, cudaStream_t stream=0){
+	cp2gpu(dest, src(), src.Nx(), src.ny(), stream);
+}
 static inline void cp2gpu(curmat& dest, const dmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);

@@ -26,6 +26,9 @@ cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon
 	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->fit.cgwarm:0), grid(_grid),
 	nfit(0), dir(0){
 	if(!parms||!recon) return;
+	if(!parms->fit.square){
+		error("cufit_grid requires parms->fit.square=1.\n");
+	}
 	/*Initialize*/
 	const int ndm=parms->ndm;
 	const int npsr=recon->npsr;

@@ -95,8 +95,9 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 			HA*actextrap*a. We replace HA by HA*actextrap to take this into
 			account during DM fitting. 
 			This needs to be used with extrapolation on dmpsol.
+			/when lor enabled, the resulting matrix is much less sparse.
 		*/
-		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres);
+		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres, 0);
 		info("Replacing HA by HA*fit->actextrap\n");
 		dspcell *HA2=0;
 		dspcellmulsp(&HA2, fit->HA, fit->actextrap, "nn", 1);
@@ -267,7 +268,7 @@ setup_fit_matrix(fit_t* fit){
 	}
 
 	if(!fit->FL.M){
-		info("Building fit->FL\n");
+		info("Building fit->FL\n");//TIC;tic;
 		fit->FL.M=cellnew(ndm, ndm);
 		dspcell* FLM=(dspcell*)fit->FL.M;
 		for(int idm=0; idm<ndm; idm++){
@@ -275,13 +276,12 @@ setup_fit_matrix(fit_t* fit){
 				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 				dsp* tmp=dspmulsp(fit->W0, P(HA, ifit, idm), "nn");
 				for(int jdm=0; jdm<ndm; jdm++){
-					dspmulsp2(&P(FLM, jdm, idm), P(HAT, jdm, ifit), tmp, "nn",
-						P(fit->wt,ifit));
+					dspmulsp2(&P(FLM, jdm, idm), P(HAT, jdm, ifit), tmp, "nn", P(fit->wt,ifit));
 				}
 				dspfree(tmp);
 			}
 		}
-
+		//toc("FLM done...");
 		if(fabs(fit->flag.tikcr)>1.e-15){
 			real tikcr=fit->flag.tikcr;
 			/*Estimated from the formula.  1/nloc is due to W0, the other
@@ -294,6 +294,7 @@ setup_fit_matrix(fit_t* fit){
 			info("Adding tikhonov constraint of %.1e to FLM\n", tikcr);
 			info("The maximum eigen value is estimated to be around %.1e\n", maxeig);
 			dcelladdI_any(fit->FL.M, tikcr*maxeig);
+			//toc("addI done...");
 		}
 
 		{/*Low rank terms. */
@@ -302,9 +303,11 @@ setup_fit_matrix(fit_t* fit){
 			dcelladd(&tmp, 1, fit->NW, -1);
 			fit->FL.V=dcellcat_each(fit->FR.U, tmp, 2);
 			dcellfree(tmp);
+			//toc("uv done...");
 		}
 		if(fit->actslave){
 			dcelladd_any(&fit->FL.M, 1, CELL(fit->actslave), 1);
+			//toc("slaving done...");
 		}
 		/*dspcellsym(fit->FL.M); */
 		info("DM Fit number of Low rank terms: %ld in LHS\n", P(fit->FL.U,0)->ny);

@@ -122,7 +122,7 @@ void maos_setup(const parms_t* parms){
 		setup_recon_control(recon, parms, powfs);
 		if(parms->recon.split){
 			/*split tomography */
-			setup_ngsmod_recon(parms, recon);
+			ngsmod_setup(parms, recon);
 			if(!parms->sim.idealfit&&parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
 				setup_recon_mvst(recon, parms);
 			}
@@ -133,7 +133,7 @@ void maos_setup(const parms_t* parms){
 			setup_recon_fit(recon, parms);
 		}
 		if(recon->actcpl && !recon->actextrap){
-			recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
+			recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres, 1);
 			if(parms->save.setup){
 				writebin(recon->actextrap, "actextrap");
 			}

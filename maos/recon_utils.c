@@ -478,10 +478,12 @@ void TomoL(dcell** xout, const void* A,
 
 	Tomo_prop(&data, recon->nthread);
 
-	if(!parms->recon.split||parms->tomo.splitlrt){
-	/*Remove global Tip/Tilt, differential focus only in integrated
-	  tomography to limit noise propagation (?).*/
+	if(parms->recon.split!=1||parms->tomo.splitlrt==2){
+		/*Remove global Tip/Tilt, focus only in integrated tomography.*/
 		TTFR(gg, recon->TTF, recon->PTTF);
+	} else if(parms->tomo.splitlrt){
+		/*Remove only focus in split tomography when splitlrt is set*/
+		TTFR(gg, recon->FF, recon->PFF);
 	}
 	Tomo_nea(&data, recon->nthread, 1);
 	Tomo_iprop(&data, recon->nthread);
@@ -746,7 +748,7 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 			   tomography reconstructor (is this 100% true)?  SHould we remove NGS
 			   modes from final OPD, xx, instead?*/
 				dcell* tmp=dcelldup(dmpsol);/*The DM command used for high order. */
-				remove_dm_ngsmod(simu, tmp);/*remove NGS modes as we do in ahst. */
+				ngsmod_remove(simu, tmp);/*remove NGS modes as we do in ahst. */
 				dcelladd(&dmadd, 1, tmp, -1);
 				dcellfree(tmp);
 			} else{

@@ -226,7 +226,7 @@ void moao_recon(sim_t* simu){
 			if(parms->sim.fuseint){
 				dcellcp(&dmcommon, P(simu->dmint->mint,0));
 				if(parms->recon.split==1){
-					remove_dm_ngsmod(simu, dmcommon);
+					ngsmod_remove(simu, dmcommon);
 				}
 			} else{
 				dcellcp(&dmcommon, P(simu->dmint->mint,0));

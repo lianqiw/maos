@@ -291,8 +291,9 @@ public:
 		Parent::init(nxi*nyi);
 	}
 	//Constructors 
-	Array(long nxi=0, long nyi=1, T* pi=NULL, int own=1)
-		:Parent(nxi* nyi, pi, own), nx(nxi), ny(nyi){}
+	Array():Parent(0,NULL,1),nx(0),ny(0){}
+	Array(long nxi, long nyi=1, T* pi=NULL, int own=1)
+		:Parent(nxi*nyi, pi, own), nx(nxi), ny(nyi){}
 
 		//Create a reference with offset.
 		//Array(long nxi,long nyi,const Parent& pi,long offset=0):Parent(pi,offset),nx(nxi),ny(nyi){
@@ -300,7 +301,10 @@ public:
 		//Create a reference with offset.
 	Array(long nxi, long nyi, const Array& pi, long offset=0):Parent(pi, offset), nx(nxi), ny(nyi){}
 	//Use default destructor
-
+	Array(const dmat *A);//C array wrapper. Only specilize for matching type
+	Array(const cmat *A);
+	Array(const smat *A);
+	Array(const zmat *A);
 	//Need to handle both basic types and classes. Use template function.
 	//Cannot partially specialize single member function.
 	void Zero(cudaStream_t stream=0){
@@ -464,6 +468,8 @@ typedef class Array<Real, Gpu>   curmat;
 typedef class Array<Comp, Gpu>   cucmat;
 typedef class Cell<Real, Gpu>  curcell;
 typedef class Cell<Comp, Gpu>  cuccell;
+typedef class Array<real, Cpu>   crmat;//equivalent to rmat in c
+typedef class Array<comp, Cpu>   ccmat;//equivalent to cmat in c
 enum TYPE_SP{
 	SP_CSC,//compressed sparse column major. 
 	SP_CSR,//compressed sparse row major. 
@@ -720,5 +726,7 @@ void initzero(Array<T, Dev>& A, long nx, long ny){
 
 #define cuzero(A,B...) (A).Zero(B)
 #define cucp(A,B...) (A).Copy(B)
+
+
 #endif
 

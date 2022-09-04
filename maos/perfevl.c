@@ -122,10 +122,10 @@ static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* 
 	dmat*  pcleNGSmp=P(cleNGSmp,ievl)/*PDMAT*/;			\
 	/*compute the dot product of wavefront with NGS mode for that direction */ \
 	if(nmod==3){							\
-	    calc_ngsmod_dot(PCOL(pclep,isim),PCOL(pclmp,isim), PCOL(pcleNGSmp,isim), \
+	    ngsmod_dot(PCOL(pclep,isim),PCOL(pclmp,isim), PCOL(pcleNGSmp,isim), \
 			    parms,recon->ngsmod,aper, P(iopdevl),ievl);	\
 	}else{/*more modes are wanted. */				\
-	    calc_ngsmod_dot(NULL,NULL, PCOL(pcleNGSmp,isim),		\
+	    ngsmod_dot(NULL,NULL, PCOL(pcleNGSmp,isim),		\
 			    parms,recon->ngsmod,aper, P(iopdevl),ievl);	\
 	    loc_calc_mod(PCOL(pclep,isim),PCOL(pclmp,isim), aper->mod,P(aper->amp),P(iopdevl)); \
 	}								\

@@ -179,11 +179,15 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->tomo.cgwarm:0),
 	grid(_grid), nttf(0), lhs_nttf(0), nwfs(0){
 	nwfs=parms->nwfsr;
-
+	if(!parms->tomo.square){
+		error("cutomo_grid requires parms->tomo.square=1.\n");
+	}
 	if(recon->PTTF&&!PTTF){//for t/t proj in 1)uplink t/t 2) recon
 		cp2gpu(PTTF, recon->PTTF);
 	}
-	
+	if(recon->PFF && !PFF){
+		cp2gpu(PFF, recon->PFF);
+	}
 	{
 		//dbg("Copying GP\n");
 		GPp=Cell<short2, Gpu>(nwfs, 1);
@@ -251,7 +255,13 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 					error("PTTF for different WFS does not match: %d vs %ld\n", nttf, PTTF(iwfs, iwfs).Nx());
 				}
 			}
-
+			if(parms->recon.split==1&&parms->tomo.splitlrt==1&&parms->powfs[ipowfs].frs){
+				GPDATA[iwfs].PFF=PFF(iwfs, iwfs)();
+				if(!lhs_nttf) lhs_nttf=PFF(iwfs, iwfs).Nx();
+				else if(lhs_nttf!=PFF(iwfs, iwfs).Nx()){
+					error("PTTF for different WFS does not match: %d vs %ld\n", nttf, PTTF(iwfs, iwfs).Nx());
+				}
+			}
 			GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs]();
 			//dbg("GPU: nea[%d]=%p\n", iwfs, GPDATA[iwfs].neai);
 			GPDATA[iwfs].nsa=recon->saloc->p[ipowfs]->nloc;
@@ -261,7 +271,9 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			GPDATA[iwfs].oxp=recon->pmap->ox;
 			GPDATA[iwfs].oyp=recon->pmap->oy;
 		}
-		lhs_nttf=(!parms->recon.split||(parms->tomo.splitlrt&&parms->recon.mvm!=2))?nttf:0;
+		if(!lhs_nttf){
+			lhs_nttf=(!parms->recon.split||(parms->tomo.splitlrt==2&&parms->recon.mvm!=2))?nttf:0;
+		}
 		gpdata.init(nwfs, 1);
 		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, H2D));
 		//delete [] GPDATA;
@@ -424,7 +436,7 @@ __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout
 	/* Global TT, Focus projection. Make sure  each thread handle the same
 	subaperture as previous gradient operation to avoid synchronization issue.*/
 	if(datai->PTTF&&nttf){//npttf has number of modes
-		Real *PTTF=datai->PTTF;
+		Real *PTTF=(nttf==1)?datai->PFF:datai->PTTF;
 		for(int im=0; im<nttf; im++){
 			ggf[im][threadIdx.x]=0;
 		}
@@ -472,9 +484,13 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 	Real GPscale=datai->GPscale;
 	Real ttx=0, tty=0, focus=0;
 	if(datai->PTTF&&nttf){
-		ttx=ttfin[iwfs*nttf+0];
-		tty=ttfin[iwfs*nttf+1];
-		if(nttf>2) focus=ttfin[iwfs*nttf+2];
+		if(nttf>1){
+			ttx=ttfin[iwfs*nttf+0];
+			tty=ttfin[iwfs*nttf+1];
+			if(nttf>2) focus=ttfin[iwfs*nttf+2];
+		} else if(nttf==1){//only focus
+			focus=ttfin[iwfs*nttf];
+		}
 	}
 	const int nx=datai->nxp;
 	const short2* restrict pxy=datai->GPp;

@@ -134,7 +134,7 @@ X(mat*) X(read_mmap)(const char* format, ...){
 /**
    Map the file to memory in read only, shared mode.
 */
-X(cell*) X(cellread_mmap)(const char* format, ...){
+X(cell)* X(cellread_mmap)(const char* format, ...){
 	format2fn;
 	mem_t* mem=mmap_open(fn, 0, 0);
 	if(!mem){

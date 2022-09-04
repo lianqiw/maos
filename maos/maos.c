@@ -238,7 +238,7 @@ static void* maos_var(void* psock){
 						zfwrite(&magic, sizeof(uint32_t), 1, fp);
 					} else if(cmd[1]==2){//client to put
 						cell* newdata=readdata(fp);
-						dcellcp(&var, newdata);
+						dcelladd_any(&var, 0, newdata, 1);
 					} else{
 						warning("unknown operation %d\n", cmd[1]);
 					}

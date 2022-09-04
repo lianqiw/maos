@@ -76,7 +76,7 @@
     X(cell) *X(celltrans)(const X(cell) *A) CHECK_UNUSED_RESULT;	\
     X(cell) *X(cellref)(const X(cell) *in) CHECK_UNUSED_RESULT;		\
     X(cell) *X(celldup)(const X(cell) *in) CHECK_UNUSED_RESULT;		\
-    void X(cellcp)(void* out0, const void*in);				\
+    void X(cellcp)(X(cell)** out0, const X(cell)*in);				\
     X(cell) *X(cellreduce)(const X(cell) *A, int dim) CHECK_UNUSED_RESULT; \
     X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim) CHECK_UNUSED_RESULT; \
     void X(cellcat2)(X(cell) **A, const X(cell) *B, int dim);		\

@@ -5,7 +5,7 @@ HEADER_LIB=common.h types.h cubin.h cucmat.h  curmat.h gpu.h kernel.h utils.h pr
 HEADER_RECON=solve.h recon_geom.h pcg.h tomo.h fit.h recon.h fdpcg.h moao.h
 #cuwfs.cu cuwfs.h
 EXTRA_DIST=$(HEADER_LIB) $(HEADER_RECON) accphi.h wfs.h  cudata.h perf.h
-SRC_LIB=utils.cu curmat.cu cucmat.cu kernel.cu prop_map.cu accphi.cu cudata.cu atm.cu
+SRC_LIB=types.cu utils.cu curmat.cu cucmat.cu kernel.cu prop_map.cu accphi.cu cudata.cu atm.cu
 SRC_RECON=solve.cu recon_geom.cu tomo.cu fit.cu moao.cu fdpcg.cu pcg.cu recon.cu mvm_trans.cu mvm_direct.cu 
 SRC_MVM= mvm_iwfs.cu mvmfull_iwfs.cu mvmfull_real.cu mvmfull_pipe.cu mvm_daemon.cu
 SRC_WFS= wfsinit.cu wfsints.cu wfsgrad.cu pywfs.cu

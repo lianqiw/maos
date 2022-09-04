@@ -891,6 +891,7 @@ dsp *act_extrap_each(loc_t *aloc,
 	//writebin(He, "He");
 	dmat *MMe=NULL;//MMe=He*MMr+MMp
 	dspmm(&MMe, He, MMr, "nn", 1);
+	dspfree(He);
 	//writebin(MMe, "MMe");
 	daddI(MMp, -1);
 	dadd(&MMe, 1, MMp, -1); //+Mz*Md
@@ -911,12 +912,18 @@ dsp *act_extrap_each(loc_t *aloc,
 */
 dspcell* act_extrap(loccell* aloc,     /**<[in] Actuator grid array*/
 	const dcell* actcplc,/**<[in] Actuator coupling coefficiency*/
-	const real thres /**<[in] Threshold of coupling to turn on interpolation*/
+	real thres, /**<[in] Threshold of coupling to turn on interpolation*/
+	int lor /**<[in] Low order mode removal before extrapolation*/ 
 ){
 	int ndm=NX(actcplc);
 	dspcell* out=dspcellnew(ndm, ndm);
 	for(int idm=0; idm<ndm; idm++){
-		P(out,idm,idm)=act_extrap_each(P(aloc,idm), P(actcplc,idm), thres);
+		if(lor){
+			//when enabled, the resulting matrix is much less sparse.
+			P(out,idm,idm)=act_extrap_each(P(aloc,idm), P(actcplc,idm), thres);
+		}else{
+			P(out, idm, idm)=act_extrap_do(P(aloc, idm), P(actcplc, idm), thres);
+		}
 	}
 	return out;
 }

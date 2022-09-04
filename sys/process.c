@@ -46,7 +46,7 @@ long NMEM=0;/*Total memory in byte. */
 const char* HOME=NULL;
 const char* USER=NULL;
 char* HOST=NULL;
-char* TEMP=NULL;//Do not put temp in user home as it may be shared by hosts and flock over nfs does not work well
+char* TEMP=NULL;//Do not put temp in /tmp as it is automatically cleaned by system.
 char* CACHE=NULL;//Directory for caching files that are expensive to compute.
 char* EXEP=NULL;/*absolute path of the exe.*/
 char* DIRSTART=NULL;//Start up directory.
@@ -162,7 +162,9 @@ void init_process(void){
  * free memory
  * */
 void free_process(){
-	//free(TEMP); TEMP=NULL;//do not free. used by scheduler_connect_self for print backtrace. 
+	/*make sure free_process is called in the end. scheduler_connect_self
+	requires TEMP for backtrace printing*/
+	free(TEMP); TEMP=NULL;
 	free(CACHE); CACHE=NULL;
 	free(EXEP); EXEP=NULL;
 	free(DIRSTART); DIRSTART=NULL;

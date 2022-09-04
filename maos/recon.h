@@ -40,7 +40,7 @@ void free_recon(const parms_t *parms, recon_t *recon);
 void free_recon_unused(const parms_t *parms, recon_t *recon);
 
 void setup_recon_mvst(recon_t *recon, const parms_t *parms);
-void setup_recon_dmttr(recon_t *recon, const parms_t *parms);
+//void setup_recon_dmttr(recon_t *recon, const parms_t *parms);
 void setup_recon_dither_dm(recon_t *recon, const powfs_t *powfs, const parms_t *parms);
 //void setup_recon_sodium_fit(recon_t* recon, const parms_t* parms);
 void tomofit(dcell **dmout, sim_t *simu, dcell *gradin);

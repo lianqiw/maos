@@ -134,7 +134,7 @@ OMP_TASK_FOR(4)
 */
 static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const int transy, const T alpha){
 	if(!A||!x) return;
-	mm_t D=parse_trans((cell*)A, (cell*)x, trans);
+	mm_t D=parse_trans(CELL(A), CELL(x), trans);
 	X(init)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
 	X(mat)* y=*yout;
 	if(x->ny==1&&trans[1]=='n'&&transy==0){
@@ -517,9 +517,9 @@ void X(spcelladd)(X(spcell)** pA, R ac, const X(spcell)* B, R bc){
 
    Takes parameters of matrix, sparse matrix, or cell array of them.
  */
-void X(cellcp)(void* A_, const void* B_){
+void X(cellcp)(X(cell)** A_, const X(cell)* B_){
 	if(!B_){
-		X(cellscale_any)(*((cell**)A_), 0);
+		if(A_ && *A_) X(cellzero)(*A_);
 	} else{
 		X(celladd)(A_, 0, B_, 1);
 	}
@@ -528,10 +528,8 @@ void X(cellcp)(void* A_, const void* B_){
 /**
    scale each element of A.
 */
-void X(cellscale_any)(cell* A_, R w){
-	if(!A_) return;
-	cell* A=(cell*)A_;
-	if(iscell(A_)){
+void X(cellscale_any)(cell* A, R w){
+	if(iscell(A)){
 		for(int i=0; i<A->nx*A->ny; i++){
 			X(cellscale_any)(P(A,i), w);
 		}
@@ -546,14 +544,14 @@ void X(cellscale_any)(cell* A_, R w){
 	}
 }
 void X(cellscale)(X(cell)* A, R w){
-	X(cellscale_any)(A?CELL(A):NULL, w);
+	if(A) X(cellscale_any)(CELL(A), w);
 }
 
 /**
    Setting all elements of a cell to zero.
 */
 void X(cellzero)(X(cell)* dc){
-	X(cellscale_any)(dc?CELL(dc):NULL, 0);
+	if(dc) X(cellscale_any)(CELL(dc), 0);
 }
 
 /**

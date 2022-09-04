@@ -48,7 +48,7 @@ typedef float2 fcomplex;
 #if CUDA_DOUBLE
 typedef double2 Comp;
 typedef double  Real;
-typedef dmat rmat;
+//typedef dmat rmat;
 #define CUSP(A) cusparseD##A
 #define CUBL(A) cublasD##A
 #define CUDA_R CUDA_R_64F
@@ -66,7 +66,7 @@ typedef dmat rmat;
 #else
 typedef float2 Comp;
 typedef float Real;
-typedef smat rmat;
+//typedef smat rmat;
 #define CUSP(A) cusparseS##A
 #define CUBL(A) cublasS##A
 #define CUDA_R CUDA_R_32F
