@@ -102,7 +102,6 @@ var searchData=
   ['refp_3c_20stream_5ft_2c_20dev_20_3e',['RefP&lt; stream_t, Dev &gt;',['../class_ref_p.html',1,'']]],
   ['refp_3c_20t_20_2a_2c_20gpu_20_3e',['RefP&lt; T *, Gpu &gt;',['../class_ref_p.html',1,'']]],
   ['refp_3c_20t_20_2a_2c_20pinned_20_3e',['RefP&lt; T *, Pinned &gt;',['../class_ref_p.html',1,'']]],
-  ['remove_5fdm_5fngsmod',['remove_dm_ngsmod',['../ahst_8h.html#aad98ae81273bdd1ddbc5f17313f35a0e',1,'ahst.c']]],
   ['remove_5ffile_5folder',['remove_file_older',['../sys_2misc_8h.html#a25b56eea8d47545699946b02ffd09690',1,'misc.c']]],
   ['rename_5ffile',['rename_file',['../maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490',1,'utils.c']]],
   ['res',['res',['../maos_2types_8h.html#aa958a6c81bbbc1d65de9de3732728be1',1,'sim_t']]],

@@ -1,6 +1,13 @@
 var NAVTREEINDEX15 =
 {
+"skyc_20.html":[4,4,39],
+"slaving_8h.html":[11,0,1,24],
+"slaving_8h.html#a1bfc85780e37cff787829d2c599de33d":[11,0,1,24,8],
+"slaving_8h.html#a3b37cf698f5019d025dc68b0d5e714af":[11,0,1,24,1],
+"slaving_8h.html#a764f42e10a49c6f968268d1a365b118b":[11,0,1,24,2],
+"slaving_8h.html#a7bcbb1b8de1d45851f3ac5c1c2b34d01":[11,0,1,24,0],
 "slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf":[11,0,1,24,3],
+"slaving_8h.html#abb6559501e8b6dc9a2aab800b6341671":[11,0,1,24,7],
 "slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3":[11,0,1,24,5],
 "slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7":[11,0,1,24,4],
 "slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7":[11,0,1,24,6],
@@ -32,6 +39,7 @@ var NAVTREEINDEX15 =
 "smath_8h.html#a15c1d84370af3e83f77421ed7595f51b":[11,0,3,9,92],
 "smath_8h.html#a1609c68491c09cf5c5e971a4ffcfb65c":[11,0,3,9,161],
 "smath_8h.html#a1709f8cfe3ad24d5afc3e76a29180b5d":[11,0,3,9,43],
+"smath_8h.html#a1a92300d529aa117a603abd92d236927":[11,0,3,9,55],
 "smath_8h.html#a1c25cda530aa2c6bb3c23903f390f2fe":[11,0,3,9,211],
 "smath_8h.html#a1c4702a54b65744ee12b0c0625f45cb7":[11,0,3,9,152],
 "smath_8h.html#a1cecf05e2bbf08c2ded9d41c27204cfe":[11,0,3,9,23],
@@ -157,7 +165,6 @@ var NAVTREEINDEX15 =
 "smath_8h.html#aa6bfba27ac7d85f08dac240face920d3":[11,0,3,9,24],
 "smath_8h.html#aa7637ef5474bf55a18742a68fbde8632":[11,0,3,9,69],
 "smath_8h.html#aa9c3e9f38857fcbd803f59a9b0430c40":[11,0,3,9,77],
-"smath_8h.html#aaa01574945a10e9ef323028880c9b2a6":[11,0,3,9,55],
 "smath_8h.html#aac46eb8078ea29690e2742c00934fe76":[11,0,3,9,44],
 "smath_8h.html#aad7c7bdafa96c19c288505e4c3cd5dc2":[11,0,3,9,226],
 "smath_8h.html#aae5029293f1ac9b8b04b043ec21f7a00":[11,0,3,9,46],
@@ -242,12 +249,5 @@ var NAVTREEINDEX15 =
 "smath_8h.html#af7ce707358410f9a72df886e740cd1bf":[11,0,3,9,160],
 "smath_8h.html#af956788b4f2ba6956ad09f77ba845efb":[11,0,3,9,76],
 "smath_8h.html#afa710a69788ccc733b231264144ccf45":[11,0,3,9,36],
-"smath_8h.html#afbdb4fdaea97abe00b679ac378a0d5a4":[11,0,3,9,113],
-"smath_8h.html#afce1b08af75769f6c765fab002def9fb":[11,0,3,9,134],
-"smath_8h.html#afec275089ac8cb58cd8495d1e6a5b3a6":[11,0,3,9,98],
-"smath_8h.html#afefd1fe3b27160f0a485df0b9a8095fc":[11,0,3,9,225],
-"smath_8h.html#aff04baf45423cd8a3c3bc03e0a334a0f":[11,0,3,9,97],
-"smath_8h.html#affe8e83863ca60062c67a8d053c8e5df":[11,0,3,9,48],
-"sock_8h.html":[11,0,4,9],
-"sock_8h.html#a06ca6a939cfb914d1b5b39b34292ecc7":[11,0,4,9,4]
+"smath_8h.html#afbdb4fdaea97abe00b679ac378a0d5a4":[11,0,3,9,113]
 };

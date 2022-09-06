@@ -55,7 +55,7 @@ var smath_8h =
     [ "scelltrans", "smath_8h.html#ada3edc0b08ed79e61d22f8e19b52df3f", null ],
     [ "scellref", "smath_8h.html#a3044daefbaa37dd91cd42bcd304827ce", null ],
     [ "scelldup", "smath_8h.html#ad3c25e2ac33758721bdb095e1f78664c", null ],
-    [ "scellcp", "smath_8h.html#aaa01574945a10e9ef323028880c9b2a6", null ],
+    [ "scellcp", "smath_8h.html#a1a92300d529aa117a603abd92d236927", null ],
     [ "scellreduce", "smath_8h.html#a4e435d4e179f82e94b7fd990f9ce700e", null ],
     [ "scellcat", "smath_8h.html#a2f622d3251e65cb941fc85d3c7c8523b", null ],
     [ "scellcat2", "smath_8h.html#ad6807e830bc79737e520b3cbf8f0ea1d", null ],

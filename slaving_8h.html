@@ -117,10 +117,10 @@ Functions</h2></td></tr>
 <tr class="separator:adc1b4899c000ff26f846ec7c8be176c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1bb469cd3e559bed0d4230b872d1ba7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7">act_float_interp</a> (<a class="el" href="type_8h.html#structloccell">loccell</a> *aloc, const <a class="el" href="type_8h.html#structlcell">lcell</a> *actfloat)</td></tr>
 <tr class="separator:af1bb469cd3e559bed0d4230b872d1ba7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3143e78f0f46c9866fac1ee5cf60d6c4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a3143e78f0f46c9866fac1ee5cf60d6c4">act_extrap_each</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *aloc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *actcpl, const real scl)</td></tr>
-<tr class="separator:a3143e78f0f46c9866fac1ee5cf60d6c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bbac27715f60f0b22b05b548ed840e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5">act_extrap</a> (<a class="el" href="type_8h.html#structloccell">loccell</a> *aloc, const <a class="el" href="type_8h.html#structdcell">dcell</a> *actcpl, const real scl)</td></tr>
-<tr class="separator:a7bbac27715f60f0b22b05b548ed840e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb6559501e8b6dc9a2aab800b6341671"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#abb6559501e8b6dc9a2aab800b6341671">act_extrap_each</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *aloc, const <a class="el" href="type_8h.html#structdmat">dmat</a> *actcpl, real scl)</td></tr>
+<tr class="separator:abb6559501e8b6dc9a2aab800b6341671"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bfc85780e37cff787829d2c599de33d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a1bfc85780e37cff787829d2c599de33d">act_extrap</a> (<a class="el" href="type_8h.html#structloccell">loccell</a> *aloc, const <a class="el" href="type_8h.html#structdcell">dcell</a> *actcpl, real scl, int lor)</td></tr>
+<tr class="separator:a1bfc85780e37cff787829d2c599de33d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines to compute interpolation matrices for stuck and floating actuators. </p>
@@ -425,8 +425,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3143e78f0f46c9866fac1ee5cf60d6c4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3143e78f0f46c9866fac1ee5cf60d6c4">&#9670;&nbsp;</a></span>act_extrap_each()</h2>
+<a id="abb6559501e8b6dc9a2aab800b6341671"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb6559501e8b6dc9a2aab800b6341671">&#9670;&nbsp;</a></span>act_extrap_each()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -466,8 +466,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a7bbac27715f60f0b22b05b548ed840e5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7bbac27715f60f0b22b05b548ed840e5">&#9670;&nbsp;</a></span>act_extrap()</h2>
+<a id="a1bfc85780e37cff787829d2c599de33d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1bfc85780e37cff787829d2c599de33d">&#9670;&nbsp;</a></span>act_extrap()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -487,8 +487,14 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const real&#160;</td>
-          <td class="paramname"><em>thres</em>&#160;</td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>thres</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>lor</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -503,6 +509,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling to turn on interpolation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lor</td><td>Low order mode removal before extrapolation </td></tr>
   </table>
   </dd>
 </dl>

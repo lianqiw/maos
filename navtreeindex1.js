@@ -1,5 +1,14 @@
 var NAVTREEINDEX1 =
 {
+"classcuda__recon_1_1cufit__grid.html#a37dac9717dcac4b2fa1ddb095a88d57b":[10,0,0,2,5],
+"classcuda__recon_1_1cufit__grid.html#a3b133e7806196e038f2c242a73e8b65c":[10,0,0,2,18],
+"classcuda__recon_1_1cufit__grid.html#a407a6535d471d46b82561c44aa0be651":[10,0,0,2,26],
+"classcuda__recon_1_1cufit__grid.html#a41682879da5d404079c799af03816ea3":[10,0,0,2,20],
+"classcuda__recon_1_1cufit__grid.html#a4253f4e3990e0a5eff4a68ad004fef80":[10,0,0,2,14],
+"classcuda__recon_1_1cufit__grid.html#a4d1ad536838e86d63b0bce94315e97e5":[10,0,0,2,29],
+"classcuda__recon_1_1cufit__grid.html#a549d10f2ffc3bdb6871d024d68d87785":[10,0,0,2,16],
+"classcuda__recon_1_1cufit__grid.html#a5ad95513d33fb51ce7cf95d3d1b88912":[10,0,0,2,22],
+"classcuda__recon_1_1cufit__grid.html#a61837bc5cd3345f8d772773db36a1af0":[10,0,0,2,2],
 "classcuda__recon_1_1cufit__grid.html#a6e1d3d7c1c0804e854c68b69208284df":[10,0,0,2,30],
 "classcuda__recon_1_1cufit__grid.html#a741dc46bc4d7a7a353f5aa22c45bc959":[10,0,0,2,4],
 "classcuda__recon_1_1cufit__grid.html#a95b195cdc305c6eb1a2f25e1e1981bd7":[10,0,0,2,23],
@@ -240,14 +249,5 @@ var NAVTREEINDEX1 =
 "classcuglobal__t.html#ae1a05e53df6660000415de44a7a9c28c":[10,0,37,5],
 "classcugrid__t.html":[10,0,38],
 "classcugrid__t.html#a07d5b58b1284943aa1a43eea0cba5c03":[10,0,38,14],
-"classcugrid__t.html#a1b2189e10e597029efa37ba0e47cae66":[10,0,38,8],
-"classcugrid__t.html#a23ae518d421b8ffc2a66cdea9396317b":[10,0,38,6],
-"classcugrid__t.html#a23b0de5e5c2fa2282631f4ec5ca82ba0":[10,0,38,0],
-"classcugrid__t.html#a257aa93ea42a23a272902ca892e8b4a8":[10,0,38,4],
-"classcugrid__t.html#a2985e3fec148b6e91a698939abe31b03":[10,0,38,9],
-"classcugrid__t.html#a33f4e030884783fda4ada5aef2d14c3b":[10,0,38,10],
-"classcugrid__t.html#a4e049d864c9cd9a8093c0d0b7c0dfdc1":[10,0,38,13],
-"classcugrid__t.html#a75b4d07ed08df1c9017e6d417d2caeb5":[10,0,38,2],
-"classcugrid__t.html#a93d2876ad4d74069d0b7f1633040e14d":[10,0,38,1],
-"classcugrid__t.html#a94887c02b70bf49d5f6677b443bcf286":[10,0,38,5]
+"classcugrid__t.html#a1b2189e10e597029efa37ba0e47cae66":[10,0,38,8]
 };

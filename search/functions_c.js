@@ -8,5 +8,10 @@ var searchData=
   ['nextfftsize',['nextfftsize',['../mathmisc_8h.html#ab2457f6b21851a0a5d62695be54331ca',1,'mathmisc.c']]],
   ['nextpow2',['nextpow2',['../mathmisc_8h.html#a17bd719e22e15aaff05bc4c8773dede2',1,'mathmisc.c']]],
   ['ngsmod2science',['ngsmod2science',['../ahst_8h.html#a75fc0893da6e59f8dccc5c17e53aba54',1,'ahst.c']]],
-  ['ngsmod_5ffree',['ngsmod_free',['../ahst_8h.html#a94177f64acfe56654db4e671a4b5ad0b',1,'ahst.c']]]
+  ['ngsmod_5fdot',['ngsmod_dot',['../ahst_8h.html#aea4bdd99e2d054739f511c19926398c3',1,'ahst.c']]],
+  ['ngsmod_5fdot_5fpost',['ngsmod_dot_post',['../ahst_8h.html#a8dfcf63ddc17bf76e13676edeace7a21',1,'ahst.c']]],
+  ['ngsmod_5ffree',['ngsmod_free',['../ahst_8h.html#a94177f64acfe56654db4e671a4b5ad0b',1,'ahst.c']]],
+  ['ngsmod_5fprep',['ngsmod_prep',['../ahst_8h.html#a96597f65ab25ac54c273d28a097c777d',1,'ahst.c']]],
+  ['ngsmod_5fremove',['ngsmod_remove',['../ahst_8h.html#a1e7dc48e7168ac32c503021a355c9c96',1,'ahst.c']]],
+  ['ngsmod_5fsetup',['ngsmod_setup',['../ahst_8h.html#ad12198b13db1af34ffaea6a450768f5c',1,'ahst.c']]]
 ];

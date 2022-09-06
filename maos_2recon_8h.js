@@ -17,7 +17,6 @@ var maos_2recon_8h =
     [ "free_recon", "maos_2recon_8h.html#a533fa88200e668fe0bce42af7f3e6794", null ],
     [ "free_recon_unused", "maos_2recon_8h.html#a9a15286be2826aa71cfca6227bb58f07", null ],
     [ "setup_recon_mvst", "maos_2recon_8h.html#a14b7a0beadfd04a65affccf99767892b", null ],
-    [ "setup_recon_dmttr", "maos_2recon_8h.html#a345ce329e36762b364fec2142450eac4", null ],
     [ "setup_recon_dither_dm", "maos_2recon_8h.html#af1da2a8efe02e505b025aee27f4f02ff", null ],
     [ "tomofit", "maos_2recon_8h.html#ac734bc10b9e0d6a8dc02a55019607156", null ],
     [ "reconstruct", "maos_2recon_8h.html#a957f786000458997344bd02425f92c43", null ]

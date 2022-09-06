@@ -7,6 +7,6 @@ var slaving_8h =
     [ "act_float", "slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7", null ],
     [ "act_stuck_cmd", "slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3", null ],
     [ "act_float_interp", "slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7", null ],
-    [ "act_extrap_each", "slaving_8h.html#a3143e78f0f46c9866fac1ee5cf60d6c4", null ],
-    [ "act_extrap", "slaving_8h.html#a7bbac27715f60f0b22b05b548ed840e5", null ]
+    [ "act_extrap_each", "slaving_8h.html#abb6559501e8b6dc9a2aab800b6341671", null ],
+    [ "act_extrap", "slaving_8h.html#a1bfc85780e37cff787829d2c599de33d", null ]
 ];

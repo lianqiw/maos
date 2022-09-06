@@ -6,6 +6,7 @@ var structgpu__gp__t =
     [ "jwfs", "structgpu__gp__t.html#abb5204fa00f1c4fb4aad80cc3caff88b", null ],
     [ "saptr", "structgpu__gp__t.html#a84706e7b5f0b2b781ef77df70c50dfbe", null ],
     [ "PTTF", "structgpu__gp__t.html#aa502c33658e9ca0c89dc2b0d477a2585", null ],
+    [ "PFF", "structgpu__gp__t.html#ae5113fa6236fd926e242e53cc7dc787d", null ],
     [ "dsa", "structgpu__gp__t.html#ab2745ff418645742beeafe41cde58378", null ],
     [ "nsa", "structgpu__gp__t.html#a533611cb28e9117bbfbae0b1a8cc71fa", null ],
     [ "GPp", "structgpu__gp__t.html#a7bb2beda55e32326cbe61e4e4a6ccee2", null ],

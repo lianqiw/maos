@@ -138,8 +138,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
 <tr class="separator:a9a15286be2826aa71cfca6227bb58f07"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14b7a0beadfd04a65affccf99767892b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#a14b7a0beadfd04a65affccf99767892b">setup_recon_mvst</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="separator:a14b7a0beadfd04a65affccf99767892b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a345ce329e36762b364fec2142450eac4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#a345ce329e36762b364fec2142450eac4">setup_recon_dmttr</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
-<tr class="separator:a345ce329e36762b364fec2142450eac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1da2a8efe02e505b025aee27f4f02ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#af1da2a8efe02e505b025aee27f4f02ff">setup_recon_dither_dm</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="separator:af1da2a8efe02e505b025aee27f4f02ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac734bc10b9e0d6a8dc02a55019607156"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#ac734bc10b9e0d6a8dc02a55019607156">tomofit</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> **dmout, <a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu, <a class="el" href="type_8h.html#structdcell">dcell</a> *gradin)</td></tr>
@@ -703,35 +701,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
 \begin{eqnarray*} MVModes&amp;=&amp;F\cdot Uw\cdot u \Sigma^{-1/2}\\ MVRngs&amp;=&amp;\Sigma^{1/2}u^T (1+G_{ngs}A^{-1}G_{ngs}^T C_{ngs}^{-1})^{-1} \end{eqnarray*}
 </p>
  
-</div>
-</div>
-<a id="a345ce329e36762b364fec2142450eac4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a345ce329e36762b364fec2142450eac4">&#9670;&nbsp;</a></span>setup_recon_dmttr()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void setup_recon_dmttr </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
-          <td class="paramname"><em>recon</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
-          <td class="paramname"><em>parms</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Tilt removal from DM command. Used by filter.c </p>
-
 </div>
 </div>
 <a id="af1da2a8efe02e505b025aee27f4f02ff"></a>
