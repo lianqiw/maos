@@ -98,8 +98,8 @@ public:
     Array<cumapcell> dm_evl;
     /*for mvm*/
     curmat mvm_m;/*the control matrix*/
-    Array<AReal, Gpu>mvm_a; /*contains act result from mvm_m*mvm_g*/
-    Array<GReal, Gpu>mvm_g;/*the gradients copied from gpu*/
+    NumArray<AReal, Gpu>mvm_a; /*contains act result from mvm_m*mvm_g*/
+    NumArray<GReal, Gpu>mvm_g;/*the gradients copied from gpu*/
     stream_t mvm_stream;
     cudata_t():recon(0){
     }

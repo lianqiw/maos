@@ -243,9 +243,9 @@ def nargout():
         return 0
     return 1
 """
-def figure(*args, **kargs):
-    plt.figure(*args, **kargs)
-    plt.clf()
+#def figure(*args, **kargs):
+#    plt.figure(*args, **kargs)
+#    plt.clf()
 
     
 def width_at(x, y, height):

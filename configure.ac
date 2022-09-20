@@ -25,7 +25,7 @@ AC_CANONICAL_HOST
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
 case "$CFLAGS" in
-	*-std=c11*|*-std=C11*)
+		*-std=*)
 	;;
 	*)
 		CFLAGS+=" -std=c11"

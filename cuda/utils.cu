@@ -44,6 +44,13 @@ static __attribute((constructor)) void init(){
 	cusparseSetMatType(spdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
 	cusparseSetMatIndexBase(spdesc, CUSPARSE_INDEX_BASE_ZERO);
 }
+/*
+The generic one:
+template<typename T, template<typename> class Dev>
+template<typename S, template<typename> class Dev2>
+void NumArray<T, Dev>::Copy(const NumArray<S, Dev2> &in, cudaStream_t stream){}
+//Note that you cannot partially spatially a member function.
+*/
 
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use Real
@@ -57,6 +64,7 @@ void cp2gpu(cumapcell& dest, const mapcell* source){
 	for(int ips=0; ips<source->nx; ips++){
 		dest[ips]=(source->p[ips]);
 	}
+	//The time is spend on loading data from disk/network. parallel does not help
 	for(int ips=0; ips<source->nx; ips++){
 		cp2gpu(dest[ips].p, (const dmat*)source->p[ips]);
 	}
@@ -193,9 +201,9 @@ cusparseSpMM(cusparseHandle_t     handle,
 #else
 		cusparseSpMVAlg_t alg=CUSPARSE_MV_ALG_DEFAULT;
 #endif
-		DO(status=CUSP(pMV_bufferSize)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, &bsize));
+		DO(status=cusparseSpMV_bufferSize(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, &bsize));
 		DO(cudaMalloc(&buffer, bsize));
-		DO(status=CUSP(pMV)(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, buffer));
+		DO(status=cusparseSpMV(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, buffer));
 		DO(cudaFree(buffer));
 		cusparseDestroyDnVec(yv);
 		cusparseDestroyDnVec(xv);
@@ -209,11 +217,11 @@ cusparseSpMM(cusparseHandle_t     handle,
 #else
 		cusparseSpMMAlg_t alg=CUSPARSE_MM_ALG_DEFAULT;
 #endif
-		DO(status=CUSP(pMM_bufferSize)(stream.sparse(), opr, opB, &alpha,
+		DO(status=cusparseSpMM_bufferSize(stream.sparse(), opr, opB, &alpha,
 			A.Desc(), Bm, &one, Cm, CUDA_R, alg, &bsize));
 		DO(cudaMalloc(&buffer, bsize));
 		
-		DO(status=CUSP(pMM)(stream.sparse(), opr, opB, &alpha,
+		DO(status=cusparseSpMM(stream.sparse(), opr, opB, &alpha,
 			A.Desc(), Bm, &one, Cm, CUDA_R, alg, buffer));
 		DO(cudaFree(buffer));
 		cusparseDestroyDnMat(Bm);
@@ -325,7 +333,7 @@ void cp2gpu(cuccell& dest, const ccell* src){
 /*
   Write Real on gpu to file
 */
-void gpu_write(const Real* p, int nx, int ny, const char* format, ...){
+void gpu_write(const Real* p, long nx, long ny, const char* format, ...){
 	format2fn;
 	Real* tmp=(Real*)malloc(nx*ny*sizeof(Real));
 	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(Real), D2H));
@@ -336,7 +344,7 @@ void gpu_write(const Real* p, int nx, int ny, const char* format, ...){
 /*
   Write Real on gpu to file
 */
-void gpu_write(const Comp* p, int nx, int ny, const char* format, ...){
+void gpu_write(const Comp* p, long nx, long ny, const char* format, ...){
 	format2fn;
 	Comp* tmp=(Comp*)malloc(nx*ny*sizeof(Comp));
 	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), D2H));
@@ -346,7 +354,7 @@ void gpu_write(const Comp* p, int nx, int ny, const char* format, ...){
 /*
   Write Real on gpu to file
 */
-void gpu_write(const int* p, int nx, int ny, const char* format, ...){
+void gpu_write(const int* p, long nx, long ny, const char* format, ...){
 	format2fn;
 	int* tmp=(int*)malloc(nx*ny*sizeof(int));
 	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(int), D2H));
@@ -396,7 +404,7 @@ static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
 	free(tmp);
 }
 #define add2cpu_mat(D, T, C)						\
-    void add2cpu(D##mat **out, T alpha, const Array<C, Gpu> &in, T beta, \
+    void add2cpu(D##mat **out, T alpha, const NumArray<C, Gpu> &in, T beta, \
 		 cudaStream_t stream, pthread_mutex_t *mutex){		\
 	if(!in){							\
 	    if(*out) D##scale(*out, alpha);				\
@@ -442,7 +450,7 @@ add2cpu_cell(s, float, curcell)
 add2cpu_cell(z, float, cuccell)
 
 #define cp2cpu_same(dmat,dzero,dnew,T)				\
-void cp2cpu(dmat **out, const Array<T, Gpu> &in, cudaStream_t stream){ \
+void cp2cpu(dmat **out, const NumArray<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in) {							\
 	    if(*out) dzero(*out);					\
 	    return;							\

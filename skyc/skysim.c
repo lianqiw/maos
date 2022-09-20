@@ -375,7 +375,7 @@ static void skysim_update_mideal(SIM_S* simu){
 		/*Add ws to mideal. After genstars so we don't purturb it. */
 		int im=parms->skyc.addws<=1?0:1;
 		info("Add wind shake time series to mideal mode %d\n", im);
-		dmat* telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
+		dmat* telws=psd2ts(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 		/*telws is in m. need to convert to rad since mideal is in this unit. */
 		real alpha=1./sqrt(P(parms->maos.mcc, 0, 0));
 		dscale(telws, alpha);//convert from wfe to radian.

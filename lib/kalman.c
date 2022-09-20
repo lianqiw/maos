@@ -225,7 +225,7 @@ static dmat* sde_fit_do(const dmat* psdin, const dmat* coeff0, real tmax_fit){
 			P(freq,i)=df*i;
 			P(freq, i+nf/2)=df*(nf/2-i);
 		}
-		psdcov_in=psdinterp1(psdin, freq, 0);
+		psdcov_in=psd_interp1(psdin, freq, 0);
 
 		//writebin(psdcov_in, "in_psd");
 		psd2cov(psdcov_in, df);
@@ -248,7 +248,7 @@ static dmat* sde_fit_do(const dmat* psdin, const dmat* coeff0, real tmax_fit){
 			for(long i=0; i<nf; i++){
 				P(freq,i)=minf+df*i;
 			}
-			psdcov_in=psdinterp1(psdin, freq, 0);
+			psdcov_in=psd_interp1(psdin, freq, 0);
 		}
 		psdcov_sde=dnew(NX(freq), 1);
 		var_in=dtrapz(freq, psdcov_in);

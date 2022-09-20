@@ -40,29 +40,25 @@
 #undef _OPENMP
 #endif
 
-#if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
-//c++ mode, not CUDA
-#include <cstdarg> //for va_start
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-using std::signbit;
-using std::isfinite;
-using std::isnan;
-using std::strerror;
-#else//C99 mode or CUDA.
 #include <stdarg.h> //for va_start
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h> //don't use tgmath here. it is included in math/numtype.h
-#endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
-
+#if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
+//c++ mode, not CUDA
+using std::signbit;
+using std::isfinite;
+using std::isnan;
+using std::strerror;
+#endif //C99 mode or CUDA.
+#if defined(__cplusplus)
+#define __auto_type auto
+#endif
 #undef	MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
+#define MAX(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); (_M1)>(_M2)?(_M1):(_M2);})
 #undef	MIN
-#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MIN(a,b) ({__typeof__(a) _m1=(a); __typeof__(b) _m2=(b); (_m1)<(_m2)?(_m1):(_m2);})
 
 
 #ifdef __linux__

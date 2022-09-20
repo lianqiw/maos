@@ -39,11 +39,7 @@ template<typename T>
 class Cpu{
 	T val;
 public:
-	static void Zero(T* p, size_t size, cudaStream_t stream=0){
-		(void)stream;
-		if(p) memset(p, 0, size*sizeof(T));
-	}
-	void* operator new[](size_t size){
+	void *operator new[](size_t size){
 		//return ::calloc(size, 1);
 		return (void*) mycalloc(size, char);
 	}
@@ -51,14 +47,15 @@ public:
 		//::free(p);
 		myfree(p);
 	}
-	static void Copy(T* pout, const T* pin, size_t size, cudaStream_t stream=0){
-		(void) stream;
+	static void Zero(T *p, size_t size, cudaStream_t stream=0){
+		(void)stream;
+		if(p) memset(p, 0, size*sizeof(T));
+	}
+	static void Copy(T *pout, const T *pin, size_t size, cudaStream_t stream=0){
+		(void)stream;
 		memcpy(pout, pin, size*sizeof(T));
 		//dbg("Cpu::Copy %p to %p for %lux%lu bytes\n", pin, pout, size, sizeof(T));
 	}
-	/*T* cpuPointer(T* p, size_t size){
-		return p;
-	}*/
 };
 
 //Pinned (page locked) CPU memory
@@ -74,6 +71,8 @@ public:
 	void operator delete[](void* p){
 		cudaFreeHost(p);
 	}
+	using Cpu<T>::Zero;
+	using Cpu<T>::Copy;
 };
 extern int cuda_dedup;
 //Gpu memory
@@ -98,38 +97,11 @@ public:
 	static void Copy(T* pout, const T* pin, size_t size, cudaStream_t stream=0){
 		DO(cudaMemcpyAsync(pout, pin, size*sizeof(T), D2D, stream));
 	}
-	/*T* cpuPointer(T* p, size_t size){
-		T* p2=mymalloc(size, T);
-		DO(cudaMemcpy(p2, p, size*sizeof(T), cudaMemcpyDeviceToHost));
-		return p2;
-	}
-	void cpuPointerFree(T* p){
-		free(p);
-	}*/
 };
 
 template <typename T, template<typename> class Dev=Cpu >
 class Array;
-/**
-   Functions to Set memory to zero. Array of fundamental types are treated
-   differently from array of Arrays.
-*/
-template <typename T, template<typename> class Dev >
-void Zero(Dev<T>* p, long n, cudaStream_t stream=0){
-	Dev<T>::Zero((T*)p, n, stream);
-	if(sizeof(T)>8){
-		warning("call dev zero for %s. This will lead to code error.\n", typeid(T).name());
-	}
-}
 
-//partially specialize for array of array
-template <typename T, template<typename> class Dev >
-void Zero(Cpu<Array<T, Dev> >* p_, long n, cudaStream_t stream=0){
-	Array<T, Dev>* p=(Array<T, Dev>*)p_;
-	for(long i=0; i<n; i++){
-		Zero((Dev<T>*)p[i](), p[i].N(), stream);
-	}
-}
 /**
    RefP is a reference counting for pointers.
 */
@@ -234,10 +206,11 @@ public:
 		return p+i;
 	}
 };
-
+	
 /**
    Generic array of basic types and classes.
-   Need to call new on p to handle cases when T is a class.
+   
+   Does not defines operations that are different between Numerical and Cell array.
 */
 template <typename T, template<typename> class Dev>
 class Array:private RefP<T, Dev>{
@@ -295,21 +268,9 @@ public:
 	Array(long nxi, long nyi=1, T* pi=NULL, int own=1)
 		:Parent(nxi*nyi, pi, own), nx(nxi), ny(nyi){}
 
-		//Create a reference with offset.
-		//Array(long nxi,long nyi,const Parent& pi,long offset=0):Parent(pi,offset),nx(nxi),ny(nyi){
-		//}
-		//Create a reference with offset.
+	//Create a reference with offset.
 	Array(long nxi, long nyi, const Array& pi, long offset=0):Parent(pi, offset), nx(nxi), ny(nyi){}
 	//Use default destructor
-	Array(const dmat *A);//C array wrapper. Only specilize for matching type
-	Array(const cmat *A);
-	Array(const smat *A);
-	Array(const zmat *A);
-	//Need to handle both basic types and classes. Use template function.
-	//Cannot partially specialize single member function.
-	void Zero(cudaStream_t stream=0){
-		::Zero((Dev<T>*)p, nx*ny, stream);
-	}
 
 	Array(const Array& in):Parent(in), nx(in.nx), ny(in.ny), header(in.header){}
 	Array& operator=(const Array& in){
@@ -328,14 +289,118 @@ public:
 		tmp.ny=1;
 		return tmp;
 	}
-	Array trans(stream_t& stream);
+};
+///Used for array in cpu of any other array.
+template <typename T>
+class CellArray:public Array<T, Cpu>{
+public:
+public:
+	typedef Array<T, Cpu> Parent;
+	using Parent::deinit;
+	using Parent::operator+;
+	using Parent::operator T *;
+	using Parent::operator const T *;
+	using Parent::operator();
+	using Parent::p;
+	using Parent::NRef;
+	using Parent::Col;
+	using Parent::Nx;
+	using Parent::Ny;
+	using Parent::N;
+	using Parent::operator bool;
+	using Parent::init;
+	CellArray Vector()const{
+		CellArray tmp=*this;
+		tmp.nx=tmp.nx*tmp.ny;
+		tmp.ny=1;
+		return tmp;
+	}
+	CellArray trans(stream_t &stream);
+	//using Parent::Copy;
+	CellArray(long nxi, long nyi=1, T *pi=NULL, int own=1):Parent(nxi, nyi, pi, own){};
+	CellArray(long nxi, long nyi, const CellArray &pi, long offset=0):Parent(nxi, nyi, pi, offset){};
+	CellArray():Parent(){};
+
+	void Zero(cudaStream_t stream=0){
+		for(long i=0; i<N(); i++){
+			(*this)(i).Zero(stream);
+		}
+	}
 
 	//Copy the data. Zero data if input data is empty. Reallocate if mismatch.
-	void Copy(const Array& in, cudaStream_t stream=0){
+	void Copy(const CellArray &in, cudaStream_t stream=0){
 		if(this!=&in){
 			if(!in){
 				this->Zero(stream);
-			} else {
+				warning("Copying from empty input, use Zero().\n");
+			} else{
+				if(this->N()!=in.N()){
+					if(NRef()>1){
+						dbg("Copying into referenced data that has different size.\n");
+					}
+					if(this->N()!=0){
+						dbg("Reinitiate data during copying, old size is %ldx%ld, new size is %ldx%ld\n", Nx(), Ny(), in.Nx(), in.Ny());
+					}
+					deinit();
+					init(in.Nx(), in.Ny());
+				}
+				for(long i=0; i<N(); i++){
+					(*this)(i).Copy(in(i), stream);
+				}
+			}
+		}
+	}
+};
+
+///Only for array of numerical data.
+template <typename T, template<typename> class Dev>
+class NumArray:public Array<T, Dev>{
+#if __cpp_static_assert >= 200410L
+	static_assert(sizeof(T)<=16, "NumArray can only be used with numerical data");
+#endif	
+public:
+	typedef Array<T, Dev> Parent;
+	using Parent::deinit;
+	using Parent::operator+;
+	using Parent::operator T *;
+	using Parent::operator const T *;
+	using Parent::operator();
+	using Parent::p;
+	using Parent::NRef;
+	using Parent::Col;
+	using Parent::Nx;
+	using Parent::Ny;
+	using Parent::N;
+	using Parent::operator bool;
+	using Parent::init;
+	using Parent::Vector;
+	NumArray trans(stream_t &stream);
+	//using Parent::Copy;
+	NumArray():Parent(){};
+	NumArray(long nxi, long nyi=1, T *pi=NULL, int own=1):Parent(nxi, nyi, pi, own){};
+	NumArray(long nxi, long nyi, const NumArray& pi, long offset=0):Parent(nxi, nyi, pi, offset){};
+	NumArray(const dmat *A);//C Array wrapper. Only specilize for matching type
+	NumArray(const cmat *A);
+	NumArray(const smat *A);
+	NumArray(const zmat *A);
+	NumArray Vector()const{
+		NumArray tmp=*this;
+		tmp.nx=tmp.nx*tmp.ny;
+		tmp.ny=1;
+		return tmp;
+	}
+	//Implementations that are different from regular Array.
+	void Zero(cudaStream_t stream=0){
+		Dev<T>::Zero(p, N(), stream);
+	}
+
+	//Copy the data. Zero data if input data is empty. Reallocate if mismatch.
+	void Copy(const NumArray &in, cudaStream_t stream=0){
+		if(this!=&in){
+			if(!in){
+				this->Zero(stream);
+				warning("Copying from empty input, ignored.\n");
+			} else{
 				if(this->N()!=in.N()){
 					if(NRef()>1){
 						dbg("Copying into referenced data that has different size.\n");
@@ -353,15 +418,14 @@ public:
 };
 
 /**
-   Cell is a special Array that can stores multiple Arrays of data in continuous
-   region.
+   Cell is a special Array of array of numerical data that can store multiple Arrays of numerical data in continuous region.
 */
 
 template <typename T, template<typename> class Dev=Cpu >
-class Cell:public Array<Array<T, Dev>, Cpu>{
+class Cell:public CellArray<NumArray<T, Dev> >{
 private:
-	typedef Array<T, Dev> TMat;
-	typedef Array<Array<T, Dev>, Cpu> Parent;
+	typedef NumArray<T, Dev> TMat;
+	typedef CellArray<NumArray<T, Dev> > Parent;
 	TMat m; /*contains the continuous data*/
 protected:
 	using Parent::nx;
@@ -371,6 +435,8 @@ public:
 	Array<T*, Gpu>pm;/*contains the data pointer in each cell in cpu.*/
 	using Parent::operator();
 	using Parent::p;
+	using Parent::Copy;
+	using Parent::Zero;
 	TMat& M(){
 		return m;
 	}
@@ -463,13 +529,13 @@ public:
 		p2pm(stream);
 	}
 };
-typedef class Array<int, Gpu>   cuimat;
-typedef class Array<Real, Gpu>   curmat;
-typedef class Array<Comp, Gpu>   cucmat;
+typedef class NumArray<int, Gpu>   cuimat;
+typedef class NumArray<Real, Gpu>   curmat;
+typedef class NumArray<Comp, Gpu>   cucmat;
 typedef class Cell<Real, Gpu>  curcell;
 typedef class Cell<Comp, Gpu>  cuccell;
-typedef class Array<real, Cpu>   crmat;//equivalent to rmat in c
-typedef class Array<comp, Cpu>   ccmat;//equivalent to cmat in c
+typedef class NumArray<real, Cpu>   crmat;//equivalent to rmat in c
+typedef class NumArray<comp, Cpu>   ccmat;//equivalent to cmat in c
 enum TYPE_SP{
 	SP_CSC,//compressed sparse column major. 
 	SP_CSR,//compressed sparse row major. 
@@ -568,9 +634,9 @@ public:
 		return nx&&ny;
 	}
 };
-typedef Array<cusp> cuspcell;
-typedef Array<curcell> curccell;
-typedef Array<curccell> curcccell;
+typedef CellArray<cusp> cuspcell;
+typedef CellArray<curcell> curccell;
+typedef CellArray<curccell> curcccell;
 void cp2gpu(curmat& dest, const loc_t* src);
 class culoc_t{
 private:
@@ -710,12 +776,39 @@ public:
 	const Real* operator()()const{
 		return p();
 	}
+	void Zero(cudaStream_t stream=0){
+		p.Zero(stream);
+	}
+	void Copy(const cumap_t& in, cudaStream_t stream=0){
+		cugrid_t::operator=(in);
+		p.Copy(in.p, stream);
+	}
 };
 
-typedef Array<cumap_t> cumapcell;
-typedef Array<cugrid_t> cugridcell;
+typedef CellArray<cumap_t> cumapcell;
+typedef CellArray<cugrid_t> cugridcell;
+
+template <typename T>
+void Copy(CellArray<T> &out, const CellArray<T>& in, cudaStream_t stream=0){
+	out.Copy(in, stream);
+}
+//Copy between same device
+template <typename T, template<typename> class Dev>
+void Copy(NumArray<T, Dev> &out, const NumArray<T, Dev> &in, cudaStream_t stream=0){
+	out.Copy(in, stream);
+}
+//Copy between different device, same or different type
+template <typename T, template<typename> class Dev, typename T2, template<typename> class Dev2>
+void Copy(NumArray<T, Dev> &out, const NumArray<T2, Dev2> &in, cudaStream_t stream=0){
+	cp2gpu(out(), in(), in.Nx(), in.Ny(), stream);
+}
+static inline void Copy(cumap_t&out, const cumap_t &in, cudaStream_t stream=0){
+	out.cugrid_t::operator=(in);
+	out.Copy(in, stream);
+}
+
 template <typename T, template<typename> class Dev >
-void initzero(Array<T, Dev>& A, long nx, long ny){
+void initzero(NumArray<T, Dev>& A, long nx, long ny){
 	/*zero array if exist, otherwise allocate and zero*/
 	if(A){
 		A.Zero();
@@ -726,7 +819,5 @@ void initzero(Array<T, Dev>& A, long nx, long ny){
 
 #define cuzero(A,B...) (A).Zero(B)
 #define cucp(A,B...) (A).Copy(B)
-
-
 #endif
 

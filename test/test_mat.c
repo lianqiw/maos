@@ -294,7 +294,7 @@ static void test_kalman(){
     writebin(k->M, "mex_M");
     writebin(k->P, "mex_P");
     /*rand_t rstat; seed_rand(&rstat, 1);
-    //dmat *ts=psd2time(psd, &rstat, 1./800, 5000);
+    //dmat *ts=psd2ts(psd, &rstat, 1./800, 5000);
     dmat *ts=dread("ts");
     for(int i=0; i<100; i++){
 	dmat *res=kalman_test(k, ts);

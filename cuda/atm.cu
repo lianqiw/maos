@@ -27,7 +27,16 @@
 
   Include routines that copy atm and dm from CPU to GPU memory
 */
-
+#define TIMING 1
+#ifdef TIMING
+#define TIC_tm
+#define tic_tm
+#define toc_tm(A)
+#else
+#define TIC_tm TIC
+#define tic_tm tic
+#define toc_tm(A) toc2(A);tic
+#endif
 
 
 static void* atm_prep(atm_prep_t* data){
@@ -83,19 +92,16 @@ static void* atm_prep(atm_prep_t* data){
 static void gpu_atm2gpu_full(const mapcell* atm){
 	if(!atm) return;
 	TIC;tic;
-	for(int im=0; im<NGPU; im++)
-#if _OPENMP >= 200805 
-#pragma omp task
-#endif
-	{
+	for(int im=0; im<NGPU; im++){
 		gpu_set(im);
 		//gpu_print_mem("atm in full");
-		cp2gpu(cudata->atm, atm);
+		if(im==0){
+			cp2gpu(cudata->atm, atm);
+		}else{//avoids converting data again
+			Copy(cudata->atm, cudata_all[0]->atm);
+		}
 		//gpu_print_mem("atm out");
 	}
-#if _OPENMP >= 200805 
-#pragma omp taskwait
-#endif
 	toc2("atm to gpu");
 }
 /**

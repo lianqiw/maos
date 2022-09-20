@@ -267,7 +267,7 @@ void genatm(sim_t* simu){
 	print_mem("After genatm");
 	if((parms->atm.r0evolve&2)==2){
 		dbg("Scaling OPD temporarily\n");
-		simu->atmscale=psd2time(parms->atm.r0logpsdt, simu->atm_rand, parms->sim.dt, parms->sim.end);
+		simu->atmscale=psd2ts(parms->atm.r0logpsdt, simu->atm_rand, parms->sim.dt, parms->sim.end);
 		const real r02wt=(-5./3.);//layer weight is prop to r0^(-5/3)
 		for(long i=0; i<NX(simu->atmscale); i++){
 			P(simu->atmscale, i)=exp((P(simu->atmscale, i))*r02wt);//convert to cn2dh
@@ -1077,7 +1077,7 @@ static void init_simu_wfs(sim_t* simu){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->ttpsd){
 				dmat* psdin=dread("%s", parms->powfs[ipowfs].llt->ttpsd);
-				P(simu->llt_tt, iwfs)=psd2time(psdin, simu->misc_rand, parms->sim.dt, parms->sim.end);
+				P(simu->llt_tt, iwfs)=psd2ts(psdin, simu->misc_rand, parms->sim.dt, parms->sim.end);
 			}
 		}
 		//writebin(simu->llt_tt, "llt_tt_%d", seed);
@@ -1417,7 +1417,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	if(parms->sim.wspsd){
 		/* Telescope wind shake added to TT input. */
 		info("Converting windshake PSD to time series.\n");
-		simu->telws=psd2time(parms->sim.wspsd, simu->telws_rand, parms->sim.dt, parms->sim.end);
+		simu->telws=psd2ts(parms->sim.wspsd, simu->telws_rand, parms->sim.dt, parms->sim.end);
 		if(parms->save.extra) writebin(simu->telws, "%s/telws_%d", fnextra, seed);
 	}
 

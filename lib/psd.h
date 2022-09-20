@@ -24,13 +24,14 @@
 */
 dmat *psd1d(const dmat *v, long nseg );
 dmat *psd1dt(const dmat *v, long nseg, real dt);
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
+dmat *psd_interp1(const dmat *psdin, const dmat *fnew, int uselog);
 dmat *psd_vibid(const dmat *psdin);
-dmat *psdt2s(const dmat *psdt, real vmean);
-dmat *psds2t(const dmat *psdt, real vmean);
+dmat *psd_t2s(const dmat *psdt, real vmean);
+dmat *psd_s2t(const dmat *psdt, real vmean);
 real psd_inte(const real *nu, const real *psd, long n);
 real psd_inte2(const dmat *psdin);
-dmat* psd2time(const dmat *psdin, rand_t *rstat, real dt, int nstep);
+dmat* psd2ts(const dmat *psdin, rand_t *rstat, real dt, int nstep);
+dmat *psd2ts2(const dmat *psdin, int seed, real dt, int nstep);
 dmat* add_psd(const dmat *psd1, const dmat *psd2, real scale2);
 void add_psd2(dmat **out, const dmat *in, real scale);
 void psd_sum(dmat *psd, real scale);

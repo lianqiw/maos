@@ -30,7 +30,7 @@ public:
 	curcell p0;
 	curcell Ap;
 	curmat store;
-	Array<Real, Pinned> diff;
+	NumArray<Real, Pinned> diff;
 	int count_fail, count;
   Real residual;//average residual
 	cgtmp_t():count_fail(0), count(0), residual(1){}

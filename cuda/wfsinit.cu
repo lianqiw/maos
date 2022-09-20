@@ -127,13 +127,13 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 					int icol=multi_mf?jwfs:0;
 					dmat* mtche=dcell_col(powfs[ipowfs].intstat->mtche, icol);
 					//Delete old referenced values.
-					cuwfs[iwfs].mtche;
+					cuwfs[iwfs].mtche.deinit();
 					cp2gpu(cuwfs[iwfs].mtche, mtche);
 					dfree(mtche);
 				}
 				if(powfs[ipowfs].intstat->i0sum){
 					//Delete old referenced values.
-					cuwfs[iwfs].i0sum;
+					cuwfs[iwfs].i0sum.deinit();
 					cp2gpu(cuwfs[iwfs].i0sum, &PR(powfs[ipowfs].intstat->i0sum, 0, jwfs), nsa, 1);
 					cuwfs[iwfs].i0sumsum=PR(powfs[ipowfs].intstat->i0sumsum, jwfs, 0);
 				}

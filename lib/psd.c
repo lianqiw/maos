@@ -87,7 +87,7 @@ dmat* psd1dt(const dmat* v, long nseg, real dt){
 /**
    Interpolate psd onto new f. We interpolate in log space which is more linear.
 */
-dmat* psdinterp1(const dmat* psdin, const dmat* fnew, int uselog){
+dmat* psd_interp1(const dmat* psdin, const dmat* fnew, int uselog){
 	dmat* f1=drefcols(psdin, 0, 1);
 	dmat* psd1=dsub(psdin, 0, 0, 1, 1);//copy
 	dmat* f2=dref(fnew);
@@ -175,7 +175,7 @@ dmat* psd_vibid(const dmat* psdin){
 }
 
 /**Convert temporal PSD to spatial*/
-dmat* psdt2s(const dmat* psdt, real vmean){
+dmat* psd_t2s(const dmat* psdt, real vmean){
 	if(NX(psdt)!=1||NY(psdt)>4){
 		error("psdt needs to be 1 row and less than 4 cols\n");
 	}
@@ -198,7 +198,7 @@ dmat* psdt2s(const dmat* psdt, real vmean){
 }
 
 /**Convert special PSD to temporal*/
-dmat* psds2t(const dmat* psds, real vmean){
+dmat* psd_s2t(const dmat* psds, real vmean){
 	if(NX(psds)!=1||NY(psds)>4){
 		error("psds needs to be 1 row and less than 4 cols\n");
 	}
@@ -253,10 +253,17 @@ real psd_inte2(const dmat* psdin){
 	real* psd=nu+n;
 	return psd_inte(nu, psd, n);
 }
-
+/**
+ * Convert PSD into time series.
+ * */
+dmat *psd2ts2(const dmat *psdin, int seed, real dt, int nstepin){
+	rand_t stat0;
+	seed_rand(&stat0, seed);
+	return psd2ts(psdin, &stat0, dt, nstepin);
+}
 /**
    Convert PSD into time series.*/
-dmat* psd2time(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
+dmat* psd2ts(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
 	if(!psdin){
 		error("psdin cannot be null\n");
 	}

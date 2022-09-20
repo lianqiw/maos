@@ -41,20 +41,20 @@ extern int cuda_dedup; //Set to 1 during setup and 0 during simulation
 */
 
 template<typename M, typename N>
-void type_convert(M* out, const N* in, int nx){
+void type_convert(M* out, const N* in, long nx){
 	for(int i=0; i<nx; i++){
 		out[i]=static_cast<M>(in[i]);
 	}
 }
 template<>
-inline void type_convert<float2, double2>(float2* out, const double2* in, int nx){
+inline void type_convert<float2, double2>(float2* out, const double2* in, long nx){
 	for(int i=0; i<nx; i++){
 		out[i].x=static_cast<float>(in[i].x);
 		out[i].y=static_cast<float>(in[i].y);
 	}
 }
 template<>
-inline void type_convert<double2, float2>(double2* out, const float2* in, int nx){
+inline void type_convert<double2, float2>(double2* out, const float2* in, long nx){
 	for(int i=0; i<nx; i++){
 		out[i].x=static_cast<double>(in[i].x);
 		out[i].y=static_cast<double>(in[i].y);
@@ -62,7 +62,7 @@ inline void type_convert<double2, float2>(double2* out, const float2* in, int nx
 }
 
 template<typename M, typename N>
-void cp2gpu(M* dest, const N* src, int nx, int ny, cudaStream_t stream=0){
+void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	/*{
 		static int same_size=0, size_last=0;
 		if(size_last==nx*ny*sizeof(N)){
@@ -98,7 +98,9 @@ void cp2gpu(M* dest, const N* src, int nx, int ny, cudaStream_t stream=0){
 			}
 			from=(M*)cuglobal->memcache;
 		}
+		//TIC;tic;
 		type_convert(from, src, nx*ny);
+		//toc("converting %ld elements", nx*ny);
 	} else{
 		from=(M*)(src);
 	}
@@ -114,7 +116,7 @@ void cp2gpu(M* dest, const N* src, int nx, int ny, cudaStream_t stream=0){
 }
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
 template<typename M, typename N>
-void cp2gpu_dedup(M** dest, const N* src, int nx, int ny, cudaStream_t stream=0){
+void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	if(!src){
 		error("src=null\n");
 	}
@@ -165,17 +167,17 @@ void cp2gpu_dedup(M** dest, const N* src, int nx, int ny, cudaStream_t stream=0)
 }
 
 template<typename M, typename N> static inline void
-cp2gpu(Array<M, Gpu>& dest, const N* src, int nx, int ny, cudaStream_t stream=0){
+cp2gpu(NumArray<M, Gpu>& dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	if(!src||!nx||!ny) return;
 	if(dest){
 		if(dest.N()!=nx*ny){
-			error("Array is %ldx%ld, input is %dx%d\n", dest.Nx(), dest.Ny(), nx, ny);
+			error("Array is %ldx%ld, input is %ldx%ld\n", dest.Nx(), dest.Ny(), nx, ny);
 		}
 		cp2gpu(dest(), src, nx, ny, stream);
 	} else{
 		M* tmp=0;
 		cp2gpu_dedup(&tmp, src, nx, ny, stream);
-		dest=Array<M, Gpu>(nx, ny, tmp, 1);
+		dest=NumArray<M, Gpu>(nx, ny, tmp, 1);
 	}
 }
 static inline void cp2gpu_dedup(Real** dest, const dmat* src, cudaStream_t stream=0){
@@ -183,10 +185,10 @@ static inline void cp2gpu_dedup(Real** dest, const dmat* src, cudaStream_t strea
 	cp2gpu_dedup(dest, src->p, src->nx, src->ny, stream);
 }
 //#if CPU_SINGLE==0
-template <typename T, typename S>
-static inline void cp2gpu(Array<T, Gpu>& dest, Array<S, Cpu>& src, cudaStream_t stream=0){
+/*template <typename T, typename S>
+static inline void cp2gpu(NumArray<T, Gpu>& dest, NumArray<S, Cpu>& src, cudaStream_t stream=0){
 	cp2gpu(dest, src(), src.Nx(), src.ny(), stream);
-}
+}*/
 static inline void cp2gpu(curmat& dest, const dmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
@@ -200,8 +202,6 @@ static inline void cp2gpu(curmat& dest, const smat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-
-
 static inline void cp2gpu(cucmat& dest, const zmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
@@ -218,10 +218,10 @@ void cp2gpu(cuccell& dest, const ccell* src);
 void cuspmul(Real* y, const cusp& A, const Real* x, int ncol, char trans,
 	Real alpha, stream_t& stream);
 
-void gpu_write(const Real* p, int nx, int ny, const char* format, ...) CHECK_ARG(4);
-void gpu_write(const Comp* p, int nx, int ny, const char* format, ...) CHECK_ARG(4);
-void gpu_write(const int* p, int nx, int ny, const char* format, ...) CHECK_ARG(4);
-void add2cpu(float* restrict* dest,Real alpha, Real* src, Real beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void gpu_write(const Real* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
+void gpu_write(const Comp* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
+void gpu_write(const int* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
+void add2cpu(float* restrict* dest,Real alpha, Real* src, Real beta, long n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(smat** out, float alpha, const curmat& in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(zmat** out, float alpha, const cucmat& in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(scell** out, float alpha, const curcell& in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
@@ -229,7 +229,7 @@ void add2cpu(zcell **out, float alpha, const cuccell &in, float beta, cudaStream
 void add2cpu(dcell **out, real alpha, const curcell &in, real beta, cudaStream_t stream, pthread_mutex_t *mutex=0);
 void add2cpu(ccell **out, real alpha, const cuccell &in, real beta, cudaStream_t stream, pthread_mutex_t *mutex=0);
 #if CPU_SINGLE==0
-void add2cpu(real* restrict* dest, real alpha, Real* src, real beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(real* restrict* dest, real alpha, Real* src, real beta, long n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 #endif
 void add2cpu(dmat** out, real alpha, const curmat& in, real beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(cmat** out, real alpha, const cucmat& in, real beta, cudaStream_t stream, pthread_mutex_t* mutex=0);

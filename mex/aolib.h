@@ -33,11 +33,11 @@ void  write_header=writebin_header(const cell*dc, const char* header, const char
 void  writesock(const cell* dc, int sock);
 dmat* sde_fit(const dmat* psdin, const dmat* coeff0, double tmax_fit, int vibid);
 double dtrapz(const dmat* x, const dmat* y);
-dmat* psdinterp1(const dmat* psdin, const dmat* fnew, int uselog);
+dmat* psd_interp1(const dmat* psdin, const dmat* fnew, int uselog);
 dmat* psd_vibid(const dmat* psdin);
-dmat* psd2time(const dmat* psdin, rand_t* seed, double dt, int nstepin);
-dmat* psdt2s(const dmat* psdt, double vmean);
-dmat* psds2t(const dmat* psdt, double vmean);
+dmat* psd2ts(const dmat* psdin, rand_t* seed, double dt, int nstepin);
+dmat* psd_t2s(const dmat* psdt, double vmean);
+dmat* psd_s2t(const dmat* psdt, double vmean);
 dmat* psd1d(const dmat* v, long nseg);
 dmat* psd1dt(const dmat* v, long nseg, double dt);
 dsp* mkh(loc_t* locin, loc_t* locout, double displacex, double displacey, double scale);
@@ -94,3 +94,4 @@ void dgauss_fit(double* mr, double* ma, double* mb, double* theta, dmat* A, doub
 dmat* dpinv2(dmat*A, cell *wt, double svdthres, double tikcr);
 dcell* dcellpinv2(dcell *A, cell *wt, double svdthres, double tikcr);
 double loc_remove_focus_grad(dmat *grad, const loc_t *saloc, double factor);
+dmat *psd2ts=psd2ts2(const dmat *psdin, int seed, real dt, int nstep);
