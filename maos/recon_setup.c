@@ -102,7 +102,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					warning("powfs[%d].nearecon=%g mas may have unit incorrect.\n", ipowfs, neamas);
 				}
 				//convert from mill-arcsec to radian.
-				real nearad=pow(neamas/206265000., 2)/(parms->powfs[ipowfs].dtrat);
+				real nearad=pow(neamas*MAS2RAD, 2)/(parms->powfs[ipowfs].dtrat);
 				for(int isa=0; isa<nsa; isa++){
 					P(P(saneac,0), isa, 0)=P(P(saneac,0), isa, 1)=nearad/(P(powfs[ipowfs].saa, isa));
 					for(int ig=2; ig<ng; ig++){
@@ -119,9 +119,9 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		}
 
 		const real area_thres=(nsa>4)?0.9*parms->powfs[ipowfs].safill2d:0;
-		const real neaextra2=copysign(pow(parms->powfs[ipowfs].neaextra/206265000., 2),
+		const real neaextra2=copysign(pow(parms->powfs[ipowfs].neaextra*MAS2RAD, 2),
 			parms->powfs[ipowfs].neaextra);
-		const real neamin2=pow(parms->powfs[ipowfs].neamin/206265000., 2);
+		const real neamin2=pow(parms->powfs[ipowfs].neamin*MAS2RAD, 2);
 
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfsr,jwfs);
@@ -169,7 +169,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					&&parms->sim.dtrat_lo==parms->sim.dtrat_lo2
 					){
 					warning("TT WFS %d has too much measurement error: %g mas\". Ignore it\n",
-						iwfs, nea_mean*206265000);
+						iwfs, nea_mean*RAD2MAS);
 					P(sanea,iwfs,iwfs)=dspnewdiag(nsa*ng, NULL, INFINITY);
 					P(saneal,iwfs,iwfs)=dspnewdiag(nsa*ng, NULL, 0);
 					P(saneai,iwfs,iwfs)=dspnewdiag(nsa*ng, NULL, 0);
@@ -219,7 +219,7 @@ setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			} else{
 				neatype="geom";
 			}
-			info2("%s(%.2f) ", neatype, P(recon->neam,iwfs)*206265000*(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE)));
+			info2("%s(%.2f) ", neatype, P(recon->neam,iwfs)*RAD2MAS*(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE)));
 		}
 	}
 	info2(" mas\n");
@@ -1349,8 +1349,8 @@ void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper){
 				strht[0]='\0';
 			}
 			writebin(P(recon->ecnn,ievl), "ecnn_x%g_y%g%s.bin",
-				P(parms->evl.thetax,ievl)*206265,
-				P(parms->evl.thetay,ievl)*206265, strht);
+				P(parms->evl.thetax,ievl)*RAD2AS,
+				P(parms->evl.thetay,ievl)*RAD2AS, strht);
 		}
 	}
 	if(parms->recon.psd){

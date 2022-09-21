@@ -115,24 +115,24 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	style[count]=(0xFF0000<<8)+(4<<4)+3;
 	P(locs,count)=locnew(parms->evl.nevl, 0, 0);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		P(locs,count)->locx[ievl]=P(parms->evl.thetax,ievl)*206265;
-		P(locs,count)->locy[ievl]=P(parms->evl.thetay,ievl)*206265;
+		P(locs,count)->locx[ievl]=P(parms->evl.thetax,ievl)*RAD2AS;
+		P(locs,count)->locy[ievl]=P(parms->evl.thetay,ievl)*RAD2AS;
 	}
 	count++;
 	legend[count]="DM Fitting";
 	style[count]=(0xFF22DD<<8)+(4<<4)+3;
 	P(locs,count)=locnew(parms->fit.nfit, 0, 0);
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-		P(locs,count)->locx[ifit]=P(parms->fit.thetax,ifit)*206265;
-		P(locs,count)->locy[ifit]=P(parms->fit.thetay,ifit)*206265;
+		P(locs,count)->locx[ifit]=P(parms->fit.thetax,ifit)*RAD2AS;
+		P(locs,count)->locy[ifit]=P(parms->fit.thetay,ifit)*RAD2AS;
 	}
 	count++;
 	legend[count]="NCPA";
 	style[count]=(0x22FF00<<8)+(4<<4)+2;
 	P(locs,count)=locnew(parms->sim.ncpa_ndir, 0, 0);
 	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
-		P(locs,count)->locx[ifit]=P(parms->sim.ncpa_thetax,ifit)*206265;
-		P(locs,count)->locy[ifit]=P(parms->sim.ncpa_thetay,ifit)*206265;
+		P(locs,count)->locx[ifit]=P(parms->sim.ncpa_thetax,ifit)*RAD2AS;
+		P(locs,count)->locy[ifit]=P(parms->sim.ncpa_thetay,ifit)*RAD2AS;
 	}
 	count++;
 	const char* const legwfs[]={
@@ -166,8 +166,8 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 		P(locs,count)=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-			P(locs,count)->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
-			P(locs,count)->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
+			P(locs,count)->locx[jwfs]=parms->wfs[iwfs].thetax*RAD2AS;
+			P(locs,count)->locy[jwfs]=parms->wfs[iwfs].thetay*RAD2AS;
 		}
 		if(isfinite(parms->powfs[ipowfs].hs)){
 			style[count]=(0xFF8800<<8)+(4<<4)+2;
@@ -423,9 +423,9 @@ char* evl_header(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, i
 		"dp=%g / PSF sampling (arcsec)\n"
 		"sum=%g / PSF total intensity\n"
 		"dt=%g / Total exposure (seconds)\n",
-		ievl<0?0:P(parms->evl.thetax,ievl)*206265, ievl<0?0:P(parms->evl.thetay,ievl)*206265,
+		ievl<0?0:P(parms->evl.thetax,ievl)*RAD2AS, ievl<0?0:P(parms->evl.thetay,ievl)*RAD2AS,
 		parms->atm.r0, P(parms->atm.L0,0),
-		wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
+		wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*RAD2AS,
 		sumamp2* nembed* nembed, parms->sim.dt* (isim-parms->evl.psfisim+1));
 	return strdup(header);
 }
@@ -437,7 +437,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	extern int draw_single;
 	int draw_single_save=draw_single;
 	draw_single=0;
-	plotdir("Aperture", parms, parms->sim.fov*206265, "fov");/*plot wfs/evaluation direction */
+	plotdir("Aperture", parms, parms->sim.fov*RAD2AS, "fov");/*plot wfs/evaluation direction */
 	plotloc("Aperture", parms, recon->ploc, 0, "ploc");
 	plotloc("Aperture", parms, recon->floc, 0, "floc");
 	for(int idm=0; idm<parms->ndm; idm++){

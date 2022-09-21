@@ -136,7 +136,7 @@ void wfsints(thread_t* thread_data){
 			cabs2toreal(lwvf, 1./((real)nlwvf*nlwvf));//sum to 1. scaling is independent of notf
 			/*if(isa_start==0){//print uplink spot size.
 				cfftshift(lwvf);
-				real fwhm=1.1774*cgauss_width(lwvf, 0.01)/dtheta1*206265;
+				real fwhm=1.1774*cgauss_width(lwvf, 0.01)/dtheta1*RAD2AS;
 				info("LGS %d on sky fwhm is %g\n", iwfs, fwhm);
 				cfftshift(lwvf);
 			}*/

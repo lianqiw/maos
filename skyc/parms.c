@@ -272,8 +272,8 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	}
 
 	for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
-		parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec
-		info("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
+		parms->skyc.pixtheta[ipowfs]*=AS2RAD;//input is in arcsec
+		info("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*RAD2MAS);
 	}
 	for(int idtrat=1; idtrat<parms->skyc.ndtrat; idtrat++){
 		if(P(parms->skyc.dtrats,idtrat)>=P(parms->skyc.dtrats,idtrat-1)){

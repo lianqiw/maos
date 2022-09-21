@@ -361,7 +361,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		}
 		dadd(&pywfs->gradoff, 1, goff, 1);
 		if(0){//test TT response
-			real ptt[3]={0,0.001/206265,0};
+			real ptt[3]={0,0.001*AS2RAD,0};
 			loc_add_ptt(opd, ptt, pywfs->locfft->loc);
 			dzero(ints); dzero(goff);
 			pywfs_fft(&ints, pywfs, opd);
@@ -714,7 +714,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 	dmat* grady=drefcols(out, 1, 1);
 
 	real ptt[3]={0,0,0};
-	real alpha=0.005/206265.;
+	real alpha=0.005*AS2RAD;
 
 	//+x
 	ptt[1]=alpha;  ptt[2]=0;

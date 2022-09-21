@@ -71,7 +71,7 @@ void photon_flux(const ZB_S* zb,        /**<[in] Sky background and zero magnitu
    Written 2010-06-09;
    Tested PASS 2010-06-09;
  */
-	real pixas=pixtheta*206265;/*in arcsec. */
+	real pixas=pixtheta*RAD2AS;/*in arcsec. */
 	real Npsum=0;
 	real Nbsum=0;
 	real saa;

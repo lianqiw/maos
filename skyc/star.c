@@ -39,10 +39,10 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 	dmat* pc=coord;
 	int nwvl=parms->maos.nwvl;
 	STAR_S* star=mycalloc(nstar, STAR_S);
-	real ngsgrid=parms->maos.ngsgrid/206265.;
-	real r2=pow(parms->skyc.patfov/206265./2., 2);
-	real keepout=pow(parms->skyc.keepout/206265., 2);
-	real minrad2=pow(parms->skyc.minrad/206265., 2);
+	real ngsgrid=parms->maos.ngsgrid*AS2RAD;
+	real r2=pow(parms->skyc.patfov*AS2RAD/2., 2);
+	real keepout=pow(parms->skyc.keepout*AS2RAD, 2);
+	real minrad2=pow(parms->skyc.minrad*AS2RAD, 2);
 	int jstar=0;
 	if(nwvl+2>coord->nx){
 		error("input coord has too few rows (need %d, has %ld\n", nwvl+2, coord->nx);
@@ -86,7 +86,7 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 		}
 		if(pow(star[istar].thetax, 2)+pow(star[istar].thetay, 2)<minrad2){
 			dbg("Skip star at (%.1f, %.1f) because minrad=%g\n",
-				star[istar].thetax*206265, star[istar].thetay*206265, parms->skyc.minrad);
+				star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS, parms->skyc.minrad);
 			skip=1;
 		}
 		if(!skip){
@@ -115,8 +115,8 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 	for(int istar=0; istar<nstar; istar++){
 		STAR_S* stari=&star[istar];
 		stari->pistat=mycalloc(npowfs, PISTAT_S);
-		const real thetax=stari->thetax*206265;/*in as */
-		const real thetay=stari->thetay*206265;
+		const real thetax=stari->thetax*RAD2AS;/*in as */
+		const real thetay=stari->thetay*RAD2AS;
 		real thxnorm=thetax/ngsgrid;
 		real thynorm=thetay/ngsgrid;
 		long thxl=(long)floor(thxnorm);
@@ -226,7 +226,7 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 	const long npowfs=parms->maos.npowfs;
 	const long nwvl=parms->maos.nwvl;
-	const real r2=pow(parms->skyc.patfov/206265./2., 2);
+	const real r2=pow(parms->skyc.patfov*AS2RAD/2., 2);
 	dmat* rnefs=parms->skyc.rnefs;
 	for(int istar=0; istar<nstar; istar++){
 		star[istar].siglev=dcellnew(npowfs, 1);
@@ -254,7 +254,7 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 				P(rnefs, parms->skyc.ndtrat-1, ipowfs));
 			if(parms->skyc.verbose&&parms->maos.nsa[ipowfs]==1){
 				info("star %d at (%5.1f %5.1f)", istar,
-					star[istar].thetax*206265, star[istar].thetay*206265);
+					star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
 				info(" bkgrnd=%5.2f, mag=[", P(star[istar].bkgrnd,ipowfs));
 				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 					info("%5.2f ", P(star[istar].mags,iwvl));
@@ -283,8 +283,8 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 		}
 		dset(star[istar].minidtrat, -1);
 		real radius=sqrt(pow(star[istar].thetax, 2)+pow(star[istar].thetay, 2));
-		int igg=round(radius*206265/parms->maos.ngsgrid);
-		//dbg("radius=%g as, igg=%d\n", radius*206265, igg);
+		int igg=round(radius*RAD2AS/parms->maos.ngsgrid);
+		//dbg("radius=%g as, igg=%d\n", radius*RAD2AS, igg);
 		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 			const long nsa=parms->maos.nsa[ipowfs];
 			const long pixpsa=parms->skyc.pixpsa[ipowfs];
@@ -355,10 +355,10 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 					//add linearly not quadratically since the errors are related.
 					dmat* nea_nonlin=dinterp1(P(P(nonlin,ipowfs),igg), NULL, P(pistat->sanea,idtrat), 0);
 					for(int i=0; i<nsa*2; i++){
-						//info("%g mas", P(P(pistat->sanea,idtrat),i)*206265000);
+						//info("%g mas", P(P(pistat->sanea,idtrat),i)*RAD2MAS);
 						P(P(pistat->sanea,idtrat),i)=sqrt(pow(P(P(pistat->sanea,idtrat),i), 2)
 							+pow(P(nea_nonlin,i), 2));
-						//info("-->%g mas\n", P(P(pistat->sanea,idtrat),i)*206265000);
+						//info("-->%g mas\n", P(P(pistat->sanea,idtrat),i)*RAD2MAS);
 					}
 					dfree(nea_nonlin);
 				}
@@ -468,8 +468,8 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 		STAR_S* stari=&star[istar];
 		int npowfs=parms->maos.npowfs;
 		stari->ztiltout=dcellnew(npowfs, 1);
-		const real thetax=stari->thetax*206265;/*in as */
-		const real thetay=stari->thetay*206265;
+		const real thetax=stari->thetax*RAD2AS;/*in as */
+		const real thetay=stari->thetay*RAD2AS;
 
 		real thxnorm=thetax/ngsgrid;
 		real thynorm=thetay/ngsgrid;
@@ -586,8 +586,8 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 		STAR_S* stari=&star[istar];
 		int npowfs=parms->maos.npowfs;
 		stari->wvfout=mycalloc(npowfs, ccell**);
-		const real thetax=stari->thetax*206265;/*in as */
-		const real thetay=stari->thetay*206265;
+		const real thetax=stari->thetax*RAD2AS;/*in as */
+		const real thetay=stari->thetay*RAD2AS;
 
 		real thxnorm=thetax/ngsgrid;
 		real thynorm=thetay/ngsgrid;

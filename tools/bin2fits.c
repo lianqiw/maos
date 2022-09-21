@@ -53,7 +53,7 @@ int main(int argc, char* argv[]){
 					"PSF Sampling: %g arcsec\n"
 					"PSF Sum to %g\n"
 					"Exposure: %gs\n",
-					wvl[iwvl], dx, psfgrid, psfgrid, wvl[iwvl]/(dx*psfgrid)*206265,
+					wvl[iwvl], dx, psfgrid, psfgrid, wvl[iwvl]/(dx*psfgrid)*RAD2AS,
 					psfsum, (double)((istep+1)*4));
 				header[iwvl+istep*5]=strdup(tmp);
 			}

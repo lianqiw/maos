@@ -173,8 +173,8 @@ OMP_TASK_FOR(4)
 					for(int iwfs=0; iwfs<asteri->nwfs; iwfs++){
 						info("wfs %d: ipowfs=%d, istar=%d, at (%5.1f,%5.1f). siglev=%.1f\n", iwfs, 
 							asteri->wfs[iwfs].ipowfs, asteri->wfs[iwfs].istar,
-							asteri->wfs[iwfs].thetax*206265,
-							asteri->wfs[iwfs].thetay*206265, 
+							asteri->wfs[iwfs].thetax*RAD2AS,
+							asteri->wfs[iwfs].thetay*RAD2AS, 
 							asteri->wfs[iwfs].siglevtot);
 					}
 				}*/

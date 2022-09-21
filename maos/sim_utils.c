@@ -646,7 +646,7 @@ static void init_simu_evl(sim_t* simu){
 			} else{
 				strht[0]='\0';
 			}
-#define DIR_SUFFIX "_%d_x%g_y%g%s.fits", seed,P(parms->evl.thetax, ievl)*206265, P(parms->evl.thetay, ievl)*206265, strht
+#define DIR_SUFFIX "_%d_x%g_y%g%s.fits", seed,P(parms->evl.thetax, ievl)*RAD2AS, P(parms->evl.thetay, ievl)*RAD2AS, strht
 			if((P(parms->evl.psf, ievl)&1)){
 				if(parms->evl.psfmean){
 					save->evlpsfmean[ievl]=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfcl" DIR_SUFFIX);
@@ -713,8 +713,8 @@ static void init_simu_evl(sim_t* simu){
 
 					save->ecovxx[ievl]=zfarr_init(parms->sim.end, 1,
 						"ecovxx_%d_x%g_y%g%s.bin", seed,
-						P(parms->evl.thetax, ievl)*206265,
-						P(parms->evl.thetay, ievl)*206265, strht);
+						P(parms->evl.thetax, ievl)*RAD2AS,
+						P(parms->evl.thetay, ievl)*RAD2AS, strht);
 				}
 			}
 		}
@@ -911,15 +911,15 @@ static void init_simu_wfs(sim_t* simu){
 				"%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g.bin",
 				dirskysim, seed,
 				parms->powfs[ipowfs].order,
-				parms->wfs[iwfs].thetax*206265,
-				parms->wfs[iwfs].thetay*206265);
+				parms->wfs[iwfs].thetax*RAD2AS,
+				parms->wfs[iwfs].thetay*RAD2AS);
 
 			save->ztiltout[iwfs]=zfarr_init(parms->sim.end-parms->sim.start, 1,
 				"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g.bin",
 				dirskysim, seed,
 				parms->powfs[ipowfs].order,
-				parms->wfs[iwfs].thetax*206265,
-				parms->wfs[iwfs].thetay*206265);
+				parms->wfs[iwfs].thetax*RAD2AS,
+				parms->wfs[iwfs].thetay*RAD2AS);
 
 		}
 		if(parms->sim.skysim&&parms->powfs[ipowfs].pistatout){
@@ -1945,7 +1945,7 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 		fprintf(fp, "%g ", P(parms->powfs[powfs_ngs[0]].wvl, iwvl));
 	}
 	fprintf(fp, "]\n");
-	fprintf(fp, "maos.ngsgrid=%g\n", ngsgrid>0?ngsgrid*206265:1);
+	fprintf(fp, "maos.ngsgrid=%g\n", ngsgrid>0?ngsgrid*RAD2AS:1);
 	fprintf(fp, "maos.npowfs=%d\n", npowfs_ngs);
 	fprintf(fp, "maos.msa=[");
 	for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
@@ -2035,8 +2035,8 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 				writebin(P(powfs[ipowfs].gradncpa, jwfs),
 					"%s/gradoff/gradoff_sa%d_x%.0f_y%.0f.bin",
 					dirskysim, nsa,
-					parms->wfs[iwfs].thetax*206265,
-					parms->wfs[iwfs].thetay*206265);
+					parms->wfs[iwfs].thetax*RAD2AS,
+					parms->wfs[iwfs].thetay*RAD2AS);
 			}
 		}
 	}

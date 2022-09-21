@@ -108,7 +108,7 @@ static void psfiris_do(thread_t* info){
 	snprintf(header, 500, "%s"
 		"Wavelength: %g\n"
 		"PSF Sampling: %g\"\n"
-		, msg, wvl, dtheta*206265);
+		, msg, wvl, dtheta*RAD2AS);
 	P(output,ipsf)->header=strdup(header);
 
 	cfree(otf);
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]){
 	double thetax=strtod(argv[P_X], NULL);
 	double thetay=strtod(argv[P_Y], NULL);
 	int npix=strtol(argv[P_NPIX], NULL, 10);
-	double pixsize=strtod(argv[P_PIXSIZE], NULL)/206265.;
+	double pixsize=strtod(argv[P_PIXSIZE], NULL)*AS2RAD;
 	double pixoffx=strtod(argv[P_PIXOFFX], NULL);
 	double pixoffy=strtod(argv[P_PIXOFFY], NULL);
 	double blur=strtod(argv[P_BLUR], NULL);
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]){
 		"Charge diffusion (blur): %g of a pixel\n"
 		, npix?"Detector image":"Raw psf",
 		thetax, thetay,
-		pixsize*206265, pixoffx, pixoffy, blur
+		pixsize*RAD2AS, pixoffx, pixoffy, blur
 	);
 	info("%s", msg);
 	dcell* psf_lgs=NULL;
@@ -226,7 +226,7 @@ int main(int argc, char* argv[]){
 	int notf=(int)search_header_num_valid(P(psf_lgs,0)->header, "FFT Grid");
 	double sumpsf=search_header_num_valid(P(psf_lgs,0)->header, "PSF Sum to");
 	double dx=search_header_num_valid(P(psf_lgs,0)->header, "OPD Sampling");
-	double dtheta1=search_header_num_valid(P(psf_lgs,0)->header, "PSF Sampling")/206265.;
+	double dtheta1=search_header_num_valid(P(psf_lgs,0)->header, "PSF Sampling")*AS2RAD;
 	int psfsizevalid=MIN(psfsize1, notf/2);/*valid psf range*/
 	if(image_size>dtheta1*psfsizevalid){/*need blending*/
 		dbg("Enlarging PSF\n");

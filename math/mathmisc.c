@@ -22,6 +22,10 @@
 #include "numtype.h"
 #include "mathmisc.h"
 #include "blas.h"
+const real AS2RAD=4.848136811095360e-06; //arcsec in unit of radian
+const real MAS2RAD=4.848136811095360e-09; //arcsec in unit of radian
+const real RAD2AS=206264.8062470964; //radian in unit of arcsec
+const real RAD2MAS=206264806.2470964; //radian to milli-arcsecond
 #define check_vec(p,N) (p?(N?1:0):(N?(error("p is null but N is not 0\n"),0):0))
 /**
    Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/

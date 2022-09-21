@@ -927,7 +927,7 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
 				star[istar].use[ipowfs]=1;
 				if(parms->skyc.estimate&&parms->skyc.nsky==1){
 					char temp2[1023];
-					snprintf(temp2, 1023, "(x=%.1f, y=%.1f, J=%.1f) ", star[istar].thetax*206265, star[istar].thetay*206265, P(star[istar].mags,0));
+					snprintf(temp2, 1023, "(x=%.1f, y=%.1f, J=%.1f) ", star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS, P(star[istar].mags,0));
 					strncat(temp1, temp2, 1023);
 				}
 			}

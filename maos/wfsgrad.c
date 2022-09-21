@@ -534,8 +534,8 @@ static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int r
 			P(P(simu->fsmerr_drift, iwfs), 1)+=P(tt, 1)*gain;
 			if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
 				dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f) mas output is (%.3f, %.3f) mas.\n",
-				simu->wfsisim, iwfs, P(tt, 0)*206265000, P(tt, 1)*206265000, 
-				P(P(simu->fsmerr_drift, iwfs), 0)*206265000, P(P(simu->fsmerr_drift, iwfs), 1)*206265000);
+				simu->wfsisim, iwfs, P(tt, 0)*RAD2MAS, P(tt, 1)*RAD2MAS, 
+				P(P(simu->fsmerr_drift, iwfs), 0)*RAD2MAS, P(P(simu->fsmerr_drift, iwfs), 1)*RAD2MAS);
 			}
 		}
 		dfree(tt);

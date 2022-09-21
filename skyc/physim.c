@@ -572,12 +572,12 @@ void skysim_save(const SIM_S* simu, const ASTER_S* aster, const real* ipres, int
 	}
 	fprintf(fp, "wfs.thetax=[0 0  -33.287 -20.5725  20.5725 33.287");
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
-		fprintf(fp, " %.4f", aster[selaster].wfs[iwfs].thetax*206265);
+		fprintf(fp, " %.4f", aster[selaster].wfs[iwfs].thetax*RAD2AS);
 	}
 	fprintf(fp, "]\n");
 	fprintf(fp, "wfs.thetay=[0 35 10.8156 -28.3156 -28.3156 10.8156");
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
-		fprintf(fp, " %.4f", aster[selaster].wfs[iwfs].thetay*206265);
+		fprintf(fp, " %.4f", aster[selaster].wfs[iwfs].thetay*RAD2AS);
 	}
 	fprintf(fp, "]\n");
 
@@ -646,8 +646,8 @@ void skysim_save(const SIM_S* simu, const ASTER_S* aster, const real* ipres, int
 			50+(long)P(parms->skyc.dtrats,seldtrat)*20);
 		fprintf(fp, "powfs.noisy=[1 1 1]\n");
 		fprintf(fp, "powfs.pixtheta=[0.8 %g %g]\n",
-			parms->skyc.pixtheta[0]*206265,
-			parms->skyc.pixtheta[1]*206265);
+			parms->skyc.pixtheta[0]*RAD2AS,
+			parms->skyc.pixtheta[1]*RAD2AS);
 		fprintf(fp, "powfs.pixpsa=[6 %d %d]\n",
 			parms->skyc.pixpsa[0],
 			parms->skyc.pixpsa[1]);

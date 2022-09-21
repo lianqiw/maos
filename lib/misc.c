@@ -207,7 +207,8 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 
 	const real thres=pow((diam-MAX(periodx, periody))*0.5, 2);
 	const real thres2=pow(aloc->dx*0.0001, 2);
-	real saminx=INT_MAX, saminy=INT_MAX; //origin of saloc
+	real saminx=saloc->nloc?saloc->locx[0]:0;
+	real saminy=saloc->nloc?saloc->locy[0]:0; //origin of saloc
 	for(int iloc=0; iloc<saloc->nloc; iloc++){
 		if(saminx>saloc->locx[iloc]){
 			saminx=saloc->locx[iloc];

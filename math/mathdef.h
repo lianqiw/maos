@@ -156,5 +156,8 @@
 #define dspccellnew (dspccell*)cellnew
 #define cspcellnew (cspcell*)cellnew
 #define cspccellnew (cspccell*)cellnew
-
+extern const real RAD2AS;
+extern const real RAD2MAS;
+extern const real MAS2RAD;
+extern const real AS2RAD;
 #endif

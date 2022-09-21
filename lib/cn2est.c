@@ -257,7 +257,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 		P(cn2est->cov1,iwfspair)=dref_reshape(P(cn2est->cov2,iwfspair), nxnx, 1);
 #endif
 	/*info2("Pair %d: wfs %d and %d. dtheta=%4f\" iht=[%d, %d)\n",
-	  iwfspair, wfs0, wfs1, pair->dtheta*206265, pair->iht0, pair->iht1);*/
+	  iwfspair, wfs0, wfs1, pair->dtheta*RAD2AS, pair->iht0, pair->iht1);*/
 
 
 	/*
@@ -545,10 +545,10 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 		}
 		dscale(wt, 1./wtsum);
 		if(verbose){
-			info2("Pair%d: r0=%.4fm theta0=%.2f\" ", iwfspair, r0, calc_aniso(r0, NX(wt), P(ht), P(wt))*206265);
+			info2("Pair%d: r0=%.4fm theta0=%.2f\" ", iwfspair, r0, calc_aniso(r0, NX(wt), P(ht), P(wt))*RAD2AS);
 			if(cn2est->dmht&&NX(cn2est->dmht)==2){
 				info2("theta2=%.2f\" ", calc_aniso2(r0, NX(wt), P(ht), P(wt),
-					P(cn2est->dmht,0), P(cn2est->dmht,1))*206265);
+					P(cn2est->dmht,0), P(cn2est->dmht,1))*RAD2AS);
 			}
 			info2("wt=[");
 			for(int iht=0; iht<NX(wt); iht++){
@@ -565,11 +565,11 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 	if(verbose){
 		info2("Mean : r0=%.4fm theta0=%.2f\" ", cn2est->r0m,
 			calc_aniso(cn2est->r0m, P(cn2est->wtrecon,0)->nx,
-				P(cn2est->htrecon), P(P(cn2est->wtrecon,0)))*206265);
+				P(cn2est->htrecon), P(P(cn2est->wtrecon,0)))*RAD2AS);
 		if(cn2est->dmht&&NX(cn2est->dmht)==2){
 			info2("theta2=%.2f\" ", calc_aniso2(cn2est->r0m, P(cn2est->wtrecon,0)->nx,
 				P(cn2est->htrecon), P(P(cn2est->wtrecon,0)),
-				P(cn2est->dmht,0), P(cn2est->dmht,1))*206265);
+				P(cn2est->dmht,0), P(cn2est->dmht,1))*RAD2AS);
 		}
 		info2("wt=[");
 		for(int iht=0; iht<P(cn2est->wtrecon,0)->nx; iht++){
@@ -631,7 +631,7 @@ cn2est_t* cn2est_all(const dmat* wfspair, dmat* wfstheta, const loc_t* saloc,
 		wfstheta=ddup(tmp);
 		dfree(tmp);
 		//Don't scale the matlab one.
-		dscale(wfstheta, 1./206265);
+		dscale(wfstheta, 1.*AS2RAD);
 	}
 	if(NX(grad)==1&&NY(grad)>1){
 		reshape(grad, NY(grad), 1);

@@ -85,7 +85,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	long ntot=catalog->nx;
 	long nsky0=0;
 	dcell* res=dcellnew(nsky, 1);
-	real fov22=pow(fov/2/206265, 2);
+	real fov22=pow(fov/2*AS2RAD, 2);
 
 
 	real navg0=M_PI*pow(fov/2./3600., 2)/cat_fov*ntot;

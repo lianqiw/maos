@@ -679,7 +679,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 				} else{
 					nea_rad=parms->powfs[ipowfs].neasim;//in mas
 				}
-				nea_rad=nea_rad/206265000./sqrt(parms->powfs[ipowfs].dtrat);//in rad
+				nea_rad=nea_rad*MAS2RAD/sqrt(parms->powfs[ipowfs].dtrat);//in rad
 				real* saa=powfs[ipowfs].realsaa?P(P(powfs[ipowfs].realsaa, jwfs)):P(powfs[ipowfs].saa);
 				dmat* nea_each=P(nea, jwfs)=dnew(nsa, 3);
 				for(int isa=0; isa<nsa; isa++){
@@ -818,7 +818,7 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		info("OTF dimension is %dx%d (%s)\n", powfs[ipowfs].notfx, powfs[ipowfs].notfy, okind);
 		if(safov>dtheta*notf){
 			warning("Subaperture PSF size (%.3f\") is smaller than detector FoV (%.3f\").\n",
-				dtheta*notf*206265, safov*206265);
+				dtheta*notf*RAD2AS, safov*RAD2AS);
 		}
 	}/*notf */
 
@@ -1473,7 +1473,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 					for(int iwvl=0; iwvl<PN(wvl); iwvl++){
 						for(int illt=0; illt<NX(lotf); illt++){
 							dmat* psf=P(P(lltpsf, illt, iwvl), 0);
-							const real dpsf=P(wvl, 0)/(NX(psf)*powfs[ipowfs].llt->pts->dx)*206265.;
+							const real dpsf=P(wvl, 0)/(NX(psf)*powfs[ipowfs].llt->pts->dx)*RAD2AS;
 							snprintf(header, 64, "dtheta=%g; #arcsecond\n", dpsf);
 							psf->header=strdup(header);
 							real fwhm=dfwhm_gauss(psf)*dpsf;

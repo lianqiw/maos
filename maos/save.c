@@ -46,8 +46,8 @@ void save_pistat(sim_t* simu){
 					writebin(pp, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
 						dirskysim, simu->seed,
 						parms->powfs[ipowfs].order,
-						parms->wfs[iwfs].thetax*206265,
-						parms->wfs[iwfs].thetay*206265);
+						parms->wfs[iwfs].thetax*RAD2AS,
+						parms->wfs[iwfs].thetay*RAD2AS);
 					for(long ic=0; ic<NX(pp)*NY(pp); ic++){
 						dfftshift(P(pp,ic));
 					}
@@ -241,8 +241,8 @@ void save_recon(sim_t* simu){
 					strht[0]='\0';
 				}
 				writebin(P(simu->ecov,ievl), "ecov_%d_x%g_y%g%s_%d.bin", seed,
-					P(parms->evl.thetax,ievl)*206265,
-					P(parms->evl.thetay,ievl)*206265, strht, simu->reconisim);
+					P(parms->evl.thetax,ievl)*RAD2AS,
+					P(parms->evl.thetay,ievl)*RAD2AS, strht, simu->reconisim);
 			}
 		}
 		dcellscale(simu->ecov, 1./scale); //2016-06-07: Do not reset. 

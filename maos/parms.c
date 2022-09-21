@@ -474,8 +474,8 @@ static void readcfg_wfs(parms_t *parms){
 	READ_WFS(dbl,thetax);
 	READ_WFS(dbl,thetay);
 	for(i=0; i<parms->nwfs; i++){
-		parms->wfs[i].thetax/=206265.;
-		parms->wfs[i].thetay/=206265.;
+		parms->wfs[i].thetax*=AS2RAD;
+		parms->wfs[i].thetay*=AS2RAD;
 	}
 	READ_WFS_RELAX(dbl,fitwt);
 	READ_WFS_MAT(d,sabad);
@@ -920,8 +920,8 @@ static void readcfg_evl(parms_t *parms){
 	real ramin=INFINITY;
 	for(ievl=0; ievl<parms->evl.nevl; ievl++){
 	/*First Convert theta to radian from arcsec. */
-		P(parms->evl.thetax,ievl)/=206265.;
-		P(parms->evl.thetay,ievl)/=206265.;
+		P(parms->evl.thetax,ievl)*=AS2RAD;
+		P(parms->evl.thetay,ievl)*=AS2RAD;
 		real ra2=pow(P(parms->evl.thetax,ievl),2)+pow(P(parms->evl.thetay,ievl),2);
 		if(ra2<ramin){
 			parms->evl.indoa=ievl;
@@ -986,8 +986,8 @@ static void readcfg_fit(parms_t *parms){
 	parms->fit.hs=readcfg_dmat(parms->fit.nfit,1,"fit.hs");
 	real ramin=INFINITY;
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-		P(parms->fit.thetax,ifit)/=206265.;
-		P(parms->fit.thetay,ifit)/=206265.;
+		P(parms->fit.thetax,ifit)*=AS2RAD;
+		P(parms->fit.thetay,ifit)*=AS2RAD;
 		real ra2=pow(P(parms->fit.thetax,ifit),2)+pow(P(parms->fit.thetay,ifit),2);
 		if(ra2<ramin){
 			parms->fit.indoa=ifit;
@@ -1164,7 +1164,7 @@ static void readcfg_sim(parms_t *parms){
 	READ_INT(sim.fuseint);
 	READ_INT(sim.closeloop);
 	READ_INT(sim.skysim);
-	READ_DBL(sim.fov);parms->sim.fov/=206265;
+	READ_DBL(sim.fov);parms->sim.fov*=AS2RAD;
 	READ_DBL(sim.zadeg); parms->sim.za=parms->sim.zadeg*M_PI/180;
 	READ_INT(sim.htel);
 	READ_INT(sim.evlol);
@@ -1188,8 +1188,8 @@ static void readcfg_sim(parms_t *parms){
 	parms->sim.ncpa_thetay=readcfg_dmat(parms->sim.ncpa_ndir,0,"sim.ncpa_thetay");
 	parms->sim.ncpa_wt=readcfg_dmat(parms->sim.ncpa_ndir,1,"sim.ncpa_wt");
 	parms->sim.ncpa_hs=readcfg_dmat(parms->sim.ncpa_ndir,1,"sim.ncpa_hs");
-	dscale(parms->sim.ncpa_thetax,1./206265);
-	dscale(parms->sim.ncpa_thetay,1./206265);
+	dscale(parms->sim.ncpa_thetax,1.*AS2RAD);
+	dscale(parms->sim.ncpa_thetay,1.*AS2RAD);
 	if(parms->sim.ncpa_wt){
 		dnormalize_sumabs(P(parms->sim.ncpa_wt),parms->sim.ncpa_ndir,1);
 	}
@@ -1286,8 +1286,8 @@ static void readcfg_dbg(parms_t *parms){
 	READ_DMAT(dbg.pwfs_psy);
 	READ_INT(dbg.pwfs_side);
 	READ_INT(dbg.pwfs_raw);
-	READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate/=206265000.;
-	READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv/=206265000.;
+	READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate*=MAS2RAD;
+	READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv*=MAS2RAD;
 	READ_DBL(dbg.pwfs_pupelong);
 	READ_DCELL(dbg.dmoff);
 	READ_DCELL(dbg.gradoff);
@@ -1719,13 +1719,13 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			} else if(powfsi->pixtheta<1e-4){
 				warning("powfs%d: pixtheta should be supplied in arcsec\n",ipowfs);
 			} else{//input is arcsecond.
-				powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
+				powfsi->pixtheta*=AS2RAD;/*convert form arcsec to radian. */
 			}
 			if(!powfsi->radpixtheta){
 				powfsi->radpixtheta=powfsi->pixtheta;
 			} else{
 				if(powfsi->radpixtheta>1e-4){
-					powfsi->radpixtheta/=206265.;
+					powfsi->radpixtheta*=AS2RAD;
 				} else if(powfsi->radpixtheta<0){
 					error("powfs %d radpixtheta<0\n",ipowfs);
 				}
@@ -1775,11 +1775,11 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->fieldstop>10||powfsi->fieldstop<1e-4){
 				warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n",ipowfs,powfsi->fieldstop);
 			}
-			powfsi->fieldstop/=206265.;
-			if(powfsi->type==1&&powfsi->fieldstop<powfsi->modulate*2+0.5/206265.){
+			powfsi->fieldstop*=AS2RAD;
+			if(powfsi->type==1&&powfsi->fieldstop<powfsi->modulate*2+0.5*AS2RAD){
 				warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
-					powfsi->fieldstop*206265,powfsi->modulate*206265*2);
-				powfsi->fieldstop=powfsi->modulate*2+0.5/206265.;
+					powfsi->fieldstop*RAD2AS,powfsi->modulate*RAD2AS*2);
+				powfsi->fieldstop=powfsi->modulate*2+0.5*AS2RAD;
 			}
 		}
 
@@ -1788,7 +1788,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->dither==-1){//no dithering, just collect i0
 				powfsi->dither_amp=0;
 			} else if(powfsi->dither==1){//tip/tilt/arcsec->radian
-				powfsi->dither_amp/=206265.;
+				powfsi->dither_amp*=AS2RAD;
 			} else if(powfsi->dither>1){//zernike modes. micron-->meter
 				powfsi->dither_amp/=1e6;
 				if(powfsi->phytype_sim2==PTYPE_MF){
@@ -2339,7 +2339,7 @@ static void setup_parms_postproc_dirs(parms_t *parms){
 	real fov=2*sqrt(rmax2);
 	if(parms->sim.fov<fov){
 		if(parms->dbg.dmfullfov&&parms->sim.fov>0){
-			dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*206265,fov*206265);
+			dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*RAD2AS,fov*RAD2AS);
 		}
 		parms->sim.fov=fov;
 	}
@@ -2969,19 +2969,19 @@ if(!parms->sim.noatm){
 	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
 		GREEN,parms->sim.zadeg,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
 	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
-		fgreen,theta0z*206265);
+		fgreen,theta0z*RAD2AS);
 	if(parms->ndm==2){
 		real H1=parms->dm[0].ht;
 		real H2=parms->dm[1].ht;
 		real theta2z=calc_aniso2(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt),H1,H2);
-		info(", generalized is %.2f as\n",theta2z*206265);
+		info(", generalized is %.2f as\n",theta2z*RAD2AS);
 	} else{
 		info("\n");
 	}
 	info("    Sampled %dx%d at 1/%gm. wind dir is%s randomized.\n",
 		parms->atm.nx,parms->atm.ny,1./parms->atm.dx,
 		(parms->atm.wdrand?"":" not"));
-	if(parms->atm.nps>1&&theta0z*206265>4){
+	if(parms->atm.nps>1&&theta0z*RAD2AS>4){
 		warning("Atmosphere theta0 maybe wrong\n");
 	}
 	for(int ips=0; ips<parms->atm.nps; ips++){
@@ -3015,7 +3015,7 @@ if(!parms->sim.noatm){
 			info("    CCD image is %dx%d @ %gx%g mas, blur %g%% (sigma), %gHz, ",
 				(parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa),
 				parms->powfs[ipowfs].pixpsa,
-				parms->powfs[ipowfs].radpixtheta*206265000,parms->powfs[ipowfs].pixtheta*206265000,
+				parms->powfs[ipowfs].radpixtheta*RAD2MAS,parms->powfs[ipowfs].pixtheta*RAD2MAS,
 				parms->powfs[ipowfs].pixblur*100,
 				1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 		} else{
@@ -3057,8 +3057,8 @@ if(!parms->sim.noatm){
 	for(i=0; i<parms->nwfs; i++){
 		const int ipowfs=parms->wfs[i].powfs;
 		info("    wfs %d: type %d, at (%7.2f, %7.2f) arcsec, %3.0f km, siglev is %g",
-			i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
-			parms->wfs[i].thetay*206265,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev);
+			i,parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
+			parms->wfs[i].thetay*RAD2AS,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
 			info(" (%g in simulation)",parms->wfs[i].sigsim);
 		}
@@ -3139,8 +3139,8 @@ if(!parms->sim.noatm){
 		info2("%sThere are %d fit directions%s\n",GREEN,parms->fit.nfit,BLACK);
 		for(i=0; i<parms->fit.nfit; i++){
 			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-				i,P(parms->fit.wt,i),P(parms->fit.thetax,i)*206265,
-				P(parms->fit.thetay,i)*206265);
+				i,P(parms->fit.wt,i),P(parms->fit.thetax,i)*RAD2AS,
+				P(parms->fit.thetay,i)*RAD2AS);
 			if(fabs(P(parms->fit.thetax,i))>1||fabs(P(parms->fit.thetay,i))>1){
 				warning("fit thetax or thetay appears too large\n");
 			}
@@ -3172,8 +3172,8 @@ if(!parms->sim.noatm){
 		GREEN,parms->evl.nevl,BLACK,1./parms->evl.dx);
 	for(i=0; i<parms->evl.nevl; i++){
 		info("    Evl %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-			i,P(parms->evl.wt,i),P(parms->evl.thetax,i)*206265,
-			P(parms->evl.thetay,i)*206265);
+			i,P(parms->evl.wt,i),P(parms->evl.thetax,i)*RAD2AS,
+			P(parms->evl.thetay,i)*RAD2AS);
 		if(fabs(P(parms->evl.thetax,i))>1||fabs(P(parms->evl.thetay,i))>1){
 			warning("evl thetax or thetay appears too large\n");
 		}

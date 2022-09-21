@@ -123,7 +123,7 @@ static void psfiris_do(thread_t* info){
 	snprintf(header, 500, "%s"
 		"Wavelength: %g\n"
 		"PSF Sampling: %g\"\n"
-		, msg, wvl, dtheta2*206265);
+		, msg, wvl, dtheta2*RAD2AS);
 	P(output,iwvl)->header=strdup(header);
 
 	cfree(otf);
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]){
 	int skyp=strtol(argv[P_SKYP], NULL, 10);
 	int idir=strtol(argv[P_IDIR], NULL, 10);
 	int npix=strtol(argv[P_NPIX], NULL, 10);
-	double pixsize=strtod(argv[P_PIXSIZE], NULL)/206265.;
+	double pixsize=strtod(argv[P_PIXSIZE], NULL)*AS2RAD;
 	double pixoffx=strtod(argv[P_PIXOFFX], NULL);
 	double pixoffy=strtod(argv[P_PIXOFFY], NULL);
 	double blur=strtod(argv[P_BLUR], NULL);
@@ -215,7 +215,7 @@ int main(int argc, char* argv[]){
 		"Charge diffusion (blur): %g of a pixel\n"
 		, npix?"Detector image":"Raw psf",
 		prof, za, ngscount, skyp, thetax[idir], thetay[idir],
-		pixsize*206265, pixoffx, pixoffy, blur
+		pixsize*RAD2AS, pixoffx, pixoffy, blur
 	);
 	info("%s", msg);
 	double tt=0, ps=0;
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]){
 		for(int ialoc=0; ialoc<naloc; ialoc++){
 			prop_nongrid(P(aloc,ialoc), P(P(mode_aloc,ialoc))+imod*P(mode_aloc,ialoc)->nx,
 				ploc, PCOL(mode_ploc, imod),
-				1, thetax[idir]/206265., thetay[idir]/206265., 1, 0, 0);
+				1, thetax[idir]*AS2RAD, thetay[idir]*AS2RAD, 1, 0, 0);
 		}
 		double inp=dvecdot(PCOL(mode_ploc, imod), PCOL(mode_ploc, imod), P(pwt), ploc->nloc);
 		dmat* dtmp=drefcols(mode_ploc, imod, 1);
