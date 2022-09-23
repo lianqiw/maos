@@ -7,5 +7,7 @@ var classcumap__t =
     [ "operator curmat &", "classcumap__t.html#adb392432f6b20066f5117fdbe5ddd0ec", null ],
     [ "operator()", "classcumap__t.html#a740354307159f3a725ee8c7c8bab5ff2", null ],
     [ "operator()", "classcumap__t.html#a2a7d4eedea2660f6ab267be16b4d35d6", null ],
+    [ "Zero", "classcumap__t.html#a7438345e6cb2504e78fe92b29460484e", null ],
+    [ "Copy", "classcumap__t.html#a0abe35619da250732cf8063a186c378a", null ],
     [ "p", "classcumap__t.html#a06bb7dfeb5ecd9a765aadf217770a53f", null ]
 ];

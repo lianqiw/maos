@@ -30,20 +30,24 @@ var hierarchy =
     [ "Cpu< AReal >", "class_cpu.html", [
       [ "Pinned< AReal >", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< Array< Comp, Gpu > >", "class_cpu.html", null ],
-    [ "Cpu< Array< int, Gpu > >", "class_cpu.html", null ],
-    [ "Cpu< Array< Real, Gpu > >", "class_cpu.html", null ],
-    [ "Cpu< Array< short2, Gpu > >", "class_cpu.html", null ],
-    [ "Cpu< Array< T, Dev > >", "class_cpu.html", null ],
     [ "Cpu< Comp * >", "class_cpu.html", [
       [ "Pinned< Comp *>", "class_pinned.html", null ]
     ] ],
+    [ "Cpu< cugrid_t >", "class_cpu.html", null ],
+    [ "Cpu< cumap_t >", "class_cpu.html", null ],
+    [ "Cpu< curccell >", "class_cpu.html", null ],
+    [ "Cpu< cusp >", "class_cpu.html", null ],
     [ "Cpu< GReal >", "class_cpu.html", [
       [ "Pinned< GReal >", "class_pinned.html", null ]
     ] ],
     [ "Cpu< int * >", "class_cpu.html", [
       [ "Pinned< int *>", "class_pinned.html", null ]
     ] ],
+    [ "Cpu< NumArray< Comp, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< NumArray< int, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< NumArray< Real, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< NumArray< short2, Gpu > >", "class_cpu.html", null ],
+    [ "Cpu< NumArray< T, Dev > >", "class_cpu.html", null ],
     [ "Cpu< Real * >", "class_cpu.html", [
       [ "Pinned< Real *>", "class_pinned.html", null ]
     ] ],
@@ -253,53 +257,32 @@ var hierarchy =
     [ "recon_cfg_t", "parms_8h.html#structrecon__cfg__t", null ],
     [ "recon_t", "maos_2types_8h.html#structrecon__t", null ],
     [ "RefP< T, Dev >", "class_ref_p.html", [
-      [ "Array< T, Dev >", "class_array.html", null ]
+      [ "Array< T, Dev >", "class_array.html", [
+        [ "NumArray< T, Dev >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< AReal, Gpu >", "class_ref_p.html", [
-      [ "Array< AReal, Gpu >", "class_array.html", null ]
+      [ "Array< AReal, Gpu >", "class_array.html", [
+        [ "NumArray< AReal, Gpu >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< AReal, Pinned >", "class_ref_p.html", [
       [ "Array< AReal, Pinned >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array, Dev >", "class_ref_p.html", [
-      [ "Array< Array >", "class_array.html", null ]
-    ] ],
     [ "RefP< Array< AReal, Pinned >, Dev >", "class_ref_p.html", [
       [ "Array< Array< AReal, Pinned > >", "class_array.html", null ]
-    ] ],
-    [ "RefP< Array< Comp, Gpu >, Cpu >", "class_ref_p.html", [
-      [ "Array< Array< Comp, Gpu >, Cpu >", "class_array.html", [
-        [ "Cell< Comp, Gpu >", "class_cell.html", null ]
-      ] ]
     ] ],
     [ "RefP< Array< culoc_t >, Dev >", "class_ref_p.html", [
       [ "Array< Array< culoc_t > >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array< int, Gpu >, Cpu >", "class_ref_p.html", [
-      [ "Array< Array< int, Gpu >, Cpu >", "class_array.html", [
-        [ "Cell< int, Gpu >", "class_cell.html", null ]
-      ] ]
-    ] ],
-    [ "RefP< Array< Real, Gpu >, Cpu >", "class_ref_p.html", [
-      [ "Array< Array< Real, Gpu >, Cpu >", "class_array.html", [
-        [ "Cell< Real, Gpu >", "class_cell.html", null ]
-      ] ]
-    ] ],
     [ "RefP< Array< Real, Pinned >, Dev >", "class_ref_p.html", [
       [ "Array< Array< Real, Pinned > >", "class_array.html", null ]
     ] ],
-    [ "RefP< Array< short2, Gpu >, Cpu >", "class_ref_p.html", [
-      [ "Array< Array< short2, Gpu >, Cpu >", "class_array.html", [
-        [ "Cell< short2, Gpu >", "class_cell.html", null ]
-      ] ]
-    ] ],
-    [ "RefP< Array< T, Dev >, Cpu >", "class_ref_p.html", [
-      [ "Array< Array< T, Dev >, Cpu >", "class_array.html", [
-        [ "Cell< T, Dev >", "class_cell.html", null ]
-      ] ]
-    ] ],
     [ "RefP< atm_prep_t, Dev >", "class_ref_p.html", [
       [ "Array< atm_prep_t >", "class_array.html", null ]
+    ] ],
+    [ "RefP< CellArray, Dev >", "class_ref_p.html", [
+      [ "Array< CellArray >", "class_array.html", null ]
     ] ],
     [ "RefP< Comp *, Gpu >", "class_ref_p.html", [
       [ "Array< Comp *, Gpu >", "class_array.html", null ]
@@ -308,7 +291,9 @@ var hierarchy =
       [ "Array< Comp *, Pinned >", "class_array.html", null ]
     ] ],
     [ "RefP< Comp, Gpu >", "class_ref_p.html", [
-      [ "Array< Comp, Gpu >", "class_array.html", null ]
+      [ "Array< Comp, Gpu >", "class_array.html", [
+        [ "NumArray< Comp, Gpu >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< cuda_recon::lap_t, Gpu >", "class_ref_p.html", [
       [ "Array< cuda_recon::lap_t, Gpu >", "class_array.html", null ]
@@ -319,8 +304,10 @@ var hierarchy =
     [ "RefP< cufftHandle, Dev >", "class_ref_p.html", [
       [ "Array< cufftHandle >", "class_array.html", null ]
     ] ],
-    [ "RefP< cugrid_t, Dev >", "class_ref_p.html", [
-      [ "Array< cugrid_t >", "class_array.html", null ]
+    [ "RefP< cugrid_t, Cpu >", "class_ref_p.html", [
+      [ "Array< cugrid_t, Cpu >", "class_array.html", [
+        [ "CellArray< cugrid_t >", "class_cell_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< cuimat, Dev >", "class_ref_p.html", [
       [ "Array< cuimat >", "class_array.html", null ]
@@ -328,17 +315,23 @@ var hierarchy =
     [ "RefP< culoc_t, Dev >", "class_ref_p.html", [
       [ "Array< culoc_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< cumap_t, Dev >", "class_ref_p.html", [
-      [ "Array< cumap_t >", "class_array.html", null ]
+    [ "RefP< cumap_t, Cpu >", "class_ref_p.html", [
+      [ "Array< cumap_t, Cpu >", "class_array.html", [
+        [ "CellArray< cumap_t >", "class_cell_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< cupowfs_t, Dev >", "class_ref_p.html", [
       [ "Array< cupowfs_t >", "class_array.html", null ]
     ] ],
-    [ "RefP< curccell, Dev >", "class_ref_p.html", [
-      [ "Array< curccell >", "class_array.html", null ]
+    [ "RefP< curccell, Cpu >", "class_ref_p.html", [
+      [ "Array< curccell, Cpu >", "class_array.html", [
+        [ "CellArray< curccell >", "class_cell_array.html", null ]
+      ] ]
     ] ],
-    [ "RefP< cusp, Dev >", "class_ref_p.html", [
-      [ "Array< cusp >", "class_array.html", null ]
+    [ "RefP< cusp, Cpu >", "class_ref_p.html", [
+      [ "Array< cusp, Cpu >", "class_array.html", [
+        [ "CellArray< cusp >", "class_cell_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< cuwfs_t, Dev >", "class_ref_p.html", [
       [ "Array< cuwfs_t >", "class_array.html", null ]
@@ -350,7 +343,9 @@ var hierarchy =
       [ "Array< gpu_gp_t, Gpu >", "class_array.html", null ]
     ] ],
     [ "RefP< GReal, Gpu >", "class_ref_p.html", [
-      [ "Array< GReal, Gpu >", "class_array.html", null ]
+      [ "Array< GReal, Gpu >", "class_array.html", [
+        [ "NumArray< GReal, Gpu >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< GReal, Pinned >", "class_ref_p.html", [
       [ "Array< GReal, Pinned >", "class_array.html", null ]
@@ -365,10 +360,47 @@ var hierarchy =
       [ "Array< int >", "class_array.html", null ]
     ] ],
     [ "RefP< int, Gpu >", "class_ref_p.html", [
-      [ "Array< int, Gpu >", "class_array.html", null ]
+      [ "Array< int, Gpu >", "class_array.html", [
+        [ "NumArray< int, Gpu >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< map2map, Dev >", "class_ref_p.html", [
       [ "Array< map2map >", "class_array.html", null ]
+    ] ],
+    [ "RefP< NumArray< Comp, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< NumArray< Comp, Gpu >, Cpu >", "class_array.html", [
+        [ "CellArray< NumArray< Comp, Gpu > >", "class_cell_array.html", [
+          [ "Cell< Comp, Gpu >", "class_cell.html", null ]
+        ] ]
+      ] ]
+    ] ],
+    [ "RefP< NumArray< int, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< NumArray< int, Gpu >, Cpu >", "class_array.html", [
+        [ "CellArray< NumArray< int, Gpu > >", "class_cell_array.html", [
+          [ "Cell< int, Gpu >", "class_cell.html", null ]
+        ] ]
+      ] ]
+    ] ],
+    [ "RefP< NumArray< Real, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< NumArray< Real, Gpu >, Cpu >", "class_array.html", [
+        [ "CellArray< NumArray< Real, Gpu > >", "class_cell_array.html", [
+          [ "Cell< Real, Gpu >", "class_cell.html", null ]
+        ] ]
+      ] ]
+    ] ],
+    [ "RefP< NumArray< short2, Gpu >, Cpu >", "class_ref_p.html", [
+      [ "Array< NumArray< short2, Gpu >, Cpu >", "class_array.html", [
+        [ "CellArray< NumArray< short2, Gpu > >", "class_cell_array.html", [
+          [ "Cell< short2, Gpu >", "class_cell.html", null ]
+        ] ]
+      ] ]
+    ] ],
+    [ "RefP< NumArray< T, Dev >, Cpu >", "class_ref_p.html", [
+      [ "Array< NumArray< T, Dev >, Cpu >", "class_array.html", [
+        [ "CellArray< NumArray< T, Dev > >", "class_cell_array.html", [
+          [ "Cell< T, Dev >", "class_cell.html", null ]
+        ] ]
+      ] ]
     ] ],
     [ "RefP< Real *, Gpu >", "class_ref_p.html", [
       [ "Array< Real *, Gpu >", "class_array.html", null ]
@@ -380,10 +412,14 @@ var hierarchy =
       [ "Array< Real >", "class_array.html", null ]
     ] ],
     [ "RefP< Real, Gpu >", "class_ref_p.html", [
-      [ "Array< Real, Gpu >", "class_array.html", null ]
+      [ "Array< Real, Gpu >", "class_array.html", [
+        [ "NumArray< Real, Gpu >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< Real, Pinned >", "class_ref_p.html", [
-      [ "Array< Real, Pinned >", "class_array.html", null ]
+      [ "Array< Real, Pinned >", "class_array.html", [
+        [ "NumArray< Real, Pinned >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< short, Gpu >", "class_ref_p.html", [
       [ "Array< short, Gpu >", "class_array.html", null ]
@@ -395,7 +431,9 @@ var hierarchy =
       [ "Array< short2 *, Pinned >", "class_array.html", null ]
     ] ],
     [ "RefP< short2, Gpu >", "class_ref_p.html", [
-      [ "Array< short2, Gpu >", "class_array.html", null ]
+      [ "Array< short2, Gpu >", "class_array.html", [
+        [ "NumArray< short2, Gpu >", "class_num_array.html", null ]
+      ] ]
     ] ],
     [ "RefP< stream_t, Dev >", "class_ref_p.html", [
       [ "Array< stream_t >", "class_array.html", null ]
@@ -405,6 +443,11 @@ var hierarchy =
     ] ],
     [ "RefP< T *, Pinned >", "class_ref_p.html", [
       [ "Array< T *, Pinned >", "class_array.html", null ]
+    ] ],
+    [ "RefP< T, Cpu >", "class_ref_p.html", [
+      [ "Array< T, Cpu >", "class_array.html", [
+        [ "CellArray< T >", "class_cell_array.html", null ]
+      ] ]
     ] ],
     [ "rmap_t", "type_8h.html#structrmap__t", null ],
     [ "rmap_t.__unnamed__", "type_8h.html#unionrmap__t_8____unnamed____", null ],
@@ -470,8 +513,9 @@ var hierarchy =
     [ "zspcell", "type_8h.html#structzspcell", null ],
     [ "zspcell.__unnamed__", "type_8h.html#unionzspcell_8____unnamed____", null ],
     [ "zspcell.__unnamed__.__unnamed__", "type_8h.html#structzspcell_8____unnamed_____8____unnamed____", null ],
-    [ "Array< T, Dev >", "class_array_3_01_t_00_01_dev_01_4.html", null ],
-    [ "Array< T, Dev > *", "class_array_3_01_t_00_01_dev_01_4_01_5.html", null ],
+    [ "Cpu< T > *", "class_cpu_3_01_t_01_4_01_5.html", null ],
     [ "long", "classlong.html", null ],
+    [ "NumArray< T, Dev >", "class_num_array_3_01_t_00_01_dev_01_4.html", null ],
+    [ "NumArray< T, Dev > *", "class_num_array_3_01_t_00_01_dev_01_4_01_5.html", null ],
     [ "unsigned int *", "classunsigned_01int_01_5.html", null ]
 ];
