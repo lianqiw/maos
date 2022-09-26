@@ -195,8 +195,12 @@ else
 fi
 if test -z "$CUDADIR" ;then #default value
 	CUDADIR=$CUDADIR_AUTO
-elif test -n "$CUDADIR" -a "$CUDADIR" != "no" ;then #user specified
-	user_enabled_cuda=yes
+elif test -n "$CUDADIR" ;then #user supplied options
+	if test "$CUDADIR" != "no" ;then #user specified
+		user_enabled_cuda=yes
+	else
+		user_enabled_cuda=no
+	fi
 fi
 
 if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
@@ -228,7 +232,7 @@ fi
 if test "$enable_release" = "yes" ;then
     enable_scheduler="no"
     enable_websockets="no"
-	#enable_allstatic="yes"
+	enable_allstatic="yes"
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
@@ -304,11 +308,17 @@ case "$host_os" in
 		if test "$enable_release" = "yes" ;then
 			CFLAGS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective
 		fi
-		if test "${host_cpu}" = "x86_64" ;then
-			libsuffix="64"
-		else
-			libsuffix="32"
-		fi
+		case ${host_cpu} in
+			*64)
+				libsuffix="64"
+			;;
+			*32)
+				libsuffix="32"
+			;;
+			*)
+				libsuffix="${host_cpu}"
+			;;
+		esac
 		mkl_avail="yes"
 		system="linux"
 		ldsuffix="so"
@@ -319,7 +329,6 @@ case "$host_os" in
 		CFLAGS+=" -fPIC"
 		CFLAGS_EXTRA=
 		mkl_avail="no"
-		libsuffix=fat
 		system="apple"
 		ldsuffix="dylib"
 		if test "$enable_release" = "yes" ;then
@@ -534,17 +543,14 @@ function set_lapack(){
 			download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
 	    fi
 	    #First use MKL if available. 
-
 	    if test "$host_cpu" = "x86_64" ;then
 			LAPACK="-lmkl_intel_lp64"
 	    else
 			LAPACK="-lmkl_intel"
 	    fi
 
-	    LAPACK+=" -lmkl_core"
-
 	    if test "$has_omp" = "0"; then
-			LAPACK+=" -lmkl_sequential -lpthread"
+			LAPACK+=" -lmkl_sequential "
 	    else 
 			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
 				LAPACK+=" -lmkl_intel_thread" #OPENMP_CFLAGS was already in CFLAGS
@@ -552,11 +558,14 @@ function set_lapack(){
 				LAPACK+=" -lmkl_gnu_thread"
 			fi
 	    fi
+		LAPACK+=" -lmkl_core"
 	    if test "$type" = "mkl-static" ;then 
+			lapack_mkl_static="yes"
 			LAPACK="-Wl,--start-group,${LAPACK},--end-group"
 			LAPACK=${LAPACK// /,}
 			LAPACK=${LAPACK//,,/,}
 	    fi
+		LAPACK+=" -lpthread -ldl"
 	    ;;
 	pkg-config)
 	    LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
@@ -603,8 +612,8 @@ for try in ${trys}; do
 		set_lapack ${try}
 		if test -n "$LAPACK" ;then
 			#the trailing -lm is necessary for ubuntu-16.04 with mkl
-			AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm])
-			AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK -lm])
+			AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+			AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 		fi
     fi
 done
@@ -702,7 +711,11 @@ if test "$has_chol" = "no" ;then
 	AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [AC_MSG_ERROR([Suitesparse header is not available])])])
 fi
 LDCHOL="-lcholmod"
-
+if test "$lapack_mkl_static" = "yes" ;then
+	: #to prevent libtool reordering problem, embed libchol inside the group. Not working yet.
+	#LAPACK=${LAPACK/-lmkl_core/-lcholmod,-lmkl_core}
+	#LDCHOL=
+fi
 #Check for libwebsocket
 has_lws=no
 if test "$enable_websockets" != "no" ;then
@@ -1034,6 +1047,8 @@ if test "$with_cuda" != "no" ;then
 else
 	if test "$user_enabled_cuda" = "yes" ;then
 		AC_MSG_ERROR([Specified cuda directory $CUDADIR is not valid])
+	elif test "$user_enabled_cuda" = "no" ;then
+		AC_MSG_NOTICE(["User disabled cuda."])
 	else
 		AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR to specify CUDA location to enable CUDA support"])
 	fi

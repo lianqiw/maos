@@ -75,6 +75,16 @@ export src_dir=$(pwd)
 ### Option 3:
 There are released version that comes with `configure`. Use this if the utilities mentioned above are not available. In this case, do not try to update the `configure.ac` file which will trigger regeneration of `configure` and require these utilities.
 ```
+cd ~/work/maos
+#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_linux_amd64-2.8.0.tar.bz2 #for linux
+#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_amd64-2.8.0.tar.bz2 #for macos 
+#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_aarch64-2.8.0.tar.bz2 #for macos apple silicon
+tar xvf maos_*.bz2
+```
+
+### Option 4:
+Instead of compiling the code, there are also pre-compiled binary that can be downloaded. This option works the best when there is no desire to modify the code.
+```
 cd ~/work/programming
 curl -L https://github.com/lianqiw/maos/archive/refs/tags/maos-2.8.0.tar.gz
 cd maos_2.8.0
