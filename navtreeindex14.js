@@ -1,5 +1,6 @@
 var NAVTREEINDEX14 =
 {
+"parms_8h.html#structtomo__cfg__t":[11,0,2,5,9],
 "parms_8h.html#structwfs__cfg__t":[11,0,2,5,6],
 "path_8h.html":[11,0,4,5],
 "path_8h.html#a07766b8acb6b809987722bd8f9bf2700":[11,0,4,5,3],
@@ -248,6 +249,5 @@ var NAVTREEINDEX14 =
 "servo_8h.html#structsho__t":[11,0,1,23,1],
 "shwfs_lgs.html":[4,4,31],
 "shwfs_lo.html":[4,4,32],
-"shwfs_ngs.html":[4,4,33],
-"shwfs_tt.html":[4,4,34]
+"shwfs_ngs.html":[4,4,33]
 };
