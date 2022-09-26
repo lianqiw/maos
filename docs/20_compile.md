@@ -43,38 +43,51 @@ We recommend using different folders to 1) store the source code, 2) compile the
 code (different directory can be used for different compiling options), and 3)
 run simulations.
 
-The source code is where the source is extracted or cloned to. Obtain the
-software in the form of the compressed tar ball: maos_version.tar.gz and extract
-it into some directory and name the directory src_dir. Example:
+## Prerequisites
 
+To build the source code that does not come with `configure`, a few additional utilities are needed: ``` automake, autoconf, libtool, make, cmake ```. 
+In linux, use the native package manage to install. In macOS, we recommend using homebrew (https://brew.sh/) to install. 
+
+## Download the code
+### Option 1:
+The preferred method is to use the always up-to-data Git version:
 ```
 cd ~/work/programming
-tar zxvf maos_version.tar.gz
-cd maos_version
-export src_dir=$(pwd)
-```
-
-To use the always up to data version, clone from github:
-```
-cd ~/work/programming
-git clone https://github.com/lianqiw/maos.git maos_git
-cd maos_git
+git clone https://github.com/lianqiw/maos.git maos
+cd maos
 ./autogen.sh
 export src_dir=$(pwd)
 ```
 
+### Option 2:
+Download the tag version that is not formally released:
+
+```
+cd ~/work/programming
+curl -L https://github.com/lianqiw/maos/archive/refs/tags/v2.8.tar.gz -o maos.tar.gz
+tar xvf maos.tar.gz
+cd maos-2.8
+./autogen.sh
+export src_dir=$(pwd)
+```
+
+
+### Option 3:
+There are released version that comes with `configure`. Use this if the utilities mentioned above are not available. In this case, do not try to update the `configure.ac` file which will trigger regeneration of `configure` and require these utilities.
+```
+cd ~/work/programming
+curl -L https://github.com/lianqiw/maos/archive/refs/tags/maos-2.8.0.tar.gz
+cd maos_2.8.0
+export src_dir=$(pwd)
+```
+## Compile the Code
 Next we create another folder, where we are going to compile the code. example:
 
 ```
 cd ~/work/maos
-mkdir comp/optim && cd comp/optim
+mkdir optim && cd optim
 $src_dir/configure
-make #this will compile using multiple threads.
-```
-
-For clusters that use job management tools, disable the built-in scheduler by using
-```
-$src_dir/configure --disable-scheduler
+make -j4 #this will compile using 4 threads.
 ```
 
 The compiled executable is maos in the sub-folder `bin` of the compiling
@@ -89,11 +102,12 @@ calling configure.
 To use a different compiler or enable debugging:
 ```
 $src_dir/configure CC=icc    #ICC compiler
-$src_dir/configure CC=clang  #clang compiler
+$src_dir/configure CC=clang  #clang compiler. Also used for compiling cuda code if cuda is detected.
 $src_dir/configure CC=gcc4.5 #use gcc4.5
-$src_dir/configure --enable-debug #enable debugging
-$src_dir/configure --disable-openmp #Use pthreads instead of openmp
-$src_dir/configure --disable-double #Use single precision (double is always used for most reduction operation for improved precision)
+$src_dir/configure --enable-debug #enable debugging (debug is not enabled by default)
+$src_dir/configure --disable-openmp #Use pthreads instead of openmp (openmp is the default)
+$src_dir/configure --disable-double #Use single precision (double is the default)
+$src_dir/configure --disable-scheduler #disable the built-in scheduler (for CPU cluster with job management)
 ```
 
 \subsection sect-cuda GPU acceleration
@@ -146,7 +160,7 @@ supported. Make sure pkg-config is in the path.
 Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now. To select gtk version when multiple ones are available:
 ```
 $src_dir/configure --disable-gtk-3 #disables gtk-3
-$src_dir/configure --disable-gtk-2 #disable gtk-2
+$src_dir/configure --disable-gtk-2 #disable gtk-2 (gtk-3 is used by default)
 ```
 
 # Graphical User Interface
