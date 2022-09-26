@@ -105,13 +105,21 @@ $(document).ready(function(){initNavTree('page20_compile.html','');});
 <li class="level2"><a href="#sect-mac-gtk">Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon</a></li>
 </ul>
 <li class="level1"><a href="#autotoc_md0">Requirements</a></li>
-<li class="level1"><a href="#autotoc_md1">Preparing the folders and compiling</a></li>
-<li class="level1"><a href="#autotoc_md2">Graphical User Interface</a><ul><li class="level2"><a href="#autotoc_md3">Monitor</a></li>
-<li class="level2"><a href="#autotoc_md4">Drawdaemon</a></li>
-<li class="level2"><a href="#autotoc_md5">Plotting results</a></li>
+<li class="level1"><a href="#autotoc_md1">Preparing the folders and compiling</a><ul><li class="level2"><a href="#autotoc_md2">Prerequisites</a></li>
+<li class="level2"><a href="#autotoc_md3">Download the code</a><ul><li class="level3"><a href="#autotoc_md4">Option 1:</a></li>
+<li class="level3"><a href="#autotoc_md5">Option 2:</a></li>
+<li class="level3"><a href="#autotoc_md6">Option 3:</a></li>
 </ul>
 </li>
-<li class="level1"><a href="#autotoc_md6">Python Scripts</a><ul><li class="level2"><a href="#autotoc_md7">Interface to MAOS</a></li>
+<li class="level2"><a href="#autotoc_md7">Compile the Code</a></li>
+</ul>
+</li>
+<li class="level1"><a href="#autotoc_md8">Graphical User Interface</a><ul><li class="level2"><a href="#autotoc_md9">Monitor</a></li>
+<li class="level2"><a href="#autotoc_md10">Drawdaemon</a></li>
+<li class="level2"><a href="#autotoc_md11">Plotting results</a></li>
+</ul>
+</li>
+<li class="level1"><a href="#autotoc_md12">Python Scripts</a><ul><li class="level2"><a href="#autotoc_md13">Interface to MAOS</a></li>
 </ul>
 </li>
 </ul>
@@ -134,13 +142,26 @@ Requirements</h1>
 <h1><a class="anchor" id="autotoc_md1"></a>
 Preparing the folders and compiling</h1>
 <p>We recommend using different folders to 1) store the source code, 2) compile the code (different directory can be used for different compiling options), and 3) run simulations.</p>
-<p>The source code is where the source is extracted or cloned to. Obtain the software in the form of the compressed tar ball: maos_version.tar.gz and extract it into some directory and name the directory src_dir. Example:</p>
-<div class="fragment"><div class="line">cd ~/work/programming</div><div class="line">tar zxvf maos_version.tar.gz</div><div class="line">cd maos_version</div><div class="line">export src_dir=$(pwd)</div></div><!-- fragment --><p>To use the always up to data version, clone from github: </p><div class="fragment"><div class="line">cd ~/work/programming</div><div class="line">git clone https://github.com/lianqiw/maos.git maos_git</div><div class="line">cd maos_git</div><div class="line">./autogen.sh</div><div class="line">export src_dir=$(pwd)</div></div><!-- fragment --><p>Next we create another folder, where we are going to compile the code. example:</p>
-<div class="fragment"><div class="line">cd ~/work/maos</div><div class="line">mkdir comp/optim &amp;&amp; cd comp/optim</div><div class="line">$src_dir/configure</div><div class="line">make #this will compile using multiple threads.</div></div><!-- fragment --><p>For clusters that use job management tools, disable the built-in scheduler by using </p><div class="fragment"><div class="line">$src_dir/configure --disable-scheduler</div></div><!-- fragment --><p>The compiled executable is maos in the sub-folder <code>bin</code> of the compiling folder. You do not have to do <code>make install</code> to run the simulations.</p>
+<h2><a class="anchor" id="autotoc_md2"></a>
+Prerequisites</h2>
+<p>To build the source code that does not come with <code>configure</code>, a few additional utilities are needed: <code>automake, autoconf, libtool, make, cmake</code>. In linux, use the native package manage to install. In macOS, we recommend using homebrew (<a href="https://brew.sh/">https://brew.sh/</a>) to install.</p>
+<h2><a class="anchor" id="autotoc_md3"></a>
+Download the code</h2>
+<h3><a class="anchor" id="autotoc_md4"></a>
+Option 1:</h3>
+<p>The preferred method is to use the always up-to-data Git version: </p><div class="fragment"><div class="line">cd ~/work/programming</div><div class="line">git clone https://github.com/lianqiw/maos.git maos</div><div class="line">cd maos</div><div class="line">./autogen.sh</div><div class="line">export src_dir=$(pwd)</div></div><!-- fragment --><h3><a class="anchor" id="autotoc_md5"></a>
+Option 2:</h3>
+<p>Download the tag version that is not formally released:</p>
+<div class="fragment"><div class="line">cd ~/work/programming</div><div class="line">curl -L https://github.com/lianqiw/maos/archive/refs/tags/v2.8.tar.gz -o maos.tar.gz</div><div class="line">tar xvf maos.tar.gz</div><div class="line">cd maos-2.8</div><div class="line">./autogen.sh</div><div class="line">export src_dir=$(pwd)</div></div><!-- fragment --><h3><a class="anchor" id="autotoc_md6"></a>
+Option 3:</h3>
+<p>There are released version that comes with <code>configure</code>. Use this if the utilities mentioned above are not available. In this case, do not try to update the <code>configure.ac</code> file which will trigger regeneration of <code>configure</code> and require these utilities. </p><div class="fragment"><div class="line">cd ~/work/programming</div><div class="line">curl -L https://github.com/lianqiw/maos/archive/refs/tags/maos-2.8.0.tar.gz</div><div class="line">cd maos_2.8.0</div><div class="line">export src_dir=$(pwd)</div></div><!-- fragment --> <h2><a class="anchor" id="autotoc_md7"></a>
+Compile the Code</h2>
+<p>Next we create another folder, where we are going to compile the code. example:</p>
+<div class="fragment"><div class="line">cd ~/work/maos</div><div class="line">mkdir optim &amp;&amp; cd optim</div><div class="line">$src_dir/configure</div><div class="line">make -j4 #this will compile using 4 threads.</div></div><!-- fragment --><p>The compiled executable is maos in the sub-folder <code>bin</code> of the compiling folder. You do not have to do <code>make install</code> to run the simulations.</p>
 <h2><a class="anchor" id="sect-compiler"></a>
 Compiler options</h2>
 <p>The default compiler for the system is used with optimization flags. There are a few optional switches or additional components that can be enabled when calling configure.</p>
-<p>To use a different compiler or enable debugging: </p><div class="fragment"><div class="line">$src_dir/configure CC=icc    #ICC compiler</div><div class="line">$src_dir/configure CC=clang  #clang compiler</div><div class="line">$src_dir/configure CC=gcc4.5 #use gcc4.5</div><div class="line">$src_dir/configure --enable-debug #enable debugging</div><div class="line">$src_dir/configure --disable-openmp #Use pthreads instead of openmp</div><div class="line">$src_dir/configure --disable-double #Use single precision (double is always used for most reduction operation for improved precision)</div></div><!-- fragment --><h2><a class="anchor" id="sect-cuda"></a>
+<p>To use a different compiler or enable debugging: </p><div class="fragment"><div class="line">$src_dir/configure CC=icc    #ICC compiler</div><div class="line">$src_dir/configure CC=clang  #clang compiler. Also used for compiling cuda code if cuda is detected.</div><div class="line">$src_dir/configure CC=gcc4.5 #use gcc4.5</div><div class="line">$src_dir/configure --enable-debug #enable debugging (debug is not enabled by default)</div><div class="line">$src_dir/configure --disable-openmp #Use pthreads instead of openmp (openmp is the default)</div><div class="line">$src_dir/configure --disable-double #Use single precision (double is the default)</div><div class="line">$src_dir/configure --disable-scheduler #disable the built-in scheduler (for CPU cluster with job management)</div></div><!-- fragment --><h2><a class="anchor" id="sect-cuda"></a>
 GPU acceleration</h2>
 <p>To enable GPU computing, first install nvidia graphics driver and cuda software development toolkit (SDK). Issue the following command to ensure graphics configuration is correct: <code>nvidia-smi</code>. You should see all your nvidia graphics gpus are listed.</p>
 <p>The configure can automatically detect cuda if nvcc is in the path, or if cuda is installed in /usr/local/cuda. For other locations, you need to pass the cuda directory to configure:</p>
@@ -158,7 +179,7 @@ Matlab Mex Routines</h2>
 <h2><a class="anchor" id="sect-mac-gtk"></a>
 Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon</h2>
 <p>For macOS, it is simplest to install gtk and gtk-mac-integration. using macport or homebrew. No additional configuration is required. For manual install, follow the instructions on <a href="https://www.gtk.org/docs/installations/">page</a> to install gtk+ for osx and configure the envirionmental parameters. Version 2 and 3 are supported. Make sure pkg-config is in the path.</p>
-<p>Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now. To select gtk version when multiple ones are available: </p><div class="fragment"><div class="line">$src_dir/configure --disable-gtk-3 #disables gtk-3</div><div class="line">$src_dir/configure --disable-gtk-2 #disable gtk-2</div></div><!-- fragment --><h1><a class="anchor" id="autotoc_md2"></a>
+<p>Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now. To select gtk version when multiple ones are available: </p><div class="fragment"><div class="line">$src_dir/configure --disable-gtk-3 #disables gtk-3</div><div class="line">$src_dir/configure --disable-gtk-2 #disable gtk-2 (gtk-3 is used by default)</div></div><!-- fragment --><h1><a class="anchor" id="autotoc_md8"></a>
 Graphical User Interface</h1>
 <p>When GTK+ libraries are found in the system, additional executables will be compiled, <code>drawdaemon</code>, <code>drawres</code>, <code>drawbin</code> and <code>monitor</code> in the <code>bin</code> folder.</p>
 <ul>
@@ -167,7 +188,7 @@ Graphical User Interface</h1>
 <li>The <code>drawres</code> can be used to automatically plot the results folder.</li>
 <li>The <code>drawbin</code> can be used to automatically plot the OPDs or maps.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md3"></a>
+<h2><a class="anchor" id="autotoc_md9"></a>
 Monitor</h2>
 <p>In order to use monitor to monitor jobs in different machines, follow these steps:</p>
 <p>Create a folder .aos in your home folder, create two files in there. Put these files in all the machines you want to monitor.</p>
@@ -176,15 +197,15 @@ Monitor</h2>
 <li><code>~/</code>.aos/port contains the port you want the <code>scheduler</code> to bind to so that the monitor can connect to it. Any non-privileged port numbers are fine (like 10000). Different users should have different port number. The port has to be the same on all the machines unless explicitly specified in <code>hosts</code>. If not set, the number will be automatically computed based on username. Make sure the firewall allows them.</li>
 <li>Please be aware that no authentication is performed. The user should make sure such ports are protected.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md4"></a>
+<h2><a class="anchor" id="autotoc_md10"></a>
 Drawdaemon</h2>
 <p>Once the monitor is running, it will display running jobs on each connected host. Right click on a running job and select <code>Plot selected jobs</code> will launch drawdaemon and start plotting the telemetry data in realtime. This works for local and remote host. Multiple drawdaemon windows can be started for the same or different jobs.</p>
 <p>An alternative way to launch drawdaemon is to include <code>plot.setup=1</code> <code>plot.run=1</code> or <code>plot.all=1</code> in maos command line.</p>
 <p>Remote plotting: when a job is running remotely or in a headless machine, and <code>drawres</code>, <code>drawbin</code>, or <code>maos</code> plotting is issued, the <code>monitor</code> can open a <code>drawdaemon</code> in the local computer and plot remotely.</p>
-<h2><a class="anchor" id="autotoc_md5"></a>
+<h2><a class="anchor" id="autotoc_md11"></a>
 Plotting results</h2>
 <p><code>$drawres result_folder</code> #can be used to plot the results. Wildcards are supported to match many folders. It will launch drawdaemon using an active monitor in a remote machine if the current shell does not have DISPLAY set. This can be used to view results remotely.</p>
-<h1><a class="anchor" id="autotoc_md6"></a>
+<h1><a class="anchor" id="autotoc_md12"></a>
 Python Scripts</h1>
 <p>MAOS comes with a few useful python routines location in <code>scripts/</code> folder:</p>
 <ul>
@@ -196,7 +217,7 @@ Python Scripts</h1>
 <li><code>maos_client</code> provides an interface to a running maos session. See next subsection.</li>
 </ul>
 <p>For <code>libaos.py</code> to work, an environment variable <code>MAOS_AOLIB</code> need to set to the path of <code>aolib.so</code> or <code>aolib.dylib</code></p>
-<h2><a class="anchor" id="autotoc_md7"></a>
+<h2><a class="anchor" id="autotoc_md13"></a>
 Interface to MAOS</h2>
 <p>It is possible to retrieve or override MAOS internal data when it is running. See the following steps:</p>
 <p>First, set up shell environment so that the libaos.py can find it.</p>

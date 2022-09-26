@@ -28,18 +28,26 @@ var NAVTREE =
     [ "Introduction", "page10_intro.html", null ],
     [ "Compile the Code", "page20_compile.html", [
       [ "Requirements", "page20_compile.html#autotoc_md0", null ],
-      [ "Preparing the folders and compiling", "page20_compile.html#autotoc_md1", null ],
-      [ "Graphical User Interface", "page20_compile.html#autotoc_md2", [
+      [ "Preparing the folders and compiling", "page20_compile.html#autotoc_md1", [
         [ "Compiler options", "page20_compile.html#sect-compiler", null ],
         [ "GPU acceleration", "page20_compile.html#sect-cuda", null ],
         [ "Matlab Mex Routines", "page20_compile.html#sect-mex", null ],
         [ "Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon", "page20_compile.html#sect-mac-gtk", null ],
-        [ "Monitor", "page20_compile.html#autotoc_md3", null ],
-        [ "Drawdaemon", "page20_compile.html#autotoc_md4", null ],
-        [ "Plotting results", "page20_compile.html#autotoc_md5", null ]
+        [ "Prerequisites", "page20_compile.html#autotoc_md2", null ],
+        [ "Download the code", "page20_compile.html#autotoc_md3", [
+          [ "Option 1:", "page20_compile.html#autotoc_md4", null ],
+          [ "Option 2:", "page20_compile.html#autotoc_md5", null ],
+          [ "Option 3:", "page20_compile.html#autotoc_md6", null ]
+        ] ],
+        [ "Compile the Code", "page20_compile.html#autotoc_md7", null ]
       ] ],
-      [ "Python Scripts", "page20_compile.html#autotoc_md6", [
-        [ "Interface to MAOS", "page20_compile.html#autotoc_md7", null ]
+      [ "Graphical User Interface", "page20_compile.html#autotoc_md8", [
+        [ "Monitor", "page20_compile.html#autotoc_md9", null ],
+        [ "Drawdaemon", "page20_compile.html#autotoc_md10", null ],
+        [ "Plotting results", "page20_compile.html#autotoc_md11", null ]
+      ] ],
+      [ "Python Scripts", "page20_compile.html#autotoc_md12", [
+        [ "Interface to MAOS", "page20_compile.html#autotoc_md13", null ]
       ] ]
     ] ],
     [ "Run simulations", "page30_run.html", [
@@ -61,52 +69,52 @@ var NAVTREE =
         [ "Python", "page40_results.html#sect-python", null ],
         [ "IDL", "page40_results.html#sect-idl", null ],
         [ "FITS", "page40_results.html#sect-fits", null ],
-        [ "Python", "page40_results.html#autotoc_md9", null ],
-        [ "Matlab", "page40_results.html#autotoc_md10", null ]
+        [ "Python", "page40_results.html#autotoc_md15", null ],
+        [ "Matlab", "page40_results.html#autotoc_md16", null ]
       ] ],
-      [ "Plotting Results", "page40_results.html#autotoc_md11", null ],
-      [ "Reading Results", "page40_results.html#autotoc_md12", [
-        [ ".bin file format", "page40_results.html#autotoc_md13", null ],
-        [ "MATLAB", "page40_results.html#autotoc_md14", null ]
+      [ "Plotting Results", "page40_results.html#autotoc_md17", null ],
+      [ "Reading Results", "page40_results.html#autotoc_md18", [
+        [ ".bin file format", "page40_results.html#autotoc_md19", null ],
+        [ "MATLAB", "page40_results.html#autotoc_md20", null ]
       ] ],
-      [ "Result Files", "page40_results.html#autotoc_md15", [
-        [ "Wavefront error", "page40_results.html#autotoc_md16", null ],
-        [ "Split tomography", "page40_results.html#autotoc_md17", null ],
-        [ "Log files", "page40_results.html#autotoc_md18", null ],
-        [ "PSF", "page40_results.html#autotoc_md19", null ],
-        [ "Other", "page40_results.html#autotoc_md20", null ]
+      [ "Result Files", "page40_results.html#autotoc_md21", [
+        [ "Wavefront error", "page40_results.html#autotoc_md22", null ],
+        [ "Split tomography", "page40_results.html#autotoc_md23", null ],
+        [ "Log files", "page40_results.html#autotoc_md24", null ],
+        [ "PSF", "page40_results.html#autotoc_md25", null ],
+        [ "Other", "page40_results.html#autotoc_md26", null ]
       ] ],
       [ "Geometry Data", "page40_results.html#geometry", null ],
       [ "Telemetry Data", "page40_results.html#telemetry", null ]
     ] ],
     [ "NFIRAOS Performance", "page43_nfiraos.html", [
-      [ "Turbulence profile", "page43_nfiraos.html#autotoc_md21", null ],
-      [ "AO Performance", "page43_nfiraos.html#autotoc_md22", [
-        [ "NFIRAOS", "page43_nfiraos.html#autotoc_md23", null ],
-        [ "IRIS Imager", "page43_nfiraos.html#autotoc_md24", [
-          [ "Wavefront error", "page43_nfiraos.html#autotoc_md25", null ],
-          [ "J band Strehl Ratio", "page43_nfiraos.html#autotoc_md26", null ],
-          [ "H band Strehl Ratio", "page43_nfiraos.html#autotoc_md27", null ],
-          [ "K band Strehl Ratio", "page43_nfiraos.html#autotoc_md28", null ]
+      [ "Turbulence profile", "page43_nfiraos.html#autotoc_md27", null ],
+      [ "AO Performance", "page43_nfiraos.html#autotoc_md28", [
+        [ "NFIRAOS", "page43_nfiraos.html#autotoc_md29", null ],
+        [ "IRIS Imager", "page43_nfiraos.html#autotoc_md30", [
+          [ "Wavefront error", "page43_nfiraos.html#autotoc_md31", null ],
+          [ "J band Strehl Ratio", "page43_nfiraos.html#autotoc_md32", null ],
+          [ "H band Strehl Ratio", "page43_nfiraos.html#autotoc_md33", null ],
+          [ "K band Strehl Ratio", "page43_nfiraos.html#autotoc_md34", null ]
         ] ],
-        [ "MODHIS", "page43_nfiraos.html#autotoc_md29", null ]
+        [ "MODHIS", "page43_nfiraos.html#autotoc_md35", null ]
       ] ]
     ] ],
     [ "Algorithms", "algorithm.html", [
       [ "DM Actuator Influence Function", "algorithm.html#sect-dm-actuator", [
-        [ "Linear influence function", "algorithm.html#autotoc_md30", null ],
-        [ "Cubic influence function", "algorithm.html#autotoc_md31", null ]
+        [ "Linear influence function", "algorithm.html#autotoc_md36", null ],
+        [ "Cubic influence function", "algorithm.html#autotoc_md37", null ]
       ] ],
       [ "DM Hysteresis", "algorithm.html#hysteresis", null ],
       [ "Physical Optics Beam Propagation", "algorithm.html#pop", [
-        [ "Maxwell Equation", "algorithm.html#autotoc_md32", null ],
-        [ "Fresnel diffraction integral", "algorithm.html#autotoc_md33", null ],
-        [ "Fresnel approximation", "algorithm.html#autotoc_md34", [
-          [ "Angular Spectrum", "algorithm.html#autotoc_md35", null ],
-          [ "Single FFT", "algorithm.html#autotoc_md36", null ]
+        [ "Maxwell Equation", "algorithm.html#autotoc_md38", null ],
+        [ "Fresnel diffraction integral", "algorithm.html#autotoc_md39", null ],
+        [ "Fresnel approximation", "algorithm.html#autotoc_md40", [
+          [ "Angular Spectrum", "algorithm.html#autotoc_md41", null ],
+          [ "Single FFT", "algorithm.html#autotoc_md42", null ]
         ] ],
-        [ "Fraunhofer approximation", "algorithm.html#autotoc_md37", null ],
-        [ "Sphere to sphere propagation", "algorithm.html#autotoc_md38", null ]
+        [ "Fraunhofer approximation", "algorithm.html#autotoc_md43", null ],
+        [ "Sphere to sphere propagation", "algorithm.html#autotoc_md44", null ]
       ] ]
     ] ],
     [ "Development", "page90_devel.html", "page90_devel" ],
@@ -146,16 +154,16 @@ var NAVTREEINDEX =
 "maos_2types_8h.html#a94883ef7919c01b79ed74f9b80442cc1",
 "maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822",
 "mvm__direct_8cu.html#a876e62ded10948d3801432dee1554415",
-"page20_compile.html#autotoc_md5",
-"parms_8h.html#a553decf85f94aa8adf69977f9682e4e4",
-"parms_8h.html#ab08542e404fce2214ce876388e4ca131",
-"path_8h.html#a784b65d0a2c65638f3f35f7f9849ed29",
-"sim_8h.html#a4aa8e0cc5984b2881e54c0000ae754ae",
-"smath_8h.html#ae567c6c6eed0316a1a41c645169d9ea5",
-"sys_2misc_8h.html#a8fa8b5dc90e560f9b2c3909b134e69a8",
+"page20_compile.html#autotoc_md13",
+"parms_8h.html#a5385c7f5ffc8fc92b21e42a89213f394",
+"parms_8h.html#aaeb77ce3cefb2e3282964b3fceec2c08",
+"parms_8h.html#structwfs__cfg__t",
+"shwfs_ttf.html",
+"smath_8h.html#adcb987c541512b7a33c3e136b92990f2",
+"sys_2misc_8h.html#a788ff2d4c1eb23bf8146aff728d08980",
 "type_8h.html#a531beb50ffb32d08756e6462c037c8e1",
-"type_8h.html#ab80bb7740288fda1f201890375a60c8f",
-"zmath_8h.html#a1ce2fef103abd9be3874bf5b8b78de25"
+"type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764",
+"zmath_8h.html#a178673ff3750e0818e6d88a94207f6c8"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
