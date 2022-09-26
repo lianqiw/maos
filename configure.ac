@@ -232,7 +232,7 @@ fi
 if test "$enable_release" = "yes" ;then
     enable_scheduler="no"
     enable_websockets="no"
-	enable_allstatic="yes"
+	#enable_allstatic="yes" #do not enable as github pipeline uses this option. mkl requires manual fix for allstatic option
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
@@ -612,8 +612,8 @@ for try in ${trys}; do
 		set_lapack ${try}
 		if test -n "$LAPACK" ;then
 			#the trailing -lm is necessary for ubuntu-16.04 with mkl
-			AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-			AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+			AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm])
+			AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK -lm])
 		fi
     fi
 done
