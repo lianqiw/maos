@@ -28,7 +28,7 @@ var NAVTREE =
     [ "Introduction", "page10_intro.html", null ],
     [ "Compile the Code", "page20_compile.html", [
       [ "Requirements", "page20_compile.html#autotoc_md0", null ],
-      [ "Preparing the folders and compiling", "page20_compile.html#autotoc_md1", [
+      [ "Compiling", "page20_compile.html#autotoc_md1", [
         [ "Compiler options", "page20_compile.html#sect-compiler", null ],
         [ "GPU acceleration", "page20_compile.html#sect-cuda", null ],
         [ "Matlab Mex Routines", "page20_compile.html#sect-mex", null ],
