@@ -1157,6 +1157,6 @@ echo "CMOCKA:          $enable_cmocka"
 echo
 
 echo "*************************************************************************"
-echo "*** MAOS Documentation can be found at http://lianqiw.github.io/maos ***"
-echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos     ***"
+echo "*** MAOS Documentation can be found at https://lianqiw.github.io/maos ***"
+echo "*** MAOS Source can be obtained at https://github.com/lianqiw/maos     ***"
 echo "*************************************************************************"
