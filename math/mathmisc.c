@@ -34,7 +34,7 @@ long double factorial(long n1, long n2){
 	while(n2>=n1){
 		fact*=n2--;
 	}
-	if(!isfinite(fact)){
+	if(isinf(fact)){
 		error("Factorial overflows\n");
 	}
 	return fact;

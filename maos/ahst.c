@@ -340,7 +340,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 		if(isnan(hs)){
 			hs=parms->powfs[ipowfs].hs;
 		} else{
-			if(isfinite(hs)||isfinite(parms->powfs[ipowfs].hs)){
+			if(!isinf(hs)||!isinf(parms->powfs[ipowfs].hs)){
 				if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
 					//High order GS at different altitude.
 					hs=INFINITY; break;
@@ -349,7 +349,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 		}
 	}
 	ngsmod->nmod=2; //Basic tip/tilt mode.
-	if(isfinite(hs)){
+	if(!isinf(hs)){
 	//LGS WFS.
 		if(ndm>1&&parms->evl.nevl>1){//Plate scale mode for multi-dm with fov
 			ngsmod->indps=ngsmod->nmod;
@@ -688,7 +688,11 @@ void ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	}
 	const real thetax=P(parms->evl.thetax,ievl);
 	const real thetay=P(parms->evl.thetay,ievl);
+#if CPU_SINGLE	
 	real coeff2[6]={coeff[0],coeff[1],coeff[2],coeff[3],coeff[4],coeff[5]};
+#else
+	#define coeff2 coeff
+#endif	
 	ngsmod_dot_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff2, ngsmod, aper, thetax, thetay);
 }
 /**

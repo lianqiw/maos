@@ -162,7 +162,7 @@ static real sde_diff(const real* coeff, void* pdata){
 #endif
 		}
 	}
-	if(!isfinite(diff)){
+	if(isinf(diff)){
 		error("Diff is not finite\n");
 	}
 	/*info2("coeff=");
@@ -230,7 +230,7 @@ static dmat* sde_fit_do(const dmat* psdin, const dmat* coeff0, real tmax_fit){
 		//writebin(psdcov_in, "in_psd");
 		psd2cov(psdcov_in, df);
 		var_in=P(psdcov_in,0);
-		if(!isfinite(P(psdcov_in,0))){
+		if(isinf(P(psdcov_in,0))){
 			warning("covariance is not finite at 0\n");
 			writebin(psdcov_in, "bad_cov");
 		}

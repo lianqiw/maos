@@ -1419,7 +1419,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			}
 			if(intstat->i0->header){
 				real dt=search_header_num(intstat->i0->header, "dt");
-				if(isfinite(dt)){
+				if(!isinf(dt)){
 					real ratio=parms->sim.dt*parms->powfs[ipowfs].dtrat/dt;
 					info("Scale loaded i0/gx/gy by %g\n", ratio);
 					dcellscale(intstat->i0, ratio);

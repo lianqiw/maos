@@ -28,7 +28,7 @@ const char* cufft_str[]={
 	"invalid value",
 	"internal errlr",
 	"exec failed (error elsewhere caused cufft to fail)",
-	"setup failed"
+	"setup failed",
 	"invalid size"
 };
 #ifndef I
@@ -77,7 +77,7 @@ cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	int tocsr,        /**<0: Keep in CSC. 1: Convert to CSR */
 	int transp        /**<1: transpose*/
 )
-	:p(NULL), i(NULL), x(NULL), nx(0), ny(0), nzmax(0), type(tocsr?SP_CSR:SP_CSC), nref(0){
+	:p(NULL), i(NULL), x(NULL), nx(0), ny(0), nzmax(0), nref(0), type(tocsr?SP_CSR:SP_CSC){
 	if(!src_csc) return;
 	dsp* src_trans=0;
 	const dsp* src=0;

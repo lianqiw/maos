@@ -59,36 +59,48 @@ die(){
     shift
     AC_MSG_ERROR(["Error:$@"])
 }
+#CPPFLAGS are for C/C++ preprocessor. Use it for -D, -I flags
+#CFLAGS are for C compiler
+#CXXFLAGS are for C++ compiler
+OPTS_CPU= # are for CPU code only
 LDOPTS=
 LDEXE=
 LDRT=
 OPTS=
+CUDAOPT= #options for CUDA
 USE_CPP=0
 #find the real flavor of CC
-CCv=`$CC -v 2>&1`
-if grep "clang++" <<< $CCv ;then
-    CN=CLANG
-    USE_CPP=1
-elif grep "DPC++" <<< $CCv ;then	
-  	CN=CLANG
-	LDOPTS+=" -limf"
-	INTEL=1
-elif grep clang <<< $CCv ;then
-    CN=CLANG
-elif grep icpc <<< $CCv ;then
-    CN=ICC
-    USE_CPP=1
-elif grep icc <<< $CCv ;then
-    CN=ICC
-elif grep g++ <<< $CCv ;then
-    CN=GCC
-    USE_CPP=1
-elif grep gcc <<< $CCv ;then
-    CN=GCC
-else
-    CN=GCC
-    AC_MSG_ERROR([Compiler $CC is unknown])
-fi
+case `$CC -v 2>&1` in
+	*clang++*)
+	    CN=CLANG
+    	USE_CPP=1
+		;;
+	*DPC++*) #New intel compilar with clang backend
+	  	CN=CLANG
+		LDOPTS+=" -limf"
+		INTEL=1
+		;;
+	*clang*)
+	    CN=CLANG
+		;;
+	*icpc*) #Old intel compiler
+    	CN=ICC
+    	USE_CPP=1
+		;;
+	*icc*) #Old intel compiler
+    	CN=ICC
+		;;
+	*g++*)
+	    CN=GCC
+    	USE_CPP=1
+		;;
+	*gcc*)
+	    CN=GCC
+		;;
+	*)
+    	CN=GCC
+    	AC_MSG_ERROR([Compiler $CC is unknown])
+esac
 AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], ["Whether MAOS is using C++ compiler"])
 AM_CONDITIONAL(GCC, [test x$CN = xGCC])
 AM_CONDITIONAL(ICC, [test x$CN = xICC])
@@ -116,7 +128,7 @@ case "$CN" in
 	;;
     CLANG)
 		if test "$system" = "apple" ;then
-			CFLAGS+=" -stdlib=libc++"
+			CUDAOPT+=" -stdlib=libc++"
 		fi
 	;;
     *)
@@ -243,14 +255,17 @@ if test "${USER}" = "lianqiw" ;then
 fi
 
 COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers" 
-#Set optimize flags for different compilers
-#-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-#COMMON_GCC+=" " #gcc-4.8 error
-COMMON_CLANG+=" -Wno-sign-compare -Wno-error=pass-failed" #CLANG has false positive in detecting sign comparison.
+COMMON_CLANG=" -Wno-error=pass-failed -Wno-pass-failed" 
+COMMON_CLANG+=" -Wno-sign-compare" #CLANG has false positive in detecting sign comparison.
+#Set optimize flags for different compilers
+OPTIM_ALL="-g -O3 -mtune=native -ftree-vectorize -ffast-math -fno-finite-math-only"
 
-OPTIM_ALL="-g -O3 -mtune=native "
-OPTIM_GCC="-ftree-vectorize -ffast-math -fno-finite-math-only "
+OPTS_CPU+=" -fopenmp-simd" #Only to be used for CPU code. 
+if test "$INTEL" = "1" ;then
+	OPTIM_CLANG+=" -fp-model=precise " 
+	OPTS_CPU+=" -qopenmp-simd"
+fi
 
 DEBUG_ALL="-g3 -O0 -DDEBUG_TRACE" #-og
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls " #-fsanitize=address"
@@ -276,9 +291,9 @@ optname1=COMMON_ALL
 optname2=COMMON_${CN}
 optname3=${ccprefix}_ALL
 optname4=${ccprefix}_${CN}
-echo OPTScc from "${optname1} ${optname2} ${optname3} ${optname4}"
-OPTScc="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
-echo OPTScc=$OPTScc
+echo OPTS_CC from "${optname1} ${optname2} ${optname3} ${optname4}"
+OPTS_CC="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
+echo OPTS_CC=$OPTS_CC
 unset optname1 optname2 optname3 optname4
 
 #Used for embedding conf folder in maos exe
@@ -296,23 +311,29 @@ case "$host_os" in
     *linux*)
 		AM_CONDITIONAL(LINUX, true)
 		LDRT=" -lrt" #need real time library.
-		LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
+		#RUNPATH is not used for dlopen. RPATH is. disable-new-dtags uses RPATH instead of RUNPATH
+		LDOPTS+=" -Wl,--no-as-needed,--disable-new-dtags" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 		CFLAGS+=" -fPIC"
 		#The following are needed when no gnu extension is used.
-		#CFLAGS_EXTRA=" -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
-		CFLAGS_EXTRA=" -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L"
+		#OPTS+=" -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
+		OPTS+=" -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L"
 		if test "$INTEL" = "1" ;then
-			CFLAGS_EXTRA+=" -D_DEFAULT_SOURCE " #DEFAULT_SOURCE is needed for oneAPI clang
+			OPTS+=" -D_DEFAULT_SOURCE " #DEFAULT_SOURCE is needed for oneAPI clang
 		fi			
-		#CFLAGS_EXTRA=" -D_DEFAULT_SOURCE "
 		if test "$enable_release" = "yes" ;then
-			CFLAGS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective
+			OPTS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective
 		fi
 		case ${host_cpu} in
-			*64)
+			aarch64|arm64)
+				libsuffix="arm64"
+			;;
+			arm|arm32)
+				libsuffix="arm32"
+			;;
+			x86_64|amd64)
 				libsuffix="64"
 			;;
-			*32)
+			*86|*32)
 				libsuffix="32"
 			;;
 			*)
@@ -327,7 +348,6 @@ case "$host_os" in
     *darwin*)
 		AM_CONDITIONAL(DARWIN, true)
 		CFLAGS+=" -fPIC"
-		CFLAGS_EXTRA=
 		mkl_avail="no"
 		system="apple"
 		ldsuffix="dylib"
@@ -338,9 +358,6 @@ case "$host_os" in
 			libsuffix=a64
 		else
 			libsuffix=fat
-		fi
-		if test "$CN" = "CLANG" ;then
-			CFLAGS+=" -stdlib=libc++"
 		fi
 		LDSO="-Wl,-undefined,error" #force an error if symbols are not resolved.
 	;;
@@ -354,11 +371,8 @@ case "$host_os" in
 		system="win"
 		ldsuffix="dll"
 	;;
-    none)
-		AC_MSG_NOTICE([OS is none])
-	;;
     *)
-	AC_MSG_ERROR([Unrecognized OS])
+		AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
 
@@ -366,7 +380,7 @@ AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
 PRE_DIR="${HOME}/.aos"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
+LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version . 
 CPPFLAGS+=" -I${PRE_DIR}/include " #use CPPFLAGS so that the preprocessor can also use it.
 PATH+=":${PRE_DIR}/bin"
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
@@ -468,56 +482,43 @@ AS_IF([test "$enable_openmp" = "yes"], [
 			unset ac_cv_lib_omp_omp_set_num_threads
 			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 		])
-		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" CPPFLAGS+="$OPENMP_CFLAGS" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
+		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
 	], [
-		AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp="0"], [CFLAGS+=" $OPENMP_CFLAGS" has_omp="1"])
+		AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp="0"], [has_omp="1"])
 	])
 ],[
 	has_omp="0"
 ])
+#Don't add OPENMP_CFLAGS to CFLAGS yet to avoid building external library with the flag
 AS_IF([test "$has_omp" = "0"], [CFLAGS+=" -pthread"])
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
 AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_omp], ["Defined to 1 if Openmp is enabled"])
-
-OPTS+=" $CFLAGS_EXTRA "
-if test "$system" = "win" ;then
-    LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
-fi
-case $host_cpu in
-	x86_64)
-    	CFLAGS+=" -DDLONG "
-    	mflag="-m64"
-	;;
-	*64)
-		CFLAGS+=" -DDLONG "
-	;;
-	*86)
-    	CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
-    	mflag="-m32"
-	;;
-esac
-if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
-    CFLAGS+=" $mflag"
-fi
-unset mflag
 
 AM_CONDITIONAL(USE_SCHEDULER, [test "$enable_scheduler" != "no"])
 if test "$enable_scheduler" = "no" ;then
     AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
     enable_websockets="no"
 fi
+
+if test "$system" = "win" ;then
+    LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
+fi
+
 case $host_cpu in
 	*64)
-    	chol_fun=cholmod_l_factorize
-    	AM_CONDITIONAL(USE_LONG, true)
-		;;
+		chol_fun=cholmod_l_factorize
+		bitwidth=64
+	;;
 	*86)
-	    chol_fun=cholmod_factorize
-    	AM_CONDITIONAL(USE_LONG, false)
-		;;
+    	CPPFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
+		chol_fun=cholmod_factorize
+		bitwidth=32
+	;;
 	*)
-		AC_MSG_ERROR([Invalid host_cpu=$host_cpu])
+		AC_MSG_ERROR([Unknown host_cpu])
+	;;
 esac
+AC_DEFINE_UNQUOTED(CPU_WIDTH, $bitwidth, "bit width of CPU")
 
 LDEXE+="$LDRT " #-static" #show that we prefer static linking.
 AM_CONDITIONAL(USE_STATIC, [test "x$enable_allstatic" = "xyes"])
@@ -553,9 +554,9 @@ function set_lapack(){
 			LAPACK+=" -lmkl_sequential "
 	    else 
 			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
-				LAPACK+=" -lmkl_intel_thread" #OPENMP_CFLAGS was already in CFLAGS
+				LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS" #OPENMP_CFLAGS was already in CFLAGS
 			else #GCC or others. Notice that clang can work with either thread model.
-				LAPACK+=" -lmkl_gnu_thread"
+				LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
 			fi
 	    fi
 		LAPACK+=" -lmkl_core"
@@ -653,9 +654,9 @@ else
 		if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 			#compile from source
 			FLAGS="--enable-threads --enable-static --enable-shared --disable-fortran "
-			if test "$has_omp" = "1" ;then
-				FLAGS+=" --enable-openmp"
-			fi
+			#if test "$has_omp" = "1" ;then //We use thread callback instead of openmp based implementation
+			#	FLAGS+=" --enable-openmp"
+			#fi
 			if test "$host_cpu" != "aarch64" ;then
 				FLAGS+=" --enable-sse2 --enable-avx --enable-avx2"
 			fi
@@ -668,12 +669,12 @@ else
 	fi
 	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1 LDFFT+=" -lfftw3f"] ,[has_fftwf=0])
 	
-	if test "$has_omp" = "1" ;then
-		THREADS_SUFFIX="_omp"
-	else
-		THREADS_SUFFIX="_threads"
-	fi
-	LDFFT_THREADS=
+	#if test "$has_omp" = "1" ;then
+	#	THREADS_SUFFIX="_omp"
+	#else
+	THREADS_SUFFIX="_threads"
+	#fi
+	LDFFT_THREADS=" -pthread" 
 	for name in $LDFFT ;do
 		case "$name" in
 		*.a)
@@ -686,12 +687,12 @@ else
 			LDFFT_THREADS+=" $name${THREADS_SUFFIX}"
 		esac
 	done
-	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 LDFFT+=" $LDFFT_THREADS"], [fftw_threads=0], [$LDFFT_THREADS $LDFFT $OPENMP_CFLAGS])
+	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 LDFFT+=" $LDFFT_THREADS"], [fftw_threads=0], [$LDFFT_THREADS $LDFFT ])
 	LDFFT_MEX=$LDFFT 
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
-AC_CHECK_LIB([m], [fftw_threads_set_callback], [has_fftw_callback=1], [has_fftw_callback=0], [$LDFFT $OPENMP_CFLAGS])
+AC_CHECK_LIB([m], [fftw_threads_set_callback], [has_fftw_callback=1], [has_fftw_callback=0], [$LDFFT]) #since version 3.3.9
 AC_DEFINE_UNQUOTED(HAS_FFTW_CALLBACK, [$has_fftw_callback], "Has fftw_threads_set_callpack support")
 AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])])
 #Check for cholmod
@@ -771,8 +772,7 @@ AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
 gtk_ver=0
 has_cairo=0
 has_notify=0
-m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG], [PKG_CONFIG=""])
-AS_IF([ test -n "$PKG_CONFIG"],[#use AS_IF instead of if to avoid error regarding pkgconfig not available.
+m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
     #make sure there are spaces before and after >=
@@ -825,7 +825,7 @@ AM_CONDITIONAL(CAIRO,  [test x$has_cairo = x1])
 AM_CONDITIONAL(NOTIFY, [test x$has_notify = x1])
 
 AC_CHECK_HEADERS([unistd.h])
-OPTS+=" $OPTScommon $OPTScc $OPTSprof "
+OPTS+=" $OPTScommon $OPTS_CC $OPTSprof "
 
 if test "$with_matlab" != "no" ;then
     if test ${MEXDIR:0:1} = '~' ;then
@@ -853,7 +853,7 @@ if test "$with_matlab" != "no" ;then
    	mexa64)
 	    MEXLIB=glnxa64
 	    MEXOPT="$OPTS -fPIC -m64 -fexceptions -fno-omit-frame-pointer"
-	    #MEXOPT="${MEXOPT} -DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200809L"
+	    #MEXOPT="${MEXOPT} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200809L"
 	    mex_cpu=x86_64
 	    ;;
 	mexmaci)
@@ -864,7 +864,7 @@ if test "$with_matlab" != "no" ;then
 	mexmaci64)
 	    MEXLIB=maci64
 	    MEXOPT="$OPTS -fPIC -m64 -fexceptions" 
-	    MEXOPT="${MEXOPT} -DDLONG"
+	    MEXOPT="${MEXOPT}"
 	    mex_cpu=x86_64
 	    ;;
 	mexw64)
@@ -893,7 +893,7 @@ if test "$with_matlab" != "no" ;then
     if test x$mex_lib = xyes ;then
     	MEXOPT+=" -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
 		#2021-05-24: Linking with mwfftw3 crashes matlab. (mwfftw3 contains thread support)
-		LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDRT $LDFFT_MEX"
+		LIBMEX="$LDCHOL -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDRT $LDFFT_MEX"
 		LDMEX+="-no-fast-install -static -Xcompiler -shared"
     else
 		with_matlab="no"
@@ -964,7 +964,7 @@ if test "$with_cuda" != "no" ;then
 
     #Check for cuda header
     if test -f "${CUDADIR}/include/cuda.h" ;then
-		CUDAOPT="-I${CUDADIR}/include"
+		CUDAOPT+=" -I${CUDADIR}/include"
     else
 		AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]);with_cuda="no"])
 		CUDAOPT=
@@ -977,39 +977,33 @@ if test "$with_cuda" != "no" ;then
 			CUDAOPT+=" -O3 -g"
 		fi
 		CUDAOPT+=" -DHAVE_CONFIG_H -I.. "
-		if test "$host_cpu" = "x86_64" ;then
-			CUDAOPT+=" -DDLONG"
-		fi
- 
-		#CUDAOPT+=" -std=c++11"
-		CCBINOPT="$OPTScommon $OPTSprof -fPIC $CPPFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
+
+		#CCBINOPT is what NVCC passes to C++ compiler
+		CCBINOPT="$OPTScommon $OPTSprof $OPTS_CC $CPPFLAGS $OPENMP_CFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
 		CCBINOPT="${CCBINOPT/-fpermissive/}"
-		if $CCBIN -v 2>&1 |grep clang ;then
+		case `$CCBIN -v 2>&1` in
+		*clang*|*DPC++*)
 			CCN=CLANG
-			LIBCUDA+=" -lstdc++"
-		elif $CCBIN -v 2>&1 |grep icc ;then
+			;;
+		*icc*) #Old intel compiler
 			CCN=ICC
-			LIBCUDA+=" -lstdc++"
-		else
+			;;
+		*)
 			CCN=GCC
-			CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
-			LIBCUDA+=" -lstdc++"
-		fi
-		optname=${ccprefix}_${CCN}
-		CCBINOPT+=" ${!optname}"
-		if test -n "$OPENMP_CFLAGS";then
-			CCBINOPT+=" $OPENMP_CFLAGS"
-		fi
+			CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ "
+		esac
+		LIBCUDA+=" -lstdc++"
     fi
 fi
-if test "$with_cuda" != "no" -a $CN = CLANG ;then #set clang flags. 
-	NVCC="clang++ "
+if test "$with_cuda" != "no" -a $CN = CLANG ;then #use clang to compile GPU code. Which is as fast as nvcc but more tolerant.
+	NVCC=$CC
 	CUDAOPT+=" --cuda-gpu-arch=sm_${cuarch} $CCBINOPT --cuda-path=$CUDADIR"
 	CUDAOPT+=" --no-cuda-version-check -Wno-unknown-cuda-version -Wno-format-nonliteral"
+	CCBINOPT= #no need for this
 	LIBCUDA+=" -lstdc++"
 elif test "$with_cuda" != "no" ;then #Set nvcc flags
     AC_MSG_NOTICE(["Use cuda in directory $CUDADIR"])
-    NVCC+=" $CFLAGS_CPU"
+    #NVCC+=" $CFLAGS_CPU"
     if test -n "$CCBIN" -a "$with_ccbin" != "no" ;then
 		CCBIN="${CCBIN%% *}"
 		NVCC+=" -ccbin ${CCBIN%% *}"
@@ -1097,7 +1091,7 @@ LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)
 AC_SUBST(CN)
 AC_SUBST(LDAOS)
-CFLAGS+=" $OPTS"
+CFLAGS+=" $OPTS $OPTS_CPU $OPENMP_CFLAGS"
 OPTS=""
 AC_SUBST(OPTS)
 AC_SUBST(LDCHOL)
@@ -1129,6 +1123,7 @@ fi
 if test "$with_cuda" != "no" ;then
     echo NVCC=$NVCC
     echo CUDAOPT=$CUDAOPT
+	echo CCBINOPT=$CCBINOPT
     echo LIBCUDA=$LIBCUDA
 fi
 if test "$with_matlab" != "no" ;then

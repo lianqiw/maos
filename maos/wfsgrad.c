@@ -86,7 +86,7 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
    physical optics mode.  */
 
-void wfsgrad_iwfs(thread_t* info){
+void* wfsgrad_iwfs(thread_t* info){
 	sim_t* simu=(sim_t*)info->data;
 	const int isim=simu->wfsisim;
 	const int iwfs=info->start;
@@ -435,6 +435,7 @@ void wfsgrad_iwfs(thread_t* info){
 	dfree(gradcalc);
 	TIM(4);
 	TIM1;
+	return NULL;
 }
 /**
    Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.
@@ -790,7 +791,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 /**
    Every operation here should be in the Simulator not the Controller
 */
-void wfsgrad_post(thread_t* info){
+void* wfsgrad_post(thread_t* info){
 	sim_t* simu=(sim_t*)info->data;
 	const parms_t* parms=simu->parms;
 	//Postprocessing gradients
@@ -854,6 +855,7 @@ void wfsgrad_post(thread_t* info){
 			}
 		}
 	}//for iwfs
+	return NULL;
 }
 static void gradoff_acc(sim_t* simu, int ipowfs){
 	(void)ipowfs;
@@ -1303,12 +1305,12 @@ void wfsgrad_twfs_recon(sim_t* simu){
    Calls wfsgrad_iwfs() to computes WFS gradient in parallel.
    It also includes operations on Gradients before tomography.
 */
-void wfsgrad(sim_t* simu){
+void* wfsgrad(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
 	const parms_t* parms=simu->parms;
-	if(parms->sim.idealfit||parms->sim.evlol||parms->sim.idealtomo) return;
+	if(parms->sim.idealfit||parms->sim.evlol||parms->sim.idealtomo) return NULL;
 	// call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
-	if(1!=PARALLEL||parms->tomo.ahst_idealngs==1||!parms->gpu.wfs){
+	if(!(PARALLEL==1&&parms->tomo.ahst_idealngs!=1&&parms->gpu.wfs)){
 		CALL_THREAD(simu->wfsgrad_pre, 0);
 	}///else: already called by sim.c
 	CALL_THREAD(simu->wfsgrad_post, 0);
@@ -1338,4 +1340,5 @@ void wfsgrad(sim_t* simu){
 			save_pistat(simu);
 	}
 	simu->tk_wfs=myclockd()-tk_start;
+	return NULL;
 }

@@ -44,7 +44,7 @@ typedef struct mvm_igpu_t{
 	int load_mvmf; /*intermediate FitR result is for 1) loading, 0) saving.*/
 }mvm_igpu_t;
 #define MVM_DEBUG 0
-static void mvm_trans_igpu(thread_t* info){
+static void* mvm_trans_igpu(thread_t* info){
 	TIC;tic;
 	real tk_prep=0, tk_fitL=0, tk_fitR=0, tk_TomoL=0, tk_TomoR=0, tk_cp=0;
 	mvm_igpu_t* data=(mvm_igpu_t*)info->data;
@@ -164,6 +164,7 @@ static void mvm_trans_igpu(thread_t* info){
 	tk_cp+=toc3;tic;
 	info("GPU %d: Prep %.2f FitL %.2f FitR %.2f TomoL %.1f TomoR %.1f cp %.2f\n",
 		igpu, tk_prep, tk_fitL, tk_fitR, tk_TomoL, tk_TomoR, tk_cp);
+	return NULL;
 }
 
 void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
@@ -360,7 +361,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		tic;
 		gpu_print_mem("before trans");
 		long mem=gpu_get_mem();
-		if(mvmt.N()*sizeof(Real)+100000>mem){
+		if((long)(mvmt.N()*sizeof(Real)+100000L)>mem){
 			warning("Not enough memory to do the transpose in GPU.\n");
 			dmat *MVMt=0;
 			cp2cpu(&MVMt, mvmt);

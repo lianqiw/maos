@@ -55,7 +55,7 @@ protected:
 private:
     
 public:
-    cusolve_cg(int _maxit=0, int _cgwarm=0):maxit(_maxit), cgwarm(_cgwarm), precond(0), first_run(_cgwarm?0:0){
+    cusolve_cg(int _maxit=0, int _cgwarm=0):maxit(_maxit), cgwarm(_cgwarm), first_run(_cgwarm?0:0), precond(0){
         id=counter; counter++;
     }
     ~cusolve_cg(){

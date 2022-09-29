@@ -89,11 +89,12 @@ void calc_cachedm(sim_t* simu){
 	if(simu->cachedm){
 		real tk_start=myclockd();
 		tp_counter_t group={0};
-		/*zero out the data. */
 		for(int idm=0; idm<simu->parms->ndm; idm++){
+			/*zero out the data. */
 			dzero((dmat*)P(simu->cachedm,idm));
+			thread_t *A=simu->cachedm_prop[idm];
 			/*do the multi-threaded ray tracing */
-			QUEUE_THREAD(&group, simu->cachedm_prop[idm], 1);
+			QUEUE_THREAD(&group, A, 1);
 		}
 		WAIT(&group, 1);
 		simu->tk_cache=myclockd()-tk_start;

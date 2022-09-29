@@ -56,7 +56,7 @@ typedef struct psfiris_t{
 	char* msg;
 }psfiris_t;
 
-static void psfiris_do(thread_t* info){
+static void* psfiris_do(thread_t* info){
 	psfiris_t* data=(psfiris_t*)info->data;
 	int ipsf=info->start;
 	int nwvl=data->nwvl;
@@ -114,6 +114,7 @@ static void psfiris_do(thread_t* info){
 	cfree(otf);
 	dfree(pixoffx);
 	dfree(pixoffy);
+	return NULL;
 }
 
 

@@ -39,7 +39,7 @@ typedef struct GENPISTAT_S{
 	dcell* unwrap;/*matrix that does unwraping. */
 }GENPISTAT_S;
 
-static void calc_pistat(GENPISTAT_S* data){
+static void* calc_pistat(GENPISTAT_S* data){
 	const PARMS_S* parms=data->parms;
 	POWFS_S* powfs=data->powfs;
 	int icase=0;
@@ -209,6 +209,7 @@ static void calc_pistat(GENPISTAT_S* data){
 		}/*if exist */
 	}
 	dfree(dtrats);
+	return NULL;
 }
 
 void genpistat(const PARMS_S* parms, POWFS_S* powfs){

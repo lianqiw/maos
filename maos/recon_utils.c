@@ -225,7 +225,7 @@ typedef struct Tomo_T{
 
    gg  = GP * HXW * xin
 */
-static void Tomo_prop_do(Tomo_T *data){
+static void* Tomo_prop_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
 	const parms_t* parms=global->parms;
 	sim_t* simu=global->simu;
@@ -267,6 +267,7 @@ static void Tomo_prop_do(Tomo_T *data){
 		dfree(xx);
 		/* For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms. */
 	}
+	return NULL;
 }
 /**
    Wrapper of Tomo_prop_do
@@ -285,7 +286,7 @@ void Tomo_prop(Tomo_T* data, int nthread){
 
    gg = GP' * NEAI * gg;
 */
-static void Tomo_nea_gpt_do(Tomo_T *data){
+static void* Tomo_nea_gpt_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
 	const parms_t *parms=global->parms;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
@@ -298,9 +299,10 @@ static void Tomo_nea_gpt_do(Tomo_T *data){
 		dspmm(&P(data->gg, iwfs), P(recon->GP, iwfs), gg2, "tn", data->alpha);
 		dfree(gg2);
 	}
+	return NULL;
 }
 
-static void Tomo_nea_do(Tomo_T *data){
+static void* Tomo_nea_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
 	const parms_t *parms=global->parms;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
@@ -312,6 +314,7 @@ static void Tomo_nea_do(Tomo_T *data){
 		dcp(&P(data->gg, iwfs), gg2);
 		dfree(gg2);
 	}
+	return NULL;
 }
 
 /*Wrapp of Tomo_nea_do for multi-threads*/
@@ -333,7 +336,7 @@ void Tomo_nea(Tomo_T* data, int nthread, int gpt){
 
    xout = Cxx^-1 * xin + HXW * gg;
 */
-static void Tomo_iprop_do(Tomo_T *data){
+static void* Tomo_iprop_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
 	const parms_t* parms=global->parms;
 	sim_t* simu=global->simu;
@@ -394,6 +397,7 @@ static void Tomo_iprop_do(Tomo_T *data){
 			}
 		}
 	}
+	return NULL;
 }
 /**
    Wrapper of Tomo_iprop_do

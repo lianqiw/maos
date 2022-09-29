@@ -164,7 +164,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 		curcelladd(x0, p0, ak+k, 1.f, stream);
 		ctoc("add");
 		/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
-		if((kover||k+1==maxiter)&&(cgthres<=0||diff[k]<cgthres)||kover>=3){
+		if(((kover||k+1==maxiter)&&(cgthres<=0||diff[k]<cgthres))||kover>=3){
 			curcelladd(r0, Ap, ak+k, -1, stream);
 			pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
 			ctoc("add");

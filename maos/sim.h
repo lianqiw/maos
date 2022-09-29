@@ -24,18 +24,17 @@
 
    Contains main simulation blocks.
 */
-void perfevl_ievl(thread_t *info);
-void perfevl(sim_t *simu);
+void* perfevl_ievl(thread_t *info);
+void* perfevl(sim_t *simu);
 void prep_cachedm(sim_t *simu);
 void calc_cachedm(sim_t *simu);
 void filter_dm(sim_t *simu);
 void update_dm(sim_t *simu);
-void wfsgrad(sim_t *simu);
-void wfsints(thread_t *thread_data);
+void* wfsgrad(sim_t *simu);
+void* wfsints(thread_t *thread_data);
 void wfs_ideal_atm(sim_t *simu, dmat *opd, int iwfs, real alpha);
-void wfsgrad_iwfs(thread_t *info);
-void wfsgrad_post(thread_t *info);
-void addlow2dm(dcell **dmval, const sim_t *simu, 
-	       const dcell *low_val, real gain);
+void* wfsgrad_iwfs(thread_t *info);
+void* wfsgrad_post(thread_t *info);
+void addlow2dm(dcell **dmval, const sim_t *simu, const dcell *low_val, real gain);
 void filter_fsm(sim_t *simu);
 #endif

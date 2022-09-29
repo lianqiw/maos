@@ -139,7 +139,7 @@ static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* 
 
 /**
    Performance evaluation for each direction in parallel mode.  */
-void perfevl_ievl(thread_t* info){
+void* perfevl_ievl(thread_t* info){
 	sim_t* simu=(sim_t*)info->data;
 	const parms_t* parms=simu->parms;
 	const aper_t* aper=simu->aper;
@@ -356,6 +356,7 @@ void perfevl_ievl(thread_t* info){
 	if(!KEEP_MEM){
 		dfree(iopdevl);
 	}
+	return NULL;
 }
 /**
    Evaluation field averaged performance.
@@ -666,7 +667,7 @@ static void perfevl_save(sim_t* simu){
 
    \todo Write a standalone routine that can plot results, using techniques
    developped in drawdaemon.  */
-void perfevl(sim_t* simu){
+void* perfevl(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
 	const parms_t* parms=simu->parms;
 	if(!parms->gpu.evl&&parms->evl.nevl>1){ //Cache the ground layer. 
@@ -703,4 +704,5 @@ void perfevl(sim_t* simu){
 #endif
 		perfevl_save(simu);
 	simu->tk_eval=myclockd()-tk_start;
+	return NULL;
 }

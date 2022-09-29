@@ -80,7 +80,7 @@ void plotloc(const char* fig, const parms_t* parms,
 		P(cir, 0, count)=parms->wfs[iwfs].thetax*ht;
 		P(cir, 1, count)=parms->wfs[iwfs].thetay*ht;
 		P(cir, 2, count)=parms->aper.d*0.5*(1.-ht/hs);
-		if(isfinite(hs)){//LGS
+		if(!isinf(hs)){//LGS
 			P(cir, 3, count)=0xFF8800;
 		} else if(!parms->powfs[ipowfs].lo){//Hi NGS
 			P(cir, 3, count)=0xFFFF00;
@@ -169,7 +169,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 			P(locs,count)->locx[jwfs]=parms->wfs[iwfs].thetax*RAD2AS;
 			P(locs,count)->locy[jwfs]=parms->wfs[iwfs].thetay*RAD2AS;
 		}
-		if(isfinite(parms->powfs[ipowfs].hs)){
+		if(!isinf(parms->powfs[ipowfs].hs)){
 			style[count]=(0xFF8800<<8)+(4<<4)+2;
 		} else if(!parms->powfs[ipowfs].lo){
 			style[count]=(0xFFFF00<<8)+(4<<4)+1;

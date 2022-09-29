@@ -44,7 +44,7 @@ vkcov_t* head=NULL;
 PNEW(mutex_cov);
 static vkcov_t* vkcov_get(real r0, real L0, real dx, long n, long ninit){
 	for(vkcov_t* p=head; p; p=p->next){
-		if(fabs(p->r0-r0)<EPS&&(fabs(p->L0-L0)<EPS||(!isfinite(p->L0)&&!isfinite(L0)))
+		if(fabs(p->r0-r0)<EPS&&(fabs(p->L0-L0)<EPS||(isinf(p->L0)&&isinf(L0)))
 			&&fabs(p->dx-dx)<EPS&&p->n==n&&p->ninit==ninit){
 			return p;
 		}

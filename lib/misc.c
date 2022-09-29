@@ -185,7 +185,7 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 	real scale,      /**<[in] Beam cone effect*/
 	int maxorder       /**<[in] Maximum power of x/y. Negative to limit total power*/
 ){
-	static int count=-1; count++;
+	//static int count=-1; count++;
 	if(NX(GA)!=saloc->nloc*2||NY(GA)!=aloc->nloc){
 		error("GA, aloc, and saloc does not match\n");
 	}

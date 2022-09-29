@@ -102,7 +102,7 @@ void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans,
 			}
 		} else if(trans=='t'){
 OMP_TASK_FOR(4)
-			for(long icol=0; icol<A->ny; icol++){			
+			for(long icol=0L; icol<A->ny; icol++){			
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
 					tmp+=alpha*(A->px[ix])*x[A->pi[ix]];
@@ -111,7 +111,7 @@ OMP_TASK_FOR(4)
 			}
 		} else if(trans=='c'){
 OMP_TASK_FOR(4)			
-			for(long icol=0; icol<A->ny; icol++){
+			for(long icol=0L; icol<A->ny; icol++){
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
 					tmp+=alpha*conj(A->px[ix])*x[A->pi[ix]];

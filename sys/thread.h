@@ -33,7 +33,7 @@
 
 typedef struct thread_t thread_t;
 typedef void *(*thread_fun)(void *);
-typedef void (*thread_wrapfun)(thread_t *);
+typedef void *(*thread_wrapfun)(thread_t *);
 #include "thread_pool.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
 #define PRINT_MACRO(x) DO_PRAGMA(message #x " is " STR(x))
@@ -144,7 +144,7 @@ static inline void THREAD_POOL_INIT(int nthread){
 //static inline void QUEUE(tp_counter_t *counter, thread_wrapfun fun, void *arg, int nthread, int urgent){
 #define QUEUE(counter, fun, arg, nthread, urgent) {\
     (void)counter; (void)urgent;\
-    DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
+    DO_PRAGMA(omp taskloop default(shared) priority(urgent) nogroup)\
     for(int it=0; it<nthread; it++){\
         fun(arg);\
     }\
@@ -152,31 +152,49 @@ static inline void THREAD_POOL_INIT(int nthread){
 //static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
 #define CALL(fun, arg, nthread, urgent) {\
     (void)urgent;\
-    DO_PRAGMA(omp taskgroup)\
-        QUEUE(NULL, fun, arg, nthread, urgent);\
+    DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
+    for(int it=0; it<nthread; it++){\
+        fun(arg);\
+    }\
 }
 #define WAIT(pcounter, urgent) DO_PRAGMA(omp taskwait)
 /*Turn to static inline function because nvcc concatenates _Pragma to } */
 //Define causes _Pragma to appear in sameline in gcc4.9
+#if 0
+//Using function creates sporadic extra tasks with clang.
 static inline void QUEUE_THREAD(tp_counter_t *counter, thread_t *A, int urgent){
     (void)counter; (void)urgent;
-    DO_PRAGMA(omp taskloop default(shared) priority(urgent))
-    for(int it=0; it<A[0].nthread; it++){
+    for(long it=0; it<A[0].nthread; it++)
+    {
         if(A[it].fun){
+            DO_PRAGMA(omp task default(shared)firstprivate(it) priority(urgent))
             A[it].fun((A+it));
         }
     }
 }
+
 //Define causes _Pragma to appear in sameline in gcc4.9
 static inline void CALL_THREAD(thread_t*A, int urgent){
-    if(!OMP_IN_PARALLEL){
+    /*if(!OMP_IN_PARALLEL){
         OMPTASK_SINGLE
             QUEUE_THREAD(NULL, A, urgent);
-    } else{
+    } else{*/
         DO_PRAGMA(omp taskgroup)
             QUEUE_THREAD(NULL, A, urgent);
-    }
+    //}
 }
+#else
+#define QUEUE_THREAD(pcounter, A, urgent) \
+    DO_PRAGMA(omp taskloop default(shared) priority(urgent) nogroup)\
+    for(long it=0; it<(A)->nthread; it++){\
+        if((A)[it].fun) (A)[it].fun((&(A)[it]));\
+    }
+#define CALL_THREAD(A, urgent)\
+    DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
+    for(long it=0; it<(A)->nthread; it++){\
+        if((A)[it].fun) (A)[it].fun((&(A)[it]));\
+    }
+#endif
 
 #else //using our thread_pool
 

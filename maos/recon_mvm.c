@@ -113,7 +113,7 @@ typedef struct{
 	long(*curp)[2];
 	long ntotact;
 }MVR_MVM_T;
-static void
+static void *
 setup_recon_mvr_mvm_iact(thread_t* info){
 	MVR_MVM_T* data=(MVR_MVM_T*)info->data;
 	const parms_t* parms=data->parms;
@@ -174,6 +174,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 	dcellfree(RRT);
 	dfree(eye);
 	dcellfree(eyec);
+	return NULL;
 }
 
 

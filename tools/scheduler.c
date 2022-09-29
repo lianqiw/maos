@@ -316,9 +316,9 @@ static RUN_T* running_get_by_pid(int pid){
 
 static RUN_T* running_get_by_status(int status){
 	RUN_T* irun;
-	int jrun=0;
+	//int jrun=0;
 	for(irun=running; irun; irun=irun->next){
-		jrun++;
+		//jrun++;
 		if(irun->status.info==status){
 			break;
 		}

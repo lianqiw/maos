@@ -729,7 +729,7 @@ static void setup_aster_kalman(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms
 				idtrat_min=idtrat_limit;
 			} else{
 				kalman_free(aster->kalman[0]);aster->kalman[0]=0;
-				if(isfinite(resmin)&&res0>resmin*2){//stop trying.
+				if(!isinf(resmin)&&res0>resmin*2){//stop trying.
 					break;
 				}
 			}

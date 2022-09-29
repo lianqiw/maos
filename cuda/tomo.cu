@@ -445,11 +445,11 @@ __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout
 				ggf[im][threadIdx.x]+=PTTF[isa*nttf+im]*g[isa]+PTTF[(isa+nsa)*nttf+im]*g[isa+nsa];
 			}
 		}
-		for(int step=(DIM_GP>>1); step>0; step>>=1){
+		for(int nstep=(DIM_GP>>1); nstep>0; nstep>>=1){
 			__syncthreads();
-			if(threadIdx.x<step){
+			if(threadIdx.x<nstep){
 				for(int im=0; im<nttf; im++){
-					ggf[im][threadIdx.x]+=ggf[im][threadIdx.x+step];
+					ggf[im][threadIdx.x]+=ggf[im][threadIdx.x+nstep];
 				}
 			}
 		}

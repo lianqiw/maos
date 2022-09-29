@@ -77,7 +77,7 @@ typedef enum M_ID{
 #define M_INT M_INT32
 #define M_STR M_INT8
 
-#ifdef DLONG
+#if CPU_WIDTH == 64
 typedef long spint;
 #define M_SPINT M_LONG
 #define M_DSP M_DSP64
@@ -128,6 +128,7 @@ int zfisfits(file_t *fp);
 void zfclose(file_t *fp);
 int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
+int zferrno(file_t* fp);
 uint64_t bytes_header(const char *header);
 void write_timestamp(file_t *fp);
 void write_header(const header_t *header, file_t *fp);

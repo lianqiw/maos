@@ -100,7 +100,7 @@ typedef struct{
 	int opdxcover;
 }SURF_DATA;
 
-static void prop_surf_evl(thread_t* info){
+static void* prop_surf_evl(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
 	const parms_t* parms=data->parms;
 	const aper_t* aper=data->aper;
@@ -117,9 +117,10 @@ static void prop_surf_evl(thread_t* info){
 		prop_grid_stat(surf, aper->locs->stat, P(P(aper->opdadd, ievl)),
 			1, displacex, displacey, scale, 0, 0, 0);
 	}
+	return NULL;
 }
 
-static void prop_surf_ncpa(thread_t* info){
+static void* prop_surf_ncpa(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
 	const parms_t* parms=data->parms;
 	const aper_t* aper=data->aper;
@@ -135,9 +136,10 @@ static void prop_surf_ncpa(thread_t* info){
 		prop_grid(surf, recon->floc, P(P(aper->opdfloc, idir)),
 			1, displacex, displacey, scale, 0, 0, 0);
 	}
+	return NULL;
 }
 
-static void prop_surf_wfs(thread_t* info){
+static void* prop_surf_wfs(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
 	const parms_t* parms=data->parms;
 	const powfs_t* powfs=data->powfs;
@@ -165,6 +167,7 @@ static void prop_surf_wfs(thread_t* info){
 		prop_grid(surf, locwfs, P(P(powfs[ipowfs].opdadd, wfsind)),
 			1, displacex, displacey, scale, 1., 0, 0);
 	}
+	return NULL;
 }
 
 /**

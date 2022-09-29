@@ -134,7 +134,7 @@ public:
 	Array<cufftHandle> plan_pys;
 	cuccell pyotfs;
 	curcell pypsfs;
-	cuwfs_t():powfs(0), msa(0), custatb(0), custatt(0), i0sumsum(0){}
+	cuwfs_t():powfs(0), i0sumsum(0), msa(0), custatb(0), custatt(0){}
 };
 
 void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim);

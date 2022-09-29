@@ -180,7 +180,7 @@
 #define creal
 #endif
 */
-#ifdef DLONG
+#if CPU_WIDTH == 64
 #define M_SPT M_SPT64
 #else
 #define M_SPT M_SPT32
@@ -191,10 +191,12 @@ static inline int issp(const void* id){
 
 #endif //if COMP_LONG
 #define DO_PRAGMA(A...) _Pragma(#A)
-#ifdef COMP_COMPLEX
-#define OMP_SIMD(...) //simd is not available for complex numbers
+#ifdef COMP_COMPLEX 
+#define OMP_SIMD(A...) //DO_PRAGMA(omp simd A) //simd is not available for complex numbers
+#define OMP_SIMD_R(A...) //simd is not available for complex numbers for reduction
 #else
 #define OMP_SIMD(A...) DO_PRAGMA(omp simd A)
+#define OMP_SIMD_R(A...) DO_PRAGMA(omp simd A)
 #endif
 
 #define ABS2(A) creal((A)*conj(A))

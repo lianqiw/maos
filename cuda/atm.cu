@@ -161,12 +161,11 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 				}
 				_Exit(0);
 			} else{
-			/*we are able to host this amount. */
+				/*we are able to host this amount. */
 				long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
-				{
-					nx0=MIN(parms->atm.nx, MIN(nxa, nxn*2));
-					ny0=MIN(parms->atm.ny, MIN(nxa, nxn*2));
-				}
+				nxa=MIN(nxa, nxn*2);
+				nx0=MIN(parms->atm.nx, nxa);
+				ny0=MIN(parms->atm.ny, nxa);
 			}
 			dbg("We will host %dx%d in GPU, taking %zd MiB\n",
 				nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);

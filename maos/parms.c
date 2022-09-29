@@ -375,7 +375,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS(int,nwfs);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
-		if(!isfinite(powfsi->hs)&&powfsi->fnllt){
+		if(isinf(powfsi->hs)&&powfsi->fnllt){
 			warning("powfs %d is at infinity, disable LLT\n",ipowfs);
 			free(powfsi->fnllt);
 			powfsi->fnllt=NULL;
@@ -408,7 +408,7 @@ static void readcfg_powfs(parms_t *parms){
 			powfsi->llt->n=NX(powfsi->llt->ox);
 		} else{/*there is no LLT. */
 			powfsi->llt=NULL;
-			if(isfinite(powfsi->hs)){
+			if(!isinf(powfsi->hs)){
 				error("powfs%d has finite hs at %g but no llt specified\n",
 					ipowfs,powfsi->hs);
 			}
@@ -1348,17 +1348,17 @@ static void readcfg_save(parms_t *parms){
 		/*The following 3 are for setup. */
 		if(!parms->save.setup) parms->save.setup=parms->save.all;
 		if(!parms->save.recon) parms->save.recon=parms->save.all;
-		parms->save.mvst=parms->save.all;
+		if(!parms->save.mvst) parms->save.mvst=parms->save.all;
 		/*The following are run time information that are not enabled by
 		  save.run because they take a lot of space*/
-		parms->save.opdr=parms->save.all;
+		if(!parms->save.opdr) parms->save.opdr=parms->save.all;
 		//parms->save.opdx=parms->save.all;
-		parms->save.evlopd=parms->save.all?10:0;
-		parms->save.run=parms->save.all;/*see following */
-		parms->save.ncpa=parms->save.all;
-		parms->save.dither=parms->save.all;
-		parms->save.gradoff=parms->save.all;
-		parms->save.extra=1;
+		if(!parms->save.evlopd) parms->save.evlopd=parms->save.all;
+		if(!parms->save.run) parms->save.run=parms->save.all;/*see following */
+		if(!parms->save.ncpa) parms->save.ncpa=parms->save.all;
+		if(!parms->save.dither) parms->save.dither=parms->save.all;
+		if(!parms->save.gradoff) parms->save.gradoff=parms->save.all;
+		if(parms->save.extra) parms->save.extra=parms->save.all;
 	}
 	if(parms->recon.glao){
 		parms->save.opdx=0;
@@ -1463,7 +1463,7 @@ static void setup_parms_postproc_za(parms_t *parms){
 	//Adjust LGS height by telescope altitude and sec(za)
 	//Adjust LGS signal level by cos(za)
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(isfinite(parms->powfs[ipowfs].hs)){//LGS
+		if(!isinf(parms->powfs[ipowfs].hs)){//LGS
 			parms->powfs[ipowfs].hs=(parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
 			parms->powfs[ipowfs].siglev*=cosz;
 			dscale(parms->powfs[ipowfs].siglevs,cosz);
@@ -1906,11 +1906,11 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				parms->ntipowfs++;
 			}
 			if(parms->powfs[ipowfs].llt){
-				if(!isfinite(parms->powfs[ipowfs].hs)){
+				if(isinf(parms->powfs[ipowfs].hs)){
 					warning("powfs with llt should have finite hs\n");
 				}
 			} else{
-				if(isfinite(parms->powfs[ipowfs].hs)){
+				if(!isinf(parms->powfs[ipowfs].hs)){
 					warning("powfs without llt should have infinite hs\n");
 				}
 			}
@@ -2235,11 +2235,11 @@ static void setup_parms_postproc_atm(parms_t *parms){
 				if(parms->powfs[ipowfs].lo||parms->powfs[ipowfs].skip){
 					continue;
 				}
-				/*isinf and isfinite both return 0 on inf in FreeBSD 9.0.*/
+				/*isinf and !isinf both return 0 on inf in FreeBSD 9.0.*/
 				if(isnan(hs)){
 					hs=parms->powfs[ipowfs].hs;
 				} else{
-					if(isfinite(hs)||isfinite(parms->powfs[ipowfs].hs)){
+					if(!isinf(hs)||!isinf(parms->powfs[ipowfs].hs)){
 						if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
 							warning("Two high order POWFS with different hs found: %g and %g\n",
 								hs,parms->powfs[ipowfs].hs);
@@ -2443,7 +2443,7 @@ static void setup_parms_postproc_dm(parms_t *parms){
 			parms->dm[i].isground=1;
 			parms->idmground=i;
 		}
-		if(isfinite(P(parms->dm[i].stroke,0))){
+		if(!isinf(P(parms->dm[i].stroke,0))){
 			real strokemicron=fabs(P(parms->dm[i].stroke,0))*1e6;
 			if(strokemicron>1000){
 				dscale(parms->dm[i].stroke,1e-6);
@@ -2453,7 +2453,7 @@ static void setup_parms_postproc_dm(parms_t *parms){
 				warning("Please set sim.fcttm to cross over frequency for offloading to tip/tilt mirror\n");
 			}
 		}
-		if(isfinite(parms->dm[i].iastroke)&&!parms->dm[i].strokescale){
+		if(!isinf(parms->dm[i].iastroke)&&!parms->dm[i].strokescale){
 			real strokemicron=parms->dm[i].iastroke*1e6;
 			if(strokemicron>1000){
 				parms->dm[i].iastroke*=1e-6;
@@ -2770,10 +2770,10 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	}
 
 	for(int idm=0; idm<parms->ndm; idm++){
-		if(isfinite(P(parms->dm[idm].stroke,0))){
+		if(!isinf(P(parms->dm[idm].stroke,0))){
 			parms->sim.dmclip=1;
 		}
-		if(isfinite(parms->dm[idm].iastroke)&&parms->dm[idm].iastroke>0){
+		if(!isinf(parms->dm[idm].iastroke)&&parms->dm[idm].iastroke>0){
 			parms->sim.dmclipia=1;
 		}
 	}
@@ -2912,7 +2912,7 @@ static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		parms->evl.npsf+=(P(parms->evl.psf,ievl)>0);
 		if((P(parms->evl.psf,ievl)&2)){//request ngs mode removed PSF
-			if(!parms->recon.split||isfinite(P(parms->evl.hs, ievl))){
+			if(!parms->recon.split||!isinf(P(parms->evl.hs, ievl))){
 				P(parms->evl.psf, ievl)^=2;
 			}
 		}
@@ -3011,21 +3011,23 @@ if(!parms->sim.noatm){
 				lrt?"both":"right hand",BLACK);
 		}
 		info("\n");
-		if(parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].usephy){
-			info("    CCD image is %dx%d @ %gx%g mas, blur %g%% (sigma), %gHz, ",
-				(parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa),
-				parms->powfs[ipowfs].pixpsa,
-				parms->powfs[ipowfs].radpixtheta*RAD2MAS,parms->powfs[ipowfs].pixtheta*RAD2MAS,
-				parms->powfs[ipowfs].pixblur*100,
-				1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
-		} else{
-			info("    PWFS, %gHz, ",1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
+		if(parms->powfs[ipowfs].usephy){
+			if(parms->powfs[ipowfs].type==WFS_SH){
+				info("    CCD image is %dx%d @ %gx%g mas, blur %g%% (sigma), %gHz, ",
+					(parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa),
+					parms->powfs[ipowfs].pixpsa,
+					parms->powfs[ipowfs].radpixtheta*RAD2MAS,parms->powfs[ipowfs].pixtheta*RAD2MAS,
+					parms->powfs[ipowfs].pixblur*100,
+					1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
+			} else{
+				info("    PWFS, %gHz, ",1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
+			}
+			info("wvl: [");
+			for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
+				info(" %g",P(parms->powfs[ipowfs].wvl,iwvl));
+			}
+			info("]\n");
 		}
-		info("wvl: [");
-		for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-			info(" %g",P(parms->powfs[ipowfs].wvl,iwvl));
-		}
-		info("]\n");
 		info("    %s in reconstruction. ",
 			parms->powfs[ipowfs].gtype_recon==GTYPE_G?"Gtilt":"Ztilt");
 

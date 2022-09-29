@@ -33,8 +33,7 @@ void cufdpcg_t::update(fdpcg_t* fdpcg){
 	int m_nxsave=0;
 	if(fdpcg->Mbinv->m){
 		m_nxsave=fdpcg->Mbinv->m->nx;
-		int bs=fdpcg->bs;
-		fdpcg->Mbinv->m->nx=nb*bs*bs;
+		fdpcg->Mbinv->m->nx=nb*fdpcg->bs*fdpcg->bs;
 	}
 	cp2gpu(Mb, fdpcg->Mbinv);
 	fdpcg->Mbinv->nx=nxsave;

@@ -60,7 +60,7 @@ typedef struct propdata_t{
     int nooptim;/*disable optim. */
     int index;
 }propdata_t;
-void prop(thread_t *data);/*A unified wrapper */
+void* prop(thread_t *data);/*A unified wrapper */
 
 #define ARGIN_GRID						\
     const map_t *mapin /**<[in] OPD defind on a square grid*/

@@ -77,7 +77,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 		if(Ap) dcellzero(Ap);
 		(*Amul)(&Ap, A, p0, 1);
 		ak=r0z1/dcellinn(p0, Ap);
-		if(!isfinite(ak)){
+		if(isinf(ak)){
 			ak=0;
 			goto end;
 		}

@@ -363,7 +363,7 @@ dmat* turbcov(dmat* r, real rmax, real r0, real L0){
 	real vkcoeff0=tg1*tgamma(5./6.)/2;/*for variance */
 	dmat* cov=dnew(NX(r), NY(r));
 	long n=NX(r)*NY(r);
-	if(!isfinite(L0)){/*kolmogorov. */
+	if(isinf(L0)){/*kolmogorov. */
 		const real power=5./3.;
 		real coeff=0.5*6.88*pow(2*M_PI/0.5e-6, -2)*pow(r0, -power);
 		real sigma2=coeff*pow(rmax, power);

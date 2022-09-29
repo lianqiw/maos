@@ -45,7 +45,7 @@ typedef struct{
 	X(mat)* mvmi;
 }mvm_igpu_t;
 
-static void mvm_direct_igpu(thread_t* info){
+static void* mvm_direct_igpu(thread_t* info){
 	int igpu=info->ithread;
 	if(gpu_avail){
 		LOCK(gpu_mutex);
@@ -57,7 +57,7 @@ static void mvm_direct_igpu(thread_t* info){
 		}
 		UNLOCK(gpu_mutex);
 	}
-	if(igpu==-1) return;
+	if(igpu==-1) return NULL;
 	gpu_set(igpu);
 	info("thread %ld is using GPU %d\n", info->ithread, igpu);
 
@@ -139,6 +139,7 @@ static void mvm_direct_igpu(thread_t* info){
 		UNLOCK(gpu_mutex);
 	}
 	dbg("thread %ld finish.\n", info->ithread);
+	return NULL;
 }
 /**
    Assemble the MVM control matrix.

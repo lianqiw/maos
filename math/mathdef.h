@@ -38,6 +38,7 @@
 #include "loc.h"
 #include "map.h"
 #include "random.h"
+void fft_threads(long nx, long ny);
 /*
 #define dnew(nx, ny) (funtrace_set,dnew_do(nx,ny,NULL,0));funtrace_unset
 #define snew(nx, ny) (funtrace_set,snew_do(nx,ny,NULL,0));funtrace_unset

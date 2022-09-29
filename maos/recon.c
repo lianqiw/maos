@@ -182,6 +182,7 @@ static void recon_split(sim_t* simu){
 						merr=&simu->Merr_lo;
 					}
 					dcellmm(merr, P(ngsmod->Rngs,iRngs), simu->gradlastcl, "nn", 1);
+					//dshow(P(*merr,0), "merr");
 					if(iRngs==0){
 						dcellscale(*merr, parms->dbg.eploscale);
 					}
@@ -213,6 +214,7 @@ static void recon_split(sim_t* simu){
 							}
 						}
 					}
+					//dshow(P(*merr, 0), "merr");
 				}//for iRngs
 				dcellfree(tmp);
 
@@ -225,7 +227,6 @@ static void recon_split(sim_t* simu){
 					}
 				}
 			}//else: there is ideal NGS correction done in perfevl. 
-
 			break;
 		case 2:{
 			/*A separate integrator for low order is required. Use it to form error signal*/
@@ -343,13 +344,12 @@ void recon_servo_update(sim_t* simu){
 /**
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
-void reconstruct(sim_t* simu){
+void* reconstruct(sim_t* simu){
 	real tk_start=myclockd();
 	const parms_t* parms=simu->parms;
-	if(parms->sim.evlol) return;
 	recon_t* recon=simu->recon;
 	int isim=simu->reconisim;
-	if(isim<0) return;
+	if(parms->sim.evlol || isim<0) return NULL;
 	if(PARALLEL==2){
 		while(simu->wfsgrad_isim<simu->reconisim){
 			//dbg("waiting wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
@@ -476,4 +476,5 @@ void reconstruct(sim_t* simu){
 	}
 	save_recon(simu);
 	simu->tk_recon=myclockd()-tk_start;
+	return NULL;
 }

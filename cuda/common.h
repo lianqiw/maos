@@ -29,6 +29,7 @@
 #include "config.h"
 #endif
 #include <cuda.h>
+#include <cuda_runtime_api.h>
 #include <cublas_v2.h>
 #include <cusparse_v2.h>
 #include <cufft.h>

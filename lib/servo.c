@@ -235,7 +235,7 @@ static real servo_calc_max_gain(SERVO_CALC_T *st, real pmargin){
 	}
 	real fcross;
 	real dB=gain_at_phase(&fcross, st->nu, st->Hol, angle);
-	real gain=isfinite(dB)?pow(10, dB/20):0;
+	real gain=!isinf(dB)?pow(10, dB/20):0;
 	return gain;
 	}*/
 /**

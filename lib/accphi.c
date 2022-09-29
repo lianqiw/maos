@@ -137,8 +137,8 @@ static void prop_index(propdata_t* propdata){
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
 */
-void prop(thread_t* data){
-	if(!data) return;
+void* prop(thread_t* data){
+	if(!data) return NULL;
 	propdata_t* propdata=(propdata_t*)data->data;
 	if(!propdata->index){
 		prop_index(propdata);
@@ -238,6 +238,7 @@ void prop(thread_t* data){
 	default:
 		error("Invalid\n");
 	}
+	return NULL;
 }
 
 
@@ -543,7 +544,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 			missing++;
 		}
 	}
-	//WARN_MISSING;//will always be triggered.
+	WARN_MISSING;//will always be triggered.
 }
 /**
    Propagate OPD defines on coordinate locin to subapertures pts. alpha is the
@@ -706,7 +707,7 @@ OMP_TASK_FOR(2)
 			missing++;
 		}
 	}
-	//WARN_MISSING;
+	WARN_MISSING;
 }
 /**
    like prop_grid_stat() but with cubic influence function.
@@ -851,7 +852,7 @@ OMP_TASK_FOR(2)
 			missing++;
 		}
 	}
-	//WARN_MISSING;//will always be triggered
+	WARN_MISSING;//will always be triggered
 }
 
 /**

@@ -53,9 +53,9 @@ public:
 	cugrid_t pmap; /*Pupil map for tomo*/
 	cugrid_t fmap; /*Pupil map for fit*/
 	w01_t W01;    /**< The aperture weighting defined on floc*/
-	long* xnx, * xny;/*do not free*/
-	long* anx, * any;/*do not free*/
-	long* anloc, * ngrad;/*do not free*/
+	long* xnx, *xny;/*do not free*/
+	long* anx, *any;/*do not free*/
+	long* anloc, *ngrad;/*do not free*/
 	Real dt;
 	curecon_geom(const parms_t* parms, const recon_t* recon);
 	~curecon_geom(){}

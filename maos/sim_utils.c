@@ -641,7 +641,7 @@ static void init_simu_evl(sim_t* simu){
 		}
 		for(int ievl=0; ievl<nevl; ievl++){
 			if(!P(parms->evl.psf, ievl)||parms->sim.evlol) continue;
-			if(isfinite(P(parms->evl.hs, ievl))){
+			if(!isinf(P(parms->evl.hs, ievl))){
 				snprintf(strht, 24, "_%g", P(parms->evl.hs, ievl));
 			} else{
 				strht[0]='\0';
@@ -705,7 +705,7 @@ static void init_simu_evl(sim_t* simu){
 				char strht[24];
 				for(int ievl=0; ievl<nevl; ievl++){
 					if(!P(parms->evl.psf, ievl)) continue;
-					if(isfinite(P(parms->evl.hs, ievl))){
+					if(!isinf(P(parms->evl.hs, ievl))){
 						snprintf(strht, 24, "_%g", P(parms->evl.hs, ievl));
 					} else{
 						strht[0]='\0';
@@ -1795,7 +1795,7 @@ void print_progress(sim_t* simu){
 		const long lapsh=laps/3600;
 		const long lapsm=(laps-lapsh*3600)/60;
 		if(isim==parms->sim.start){
-			const char *hol="Step        Open Loop  PR TT  ";
+			const char *hol="Step     #  Open Loop  PR TT  ";
 			const char *hoa="On axis  PR TT  Field RMS PR TT ";
 			const char *hsp="Split     HIGH   TT    LOW ";
 			const char *htm="    Timing ";
@@ -1819,7 +1819,7 @@ void print_progress(sim_t* simu){
 					mysqrt(P(simu->clem, 2, isim))*1e9);
 			}
 			extern int NO_EVL;
-			if(!NO_EVL&&!isfinite(P(simu->cle, 0, isim))){
+			if(!NO_EVL&&isinf(P(simu->cle, 0, isim))){
 				error("\nStep %d: NaN/inf found: cle is %g\n", isim, P(simu->cle, 0, isim));
 			}
 		}

@@ -50,7 +50,7 @@
    The uplink OTF need to be upsampled to dx/lambda *(nwvf/notf)
    
 */
-void wfsints(thread_t* thread_data){
+void* wfsints(thread_t* thread_data){
 	/* first, unwrap the data */
 	wfsints_t* data=(wfsints_t*)thread_data->data;
 	const parms_t* parms=global->parms;
@@ -279,4 +279,5 @@ void wfsints(thread_t* thread_data){
 		cfree(lotfc);
 	}
 	TIM1;
+	return NULL;
 }

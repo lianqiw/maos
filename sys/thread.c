@@ -54,6 +54,7 @@ thread_t* thread_prep(long start, long end, long nthread,
 	thread_t *thd=mycalloc(nthread, thread_t);
 	long nt=(end-start+nthread-1)/nthread;
 	int skip=0;
+	int nthread_active=0; //active threads
 	for(long ithread=0; ithread<nthread; ithread++){
 		thd[ithread].ithread=ithread;
 		thd[ithread].nthread=nthread;
@@ -70,10 +71,12 @@ thread_t* thread_prep(long start, long end, long nthread,
 				skip=1;
 				data=0;
 				fun=0;
+				nthread_active=ithread+1;
 			}
 			thd[ithread].end=start;
 		}
 	}
+	thd[0].nthread=nthread_active;
 	/*Make sure we terminate at the right place. */
 	if(thd[nthread-1].end&&thd[nthread-1].end!=end){
 		error("Not correctly terminated\n");

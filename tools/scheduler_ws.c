@@ -448,7 +448,7 @@ int ws_service(int waiting){
 	if(waiting){
 		lws_callback_on_writable_all_protocol(context, protocols+1);
 	}
-	int repeat=0;
+	//int repeat=0;
 	pending=0;
 	/*returns immediately if no task is pending when timeout is 0 ms.*/
 	if(!ans){
@@ -460,7 +460,7 @@ int ws_service(int waiting){
 #endif		
 			if(pending && waiting){
 				mysleep(0.001);//this sleep is necessary 
-				repeat++;
+				//repeat++;
 			}
 		}while(pending && (waiting--)>0);//service all available requests
 		/*if(repeat>1){

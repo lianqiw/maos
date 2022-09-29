@@ -235,7 +235,7 @@ void save_recon(sim_t* simu){
 			char strht[24];
 			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 				if(!P(simu->ecov,ievl)) continue;
-				if(isfinite(P(parms->evl.hs,ievl))){
+				if(!isinf(P(parms->evl.hs,ievl))){
 					snprintf(strht, 24, "_%g", P(parms->evl.hs,ievl));
 				} else{
 					strht[0]='\0';

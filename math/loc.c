@@ -789,13 +789,16 @@ void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 			const real* ampx=ampi+iy*pts->nxsa;
 			const real* opdx=opdi+iy*pts->nxsa;
 			for(int ix=0; ix<pts->nxsa; ix++){
-				real x=ix*dx+origx;
-				real tmp=ampx[ix]*opdx[ix];
-				a0+=tmp;
-				a1+=tmp*x;
-				a2+=tmp*y;
+				if(ampx[ix]){
+					real x=ix*dx+origx;
+					real tmp=ampx[ix]*opdx[ix];
+					a0+=tmp;
+					a1+=tmp*x;
+					a2+=tmp*y;
+				}
 			}
 		}
+		//info("a0=%g, a1=%g, a2=%g\n", a0, a1, a2);
 		coeff[0]=a0;
 		coeff[1]=a1;
 		coeff[2]=a2;
@@ -1635,14 +1638,14 @@ void loc_dxdy(loc_t* out){
 	}
 	if(out->dx==0||isnan(out->dx)){
 		out->dx=dxd;//use value derived from data
-	} else if(fabs(out->dx-dxd)>tol&&isfinite(dxd)){
+	} else if(fabs(out->dx-dxd)>tol&&!isinf(dxd)){
 		warning("Specified dx=%.15g doesn't agree with data: %.15g, replace.\n", out->dx, dxd);
 		out->dx=dxd;
 	}
 
 	if(out->dy==0||isnan(out->dy)){
 		out->dy=dyd;
-	} else if(fabs(out->dy-dyd)>tol&&isfinite(dyd)){
+	} else if(fabs(out->dy-dyd)>tol&&!isinf(dyd)){
 		warning("Specified dy=%.15g doesn't agree with data: %.15g, replace.\n", out->dy, dyd);
 		out->dy=dyd;
 	}

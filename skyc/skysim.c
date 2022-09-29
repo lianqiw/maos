@@ -91,7 +91,7 @@
 /**
    The actual work horse that does the physical optics time domain simulation.
 */
-static void skysim_isky(SIM_S* simu){
+static void* skysim_isky(SIM_S* simu){
 	int isky;
 	POWFS_S* powfs=simu->powfs;
 	const PARMS_S* parms=simu->parms;
@@ -332,6 +332,7 @@ skip1:;
 			isky, nstar, selaster, naster, P(simu->fss,isky), sqrt(skymini)*1e9,
 			tk_3-tk_2, tk_4-tk_3, laps_h, laps_m, rest_h, rest_m);
 	}/*while isky*/
+	return NULL;
 }
 
 /**

@@ -106,14 +106,14 @@ void X(randn)(X(mat)* A, const T sigma, rand_t* rstat){
 T X(inn)(const X(mat)* A, const X(mat)* B){
 	if(!check_match(A, B)) return -1;
 	TD out=0;
-	OMP_SIMD(reduction(+:out))
+	OMP_SIMD_R(reduction(+:out))
 	for(int i=0; i<A->nx*A->ny; i++){
 		out+=P(A, i)*P(B, i);
 	}
 	if(isnan(REAL(out))){
-		writebin(A, "inn_A");
-		writebin(B, "inn_B");
-		warning("NaN found\n");
+		X(show)(A, "inn_A");
+		X(show)(B, "inn_B");
+		error("X(inn): NaN found\n");
 	}
 	return out;
 }
@@ -124,8 +124,8 @@ T X(inn)(const X(mat)* A, const X(mat)* B){
 T X(wdot)(const T* a, const X(mat)* w, const T* b){
 	if(!check_mat(w)||!a||!b) return 0;
 	TD res=0;
-	OMP_SIMD(reduction(+:res) collapse(2))
 	for(int j=0; j<w->ny; j++){
+		OMP_SIMD_R(reduction(+:res))
 		for(int i=0; i<w->nx; i++){
 			res+=P(w, i, j)*a[i]*b[j];
 		}
@@ -197,14 +197,17 @@ void X(cwm3)(X(mat)* restrict A, const X(mat)* restrict W,
 		int has_b1=B1&&wt1&&check_match(A, B1);
 		int has_b2=B2&&wt2&&check_match(A, B2);
 		if(has_b1&&has_b2){
+			OMP_SIMD()
 			for(long i=0; i<B1->nx*B1->ny; i++){
 				P(A, i)*=P(W, i)*(P(B1, i)*wt1+P(B2, i)*wt2);
 			}
 		} else if(has_b1){
+			OMP_SIMD()
 			for(long i=0; i<B1->nx*B1->ny; i++){
 				P(A, i)*=P(W, i)*P(B1, i)*wt1;
 			}
 		} else if(has_b2){
+			OMP_SIMD()
 			for(long i=0; i<B2->nx*B2->ny; i++){
 				P(A, i)*=P(W, i)*P(B2, i)*wt2;
 			}
@@ -220,6 +223,7 @@ void X(cwmcol)(X(mat)* restrict A, const X(mat)* restrict B){
 	if(check_mat(A, B)&&A->nx==B->nx&&B->ny==1){
 		T* B1=P(B);
 		for(long iy=0; iy<A->ny; iy++){
+			OMP_SIMD()
 			for(long ix=0; ix<A->nx; ix++){
 				P(A, ix, iy)*=B1[ix];
 			}
@@ -243,6 +247,7 @@ void X(cwmcol2)(X(mat)* restrict A,
 	if(has_b1&&has_b2){
 		for(long ix=0; ix<A->nx; ix++){
 			T junk=P(B1, ix)*wt1+P(B2, ix)*wt2;
+			//OMP_SIMD()
 			for(long iy=0; iy<A->ny; iy++){
 				P(A, ix, iy)*=junk;
 			}
@@ -250,6 +255,7 @@ void X(cwmcol2)(X(mat)* restrict A,
 	} else if(has_b1){
 		for(long ix=0; ix<A->nx; ix++){
 			T junk=P(B1, ix)*wt1;
+			//OMP_SIMD()
 			for(long iy=0; iy<A->ny; iy++){
 				P(A, ix, iy)*=junk;
 			}
@@ -276,14 +282,15 @@ void X(cwm3col)(X(mat)* restrict A, const X(mat)* restrict W,
 			T* B1p=P(B1);
 			T* B2p=P(B2);
 			for(long iy=0; iy<A->ny; iy++){
+				OMP_SIMD()
 				for(long ix=0; ix<A->nx; ix++){
 					P(A, ix, iy)=P(A, ix, iy)*P(W, ix, iy)*(B1p[ix]*wt1+B2p[ix]*wt2);
 				}
 			}
 		} else if(has_b1){
 			T* B1p=P(B1);
-
 			for(long iy=0; iy<A->ny; iy++){
+				OMP_SIMD()
 				for(long ix=0; ix<A->nx; ix++){
 					P(A, ix, iy)=P(A, ix, iy)*P(W, ix, iy)*B1p[ix]*wt1;
 				}
@@ -305,6 +312,7 @@ void X(cwmrow)(X(mat)* restrict A, const X(mat)* restrict B){
 	T* B1=P(B);
 	for(long iy=0; iy<A->ny; iy++){
 		T junk=B1[iy];
+		OMP_SIMD()
 		for(long ix=0; ix<A->nx; ix++){
 			P(A, ix, iy)*=junk;
 		}
@@ -328,6 +336,7 @@ void X(cwmrow2)(X(mat)* restrict A,
 	if(has_b1&&has_b2){
 		for(long iy=0; iy<A->ny; iy++){
 			T junk=P(B1, iy)*wt1+P(B2, iy)*wt2;
+			OMP_SIMD()
 			for(long ix=0; ix<A->nx; ix++){
 				P(A, ix, iy)*=junk;
 			}
@@ -335,6 +344,7 @@ void X(cwmrow2)(X(mat)* restrict A,
 	} else if(has_b1){
 		for(long iy=0; iy<A->ny; iy++){
 			T junk=P(B1, iy)*wt1;
+			OMP_SIMD()
 			for(long ix=0; ix<A->nx; ix++){
 				P(A, ix, iy)*=junk;
 			}
@@ -352,6 +362,7 @@ void X(cwdiv)(X(mat)* B, const X(mat)* A, T value){
 		warning("Input does not match\n");
 		return;
 	}
+	OMP_SIMD()
 	for(int i=0; i<A->nx*A->ny; i++){
 		P(B, i)/=P(A, i);
 		if(isnan(REAL(P(B, i)))) P(B, i)=value;
@@ -368,6 +379,7 @@ void X(mulvec)(T* restrict y, const X(mat)* restrict A,
 		return;
 	}
 	for(int iy=0; iy<A->ny; iy++){
+		OMP_SIMD()
 		for(int ix=0; ix<A->nx; ix++){
 			y[ix]+=(x[iy]*alpha)*P(A, ix, iy);
 		}
@@ -400,6 +412,7 @@ X(mat)* X(mcc)(const X(mat)* A, const X(mat)* wt){
 	for(int imod=0; imod<nmod; imod++){
 		for(int jmod=imod; jmod<nmod; jmod++){
 			T tmp=0;
+			OMP_SIMD_R(reduction(+:tmp))
 			for(long ik=0; ik<nsa2; ik++){
 				tmp+=P(A, ik, imod)*P(A, ik, jmod)*P(wt, ik);
 			}
@@ -423,6 +436,7 @@ X(mat)* X(tmcc)(const X(mat)* A, const X(mat)* wt){
 	for(int imod=0; imod<nmod; imod++){
 		for(int jmod=imod; jmod<nmod; jmod++){
 			T tmp=0;
+			OMP_SIMD_R(reduction(+:tmp))
 			for(int k=0; k<nsa2; k++){
 				tmp+=P(A, imod, k)*P(A, jmod, k)*P(wt, k);
 			}
@@ -539,7 +553,7 @@ void X(rotvec)(X(mat)* A, const R theta){
 	}
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
-	//OMP_SIMD()
+	OMP_SIMD()
 	for(int i=0; i<A->nx; i++){
 		T tmp=P(A, i, 0)*ctheta-P(A, i, 1)*stheta;
 		P(A, i, 1)=P(A, i, 0)*stheta+P(A, i, 1)*ctheta;
@@ -622,8 +636,8 @@ void X(corr)(X(mat)** pout, const X(mat)* A, const X(mat)* B){
 			long sx1, nnx;
 			SHIFT_PEX(sx1, nnx, A->nx, offx);
 			T tmp=0;
-			OMP_SIMD(reduction(+:tmp) collapse(2))
 			for(long iy1=sy1; iy1<nny; iy1++){
+				OMP_SIMD_R(reduction(+:tmp))
 				for(long ix1=sx1; ix1<nnx; ix1++){
 					tmp+=P(A, ix1, iy1)*P(B, ix1-offx, iy1-offy);
 				}
@@ -678,8 +692,9 @@ void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
 	R thres, R bkgrnd, R flux){
 	R sum=0, sumx=0, sumy=0;
 	R iI;
-	OMP_SIMD(reduction(+:sum,sumx,sumy) collapse(2))
+	
 	for(int iy=0; iy<im->ny; iy++){
+		OMP_SIMD_R(reduction(+:sum, sumx, sumy))
 		for(int ix=0; ix<im->nx; ix++){
 			iI=REAL(P(im, ix, iy))-bkgrnd;
 			if(iI>thres){
@@ -789,13 +804,13 @@ void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
 */
 int X(clip)(X(mat)* restrict A, R min, R max){
 	if(!A) return 0;
-	if(!isfinite(min)&&!isfinite(max)) return 0;
+	if(isinf(min)&&isinf(max)) return 0;
 	if(max<=min){
 		error("upper light should be larger than lower limit\n");
 	}
 	T* restrict Ap=P(A);
 	int nclip=0;
-	OMP_SIMD(reduction(+:nclip))
+	OMP_SIMD_R(reduction(+:nclip))
 	for(long i=0; i<A->nx*A->ny; i++){
 		R Ar=REAL(Ap[i]);
 		if(Ar>max){
@@ -816,8 +831,8 @@ void X(muldiag)(X(mat)* restrict A, const X(mat)* restrict s){
 	assert(A->ny==s->nx&&s->ny==1);
 	X(mat)* pA=A;
 	const T* restrict ps=P(s);
-	OMP_SIMD(collapse(2))
 	for(long iy=0; iy<A->ny; iy++){
+		OMP_SIMD()
 		for(long ix=0; ix<A->nx; ix++){
 			P(pA, ix, iy)*=ps[iy];
 		}
@@ -829,7 +844,7 @@ void X(muldiag)(X(mat)* restrict A, const X(mat)* restrict s){
 */
 void X(cwpow)(X(mat)* A, R power){
 	if(!A) return;
-	//OMP_SIMD()
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=pow(P(A, i), power);
 	}
@@ -840,7 +855,7 @@ void X(cwpow)(X(mat)* A, R power){
 */
 void X(cwexp)(X(mat)* A, R alpha){
 	if(!A) return;
-	//OMP_SIMD()
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=exp(P(A, i)*alpha);
 	}
@@ -851,6 +866,7 @@ void X(cwexp)(X(mat)* A, R alpha){
 */
 void X(cwpow_thres)(X(mat)* restrict A, R power, R thres){
 	thres*=X(maxabs)(A);
+	//OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		if(fabs(P(A, i))>thres){
 			P(A, i)=pow(P(A, i), power);
@@ -870,7 +886,7 @@ void X(polyval)(X(mat)* A, XR(mat)* p){
 	int np=p->nx;
 	for(long i=0; i<A->nx*A->ny; i++){
 		T tmp=0;
-		//OMP_SIMD(reduction(+:tmp))
+		OMP_SIMD_R(reduction(+:tmp))
 		for(long ip=0; ip<np; ip++){
 			tmp+=P(p, ip)*(T)pow(P(A, i), np-ip-1);
 		}
@@ -885,6 +901,7 @@ void X(addI)(X(mat)*restrict A, T val){
 	if(A->nx!=A->ny)
 		warning("daddI: A is not square\n");
 	long M=A->nx<A->ny?A->nx:A->ny;
+	OMP_SIMD()
 	for(long i=0; i<M; i++){
 		P(A, i, i)+=val;
 	}
@@ -933,8 +950,8 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 		X(mat)* restrict B=*B0;
 		long nx=MIN(A->nx, B->nx);
 		long ny=MIN(A->ny, B->ny);
-		OMP_SIMD(collapse(2))
 		for(long iy=0; iy<ny; iy++){
+			OMP_SIMD()
 			for(long ix=0; ix<nx; ix++){
 				P(B, ix, iy)=P(B, ix, iy)*bc+P(A, ix, iy)*ac;
 			}
@@ -958,6 +975,7 @@ void X(adds)(X(mat)*restrict A, const T ac){
 X(mat)* X(logspace)(R emin, R emax, long n){
 	X(mat)* out=X(new)(n, 1);
 	R esep=(emax-emin)/(n-1);
+	//OMP_SIMD()
 	for(long i=0; i<n; i++){
 		P(out, i)=pow(10, emin+esep*i);
 	}
@@ -1001,7 +1019,7 @@ static int X(islog)(const X(mat)* xin){
 	R x1=log10(P(xin, 1));
 	R xmaxl=log10(P(xin, nmax1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
-	if(!isfinite(xsep)||fabs(xsep+xminl-x1)>xsep*1.e-3){
+	if(isinf(xsep)||fabs(xsep+xminl-x1)>xsep*1.e-3){
 		return 0;
 	} else{
 		return 1;
@@ -1257,7 +1275,6 @@ X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 
 	X(mat)* pc=coeff;
 	T ypriv, ynext;
-	//OMP_SIMD() //not useful
 	for(long ix=0; ix<nx-1; ix++){
 		if(fabs(px[ix+1]-px[ix]-xsep)>thres){
 			error("The coordinate is not evenly spaced\n");
@@ -1321,7 +1338,7 @@ X(mat)* X(spline)(X(mat)* x, X(mat)* y, X(mat)* xnew){
 */
 void X(cwlog10)(X(mat)* A){
 	R ratio=1./log(10);
-	//OMP_SIMD()
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=log(P(A, i))*ratio;
 	}
@@ -1330,7 +1347,7 @@ void X(cwlog10)(X(mat)* A){
    Do a component wise log10 on each element of A.
 */
 void X(cwlog)(X(mat)* A){
-	//OMP_SIMD()
+	OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=log(P(A, i));
 	}
@@ -1379,7 +1396,6 @@ void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
 		long ix2, iy2;
 		for(long iy=0; iy<nouty; iy++){
 			R y=(R)(iy-nouty2);
-			//OMP_SIMD()
 			for(long ix=0; ix<noutx; ix++){
 				R x=(R)(ix-noutx2);
 				R x2=x*ctheta+y*stheta+ninx2;
@@ -1409,7 +1425,7 @@ R X(fwhm)(X(mat)* A){
 	if(!A) return 0;
 	R hm=0.5*X(max)(A);
 	long n=0;
-	OMP_SIMD(reduction(+:n))
+	OMP_SIMD_R(reduction(+:n))
 	for(long ix=0; ix<A->nx*A->ny; ix++){
 		if(fabs(P(A, ix))>=hm){
 			n++;
@@ -1433,7 +1449,6 @@ void X(gauss_fit)(
 	long nx=NX(A);
 
 	R sum=0, sumx=0, sumy=0, Amax=0;
-	//OMP_SIMD(reduction(+:sum,sumx,sumy) reduction(max:Amax) collapse(2))
 	for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
 			R Ai=REAL(P(A, ix, iy));
@@ -1458,7 +1473,7 @@ void X(gauss_fit)(
 	sum=0;
 	for(long iy=0; iy<ny; iy++){
 		R y=(R)iy-sumy;
-		OMP_SIMD(reduction(+:sumx2, sumy2, sumxy, sum))
+		OMP_SIMD_R(reduction(+:sumx2, sumy2, sumxy, sum))
 		for(long ix=0; ix<nx; ix++){
 			R x=(R)ix-sumx;
 			R Ai=REAL(P(A, ix, iy));
@@ -1503,7 +1518,7 @@ typedef struct{
 	int type;
 }ENC_T;
 
-static void X(enc_thread)(thread_t* pdata){
+static void* X(enc_thread)(thread_t* pdata){
 	ENC_T* data=(ENC_T*)pdata->data;
 	const X(mat)* dvec=data->dvec;
 	X(mat)* restrict enc=data->enc;
@@ -1520,7 +1535,7 @@ static void X(enc_thread)(thread_t* pdata){
 		/*Cache the data. */
 		for(long iy=0; iy<ncomp2; iy++){
 			R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
-			//OMP_SIMD()
+			OMP_SIMD()
 			for(long ir=pdata->start; ir<pdata->end; ir++){
 				P(pks, ir, iy)=sinc(ky*dr[ir])*dr[ir];
 			}
@@ -1552,7 +1567,6 @@ static void X(enc_thread)(thread_t* pdata){
 					break;
 				case 1: {/*Encircled energy. dr is diameter */
 					R k=sqrt(kx*kx+ky*ky);
-					//OMP_SIMD()
 					for(long ir=pdata->start; ir<pdata->end; ir++){
 						const R r=dr[ir]*0.5;
 						const R tmp=k*pi2*r;
@@ -1570,6 +1584,7 @@ static void X(enc_thread)(thread_t* pdata){
 			}
 		}
 	}
+	return NULL;
 }
 /**
    Compute the enclosed energy or azimuthal average of a.
@@ -1637,13 +1652,13 @@ T X(trapz)(const X(mat)* restrict x, const X(mat)* restrict y){
 		}
 		T ans=0;
 		if(px){
-			OMP_SIMD(reduction(+:ans))
+			OMP_SIMD_R(reduction(+:ans))
 			for(long i=0; i<y->nx-1; i++){
 			//notice use of abs here.
 				ans+=fabs(px[i+1]-px[i])*(py[i+1]+py[i]);
 			}
 		} else{
-			OMP_SIMD(reduction(+:ans))
+			OMP_SIMD_R(reduction(+:ans))
 			for(long i=0; i<y->nx; i++){
 				ans+=py[i];
 			}
@@ -1829,7 +1844,7 @@ R X(celldiff)(const X(cell)* A, const X(cell)* B){
 */
 int X(cellclip)(X(cell)* Ac, R min, R max){
 	if(!Ac||!P(Ac)) return 0;
-	if(!isfinite(min)&&!isfinite(max)) return 0;
+	if(isinf(min)&&isinf(max)) return 0;
 	int nclip=0;
 	for(long i=0; i<Ac->nx*Ac->ny; i++){
 		nclip+=X(clip)(P(Ac, i), min, max);

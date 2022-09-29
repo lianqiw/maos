@@ -366,13 +366,15 @@ void X(show)(const X(mat)* A, const char* format, ...){
 	info("Displaying content of %s:\n", fn);
 	if(!check_mat(A)) return;
 	int colmax=10;
+	int rowmax=10;
 	int iset, i, j;
-	int nset=(A->ny+colmax-1)/colmax;
+	int nset=1;//(A->ny+colmax-1)/colmax;
 	for(iset=0; iset<nset; iset++){
 		int ncol=(iset+1)*colmax;
 		if(ncol>A->ny) ncol=A->ny;
 		info("Cols %d to %d\n", iset, ncol-1);
-		for(j=0; j<A->nx; j++){
+		int nxmax=MIN(A->nx, rowmax);
+		for(j=0; j<nxmax; j++){
 			for(i=iset*colmax; i<ncol; i++){
 				PRINT(P(A, j, i));
 			}

@@ -336,7 +336,7 @@ static void save_cov_opdmean(curmat& opdcov, curmat& opdmean, curmat& iopdevl,
 /**
    Performance evaluation. Designed to replace perfevl_ievl in maos/perfevl.c
 */
-void gpu_perfevl_queue(thread_t* info){
+void* gpu_perfevl_queue(thread_t* info){
 	TIC;tic;
 	sim_t* simu=(sim_t*)info->data;
 	const parms_t* parms=simu->parms;
@@ -501,8 +501,9 @@ void gpu_perfevl_queue(thread_t* info){
 		//info("thread %ld gpu %d ievl %d queued\n", thread_id(), cudata->igpu, ievl);
 		ctoc("queued");
 	}//for ievl
+	return NULL;
 }
-void gpu_perfevl_sync(thread_t* info){
+void* gpu_perfevl_sync(thread_t* info){
 	TIC;tic;
 	sim_t* simu=(sim_t*)info->data;
 	const parms_t* parms=simu->parms;
@@ -531,6 +532,7 @@ void gpu_perfevl_sync(thread_t* info){
 		//info("thread %ld gpu %d ievl %d end\n", thread_id(), cudata->igpu, ievl);
 	}//for ievl
 	ctoc("gpu_perfevl_sync");
+	return NULL;
 }
 
 /**

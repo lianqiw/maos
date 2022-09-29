@@ -55,22 +55,21 @@ public:
     void *memcache;/*For reuse temp array for type conversion.*/
     long nmemcache;
     pthread_mutex_t memmutex;
-
-    int recongpu;
     Array<int> evlgpu;
     Array<int> wfsgpu;
     dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
+    int recongpu;
     int atm_full; /**<Indicate whether atm is loaded in full to GPU*/
     cuperf_g perf;
     Array<cuwfs_t>wfs;
     Array<atm_prep_t>atm_prep_data;
     curmat mvm;
-    cuglobal_t():recongpu(0),atmscale(0),nmemcache(0),memcache(NULL){
-	pthread_mutex_init(&memmutex, 0);
+    cuglobal_t():memcache(NULL), nmemcache(0), atmscale(0), recongpu(0), atm_full(0){
+	    pthread_mutex_init(&memmutex, 0);
     }
     ~cuglobal_t(){
-	free(memcache); memcache=NULL; nmemcache=0;
-	dfree(atmscale);
+	    free(memcache); memcache=NULL; nmemcache=0;
+	    dfree(atmscale);
     }
 };
 //Per GPU data
@@ -101,10 +100,10 @@ public:
     NumArray<AReal, Gpu>mvm_a; /*contains act result from mvm_m*mvm_g*/
     NumArray<GReal, Gpu>mvm_g;/*the gradients copied from gpu*/
     stream_t mvm_stream;
-    cudata_t():recon(0){
+    cudata_t():igpu(0),recon(0){
     }
     ~cudata_t(){
-	delete recon;
+	    delete recon;
     }
 };
 

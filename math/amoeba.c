@@ -161,7 +161,7 @@ int X(minsearch)(T* x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void* i
 			pinit[i][i]*=1.05;//5% perturbation (was 15%, 2017-07-19)
 		}
 		yinit[i]=fun(pinit[i], info);
-		if(!isfinite(yinit[i])){
+		if(isinf(yinit[i])){
 			warning("yinit[%d]=%g\n", i, yinit[i]);
 		}
 	}

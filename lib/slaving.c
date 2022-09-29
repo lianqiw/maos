@@ -817,7 +817,7 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 		}
 		dspfree(outit);
 		dfree(actcpl2);
-		dbg("act_extrap: nmissing=%ld\n", nmissing);
+		if(nmissing) dbg("act_extrap: nmissing=%ld, repeat.\n", nmissing);
 	}while(nmissing>0);
 	dsp* out=dsptrans(outt);
 	dspfree(outt);

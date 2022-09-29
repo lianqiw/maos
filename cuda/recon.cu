@@ -63,7 +63,7 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	init_tomo(parms, recon);
 	init_moao(parms, recon);
 
-	if((parms->recon.alg==RECON_MVR&&parms->gpu.fit||parms->recon.mvm||parms->gpu.moao)
+	if(((parms->recon.alg==RECON_MVR&&parms->gpu.fit)||parms->recon.mvm||parms->gpu.moao)
 		||(parms->recon.alg==RECON_LSR&&parms->gpu.lsr)
 		){
 		if(parms->recon.alg==RECON_MVR&&parms->fit.square){

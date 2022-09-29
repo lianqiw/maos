@@ -36,7 +36,7 @@ typedef struct data_t{
 	int urgent;
 }data_t;
 
-static void dummy_runner(data_t *data){
+static void* dummy_runner(data_t *data){
 	int do_loader=0;
 	unsigned int i;
 	unsigned int tot=0;
@@ -51,6 +51,7 @@ static void dummy_runner(data_t *data){
 		//dbg("depth=%u\n", data->depth);
 		dummy_loader(data->depth, data->urgent);
 	}
+	return NULL;
 }
 static void dummy_loader(unsigned int depth, int urgent){
 	//dbg("depth=%u\n", depth);

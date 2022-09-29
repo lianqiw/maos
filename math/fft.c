@@ -21,46 +21,11 @@
 #include "mathdef.h"
 #include "defs.h"
 //This file is only used by cmath and zmath, which defines COMP_COMPLEX
-#if defined(COMP_COMPLEX) && (!defined(COMP_SINGLE) || HAS_FFTWF==1) || 1
-/**
-   An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
-*/
-typedef struct PLAN1D_T{
-	int ncomp;         /**< For a NxN array, only convert center ncomp*ncomp to Fourier space. */
-	FFTW(plan) plan[3]; /**< Array of plans for 1-d FFT */
-}PLAN1D_T;
+#if defined(COMP_COMPLEX) && (!defined(COMP_SINGLE) || HAS_FFTWF==1)
 
-struct fft_t{
-	FFTW(plan) plan[3];
-	PLAN1D_T* plan1d[3];
-};
-/**
-   Free FFTW plans.
-*/
-void X(fft_free_plan)(fft_t* fft){
-	if(!fft) return;
-	for(int idir=-1; idir<2; idir+=2){
-		LOCK_FFT;
-		if(fft->plan1d[idir+1]){
-			FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[0]);
-			FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[1]);
-			FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[2]);
-			dbg3("Plan %p destroyed\n", fft->plan1d[idir+1]);
-			free(fft->plan1d[idir+1]);
-		}
-		if(fft->plan[idir+1]){
-			FFTW(destroy_plan)(fft->plan[idir+1]);
-			dbg3("Plan %p destroyed\n", fft->plan[idir+1]);
-
-		}
-		UNLOCK_FFT;
-	}
-	free(fft);
-}
 /**
    load FFT wisdom from file.
 */
-
 static char fnwisdom[64];
 static void load_wisdom(){
 	FILE* fpwisdom;
@@ -72,7 +37,7 @@ static void load_wisdom(){
 /**
    save FFT wisdom to file.
 */
-#if !defined (COMP_SINGLE)
+
 //Put the following within COMP_COMPLEX to avoid run multiple copies of it.
 static void save_wisdom(){
 	FILE* fpwisdom;
@@ -87,19 +52,6 @@ static void save_wisdom(){
 static __attribute__((destructor))void deinit(){
 	save_wisdom();
 }
-#endif
-//The following are static, one per data type
-#if HAS_FFTW_CALLBACK
-#if _OPENMP>=201511
-static void fftw_task_callback(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
-	(void)data;
-#pragma omp taskloop
-	for(int i=0; i<njobs; ++i){
-		work(jobdata+elsize*i);
-	}
-}
-#endif
-#endif
 static void (*init_threads())(int){
 	void (*p_fftw_plan_with_nthreads)(int)=NULL;
 #if HAS_FFTW_THREADS
@@ -120,31 +72,42 @@ static void (*init_threads())(int){
 #else
 	const char *libname="fftw";
 #endif
-	sprintf(fnwisdom, "%s/.aos/%s_wisdom%s", HOME, libname, suffix);
+	sprintf(fnwisdom, "%s/%s_wisdom%s", CACHE, libname, suffix);
 	load_wisdom();
 	return p_fftw_plan_with_nthreads;
 }
 
-static void fft_execute(FFTW(plan) plan){
-#if _OPENMP
-	if(NTHREAD>1 && !omp_in_parallel()){
-		warning("fft_execute not in parallel\n");
-	}
-#endif
-	FFTW(execute)(plan);
-}
 
-static void fft_threads(long nx, long ny){
+
+#if HAS_FFTW_CALLBACK
+static void FFTW(task_callback)(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
+	(void)data;
+	dbg("fft_task_callback: %d threads\n", njobs);
+#if _OPENMP
+#pragma omp taskloop default(shared) num_tasks(njobs) priority(1)
+	for(int i=0; i<njobs; ++i){
+		work(jobdata+elsize*i);
+	}
+#else
+	tp_counter_t group={0};
+	for(int i=0; i<njobs; ++i){
+		QUEUE(&group, work, jobdata+elsize*i, 1, 1);
+	}
+	WAIT(&group, 1);
+#endif
+}
+#endif
+static void FFTW(fft_threads)(long nx, long ny){
 	static int fft_has_threads=-1;
 	static int last_nthread=-1;
 	static void (*p_fftw_plan_with_nthreads)(int)=NULL;
 	if(fft_has_threads==-1){//first initialization
 		if((p_fftw_plan_with_nthreads=init_threads())){
 #if HAS_FFTW_CALLBACK
-#if _OPENMP>=201511
-			fftw_threads_set_callback(fftw_task_callback, NULL);
+			fftw_threads_set_callback(FFTW(task_callback), NULL); //since version 3.3.9
 			dbg("fftw_thread_set_callback with fftw_task_callback\n");
-#endif
+#else			
+			dbg("fftw_thread_set_callback is not available.k\n");
 #endif
 			fft_has_threads=1;
 		} else{
@@ -160,12 +123,55 @@ static void fft_threads(long nx, long ny){
 		}
 	}
 }
+
 #ifdef __cplusplus
 #define COMP(A) reinterpret_cast<fftw_complex*>(A)
 #else
 #define COMP(A) A
 #endif
+/**
+   An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
+*/
+typedef struct PLAN1D_T{
+	int ncomp;         /**< For a NxN array, only convert center ncomp*ncomp to Fourier space. */
+	FFTW(plan) plan[3]; /**< Array of plans for 1-d FFT */
+}PLAN1D_T;
 
+struct fft_t{
+	FFTW(plan) plan[3];
+	PLAN1D_T *plan1d[3];
+};
+/**
+   Free FFTW plans.
+*/
+void X(fft_free_plan)(fft_t *fft){
+	if(!fft) return;
+	for(int idir=-1; idir<2; idir+=2){
+		LOCK_FFT;
+		if(fft->plan1d[idir+1]){
+			FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[0]);
+			FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[1]);
+			FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[2]);
+			dbg3("Plan %p destroyed\n", fft->plan1d[idir+1]);
+			free(fft->plan1d[idir+1]);
+		}
+		if(fft->plan[idir+1]){
+			FFTW(destroy_plan)(fft->plan[idir+1]);
+			dbg3("Plan %p destroyed\n", fft->plan[idir+1]);
+
+		}
+		UNLOCK_FFT;
+	}
+	free(fft);
+}
+static void fft_execute(FFTW(plan) plan){
+#if _OPENMP
+	if(NTHREAD>1&&!omp_in_parallel()){
+		warning("fft_execute not in parallel\n");
+	}
+#endif
+	FFTW(execute)(plan);
+}
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
    the array. So do it before filling in data.
@@ -178,7 +184,7 @@ static void X(fft2plan)(X(mat)* A, int dir){
 	int FFTW_FLAGS;
 	FFTW_FLAGS=FFTW_ESTIMATE;//Always use ESTIMATE To avoid override data.
 	LOCK_FFT;
-	fft_threads(A->nx, A->ny);
+	FFTW(fft_threads)(A->nx, A->ny);
 	/*!!fft uses row major mode. so need to reverse order */
 	if(A->nx==1||A->ny==1){
 		A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, COMP(P(A)), COMP(P(A)), dir, FFTW_FLAGS);
@@ -206,7 +212,7 @@ static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
 	FFTW_FLAGS=FFTW_ESTIMATE;
 	PLAN1D_T* plan1d=A->fft->plan1d[dir+1]=mycalloc(1, PLAN1D_T);
 	LOCK_FFT;
-	fft_threads(A->nx, A->ny);
+	FFTW(fft_threads)(A->nx, A->ny);
 	/*along columns for all columns. */
 	plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
 		COMP(P(A)), NULL, 1, nx,
@@ -316,7 +322,7 @@ static void XR(cell_fft2plan)(XR(cell)* dc, int dir){
 	fft_t* fft=mycalloc(1, fft_t);
 	if(!fft->plan[dir+1]){
 		LOCK_FFT;
-		fft_threads(nx, ny);
+		FFTW(fft_threads)(nx, ny);
 		fft->plan[dir+1]=FFTW(plan_guru_split_dft)
 			(2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);
 		if(!fft->plan[dir+1]){

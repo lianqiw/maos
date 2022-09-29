@@ -55,7 +55,7 @@ void zfarr_push_cell(zfarr* ca, int i, const cell* A){
 		return;
 	}
 	if(i>=0&&ca->cur>i){
-		warning("Invalid. cur=%ld, i=%d, skip.\n", ca->cur, i);
+		warning("Invalid. %s, cur=%ld, i=%x, skip.\n", zfname(ca->fp), ca->cur, i);
 		print_backtrace();
 		return;
 	}
@@ -71,7 +71,7 @@ void zfarr_push_cell(zfarr* ca, int i, const cell* A){
 		if(!ca->id){
 			ca->id=id;
 		}else if(ca->id!=id){
-			warning("Data mismatch: existing data is %u, new data is %u", ca->id, id);
+			warning("Data mismatch: %s, existing data is %x, new data is %x", zfname(ca->fp), ca->id, id);
 		}
 	}
 	while(ca->cur<i && ca->tot){//fill blank

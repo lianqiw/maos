@@ -200,7 +200,7 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 /**
    A wrapper to execute pttr parallel in pthreads
  */
-static void genotf_wrap(thread_t* info){
+static void *genotf_wrap(thread_t* info){
 	GENOTF_T* data=(GENOTF_T*)info->data;
 	const int nsa=data->nsa;
 	ccell* otf=data->otf;
@@ -235,6 +235,7 @@ static void genotf_wrap(thread_t* info){
 		}
 	}
 	//if(!detached && nsa>10) info2("Thread %ld done\n", info->ithread);
+	return NULL;
 }
 /**
    Generate pairs of overlapping points for structure function.

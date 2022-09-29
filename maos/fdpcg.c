@@ -594,7 +594,7 @@ typedef struct{
 /**
    Copy x vector and do FFT on each layer
 */
-static void fdpcg_fft(fdpcg_info_t* data){
+static void* fdpcg_fft(fdpcg_info_t* data){
 	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhati=data->xhati;
 	const dcell* xin=data->xin;
@@ -618,24 +618,26 @@ static void fdpcg_fft(fdpcg_info_t* data){
 			cfft2(P(xhati,ips), -1);
 		}
 	}
+	return NULL;
 }
 
 /**
    Multiply each block in parallel
  */
-static void fdpcg_mulblock(fdpcg_info_t* data){
+static void* fdpcg_mulblock(fdpcg_info_t* data){
 	fdpcg_t* fdpcg=data->fdpcg;
 	long bs=P(fdpcg->Mbinv,0)->nx;//size of block
 	unsigned int ib;
 	while((ib=atomic_fetch_add(&data->ib, 1))<data->nb){
 		cmulvec(&P(data->xhat,ib*bs), P(fdpcg->Mbinv,ib), &P(data->xhat2,ib*bs), 1);
 	}
+	return NULL;
 }
 
 /**
    Inverse FFT for each block. Put result in xout, replace content, do not accumulate.
  */
-static void fdpcg_ifft(fdpcg_info_t* data){
+static void* fdpcg_ifft(fdpcg_info_t* data){
 	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhat2i=data->xhat2i;
 	dcell* xout=data->xout;
@@ -655,6 +657,7 @@ static void fdpcg_ifft(fdpcg_info_t* data){
 			cembed_locstat(&P(xhat2i,ips), 1, P(fdpcg->xloc,ips), P(P(xout,ips)), 0, 1);
 		}
 	}
+	return NULL;
 }
 
 /**

@@ -33,7 +33,7 @@
 
 
 #include "chol.h"
-#if defined(DLONG)
+#if CPU_WIDTH == 64
 #define MOD(A) cholmod_l_##A
 #define CHOL_ITYPE CHOLMOD_LONG
 #else
@@ -555,9 +555,10 @@ static void chol_solve_each(dmat** x, spchol* A, const dmat* y, long start, long
 /*
   Solve section of the columns in multi-threaded way.
 */
-static void chol_solve_thread(thread_t* info){
+static void* chol_solve_thread(thread_t* info){
 	CHOLSOLVE_T* data=(CHOLSOLVE_T*)info->data;
 	chol_solve_each(&data->x, data->A, data->y, info->start, info->end);
+	return NULL;
 }
 /**
    Solve A*x=y where the cholesky factor of A is stored in A.

@@ -45,5 +45,5 @@ void setup_recon_dither_dm(recon_t *recon, const powfs_t *powfs, const parms_t *
 //void setup_recon_sodium_fit(recon_t* recon, const parms_t* parms);
 void tomofit(dcell **dmout, sim_t *simu, dcell *gradin);
 //void lsr(sim_t *simu);
-void reconstruct(sim_t *simu);
+void* reconstruct(sim_t *simu);
 #endif

@@ -274,7 +274,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	char* sline=NULL;
 	int countnew=0;
 	int countold=0;
-	int countskip=0;
+	//int countskip=0;
 #define MAXLN 10000
 	char ssline[MAXLN];
 	ssline[0]='\0';/*stores the available line. */
@@ -325,7 +325,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				}
 				countnew=0;
 				countold=0;
-				countskip=0;
+				//countskip=0;
 			} else if(!strcmp(ssline, "__default__")){
 				priority=0;//this file contains default setup.
 			} else{
@@ -453,7 +453,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 					}
 				} else if(diffval){
 					if(oldstore->priority>priority){
-						countskip++;
+						//countskip++;
 						info("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
 						//Skip the entry.
 					} else{

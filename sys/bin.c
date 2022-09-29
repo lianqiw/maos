@@ -93,6 +93,7 @@ struct file_t{
 	int isfits;/**<Is the file fits.*/
 	int fd;    /**<The underlying file descriptor, used for locking. */
 	int err;   /**<error happened. 1: eof, 2: other error*/
+	int mode;  /**<0: read, 1: write*/
 };
 /*
   Describes the information about mmaped data. Don't unmap a segment of mmaped
@@ -215,8 +216,14 @@ static char* procfn(const char* fn, const char* mod){
 			}*/
 		if(disable_save&&mystrcmp(fn2, CACHE)){
 			//When saving is disabled, allow writing to cache folder.
-			warning("Saving is disabled for %s.\n", fn2);
-			print_backtrace();
+			{
+				static int printed=0;
+				if(!printed){
+					warning("Saving is disabled for %s.\n", fn2);
+					print_backtrace();
+					printed=1;
+				}
+			}
 			free(fn2);
 			fn2=NULL;
 		}
@@ -325,6 +332,7 @@ file_t* zfopen(const char* fni, const char* mod){
 		if((fp->fd=myopen(fn2, O_RDONLY, 0666))==-1){
 			perror("open for read");
 		} else{//file exist
+			fp->mode=0;
 			if(!mystrcmp(fn2, CACHE)){
 				utimes(fn2, NULL);
 			}
@@ -342,6 +350,7 @@ file_t* zfopen(const char* fni, const char* mod){
 			} else if(mod[0]=='w'&&ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
 				perror("ftruncate");
 			}
+			fp->mode=1;
 		}
 		break;
 	default:
@@ -357,7 +366,7 @@ file_t* zfopen(const char* fni, const char* mod){
 	if(mod[0]=='r'){
 		uint16_t magic;
 		if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
-			dbg("Unable to read from %s.\n", fn2);
+			dbg("Unable to read magic from %s.\n", fn2);
 			goto fail;
 		} else{
 			if(magic==0x8b1f){
@@ -387,6 +396,37 @@ fail:
 	if(fp->fd!=-1) close(fp->fd);
 	free(fp->fn); free(fp); fp=NULL;
 	return fp;
+}
+/**
+ * print error message
+ * */
+static void zferrprint(file_t *fp){
+	switch(fp->err){
+	case 0:
+		break;//dbg("%s: Clear error\n", fp->fn);
+	case 1:
+		dbg("%s: EOF encountered\n", fp->fn);
+		break;
+	case 2:
+		dbg("%s: Unknown error\n", fp->fn);
+		break;
+	default:
+		dbg("%s: Invalid entry: %d\n", fp->fn, fp->err);
+	}
+}
+/**
+ * set error field
+ * */
+static void zferr(file_t *fp, int err){
+	if(!fp) return;
+	fp->err=err;
+	zferrprint(fp);
+}
+/**
+ * Return the error number
+ * */
+int zferrno(file_t *fp){
+	return fp?fp->err:-1;
 }
 /**
    Open a bin file or socket for read/write access.
@@ -422,6 +462,13 @@ int zfisfits(file_t* fp){
 */
 void zfclose(file_t* fp){
 	if(!fp) return;
+	if(fp->fn && fp->mode==0){
+		long pos=zfpos(fp);
+		long len=zflen(fp);
+		if(pos<len){
+			dbg("zfclose %s: there is extra data not read. pos=%ld, len=%ld\n", fp->fn, pos, len);
+		}
+	}
 	//LOCK(lock);//causes race condition with zfopen_try
 	if(fp->isgzip){
 		gzclose(fp->gp);
@@ -438,7 +485,8 @@ void zfclose(file_t* fp){
  * */
 int zfwrite_wrap(const void* ptr, const size_t tot, file_t* fp){
 	if(!fp||fp->fd<0||fp->err||!ptr){
-		return -1;
+		dbg("zfwrite_wrap: error encountered, cancelled.\n");
+		return (fp&&fp->err)?fp->err:-1;
 	} else if(fp->isgzip){
 		return gzwrite(fp->gp, ptr, tot);
 	} else{
@@ -461,7 +509,7 @@ int zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* f
 				break;
 			}
 		} else{
-			fp->err=2;
+			zferr(fp, 2);
 		}
 	}
 	if(fp->err){
@@ -476,7 +524,10 @@ int zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* f
 */
 int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
-	if(!ptr || !size || !nmemb || !fp) return 0;
+	if(!ptr || !size || !nmemb || !fp){
+		dbg("zfwrite: invalid input\n");
+		return -1;
+	}
 	int ans=0;
 	if(fp->isfits&&BIGENDIAN==0){
 		int length=size*nmemb;
@@ -521,7 +572,6 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	while(!fp->err){
 		long count=zfread_wrap(ptr, tot, fp);
 		if(count>0){
-			//dbg("tot=%lu, count=%ld, zfeof=%d, pos=%ld, len=%ld\n", tot, count, zfeof(fp), zfpos(fp), zflen(fp));
 			if(count<tot){
 				ptr+=count;
 				tot-=count;
@@ -529,21 +579,19 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 				break;
 			}
 		} else if(count==0){//eof
-			//dbg("%s: EOF tot=%lu, count=%ld, pos=%ld, len=%ld\n", fp->fn, tot, count, zfpos(fp), zflen(fp));
-			fp->err=1;
-		} else{//-1 indicates error
+			zferr(fp, 1);
+		} else{//unknown error
 			dbg("%s: unknown error happend during reading.\n", fp->fn);
-			fp->err=2;
+			zferr(fp, 2);
 		}
 	}
-	return fp->err?-1:0;
+	return fp->err;
 }
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
    return 0 when succeed and -1 when error.
 */
 int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
 	int ans=0;
 	if(fp->err){
 		ans=-1;
@@ -584,11 +632,11 @@ long zfseek(file_t* fp, long offset, int whence){
 void zfrewind(file_t* fp){
 	if(fp->isgzip){
 		if(!gzrewind(fp->gp)){
-			fp->err=0;
+			zferr(fp, 0);
 		}
 	} else{
 		if(lseek(fp->fd, 0, SEEK_SET)!=-1){
-			fp->err=0;
+			zferr(fp, 0);
 		}
 	}
 }
@@ -607,14 +655,11 @@ long zfpos(file_t* fp){
    Return 1 if end of file is reached.
 */
 int zfeof(file_t* fp){
-	if(!fp->err){
-		if(zfseek(fp, 1, SEEK_CUR)<0){
-			fp->err=1;
-		} else{
-			zfseek(fp, -1, SEEK_CUR);//restore
-		}
-	}
-	return fp->err==1;
+	if(fp->err) return fp->err==1;//already EOF error
+	long pos=zfpos(fp);
+	long end=zfseek(fp, 0, SEEK_END);
+	zfseek(fp, pos, SEEK_SET);
+	return pos!=end;
 }
 /**
  * Return file length
@@ -625,6 +670,7 @@ long zflen(file_t *fp){
 	zfseek(fp, pos, SEEK_SET);
 	return end;
 }
+
 /**
    Flush the buffer.
 */
@@ -635,7 +681,7 @@ void zflush(file_t* fp){
 	}
 }*/
 #define CHECK_EOF(A, errmsg) if(A){if(fp->err==1) goto read_error_eof; else  {fp->msg=errmsg;goto read_error;}}//eof is not error
-#define CHECK_ERR(A, errmsg) if(A){if(!fp->err) fp->err=2; fp->msg=errmsg; goto read_error;} //eof is error
+#define CHECK_ERR(A, errmsg) if(A){if(!fp->err) zferr(fp, 2); fp->msg=errmsg; goto read_error;} //eof is error
 /*
   Obtain the current magic number, string header, and array size from a bin
   format file. In file, the string header is located before the data magic.
@@ -647,7 +693,7 @@ read_bin_header(header_t* header, file_t* fp){
 	memset(header, 0, sizeof(header_t));
 
 	if(fp->isfits){
-		warning("fits file is not supported\n");
+		warning("Please use read_fits_header for fits file.\n");
 		return -1;
 	}
 	while(!fp->err){
@@ -655,7 +701,7 @@ read_bin_header(header_t* header, file_t* fp){
 		CHECK_EOF(zfread(&magic, sizeof(uint32_t), 1, fp),"Read frame start failed.");
 		/*If it is hstr, read or skip it.*/
 		if(magic==M_EOD){//end of data. useful in socket i/o to indicate end of current dataset
-			return -1;
+			return 1;
 		}else if((magic&M_SKIP)==M_SKIP){//dummy
 			continue;
 		} else if(magic==M_COMMENT){//comment
@@ -680,7 +726,7 @@ read_bin_header(header_t* header, file_t* fp){
 			CHECK_ERR(zfread(&header->ny, sizeof(uint64_t), 1, fp), "Real ny failed");
 			if((magic&0x6400)!=0x6400){
 				warning("wrong magic number=%x at %ld. cancelled.\n", magic, zfpos(fp));
-				fp->err=2;
+				zferr(fp, 2);
 				goto read_error;
 			} else{
 				return 0;
@@ -696,7 +742,7 @@ read_error_eof:
 	header->nx=0;
 	header->ny=0;
 	free(header->str); header->str=NULL;
-	return -1;
+	return fp->err?fp->err:-1;
 }
 
 /*
@@ -958,7 +1004,7 @@ read_fits_header(header_t* header, file_t* fp){
 		header->magic=M_INT8;
 		break;
 	default:
-		fp->err=2;
+		zferr(fp, 2);
 		warning("Unsupported bitpix=%d.\n", bitpix);
 		goto read_error;
 	}
@@ -971,7 +1017,7 @@ read_error_eof:
 	header->magic=0;
 	header->nx=0;
 	header->ny=0;
-	return -1;
+	return fp->err?fp->err:-1;
 }
 /**
    A unified header writing routine for .bin and .fits files. It write the array
@@ -1000,7 +1046,7 @@ int read_header(header_t* header, file_t* fp){
 	int ans;
 	header->str=NULL;
 	if(fp->err){
-		warning("fp->err=%d\n", fp->err);
+		dbg("fp->err=%d, read_header canceled.\n", fp->err);
 		ans=-1;
 	} else if(fp->isfits){
 		ans=read_fits_header(header, fp);
@@ -1051,7 +1097,6 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 	const uint64_t ny    /**<[in] Number of columns. 1 for vector*/
 ){
 	file_t* fp;
-	header_t header={magic, nx, ny, (char*)str};
 	if(isfn){
 		fp=zfopen((char*)fpn, "wb");
 	} else{
@@ -1059,15 +1104,19 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 	}
 	if(!fp){
 		if(!disable_save){
-			warning_once("fp is empty\n");
+			warning_once("writearr failed: fp is empty.\n");
+		}else{
+			warning_once("writearr failed: empty fp.\n");
 		}
 		return -1;
 	}
+	header_t header={magic, nx, ny, (char *)str};
 	write_header(&header, fp);
-	long pos=zfpos(fp);
+	//long pos=zfpos(fp);
 	if(nx*ny>0) zfwrite(p, size, nx*ny, fp);
+	//else dbg("writearr: size is zero: %s %ldx%ld\n", zfname(fp), nx, ny);
 	if(isfn) zfclose(fp);
-	return pos;
+	return 0;
 }
 
 
@@ -1306,12 +1355,15 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 	}
 	return async;
 }
+/**
+ * Wait until previous async write are finished.
+ * */
 static void async_sync(async_t* async, int wait){
 	long ans;
 	if(async->aio.aio_nbytes){//check previous result
-		//Notice, if aio_fsync is called after aio_write, aio_return returns status of aio_fsync, not aio_write.
-		//Calling aio_fsync breaks the code (why?)
-		//aio_fsync is not available in macos.
+		/*avoid using aio_fsync(). Calling aio_fsync breaks the code because if
+		aio_fsync is called after aio_write, aio_return returns status of
+		aio_fsync, not aio_write. aio_fsync is not available in macos.*/
 		int retry=0;
 		while((ans=aio_error(&async->aio))==EINPROGRESS&&wait){
 			const struct aiocb* paio=&async->aio;
@@ -1326,12 +1378,15 @@ static void async_sync(async_t* async, int wait){
 			if((ans=aio_return(&async->aio))!=(long)async->aio.aio_nbytes){
 				dbg("%s: wrote %ld bytes out of %ld, mark eof.\n",
 					zfname(async->fp), ans, async->aio.aio_nbytes);
-				async->fp->err=2;
+				zferr(async->fp, 2);
 			}
 			async->aio.aio_nbytes=0;
 		}
 	}
 }
+/**
+ * Write to file asynchronously
+ * */
 void async_write(async_t* async, long offset, int wait){
 	if(!async||async->fp->err){
 		if(!async){
@@ -1362,7 +1417,7 @@ void async_write(async_t* async, long offset, int wait){
 			if(errno==EAGAIN){//mark as temporary failure.
 				async->aio.aio_nbytes=0;
 			}else{//mark as permanent failure
-				async->fp->err=2;
+				zferr(async->fp, 2);
 				dbg("%s: aio_write failed with errno %d:%s.\n", zfname(async->fp), errno, strerror(errno));
 			}
 		}else{//update previous marker only if success

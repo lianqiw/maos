@@ -193,14 +193,14 @@ void maos_isim(int isim){
 	} else{/*do the big loop in serial mode. */
 		if(parms->sim.closeloop){
 			if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
-			if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
+			if(!NO_WFS)	wfsgrad(simu);/*output grads to gradcl, gradol */
 			if(!NO_RECON){
 				reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
 				shift_grad(simu);
 				filter_dm(simu);
 			}
 		} else{/*in OL mode,  */
-			if(!NO_WFS) wfsgrad(simu);
+			if(!NO_WFS)	wfsgrad(simu);
 			if(!NO_RECON){
 				shift_grad(simu);
 				reconstruct(simu);
