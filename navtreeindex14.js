@@ -1,5 +1,6 @@
 var NAVTREEINDEX14 =
 {
+"parms_8h.html#structsim__cfg__t":[11,0,2,5,13],
 "parms_8h.html#structtomo__cfg__t":[11,0,2,5,9],
 "parms_8h.html#structwfs__cfg__t":[11,0,2,5,6],
 "path_8h.html":[11,0,4,5],
@@ -12,10 +13,10 @@ var NAVTREEINDEX14 =
 "path_8h.html#aa95ac1be1b592e9a3d6761a8376b72b2":[11,0,4,5,2],
 "path_8h.html#af4d7c608d3c193573c706d3dfd7e070c":[11,0,4,5,6],
 "perfevl_8c.html":[11,0,2,6],
-"perfevl_8c.html#a24fb69fe8cc24a1851a6337a3875af52":[11,0,2,6,3],
+"perfevl_8c.html#a4222c173bf339c4f613587a6b5f8f73b":[11,0,2,6,3],
 "perfevl_8c.html#a51b7a9c320bb9b58fc5632da0a44ab84":[11,0,2,6,0],
 "perfevl_8c.html#a52bfe1186605f34e3d77031297d538c3":[11,0,2,6,1],
-"perfevl_8c.html#a80d4a64817a1bf35d8a5be7fb9d63cfd":[11,0,2,6,4],
+"perfevl_8c.html#a799c7105d3e2ffd9cbcd7de50fbd16e7":[11,0,2,6,4],
 "perfevl_8c.html#a924dc1ad6dce01c9e93d147002358f97":[11,0,2,6,2],
 "powfs_8h.html":[11,0,2,7],
 "powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e":[11,0,2,7,0],
@@ -248,6 +249,5 @@ var NAVTREEINDEX14 =
 "servo_8h.html#structservo__t":[11,0,1,23,0],
 "servo_8h.html#structsho__t":[11,0,1,23,1],
 "shwfs_lgs.html":[4,4,31],
-"shwfs_lo.html":[4,4,32],
-"shwfs_ngs.html":[4,4,33]
+"shwfs_lo.html":[4,4,32]
 };

@@ -61,6 +61,7 @@ var bin_8h =
     [ "zfclose", "bin_8h.html#a4ed840d37c980314e41e565e7dd617d3", null ],
     [ "zfwrite", "bin_8h.html#ace6a770f21f23800c9f497498495d1d5", null ],
     [ "zfread", "bin_8h.html#ac266a2663e090233d93f35fc2453a753", null ],
+    [ "zferrno", "bin_8h.html#ac87d75297b5fc4ea1d7c8ad2a62dbd7b", null ],
     [ "bytes_header", "bin_8h.html#a343d68b2551eff30cf94bb976cafb0ff", null ],
     [ "write_timestamp", "bin_8h.html#a1825ca342f947862c152e0408e923189", null ],
     [ "write_header", "bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e", null ],

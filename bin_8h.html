@@ -217,6 +217,8 @@ file_t *&#160;</td><td class="memItemRight" valign="bottom"><b>zfdopen</b> (int 
 <tr class="separator:ace6a770f21f23800c9f497498495d1d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac266a2663e090233d93f35fc2453a753"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ac266a2663e090233d93f35fc2453a753">zfread</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr class="separator:ac266a2663e090233d93f35fc2453a753"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac87d75297b5fc4ea1d7c8ad2a62dbd7b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ac87d75297b5fc4ea1d7c8ad2a62dbd7b">zferrno</a> (file_t *fp)</td></tr>
+<tr class="separator:ac87d75297b5fc4ea1d7c8ad2a62dbd7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a343d68b2551eff30cf94bb976cafb0ff"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a343d68b2551eff30cf94bb976cafb0ff">bytes_header</a> (const char *header)</td></tr>
 <tr class="separator:a343d68b2551eff30cf94bb976cafb0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top"><a id="a1825ca342f947862c152e0408e923189"></a>
@@ -249,8 +251,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 <tr class="memitem:a097892c6434a429ee7a2b89ea712b05e"><td class="memItemLeft" align="right" valign="top"><a id="a097892c6434a429ee7a2b89ea712b05e"></a>
 async_t *&#160;</td><td class="memItemRight" valign="bottom"><b>async_init</b> (file_t *fp, const size_t size, const uint32_t magic, const char *str, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
 <tr class="separator:a097892c6434a429ee7a2b89ea712b05e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0208a3d751b79aaaf879f0ce17a1b13"><td class="memItemLeft" align="right" valign="top"><a id="ae0208a3d751b79aaaf879f0ce17a1b13"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>async_write</b> (async_t *async, <a class="el" href="classlong.html">long</a> offset, int wait)</td></tr>
+<tr class="memitem:ae0208a3d751b79aaaf879f0ce17a1b13"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ae0208a3d751b79aaaf879f0ce17a1b13">async_write</a> (async_t *async, <a class="el" href="classlong.html">long</a> offset, int wait)</td></tr>
 <tr class="separator:ae0208a3d751b79aaaf879f0ce17a1b13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b5a92b55915d614a7c8569ff1d27b81"><td class="memItemLeft" align="right" valign="top"><a id="a2b5a92b55915d614a7c8569ff1d27b81"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>async_free</b> (async_t *async)</td></tr>
@@ -671,6 +672,25 @@ magic</td>
 
 </div>
 </div>
+<a id="ac87d75297b5fc4ea1d7c8ad2a62dbd7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac87d75297b5fc4ea1d7c8ad2a62dbd7b">&#9670;&nbsp;</a></span>zferrno()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int zferrno </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Return the error number </p>
+
+</div>
+</div>
 <a id="a343d68b2551eff30cf94bb976cafb0ff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a343d68b2551eff30cf94bb976cafb0ff">&#9670;&nbsp;</a></span>bytes_header()</h2>
 
@@ -1079,6 +1099,41 @@ magic</td>
       </table>
 </div><div class="memdoc">
 <p>Initialize the dimension from the header in the mmaped file. </p>
+
+</div>
+</div>
+<a id="ae0208a3d751b79aaaf879f0ce17a1b13"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0208a3d751b79aaaf879f0ce17a1b13">&#9670;&nbsp;</a></span>async_write()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void async_write </td>
+          <td>(</td>
+          <td class="paramtype">async_t *&#160;</td>
+          <td class="paramname"><em>async</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>offset</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>wait</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Write to file asynchronously </p>
 
 </div>
 </div>

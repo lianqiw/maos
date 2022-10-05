@@ -129,28 +129,28 @@ Simulation Flow</h1>
 <li><a class="el" href="maos_8h.html#a5935e0612a22d888703e8eee46a930bf">maos_sim()</a>: to start the simulation. It then calls<ul>
 <li><a class="el" href="maos_8h.html#ab642ac48296a45f061bd093ecee20604">maos_iseed()</a>: to initialize runtime data for each seed including turbulence</li>
 <li>In event driven simulation mode (PARALLEL=2). It calls the following in parallel each in a loop<ul>
-<li><a class="el" href="perfevl_8c.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl()</a> &amp; <a class="el" href="sim__utils_8h.html#a90fbafc175cd1a29b174570eaa5bc03e">print_progress()</a>: performance simulation</li>
-<li><a class="el" href="sim_8h.html#a409184df49223b72bd8fb30584015925">wfsgrad()</a> and <a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad()</a>: compute gradients and shift to gradlast</li>
-<li><a class="el" href="maos_2recon_8h.html#a957f786000458997344bd02425f92c43">reconstruct()</a> &amp; filter_dm: wfs reconstruction and servo filtering</li>
+<li><a class="el" href="perfevl_8c.html#a799c7105d3e2ffd9cbcd7de50fbd16e7">perfevl()</a> &amp; <a class="el" href="sim__utils_8h.html#a90fbafc175cd1a29b174570eaa5bc03e">print_progress()</a>: performance simulation</li>
+<li><a class="el" href="sim_8h.html#a2f3ab210392cf3ba70bcf8df2ccbfde3">wfsgrad()</a> and <a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad()</a>: compute gradients and shift to gradlast</li>
+<li><a class="el" href="maos_2recon_8h.html#a51b790af35dc99f61ba5ef9d54173b7f">reconstruct()</a> &amp; filter_dm: wfs reconstruction and servo filtering</li>
 </ul>
 </li>
 <li>In parallel simulation, calls <a class="el" href="maos_8h.html#afda0654e4cb8f4e37feb53986e044e19">maos_isim()</a> for each step. It then calls<ul>
 <li><a class="el" href="sim__utils_8h.html#ad8735860632183309e1afb0f4dd020cf">sim_update_etf()</a>: update sodium profile if needed</li>
 <li><a class="el" href="sim__utils_8h.html#a82672d602a95b40837f6226d00ec041c">genatm()</a>: update turbulence if not using frozen-flow</li>
 <li>In parallel mode (PARALLEL=1)<ul>
-<li>perfevl_pre: wfsgrad_prep, <a class="el" href="maos_2recon_8h.html#a957f786000458997344bd02425f92c43">reconstruct()</a> in parallel and then wait</li>
-<li><a class="el" href="perfevl_8c.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl()</a>: <a class="el" href="sim_8h.html#a409184df49223b72bd8fb30584015925">wfsgrad()</a>, in parallel and then wait</li>
-<li><a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad()</a>: copy from grad to gradlast for <a class="el" href="maos_2recon_8h.html#a957f786000458997344bd02425f92c43">reconstruct()</a></li>
+<li>perfevl_pre: wfsgrad_prep, <a class="el" href="maos_2recon_8h.html#a51b790af35dc99f61ba5ef9d54173b7f">reconstruct()</a> in parallel and then wait</li>
+<li><a class="el" href="perfevl_8c.html#a799c7105d3e2ffd9cbcd7de50fbd16e7">perfevl()</a>: <a class="el" href="sim_8h.html#a2f3ab210392cf3ba70bcf8df2ccbfde3">wfsgrad()</a>, in parallel and then wait</li>
+<li><a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad()</a>: copy from grad to gradlast for <a class="el" href="maos_2recon_8h.html#a51b790af35dc99f61ba5ef9d54173b7f">reconstruct()</a></li>
 <li><a class="el" href="sim_8h.html#a622d82c9ae0920ac6c92085f5178ae28">filter_dm()</a>: servo filtering (dmreal)</li>
 </ul>
 </li>
 <li>In serial mode (PARALLEL=0), calls the following in sequence<ul>
-<li><a class="el" href="perfevl_8c.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl()</a>: (in closed loop) to evaluate the performance in science field</li>
-<li><a class="el" href="sim_8h.html#a409184df49223b72bd8fb30584015925">wfsgrad()</a>: to compute WFS gradients</li>
-<li><a class="el" href="maos_2recon_8h.html#a957f786000458997344bd02425f92c43">reconstruct()</a>:</li>
+<li><a class="el" href="perfevl_8c.html#a799c7105d3e2ffd9cbcd7de50fbd16e7">perfevl()</a>: (in closed loop) to evaluate the performance in science field</li>
+<li><a class="el" href="sim_8h.html#a2f3ab210392cf3ba70bcf8df2ccbfde3">wfsgrad()</a>: to compute WFS gradients</li>
+<li><a class="el" href="maos_2recon_8h.html#a51b790af35dc99f61ba5ef9d54173b7f">reconstruct()</a>:</li>
 <li><a class="el" href="recon__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b">shift_grad()</a>:</li>
 <li><a class="el" href="sim_8h.html#a622d82c9ae0920ac6c92085f5178ae28">filter_dm()</a>:</li>
-<li><a class="el" href="perfevl_8c.html#a80d4a64817a1bf35d8a5be7fb9d63cfd">perfevl()</a>:</li>
+<li><a class="el" href="perfevl_8c.html#a799c7105d3e2ffd9cbcd7de50fbd16e7">perfevl()</a>:</li>
 </ul>
 </li>
 <li>setup_recon_tomo_update(): Update tomography parameter when needed</li>

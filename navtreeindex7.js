@@ -1,5 +1,6 @@
 var NAVTREEINDEX7 =
 {
+"maos_2types_8h.html#a14ef8a333a0e6595ec7c5856dee2d91a":[11,0,2,20,15,155],
 "maos_2types_8h.html#a14fef4d4fa3e3e07f6aab1dacd9cdda5":[11,0,2,20,1,3],
 "maos_2types_8h.html#a1578360552fcb598c2d42d3131131d81":[11,0,2,20,3,24],
 "maos_2types_8h.html#a15a0fb4bca39bccb08cae37081b6f48f":[11,0,2,20,15,46],
@@ -248,6 +249,5 @@ var NAVTREEINDEX7 =
 "maos_2types_8h.html#a91041be1f00651d08de6a94a6e2d77dd":[11,0,2,20,3,38],
 "maos_2types_8h.html#a91fe6c8ede9de6aff5378d9b76430aeb":[11,0,2,20,15,157],
 "maos_2types_8h.html#a92d5cad9f0d4550ffc016298511c573c":[11,0,2,20,6,8],
-"maos_2types_8h.html#a942f756674db632e1c53b6f1b31f76e3":[11,0,2,20,14,3],
-"maos_2types_8h.html#a946588d3ae6b091bf560777a40013eb4":[11,0,2,20,7,2]
+"maos_2types_8h.html#a942f756674db632e1c53b6f1b31f76e3":[11,0,2,20,14,3]
 };

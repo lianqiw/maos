@@ -23,6 +23,7 @@ var searchData=
   ['apply_5flaplacian_5fmap',['apply_laplacian_map',['../laplacian_8h.html#ad50368f80512d243a668b1f4cd70e77a',1,'laplacian.c']]],
   ['applyw',['applyW',['../recon__utils_8h.html#a29875eda5bf6485bb6b3b5628da3e361',1,'recon_utils.c']]],
   ['argv2str',['argv2str',['../sys_2misc_8h.html#a8a2802063b35fa082c7e9ca93153e44d',1,'misc.c']]],
+  ['async_5fwrite',['async_write',['../bin_8h.html#ae0208a3d751b79aaaf879f0ce17a1b13',1,'bin.c']]],
   ['atm2xloc',['atm2xloc',['../sim__utils_8h.html#a6140547e84ed40849518c002ff165382',1,'sim_utils.c']]],
   ['available_5fspace',['available_space',['../sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4',1,'misc.c']]],
   ['average_5fpowfs',['average_powfs',['../maos_2utils_8h.html#aa3c976283684c703e5ed8b35bfeac3b8',1,'utils.c']]]

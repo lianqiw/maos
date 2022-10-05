@@ -39,7 +39,7 @@ var thread_8h =
     [ "CALL", "thread_8h.html#ac484ce8461053d81b280ae84d3d2c110", null ],
     [ "CALL_THREAD", "thread_8h.html#a9020b285ee8e1e5342e481ae80f6152a", null ],
     [ "thread_fun", "thread_8h.html#a41f23d172c89ca8271cf0a6ebab9119f", null ],
-    [ "thread_wrapfun", "thread_8h.html#a735e98ad9d08fe72a5a2e20051ebf72a", null ],
+    [ "thread_wrapfun", "thread_8h.html#a0af06632e1c10cee94ac065f958b63e7", null ],
     [ "thread_id", "thread_8h.html#a46d357a9305be4f48b8166cb27ec41ff", null ],
     [ "thread_prep", "thread_8h.html#a5abc03e87897fd9c0d49c0b837f9d98f", null ],
     [ "thread_new", "thread_8h.html#a026c95e6b2a9ee10f90a5a254548786a", null ],

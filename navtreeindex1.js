@@ -1,5 +1,6 @@
 var NAVTREEINDEX1 =
 {
+"classcuda__recon_1_1cgtmp__t.html#a190a6f7f30f6ea8967d795177d4700a3":[10,0,0,0,2],
 "classcuda__recon_1_1cgtmp__t.html#a51ed12dd882e7428cf06e566bd605b2f":[10,0,0,0,4],
 "classcuda__recon_1_1cgtmp__t.html#a535055a408d1376b94dd6bca70fb9ad3":[10,0,0,0,1],
 "classcuda__recon_1_1cgtmp__t.html#a551f1acb8045b6a2d2a1a06abb064de5":[10,0,0,0,3],
@@ -248,6 +249,5 @@ var NAVTREEINDEX1 =
 "classcudata__t.html#a6b54a9a44f05e75f204d07d97e58d2f6":[10,0,35,2],
 "classcudata__t.html#a7baa17f30db981adbaad7a75a6828fc5":[10,0,35,12],
 "classcudata__t.html#a9f23cd6e1814e97636133fdb76fb0d1e":[10,0,35,13],
-"classcudata__t.html#aa3f6e5419e4751d3dec5d7999e574145":[10,0,35,8],
-"classcudata__t.html#ad9bad0392b15a8e1f189e0ee768f7952":[10,0,35,5]
+"classcudata__t.html#aa3f6e5419e4751d3dec5d7999e574145":[10,0,35,8]
 };

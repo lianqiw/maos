@@ -88,5 +88,6 @@ var mathdef_8h =
     [ "dspcellnew", "mathdef_8h.html#af64c16fc592737d61c27ff55cb509c17", null ],
     [ "dspccellnew", "mathdef_8h.html#a5bf742ba3778fa4cee270545581fff42", null ],
     [ "cspcellnew", "mathdef_8h.html#a80403a6da6e463568b2afe9063760691", null ],
-    [ "cspccellnew", "mathdef_8h.html#a440b2ba964f39fe50b3a6b14a407a711", null ]
+    [ "cspccellnew", "mathdef_8h.html#a440b2ba964f39fe50b3a6b14a407a711", null ],
+    [ "fft_threads", "mathdef_8h.html#a422c3479f9cb7e9749e18b005fdd7693", null ]
 ];

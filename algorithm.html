@@ -100,13 +100,13 @@ $(document).ready(function(){initNavTree('algorithm.html','');});
 <div class="contents">
 <div class="textblock"><h1><a class="anchor" id="sect-dm-actuator"></a>
 DM Actuator Influence Function</h1>
-<h2><a class="anchor" id="autotoc_md37"></a>
+<h2><a class="anchor" id="autotoc_md40"></a>
 Linear influence function</h2>
 <p>The linear influence function is defined as </p><p class="formulaDsp">
 \[ h(x;x_{i};\delta)=\begin{cases} 1-|x-x_{i}|/\sigma &amp; \textrm{if }|x-x_{i}|\leq\delta\\ 0 &amp; \textrm{else} \end{cases} \]
 </p>
 <p> where \(\delta\) is usually equal to the grid spacing. A bilinear influence function is simply the product of two linear influence functions with variables \(x_{1}\)and \(x_{2}\).</p>
-<h2><a class="anchor" id="autotoc_md38"></a>
+<h2><a class="anchor" id="autotoc_md41"></a>
 Cubic influence function</h2>
 <p>A cubic influence function that can reproduce piston/tip/tilt is coined by Ellerbroek to model the piezo stack DM actuator. The influence has the form </p><p class="formulaDsp">
 \[ h(x;x_{i};\delta)=h_{0}((x-x_{i})/\delta) \]
@@ -135,7 +135,7 @@ DM Hysteresis</h1>
 </p>
 <h1><a class="anchor" id="pop"></a>
 Physical Optics Beam Propagation</h1>
-<h2><a class="anchor" id="autotoc_md39"></a>
+<h2><a class="anchor" id="autotoc_md42"></a>
 Maxwell Equation</h2>
 <p>The Maxwell equation predicts that</p>
 <p class="formulaDsp">
@@ -147,14 +147,14 @@ Maxwell Equation</h2>
 \[\mathbf{E}=\mathbf{E_0}f(\hat{\mathbf{k}}\cdot{\mathbf{x}} - c_0 t)\]
 </p>
 <p> where \(\hat{\mathbf{k}}\) is the wave propagation direction. We have \(\mathbf{E}\cdot\hat{\mathbf{k}}=0\) and \(c_0\mathbf{B}=\hat{\mathbf{k}}\times \mathbf{E}\).</p>
-<h2><a class="anchor" id="autotoc_md40"></a>
+<h2><a class="anchor" id="autotoc_md43"></a>
 Fresnel diffraction integral</h2>
 <p>The electric field at a point \((x,y,z)\) following an aperture at \(z=0\) is given by</p>
 <p class="formulaDsp">
 \[ E(x,y,z)=\frac{1}{i\lambda}\iint E(x^\prime, y^\prime, 0)\frac{e^{ikr}}{r} \frac{z}{r} dx^\prime dy^\prime \]
 </p>
 <p>where \(k=2\pi/\lambda\) is the wave number and \(r=\sqrt{(x-x^\prime)^2+(y-y^\prime)^2+z^2}\). This is the exact solution, but lacks analytical or convenient numerical solution.</p>
-<h2><a class="anchor" id="autotoc_md41"></a>
+<h2><a class="anchor" id="autotoc_md44"></a>
 Fresnel approximation</h2>
 <p>Introduce \(\rho^2=(x-x^\prime)^2+(y-y^\prime)^2\), and substitute \(r\) with its Taylor expansion: </p><p class="formulaDsp">
 \[r=\sqrt{\rho^2+z^2}=z\sqrt{1+\frac{\rho^2}{z^2}}=z+\frac{\rho^2}{2z}-\frac{\rho^4}{8z^3}+...\]
@@ -167,7 +167,7 @@ Fresnel approximation</h2>
 \[E(x,y,z)=\frac{e^{ikz}}{i\lambda z}\iint E(x^\prime, y^\prime,0){e^{\frac{i\pi}{z\lambda}[(x-x^\prime)^2+(y-y^\prime)^2]}} dx^\prime dy^\prime\]
 </p>
 <p>This is the Fresnel diffraction integral. It means that, if the Fresnel approximation is valid, the propagating field is a spherical wave, originating at the aperture and moving along z. The term before the integral represents constant phase evolution and energy normalization.</p>
-<h3><a class="anchor" id="autotoc_md42"></a>
+<h3><a class="anchor" id="autotoc_md45"></a>
 Angular Spectrum</h3>
 <p>The integral can be viewed as a convolution between \(E(x,y,0)\) and </p><p class="formulaDsp">
 \[h(x,y)=e^{\frac{i\pi}{z\lambda}(x^2+y^2)}.\]
@@ -183,7 +183,7 @@ Angular Spectrum</h3>
 </p>
 <p> Using this requires upsampling since FFT convolution assumes the function is periodic. We do not use this method.</p>
 <p>This convolution view is commonly referred to as the angular spectrum method. The original field \(E(x,y,0)\) is only FFT'ed once. For each propagation distance, the FFT of \(h()\) is multiplied to \(\hat{E}\) and then inverse FFT'ed to obtain the field. This approach is mostly useful in very near field propagations when \(x\) and \(x^\prime\) has the same sampling.</p>
-<h3><a class="anchor" id="autotoc_md43"></a>
+<h3><a class="anchor" id="autotoc_md46"></a>
 Single FFT</h3>
 <p>The integral can also be rewritten as a single Fourier transform:</p>
 <p class="formulaDsp">
@@ -203,7 +203,7 @@ Single FFT</h3>
 \[ E(p,q,z)=h(p z \lambda, q z \lambda)\hat{G}(p,q)\]
 </p>
 <p>. The scaling of \(\frac{1}{z\lambda}\) is dropped due to change of variable and preservation of total energy. In numerical calculation, the sampling of \(p,q\) and \(x,y\) follows \(dp=1/(n*dx),dq=1/(n*dy)\) where \(n\) is the array dimension along \(x\) and \(y\).</p>
-<h2><a class="anchor" id="autotoc_md44"></a>
+<h2><a class="anchor" id="autotoc_md47"></a>
 Fraunhofer approximation</h2>
 <p>In a special case when the propagation is at far field (from pupil to focus or vice versa), so that \(z\gg\frac{\rho^2}{2\lambda}\) the extra phase term also be dropped:</p>
 <p class="formulaDsp">
@@ -215,7 +215,7 @@ Fraunhofer approximation</h2>
 <p> and the energy is preserved via </p><p class="formulaDsp">
 \[\iint{||E^\prime(p,q)||^2 dp dq}=\iint{||E(x,y,0)||^2dxdy}.\]
 </p>
-<h2><a class="anchor" id="autotoc_md45"></a>
+<h2><a class="anchor" id="autotoc_md48"></a>
 Sphere to sphere propagation</h2>
 <p>When the wavefront at the starting aperture is highly curved, regular numerical solution may not be able to sample the wavefront sufficiently, resuling in poor numerical accuracy. </p>
 </div></div><!-- contents -->

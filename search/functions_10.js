@@ -113,7 +113,6 @@ var searchData=
   ['setup_5frecon_5ftomo_5fprep',['setup_recon_tomo_prep',['../maos_2recon_8h.html#ab4ca5a984cc27dacd89abeaf25e927cb',1,'setup_recon_tomo_prep(recon_t *recon, const parms_t *parms):&#160;recon_setup.c'],['../recon__setup_8c.html#ab4ca5a984cc27dacd89abeaf25e927cb',1,'setup_recon_tomo_prep(recon_t *recon, const parms_t *parms):&#160;recon_setup.c']]],
   ['setup_5frecon_5fupdate_5fcn2',['setup_recon_update_cn2',['../maos_2recon_8h.html#affdf4abbd6002b77777fe7c1852cfcc7',1,'setup_recon_update_cn2(recon_t *recon, const parms_t *parms):&#160;recon_setup.c'],['../recon__setup_8c.html#affdf4abbd6002b77777fe7c1852cfcc7',1,'setup_recon_update_cn2(recon_t *recon, const parms_t *parms):&#160;recon_setup.c']]],
   ['setup_5fsurf',['setup_surf',['../surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107',1,'surf.c']]],
-  ['sfft_5ffree_5fplan',['sfft_free_plan',['../zmath_8h.html#a33d44217669daf304b908c9cb0c30f7b',1,'stmp.c']]],
   ['sfftshift',['sfftshift',['../smath_8h.html#a9110aaf766519ffc07645d8a088a0dd3',1,'stmp.c']]],
   ['sflip',['sflip',['../smath_8h.html#a8d2c27fbbf527a64bc10656384c376b4',1,'stmp.c']]],
   ['sfree_5fdo',['sfree_do',['../smath_8h.html#a061ae93168e5bc1bd962a0763953c1eb',1,'stmp.c']]],
