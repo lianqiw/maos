@@ -33,7 +33,7 @@
 
 
 #include "chol.h"
-#if CPU_WIDTH == 64
+#if defined(DLONG)
 #define MOD(A) cholmod_l_##A
 #define CHOL_ITYPE CHOLMOD_LONG
 #else

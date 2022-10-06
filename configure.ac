@@ -507,18 +507,16 @@ fi
 case $host_cpu in
 	*64)
 		chol_fun=cholmod_l_factorize
-		bitwidth=64
+		CFLAGS+=" -DDLONG"
 	;;
-	*86)
+	*86|*32|arm)
     	CPPFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
 		chol_fun=cholmod_factorize
-		bitwidth=32
 	;;
 	*)
 		AC_MSG_ERROR([Unknown host_cpu])
 	;;
 esac
-AC_DEFINE_UNQUOTED(CPU_WIDTH, $bitwidth, "bit width of CPU")
 
 LDEXE+="$LDRT " #-static" #show that we prefer static linking.
 AM_CONDITIONAL(USE_STATIC, [test "x$enable_allstatic" = "xyes"])
@@ -704,7 +702,7 @@ if test "$has_chol" = "no" ;then
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 
 	if test "$has_chol" = "no" ;then
-		compile CHOLMOD "cholmod.tar.bz2"
+		compile CHOLMOD "cholmod.tar.bz2" 
 		unset ac_cv_lib_cholmod_${chol_fun}
 		AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 	fi

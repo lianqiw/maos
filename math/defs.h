@@ -180,7 +180,7 @@
 #define creal
 #endif
 */
-#if CPU_WIDTH == 64
+#if defined(DLONG)
 #define M_SPT M_SPT64
 #else
 #define M_SPT M_SPT32

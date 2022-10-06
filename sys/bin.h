@@ -77,7 +77,7 @@ typedef enum M_ID{
 #define M_INT M_INT32
 #define M_STR M_INT8
 
-#if CPU_WIDTH == 64
+#if defined(DLONG)
 typedef long spint;
 #define M_SPINT M_LONG
 #define M_DSP M_DSP64
