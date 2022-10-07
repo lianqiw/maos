@@ -12,24 +12,35 @@
 # automake:   Create Makefile.in from Makefile.am and configure.ac
 # aclocal:    Scan configure.ac for uses of third-party macros and gather definitions in aclocal.m4
 
-#GNU M4 is the real macro processor. 
+#GNU M4 is the real macro processor.
 
 #Use autoreconf to setup the package initially
-if ! which autoreconf ; then
+if ! which autoreconf; then
 	read -p "Required packages are not installed, would like to install them? (Y/n):" ans
-	if [ "$ans" = "" or "$ans" = "Y" or "$ans" = "y" ];then 
+	if [ "$ans" = "" -o "$ans" = "Y" -o "$ans" = "y" ]; then
 		common="autoconf automake libtool make cmake"
-		if which apt ;then
-			sudo apt install $common gcc git tar bzip2 libfftw3-dev liblapack3 libcmocka-dev libwebsockets-dev
-		elif which dnf;then
-			sudo dnf install $common gcc git tar bzip2 fftw-devel lapack libcmocka-devel libwebsockets-devel
-		elif which brew;then
-			brew install $common
-		elif which port ;then
-			sudo port install $common
-		else
-			echo "Not sure how to install the packages."
-		fi
+		case "`uname`" in
+		Linux)
+			if which apt; then
+				sudo apt install $common gcc git tar bzip2 libfftw3-dev liblapack3 libcmocka-dev libwebsockets-dev
+			elif which dnf; then
+				sudo dnf install $common gcc git tar bzip2 fftw-devel lapack libcmocka-devel libwebsockets-devel
+			else
+				echo "System: Linux. Not sure how to install the packages."
+			fi
+			;;
+		Darwin)
+			if which brew; then
+				brew install $common
+			elif which port; then
+				sudo port install $common
+			else
+				echo "System: macOS. Not sure how to install the packages."
+			fi
+			;;
+		*)
+			echo "Unknown system: `uname`"
+		esac
 	fi
 fi
 autoreconf -i
