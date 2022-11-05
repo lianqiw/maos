@@ -34,29 +34,29 @@ print("from interface import *", file=fpout)
 
 #map between MAOS C types and python types
 aotype2py={
-    'dmat':'cell',
-    'lmat':'cell',
-    'cmat':'cell',
-    'smat':'cell',
-    'zmat':'cell',
-    'cell':'cell',
-    'map_t':'cell',
-    'loc_t':'loc',
-    'pts_t':'loc',
-    'dsp':'csc',
-    'csp':'csc',
-    'ssp':'csc',
-    'zsp':'csc',
-    'char':'c_char',
-    'double':'c_double',
-    'float':'c_float',
-    'real':'c_double',
-    'size_t':'c_size_t',
-    'long':'c_long',
-    'int':'c_int',
-    'uint32_t':'c_uint',
-    'uint64_t':'c_ulonglong',
-    'void':'',
+    'dmat':('cell',0x6402),
+    'lmat':('cell',0x6403),
+    'cmat':('cell',0x6404),
+    'smat':('cell',0x6408),
+    'zmat':('cell',0x6409),
+    'cell':('cell',0x6421),
+    'map_t':('cell',0x6402),
+    'loc_t':('loc',0x6402),
+    'pts_t':('loc',0x6402),
+    'dsp':('csc',0x6401),
+    'csp':('csc',0x6400),
+    'ssp':('csc',0x6407),
+    'zsp':('csc',0x6406),
+    'char':('c_char',0),
+    'double':('c_double',0),
+    'float':('c_float',0),
+    'real':('c_double',0),
+    'size_t':('c_size_t',0),
+    'long':('c_long',0),
+    'int':('c_int',0),
+    'uint32_t':('c_uint',0),
+    'uint64_t':('c_ulonglong',0),
+    'void':('',0),
 }
 #process variable type
 def handle_type(argtype, argname):
@@ -81,7 +81,7 @@ def handle_type(argtype, argname):
     if argtype[-4:]=='cell':
         argtype='cell'
 
-    pytype=aotype2py.get(argtype, None)
+    pytype,tid=aotype2py.get(argtype, (None,None))
 
     if pytype is None: #represent as a struct
         if structs.get(argtype,None) :
@@ -90,12 +90,12 @@ def handle_type(argtype, argname):
             #print(argtype, argname)
             pytype='Unknown'
             argname='Unknown'
-        py2c='py2cellref('+argname+')'
+        py2c='py2cellref('+argname+',0)'
     elif pytype=='cell':#arbitrary array
         if isref:
-            py2c='py2cellref('+argname+')'
+            py2c='py2cellref({},{})'.format(argname, tid)
         else:
-            py2c='py2cell('+argname+')'
+            py2c='py2cell({},{})'.format(argname)
     else:
         py2c=pytype+'('+argname+')'
         if isref: #pointer input
@@ -129,7 +129,7 @@ def handle_output(funtype, funname):
         ispointer=0
     if funtype[-4:]=='cell':
         funtype='cell'
-    fun_arg=aotype2py.get(funtype, None)
+    fun_arg,fun_tid=aotype2py.get(funtype, (None,None))
     if fun_arg is None:#represent as a struct
         if structs.get(funtype,None):
             fun_arg='make_class(\''+funtype+'\''+','+json.dumps(structs.get(funtype,None))+')'

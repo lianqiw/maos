@@ -519,7 +519,7 @@ def plot_circle(radius, *args):
     plot(rx*np.cos(theta), ry*np.sin(theta), *args)
     
 def calc_width_gauss(dx,data):
-    '''Compute the Gaussian width'''
+    '''Compute the Gaussian width of 2-d array data with sampling of dx'''
     n=data.shape[0]
     n2=int(n/2)
     x=np.arange(-n2,n2)*dx
@@ -537,3 +537,25 @@ def calc_width_gauss(dx,data):
 def calc_fwhm(dx, intensity):
     '''A simple way to compute the FWHM'''
     return sqrt(np.sum(intensity>=0.5*np.max(intensity))*4/np.pi)*dx
+
+def embed(a,ratio=2):
+    '''Embed a 2-d image into a new array bigger by ratio'''
+    nx=a.shape[0]
+    ny=a.shape[1]
+    nx4=int(nx/2)
+    ny4=int(ny/2)
+    nx2=int(nx4*ratio)
+    ny2=int(ny4*ratio)
+    a2=np.zeros((nx*ratio,ny*ratio),dtype=a.dtype)
+    a2[nx2-nx4:nx2+nx4,ny2-ny4:ny2+ny4]=a
+    #a2[nx2*ratio-nx2:nx2*ratio+nx2,ny2*ratio-ny2:ny*ratio+ny2]=a
+    return a2
+def unembed(a,ratio=2):
+    '''undo embed(). unembed center piece'''
+    nx=a.shape[0]
+    ny=a.shape[1]
+    nx2=int(nx/2)
+    ny2=int(ny/2)
+    nx4=int(nx/ratio/2)
+    ny4=int(ny/ratio/2)
+    return a[nx2-nx4:nx2+nx4,ny2-ny4:ny4+ny2]    

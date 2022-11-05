@@ -29,11 +29,7 @@ Math routines that are not included in mat.c
    scale each element of A by w.
 */
 void X(scale)(X(mat)* A, R w){
-	if(!A) return;
-	if(!check_mat(A)){
-		warning("Input is not valid");
-		return;
-	}
+	if(!A || !check_mat(A)) return;
 	if(w==(T)0){
 		memset(P(A), 0, sizeof(T)*A->nx*A->ny);
 	} else{
@@ -1530,7 +1526,7 @@ static void* X(enc_thread)(thread_t* pdata){
 	const R dk=1./ncomp2;
 	const R pi2=2*M_PI;
 	if(type==0){
-		X(mat)* ksinc=X(new)(dvec->nx, ncomp2);
+		X(mat)* ksinc=X(new)(PN(dvec), ncomp2);
 		X(mat)* pks=ksinc;
 		/*Cache the data. */
 		for(long iy=0; iy<ncomp2; iy++){
@@ -1571,11 +1567,11 @@ static void* X(enc_thread)(thread_t* pdata){
 						const R r=dr[ir]*0.5;
 						const R tmp=k*pi2*r;
 						R s=j1(tmp)*r/k;
-						if(!ix&&!iy) s=pi2*r*r;/*special case. */
+						if(!ix&&!iy) s=M_PI*r*r;/*special case when k=0. J1(x)/x=1/2 when x=0. */
 						P(enc, ir)+=s*P(ppsf, ix, iy);
 					}
 				} break;
-				case 2:/*Enstripped energe in a slit. */
+				case 2:/*Enslitted energe in a slit. */
 					error("To implement: Do FFT only along 1-d\n");
 					break;
 				default:
@@ -1597,6 +1593,7 @@ X(mat)* X(enc)(X(mat)* psf, /**<The input array*/
 	if(type<-1||type>2){
 		error("Usage: type= \n-1: azimuthal average, \n0: within a square, \n1: within a circle, \n2: within a slit\n");
 	}
+	if(nthread<=0) nthread=NTHREAD;	
 	R rmax=ceil(X(max)(dvec))+1;
 	long ncomp;
 	ncomp=nextfftsize(rmax*2);//avoid wrapping
@@ -1620,9 +1617,9 @@ X(mat)* X(enc)(X(mat)* psf, /**<The input array*/
 	XC(real2d)(&phat, 0, psf2, 1);
 	X(scale)(phat, pow((R)ncomp2, -2));
 	XC(free)(psf2);
-	X(mat)* enc=X(new)(dvec->nx, 1);
+	X(mat)* enc=X(new)(PN(dvec), 1);
 	ENC_T data={enc, dvec, phat, type};
-	thread_t* tdata=thread_prep(0, dvec->nx, nthread, X(enc_thread), &data);
+	thread_t* tdata=thread_prep(0, PN(dvec), nthread, X(enc_thread), &data);
 	CALL_THREAD(tdata, 0);
 	free(tdata);
 	X(free)(phat);

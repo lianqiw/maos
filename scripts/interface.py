@@ -37,7 +37,7 @@ aolib_so=os.environ.get('MAOS_AOLIB', 'aolib.so')
 try:
     lib=cdll.LoadLibrary(aolib_so)
 except:
-    raise Exception('aolib.so is not found at '+aolib_so)
+    raise Exception('Load aolib.so failed from '+aolib_so)
 from readbin import headers
 
 def simplify(arr, do_stack=1):
@@ -116,16 +116,16 @@ def as_array(arr, id, shape):
         return nparr2
 
 #convert numpy array to any C array adaptively
-def py2cell(arr):
+def py2cell(arr, tid=0):
     if type(arr) is list:
         arr=np.asarray(arr)
     if sp.isspmatrix_csr(arr):
-        return csr(arr)
+        return csr(arr, tid)
     else:
-        return cell(arr)
+        return cell(arr, tid)
 
 #convert numpy array to any C array pointer adaptively
-def py2cellref(arr):
+def py2cellref(arr, tid=0):
     if type(arr) is list:
         arr = np.asarray(arr)
         
@@ -133,9 +133,9 @@ def py2cellref(arr):
         if arr.size==0:
             return None #turn empty ndarray to Null pointer. do not use 0
         elif sp.isspmatrix_csr(arr):
-            return byref(csr(arr))
+            return byref(csr(arr,tid))
         else:
-            return byref(cell(arr))
+            return byref(cell(arr,tid))
     else:
         return byref(arr)
 class cell(Structure):
@@ -151,7 +151,8 @@ class cell(Structure):
         ('dummy4', c_void_p),
         ]
  
-    def __init__(self, arr=None):#convert from numpy to C. Memory is borrowed
+    def __init__(self, arr=None, tid=0):#convert from numpy to C. Memory is borrowed
+        #attributes set within __init__ are per object
         dtype2id={#Conversion from numpy type to maos id
             np.double:  0x6402,
             np.int64:   0x6403,
@@ -171,6 +172,8 @@ class cell(Structure):
             if tmpid is None:
                 print("init: Unknown data" +str( arr.dtype.type))
                 return None
+            if tid!=0 and tmpid != tid:
+                raise(Exception('data mismatch want {}, got {}'.format(tmpid, tid)))
             self.id=tmpid
             if arr.ndim>2:
                 print("init: Only use 2 dimensions\n");
@@ -325,7 +328,7 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
         ('i', c_void_p),
         ('nref', c_void_p),
     ]
-    def __init__(self, arr=None): #convert from numpy to C. Memory is borrowed
+    def __init__(self, arr=None, tid=0): #convert from numpy to C. Memory is borrowed
         dtype2id={#Conversion from sparse type to maos id
             np.float32:  25607,
             np.float64:  25601,
@@ -334,6 +337,8 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
         }
         if arr is not None and sp.isspmatrix_csr(arr):
             self.id=dtype2id.get(arr.dtype.type)
+            if  tid !=0 and self.id != tid:
+                raise(Exception('data mismatch want {}, got {}'.format(self.id, tid)))
             #save subarrays
             self.xp=arr.data
             self.ip=arr.indices.astype(np.long)

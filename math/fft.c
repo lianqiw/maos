@@ -84,9 +84,17 @@ static void FFTW(task_callback)(void *(*work)(char *), char *jobdata, size_t els
 	(void)data;
 	dbg("fft_task_callback: %d threads\n", njobs);
 #if _OPENMP
-#pragma omp taskloop default(shared) num_tasks(njobs) priority(1)
-	for(int i=0; i<njobs; ++i){
-		work(jobdata+elsize*i);
+	//Adaptively handling in or outside of parallel region.
+	if(NTHREAD>1&&!omp_in_parallel()){
+		#pragma omp parallel for default(shared) 
+		for(int i=0; i<njobs; ++i){
+			work(jobdata+elsize*i);
+		}
+	}else{
+		#pragma omp taskloop default(shared) num_tasks(njobs) priority(1)
+		for(int i=0; i<njobs; ++i){
+			work(jobdata+elsize*i);
+		}
 	}
 #else
 	tp_counter_t group={0};
@@ -165,11 +173,6 @@ void X(fft_free_plan)(fft_t *fft){
 	free(fft);
 }
 static void fft_execute(FFTW(plan) plan){
-#if _OPENMP
-	if(NTHREAD>1&&!omp_in_parallel()){
-		warning("fft_execute not in parallel\n");
-	}
-#endif
 	FFTW(execute)(plan);
 }
 /**
